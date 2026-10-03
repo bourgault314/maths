@@ -1,20 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Régénère les SIX livrets de l'Enquête (monde 3 de l'univers SPLAT!, 8 pages chacun) à partir du
-site lui-même — la progression en six livrets du 30/09/2026 (lot 2) :
+Régénère les CINQ livrets de l'Enquête (monde 3 de l'univers SPLAT!, 8 pages chacun) à partir du
+site lui-même — la progression v3 du 03/10/2026 (splat-relecture\monde-3-progression-six-livrets.md) :
     trois livrets de base, pour tous, dans l'ordre :
         additif        partie 1, fiches 10 à 14   « SPLAT! Enquête »
         multiplicatif  partie 2, fiches 15 à 19   « SPLAT! Grande enquête »
         rebondit       partie 3, fiches 20 à 24   « SPLAT! L'enquête rebondit »
-    et trois livrets « Deuxième tour » (plus durs, mêmes étoiles) :
-        additif_tour2, multiplicatif_tour2, rebondit_tour2   fiches 10d à 24d
+    et deux livrets « Deuxième tour » (plus durs, mêmes étoiles) :
+        tour2_dessins  fiches 11d 12d 13d 16d 17d   « Les trois dessins »
+        tour2_systeme  fiches 18d 20d 22d 19d 24d   « Vers le Système »
 
-    python3 render.py                    (les SIX livrets, élève et corrections)
+    python3 render.py                    (les CINQ livrets, élève et corrections)
     python3 render.py additif            (un seul livret, et ses corrections)
     python3 render.py --qr               (en refabriquant d'abord les QR codes)
     python3 render.py --eleve            (seulement les livrets de l'élève)
     python3 render.py --correction       (seulement les livrets de correction)
+    python3 render.py --vignettes        (seulement les vignettes de la page des livrets, d'après les PDF)
 
 Produit, à la racine du dépôt, pour chaque livret :
     outils/livret_splat_enquete_<nom>.pdf            8 pages A4, ordre de lecture
@@ -24,7 +26,9 @@ mêmes cartes à la même place : …_correction.pdf (inconnue « ? ») et …_c
 (inconnue en lettre), chacun avec son …_a_plier.pdf.
 
 LES PAGES. Couverture, un exemple résolu (le dessin de la première fiche du livret), les cinq
-fiches (4 cartes par page), le dos. Une fiche = une étape de la carte des mondes = une étoile ;
+fiches (4 cartes par page), le dos (les séries en ligne, la suite, et deux cartes de rappel du
+livret d'avant — l'exemple corrigé et sa carte jumelle à la partie 3, l'unité commune résolue au
+Deuxième tour 2). Une fiche = une étape de la carte des mondes = une étoile ;
 le QR d'une fiche ouvre sa série en ligne (?f=12, ou ?f=12d pour le deuxième tour : la même
 étoile).
 
@@ -34,7 +38,7 @@ ajouté dans le bandeau juste avant l'impression. L'EXEMPLE RÉSOLU non plus : l
 trois dessins sont ceux du bouton « Voir le schéma » de l'outil (la correction en barres des
 lots G1-G2 : ① les barres, ② schéma regroupé, ③ je calcule), au profil d'impression de la
 correction, sur une carte qui n'est PAS dans les livrets ; les légendes sont écrites À PARTIR
-DE LA CARTE rendue (elles ne peuvent pas mentir sur ses nombres). Au dos du Deuxième tour 3,
+DE LA CARTE rendue (elles ne peuvent pas mentir sur ses nombres). Au dos du Deuxième tour 2,
 l'unité commune résolue est dessinée de la même façon.
 
 LIVRETS DE CORRECTION : la correction imprimée de l'outil (print=correction), 4 par page,
@@ -42,7 +46,7 @@ chaque carte à la même place que sur la fiche de l'élève ; en lettre, les m�
 avec unknown=letter (les nombres ne bougent pas, vérifié carte par carte au rendu). La
 couverture reçoit le bandeau « Correction » et la ligne « Livret corrigé » (jamais « professeur » :
 le corrigé peut être donné aux élèves, 23/09/2026), la boîte du QR dit « Je rejoue ces cartes
-en ligne » ; l'exemple résolu et le dos ne changent pas.
+en ligne » ; l'exemple résolu ne change pas, les cartes de rappel du dos sont corrigées.
 
 Dépendances : playwright (chromium), pikepdf, qrcode[pil]. qpdf si disponible.
 """
@@ -58,73 +62,70 @@ SITE = "https://mathsgo.re"
 SC = "/splat/classique/"                        # l'outil, à son adresse courte
 COURTE = "/splat/enquete/livret/"               # la page courte des QR (?f=étape, ?s=série)
 
-# LES TRENTE FICHES (lot 2 de l'Enquête, 30/09/2026 : la progression en SIX livrets, décidée le
-# 30/09 — splat-relecture\monde-3-progression-six-livrets.md). Trois livrets de base (fiches 10
-# à 24, pour tous, dans l'ordre) et trois livrets « Deuxième tour » (fiches 10d à 24d : un second
-# tour, plus dur, qui allume les MÊMES étoiles). Une fiche = une étape de la carte des mondes :
-# E10 … E24 sont EXACTEMENT les adresses de ENQ_FICHES (outils/splat_univers.html) et de la page
-# courte des QR (splat/enquete/livret/index.html, ENQ) ; E10D … E24D celles de ENQ_TOUR2 dans la
-# page courte. Un test épingle les trois listes l'une sur l'autre.
-# Les graines sont TRIÉES (script de tri hors dépôt, qui rejoue generate() de l'outil) : chaque
-# carte a la sorte prévue à sa place, aucun nombre à sous-entendu, jamais deux taches égales,
-# écarts de 2 au moins, plus petite tache ≥ 5 sur les fiches à deux taches (10-12, 15-17) et ≥ 8
-# sur les grands nombres (14d, 19d, 23d), ≥ le sixième de la plus grande, aucun mot réduit à son
-# initiale dans les cases (sauf 24d, où c'est impossible), totaux différents dans une fiche,
-# aucune carte en double sur les 30 fiches ni égale à un exemple. « modele=1 » : le schéma vide
-# sous la carte 1 (lot 1) — fiches 13, 18, 22, 11d, 17d, 18d, celles qui apportent un dessin.
+# LES VINGT-CINQ FICHES (lot « fabrication des cinq livrets », 03/10/2026 : la progression v3,
+# splat-relecture\monde-3-progression-six-livrets.md, section « progression v3, CINQ livrets »).
+# Trois livrets de base (fiches 10 à 24, pour tous, dans l'ordre) et deux livrets « Deuxième
+# tour » (11d 12d 13d 16d 17d, puis 18d 20d 22d 19d 24d : un second tour, plus dur, qui allume
+# les MÊMES étoiles). Les fiches 10d, 14d, 15d, 21d et 23d n'existent plus (le 03/10 au soir :
+# cinq livrets au lieu de six). Une fiche = une étape de la carte des mondes : E10 … E24 sont
+# EXACTEMENT les adresses de ENQ_FICHES (outils/splat_univers.html) et de la page courte des QR
+# (splat/enquete/livret/index.html, ENQ) ; E11D … E24D celles de ENQ_TOUR2 dans la page courte.
+# Un test épingle les trois listes l'une sur l'autre.
+# Les graines sont TRIÉES au script (le moteur de l'outil rejoué, hors dépôt) : chaque carte a sa
+# variante imposée (dessin + sens des indices), aucun nombre à sous-entendu, jamais deux taches
+# égales, écarts de 2 au moins, plus petite tache ≥ 5 sur les fiches à deux taches (10, 11, 15,
+# 16, 22), ≥ 4 sur 17 et 18, ≥ le sixième de la plus grande, aucun mot réduit à son initiale dans
+# la correction, aucune carte en double sur les 100 cartes, les cartes de rappel du dos et les
+# exemples ; aucune fiche ne reprend la carte 1 d'une autre. « modele=1 » : le schéma vide sous
+# la carte 1 (fiches 12, 13, 17, 18, 22, 11d, 17d, 18d, celles qui apportent un dessin).
 # Si une graine change : la reporter dans la carte des mondes ET la page courte, relancer --qr.
 ENQ_COMMUN = "&cards=4&unknown=question"
 NOTE = "Reformule l’indice avant de dessiner ton schéma."
 E10 = "mode=C&clues=SENTENCE&splats=2&mul=0&div=0&add=1&sub=0&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&seed=51"
 E11 = "mode=C&clues=SENTENCE&splats=2&mul=0&div=0&add=0&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&seed=74"
-E12 = "mode=C&clues=SENTENCE&splats=2&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&seed=1195"
-E13 = "mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&modele=1&seed=1184"
-E14 = "mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=30&totalMax=60&seed=19446"
-E15 = "mode=C&clues=SENTENCE&splats=2&mul=1&div=0&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=45"
-E16 = "mode=C&clues=SENTENCE&splats=2&mul=0&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=76"
-E17 = "mode=C&clues=SENTENCE&splats=2&mul=1&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&vocab=1&seed=76172"
-E18 = "mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=1&div=1&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&modele=1&seed=105403"
-E19 = "mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=30&totalMax=70&seed=94050"
-E20 = "mode=C&clues=SENTENCE&splats=2&repeat=3&mul=0&div=0&add=1&sub=1&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=172"
-E21 = "mode=C&clues=SENTENCE&splats=2&repeat=3&mul=1&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&vocab=1&seed=26174"
-E22 = "mode=C&clues=SENTENCE&splats=2&noTotal=1&mul=1&div=0&add=1&sub=0&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60&modele=1&seed=3"
+E12 = "mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&modele=1&seed=12287"
+E13 = "mode=C&clues=SENTENCE&splats=3&structure=CHAINE&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&modele=1&seed=30140"
+E14 = "mode=C&clues=SENTENCE&splats=3&structure=HASARD&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=3&totalMin=20&totalMax=50&seed=6176290"
+E15 = "mode=C&clues=SENTENCE&splats=2&mul=1&div=0&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&vocab=1&seed=1800"
+E16 = "mode=C&clues=SENTENCE&splats=2&mul=0&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&vocab=1&seed=871"
+E17 = "mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=1&div=1&add=0&sub=0&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&modele=1&seed=3485"
+E18 = "mode=C&clues=SENTENCE&splats=3&structure=CHAINE&ordre=DESSIN&mul=1&div=1&add=0&sub=0&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&modele=1&seed=962412"
+E19 = "mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=1&div=1&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=3&totalMin=20&totalMax=60&seed=8562429"
+E20 = "mode=C&clues=SENTENCE&splats=2&repeat=3&mul=0&div=0&add=1&sub=1&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=14"
+E21 = "mode=C&clues=SENTENCE&splats=2&repeat=3&mul=1&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=3&totalMin=20&totalMax=60&vocab=1&seed=21800"
+E22 = "mode=C&clues=SENTENCE&splats=2&noTotal=1&mul=1&div=0&add=1&sub=0&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60&modele=1&seed=159"
 E23 = "mode=C&clues=SENTENCE&splats=2&noTotal=1&mul=0&div=1&add=0&sub=1&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60&seed=9"
-E24 = "mode=C&clues=SENTENCE&splats=2&repeat=3&noTotal=1&mul=1&div=1&add=1&sub=1&deltaMax=20&visibleMin=1&visibleMax=3&totalMin=30&totalMax=70&seed=16220"
-E10D = "mode=C&clues=SENTENCE&splats=3&structure=CHAINE&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&seed=1184"
+E24 = "mode=C&clues=SENTENCE&splats=2&repeat=3&noTotal=1&mul=1&div=1&add=1&sub=1&deltaMax=20&visibleMin=1&visibleMax=3&totalMin=30&totalMax=70&seed=30091"
 E11D = "mode=C&clues=SENTENCE&splats=3&structure=COMPLETE&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&modele=1&seed=361"
-E12D = "mode=C&clues=SENTENCE&splats=3&structure=HASARD&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=2888"
+E12D = "mode=C&clues=SENTENCE&splats=3&structure=HASARD&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=646916"
 E13D = "mode=C&clues=SENTENCE&splats=3&structure=HASARD&ordre=DESORDRE&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=2621"
-E14D = "mode=C&clues=SENTENCE&splats=3&structure=HASARD&ordre=DESORDRE&mul=0&div=0&add=1&sub=1&deltaMax=25&visibleMin=1&visibleMax=3&totalMin=60&totalMax=120&seed=5294"
-E15D = "mode=C&clues=SENTENCE&splats=3&structure=CHAINE&ordre=DESSIN&mul=1&div=1&add=0&sub=0&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=24224"
-E16D = "mode=C&clues=SENTENCE&splats=3&structure=CHAINE&ordre=DESSIN&mul=1&div=1&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=9236"
-E17D = "mode=C&clues=SENTENCE&splats=3&structure=COMPLETE&ordre=DESSIN&mul=1&div=1&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&modele=1&seed=7680"
+E16D = "mode=C&clues=SENTENCE&splats=3&structure=CHAINE&ordre=DESSIN&mul=1&div=1&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=8707765"
+E17D = "mode=C&clues=SENTENCE&splats=3&structure=COMPLETE&ordre=DESSIN&mul=1&div=1&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&modele=1&seed=69705"
 E18D = "mode=C&clues=SENTENCE&splats=2&compose=1&mul=1&div=1&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&modele=1&seed=151"
 E19D = "mode=C&clues=SENTENCE&splats=3&structure=HASARD&ordre=DESORDRE&mul=1&div=1&add=1&sub=1&deltaMax=25&visibleMin=1&visibleMax=3&totalMin=60&totalMax=120&seed=1558913"
-E20D = "mode=C&clues=SENTENCE&splats=3&structure=HASARD&reunies=1&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=30&totalMax=80&seed=68"
-E21D = "mode=C&clues=SENTENCE&splats=3&structure=HASARD&repeat=3&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=30&totalMax=80&seed=10273"
+E20D = "mode=C&clues=SENTENCE&splats=3&structure=HASARD&reunies=1&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=30&totalMax=80&seed=1169"
 E22D = "mode=C&clues=SYMBOL&splats=3&structure=HASARD&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=132600"
-E23D = "mode=C&clues=SENTENCE&splats=3&structure=HASARD&ordre=DESORDRE&mul=1&div=1&add=1&sub=1&deltaMax=40&visibleMin=0&visibleMax=0&totalMin=100&totalMax=200&seed=31987"
-E24D = "mode=C&clues=SENTENCE&splats=3&structure=UNITE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=30&totalMax=90&seed=3572"
+E24D = "mode=C&clues=SENTENCE&splats=3&structure=UNITE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=30&totalMax=90&seed=17782"
 
 def fiche(n, t, q, resume, note=False, code=None):
     """code : ce que porte le QR de la fiche (« 12 », ou « 12d » pour un livret Deuxième tour)."""
     return dict(n=n, t=t, q=q, resume=resume, note=note, code=code or str(n))
 
 # Les fiches de chaque livret : n = numéro de fiche = numéro d'étape de la carte des mondes ;
-# le titre imprimé est « Fiche {code} — {t} ». Les titres sont ceux du document du 30/09.
+# le titre imprimé est « Fiche {code} — {t} ». Les titres sont ceux du document du 03/10.
 FICHES_ADD = [
     fiche(10, "De plus que", E10, "Deux taches, un indice&nbsp;: de plus."),
     fiche(11, "De moins que", E11, "Le même jeu, à l'envers.", note=True),
-    fiche(12, "Plus ou moins", E12, "L'indice change&nbsp;: lis-le bien."),
-    fiche(13, "Trois taches, une référence", E13, "Deux indices, depuis la plus petite."),
-    fiche(14, "Le défi : une référence, jetons visibles", E14, "Et des jetons visibles à retirer."),
+    fiche(12, "Trois taches, une référence", E12, "Deux indices, depuis la plus petite."),
+    fiche(13, "Trois taches en chaîne", E13, "La tache commune est au milieu."),
+    fiche(14, "Référence ou chaîne ?", E14, "À toi de reconnaître le dessin."),
 ]
 FICHES_MUL = [
-    fiche(15, "Fois plus", E15, "L'indice multiplie."),
-    fiche(16, "Fois moins", E16, "L'indice partage.", note=True),
-    fiche(17, "Fois plus ou fois moins : le double, la moitié", E17, "Le double, le triple, la moitié…"),
-    fiche(18, "Trois taches : deux rapports, puis un écart et un rapport", E18, "Fois plus… et de plus, ensemble."),
-    fiche(19, "Le défi : toutes opérations, jetons visibles", E19, "Tout mélangé, et des jetons visibles."),
+    fiche(15, "Fois plus", E15, "L'indice multiplie&nbsp;: le double, le triple."),
+    fiche(16, "Fois moins", E16, "L'indice partage&nbsp;: la moitié, le quart.", note=True),
+    fiche(17, "Une référence, deux rapports", E17, "Deux rapports, depuis la plus petite."),
+    fiche(18, "Chaîne, deux rapports", E18, "Fois plus, puis encore fois plus."),
+    fiche(19, "Une référence, un écart et un rapport", E19, "De plus et fois plus, ensemble."),
 ]
 FICHES_REB = [
     fiche(20, "Des taches répétées", E20, "Même couleur, même nombre."),
@@ -133,153 +134,160 @@ FICHES_REB = [
     fiche(23, "Sans total, à retourner", E23, "Deux indices à retourner.", note=True),
     fiche(24, "Le défi qui rebondit", E24, "Répétées ou sans total."),
 ]
-FICHES_ADD_T2 = [
-    fiche(10, "Trois taches en chaîne", E10D, "La tache commune est au milieu.", code="10d"),
+# Deuxième tour 1 — les trois dessins ; Deuxième tour 2 — vers le Système (le grand défi, puis
+# l'unité commune en dernier : c'est la dernière fiche du monde 3).
+FICHES_T2_DESSINS = [
     fiche(11, "Je complète", E11D, "La tache commune est la plus grande.", code="11d"),
     fiche(12, "Référence, chaîne ou je complète ?", E12D, "À toi de reconnaître le dessin.", code="12d"),
     fiche(13, "Tout dans le désordre", E13D, "Par où commencer&nbsp;?", code="13d"),
-    fiche(14, "Le grand défi additif", E14D, "Grands nombres, jetons visibles.", code="14d"),
-]
-FICHES_MUL_T2 = [
-    fiche(15, "Chaîne, deux rapports", E15D, "Fois plus, puis encore fois plus.", code="15d"),
     fiche(16, "Chaîne, un écart et un rapport", E16D, "De plus, puis fois plus.", code="16d"),
     fiche(17, "Je complète, avec un rapport", E17D, "Compléter, puis remplacer.", code="17d"),
-    fiche(18, "Indices composés", E18D, "«&nbsp;3 de plus que le double&nbsp;».", code="18d"),
-    fiche(19, "Le grand défi", E19D, "Tout mélangé, grands nombres.", code="19d"),
 ]
-FICHES_REB_T2 = [
+FICHES_T2_SYSTEME = [
+    fiche(18, "Indices composés", E18D, "«&nbsp;3 de plus que le double&nbsp;».", code="18d"),
     fiche(20, "Deux taches réunies", E20D, "Autant que deux autres réunies.", code="20d"),
-    fiche(21, "Répétées à trois couleurs", E21D, "Trois couleurs, des taches répétées.", code="21d"),
     fiche(22, "Les indices en symboles", E22D, "L'indice s'écrit en symboles.", code="22d"),
-    fiche(23, "Très grands nombres", E23D, "Des totaux jusqu'à 200.", code="23d"),
+    fiche(19, "Le grand défi", E19D, "Tout mélangé, grands nombres.", code="19d"),
     fiche(24, "Unité commune : les petites parts", E24D, "Je coupe en petites parts.", code="24d"),
 ]
 
 # Les séries infinies du dos : pas de graine, huit cartes nouvelles à chaque ouverture, en mode
 # élève sans étape (rien n'est enregistré). Leurs QR passent par la page courte (?s=N). Les
 # réglages sont ceux des fiches, sans graine (ni « modele », qui ne sert qu'à l'impression).
-# Numéros 16 à 34 depuis le lot 2 (30/09/2026) : 1 à 15 étaient ceux des anciens livrets (Le
-# défi compris) ; la page courte les sert encore, pour un livret déjà imprimé.
+# 1 à 15 : les anciens livrets ; 16 à 34 : les six livrets du 30/09 ; 35 et 36 : les cinq
+# livrets du 03/10 (la chaîne additive, les deux rapports). La page courte les sert TOUTES, pour
+# un livret déjà imprimé ; seules celles des cinq livrets sont listées ici.
 SERIES = {
     16: "mode=C&clues=SENTENCE&splats=2&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50",
     17: "mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50",
-    18: "mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=30&totalMax=60",
     19: "mode=C&clues=SENTENCE&splats=2&mul=1&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&vocab=1",
     20: "mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=1&div=1&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
-    21: "mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=30&totalMax=70",
     22: "mode=C&clues=SENTENCE&splats=2&repeat=3&mul=1&div=1&add=1&sub=1&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
     23: "mode=C&clues=SENTENCE&splats=2&noTotal=1&mul=1&div=1&add=1&sub=1&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60",
     24: "mode=C&clues=SENTENCE&splats=2&repeat=3&noTotal=1&mul=1&div=1&add=1&sub=1&deltaMax=20&visibleMin=1&visibleMax=3&totalMin=30&totalMax=70",
     25: "mode=C&clues=SENTENCE&splats=3&structure=HASARD&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
     26: "mode=C&clues=SENTENCE&splats=3&structure=HASARD&ordre=DESORDRE&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
-    27: "mode=C&clues=SENTENCE&splats=3&structure=HASARD&ordre=DESORDRE&mul=0&div=0&add=1&sub=1&deltaMax=25&visibleMin=1&visibleMax=3&totalMin=60&totalMax=120",
     28: "mode=C&clues=SENTENCE&splats=3&structure=CHAINE&ordre=DESSIN&mul=1&div=1&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
     29: "mode=C&clues=SENTENCE&splats=3&structure=COMPLETE&ordre=DESSIN&mul=1&div=1&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
     30: "mode=C&clues=SENTENCE&splats=2&compose=1&mul=1&div=1&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
-    31: "mode=C&clues=SENTENCE&splats=3&structure=HASARD&ordre=DESORDRE&mul=1&div=1&add=1&sub=1&deltaMax=25&visibleMin=1&visibleMax=3&totalMin=60&totalMax=120",
     32: "mode=C&clues=SENTENCE&splats=3&structure=HASARD&reunies=1&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=30&totalMax=80",
     33: "mode=C&clues=SYMBOL&splats=3&structure=HASARD&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
     34: "mode=C&clues=SENTENCE&splats=3&structure=UNITE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=30&totalMax=90",
+    # (03/10/2026) la chaîne additive (fiches 13 et 14) ; les deux rapports, référence ou chaîne
+    # (fiches 17 et 18 : sans « de plus / de moins », « au hasard » ne tire jamais « je complète »)
+    35: "mode=C&clues=SENTENCE&splats=3&structure=CHAINE&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50",
+    36: "mode=C&clues=SENTENCE&splats=3&structure=HASARD&ordre=DESSIN&mul=1&div=1&add=0&sub=0&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
 }
 SERIE_CARTES = 8
 
 # LES EXEMPLES (couverture et page 2) : la page 2 de chaque livret montre le dessin de SA
 # première fiche (décision du 30/09), sur une carte qui n'est dans aucun livret :
-#   base 1 (graine 32)     : deux taches, « de plus » — noire 9, verte 17, total 26 ;
-#   base 2 (graine 83)     : deux taches, « 3 fois plus » — noire 7, bleue 21, total 28 ;
-#   base 3 (graine 82)     : taches répétées, une noire et deux bleues « 7 de plus » — 8, 15, 15
-#                            (l'exemple de « L'enquête rebondit » depuis le 25/09) ;
-#   tour 2, 1 (graine 4642) : chaîne, deux « de plus » — 5, 9, 12, total 26 (l'ancien exemple du
-#                            livret 1 : il change de livret, pas de rôle) ;
-#   tour 2, 2 (graine 128029) : chaîne, « de plus » puis « 3 fois plus » — 5, 7, 21, total 33 ;
-#   tour 2, 3 (graine 43)  : deux taches réunies — 8, 19 et 27, total 54.
+#   base 1 (graine 32)        : deux taches, « de plus » — noire 9, verte 17, total 26 ;
+#   base 2 (graine 83)        : deux taches, « 3 fois plus » — noire 7, bleue 21, total 28 ;
+#   base 3 (graine 82)        : taches répétées, une noire et deux bleues « 7 de plus » — 8, 15, 15 ;
+#   2e tour 1 (graine 20)     : je complète, deux « de plus » vers la plus grande (03/10/2026 :
+#                               la fiche 11d ouvre le livret) — total 21 ;
+#   2e tour 2 (graine 14)     : indice composé à deux taches, « 3 de plus que le double »
+#                               (03/10/2026 : la fiche 18d ouvre le livret) — total 21.
 # render.py écrit les textes à partir de la carte rendue, et refuse un exemple qui serait une
 # carte d'un livret (total et valeurs, quel que soit l'ordre des taches).
 EX_ADD2 = "mode=C&clues=SENTENCE&splats=2&mul=0&div=0&add=1&sub=0&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&cards=1&unknown=question&seed=32"
 EX_MUL2 = "mode=C&clues=SENTENCE&splats=2&mul=1&div=0&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&cards=1&unknown=question&seed=83"
 EX_REB = "mode=C&splats=2&repeat=2&clues=SENTENCE&mul=0&div=0&add=1&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=15&totalMax=45&cards=1&unknown=question&seed=82"
-EX_ADD = "mode=C&splats=3&structure=CHAIN&clues=SENTENCE&mul=0&div=0&add=1&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=15&totalMax=40&cards=1&unknown=question&seed=4642"
-EX_MUL = "mode=C&splats=3&structure=CHAIN&clues=SENTENCE&mul=1&div=0&add=1&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=15&totalMax=40&cards=1&unknown=question&seed=128029"
-EX_REU = "mode=C&clues=SENTENCE&splats=3&structure=HASARD&reunies=1&mul=1&div=0&add=1&sub=0&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=30&totalMax=80&cards=1&unknown=question&seed=43"
-# L'unité commune résolue, au dos du livret Deuxième tour 3 (à la place de « Pour se souvenir ») :
+EX_COMPLETE = "mode=C&clues=SENTENCE&splats=3&structure=COMPLETE&ordre=DESSIN&mul=0&div=0&add=1&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=40&cards=1&unknown=question&seed=20"
+EX_COMPOSE = "mode=C&clues=SENTENCE&splats=2&compose=1&mul=1&div=0&add=1&sub=0&deltaMax=8&visibleMin=0&visibleMax=0&totalMin=20&totalMax=40&cards=1&unknown=question&seed=14"
+# L'unité commune résolue, au dos du Deuxième tour 2 (à la place des cartes de rappel) :
 # « la rouge a 2 fois plus que la verte, 3 fois plus que la noire » — noire 10, verte 15, rouge 30,
 # total 55 ; les petites parts : 11 parts = 55, 1 part = 5. Une carte de réglages 24d qui n'est pas dans la fiche.
 EX_UNITE = "mode=C&clues=SENTENCE&splats=3&structure=UNITE&mul=1&div=0&add=0&sub=0&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=30&totalMax=60&cards=1&unknown=question&seed=59"
 
+# LES CARTES DE RAPPEL DU DOS (décidées le 02/10, gardées le 03/10) : deux cartes du livret
+# d'avant, à la place de « Pour se souvenir » — énoncé dans le livret de l'élève, correction
+# dans les livrets corrigés, à la même place. Partie 1 : deux cartes du monde 2 (SPLAT!
+# classique, un paquet puis deux paquets) ; Partie 3 : l'exemple sans total résolu reste, et
+# une carte ; Deuxième tour 2 : l'unité commune résolue, sans carte de rappel. Graines vérifiées
+# au script : aucune n'est une carte des 25 fiches ni un exemple.
+R_MONDE2 = "mode=N&equation=AX_PLUS_C_EQ_B&tasksMin=2&tasksMax=5&visibleMin=1&visibleMax=2&seed=16"
+R2A = "mode=C&clues=SENTENCE&splats=2&mul=0&div=0&add=0&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&seed=7"
+R2B = "mode=C&clues=SENTENCE&splats=3&structure=CHAINE&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&seed=4"
+R4A = "mode=C&clues=SENTENCE&splats=2&repeat=3&mul=0&div=0&add=1&sub=1&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=4"
+R4B = "mode=C&clues=SENTENCE&splats=2&noTotal=1&mul=0&div=1&add=0&sub=1&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60&seed=10"
+def rappel(q, n=1, titre=None, corrige=False):
+    """n cartes de rappel tirées d'une même adresse (les n premières cartes de la série) ;
+    corrige : la carte est TOUJOURS corrigée (l'exemple corrigé de la partie 3), même dans le
+    livret de l'élève ; titre : écrit au-dessus de la carte."""
+    return dict(q=q, n=n, titre=titre, corrige=corrige)
+
 # La page « exemple résolu » : 2e page du livret (lue avant la première fiche).
 PLACE_EXEMPLE = 2
 
-T2 = " · Deuxième tour"   # (sur-titre sans « Mon livret · » : sinon il passe sur deux lignes)
-DOS_BASE1 = dict(mini=["noire"], ecart="4",
-    reformule="Une barre par tache, le <b>mot</b> dans chaque case&nbsp;: tout s'écrit avec la plus petite. Quand l'indice dit <q>de moins que</q>, retourne-le&nbsp;: <q>la noire a 4 jetons de moins que la bleue</q>, c'est <q>la bleue a 4 jetons de plus que la noire</q>.")
-DOS_BASE2 = dict(mini=["noire", "noire", "noire"], ecart=None,
-    reformule="Une barre par tache, le <b>mot</b> dans chaque case&nbsp;: tout s'écrit avec la plus petite. Quand l'indice dit <q>fois moins</q>, retourne-le&nbsp;: <q>la noire a 3 fois moins de jetons que la bleue</q>, c'est <q>la bleue a 3 fois plus de jetons que la noire</q>.")
-DOS_REB = dict(mini=["noire", "noire", "noire"], ecart=None,
-    taches="Chaque tache a sa couleur, écrite dessus. Les taches de <b>même couleur</b> cachent <b>le même nombre de jetons</b>&nbsp;; deux couleurs, jamais le même&nbsp;: c'est l'<b>indice</b> qui les relie.",
-    reformule="<b>Sans total</b>, deux indices parlent des mêmes taches&nbsp;: <q>la bleue a 3 fois plus de jetons que la noire</q> et <q>la bleue a 18 jetons de plus que la noire</q>. La bleue, c'est trois noires&nbsp;: ce qui dépasse la noire, deux noires, vaut 18&nbsp;; une noire vaut 9.")
+T2 = "Monde 3 · Deuxième tour"   # (sur-titre sans « Mon livret · » : sinon il passe sur deux lignes)
+# L'exemple corrigé du dos de la partie 3 (03/10/2026, demande de Gwenaël : « un exemple corrigé »,
+# à la place du texte « sans total » du 25/09) : une carte sans total que l'outil corrige, à côté de
+# la carte à faire — noire 12, verte 36 : « 3 fois plus » et « 24 de plus ». Elle n'est dans aucune
+# fiche et n'est aucun exemple (vérifié au script).
+R3_EXEMPLE = "mode=C&clues=SENTENCE&splats=2&noTotal=1&mul=1&div=0&add=1&sub=0&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60&seed=21"
+# … et à côté, la MÊME sorte de carte avec d'autres nombres, à faire (demande de Gwenaël, 03/10 :
+# « la même chose, avec des données différentes ») — orange 11, verte 33 : « 3 fois plus » et
+# « 22 de plus ». Elle remplace la carte « écart + fois moins » de la partie 2.
+R3_A_TOI = "mode=C&clues=SENTENCE&splats=2&noTotal=1&mul=1&div=0&add=1&sub=0&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60&seed=4"
 LIVRETS = {
     "additif": dict(
         sortie="livret_splat_enquete_additif", fiches=FICHES_ADD,
         exemple=dict(query=EX_ADD2, op="DEUX"),
         couv=dict(sur="Mon livret · Monde 3 · Partie 1", titre="Enquête",
                   accroche="Un indice relie les taches…<br>à toi de mener l'enquête&nbsp;!"),
-        dos=dict(DOS_BASE1,
-            series=[("Deux taches", "De plus ou de moins, comme les fiches&nbsp;10 à&nbsp;12.", 16),
-                    ("Trois taches", "Une référence, comme la fiche&nbsp;13.", 17),
-                    ("Jetons visibles", "Comme la fiche&nbsp;14.", 18)],
+        dos=dict(
+            series=[("Deux taches", "De plus ou de moins, comme les fiches&nbsp;10 et&nbsp;11.", 16),
+                    ("Une référence", "Trois taches, comme la fiche&nbsp;12.", 17),
+                    ("En chaîne", "Trois taches, comme les fiches&nbsp;13 et&nbsp;14.", 35)],
+            rappel=dict(dit="Deux cartes du monde&nbsp;2&nbsp;: trouve ce que cache chaque tache.", cartes=[rappel(R_MONDE2, 2)]),
             suite="Continue avec la partie&nbsp;2, <b>Grande enquête</b>&nbsp;: fois plus, fois moins&nbsp;!")),
     "multiplicatif": dict(
         sortie="livret_splat_enquete_multiplicatif", fiches=FICHES_MUL,
         exemple=dict(query=EX_MUL2, op="DEUX"),
         couv=dict(sur="Mon livret · Monde 3 · Partie 2", titre="Grande enquête",
-                  accroche="Fois plus, fois moins…<br>et les quatre opérations&nbsp;!"),
-        dos=dict(DOS_BASE2,
-            series=[("Fois plus, fois moins", "Deux taches, comme les fiches&nbsp;15 à&nbsp;17.", 19),
-                    ("Trois taches", "Écarts et rapports, comme la fiche&nbsp;18.", 20),
-                    ("Jetons visibles", "Toutes les opérations, comme la fiche&nbsp;19.", 21)],
+                  accroche="Fois plus, fois moins…<br>et les deux ensemble&nbsp;!"),
+        dos=dict(
+            series=[("Fois plus, fois moins", "Deux taches, comme les fiches&nbsp;15 et&nbsp;16.", 19),
+                    ("Deux rapports", "Trois taches, comme les fiches&nbsp;17 et&nbsp;18.", 36),
+                    ("Écart et rapport", "Trois taches, comme la fiche&nbsp;19.", 20)],
+            rappel=dict(dit="Deux cartes de la partie&nbsp;1&nbsp;: dessine le schéma, puis trouve ce que cache chaque tache.", cartes=[rappel(R2A), rappel(R2B)]),
             suite="Continue avec la partie&nbsp;3, <b>L'enquête rebondit</b>&nbsp;: des taches de même couleur, puis sans total&nbsp;!")),
     "rebondit": dict(
         sortie="livret_splat_enquete_rebondit", fiches=FICHES_REB,
         exemple=dict(query=EX_REB, op="REPET"),
         couv=dict(sur="Mon livret · Monde 3 · Partie 3", titre="L'enquête rebondit",
                   accroche="Des taches de même couleur…<br>puis des enquêtes sans total&nbsp;!"),
-        dos=dict(DOS_REB,
+        dos=dict(
             series=[("Taches répétées", "Même couleur, même nombre, comme les fiches&nbsp;20 et&nbsp;21.", 22),
                     ("Sans total", "Deux indices, pas de total, comme les fiches&nbsp;22 et&nbsp;23.", 23),
                     ("Le défi qui rebondit", "Tout mélangé, comme la fiche&nbsp;24.", 24)],
+            rappel=dict(dit="Une carte sans total corrigée, puis la même sorte de carte à résoudre.",
+                        cartes=[rappel(R3_EXEMPLE, titre="Un exemple corrigé", corrige=True), rappel(R3_A_TOI, titre="À toi&nbsp;!")]),
             suite="Continue avec le monde&nbsp;4, <b>SPLAT! Système</b>&nbsp;: plusieurs plateaux, un total pour chacun… compare-les&nbsp;!")),
-    # Les livrets « Deuxième tour » (lot 2, 30/09/2026) : un second tour plus dur, les MÊMES étoiles
-    # (?f=Nd → parcours=enqN). Nom choisi le 30/09 (« Le défi » est le nom des fiches 14, 19 et 24).
-    "additif_tour2": dict(
-        sortie="livret_splat_enquete_additif_tour2", fiches=FICHES_ADD_T2,
-        exemple=dict(query=EX_ADD, op="ADD"),
-        couv=dict(sur="Monde 3 · Partie 1" + T2, titre="Enquête",
-                  accroche="Trois dessins, des phrases en désordre…<br>à toi de mener l'enquête&nbsp;!"),
-        dos=dict(DOS_BASE1,
-            reformule="<b>Par où commencer&nbsp;?</b> Cherche la tache qui revient dans les deux indices&nbsp;: c'est elle qui relie tout. Puis écris chaque tache avec la plus petite. Si la tache commune est la plus grande, je complète&nbsp;: <q>la noire + 4 = la bleue</q>.",
-            series=[("Quel dessin&nbsp;?", "Référence, chaîne ou je complète, comme la fiche&nbsp;12d.", 25),
+    # Les livrets « Deuxième tour » (03/10/2026 : deux au lieu de trois) : un second tour plus dur,
+    # les MÊMES étoiles (?f=Nd → parcours=enqN).
+    "tour2_dessins": dict(
+        sortie="livret_splat_enquete_tour2_dessins", fiches=FICHES_T2_DESSINS,
+        exemple=dict(query=EX_COMPLETE, op="COMPLETE"),
+        couv=dict(sur=T2 + " · 1", titre="Les trois dessins",
+                  accroche="Référence, chaîne, je complète…<br>à toi de reconnaître le dessin&nbsp;!"),
+        dos=dict(
+            series=[("Quel dessin&nbsp;?", "Comme les fiches&nbsp;11d et&nbsp;12d.", 25),
                     ("Dans le désordre", "Comme la fiche&nbsp;13d.", 26),
-                    ("Le grand défi additif", "Grands nombres, jetons visibles, comme la fiche&nbsp;14d.", 27)],
-            suite="Continue avec la partie&nbsp;2 du deuxième tour&nbsp;: chaînes, je complète, indices composés&nbsp;!")),
-    "multiplicatif_tour2": dict(
-        sortie="livret_splat_enquete_multiplicatif_tour2", fiches=FICHES_MUL_T2,
-        exemple=dict(query=EX_MUL, op="MUL"),
-        couv=dict(sur="Monde 3 · Partie 2" + T2, titre="Grande enquête",
-                  accroche="Chaînes, je complète, indices composés…<br>mène l'enquête&nbsp;!"),
-        dos=dict(DOS_BASE2, mini=["noire", "noire"],
-            reformule="<b>Je complète</b> quand la tache commune est la plus grande&nbsp;: <q>la bleue a 5 jetons de plus que l'orange</q> s'écrit <q>orange + 5 = bleue</q>. Si la bleue, c'est aussi deux noires, alors <q>orange + 5 = deux noires</q>.",
-            series=[("Chaînes", "Écarts et rapports, comme les fiches&nbsp;15d et&nbsp;16d.", 28),
-                    ("Je complète", "Avec un rapport, comme la fiche&nbsp;17d.", 29),
-                    ("Indices composés", "Comme la fiche&nbsp;18d.", 30),
-                    ("Le grand défi", "Tout mélangé, comme la fiche&nbsp;19d.", 31)],
-            suite="Continue avec la partie&nbsp;3 du deuxième tour&nbsp;: taches réunies, symboles, unité commune&nbsp;!")),
-    "rebondit_tour2": dict(
-        sortie="livret_splat_enquete_rebondit_tour2", fiches=FICHES_REB_T2,
-        exemple=dict(query=EX_REU, op="REUNIES"),
-        couv=dict(sur="Monde 3 · Partie 3" + T2, titre="L'enquête rebondit",
-                  accroche="Taches réunies, symboles…<br>et l'unité commune&nbsp;!"),
-        dos=dict(DOS_BASE2, unite=EX_UNITE,
-            series=[("Taches réunies", "Comme la fiche&nbsp;20d.", 32),
+                    ("Chaîne et rapport", "Comme la fiche&nbsp;16d.", 28),
+                    ("Je complète", "Avec un rapport, comme la fiche&nbsp;17d.", 29)],
+            rappel=dict(dit="Deux cartes de la partie&nbsp;3&nbsp;: dessine le schéma, puis trouve ce que cache chaque tache.", cartes=[rappel(R4A), rappel(R4B)]),
+            suite="Continue avec le livret <b>Vers le Système</b>&nbsp;: indices composés, symboles, unité commune&nbsp;!")),
+    "tour2_systeme": dict(
+        sortie="livret_splat_enquete_tour2_systeme", fiches=FICHES_T2_SYSTEME,
+        exemple=dict(query=EX_COMPOSE, op="COMPOSE"),
+        couv=dict(sur=T2 + " · 2", titre="Vers le Système",
+                  accroche="Indices composés, symboles…<br>et l'unité commune&nbsp;!"),
+        dos=dict(unite=EX_UNITE,
+            series=[("Indices composés", "Comme la fiche&nbsp;18d.", 30),
+                    ("Taches réunies", "Comme la fiche&nbsp;20d.", 32),
                     ("En symboles", "Comme la fiche&nbsp;22d.", 33),
                     ("Unité commune", "Les petites parts, comme la fiche&nbsp;24d.", 34)],
             suite="Continue avec le monde&nbsp;4, <b>SPLAT! Système</b>&nbsp;: plusieurs plateaux, un total pour chacun&nbsp;!")),
@@ -332,6 +340,22 @@ JS_X = r"""async () => {
     return f.length ? 'ok' : non;
   } catch (e) { return non; }
 }"""
+
+# Les cartes de rappel du dos (03/10/2026) : les dessins de l'outil, 4 par page, tels quels (les
+# variables de couleur résolues, comme pour l'exemple), et la clé de chaque carte.
+JS_RAPPEL = r"""(n) => {
+  printSheet();
+  const svgs = [...document.querySelectorAll('.printArea .pCard svg')].slice(0, n);
+  if (svgs.length !== n) return {erreur: svgs.length + ' cartes au lieu de ' + n};
+  const cs = getComputedStyle(document.body), inconnues = new Set();
+  const resout = s => s.replace(/var\((--[\w-]+)\)/g, (m, k) => { const v = cs.getPropertyValue(k).trim(); if (!v) inconnues.add(k); return v || m; });
+  const out = svgs.map(sv => { const c = sv.cloneNode(true); c.removeAttribute('style'); c.removeAttribute('width'); c.removeAttribute('height');
+    c.setAttribute('xmlns', 'http://www.w3.org/2000/svg'); return resout(c.outerHTML); });
+  if (inconnues.size) return {erreur: 'variables de couleur inconnues : ' + [...inconnues].join(', ')};
+  const cache = c => (c._rel ? c._rel.hiddenValues : c.hidden).slice().sort((a, b) => a - b);
+  return {svgs: out, cles: cards.slice(0, n).map(c => [c.total, JSON.stringify(cache(c))])};
+}"""
+# (les cartes de rappel du dos prennent la lettre de l'outil, SplatLettres, par commun.css — 𝑥 compris)
 
 QR_ELEVE = "J'ai terminé<br>ma fiche,<em>je rejoue en ligne</em>"
 QR_PROF = "Je rejoue<br>ces cartes<em>en ligne</em>"
@@ -571,53 +595,52 @@ JS_DOS = """(d) => {
   box.innerHTML = d.niveaux.map(n =>
      '<div class="niv"><img src="' + n[2] + '" alt=""><span class="n">' + n[0] +
      '</span><span class="d">' + n[1] + '</span></div>').join('');
-  const u = document.querySelector('.suite img'); if (u) u.setAttribute('src', d.univers);
+  const qrU = document.querySelector('.suite img'); if (qrU) qrU.setAttribute('src', d.univers);
   const s = document.querySelector('.suite p.t'); if (!s) return 'pas de texte « suite »'; s.innerHTML = d.suite;
-  const r = document.querySelector('.lex .pr'); if (!r) return 'pas de ligne « référence »'; r.innerHTML = d.reformule;
-  // « L'enquête rebondit » (25/09/2026) : la ligne des deux taches parle des taches de même couleur
-  if (d.taches) {
-    const t = document.querySelectorAll('.lex li')[1]; const sp = t && t.querySelectorAll(':scope > span')[1];
-    if (!sp) return 'pas de ligne « taches »'; sp.innerHTML = d.taches;
-  }
-  const m = document.querySelectorAll('.mini-sch .r')[1]; if (!m) return 'pas de mini-schéma';
-  m.innerHTML = '<em>bleue</em>' + d.mini.map(t => '<span class="q">' + t + '</span>').join('') + (d.ecart ? '<span class="v">' + d.ecart + '</span>' : '');
-  // le mini-schéma est un vrai schéma en barres : chaque « ? » a exactement la largeur de la
-  // case de la tache de référence, les cases d'une barre se touchent, et rien ne déborde
-  const qs = [...document.querySelectorAll('.mini-sch .q')].map(e => e.getBoundingClientRect());
-  if (qs.length !== 1 + d.mini.length) return 'mini-schéma : ' + qs.length + ' cases « ? »';
-  if (qs.some(b => Math.abs(b.width - qs[0].width) > 0.3)) return 'mini-schéma : les cases « ? » n’ont pas toutes la même largeur';
-  if (Math.abs(qs[1].left - qs[0].left) > 0.3) return 'mini-schéma : les deux barres ne partent pas du même bord';
-  const cases = [...m.querySelectorAll('span')].map(e => e.getBoundingClientRect());
-  // le bloc « Pour se souvenir » est agrandi d'un coup (zoom, lot 2 de la relecture du monde 1) :
-  // les mesures sont faites dans l'espace agrandi, le chevauchement de 1,3 px des bordures aussi
-  const Z = parseFloat(getComputedStyle(document.querySelector('.lex ul')).zoom) || 1;
-  for (let i = 1; i < cases.length; i++)
-    if (Math.abs(cases[i].left - (cases[i - 1].right - 1.3 * Z)) > 0.3 * Z) return 'mini-schéma : des cases de la barre ne se touchent pas';
-  const ic = m.closest('.ic').getBoundingClientRect();
-  if (cases[cases.length - 1].right > ic.right + 0.3) return 'mini-schéma : il déborde de sa colonne';
-  // (« Mes fiches — je colorie l'étoile » a quitté le dos : relecture du monde 1, lot 2, 25/09/2026)
-  // Deuxième tour 3 (lot 2, 30/09/2026) : l'unité commune résolue remplace « Pour se souvenir » —
-  // la carte et les trois dessins de l'outil (① ② ③), puis la réponse ; le tout doit tenir
-  // au-dessus des crédits, sans rien réduire d'autre.
-  if (d.unite) {
-    const lex = document.querySelector('.lex');
-    const u = d.unite;
-    lex.className = 'lex unite';
-    document.body.classList.add('dos-unite'); // les QR un peu plus petits : la place va à l'exemple
-    // (lot « pages 2 », 30/09/2026) les schémas successifs du pas à pas de la projection (G3) :
-    // la situation, je coupe en petites parts, le schéma regroupé, je partage, les taches — en
-    // deux colonnes lues de haut en bas, la carte en tête, la réponse à la fin
-    const N = '①②③④⑤⑥⑦⑧';
-    const et = (e, i) => '<div class="u-et"><h3>' + N[i] + ' ' + e.titre + '</h3><svg viewBox="50 612 1500 ' + e.h + '" xmlns="http://www.w3.org/2000/svg">' + e.svg + '</svg></div>';
-    lex.innerHTML = '<span class="chip">Un exemple résolu&nbsp;: les petites parts</span>' +
-      '<div class="u-corps"><div class="u-carte"><svg viewBox="100 10 1460 830" xmlns="http://www.w3.org/2000/svg">' + u.carte + '</svg><p>' + u.indices + '</p></div>' +
-      u.etapes.map(et).join('') + '<p class="u-fin"><b>' + N[u.etapes.length] + ' Je vérifie.</b> ' + u.fin + '</p></div>';
-    lex.style.flexShrink = '0';
-    const b = lex.querySelector('.u-corps').getBoundingClientRect(), c = document.querySelector('.credits').getBoundingClientRect();
-    // les crédits sont poussés par l'exemple : la vraie limite est le bas de la page
+  const lex = document.querySelector('.lex'); if (!lex) return 'pas de bloc « lex »';
+  if (!!d.rappel === !!d.unite) return 'le dos a des cartes de rappel OU l’unité commune résolue';
+  // les crédits sont poussés par le bas du dos : la vraie limite est le bas de la page
+  const deborde = () => {
+    const c = document.querySelector('.credits').getBoundingClientRect();
     const pied = document.querySelector('.pied').getBoundingClientRect().bottom, page = document.documentElement.clientHeight;
-    if (b.bottom > c.top - 4 || pied > page + 0.5) return 'l’unité commune déborde : ' + Math.round(Math.max(b.bottom - c.top + 4, pied - page)) + ' px de trop';
+    const bas = Math.max(...[...lex.children].map(e => e.getBoundingClientRect().bottom));
+    return Math.max(bas - c.top + 4, pied - page);
+  };
+  // (03/10/2026, décidé le 02/10) les cartes de rappel du livret d'avant, à la place de « Pour se
+  // souvenir » : dessinées par l'outil (4 par page), l'énoncé pour l'élève, la correction dans
+  // les livrets corrigés ; à la partie 3, un exemple corrigé (toujours corrigé) à gauche de la carte.
+  if (d.rappel) {
+    const R = d.rappel;
+    lex.className = 'lex rappel';
+    document.body.classList.add('dos-serre');
+    const titres = R.cartes.some(c => c.titre);
+    lex.innerHTML = '<span class="chip">Pour ne pas oublier</span><p class="r-dit">' + R.dit + '</p>' +
+      '<div class="r-grille">' + R.cartes.map(c => '<div class="r-bloc">' + (titres ? '<h3>' + (c.titre || '') + '</h3>' : '') +
+      '<div class="r-carte">' + c.svg + '</div></div>').join('') + '</div>';
+    if (lex.querySelectorAll('.r-carte svg').length !== R.cartes.length) return 'cartes de rappel : ' + lex.querySelectorAll('.r-carte svg').length + ' dessins';
+    // trop haut pour la page : les cartes rétrécissent ensemble, de 3 % en 3 %, 70 % au moins
+    const blocs = [...lex.querySelectorAll('.r-carte')];
+    const l0 = blocs.map(e => e.getBoundingClientRect().width);
+    for (let p = 97; deborde() > 0 && p >= 70; p -= 3) blocs.forEach((e, i) => { e.style.width = (l0[i] * p / 100) + 'px'; });
+    if (deborde() > 0) return 'les cartes de rappel débordent : ' + Math.round(deborde()) + ' px de trop';
+    const r = blocs.map(e => e.getBoundingClientRect());
+    if (r.some(x => x.right > lex.getBoundingClientRect().right + 0.5 || x.left < lex.getBoundingClientRect().left - 0.5)) return 'les cartes de rappel débordent sur le côté';
+    return 'ok';
   }
+  // Deuxième tour 2 (03/10/2026 ; Deuxième tour 3 avant) : l'unité commune résolue — la carte et
+  // les schémas successifs du pas à pas de la projection (G3) : la situation, je coupe en petites
+  // parts, le schéma regroupé, je partage, les taches — en deux colonnes lues de haut en bas, la
+  // carte en tête, la réponse à la fin ; le tout doit tenir au-dessus des crédits.
+  const u = d.unite;
+  lex.className = 'lex unite';
+  document.body.classList.add('dos-unite'); // les QR un peu plus petits : la place va à l'exemple
+  const N = '①②③④⑤⑥⑦⑧';
+  const et = (e, i) => '<div class="u-et"><h3>' + N[i] + ' ' + e.titre + '</h3><svg viewBox="50 612 1500 ' + e.h + '" xmlns="http://www.w3.org/2000/svg">' + e.svg + '</svg></div>';
+  lex.innerHTML = '<span class="chip">Un exemple résolu&nbsp;: les petites parts</span>' +
+    '<div class="u-corps"><div class="u-carte"><svg viewBox="100 10 1460 830" xmlns="http://www.w3.org/2000/svg">' + u.carte + '</svg><p>' + u.indices + '</p></div>' +
+    u.etapes.map(et).join('') + '<p class="u-fin"><b>' + N[u.etapes.length] + ' Je vérifie.</b> ' + u.fin + '</p></div>';
+  lex.style.flexShrink = '0';
+  if (deborde() > 0) return 'l’unité commune déborde : ' + Math.round(deborde()) + ' px de trop';
   return 'ok';
 }"""
 
@@ -651,6 +674,10 @@ def textes_exemple(ex, op):
         return textes_exemple_deux(ex)
     if op == "REUNIES":
         return textes_exemple_reunies(ex)
+    if op == "COMPLETE":
+        return textes_exemple_complete(ex)
+    if op == "COMPOSE":
+        return textes_exemple_compose(ex)
     n = len(ex["valeurs"])
     if ex["visibles"] or n != 3 or len(ex["relations"]) != 2:
         raise SystemExit("l'exemple doit être une carte à trois taches, sans jeton visible")
@@ -721,6 +748,8 @@ def _verifs(ex):
         elif r["op"] == "MUL": out.append(f"{r['k']} × {s_} = {t_}")
         elif r["op"] == "DIV": out.append(f"{r['k']} × {t_} = {s_}")
         elif r["op"] == "SUM": out.append(f"{s_} + {v[r['source2']]} = {t_}")
+        elif r["op"] == "COMPOSE":
+            out.append(f"{r['k']} × {s_} {'+' if r['d'] > 0 else '−'} {abs(r['d'])} = {t_}")
     return out
 
 
@@ -787,6 +816,61 @@ def textes_exemple_reunies(ex):
     return dict(intro=intro, enquete=_enquete(T, 3, ex["indices"], True), legendes=[barres, ligne, resous, fin])
 
 
+def textes_exemple_complete(ex):
+    """Deuxième tour 1 (03/10/2026) : trois taches, deux indices « de plus » vers la plus grande —
+    le dessin de la fiche 11d, « je complète ». La tache commune est la PLUS GRANDE : chaque autre
+    barre, complétée de son écart, fait une barre de la grande. Écrits à partir de la carte rendue
+    et de son modèle de correction (mode « complete »)."""
+    v, mots, T, B = ex["valeurs"], ex["mots"], ex["total"], ex["barres"]
+    if ex["visibles"] or len(v) != 3 or len(ex["relations"]) != 2 or B["mode"] != "complete":
+        raise SystemExit("l'exemple du Deuxième tour 1 : je complète, trois taches, sans jeton visible")
+    if any(r["op"] != "ADD" for r in ex["relations"]) or len({r["target"] for r in ex["relations"]}) != 1:
+        raise SystemExit("l'exemple du Deuxième tour 1 : deux indices « de plus » vers la même tache")
+    g = B["unite"]                                   # la plus grande, la tache commune
+    gi = mots.index(g)
+    assert gi == ex["relations"][0]["target"] and v[gi] == max(v) and T == sum(v)
+    ps = [r for r in B["rows"] if r["tache"] != g]   # les deux barres complétées
+    k = {r["tache"]: [c["nombre"] for c in r["cells"] if "nombre" in c][0] for r in ps}
+    a, b = ps[0]["tache"], ps[1]["tache"]
+    gs = g if g == "orange" else g + "s"
+    barres = (f"La tache commune est la plus grande, la tache {g}&nbsp;: je complète les deux autres. "
+              f"{_art(a).capitalize()} et {k[a]} font une {g}&nbsp;; {_art(b)} et {k[b]} aussi.")
+    ligne = f"Complétées, les barres font trois {gs}&nbsp;: {T} + {k[a]} + {k[b]} = {B['accolade']}."
+    resous = f"D'abord la tache {g}&nbsp;; puis j'enlève ce que j'ai ajouté aux deux autres."
+    ordre = sorted(range(3), key=lambda i: v[i])
+    fin = ("L" + ", ".join(f"la tache {mots[i]} cache <b>{v[i]}</b> jetons" for i in ordre)[1:] + ".|||"
+           + "&nbsp;✓&nbsp;; ".join(_verifs(ex)) + "&nbsp;✓")
+    intro = (f"Sur cette carte, il y a {T} jetons au total, tous cachés sous trois taches&nbsp;: "
+             f"la tache {mots[ordre[0]]}, la tache {mots[ordre[1]]} et la tache {g}. Deux indices les relient."
+             "\n      <span>Pour mener l'enquête, on dessine un <b>schéma en barres</b>&nbsp;: une "
+             f"barre par tache. Ici, les deux indices parlent de la tache {g}, "
+             "la plus grande&nbsp;: on complète les deux autres. La page&nbsp;2 mène cette enquête pas à pas, jusqu'à la réponse.</span>")
+    return dict(intro=intro, enquete=_enquete(T, 3, ex["indices"], True), legendes=[barres, ligne, resous, fin])
+
+
+def textes_exemple_compose(ex):
+    """Deuxième tour 2 (03/10/2026) : deux taches, un indice composé « 3 de plus que le double »
+    — le dessin de la fiche 18d. Écrits à partir de la carte rendue."""
+    v, mots, ref, T, B = ex["valeurs"], ex["mots"], ex["ref"], ex["total"], ex["barres"]
+    if ex["visibles"] or len(v) != 2 or len(ex["relations"]) != 1:
+        raise SystemExit("l'exemple du Deuxième tour 2 : deux taches, un indice, sans jeton visible")
+    r = ex["relations"][0]
+    if r["op"] != "COMPOSE" or r["d"] <= 0 or r["source"] != ref or B["mode"] != "reference":
+        raise SystemExit("l'exemple du Deuxième tour 2 : « … de plus que le double », depuis la plus petite")
+    u, g = mots[ref], mots[1 - ref]
+    assert B["unite"] == u and T == sum(v)
+    r0, r1 = B["rows"]
+    mot_k = {2: "le double", 3: "le triple"}[r["k"]]
+    barres = (f"Tout s'écrit avec la plus petite, la tache {u}. {_art(g).capitalize()} a {r['d']} jetons de plus que "
+              f"{mot_k} de la {u}&nbsp;: {_cases(r1['cells'], u)}.")
+    ligne = f"Les barres bout à bout sous le total&nbsp;: {_cases(r0['cells'] + r1['cells'], u)} font {T}."
+    resous = f"D'abord la tache {u}, l'unité&nbsp;; puis la tache {g} à partir d'elle."
+    fin = (f"La tache {u} cache <b>{v[ref]}</b> jetons, la tache {g} <b>{v[1 - ref]}</b>.|||"
+           + "&nbsp;✓&nbsp;; ".join(_verifs(ex)) + "&nbsp;✓")
+    intro = _intro(T, 2, f"la tache {u} et la tache {g}", "Un seul indice les relie, avec deux gestes&nbsp;: le double, puis de plus.", u)
+    return dict(intro=intro, enquete=_enquete(T, 2, ex["indices"], False), legendes=[barres, ligne, resous, fin])
+
+
 def textes_exemple_repet(ex):
     """« L'enquête rebondit » (25/09/2026) : trois taches, deux couleurs, la tache de référence
     seule et l'autre couleur deux fois, un indice « de plus ». Écrits à partir de la carte rendue
@@ -834,21 +918,53 @@ def donnees_page2(ex, textes):
                 fin=dict(reponse=reponse.strip(), verif=verif))
 
 def fabrique_qr():
-    """(Re)fabrique tous les QR codes. À relancer si une graine ou une série change."""
+    """(Re)fabrique tous les QR codes. À relancer si une graine ou une série change. Les QR qui ne
+    servent plus à aucun livret (fiches et séries retirées) sont effacés du dossier."""
     import qrcode
     from qrcode.constants import ERROR_CORRECT_M
     dossier = ICI / "qr"
     dossier.mkdir(parents=True, exist_ok=True)
+    faits = set()
     def ecrire(url, nom):
         q = qrcode.QRCode(error_correction=ERROR_CORRECT_M, box_size=12, border=2)
         q.add_data(url); q.make(fit=True)
         q.make_image(fill_color="black", back_color="white").save(dossier / nom)
+        faits.add(nom)
     for niv in LIVRETS.values():
         for f in niv["fiches"]:
             ecrire(lien_fiche(f["code"]), f"fiche{f['code']}.png")
-    for s in SERIES:
-        ecrire(lien_serie(s), f"serie-{s}.png")
+        for _, _, s in niv["dos"]["series"]:
+            ecrire(lien_serie(s), f"serie-{s}.png")
     ecrire(LIEN_UNIVERS, "univers.png")
+    for vieux in dossier.glob("*.png"):
+        if vieux.name not in faits:
+            vieux.unlink()
+
+def vignettes():
+    """Les vignettes de la page des livrets (03/10/2026) : la page 1 de chaque livret de l'élève à
+    120 dpi (993 × 1404), en PNG et en WebP plus légère, dans assets/img/thumbnails/splat/
+    (livret-splat-enquete-<nom>.png/.webp). PyMuPDF s'il est là, sinon pdftoppm."""
+    import shutil, subprocess, tempfile
+    from PIL import Image
+    dossier = RACINE / "assets" / "img" / "thumbnails" / "splat"
+    for niv in LIVRETS.values():
+        pdf = RACINE / "outils" / f"{niv['sortie']}.pdf"
+        png = dossier / (niv["sortie"].replace("_", "-") + ".png")
+        try:
+            import fitz
+            with fitz.open(str(pdf)) as d:
+                d[0].get_pixmap(dpi=120).save(str(png))
+        except ImportError:
+            if not shutil.which("pdftoppm"):
+                raise SystemExit("vignettes : il faut PyMuPDF (pip install pymupdf) ou pdftoppm")
+            with tempfile.TemporaryDirectory() as t:
+                subprocess.run(["pdftoppm", "-r", "120", "-png", "-f", "1", "-l", "1", "-singlefile", str(pdf), f"{t}/v"], check=True)
+                shutil.move(f"{t}/v.png", png)
+        im = Image.open(png)
+        if im.size != (993, 1404):
+            raise SystemExit(f"vignette {png.name} : {im.size} au lieu de 993 × 1404")
+        im.convert("RGB").save(png.with_suffix(".webp"), "WEBP", quality=82, method=6)
+        print(f"   vignette : {png.relative_to(RACINE)} (+ .webp)")
 
 def serveur():
     class Silencieux(http.server.SimpleHTTPRequestHandler):
@@ -968,12 +1084,31 @@ async def rendre(niv, tmp, corr=None):
                          fin="L" + ", ".join(f"la tache {mots[i]} cache <b>{v[i]}</b> jetons" for i in ordre)[1:]
                              + ".<br>" + "&nbsp;✓&nbsp;; ".join(_verifs(ux)) + "&nbsp;✓")
             AUTRES_EXEMPLES["unite commune"] = ux["cle"]
+        rappel, cles_rappel = None, []
+        if d.get("rappel"):
+            # les cartes de rappel (03/10/2026) : la série de chaque adresse dans l'outil, 4 par page,
+            # énoncé ou correction comme les fiches de CE livret (« ? » ou lettre) ; on garde les
+            # dessins des n premières cases
+            svgs = []
+            for rp in d["rappel"]["cartes"]:
+                q = rp["q"] + f"&cards={rp['n']}&layout=4&unknown=" + ("letter" if corr and corr["lettre"] else "question")
+                q += f"&print={'correction' if corr or rp['corrige'] else 'statement'}"
+                pg = await page_outil(q)
+                r = await pg.evaluate(JS_RAPPEL, rp["n"])
+                await pg.close()
+                if "erreur" in r:
+                    raise SystemExit(f"cartes de rappel du livret « {niv['sortie']} » : {r['erreur']}")
+                svgs += [dict(svg=x, titre=rp["titre"]) for x in r["svgs"]]
+                if rp["corrige"]:
+                    AUTRES_EXEMPLES["exemple corrigé du dos"] = r["cles"][0]
+                else:
+                    cles_rappel += r["cles"]
+            rappel = dict(dit=d["rappel"]["dit"], cartes=svgs)
         dos = dict(niveaux=[[nom, desc, f"{qrweb}/serie-{s}.png"] for nom, desc, s in d["series"]], unite=unite,
-                   univers=f"{qrweb}/univers.png", suite=d["suite"], reformule=d["reformule"],
-                   mini=d["mini"], ecart=d["ecart"], taches=d.get("taches"))
+                   rappel=rappel, univers=f"{qrweb}/univers.png", suite=d["suite"])
         await pdf_html(f"{base}{BASE_WEB}/dos.html", tmp / "dos.pdf", JS_DOS, dos)
         await nav.close()
-    return ex["cle"], cles
+    return ex["cle"], cles, cles_rappel
 
 def ordre_des_pages(niv, tmp):
     fiches = [tmp / f"fiche{i}.pdf" for i in range(len(niv["fiches"]))]
@@ -1030,19 +1165,22 @@ CARTES_JSON = ICI / "cartes.json"
 # passage, relus par controle_global
 AUTRES_EXEMPLES = {}
 
-def ecrire_cartes(nom, cle_ex, reference):
-    """cartes.json : pour chaque livret, l'exemple et les 20 cartes des fiches, en « total +
-    valeurs triées » (la même clé que le contrôle ci-dessus)."""
+def ecrire_cartes(nom, cle_ex, reference, rappel=()):
+    """cartes.json : pour chaque livret, l'exemple, les 20 cartes des fiches et les cartes de
+    rappel du dos (03/10/2026), en « total + valeurs triées » (la même clé que le contrôle
+    ci-dessus)."""
     tout = json.loads(CARTES_JSON.read_text(encoding="utf-8")) if CARTES_JSON.exists() else {}
-    # (lot 2, 30/09/2026) les livrets qui n'existent plus (« Le défi ») quittent le fichier
+    # les livrets qui n'existent plus (« Le défi » le 30/09, les trois « Deuxième tour » le 03/10)
+    # quittent le fichier
     tout = {k: v for k, v in tout.items() if k in LIVRETS}
     tout[nom] = {"exemple": [cle_ex[0], json.loads(cle_ex[1])],
+                 "rappel": [[c[0], json.loads(c[1])] for c in rappel],
                  "fiches": {t: [[c[0], json.loads(c[1])] for c in v] for t, v in reference.items()}}
     # une carte par ligne : le fichier se relit à l'œil
     j = lambda x: json.dumps(x, ensure_ascii=False, separators=(", ", ": "))
     lignes = ["{"]
     for i, (n, c) in enumerate(sorted(tout.items())):
-        lignes.append(f' {j(n)}: {{"exemple": {j(c["exemple"])}, "fiches": {{')
+        lignes.append(f' {j(n)}: {{"exemple": {j(c["exemple"])}, "rappel": {j(c.get("rappel", []))}, "fiches": {{')
         fs = list(c["fiches"].items())
         for k, (t, v) in enumerate(fs):
             lignes.append(f'  {j(t)}: {j(v)}' + ("," if k < len(fs) - 1 else ""))
@@ -1051,11 +1189,11 @@ def ecrire_cartes(nom, cle_ex, reference):
     CARTES_JSON.write_text("\n".join(lignes) + "\n", encoding="utf-8")
 
 def controle_global():
-    """Sur les SIX livrets de cartes.json (lot 2, 30/09/2026) : aucune carte ne revient, ni dans
-    un autre livret ni dans une autre fiche (total et valeurs, quel que soit l'ordre des taches) —
+    """Sur les CINQ livrets de cartes.json (03/10/2026) : aucune carte ne revient, ni dans un
+    autre livret ni dans une autre fiche (total et valeurs, quel que soit l'ordre des taches) —
     un élève qui fait le deuxième tour ne retrouve aucune carte déjà faite ; dans une fiche,
-    jamais deux fois le même total ; aucun exemple (page 2, unité commune du dos) n'est une carte,
-    et deux livrets n'ont jamais le même exemple."""
+    jamais deux fois le même total ; aucun exemple (page 2, unité commune du dos) ni aucune carte
+    de rappel du dos n'est une carte des fiches, et deux livrets n'ont jamais le même exemple."""
     tout = json.loads(CARTES_JSON.read_text(encoding="utf-8"))
     if not set(tout) <= set(LIVRETS):
         raise SystemExit(f"cartes.json : des livrets inconnus ({sorted(set(tout) - set(LIVRETS))})")
@@ -1070,6 +1208,10 @@ def controle_global():
     for k, lieux in ou.items():
         if len(lieux) > 1:
             raise SystemExit(f"une carte revient : {k} dans {lieux}")
+    for nom, c in tout.items():
+        for k in c.get("rappel", []):
+            if cle(k) in ou:
+                raise SystemExit(f"une carte de rappel du dos ({nom}) est une carte des fiches : {k} ({ou[cle(k)]})")
     exs = [cle(c["exemple"]) for c in tout.values()] + [cle([t, json.loads(v)]) for t, v in AUTRES_EXEMPLES.values()]
     for k in exs:
         if k in ou:
@@ -1093,18 +1235,20 @@ def main():
         versions = CORRECTIONS
     if "--qr" in sys.argv:
         fabrique_qr(); print("QR codes régénérés.")
+    if "--vignettes" in sys.argv:
+        vignettes(); return
     srv = serveur()
     try:
         exemples = {}
         for nom in demandes:
             niv = LIVRETS[nom]
             print(f"— livret « {nom} »")
-            reference = None
+            reference = rappel_ref = None
             for corr in versions:
                 sortie = niv["sortie"] + (corr["suffixe"] if corr else "")
                 with tempfile.TemporaryDirectory() as d:
                     tmp = Path(d)
-                    cle_ex, cles = asyncio.run(rendre(niv, tmp, corr))
+                    cle_ex, cles, cles_rappel = asyncio.run(rendre(niv, tmp, corr))
                     assemble(niv, tmp, sortie)
                 # les cartes ne bougent pas d'une version à l'autre (« ? », correction, lettre)
                 vues = {t.replace(" — Correction", ""): v for t, v in cles.items()}
@@ -1112,6 +1256,11 @@ def main():
                     reference = vues
                 elif vues != reference:
                     raise SystemExit(f"{sortie} : les cartes diffèrent du livret de l'élève")
+                # les cartes de rappel du dos non plus (03/10/2026)
+                if rappel_ref is None:
+                    rappel_ref = cles_rappel
+                elif cles_rappel != rappel_ref:
+                    raise SystemExit(f"{sortie} : les cartes de rappel diffèrent du livret de l'élève")
                 exemples[nom] = cle_ex
                 for s in ("", "_a_plier"):
                     compresse(RACINE / "outils" / f"{sortie}{s}.pdf")
@@ -1126,7 +1275,7 @@ def main():
             # tests/livret-splat-enquete.test.mjs relit — le contrôle ne dépend plus du seul
             # fait d'avoir lancé ce script jusqu'au bout (l'exemple du livret 2 du lot E4,
             # 7, 9, 18, total 34, était la carte 4 de la fiche 18 et était passé)
-            ecrire_cartes(nom, cle_ex, reference)
+            ecrire_cartes(nom, cle_ex, reference, rappel_ref or [])
         controle_global()
     finally:
         srv.shutdown()

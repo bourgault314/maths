@@ -22,7 +22,7 @@ const prepa = univers.match(/const PREPA_PHRASE=[^\n]*\n/)[0];
 const ctx = vm.createContext({ encodeURIComponent, decodeURIComponent, escape, unescape, atob, btoa });
 vm.runInContext(
   bloc("const PS=", "const PROF =") + prepa + bloc("const NOTES_MONDE", "const main=document") +
-  ";globalThis.X={MONDES,NOTES_MONDE,NOTES_PROF,LIVRET_TEXTE};" +
+  ";globalThis.X={MONDES,NOTES_MONDE,NOTES_PROF,LIVRET_TEXTE,ENQ_TOUR2};" +
   "Object.assign(globalThis,{idEtape,eqSeuleLiens,eqBarreLiens,plagesFiches,mondeProfHtml,sommaireProfHtml,intentionHtml,ressourcesHtml,actionsHtml,cartesHtml,PREPA_PHRASE});",
   ctx, { filename: "splat_univers.html" }
 );
@@ -73,6 +73,8 @@ test("aucun lien ne change : exactement les liens des données, plus la page des
       (e.parties || []).forEach((p) => { attendu.add(p.jp); attendu.add(p.f); });
       (ctx.eqSeuleLiens(e) || ctx.eqBarreLiens(m, e) || []).forEach((u) => attendu.add(u));
     });
+    /* (03/10/2026) le deuxième tour du monde 3 : dix lignes sous la partie 3, mêmes boutons */
+    if (m.idp === "enq") ctx.X.ENQ_TOUR2.forEach((f) => { for (const k of ["jp", "j", "f", "c"]) attendu.add(f[k]); });
     const vus = new Set(hrefs(html(mi)));
     assert.deepEqual([...vus].sort(), [...attendu].sort(), m.nom);
     total += vus.size;

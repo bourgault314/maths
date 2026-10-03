@@ -21,7 +21,7 @@ const moduleEtapes = lire("assets/js/splat-etapes.js");
 const univers = lire("outils/splat_univers.html");
 const livrets = lire("outils/livrets_splat.html");
 const URL_CARTE = "/outils/splat_univers.html";
-const VERSION = "20260930-2";
+const VERSION = "20261003-1";
 
 // ---------- le module, exécuté avec une fausse fenêtre ----------
 function stockage(initial = {}) {
