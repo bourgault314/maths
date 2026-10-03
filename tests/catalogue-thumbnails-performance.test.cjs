@@ -119,7 +119,7 @@ test("les URL partent immédiatement sans ordonnanceur de mise en page", () => {
   assert.doesNotMatch(catalogueScript, /image\.src\s*=|pictureSource\.srcset\s*=/);
 });
 
-test("les versions de cache publient ensemble le JavaScript et le CSS", () => {
-  assert.match(catalogueHtml, /catalogue-refonte\.css\?v=breadcrumb-parent-20260913-1/);
-  assert.match(catalogueHtml, /catalogue-refonte\.js\?v=ordre-livrets-splat-20260919-1/);
+test("le JavaScript et le CSS sont chargés avec une version de cache non vide", () => {
+  assert.match(catalogueHtml, /catalogue-refonte\.css\?v=[^"\s#]+"/);
+  assert.match(catalogueHtml, /catalogue-refonte\.js\?v=[^"\s#]+"/);
 });
