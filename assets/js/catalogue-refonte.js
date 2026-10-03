@@ -731,7 +731,18 @@
   }
 
   function domainResourceCount(domainId) {
-    return resourceDisplayCount(published.filter((resource) => resource.domains.includes(domainId)));
+    // Compter les contenus atteignables depuis les portes visibles du domaine,
+    // pas les simples étiquettes transversales d'une ressource rangée ailleurs.
+    const notions = catalogue.notions.filter((notion) => (
+      notion.domain === domainId && !notion.parent && !notionDesign[notion.id]?.hiddenFromBrowse
+    ));
+    const collections = (catalogue.collections || []).filter((collection) => (
+      collection.domain === domainId && !collection.parent && !collection.hiddenFromBrowse
+    ));
+    return resourceCount([
+      ...notions.flatMap((notion) => notionResources(notion.id, domainId)),
+      ...collections.flatMap((collection) => collectionResources(collection.id))
+    ]);
   }
 
   function resourceClassification(resource) {
@@ -822,33 +833,58 @@
     return items.slice().sort((a, b) => compareCards(cardSortKey(a), cardSortKey(b)));
   }
 
-  function resourceDisplayCount(resources) {
-    return displayItems(resources).length;
+  // Une ressource publiée = un chemin du catalogue, même si sa carte regroupe
+  // plusieurs variantes. Les dossiers ne s'ajoutent jamais à leurs contenus.
+  function uniqueResources(resources) {
+    return [...new Map(resources.map((resource) => [resource.path, resource])).values()];
+  }
+
+  function resourceCount(resources) {
+    return uniqueResources(resources).length;
+  }
+
+  function resourceCountLabel(count) {
+    return `${count} ressource${count > 1 ? "s" : ""}`;
+  }
+
+  function resourcesFromCards(items, collections = []) {
+    return uniqueResources([
+      ...items.flatMap((item) => item.variants || [item.resource]),
+      ...collections.flatMap((collection) => collectionResources(collection.id))
+    ]);
   }
 
   function childNotions(parentId) {
     return catalogue.notions.filter((notion) => notion.parent === parentId);
   }
 
-  function notionBranchIds(notionId) {
-    const ids = [notionId];
-    childNotions(notionId).forEach((child) => ids.push(...notionBranchIds(child.id)));
-    return ids;
+  function notionResources(notionId, domainId = "") {
+    const children = childNotions(notionId);
+    if (children.length) {
+      return uniqueResources(children.flatMap((child) => notionResources(child.id, domainId)));
+    }
+    const resources = published.filter((resource) => (
+      (!domainId || resource.domains.includes(domainId)) &&
+      resourceBelongsToNotion(resource, notionId) &&
+      !resourceBelongsToCollapsedCollection(resource)
+    ));
+    return resourcesFromCards(displayItems(resources), matchingNotionCollections(notionId));
   }
 
   function notionResourceCount(notionId, domainId = "") {
-    const branchIds = notionBranchIds(notionId);
-    const resources = published.filter((resource) => (
-      (!domainId || resource.domains.includes(domainId)) &&
-      branchIds.some((id) => resourceBelongsToNotion(resource, id)) &&
-      !resourceBelongsToCollapsedCollection(resource)
-    ));
-    const collectionIds = new Set(branchIds.flatMap((id) => matchingNotionCollections(id).map((collection) => collection.id)));
-    return resourceDisplayCount(resources) + collectionIds.size;
+    return resourceCount(notionResources(notionId, domainId));
+  }
+
+  function collectionResources(collectionId) {
+    const children = (catalogue.collections || []).filter((collection) => collection.parent === collectionId);
+    if (children.length) {
+      return uniqueResources(children.flatMap((child) => collectionResources(child.id)));
+    }
+    return resourcesFromCards(displayItems(published.filter((resource) => resourceCollections(resource).includes(collectionId))));
   }
 
   function collectionResourceCount(collectionId) {
-    return resourceDisplayCount(published.filter((resource) => resourceCollections(resource).includes(collectionId)));
+    return resourceCount(collectionResources(collectionId));
   }
 
   function resourceFacets(resource) {
@@ -1064,7 +1100,7 @@
           <h3>${escapeHtml(collection.title)}</h3>
         </span>
         <p>${escapeHtml(design.description || (operationEntry ? "Choisir l’outil adapté à cet usage." : "Retrouver cette collection d’outils."))}</p>
-        <span class="notion-count">${count} ${operationEntry ? "outil" : "ressource"}${count > 1 ? "s" : ""}</span>
+        <span class="notion-count">${resourceCountLabel(count)}</span>
       </a>`;
     });
     notionGrid.innerHTML = [...notionCards, ...collectionCards].join("") || `<p class="empty-state">Aucun thème ne correspond à cette recherche.</p>`;
@@ -1226,7 +1262,7 @@
     const design = collectionDesign[collection.id] || {};
     return `<a class="resource-card resource-card-visual collection-resource-card" data-collection-card="${escapeHtml(collection.id)}" href="${escapeHtml(collectionHref(collection))}" style="${domainStyle(collection.domain)}">
       <span class="resource-thumbnail collection-resource-icon">${icon(design.icon)}</span>
-      <span class="resource-copy"><h3>${escapeHtml(collection.title)}</h3><span class="resource-description">${escapeHtml(design.description || "Retrouver cette collection d’outils.")}</span></span>
+      <span class="resource-copy"><h3>${escapeHtml(collection.title)}</h3><span class="resource-description">${escapeHtml(design.description || "Retrouver cette collection d’outils.")}</span><span class="resource-meta">${resourceCountLabel(collectionResourceCount(collection.id))}</span></span>
       <span class="resource-arrow" aria-hidden="true">→</span>
     </a>`;
   }
@@ -1259,6 +1295,7 @@
               <h3>${escapeHtml(collection.title)}</h3>
             </span>
             <p>${escapeHtml(design.description || (operationEntry ? "Choisir l’outil adapté à cet usage." : "Retrouver cette collection d’outils."))}</p>
+            <span class="notion-count">${resourceCountLabel(collectionResourceCount(collection.id))}</span>
           </a>`;
         }).join("")}</div>
       </section>`
@@ -1275,12 +1312,12 @@
     const groupedResources = resourceGroups.map((group) => {
       const groupItems = sortCards(grouped.get(group.id));
       const groupCollections = groupedCollections.get(group.id).slice().sort(compareCards);
-      const groupCount = groupItems.length + groupCollections.length;
+      const groupCount = resourceCount(resourcesFromCards(groupItems, groupCollections));
       if (!groupCount) return "";
       return `<section class="resource-group" aria-labelledby="resource-group-${escapeHtml(group.id)}">
         <div class="resource-group-heading">
           <h2 id="resource-group-${escapeHtml(group.id)}">${escapeHtml(group.label)}</h2>
-          <span>${groupCount} entrée${groupCount > 1 ? "s" : ""}</span>
+          <span>${resourceCountLabel(groupCount)}</span>
         </div>
         <div class="resource-group-grid">${groupCollections.map(collectionResourceCard).join("")}${groupItems.map((item) => item.family
           ? resourceFamilyCard(item.family, item.variants)
@@ -1337,7 +1374,7 @@
       pageTitle.textContent = "Explorer les outils";
       heroLead.textContent = "Recherchez un outil ou choisissez un domaine.";
       title.textContent = "Choisissez un domaine";
-      summary.textContent = "";
+      summary.textContent = resourceCountLabel(resourceCount(published));
       return;
     }
 
@@ -1348,7 +1385,7 @@
         pageTitle.textContent = selectedNotion.title;
         heroLead.textContent = notionDesign[selectedNotion.id]?.description || "Choisissez une notion.";
         title.textContent = "Choisissez une notion";
-        summary.textContent = `${notionChildren.length} notion${notionChildren.length > 1 ? "s" : ""}`;
+        summary.textContent = `${resourceCountLabel(notionResourceCount(selectedNotion.id, state.domain))} · ${notionChildren.length} notion${notionChildren.length > 1 ? "s" : ""}`;
         return;
       }
 
@@ -1358,7 +1395,7 @@
         pageTitle.textContent = selectedCollection.title;
         heroLead.textContent = collectionDesign[selectedCollection.id]?.description || "Choisissez une famille d’outils.";
         title.textContent = `Choisissez un outil — ${selectedCollection.title}`;
-        summary.textContent = `${children.length} famille${children.length > 1 ? "s" : ""}`;
+        summary.textContent = `${resourceCountLabel(collectionResourceCount(selectedCollection.id))} · ${children.length} famille${children.length > 1 ? "s" : ""}`;
         return;
       }
 
@@ -1389,11 +1426,9 @@
       }
 
       summary.textContent = [
+        resourceCountLabel(resourceCount(resourcesFromCards(displayItems(resources), directCollections))),
         directCollections.length
           ? `${directCollections.length} ${selectedNotion && onlyOperationEntries ? `opération${directCollections.length > 1 ? "s" : ""}` : selectedNotion ? `famille${directCollections.length > 1 ? "s" : ""}` : `accès direct${directCollections.length > 1 ? "s" : ""}`}`
-          : "",
-        resourceDisplayCount(resources)
-          ? `${resourceDisplayCount(resources)} entrée${resourceDisplayCount(resources) > 1 ? "s" : ""}`
           : ""
       ].filter(Boolean).join(" · ");
       return;
@@ -1413,6 +1448,7 @@
         : (selectedDomain ? "Choisissez une notion ou une collection" : "Les notions"));
     summary.textContent = notions.length || collections.length
       ? [
+        selectedDomain ? resourceCountLabel(domainResourceCount(selectedDomain.id)) : "",
         notions.length ? `${notions.length} notion${notions.length > 1 ? "s" : ""}` : "",
         collections.length ? `${collections.length} collection${collections.length > 1 ? "s" : ""}` : ""
       ].filter(Boolean).join(" · ")
