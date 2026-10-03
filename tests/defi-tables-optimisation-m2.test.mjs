@@ -146,6 +146,26 @@ test("la 5e étape du raccourci est annoncée : « raccourciEnFin » quand il pe
   assert.equal(s.parcours.tables[3].acquise, jour(1));
 });
 
+test("Mes calculs, le mélange dû, puis deux marches : la validation possible en 5e étape est annoncée aussi (« 4 ou 5 »)", () => {
+  // Contrôle de Claude Code (03/10) : le mélange se joue en 2e étape, réussi il
+  // rouvre la validation, et le raccourci gagné à la 4e l'ajoutait en 5e étape
+  // sans que la carte l'ait dit (6 séances sur 33 600 au hasard).
+  let p = avecDepart(5);
+  p.tables[2].acquise = jour(1); p.tables[10].acquise = jour(1);
+  p.tables[3].sansFaute = {desordre: 0, trous: 0};
+  p = P.normaliserParcours(p);
+  p = P.appliquerReponse(p, "3-4", {correcte: true, date: jour(1)}).parcours;
+  const s = jouerSeance(p, jour(2), etape => (etape.type === "entraine" ? 1 : 0), 3);
+  assert.deepEqual(s.programme.etapes.map(etape => etape.marche || etape.type), ["revision", "melange", 5, 6]);
+  assert.equal(s.programme.raccourciEnFin, true, "la carte dit « 4 ou 5 étapes »");
+  assert.equal(s.programme.minutesMax, s.programme.minutes + 2);
+  assert.deepEqual(s.noms, ["revision", "melange", 5, 6, "validation"], "la 5e étape jouée est celle annoncée");
+  // Le mélange dû et absent de la séance (raté plus tôt, déjà joué) : toujours rien d'annoncé.
+  const ouverte = P.ouvrirSeance(p, {aujourdhui: jour(2), table: 3});
+  const sansMelange = P.programmeDeSeance(p, {...ouverte, file: ouverte.file.filter(prevue => prevue.type !== "melange")}, jour(2));
+  assert.equal(sansMelange.raccourciEnFin, false);
+});
+
 test("le raccourci gagné sur la marche 8 jouée en « Dans le désordre » : pas de 5e étape non annoncée, la validation est pour demain", () => {
   let p = avecDepart(5);
   // 8 sur 10 au premier désordre, 9 sur 10 aux nombres manquants, 10 sur 10 au désordre de la marche 8.

@@ -1787,12 +1787,18 @@
   // « Nombres manquants » jouée comme marche (pas la marche 8 remplacée), son
   // 9 sur 10 manque encore, et l'autre est déjà gagné ou se joue plus tôt
   // dans la séance ; pas de validation déjà prévue ; validation possible
-  // (table pas acquise, pas de mélange dû). La carte dit alors « 4 ou 5 étapes ».
+  // (table pas acquise, pas de mélange dû — ou il se joue plus tôt dans la
+  // séance). La carte dit alors « 4 ou 5 étapes ».
   function raccourciEnFin(parcours, seance, etapes) {
     if (!seance.echelle || !etapes.length || seance.table === null) return false;
     if (seance.faites.length + etapes.length >= SEUILS.seance.etapesMax) return false;
     const ligne = parcours.tables[seance.table];
-    if (!ligne || ligne.acquise || melangeDu(parcours)) return false;
+    if (!ligne || ligne.acquise) return false;
+    // Le mélange dû verrouille la validation… sauf s'il se joue plus tôt dans
+    // cette séance (Mes calculs, le mélange, deux marches) : réussi, il la
+    // rouvre, et le raccourci gagné à la dernière marche l'ajoute en 5e étape.
+    const melangeAvant = etapes.slice(0, -1).some(etape => etape.type === "melange");
+    if (melangeDu(parcours) && !melangeAvant) return false;
     if (seance.faites.some(passee => passee.type === "validation")) return false;
     if (etapes.some(etape => etape.prevue.type === "marche" && etape.prevue.marche === MARCHE_VALIDATION)) return false;
     const derniere = etapes[etapes.length - 1];
