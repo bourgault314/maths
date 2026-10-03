@@ -6769,13 +6769,15 @@
       }
 
       // Le score d'une étape, comme le moteur l'attend : les réponses justes
-      // du premier coup. Les perles ne se ratent pas.
+      // du premier coup. Les perles ne se ratent pas. Lot E1 : elles comptent
+      // sur 10, comme leur compteur (la case 0 × N est donnée) — le bilan de
+      // la séance disait « Les perles 11 sur 11 » après « 10 / 10 cases ».
       function resultatDeLEtape(suivi) {
         const config = state.configuration;
         const erreurs = erreursDeLEtape();
         if (config.mode === "revision") return {juste: state.revisionPremierScore, total: Math.max(1, state.revisionPremierTotal), erreurs};
         if (config.mode === "learn") {
-          if (activitePerles(config)) return {juste: CASES_BANDE, total: CASES_BANDE, erreurs};
+          if (activitePerles(config)) return {juste: CASES_BANDE - 1, total: CASES_BANDE - 1, erreurs};
           const total = config.learnActivity === "gaps" ? TOTAL : CASES_BANDE;
           return {juste: total - casesRatees(), total, erreurs};
         }
