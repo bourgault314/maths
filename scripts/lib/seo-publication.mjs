@@ -464,7 +464,7 @@ export function buildDirectoryHtml(catalogue) {
   <meta name="robots" content="index, follow, max-image-preview:large">
   <link rel="icon" href="/favicon.ico" sizes="48x48">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <link rel="stylesheet" href="../assets/css/annuaire-ressources.css?v=20260810-1">
+  <link rel="stylesheet" href="../assets/css/annuaire-ressources.css?v=pied-sans-nom-20261003-1">
   <script defer src="../assets/js/mention-confidentialite.js"></script>
 </head>
 <body>
@@ -491,12 +491,11 @@ ${collectionCards}
 ${domainSections}
   </main>
   <footer>
-    <span>Gwenaël Bourgault</span><span aria-hidden="true">·</span>
-    <a href="mailto:gwenael@mathsgo.re?subject=Contact%20depuis%20mathsgo.re">Me contacter</a><span aria-hidden="true">·</span>
-    <a href="/outils/">Catalogue</a><span aria-hidden="true">·</span>
-    <a href="/mentions-legales.html">Mentions légales</a><span aria-hidden="true">·</span>
-    <a href="/confidentialite.html">Confidentialité</a><span aria-hidden="true">·</span>
-    <a href="/licence.html">Licence</a><span aria-hidden="true">·</span>
+    <span class="pied-groupe"><a href="mailto:gwenael@mathsgo.re?subject=Contact%20depuis%20mathsgo.re">Me contacter</a><span aria-hidden="true">·</span></span>
+    <span class="pied-groupe"><a href="/outils/">Catalogue</a><span aria-hidden="true">·</span></span>
+    <span class="pied-groupe"><a href="/mentions-legales.html">Mentions légales</a><span aria-hidden="true">·</span></span>
+    <span class="pied-groupe"><a href="/confidentialite.html">Confidentialité</a><span aria-hidden="true">·</span></span>
+    <span class="pied-groupe"><a href="/licence.html">Licence</a><span aria-hidden="true">·</span></span>
     <span data-mathsgo-confidentialite>Sans cookie ni traceur</span>
   </footer>
 </body>

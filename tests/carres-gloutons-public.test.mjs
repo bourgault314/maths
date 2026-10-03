@@ -90,7 +90,7 @@ test("le plein écran et le socle public restent disponibles", () => {
   assert.match(script, /event\.key !== "Escape" \|\| !root\.classList\.contains\("fullscreen-fallback"\)/);
   assert.doesNotMatch(page, /consentement\.(css|js)/);
   assert.match(page, /src="\.\.\/\.\.\/assets\/js\/mention-confidentialite\.js"/);
-  assert.match(page, /Gwenaël Bourgault/);
+  assert.doesNotMatch(page, /Gwenaël Bourgault/);
   assert.match(page, /<span data-mathsgo-confidentialite>Sans cookie ni traceur<\/span>/);
   assert.match(page, /body\.game-fullscreen \.site-footer \{ display: none; \}/);
 });
