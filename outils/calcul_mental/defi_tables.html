@@ -4799,6 +4799,13 @@
           liste.style.fontSize = `${taille}px`;
         }
       }
+      // La fenêtre change de taille après coup (plein écran quitté, barre du
+      // navigateur qui revient, téléphone tourné) : l'ajustement se refait,
+      // sinon la table défilait de nouveau (105 px cachés de 1366 × 768 à
+      // 1366 × 650).
+      window.addEventListener("resize", () => {
+        if ($("question-card").classList.contains("est-finie")) ajusterTableFinale();
+      });
 
       function majBoulier() {
         const dom = boulier.dom;

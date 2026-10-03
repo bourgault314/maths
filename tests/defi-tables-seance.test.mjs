@@ -878,6 +878,8 @@ test("lot 2b : « résultats et nombres manquants » partout — noyau, fiche vi
 // de suivi prennent de la hauteur). L'écriture se réduit jusqu'à tout montrer.
 test("les perles : la table finale tient sans défiler, même en séance sous un code", () => {
   assert.match(html, /\$\("question-card"\)\.classList\.add\("est-finie"\);\s*mesurerBoulier\(\);\s*ajusterTableFinale\(\);/);
+  // Et de nouveau quand la fenêtre change de taille (plein écran quitté…).
+  assert.match(html, /window\.addEventListener\("resize", \(\) => \{\s*if \(\$\("question-card"\)\.classList\.contains\("est-finie"\)\) ajusterTableFinale\(\);\s*\}\);/);
   const debut = html.indexOf("      function ajusterTableFinale() {");
   const source = html.slice(debut, html.indexOf("\n      }", debut) + 9);
   // Exécutée avec une fausse liste : 11 lignes de 1,3 × la taille, dans 400 px.
