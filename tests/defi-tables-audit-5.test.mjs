@@ -83,11 +83,11 @@ test("la publication relance la fiche sans python-docx, et l'ancien PDF modèle 
 
 test("la miniature a été refaite (993 × 1404, webp plus légère) et son ?v= suit", async () => {
   const catalogue = await lire("assets/js/catalogue-refonte-data.js");
-  assert.match(catalogue, /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-tables-multiplication\.png\?v=2"/);
+  assert.match(catalogue, /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-tables-multiplication\.png\?v=3"/);
   const png = await readFile(new URL("assets/img/thumbnails/calcul-mental/fiche-tables-multiplication.png", racine));
   assert.equal(png.readUInt32BE(16), 993);
   assert.equal(png.readUInt32BE(20), 1404);
   const webp = await stat(new URL("assets/img/thumbnails/calcul-mental/fiche-tables-multiplication.webp", racine));
   assert.ok(webp.size < png.length);
-  assert.match(await lire("outils/index.html"), /catalogue-refonte-data\.js\?v=fiche-parcours-20261003-1/);
+  assert.match(await lire("outils/index.html"), /catalogue-refonte-data\.js\?v=feuille-tables-20261003-1/);
 });

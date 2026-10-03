@@ -669,7 +669,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "imprimer",
       "collections": [],
       "tags": ["calcul-mental", "tables", "multiplication", "revision", "imprimable"],
-      "thumbnail": "assets/img/thumbnails/calcul-mental/fiche-tables-multiplication.png?v=2",
+      "thumbnail": "assets/img/thumbnails/calcul-mental/fiche-tables-multiplication.png?v=3",
       "cardDescription": "Toutes les tables écrites en entier sur une page A4, à relire ou à coller dans le cahier."
     },
     "outils/calcul_mental/fiche_parcours_tables.pdf": {

@@ -139,15 +139,16 @@ test("les cartes : un PDF de 2 pages par table de 2 à 10, un PDF de 18 pages po
   const png = await stat(new URL(vignette, racine));
   const webp = await stat(new URL(vignette.replace(/\.png$/, ".webp"), racine));
   assert.ok(webp.size < png.size, "la webp est plus légère que la png");
-  assert.match(cataloguePage, /catalogue-refonte-data\.js\?v=fiche-parcours-20261003-1/, "le cache-buster du catalogue suit");
+  assert.match(cataloguePage, /catalogue-refonte-data\.js\?v=feuille-tables-20261003-1/, "le cache-buster du catalogue suit");
 });
 
 test("la feuille des tables (PDF) décrit le parcours réel et la révision du jour (A21)", async () => {
   // Lot 5 de l'audit (01/10/2026) : la fiche est dessinée par
   // generer_fiche_tables.py ; generer_pdf.py (lancé par la publication) l'appelle.
   const source = await readFile(new URL("_sources/defi-tables/generer_fiche_tables.py", racine), "utf8");
-  assert.match(source, /GUIDE_TEXT = "Suis le parcours : J’apprends  →  Je m’entraîne  →  Je valide ma table\."/);
-  assert.match(source, /GUIDE_TEXT_2 = "Puis, chaque jour, fais Mes calculs du jour : les calculs qui reviennent\."/);
+  assert.match(source, /GUIDE_TEXT = "Chaque jour, fais Ma séance du jour : quelques minutes suffisent\."/, "la séance du jour, plus l'ancien parcours en trois étapes");
+  assert.match(source, /GUIDE_TEXT_2 = "Quand toutes les cases de ta table sont pleines, valide ta table\."/);
+  assert.doesNotMatch(source, /Suis le parcours|Je m’entraîne  →/);
   assert.doesNotMatch(source, /Je deviens expert/);
   assert.match(source, /pdf\.drawString\(margin \+ 4 \* mm, guide_y \+ guide_h - 10 \* mm, GUIDE_TEXT\)\s*\n\s*pdf\.drawString\(margin \+ 4 \* mm, guide_y \+ guide_h - 14\.2 \* mm, GUIDE_TEXT_2\)/);
   const publication = await readFile(new URL("_sources/defi-tables/generer_pdf.py", racine), "utf8");
