@@ -833,7 +833,8 @@ test("lot 2b : une seule attente par ouverture — 2,5 s en tout, billet compris
   assert.deepEqual(minuteurs.map(m => m.ms), [2500]);
   // Le billet revient vite, la case est vide : on attend encore, SANS relancer le minuteur.
   page.attendreSuivi();
-  assert.equal(minuteurs.filter(m => m.actif).length, 1, "le compte à rebours continue, il ne repart pas de zéro");
+  assert.equal(minuteurs.length, 1, "le compte à rebours continue, il ne repart pas de zéro");
+  assert.equal(minuteurs[0].actif, true);
   // 2,5 s : l'accueil se montre…
   sonner();
   assert.equal(page.attendu(), false);
