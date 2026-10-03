@@ -237,12 +237,23 @@ test("le nombre d'étapes du schéma : un cadre par étape du plan ; l'Enquête 
 
 test("eleveVoirSchema : un appui par cadre, le bouton s'efface au dernier cadre du plan (4 pour Trois paires)", () => {
   const boutons = [];
-  const suivant = { focus(){ this.focalise = true; } };
-  const valider = { hidden: false, parentNode: { appendChild: (b) => boutons.push(b) } };
+  const suivant = { className: "suivant", focus(){ this.focalise = true; } };
+  /* les boutons du pas à pas (03/10/2026) : « ◀ » et « Étape suivante » s'insèrent avant « Carte suivante » */
+  const actions = {
+    appendChild: (b) => boutons.push(b),
+    insertBefore: (b, ref) => { const i = ref ? boutons.indexOf(ref) : -1; if(i >= 0) boutons.splice(i, 0, b); else boutons.push(b); },
+    querySelector: (sel) => (sel === ".suivant" ? suivant : null)
+  };
+  const valider = { hidden: false, parentNode: actions };
   const document = {
-    createElement: () => ({ remove(){ this.retire = true; boutons.splice(boutons.indexOf(this), 1); } }),
-    getElementById: (id) => (id === "eleveSchema" ? boutons.find((b) => b.id === "eleveSchema") || null : null),
-    querySelector: (sel) => (sel === "#elevePanel .eleveActions .suivant" ? suivant : null)
+    activeElement: null,
+    createElement: () => {
+      const b = { classes: new Set(), remove(){ this.retire = true; boutons.splice(boutons.indexOf(this), 1); }, focus(){}, setAttribute(k, v){ this[k] = v; } };
+      b.classList = { toggle: (k, v) => (v ? b.classes.add(k) : b.classes.delete(k)) };
+      return b;
+    },
+    getElementById: (id) => boutons.find((b) => b.id === id) || null,
+    querySelector: (sel) => (sel === "#elevePanel .eleveActions .suivant" ? suivant : sel === "#elevePanel .eleveActions" ? actions : null)
   };
   const ctx = new Function("document", `
     let eleveSchemaEtape = 0, eleveIdx = 0;
@@ -260,6 +271,10 @@ test("eleveVoirSchema : un appui par cadre, le bouton s'efface au dernier cadre 
     function eleveSchemaReserverOrdinateur(card){ reserves.push(card); }
     ${fn("eleveProposerSchema")}
     ${fn("eleveVoirSchema")}
+    ${fn("eleveSchemaMontrerEtape")}
+    ${fn("eleveSchemaBoutons")}
+    ${fn("eleveSchemaPrecedente")}
+    function enqueteProjectionPasAPas(){ return null; }
     return { proposer: eleveProposerSchema, voir: eleveVoirSchema, dessins, etape: () => eleveSchemaEtape };
   `)(document);
   ctx.proposer(valider);
@@ -267,7 +282,8 @@ test("eleveVoirSchema : un appui par cadre, le bouton s'efface au dernier cadre 
   assert.equal(valider.hidden, true);
   for(let k = 0; k < 6; k++) ctx.voir();
   assert.deepEqual(ctx.dessins, [1, 2, 3, 4], "quatre cadres, puis plus rien");
-  assert.equal(boutons.length, 0, "le bouton s'est effacé au 4e");
+  assert.equal(boutons.find((b) => b.id === "eleveSchema"), undefined, "le bouton s'est effacé au 4e");
+  assert.deepEqual(boutons.map((b) => b.id), ["eleveSchemaPrec"], "il reste « ◀ » (03/10/2026)");
   assert.equal(suivant.focalise, true);
 });
 

@@ -172,8 +172,9 @@ test("projection : le plateau à côté du dessin quand l'étape est trop haute 
 
 test("projection : seul l'écran du professeur est cadré ; le mode élève et l'impression gardent les leurs", () => {
   const appels = html.split("enqueteProjectionCadrer(").length - 1;
-  assert.equal(appels, 3, "une définition, l'appel de la projection, celui du pas à pas en mode élève (01/10/2026)");
-  assert.match(fn("eleveRendreEtape"), /if\(e > 0 && card && card\.family === "C" && enqueteProjectionPasAPas\(card\)\)\{\n    enqueteProjectionCadrer\(card, e\);/);
+  assert.equal(appels, 4, "une définition, l'appel de la projection, celui du pas à pas en mode élève (01/10/2026), la mesure de l'échelle de la carte en mode élève (03/10/2026)");
+  assert.match(fn("eleveRendreEtape"), /const g3 = e > 0 && card && card\.family === "C" && !!enqueteProjectionPasAPas\(card\);[\s\S]*if\(g3\)\{\n    enqueteProjectionCadrer\(card, e\);/);
+  assert.match(fn("eleveG3EchelleCarte"), /renderCard\(card, e\);\n      enqueteProjectionCadrer\(card, e\);/);
   assert.match(fn("updateUI"), /if\(eleveActif\)\{ renderEleveSplat\(\); return; \}[\s\S]*else \{ renderCard\(cards\[idx\], revealState\); enqueteProjectionCadrer\(cards\[idx\], revealState\); \}\n\}/);
   /* un dessin qui n'est pas posé directement sur la scène (mode élève : calque décalé) n'est pas touché */
   assert.match(fn("enqueteProjectionCadrer"), /dessin && dessin\.parentNode === svg \? enqueteBarresModele\(card\) : null/);
