@@ -73,6 +73,8 @@ const moteur = new Function(`
   ${fn("numberedBeadRadius")}
   ${fn("numberedBeadRadiusDrawn")}
   ${fn("nudgeTokenFree")}
+  ${fn("numberedSplatsBande")}
+  ${fn("numberedSplatsPlacesVisibles")}
   ${fn("relocateNumberedTokensToFinalSplats")}
   ${fn("assignPositionsNumbered")}
   ${fn("genInvestigate")}
@@ -130,7 +132,13 @@ const TIRAGES = { E10: 106, E11: 96, E12: 71, E13: 104, E14: 169, E15: 96, E16: 
 /* (lot « petite part », 01/10/2026) la fiche 24d change de graine (1168 → 3572 : trois cartes
    « 2 et 3 » ou « 2 et 5 », puis « 3 et 4 », 19 parts, en dernier) ; les 29 autres fiches tirent
    les mêmes cartes, au même hasard (empreinte sans la 24d identique à main : 1b81db09362575df). */
-const EMPREINTE = "696ba2c94ddcfc68";
+/* (lot « plateau en ligne », 03/10/2026) les PLACES des taches et des jetons changent (trois,
+   quatre et cinq taches en ligne, jetons visibles aux places fixes) : l'empreinte avec les places
+   devient 47827997a7c2f6ee (a7846d641ef6f494 avec les trois taches seules) ; SANS les places
+   (valeurs, indices, modèle, couleurs), elle est la même qu'avant le lot : 169f3e7e042e825e —
+   relevée sur main fa6e86f9 avec le même script. */
+const EMPREINTE = "47827997a7c2f6ee";
+const EMPREINTE_VALEURS = "169f3e7e042e825e";
 
 test("règle absolue : les 30 adresses des livrets tirent exactement les cartes imprimées (cartes.json), même hasard consommé", () => {
   const tout = {};
@@ -144,6 +152,8 @@ test("règle absolue : les 30 adresses des livrets tirent exactement les cartes 
     tout[nom] = cartes.map((c) => ({ total: c.total, hidden: c.hidden, visible: c.visible, indices: c._inv.indices, rel: c._rel, couleurs: c._colorMap, posH: c._posH, posV: c._posV }));
   }
   assert.equal(empreinte(tout), EMPREINTE, "valeurs, indices, modèle, couleurs, places des jetons : rien ne bouge");
+  const valeurs = Object.fromEntries(Object.entries(tout).map(([n, cs]) => [n, cs.map(({ posH, posV, ...c }) => c)]));
+  assert.equal(empreinte(valeurs), EMPREINTE_VALEURS, "sans les places : la même empreinte qu'avant le lot « plateau en ligne »");
 });
 
 // --- 2. le modèle de la correction ------------------------------------------------------------
@@ -312,7 +322,9 @@ test("l'impression : le plateau de la correction à 22 mm, la correction sous lu
   assert.match(impression, /const enqueteEnoncePetit = enqueteAvecModele && !revealAnswers && !opts\.sixColonne && !opts\.sixParPage && !opts\.plateauEntier;/);
   // l'Enquête en 6/page ne passe pas par sixColonne (modes A et B) : printSheet lui donne sixParPage
   assert.match(fn("printSheet"), /\}else\{\s*sv\.setAttribute\("viewBox", cardViewBox\);[\s\S]{0,600}renderCardIntoSvg\(sv, card, mode, \{[^}]*sixParPage:perSheet === 6 \}\);/);
-  assert.match(impression, /const trayHDessine = \(enqueteCompacte \|\| enqueteEnoncePetit\) \? ENQ_PLATEAU_CORRECTION_H : trayH;/);
+  // (lot « plateau en ligne », 03/10/2026) même réduction, et le plateau se referme sur une rangée
+  assert.match(impression, /const enqEchelle = Math\.round\(1000 \* ENQ_PLATEAU_CORRECTION_H \/ trayH\) \/ 1000;/);
+  assert.match(impression, /const trayHDessine = \(enqueteCompacte \|\| enqueteEnoncePetit\) \? Math\.round\(\(enqBande \? enqBande\.h : trayH\) \* enqEchelle\) : trayH;/);
   assert.match(impression, /const startY = trayY \+ trayHDessine \+ 80;/, "les indices en symboles remontent avec le plateau");
   // (01/10/2026, fiche 22d) l'Enquête en symboles : les indices à droite du TOTAL, avec le nom
   // des couleurs (lisibles en noir et blanc), comme le Système et le corrigé — sauf en 6/page

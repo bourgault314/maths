@@ -3162,14 +3162,32 @@ function getNumberedSplatsLegacy(taskCount, mode){
 
 function getNumberedSplats(taskCount, mode){
   const tray = getTrayConfig(mode);
-  /* Plateau bas (Enquête, Système en phrases ou en symboles) : à 4 taches, les deux
-     rangées de l'ancienne table se touchaient (0,6 unité) ; écartées de 270 (au lieu de
-     230), même rayon (les jetons gardent leur taille), 27 unités de blanc entre deux
-     taches, toutes dans le plateau (lot S2). 5 et 6 taches ne se touchent pas (34 et 50).
-     L'Enquête n'a jamais plus de 3 taches : aucune de ses cartes ne change. */
+  /* Plateau bas (Enquête, Système en phrases ou en symboles) : 3, 4 et 5 taches sur une
+     rangée (lot « plateau en ligne ») ; 6 et 7 taches gardent l'ancienne table (deux rangées,
+     elles ne se touchent pas : 50 unités). */
   if(!tray.isHigh){
-    if(taskCount !== 4) return getNumberedSplatsLegacy(taskCount, mode);
-    return [{cx:610, cy:400},{cx:1030, cy:400},{cx:610, cy:670},{cx:1030, cy:670}].map(p => ({...p, r:130}));
+    /* Lot « plateau en ligne » (03/10/2026, décidé sur image) : trois taches côte à côte, au
+       milieu du plateau, même rayon qu'avant (145) — l'ancienne table les posait en triangle.
+       Le plateau imprimé peut alors se refermer sur la rangée (voir renderCardIntoSvg) ; les
+       jetons visibles se logent dans les deux passages entre les taches (voir
+       relocateNumberedTokensToFinalSplats). La table de tirage ne change pas : aucune carte ne
+       change, seuls les dessins bougent. */
+    if(taskCount === 3){
+      const cyMid = tray.y + tray.h/2;
+      return [{cx:330, cy:cyMid},{cx:820, cy:cyMid},{cx:1310, cy:cyMid}].map(p => ({...p, r:145}));
+    }
+    /* Quatre et cinq taches aussi (décidé sur image le 03/10 au soir) : rayon 120 à quatre
+       (130 en deux rangées avant), 100 à cinq (120 avant) ; 47 et 35 unités entre deux taches,
+       130 et 110 au bord — assez pour qu'un jeton visible se loge au bord du plateau. */
+    if(taskCount === 4){
+      const cyMid = tray.y + tray.h/2;
+      return [{cx:370, cy:cyMid},{cx:657, cy:cyMid},{cx:943, cy:cyMid},{cx:1230, cy:cyMid}].map(p => ({...p, r:120}));
+    }
+    if(taskCount === 5){
+      const cyMid = tray.y + tray.h/2;
+      return [{cx:330, cy:cyMid},{cx:565, cy:cyMid},{cx:800, cy:cyMid},{cx:1035, cy:cyMid},{cx:1270, cy:cyMid}].map(p => ({...p, r:100}));
+    }
+    return getNumberedSplatsLegacy(taskCount, mode);
   }
   /* Grand plateau (B, B±) : seules 4 et 5 taches changent. */
   if(taskCount !== 4 && taskCount !== 5) return getNumberedSplatsLegacy(taskCount, mode);
@@ -3417,10 +3435,39 @@ const ENQUETE_NOM_ECART = 14;
    les jetons visibles ne bougent que s'ils gênent, et vers la place libre la plus proche.
    Quand la table ET le rayon sont ceux du tirage (1 et 2 taches, une tache qui cache deux
    paquets à 3 ou 6 taches, Enquête, mode D), la carte reste exactement celle d'avant. */
+/* Une rangée de taches (1 à 5 sur le plateau bas) : la bande qui les contient, 25 au-dessus
+   et au-dessous. Le plateau imprimé se referme dessus (lot « plateau en ligne », 03/10/2026). */
+function numberedSplatsBande(splats){
+  if(!splats || !splats.length || splats.length > 5) return null;
+  if(!splats.every(s => s.cy === splats[0].cy)) return null;
+  const r = Math.max(...splats.map(s => s.r));
+  return { y: splats[0].cy - r - 25, h: 2 * r + 50, cy: splats[0].cy, r };
+}
+/* Les places fixes des jetons visibles d'une rangée : dans les passages libres entre les taches
+   (et sur les bords), deux par passage, l'un au-dessus de l'autre autour du milieu — toujours
+   dans la bande, jamais sur une tache, sans aucun tirage (la suite au hasard ne bouge pas). */
+function numberedSplatsPlacesVisibles(tray, splats, beadR, margin){
+  const bande = numberedSplatsBande(splats);
+  if(!bande) return null;
+  const tri = splats.slice().sort((a, b) => a.cx - b.cx);
+  const libre = s => s.r + beadR + 14;
+  const bords = [tray.x + beadR + margin];
+  tri.forEach(s => bords.push(s.cx - libre(s), s.cx + libre(s)));
+  bords.push(tray.x + tray.w - beadR - margin);
+  const places = [];
+  for(let i = 0; i < bords.length; i += 2){
+    const a = bords[i], b = bords[i + 1];
+    if(b - a < 0) continue;
+    const cx = Math.round((a + b) / 2);
+    places.push({ cx, cy: bande.cy - beadR - 6 }, { cx, cy: bande.cy + beadR + 6 });
+  }
+  return places;
+}
 function relocateNumberedTokensToFinalSplats(card, tray, margin, splatsFinal, hiddenPlan){
   const beadRDrawn = numberedBeadRadiusDrawn(splatsFinal, card.family, card._num && card._num.hiddenByTask, card._num && card._num.opposedTasks);
   const beadRBase = numberedBeadRadius(splatsFinal, card.family);
-  if(sameSplats(card._splats, splatsFinal) && beadRDrawn === card._beadR) return;
+  const rangee = !tray.isHigh && (card._posV || []).length && numberedSplatsBande(splatsFinal);
+  if(!rangee && sameSplats(card._splats, splatsFinal) && beadRDrawn === card._beadR) return;
 
   /* Tente le report avec un rayon donné ; rend null si un jeton visible ne trouve pas
      de place libre (carte chargée) : on retombe alors sur le rayon de base. */
@@ -3451,6 +3498,17 @@ function relocateNumberedTokensToFinalSplats(card, tray, margin, splatsFinal, hi
       return true;
     }
     const posV = [];
+    /* une rangée : chaque jeton visible prend la place fixe libre la plus proche de sa place tirée */
+    const fixes = rangee ? numberedSplatsPlacesVisibles(tray, splatsFinal, beadR, margin) : null;
+    if(fixes && fixes.length >= (card._posV || []).length){
+      const libres = fixes.slice();
+      for(const p of (card._posV || [])){
+        let k = 0;
+        libres.forEach((q, i) => { if(Math.hypot(q.cx - p.cx, q.cy - p.cy) < Math.hypot(libres[k].cx - p.cx, libres[k].cy - p.cy)) k = i; });
+        posV.push(libres.splice(k, 1)[0]);
+      }
+      return { beadR, posH, posV };
+    }
     for(const p of (card._posV || [])){
       const q = nudgeTokenFree(p.cx, p.cy, ok);
       if(!ok(q.cx, q.cy)) return null;
@@ -8206,6 +8264,29 @@ function drawEnqueteLigne(targetGroup, card, opts = {}){
   return h;
 }
 
+/* La phrase de la réponse, en morceaux (les nombres en gras) : « La tache rouge cache 7 jetons, la
+   tache noire 21, la tache orange 14. » — « Chaque tache orange » quand la couleur est répétée
+   (même phrase que la page 2 des livrets). L'ordre est celui de la correction (l'unité d'abord). */
+function enqueteReponsePhrase(card, modele){
+  const rel = card._rel || {};
+  const rep = rel.repetees && Array.isArray(rel.repetees.couleurDe) ? rel.repetees : null;
+  const nb = i => rep ? rep.couleurDe.filter(c => c === rep.couleurDe[i]).length : 1;
+  const N = v => formatRelationNumber(v);
+  const vals = (rel.hiddenValues || []).map(Number);
+  const segs = [];
+  (modele.reponse || []).forEach((e, k) => {
+    const mot = enqueteMotCouleur(card, e.i);
+    const qui = (nb(e.i) > 1 ? "chaque tache " : "la tache ") + mot;
+    if(k === 0){
+      segs.push({ t: qui.charAt(0).toUpperCase() + qui.slice(1) + " cache ", gras:false }, { t: N(vals[e.i]), gras:true }, { t: " jetons", gras:false });
+    }else{
+      segs.push({ t: `, ${qui} `, gras:false }, { t: N(vals[e.i]), gras:true });
+    }
+  });
+  if(segs.length) segs.push({ t: ".", gras:false });
+  return segs;
+}
+
 /* ③ Je calcule : chaque ligne commence à gauche (variante A, décidée le 29/09) ; puis, si
    opts.reponse, la réponse en gras (« noire = 8 · rouge = 16 · orange = 11 ») suivie de la
    vérification du total (« 8 + 16 + 11 = 35 ✓ ») quand il y a la place. */
@@ -8242,7 +8323,72 @@ function drawEnqueteCalculs(targetGroup, card, opts = {}){
     }
     y += pas;
   });
-  if(opts.reponse !== false && modele.reponse && modele.reponse.length){
+  if(opts.reponse !== false && opts.isPrint && modele.reponse && modele.reponse.length){
+    /* Les cartes du corrigé (lot « plateau en ligne », décidé le 03/10/2026) : comme la page 2 et
+       l'écran, « Je réponds » — la phrase dans un cadre (« La tache rouge cache 7 jetons, la tache
+       noire 21, la tache orange 14. »), puis « Je vérifie » : le total, puis chaque indice. Avant :
+       la réponse en gras sur une ligne (« rouge = 7 · noire = 21 »). Mise en page serrée (sous-titres
+       sans numéro, cadre à 12, vérifications à la suite) : la carte ne doit pas être plus réduite
+       qu'avant le lot, le plateau refermé rend au moins autant qu'elle prend. */
+    y += P.calcBlanc;
+    y += enqueteTitreEtapeSimple(g, x0, y, "Je réponds", P);
+    const J = 12;
+    const segments = enqueteReponsePhrase(card, modele);
+    const largeurSeg = (segs, f) => segs.reduce((a, sg) => a + enqueteTexteLargeur(sg.t, f, sg.gras ? 900 : 700), 0);
+    const largeurR = largeur - 2 * J;
+    /* sur une ligne si elle tient en descendant jusqu'à repFont − 6, sinon deux lignes à repFont
+       (plus lisible qu'une ligne minuscule) ; coupée après une virgule, la police descend seulement
+       si une ligne déborde encore */
+    const couper = (segs, f) => {
+      const lignes = [[]];
+      segs.forEach(sg => {
+        const morceaux = sg.t.split(/(?<=, )/);
+        morceaux.forEach((m, k) => { if(k) lignes.push([]); if(m) lignes[lignes.length - 1].push({ t:m, gras:sg.gras }); });
+      });
+      const out = [];
+      lignes.forEach(l => {
+        const essai = out.length ? out[out.length - 1].concat(l) : null;
+        if(essai && largeurSeg(essai, f) <= largeurR) out[out.length - 1] = essai; else out.push(l);
+      });
+      return out;
+    };
+    let rf = P.repFont, lignesR;
+    let une = rf;
+    while(une > P.repFont - 6 && largeurSeg(segments, une) > largeurR) une -= 2;
+    if(largeurSeg(segments, une) <= largeurR){ rf = une; lignesR = [segments]; }
+    else{
+      lignesR = couper(segments, rf);
+      while(rf > P.repFont * 0.7 && lignesR.some(l => largeurSeg(l, rf) > largeurR)){ rf -= 2; lignesR = couper(segments, rf); }
+    }
+    const haut = y;
+    y += J;
+    let plusLarge = 0;
+    lignesR.forEach(l => {
+      const t = el("text", { x:x0 + J, y:y + rf * 0.68 + pastilleTextDy(rf), "text-anchor":"start", "dominant-baseline":"middle", "font-size":rf, fill:"#111827", "data-reponse":"phrase" });
+      l.forEach(sg => { const ts = el("tspan", { "font-weight":sg.gras ? 900 : 700 }); ts.textContent = sg.t; t.appendChild(ts); });
+      g.appendChild(t);
+      plusLarge = Math.max(plusLarge, largeurSeg(l, rf));
+      y += Math.round(rf * 1.25);
+    });
+    y += J - Math.round(rf * 0.1);
+    g.insertBefore(el("rect", { x:x0, y:haut, width:Math.min(largeur, Math.round(plusLarge + 2 * J)), height:Math.round(y - haut), rx:14, fill:"none", stroke:"#111827", "stroke-width":4, "data-cadre":"reponse" }), g.firstChild);
+    const verifs = (modele.verification ? [`${modele.verification} ✓`] : []).concat(enqueteG3VerifIndices(card, modele.lettres));
+    if(verifs.length){
+      y += 8;
+      /* « Je vérifie : » puis les vérifications à la suite, à la ligne quand ça ne tient plus */
+      const vf = P.repFont - 4;
+      const ecartV = Math.round(vf * 1.1);
+      const items = [{ t:"Je vérifie :", poids:800, fill:"#374151" }].concat(verifs.map(t => ({ t, poids:700, fill:ENQ_G3_VERIF_GRIS })));
+      let xv = x0;
+      items.forEach((it, k) => {
+        const w = enqueteTexteLargeur(it.t, vf, it.poids);
+        if(k && xv + w > x0 + largeur){ xv = x0; y += Math.round(vf * 1.25); }
+        g.appendChild(text(xv, y + vf * 0.7 + pastilleTextDy(vf), it.t, { "text-anchor":"start", "dominant-baseline":"middle", "font-size":vf, "font-weight":it.poids, fill:it.fill, "data-verif":k ? "indice" : "titre" }));
+        xv += w + ecartV;
+      });
+      y += Math.round(vf * 1.25);
+    }
+  }else if(opts.reponse !== false && modele.reponse && modele.reponse.length){
     y += P.calcBlanc;
     let rf = P.repFont;
     const entries = modele.reponse.map(e => ({ ...e }));
@@ -11555,9 +11701,16 @@ function renderCardIntoSvg(targetSvg, card, printMode, opts = {}){
   const enqueteAvecModele = (card.family === "C" && !!card._rel && !card._directSubstitution && !!enqueteBarresModele(card));
   const enqueteCompacte = enqueteAvecModele && revealAnswers;
   const enqueteEnoncePetit = enqueteAvecModele && !revealAnswers && !opts.sixColonne && !opts.sixParPage && !opts.plateauEntier;
-  const trayHDessine = (enqueteCompacte || enqueteEnoncePetit) ? ENQ_PLATEAU_CORRECTION_H : trayH;
+  /* Lot « plateau en ligne » (03/10/2026) : la réduction reste celle de 22 mm (420/550) et, quand
+     les taches tiennent sur une rangée (1, 2 ou 3), le plateau se referme sur elles — 14 mm à
+     trois taches, 17 mm à deux ; les taches gardent leur taille, les jetons visibles sont dans la
+     bande (places fixes). Plus de trois taches (répétées) : comme avant. */
+  const enqEchelle = Math.round(1000 * ENQ_PLATEAU_CORRECTION_H / trayH) / 1000;
+  const enqBande = (enqueteCompacte || enqueteEnoncePetit) ? numberedSplatsBande(card._splats) : null;
+  const enqDy = enqBande ? Math.round(enqBande.y - trayY) : 0;
+  const trayHDessine = (enqueteCompacte || enqueteEnoncePetit) ? Math.round((enqBande ? enqBande.h : trayH) * enqEchelle) : trayH;
   const enqPlateauGroupe = (enqueteCompacte || enqueteEnoncePetit) ? tEl("g", { id:"plateauCorrectionEnquete",
-    transform:`translate(800 ${trayY}) scale(${Math.round(1000 * trayHDessine / trayH) / 1000}) translate(-800 ${-trayY})` }) : null;
+    transform:`translate(800 ${trayY}) scale(${enqEchelle}) translate(-800 ${-trayY - enqDy})` }) : null;
   // Plateau imprimé : fond blanc, contour gris foncé (le gris clair disparaissait
   // en noir et blanc). L'écran garde son plateau translucide.
   targetSvg.appendChild(tEl("rect",{
