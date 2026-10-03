@@ -243,7 +243,7 @@ test("confidentialite.html annonce zéro cookie, zéro traceur tiers, et décrit
   assert.match(page, /n’utilise aucun cookie de mesure ni aucun traceur tiers/);
   assert.match(page, /gardent sur votre appareil, et seulement là, vos réglages et votre progression/);
   assert.match(page, /rien n’est transmis/);
-  assert.match(page, /Dernière mise à jour : 8 septembre 2026/);
+  assert.match(page, /Dernière mise à jour : 3 octobre 2026/);
   assert.match(page, /mathsgo-suivi-identite/, "la clé d'identité de l'onglet (lot 8) est déclarée");
   assert.doesNotMatch(page, /<code>_ga<\/code>/, "plus de ligne _ga dans le tableau");
   assert.doesNotMatch(page, /mathsgo:consentement:v1/, "plus de clé de consentement dans le tableau");
@@ -255,5 +255,9 @@ test("confidentialite.html annonce zéro cookie, zéro traceur tiers, et décrit
   assert.doesNotMatch(page, /<table class="privacy-table">/, "le tableau technique a laissé place à une liste en français");
   assert.match(page, /<details class="legal-details">[\s\S]*soley-save-v5[\s\S]*mathsgo-suivi-identite[\s\S]*<\/details>/, "les clés exactes restent dans le repliable");
   assert.doesNotMatch(page, /Un professeur peut ouvrir/);
-  assert.match(page, /Cette mesure a été retirée/, "l'historique est dit franchement");
+  assert.match(page, /Google Analytics, proposé avec votre accord jusqu’au 4 septembre 2026, a été retiré/, "l'historique est dit franchement");
+  // Retours de Gwenaël du 03/10 : page raccourcie (plus de doublon « En bref » / suivi, plus de
+  // « tableau ci-dessus » qui n'existait pas, plus de « retirer votre consentement » sans consentement).
+  assert.doesNotMatch(page, /tableau ci-dessus|retirer votre consentement/);
+  assert.match(page, /<h2 id="suivi">Le suivi de classe, sur code<\/h2>/);
 });
