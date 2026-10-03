@@ -160,7 +160,12 @@
     // (la séance 6-7-8 est la dernière), +2 quand tout est sans faute ;
     // « raté » = plus de 3 erreurs sur 10 (moins de 7 sur 10) ; l'objectif de
     // la semaine (4 jours, pas une limite) ; les séances gardées.
-    seance: Object.freeze({marches: 3, departMax: 6, sansFaute: 2, erreursRate: 0.3, objectifSemaine: 4, garder: 60})
+    seance: Object.freeze({marches: 3, departMax: 6, sansFaute: 2, erreursRate: 0.3, objectifSemaine: 4, garder: 60}),
+    // La page du professeur (lot 2b) : à partir de 8 séances sur une table
+    // qui n'est toujours pas acquise, la ligne le signale (l'élève moyen en
+    // met 4 ou 5, l'élève en difficulté 7 à 9 : simulation du lot 1) ; et à
+    // partir de 7 jours sans rien faire.
+    prof: Object.freeze({seancesLongues: 8, absenceJours: 7})
   });
   const ETOILES_MAX = SEUILS.etoile.durees.length;
 
@@ -1644,6 +1649,60 @@
     };
   }
 
+  // Ce que la page du professeur écrit sur la ligne d'un élève (lot 2b,
+  // 03/10/2026). Tout est lu dans le parcours tel qu'il est : aucun compteur
+  // de plus n'est enregistré.
+  //  - « enCours » : une ligne courte, pas les dix cases (illisibles sur 28
+  //    lignes et à l'impression) — « table de 5 · 6 sur 10 », « tables 5 et
+  //    7 » quand deux tables sont commencées, « mélange à faire », « ★★ ».
+  //    Une table est « commencée » quand l'élève y a fait une séance ou une
+  //    activité : sa rangée ne suffit pas à le dire (3 × 2 et 3 × 5 y sont
+  //    pleins dès que les tables de 2 et de 5 sont acquises).
+  //  - « ordre » : la clé du tri de la colonne (rien, puis les tables dans
+  //    l'ordre conseillé et par cases pleines, le mélange, les étoiles).
+  //  - « seances » : les jours de la semaine avec une séance finie.
+  //  - « longue » : le nombre de séances sur la table en cours, quand il
+  //    atteint le seuil ; null sinon.
+  function tableCommencee(ligne) {
+    if (!ligne || ligne.acquise) return false;
+    return Boolean(ligne.seance.dernier) || ligne.seance.n > 0 || CLES_FOIS.some(cle => ligne.fois[cle] > 0);
+  }
+
+  function resumeProf(parcours, aujourdhui = jourLocal()) {
+    const seances = bilanSeances(parcours, aujourdhui).semaine;
+    const acquises = tablesAcquises(parcours);
+    const rien = {type: "rien", tables: [], pleines: 0, total: 10, texte: "—", ordre: 0};
+    if (estVide(parcours) && !TABLES.some(table => tableCommencee(parcours.tables[table]))) return {enCours: rien, seances, longue: null};
+    let enCours;
+    if (melangeDu(parcours)) {
+      enCours = {type: "melange", tables: [], pleines: 0, total: 10, texte: "mélange à faire", ordre: 2000};
+    } else if (acquises.length === TABLES.length) {
+      const etoiles = parcours.expert.etoiles;
+      const texte = parcours.expert.couronne ? "👑" : (etoiles ? "★".repeat(etoiles) : "les 9 tables");
+      enCours = {type: "expert", tables: [], pleines: 0, total: 10, texte, ordre: 3000 + etoiles + (parcours.expert.couronne ? 1 : 0)};
+    } else {
+      const table = tableDeSeance(parcours);
+      const commencees = TABLES.filter(candidate => tableCommencee(parcours.tables[candidate]));
+      const rang = ORDRE_CONSEIL.indexOf(table) + 1;
+      if (commencees.length >= 2) {
+        const liste = commencees.length === 2
+          ? commencees.join(" et ")
+          : `${commencees.slice(0, -1).join(", ")} et ${commencees[commencees.length - 1]}`;
+        enCours = {type: "tables", tables: commencees, pleines: 0, total: 10, texte: `tables ${liste}`, ordre: rang * 100 + 50};
+      } else {
+        const rangee = rangeeTable(parcours, table);
+        enCours = {type: "table", tables: [table], pleines: rangee.pleines, total: rangee.total,
+                   texte: `table de ${table} · ${rangee.pleines} sur ${rangee.total}`, ordre: rang * 100 + rangee.pleines};
+      }
+    }
+    let longue = null;
+    if (enCours.type === "table" || enCours.type === "tables") {
+      const n = parcours.tables[tableDeSeance(parcours)].seance.n;
+      if (n >= SEUILS.prof.seancesLongues) longue = {table: tableDeSeance(parcours), seances: n};
+    }
+    return {enCours, seances, longue};
+  }
+
   // ---------------------------------------------------- le rangement par code
   //
   // Un rangement PAR CODE sur l'appareil (lot A1, 30/08/2026) : la case
@@ -2375,6 +2434,7 @@
     marcheRatee,
     noterEtape,
     bilanSeances,
+    resumeProf,
     commencerApresDecouverte,
     MARCHE_APRES_DECOUVERTE,
     CLE_SEL,

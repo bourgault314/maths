@@ -94,7 +94,37 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   table { width: 100%; border-collapse: collapse; background: var(--paper); font-size: .92rem; }
   th, td { padding: 8px 6px; text-align: left; border-bottom: 1px solid var(--line);
            white-space: nowrap; }
-  #tableau td.actions-eleve { display: flex; gap: 6px; }
+  #tableau td.actions-eleve { display: flex; gap: 6px; justify-content: flex-end; }
+  /* Lot 2b (03/10/2026) : la ligne d'un élève se lit sans survol et
+     s'imprime en noir et blanc — du texte, pas des cases de couleur. */
+  .acquises-liste { margin-left: 7px; color: var(--muted); font-size: .86rem; }
+  .en-cours b { color: var(--ink); }
+  .en-cours .cases { color: var(--muted); }
+  .en-cours.melange { color: #7a5a00; font-weight: 700; }
+  .en-cours.expert { color: #8a5a00; font-weight: 800; letter-spacing: .06em; }
+  .seances { font-weight: 800; color: var(--ink); }
+  .seances.zero { color: var(--muted); font-weight: 600; }
+  .alerte { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px;
+            border: 1px solid #d9a3a3; background: #fff5f5; color: #9b2c2c;
+            font-size: .78rem; font-weight: 800; white-space: nowrap; }
+  /* Les gestes rares (revenir à une version, nouveau code, supprimer) sont
+     rangés derrière « ⋯ » : quatre boutons par ligne faisaient déborder le
+     tableau de 110 px à 1 220 px. */
+  .plus { position: relative; }
+  .plus summary { list-style: none; cursor: pointer; display: inline-flex; align-items: center;
+                  justify-content: center; min-width: 44px; min-height: 44px; padding: 0 8px;
+                  border: 1px solid var(--line); border-radius: 10px; background: var(--paper);
+                  color: var(--blue-dark); font-weight: 800; }
+  .plus summary::-webkit-details-marker { display: none; }
+  .plus summary:hover { border-color: var(--blue); background: #f3f8fc; }
+  /* En position fixe, placé par le script à l'ouverture : l'enveloppe du
+     tableau défile en largeur, elle couperait un menu « absolu » sur les
+     dernières lignes de la classe. */
+  .plus[open] > div { position: fixed; z-index: 5;
+                      display: grid; gap: 6px; min-width: 170px; padding: 8px;
+                      background: var(--paper); border: 1px solid var(--line); border-radius: 12px;
+                      box-shadow: 0 8px 24px rgba(16, 42, 67, .16); }
+  .plus > div button { width: 100%; text-align: left; }
   th { background: #eef3f9; color: var(--blue-dark); font-size: .82rem;
        text-transform: uppercase; letter-spacing: .04em; }
   th button { min-height: 44px; padding: 0; color: var(--blue-dark); background: none;
@@ -138,88 +168,6 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   .objectif .lignes { list-style: none; display: flex; flex-wrap: wrap; gap: 8px 18px;
                       margin: 10px 0 0; padding: 0; color: var(--muted); font-size: .9rem; }
   .objectif .lignes b { color: var(--ink); }
-  /* Le rang dans le tableau : la meme pastille que sur l'accueil de l'eleve. */
-  .rang { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px 2px 6px;
-          border-radius: 999px; font-size: .74rem; font-weight: 950; border: 1px solid transparent;
-          white-space: nowrap; }
-  .rang:empty { display: none; }
-  .rang i { width: 11px; height: 11px; border-radius: 50%; display: inline-block;
-            box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .18), inset 0 1px 0 rgba(255, 255, 255, .7); }
-  .rang.bronze { background: #f7e9dc; color: #7a4416; border-color: #e6c9ad; }
-  .rang.bronze i { background: linear-gradient(135deg, #e0a06a, #b8722f); }
-  .rang.argent { background: #eef1f4; color: #465563; border-color: #d3dbe3; }
-  .rang.argent i { background: linear-gradient(135deg, #e6ebf0, #98a5b3); }
-  .rang.or { background: #fff4cc; color: #7a5a00; border-color: #f0dc8c; }
-  .rang.or i { background: linear-gradient(135deg, #ffe17a, #d9a300); }
-  .rang.platine { background: #e8f4f8; color: #2c5d70; border-color: #bfdde8; }
-  .rang.platine i { background: linear-gradient(135deg, #e6f6fa, #7db7c9); }
-  .rang.diamant { background: #e9f0ff; color: #2a4c93; border-color: #c2d3f7; }
-  .rang.diamant i { background: linear-gradient(135deg, #b9d3ff, #4f7fd6); border-radius: 3px;
-                    transform: rotate(45deg) scale(.85); }
-  .rang.legende { background: linear-gradient(135deg, #fff1c2, #ffe08a); color: #6b4a00;
-                  border-color: #e6c25a; }
-  .rang.legende i { background: linear-gradient(135deg, #ffe9a8, #d9a300); }
-  .expert-case { display: inline-flex; align-items: center; gap: 7px; }
-  .expert-case .etoiles { color: #c9860a; letter-spacing: .08em; font-weight: 800; }
-  .fragiles { margin-top: 14px; border-left: 5px solid var(--orange); }
-  .fragiles strong { display: block; color: var(--blue-dark); font-family: Georgia, serif; font-size: 1.05rem; }
-  .fragiles p { margin: 4px 0 10px; color: var(--muted); font-size: .88rem; }
-  .fragiles ul { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; }
-  .fragiles li { display: flex; align-items: baseline; gap: 6px; padding: 6px 12px; border-radius: 999px;
-                 background: #fdf0e3; color: #8a4c0a; font-weight: 800; }
-  .fragiles li span { font-size: .82rem; font-weight: 600; color: #a15c11; }
-  .barre-outils { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
-  .barre-outils .espace { margin-left: auto; }
-  /* Le papier (lot 7). Deux impressions distinctes, jamais ensemble : les
-     BANDELETTES à distribuer (adresse, code, consigne — aucun prénom du côté
-     donné à l'élève) et la FEUILLE prénom ↔ code, que le professeur garde.
-     À l'écran, ni l'une ni l'autre ne s'affiche. */
-  .fiche, .bandelettes, .note-impression { display: none; }
-  .fiche h2 { margin-top: 0; }
-  .fiche table { font-size: 1rem; }
-  .fiche td.code { font-size: 1.15rem; }
-  .fiche td.numero { color: var(--muted); font-weight: 800; text-align: right; width: 2.4em; }
-  .avertissement-papier { margin: 0 0 6mm; padding: 3mm 4mm; border: 1px solid #999;
-                          border-radius: 2mm; font-size: .82rem; color: #333; }
-  .bandelettes h2 { margin: 0 0 2mm; }
-  .bandelettes-liste { list-style: none; margin: 0; padding: 0; }
-  /* Une bandelette = une souche (le professeur la détache et la garde : le
-     numéro et le prénom, JAMAIS le code) et la partie remise à l'élève
-     (l'adresse, le code, la consigne, JAMAIS le prénom). Séparées, aucune des
-     deux n'associe un enfant à un code : ce lien n'existe que sur la feuille
-     récapitulative, imprimée à part. */
-  .bandelette { display: flex; align-items: stretch; margin: 0 0 2mm; line-height: 1.35;
-                border: 1px dashed #8a8a8a; border-radius: 2mm;
-                break-inside: avoid; page-break-inside: avoid; }
-  .bandelette .souche { flex: 0 0 40mm; display: flex; align-items: center; gap: 3mm;
-                        padding: 2mm 3mm; border-right: 1px dashed #8a8a8a; }
-  .bandelette .souche .numero { font-weight: 800; color: #666; font-size: .85rem; }
-  .bandelette .souche .nom { font-weight: 700; }
-  .bandelette .part { flex: 1; padding: 2mm 4mm; }
-  .bandelette .marque { font-family: Georgia, serif; font-weight: 700; font-size: .88rem; color: #063f86; }
-  .bandelette .marque .appli { margin-left: 6px; font-family: inherit; font-weight: 400; color: #444; }
-  .bandelette .adresse { font-weight: 700; font-size: .98rem; }
-  .bandelette .code-ligne { display: flex; align-items: baseline; gap: 3mm; }
-  .bandelette .code-ligne .etiquette { font-size: .8rem; color: #444; }
-  .bandelette .code-ligne .code { font-family: ui-monospace, Consolas, monospace;
-                                  font-size: 1.25rem; font-weight: 800; letter-spacing: .12em; }
-  .bandelette .consigne { font-size: .78rem; }
-  /* Aperçu « code → prénom » dans la boîte « Coller la liste des prénoms ». */
-  .apercu { list-style: none; margin: 10px 0 0; padding: 8px 12px; max-height: 200px; overflow: auto;
-            background: #fbfcfe; border: 1px solid var(--line); border-radius: 10px;
-            font-size: .9rem; line-height: 1.5; }
-  .apercu li { display: flex; gap: 8px; align-items: baseline; }
-  .apercu li .numero { flex: 0 0 2em; text-align: right; color: var(--muted); font-weight: 800; }
-  .apercu li .code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .06em; }
-  .apercu li.vide { color: var(--muted); font-style: italic; }
-  .apercu li.alerte { color: var(--rouge); font-weight: 700; }
-  dialog { border: 0; border-radius: 14px; padding: 18px; max-width: 420px; width: calc(100% - 32px);
-           box-shadow: 0 20px 50px rgba(16,41,74,.28); }
-  dialog::backdrop { background: rgba(16,41,74,.45); }
-  footer { padding: 14px 16px; border-top: 1px solid var(--line); background: var(--paper);
-           color: var(--muted); font-size: .82rem; text-align: center; }
-  footer a { display: inline-block; padding: 12px 8px; color: var(--muted); }
-  [hidden] { display: none !important; }
   /* Sous 700 px, le tableau devient une carte par élève : rien ne déborde,
      tout se lit d'un coup d'œil sur un téléphone. */
   @media (max-width: 700px) {
@@ -235,8 +183,10 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
                           letter-spacing: .04em; }
     #tableau td[data-libelle=""]::before { display: none; }
     #tableau td input { width: 100%; min-height: 44px; }
-    #tableau td.actions-eleve { flex-wrap: wrap; gap: 8px; }
-    #tableau td.actions-eleve button { flex: 1 1 auto; margin-left: 0 !important; }
+    #tableau td.actions-eleve { flex-wrap: wrap; gap: 8px; justify-content: flex-start; }
+    #tableau td.actions-eleve > button { flex: 1 1 auto; margin-left: 0 !important; }
+    #tableau td { flex-wrap: wrap; }
+    .alerte { margin-left: 0; }
   }
   @media print {
     @page { margin: 12mm; }
@@ -344,7 +294,8 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
       <select id="tri" style="width:auto;min-width:170px">
         <option value="prenom">Prénom</option>
         <option value="acquises">Tables acquises</option>
-        <option value="travailler">Calculs à travailler</option>
+        <option value="encours">En cours</option>
+        <option value="semaine">Séances cette semaine</option>
         <option value="retard">Calculs en retard</option>
         <option value="date">Dernière activité</option>
       </select>
@@ -375,10 +326,9 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
             <th><button type="button" data-tri="prenom">Élève</button></th>
             <th>Code</th>
             <th><button type="button" data-tri="acquises">Tables acquises</button></th>
-            <th><button type="button" data-tri="travailler">À travailler</button></th>
+            <th><button type="button" data-tri="encours">En cours</button></th>
+            <th><button type="button" data-tri="semaine">Cette semaine</button></th>
             <th><button type="button" data-tri="retard">En retard</button></th>
-            <th>Mélange</th>
-            <th>Expert</th>
             <th><button type="button" data-tri="date">Dernière activité</button></th>
             <th></th>
           </tr>
@@ -807,42 +757,58 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   // ---------------------------------------------------------------- lecture d'une progression
 
   function lireProgression(brut) {
-    const vide = {acquises: [], melange: "—", etoiles: 0, couronne: null, rang: null,
-                  semaine: 0, travailler: null, retard: null, parcours: null, lisible: Boolean(PARCOURS)};
+    const vide = {acquises: [], couronne: null,
+                  semaine: 0, retard: null, parcours: null, lisible: Boolean(PARCOURS),
+                  enCours: {type: "rien", texte: "—", ordre: 0, tables: [], pleines: 0, total: 10},
+                  seances: 0, longue: null};
     if (!PARCOURS || !brut) return vide;
     try {
       const parcours = PARCOURS.normaliserParcours(brut);
       const etat = PARCOURS.etatAffichage(parcours);
-      let melange = "—";
-      if (etat.melange.visible) melange = etat.melange.aJour ? "à jour" : "à refaire";
-      else if (etat.acquises.length === PARCOURS.TABLES.length) melange = "toutes acquises";
+      // Lot 2b : « En cours », les séances de la semaine et la table qui
+      // dure viennent du moteur (resumeProf), comme tout le reste.
+      // (Un moteur d'avant le lot 2b, resté sur le serveur : la ligne se
+      // lit quand même, sans ces trois colonnes.)
+      const resume = PARCOURS.resumeProf ? PARCOURS.resumeProf(parcours) : {enCours: vide.enCours, seances: 0, longue: null};
       return {
         acquises: etat.acquises,
-        melange,
-        etoiles: etat.expert.niveau,
-        // Depuis le lot 3 de Défi tables (08/09/2026) : la couronne (👑) est la
-        // marche du dessus, pas une cinquième étoile — la colonne montrait
-        // « ★★★★★ » à une Légende. Le rang, lui, ne redescend jamais.
+        // La couronne : pour l'info-bulle « Légende des tables » de « En cours ».
         couronne: etat.expert.couronne,
-        rang: etat.rang,
         // « N jours cette semaine », compté par le moteur (semaine du lundi,
         // heure de La Réunion) : le seul chiffre de temps de la page.
         semaine: etat.jours ? etat.jours.semaine : 0,
-        travailler: PARCOURS.calculsATravailler ? PARCOURS.calculsATravailler(parcours) : null,
         // Lot mémoire (12/09/2026) : les calculs dus avant aujourd'hui et pas
         // encore refaits — l'élève n'a pas fait ses « calculs du jour ».
         retard: PARCOURS.calculsEnRetard ? PARCOURS.calculsEnRetard(parcours) : null,
+        enCours: resume.enCours,
+        seances: resume.seances,
+        longue: resume.longue,
         parcours,
         lisible: true
       };
     } catch (_) { return vide; }
   }
 
+  // « ven. 02/10 » : le jour de la semaine dit plus vite qu'une année si
+  // l'élève est venu cette semaine (lot 2b) ; à l'heure de La Réunion, comme
+  // les journées du serveur.
   function dateLisible(iso) {
     if (!iso) return "";
     const date = new Date(iso);
     if (isNaN(date)) return "";
-    return date.toLocaleDateString("fr-FR", {day: "2-digit", month: "2-digit", year: "2-digit"});
+    return date.toLocaleDateString("fr-FR",
+      {timeZone: "Indian/Reunion", weekday: "short", day: "2-digit", month: "2-digit"});
+  }
+
+  // Depuis combien de jours l'élève n'a rien fait : null tant que ce n'est
+  // pas à signaler (jamais venu, ou venu il y a moins d'une semaine).
+  function joursSansRien(eleve) {
+    if (!PARCOURS || !eleve.maj_le) return null;
+    const date = new Date(eleve.maj_le);
+    if (isNaN(date)) return null;
+    const jour = date.toLocaleDateString("en-CA", {timeZone: "Indian/Reunion"});
+    const ecart = PARCOURS.ecartJours(jour, PARCOURS.jourLocal());
+    return ecart >= PARCOURS.SEUILS.prof.absenceJours ? ecart : null;
   }
 
   // « mardi 8 septembre » : le jour tel que l'élève et le professeur l'ont
@@ -866,7 +832,8 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   function trierEleves() {
     const clef = eleve => {
       if (tri.colonne === "acquises") return eleve.lu.acquises.length;
-      if (tri.colonne === "travailler") return eleve.lu.travailler ? eleve.lu.travailler.length : -1;
+      if (tri.colonne === "encours") return eleve.lu.enCours.ordre;
+      if (tri.colonne === "semaine") return eleve.lu.seances;
       if (tri.colonne === "retard") return eleve.lu.retard ? eleve.lu.retard.length : -1;
       if (tri.colonne === "date") return eleve.maj_le || "";
       return (eleve.prenom || "￿").toLocaleLowerCase("fr");
@@ -879,39 +846,22 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     });
   }
 
-  // Le badge du rang, même dessin que sur l'accueil de l'élève (un point de
-  // métal et le nom). La couronne de la Légende, elle, reste dans la colonne
-  // Expert : sur l'accueil de l'élève le badge est seul, ici il voisine avec
-  // l'escalier — et « 👑 👑 Légende des tables » sur la même ligne, c'est une
-  // couronne de trop (vu à la capture).
-  function badgeRang(rang) {
-    const badge = document.createElement("span");
-    if (!rang || !rang.niveau) return badge;
-    badge.className = `rang ${rang.cle}`;
-    const point = document.createElement("i");
-    point.setAttribute("aria-hidden", "true");
-    badge.append(point, document.createTextNode(rang.nom));
-    return badge;
+  // Le menu « ⋯ » d'une ligne : sous son bouton, ou au-dessus quand il
+  // sortirait par le bas de l'écran ; un seul ouvert à la fois.
+  function placerMenu(plus, poignee, menu) {
+    if (!plus.open) return;
+    document.querySelectorAll("#corps details.plus[open]").forEach(autre => { if (autre !== plus) autre.open = false; });
+    const cadre = poignee.getBoundingClientRect();
+    const hauteur = menu.getBoundingClientRect().height;
+    const dessous = cadre.bottom + 4 + hauteur <= window.innerHeight;
+    menu.style.top = `${dessous ? cadre.bottom + 4 : Math.max(4, cadre.top - 4 - hauteur)}px`;
+    menu.style.right = `${Math.max(4, window.innerWidth - cadre.right)}px`;
   }
 
-  // La case « Expert » : l'escalier tel que l'élève le voit. Une couronne n'est
-  // pas cinq étoiles — c'est la marche d'après, et elle s'écrit 👑.
-  function caseExpert(lu) {
-    const bloc = document.createElement("span");
-    bloc.className = "expert-case";
-    const marches = document.createElement("span");
-    marches.className = "etoiles";
-    if (lu.couronne) {
-      marches.textContent = "\u{1F451}";
-      marches.title = "Légende des tables";
-    } else if (lu.etoiles) {
-      marches.textContent = "\u2605".repeat(lu.etoiles);
-    } else {
-      marches.textContent = "—";
-      marches.style.color = "var(--muted)";
-    }
-    bloc.append(marches, badgeRang(lu.rang));
-    return bloc;
+  function fermerMenus(evenement) {
+    document.querySelectorAll("#corps details.plus[open]").forEach(plus => {
+      if (!evenement || !plus.contains(evenement.target)) plus.open = false;
+    });
   }
 
   function dessinerTableau() {
@@ -942,15 +892,59 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
       const cAcquises = document.createElement("td");
       const nombre = eleve.lu.acquises.length;
       cAcquises.innerHTML = `<span class="pastille ${nombre ? "p-vert" : "p-gris"}">${nombre} / 9</span>`;
-      if (nombre) cAcquises.title = "Tables " + eleve.lu.acquises.join(", ");
+      // La liste s'écrit (lot 2b) : une info-bulle ne se lit ni au téléphone
+      // ni sur une feuille. Les 9 tables : le compte suffit.
+      if (nombre && nombre < 9) {
+        const liste = document.createElement("span");
+        liste.className = "acquises-liste";
+        // Au-delà de la moitié, ce qui reste est plus court à lire.
+        const reste = PARCOURS.TABLES.filter(table => !eleve.lu.acquises.includes(table));
+        liste.textContent = reste.length <= 3 ? `reste ${reste.join(", ")}` : eleve.lu.acquises.join(", ");
+        cAcquises.append(liste);
+      }
 
-      const cTravailler = document.createElement("td");
-      const combien = eleve.lu.travailler ? eleve.lu.travailler.length : null;
-      if (combien === null) {
-        cTravailler.innerHTML = '<span class="pastille p-gris">—</span>';
+      // « En cours » : une ligne courte (décision du 03/10), et la table qui
+      // dure juste à côté.
+      const cEnCours = document.createElement("td");
+      const enCours = eleve.lu.enCours;
+      const texte = document.createElement("span");
+      texte.className = `en-cours ${enCours.type}`;
+      if (enCours.type === "table") {
+        const table = document.createElement("b");
+        table.textContent = `table de ${enCours.tables[0]}`;
+        const cases = document.createElement("span");
+        cases.className = "cases";
+        cases.textContent = ` · ${enCours.pleines} sur ${enCours.total}`;
+        texte.append(table, cases);
+      } else if (enCours.type === "tables") {
+        const tables = document.createElement("b");
+        tables.textContent = enCours.texte;
+        texte.append(tables);
       } else {
-        cTravailler.innerHTML = `<span class="pastille ${combien ? "p-orange" : "p-vert"}">${combien}</span>`;
-        if (combien) cTravailler.title = eleve.lu.travailler.map(cle => PARCOURS.libelleFait(cle)).join(" · ");
+        texte.textContent = enCours.texte;
+        if (enCours.type === "rien") texte.style.color = "var(--muted)";
+        if (enCours.type === "expert" && eleve.lu.couronne) texte.title = "Légende des tables";
+      }
+      cEnCours.append(texte);
+      if (eleve.lu.longue) {
+        const alerte = document.createElement("span");
+        alerte.className = "alerte";
+        alerte.textContent = `${eleve.lu.longue.seances} séances dessus`;
+        cEnCours.append(alerte);
+      }
+
+      // Les séances de la semaine, et l'élève qu'on ne voit plus.
+      const cSemaine = document.createElement("td");
+      const seances = document.createElement("span");
+      seances.className = eleve.lu.seances ? "seances" : "seances zero";
+      seances.textContent = eleve.lu.parcours ? String(eleve.lu.seances) : "—";
+      cSemaine.append(seances);
+      const absence = joursSansRien(eleve);
+      if (absence !== null) {
+        const alerte = document.createElement("span");
+        alerte.className = "alerte";
+        alerte.textContent = `rien depuis ${absence} jours`;
+        cSemaine.append(alerte);
       }
 
       const cRetard = document.createElement("td");
@@ -961,15 +955,6 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
         cRetard.innerHTML = `<span class="pastille ${retard ? "p-orange" : "p-vert"}">${retard}</span>`;
         if (retard) cRetard.title = eleve.lu.retard.map(cle => PARCOURS.libelleFait(cle)).join(" · ");
       }
-
-      const cMelange = document.createElement("td");
-      const m = eleve.lu.melange;
-      cMelange.innerHTML = m === "—"
-        ? '<span class="pastille p-gris">—</span>'
-        : `<span class="pastille ${m === "à refaire" ? "p-orange" : "p-vert"}">${m}</span>`;
-
-      const cExpert = document.createElement("td");
-      cExpert.append(caseExpert(eleve.lu));
 
       const cDate = document.createElement("td");
       const quand = dateLisible(eleve.maj_le);
@@ -984,9 +969,19 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
       const fiche = document.createElement("button");
       fiche.type = "button";
       fiche.className = "secondaire petit";
-      fiche.textContent = "Voir sa fiche";
+      fiche.textContent = "Fiche";
+      fiche.title = "Voir sa fiche";
       fiche.addEventListener("click", () => voirFiche(eleve, fiche));
       cActions.append(fiche);
+      // Les gestes rares, derrière « ⋯ » (lot 2b).
+      const plus = document.createElement("details");
+      plus.className = "plus";
+      const poignee = document.createElement("summary");
+      poignee.textContent = "⋯";
+      poignee.setAttribute("aria-label", "Autres actions");
+      poignee.title = "Autres actions";
+      const menu = document.createElement("div");
+      plus.append(poignee, menu);
       if (ecriture && (eleve.restaurable || (eleve.journees || []).length)) {
         // Le serveur garde la version d'avant le dernier enregistrement ET la
         // fin de chacune des sept dernières journées : un écrasement (par
@@ -998,7 +993,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
         revenir.textContent = "Revenir à…";
         revenir.title = "Revenir à une version précédente de sa progression";
         revenir.addEventListener("click", () => revenirA(eleve));
-        cActions.append(revenir);
+        menu.append(revenir);
       }
       if (ecriture) {
         const regen = document.createElement("button");
@@ -1006,7 +1001,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
         regen.className = "secondaire petit";
         regen.textContent = "Nouveau code";
         regen.addEventListener("click", () => regenerer(eleve));
-        cActions.append(regen);
+        menu.append(regen);
       }
       // Supprimer un élève efface sa progression pour de bon : depuis le lot 11,
       // c'est au propriétaire de la classe, comme la supprimer. Un collègue en
@@ -1017,21 +1012,25 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
         sup.className = "danger petit";
         sup.textContent = "Supprimer";
         sup.addEventListener("click", () => supprimerEleve(eleve));
-        cActions.append(sup);
+        menu.append(sup);
+      }
+      if (menu.children.length) {
+        menu.addEventListener("click", () => { plus.open = false; });
+        plus.addEventListener("toggle", () => placerMenu(plus, poignee, menu));
+        cActions.append(plus);
       }
 
       cNom.dataset.libelle = "";
       cCode.dataset.libelle = "Code";
       cAcquises.dataset.libelle = "Acquises";
-      cTravailler.dataset.libelle = "À travailler";
+      cEnCours.dataset.libelle = "En cours";
+      cSemaine.dataset.libelle = "Séances";
       cRetard.dataset.libelle = "En retard";
-      cMelange.dataset.libelle = "Mélange";
-      cExpert.dataset.libelle = "Expert";
       cDate.dataset.libelle = "Activité";
       cActions.dataset.libelle = "";
       cActions.className = "actions-eleve";
 
-      ligne.append(cNom, cCode, cAcquises, cTravailler, cRetard, cMelange, cExpert, cDate, cActions);
+      ligne.append(cNom, cCode, cAcquises, cEnCours, cSemaine, cRetard, cDate, cActions);
       corps.appendChild(ligne);
     });
 
@@ -2084,6 +2083,12 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     } catch (erreur) { surErreur(erreur, "message-classe"); }
     finally { bouton.disabled = false; }
   });
+
+  // Un menu « ⋯ » se referme au clic ailleurs et dès que la page défile
+  // (il est en position fixe : il ne suivrait pas sa ligne).
+  document.addEventListener("click", fermerMenus);
+  window.addEventListener("scroll", () => fermerMenus(null), true);
+  window.addEventListener("resize", () => fermerMenus(null));
 
   $("imprimer-bandelettes").addEventListener("click", () => imprimer("bandelettes"));
   $("imprimer-recap").addEventListener("click", () => imprimer("recap"));

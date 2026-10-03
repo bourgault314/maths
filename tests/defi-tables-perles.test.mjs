@@ -399,8 +399,8 @@ test("le rond bleu : J’apprends tant que les cinq ne sont pas terminées et qu
 });
 
 test("le moteur épinglé a changé : nouveau numéro, copie serveur identique, serveur qui accepte « beads »", async () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261003-1/, "le moteur a changé : son numéro monte (et un dépôt FTP suit)");
-  assert.match(html, /defi_tables_core\.js\?v=20260930-1/, "le noyau aussi (« la bande » dans ses libellés)");
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261003-2/, "le moteur a changé : son numéro monte (et un dépôt FTP suit)");
+  assert.match(html, /defi_tables_core\.js\?v=20261003-1/, "le noyau aussi (« la bande » dans ses libellés)");
   const moteur = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie), "_serveur/public/prof/defi_tables_mon_parcours.js : la copie octet pour octet");
@@ -425,7 +425,8 @@ test("la bande s’appelle la bande, partout où l’élève lit", async () => {
     assert.doesNotMatch(texte.replace(/ex-bâton/g, ""), /bâton/i, "le mot ne reste que dans le commentaire d’en-tête du moteur, qui raconte le renommage");
   });
   assert.match(html, /stick\.className = "number-stick";/, "le nom interne ne change pas");
-  // La fiche imprimée : cinq colonnes dans J'apprends.
-  assert.match(html, /<th colspan="5">J’apprends<small>perles · bande · à trous · ordre · désordre<\/small><\/th>/);
-  assert.match(html, /\.fiche-table td:nth-child\(7\), \.fiche-table td:nth-child\(10\) \{ border-left/, "les traits de groupe ont suivi : Je m’entraîne commence à la 7e cellule, Acquise est la 10e");
+  // La fiche imprimée (lot 2b) : plus de colonnes J'apprends / Je m'entraîne,
+  // une rangée par table ; le cadre du professeur nomme « la bande ».
+  assert.doesNotMatch(html, /fiche-table|fiche-dot/);
+  assert.match(html, /<th>Je construis<br>la bande<\/th><th>Bande<br>à trous<\/th>/);
 });

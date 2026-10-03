@@ -149,13 +149,9 @@ test("3. Mon parcours : « Réviser N calculs → » sous la ligne, plus à côt
   // Seulement les calculs rouges DUS : raté aujourd'hui, il revient demain,
   // et le bouton affiché le jour même ne lançait rien.
   assert.match(rendu, /const rouges = ligne\.aRevoir \? new Set\(PARCOURS\.calculsATravailler\(parcours, ligne\.table\)\) : new Set\(\);\s*const nombre = PARCOURS\.calculsDus\(parcours, \{table: ligne\.table\}\)\.filter\(cle => rouges\.has\(cle\)\)\.length;\s*if \(!nombre\) return null;/);
-  assert.match(rendu, /const revoir = boutonReviser\(ligne\);/);
   assert.match(rendu, /revoir\.textContent = `Réviser \$\{pluriel\(nombre, "calcul"\)\}\\u00a0→`;/);
   assert.match(rendu, /revoir\.addEventListener\("click", \(\) => startRevision\(ligne\.table, "parcours"\)\);/, "il lance toujours la révision de la table");
-  assert.match(rendu, /etatGroupe\.append\(badge\);/);
-  assert.match(rendu, /badge\.textContent = ligne\.acquise \? "" : ligne\.dernierEntrainement \?/, "plus de pastille « Acquise ✓ » : la case verte le dit");
   assert.doesNotMatch(rendu, /etatGroupe\.append\(revoir\)/, "plus dans l’en-tête, à côté de « Acquise ✓ »");
-  assert.match(rendu, /item\.append\(head, cells\);\s*if \(revoir\) item\.append\(revoir\);/, "sous les ronds");
   assert.match(html, /const revoir = boutonReviser\(ligne\);\s*if \(revoir\) item\.append\(revoir\);\s*list\.append\(item\);/, "et sous la rangée, avec la séance");
   assert.match(html, /\.parcours-revoir \{\s*display: block;\s*width: 100%;\s*min-height: 44px;/);
 });
@@ -180,8 +176,8 @@ test("3. la barre n’apparaît que quand la révision peut partir : jamais le j
 test("3. Mon parcours : « ma table » (pastille et cadre bleus) sur la table de l’accueil", () => {
   const rendu = html.slice(html.indexOf("      function renderParcours() {"), html.indexOf("const melange = $(\"parcours-melange\");"));
   assert.match(rendu, /const maTable = tableEnCours\(etat\);/, "la même table que l’accueil (ordre 2, 10, 5… ou table choisie)");
-  assert.match(rendu, /item\.className = `parcours-row\$\{ligne\.acquise \? " is-acquise" : ""\}\$\{ligne\.table === maTable \? " is-ma-table" : ""\}`;/);
-  assert.match(rendu, /repere\.className = "parcours-ma-table";\s*repere\.textContent = "ma table";\s*etatGroupe\.append\(repere\);\s*\}\s*etatGroupe\.append\(badge\);/);
+  assert.match(html, /item\.className = `parcours-row seance-row\$\{ligne\.acquise \? " is-acquise" : ""\}\$\{table === maTable \? " is-ma-table" : ""\}`;/);
+  assert.match(html, /repere\.className = "parcours-ma-table";\s*repere\.textContent = "ma table";\s*droite\.append\(repere\);/);
   assert.match(html, /\.parcours-row\.is-acquise \{[^}]*\}\s*\.parcours-row\.is-ma-table \{ border-color: var\(--blue\); box-shadow: 0 0 0 1px var\(--blue\); \}/, "le bleu l’emporte sur le vert d’une table acquise choisie");
   assert.match(html, /\.parcours-ma-table \{ padding: 3px 9px; border-radius: 999px; color: #fff; background: var\(--blue\);/);
 });

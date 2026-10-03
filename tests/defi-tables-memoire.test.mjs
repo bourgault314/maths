@@ -187,7 +187,7 @@ test("élève 3 · un 3e qui sait tout : 9 tables en une soirée, Platine ; 36 d
 
 test("la page : le bloc du jour en tête et conseillé, l’unique rond bleu, le bandeau des boîtes, les cinq cases, la notice", () => {
   assert.match(html, /<button id="acc-reviser" class="reviser etape" type="button" hidden><span class="num" aria-hidden="true"><svg class="neurones"/, "le rond : des neurones qui se relient (idée de Gwenaël)");
-  assert.match(html, /reviser\.hidden = !agenda\.dus;/, "le bloc n’existe que quand des calculs sont dus");
+  assert.match(html, /reviser\.hidden = true;/, "lot 2b : Mes calculs du jour est la première étape de la séance, le bloc a quitté l’accueil");
   assert.match(html, /reviser\.classList\.toggle\("is-next", conseil === "reviser"\);/);
   assert.match(html, /conseille: conseil === "expert",/, "la marche de l’escalier n’est plus conseillée d’office : un seul rond bleu à l’écran");
   assert.match(html, /renderJours\(\{\.\.\.etat\.jours, demain: agenda\.dus \? 0 : etat\.jours\.demain\}\);/, "« N calculs demain » seulement quand rien n’est dû");
@@ -201,7 +201,6 @@ test("la page : le bloc du jour en tête et conseillé, l’unique rond bleu, le
   assert.match(html, /for \(let index = 0; index < PARCOURS\.SEUILS\.revision\.boites; index \+= 1\) \{\s*const caseFait = document\.createElement\("span"\);\s*caseFait\.className = `mc-case\$\{index < cellule\.boite \? " is-pleine" : ""\}`;/, "cinq petites cases par cellule de la grille");
   assert.equal((html.match(/<span class="mc-cell[^"]*"><span class="mc-cases">(?:<span class="mc-case(?: is-pleine)?"><\/span>){5}<\/span><\/span>/g) || []).length, 4, "la légende : quatre états à cinq cases");
   assert.match(html, /@media \(max-width: 479px\) \{\s*\.mc-cases \{ gap: 1\.5px; \}\s*\.mc-case \{ width: 5px; height: 5px;/, "au téléphone, 5 × 5 px + 4 × 1,5 px tiennent dans une cellule de ~33 px");
-  assert.match(html, /<b>Mes calculs\.<\/b> Chaque calcul a 5 boîtes\./);
   assert.match(html, /<b>Mes calculs du jour\.<\/b>/);
   assert.doesNotMatch(html, /une seule par jour|trois jours différents|Une case par jour/, "plus une trace de « une case par jour »");
   // « Encore 10 calculs » à zéro (décision du 12/09) : sur le résultat et dans Mes calculs, en secondaire.
@@ -210,8 +209,8 @@ test("la page : le bloc du jour en tête et conseillé, l’unique rond bleu, le
   assert.match(html, /const libre = !agenda\.dus && PARCOURS\.calculsAVenir\(parcours\)\.length > 0;/, "dans Mes calculs, le bouton devient « Encore N calculs »");
   assert.match(html, /bouton\.classList\.toggle\("secondary", !agenda\.dus\);/, "en secondaire : ce n’est plus l’étape du jour");
   assert.match(html, /"Rien ne monte : ces calculs n’étaient pas encore à revoir"/);
-  assert.match(html, /defi_tables_core\.js\?v=20260930-1/);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261003-1/);
+  assert.match(html, /defi_tables_core\.js\?v=20261003-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261003-2/);
 });
 
 test("le serveur : « boite » et « echeance » acceptés, « cases » toujours ; la page du professeur compte les calculs en retard", async () => {
@@ -225,7 +224,7 @@ test("le serveur : « boite » et « echeance » acceptés, « cases » toujours
   assert.match(prof, /retard: PARCOURS\.calculsEnRetard \? PARCOURS\.calculsEnRetard\(parcours\) : null,/);
   assert.match(prof, /if \(tri\.colonne === "retard"\) return eleve\.lu\.retard \? eleve\.lu\.retard\.length : -1;/);
   assert.match(prof, /cRetard\.dataset\.libelle = "En retard";/);
-  assert.match(prof, /ligne\.append\(cNom, cCode, cAcquises, cTravailler, cRetard, cMelange, cExpert, cDate, cActions\);/);
+  assert.match(prof, /ligne\.append\(cNom, cCode, cAcquises, cEnCours, cSemaine, cRetard, cDate, cActions\);/);
   // Le compteur est bien celui du moteur : dus AVANT aujourd'hui.
   const p = P.normaliserParcours({calculs: {
     "2-2": {boite: 2, vu: "2026-09-10", erreur: null, gagne: "2026-09-10", echeance: "2026-09-11"},

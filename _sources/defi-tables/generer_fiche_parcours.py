@@ -2,29 +2,26 @@
 
 Sorties :
   - outils/calcul_mental/fiche_parcours_tables.pdf   (fiche vide à photocopier :
-    page 1 = parcours par table, page 2 = carré de Pythagore 2→9, 5 boîtes par calcul)
+    page 1 = une rangée de dix cases par table, page 2 = carré de Pythagore
+    2→9, 5 boîtes par calcul)
   - assets/img/qr-defi-tables-parcours.svg           (QR utilisé aussi par la
-    fiche imprimée depuis l'appli, qui reproduit la même mise en page en HTML)
+    fiche de l'appli, qui reproduit la même mise en page en HTML)
 
-La fiche reprend la charte de la fiche de révision (titre bleu, cartes claires,
-QR code à droite, logo en haut à gauche, signature « mathsgo.re · CC BY-NC-SA
-4.0 » centrée en pied). Les règles écrites en bas de page sont celles du moteur
-`defi_tables_mon_parcours.js` : si un seuil change là-bas, il doit changer ici.
-La mise en page est la même que la fiche imprimée depuis l'appli
-(`defi_tables.html`, section `.fiche`) : les deux disent la même chose.
+Lot 2b de « Ma séance du jour » (03/10/2026) : la fiche montre ce que montre
+Mon parcours dans l'appli — pour chaque table, la rangée de ses dix résultats
+(× 1 à × 10). Une case entourée : réussi une fois ; une case coloriée : prêt.
+Les ronds de J'apprends et de Je m'entraîne ont quitté l'appli au lot 2a.
+QR à gauche, un seul logo (en haut à droite), la signature « mathsgo.re ·
+CC BY-NC-SA 4.0 » seule en pied. Tout texte est foncé : la feuille se lit
+imprimée en noir et blanc.
 
-Lot 3 de Défi tables v2 (08/09/2026) : mélange obligatoire dès 2 tables
-(20 questions en 1 min 30), escalier de cinq marches (★ … ♛ Légende des
-tables), rang qui ne redescend jamais. Lot 4b (10/09/2026) : cinq activités
-dans J'apprends — « perles » (le rekenrek) en tête, et le bâton s'appelle la
-bande. Lot mémoire (12/09/2026) : cinq boîtes par calcul au lieu de trois
-cases — un calcul monte quand on le réussit le jour où il revient (le
-lendemain, puis 3, 7, 14 jours après), su dès la boîte 4, une erreur = une
-boîte de moins.
+Les règles écrites en bas de page sont celles du moteur
+`defi_tables_mon_parcours.js` : si un seuil change là-bas, il change ici.
 
 Usage : python3 _sources/defi-tables/generer_fiche_parcours.py
 """
 
+import os
 from pathlib import Path
 
 from reportlab.graphics import renderPDF, renderSVG
@@ -37,55 +34,85 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 
+# ------------------------------------------------------------------ les textes
 TITLE_LINE_1 = "MON PARCOURS"
 TITLE_LINE_2 = "DES TABLES"
-SUBTITLE = "Feuille à colorier à la main. Dans l’application, elle se remplit toute seule."
+SUBTITLE = "Dans l’application, cette fiche se remplit toute seule. Ici, à la main."
+QR_LABEL = "Ouvrir l’appli"
 APP_URL = "https://mathsgo.re/outils/calcul_mental/defi_tables.html#parcours"
 FOOTER_TEXT = "mathsgo.re  ·  CC BY-NC-SA 4.0"
 TABLES = range(2, 11)
-APPRENDS = ["perles", "bande", "à trous", "ordre", "désordre"]
-ENTRAINE = ["produits", "trous", "les deux"]
+LEGENDE = ["j’entoure : réussi une fois", "je colorie : prêt"]
+ACQUISE_TEXTE = "acquise le"
+MELANGE_TITRE = "Mon mélange : mes tables acquises"
+MELANGE_TEXTE = "Dès 2 tables acquises : 20 questions en 1 min 30, à refaire après chaque nouvelle table."
+EXPERT_TITRE = "Je deviens expert : toutes les tables, de plus en plus vite"
+EXPERT_TEXTE = "Mes 9 tables acquises : 25 questions avec des divisions, 2 erreurs au plus."
 # Les cinq marches de l'escalier : la durée de chacune, et la couronne pour la
 # dernière (DejaVu n'a pas l'emoji 👑 : ♛ la remplace sur le papier).
 MARCHES = ["★  2 min", "★★  1 min 45", "★★★  1 min 30", "★★★★  1 min 15", "♛  1 min"]
+REGLES_TITRE = "Les règles"
+# Chaque règle : le début en gras, puis la suite.
 RULES = [
-    "J’apprends : un rond par activité terminée. On découvre la table, il n’y a rien à réussir.",
-    "Je m’entraîne : 10 questions sans chronomètre, 1 erreur au maximum. Trois entraînements différents.",
-    "Acquise ✓ : 20 questions (produits et nombres manquants) en 1 min 30, 2 erreurs au maximum.",
-    "Mon mélange : même règle, sur mes tables acquises — à réussir avant de valider une nouvelle table.",
-    "Mon rang : Bronze dès ma première table, puis Argent, Or, Platine, Diamant, Légende. On ne redescend jamais.",
+    ("Ma rangée", " : une case entourée, réussi une fois ; une case coloriée, prêt. Toutes coloriées : je peux valider."),
+    ("Acquise ✓", " : 20 questions (résultats et nombres manquants) en 1 min 30, 2 erreurs au plus."),
+    ("Mon mélange", " : à réussir avant de valider une nouvelle table."),
+    ("Mon rang", " : Bronze, Argent, Or, Platine, Diamant, Légende. On ne redescend jamais."),
 ]
 
 # Page 2 : « Mes calculs » — carré de Pythagore 2→9, sens confondus (moitié miroir grisée).
 CALC_TITLE = "MES CALCULS"
-CALC_SUBTITLE = "Cinq boîtes par calcul : une bonne réponse le jour où le calcul revient le fait monter d’une boîte,"
-CALC_SUBTITLE_2 = "une erreur le fait redescendre. À partir de la boîte 4, le calcul est su."
+CALC_SUBTITLE = "Chaque calcul a 5 boîtes. Réussi le jour où il revient, il monte d’une boîte ;"
+CALC_SUBTITLE_2 = "raté, il descend et revient demain. À partir de la boîte 4, il est su."
+CALC_NOTE = "7 × 8 et 8 × 7 sont le même calcul : une seule case. La moitié grisée est son miroir."
 BOITES = 5
-FACTS = [(a, b) for a in range(2, 10) for b in range(a, 10)]
+CALC_REGLES_TITRE = "Comment lire la grille"
 CALC_RULES = [
-    "7 × 8 = 8 × 7 : c’est le même calcul à mémoriser, il n’occupe qu’une case du tableau. C’est pourquoi une moitié est grisée.",
-    "Un calcul monte quand on le réussit le jour où il revient : le lendemain, puis 3 jours, 7 jours et 14 jours après —",
-    "pas trois fois dans la même minute. Une erreur le fait redescendre d’une boîte, sans limite, et il revient tout de suite.",
-    "Les tables de 1 et de 10 n’y sont pas : elles se retrouvent sans les apprendre par cœur.",
-    "La grille se remplit dans les entraînements, les validations et les révisions — jamais dans J’apprends.",
+    ("Un calcul revient", " le lendemain, puis 3 jours, 7 jours et 14 jours après. Le refaire le même jour ne le fait pas monter."),
+    ("Mes calculs du jour", " : les calculs qui reviennent aujourd’hui, 10 à la fois, sans chrono."),
+    ("Les tables de 1 et de 10", " n’y sont pas : elles se retrouvent sans les apprendre par cœur."),
+    ("La grille se remplit", " dans les entraînements, les validations et Mes calculs du jour — jamais dans J’apprends."),
 ]
 
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT_PDF = ROOT / "outils" / "calcul_mental" / "fiche_parcours_tables.pdf"
 OUTPUT_QR = ROOT / "assets" / "img" / "qr-defi-tables-parcours.svg"
 LOGO = ROOT / "assets" / "img" / "mathsgo-logo-print.png"
-FONT_REGULAR = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
-FONT_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 
+
+def police(*candidates: str) -> str:
+    """La première police présente : DejaVu sous Linux, sinon Windows ou macOS."""
+    for chemin in candidates:
+        if os.path.exists(chemin):
+            return chemin
+    raise SystemExit("Aucune police trouvée parmi : " + ", ".join(candidates))
+
+
+FONT_REGULAR = police("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+                      r"C:\Windows\Fonts\DejaVuSans.ttf", r"C:\Windows\Fonts\arial.ttf",
+                      "/Library/Fonts/Arial.ttf", "/System/Library/Fonts/Supplemental/Arial.ttf")
+FONT_BOLD = police("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+                   r"C:\Windows\Fonts\DejaVuSans-Bold.ttf", r"C:\Windows\Fonts\arialbd.ttf",
+                   "/Library/Fonts/Arial Bold.ttf", "/System/Library/Fonts/Supplemental/Arial Bold.ttf")
+
+# Couleurs : tout texte est foncé (lisible en noir et blanc) ; les aplats
+# restent pâles, jamais de texte clair sur un aplat de la même teinte.
 INK = HexColor("#143451")
 BLUE = HexColor("#0B57B7")
-TEAL = HexColor("#087F75")
-MUTED = HexColor("#506B7D")
+MUTED = HexColor("#3F5A6C")
 LINE = HexColor("#CFE2ED")
+TRAIT = HexColor("#7EA1B8")
+TEAL = HexColor("#087F75")
 CARD = HexColor("#F8FCFF")
 PALE_TEAL = HexColor("#E7F7F4")
-GOLD = HexColor("#B7791F")
+TEAL_LINE = HexColor("#A9E4DC")
+PALE_GOLD = HexColor("#FFF8E1")
+GOLD_LINE = HexColor("#E7C86A")
+GOLD_DARK = HexColor("#7A4E00")
+MIROIR = HexColor("#E6EAF0")
 WHITE = HexColor("#FFFFFF")
+
+MARGIN = 14 * mm
 
 
 def qr_drawing(size: float) -> Drawing:
@@ -101,45 +128,58 @@ def write_qr_svg() -> None:
     renderSVG.drawToFile(qr_drawing(120), str(OUTPUT_QR))
 
 
-def circle_row(pdf: canvas.Canvas, x: float, y: float, count: int, step: float, radius: float) -> None:
-    pdf.setStrokeColor(HexColor("#7EA1B8"))
-    pdf.setLineWidth(1.1)
-    for index in range(count):
-        pdf.circle(x + index * step, y, radius, stroke=1, fill=0)
-
-
-def rounded_box(pdf: canvas.Canvas, x: float, y: float, w: float, h: float, fill, stroke, radius=3 * mm, width=1.0) -> None:
+def rounded_box(pdf, x, y, w, h, fill, stroke, radius=3 * mm, width=1.0) -> None:
     pdf.setFillColor(fill)
     pdf.setStrokeColor(stroke)
     pdf.setLineWidth(width)
     pdf.roundRect(x, y, w, h, radius, stroke=1, fill=1)
 
 
+def regle(pdf, x, y, gras, suite, taille=8.6) -> None:
+    """Une ligne de règle : le début en gras, la suite en normal."""
+    pdf.setFillColor(INK)
+    pdf.setFont("SheetSans-Bold", taille)
+    pdf.drawString(x, y, gras)
+    decalage = pdfmetrics.stringWidth(gras, "SheetSans-Bold", taille)
+    pdf.setFillColor(MUTED)
+    pdf.setFont("SheetSans", taille)
+    pdf.drawString(x + decalage, y, suite)
+
+
+def footer(pdf) -> None:
+    width, _ = A4
+    pdf.setFillColor(MUTED)
+    pdf.setFont("SheetSans", 8)
+    pdf.drawCentredString(width / 2, 9 * mm, FOOTER_TEXT)
+
+
 def draw_sheet(pdf: canvas.Canvas) -> None:
     width, height = A4
-    margin = 14 * mm
+    margin = MARGIN
     top = height - margin
+    inner_w = width - 2 * margin
 
-    # En-tête : logo, titre, QR
-    logo_w = 34 * mm
-    pdf.drawImage(str(LOGO), margin, top - 16 * mm, width=logo_w, height=logo_w * 195 / 420, mask="auto")
+    # En-tête : QR à gauche, titre au centre, logo à droite (un seul logo).
+    qr_size = 22 * mm
+    renderPDF.draw(qr_drawing(qr_size), pdf, margin - 1.5 * mm, top - qr_size + 1.5 * mm)
+    pdf.setFillColor(MUTED)
+    pdf.setFont("SheetSans", 7.5)
+    pdf.drawCentredString(margin - 1.5 * mm + qr_size / 2, top - qr_size - 1.5 * mm, QR_LABEL)
     pdf.setFillColor(BLUE)
     pdf.setFont("SheetSans-Bold", 22)
     pdf.drawCentredString(width / 2, top - 8 * mm, TITLE_LINE_1)
     pdf.drawCentredString(width / 2, top - 16.5 * mm, TITLE_LINE_2)
-    qr_size = 24 * mm
-    renderPDF.draw(qr_drawing(qr_size), pdf, width - margin - qr_size, top - qr_size)
-    pdf.setFillColor(MUTED)
-    pdf.setFont("SheetSans", 6.5)
-    pdf.drawCentredString(width - margin - qr_size / 2, top - qr_size - 3 * mm, "Ouvrir Mon parcours")
+    logo_w = 34 * mm
+    pdf.drawImage(str(LOGO), width - margin - logo_w, top - 17 * mm, width=logo_w,
+                  height=logo_w * 195 / 420, mask="auto")
 
-    # Ligne prénom / classe / date
-    y = top - 30 * mm
+    # Prénom / classe / date
+    y = top - 31 * mm
     pdf.setFillColor(INK)
     pdf.setFont("SheetSans-Bold", 11)
     pdf.drawString(margin, y, "Prénom :")
-    pdf.setStrokeColor(LINE)
-    pdf.setLineWidth(0.9)
+    pdf.setStrokeColor(TRAIT)
+    pdf.setLineWidth(0.6)
     pdf.line(margin + 20 * mm, y - 1.2 * mm, margin + 82 * mm, y - 1.2 * mm)
     pdf.drawString(margin + 90 * mm, y, "Classe :")
     pdf.line(margin + 108 * mm, y - 1.2 * mm, margin + 132 * mm, y - 1.2 * mm)
@@ -149,190 +189,165 @@ def draw_sheet(pdf: canvas.Canvas) -> None:
     pdf.setFont("SheetSans", 9)
     pdf.drawString(margin, y - 6.5 * mm, SUBTITLE)
 
-    # Tableau des tables : 5 ronds J'apprends, 3 ronds Je m'entraîne, la case
-    # Acquise — neuf colonnes après le nom de la table, au pas de 12,5 mm.
-    table_top = y - 12 * mm
-    row_h = 15.6 * mm
-    col_table = margin
-    col_apprends = margin + 40 * mm
-    col_entraine = margin + 106 * mm
-    col_acquise = margin + 150 * mm
-    inner_w = width - 2 * margin
-    step_apprends = 12.5 * mm
-    step_entraine = 12.5 * mm
-    radius = 4 * mm
+    # La légende : deux cases modèles.
+    case_w, case_h, ecart = 10.2 * mm, 7.6 * mm, 1.3 * mm
+    ly = y - 15.5 * mm
+    lx = margin
+    for index, texte in enumerate(LEGENDE):
+        pdf.setFillColor(TEAL if index else WHITE)
+        pdf.setStrokeColor(TEAL)
+        pdf.setLineWidth(1.0 if index else 1.6)
+        pdf.roundRect(lx, ly - 1.6 * mm, 7 * mm, 5 * mm, 1.3 * mm, stroke=1, fill=1)
+        pdf.setFillColor(MUTED)
+        pdf.setFont("SheetSans", 8.6)
+        pdf.drawString(lx + 9 * mm, ly, texte)
+        lx += 9 * mm + pdfmetrics.stringWidth(texte, "SheetSans", 8.6) + 8 * mm
 
-    # En-têtes de colonnes
-    pdf.setFillColor(MUTED)
-    pdf.setFont("SheetSans-Bold", 8)
-    pdf.drawCentredString(col_apprends + 2 * step_apprends, table_top + 1.5 * mm, "J’APPRENDS")
-    pdf.drawCentredString(col_entraine + step_entraine, table_top + 1.5 * mm, "JE M’ENTRAÎNE")
-    pdf.drawCentredString(col_acquise + 8 * mm, table_top + 1.5 * mm, "ACQUISE")
-    pdf.setFont("SheetSans", 6.3)
-    for index, label in enumerate(APPRENDS):
-        pdf.drawCentredString(col_apprends + index * step_apprends, table_top - 1.6 * mm, label)
-    for index, label in enumerate(ENTRAINE):
-        pdf.drawCentredString(col_entraine + index * step_entraine, table_top - 1.6 * mm, label)
-
-    y = table_top - 4 * mm
+    # Une rangée par table : ses dix résultats (× 1 à × 10), puis « acquise le ».
+    row_h = 13.4 * mm
+    col_cases = margin + 33 * mm
+    y = ly - 3.5 * mm
     for table in TABLES:
         y -= row_h
-        rounded_box(pdf, margin, y, inner_w, row_h - 2 * mm, CARD, LINE)
-        cy = y + (row_h - 2 * mm) / 2
+        box_h = row_h - 1.8 * mm
+        rounded_box(pdf, margin, y, inner_w, box_h, WHITE, LINE)
+        cy = y + box_h / 2
         pdf.setFillColor(INK)
-        pdf.setFont("SheetSans-Bold", 12.5)
-        pdf.drawString(col_table + 4 * mm, cy - 1.6 * mm, f"Table de {table}")
-        circle_row(pdf, col_apprends, cy, len(APPRENDS), step_apprends, radius)
-        circle_row(pdf, col_entraine, cy, len(ENTRAINE), step_entraine, radius)
-        # case Acquise
-        box = 8.4 * mm
-        pdf.setStrokeColor(HexColor("#7EA1B8"))
-        pdf.setLineWidth(1.1)
-        pdf.setFillColor(WHITE)
-        pdf.roundRect(col_acquise + 8 * mm - box / 2, cy - box / 2, box, box, 2 * mm, stroke=1, fill=1)
-        pdf.setFillColor(HexColor("#C9D6DF"))
-        pdf.setFont("SheetSans-Bold", 11)
-        pdf.drawCentredString(col_acquise + 8 * mm, cy - 1.9 * mm, "✓")
+        pdf.setFont("SheetSans-Bold", 12)
+        pdf.drawString(margin + 3.5 * mm, cy - 1.6 * mm, f"Table de {table}")
+        for index in range(10):
+            x = col_cases + index * (case_w + ecart)
+            rounded_box(pdf, x, cy - case_h / 2, case_w, case_h, WHITE, TRAIT, radius=1.8 * mm, width=0.9)
+            pdf.setFillColor(INK)
+            pdf.setFont("SheetSans-Bold", 9.5)
+            pdf.drawCentredString(x + case_w / 2, cy - 1.25 * mm, str(table * (index + 1)))
+        fin = col_cases + 10 * (case_w + ecart)
+        pdf.setFillColor(MUTED)
+        pdf.setFont("SheetSans", 7.5)
+        pdf.drawString(fin + 2 * mm, cy - 1 * mm, ACQUISE_TEXTE)
+        pdf.setStrokeColor(TRAIT)
+        pdf.setLineWidth(0.6)
+        pdf.line(fin + 16.5 * mm, cy - 1.6 * mm, margin + inner_w - 3 * mm, cy - 1.6 * mm)
 
-    # Mon mélange + Je deviens expert (mêmes textes que la fiche de l'appli)
-    y -= 5 * mm
-    block_h = 17 * mm
-    y -= block_h
-    rounded_box(pdf, margin, y, inner_w, block_h, PALE_TEAL, HexColor("#A9E4DC"))
+    # Mon mélange
+    block_h = 16 * mm
+    y -= 4 * mm + block_h
+    rounded_box(pdf, margin, y, inner_w, block_h, PALE_TEAL, TEAL_LINE)
     pdf.setFillColor(INK)
     pdf.setFont("SheetSans-Bold", 11)
-    pdf.drawString(margin + 4 * mm, y + block_h - 5.5 * mm, "Mon mélange : mes tables acquises")
+    pdf.drawString(margin + 4 * mm, y + block_h - 6 * mm, MELANGE_TITRE)
     pdf.setFillColor(MUTED)
+    pdf.setFont("SheetSans", 8.6)
+    pdf.drawString(margin + 4 * mm, y + 3.6 * mm, MELANGE_TEXTE)
     pdf.setFont("SheetSans", 8)
-    pdf.drawString(margin + 4 * mm, y + 3.5 * mm,
-                   "Dès 2 tables acquises, à réussir avant de valider une nouvelle table (20 questions en 1 min 30). À refaire à chaque table.")
-    pdf.setFillColor(MUTED)
-    pdf.setFont("SheetSans", 7.5)
-    pdf.drawString(margin + 96 * mm, y + block_h - 5.5 * mm, "dates :")
-    pdf.setStrokeColor(HexColor("#7EA1B8"))
-    pdf.setLineWidth(0.8)
+    pdf.drawString(margin + 98 * mm, y + block_h - 6 * mm, "dates :")
+    pdf.setStrokeColor(TRAIT)
+    pdf.setLineWidth(0.6)
     for index in range(4):
-        x0 = margin + 109 * mm + index * 18 * mm
-        pdf.line(x0, y + block_h - 6.5 * mm, x0 + 15 * mm, y + block_h - 6.5 * mm)
+        x0 = margin + 110 * mm + index * 17.5 * mm
+        pdf.line(x0, y + block_h - 6.8 * mm, x0 + 14.5 * mm, y + block_h - 6.8 * mm)
 
-    # L'escalier : le titre, la phrase, puis les cinq marches sur leur ligne,
-    # réparties sur la largeur, à cocher au fur et à mesure.
-    expert_h = 22 * mm
+    # Les étoiles : le titre, la phrase, puis les cinq marches sur leur ligne.
+    expert_h = 23 * mm
     y -= 3 * mm + expert_h
-    rounded_box(pdf, margin, y, inner_w, expert_h, HexColor("#FFF8E1"), HexColor("#E7C86A"))
+    rounded_box(pdf, margin, y, inner_w, expert_h, PALE_GOLD, GOLD_LINE)
     pdf.setFillColor(INK)
     pdf.setFont("SheetSans-Bold", 11)
-    pdf.drawString(margin + 4 * mm, y + expert_h - 5.5 * mm, "Je deviens expert : toutes les tables, de plus en plus vite")
+    pdf.drawString(margin + 4 * mm, y + expert_h - 6 * mm, EXPERT_TITRE)
     pdf.setFillColor(MUTED)
-    pdf.setFont("SheetSans", 8)
-    pdf.drawString(margin + 4 * mm, y + expert_h - 10 * mm,
-                   "Quand mes 9 tables sont acquises et le mélange réussi : 25 questions avec des divisions, 2 erreurs au maximum.")
-    pdf.setFont("SheetSans-Bold", 9)
-    pdf.setFillColor(GOLD)
+    pdf.setFont("SheetSans", 8.6)
+    pdf.drawString(margin + 4 * mm, y + expert_h - 11 * mm, EXPERT_TEXTE)
+    pdf.setFont("SheetSans-Bold", 9.5)
+    pdf.setFillColor(GOLD_DARK)
     pas = (inner_w - 8 * mm) / len(MARCHES)
     for index, marche in enumerate(MARCHES):
-        pdf.drawCentredString(margin + 4 * mm + pas * (index + 0.5), y + 3.8 * mm, marche)
-    pdf.setFont("SheetSans", 6.5)
+        pdf.drawCentredString(margin + 4 * mm + pas * (index + 0.5), y + 4.8 * mm, marche)
+    pdf.setFont("SheetSans", 7.5)
     pdf.setFillColor(MUTED)
-    pdf.drawCentredString(margin + 4 * mm + pas * 4.5, y + 1.2 * mm, "Légende des tables")
+    pdf.drawCentredString(margin + 4 * mm + pas * 4.5, y + 1.6 * mm, "Légende des tables")
 
-    # Règles
-    y -= 10 * mm
+    # Comment colorier
+    y -= 9 * mm
     pdf.setFillColor(INK)
-    pdf.setFont("SheetSans-Bold", 9)
-    pdf.drawString(margin, y, "Les règles")
-    y -= 5 * mm
-    pdf.setFillColor(MUTED)
-    pdf.setFont("SheetSans", 8.3)
-    for line in RULES:
-        pdf.drawString(margin, y, line)
-        y -= 5 * mm
+    pdf.setFont("SheetSans-Bold", 9.5)
+    pdf.drawString(margin, y, REGLES_TITRE)
+    for gras, suite in RULES:
+        y -= 5.2 * mm
+        regle(pdf, margin, y, gras, suite)
 
-    # Pied de page
-    pdf.setFillColor(MUTED)
-    pdf.setFont("SheetSans", 8)
-    pdf.drawCentredString(width / 2, 9 * mm, FOOTER_TEXT)
+    footer(pdf)
 
 
 def draw_calc_sheet(pdf: canvas.Canvas) -> None:
     width, height = A4
-    margin = 14 * mm
-    top = height - margin
+    margin = 10 * mm
+    top = height - MARGIN
 
-    # Titre et consigne
     pdf.setFillColor(BLUE)
     pdf.setFont("SheetSans-Bold", 22)
     pdf.drawCentredString(width / 2, top - 8 * mm, CALC_TITLE)
     pdf.setFillColor(MUTED)
-    pdf.setFont("SheetSans", 9)
-    pdf.drawCentredString(width / 2, top - 15 * mm, CALC_SUBTITLE)
-    pdf.drawCentredString(width / 2, top - 19.5 * mm, CALC_SUBTITLE_2)
+    pdf.setFont("SheetSans", 9.5)
+    pdf.drawCentredString(width / 2, top - 15.5 * mm, CALC_SUBTITLE)
+    pdf.drawCentredString(width / 2, top - 20.3 * mm, CALC_SUBTITLE_2)
 
     # Carré de Pythagore, 2 à 9 (décidé le 30/08/2026) : la moitié haute porte
-    # les cinq boîtes à cocher, la moitié miroir est grisée — 7 × 8 et 8 × 7
-    # sont le même calcul, on ne le remplit qu'une fois. Même disposition que
-    # l'écran « Mes calculs » de l'appli et que la fiche remplie.
+    # les cinq boîtes, la moitié miroir est grisée — 7 × 8 et 8 × 7 sont le
+    # même calcul. Même disposition que l'écran « Mes calculs » de l'appli.
+    # Lot 5 : la grille prend la page (cases de 22,9 × 23 mm), boîtes de 3,6 mm.
     facteurs = list(range(2, 10))
-    grid_top = top - 27 * mm
-    entete_w = 14 * mm
+    entete_w = 7 * mm
     cell_w = (width - 2 * margin - entete_w) / len(facteurs)
-    cell_h = 15 * mm
-    box = 2.7 * mm
-    ecart = 0.8 * mm
+    cell_h = 23 * mm
+    grid_top = top - 31 * mm
+    box = 3.6 * mm
+    ecart = 0.7 * mm
 
-    # En-tête de colonnes
-    pdf.setFont("SheetSans-Bold", 11)
+    pdf.setFont("SheetSans-Bold", 12)
     pdf.setFillColor(BLUE)
-    pdf.drawCentredString(margin + entete_w / 2, grid_top + 3 * mm, "×")
+    pdf.drawCentredString(margin + entete_w / 2, grid_top + 2.5 * mm, "×")
     for index, colonne in enumerate(facteurs):
         cx = margin + entete_w + index * cell_w + cell_w / 2
-        pdf.drawCentredString(cx, grid_top + 3 * mm, str(colonne))
+        pdf.drawCentredString(cx, grid_top + 2.5 * mm, str(colonne))
 
     for rang, ligne in enumerate(facteurs):
         y = grid_top - (rang + 1) * cell_h
-        pdf.setFont("SheetSans-Bold", 11)
+        pdf.setFont("SheetSans-Bold", 12)
         pdf.setFillColor(BLUE)
-        pdf.drawCentredString(margin + entete_w / 2, y + cell_h / 2 - 1.6 * mm, str(ligne))
+        pdf.drawCentredString(margin + entete_w / 2, y + cell_h / 2 - 1.8 * mm, str(ligne))
         for index, colonne in enumerate(facteurs):
             x = margin + entete_w + index * cell_w
             miroir = colonne < ligne
             pdf.setStrokeColor(LINE)
             pdf.setLineWidth(0.7)
-            pdf.setFillColor(HexColor("#EEF1F5") if miroir else CARD)
+            pdf.setFillColor(MIROIR if miroir else CARD)
             pdf.rect(x, y, cell_w, cell_h, stroke=1, fill=1)
             if miroir:
                 continue
             cy = y + cell_h / 2
             largeur_cases = BOITES * box + (BOITES - 1) * ecart
             depart = x + (cell_w - largeur_cases) / 2
-            pdf.setStrokeColor(HexColor("#7EA1B8"))
+            pdf.setStrokeColor(TRAIT)
             pdf.setLineWidth(0.8)
             pdf.setFillColor(WHITE)
             for case in range(BOITES):
                 bx = depart + case * (box + ecart)
                 pdf.roundRect(bx, cy - box / 2, box, box, 0.7 * mm, stroke=1, fill=1)
 
+    bas = grid_top - len(facteurs) * cell_h
     pdf.setFillColor(MUTED)
-    pdf.setFont("SheetSans", 8)
-    pdf.drawCentredString(width / 2, grid_top - len(facteurs) * cell_h - 5 * mm,
-                          "La moitié grisée est le miroir de l’autre : 7 × 8 et 8 × 7 sont le même calcul, on ne le remplit qu’une fois.")
+    pdf.setFont("SheetSans", 8.6)
+    pdf.drawCentredString(width / 2, bas - 5.5 * mm, CALC_NOTE)
 
-    # Règles de lecture
-    y = grid_top - len(facteurs) * cell_h - 14 * mm
+    y = bas - 14 * mm
     pdf.setFillColor(INK)
-    pdf.setFont("SheetSans-Bold", 9)
-    pdf.drawString(margin, y, "Comment lire la grille")
-    y -= 5 * mm
-    pdf.setFillColor(MUTED)
-    pdf.setFont("SheetSans", 8.3)
-    for line in CALC_RULES:
-        pdf.drawString(margin, y, line)
-        y -= 5 * mm
+    pdf.setFont("SheetSans-Bold", 9.5)
+    pdf.drawString(MARGIN, y, CALC_REGLES_TITRE)
+    for gras, suite in CALC_RULES:
+        y -= 5.2 * mm
+        regle(pdf, MARGIN, y, gras, suite)
 
-    # Pied de page
-    pdf.setFillColor(MUTED)
-    pdf.setFont("SheetSans", 8)
-    pdf.drawCentredString(width / 2, 9 * mm, FOOTER_TEXT)
+    footer(pdf)
 
 
 def main() -> None:
