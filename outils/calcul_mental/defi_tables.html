@@ -1782,6 +1782,7 @@
     .fiche-prof thead th { background: #eef3f9; color: #143451; font-size: 7.5pt; line-height: 1.1; }
     .fiche-prof tbody th { text-align: left; white-space: nowrap; }
     .fiche-prof td.zero { color: #9fb0bd; }
+    .fiche-prof p { margin: 0; color: #3f5a6c; font-size: 8.3pt; }
     .fiche-block { position: relative; margin: 2.5mm 0 0; padding: 2.2mm 4mm; border: .3mm solid #a9e4dc; border-radius: 3mm; background: #e7f7f4; break-inside: avoid; }
     .fiche-expert { border-color: #e7c86a; background: #fff8e1; }
     .fiche-block strong { display: block; font-size: 11pt; }
@@ -2232,8 +2233,8 @@
         </div>
         <div id="parcours-legende" class="parcours-legend legende-rangee" aria-hidden="true">
           <span><b></b> pas encore</span>
-          <span><b class="entouree">7</b> réussi une fois</span>
-          <span><b class="pleine">7</b> prêt</span>
+          <span><b class="entouree"></b> réussi une fois</span>
+          <span><b class="pleine"></b> prêt</span>
         </div>
         <ol id="parcours-list" class="parcours-list"></ol>
         <div id="parcours-melange" class="parcours-row parcours-extra" hidden></div>
@@ -2400,8 +2401,8 @@
          de J'apprends et de Je m'entraîne ont quitté l'appli au lot 2a. -->
     <p class="fiche-legende" aria-hidden="true">
       <span><i class="fiche-r"></i>pas encore</span>
-      <span><i class="fiche-r entouree">12</i>réussi une fois</span>
-      <span><i class="fiche-r pleine">12</i>prêt</span>
+      <span><i class="fiche-r entouree"></i>réussi une fois</span>
+      <span><i class="fiche-r pleine"></i>prêt</span>
       <b id="fiche-semaine"></b>
     </p>
     <ol id="fiche-rows" class="fiche-rangees"></ol>
@@ -2423,6 +2424,7 @@
         <thead><tr><th></th><th>Séances</th><th>Perles</th><th>Je construis<br>la bande</th><th>Bande<br>à trous</th><th>Dans<br>l’ordre</th><th>Dans le<br>désordre</th><th>Nombres<br>manquants</th><th>Résultats et<br>nombres manquants</th></tr></thead>
         <tbody id="fiche-prof-rows"></tbody>
       </table>
+      <p id="fiche-prof-vide" hidden>Aucune séance ni activité enregistrée.</p>
     </div>
     <div class="fiche-rules">
       <p><b>Ma rangée</b> : une case entourée, réussi une fois ; une case pleine, prêt. Toutes pleines : je peux valider ma table.</p>
@@ -3076,11 +3078,15 @@
       // demandé, demarrerSuivi lit le serveur. Un billet refusé (déjà utilisé,
       // périmé, ou serveur muet) laisse l'appli sans code et le dit.
       async function entrerParBillet(billet, ouvrir) {
-        // Lot 2b : pendant l'échange du billet, on ne sait pas encore qui
-        // entre — l'accueil attend (voir attendreSuivi).
-        attendreSuivi();
+        // Pendant l'échange du billet, on ne sait pas encore qui entre :
+        // l'accueil reste caché (billetEnCours). Les 2,5 s d'attente du
+        // parcours ne partent qu'ensuite, dans demarrerSuivi : comptées dès
+        // ici, un billet lent les épuisait et « Tu connais déjà des
+        // tables ? » clignotait à l'élève qui en a déjà.
+        billetEnCours = true;
         renderParcours();
         const reponse = await echangerBillet(billet);
+        billetEnCours = false;
         const donnees = reponse.statut === 200 && reponse.donnees && reponse.donnees.ok ? reponse.donnees : null;
         const code = donnees && donnees.type === "entree" ? PARCOURS.normaliserCode(donnees.code || "") : "";
         if (!PARCOURS.codeValide(code)) {
@@ -3088,6 +3094,9 @@
           majLienRetour();
           renderRepere();
           finAttente();
+          // L'attente de 2,5 s a pu finir pendant l'échange : l'accueil se
+          // redessine ici, sinon il resterait caché.
+          if (!state.running) renderParcours();
           return false;
         }
         adopterCode(code);
@@ -3335,6 +3344,11 @@
       // réponse, à l'échec, ou au bout de 2,5 s (réseau lent : l'écran arrive
       // quand même, et suit le parcours dès qu'il est rendu).
       let suiviAttendu = false;
+      // Tant que le billet d'entrée s'échange, on ne sait pas QUI entre :
+      // l'accueil reste caché, même au-delà des 2,5 s. Sans cela, une table
+      // touchée pendant un billet lent se jouait dans la case « sans code »
+      // et n'était jamais rattachée à l'élève (cas relevé par Code, 03/10).
+      let billetEnCours = false;
       let minuteurAttente = null;
       let attenteFinie = false;
       const ATTENTE_SUIVI_MS = 2500;
@@ -3424,6 +3438,8 @@
         const distant = existe ? PARCOURS.normaliserParcours(brut) : PARCOURS.creerParcours();
         if (!distant.prenom && prenom) distant.prenom = prenom;
         $("fiche-ecran-nom").textContent = distant.prenom || "Fiche de suivi";
+        // Le navigateur propose le titre de la page comme nom du PDF.
+        document.title = `Fiche Défi tables${distant.prenom ? ` - ${distant.prenom}` : ""}${classe ? ` - ${classe}` : ""}`;
         $("fiche-classe").textContent = classe || "";
         $("fiche-ecran-info").textContent = [
           classe ? `Classe ${classe}` : "",
@@ -4764,7 +4780,24 @@
         // alignée : c'est l'élève qui vient de la fabriquer.
         $("question-card").classList.add("est-finie");
         mesurerBoulier();
+        ajusterTableFinale();
         dom.terminer.focus?.({preventScroll: true});
+      }
+
+      // Les onze lignes tiennent sans défiler. La taille écrite dans le style
+      // (4,2 % de la hauteur) ne connaît ni le fil « Ma séance » ni le repère
+      // de suivi : en séance, sous un code, la table défilait dans son cadre
+      // (capture de Gwenaël, 03/10). On réduit donc l'écriture, pixel par
+      // pixel, jusqu'à ce que tout soit visible.
+      function ajusterTableFinale() {
+        const liste = boulier.dom && boulier.dom.tableFinale;
+        if (!liste) return;
+        liste.style.fontSize = "";
+        let taille = parseFloat(getComputedStyle(liste).fontSize);
+        while (liste.scrollHeight > liste.clientHeight + 1 && taille > 12) {
+          taille -= 1;
+          liste.style.fontSize = `${taille}px`;
+        }
       }
 
       function majBoulier() {
@@ -6496,7 +6529,7 @@
         document.querySelector(".acc").classList.toggle("en-decouverte", decouverte);
         // Appareil neuf sous un code : rien à l'écran tant que le serveur n'a
         // pas dit qui est l'élève (lot 2b).
-        document.querySelector(".acc").classList.toggle("en-attente", suiviAttendu);
+        document.querySelector(".acc").classList.toggle("en-attente", suiviAttendu || billetEnCours);
         const carteSeance = avecSeance && !state.choisirActivite;
         if (decouverte) renderDecouverte(etapes, etat);
         else if (avecSeance) renderSeanceAccueil(etapes, etat, table, ligne);
@@ -7128,7 +7161,7 @@
       // qui avait déjà des tables et ouvrait l'appli sur un appareil neuf, et
       // un élève rapide pouvait y toucher une table.
       function enDecouverte() {
-        if (suiviAttendu) return false;
+        if (suiviAttendu || billetEnCours) return false;
         let fermee = decouverteFermee;
         try { fermee = fermee || stockageSession()?.getItem(CLE_DECOUVERTE) === (codeSuivi || "-"); } catch (_) {}
         return !fermee && (decouverteEngagee || PARCOURS.estVide(parcours));
@@ -7655,7 +7688,11 @@
             lignesProf.append(tr);
           });
         }
-        cadre.hidden = !lignesProf.children.length;
+        // Toujours là pour le professeur ; sans rien à compter, il le dit
+        // (une fiche sans cadre faisait croire à un oubli).
+        cadre.hidden = !source;
+        cadre.querySelector("table").hidden = !lignesProf.children.length;
+        $("fiche-prof-vide").hidden = Boolean(lignesProf.children.length);
         // R5 (A17) : « À refaire » seulement s'il a déjà été réussi une fois ;
         // un mélange jamais fait est « À faire » — la règle de Mon parcours.
         $("fiche-melange-state").textContent = etat.melange.visible

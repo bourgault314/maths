@@ -702,10 +702,10 @@ test("lot 2a : le premier écran suit le parcours rendu par le serveur — il ne
   const onglet = new Map();
   const stockageSession = () => ({getItem: cle => (onglet.has(cle) ? onglet.get(cle) : null), setItem: (cle, valeur) => onglet.set(cle, valeur)});
   const fabrique = new Function("PARCOURS", "stockageSession", "etat",
-    `let parcours = etat.parcours; let codeSuivi = etat.code; let suiviAttendu = Boolean(etat.attendu);
+    `let parcours = etat.parcours; let codeSuivi = etat.code; let suiviAttendu = Boolean(etat.attendu); let billetEnCours = Boolean(etat.billet);
      ${html.slice(debut, fin)}
      return {
-       enDecouverte() { parcours = etat.parcours; codeSuivi = etat.code; suiviAttendu = Boolean(etat.attendu); return enDecouverte(); },
+       enDecouverte() { parcours = etat.parcours; codeSuivi = etat.code; suiviAttendu = Boolean(etat.attendu); billetEnCours = Boolean(etat.billet); return enDecouverte(); },
        fermerDecouverte,
        tenter() { decouverteEngagee = true; }
      };`);
@@ -719,7 +719,12 @@ test("lot 2a : le premier écran suit le parcours rendu par le serveur — il ne
   const etat = {parcours: vide, code: "ABCDEF", attendu: true};
   const page = fabrique(P, stockageSession, etat);
   assert.equal(page.enDecouverte(), false, "case vide, serveur attendu : pas encore de premier écran");
+  // Billet encore en cours d'échange, attente de 2,5 s déjà finie : toujours pas d'écran
+  // (une table touchée là se jouerait sans le code de l'élève).
   etat.attendu = false;
+  etat.billet = true;
+  assert.equal(page.enDecouverte(), false, "billet en cours : on ne sait pas qui entre, pas de premier écran");
+  etat.billet = false;
   assert.equal(page.enDecouverte(), true, "le serveur n'a rien (ou n'a pas répondu) : l'écran s'affiche");
   etat.parcours = P.fusionner(vide, lea);
   assert.equal(page.enDecouverte(), false, "le serveur a rendu ses 3 tables : l'accueil de sa table, plus le premier écran");
@@ -753,7 +758,7 @@ test("lot 2b : la fiche — une rangée par table, l'échelle de ma table, « Ce
   const fiche = html.slice(html.indexOf('<section id="fiche-print"'), html.indexOf('<section class="fiche-page2">'));
   assert.match(fiche, /<ol id="fiche-rows" class="fiche-rangees"><\/ol>/);
   assert.doesNotMatch(fiche, /J’apprends|Je m’entraîne|fiche-table|Colorie les ronds/, "les ronds ont quitté l'appli au lot 2a");
-  assert.match(fiche, /<span><i class="fiche-r"><\/i>pas encore<\/span>\s*<span><i class="fiche-r entouree">12<\/i>réussi une fois<\/span>\s*<span><i class="fiche-r pleine">12<\/i>prêt<\/span>/, "la légende de Mon parcours");
+  assert.match(fiche, /<span><i class="fiche-r"><\/i>pas encore<\/span>\s*<span><i class="fiche-r entouree"><\/i>réussi une fois<\/span>\s*<span><i class="fiche-r pleine"><\/i>prêt<\/span>/, "la légende de Mon parcours");
   // Un seul logo, en haut à droite ; le QR à gauche ; la signature seule en pied.
   assert.match(fiche, /<header class="fiche-head">\s*<div class="fiche-qr">[\s\S]*?<\/div>\s*<h1>Mon parcours<br>des tables<\/h1>\s*<img class="fiche-logo" src="\.\.\/\.\.\/assets\/img\/mathsgo-logo-print\.png"/);
   assert.equal((fiche.match(/mathsgo-logo/g) || []).length, 1, "un seul logo sur la feuille 1");
@@ -781,7 +786,11 @@ test("lot 2b : les compteurs « fois » sont pour le professeur — le cadre n'e
   assert.match(html, /<div id="fiche-prof" class="fiche-prof" hidden>\s*<strong>Pour le professeur <small>— combien de fois chaque activité a été faite<\/small><\/strong>/);
   const rendu = html.slice(html.indexOf("      function renderFiche(source) {"), html.indexOf("      function printFiche() {"));
   assert.match(rendu, /lignesProf\.replaceChildren\(\);\s*if \(source\) \{/, "sans source (la fiche de l'élève sur son appareil), aucune ligne");
-  assert.match(rendu, /cadre\.hidden = !lignesProf\.children\.length;/);
+  // Toujours là pour le professeur ; sans rien à compter, une phrase le dit.
+  assert.match(rendu, /cadre\.hidden = !source;\s*cadre\.querySelector\("table"\)\.hidden = !lignesProf\.children\.length;\s*\$\("fiche-prof-vide"\)\.hidden = Boolean\(lignesProf\.children\.length\);/);
+  assert.match(html, /<p id="fiche-prof-vide" hidden>Aucune séance ni activité enregistrée\.<\/p>/);
+  // Le nom proposé à l'enregistrement du PDF : le titre de la page.
+  assert.match(html, /document\.title = `Fiche Défi tables\$\{distant\.prenom \? ` - \$\{distant\.prenom\}` : ""\}\$\{classe \? ` - \$\{classe\}` : ""\}`;/);
   assert.match(rendu, /const nombres = \[ligne\.seance\.n, fois\.beads, fois\.construct, fois\.gaps, fois\.ordered,\s*fois\.random \+ fois\.desordre, fois\.trous, fois\.mixte\];\s*if \(!nombres\.some\(Boolean\)\) return;/, "une ligne par table où quelque chose a été fait");
   assert.equal((html.match(/<th>Séances<\/th><th>Perles<\/th>/g) || []).length, 1);
   // Le professeur passe toujours une source ; l'élève, jamais.
@@ -790,20 +799,22 @@ test("lot 2b : les compteurs « fois » sont pour le professeur — le cadre n'e
 });
 
 test("lot 2b : avec un code, « Tu connais déjà des tables ? » attend le serveur — billet, lecture, 2,5 s au plus", () => {
-  assert.match(html, /function enDecouverte\(\) \{\s*if \(suiviAttendu\) return false;/);
+  assert.match(html, /function enDecouverte\(\) \{\s*if \(suiviAttendu \|\| billetEnCours\) return false;/);
   assert.match(html, /const ATTENTE_SUIVI_MS = 2500;/);
   assert.match(html, /function attendreSuivi\(\) \{\s*if \(attenteFinie\) return;\s*suiviAttendu = true;\s*if \(minuteurAttente === null\) minuteurAttente = window\.setTimeout\(finAttente, ATTENTE_SUIVI_MS\);/);
   assert.match(html, /function finAttente\(\) \{[\s\S]{0,160}?attenteFinie = true;\s*if \(!suiviAttendu\) return;\s*suiviAttendu = false;\s*if \(!state\.running\) renderParcours\(\);/);
   // Le billet : l'attente commence avant l'échange, et finit si le billet est refusé.
-  assert.match(html, /async function entrerParBillet\(billet, ouvrir\) \{[\s\S]{0,220}?attendreSuivi\(\);\s*renderParcours\(\);\s*const reponse = await echangerBillet\(billet\);/);
-  assert.match(html, /renderRepere\(\);\s*finAttente\(\);\s*return false;/);
+  assert.match(html, /async function entrerParBillet\(billet, ouvrir\) \{[\s\S]{0,500}?billetEnCours = true;\s*renderParcours\(\);\s*const reponse = await echangerBillet\(billet\);/);
   // La lecture du parcours : seulement pour une case vide ; sans code ou détaché, rien n'attend.
   assert.match(html, /if \(!suiviActif\(\)\) \{ finAttente\(\); return; \}/);
   assert.match(html, /if \(sync\.detache\) \{ finAttente\(\); return; \}/);
   assert.match(html, /if \(PARCOURS\.estVide\(parcours\)\) \{\s*attendreSuivi\(\);\s*if \(!state\.running\) renderParcours\(\);\s*\} else finAttente\(\);/);
   assert.match(html, /lireParcoursDuServeur\(code\)\.then\(reponse => \{\s*if \(code !== codeSuivi\) return;[\s\S]{0,200}?suiviAttendu = false;/);
   // Pendant l'attente, l'accueil ne montre rien (ni table de 2, ni premier écran).
-  assert.match(html, /classList\.toggle\("en-attente", suiviAttendu\);/);
+  assert.match(html, /classList\.toggle\("en-attente", suiviAttendu \|\| billetEnCours\);/);
+  // Billet lent : l'accueil reste caché jusqu'au retour du billet, puis se redessine même si les 2,5 s sont passées.
+  assert.match(html, /const reponse = await echangerBillet\(billet\);\s*billetEnCours = false;/);
+  assert.match(html, /finAttente\(\);[\s\S]{0,200}?if \(!state\.running\) renderParcours\(\);\s*return false;/);
   assert.match(html, /\.acc\.en-attente > \* \{ visibility: hidden; \}/);
 });
 
@@ -860,4 +871,23 @@ test("lot 2b : « résultats et nombres manquants » partout — noyau, fiche vi
   const publication = lire(".github/workflows/publier.yml");
   assert.match(publication, /python -m pip install --disable-pip-version-check reportlab\n/);
   assert.doesNotMatch(publication, /PyMuPDF|pypdf/);
+});
+
+// Retouches après le lot 2b (03/10/2026) : en séance, sous un code, la table
+// finale des perles défilait dans son cadre (le fil « Ma séance » et le repère
+// de suivi prennent de la hauteur). L'écriture se réduit jusqu'à tout montrer.
+test("les perles : la table finale tient sans défiler, même en séance sous un code", () => {
+  assert.match(html, /\$\("question-card"\)\.classList\.add\("est-finie"\);\s*mesurerBoulier\(\);\s*ajusterTableFinale\(\);/);
+  const debut = html.indexOf("      function ajusterTableFinale() {");
+  const source = html.slice(debut, html.indexOf("\n      }", debut) + 9);
+  // Exécutée avec une fausse liste : 11 lignes de 1,3 × la taille, dans 400 px.
+  const liste = {style: {fontSize: ""}, clientHeight: 400, get scrollHeight() { return Math.ceil(11 * 1.3 * (parseFloat(this.style.fontSize) || 40)); }};
+  new Function("boulier", "getComputedStyle", `${source}; ajusterTableFinale();`)({dom: {tableFinale: liste}}, () => ({fontSize: "40px"}));
+  const taille = parseFloat(liste.style.fontSize);
+  assert.ok(liste.scrollHeight <= liste.clientHeight + 1, "plus rien à faire défiler");
+  assert.equal(taille, 28, "la plus grande écriture qui tient (40 px en demandait 572)");
+  // Assez de place : la taille du style n'est pas touchée.
+  const large = {style: {fontSize: ""}, clientHeight: 900, scrollHeight: 572};
+  new Function("boulier", "getComputedStyle", `${source}; ajusterTableFinale();`)({dom: {tableFinale: large}}, () => ({fontSize: "40px"}));
+  assert.equal(large.style.fontSize, "");
 });
