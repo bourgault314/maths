@@ -332,13 +332,18 @@ test("l'écran : trois étapes (les barres, schéma regroupé, je calcule), les 
   assert.deepEqual(cadres.slice(0, 3), ["enqueteBarres", "enqueteLigne", "enqueteCalculs"]);
   assert.match(ligne("const ENQ_PROFIL_TEL = "), /boxW:960, cadre:true/);
   // la page 2 des livrets (lot « pages 2 », 30/09/2026) : les schémas du pas à pas G3, posés par
-  // render.py, puis « J'écris la réponse et je vérifie » en texte
+  // render.py, puis « Je réponds » et « Je vérifie » en texte, deux endroits comme à l'écran (03/10/2026)
   assert.match(render, /enqueteG3Dessiner\(g, card, et, plan\.modele, prof\);/);
   assert.doesNotMatch(render, /vide:true|drawRelationGroupedSchema|drawRelationOrderedSchema/);
   assert.match(render, /if \(n < 4 \|\| n > 7\) return/);
   const exemple = exempleHtml;
   assert.match(exemple, /<ol class="etapes"><\/ol>/);
-  assert.match(render, /J'écris la réponse et je vérifie/);
+  assert.doesNotMatch(render, /J'écris la réponse et je vérifie/, "l'ancien titre unique");
+  assert.match(render, /<h3>Je réponds<\/h3><p class="rep">' \+ d\.fin\.reponse/);
+  assert.match(render, /<h3>Je vérifie<\/h3><p class="leg">' \+ d\.fin\.verif/);
+  // la réponse encadrée sur fond blanc ; en deux colonnes, « Je vérifie » passe dessous (les schémas gardent leur taille)
+  assert.match(exemple, /\.et\.texte \.rep\{[^}]*background:#fff;border:1\.2px solid #0f172a/);
+  assert.match(exemple, /\.etapes\.deux \.et\.texte \.duo\{flex-direction:column/);
   assert.match(render, /Je fais le schéma de la situation/);
   assert.doesNotMatch(exemple, /class="fin"|Je les remplis avec les mots/);
 });

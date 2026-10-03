@@ -439,15 +439,15 @@ JS_EXEMPLE = r"""() => {
   const fond = sc.querySelector('rect'); if (fond && fond.getAttribute('width') === '1600') fond.remove();
   const carte = sc.innerHTML; sc.remove();
   // la correction en barres (lots G1-G2, 29/09/2026) : ① les barres, ② schéma regroupé,
-  // ③ je calcule (sans la ligne réponse : la 4e étape de la page, « J'écris la réponse et je
-  // vérifie », la remplace)
+  // ③ je calcule (sans la ligne réponse : la 4e étape de la page, « Je réponds » puis
+  // « Je vérifie », la remplace)
   const modele = enqueteBarresModele(card);
   if (!modele) return {erreur: "la carte de l'exemple n'a pas de correction en barres"};
   const prof = {isPrint:true, modele, sansTitre:true}; // la page a ses propres titres
   // Les schémas successifs du pas à pas de la projection (lot G3), au profil d'impression : les
   // barres, le schéma regroupé, puis un dessin par opération (je range, je regroupe, je retire,
   // je partage, je remplace) et les barres avec les nombres. Ni le schéma vide ni le dernier
-  // appui (la dernière étape de la page, « J'écris la réponse et je vérifie », est en texte).
+  // appui (la dernière étape de la page, « Je réponds » puis « Je vérifie », est en texte).
   // Les autres taches tiennent en UN dessin, le dernier (toutes les valeurs, tous les calculs).
   let plan = null;
   try { plan = enqueteG3Etapes(card); } catch (_e) { plan = null; }
@@ -517,7 +517,7 @@ JS_PAGE_EXEMPLE = """(d) => {
   const c = document.querySelector('svg.ex-carte'); if (!c) return 'pas de place pour la carte';
   c.innerHTML = d.carte;
   const e = document.querySelector('.enquete'); if (!e) return 'pas de bloc enquête'; e.innerHTML = d.enquete;
-  // les dessins du pas à pas (de 4 à 7), puis « J'écris la réponse et je vérifie », en texte ;
+  // les dessins du pas à pas (de 4 à 7), puis « Je réponds » et « Je vérifie », en texte ;
   // jusqu'à cinq dessins : une colonne ; au-delà : deux colonnes, lues de haut en bas (la
   // moitié des étapes à gauche, le reste à droite)
   const ol = document.querySelector('.etapes'); if (!ol) return 'pas de liste des étapes';
@@ -532,7 +532,11 @@ JS_PAGE_EXEMPLE = """(d) => {
   ol.innerHTML = d.etapes.map((e, i) =>
     '<li class="et">' + badge(i + 1) + '<div class="txt"><h3>' + e.titre + '</h3><p class="leg">' + (e.legende || '') + '</p></div>' +
     '<svg class="dessin" viewBox="50 612 1500 ' + e.h + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' + e.titre + '">' + e.svg + '</svg></li>').join('') +
-    '<li class="et texte">' + badge(n + 1) + '<div class="txt"><h3>' + "J'écris la réponse et je vérifie" + '</h3><p class="leg">' + d.fin + '</p></div></li>';
+    // la dernière étape, en texte (03/10/2026) : « Je réponds » (la phrase, encadrée) puis
+    // « Je vérifie », deux endroits comme à l'écran — côte à côte en une colonne, l'un sous
+    // l'autre en deux colonnes (exemple.html), pour ne rien prendre aux schémas
+    '<li class="et texte">' + badge(n + 1) + '<div class="txt duo"><div><h3>Je réponds</h3><p class="rep">' + d.fin.reponse + '</p></div>' +
+    '<div><h3>Je vérifie</h3><p class="leg">' + d.fin.verif + '</p></div></div></li>';
   const et = [...ol.children], moitie = Math.ceil((n + 1) / 2);
   if (deux) { et[moitie].classList.add('saut'); et[moitie - 1].classList.add('avant-saut'); }
   if (document.querySelector('.fin')) return 'la conclusion est devenue la dernière étape (29/09/2026)';
@@ -638,7 +642,7 @@ def textes_exemple(ex, op):
     vient de dessiner et de SON modèle de correction (ex["barres"], lot G1) : ils ne peuvent
     pas mentir sur les nombres de l'exemple. Les légendes suivent les trois étapes de « Voir le
     schéma » (① les barres, ② schéma regroupé, ③ je calcule), puis la 4e étape de la page,
-    « J'écris la réponse et je vérifie » (lot G2, 29/09/2026). op : DEUX (deux taches, un
+    « Je réponds » puis « Je vérifie » (lot G2, 29/09/2026). op : DEUX (deux taches, un
     indice — livrets de base 1 et 2), ADD / MUL (chaîne — Deuxième tour 1 et 2), REPET (taches
     répétées — base 3), REUNIES (deux taches réunies — Deuxième tour 3)."""
     if op == "REPET":
@@ -682,7 +686,7 @@ def textes_exemple(ex, op):
     ligne = f"Les barres bout à bout sous le total&nbsp;: {_cases(tous, u)} font {T}."
     # le texte ne recopie plus les calculs (29/09/2026) : le dessin les montre
     resous = f"D'abord {t[u]}, l'unité&nbsp;; puis les autres taches à partir d'elle."
-    # « J'écris la réponse et je vérifie » : la réponse en gras, le total, puis chaque indice
+    # « Je réponds » puis « Je vérifie » : la réponse en gras, le total, puis chaque indice
     # retourné (« 5 + 10 = 15 ✓ »)
     verifs = [ex["verification"]]
     for r in ex["relations"]:
@@ -692,7 +696,7 @@ def textes_exemple(ex, op):
         elif r["op"] == "MUL": verifs.append(f"{r['k']} × {s_} = {t_}")
         elif r["op"] == "DIV": verifs.append(f"{r['k']} × {t_} = {s_}")
     fin = (f"{t[u].capitalize()} cache <b>{v[ref]}</b> jetons, {_art(r1['tache'])} <b>{v[milieu_i]}</b>, "
-           f"{_art(r2['tache'])} <b>{v[mots.index(r2['tache'])]}</b>. Je vérifie&nbsp;: " + "&nbsp;✓&nbsp;; ".join(verifs) + "&nbsp;✓")
+           f"{_art(r2['tache'])} <b>{v[mots.index(r2['tache'])]}</b>.|||" + "&nbsp;✓&nbsp;; ".join(verifs) + "&nbsp;✓")
     indices = "<br>".join(f"<q>{i}</q>" for i in ex["indices"])
     autres = [m for m in mots if m != u]
     intro = (f"Sur cette carte, il y a {T} jetons au total, tous cachés sous trois taches&nbsp;: "
@@ -753,7 +757,7 @@ def textes_exemple_deux(ex):
     tous = r0["cells"] + r1["cells"]
     ligne = f"Les barres bout à bout sous le total&nbsp;: {_cases(tous, u)} font {T}."
     resous = f"D'abord la tache {u}, l'unité&nbsp;; puis la tache {g} à partir d'elle."
-    fin = (f"La tache {u} cache <b>{v[ref]}</b> jetons, la tache {g} <b>{v[1 - ref]}</b>. Je vérifie&nbsp;: "
+    fin = (f"La tache {u} cache <b>{v[ref]}</b> jetons, la tache {g} <b>{v[1 - ref]}</b>.|||"
            + "&nbsp;✓&nbsp;; ".join(_verifs(ex)) + "&nbsp;✓")
     intro = _intro(T, 2, f"la tache {u} et la tache {g}", "Un indice les relie.", u)
     return dict(intro=intro, enquete=_enquete(T, 2, ex["indices"], False), legendes=[barres, ligne, resous, fin])
@@ -777,8 +781,8 @@ def textes_exemple_reunies(ex):
     tous = [c for r in B["rows"] for c in r["cells"]]
     ligne = f"Les barres bout à bout sous le total&nbsp;: {_cases(tous, u)} font {T}."
     resous = f"D'abord la tache {u}, l'unité&nbsp;; puis la tache {m}, et enfin la tache {g}, les deux réunies."
-    fin = (f"La tache {u} cache <b>{v[ref]}</b> jetons, la tache {m} <b>{v[mots.index(m)]}</b>, la tache {g} <b>{v[mots.index(g)]}</b>. "
-           "Je vérifie&nbsp;: " + "&nbsp;✓&nbsp;; ".join(_verifs(ex)) + "&nbsp;✓")
+    fin = (f"La tache {u} cache <b>{v[ref]}</b> jetons, la tache {m} <b>{v[mots.index(m)]}</b>, la tache {g} <b>{v[mots.index(g)]}</b>.|||"
+           + "&nbsp;✓&nbsp;; ".join(_verifs(ex)) + "&nbsp;✓")
     intro = _intro(T, 3, f"la tache {u}, la tache {m} et la tache {g}", "Deux indices les relient.", u)
     return dict(intro=intro, enquete=_enquete(T, 3, ex["indices"], True), legendes=[barres, ligne, resous, fin])
 
@@ -804,7 +808,7 @@ def textes_exemple_repet(ex):
     ligne = f"Les barres bout à bout sous le total&nbsp;: trois {rr}s, {k} et {k} font {T}."
     resous = f"D'abord la tache {rr}, l'unité&nbsp;; puis les taches {oos} à partir d'elle."
     fin = (f"La tache {rr} cache <b>{x}</b> jetons, chaque tache {oo} <b>{x + k}</b>. "
-           f"Je vérifie&nbsp;: {ex['verification']}&nbsp;✓&nbsp;; {x} + {k} = {x + k}&nbsp;✓")
+           f"|||{ex['verification']}&nbsp;✓&nbsp;; {x} + {k} = {x + k}&nbsp;✓")
     indices = "<br>".join(f"<q>{i}</q>" for i in ex["indices"])
     intro = (f"Sur cette carte, il y a {T} jetons au total, tous cachés sous trois taches&nbsp;: "
              f"une tache {rr} et deux taches {oos}. Les taches de même couleur cachent le même nombre de jetons&nbsp;; "
@@ -821,10 +825,13 @@ def textes_exemple_repet(ex):
 
 def donnees_page2(ex, textes):
     """Ce que la page 2 reçoit : la carte, l'enquête, les dessins du pas à pas (avec une légende
-    pour les deux premiers : les barres, le schéma regroupé) et la dernière étape, en texte."""
+    pour les deux premiers : les barres, le schéma regroupé) et la dernière étape, en texte :
+    la réponse et la vérification, séparées par « ||| » dans la dernière légende."""
     leg = textes["legendes"]
     etapes = [dict(e, legende=leg[i] if i < 2 else "") for i, e in enumerate(ex["etapes"])]
-    return dict(carte=ex["carte"], etapes=etapes, enquete=textes["enquete"], fin=leg[-1])
+    reponse, verif = leg[-1].split("|||")       # « Je réponds » ||| « Je vérifie » (03/10/2026)
+    return dict(carte=ex["carte"], etapes=etapes, enquete=textes["enquete"],
+                fin=dict(reponse=reponse.strip(), verif=verif))
 
 def fabrique_qr():
     """(Re)fabrique tous les QR codes. À relancer si une graine ou une série change."""

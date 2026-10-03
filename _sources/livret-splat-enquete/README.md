@@ -31,8 +31,9 @@ Les livrets « Le défi » d'avant (totaux de 50 à 100) ont disparu au lot 2.
    (lot G3 ; lot « pages 2 », 30/09/2026) : ① Je fais le schéma de la situation · ② Schéma
    regroupé, puis un dessin par opération — Je range · Je regroupe · Je retire (26 − 8 → 18) ·
    Je partage (18 ÷ 2 ; 28 en 4 × 7) — et les barres avec les nombres (« Je trouve la verte », ou
-   « Je trouve les autres taches » en un seul dessin) ; enfin « J'écris la réponse et je
-   vérifie », en texte, et « À toi ! ». Jusqu'à cinq dessins (parties 1 et 2) : une colonne ;
+   « Je trouve les autres taches » en un seul dessin) ; enfin, en texte, « Je réponds » (la
+   phrase de réponse, encadrée sur fond blanc) puis « Je vérifie » — côte à côte en une colonne,
+   l'un sous l'autre en deux colonnes, sans rien prendre aux schémas (03/10/2026) —, et « À toi ! ». Jusqu'à cinq dessins (parties 1 et 2) : une colonne ;
    au-delà : **deux colonnes lues de haut en bas**, un filet entre les deux. La case retirée est
    hachurée **comme en projection**, seulement moins estompée (teintes fixes, sans transparence), pour
    rester lisible en noir et blanc ; la case **ajoutée** (« Je complète ») est blanche, en

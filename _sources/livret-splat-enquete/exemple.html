@@ -21,12 +21,21 @@
 .enquete .but{background:#fce7f3;border:1px solid #f0abc9;border-radius:6px;padding:2mm 3mm;font-weight:700;color:#0f172a}
 /* ---------- les schémas successifs du pas à pas (lot « pages 2 », 30/09/2026) : ceux de la
      projection (G3) — les barres, le schéma regroupé, puis un dessin par opération — et, en
-     texte, « J'écris la réponse et je vérifie ». Jusqu'à cinq dessins : une colonne (le titre à
+     texte, « Je réponds » (la phrase encadrée) puis « Je vérifie » (03/10/2026). Jusqu'à cinq dessins : une colonne (le titre à
      gauche du dessin) ; au-delà : deux colonnes (le titre au-dessus). ---------- */
 .etapes{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr;row-gap:4mm;column-gap:6mm}
 .et{display:grid;grid-template-columns:9.5mm 47mm 1fr;align-items:center;column-gap:3mm}
 .et.texte{grid-template-columns:9.5mm 1fr;background:#fce7f3;border:1px solid #f0abc9;border-radius:6px;padding:1.6mm 3mm 1.6mm 1.6mm}
 .et.texte .leg{font-size:12px;margin-top:0.6mm}
+/* « Je réponds » et « Je vérifie » (03/10/2026) : deux endroits, comme à l'écran. Une colonne :
+   côte à côte (le bandeau garde sa hauteur, les schémas leur taille) ; deux colonnes : l'un sous
+   l'autre. La réponse est encadrée sur fond blanc (lisible en noir et blanc). */
+.et.texte .duo{display:flex;gap:7mm;align-items:flex-start}
+.et.texte .duo>div:first-child{flex:0 1 auto}
+.et.texte .rep{margin:0.5mm 0 0;padding:0.5mm 2.5mm;background:#fff;border:1.2px solid #0f172a;border-radius:4px;font-size:12px;color:#0f172a;line-height:1.3}
+.et.texte .duo .leg{margin-top:1.2mm}
+.etapes.deux .et.texte .duo{flex-direction:column;gap:1.2mm}
+.etapes.deux .et.texte .duo .leg{margin-top:0.4mm}
 .et .num{box-sizing:border-box;width:7.5mm;height:7.5mm;border:0.6mm solid #831843;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;color:#831843;font-size:13px;font-weight:800;justify-self:center}
 .et h3{margin:0;font-size:12.5px;font-weight:700;color:#831843;line-height:1.2}
 .et .leg{margin:0.8mm 0 0;font-size:11px;line-height:1.3;color:#334155}
@@ -66,7 +75,7 @@
 <div class="corps">
   <!-- La carte et les dessins sont ceux de l'outil (outils/splat.html) : les schémas successifs
        du pas à pas de la projection (lot G3), au profil d'impression de la correction ; puis la
-       dernière étape, « J'écris la réponse et je vérifie », en texte. render.py les redemande à
+       dernière étape, « Je réponds » puis « Je vérifie », en texte. render.py les redemande à
        l'outil, pose les étapes dans la liste et écrit les légendes À PARTIR DE LA CARTE. -->
   <section class="haut">
     <div class="carte">
