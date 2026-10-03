@@ -23,7 +23,7 @@ test("le verdict dit réussi, pas encore ou temps écoulé — et ce qui manquai
 test("J’apprends n’a ni score ni temps : on s’entraîne, on ne se chronomètre pas", () => {
   // Audit 1 (30/09/2026) : le titre dit l'activité qui vient de finir.
   assert.match(html, /verdict\.titre = activitePerles\(config\) \? "Perles terminées !"\s*: config\.learnActivity === "construct" \? "Bande terminée !"\s*: config\.learnActivity === "gaps" \? "Bande complétée !"\s*: "Série terminée !";/);
-  assert.match(html, /\? "Les 11 produits construits sur le boulier"/);
+  assert.match(html, /\? "Les 10 cases construites sur le boulier"/, "lot E2 : comme le compteur « 10 / 10 cases »");
   assert.match(html, /verdict\.config = `J’apprends · Table de \$\{config\.tables\[0\]\}`;/, "la ligne du dessous dit la table");
   assert.doesNotMatch(html, /activité\$\{apprends\.termines > 1/, "plus de « N activités sur 5 faites »");
   assert.doesNotMatch(html, /11 questions/, "les perles ne sont pas « 11 questions »");
