@@ -12,7 +12,7 @@
      couleur, solution unique et positive, bornes, 6 taches au plus, aucun nombre à
      sous-entendu, schéma en cases positives) ;
    - l'adresse, l'ordre des lignes du schéma, les accolades par couleur, la ligne réponse, le
-     mode élève (une case par couleur), la règle écrite, la correction imprimée. */
+     mode élève (une case par tache, 03/10/2026), la règle écrite, la correction imprimée. */
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
@@ -389,12 +389,15 @@ test("ligne réponse : une fois par couleur (« bleue = 6   noire = 11 »)", () 
   }
 });
 
-test("mode élève : une case par couleur (choix du 23/09), dans l'ordre du plateau ; une tache par couleur : comme avant", () => {
+test("mode élève : une case par TACHE (03/10/2026 — la case par couleur du 23/09 rendait le tableau faux), les taches d'une couleur côte à côte ; une tache par couleur : comme avant", () => {
   for(const c of [...cartesDessin, ...cartes3]){
     const e = dessin.eleve(c);
-    assert.equal(e.ordre.length, c._rel.repetees.nombre.length);
+    assert.equal(e.ordre.length, c.hidden.length, "une case par tache");
+    assert.deepEqual([...e.ordre].sort((a, b) => a - b), c.hidden.map((_, k) => k));
     const couleurs = e.ordre.map(i => c._rel.repetees.couleurDe[i]);
-    assert.deepEqual(couleurs, [...new Set(c._rel.repetees.couleurDe)]);
+    assert.deepEqual([...new Set(couleurs)], [...new Set(c._rel.repetees.couleurDe)], "les couleurs dans l'ordre du plateau");
+    couleurs.forEach((k, j) => { if(j > 0 && k !== couleurs[j - 1]) assert.ok(!couleurs.slice(0, j).includes(k), "une couleur n'est pas coupée en deux"); });
+    assert.equal(e.ordre.reduce((s, i) => s + e.valeurs[i], 0) + e.visibleSum, c.total, "le tableau est juste : cases + visibles = TOTAL");
   }
   const ordinaire = { family:"C", hidden:[5, 9, 3], visible:[], _rel:{}, _splats:[{ cx:800 }, { cx:300 }, { cx:1200 }] };
   assert.deepEqual(dessin.eleve(ordinaire).ordre, [1, 0, 2], "de gauche à droite");

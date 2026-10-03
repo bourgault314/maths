@@ -823,7 +823,20 @@
   /* case fausse : le champ ne remplit plus la case, c'est la case qui rougit */
   /* après validation : glissement vers les vraies largeurs, minimum pour lire le nom */
   #elevePanel.enquete .ligneBas .eleveCase{transition:flex-grow .6s ease}
-  #elevePanel.enquete .eleveDiag.vraies .ligneBas .eleveCase{min-width:72px}
+  /* … sans jamais déborder du tableau : avec une case par tache (03/10/2026), il peut y en avoir 7 */
+  #elevePanel.enquete .eleveDiag.vraies .ligneBas .eleveCase{min-width:min(72px, calc(100% / var(--n, 1)))}
+  /* Tableau serré (eleveTableauSerrer : un nom ne tient plus dans sa case, 5 à 7 cases au
+     téléphone) : la pastille passe AU-DESSUS du mot, plus de réserve sur les côtés, mot en 10 px. */
+  #elevePanel.enquete .eleveDiag.serre .ligneBas .eleveTacheNom{font-size:10px;letter-spacing:-.01em}
+  /* case copie (même couleur que la case où l'élève tape) : le nombre comme dans le champ */
+  .eleveCase.copie{cursor:default}
+  .eleveCopieVal{line-height:1.1;color:#111}
+  .eleveCopieVal.vide{color:#94a3b8;font-weight:700}
+  .eleveCase.copie.ok .eleveCopieVal{color:#15803d}
+  .eleveCase.copie.ko .eleveCopieVal, .eleveCase.copie.montre .eleveCopieVal{color:#b91c1c}
+  #elevePanel.enquete .eleveDiag.serre .eleveCase.grise .eleveTacheNom{flex-direction:column;gap:2px;margin:0 auto;padding:0}
+  #elevePanel.enquete .eleveDiag.serre .eleveCase.grise .eleveTacheCouleur{position:static;transform:none}
+  #elevePanel.enquete .eleveDiag.serre .ligneBas .eleveCase.blanche .eleveTacheNom{font-size:9px} /* « visibles » : le mot le plus long, dans le cadre bleu de la case active */
   #elevePanel.enquete .eleveCase.ko{background:#fee2e2}
   #elevePanel.enquete .eleveCase.ko input.eleveChamp{background:transparent}
   .eleveCase.haut.donnee{color:#111}
@@ -890,7 +903,7 @@
     body.eleve-mode .eleveTacheCouleur{width:20px;height:14px}
     body.eleve-mode #elevePanel.enquete .eleveCase.grise{--reserve-tache:23px} /* réserve = pastille 20 px + écart 3 px */
     body.eleve-mode .eleveCase.haut.donnee .eleveTacheNom{font-size:13px}
-    body.eleve-mode #elevePanel.enquete .eleveDiag.vraies .ligneBas .eleveCase{min-width:96px}
+    body.eleve-mode #elevePanel.enquete .eleveDiag.vraies .ligneBas .eleveCase{min-width:min(96px, calc(100% / var(--n, 1)))}
     body.eleve-mode .eleveConsigne{font-size:17px;margin:2px 0 10px}
     body.eleve-mode .eleveTete{font-size:21px;gap:10px} /* les pastilles ne touchent plus le compteur */
     body.eleve-mode .eleveTete a.eleveMondes{font-size:15px;padding:5px 11px}
@@ -13096,34 +13109,37 @@ function eleveInfosEnquete(card){
   if(!valeurs.length || valeurs.some(v => !(v > 0))) return null;
   const visibleSum = (card.visible || []).reduce((s, v) => s + v, 0);
   const cx = i => (card._splats && card._splats[i] && Number(card._splats[i].cx)) || 0;
-  /* Taches répétées (lot E-repet) : une case par COULEUR — la première tache de chaque
-     couleur, dans l'ordre du plateau ; les autres taches de la couleur cachent le même
-     nombre. Une tache par couleur : les taches de gauche à droite, comme avant. */
+  /* Taches répétées : une case par TACHE, comme aux mondes 1 et 2 (03/10/2026, Gwenaël — la case
+     par couleur du 23/09 rendait le tableau faux : « verte + rouge = 21 » pour 3 vertes et
+     1 rouge). Les taches d'une couleur se suivent, couleur après couleur dans l'ordre du
+     plateau ; l'élève remplit toutes les cases. Une tache par couleur : de gauche à droite. */
   const couleurDe = card._rel.repetees && Array.isArray(card._rel.repetees.couleurDe) ? card._rel.repetees.couleurDe : null;
-  const ordre = couleurDe ? valeurs.map((_, i) => i).filter(i => couleurDe.indexOf(couleurDe[i]) === i)
+  const ordre = couleurDe ? valeurs.map((_, i) => i).sort((a, b) => (couleurDe.indexOf(couleurDe[a]) - couleurDe.indexOf(couleurDe[b])) || (a - b))
     : valeurs.map((_, i) => i).sort((a, b) => cx(a) - cx(b));
   return { tasks: valeurs.length, valeurs, visibleSum, ordre };
 }
 
-/* ===== Système (mode D) : une case par COULEUR (conception S0 § 8, lot « mode élève »
-   du 24/09/2026) — les taches d'une même couleur cachent le même nombre, comme les
-   taches répétées de l'Enquête. Même forme que eleveInfosEnquete : `ordre` = l'indice
-   de la première tache de chaque couleur du plateau principal, dans l'ordre des
-   couleurs de la carte (celui des rangées de la grille), pour que les cases se
-   fabriquent avec le même code. Le TOTAL est celui du plateau principal ; « Trois
-   paires » le cache (sysTotalCache) : la case reste « ? », comme l'Enquête sans total. */
+/* ===== Système (mode D) : une case par TACHE du plateau principal (03/10/2026 ; une case par
+   couleur jusque-là, ce qui rendait le tableau faux sous le TOTAL : « noire + rouge = 21 »
+   pour 1 noire et 3 rouges). Même forme que eleveInfosEnquete : `ordre` = les taches du
+   plateau principal, couleur après couleur dans l'ordre des couleurs de la carte (celui
+   des rangées de la grille), pour que les cases se fabriquent avec le même code. Le TOTAL
+   est celui du plateau principal ; « Trois paires » le cache (sysTotalCache) : la case
+   reste « ? », comme l'Enquête sans total. */
 function eleveInfosSysteme(card){
   if(!sysAPlan(card)) return null;
   const valeurs = Array.isArray(card.hidden) ? card.hidden.map(v => Number(v)) : [];
   const colorMap = Array.isArray(card._colorMap) ? card._colorMap : [];
   const couleurs = Array.isArray(card._sys.colors) ? card._sys.colors : [];
   if(!valeurs.length || valeurs.some(v => !(v > 0)) || !couleurs.length) return null;
-  const ordre = couleurs.map(k => colorMap.indexOf(k)).filter(i => i >= 0 && i < valeurs.length);
-  if(ordre.length !== couleurs.length) return null;
+  if(couleurs.some(k => colorMap.indexOf(k) < 0 || colorMap.indexOf(k) >= valeurs.length)) return null;
+  const ordre = [];
+  couleurs.forEach(k => valeurs.forEach((_, i) => { if(colorMap[i] === k) ordre.push(i); }));
+  if(ordre.length !== valeurs.length) return null;
   const visibleSum = (card.visible || []).reduce((s, v) => s + v, 0);
   return { tasks: valeurs.length, valeurs, visibleSum, ordre, systeme: true };
 }
-/* Enquête ou Système : le tableau « une case par tache (ou par couleur) ». */
+/* Enquête ou Système : le tableau « une case par tache ». */
 function eleveInfosTableau(card){
   return eleveInfosEnquete(card) || eleveInfosSysteme(card);
 }
@@ -13153,9 +13169,41 @@ function eleveCasesEnqueteHtml(card, enquete){
   /* 02/10/2026 (Gwenaël) : les jetons visibles se REMPLISSENT, comme aux mondes 1 et 2 — les
      additionner fait partie du travail ; case vide, sans « ? » (règle du 19/09). Le TOTAL reste donné. */
   if(enquete.visibleSum > 0) bas += eleveCaseHtml("blanche", enquete.visibleSum, 1, false, `<span class="eleveTacheNom"><span>visibles</span></span>`);
-  /* cases de largeur égale : des largeurs proportionnelles donneraient la réponse */
-  enquete.ordre.forEach(i => { bas += eleveCaseHtml("grise", enquete.valeurs[i], 1, true, eleveTacheCouleurHtml(investigateColorInfo(card, i))); });
+  /* cases de largeur égale : des largeurs proportionnelles donneraient la réponse.
+     Une case par tache (03/10/2026) ; l'élève tape dans la PREMIÈRE case de chaque couleur, les
+     autres cases de la couleur recopient ce nombre (eleveCopiesSynchroniser) — choix de Gwenaël :
+     retaper six fois le même nombre au téléphone, « c'est chiant ». */
+  let place = enquete.visibleSum > 0 ? 1 : 0; /* rang de la case dans la ligne du bas */
+  const source = new Map(); /* couleur → rang de la case où l'élève tape */
+  enquete.ordre.forEach(i => {
+    const info = investigateColorInfo(card, i);
+    const tache = eleveTacheCouleurHtml(info);
+    if(source.has(info.key)) bas += eleveCaseCopieHtml(enquete.valeurs[i], tache, source.get(info.key));
+    else { source.set(info.key, place); bas += eleveCaseHtml("grise", enquete.valeurs[i], 1, true, tache); }
+    place++;
+  });
   return bas;
+}
+/* La copie d'une case de tache : même étiquette, pas de champ (le pavé et la validation
+   l'ignorent), le nombre tapé dans la première case de la couleur, « ? » tant qu'elle est vide.
+   data-copie = le rang, dans la ligne du bas, de cette première case. */
+function eleveCaseCopieHtml(attendu, tacheHtml, rangSource){
+  return `<div class="eleveCase grise copie" style="flex:1 1 0" data-attendu="${attendu}" data-copie="${rangSource}">` +
+    tacheHtml + `<span class="eleveCopieVal vide">?</span></div>`;
+}
+/* Recopie, dans les cases copies, le nombre et l'état (juste, faux, réponse montrée) de la
+   première case de leur couleur. Appelé à chaque saisie, à la validation, à « Voir la réponse »
+   et au pas à pas (tableau remis à « ? »). */
+function eleveCopiesSynchroniser(){
+  document.querySelectorAll("#elevePanel .eleveCase[data-copie]").forEach(c => {
+    const src = c.parentNode ? c.parentNode.children[Number(c.getAttribute("data-copie"))] : null;
+    const inp = src ? src.querySelector(".eleveChamp") : null;
+    if(!inp) return;
+    const v = String(inp.value).trim();
+    const val = c.querySelector(".eleveCopieVal");
+    if(val){ val.textContent = v || "?"; val.classList.toggle("vide", !v); }
+    ["ok", "ko", "montre"].forEach(k => c.classList.toggle(k, src.classList.contains(k)));
+  });
 }
 
 function eleveEnregistrerReussite(sansFaute, total){
@@ -13414,7 +13462,7 @@ function renderEleveSplat(){
 
   const card = eleveSerie[eleveIdx];
   const infos = eleveInfosCarte(card);
-  const enquete = infos ? null : eleveInfosTableau(card); /* Enquête, ou Système (une case par couleur) */
+  const enquete = infos ? null : eleveInfosTableau(card); /* Enquête, ou Système (une case par tache) */
   eleveEnqueteDevoile = false; eleveSchemaEtape = 0; /* nouvelle carte : taches couvertes, plateau sans schéma */
   eleveIndicesTel = !!enquete && eleveIndicesPossible(card) && eleveSchemaTelephone(); eleveDefileErreur = 0; /* lot E7 */
   renderCard(card, 0);
@@ -13471,6 +13519,7 @@ function renderEleveSplat(){
     `<div class="eleveActions"><button id="eleveValider" type="button">Valider</button></div>`;
 
   const pave = elevePaveActiver(panneau);
+  eleveTableauSerrer(panneau); /* après le pavé, qui peut régler la largeur du tableau */
   const premier = panneau.querySelector(".eleveChamp");
   /* Clavier physique : le premier champ prend le focus, comme avant. Au pavé,
      c'est la première case vide qui devient active — un focus rouvrirait le
@@ -13484,6 +13533,7 @@ function renderEleveSplat(){
     inp.addEventListener("input", () => {
       const c = inp.closest(".eleveCase");
       if(c) c.classList.remove("ko");
+      eleveCopiesSynchroniser(); /* taches répétées : les autres cases de la couleur suivent */
     });
   });
   document.getElementById("eleveValider").onclick = eleveValiderSplat;
@@ -13505,6 +13555,7 @@ function eleveValiderSplat(){
     c.classList.toggle("ok", juste);
     if(!juste) toutJuste = false;
   });
+  eleveCopiesSynchroniser(); /* les copies prennent le vert ou le rouge de leur case */
   if(toutJuste){
     /* une carte rejouée après « Voir la réponse » devient orange, jamais verte */
     const etaitRouge = eleveResultats[eleveIdx] === "ko";
@@ -13561,7 +13612,24 @@ function eleveCalerLargeur(panneau){
     }catch(_e){ panneau.style.maxWidth = ""; }
   };
   caler();
-  if(!eleveCalerLargeur._lie){ eleveCalerLargeur._lie = true; window.addEventListener("resize", () => { const pn = document.getElementById("elevePanel"); if(pn) eleveCalerLargeur(pn); }); }
+  if(!eleveCalerLargeur._lie){ eleveCalerLargeur._lie = true; window.addEventListener("resize", () => { const pn = document.getElementById("elevePanel"); if(pn){ eleveCalerLargeur(pn); eleveTableauSerrer(pn); } }); }
+}
+
+/* Enquête et Système, une case par tache (03/10/2026) : jusqu'à 7 cases sous le TOTAL. Si un
+   nom (mini-tache + couleur, ou « visibles ») ne tient plus dans sa case, le tableau passe en
+   « serré » (voir le CSS). Mesuré sans la classe, à chaque carte et quand la largeur change. */
+function eleveTableauSerrer(panneau){
+  const pn = panneau || document.getElementById("elevePanel");
+  const diag = pn && pn.classList.contains("enquete") ? pn.querySelector(".eleveDiag") : null;
+  if(!diag) return;
+  const bas = diag.querySelector(".ligneBas");
+  if(bas) bas.style.setProperty("--n", String(bas.children.length));
+  diag.classList.remove("serre");
+  const deborde = Array.from(diag.querySelectorAll(".ligneBas .eleveCase")).some(c => {
+    const nom = c.querySelector(".eleveTacheNom");
+    return !!nom && nom.getBoundingClientRect().width > c.clientWidth - 8; /* 4 px de cadre bleu de chaque côté (case active) */
+  });
+  diag.classList.toggle("serre", deborde);
 }
 
 /* Vérification : les taches du plateau deviennent transparentes et laissent voir
@@ -13650,10 +13718,9 @@ function eleveEnqueteLargeursVraies(){
   if(!panneau || !panneau.classList.contains("enquete")) return;
   const card = eleveSerie[eleveIdx];
   const infos = card ? eleveInfosTableau(card) : null;
-  /* Système : une case vaut une COULEUR, pas une tache (2 noires + 1 bleue) — une largeur
-     proportionnelle ne représenterait plus le plateau. Les cases restent égales (décision du
-     24/09) ; le schéma en barres, c'est « Voir le schéma ». */
-  if(!infos || infos.systeme) return;
+  /* Système : une case vaut une tache depuis le 03/10/2026 (elle valait une couleur, d'où les
+     cases égales du 24/09) — les vraies largeurs représentent donc le plateau, comme à l'Enquête. */
+  if(!infos) return;
   const diag = panneau.querySelector(".eleveDiag");
   if(diag) diag.classList.add("vraies");
   panneau.querySelectorAll(".ligneBas .eleveCase").forEach(c => {
@@ -13672,6 +13739,7 @@ function eleveReponseCacher(cacher){
     if(cacher && !inp.hasAttribute("data-reponse")){ inp.setAttribute("data-reponse", inp.value); inp.value = ""; }
     if(!cacher && inp.hasAttribute("data-reponse")){ inp.value = inp.getAttribute("data-reponse"); inp.removeAttribute("data-reponse"); }
   });
+  eleveCopiesSynchroniser();
 }
 /* Ordinateur, pas à pas G3 (01/10/2026, idée de Gwenaël) : pendant les étapes, la question, le tableau
    (qui ne montre que des « ? ») et le message s'effacent ; leur hauteur passe au dessin, qui grandit
@@ -14147,6 +14215,7 @@ function eleveMontrerReponse(){
     c.classList.remove("ko", "ok");
     c.classList.add("montre");
   });
+  eleveCopiesSynchroniser();
   msg.textContent = "Voil\u00e0 la r\u00e9ponse. Regarde bien, tu pourras rejouer cette carte \u00e0 la fin.";
   msg.className = "eleveMsg rate";
   eleveResultats[eleveIdx] = "ko";

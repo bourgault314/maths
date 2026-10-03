@@ -48,6 +48,7 @@ const cases = new Function(`
   ${fn("eleveTacheCouleurHtml")}
   ${fn("eleveCaseDonneeHtml")}
   ${fn("eleveCasesEnqueteHtml")}
+  ${fn("eleveCaseCopieHtml")}
   return { infos: eleveInfosEnquete, bas: eleveCasesEnqueteHtml, donnee: eleveCaseDonneeHtml, mini: ELEVE_TACHE_MINI };
 `)();
 
@@ -60,8 +61,8 @@ function carteC({ hidden, colors, visible = [], cx }){
     _rel: { taskCount: hidden.length, colorMap: colors, hiddenValues: hidden }
   };
 }
-const casesDe = (h) => [...h.matchAll(/<div class="eleveCase ([^"]+)" style="([^"]+)"( data-attendu="(\d+)")?>([\s\S]*?)<\/div>/g)]
-  .map((m) => ({ classes: m[1], style: m[2], attendu: m[4], contenu: m[5] }));
+const casesDe = (h) => [...h.matchAll(/<div class="eleveCase ([^"]+)" style="([^"]+)"( data-attendu="(\d+)")?( data-copie="(\d+)")?>([\s\S]*?)<\/div>/g)]
+  .map((m) => ({ classes: m[1], style: m[2], attendu: m[4], copie: m[6], contenu: m[7] }));
 
 test("une case par tache, de largeur égale, dans l'ordre du plateau (de gauche à droite)", () => {
   // noire (x = 1100) à droite, verte (x = 500) à gauche : la verte vient en premier
@@ -76,6 +77,66 @@ test("une case par tache, de largeur égale, dans l'ordre du plateau (de gauche 
     assert.match(x.contenu, /placeholder="\?"/, "le « ? » de l'inconnue, comme au monde 2");
     assert.match(x.contenu, /<input class="eleveChamp" type="text" inputmode="numeric" maxlength="3" autocomplete="off" placeholder="\?">$/);
   }
+});
+
+test("taches répétées (03/10/2026) : une case par tache sous le TOTAL ; l'élève tape dans la première de chaque couleur, les autres recopient", () => {
+  // la carte vue par Gwenaël : 3 vertes + 1 rouge = 21 (la rouge 4 fois plus) — avant, « verte + rouge = 21 »
+  const carte = carteC({ hidden: [3, 3, 3, 12], colors: ["green", "green", "green", "red"], cx: [300, 700, 300, 700] });
+  carte._rel.repetees = { couleurDe: [0, 0, 0, 1], nombre: [3, 1] };
+  const infos = cases.infos(carte);
+  assert.deepEqual(infos.ordre, [0, 1, 2, 3]);
+  const c = casesDe(cases.bas(carte, infos));
+  assert.equal(c.length, 4, "quatre cases sous le TOTAL : 3 + 3 + 3 + 12 = 21");
+  assert.deepEqual(c.map((x) => x.attendu), ["3", "3", "3", "12"]);
+  assert.match(c[0].contenu, /<input class="eleveChamp"/, "la première verte : à remplir");
+  assert.match(c[3].contenu, /<input class="eleveChamp"/, "la rouge : à remplir");
+  for(const k of [1, 2]){
+    assert.equal(c[k].classes, "grise copie");
+    assert.doesNotMatch(c[k].contenu, /<input/, "une copie n'a pas de champ : ni le pavé ni la validation ne la voient");
+    assert.match(c[k].contenu, /<span>verte<\/span>/);
+  }
+  assert.match(cases.bas(carte, infos), /data-copie="0"[^>]*>[\s\S]*?data-copie="0"/, "les deux copies pointent la case 0");
+  // jetons visibles en tête : le rang de la source se décale d'une case
+  const v = carteC({ hidden: [5, 5], colors: ["red", "red"], visible: [4], cx: [300, 700] });
+  v._rel.repetees = { couleurDe: [0, 0], nombre: [2] };
+  assert.match(cases.bas(v, cases.infos(v)), /data-copie="1"/);
+});
+
+test("eleveCopiesSynchroniser : le nombre tapé, « ? » si vide, et le vert / rouge / réponse montrée de la case source", () => {
+  const classe = (init) => { const set = new Set(init); return { contains: (k) => set.has(k), toggle: (k, v) => (v ? set.add(k) : set.delete(k)), set }; };
+  const champ = { value: "" };
+  const src = { classList: classe([]), querySelector: (sel) => (sel === ".eleveChamp" ? champ : null) };
+  const val = { textContent: "?", classList: classe(["vide"]) };
+  const ligne = { children: [src] };
+  const copie = { parentNode: ligne, classList: classe(["eleveCase", "copie"]), getAttribute: (k) => (k === "data-copie" ? "0" : null), querySelector: (sel) => (sel === ".eleveCopieVal" ? val : null) };
+  ligne.children.push(copie);
+  const synchro = new Function("document", `${fn("eleveCopiesSynchroniser")} return eleveCopiesSynchroniser;`)({
+    querySelectorAll: (sel) => (sel === "#elevePanel .eleveCase[data-copie]" ? [copie] : []) });
+  synchro();
+  assert.equal(val.textContent, "?"); assert.ok(val.classList.contains("vide"));
+  champ.value = "3"; synchro();
+  assert.equal(val.textContent, "3"); assert.ok(!val.classList.contains("vide"));
+  src.classList.toggle("ko", true); synchro();
+  assert.ok(copie.classList.contains("ko"), "case fausse : ses copies rougissent aussi");
+  src.classList.toggle("ko", false); src.classList.toggle("ok", true); synchro();
+  assert.ok(copie.classList.contains("ok") && !copie.classList.contains("ko"));
+  // appelée à chaque saisie, à la validation, à « Voir la réponse » et au pas à pas
+  assert.match(fn("renderEleveSplat"), /if\(c\) c\.classList\.remove\("ko"\);\n      eleveCopiesSynchroniser\(\);/);
+  assert.match(fn("eleveValiderSplat"), /if\(!juste\) toutJuste = false;\n  \}\);\n  eleveCopiesSynchroniser\(\);/);
+  assert.match(fn("eleveMontrerReponse"), /c\.classList\.add\("montre"\);\n  \}\);\n  eleveCopiesSynchroniser\(\);/);
+  assert.match(fn("eleveReponseCacher"), /\n  \}\);\n  eleveCopiesSynchroniser\(\);\n\}/);
+});
+
+test("tableau serré (jusqu'à 7 cases au téléphone) : pastille au-dessus du mot, mesuré à chaque carte et quand la largeur change", () => {
+  const r = regles(feuille);
+  const decl = (sel) => (r.find((x) => x.sel === sel) || {}).decl || "";
+  assert.equal(decl("#elevePanel.enquete .eleveDiag.serre .eleveCase.grise .eleveTacheNom"), "flex-direction:column;gap:2px;margin:0 auto;padding:0");
+  assert.equal(decl("#elevePanel.enquete .eleveDiag.serre .eleveCase.grise .eleveTacheCouleur"), "position:static;transform:none");
+  assert.match(fn("renderEleveSplat"), /const pave = elevePaveActiver\(panneau\);\n  eleveTableauSerrer\(panneau\);/);
+  assert.match(fn("eleveCalerLargeur"), /eleveCalerLargeur\(pn\); eleveTableauSerrer\(pn\);/);
+  const src = fn("eleveTableauSerrer");
+  assert.match(src, /bas\.style\.setProperty\("--n", String\(bas\.children\.length\)\);/, "--n : le minimum de largeur ne fait jamais déborder le tableau");
+  assert.match(src, /diag\.classList\.remove\("serre"\);/, "mesuré sans la classe");
 });
 
 test("dans chaque case : la mini-tache À SA COULEUR et le nom de la couleur", () => {
@@ -253,7 +314,7 @@ test("pas à pas G3 (01/10/2026) : le tableau est vidé jusqu'à l'avant-dernier
     hasAttribute: (k) => k in inp.attrs, getAttribute: (k) => inp.attrs[k], setAttribute: (k, v) => { inp.attrs[k] = String(v); }, removeAttribute: (k) => { delete inp.attrs[k]; } }));
   const classes = new Set();
   const panneau = { classList: { toggle: (k, v) => (v ? classes.add(k) : classes.delete(k)) }, querySelectorAll: (sel) => (sel === ".eleveCase[data-attendu] .eleveChamp" ? cases : []) };
-  const cacher = new Function("document", `${fn("eleveReponseCacher")} return eleveReponseCacher;`)({ getElementById: (id) => (id === "elevePanel" ? panneau : null) });
+  const cacher = new Function("document", `function eleveCopiesSynchroniser(){}\n${fn("eleveReponseCacher")} return eleveReponseCacher;`)({ getElementById: (id) => (id === "elevePanel" ? panneau : null) });
   cacher(true); cacher(true);
   assert.deepEqual(cases.map((c) => c.value), ["", ""], "le « ? » revient");
   assert.ok(classes.has("reponseCachee"));
@@ -578,7 +639,8 @@ test("après validation, les cases prennent leur vraie largeur ; pendant la rech
   const r = regles(feuille);
   const decl = (sel) => (r.find((x) => x.sel === sel) || {}).decl || "";
   assert.equal(decl("#elevePanel.enquete .ligneBas .eleveCase"), "transition:flex-grow .6s ease");
-  assert.equal(decl("#elevePanel.enquete .eleveDiag.vraies .ligneBas .eleveCase"), "min-width:72px", "un minimum pour lire le nom et le nombre");
+  assert.equal(decl("#elevePanel.enquete .eleveDiag.vraies .ligneBas .eleveCase"), "min-width:min(72px, calc(100% / var(--n, 1)))",
+    "un minimum pour lire le nom et le nombre, sans déborder du tableau (jusqu'à 7 cases, 03/10/2026)");
 });
 
 // --- le dévoilement et le nom sur la tache ---------------------------------------------------
