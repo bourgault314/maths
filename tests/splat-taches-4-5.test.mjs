@@ -69,13 +69,16 @@ test("les tables de dessin ne diffèrent qu'à 4 et 5 taches, sur le grand plate
     assert.ok(!geo.sameSplats(geo.getUnitSplats(n), geo.getUnitSplatsLegacy(n)));
     assert.ok(!geo.sameSplats(geo.getNumberedSplats(n, "N"), geo.getNumberedSplatsLegacy(n, "N")));
   }
-  // plateau bas (Enquête, Système en phrases ou en symboles) : seule la table à 4 taches change (lot S2)
-  for(const n of [1, 2, 3, 5, 6]){
+  // plateau bas (Enquête, Système en phrases ou en symboles) : la table à 4 taches change (lot S2),
+  // et celle à 3 taches depuis le lot « plateau en ligne » (03/10/2026 : trois taches côte à côte)
+  for(const n of [1, 2, 5, 6]){
     assert.ok(geo.sameSplats(geo.getNumberedSplats(n, "C"), geo.getNumberedSplatsLegacy(n, "C")), `C à ${n} tache(s)`);
     assert.ok(geo.sameSplats(geo.getNumberedSplats(n, "D"), geo.getNumberedSplatsLegacy(n, "D")), `D à ${n} tache(s)`);
   }
-  assert.ok(!geo.sameSplats(geo.getNumberedSplats(4, "C"), geo.getNumberedSplatsLegacy(4, "C")));
-  assert.ok(!geo.sameSplats(geo.getNumberedSplats(4, "D"), geo.getNumberedSplatsLegacy(4, "D")));
+  for(const n of [3, 4]){
+    assert.ok(!geo.sameSplats(geo.getNumberedSplats(n, "C"), geo.getNumberedSplatsLegacy(n, "C")), `C à ${n} taches`);
+    assert.ok(!geo.sameSplats(geo.getNumberedSplats(n, "D"), geo.getNumberedSplatsLegacy(n, "D")), `D à ${n} taches`);
+  }
 });
 
 test("plateau bas (lot S2) : à 4 taches elles se touchaient ; écartées, même rayon, toutes dans le plateau", () => {
@@ -130,7 +133,7 @@ test("le décalage d'un jeton est sans hasard et va à la place libre la plus pr
 
 test("le report sur la table de dessin ne fait aucun tirage et ne touche pas les cartes aux tables et rayons identiques", () => {
   const relocate = functionSource("relocateNumberedTokensToFinalSplats", "assignPositions");
-  assert.match(relocate, /if\(sameSplats\(card\._splats, splatsFinal\) && beadRDrawn === card\._beadR\) return;/);
+  assert.match(relocate, /if\(!rangee && sameSplats\(card\._splats, splatsFinal\) && beadRDrawn === card\._beadR\) return;/);
   assert.doesNotMatch(relocate, /rng|Math\.random|rFloat/);
   const units = functionSource("assignPositionsUnits", "shouldGenerateEmptyTaskCase");
   const tail = units.slice(units.indexOf("if(!sameSplats(splats, splatsFinal))"));
@@ -170,7 +173,7 @@ test("B3 : le rayon dessiné des jetons numérotés grossit à 3, 4, 5 et 6 tach
   const relocate = functionSource("relocateNumberedTokensToFinalSplats", "assignPositions");
   assert.match(relocate, /let done = attempt\(beadRDrawn\);/);
   assert.match(relocate, /if\(!done && beadRDrawn !== beadRBase\) done = attempt\(beadRBase\);/);
-  assert.match(relocate, /if\(sameSplats\(card\._splats, splatsFinal\) && beadRDrawn === card\._beadR\) return;/);
+  assert.match(relocate, /if\(!rangee && sameSplats\(card\._splats, splatsFinal\) && beadRDrawn === card\._beadR\) return;/);
   assert.doesNotMatch(relocate, /rng|Math\.random|rFloat/);
   // le tirage passe toujours par le rayon de base
   assert.match(functionSource("assignPositionsNumbered", "numberedBeadRadiusDrawn"), /const beadR = numberedBeadRadius\(splats, card\.family\)/);

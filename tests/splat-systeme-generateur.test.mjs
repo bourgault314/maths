@@ -551,8 +551,10 @@ test("la page : le générateur n'est appelé qu'en mode D, et le panneau porte 
   for(let n = 1; n <= 6; n++){
     const t = tables.getNumberedSplats(n, "D");
     assert.equal(t.length, n, `${n} taches : ${t.length} places`);
-    // lot S2 : à 4 taches, la table de dessin du plateau bas écarte les deux rangées (elles se touchaient)
-    if(n === 4) assert.notDeepEqual(t, tables.getNumberedSplatsLegacy(n, "D"));
+    // lot S2 : à 4 taches, la table de dessin du plateau bas écarte les deux rangées (elles se touchaient) ;
+    // lot « plateau en ligne » (03/10/2026) : à 3 taches, côte à côte au milieu du plateau
+    if(n === 3) assert.deepEqual(t, [{cx:330, cy:545, r:145},{cx:820, cy:545, r:145},{cx:1310, cy:545, r:145}]);
+    else if(n === 4) assert.notDeepEqual(t, tables.getNumberedSplatsLegacy(n, "D"));
     else assert.deepEqual(t, tables.getNumberedSplatsLegacy(n, "D"));
     for(const s of t) assert.ok(s.cy - 0.74 * s.r >= plateau.y && s.cy + 1.10 * s.r <= plateau.y + plateau.h && s.cx - 1.06 * s.r >= plateau.x && s.cx + 1.06 * s.r <= plateau.x + plateau.w, `${n} taches : une tache sort du plateau`);
   }

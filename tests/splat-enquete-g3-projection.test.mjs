@@ -62,6 +62,8 @@ const moteur = new Function(`
   ${fn("numberedBeadRadius")}
   ${fn("numberedBeadRadiusDrawn")}
   ${fn("nudgeTokenFree")}
+  ${fn("numberedSplatsBande")}
+  ${fn("numberedSplatsPlacesVisibles")}
   ${fn("relocateNumberedTokensToFinalSplats")}
   ${fn("assignPositionsNumbered")}
   ${fn("genInvestigate")}

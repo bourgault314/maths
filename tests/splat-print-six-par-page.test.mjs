@@ -218,7 +218,8 @@ test("à l'impression, les cadres sont gris foncé sur fond blanc (cases et plat
   // contour, même fond)
   assert.match(printRenderer, /x:printTray\.x, y:trayY, width:printTray\.w, height:trayHDessine,\s*rx:30, fill:"#fff", stroke:"#334155", "stroke-width":"8"/);
   // (01/10/2026) l'énoncé de l'Enquête aussi, sauf en 6/page (sixColonne garde son plateau)
-  assert.match(printRenderer, /const trayHDessine = \(enqueteCompacte \|\| enqueteEnoncePetit\) \? ENQ_PLATEAU_CORRECTION_H : trayH;/);
+  // (lot « plateau en ligne », 03/10/2026) la même réduction, et le plateau se referme sur une rangée de taches
+  assert.match(printRenderer, /const trayHDessine = \(enqueteCompacte \|\| enqueteEnoncePetit\) \? Math\.round\(\(enqBande \? enqBande\.h : trayH\) \* enqEchelle\) : trayH;/);
   assert.match(printRenderer, /const enqueteEnoncePetit = [^;]*!opts\.sixColonne/);
   assert.doesNotMatch(printRenderer, /stroke:"rgba\(0,0,0,0\.15\)"/);
 });

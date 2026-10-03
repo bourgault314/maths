@@ -225,7 +225,13 @@ test("les places connues du générateur sont celles que la page dessine (platea
   const src = fn("genInvestigate");
   const bloc = src.slice(src.indexOf("const PLACES_PLATEAU = {"), src.indexOf("};", src.indexOf("const PLACES_PLATEAU = {")) + 2);
   const lues = new Function(`${bloc}\nreturn PLACES_PLATEAU;`)();
-  assert.deepEqual(lues, PLACES);
+  /* (lot « plateau en ligne », 03/10/2026) à 3 taches, la page dessine une rangée (330, 820, 1310) ;
+     le rangement des couleurs se décide toujours sur le triangle du tirage : deux taches de même
+     couleur y vont en bas (places 2 et 3), donc côte à côte dans la rangée. 4 à 6 : inchangé. */
+  const TIRAGE3 = new Function(`${fn("getTrayConfig")}\n${fn("getNumberedSplatsLegacy")}\nreturn getNumberedSplatsLegacy(3, "C").map(s => [s.cx, s.cy]);`)();
+  assert.deepEqual(lues[3], TIRAGE3, "3 taches : la table du tirage");
+  assert.deepEqual(PLACES[3], [[330, 545], [820, 545], [1310, 545]], "3 taches : dessinées en ligne");
+  assert.deepEqual({ 4: lues[4], 5: lues[5], 6: lues[6] }, { 4: PLACES[4], 5: PLACES[5], 6: PLACES[6] });
 });
 
 test("case cochée, réglages impossibles (total max 8) : des cartes, jamais d'erreur", () => {
