@@ -822,6 +822,11 @@
     .carte-seance .programme > span { display: grid; grid-template-columns: 24px minmax(0, 1fr); align-items: center; gap: 9px; font-size: .95rem; font-weight: 850; line-height: 1.25; }
     .carte-seance .programme i { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #e4edf5; color: var(--ink); font-size: .8rem; font-style: normal; font-weight: 950; line-height: 1; }
     .carte-seance .programme small { color: var(--muted); font-size: .84rem; font-weight: 750; }
+    /* Lot M1 : la séance du jour reprise — les étapes faites cochées (vert),
+       celle où l'on reprend en bleu, comme le fil « Ma séance » d'une série. */
+    .carte-seance .programme .faite i { background: var(--teal); color: #fff; }
+    .carte-seance .programme .faite > span { color: var(--muted); }
+    .carte-seance .programme .ici i { background: var(--blue); color: #fff; }
     .seance-liens { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 18px; margin: 8px 0 -6px; }
     .seance-liens button { min-height: 44px; padding: 0 2px; border: 0; background: none; color: var(--blue); font: inherit; font-size: .9rem; font-weight: 850; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
     .semaine { display: flex; align-items: center; justify-content: center; gap: 8px; margin: -2px 0; color: var(--muted); font-size: .86rem; font-weight: 800; }
@@ -2455,7 +2460,7 @@
   <!-- Ma séance du jour (lot 2, 03/10/2026) : la notice de la séance, six
        lignes (la notice d'avant a été retirée avec la clé, lot 2b). -->
   <template id="notice-seance">
-    <p><b>Ma séance du jour.</b> 3 ou 4 étapes, environ 8 min. Réussi&nbsp;: j’avance. Raté&nbsp;: je reprends un peu plus bas.</p>
+    <p><b>Ma séance du jour.</b> 3 ou 4 étapes, environ 5 min. Réussi&nbsp;: j’avance. Raté&nbsp;: je reprends un peu plus bas.</p>
     <p><b>Ma table.</b> De marche en marche&nbsp;: les perles, la bande, dans l’ordre, dans le désordre, les nombres manquants… jusqu’à «&nbsp;Je valide ma table&nbsp;»&nbsp;: 20 questions en 1 min 30, 2 erreurs au plus.</p>
     <p><b>Ma rangée.</b> Une case entourée&nbsp;: réussi une fois. Une case pleine&nbsp;: prêt. Toutes pleines&nbsp;: je peux valider.</p>
     <p><b>Mes calculs du jour.</b> Un calcul réussi revient plus tard. Raté, il revient demain.</p>
@@ -2472,7 +2477,7 @@
   </footer>
 
   <script src="./defi_tables_core.js?v=20261003-1"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20261003-2"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20261003-3"></script>
   <script>
     (() => {
       "use strict";
@@ -6805,6 +6810,9 @@
         etapeEnCours = null;
       }
 
+      // Lot M1 : ouvrirSeance rend la séance du jour déjà commencée quand il y
+      // en a une (elle est dans le parcours, donc aussi sur le serveur) — les
+      // étapes faites restent faites, on reprend à la suivante.
       function commencerSeance(table) {
         seance = PARCOURS.ouvrirSeance(parcours, {table});
         lancerEtapeDeSeance();
@@ -6824,14 +6832,30 @@
       // du premier coup. Les perles ne se ratent pas.
       function resultatDeLEtape(suivi) {
         const config = state.configuration;
-        if (config.mode === "revision") return {juste: state.revisionPremierScore, total: Math.max(1, state.revisionPremierTotal)};
+        const erreurs = erreursDeLEtape();
+        if (config.mode === "revision") return {juste: state.revisionPremierScore, total: Math.max(1, state.revisionPremierTotal), erreurs};
         if (config.mode === "learn") {
-          if (activitePerles(config)) return {juste: CASES_BANDE, total: CASES_BANDE};
+          if (activitePerles(config)) return {juste: CASES_BANDE, total: CASES_BANDE, erreurs};
           const total = config.learnActivity === "gaps" ? TOTAL : CASES_BANDE;
-          return {juste: total - casesRatees(), total};
+          return {juste: total - casesRatees(), total, erreurs};
         }
         const principal = suivi ? suivi.evenements.find(evenement => typeof evenement.reussi === "boolean") : null;
-        return {juste: state.correct, total: TOTAL, reussi: Boolean(principal && principal.reussi)};
+        return {juste: state.correct, total: TOTAL, reussi: Boolean(principal && principal.reussi), erreurs};
+      }
+
+      // Lot M1 : les calculs ratés de l'étape (4 × 7 → [4, 7]), que la séance
+      // garde — une fois chacun — pour le cadre « À retenir pour demain » du
+      // bilan (lot E2). Rien ne les affiche encore.
+      function erreursDeLEtape() {
+        const paires = [];
+        state.questions.forEach((question, index) => {
+          const reponse = state.responses[index];
+          if (!question || !reponse || reponse.correct) return;
+          const premier = Number(question.first);
+          const second = Number(question.second);
+          if (Number.isInteger(premier) && Number.isInteger(second)) paires.push([premier, second]);
+        });
+        return paires;
       }
 
       function noterEtapeDeSeance(suivi) {
@@ -7025,9 +7049,14 @@
 
       // La carte « Ma séance du jour » : la liste numérotée des étapes du jour
       // et « Commencer → ». table = null : la séance des 9 tables acquises.
+      // Lot M1 : une séance du jour déjà commencée → « Reprendre ma séance »,
+      // ses étapes faites cochées, « Reprendre ».
       function carteDeSeance(table) {
-        const programme = PARCOURS.programmeDeSeance(parcours, PARCOURS.ouvrirSeance(parcours, {table}));
-        const nombre = programme.etapes.length;
+        const ouverte = PARCOURS.ouvrirSeance(parcours, {table});
+        const programme = PARCOURS.programmeDeSeance(parcours, ouverte);
+        const dejaFaites = ouverte.faites;
+        const reprise = dejaFaites.length > 0;
+        const nombre = dejaFaites.length + programme.etapes.length;
         const faite = PARCOURS.bilanSeances(parcours).aujourdhui > 0;
         const carte = document.createElement("button");
         carte.type = "button";
@@ -7037,21 +7066,42 @@
         tete.className = "tete";
         const texte = document.createElement("span");
         const titre = document.createElement("strong");
-        titre.textContent = faite ? "Encore une séance" : "Ma séance du jour";
+        titre.textContent = reprise ? "Reprendre ma séance" : faite ? "Encore une séance" : "Ma séance du jour";
         const duree = document.createElement("span");
         duree.className = "duree";
-        duree.textContent = soude(`${pluriel(nombre, "étape")} · environ ${programme.minutes} min`);
+        // « encore 2 min environ » ne se coupe pas, ni avant « · » : au téléphone
+        // (402 px), « environ » restait seul sur la deuxième ligne.
+        duree.textContent = reprise
+          ? soude(`étape ${dejaFaites.length + 1} sur ${nombre}\u00a0· encore\u00a0${programme.minutes}\u00a0min\u00a0environ`)
+          : soude(`${pluriel(nombre, "étape")} · environ ${programme.minutes} min`);
         texte.append(titre, duree);
         const go = document.createElement("span");
         go.className = "go";
-        go.textContent = "Commencer\u00a0→";
+        go.textContent = reprise ? "Reprendre" : "Commencer\u00a0→";
         tete.append(texte, go);
         // La liste des étapes du jour, numérotées (choix de Gwenaël, 02/10) :
         // l'élève voit ce qu'il va faire avant de commencer.
         const liste = document.createElement("span");
         liste.className = "programme";
-        programme.etapes.forEach((etape, index) => {
+        dejaFaites.forEach(passee => {
           const item = document.createElement("span");
+          item.className = "faite";
+          const coche = document.createElement("i");
+          coche.textContent = "✓";
+          const nom = document.createElement("span");
+          nom.textContent = passee.nom;
+          if (passee.type === "revision") {
+            const petit = document.createElement("small");
+            petit.textContent = ` · ${pluriel(passee.total, "calcul")}`;
+            nom.append(petit);
+          }
+          item.append(coche, nom);
+          liste.append(item);
+        });
+        programme.etapes.forEach((etape, rang) => {
+          const index = dejaFaites.length + rang;
+          const item = document.createElement("span");
+          if (reprise && rang === 0) item.className = "ici";
           const numero = document.createElement("i");
           numero.textContent = String(index + 1);
           const nom = document.createElement("span");
@@ -7068,7 +7118,9 @@
           liste.append(item);
         });
         carte.append(tete, liste);
-        carte.setAttribute("aria-label", `${titre.textContent} : ${duree.textContent}. ${programme.etapes.map((etape, index) => `${index + 1}, ${etape.nom}`).join(" ; ")}. Commencer.`);
+        carte.setAttribute("aria-label", reprise
+          ? `${titre.textContent} : ${duree.textContent}. ${dejaFaites.map((passee, index) => `${index + 1}, ${passee.nom}, fait`).join(" ; ")} ; ${programme.etapes.map((etape, index) => `${dejaFaites.length + index + 1}, ${etape.nom}`).join(" ; ")}. Reprendre.`
+          : `${titre.textContent} : ${duree.textContent}. ${programme.etapes.map((etape, index) => `${index + 1}, ${etape.nom}`).join(" ; ")}. Commencer.`);
         carte.addEventListener("click", () => commencerSeance(table));
         return carte;
       }
@@ -7117,8 +7169,8 @@
         etapes.append(liens);
       }
 
-      // « Cette semaine ●○○○ » : les jours avec une séance finie, objectif 4
-      // (pas une limite : au-delà, « 5 jours cette semaine ✓ »). Et la tuile
+      // « Cette semaine ●○○○○ » : les jours avec une séance finie, objectif 5
+      // (pas une limite : au-delà, « 6 jours cette semaine ✓ »). Et la tuile
       // Mon parcours reprend « 3 tables sur 9 · Or ».
       function renderSemaine(etat) {
         const zone = $("acc-semaine");
@@ -7127,8 +7179,8 @@
         zone.hidden = false;
         if (bilan.semaine > bilan.objectif) {
           zone.textContent = `${bilan.semaine} jours cette semaine ✓`;
-          // Le texte se lit seul : l'étiquette des ronds (« 4 jours … sur 4 »)
-          // ne doit pas lui survivre quand la 5e séance arrive page ouverte.
+          // Le texte se lit seul : l'étiquette des ronds (« 5 jours … sur 5 »)
+          // ne doit pas lui survivre quand la 6e séance arrive page ouverte.
           zone.removeAttribute("aria-label");
         } else {
           const titre = document.createElement("span");

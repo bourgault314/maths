@@ -210,7 +210,7 @@ test("la page : le bloc du jour en tête et conseillé, l’unique rond bleu, le
   assert.match(html, /bouton\.classList\.toggle\("secondary", !agenda\.dus\);/, "en secondaire : ce n’est plus l’étape du jour");
   assert.match(html, /"Rien ne monte : ces calculs n’étaient pas encore à revoir"/);
   assert.match(html, /defi_tables_core\.js\?v=20261003-1/);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261003-2/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261003-3/);
 });
 
 test("le serveur : « boite » et « echeance » acceptés, « cases » toujours ; la page du professeur compte les calculs en retard", async () => {
