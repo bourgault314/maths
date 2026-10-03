@@ -770,6 +770,10 @@
   input.eleveChamp{width:100%;height:100%;padding:0;border:none;border-radius:0;outline:none;text-align:center;font:inherit;color:#111;background:transparent;min-width:0}
   /* Convention des fiches : total et caché en noir, jetons visibles en bleu */
   .eleveCase.blanche input.eleveChamp{color:#1d4ed8}
+  /* « Voir la réponse » / « Voir la correction » : la case des jetons visibles devient rouge comme les
+     taches (02/10/2026, Gwenaël : « si c'est quelque chose qui remplit, c'est quelque chose à valider ») ;
+     la règle bleue juste au-dessus l'emportait sur .montre, écrite plus haut */
+  .eleveCase.blanche.montre input.eleveChamp{color:#b91c1c}
   .eleveCase.haut input.eleveChamp{color:#111}
   input.eleveChamp::placeholder{color:#94a3b8;font-weight:700}
   /* Cadre de la case active DANS la case (box-shadow inset), pas sur ses bords : le trait
@@ -909,6 +913,10 @@
     body.eleve-mode .eleveTete a.eleveMondes{font-size:15px;padding:5px 11px}
     body.eleve-mode .eleveActions button{font-size:19px;padding:14px 30px}
   }
+  /* « ◀ » du pas à pas (03/10/2026) : petit, à gauche de « Étape suivante », jamais étiré comme
+     les deux autres boutons au téléphone ; invisible à la 1re étape, sa place reste */
+  #elevePanel.avecSchema .eleveActions button.precedent{flex:0 0 auto;min-width:52px;max-width:none;padding-left:16px;padding-right:16px}
+  #elevePanel .eleveActions button.precedent.cache{visibility:hidden}
   .eleveMsg{text-align:center;min-height:24px;font-weight:900;margin-top:9px}
   .eleveMsg.bravo{color:#15803d}
   .eleveMsg.rate{color:#b91c1c}
@@ -946,6 +954,8 @@
   /* case rouge ET active : même principe que .eleveCase.ko:focus-within plus haut */
   body.eleve-pave .eleveCase.ko.mg-pave-case-active{box-shadow:inset 0 0 0 4px #2563eb, inset 0 0 0 999px #fee2e2}
   body.eleve-pave .eleveCase.ko.mg-pave-case-active input.eleveChamp{background:transparent}
+  /* carte finie (juste, ou réponse montrée) : plus rien à taper, plus de case « active » encadrée de bleu */
+  body.eleve-pave #elevePanel.avecSchema .eleveCase.mg-pave-case-active{box-shadow:none}
   /* Un seul Valider : celui du pavé fait exactement la même action. Le bouton
      reste dans la page (la validation le lit), seulement caché ; « Voir la
      réponse » et « Carte suivante » prennent sa place quand ils apparaissent. */
@@ -13737,14 +13747,20 @@ function eleveValiderSplat(){
   }else{
     eleveCarteFautee = true;
     eleveEchecs++;
-    msg.textContent = "Pas encore\u2026 corrige ce qui est en rouge et revalide !";
+    /* Enquête et Système (03/10/2026, Gwenaël) : à la 3e erreur, le bouton jaune ouvre directement
+       la correction pas à pas (avant : « Voir la réponse », puis « Voir la correction », qui
+       recachait la réponse qu'on venait de montrer) ; le message parle des deux chemins */
+    const avecCorrection = eleveCorrectionPasAPas(eleveSerie[eleveIdx]);
+    msg.textContent = (avecCorrection && eleveEchecs >= ELEVE_ECHECS_MAX)
+      ? "Pas encore\u2026 corrige ce qui est en rouge, ou regarde la correction."
+      : "Pas encore\u2026 corrige ce qui est en rouge et revalide !";
     msg.className = "eleveMsg rate";
-    /* au 3e échec, on propose de voir la réponse (la carte restera rouge) */
+    /* au 3e échec, on propose de voir la réponse — ou la correction (la carte restera rouge) */
     if(eleveEchecs >= ELEVE_ECHECS_MAX && !document.getElementById("eleveVoir")){
       const voir = document.createElement("button");
       voir.type = "button"; voir.id = "eleveVoir"; voir.className = "secondaire";
-      voir.textContent = "Voir la r\u00e9ponse";
-      voir.onclick = eleveMontrerReponse;
+      voir.textContent = avecCorrection ? "Voir la correction" : "Voir la r\u00e9ponse";
+      voir.onclick = avecCorrection ? eleveMontrerCorrection : eleveMontrerReponse;
       bouton.parentNode.appendChild(voir);
       eleveMontrerAuDessusDuPave(voir);
     }
@@ -13923,6 +13939,16 @@ function eleveVoirSchema(){
   const card = eleveSerie[eleveIdx];
   if(!card || eleveSchemaEtape >= eleveSchemaEtapes(card)) return;
   eleveSchemaEtape++;
+  eleveSchemaMontrerEtape(card);
+}
+/* « ◀ » (03/10/2026, Gwenaël) : revenir à l'étape d'avant du pas à pas, jusqu'à la première. */
+function eleveSchemaPrecedente(){
+  const card = eleveSerie[eleveIdx];
+  if(!card || eleveSchemaEtape <= 1) return;
+  eleveSchemaEtape--;
+  eleveSchemaMontrerEtape(card);
+}
+function eleveSchemaMontrerEtape(card){
   if(card.family === "C" && enqueteProjectionPasAPas(card)){
     const pendant = eleveSchemaEtape < eleveSchemaEtapes(card);
     eleveReponseCacher(pendant);
@@ -13931,15 +13957,44 @@ function eleveVoirSchema(){
     else{ const pt = document.getElementById("elevePanel"); if(pt) pt.classList.toggle("tableauCacheTel", pendant); }
   }
   eleveDessinerSchema(card);
-  const voir = document.getElementById("eleveSchema");
-  if(!voir) return;
-  if(eleveSchemaEtape >= eleveSchemaEtapes(card)){
-    voir.remove();
-    const suivant = document.querySelector("#elevePanel .eleveActions .suivant");
-    if(suivant) suivant.focus(); /* Entrée enchaîne sur la carte suivante */
-  }else{
-    voir.textContent = "Étape suivante ▶";
+  eleveSchemaBoutons(card);
+}
+/* Les boutons du pas à pas : « ◀ » (dès la 1re étape, invisible à la 1re pour que les autres
+   boutons ne bougent plus d'un appui à l'autre), « Étape suivante ▶ » sauf à la dernière,
+   « Carte suivante ▶ ». Le bouton appuyé garde le focus (Entrée le rejoue) ; à la dernière
+   étape, c'est « Carte suivante ». */
+function eleveSchemaBoutons(card){
+  const actions = document.querySelector("#elevePanel .eleveActions");
+  if(!actions) return;
+  const derniere = eleveSchemaEtape >= eleveSchemaEtapes(card);
+  const avant = document.activeElement;
+  const suivant = actions.querySelector(".suivant");
+  let voir = document.getElementById("eleveSchema");
+  if(derniere){ if(voir) voir.remove(); voir = null; }
+  else{
+    if(!voir){
+      voir = document.createElement("button");
+      voir.type = "button"; voir.id = "eleveSchema"; voir.className = "secondaire";
+      voir.onclick = eleveVoirSchema;
+      actions.insertBefore(voir, suivant || null);
+    }
+    voir.textContent = "\u00c9tape suivante \u25b6";
   }
+  let prec = document.getElementById("eleveSchemaPrec");
+  if(!prec){
+    prec = document.createElement("button");
+    prec.type = "button"; prec.id = "eleveSchemaPrec"; prec.className = "secondaire precedent";
+    prec.textContent = "\u25c0";
+    prec.title = "\u00c9tape pr\u00e9c\u00e9dente"; prec.setAttribute("aria-label", "\u00c9tape pr\u00e9c\u00e9dente");
+    prec.onclick = eleveSchemaPrecedente;
+    actions.insertBefore(prec, voir || suivant || null);
+  }
+  const premiere = eleveSchemaEtape <= 1;
+  prec.classList.toggle("cache", premiere);
+  prec.disabled = premiere;
+  if(derniere){ if(suivant) suivant.focus(); }
+  else if(avant === prec && premiere){ voir.focus(); }
+  else if(avant !== prec && avant !== voir && voir){ voir.focus(); }
 }
 /* Le schéma se dessine dans le plateau, cadré sur son contenu. Il est plus large
    que haut (1600 × ~1100) : sur un téléphone, le plateau réduit pour le pavé (150 à
@@ -14053,10 +14108,12 @@ function eleveSchemaCadreUnique(card){
    projection (bandeau TOTAL + petit plateau + phrases, une seule échelle ; plateau entier au dernier
    appui) — l'élève revoit l'écran du tableau. */
 function eleveRendreEtape(card, e){
+  const g3 = e > 0 && card && card.family === "C" && !!enqueteProjectionPasAPas(card);
+  if(g3) eleveG3EchelleCarte(card); /* avant le dessin : la mesure redessine chaque étape */
   renderCard(card, e);
-  if(e > 0 && card && card.family === "C" && enqueteProjectionPasAPas(card)){
+  if(g3){
     enqueteProjectionCadrer(card, e);
-    eleveG3Zone();
+    eleveG3Zone(card);
   }
 }
 /* Ordinateur, pas à pas du mode élève (01/10/2026, remarque de Gwenaël : « c'est les schémas que j'ai
@@ -14066,7 +14123,30 @@ function eleveRendreEtape(card, e){
    la projection : l'écran d'ordinateur est plus large que haut). Le cadrage unique de la carte
    (eleveCadrerSchemaSys) mesure donc toujours bandeau + zone : plus de vide sous un cadre court. */
 const ELEVE_G3_BANDEAU = 0.8, ELEVE_G3_ZONE_H = 560, ELEVE_G3_ZONE_L = 2400, ELEVE_G3_ZONE_ECART = 24;
-function eleveG3Zone(){
+/* Une seule échelle pour toutes les étapes d'une carte (03/10/2026, Gwenaël : « entre 3 et 4 ça a
+   diminué ») : chaque cadre prenait la plus grande taille qui tenait dans la zone, si bien qu'un
+   cadre de plus de lignes était dessiné plus petit (0,83 → 0,62 d'une étape à l'autre sur une
+   carte à trois taches). L'échelle est celle du cadre le plus grand de la carte ; les cadres ont
+   tous la même largeur, comme au téléphone, et les plus courts laissent du blanc dessous. */
+let eleveG3Echelle = null; /* { card, f } */
+function eleveG3EchelleCarte(card){
+  if(eleveG3Echelle && eleveG3Echelle.card === card) return eleveG3Echelle.f;
+  let f = Infinity;
+  try{
+    for(let e = 1; e <= eleveSchemaEtapes(card); e++){
+      renderCard(card, e);
+      enqueteProjectionCadrer(card, e);
+      const dessin = ENQ_PROJ_IDS.map(id => document.getElementById(id)).find(Boolean);
+      if(!dessin || dessin.parentNode !== svg) continue;
+      dessin.removeAttribute("transform");
+      const bd = dessin.getBBox();
+      if(bd.width > 0 && bd.height > 0) f = Math.min(f, ELEVE_G3_ZONE_H / bd.height, ELEVE_G3_ZONE_L / bd.width);
+    }
+  }catch(_e){ f = Infinity; }
+  eleveG3Echelle = { card, f: Number.isFinite(f) ? f : null };
+  return eleveG3Echelle.f;
+}
+function eleveG3Zone(card){
   try{
     const plateau = document.getElementById("enqueteProjectionPlateau");
     const dessin = ENQ_PROJ_IDS.map(id => document.getElementById(id)).find(Boolean);
@@ -14077,7 +14157,8 @@ function eleveG3Zone(){
     const haut = Math.round((bp.y + bp.height) * k) + ELEVE_G3_ZONE_ECART;
     dessin.removeAttribute("transform");
     const bd = dessin.getBBox();
-    const f = Math.min(ELEVE_G3_ZONE_H / bd.height, ELEVE_G3_ZONE_L / bd.width);
+    const fCarte = card && eleveG3Echelle && eleveG3Echelle.card === card ? eleveG3Echelle.f : null;
+    const f = fCarte || Math.min(ELEVE_G3_ZONE_H / bd.height, ELEVE_G3_ZONE_L / bd.width);
     dessin.setAttribute("transform", `translate(800 ${haut}) scale(${Math.round(1000 * f) / 1000}) translate(${Math.round(-(bd.x + bd.width / 2))} ${Math.round(-bd.y)})`);
     return true;
   }catch(_e){ return false; }
@@ -14356,7 +14437,17 @@ function eleveRemonterApresErreur(){
 
 /* L'élève bloqué voit la réponse : les cases se remplissent en rouge, la
    pastille devient rouge, et il passe à la carte suivante quand il veut. */
-function eleveMontrerReponse(){
+/* Enquête et Système : la carte a une correction pas à pas (« Voir la correction »). */
+function eleveCorrectionPasAPas(card){
+  return !!card && !!eleveInfosTableau(card) && eleveSchemaEtapes(card) > 0;
+}
+/* « Voir la correction » à la 3e erreur (03/10/2026) : la réponse est rangée dans le tableau et la
+   carte devient rouge, comme avec « Voir la réponse », puis la correction démarre aussitôt à sa
+   première étape ; la réponse revient au dernier appui (« Je réponds », « Je vérifie »). */
+function eleveMontrerCorrection(){
+  eleveMontrerReponse(null, true);
+}
+function eleveMontrerReponse(_ev, correction){
   const bouton = document.getElementById("eleveValider");
   const voir = document.getElementById("eleveVoir");
   const msg = document.getElementById("eleveMsg");
@@ -14385,6 +14476,11 @@ function eleveMontrerReponse(){
   bouton.parentNode.appendChild(suivant);
   suivant.focus();
   eleveRemonterApresErreur(); /* après le focus, qui peut lui aussi faire défiler */
+  if(correction && document.getElementById("eleveSchema")){
+    eleveVoirSchema(); /* la première étape tout de suite */
+    const etape = document.getElementById("eleveSchema");
+    if(etape) etape.focus(); /* Entrée passe à l'étape suivante */
+  }
   const pastilles = document.querySelector("#eleveTeteHaut .elevePastilles");
   if(pastilles) pastilles.outerHTML = elevePastillesHtml();
 }

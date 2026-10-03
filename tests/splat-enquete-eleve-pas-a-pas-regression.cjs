@@ -8,6 +8,9 @@
      tache n'est dévoilée ; au dernier appui, la réponse revient et les taches se dévoilent ;
    - les boutons ne bougent pas d'un appui à l'autre, la page ne défile pas de côté ;
    - rien du schéma ne sort à droite du plateau (téléphone : les lignes de calcul tiennent) ;
+   - 03/10/2026 : sur ordinateur, la même échelle à tous les appuis ; « ◀ » visible dès la 2e étape,
+     il ramène une étape en arrière (réponse recachée, boutons à leur place) ; à la 3e erreur,
+     « Voir la correction » ouvre directement la 1re étape et la carte devient rouge ;
    - téléphone (02/10/2026) : à chaque appui, le petit plateau est dans le bandeau, sous les phrases,
      aucun trait du schéma ne touche le cadre de l'étape,
      à gauche du TOTAL sans le toucher, avec toutes les taches de la carte ; rien sur ordinateur. */
@@ -66,6 +69,14 @@ const etat = () => {
     cache: document.getElementById("elevePanel").classList.contains("reponseCachee"),
     devoilees: document.querySelectorAll("#mainSvg [class*='anim-fade-out']").length,
     scrollX, largeurPage: document.documentElement.scrollWidth, largeur: innerWidth, deborde,
+    /* ordinateur (03/10/2026) : l'échelle du cadre de l'étape, la même à tous les appuis */
+    echelle: (() => {
+      const d = ENQ_PROJ_IDS.map((id) => document.getElementById(id)).find(Boolean);
+      const m = d && (d.getAttribute("transform") || "").match(/scale\(([\d.]+)\)/);
+      return m ? Number(m[1]) : null;
+    })(),
+    /* « ◀ » : [présent, visible] */
+    precedent: (() => { const p = document.getElementById("eleveSchemaPrec"); return p ? [true, getComputedStyle(p).visibility === "visible"] : [false, false]; })(),
   };
 };
 
@@ -93,7 +104,7 @@ const etat = () => {
       await page.waitForSelector("#eleveSchema", { state: "attached" });
       const appuis = await page.evaluate(() => { const c = eleveSerie[eleveIdx]; const p = enqueteProjectionPasAPas(c); return p ? p.etapes.length : 0; });
       assert.ok(appuis >= 5, `${ici} : le pas à pas G3 (${appuis} étapes)`);
-      let depart = null, n = 0;
+      let depart = null, n = 0, echelle = null;
       while(await page.$("#eleveSchema")){
         await page.evaluate(() => document.getElementById("eleveSchema").click());
         n++;
@@ -103,6 +114,11 @@ const etat = () => {
         assert.equal(e.scrollX, 0, `${ici} : défilement de côté`);
         assert.ok(e.largeurPage <= e.largeur, `${ici} : la page est plus large que l'écran`);
         assert.ok(e.deborde <= 1, `${ici}, appui ${n} : un texte sort de ${e.deborde} px à droite du plateau`);
+        assert.deepEqual(e.precedent, [true, n >= 2], `${ici}, appui ${n} : « ◀ » (présent, visible dès la 2e étape)`);
+        if(!f.isMobile && e.echelle !== null){
+          if(echelle === null) echelle = e.echelle;
+          assert.equal(e.echelle, echelle, `${ici}, appui ${n} : l'échelle du schéma a changé (${echelle} → ${e.echelle})`);
+        }
         if(n < appuis){
           assert.ok(e.cache && e.valeurs.every((v) => v === ""), `${ici}, appui ${n} : la réponse est encore affichée`);
         }else{
@@ -123,6 +139,33 @@ const etat = () => {
         controles++;
       }
       assert.equal(n, appuis, `${ici} : ${n} appuis pour ${appuis} étapes`);
+      /* « ◀ » depuis la dernière étape : la réponse est recachée, « Étape suivante » revient à sa place */
+      await page.evaluate(() => document.getElementById("eleveSchemaPrec").click());
+      const r = await page.evaluate(etat);
+      assert.equal(await page.evaluate(() => eleveSchemaEtape), appuis - 1, `${ici} : ◀ ne ramène pas à l'avant-dernière étape`);
+      assert.ok(r.cache && r.valeurs.every((v) => v === ""), `${ici} : après ◀, la réponse est encore affichée`);
+      assert.ok(await page.$("#eleveSchema"), `${ici} : après ◀, « Étape suivante » ne revient pas`);
+      assert.equal(r.haut, depart, `${ici} : après ◀, les boutons ont bougé`);
+      if(!f.isMobile && r.echelle !== null) assert.equal(r.echelle, echelle, `${ici} : après ◀, l'échelle a changé`);
+      await page.evaluate(() => document.getElementById("eleveSchema").click());
+      const fin = await page.evaluate(etat);
+      assert.ok(!fin.cache && fin.valeurs.every((v, i) => v === attendues[i]), `${ici} : la réponse ne revient pas après ◀ puis ▶`);
+      /* trois erreurs : « Voir la correction » ouvre directement la 1re étape, la carte est rouge */
+      await page.goto(`${BASE}/outils/splat.html?${requete}&cards=1&unknown=question&eleve=1`);
+      await page.waitForSelector("#eleveValider", { state: "attached" });
+      for(let k = 0; k < 3; k++) await page.evaluate(() => {
+        document.querySelectorAll("#elevePanel .eleveCase[data-attendu]").forEach((c) => {
+          const i = c.querySelector("input");
+          if(i){ i.value = String(Number(c.getAttribute("data-attendu")) + 1); i.dispatchEvent(new Event("input", { bubbles: true })); }
+        });
+        document.getElementById("eleveValider").click();
+      });
+      const voir = await page.evaluate(() => ({ texte: document.getElementById("eleveVoir").textContent, msg: document.getElementById("eleveMsg").textContent }));
+      assert.equal(voir.texte, "Voir la correction", `${ici} : 3e erreur`);
+      assert.equal(voir.msg, "Pas encore\u2026 corrige ce qui est en rouge, ou regarde la correction.", `${ici} : message de la 3e erreur`);
+      await page.evaluate(() => document.getElementById("eleveVoir").click());
+      const c1 = await page.evaluate(() => ({ etape: eleveSchemaEtape, rouge: eleveResultats[eleveIdx], suivante: !!document.getElementById("eleveSchema") }));
+      assert.deepEqual(c1, { etape: 1, rouge: "ko", suivante: true }, `${ici} : « Voir la correction » n'ouvre pas la 1re étape`);
     }
     assert.deepEqual(erreurs, [], `${f.nom} : erreurs JavaScript`);
     await contexte.close();

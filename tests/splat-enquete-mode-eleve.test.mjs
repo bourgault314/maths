@@ -220,13 +220,24 @@ test("« Regarde sous les taches… » pour l'Enquête, « sous la tache… » a
 // --- « Voir le schéma » ----------------------------------------------------------------------
 function harnaisSchema(){
   const boutons = [];
-  const actions = { appendChild: (b) => { boutons.push(b); b.parentNode = actions; } };
+  /* les boutons du pas à pas (03/10/2026) : « ◀ » et « Étape suivante » s'insèrent avant « Carte suivante » */
+  const suivant = { className: "suivant", focus(){ suivant.focalise = (suivant.focalise || 0) + 1; document.activeElement = suivant; }, focalise: 0 };
+  const actions = {
+    appendChild: (b) => { boutons.push(b); b.parentNode = actions; },
+    insertBefore: (b, ref) => { const i = ref ? boutons.indexOf(ref) : -1; if(i >= 0) boutons.splice(i, 0, b); else boutons.push(b); b.parentNode = actions; },
+    querySelector: (sel) => (sel === ".suivant" ? suivant : null)
+  };
   const valider = { parentNode: actions };
-  const suivant = { focus(){ suivant.focalise = (suivant.focalise || 0) + 1; }, focalise: 0 };
   const document = {
-    createElement: () => ({ remove(){ this.retire = true; boutons.splice(boutons.indexOf(this), 1); } }),
-    getElementById: (id) => (id === "eleveSchema" ? boutons.find((b) => b.id === "eleveSchema") || null : null),
-    querySelector: (sel) => (sel === "#elevePanel .eleveActions .suivant" ? suivant : null)
+    activeElement: null,
+    createElement: () => {
+      const b = { classes: new Set(), remove(){ this.retire = true; boutons.splice(boutons.indexOf(this), 1); },
+        focus(){ document.activeElement = this; }, setAttribute(k, v){ this[k] = v; } };
+      b.classList = { toggle: (k, v) => (v ? b.classes.add(k) : b.classes.delete(k)), contains: (k) => b.classes.has(k) };
+      return b;
+    },
+    getElementById: (id) => boutons.find((b) => b.id === id) || null,
+    querySelector: (sel) => (sel === "#elevePanel .eleveActions .suivant" ? suivant : sel === "#elevePanel .eleveActions" ? actions : null)
   };
   const ctx = new Function("document", `
     let eleveSchemaEtape = 0, eleveIdx = 0;
@@ -254,9 +265,13 @@ function harnaisSchema(){
     function eleveSchemaReserverOrdinateur(card){ reserves.push(card); }
     ${fn("eleveProposerSchema")}
     ${fn("eleveVoirSchema")}
-    return { proposer: eleveProposerSchema, voir: eleveVoirSchema, dessins, caches, tableaux, avecPlan: () => { planG3 = { etapes: [] }; }, etape: () => eleveSchemaEtape, monde2: () => { eleveSerie[0] = { family: "N" }; } };
+    ${fn("eleveSchemaPrecedente")}
+    ${fn("eleveSchemaMontrerEtape")}
+    ${fn("eleveSchemaBoutons")}
+    return { proposer: eleveProposerSchema, voir: eleveVoirSchema, precedente: eleveSchemaPrecedente, dessins, caches, tableaux, avecPlan: () => { planG3 = { etapes: [] }; }, etape: () => eleveSchemaEtape, monde2: () => { eleveSerie[0] = { family: "N" }; } };
   `)(document);
-  return { ctx, boutons, valider, suivant };
+  const par = (id) => boutons.find((b) => b.id === id) || null;
+  return { ctx, boutons, valider, suivant, par, document };
 }
 
 test("après validation : un bouton jaune « Voir la correction » (ex-« Voir le schéma »), une seule fois, pour l'Enquête seulement", () => {
@@ -277,6 +292,28 @@ test("après validation : un bouton jaune « Voir la correction » (ex-« Voir l
   assert.match(fn("eleveMontrerReponse"), /if\(voir\) voir\.remove\(\);\n  eleveProposerSchema\(bouton\);/);
 });
 
+test("3e erreur à l'Enquête et au Système (03/10/2026) : « Voir la correction » ouvre le pas à pas, le message parle des deux chemins ; ailleurs « Voir la réponse »", () => {
+  const v = fn("eleveValiderSplat");
+  assert.match(v, /const avecCorrection = eleveCorrectionPasAPas\(eleveSerie\[eleveIdx\]\);/);
+  assert.match(v, /\? "Pas encore\\u2026 corrige ce qui est en rouge, ou regarde la correction\."\n\s+: "Pas encore\\u2026 corrige ce qui est en rouge et revalide !";/);
+  assert.match(v, /voir\.textContent = avecCorrection \? "Voir la correction" : "Voir la r\\u00e9ponse";/);
+  assert.match(v, /voir\.onclick = avecCorrection \? eleveMontrerCorrection : eleveMontrerReponse;/);
+  /* qui a une correction : la carte a un tableau (Enquête, Système) et des étapes */
+  const a = new Function(`
+    function eleveInfosTableau(c){ return c.tableau ? {} : null; }
+    function eleveSchemaEtapes(c){ return c.etapes; }
+    ${fn("eleveCorrectionPasAPas")} return eleveCorrectionPasAPas;`)();
+  assert.equal(a({ tableau: true, etapes: 5 }), true);
+  assert.equal(a({ tableau: false, etapes: 5 }), false, "mondes 1, 2, 5 : « Voir la réponse »");
+  assert.equal(a(null), false);
+  /* « Voir la correction » : la réponse rangée, la carte rouge, puis la 1re étape tout de suite */
+  assert.match(fn("eleveMontrerCorrection"), /eleveMontrerReponse\(null, true\);/);
+  assert.match(fn("eleveMontrerReponse"), /eleveRemonterApresErreur\(\);[^\n]*\n  if\(correction && document\.getElementById\("eleveSchema"\)\)\{\n    eleveVoirSchema\(\);/);
+  /* la case des jetons visibles devient rouge comme les taches (02/10/2026), et plus de case « active » sur une carte finie */
+  assert.match(feuille, /\.eleveCase\.blanche input\.eleveChamp\{color:#1d4ed8\}\n[\s\S]*?\.eleveCase\.blanche\.montre input\.eleveChamp\{color:#b91c1c\}/, "la règle rouge APRÈS la règle bleue");
+  assert.match(html, /body\.eleve-pave #elevePanel\.avecSchema \.eleveCase\.mg-pave-case-active\{box-shadow:none\}/);
+});
+
 test("trois étapes, une par appui ; à la dernière le bouton s'efface et « Carte suivante » reprend le focus", () => {
   const h = harnaisSchema();
   h.ctx.proposer(h.valider);
@@ -286,10 +323,10 @@ test("trois étapes, une par appui ; à la dernière le bouton s'efface et « Ca
   assert.equal(bouton.textContent, "Étape suivante ▶");
   bouton.onclick();
   assert.deepEqual(h.ctx.dessins, [1, 2]);
-  assert.equal(h.boutons.length, 1, "toujours là avant la dernière étape");
+  assert.equal(h.par("eleveSchema"), bouton, "toujours là avant la dernière étape");
   bouton.onclick();
   assert.deepEqual(h.ctx.dessins, [1, 2, 3]);
-  assert.equal(h.boutons.length, 0, "effacé aux calculs");
+  assert.equal(h.par("eleveSchema"), null, "effacé aux calculs");
   assert.equal(h.suivant.focalise, 1, "Entrée enchaîne sur la carte suivante");
   assert.deepEqual(h.ctx.caches, [], "sans pas à pas, le tableau garde la réponse");
   h.ctx.voir();
@@ -298,6 +335,47 @@ test("trois étapes, une par appui ; à la dernière le bouton s'efface et « Ca
   // le nombre d'étapes vient de la correction en barres : 3 avec un total, 2 sans (enqueteNbEtapes)
   assert.match(fn("eleveSchemaEtapes"), /card\.family === "C"\) \? enqueteDerniereEtape\(card\)/);
   assert.match(fn("enqueteNbEtapes"), /return card\._rel\.sansTotal \? 2 : 3;/);
+});
+
+test("« ◀ » (03/10/2026) : sa place est prise dès la 1re étape, il se montre à la 2e, reste à la dernière, et ramène une étape en arrière jusqu'à la 1re", () => {
+  const h = harnaisSchema();
+  h.ctx.avecPlan();
+  h.ctx.proposer(h.valider);
+  const bouton = h.boutons[0];
+  assert.equal(h.par("eleveSchemaPrec"), null, "pas de ◀ avant le pas à pas (« Voir la correction »)");
+  bouton.onclick();
+  const prec = h.par("eleveSchemaPrec");
+  assert.ok(prec, "◀ créé à la 1re étape");
+  assert.equal(prec.textContent, "◀");
+  assert.equal(prec.className, "secondaire precedent");
+  assert.equal(prec["aria-label"], "Étape précédente");
+  assert.ok(prec.classes.has("cache") && prec.disabled, "1re étape : invisible (sa place reste) et inactif");
+  assert.deepEqual(h.boutons.map((b) => b.id), ["eleveSchemaPrec", "eleveSchema"], "à gauche de « Étape suivante »");
+  bouton.onclick();
+  assert.ok(!prec.classes.has("cache") && !prec.disabled, "2e étape : visible");
+  bouton.onclick();
+  assert.equal(h.par("eleveSchema"), null);
+  assert.equal(h.par("eleveSchemaPrec"), prec, "dernière étape : ◀ reste");
+  assert.deepEqual(h.ctx.caches, [true, true, false], "la réponse revient au dernier appui");
+  prec.onclick();
+  assert.equal(h.ctx.etape(), 2);
+  assert.deepEqual(h.ctx.dessins, [1, 2, 3, 2], "l'étape d'avant est redessinée");
+  assert.deepEqual(h.ctx.caches, [true, true, false, true], "en revenant, la réponse est recachée");
+  const revenu = h.par("eleveSchema");
+  assert.ok(revenu, "« Étape suivante » revient");
+  assert.equal(revenu.textContent, "Étape suivante ▶");
+  assert.deepEqual(h.boutons.map((b) => b.id), ["eleveSchemaPrec", "eleveSchema"]);
+  prec.onclick();
+  assert.equal(h.ctx.etape(), 1);
+  assert.ok(prec.classes.has("cache") && prec.disabled, "retour à la 1re étape : ◀ s'efface");
+  h.ctx.precedente();
+  assert.equal(h.ctx.etape(), 1, "jamais avant la 1re étape");
+  assert.deepEqual(h.ctx.dessins, [1, 2, 3, 2, 1]);
+  revenu.onclick(); revenu.onclick();
+  assert.equal(h.ctx.etape(), 3, "et on repart en avant jusqu'au bout");
+  assert.equal(h.par("eleveSchema"), null);
+  assert.match(feuille, /#elevePanel\.avecSchema \.eleveActions button\.precedent\{flex:0 0 auto;min-width:52px;max-width:none;/, "au téléphone, ◀ n'est pas étiré comme les deux autres");
+  assert.match(feuille, /#elevePanel \.eleveActions button\.precedent\.cache\{visibility:hidden\}/);
 });
 
 test("pas à pas G3 (01/10/2026) : le tableau est vidé jusqu'à l'avant-dernier appui, la réponse revient au dernier", () => {
@@ -342,16 +420,45 @@ test("pas à pas G3 (01/10/2026) : le tableau est vidé jusqu'à l'avant-dernier
   assert.match(html, /const ENQ_G3_RAPPEL = false;/);
   assert.match(html, /const lignes = ENQ_G3_RAPPEL \? modele\.calculs : \[\];/);
   /* ordinateur : une zone fixe sous le bandeau, chaque cadre y prend la plus grande taille qui tient */
-  assert.match(fn("eleveG3Zone"), /const f = Math\.min\(ELEVE_G3_ZONE_H \/ bd\.height, ELEVE_G3_ZONE_L \/ bd\.width\);/);
+  /* … à l'échelle de la carte (03/10/2026) ; repli : la plus grande taille qui tient pour ce cadre */
+  assert.match(fn("eleveG3Zone"), /const fCarte = card && eleveG3Echelle && eleveG3Echelle\.card === card \? eleveG3Echelle\.f : null;\n    const f = fCarte \|\| Math\.min\(ELEVE_G3_ZONE_H \/ bd\.height, ELEVE_G3_ZONE_L \/ bd\.width\);/);
   /* les taches : couvertes pendant le pas à pas, dévoilées au dernier appui (renderCard) */
   assert.match(html, /const eleveCacheG3 = eleveDevoileC && revealState > 0 && revealState < enqueteDerniereEtape\(card\) && !!enqueteProjectionPasAPas\(card\);/);
   assert.match(html, /\(\(revealState >= enqueteDerniereEtape\(card\) \|\| \(eleveDevoileC && !eleveCacheG3\)\) \? 2 : 0\)/);
 });
 
+test("une seule échelle par carte (03/10/2026) : celle du cadre le plus grand, mesurée une fois, remesurée pour une autre carte", () => {
+  /* trois cadres : 1000 × 280, 1000 × 400 (le plus haut), 1000 × 350 ; zone 560 × 2400 → 560 / 400 = 1,4 */
+  const tailles = { 1: { width: 1000, height: 280 }, 2: { width: 1000, height: 400 }, 3: { width: 1000, height: 350 } };
+  const svg = {};
+  let courant = 0;
+  const dessin = { parentNode: svg, removeAttribute(){}, getBBox: () => ({ x: 0, y: 0, ...tailles[courant] }) };
+  const document = { getElementById: (id) => (id === "enqueteBarres" ? dessin : null) };
+  const o = new Function("document", "svg", `
+    ${constLine("const ELEVE_G3_BANDEAU = ")}
+    const ENQ_PROJ_IDS = ["enqueteBarres"];
+    const rendus = [];
+    function eleveSchemaEtapes(){ return 3; }
+    function renderCard(card, e){ rendus.push(e); }
+    function enqueteProjectionCadrer(card, e){ document.courant(e); }
+    ${constLine("let eleveG3Echelle = ")}
+    ${fn("eleveG3EchelleCarte")}
+    return { echelle: eleveG3EchelleCarte, rendus };
+  `)(Object.assign(document, { courant: (e) => { courant = e; } }), svg);
+  const carte = {}, autre = {};
+  assert.equal(o.echelle(carte), 1.4);
+  assert.deepEqual(o.rendus, [1, 2, 3], "chaque étape mesurée une fois");
+  assert.equal(o.echelle(carte), 1.4);
+  assert.deepEqual(o.rendus, [1, 2, 3], "en mémoire pour la même carte");
+  tailles[2] = { width: 1000, height: 200 };
+  assert.equal(o.echelle(autre), 1.6, "une autre carte : remesurée (le plus haut est maintenant 350 : 560 / 350)");
+  assert.deepEqual(o.rendus, [1, 2, 3, 1, 2, 3]);
+});
+
 test("les étapes sont celles de la projection, et la nouvelle carte repart du plateau couvert", () => {
   assert.match(fn("eleveDessinerSchema"), /eleveRendreEtape\(card, eleveSchemaEtape\);\n  if\(eleveSchemaCadreUnique\(card\)\) eleveCadrerSchemaSys\(card\); else eleveCadrerScene\(\);/);
   /* ordinateur, pas à pas G3 : la mise en page de la projection (bandeau), un seul cadrage pour la carte */
-  assert.match(fn("eleveRendreEtape"), /renderCard\(card, e\);\n  if\(e > 0 && card && card\.family === "C" && enqueteProjectionPasAPas\(card\)\)\{\n    enqueteProjectionCadrer\(card, e\);\n    eleveG3Zone\(\);/);
+  assert.match(fn("eleveRendreEtape"), /const g3 = e > 0 && card && card\.family === "C" && !!enqueteProjectionPasAPas\(card\);\n  if\(g3\) eleveG3EchelleCarte\(card\);[^\n]*\n  renderCard\(card, e\);\n  if\(g3\)\{\n    enqueteProjectionCadrer\(card, e\);\n    eleveG3Zone\(card\);/);
   assert.match(fn("eleveSchemaCadreUnique"), /return sysAPlan\(card\) \|\| \(!!card && card\.family === "C" && !!enqueteProjectionPasAPas\(card\)\);/);
   assert.match(fn("renderEleveSplat"), /eleveEnqueteDevoile = false; eleveSchemaEtape = 0;[^\n]*\n  eleveIndicesTel = [^\n]*\n  renderCard\(card, 0\);/);
   assert.match(fn("renderEleveSplat"), /elevePaveRendrePlateau\(\);[^\n]*\n  eleveSchemaReinitialiser\(\);/);

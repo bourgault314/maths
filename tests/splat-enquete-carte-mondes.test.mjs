@@ -151,7 +151,8 @@ test("l'empreinte de reprise des séries de l'Enquête est celle des fiches du l
   /* outils/splat.html reprend une série en cours seulement si l'empreinte de son adresse
      (les réglages qui fixent les cartes, clés triées — eleveSignatureSerie) est la même :
      elle doit être celle des fiches figées au lot « fabrication des cinq livrets » (03/10/2026 ;
-     les graines ont été retriées — le monde 3 est encore caché au public, aucun élève n'y est passé). */
+     les graines ont été retriées). Le monde 3 est en ligne pour tous depuis la PR #888 (seul le
+     monde 4 reste caché, MONDES_EN_PREPARATION) : une série commencée avant ce lot repart du début. */
   const outil = lire("outils/splat.html");
   const hors = JSON.parse(outil.match(/const ELEVE_HORS_EMPREINTE = (\[[^\]]+\]);/)[1]);
   const empreinte = (url) => [...new URLSearchParams(url.split("?")[1])]
