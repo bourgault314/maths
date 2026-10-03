@@ -409,7 +409,8 @@ test("la page : « Reprendre ma séance », ses étapes cochées, « Reprendre �
   const soude = new Function(`${html.match(/function soude\(texte\) \{[\s\S]*?\n      \}/)[0]}; return soude;`)();
   const duree = new Function("soude", "dejaFaites", "nombre", "programme", `return soude(${modele});`)(soude, {length: 2}, 4, {minutes: 2});
   assert.deepEqual(duree.split(" "), ["étape", "3\u00a0sur\u00a04\u00a0·", "encore\u00a02\u00a0min\u00a0environ"]);
-  assert.match(html, /go\.textContent = reprise \? "Reprendre" : "Commencer\\u00a0→";/);
+  // Lot E1 (décision 8) : « Commencer » sans flèche ; « Reprendre » reste.
+  assert.match(html, /go\.textContent = reprise \? "Reprendre" : "Commencer";/);
   assert.match(html, /item\.className = "faite";\s+const coche = document\.createElement\("i"\);\s+coche\.textContent = "✓";/);
   assert.match(html, /if \(reprise && rang === 0\) item\.className = "ici";/);
   assert.match(html, /\.carte-seance \.programme \.faite i \{ background: var\(--teal\); color: #fff; \}/);

@@ -42,22 +42,23 @@ test("« J’apprends » et « Je m’entraîne » se déplient sur l’accueil 
   assert.match(html, /controle: "acc-choix-apprends"/);
   assert.match(html, /controle: "acc-choix-entraine"/);
   assert.match(html, /bouton\.setAttribute\("aria-expanded", String\(Boolean\(deplie\)\)\)/, "la tuile annonce son état aux lecteurs d’écran");
-  assert.match(html, /function panneauChoix\(\{id, legende, items, marquerConseil = true\}\)/);
+  assert.match(html, /function panneauChoix\(\{id, legende, items\}\)/);
   assert.match(html, /legende: "Choisis ton activité"/);
   assert.match(html, /legende: "Choisis ton entraînement"/);
   assert.match(html, /state\.etapeOuverte = state\.etapeOuverte === nom \? null : nom;/, "un deuxième appui referme");
   assert.doesNotMatch(html, /bouton\.disabled = /, "rien n’est désactivé : l’élève peut relancer une activité déjà faite");
 });
 
-test("l’ordre des activités est conseillé, jamais imposé", () => {
+test("l’ordre des activités est celui du parcours, jamais imposé — et le menu ne conseille plus (lot E1)", () => {
   // Lot 4b : les cinq activités du moteur (les perles en tête) sont
   // lançables, chacune la sienne — plus d'activité « en essai » devant la liste.
   assert.match(html, /items: ligne\.apprends\.map\(item => \(\{[\s\S]*?libelle: majuscule\(PARCOURS\.LIBELLES_APPRENDS\[item\.activite\]\)[\s\S]*?lancer: \(\) => launchFromParcours\(PARCOURS\.configApprends\(table, item\.activite\), "menu"\)/, "les CINQ activités sont lançables, chacune la sienne");
   assert.doesNotMatch(html, /ESSAI_PERLES/, "le garde d’essai du lot 4a est parti : l’activité est ouverte à tous");
-  assert.match(html, /conseillee: Boolean\(prochaineActivite\) && item\.activite === prochaineActivite\.activite/, "la conseillée est la première non faite, et rien de plus");
-  assert.match(html, /conseillee: Boolean\(prochainEntrainement\) && item\.entrainement === prochainEntrainement\.entrainement/);
-  assert.match(html, /tag\.textContent = "conseillé";/);
-  assert.match(html, /etat\.textContent = marqueur \|\| \(fait \? "✓" : commence \? "◔" : "○"\)/, "l’élève voit ce qu’il a déjà fait");
+  // Lot E1 (03/10/2026, « liste simple ») : ni « conseillé », ni ✓ ◔ ○ dans
+  // le menu — c'est la séance du jour qui conseille, la rangée qui montre.
+  assert.doesNotMatch(html, /conseillee: Boolean\(prochaine/);
+  assert.doesNotMatch(html, /tag\.textContent = "conseillé";/);
+  assert.doesNotMatch(html, /fait \? "✓" : commence \? "◔" : "○"/);
 });
 
 // ---------------------------------------------- 3. la validation et le temps
@@ -79,8 +80,10 @@ test("la même épreuve avec plus de temps devient un entraînement de l’étap
   // Lot dosage + validation (19/09/2026) : proposée AUSSI sur une table
   // acquise — se remettre en jambes sur une table validée est un vrai usage.
   assert.doesNotMatch(html, /if \(!ligne\.acquise\) \{\s*choixEntraine\.push\(/, "plus de condition « pas acquise » sur l’option 2 min");
-  assert.match(html, /\{\s*choixEntraine\.push\(\{\s*libelle: "Comme la validation, en 2 min"/);
-  assert.match(html, /marqueur: "⏱"/, "ce n’est pas un des trois entraînements comptés : pas de rond d’état");
+  assert.match(html, /\n\s*choixEntraine\.push\(\{\s*libelle: "Comme la validation, en 2 min"/);
+  // Lot E1 : plus de rond d'état dans le menu, donc plus de ⏱ pour s'en
+  // distinguer ; le cadre en pointillés (is-plus) suffit.
+  assert.match(html, /detail: "20 questions · 2 min · avant de valider",\s*extraClasse: "is-plus",/);
 });
 
 // ------------------------------------------- 4. l’accueil dit ce qu’il fait

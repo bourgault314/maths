@@ -369,18 +369,14 @@ test("lot R3 · le bleu ne désigne plus que l’étape conseillée", () => {
   // Ce qui reste bleu : l'étape conseillée, et elle seule (is-next).
   assert.match(html, /\.etape\.is-next \{ border-color: var\(--blue\);/);
   assert.match(html, /\.expert \.etape\.is-next strong \{ color: var\(--blue\); \}/);
-  // Un seul « conseillé » à la fois : l'étiquette du panneau déplié ne
-  // s'écrit que si l'étape elle-même est celle que l'appli conseille.
-  assert.match(html, /function panneauChoix\(\{id, legende, items, marquerConseil = true\}\)/);
-  assert.match(html, /items\.forEach\(item => zone\.append\(boutonChoix\(\{\.\.\.item, marquerConseil\}\)\)\);/);
-  assert.match(html, /if \(conseillee && marquerConseil\) \{/);
-  // Lot dosage + validation : « conseilCarte » = le conseil, sauf sur une
-  // table acquise (aucune étape conseillée sur une carte cochée).
-  assert.match(html, /marquerConseil: conseilCarte === "apprends",/);
-  assert.match(html, /marquerConseil: conseilCarte === "entraine",/);
-  assert.match(html, /const conseilCarte = ligne\.acquise \? null : conseil;/);
-  // Le lecteur d'écran entend la même chose que l'œil voit.
-  assert.match(html, /\$\{conseillee && marquerConseil \? " Conseillé\." : ""\}/);
+  // Lot E1 (03/10/2026) : l'ancien menu « Choisir une activité » est une
+  // liste simple — plus aucun « conseillé », ni sur les lignes ni dans les
+  // panneaux : c'est la séance du jour qui conseille.
+  assert.match(html, /function panneauChoix\(\{id, legende, items\}\)/);
+  assert.match(html, /items\.forEach\(item => zone\.append\(boutonChoix\(item\)\)\);/);
+  assert.doesNotMatch(html, /marquerConseil/);
+  assert.doesNotMatch(html, /conseilCarte/);
+  assert.doesNotMatch(html, /tag\.textContent = "conseillé";/);
 });
 
 test("lot R3 · toucher le cadenas descend jusqu’à « Mon mélange » et l’illumine", () => {
@@ -421,8 +417,9 @@ test("lot R3 · « Changer de table » est centré, et Réviser lisible", () => 
 });
 
 test("lot R3 · les petits textes, le focus et le bandeau des réglages", () => {
-  // A8 : « conseillé » à 10,9 px → 12 px.
-  assert.match(regle(".choix-activite .tag"), /font-size: \.75rem/);
+  // A8 : « conseillé » à 10,9 px → 12 px. Lot E1 : l'étiquette a disparu
+  // du menu (liste simple), sa règle avec.
+  assert.doesNotMatch(html, /\.choix-activite \.tag \{/);
   // A19 : le contour du clavier était à 1,6:1 (rgba .3) ; plein, il fait 4,6:1.
   assert.doesNotMatch(html, /outline: 3px solid rgba\(15, 108, 249, \.3\)/);
   assert.equal((html.match(/outline: 3px solid #0f6cf9/g) || []).length, 2, "le focus général et celui du pavé");

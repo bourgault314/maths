@@ -361,14 +361,6 @@
     .etape .dots i.on { background: var(--teal); }
     .etape .dots i.is-check { width: auto; height: auto; border: 0; border-radius: 0; background: none; color: var(--green); font-style: normal; font-weight: 950; font-size: 1.15rem; line-height: 1; }
     .etape .dots i.is-check.off { color: #698197; }
-    /* Lot « dosage + validation » (19/09/2026) : la pastille « N fois » de
-       J'apprends — un nombre qui ne fait que monter, à la place des cinq ronds
-       qui se lisaient comme un niveau terminé. Rien tant que c'est 0. */
-    .etape .fois { display: inline-flex; align-items: center; justify-content: center; height: 24px; padding: 0 8px; border-radius: 12px; background: var(--teal); color: #fff; font-weight: 900; font-size: .78rem; line-height: 1; white-space: nowrap; }
-    .choix-activite .fois-petit { color: var(--teal); font-weight: 900; font-size: .74rem; white-space: nowrap; }
-    /* Le rendez-vous des 8 calculs, sous les trois étapes : pourquoi le rond
-       bleu reste sur Je m'entraîne quand les trois sont réussis. */
-    .matable .rdv { margin: 10px 0 2px; padding: 10px 12px; border: 1px solid #b9d4e6; border-radius: 12px; background: #eef6fc; color: #1a4b8c; font-weight: 800; font-size: .86rem; line-height: 1.3; }
     .etape.is-next { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(7, 85, 184, .18), 0 2px 0 #b7cfe8; background: #fff; }
     .etape.is-next .num { background: var(--blue); color: #fff; }
     /* Lot R3 (Q2, 12/09/2026) : « Je valide ma table » n'est plus écrit en
@@ -405,14 +397,12 @@
        l'ordre : l'appli conseille, l'élève décide. */
     .etape-choix { display: grid; gap: 6px; margin: -2px 0 2px; padding: 9px 10px; border: 1px solid #cfe0ea; border-left: 3px solid var(--blue); border-radius: 13px; background: #f4f9fc; }
     .etape-choix > p { margin: 0 0 1px 2px; color: #5b7286; font-size: .72rem; font-weight: 950; text-transform: uppercase; letter-spacing: .05em; }
-    .choix-activite { width: 100%; min-height: 46px; display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; align-items: center; gap: 9px; padding: 7px 11px; border: 1px solid #c9dbe6; border-radius: 12px; background: #fff; color: var(--ink); text-align: left; font: inherit; cursor: pointer; }
+    /* Lot E1 (03/10/2026) : l'ancien menu est une liste simple — ni ✓ ○, ni
+       « fait N fois », ni « conseillé » : où en est l'élève, c'est la séance,
+       la rangée et Mon parcours qui le disent. */
+    .choix-activite { width: 100%; min-height: 46px; display: grid; grid-template-columns: minmax(0, 1fr); align-items: center; gap: 9px; padding: 7px 13px; border: 1px solid #c9dbe6; border-radius: 12px; background: #fff; color: var(--ink); text-align: left; font: inherit; cursor: pointer; }
     .choix-activite strong { display: block; font-size: .95rem; font-weight: 900; line-height: 1.15; }
     .choix-activite small { display: block; margin-top: 2px; color: #5b7286; font-size: .74rem; font-weight: 800; }
-    .choix-activite .etat { color: var(--green); font-style: normal; font-weight: 950; font-size: 1.05rem; line-height: 1; text-align: center; }
-    .choix-activite .etat.off { color: #698197; }
-    .choix-activite .etat.neutre { color: #5b7286; font-size: .95rem; }
-    .choix-activite .tag { padding: 3px 9px; border-radius: 999px; background: #e7f0fb; color: var(--blue); font-size: .75rem; font-weight: 950; white-space: nowrap; }
-    .choix-activite.is-next { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(7, 85, 184, .16); }
     .choix-activite.is-plus { border-style: dashed; background: #fbfdff; }
     /* « Mes calculs » s'ouvre sur la grille : la barre du haut reste collée,
        donc le retour « Ma table » ne disparaît jamais de l'écran. */
@@ -502,6 +492,10 @@
     .boite.is-choisie { outline: 3px solid var(--blue); outline-offset: 1px; }
     .boite:focus-visible { outline: 3px solid var(--blue); outline-offset: 1px; }
     .mc-detail-liste { font-size: .82rem; font-weight: 800; line-height: 1.35; }
+    /* Lot E1 (décision 6) : une pastille par calcul — le « · » entre deux
+       calculs se lisait comme un « fois ». */
+    .mc-detail-liste.pastilles { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 6px; }
+    .mc-detail-liste.pastilles span { display: inline-flex; align-items: center; padding: 4px 9px; border: 1.5px solid currentColor; border-radius: 999px; background: #fff; font-size: .86rem; font-weight: 900; white-space: nowrap; }
     .acc-liens { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .acc-lien { min-height: 64px; display: grid; grid-template-columns: 34px minmax(0, 1fr); align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid #c5d9e6; border-radius: 15px; background: #fff; color: var(--blue); font: inherit; font-weight: 900; text-align: left; cursor: pointer; }
     .acc-lien .ico { width: 34px; height: 34px; }
@@ -827,8 +821,17 @@
     .carte-seance .programme .faite i { background: var(--teal); color: #fff; }
     .carte-seance .programme .faite > span { color: var(--muted); }
     .carte-seance .programme .ici i { background: var(--blue); color: #fff; }
-    .seance-liens { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 18px; margin: 8px 0 -6px; }
-    .seance-liens button { min-height: 44px; padding: 0 2px; border: 0; background: none; color: var(--blue); font: inherit; font-size: .9rem; font-weight: 850; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+    /* Lot E1 (décision 8 du 03/10/2026) : sous la carte, « Je valide ma table »
+       est un bouton rond (c'est une action qui engage), « Choisir une
+       activité » un lien de 16 px. Au téléphone, le lien passe sous le bouton. */
+    .seance-liens { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 18px; margin: 12px 0 -4px; }
+    .seance-liens button { min-height: 44px; padding: 0 2px; border: 0; background: none; color: var(--blue); font: inherit; font-size: 1rem; font-weight: 850; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+    .seance-liens button.rond { display: inline-flex; align-items: center; justify-content: center; padding: 9px 18px; border: 2px solid #c5d9e6; border-radius: 999px; background: #fff; font-size: .98rem; font-weight: 900; text-decoration: none; }
+    /* « Choisir une activité » ouvert : « ← Ma séance du jour » à gauche (la
+       grammaire du « ← Ma table » d'une activité), puis un petit titre. */
+    .retour-seance { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin: 0 0 4px; padding: 9px 18px; border: 2px solid #c5d9e6; border-radius: 999px; background: #fff; color: var(--blue); font: inherit; font-size: .98rem; font-weight: 900; cursor: pointer; justify-self: start; }
+    .retour-seance span { font-size: 1.1em; line-height: 1; }
+    .titre-menu { margin: 6px 0 2px; color: var(--muted); font-size: .8rem; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; }
     .semaine { display: flex; align-items: center; justify-content: center; gap: 8px; margin: -2px 0; color: var(--muted); font-size: .86rem; font-weight: 800; }
     .semaine i { width: 13px; height: 13px; border: 2px solid var(--teal); border-radius: 50%; box-sizing: border-box; }
     .semaine i.ok { background: var(--teal); }
@@ -872,6 +875,10 @@
     .decouverte-choix button { min-height: 52px; font-size: 1.12rem; }
     .decouverte-choix button.is-acquise { cursor: default; }
     .decouverte-go { display: block; margin: 16px auto 4px; min-height: 48px; padding: 12px 20px 9px; }
+    /* Lot E1 (décision 4) : « Par quelle table veux-tu commencer ? », la table
+       conseillée cerclée de bleu, le mot « conseillée » dessous. */
+    .decouverte-choix button.is-conseillee { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(7, 85, 184, .18); color: var(--ink); }
+    .decouverte-choix button small { display: block; color: var(--blue); font-size: .62rem; font-weight: 800; line-height: 1.1; }
     .seance-row { align-self: start; }
     /* Mon parcours avec la séance (lot 2) : la rangée de chaque table, et
        l'échelle de ma table. */
@@ -898,6 +905,13 @@
       .carte-seance .tete strong { font-size: 1.12rem; }
       .carte-seance .go { padding: 9px 12px 7px; font-size: .92rem; }
       .seance-fil { gap: 8px; font-size: .84rem; }
+      /* Lot E1 : au téléphone, le fil tient sur une ligne — le mot « Ma
+         séance » s'efface (pendant l'activité) et les traits raccourcissent. */
+      .seance-fil:not(.centre) { gap: 6px; }
+      .seance-fil:not(.centre) > .fil-titre { display: none; }
+      .seance-fil li { width: 22px; height: 22px; }
+      .seance-fil li + li { margin-left: 8px; }
+      .seance-fil li + li::before { width: 8px; }
       .seance-suite .boutons > button,
       .seance-suite > .primary { width: 100%; }
     }
@@ -4835,8 +4849,11 @@
 
       function renderLearnProgress() {
         const stickActivity = ["beads", "construct", "gaps"].includes(state.configuration.learnActivity);
-        const completed = stickActivity ? state.revealedLearnResults.size : state.mastered.size;
-        const total = stickActivity ? CASES_BANDE : TOTAL;
+        // Lot E1 (décision 13) : les perles comptent sur 10 — la case 0 × N est
+        // donnée, elle n'est pas comptée (« 1 / 11 » avant d'avoir touché une perle).
+        const zeroDonne = activitePerles(state.configuration) && state.revealedLearnResults.has(0) ? 1 : 0;
+        const completed = stickActivity ? state.revealedLearnResults.size - zeroDonne : state.mastered.size;
+        const total = stickActivity ? CASES_BANDE - (activitePerles(state.configuration) ? 1 : 0) : TOTAL;
         const label = stickActivity ? "cases complétées" : "calculs sus";
         if (stickActivity) {
           // Audit 2 (30/09/2026) : « complétées » s'efface sous 430 px —
@@ -5815,7 +5832,14 @@
           zone.appendChild(ligneDetail("mc-detail-etat", boite === 1
             ? "Ratés : ils reviennent demain"
             : `Ils reviennent ${libelleDans(PARCOURS.SEUILS.revision.delais[boite - 1])}`));
-          zone.appendChild(ligneDetail("mc-detail-liste", cles.length ? cles.map(PARCOURS.libelleFait).join(" · ") : "Aucun calcul pour l’instant."));
+          if (!cles.length) {
+            zone.appendChild(ligneDetail("mc-detail-liste", "Aucun calcul pour l’instant."));
+            return;
+          }
+          // Lot E1 (décision 6) : une pastille par calcul, rien à lire entre deux.
+          const liste = ligneDetail("mc-detail-liste pastilles", "");
+          cles.forEach(cle => liste.appendChild(ligneDetail("", PARCOURS.libelleFait(cle))));
+          zone.appendChild(liste);
           return;
         }
         const {ligne, colonne, cle} = calculsSelection;
@@ -6203,14 +6227,6 @@
         return i;
       }
 
-      // La pastille « N fois » de J'apprends (lot dosage + validation).
-      function pastilleFois(fois) {
-        const pastille = document.createElement("span");
-        pastille.className = "fois";
-        pastille.textContent = `${fois}\u00a0fois`;
-        return pastille;
-      }
-
       // « 13 septembre » depuis « AAAA-MM-JJ » (jour local, sans fuseau).
       function dateEnLettres(jour) {
         const [annee, mois, date] = String(jour).split("-").map(Number);
@@ -6274,68 +6290,42 @@
         return texte ? texte.charAt(0).toUpperCase() + texte.slice(1) : "";
       }
 
-      // Le panneau déplié sous une étape : une ligne par activité, son état,
-      // et la mention « conseillé » sur celle que l'appli propose. L'ordre est
-      // conseillé, jamais imposé (décision du 09/09/2026).
-      // `marquerConseil` : l'étiquette bleue « conseillé » ne s'écrit dans ce
-      // panneau que si l'étape elle-même est celle que l'appli conseille. Lot
-      // R3 (A4) : quand le mélange est dû, Mon mélange est surligné en jaune —
-      // une deuxième marque bleue, deux lignes plus haut, désignait une autre
-      // « chose à faire ». Une seule à la fois : celle du haut. Le rond ✓ / ◔ / ○
-      // et l'ordre des activités disent toujours par où l'élève en est.
-      function panneauChoix({id, legende, items, marquerConseil = true}) {
+      // Le panneau déplié sous une étape : une ligne par activité. Lot E1
+      // (03/10/2026) : une liste simple, sans état ni « conseillé » — l'ordre
+      // reste celui du parcours.
+      function panneauChoix({id, legende, items}) {
         const zone = document.createElement("div");
         zone.className = "etape-choix";
         zone.id = id;
         const titre = document.createElement("p");
         titre.textContent = legende;
         zone.append(titre);
-        items.forEach(item => zone.append(boutonChoix({...item, marquerConseil})));
+        items.forEach(item => zone.append(boutonChoix(item)));
         return zone;
       }
 
-      // « fois » (lot dosage + validation) : combien de fois l'activité a été
-      // faite jusqu'au bout — écrit sous le libellé, après le détail s'il y en a.
-      function boutonChoix({libelle, detail = "", fait = false, commence = false, conseillee = false, marquerConseil = true, marqueur = "", extraClasse = "", fois = 0, lancer}) {
+      function boutonChoix({libelle, detail = "", extraClasse = "", lancer}) {
         const bouton = document.createElement("button");
         bouton.type = "button";
-        bouton.className = `choix-activite${conseillee ? " is-next" : ""}${extraClasse ? ` ${extraClasse}` : ""}`;
-        const etat = document.createElement("i");
-        etat.className = `etat${marqueur ? " neutre" : fait ? "" : " off"}`;
-        etat.setAttribute("aria-hidden", "true");
-        etat.textContent = marqueur || (fait ? "✓" : commence ? "◔" : "○");
+        bouton.className = `choix-activite${extraClasse ? ` ${extraClasse}` : ""}`;
         const texte = document.createElement("span");
         const fort = document.createElement("strong");
         fort.textContent = libelle;
         texte.append(fort);
-        if (detail || fois) {
+        if (detail) {
           const petit = document.createElement("small");
           petit.textContent = detail;
-          if (fois) {
-            const compte = document.createElement("span");
-            compte.className = "fois-petit";
-            compte.textContent = `${detail ? " · " : ""}fait ${fois}\u00a0fois`;
-            petit.append(compte);
-          }
           texte.append(petit);
         }
-        bouton.append(etat, texte);
-        if (conseillee && marquerConseil) {
-          const tag = document.createElement("span");
-          tag.className = "tag";
-          tag.textContent = "conseillé";
-          bouton.append(tag);
-        }
-        bouton.setAttribute("aria-label", marqueur
-          ? `${libelle}${detail ? `, ${detail}` : ""}. Lancer.`
-          : `${libelle}${detail ? `, ${detail}` : ""} : ${fait ? "déjà réussi" : commence ? "commencé" : "pas encore fait"}${fois ? `, fait ${fois} fois` : ""}.${conseillee && marquerConseil ? " Conseillé." : ""} Lancer.`);
+        bouton.append(texte);
+        bouton.setAttribute("aria-label", `${libelle}${detail ? `, ${detail}` : ""}. Lancer.`);
         bouton.addEventListener("click", lancer);
         return bouton;
       }
 
       // Ouvrir ou fermer le choix d'une étape. Le panneau reste ouvert quand
-      // l'élève revient de son activité : il retrouve sa liste, avec le ✓ de
-      // celle qu'il vient de faire, et en choisit une autre.
+      // l'élève revient de son activité : il retrouve sa liste et en choisit
+      // une autre.
       function basculerEtape(nom) {
         state.etapeOuverte = state.etapeOuverte === nom ? null : nom;
         renderAccueil();
@@ -6546,26 +6536,21 @@
         if (decouverte) renderDecouverte(etapes, etat);
         else if (avecSeance) renderSeanceAccueil(etapes, etat, table, ligne);
         if (!replie && !carteSeance) {
-          // Une table acquise n'a plus d'étape conseillée : ses trois étapes
-          // sont cochées, l'élève y revient pour refaire ce qu'il veut.
-          const conseilCarte = ligne.acquise ? null : conseil;
-          const terminees = ligne.apprends.filter(item => item.etat === 2).length;
-          const prochaineActivite = ligne.apprends.find(item => item.etat !== 2);
+          // L'ancien menu, ouvert par « Choisir une activité » (lot E1,
+          // 03/10/2026) : il lance les mêmes activités qu'avant, mais ne dit
+          // plus où en est l'élève — ni « N fois », ni ●○○, ni « puis : … »,
+          // ni ✓ ○, ni « conseillé » : c'est la séance, la rangée et Mon
+          // parcours qui le disent. Restent le cadenas du mélange et « Ma table
+          // est acquise ».
           const apprendsOuvert = state.etapeOuverte === "apprends";
-          // Lot « dosage + validation » (19/09/2026) : plus de ronds pour
-          // J'apprends — cinq ronds pleins se lisaient « niveau terminé » alors
-          // qu'ils ne mesurent rien de la mémoire (J'apprends ne remplit aucune
-          // case de la grille). À la place, « N fois » : le nombre d'activités
-          // faites jusqu'au bout, qui ne fait que monter. Rien tant que c'est 0.
-          const foisApprends = ligne.apprends.reduce((somme, item) => somme + item.fois, 0);
           etapes.append(ligneEtape({
             classe: "apprends",
             num: "1",
             titre: "J’apprends",
             sousTitre: `facultatif · ${ligne.apprends.length} activités`,
-            points: foisApprends ? [pastilleFois(foisApprends)] : [],
-            conseille: conseilCarte === "apprends",
-            aria: `J’apprends la table de ${table}, facultatif, ${ligne.apprends.length} activités${foisApprends ? `, faites ${foisApprends} fois` : ""}${terminees ? ` (${terminees} sur ${ligne.apprends.length} déjà vues)` : ""}.`,
+            points: [],
+            conseille: false,
+            aria: `J’apprends la table de ${table}, facultatif, ${ligne.apprends.length} activités.`,
             deplie: apprendsOuvert,
             controle: "acc-choix-apprends",
             action: () => basculerEtape("apprends")
@@ -6574,41 +6559,23 @@
             etapes.append(panneauChoix({
               id: "acc-choix-apprends",
               legende: "Choisis ton activité",
-              marquerConseil: conseilCarte === "apprends",
-              // Les cinq activités du moteur, dans son ordre : les perles en tête
-              // (lot 4b), la conseillée = la première qui n'est pas terminée.
+              // Les cinq activités du moteur, dans son ordre (les perles en tête).
               items: ligne.apprends.map(item => ({
                 libelle: majuscule(PARCOURS.LIBELLES_APPRENDS[item.activite]),
-                fait: item.etat === 2,
-                commence: item.etat === 1,
-                fois: item.fois,
-                conseillee: Boolean(prochaineActivite) && item.activite === prochaineActivite.activite,
                 lancer: () => launchFromParcours(PARCOURS.configApprends(table, item.activite), "menu")
               }))
             }));
           }
 
-          const reussis = ligne.entraine.filter(item => item.etat === 2).length;
-          const prochainEntrainement = ligne.entraine.find(item => item.etat !== 2);
           const entraineOuvert = state.etapeOuverte === "entraine";
-          // Les trois ronds restent (chacun dit « cet entraînement est réussi »,
-          // et il y en a trois différents) ; le sous-titre ne répète plus ce
-          // qu'ils montrent : « puis : nombres manquants », puis, les trois
-          // réussis, « réussi ✓ · fait N fois » — le compte de ce lot, qui dit
-          // qu'on peut continuer. Une ligne à 402 px comme à 320 px.
-          const foisEntraine = ligne.entraine.reduce((somme, item) => somme + item.fois, 0);
           etapes.append(ligneEtape({
             classe: "entraine",
             num: "2",
             titre: "Je m’entraîne",
-            sousTitre: reussis === 3
-              ? `réussi ✓ · fait ${foisEntraine}\u00a0fois`
-              : reussis
-                ? `puis : ${NOMS_ENTRAINEMENTS[prochainEntrainement.entrainement]}`
-                : `d’abord : ${NOMS_ENTRAINEMENTS[prochainEntrainement.entrainement]}`,
-            points: ligne.entraine.map(item => etoile(item.etat)),
-            conseille: conseilCarte === "entraine",
-            aria: `Je m’entraîne sur la table de ${table} : ${reussis} réussi${reussis > 1 ? "s" : ""} sur 3${foisEntraine ? `, fait ${foisEntraine} fois` : ""}.`,
+            sousTitre: `${ligne.entraine.length} entraînements · sans chrono`,
+            points: [],
+            conseille: false,
+            aria: `Je m’entraîne sur la table de ${table} : ${ligne.entraine.length} entraînements, sans chrono.`,
             deplie: entraineOuvert,
             controle: "acc-choix-entraine",
             action: () => basculerEtape("entraine")
@@ -6617,33 +6584,21 @@
             const choixEntraine = ligne.entraine.map(item => ({
               libelle: majuscule(NOMS_ENTRAINEMENTS[item.entrainement]),
               detail: "10 questions, sans chrono",
-              fait: item.etat === 2,
-              commence: item.etat === 1,
-              fois: item.fois,
-              conseillee: Boolean(prochainEntrainement) && item.entrainement === prochainEntrainement.entrainement,
               lancer: () => launchFromParcours(PARCOURS.configEntraine(table, item.entrainement), "menu")
             }));
             // L'épreuve de validation avec plus de temps : c'est un
-            // ENTRAÎNEMENT, donc elle vit ici et plus sur l'écran de
-            // lancement de l'étape 3 (décision du 09/09/2026). Le moteur la
-            // reconnaît déjà comme une « préparation » : elle ne valide pas
-            // la table, et elle le dit à la fin. Elle reste proposée sur une
-            // table acquise (19/09/2026) : se remettre en jambes sur une table
-            // validée est un vrai usage, et rien ne la rendait indisponible
-            // sinon un « if » de la page.
-            {
-              choixEntraine.push({
-                libelle: "Comme la validation, en 2 min",
-                detail: "20 questions · 2 min · avant de valider",
-                marqueur: "⏱",
-                extraClasse: "is-plus",
-                lancer: () => launchFromParcours(PARCOURS.configValidation(table, 120), "menu")
-              });
-            }
+            // ENTRAÎNEMENT (décision du 09/09/2026) ; le moteur la reconnaît
+            // comme une « préparation » : elle ne valide pas la table. Elle
+            // reste proposée sur une table acquise (19/09/2026).
+            choixEntraine.push({
+              libelle: "Comme la validation, en 2 min",
+              detail: "20 questions · 2 min · avant de valider",
+              extraClasse: "is-plus",
+              lancer: () => launchFromParcours(PARCOURS.configValidation(table, 120), "menu")
+            });
             etapes.append(panneauChoix({
               id: "acc-choix-entraine",
               legende: "Choisis ton entraînement",
-              marquerConseil: conseilCarte === "entraine",
               items: choixEntraine
             }));
           }
@@ -6672,9 +6627,6 @@
             ligneVerrou.setAttribute("aria-disabled", "true");
             etapes.append(ligneVerrou);
           } else {
-            const coche = document.createElement("i");
-            coche.className = `is-check${ligne.acquise ? "" : " off"}`;
-            coche.textContent = ligne.acquise ? "✓" : "○";
             // Une table acquise le dit en titre (« Ma table est acquise ·
             // acquise le 13 septembre ») ; toucher la ligne rejoue la
             // validation, comme avant.
@@ -6683,30 +6635,18 @@
               num: "3",
               titre: ligne.acquise ? "Ma table est acquise" : "Je valide ma table",
               sousTitre: ligne.acquise ? `acquise le ${dateEnLettres(ligne.acquise)}` : "20 questions · 1 min 30",
-              points: [coche],
-              conseille: conseilCarte === "valide",
+              points: [],
+              conseille: false,
               aria: ligne.acquise
                 ? `Ma table de ${table} est acquise depuis le ${dateEnLettres(ligne.acquise)}. Toucher pour la revalider (20 questions en 1 min 30).`
-                : `Je valide la table de ${table}, 20 questions en 1 min 30 : pas encore.`,
+                : `Je valide la table de ${table}, 20 questions en 1 min 30.`,
               action: () => launchFromParcours(PARCOURS.configValidation(table), "menu")
             }));
           }
-          // Les trois entraînements réussis, mais les 8 calculs de la table
-          // pas encore tous en boîte 3 : le rond bleu est resté sur
-          // Je m'entraîne, et cet encadré dit pourquoi — le rendez-vous des
-          // calculs (décision du 19/09/2026 ; « Je valide » reste libre).
-          if (!ligne.acquise && reussis === 3 && !ligne.validation.prete) {
-            const rdv = document.createElement("p");
-            rdv.className = "rdv";
-            rdv.id = "acc-rdv";
-            rdv.textContent = soude(phraseRendezVous(ligne.validation, table));
-            etapes.append(rdv);
-          }
         }
 
-        // Dès 2 tables acquises, la 4e ligne ★ « Mon mélange » : le mélange de
-        // mes tables acquises, surligné quand il est dû. Avec les 9 tables, il
-        // vit dans le bloc « Je deviens expert » (renderExpert), pas ici.
+        // Dès 2 tables acquises, la 4e ligne ★ « Mon mélange ». Avec les 9
+        // tables, il vit dans le bloc « Je deviens expert » (renderExpert).
         if (etat.melange.visible && !toutes && !carteSeance) {
           const melange = etat.melange;
           etapes.append(ligneEtape({
@@ -6714,8 +6654,8 @@
             num: "★",
             titre: "Mon mélange",
             sousTitre: sousTitreMelange(melange),
-            points: [etoile(melange.aJour ? 2 : 0)],
-            conseille: conseil === "melange",
+            points: [],
+            conseille: false,
             aria: `Mon mélange, tables ${listeTables(melange.tables)} : ${melange.aJour ? "à jour" : melange.aRefaireAvec ? `à refaire avec la table de ${melange.aRefaireAvec}` : "à faire"}.`,
             action: () => launchFromParcours(PARCOURS.configMelange(parcours), "menu")
           }));
@@ -6829,13 +6769,15 @@
       }
 
       // Le score d'une étape, comme le moteur l'attend : les réponses justes
-      // du premier coup. Les perles ne se ratent pas.
+      // du premier coup. Les perles ne se ratent pas. Lot E1 : elles comptent
+      // sur 10, comme leur compteur (la case 0 × N est donnée) — le bilan de
+      // la séance disait « Les perles 11 sur 11 » après « 10 / 10 cases ».
       function resultatDeLEtape(suivi) {
         const config = state.configuration;
         const erreurs = erreursDeLEtape();
         if (config.mode === "revision") return {juste: state.revisionPremierScore, total: Math.max(1, state.revisionPremierTotal), erreurs};
         if (config.mode === "learn") {
-          if (activitePerles(config)) return {juste: CASES_BANDE, total: CASES_BANDE, erreurs};
+          if (activitePerles(config)) return {juste: CASES_BANDE - 1, total: CASES_BANDE - 1, erreurs};
           const total = config.learnActivity === "gaps" ? TOTAL : CASES_BANDE;
           return {juste: total - casesRatees(), total, erreurs};
         }
@@ -6882,6 +6824,7 @@
         // Pendant une série, l'étape jouée est encore en tête de la file.
         const total = faites + aVenir.length;
         const titre = document.createElement("span");
+        titre.className = "fil-titre";
         titre.textContent = "Ma séance";
         const liste = document.createElement("ol");
         for (let index = 0; index < total; index += 1) {
@@ -7048,7 +6991,7 @@
       }
 
       // La carte « Ma séance du jour » : la liste numérotée des étapes du jour
-      // et « Commencer → ». table = null : la séance des 9 tables acquises.
+      // et « Commencer » (sans flèche depuis le lot E1). table = null : la séance des 9 tables acquises.
       // Lot M1 : une séance du jour déjà commencée → « Reprendre ma séance »,
       // ses étapes faites cochées, « Reprendre ».
       function carteDeSeance(table) {
@@ -7077,7 +7020,7 @@
         texte.append(titre, duree);
         const go = document.createElement("span");
         go.className = "go";
-        go.textContent = reprise ? "Reprendre" : "Commencer\u00a0→";
+        go.textContent = reprise ? "Reprendre" : "Commencer";
         tete.append(texte, go);
         // La liste des étapes du jour, numérotées (choix de Gwenaël, 02/10) :
         // l'élève voit ce qu'il va faire avant de commencer.
@@ -7131,21 +7074,36 @@
         etapes.append(rangeeDeTable(table));
         const liens = document.createElement("div");
         liens.className = "seance-liens";
-        const lien = (texte, action) => {
+        const lien = (texte, action, classe = "") => {
           const bouton = document.createElement("button");
           bouton.type = "button";
+          if (classe) bouton.className = classe;
           bouton.textContent = texte;
           bouton.addEventListener("click", action);
           liens.append(bouton);
           return bouton;
         };
         if (state.choisirActivite) {
-          lien("Revenir à ma séance", () => {
+          // Lot E1 (décision 8) : « ← Ma séance du jour » à gauche, puis le
+          // petit titre CHOISIR UNE ACTIVITÉ au-dessus de l'ancien menu.
+          const retour = document.createElement("button");
+          retour.type = "button";
+          retour.className = "retour-seance";
+          retour.id = "acc-retour-seance";
+          const fleche = document.createElement("span");
+          fleche.setAttribute("aria-hidden", "true");
+          fleche.textContent = "←";
+          retour.append(fleche, "Ma séance du jour");
+          retour.addEventListener("click", () => {
             state.choisirActivite = false;
             state.etapeOuverte = null;
             renderAccueil();
+            $("acc-seance")?.focus?.({preventScroll: true});
           });
-          etapes.append(liens);
+          const titreMenu = document.createElement("p");
+          titreMenu.className = "titre-menu";
+          titreMenu.textContent = "Choisir une activité";
+          etapes.append(retour, titreMenu);
           return;
         }
         etapes.append(carteDeSeance(table));
@@ -7159,7 +7117,7 @@
               return;
             }
             launchFromParcours(PARCOURS.configValidation(table), "menu");
-          });
+          }, "rond");
         }
         lien("Choisir une activité", () => {
           state.choisirActivite = true;
@@ -7214,6 +7172,9 @@
       const CLE_DECOUVERTE = "mathsgo-defi-tables-decouverte";
       let decouverteFermee = false;
       let decouverteEngagee = false;
+      // Lot E1 (décision 4) : « Non, je commence à apprendre » ouvre un second
+      // écran, « Par quelle table veux-tu commencer ? » (la conseillée marquée).
+      let decouverteChoixTable = false;
 
       // Lot 2b : avec un code, l'écran attend la première réponse du serveur
       // (ou son échec, ou 2,5 s). Avant, il s'affichait un instant à l'élève
@@ -7233,6 +7194,10 @@
 
       function renderDecouverte(etapes, etat) {
         $("acc-table-eyebrow").textContent = "Bienvenue";
+        if (decouverteChoixTable) {
+          renderChoixPremiereTable(etapes, etat);
+          return;
+        }
         $("acc-table-titre").textContent = "Tu connais déjà des tables ?";
         const texte = document.createElement("p");
         texte.className = "decouverte-texte";
@@ -7257,14 +7222,61 @@
         const commencer = document.createElement("button");
         commencer.type = "button";
         commencer.className = "primary decouverte-go";
-        commencer.textContent = etat.acquises.length
-          ? (suivante === null ? "C’est tout" : `C’est tout, je commence la table de ${suivante}`)
-          : `Non, je commence par la table de ${suivante}`;
+        // Lot E1 : « Non, je commence à apprendre » et « C'est tout » ouvrent
+        // le choix de la table (la suivante conseillée). Les 9 acquises : on
+        // ferme, il n'y a plus rien à choisir.
+        commencer.textContent = etat.acquises.length ? "C’est tout" : "Non, je commence à apprendre";
         commencer.addEventListener("click", () => {
+          if (suivante !== null) {
+            decouverteChoixTable = true;
+            renderAccueil();
+            $("acc-table-titre").focus?.({preventScroll: true});
+            return;
+          }
           fermerDecouverte();
           renderAccueil();
         });
         etapes.append(texte, choix, commencer);
+      }
+
+      // « Par quelle table veux-tu commencer ? » : les neuf tables, la
+      // conseillée (la 2 pour un élève neuf) cerclée de bleu. Toucher une table
+      // ferme le premier écran et ouvre l'accueil de cette table.
+      function renderChoixPremiereTable(etapes, etat) {
+        const conseillee = PARCOURS.tableDeSeance(parcours);
+        $("acc-table-titre").textContent = "Par quelle table veux-tu commencer ?";
+        const texte = document.createElement("p");
+        texte.className = "decouverte-texte";
+        texte.textContent = conseillee === null ? "" : `La table de ${conseillee} est conseillée.`;
+        const choix = document.createElement("div");
+        choix.className = "matable-choix decouverte-choix";
+        choix.setAttribute("role", "group");
+        choix.setAttribute("aria-labelledby", "acc-table-titre");
+        PARCOURS_TABLES.forEach(candidate => {
+          const bouton = document.createElement("button");
+          bouton.type = "button";
+          const acquise = etat.acquises.includes(candidate);
+          const conseil = candidate === conseillee;
+          bouton.className = acquise ? "is-acquise" : conseil ? "is-conseillee" : "";
+          bouton.textContent = acquise ? `${candidate} ✓` : String(candidate);
+          if (conseil) {
+            const petit = document.createElement("small");
+            petit.textContent = "conseillée";
+            bouton.append(petit);
+          }
+          bouton.setAttribute("aria-label", `Table de ${candidate}${acquise ? ", acquise" : conseil ? ", conseillée" : ""}`);
+          // Une table déjà validée est cochée, pas proposée (comme au premier écran).
+          if (acquise) bouton.setAttribute("aria-disabled", "true");
+          else bouton.addEventListener("click", () => {
+            decouverteChoixTable = false;
+            fermerDecouverte();
+            ecrireTableChoisie(candidate);
+            renderAccueil();
+            $("acc-table-titre").focus?.({preventScroll: true});
+          });
+          choix.append(bouton);
+        });
+        etapes.append(texte, choix);
       }
 
       // Le résultat d'une validation lancée depuis la découverte : le verdict
@@ -7291,7 +7303,13 @@
         if (validation.reussi) {
           boutons.append(
             bouton("Une autre table", "primary", autre),
-            bouton("C’est tout", "secondary", () => { fermerDecouverte(); backToModes(); })
+            // Lot E1 : « C'est tout » ouvre le choix de la table, comme sur le
+            // premier écran (sauf quand les 9 sont acquises : rien à choisir).
+            bouton("C’est tout", "secondary", () => {
+              if (PARCOURS.tableDeSeance(parcours) === null) fermerDecouverte();
+              else decouverteChoixTable = true;
+              backToModes();
+            })
           );
         } else {
           boutons.append(

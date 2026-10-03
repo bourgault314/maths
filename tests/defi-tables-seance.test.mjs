@@ -679,7 +679,8 @@ test("lot 2a : la page — premier écran, Mon parcours, notice, séance des 9 t
   assert.match(html, /const decouverte = avecSeance && enDecouverte\(\);/);
   assert.match(html, /decouverteEngagee = true;\s*launchFromParcours\(PARCOURS\.configValidation\(candidate\), "decouverte"\)/);
   assert.match(html, /\{correct: state\.correct, total: TOTAL, decouverte: state\.origin === "decouverte"\}/);
-  assert.match(html, /`Non, je commence par la table de \$\{suivante\}`/);
+  // Lot E1 (décision 4) : « Non, je commence à apprendre », puis le choix de la table.
+  assert.match(html, /commencer\.textContent = etat\.acquises\.length \? "C’est tout" : "Non, je commence à apprendre";/);
   assert.match(html, /parcours = PARCOURS\.commencerApresDecouverte\(parcours, table\);\s*sauverParcours\(\);\s*ecrireTableChoisie\(table\);\s*fermerDecouverte\(\);/);
   // Mon parcours : une rangée par table, l'échelle pour ma table.
   assert.match(html, /const maTable = tableEnCours\(etat\);[\s\S]{0,300}?\n        renderParcoursSeance\(list, etat, maTable\);/);
