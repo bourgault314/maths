@@ -3336,16 +3336,23 @@
       // quand même, et suit le parcours dès qu'il est rendu).
       let suiviAttendu = false;
       let minuteurAttente = null;
+      let attenteFinie = false;
       const ATTENTE_SUIVI_MS = 2500;
 
+      // Une seule attente par ouverture de la page : 2,5 s au plus en tout,
+      // billet compris, et une fois l'accueil montré il ne se cache plus.
+      // (Relecture de Code, 03/10 : relancée à l'arrivée d'un billet lent,
+      // l'attente cachait « Tu connais déjà des tables ? » déjà affiché, puis
+      // le remontrait 2,5 s plus tard.)
       function attendreSuivi() {
+        if (attenteFinie) return;
         suiviAttendu = true;
-        if (minuteurAttente !== null) window.clearTimeout(minuteurAttente);
-        minuteurAttente = window.setTimeout(finAttente, ATTENTE_SUIVI_MS);
+        if (minuteurAttente === null) minuteurAttente = window.setTimeout(finAttente, ATTENTE_SUIVI_MS);
       }
 
       function finAttente() {
         if (minuteurAttente !== null) { window.clearTimeout(minuteurAttente); minuteurAttente = null; }
+        attenteFinie = true;
         if (!suiviAttendu) return;
         suiviAttendu = false;
         if (!state.running) renderParcours();
@@ -3374,6 +3381,7 @@
           // La réponse est là : l'écran qui suit (renderParcours, plus bas)
           // se dessine sur le parcours fusionné.
           suiviAttendu = false;
+          attenteFinie = true;
           if (minuteurAttente !== null) { window.clearTimeout(minuteurAttente); minuteurAttente = null; }
           if (reponse.statut === 404) {
             detacher();
@@ -7564,15 +7572,19 @@
         const ficheDeLAppareil = !source && !document.body.classList.contains("mode-fiche");
         $("fiche-prenom").textContent = ficheDeLAppareil ? prenomAffiche() : fiche.prenom;
         if (ficheDeLAppareil) $("fiche-classe").textContent = suiviActif() && suiviIdentite ? (suiviIdentite.classe || "") : "";
-        $("fiche-date").textContent = PARCOURS.estVide(fiche) ? "" : new Date().toLocaleDateString("fr-FR");
+        // Une fiche vide : rien de fait. Le prénom ne compte pas — la fiche
+        // ouverte depuis « Ma classe » le reçoit du serveur, et celle d'un
+        // élève qui n'a rien fait désignait sa table de 2 (relecture de Code,
+        // 03/10/2026).
+        const vide = PARCOURS.estVide({...fiche, prenom: ""});
+        $("fiche-date").textContent = vide ? "" : new Date().toLocaleDateString("fr-FR");
         // Depuis le suivi, c'est l'application qui tient le carnet : une fiche
         // remplie est une photo de l'instant, pas une feuille à continuer.
-        $("fiche-subtitle").textContent = PARCOURS.estVide(fiche)
+        $("fiche-subtitle").textContent = vide
           ? "Rien d’enregistré pour l’instant."
           : "Ma progression dans l’application à ce jour.";
         // Lot 2b : une rangée par table, comme dans Mon parcours ; l'échelle
         // sous la table de la séance. Une fiche vide ne désigne aucune table.
-        const vide = PARCOURS.estVide(fiche);
         const maTable = vide ? null : PARCOURS.tableDeSeance(fiche);
         const semaine = PARCOURS.bilanSeances(fiche);
         $("fiche-semaine").textContent = vide ? ""

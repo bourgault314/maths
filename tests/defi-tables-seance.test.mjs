@@ -762,6 +762,15 @@ test("lot 2b : la fiche — une rangée par table, l'échelle de ma table, « Ce
   assert.match(html, /PARCOURS\.rangeeTable\(fiche, table\)\.cases\.forEach\(uneCase => \{/);
   assert.match(html, /if \(uneCase\.etat !== "vide"\) boite\.textContent = String\(uneCase\.produit\);/, "comme à l'écran : une case vide ne donne pas le résultat");
   assert.match(html, /const maTable = vide \? null : PARCOURS\.tableDeSeance\(fiche\);/, "une fiche vide ne désigne aucune table");
+  // Relecture de Code (03/10/2026), vue au navigateur : « Fiche » sur un élève
+  // qui n'a rien fait — le serveur donne son prénom, et le prénom suffisait à
+  // rendre la fiche « non vide » : table de 2 désignée, date, « Ma progression ».
+  assert.match(html, /const vide = PARCOURS\.estVide\(\{\.\.\.fiche, prenom: ""\}\);\s*\$\("fiche-date"\)\.textContent = vide \?/);
+  assert.match(html, /\$\("fiche-subtitle"\)\.textContent = vide\s*\?/);
+  const hugo = P.creerParcours();
+  hugo.prenom = "Hugo";
+  assert.equal(P.estVide(hugo), false, "le moteur compte le prénom : c'est à la fiche de l'écarter");
+  assert.equal(P.estVide({...hugo, prenom: ""}), true);
   assert.match(html, /const marches = marchesDeTable\(fiche, table\);/);
   assert.match(html, /function echelleDeTable\(table\) \{\s*const \{depart, prochaines, noms\} = marchesDeTable\(parcours, table\);/, "Mon parcours et la fiche lisent l'échelle de la même façon");
   assert.match(html, /const semaine = PARCOURS\.bilanSeances\(fiche\);/);
@@ -783,8 +792,8 @@ test("lot 2b : les compteurs « fois » sont pour le professeur — le cadre n'e
 test("lot 2b : avec un code, « Tu connais déjà des tables ? » attend le serveur — billet, lecture, 2,5 s au plus", () => {
   assert.match(html, /function enDecouverte\(\) \{\s*if \(suiviAttendu\) return false;/);
   assert.match(html, /const ATTENTE_SUIVI_MS = 2500;/);
-  assert.match(html, /function attendreSuivi\(\) \{\s*suiviAttendu = true;\s*if \(minuteurAttente !== null\) window\.clearTimeout\(minuteurAttente\);\s*minuteurAttente = window\.setTimeout\(finAttente, ATTENTE_SUIVI_MS\);/);
-  assert.match(html, /function finAttente\(\) \{[\s\S]{0,160}?if \(!suiviAttendu\) return;\s*suiviAttendu = false;\s*if \(!state\.running\) renderParcours\(\);/);
+  assert.match(html, /function attendreSuivi\(\) \{\s*if \(attenteFinie\) return;\s*suiviAttendu = true;\s*if \(minuteurAttente === null\) minuteurAttente = window\.setTimeout\(finAttente, ATTENTE_SUIVI_MS\);/);
+  assert.match(html, /function finAttente\(\) \{[\s\S]{0,160}?attenteFinie = true;\s*if \(!suiviAttendu\) return;\s*suiviAttendu = false;\s*if \(!state\.running\) renderParcours\(\);/);
   // Le billet : l'attente commence avant l'échange, et finit si le billet est refusé.
   assert.match(html, /async function entrerParBillet\(billet, ouvrir\) \{[\s\S]{0,220}?attendreSuivi\(\);\s*renderParcours\(\);\s*const reponse = await echangerBillet\(billet\);/);
   assert.match(html, /renderRepere\(\);\s*finAttente\(\);\s*return false;/);
@@ -796,6 +805,43 @@ test("lot 2b : avec un code, « Tu connais déjà des tables ? » attend le serv
   // Pendant l'attente, l'accueil ne montre rien (ni table de 2, ni premier écran).
   assert.match(html, /classList\.toggle\("en-attente", suiviAttendu\);/);
   assert.match(html, /\.acc\.en-attente > \* \{ visibility: hidden; \}/);
+});
+
+// Relecture de Code (03/10/2026), vue au navigateur avec un serveur simulé
+// lent : le billet met 4 s à revenir. Le lot livré relançait les 2,5 s à son
+// arrivée — « Tu connais déjà des tables ? », affiché à 2,5 s, disparaissait à
+// 4 s puis revenait (ou laissait place à la table). Un élève rapide y avait
+// déjà touché une table. Les fonctions de la page sont EXÉCUTÉES, minuteur simulé.
+test("lot 2b : une seule attente par ouverture — 2,5 s en tout, billet compris, et l'accueil montré ne se cache plus", () => {
+  const debut = html.indexOf("      let suiviAttendu = false;");
+  const fin = html.indexOf("      function demarrerSuivi() {", debut);
+  assert.ok(debut > 0 && fin > debut, "l'attente introuvable dans la page");
+  const minuteurs = [];
+  const window = {
+    setTimeout: (fn, ms) => { minuteurs.push({fn, ms, actif: true}); return minuteurs.length - 1; },
+    clearTimeout: id => { if (minuteurs[id]) minuteurs[id].actif = false; }
+  };
+  const dessins = [];
+  const page = new Function("window", "state", "renderParcours",
+    `${html.slice(debut, fin)}
+     return {attendreSuivi, finAttente, attendu: () => suiviAttendu};`)(window, {running: false}, () => dessins.push("dessin"));
+  const sonner = () => minuteurs.filter(m => m.actif).forEach(m => { m.actif = false; m.fn(); });
+
+  // Le billet part : l'accueil attend, un seul minuteur de 2,5 s.
+  page.attendreSuivi();
+  assert.equal(page.attendu(), true);
+  assert.deepEqual(minuteurs.map(m => m.ms), [2500]);
+  // Le billet revient vite, la case est vide : on attend encore, SANS relancer le minuteur.
+  page.attendreSuivi();
+  assert.equal(minuteurs.filter(m => m.actif).length, 1, "le compte à rebours continue, il ne repart pas de zéro");
+  // 2,5 s : l'accueil se montre…
+  sonner();
+  assert.equal(page.attendu(), false);
+  assert.equal(dessins.length, 1);
+  // … et un billet lent qui revient après ne le cache plus.
+  page.attendreSuivi();
+  assert.equal(page.attendu(), false, "l'accueil déjà montré ne se cache plus");
+  assert.equal(minuteurs.filter(m => m.actif).length, 0);
 });
 
 test("lot 2b : « résultats et nombres manquants » partout — noyau, fiche vierge ; les restes du lot 5a", () => {

@@ -222,6 +222,30 @@ test("la feuille des codes ne sort que par un bouton : Ctrl+P imprime le mode d'
   assert.match(script, /\$\("imprimer-recap"\)\.addEventListener\("click", \(\) => imprimer\("recap"\)\)/);
 });
 
+// Lot 2b (03/10/2026) : en retirant les styles de la colonne Expert, le lot
+// avait emporté tout le bloc qui suivait — à l'écran, les bandelettes et la
+// feuille prénom ↔ code s'affichaient sous le tableau, [hidden] ne cachait
+// plus les cartes, et les boîtes de dialogue perdaient leur dessin.
+test("à l'écran, les deux feuilles restent cachées et [hidden] cache pour de bon", () => {
+  const style = page.slice(page.indexOf("<style>"), page.indexOf("</style>"));
+  const ecran = style.slice(0, style.indexOf("@media"));
+  [
+    ".fiche, .bandelettes, .note-impression { display: none; }",
+    "[hidden] { display: none !important; }",
+    ".bandelette { display: flex;",
+    ".bandelette .souche {",
+    ".bandelette .code-ligne .code {",
+    ".avertissement-papier {",
+    ".apercu {",
+    "dialog {",
+    "dialog::backdrop {",
+    "footer {",
+    ".fragiles {",
+    ".barre-outils {"
+  ].forEach(regle => assert.ok(ecran.includes(regle), `règle perdue : ${regle}`));
+  assert.ok(!style.includes(".rang {") && !style.includes(".expert-case"), "les styles de la colonne Expert, eux, sont partis");
+});
+
 // ------------------------------------------------- tri pendant une saisie de prénom
 
 const creerFileRedessin = new Function(`${fonction("creerFileRedessin")}\nreturn creerFileRedessin;`)();

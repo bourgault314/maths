@@ -168,6 +168,65 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   .objectif .lignes { list-style: none; display: flex; flex-wrap: wrap; gap: 8px 18px;
                       margin: 10px 0 0; padding: 0; color: var(--muted); font-size: .9rem; }
   .objectif .lignes b { color: var(--ink); }
+  .fragiles { margin-top: 14px; border-left: 5px solid var(--orange); }
+  .fragiles strong { display: block; color: var(--blue-dark); font-family: Georgia, serif; font-size: 1.05rem; }
+  .fragiles p { margin: 4px 0 10px; color: var(--muted); font-size: .88rem; }
+  .fragiles ul { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; }
+  .fragiles li { display: flex; align-items: baseline; gap: 6px; padding: 6px 12px; border-radius: 999px;
+                 background: #fdf0e3; color: #8a4c0a; font-weight: 800; }
+  .fragiles li span { font-size: .82rem; font-weight: 600; color: #a15c11; }
+  .barre-outils { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
+  .barre-outils .espace { margin-left: auto; }
+  /* Le papier (lot 7). Deux impressions distinctes, jamais ensemble : les
+     BANDELETTES à distribuer (adresse, code, consigne — aucun prénom du côté
+     donné à l'élève) et la FEUILLE prénom ↔ code, que le professeur garde.
+     À l'écran, ni l'une ni l'autre ne s'affiche. */
+  .fiche, .bandelettes, .note-impression { display: none; }
+  .fiche h2 { margin-top: 0; }
+  .fiche table { font-size: 1rem; }
+  .fiche td.code { font-size: 1.15rem; }
+  .fiche td.numero { color: var(--muted); font-weight: 800; text-align: right; width: 2.4em; }
+  .avertissement-papier { margin: 0 0 6mm; padding: 3mm 4mm; border: 1px solid #999;
+                          border-radius: 2mm; font-size: .82rem; color: #333; }
+  .bandelettes h2 { margin: 0 0 2mm; }
+  .bandelettes-liste { list-style: none; margin: 0; padding: 0; }
+  /* Une bandelette = une souche (le professeur la détache et la garde : le
+     numéro et le prénom, JAMAIS le code) et la partie remise à l'élève
+     (l'adresse, le code, la consigne, JAMAIS le prénom). Séparées, aucune des
+     deux n'associe un enfant à un code : ce lien n'existe que sur la feuille
+     récapitulative, imprimée à part. */
+  .bandelette { display: flex; align-items: stretch; margin: 0 0 2mm; line-height: 1.35;
+                border: 1px dashed #8a8a8a; border-radius: 2mm;
+                break-inside: avoid; page-break-inside: avoid; }
+  .bandelette .souche { flex: 0 0 40mm; display: flex; align-items: center; gap: 3mm;
+                        padding: 2mm 3mm; border-right: 1px dashed #8a8a8a; }
+  .bandelette .souche .numero { font-weight: 800; color: #666; font-size: .85rem; }
+  .bandelette .souche .nom { font-weight: 700; }
+  .bandelette .part { flex: 1; padding: 2mm 4mm; }
+  .bandelette .marque { font-family: Georgia, serif; font-weight: 700; font-size: .88rem; color: #063f86; }
+  .bandelette .marque .appli { margin-left: 6px; font-family: inherit; font-weight: 400; color: #444; }
+  .bandelette .adresse { font-weight: 700; font-size: .98rem; }
+  .bandelette .code-ligne { display: flex; align-items: baseline; gap: 3mm; }
+  .bandelette .code-ligne .etiquette { font-size: .8rem; color: #444; }
+  .bandelette .code-ligne .code { font-family: ui-monospace, Consolas, monospace;
+                                  font-size: 1.25rem; font-weight: 800; letter-spacing: .12em; }
+  .bandelette .consigne { font-size: .78rem; }
+  /* Aperçu « code → prénom » dans la boîte « Coller la liste des prénoms ». */
+  .apercu { list-style: none; margin: 10px 0 0; padding: 8px 12px; max-height: 200px; overflow: auto;
+            background: #fbfcfe; border: 1px solid var(--line); border-radius: 10px;
+            font-size: .9rem; line-height: 1.5; }
+  .apercu li { display: flex; gap: 8px; align-items: baseline; }
+  .apercu li .numero { flex: 0 0 2em; text-align: right; color: var(--muted); font-weight: 800; }
+  .apercu li .code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .06em; }
+  .apercu li.vide { color: var(--muted); font-style: italic; }
+  .apercu li.alerte { color: var(--rouge); font-weight: 700; }
+  dialog { border: 0; border-radius: 14px; padding: 18px; max-width: 420px; width: calc(100% - 32px);
+           box-shadow: 0 20px 50px rgba(16,41,74,.28); }
+  dialog::backdrop { background: rgba(16,41,74,.45); }
+  footer { padding: 14px 16px; border-top: 1px solid var(--line); background: var(--paper);
+           color: var(--muted); font-size: .82rem; text-align: center; }
+  footer a { display: inline-block; padding: 12px 8px; color: var(--muted); }
+  [hidden] { display: none !important; }
   /* Sous 700 px, le tableau devient une carte par élève : rien ne déborde,
      tout se lit d'un coup d'œil sur un téléphone. */
   @media (max-width: 700px) {
