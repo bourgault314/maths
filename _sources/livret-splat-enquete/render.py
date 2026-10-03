@@ -327,16 +327,23 @@ CSS_QR = """
 # size-adjust:120 % lui donne la hauteur du x de DejaVu Sans (mesuré : 108 px contre 109 à
 # 200 px ; 90 sans réglage). Mesure faite pour FreeSerif : ne pas changer l'ordre des polices
 # sans remesurer.
+# Sous Windows (03/10/2026), ni FreeSerif ni Latin Modern Math : la seconde famille, « x-arrondi-win »,
+# prend Cambria Math, SANS size-adjust — c'est le 𝑥 de l'appli, à la hauteur du x de Segoe UI
+# (mesuré : 97 px contre 100 à 200 px ; 116 avec 120 %). Sous Linux, elle ne se charge pas : rien
+# ne change.
 X_SOURCES = 'local("FreeSerif"), local("LatinModernMath-Regular")'
+X_WIN = 'local("Cambria Math")'
 CSS_X = (
     '@font-face{font-family:"x-arrondi";src:' + X_SOURCES + ';unicode-range:U+1D465;size-adjust:120%}\n'
     '@font-face{font-family:"x-arrondi";font-style:italic;src:' + X_SOURCES + ';unicode-range:U+1D465;size-adjust:120%}\n'
-    '*{font-family:"x-arrondi",system-ui,-apple-system,"Segoe UI",Roboto,Arial}\n'
+    '@font-face{font-family:"x-arrondi-win";src:' + X_WIN + ';unicode-range:U+1D465}\n'
+    '@font-face{font-family:"x-arrondi-win";font-style:italic;src:' + X_WIN + ';unicode-range:U+1D465}\n'
+    '*{font-family:"x-arrondi","x-arrondi-win",system-ui,-apple-system,"Segoe UI",Roboto,Arial}\n'
 )
-JS_X = r"""async () => {
-  const non = 'aucune police pour le 𝑥 arrondi (FreeSerif ou Latin Modern Math : apt install fonts-freefont-ttf)';
+JS_X = r"""async (fam) => {
+  const non = 'aucune police pour le 𝑥 arrondi (FreeSerif ou Latin Modern Math : apt install fonts-freefont-ttf ; sous Windows, Cambria Math)';
   try {
-    const f = await document.fonts.load('italic 40px "x-arrondi"', '\u{1D465}');
+    const f = await document.fonts.load('italic 40px "' + fam + '"', '\u{1D465}');
     return f.length ? 'ok' : non;
   } catch (e) { return non; }
 }"""
@@ -1034,7 +1041,9 @@ async def rendre(niv, tmp, corr=None):
             await pg.add_style_tag(content=CSS_QR)
             if corr and corr["lettre"]:
                 await pg.add_style_tag(content=CSS_X)
-                r = await pg.evaluate(JS_X)
+                r = await pg.evaluate(JS_X, "x-arrondi")
+                if r != "ok":  # pas de FreeSerif : Windows, Cambria Math
+                    r = await pg.evaluate(JS_X, "x-arrondi-win")
                 if r != "ok":
                     raise SystemExit(f"{titre} : {r}")
             r = await pg.evaluate(JS_QR, [f"{qrweb}/fiche{f['code']}.png", QR_PROF if corr else QR_ELEVE])
@@ -1150,9 +1159,19 @@ def assemble(niv, tmp, sortie):
         s.close()
 
 def compresse(chemin):
-    """qpdf, s'il est installé, divise le poids par deux (objets et flux recompressés)."""
+    """qpdf, s'il est installé, divise le poids par deux (objets et flux recompressés).
+    Sans qpdf (Windows, 03/10/2026) : pikepdf, qui embarque la bibliothèque de qpdf, avec les
+    mêmes réglages — sans flux d'objets, tests/livret-splat-enquete.test.mjs ne compte plus les
+    pages."""
     import shutil, subprocess
     if not shutil.which("qpdf"):
+        import pikepdf
+        pikepdf.settings.set_flate_compression_level(9)
+        tmp = chemin.with_suffix(".qpdf.pdf")
+        with pikepdf.open(str(chemin)) as d:
+            d.save(str(tmp), object_stream_mode=pikepdf.ObjectStreamMode.generate,
+                   compress_streams=True, recompress_flate=True)
+        tmp.replace(chemin)
         return
     tmp = chemin.with_suffix(".qpdf.pdf")
     r = subprocess.run(["qpdf", "--object-streams=generate", "--compress-streams=y",

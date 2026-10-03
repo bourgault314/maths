@@ -285,8 +285,11 @@ function texteDesPages(p) {
     for (const bloc of f.match(/beginbfrange([\s\S]*?)endbfrange/g) || [])
       for (const m of bloc.matchAll(/<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>/g)) {
         const a = parseInt(m[1], 16), z = parseInt(m[2], 16), c = parseInt(m[3], 16);
-        for (let k = a; k <= z && k - a < 1024; k++) t.set(k.toString(16).padStart(4, "0"), String.fromCodePoint(c + (k - a)));
+        for (let k = a; k <= z && k - a < 1024; k++) t.set(k.toString(16).padStart(m[1].length, "0"), String.fromCodePoint(c + (k - a)));
       }
+    // la largeur des codes : 4 chiffres (polices Type 0), 2 pour les polices Type 3 que le
+    // Chromium de Windows écrit pour les glyphes de secours, le ✓ par exemple (03/10/2026)
+    t.w = [...t.keys()][0]?.length || 4;
     if (t.size) tables.push(t);
   }
   const pages = [];
@@ -298,13 +301,14 @@ function texteDesPages(p) {
     for (let k = 0; k < bornes.length - 1; k++) {
       // une chaîne peut porter plusieurs glyphes (<02D402D5> Tj) : le Chromium de Windows en
       // écrit beaucoup (03/10/2026) ; on les découpe par 4, sinon leurs lettres disparaissent
-      const codes = [...s.slice(bornes[k], bornes[k + 1]).matchAll(/<((?:[0-9a-fA-F]{4})+)>\s*Tj/g)]
-        .flatMap((m) => m[1].toLowerCase().match(/.{4}/g));
-      if (!codes.length) continue;
-      let meilleure = null, score = 0;
+      const chaines = [...s.slice(bornes[k], bornes[k + 1]).matchAll(/<((?:[0-9a-fA-F]{2})+)>\s*Tj/g)]
+        .map((m) => m[1].toLowerCase());
+      if (!chaines.length) continue;
+      const decoupe = (w) => chaines.every((c) => c.length % w === 0) ? chaines.flatMap((c) => c.match(new RegExp(`.{${w}}`, "g"))) : [];
+      let meilleure = null, codes = [], score = 0;
       for (const t of tables) {
-        const n = codes.filter((c) => t.has(c)).length;
-        if (n > score) { score = n; meilleure = t; }
+        const cs = decoupe(t.w), n = cs.filter((c) => t.has(c)).length;
+        if (n > score) { score = n; meilleure = t; codes = cs; }
       }
       if (meilleure) texte += codes.map((c) => meilleure.get(c) ?? "").join("");
     }
@@ -355,7 +359,8 @@ test("dans les PDF — couverture, exemple en page 2, les cinq fiches dans l'ord
       assert.doesNotMatch(pages[1], souple("Je vérifie :"), `${s}, page 2 : « Je vérifie » est un titre, plus un bout de phrase`);
       assert.match(pages[1], souple(`${EXEMPLES_P2[nom]} ✓`), `${s} : l'exemple de la page 2`);
       TITRES[nom].forEach((f, k) => {
-        const p = pages[2 + k];
+        // (03/10/2026) l'en-tête « Splat! » se lit aussi (Segoe UI Black, Type 3 sous Linux)
+        const p = pages[2 + k].replace(/^Splat! ?/, "");
         assert.ok(p.startsWith(`Fiche ${f.code} —`), `${s}, page ${3 + k} : fiche ${f.code} (lu : ${p.slice(0, 40)})`);
         assert.ok(p.replace(/\s/g, "").includes(f.t.replace(/\s/g, "")), `${s}, page ${3 + k} : « ${f.t} »`);
         if (v) assert.match(p, /Correction/, `${s}, page ${3 + k}`);
