@@ -12,7 +12,7 @@ const html = await readFile(new URL("outils/calcul_mental/defi_tables.html", rac
 const require = createRequire(import.meta.url);
 const PARCOURS = require("../outils/calcul_mental/defi_tables_mon_parcours.js");
 
-const notice = html.match(/<template id="notice-regles">([\s\S]*?)<\/template>/)[1];
+const notice = html.match(/<template id="notice-seance">([\s\S]*?)<\/template>/)[1];
 
 test("la notice garde six phrases et prend le nom que l'appli donne au mélange", () => {
   assert.equal((notice.match(/<p>/g) || []).length, 6, "toujours six phrases");
@@ -25,7 +25,9 @@ test("la notice garde six phrases et prend le nom que l'appli donne au mélange"
 test("la notice dit « 10 à la fois », et le moteur les prend dans chaque boîte, à tour de rôle", () => {
   // Audit 1 (30/09/2026) : la notice tient en six lignes courtes ; le « à
   // tour de rôle » n'y est plus écrit, mais le moteur tire toujours ainsi.
-  assert.match(notice, /<b>Mes calculs du jour\.<\/b> Les calculs qui reviennent aujourd’hui, 10 à la fois, sans chrono\./);
+  // Lot 2b : la notice de la séance ne dit plus « 10 à la fois » (Mes calculs
+  // du jour est une étape de la séance) ; le moteur, lui, tire toujours ainsi.
+  assert.match(notice, /<b>Mes calculs du jour\.<\/b> Un calcul réussi revient plus tard\. Raté, il revient demain\./);
   // Et le moteur tire bien ainsi : sur 30 calculs dus répartis dans les cinq
   // boîtes, la première série de 10 en prend dans chacune — pas dix rouges.
   const aujourdhui = PARCOURS.jourLocal();
@@ -44,7 +46,7 @@ test("la notice dit « 10 à la fois », et le moteur les prend dans chaque boî
 });
 
 test("la notice dit ce que fait une erreur, et le moteur le confirme : une boîte de moins, et demain", () => {
-  assert.match(notice, /Réussi le jour où il revient, il monte d’une boîte&nbsp;; raté, il descend et revient demain\./);
+  assert.match(notice, /Un calcul réussi revient plus tard\. Raté, il revient demain\./);
   assert.doesNotMatch(notice, /il revient tout de suite/);
   // La même phrase partout où l'élève lit la règle (audit 1) : le détail
   // d'une case et la fiche imprimée disent « demain », plus « tout de suite ».
@@ -77,9 +79,8 @@ test("« Encore 10 calculs » est bien le libellé du bouton", () => {
 
 test("les nombres écrits pour l'élève sont ceux du moteur : 5 boîtes, 10 à la fois, su à la boîte 4, 1 · 3 · 7 · 14 jours", () => {
   assert.equal(PARCOURS.SEUILS.revision.boites, 5);
-  assert.match(notice, /Chaque calcul a 5 boîtes\./);
+  assert.match(html, /Cinq boîtes par calcul/, "la page 2 de la fiche le dit (la notice de la séance, non)");
   assert.equal(PARCOURS.SEUILS.revision.total, 10);
-  assert.match(notice, /10 à la fois/);
   assert.deepEqual(PARCOURS.SEUILS.revision.delais, [0, 1, 3, 7, 14]);
   // Audit 1 : les délais et la boîte 4 ne sont plus dans la notice courte ;
   // la page 2 de la fiche imprimée les écrit toujours.

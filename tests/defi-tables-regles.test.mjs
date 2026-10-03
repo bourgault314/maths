@@ -418,7 +418,6 @@ test("l’accueil : « Mon mélange » surligné, le cadenas sur Je valide, l’
 });
 
 test("le parcours : Acquise cadenassée, « Mon mélange » jusqu’aux 9 tables, l’escalier à cinq marches avec leur durée", () => {
-  assert.match(html, /kind: "lock",[\s\S]*?label: `Table de \$\{ligne\.table\}, valider ma table : verrouillé, réussis d’abord ton mélange`/);
   assert.match(html, /"Mon mélange : mes 9 tables" : `Mon mélange : tables \$\{listeTables\(etat\.melange\.tables\)\}`/);
   assert.match(html, /label: "Mon mélange, mes tables acquises \(20 questions en 1 min 30\)"/);
   assert.match(html, /expertTitle\.textContent = "Je deviens expert : toutes les tables, de plus en plus vite";/);
@@ -454,8 +453,8 @@ test("le lancement : le mélange se joue en 1 min 30, comme la validation d’un
 });
 
 test("les scripts modifiés ont un nouveau numéro de cache, et la copie serveur du moteur est identique", async () => {
-  assert.match(html, /defi_tables_core\.js\?v=20260930-1/);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261003-1/);
+  assert.match(html, /defi_tables_core\.js\?v=20261003-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261003-2/);
   const moteur = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie), "_serveur/public/prof/defi_tables_mon_parcours.js doit être la copie octet pour octet du moteur");

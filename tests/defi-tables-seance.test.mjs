@@ -416,18 +416,18 @@ test("trois élèves types : celui qui sait tout, le moyen, celui qui ne sait ri
   assert.equal(p.seances.length, 10, "et chaque séance compte quand même");
 });
 
-test("la page : tout est derrière la clé ?seance=1 ; sans elle, l'accueil et les bilans d'avant", () => {
-  assert.match(html, /const CLE_SEANCE = "mathsgo-defi-tables-seance";/);
-  assert.match(html, /if \(demande === "0"\) durable\.removeItem\(CLE_SEANCE\);\s*else if \(demande !== null\) durable\.setItem\(CLE_SEANCE, "1"\);\s*return durable\.getItem\(CLE_SEANCE\) === "1";/, "?seance=1 pose la clé sur l'appareil, ?seance=0 la retire");
-  assert.match(html, /const SEANCE = lireCleSeance\(\);\s*document\.body\.classList\.toggle\("avec-seance", SEANCE\);/);
-  assert.match(html, /const avecSeance = SEANCE && !replie;/, "l'accueil de la séance ne se pose qu'avec la clé");
+test("la page : la séance est l'accueil de tous — la clé ?seance=1 est retirée (lot 2b)", () => {
+  assert.doesNotMatch(html, /\bSEANCE\b|lireCleSeance|CLE_SEANCE/, "plus aucune branche « sans la clé »");
+  assert.match(html, /try \{ window\.localStorage\.removeItem\("mathsgo-defi-tables-seance"\); \} catch \(_\) \{\}/, "la trace de la clé est effacée de l'appareil");
+  assert.match(html, /<body class="avec-seance">/, "la classe est posée dès le premier dessin");
+  assert.match(html, /const avecSeance = !replie;/);
   assert.match(html, /if \(decouverte\) renderDecouverte\(etapes, etat\);\s*else if \(avecSeance\) renderSeanceAccueil\(etapes, etat, table, ligne\);\s*if \(!replie && !carteSeance\) \{/);
-  assert.match(html, /if \(SEANCE\) renderSemaine\(etat\);/);
-  assert.match(html, /function enSeance\(\) \{\s*return SEANCE && Boolean\(seance\) && state\.origin === "seance";/, "une série hors séance garde son bilan d'avant");
-  assert.match(html, /if \(enSeance\(\)\) noterEtapeDeSeance\(suivi\);\s*if \(SEANCE && state\.origin === "decouverte"\) renderSuiteDecouverte\(suivi\);\s*show\("result"\);/);
+  assert.match(html, /\n        renderSemaine\(etat\);/);
+  assert.match(html, /function enSeance\(\) \{\s*return Boolean\(seance\) && state\.origin === "seance";/, "une série hors séance garde son bilan d'avant");
+  assert.match(html, /if \(enSeance\(\)\) noterEtapeDeSeance\(suivi\);\s*if \(state\.origin === "decouverte"\) renderSuiteDecouverte\(suivi\);\s*show\("result"\);/);
   assert.match(html, /function backToModes\(\) \{\s*quitterSeance\(\);/, "revenir à Ma table quitte la séance");
-  assert.match(html, /mixte: SEANCE \? "résultats et nombres manquants" : "les deux à la fois"/);
-  assert.match(html, /return SEANCE \? libelle\.replace\("les deux à la fois", "résultats et nombres manquants"\) : libelle;/);
+  assert.match(html, /mixte: "résultats et nombres manquants"\}\);/);
+  assert.match(html, /function configurationLabel\(config\) \{\s*return CORE\.configurationLabel\(config\);/, "le noyau porte le nom lui-même");
   // Ce que la page pose, et où.
   assert.match(html, /<div id="acc-semaine" class="semaine" hidden><\/div>/);
   assert.match(html, /<div id="seance-fil" class="seance-fil" hidden><\/div>\s*<div class="status">/, "le fil de la séance est au-dessus de la barre");
@@ -441,13 +441,13 @@ test("la page : tout est derrière la clé ?seance=1 ; sans elle, l'accueil et l
   assert.match(html, /encore\.textContent = "Encore une séance";/);
   // La rangée : une case vide reste sans nombre.
   assert.match(html, /if \(item\.etat !== "vide"\) \{\s*cellule\.className = item\.etat;\s*cellule\.textContent = String\(item\.produit\);\s*\}/);
-  // Les bouts sont gardés même sans la clé (rien ne s'affiche, rien ne se perd).
+  // Les bouts sont gardés hors séance aussi.
   assert.match(html, /if \(!resultat\.fait && resultat\.bouts && resultat\.bouts\.length\) \{\s*parcours = resultat\.parcours;\s*sauverParcours\(\);\s*\}/);
   // Les perles : le doigt (pixels d'écran) est ramené aux pixels du boulier quand le cadre est réduit.
   assert.match(html, /const zoom = rect\.width \/ boulier\.dom\.interieur\.offsetWidth \|\| 1;\s*const x = \(event\.clientX - rect\.left\) \/ zoom;/);
   assert.match(html, /const ecart = \(event\.clientX - drag\.depart\) \/ drag\.zoom;/);
   // Le bloc « Mes calculs du jour » quitte l'accueil de la séance, pas Mes calculs.
-  assert.match(html, /if \(SEANCE\) reviser\.hidden = true;/, "avec la clé, Mes calculs du jour est dans la séance (les 9 tables aussi)");
+  assert.match(html, /reviser\.hidden = true;/, "Mes calculs du jour est dans la séance (les 9 tables aussi)");
   assert.match(html, /<button id="calculs-reviser" class="primary" type="button">/);
 });
 
@@ -548,7 +548,7 @@ test("« Cette semaine » : à la 5e séance, page ouverte, l'étiquette des ron
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie serveur identique, serveur qui accepte les nouvelles clés", () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261003-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261003-2/);
   const moteur = readFileSync(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = readFileSync(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie), "cp outils/calcul_mental/defi_tables_mon_parcours.js _serveur/public/prof/");
@@ -667,25 +667,27 @@ test("lot 2a : la page — premier écran, Mon parcours, notice, séance des 9 t
   assert.match(html, /body\.avec-seance \.acc\.choix-ouvert > :not\(\.matable\),\s*body\.avec-seance \.acc\.choix-ouvert #acc-etapes,\s*body\.avec-seance \.acc\.choix-ouvert #acc-lire \{ display: none; \}/);
   // Le premier écran : seulement pour un parcours vide, fermé pour l'onglet.
   assert.match(html, /return !fermee && \(decouverteEngagee \|\| PARCOURS\.estVide\(parcours\)\);/);
-  assert.match(html, /const decouverte = avecSeance && enDecouverte\(\);/, "avec la clé seulement");
+  assert.match(html, /const decouverte = avecSeance && enDecouverte\(\);/);
   assert.match(html, /decouverteEngagee = true;\s*launchFromParcours\(PARCOURS\.configValidation\(candidate\), "decouverte"\)/);
   assert.match(html, /\{correct: state\.correct, total: TOTAL, decouverte: state\.origin === "decouverte"\}/);
   assert.match(html, /`Non, je commence par la table de \$\{suivante\}`/);
   assert.match(html, /parcours = PARCOURS\.commencerApresDecouverte\(parcours, table\);\s*sauverParcours\(\);\s*ecrireTableChoisie\(table\);\s*fermerDecouverte\(\);/);
   // Mon parcours : une rangée par table, l'échelle pour ma table.
-  assert.match(html, /if \(SEANCE\) \{\s*renderParcoursSeance\(list, etat, maTable\);\s*\} else etat\.lignes\.forEach/);
+  assert.match(html, /const maTable = tableEnCours\(etat\);[\s\S]{0,300}?\n        renderParcoursSeance\(list, etat, maTable\);/);
+  assert.doesNotMatch(html, /kind: "dot",\s*etat: activite\.etat/, "lot 2b : les ronds de l'ancien parcours sont retirés");
+  assert.doesNotMatch(html, /pas fait<\/span>\s*<span><span class="cell is-started">/, "et leur légende aussi");
   assert.match(html, /item\.append\(rangeeDeTable\(table\)\);\s*if \(table === maTable && !ligne\.acquise\) item\.append\(echelleDeTable\(table\)\);/);
-  // La table de la dernière séance, avec la clé.
-  assert.match(html, /if \(SEANCE && etat\.tableSeance\) return etat\.tableSeance;/);
+  // La table de la dernière séance.
+  assert.match(html, /if \(etat\.tableSeance\) return etat\.tableSeance;/);
   // Les 9 tables : la carte de la séance dans « Je deviens expert ».
-  assert.match(html, /if \(SEANCE && PARCOURS\.programmeDeSeance\(parcours, PARCOURS\.ouvrirSeance\(parcours\)\)\.etapes\.length\) \{\s*action\.append\(carteDeSeance\(null\)\);/);
-  // La notice de la séance : six lignes, posée avec la clé.
+  assert.match(html, /if \(PARCOURS\.programmeDeSeance\(parcours, PARCOURS\.ouvrirSeance\(parcours\)\)\.etapes\.length\) \{\s*action\.append\(carteDeSeance\(null\)\);/);
+  // La notice de la séance : six lignes, la seule notice.
   const debut = html.indexOf('<template id="notice-seance">');
   const notice = html.slice(debut, html.indexOf("</template>", debut));
   assert.equal((notice.match(/<p>/g) || []).length, 6, "six lignes");
   assert.doesNotMatch(notice, /les deux à la fois|je m’entraîne 3 fois/i);
-  assert.match(html, /const modele = \$\(SEANCE \? "notice-seance" : "notice-regles"\);/);
-  assert.match(html, /<template id="notice-regles">\s*<p><b>Ma table\.<\/b> J’apprends si je veux, je m’entraîne 3 fois/, "sans la clé, la notice d'avant");
+  assert.match(html, /const modele = \$\("notice-seance"\);/);
+  assert.doesNotMatch(html, /notice-regles"|je m’entraîne 3 fois/, "la notice d'avant est retirée");
 });
 
 // Relecture de Code (03/10/2026), vue au navigateur : avec un code, l'accueil
@@ -700,10 +702,10 @@ test("lot 2a : le premier écran suit le parcours rendu par le serveur — il ne
   const onglet = new Map();
   const stockageSession = () => ({getItem: cle => (onglet.has(cle) ? onglet.get(cle) : null), setItem: (cle, valeur) => onglet.set(cle, valeur)});
   const fabrique = new Function("PARCOURS", "stockageSession", "etat",
-    `let parcours = etat.parcours; let codeSuivi = etat.code;
+    `let parcours = etat.parcours; let codeSuivi = etat.code; let suiviAttendu = Boolean(etat.attendu);
      ${html.slice(debut, fin)}
      return {
-       enDecouverte() { parcours = etat.parcours; codeSuivi = etat.code; return enDecouverte(); },
+       enDecouverte() { parcours = etat.parcours; codeSuivi = etat.code; suiviAttendu = Boolean(etat.attendu); return enDecouverte(); },
        fermerDecouverte,
        tenter() { decouverteEngagee = true; }
      };`);
@@ -713,9 +715,12 @@ test("lot 2a : le premier écran suit le parcours rendu par le serveur — il ne
   lea = P.normaliserParcours(lea);
 
   // Appareil neuf : vide au premier dessin, puis le serveur rend le parcours de Léa.
-  const etat = {parcours: vide, code: "ABCDEF"};
+  // Lot 2b : tant que le serveur n'a pas répondu, l'écran ne se pose pas.
+  const etat = {parcours: vide, code: "ABCDEF", attendu: true};
   const page = fabrique(P, stockageSession, etat);
-  assert.equal(page.enDecouverte(), true, "case vide au premier dessin : l'écran s'affiche");
+  assert.equal(page.enDecouverte(), false, "case vide, serveur attendu : pas encore de premier écran");
+  etat.attendu = false;
+  assert.equal(page.enDecouverte(), true, "le serveur n'a rien (ou n'a pas répondu) : l'écran s'affiche");
   etat.parcours = P.fusionner(vide, lea);
   assert.equal(page.enDecouverte(), false, "le serveur a rendu ses 3 tables : l'accueil de sa table, plus le premier écran");
 
@@ -731,4 +736,128 @@ test("lot 2a : le premier écran suit le parcours rendu par le serveur — il ne
   assert.equal(autre.enDecouverte(), false);
   neuf.parcours = vide;
   assert.equal(fabrique(P, stockageSession, neuf).enDecouverte(), false, "fermé pour de bon dans l'onglet");
+});
+
+// ---------------------------------------------------------------------------
+// Lot 2b (03/10/2026) : la fiche montre ce que montre Mon parcours, le cadre
+// des compteurs est pour le professeur, et le premier écran attend le serveur.
+//
+// Sabotages attendus (chacun rend un test rouge) :
+//   - écrire le résultat dans une case vide de la fiche ;
+//   - montrer le cadre du professeur à l'élève (sans « source ») ;
+//   - poser le premier écran pendant l'échange du billet ;
+//   - ne pas finir l'attente quand le billet est refusé ;
+//   - remettre « les deux à la fois » dans le noyau.
+
+test("lot 2b : la fiche — une rangée par table, l'échelle de ma table, « Cette semaine », plus de ronds", () => {
+  const fiche = html.slice(html.indexOf('<section id="fiche-print"'), html.indexOf('<section class="fiche-page2">'));
+  assert.match(fiche, /<ol id="fiche-rows" class="fiche-rangees"><\/ol>/);
+  assert.doesNotMatch(fiche, /J’apprends|Je m’entraîne|fiche-table|Colorie les ronds/, "les ronds ont quitté l'appli au lot 2a");
+  assert.match(fiche, /<span><i class="fiche-r"><\/i>pas encore<\/span>\s*<span><i class="fiche-r entouree">12<\/i>réussi une fois<\/span>\s*<span><i class="fiche-r pleine">12<\/i>prêt<\/span>/, "la légende de Mon parcours");
+  // Un seul logo, en haut à droite ; le QR à gauche ; la signature seule en pied.
+  assert.match(fiche, /<header class="fiche-head">\s*<div class="fiche-qr">[\s\S]*?<\/div>\s*<h1>Mon parcours<br>des tables<\/h1>\s*<img class="fiche-logo" src="\.\.\/\.\.\/assets\/img\/mathsgo-logo-print\.png"/);
+  assert.equal((fiche.match(/mathsgo-logo/g) || []).length, 1, "un seul logo sur la feuille 1");
+  assert.match(html, /<footer class="fiche-foot">mathsgo\.re · CC BY-NC-SA 4\.0<\/footer>\s*<section class="fiche-page2">/);
+  // Le remplissage : la rangée du moteur, lue dans le parcours de LA FICHE (celui d'un autre élève chez le professeur).
+  assert.match(html, /PARCOURS\.rangeeTable\(fiche, table\)\.cases\.forEach\(uneCase => \{/);
+  assert.match(html, /if \(uneCase\.etat !== "vide"\) boite\.textContent = String\(uneCase\.produit\);/, "comme à l'écran : une case vide ne donne pas le résultat");
+  assert.match(html, /const maTable = vide \? null : PARCOURS\.tableDeSeance\(fiche\);/, "une fiche vide ne désigne aucune table");
+  // Relecture de Code (03/10/2026), vue au navigateur : « Fiche » sur un élève
+  // qui n'a rien fait — le serveur donne son prénom, et le prénom suffisait à
+  // rendre la fiche « non vide » : table de 2 désignée, date, « Ma progression ».
+  assert.match(html, /const vide = PARCOURS\.estVide\(\{\.\.\.fiche, prenom: ""\}\);\s*\$\("fiche-date"\)\.textContent = vide \?/);
+  assert.match(html, /\$\("fiche-subtitle"\)\.textContent = vide\s*\?/);
+  const hugo = P.creerParcours();
+  hugo.prenom = "Hugo";
+  assert.equal(P.estVide(hugo), false, "le moteur compte le prénom : c'est à la fiche de l'écarter");
+  assert.equal(P.estVide({...hugo, prenom: ""}), true);
+  assert.match(html, /const marches = marchesDeTable\(fiche, table\);/);
+  assert.match(html, /function echelleDeTable\(table\) \{\s*const \{depart, prochaines, noms\} = marchesDeTable\(parcours, table\);/, "Mon parcours et la fiche lisent l'échelle de la même façon");
+  assert.match(html, /const semaine = PARCOURS\.bilanSeances\(fiche\);/);
+  assert.match(html, /\.fiche-carre tr > th:first-child \{ width: 9mm; \}\s*\.fiche-carre \.fiche-carre-cases \{ display: flex; justify-content: center; gap: \.5mm; \}\s*\.fiche-carre \.fiche-case \{ width: 3\.3mm; height: 3\.3mm; \}/, "page 2 : des boîtes de 3,3 mm, qui ne se touchent pas d'une case à l'autre");
+});
+
+test("lot 2b : les compteurs « fois » sont pour le professeur — le cadre n'existe que dans la fiche ouverte depuis « Ma classe »", () => {
+  assert.match(html, /<div id="fiche-prof" class="fiche-prof" hidden>\s*<strong>Pour le professeur <small>— combien de fois chaque activité a été faite<\/small><\/strong>/);
+  const rendu = html.slice(html.indexOf("      function renderFiche(source) {"), html.indexOf("      function printFiche() {"));
+  assert.match(rendu, /lignesProf\.replaceChildren\(\);\s*if \(source\) \{/, "sans source (la fiche de l'élève sur son appareil), aucune ligne");
+  assert.match(rendu, /cadre\.hidden = !lignesProf\.children\.length;/);
+  assert.match(rendu, /const nombres = \[ligne\.seance\.n, fois\.beads, fois\.construct, fois\.gaps, fois\.ordered,\s*fois\.random \+ fois\.desordre, fois\.trous, fois\.mixte\];\s*if \(!nombres\.some\(Boolean\)\) return;/, "une ligne par table où quelque chose a été fait");
+  assert.equal((html.match(/<th>Séances<\/th><th>Perles<\/th>/g) || []).length, 1);
+  // Le professeur passe toujours une source ; l'élève, jamais.
+  assert.match(html, /renderFiche\(distant\);/);
+  assert.match(html, /function imprimerLaFiche\(\) \{\s*renderFiche\(\);/);
+});
+
+test("lot 2b : avec un code, « Tu connais déjà des tables ? » attend le serveur — billet, lecture, 2,5 s au plus", () => {
+  assert.match(html, /function enDecouverte\(\) \{\s*if \(suiviAttendu\) return false;/);
+  assert.match(html, /const ATTENTE_SUIVI_MS = 2500;/);
+  assert.match(html, /function attendreSuivi\(\) \{\s*if \(attenteFinie\) return;\s*suiviAttendu = true;\s*if \(minuteurAttente === null\) minuteurAttente = window\.setTimeout\(finAttente, ATTENTE_SUIVI_MS\);/);
+  assert.match(html, /function finAttente\(\) \{[\s\S]{0,160}?attenteFinie = true;\s*if \(!suiviAttendu\) return;\s*suiviAttendu = false;\s*if \(!state\.running\) renderParcours\(\);/);
+  // Le billet : l'attente commence avant l'échange, et finit si le billet est refusé.
+  assert.match(html, /async function entrerParBillet\(billet, ouvrir\) \{[\s\S]{0,220}?attendreSuivi\(\);\s*renderParcours\(\);\s*const reponse = await echangerBillet\(billet\);/);
+  assert.match(html, /renderRepere\(\);\s*finAttente\(\);\s*return false;/);
+  // La lecture du parcours : seulement pour une case vide ; sans code ou détaché, rien n'attend.
+  assert.match(html, /if \(!suiviActif\(\)\) \{ finAttente\(\); return; \}/);
+  assert.match(html, /if \(sync\.detache\) \{ finAttente\(\); return; \}/);
+  assert.match(html, /if \(PARCOURS\.estVide\(parcours\)\) \{\s*attendreSuivi\(\);\s*if \(!state\.running\) renderParcours\(\);\s*\} else finAttente\(\);/);
+  assert.match(html, /lireParcoursDuServeur\(code\)\.then\(reponse => \{\s*if \(code !== codeSuivi\) return;[\s\S]{0,200}?suiviAttendu = false;/);
+  // Pendant l'attente, l'accueil ne montre rien (ni table de 2, ni premier écran).
+  assert.match(html, /classList\.toggle\("en-attente", suiviAttendu\);/);
+  assert.match(html, /\.acc\.en-attente > \* \{ visibility: hidden; \}/);
+});
+
+// Relecture de Code (03/10/2026), vue au navigateur avec un serveur simulé
+// lent : le billet met 4 s à revenir. Le lot livré relançait les 2,5 s à son
+// arrivée — « Tu connais déjà des tables ? », affiché à 2,5 s, disparaissait à
+// 4 s puis revenait (ou laissait place à la table). Un élève rapide y avait
+// déjà touché une table. Les fonctions de la page sont EXÉCUTÉES, minuteur simulé.
+test("lot 2b : une seule attente par ouverture — 2,5 s en tout, billet compris, et l'accueil montré ne se cache plus", () => {
+  const debut = html.indexOf("      let suiviAttendu = false;");
+  const fin = html.indexOf("      function demarrerSuivi() {", debut);
+  assert.ok(debut > 0 && fin > debut, "l'attente introuvable dans la page");
+  const minuteurs = [];
+  const window = {
+    setTimeout: (fn, ms) => { minuteurs.push({fn, ms, actif: true}); return minuteurs.length - 1; },
+    clearTimeout: id => { if (minuteurs[id]) minuteurs[id].actif = false; }
+  };
+  const dessins = [];
+  const page = new Function("window", "state", "renderParcours",
+    `${html.slice(debut, fin)}
+     return {attendreSuivi, finAttente, attendu: () => suiviAttendu};`)(window, {running: false}, () => dessins.push("dessin"));
+  const sonner = () => minuteurs.filter(m => m.actif).forEach(m => { m.actif = false; m.fn(); });
+
+  // Le billet part : l'accueil attend, un seul minuteur de 2,5 s.
+  page.attendreSuivi();
+  assert.equal(page.attendu(), true);
+  assert.deepEqual(minuteurs.map(m => m.ms), [2500]);
+  // Le billet revient vite, la case est vide : on attend encore, SANS relancer le minuteur.
+  page.attendreSuivi();
+  assert.equal(minuteurs.length, 1, "le compte à rebours continue, il ne repart pas de zéro");
+  assert.equal(minuteurs[0].actif, true);
+  // 2,5 s : l'accueil se montre…
+  sonner();
+  assert.equal(page.attendu(), false);
+  assert.equal(dessins.length, 1);
+  // … et un billet lent qui revient après ne le cache plus.
+  page.attendreSuivi();
+  assert.equal(page.attendu(), false, "l'accueil déjà montré ne se cache plus");
+  assert.equal(minuteurs.filter(m => m.actif).length, 0);
+});
+
+test("lot 2b : « résultats et nombres manquants » partout — noyau, fiche vierge ; les restes du lot 5a", () => {
+  const lire = chemin => readFileSync(new URL(`../${chemin}`, import.meta.url), "utf8");
+  const noyau = lire("outils/calcul_mental/defi_tables_core.js");
+  assert.match(noyau, /"direct\+missing": "résultats et nombres manquants"/);
+  assert.doesNotMatch(noyau, /"les deux à la fois"/);
+  assert.match(html, /defi_tables_core\.js\?v=20261003-1/, "le noyau a changé : son numéro monte");
+  const vierge = lire("_sources/defi-tables/generer_fiche_parcours.py");
+  assert.match(vierge, /\("Acquise ✓", " : 20 questions \(résultats et nombres manquants\) en 1 min 30, 2 erreurs au plus\."\)/);
+  assert.match(vierge, /LEGENDE = \["j’entoure : réussi une fois", "je colorie : prêt"\]/);
+  assert.doesNotMatch(vierge, /APPRENDS|ENTRAINE|les deux/, "plus de colonnes J'apprends / Je m'entraîne sur la fiche vierge");
+  assert.match(vierge, /pdf\.drawCentredString\(x \+ case_w \/ 2, cy - 1\.25 \* mm, str\(table \* \(index \+ 1\)\)\)/, "dix résultats par table, × 1 à × 10");
+  assert.match(vierge, /def police\(\*candidates: str\) -> str:/, "le script tourne aussi sur Windows (polices)");
+  const publication = lire(".github/workflows/publier.yml");
+  assert.match(publication, /python -m pip install --disable-pip-version-check reportlab\n/);
+  assert.doesNotMatch(publication, /PyMuPDF|pypdf/);
 });

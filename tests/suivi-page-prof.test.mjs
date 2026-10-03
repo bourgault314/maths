@@ -222,6 +222,30 @@ test("la feuille des codes ne sort que par un bouton : Ctrl+P imprime le mode d'
   assert.match(script, /\$\("imprimer-recap"\)\.addEventListener\("click", \(\) => imprimer\("recap"\)\)/);
 });
 
+// Lot 2b (03/10/2026) : en retirant les styles de la colonne Expert, le lot
+// avait emporté tout le bloc qui suivait — à l'écran, les bandelettes et la
+// feuille prénom ↔ code s'affichaient sous le tableau, [hidden] ne cachait
+// plus les cartes, et les boîtes de dialogue perdaient leur dessin.
+test("à l'écran, les deux feuilles restent cachées et [hidden] cache pour de bon", () => {
+  const style = page.slice(page.indexOf("<style>"), page.indexOf("</style>"));
+  const ecran = style.slice(0, style.indexOf("@media"));
+  [
+    ".fiche, .bandelettes, .note-impression { display: none; }",
+    "[hidden] { display: none !important; }",
+    ".bandelette { display: flex;",
+    ".bandelette .souche {",
+    ".bandelette .code-ligne .code {",
+    ".avertissement-papier {",
+    ".apercu {",
+    "dialog {",
+    "dialog::backdrop {",
+    "footer {",
+    ".fragiles {",
+    ".barre-outils {"
+  ].forEach(regle => assert.ok(ecran.includes(regle), `règle perdue : ${regle}`));
+  assert.ok(!style.includes(".rang {") && !style.includes(".expert-case"), "les styles de la colonne Expert, eux, sont partis");
+});
+
 // ------------------------------------------------- tri pendant une saisie de prénom
 
 const creerFileRedessin = new Function(`${fonction("creerFileRedessin")}\nreturn creerFileRedessin;`)();
@@ -497,68 +521,132 @@ const MOTEUR_PROF = join(racine, "_serveur/public/prof/defi_tables_mon_parcours.
 const { createRequire: requerir } = await import("node:module");
 const MON_PARCOURS = requerir(import.meta.url)(MOTEUR_PROF);
 
-// Les deux fabriques de la page, extraites telles qu'elles y sont écrites.
-function fabriquesDuTableau() {
-  const debut = page.indexOf("  function badgeRang(rang) {");
-  assert.ok(debut > 0, "la page doit avoir son badge de rang");
-  const fin = page.indexOf("\n  }", page.indexOf("  function caseExpert(lu) {", debut)) + "\n  }".length;
-  const source = page.slice(debut, fin) + "\n  return {badgeRang, caseExpert};";
-  const noeud = () => {
-    const n = {style: {}, textContent: "", className: "", title: "", enfants: [],
-      append(...e) { n.enfants.push(...e); }, setAttribute() {}};
-    return n;
-  };
-  const document = {createElement: noeud, createTextNode: t => ({texte: t})};
-  return new Function("document", source)(document);
+// -------------------------------------------------------------------------
+// Lot 2b de « Ma séance du jour » (03/10/2026) : le tableau de la classe.
+// Colonnes : Élève · Code · Tables acquises · En cours · Cette semaine · En
+// retard · Dernière activité. « À travailler », « Mélange », « Expert » et la
+// pastille du rang ont quitté le tableau : le mélange et les étoiles se lisent
+// dans « En cours », une LIGNE COURTE (décision de Gwenaël) calculée par le
+// moteur (resumeProf). Deux alertes, sans compteur de plus : la table qui dure
+// (8 séances et plus) et l'élève qu'on ne voit plus (7 jours et plus).
+//
+// Sabotages attendus (chacun rend un test rouge) :
+//   l) écrire "★".repeat(5) pour une Légende → la couronne redevient 5 étoiles
+//   w) compter une table « commencée » sur sa rangée (3 × 2 et 3 × 5 pleins
+//      dès que la 2 et la 5 sont acquises) → « tables 3 et 4 » à tort
+//   x) laisser la table en cours devant un mélange dû
+//   y) baisser le seuil des séances longues, ou le lire sur une autre table
+//   z) compter l'absence depuis le début de la semaine au lieu du dernier jour
+
+const jourP = n => MON_PARCOURS.ajouterJours("2026-09-28", n);
+function eleveProf({acquises = [], commencees = {}, melange = true} = {}) {
+  let p = MON_PARCOURS.creerParcours();
+  acquises.forEach(table => {
+    p.tables[table].acquise = jourP(0);
+    MON_PARCOURS.faitsDeLaTable(table).forEach(cle => {
+      p.calculs[cle] = {boite: 4, vu: jourP(0), erreur: null, gagne: jourP(0), echeance: jourP(20)};
+    });
+  });
+  if (acquises.length >= 2 && melange) { p.melange.aJour = true; p.melange.tables = [...acquises]; p.melange.dernier = jourP(0); }
+  Object.entries(commencees).forEach(([table, seance]) => { p.tables[table].seance = {depart: 3, ...seance}; });
+  return MON_PARCOURS.normaliserParcours(p);
 }
 
-// Ce que la case Expert MONTRE, à plat.
-function texteDeLaCase(case_) {
-  const morceaux = [];
-  const visiter = noeud => {
-    if (!noeud) return;
-    if (noeud.texte) morceaux.push(noeud.texte);
-    if (noeud.textContent) morceaux.push(noeud.textContent);
-    (noeud.enfants || []).forEach(visiter);
-  };
-  visiter(case_);
-  return morceaux.join(" ");
-}
-
-test("une Légende des tables affiche la couronne, pas cinq étoiles", () => {
-  const {caseExpert} = fabriquesDuTableau();
-  const legende = caseExpert({etoiles: 5, couronne: "2026-09-08", rang: MON_PARCOURS.rang(6)});
-  assert.match(texteDeLaCase(legende), /\u{1F451}/u,
-    "la couronne est la marche d'après les quatre étoiles, pas une cinquième étoile");
-  assert.doesNotMatch(texteDeLaCase(legende), /★★★★★/, "cinq étoiles n'existent pas dans l'escalier");
+test("« En cours » : une ligne courte — table et cases pleines, deux tables, mélange à faire, étoiles, couronne", () => {
+  const resume = p => MON_PARCOURS.resumeProf(p, jourP(4));
+  assert.equal(resume(MON_PARCOURS.creerParcours()).enCours.texte, "—", "rien fait : un tiret");
+  // 2 et 5 acquises, la 3 en cours : 3 × 2 et 3 × 5 sont déjà pleins (boîte 4).
+  const lea = eleveProf({acquises: [2, 5], commencees: {3: {n: 2, dernier: jourP(3)}}});
+  assert.deepEqual({...resume(lea).enCours}, {type: "table", tables: [3], pleines: 2, total: 10, texte: "table de 3 · 2 sur 10", ordre: 402});
+  // La 4 n'est PAS commencée, même si 4 × 2 et 4 × 5 sont pleins.
+  assert.equal(resume(lea).enCours.type, "table", "une rangée à moitié pleine ne fait pas une table commencée");
+  const deux = eleveProf({acquises: [2, 5], commencees: {3: {n: 2, dernier: jourP(1)}, 7: {n: 1, dernier: jourP(3)}}});
+  assert.equal(resume(deux).enCours.texte, "tables 3 et 7");
+  const trois = eleveProf({acquises: [2, 5], commencees: {3: {n: 1, dernier: jourP(1)}, 4: {n: 1, dernier: jourP(2)}, 7: {n: 1, dernier: jourP(3)}}});
+  assert.equal(resume(trois).enCours.texte, "tables 3, 4 et 7");
+  const melange = eleveProf({acquises: [2, 5], commencees: {3: {n: 2, dernier: jourP(3)}}, melange: false});
+  assert.equal(resume(melange).enCours.texte, "mélange à faire", "le mélange dû passe devant la table");
+  const toutes = eleveProf({acquises: [...MON_PARCOURS.TABLES]});
+  assert.equal(resume(toutes).enCours.texte, "les 9 tables");
+  const etoiles = MON_PARCOURS.normaliserParcours({...toutes, expert: {...toutes.expert, etoiles: 2}});
+  assert.equal(resume(etoiles).enCours.texte, "★★");
+  const legende = MON_PARCOURS.normaliserParcours({...toutes, expert: {...toutes.expert, etoiles: 5, couronne: jourP(3)}});
+  assert.equal(resume(legende).enCours.texte, "👑", "la couronne est la marche d'après les quatre étoiles, pas une cinquième étoile");
 });
 
-test("les marches déjà gagnées restent des étoiles, et zéro reste un tiret", () => {
-  const {caseExpert} = fabriquesDuTableau();
-  assert.match(texteDeLaCase(caseExpert({etoiles: 4, couronne: null, rang: MON_PARCOURS.rang(5)})), /★★★★/);
-  assert.match(texteDeLaCase(caseExpert({etoiles: 0, couronne: null, rang: MON_PARCOURS.rang(0)})), /—/,
-    "un élève sans étoile ne voit rien s'afficher de faux");
+test("« En cours » se trie : rien, puis les tables dans l'ordre conseillé et par cases pleines, le mélange, les étoiles", () => {
+  const ordre = p => MON_PARCOURS.resumeProf(p, jourP(4)).enCours.ordre;
+  const rien = ordre(MON_PARCOURS.creerParcours());
+  const table2 = ordre(eleveProf({commencees: {2: {n: 1, dernier: jourP(1)}}}));
+  const table3 = ordre(eleveProf({acquises: [2, 10, 5], commencees: {3: {n: 1, dernier: jourP(1)}}}));
+  const table7 = ordre(eleveProf({acquises: [2, 10, 5], commencees: {7: {n: 1, dernier: jourP(1)}}}));
+  const melange = ordre(eleveProf({acquises: [2, 5], melange: false}));
+  const toutes = ordre(eleveProf({acquises: [...MON_PARCOURS.TABLES]}));
+  assert.ok(rien < table2 && table2 < table3 && table3 < table7 && table7 < melange && melange < toutes,
+    `ordre attendu croissant : ${[rien, table2, table3, table7, melange, toutes].join(" < ")}`);
 });
 
-test("le rang s'affiche à côté de l'escalier, et la couronne ne s'y répète pas", () => {
-  const {caseExpert} = fabriquesDuTableau();
-  const legende = caseExpert({etoiles: 5, couronne: "2026-09-08", rang: MON_PARCOURS.rang(6)});
-  const texte = texteDeLaCase(legende);
-  assert.ok(texte.includes("Légende des tables"), "le nom du rang est là");
-  assert.equal((texte.match(/\u{1F451}/gu) || []).length, 1,
-    "une seule couronne sur la ligne : celle de l'escalier (vu à la capture du 08/09/2026)");
-  const or = caseExpert({etoiles: 0, couronne: null, rang: MON_PARCOURS.rang(3)});
-  assert.ok(texteDeLaCase(or).includes("Or"), "le rang s'affiche même sans étoile : c'est lui qui bouge en septembre");
+test("les alertes : la table qui dure (8 séances), les séances de la semaine — lues dans le parcours, sans compteur de plus", () => {
+  assert.deepEqual({...MON_PARCOURS.SEUILS.prof}, {seancesLongues: 8, absenceJours: 7});
+  const sept = eleveProf({acquises: [2, 5], commencees: {3: {n: 7, dernier: jourP(3)}}});
+  assert.equal(MON_PARCOURS.resumeProf(sept, jourP(4)).longue, null, "7 séances : rien");
+  const huit = eleveProf({acquises: [2, 5], commencees: {3: {n: 8, dernier: jourP(3)}}});
+  assert.deepEqual({...MON_PARCOURS.resumeProf(huit, jourP(4)).longue}, {table: 3, seances: 8});
+  // Les séances d'une table ACQUISE ne comptent pas, ni celles d'une autre table.
+  const acquise = eleveProf({acquises: [2, 5], commencees: {3: {n: 1, dernier: jourP(3)}}});
+  acquise.tables[2].seance.n = 12;
+  assert.equal(MON_PARCOURS.resumeProf(acquise, jourP(4)).longue, null);
+  // « Cette semaine » : les jours avec une séance finie, depuis lundi.
+  const semaine = eleveProf({acquises: [2, 5], commencees: {3: {n: 2, dernier: jourP(3)}}});
+  semaine.seances = [jourP(-3), jourP(0), jourP(2), jourP(2)];
+  assert.equal(MON_PARCOURS.resumeProf(MON_PARCOURS.normaliserParcours(semaine), jourP(4)).seances, 2, "deux jours (deux séances le même jour comptent pour un)");
+  // Et la page les écrit telles quelles.
+  assert.match(page, /alerte\.textContent = `\$\{eleve\.lu\.longue\.seances\} séances dessus`;/);
+  assert.match(page, /alerte\.textContent = `rien depuis \$\{absence\} jours`;/);
 });
 
-test("« lireProgression » demande au moteur la couronne, le rang et les jours", () => {
+test("« rien depuis N jours » : compté depuis la dernière activité, à l'heure de La Réunion, à partir de 7 jours", () => {
+  const debut = page.indexOf("  function joursSansRien(eleve) {");
+  assert.ok(debut > 0, "la page doit compter les jours sans activité");
+  const source = page.slice(debut, page.indexOf("\n  }", debut) + 4) + "\n  return joursSansRien;";
+  const compter = aujourdhui => new Function("PARCOURS", source)({...MON_PARCOURS, jourLocal: () => aujourdhui});
+  assert.equal(compter("2026-10-03")({maj_le: null}), null, "jamais venu : la colonne dit déjà « rien fait »");
+  assert.equal(compter("2026-10-03")({maj_le: "2026-09-27T06:00:00Z"}), null, "6 jours : rien");
+  assert.equal(compter("2026-10-03")({maj_le: "2026-09-26T06:00:00Z"}), 7);
+  assert.equal(compter("2026-10-03")({maj_le: "2026-09-24T06:00:00Z"}), 9);
+  // 21 h à Paris le 25, c'est déjà le 26 à La Réunion (UTC + 4).
+  assert.equal(compter("2026-10-03")({maj_le: "2026-09-25T20:30:00Z"}), 7, "le jour est celui de La Réunion, comme les journées du serveur");
+});
+
+test("le tableau : sept colonnes, la liste des tables écrite, les gestes rares derrière « ⋯ »", () => {
+  const entete = page.slice(page.indexOf('<table id="tableau">'), page.indexOf('<tbody id="corps">'));
+  assert.deepEqual([...entete.matchAll(/<th>(?:<button type="button" data-tri="(\w+)">)?([^<]*)/g)].map(m => `${m[2]}${m[1] ? `:${m[1]}` : ""}`),
+    ["Élève:prenom", "Code", "Tables acquises:acquises", "En cours:encours", "Cette semaine:semaine", "En retard:retard", "Dernière activité:date", ""]);
+  assert.doesNotMatch(page, /À travailler|cMelange|cExpert|caseExpert|badgeRang|calculsATravailler\(/, "les trois colonnes d'avant sont retirées, et leur code avec");
+  assert.match(page, /if \(tri\.colonne === "encours"\) return eleve\.lu\.enCours\.ordre;\s*if \(tri\.colonne === "semaine"\) return eleve\.lu\.seances;/);
+  assert.match(page, /<option value="encours">En cours<\/option>\s*<option value="semaine">Séances cette semaine<\/option>/);
+  // La liste des tables se LIT (une info-bulle ne s'imprime pas).
+  assert.match(page, /liste\.textContent = reste\.length <= 3 \? `reste \$\{reste\.join\(", "\)\}` : eleve\.lu\.acquises\.join\(", "\);\s*cAcquises\.append\(liste\);/);
+  // « Fiche » reste visible ; revenir à une version, nouveau code, supprimer : dans le menu.
+  assert.match(page, /fiche\.textContent = "Fiche";/);
+  assert.match(page, /menu\.append\(revenir\);[\s\S]*?menu\.append\(regen\);[\s\S]*?menu\.append\(sup\);/);
+  assert.match(page, /if \(menu\.children\.length\) \{\s*menu\.addEventListener\("click", \(\) => \{ plus\.open = false; \}\);\s*plus\.addEventListener\("toggle", \(\) => placerMenu\(plus, poignee, menu\)\);\s*cActions\.append\(plus\);/, "pas de menu vide pour un collègue en lecture seule");
+  // Le menu est en position fixe (l'enveloppe du tableau le couperait sur les dernières lignes).
+  assert.match(page, /\.plus\[open\] > div \{ position: fixed; z-index: 5;/);
+  assert.match(page, /menu\.style\.top = `\$\{dessous \? cadre\.bottom \+ 4 : Math\.max\(4, cadre\.top - 4 - hauteur\)\}px`;/);
+  assert.match(page, /document\.addEventListener\("click", fermerMenus\);\s*window\.addEventListener\("scroll", \(\) => fermerMenus\(null\), true\);/);
+  assert.match(page, /ligne\.append\(cNom, cCode, cAcquises, cEnCours, cSemaine, cRetard, cDate, cActions\);/);
+});
+
+test("« lireProgression » demande tout au moteur, et un parcours illisible donne une ligne vide complète", () => {
   const debut = page.indexOf("  function lireProgression(brut) {");
   const bloc = page.slice(debut, page.indexOf("\n  }", debut));
-  ["couronne: etat.expert.couronne", "rang: etat.rang", "etat.jours ? etat.jours.semaine : 0"]
+  ["couronne: etat.expert.couronne", "etat.jours ? etat.jours.semaine : 0", "enCours: resume.enCours", "seances: resume.seances", "longue: resume.longue"]
     .forEach(attendu => assert.ok(bloc.includes(attendu),
-      `la page doit lire « ${attendu} » dans l'état rendu par le moteur, sans le recalculer`));
-  assert.match(bloc, /const vide = \{[^}]*couronne: null[^}]*rang: null/s,
-    "un parcours illisible doit donner un état vide complet, sinon la case plante");
+      `la page doit lire « ${attendu} » dans ce que rend le moteur, sans le recalculer`));
+  assert.match(bloc, /const resume = PARCOURS\.resumeProf \? PARCOURS\.resumeProf\(parcours\) :/, "un moteur d'avant le lot 2b resté sur le serveur ne vide pas le tableau");
+  assert.match(bloc, /const vide = \{[^}]*couronne: null[^}]*enCours: \{type: "rien", texte: "—", ordre: 0/s,
+    "un parcours illisible doit donner un état vide complet, sinon la ligne plante");
 });
 
 // La jauge de classe. Le point sensible n'est pas le calcul, c'est ce qu'elle

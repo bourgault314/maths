@@ -280,9 +280,10 @@
     }
     // Les trois entraînements du parcours portent le même nom partout
     // (audit 1, 30/09/2026) : « dans le désordre », « nombres manquants »,
-    // « les deux à la fois ».
+    // « résultats et nombres manquants » (« les deux à la fois » jusqu'au
+    // lot 2b : Gwenaël ne le trouvait pas clair, 02/10/2026).
     if (normalized.mode === "train") {
-      const noms = {direct: "dans le désordre", missing: "nombres manquants", "direct+missing": "les deux à la fois"};
+      const noms = {direct: "dans le désordre", missing: "nombres manquants", "direct+missing": "résultats et nombres manquants"};
       const labels = {direct: "produits", missing: "nombres manquants", division: "divisions"};
       details.push(noms[normalized.questionTypes.join("+")] || normalized.questionTypes.map(type => labels[type]).join(" + "));
     }

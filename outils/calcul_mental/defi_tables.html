@@ -795,7 +795,7 @@
     .result.is-revision .result-parcours-actions { justify-content: center; }
     .result.is-revision .result-actions { display: none; }
 
-    /* ---- Ma séance du jour (lot 1, 02/10/2026) — derrière ?seance=1 ----
+    /* ---- Ma séance du jour (lot 1, 02/10/2026 ; pour tous depuis le lot 2b) ----
        La rangée de dix cases (les résultats de la table), la carte de la
        séance, ses liens, « Cette semaine », le fil de la séance au-dessus de
        la barre, l'écran entre deux étapes et le bilan. Sans la clé, rien de
@@ -862,6 +862,7 @@
        les deux portes des professeurs (Réglages libres, Évaluation CM1). */
     .acc.en-decouverte #acc-changer, .acc.en-decouverte #acc-lire, .acc.en-decouverte #acc-fiche,
     .acc.en-decouverte > :not(.matable):not(.acc-bas):not(#acc-notice) { display: none; }
+    .acc.en-attente > * { visibility: hidden; }
     .decouverte-texte { margin: 2px 0 12px; color: var(--muted); font-size: .95rem; font-weight: 800; }
     .decouverte-choix button { min-height: 52px; font-size: 1.12rem; }
     .decouverte-choix button.is-acquise { cursor: default; }
@@ -1738,43 +1739,50 @@
        élève », ouverte par le professeur) et sur le papier. En millimètres :
        ce qui s’affiche est exactement ce qui sortira de l’imprimante. */
     .fiche-print { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .fiche-head { display: grid; grid-template-columns: 34mm 1fr 26mm; align-items: start; gap: 6mm; }
+    .fiche-head { display: grid; grid-template-columns: 26mm 1fr 34mm; align-items: start; gap: 6mm; }
     .fiche-logo { width: 34mm; height: auto; }
     .fiche-head h1 { margin: 0; color: #0b57b7; font-size: 21pt; line-height: 1.05; text-align: center; text-transform: uppercase; }
-    .fiche-qr { display: grid; justify-items: center; gap: 1mm; color: #506b7d; font-size: 6.5pt; }
+    .fiche-qr { display: grid; justify-items: center; gap: 1mm; color: #3f5a6c; font-size: 7.5pt; }
     .fiche-qr img { width: 24mm; height: 24mm; }
-    .fiche-identity { display: flex; justify-content: space-between; gap: 6mm; margin: 6mm 0 1mm; font-size: 11pt; font-weight: 700; }
+    .fiche-identity { display: flex; justify-content: space-between; gap: 6mm; margin: 5mm 0 1mm; font-size: 11pt; font-weight: 700; }
     .fiche-identity span { flex: 1; }
     .fiche-identity b { display: inline-block; min-width: 40mm; border-bottom: .3mm solid #cfe2ed; font-weight: 700; color: #0b57b7; }
-    .fiche-subtitle { margin: 0 0 3mm; color: #506b7d; font-size: 9pt; }
+    .fiche-subtitle { margin: 0 0 2.5mm; color: #3f5a6c; font-size: 9pt; }
     /* La feuille 1 tient sur UNE page A4, pied compris : 273 mm utiles
-       (297 − 2 × 12 de marge). Mesuré dans le PDF de Chrome (10/09/2026) :
-       avec des lignes de 12,5 mm, 2 mm d'écart et 8 mm au-dessus du pied,
-       elle en demandait 280,9 et le pied partait seul sur une page — la
-       fiche sortait en 3 pages. Au pas de 13 mm (11,5 + 1,5) et à 6 mm du
-       pied, elle en prend 264 : 9 mm de reste en Arial, et elle tient encore
-       en Verdana forcé. Tout ajout à cette feuille se remesure au PDF. */
-    .fiche-table { width: 100%; border-collapse: separate; border-spacing: 0 1.5mm; }
-    .fiche-table th { padding: 0 0 .5mm; color: #506b7d; font-size: 8pt; text-align: center; text-transform: uppercase; }
-    .fiche-table th small { display: block; font-size: 6.3pt; font-weight: 400; text-transform: none; }
-    .fiche-table th:first-child { width: 36mm; }
-    .fiche-table tbody tr { break-inside: avoid; }
-    .fiche-table td { height: 11.5mm; padding: 0; border-top: .3mm solid #cfe2ed; border-bottom: .3mm solid #cfe2ed; background: #f8fcff; text-align: center; vertical-align: middle; }
-    .fiche-table td:first-child { padding-left: 4mm; border-left: .3mm solid #cfe2ed; border-radius: 3mm 0 0 3mm; color: #143451; font-size: 12.5pt; font-weight: 700; text-align: left; }
-    .fiche-table td:last-child { border-right: .3mm solid #cfe2ed; border-radius: 0 3mm 3mm 0; }
-    .fiche-table td.fiche-gap { width: 6mm; background: transparent; border: 0; }
-    /* Trois groupes, trois blocs : un trait sépare J'apprends (5 ronds depuis
-       le lot 4b), Je m'entraîne (3) et Acquise, sinon les neuf ronds se lisent
-       comme une seule file. */
-    .fiche-table th:nth-child(3), .fiche-table th:nth-child(4),
-    .fiche-table td:nth-child(7), .fiche-table td:nth-child(10) { border-left: .5mm solid #b9d4e6; }
-    .fiche-table tr.is-acquise td { background: #f2fbf5; }
-    .fiche-dot { display: inline-block; width: 7.6mm; height: 7.6mm; border: .35mm solid #7ea1b8; border-radius: 50%; background: #fff; vertical-align: middle; }
-    .fiche-dot.is-started { border-color: #087f75; background: linear-gradient(90deg, #087f75 50%, #fff 50%); }
-    .fiche-dot.is-done { border-color: #087f75; background: #087f75; }
-    .fiche-check { display: inline-grid; place-items: center; width: 8.4mm; height: 8.4mm; border: .35mm solid #7ea1b8; border-radius: 2mm; background: #fff; color: #c9d6df; font-size: 11pt; font-weight: 700; }
-    .fiche-check.is-done { border-color: #147447; background: #147447; color: #fff; }
-    .fiche-block { position: relative; margin: 3mm 0 0; padding: 3mm 4mm; border: .3mm solid #a9e4dc; border-radius: 3mm; background: #e7f7f4; break-inside: avoid; }
+       (297 − 2 × 12 de marge). Lot 2b : neuf rangées de 9 mm + 1,2 mm
+       d'écart, l'échelle de ma table, deux blocs, le cadre du professeur
+       (9 lignes au plus) et deux lignes de règles. Mesuré dans le PDF de
+       Chromium : la première version, avec le cadre du professeur plein
+       (9 tables), prenait 287,8 mm et sortait en 3 pages. Tout ajout à
+       cette feuille se remesure au PDF, cadre plein. */
+    .fiche-legende { display: flex; align-items: center; gap: 6mm; margin: 0 0 2mm; color: #3f5a6c; font-size: 8pt; }
+    .fiche-legende span { display: inline-flex; align-items: center; gap: 1.5mm; }
+    .fiche-legende b { margin-left: auto; color: #143451; font-size: 8.5pt; }
+    .fiche-r { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; width: 9mm; height: 6.4mm; line-height: 1; border: .4mm solid #9fb6c6; border-radius: 1.6mm; background: #fff; color: #143451; font-size: 8.5pt; font-style: normal; font-weight: 700; }
+    .fiche-r.entouree { border: .6mm solid #087f75; }
+    .fiche-r.pleine { border-color: #087f75; background: #087f75; color: #fff; }
+    .fiche-rangees { list-style: none; margin: 0; padding: 0; }
+    .fiche-rangee { display: grid; grid-template-columns: 28mm auto 1fr; align-items: center; column-gap: 3mm; box-sizing: border-box; min-height: 9mm; margin: 0 0 1.2mm; padding: 1mm 3mm; border: .3mm solid #cfe2ed; border-radius: 2.5mm; background: #fff; break-inside: avoid; }
+    .fiche-rangee.is-acquise { border-color: #b9dcc8; background: #f2fbf5; }
+    .fiche-rangee.is-ma-table { border: .6mm solid #0b57b7; }
+    .fiche-rangee > strong { color: #143451; font-size: 11.5pt; }
+    .fiche-cases { display: flex; gap: 1.1mm; }
+    .fiche-etat { color: #0a6b3a; font-size: 8pt; font-weight: 700; text-align: right; }
+    .fiche-rangee.is-ma-table .fiche-etat { color: #0b57b7; }
+    .fiche-echelle { grid-column: 2 / 4; display: flex; align-items: center; gap: 1.1mm; margin-top: 1.4mm; color: #3f5a6c; font-size: 8pt; }
+    .fiche-echelle b { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; width: 6mm; height: 4.6mm; border: .3mm solid #9fb6c6; border-radius: 1.2mm; color: #3f5a6c; font-size: 7.5pt; }
+    .fiche-echelle b.faite { border-color: #9fcdb2; background: #dff1e6; color: #0a6b3a; }
+    .fiche-echelle b.ici { border-color: #0b57b7; background: #0b57b7; color: #fff; }
+    .fiche-echelle span { margin-left: 2mm; }
+    .fiche-prof { margin-top: 2.5mm; padding: 1.8mm 3mm; border: .4mm dashed #7a8ea0; border-radius: 2.5mm; break-inside: avoid; }
+    .fiche-prof > strong { display: block; margin-bottom: 1.5mm; color: #143451; font-size: 9.5pt; }
+    .fiche-prof > strong small { color: #3f5a6c; font-size: 8pt; font-weight: 400; }
+    .fiche-prof table { width: 100%; border-collapse: collapse; font-size: 8pt; }
+    .fiche-prof th, .fiche-prof td { padding: .3mm 1.2mm; border: .2mm solid #b8c7d3; text-align: center; }
+    .fiche-prof thead th { background: #eef3f9; color: #143451; font-size: 7.5pt; line-height: 1.1; }
+    .fiche-prof tbody th { text-align: left; white-space: nowrap; }
+    .fiche-prof td.zero { color: #9fb0bd; }
+    .fiche-block { position: relative; margin: 2.5mm 0 0; padding: 2.2mm 4mm; border: .3mm solid #a9e4dc; border-radius: 3mm; background: #e7f7f4; break-inside: avoid; }
     .fiche-expert { border-color: #e7c86a; background: #fff8e1; }
     .fiche-block strong { display: block; font-size: 11pt; }
     .fiche-melange strong { padding-right: 58mm; }
@@ -1786,7 +1794,7 @@
     .fiche-stars b, .fiche-stars span { margin-left: 2.5mm; }
     .fiche-stars b { color: #b7791f; font-weight: 400; }
     .fiche-stars .couronne { width: 4.6mm; height: 3.8mm; vertical-align: -.3mm; }
-    .fiche-rules { margin-top: 5mm; color: #506b7d; font-size: 8.3pt; }
+    .fiche-rules { margin-top: 3mm; color: #3f5a6c; font-size: 8.3pt; }
     .fiche-rules strong { display: block; margin-bottom: 1mm; color: #143451; font-size: 9pt; }
     .fiche-rules p { margin: 0 0 1mm; }
     .fiche-foot { margin-top: 6mm; color: #506b7d; font-size: 8pt; text-align: center; }
@@ -1800,7 +1808,7 @@
     .fiche-carre th, .fiche-carre td { border: .3mm solid #cfe2ed; text-align: center; vertical-align: middle; }
     .fiche-carre th { padding: 1.2mm 0; background: #eef4fa; color: #0b57b7; font-size: 10pt; font-weight: 700; }
     .fiche-carre th.coin { background: #fff; border-color: #fff; }
-    .fiche-carre td { height: 11mm; padding: 0; background: #f8fcff; }
+    .fiche-carre td { height: 13mm; padding: 0; background: #f8fcff; }
     /* Mêmes couleurs que l'écran « Mes calculs » de l'appli : la fiche imprimée
        et l'écran racontent exactement la même chose, au même coup d'œil. */
     .fiche-carre td.jamais-vu { background: #f8fcff; color: #7ea1b8; }
@@ -1810,8 +1818,13 @@
     .fiche-carre td.miroir { background: #eef1f5; }
     .fiche-carre .fiche-carre-cases .fiche-case { border-color: currentColor; background: transparent; }
     .fiche-carre .fiche-carre-cases .fiche-case.is-pleine { background: currentColor; }
-    .fiche-carre .fiche-carre-cases { display: flex; justify-content: center; gap: .8mm; }
-    .fiche-carre .fiche-case { width: 2.7mm; height: 2.7mm; }
+    /* Lot 2b : des boîtes de 3,3 mm (2,7 avant). La colonne des en-têtes
+       passe à 9 mm pour que les cinq boîtes gardent de l'air de chaque côté :
+       à 3,6 mm et colonne large, elles se touchaient d'une case à l'autre
+       (vu à la planche). */
+    .fiche-carre tr > th:first-child { width: 9mm; }
+    .fiche-carre .fiche-carre-cases { display: flex; justify-content: center; gap: .5mm; }
+    .fiche-carre .fiche-case { width: 3.3mm; height: 3.3mm; }
     .fiche-carre-note { margin: 2mm 0 0; color: #506b7d; font-size: 7.5pt; text-align: center; }
     .fiche-calc { display: flex; align-items: center; justify-content: space-between; padding: 1.6mm 3mm; border: .3mm solid #cfe2ed; border-radius: 2mm; background: #f8fcff; color: #143451; font-size: 11pt; font-weight: 700; break-inside: avoid; }
     .fiche-calc-cases { display: flex; gap: 1.2mm; }
@@ -2005,7 +2018,7 @@
     }
   </style>
 </head>
-<body>
+<body class="avec-seance">
   <main class="shell">
     <header class="topbar">
       <a class="brand" href="/" aria-label="Accueil maths&amp;go">
@@ -2083,7 +2096,7 @@
             <button id="acc-reviser" class="reviser etape" type="button" hidden><span class="num" aria-hidden="true"><svg class="neurones" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 5 12 12M20 4 12 12M12 12 7 21M12 12l8 7"/><circle cx="4" cy="5" r="1.9" fill="currentColor"/><circle cx="20" cy="4" r="1.9" fill="currentColor"/><circle cx="7" cy="21" r="1.8" fill="currentColor"/><circle cx="20" cy="19" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/></svg></span><span><strong id="acc-reviser-titre">Mes calculs du jour</strong><small id="acc-reviser-note"></small></span><span class="go">Réviser&nbsp;→</span></button>
             <div id="acc-jours" class="jours" hidden></div>
             <!-- Ma séance du jour (lot 1) : « Cette semaine ●○○○ », les jours
-                 avec une séance finie — posé seulement avec la clé ?seance=1. -->
+                 avec une séance finie. -->
             <div id="acc-semaine" class="semaine" hidden></div>
             <div class="acc-liens">
               <button id="open-parcours" class="acc-lien" type="button" aria-controls="parcours"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5 9 4l6 2.5 6-2.5v13l-6 2.5-6-2.5-6 2.5z" fill="#e7f8f5" stroke="#087a71" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 4v13M15 6.5v13" stroke="#087a71" stroke-width="1.8"/><circle cx="12" cy="10" r="1.8" fill="#e0771a"/></svg><span>Mon parcours<small>tables, mélange, étoiles</small></span></button>
@@ -2217,12 +2230,7 @@
             <button id="parcours-confirm-no" class="secondary" type="button">Garder</button>
           </div>
         </div>
-        <div class="parcours-legend" aria-hidden="true">
-          <span><span class="cell"><span class="dot"></span></span> pas fait</span>
-          <span><span class="cell is-started"><span class="dot"></span></span> commencé</span>
-          <span><span class="cell is-done"><span class="dot"></span></span> réussi</span>
-        </div>
-        <div id="parcours-legende" class="parcours-legend legende-rangee" aria-hidden="true" hidden>
+        <div id="parcours-legende" class="parcours-legend legende-rangee" aria-hidden="true">
           <span><b></b> pas encore</span>
           <span><b class="entouree">7</b> réussi une fois</span>
           <span><b class="pleine">7</b> prêt</span>
@@ -2381,34 +2389,44 @@
 
   <section id="fiche-print" class="fiche-print" aria-hidden="true">
     <header class="fiche-head">
-      <img class="fiche-logo" src="../../assets/img/mathsgo-logo-print.png" alt="" width="420" height="195">
+      <div class="fiche-qr"><img src="../../assets/img/qr-defi-tables-parcours.svg" alt="" width="120" height="120"><span>Ouvrir l’appli</span></div>
       <h1>Mon parcours<br>des tables</h1>
-      <div class="fiche-qr"><img src="../../assets/img/qr-defi-tables-parcours.svg" alt="" width="120" height="120"><span>Ouvrir Mon parcours</span></div>
+      <img class="fiche-logo" src="../../assets/img/mathsgo-logo-print.png" alt="" width="420" height="195">
     </header>
     <p class="fiche-identity"><span>Prénom : <b id="fiche-prenom"></b></span><span>Classe : <b id="fiche-classe"></b></span><span>Date : <b id="fiche-date"></b></span></p>
-    <p class="fiche-subtitle" id="fiche-subtitle">Colorie les ronds au fur et à mesure, comme dans l’application.</p>
-    <table class="fiche-table">
-      <thead>
-        <tr><th></th><th colspan="5">J’apprends<small>perles · bande · à trous · ordre · désordre</small></th><th colspan="3">Je m’entraîne<small>désordre · nombres manquants · les deux</small></th><th>Acquise</th></tr>
-      </thead>
-      <tbody id="fiche-rows"></tbody>
-    </table>
+    <p class="fiche-subtitle" id="fiche-subtitle">Ma progression dans l’application à ce jour.</p>
+    <!-- Lot 2b (03/10/2026) : la fiche montre ce que montre Mon parcours —
+         une rangée de dix cases par table, l'échelle de ma table. Les ronds
+         de J'apprends et de Je m'entraîne ont quitté l'appli au lot 2a. -->
+    <p class="fiche-legende" aria-hidden="true">
+      <span><i class="fiche-r"></i>pas encore</span>
+      <span><i class="fiche-r entouree">12</i>réussi une fois</span>
+      <span><i class="fiche-r pleine">12</i>prêt</span>
+      <b id="fiche-semaine"></b>
+    </p>
+    <ol id="fiche-rows" class="fiche-rangees"></ol>
     <div class="fiche-block fiche-melange">
       <strong>Mon mélange : mes tables acquises</strong>
       <span id="fiche-melange-state" class="fiche-state"></span>
-      <p>Dès 2 tables acquises, à réussir avant de valider une nouvelle table (20 questions en 1 min 30). À refaire à chaque nouvelle table : note la date de chaque mélange réussi. <span class="fiche-dates">dates : ______ ______ ______ ______</span></p>
+      <p>Dès 2 tables acquises : 20 questions en 1 min 30, à refaire après chaque nouvelle table.</p>
     </div>
     <div class="fiche-block fiche-expert">
       <strong>Je deviens expert : toutes les tables, de plus en plus vite</strong>
       <span id="fiche-stars" class="fiche-stars"></span>
-      <p>Quand mes 9 tables sont acquises et le mélange réussi : 25 questions avec des divisions — ★ 2 min · ★★ 1 min 45 · ★★★ 1 min 30 · ★★★★ 1 min 15 · 👑 1 min = Légende des tables.</p>
+      <p>Mes 9 tables acquises : 25 questions avec des divisions — ★ 2 min · ★★ 1 min 45 · ★★★ 1 min 30 · ★★★★ 1 min 15 · 👑 1 min.</p>
+    </div>
+    <!-- Les compteurs sont pour le professeur : ce cadre n'apparaît que
+         dans la fiche ouverte depuis « Ma classe » (décision du 03/10). -->
+    <div id="fiche-prof" class="fiche-prof" hidden>
+      <strong>Pour le professeur <small>— combien de fois chaque activité a été faite</small></strong>
+      <table>
+        <thead><tr><th></th><th>Séances</th><th>Perles</th><th>Je construis<br>la bande</th><th>Bande<br>à trous</th><th>Dans<br>l’ordre</th><th>Dans le<br>désordre</th><th>Nombres<br>manquants</th><th>Résultats et<br>nombres manquants</th></tr></thead>
+        <tbody id="fiche-prof-rows"></tbody>
+      </table>
     </div>
     <div class="fiche-rules">
-      <strong>Les règles</strong>
-      <p><b>J’apprends</b> : un rond par activité terminée. On découvre la table, il n’y a rien à réussir.</p>
-      <p><b>Je m’entraîne</b> : 10 questions sans chrono, 1 erreur au maximum. Trois entraînements différents.</p>
-      <p><b>Acquise ✓</b> : 20 questions (produits et nombres manquants) en 1 min 30, 2 erreurs au maximum.</p>
-      <p><b>Mon mélange</b> : même règle, sur mes tables acquises — à réussir avant de valider une nouvelle table. <b>Mon rang</b> : Bronze dès ma première table, puis Argent, Or, Platine, Diamant, Légende. On ne redescend jamais.</p>
+      <p><b>Ma rangée</b> : une case entourée, réussi une fois ; une case pleine, prêt. Toutes pleines : je peux valider ma table.</p>
+      <p><b>Acquise ✓</b> : 20 questions (résultats et nombres manquants) en 1 min 30, 2 erreurs au plus.</p>
     </div>
     <footer class="fiche-foot">mathsgo.re · CC BY-NC-SA 4.0</footer>
     <section class="fiche-page2">
@@ -2432,16 +2450,8 @@
        case de Mes calculs). Lot 3 (08/09/2026) : le mélange, les étoiles et le
        rang s'ajoutent ici — « un test, c'est 20 questions en 1 min 30 » vaut
        pour les validations et les mélanges, pas pour les étoiles. -->
-  <template id="notice-regles">
-    <p><b>Ma table.</b> J’apprends si je veux, je m’entraîne 3 fois, je valide&nbsp;: 20 questions en 1 min 30, 2 erreurs au maximum.</p>
-    <p><b>Mon mélange.</b> Dès 2 tables acquises, je réussis le mélange avant de valider une nouvelle table.</p>
-    <p><b>Mes calculs.</b> Chaque calcul a 5 boîtes. Réussi le jour où il revient, il monte d’une boîte&nbsp;; raté, il descend et revient demain.</p>
-    <p><b>Mes calculs du jour.</b> Les calculs qui reviennent aujourd’hui, 10 à la fois, sans chrono.</p>
-    <p><b>Les étoiles.</b> Mes 9 tables acquises et le mélange réussi, je tente toutes les tables de plus en plus vite&nbsp;: ★ 2 min … 👑 1 min.</p>
-    <p><b>Mon rang.</b> Bronze, Argent, Or, Platine, Diamant, Légende. On ne redescend jamais.</p>
-  </template>
   <!-- Ma séance du jour (lot 2, 03/10/2026) : la notice de la séance, six
-       lignes, posée à la place de la précédente avec la clé ?seance=1. -->
+       lignes (la notice d'avant a été retirée avec la clé, lot 2b). -->
   <template id="notice-seance">
     <p><b>Ma séance du jour.</b> 3 ou 4 étapes, environ 8 min. Réussi&nbsp;: j’avance. Raté&nbsp;: je reprends un peu plus bas.</p>
     <p><b>Ma table.</b> De marche en marche&nbsp;: les perles, la bande, dans l’ordre, dans le désordre, les nombres manquants… jusqu’à «&nbsp;Je valide ma table&nbsp;»&nbsp;: 20 questions en 1 min 30, 2 erreurs au plus.</p>
@@ -2459,8 +2469,8 @@
     <span data-mathsgo-confidentialite>Sans cookie ni traceur</span>
   </footer>
 
-  <script src="./defi_tables_core.js?v=20260930-1"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20261003-1"></script>
+  <script src="./defi_tables_core.js?v=20261003-1"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20261003-2"></script>
   <script>
     (() => {
       "use strict";
@@ -2470,27 +2480,10 @@
       const PARCOURS = window.MATHSGO_DEFI_TABLES_MON_PARCOURS;
       if (!PARCOURS) throw new Error("Le moteur de Mon parcours est indisponible.");
       const PARCOURS_TABLES = [...PARCOURS.TABLES];
-      // [seance-cle:debut]
-      // « Ma séance du jour », lot 1 (02/10/2026) : cachée derrière ?seance=1,
-      // comme ?essai=1 pour les mondes SPLAT! en préparation. La clé est
-      // retenue sur l'appareil (l'espace élève rouvre l'appli sans elle) ;
-      // ?seance=0 la retire. Sans la clé, l'accueil, les séries et les bilans
-      // sont ceux d'avant, au pixel près. Le lot 2 retirera la clé.
-      const CLE_SEANCE = "mathsgo-defi-tables-seance";
-      function lireCleSeance() {
-        try {
-          const demande = new URLSearchParams(window.location.search).get("seance");
-          const durable = window.localStorage;
-          if (demande === "0") durable.removeItem(CLE_SEANCE);
-          else if (demande !== null) durable.setItem(CLE_SEANCE, "1");
-          return durable.getItem(CLE_SEANCE) === "1";
-        } catch (_) {
-          return false;
-        }
-      }
-      const SEANCE = lireCleSeance();
-      document.body.classList.toggle("avec-seance", SEANCE);
-      // [seance-cle:fin]
+      // « Ma séance du jour » est l'accueil de tous depuis le lot 2b
+      // (03/10/2026). La clé ?seance=1 des lots 1 et 2a n'existe plus ; sa
+      // trace sur l'appareil est effacée.
+      try { window.localStorage.removeItem("mathsgo-defi-tables-seance"); } catch (_) {}
       // Deux stockages, deux durées de vie. Les parcours (une case par code,
       // plus la case « sans code ») restent sur l'appareil : hors-ligne et
       // fusion en dépendent. L'identité — QUEL code est actif — ne vit que le
@@ -3083,6 +3076,10 @@
       // demandé, demarrerSuivi lit le serveur. Un billet refusé (déjà utilisé,
       // périmé, ou serveur muet) laisse l'appli sans code et le dit.
       async function entrerParBillet(billet, ouvrir) {
+        // Lot 2b : pendant l'échange du billet, on ne sait pas encore qui
+        // entre — l'accueil attend (voir attendreSuivi).
+        attendreSuivi();
+        renderParcours();
         const reponse = await echangerBillet(billet);
         const donnees = reponse.statut === 200 && reponse.donnees && reponse.donnees.ok ? reponse.donnees : null;
         const code = donnees && donnees.type === "entree" ? PARCOURS.normaliserCode(donnees.code || "") : "";
@@ -3090,6 +3087,7 @@
           entreeRefusee = reponse.statut === 404 || donnees ? "expire" : "injoignable";
           majLienRetour();
           renderRepere();
+          finAttente();
           return false;
         }
         adopterCode(code);
@@ -3330,8 +3328,38 @@
       // enfant se voyait nommer un camarade et pouvait déplacer, ou effacer,
       // le travail d'un autre. Supprimée le 02/09/2026 (lot 2b).
 
+      // Lot 2b : tant que le serveur n'a pas dit qui est l'élève (billet à
+      // échanger, parcours à lire), l'accueil d'une case vide ne montre rien
+      // — sinon « Tu connais déjà des tables ? » s'affichait un instant à un
+      // élève qui en a déjà, sur un appareil neuf. L'attente finit à la
+      // réponse, à l'échec, ou au bout de 2,5 s (réseau lent : l'écran arrive
+      // quand même, et suit le parcours dès qu'il est rendu).
+      let suiviAttendu = false;
+      let minuteurAttente = null;
+      let attenteFinie = false;
+      const ATTENTE_SUIVI_MS = 2500;
+
+      // Une seule attente par ouverture de la page : 2,5 s au plus en tout,
+      // billet compris, et une fois l'accueil montré il ne se cache plus.
+      // (Relecture de Code, 03/10 : relancée à l'arrivée d'un billet lent,
+      // l'attente cachait « Tu connais déjà des tables ? » déjà affiché, puis
+      // le remontrait 2,5 s plus tard.)
+      function attendreSuivi() {
+        if (attenteFinie) return;
+        suiviAttendu = true;
+        if (minuteurAttente === null) minuteurAttente = window.setTimeout(finAttente, ATTENTE_SUIVI_MS);
+      }
+
+      function finAttente() {
+        if (minuteurAttente !== null) { window.clearTimeout(minuteurAttente); minuteurAttente = null; }
+        attenteFinie = true;
+        if (!suiviAttendu) return;
+        suiviAttendu = false;
+        if (!state.running) renderParcours();
+      }
+
       function demarrerSuivi() {
-        if (!suiviActif()) return;
+        if (!suiviActif()) { finAttente(); return; }
         PARCOURS.sauverCode(stockageSession(), codeSuivi);
         // Du travail dans la case et aucune révision confirmée : par définition,
         // il est à envoyer (case remplie hors ligne, ou par une appli d'avant).
@@ -3340,11 +3368,21 @@
           sauverSync();
         }
         renderRepere();
-        if (sync.detache) return;
+        if (sync.detache) { finAttente(); return; }
         chargerIdentite(codeSuivi);
         const code = codeSuivi;
+        // Appareil neuf (case vide) : l'accueil attend la lecture du parcours.
+        if (PARCOURS.estVide(parcours)) {
+          attendreSuivi();
+          if (!state.running) renderParcours();
+        } else finAttente();
         lireParcoursDuServeur(code).then(reponse => {
           if (code !== codeSuivi) return;
+          // La réponse est là : l'écran qui suit (renderParcours, plus bas)
+          // se dessine sur le parcours fusionné.
+          suiviAttendu = false;
+          attenteFinie = true;
+          if (minuteurAttente !== null) { window.clearTimeout(minuteurAttente); minuteurAttente = null; }
           if (reponse.statut === 404) {
             detacher();
             if (!state.running) renderParcours();
@@ -3652,9 +3690,7 @@
       }
 
       function configurationLabel(config) {
-        const libelle = CORE.configurationLabel(config);
-        // Avec la clé : « résultats et nombres manquants » partout (lot 1).
-        return SEANCE ? libelle.replace("les deux à la fois", "résultats et nombres manquants") : libelle;
+        return CORE.configurationLabel(config);
       }
 
       function configurationKey(config) {
@@ -5037,7 +5073,7 @@
         renderCorrections();
         $("result-reglages").hidden = state.origin !== "reglages";
         if (enSeance()) noterEtapeDeSeance(suivi);
-        if (SEANCE && state.origin === "decouverte") renderSuiteDecouverte(suivi);
+        if (state.origin === "decouverte") renderSuiteDecouverte(suivi);
         show("result");
       }
 
@@ -6086,7 +6122,7 @@
         if (choisie && (!etat.acquises.includes(choisie) || choix.acquise || etat.acquises.length === PARCOURS_TABLES.length)) return choisie;
         // Avec la séance (lot 2) : la table de la dernière séance, gardée dans
         // le parcours — le choix de l'onglet ne survit pas au lendemain.
-        if (SEANCE && etat.tableSeance) return etat.tableSeance;
+        if (etat.tableSeance) return etat.tableSeance;
         const ordre = PARCOURS.ORDRE_CONSEIL;
         return ordre.find(table => !etat.acquises.includes(table)) || ordre[ordre.length - 1];
       }
@@ -6107,9 +6143,9 @@
       // (audit 1, 30/09/2026) : tuile, panneau, bilan, aria, fiche, notice.
       // Les identifiants du moteur (desordre, trous, mixte) ne changent pas.
       // Lot « Ma séance du jour » : le troisième s'appelle « résultats et
-      // nombres manquants » (« les deux à la fois » n'était pas clair) — avec
-      // la clé seulement, tant que le lot 2 ne l'a pas retirée.
-      const NOMS_ENTRAINEMENTS = Object.freeze({desordre: "dans le désordre", trous: "nombres manquants", mixte: SEANCE ? "résultats et nombres manquants" : "les deux à la fois"});
+      // nombres manquants » (l'ancien nom n'était pas clair) — pour tous
+      // depuis le lot 2b.
+      const NOMS_ENTRAINEMENTS = Object.freeze({desordre: "dans le désordre", trous: "nombres manquants", mixte: "résultats et nombres manquants"});
 
       function listeTables(tables) {
         if (tables.length <= 1) return tables.join("");
@@ -6337,7 +6373,7 @@
         action.replaceChildren();
         // Ma séance du jour (lot 2) : les 9 tables acquises ont aussi leur
         // séance — Mes calculs du jour, le mélange s'il est dû, l'étoile suivante.
-        if (SEANCE && PARCOURS.programmeDeSeance(parcours, PARCOURS.ouvrirSeance(parcours)).etapes.length) {
+        if (PARCOURS.programmeDeSeance(parcours, PARCOURS.ouvrirSeance(parcours)).etapes.length) {
           action.append(carteDeSeance(null));
           return;
         }
@@ -6450,14 +6486,17 @@
 
         const etapes = $("acc-etapes");
         etapes.replaceChildren();
-        // Ma séance du jour (lot 1, avec la clé) : la rangée de la table, la
+        // Ma séance du jour (lot 1) : la rangée de la table, la
         // carte de la séance et deux liens prennent la place des trois étapes ;
         // « Choisir une activité » rouvre le menu d'avant, tel quel.
-        const avecSeance = SEANCE && !replie;
+        const avecSeance = !replie;
         // « Tu connais déjà des tables ? » (lot 2) : le tout premier écran d'un
         // élève qui n'a encore rien fait.
         const decouverte = avecSeance && enDecouverte();
         document.querySelector(".acc").classList.toggle("en-decouverte", decouverte);
+        // Appareil neuf sous un code : rien à l'écran tant que le serveur n'a
+        // pas dit qui est l'élève (lot 2b).
+        document.querySelector(".acc").classList.toggle("en-attente", suiviAttendu);
         const carteSeance = avecSeance && !state.choisirActivite;
         if (decouverte) renderDecouverte(etapes, etat);
         else if (avecSeance) renderSeanceAccueil(etapes, etat, table, ligne);
@@ -6644,8 +6683,7 @@
         const reviser = $("acc-reviser");
         // Avec la séance, « Mes calculs du jour » est sa première étape : le
         // bloc quitte l'accueil (il reste dans Mes calculs).
-        reviser.hidden = !agenda.dus;
-        if (SEANCE) reviser.hidden = true;
+        reviser.hidden = true;
         reviser.classList.toggle("is-next", conseil === "reviser");
         const serie = questionsRevision(agenda);
         $("acc-reviser-note").textContent = agenda.dus > serie
@@ -6659,7 +6697,7 @@
         // sinon le bloc du jour dit déjà quoi faire. Rien tant qu'il n'y a
         // rien à dire.
         renderJours({...etat.jours, demain: agenda.dus ? 0 : etat.jours.demain});
-        if (SEANCE) renderSemaine(etat);
+        renderSemaine(etat);
         // Audit 4 : un choix déplié prend la place des autres étapes (CSS,
         // ordinateur seulement) — seulement s'il est vraiment affiché (les 9
         // tables acquises replient le bloc : pas d'étapes, rien à cacher).
@@ -6692,9 +6730,9 @@
       }
 
       // « Comment ça marche ? » : la notice est écrite une fois (template
-      // notice-regles) et clonée là où on la déplie — accueil et parcours.
+      // notice-seance) et clonée là où on la déplie — accueil et parcours.
       function poserNotices() {
-        const modele = $(SEANCE ? "notice-seance" : "notice-regles");
+        const modele = $("notice-seance");
         if (!modele || !modele.content) return;
         document.querySelectorAll("[data-notice]").forEach(zone => zone.append(modele.content.cloneNode(true)));
       }
@@ -6719,7 +6757,7 @@
       let etapeEnCours = null;
 
       function enSeance() {
-        return SEANCE && Boolean(seance) && state.origin === "seance";
+        return Boolean(seance) && state.origin === "seance";
       }
 
       function quitterSeance() {
@@ -6995,7 +7033,7 @@
         return carte;
       }
 
-      // L'accueil avec la clé : la rangée, puis la carte de la séance et ses
+      // L'accueil : la rangée, puis la carte de la séance et ses
       // liens — ou, « Choisir une activité » ouvert, le menu d'avant.
       function renderSeanceAccueil(etapes, etat, table, ligne) {
         etapes.append(rangeeDeTable(table));
@@ -7085,7 +7123,12 @@
       let decouverteFermee = false;
       let decouverteEngagee = false;
 
+      // Lot 2b : avec un code, l'écran attend la première réponse du serveur
+      // (ou son échec, ou 2,5 s). Avant, il s'affichait un instant à l'élève
+      // qui avait déjà des tables et ouvrait l'appli sur un appareil neuf, et
+      // un élève rapide pouvait y toucher une table.
       function enDecouverte() {
+        if (suiviAttendu) return false;
         let fermee = decouverteFermee;
         try { fermee = fermee || stockageSession()?.getItem(CLE_DECOUVERTE) === (codeSuivi || "-"); } catch (_) {}
         return !fermee && (decouverteEngagee || PARCOURS.estVide(parcours));
@@ -7176,11 +7219,19 @@
       // Mon parcours avec la séance (lot 2) : une carte par table, sa rangée,
       // et pour ma table l'échelle des 8 marches — les marches passées
       // pleines, celles de la prochaine séance en bleu.
-      function echelleDeTable(table) {
-        const ligne = parcours.tables[table];
-        const depart = ligne.seance.depart;
-        const prochaines = PARCOURS.programmeDeSeance(parcours, PARCOURS.ouvrirSeance(parcours, {table}))
+      // Où en est l'échelle d'une table : le départ, les marches de la
+      // prochaine séance et leurs noms — pour Mon parcours et pour la fiche
+      // (qui lit le parcours d'un autre élève quand le professeur l'ouvre).
+      function marchesDeTable(source, table) {
+        const depart = source.tables[table].seance.depart;
+        const prochaines = PARCOURS.programmeDeSeance(source, PARCOURS.ouvrirSeance(source, {table}))
           .etapes.filter(etape => etape.marche).map(etape => etape.prevue.marche);
+        const noms = PARCOURS.MARCHES.filter(item => prochaines.includes(item.marche)).map(item => item.nom);
+        return {depart, prochaines, noms};
+      }
+
+      function echelleDeTable(table) {
+        const {depart, prochaines, noms} = marchesDeTable(parcours, table);
         const zone = document.createElement("div");
         zone.className = "echelle";
         const liste = document.createElement("ol");
@@ -7193,7 +7244,6 @@
           liste.append(point);
         });
         const texte = document.createElement("p");
-        const noms = PARCOURS.MARCHES.filter(item => prochaines.includes(item.marche)).map(item => item.nom);
         texte.textContent = noms.length ? `Prochaine séance : ${noms.join(", ")}` : "";
         zone.append(liste, texte);
         zone.setAttribute("aria-label", `L’échelle de la table de ${table} : ${texte.textContent}`);
@@ -7359,82 +7409,7 @@
         const maTable = tableEnCours(etat);
         // Ma séance du jour (lot 2) : chaque table montre sa rangée — la même
         // que sur l'accueil — et ma table, son échelle (où en est la séance).
-        $("parcours-legende").hidden = !SEANCE;
-        document.querySelector(".parcours-legend:not(#parcours-legende)").hidden = SEANCE;
-        if (SEANCE) {
-          renderParcoursSeance(list, etat, maTable);
-        } else etat.lignes.forEach(ligne => {
-          const item = document.createElement("li");
-          item.className = `parcours-row${ligne.acquise ? " is-acquise" : ""}${ligne.table === maTable ? " is-ma-table" : ""}`;
-          const head = document.createElement("div");
-          head.className = "parcours-row-head";
-          const name = document.createElement("strong");
-          name.textContent = `Table de ${ligne.table}`;
-          const badge = document.createElement("span");
-          badge.className = `parcours-badge${ligne.acquise ? "" : " is-pending"}`;
-          // Audit 2 : plus de pastille « Acquise ✓ » — la case verte ✓ de la
-          // colonne « Acquise » le dit déjà (doublon relevé par Gwenaël).
-          badge.textContent = ligne.acquise ? "" : ligne.dernierEntrainement ? `dernier essai : ${ligne.dernierEntrainement.score} sur ${ligne.dernierEntrainement.total}` : "";
-          const etatGroupe = document.createElement("span");
-          etatGroupe.className = "parcours-head-etat";
-          // Audit 2 (30/09/2026, piste 1 choisie par Gwenaël) : « à revoir »
-          // ne se pose plus à côté de « Acquise ✓ » — posés côte à côte, les
-          // deux se lisaient comme l'état de la table et se contredisaient
-          // (une validation réussie avec 2 erreurs allumait les deux). La
-          // table reste acquise ; ce sont des CALCULS qui sont à revoir : ils
-          // ont leur barre sous la ligne, avec leur nombre.
-          // Seulement quand ces calculs sont à réviser : un calcul raté ne
-          // revient que le lendemain, et le bouton affiché le jour même ne
-          // lançait rien (startRevision n'avait aucun calcul dû). La barre
-          // n'apparaît donc jamais le jour d'une validation réussie.
-          const revoir = boutonReviser(ligne);
-          if (ligne.table === maTable) {
-            const repere = document.createElement("span");
-            repere.className = "parcours-ma-table";
-            repere.textContent = "ma table";
-            etatGroupe.append(repere);
-          }
-          etatGroupe.append(badge);
-          head.append(name, etatGroupe);
-          const cells = document.createElement("div");
-          cells.className = "parcours-cells";
-          cells.append(groupLabel("J’apprends", ""), groupLabel("Je m’entraîne", "is-entraine"), groupLabel("Acquise", "is-acquise"));
-          ligne.apprends.forEach(activite => cells.append(makeCell({
-            kind: "dot",
-            etat: activite.etat,
-            label: `Table de ${ligne.table}, j’apprends, ${activite.libelle}`,
-            config: PARCOURS.configApprends(ligne.table, activite.activite)
-          })));
-          cells.append(document.createElement("span"));
-          ligne.entraine.forEach(entrainement => cells.append(makeCell({
-            kind: "dot",
-            etat: entrainement.etat,
-            label: `Table de ${ligne.table}, entraînement ${NOMS_ENTRAINEMENTS[entrainement.entrainement]}`,
-            config: PARCOURS.configEntraine(ligne.table, entrainement.entrainement)
-          })));
-          cells.append(document.createElement("span"));
-          // Lot 3 : la case Acquise d'une table non acquise est cadenassée tant
-          // que le mélange est dû ; le cadenas mène à la ligne « Mon mélange ».
-          if (etat.verrou && !ligne.acquise) {
-            cells.append(makeCell({
-              kind: "lock",
-              etat: 0,
-              label: `Table de ${ligne.table}, valider ma table : verrouillé, réussis d’abord ton mélange`,
-              config: null,
-              action: () => $("parcours-melange").querySelector(".cell")?.focus?.()
-            }));
-          } else {
-            cells.append(makeCell({
-              kind: "check",
-              etat: ligne.acquise ? 2 : 0,
-              label: `Table de ${ligne.table}, valider ma table (20 questions en 1 min 30)`,
-              config: PARCOURS.configValidation(ligne.table)
-            }));
-          }
-          item.append(head, cells);
-          if (revoir) item.append(revoir);
-          list.append(item);
-        });
+        renderParcoursSeance(list, etat, maTable);
 
         // « Mon mélange » : dès 2 tables acquises, jusqu'aux 9 — obligatoire
         // avant de valider une nouvelle table, et c'est le mélange des 9 qui
@@ -7597,42 +7572,90 @@
         const ficheDeLAppareil = !source && !document.body.classList.contains("mode-fiche");
         $("fiche-prenom").textContent = ficheDeLAppareil ? prenomAffiche() : fiche.prenom;
         if (ficheDeLAppareil) $("fiche-classe").textContent = suiviActif() && suiviIdentite ? (suiviIdentite.classe || "") : "";
-        $("fiche-date").textContent = PARCOURS.estVide(fiche) ? "" : new Date().toLocaleDateString("fr-FR");
+        // Une fiche vide : rien de fait. Le prénom ne compte pas — la fiche
+        // ouverte depuis « Ma classe » le reçoit du serveur, et celle d'un
+        // élève qui n'a rien fait désignait sa table de 2 (relecture de Code,
+        // 03/10/2026).
+        const vide = PARCOURS.estVide({...fiche, prenom: ""});
+        $("fiche-date").textContent = vide ? "" : new Date().toLocaleDateString("fr-FR");
         // Depuis le suivi, c'est l'application qui tient le carnet : une fiche
         // remplie est une photo de l'instant, pas une feuille à continuer.
-        $("fiche-subtitle").textContent = PARCOURS.estVide(fiche)
-          ? "Rien d’enregistré pour l’instant : à colorier à la main, ou à remplir en jouant dans l’application."
-          : "Ma progression dans l’application à ce jour. Elle se met à jour toute seule — cette feuille en est la photo.";
+        $("fiche-subtitle").textContent = vide
+          ? "Rien d’enregistré pour l’instant."
+          : "Ma progression dans l’application à ce jour.";
+        // Lot 2b : une rangée par table, comme dans Mon parcours ; l'échelle
+        // sous la table de la séance. Une fiche vide ne désigne aucune table.
+        const maTable = vide ? null : PARCOURS.tableDeSeance(fiche);
+        const semaine = PARCOURS.bilanSeances(fiche);
+        $("fiche-semaine").textContent = vide ? ""
+          : `Cette semaine : ${semaine.semaine} jour${semaine.semaine > 1 ? "s" : ""} avec une séance`;
         const rows = $("fiche-rows");
         rows.replaceChildren();
         etat.lignes.forEach(ligne => {
-          const tr = document.createElement("tr");
-          tr.className = ligne.acquise ? "is-acquise" : "";
-          const name = document.createElement("td");
-          name.textContent = `Table de ${ligne.table}`;
-          tr.append(name);
-          ligne.apprends.forEach(activite => {
-            const td = document.createElement("td");
-            const dot = document.createElement("span");
-            dot.className = `fiche-dot${activite.etat === 2 ? " is-done" : activite.etat === 1 ? " is-started" : ""}`;
-            td.append(dot);
-            tr.append(td);
+          const table = ligne.table;
+          const item = document.createElement("li");
+          const ici = table === maTable && !ligne.acquise;
+          item.className = `fiche-rangee${ligne.acquise ? " is-acquise" : ""}${ici ? " is-ma-table" : ""}`;
+          const nom = document.createElement("strong");
+          nom.textContent = `Table de ${table}`;
+          const cases = document.createElement("span");
+          cases.className = "fiche-cases";
+          PARCOURS.rangeeTable(fiche, table).cases.forEach(uneCase => {
+            const boite = document.createElement("i");
+            boite.className = `fiche-r${uneCase.etat === "vide" ? "" : ` ${uneCase.etat}`}`;
+            // Comme à l'écran : une case vide ne donne pas le résultat.
+            if (uneCase.etat !== "vide") boite.textContent = String(uneCase.produit);
+            cases.append(boite);
           });
-          ligne.entraine.forEach(entrainement => {
-            const td = document.createElement("td");
-            const dot = document.createElement("span");
-            dot.className = `fiche-dot${entrainement.etat === 2 ? " is-done" : entrainement.etat === 1 ? " is-started" : ""}`;
-            td.append(dot);
-            tr.append(td);
-          });
-          const acquise = document.createElement("td");
-          const check = document.createElement("span");
-          check.className = `fiche-check${ligne.acquise ? " is-done" : ""}`;
-          check.textContent = "✓";
-          acquise.append(check);
-          tr.append(acquise);
-          rows.append(tr);
+          const etatTable = document.createElement("span");
+          etatTable.className = "fiche-etat";
+          etatTable.textContent = ligne.acquise ? `✓ acquise le ${dateEnLettres(ligne.acquise)}` : ici ? "ma table" : "";
+          item.append(nom, cases, etatTable);
+          if (ici) {
+            const marches = marchesDeTable(fiche, table);
+            const echelle = document.createElement("div");
+            echelle.className = "fiche-echelle";
+            PARCOURS.MARCHES.forEach(marche => {
+              const point = document.createElement("b");
+              if (marche.marche < marches.depart) point.className = "faite";
+              if (marches.prochaines.includes(marche.marche)) point.className = "ici";
+              point.textContent = marche.marche === PARCOURS.MARCHES.length ? "✓" : String(marche.marche);
+              echelle.append(point);
+            });
+            const texte = document.createElement("span");
+            texte.textContent = marches.noms.length ? `Prochaine séance : ${marches.noms.join(", ")}` : "";
+            echelle.append(texte);
+            item.append(echelle);
+          }
+          rows.append(item);
         });
+        // Le cadre du professeur : les compteurs « fois », seulement dans la
+        // fiche ouverte depuis « Ma classe » (une source est donnée). Une
+        // ligne par table où quelque chose a été fait.
+        const cadre = $("fiche-prof");
+        const lignesProf = $("fiche-prof-rows");
+        lignesProf.replaceChildren();
+        if (source) {
+          PARCOURS_TABLES.forEach(table => {
+            const ligne = fiche.tables[table];
+            const fois = ligne.fois;
+            const nombres = [ligne.seance.n, fois.beads, fois.construct, fois.gaps, fois.ordered,
+              fois.random + fois.desordre, fois.trous, fois.mixte];
+            if (!nombres.some(Boolean)) return;
+            const tr = document.createElement("tr");
+            const tete = document.createElement("th");
+            tete.textContent = `Table de ${table}`;
+            tr.append(tete);
+            nombres.forEach(nombre => {
+              const td = document.createElement("td");
+              td.textContent = nombre ? String(nombre) : "·";
+              if (!nombre) td.className = "zero";
+              tr.append(td);
+            });
+            lignesProf.append(tr);
+          });
+        }
+        cadre.hidden = !lignesProf.children.length;
         // R5 (A17) : « À refaire » seulement s'il a déjà été réussi une fois ;
         // un mélange jamais fait est « À faire » — la règle de Mon parcours.
         $("fiche-melange-state").textContent = etat.melange.visible

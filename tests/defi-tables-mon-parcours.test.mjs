@@ -848,7 +848,7 @@ test("dans Je deviens expert, « Toutes les tables » coche 2 à 10", () => {
   assert.equal(core.configurationLabel(normaliser({mode: "train", tables: [6, 7]})), "Je m’entraîne · Tables de 6 et 7 · dans le désordre · 10 questions · sans chrono");
   // Audit 1 (30/09/2026) : les trois entraînements, le même nom partout.
   assert.equal(core.configurationLabel(normaliser(parcours.configEntraine(7, "desordre"))), "Je m’entraîne · Table de 7 · dans le désordre · 10 questions · sans chrono");
-  assert.equal(core.configurationLabel(normaliser(parcours.configEntraine(7, "mixte"))), "Je m’entraîne · Table de 7 · les deux à la fois · 10 questions · sans chrono");
+  assert.equal(core.configurationLabel(normaliser(parcours.configEntraine(7, "mixte"))), "Je m’entraîne · Table de 7 · résultats et nombres manquants · 10 questions · sans chrono");
 });
 
 test("la page Confidentialité décrit la sauvegarde locale de Mon parcours", () => {

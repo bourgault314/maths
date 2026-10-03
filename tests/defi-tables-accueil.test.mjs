@@ -136,21 +136,15 @@ test("plus aucun texte de règle sur les écrans de l’élève en dehors de la 
 });
 
 test("la notice « Comment ça marche ? » : les règles, écrites une fois, clonées deux fois", () => {
-  const notice = html.match(/<template id="notice-regles">([\s\S]*?)<\/template>/);
+  // Lot 2b (03/10/2026) : la notice de la séance est la seule ; celle d'avant
+  // (« je m'entraîne 3 fois ») est partie avec la clé ?seance=1.
+  assert.doesNotMatch(html, /notice-regles"/);
+  const notice = html.match(/<template id="notice-seance">([\s\S]*?)<\/template>/);
   assert.ok(notice, "le gabarit de la notice existe");
   const texte = notice[1];
-  assert.equal((texte.match(/<p>/g) || []).length, 6, "six phrases (lot 3 : le mélange, les étoiles, mon rang)");
-  // Audit 1 (30/09/2026) : six lignes courtes, une par sujet, mêmes mots en gras.
-  assert.match(texte, /<p><b>Ma table\.<\/b> J’apprends si je veux, je m’entraîne 3 fois, je valide&nbsp;: 20 questions en 1 min 30, 2 erreurs au maximum\.<\/p>/);
+  assert.equal((texte.match(/<p>/g) || []).length, 6, "six lignes, une par sujet");
   assert.match(texte, /<p><b>Mon mélange\.<\/b> Dès 2 tables acquises, je réussis le mélange avant de valider une nouvelle table\.<\/p>/);
-  assert.match(texte, /<p><b>Mes calculs\.<\/b> Chaque calcul a 5 boîtes\. Réussi le jour où il revient, il monte d’une boîte&nbsp;; raté, il descend et revient demain\.<\/p>/);
-  assert.match(texte, /<p><b>Mes calculs du jour\.<\/b> Les calculs qui reviennent aujourd’hui, 10 à la fois, sans chrono\.<\/p>/);
-  assert.match(texte, /<p><b>Les étoiles\.<\/b> Mes 9 tables acquises et le mélange réussi, je tente toutes les tables de plus en plus vite&nbsp;: ★ 2 min … 👑 1 min\.<\/p>/);
-  assert.match(texte, /<p><b>Mon rang\.<\/b> Bronze, Argent, Or, Platine, Diamant, Légende\. On ne redescend jamais\.<\/p>/);
-  // Une ligne par sujet : pas de phrase longue qui revient.
-  assert.doesNotMatch(texte, /<b>Une table\.<\/b>|avec des trous|Chaque nouvelle table le remet à faire/);
-  // Plus rien de l'ancien système : ni mélange à 25 en 2 min, ni Champion.
-  assert.doesNotMatch(texte, /25 produits|Champion|★ produits/);
+  assert.doesNotMatch(texte, /je m’entraîne 3 fois|25 produits|Champion|★ produits/);
   assert.equal((html.match(/data-notice hidden/g) || []).length, 2, "accueil + parcours");
   assert.match(html, /document\.querySelectorAll\("\[data-notice\]"\)\.forEach\(zone => zone\.append\(modele\.content\.cloneNode\(true\)\)\)/);
 });
@@ -212,13 +206,12 @@ test("Ma table = la prochaine de l’ordre conseillé qui n’est pas acquise, s
   assert.equal(logique.tableEnCours(PARCOURS.etatAffichage(PARCOURS.normaliserParcours(tout))), 9);
 
   // Avec la séance (lot 2a, décision du 03/10) : sans choix dans l'onglet, la
-  // table de la dernière séance — sans la clé, rien ne change.
+  // table de la dernière séance (pour tous depuis le lot 2b).
   const joue = lea();
   joue.tables[7].seance = {depart: 3, n: 2, dernier: "2026-10-05"};
   const etatJoue = PARCOURS.etatAffichage(PARCOURS.normaliserParcours(joue));
   assert.equal(etatJoue.tableSeance, 7);
   assert.equal(chargerLogiqueAccueil("", fauxStockage(), true).tableEnCours(etatJoue), 7, "la 7 de la dernière séance");
-  assert.equal(chargerLogiqueAccueil("", fauxStockage(), false).tableEnCours(etatJoue), 5, "sans la clé : l'ordre conseillé");
   const avecChoix = chargerLogiqueAccueil("", fauxStockage(), true);
   avecChoix.ecrireTableChoisie(4);
   assert.equal(avecChoix.tableEnCours(etatJoue), 4, "le choix de l'onglet passe devant");

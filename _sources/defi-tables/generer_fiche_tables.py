@@ -203,7 +203,7 @@ try:
     from docx import Document
     from docx.enum.section import WD_SECTION
     from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT, WD_ROW_HEIGHT_RULE, WD_TABLE_ALIGNMENT
-    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_TAB_ALIGNMENT
     from docx.oxml import OxmlElement
     from docx.oxml.ns import qn
     from docx.shared import Cm, Pt, RGBColor
@@ -327,6 +327,11 @@ def qr_png() -> BytesIO:
     return sortie
 
 
+# Où tombe le signe « = » dans une carte du DOCX, depuis son bord gauche : un
+# peu à droite du milieu (la carte fait 5,43 cm), comme sur le PDF.
+EGAL_CM = 2.95
+
+
 def add_card(cell, table_number, accent):
     cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
     set_cell_margins(cell, top=45, start=55, bottom=45, end=55)
@@ -349,7 +354,14 @@ def add_card(cell, table_number, accent):
         else:
             k = MULTIPLIERS[index - 1]
             set_cell_fill(card_cell, TINTS[accent] if index % 2 == 0 else WHITE)
-            set_run_font(paragraph.add_run(f"{libelle(table_number, k)} = {table_number * k}"), 11, INK)
+            # Aligné sur « = », comme le PDF (lot 2b) : le calcul finit avant
+            # le signe, le résultat commence après — trois taquets.
+            paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            taquets = paragraph.paragraph_format.tab_stops
+            taquets.add_tab_stop(Cm(EGAL_CM - 0.32), WD_TAB_ALIGNMENT.RIGHT)
+            taquets.add_tab_stop(Cm(EGAL_CM), WD_TAB_ALIGNMENT.CENTER)
+            taquets.add_tab_stop(Cm(EGAL_CM + 0.32), WD_TAB_ALIGNMENT.LEFT)
+            set_run_font(paragraph.add_run(f"\t{libelle(table_number, k)}\t=\t{table_number * k}"), 11, INK)
 
 
 def build_docx() -> None:
@@ -433,5 +445,10 @@ def build_docx() -> None:
 
 if __name__ == "__main__":
     build_pdf()
+    # Le PDF est refait à ce moment-là. Sans python-docx, on le dit clairement
+    # au lieu de s'arrêter sur « 'NoneType' object is not callable ».
+    if Document is None:
+        raise SystemExit(f"OK : {OUTPUT_PDF.relative_to(ROOT)} est refait. Le DOCX ne l'est pas : "
+                         "il manque python-docx (pip install python-docx), puis relance ce script.")
     build_docx()
     print(f"OK : {OUTPUT_PDF.relative_to(ROOT)} et {OUTPUT_DOCX.relative_to(ROOT)}")

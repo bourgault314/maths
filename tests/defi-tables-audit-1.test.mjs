@@ -133,16 +133,15 @@ test("1. validation ratée : « Je m’entraîne : … » en bouton bleu, l’en
 });
 
 test("2. le même vocabulaire partout : les trois entraînements, « sans chrono », « acquise », « Tente », « sur »", () => {
-  assert.match(html, /const NOMS_ENTRAINEMENTS = Object\.freeze\(\{desordre: "dans le désordre", trous: "nombres manquants", mixte: SEANCE \? "résultats et nombres manquants" : "les deux à la fois"\}\);/);
-  assert.match(html, /libelle: majuscule\(NOMS_ENTRAINEMENTS\[item\.entrainement\]\),/, "le panneau : « Dans le désordre », « Nombres manquants », « Les deux à la fois »");
+  assert.match(html, /const NOMS_ENTRAINEMENTS = Object\.freeze\(\{desordre: "dans le désordre", trous: "nombres manquants", mixte: "résultats et nombres manquants"\}\);/);
+  assert.match(html, /libelle: majuscule\(NOMS_ENTRAINEMENTS\[item\.entrainement\]\),/, "le panneau : « Dans le désordre », « Nombres manquants », « Résultats et nombres manquants »");
   assert.doesNotMatch(html, /LIBELLES_ENTRAINEMENTS/, "plus aucun libellé d’entraînement pris au moteur");
-  assert.match(html, /<th colspan="3">Je m’entraîne<small>désordre · nombres manquants · les deux<\/small><\/th>/);
+  assert.doesNotMatch(html, /"les deux à la fois"|· les deux</, "lot 2b : « résultats et nombres manquants » partout, fiche comprise");
   assert.doesNotMatch(html, /sans chronomètre/i);
   assert.match(html, /sousTitre: ligne\.acquise \? `acquise le \$\{dateEnLettres\(ligne\.acquise\)\}`/);
   assert.match(html, /Ma table de \$\{table\} est acquise depuis le \$\{dateEnLettres\(ligne\.acquise\)\}\./);
   assert.doesNotMatch(html, /Tenter \$\{/);
   assert.match(html, /`Série précédente\\u00a0: \$\{previousScore\} sur \$\{TOTAL\}\.`/);
-  assert.match(html, /`dernier essai : \$\{ligne\.dernierEntrainement\.score\} sur \$\{ligne\.dernierEntrainement\.total\}`/);
   assert.match(html, /const label = stickActivity \? "cases complétées" : "calculs sus";/);
 });
 
