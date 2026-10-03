@@ -3162,11 +3162,9 @@ function getNumberedSplatsLegacy(taskCount, mode){
 
 function getNumberedSplats(taskCount, mode){
   const tray = getTrayConfig(mode);
-  /* Plateau bas (Enquête, Système en phrases ou en symboles) : à 4 taches, les deux
-     rangées de l'ancienne table se touchaient (0,6 unité) ; écartées de 270 (au lieu de
-     230), même rayon (les jetons gardent leur taille), 27 unités de blanc entre deux
-     taches, toutes dans le plateau (lot S2). 5 et 6 taches ne se touchent pas (34 et 50).
-     L'Enquête n'a jamais plus de 3 taches : aucune de ses cartes ne change. */
+  /* Plateau bas (Enquête, Système en phrases ou en symboles) : 3, 4 et 5 taches sur une
+     rangée (lot « plateau en ligne ») ; 6 et 7 taches gardent l'ancienne table (deux rangées,
+     elles ne se touchent pas : 50 unités). */
   if(!tray.isHigh){
     /* Lot « plateau en ligne » (03/10/2026, décidé sur image) : trois taches côte à côte, au
        milieu du plateau, même rayon qu'avant (145) — l'ancienne table les posait en triangle.
@@ -3178,8 +3176,18 @@ function getNumberedSplats(taskCount, mode){
       const cyMid = tray.y + tray.h/2;
       return [{cx:330, cy:cyMid},{cx:820, cy:cyMid},{cx:1310, cy:cyMid}].map(p => ({...p, r:145}));
     }
-    if(taskCount !== 4) return getNumberedSplatsLegacy(taskCount, mode);
-    return [{cx:610, cy:400},{cx:1030, cy:400},{cx:610, cy:670},{cx:1030, cy:670}].map(p => ({...p, r:130}));
+    /* Quatre et cinq taches aussi (décidé sur image le 03/10 au soir) : rayon 120 à quatre
+       (130 en deux rangées avant), 100 à cinq (120 avant) ; 47 et 35 unités entre deux taches,
+       130 et 110 au bord — assez pour qu'un jeton visible se loge au bord du plateau. */
+    if(taskCount === 4){
+      const cyMid = tray.y + tray.h/2;
+      return [{cx:370, cy:cyMid},{cx:657, cy:cyMid},{cx:943, cy:cyMid},{cx:1230, cy:cyMid}].map(p => ({...p, r:120}));
+    }
+    if(taskCount === 5){
+      const cyMid = tray.y + tray.h/2;
+      return [{cx:330, cy:cyMid},{cx:565, cy:cyMid},{cx:800, cy:cyMid},{cx:1035, cy:cyMid},{cx:1270, cy:cyMid}].map(p => ({...p, r:100}));
+    }
+    return getNumberedSplatsLegacy(taskCount, mode);
   }
   /* Grand plateau (B, B±) : seules 4 et 5 taches changent. */
   if(taskCount !== 4 && taskCount !== 5) return getNumberedSplatsLegacy(taskCount, mode);
@@ -3427,10 +3435,10 @@ const ENQUETE_NOM_ECART = 14;
    les jetons visibles ne bougent que s'ils gênent, et vers la place libre la plus proche.
    Quand la table ET le rayon sont ceux du tirage (1 et 2 taches, une tache qui cache deux
    paquets à 3 ou 6 taches, Enquête, mode D), la carte reste exactement celle d'avant. */
-/* Une rangée de taches (1, 2 ou 3 sur le plateau bas) : la bande qui les contient, 25 au-dessus
+/* Une rangée de taches (1 à 5 sur le plateau bas) : la bande qui les contient, 25 au-dessus
    et au-dessous. Le plateau imprimé se referme dessus (lot « plateau en ligne », 03/10/2026). */
 function numberedSplatsBande(splats){
-  if(!splats || !splats.length || splats.length > 3) return null;
+  if(!splats || !splats.length || splats.length > 5) return null;
   if(!splats.every(s => s.cy === splats[0].cy)) return null;
   const r = Math.max(...splats.map(s => s.r));
   return { y: splats[0].cy - r - 25, h: 2 * r + 50, cy: splats[0].cy, r };

@@ -132,11 +132,12 @@ const TIRAGES = { E10: 106, E11: 96, E12: 71, E13: 104, E14: 169, E15: 96, E16: 
 /* (lot « petite part », 01/10/2026) la fiche 24d change de graine (1168 → 3572 : trois cartes
    « 2 et 3 » ou « 2 et 5 », puis « 3 et 4 », 19 parts, en dernier) ; les 29 autres fiches tirent
    les mêmes cartes, au même hasard (empreinte sans la 24d identique à main : 1b81db09362575df). */
-/* (lot « plateau en ligne », 03/10/2026) les PLACES des taches et des jetons changent (trois
-   taches en ligne, jetons visibles aux places fixes) : l'empreinte avec les places devient
-   a7846d641ef6f494 ; SANS les places (valeurs, indices, modèle, couleurs), elle est la même qu'avant
-   le lot : 169f3e7e042e825e — relevée sur main fa6e86f9 avec le même script. */
-const EMPREINTE = "a7846d641ef6f494";
+/* (lot « plateau en ligne », 03/10/2026) les PLACES des taches et des jetons changent (trois,
+   quatre et cinq taches en ligne, jetons visibles aux places fixes) : l'empreinte avec les places
+   devient 47827997a7c2f6ee (a7846d641ef6f494 avec les trois taches seules) ; SANS les places
+   (valeurs, indices, modèle, couleurs), elle est la même qu'avant le lot : 169f3e7e042e825e —
+   relevée sur main fa6e86f9 avec le même script. */
+const EMPREINTE = "47827997a7c2f6ee";
 const EMPREINTE_VALEURS = "169f3e7e042e825e";
 
 test("règle absolue : les 30 adresses des livrets tirent exactement les cartes imprimées (cartes.json), même hasard consommé", () => {

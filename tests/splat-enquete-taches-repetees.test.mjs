@@ -225,13 +225,18 @@ test("les places connues du générateur sont celles que la page dessine (platea
   const src = fn("genInvestigate");
   const bloc = src.slice(src.indexOf("const PLACES_PLATEAU = {"), src.indexOf("};", src.indexOf("const PLACES_PLATEAU = {")) + 2);
   const lues = new Function(`${bloc}\nreturn PLACES_PLATEAU;`)();
-  /* (lot « plateau en ligne », 03/10/2026) à 3 taches, la page dessine une rangée (330, 820, 1310) ;
-     le rangement des couleurs se décide toujours sur le triangle du tirage : deux taches de même
-     couleur y vont en bas (places 2 et 3), donc côte à côte dans la rangée. 4 à 6 : inchangé. */
+  /* (lot « plateau en ligne », 03/10/2026) à 3, 4 et 5 taches, la page dessine une rangée ; le
+     rangement des couleurs se décide toujours sur les tables d'avant (le triangle du tirage à 3,
+     les deux rangées à 4 et 5) : chaque rangée d'avant est un morceau de la ligne, les taches d'une
+     couleur restent côte à côte, et aucune carte ne change (couleurs comprises). 6 taches : inchangé. */
   const TIRAGE3 = new Function(`${fn("getTrayConfig")}\n${fn("getNumberedSplatsLegacy")}\nreturn getNumberedSplatsLegacy(3, "C").map(s => [s.cx, s.cy]);`)();
   assert.deepEqual(lues[3], TIRAGE3, "3 taches : la table du tirage");
+  assert.deepEqual(lues[4], [[610, 400], [1030, 400], [610, 670], [1030, 670]], "4 taches : les deux rangées du lot S2");
+  assert.deepEqual(lues[5], [[540, 420], [820, 420], [1100, 420], [680, 680], [960, 680]], "5 taches : les deux rangées d'avant");
   assert.deepEqual(PLACES[3], [[330, 545], [820, 545], [1310, 545]], "3 taches : dessinées en ligne");
-  assert.deepEqual({ 4: lues[4], 5: lues[5], 6: lues[6] }, { 4: PLACES[4], 5: PLACES[5], 6: PLACES[6] });
+  assert.deepEqual(PLACES[4], [[370, 545], [657, 545], [943, 545], [1230, 545]], "4 taches : dessinées en ligne");
+  assert.deepEqual(PLACES[5], [[330, 545], [565, 545], [800, 545], [1035, 545], [1270, 545]], "5 taches : dessinées en ligne");
+  assert.deepEqual(lues[6], PLACES[6]);
 });
 
 test("case cochée, réglages impossibles (total max 8) : des cartes, jamais d'erreur", () => {

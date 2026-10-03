@@ -103,7 +103,7 @@ const moteur = new Function(`
   };`)();
 
 // --- 1. la table de dessin ----------------------------------------------------------------------
-test("trois taches côte à côte au milieu du plateau bas (Enquête et Système), même rayon ; le tirage et les autres tables ne bougent pas", () => {
+test("trois, quatre et cinq taches côte à côte au milieu du plateau bas (Enquête et Système) ; le tirage et les autres tables ne bougent pas", () => {
   for(const mode of ["C", "D"]){
     const t = geo.getNumberedSplats(3, mode);
     assert.deepEqual(t, [{ cx:330, cy:545, r:145 }, { cx:820, cy:545, r:145 }, { cx:1310, cy:545, r:145 }], mode);
@@ -112,27 +112,37 @@ test("trois taches côte à côte au milieu du plateau bas (Enquête et Système
     // dans le plateau, avec le débord dessiné d'une tache (10 % en bas, 6 % sur les côtés)
     const p = geo.getTrayConfig(mode);
     for(const s of t) assert.ok(s.cy - 0.74 * s.r >= p.y && s.cy + 1.10 * s.r <= p.y + p.h && s.cx - 1.06 * s.r >= p.x && s.cx + 1.06 * s.r <= p.x + p.w);
-    for(const n of [1, 2, 5, 6]) assert.ok(geo.sameSplats(geo.getNumberedSplats(n, mode), geo.getNumberedSplatsLegacy(n, mode)), `${mode} à ${n}`);
+    // quatre et cinq taches aussi (décidé sur image le 03/10 au soir) : rayon 120 et 100, une seule rangée, dans le plateau
+    const t4 = geo.getNumberedSplats(4, mode), t5 = geo.getNumberedSplats(5, mode);
+    assert.deepEqual(t4, [{ cx:370, cy:545, r:120 }, { cx:657, cy:545, r:120 }, { cx:943, cy:545, r:120 }, { cx:1230, cy:545, r:120 }], mode);
+    assert.deepEqual(t5, [{ cx:330, cy:545, r:100 }, { cx:565, cy:545, r:100 }, { cx:800, cy:545, r:100 }, { cx:1035, cy:545, r:100 }, { cx:1270, cy:545, r:100 }], mode);
+    for(const s of [...t4, ...t5]) assert.ok(s.cy - 0.74 * s.r >= p.y && s.cy + 1.10 * s.r <= p.y + p.h && s.cx - 1.06 * s.r >= p.x && s.cx + 1.06 * s.r <= p.x + p.w);
+    for(const t of [t4, t5]) for(let i = 1; i < t.length; i++) assert.ok(t[i].cx - t[i].r - (t[i - 1].cx + t[i - 1].r) >= 35, `${mode} : au moins 35 unités entre deux taches`);
+    assert.ok(new Set(geo.getNumberedSplatsLegacy(4, mode).map(s => s.cy)).size === 2 && new Set(geo.getNumberedSplatsLegacy(5, mode).map(s => s.cy)).size === 2, `${mode} : le tirage à 4 et 5 taches reste en deux rangées`);
+    for(const n of [1, 2, 6, 7]) assert.ok(geo.sameSplats(geo.getNumberedSplats(n, mode), geo.getNumberedSplatsLegacy(n, mode)), `${mode} à ${n}`);
   }
   // le grand plateau (B, B±) ne change pas : trois taches en triangle
   assert.ok(geo.sameSplats(geo.getNumberedSplats(3, "N"), geo.getNumberedSplatsLegacy(3, "N")));
   assert.match(fn("assignPositionsNumbered"), /const splats = getNumberedSplatsLegacy\(meta\.tasks, card\.family\);\s*const splatsFinal = getNumberedSplats\(meta\.tasks, card\.family\);/);
 });
 
-test("la bande d'une rangée : 25 au-dessus et au-dessous des taches ; rien au-delà de trois taches ni en triangle", () => {
+test("la bande d'une rangée : 25 au-dessus et au-dessous des taches ; rien au-delà de cinq taches ni en triangle", () => {
   assert.deepEqual(geo.numberedSplatsBande(geo.getNumberedSplats(3, "C")), { y:375, h:340, cy:545, r:145 });
   assert.deepEqual(geo.numberedSplatsBande(geo.getNumberedSplats(2, "C")), { y:340, h:410, cy:545, r:180 });
-  assert.equal(geo.numberedSplatsBande(geo.getNumberedSplats(4, "C")), null);
+  assert.deepEqual(geo.numberedSplatsBande(geo.getNumberedSplats(4, "C")), { y:400, h:290, cy:545, r:120 });
+  assert.deepEqual(geo.numberedSplatsBande(geo.getNumberedSplats(5, "C")), { y:420, h:250, cy:545, r:100 });
+  assert.equal(geo.numberedSplatsBande(geo.getNumberedSplats(6, "C")), null);
   assert.equal(geo.numberedSplatsBande(geo.getNumberedSplatsLegacy(3, "C")), null, "le triangle du tirage n'est pas une rangée");
   assert.equal(geo.numberedSplatsBande([]), null);
 });
 
 test("les places fixes des jetons visibles : dans les passages libres, deux par passage, dans la bande, jamais sur une tache", () => {
   const tray = geo.getTrayConfig("C"), margin = 14;
-  for(const n of [1, 2, 3]){
+  for(const n of [1, 2, 3, 4, 5]){
     const sp = geo.getNumberedSplats(n, "C"), beadR = geo.numberedBeadRadius(sp, "C");
     const places = geo.numberedSplatsPlacesVisibles(tray, sp, beadR, margin);
     assert.ok(places.length >= 4, `${n} taches : ${places.length} places (il en faut 3 au plus)`);
+    if(n >= 4) assert.equal(places.length, 4, `${n} taches : les jetons visibles se logent au bord du plateau, pas entre les taches`);
     const bande = geo.numberedSplatsBande(sp);
     for(const q of places){
       assert.ok(q.cy - beadR >= bande.y && q.cy + beadR <= bande.y + bande.h, `${n} taches : jeton dans la bande`);
@@ -142,7 +152,7 @@ test("les places fixes des jetons visibles : dans les passages libres, deux par 
     for(let i = 0; i < places.length; i++) for(let j = i + 1; j < places.length; j++)
       assert.ok(Math.hypot(places[i].cx - places[j].cx, places[i].cy - places[j].cy) >= 2 * beadR + 12 - 1, `${n} taches : deux jetons ne se touchent pas`);
   }
-  assert.equal(geo.numberedSplatsPlacesVisibles(tray, geo.getNumberedSplats(4, "C"), 50, margin), null);
+  assert.equal(geo.numberedSplatsPlacesVisibles(tray, geo.getNumberedSplats(6, "C"), 50, margin), null);
   assert.doesNotMatch(fn("numberedSplatsPlacesVisibles") + fn("relocateNumberedTokensToFinalSplats"), /rng\(|Math\.random|rFloat/);
 });
 
@@ -192,8 +202,24 @@ test("taches répétées à trois taches : les deux taches de même couleur rest
   assert.ok(vues >= 10, `${vues} cartes répétées à trois taches`);
 });
 
+test("taches répétées à quatre et cinq taches : les taches d'une même couleur se suivent dans la rangée (le rangement se décide sur les deux rangées d'avant)", () => {
+  const cartes = moteur(py("E20") + "&cards=60&unknown=question", 60).concat(moteur(py("E21") + "&cards=60&unknown=question", 60));
+  const vues = { 4: 0, 5: 0 };
+  for(const c of cartes){
+    const rep = c._rel && c._rel.repetees;
+    if(!rep || rep.couleurDe.length < 4 || rep.couleurDe.length > 5) continue;
+    const cd = rep.couleurDe;
+    assert.ok(c._splats.every(s => s.cy === c._splats[0].cy), `${cd.length} taches : une rangée`);
+    const ordre = c._splats.map((s, i) => [s.cx, cd[i]]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
+    let changements = 0; for(let i = 1; i < ordre.length; i++) if(ordre[i] !== ordre[i - 1]) changements++;
+    assert.equal(changements, new Set(cd).size - 1, `${JSON.stringify(ordre)} : chaque couleur d'un seul tenant`);
+    vues[cd.length]++;
+  }
+  assert.ok(vues[4] >= 5 && vues[5] >= 3, `${vues[4]} cartes à quatre taches, ${vues[5]} à cinq`);
+});
+
 // --- 3. le plateau imprimé -------------------------------------------------------------------------
-test("l'impression : la réduction de 22 mm reste, et le plateau se referme sur une rangée (14 mm à trois taches, 17 mm à deux)", () => {
+test("l'impression : la réduction de 22 mm reste, et le plateau se referme sur une rangée (14 mm à trois taches, 17 à deux, 12 à quatre, 10 à cinq)", () => {
   const mm = Number(ligne("const ENQ_MM = ").match(/[\d.]+/)[0]);
   const H = Number(ligne("const ENQ_PLATEAU_CORRECTION_H = ").match(/\d+/)[0]);
   const trayH = geo.getTrayConfig("C").h;
@@ -201,7 +227,9 @@ test("l'impression : la réduction de 22 mm reste, et le plateau se referme sur 
   const haut = (n) => Math.round((geo.numberedSplatsBande(geo.getNumberedSplats(n, "C")) || { h:trayH }).h * echelle);
   assert.ok(Math.abs(haut(3) / mm - 14) < 0.6, `trois taches : ${(haut(3) / mm).toFixed(1)} mm`);
   assert.ok(Math.abs(haut(2) / mm - 17) < 0.6, `deux taches : ${(haut(2) / mm).toFixed(1)} mm`);
-  assert.ok(Math.abs(haut(4) / mm - 22) < 0.5, `quatre taches : ${(haut(4) / mm).toFixed(1)} mm (comme avant)`);
+  assert.ok(Math.abs(haut(4) / mm - 12) < 0.6, `quatre taches : ${(haut(4) / mm).toFixed(1)} mm`);
+  assert.ok(Math.abs(haut(5) / mm - 10.4) < 0.6, `cinq taches : ${(haut(5) / mm).toFixed(1)} mm`);
+  assert.ok(Math.abs(haut(6) / mm - 22) < 0.5, `six taches : ${(haut(6) / mm).toFixed(1)} mm (comme avant)`);
   const impression = html.slice(html.indexOf("\nfunction renderCardIntoSvg("), html.indexOf("\nfunction printSheet("));
   assert.match(impression, /const enqBande = \(enqueteCompacte \|\| enqueteEnoncePetit\) \? numberedSplatsBande\(card\._splats\) : null;/);
   assert.match(impression, /const enqDy = enqBande \? Math\.round\(enqBande\.y - trayY\) : 0;/);

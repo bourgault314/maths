@@ -69,30 +69,31 @@ test("les tables de dessin ne diffèrent qu'à 4 et 5 taches, sur le grand plate
     assert.ok(!geo.sameSplats(geo.getUnitSplats(n), geo.getUnitSplatsLegacy(n)));
     assert.ok(!geo.sameSplats(geo.getNumberedSplats(n, "N"), geo.getNumberedSplatsLegacy(n, "N")));
   }
-  // plateau bas (Enquête, Système en phrases ou en symboles) : la table à 4 taches change (lot S2),
-  // et celle à 3 taches depuis le lot « plateau en ligne » (03/10/2026 : trois taches côte à côte)
-  for(const n of [1, 2, 5, 6]){
+  // plateau bas (Enquête, Système en phrases ou en symboles) : 3, 4 et 5 taches sur une rangée
+  // depuis le lot « plateau en ligne » (03/10/2026) ; 1, 2, 6 et 7 : la table du tirage
+  for(const n of [1, 2, 6, 7]){
     assert.ok(geo.sameSplats(geo.getNumberedSplats(n, "C"), geo.getNumberedSplatsLegacy(n, "C")), `C à ${n} tache(s)`);
     assert.ok(geo.sameSplats(geo.getNumberedSplats(n, "D"), geo.getNumberedSplatsLegacy(n, "D")), `D à ${n} tache(s)`);
   }
-  for(const n of [3, 4]){
+  for(const n of [3, 4, 5]){
     assert.ok(!geo.sameSplats(geo.getNumberedSplats(n, "C"), geo.getNumberedSplatsLegacy(n, "C")), `C à ${n} taches`);
     assert.ok(!geo.sameSplats(geo.getNumberedSplats(n, "D"), geo.getNumberedSplatsLegacy(n, "D")), `D à ${n} taches`);
   }
 });
 
-test("plateau bas (lot S2) : à 4 taches elles se touchaient ; écartées, même rayon, toutes dans le plateau", () => {
+test("plateau bas : à 4 taches elles se touchaient (avant le lot S2) ; en ligne depuis le lot « plateau en ligne », rayon 120, toutes dans le plateau", () => {
   const bas = { x:120, y:270, w:1360, h:550 }; // getTrayConfig("D")
   assert.ok(minGap(geo.getNumberedSplatsLegacy(4, "D")) < 5, "avant : 0,6 unité");
   const t4 = geo.getNumberedSplats(4, "D");
   assert.ok(minGap(t4) >= 20, `après : ${minGap(t4)}`);
-  assert.deepEqual(t4.map(s => s.r), [130, 130, 130, 130], "même rayon : les jetons gardent leur taille");
-  assert.equal(geo.numberedBeadRadius(t4, "D"), geo.numberedBeadRadius(geo.getNumberedSplatsLegacy(4, "D"), "D"));
+  assert.deepEqual(t4.map(s => s.r), [120, 120, 120, 120], "rayon 120 (130 en deux rangées)");
+  assert.ok(t4.every(s => s.cy === t4[0].cy), "une rangée");
   for(const s of t4) assert.ok(s.cy - 0.94 * s.r >= bas.y && s.cy + 1.10 * s.r <= bas.y + bas.h && s.cx - 1.06 * s.r >= bas.x && s.cx + 1.06 * s.r <= bas.x + bas.w);
-  // 5 et 6 taches ne se touchaient pas : elles ne bougent pas
-  assert.ok(minGap(geo.getNumberedSplats(5, "D")) >= 30);
+  // 5 taches en ligne aussi (rayon 100) ; 6 taches ne se touchaient pas : elles ne bougent pas
+  const t5 = geo.getNumberedSplats(5, "D");
+  assert.ok(minGap(t5) >= 30 && t5.every(s => s.cy === t5[0].cy && s.r === 100));
   assert.ok(minGap(geo.getNumberedSplats(6, "D")) >= 45);
-  assert.deepEqual(geo.getNumberedSplats(4, "C"), t4, "l'Enquête (même plateau) aura la même place à 4 taches");
+  assert.deepEqual(geo.getNumberedSplats(4, "C"), t4, "l'Enquête (même plateau) a la même place à 4 taches");
 });
 
 test("avant : à 4 taches (A, B) et 5 taches (A), les taches dessinées se touchaient", () => {
