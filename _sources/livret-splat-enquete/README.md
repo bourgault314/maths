@@ -133,10 +133,12 @@ python3 render.py --vignettes     # les vignettes de la page des livrets (page 1
 Dépendances : `playwright` **1.56.0** (+ chromium), `pikepdf`, `qrcode[pil]` ; `qpdf`, s'il
 est présent, divise le poids des PDF par deux. Le rendu utilise le **vrai Chromium**
 (`channel="chromium"`), jamais le « headless shell », qui espace les lettres d'environ 5 %.
-Les PDF du site se rendent sur le poste Windows de Gwenaël (Segoe UI, depuis le lot « pages 2 »
-du 03/10/2026) ; rendus ailleurs, l'écriture des fiches change (DejaVu Sans) : on compare alors
-à `main` page par page avant de publier. Les cartes de l'outil (couverture, page 2, dos) gardent
-la police de l'outil (`commun.css`), comme les fiches.
+**Les PDF du site se rendent sous Linux** (DejaVu Sans), comme tous les livrets SPLAT! : sur un
+poste Windows, les fiches sortent en Segoe UI et l'écriture ne serait plus celle des autres
+mondes (vérifié le 03/10/2026 : le rendu Windows de la PR #910 a été refait sous Linux). Le
+script tourne aussi sous Windows (Cambria Math pour le 𝑥, pikepdf si qpdf manque), pour essayer.
+Les cartes de l'outil (couverture, page 2, dos) gardent la police de l'outil (`commun.css`),
+comme les fiches.
 
 ## Conventions
 
