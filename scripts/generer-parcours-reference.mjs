@@ -34,6 +34,11 @@ export function parcoursComplet() {
     ligne.sansFaute = {desordre: 1, trous: index % 2};
   });
   p.seances = ["2026-09-21", "2026-09-22", "2026-09-22", "2026-09-23"];
+  // Lot M1 : une séance en cours, avec tout ce qu'elle peut porter (une
+  // marche ratée refaite, une étoile tentée, des calculs à retenir).
+  p.enCours = {jour: "2026-09-23", table: 7, depart: 5, echelle: false, rang: 1,
+    file: [16, 26, 7, 200, 300], faites: [100, 8, 10, 0, 6, 5, 10, 1, 200, 17, 20, 4, 303, 24, 25, 2],
+    erreurs: [407, 709, 1010], rate: 6, sansFaute: false, remplacee: true, reparee: false, prete: true};
   p.melange = {tables: [...PARCOURS.TABLES], aJour: true, aRefaireAvec: null, dernier: "2026-09-20"};
   // Lot 3 : l'escalier, le rang, les jours travaillés. (L'avis de migration
   // du lot 3 a été retiré au lot 4b ; « beads » s'est ajouté aux activités.)

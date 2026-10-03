@@ -42,9 +42,18 @@ const CATALOGUE_APPLIS = [
         // sous-clés « desordre » et « trous » sont déjà déclarées) ; au niveau
         // du parcours, « seances » (une liste de dates : le jour de chaque
         // séance finie).
+        // Lot M1 de l'optimisation (03/10/2026) : au niveau du parcours,
+        // « enCours », la séance du jour commencée et pas finie, pour qu'elle
+        // se reprenne sur un autre appareil. Rien que des nombres, des
+        // booléens et une date : « jour », « table », « echelle », « file » et
+        // « faites » (des listes d'entiers : un code par étape), « erreurs »
+        // (les calculs ratés, 407 pour 4 × 7), « rate », « remplacee »,
+        // « reparee », « prete » ; « depart », « rang » et « sansFaute » sont
+        // déjà déclarées.
         'cles' => ['version', 'epoque', 'tables', 'apprends', 'beads', 'construct', 'gaps', 'ordered', 'random',
             'entraine', 'desordre', 'trous', 'mixte', 'dernier', 'entrainement', 'score', 'total', 'fois',
             'bouts', 'seance', 'depart', 'n', 'sansFaute', 'seances',
+            'enCours', 'jour', 'table', 'echelle', 'file', 'faites', 'erreurs', 'rate', 'remplacee', 'reparee', 'prete',
             'acquise', 'melange', 'aJour', 'aRefaireAvec', 'expert', 'niveau', 'champion',
             'etoiles', 'couronne', 'rang', 'jours',
             'calculs', 'boite', 'cases', 'vu', 'erreur', 'gagne', 'echeance'],
