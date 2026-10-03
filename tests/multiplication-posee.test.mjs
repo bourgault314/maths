@@ -458,7 +458,7 @@ test("l’interface est professorale, responsive, projetable et sans version él
   assert.match(interfaceHtml, /class="instruction" aria-live="polite" aria-atomic="true"/);
   assert.match(interfaceHtml, /id="projection-recap"[^>]*hidden/);
   assert.match(interfaceHtml, /fullscreen-collapse[^>]*hidden/);
-  assert.match(interfaceHtml, /Gwenaël Bourgault/);
+  assert.doesNotMatch(interfaceHtml.match(/<footer[\s\S]*?<\/footer>/)[0], /Gwenaël Bourgault/);
   assert.match(interfaceHtml, /Sans cookie ni traceur/);
   assert.doesNotMatch(interfaceHtml, /data-mode="(?:integer|decimal)"/);
   assert.doesNotMatch(interfaceHtml, /Vérifier l’étape|score|indice|version élève/i);

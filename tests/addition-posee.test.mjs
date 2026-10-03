@@ -233,7 +233,7 @@ test("l’interface est professorale, projetable et conforme à l’identité ma
   assert.match(interfaceHtml, /rekenrek-20\.css\?v=2/);
   assert.match(interfaceHtml, /id="projection-recap"[^>]*hidden/);
   assert.match(interfaceHtml, /fullscreen-collapse[^>]*hidden/);
-  assert.match(interfaceHtml, /Gwenaël Bourgault/);
+  assert.doesNotMatch(interfaceHtml.match(/<footer[\s\S]*?<\/footer>/)[0], /Gwenaël Bourgault/);
   assert.match(interfaceHtml, /Me contacter/);
   assert.match(interfaceHtml, /Toutes les ressources/);
   assert.match(interfaceHtml, /Mentions légales/);

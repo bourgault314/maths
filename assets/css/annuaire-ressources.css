@@ -139,6 +139,13 @@ footer {
   text-align: center;
 }
 
+/* Un lien et son point restent ensemble : jamais de « · » en début de ligne. */
+.pied-groupe {
+  display: inline-flex;
+  gap: 10px;
+  white-space: nowrap;
+}
+
 footer a,
 footer button {
   color: #075caa;
