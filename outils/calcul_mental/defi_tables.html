@@ -816,6 +816,8 @@
     .carte-seance .programme > span { display: grid; grid-template-columns: 24px minmax(0, 1fr); align-items: center; gap: 9px; font-size: .95rem; font-weight: 850; line-height: 1.25; }
     .carte-seance .programme i { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #e4edf5; color: var(--ink); font-size: .8rem; font-style: normal; font-weight: 950; line-height: 1; }
     .carte-seance .programme small { color: var(--muted); font-size: .84rem; font-weight: 750; }
+    /* Lot M2 : la 5e étape possible (la validation du raccourci) — numéro en pointillés. */
+    .carte-seance .programme .en-plus i { background: #fff; border: 2px dashed #9fb6c6; box-sizing: border-box; }
     /* Lot M1 : la séance du jour reprise — les étapes faites cochées (vert),
        celle où l'on reprend en bleu, comme le fil « Ma séance » d'une série. */
     .carte-seance .programme .faite i { background: var(--teal); color: #fff; }
@@ -852,6 +854,8 @@
     .result.en-seance .result-config { display: none !important; }
     .seance-suite { display: grid; justify-items: center; gap: 10px; margin: 14px 0 0; }
     .seance-suite .primary { min-height: 48px; padding: 12px 18px 8px; }
+    /* Lot M2 : après une marche ratée, une phrase au-dessus du bouton. */
+    .seance-suite .plus-bas { margin: 0; color: var(--ink); font-size: .95rem; font-weight: 800; text-align: center; }
     .seance-suite .arreter { min-height: 44px; margin-top: -8px; padding: 0 4px; border: 0; background: none; color: var(--blue); font: inherit; font-size: .88rem; font-weight: 850; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
     .seance-suite .cadre { width: 100%; padding: 11px 13px; border: 1px solid #cfe0f2; border-radius: 13px; background: #eef6ff; color: var(--ink); font-weight: 800; box-sizing: border-box; }
     .seance-suite .cadre .rangee { margin: 2px auto 8px; max-width: 440px; }
@@ -2474,7 +2478,7 @@
   <!-- Ma séance du jour (lot 2, 03/10/2026) : la notice de la séance, six
        lignes (la notice d'avant a été retirée avec la clé, lot 2b). -->
   <template id="notice-seance">
-    <p><b>Ma séance du jour.</b> 3 ou 4 étapes, environ 5 min. Réussi&nbsp;: j’avance. Raté&nbsp;: je reprends un peu plus bas.</p>
+    <p><b>Ma séance du jour.</b> 4 étapes (parfois 5), environ 5 min. Réussi&nbsp;: j’avance. Raté&nbsp;: je reprends un peu plus bas.</p>
     <p><b>Ma table.</b> De marche en marche&nbsp;: les perles, la bande, dans l’ordre, dans le désordre, les nombres manquants… jusqu’à «&nbsp;Je valide ma table&nbsp;»&nbsp;: 20 questions en 1 min 30, 2 erreurs au plus.</p>
     <p><b>Ma rangée.</b> Une case entourée&nbsp;: réussi une fois. Une case pleine&nbsp;: prêt. Toutes pleines&nbsp;: je peux valider.</p>
     <p><b>Mes calculs du jour.</b> Un calcul réussi revient plus tard. Raté, il revient demain.</p>
@@ -2490,7 +2494,7 @@
   </footer>
 
   <script src="./defi_tables_core.js?v=20261003-1"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20261003-3"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20261003-4"></script>
   <script>
     (() => {
       "use strict";
@@ -4952,7 +4956,10 @@
       function showAnswerError() {
         $("inline-answer")?.classList.add("is-invalid");
         $("answer-feedback").className = "answer-feedback is-wrong";
-        $("answer-feedback").textContent = "Tape une réponse ou appuie sur «\u00a0Passer\u00a0».";
+        // Lot M2 (audit GPT, point A) : « Passer » n'est proposé que s'il est
+        // vraiment là — J'apprends (la bande, les perles) n'en a pas.
+        const passer = !$("question-card").classList.contains("no-skip") && !$("skip").disabled;
+        $("answer-feedback").textContent = passer ? "Tape une réponse ou appuie sur «\u00a0Passer\u00a0»." : "Tape ta réponse.";
         $("expression").focus?.({preventScroll: true});
       }
 
@@ -6799,14 +6806,23 @@
         return paires;
       }
 
+      // Lot M2 : après une marche ratée, l'écran entre deux étapes dit que la
+      // séance s'allonge (« On reprend un peu plus bas : 1 étape de plus. »).
+      let etapesAjoutees = 0;
+      function etapesPrevues(source, laSeance) {
+        return laSeance.faites.length + PARCOURS.programmeDeSeance(source, laSeance).etapes.length;
+      }
+
       function noterEtapeDeSeance(suivi) {
         const fete = suivi ? feteDuResultat(suivi.evenements) : {principal: null};
         const chronometree = ["validation", "melange", "etoile"].includes(etapeEnCours.type);
+        const avant = etapesPrevues(parcours, seance);
         const note = PARCOURS.noterEtape(parcours, seance, etapeEnCours, resultatDeLEtape(suivi));
         parcours = note.parcours;
         seance = note.seance;
         etapeEnCours = null;
         sauverParcours();
+        etapesAjoutees = note.faite.rate && !seance.finie ? Math.max(0, etapesPrevues(parcours, seance) - avant) : 0;
         // Une validation ou un mélange (et toute nouvelle à fêter) gardent
         // leur écran : le bilan vient après, par « Mon bilan → ».
         renderSuiteSeance({bilan: seance.finie && !chronometree && !fete.principal});
@@ -6906,6 +6922,15 @@
         if (seance.faites[seance.faites.length - 1].type === "entraine") $("result-score").textContent = $("result-score").textContent.split(" · ")[0];
         suite.textContent = `Étape ${seance.faites.length + 1}\u00a0: ${prochaine.nom} →`;
         suite.addEventListener("click", lancerEtapeDeSeance);
+        // Lot M2 (décision de Gwenaël) : la séance s'allonge, on le dit.
+        if (seance.faites[seance.faites.length - 1].rate) {
+          const phrase = document.createElement("p");
+          phrase.className = "plus-bas";
+          phrase.textContent = etapesAjoutees
+            ? soude(`On reprend un peu plus bas\u00a0: ${pluriel(etapesAjoutees, "étape")} de plus.`)
+            : "On reprend un peu plus bas.";
+          zone.append(phrase);
+        }
         const arreter = document.createElement("button");
         arreter.type = "button";
         arreter.className = "arreter";
@@ -6999,6 +7024,12 @@
         const dejaFaites = ouverte.faites;
         const reprise = dejaFaites.length > 0;
         const nombre = dejaFaites.length + programme.etapes.length;
+        // Lot M2 (décision de Gwenaël, 03/10) : la carte ne peut pas annoncer
+        // quatre étapes et en jouer cinq — les jours où la validation du
+        // raccourci peut s'ajouter, elle le dit (« 4 ou 5 étapes ») et la liste
+        // a une 5e ligne.
+        const enPlus = programme.raccourciEnFin;
+        const minutes = enPlus ? `${programme.minutes}\u00a0à\u00a0${programme.minutesMax}` : String(programme.minutes);
         const faite = PARCOURS.bilanSeances(parcours).aujourdhui > 0;
         const carte = document.createElement("button");
         carte.type = "button";
@@ -7014,8 +7045,8 @@
         // « encore 2 min environ » ne se coupe pas, ni avant « · » : au téléphone
         // (402 px), « environ » restait seul sur la deuxième ligne.
         duree.textContent = reprise
-          ? soude(`étape ${dejaFaites.length + 1} sur ${nombre}\u00a0· encore\u00a0${programme.minutes}\u00a0min\u00a0environ`)
-          : soude(`${pluriel(nombre, "étape")} · environ ${programme.minutes} min`);
+          ? soude(`étape ${dejaFaites.length + 1} sur ${nombre}${enPlus ? `\u00a0ou\u00a0${nombre + 1}` : ""}\u00a0· encore\u00a0${minutes}\u00a0min\u00a0environ`)
+          : soude(enPlus ? `${nombre}\u00a0ou\u00a0${nombre + 1}\u00a0étapes · environ\u00a0${minutes}\u00a0min` : `${pluriel(nombre, "étape")} · environ ${minutes} min`);
         texte.append(titre, duree);
         const go = document.createElement("span");
         go.className = "go";
@@ -7059,10 +7090,23 @@
           item.append(numero, nom);
           liste.append(item);
         });
+        if (enPlus) {
+          const item = document.createElement("span");
+          item.className = "en-plus";
+          const numero = document.createElement("i");
+          numero.textContent = String(nombre + 1);
+          const nom = document.createElement("span");
+          nom.textContent = "Je valide ma table";
+          const petit = document.createElement("small");
+          petit.textContent = " · si je réussis mes entraînements";
+          nom.append(petit);
+          item.append(numero, nom);
+          liste.append(item);
+        }
         carte.append(tete, liste);
         carte.setAttribute("aria-label", reprise
           ? `${titre.textContent} : ${duree.textContent}. ${dejaFaites.map((passee, index) => `${index + 1}, ${passee.nom}, fait`).join(" ; ")} ; ${programme.etapes.map((etape, index) => `${dejaFaites.length + index + 1}, ${etape.nom}`).join(" ; ")}. Reprendre.`
-          : `${titre.textContent} : ${duree.textContent}. ${programme.etapes.map((etape, index) => `${index + 1}, ${etape.nom}`).join(" ; ")}. Commencer.`);
+          : `${titre.textContent} : ${duree.textContent}. ${programme.etapes.map((etape, index) => `${index + 1}, ${etape.nom}`).join(" ; ")}${enPlus ? ` ; ${nombre + 1}, Je valide ma table, si je réussis mes entraînements` : ""}. Commencer.`);
         carte.addEventListener("click", () => commencerSeance(table));
         return carte;
       }
@@ -7313,7 +7357,7 @@
         } else {
           boutons.append(
             bouton(`Je commence la table de ${table} →`, "primary", () => {
-              parcours = PARCOURS.commencerApresDecouverte(parcours, table);
+              parcours = PARCOURS.commencerApresDecouverte(parcours, table, {juste: validation.score});
               sauverParcours();
               ecrireTableChoisie(table);
               fermerDecouverte();

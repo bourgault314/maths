@@ -129,6 +129,20 @@
   //    mesurées (4 étapes, environ 5 min).
   // Toujours pas de changement de version : une clé de plus, absente = rien.
 
+  // Lot M2 de l'optimisation (03/10/2026 au soir — décision de Gwenaël :
+  // « une séance a toujours 4 étapes ») :
+  //  - quatre marches quand rien n'est dû (le premier jour : perles, bande,
+  //    bande à trous, dans l'ordre) ; trois avec Mes calculs du jour OU le
+  //    mélange ; deux avec les deux. Au sommet, la fenêtre s'arrête à la
+  //    marche 8 au lieu de raccourcir (départ 6 : 5-6-7-8) ;
+  //  - une marche ratée : cinq étapes au plus (la marche refaite prend la
+  //    place de la dernière marche du jour) ;
+  //  - la validation du raccourci, quand elle peut s'ajouter en 5e étape, est
+  //    annoncée par la carte (programmeDeSeance : « raccourciEnFin ») ;
+  //  - une table ratée au premier écran : moins de 10 sur 20, la séance
+  //    repart des perles ; sinon des entraînements (comme avant).
+  // Rien n'est enregistré de plus : pas de changement de version.
+
   // Version du parcours enregistré. 1 = jusqu'au lot 2 de Défi tables v2 ;
   // 2 = lot 3 (mélange obligatoire, escalier des étoiles, rang, jours) ;
   // 3 = lot mémoire (cinq boîtes et une échéance par calcul). Un parcours
@@ -183,7 +197,16 @@
     // que « marchesMin ») ; « raccourciErreursMax » — une erreur au plus aux
     // deux entraînements du raccourci ; « erreursGardees » — les calculs
     // ratés que la séance en cours retient (pour « À retenir pour demain »).
-    seance: Object.freeze({marches: 3, marchesMin: 2, plafond: 4, departMax: 6, sansFaute: 2, raccourciErreursMax: 1, erreursRate: 0.3, objectifSemaine: 5, garder: 60, erreursGardees: 60}),
+    // Lot M2 : « marches » passe à 4 (toujours quatre étapes : quatre marches
+    // quand rien n'est dû) ; « etapesMax » — cinq étapes au plus après une
+    // marche ratée. « departMax » reste 6 : un parcours enregistré au départ 6
+    // ne doit pas retomber à 1 (entier() rend la valeur par défaut hors bornes).
+    seance: Object.freeze({marches: 4, marchesMin: 2, plafond: 4, etapesMax: 5, departMax: 6, sansFaute: 2, raccourciErreursMax: 1, erreursRate: 0.3, objectifSemaine: 5, garder: 60, erreursGardees: 60}),
+    // Lot M2 : une table ratée au premier écran (« Tu connais déjà des
+    // tables ? ») — moins de « sous » bonnes réponses sur 20 : la séance
+    // repart de la marche « departBas » (les perles) ; sinon des
+    // entraînements (MARCHE_APRES_DECOUVERTE).
+    decouverte: Object.freeze({sous: 10, departBas: 1}),
     // La page du professeur (lot 2b) : à partir de 8 séances sur une table
     // qui n'est toujours pas acquise, la ligne le signale (l'élève moyen en
     // met 4 ou 5, l'élève en difficulté 7 à 9 : simulation du lot 1) ; et à
@@ -1464,8 +1487,8 @@
   }
 
   // Ouvre une séance : la file de ses étapes. Mes calculs du jour s'il y en a
-  // (une série, 10 au plus), le mélange s'il est dû, puis trois marches de la
-  // table à partir de son départ. Une table déjà acquise (choisie exprès) se
+  // (une série, 10 au plus), le mélange s'il est dû, puis les marches de la
+  // table à partir de son départ — quatre étapes en tout (lot M2). Une table déjà acquise (choisie exprès) se
   // retravaille par ses trois entraînements, sans rien déplacer.
   // Lot M1 : la séance du jour déjà commencée est REPRISE là où elle en est
   // (ses étapes faites, sa file) ; et quatre étapes au plus au départ — avec
@@ -1489,7 +1512,11 @@
       depart = echelle ? bornerDepart(ligne.seance.depart) : MARCHE_DE_REMPLACEMENT;
       const derniere = echelle ? MARCHE_VALIDATION : MARCHE_VALIDATION - 1;
       const marches = Math.min(SEUILS.seance.marches, Math.max(SEUILS.seance.marchesMin, SEUILS.seance.plafond - file.length));
-      for (let numero = depart; numero < depart + marches && numero <= derniere; numero += 1) {
+      // Lot M2 : au sommet, la fenêtre s'arrête à la marche 8 au lieu de
+      // raccourcir (départ 6, rien de dû : 5-6-7-8, pas 6-7-8 seul). Le départ
+      // enregistré ne bouge pas. Une table acquise garde ses trois entraînements.
+      const premiere = echelle ? Math.max(1, Math.min(depart, derniere - marches + 1)) : depart;
+      for (let numero = premiere; numero < premiere + marches && numero <= derniere; numero += 1) {
         file.push({type: "marche", marche: numero, table: choisie});
       }
     }
@@ -1748,7 +1775,31 @@
         : etape);
       reste = {...reste, file: reste.file.slice(reste.file.indexOf(etape.prevue) + 1)};
     }
-    return {etapes, minutes: etapes.reduce((somme, etape) => somme + etape.minutes, 0)};
+    const minutes = etapes.reduce((somme, etape) => somme + etape.minutes, 0);
+    const enFin = raccourciEnFin(parcours, seance, etapes);
+    return {etapes, minutes, raccourciEnFin: enFin, minutesMax: minutes + (enFin ? MINUTES_ETAPE.validation : 0)};
+  }
+
+  // Lot M2 : la validation du raccourci peut-elle s'ajouter EN PLUS des
+  // étapes annoncées (une 5e étape) ? Seulement si le raccourci se complète
+  // à la DERNIÈRE étape du programme — plus tôt, la validation prend la place
+  // de la suite. Donc : la dernière étape est « Dans le désordre » ou
+  // « Nombres manquants » jouée comme marche (pas la marche 8 remplacée), son
+  // 9 sur 10 manque encore, et l'autre est déjà gagné ou se joue plus tôt
+  // dans la séance ; pas de validation déjà prévue ; validation possible
+  // (table pas acquise, pas de mélange dû). La carte dit alors « 4 ou 5 étapes ».
+  function raccourciEnFin(parcours, seance, etapes) {
+    if (!seance.echelle || !etapes.length || seance.table === null) return false;
+    if (seance.faites.length + etapes.length >= SEUILS.seance.etapesMax) return false;
+    const ligne = parcours.tables[seance.table];
+    if (!ligne || ligne.acquise || melangeDu(parcours)) return false;
+    if (seance.faites.some(passee => passee.type === "validation")) return false;
+    if (etapes.some(etape => etape.prevue.type === "marche" && etape.prevue.marche === MARCHE_VALIDATION)) return false;
+    const derniere = etapes[etapes.length - 1];
+    if (derniere.type !== "entraine" || !CLES_SANS_FAUTE.includes(derniere.cle) || ligne.sansFaute[derniere.cle] === 1) return false;
+    const avant = etapes.slice(0, -1);
+    return CLES_SANS_FAUTE.every(cle => cle === derniere.cle || ligne.sansFaute[cle] === 1
+      || avant.some(etape => etape.type === "entraine" && etape.cle === cle));
   }
 
   // Une marche est-elle ratée ? Plus de 3 erreurs sur 10 (moins de 7 sur 10) ;
@@ -1804,6 +1855,12 @@
       suite.file = suite.remplacee || numero <= 1 ? []
         : [{type: "marche", marche: numero - 1, table, remplacement: true},
           ...(reprendre ? [{type: "marche", marche: numero, table, reprise: true}, ...reste] : [])];
+      // Lot M2 (décision de Gwenaël) : cinq étapes au plus — la marche refaite
+      // prend la place de la dernière marche du jour ; ratée à la 4e étape, il
+      // ne reste que la marche d'en dessous (la marche ratée est pour demain :
+      // le départ redescend, voir plus bas).
+      const place = SEUILS.seance.etapesMax - (suite.faites.length + 1);
+      if (suite.file.length > place) suite.file = suite.file.slice(0, Math.max(0, place));
       suite.remplacee = true;
       suite.reparee = false;
       if (suite.echelle) {
@@ -1817,7 +1874,16 @@
       if (faite.rate) descendre(etape.marche);
       // La marche ratée, refaite et réussie : le raté est réparé.
       else if (etape.prevue.reprise) suite.reparee = true;
-      if (!faite.rate && suite.echelle && !suite.file.some(prevue => prevue.marche === MARCHE_VALIDATION) && !suite.faites.some(passee => passee.type === "validation")
+      // Lot M2 : gagné sur la marche 8 jouée en entraînement (« si mes calculs
+      // sont prêts »), le raccourci ne rajoute pas une 5e étape que la carte
+      // n'a pas annoncée : la validation est pour demain (départ 6).
+      const surLaMarche8 = Boolean(etape.aLaPlaceDeLaValidation) && !suite.file.length;
+      // … et cinq étapes au plus : gagné à la 5e étape (après un raté), il
+      // attend lui aussi le lendemain.
+      const pasDePlace = suite.faites.length + 2 > SEUILS.seance.etapesMax;
+      // Lot M2 : la marche 8 déjà prévue (séance 5-6-7-8) devient elle-même la
+      // validation une fois le raccourci gagné — la séance garde ses 4 étapes.
+      if (!faite.rate && !surLaMarche8 && !pasDePlace && suite.echelle && !suite.file.some(prevue => prevue.marche === MARCHE_VALIDATION) && !suite.faites.some(passee => passee.type === "validation")
         && raccourciValidation(copie, table) && validationDeSeance(copie, table, suite)) {
         // Le raccourci : la validation tout de suite, à la place de la suite.
         suite.file = [{type: "marche", marche: MARCHE_VALIDATION, table, raccourci: true}];
@@ -1858,9 +1924,16 @@
 
   // Une table ratée sur le premier écran (« Tu connais déjà des tables ? ») :
   // l'élève la connaît en partie — sa séance commence aux entraînements
-  // (« Dans le désordre »), pas aux perles.
+  // (« Dans le désordre »), pas aux perles. Lot M2 (décision de Gwenaël) :
+  // moins de 10 bonnes réponses sur 20, elle repart des perles — la descente
+  // d'un cran par séance mettait quatre jours à y arriver.
   const MARCHE_APRES_DECOUVERTE = 5;
-  function commencerApresDecouverte(parcours, table, {depart = MARCHE_APRES_DECOUVERTE, aujourdhui = jourLocal()} = {}) {
+  function departApresDecouverte(juste) {
+    // Sans score (null, absent) : la marche 5, comme avant.
+    const score = juste === null || juste === undefined || juste === "" ? NaN : Number(juste);
+    return Number.isFinite(score) && score < SEUILS.decouverte.sous ? SEUILS.decouverte.departBas : MARCHE_APRES_DECOUVERTE;
+  }
+  function commencerApresDecouverte(parcours, table, {juste = null, depart = departApresDecouverte(juste), aujourdhui = jourLocal()} = {}) {
     const copie = cloner(parcours);
     const ligne = copie.tables[table];
     if (!ligne || ligne.acquise) return parcours;
@@ -2681,6 +2754,7 @@
     bilanSeances,
     resumeProf,
     commencerApresDecouverte,
+    departApresDecouverte,
     MARCHE_APRES_DECOUVERTE,
     CLE_SEL,
     ITERATIONS_EMPREINTE,
