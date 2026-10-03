@@ -9,16 +9,13 @@ const root = path.resolve(testDir, "..");
 const html = readFileSync(path.join(root, "index.html"), "utf8");
 const css = readFileSync(path.join(root, "assets/css/accueil.css"), "utf8");
 
-test("le pied d’accueil sépare la signature, les actions et les liens légaux", () => {
+test("le pied d’accueil conserve les actions et les liens légaux sans signature", () => {
   const footer = html.match(/<footer class="home-footer">([\s\S]*?)<\/footer>/)?.[1];
   assert.ok(footer, "le pied d’accueil doit être identifiable explicitement");
 
-  const identityRow = footer.match(
-    /<span class="footer-row footer-row-identity">([\s\S]*?)<\/span>\s*<span class="footer-section-separator"/
-  )?.[1];
-  assert.ok(identityRow);
-  assert.match(identityRow, /Gwenaël Bourgault/);
-  assert.doesNotMatch(identityRow, /Me contacter|Toutes les ressources|aria-hidden="true">·/);
+  assert.doesNotMatch(footer, /Gwenaël Bourgault|footer-row-identity/);
+  assert.equal((footer.match(/class="footer-row /g) || []).length, 2);
+  assert.equal((footer.match(/class="footer-section-separator"/g) || []).length, 1);
 
   const actionsRow = footer.match(
     /<span class="footer-row footer-row-actions">([\s\S]*?)<\/span>\s*<span class="footer-section-separator"/
@@ -46,7 +43,7 @@ test("le pied reste sur une ligne continue sur ordinateur", () => {
   );
 });
 
-test("le pied compact affiche les trois groupes sans séparateur orphelin", () => {
+test("le pied compact affiche les deux groupes sans séparateur orphelin", () => {
   const compact = css.slice(
     css.indexOf("@media (max-width: 920px)"),
     css.indexOf(".footer-row {")
