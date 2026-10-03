@@ -42,7 +42,7 @@ const DESSIN = ["sysEnPlateaux", "sysTotalCache", "sysRayonJeton", "sysGrille", 
   "sysCorrLargeurCalcul", "sysCorrAjuster", "drawSysCase", "drawSysBarre", "drawSysCadre", "blobPath", "wrapTextToWidth", "beadColorForValue",
   "drawInvestigateSplatName", "investigateColorInfo", "sysTelMesures", "drawSysCadrePortrait", "drawSysCorrectionTelephone"].map(fn).join("\n");
 const ELEVE = ["eleveInfosEnquete", "eleveInfosSysteme", "eleveInfosTableau", "eleveSchemaEtapes", "eleveTacheCouleurHtml", "eleveCaseDonneeHtml",
-  "eleveCasesEnqueteHtml", "eleveCaseHtml"].map(fn).join("\n");
+  "eleveCasesEnqueteHtml", "eleveCaseHtml", "eleveCaseCopieHtml"].map(fn).join("\n");
 
 /* faux SVG : des objets, les textes gardés dans l'ordre */
 const FAUX_SVG = `
@@ -106,18 +106,22 @@ for(const geste of sys.GESTES) for(const r of REGLAGES) for(const g of graines(4
 
 const textes = (n, out = []) => { if(!n) return out; if(n.name === "text") out.push(n); (n.children || []).forEach((c) => textes(c, out)); return out; };
 const elements = (n, name, out = []) => { if(!n) return out; if(n.name === name) out.push(n); (n.children || []).forEach((c) => elements(c, name, out)); return out; };
-const casesDe = (h) => [...h.matchAll(/<div class="eleveCase ([^"]+)" style="([^"]+)"( data-attendu="(\d+)")?>([\s\S]*?)<\/div>/g)]
-  .map((m) => ({ classes: m[1], style: m[2], attendu: m[4], contenu: m[5] }));
+const casesDe = (h) => [...h.matchAll(/<div class="eleveCase ([^"]+)" style="([^"]+)"( data-attendu="(\d+)")?( data-copie="(\d+)")?>([\s\S]*?)<\/div>/g)]
+  .map((m) => ({ classes: m[1], style: m[2], attendu: m[4], copie: m[6], contenu: m[7] }));
 
-// --- le tableau : une case par couleur ----------------------------------------------------
-test("chaque carte du Système donne une case par COULEUR, dans l'ordre des couleurs de la carte, avec la valeur de la couleur", () => {
+// --- le tableau : une case par tache (03/10/2026 ; une par couleur avant, tableau faux) -----
+test("chaque carte du Système donne une case par TACHE du plateau principal, couleur après couleur dans l'ordre de la carte", () => {
   assert.ok(CARTES.length > 2000);
   for(const c of CARTES){
     const i = sys.infos(c);
     assert.ok(i && i.systeme, "une carte du Système a son tableau");
-    assert.equal(i.ordre.length, c._sys.colors.length, "une case par couleur");
-    assert.deepEqual(i.ordre.map((k) => c._colorMap[k]), c._sys.colors, "dans l'ordre des couleurs (celui des rangées de la grille)");
-    assert.deepEqual(i.ordre.map((k) => i.valeurs[k]), c._sys.colors.map((k) => c._sys.values[k]), "la valeur cachée par la couleur");
+    assert.equal(i.ordre.length, c.hidden.length, "une case par tache : sous le TOTAL, le tableau doit faire le compte");
+    assert.deepEqual([...i.ordre].sort((a, b) => a - b), c.hidden.map((_, k) => k), "chaque tache une fois");
+    const suite = i.ordre.map((k) => c._colorMap[k]);
+    assert.deepEqual([...new Set(suite)], c._sys.colors, "dans l'ordre des couleurs (celui des rangées de la grille)");
+    suite.forEach((k, j) => { if(j > 0 && k !== suite[j - 1]) assert.ok(!suite.slice(0, j).includes(k), "les taches d'une couleur se suivent"); });
+    assert.deepEqual(i.ordre.map((k) => i.valeurs[k]), suite.map((k) => c._sys.values[k]), "la valeur cachée par la couleur");
+    assert.equal(i.ordre.reduce((s, k) => s + i.valeurs[k], 0) + i.visibleSum, c.total, "le tableau est juste : cases + visibles = TOTAL");
     assert.equal(i.visibleSum, (c.visible || []).reduce((s, v) => s + v, 0));
     assert.equal(i.tasks, c.hidden.length);
     // eleveInfosTableau : le Système passe par le même chemin que l'Enquête
@@ -142,20 +146,35 @@ test("les cases : largeur égale, mini-tache à la couleur + nom, « ? » ; les 
   const coef = CARTES.find((c) => c._sys.geste === "COEF" && c.hidden.length === 4 && c.visible.length === 0);
   const i = sys.infos(coef);
   const cases = casesDe(sys.bas(coef, i));
-  assert.equal(cases.length, 2, "quatre taches, deux couleurs : deux cases");
-  assert.deepEqual(cases.map((x) => x.style), ["flex:1 1 0", "flex:1 1 0"]);
+  assert.equal(cases.length, 4, "quatre taches : quatre cases");
+  assert.deepEqual(cases.map((x) => x.style), ["flex:1 1 0", "flex:1 1 0", "flex:1 1 0", "flex:1 1 0"]);
+  const vues = new Map();
   cases.forEach((x, k) => {
-    assert.equal(x.classes, "grise");
-    assert.equal(x.attendu, String(coef._sys.values[coef._sys.colors[k]]));
+    const coul = coef._colorMap[i.ordre[k]];
+    assert.equal(x.attendu, String(coef._sys.values[coul]));
     assert.match(x.contenu, /class="eleveTacheCouleur"/);
-    assert.match(x.contenu, /placeholder="\?"/);
+    if(!vues.has(coul)){
+      // la première case de la couleur : celle où l'élève tape
+      vues.set(coul, k);
+      assert.equal(x.classes, "grise");
+      assert.equal(x.copie, undefined);
+      assert.match(x.contenu, /placeholder="\?"/);
+    }else{
+      // les suivantes recopient (03/10/2026, « retaper, c'est chiant ») : pas de champ, « ? » en attendant
+      assert.equal(x.classes, "grise copie");
+      assert.equal(x.copie, String(vues.get(coul)), "le rang de la case où l'élève tape");
+      assert.doesNotMatch(x.contenu, /<input/);
+      assert.match(x.contenu, /<span class="eleveCopieVal vide">\?<\/span>$/);
+    }
   });
+  assert.equal(vues.size, coef._sys.colors.length, "un champ par couleur");
   const vis = CARTES.find((c) => c.visible.length >= 2);
   const cv = casesDe(sys.bas(vis, sys.infos(vis)));
   assert.equal(cv[0].classes, "blanche", "les jetons visibles : case à remplir (02/10/2026), avant les couleurs");
   assert.equal(cv[0].attendu, String(vis.visible.reduce((s, v) => s + v, 0)));
   assert.match(cv[0].contenu, /<span>visibles<\/span><\/span><input class="eleveChamp"/);
-  assert.equal(cv.length, 1 + vis._sys.colors.length);
+  assert.equal(cv.length, 1 + vis.hidden.length);
+  cv.filter((x) => x.copie !== undefined).forEach((x) => assert.ok(Number(x.copie) >= 1, "les visibles en tête : le rang compte leur case"));
   // Trois paires : total du plateau principal caché
   const trois = CARTES.find((c) => c._sys.geste === "TROIS");
   assert.ok(sys.totalCache(trois));
@@ -172,7 +191,7 @@ test("renderEleveSplat : le Système passe (classe « systeme »), le TOTAL donn
 });
 
 // --- après la validation --------------------------------------------------------------------
-test("après validation, les cases du Système restent ÉGALES (une case vaut une couleur, pas une tache) ; l'Enquête garde ses vraies largeurs", () => {
+test("après validation, les cases prennent leur vraie largeur, au Système comme à l'Enquête (une case vaut une tache depuis le 03/10/2026)", () => {
   const casesBas = [{ attendu: "9" }, { attendu: "4" }].map((c) => ({ ...c, style: {}, classList: { contains: () => false }, getAttribute: () => c.attendu }));
   const diag = { classes: [], classList: { add(k){ diag.classes.push(k); } } };
   const panneau = { classList: { contains: (k) => k === "enquete" }, querySelector: (sel) => (sel === ".eleveDiag" ? diag : null), querySelectorAll: () => casesBas };
@@ -187,8 +206,9 @@ test("après validation, les cases du Système restent ÉGALES (une case vaut un
     eleveEnqueteLargeursVraies();
   `)({ getElementById: () => panneau });
   lancer(true);
-  assert.deepEqual(casesBas.map((c) => c.style.flexGrow), [undefined, undefined], "Système : rien ne bouge");
-  assert.deepEqual(diag.classes, [], "pas de classe « vraies » non plus");
+  assert.deepEqual(casesBas.map((c) => c.style.flexGrow), ["9", "4"], "Système : chaque tache à sa valeur");
+  assert.deepEqual(diag.classes, ["vraies"]);
+  casesBas.forEach((c) => { delete c.style.flexGrow; });
   lancer(false);
   assert.deepEqual(casesBas.map((c) => c.style.flexGrow), ["9", "4"], "Enquête : inchangée");
 });

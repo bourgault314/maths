@@ -183,6 +183,7 @@ function monter({ tactile = true, largeur = 390, hauteur = 664, ecran = { width:
     // les deux voisines de la page, remplacées par des espions
     "function eleveValiderSplat(){ validations.push(true); if (reussite) document.getElementById('eleveValider').disabled = true; }",
     "function eleveCalerLargeur(){ calages++; }",
+    "function eleveTableauSerrer(){}", // Enquête : le tableau serré (couvert par splat-enquete-mode-eleve)
     declaration("let elevePave = null"),
     declaration("const ELEVE_PLATEAU_MIN "),
     // lot E7 : la hauteur et la réserve de l'Enquête au téléphone (hors Enquête : sans effet)
