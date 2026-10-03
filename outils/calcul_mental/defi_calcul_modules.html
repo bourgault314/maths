@@ -79,7 +79,7 @@
     })(window);
   </script>
   <script defer src="../../assets/js/mention-confidentialite.js"></script>
-  <link rel="stylesheet" href="./defi_calcul.css?v=20261003-2">
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261003-3">
 </head>
 <body>
   <main class="shell">
@@ -98,8 +98,8 @@
       <p id="suivi-repere" class="suivi-repere" hidden></p>
       <div id="suivi-garde" class="suivi-garde" role="dialog" aria-modal="true" aria-labelledby="suivi-garde-titre" hidden>
         <div class="suivi-garde-carte">
-          <p id="suivi-garde-titre" class="suivi-garde-titre">C’est toujours toi ?</p>
-          <p class="suivi-garde-note">Personne n’a touché à cet écran depuis un moment. Si c’est toi, retape ton code (il est sur ta bandelette). Sinon, appuie sur «&nbsp;Non&nbsp;» : ton camarade retrouvera son parcours avec son code.</p>
+          <p id="suivi-garde-titre" class="suivi-garde-titre">C’est toujours toi&nbsp;?</p>
+          <p class="suivi-garde-note">Personne n’a touché à cet écran depuis un moment. Si c’est toi, retape ton code (il est sur ta bandelette). Sinon, appuie sur «&nbsp;Non&nbsp;»&nbsp;: ton camarade retrouvera son parcours avec son code.</p>
           <form id="suivi-garde-form" class="suivi-garde-form" autocomplete="off">
             <label class="suivi-garde-label" for="suivi-garde-code">Ton code</label>
             <input id="suivi-garde-code" class="suivi-garde-code" type="text" inputmode="latin" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="6" size="6" aria-describedby="suivi-garde-erreur">
@@ -173,7 +173,7 @@
           <div id="expression" class="expression" tabindex="-1" role="status" aria-live="polite" aria-atomic="true"></div>
           <p id="answer-feedback" class="answer-feedback" role="status" aria-live="polite"></p>
           <div id="aide" class="dc-aide" hidden></div>
-          <div id="touches" class="dc-touches"></div>
+          <div id="touches" class="dc-touches" hidden><button type="button" data-key="," aria-label="Virgule">,</button></div>
           <div class="keypad" role="group" aria-label="Clavier numérique">
             <button type="button" data-key="1">1</button><button type="button" data-key="2">2</button><button type="button" data-key="3">3</button>
             <button type="button" data-key="4">4</button><button type="button" data-key="5">5</button><button type="button" data-key="6">6</button>
@@ -233,9 +233,9 @@
     <span data-mathsgo-confidentialite>Sans cookie ni traceur</span>
   </footer>
 
-  <script src="./defi_calcul_core.js?v=20261003-2"></script>
-  <script src="./defi_calcul_mon_parcours.js?v=20261003-2"></script>
-  <script src="./defi_calcul_aides.js?v=20261003-2"></script>
+  <script src="./defi_calcul_core.js?v=20261003-3"></script>
+  <script src="./defi_calcul_mon_parcours.js?v=20261003-3"></script>
+  <script src="./defi_calcul_aides.js?v=20261003-3"></script>
   <script>
     (() => {
       "use strict";
@@ -272,7 +272,8 @@
         waitingForContinue: false,
         correctionAfficheeA: 0,
         autoAdvanceTimer: null,
-        perles: null,
+        // L'aide qu'on touche dans « J'apprends » (rekenrek, glisse-nombres).
+        manip: null,
         palier: null,
         module: null,
         titreResultat: "result-title"
@@ -958,7 +959,7 @@
         const titre = document.getElementById("suivi-garde-titre");
         if (titre) {
           const qui = prenomAffiche();
-          titre.textContent = qui ? `C’est toujours toi, ${qui} ?` : "C’est toujours toi ?";
+          titre.textContent = qui ? `C’est toujours toi, ${qui}\u00a0?` : "C’est toujours toi\u00a0?";
         }
         const erreur = document.getElementById("suivi-garde-erreur");
         if (erreur) {
@@ -1160,7 +1161,7 @@
       //  - une page longue (« Comment ça marche ? ») : ×1 en fenêtre, la
       //    largeur en plein écran ;
       //  - téléphone et tablette (moins de 1 024 px de large) : ×1, toujours.
-      const ECHELLE = Object.freeze({largeurMin: 1024, min: 0.8, max: 1.6, maxPerles: 1.2, largeurColonne: 850, largeurBase: 1280, basCadre: 12});
+      const ECHELLE = Object.freeze({largeurMin: 1024, min: 0.8, max: 1.6, maxPerles: 1.2, maxGlisse: 1.6, largeurColonne: 850, largeurBase: 1280, basCadre: 12});
       function bornesEchelle(largeur, pleinEcran) {
         if (largeur < ECHELLE.largeurMin) return {min: 1, max: 1, longue: 1};
         const parLargeur = Math.max(1, Math.min(ECHELLE.max, (largeur - 32) / ECHELLE.largeurColonne));
@@ -1204,10 +1205,11 @@
         const tient = z => {
           racine.style.setProperty("--echelle", z.toFixed(3));
           // Le rekenrek se recalcule à la taille qu'on essaie : c'est lui
-          // qui fait déborder le cadre quand la place manque.
-          if (state.perles) {
-            state.perles.mesurer();
-            if (state.perles.deborde) return false;
+          // qui fait déborder le cadre quand la place manque. Le
+          // glisse-nombres remesure ses colonnes.
+          if (state.manip) {
+            state.manip.mesurer();
+            if (state.manip.deborde) return false;
           }
           if (!fige && corps.offsetHeight > limite) return false;
           return !(enJeu && carte && carte.scrollHeight > carte.clientHeight + 1);
@@ -1215,14 +1217,16 @@
         const defilement = window.scrollY;
         corps.classList.add("mesure-cadre");
         // Le rekenrek se manipule : en plein écran, la place va d'abord aux
-        // perles (plus le cadre grossit, plus elles rapetissent).
-        const maximum = state.perles ? Math.min(bornes.max, ECHELLE.maxPerles) : bornes.max;
+        // perles (plus le cadre grossit, plus elles rapetissent). Le
+        // glisse-nombres a une taille fixe : il grandit avec le cadre.
+        const plafond = state.manip ? (state.manip.outil === "perles" ? ECHELLE.maxPerles : ECHELLE.maxGlisse) : ECHELLE.max;
+        const maximum = Math.min(bornes.max, plafond);
         // Un écran qui ne tient à aucune échelle garde la plus petite : moins
         // il reste à faire défiler, mieux c'est.
         const z = chercherEchelle({...bornes, max: maximum, longue: bornes.min}, tient);
         corps.classList.remove("mesure-cadre");
         racine.style.setProperty("--echelle", z.toFixed(3));
-        if (state.perles) state.perles.mesurer();
+        if (state.manip) state.manip.mesurer();
         if (window.scrollY !== defilement) window.scrollTo(0, defilement);
       }
       window.addEventListener("resize", ajusterEchelle);
@@ -1594,6 +1598,9 @@
         show("module");
       }
 
+      // Sous « J'apprends », ce qu'on va manipuler.
+      const DETAIL_APPRENDS = Object.freeze({perles: "avec les perles et la droite", glisse: "avec le glisse-nombres et le tableau", aucun: "avec la droite"});
+
       function renderModule() {
         const id = state.module || moduleCourant();
         const fiche = id ? CORE.moduleDe(id) : null;
@@ -1657,7 +1664,7 @@
           return bouton;
         };
         $("module-etapes").replaceChildren(
-          etape(1, "J’apprends", niveau.apprends.manipule ? "avec les perles et la droite" : "avec la droite",
+          etape(1, "J’apprends", DETAIL_APPRENDS[niveau.apprends.manipule ? niveau.apprends.manipule.outil : "aucun"],
             () => lancerApprends(id, niveau.n, "module")),
           etape(2, "Je m’entraîne", "10 calculs, sans chrono", () => lancerSerie(id, niveau.n, "entraine", "module")),
           etape(3, `Je valide le niveau ${niveau.n}`, fait ? "12 calculs · 10 justes, sans traîner" : "10 calculs · 8 justes",
@@ -1673,11 +1680,12 @@
       }
 
       function retirerAide() {
-        if (state.perles) { state.perles.detruire(); state.perles = null; }
+        if (state.manip) { state.manip.detruire(); state.manip = null; }
         const aide = $("aide");
         aide.replaceChildren();
         aide.hidden = true;
-        $("question-card").classList.remove("aide-perles", "aide-image", "est-finie", "sans-retour", "ecrit");
+        $("touches").hidden = true;
+        $("question-card").classList.remove("aide-perles", "aide-glisse", "aide-image", "est-finie", "sans-retour", "ecrit");
       }
 
       function arreterActivite() {
@@ -1705,14 +1713,53 @@
       // ce délai, un appui est ignoré — deux appuis rapides sautaient la
       // correction.
       const DELAI_LECTURE_CORRECTION_MS = 700;
-      const CHIFFRES_MAX = 6;
+      // Les réponses vont jusqu'à 7 signes, virgule comprise (999 000,
+      // 4 078,74, 890,512) ; un de plus pour qu'un zéro de trop (988,7730)
+      // puisse être tapé, et reconnu.
+      const CHIFFRES_MAX = 8;
+
+      // La touche « , » au-dessus du pavé, dans les modules à décimales.
+      function renderTouches(id) {
+        const fiche = CORE.moduleDe(id);
+        $("touches").hidden = !(fiche && fiche.virgule);
+      }
 
       function renderInlineAnswer(status = "") {
         const slot = $("inline-answer");
-        if (!slot) return;
+        // Un calcul sans case (l'exemple du glisse-nombres) se mesure aussi :
+        // la taille d'avant ne doit pas rester.
+        if (!slot) { ajusterCalcul(); return; }
         slot.textContent = state.answer || " ";
         slot.className = `inline-answer${status ? ` ${status}` : ""}`;
         slot.setAttribute("aria-label", state.answer ? `Réponse ${state.answer}` : "Réponse à saisir");
+        ajusterCalcul();
+      }
+
+      // Un calcul tient sur UNE ligne : s'il déborde (« 407,874 × 10 =
+      // 4 078,74 », ou au téléphone « = 2 milliers et 7 centaines » dans
+      // « J'écris »), il s'écrit plus petit, jusqu'à tenir.
+      function ajusterCalcul() {
+        const expression = $("expression");
+        if (!expression) return;
+        expression.style.fontSize = "";
+        // La largeur du texte contre la place dans la boîte, moins un peu
+        // d'air de chaque côté (en pixels d'écran : le cadre peut être zoomé).
+        const boite = expression.getBoundingClientRect();
+        if (!boite.width) return;
+        const zoom = boite.width / (expression.offsetWidth || 1);
+        const style = window.getComputedStyle(expression);
+        const place = boite.width - (parseFloat(style.paddingLeft) + parseFloat(style.paddingRight) + 12) * zoom;
+        const largeur = () => {
+          const morceau = document.createRange();
+          morceau.selectNodeContents(expression);
+          return morceau.getBoundingClientRect().width;
+        };
+        if (largeur() <= place) return;
+        let taille = parseFloat(style.fontSize);
+        while (taille > 18 && largeur() > place) {
+          taille -= 2;
+          expression.style.fontSize = `${taille}px`;
+        }
       }
 
       const insecable = texte => String(texte).replace(/ /g, " ");
@@ -1797,7 +1844,7 @@
           morceaux.push(p);
         }
         const dessin = document.createElement("div");
-        dessin.innerHTML = AIDES.droiteSauts(image);
+        dessin.innerHTML = AIDES.dessinerImage(image);
         morceaux.push(dessin.firstChild);
         aide.replaceChildren(...morceaux);
         aide.hidden = false;
@@ -1868,20 +1915,24 @@
         carte.classList.add("no-skip");
         clearAnswerFeedback();
         if (nom === "manipule") {
-          // Pas de pavé : on touche les perles, l'appli écrit les calculs.
+          // Pas de pavé : on touche les perles ou la bande, l'appli écrit les
+          // calculs.
           renderExpression(apprends.exemple.texte, "dc-petit");
-          carte.classList.add("aide-perles");
+          const glisse = apprends.manipule.outil === "glisse";
+          carte.classList.add(glisse ? "aide-glisse" : "aide-perles");
           $("aide").hidden = false;
           $("validate").textContent = "Suivant";
-          state.perles = AIDES.perles100($("aide"), Object.assign({}, apprends.manipule, {
+          const options = Object.assign({}, apprends.manipule, {
             surFini() {
               carte.classList.add("est-finie");
               state.waitingForContinue = true;
               $("validate").focus?.({preventScroll: true});
             }
-          }));
+          });
+          state.manip = glisse ? AIDES.glisseNombres($("aide"), options) : AIDES.perles100($("aide"), options);
         } else if (nom === "represente") {
           renderExpression(apprends.represente.texte);
+          renderTouches(serie.module);
           montrerImage(apprends.represente.image, apprends.represente.consigne);
           carte.classList.add("sans-retour");
         } else {
@@ -1893,6 +1944,7 @@
             lignes.append(ligne);
           });
           carte.classList.add("ecrit");
+          renderTouches(serie.module);
           const expression = $("expression");
           expression.className = "expression dc-lignes";
           expression.replaceChildren(lignes);
@@ -1926,7 +1978,7 @@
         const serie = state.serie;
         const nom = serie.temps[serie.index];
         if (nom === "manipule") {
-          if (state.perles && state.perles.fini) avancerTemps();
+          if (state.manip && state.manip.fini) avancerTemps();
           return;
         }
         if (state.waitingForContinue) { avancerTemps(); return; }
@@ -1986,7 +2038,7 @@
         $("result-verdict").hidden = true;
         $("result-retenir").hidden = false;
         $("retenir-phrase").textContent = serie.apprends.bilan;
-        $("retenir-image").innerHTML = AIDES.droiteSauts(serie.apprends.image);
+        $("retenir-image").innerHTML = AIDES.dessinerImage(serie.apprends.image);
         $("result-suite").replaceChildren(boutonsDeSuite(
           ["Je m’entraîne →", "primary", () => lancerSerie(serie.module, serie.niveau, "entraine", state.origine)],
           ["Revoir l’exemple", "secondary", () => lancerApprends(serie.module, serie.niveau, state.origine)]
@@ -2038,6 +2090,7 @@
         state.answer = "";
         state.effacerAuProchain = false;
         renderExpression(question.calcul.texte);
+        renderTouches(serie.module);
         clearAnswerFeedback();
         $("question-card").scrollTop = 0;
         $("expression").focus?.({preventScroll: true});
@@ -2072,6 +2125,9 @@
           if (cause) {
             feedback.textContent = cause.texte;
             montrerImage(cause.image);
+            // La touche « , » ne sert plus (la réponse est écrite) : la place
+            // va à l'image.
+            $("touches").hidden = true;
           } else {
             feedback.textContent = passe
               ? `Pas de réponse. Bonne réponse : ${attendue}.`
@@ -2094,7 +2150,7 @@
         const question = serie.questions[serie.index];
         const ms = Math.round(performance.now() - serie.debut);
         const juste = !passe && CORE.memeNombre(valeur, question.calcul.reponse);
-        const cause = !juste && !passe ? CORE.diagnostiquer(question.calcul, valeur) : null;
+        const cause = !juste && !passe ? CORE.diagnostiquer(question.calcul, valeur, state.answer) : null;
         // Seule la première réponse à un calcul compte, pour le score comme
         // pour les causes d'erreur : celui qui revient vient d'être corrigé
         // sous les yeux de l'élève.
@@ -2126,6 +2182,8 @@
         if (!state.running || state.waitingForContinue) return;
         if (state.effacerAuProchain) { state.answer = ""; state.effacerAuProchain = false; }
         if (state.answer.length >= CHIFFRES_MAX) return;
+        // Une seule virgule, et seulement là où la touche est montrée.
+        if (digit === "," && ($("touches").hidden || state.answer.includes(","))) return;
         state.answer += digit;
         renderInlineAnswer();
         clearAnswerError();
@@ -2318,12 +2376,15 @@
         if (gardeVisible) return;
         const cible = event.target;
         if (cible && typeof cible.closest === "function" && cible.closest("#suivi-garde")) return;
-        // Le rekenrek se joue au doigt : seule Entrée répond, une fois le
-        // geste fait (« Suivant »).
-        const perles = $("question-card").classList.contains("aide-perles");
-        if (/^\d$/.test(event.key) && !perles) enterDigit(event.key);
-        else if (event.key === "Backspace" && !perles) effacer(false);
-        else if ((event.key === "Delete" || event.key === "Escape") && !perles) effacer(true);
+        // Le rekenrek et le glisse-nombres ont leurs touches à eux (flèches,
+        // Entrée) ; ici, seule Entrée répond, une fois le geste fait
+        // (« Suivant »).
+        const carte = $("question-card");
+        const manip = carte.classList.contains("aide-perles") || carte.classList.contains("aide-glisse");
+        if (/^\d$/.test(event.key) && !manip) enterDigit(event.key);
+        else if ((event.key === "," || event.key === ".") && !manip && !$("touches").hidden) enterDigit(",");
+        else if (event.key === "Backspace" && !manip) effacer(false);
+        else if ((event.key === "Delete" || event.key === "Escape") && !manip) effacer(true);
         else if (event.key === "Enter") {
           // Entrée gardée enfoncée ne fait pas défiler les corrections.
           if (!event.repeat) next(false);
@@ -2341,12 +2402,17 @@
       // Pour les contrôles au navigateur (?test) : le calcul à l'écran et la
       // progression, en lecture seule.
       if (new URLSearchParams(window.location.search).has("test")) {
+        const arretsDeLaBande = [];
+        document.addEventListener("decalage", event => arretsDeLaBande.push(Object.assign({}, event.detail)));
         Object.defineProperty(window, "__MATHSGO_DEFI_CALCUL_TEST__", {
           configurable: true,
           value: Object.freeze({
             calcul: () => (state.running && state.serie && state.serie.questions ? state.serie.questions[state.serie.index].calcul : null),
             parcours: () => JSON.parse(JSON.stringify(parcours)),
-            perles: () => (state.perles ? {etape: state.perles.etape, total: state.perles.total, fini: state.perles.fini} : null)
+            perles: () => (state.manip && state.manip.outil === "perles" ? {etape: state.manip.etape, total: state.manip.total, fini: state.manip.fini} : null),
+            glisse: () => (state.manip && state.manip.outil === "glisse" ? {decalage: state.manip.decalage, fini: state.manip.fini} : null),
+            // Les arrêts de la bande, dans l'ordre : {decalage, accepte}.
+            arrets: () => arretsDeLaBande.slice()
           })
         });
       }

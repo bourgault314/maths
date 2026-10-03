@@ -1,4 +1,4 @@
-// Défi calcul — les modules (lot 1a, 03/10/2026).
+// Défi calcul — les modules (lot 1a, 03/10/2026 ; M2 et D2 au lot 1b).
 //
 // Un module = une fiche de données : son nom, ses niveaux, ses générateurs,
 // ses erreurs connues, les trois temps de « J'apprends ». Tout texte vu par
@@ -79,23 +79,40 @@
   const ESPACE_FINE = " ";
 
   // « 2 700 », « 3,6 » : l'espace fine insécable des milliers, la virgule.
+  // Jusqu'aux millionièmes (3,6 ÷ 1 000 = 0,0036 est une erreur à montrer
+  // telle quelle) ; les zéros inutiles tombent (« 2,50 » s'écrit « 2,5 »).
   function formaterNombre(nombre) {
     const n = Number(nombre);
     if (!Number.isFinite(n)) return "";
     const signe = n < 0 ? "−" : "";
-    const [entiere, decimales = ""] = Math.abs(n).toFixed(3).split(".");
+    const [entiere, decimales = ""] = Math.abs(n).toFixed(6).split(".");
     const groupes = entiere.replace(/\B(?=(\d{3})+(?!\d))/g, ESPACE_FINE);
     const reste = decimales.replace(/0+$/, "");
     return signe + groupes + (reste ? "," + reste : "");
   }
 
   // Ce que l'élève a tapé, en nombre : virgule ou point, espaces ignorées,
-  // « 360 » et « 360,0 » sont le même nombre. null si ce n'est pas un nombre.
+  // « 360 » et « 360,0 » sont le même nombre, « ,5 » est 0,5. null si ce
+  // n'est pas un nombre (deux virgules, une virgule seule).
   function lireReponse(texte) {
     const propre = String(texte == null ? "" : texte).replace(/[\s  ]/g, "").replace(",", ".");
     if (!/^\d+(\.\d*)?$|^\.\d+$/.test(propre)) return null;
     const nombre = Number(propre);
     return Number.isFinite(nombre) ? nombre : null;
+  }
+
+  // Un résultat décimal exact : 1,082 × 100 donne 108,2 et pas
+  // 108,20000000000002 (le calcul en virgule flottante est arrondi au
+  // millionième, bien au-delà des millièmes du programme).
+  function exact(nombre) {
+    return Number(Number(nombre).toFixed(6));
+  }
+
+  // Le nombre de chiffres après la virgule (2,5 → 1 ; 4,107 → 3 ; 360 → 0).
+  function decimalesDe(nombre) {
+    const texte = formaterNombre(nombre);
+    const virgule = texte.indexOf(",");
+    return virgule < 0 ? 0 : texte.length - virgule - 1;
   }
 
   function memeNombre(premier, second) {
@@ -118,11 +135,14 @@
   // Un calcul : le texte avec sa case, la réponse, une clé stable sans texte
   // libre, la forme, et les nombres dont les erreurs connues ont besoin.
   // Clé : module, niveau, puis les nombres dans l'ordre du texte ; la case
-  // s'écrit « x », sauf quand elle est le résultat, en dernier.
+  // s'écrit « x », sauf quand elle est le résultat, en dernier. Le signe
+  // « ÷ » s'écrit « q » (quotient) : sans lui, 30 × 10 et 30 ÷ 10 auraient
+  // la même clé.
   function fabriquer(module, niveau, forme, morceaux, reponse, donnees) {
     const texte = morceaux.map(m => (m === TROU ? CASE : typeof m === "number" ? formaterNombre(m) : m)).join(" ");
-    const operandes = morceaux.filter(m => m === TROU || typeof m === "number");
-    const cles = operandes.map((m, index) => (m === TROU ? (index === operandes.length - 1 ? null : "x") : cleNombre(m)))
+    const operandes = morceaux.filter(m => m === TROU || typeof m === "number" || m === "÷");
+    const derniere = operandes.map(m => m !== "÷").lastIndexOf(true);
+    const cles = operandes.map((m, index) => (m === "÷" ? "q" : m === TROU ? (index === derniere ? null : "x") : cleNombre(m)))
       .filter(m => m !== null);
     return Object.freeze({
       texte, reponse, forme, module, niveau,
@@ -480,6 +500,361 @@
     });
   }
 
+  // --------------------------------------------- M2, D2 : × 10, × 100, × 1 000
+
+  const PUISSANCES = Object.freeze([10, 100, 1000]);
+  const colonnesDe = p => Math.round(Math.log10(p));
+  const pluriel = (nombre, mot) => `${nombre} ${mot}${nombre > 1 ? "s" : ""}`;
+  // « 2,50 » tel que l'élève l'a tapé (le point devient une virgule) ; à
+  // défaut, le nombre écrit proprement.
+  const commeEcrit = (reponse, ecrit) => (ecrit ? String(ecrit).replace(/\./g, ",") : formaterNombre(reponse));
+
+  // Les formes communes aux deux modules. Les nombres utiles aux erreurs
+  // connues : n (le nombre multiplié), p (10, 100 ou 1 000), m = n × p.
+  function produit(module, niveau, n, p, gauche = false) {
+    const m = exact(n * p);
+    return gauche
+      ? fabriquer(module, niveau, "produit-gauche", [p, "×", n, "=", TROU], m, {n, p, m})
+      : fabriquer(module, niveau, "produit", [n, "×", p, "=", TROU], m, {n, p, m});
+  }
+  // n × □ = m : la réponse est la puissance.
+  const trouFacteur = (module, niveau, n, p) => fabriquer(module, niveau, "trou-facteur", [n, "×", TROU, "=", exact(n * p)], p, {n, p, m: exact(n * p)});
+  // m = n × □ : la réponse est la puissance, l'égalité écrite à l'envers.
+  const trouEgal = (module, niveau, n, p) => fabriquer(module, niveau, "trou-egal", [exact(n * p), "=", n, "×", TROU], p, {n, p, m: exact(n * p)});
+  // □ × p = m : la réponse est le nombre.
+  const trouNombre = (module, niveau, n, p) => fabriquer(module, niveau, "trou-nombre", [TROU, "×", p, "=", exact(n * p)], n, {n, p, m: exact(n * p)});
+  // p × □ = m : la réponse est le nombre.
+  const trouNombreGauche = (module, niveau, n, p) => fabriquer(module, niveau, "trou-nombre-gauche", [p, "×", TROU, "=", exact(n * p)], n, {n, p, m: exact(n * p)});
+  // m ÷ p = □ : la réponse est n.
+  const division = (module, niveau, n, p) => fabriquer(module, niveau, "division", [exact(n * p), "÷", p, "=", TROU], n, {n, p, m: exact(n * p)});
+
+  const estProduit = calcul => calcul.forme === "produit" || calcul.forme === "produit-gauche";
+  const estTrouNombre = calcul => calcul.forme === "trou-nombre" || calcul.forme === "trou-nombre-gauche";
+
+  // Tire `nombre` calculs aux clés toutes différentes (et différentes de
+  // celles des imposés). `tirer(rng)` rend un calcul.
+  function tirerCalculs(rng, nombre, tirer, deja = []) {
+    const cles = new Set(deja.map(c => c.cle));
+    const liste = [];
+    let essais = 0;
+    while (liste.length < nombre && essais < 5000) {
+      essais += 1;
+      const calcul = tirer(rng);
+      if (cles.has(calcul.cle)) continue;
+      cles.add(calcul.cle);
+      liste.push(calcul);
+    }
+    return liste;
+  }
+
+  // Les entiers de M2 : de 2 à 999, chiffre des unités non nul, à 1, 2 ou 3
+  // chiffres.
+  const M2_CHIFFRES = Object.freeze([[2, 9], [11, 99], [101, 999]]);
+  const entierM2 = (rng, chiffres = entierEntre(rng, 1, 3)) => sansUniteNulle(rng, ...M2_CHIFFRES[chiffres - 1]);
+
+  // Niveau 1 : les produits. 3 nombres à un chiffre, 4 à deux, 3 à trois ;
+  // 7 « n × p », 3 « p × n ».
+  function m2Niveau1(rng, total, imposes) {
+    const classes = repartir(total, [3, 4, 3]);
+    const [, gauches] = repartir(total, [7, 3]);
+    const longueur = c => String(c.donnees.n).length;
+    const nombres = [];
+    classes.forEach((voulu, i) => {
+      const manque = Math.max(0, voulu - imposes.filter(c => longueur(c) === i + 1).length);
+      nombres.push(...tirerDistincts(rng, manque, r => entierM2(r, i + 1), [...imposes.map(c => c.donnees.n), ...nombres]));
+    });
+    const nG = Math.max(0, gauches - imposes.filter(c => c.forme === "produit-gauche").length);
+    const aGauche = melanger(rng, nombres.map((_, i) => i < nG));
+    return [...nombres.map((n, i) => produit("M2", 1, n, choisir(rng, PUISSANCES), aGauche[i])), ...imposes];
+  }
+
+  // Niveau 2 : 3 produits de nombres en 0 (30 × 100), 4 trous (2 sur la
+  // puissance, 2 sur le nombre), 3 divisions exactes.
+  function m2Niveau2(rng, total, imposes) {
+    const [produits, trous, divisions] = repartir(total, [3, 4, 3]);
+    const [facteurs, nombres] = repartir(trous, [1, 1]);
+    const manque = forme => imposes.filter(c => c.forme === forme).length;
+    const deja = imposes.slice();
+    const tirer = (nombre, fabrique) => {
+      const liste = tirerCalculs(rng, Math.max(0, nombre), fabrique, deja);
+      deja.push(...liste);
+      return liste;
+    };
+    return [
+      ...tirer(produits - manque("produit"), r => produit("M2", 2, entierEntre(r, 1, 99) * 10, choisir(r, PUISSANCES))),
+      ...tirer(facteurs - manque("trou-facteur"), r => trouFacteur("M2", 2, entierM2(r), choisir(r, PUISSANCES))),
+      ...tirer(nombres - manque("trou-nombre"), r => trouNombre("M2", 2, entierM2(r), choisir(r, PUISSANCES))),
+      ...tirer(divisions - manque("division"), r => division("M2", 2, entierM2(r), choisir(r, PUISSANCES))),
+      ...imposes
+    ];
+  }
+
+  // Le tableau à flèches d'un calcul, la réponse montrée (après une erreur,
+  // à la phrase-bilan) : en haut le nombre de départ, en bas l'arrivée.
+  function tableauDe(calcul) {
+    const {n, p, m} = calcul.donnees;
+    if (calcul.forme === "division") return {outil: "tableau-fleches", depart: m, arrivee: n, p, operation: "÷", virgule: calcul.module === "D2"};
+    return {outil: "tableau-fleches", depart: n, arrivee: m, p, operation: "×", virgule: calcul.module === "D2"};
+  }
+
+  // Les erreurs connues de M2. « Un rang de trop », « un rang de moins » :
+  // sur les produits ; « le résultat recopié » : sur n × □ = m ; « mauvais
+  // sens » : sur les divisions et sur □ × p = m. Ailleurs, le retour de
+  // Défi tables.
+  const M2_ERREURS = Object.freeze([
+    Object.freeze({
+      c: 1, nom: "un rang de trop",
+      test: (calcul, reponse) => estProduit(calcul) && memeNombre(reponse, exact(calcul.reponse * 10)),
+      retour: (calcul, reponse) => {
+        const {n, p} = calcul.donnees;
+        return `${formaterNombre(reponse)}, c’est ${formaterNombre(n)} × ${formaterNombre(p * 10)}. Pour × ${formaterNombre(p)}, chaque chiffre vaut ${formaterNombre(p)} fois plus : ${formaterNombre(n)} → ${formaterNombre(calcul.reponse)}.`;
+      }
+    }),
+    Object.freeze({
+      c: 2, nom: "un rang de moins",
+      test: (calcul, reponse) => estProduit(calcul) && memeNombre(reponse, exact(calcul.reponse / 10)),
+      retour: (calcul, reponse) => {
+        const {n, p} = calcul.donnees;
+        return `${formaterNombre(reponse)}, c’est ${formaterNombre(n)} × ${formaterNombre(p / 10)}. Pour × ${formaterNombre(p)}, chaque chiffre vaut ${formaterNombre(p)} fois plus : ${formaterNombre(n)} → ${formaterNombre(calcul.reponse)}.`;
+      }
+    }),
+    Object.freeze({
+      c: 3, nom: "le résultat recopié",
+      test: (calcul, reponse) => calcul.forme === "trou-facteur" && memeNombre(reponse, calcul.donnees.m),
+      retour: calcul => {
+        const {n, m} = calcul.donnees;
+        return `${formaterNombre(m)}, c’est l’arrivée. Par combien faut-il multiplier ${formaterNombre(n)} pour obtenir ${formaterNombre(m)} ?`;
+      }
+    }),
+    Object.freeze({
+      c: 4, nom: "mauvais sens",
+      test: (calcul, reponse) => (calcul.forme === "division" || calcul.forme === "trou-nombre") && memeNombre(reponse, exact(calcul.donnees.m * calcul.donnees.p)),
+      retour: (calcul, reponse) => {
+        const {p, m} = calcul.donnees;
+        return `${formaterNombre(reponse)}, c’est ${formaterNombre(m)} × ${formaterNombre(p)}. Ici on cherche un nombre ${formaterNombre(p)} fois plus petit que ${formaterNombre(m)}.`;
+      }
+    })
+  ]);
+
+  // Les décimaux de D2 : `decimales` chiffres après la virgule, le dernier
+  // non nul ; la partie entière entre `minimum` et `maximum`.
+  function decimal(rng, decimales, minimum, maximum) {
+    const base = 10 ** decimales;
+    let fraction = entierEntre(rng, 1, base - 1);
+    while (fraction % 10 === 0) fraction = entierEntre(rng, 1, base - 1);
+    return exact(entierEntre(rng, minimum, maximum) + fraction / base);
+  }
+  // Une partie entière à 1, 2 ou 3 chiffres (autant de chances chacune),
+  // jamais au-delà de `plafond` ; 0 quand le nombre doit être sous 1.
+  function partieEntiere(rng, plafond, sousUn = false) {
+    if (sousUn) return 0;
+    const classes = [[1, 9], [10, 99], [100, 999]].filter(([minimum]) => minimum <= plafond);
+    const [minimum, maximum] = choisir(rng, classes);
+    return entierEntre(rng, minimum, Math.min(maximum, plafond));
+  }
+  const decimalD2 = (rng, decimales, plafond, sousUn = false) => {
+    const entiere = partieEntiere(rng, plafond, sousUn);
+    return decimal(rng, decimales, entiere, entiere);
+  };
+
+  // Une liste de « places » (décimales, puissance, sous 1, à gauche) à
+  // remplir : celles que les imposés occupent déjà sont retirées une à une.
+  function retirerImposes(places, imposes, correspond) {
+    const restantes = places.slice();
+    imposes.forEach(impose => {
+      const index = restantes.findIndex(place => correspond(place, impose));
+      if (index >= 0) restantes.splice(index, 1);
+    });
+    return restantes;
+  }
+
+  // Niveau 1 : × 10. 4 nombres à 1 décimale, 3 à 2, 3 à 3 ; 2 sous 1 (0,6) ;
+  // « 10 × n » sur 2 calculs.
+  function d2Niveau1(rng, total, imposes) {
+    const parts = repartir(total, [4, 3, 3]);
+    let places = parts.flatMap((nombre, i) => Array.from({length: nombre}, () => ({d: i + 1})));
+    places = retirerImposes(places, imposes, (place, c) => place.d === decimalesDe(c.donnees.n));
+    const sousUn = Math.max(0, 2 - imposes.filter(c => c.donnees.n < 1).length);
+    const gauches = Math.max(0, 2 - imposes.filter(c => c.forme === "produit-gauche").length);
+    const ordre = melanger(rng, places.map((_, i) => i));
+    ordre.slice(0, sousUn).forEach(i => { places[i].sousUn = true; });
+    melanger(rng, places.map((_, i) => i)).slice(0, gauches).forEach(i => { places[i].gauche = true; });
+    const deja = imposes.slice();
+    const tires = places.map(place => {
+      const [calcul] = tirerCalculs(rng, 1, r => produit("D2", 1, decimalD2(r, place.d, 999, place.sousUn), 10, place.gauche), deja);
+      deja.push(calcul);
+      return calcul;
+    });
+    return [...tires, ...imposes];
+  }
+
+  // Niveau 2 : × 100 sur 2 ou 3 décimales (n < 100), × 1 000 sur 3 décimales
+  // (n < 10) — la puissance ne dépasse jamais le nombre de décimales.
+  function d2Niveau2(rng, total, imposes) {
+    const [cent, mille] = repartir(total, [6, 4]);
+    const [deux, trois] = repartir(cent, [1, 1]);
+    let places = [
+      ...Array.from({length: deux}, () => ({p: 100, d: 2})),
+      ...Array.from({length: trois}, () => ({p: 100, d: 3})),
+      ...Array.from({length: mille}, () => ({p: 1000, d: 3}))
+    ];
+    places = retirerImposes(places, imposes, (place, c) => place.p === c.donnees.p && place.d === decimalesDe(c.donnees.n));
+    const deja = imposes.slice();
+    const tires = places.map(place => {
+      const [calcul] = tirerCalculs(rng, 1, r => produit("D2", 2, decimalD2(r, place.d, place.p === 100 ? 99 : 9), place.p), deja);
+      deja.push(calcul);
+      return calcul;
+    });
+    return [...tires, ...imposes];
+  }
+
+  // Niveau 3 : des zéros à écrire — × 100 sur 1 décimale (n < 100), × 1 000
+  // sur 1 ou 2 décimales (n < 10) ; 2 calculs avec n < 1 (0,2 × 100).
+  function d2Niveau3(rng, total, imposes) {
+    const [cent, mille] = repartir(total, [1, 1]);
+    const [une, deux] = repartir(mille, [3, 2]);
+    let places = [
+      ...Array.from({length: cent}, () => ({p: 100, d: 1})),
+      ...Array.from({length: une}, () => ({p: 1000, d: 1})),
+      ...Array.from({length: deux}, () => ({p: 1000, d: 2}))
+    ];
+    places = retirerImposes(places, imposes, (place, c) => place.p === c.donnees.p && place.d === decimalesDe(c.donnees.n));
+    const sousUn = Math.max(0, 2 - imposes.filter(c => c.donnees.n < 1).length);
+    melanger(rng, places.map((_, i) => i)).slice(0, sousUn).forEach(i => { places[i].sousUn = true; });
+    const deja = imposes.slice();
+    const tires = places.map(place => {
+      const [calcul] = tirerCalculs(rng, 1, r => produit("D2", 3, decimalD2(r, place.d, place.p === 100 ? 99 : 9, place.sousUn), place.p), deja);
+      deja.push(calcul);
+      return calcul;
+    });
+    return [...tires, ...imposes];
+  }
+
+  // Un nombre et une puissance pour un trou : 1 à 3 décimales, le produit
+  // sous 10 000, et la puissance ne dépasse pas toujours les décimales.
+  function nombreEtPuissance(rng) {
+    const p = choisir(rng, PUISSANCES);
+    const d = entierEntre(rng, 1, 3);
+    return [decimalD2(rng, d, Math.min(999, Math.floor(9999 / p))), p];
+  }
+
+  // Niveau 4 : les trous. 4 sur la puissance (n × □ = m, m = n × □), 6 sur
+  // le nombre (□ × p = m, p × □ = m).
+  function d2Niveau4(rng, total, imposes) {
+    const [puissance, nombre] = repartir(total, [4, 6]);
+    const [facteurs, egaux] = repartir(puissance, [1, 1]);
+    const [droits, gauches] = repartir(nombre, [1, 1]);
+    const manque = forme => imposes.filter(c => c.forme === forme).length;
+    const deja = imposes.slice();
+    const tirer = (nombreVoulu, fabrique) => {
+      const liste = tirerCalculs(rng, Math.max(0, nombreVoulu), r => fabrique(...nombreEtPuissance(r)), deja);
+      deja.push(...liste);
+      return liste;
+    };
+    return [
+      ...tirer(facteurs - manque("trou-facteur"), (n, p) => trouFacteur("D2", 4, n, p)),
+      ...tirer(egaux - manque("trou-egal"), (n, p) => trouEgal("D2", 4, n, p)),
+      ...tirer(droits - manque("trou-nombre"), (n, p) => trouNombre("D2", 4, n, p)),
+      ...tirer(gauches - manque("trou-nombre-gauche"), (n, p) => trouNombreGauche("D2", 4, n, p)),
+      ...imposes
+    ];
+  }
+
+  // Les erreurs connues de D2, essayées dans l'ordre 1, 3, 2, 4, 5. Sur les
+  // produits toutes les cinq ; sur □ × p = m (et p × □ = m), seulement
+  // « mauvais sens » ; sur les trous de la puissance, aucune.
+  const D2_ERREURS = Object.freeze([
+    Object.freeze({
+      c: 1, nom: "un zéro ajouté, le nombre n’a pas changé",
+      test: (calcul, reponse) => estProduit(calcul) && memeNombre(reponse, calcul.donnees.n),
+      retour: (calcul, reponse, ecrit) => {
+        const {n, p} = calcul.donnees;
+        return `${commeEcrit(reponse, ecrit)} = ${formaterNombre(n)} : tu n’as pas multiplié. Chaque chiffre doit valoir ${formaterNombre(p)} fois plus : ${formaterNombre(n)} → ${formaterNombre(calcul.reponse)}.`;
+      }
+    }),
+    Object.freeze({
+      c: 3, nom: "seule la partie entière multipliée",
+      test: (calcul, reponse) => {
+        if (!estProduit(calcul)) return false;
+        const {n, p} = calcul.donnees;
+        return Math.trunc(n) > 0 && memeNombre(reponse, exact(Math.trunc(n) * p + (n - Math.trunc(n))));
+      },
+      retour: (calcul, reponse) => {
+        const {n, p} = calcul.donnees;
+        return `Dans ${formaterNombre(reponse)}, le ${formaterNombre(exact(n - Math.trunc(n)))} n’a pas bougé. Lui aussi vaut ${formaterNombre(p)} fois plus.`;
+      }
+    }),
+    Object.freeze({
+      c: 2, nom: "un rang de moins",
+      test: (calcul, reponse) => estProduit(calcul) && memeNombre(reponse, exact(calcul.reponse / 10)),
+      retour: (calcul, reponse) => {
+        const {n, p} = calcul.donnees;
+        return `${formaterNombre(reponse)}, c’est ${formaterNombre(n)} × ${formaterNombre(p / 10)}. Pour × ${formaterNombre(p)}, chaque chiffre glisse de ${pluriel(colonnesDe(p), "colonne")} : ${formaterNombre(n)} → ${formaterNombre(calcul.reponse)}.`;
+      }
+    }),
+    Object.freeze({
+      c: 4, nom: "mauvais sens",
+      test: (calcul, reponse) => {
+        const {n, p, m} = calcul.donnees;
+        if (estProduit(calcul)) return memeNombre(reponse, exact(n / p));
+        return estTrouNombre(calcul) && memeNombre(reponse, exact(m * p));
+      },
+      // Sur un trou, l'élève a multiplié au lieu de chercher le nombre : la
+      // phrase de M2 pour la même erreur.
+      retour: (calcul, reponse) => {
+        const p = formaterNombre(calcul.donnees.p);
+        if (estTrouNombre(calcul)) return `${formaterNombre(reponse)}, c’est ${formaterNombre(calcul.donnees.m)} × ${p}. Ici on cherche un nombre ${p} fois plus petit que ${formaterNombre(calcul.donnees.m)}.`;
+        return `${formaterNombre(reponse)}, c’est ${p} fois plus petit. Ici il faut ${p} fois plus grand.`;
+      }
+    }),
+    Object.freeze({
+      c: 5, nom: "un rang de trop",
+      test: (calcul, reponse) => estProduit(calcul) && memeNombre(reponse, exact(calcul.reponse * 10)),
+      retour: (calcul, reponse) => {
+        const {n, p} = calcul.donnees;
+        const k = colonnesDe(p);
+        return `${formaterNombre(reponse)}, c’est ${formaterNombre(n)} × ${formaterNombre(p * 10)}. Pour × ${formaterNombre(p)}, c’est ${pluriel(k, "colonne")}, pas ${k + 1}.`;
+      }
+    })
+  ]);
+
+  // Les trois temps d'un niveau de M2 ou D2 : le glisse-nombres (les
+  // chiffres glissent, la virgule ne bouge pas), le tableau à flèches, la
+  // décomposition écrite.
+  //   calcul    : l'exemple, fabriqué comme un calcul de la série
+  //   colonnes  : les rangs du glisse-nombres (5 = centaines de mille,
+  //               0 = unités, −3 = millièmes)
+  //   consigne  : celle du glisse-nombres et du tableau
+  //   refus     : la phrase d'un glissement faux (null : la consigne tremble)
+  //   inconnue  : ce que le tableau cache, « arrivee » ou « puissance »
+  function glisseApprends({calcul, exemple, colonnes, consigne, consigneTableau = consigne, refus, trace, lignes, suite, bilan, inconnue = "arrivee"}) {
+    const image = tableauDe(calcul);
+    const {n, p, m} = calcul.donnees;
+    const decalage = calcul.forme === "division" ? -colonnesDe(p) : colonnesDe(p);
+    return Object.freeze({
+      exemple: Object.freeze({texte: exemple, reponse: calcul.reponse}),
+      manipule: Object.freeze({
+        outil: "glisse", depart: calcul.forme === "division" ? m : n, colonnes: Object.freeze(colonnes.slice()),
+        decalage, consigne, refus,
+        traces: Object.freeze([Object.freeze({apres: 1, attente: trace[0], texte: trace[1]})])
+      }),
+      represente: Object.freeze({
+        outil: "tableau-fleches", consigne: consigneTableau,
+        texte: calcul.texte, reponse: calcul.reponse,
+        // L'arrivée cherchée : ses zéros à écrire sont des « ? ». La
+        // puissance cherchée : l'étiquette dit « × ? ».
+        image: Object.freeze(Object.assign({}, image, inconnue === "puissance" ? {masque: true} : {inconnue: true}))
+      }),
+      ecris: Object.freeze({lignes: Object.freeze(lignes), reponse: calcul.reponse, suite}),
+      bilan,
+      image: Object.freeze(image)
+    });
+  }
+
+  const COLONNES_M2 = Object.freeze([5, 4, 3, 2, 1, 0]);
+  const COLONNES_D2 = Object.freeze([3, 2, 1, 0, -1, -2, -3]);
+  const MILLE = `1${ESPACE_FINE}000`;
+
   // ------------------------------------------------------------- les 71 modules
 
   const niveauxVides = nombre => Array.from({length: nombre}, (_, i) => ({n: i + 1}));
@@ -574,23 +949,99 @@
     ]
   };
 
-  // M2 et D2 : réservés avec leurs niveaux, construits au lot 1b.
   const M2 = {
     id: "M2", nom: "× 10, × 100, × 1\u202f000", exemple: "27 × 100",
-    famille: "M", palier: 1, rang: 5, avant: [], construit: false,
+    famille: "M", palier: 1, rang: 5, avant: [], construit: true,
+    aide_entraine: "tableau-fleches",
+    erreurs: M2_ERREURS, image: tableauDe,
     niveaux: [
-      {n: 1, titre: "produits", type: "P", avant: []},
-      {n: 2, titre: "nombres en 0, trous, divisions", type: "P", avant: ["M2-1"]}
+      {
+        n: 1, titre: "produits", type: "P", avant: [],
+        composer: m2Niveau1,
+        imposes: [produit("M2", 1, 38, 10), produit("M2", 1, 9, 100, true)],
+        apprends: glisseApprends({
+          calcul: produit("M2", 1, 27, 100), exemple: "27 × 100", colonnes: COLONNES_M2,
+          consigne: "Chaque chiffre vaut 100 fois plus.",
+          refus: "Chaque chiffre doit valoir 100 fois plus\u00a0: 2 colonnes.",
+          trace: ["27 × 100 = …", `27 × 100 = 2${ESPACE_FINE}700`],
+          lignes: ["27 × 100", "= 2 milliers et 7 centaines", `= 2${ESPACE_FINE}000 + 700`, `= ${CASE}`], suite: true,
+          bilan: "Quand je multiplie par 100, chaque chiffre prend une valeur 100 fois plus grande."
+        })
+      },
+      {
+        n: 2, titre: "nombres en 0, trous, divisions", type: "P", avant: ["M2-1"],
+        composer: m2Niveau2,
+        imposes: [produit("M2", 2, 30, 100), trouFacteur("M2", 2, 35, 100), division("M2", 2, 48, 10)],
+        apprends: glisseApprends({
+          calcul: division("M2", 2, 48, 10), exemple: "480 ÷ 10", colonnes: COLONNES_M2,
+          consigne: "Chaque chiffre vaut 10 fois moins.",
+          refus: "Chaque chiffre doit valoir 10 fois moins\u00a0: 1 colonne.",
+          trace: ["480 ÷ 10 = …", "480 ÷ 10 = 48"],
+          lignes: ["480 ÷ 10", "= 4 dizaines et 8 unités", `= ${CASE}`], suite: true,
+          bilan: "Quand je divise par 10, chaque chiffre prend une valeur 10 fois plus petite."
+        })
+      }
     ]
   };
+  // Les modules à décimales ont la touche « , » au-dessus du pavé.
   const D2 = {
     id: "D2", nom: "× 10, × 100, × 1\u202f000 avec virgule", exemple: "7,54 × 100",
-    famille: "D", palier: 3, rang: 2, avant: ["M2", "D1"], construit: false,
+    famille: "D", palier: 3, rang: 2, avant: ["M2", "D1"], construit: true, virgule: true,
+    aide_entraine: "tableau-fleches",
+    erreurs: D2_ERREURS, image: tableauDe,
     niveaux: [
-      {n: 1, titre: "× 10", type: "P", avant: []},
-      {n: 2, titre: "× 100, × 1\u202f000 sans zéro à écrire", type: "P", avant: ["D2-1"]},
-      {n: 3, titre: "des zéros à écrire", type: "P", avant: ["D2-2"]},
-      {n: 4, titre: "trous", type: "P", avant: ["D2-3"]}
+      {
+        n: 1, titre: "× 10", type: "P", avant: [],
+        composer: d2Niveau1,
+        imposes: [produit("D2", 1, 0.6, 10), produit("D2", 1, 2.5, 10)],
+        apprends: glisseApprends({
+          calcul: produit("D2", 1, 2.5, 10), exemple: "2,5 × 10", colonnes: COLONNES_D2,
+          consigne: "Chaque chiffre vaut 10 fois plus.",
+          refus: "Chaque chiffre doit valoir 10 fois plus\u00a0: 1 colonne.",
+          trace: ["2,5 × 10 = …", "2,5 × 10 = 25"],
+          lignes: ["2,5 × 10", "2 → 20\u202f; 0,5 → 5", "= 20 + 5", `= ${CASE}`], suite: false,
+          bilan: "Quand je multiplie par 10, chaque chiffre prend une valeur 10 fois plus grande. La virgule ne bouge pas, ce sont les chiffres qui glissent."
+        })
+      },
+      {
+        n: 2, titre: "× 100, × 1\u202f000 sans zéro à écrire", type: "P", avant: ["D2-1"],
+        composer: d2Niveau2,
+        imposes: [produit("D2", 2, 7.54, 100), produit("D2", 2, 4.107, 1000)],
+        apprends: glisseApprends({
+          calcul: produit("D2", 2, 7.54, 100), exemple: "7,54 × 100", colonnes: COLONNES_D2,
+          consigne: "Chaque chiffre vaut 100 fois plus.",
+          refus: "Chaque chiffre doit valoir 100 fois plus\u00a0: 2 colonnes.",
+          trace: ["7,54 × 100 = …", "7,54 × 100 = 754"],
+          lignes: ["7,54 × 100", "7 → 700\u202f; 0,5 → 50\u202f; 0,04 → 4", "= 700 + 50 + 4", `= ${CASE}`], suite: false,
+          bilan: "Quand je multiplie par 100, chaque chiffre prend une valeur 100 fois plus grande."
+        })
+      },
+      {
+        n: 3, titre: "des zéros à écrire", type: "P", avant: ["D2-2"],
+        composer: d2Niveau3,
+        imposes: [produit("D2", 3, 3.6, 100), produit("D2", 3, 72.4, 100), produit("D2", 3, 0.2, 100)],
+        apprends: glisseApprends({
+          calcul: produit("D2", 3, 3.6, 100), exemple: "3,6 × 100", colonnes: COLONNES_D2,
+          consigne: "Chaque chiffre vaut 100 fois plus.",
+          refus: "Chaque chiffre doit valoir 100 fois plus\u00a0: 2 colonnes.",
+          trace: ["3,6 × 100 = …", "3,6 × 100 = 360"],
+          lignes: ["3,6 × 100", "3 → 300\u202f; 0,6 → 60", "= 300 + 60", `= ${CASE}`], suite: false,
+          bilan: "Quand une case reste vide, j’écris un zéro\u00a0: 3,6 × 100 = 360."
+        })
+      },
+      {
+        n: 4, titre: "trous", type: "P", avant: ["D2-3"],
+        composer: d2Niveau4,
+        imposes: [trouFacteur("D2", 4, 3.6, 100), trouNombre("D2", 4, 0.45, 100), trouEgal("D2", 4, 1.2, 1000)],
+        apprends: glisseApprends({
+          calcul: trouEgal("D2", 4, 1.2, 1000), exemple: `1${ESPACE_FINE}200 = 1,2 × ?`, colonnes: COLONNES_D2,
+          consigne: `Glisse jusqu’à lire 1${ESPACE_FINE}200.`, consigneTableau: "Je compte les colonnes.",
+          refus: null, inconnue: "puissance",
+          trace: [`1,2 × … = 1${ESPACE_FINE}200`, `1,2 × ${MILLE} = 1${ESPACE_FINE}200`],
+          lignes: [`1,2 → 1${ESPACE_FINE}200`, "3 colonnes", `1${ESPACE_FINE}200 = 1,2 × ${CASE}`], suite: false,
+          bilan: "Pour trouver par combien on a multiplié, je compte les colonnes."
+        })
+      }
     ]
   };
 
@@ -618,13 +1069,13 @@
     reserve("M5", "Repères 25, 50, 60, 100", "3 × 25", 2, 5, ["M4"], 2),
     reserve("C1", "Parenthèses", "3 × (10 − 6)", 2, 6, ["A4", "M4", "A7"], 3),
     reserve("C4", "Remonter un calcul", "(2 × ?) − 5 = 23", 2, 7, ["C1", "M4"], 2),
-    reserve("M8", "Distributivité : décomposer", "6 × 23", 2, 8, ["M3", "A4"], 3),
+    reserve("M8", "Distributivité\u00a0: décomposer", "6 × 23", 2, 8, ["M3", "A4"], 3),
     reserve("A9", "Regrouper pour calculer", "27 + 48 + 73", 2, 9, ["A2", "A4"], 3),
     reserve("M10", "Regrouper les facteurs", "5 × 43 × 2", 2, 10, ["M5", "M7"], 3),
     reserve("C3", "Égalités à équilibrer", "144 + 7 = 142 + ?", 2, 11, ["A8", "M10"], 3),
     reserve("M11", "Quotient et reste", "17 = 3 × 5 + ?", 2, 12, ["M4"], 2),
     reserve("M12", "Diviser en décomposant", "96 ÷ 8", 2, 13, ["M3", "M4"], 3),
-    reserve("M9", "Distributivité : retrancher", "7 × 99", 2, 14, ["M8", "A6", "A7"], 3),
+    reserve("M9", "Distributivité\u00a0: retrancher", "7 × 99", 2, 14, ["M8", "A6", "A7"], 3),
 
     reserve("D1", "Écritures d’un décimal", "3 + 2/10 = ?", 3, 1, [], 3),
     D2,
@@ -665,7 +1116,7 @@
     reserve("R3", "Soustraire un relatif", "7 − (−5)", 0, 0, ["R2"], 3),
     reserve("R4", "Sommes de plusieurs relatifs", "−3 + 7 − 5", 0, 0, ["R3", "A9"], 3),
     reserve("R5", "Multiplier, diviser des relatifs", "−7 × 3", 0, 0, ["R2", "M4"], 4),
-    reserve("R6", "Somme ou produit ?", "−3 × (−5)", 0, 0, ["R4", "R5", "C2"], 2),
+    reserve("R6", "Somme ou produit\u00a0?", "−3 × (−5)", 0, 0, ["R4", "R5", "C2"], 2),
     reserve("X1", "Carrés de 0 à 12", "7²", 0, 0, [], 3),
     reserve("X2", "Puissances simples", "2³", 0, 0, ["X1"], 3),
     reserve("X3", "Racines carrées", "√81", 0, 0, ["X1"], 2),
@@ -733,12 +1184,14 @@
   // La cause d'une réponse fausse, si elle est connue : son numéro, la
   // phrase qui lui répond, l'image (le pas oublié en gras). Les causes sont
   // essayées dans l'ordre de la fiche ; null si aucune ne se reconnaît.
-  function diagnostiquer(calcul, reponse) {
+  // `ecrit` : la réponse telle que l'élève l'a tapée (« 2,50 »), pour la
+  // phrase qui la cite.
+  function diagnostiquer(calcul, reponse, ecrit = "") {
     const fiche = calcul ? moduleDe(calcul.module) : null;
     if (!fiche || !fiche.erreurs || typeof reponse !== "number" || memeNombre(reponse, calcul.reponse)) return null;
     const cause = fiche.erreurs.find(erreur => erreur.test(calcul, reponse));
     if (!cause) return null;
-    return {c: cause.c, nom: cause.nom, texte: cause.retour(calcul, reponse), image: fiche.image(calcul, cause.gras)};
+    return {c: cause.c, nom: cause.nom, texte: cause.retour(calcul, reponse, ecrit), image: fiche.image(calcul, cause.gras || 0)};
   }
 
   // L'image d'un calcul, réponse montrée (après une erreur, à la phrase-bilan).
@@ -761,6 +1214,8 @@
     lireReponse,
     memeNombre,
     cleNombre,
+    exact,
+    decimalesDe,
     moduleDe,
     niveauDe,
     carte,

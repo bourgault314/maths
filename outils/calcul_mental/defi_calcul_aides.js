@@ -1,4 +1,4 @@
-// Défi calcul — les aides visuelles (lot 1a, 03/10/2026).
+// Défi calcul — les aides visuelles (lot 1a, 03/10/2026 ; lot 1b le même jour).
 //
 //  - perles100 : le rekenrek de 100 perles de Défi tables (« Je pousse les
 //    perles »), copié puis adapté. Même géométrie, mêmes gestes au doigt ;
@@ -9,8 +9,18 @@
 //  - droiteSauts : la droite à sauts (SVG). Positions proportionnelles
 //    bornées (un petit saut garde une largeur lisible), étiquettes dans des
 //    pilules, le saut direct dessous, le saut oublié en gras.
+//  - glisseNombres : le « Glisse-nombre » d'Automatismes
+//    (auto/scripts/shared/visuals/numbers/place-value-table.js), COPIÉ et
+//    non partagé : colonnes au choix (des centaines de mille aux unités pour
+//    M2, des milliers aux millièmes pour D2), un événement « decalage »
+//    quand la bande s'arrête, aucun zéro écrit à la place de l'élève (une
+//    case vide est le zéro à écrire). Les chiffres glissent ; la virgule,
+//    fixe, ne bouge jamais.
+//  - tableauFleches : le tableau de numération fixe à flèches (SVG) de la
+//    planche 4 : le nombre en haut, l'arrivée en bas, une flèche par chiffre.
 //
-// Le glisse-nombres et le tableau à flèches arrivent au lot 1b.
+// Les aides qu'on touche (rekenrek, glisse-nombres) se jouent aussi au
+// clavier, et leurs refus sont lus par un lecteur d'écran.
 (function initDefiCalculAides(root, factory) {
   const api = factory();
   if (typeof module === "object" && module.exports) module.exports = api;
@@ -30,10 +40,29 @@
   // Les trois refus de Défi tables. Ils ne disent que la direction, jamais
   // le nombre.
   const MESSAGES_REFUS = Object.freeze({
-    rangee: "Finis la rangée d’abord !",
-    trop: "Trop de perles !",
-    peu: "Pas assez de perles !"
+    rangee: "Finis la rangée d’abord\u00a0!",
+    trop: "Trop de perles\u00a0!",
+    peu: "Pas assez de perles\u00a0!"
   });
+
+  // Une zone lue par un lecteur d'écran, invisible : les refus, et ce que
+  // le clavier vient de choisir. Le même texte deux fois de suite est relu.
+  function zoneAnnonce() {
+    const zone = document.createElement("p");
+    zone.className = "sr-only dc-annonce";
+    zone.setAttribute("aria-live", "assertive");
+    zone.setAttribute("aria-atomic", "true");
+    let minuteur = 0;
+    zone.annoncer = texte => {
+      clearTimeout(minuteur);
+      zone.textContent = "";
+      minuteur = setTimeout(() => { zone.textContent = texte; }, 40);
+    };
+    zone.arreter = () => clearTimeout(minuteur);
+    return zone;
+  }
+  let compteurAides = 0;
+  const accorder = (nombre, singulier, pluriel) => `${nombre} ${nombre > 1 ? pluriel : singulier}`;
 
   // Les perles poussées au départ : des rangées pleines, puis la rangée
   // entamée.
@@ -83,19 +112,27 @@
   }
 
   // Le rekenrek dans `zone`. options : {depart, gestes, consigne, traces,
-  // surFini}. Rend {detruire, fini}.
+  // surFini}. Rend {detruire, mesurer, deborde, fini}.
+  //
+  // Au clavier, le même geste qu'au doigt : ↑ ↓ choisissent la rangée,
+  // ← → la perle (celle que le doigt attraperait), Entrée la fait glisser
+  // avec ses voisines. Un cadre bleu montre la rangée et la perle, seulement
+  // quand on joue au clavier.
   function perles100(zone, options) {
     const {depart, gestes, consigne: texteConsigne, traces = [], surFini = null} = options;
     const boulier = {
       taille: 0, ecart: PERLES.ecart, etats: etatsDe(depart), etape: 0, finie: false,
-      drag: null, dom: null, observer: null, refus: 0
+      drag: null, dom: null, observer: null, refus: 0, curseur: null
     };
+    compteurAides += 1;
 
     const bloc = document.createElement("div");
     bloc.className = "perles-zone";
     const consigne = document.createElement("p");
     consigne.className = "consigne perles-consigne";
+    consigne.id = `dc-consigne-${compteurAides}`;
     consigne.textContent = texteConsigne;
+    const annonce = zoneAnnonce();
     const scene = document.createElement("div");
     scene.className = "perles-scene";
     const cadre = document.createElement("div");
@@ -107,8 +144,11 @@
     });
     const interieur = document.createElement("div");
     interieur.className = "perles-interieur";
-    interieur.setAttribute("role", "img");
-    interieur.setAttribute("aria-label", "Boulier de 100 perles");
+    interieur.setAttribute("role", "application");
+    interieur.setAttribute("aria-roledescription", "boulier");
+    interieur.setAttribute("aria-label", "Boulier de 100 perles. Flèches pour choisir la rangée et la perle, Entrée pour la faire glisser.");
+    interieur.setAttribute("aria-describedby", consigne.id);
+    interieur.tabIndex = 0;
     const rangees = [];
     for (let r = 0; r < PERLES.rangees; r += 1) {
       const rangee = document.createElement("div");
@@ -135,7 +175,7 @@
     trace.className = "dc-trace";
     trace.setAttribute("role", "status");
     trace.setAttribute("aria-live", "polite");
-    bloc.append(consigne, scene, trace);
+    bloc.append(consigne, scene, trace, annonce);
     zone.replaceChildren(bloc);
     boulier.dom = {scene, cadre, interieur, montants, rangees};
 
@@ -212,6 +252,8 @@
     function refuser(refus) {
       clearTimeout(boulier.refus);
       consigne.textContent = MESSAGES_REFUS[refus.motif] || texteConsigne;
+      // Le refus sans phrase relit la consigne.
+      annonce.annoncer(consigne.textContent);
       // Le tremblement rejoue à chaque refus, même enchaîné.
       consigne.classList.remove("est-refus");
       void consigne.offsetWidth;
@@ -260,26 +302,17 @@
       }
     }
 
-    function pointerUp() {
-      const drag = boulier.drag;
-      if (!drag) return;
-      boulier.drag = null;
-      const etat = boulier.etats[drag.rangee];
-      const pousse = drag.index >= etat;
-      // Tout ou rien, à une perle près : un groupe qui n'est pas arrivé
-      // revient d'où il vient.
-      const tolerance = boulier.taille;
-      let nouvel = etat;
-      if (pousse && drag.position <= positionPerle(drag.index, true) + tolerance) nouvel = drag.index + 1;
-      if (!pousse && drag.position >= positionPerle(drag.index, false) - tolerance) nouvel = drag.index;
-      const ecart = nouvel - etat;
-      const refus = verifierGeste(boulier.etats, gestes[boulier.etape], drag.rangee, ecart);
+    // Un geste fini (au doigt ou au clavier) : la rangée passe de son état
+    // à `nouvel` perles poussées, si c'est le geste attendu.
+    function jouer(numero, nouvel) {
+      const ecart = nouvel - boulier.etats[numero];
+      const refus = verifierGeste(boulier.etats, gestes[boulier.etape], numero, ecart);
       if (refus) {
         dessiner(true);
         refuser(refus);
         return;
       }
-      boulier.etats[drag.rangee] = nouvel;
+      boulier.etats[numero] = nouvel;
       dessiner(true);
       if (!ecart) return;
       leverRefus();
@@ -292,10 +325,77 @@
       }
     }
 
+    function pointerUp() {
+      const drag = boulier.drag;
+      if (!drag) return;
+      boulier.drag = null;
+      const etat = boulier.etats[drag.rangee];
+      const pousse = drag.index >= etat;
+      // Tout ou rien, à une perle près : un groupe qui n'est pas arrivé
+      // revient d'où il vient.
+      const tolerance = boulier.taille;
+      let nouvel = etat;
+      if (pousse && drag.position <= positionPerle(drag.index, true) + tolerance) nouvel = drag.index + 1;
+      if (!pousse && drag.position >= positionPerle(drag.index, false) - tolerance) nouvel = drag.index;
+      jouer(drag.rangee, nouvel);
+    }
+
+    // ---- au clavier
+    function montrerCurseur() {
+      rangees.forEach((rangee, r) => {
+        rangee.element.classList.toggle("curseur", Boolean(boulier.curseur) && boulier.curseur.rangee === r);
+        rangee.perles.forEach((perle, i) => perle.classList.toggle("curseur", Boolean(boulier.curseur) && boulier.curseur.rangee === r && boulier.curseur.index === i));
+      });
+    }
+    function annoncerCurseur() {
+      const {rangee, index} = boulier.curseur;
+      const etat = boulier.etats[rangee];
+      const poussees = etat ? accorder(etat, "perle poussée", "perles poussées") : "aucune perle poussée";
+      annonce.annoncer(`Rangée ${rangee + 1}\u00a0: ${poussees}. Perle ${index + 1}.`);
+    }
+    // Le curseur part de la rangée entamée (sinon la première qui n'est pas
+    // pleine), sur la première perle au repos.
+    function placerCurseur() {
+      if (boulier.curseur) return;
+      let rangee = rangeeEntamee(boulier.etats);
+      if (rangee < 0) rangee = boulier.etats.findIndex(valeur => valeur < PERLES.parRangee);
+      if (rangee < 0) rangee = PERLES.rangees - 1;
+      boulier.curseur = {rangee, index: Math.min(PERLES.parRangee - 1, boulier.etats[rangee])};
+    }
+    function toucheClavier(event) {
+      if (boulier.finie) return;
+      const fleches = {ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1]};
+      if (fleches[event.key]) {
+        const nouveau = !boulier.curseur;
+        placerCurseur();
+        if (!nouveau) {
+          const [dr, di] = fleches[event.key];
+          boulier.curseur.rangee = Math.max(0, Math.min(PERLES.rangees - 1, boulier.curseur.rangee + dr));
+          boulier.curseur.index = Math.max(0, Math.min(PERLES.parRangee - 1, boulier.curseur.index + di));
+        }
+        montrerCurseur();
+        annoncerCurseur();
+      } else if (event.key === "Enter" || event.key === " ") {
+        if (event.repeat) { event.preventDefault(); event.stopPropagation(); return; }
+        placerCurseur();
+        const {rangee, index} = boulier.curseur;
+        // Comme le doigt qui attrape la perle `index` et va au bout : au
+        // repos, elle est poussée avec celles d'avant ; poussée, elle est
+        // retirée avec celles d'après.
+        jouer(rangee, index >= boulier.etats[rangee] ? index + 1 : index);
+        montrerCurseur();
+      } else return;
+      event.preventDefault();
+      // Entrée est à lui tant que le geste n'est pas fait (sinon « Suivant »).
+      event.stopPropagation();
+    }
+
     interieur.addEventListener("pointerdown", pointerDown);
     interieur.addEventListener("pointermove", pointerMove);
     interieur.addEventListener("pointerup", pointerUp);
     interieur.addEventListener("pointercancel", pointerUp);
+    interieur.addEventListener("keydown", toucheClavier);
+    interieur.addEventListener("focus", () => { placerCurseur(); montrerCurseur(); });
     if (typeof ResizeObserver === "function") {
       boulier.observer = new ResizeObserver(() => mesurer());
       boulier.observer.observe(scene);
@@ -306,8 +406,10 @@
     return {
       detruire() {
         clearTimeout(boulier.refus);
+        annonce.arreter();
         if (boulier.observer) boulier.observer.disconnect();
       },
+      outil: "perles",
       mesurer,
       // Vrai quand le boulier, à sa plus petite taille, dépasse la place
       // qu'on lui laisse (la page le lit pour régler son échelle).
@@ -438,6 +540,482 @@
     return `Droite : on part de ${nombre(o.depart)}. ${morceaux.join(". Puis ")}.`;
   }
 
+
+  // ------------------------------------------------------- le glisse-nombres
+
+  // Les noms des colonnes, par rang (0 = unités).
+  const RANGS = Object.freeze({
+    5: "Centaines de mille", 4: "Dizaines de mille", 3: "Milliers", 2: "Centaines", 1: "Dizaines", 0: "Unités",
+    "-1": "Dixièmes", "-2": "Centièmes", "-3": "Millièmes"
+  });
+  const PAD = 3; // de quoi glisser de 3 colonnes de chaque côté
+
+  // L'écriture d'un nombre sans espace, virgule française, sans zéro inutile.
+  function ecriture(nombre) {
+    return String(Number(Number(nombre).toFixed(6))).replace(".", ",");
+  }
+
+  // Le même, avec l'espace fine des milliers (« 1 200 », « 4 107,5 »).
+  function ecritureLisible(nombreDonne) {
+    const [entiere, decimales] = ecriture(nombreDonne).split(",");
+    return nombre(Number(entiere)) + (decimales ? `,${decimales}` : "");
+  }
+
+  // Les chiffres d'un nombre, par rang : « 0,25 » → {0: "0", −1: "2", −2: "5"}.
+  function chiffresParRang(nombre) {
+    const [entiere, decimales = ""] = ecriture(nombre).split(",");
+    const rangs = new Map();
+    [...entiere].forEach((chiffre, i) => rangs.set(entiere.length - 1 - i, chiffre));
+    [...decimales].forEach((chiffre, i) => rangs.set(-1 - i, chiffre));
+    return rangs;
+  }
+
+  // Les chiffres d'un nombre dans les colonnes (le rang de chaque colonne,
+  // de gauche à droite) ; '' pour une case vide.
+  function chiffresDansColonnes(nombre, colonnes) {
+    const rangs = chiffresParRang(nombre);
+    return colonnes.map(rang => rangs.get(rang) || "");
+  }
+
+  // Ce que montre la bande quand elle a glissé de `decalage` colonnes vers
+  // la gauche (négatif : vers la droite). Les zéros de tête tombent
+  // (0,6 × 10 se lit 6, pas 06) ; une case vide RESTE vide : c'est le zéro
+  // à écrire, l'outil ne l'écrit pas à la place de l'élève.
+  function bandeApres(base, decalage, indexUnites) {
+    const vue = base.map((_, i) => base[i + decalage] || "");
+    let gauche = vue.findIndex(chiffre => chiffre !== "");
+    while (gauche >= 0 && gauche < indexUnites && vue[gauche] === "0" && vue.some((chiffre, i) => i > gauche && chiffre !== "")) {
+      vue[gauche] = "";
+      gauche += 1;
+    }
+    return vue;
+  }
+
+  // Suivre un glissement jusqu'au lâcher, même hors de la bande (copié de
+  // auto/scripts/shared/interactions/pointer-drag.js).
+  function suivreGlissement(element, depart, {bouge, fin}) {
+    const vue = element.ownerDocument && element.ownerDocument.defaultView ? element.ownerDocument.defaultView : globalThis;
+    const id = depart.pointerId;
+    let actif = true;
+    const memeDoigt = event => actif && (id === undefined || event.pointerId === id);
+    const surBouge = event => { if (memeDoigt(event)) bouge(event); };
+    const finir = event => {
+      if (!memeDoigt(event)) return;
+      actif = false;
+      vue.removeEventListener("pointermove", surBouge);
+      vue.removeEventListener("pointerup", finir);
+      vue.removeEventListener("pointercancel", finir);
+      try { element.releasePointerCapture?.(id); } catch (_) {}
+      fin(event);
+    };
+    try { element.setPointerCapture?.(id); } catch (_) {}
+    vue.addEventListener("pointermove", surBouge, {passive: false});
+    vue.addEventListener("pointerup", finir);
+    vue.addEventListener("pointercancel", finir);
+  }
+
+  const versLeCote = decalage => (decalage > 0 ? "vers la gauche" : "vers la droite");
+  const direDecalage = decalage => (decalage ? `${accorder(Math.abs(decalage), "colonne", "colonnes")} ${versLeCote(decalage)}` : "à sa place");
+
+  // Le glisse-nombres dans `zone`. options :
+  //   depart    : le nombre posé dans la bande
+  //   colonnes  : les rangs des colonnes, de gauche à droite ([5 … 0], [3 … −3])
+  //   decalage  : le glissement attendu (2 : deux colonnes vers la gauche)
+  //   consigne, refus (la phrase d'un glissement faux ; null : la consigne
+  //   tremble), traces [{apres: 1, attente, texte}], surFini
+  // Rend {detruire, mesurer, deborde, fini, decalage}. La bande émet
+  // l'événement « decalage » ({detail: {decalage, accepte}}) à chaque arrêt.
+  //
+  // On fait glisser la bande grise (doigt, souris), ou on touche le chiffre
+  // des unités puis sa colonne d'arrivée ; au clavier, ← → font glisser
+  // d'une colonne, Entrée lâche la bande.
+  function glisseNombres(zone, options) {
+    const {depart, colonnes, decalage: attendu, consigne: texteConsigne, refus: texteRefus = null, traces = [], surFini = null} = options;
+    const nombreColonnes = colonnes.length;
+    const indexUnites = colonnes.indexOf(0);
+    const virgule = colonnes.includes(-1);
+    const base = chiffresDansColonnes(depart, colonnes);
+    const etat = {decalage: 0, fini: false, pas: 1, departX: 0, departPx: 0, px: 0, refus: 0, observer: null, glisse: false};
+    compteurAides += 1;
+
+    const bloc = document.createElement("div");
+    bloc.className = "glisse-zone";
+    const consigne = document.createElement("p");
+    consigne.className = "consigne glisse-consigne";
+    consigne.id = `dc-consigne-${compteurAides}`;
+    consigne.textContent = texteConsigne;
+    const annonce = zoneAnnonce();
+
+    const outil = document.createElement("div");
+    outil.className = "place-value-tool";
+    const grille = document.createElement("div");
+    grille.className = "place-value-grid";
+    grille.style.setProperty("--colonnes", String(nombreColonnes));
+    const ligne = (classe, enfants) => {
+      const element = document.createElement("div");
+      element.className = classe;
+      element.append(...enfants);
+      return element;
+    };
+    const titres = colonnes.map((rang, index) => {
+      const titre = document.createElement("div");
+      titre.className = "place-value-head";
+      titre.dataset.placeValueTarget = String(index);
+      const nom = RANGS[rang];
+      const coupure = nom.indexOf(" de ");
+      // « Centaines de mille » sur deux lignes : la colonne est étroite.
+      if (coupure > 0) titre.append(nom.slice(0, coupure), document.createElement("br"), nom.slice(coupure + 1));
+      else titre.textContent = nom;
+      titre.setAttribute("aria-label", `Colonne des ${nom.toLowerCase()}`);
+      return titre;
+    });
+    const cellulesBande = Array.from({length: nombreColonnes + 2 * PAD}, () => {
+      const cellule = document.createElement("span");
+      cellule.className = "place-value-strip-digit";
+      return cellule;
+    });
+    const bande = ligne("place-value-strip", cellulesBande);
+    bande.style.gridTemplateColumns = `repeat(${nombreColonnes + 2 * PAD}, minmax(0, 1fr))`;
+    bande.style.width = `calc(100% * ${nombreColonnes + 2 * PAD} / ${nombreColonnes})`;
+    const fenetres = colonnes.map(() => ligne("place-value-window", []));
+    const barre = document.createElement("div");
+    barre.className = "place-value-drag-bar";
+    barre.tabIndex = 0;
+    barre.setAttribute("role", "slider");
+    barre.setAttribute("aria-label", "Bande des chiffres, à faire glisser avec les flèches. Entrée pour la lâcher.");
+    barre.setAttribute("aria-describedby", consigne.id);
+    barre.setAttribute("aria-valuemin", String(-PAD));
+    barre.setAttribute("aria-valuemax", String(PAD));
+    barre.append(document.createElement("span"));
+    const apercu = ligne("place-value-preview-row", [
+      ligne("place-value-strip-viewport", [bande]),
+      ligne("place-value-window-row", fenetres),
+      barre
+    ]);
+    const fixes = base.map((chiffre, index) => {
+      const cellule = document.createElement("span");
+      cellule.className = `place-value-fixed-digit${index === indexUnites ? " is-units-digit" : ""}`;
+      cellule.textContent = chiffre;
+      return cellule;
+    });
+    const source = fixes[indexUnites];
+    source.dataset.placeValueSource = "";
+    source.setAttribute("role", "button");
+    source.tabIndex = 0;
+    source.setAttribute("aria-pressed", "false");
+    source.setAttribute("aria-label", "Choisir le chiffre des unités, puis sa colonne d’arrivée");
+    const fixe = ligne("place-value-fixed-row", fixes);
+    if (virgule) {
+      // La virgule, fixe, entre les unités et les dixièmes.
+      const position = `calc(${(indexUnites + 1) / nombreColonnes * 100}% - 4px)`;
+      [apercu, fixe].forEach(rangee => {
+        const marque = document.createElement("span");
+        marque.className = "place-value-comma";
+        marque.setAttribute("aria-hidden", "true");
+        marque.textContent = ",";
+        marque.style.left = position;
+        rangee.append(marque);
+      });
+    }
+    grille.append(ligne("place-value-head-row", titres), apercu, fixe);
+    outil.append(grille);
+    const trace = document.createElement("p");
+    trace.className = "dc-trace";
+    trace.setAttribute("role", "status");
+    trace.setAttribute("aria-live", "polite");
+    bloc.append(consigne, outil, trace, annonce);
+    zone.replaceChildren(bloc);
+
+    const borner = (valeur, minimum, maximum) => Math.min(maximum, Math.max(minimum, valeur));
+
+    function ecrireChiffres(decalage) {
+      const vue = bandeApres(base, decalage, indexUnites);
+      cellulesBande.forEach(cellule => { cellule.textContent = ""; cellule.classList.remove("is-units-digit"); });
+      vue.forEach((chiffre, index) => {
+        const cellule = cellulesBande[PAD + index + decalage];
+        if (!cellule) return;
+        cellule.textContent = chiffre;
+        cellule.classList.toggle("is-units-digit", index === indexUnites);
+      });
+    }
+    function poser(px, animer) {
+      const transition = animer ? "transform .34s cubic-bezier(.2,.75,.25,1)" : "none";
+      barre.style.transition = transition;
+      bande.style.transition = transition;
+      barre.style.transform = `translateX(${px}px)`;
+      bande.style.transform = `translateX(${-PAD * etat.pas + px}px)`;
+      etat.px = px;
+    }
+    function appliquer(decalage, animer = true) {
+      etat.decalage = borner(Math.round(decalage), -PAD, PAD);
+      ecrireChiffres(etat.decalage);
+      poser(-etat.decalage * etat.pas, animer);
+      barre.setAttribute("aria-valuenow", String(etat.decalage));
+      barre.setAttribute("aria-valuetext", direDecalage(etat.decalage));
+    }
+    function mesurer() {
+      etat.pas = grille.clientWidth / nombreColonnes || 1;
+      appliquer(etat.decalage, false);
+    }
+
+    function ecrireTraces() {
+      trace.replaceChildren(...traces.map(t => {
+        const b = document.createElement("b");
+        b.className = etat.fini ? "ok" : "ici";
+        b.textContent = etat.fini ? t.texte : t.attente;
+        return b;
+      }));
+    }
+
+    function leverRefus() {
+      clearTimeout(etat.refus);
+      etat.refus = 0;
+      if (!consigne.classList.contains("est-refus")) return;
+      consigne.textContent = texteConsigne;
+      consigne.classList.remove("est-refus");
+    }
+    function refuser() {
+      clearTimeout(etat.refus);
+      consigne.textContent = texteRefus || texteConsigne;
+      consigne.classList.remove("est-refus");
+      void consigne.offsetWidth;
+      consigne.classList.add("est-refus");
+      annonce.annoncer(consigne.textContent);
+      etat.refus = setTimeout(leverRefus, 1800);
+    }
+
+    // La bande s'est arrêtée : le bon glissement finit le temps, un autre
+    // est refusé et la bande revient à sa place.
+    function lacher() {
+      if (etat.fini || !etat.decalage) return;
+      const accepte = etat.decalage === attendu;
+      bloc.dispatchEvent(new CustomEvent("decalage", {bubbles: true, detail: {decalage: etat.decalage, accepte}}));
+      if (!accepte) {
+        appliquer(0, true);
+        refuser();
+        return;
+      }
+      leverRefus();
+      etat.fini = true;
+      bloc.classList.add("est-finie");
+      barre.setAttribute("aria-disabled", "true");
+      source.removeAttribute("tabindex");
+      ecrireTraces();
+      if (typeof surFini === "function") surFini();
+    }
+
+    // ---- toucher le chiffre des unités, puis sa colonne d'arrivée
+    const finirChoix = () => {
+      outil.classList.remove("tap-selecting");
+      source.setAttribute("aria-pressed", "false");
+      titres.forEach(titre => { titre.removeAttribute("tabindex"); titre.removeAttribute("role"); });
+    };
+    const basculerChoix = () => {
+      if (etat.fini) return;
+      const actif = !outil.classList.contains("tap-selecting");
+      finirChoix();
+      if (!actif) return;
+      outil.classList.add("tap-selecting");
+      source.setAttribute("aria-pressed", "true");
+      titres.forEach(titre => { titre.tabIndex = 0; titre.setAttribute("role", "button"); });
+    };
+    source.addEventListener("click", basculerChoix);
+    source.addEventListener("keydown", event => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      event.stopPropagation();
+      basculerChoix();
+    });
+    titres.forEach(titre => {
+      const choisir = () => {
+        if (!outil.classList.contains("tap-selecting") || etat.fini) return;
+        mesurer();
+        appliquer(indexUnites - Number(titre.dataset.placeValueTarget), true);
+        finirChoix();
+        barre.focus?.({preventScroll: true});
+        lacher();
+      };
+      titre.addEventListener("click", choisir);
+      titre.addEventListener("keydown", event => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        event.stopPropagation();
+        choisir();
+      });
+    });
+
+    // ---- glisser la bande
+    barre.addEventListener("pointerdown", event => {
+      if (event.button > 0 || etat.fini) return;
+      event.preventDefault();
+      finirChoix();
+      mesurer();
+      // Le cadre peut être agrandi ou réduit (--echelle) : le doigt est en
+      // pixels d'écran, la bande en pixels du cadre.
+      const zoom = grille.getBoundingClientRect().width / (grille.offsetWidth || 1) || 1;
+      etat.departX = event.clientX;
+      etat.departPx = etat.px;
+      etat.glisse = true;
+      suivreGlissement(barre, event, {
+        bouge(mouvement) {
+          const px = borner(etat.departPx + (mouvement.clientX - etat.departX) / zoom, -PAD * etat.pas, PAD * etat.pas);
+          const suivant = borner(Math.round(-px / etat.pas), -PAD, PAD);
+          if (suivant !== etat.decalage) {
+            etat.decalage = suivant;
+            ecrireChiffres(suivant);
+          }
+          poser(px, false);
+        },
+        fin() {
+          etat.glisse = false;
+          appliquer(etat.decalage, true);
+          lacher();
+        }
+      });
+    });
+    barre.addEventListener("keydown", event => {
+      if (etat.fini) return;
+      if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+        mesurer();
+        appliquer(etat.decalage + (event.key === "ArrowLeft" ? 1 : -1), true);
+        annonce.annoncer(direDecalage(etat.decalage));
+      } else if (event.key === "Enter" || event.key === " ") {
+        if (!event.repeat) lacher();
+      } else return;
+      event.preventDefault();
+      // Entrée est à la bande tant que le glissement n'est pas fait.
+      event.stopPropagation();
+    });
+
+    if (typeof ResizeObserver === "function") {
+      etat.observer = new ResizeObserver(() => { if (!etat.glisse) mesurer(); });
+      etat.observer.observe(grille);
+    }
+    ecrireTraces();
+    mesurer();
+
+    return {
+      outil: "glisse",
+      element: bloc,
+      detruire() {
+        clearTimeout(etat.refus);
+        annonce.arreter();
+        if (etat.observer) etat.observer.disconnect();
+      },
+      mesurer,
+      get deborde() { return bloc.scrollWidth > zone.clientWidth + 1; },
+      get fini() { return etat.fini; },
+      get decalage() { return etat.decalage; }
+    };
+  }
+
+  // ------------------------------------------------------- le tableau à flèches
+
+  const TABLEAU = Object.freeze({colonne: 68, ecart: 8, bord: 6, titre: 30, rangee: 46, entre: 40});
+  let compteurTableaux = 0;
+
+  // Où vont les chiffres : ceux du départ, glissés de `k` colonnes (vers la
+  // gauche si k > 0), sauf les zéros de tête et ceux qui sortent du
+  // tableau ; les cases de l'arrivée que rien n'atteint sont les zéros à
+  // écrire.
+  function planTableau(o) {
+    const k = Math.round(Math.log10(o.p)) * (o.operation === "÷" ? -1 : 1);
+    const haut = chiffresParRang(o.depart);
+    const bas = chiffresParRang(o.arrivee);
+    const rangs = [...haut.keys(), ...bas.keys(), 0];
+    if (o.virgule) rangs.push(-1);
+    const premier = Math.max(...rangs);
+    const dernier = Math.min(...rangs);
+    const colonnes = [];
+    for (let rang = premier; rang >= dernier; rang -= 1) colonnes.push(rang);
+    const plusHautBas = Math.max(...bas.keys());
+    const fleches = [...haut.entries()]
+      .map(([rang, chiffre]) => ({de: rang, vers: rang + k, chiffre}))
+      .filter(f => f.vers <= plusHautBas && f.vers >= dernier);
+    const atteints = new Set(fleches.map(f => f.vers));
+    const zeros = [...bas.keys()].filter(rang => !atteints.has(rang));
+    return {k, colonnes, haut, bas, fleches, zeros};
+  }
+
+  // Le tableau en SVG (chaîne). o : {depart, arrivee, p, operation ("×" ou
+  // "÷"), virgule (montrer la virgule même sans décimale), inconnue (les
+  // zéros à écrire sont des « ? »), masque (l'étiquette dit « × ? »)}.
+  function tableauFleches(o) {
+    const plan = planTableau(o);
+    const {colonne: C, ecart: E, bord: B, titre: T, rangee: R, entre: G} = TABLEAU;
+    const n = plan.colonnes.length;
+    // L'étiquette « × 100 » se pose hors des colonnes, du côté où les
+    // flèches ne vont pas (à droite pour ×, à gauche pour ÷) : elle ne
+    // cache jamais une flèche.
+    const etiquette = `${o.operation} ${o.masque ? "?" : nombre(o.p)}`;
+    const lw = etiquette.length * 10 + 18;
+    const marge = lw + 10;
+    const gaucheEtiquette = plan.k < 0;
+    const W = B * 2 + n * C + (n - 1) * E + marge;
+    const yHaut = T + 6;
+    const yBas = yHaut + R + G;
+    const H = yBas + R + 4;
+    const x0 = B + (gaucheEtiquette ? marge : 0);
+    const x = rang => x0 + plan.colonnes.indexOf(rang) * (C + E);
+    compteurTableaux += 1;
+    const id = `dc-tf-${compteurTableaux}`;
+    let s = `<svg class="dc-tableau" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${decrireTableau(o, plan)}">`
+      + `<defs><marker id="${id}" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M0 0L10 5L0 10z" fill="#0755b8"/></marker></defs>`;
+    plan.colonnes.forEach(rang => {
+      const nom = RANGS[rang];
+      const coupure = nom.indexOf(" de ");
+      const cx = x(rang) + C / 2;
+      s += `<rect x="${x(rang)}" y="0" width="${C}" height="${T}" rx="7" fill="#e3ecf2"/>`;
+      s += coupure > 0
+        ? `<text x="${cx}" y="13" text-anchor="middle" font-size="10.5" fill="#2c4a63">${nom.slice(0, coupure)}</text><text x="${cx}" y="25" text-anchor="middle" font-size="10.5" fill="#2c4a63">${nom.slice(coupure + 1)}</text>`
+        : `<text x="${cx}" y="19.5" text-anchor="middle" font-size="11" fill="#2c4a63">${nom}</text>`;
+      const chiffreHaut = plan.haut.get(rang) || "";
+      s += `<rect x="${x(rang) + 1}" y="${yHaut}" width="${C - 2}" height="${R}" rx="9" fill="#e9eef2" stroke="#143451" stroke-width="2"/>`
+        + (chiffreHaut ? `<text x="${cx}" y="${yHaut + 33}" text-anchor="middle" font-size="27" fill="#143451">${chiffreHaut}</text>` : "");
+      const zero = plan.zeros.includes(rang);
+      const fleche = plan.fleches.find(f => f.vers === rang);
+      const chiffreBas = fleche ? fleche.chiffre : zero ? (o.inconnue ? "?" : "0") : "";
+      s += zero
+        ? `<rect x="${x(rang) + 1.5}" y="${yBas + .5}" width="${C - 3}" height="${R - 1}" rx="9" fill="#fff" stroke="#0755b8" stroke-width="3" stroke-dasharray="6 4"/>`
+        : `<rect x="${x(rang) + 1}" y="${yBas}" width="${C - 2}" height="${R}" rx="9" fill="#fff" stroke="#143451" stroke-width="2"/>`;
+      if (chiffreBas) s += `<text x="${cx}" y="${yBas + 33}" text-anchor="middle" font-size="${zero && o.inconnue ? 22 : 27}" fill="${zero ? "#0755b8" : "#143451"}">${chiffreBas}</text>`;
+    });
+    // La virgule, fixe, au même endroit dans les deux rangées.
+    if (plan.colonnes.includes(-1)) {
+      const xv = x(0) + C + E / 2 - 3;
+      [yHaut, yBas].forEach(y => { s += `<path d="M${xv} ${y + R - 14}h7l-4 14h-6z" fill="#c62828"/>`; });
+    }
+    plan.fleches.forEach(f => {
+      const x1 = x(f.de) + C / 2;
+      const x2 = x(f.vers) + C / 2 + (plan.k > 0 ? 8 : plan.k < 0 ? -8 : 0);
+      s += `<line x1="${x1}" y1="${yHaut + R + 3}" x2="${x2}" y2="${yBas - 4}" stroke="#0755b8" stroke-width="3" stroke-linecap="round" marker-end="url(#${id})"/>`;
+    });
+    const lx = gaucheEtiquette ? B + lw / 2 : W - B - lw / 2;
+    s += `<rect x="${lx - lw / 2}" y="${yHaut + R + G / 2 - 13}" width="${lw}" height="26" rx="13" fill="#eaf2ff" stroke="#0755b8" stroke-width="2"/>`
+      + `<text x="${lx}" y="${yHaut + R + G / 2 + 6}" text-anchor="middle" font-size="16" fill="#0755b8">${etiquette}</text>`;
+    return s + "</svg>";
+  }
+
+  // Le même tableau, en mots, pour un lecteur d'écran (sans la réponse
+  // quand elle est cherchée).
+  function decrireTableau(o, plan = planTableau(o)) {
+    const glisse = `chaque chiffre glisse de ${accorder(Math.abs(plan.k), "colonne", "colonnes")} ${versLeCote(plan.k)}`;
+    const depart = `Tableau de numération. En haut, ${ecritureLisible(o.depart)}.`;
+    if (o.masque) return `${depart} En bas, ${ecritureLisible(o.arrivee)}. On a multiplié par combien ? Compte les colonnes.`;
+    if (o.inconnue) {
+      const vides = plan.zeros.length ? ` ${accorder(plan.zeros.length, "case reste vide", "cases restent vides")}.` : "";
+      return `${depart} ${o.operation === "÷" ? "Divisé" : "Multiplié"} par ${nombre(o.p)} : ${glisse}.${vides}`;
+    }
+    return `${depart} ${o.operation === "÷" ? "Divisé" : "Multiplié"} par ${nombre(o.p)} : ${glisse}. En bas, ${ecritureLisible(o.arrivee)}.`;
+  }
+
+  // L'image d'une aide, quelle qu'elle soit (la page ne connaît que ça).
+  function dessinerImage(image) {
+    if (!image) return "";
+    if (image.outil === "tableau-fleches") return tableauFleches(image);
+    return droiteSauts(image);
+  }
+
   return Object.freeze({
     PERLES,
     MESSAGES_REFUS,
@@ -448,6 +1026,16 @@
     DROITE,
     planDroite,
     droiteSauts,
-    decrireDroite
+    decrireDroite,
+    RANGS,
+    chiffresParRang,
+    chiffresDansColonnes,
+    bandeApres,
+    glisseNombres,
+    TABLEAU,
+    planTableau,
+    tableauFleches,
+    decrireTableau,
+    dessinerImage
   });
 });

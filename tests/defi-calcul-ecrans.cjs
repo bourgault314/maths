@@ -1,10 +1,11 @@
-// Défi calcul, lot 1a : les écrans au navigateur (fiche technique § 9, point 6).
+// Défi calcul, lots 1a et 1b : les écrans au navigateur (fiche technique § 9, point 6).
 //
 // Hors CI : ni « npm run verifier » ni « node --test » ne lancent ce fichier.
 //   npm install --no-save playwright
 //   node tests/defi-calcul-ecrans.cjs
 //   DEFI_CALCUL_CAPTURES=/chemin/du/dossier node tests/defi-calcul-ecrans.cjs   (dépose les captures)
 //   CHROMIUM_EXECUTABLE_PATH=/chemin/chrome node tests/defi-calcul-ecrans.cjs   (un Chromium précis)
+//   DEFI_CALCUL_SEULEMENT=lot-1b node tests/defi-calcul-ecrans.cjs  (seulement M2, D2 et le clavier)
 //
 // Un faux serveur de suivi RÉPOND (la recette du lot 2b de Défi tables) : le
 // bandeau « Suivi par ton professeur » est donc affiché, et c'est avec lui
@@ -141,6 +142,14 @@ async function controler(session, taille, nom, {jeu = false, pave = false, image
       cadre: boite(".panel"), carte: carte ? [carte.scrollHeight, carte.clientHeight] : null,
       pave: boite(".keypad"), valider: boite("#validate"), aide: boite("#aide"), expression: boite("#expression"),
       boulier: boite(".perles-cadre"), scene: boite(".perles-scene"),
+      // Le calcul tient dans sa boîte (une ligne, rien de coupé).
+      calculDeborde: (() => {
+        const expression = document.getElementById("expression");
+        if (!expression || !expression.checkVisibility()) return 0;
+        const morceau = document.createRange();
+        morceau.selectNodeContents(expression);
+        return Math.round(morceau.getBoundingClientRect().width - expression.getBoundingClientRect().width);
+      })(),
       repere: (document.getElementById("suivi-repere").textContent || "").trim(),
       repereVisible: !document.getElementById("suivi-repere").hidden,
       echelle: getComputedStyle(document.documentElement).getPropertyValue("--echelle")
@@ -153,6 +162,7 @@ async function controler(session, taille, nom, {jeu = false, pave = false, image
     assert.match(m.repere, /^Suivi par ton professeur · Léa · 4e B/, `${ou} : le bandeau`);
   }
   assert.ok(m.largeurPage <= m.largeur, `${ou} : aucun défilement horizontal (${m.largeurPage} > ${m.largeur})`);
+  assert.ok(m.calculDeborde <= 0, `${ou} : le calcul sort de sa boîte (${m.calculDeborde} px)`);
   if (!taille.telephone) {
     // Sur ordinateur, le cadre blanc tient entier dans l'écran.
     assert.ok(m.cadre.bas <= m.hauteur + .5, `${ou} : le bas du cadre (${Math.round(m.cadre.bas)}) dépasse la fenêtre (${m.hauteur})`);
@@ -201,7 +211,7 @@ async function parcoursDesEcrans(navigateur, base, taille) {
   assert.equal(await texte(page, "#parcours-compte"), "0 module validé sur 42");
   assert.equal(await page.locator("#parcours-paliers button").count(), 4, "quatre pastilles de palier");
   assert.equal(await page.locator("#parcours-modules .dc-mod").count(), 10, "le palier 1 : dix modules");
-  assert.equal(await page.locator("#parcours-modules .dc-mod.bientot:disabled").count(), 8, "huit modules « bientôt », fermés");
+  assert.equal(await page.locator("#parcours-modules .dc-mod.bientot:disabled").count(), 7, "sept modules « bientôt », fermés (A2, M2 et A5 sont construits)");
   assert.match(await texte(page, "#acc-carte"), /Ma séance du jour3 étapes · environ 10 min/);
   if (!taille.telephone) {
     // Deux colonnes : le parcours à droite de Mon module.
@@ -540,6 +550,264 @@ async function reglesDeValidation(navigateur, base) {
   await session.contexte.close();
 }
 
+// Glisse la bande du glisse-nombres de `colonnes` colonnes vers la gauche
+// (négatif : vers la droite), au doigt ou à la souris, puis la lâche.
+async function glisserBande(page, colonnes) {
+  const g = await page.evaluate(() => {
+    const barre = document.querySelector(".place-value-drag-bar").getBoundingClientRect();
+    const grille = document.querySelector(".place-value-grid");
+    const n = Number(getComputedStyle(grille).getPropertyValue("--colonnes"));
+    return {x: barre.left + barre.width / 2, y: barre.top + barre.height / 2, pas: grille.getBoundingClientRect().width / n};
+  });
+  await page.mouse.move(g.x, g.y);
+  await page.mouse.down();
+  for (let pas = 1; pas <= 8; pas += 1) await page.mouse.move(g.x - colonnes * g.pas * pas / 8, g.y);
+  await page.mouse.up();
+  await page.waitForTimeout(450);
+}
+const glisse = page => page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.glisse());
+const arrets = page => page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.arrets());
+const annonce = (page, selecteur = ".dc-annonce") => page.evaluate(s => (document.querySelector(s)?.textContent || "").replace(/[  ]/g, " "), selecteur);
+// Les chiffres que la bande montre, dans l'ordre (les cases vides sautées).
+const bande = page => page.evaluate(() => [...document.querySelectorAll(".place-value-strip-digit")].map(c => c.textContent).join(""));
+
+async function ouvrirNiveau(page, module, niveau, palier = 1) {
+  await page.click("#game-menu").catch(() => {});
+  if (await page.locator("#module").isVisible()) await page.click("#module-changer");
+  await page.waitForTimeout(150);
+  await page.click(`#parcours-paliers button:nth-child(${palier})`);
+  await page.click(`.dc-mod[data-module="${module}"]`);
+  await page.click(`#module-niveaux button:nth-child(${niveau})`);
+  await page.waitForTimeout(150);
+}
+
+// M2 et D2 (lot 1b) : le glisse-nombres, le tableau à flèches, la virgule.
+async function glisseEtTableau(navigateur, base, taille) {
+  const session = await ouvrir(navigateur, base, taille);
+  const {page} = session;
+  const ecran = (nom, options) => controler(session, taille, nom, options);
+
+  // M2 : l'écran du module.
+  await ouvrirNiveau(page, "M2", 1);
+  assert.equal(await texte(page, "#module-titre"), "× 10, × 100, × 1 000");
+  assert.deepEqual(await page.locator("#module-niveaux button strong").allTextContents(), ["produits", "nombres en 0, trous, divisions"]);
+  assert.equal(await texte(page, "#module-etapes .etape:nth-child(1) small"), "avec le glisse-nombres et le tableau");
+  await ecran("30-m2-module");
+
+  // J'apprends, temps 1 : le glisse-nombres, 27 dans la bande.
+  await page.click("#module-etapes .etape:nth-child(1)");
+  await page.waitForTimeout(400);
+  assert.equal(await texte(page, "#seance-fil"), "J’apprends123Je manipule");
+  assert.deepEqual(await glisse(page), {decalage: 0, fini: false});
+  assert.equal(await texte(page, ".glisse-consigne"), "Chaque chiffre vaut 100 fois plus.");
+  assert.equal(await page.locator(".place-value-head").count(), 6, "M2 : 6 colonnes");
+  assert.equal(await page.locator(".place-value-comma").count(), 0, "pas de virgule chez les entiers");
+  assert.equal(await page.locator(".keypad").isVisible(), false, "pas de pavé pour glisser");
+  await ecran("31-m2-glisse", {jeu: true});
+  // Une colonne seulement : refusé, avec la phrase de la fiche, lue à voix haute.
+  await glisserBande(page, 1);
+  assert.equal(await texte(page, ".glisse-consigne"), "Chaque chiffre doit valoir 100 fois plus : 2 colonnes.");
+  assert.deepEqual(await glisse(page), {decalage: 0, fini: false}, "la bande revient à sa place");
+  assert.deepEqual(await arrets(page), [{decalage: 1, accepte: false}], "l'événement « decalage »");
+  await page.waitForTimeout(100);
+  assert.equal(await annonce(page), "Chaque chiffre doit valoir 100 fois plus : 2 colonnes.", "le refus est lu");
+  if (CAPTURES) await page.screenshot({path: path.join(CAPTURES, `${taille.nom}-32-m2-glisse-refuse.png`)});
+  // Au clavier : ← ← puis Entrée.
+  await page.focus(".place-value-drag-bar");
+  await page.keyboard.press("ArrowLeft");
+  await page.keyboard.press("ArrowLeft");
+  await page.waitForTimeout(400);
+  assert.deepEqual(await glisse(page), {decalage: 2, fini: false}, "les flèches font glisser sans lâcher");
+  assert.equal(await page.getAttribute(".place-value-drag-bar", "aria-valuetext"), "2 colonnes vers la gauche");
+  assert.equal(await bande(page), "27", "aucun zéro posé à la place de l'élève");
+  await page.keyboard.press("Enter");
+  await page.waitForTimeout(250);
+  assert.deepEqual(await glisse(page), {decalage: 2, fini: true}, "Entrée lâche la bande");
+  assert.equal(await texte(page, ".dc-trace"), "27 × 100 = 2 700");
+  // La pastille : son texte au milieu, en hauteur comme en largeur.
+  const centrage = await page.evaluate(() => {
+    const pastille = document.querySelector(".dc-trace b");
+    const morceau = document.createRange();
+    morceau.selectNodeContents(pastille);
+    const t = morceau.getBoundingClientRect();
+    const b = pastille.getBoundingClientRect();
+    return [Math.abs(t.left + t.right - b.left - b.right) / 2, Math.abs(t.top + t.bottom - b.top - b.bottom) / 2];
+  });
+  assert.ok(centrage[0] <= 1.5 && centrage[1] <= 1.5, `« 27 × 100 = 2 700 » n'est pas centré dans sa pastille (${centrage})`);
+  assert.equal(await page.locator("#validate").isVisible(), true, "« Suivant » apparaît");
+  await ecran("33-m2-glisse-fini", {jeu: true});
+
+  // Temps 2 : le tableau à flèches. Les zéros à écrire sont des « ? ».
+  await page.keyboard.press("Enter");
+  await page.waitForTimeout(350);
+  assert.equal(await texte(page, "#seance-fil"), "J’apprends✓23Je représente");
+  assert.equal(await page.locator("#aide svg.dc-tableau").count(), 1);
+  assert.equal(await texte(page, "#aide .consigne"), "Chaque chiffre vaut 100 fois plus.");
+  assert.equal(await page.locator("#touches").isVisible(), false, "M2 : pas de virgule");
+  assert.doesNotMatch(await page.getAttribute("#aide svg", "aria-label"), /2 700/, "le lecteur d'écran ne dit pas la réponse");
+  await ecran("34-m2-tableau", {jeu: true, pave: true, image: true});
+  await taper(page, 2700, {clavier: true});
+  await valider(page, {clavier: true});
+  await page.waitForTimeout(1100);
+  // Temps 3 : j'écris (la ligne corrigée de la fiche).
+  assert.equal(await texte(page, "#expression"), "27 × 100= 2 milliers et 7 centaines= 2 000 + 700=");
+  await ecran("35-m2-ecris", {jeu: true, pave: true});
+  await taper(page, 2700);
+  await valider(page);
+  await page.waitForTimeout(1100);
+  assert.equal(await texte(page, "#retenir-phrase"), "Quand je multiplie par 100, chaque chiffre prend une valeur 100 fois plus grande.");
+  assert.equal(await page.locator("#retenir-image svg.dc-tableau").count(), 1);
+  await ecran("36-m2-phrase-bilan");
+
+  // Je m'entraîne : un rang de trop, l'image du tableau.
+  await page.click("#result-suite .primary");
+  await page.waitForTimeout(300);
+  let c = await calcul(page);
+  await taper(page, c.reponse * 10);
+  await valider(page);
+  await page.waitForTimeout(300);
+  assert.match(await texte(page, "#answer-feedback"), new RegExp(`, c’est .* × ${(c.donnees.p * 10).toLocaleString("fr-FR").replace(/\s/g, " ")}\\. Pour × `));
+  assert.equal(await page.locator("#aide svg.dc-tableau").count(), 1, "l'image : le tableau à flèches");
+  await ecran("37-m2-erreur-connue", {jeu: true, pave: true, image: true});
+
+  // M2 niveau 2 : 480 ÷ 10, la bande glisse vers la droite.
+  await ouvrirNiveau(page, "M2", 2);
+  await page.click("#module-etapes .etape:nth-child(1)");
+  await page.waitForTimeout(400);
+  await glisserBande(page, 1);
+  assert.equal(await texte(page, ".glisse-consigne"), "Chaque chiffre doit valoir 10 fois moins : 1 colonne.", "vers la gauche : refusé");
+  await glisserBande(page, -1);
+  assert.deepEqual(await glisse(page), {decalage: -1, fini: true});
+  assert.equal(await bande(page), "48", "le zéro sort du tableau des entiers");
+  await valider(page);
+  await page.waitForTimeout(350);
+  await ecran("38-m2-division-tableau", {jeu: true, pave: true, image: true});
+
+  // D2 niveau 3 : 3,6 × 100, la virgule, la case des unités vide.
+  await ouvrirNiveau(page, "D2", 3, 3);
+  assert.equal(await texte(page, "#module-titre"), "× 10, × 100, × 1 000 avec virgule");
+  await page.click("#module-etapes .etape:nth-child(1)");
+  await page.waitForTimeout(400);
+  assert.equal(await page.locator(".place-value-head").count(), 7, "D2 : des milliers aux millièmes");
+  assert.equal(await page.evaluate(() => document.getElementById("expression").style.fontSize), "", "la taille réduite d'un calcul précédent ne reste pas");
+  assert.equal(await page.locator(".place-value-comma").count(), 2, "la virgule fixe, dans les deux rangées");
+  const virgule = () => page.evaluate(() => [...document.querySelectorAll(".place-value-comma")].map(v => Math.round(v.getBoundingClientRect().left)));
+  const avant = await virgule();
+  await glisserBande(page, 2);
+  assert.deepEqual(await glisse(page), {decalage: 2, fini: true});
+  assert.deepEqual(await virgule(), avant, "la virgule ne bouge pas");
+  assert.equal(await bande(page), "36", "la case des unités reste vide : c'est le zéro à écrire");
+  assert.equal(await texte(page, ".dc-trace"), "3,6 × 100 = 360");
+  const chevauche = await page.evaluate(() => {
+    const trace = document.querySelector(".dc-trace").getBoundingClientRect();
+    const suivant = document.getElementById("validate").getBoundingClientRect();
+    const tableau = document.querySelector(".place-value-tool").getBoundingClientRect();
+    const calcul = document.getElementById("expression").getBoundingClientRect();
+    return {trace: trace.bottom - suivant.top, calcul: calcul.bottom - tableau.top};
+  });
+  assert.ok(chevauche.trace <= 0, `la ligne du calcul passe sous « Suivant » (${chevauche.trace} px)`);
+  assert.ok(chevauche.calcul <= 0, `le glisse-nombres monte sur le calcul (${chevauche.calcul} px)`);
+  await ecran("39-d2-glisse-zero", {jeu: true});
+  await valider(page);
+  await page.waitForTimeout(350);
+  assert.equal(await page.locator("#touches").isVisible(), true, "D2 : la touche « , »");
+  assert.equal(await page.locator("#aide svg text", {hasText: "?"}).count(), 1, "un « ? » : le zéro à écrire");
+  await ecran("40-d2-tableau", {jeu: true, pave: true, image: true});
+
+  // D2 niveau 4 : la puissance cherchée. Un glissement faux, sans phrase.
+  await ouvrirNiveau(page, "D2", 4, 3);
+  await page.click("#module-etapes .etape:nth-child(1)");
+  await page.waitForTimeout(400);
+  await glisserBande(page, 2);
+  assert.equal(await texte(page, ".glisse-consigne"), "Glisse jusqu’à lire 1 200.", "refusé sans phrase : la consigne reste");
+  assert.equal(await page.locator(".glisse-consigne.est-refus").count(), 1, "elle tremble");
+  await page.waitForTimeout(100);
+  assert.equal(await annonce(page), "Glisse jusqu’à lire 1 200.", "le lecteur d'écran relit la consigne");
+  await glisserBande(page, 3);
+  assert.equal(await texte(page, ".dc-trace"), "1,2 × 1 000 = 1 200");
+  await valider(page);
+  await page.waitForTimeout(350);
+  assert.match(await page.locator("#aide svg").innerHTML(), />× \?</);
+  assert.equal(await texte(page, "#aide .consigne"), "Je compte les colonnes.");
+  await taper(page, 1000);
+  await valider(page);
+  await page.waitForTimeout(1100);
+  assert.equal(await texte(page, "#expression"), "1,2 → 1 2003 colonnes1 200 = 1,2 ×");
+  await ecran("41-d2-ecris", {jeu: true, pave: true});
+
+  // D2 niveau 1, entraînement : la virgule au pavé et au clavier, une seule.
+  await ouvrirNiveau(page, "D2", 1, 3);
+  await page.click("#module-etapes .etape:nth-child(2)");
+  await page.waitForTimeout(300);
+  c = await calcul(page);
+  const ecrit = String(c.reponse).replace(".", ",");
+  for (const signe of ecrit) await page.click(`#play [data-key="${signe}"]`);
+  if (ecrit.includes(",")) {
+    await page.click('#play [data-key=","]');
+    assert.equal(await texte(page, "#inline-answer"), ecrit, "une seule virgule");
+  }
+  await ecran("42-d2-virgule", {jeu: true, pave: true});
+  await valider(page);
+  await page.waitForTimeout(950);
+  // « Le nombre n'a pas changé » : tapé avec un zéro de trop, au clavier.
+  c = await calcul(page);
+  const recopie = `${String(c.donnees.n).replace(".", ",")}0`;
+  for (const signe of recopie) await page.keyboard.press(signe === "," ? "," : signe);
+  await page.keyboard.press("Enter");
+  await page.waitForTimeout(300);
+  assert.equal((await texte(page, "#answer-feedback")).split(" : ")[0], `${recopie} = ${String(c.donnees.n).replace(".", ",")}`);
+  assert.equal(await page.locator("#aide svg.dc-tableau").count(), 1);
+  await ecran("43-d2-erreur-connue", {jeu: true, pave: true, image: true});
+
+  assert.deepEqual(session.erreurs, []);
+  await session.contexte.close();
+}
+
+// Le rekenrek au clavier (1366 × 768) : le même geste forcé qu'au doigt.
+async function rekenrekAuClavier(navigateur, base) {
+  const taille = TAILLES[0];
+  const session = await ouvrir(navigateur, base, taille);
+  const {page} = session;
+  await ouvrirNiveau(page, "A5", 1);
+  await page.click("#module-etapes .etape:nth-child(1)");
+  await page.waitForTimeout(400);
+  await page.keyboard.press("Tab");
+  // Tab jusqu'au boulier.
+  for (let i = 0; i < 12 && !(await page.evaluate(() => document.activeElement?.classList.contains("perles-interieur"))); i += 1) await page.keyboard.press("Tab");
+  assert.equal(await page.evaluate(() => document.activeElement?.classList.contains("perles-interieur")), true, "Tab mène au boulier");
+  assert.equal(await page.getAttribute(".perles-interieur", "role"), "application");
+  // Le curseur part de la rangée entamée (47 : la 5e, 7 perles).
+  await page.keyboard.press("ArrowDown");
+  await page.waitForTimeout(80);
+  assert.equal(await annonce(page), "Rangée 6 : aucune perle poussée. Perle 8.");
+  assert.equal(await page.locator(".perles-rangee.curseur .perle.curseur").count(), 1, "le cadre bleu : la rangée et la perle");
+  // 8 perles d'un coup sur la rangée vide : « Pas assez de perles ! », lu.
+  await page.keyboard.press("Enter");
+  await page.waitForTimeout(80);
+  assert.equal(await texte(page, ".perles-consigne"), "Pas assez de perles !");
+  assert.equal(await annonce(page), "Pas assez de perles !");
+  assert.deepEqual(await perles(page), {etape: 0, total: 47, fini: false});
+  // La 10e perle : la rangée entière.
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("Enter");
+  await page.waitForTimeout(250);
+  assert.deepEqual(await perles(page), {etape: 1, total: 57, fini: false});
+  if (CAPTURES) await page.screenshot({path: path.join(CAPTURES, `${taille.nom}-44-rekenrek-clavier.png`)});
+  // Retirer 1 : la rangée entamée, sa 7e perle.
+  await page.keyboard.press("ArrowUp");
+  for (let i = 0; i < 3; i += 1) await page.keyboard.press("ArrowLeft");
+  await page.keyboard.press("Enter");
+  await page.waitForTimeout(250);
+  assert.deepEqual(await perles(page), {etape: 2, total: 56, fini: true});
+  // Entrée, maintenant, c'est « Suivant ».
+  await page.keyboard.press("Enter");
+  await page.waitForTimeout(350);
+  assert.equal(await texte(page, "#seance-fil"), "J’apprends✓23Je représente");
+  assert.deepEqual(session.erreurs, []);
+  await session.contexte.close();
+}
+
 // Sans code, et avec un serveur qui ne connaît pas encore l'appli (avant le lot 2).
 async function etatsDuSuivi(navigateur, base) {
   const taille = TAILLES[0];
@@ -580,14 +848,23 @@ async function etatsDuSuivi(navigateur, base) {
     : {channel: "chromium"});
   let echec = null;
   try {
-    for (const taille of TAILLES) {
+    const lot1a = process.env.DEFI_CALCUL_SEULEMENT !== "lot-1b";
+    for (const taille of lot1a ? TAILLES : []) {
       await parcoursDesEcrans(navigateur, base, taille);
       console.log(`ok — les écrans à ${taille.nom}`);
     }
-    await reglesDeValidation(navigateur, base);
-    console.log("ok — les règles de validation, le rekenrek d'A2, le retour du navigateur");
-    await etatsDuSuivi(navigateur, base);
-    console.log("ok — sans code, et avec un serveur qui ne connaît pas encore l'appli");
+    for (const taille of TAILLES) {
+      await glisseEtTableau(navigateur, base, taille);
+      console.log(`ok — M2 et D2 (glisse-nombres, tableau à flèches, virgule) à ${taille.nom}`);
+    }
+    await rekenrekAuClavier(navigateur, base);
+    console.log("ok — le rekenrek au clavier, ses refus lus");
+    if (lot1a) {
+      await reglesDeValidation(navigateur, base);
+      console.log("ok — les règles de validation, le rekenrek d'A2, le retour du navigateur");
+      await etatsDuSuivi(navigateur, base);
+      console.log("ok — sans code, et avec un serveur qui ne connaît pas encore l'appli");
+    }
   } catch (erreur) {
     echec = erreur;
   }
@@ -597,5 +874,5 @@ async function etatsDuSuivi(navigateur, base) {
     console.error(`ÉCHEC — ${echec.message}`);
     process.exit(1);
   }
-  console.log(CAPTURES ? `Captures déposées dans ${CAPTURES}` : "Défi calcul : les écrans du lot 1a sont conformes.");
+  console.log(CAPTURES ? `Captures déposées dans ${CAPTURES}` : "Défi calcul : les écrans des lots 1a et 1b sont conformes.");
 })();

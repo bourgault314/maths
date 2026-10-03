@@ -246,7 +246,9 @@ test("les états d'un module et le module suivant", () => {
   assert.equal(etat(neuf, "A2"), "libre");
   assert.equal(etat(neuf, "A5"), "libre", "A5 est ouvert sans A3 pendant l'essai");
   assert.equal(etat(neuf, "A1"), "bientot");
-  assert.equal(etat(neuf, "M2"), "bientot", "M2 est pilote, mais pas encore construit");
+  assert.equal(etat(neuf, "M2"), "libre", "M2, construit au lot 1b, est ouvert");
+  assert.equal(etat(neuf, "D2"), "libre", "D2 est ouvert sans M2 ni D1 pendant l'essai");
+  assert.equal(etat(neuf, "D3"), "bientot");
   assert.equal(P.moduleSuivant(neuf, CARTE), "A2");
   assert.equal(P.moduleCourant(neuf, CARTE), "A2");
   const choisi = P.choisirModule(neuf, "A5", JOUR);
@@ -272,7 +274,7 @@ test("les états d'un module et le module suivant", () => {
   assert.equal(P.compter(p, CARTE).total, 42, "le compte dit « sur 42 »");
   // Tout ce qui est ouvert est validé : plus de module suivant.
   let fini = neuf;
-  ["A2", "A5"].forEach(id => { fini = validerTout(fini, id); });
+  ["A2", "M2", "A5", "D2"].forEach(id => { fini = validerTout(fini, id); });
   assert.equal(P.moduleSuivant(fini, CARTE), null);
 });
 
@@ -375,7 +377,7 @@ test("la file de la séance : 4 étapes au plus, la validation après un entraî
   assert.deepEqual(P.suiteDeFile(deux, 0, {reussi: false}), deux);
   // Tout est validé : il ne reste que le mélange.
   let fini = P.creerParcours();
-  ["A2", "A5"].forEach(id => { fini = validerTout(fini, id); });
+  ["A2", "M2", "A5", "D2"].forEach(id => { fini = validerTout(fini, id); });
   assert.deepEqual(types(P.fileSeance(fini, CARTE)), ["melange"]);
 });
 
