@@ -7069,8 +7069,10 @@
         titre.textContent = reprise ? "Reprendre ma séance" : faite ? "Encore une séance" : "Ma séance du jour";
         const duree = document.createElement("span");
         duree.className = "duree";
+        // « encore 2 min environ » ne se coupe pas, ni avant « · » : au téléphone
+        // (402 px), « environ » restait seul sur la deuxième ligne.
         duree.textContent = reprise
-          ? soude(`étape ${dejaFaites.length + 1} sur ${nombre} · encore ${programme.minutes} min environ`)
+          ? soude(`étape ${dejaFaites.length + 1} sur ${nombre}\u00a0· encore\u00a0${programme.minutes}\u00a0min\u00a0environ`)
           : soude(`${pluriel(nombre, "étape")} · environ ${programme.minutes} min`);
         texte.append(titre, duree);
         const go = document.createElement("span");

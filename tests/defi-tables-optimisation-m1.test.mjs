@@ -402,7 +402,13 @@ test("cinq points par semaine, des durées justes", () => {
 
 test("la page : « Reprendre ma séance », ses étapes cochées, « Reprendre » ; les erreurs de l'étape partent au moteur", () => {
   assert.match(html, /titre\.textContent = reprise \? "Reprendre ma séance" : faite \? "Encore une séance" : "Ma séance du jour";/);
-  assert.match(html, /soude\(`étape \$\{dejaFaites\.length \+ 1\} sur \$\{nombre\} · encore \$\{programme\.minutes\} min environ`\)/);
+  // « étape 3 sur 4 · encore 2 min environ » : la ligne ne se coupe qu'après
+  // « · » (à 402 px, « environ » restait seul sur la deuxième ligne). On
+  // exécute la vraie fonction soude() de la page sur le vrai modèle.
+  const modele = html.match(/\? soude\((`étape [^`]+`)\)/)[1];
+  const soude = new Function(`${html.match(/function soude\(texte\) \{[\s\S]*?\n      \}/)[0]}; return soude;`)();
+  const duree = new Function("soude", "dejaFaites", "nombre", "programme", `return soude(${modele});`)(soude, {length: 2}, 4, {minutes: 2});
+  assert.deepEqual(duree.split(" "), ["étape", "3\u00a0sur\u00a04\u00a0·", "encore\u00a02\u00a0min\u00a0environ"]);
   assert.match(html, /go\.textContent = reprise \? "Reprendre" : "Commencer\\u00a0→";/);
   assert.match(html, /item\.className = "faite";\s+const coche = document\.createElement\("i"\);\s+coche\.textContent = "✓";/);
   assert.match(html, /if \(reprise && rang === 0\) item\.className = "ici";/);
