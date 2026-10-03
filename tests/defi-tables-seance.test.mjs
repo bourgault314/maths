@@ -137,12 +137,12 @@ test("le parcours : des clés en plus, sans changer de version ; une clé absent
   assert.equal(P.estVide(P.appliquerReponse(neuf, "1-3", {correcte: true}).parcours), false, "un bout réussi est déjà du travail");
 });
 
-test("la séance : Mes calculs du jour s'il y en a, le mélange s'il est dû, puis trois marches qui se suivent", () => {
+test("la séance : Mes calculs du jour s'il y en a, le mélange s'il est dû, puis les marches qui se suivent — quatre étapes (lot M2)", () => {
   let p = P.creerParcours();
   assert.deepEqual(P.MARCHES.map(m => m.nom), ["Les perles", "Je construis la bande", "La bande à trous", "Dans l’ordre", "Dans le désordre", "Nombres manquants", "Résultats et nombres manquants", "Je valide ma table"]);
-  assert.deepEqual(nomsDe(p, jour(1)), ["Les perles", "Je construis la bande", "La bande à trous"], "jour 1 : marches 1, 2, 3 de la table de 2");
+  assert.deepEqual(nomsDe(p, jour(1)), ["Les perles", "Je construis la bande", "La bande à trous", "Dans l’ordre"], "jour 1 : marches 1 à 4 de la table de 2 (lot M2 : toujours 4 étapes)");
   assert.equal(P.ouvrirSeance(p, {aujourdhui: jour(1)}).table, 2, "sans choix, la première table de l'ordre conseillé");
-  assert.deepEqual(nomsDe(p, jour(1), 7), ["Les perles", "Je construis la bande", "La bande à trous"]);
+  assert.deepEqual(nomsDe(p, jour(1), 7), ["Les perles", "Je construis la bande", "La bande à trous", "Dans l’ordre"]);
   assert.equal(P.ouvrirSeance(p, {aujourdhui: jour(1), table: 7}).table, 7, "le changement de table est libre");
   p.tables[2].seance = {depart: 3, n: 2};
   p = P.appliquerReponse(p, "2-6", {correcte: true, date: jour(1)}).parcours;
@@ -165,16 +165,16 @@ test("la séance : Mes calculs du jour s'il y en a, le mélange s'il est dû, pu
   assert.ok(nomsDe(p, jour(2)).every(nom => ["Mes calculs du jour", "Mon mélange"].includes(nom)));
 });
 
-test("l’échelle à décalage : +1 par séance finie, +2 quand les trois marches sont sans faute, jamais plus loin que 6-7-8", () => {
+test("l’échelle à décalage : +1 par séance finie, +2 quand les marches sont sans faute, jamais plus loin que le départ 6 (5-6-7-8 au sommet, lot M2)", () => {
   let p = P.creerParcours();
   // Une erreur dans la bande : la séance est finie, pas sans faute.
   let s = jouerSeance(p, jour(1), etape => (etape.cle === "construct" ? 1 : 0));
-  assert.deepEqual(s.noms, [1, 2, 3]);
+  assert.deepEqual(s.noms, [1, 2, 3, 4]);
   assert.equal(s.seance.finie, true);
-  assert.deepEqual(departN(s.parcours.tables[2].seance), {depart: 2, n: 1}, "jour 2 : marches 2, 3, 4");
+  assert.deepEqual(departN(s.parcours.tables[2].seance), {depart: 2, n: 1}, "jour 2 : marches 2 à 5");
   assert.equal(s.seance.avance, 1);
   s = jouerSeance(s.parcours, jour(2));
-  assert.deepEqual(s.noms, [2, 3, 4]);
+  assert.deepEqual(s.noms, [2, 3, 4, 5]);
   assert.deepEqual(departN(s.parcours.tables[2].seance), {depart: 4, n: 2}, "tout sans faute : deux marches d'un coup");
   assert.equal(s.seance.avance, 2);
   // Les perles ne se ratent pas : elles comptent sans faute.
@@ -189,7 +189,7 @@ test("l’échelle à décalage : +1 par séance finie, +2 quand les trois march
   // « Encore une séance » le même jour : la séance du jour suivant.
   s = jouerSeance(P.creerParcours(), jour(1), () => 1);
   const encore = jouerSeance(s.parcours, jour(1), () => 1);
-  assert.deepEqual(encore.noms, [2, 3, 4], "le même jour, la séance suivante est décalée d'une marche");
+  assert.deepEqual(encore.noms, [2, 3, 4, 5], "le même jour, la séance suivante est décalée d'une marche");
   assert.deepEqual(encore.parcours.seances, [jour(1), jour(1)]);
 });
 
@@ -252,11 +252,13 @@ test("une marche ratée : moins de 7 sur 10 ; la marche d'en dessous, la marche 
 test("la marche 8 : la validation si la table est prête, sinon un entraînement à sa place ; jamais tant que le mélange est dû", () => {
   let p = P.creerParcours();
   p.tables[3].seance = {depart: 6, n: 5};
-  assert.deepEqual(nomsDe(p, jour(1), 3), ["Nombres manquants", "Résultats et nombres manquants", "Je valide ma table (si prêts)"]);
+  // Lot M2 : au sommet, rien de dû, la fenêtre s'arrête à la marche 8 (5-6-7-8, pas 6-7-8 seul).
+  assert.deepEqual(nomsDe(p, jour(1), 3), ["Dans le désordre", "Nombres manquants", "Résultats et nombres manquants", "Je valide ma table (si prêts)"]);
+  assert.equal(p.tables[3].seance.depart, 6, "le départ enregistré ne bouge pas");
   // Deux erreurs par entraînement : depuis le lot M1, une seule (9 sur 10) aux
   // deux formes gagnerait le raccourci.
   let s = jouerSeance(p, jour(1), () => 2, 3);
-  assert.deepEqual(s.noms, [6, 7, 5], "pas prête : « Dans le désordre » à la place de la validation");
+  assert.deepEqual(s.noms, [5, 6, 7, 5], "pas prête : « Dans le désordre » à la place de la validation");
   assert.equal(s.parcours.tables[3].acquise, null);
   // Le lendemain, les calculs du jour font monter les boîtes : la table est prête.
   s = jouerSeance(s.parcours, jour(2), () => 1, 3);
@@ -267,7 +269,7 @@ test("la marche 8 : la validation si la table est prête, sinon un entraînement
   for (const date of [jour(1), jour(2)]) for (let m = 1; m <= 10; m += 1) q = P.appliquerReponse(q, `3-${m}`, {correcte: true, date}).parcours;
   assert.equal(P.validationDeSeance(q, 3), true);
   s = jouerSeance(q, jour(3), etape => (etape.type === "validation" ? 1 : 0), 3);
-  assert.deepEqual(s.noms, [6, 7, "validation"]);
+  assert.deepEqual(s.noms, [5, 6, 7, "validation"]);
   assert.equal(s.parcours.tables[3].acquise, jour(3));
   // Le mélange dû : pas de validation d'une autre table.
   q.tables[2].acquise = jour(1); q.tables[10].acquise = jour(1);
@@ -286,9 +288,9 @@ test("une table prête pendant la séance le reste : une erreur à l'entraîneme
   let q = P.creerParcours();
   q.tables[3].seance = {depart: 6, n: 5};
   for (const date of [jour(1), jour(2)]) for (let m = 1; m <= 10; m += 1) q = P.appliquerReponse(q, `3-${m}`, {correcte: true, date}).parcours;
-  // Une erreur à chaque entraînement — « Dans le désordre » n'est pas joué, donc pas de raccourci.
-  const s = jouerSeance(q, jour(3), () => 1, 3);
-  assert.deepEqual(s.noms, [6, 7, "validation"], "prête à l'ouverture : la marche 8 est la validation, malgré les deux erreurs");
+  // Deux erreurs à chaque entraînement (8 sur 10) : pas de raccourci (lot M2 : « Dans le désordre » est joué, séance 5-6-7-8).
+  const s = jouerSeance(q, jour(3), etape => (etape.type === "validation" ? 1 : 2), 3);
+  assert.deepEqual(s.noms, [5, 6, 7, "validation"], "prête à l'ouverture : la marche 8 est la validation, malgré les erreurs");
   assert.equal(P.raccourciValidation(s.parcours, 3), false);
   // Pas prête à l'ouverture, prête après Mes calculs du jour : pareil.
   let r = P.creerParcours();
@@ -321,7 +323,7 @@ test("le raccourci : 9 sur 10 ou mieux à « Dans le désordre » ET à « Nombr
   p.tables[3].seance = {depart: 4, n: 3};
   // Un seul des deux ne suffit pas.
   let s = jouerSeance(p, jour(1), etape => (etape.marche === 6 ? 2 : 0), 3);
-  assert.deepEqual(s.noms, [4, 5, 6], "8 sur 10 aux nombres manquants : pas de raccourci");
+  assert.deepEqual(s.noms, [4, 5, 6, 7], "8 sur 10 aux nombres manquants : pas de raccourci");
   assert.deepEqual(s.parcours.tables[3].sansFaute, {desordre: 1, trous: 0});
   assert.equal(P.raccourciValidation(s.parcours, 3), false);
   // Les deux : la validation devient l'étape suivante, même si les boîtes ne sont pas prêtes.
@@ -329,10 +331,10 @@ test("le raccourci : 9 sur 10 ou mieux à « Dans le désordre » ET à « Nombr
   assert.deepEqual(s.noms, [4, 5, 6, "validation"]);
   assert.equal(P.rangeeTable(P.creerParcours(), 3).prete, false);
   assert.equal(s.parcours.tables[3].acquise, jour(1), "validée dans la séance, sans attendre les boîtes");
-  // Dans la séance 5-6-7 : la validation prend la place de la marche 7.
+  // Lot M2 : dans la séance 5-6-7-8, la marche 8 devient elle-même la validation (4 étapes).
   p.tables[3].seance = {depart: 5, n: 4};
   s = jouerSeance(p, jour(1), etape => (etape.type === "validation" ? 6 : 0), 3);
-  assert.deepEqual(s.noms, [5, 6, "validation", 7], "validation ratée : retour à la marche 7");
+  assert.deepEqual(s.noms, [5, 6, 7, "validation", 7], "validation ratée : retour à la marche 7 (5e étape : cinq au plus)");
   assert.equal(s.parcours.tables[3].seance.depart, 6);
   assert.deepEqual(nomsDe(s.parcours, jour(2), 3).slice(-1), ["Je valide ma table"], "le raccourci reste gagné : la marche 8 est la validation");
   // Une seule erreur à chacun : le raccourci (lot M1).
@@ -389,12 +391,12 @@ test("la fusion : les bouts s'ajoutent, le départ le plus récent gagne (il peu
 });
 
 test("trois élèves types : celui qui sait tout, le moyen, celui qui ne sait rien", () => {
-  // 1. Sait tout, suit la séance : 1-2-3, 3-4-5, puis 5-6 et le raccourci.
+  // 1. Sait tout, suit la séance : 1-2-3-4, puis 3-4-5-6 et le raccourci en 5e étape (annoncé par la carte, lot M2).
   let p = P.creerParcours();
   const seances = [];
   for (let n = 1; n <= 3; n += 1) { const s = jouerSeance(p, jour(n)); p = s.parcours; seances.push(s.noms.join(",")); }
-  assert.deepEqual(seances, ["1,2,3", "3,4,5", "revision,5,6,validation"]);
-  assert.equal(p.tables[2].acquise, jour(3), "la table de 2 acquise à la troisième séance");
+  assert.deepEqual(seances, ["1,2,3,4", "3,4,5,6,validation", "revision,1,2,3"]);
+  assert.equal(p.tables[2].acquise, jour(2), "la table de 2 acquise à la deuxième séance (lot M2 : 4 marches)");
   // 2. Moyen (deux erreurs par entraînement, jamais 9 sur 10) : pas de raccourci ;
   //    il valide le jour où sa rangée est prête après Mes calculs du jour.
   p = P.creerParcours();
@@ -557,7 +559,7 @@ test("« Cette semaine » : à la 5e séance, page ouverte, l'étiquette des ron
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie serveur identique, serveur qui accepte les nouvelles clés", () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261003-3/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261003-4/);
   const moteur = readFileSync(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = readFileSync(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie), "cp outils/calcul_mental/defi_tables_mon_parcours.js _serveur/public/prof/");
@@ -681,7 +683,7 @@ test("lot 2a : la page — premier écran, Mon parcours, notice, séance des 9 t
   assert.match(html, /\{correct: state\.correct, total: TOTAL, decouverte: state\.origin === "decouverte"\}/);
   // Lot E1 (décision 4) : « Non, je commence à apprendre », puis le choix de la table.
   assert.match(html, /commencer\.textContent = etat\.acquises\.length \? "C’est tout" : "Non, je commence à apprendre";/);
-  assert.match(html, /parcours = PARCOURS\.commencerApresDecouverte\(parcours, table\);\s*sauverParcours\(\);\s*ecrireTableChoisie\(table\);\s*fermerDecouverte\(\);/);
+  assert.match(html, /parcours = PARCOURS\.commencerApresDecouverte\(parcours, table, \{juste: validation\.score\}\);\s*sauverParcours\(\);\s*ecrireTableChoisie\(table\);\s*fermerDecouverte\(\);/);
   // Mon parcours : une rangée par table, l'échelle pour ma table.
   assert.match(html, /const maTable = tableEnCours\(etat\);[\s\S]{0,300}?\n        renderParcoursSeance\(list, etat, maTable\);/);
   assert.doesNotMatch(html, /kind: "dot",\s*etat: activite\.etat/, "lot 2b : les ronds de l'ancien parcours sont retirés");

@@ -363,12 +363,12 @@ test("la validation réussie termine la séance ; le mélange ouvre la suivante,
   assert.deepEqual(rate.noms.slice(-2), ["validation", 7]);
 });
 
-test("quatre étapes au plus à l'ouverture : trois marches, deux quand Mes calculs du jour ET le mélange sont dus", () => {
+test("quatre étapes au plus à l'ouverture : quatre marches (lot M2), trois avec Mes calculs du jour ou le mélange, deux avec les deux", () => {
   assert.equal(P.SEUILS.seance.plafond, 4);
   assert.equal(P.SEUILS.seance.marchesMin, 2);
   const marchesDe = (parcours, date, table = null) => P.ouvrirSeance(parcours, {aujourdhui: date, table}).file.map(prevue => prevue.type === "marche" ? prevue.marche : prevue.type);
   let p = P.creerParcours();
-  assert.deepEqual(marchesDe(p, jour(1)), [1, 2, 3], "rien de dû : trois marches");
+  assert.deepEqual(marchesDe(p, jour(1)), [1, 2, 3, 4], "rien de dû : quatre marches (lot M2 : toujours 4 étapes)");
   p = P.appliquerReponse(p, "2-6", {correcte: true, date: jour(1)}).parcours;
   assert.deepEqual(marchesDe(p, jour(2)), ["revision", 1, 2, 3], "les calculs seuls : trois marches");
   let q = P.creerParcours();
@@ -387,7 +387,7 @@ test("cinq points par semaine, des durées justes", () => {
   assert.equal(P.bilanSeances(P.creerParcours(), jour(1)).objectif, 5);
   let p = P.creerParcours();
   const minutes = (parcours, date) => P.programmeDeSeance(parcours, P.ouvrirSeance(parcours, {aujourdhui: date}), date);
-  assert.equal(minutes(p, jour(1)).minutes, 4, "perles 2 + bande 1 + bande à trous 1");
+  assert.equal(minutes(p, jour(1)).minutes, 5, "perles 2 + bande 1 + bande à trous 1 + dans l’ordre 1 (lot M2 : quatre marches)");
   p = P.appliquerReponse(p, "2-6", {correcte: true, date: jour(1)}).parcours;
   const programme = minutes(p, jour(2));
   assert.equal(programme.etapes.length, 4);
@@ -405,10 +405,12 @@ test("la page : « Reprendre ma séance », ses étapes cochées, « Reprendre �
   // « étape 3 sur 4 · encore 2 min environ » : la ligne ne se coupe qu'après
   // « · » (à 402 px, « environ » restait seul sur la deuxième ligne). On
   // exécute la vraie fonction soude() de la page sur le vrai modèle.
-  const modele = html.match(/\? soude\((`étape [^`]+`)\)/)[1];
+  const modele = html.match(/\? soude\((`étape .*`)\)\n/)[1];
   const soude = new Function(`${html.match(/function soude\(texte\) \{[\s\S]*?\n      \}/)[0]}; return soude;`)();
-  const duree = new Function("soude", "dejaFaites", "nombre", "programme", `return soude(${modele});`)(soude, {length: 2}, 4, {minutes: 2});
-  assert.deepEqual(duree.split(" "), ["étape", "3\u00a0sur\u00a04\u00a0·", "encore\u00a02\u00a0min\u00a0environ"]);
+  const duree = enPlus => new Function("soude", "dejaFaites", "nombre", "enPlus", "minutes", `return soude(${modele});`)(soude, {length: 2}, 4, enPlus, enPlus ? "2\u00a0à\u00a04" : "2");
+  assert.deepEqual(duree(false).split(" "), ["étape", "3\u00a0sur\u00a04\u00a0·", "encore\u00a02\u00a0min\u00a0environ"]);
+  // Lot M2 : « étape 3 sur 4 ou 5 · encore 2 à 4 min environ », coupé seulement après « · ».
+  assert.deepEqual(duree(true).split(" "), ["étape", "3\u00a0sur\u00a04\u00a0ou\u00a05\u00a0·", "encore\u00a02\u00a0à\u00a04\u00a0min\u00a0environ"]);
   // Lot E1 (décision 8) : « Commencer » sans flèche ; « Reprendre » reste.
   assert.match(html, /go\.textContent = reprise \? "Reprendre" : "Commencer";/);
   assert.match(html, /item\.className = "faite";\s+const coche = document\.createElement\("i"\);\s+coche\.textContent = "✓";/);
@@ -420,12 +422,12 @@ test("la page : « Reprendre ma séance », ses étapes cochées, « Reprendre �
   // La séance n'est plus gardée que dans l'onglet : c'est le moteur qui la rend.
   assert.match(html, /function commencerSeance\(table\) \{\s+seance = PARCOURS\.ouvrirSeance\(parcours, \{table\}\);/);
   assert.match(html, /seance = note\.seance;\s+etapeEnCours = null;\s+sauverParcours\(\);/, "le parcours (avec la séance en cours) est sauvé après chaque étape");
-  assert.match(html, /<p><b>Ma séance du jour\.<\/b> 3 ou 4 étapes, environ 5 min\./, "la notice annonce la même durée que la carte");
+  assert.match(html, /<p><b>Ma séance du jour\.<\/b> 4 étapes \(parfois 5\), environ 5 min\./, "la notice annonce la même durée que la carte (lot M2)");
   assert.doesNotMatch(html, /environ 8 min/);
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie serveur identique", () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261003-3/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261003-4/);
   assert.match(html, /defi_tables_core\.js\?v=20261003-1/, "le noyau n'a pas changé : son numéro reste");
   const moteur = readFileSync(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = readFileSync(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
