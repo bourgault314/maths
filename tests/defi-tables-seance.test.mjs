@@ -450,8 +450,9 @@ test("la page : la séance est l'accueil de tous — la clé ?seance=1 est retir
   assert.match(html, /arreter\.textContent = "Arrêter la séance";\s*arreter\.addEventListener\("click", backToModes\);/);
   assert.match(html, /\$\("result-title"\)\.textContent = "Séance du jour faite";/);
   assert.match(html, /encore\.textContent = "Encore une séance";/);
-  // La rangée : une case vide reste sans nombre.
-  assert.match(html, /if \(item\.etat !== "vide"\) \{\s*cellule\.className = item\.etat;\s*cellule\.textContent = String\(item\.produit\);\s*\}/);
+  // La rangée : une case vide reste sans nombre. Lot « Mon parcours » (décision
+  // 13) : aux couleurs du tableau — « vide » = entrée dans aucune boîte.
+  assert.match(html, /if \(item\.etat\) \{\s*cellule\.className = `is-\$\{item\.etat\}`;\s*cellule\.textContent = String\(item\.produit\);\s*\}/);
   // Les bouts sont gardés hors séance aussi.
   assert.match(html, /if \(!resultat\.fait && resultat\.bouts && resultat\.bouts\.length\) \{\s*parcours = resultat\.parcours;\s*sauverParcours\(\);\s*\}/);
   // Les perles : le doigt (pixels d'écran) est ramené aux pixels du boulier quand le cadre est réduit.
@@ -475,7 +476,7 @@ test("le bilan de séance : pas de rangée tant qu'elle est entièrement vide, l
     assert.ok(a > 0 && b > a, `${debut} introuvable dans la page`);
     return html.slice(a, b);
   };
-  const code = extraire("function rangeeDeTable(table) {", "// L'écran entre deux étapes")
+  const code = extraire("function etatsDeRangee(table) {", "// L'écran entre deux étapes")
     + extraire("function renderBilanSeance(zone) {", "// La table de la prochaine séance");
   const element = (balise = "div") => ({
     balise, attributs: {}, childNodes: [], className: "", hidden: true, texte: "",
@@ -517,6 +518,15 @@ test("le bilan de séance : pas de rangée tant qu'elle est entièrement vide, l
   const avec = bilan(entouree);
   assert.ok(classes(avec.zone).includes("cadre"));
   assert.ok(classes(avec.zone).includes("rangee"), "dès qu'une case est entourée, la rangée revient au bilan");
+  assert.ok(classes(avec.zone).includes("is-en-cours"), "lot « Mon parcours » : la boîte 2 en bleu, comme au tableau");
+  // Lot « Mon parcours » (décision 13) : un calcul RATÉ (boîte 1) n'est plus
+  // une case vide — il est rouge, avec son nombre ; la rangée revient donc aussi.
+  const rate = P.appliquerReponse(P.creerParcours(), "2-3", {correcte: false, date: "2026-10-05"}).parcours;
+  assert.equal(rate.calculs["2-3"].boite, 1);
+  assert.equal(P.rangeeTable(rate, 2).cases[2].etat, "vide", "le moteur ne change pas : pour lui, la case n'est pas prête");
+  const avecRate = bilan(rate);
+  assert.ok(classes(avecRate.zone).includes("rangee"));
+  assert.ok(classes(avecRate.zone).includes("is-a-travailler"), "rouge, comme au tableau");
 });
 
 // Relecture de Code (02/10/2026) : la fonction de la page est EXÉCUTÉE avec un
@@ -787,12 +797,12 @@ test("la fiche — la carte de ma table, le tableau de Mes calculs, « Cette sem
   assert.match(html, /const fait = fiche\.calculs\[cle\] \|\| null;\s*const td = document\.createElement\("td"\);\s*td\.className = colonne < ligne \? `miroir\$\{fait \? " vu" : ""\}` : PARCOURS\.etatFait\(fait\);/, "la moitié miroir grise seulement pour un calcul déjà vu");
   assert.match(html, /nombre\.textContent = fait \? String\(ligne \* colonne\) : "";/, "comme à l'écran : une case jamais vue ne donne pas le résultat");
   assert.match(html, /const maTable = vide \? null : PARCOURS\.tableDeSeance\(fiche\);/, "une fiche vide ne désigne aucune table");
-  assert.match(html, /carte\.hidden = !maTable;/);
+  assert.match(html, /carte\.hidden = !maTable && !vierge;/, "lot « Mon parcours » : la fiche vierge a sa carte, vide");
   // Relecture de Code (03/10/2026), vue au navigateur : « Fiche » sur un élève
   // qui n'a rien fait — le serveur donne son prénom, et le prénom suffisait à
   // rendre la fiche « non vide » : table de 2 désignée, date, « Ma progression ».
   assert.match(html, /const vide = PARCOURS\.estVide\(\{\.\.\.fiche, prenom: ""\}\);\s*\$\("fiche-date"\)\.textContent = vide \?/);
-  assert.match(html, /\$\("fiche-subtitle"\)\.textContent = vide\s*\?/);
+  assert.match(html, /\$\("fiche-subtitle"\)\.textContent = vierge\s*\?[^:]*:\s*vide\s*\?/);
   const hugo = P.creerParcours();
   hugo.prenom = "Hugo";
   assert.equal(P.estVide(hugo), false, "le moteur compte le prénom : c'est à la fiche de l'écarter");
@@ -886,12 +896,14 @@ test("lot 2b : « résultats et nombres manquants » partout — noyau, fiche vi
   assert.match(noyau, /"direct\+missing\+division": "résultats, nombres manquants et divisions"/, "lot « divisions »");
   assert.doesNotMatch(noyau, /"les deux à la fois"/);
   assert.match(html, /defi_tables_core\.js\?v=20261004-1/, "le noyau a changé : son numéro monte");
+  // Lot « Mon parcours » (décision 15) : la fiche vierge n'est plus dessinée
+  // à part — c'est la fiche de l'appli, en mode vierge, imprimée par Chromium.
+  // Ses règles sont donc celles de la fiche : « résultats, nombres manquants et divisions ».
   const vierge = lire("_sources/defi-tables/generer_fiche_parcours.py");
-  assert.match(vierge, /\("Acquise ✓", " : 20 questions \(résultats et nombres manquants\) en 1 min 30, 2 erreurs au plus\."\)/);
-  assert.match(vierge, /LEGENDE = \["j’entoure : réussi une fois", "je colorie : prêt"\]/);
-  assert.doesNotMatch(vierge, /APPRENDS|ENTRAINE|les deux/, "plus de colonnes J'apprends / Je m'entraîne sur la fiche vierge");
-  assert.match(vierge, /pdf\.drawCentredString\(x \+ case_w \/ 2, cy - 1\.25 \* mm, str\(table \* \(index \+ 1\)\)\)/, "dix résultats par table, × 1 à × 10");
-  assert.match(vierge, /def police\(\*candidates: str\) -> str:/, "le script tourne aussi sur Windows (polices)");
+  assert.match(vierge, /await page\.goto\(PAGE\.as_uri\(\) \+ "\?vierge"\)/);
+  assert.match(vierge, /pw\.chromium\.launch\(channel="chromium"\)/, "le vrai Chromium, pas le headless shell (largeur du texte)");
+  assert.doesNotMatch(vierge, /APPRENDS|ENTRAINE|les deux|LEGENDE = |j’entoure|je colorie/, "plus de rangées à entourer ni à colorier");
+  assert.match(html, /<p><b>Acquise ✓<\/b> : 20 questions \(résultats, nombres manquants et divisions\) en 1 min 30, 2 erreurs au plus\.<\/p>/);
   const publication = lire(".github/workflows/publier.yml");
   assert.match(publication, /python -m pip install --disable-pip-version-check reportlab\n/);
   assert.doesNotMatch(publication, /PyMuPDF|pypdf/);

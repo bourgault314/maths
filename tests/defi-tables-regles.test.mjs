@@ -418,7 +418,8 @@ test("l’accueil : « Mon mélange » surligné, le cadenas sur Je valide, l’
 });
 
 test("le parcours : Acquise cadenassée, « Mon mélange » jusqu’aux 9 tables, l’escalier à cinq marches avec leur durée", () => {
-  assert.match(html, /"Mon mélange : mes 9 tables" : `Mon mélange : tables \$\{listeTables\(etat\.melange\.tables\)\}`/);
+  // Lot « Mon parcours » (décision 11) : « Mon mélange », ses tables dessous.
+  assert.match(html, /title\.textContent = "Mon mélange";\s*const tables = document\.createElement\("small"\);\s*tables\.textContent = tablesDuMelange\(etat\.melange\.tables\);/);
   assert.match(html, /label: "Mon mélange, mes tables acquises \(20 questions en 1 min 30\)"/);
   assert.match(html, /expertTitle\.textContent = "Je deviens expert : toutes les tables, de plus en plus vite";/);
   assert.match(html, /etat\.expert\.marches\.forEach\(marche => \{/);
@@ -449,7 +450,8 @@ test("le lancement : le mélange se joue en 1 min 30, comme la validation d’un
   assert.doesNotMatch(html, /launch-durations/);
   assert.equal(P.SEUILS.melange.dureeMax, 90);
   assert.equal(P.SEUILS.validation.dureeMax, 90);
-  assert.match(html, /return `Mon mélange · \$\{lesquelles\} · 20 questions · \$\{CORE\.durationLabel\(config\.duration\)\}`;/);
+  // Lot « Mon parcours » : « 20 questions » et « 1 min 30 » ne se coupent plus.
+  assert.match(html, /return `Mon mélange · \$\{lesquelles\} · \$\{insecable\("20 questions"\)\} · \$\{dureeLancement\(config\.duration\)\}`;/);
 });
 
 test("les scripts modifiés ont un nouveau numéro de cache, et la copie serveur du moteur est identique", async () => {

@@ -43,10 +43,14 @@ test("décision 3 : « À retenir pour demain » — chaque calcul une fois, éc
   assert.equal(cadreARetenir([]), null, "sans erreur, pas de cadre");
   const cadre = cadreARetenir([[4, 7], [6, 4], [7, 4], [3, 3]]);
   assert.equal(cadre.className, "retenir");
-  assert.equal(cadre.tous("h2")[0].textContent, "À retenir pour demain");
+  // Lot « Mon parcours » (décision 12) : « À retenir pour la prochaine séance »,
+  // SANS phrase — elle disait « revient dans Mes calculs du jour », faux pour
+  // × 1 et × 10 ; « Demain : N calculs t’attendent », au-dessus, suffit.
+  assert.equal(cadre.tous("h2")[0].textContent, "À retenir pour la prochaine séance");
   assert.deepEqual(cadre.tous("li").map(li => li.textContent), ["4 × 7 =28", "6 × 4 =24", "3 × 3 =9"], "4 × 7 et 7 × 4 : un seul calcul");
-  assert.equal(cadre.tous("p")[0].textContent, "Mes 3 calculs à revoir. Ils reviennent demain dans Mes calculs du jour.");
-  assert.equal(cadreARetenir([[2, 9]]).tous("p")[0].textContent, "Mon calcul à revoir. Il revient demain dans Mes calculs du jour.");
+  assert.equal(cadre.tous("p").length, 0, "plus de phrase");
+  assert.deepEqual(cadreARetenir([[1, 3]]).tous("li").map(li => li.textContent), ["1 × 3 =3"], "× 1 aussi : écrit juste, sans phrase fausse");
+  assert.equal(cadreARetenir([[1, 3]]).tous("p").length, 0);
   const bilan = corps("renderBilanSeance");
   assert.match(bilan, /const retenir = cadreARetenir\(seance\.erreurs \|\| \[\]\);\s*if \(retenir\) zone\.append\(retenir\);\s*\$\("corrections"\)\.replaceChildren\(\);/);
   assert.ok(bilan.indexOf("cadreARetenir") < bilan.indexOf("boutons.className"), "au-dessus des boutons");
@@ -54,14 +58,17 @@ test("décision 3 : « À retenir pour demain » — chaque calcul une fois, éc
 });
 
 test("décision 12 (réponse B) : « Table de 3 acquise ✓ » à la place de la rangée, et une seule phrase pour demain", () => {
-  const fabrique = (demain, melange, toutes, suivante) => new Function("document", "soude", "pluriel", "PARCOURS", "parcours", `${corps("cadreTableAcquise")}; return cadreTableAcquise;`)(
+  // Lot « Mon parcours » (décision 12) : les tables du mélange sont écrites ;
+  // la phrase se coupe après une virgule, jamais ailleurs dans un morceau.
+  const listeTables = new Function(`${corps("listeTables")}; return listeTables;`)();
+  const fabrique = (demain, melange, toutes, suivante, tables = [2, 3, 5, 10]) => new Function("document", "soude", "pluriel", "PARCOURS", "parcours", "listeTables", `${corps("cadreTableAcquise")}; return cadreTableAcquise;`)(
     document, soude, pluriel,
-    {agendaCalculs: () => ({demain}), melangeDu: () => melange, toutesAcquises: () => toutes, tableDeSeance: () => suivante}, {});
+    {agendaCalculs: () => ({demain}), melangeDu: () => melange, toutesAcquises: () => toutes, tableDeSeance: () => suivante, etatAffichage: () => ({melange: {tables}})}, {}, listeTables);
   let cadre = fabrique(3, true, false, 4)(3);
   assert.equal(cadre.tous("p")[0].textContent, "Table de 3 acquise ✓");
-  assert.equal(cadre.tous("p")[1].textContent, "Demain : 3 calculs, ton\u00a0mélange, puis la\u00a0table\u00a0de\u00a04.");
-  assert.equal(fabrique(1, true, false, 4)(3).tous("p")[1].textContent, "Demain : 1 calcul, ton\u00a0mélange, puis la\u00a0table\u00a0de\u00a04.");
-  assert.equal(fabrique(0, true, false, 4)(3).tous("p")[1].textContent, "Demain : ton\u00a0mélange, puis la\u00a0table\u00a0de\u00a04.");
+  assert.equal(cadre.tous("p")[1].textContent, "Demain\u00a0: 3\u00a0calculs, ton\u00a0mélange\u00a0des\u00a0tables\u00a02, 3, 5\u00a0et\u00a010, puis la\u00a0table\u00a0de\u00a04.");
+  assert.equal(fabrique(1, true, false, 4)(3).tous("p")[1].textContent, "Demain\u00a0: 1\u00a0calcul, ton\u00a0mélange\u00a0des\u00a0tables\u00a02, 3, 5\u00a0et\u00a010, puis la\u00a0table\u00a0de\u00a04.", "la phrase de la décision 12");
+  assert.equal(fabrique(0, true, false, 4, [2, 5])(3).tous("p")[1].textContent, "Demain\u00a0: ton\u00a0mélange\u00a0des\u00a0tables\u00a02\u00a0et\u00a05, puis la\u00a0table\u00a0de\u00a04.");
   assert.equal(fabrique(0, false, false, 10)(2).tous("p")[1].textContent, "Demain : la\u00a0table\u00a0de\u00a010.", "la première table acquise : pas encore de mélange");
   assert.equal(fabrique(2, true, true, null)(9).tous("p")[1].textContent, "Demain : 2 calculs, puis ton\u00a0mélange\u00a0des\u00a09\u00a0tables.");
   const bilan = corps("renderBilanSeance");
@@ -84,26 +91,37 @@ test("décision 5 (version A, « la barre », choisie le 03/10) : huit segments 
   assert.match(html, /\.fiche-echelle \.barre i \{ flex: 1 1 0; height: 2\.2mm; border: \.25mm solid #9fb6c6;/, "un contour : lisible en noir et blanc");
 });
 
-test("E2 · 1 (audit GPT, F) : l'écran de lancement dit le format, les bonnes réponses pour réussir, et un exemple pris dans sa table", () => {
+// Lot « Mon parcours » (04/10/2026, point 5 — version B choisie par Gwenaël,
+// « calculs un peu plus gros ») : moins de texte. « 18 bonnes réponses pour
+// réussir. », puis l'exemple en trois pastilles, sans « Par exemple » ni « ou »
+// (un « · » entre deux calculs se lisait « fois », lot E1) ; plus de « Des
+// résultats, des nombres manquants et des divisions » ni de « Le chrono part
+// quand tu appuies… ».
+test("E2 · 1 (audit GPT, F ; lot « Mon parcours », version B) : les bonnes réponses pour réussir, et l’exemple en trois pastilles pris dans sa table", () => {
   const zone = new Noeud("div");
   const lancer = (config, origine = "seance") => new Function("$", "state", "PARCOURS", "document", "soude", `${corps("renderFormatLancement")}; return renderFormatLancement;`)(
     () => zone, {origin: origine}, PARCOURS, document, soude)(config);
+  const N = "\u00a0";
   lancer(PARCOURS.configValidation(7));
   assert.equal(zone.hidden, false);
-  assert.deepEqual(zone.tous("p").map(p => p.textContent), [
-    "Des résultats, des nombres manquants et des divisions : 18 bonnes réponses pour réussir.",
-    "Par exemple : 7 × 4 = ? ou 7 × ? = 28 ou 28 ÷ 7 = ?"]);
+  const [ligne, exemple] = zone.tous("p");
+  assert.equal(ligne.textContent, `18${N}bonnes réponses pour réussir.`);
+  assert.equal(exemple.className, "launch-exemple");
+  assert.deepEqual(exemple.tous("b").map(b => b.textContent), [`7${N}×${N}4${N}=${N}?`, `7${N}×${N}?${N}=${N}28`, `28${N}÷${N}7${N}=${N}?`], "trois pastilles : résultat, nombre manquant, division");
+  assert.equal(exemple.enfants.length, 3, "rien entre les pastilles : ni « ou », ni « · »");
   const parcours = PARCOURS.creerParcours();
   parcours.tables[2].acquise = "2026-10-01"; parcours.tables[5].acquise = "2026-10-01";
   lancer(PARCOURS.configMelange(PARCOURS.normaliserParcours(parcours)));
-  assert.equal(zone.tous("p")[1].textContent, "Par exemple : 2 × 4 = ? ou 2 × ? = 8 ou 8 ÷ 2 = ?", "le mélange : un exemple dans une de ses tables");
+  assert.deepEqual(zone.tous("p")[1].tous("b").map(b => b.textContent), [`2${N}×${N}4${N}=${N}?`, `2${N}×${N}?${N}=${N}8`, `8${N}÷${N}2${N}=${N}?`], "le mélange : un exemple dans une de ses tables");
   lancer(PARCOURS.configEtoile(1));
-  assert.deepEqual(zone.tous("p").map(p => p.textContent), ["Des résultats, des nombres manquants et des divisions : 23 bonnes réponses pour réussir."]);
+  assert.deepEqual(zone.tous("p").map(p => p.textContent), [`23${N}bonnes réponses pour réussir.`]);
   lancer(PARCOURS.configValidation(7), "reglages");
   assert.equal(zone.hidden, true, "rien pour les réglages libres");
   lancer(PARCOURS.configEntraine(7, "desordre"));
   assert.equal(zone.hidden, true, "rien pour un entraînement");
-  assert.match(html, /<div id="launch-format" class="launch-format" hidden><\/div>\s*<p id="launch-hint"/);
+  assert.doesNotMatch(html, /"Des résultats, des nombres manquants et des divisions"|"Par exemple|id="launch-hint"|Le chrono part quand tu appuies/);
+  assert.match(html, /<div id="launch-format" class="launch-format" hidden><\/div>\s*<div class="launch-actions">/);
+  assert.match(html, /\.launch-exemple b \{ padding: 6px 11px; border: 2px solid #c5d9e6; border-radius: 10px; background: #f4f8fb; font-size: 1\.15rem;/, "des pastilles un peu plus grosses que le texte (.95rem)");
   assert.match(html, /renderFormatLancement\(config\);/);
 });
 

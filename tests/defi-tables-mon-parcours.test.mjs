@@ -983,7 +983,8 @@ test("la fiche montre les calculs en carré de Pythagore", () => {
 test("la fiche imprimable peut afficher le parcours d’un autre élève", () => {
   // Le professeur ouvre …#fiche=CODE : même gabarit, rempli depuis le serveur.
   assert.match(html, /function renderFiche\(source\)/);
-  assert.match(html, /const fiche = source \|\| parcours;/);
+  // Lot « Mon parcours » : ou vierge (le PDF de la page du professeur).
+  assert.match(html, /const fiche = vierge \? PARCOURS\.creerParcours\(\) : source \|\| parcours;/);
   assert.match(html, /id="fiche-ecran"/);
   assert.match(html, /mode-fiche/);
 });
@@ -1088,9 +1089,10 @@ test("le lien du haut ramène l’élève suivi à son espace, les autres au cat
       getElementById: id => (id === "lien-retour" ? lien : null),
       querySelector: selecteur => (selecteur === "a.brand" ? logo
         : selecteur === "footer.site-footer" ? pied : null),
-      createElement: () => ({
-        href: "", textContent: "", attributs: {},
-        setAttribute(nom, valeur) { this.attributs[nom] = valeur; }
+      createElement: tag => ({
+        tag, href: "", textContent: "", attributs: {}, enfants: [],
+        setAttribute(nom, valeur) { this.attributs[nom] = valeur; },
+        append(...noeuds) { this.enfants.push(...noeuds); }
       })
     };
     new Function("SUIVI_URL", "document", "suiviActif", "entreeRefusee", `${source}\nreturn majLienRetour;`)(
@@ -1130,12 +1132,21 @@ test("le lien du haut ramène l’élève suivi à son espace, les autres au cat
   // site. Pour un élève suivi, le pied devient deux liens qui restent chez lui.
   assert.equal(executer(false).pied.enfants, null,
     "pour un visiteur ordinaire, le pied du site n'est pas touché");
-  assert.equal(executer(false, "expire").pied.enfants.length, 3,
+  assert.equal(executer(false, "expire").pied.enfants.length, 4,
     "un billet refusé laisse quand même un élève venu de son espace");
 
   const piedSuivi = executer(true).pied.enfants;
-  const liens = piedSuivi.filter(noeud => noeud.href);
-  assert.equal(liens.length, 2, "un élève suivi n'a que deux liens sous les yeux");
+  // Lot « Mon parcours » (point 6) : le logo quitte la barre du haut de
+  // l'élève à code ; il est en tête du pied, en petit, et ramène à son espace
+  // comme celui du haut.
+  const [logoPied] = piedSuivi;
+  assert.equal(logoPied.className, "pied-logo");
+  assert.equal(logoPied.href, "https://suivi.mathsgo.re/", "le petit logo ramène à son espace");
+  assert.equal(logoPied.attributs["aria-label"], "maths&go — Retour à mon espace");
+  assert.equal(logoPied.enfants[0].tag, "img");
+  assert.equal(logoPied.enfants[0].alt, "", "l’image est décorative : le lien porte le nom");
+  const liens = piedSuivi.filter(noeud => noeud.href && noeud.textContent);
+  assert.equal(liens.length, 2, "un élève suivi n'a que deux liens écrits sous les yeux (et le petit logo)");
   assert.deepEqual(liens.map(a => a.href),
     ["https://suivi.mathsgo.re/", "https://suivi.mathsgo.re/infos.php"],
     "et tous les deux restent sur son espace");

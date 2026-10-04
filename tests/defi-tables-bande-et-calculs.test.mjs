@@ -47,11 +47,12 @@ function fonction(nom, {avant = "", dependances = []} = {}) {
 
 // --------------------------------------------- 1. le détail de Mes calculs
 
-// Un faux écran : la barre collée, le cadre du détail, la fenêtre.
-function ecranCalculs({hautCadre, hauteurCadre = 78, basBarre = 44, hauteurFenetre = 667}) {
+// Un faux écran : le cadre du détail (ouvert ou fermé), ce que l'élève vient
+// de toucher (lot « Mon parcours »), la fenêtre.
+function ecranCalculs({hautCadre, hauteurCadre = 78, basBarre = 44, hauteurFenetre = 667, ferme = false, hautTouche = null}) {
   const defilements = [];
-  const cadre = {getBoundingClientRect: () => ({top: hautCadre, bottom: hautCadre + hauteurCadre})};
-  const barre = {getBoundingClientRect: () => ({bottom: basBarre})};
+  const cadre = {classList: {contains: nom => nom === "is-ferme" && ferme}, getBoundingClientRect: () => ({top: hautCadre, bottom: hautCadre + hauteurCadre})};
+  const barre = hautTouche === null ? null : {getBoundingClientRect: () => ({top: hautTouche, bottom: hautTouche + 40})};
   const avant = `
     const MARGE_DETAIL = 8;
     const cadre = ${JSON.stringify(null)};
@@ -81,6 +82,12 @@ test("le cadre du détail revient dans l’écran, et seulement s’il en a beso
   assert.deepEqual(ecranCalculs({hautCadre: 640}), [640 + 78 - 667 + 8]);
   assert.deepEqual(ecranCalculs({hautCadre: 660, hauteurCadre: 700}), [660 - 8],
     "un cadre plus haut que l’écran se cale en haut au lieu d’aligner son bas");
+  // Lot « Mon parcours » : le détail s'ouvre sous le tableau ; la page glisse,
+  // mais ce que l'élève vient de toucher (une boîte, en haut) ne sort pas de l'écran.
+  assert.deepEqual(ecranCalculs({hautCadre: 640, hautTouche: 300}), [640 + 78 - 667 + 8], "la boîte reste visible : rien ne change");
+  assert.deepEqual(ecranCalculs({hautCadre: 640, hauteurCadre: 300, hautTouche: 120}), [120 - 8], "on s’arrête quand la boîte touchée arrive en haut");
+  assert.deepEqual(ecranCalculs({hautCadre: 640, hautTouche: 2}), [], "déjà tout en haut : on ne remonte jamais");
+  assert.deepEqual(ecranCalculs({hautCadre: 900, ferme: true}), [], "un détail fermé ne fait rien bouger");
 });
 
 test("toucher une case ou une boîte de Mes calculs ramène le détail dans l’écran", () => {

@@ -83,9 +83,13 @@ test("C. Temps écoulé : le score compte les réponses justes, le détail compt
 });
 
 test("E. un calcul raté revient demain — le détail d’une case, la boîte 1, la fiche", () => {
-  assert.match(html, /note = "Raté aujourd’hui : il revient demain\.";/);
-  assert.match(html, /\? "Ratés : ils reviennent demain"/);
-  assert.match(html, /\$\{boite === 1 \? "reviennent demain" : `revient \$\{libelleDans\(PARCOURS\.SEUILS\.revision\.delais\[index\]\)\}`\}/, "l’aria de la boîte 1");
+  // Lot « Mon parcours » (décisions 7 et 8) : « il reviendra demain dans ta
+  // séance » ; la boîte touchée range ses calculs par JOUR de retour — un
+  // calcul raté aujourd'hui sous « Demain » (tests/defi-tables-mon-parcours-lot.test.mjs
+  // l'exécute) ; le délai de la boîte n'est plus dit, pas même dans l'aria.
+  assert.match(html, /note = "Raté aujourd’hui : il reviendra demain dans ta séance\.";/);
+  assert.match(html, /if \(fait\.erreur === aujourdhui\) return 1;/);
+  assert.doesNotMatch(html, /Ratés : ils reviennent demain|SEUILS\.revision\.delais\[/, "plus de délai de boîte à l’écran");
   assert.doesNotMatch(html, /il revient tout de suite/);
   // En révision et dans J’apprends, le calcul repasse AUSSI en fin de série.
   assert.match(html, /question\.retry \? " · il revient" : ""/);

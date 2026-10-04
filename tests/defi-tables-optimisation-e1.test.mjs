@@ -49,11 +49,13 @@ test("décision 4 : « C’est tout » sur l’écran de résultat mène au mêm
 
 test("décision 6 : Mes calculs, une pastille par calcul, plus de « · » entre deux calculs", () => {
   const detail = corps("renderCalculsDetail");
-  assert.match(detail, /const liste = ligneDetail\("mc-detail-liste pastilles", ""\);/);
-  assert.match(detail, /cles\.forEach\(cle => liste\.appendChild\(ligneDetail\("", PARCOURS\.libelleFait\(cle\)\)\)\);/);
+  // Lot « Mon parcours » (décision 7) : les pastilles sont rangées par jour
+  // de retour (« Aujourd'hui », « Demain »…), toujours une par calcul.
+  assert.match(detail, /parJour\.get\(dans\)\.forEach\(cle => groupe\.append\(ligneDetail\("", PARCOURS\.libelleFait\(cle\)\)\)\);/);
   assert.match(detail, /zone\.appendChild\(ligneDetail\("mc-detail-liste", "Aucun calcul pour l’instant\."\)\);/);
-  assert.doesNotMatch(detail, /join\(" · "\)/);
-  assert.match(html, /\.mc-detail-liste\.pastilles span \{ display: inline-flex;[^}]*border: 1\.5px solid currentColor; border-radius: 999px; background: #fff;[^}]*white-space: nowrap; \}/, "une pastille ne se coupe jamais");
+  // Le seul « · » du détail sépare « 1 à revoir · 7 à faire monter », jamais deux calculs.
+  assert.deepEqual(detail.match(/[a-zA-Z]+\.join\(" · "\)/g), ["sortes.join(\" · \")"]);
+  assert.match(html, /\.mc-detail-jours span \{ display: inline-block; padding: 7px 9px; border: 1\.5px solid currentColor; border-radius: 999px; background: #fff;[^}]*white-space: nowrap;[^}]*\}/, "une pastille ne se coupe jamais");
 });
 
 test("décision 8 : « Commencer » sans flèche, « Je valide ma table » en bouton rond, « Choisir une activité » en lien de 16 px", () => {

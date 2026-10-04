@@ -193,7 +193,8 @@ test("J’apprends et Je m’entraîne démarrent directement, les autres parcou
   assert.doesNotMatch(html, /setTimeout\(beginRound/);
   assert.match(html, /if \(config\.mode === "learn" \|\| config\.mode === "train"\) \{[\s\S]*beginRound\(\);[\s\S]*return;/);
   assert.match(html, /de ×0 à ×10/);
-  assert.match(html, /produits, trous, divisions · 25 questions/, "lot 3 : une marche de l’escalier, tout dedans, seule la durée change");
+  // Lot « Mon parcours » : « 25 questions » et la durée insécables (ils se coupaient au téléphone).
+  assert.match(html, /produits, trous, divisions · \$\{insecable\("25 questions"\)\}/, "lot 3 : une marche de l’escalier, tout dedans, seule la durée change");
 });
 
 test("J’apprends garde la bande pour construire et la propose en aide temporaire pour mémoriser", () => {
