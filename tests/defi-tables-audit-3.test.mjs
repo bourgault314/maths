@@ -55,7 +55,8 @@ test("la mesure : sans le pied de page, le repère compris ; la carte du jeu ne 
   assert.match(ajuster, /const pleinEcran = corps\.classList\.contains\("fullscreen-active"\);\s*const bornes = bornesEchelle\(window\.innerWidth, pleinEcran\);/);
   assert.match(ajuster, /if \(!fige && corps\.offsetHeight > limite\) return false;\s*return !\(enJeu && carte && carte\.scrollHeight > carte\.clientHeight \+ 1\);/);
   assert.match(ajuster, /corps\.classList\.add\("mesure-cadre"\);[\s\S]*corps\.classList\.remove\("mesure-cadre"\);/);
-  assert.match(ajuster, /chercherEchelle\(enJeu \|\| accueil \? \{\.\.\.bornes, longue: bornes\.min\} : bornes, tient\)/, "une série ou l’accueil trop hauts gardent la plus petite échelle");
+  assert.match(ajuster, /chercherEchelle\(enJeu \|\| accueil \|\| parcoursOuvert \? \{\.\.\.bornes, longue: bornes\.min\} : bornes, tient\)/, "une série, l’accueil ou Mon parcours trop hauts gardent la plus petite échelle");
+  assert.match(ajuster, /const parcoursOuvert = !document\.getElementById\("parcours"\)\.hidden;/, "lot « Mon parcours »");
   assert.match(ajuster, /classList\.contains\("mode-fiche"\) \|\| corps\.classList\.contains\("voir-fiche"\)/, "la fiche a sa propre échelle");
   assert.match(html, /body\.mesure-cadre \{ min-height: 0 !important; \}\s*body\.mesure-cadre \.site-footer \{ display: none !important; \}/);
 });
@@ -78,12 +79,15 @@ test("le CSS : une seule échelle, jamais à l’impression ; la hauteur du jeu 
   assert.match(telephone, /\.challenge-playing \.shell \{ height: 100dvh;/, "le téléphone n’est pas touché");
 });
 
-test("Mon parcours (et Mes calculs, qui y vit) et Lire la table : pages longues, jamais réduites en fenêtre", () => {
+test("Lire la table : page longue, jamais réduite en fenêtre — Mon parcours ne l’est plus (deux colonnes, mesuré)", () => {
   // Retouche de Cowork (01/10/2026) : ×1 en fenêtre, comme sur main ; en plein
-  // écran, agrandies d’après la largeur. Sans passer par la mesure. Lot « un
-  // seul tableau » : l'écran « calculs » n'existe plus.
-  assert.match(ajuster, /if \(\["parcours", "lire"\]\.some\(id => !document\.getElementById\(id\)\.hidden\)\) \{\s*racine\.style\.setProperty\("--echelle", bornes\.longue\.toFixed\(3\)\);\s*return;\s*\}/);
-  assert.ok(ajuster.indexOf('["parcours", "lire"]') < ajuster.indexOf('corps.classList.add("mesure-cadre")'), "avant toute mesure");
+  // écran, agrandie d’après la largeur. Sans passer par la mesure. Lot « Mon
+  // parcours » (04/10/2026, décision 2) : Mon parcours tient sur l'écran
+  // d'ordinateur en deux colonnes ; il est mesuré comme l'accueil (× 0,8 à × 1
+  // en fenêtre, agrandi en plein écran, × 0,8 s'il ne tient pas).
+  assert.match(ajuster, /if \(!document\.getElementById\("lire"\)\.hidden\) \{\s*racine\.style\.setProperty\("--echelle", bornes\.longue\.toFixed\(3\)\);\s*return;\s*\}/);
+  assert.doesNotMatch(ajuster, /\["parcours", "lire"\]/);
+  assert.ok(ajuster.indexOf('getElementById("lire").hidden') < ajuster.indexOf('corps.classList.add("mesure-cadre")'), "avant toute mesure");
   assert.equal(bornesEchelle(1366, false).longue, 1, "fenêtre : ×1");
   assert.equal(bornesEchelle(1920, true).longue, 1.5, "plein écran : d’après la largeur");
 });

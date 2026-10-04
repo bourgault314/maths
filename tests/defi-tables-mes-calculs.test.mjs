@@ -424,12 +424,16 @@ test("le détail d’une case écrit le calcul dans les deux sens et empile ses 
   assert.match(html, /ligneDetail\("mc-detail-etat", /);
   assert.match(html, /majuscule\(LIBELLES_ETATS_CALCULS\[etat\]\)/);
   assert.match(html, /À faire aujourd’hui : réussis-le pour monter d’une boîte\./, "la note dit ce que l’élève a sous les yeux : dû, raté aujourd’hui, ou le jour du retour");
-  assert.match(html, /Raté aujourd’hui : il revient demain\./);
-  assert.match(html, /`Revient \$\{libelleDans\(PARCOURS\.ecartJours\(aujourdhui, fait\.echeance\)\)\}\.`/);
-  assert.match(html, /boîte \$\{boite\} sur \$\{PARCOURS\.SEUILS\.revision\.boites\}/, "« En route — boîte 3 sur 5 »");
+  // Lot « Mon parcours » (décision 8) : « … dans ta séance », et « En route — boîte 3 » (plus « sur 5 »).
+  assert.match(html, /Raté aujourd’hui : il reviendra demain dans ta séance\./);
+  assert.match(html, /`Il reviendra dans ta séance \$\{libelleDans\(PARCOURS\.ecartJours\(aujourdhui, fait\.echeance\)\)\}\.`/);
+  assert.match(html, /`\$\{majuscule\(LIBELLES_ETATS_CALCULS\[etat\]\)\} — boîte \$\{boite\}`/, "« En route — boîte 3 »");
   assert.match(html, /function jourDuJour\(\) \{\s*return PARCOURS\.jourLocal\(\);/, "même convention de date que le moteur : le jour local (lot 3)");
   assert.match(html, /\.mc-detail-calcul \{ font-size: 1\.05rem/);
-  assert.match(html, /\.calculs-detail \{[\s\S]*?min-height: 78px/, "la hauteur réservée couvre trois lignes : la grille ne saute pas");
+  // Lot « Mon parcours » (décision 6) : le détail n'apparaît qu'au toucher —
+  // plus de cadre vide réservé ; il s'ouvre SOUS le tableau, qui ne bouge pas.
+  assert.doesNotMatch(html, /\.calculs-detail \{[^}]*min-height: 78px/);
+  assert.match(html, /\.calculs-detail\.is-ferme \{ display: block; height: 0;/);
 });
 
 test("seule la première réponse compte pour la grille, et un raté ne revient qu’une fois", () => {
@@ -441,7 +445,7 @@ test("seule la première réponse compte pour la grille, et un raté ne revient 
   assert.match(html, /\$\("result-detail"\)\.textContent = "";/);
 });
 
-test("la révision : les calculs dus, 10 par 10, « Encore N → Continuer », puis « Reviens demain : N calculs t’attendront »", () => {
+test("la révision : les calculs dus, 10 par 10, « Encore N → Continuer », puis « Reviens demain : N calculs t’attendront » (plus d’« Encore 10 calculs »)", () => {
   assert.match(html, /function startRevision\(/);
   assert.match(html, /mode: "revision"/);
   assert.doesNotMatch(html, /Encore une révision/, "à zéro, rejouer ne ferait rien monter : le bouton n’existe plus");
@@ -455,10 +459,11 @@ test("la révision : les calculs dus, 10 par 10, « Encore N → Continuer », p
   assert.match(html, /return `Reviens \$\{quand\} : \$\{pluriel\(prochain\.calculs, "calcul"\)\} t’attendr\$\{prochain\.calculs > 1 \? "ont" : "a"\}\.`;/);
   assert.match(html, /mont\$\{montes > 1 \? "ent" : "e"\} d’une boîte/, "le bilan : ce qui monte, ce qui redescend");
   assert.match(html, /if \(!plan\.length\) return;/, "rien de dû ne lance rien");
-  assert.match(html, /\$\("calculs-encore-zone"\)\.hidden = !libre;/, "dans Mon parcours, « Encore 10 calculs » seulement s’il reste des calculs à venir et rien de dû");
-  assert.match(html, /function libelleEncoreLibre\(table = null\)/);
-  assert.match(html, /startRevision\(table, state\.origin, true\)/, "le résultat propose « Encore 10 calculs » à zéro");
-  assert.match(html, /PARCOURS\.planRevision\(parcours, \{table, libre\}\)/);
+  // Lot « Mon parcours » (décision de Gwenaël) : « Encore 10 calculs » est
+  // retiré, sous le tableau et sur le résultat ; la page ne demande plus au
+  // moteur que les calculs dus (« libre » reste dans le moteur, testé plus bas).
+  assert.doesNotMatch(html, /calculs-encore|libelleEncoreLibre|startRevision\([^)]*, true\)/);
+  assert.match(html, /PARCOURS\.planRevision\(parcours, \{table\}\)/);
   assert.match(html, /au premier essai/);
   assert.match(html, /if \(entry\.retour\) \{[\s\S]*?number\.textContent = "Il est revenu";/, "un calcul qui revient n’est pas numéroté Question 11, 12… — il est marqué « Il est revenu » (lot R2 : les autres n’ont plus de numéro)");
   assert.doesNotMatch(html, /Rien aujourd’hui\. \$\{phraseProchainRetour\(agenda\)\}/, "lot « un seul tableau » : le bouton seul (choix de Gwenaël)");
@@ -475,18 +480,20 @@ test("la révision : les calculs dus, 10 par 10, « Encore N → Continuer », p
 // Lot « un seul tableau » : la fiche de l'appli tient sur UNE page, le tableau
 // de Mes calculs y est sous la carte de ma table. Le PDF vierge (publié, page
 // du professeur) n'est pas touché par ce lot.
-test("la fiche imprimable porte le tableau de Mes calculs sur sa page unique ; le PDF vide est inchangé", async () => {
+// Lot « Mon parcours » (décision 15) : le PDF vide est désormais CETTE fiche,
+// en mode vierge, imprimée par Chromium — une page, comme celle de l'appli.
+test("la fiche imprimable porte le tableau de Mes calculs sur sa page unique ; le PDF vide est cette fiche, vierge", async () => {
   const fs = await import("node:fs/promises");
   assert.match(html, /id="fiche-calculs"/);
   assert.doesNotMatch(html, /fiche-page2/);
   assert.match(html, /<div id="fiche-matable" class="fiche-rangee is-ma-table fiche-matable" hidden><\/div>\s*<table id="fiche-calculs" class="fiche-carre"><tbody><\/tbody><\/table>/);
   const pdf = await fs.readFile(new URL("../outils/calcul_mental/fiche_parcours_tables.pdf", import.meta.url));
   assert.equal(pdf.subarray(0, 5).toString(), "%PDF-");
-  assert.match(pdf.toString("latin1"), /\/Count 2/, "le PDF vide fait deux pages");
+  assert.match(pdf.toString("latin1"), /\/Count 1\b/, "le PDF vide fait une page");
+  assert.doesNotMatch(pdf.toString("latin1"), /\/Count 2\b/);
   const source = await fs.readFile(new URL("../_sources/defi-tables/generer_fiche_parcours.py", import.meta.url), "utf8");
-  assert.match(source, /MES CALCULS/);
-  assert.match(source, /BOITES = 5/, "la fiche vide a cinq boîtes par calcul");
-  assert.match(source, /for case in range\(BOITES\):/);
+  assert.match(source, /await page\.goto\(PAGE\.as_uri\(\) \+ "\?vierge"\)/, "il imprime la fiche de l’appli, en mode vierge");
+  assert.match(source, /if pages != 1:/, "et refuse un PDF de plus d’une page");
   assert.match(html, /for \(let index = 0; index < PARCOURS\.SEUILS\.revision\.boites; index \+= 1\) \{\s*const caseFait = document\.createElement\("span"\);\s*caseFait\.className = `fiche-case\$\{fait && index < fait\.boite \? " is-pleine" : ""\}`;/, "la fiche remplie aussi");
   assert.match(html, /nombre\.textContent = fait \? String\(ligne \* colonne\) : "";/, "le produit en gros dès la première réponse");
 });

@@ -204,12 +204,11 @@ test("la page : le bloc du jour en tête et conseillé, l’unique rond bleu, le
   assert.match(html, /@media \(max-width: 479px\) \{\s*\.mc-cases \{ gap: 1\.5px; \}\s*\.mc-case \{ width: 5px; height: 5px;/, "au téléphone, 5 × 5 px + 4 × 1,5 px tiennent dans une cellule de ~33 px");
   assert.match(html, /<b>Mes calculs du jour\.<\/b>/);
   assert.doesNotMatch(html, /une seule par jour|trois jours différents|Une case par jour/, "plus une trace de « une case par jour »");
-  // « Encore 10 calculs » à zéro (décision du 12/09) : sur le résultat et dans Mes calculs, en secondaire.
-  // R4 bis : la branche « à zéro » du cadre (« Ma table » principal, puis « Encore N calculs »).
-  assert.match(html, /\} else \{\s*actions\.append\(maTable\);[\s\S]{0,200}if \(PARCOURS\.calculsAVenir\(parcours, \{table\}\)\.length\) \{\s*const encore = document\.createElement\("button"\);\s*encore\.type = "button";\s*encore\.className = "secondary";/, "sur le résultat, quand plus rien n’est dû");
-  assert.match(html, /const libre = !agenda\.dus && PARCOURS\.calculsAVenir\(parcours\)\.length > 0;\s*\$\("calculs-encore-zone"\)\.hidden = !libre;/, "dans Mes calculs, « Encore N calculs » seulement quand rien n’est dû");
-  assert.match(html, /<button id="calculs-encore" class="secondary" type="button">Encore 10 calculs<\/button>/, "en secondaire : ce n’est pas l’étape du jour");
-  assert.match(html, /"Rien ne monte : ces calculs n’étaient pas encore à revoir"/);
+  // « Encore 10 calculs » à zéro (décision du 12/09) — retiré au lot « Mon
+  // parcours » (04/10/2026, décision de Gwenaël), sur le résultat et sous le
+  // tableau : à zéro, « Ma table » principal et « Voir mes calculs ».
+  assert.match(html, /\} else \{\s*actions\.append\(maTable\);[\s\S]{0,260}const voir = document\.createElement\("button"\);/, "sur le résultat, quand plus rien n’est dû");
+  assert.doesNotMatch(html, /calculs-encore|libelleEncoreLibre|Rien ne monte : ces calculs n’étaient pas encore à revoir/);
   assert.match(html, /defi_tables_core\.js\?v=20261004-1/);
   assert.match(html, /defi_tables_mon_parcours\.js\?v=20261004-1/);
 });

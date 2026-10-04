@@ -109,9 +109,10 @@ test("les trois mots d’état : à revoir (rouge) · en route (bleu) · su (ver
 
 test("le détail d’une case dit la règle du jour, et seulement là", () => {
   // Lot mémoire : raté aujourd'hui, dû, ou le jour du retour — rien d'autre.
-  assert.match(html, /if \(fait && fait\.erreur === aujourdhui\) note = "Raté aujourd’hui : il revient demain\.";/);
+  // Lot « Mon parcours » (décision 8) : « … dans ta séance ».
+  assert.match(html, /if \(fait && fait\.erreur === aujourdhui\) note = "Raté aujourd’hui : il reviendra demain dans ta séance\.";/);
   assert.match(html, /else if \(fait && PARCOURS\.faitDu\(fait, aujourdhui\)\) note = boite >= 5\s*\? "À faire aujourd’hui : réussis-le pour le garder 14 jours de plus\."\s*: "À faire aujourd’hui : réussis-le pour monter d’une boîte\.";/);
-  assert.match(html, /else if \(fait && fait\.echeance\) note = `Revient \$\{libelleDans\(PARCOURS\.ecartJours\(aujourdhui, fait\.echeance\)\)\}\.`;/);
+  assert.match(html, /else if \(fait && fait\.echeance\) note = `Il reviendra dans ta séance \$\{libelleDans\(PARCOURS\.ecartJours\(aujourdhui, fait\.echeance\)\)\}\.`;/);
   assert.doesNotMatch(html, /function formaterJour/, "« Vu il y a 3 jours » n’est plus écrit : la date qui compte est celle du retour");
 });
 
@@ -310,41 +311,50 @@ test("avec un code, les liens Réglages libres et Évaluation CM1 n’existent p
 
 // ------------------------------------------------- l'en-tête compact (point 9)
 
-test("sur téléphone, le repère de suivi tient sur une ligne sous le logo et « Se déconnecter » devient une pilule", async () => {
-  // Version A, choisie par Gwenaël le 08/09/2026 : ligne 1 = logo, pilule
-  // « Se déconnecter », flèche ; ligne 2 = le repère sur toute la largeur,
-  // une seule ligne, coupé par « … » si le prénom est très long. Rien ne
-  // change sur PC et tablette : la sortie reste sur le repère (règle du 03/09).
-  assert.match(html, /<button id="suivi-sortie" class="catalogue-link suivi-sortie" type="button" hidden>Se déconnecter<\/button>/);
-  assert.ok(html.indexOf('id="suivi-sortie"') < html.indexOf('id="lien-retour"'), "la pilule est à côté de la flèche, avant elle");
-  assert.match(html, /\$\("suivi-sortie"\)\.addEventListener\("click", quitterSuivi\)/, "le même geste que la sortie du repère");
-  // Les DEUX classes dans le sélecteur : `.suivi-sortie` seule perd contre
-  // `.catalogue-link`, déclarée plus bas dans la même feuille avec la même
-  // spécificité — la pilule s'affichait aussi sur PC et tablette, en double
-  // avec la sortie du repère (mesuré au navigateur le 08/09 : 124 × 44 à
-  // 1366 px, à côté du « · Se déconnecter » du repère).
-  assert.match(html, /\n    \.catalogue-link\.suivi-sortie \{ display: none; \}/, "invisible hors téléphone");
-  assert.ok(html.indexOf(".catalogue-link.suivi-sortie { display: none; }") < html.indexOf("\n    .catalogue-link {"),
-    "la règle de base est écrite AVANT `.catalogue-link` : seule sa spécificité la fait gagner");
+// Lot « Mon parcours » (04/10/2026, point 6 — dessin de Gwenaël sur ses photos
+// d'iPhone) : l'en-tête compact de 2 étages (logo + pilule « Se déconnecter »
+// + flèche, puis le bandeau, texte collé en haut) devient UNE barre fine pour
+// l'élève à code : ← Mon espace (la flèche seule au téléphone), le bloc de
+// suivi — « Suivi par ton professeur », le prénom, la classe, trois lignes
+// centrées au téléphone — avec « Se déconnecter » à droite DANS le bloc, et
+// « Plein écran » sur ordinateur. Le logo passe en petit dans le pied de page.
+// Le visiteur sans code garde l'en-tête du site.
+test("élève à code : une seule barre fine — ← Mon espace, le bloc de suivi avec « Se déconnecter » dedans ; le logo dans le pied", async () => {
+  assert.doesNotMatch(html, /id="suivi-sortie"|suivi-sortie|renderSortieBarre/, "plus de pilule « Se déconnecter » dans l’en-tête : la sortie est dans le bloc");
+  const eleve = html.slice(html.indexOf("/* Lot « Mon parcours » (point 6, dessin de Gwenaël) : l'élève à code"), html.indexOf("</style>", html.indexOf("/* Lot « Mon parcours » (point 6, dessin de Gwenaël) : l'élève à code")));
+  assert.match(eleve, /body\.mode-eleve \.topbar \{ flex-wrap: nowrap; min-height: 0;/, "une barre, pas deux étages");
+  assert.match(eleve, /body\.mode-eleve \.topbar > \.brand \{ display: none; \}/, "plus de logo en haut pour l’élève à code");
+  assert.match(eleve, /body\.mode-eleve \.topbar-actions \{ display: contents; \}/);
+  assert.match(eleve, /body\.mode-eleve #lien-retour \{ order: 1;[^}]*\}\s*body\.mode-eleve \.suivi-repere \{ order: 2; flex: 1 1 auto; min-width: 0; margin: 0; \}\s*body\.mode-eleve \.fullscreen-toggle \{ order: 3;/,
+    "← Mon espace, le bloc, Plein écran — dans cet ordre");
+  assert.match(eleve, /body\.mode-eleve #lien-retour \.catalogue-link-label \{ display: none; \}/, "au téléphone, la flèche seule");
+  assert.doesNotMatch(html, /body\.mode-eleve [^{]*\.brand[^{]*\{[^}]*display: (block|flex)/);
   const mobile = html.slice(html.indexOf("@media (max-width: 620px) {"), html.indexOf("@media (min-width: 621px) and (max-height: 900px)"));
-  assert.match(mobile, /\.suivi-repere \{ display: block; margin: -2px 0 0; padding: 4px 10px; font-size: \.8rem;/, "le repère reste sous le logo, sur une ligne");
-  assert.doesNotMatch(mobile, /\.suivi-repere \{ order: -1/, "pas de bande d’état au-dessus du logo (version B écartée)");
-  assert.match(mobile, /\.suivi-repere:not\(\.detache\):not\(\.hors-ligne\) \{ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; \}/, "une seule ligne, « … » si le prénom est long ; les états longs (code refusé, hors ligne) gardent le droit de passer à la ligne");
-  assert.match(mobile, /\.suivi-repere \.sortie-bloc \{ display: none; \}/);
-  assert.match(mobile, /\.catalogue-link\.suivi-sortie \{ display: inline-flex; \}/, "même sélecteur à deux classes, sinon la règle de base gagnerait ici");
+  assert.match(mobile, /\.suivi-repere \{ display: flex; flex-wrap: nowrap; align-items: center;[^}]*min-height: 44px;[^}]*text-align: center; \}/, "centré en hauteur (il était collé en haut)");
+  assert.match(mobile, /\.repere-texte > span \{ display: block; \}/, "trois lignes : Suivi par ton professeur / le prénom / la classe");
+  assert.match(mobile, /\.repere-sep \{ display: none; \}/);
+  assert.match(mobile, /\.suivi-repere \.sortie-bloc \{ flex: 0 0 auto; font-size: 0; \}/, "« Se déconnecter » à droite, dans le bloc (le « · » ne s’y voit pas)");
+  assert.doesNotMatch(mobile, /\.suivi-repere \.sortie-bloc \{ display: none; \}/);
+  assert.doesNotMatch(mobile, /text-overflow: ellipsis; \}/, "un prénom long passe à la ligne, il n’est plus coupé");
   assert.match(html, /bloc\.className = "sortie-bloc";/);
-  assert.doesNotMatch(html, /Suivi par ton professeur\$\{qui\}\$\{ou\}[^`]/, "le texte du repère ne change pas");
+  assert.match(html, /logo\.className = "pied-logo";/, "le logo en petit dans le pied de l’élève");
 
-  // Exécuté : la pilule suit le code, comme le repère.
-  const site = demarrerAppli({});
-  site.api.renderRepere();
-  assert.equal(site.document.getElementById("suivi-sortie").hidden, true, "sans code, pas de pilule");
-  const eleve = demarrerAppli({codeOnglet: "ABC234"});
-  eleve.api.renderRepere();
-  assert.equal(eleve.document.getElementById("suivi-sortie").hidden, false, "sous un code, la pilule est là");
-  assert.equal(eleve.boutonRepere("Se déconnecter")?.textContent, "Se déconnecter", "et la sortie du repère aussi (PC, tablette)");
-  eleve.api.quitterSuivi();
-  assert.equal(eleve.document.getElementById("suivi-sortie").hidden, true, "après « Se déconnecter », plus de pilule");
+  // Exécuté (l'identité arrive du serveur simulé : Léa, 405) : le texte lu
+  // du bloc ne change pas ; ses trois morceaux sont là ; la sortie est dans le bloc.
+  const eleveSuivi = demarrerAppli({codeOnglet: "ABC234"});
+  eleveSuivi.api.demarrerSuivi();
+  await tic(20);
+  const repere = eleveSuivi.repere();
+  assert.equal(repere.hidden, false);
+  assert.match(repere.texte, /^Suivi par ton professeur · Léa · 405· Se déconnecter$/, "le texte lu ne change pas");
+  const morceaux = repere.enfants.find(n => n && n.className === "repere-texte");
+  assert.ok(morceaux, "le texte en morceaux");
+  assert.deepEqual(morceaux.enfants.map(n => [n.className || "", n.textContent || n.texte]),
+    [["", "Suivi par ton professeur"], ["repere-prenom", " · Léa"], ["repere-classe", " · 405"]]);
+  assert.deepEqual(morceaux.enfants[1].enfants.map(n => typeof n === "string" ? n : n.className), ["repere-sep", "Léa"], "le « · » à part : caché au téléphone");
+  assert.equal(eleveSuivi.boutonRepere("Se déconnecter")?.textContent, "Se déconnecter", "la sortie est dans le bloc");
+  eleveSuivi.api.quitterSuivi();
+  assert.equal(eleveSuivi.repere().hidden, true, "après « Se déconnecter », plus de bloc");
 });
 
 test("la page Confidentialité nomme les deux clés de session de l’accueil", () => {

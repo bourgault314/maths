@@ -333,18 +333,30 @@ test("l’aiguillage ouvre le bon écran à partir de ce que le <head> a lu", ()
   // mène à l'accueil « Ma table » (backToModes), qui EST l'entrée de l'élève ;
   // seul « calculs » ouvre un autre écran directement. openParcours n'est
   // plus appelé par l'aiguillage.
-  const aiguiller = entree => {
+  // Lot « Mon parcours » : « ?vierge » ouvre la fiche vierge (le PDF de la
+  // page du professeur en est l'impression), sans aucun suivi.
+  const aiguiller = (entree, recherche = "") => {
     const appels = [];
-    new Function("ENTREE", "openParcours", "backToModes", "openCalculs", "demarrerSuivi", "entrerParBillet", "ouvrirFicheParBillet", SOURCE_AIGUILLAGE)(
+    const classes = new Set();
+    const element = () => ({hidden: true, textContent: ""});
+    const elements = {};
+    const fauxDocument = {body: {classList: {add: c => classes.add(c)}}, title: ""};
+    new Function("ENTREE", "openParcours", "backToModes", "openCalculs", "demarrerSuivi", "entrerParBillet", "ouvrirFicheParBillet",
+      "window", "document", "$", "renderFiche", "ajusterFiche", "FICHE_VIERGE", SOURCE_AIGUILLAGE)(
       {billet: "", vue: "", ouvrir: "", ...entree},
       () => appels.push("parcours"), () => appels.push("accueil"), () => appels.push("calculs"),
       () => appels.push("suivi"),
       // Le billet : l'échange d'abord, l'écran ensuite — on joue l'échange
       // réussi tout de suite pour voir quel écran il ouvrirait.
       (billet, ouvrir) => { appels.push("billet:" + billet); ouvrir(); },
-      billet => appels.push("fiche-billet:" + billet));
+      billet => appels.push("fiche-billet:" + billet),
+      {location: {search: recherche}}, fauxDocument, id => (elements[id] ||= element()),
+      source => appels.push(`fiche:${source}${classes.has("mode-fiche") ? "(mode-fiche)" : ""}${elements["fiche-ecran"]?.hidden === false ? "(barre)" : ""}`),
+      () => appels.push("ajuster"), "vierge");
     return appels;
   };
+  assert.deepEqual(aiguiller({}, "?vierge"), ["fiche:vierge(mode-fiche)(barre)", "ajuster"], "la fiche vierge : rien d’autre, pas de suivi");
+  assert.deepEqual(aiguiller({billet: "0123456789abcdef0123456789abcdef"}, "?vierge"), ["fiche:vierge(mode-fiche)(barre)", "ajuster"], "même avec un billet : la page vierge n’échange rien");
   assert.deepEqual(aiguiller({ouvrir: "parcours"}), ["suivi"], "l’accueil est l’écran de départ : rien d’autre à ouvrir");
   assert.deepEqual(aiguiller({ouvrir: "calculs"}), ["calculs", "suivi"]);
   assert.deepEqual(aiguiller({}), ["suivi"], "sans adresse, l’appli s’ouvre normalement (demarrerSuivi ne fait rien sans code)");

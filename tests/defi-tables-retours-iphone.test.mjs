@@ -66,11 +66,13 @@ function fauxDocument(ids) {
     return el;
   };
   ids.forEach(id => { elements[id] = creer(); });
+  // Le panneau blanc (lot « Mon parcours » : show() lui pose « avec-parcours »).
+  const panneau = creer("section");
   const document = {
     createElement: creer,
     createTextNode: t => ({texte: t}),
     getElementById: id => elements[id] || null,
-    querySelector: () => null,
+    querySelector: selecteur => (selecteur === ".panel" ? panneau : null),
     body: creer("body")
   };
   return {document, elements, $: id => elements[id]};
@@ -78,19 +80,21 @@ function fauxDocument(ids) {
 
 // --------------------------------------------------------- 1. fin de révision
 
-test("fin de révision : le cadre porte les boutons — Continuer + Ma table, ou Ma table + Encore N + Voir mes calculs", () => {
+// Lot « Mon parcours » (04/10/2026, décision de Gwenaël) : « Encore 10 calculs »
+// est retiré — à zéro, « Ma table » et « Voir mes calculs ».
+test("fin de révision : le cadre porte les boutons — Continuer + Ma table, ou Ma table + Voir mes calculs", () => {
   const cas = [];
   for (const restants of [11, 0]) {
     const {document, $} = fauxDocument(["result", "result-verdict", "result-icon", "result-title", "result-score", "result-config", "result-detail", "result-rang", "result-message", "result-previous", "retry", "result-parcours", "result-reglages", "result-accueil"]);
     const avant = `
       const document = ARG.document; const $ = ARG.$;
-      const state = {startAt: 0, configuration: {revisionTable: null, revisionLibre: false}, revisionPremierTotal: 10, revisionPremierScore: 10, revisionMontes: 10, revisionDescendus: 0, origin: "menu"};
+      const state = {startAt: 0, configuration: {revisionTable: null}, revisionPremierTotal: 10, revisionPremierScore: 10, revisionMontes: 10, revisionDescendus: 0, origin: "menu"};
       const parcours = {};
       const PARCOURS = {calculsDus: () => new Array(${restants}), agendaCalculs: () => ({dus: ${restants}, prochain: {dans: 1, calculs: 3}}), calculsAVenir: () => [1, 2, 3]};
       const soude = t => t; const pluriel = (n, m) => n + " " + m + (n > 1 ? "s" : ""); const formatElapsed = () => "17 s";
       const phraseProchainRetour = () => "Reviens demain : 3 calculs t’attendront.";
       const startRevision = () => {}; const backToModes = () => {}; const openCalculs = () => {};
-      const libelleEncoreLibre = () => "Encore 10 calculs"; const renderCorrections = () => {}; const show = () => {};`;
+      const renderCorrections = () => {}; const show = () => {};`;
     const finishRevision = new Function("ARG", `${avant}\n${source("finishRevision")}\nreturn finishRevision;`)({document, $});
     finishRevision();
     const actions = $("result-parcours").children.find(c => c.className === "result-parcours-actions");
@@ -98,8 +102,8 @@ test("fin de révision : le cadre porte les boutons — Continuer + Ma table, ou
   }
   assert.deepEqual(cas, [
     {restants: 11, revision: true, boutons: ["Continuer →", "Ma table [secondary]"].map((t, i) => i === 0 ? "Continuer → [primary]" : t)},
-    {restants: 0, revision: true, boutons: ["Ma table [primary]", "Encore 10 calculs [secondary]", "Voir mes calculs [secondary]"]}
-  ], "deux boutons tant qu'il en reste, trois à zéro — et « Voir mon parcours » n'est plus là");
+    {restants: 0, revision: true, boutons: ["Ma table [primary]", "Voir mes calculs [secondary]"]}
+  ], "deux boutons tant qu'il en reste, deux à zéro (plus d’« Encore 10 calculs ») — et « Voir mon parcours » n'est plus là");
 });
 
 test("fin de révision : la classe is-revision centre le cadre, cache la rangée du bas, et disparaît sur les autres verdicts", () => {
@@ -118,21 +122,28 @@ test("fin de révision : la classe is-revision centre le cadre, cache la rangée
 
 // ------------------------------------------------------------ 2. Mes calculs
 
-test("une boîte touchée s’allume dans la grille : is-filtre sur la grille, is-dans-boite sur ses calculs (pas sur le miroir), sans contour", () => {
+test("une boîte (ou « Aujourd’hui ») touchée s’allume dans la grille : is-filtre sur la grille, is-dans-boite sur ses calculs (pas sur le miroir), sur fond bleu", () => {
   assert.match(html, /const boiteChoisie = calculsSelection && calculsSelection\.boite \? calculsSelection\.boite : 0;/);
-  assert.match(html, /zone\.classList\.toggle\("is-filtre", Boolean\(boiteChoisie\)\);/);
-  assert.match(html, /const dansBoite = Boolean\(boiteChoisie\) && cellule\.active && cellule\.boite === boiteChoisie;/, "seule la moitié active s'allume — le miroir reste éteint");
+  assert.match(html, /zone\.classList\.toggle\("is-filtre", Boolean\(boiteChoisie\) \|\| jourChoisi\);/);
+  assert.match(html, /const dansBoite = cellule\.active && \(\(Boolean\(boiteChoisie\) && cellule\.boite === boiteChoisie\) \|\| \(jourChoisi && cellule\.du\)\);/, "seule la moitié active s'allume — le miroir reste éteint");
   assert.match(html, /\$\{dansBoite \? " is-dans-boite" : ""\}`;/);
   assert.match(html, /\.calculs-grille\.is-filtre \.mc-cell:not\(\.is-dans-boite\) \{ opacity: \.28; \}/, "les autres s'estompent");
   assert.match(html, /\.calculs-grille\.is-filtre \.mc-cell\.is-miroir \{ opacity: \.12; \}/);
-  assert.doesNotMatch(html, /\.is-dans-boite \{[^}]*(outline|box-shadow)/, "aucun contour ajouté (maquette du 13/09 : « bizarre »)");
+  // Lot « Mon parcours » (décision 4, l'idée de Gwenaël du 04/10) : les cases
+  // allumées sur fond bleu, comme ma table — un halo de 4 px, pas un anneau
+  // collé à la case (les anneaux du 13/09 étaient « bizarres »).
+  assert.match(html, /\.calculs-grille\.is-filtre \.mc-cell\.is-dans-boite \{ z-index: 2; box-shadow: 0 0 0 4px var\(--blue\); \}/);
 });
 
-test("le cadre d’une boîte : « Ils reviennent demain », « Ratés : ils reviennent demain » — et la liste des calculs reste", () => {
-  assert.match(html, /\? "Ratés : ils reviennent demain"\s*: `Ils reviennent \$\{libelleDans\(PARCOURS\.SEUILS\.revision\.delais\[boite - 1\]\)\}`\)\);/);
+// Lot « Mon parcours » (décision 7) : « Ils reviennent dans 7 jours » était le
+// DÉLAI de la boîte, pas le jour où ses calculs reviennent (des calculs dus
+// aujourd'hui s'annonçaient « dans 7 jours »). La liste reste, rangée par jour.
+test("le cadre d’une boîte : ses calculs rangés par jour de retour — la liste reste, sans le délai de la boîte", () => {
+  assert.doesNotMatch(html, /Ratés : ils reviennent demain|`Ils reviennent \$\{libelleDans/);
   assert.doesNotMatch(html, /· revient \$\{boite === 1 \? "le lendemain"/, "plus de « En route · revient demain »");
-  // Lot E1 (décision 6) : la liste reste, une pastille par calcul (le « · » se lisait « fois »).
-  assert.match(html, /const liste = ligneDetail\("mc-detail-liste pastilles", ""\);\s*cles\.forEach\(cle => liste\.appendChild\(ligneDetail\("", PARCOURS\.libelleFait\(cle\)\)\)\);/, "la liste, que Gwenaël a voulu garder");
+  // Lot E1 (décision 6) : une pastille par calcul (le « · » se lisait « fois »).
+  assert.match(html, /titreJour\.textContent = majuscule\(libelleDans\(dans\)\);/);
+  assert.match(html, /parJour\.get\(dans\)\.forEach\(cle => groupe\.append\(ligneDetail\("", PARCOURS\.libelleFait\(cle\)\)\)\);/, "la liste, que Gwenaël a voulu garder");
   assert.doesNotMatch(html, /cles\.map\(PARCOURS\.libelleFait\)\.join\(" · "\)/);
 });
 
@@ -171,8 +182,10 @@ test("« ← Calcul mental » seulement sur l’accueil : body.ecran-interne par
     const configuration = {mode: null}; const suivreHistorique = () => {}; const ajusterEchelle = () => {};`;
   const show = new Function("ARG", `${avant}\n${source("show")}\nreturn show;`)({document, $});
   const vus = {};
-  ["calculs", "parcours", "play", "result", "intro"].forEach(nom => { show(nom); vus[nom] = document.body.classes.has("ecran-interne"); });
+  const panneau = {};
+  ["calculs", "parcours", "play", "result", "intro"].forEach(nom => { show(nom); vus[nom] = document.body.classes.has("ecran-interne"); panneau[nom] = document.querySelector(".panel").classList.contains("avec-parcours"); });
   assert.deepEqual(vus, {calculs: true, parcours: true, play: true, result: true, intro: false});
+  assert.deepEqual(panneau, {calculs: false, parcours: true, play: false, result: false, intro: false}, "lot « Mon parcours » : le panneau de Mon parcours, et lui seul");
 });
 
 // ------------------------------------------------------ 6. « 10×10 »

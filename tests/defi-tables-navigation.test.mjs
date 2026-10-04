@@ -30,7 +30,8 @@ test("le bouton de sortie de l’écran de jeu dit où il ramène", () => {
   // Lot « un seul tableau » : Mes calculs vit dans Mon parcours — trois origines.
   assert.match(html, /const SORTIES = Object\.freeze\(\{\s*reglages: \{mot: "Réglages", ou: "aux réglages"\},\s*parcours: \{mot: "Mon parcours", ou: "à Mon parcours"\},\s*menu: \{mot: "Ma table", ou: "à Ma table"\}\s*\}\);/, "chaque origine a son mot : quitterSerie ramène là d’où la série est partie, le bouton doit le dire");
   assert.match(html, /function homeScreen\(\) \{\s*return state\.origin === "parcours" \? "parcours" : "intro";\s*\}/);
-  assert.match(html, /\$\("calculs-encore"\)\.addEventListener\("click", \(\) => startRevision\(null, "parcours", true\)\);/, "« Encore 10 calculs » part de Mon parcours et y revient");
+  // Lot « Mon parcours » : « Encore 10 calculs » (qui partait de Mon parcours) est retiré.
+  assert.doesNotMatch(html, /calculs-encore/);
   assert.match(html, /bouton\.querySelector\("\.game-menu-label"\)\.textContent = sortie\.mot;/);
   assert.match(html, /bouton\.setAttribute\("aria-label", `Arrêter la série et revenir \$\{sortie\.ou\}`\);/);
   assert.match(html, /function sortieDeSerie\(\) \{\s*return SORTIES\[state\.origin\] \|\| SORTIES\.menu;/, "une origine inconnue retombe sur Ma table, jamais sur un bouton vide");
@@ -70,7 +71,11 @@ test("« Je valide ma table » se joue en 1 min 30, sans choix de durée", () =>
   assert.doesNotMatch(html, /data-launch-duration/, "les trois durées quittent l’écran de lancement (décision du 09/09)");
   assert.doesNotMatch(html, /launch-durations/, "le groupe et son CSS partent avec elles");
   assert.doesNotMatch(html, /Ta table est validée en 1 min 30\. En 2 ou 3 min/, "la phrase qui expliquait le choix n’a plus d’objet");
-  assert.match(html, /\$\("launch-hint"\)\.textContent = chrono \? "Le chrono part quand tu appuies sur « C’est parti ! »\." : ""/, "l’écran de départ garde son seul rôle : le chrono ne part pas sous le doigt");
+  // L'écran de départ garde son seul rôle : le chrono ne part pas sous le
+  // doigt, mais au « C'est parti ! » (lot « Mon parcours », version B de
+  // Gwenaël : on ne l'écrit plus — « Le chrono part quand tu appuies… »).
+  assert.doesNotMatch(html, /id="launch-hint"|Le chrono part quand tu appuies/);
+  assert.match(html, /\$\("launch-start"\)\.addEventListener\("click", beginRound\);/, "le chrono part au « C’est parti ! »");
   assert.match(html, /\$\("launch-back-label"\)\.textContent = versReglages \? "Modifier" : sortieDeSerie\(\)\.mot;/, "le retour de l’écran de lancement nomme lui aussi l’écran d’origine");
   assert.match(html, /id="launch-back-fleche" class="back-icon"[^>]*><svg viewBox="0 0 24 24"/, "la vraie flèche du site, pas le caractère « ← » (règle de Gwenaël du 21/08)");
   assert.doesNotMatch(html, /"← Ma table"/, "aucun chevron typographique en guise de flèche");

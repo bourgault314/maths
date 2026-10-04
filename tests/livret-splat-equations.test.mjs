@@ -589,7 +589,7 @@ test("Q4 : page des livrets — les corrigés du monde 5 repliés sous chaque li
   assert.match(catalogue, /Pour chaque livret : le PDF de 8 pages, le livret à plier et le corrigé\./);
   assert.doesNotMatch(pageLivrets, /pour les mondes 1 à 4/);
   assert.doesNotMatch(lire("outils/toutes-les-ressources.html"), /pour les mondes 1 à 4, les livrets corrigés/);
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=feuille-tables-20261003-1/, "le cache-buster du catalogue suit");
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=fiche-parcours-20261004-1/, "le cache-buster du catalogue suit");
 });
 
 /* ------------------------------------------------------------------ lot Q5 (25/09/2026)
@@ -791,7 +791,7 @@ test("Q5 : la page des livrets et la carte des mondes — « Le défi » au mond
   const catalogue = lire("assets/js/catalogue-refonte-data.js");
   // (01/10/2026) les textes du catalogue raccourcis : « du monde 1 au monde 6 »
   assert.match(catalogue, /"cardDescription": "Tous les livrets SPLAT! à plier, du monde 1 au monde 6, avec leurs corrigés\."/);
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=feuille-tables-20261003-1/);
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=fiche-parcours-20261004-1/);
 });
 
 test("Q5 : ÉquaSplat ne reprend une série interrompue que si c'est la même (empreinte)", () => {

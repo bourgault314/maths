@@ -1,6 +1,6 @@
 // Défi tables — lot R6 (13/09/2026) : la notice « Comment ça marche ? » dit la
 // révision du jour (d'où viennent les 10 calculs, ce que fait une erreur,
-// « Encore 10 calculs »), et le prénom est demandé au moment d'imprimer la
+// « Encore 10 calculs » — retiré au lot « Mon parcours »), et le prénom est demandé au moment d'imprimer la
 // fiche — jamais sous un code de suivi, où le professeur l'a déjà saisi.
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -51,7 +51,7 @@ test("la notice dit ce que fait une erreur, et le moteur le confirme : une boît
   // La même phrase partout où l'élève lit la règle (audit 1) : le détail
   // d'une case et la fiche imprimée disent « demain », plus « tout de suite ».
   assert.doesNotMatch(html, /il revient tout de suite/);
-  assert.match(html, /note = "Raté aujourd’hui : il revient demain\.";/);
+  assert.match(html, /note = "Raté aujourd’hui : il reviendra demain dans ta séance\.";/, "lot « Mon parcours »");
   // Lot « un seul tableau » : la page 2 de la fiche est partie ; la règle
   // des boîtes y tient en une ligne, sous le tableau.
   assert.match(html, /<p><b>Mes calculs<\/b> : les 5 carrés d’une case, c’est sa boîte\. Réussi le jour où il revient, un calcul monte d’une boîte ; raté, il redescend\.<\/p>/);
@@ -73,10 +73,14 @@ test("la notice dit ce que fait une erreur, et le moteur le confirme : une boît
   assert.equal(PARCOURS.faitDu(fait, demain), true, "il revient demain");
 });
 
-test("« Encore 10 calculs » est bien le libellé du bouton", () => {
-  // Audit 1 : la notice courte ne le détaille plus ; le bouton, lui, reste.
-  assert.match(html, /return `Encore \$\{pluriel\(nombre, "calcul"\)\}`;/);
-  assert.match(html, /const nombre = Math\.min\(PARCOURS\.SEUILS\.revision\.total, PARCOURS\.calculsAVenir\(parcours, \{table\}\)\.length\);/);
+// Lot « Mon parcours » (04/10/2026, décision de Gwenaël) : « Encore 10
+// calculs » est retiré — sous le tableau de Mon parcours ET à la fin d'une
+// révision. Personne ne comprenait ce qu'il faisait (des calculs pas encore
+// dus : réussis, ils ne montaient pas ; ratés, ils descendaient).
+test("« Encore 10 calculs » n’existe plus : ni sous le tableau, ni à la fin d’une révision", () => {
+  assert.doesNotMatch(html, /libelleEncoreLibre|calculs-encore|revisionLibre|Encore des calculs/);
+  assert.doesNotMatch(html, /startRevision\([^)]*, true\)/, "plus de révision « libre » demandée par la page");
+  assert.doesNotMatch(html, /planRevision\(parcours, \{table, libre\}\)/);
 });
 
 test("les nombres écrits pour l'élève sont ceux du moteur : 5 boîtes, 10 à la fois, su à la boîte 4, 1 · 3 · 7 · 14 jours", () => {
@@ -85,10 +89,13 @@ test("les nombres écrits pour l'élève sont ceux du moteur : 5 boîtes, 10 à 
   assert.equal(PARCOURS.SEUILS.revision.total, 10);
   assert.deepEqual(PARCOURS.SEUILS.revision.delais, [0, 1, 3, 7, 14]);
   // Audit 1 : les délais et la boîte 4 ne sont plus dans la notice courte.
-  // Lot « un seul tableau » : ni sur la fiche (sa page 2 est partie) — le
-  // détail d'une boîte les lit dans le moteur (SEUILS.revision.delais).
+  // Lot « un seul tableau » : ni sur la fiche (sa page 2 est partie). Lot
+  // « Mon parcours » (décision 7) : le détail d'une boîte ne dit plus son
+  // délai (« dans 7 jours » pour des calculs dus aujourd'hui) mais le JOUR où
+  // chacun de ses calculs revient, lu sur son échéance.
   assert.doesNotMatch(html, /le lendemain, puis 3 jours, 7 jours et 14 jours après/);
-  assert.match(html, /`Ils reviennent \$\{libelleDans\(PARCOURS\.SEUILS\.revision\.delais\[boite - 1\]\)\}`/);
+  assert.doesNotMatch(html, /SEUILS\.revision\.delais/);
+  assert.match(html, /return Math\.max\(1, PARCOURS\.ecartJours\(aujourdhui, fait\.echeance\)\);/);
   // « su » commence à la boîte 4 : c'est ce que dit etatFait.
   const fait = boite => ({boite, vu: "2026-01-01", erreur: "", gagne: "", echeance: "2026-01-01", cases: 0});
   assert.equal(PARCOURS.etatFait(fait(3)), "en-cours");
@@ -120,7 +127,8 @@ test("on ne demande le prénom que quand il sert : pas sous un code, pas s'il ex
 });
 
 test("la fiche d'un élève sous code porte son prénom et sa classe, la vue du professeur est intacte", () => {
-  assert.match(html, /const ficheDeLAppareil = !source && !document\.body\.classList\.contains\("mode-fiche"\);/);
+  // Lot « Mon parcours » : la fiche vierge n'est la fiche d'aucun appareil.
+  assert.match(html, /const ficheDeLAppareil = !source && !vierge && !document\.body\.classList\.contains\("mode-fiche"\);/);
   assert.match(html, /\$\("fiche-prenom"\)\.textContent = ficheDeLAppareil \? prenomAffiche\(\) : fiche\.prenom;/);
   assert.match(html, /if \(ficheDeLAppareil\) \$\("fiche-classe"\)\.textContent = suiviActif\(\) && suiviIdentite \? \(suiviIdentite\.classe \|\| ""\) : "";/);
   // Le moteur continue de retirer le prénom de la case durable sous un code :
