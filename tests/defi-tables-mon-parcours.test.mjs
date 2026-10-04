@@ -51,26 +51,43 @@ test("le parcours couvre les tables 2 à 10 et conseille les faciles d’abord",
 });
 
 test("les configurations du parcours sont acceptées par le moteur de questions", () => {
+  // Lot « divisions » (04/10/2026) : les divisions prennent une partie de la
+  // place des nombres manquants ; une seule forme (56 ÷ 7 = ?), dans les deux sens.
+  const compter = questions => ["direct", "missing", "division"].map(categorie => questions.filter(question => question.category === categorie).length);
   const entrainement = normaliser(parcours.configEntraine(7, "trous"));
   assert.equal(entrainement.mode, "train");
   assert.deepEqual(entrainement.tables, [7]);
   assert.equal(entrainement.total, 10);
   assert.equal(entrainement.duration, null);
-  assert.deepEqual(entrainement.questionTypes, ["missing"]);
-  assert.ok(core.generateQuestions(entrainement).every(question => question.category === "missing"));
-
+  assert.deepEqual(entrainement.questionTypes, ["missing", "division"]);
   const mixte = normaliser(parcours.configEntraine(7, "mixte"));
-  assert.deepEqual(mixte.questionTypes, ["direct", "missing"]);
+  assert.deepEqual(mixte.questionTypes, ["direct", "missing", "division"]);
+  const sens = new Set();
+  for (let tirage = 0; tirage < 40; tirage += 1) {
+    const trous = core.generateQuestions(entrainement);
+    assert.deepEqual(compter(trous), [0, 5, 5], "marche 6 : 5 nombres manquants + 5 divisions");
+    assert.deepEqual(compter(core.generateQuestions(mixte)), [6, 2, 2], "marche 7 : 6 résultats, 2 nombres manquants, 2 divisions");
+    trous.filter(question => question.category === "division").forEach(question => {
+      assert.equal(question.type, "division-quotient", "hors d'Expert : 56 ÷ 7 = ? seulement");
+      assert.equal(question.product, question.first * question.second);
+      assert.ok([question.first, question.second].includes(7), "une division de la table de 7");
+      assert.equal(question.factKey, `${Math.min(question.first, question.second)}-${Math.max(question.first, question.second)}`, "elle compte pour son calcul (56 ÷ 7 = case 7 × 8)");
+      sens.add(question.first === 7 ? "par la table" : "par l'autre facteur");
+    });
+  }
+  assert.equal(sens.size, 2, "les deux sens : 56 ÷ 7 et 56 ÷ 8");
+  const expert = core.generateQuestions(normaliser(parcours.configEtoile(1)));
+  assert.ok(expert.some(question => question.type !== "division-quotient" && question.category === "division"), "Expert garde ses trois formes");
 
   const validation = normaliser(parcours.configValidation(7));
   assert.equal(validation.mode, "validation");
   assert.equal(validation.total, 20);
   assert.equal(validation.duration, 90);
-  assert.deepEqual(validation.questionTypes, ["direct", "missing"]);
+  assert.deepEqual(validation.questionTypes, ["direct", "missing", "division"]);
   const questions = core.generateQuestions(validation);
   assert.equal(questions.length, 20);
-  assert.equal(questions.filter(question => question.category === "direct").length, 14);
-  assert.equal(questions.filter(question => question.category === "missing").length, 6);
+  assert.deepEqual(compter(questions), [14, 3, 3], "14 résultats, 3 nombres manquants, 3 divisions");
+  assert.ok(questions.filter(question => question.category === "division").every(question => question.type === "division-quotient"));
   assert.ok(questions.every(question => question.focusTable === 7));
   assert.equal(core.configurationLabel(validation), "Je valide ma table · Table de 7 · 20 questions · 1 min 30");
   assert.equal(core.durationLabel(90), "1 min 30");
@@ -84,9 +101,7 @@ test("les configurations du parcours sont acceptées par le moteur de questions"
   assert.equal(melange.total, 20);
   assert.equal(melange.duration, 90);
   const questionsMelange = core.generateQuestions(melange);
-  assert.equal(questionsMelange.filter(question => question.category === "direct").length, 14);
-  assert.equal(questionsMelange.filter(question => question.category === "missing").length, 6);
-  assert.equal(questionsMelange.filter(question => question.category === "division").length, 0, "sans division, même le dernier");
+  assert.deepEqual(compter(questionsMelange), [14, 3, 3], "le mélange a le format de la validation (lot « divisions » : 3 divisions)");
   assert.deepEqual([...new Set(questionsMelange.map(question => question.focusTable))].sort(), [10, 2]);
   assert.equal(core.configurationLabel(melange), "Mon mélange · Tables de 2 et 10 · 20 questions · 1 min 30");
 
@@ -832,7 +847,9 @@ test("prénom local, remise à zéro confirmée dans la page, résultat relié a
 
 test("Je m’entraîne propose produits, trous ou les deux ; la validation se joue en 1 min 30", () => {
   assert.match(html, /id="train-type-settings"[\s\S]*data-train-type="desordre"[\s\S]*data-train-type="trous"[\s\S]*data-train-type="mixte"/);
-  assert.match(html, /const TRAIN_TYPES = \{desordre: \["direct"\], trous: \["missing"\], mixte: \["direct", "missing"\]\}/);
+  assert.match(html, /const TRAIN_TYPES = \{desordre: \["direct"\], trous: \["missing", "division"\], mixte: \["direct", "missing", "division"\]\}/);
+  // Lot « divisions » : les types de la page = ceux du moteur, dans le même ordre.
+  for (const [cle, types] of Object.entries({desordre: ["direct"], trous: ["missing", "division"], mixte: ["direct", "missing", "division"]})) assert.deepEqual(parcours.configEntraine(7, cle).questionTypes, types);
   // 09/09 : plus de choix 1 min 30 / 2 min / 3 min avant l'épreuve. La durée
   // de validation est celle du moteur, et « la même épreuve avec plus de
   // temps » est devenue un entraînement de l'étape 2 (voir
@@ -847,11 +864,11 @@ test("dans Je deviens expert, « Toutes les tables » coche 2 à 10", () => {
   assert.match(html, /return mode === "test" \? PARCOURS_TABLES : ALL_TABLES;/);
   assert.match(html, /"Toutes les tables \(2 à 10\)"/);
   assert.equal(core.configurationLabel(normaliser({mode: "test", tables: [2, 3, 4, 5, 6, 7, 8, 9, 10], testLevel: 3})), "Je deviens expert · Tables de 2 à 10 · produits, trous, divisions · 25 questions · 2 minutes");
-  assert.equal(core.configurationLabel(normaliser(parcours.configEntraine(7, "trous"))), "Je m’entraîne · Table de 7 · nombres manquants · 10 questions · sans chrono");
+  assert.equal(core.configurationLabel(normaliser(parcours.configEntraine(7, "trous"))), "Je m’entraîne · Table de 7 · nombres manquants et divisions · 10 questions · sans chrono");
   assert.equal(core.configurationLabel(normaliser({mode: "train", tables: [6, 7]})), "Je m’entraîne · Tables de 6 et 7 · dans le désordre · 10 questions · sans chrono");
   // Audit 1 (30/09/2026) : les trois entraînements, le même nom partout.
   assert.equal(core.configurationLabel(normaliser(parcours.configEntraine(7, "desordre"))), "Je m’entraîne · Table de 7 · dans le désordre · 10 questions · sans chrono");
-  assert.equal(core.configurationLabel(normaliser(parcours.configEntraine(7, "mixte"))), "Je m’entraîne · Table de 7 · résultats et nombres manquants · 10 questions · sans chrono");
+  assert.equal(core.configurationLabel(normaliser(parcours.configEntraine(7, "mixte"))), "Je m’entraîne · Table de 7 · résultats, nombres manquants et divisions · 10 questions · sans chrono");
 });
 
 test("la page Confidentialité décrit la sauvegarde locale de Mon parcours", () => {

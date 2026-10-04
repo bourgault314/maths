@@ -139,7 +139,7 @@ test("le parcours : des clés en plus, sans changer de version ; une clé absent
 
 test("la séance : Mes calculs du jour s'il y en a, le mélange s'il est dû, puis les marches qui se suivent — quatre étapes (lot M2)", () => {
   let p = P.creerParcours();
-  assert.deepEqual(P.MARCHES.map(m => m.nom), ["Les perles", "Je construis la bande", "La bande à trous", "Dans l’ordre", "Dans le désordre", "Nombres manquants", "Résultats et nombres manquants", "Je valide ma table"]);
+  assert.deepEqual(P.MARCHES.map(m => m.nom), ["Les perles", "Je construis la bande", "La bande à trous", "Dans l’ordre", "Dans le désordre", "Nombres manquants et divisions", "Résultats, nombres manquants et divisions", "Je valide ma table"]);
   assert.deepEqual(nomsDe(p, jour(1)), ["Les perles", "Je construis la bande", "La bande à trous", "Dans l’ordre"], "jour 1 : marches 1 à 4 de la table de 2 (lot M2 : toujours 4 étapes)");
   assert.equal(P.ouvrirSeance(p, {aujourdhui: jour(1)}).table, 2, "sans choix, la première table de l'ordre conseillé");
   assert.deepEqual(nomsDe(p, jour(1), 7), ["Les perles", "Je construis la bande", "La bande à trous", "Dans l’ordre"]);
@@ -155,7 +155,7 @@ test("la séance : Mes calculs du jour s'il y en a, le mélange s'il est dû, pu
   assert.deepEqual(nomsDe(p, jour(2)), ["Mes calculs du jour", "Mon mélange", "Les perles", "Je construis la bande"], "lot M1 : quatre étapes au plus — deux marches ce jour-là");
   assert.equal(P.ouvrirSeance(p, {aujourdhui: jour(2)}).table, 5);
   // Une table acquise, choisie exprès : ses trois entraînements, rien ne bouge.
-  assert.deepEqual(nomsDe(p, jour(2), 2).slice(2), ["Dans le désordre", "Nombres manquants"]);
+  assert.deepEqual(nomsDe(p, jour(2), 2).slice(2), ["Dans le désordre", "Nombres manquants et divisions"]);
   const acquise = jouerSeance(p, jour(2), () => 0, 2);
   assert.deepEqual(departN(acquise.parcours.tables[2].seance), {depart: 3, n: 2}, "le départ d'une table acquise ne bouge pas");
   // Les 9 tables acquises : plus de marches.
@@ -253,7 +253,7 @@ test("la marche 8 : la validation si la table est prête, sinon un entraînement
   let p = P.creerParcours();
   p.tables[3].seance = {depart: 6, n: 5};
   // Lot M2 : au sommet, rien de dû, la fenêtre s'arrête à la marche 8 (5-6-7-8, pas 6-7-8 seul).
-  assert.deepEqual(nomsDe(p, jour(1), 3), ["Dans le désordre", "Nombres manquants", "Résultats et nombres manquants", "Je valide ma table (si prêts)"]);
+  assert.deepEqual(nomsDe(p, jour(1), 3), ["Dans le désordre", "Nombres manquants et divisions", "Résultats, nombres manquants et divisions", "Je valide ma table (si prêts)"]);
   assert.equal(p.tables[3].seance.depart, 6, "le départ enregistré ne bouge pas");
   // Deux erreurs par entraînement : depuis le lot M1, une seule (9 sur 10) aux
   // deux formes gagnerait le raccourci.
@@ -437,7 +437,7 @@ test("la page : la séance est l'accueil de tous — la clé ?seance=1 est retir
   assert.match(html, /function enSeance\(\) \{\s*return Boolean\(seance\) && state\.origin === "seance";/, "une série hors séance garde son bilan d'avant");
   assert.match(html, /if \(enSeance\(\)\) noterEtapeDeSeance\(suivi\);\s*if \(state\.origin === "decouverte"\) renderSuiteDecouverte\(suivi\);\s*show\("result"\);/);
   assert.match(html, /function backToModes\(\) \{\s*quitterSeance\(\);/, "revenir à Ma table quitte la séance");
-  assert.match(html, /mixte: "résultats et nombres manquants"\}\);/);
+  assert.match(html, /mixte: "résultats, nombres manquants et divisions"\}\);/);
   assert.match(html, /function configurationLabel\(config\) \{\s*return CORE\.configurationLabel\(config\);/, "le noyau porte le nom lui-même");
   // Ce que la page pose, et où.
   assert.match(html, /<div id="acc-semaine" class="semaine" hidden><\/div>/);
@@ -446,7 +446,7 @@ test("la page : la séance est l'accueil de tous — la clé ?seance=1 est retir
   assert.match(html, /<div id="seance-suite" class="seance-suite" hidden><\/div>/);
   // Entre deux étapes : UN bouton, « Arrêter la séance », pas de « Rejouer ».
   assert.match(html, /\.result\.en-seance \.result-actions,\s*\.result\.en-seance #result-parcours,\s*\.result\.en-seance #result-message,\s*\.result\.en-seance #result-previous,\s*\.result\.en-seance \.result-config \{ display: none !important; \}/);
-  assert.match(html, /suite\.textContent = `Étape \$\{seance\.faites\.length \+ 1\}\\u00a0: \$\{prochaine\.nom\} →`;/);
+  assert.match(html, /suite\.textContent = `Étape \$\{seance\.faites\.length \+ 1\}\\u00a0: \$\{prochaine\.nom\}\\u00a0→`;/, "lot « divisions » : la flèche reste avec son nom");
   assert.match(html, /arreter\.textContent = "Arrêter la séance";\s*arreter\.addEventListener\("click", backToModes\);/);
   assert.match(html, /\$\("result-title"\)\.textContent = "Séance du jour faite";/);
   assert.match(html, /encore\.textContent = "Encore une séance";/);
@@ -561,7 +561,7 @@ test("« Cette semaine » : à la 5e séance, page ouverte, l'étiquette des ron
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie serveur identique, serveur qui accepte les nouvelles clés", () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261003-4/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261004-1/);
   const moteur = readFileSync(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = readFileSync(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie), "cp outils/calcul_mental/defi_tables_mon_parcours.js _serveur/public/prof/");
@@ -883,9 +883,9 @@ test("lot 2b : une seule attente par ouverture — 2,5 s en tout, billet compris
 test("lot 2b : « résultats et nombres manquants » partout — noyau, fiche vierge ; les restes du lot 5a", () => {
   const lire = chemin => readFileSync(new URL(`../${chemin}`, import.meta.url), "utf8");
   const noyau = lire("outils/calcul_mental/defi_tables_core.js");
-  assert.match(noyau, /"direct\+missing": "résultats et nombres manquants"/);
+  assert.match(noyau, /"direct\+missing\+division": "résultats, nombres manquants et divisions"/, "lot « divisions »");
   assert.doesNotMatch(noyau, /"les deux à la fois"/);
-  assert.match(html, /defi_tables_core\.js\?v=20261003-1/, "le noyau a changé : son numéro monte");
+  assert.match(html, /defi_tables_core\.js\?v=20261004-1/, "le noyau a changé : son numéro monte");
   const vierge = lire("_sources/defi-tables/generer_fiche_parcours.py");
   assert.match(vierge, /\("Acquise ✓", " : 20 questions \(résultats et nombres manquants\) en 1 min 30, 2 erreurs au plus\."\)/);
   assert.match(vierge, /LEGENDE = \["j’entoure : réussi une fois", "je colorie : prêt"\]/);

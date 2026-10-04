@@ -15,10 +15,23 @@
     learn: Object.freeze({total: 11, duration: null, questionTypes: Object.freeze(["direct"]), selection: "single", order: "ordered", learnActivity: "construct"}),
     train: Object.freeze({total: 10, duration: null, questionTypes: Object.freeze(["direct"]), selection: "multiple", order: "random"}),
     test: Object.freeze({total: 25, duration: 120, questionTypes: Object.freeze(["direct"]), selection: "multiple", order: "random", testLevel: 1}),
-    validation: Object.freeze({total: 20, duration: 90, questionTypes: Object.freeze(["direct", "missing"]), questionMix: Object.freeze({direct: 14, missing: 6}), selection: "single", order: "random"}),
+    // Lot « divisions » (04/10/2026, décision de Gwenaël) : les divisions
+    // prennent la moitié de la place des nombres manquants — 14 résultats,
+    // 3 nombres manquants, 3 divisions (la validation d'une table, le mélange
+    // et « Comme la validation, en 2 min » ont ce format).
+    validation: Object.freeze({total: 20, duration: 90, questionTypes: Object.freeze(["direct", "missing", "division"]), questionMix: Object.freeze({direct: 14, missing: 3, division: 3}), selection: "single", order: "random"}),
     evaluation: Object.freeze({total: 25, duration: 60, questionTypes: Object.freeze(["evaluation"]), selection: "automatic", order: "random"}),
     custom: Object.freeze({total: 20, duration: null, questionTypes: Object.freeze(["direct"]), selection: "multiple", order: "random"})
   });
+
+  // Les entraînements du parcours (mode « train ») qui ne sont pas à parts
+  // égales : « résultats, nombres manquants et divisions » (marche 7) pose
+  // 6 résultats, 2 nombres manquants et 2 divisions sur 10 (lot « divisions »).
+  const TRAIN_MIXES = Object.freeze({"direct+missing+division": Object.freeze({direct: 6, missing: 2, division: 2})});
+  // Dans le parcours (entraînements, validation, mélange), une division a une
+  // seule forme, dans les deux sens : 56 ÷ 7 = ? et 56 ÷ 8 = ?. Les formes
+  // « ? ÷ 7 = 8 » et « 56 ÷ ? = 8 » restent à Expert et aux réglages libres.
+  const MODES_QUOTIENT_SEUL = Object.freeze(["train", "validation"]);
 
   function shuffle(items, random = Math.random) {
     const copy = items.slice();
@@ -187,12 +200,12 @@
     return sequence;
   }
 
-  function questionTypePlan(questionTypes, total, random = Math.random, mix = null) {
+  function questionTypePlan(questionTypes, total, random = Math.random, mix = null, formesDivision = DIVISION_FORMS) {
     const categories = shuffle(mix ? mixedSequence(mix, total) : balancedSequence(questionTypes, total, random), random);
     const missingCount = categories.filter(type => type === "missing").length;
     const divisionCount = categories.filter(type => type === "division").length;
     const missingForms = balancedSequence(MISSING_FORMS, missingCount, random);
-    const divisionForms = balancedSequence(DIVISION_FORMS, divisionCount, random);
+    const divisionForms = balancedSequence(formesDivision, divisionCount, random);
     let missingIndex = 0;
     let divisionIndex = 0;
     return categories.map(type => {
@@ -209,14 +222,28 @@
     const tablePlan = balancedSequence(tables, total, random);
     const multiplierPlan = balancedSequence(ALL_TABLES, total, random);
     const directSides = balancedSequence(["focus-first", "focus-second"], total, random);
-    const typePlan = questionTypePlan(normalized.questionTypes, total, random, normalized.mode === "validation" ? PRESETS.validation.questionMix : null);
+    const quotientSeul = MODES_QUOTIENT_SEUL.includes(normalized.mode);
+    const mix = normalized.mode === "validation"
+      ? PRESETS.validation.questionMix
+      : normalized.mode === "train" ? TRAIN_MIXES[normalized.questionTypes.join("+")] || null : null;
+    const typePlan = questionTypePlan(normalized.questionTypes, total, random, mix, quotientSeul ? ["division-quotient"] : DIVISION_FORMS);
+    // Dans le parcours, les divisions alternent les deux sens (56 ÷ 7 et
+    // 56 ÷ 8), à parts égales ; tirés seulement s'il y a des divisions, pour
+    // ne rien changer aux autres séries.
+    const nbDivisions = typePlan.filter(type => DIVISION_FORMS.includes(type)).length;
+    const sensDivision = quotientSeul && nbDivisions ? balancedSequence(["table", "multiplicateur"], nbDivisions, random) : [];
+    let divisionIndex = 0;
 
     return tablePlan.map((focusTable, index) => {
       const multiplier = multiplierPlan[index];
       const type = typePlan[index];
       let first = focusTable;
       let second = multiplier;
-      if (DIVISION_FORMS.includes(type)) return {...tableQuestion(type, focusTable, multiplier), focusTable, multiplier};
+      if (DIVISION_FORMS.includes(type)) {
+        // « table » : 56 ÷ 7 = 8 (on divise par la table) ; « multiplicateur » : 56 ÷ 8 = 7.
+        const parLeMultiplicateur = quotientSeul && sensDivision[divisionIndex++] === "multiplicateur";
+        return {...(parLeMultiplicateur ? tableQuestion(type, multiplier, focusTable) : tableQuestion(type, focusTable, multiplier)), focusTable, multiplier};
+      }
       if (type === "direct" && directSides[index] === "focus-second") [first, second] = [multiplier, focusTable];
       if (type === "left" || type === "reverse-left") [first, second] = [multiplier, focusTable];
       return {...tableQuestion(type, first, second), focusTable, multiplier};
@@ -283,7 +310,7 @@
     // « résultats et nombres manquants » (« les deux à la fois » jusqu'au
     // lot 2b : Gwenaël ne le trouvait pas clair, 02/10/2026).
     if (normalized.mode === "train") {
-      const noms = {direct: "dans le désordre", missing: "nombres manquants", "direct+missing": "résultats et nombres manquants"};
+      const noms = {direct: "dans le désordre", "missing+division": "nombres manquants et divisions", "direct+missing+division": "résultats, nombres manquants et divisions"};
       const labels = {direct: "produits", missing: "nombres manquants", division: "divisions"};
       details.push(noms[normalized.questionTypes.join("+")] || normalized.questionTypes.map(type => labels[type]).join(" + "));
     }
@@ -317,6 +344,7 @@
     ALL_TABLES,
     LEARN_MULTIPLIERS,
     PRESETS,
+    TRAIN_MIXES,
     tableQuestion,
     normalizeConfiguration,
     generateEvaluationQuestions,

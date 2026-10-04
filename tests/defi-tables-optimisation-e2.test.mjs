@@ -91,12 +91,12 @@ test("E2 · 1 (audit GPT, F) : l'écran de lancement dit le format, les bonnes r
   lancer(PARCOURS.configValidation(7));
   assert.equal(zone.hidden, false);
   assert.deepEqual(zone.tous("p").map(p => p.textContent), [
-    "Des résultats et des nombres manquants : 18 bonnes réponses pour réussir.",
-    "Par exemple : 7 × 4 = ? ou 7 × ? = 28"]);
+    "Des résultats, des nombres manquants et des divisions : 18 bonnes réponses pour réussir.",
+    "Par exemple : 7 × 4 = ? ou 7 × ? = 28 ou 28 ÷ 7 = ?"]);
   const parcours = PARCOURS.creerParcours();
   parcours.tables[2].acquise = "2026-10-01"; parcours.tables[5].acquise = "2026-10-01";
   lancer(PARCOURS.configMelange(PARCOURS.normaliserParcours(parcours)));
-  assert.equal(zone.tous("p")[1].textContent, "Par exemple : 2 × 4 = ? ou 2 × ? = 8", "le mélange : un exemple dans une de ses tables");
+  assert.equal(zone.tous("p")[1].textContent, "Par exemple : 2 × 4 = ? ou 2 × ? = 8 ou 8 ÷ 2 = ?", "le mélange : un exemple dans une de ses tables");
   lancer(PARCOURS.configEtoile(1));
   assert.deepEqual(zone.tous("p").map(p => p.textContent), ["Des résultats, des nombres manquants et des divisions : 23 bonnes réponses pour réussir."]);
   lancer(PARCOURS.configValidation(7), "reglages");

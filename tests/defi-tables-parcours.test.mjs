@@ -254,7 +254,7 @@ test("J’apprends garde la bande pour construire et la propose en aide temporai
   assert.match(html, /textContent = enabled \? "Valider" : "Suivant"/);
   assert.match(html, /completeReview = state\.configuration\.mode === "test"/);
   assert.match(html, /Mes \$\{wrongEntries\.length\} erreurs/, "lot R2 : les erreurs d’abord, sous leur titre");
-  assert.match(html, /defi_tables_core\.js\?v=20261003-1/);
+  assert.match(html, /defi_tables_core\.js\?v=20261004-1/);
   // Le moteur était le seul des deux scripts sans épingle, et le lot A2 est
   // passé au travers : il ajoutait chargerSync / sauverSync / casesDetachees au
   // moteur sans monter son numéro. Un navigateur qui avait déjà l'ancien moteur
@@ -262,7 +262,7 @@ test("J’apprends garde la bande pour construire et la propose en aide temporai
   // « PARCOURS.chargerSync is not a function », plus de repère de suivi, plus
   // rien envoyé au professeur, et une page d'accueil d'apparence normale.
   // Changer ce numéro à chaque modification du moteur ; ce test le rappelle.
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261003-4/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261004-1/);
 });
 
 test("une erreur = une ligne : le calcul avec sa bonne réponse, la réponse donnée barrée à côté", () => {

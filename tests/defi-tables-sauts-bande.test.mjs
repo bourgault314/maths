@@ -290,8 +290,8 @@ test("dans l’ordre et le désordre, rien ne change : le calcul revient jusqu�
 test("la correction dit « Je l’écris dans la bande. » à la 3e erreur", () => {
   assert.match(html, /function showAnswerFeedback\(question, correct, given, willRetry = false, assisted = false, donnee = false\)/);
   assert.match(html, /const suite = willRetry\s*\? \(montree \? " Je l’écris dans la bande, le calcul reviendra\." : " Le calcul reviendra\."\)\s*: donnee \? " Je l’écris dans la bande\." : "";/);
-  assert.match(html, /: `Ta réponse\\u00a0: \$\{given\}\. Bonne réponse\\u00a0: \$\{question\.answer\}\.\$\{suite\}`;/);
-  assert.match(html, /\? `Pas de réponse\. Bonne réponse\\u00a0: \$\{question\.answer\}\.\$\{suite\}`/);
+  assert.match(html, /: `Ta réponse\\u00a0: \$\{given\}\. Bonne réponse\\u00a0: \$\{question\.answer\}\$\{car\}\.\$\{suite\}`;/);
+  assert.match(html, /\? `Pas de réponse\. Bonne réponse\\u00a0: \$\{question\.answer\}\$\{car\}\.\$\{suite\}`/);
 });
 
 test("la case donnée est ambre, jamais verte, et le lecteur d’écran le dit", () => {

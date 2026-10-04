@@ -2478,14 +2478,14 @@
     <div id="fiche-prof" class="fiche-prof" hidden>
       <strong>Pour le professeur <small>— combien de fois chaque activité a été faite</small></strong>
       <table>
-        <thead><tr><th></th><th>Séances</th><th>Perles</th><th>Je construis<br>la bande</th><th>Bande<br>à trous</th><th>Dans<br>l’ordre</th><th>Dans le<br>désordre</th><th>Nombres<br>manquants</th><th>Résultats et<br>nombres manquants</th></tr></thead>
+        <thead><tr><th></th><th>Séances</th><th>Perles</th><th>Je construis<br>la bande</th><th>Bande<br>à trous</th><th>Dans<br>l’ordre</th><th>Dans le<br>désordre</th><th>Nombres manquants<br>et divisions</th><th>Résultats, nombres<br>manquants et divisions</th></tr></thead>
         <tbody id="fiche-prof-rows"></tbody>
       </table>
       <p id="fiche-prof-vide" hidden>Aucune séance ni activité enregistrée.</p>
     </div>
     <div class="fiche-rules">
       <p><b>Mes calculs</b> : les 5 carrés d’une case, c’est sa boîte. Réussi le jour où il revient, un calcul monte d’une boîte ; raté, il redescend.</p>
-      <p><b>Acquise ✓</b> : 20 questions (résultats et nombres manquants) en 1 min 30, 2 erreurs au plus.</p>
+      <p><b>Acquise ✓</b> : 20 questions (résultats, nombres manquants et divisions) en 1 min 30, 2 erreurs au plus.</p>
     </div>
     <footer class="fiche-foot">mathsgo.re · CC BY-NC-SA 4.0</footer>
   </section>
@@ -2499,7 +2499,7 @@
        lignes (la notice d'avant a été retirée avec la clé, lot 2b). -->
   <template id="notice-seance">
     <p><b>Ma séance du jour.</b> 4 étapes (parfois 5), environ 5 min. Réussi&nbsp;: j’avance. Raté&nbsp;: je reprends un peu plus bas.</p>
-    <p><b>Ma table.</b> De marche en marche&nbsp;: les perles, la bande, dans l’ordre, dans le désordre, les nombres manquants… jusqu’à «&nbsp;Je valide ma table&nbsp;»&nbsp;: 20 questions en 1 min 30, 2 erreurs au plus.</p>
+    <p><b>Ma table.</b> De marche en marche&nbsp;: les perles, la bande, dans l’ordre, dans le désordre, les nombres manquants et les divisions… jusqu’à «&nbsp;Je valide ma table&nbsp;»&nbsp;: 20 questions en 1 min 30, 2 erreurs au plus.</p>
     <p><b>Ma rangée.</b> Une case entourée&nbsp;: réussi une fois. Une case pleine&nbsp;: prêt. Toutes pleines&nbsp;: je peux valider.</p>
     <p><b>Mes calculs du jour.</b> Un calcul réussi revient plus tard. Raté, il revient demain.</p>
     <p><b>Mon mélange.</b> Dès 2 tables acquises, je réussis le mélange avant de valider une nouvelle table.</p>
@@ -2513,8 +2513,8 @@
     <span data-mathsgo-confidentialite>Sans cookie ni traceur</span>
   </footer>
 
-  <script src="./defi_tables_core.js?v=20261003-1"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20261003-4"></script>
+  <script src="./defi_tables_core.js?v=20261004-1"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20261004-1"></script>
   <script>
     (() => {
       "use strict";
@@ -3672,7 +3672,10 @@
         revisionMontes: 0,
         revisionDescendus: 0
       };
-      const TRAIN_TYPES = {desordre: ["direct"], trous: ["missing"], mixte: ["direct", "missing"]};
+      // Les types de questions de chaque entraînement : ceux du moteur du
+      // parcours (lot « divisions » : nombres manquants ET divisions dans
+      // « trous », les trois dans « mixte »), dans le même ordre.
+      const TRAIN_TYPES = {desordre: ["direct"], trous: ["missing", "division"], mixte: ["direct", "missing", "division"]};
 
       function setupFullscreen() {
         const button = document.querySelector("[data-fullscreen-toggle]");
@@ -5022,9 +5025,12 @@
           const suite = willRetry
             ? (montree ? " Je l’écris dans la bande, le calcul reviendra." : " Le calcul reviendra.")
             : donnee ? " Je l’écris dans la bande." : "";
+          // Lot « divisions » (04/10/2026) : une division ratée se corrige
+          // avec sa multiplication — « Bonne réponse : 7, car 5 × 7 = 35. »
+          const car = question.category === "division" ? `, car ${question.first}\u00a0×\u00a0${question.second}\u00a0=\u00a0${question.product}` : "";
           feedback.textContent = given === null
-            ? `Pas de réponse. Bonne réponse\u00a0: ${question.answer}.${suite}`
-            : `Ta réponse\u00a0: ${given}. Bonne réponse\u00a0: ${question.answer}.${suite}`;
+            ? `Pas de réponse. Bonne réponse\u00a0: ${question.answer}${car}.${suite}`
+            : `Ta réponse\u00a0: ${given}. Bonne réponse\u00a0: ${question.answer}${car}.${suite}`;
         }
         setAnswerControlsEnabled(false);
         $("validate").focus?.({preventScroll: true});
@@ -5494,7 +5500,7 @@
         if (config.mode === "train") {
           // Les trois entraînements portent le même nom partout (audit 1).
           const entrainement = Object.keys(TRAIN_TYPES).find(key => TRAIN_TYPES[key].join("+") === config.questionTypes.join("+"));
-          const typeLabels = {direct: "produits", missing: "nombres manquants"};
+          const typeLabels = {direct: "produits", missing: "nombres manquants", division: "divisions"};
           const nom = entrainement ? NOMS_ENTRAINEMENTS[entrainement] : config.questionTypes.map(type => typeLabels[type]).join(" et ");
           return `${tables} · ${nom} · ${config.total} questions · sans chrono`;
         }
@@ -5606,8 +5612,11 @@
         let format = "";
         let reussir = 0;
         let table = null;
+        // Lot « divisions » (04/10/2026) : l'exemple montre les trois formes —
+        // résultat, nombre manquant, division (28 ÷ 7 = ?).
+        const formes = ["produit", "trou", "division"];
         if (config.mode === "validation" && config.total === S.validation.total) {
-          format = "Des résultats et des nombres manquants";
+          format = "Des résultats, des nombres manquants et des divisions";
           reussir = S.validation.total - S.validation.erreursMax;
           table = config.tables[0];
         } else if (config.mode === "test" && config.total === S.etoile.total) {
@@ -5621,12 +5630,19 @@
         ligne.append(document.createTextNode(`${format}\u00a0: `), gras, document.createTextNode(" pour réussir."));
         zone.append(ligne);
         if (table !== null) {
+          const textes = {
+            produit: `${table}\u00a0×\u00a04\u00a0=\u00a0?`,
+            trou: `${table}\u00a0×\u00a0?\u00a0=\u00a0${table * 4}`,
+            division: `${table * 4}\u00a0÷\u00a0${table}\u00a0=\u00a0?`
+          };
           const exemple = document.createElement("p");
-          const produit = document.createElement("b");
-          produit.textContent = `${table}\u00a0×\u00a04\u00a0=\u00a0?`;
-          const trou = document.createElement("b");
-          trou.textContent = `${table}\u00a0×\u00a0?\u00a0=\u00a0${table * 4}`;
-          exemple.append(document.createTextNode("Par exemple\u00a0: "), produit, document.createTextNode(" ou "), trou);
+          exemple.append(document.createTextNode("Par exemple\u00a0: "));
+          formes.forEach((forme, index) => {
+            if (index) exemple.append(document.createTextNode(" ou "));
+            const gras = document.createElement("b");
+            gras.textContent = textes[forme];
+            exemple.append(gras);
+          });
           zone.append(exemple);
         }
         zone.hidden = false;
@@ -6333,8 +6349,11 @@
       // Les identifiants du moteur (desordre, trous, mixte) ne changent pas.
       // Lot « Ma séance du jour » : le troisième s'appelle « résultats et
       // nombres manquants » (l'ancien nom n'était pas clair) — pour tous
-      // depuis le lot 2b.
-      const NOMS_ENTRAINEMENTS = Object.freeze({desordre: "dans le désordre", trous: "nombres manquants", mixte: "résultats et nombres manquants"});
+      // depuis le lot 2b. Lot « divisions » (04/10/2026, Gwenaël) : les
+      // divisions rejoignent les nombres manquants (« nombres manquants et
+      // divisions ») et entrent dans le troisième (« résultats, nombres
+      // manquants et divisions », jugé plus clair que « tout ensemble »).
+      const NOMS_ENTRAINEMENTS = Object.freeze({desordre: "dans le désordre", trous: "nombres manquants et divisions", mixte: "résultats, nombres manquants et divisions"});
 
       function listeTables(tables) {
         if (tables.length <= 1) return tables.join("");
@@ -7042,7 +7061,8 @@
         // Entre deux étapes, le score seul (« 9 sur 10 ») : le compte des
         // entraînements réussis n'a pas sa place dans la séance.
         if (seance.faites[seance.faites.length - 1].type === "entraine") $("result-score").textContent = $("result-score").textContent.split(" · ")[0];
-        suite.textContent = `Étape ${seance.faites.length + 1}\u00a0: ${prochaine.nom} →`;
+        // Lot « divisions » : les noms s'allongent, la flèche ne part jamais seule à la ligne.
+        suite.textContent = `Étape ${seance.faites.length + 1}\u00a0: ${prochaine.nom}\u00a0→`;
         suite.addEventListener("click", lancerEtapeDeSeance);
         // Lot M2 (décision de Gwenaël) : la séance s'allonge, on le dit.
         if (seance.faites[seance.faites.length - 1].rate) {

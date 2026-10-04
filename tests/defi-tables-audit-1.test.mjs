@@ -126,7 +126,7 @@ test("1. validation ratée : « Je m’entraîne : … » en bouton bleu, l’en
   assert.deepEqual(conseil.config, PARCOURS.configEntraine(7, "desordre"));
   parcours.tables[7].entraine.desordre = 2;
   conseil = conseille(parcours, 7);
-  assert.equal(conseil.nom, "nombres manquants", "la même lecture que la tuile : le premier pas encore réussi");
+  assert.equal(conseil.nom, "nombres manquants et divisions", "la même lecture que la tuile : le premier pas encore réussi");
   parcours.tables[7].entraine = {...parcours.tables[7].entraine, trous: 2, mixte: 2};
   conseil = conseille(parcours, 7);
   assert.equal(conseil.nom, "comme la validation, en 2 min");
@@ -134,8 +134,8 @@ test("1. validation ratée : « Je m’entraîne : … » en bouton bleu, l’en
 });
 
 test("2. le même vocabulaire partout : les trois entraînements, « sans chrono », « acquise », « Tente », « sur »", () => {
-  assert.match(html, /const NOMS_ENTRAINEMENTS = Object\.freeze\(\{desordre: "dans le désordre", trous: "nombres manquants", mixte: "résultats et nombres manquants"\}\);/);
-  assert.match(html, /libelle: majuscule\(NOMS_ENTRAINEMENTS\[item\.entrainement\]\),/, "le panneau : « Dans le désordre », « Nombres manquants », « Résultats et nombres manquants »");
+  assert.match(html, /const NOMS_ENTRAINEMENTS = Object\.freeze\(\{desordre: "dans le désordre", trous: "nombres manquants et divisions", mixte: "résultats, nombres manquants et divisions"\}\);/);
+  assert.match(html, /libelle: majuscule\(NOMS_ENTRAINEMENTS\[item\.entrainement\]\),/, "le panneau : « Dans le désordre », « Nombres manquants et divisions », « Résultats, nombres manquants et divisions » (lot « divisions »)");
   assert.doesNotMatch(html, /LIBELLES_ENTRAINEMENTS/, "plus aucun libellé d’entraînement pris au moteur");
   assert.doesNotMatch(html, /"les deux à la fois"|· les deux</, "lot 2b : « résultats et nombres manquants » partout, fiche comprise");
   assert.doesNotMatch(html, /sans chronomètre/i);
