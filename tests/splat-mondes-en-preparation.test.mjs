@@ -21,7 +21,7 @@ const moduleEtapes = lire("assets/js/splat-etapes.js");
 const univers = lire("outils/splat_univers.html");
 const livrets = lire("outils/livrets_splat.html");
 const URL_CARTE = "/outils/splat_univers.html";
-const VERSION = "20261004-1";
+const VERSION = "20261004-2";   // lot M4-4 : le monde 4 à quatre fiches et son Bonus
 
 // ---------- le module, exécuté avec une fausse fenêtre ----------
 function stockage(initial = {}) {
@@ -99,7 +99,10 @@ test("sans la clé : le monde 3 suit le monde 2 (9 → 10), le bouton saute le m
   assert.equal(suivant(E, "enq23", false), "enq24");
   assert.equal(suivant(E, "enq24", false), "m3e1");
   assert.equal(suivant(E, "sys27", false), "sys28");
-  assert.equal(suivant(E, "sys34", false), "carte");
+  assert.equal(suivant(E, "sys28", false), "carte");   // lot M4-4 : le monde 4 finit à la fiche 28
+  // ses fiches bonus aussi (un QR du livret « Deuxième tour ») : la suivante, puis la carte sur le Bonus
+  assert.equal(suivant(E, "sys25d", false), "sys26d");
+  assert.equal(E.bouton("sys28d", URL_CARTE, false).href, URL_CARTE + "#sys-bonus");
   // aucun changement de monde ne mène à un monde caché
   for (const e of ETAPES) {
     const s = E.suivante(e[0], false);

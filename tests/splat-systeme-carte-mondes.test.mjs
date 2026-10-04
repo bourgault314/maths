@@ -3,10 +3,11 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import vm from "node:vm";
 
-/* Lot « six mondes » (24/09/2026) — SPLAT! Système entre dans la carte des mondes
-   (monde 4, fiches 25 à 34, deux parties), la carte se replie en accordéon, et un
-   bouton « Continuer » mène à la prochaine étoile. Comme pour l'Enquête, on EXÉCUTE
-   les données de outils/splat_univers.html plutôt que d'y chercher du texte. */
+/* Lot « six mondes » (24/09/2026) — SPLAT! Système entre dans la carte des mondes, la carte
+   se replie en accordéon, et un bouton « Continuer » mène à la prochaine étoile. Lot M4-4
+   (04/10/2026) : le monde 4 devient un livret pour tous (fiches 25 à 28, quatre étoiles) et un
+   deuxième tour en bonus (25d à 28d, taches dorées), comme le monde 3. Comme pour l'Enquête,
+   on EXÉCUTE les données de outils/splat_univers.html plutôt que d'y chercher du texte. */
 
 const lire = (p) => readFileSync(new URL("../" + p, import.meta.url), "utf8");
 const univers = lire("outils/splat_univers.html");
@@ -21,50 +22,82 @@ const ctx = vm.createContext({ encodeURIComponent });
 vm.runInContext(
   bloc("const PS=", "const PROF =") +
   bloc("const NOTES_MONDE", "const main=document") +
-  ";globalThis.X={MONDES,NOTES_MONDE,NOTES_PROF,SYS_FICHES};",
+  ";globalThis.X={MONDES,NOTES_MONDE,NOTES_PROF,SYS_FICHES,SYS_TOUR2,BONUS_MONDES:BONUS_MONDES.map(b=>({...b,monde:b.monde.nom}))};",
   ctx, { filename: "splat_univers.html" }
 );
-const { MONDES, NOTES_MONDE, NOTES_PROF, SYS_FICHES } = JSON.parse(JSON.stringify(ctx.X));
+const { MONDES, NOTES_MONDE, NOTES_PROF, SYS_FICHES, SYS_TOUR2, BONUS_MONDES } = JSON.parse(JSON.stringify(ctx.X));
 const SYSTEME = MONDES[3];
 
-/* Les adresses des fiches 25 à 34, figées au lot « fiches 20-34 » (splat-systemes-fiches-25-34-adresses.md,
-   24/09/2026). Une graine ou un réglage qui bouge ici, ce sont les fiches, les PDF et les
-   livrets du Système à refaire — et les cartes des livrets déjà imprimés ne correspondraient plus. */
+/* Les adresses des fiches du lot M4-4 (04/10/2026) : réglages et graines TRIÉES (chaque carte a son
+   type, dans l'ordre de la fiche), les mêmes que _sources/livret-splat-systeme/render.py et que la
+   page courte des QR. Une graine ou un réglage qui bouge ici, ce sont les fiches, les PDF et les
+   livrets du Système à refaire. */
 const BASE = "/splat/classique/?";
 const FIN = "&cards=4&unknown=question";
-const FICHES_25_34 = [
-  [25, "Une partie du plateau", "mode=D&geste=EMBOITE1&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=2105"],
-  [26, "Avec des jetons visibles", "mode=D&geste=EMBOITE1&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=9244"],
-  [27, "Une partie connue", "mode=D&geste=PARTIELLE&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=2828"],
-  [28, "Deux pesées", "mode=D&geste=COEF&coefMax=3&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=1214"],
-  [29, "Le défi des plateaux", "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=7984"],
-  [30, "Trois paires", "mode=D&geste=TROIS&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=653"],
-  [31, "Doubler, puis comparer", "mode=D&geste=DOUBLE&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=175"],
-  [32, "En miroir", "mode=D&geste=MIROIR&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=609"],
-  [33, "Doubler ou miroir ?", "mode=D&geste=MIX&gestes=DOUBLE,MIROIR&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=1287"],
-  [34, "Le grand défi du Système", "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=11674"]
+const T = "&totalMin=20&totalMax=60", V0 = "&visibleMin=0&visibleMax=0";
+const FICHES = [
+  [25, "Je retire", "mode=D&geste=MIX&gestes=PARTIELLE,COEF" + V0 + T + "&seed=24"],
+  [26, "Trois couleurs", "mode=D&geste=EMBOITE1" + V0 + T + "&seed=22"],
+  [27, "Je double", "mode=D&geste=DOUBLE&sens=MIX" + V0 + T + "&seed=222"],
+  [28, "J'additionne", "mode=D&geste=MIX&gestes=MIROIR,TROIS" + V0 + T + "&seed=53"]
+];
+const TOUR2 = [
+  ["25d", "L'escalier", "mode=D&geste=ESCALIER" + V0 + T + "&seed=3046"],
+  ["26d", "Je triple", "mode=D&geste=DOUBLE&fois=3" + V0 + T + "&seed=1"],
+  ["27d", "Avec des jetons visibles", "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR&visibleMin=1&visibleMax=3" + T + "&seed=1373"],
+  ["28d", "Dans le désordre", "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS&ordre=MELANGE" + V0 + T + "&seed=6334"]
 ];
 const titre = (n, t) => encodeURIComponent(`Fiche ${n} — ${t}`);
 
-test("Système : dix étapes, les réglages et les graines des fiches 25 à 34, rien d'autre", () => {
+test("Système : quatre étapes (fiches 25 à 28), les réglages et les graines du lot M4-4, rien d'autre", () => {
   assert.equal(SYSTEME.nom, "SPLAT! Système");
-  assert.deepEqual(SYS_FICHES.map((f) => f.q), FICHES_25_34.map((f) => f[2]));
-  assert.deepEqual(SYSTEME.etapes.map((e) => [e.n, e.t]), FICHES_25_34.map((f) => [f[0], f[1]]));
+  assert.deepEqual(SYS_FICHES.map((f) => f.q), FICHES.map((f) => f[2]));
+  assert.deepEqual(SYSTEME.etapes.map((e) => [e.n, e.t]), FICHES.map((f) => [f[0], f[1]]));
+  assert.equal(SYSTEME.volets, undefined, "une seule partie : plus d'intertitres");
   SYSTEME.etapes.forEach((e, i) => {
-    const [n, t, q] = FICHES_25_34[i];
+    const [n, t, q] = FICHES[i];
     assert.equal(e.j, BASE + q + FIN + "&eleve=1&parcours=sys" + n, `jeu de la fiche ${n}`);
     assert.equal(e.jp, BASE + q + FIN, `projection de la fiche ${n}`);
-    assert.equal(e.f, BASE + q + FIN + "&layout=4&title=" + titre(n, t) + "&print=statement", `fiche ${n}`);
-    assert.equal(e.c, BASE + q + FIN + "&layout=4&title=" + titre(n, t) + "&print=correction", `correction ${n}`);
-    assert.equal(e.c2, BASE + q + FIN + "&layout=2&title=" + titre(n, t) + "&print=correction", `correction 2 par page ${n}`);
+    /* la fiche et le corrigé en 2 par page : la page du livret tablette (lot M4-4) */
+    assert.equal(e.f, BASE + q + FIN + "&layout=2&title=" + titre(n, t) + "&print=statement", `fiche ${n}`);
+    assert.equal(e.c, BASE + q + FIN + "&layout=2&title=" + titre(n, t) + "&print=correction", `correction ${n}`);
+    assert.equal(e.c2, undefined);
+    /* et le corrigé « en lettres », comme les livrets (vue prof : Corrigé · taches | lettres) */
+    assert.equal(e.cl, BASE + q + "&cards=4&unknown=letter&layout=2&title=" + titre(n, t) + "&print=correction", `correction en lettres ${n}`);
     assert.equal(e.p, "sys" + n);
     assert.equal(e.id, "sys-" + i);
     assert.ok(e.o.length > 20, `phrase de la fiche ${n}`);
     assert.equal(e.note, undefined, "aucune consigne en gras au Système");
   });
   /* aucun nombre à sous-entendu dans ce que l'élève lit */
-  const lu = [SYSTEME.desc, ...SYSTEME.volets.map((v) => v.o), ...SYSTEME.etapes.map((e) => e.t + " " + e.o)].join(" ");
+  const lu = [SYSTEME.desc, ...SYSTEME.etapes.map((e) => e.t + " " + e.o), ...SYS_TOUR2.map((f) => f.t)].join(" ");
   assert.doesNotMatch(lu, /\b69\b/);
+});
+
+test("Système : le deuxième tour (25d à 28d) est le Bonus du monde 4, comme au monde 3", () => {
+  assert.deepEqual(SYS_TOUR2.map((f) => [f.code, f.t, f.q]), TOUR2);
+  SYS_TOUR2.forEach((f) => {
+    assert.equal(f.j, BASE + f.q + FIN + "&eleve=1&parcours=sys" + f.code, `jeu de la fiche ${f.code}`);
+    assert.equal(f.jp, BASE + f.q + FIN);
+    assert.equal(f.f, BASE + f.q + FIN + "&layout=2&title=" + titre(f.code, f.t) + "&print=statement");
+    assert.equal(f.c, BASE + f.q + FIN + "&layout=2&title=" + titre(f.code, f.t) + "&print=correction");
+    assert.equal(f.cl, BASE + f.q + "&cards=4&unknown=letter&layout=2&title=" + titre(f.code, f.t) + "&print=correction");
+    assert.ok(f.n.length > 10, `note du prof de la fiche ${f.code}`);
+  });
+  /* les deux Bonus : le monde 3 garde ses identifiants, le monde 4 a les siens */
+  assert.deepEqual(BONUS_MONDES.map((b) => [b.monde, b.idp, b.volet, b.li, b.stars, b.cle, b.fiches.length]),
+    [["SPLAT! Enquête", "enq", "enq-bonus", "enq-t2-", "starsBonus", "", 10], ["SPLAT! Système", "sys", "sys-bonus", "sys-t2-", "starsBonusSys", "-sys", 4]]);
+  assert.deepEqual(BONUS_MONDES[1].livrets, [["Le livret · Deuxième tour", 0, 4]]);
+  /* le Bonus s'écrit pour chaque monde qui en a un (vue élève et vue prof) */
+  assert.match(univers, /\}\)\.join\(""\)\+bonusHtml\(m\)\+'<\/ol>';/);
+  assert.match(univers, /\}\)\.join\(''\)\+tour2ProfHtml\(m\)\+'<\/ol>';/);
+  /* une clé de mémoire par Bonus ; celle du monde 3 ne change pas */
+  assert.match(univers, /const CLE_BONUS_OUVERT="mathsgo-splat-bonus-ouvert";/);
+  assert.match(univers, /const cle=CLE_BONUS_OUVERT\+\(\(b&&b\.cle\)\|\|""\);/);
+  /* ?apres= : la fiche bonus suivante du même monde */
+  assert.match(univers, /for\(const b of BONUS_MONDES\)\{\s*const kb=b\.fiches\.findIndex\(f=>b\.idp\+f\.code===apres\);/);
+  /* le cannelle du monde 4 pour son Bonus */
+  assert.match(univers, /\.msys \.volet\.bonus\{background:#fff;border:1\.5px dashed #e3b994\}/);
 });
 
 test("Système : le monde porte le cannelle des fiches, et cette couleur n'était prise par personne", () => {
@@ -89,7 +122,7 @@ test("Système : la note du professeur porte le tableau de tous les systèmes du
      du <p> de l'intention (un <table> ferme un <p> et sortirait du texte) */
   assert.match(univers, /return '<p class="txt">'\+avant\+'<\/p><details><summary>Repère : tous les systèmes du collège, et où ils sont dans SPLAT!<\/summary>'\+t\.slice\(k\)\+'<\/details>';/);
   assert.match(univers, /\.pIntro details table\{border-collapse:collapse;/);
-  assert.equal(NOTES_PROF[3].length, 10);
+  assert.equal(NOTES_PROF[3].length, 4);
   assert.equal(NOTES_PROF[2].length, 15);
   assert.match(NOTES_MONDE[2], /Un monde en trois parties/);
 });
@@ -99,9 +132,11 @@ test("Système : la page courte des QR vise exactement les liens de la carte des
   assert.match(courte, /<meta name="robots" content="noindex, follow">/);
   assert.match(courte, /var SYS_DEPART = 25;/);
   const ctxCourte = vm.createContext({});
-  vm.runInContext(courte.slice(courte.indexOf("var SYS = ["), courte.indexOf("var f =")) + ";globalThis.SYS=SYS;",
+  vm.runInContext(courte.slice(courte.indexOf("var SYS = ["), courte.indexOf("var f =")) + ";globalThis.SYS=SYS;globalThis.SYS_TOUR2=SYS_TOUR2;",
     ctxCourte, { filename: "systeme/livret/index.html" });
   assert.deepEqual(JSON.parse(JSON.stringify(ctxCourte.SYS)), SYS_FICHES.map((f) => f.q));
+  assert.deepEqual(JSON.parse(JSON.stringify(ctxCourte.SYS_TOUR2)), SYS_TOUR2.map((f) => f.q));
+  SYS_TOUR2.forEach((f) => assert.ok(courte.includes(f.j.replace(/&/g, "&amp;")), `lien de repli de la fiche ${f.code}`));
   SYSTEME.etapes.forEach((e, i) => {
     const cible = "/splat/classique/?" + ctxCourte.SYS[i] + "&cards=4&unknown=question&eleve=1&parcours=sys" + (25 + i);
     assert.equal(cible, e.j, `?f=${25 + i}`);

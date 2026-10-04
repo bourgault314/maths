@@ -13,11 +13,17 @@ import vm from "node:vm";
 const lire = (p) => readFileSync(new URL("../" + p, import.meta.url), "utf8");
 const FAMILLES = ["livret-petit-splat", "livret-splat-classique", "livret-splat-enquete",
                   "livret-splat-equations", "livret-splat-systeme"];
+/* Lot M4-4 (04/10/2026) : les livrets du monde 4 sont refaits au format « tablette » (toutes les
+   pages en largeur), avec leurs propres règles d'habillage décidées par Gwenaël — couverture et
+   page 2 sans logo, IREMI seul dans le bandeau des fiches page par page, logos au dos seulement,
+   « Le défi ! » au dos. Elles sont vérifiées dans tests/livret-splat-systeme.test.mjs ; ici, le
+   monde 4 ne garde que la règle D (guillemets). */
+const FAMILLES_A = FAMILLES.filter((f) => f !== "livret-splat-systeme");
 
 test("A. couverture : aucun logo, et le splat remonté au milieu du titre", () => {
   const haut = { "livret-petit-splat": 7, "livret-splat-classique": 7, "livret-splat-enquete": 8,
-                 "livret-splat-equations": 7, "livret-splat-systeme": 10 };
-  for (const f of FAMILLES) {
+                 "livret-splat-equations": 7 };
+  for (const f of FAMILLES_A) {
     const c = lire(`_sources/${f}/couverture.html`);
     assert.doesNotMatch(c, /logo-print\.png|class="logos"|\.logos\{/, `${f} : aucun logo sur la couverture`);
     assert.match(c, new RegExp(`\\.tete \\.hero\\{position:absolute;right:\\d+mm;top:${haut[f]}mm;`), `${f} : le splat remonté`);
@@ -25,7 +31,7 @@ test("A. couverture : aucun logo, et le splat remonté au milieu du titre", () =
 });
 
 test("A. dos : aucun logo, plus de « Mes fiches », QR de 30 mm, « Pour se souvenir » agrandi, crédit IREMI gardé", () => {
-  for (const f of FAMILLES) {
+  for (const f of FAMILLES_A) {
     const d = lire(`_sources/${f}/dos.html`);
     // lot 3 (26/09/2026) : au monde 1, IREMI et maths&go reviennent UNE fois, dans le crédit en
     // bas du dos (tests/splat-relecture-m1-lot3.test.mjs) ; le haut du dos reste sans logo
@@ -51,19 +57,13 @@ test("A. dos : aucun logo, plus de « Mes fiches », QR de 30 mm, « Pour se sou
   // (34 mm au monde 2 depuis sa relecture, 26/09/2026 : la place de la tache plus grosse et des logos)
   for (const [f, mm] of [["livret-splat-classique", 34], ["livret-splat-equations", 36]])
     assert.match(lire(`_sources/${f}/render.py`), new RegExp(`CSS_DOS_DEFI = """[\\s\\S]*?\\.niv img\\{width:${mm}mm;height:${mm}mm\\}`), f);
-  // l'agrandissement par zoom : les mesures des mini-schémas en tiennent compte
-  for (const f of ["livret-splat-systeme"])
-    assert.match(lire(`_sources/${f}/render.py`), /const Z = parseFloat\(getComputedStyle\(document\.querySelector\('\.lex ul'\)\)\.zoom\) \|\| 1;/, f);
 });
 
 test("A. l'en-tête des pages-fiches ne change pas : IREMI + maths&go", () => {
   // (lot 2 de l'Enquête, 30/09/2026 : la page 2 de l'Enquête passe à la règle des livrets du
   // 25/09 — aucun logo, ils sont au dos ; tests/livret-splat-enquete.test.mjs)
-  for (const f of ["livret-splat-systeme"]) {
-    const e = lire(`_sources/${f}/exemple.html`);
-    assert.match(e, /alt="IREMI La Réunion"/, f);
-    assert.equal((e.match(/logos\/mathsgo\/logo-print\.png/g) || []).length, 1, f);
-  }
+  // (lot M4-4, 04/10/2026 : la page 2 du Système, refaite en largeur, n'a plus de logo non plus —
+  // tests/livret-splat-systeme.test.mjs)
   assert.match(lire("outils/splat_tache_barre.html"), /const PRINT_IREM_LOGO_SRC = /);
 });
 

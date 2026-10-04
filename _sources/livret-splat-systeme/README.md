@@ -1,96 +1,118 @@
-# Livrets du Système — « SPLAT! Système » et « SPLAT! Système, la suite » (monde 4), 8 pages chacun, à plier
+# Livrets du Système — « SPLAT! Système » et son « Deuxième tour » (monde 4), format « tablette »
 
-Le monde 4 de l'univers SPLAT! en deux livrets, un par partie (décision du 24/09/2026) : les dix
-fiches 25 à 34, cinq par livret, avec une couverture, un exemple résolu pas à pas et une 4e de
-couverture. Même fabrication que les livrets de l'Enquête (`_sources/livret-splat-enquete/`) :
-**2 feuilles A3 recto-verso**, pliées et agrafées au milieu → 8 pages A4.
+Le monde 4 de l'univers SPLAT! en deux livrets de 12 pages (lot M4-4, 04/10/2026, décisions de
+Gwenaël sur planches) : **un livret pour tous**, quatre fiches (25 à 28), une idée par fiche ; puis
+**le deuxième tour**, plus dur (25d à 28d) — le Bonus du monde 4 sur la carte des mondes, comme au
+monde 3. Les fiches 29 à 34 restent libres ; SPLAT! Équations garde 35.
 
-| Livret | Fiches | PDF produits |
+## Le format « tablette »
+
+**Toutes les pages sont des A4 en largeur** — couverture, pages 2-3 et dos compris —, comme les
+fiches 2 par page de l'outil. Le livret à plier : **3 feuilles A3 en hauteur**, imprimées recto verso
+avec **retournement sur le bord court**, pliées en deux **à l'horizontale**, emboîtées et agrafées sur
+le pli : on tourne les pages vers le haut.
+
+| Page | Contenu |
+|---|---|
+| 1 | Couverture : « Comment ça marche ? » (la carte de l'exemple), nom, classe, sommaire des 4 fiches |
+| 2 | **Un exemple résolu — « Le système pas à pas »** : la carte et toute sa correction en barres (les blocs de l'outil) |
+| 3 | **« À toi ! » — « La même sorte de carte »** : le même schéma, vide (pointillés), à compléter ; rempli dans les corrigés |
+| 4-5, 6-7, 8-9, 10-11 | **Les quatre fiches** : une fiche = 4 cartes sur la double page (2 cartes par page, l'impression 2 par page de l'outil) |
+| 12 | Le dos : « Encore des cartes ! » (trois séries), « La suite du voyage », **« Le défi ! »** (deux cartes plus dures, corrigées au dos des corrigés), crédits et logos |
+
+Imposition (haut, bas) de chaque face, de la feuille du dehors à celle du milieu :
+`(12, 1) (2, 11) (10, 3) (4, 9) (8, 5) (6, 7)`. Vérifiée par une simulation du pliage et pixel par
+pixel contre le PDF page par page (notice du lot M4-4).
+
+## Les PDF produits
+
+| Livret | Fiches | PDF |
 |---|---|---|
-| `systeme` — partie 1, **on retire** | 25 Une partie du plateau · 26 Avec des jetons visibles · 27 Une partie connue · 28 Deux pesées · 29 Le défi des plateaux | `outils/livret_splat_systeme.pdf` · `…_a_plier.pdf` |
-| `suite` — partie 2, **on additionne, on double** | 30 Trois paires · 31 Doubler, puis comparer · 32 En miroir · 33 Doubler ou miroir ? · 34 Le grand défi du Système | `outils/livret_splat_systeme_suite.pdf` · `…_a_plier.pdf` |
-| + quatre corrigés chacun (pour tous) | les mêmes | inconnue « ? » : `…_correction.pdf` + `…_correction_a_plier.pdf` (4 cartes par page, livret de 8 pages), `…_correction_2_par_page.pdf` (2 cartes par page, 10 pages A4 **paysage**) ; **en lettres** : `…_correction_lettre.pdf` + `…_a_plier.pdf`, `…_correction_lettre_2_par_page.pdf` |
+| `systeme` — **SPLAT! Système** | 25 Je retire · 26 Trois couleurs · 27 Je double · 28 J'additionne | `outils/livret_splat_systeme.pdf` · `…_a_plier.pdf` |
+| `tour2` — **SPLAT! Système, deuxième tour** | 25d L'escalier · 26d Je triple · 27d Avec des jetons visibles · 28d Dans le désordre | `outils/livret_splat_systeme_tour2.pdf` · `…_a_plier.pdf` |
+| + deux corrigés chacun (pour tous) | les mêmes cartes | **avec les taches** : `…_correction.pdf` · `…_correction_a_plier.pdf` ; **en lettres** : `…_correction_lettre.pdf` · `…_correction_lettre_a_plier.pdf` |
 
-## Les pages
+Le PDF **page par page** (12 pages A4 en largeur, ordre de lecture) porte le logo de l'IREMI seul
+dans le bandeau de chaque fiche (un collègue qui imprime une seule fiche n'a pas le dos) ; le livret
+**à plier** n'a aucun logo sur ses fiches. Couverture et pages 2-3 : aucun logo. Au dos : IREMI +
+maths&go, puis l'Unité apprenante Michel Debré.
 
-1. **Couverture** — bandeau brun cannelle (le dégradé des fiches du Système), « Mon livret · Monde 4 ·
-   Partie 1 » (ou 2), deux plateaux en dessin, « Comment ça marche ? » : la carte de l'exemple, le
-   premier cadre de sa correction (« Le plateau entier », pour commencer — pas la réponse), la
-   consigne, « Nom, prénom » + Classe, le sommaire des cinq fiches.
-2. **Un exemple résolu — « Le système pas à pas »** : la même carte, puis les **cadres de la
-   correction de l'outil** (`drawSysCadre`, un cadre par étape, comme au clic), chacun avec sa légende,
-   la vérification et « À toi ! ». Partie 1 : une **partie connue** (graine 82 : 2 noires + 3 bleues = 54 ;
-   2 noires = 30 → bleue 8, noire 15). Partie 2 : un **doubler** (graine 321 : 2 noires + 4 bleues = 42 ;
-   noire + bleue = 15 → bleue 6, noire 9). Choix du 24/09/2026.
-3. à 7. **Les cinq fiches**, 4 cartes par page, telles que l'outil les imprime.
-8. **Dos** — « Encore des cartes ! » (trois séries, huit cartes nouvelles à chaque ouverture), « La
-   suite du voyage » (partie 1 → la partie 2 ; partie 2 → le monde 5, SPLAT! Équations), « Pour se
-   souvenir » (le total du plateau, une couleur = le même nombre partout, un mini-schéma du geste du
-   livret : barres alignées à gauche et « reste »), « Mes fiches », crédits. **Au dos des corrigés**, à
-   la place de « Pour se souvenir » : **« Tous les systèmes du collège, et où les trouver »** (le
-   tableau § 0 de la conception, pour les profs ; les lignes du livret en gras) — décision du
-   25/09/2026 : « on ne peut pas mettre ça sur un livret élève, il ne va rien comprendre ».
+## Les fiches : réglages et graines triées (lot M4-4)
 
-Les légendes de la page 2 disent **ce qu'on fait** (retirer, partager, doubler, comparer), sans
-nombre : les nombres sont dans les cadres, dessinés par l'outil. Les textes qui citent des nombres
-(couverture, haut de la page 2, conclusion) sont écrits à partir de la carte rendue
-(`textes_exemple`) et vérifiés (chaque plateau refait).
+`S25` … `S28D` (dans `render.py`) sont **aussi** les adresses de la carte des mondes (`SYS_FICHES`,
+`SYS_TOUR2`) et de la page courte des QR ; `tests/livret-splat-systeme.test.mjs` et
+`tests/splat-systeme-carte-mondes.test.mjs` les comparent. Les graines sont triées pour que chaque
+carte ait son type, dans l'ordre de la fiche (`TYPES`, vérifié au rendu : `render.py` s'arrête si
+une graine a bougé) :
 
-## Les fiches : les adresses figées du 24/09/2026
+| Fiche | Types (classification du monde 4) |
+|---|---|
+| 25 Je retire | 1a partie connue · 1b une tache de plus · 1c je partage · 1c |
+| 26 Trois couleurs | 1d ×4 |
+| 27 Je double (`sens=MIX`, réglage ajouté au lot) | 2a ×3 · 2d le petit recopié dépasse |
+| 28 J'additionne | 3a en miroir ×3 · 3b trois paires |
+| 25d L'escalier | 1e ×4 |
+| 26d Je triple | 2b ×4 |
+| 27d Avec des jetons visibles | 1a · 1d · 2a · 3a, avec des jetons |
+| 28d Dans le désordre | 1b · 1d · 2a · 3b, plateaux mélangés |
 
-`S25` … `S34` sont **exactement** les réglages et les graines de
-`splat-systemes-fiches-25-34-adresses.md` (lot « fiches 20-34 ») : 2105, 9244, 2828, 1214, 7984,
-653, 175, 609, 1287, 11674. `tests/livret-splat-systeme.test.mjs` les recopie et les compare.
-Leurs cartes ne doivent jamais changer (le lot S-defi l'a prouvé carte par carte).
+Partout : totaux tous différents dans une fiche, deux cartes jamais de la même paire de couleurs,
+plus petite valeur ≥ 3, aucune carte en double sur les deux livrets, les exemples et les défis
+(`controle_global`). Les cartes rendues sont dans `cartes.json`.
+
+**Ne jamais changer une graine sans refaire les PDF, la carte des mondes et la page courte.**
 
 ## Les corrigés
 
-- **4 cartes par page** : un livret de 8 pages, comme celui de l'élève (couverture « Correction » +
-  « Livret corrigé — 4 cartes par page », l'exemple, les fiches corrigées, le dos).
-- **2 cartes par page** (choix du 24/09/2026 : calculs ≈ 7 pt au lieu de ≈ 5) : l'outil imprime deux
-  cartes côte à côte sur une page A4 paysage. Chaque fiche tient sur **une feuille recto verso** ; le
-  corrigé est la suite des cinq feuilles (10 pages), sans couverture ni pliage (une page paysage ne se
-  relie pas dans un livret portrait).
-- **En lettres** (25/09/2026) : les mêmes corrigés avec `unknown=letter`, comme l'appli — l'initiale de
-  chaque couleur (N, B, O, R, Ve, Vi : « 2 × N + 3 × B = 54 », « B = 24 ÷ 3 = 8 »), deux inconnues donc
-  deux lettres, pas un 𝑥.
-- Les cartes sont vérifiées identiques entre l'élève et les quatre corrigés (`render.py` s'arrête sinon).
+- **Avec les taches** : le nom de la couleur dans chaque tache ; **en lettres** : l'initiale
+  (`unknown=letter`, comme l'appli : N, B, O, R, Ve, Vi).
+- **Le système écrit** à côté des barres de « Les deux plateaux », chacun dans sa langue :
+  « 3 noires + 4 rouges = 53 » / « 3 × N + 4 × R = 53 » (jamais « 3N ») — seulement s'il y a la
+  place, et alors tout le système, en un seul corps. C'est l'outil qui l'écrit (`sysSystemeEcrit`,
+  `drawSysSystemeEcrit` dans `outils/splat.html`), donc pareil en projection.
+- Les cartes sont vérifiées identiques entre l'élève et les deux corrigés (`render.py` s'arrête sinon).
 
 ## Les QR codes passent par une page courte
 
-`https://mathsgo.re/splat/systeme/livret/?f=25` … `?f=34` ouvre la série en ligne de la fiche (les mêmes
-cartes, l'étoile `sys-25` … `sys-34`) ; `?s=1` … `?s=6` ouvre une série du dos (réglages des fiches,
-sans graine, `&cards=8&unknown=question&eleve=1`). **Cette page est créée par le lot « six mondes »** :
-si elle retient d'autres adresses, seuls les QR sont à refaire (`python3 render.py --qr`).
+`https://mathsgo.re/splat/systeme/livret/?f=25` … `?f=28` et `?f=25d` … `?f=28d` ouvrent la série en
+ligne de la fiche (les mêmes cartes ; l'étoile `sys25`… ou la tache dorée `sys25d`…) ; `?s=7` …
+`?s=12` ouvrent une série du dos (sans graine, `&cards=8&unknown=question&eleve=1`). Les séries 1 à 6
+des livrets du 25/09 (jamais distribués) restent servies. Le QR est imprimé **une fois par fiche**, en
+haut de sa première page.
 
 | Série | Livret | Réglages |
 |---|---|---|
-| 1 Une partie du plateau | 1 | Une partie du plateau, 0 à 3 jetons visibles |
-| 2 Partie connue, deux pesées | 1 | les gestes 27 et 28 mélangés |
-| 3 Le défi des plateaux | 1 | les trois gestes de la partie 1, 1 à 3 jetons visibles |
-| 4 Trois paires | 2 | Trois paires |
-| 5 Doubler ou miroir | 2 | les gestes 31 et 32 mélangés |
-| 6 Le grand défi | 2 | les six gestes, 1 à 3 jetons visibles |
+| 7 Je retire | 1 | partie connue, une tache de plus, trois couleurs |
+| 8 Je double, j'additionne | 1 | doubler (les deux sens), miroir, trois paires |
+| 9 Tout mélangé | 1 | les six gestes |
+| 10 L'escalier | 2 | l'escalier |
+| 11 Je triple | 2 | doubler, 3 fois |
+| 12 Le grand défi | 2 | tous les gestes, escalier compris, des jetons, le désordre |
 
 ## Régénérer
 
 ```bash
 cd _sources/livret-splat-systeme
 python3 render.py                 # les deux livrets, l'élève et les deux corrigés
-python3 render.py systeme         # un seul livret (systeme | suite)
+python3 render.py systeme         # un seul livret (systeme | tour2)
 python3 render.py --eleve         # seulement l'élève
 python3 render.py --correction    # seulement les corrigés
 python3 render.py --qr            # en refabriquant d'abord les QR codes
+python3 render.py --vignettes     # les vignettes de la page des livrets (page 1 à 120 dpi)
+python3 render.py --page3-suite   # (non retenu) l'exemple résolu sur les pages 2 et 3, sans « À toi ! »
 ```
 
-Dépendances : `playwright` **1.56.0** (+ chromium), `pikepdf`, `qrcode[pil]` ; `qpdf` s'il est
-présent. Le rendu utilise le **vrai Chromium** (`channel="chromium"`), jamais le « headless shell ».
-**Ne pas régénérer ces PDF sur un poste Windows** (Segoe UI au lieu de DejaVu Sans dans les fiches).
+Dépendances : `playwright` **1.56.0** (+ chromium), `pikepdf`, `qrcode[pil]` ; `qpdf` et `pdftoppm`
+s'ils sont présents. Le rendu utilise le **vrai Chromium** (`channel="chromium"`), jamais le
+« headless shell ». **Ne pas régénérer ces PDF sur un poste Windows** (Segoe UI au lieu de DejaVu Sans
+dans les fiches).
 
 ## Conventions
 
-- Logos IREMI + maths&go, **un seul logo maths&go par page** ; signature `mathsgo.re/splat · CC BY-NC-SA 4.0`.
+- Signature `mathsgo.re/splat · CC BY-NC-SA 4.0` au pied de chaque page.
 - Lisible en **noir et blanc** : le cannelle ne sert qu'aux fonds, tout texte coloré est brun foncé
   (`#7c2d12`) ; le nom de la couleur est écrit sur chaque tache (l'outil).
-- Crédits : le jeu SPLAT! de Steve Wyborney et l'outil de maths&go. Les fiches, réglages, graines,
-  livrets et PDF sont le travail de Gwenaël Bourgault.
+- Crédits (au dos) : le jeu SPLAT! de Steve Wyborney ; le livret et l'outil SPLAT! Système de
+  maths&go, avec l'IREMI de La Réunion ; merci à Claire pour la progression « SPLAT! cycle 3 », ses
+  idées et sa relecture. Les fiches, réglages, graines, livrets et PDF du Système sont le travail de
+  Gwenaël Bourgault.

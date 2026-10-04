@@ -512,3 +512,32 @@ test("adresses : les réglages nouveaux, écrits seulement quand ils sont allum�
   assert.match(fn("appliquerConfiguration"), /if\(act === "D"\) sysLireReglagesM4\(params\);/);
   assert.match(fn("buildShareUrl"), /if\(act === "D"\) sysEcrireReglagesM4\(params\);/);
 });
+
+/* Lot M4-4 (04/10/2026) : « sens=MIX » (« Les deux, au hasard ») — la fiche 27 « Je double » mêle
+   les deux sens de Doubler : chaque carte tire le sien (le grand plateau dépasse, ou le petit
+   recopié dépasse). Les adresses d'avant (sens absent, PLATEAU ou INDICE) ne changent pas. */
+test("lot M4-4 : sens=MIX — chaque carte de Doubler tire son sens, les deux sortent, rien d'autre ne change", () => {
+  assert.equal(sys.normaliser({ geste: "DOUBLE", sens: "MIX" }).sens, "MIX");
+  assert.equal(sys.normaliser({ geste: "DOUBLE", sens: "mix" }).sens, "MIX");
+  assert.equal(sys.normaliser({ geste: "DOUBLE", sens: "AUTRE" }).sens, "PLATEAU");
+  const depasse = (c, fois) => {
+    const [P, I] = c._sys.boards;
+    return fois * I.total > P.total - (P.visible || []).reduce((a, x) => a + x, 0);
+  };
+  for(const fois of [2, 3]){
+    const r = { geste: "DOUBLE", sens: "MIX", ...(fois === 3 ? { fois: 3 } : {}) };
+    const cartes = tirer(r, 60);
+    cartes.forEach((c) => verifierCarte(c, r));
+    const n = cartes.filter((c) => depasse(c, fois)).length;
+    assert.ok(n > 0.2 * cartes.length && n < 0.8 * cartes.length, `${fois} fois : les deux sens sortent (${n} / ${cartes.length})`);
+    // déterministe : la même graine, les mêmes cartes
+    assert.equal(JSON.stringify(sys.serie(222, 4, r)), JSON.stringify(sys.serie(222, 4, r)));
+  }
+  // un seul sens demandé : il est tenu, carte par carte
+  assert.ok(tirer({ geste: "DOUBLE", sens: "INDICE" }, 30).every((c) => depasse(c, 2)));
+  assert.ok(tirer({ geste: "DOUBLE" }, 30).every((c) => !depasse(c, 2)));
+  // le menu et l'adresse
+  const panneau = html.slice(html.indexOf('<div id="systemSettings"'), html.indexOf("<!-- Réglages d'affichage"));
+  assert.match(panneau, /<select id="sysSens"[^>]*>\s*<option value="PLATEAU" selected>Le grand plateau<\/option>\s*<option value="INDICE">Le petit recopié<\/option>\s*<option value="MIX">Les deux, au hasard<\/option>/);
+  assert.match(fn("sysEcrireReglagesM4"), /\(sysSensEl\.value === "INDICE" \|\| sysSensEl\.value === "MIX"\)\) params\.set\("sens", sysSensEl\.value\);/);
+});

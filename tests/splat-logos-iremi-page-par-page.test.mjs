@@ -10,8 +10,8 @@ import test from "node:test";
    - le logo reste À DROITE (monde 1 : à sa place dans le bandeau ; mondes 2 et 3 : à droite de la
      boîte du QR, qui se pousse à gauche — réponse A, préférée à « à gauche du QR ») ;
    - le livret à plier ne change pas : aucun logo sur ses fiches, IREMI + maths&go au dos ;
-   - mondes 1, 2, 3 seulement pour ce lot (le monde 4 suivra) ; les mondes 5 et 6 n'ont pas
-     l'IREMI et ne changent pas.
+   - mondes 1, 2, 3 d'abord ; le monde 4 au lot M4-4 (04/10/2026, livrets « tablette » : même
+     règle, IREMI à droite du QR) ; les mondes 5 et 6 n'ont pas l'IREMI et ne changent pas.
    Chaque fiche est rendue deux fois, avec les mêmes graines : sans logo (livret à plier) et avec
    l'IREMI (page par page). */
 const lire = (p) => readFileSync(new URL("../" + p, import.meta.url), "utf8");
@@ -19,9 +19,10 @@ const RENDUS = {
   "monde 1": lire("_sources/livret-petit-splat/render.py"),
   "monde 2": lire("_sources/livret-splat-classique/render.py"),
   "monde 3": lire("_sources/livret-splat-enquete/render.py"),
+  "monde 4": lire("_sources/livret-splat-systeme/render.py"),
 };
 
-test("mondes 1 à 3 : JS_IREMI_SEUL retire seulement le logo maths&go du bandeau, et vérifie qu'il reste l'IREMI", () => {
+test("mondes 1 à 4 : JS_IREMI_SEUL retire seulement le logo maths&go du bandeau, et vérifie qu'il reste l'IREMI", () => {
   for (const [m, r] of Object.entries(RENDUS)) {
     const js = r.slice(r.indexOf('JS_IREMI_SEUL = """'), r.indexOf('}"""', r.indexOf('JS_IREMI_SEUL = """')));
     assert.ok(js.length > 50, `${m} : JS_IREMI_SEUL défini`);
@@ -46,8 +47,14 @@ test("chaque fiche est rendue deux fois : sans logo (livret à plier) et avec l'
   const m3 = RENDUS["monde 3"];
   assert.match(m3, /await pdf_fiche\(f, tmp \/ f"fiche\{i\}\.pdf"\)\n\s*# la même fiche avec le logo de l'IREMI, pour le PDF page par page\n\s*await pdf_fiche\(f, tmp \/ f"fiche\{i\}_iremi\.pdf", iremi=True\)/);
   assert.match(m3, /for f in ordre_des_pages\(niv, tmp, iremi=True\):/, "monde 3 : le PDF page par page prend les fiches _iremi");
+  const m4 = RENDUS["monde 4"];
+  assert.match(m4, /await pdf_fiche\(f, tmp \/ f"fiche\{i\}\.pdf"\)\n\s*await pdf_fiche\(f, tmp \/ f"fiche\{i\}_iremi\.pdf", iremi=True\)/);
+  assert.match(m4, /par_page = lire\(ordre_des_pages\(niv, tmp, iremi=True\)\)/, "monde 4 : le PDF page par page prend les fiches _iremi");
+  // monde 4 (tablette) : le livret à plier est imposé à partir des pages SANS logo, en haut / en bas
+  assert.match(m4, /pages = lire\(ordre_des_pages\(niv, tmp\)\)/);
+  assert.match(m4, /add_overlay\(pages\[haut - 1\], [^\n]*\)\n\s*pikepdf\.Page\(feuille\)\.add_overlay\(pages\[bas - 1\]/);
   // le livret à plier est toujours imposé à partir des pages SANS logo
-  for (const [m, r] of Object.entries(RENDUS))
+  for (const [m, r] of Object.entries(RENDUS)) if (m !== "monde 4")
     assert.match(r, /for idx, tx in \(\(g, 0\.0\), \(d, A4W\)\):\s*\n\s*pikepdf\.Page\(feuille\)\.add_overlay\(pages\[idx - 1\]/, `${m} : à plier = pages sans logo`);
 });
 

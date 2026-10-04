@@ -905,7 +905,7 @@ const CARTES_MONDES = [
   [1, "Petit SPLAT!", "fiches 1 à 6", 1, "Monde 1 · "],
   [2, "SPLAT! Classique", "fiches 7 à 9", 2, "Monde 2 · "],
   [3, "SPLAT! Enquête", "fiches 10 à 24", 3, "Monde 3 · "],     // 25/09/2026 : le monde 3 en trois parties
-  [4, "SPLAT! Système", "fiches 25 à 34", 4, "Monde 4 · "],     // 25/09/2026 : le Système, monde 4
+  [4, "SPLAT! Système", "fiches 25 à 28", 4, "Monde 4 · "],     // 25/09/2026 : le Système, monde 4 ; lot M4-4 (04/10/2026) : un livret, 25 à 28
   [5, "SPLAT! Équations", "fiches 35 à 37", 5, "Monde 5 · "],     // lot Q3 (24/09/2026) : la carte saute de 19 à 35
   [6, "SPLAT! Relatifs", "fiches 38 à 43", 6, "Monde 6 · "],      // lot R2 (26/09/2026)
 ];

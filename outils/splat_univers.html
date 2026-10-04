@@ -13,7 +13,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
 <!-- La liste des mondes « en préparation » et la clé de Gwenaël (?essai=1) : en tête de assets/js/splat-etapes.js -->
-<script src="../assets/js/splat-etapes.js?v=20261004-1"></script>
+<script src="../assets/js/splat-etapes.js?v=20261004-2"></script>
 <style>
 :root{
   --page:#f6f8fb; --paper:#ffffff; --ink:#10294a; --muted:#5c6c82; --line:#d9e2ec;
@@ -169,26 +169,27 @@ main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
 .volet.ferme .fiches,.volet.ferme p{display:none}
 .volet.ferme{padding-top:8px;padding-bottom:8px}
 .etapes>li.replieP{display:none}
-/* le Bonus du monde 3 : un menu de plus sous la partie 3, fermé par défaut, en pointillés ;
+/* le Bonus des mondes 3 et 4 (monde 4 : lot M4-4) : un menu de plus sous les étapes, fermé par défaut, en pointillés ;
    ses fiches sont des taches blanches cerclées de framboise, dorées ✨ une fois réussies,
    avec leur compteur à elles (hors des étoiles du haut) */
 .menq .volet.bonus{background:#fff;border:1.5px dashed #e8a3c3}
-.menq .volet.bonus .rang{background:#fff;color:var(--framboise);border:1.5px solid var(--framboise);padding:3.5px 8.5px}
+.msys .volet.bonus{background:#fff;border:1.5px dashed #e3b994}
+.menq .volet.bonus .rang,.msys .volet.bonus .rang{background:#fff;color:var(--c);border:1.5px solid var(--c);padding:3.5px 8.5px}
 .livretBonus{list-style:none;margin:12px 0 0;padding:0 4px;font-size:12.5px;font-weight:800;letter-spacing:1.2px;
-  text-transform:uppercase;color:var(--framboise)}
+  text-transform:uppercase;color:var(--c)}
 .livretBonus+.etape{border-top:none}
 .etape+.livretBonus{margin-top:16px}
-.menq .etape.bonus .badge use.fond{fill:#fff;stroke:var(--framboise);stroke-width:5}
-.menq .etape.bonus.done .badge use.fond{fill:var(--gold);stroke:#b8860b;stroke-width:3}
+.menq .etape.bonus .badge use.fond,.msys .etape.bonus .badge use.fond{fill:#fff;stroke:var(--c);stroke-width:5}
+.menq .etape.bonus.done .badge use.fond,.msys .etape.bonus.done .badge use.fond{fill:var(--gold);stroke:#b8860b;stroke-width:3}
 /* « 11d » en 16 px : centré sur le centre de gravité de la tache, comme les numéros des étapes
    (mesuré le 04/10/2026, au pixel, sur les dix fiches : au plus 0,6 px de côté et 0,1 px en
    hauteur ; sans ce réglage, le code était 1,5 px trop haut) */
-.etape.bonus .badge .n{font-size:16px;color:var(--framboise);transform:translateY(.2px)}
+.etape.bonus .badge .n{font-size:16px;color:var(--c);transform:translateY(.2px)}
 .etape.bonus.done .badge .n{color:var(--ink)}
 .etape.bonus .badge .eclat{position:absolute;right:-9px;bottom:-7px;font-size:20px;line-height:1;display:none}
 .etape.bonus.done .badge .eclat{display:block}
 .etape.bonus h3{margin-bottom:8px}
-.menq .etape.bonus .actions a.jouer{background:#fff;color:var(--framboise);border:2px solid var(--framboise)}
+.menq .etape.bonus .actions a.jouer,.msys .etape.bonus .actions a.jouer{background:#fff;color:var(--c);border:2px solid var(--c)}
 /* téléphone : la pastille « Partie N » et les étoiles sur une première ligne, le
    titre et la phrase en dessous sur toute la largeur (sinon la phrase est en colonne) ;
    une partie fermée tient sur une ligne : pastille, titre, étoiles, chevron */
@@ -467,7 +468,7 @@ body.prof .volet p{font-size:14.5px}
 </div>
 
 <div class="totalBar" id="totalBar">
-  <div class="lbl"><span>Ta progression</span><span id="totalTxt">0 / 43 étoiles</span></div>
+  <div class="lbl"><span>Ta progression</span><span id="totalTxt">0 / 37 étoiles</span></div>
   <div class="rail"><div class="fill" id="totalFill"></div></div>
 </div>
 
@@ -509,9 +510,9 @@ const M2E5B="mode=N&equation=AX_PLUS_C_EQ_B&tasksMin=2&tasksMax=5&visibleMin=2&v
 /* ---- SPLAT! Équations, monde 5 (lot Q2, 24/09/2026) : les fiches 35, 36, 37 ----
    Le numéro de la première fiche est écrit ICI SEULEMENT : la carte des mondes saute
    jusqu'à lui (« premier » du monde, voir le rendu) et les titres « Fiche N — … »
-   en découlent. Les fiches 20 à 34 sont réservées à l'Enquête (3e livret, 20-24) et
-   au Système (25-34) : quand ils entreront dans MONDES, le compteur arrivera de lui-même
-   à 34 et « premier » ne fera plus rien — aucun numéro à reprendre.
+   en découlent. Les fiches 20 à 24 sont l'Enquête (3e livret), 25 à 28 le Système (lot M4-4,
+   son Bonus 25d à 28d) ; 29 à 34 restent libres : « premier » saute jusqu'à 35, aucun numéro
+   déjà imprimé ne bouge.
    Réglages de l'outil (/splat/equations/), inconnue en lettre ; les séries d'une fiche
    sont mises bout à bout (paramètre « suite »). */
 const EQ5_PREMIERE_FICHE=35;
@@ -640,52 +641,45 @@ const MONDE_ENQUETE={cls:"menq",idp:"enq",actif:true,nom:"SPLAT! Enquête",
    {de:5,a:10,nom:"La grande enquête",o:"Les indices multiplient et partagent — fois plus, fois moins —, puis écarts et rapports se mélangent."},
    {de:10,a:15,nom:"L’enquête rebondit",o:"Des taches de la même couleur… puis des enquêtes sans total : les indices suffisent."}],
   etapes:enqEtapes(0,15)};
-/* ---- SPLAT! Système, monde 4 (lot « six mondes », 24/09/2026) : les fiches 25 à 34 ----
-   Le mode D de l'outil (générateur S1, énoncé S2, correction S3, mode élève) :
-   plusieurs plateaux, un total chacun, les mêmes couleurs partout. Deux parties,
-   une par livret : « On retire » (25 à 29) et « On additionne, on double » (30 à 34).
-   Réglages et graines figés au lot « fiches 20-34 » (splat-systemes-fiches-25-34-adresses.md) :
-   ne jamais changer une graine sans refaire les PDF. Étoiles sys-0 … sys-9 (« id » en
-   toutes lettres, rang dans SYS_FICHES), parcours sys25 … sys34 : figés une fois pour
-   toutes, comme ceux de l'Enquête — c'est sous ces noms que les élèves rangent leurs
-   séries réussies. */
+/* ---- SPLAT! Système, monde 4 : les livrets « tablette » du lot M4-4 (04/10/2026) ----
+   Le mode D de l'outil : plusieurs plateaux, un total chacun, les mêmes couleurs partout.
+   Un livret pour tous, une idée par fiche (25 à 28), puis le deuxième tour, plus dur (25d à
+   28d) : le Bonus du monde 4, comme au monde 3 (SYS_TOUR2, plus bas). Réglages et graines
+   TRIÉS au lot M4-4 (chaque carte a son type, dans l'ordre de la fiche) : ce sont exactement
+   ceux des livrets (_sources/livret-splat-systeme/render.py) et de la page courte des QR
+   (splat/systeme/livret/) — un test les compare. Ne jamais changer une graine sans refaire les
+   PDF. Étoiles sys-0 … sys-3 (« id » en toutes lettres), parcours sys25 … sys28 : les
+   anciennes fiches 25 à 34 (24/09) n'ont jamais été ouvertes aux élèves (monde en
+   préparation depuis le 26/09). */
 const SYS_FICHES=[
- {t:"Une partie du plateau",
-  o:"Le deuxième plateau est une partie du premier : retire-le, et il ne reste qu’une couleur.",
-  q:"mode=D&geste=EMBOITE1&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=2105"},
- {t:"Avec des jetons visibles",
-  o:"Le même geste, avec des jetons visibles à retirer aussi.",
-  q:"mode=D&geste=EMBOITE1&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=9244"},
- {t:"Une partie connue",
-  o:"L’indice donne le total d’une seule couleur : retire-la, puis partage le reste.",
-  q:"mode=D&geste=PARTIELLE&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=2828"},
- {t:"Deux pesées",
-  o:"Deux plateaux presque pareils : une seule couleur change. Compare-les.",
-  q:"mode=D&geste=COEF&coefMax=3&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=1214"},
- {t:"Le défi des plateaux",
-  o:"Retirer, partager, comparer : à toi de reconnaître le geste à chaque carte.",
-  q:"mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=7984"},
- {t:"Trois paires",
-  o:"Trois plateaux à deux taches, sans total : additionne-les, tu as deux fois le tout.",
-  q:"mode=D&geste=TROIS&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=653"},
- {t:"Doubler, puis comparer",
-  o:"Double un plateau pour qu’il ressemble à l’autre, puis compare.",
-  q:"mode=D&geste=DOUBLE&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=175"},
- {t:"En miroir",
-  o:"Deux plateaux en miroir : additionne-les, puis partage.",
-  q:"mode=D&geste=MIROIR&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=609"},
- {t:"Doubler ou miroir ?",
-  o:"Deux gestes qui se ressemblent : à chaque carte, choisis le bon.",
-  q:"mode=D&geste=MIX&gestes=DOUBLE,MIROIR&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=1287"},
- {t:"Le grand défi du Système",
-  o:"Tous les gestes du monde 4, avec des jetons visibles : le défi final.",
-  q:"mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=11674"}
+ {t:"Je retire",
+  o:"Le petit plateau est dans le grand : retire-le, puis partage ce qui reste.",
+  q:"mode=D&geste=MIX&gestes=PARTIELLE,COEF&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=24"},
+ {t:"Trois couleurs",
+  o:"Trois plateaux : retire, puis remplace ce que tu connais.",
+  q:"mode=D&geste=EMBOITE1&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=22"},
+ {t:"Je double",
+  o:"Recopie le petit plateau deux fois, puis compare-le au grand.",
+  q:"mode=D&geste=DOUBLE&sens=MIX&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=222"},
+ {t:"J'additionne",
+  o:"Additionne les plateaux, puis partage.",
+  q:"mode=D&geste=MIX&gestes=MIROIR,TROIS&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=53"}
+];
+/* Le deuxième tour du monde 4 (lot M4-4) : le Bonus du monde 4, un menu sous les étapes, hors
+   des étoiles du haut, comme au monde 3 ; chaque fiche a son parcours (sys25d…, sa tache
+   dorée ; assets/js/splat-etapes.js en garde la copie, BONUS). « n » : la note du prof. */
+const SYS_TOUR2=[
+ {code:"25d",t:"L'escalier",n:"Trois plateaux emboîtés : retirer deux fois.",
+  q:"mode=D&geste=ESCALIER&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=3046"},
+ {code:"26d",t:"Je triple",n:"Recopier le petit plateau trois fois.",
+  q:"mode=D&geste=DOUBLE&fois=3&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=1"},
+ {code:"27d",t:"Avec des jetons visibles",n:"Les gestes du livret 1, avec des jetons à retirer aussi.",
+  q:"mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=1373"},
+ {code:"28d",t:"Dans le désordre",n:"Les plateaux mélangés : trouver d'abord le grand.",
+  q:"mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS&ordre=MELANGE&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=6334"}
 ];
 const MONDE_SYSTEME={cls:"msys",idp:"sys",actif:true,nom:"SPLAT! Système",
   desc:"Plusieurs plateaux, un total pour chacun, et les mêmes couleurs partout : compare les plateaux pour trouver ce que cache chaque couleur.",
-  volets:[
-   {de:0,a:5,nom:"On retire",o:"Un plateau est une partie de l’autre : retire-le, ce qui reste te dit tout."},
-   {de:5,a:10,nom:"On additionne, on double",o:"Cette fois, il faut d’abord doubler un plateau, ou additionner les plateaux, avant de comparer."}],
   etapes:SYS_FICHES.map((f,k)=>({t:f.t,o:f.o,fi:k,id:"sys-"+k}))};
 /* Les liens des étapes de l'Enquête et du Système : le jeu de l'élève (mêmes réglages
    que la fiche, sans rien d'impression, plus eleve=1&parcours=), la fiche et la
@@ -698,6 +692,8 @@ function ficheImprimer(f,n,quoi,layout){
 function enqJeu(i,n){return ficheJeu(ENQ_FICHES[i].q,"enq",n);}
 function enqImprimer(i,n,quoi){return ficheImprimer(ENQ_FICHES[i],n,quoi);}
 const MONDES_A_FICHES=[[MONDE_ENQUETE,ENQ_FICHES,"enq"],[MONDE_SYSTEME,SYS_FICHES,"sys"]];
+/* le corrigé « en lettres » du Système : le même lien, l'inconnue écrite en lettre (N, B…) */
+function enLettres(u){return u.replace("&unknown=question&","&unknown=letter&");}
 
 /* « cls » et « idp » sont des noms INTERNES, figés une fois pour toutes : ils ne
    suivent pas le numéro affiché du monde (calculé, lui, à partir du rang dans
@@ -852,8 +848,8 @@ const MONDES=[
 /* Le numéro affiché d'une étape est continu dans tout l'univers (monde 1 : 1 à 6,
    monde 2 : 7 à 9) et c'est LUI qui nomme les fiches des livrets — « Fiche 7 » du
    livret SPLAT! Classique, c'est l'étape 7. Les fiches de l'Enquête sont donc les
-   fiches 10 à 24 (monde 3, trois parties) et celles du Système les fiches 25 à 34
-   (monde 4) : on les numérote ici, une fois les mondes connus, pour qu'une étape
+   fiches 10 à 24 (monde 3, trois parties) et celles du Système les fiches 25 à 28
+   (monde 4, lot M4-4) : on les numérote ici, une fois les mondes connus, pour qu'une étape
    ajoutée à un monde précédent renumérote tout sans rien laisser en arrière. */
 MONDES_A_FICHES.forEach(([m,fiches,idp])=>{
   const depart=MONDES.slice(0,MONDES.indexOf(m)).reduce((n,x)=>n+x.etapes.length,0)+1;
@@ -861,7 +857,9 @@ MONDES_A_FICHES.forEach(([m,fiches,idp])=>{
     const f=fiches[e.fi], n=depart+k;
     e.n=n; e.p=idp+n; e.j=ficheJeu(f.q,idp,n);
     e.f=ficheImprimer(f,n,"statement"); e.c=ficheImprimer(f,n,"correction");
-    if(m===MONDE_SYSTEME){ e.jp=EQ+f.q+ENQ_COMMUN; e.c2=ficheImprimer(f,n,"correction",2); }
+    /* le Système (lot M4-4) : fiche et corrigé en 2 par page, la page du livret tablette ; deux
+       corrigés, comme les livrets : « avec les taches » (e.c) et « en lettres » (e.cl) */
+    if(m===MONDE_SYSTEME){ e.jp=EQ+f.q+ENQ_COMMUN; e.f=ficheImprimer(f,n,"statement",2); e.c=ficheImprimer(f,n,"correction",2); e.cl=enLettres(e.c); }
     /* monde 3 (03/10/2026, Gwenaël : « le prof va vouloir projeter ce qu'il veut ») : toutes les
        fiches se projettent — l'outil, réglage de la fiche, ses 4 cartes, pas à pas coché (c'est
        son réglage par défaut) */
@@ -875,6 +873,24 @@ ENQ_TOUR2.forEach(f=>{
   f.j=ficheJeu(f.q,"enq",f.code); f.f=ficheImprimer(f,f.code,"statement"); f.c=ficheImprimer(f,f.code,"correction");
   f.jp=EQ+f.q+ENQ_COMMUN;
 });
+SYS_TOUR2.forEach(f=>{
+  f.j=ficheJeu(f.q,"sys",f.code); f.f=ficheImprimer(f,f.code,"statement",2); f.c=ficheImprimer(f,f.code,"correction",2); f.cl=enLettres(f.c);
+  f.jp=EQ+f.q+ENQ_COMMUN;
+});
+/* Les Bonus (monde 3 : 04/10/2026 ; monde 4 : lot M4-4) : par monde, ses fiches, leurs livrets,
+   et les identifiants de la page (ceux du monde 3 ne changent pas : enq-bonus, enq-t2-11d,
+   starsBonus, et sa clé de mémoire). */
+const BONUS_MONDES=[
+ {monde:MONDE_ENQUETE,idp:"enq",fiches:ENQ_TOUR2,volet:"enq-bonus",li:"enq-t2-",stars:"starsBonus",cle:"",
+  fichesTxt:"fiches 11d à 24d",phrase:"Pour aller plus loin\u00a0: tous les types de problèmes, mélangés.",
+  livrets:[["Livret 1 · Les trois dessins",0,5],["Livret 2 · Vers le Système",5,10]],
+  prof:[[1,"Les trois dessins","11d","17d",0,5],[2,"Vers le Système","18d","24d",5,10]]},
+ {monde:MONDE_SYSTEME,idp:"sys",fiches:SYS_TOUR2,volet:"sys-bonus",li:"sys-t2-",stars:"starsBonusSys",cle:"-sys",
+  fichesTxt:"fiches 25d à 28d",phrase:"Pour aller plus loin\u00a0: l'escalier, je triple, des jetons, le désordre.",
+  livrets:[["Le livret · Deuxième tour",0,4]],
+  prof:[["","SPLAT! Système, deuxième tour","25d","28d",0,4]]}
+];
+function bonusDe(m){return BONUS_MONDES.find(b=>b.monde===m)||null;}
 /* Monde 5 : numéro de fiche et liens de chaque étape (lot Q2). « Projeter » ouvre la
    série dans l'outil (vue de l'étape) ; « Fiche » l'imprime en 6 par page, énoncé seul,
    titre « Fiche N — … », suite comprise pour la fiche 35. La vue est répétée dans
@@ -947,16 +963,16 @@ const NOTES_MONDE = [
  "Le tout et les parties : lire, compléter, puis dessiner un schéma en barres.",
  "Le schéma en barres devient une équation.",
  "Un indice relie les taches : l'élève trace son schéma, puis déduit. Un monde en trois parties : «\u00a0de plus, de moins\u00a0», puis «\u00a0fois plus, fois moins\u00a0», puis l'enquête qui rebondit. Un deuxième tour (dix fiches « d », deux livrets, en bonus) donne tous les types de problèmes.",
- "Plusieurs plateaux, les mêmes couleurs : on compare les plateaux. Pour s'y retrouver : l'Enquête, c'est un indice qui compare deux taches ; le Système, c'est un indice qui donne un total partiel. Deux parties : on retire, puis on additionne ou on double. "+
+ "Plusieurs plateaux, les mêmes couleurs\u00a0: on compare les plateaux. Pour s'y retrouver\u00a0: l'Enquête, c'est un indice qui compare deux taches\u00a0; le Système, c'est un indice qui donne un total partiel. Un livret pour tous (fiches 25 à 28, une idée par fiche), puis un deuxième tour plus dur, en bonus (25d à 28d). "+
  "<table><tr><th>Ce que dit l'énoncé</th><th>Où dans SPLAT!</th><th>Programme</th></tr>"+
  "<tr><td>A = B + d ou A = k × B, avec un total (partage inégal à 2 ou 3 taches)</td><td>Enquête, fiches 10 à 19</td><td>CM1-6e</td></tr>"+
  "<tr><td>pareil, plusieurs taches de chaque couleur</td><td>Enquête, fiches 20 et 21</td><td>6e</td></tr>"+
  "<tr><td>A = k × B <b>et</b> A = B + d, sans total</td><td>Enquête, fiches 22 et 23</td><td>CM2-6e</td></tr>"+
- "<tr><td>une partie connue (3 noires = 30) et le tout</td><td>Système, fiche 27</td><td>CM2-6e (la famille d'Inconnues en barres)</td></tr>"+
- "<tr><td>deux pesées, l'une contenue dans l'autre (2N + 1V = 25 ; 2N + 4V = 40)</td><td>Système, fiches 25, 26 et 28</td><td>CM2-6e — l'exemple «\u00a0ciseaux et crayons\u00a0» du programme</td></tr>"+
- "<tr><td>il faut doubler une pesée avant de comparer</td><td>Système, fiche 31</td><td>cycle 4</td></tr>"+
- "<tr><td>deux pesées en miroir, on additionne</td><td>Système, fiche 32</td><td>cycle 4 (défi)</td></tr>"+
- "<tr><td>trois sommes de paires, sans total</td><td>Système, fiche 30</td><td>cycle 3 défi / cycle 4</td></tr>"+
+ "<tr><td>une partie connue (3 noires = 30) et le tout</td><td>Système, fiche 25</td><td>CM2-6e (la famille d'Inconnues en barres)</td></tr>"+
+ "<tr><td>deux pesées, l'une contenue dans l'autre (2N + 1V = 25 ; 2N + 4V = 40)</td><td>Système, fiches 25, 26 et 25d</td><td>CM2-6e — l'exemple «\u00a0ciseaux et crayons\u00a0» du programme</td></tr>"+
+ "<tr><td>il faut doubler (ou tripler) une pesée avant de comparer</td><td>Système, fiches 27 et 26d</td><td>cycle 4</td></tr>"+
+ "<tr><td>deux pesées en miroir, on additionne</td><td>Système, fiche 28</td><td>cycle 4 (défi)</td></tr>"+
+ "<tr><td>trois sommes de paires, sans total</td><td>Système, fiche 28 (dernière carte)</td><td>cycle 3 défi / cycle 4</td></tr>"+
  "<tr><td>l'inconnue dans les deux membres (2x + 4 = 3x + 3)</td><td>mondes 5 et 6</td><td>4e-3e</td></tr>"+
  "<tr><td>systèmes quelconques (3N + 2V ; 2N + 3V)</td><td><b>volontairement hors SPLAT!</b></td><td>lycée</td></tr></table>",
  "Deux plateaux, la même quantité : l'élève dessine le schéma ou écrit l'équation. Une nouveauté à la fois, tout mélangé à la fin.",
@@ -987,16 +1003,10 @@ const NOTES_PROF = [
   "Sans total : deux indices sur la même paire.",
   "Sans total, indices à retourner.",
   "Bilan de la partie 3."],
- ["Un plateau dans l'autre : on retire, puis on partage.",
-  "Le même geste, avec des jetons visibles.",
-  "Le total d'une couleur est donné : on le retire du tout.",
-  "Deux pesées presque pareilles : l'écart donne une couleur.",
-  "Les trois gestes mélangés.",
-  "Trois paires sans total : la somme vaut deux fois le tout.",
-  "Doubler un plateau, puis comparer.",
-  "Deux plateaux en miroir : on additionne, puis on partage.",
-  "Doubler ou additionner : l'élève choisit.",
-  "Bilan du Système."],
+ ["Une partie connue, une tache de plus, puis on partage.",
+  "Trois plateaux : retirer, puis remplacer.",
+  "Doubler le petit plateau ; dernière carte : le doublé dépasse.",
+  "Deux plateaux en miroir : additionner ; dernière carte : trois paires."],
  ["x + b = c, puis a × x = c : un par un, puis en paquets.",
   "Enlever, puis partager : 2 ou 3 taches, puis 4 à 6.",
   "Des taches sur les deux plateaux, puis le grand mélange."],
@@ -1068,7 +1078,7 @@ const LIVRET_TEXTE=[
   "Deux séries de trois niveaux, et leurs corrigés.",
   "Les fiches 7 à 9 et Le défi, en «\u00a0?\u00a0» ou en lettre, et leurs corrigés.",
   "Un livret par partie, puis le deuxième tour, et leurs corrigés.",
-  "Un livret par partie, et leurs corrigés.",
+  "Le livret, puis le deuxième tour, et leurs corrigés.",
   "Schéma ou équation, chacun avec son livret Le défi, et leurs corrigés.",
   "Un livret par partie, chacun avec son livret Le défi, et leurs corrigés."];
 function ressourcesHtml(m,mi){
@@ -1108,7 +1118,8 @@ function actionsHtml(e,m,cid){
   else if(m.actif) a.push(btnPlein(e.j,'jeu','Jeu de l’élève'));
   if(e.f&&e.fe) a.push(btnSeg('fiche','Fiche',[['tableau',e.f],['équation',e.fe]]));
   else if(e.f) a.push(btnTrait(e.f,'fiche','Fiche','Ouvre l’outil prêt à imprimer la fiche'));
-  if(e.c&&e.c2) a.push(btnSeg('corrige','Corrigé',[['4 par page',e.c],['2 par page',e.c2]]));
+  if(e.c&&e.cl) a.push(btnSeg('corrige','Corrigé',[['taches',e.c],['lettres',e.cl]]));
+  else if(e.c&&e.c2) a.push(btnSeg('corrige','Corrigé',[['4 par page',e.c],['2 par page',e.c2]]));
   else if(e.c) a.push(btnTrait(e.c,'corrige','Corrigé','Ouvre l’outil prêt à imprimer la correction'));
   return '<div class="pAct">'+a.join('')+btnCartes+'</div>';
 }
@@ -1154,21 +1165,22 @@ function mondeProfHtml(m,mi,plage){
           '<p class="pNote">'+NOTES_PROF[mi][ei]+'</p>'+
           actionsHtml(e,m,cid)+cartesHtml(e,m,cid)+
         '</div></li>';
-    }).join('')+(m===MONDE_ENQUETE?tour2ProfHtml(m):'')+'</ol>';
+    }).join('')+tour2ProfHtml(m)+'</ol>';
 }
-/* Le deuxième tour du monde 3 (03/10/2026), sous la partie 3 : un intertitre, puis une ligne par
-   fiche, comme les étapes (la note, Projeter, le jeu, la fiche, le corrigé). */
+/* Le deuxième tour (monde 3 : 03/10/2026 ; monde 4 : lot M4-4), sous les étapes : un intertitre
+   par livret, puis une ligne par fiche, comme les étapes (la note, Projeter, le jeu, la fiche, le
+   corrigé). */
 function tour2ProfHtml(m){
-  const li=(f)=>'<li class="etape t2" id="enq-t2-'+f.code+'">'+
+  const b=bonusDe(m); if(!b) return '';
+  const li=(f)=>'<li class="etape t2" id="'+b.li+f.code+'">'+
     '<button class="badge" type="button" disabled>'+
       '<svg class="tache" viewBox="0 0 110 110"><use class="fond" href="#tacheEtoile" width="110" height="110"/></svg>'+
       '<span class="n">'+f.code+'</span></button>'+
     '<div class="corps"><h3>'+f.t+'</h3><p class="pNote">'+f.n+'</p>'+actionsHtml(f,m,'')+'</div></li>';
-  const tete=(rang,nom,de,a)=>'<li class="volet" id="enq-tour2-'+rang+'"><span class="rang">Deuxième tour '+rang+'</span>'+
+  const tete=(rang,nom,de,a)=>'<li class="volet" id="'+b.idp+'-tour2-'+(rang||1)+'"><span class="rang">Deuxième tour'+(rang?' '+rang:'')+'</span>'+
     '<h4>'+nom+'<span class="fiches">fiches '+de+' à '+a+'</span></h4>'+
     '<p>Plus dur, en bonus\u00a0: ses étoiles sont à part.</p></li>';
-  return tete(1,'Les trois dessins','11d','17d')+ENQ_TOUR2.slice(0,5).map(li).join('')+
-         tete(2,'Vers le Système','18d','24d')+ENQ_TOUR2.slice(5).map(li).join('');
+  return b.prof.map(([rang,nom,de,a,i0,i1])=>tete(rang,nom,de,a)+b.fiches.slice(i0,i1).map(li).join('')).join('');
 }
 function sommaireProfHtml(plages){
   return MONDES.map((m,mi)=>'<a href="#monde-'+(mi+1)+'" class="'+m.cls+(m.cache?' cache':'')+'" data-mi="'+mi+'">'+
@@ -1212,14 +1224,14 @@ function voletHtml(id,cle,rang,nom,fiches,phrase,idStars,cls){
     '<div class="t"><h4>'+nom+'<span class="fiches">'+fiches+'</span></h4><p>'+phrase+'</p></div>'+
     '<span class="stars" id="'+idStars+'"></span>'+CHEV_P+'</li>';
 }
-/* Le Bonus : les deux livrets « Deuxième tour », dans leur ordre, un « Je joue » par fiche,
-   sans phrase. Chaque fiche a son parcours (enq11d…) : elle allume SA tache, dorée ✨. */
-const BONUS_LIVRETS=[["Livret 1 · Les trois dessins",0,5],["Livret 2 · Vers le Système",5,10]];
-function bonusHtml(){
-  return voletHtml('enq-bonus','bonus','Bonus','Deuxième tour','fiches 11d à 24d',
-      'Pour aller plus loin\u00a0: tous les types de problèmes, mélangés.','starsBonus',' bonus')+
-    BONUS_LIVRETS.map(([titre,de,a])=>'<li class="livretBonus" data-partie="bonus">'+titre+'</li>'+
-      ENQ_TOUR2.slice(de,a).map(f=>'<li class="etape bonus" id="enq-t2-'+f.code+'" data-partie="bonus">'+
+/* Le Bonus d'un monde (BONUS_MONDES : le monde 3, et le monde 4 depuis le lot M4-4) : ses livrets
+   « Deuxième tour », dans leur ordre, un « Je joue » par fiche, sans phrase. Chaque fiche a son
+   parcours (enq11d…, sys25d…) : elle allume SA tache, dorée ✨. */
+function bonusHtml(m){
+  const b=bonusDe(m); if(!b) return '';
+  return voletHtml(b.volet,'bonus','Bonus','Deuxième tour',b.fichesTxt,b.phrase,b.stars,' bonus')+
+    b.livrets.map(([titre,de,a])=>'<li class="livretBonus" data-partie="bonus">'+titre+'</li>'+
+      b.fiches.slice(de,a).map(f=>'<li class="etape bonus" id="'+b.li+f.code+'" data-partie="bonus">'+
         '<button class="badge" type="button" disabled>'+
           '<svg class="tache" viewBox="0 0 110 110"><use class="fond" href="#tacheEtoile" width="110" height="110"/></svg>'+
           '<span class="n">'+f.code+'</span><span class="eclat" aria-hidden="true">\u2728</span>'+
@@ -1290,7 +1302,7 @@ else MONDES.forEach((m,mi)=>{
            : '<div class="actions"><span class="bientot">\ud83d\udea7 Le vrai jeu de ce monde est en construction — bient\u00f4t !</span></div>')+
        '</div>'+
      '</li>';
-   }).join("")+(m===MONDE_ENQUETE?bonusHtml():'')+'</ol>';
+   }).join("")+bonusHtml(m)+'</ol>';
   main.appendChild(sec);
 });
 
@@ -1324,19 +1336,19 @@ function majAffichage(){
       sv.textContent="⭐ "+fv+" / "+(v.a-v.de);
     });
   });
-  /* le Bonus du monde 3 : ses taches dorées et son compteur, hors du total (vue élève) */
-  const fichesBonus=document.querySelectorAll("li.etape.bonus");
-  if(fichesBonus.length){
+  /* les Bonus (mondes 3 et 4) : leurs taches dorées et leur compteur, hors du total (vue élève) */
+  BONUS_MONDES.forEach(b=>{
+    if(!document.getElementById(b.volet)) return;
     let fb=0;
-    ENQ_TOUR2.forEach(f=>{
-      const li=document.getElementById("enq-t2-"+f.code), p="enq"+f.code;
+    b.fiches.forEach(f=>{
+      const li=document.getElementById(b.li+f.code), p=b.idp+f.code;
       const ok=!!(parcours[p]&&parcours[p].fait);
       if(li) li.classList.toggle("done",ok);
       if(ok) fb++;
     });
-    const sb=document.getElementById("starsBonus");
-    if(sb) sb.textContent="\u2728 "+fb+" / "+ENQ_TOUR2.length;
-  }
+    const sb=document.getElementById(b.stars);
+    if(sb) sb.textContent="\u2728 "+fb+" / "+b.fiches.length;
+  });
   document.getElementById("totalTxt").textContent=fait+" / "+total+" étoiles";
   document.getElementById("totalFill").style.width=(total?100*fait/total:0)+"%";
   /* « Continuer » : la première étoile qui reste à gagner, dans l'ordre de l'univers */
@@ -1411,7 +1423,7 @@ document.addEventListener("click",ev=>{
   if(a.id==="continuerLien"){ retenirMonde(parseInt(a.dataset.monde,10)); return; }
   const sec=a.closest("main>.monde");
   if(sec) retenirMonde([...document.querySelectorAll("main>.monde")].indexOf(sec));
-  if(a.closest("li.etape.bonus")) retenirBonus(true);
+  if(a.closest("li.etape.bonus")) retenirBonus(true,bonusDeSection(sec));
 });
 document.addEventListener("keydown",ev=>{
   if((ev.key==="Enter"||ev.key===" ")&&ev.target.matches("main>.monde>.head")){ ev.preventDefault(); ev.target.click(); }
@@ -1423,10 +1435,16 @@ document.addEventListener("keydown",ev=>{
    dernière fois (il l'a ouvert, ou y a lancé une fiche), retenu sur l'appareil comme le monde
    ouvert. Une adresse qui vise une partie ou une étape (#enq-bonus, #enq-7) ouvre sa partie. */
 const CLE_BONUS_OUVERT="mathsgo-splat-bonus-ouvert";
-function retenirBonus(o){
-  try{ if(o) localStorage.setItem(CLE_BONUS_OUVERT,"1"); else localStorage.removeItem(CLE_BONUS_OUVERT); }catch(e){}
+/* une clé par Bonus (celle du monde 3 ne change pas ; le monde 4 : « …-sys ») */
+function bonusDeSection(sec){
+  const mi=[...document.querySelectorAll("main>.monde")].indexOf(sec);
+  return mi>=0?bonusDe(MONDES[mi]):null;
 }
-function bonusRetenu(){ try{ return localStorage.getItem(CLE_BONUS_OUVERT)==="1"; }catch(e){ return false; } }
+function retenirBonus(o,b){
+  const cle=CLE_BONUS_OUVERT+((b&&b.cle)||"");
+  try{ if(o) localStorage.setItem(cle,"1"); else localStorage.removeItem(cle); }catch(e){}
+}
+function bonusRetenu(b){ try{ return localStorage.getItem(CLE_BONUS_OUVERT+((b&&b.cle)||""))==="1"; }catch(e){ return false; } }
 function ouvrirPartie(volet,ouvert){
   volet.classList.toggle("ferme",!ouvert);
   volet.setAttribute("aria-expanded",ouvert?"true":"false");
@@ -1442,7 +1460,7 @@ function ouvrirParties(){
     const enCours=premiere?premiere.dataset.partie:null;
     volets.forEach(v=>{
       const cle=v.dataset.volet;
-      let o=cle==="bonus"?bonusRetenu():cle===enCours;
+      let o=cle==="bonus"?bonusRetenu(bonusDeSection(sec)):cle===enCours;
       if(elCible&&(elCible===v||(sec.contains(elCible)&&elCible.dataset.partie===cle))) o=true;
       ouvrirPartie(v,o);
     });
@@ -1453,7 +1471,7 @@ document.addEventListener("click",ev=>{
   if(!v) return;
   const o=v.classList.contains("ferme");
   ouvrirPartie(v,o);
-  if(v.dataset.volet==="bonus") retenirBonus(o);
+  if(v.dataset.volet==="bonus") retenirBonus(o,bonusDeSection(v.closest("main>.monde")));
 });
 document.addEventListener("keydown",ev=>{
   if((ev.key==="Enter"||ev.key===" ")&&ev.target.matches("main .etapes>.volet[data-volet]")){ ev.preventDefault(); ev.target.click(); }
@@ -1485,13 +1503,15 @@ if (PROF) {
 (function(){
   const apres=new URLSearchParams(window.location.search).get("apres");
   if(!apres||PROF) return;
-  /* une fiche du Bonus (04/10/2026) : la fiche bonus suivante, dans l'ordre des livrets ; au
-     retour sur la carte, le monde 3 et son Bonus seront ouverts. Après 24d, le bouton de l'outil
-     ramène directement à la carte (#enq-bonus), sans passer par ici. */
-  const kb=ENQ_TOUR2.findIndex(f=>"enq"+f.code===apres);
-  if(kb>=0){
-    retenirMonde(MONDES.indexOf(MONDE_ENQUETE)); retenirBonus(true);
-    if(kb+1<ENQ_TOUR2.length) window.location.replace(ENQ_TOUR2[kb+1].j);
+  /* une fiche d'un Bonus (04/10/2026 ; monde 4 : lot M4-4) : la fiche bonus suivante du MÊME
+     monde, dans l'ordre des livrets ; au retour sur la carte, ce monde et son Bonus seront
+     ouverts. Après sa dernière fiche (24d, 28d), le bouton de l'outil ramène directement à la
+     carte (#enq-bonus, #sys-bonus), sans passer par ici. */
+  for(const b of BONUS_MONDES){
+    const kb=b.fiches.findIndex(f=>b.idp+f.code===apres);
+    if(kb<0) continue;
+    retenirMonde(MONDES.indexOf(b.monde)); retenirBonus(true,b);
+    if(kb+1<b.fiches.length) window.location.replace(b.fiches[kb+1].j);
     return;
   }
   /* Mondes en préparation (26/09/2026), comme le bouton de assets/js/splat-etapes.js :

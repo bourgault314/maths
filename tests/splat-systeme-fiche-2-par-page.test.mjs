@@ -41,13 +41,13 @@ const PALETTE = html.slice(html.indexOf("const INVESTIGATE_COLOR_PALETTE = ["), 
 const CONSTANTES = ["SYS_GESTES", "SYS_GESTES_MIX_DEFAUT", "SYS_MAX_TACHES", "SYS_MAX_TACHES_AVANT", "SYS_ESSAIS", "SYS_NOMBRES_SOUS_ENTENDUS", "SYS_COULEURS_PLURIEL", "SYS_PLAGES",
   "SYS_ZONE_IMPRIME", "SYS_TACHE", "SYS_BARRES", "SYS_BARRES_SERRE", "SYS_BARRES_TAILLES", "SYS_CORR_IMPRIME", "SYS_ZONE_IMPRIME_CORRECTION",
   "SYS_2P", "SYS_2P_VIEWBOX", "SYS_2P_VIEWBOX_CORRECTION", "SYS_ZONE_IMPRIME_2P", "SYS_ZONE_IMPRIME_CORRECTION_2P", "SYS_CORR_IMPRIME_2P", "SYS_REPONSE_2P",
-  "SYS_BLOC", "SYS_BLOC_SERRE", "SYS_BLOC_FLECHE", "ENQUETE_NOM_ECART"].map(constante).join("\n");
+  "SYS_BLOC", "SYS_BLOC_SERRE", "SYS_BLOC_FLECHE", "SYS_EQ_ECRIT", "ENQUETE_NOM_ECART"].map(constante).join("\n");
 const GENERATEUR = ["sysNormaliserReglages", "genSystemCarte", "sysMelangerPlateaux", "sysFormes", "sysFormesDouble", "sysSomme", "sysNombreTaches", "sysPlateau",
   "sysTirerSituation", "sysSituationValide", "sysNombreSousEntendu", "sysTexteASousEntendu", "sysSituationSure",
   "sysAssemblerCarte", "sysUneTacheParCouleur", "sysIndice", "sysPhraseIndice", "sysPlanS3", "sysPlan"].map(fn).join("\n");
 const DESSIN = ["sysEnPlateaux", "sysTotalCache", "sysRayonJeton", "sysGrille", "sysColonnesVisibles", "sysRayonMax", "sysDispositionPlateaux", "drawSysPlateaux",
   "sysAPlan", "sysBarresMetriques", "sysLargeurTexte", "sysCorrAjuster", "sysBarreCases", "sysBarreLargeur", "sysEtapeTaille", "sysVerifHauteur",
-  "sysVerifLargeur", "sysEtapesFlux", "sysJetonCouleurs", "drawSysCaseBarre", "drawSysBarre", "drawSysEtape", "drawSysVerification", "drawSysCorrectionImprimee",
+  "sysVerifLargeur", "sysEtapesFlux", "sysJetonCouleurs", "drawSysCaseBarre", "drawSysBarre", "drawSysEtape", "drawSysVerification", "sysSystemeEcrit", "drawSysSystemeEcrit", "drawSysCorrectionImprimee",
   "sysBlocs", "sysBlocMesure", "sysBlocPartageAligne", "sysBlocsFlux", "drawSysCorrectionBlocs", "drawSysLigneReponse",
   "blobPath", "wrapTextToWidth", "beadColorForValue", "drawInvestigateSplatName", "investigateColorInfo"].map(fn).join("\n");
 

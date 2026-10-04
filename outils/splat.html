@@ -982,7 +982,7 @@
      le pavé doit déjà exister à ce moment-là. -->
 <script src="../assets/js/mathsgo-pave-chiffres.js?v=20260918-1"></script>
 <!-- Le texte du bouton « Étape suivante ▶ » de l'écran de fin (lot A). -->
-<script src="../assets/js/splat-etapes.js?v=20261004-1"></script>
+<script src="../assets/js/splat-etapes.js?v=20261004-2"></script>
 </head>
 
 <body class="light">
@@ -1437,6 +1437,7 @@
           <select id="sysSens" title="Doubler : le grand plateau a des taches de plus, ou c'est le petit plateau recopié">
             <option value="PLATEAU" selected>Le grand plateau</option>
             <option value="INDICE">Le petit recopié</option>
+            <option value="MIX">Les deux, au hasard</option>
           </select>
         </div>
       </div>
@@ -2461,7 +2462,7 @@ function sysEcrireReglagesM4(params){
   if(coef && sysEcartEl && sysEcartEl.value) params.set("ecart", sysEcartEl.value);
   if(double && sysFoisEl && sysFoisEl.value === "3") params.set("fois", "3");
   if(double && sysIndiceEl && sysIndiceEl.value === "12") params.set("indice", "12");
-  if(double && sysSensEl && sysSensEl.value === "INDICE") params.set("sens", "INDICE");
+  if(double && sysSensEl && (sysSensEl.value === "INDICE" || sysSensEl.value === "MIX")) params.set("sens", sysSensEl.value);
   if(sysOrdreEl && sysOrdreEl.value === "MELANGE") params.set("ordre", "MELANGE");
   if(sysPasAPasEl && !sysPasAPasEl.checked) params.set("pasapas", "0");
 }
@@ -4422,9 +4423,12 @@ function sysNormaliserReglages(opts){
   const ecartBrut = String(r.ecart == null ? "" : r.ecart).trim();
   const ecart = ecartBrut === "1" ? "1" : (/^2\+?$/.test(ecartBrut) ? "2" : "");
   const fois = entier(r.fois, 2) === 3 ? 3 : 2;
-  const sens = String(r.sens == null ? "" : r.sens).toUpperCase() === "INDICE" ? "INDICE" : "PLATEAU";
+  /* lot M4-4 : « sens=MIX », chaque carte tire son sens (sysTirerSituation) ; l'indice est
+     alors vérifié carte par carte, dans le sens tiré. */
+  const sensBrut = String(r.sens == null ? "" : r.sens).toUpperCase();
+  const sens = sensBrut === "INDICE" || sensBrut === "MIX" ? sensBrut : "PLATEAU";
   let indice = String(r.indice == null ? "" : r.indice).trim() === "12" ? "12" : "11";
-  if(!sysFormesDouble(fois, indice, sens).length) indice = indice === "12" ? "11" : "12";
+  if(sens !== "MIX" && !sysFormesDouble(fois, indice, sens).length) indice = indice === "12" ? "11" : "12";
   return {
     geste,
     gestes: gestes.length ? gestes : SYS_GESTES_MIX_DEFAUT.slice(),
@@ -4595,12 +4599,22 @@ function sysTirerSituation(rng, geste, couleurs, plage, o){
     ] };
   }
   if(geste === "DOUBLE"){
-    const [a, b, d] = forme();
+    /* « sens=MIX » (lot M4-4, fiches « Je double » et « Je triple » : la dernière carte, c'est
+       le petit plateau recopié qui dépasse) : chaque carte tire son sens, juste avant sa forme,
+       et garde l'indice demandé s'il a une forme dans ce sens (sinon l'autre, comme
+       sysNormaliserReglages). Sans MIX, aucun tirage de plus : mêmes cartes qu'avant. */
+    let sens = o.sens, formes = null;
+    if(sens === "MIX"){
+      sens = rInt(rng, 0, 1) === 1 ? "INDICE" : "PLATEAU";
+      formes = sysFormesDouble(o.fois, o.indice, sens);
+      if(!formes.length) formes = sysFormesDouble(o.fois, o.indice === "12" ? "11" : "12", sens);
+    }
+    const [a, b, d] = formes ? formes[rInt(rng, 0, formes.length - 1)] : forme();
     const values = { [A]: valeur(), [B]: valeur() };
     const vis = visibles();
     const k = o.fois;
     return { geste, colors: [A, B], values, boards: [
-      sysPlateau({ [A]: k * a, [B]: o.sens === "INDICE" ? k * b - d : k * b + d }, values, vis),
+      sysPlateau({ [A]: k * a, [B]: sens === "INDICE" ? k * b - d : k * b + d }, values, vis),
       sysPlateau({ [A]: a, [B]: b }, values)
     ] };
   }
@@ -10306,7 +10320,10 @@ function drawSysCorrectionImprimee(target, card, haut, bas, ctx, zone){
   flux.places.forEach(p => {
     // « Je vérifie » à la ligne : un peu plus d'air au-dessus (ecartVerif, « decale »)
     if(p.verif) drawSysVerification(g, p.etape, p.x, haut + p.y + (p.y > 0 ? p.decale : 0), p.w, M, ctx);
-    else drawSysEtape(g, p.etape, p.x, haut + p.y, M, ctx, 0, 0, p.taille);
+    else{
+      drawSysEtape(g, p.etape, p.x, haut + p.y, M, ctx, 0, 0, p.taille);
+      if(p.etape.role === "plateaux") drawSysSystemeEcrit(g.children[g.children.length - 1], p, flux.places, 0, haut, Z.xMax, M, ctx);
+    }
   });
   return haut + hauteur * k;
 }
@@ -10481,6 +10498,7 @@ function drawSysCorrectionBlocs(target, card, haut, bas, ctx){
     if(it.verif){ drawSysVerification(g, it.verif, xi + 10, yi, it.w - 2 * B.pad - 10, M, ctx); return; }
     it.L.flux.places.forEach(p => {
       drawSysEtape(g, p.etape, xi + p.x, yi + p.y, M, ctx, 0, 0, p.taille);
+      if(p.etape.role === "plateaux") drawSysSystemeEcrit(g.children[g.children.length - 1], p, it.L.flux.places, xi, yi, it.x + it.w - B.pad, M, ctx);
       if(p.fleche){
         const F = SYS_BLOC_FLECHE, t = F.pointe * M.f, x1 = xi + p.fleche.x1, x2 = xi + p.fleche.x2, y = yi + p.fleche.y;
         g.appendChild(ctx.mkEl("path", { class:"sysFleche", d:`M ${x1} ${y} L ${x2} ${y} M ${x2 - 2 * t} ${y - t} L ${x2} ${y} L ${x2 - 2 * t} ${y + t}`,
@@ -10489,6 +10507,62 @@ function drawSysCorrectionBlocs(target, card, haut, bas, ctx){
     });
   })));
   return haut + flux.h;
+}
+/* Le système écrit (lot M4-4, idée de Gwenaël du 04/10/2026, décidé le 04/10 sur planche) : à
+   droite de chaque barre de « Les deux plateaux », l'équation de ce plateau, dans la langue du
+   corrigé — en mots avec les taches (« 3 noires + 1 rouge = 41 »), en lettres en version lettres
+   (« 3 × N + R = 41 », jamais « 3N »), à la hauteur de ses cases. Tout le système ou rien :
+   seulement si chaque équation tient, sans toucher une autre étape ni sortir du cadre (sinon la
+   barre suffit). Les termes dans l'ordre des cases ; un jeton visible s'écrit en nombre ; un
+   plateau sans total (« ? », trois paires) n'a pas d'équation. Le même dessin sur le papier (2 et
+   4 par page) et en projection (pas à pas et correction directe) ; pas au téléphone (pas la place). */
+const SYS_EQ_ECRIT = { ecart:40, fs:38, fsMin:30, poids:800, encre:"#0f172a" };
+function sysSystemeEcrit(b, lettres){
+  if(String(b.top) === "?" || !b.cells.length) return null;
+  const n = new Map(), vis = [];
+  for(const c of b.cells){
+    if(c.kind === "unknown" || c.kind === "known") n.set(c.color, (n.get(c.color) || 0) + 1);
+    else if(c.kind === "visible") vis.push(String(c.value));
+    else return null;
+  }
+  const termes = [...n].map(([k, m]) => {
+    const info = investigateColorByKey(k);
+    if(lettres) return (m > 1 ? `${m} × ` : "") + investigateColorInitial(info);
+    return m > 1 ? `${m} ${SYS_COULEURS_PLURIEL[k] || investigateColorWord(info)}` : `1 ${investigateColorWord(info)}`;
+  });
+  return `${termes.concat(vis).join(" + ")} = ${b.top}`;
+}
+/* g : le groupe de l'étape (le système écrit en fait partie) ; p : l'étape « Les deux plateaux »
+   placée (x, y, taille, comme dans sysEtapesFlux) ; places : les
+   étapes voisines (pour ne pas les toucher) ; xi, yi : le décalage des places ; xDroit : le bord
+   à ne pas dépasser. */
+function drawSysSystemeEcrit(g, p, places, xi, yi, xDroit, M, ctx){
+  const E = SYS_EQ_ECRIT;
+  const textes = [];
+  const ok = p.etape.barres.every((b, i) => {
+    const t = sysSystemeEcrit(b, ctx.lettres);
+    if(!t) return String(b.top) === "?";
+    const pl = p.taille.places[i];
+    const x = xi + p.x + pl.dx + sysBarreCases(b) * M.pas + E.ecart * M.f;
+    const yHaut = yi + p.y + p.taille.haut + pl.dy + M.hCase, yBas = yHaut + M.hCase;
+    let lim = xDroit;
+    places.forEach(q => {
+      if(q === p) return;
+      const qx = xi + q.x, qy0 = yi + q.y, qy1 = qy0 + q.h;
+      if(qx > x - 1 && qy0 < yBas && qy1 > yHaut) lim = Math.min(lim, qx - E.ecart * M.f);
+      if(q.fleche && yi + q.fleche.y > yHaut - 1 && yi + q.fleche.y < yBas + M.hCase) lim = Math.min(lim, xi + q.fleche.x1 - 10 * M.f);
+    });
+    let fs = E.fs * M.f;
+    while(fs > E.fsMin * M.f && sysLargeurTexte(t, fs, E.poids) > lim - x) fs -= 1;
+    if(sysLargeurTexte(t, fs, E.poids) > lim - x) return false;
+    textes.push({ x, y: (yHaut + yBas) / 2, t, fs });
+    return true;
+  });
+  if(!ok || !textes.length) return;
+  // un seul corps pour tout le système
+  const fs = Math.min(...textes.map(e => e.fs));
+  textes.forEach(e => g.appendChild(ctx.mkText(e.x, e.y, e.t, { class:"sysSystemeEcrit", "text-anchor":"start", "dominant-baseline":"middle", dy:"0.06em",
+    "font-size":fs, "font-weight":E.poids, fill:E.encre })));
 }
 /* La ligne réponse de l'énoncé : « noire = …… rouge = …… », centrée en bas de la carte ; serrée,
    puis plus petite, si elle ne tient pas dans la largeur. */
@@ -10569,7 +10643,13 @@ function drawSysCorrectionEcran(card, etat){
   svg.appendChild(g);
   const etape = plan[k - 1];
   if(etape.role === "verification") drawSysVerification(g, etape, SYS_CORR_ECRAN.x + 10 * M.f, yEtape, Math.min(SYS_CORR_ECRAN.xMax - SYS_CORR_ECRAN.x - 10 * M.f, 1460 * M.f), M, ctx, k);
-  else drawSysEtape(g, etape, SYS_CORR_ECRAN.x, yEtape, M, ctx, k);
+  else{
+    const t = drawSysEtape(g, etape, SYS_CORR_ECRAN.x, yEtape, M, ctx, k);
+    if(etape.role === "plateaux"){
+      const p = { x:SYS_CORR_ECRAN.x, y:yEtape, etape, taille:t, h:t.h };
+      drawSysSystemeEcrit(g.children[g.children.length - 1], p, [p], 0, 0, SYS_CORR_ECRAN.xMax, M, ctx);
+    }
+  }
 }
 
 /* « Pas à pas » (réglage du tableau) : coché par défaut ; le mode élève l'est toujours. */
@@ -10598,7 +10678,10 @@ function drawSysCorrectionDirecte(card){
   svg.appendChild(g);
   f.places.forEach(p => {
     if(p.verif) drawSysVerification(g, p.etape, p.x, p.y + (p.y > 0 ? p.decale : 0), p.w, M, ctx);
-    else drawSysEtape(g, p.etape, p.x, p.y, M, ctx, 0, 0, p.taille);
+    else{
+      drawSysEtape(g, p.etape, p.x, p.y, M, ctx, 0, 0, p.taille);
+      if(p.etape.role === "plateaux") drawSysSystemeEcrit(g.children[g.children.length - 1], p, f.places, 0, 0, f.w, M, ctx);
+    }
   });
 }
 

@@ -1,14 +1,20 @@
 @font-face{font-family:Poppins;src:url('/assets/fonts/Poppins-Regular.woff2') format('woff2');font-weight:400;font-style:normal}
 @font-face{font-family:Poppins;src:url('/assets/fonts/Poppins-Bold.woff2') format('woff2');font-weight:700;font-style:normal}
-@page{size:A4;margin:0}
+/* Livrets « tablette » du monde 4 (lot M4-4, 04/10/2026) : toutes les pages sont des A4 en
+   LARGEUR — couverture, page 2, page 3 et dos compris —, comme les fiches 2 par page de l'outil.
+   Feuille A3 en hauteur, pliée à l'horizontale : on tourne les pages vers le haut. */
+@page{size:297mm 210mm;margin:0}
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-body{width:210mm;height:297mm;overflow:hidden;font-family:Poppins,'Segoe UI',system-ui,sans-serif;color:#0f172a;position:relative;display:flex;flex-direction:column}
+body{width:297mm;height:210mm;overflow:hidden;font-family:Poppins,'Segoe UI',system-ui,sans-serif;color:#0f172a;position:relative;display:flex;flex-direction:column}
 /* Charte du monde 4, SPLAT! Système : le brun cannelle des fiches (#92400e), le même dégradé
    que leur bandeau imprimé (.print-page-header--systeme de outils/splat.html).
    Lisible en noir et blanc : le cannelle ne sert qu'aux FONDS ; tout texte coloré est brun
-   foncé (#7c2d12), jamais un orange clair sur du blanc. */
-.corps{flex:1 1 auto;padding:0 14mm;display:flex;flex-direction:column}
+   foncé (#7c2d12), jamais un orange clair sur du blanc ; aucune page n'est un seul aplat teinté. */
+.corps{flex:1 1 auto;padding:0 12mm;display:flex;flex-direction:column;min-height:0}
 /* Pied : gris moyen et 10 px, lisible en photocopie (comme les livrets des autres mondes). */
-.pied{flex:0 0 auto;text-align:center;font-size:10px;font-weight:700;color:#64748b;padding-bottom:6mm}
+.pied{flex:0 0 auto;text-align:center;font-size:10px;font-weight:700;color:#64748b;padding-bottom:5mm}
 .chip{display:inline-block;font-size:12px;font-weight:700;color:#7c2d12;background:#fdf0e6;border:1px solid #efc9a8;border-radius:999px;padding:1.4mm 4mm;text-transform:uppercase;letter-spacing:1.4px}
+.cadre{border:1.4px solid #5b6574;border-radius:8px;background:#fff}
+/* Les dessins de l'outil (cartes, corrections) gardent sa police, comme sur les fiches. */
+svg.outil{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial}

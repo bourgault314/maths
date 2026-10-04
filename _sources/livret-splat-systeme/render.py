@@ -1,53 +1,50 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Régénère les deux livrets du monde 4, SPLAT! Système, à partir du site lui-même :
-« SPLAT! Système » (partie 1, on retire : fiches 25 à 29) et « SPLAT! Système, la suite »
-(partie 2, on additionne, on double : fiches 30 à 34).
+Régénère les deux livrets « tablette » du monde 4, SPLAT! Système (lot M4-4, 04/10/2026), à
+partir du site lui-même :
+    « SPLAT! Système »               le livret de base, pour tous : fiches 25 à 28
+    « SPLAT! Système, deuxième tour » le livret plus dur : fiches 25d à 28d (le Bonus du monde 4
+                                     sur la carte des mondes, comme le monde 3)
 
     python3 render.py                    (les deux livrets, l'élève et les deux corrigés)
-    python3 render.py systeme            (un seul livret : systeme | suite)
+    python3 render.py systeme            (un seul livret : systeme | tour2)
     python3 render.py --qr               (en refabriquant d'abord les QR codes)
     python3 render.py --eleve            (seulement les livrets de l'élève)
     python3 render.py --correction       (seulement les corrigés)
+    python3 render.py --vignettes        (les vignettes de la page des livrets)
 
-Produit, à la racine du dépôt, pour chaque livret :
-    outils/livret_splat_systeme.pdf                     8 pages A4, ordre de lecture
-    outils/livret_splat_systeme_a_plier.pdf             2 feuilles A3 (4 pages A3), imposées
-et ses deux corrigés (pour tous : on peut les donner aux élèves) :
-    outils/livret_splat_systeme_correction.pdf          4 cartes par page, 8 pages (comme l'élève)
-    outils/livret_splat_systeme_correction_2_par_page.pdf
-                                                        2 cartes par page, calculs plus gros :
-                                                        10 pages A4 PAYSAGE, une feuille recto
-                                                        verso par fiche (pas de livret à plier)
-    (le livret de l'élève et le corrigé 4 par page ont chacun leur …_a_plier.pdf) ; idem pour
-    « suite » (livret_splat_systeme_suite…).
+LE FORMAT « TABLETTE » (décidé le 04/10/2026, lot M4-3) : TOUTES les pages sont des A4 en
+LARGEUR, couverture, pages 2-3 et dos compris. Le livret à plier est fait de 3 feuilles A3 en
+HAUTEUR, imprimées recto verso (retournement sur le bord COURT), pliées à l'horizontale et
+agrafées sur le pli : on tourne les pages vers le haut, comme une tablette. 12 pages :
+    1 couverture · 2-3 l'exemple · 4-5, 6-7, 8-9, 10-11 les quatre fiches · 12 le dos
+Une fiche = 4 cartes sur la double page ouverte (2 cartes par page : l'impression 2 par page de
+l'outil, page paysage, lot M4-3).
 
-LES PAGES. Couverture, un exemple résolu (page 2), les cinq fiches du livret (4 cartes par page),
-le dos. Une fiche = une étape de la carte des mondes = une étoile ; le QR d'une fiche ouvre sa
-série en ligne par la page courte /splat/systeme/livret/?f=25 (…34).
+Produit, à la racine du dépôt, pour chaque livret (ex. livret_splat_systeme) :
+    outils/livret_splat_systeme.pdf                      12 pages A4 paysage, ordre de lecture
+                                                          (« page par page » : le logo de l'IREMI
+                                                          dans le bandeau de chaque fiche)
+    outils/livret_splat_systeme_a_plier.pdf              3 feuilles A3 en hauteur, recto verso
+                                                          (6 pages A3), déjà imposées
+et ses deux corrigés (pour tous : on peut les donner aux élèves), chacun avec son « à plier » :
+    outils/livret_splat_systeme_correction.pdf           « avec les taches » (les mots des couleurs)
+    outils/livret_splat_systeme_correction_lettre.pdf    en lettres (N, B…), comme l'appli
 
-LES FICHES ne sont PAS redessinées ici : elles sont rendues par l'outil du site
-(outils/splat.html, mode D, 4 par page) avec les graines figées du lot « fiches 20-34 »
-(24/09/2026, splat-systemes-fiches-25-34-adresses.md), et le QR est ajouté dans le bandeau
-juste avant l'impression. L'EXEMPLE RÉSOLU non plus : la carte et ses cadres sont ceux de la
-correction de l'outil (drawSysCadre, un cadre par étape, comme au clic), sur une carte qui n'est
-PAS dans le livret ; les légendes ne répètent aucun nombre (les nombres sont dans les cadres
-dessinés par l'outil), les textes qui en citent sont écrits À PARTIR DE LA CARTE rendue.
-
-LES CORRIGÉS : la correction imprimée de l'outil (print=correction) — les plateaux dévoilés en
-haut, puis les cadres. En 4 par page, un livret de 8 pages comme celui de l'élève ; en 2 par
-page (layout=2, choix du 24/09/2026 : calculs ≈ 7 pt au lieu de ≈ 5), l'outil imprime deux
-cartes côte à côte sur une page A4 PAYSAGE : chaque fiche tient sur une feuille recto verso,
-et le corrigé est la suite de ces cinq feuilles (10 pages), sans couverture ni pliage — une
-page paysage ne se relie pas dans un livret portrait. Les cartes sont vérifiées identiques
-d'une version à l'autre.
+LES FICHES ne sont PAS redessinées ici : elles sont imprimées par l'outil du site
+(outils/splat.html, mode D, layout=2) avec les graines triées du lot M4-4, et le QR est ajouté
+dans le bandeau juste avant l'impression. L'EXEMPLE non plus : la carte et les blocs de sa
+correction sont ceux de l'outil (drawSysPlateaux, drawSysCorrectionBlocs), sur une carte qui
+n'est PAS dans le livret ; les textes qui citent des nombres sont écrits À PARTIR DE LA CARTE
+rendue (textes_exemple).
 
 Dépendances : playwright 1.56.0 (+ chromium), pikepdf, qrcode[pil]. qpdf si disponible.
 Le rendu utilise le VRAI Chromium (channel="chromium"), jamais le « headless shell » (il
-espace les lettres d'environ 5 %).
+espace les lettres d'environ 5 %). Les PDF du site se rendent sous Linux (DejaVu Sans), comme
+tous les livrets SPLAT!.
 """
-import asyncio, http.server, socketserver, threading, functools, sys, json
+import asyncio, http.server, socketserver, threading, functools, sys, json, copy
 from pathlib import Path
 from urllib.parse import quote
 
@@ -58,122 +55,154 @@ PORT = 8126
 SITE = "https://mathsgo.re"
 COURTE = "/splat/systeme/livret/"               # la page courte des QR (?f=fiche, ?s=série)
 
-# Les dix fiches du Système, EXACTEMENT les adresses du lot « fiches 20-34 » (24/09/2026,
-# graines validées sur planches) : réglages du plan de production (§ 4) + la graine. Leurs
-# cartes ne doivent jamais changer (le lot S-defi l'a prouvé carte par carte).
+# ---------------------------------------------------------------------------
+# LES HUIT FICHES (lot M4-4, 04/10/2026). Une fiche = un réglage + une graine ; les graines
+# sont TRIÉES (hors dépôt : le vrai générateur rejoué dans Chromium, carte par carte) pour que
+# chaque carte ait son type imposé, dans l'ordre de la fiche :
+#   25 Je retire       une partie connue, une tache de plus, puis deux cartes « je partage »
+#   26 Trois couleurs  trois plateaux : je retire, puis je remplace
+#   27 Je double       trois cartes « je double », la dernière : le petit plateau doublé dépasse
+#                      (sens=MIX, réglage ajouté au lot M4-4 : chaque carte tire son sens)
+#   28 J'additionne    trois cartes en miroir (les deux formes), la dernière : trois paires
+#   25d L'escalier     les quatre formes de l'escalier, de la plus petite à la plus grande
+#   26d Je triple      le petit plateau recopié trois fois
+#   27d Avec des jetons visibles   je retire, trois couleurs, je double, en miroir — des jetons
+#   28d Dans le désordre           je retire, trois couleurs, je double, trois paires — les
+#                                  plateaux mélangés (aucun à sa place habituelle)
+# Et partout : totaux tous différents dans une fiche (ceux des petits plateaux compris), deux
+# cartes jamais de la même paire de couleurs, plus petite valeur ≥ 3, jamais de carte de secours,
+# aucune carte en double sur les deux livrets, les exemples et les défis (controle_global).
+# Ces adresses sont AUSSI celles de la carte des mondes (SYS_FICHES, SYS_TOUR2) et de la page
+# courte des QR : un test les compare. Ne jamais changer une graine sans refaire les PDF.
 SYS_COMMUN = "&cards=4&unknown=question"
-S25 = "mode=D&geste=EMBOITE1&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=2105"
-S26 = "mode=D&geste=EMBOITE1&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=9244"
-S27 = "mode=D&geste=PARTIELLE&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=2828"
-S28 = "mode=D&geste=COEF&coefMax=3&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=1214"
-S29 = "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=7984"
-S30 = "mode=D&geste=TROIS&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=653"
-S31 = "mode=D&geste=DOUBLE&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=175"
-S32 = "mode=D&geste=MIROIR&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=609"
-S33 = "mode=D&geste=MIX&gestes=DOUBLE,MIROIR&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=1287"
-S34 = "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=11674"
+T = "&totalMin=20&totalMax=60"
+V0 = "&visibleMin=0&visibleMax=0"
+S25 = "mode=D&geste=MIX&gestes=PARTIELLE,COEF" + V0 + T + "&seed=24"
+S26 = "mode=D&geste=EMBOITE1" + V0 + T + "&seed=22"
+S27 = "mode=D&geste=DOUBLE&sens=MIX" + V0 + T + "&seed=222"
+S28 = "mode=D&geste=MIX&gestes=MIROIR,TROIS" + V0 + T + "&seed=53"
+S25D = "mode=D&geste=ESCALIER" + V0 + T + "&seed=3046"
+S26D = "mode=D&geste=DOUBLE&fois=3" + V0 + T + "&seed=1"
+S27D = "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR&visibleMin=1&visibleMax=3" + T + "&seed=1373"
+S28D = "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS&ordre=MELANGE" + V0 + T + "&seed=6334"
 
-def fiche(n, t, q, resume):
-    return dict(n=n, t=t, q=q, resume=resume, code=str(n))
+# Le type attendu de chaque carte (vérifié au rendu : render.py s'arrête si une graine a bougé).
+TYPES = {
+    "25": ["1a", "1b", "1c", "1c"], "26": ["1d"] * 4, "27": ["2a", "2a", "2a", "2d"], "28": ["3a", "3a", "3a", "3b"],
+    "25d": ["1e"] * 4, "26d": ["2b"] * 4, "27d": ["1a", "1d", "2a", "3a"], "28d": ["1b", "1d", "2a", "3b"],
+}
+
+def fiche(code, t, q, resume):
+    return dict(code=code, t=t, q=q, resume=resume)
 
 FICHES_1 = [
-    fiche(25, "Une partie du plateau", S25, "Un 2e plateau est dans le 1er&nbsp;: retire-le."),
-    fiche(26, "Avec des jetons visibles", S26, "Le même jeu, et des jetons à retirer aussi."),
-    fiche(27, "Une partie connue", S27, "L'indice ne garde qu'une couleur."),
-    fiche(28, "Deux pesées", S28, "Une seule couleur change."),
-    fiche(29, "Le défi des plateaux", S29, "À toi de trouver le bon geste."),
+    fiche("25", "Je retire", S25, "Le petit plateau est dans le grand&nbsp;: retire-le."),
+    fiche("26", "Trois couleurs", S26, "Je retire, puis je remplace."),
+    fiche("27", "Je double", S27, "Je recopie le petit plateau deux fois."),
+    fiche("28", "J'additionne", S28, "J'additionne les plateaux, puis je partage."),
 ]
 FICHES_2 = [
-    fiche(30, "Trois paires", S30, "Pas de total&nbsp;: additionne les trois."),
-    fiche(31, "Doubler, puis comparer", S31, "Double l'indice avant de comparer."),
-    fiche(32, "En miroir", S32, "Additionne les deux, puis partage."),
-    fiche(33, "Doubler ou miroir&nbsp;?", S33, "Deux gestes qui se ressemblent."),
-    fiche(34, "Le grand défi du Système", S34, "Tout mélangé, et des jetons visibles."),
+    fiche("25d", "L'escalier", S25D, "Trois plateaux&nbsp;: je retire deux fois."),
+    fiche("26d", "Je triple", S26D, "Je recopie le petit plateau trois fois."),
+    fiche("27d", "Avec des jetons visibles", S27D, "Je retire aussi les jetons."),
+    fiche("28d", "Dans le désordre", S28D, "Je cherche d'abord le grand plateau."),
 ]
 
 # Les séries infinies du dos : pas de graine, huit cartes nouvelles à chaque ouverture, en mode
-# élève sans étape (rien n'est enregistré). Leurs QR passent par la page courte (?s=1…6), comme
-# ceux de l'Enquête : une adresse courte, un QR aux gros modules, qui se lit photocopié. Les
-# réglages sont ceux des fiches, sans graine (la page courte ajoute &cards=8&unknown=question&eleve=1).
+# élève sans étape (rien n'est enregistré). Leurs QR passent par la page courte (?s=7…12 ; les
+# séries 1 à 6 des livrets du 25/09 restent servies pour un livret déjà imprimé).
 SERIES = {
-    1: "mode=D&geste=EMBOITE1&visibleMin=0&visibleMax=3&totalMin=20&totalMax=60",
-    2: "mode=D&geste=MIX&gestes=PARTIELLE,COEF&coefMax=3&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
-    3: "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60",
-    4: "mode=D&geste=TROIS&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
-    5: "mode=D&geste=MIX&gestes=DOUBLE,MIROIR&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
-    6: "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60",
+    7: "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF" + V0 + T,
+    8: "mode=D&geste=MIX&gestes=DOUBLE,MIROIR,TROIS&sens=MIX" + V0 + T,
+    9: "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS&sens=MIX" + V0 + T,
+    10: "mode=D&geste=ESCALIER" + V0 + T,
+    11: "mode=D&geste=DOUBLE&fois=3" + V0 + T,
+    12: "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS,ESCALIER&sens=MIX&ordre=MELANGE&visibleMin=1&visibleMax=3" + T,
 }
 SERIE_CARTES = 8
 
-# Les exemples (couverture et page 2), décidés le 24/09/2026 : une « partie connue » pour la
-# partie 1, un « doubler » pour la partie 2. Mêmes réglages que la fiche du geste, une carte,
-# une graine HORS des fiches, la tache noire et la tache bleue (comme les exemples de l'Enquête) :
-#   partie 1 (PARTIELLE, graine 82) : 2 noires + 3 bleues = 54 ; 2 noires = 30
-#     → 54 − 30 = 24, 3 bleues = 24, bleue = 8 ; 2 noires = 30, noire = 15 ;
-#   partie 2 (DOUBLE, graine 321) : 2 noires + 4 bleues = 42 ; noire + bleue = 15
-#     → on double : 2 noires + 2 bleues = 30 ; 42 − 30 = 12 = 2 bleues, bleue = 6 ; noire = 9.
-# render.py refuse un exemple qui serait une carte des fiches 25 à 34.
-EX_1 = "mode=D&geste=PARTIELLE&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&cards=1&unknown=question&seed=82"
-EX_2 = "mode=D&geste=DOUBLE&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&cards=1&unknown=question&seed=321"
+# Les exemples (couverture et pages 2-3) : le geste de la première fiche du livret, une carte
+# HORS des fiches, la tache noire et la tache bleue (comme les exemples de l'Enquête).
+#   livret 1 (COEF, je partage, graine 82) : 2 noires + 3 bleues = 42 ; 2 noires + 1 bleue = 30
+#     → 2 bleues = 12, bleue = 6 ; 2 noires = 24, noire = 12 ;
+#   deuxième tour (ESCALIER, graine 180) : 2 noires + 2 bleues + 1 violette = 45 ;
+#     2 noires + 2 bleues = 38 ; 2 noires = 18 → noire = 9, bleue = 10, violette = 7.
+# Et la carte « À toi ! » de la page 3 : la même forme, d'autres couleurs, d'autres nombres.
+EX_1 = "mode=D&geste=COEF&ecart=2" + V0 + T + "&cards=1&unknown=question&seed=82"
+ATOI_1 = "mode=D&geste=COEF&ecart=2" + V0 + T + "&cards=1&unknown=question&seed=5"
+EX_2 = "mode=D&geste=ESCALIER" + V0 + T + "&cards=1&unknown=question&seed=180"
+ATOI_2 = "mode=D&geste=ESCALIER" + V0 + T + "&cards=1&unknown=question&seed=6"
+
+# « Le défi ! » au dos (04/10/2026, demande de Gwenaël : « des trucs qu'on n'aurait pas osé
+# mettre ») : deux cartes du livret, plus difficiles — l'énoncé et sa place pour chercher dans le
+# livret de l'élève, la correction à la même place dans les corrigés.
+#   livret 1 : deux cartes qui se ressemblent (2 + 3 taches sur le grand plateau) mais pas le
+#     même geste — je double, puis je retire : le titre ne le dit plus, c'est l'élève qui choisit ;
+#   deuxième tour : « je double un plateau plus gros » (le seul type de la classification qui
+#     n'est dans aucune fiche), puis un escalier dans le désordre avec des jetons visibles.
+DEFI_1 = [dict(q="mode=D&geste=MIX&gestes=COEF,DOUBLE" + V0 + T + "&seed=187", n=2)]
+DEFI_2 = [dict(q="mode=D&geste=DOUBLE&indice=12" + V0 + T + "&seed=2", n=1),
+          dict(q="mode=D&geste=ESCALIER&ordre=MELANGE&visibleMin=1&visibleMax=3" + T + "&seed=1", n=1)]
 
 LIVRETS = {
     "systeme": dict(
         sortie="livret_splat_systeme",
         fiches=FICHES_1,
-        exemple=dict(query=EX_1, geste="PARTIELLE"),
-        couv=dict(sur="Mon livret · Monde 4 · Partie 1", titre="Système",
-                  accroche="Plusieurs plateaux, un total pour chacun…<br>retire l'un de l'autre&nbsp;!"),
+        exemple=dict(query=EX_1, atoi=ATOI_1, geste="COEF"),
+        couv=dict(sur="Mon livret · Monde 4", titre="Système",
+                  accroche="Plusieurs plateaux…<br>compare-les pour tout trouver&nbsp;!"),
         dos=dict(
-            series=[("Une partie du plateau", "Un plateau dans l'autre, comme les fiches&nbsp;25 et&nbsp;26.", 1),
-                    ("Partie connue, deux pesées", "Comme les fiches&nbsp;27 et&nbsp;28.", 2),
-                    ("Le défi des plateaux", "Les trois gestes mélangés, comme la fiche&nbsp;29.", 3)],
-            suite="Continue avec la partie&nbsp;2, <b>SPLAT! Système, la suite</b>&nbsp;: on additionne, on double… avant de comparer&nbsp;!",
-            # « Pour se souvenir » (dos de l'élève) : [étiquette, cases « ? », cases de « reste »]
-            souvenir=dict(mini=[["plateau", 5, 0], ["indice", 2, 3]],
-                          texte="Je dessine chaque plateau en barre, <b>une case par tache</b>, l'un sous l'autre, alignés à gauche. Ce qui dépasse, c'est <b>ce qui reste</b>&nbsp;: la différence des deux totaux.")),
+            series=[("Je retire", "Comme les fiches&nbsp;25 et&nbsp;26.", 7),
+                    ("Je double, j'additionne", "Comme les fiches&nbsp;27 et&nbsp;28.", 8),
+                    ("Tout mélangé", "À toi de choisir le geste&nbsp;!", 9)],
+            suite="Continue avec le <b>deuxième tour</b>&nbsp;: l'escalier, je triple… ou va voir le monde&nbsp;5, <b>SPLAT! Équations</b>.",
+            defi=DEFI_1, defi_dit="Deux cartes qui se ressemblent… mais pas le même geste. À toi de choisir&nbsp;!"),
     ),
-    "suite": dict(
-        sortie="livret_splat_systeme_suite",
+    "tour2": dict(
+        sortie="livret_splat_systeme_tour2",
         fiches=FICHES_2,
-        exemple=dict(query=EX_2, geste="DOUBLE"),
-        couv=dict(sur="Mon livret · Monde 4 · Partie 2", titre="Système, la suite",
-                  accroche="On additionne, on double…<br>avant de comparer&nbsp;!"),
+        exemple=dict(query=EX_2, atoi=ATOI_2, geste="ESCALIER"),
+        couv=dict(sur="Mon livret · Monde 4 · Deuxième tour", titre="Système",
+                  accroche="Plus de plateaux, plus de taches…<br>pour aller plus loin&nbsp;!"),
         dos=dict(
-            series=[("Trois paires", "Pas de total, comme la fiche&nbsp;30.", 4),
-                    ("Doubler ou miroir", "Comme les fiches&nbsp;31 à&nbsp;33.", 5),
-                    ("Le grand défi", "Les six gestes et des jetons visibles, comme la fiche&nbsp;34.", 6)],
+            series=[("L'escalier", "Comme la fiche&nbsp;25d.", 10),
+                    ("Je triple", "Comme la fiche&nbsp;26d.", 11),
+                    ("Le grand défi", "Tous les gestes, des jetons, le désordre.", 12)],
             suite="Va voir le monde&nbsp;5, <b>SPLAT! Équations</b>&nbsp;: des taches des deux côtés, et on écrit l'équation&nbsp;!",
-            souvenir=dict(mini=[["plateau", 6, 0], ["indice ×&nbsp;2", 4, 2]],
-                          texte="Parfois, il faut d'abord <b>doubler</b> l'indice, ou <b>additionner</b> les plateaux. Ensuite, je compare comme avant&nbsp;: ce qui dépasse, c'est <b>ce qui reste</b>.")),
+            defi=DEFI_2, defi_dit="Deux cartes encore plus difficiles&nbsp;: un plateau plus gros à doubler, puis un escalier en désordre."),
     ),
 }
 
-def lien_fiche(n):
-    return f"{SITE}{COURTE}?f={n}"
+def lien_fiche(code):
+    return f"{SITE}{COURTE}?f={code}"
 
 def lien_serie(s):
     return f"{SITE}{COURTE}?s={s}"
 
 LIEN_UNIVERS = f"{SITE}/outils/splat_univers.html"
 
-# Le QR dans le bandeau de chaque fiche, dans une boîte blanche (comme l'Enquête).
+# ---------------------------------------------------------------------------
+# LES FICHES : le QR dans le bandeau, dans une boîte blanche (comme les autres mondes). Le
+# bandeau du 2 par page (14 mm) grandit juste assez pour un QR de 14 mm.
 CSS_QR = """
-.printArea .print-page-header{flex-basis:21mm !important}
-.printArea.print-2up .print-page-header{flex-basis:21mm !important}
+.printArea.print-2up .print-page-header{flex-basis:17.5mm !important}
 .printArea .print-page-title-block{flex:1 1 auto;min-width:0;align-items:center}
 .printArea .print-page-subtitle{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.12}
-.qr-livret{display:flex;align-items:center;gap:2.5mm;background:#fff;border-radius:2mm;padding:1mm 1.5mm 1mm 2.5mm;margin-left:auto;margin-right:2mm;flex:0 0 auto}
-.qr-livret img{width:17mm;height:17mm;display:block}
-.qr-livret .lib{text-align:right;font-size:11px;font-weight:900;color:#0f172a;line-height:1.2;white-space:nowrap}
-.qr-livret .lib em{display:block;font-style:normal;font-weight:400;font-size:10px;color:#475569;margin-top:0.5mm}
+.qr-livret{display:flex;align-items:center;gap:2.5mm;background:#fff;border-radius:2mm;padding:0.8mm 1.2mm 0.8mm 2.5mm;margin-left:auto;margin-right:2mm;flex:0 0 auto}
+.qr-livret img{width:14mm;height:14mm;display:block}
+.qr-livret .lib{text-align:right;font-size:10.5px;font-weight:900;color:#0f172a;line-height:1.2;white-space:nowrap}
+.qr-livret .lib em{display:block;font-style:normal;font-weight:400;font-size:9.5px;color:#475569;margin-top:0.4mm}
 """
 QR_ELEVE = "J'ai terminé<br>ma fiche,<em>je rejoue en ligne</em>"
 QR_CORR = "Je rejoue<br>ces cartes<em>en ligne</em>"
 
+# Le QR est imprimé UNE fois par fiche, en haut de sa première page (décision du 04/10/2026) : la
+# double page est une seule fiche, ses 4 cartes sont une seule série en ligne (une étoile) ; la
+# page du bas garde son bandeau et son titre.
 JS_QR = """([qr, lib]) => {
   const heads = document.querySelectorAll('.printArea .print-page-header');
-  if (!heads.length) return 'pas de bandeau imprimé';
-  heads.forEach(h => {
+  if (heads.length !== 2) return heads.length + ' bandeaux au lieu de 2';
+  [heads[0]].forEach(h => {
     const box = document.createElement('div'); box.className = 'qr-livret';
     box.innerHTML = '<div class="lib">' + lib + '</div><img src="' + qr + '" alt="">';
     const logos = h.querySelector('.print-page-logos');
@@ -184,8 +213,8 @@ JS_QR = """([qr, lib]) => {
 
 PIED_LIVRET = "mathsgo.re/splat · CC BY-NC-SA 4.0"
 PIED_CORRECTION = PIED_LIVRET + " · correction"
-# Un titre trop long pour une ligne se coupe APRÈS le tiret (comme l'Enquête).
-JS_TITRE = """() => {
+# Un titre trop long pour une ligne se coupe APRÈS le tiret (comme les autres mondes).
+JS_TITRE = r"""() => {
   const st = document.querySelectorAll('.printArea .print-page-subtitle');
   if (!st.length) return 'pas de titre';
   st.forEach(e => {
@@ -197,7 +226,7 @@ JS_TITRE = """() => {
     if (trop && i > 0) {
       const corr = t.endsWith(' — Correction') ? ' — Correction' : '';
       const tete = t.slice(0, i) + (corr || ' —');
-      const suite = t.slice(i + 3, t.length - corr.length).replace(/(\\d) /g, '$1\\u00a0');
+      const suite = t.slice(i + 3, t.length - corr.length).replace(/(\d) /g, '$1 ');
       e.textContent = ''; e.append(tete); e.appendChild(document.createElement('br')); e.append(suite);
       const lh = parseFloat(getComputedStyle(e).lineHeight) || parseFloat(getComputedStyle(e).fontSize) * 1.12;
       const f0 = parseFloat(getComputedStyle(e).fontSize);
@@ -208,6 +237,29 @@ JS_TITRE = """() => {
   return 'ok';
 }"""
 
+# Les logos (décisions du 25/09 et du 04/10/2026, les mêmes qu'aux mondes 1 à 3) : aucun logo sur
+# les fiches du livret à plier (JS_SANS_LOGO) ; dans le PDF page par page, l'IREMI SEUL dans le
+# bandeau de chaque fiche, à droite de la boîte du QR (JS_IREMI_SEUL) — un collègue qui imprime
+# une seule fiche n'a pas le dos ; maths&go est déjà au pied (mathsgo.re/splat). On retire les
+# blocs AU RENDU, jamais dans l'outil (une fiche imprimée depuis le générateur garde ses deux
+# logos). Chaque fiche est donc rendue deux fois, mêmes graines : seul le bandeau diffère.
+JS_SANS_LOGO = """() => {
+  const l = document.querySelectorAll('.printArea .print-page-logos');
+  if (!l.length) return 'pas de logos dans le bandeau';
+  l.forEach(e => e.remove());
+  return 'ok';
+}"""
+JS_IREMI_SEUL = """() => {
+  const l = document.querySelectorAll('.printArea .print-page-logos');
+  if (!l.length) return 'pas de logos dans le bandeau';
+  for (const e of l) {
+    const mg = e.querySelectorAll('.print-page-logo-maths'), ir = e.querySelectorAll('.print-page-logo-irem');
+    if (mg.length !== 1 || ir.length !== 1) return 'logos inattendus dans le bandeau';
+    mg[0].remove();
+  }
+  return 'ok';
+}"""
+
 JS_PIED = """(texte) => {
   const f = document.querySelectorAll('.printArea .print-page-footer');
   if (!f.length) return 'pas de pied de page';
@@ -215,86 +267,161 @@ JS_PIED = """(texte) => {
   return 'ok';
 }"""
 
+# Le type d'une carte (la classification du monde 4, monde-4-audit-et-plan.md § 2), lu sur son
+# modèle : c'est ce que render.py vérifie fiche par fiche (TYPES).
+JS_TYPE = r"""const typeSys = c => {
+  const S = c._sys, b = S.boards, n = (B, k) => B.counts[k] || 0, [A, Bk] = S.colors;
+  if (S.geste === 'PARTIELLE') return '1a';
+  if (S.geste === 'COEF') return n(b[0], Bk) - n(b[1], Bk) === 1 ? '1b' : '1c';
+  if (S.geste === 'EMBOITE1') return '1d';
+  if (S.geste === 'ESCALIER') return '1e';
+  if (S.geste === 'MIROIR') return '3a';
+  if (S.geste === 'TROIS') return '3b';
+  if (S.geste === 'DOUBLE') {
+    const k = n(b[0], A) / n(b[1], A);
+    if (n(b[0], Bk) < k * n(b[1], Bk)) return k === 2 ? '2d' : '2b-';
+    return k === 3 ? '2b' : (n(b[1], Bk) === 2 ? '2c' : '2a');
+  }
+  return '?';
+};"""
+
 # La feuille imprimée telle que l'outil la fabrique, et ses cartes : total, valeurs de chaque
 # couleur, plateaux (pour vérifier que l'élève et les deux corrigés ont les mêmes cartes).
-JS_FICHE = """() => {
+JS_FICHE = "() => {" + JS_TYPE + r"""
   printSheet();
   return {cartes: cards.map(c => [c.total, JSON.stringify(c.hidden.slice().sort((a, b) => a - b)),
                                   JSON.stringify(c._sys.boards.map(b => [c._sys.colors.map(k => b.counts[k] || 0), b.total, b.visible || []]))]),
-          gestes: cards.map(c => c._sys.geste),
-          feuilles: document.querySelectorAll('.printArea .sheet').length, parPage: getPrintCardsPerPage()};
+          types: cards.map(typeSys), secours: cards.some(c => !!c._sys.secours),
+          ordres: cards.map(c => c._sys.ordre || null),
+          feuilles: document.querySelectorAll('.printArea .sheet').length, parPage: getPrintCardsPerPage(),
+          echelles: [...document.querySelectorAll('#sysCorrectionPrint')].map(g => g.getAttribute('data-echelle'))};
 }"""
 
 # ---------------------------------------------------------------------------
-# LES CORRIGÉS (pour tous) : 4 par page (8 pages, comme l'élève) et 2 par page (12 pages).
+# LES CORRIGÉS (pour tous) : la correction imprimée de l'outil (print=correction, 2 par page :
+# l'énoncé dévoilé en haut, puis les blocs encadrés, lot M4-3), aux mêmes pages que l'élève.
 CORRECTIONS = [
-    dict(suffixe="_correction", layout=4, lettre=False, dit="4 cartes par page"),
-    dict(suffixe="_correction_2_par_page", layout=2, lettre=False, dit="2 cartes par page, en plus gros"),
+    # (« inconnue ? » ne veut rien dire ici : les cases portent le nom de la tache — 04/10/2026)
+    dict(suffixe="_correction", lettre=False, dit="avec les taches"),
     # 25/09/2026 (demande de Gwenaël) : les mêmes corrigés « en lettres », comme l'appli les écrit
-    # avec unknown=letter — l'initiale de chaque couleur (2 × N + 3 × B = 54 ; B = 24 ÷ 3 = 8) :
-    # deux inconnues, donc deux lettres, pas un 𝑥. Mêmes graines, mêmes cartes (vérifié au rendu).
-    dict(suffixe="_correction_lettre", layout=4, lettre=True, dit="en lettres, 4 cartes par page"),
-    dict(suffixe="_correction_lettre_2_par_page", layout=2, lettre=True, dit="en lettres, 2 cartes par page"),
+    # avec unknown=letter — l'initiale de chaque couleur (2 × N + 3 × B = 42 ; B = 12 ÷ 2 = 6).
+    dict(suffixe="_correction_lettre", lettre=True, dit="en lettres"),
 ]
 PROF = dict(bandeau="Correction", ligne="Livret corrigé")
 CSS_PROF = """
-.bandeau-prof{flex:0 0 14mm;box-sizing:border-box;padding-top:4mm;display:flex;align-items:center;justify-content:center;
-  background:#b91c1c;color:#fff;font-size:16px;font-weight:700;text-transform:uppercase;letter-spacing:3px}
-.ident .champ.prof{flex:1;padding:1.2mm 4mm;text-align:center;line-height:1.2}
-.ident .champ.prof span{font-size:17px;color:#7c2d12}
-.ident .champ.prof small{font-size:12.5px;font-weight:700;color:#475569;margin-left:2.5mm}
-.ident .champ.prof small::before{content:"— "}
+.bandeau-prof{position:absolute;top:0;left:0;right:0;height:9mm;z-index:5;display:flex;align-items:center;justify-content:center;
+  background:#b91c1c;color:#fff;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:3px}
+.ident .champ.prof{padding:2.5mm 4mm;text-align:center;line-height:1.25}
+.ident .champ.prof span{display:block;font-size:17px;color:#7c2d12}
+.ident .champ.prof small{display:block;font-size:12.5px;font-weight:700;color:#475569;margin-top:1mm}
 """
 
-# L'exemple : la carte (ses plateaux, comme sur la fiche) et les cadres de la correction de
-# l'outil, un par étape, dessinés par drawSysCadre au profil d'impression, sans numéro (le
-# numéro est dans la pastille de la page). Les couleurs var(--…) de l'outil sont résolues.
-JS_EXEMPLE = r"""() => {
+# ---------------------------------------------------------------------------
+# L'EXEMPLE ET LA CARTE « À TOI » : dessinés par l'outil. La carte (ses plateaux, comme sur la
+# fiche, drawSysPlateaux), puis les blocs de la correction (drawSysCorrectionBlocs, le corrigé
+# 2 par page) : tous ensemble (« bloc » = null) ou bloc par bloc. « vide » : le même schéma sans
+# ses nombres (totaux, calculs, valeurs trouvées, réponse) — la carte « À toi ! » de la page 3.
+# Les couleurs var(--…) de l'outil sont résolues (sinon une pastille sortirait noire).
+JS_EXEMPLE = r"""(opts) => {
   const NS = 'http://www.w3.org/2000/svg', card = cards[0];
   if (!card || !card._sys || !Array.isArray(card._sys.plan)) return {erreur: 'pas une carte du Système'};
   const mkEl = (n, a = {}) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); return e; };
   const mkText = (x, y, t, a = {}) => { const e = mkEl('text', {x, y, ...a}); e.textContent = t; return e; };
-  const mk = () => { const sv = document.createElementNS(NS, 'svg'); sv.setAttribute('viewBox', '0 0 1600 2200');
-    sv.setAttribute('width', '1600'); sv.setAttribute('height', '2200'); document.body.appendChild(sv); return sv; };
-  const sc = mk(); renderCardIntoSvg(sc, card, 'statement');
-  const fond = sc.querySelector('rect'); if (fond && fond.getAttribute('width') === '1600') fond.remove();
-  const bb = sc.getBBox();
-  const carte = {svg: sc.innerHTML, vb: [Math.floor(bb.x) - 16, Math.floor(bb.y) - 16, Math.ceil(bb.width) + 32, Math.ceil(bb.height) + 32].join(' ')};
-  sc.remove();
-  const mesures = sysCorrMesures(card);
-  const ctx = {mkEl, mkText, isPrint: true, lettres: false, C: mesures.C};
-  const cadres = card._sys.plan.map(e => {
-    const sv = mk(); const g = mkEl('g'); sv.appendChild(g);
-    const h = drawSysCadre(g, card, e, 0, mesures, ctx, 0);
-    const r = {svg: sv.innerHTML, h, role: e.role, titre: e.titre}; sv.remove(); return r;
-  });
-  const cs = getComputedStyle(document.body);
-  const inconnues = new Set();
+  const mk = (w, h) => { const sv = document.createElementNS(NS, 'svg'); sv.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+    sv.setAttribute('width', w); sv.setAttribute('height', h); document.body.appendChild(sv); return sv; };
+  const boite = (sv, m) => { const bb = sv.getBBox(); return [Math.floor(bb.x) - m, Math.floor(bb.y) - m, Math.ceil(bb.width) + 2 * m, Math.ceil(bb.height) + 2 * m].join(' '); };
+  const cs = getComputedStyle(document.body), inconnues = new Set();
   const resout = s => s.replace(/var\((--[\w-]+)\)/g, (m, n) => { const v = cs.getPropertyValue(n).trim(); if (!v) inconnues.add(n); return v || m; });
-  carte.svg = resout(carte.svg); cadres.forEach(c => { c.svg = resout(c.svg); });
+  // la carte : ses plateaux seulement (le 2 par page de l'énoncé, sans la ligne réponse)
+  const sc = mk(1830, 2200);
+  drawSysPlateaux(sc, card, SYS_ZONE_IMPRIME_2P, {mkEl, mkText, isPrint: true, devoile: false});
+  const carte = {svg: resout(sc.innerHTML), vb: boite(sc, 16)}; sc.remove();
+  // les blocs de la correction
+  const ctx = {mkEl, mkText, isPrint: true, lettres: !numberedQuestionMarkMode};
+  const plan = card._sys.plan;
+  // « vide » : le même dessin, puis ses nombres effacés (totaux, valeurs trouvées, blocs, calculs
+  // gris) — le plan n'est pas touché, la mise en page reste exactement celle du corrigé ; « Je
+  // vérifie » garde ses lignes, en pointillés, et la réponse « noire = …… ».
+  const vider = p => p.map(e => {
+    if (e.role !== 'verification') return e;
+    const x = JSON.parse(JSON.stringify(e));
+    x.lignes = (x.lignes || []).map(() => '…………………………………………'); (x.reponses || []).forEach(r => { r.value = '……'; });
+    return x;
+  });
+  const dessine = etapes => {
+    const sv = mk(1740, 8000), g = mkEl('g'); sv.appendChild(g);
+    const c2 = Object.assign({}, card, {_sys: Object.assign({}, card._sys, {plan: opts.vide ? vider(etapes) : etapes})});
+    drawSysCorrectionBlocs(g, c2, 100, 7900, ctx);
+    const trait = g.querySelector(':scope > line'); if (trait) trait.remove();   // le pointillé sous l'énoncé
+    // les nombres : en noir dans les barres (totaux, valeurs trouvées, blocs), en gris à côté
+    // (calculs) ; les noms des taches sont en blanc, les titres en encre (#0f172a) : ils restent
+    if (opts.vide) g.querySelectorAll('text[fill="#000"], text[fill="#475569"]').forEach(t => t.remove());
+    const r = {svg: resout(sv.innerHTML), vb: boite(sv, 6), echelle: (g.querySelector('#sysCorrectionPrint') || {getAttribute: () => '?'}).getAttribute('data-echelle')};
+    sv.remove(); return r;
+  };
+  const etapes = plan.filter(e => e.role !== 'verification'), verif = plan.find(e => e.role === 'verification');
+  const blocs = sysBlocs(etapes).map(b => Object.assign(dessine(b), {roles: b.map(e => e.role), titres: b.map(e => e.titre)}));
+  if (verif) blocs.push(Object.assign(dessine([verif]), {roles: ['verification'], titres: [verif.titre]}));
+  const tout = dessine(plan);
   if (inconnues.size) return {erreur: 'variables de couleur inconnues : ' + [...inconnues].join(', ')};
   const s = card._sys, mot = k => investigateColorWord(investigateColorByKey(k));
-  return {carte, cadres, geste: s.geste, total: card.total, visibles: card.visible,
+  return {carte, tout, blocs, lettre: ctx.lettres, geste: s.geste, total: card.total, visibles: card.visible,
           couleurs: s.colors.map(k => ({k, mot: mot(k), pluriel: SYS_COULEURS_PLURIEL[k], valeur: s.values[k]})),
           plateaux: s.boards.map(b => ({counts: s.colors.map(k => b.counts[k] || 0), total: b.total})),
           cle: [card.total, JSON.stringify(card.hidden.slice().sort((a, b) => a - b)),
                 JSON.stringify(s.boards.map(b => [s.colors.map(k => b.counts[k] || 0), b.total, b.visible || []]))]};
 }"""
 
+# Les cartes du défi (dos) : l'énoncé 2 par page (les plateaux, la place pour chercher, la ligne
+# réponse remontée), ou son corrigé (l'énoncé dévoilé et les blocs), tels que l'outil les dessine.
+JS_DEFI = r"""([n, corr, haut]) => {
+  printSheet();
+  const svgs = [...document.querySelectorAll('.printArea .pCard svg')].slice(0, n);
+  if (svgs.length !== n) return {erreur: svgs.length + ' cartes au lieu de ' + n};
+  const cs = getComputedStyle(document.body), inconnues = new Set();
+  const resout = s => s.replace(/var\((--[\w-]+)\)/g, (m, k) => { const v = cs.getPropertyValue(k).trim(); if (!v) inconnues.add(k); return v || m; });
+  const out = svgs.map(sv => {
+    const c = sv.cloneNode(true); c.removeAttribute('style'); c.removeAttribute('width'); c.removeAttribute('height');
+    c.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    const vb = c.getAttribute('viewBox').split(/\s+/).map(Number);
+    if (!corr) {
+      // l'énoncé : la ligne réponse remonte, la carte raccourcit à « haut »
+      const lr = c.querySelector('#sysLigneReponsePrint');
+      if (!lr) return null;
+      lr.setAttribute('transform', 'translate(0 ' + (haut - vb[3]) + ')');
+      c.setAttribute('viewBox', [vb[0], vb[1], vb[2], haut].join(' '));
+      const fond = c.querySelector('rect'); if (fond) fond.setAttribute('height', haut);
+    } else {
+      // le corrigé : jusqu'au bas du dessin (mesuré sans le fond blanc de la carte)
+      document.body.appendChild(c);
+      const fond0 = c.querySelector('rect'); if (fond0) fond0.setAttribute('height', 0);
+      const bb = c.getBBox(); c.remove();
+      const h = Math.ceil(bb.y + bb.height + 40);
+      c.setAttribute('viewBox', [vb[0], vb[1], vb[2], h].join(' '));
+      const fond = c.querySelector('rect'); if (fond) fond.setAttribute('height', h);
+    }
+    return resout(c.outerHTML);
+  });
+  if (out.some(x => !x)) return {erreur: 'pas de ligne réponse'};
+  if (inconnues.size) return {erreur: 'variables de couleur inconnues : ' + [...inconnues].join(', ')};
+  return {svgs: out, echelles: [...document.querySelectorAll('#sysCorrectionPrint')].map(g => g.getAttribute('data-echelle')),
+          cles: cards.slice(0, n).map(c => [c.total, JSON.stringify(c.hidden.slice().sort((a, b) => a - b)),
+            JSON.stringify(c._sys.boards.map(b => [c._sys.colors.map(k => b.counts[k] || 0), b.total, b.visible || []]))])};
+}"""
+
 JS_COUV = """(d) => {
-  const set = (sel, svg, vb) => { const e = document.querySelector(sel); if (!e) return false; e.innerHTML = svg; if (vb) e.setAttribute('viewBox', vb); return true; };
-  if (!set('svg.ex-carte', d.carte, d.vbCarte)) return 'pas de place pour la carte';
-  if (!set('svg.ex-vide', d.premier, d.vbPremier)) return 'pas de place pour le premier cadre';
-  const txt = (sel, html) => { const e = document.querySelector(sel); if (!e) return false; e.innerHTML = html; return true; };
+  const e = document.querySelector('svg.ex-carte'); if (!e) return 'pas de place pour la carte';
+  e.innerHTML = d.carte; e.setAttribute('viewBox', d.vbCarte);
+  const txt = (sel, html) => { const x = document.querySelector(sel); if (!x) return false; x.innerHTML = html; return true; };
   if (!txt('.tete .sur', d.sur) || !txt('.tete h1 span', d.titre) || !txt('.tete .accroche', d.accroche) || !txt('.expl .intro', d.intro)) return 'textes de couverture';
-  const h = document.querySelector('.tete h1 span').getBoundingClientRect(), hero = document.querySelector('.tete .hero').getBoundingClientRect();
-  if (h.height > 60) return 'titre sur deux lignes : ' + d.titre;
-  const mots = document.createRange(); mots.selectNodeContents(document.querySelector('.tete h1 span'));
+  const h1 = document.querySelector('.tete h1').getBoundingClientRect(), hero = document.querySelector('.tete .hero').getBoundingClientRect();
+  if (h1.height > 70) return 'titre sur deux lignes : ' + d.titre;
+  const mots = document.createRange(); mots.selectNodeContents(document.querySelector('.tete h1'));
   if (mots.getBoundingClientRect().right > hero.left - 4) return 'le titre touche le dessin : ' + d.titre;
   const li = document.querySelectorAll('.som ol li');
   if (li.length !== d.sommaire.length) return 'sommaire : ' + li.length + ' lignes';
   d.sommaire.forEach((t, i) => {
-    li[i].querySelector('.badge b').textContent = t[0];
+    const b = li[i].querySelector('.badge b'); b.textContent = t[0]; b.classList.toggle('d', String(t[0]).length > 2);
     li[i].querySelectorAll('span')[1].innerHTML = t[1] + '<em>' + t[2] + '</em>';
   });
   if (d.prof) {
@@ -303,24 +430,42 @@ JS_COUV = """(d) => {
     document.body.insertAdjacentHTML('afterbegin', '<div class="bandeau-prof">' + d.prof.bandeau + '</div>');
     id.innerHTML = '<div class="champ prof"><span>' + d.prof.ligne + '</span><small>' + d.prof.dit + '</small></div>';
   }
-  // rien ne déborde de la page (la couverture a une hauteur fixe)
+  // rien ne déborde (la page a une hauteur fixe)
   const pied = document.querySelector('.pied').getBoundingClientRect();
-  if (pied.bottom > document.body.getBoundingClientRect().bottom + 0.5) return 'la couverture déborde';
+  for (const s of ['.expl', '.som']) {
+    const r = document.querySelector(s).getBoundingClientRect();
+    if (r.bottom > pied.top + 0.5) return 'la couverture déborde sur le pied (' + s + ')';
+  }
+  const intro = document.querySelector('.expl .intro');
+  if (intro.scrollHeight > intro.clientHeight + 1) return 'le texte de « Comment ça marche ? » déborde';
   return 'ok';
 }"""
 
-JS_PAGE_EXEMPLE = """(d) => {
+# Pages 2 et 3 : la carte et son texte à gauche ; à droite soit un grand dessin (toute la
+# correction, ou le schéma à compléter), soit des étapes (pastille, titre, légende, dessin).
+JS_PAGE = """(d) => {
+  const txt = (sel, html) => { const x = document.querySelector(sel); if (!x) return false; x.innerHTML = html; return true; };
+  if (!txt('.tete .sur', d.sur) || !txt('.tete h1', d.h1)) return 'bandeau';
   const c = document.querySelector('svg.ex-carte'); if (!c) return 'pas de place pour la carte';
-  c.innerHTML = d.carte; c.setAttribute('viewBox', d.vbCarte);
-  const e = document.querySelector('.enquete'); if (!e) return 'pas de bloc enquête'; e.innerHTML = d.enquete;
-  const ol = document.querySelector('.etapes'); if (!ol) return 'pas de liste des étapes';
-  ol.innerHTML = d.etapes.map((et, i) =>
-    '<li class="et"><span class="badge"><svg viewBox="2 5 106 105" fill="#7c2d12"><use href="#tacheBadge"/></svg><b>' + (i + 1) + '</b></span>' +
-    '<div class="txt"><h3>' + et.h3 + '</h3><p class="leg">' + et.leg + '</p></div>' +
-    '<svg class="dessin" viewBox="40 -8 1520 ' + (et.h + 16) + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' + et.titre + '">' + et.svg + '</svg></li>').join('');
-  const f = document.querySelector('.fin'); if (!f) return 'pas de conclusion'; f.innerHTML = d.fin;
-  const pied = document.querySelector('.pied').getBoundingClientRect(), a = document.querySelector('.atoi').getBoundingClientRect();
-  if (a.bottom > pied.top - 1) return 'la page 2 déborde sur le pied';
+  if (d.carte) { c.innerHTML = d.carte; c.setAttribute('viewBox', d.vbCarte); document.querySelector('.carte .lg').innerHTML = d.lgCarte; }
+  else document.querySelector('.carte').remove();
+  if (!txt('.texte', d.texte)) return 'pas de texte';
+  if (!d.carte && !d.texte) document.querySelector('.gauche').remove();   // page pleine largeur
+  const dr = document.querySelector('.droite');
+  if (d.dessin) {
+    dr.innerHTML = (d.avant || '') + '<div class="dessin"><svg class="outil" xmlns="http://www.w3.org/2000/svg" viewBox="' + d.dessin.vb + '">' + d.dessin.svg + '</svg></div>' + (d.apres || '');
+  } else {
+    dr.innerHTML = (d.avant || '') + '<ol class="etapes">' + d.etapes.map(et =>
+      '<li class="et"><span class="badge"><svg viewBox="2 5 106 105" fill="#7c2d12"><use href="#tacheBadge"/></svg><b>' + et.n + '</b></span>' +
+      '<div class="txt"><h3>' + et.h3 + '</h3><p class="leg">' + et.leg + '</p></div>' +
+      '<svg class="outil" xmlns="http://www.w3.org/2000/svg" viewBox="' + et.vb + '">' + et.svg + '</svg></li>').join('') + '</ol>' + (d.apres || '');
+  }
+  const pied = document.querySelector('.pied').getBoundingClientRect();
+  for (const s of ['.gauche', '.droite']) {
+    if (!document.querySelector(s)) continue;
+    const kids = [...document.querySelector(s).children];
+    for (const k of kids) if (k.getBoundingClientRect().bottom > pied.top + 0.5) return 'la page déborde sur le pied (' + s + ')';
+  }
   return 'ok';
 }"""
 
@@ -328,70 +473,32 @@ JS_DOS = """(d) => {
   const box = document.querySelector('.niveaux');
   if (!box) return 'pas de bloc niveaux';
   box.innerHTML = d.niveaux.map(n =>
-     '<div class="niv"><img src="' + n[2] + '" alt=""><span class="n">' + n[0] +
-     '</span><span class="d">' + n[1] + '</span></div>').join('');
+     '<div class="niv"><img src="' + n[2] + '" alt=""><div><span class="n">' + n[0] +
+     '</span><span class="d">' + n[1] + '</span></div></div>').join('');
   const u = document.querySelector('.suite img'); if (u) u.setAttribute('src', d.univers);
   const s = document.querySelector('.suite p.t'); if (!s) return 'pas de texte « suite »'; s.innerHTML = d.suite;
-  // (« Mes fiches — je colorie l'étoile » a quitté le dos : relecture du monde 1, lot 2, 25/09/2026)
-  // d.fiches sert encore : les lignes du tableau des systèmes de CE livret, en gras
-  // 25/09/2026 : l'élève a « Pour se souvenir » ; le tableau des systèmes du collège (pour les
-  // profs) n'est qu'au dos des corrigés
-  const lex = document.querySelector('.lex'), syst = document.querySelector('.syst');
-  if (!lex || !syst) return 'pas de bloc « Pour se souvenir » ou « systèmes »';
-  if (d.tableau) lex.remove();
-  else {
-    syst.remove();
-    const m = document.querySelector('.mini-sch'), t = document.querySelector('.lex .pr');
-    if (!m || !t) return 'pas de mini-schéma';
-    m.innerHTML = d.mini.map(r => '<span class="r"><em>' + r[0] + '</em>' +
-      '<span class="q">?</span>'.repeat(r[1]) + (r[2] ? '<span class="reste" style="width:calc(' + r[2] + ' * 6.2mm - ' + (r[2] - 1) + ' * 1.3px)">reste</span>' : '') + '</span>').join('');
-    t.innerHTML = d.souvenir;
-    // un vrai schéma en barres : toutes les cases « ? » de la même largeur, les barres partent du
-    // même bord, les cases d'une barre se touchent, la case « reste » couvre exactement les cases
-    // du plateau qui dépassent
-    const rows = [...m.querySelectorAll('.r')].map(r => [...r.querySelectorAll('span')].map(e => e.getBoundingClientRect()));
-    const qs = [...m.querySelectorAll('.q')].map(e => e.getBoundingClientRect());
-    if (qs.some(b => Math.abs(b.width - qs[0].width) > 0.3)) return 'mini-schéma : des cases « ? » de largeurs différentes';
-    if (rows.some(r => Math.abs(r[0].left - rows[0][0].left) > 0.3)) return 'mini-schéma : les barres ne partent pas du même bord';
-    // le bloc « Pour se souvenir » est agrandi d'un coup (zoom, lot 2 de la relecture du monde 1) :
-    // les mesures sont faites dans l'espace agrandi, le chevauchement de 1,3 px des bordures aussi
-    const Z = parseFloat(getComputedStyle(document.querySelector('.lex ul')).zoom) || 1;
-    for (const r of rows) for (let i = 1; i < r.length; i++)
-      if (Math.abs(r[i].left - (r[i - 1].right - 1.3 * Z)) > 0.3 * Z) return 'mini-schéma : des cases ne se touchent pas';
-    if (Math.abs(rows[1][rows[1].length - 1].right - rows[0][rows[0].length - 1].right) > 0.4) return 'mini-schéma : « reste » ne finit pas avec le plateau';
-  }
-  // les lignes du tableau de CE livret en gras (fiches 25-29 ou 30-34)
-  document.querySelectorAll('.syst tbody tr').forEach(tr => {
-    const m = tr.children[1].textContent.match(/Système, fiches? (\\d+)(?: et (\\d+))?/);
-    tr.classList.toggle('ici', !!m && d.fiches.some(f => f[0] === +m[1] || (m[2] && f[0] === +m[2])));
-  });
+  const df = document.querySelector('.defi'); if (!df) return 'pas de bloc défi';
+  df.querySelector('.d-dit').innerHTML = d.defiDit;
+  if (d.corr) df.querySelector('.chip').innerHTML = 'Le défi&nbsp;! — corrigé';
+  df.querySelector('.d-cartes').innerHTML = d.defi.map(c => '<div class="d-carte">' + c + '</div>').join('');
+  if (d.corr) document.body.classList.add('dos-corrige');
+  // les cartes du défi tiennent dans leur bloc : sinon elles rapetissent ensemble, par pas de 3 %
+  const zone = df.querySelector('.d-cartes');
+  for (let k = 0; k < 15 && zone.scrollHeight > zone.clientHeight + 0.5; k++)
+    zone.querySelectorAll('.d-carte').forEach(c => { c.style.width = (parseFloat(getComputedStyle(c).width) * 0.97) + 'px'; });
+  if (zone.scrollHeight > zone.clientHeight + 0.5) return 'les cartes du défi débordent';
   const pied = document.querySelector('.pied').getBoundingClientRect(), cr = document.querySelector('.credits').getBoundingClientRect();
   if (cr.bottom > pied.top + 0.5) return 'le dos déborde sur le pied';
   return 'ok';
 }"""
 
-# Les légendes de la page 2, par étape (le rôle du cadre dans le plan de l'outil) et par geste.
-# Elles disent CE QU'ON FAIT, sans nombre : les nombres sont dans les cadres, dessinés par l'outil.
-ETAPES = {
-    "PARTIELLE": {
-        "plateau": ("Je dessine le plateau", "Une barre pour le plateau entier&nbsp;: une case par tache, toutes de la même largeur, et son total."),
-        "indice": ("Je place l'indice", "L'indice est un 2e plateau, fait de taches du 1er. Je le place dessous, aligné à gauche&nbsp;: ce qui dépasse, c'est <b>ce qui reste</b>."),
-        "reste": ("Ce qui reste", "Il vaut la différence des deux totaux. Ce sont des taches d'une seule couleur&nbsp;: je partage."),
-        "indice-seul": ("Je reviens à l'indice", "Il n'a qu'une couleur&nbsp;: je partage son total."),
-        "verification": ("Je vérifie", "Je remets les nombres trouvés sur chaque plateau&nbsp;: chaque total doit tomber juste."),
-    },
-    "DOUBLE": {
-        "plateau": ("Je dessine le plateau", "Une barre pour le plateau entier&nbsp;: une case par tache, toutes de la même largeur, et son total."),
-        "double": ("Je double l'indice", "L'indice n'a qu'une tache de chaque couleur&nbsp;: deux fois l'indice, c'est deux fois son total."),
-        "reste": ("Je compare au plateau", "L'indice doublé est dans le plateau&nbsp;: ce qui dépasse vaut la différence des totaux. Je partage."),
-        "indice-retire": ("Je reviens à l'indice", "Je retire la tache que je connais&nbsp;: il reste l'autre."),
-        "verification": ("Je vérifie", "Je remets les nombres trouvés sur chaque plateau&nbsp;: chaque total doit tomber juste."),
-    },
-}
-MOTS = {1: "une", 2: "deux", 3: "trois", 4: "quatre", 5: "cinq", 6: "six"}
+# ---------------------------------------------------------------------------
+# LES TEXTES DE L'EXEMPLE, écrits à partir de la carte rendue (ils ne peuvent pas mentir sur ses
+# nombres) ; les légendes disent CE QU'ON FAIT, sans nombre : les nombres sont dans les dessins.
+MOTS = {1: "une", 2: "deux", 3: "trois", 4: "quatre", 5: "cinq", 6: "six", 7: "sept"}
 
 def decrit(counts, couleurs):
-    """« 2 taches noires et 3 taches bleues » ; « la tache noire » pour une seule tache."""
+    """« 2 taches noires et 3 taches bleues » ; « une tache noire » pour une seule tache."""
     parts = []
     for n, c in zip(counts, couleurs):
         if n == 0:
@@ -399,37 +506,50 @@ def decrit(counts, couleurs):
         parts.append(f"{MOTS[n]} tache {c['mot']}" if n == 1 else f"{MOTS[n]} taches {c['pluriel']}")
     return " et ".join([", ".join(parts[:-1]), parts[-1]]) if len(parts) > 1 else parts[0]
 
+ORDINAUX = {0: "1er", 1: "2e", 2: "3e", 3: "4e"}
+
+LEGENDES = {
+    "plateaux": ("Je dessine chaque plateau", "Une barre par plateau&nbsp;: une case par tache, le total au-dessus."),
+    "remplace": ("Je remplace", "Le petit plateau est dans le grand&nbsp;: je le remplace par son total."),
+    "retire": ("Je retire", "La différence des deux totaux, c'est ce qui reste."),
+    "partage": ("Je partage", "Il ne reste qu'une couleur&nbsp;: je partage."),
+    "verification": ("Je vérifie", "Je refais chaque total avec les nombres trouvés."),
+}
+
+def legende(bloc, i):
+    """La légende d'un bloc : son premier geste (pastille ①…), sans nombre."""
+    r = bloc["roles"][0]
+    if r == "verification":
+        return LEGENDES["verification"]
+    if i > 1 and r in ("remplace",):
+        return ("Je reviens à un plateau", "Je connais une couleur&nbsp;: je mets sa valeur, je trouve l'autre.")
+    return LEGENDES.get(r, (bloc["titres"][0], ""))
+
 def textes_exemple(ex, geste):
-    """Les textes de la couverture et de la page 2, écrits à partir de la carte rendue."""
+    """Les textes de la couverture et des pages 2-3, écrits à partir de la carte rendue."""
     if ex["geste"] != geste:
         raise SystemExit(f"l'exemple devait être un geste {geste}, pas {ex['geste']}")
-    if ex["visibles"] or len(ex["plateaux"]) != 2 or len(ex["couleurs"]) != 2:
-        raise SystemExit("l'exemple : deux plateaux, deux couleurs, sans jeton visible")
-    roles = [c["role"] for c in ex["cadres"]]
-    leg = ETAPES[geste]
-    if set(roles) - set(leg):
-        raise SystemExit(f"l'exemple : des étapes sans légende {set(roles) - set(leg)}")
-    P, I = ex["plateaux"]
+    if ex["visibles"]:
+        raise SystemExit("l'exemple : sans jeton visible")
     C = ex["couleurs"]
-    intro = (f"Sur cette carte, deux plateaux, un total pour chacun. Le premier&nbsp;: {decrit(P['counts'], C)}, "
-             f"{P['total']} jetons en tout. Le second&nbsp;: {decrit(I['counts'], C)}, {I['total']} jetons. "
-             "Une couleur cache partout le même nombre de jetons."
-             "\n      <span>Pour mener l'enquête, on dessine chaque plateau en <b>barre</b>&nbsp;: une case par "
-             "tache, toutes de la même largeur. Puis on <b>compare</b> les barres. La page&nbsp;2 mène cette "
-             "enquête pas à pas, jusqu'à la réponse.</span>")
-    enquete = (f"<p><b>Le 1er plateau</b>&nbsp;: {decrit(P['counts'], C)}, TOTAL {P['total']}.</p>"
-               f"<p><b>Le 2e plateau</b>&nbsp;: {decrit(I['counts'], C)}, TOTAL {I['total']}.</p>"
-               "<p>Une couleur cache partout le même nombre de jetons.</p>"
-               "<p class=\"but\">Mon enquête&nbsp;: trouver ce que cache chaque couleur.</p>")
-    etapes = [dict(h3=leg[c["role"]][0], leg=leg[c["role"]][1], svg=c["svg"], h=c["h"], titre=c["titre"]) for c in ex["cadres"]]
-    # la conclusion : les valeurs, puis la vérification des deux plateaux
-    def somme(counts):
-        return " + ".join(f"{n} × {c['valeur']}" if n > 1 else f"{c['valeur']}" for n, c in zip(counts, C) if n)
-    for pl in (P, I):
-        assert sum(n * c["valeur"] for n, c in zip(pl["counts"], C)) == pl["total"]
-    fin = (" et ".join(f"la tache {c['mot']} cache <b>{c['valeur']}</b> jetons" for c in C).capitalize() +
-           f". Je vérifie&nbsp;: {somme(P['counts'])} = {P['total']} et {somme(I['counts'])} = {I['total']}.")
-    return dict(intro=intro, enquete=enquete, etapes=etapes, fin=fin)
+    pls = ex["plateaux"]
+    for pl in pls:
+        if pl["total"] is not None:
+            assert sum(n * c["valeur"] for n, c in zip(pl["counts"], C)) == pl["total"]
+    nb = {2: "deux", 3: "trois"}[len(pls)]
+    intro = (f"Sur cette carte, {nb} plateaux, un total pour chacun. Une couleur cache partout le même nombre de jetons."
+             f"<span>Pour trouver ce que cache chaque couleur, on <b>compare les plateaux</b>. Les pages&nbsp;2 et&nbsp;3 le font pas à pas.</span>")
+    lignes = "".join(f"<p><b>{ORDINAUX[i]} plateau</b>&nbsp;: {decrit(p['counts'], C)}, total {p['total']}.</p>" for i, p in enumerate(pls))
+    texte = (lignes + "<p>Une couleur cache partout le même nombre de jetons.</p>"
+             "<p class=\"but\"><b>Mon enquête</b>&nbsp;: trouver ce que cache chaque couleur.</p>")
+    fin = " et ".join(f"la tache {c['mot']} cache <b>{c['valeur']}</b> jetons" for c in C)
+    return dict(intro=intro, texte=texte, fin=fin[0].upper() + fin[1:] + ".")
+
+def textes_atoi(ax):
+    C = ax["couleurs"]
+    lignes = "".join(f"<p><b>{ORDINAUX[i]} plateau</b>&nbsp;: {decrit(p['counts'], C)}, total {p['total']}.</p>" for i, p in enumerate(ax["plateaux"]))
+    return (lignes + "<p class=\"but\"><b>À toi&nbsp;!</b> La même sorte de carte, d'autres nombres&nbsp;: "
+            "écris les totaux et les calculs dans le schéma, puis la réponse.</p>")
 
 
 def fabrique_qr():
@@ -458,33 +578,54 @@ def serveur():
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     return srv
 
-async def rendre(niv, tmp, corr=None):
-    """corr : None pour le livret de l'élève, sinon un élément de CORRECTIONS."""
+# Les dimensions : A4 en largeur (px CSS à 96 dpi : 297 mm = 1123 px, 210 mm = 794 px).
+A4L = {"width": 1123, "height": 794}
+
+async def rendre(niv, tmp, corr=None, page3="atoi"):
+    """corr : None pour le livret de l'élève, sinon un élément de CORRECTIONS.
+    page3 : « atoi » (l'exemple résolu en page 2, la même sorte de carte à compléter en page 3)
+    ou « suite » (l'exemple résolu sur les deux pages)."""
     from playwright.async_api import async_playwright
     base = f"http://127.0.0.1:{PORT}"
     qrweb = f"{BASE_WEB}/qr"
     cles = {}
-    fichiers = []
+    lettre = bool(corr and corr["lettre"])
     async with async_playwright() as p:
         nav = await p.chromium.launch(channel="chromium")
 
-        async def page_outil(query):
-            pg = await nav.new_page(viewport={"width": 794, "height": 1123})
+        async def page_outil(query, vp=None):
+            pg = await nav.new_page(viewport=vp or {"width": 794, "height": 1123})
             await pg.goto(f"{base}/outils/splat.html?{query}", wait_until="networkidle")
             await pg.wait_for_timeout(800)
             return pg
 
-        pg = await page_outil(niv["exemple"]["query"] + "&print=statement")
-        ex = await pg.evaluate(JS_EXEMPLE)
+        def q_lettre(q):
+            return q.replace("unknown=question", "unknown=letter") if lettre else q
+
+        ex_conf = niv["exemple"]
+        pg = await page_outil(q_lettre(ex_conf["query"]) + "&layout=2&print=statement")
+        ex = await pg.evaluate(JS_EXEMPLE, {"vide": False})
         await pg.close()
         if "erreur" in ex:
             raise SystemExit(f"exemple du livret « {niv['sortie']} » : {ex['erreur']}")
-        textes = textes_exemple(ex, niv["exemple"]["geste"])
+        pg = await page_outil(q_lettre(ex_conf["atoi"]) + "&layout=2&print=statement")
+        ax = await pg.evaluate(JS_EXEMPLE, {"vide": not corr})
+        if not corr and ax["lettre"]:
+            raise SystemExit("la carte « À toi » vide se dessine en « ? » (les lettres sont écrites en noir)")
+        await pg.close()
+        if "erreur" in ax:
+            raise SystemExit(f"carte « À toi » du livret « {niv['sortie']} » : {ax['erreur']}")
+        if [b["roles"] for b in ax["blocs"]] != [b["roles"] for b in ex["blocs"]]:
+            raise SystemExit(f"« À toi » ({niv['sortie']}) : pas le même schéma que l'exemple")
+        for b in ex["blocs"] + ax["blocs"] + [ex["tout"], ax["tout"]]:
+            if b["echelle"] not in ("1", "?"):
+                raise SystemExit(f"exemple ({niv['sortie']}) : un dessin réduit ({b['echelle']})")
+        textes = textes_exemple(ex, ex_conf["geste"])
         print(f"   exemple : {ex['geste']}, " + ", ".join(f"{c['mot']} {c['valeur']}" for c in ex["couleurs"]) +
               " — plateaux " + " ; ".join(str(p['total']) for p in ex["plateaux"]))
 
         async def pdf_html(url, sortie, js=None, donnees=None, css=()):
-            pg = await nav.new_page(viewport={"width": 794, "height": 1123})
+            pg = await nav.new_page(viewport=A4L)
             await pg.goto(url, wait_until="networkidle")
             await pg.wait_for_timeout(1200)
             for c in css:
@@ -495,31 +636,35 @@ async def rendre(niv, tmp, corr=None):
                 if r != "ok":
                     raise SystemExit(f"{url} : {r}")
             await pg.wait_for_timeout(400)
-            await pg.pdf(path=str(sortie), width="210mm", height="297mm", print_background=True,
+            await pg.pdf(path=str(sortie), width="297mm", height="210mm", print_background=True,
                          margin={"top": "0", "bottom": "0", "left": "0", "right": "0"})
             await pg.close()
 
-        async def pdf_fiche(f, sortie):
-            titre = f"Fiche {f['n']} — {f['t'].replace('&nbsp;', chr(160))}"
-            titre_url = titre.replace(chr(160), " ")
-            layout = corr["layout"] if corr else 4
-            q = f["q"] + SYS_COMMUN + f"&layout={layout}"
-            if corr and corr["lettre"]:
-                q = q.replace("unknown=question", "unknown=letter")
-            q += f"&title={quote(titre_url)}&print={'correction' if corr else 'statement'}"
+        async def pdf_fiche(f, sortie, iremi=False):
+            titre = f"Fiche {f['code']} — {f['t']}"
+            q = q_lettre(f["q"] + SYS_COMMUN) + f"&layout=2&title={quote(titre)}&print={'correction' if corr else 'statement'}"
             pg = await page_outil(q)
             etat = await pg.evaluate(JS_FICHE)
-            if etat["parPage"] != layout:
-                raise SystemExit(f"{titre} : {etat['parPage']} cartes par page au lieu de {layout}")
-            attendu = 4 // layout
-            if etat["feuilles"] != attendu or len(etat["cartes"]) != 4:
-                raise SystemExit(f"{titre} : {etat['feuilles']} feuilles, {len(etat['cartes'])} cartes")
-            cles[titre_url] = etat["cartes"]
+            if etat["parPage"] != 2 or etat["feuilles"] != 2 or len(etat["cartes"]) != 4:
+                raise SystemExit(f"{titre} : {etat['parPage']} par page, {etat['feuilles']} feuilles, {len(etat['cartes'])} cartes")
+            if etat["secours"]:
+                raise SystemExit(f"{titre} : une carte de secours")
+            if etat["types"] != TYPES[f["code"]]:
+                raise SystemExit(f"{titre} : types {etat['types']} au lieu de {TYPES[f['code']]}")
+            if f["code"] == "28d" and any(o is None or o == sorted(o) for o in etat["ordres"]):
+                raise SystemExit(f"{titre} : un plateau est à sa place habituelle")
+            if any(e != "1" for e in etat["echelles"]):
+                raise SystemExit(f"{titre} : une carte réduite ({etat['echelles']})")
+            cles[f["code"]] = etat["cartes"]
             await pg.add_style_tag(content=CSS_QR)
             r = await pg.evaluate(JS_QR, [f"{qrweb}/fiche{f['code']}.png", QR_CORR if corr else QR_ELEVE])
             if r != "ok":
                 raise SystemExit(f"{titre}, QR : {r}")
-            await pg.set_viewport_size({"width": 733, "height": 1062})
+            r = await pg.evaluate(JS_IREMI_SEUL if iremi else JS_SANS_LOGO)
+            if r != "ok":
+                raise SystemExit(f"{titre}, logos : {r}")
+            # la mesure se fait à la largeur imprimée (A4 paysage moins les 2 × 8 mm de l'outil)
+            await pg.set_viewport_size({"width": 1062, "height": 733})
             await pg.emulate_media(media="print")
             r = await pg.evaluate(JS_TITRE)
             if r != "ok":
@@ -528,91 +673,131 @@ async def rendre(niv, tmp, corr=None):
             if r != "ok":
                 raise SystemExit(f"{titre}, pied : {r}")
             await pg.wait_for_timeout(600)
-            await pg.pdf(path=str(sortie), format="A4", print_background=True, prefer_css_page_size=True)
+            # marges : celles de la feuille de l'outil (@page 8 mm), comme un professeur qui
+            # clique sur Imprimer
+            await pg.pdf(path=str(sortie), format="A4", landscape=True, print_background=True, prefer_css_page_size=True)
             await pg.close()
-            print(f"   {titre}")
+            print(f"   {titre}" + (" (avec l’IREMI)" if iremi else ""))
 
-        if corr and corr["layout"] == 2:
-            for i, f in enumerate(niv["fiches"]):
-                await pdf_fiche(f, tmp / f"fiche{i}.pdf")
-                fichiers.append(tmp / f"fiche{i}.pdf")
-            await nav.close()
-            return ex["cle"], cles, fichiers
-
-        cad = ex["cadres"]
-        couv = dict(carte=ex["carte"]["svg"], vbCarte=ex["carte"]["vb"], premier=cad[0]["svg"], vbPremier=f"40 -8 1520 {cad[0]['h'] + 16}",
+        # 1. la couverture
+        couv = dict(carte=ex["carte"]["svg"], vbCarte=ex["carte"]["vb"],
                     sur=niv["couv"]["sur"], titre=niv["couv"]["titre"], accroche=niv["couv"]["accroche"], intro=textes["intro"],
-                    sommaire=[[f["n"], f["t"], f["resume"]] for f in niv["fiches"]],
+                    sommaire=[[f["code"], f["t"], f["resume"]] for f in niv["fiches"]],
                     prof=dict(PROF, dit=corr["dit"]) if corr else None)
-        await pdf_html(f"{base}{BASE_WEB}/couverture.html", tmp / "couverture.pdf", JS_COUV, couv,
-                       css=[CSS_PROF if corr else None])
-        fichiers.append(tmp / "couverture.pdf")
-        await pdf_html(f"{base}{BASE_WEB}/exemple.html", tmp / "exemple.pdf", JS_PAGE_EXEMPLE,
-                       dict(carte=ex["carte"]["svg"], vbCarte=ex["carte"]["vb"], etapes=textes["etapes"],
-                            enquete=textes["enquete"], fin=textes["fin"]))
-        fichiers.append(tmp / "exemple.pdf")
+        await pdf_html(f"{base}{BASE_WEB}/couverture.html", tmp / "p01.pdf", JS_COUV, couv, css=[CSS_PROF if corr else None])
+
+        # 2-3. l'exemple
+        lg = "La carte et ses plateaux"
+        if page3 == "atoi":
+            p2 = dict(sur="Un exemple résolu", h1="Le système pas à pas", carte=ex["carte"]["svg"], vbCarte=ex["carte"]["vb"], lgCarte=lg,
+                      texte=textes["texte"], dessin=dict(svg=ex["tout"]["svg"], vb=ex["tout"]["vb"]))
+            p3 = dict(sur="À toi&nbsp;!", h1="La même sorte de carte" + (" — corrigée" if corr else ""),
+                      carte=ax["carte"]["svg"], vbCarte=ax["carte"]["vb"], lgCarte="La carte et ses plateaux",
+                      texte=textes_atoi(ax) if not corr else textes_atoi(ax).replace("écris les totaux et les calculs dans le schéma, puis la réponse", "le schéma rempli"),
+                      dessin=dict(svg=ax["tout"]["svg"], vb=ax["tout"]["vb"]))
+        else:
+            bl = ex["blocs"]
+            coupe = (len(bl) + 1) // 2 if len(bl) > 3 else 2
+            et = lambda bs, d0: [dict(n=d0 + i + 1, h3=legende(b, d0 + i)[0], leg=legende(b, d0 + i)[1], svg=b["svg"], vb=b["vb"]) for i, b in enumerate(bs)]
+            p2 = dict(sur="Un exemple résolu", h1="Le système pas à pas", carte=ex["carte"]["svg"], vbCarte=ex["carte"]["vb"], lgCarte=lg,
+                      texte=textes["texte"], etapes=et(bl[:coupe], 0))
+            p3 = dict(sur="Un exemple résolu (suite)", h1="Le système pas à pas", carte=None, vbCarte="",
+                      texte="", etapes=et(bl[coupe:], coupe),
+                      apres='<p class="atoi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21l3.5-.8L19 7.7 16.3 5 3.8 17.5 3 21z" fill="#92400e"/></svg><span><b>À toi&nbsp;!</b> Sur les fiches, sous chaque carte, dessine le schéma comme dans cet exemple, puis trouve ce que cache chaque couleur.</span></p>')
+        await pdf_html(f"{base}{BASE_WEB}/exemple.html", tmp / "p02.pdf", JS_PAGE, p2)
+        await pdf_html(f"{base}{BASE_WEB}/exemple.html", tmp / "p03.pdf", JS_PAGE, p3)
+
+        # 4-11. les fiches, deux fois chacune (livret à plier, page par page)
         for i, f in enumerate(niv["fiches"]):
             await pdf_fiche(f, tmp / f"fiche{i}.pdf")
-            fichiers.append(tmp / f"fiche{i}.pdf")
+            await pdf_fiche(f, tmp / f"fiche{i}_iremi.pdf", iremi=True)
+
+        # 12. le dos
         d = niv["dos"]
+        defi, cles_defi = [], []
+        for dc in d["defi"]:
+            q = q_lettre(dc["q"] + f"&cards={dc['n']}&unknown=question") + f"&layout=2&print={'correction' if corr else 'statement'}"
+            pg = await page_outil(q)
+            r = await pg.evaluate(JS_DEFI, [dc["n"], bool(corr), 1450])
+            await pg.close()
+            if "erreur" in r:
+                raise SystemExit(f"défi du livret « {niv['sortie']} » : {r['erreur']}")
+            if any(e != "1" for e in r["echelles"]):
+                raise SystemExit(f"défi du livret « {niv['sortie']} » : une carte réduite")
+            defi += r["svgs"]; cles_defi += r["cles"]
         dos = dict(niveaux=[[nom, desc, f"{qrweb}/serie-{s}.png"] for nom, desc, s in d["series"]],
-                   univers=f"{qrweb}/univers.png", suite=d["suite"],
-                   fiches=[[f["n"], f["t"]] for f in niv["fiches"]],
-                   tableau=bool(corr), mini=d["souvenir"]["mini"], souvenir=d["souvenir"]["texte"])
-        await pdf_html(f"{base}{BASE_WEB}/dos.html", tmp / "dos.pdf", JS_DOS, dos)
-        fichiers.append(tmp / "dos.pdf")
+                   univers=f"{qrweb}/univers.png", suite=d["suite"], defi=defi, defiDit=d["defi_dit"], corr=bool(corr))
+        await pdf_html(f"{base}{BASE_WEB}/dos.html", tmp / "p12.pdf", JS_DOS, dos)
         await nav.close()
-    return ex["cle"], cles, fichiers
+    return dict(ex=ex["cle"], atoi=ax["cle"], defi=cles_defi), cles
 
-def assemble_feuilles(fichiers, sortie):
-    """Le corrigé 2 par page : les pages de l'outil telles quelles (A4 paysage), à la suite."""
+def ordre_des_pages(niv, tmp, iremi=False):
+    # iremi : les fiches avec le logo de l'IREMI (PDF page par page) ; sinon, sans (livret à plier)
+    pages = [tmp / "p01.pdf", tmp / "p02.pdf", tmp / "p03.pdf"]
+    for i in range(len(niv["fiches"])):
+        pages.append(tmp / f"fiche{i}{'_iremi' if iremi else ''}.pdf")
+    pages.append(tmp / "p12.pdf")
+    return pages
+
+# L'IMPOSITION « TABLETTE » : 12 pages A4 paysage sur 3 feuilles A3 EN HAUTEUR, recto verso.
+# C'est le cahier de 12 pages d'un livret ordinaire tourné d'un quart de tour : la gauche devient
+# le haut, la droite le bas. Feuille 1 (dehors) : recto 12 en haut / 1 en bas, verso 2 / 11 ;
+# feuille 2 : 10 / 3, puis 4 / 9 ; feuille 3 (au milieu) : 8 / 5, puis 6 / 7. Toutes les pages
+# droites dans la feuille en hauteur ; imprimé recto verso avec RETOURNEMENT SUR LE BORD COURT
+# (la feuille se retourne de haut en bas, comme un calendrier), le haut du verso est derrière le
+# bas du recto : page 2 derrière la couverture, etc. On plie chaque feuille en deux à
+# l'horizontale (le haut passe derrière), on emboîte les trois feuilles, on agrafe sur le pli.
+IMPOSITION = [(12, 1), (2, 11), (10, 3), (4, 9), (8, 5), (6, 7)]
+
+def assemble(niv, tmp, sortie):
+    """Le PDF page par page (12 pages A4 paysage) et le livret à plier (6 pages A3 en hauteur).
+
+    IMPORTANT : on passe par pikepdf et `add_overlay`, qui place chaque page comme un Form
+    XObject. Avec une simple translation de contenu (pypdf merge_transformed_page), les
+    DÉGRADÉS ne suivent pas (bug vu sur le livret du monde 1 le 17/09/2026)."""
     import pikepdf
-    doc = pikepdf.Pdf.new()
+    W, H = 841.890, 595.276                      # A4 en largeur
     src = []
-    for f in fichiers:
-        d = pikepdf.open(str(f)); src.append(d)
-        doc.pages.extend(d.pages)
-    for p in doc.pages:
-        w, h = float(p.mediabox[2]), float(p.mediabox[3])
-        if not w > h:
-            raise SystemExit(f"{sortie} : une page n'est pas en paysage ({w:.0f} × {h:.0f})")
-    doc.save(str(RACINE / "outils" / f"{sortie}.pdf"))
-    n = len(doc.pages)
-    for d in src:
-        d.close()
-    return n
-
-def assemble(fichiers, sortie):
-    """Assemble les 8 pages, puis impose les 2 feuilles A3 (pikepdf + add_overlay : les
-    dégradés suivent, ce qu'une simple translation de contenu ne fait pas)."""
-    import pikepdf
-    A4W, A4H = 595.276, 841.890
-    src, pages = [], []
-    for f in fichiers:
-        d = pikepdf.open(str(f))
-        if len(d.pages) != 1:
-            raise SystemExit(f"{f.name} : {len(d.pages)} pages au lieu d'une")
-        src.append(d); pages.extend(d.pages)
-    if len(pages) != 8:
-        raise SystemExit(f"{len(pages)} pages au lieu de 8")
+    def lire(chemins):
+        out = []
+        for f in chemins:
+            d = pikepdf.open(str(f)); src.append(d)
+            out.extend(d.pages)
+        return out
+    pages = lire(ordre_des_pages(niv, tmp))
+    par_page = lire(ordre_des_pages(niv, tmp, iremi=True))
+    for liste in (pages, par_page):
+        if len(liste) != 12:
+            raise SystemExit(f"{len(liste)} pages au lieu de 12")
+        for p in liste:
+            w, h = float(p.mediabox[2]) - float(p.mediabox[0]), float(p.mediabox[3]) - float(p.mediabox[1])
+            if not (w > h and abs(w / h - W / H) < 0.01):
+                raise SystemExit(f"{sortie} : une page n'est pas un A4 en largeur ({w:.1f} × {h:.1f})")
     livret = pikepdf.Pdf.new()
-    for p in pages:
-        page = livret.add_blank_page(page_size=(A4W, A4H))
-        pikepdf.Page(page).add_overlay(p, pikepdf.Rectangle(0, 0, A4W, A4H))
+    for p in par_page:
+        page = livret.add_blank_page(page_size=(W, H))
+        pikepdf.Page(page).add_overlay(p, pikepdf.Rectangle(0, 0, W, H))
     livret.save(str(RACINE / "outils" / f"{sortie}.pdf"))
     a3 = pikepdf.Pdf.new()
-    for g, d in [(8, 1), (2, 7), (6, 3), (4, 5)]:   # imposition d'un cahier de 8 pages
-        feuille = a3.add_blank_page(page_size=(2 * A4W, A4H))
-        for idx, tx in ((g, 0.0), (d, A4W)):
-            pikepdf.Page(feuille).add_overlay(pages[idx - 1], pikepdf.Rectangle(tx, 0, tx + A4W, A4H))
+    for haut, bas in IMPOSITION:
+        feuille = a3.add_blank_page(page_size=(W, 2 * H))
+        pikepdf.Page(feuille).add_overlay(pages[haut - 1], pikepdf.Rectangle(0, H, W, 2 * H))
+        pikepdf.Page(feuille).add_overlay(pages[bas - 1], pikepdf.Rectangle(0, 0, W, H))
     a3.save(str(RACINE / "outils" / f"{sortie}_a_plier.pdf"))
     for s in src:
         s.close()
-    return len(pages)
 
 def compresse(chemin):
+    """qpdf, s'il est installé, divise le poids par deux ; sinon pikepdf, mêmes réglages."""
     import shutil, subprocess
     if not shutil.which("qpdf"):
+        import pikepdf
+        pikepdf.settings.set_flate_compression_level(9)
+        tmp = chemin.with_suffix(".qpdf.pdf")
+        with pikepdf.open(str(chemin)) as d:
+            d.save(str(tmp), object_stream_mode=pikepdf.ObjectStreamMode.generate,
+                   compress_streams=True, recompress_flate=True)
+        tmp.replace(chemin)
         return
     tmp = chemin.with_suffix(".qpdf.pdf")
     r = subprocess.run(["qpdf", "--object-streams=generate", "--compress-streams=y",
@@ -622,16 +807,19 @@ def compresse(chemin):
 
 CARTES_JSON = ICI / "cartes.json"
 
-def ecrire_cartes(nom, cle_ex, reference):
-    """cartes.json : pour chaque livret, l'exemple et les 20 cartes des fiches — total, valeurs
-    triées, plateaux (nombre de taches de chaque couleur, total, jetons visibles)."""
+def ecrire_cartes(nom, autres, reference):
+    """cartes.json : pour chaque livret, l'exemple, la carte « À toi », les cartes du défi et les
+    16 cartes des fiches — total, valeurs triées, plateaux (taches de chaque couleur, total,
+    jetons visibles)."""
     tout = json.loads(CARTES_JSON.read_text(encoding="utf-8")) if CARTES_JSON.exists() else {}
-    tout[nom] = {"exemple": [cle_ex[0], json.loads(cle_ex[1]), json.loads(cle_ex[2])],
-                 "fiches": {t: [[c[0], json.loads(c[1]), json.loads(c[2])] for c in v] for t, v in reference.items()}}
+    tout = {k: v for k, v in tout.items() if k in LIVRETS}
+    dec = lambda c: [c[0], json.loads(c[1]), json.loads(c[2])]
+    tout[nom] = {"exemple": dec(autres["ex"]), "atoi": dec(autres["atoi"]), "defi": [dec(c) for c in autres["defi"]],
+                 "fiches": {t: [dec(c) for c in v] for t, v in reference.items()}}
     j = lambda x: json.dumps(x, ensure_ascii=False, separators=(", ", ": "))
     lignes = ["{"]
     for i, (n, c) in enumerate(sorted(tout.items())):
-        lignes.append(f' {j(n)}: {{"exemple": {j(c["exemple"])}, "fiches": {{')
+        lignes.append(f' {j(n)}: {{"exemple": {j(c["exemple"])}, "atoi": {j(c["atoi"])}, "defi": {j(c["defi"])}, "fiches": {{')
         fs = list(c["fiches"].items())
         for k, (t, v) in enumerate(fs):
             lignes.append(f'  {j(t)}: [')
@@ -643,17 +831,34 @@ def ecrire_cartes(nom, cle_ex, reference):
     CARTES_JSON.write_text("\n".join(lignes) + "\n", encoding="utf-8")
 
 def controle_global():
-    """Sur les deux livrets : aucun exemple n'est une carte d'une fiche (mêmes plateaux, mêmes
-    valeurs), et les deux exemples sont différents."""
+    """Sur les deux livrets : aucune carte en double — fiches, exemples, cartes « À toi » et
+    défis confondus (mêmes valeurs, mêmes plateaux, quelles que soient les couleurs)."""
     tout = json.loads(CARTES_JSON.read_text(encoding="utf-8"))
-    cle = lambda c: json.dumps([c[0], sorted(c[1]), c[2]])
-    cartes = {cle(k) for c in tout.values() for cs in c["fiches"].values() for k in cs}
+    cle = lambda c: json.dumps([sorted(c[1]), sorted(c[2], key=json.dumps)])
+    vues = {}
     for nom, c in tout.items():
-        if cle(c["exemple"]) in cartes:
-            raise SystemExit(f"l'exemple du livret « {nom} » est une carte des fiches")
-    exs = [cle(c["exemple"]) for c in tout.values()]
-    if len(set(exs)) != len(exs):
-        raise SystemExit("deux livrets ont le même exemple")
+        liste = [("exemple", c["exemple"]), ("à toi", c["atoi"])] + [(f"défi {i + 1}", x) for i, x in enumerate(c["defi"])]
+        liste += [(f"fiche {t}, carte {i + 1}", x) for t, v in c["fiches"].items() for i, x in enumerate(v)]
+        for ou, x in liste:
+            k = cle(x)
+            if k in vues:
+                raise SystemExit(f"carte en double : {nom}, {ou} = {vues[k]}")
+            vues[k] = f"{nom}, {ou}"
+
+def vignettes():
+    """Les vignettes de la page des livrets : la couverture (page 1) à 120 dpi, PNG et WebP."""
+    import subprocess, tempfile
+    from PIL import Image
+    for niv in LIVRETS.values():
+        nom = niv["sortie"].replace("_", "-")
+        with tempfile.TemporaryDirectory() as d:
+            subprocess.run(["pdftoppm", "-r", "120", "-png", "-f", "1", "-l", "1", "-singlefile",
+                            str(RACINE / "outils" / f"{niv['sortie']}.pdf"), f"{d}/v"], check=True)
+            im = Image.open(f"{d}/v.png").convert("RGB")
+            dest = RACINE / "assets" / "img" / "thumbnails" / "splat"
+            im.save(dest / f"{nom}.png", optimize=True)
+            im.save(dest / f"{nom}.webp", quality=82, method=6)
+        print(f"   vignette : {nom}.png / .webp ({im.size[0]} × {im.size[1]})")
 
 def main():
     import tempfile
@@ -662,8 +867,11 @@ def main():
     inconnu = [a for a in demandes if a not in LIVRETS]
     if inconnu:
         raise SystemExit(f"livret inconnu : {', '.join(inconnu)} (au choix : {', '.join(LIVRETS)})")
+    if "--vignettes" in sys.argv:
+        vignettes(); return
     if "--eleve" in sys.argv and "--correction" in sys.argv:
         raise SystemExit("--eleve et --correction s'excluent (sans option : tous)")
+    page3 = "suite" if "--page3-suite" in sys.argv else "atoi"
     versions = [None] + CORRECTIONS
     if "--eleve" in sys.argv:
         versions = [None]
@@ -676,28 +884,22 @@ def main():
         for nom in demandes:
             niv = LIVRETS[nom]
             print(f"— livret « {nom} »")
-            reference = None
+            reference = autres = None
             for corr in versions:
                 sortie = niv["sortie"] + (corr["suffixe"] if corr else "")
                 with tempfile.TemporaryDirectory() as d:
                     tmp = Path(d)
-                    cle_ex, cles, fichiers = asyncio.run(rendre(niv, tmp, corr))
-                    deux = bool(corr and corr["layout"] == 2)
-                    n = assemble_feuilles(fichiers, sortie) if deux else assemble(fichiers, sortie)
-                attendu = 10 if deux else 8
-                if n != attendu:
-                    raise SystemExit(f"{sortie} : {n} pages au lieu de {attendu}")
-                vues = {t.replace(" — Correction", ""): v for t, v in cles.items()}
+                    au, cles = asyncio.run(rendre(niv, tmp, corr, page3))
+                    assemble(niv, tmp, sortie)
                 if reference is None:
-                    reference = vues
-                elif vues != reference:
+                    reference, autres = cles, au
+                elif cles != reference or au != autres:
                     raise SystemExit(f"{sortie} : les cartes diffèrent du livret de l'élève")
-                for s in (("",) if deux else ("", "_a_plier")):
+                for s in ("", "_a_plier"):
                     compresse(RACINE / "outils" / f"{sortie}{s}.pdf")
-                print(f"   Fait : outils/{sortie}.pdf ({n} pages)" + ("" if deux else f" et outils/{sortie}_a_plier.pdf"))
-            if any(cle_ex == c for v in reference.values() for c in v):
-                raise SystemExit(f"l'exemple du livret « {nom} » est une carte du livret")
-            ecrire_cartes(nom, cle_ex, reference)
+                print(f"   Fait : outils/{sortie}.pdf (12 pages) et outils/{sortie}_a_plier.pdf")
+            if versions[0] is None:
+                ecrire_cartes(nom, autres, reference)
         controle_global()
     finally:
         srv.shutdown()
