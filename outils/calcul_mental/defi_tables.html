@@ -705,6 +705,10 @@
     .parcours-extra p { margin: 6px 0 0; color: var(--muted); font-size: .88rem; }
     .parcours-notice-action { margin-top: 14px; }
     .launch-hint { margin: 0; color: var(--muted); font-size: .9rem; }
+    /* Lot E2 (question E2 · 1) : le format de l'épreuve, au-dessus du chrono. */
+    .launch-format { display: grid; gap: 6px; margin: 0 0 10px; color: var(--ink); font-size: .95rem; font-weight: 700; line-height: 1.35; }
+    .launch-format p { margin: 0; }
+    .launch-format b { font-weight: 900; white-space: nowrap; }
     .result-parcours {
       margin: 12px 0 0;
       padding: 11px 13px;
@@ -861,6 +865,16 @@
     .seance-suite .cadre .rangee { margin: 2px auto 8px; max-width: 440px; }
     .seance-suite .cadre p { margin: 0; line-height: 1.4; }
     .seance-suite .cadre p b { color: var(--blue); }
+    /* Lot E2 (décision 3) : « À retenir pour demain », toutes les erreurs de
+       la séance écrites justes ; il remplace la liste de la dernière étape. */
+    .seance-suite .retenir { width: 100%; padding: 11px 13px; border: 1px solid #efd28a; border-radius: 13px; background: #fff8e6; text-align: left; box-sizing: border-box; }
+    .seance-suite .retenir h2 { margin: 0 0 7px; color: #8a4c00; font-size: 1rem; font-weight: 950; }
+    .seance-suite .retenir ul { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 7px; padding: 0; list-style: none; }
+    .seance-suite .retenir li { display: inline-flex; padding: 4px 10px; border: 1.5px solid var(--ink); border-radius: 999px; background: #fff; color: var(--ink); font-size: .95rem; font-weight: 900; white-space: nowrap; }
+    .seance-suite .retenir li b { margin-left: .25em; color: var(--green); }
+    .seance-suite .retenir p { margin: 0; color: #4c6274; font-size: .9rem; font-weight: 700; line-height: 1.35; }
+    /* Lot E2 (décision 12) : le bilan après une table acquise. */
+    .seance-suite .cadre .acquise { margin: 0 0 4px; color: var(--green); font-size: 1.15rem; font-weight: 950; }
     .seance-suite .boutons { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; width: 100%; }
     .seance-suite .boutons .secondary { min-height: 48px; padding: 10px 18px; }
     .seance-bilan { display: grid; gap: 6px; max-width: 400px; margin: 12px auto 0; padding: 0; list-style: none; text-align: left; }
@@ -897,11 +911,16 @@
       .rangee b, .seance-row .rangee b { border-radius: 7px; font-size: 11px; letter-spacing: -.04em; }
     }
     .echelle { margin-top: 10px; padding-top: 9px; border-top: 1px dashed #c9dbe6; }
-    .echelle ol { display: flex; gap: 4px; margin: 0; padding: 0; list-style: none; }
-    .echelle li { display: inline-grid; place-items: center; flex: 1 1 0; max-width: 36px; height: 24px; border: 2px solid #b9cbd8; border-radius: 7px; background: #fff; color: #6b8192; font-size: .78rem; font-weight: 950; box-sizing: border-box; }
-    .echelle li.faite { border-color: #9ad1c8; background: #e7f8f5; color: var(--teal); }
-    .echelle li.ici { border-color: var(--blue); background: var(--blue); color: #fff; }
-    .echelle p { margin: 6px 0 0; color: var(--muted); font-size: .84rem; font-weight: 800; }
+    /* Lot E2 (décision 5, version A « la barre », choisie le 03/10 sur
+       planche — C1 était trop lourd au téléphone) : huit segments, vert clair
+       = fait, bleu = prochaine séance, gris = à venir ; dessous, une ligne
+       « Prochaine séance : … ». */
+    .echelle ol { display: flex; gap: 3px; margin: 2px 0 8px; padding: 0; list-style: none; }
+    .echelle li { flex: 1 1 0; height: 10px; border-radius: 5px; background: #dbe5ec; }
+    .echelle li.faite { background: #8fd0c4; }
+    .echelle li.ici { background: var(--blue); }
+    .echelle p { margin: 0; color: var(--muted); font-size: .84rem; font-weight: 700; line-height: 1.35; }
+    .echelle p b { color: var(--blue); font-weight: 900; }
     @media (max-width: 520px) {
       .rangee { gap: 3px; }
       .rangee b { height: 31px; border-radius: 8px; font-size: 13px; }
@@ -1792,11 +1811,14 @@
     .fiche-cases { display: flex; gap: 1.1mm; }
     .fiche-etat { color: #0a6b3a; font-size: 8pt; font-weight: 700; text-align: right; }
     .fiche-rangee.is-ma-table .fiche-etat { color: #0b57b7; }
-    .fiche-echelle { grid-column: 2 / 4; display: flex; align-items: center; gap: 1.1mm; margin-top: 1.4mm; color: #3f5a6c; font-size: 8pt; }
-    .fiche-echelle b { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; width: 6mm; height: 4.6mm; border: .3mm solid #9fb6c6; border-radius: 1.2mm; color: #3f5a6c; font-size: 7.5pt; }
-    .fiche-echelle b.faite { border-color: #9fcdb2; background: #dff1e6; color: #0a6b3a; }
-    .fiche-echelle b.ici { border-color: #0b57b7; background: #0b57b7; color: #fff; }
-    .fiche-echelle span { margin-left: 2mm; }
+    /* Lot E2 (décision 5, « la barre ») : la même échelle qu'à l'écran. Les
+       segments gardent un contour : lisibles imprimés en noir et blanc. */
+    .fiche-echelle { grid-column: 2 / 4; margin-top: 1.4mm; color: #3f5a6c; font-size: 7.5pt; }
+    .fiche-echelle .barre { display: flex; gap: .8mm; margin-bottom: 1mm; }
+    .fiche-echelle .barre i { flex: 1 1 0; height: 2.2mm; border: .25mm solid #9fb6c6; border-radius: 1.1mm; background: #fff; box-sizing: border-box; }
+    .fiche-echelle .barre i.faite { border-color: #6fb8a6; background: #bfe5dc; }
+    .fiche-echelle .barre i.ici { border-color: #0b57b7; background: #0b57b7; }
+    .fiche-echelle b { color: #0b57b7; }
     .fiche-prof { margin-top: 2.5mm; padding: 1.8mm 3mm; border: .4mm dashed #7a8ea0; border-radius: 2.5mm; break-inside: avoid; }
     .fiche-prof > strong { display: block; margin-bottom: 1.5mm; color: #143451; font-size: 9.5pt; }
     .fiche-prof > strong small { color: #3f5a6c; font-size: 8pt; font-weight: 400; }
@@ -1910,6 +1932,9 @@
     .perles-montant.droite { right: 0; border-radius: 0 10px 10px 0; }
     .perles-interieur { position: relative; overflow: hidden; touch-action: none; cursor: grab; }
     .perles-rangee { position: relative; width: 100%; }
+    /* Lot E2 (question E2 · 3) : la démonstration du geste — une flèche sur la
+       rangée, le groupe qui glisse puis revient. */
+    .perles-fleche { position: absolute; top: 50%; z-index: 3; transform: translateY(-50%); padding: 0 .5em; border-radius: 999px; background: var(--blue); color: #fff; font-weight: 900; line-height: 1.45; pointer-events: none; box-shadow: 0 2px 6px rgba(0, 0, 0, .25); }
     .perles-tige { position: absolute; top: 50%; right: 0; left: 0; height: 2px; transform: translateY(-50%); background: #a98352; }
     .perle {
       position: absolute;
@@ -2040,6 +2065,17 @@
       *::before,
       *::after { transition: none !important; animation: none !important; }
     }
+    /* Lot E2 (question E2 · 4, audit GPT) : la police était très grasse
+       partout (800 à 950). Les textes secondaires — lignes grises, petits
+       textes, liens, noms des étapes de la carte — passent en 700 ; les
+       nombres, les titres (dont « Choisir une activité », 900) et les boutons restent tels quels. Même sélecteurs
+       que leurs règles d'origine, placés après elles : l'ordre suffit. */
+    .carte-seance .duree, .carte-seance .programme small, .carte-seance .programme > span, .acc-lien small, .semaine, .jours,
+    .decouverte-texte, .etape small, .choix-activite small, .matable-droite small, .mc-detail-liste, .mc-detail-etat, .mc-detail-note,
+    .calculs-legende, .calculs-detail, .parcours-legend, .launch-hint, .result-verdict #result-detail, .previous-score, .result-message,
+    .result-parcours, .seance-suite .cadre, .seance-bilan li, .matable-lire, .acc-bas button, .matable-changer, .seance-liens button:not(.rond),
+    .seance-suite .arreter, .choix-legende, .etape-choix > p, .marche small, .boite small, .correction-details summary,
+    .seance-fil, .suivi-repere, .marche-cell small, .parcours-group-label { font-weight: 700; }
   </style>
 </head>
 <body class="avec-seance">
@@ -2220,6 +2256,7 @@
       <div id="launch" class="launch-screen" hidden>
         <p class="eyebrow">Tu as choisi</p>
         <h1 id="launch-summary" class="launch-heading" tabindex="-1"></h1>
+        <div id="launch-format" class="launch-format" hidden></div>
         <p id="launch-hint" class="launch-hint" hidden></p>
         <div class="launch-actions">
           <button id="launch-start" class="primary" type="button">C’est parti&nbsp;!</button>
@@ -4443,6 +4480,7 @@
         zone.replaceChildren(bloc);
 
         boulier.dom = {zone, bloc, scene, cadre, interieur, montants, rangees, addition, bande, tableFinale, terminer};
+        arreterDemo();
         interieur.addEventListener("pointerdown", perlesPointerDown);
         interieur.addEventListener("pointermove", perlesPointerMove);
         interieur.addEventListener("pointerup", perlesPointerUp);
@@ -4453,6 +4491,58 @@
           boulier.observer.observe(scene);
         }
         mesurerBoulier();
+        // Lot E2 (question E2 · 3) : la toute première fois que l'élève pousse
+        // des perles, la démonstration du geste se joue toute seule.
+        if (premieresPerles()) setTimeout(() => { if (boulier.dom && boulier.etape === 0 && totalPerles() === 0) montrerGeste(); }, 700);
+      }
+
+      // Lot E2 (question E2 · 3, audit GPT point E) : rien ne disait qu'il faut
+      // FAIRE GLISSER les perles vers la gauche, et un clic ne faisait rien.
+      // La démonstration : une flèche sur la rangée, le bon groupe de perles
+      // qui glisse lentement vers la gauche puis revient à sa place, deux fois
+      // — les perles reviennent toujours, rien n'est fait à la place de
+      // l'élève. Toute seule la toute première fois ; ensuite, après un clic
+      // sans glisser. Toucher le boulier l'arrête.
+      let demo = null;
+      function premieresPerles() {
+        return PARCOURS_TABLES.every(table => !(parcours.tables[table] && parcours.tables[table].fois.beads > 0));
+      }
+
+      function arreterDemo() {
+        if (!demo) return;
+        demo.minuteurs.forEach(clearTimeout);
+        demo.fleche.remove();
+        demo = null;
+        if (boulier.dom) dessinerBoulier(false);
+      }
+
+      function montrerGeste() {
+        const dom = boulier.dom;
+        // Jamais pendant que l'élève tient déjà une perle.
+        if (!dom || boulier.finie || !state.running || boulier.drag || !(boulier.taille > 0)) return;
+        arreterDemo();
+        const attendu = gesteAttendu(boulier.etats, boulier.etape, boulier.table);
+        if (!attendu.nombre) return;
+        const rangee = dom.rangees[attendu.rangee];
+        const premiere = boulier.etats[attendu.rangee];
+        const fleche = document.createElement("span");
+        fleche.className = "perles-fleche";
+        fleche.setAttribute("aria-hidden", "true");
+        fleche.textContent = "←";
+        fleche.style.left = `${Math.max(0, positionPerle(premiere, false) - boulier.taille * 1.7)}px`;
+        rangee.element.append(fleche);
+        demo = {minuteurs: [], fleche};
+        const placer = poussees => {
+          for (let i = premiere; i < premiere + attendu.nombre; i += 1) {
+            rangee.perles[i].style.transition = "left .9s ease-in-out";
+            rangee.perles[i].style.left = `${positionPerle(i, poussees)}px`;
+          }
+        };
+        // Mouvement réduit demandé par l'appareil : la flèche seule.
+        if (!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+          [[300, true], [1500, false], [2700, true], [3900, false]].forEach(([delai, poussees]) => demo.minuteurs.push(setTimeout(() => placer(poussees), delai)));
+        }
+        demo.minuteurs.push(setTimeout(arreterDemo, 5100));
       }
 
       function mesurerBoulier() {
@@ -4562,12 +4652,21 @@
         // de perles ! » sur le bon geste) — trouvé en jouant la séance.
         const zoom = rect.width / boulier.dom.interieur.offsetWidth || 1;
         const x = (event.clientX - rect.left) / zoom;
+        // Lot E2, correction de Claude Code : l'élève qui imite la
+        // démonstration attrape la perle LÀ OÙ IL LA VOIT, en train de
+        // glisser. On lit donc la place des perles à l'écran avant d'arrêter
+        // la démonstration (qui les remet au repos) ; sans ça, la perle prise
+        // était sa voisine au repos, et le bon geste disait « Pas assez de
+        // perles ! ». Le groupe, lui, repart bien de sa vraie place : c'est
+        // l'élève qui fait tout le geste.
+        const vues = demo ? boulier.dom.rangees[rangee].perles.map(perle => (perle.getBoundingClientRect().left - rect.left) / zoom) : null;
+        arreterDemo();
         // La perle la plus proche du doigt, poussées et au repos confondues :
         // on attrape la rangée, pas une cible de 44 px.
         let index = 0;
         let meilleure = Infinity;
         for (let i = 0; i < PERLES.parRangee; i += 1) {
-          const centre = positionPerle(i, i < boulier.etats[rangee]) + boulier.taille / 2;
+          const centre = (vues ? vues[i] : positionPerle(i, i < boulier.etats[rangee])) + boulier.taille / 2;
           const distance = Math.abs(centre - x);
           if (distance < meilleure) { meilleure = distance; index = i; }
         }
@@ -4584,6 +4683,7 @@
         const premiere = pousse ? etat : drag.index;
         const derniere = pousse ? drag.index : etat - 1;
         const ecart = (event.clientX - drag.depart) / drag.zoom;
+        if (Math.abs(ecart) > 4) drag.bouge = true;
         const rangee = boulier.dom.rangees[drag.rangee];
         for (let i = premiere; i <= derniere; i += 1) {
           const depart = positionPerle(i, !pousse);
@@ -4607,6 +4707,11 @@
         if (pousse && drag.position <= positionPerle(drag.index, true) + tolerance) nouvel = drag.index + 1;
         if (!pousse && drag.position >= positionPerle(drag.index, false) - tolerance) nouvel = drag.index;
         const ecart = nouvel - etat;
+        // Lot E2 (question E2 · 3) : un clic sans glisser rejoue la démonstration.
+        if (!drag.bouge && !ecart) {
+          montrerGeste();
+          return;
+        }
         // Un seul geste est le bon : le groupe qui n'est pas celui-là repart
         // d'où il vient, et la consigne dit ce qu'on attendait.
         const refus = verifierGeste(boulier.etats, boulier.etape, boulier.table, drag.rangee, ecart);
@@ -5028,7 +5133,12 @@
         zone.replaceChildren();
         if (wrongEntries.length) {
           const title = document.createElement("h2");
-          title.textContent = wrongEntries.length > 1 ? `Mes ${wrongEntries.length} erreurs` : "Mon erreur";
+          // Lot E2 (question E2 · 2, audit GPT point I) : un calcul passé n'est
+          // pas une erreur — dès qu'il y en a un dans la liste, « à revoir ».
+          const avecPasse = wrongEntries.some(entry => entry.passe);
+          title.textContent = avecPasse
+            ? (wrongEntries.length > 1 ? `Mes ${wrongEntries.length} calculs à revoir` : "Mon calcul à revoir")
+            : (wrongEntries.length > 1 ? `Mes ${wrongEntries.length} erreurs` : "Mon erreur");
           zone.append(title);
           const list = document.createElement("ol");
           list.className = "correction-list";
@@ -5224,7 +5334,7 @@
           const casesBande = config.learnActivity === "gaps" ? TOTAL : CASES_BANDE;
           const ratees = casesRatees();
           verdict.score = activitePerles(config)
-            ? "Les 11 produits construits sur le boulier"
+            ? "Les 10 cases construites sur le boulier"
             : config.learnActivity === "gaps"
               ? (ratees ? `${casesBande - ratees} cases manquantes sur ${casesBande} complétées du premier coup` : `Les ${TOTAL} cases manquantes complétées`)
               : config.learnActivity === "construct"
@@ -5493,12 +5603,52 @@
         const chrono = config.duration !== null;
         $("launch-hint").hidden = !chrono;
         $("launch-hint").textContent = chrono ? "Le chrono part quand tu appuies sur « C’est parti ! »." : "";
+        renderFormatLancement(config);
         // La vraie flèche du site (le SVG épais), jamais le caractère « ← » :
         // il est trop maigre et trop petit à côté du texte (règle de Gwenaël).
         const versReglages = state.origin === "reglages";
         $("launch-back-fleche").hidden = versReglages;
         $("launch-back-label").textContent = versReglages ? "Modifier" : sortieDeSerie().mot;
         show("launch");
+      }
+
+      // Lot E2 (question E2 · 1, audit GPT point F) : l'écran de lancement d'une
+      // validation, d'un mélange ou d'une étoile dit ce qui l'attend — le format
+      // et le nombre de bonnes réponses pour réussir, avec un exemple pris dans
+      // SA table (validation, mélange). Rien pour les réglages libres.
+      function renderFormatLancement(config) {
+        const zone = $("launch-format");
+        zone.replaceChildren();
+        zone.hidden = true;
+        if (state.origin === "reglages") return;
+        const S = PARCOURS.SEUILS;
+        let format = "";
+        let reussir = 0;
+        let table = null;
+        if (config.mode === "validation" && config.total === S.validation.total) {
+          format = "Des résultats et des nombres manquants";
+          reussir = S.validation.total - S.validation.erreursMax;
+          table = config.tables[0];
+        } else if (config.mode === "test" && config.total === S.etoile.total) {
+          format = "Des résultats, des nombres manquants et des divisions";
+          reussir = S.etoile.total - S.etoile.erreursMax;
+        }
+        if (!format) return;
+        const ligne = document.createElement("p");
+        const gras = document.createElement("b");
+        gras.textContent = `${reussir}\u00a0bonnes réponses`;
+        ligne.append(document.createTextNode(`${format}\u00a0: `), gras, document.createTextNode(" pour réussir."));
+        zone.append(ligne);
+        if (table !== null) {
+          const exemple = document.createElement("p");
+          const produit = document.createElement("b");
+          produit.textContent = `${table}\u00a0×\u00a04\u00a0=\u00a0?`;
+          const trou = document.createElement("b");
+          trou.textContent = `${table}\u00a0×\u00a0?\u00a0=\u00a0${table * 4}`;
+          exemple.append(document.createTextNode("Par exemple\u00a0: "), produit, document.createTextNode(" ou "), trou);
+          zone.append(exemple);
+        }
+        zone.hidden = false;
       }
 
       function homeScreen() {
@@ -5517,6 +5667,9 @@
         state.launchReady = false;
         state.running = false;
         stopTimer();
+        // Lot E2, correction de Claude Code : la démonstration des perles ne
+        // survit pas à la sortie (menu, retour) — ses minuteurs partent avec.
+        arreterDemo();
         if (state.origin === "reglages") {
           show("intro");
           return;
@@ -6966,7 +7119,10 @@
           liste.append(ligne);
         });
         const table = seance.table;
-        if (table !== null) {
+        const acquiseIci = table !== null && seance.faites.some(faite => faite.type === "validation" && faite.reussi) && Boolean(parcours.tables[table].acquise);
+        if (acquiseIci) {
+          zone.append(cadreTableAcquise(table));
+        } else if (table !== null) {
           const cadre = document.createElement("div");
           cadre.className = "cadre";
           // Une rangée entièrement vide n'est pas montrée au bilan (décision de Gwenaël, 03/10/2026) :
@@ -6984,6 +7140,12 @@
           // Ni rangée ni phrase : pas de cadre vide.
           if (cadre.childNodes.length) zone.append(cadre);
         }
+        // Lot E2 (décision 3) : « À retenir pour demain » — toutes les erreurs
+        // de la séance (le moteur les garde depuis le lot M1), écrites justes.
+        // Il remplace la liste « Mes erreurs » de la dernière étape.
+        const retenir = cadreARetenir(seance.erreurs || []);
+        if (retenir) zone.append(retenir);
+        $("corrections").replaceChildren();
         const boutons = document.createElement("div");
         boutons.className = "boutons";
         const maTable = document.createElement("button");
@@ -7004,6 +7166,71 @@
           boutons.append(encore);
         }
         zone.append(boutons);
+      }
+
+      // Lot E2 (décisions 3 et 12) ------------------------------------------
+      // « À retenir pour demain » : chaque calcul une fois (4 × 7 et 7 × 4 sont
+      // le même calcul), écrit juste, une pastille par calcul.
+      function cadreARetenir(erreurs) {
+        const vus = new Set();
+        const calculs = [];
+        erreurs.forEach(([a, b]) => {
+          const cle = `${Math.min(a, b)}-${Math.max(a, b)}`;
+          if (vus.has(cle)) return;
+          vus.add(cle);
+          calculs.push([a, b]);
+        });
+        if (!calculs.length) return null;
+        const cadre = document.createElement("section");
+        cadre.className = "retenir";
+        const titre = document.createElement("h2");
+        titre.textContent = "À retenir pour demain";
+        const liste = document.createElement("ul");
+        calculs.forEach(([a, b]) => {
+          const item = document.createElement("li");
+          const resultat = document.createElement("b");
+          resultat.textContent = String(a * b);
+          item.append(document.createTextNode(`${a}\u00a0×\u00a0${b}\u00a0=`), resultat);
+          liste.append(item);
+        });
+        const phrase = document.createElement("p");
+        phrase.textContent = calculs.length > 1
+          ? `Mes ${calculs.length} calculs à revoir. Ils reviennent demain dans Mes calculs du jour.`
+          : "Mon calcul à revoir. Il revient demain dans Mes calculs du jour.";
+        cadre.append(titre, liste, phrase);
+        return cadre;
+      }
+
+      // Le bilan après une table acquise : « Table de 3 acquise ✓ » à la place
+      // de la rangée, et UNE phrase pour demain (question E2 · 6, réponse B) :
+      // « Demain : 3 calculs, ton mélange, puis la table de 4. »
+      function cadreTableAcquise(table) {
+        const cadre = document.createElement("div");
+        cadre.className = "cadre";
+        const titre = document.createElement("p");
+        titre.className = "acquise";
+        titre.textContent = `Table de ${table} acquise ✓`;
+        cadre.append(titre);
+        const morceaux = [];
+        const demain = PARCOURS.agendaCalculs(parcours).demain;
+        if (demain) morceaux.push(soude(pluriel(demain, "calcul")));
+        if (PARCOURS.melangeDu(parcours)) morceaux.push(PARCOURS.toutesAcquises(parcours) ? "ton mélange des 9 tables" : "ton mélange");
+        const suivante = PARCOURS.tableDeSeance(parcours);
+        if (suivante !== null) morceaux.push(`la table de ${suivante}`);
+        if (morceaux.length) {
+          const phrase = document.createElement("p");
+          phrase.append(document.createTextNode("Demain\u00a0: "));
+          morceaux.forEach((morceau, index) => {
+            if (index) phrase.append(document.createTextNode(index === morceaux.length - 1 ? ", puis " : ", "));
+            const gras = document.createElement("b");
+            // Un morceau ne se coupe pas (« la table / de 4 » au téléphone).
+            gras.textContent = morceau.replace(/ /g, "\u00a0");
+            phrase.append(gras);
+          });
+          phrase.append(document.createTextNode("."));
+          cadre.append(phrase);
+        }
+        return cadre;
       }
 
       // La table de la prochaine séance : celle que l'accueil affiche (null =
@@ -7383,23 +7610,40 @@
         return {depart, prochaines, noms};
       }
 
+      // Lot E2 (décision 5, « la barre ») : les noms des marches en minuscules
+      // dans la ligne « Prochaine séance : dans l'ordre, dans le désordre… ».
+      function nomDeMarche(nom) {
+        return nom.charAt(0).toLocaleLowerCase("fr") + nom.slice(1);
+      }
+
+      // La ligne sous la barre : « Prochaine séance : dans l'ordre, … » (écran et fiche).
+      function phraseProchaineSeance(noms) {
+        if (!noms.length) return null;
+        const phrase = document.createElement("p");
+        const titre = document.createElement("b");
+        titre.textContent = "Prochaine séance";
+        phrase.append(titre, document.createTextNode(`\u00a0: ${noms.map(nomDeMarche).join(", ")}.`));
+        return phrase;
+      }
+
       function echelleDeTable(table) {
         const {depart, prochaines, noms} = marchesDeTable(parcours, table);
         const zone = document.createElement("div");
         zone.className = "echelle";
         const liste = document.createElement("ol");
+        liste.setAttribute("aria-hidden", "true");
+        const faites = [];
         PARCOURS.MARCHES.forEach(item => {
-          const point = document.createElement("li");
-          point.title = item.nom;
-          if (item.marche < depart) point.className = "faite";
-          if (prochaines.includes(item.marche)) point.className = "ici";
-          point.textContent = item.marche === PARCOURS.MARCHES.length ? "✓" : String(item.marche);
-          liste.append(point);
+          const segment = document.createElement("li");
+          if (item.marche < depart) { segment.className = "faite"; faites.push(item.nom); }
+          if (prochaines.includes(item.marche)) segment.className = "ici";
+          segment.title = item.nom;
+          liste.append(segment);
         });
-        const texte = document.createElement("p");
-        texte.textContent = noms.length ? `Prochaine séance : ${noms.join(", ")}` : "";
-        zone.append(liste, texte);
-        zone.setAttribute("aria-label", `L’échelle de la table de ${table} : ${texte.textContent}`);
+        zone.append(liste);
+        const phrase = phraseProchaineSeance(noms);
+        if (phrase) zone.append(phrase);
+        zone.setAttribute("aria-label", `L’échelle de la table de ${table} : ${faites.length} marche${faites.length > 1 ? "s" : ""} sur ${PARCOURS.MARCHES.length} faite${faites.length > 1 ? "s" : ""}${noms.length ? ` ; prochaine séance : ${noms.join(", ")}` : ""}`);
         return zone;
       }
 
@@ -7682,6 +7926,9 @@
 
       function phraseErreursDemain() {
         const erreurs = state.answered - state.correct + calculsPasses();
+        // Lot E2 (question E2 · 2) : avec un calcul passé, « ce calcul revient ».
+        if (calculsPasses() && erreurs > 1) return `Ces ${erreurs} calculs reviennent demain dans Mes calculs. D’ici là, entraîne‑toi.`;
+        if (calculsPasses() && erreurs === 1) return "Ce calcul revient demain dans Mes calculs. D’ici là, entraîne‑toi.";
         if (erreurs > 1) return `Tes ${erreurs} erreurs reviennent demain dans Mes calculs. D’ici là, entraîne‑toi.`;
         if (erreurs === 1) return "Ton erreur revient demain dans Mes calculs. D’ici là, entraîne‑toi.";
         const tempsEcoule = state.configuration.duration !== null && TOTAL - state.index > 0;
@@ -7768,16 +8015,18 @@
             const marches = marchesDeTable(fiche, table);
             const echelle = document.createElement("div");
             echelle.className = "fiche-echelle";
+            // Lot E2 (décision 5, « la barre ») : la même échelle qu'à l'écran.
+            const barre = document.createElement("span");
+            barre.className = "barre";
             PARCOURS.MARCHES.forEach(marche => {
-              const point = document.createElement("b");
-              if (marche.marche < marches.depart) point.className = "faite";
-              if (marches.prochaines.includes(marche.marche)) point.className = "ici";
-              point.textContent = marche.marche === PARCOURS.MARCHES.length ? "✓" : String(marche.marche);
-              echelle.append(point);
+              const segment = document.createElement("i");
+              if (marche.marche < marches.depart) segment.className = "faite";
+              if (marches.prochaines.includes(marche.marche)) segment.className = "ici";
+              barre.append(segment);
             });
-            const texte = document.createElement("span");
-            texte.textContent = marches.noms.length ? `Prochaine séance : ${marches.noms.join(", ")}` : "";
-            echelle.append(texte);
+            echelle.append(barre);
+            const phrase = phraseProchaineSeance(marches.noms);
+            if (phrase) echelle.append(...phrase.childNodes);
             item.append(echelle);
           }
           rows.append(item);

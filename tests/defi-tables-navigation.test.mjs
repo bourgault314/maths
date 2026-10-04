@@ -147,7 +147,7 @@ test("une série sans faute ne déroule pas la liste de toutes les bonnes répon
   assert.match(html, /`Mes \$\{rightEntries\.length\} réponses justes`/);
   assert.doesNotMatch(html, /Aucune erreur à corriger/, "plus de cadre vert : le verdict a parlé, et sur une série ratée au temps ce cadre le contredisait (audit, A3)");
   assert.doesNotMatch(html, /Bilan de tes réponses/);
-  assert.match(html, /title\.textContent = wrongEntries\.length > 1 \? `Mes \$\{wrongEntries\.length\} erreurs` : "Mon erreur";/);
+  assert.match(html, /: \(wrongEntries\.length > 1 \? `Mes \$\{wrongEntries\.length\} erreurs` : "Mon erreur"\);/, "lot E2 : « Mon erreur » sans calcul passé, « à revoir » avec");
 });
 
 test("« Mes calculs » s’ouvre sur la grille, et le retour reste à l’écran", () => {

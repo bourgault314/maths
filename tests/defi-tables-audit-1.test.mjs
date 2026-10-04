@@ -103,7 +103,8 @@ test("1. validation ou mélange ratés : les erreurs reviennent demain ; sans er
     responses: Array.from({length: passees}, () => ({skipped: true}))
   });
   assert.equal(phrase(serie(20, 15, 0, 20), 20), "Tes 5 erreurs reviennent demain dans Mes calculs. D’ici là, entraîne‑toi.");
-  assert.equal(phrase(serie(14, 12, 2, 20), 20), "Tes 4 erreurs reviennent demain dans Mes calculs. D’ici là, entraîne‑toi.", "les calculs passés comptent");
+  assert.equal(phrase(serie(14, 12, 2, 20), 20), "Ces 4 calculs reviennent demain dans Mes calculs. D’ici là, entraîne‑toi.", "les calculs passés comptent — lot E2 : « ces calculs », un calcul passé n’est pas une erreur");
+  assert.equal(phrase(serie(0, 0, 1, 1), 20), "Ce calcul revient demain dans Mes calculs. D’ici là, entraîne‑toi.", "lot E2 : un seul calcul, passé");
   assert.equal(phrase(serie(12, 11, 0, 12), 20), "Ton erreur revient demain dans Mes calculs. D’ici là, entraîne‑toi.");
   assert.equal(phrase(serie(12, 12, 0, 12), 20), "Tu manques de temps : entraîne-toi, puis réessaie.");
 });
