@@ -10327,8 +10327,10 @@ function drawSysCorrectionImprimee(target, card, haut, bas, ctx, zone){
    – Corrigé : l'énoncé dévoilé en haut, un trait pointillé, puis les étapes en BLOCS ENCADRÉS, une
      idée par cadre (décidé le 04/10 sur les planches 10a, 10b et 11 du lot M4-2). Un bloc commence
      après « Les deux plateaux », après une étape qui trouve (« Je partage », ou une tache seule) et
-     à chaque « Je remplace » / « Je retrouve ». Dedans, rien ne change : mêmes barres, cases de
-     118, mêmes titres. Une carte dont les cadres ne tiennent pas, même serrés (miroir ou escalier
+     à chaque « Je remplace » / « Je retrouve » ; « Je partage » juste après les plateaux (l'escalier)
+     reste dans leur cadre, à la hauteur de la barre partagée, une flèche détachée entre les deux.
+     Dedans, rien ne change : mêmes
+     barres, cases de 118, mêmes titres. Une carte dont les cadres ne tiennent pas, même serrés (miroir ou escalier
      avec des jetons visibles), se dessine sans cadres, comme en 4 par page : jamais de carte
      réduite. Le 4 par page reste sans cadres (drawSysCorrectionImprimee).
 --------------------------------------------------------------------------------------- */
@@ -10350,18 +10352,24 @@ const SYS_REPONSE_2P = { y:2140, fs:40, entre:90, pointilles:200 };
    carte est trop longue (comme SYS_BARRES_SERRE) */
 const SYS_BLOC = { pad:18, padHaut:10, gap:20, rx:18, trait:3, encre:"#475569" };
 const SYS_BLOC_SERRE = { pad:12, padHaut:6, gap:12, rx:18, trait:3, encre:"#475569" };
+/* la flèche de la barre partagée vers « Je partage » (escalier) : 45 de blanc à chaque bout
+   (≈ 3 mm), pas de flèche si elle ferait moins de 60 */
+const SYS_BLOC_FLECHE = { ecart:45, pointe:10, trait:4, longueurMin:60 };
 
 /* Imprime-t-on le Système en plateaux, 2 par page ? (la carte qui remplit sa case, les cadres) */
 function sysDeuxParPage(perSheet){
   return perSheet === 2 && !!activityEl && activityEl.value === "D" && cards.length > 0 && cards.every(sysEnPlateaux);
 }
-/* Les étapes d'un plan (sans « Je vérifie ») rangées en blocs, une idée par bloc. */
+/* Les étapes d'un plan (sans « Je vérifie ») rangées en blocs, une idée par bloc. « Je partage »
+   juste après les plateaux (l'escalier : 2 noires = 6, donc noire = 3) reste dans leur cadre : la
+   tache trouvée dépend d'eux (remarque de Gwenaël du 04/10). */
 function sysBlocs(etapes){
   const out = [];
   let prev = null;
   const trouve = p => !!p && (p.role === "partage" || (p.barres.length > 0 && p.barres.every(b => b.cells.length === 1 && b.cells[0].kind === "unknown")));
   etapes.forEach(e => {
-    const nouveau = !prev || prev.role === "plateaux" || trouve(prev) || ["remplace", "retrouve", "retrouve-reste", "plateaux"].includes(e.role);
+    const avecPlateaux = !!prev && prev.role === "plateaux" && e.role === "partage";
+    const nouveau = !prev || (prev.role === "plateaux" && !avecPlateaux) || trouve(prev) || ["remplace", "retrouve", "retrouve-reste", "plateaux"].includes(e.role);
     if(nouveau) out.push([]);
     out[out.length - 1].push(e);
     prev = e;
@@ -10375,7 +10383,27 @@ function sysBlocMesure(it, larg, M, serre){
   const dh = B.padHaut - B.pad;
   if(it.verif) return { w: sysVerifLargeur(it.verif, M) + 10, h: sysVerifHauteur(it.verif, M) + dh };
   const f = sysEtapesFlux(it.etapes, M, 0, larg - 2 * B.pad, null, serre);
+  sysBlocPartageAligne(f, M);
   return { flux: f, w: f.w, h: f.h + dh };
+}
+/* Dans le cadre des plateaux, « Je partage » posé à leur droite se met à la hauteur de la barre
+   qu'il partage (celle dont le total est divisé : « 6 ÷ 2 » → la barre 6), et une flèche grise va
+   de l'une à l'autre sans toucher ni l'une ni l'autre (SYS_BLOC_FLECHE, choisi le 04/10 sur
+   planche : « un peu de distance… ça touche pas de chaque côté »). */
+function sysBlocPartageAligne(f, M){
+  const p1 = f.places.find(p => p.etape.role === "plateaux");
+  const p2 = p1 && f.places.find(p => p.etape.role === "partage" && p.rang === p1.rang && p.col === p1.col + 1);
+  if(!p2) return;
+  const n = Number(String(p2.etape.barres[0].calcul || "").split(" ÷ ")[0]);
+  const j = p1.etape.barres.findIndex(b => Number(b.top) === n);
+  if(j < 0) return;
+  const yBarre = p1.y + p1.taille.haut + p1.taille.places[j].dy;
+  p2.y = Math.round(yBarre - p2.taille.haut);
+  const F = SYS_BLOC_FLECHE;
+  const x1 = p1.x + p1.taille.places[j].dx + sysBarreCases(p1.etape.barres[j]) * M.pas + F.ecart * M.f;
+  const x2 = p2.x - F.ecart * M.f;
+  if(x2 - x1 >= F.longueurMin * M.f) p2.fleche = { x1, x2, y: yBarre + M.hCase };
+  f.h = Math.max(f.h, ...f.places.map(p => p.y + p.h));
 }
 /* Les blocs en lignes faites de colonnes (comme les étapes) : un bloc se met sous le dernier de
    la colonne, dans une nouvelle colonne (seulement si la dernière n'a qu'un bloc : ordre de
@@ -10451,7 +10479,14 @@ function drawSysCorrectionBlocs(target, card, haut, bas, ctx){
     g.appendChild(ctx.mkEl("rect", { class:"sysBloc", x:it.x, y, width:it.w, height:it.h, rx:B.rx, fill:"none", stroke:B.encre, "stroke-width":B.trait }));
     const xi = it.x + B.pad, yi = y + B.padHaut;
     if(it.verif){ drawSysVerification(g, it.verif, xi + 10, yi, it.w - 2 * B.pad - 10, M, ctx); return; }
-    it.L.flux.places.forEach(p => drawSysEtape(g, p.etape, xi + p.x, yi + p.y, M, ctx, 0, 0, p.taille));
+    it.L.flux.places.forEach(p => {
+      drawSysEtape(g, p.etape, xi + p.x, yi + p.y, M, ctx, 0, 0, p.taille);
+      if(p.fleche){
+        const F = SYS_BLOC_FLECHE, t = F.pointe * M.f, x1 = xi + p.fleche.x1, x2 = xi + p.fleche.x2, y = yi + p.fleche.y;
+        g.appendChild(ctx.mkEl("path", { class:"sysFleche", d:`M ${x1} ${y} L ${x2} ${y} M ${x2 - 2 * t} ${y - t} L ${x2} ${y} L ${x2 - 2 * t} ${y + t}`,
+          fill:"none", stroke:B.encre, "stroke-width":F.trait * M.f, "stroke-linecap":"round", "stroke-linejoin":"round" }));
+      }
+    });
   })));
   return haut + flux.h;
 }

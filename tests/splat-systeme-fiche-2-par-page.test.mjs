@@ -41,14 +41,14 @@ const PALETTE = html.slice(html.indexOf("const INVESTIGATE_COLOR_PALETTE = ["), 
 const CONSTANTES = ["SYS_GESTES", "SYS_GESTES_MIX_DEFAUT", "SYS_MAX_TACHES", "SYS_MAX_TACHES_AVANT", "SYS_ESSAIS", "SYS_NOMBRES_SOUS_ENTENDUS", "SYS_COULEURS_PLURIEL", "SYS_PLAGES",
   "SYS_ZONE_IMPRIME", "SYS_TACHE", "SYS_BARRES", "SYS_BARRES_SERRE", "SYS_BARRES_TAILLES", "SYS_CORR_IMPRIME", "SYS_ZONE_IMPRIME_CORRECTION",
   "SYS_2P", "SYS_2P_VIEWBOX", "SYS_2P_VIEWBOX_CORRECTION", "SYS_ZONE_IMPRIME_2P", "SYS_ZONE_IMPRIME_CORRECTION_2P", "SYS_CORR_IMPRIME_2P", "SYS_REPONSE_2P",
-  "SYS_BLOC", "SYS_BLOC_SERRE", "ENQUETE_NOM_ECART"].map(constante).join("\n");
+  "SYS_BLOC", "SYS_BLOC_SERRE", "SYS_BLOC_FLECHE", "ENQUETE_NOM_ECART"].map(constante).join("\n");
 const GENERATEUR = ["sysNormaliserReglages", "genSystemCarte", "sysMelangerPlateaux", "sysFormes", "sysFormesDouble", "sysSomme", "sysNombreTaches", "sysPlateau",
   "sysTirerSituation", "sysSituationValide", "sysNombreSousEntendu", "sysTexteASousEntendu", "sysSituationSure",
   "sysAssemblerCarte", "sysUneTacheParCouleur", "sysIndice", "sysPhraseIndice", "sysPlanS3", "sysPlan"].map(fn).join("\n");
 const DESSIN = ["sysEnPlateaux", "sysTotalCache", "sysRayonJeton", "sysGrille", "sysColonnesVisibles", "sysRayonMax", "sysDispositionPlateaux", "drawSysPlateaux",
   "sysAPlan", "sysBarresMetriques", "sysLargeurTexte", "sysCorrAjuster", "sysBarreCases", "sysBarreLargeur", "sysEtapeTaille", "sysVerifHauteur",
   "sysVerifLargeur", "sysEtapesFlux", "sysJetonCouleurs", "drawSysCaseBarre", "drawSysBarre", "drawSysEtape", "drawSysVerification", "drawSysCorrectionImprimee",
-  "sysBlocs", "sysBlocMesure", "sysBlocsFlux", "drawSysCorrectionBlocs", "drawSysLigneReponse",
+  "sysBlocs", "sysBlocMesure", "sysBlocPartageAligne", "sysBlocsFlux", "drawSysCorrectionBlocs", "drawSysLigneReponse",
   "blobPath", "wrapTextToWidth", "beadColorForValue", "drawInvestigateSplatName", "investigateColorInfo"].map(fn).join("\n");
 
 const sys = new Function(`
@@ -325,7 +325,7 @@ test("le corrigé n'est jamais réduit même avec une police 25 % plus large (Wi
   }finally{ sys.police(1); }
 });
 
-test("une idée par cadre : un cadre commence après « Les deux plateaux », après une étape qui trouve, et à chaque « Je remplace » / « Je retrouve »", () => {
+test("une idée par cadre : un cadre commence après « Les deux plateaux » (sauf « Je partage » qui les suit : l'escalier), après une étape qui trouve, et à chaque « Je remplace » / « Je retrouve »", () => {
   const inc = (k, n = 1) => Array.from({ length: n }, () => ({ kind: "unknown", color: k }));
   const bloc = (n) => ({ kind: "block", value: 9, covers: n });
   const barre = (cells) => ({ top: "1", calcul: "", cells, coupes: [] });
@@ -335,18 +335,52 @@ test("une idée par cadre : un cadre commence après « Les deux plateaux », ap
   const plan1b = [e("plateaux", inc("N", 4), "P"), e("remplace", [bloc(3), ...inc("R")], "R1"), e("retire", inc("R"), "T1"),
     e("remplace", inc("N", 3), "R2"), e("retire", inc("N", 2), "T2"), e("partage", inc("N"), "D")];
   assert.deepEqual(noms(sys.blocs(plan1b)), [["P"], ["R1", "T1"], ["R2", "T2", "D"]]);
-  // après « Je partage », toujours un nouveau cadre, même devant « Je retire »
-  assert.deepEqual(noms(sys.blocs([e("plateaux", inc("N", 3), "P"), e("partage", inc("N"), "D"), e("retire", inc("R", 2), "T")])), [["P"], ["D"], ["T"]]);
+  // « Je partage » juste après les plateaux reste dans leur cadre (l'escalier : 2 noires = 6, donc
+  // noire = 3, remarque de Gwenaël du 04/10) ; après lui, toujours un nouveau cadre
+  assert.deepEqual(noms(sys.blocs([e("plateaux", inc("N", 3), "P"), e("partage", inc("N"), "D"), e("retire", inc("R", 2), "T")])), [["P", "D"], ["T"]]);
   // « Je retire » qui laisse plusieurs taches : la suite reste dans le même cadre
   assert.deepEqual(noms(sys.blocs([e("plateaux", inc("N", 3), "P"), e("additionne", inc("N", 4), "A"), e("partage", inc("N"), "D"), e("retrouve", inc("R", 2), "Q"), e("retire", inc("R", 2), "T"), e("partage", inc("R"), "D2")])),
     [["P"], ["A", "D"], ["Q", "T", "D2"]]);
-  // sur les vraies cartes : le premier cadre est toujours « Les deux / trois plateaux » seul
+  // sur les vraies cartes : le premier cadre est « Les deux / trois plateaux » seul, et pour
+  // l'escalier « Les trois plateaux » puis « Je partage »
   for(const r of Object.values(TYPES)) for(const c of sys.serie(11, 6, { ...REGLAGES_FICHES, visMin: 0, visMax: 2, ...r })){
     const bs = sys.blocs(c._sys.plan.filter((x) => x.role !== "verification"));
-    assert.equal(bs[0].length, 1);
-    assert.equal(bs[0][0].role, "plateaux");
+    assert.deepEqual(bs[0].map((x) => x.role), r.geste === "ESCALIER" ? ["plateaux", "partage"] : ["plateaux"]);
     assert.equal(bs.flat().length, c._sys.plan.length - 1, "aucune étape perdue");
   }
+});
+
+test("l'escalier : « Je partage » dans le cadre des trois plateaux, sa barre à la hauteur de la barre qu'il partage, une flèche détachée entre les deux", () => {
+  let n = 0;
+  for(const vis of [{ visMin: 0, visMax: 0 }, { visMin: 1, visMax: 3 }]) for(const g of graines(10)) for(const c of sys.serie(g, 4, { ...REGLAGES_FICHES, ...vis, geste: "ESCALIER" })){
+    const { g: dessin } = sys.corrige(c, false);
+    if(dessin.attrs["data-blocs"] === undefined) continue;
+    n++;
+    const etapes = elements(dessin, "g").filter((x) => /\bsysEtape\b/.test(x.attrs.class || ""));
+    const plateaux = etapes.find((x) => x.attrs["data-role"] === "plateaux");
+    const partage = etapes.find((x) => x.attrs["data-role"] === "partage");
+    // les barres : le rectangle du total (trait épais, sans remplissage gris), le premier de chaque barre
+    const tops = (e) => elements(e, "rect").filter((x) => x.attrs.height === sys.B.hCase && x.attrs.fill === "#fff" && x.attrs["stroke-width"] === sys.B.trait);
+    const div = Number(c._sys.plan[1].barres[0].calcul.split(" ÷ ")[0]);
+    const k = c._sys.plan[0].barres.findIndex((b) => Number(b.top) === div);
+    assert.ok(k >= 0);
+    const yP = tops(plateaux).map((x) => x.attrs.y)[k], yD = tops(partage)[0].attrs.y;
+    assert.ok(Math.abs(yP - yD) < 1, `barre partagée à ${yP}, « Je partage » à ${yD}`);
+    // dans le même cadre
+    const cadres = elements(dessin, "rect").filter((x) => x.attrs.class === "sysBloc");
+    const dans = (r, x, y) => x >= r.attrs.x && x <= r.attrs.x + r.attrs.width && y >= r.attrs.y && y <= r.attrs.y + r.attrs.height;
+    const cP = cadres.find((r) => dans(r, tops(plateaux)[0].attrs.x, tops(plateaux)[0].attrs.y));
+    assert.ok(cP && dans(cP, tops(partage)[0].attrs.x, yD), "« Je partage » hors du cadre des plateaux");
+    // la flèche : horizontale, au milieu de la barre partagée, à 45 de chaque bout (elle ne touche rien)
+    const fleches = elements(dessin, "path").filter((x) => x.attrs.class === "sysFleche");
+    assert.equal(fleches.length, 1, "une flèche");
+    const [x1, y1, x2, y2] = fleches[0].attrs.d.match(/^M ([\d.-]+) ([\d.-]+) L ([\d.-]+) ([\d.-]+) /).slice(1).map(Number);
+    const barreP = tops(plateaux)[k];
+    const finBarre = barreP.attrs.x + barreP.attrs.width, debutPartage = tops(partage)[0].attrs.x;
+    assert.ok(Math.abs(y1 - y2) < 0.01 && Math.abs(y1 - (yP + sys.B.hCase)) < 0.5, "horizontale, au milieu de la barre");
+    assert.ok(Math.abs(x1 - finBarre - 45) < 0.5 && Math.abs(debutPartage - x2 - 45) < 0.5, `détachée : ${x1 - finBarre} et ${debutPartage - x2}`);
+  }
+  assert.ok(n >= 60, `${n} escaliers`);
 });
 
 test("le pied des fiches : « mathsgo.re/splat » pour l'Enquête et le Système (comme les livrets), « mathsgo.re/splat/classique » pour les modes A et B", () => {
