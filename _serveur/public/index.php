@@ -69,6 +69,14 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
                       min-height: 44px; font-size: .92rem; font-weight: 600; }
   button.secondaire:hover { color: var(--blue); background: #fff; border-color: var(--blue); }
   .actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  /* « Entrer » (04/10/2026) : sous la case du code, centrée, le bouton était
+     collé à gauche. Téléphone : toute la largeur, comme la case ; ordinateur :
+     centré, largeur moyenne. */
+  #form-code .actions button { flex: 1 1 100%; }
+  @media (min-width: 600px) {
+    #form-code .actions { justify-content: center; }
+    #form-code .actions button { flex: 0 0 auto; min-width: 240px; }
+  }
   .erreur { margin-top: 12px; padding: 10px 12px; border-radius: 10px;
             background: #fdecec; color: #a3261f; font-weight: 600; }
   .classe { padding: 4px 11px; border-radius: 999px; background: #e6f6f5;
@@ -182,7 +190,9 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
       </form>
       <p class="erreur" id="erreur" hidden></p>
     </div>
-    <p class="aide">Ton code compte 6 caractères. Il n’y a jamais de O ni de I : ce sont des zéros et des uns qui n’existent pas ici — si tu hésites, c’est un chiffre.</p>
+    <!-- 04/10/2026 (Gwenaël) : la phrase d'avant était fausse — un code n'a ni
+         O, ni I, ni 0, ni 1 (lib/codes.php), il n'y a donc jamais à hésiter. -->
+    <p class="aide">Ton code a 6 caractères&nbsp;: des lettres et des chiffres.</p>
   </section>
 
   <section id="ecran-espace" hidden>
