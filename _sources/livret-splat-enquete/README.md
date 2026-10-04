@@ -47,17 +47,21 @@ Les livrets « Le défi » ont disparu au lot 2 (30/09), les trois anciens « De
    Depuis le 01/10/2026, le plateau des énoncés fait **22 mm** (comme la correction) pour laisser
    plus de place pour écrire ; la carte d'exemple seule (couverture, page 2, dos) garde ses 28 mm
    (`plateauEntier`).
-4. **Dos** — « Encore des cartes ! » (trois séries infinies, quatre au deuxième tour ; huit cartes
-   à chaque ouverture), « La suite du voyage », puis « Pour ne pas oublier » (03/10/2026, décidé
-   le 02/10 : à la place de « Pour se souvenir ») : **deux cartes du livret d'avant**, dessinées
-   par l'outil comme sur les fiches — l'énoncé et sa place pour écrire dans le livret de l'élève,
-   la **correction** à la même place dans les corrigés. Partie 1 : deux cartes du monde 2 ; partie 2 :
-   deux de la partie 1 ; partie 3 : **un exemple corrigé** (une carte sans total, corrigée même chez
-   l'élève) et, à côté, **la même sorte de carte** avec d'autres nombres (« À toi ! » — demande de
-   Gwenaël, 03/10) ; deuxième tour 1 : deux de la partie 3 ; deuxième tour 2 : **l'unité commune
-   résolue** (« les petites parts », pas à pas comme en projection), sans carte de rappel. Les QR
-   rapetissent pour leur laisser la place. Puis les crédits avec, seuls logos du livret, IREMI +
-   maths&go et l'Unité apprenante Michel Debré.
+4. **Dos** — « Encore des cartes ! » (huit cartes à chaque ouverture) : trois séries infinies et,
+   aux parties 1 à 3, un 4e QR **« Je révise »**, une série du livret d'avant (partie 1 : le monde 2 ;
+   partie 2 : la partie 1 ; partie 3 : la partie 2) ; quatre séries au deuxième tour, sans « Je
+   révise ». Puis « La suite du voyage », et en bas (04/10/2026, décidé avec Gwenaël sur maquette puis
+   sur la planche des cartes) **« Le défi ! »** : **deux cartes du MÊME livret, plus difficiles** (des
+   jetons visibles, de grands nombres ; au deuxième tour 1, les indices dans le désordre), pour l'élève
+   qui a fini avant les autres — dessinées par l'outil comme sur les fiches, l'énoncé et sa place pour
+   écrire dans le livret de l'élève, la **correction** à la même place dans les corrigés. Elles
+   remplacent les cartes de rappel du livret d'avant (03/10), qui regardaient en arrière sous « Et
+   après ? ». Exceptions : la partie 3 garde « Pour ne pas oublier » — **un exemple corrigé** (une
+   carte sans total, corrigée même chez l'élève) et, à côté, **la même sorte de carte** avec d'autres
+   nombres (« À toi ! », demande de Gwenaël du 03/10) ; le deuxième tour 2 garde **l'unité commune
+   résolue** (« les petites parts », pas à pas comme en projection). Les QR rapetissent pour leur
+   laisser la place. Puis les crédits avec, seuls logos du livret, IREMI + maths&go et l'Unité
+   apprenante Michel Debré (logos : rien ne change, décision du 04/10/2026).
 
 ## Les graines : triées, une fiche = une étape = une étoile
 
@@ -73,8 +77,8 @@ rejoué, `splat-relecture\progression-v2-outils\`) :
   deux taches égales ; écarts de 2 au moins ; plus petite tache ≥ 5 sur 10, 11, 15, 16, 22, ≥ 4
   sur 17 et 18, ≥ le sixième de la plus grande ; aucun mot réduit à son initiale dans la
   correction ;
-- totaux différents dans une fiche, **aucune carte en double** sur les 100 cartes, les cartes de
-  rappel et les exemples (`controle_global` le revérifie au rendu, sur `cartes.json`) ; aucune
+- totaux différents dans une fiche, **aucune carte en double** sur les 100 cartes, les cartes du
+  dos (« Le défi ! », l'exemple corrigé de la partie 3) et les exemples (`controle_global` le revérifie au rendu, sur `cartes.json`) ; aucune
   fiche ne reprend la carte 1 d'une autre.
 
 Si une graine change : la reporter dans la carte des mondes ET la page courte, relancer
@@ -92,9 +96,9 @@ un livret déjà imprimé.
 
 | Livret | Séries du dos |
 |---|---|
-| partie 1 | 16 Deux taches · 17 Une référence · 35 En chaîne |
-| partie 2 | 19 Fois plus, fois moins · 36 Deux rapports · 20 Écart et rapport |
-| partie 3 | 22 Taches répétées · 23 Sans total · 24 Le défi qui rebondit |
+| partie 1 | 16 Deux taches · 17 Une référence · 35 En chaîne · 37 Je révise (le monde 2) |
+| partie 2 | 19 Fois plus, fois moins · 36 Deux rapports · 20 Écart et rapport · 35 Je révise (la partie 1) |
+| partie 3 | 22 Taches répétées · 23 Sans total · 24 Le défi qui rebondit · 36 Je révise (la partie 2) |
 | deuxième tour 1 | 25 Quel dessin ? · 26 Dans le désordre · 28 Chaîne et rapport · 29 Je complète |
 | deuxième tour 2 | 30 Indices composés · 32 Taches réunies · 33 En symboles · 34 Unité commune |
 
