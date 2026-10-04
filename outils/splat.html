@@ -7985,7 +7985,8 @@ function enqueteBarresModele(card){
   const reponse = ordreReps.map(i => ({ i, texte:`${mot(i)} = ${N(vals[i])}` }));
   /* la vérification du total, à côté de la réponse quand il y a la place (retour du 29/09) */
   const verification = `${rows.map(r => N(vals[r.i])).concat(visibles.map(N)).join(" + ")} = ${N(total)}`;
-  return { mode, lettres, unit:u, commun:c, reformulation, preLignes, titre1, rows, parts, accolade, ligne, calculs, reponse, verification, texteCellule };
+  return { mode, lettres, unit:u, commun:c, reformulation, preLignes, titre1, rows, parts, accolade, ligne, calculs, reponse, verification, texteCellule,
+    motCellule:c => c.kind === "tache" ? mot(c.de) : N(c.v) };
 }
 
 /* Le schéma vide sous la carte 1 (lot 1, 30/09/2026) : ① tel que la correction le dessine —
@@ -8157,6 +8158,7 @@ function enqueteCadre(g, P, boxY, h, id){
    même dans les deux dessins — celle qui fait tenir la ligne ② dans la largeur ET la plus
    longue barre de ① à côté des noms : une barre a exactement la même longueur dans ① et ②,
    on voit qu'on les pose bout à bout. Cases minimales identiques (même profil). */
+const ENQ_LIGNE_ALIGNEE = true;
 function enqueteMiseEnPage(modele, P){
   const x0 = P.boxX + P.marge, largeur = P.boxW - 2 * P.marge;
   /* schéma vide : mesuré sur les noms du corrigé (labelMesure) — le dessin tombe aux mêmes places */
@@ -8165,12 +8167,32 @@ function enqueteMiseEnPage(modele, P){
   const droite = modele.accolade == null ? 0 : P.braceGap + P.braceW + P.braceGap + enqueteTexteLargeur(totalTxt, P.totalFont, 900) + 6;
   const barX = x0 + labelW, barW = largeur - labelW - droite;
   const sBarres = enqueteEchelle(modele.rows.map(r => r.cells), barW, P);
-  const lineW = largeur - P.ligneBord;
-  const sLigne = modele.ligne ? enqueteEchelle([modele.ligne.groupes.flatMap(g => g.cells)], lineW, P) : sBarres;
   /* la même échelle dans les deux dessins (l'unité commune aussi depuis les petites parts,
      01/10/2026 : ② vaut le total, plus le double) ; garde-fou si un jour ② valait autre chose */
   const commune = !modele.ligne || modele.ligne.total === modele.accolade;
-  return { x0, largeur, labelW, barX, barW, totalTxt, lineW, s:commune ? Math.min(sBarres, sLigne) : sBarres, sLigne:commune ? Math.min(sBarres, sLigne) : sLigne };
+  const avecLigne = lineX => {
+    const lineW = x0 + largeur - lineX - P.ligneBord / 2;
+    const sLigne = modele.ligne ? enqueteEchelle([modele.ligne.groupes.flatMap(g => g.cells)], lineW, P) : sBarres;
+    return { lineX, lineW, s:commune ? Math.min(sBarres, sLigne) : sBarres, sLigne:commune ? Math.min(sBarres, sLigne) : sLigne };
+  };
+  /* ② part du même bord que les barres de ① (03/10/2026, choisi par Gwenaël sur planche) : la
+     colonne des noms reste vide devant lui et le schéma perd ≈ 12 %. Pas au téléphone (portrait :
+     20 % de moins et « violette » deviendrait « Vi ») ; pas non plus sur une carte où un nom de
+     couleur qui tenait dans sa case n'y tiendrait plus (il passerait à son initiale) : ② y part
+     du bord du cadre, comme avant. */
+  let L = avecLigne(x0 + P.ligneBord / 2);
+  if(ENQ_LIGNE_ALIGNEE && !P.portrait && modele.ligne){
+    const A = avecLigne(barX);
+    if(enqueteMotsTiennent(modele, A.s, P) || !enqueteMotsTiennent(modele, L.s, P)) L = A;
+  }
+  return { x0, largeur, labelW, barX, barW, totalTxt, ...L };
+}
+/* Chaque nom de couleur écrit dans une case de ① (et de ②, mêmes cases) tient-il, au plus petit
+   (wordMin), à l'échelle s ? — le mot entier, même pour le corrigé « en lettre ». */
+function enqueteMotsTiennent(modele, s, P){
+  const mot = modele.motCellule || modele.texteCellule;
+  return modele.rows.every(r => r.cells.every(c => c.kind !== "tache" ||
+    enqueteTexteLargeur(mot(c), P.wordMin, 700) <= c.v * s - 2 * P.cellPad));
 }
 
 /* ① Les barres. opts.sansTitre : sans le « ① Les barres » (la page 2 des livrets a ses propres
@@ -8240,7 +8262,7 @@ function drawEnqueteLigne(targetGroup, card, opts = {}){
   (modele.ligne.avant || []).forEach(t => { y += enqueteLigneTexte(g, x0, y, t, P.apartFont, P.apartPas, largeur, 800, "#111827"); });
   const cells = modele.ligne.groupes.flatMap(gr => gr.cells);
   const bord = P.ligneBord;
-  const lineX = x0 + bord / 2;
+  const lineX = M.lineX;
   const ws = enqueteLargeursCases(cells, s, P);
   const wTot = ws.reduce((a, b) => a + b, 0);
   /* le tout en haut : le total, dans une case aussi large que la ligne (trait fin) */
@@ -8841,7 +8863,7 @@ function enqueteG3DessinerLigne(target, card, et, modele, opts = {}){
   let y = boxY + P.marge * 0.6;
   if(!opts.sansTitre) y += enqueteTitreEtape(g, x0, y, et.titre === "Schéma regroupé" ? 2 : 3, et.titre, P, largeur);
   (et.avant || []).forEach(t => { y += enqueteLigneTexte(g, x0, y, t, P.apartFont, P.apartPas, largeur, 800, "#111827"); });
-  const bord = P.ligneBord, lineX = x0 + bord / 2;
+  const bord = P.ligneBord, lineX = M.lineX;
   const ws = enqueteLargeursCases(et.cells, s, P);
   const xs = []; let xx = lineX; ws.forEach(w => { xs.push(xx); xx += w; });
   const yTop = y + bord / 2;
