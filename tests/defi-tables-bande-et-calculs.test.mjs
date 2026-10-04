@@ -66,33 +66,32 @@ function ecranCalculs({hautCadre, hauteurCadre = 78, basBarre = 44, hauteurFenet
   return defilements;
 }
 
-test("le cadre du détail revient sous la barre collée, et seulement s’il en a besoin", () => {
-  // Le cas de l'audit : l'écran ouvert sur la grille, le cadre à 7 px du haut,
-  // donc sous une barre qui descend à 44 — il faut remonter la page de 45 px.
-  assert.deepEqual(ecranCalculs({hautCadre: 7}), [7 - 44 - 8]);
-  // Complètement au-dessus de l'écran (petit téléphone) : même règle.
-  assert.deepEqual(ecranCalculs({hautCadre: -32}), [-32 - 44 - 8]);
-  // Déjà visible sous la barre (iPhone de 402 px) : la page ne bouge pas.
+// Lot « un seul tableau » (04/10/2026) : Mes calculs vit dans Mon parcours,
+// dont la barre du haut n'est pas collée — le plafond est le haut de l'écran
+// (8 px de marge), plus le bas d'une barre.
+test("le cadre du détail revient dans l’écran, et seulement s’il en a besoin", () => {
+  // Juste au-dessus du haut de l'écran : on remonte de ce qui manque.
+  assert.deepEqual(ecranCalculs({hautCadre: 7}), [7 - 8]);
+  assert.deepEqual(ecranCalculs({hautCadre: -32}), [-32 - 8]);
+  // Déjà visible : la page ne bouge pas, barre ou pas.
   assert.deepEqual(ecranCalculs({hautCadre: 80}), []);
-  assert.deepEqual(ecranCalculs({hautCadre: 116, basBarre: 45}), []);
+  assert.deepEqual(ecranCalculs({hautCadre: 9, basBarre: 45}), [], "la barre de Mon parcours n’est pas collée : elle ne compte plus");
   // Sous la ligne de flottaison : on descend, mais jamais au point de le
-  // faire passer sous la barre à son tour.
+  // faire sortir par le haut.
   assert.deepEqual(ecranCalculs({hautCadre: 640}), [640 + 78 - 667 + 8]);
-  assert.deepEqual(ecranCalculs({hautCadre: 660, hauteurCadre: 700}), [660 - 44 - 8],
-    "un cadre plus haut que l’écran se cale sous la barre au lieu d’aligner son bas");
+  assert.deepEqual(ecranCalculs({hautCadre: 660, hauteurCadre: 700}), [660 - 8],
+    "un cadre plus haut que l’écran se cale en haut au lieu d’aligner son bas");
 });
 
 test("toucher une case ou une boîte de Mes calculs ramène le détail dans l’écran", () => {
   assert.match(html, /calculsSelection = choisie \? null : \{boite\};\s*renderCalculs\(\);\s*montrerDetail\(\);/,
     "le bandeau des cinq boîtes");
   assert.match(html, /calculsSelection = \{ligne: cellule\.ligne, colonne: cellule\.colonne, cle: cellule\.cle\};\s*renderCalculs\(\);\s*montrerDetail\(\);/,
-    "les cases de la grille");
-  // La barre reste collée et la grille garde son ancre : l'ouverture de
-  // l'écran ne change pas.
-  assert.match(html, /\.calculs-screen \.settings-toolbar \{ position: sticky; top: 0;/);
-  // R4 bis : la barre a pris 8 px en haut et 10 en bas (le rond flotte) — l'ancre suit.
-  assert.match(html, /#calculs-grille \{ scroll-margin-top: 66px; \}/);
-  assert.match(html, /\$\("calculs-grille"\)\.scrollIntoView\?\.\(\{block: "start", behavior: "auto"\}\)/);
+    "les cases du tableau");
+  // Lot « un seul tableau » : plus d'écran à part, plus de barre collée ; ce
+  // qui ouvrait Mes calculs ouvre Mon parcours sur le bloc.
+  assert.doesNotMatch(html, /\.calculs-screen|#calculs-grille \{ scroll-margin-top/);
+  assert.match(html, /function openCalculs\(\) \{\s*openParcours\(\);\s*\$\("parcours-calculs"\)\.scrollIntoView\?\.\(\{block: "start", behavior: "auto"\}\);\s*\}/);
   // Le mouvement est doux, sauf pour qui demande moins d'animations.
   assert.match(html, /behavior: sansAnimation\(\) \? "auto" : "smooth"/);
   assert.match(html, /matchMedia\?\.\("\(prefers-reduced-motion: reduce\)"\)\.matches === true/);

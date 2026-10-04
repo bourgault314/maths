@@ -20,8 +20,10 @@ function entre(debut, fin) {
 }
 
 test("1. légende de Mes calculs : le carré suit ses petites cases (43 px dès 480 px)", () => {
-  assert.match(html, /\.calculs-legende \.mc-cell \{ width: auto; min-width: 44px; min-height: 22px; padding: 2px 5px; pointer-events: none; \}/);
-  assert.doesNotMatch(html, /\.calculs-legende \.mc-cell \{ width: 44px;/, "plus de carré figé à 44 px (36 px dedans)");
+  // Lot « un seul tableau » : le carré a 40 px de haut (le nombre au-dessus des
+  // cases), 46 px de large au moins, et il suit toujours ses petites cases.
+  assert.match(html, /\.calculs-legende \.mc-cell \{ width: auto; min-width: 46px; height: 40px; padding: 0 4px; aspect-ratio: auto; pointer-events: none; \}/);
+  assert.doesNotMatch(html, /\.calculs-legende \.mc-cell \{ width: 4\dpx;/, "plus de carré figé (les cinq cases de 7 px en dépassaient)");
   // Les petites cases d'origine, que le carré doit contenir : 5 × 7 px + 4 × 2 px.
   assert.match(html, /\.mc-cases \{ display: flex; gap: 2px; \}\s*\.mc-case \{ width: 7px; height: 7px;/);
 });
@@ -143,17 +145,13 @@ test("D. depuis l’accueil, Retour n’est pas intercepté ; une page rechargé
     "l’adresse ne change jamais");
 });
 
-test("3. Mon parcours : « Réviser N calculs → » sous la ligne, plus à côté de « Acquise ✓ »", () => {
-  // Lot 2a : la barre est une fonction (boutonReviser), partagée avec Mon parcours de la séance.
-  const rendu = html.slice(html.indexOf("      function boutonReviser(ligne) {"), html.indexOf("const melange = $(\"parcours-melange\");"));
-  // Seulement les calculs rouges DUS : raté aujourd'hui, il revient demain,
-  // et le bouton affiché le jour même ne lançait rien.
-  assert.match(rendu, /const rouges = ligne\.aRevoir \? new Set\(PARCOURS\.calculsATravailler\(parcours, ligne\.table\)\) : new Set\(\);\s*const nombre = PARCOURS\.calculsDus\(parcours, \{table: ligne\.table\}\)\.filter\(cle => rouges\.has\(cle\)\)\.length;\s*if \(!nombre\) return null;/);
-  assert.match(rendu, /revoir\.textContent = `Réviser \$\{pluriel\(nombre, "calcul"\)\}\\u00a0→`;/);
-  assert.match(rendu, /revoir\.addEventListener\("click", \(\) => startRevision\(ligne\.table, "parcours"\)\);/, "il lance toujours la révision de la table");
-  assert.doesNotMatch(rendu, /etatGroupe\.append\(revoir\)/, "plus dans l’en-tête, à côté de « Acquise ✓ »");
-  assert.match(html, /const revoir = boutonReviser\(ligne\);\s*if \(revoir\) item\.append\(revoir\);\s*list\.append\(item\);/, "et sous la rangée, avec la séance");
-  assert.match(html, /\.parcours-revoir \{\s*display: block;\s*width: 100%;\s*min-height: 44px;/);
+// Lot « un seul tableau » (04/10/2026) : les rangées de Mon parcours et leur
+// barre « Réviser N calculs → » sont parties — la révision n'a plus qu'une
+// porte, la séance. Le test qui suit (le moteur ne lance rien le jour de
+// l'erreur) reste vrai pour la séance.
+test("3. Mon parcours : plus de barre « Réviser N calculs → »", () => {
+  assert.doesNotMatch(html, /function boutonReviser|parcours-revoir/);
+  assert.doesNotMatch(html, /startRevision\(ligne\.table, "parcours"\)/);
 });
 
 test("3. la barre n’apparaît que quand la révision peut partir : jamais le jour de l’erreur, dès le lendemain", () => {
@@ -174,9 +172,11 @@ test("3. la barre n’apparaît que quand la révision peut partir : jamais le j
 });
 
 test("3. Mon parcours : « ma table » (pastille et cadre bleus) sur la table de l’accueil", () => {
+  // Lot « un seul tableau » : une seule carte, celle de ma table, en tête du parcours.
   const rendu = html.slice(html.indexOf("      function renderParcours() {"), html.indexOf("const melange = $(\"parcours-melange\");"));
-  assert.match(rendu, /const maTable = tableEnCours\(etat\);/, "la même table que l’accueil (ordre 2, 10, 5… ou table choisie)");
-  assert.match(html, /item\.className = `parcours-row seance-row\$\{ligne\.acquise \? " is-acquise" : ""\}\$\{table === maTable \? " is-ma-table" : ""\}`;/);
+  assert.match(rendu, /renderMaTable\(\$\("parcours-matable"\), etat, tableEnCours\(etat\)\);/, "la même table que l’accueil (ordre 2, 10, 5… ou table choisie)");
+  assert.match(html, /<div id="parcours-matable" class="parcours-row is-ma-table parcours-matable"><\/div>/);
+  assert.match(html, /zone\.classList\.toggle\("is-acquise", Boolean\(ligne && ligne\.acquise\)\);/);
   assert.match(html, /repere\.className = "parcours-ma-table";\s*repere\.textContent = "ma table";\s*droite\.append\(repere\);/);
   assert.match(html, /\.parcours-row\.is-acquise \{[^}]*\}\s*\.parcours-row\.is-ma-table \{ border-color: var\(--blue\); box-shadow: 0 0 0 1px var\(--blue\); \}/, "le bleu l’emporte sur le vert d’une table acquise choisie");
   assert.match(html, /\.parcours-ma-table \{ padding: 3px 9px; border-radius: 999px; color: #fff; background: var\(--blue\);/);

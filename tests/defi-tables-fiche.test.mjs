@@ -30,7 +30,7 @@ test("« Voir ma fiche » : un seul chemin, en bas de l'accueil, vers un écran 
   // L'écran : la barre (retour, titre), le bouton, et la feuille #fiche-print
   // affichée par body.voir-fiche — la même que celle du professeur.
   assert.match(html, /<div id="fiche" class="fiche-screen" hidden>[\s\S]*id="fiche-back" class="settings-back"[\s\S]*<h1 id="fiche-title" class="settings-heading" tabindex="-1">Ma fiche<\/h1>[\s\S]*<button id="fiche-imprimer" class="primary" type="button">Imprimer ma fiche<\/button>/);
-  assert.match(html, /\["intro", "launch", "play", "result", "parcours", "calculs", "lire", "fiche"\]\.forEach/);
+  assert.match(html, /\["intro", "launch", "play", "result", "parcours", "lire", "fiche"\]\.forEach/, "lot « un seul tableau » : plus d’écran « calculs »");
   assert.match(html, /document\.body\.classList\.toggle\("voir-fiche", name === "fiche"\);\s*\n\s*if \(name === "fiche"\) \{\s*\n\s*\$\("fiche-title"\)\.textContent = prenomAffiche\(\) \? `La fiche de \$\{prenomAffiche\(\)\}` : "Ma fiche";\s*\n\s*renderFiche\(\);\s*\n\s*ajusterFiche\(\);/);
   assert.match(html, /body\.mode-fiche #fiche-print, body\.voir-fiche #fiche-print \{ display: block;/);
   assert.match(html, /body\.mode-fiche #fiche-print, body\.voir-fiche #fiche-print \{ zoom: var\(--fiche-zoom, 1\); \}/);
@@ -161,7 +161,9 @@ test("la feuille des tables (PDF) décrit le parcours réel et la révision du j
 
 test("à l'écran, la ligne des étoiles et l'état du mélange ne chevauchent plus les titres de la fiche réduite", () => {
   assert.match(html, /\.fiche-melange strong \{ padding-right: 58mm; \}\s*\n\s*\.fiche-expert strong \{ padding-right: 58mm; \}/);
-  assert.match(html, /body\.mode-fiche \.fiche-page2, body\.voir-fiche \.fiche-page2 \{ margin-top: 8mm; padding-top: 6mm; border-top: 1\.5px dashed #b9d4e6; \}/);
+  // Lot « un seul tableau » : la fiche tient sur une page, plus de trait de
+  // « saut de page » à l'écran.
+  assert.doesNotMatch(html, /fiche-page2/);
 });
 
 // La fiche imprimée tient en 2 pages : 273 mm pour la feuille 1 (lot du 10/09).

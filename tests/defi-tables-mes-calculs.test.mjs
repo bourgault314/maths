@@ -383,20 +383,20 @@ test("appliquerReponse ne modifie jamais l’objet reçu", () => {
 const html = await (await import("node:fs/promises")).readFile(new URL("../outils/calcul_mental/defi_tables.html", import.meta.url), "utf8");
 const confidentialite = await (await import("node:fs/promises")).readFile(new URL("../confidentialite.html", import.meta.url), "utf8");
 
-test("la page a l’écran Mes calculs : entrée depuis l’accueil, grille, détail, révision", () => {
-  assert.match(html, /\["intro", "launch", "play", "result", "parcours", "calculs", "lire", "fiche"\]/);
-  assert.match(html, /id="open-calculs" class="acc-lien"[\s\S]*Mes calculs/, "l’entrée est la carte de l’accueil (lot 2)");
-  assert.doesNotMatch(html, /id="parcours-calculs"/, "plus de bouton-carte dans le parcours");
-  assert.match(html, /id="calculs"[^>]*class="calculs-screen"/);
+// Lot « un seul tableau » (04/10/2026) : Mes calculs n'a plus d'écran à part,
+// il vit dans Mon parcours, sous la carte de ma table.
+test("Mes calculs vit dans Mon parcours : boîtes, détail, tableau, légende ; plus d’écran ni de tuile", () => {
+  assert.match(html, /\["intro", "launch", "play", "result", "parcours", "lire", "fiche"\]/);
+  assert.doesNotMatch(html, /id="open-calculs"|id="calculs" class="calculs-screen"|id="calculs-back"|id="calculs-reviser"/);
+  const parcoursEcran = html.slice(html.indexOf('<div id="parcours" class="parcours-screen" hidden>'), html.indexOf('<div id="play" hidden>'));
+  assert.match(parcoursEcran, /<div id="parcours-matable" class="parcours-row is-ma-table parcours-matable"><\/div>\s*<section id="parcours-calculs" class="parcours-row calculs-bloc" aria-labelledby="calculs-titre">\s*<h2 id="calculs-titre" class="calculs-titre">Mes calculs<\/h2>/, "la carte de ma table, puis Mes calculs");
+  assert.ok(parcoursEcran.indexOf('id="parcours-calculs"') < parcoursEcran.indexOf('id="parcours-melange"'), "puis le mélange et l’escalier");
   assert.doesNotMatch(html, /id="calculs-resume"/, "lot mémoire : la ligne de résumé a laissé la place aux tuiles des boîtes");
-  assert.match(html, /id="calculs-grille"/);
-  assert.match(html, /id="calculs-detail"/);
-  assert.match(html, /id="calculs-reviser"[\s\S]*Réviser mes calculs du jour/);
-  assert.match(html, /id="calculs-boites" class="calculs-boites" role="group" aria-label="Mes cinq boîtes"/, "le bandeau des cinq boîtes, au-dessus de la grille");
-  assert.ok(html.indexOf('id="calculs-boites"') < html.indexOf('id="calculs-grille"'));
-  assert.ok(html.indexOf('id="calculs-reviser"') < html.indexOf('id="calculs-boites"'), "Réviser EN HAUT, au-dessus des boîtes et de la grille (décision du 08/09/2026)");
+  assert.match(parcoursEcran, /id="calculs-grille"/);
+  assert.match(parcoursEcran, /id="calculs-detail"/);
+  assert.match(parcoursEcran, /id="calculs-boites" class="calculs-boites" role="group" aria-label="Mes cinq boîtes"/, "le bandeau des cinq boîtes, au-dessus de la grille");
+  assert.ok(html.indexOf('id="calculs-boites"') < html.indexOf('id="calculs-detail"') && html.indexOf('id="calculs-detail"') < html.indexOf('id="calculs-grille"'));
   assert.doesNotMatch(html, /class="calculs-note"/, "le paragraphe de règles a disparu : les règles vivent dans « Comment ça marche ? »");
-  assert.match(html, /id="calculs-back"/);
   assert.match(html, /PARCOURS\.serieAlimenteGrille/);
   assert.match(html, /PARCOURS\.appliquerReponse/);
   assert.match(html, /PARCOURS\.planRevision/);
@@ -444,14 +444,13 @@ test("la révision : les calculs dus, 10 par 10, « Encore N → Continuer », p
   assert.match(html, /return `Reviens \$\{quand\} : \$\{pluriel\(prochain\.calculs, "calcul"\)\} t’attendr\$\{prochain\.calculs > 1 \? "ont" : "a"\}\.`;/);
   assert.match(html, /mont\$\{montes > 1 \? "ent" : "e"\} d’une boîte/, "le bilan : ce qui monte, ce qui redescend");
   assert.match(html, /if \(!plan\.length\) return;/, "rien de dû ne lance rien");
-  assert.match(html, /bouton\.classList\.toggle\("is-vide", !agenda\.dus && !libre\);/, "et le bouton de Mes calculs le montre — sauf s’il reste des calculs à venir : « Encore 10 calculs »");
+  assert.match(html, /\$\("calculs-encore-zone"\)\.hidden = !libre;/, "dans Mon parcours, « Encore 10 calculs » seulement s’il reste des calculs à venir et rien de dû");
   assert.match(html, /function libelleEncoreLibre\(table = null\)/);
   assert.match(html, /startRevision\(table, state\.origin, true\)/, "le résultat propose « Encore 10 calculs » à zéro");
   assert.match(html, /PARCOURS\.planRevision\(parcours, \{table, libre\}\)/);
   assert.match(html, /au premier essai/);
   assert.match(html, /if \(entry\.retour\) \{[\s\S]*?number\.textContent = "Il est revenu";/, "un calcul qui revient n’est pas numéroté Question 11, 12… — il est marqué « Il est revenu » (lot R2 : les autres n’ont plus de numéro)");
-  assert.match(html, /Rien aujourd’hui\. \$\{phraseProchainRetour\(agenda\)\}/);
-  assert.match(html, /Ta grille est vide : elle se remplit dans Je m’entraîne et les validations\./);
+  assert.doesNotMatch(html, /Rien aujourd’hui\. \$\{phraseProchainRetour\(agenda\)\}/, "lot « un seul tableau » : le bouton seul (choix de Gwenaël)");
   assert.doesNotMatch(html, /Tout est su ! 10 questions pour entretenir ta grille/, "l’entretien n’est plus une pioche : les verts reviennent à leur date");
   assert.doesNotMatch(html, /on découvre les 10 premiers calculs/, "plus de découverte de calculs par la révision (lot 3)");
   assert.doesNotMatch(html, /L’étoile valide toutes tes tables d’un coup/, "lot 3 : plus de raccourci « ★ valide les 9 tables »");
@@ -462,11 +461,14 @@ test("la révision : les calculs dus, 10 par 10, « Encore N → Continuer », p
   assert.match(html, /animation: none !important/, "la fête respecte prefers-reduced-motion");
 });
 
-test("la fiche imprimable a une page 2 « Mes calculs » et le PDF vide aussi", async () => {
+// Lot « un seul tableau » : la fiche de l'appli tient sur UNE page, le tableau
+// de Mes calculs y est sous la carte de ma table. Le PDF vierge (publié, page
+// du professeur) n'est pas touché par ce lot.
+test("la fiche imprimable porte le tableau de Mes calculs sur sa page unique ; le PDF vide est inchangé", async () => {
   const fs = await import("node:fs/promises");
   assert.match(html, /id="fiche-calculs"/);
-  assert.match(html, /fiche-page2/);
-  assert.match(html, /Mes calculs<\/h1>|Mes<br>calculs<\/h1>|<h1>Mes calculs/);
+  assert.doesNotMatch(html, /fiche-page2/);
+  assert.match(html, /<div id="fiche-matable" class="fiche-rangee is-ma-table fiche-matable" hidden><\/div>\s*<table id="fiche-calculs" class="fiche-carre"><tbody><\/tbody><\/table>/);
   const pdf = await fs.readFile(new URL("../outils/calcul_mental/fiche_parcours_tables.pdf", import.meta.url));
   assert.equal(pdf.subarray(0, 5).toString(), "%PDF-");
   assert.match(pdf.toString("latin1"), /\/Count 2/, "le PDF vide fait deux pages");
@@ -475,7 +477,7 @@ test("la fiche imprimable a une page 2 « Mes calculs » et le PDF vide aussi", 
   assert.match(source, /BOITES = 5/, "la fiche vide a cinq boîtes par calcul");
   assert.match(source, /for case in range\(BOITES\):/);
   assert.match(html, /for \(let index = 0; index < PARCOURS\.SEUILS\.revision\.boites; index \+= 1\) \{\s*const caseFait = document\.createElement\("span"\);\s*caseFait\.className = `fiche-case\$\{fait && index < fait\.boite \? " is-pleine" : ""\}`;/, "la fiche remplie aussi");
-  assert.match(html, /Cinq boîtes par calcul : une bonne réponse le jour où le calcul revient le fait monter d’une boîte/);
+  assert.match(html, /nombre\.textContent = fait \? String\(ligne \* colonne\) : "";/, "le produit en gros dès la première réponse");
 });
 
 test("la page Confidentialité mentionne la grille des calculs", () => {

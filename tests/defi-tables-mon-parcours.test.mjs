@@ -801,12 +801,15 @@ test("la page charge le moteur du parcours et propose la carte Mon parcours", ()
   assert.match(html, /window\.MATHSGO_DEFI_TABLES_MON_PARCOURS/);
   assert.match(html, /id="open-parcours" class="acc-lien"[\s\S]*Mon parcours/);
   assert.match(html, /id="parcours"[^>]*class="parcours-screen"/);
-  assert.match(html, /id="parcours-list"/);
+  // Lot « un seul tableau » : la carte de ma table et Mes calculs à la place des dix rangées.
+  assert.doesNotMatch(html, /id="parcours-list"/);
+  assert.match(html, /id="parcours-matable"/);
+  assert.match(html, /id="parcours-calculs"/);
   assert.match(html, /id="parcours-melange"/);
   assert.match(html, /id="parcours-expert"/);
   assert.doesNotMatch(html, /id="parcours-next"/, "« Prochaine étape » a quitté le parcours (lot 2) : l’accueil dit quoi faire");
   assert.doesNotMatch(html, /C’est parti<\/button>|"C’est parti"/, "et son bouton avec");
-  assert.match(html, /\["intro", "launch", "play", "result", "parcours", "calculs", "lire", "fiche"\]/);
+  assert.match(html, /\["intro", "launch", "play", "result", "parcours", "lire", "fiche"\]/);
 });
 
 test("prénom local, remise à zéro confirmée dans la page, résultat relié au parcours", () => {
@@ -857,12 +860,13 @@ test("la page Confidentialité décrit la sauvegarde locale de Mon parcours", ()
   assert.match(confidentialite, /Recommencer à zéro/);
 });
 
-test("sur écran large, Mon parcours passe en deux colonnes compactes", () => {
+// Lot « un seul tableau » : plus de rangées en deux colonnes ; la page garde
+// sa largeur, le tableau s'arrête à 560 px (la largeur de l'ancien écran).
+test("sur écran large, Mon parcours garde ses blocs compacts et le tableau ne dépasse pas 560 px", () => {
   assert.match(html, /@media \(min-width: 1040px\) \{[\s\S]*?\.parcours-screen \{ max-width: 1120px; \}/);
-  assert.match(html, /@media \(min-width: 1040px\) \{[\s\S]*?\.parcours-list \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
-  assert.match(html, /@media \(min-width: 1040px\) \{[\s\S]*?\.parcours-cells \.cell \{ min-height: 34px/);
+  assert.doesNotMatch(html, /\.parcours-list \{/);
   assert.match(html, /\.parcours-screen \{ max-width: 720px/, "en dessous de 1040 px, rien ne change");
-  assert.match(html, /\.calculs-screen \{ max-width: 560px/, "Mes calculs garde sa largeur");
+  assert.match(html, /\.calculs-grille \{\s*display: grid;\s*grid-template-columns: auto repeat\(8, minmax\(0, 1fr\)\);\s*gap: 3px;\s*max-width: 560px;\s*margin: 12px auto 0;\s*\}/, "le tableau garde la largeur de l’ancien écran Mes calculs");
 });
 
 test("la fiche « Mon parcours des tables » s’imprime depuis l’appli et existe en PDF vide avec sa source", async () => {
