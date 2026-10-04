@@ -486,9 +486,11 @@ test("logos (décision du 25/09/2026) : aucun sur la couverture, les fiches et l
   assert.match(dos, /<div class="logos-bas">/);
   assert.match(dos, /avec l'IREMI de La Réunion/);
   assert.equal((dos.match(/Claire/g) || []).length, 1, "le crédit de Claire, une seule fois, au dos");
-  // les fiches sont celles de l'outil, dont on retire les logos au rendu (jamais dans l'outil)
+  // les fiches sont celles de l'outil, dont on retire les logos au rendu (jamais dans l'outil) — dans
+  // le livret à plier ; le PDF page par page garde l'IREMI seul (04/10/2026,
+  // tests/splat-logos-iremi-page-par-page.test.mjs)
   assert.match(render, /JS_SANS_LOGO = """\(\) => \{\n  const l = document\.querySelectorAll\('\.printArea \.print-page-logos'\);/);
-  assert.match(render, /r = await pg\.evaluate\(JS_SANS_LOGO\)/);
+  assert.match(render, /r = await pg\.evaluate\(JS_IREMI_SEUL if iremi else JS_SANS_LOGO\)/);
   assert.match(render, /PIED_LIVRET = "mathsgo\.re\/splat · CC BY-NC-SA 4\.0"/);
   // noir et blanc : aucun texte framboise sur le blanc
   const css = lire(SRC + "commun.css");

@@ -247,6 +247,7 @@ pypdf pour l'imposition.
   ni en haut du dos, ni sur les six pages-fiches : `render.py` retire au rendu le bloc
   `.activity-logos` que l'outil imprime (l'outil, lui, garde ses logos). La signature
   `mathsgo.re/splat · CC BY-NC-SA 4.0` reste au pied des 8 pages.
+  **PDF page par page (04/10/2026)** : chaque page-fiche du `….pdf` garde le logo de **l'IREMI seul**, à droite du bandeau, où il était (`JS_IREMI_SEUL`) — un collègue qui imprime une seule fiche n'a pas le dos ; maths&go est déjà au pied (`mathsgo.re/splat`). Le livret à plier (`…_a_plier.pdf`) ne change pas : aucun logo sur ses fiches. Chaque fiche est donc rendue deux fois, mêmes graines ; seul le bandeau diffère.
 - Numéros de pages : « page N » en gras, au coin extérieur du bas des pages 2 à 7 (à droite
   si N est impair, à gauche s'il est pair), posé par `render.py`. Ni la couverture ni le
   dos. C'est le numéro dans le livret, pas celui de la feuille A3.
