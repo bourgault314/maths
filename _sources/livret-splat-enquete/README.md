@@ -2,8 +2,8 @@
 
 La progression **v3, en cinq livrets** (lot « fabrication des cinq livrets », 03/10/2026 — décidée
 avec Gwenaël, `splat-relecture\monde-3-progression-six-livrets.md`, section du 03/10 au soir) :
-trois livrets de base, pour tous, dans l'ordre, puis deux livrets « Deuxième tour », plus durs,
-qui allument les **mêmes étoiles**. Même fabrication que les livrets des mondes 1 et 2 :
+trois livrets de base, pour tous, dans l'ordre, puis deux livrets « Deuxième tour », plus durs :
+le **Bonus** de la carte des mondes (depuis le 04/10/2026, des taches dorées à part). Même fabrication que les livrets des mondes 1 et 2 :
 **2 feuilles A3 recto-verso**, pliées et agrafées au milieu → 8 pages A4.
 
 | Livret (`render.py`) | Fiches | Page 2 (exemple résolu) |
@@ -89,7 +89,7 @@ Si une graine change : la reporter dans la carte des mondes ET la page courte, r
 
 `https://mathsgo.re/splat/enquete/livret/?f=12` ouvre la série en ligne de la fiche 12 —
 exactement le lien « Je joue » de la carte des mondes (mêmes cartes, `parcours=enq12`) ;
-`?f=12d` ouvre la fiche 12d, avec **le même parcours** (la même étoile) ; `?f=10d`, `14d`, `15d`,
+`?f=12d` ouvre la fiche 12d, avec **son parcours** (`enq12d`, sa tache dorée du Bonus) ; `?f=10d`, `14d`, `15d`,
 `21d`, `23d` (retirées) mènent à la carte des mondes. `?s=N` : les séries du dos (réglages des
 fiches, sans graine, mode élève sans étape) ; les séries des anciens livrets restent servies pour
 un livret déjà imprimé.

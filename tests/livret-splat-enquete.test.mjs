@@ -1,11 +1,13 @@
 /* Les cinq livrets de l'Enquête (monde 3 de l'univers SPLAT!) — la progression v3 du 03/10/2026 :
    trois livrets de base, pour tous, dans l'ordre (fiches 10 à 24), puis deux livrets « Deuxième
-   tour », plus durs, qui allument les MÊMES étoiles (11d 12d 13d 16d 17d, puis 18d 20d 22d 19d 24d).
+   tour », plus durs (11d 12d 13d 16d 17d, puis 18d 20d 22d 19d 24d) : le Bonus de la carte des
+   mondes depuis le 04/10/2026, chaque fiche avec SON parcours (enq11d…) et sa tache dorée.
 
    Rendus par _sources/livret-splat-enquete/render.py à partir de l'outil du site : les fiches de
    base doivent être EXACTEMENT celles de la carte des mondes (ENQ_FICHES : mêmes réglages, mêmes
    graines, mêmes titres ; une fiche = une étape = une étoile), celles du deuxième tour celles de la
-   page courte (ENQ_TOUR2), et le QR de chaque fiche doit ouvrir la série qui allume la bonne étoile.
+   page courte (ENQ_TOUR2), et le QR de chaque fiche doit ouvrir la série qui allume la bonne étoile
+   (ou la bonne tache dorée du Bonus).
    On EXÉCUTE les données de la carte des mondes et le script de la page courte des QR (leçon du
    lot L : chercher du texte ne dit rien des adresses réellement construites), puis on relit les
    PDF publiés et les cartes rendues (cartes.json). */
@@ -90,7 +92,7 @@ test("les dix fiches du deuxième tour — codes, titres, ordre ; aucune consign
   assert.deepEqual(T.map((f) => f.q), TOUR2);
   assert.deepEqual(T.map((f) => f.t), FT.map((f) => f.t));
   T.forEach((f) => {
-    assert.equal(f.j, `/splat/classique/?${f.q}&cards=4&unknown=question&eleve=1&parcours=enq${parseInt(f.code, 10)}`, `${f.code} : jeu, étoile de la fiche de base`);
+    assert.equal(f.j, `/splat/classique/?${f.q}&cards=4&unknown=question&eleve=1&parcours=enq${f.code}`, `${f.code} : jeu, son parcours à lui (le Bonus, 04/10/2026)`);
     assert.equal(f.jp, `/splat/classique/?${f.q}&cards=4&unknown=question`, `${f.code} : projeter`);
     assert.equal(decodeURIComponent(new URLSearchParams(f.f.split("?")[1]).get("title")), `Fiche ${f.code} \u2014 ${f.t}`);
   });
@@ -129,13 +131,13 @@ test("le QR d'une fiche ouvre sa série et son étoile, par la page courte (?f=1
   });
 });
 
-test("deuxième tour : ?f=11d … ?f=24d ouvre la fiche, avec la MÊME étoile que sa fiche de base ; les retirées mènent à la carte", () => {
+test("deuxième tour : ?f=11d … ?f=24d ouvre la fiche, avec SON parcours (le Bonus, pas l'étoile de la fiche de base) ; les retirées mènent à la carte", () => {
   assert.match(render, /ecrire\(lien_fiche\(f\["code"\]\), f"fiche\{f\['code'\]\}\.png"\)/);
   TOUR2.forEach((q, i) => {
     const c = CODES_T2[i], n = parseInt(c, 10), cible = cibleCourte(`?f=${c}`);
-    assert.equal(cible, `/splat/classique/?${q}&cards=4&unknown=question&eleve=1&parcours=enq${n}`, `?f=${c}`);
+    assert.equal(cible, `/splat/classique/?${q}&cards=4&unknown=question&eleve=1&parcours=enq${c}`, `?f=${c}`);
     const j = new URLSearchParams(ETAPES[n - 10].j.split("?")[1]);
-    assert.equal(new URLSearchParams(cible.split("?")[1]).get("parcours"), j.get("parcours"), `fiche ${c} : même étoile que la fiche ${n}`);
+    assert.notEqual(new URLSearchParams(cible.split("?")[1]).get("parcours"), j.get("parcours"), `fiche ${c} : plus l'étoile de la fiche ${n}`);
     assert.ok(existe(`${SRC}qr/fiche${c}.png`), `qr/fiche${c}.png`);
     assert.ok(courte.includes(`href="${cible.replace(/&/g, "&amp;")}"`), `lien de repli de la fiche ${c}`);
   });

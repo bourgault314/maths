@@ -982,7 +982,7 @@
      le pavé doit déjà exister à ce moment-là. -->
 <script src="../assets/js/mathsgo-pave-chiffres.js?v=20260918-1"></script>
 <!-- Le texte du bouton « Étape suivante ▶ » de l'écran de fin (lot A). -->
-<script src="../assets/js/splat-etapes.js?v=20261003-1"></script>
+<script src="../assets/js/splat-etapes.js?v=20261004-1"></script>
 </head>
 
 <body class="light">
@@ -14361,10 +14361,13 @@ function eleveEtapeSuivante(){
   return { html: "\u00c9tape suivante \u25b6", href: `${ELEVE_URL_MONDES}?apres=${encodeURIComponent(parcoursId)}`, versCarte: false };
 }
 
-/* Lien vers la carte des mondes (seulement quand on vient du parcours). */
+/* Lien vers la carte des mondes (seulement quand on vient du parcours). D'une fiche bonus du
+   monde 3 (04/10/2026), la carte s'ouvre sur son Bonus (#enq-bonus). */
 function eleveLienMondesHtml(classe, libelle){
   if(!parcoursId) return "";
-  return `<a class="${classe}" href="${ELEVE_URL_MONDES}" title="Retour \u00e0 la carte des mondes">` +
+  const ancre = (window.MathsGoSplatEtapes && window.MathsGoSplatEtapes.estBonus &&
+    window.MathsGoSplatEtapes.estBonus(parcoursId)) ? "#enq-bonus" : "";
+  return `<a class="${classe}" href="${ELEVE_URL_MONDES}${ancre}" title="Retour \u00e0 la carte des mondes">` +
     (libelle || '\u25c0 <span class="txt">Carte des mondes</span>') + `</a>`;
 }
 
@@ -14518,16 +14521,21 @@ function renderEleveFinSplat(panneau){
   eleveIndicesTel = false; eleveIndicesAfficher(null); /* l'écran de fin garde le plateau d'avant */
   renderCard(eleveSerie[total - 1], 0);
   eleveCadrerScene(); /* le cadrage de la carte, pas celui du schéma resté affiché (Enquête) */
+  /* une fiche bonus du monde 3 (11d…24d, 04/10/2026, choix B de Gwenaël) : sur la carte, sa
+     tache devient dorée ✨ (pas d'étoile) — l'écran de fin dit la même chose */
+  const bonus = !!(parcoursId && window.MathsGoSplatEtapes && window.MathsGoSplatEtapes.estBonus &&
+    window.MathsGoSplatEtapes.estBonus(parcoursId));
+  const icone = bonus ? "\u2728" : "\u2b50";
   if(rouges.length){
     /* des cartes rouges : pas d'étoile, on propose de les rejouer */
     eleveSauverFinDeSerie(); /* au retour, l'élève revient sur cet écran */
     const nbR = rouges.length, plR = nbR > 1 ? "s" : "";
     panneau.innerHTML = `<div class="eleveFin">` +
-      (parcoursId ? `<div class="finEtoile">\u2b50</div>` : ``) +
+      (parcoursId ? `<div class="finEtoile">${icone}</div>` : ``) +
       `<h2>Encore ${nbR} carte${plR}\u00a0!</h2>` +
       `<div class="finPastilles">${elevePastillesHtml()}</div>` +
       `<p class="finSous">Rejoue-l${nbR > 1 ? "es" : "a"} ` +
-      (parcoursId ? `et ton \u00e9toile s'allume sur la carte des mondes.` : `pour finir la s\u00e9rie.`) + `</p>` +
+      (parcoursId ? (bonus ? `et ta tache bonus devient dor\u00e9e sur la carte des mondes.` : `et ton \u00e9toile s'allume sur la carte des mondes.`) : `pour finir la s\u00e9rie.`) + `</p>` +
       `<div class="finAction"><button id="eleveRejouerRouges" type="button">Je rejoue ${nbR > 1 ? `mes ${nbR} cartes rouges` : `ma carte rouge`} \u25b6</button></div>` +
       `<div class="finSorties"><button id="eleveRejouer" type="button">Rejouer toute la s\u00e9rie</button>` +
       `${eleveLienMondesHtml("finLien", "Retour \u00e0 la carte des mondes")}</div></div>`;
@@ -14536,11 +14544,11 @@ function renderEleveFinSplat(panneau){
     eleveEnregistrerReussite(eleveEtoiles, total);
     const suite = parcoursId ? eleveEtapeSuivante() : null;
     panneau.innerHTML = `<div class="eleveFin">` +
-      `<div class="finEtoile on">\u2B50</div>` +
+      `<div class="finEtoile on">${icone}</div>` +
       `<h2>S\u00e9rie termin\u00e9e, bravo\u00a0!</h2>` +
       `<div class="finPastilles">${elevePastillesHtml()}</div>` +
       `<p>${eleveEtoiles} carte${eleveEtoiles > 1 ? "s" : ""} sur ${total} du premier coup.` +
-      (parcoursId ? ` Ton \u00e9toile est allum\u00e9e sur la carte des mondes\u00a0!` : ``) + `</p>` +
+      (parcoursId ? (bonus ? ` Ta tache bonus est dor\u00e9e sur la carte des mondes\u00a0!` : ` Ton \u00e9toile est allum\u00e9e sur la carte des mondes\u00a0!`) : ``) + `</p>` +
       /* dans le parcours : « Étape suivante ▶ » en gros, rejouer et la carte en liens
          dessous (comme l'écran des cartes rouges) ; hors parcours, rien ne change */
       (parcoursId

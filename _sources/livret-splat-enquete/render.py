@@ -7,7 +7,7 @@ site lui-même — la progression v3 du 03/10/2026 (splat-relecture\monde-3-prog
         additif        partie 1, fiches 10 à 14   « SPLAT! Enquête »
         multiplicatif  partie 2, fiches 15 à 19   « SPLAT! Grande enquête »
         rebondit       partie 3, fiches 20 à 24   « SPLAT! L'enquête rebondit »
-    et deux livrets « Deuxième tour » (plus durs, mêmes étoiles) :
+    et deux livrets « Deuxième tour » (plus durs, le Bonus de la carte des mondes) :
         tour2_dessins  fiches 11d 12d 13d 16d 17d   « Les trois dessins »
         tour2_systeme  fiches 18d 20d 22d 19d 24d   « Vers le Système »
 
@@ -30,8 +30,8 @@ fiches (4 cartes par page), le dos (les séries en ligne — avec « Je révise 
 d'avant, aux parties 1 à 3 —, la suite, et « Le défi ! » : deux cartes du livret, plus difficiles
 (04/10/2026) ; l'exemple corrigé et sa carte jumelle à la partie 3, l'unité commune résolue au
 Deuxième tour 2). Une fiche = une étape de la carte des mondes = une étoile ;
-le QR d'une fiche ouvre sa série en ligne (?f=12, ou ?f=12d pour le deuxième tour : la même
-étoile).
+le QR d'une fiche ouvre sa série en ligne (?f=12, ou ?f=12d pour le deuxième tour : sa tache
+dorée dans le Bonus, depuis le 04/10/2026).
 
 LES FICHES ne sont PAS redessinées ici : elles sont rendues par l'outil du site
 (outils/splat.html, « 4 par page ») avec les adresses de la carte des mondes, et le QR est
@@ -66,8 +66,8 @@ COURTE = "/splat/enquete/livret/"               # la page courte des QR (?f=éta
 # LES VINGT-CINQ FICHES (lot « fabrication des cinq livrets », 03/10/2026 : la progression v3,
 # splat-relecture\monde-3-progression-six-livrets.md, section « progression v3, CINQ livrets »).
 # Trois livrets de base (fiches 10 à 24, pour tous, dans l'ordre) et deux livrets « Deuxième
-# tour » (11d 12d 13d 16d 17d, puis 18d 20d 22d 19d 24d : un second tour, plus dur, qui allume
-# les MÊMES étoiles). Les fiches 10d, 14d, 15d, 21d et 23d n'existent plus (le 03/10 au soir :
+# tour » (11d 12d 13d 16d 17d, puis 18d 20d 22d 19d 24d : un second tour, plus dur — le Bonus de
+# la carte des mondes depuis le 04/10/2026, avec ses propres taches dorées). Les fiches 10d, 14d, 15d, 21d et 23d n'existent plus (le 03/10 au soir :
 # cinq livrets au lieu de six). Une fiche = une étape de la carte des mondes : E10 … E24 sont
 # EXACTEMENT les adresses de ENQ_FICHES (outils/splat_univers.html) et de la page courte des QR
 # (splat/enquete/livret/index.html, ENQ) ; E11D … E24D celles de ENQ_TOUR2 dans la page courte.
@@ -294,7 +294,7 @@ LIVRETS = {
                         cartes=[rappel(R3_EXEMPLE, titre="Un exemple corrigé", corrige=True), rappel(R3_A_TOI, titre="À toi&nbsp;!")]),
             suite="Continue avec le monde&nbsp;4, <b>SPLAT! Système</b>&nbsp;: plusieurs plateaux, un total pour chacun… compare-les&nbsp;!")),
     # Les livrets « Deuxième tour » (03/10/2026 : deux au lieu de trois) : un second tour plus dur,
-    # les MÊMES étoiles (?f=Nd → parcours=enqN).
+    # le Bonus de la carte des mondes (?f=Nd → parcours=enqNd, depuis le 04/10/2026).
     "tour2_dessins": dict(
         sortie="livret_splat_enquete_tour2_dessins", fiches=FICHES_T2_DESSINS,
         exemple=dict(query=EX_COMPLETE, op="COMPLETE"),
@@ -324,7 +324,7 @@ def lien_fiche(n):
     """Le QR d'une fiche : la page courte ?f=N, qui ouvre EXACTEMENT le lien « Le jeu
     de l'élève » de l'étape N sur la carte des mondes (les mêmes cartes, l'étoile de
     l'étape, la même empreinte de reprise). Pour un livret Deuxième tour, ?f=Nd : les
-    cartes de la fiche Nd, et la MÊME étoile (parcours=enqN)."""
+    cartes de la fiche Nd, et sa tache dorée du Bonus (parcours=enqNd, depuis le 04/10/2026)."""
     return f"{SITE}{COURTE}?f={n}"
 
 def lien_serie(s):

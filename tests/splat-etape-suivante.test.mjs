@@ -249,10 +249,75 @@ test("les trois outils chargent splat-etapes.js (sans defer, même version)", ()
   for (const [page, nom] of [[splat, "splat.html"], [petit, "splat_tache_barre.html"], [equa, "equasplat.html"]]) {
     const m = page.match(/<script src="\.\.\/assets\/js\/splat-etapes\.js\?v=([\w-]+)"><\/script>/);
     assert.ok(m, `${nom} ne charge pas splat-etapes.js`);
-    assert.equal(m[1], "20261003-1", `${nom} : ?v= de splat-etapes.js`);
+    assert.equal(m[1], "20261004-1", `${nom} : ?v= de splat-etapes.js`);
     // dans <head>, avant tout script de la page
     assert.ok(page.indexOf(m[0]) < page.indexOf("</head>"), `${nom} : le script doit être dans <head>`);
     // la petite ligne a son style
     assert.match(page, /\.finSuiteOu ?\{ ?display: ?block;/);
   }
+});
+
+/* Le Bonus du monde 3 (04/10/2026, choix B de Gwenaël sur la planche « écran de fin d'une fiche
+   bonus ») : une fiche bonus (enq11d…) a SON parcours ; à la fin, « Étape suivante ▶ » mène à la
+   fiche bonus suivante (« Bonus 12d · … »), l'écran montre ✨ et dit « Ta tache bonus est dorée sur
+   la carte des mondes ! » ; après 24d, la carte, ouverte sur le Bonus. Les étapes ne changent pas. */
+test("Bonus : la liste de splat-etapes.js est la copie de ENQ_TOUR2 de la carte, dans l'ordre des livrets", () => {
+  const ctx = vm.createContext({ encodeURIComponent });
+  vm.runInContext(blocUnivers("const PS=", "const PROF =") + ";globalThis.T=ENQ_TOUR2;", ctx);
+  const attendu = JSON.parse(JSON.stringify(ctx.T.map((f) => ["enq" + f.code, f.code, f.t])));
+  assert.deepEqual(ETAPES_JS.BONUS, attendu);
+  assert.deepEqual(ETAPES_JS.BONUS.map((b) => b[1]), ["11d", "12d", "13d", "16d", "17d", "18d", "20d", "22d", "19d", "24d"]);
+  // aucune fiche bonus n'est une étape, et aucune étape n'est une fiche bonus
+  for (const b of ETAPES_JS.BONUS) {
+    assert.ok(ETAPES_JS.estBonus(b[0]));
+    assert.ok(!ETAPES_JS.ETAPES.some((e) => e[0] === b[0]), `${b[0]} n'est pas une étape`);
+  }
+  for (const e of ETAPES_JS.ETAPES) assert.ok(!ETAPES_JS.estBonus(e[0]), `${e[0]} n'est pas une fiche bonus`);
+  // le jeu de chaque fiche bonus sur la carte porte ce parcours
+  ctx.T.forEach((f) => assert.equal(new URLSearchParams(f.j.split("?")[1]).get("parcours"), "enq" + f.code));
+});
+
+test("Bonus : « Étape suivante ▶ » mène à la fiche bonus suivante ; après 24d, la carte ouverte sur le Bonus", () => {
+  const B = ETAPES_JS.BONUS;
+  B.slice(0, -1).forEach((b, k) => {
+    const [p2, code2, titre2] = B[k + 1];
+    assert.equal(ETAPES_JS.sousTitre(b[0]), `Bonus ${code2} · ${titre2}`);
+    assert.equal(ETAPES_JS.suivante(b[0]).parcours, p2);
+    assert.deepEqual(ETAPES_JS.bouton(b[0], URL_CARTE), {
+      html: `Étape suivante ▶<span class="finSuiteOu">Bonus ${code2} · ${titre2.replace(/&/g, "&amp;")}</span>`,
+      href: `${URL_CARTE}?apres=${b[0]}`, versCarte: false });
+  });
+  assert.deepEqual(ETAPES_JS.bouton("enq24d", URL_CARTE), { html: "Voir la carte des mondes ▶", href: URL_CARTE + "#enq-bonus", versCarte: true });
+  // sans la clé non plus, rien ne change pour le Bonus (le monde 3 est public)
+  assert.equal(ETAPES_JS.sousTitre("enq11d", false), "Bonus 12d · Référence, chaîne ou je complète ?");
+  // les étapes du monde 3 ne mènent jamais au Bonus
+  assert.equal(ETAPES_JS.suivante("enq24", true).parcours, "sys25");
+  assert.equal(ETAPES_JS.suivante("enq11", true).parcours, "enq12");
+});
+
+test("Bonus : l'écran de fin de splat.html — ✨, « Ta tache bonus est dorée », la fiche suivante, retour sur le Bonus", () => {
+  const { html, d, w } = finSplat({ parcours: "enq11d", resultats: TOUT_VERT });
+  assert.match(html, /<div class="finEtoile on">✨<\/div>/);
+  assert.match(html, /Ta tache bonus est dorée sur la carte des mondes !/);
+  assert.doesNotMatch(html, /étoile est allumée/);
+  assert.match(html, /Bonus 12d · Référence, chaîne ou je complète \?/);
+  assert.match(html, /href="\/outils\/splat_univers\.html#enq-bonus"[^>]*>Retour à la carte des mondes<\/a>/);
+  d.elements.eleveEtapeSuivante.onclick();
+  assert.equal(w.location.href, `${URL_CARTE}?apres=enq11d`);
+  // des cartes rouges : la même tache, au futur
+  const rouge = finSplat({ parcours: "enq11d", resultats: UNE_ROUGE }).html;
+  assert.match(rouge, /<div class="finEtoile">✨<\/div>/);
+  assert.match(rouge, /et ta tache bonus devient dorée sur la carte des mondes\./);
+  // la dernière fiche : la carte, ouverte sur le Bonus, sans lien en double
+  const fin = finSplat({ parcours: "enq24d", resultats: TOUT_VERT });
+  assert.match(fin.html, /id="eleveEtapeSuivante"[^>]*>Voir la carte des mondes ▶<\/button>/);
+  fin.d.elements.eleveEtapeSuivante.onclick();
+  assert.equal(fin.w.location.href, `${URL_CARTE}#enq-bonus`);
+  // une étape : rien ne change (⭐, « Ton étoile est allumée », pas d'ancre)
+  const etape = finSplat({ parcours: "enq11", resultats: TOUT_VERT }).html;
+  assert.match(etape, /<div class="finEtoile on">⭐<\/div>/);
+  assert.match(etape, /Ton étoile est allumée sur la carte des mondes !/);
+  assert.match(etape, /href="\/outils\/splat_univers\.html" title=/);
+  // sans splat-etapes.js : l'écran d'une étape, sans rien casser
+  assert.match(finSplat({ parcours: "enq11d", resultats: TOUT_VERT, avecModule: false }).html, /étoile est allumée/);
 });

@@ -271,12 +271,13 @@ test("six mondes : les parties sont des intertitres dans la liste, un par livret
   MONDES.forEach((m) => m.etapes.forEach((e) => assert.equal(e.g, undefined, `${m.nom} n'a pas d'intertitre d'étape`)));
   assert.doesNotMatch(univers, /groupeTitre|Les enquêtes additives|Les enquêtes multiplicatives/);
   assert.match(univers, /const v=\(m\.volets\|\|\[\]\)\.find\(x=>x\.de===ei\), vi=\(m\.volets\|\|\[\]\)\.indexOf\(v\);/);
-  assert.match(univers, /'<li class="volet" id="'\+m\.idp\+'-partie-'\+\(vi\+1\)\+'">'/);
-  assert.match(univers, /'<span class="rang">Partie '\+\(vi\+1\)\+'<\/span>'/);
-  assert.match(univers, /<span class="fiches">fiches '\+compteur\+' à '\+\(compteur\+v\.a-v\.de-1\)\+'<\/span>/);
-  assert.match(univers, /return volet\+'<li class="etape" id="'\+ids\[ei\]\+'">'/);
+  /* depuis le 04/10/2026, chaque partie est un menu déroulant (voletHtml, vue élève) : même id,
+     même pastille, mêmes fiches, mêmes étoiles ; ses étapes portent data-partie */
+  assert.match(univers, /const volet=!v\?'':voletHtml\(m\.idp\+'-partie-'\+\(vi\+1\),vi,'Partie '\+\(vi\+1\),v\.nom,\s*'fiches '\+compteur\+' à '\+\(compteur\+v\.a-v\.de-1\),v\.o,'stars'\+mi\+'-'\+vi,''\);/);
+  assert.match(univers, /'<span class="rang">'\+rang\+'<\/span>'/);
+  assert.match(univers, /return volet\+'<li class="etape" id="'\+ids\[ei\]\+'"'\+\(partie>=0\?' data-partie="'\+partie\+'"':''\)\+'>'/);
   /* les étoiles de la partie : comptées sur ses étapes (de ≤ ei < a), dans majAffichage */
-  assert.match(univers, /'<span class="stars" id="stars'\+mi\+'-'\+vi\+'"><\/span>'\+/);
+  assert.match(univers, /'<span class="stars" id="'\+idStars\+'"><\/span>'\+CHEV_P/);
   assert.match(univers, /for\(let ei=v\.de;ei<v\.a;ei\+\+\)\{ if\(document\.getElementById\(idEtape\(m,m\.etapes\[ei\],ei\)\)\.classList\.contains\("done"\)\) fv\+\+; \}/);
   assert.match(univers, /sv\.textContent="\u2b50 "\+fv\+" \/ "\+\(v\.a-v\.de\);/);
   /* le monde ne compte que des parties de 5 fiches : un livret chacune */
