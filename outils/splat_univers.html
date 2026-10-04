@@ -13,7 +13,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
 <!-- La liste des mondes « en préparation » et la clé de Gwenaël (?essai=1) : en tête de assets/js/splat-etapes.js -->
-<script src="../assets/js/splat-etapes.js?v=20261003-1"></script>
+<script src="../assets/js/splat-etapes.js?v=20261004-1"></script>
 <style>
 :root{
   --page:#f6f8fb; --paper:#ffffff; --ink:#10294a; --muted:#5c6c82; --line:#d9e2ec;
@@ -156,13 +156,50 @@ main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
 /* monde 6, les Relatifs (lot R2) : ses deux parties dans son violet */
 .m4 .volet{background:#f7f1fc;border-color:#dcc8ef}
 .m4 .volet .rang{background:var(--violet)}
+/* Vue élève (04/10/2026, maquettes « bonus » validées par Gwenaël) : chaque partie est un menu
+   déroulant. Fermée, elle ne montre que « Partie N · titre · ⭐ x/y » et son chevron ; à
+   l'arrivée, seule la partie en cours est ouverte. Les étapes d'une partie fermée sont
+   masquées (.replieP), pas retirées : les ids et la numérotation ne bougent pas. */
+.volet[role=button]{cursor:pointer;user-select:none}
+.volet[role=button]:hover{filter:brightness(.985)}
+.volet .chevP{flex:0 0 auto;width:28px;height:28px;border-radius:50%;background:#fff;border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;transition:transform .25s}
+.volet .chevP svg{width:16px;height:16px;stroke:var(--c);stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.volet.ferme .chevP{transform:rotate(-90deg)}
+.volet.ferme .fiches,.volet.ferme p{display:none}
+.volet.ferme{padding-top:8px;padding-bottom:8px}
+.etapes>li.replieP{display:none}
+/* le Bonus du monde 3 : un menu de plus sous la partie 3, fermé par défaut, en pointillés ;
+   ses fiches sont des taches blanches cerclées de framboise, dorées ✨ une fois réussies,
+   avec leur compteur à elles (hors des étoiles du haut) */
+.menq .volet.bonus{background:#fff;border:1.5px dashed #e8a3c3}
+.menq .volet.bonus .rang{background:#fff;color:var(--framboise);border:1.5px solid var(--framboise);padding:3.5px 8.5px}
+.livretBonus{list-style:none;margin:12px 0 0;padding:0 4px;font-size:12.5px;font-weight:800;letter-spacing:1.2px;
+  text-transform:uppercase;color:var(--framboise)}
+.livretBonus+.etape{border-top:none}
+.etape+.livretBonus{margin-top:16px}
+.menq .etape.bonus .badge use.fond{fill:#fff;stroke:var(--framboise);stroke-width:5}
+.menq .etape.bonus.done .badge use.fond{fill:var(--gold);stroke:#b8860b;stroke-width:3}
+/* « 11d » en 16 px : centré sur le centre de gravité de la tache, comme les numéros des étapes
+   (mesuré le 04/10/2026, au pixel, sur les dix fiches : au plus 0,6 px de côté et 0,1 px en
+   hauteur ; sans ce réglage, le code était 1,5 px trop haut) */
+.etape.bonus .badge .n{font-size:16px;color:var(--framboise);transform:translateY(.2px)}
+.etape.bonus.done .badge .n{color:var(--ink)}
+.etape.bonus .badge .eclat{position:absolute;right:-9px;bottom:-7px;font-size:20px;line-height:1;display:none}
+.etape.bonus.done .badge .eclat{display:block}
+.etape.bonus h3{margin-bottom:8px}
+.menq .etape.bonus .actions a.jouer{background:#fff;color:var(--framboise);border:2px solid var(--framboise)}
 /* téléphone : la pastille « Partie N » et les étoiles sur une première ligne, le
-   titre et la phrase en dessous sur toute la largeur (sinon la phrase est en colonne) */
+   titre et la phrase en dessous sur toute la largeur (sinon la phrase est en colonne) ;
+   une partie fermée tient sur une ligne : pastille, titre, étoiles, chevron */
 @media(max-width:480px){
   .volet{gap:6px 10px;padding:9px 11px}
   .volet .rang{order:1}
   .volet .stars{order:2;margin-left:auto;font-size:13px;padding:4px 8px}
+  .volet .chevP{order:2}
   .volet .t{order:3;flex:1 0 100%}
+  .volet.ferme .t{order:1;flex:1 1 0}
+  .volet.ferme .stars{margin-left:0}
   .volet .fiches{margin-left:6px}
 }
 
@@ -496,8 +533,9 @@ const EQ5_F37=["mode=EQUNITSTEP&form=BOTH&tasksMax=3&visibleMax=10&cards=2&seed=
 /* ---- SPLAT! Enquête : les 15 fiches du monde 3 (lot E0 du 22/09/2026 ; refaites au lot
    « fabrication des cinq livrets » du 03/10/2026, la progression v3 : ce sont les fiches des trois
    livrets de base, graines triées, « modele=1 » pour le schéma vide sous la carte 1 des fiches
-   12, 13, 17, 18 et 22). Les fiches du deuxième tour (ENQ_TOUR2, plus bas) allument les mêmes
-   étoiles : elles sont servies par la page courte des QR (splat/enquete/livret/). Le jeu de
+   12, 13, 17, 18 et 22). Les fiches du deuxième tour (ENQ_TOUR2, plus bas) sont le Bonus du monde
+   (04/10/2026), avec leurs propres taches dorées ; elles sont aussi servies par la page courte des
+   QR (splat/enquete/livret/). Le jeu de
    l'élève reprend les MÊMES réglages sans layout/note/title, plus &eleve=1&parcours=enqN.
    Ne jamais changer une graine sans refaire les PDF des livrets : la graine fige
    la série carte par carte (tests/splat-enquete-carte-mondes.test.mjs les épingle). */
@@ -556,9 +594,10 @@ const ENQ_FICHES=[
 ];
 /* Le deuxième tour (03/10/2026 : deux livrets, dix fiches) : « Deuxième tour 1 — les trois
    dessins » puis « Deuxième tour 2 — vers le Système ». Pas d'étape à lui sur la carte des
-   mondes : chaque fiche allume l'étoile de sa fiche de base (code « 11d » → parcours enq11).
-   Mêmes adresses que la page courte des QR (ENQ_TOUR2) et que les livrets (render.py). La vue
-   prof en fait une liste à part, sous le monde 3 (« n » : la note du prof). */
+   mondes : c'est le Bonus du monde 3 (04/10/2026), un menu sous la partie 3, hors des étoiles du
+   haut ; chaque fiche a son parcours (code « 11d » → parcours enq11d, assets/js/splat-etapes.js
+   en garde la copie, BONUS). Mêmes adresses que la page courte des QR (ENQ_TOUR2) et que les
+   livrets (render.py). La vue prof en fait une liste à part, sous le monde 3 (« n » : la note du prof). */
 const ENQ_TOUR2=[
  {code:"11d",t:"Je complète",n:"La tache commune est la plus grande : je complète.",
   q:"mode=C&clues=SENTENCE&splats=3&structure=COMPLETE&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&modele=1&seed=361"},
@@ -830,10 +869,10 @@ MONDES_A_FICHES.forEach(([m,fiches,idp])=>{
   });
 });
 /* Le deuxième tour du monde 3 (03/10/2026) : les mêmes liens que les étapes, sous le code de la
-   fiche (« Fiche 11d — … ») ; le jeu allume l'étoile de la fiche de base (parcours=enq11). */
+   fiche (« Fiche 11d — … »). Depuis le 04/10/2026 (le Bonus), le jeu a SON parcours (parcours=enq11d) :
+   il dore la tache de la fiche bonus, et n'allume plus l'étoile de la fiche de base. */
 ENQ_TOUR2.forEach(f=>{
-  const base=parseInt(f.code,10);
-  f.j=ficheJeu(f.q,"enq",base); f.f=ficheImprimer(f,f.code,"statement"); f.c=ficheImprimer(f,f.code,"correction");
+  f.j=ficheJeu(f.q,"enq",f.code); f.f=ficheImprimer(f,f.code,"statement"); f.c=ficheImprimer(f,f.code,"correction");
   f.jp=EQ+f.q+ENQ_COMMUN;
 });
 /* Monde 5 : numéro de fiche et liens de chaque étape (lot Q2). « Projeter » ouvre la
@@ -907,7 +946,7 @@ let faits=lireFaits();
 const NOTES_MONDE = [
  "Le tout et les parties : lire, compléter, puis dessiner un schéma en barres.",
  "Le schéma en barres devient une équation.",
- "Un indice relie les taches : l'élève trace son schéma, puis déduit. Un monde en trois parties : «\u00a0de plus, de moins\u00a0», puis «\u00a0fois plus, fois moins\u00a0», puis l'enquête qui rebondit. Un deuxième tour (dix fiches « d », deux livrets, mêmes étoiles) donne tous les types de problèmes.",
+ "Un indice relie les taches : l'élève trace son schéma, puis déduit. Un monde en trois parties : «\u00a0de plus, de moins\u00a0», puis «\u00a0fois plus, fois moins\u00a0», puis l'enquête qui rebondit. Un deuxième tour (dix fiches « d », deux livrets, en bonus) donne tous les types de problèmes.",
  "Plusieurs plateaux, les mêmes couleurs : on compare les plateaux. Pour s'y retrouver : l'Enquête, c'est un indice qui compare deux taches ; le Système, c'est un indice qui donne un total partiel. Deux parties : on retire, puis on additionne ou on double. "+
  "<table><tr><th>Ce que dit l'énoncé</th><th>Où dans SPLAT!</th><th>Programme</th></tr>"+
  "<tr><td>A = B + d ou A = k × B, avec un total (partage inégal à 2 ou 3 taches)</td><td>Enquête, fiches 10 à 19</td><td>CM1-6e</td></tr>"+
@@ -1127,7 +1166,7 @@ function tour2ProfHtml(m){
     '<div class="corps"><h3>'+f.t+'</h3><p class="pNote">'+f.n+'</p>'+actionsHtml(f,m,'')+'</div></li>';
   const tete=(rang,nom,de,a)=>'<li class="volet" id="enq-tour2-'+rang+'"><span class="rang">Deuxième tour '+rang+'</span>'+
     '<h4>'+nom+'<span class="fiches">fiches '+de+' à '+a+'</span></h4>'+
-    '<p>Plus dur. Chaque fiche allume l\u2019étoile de sa fiche de base.</p></li>';
+    '<p>Plus dur, en bonus\u00a0: ses étoiles sont à part.</p></li>';
   return tete(1,'Les trois dessins','11d','17d')+ENQ_TOUR2.slice(0,5).map(li).join('')+
          tete(2,'Vers le Système','18d','24d')+ENQ_TOUR2.slice(5).map(li).join('');
 }
@@ -1160,6 +1199,34 @@ function renderProf(main){
     const box=document.getElementById(b.getAttribute("aria-controls"));
     const o=!box.classList.contains("ouvert"); box.classList.toggle("ouvert",o); b.setAttribute("aria-expanded",o?"true":"false");
   });
+}
+
+/* ============ vue élève : les parties en menus déroulants, le Bonus du monde 3 ============
+   (04/10/2026, maquettes « bonus » 1 à 6 validées par Gwenaël) */
+const CHEV_P='<span class="chevP" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span>';
+/* L'en-tête d'un menu : la pastille, le titre (et, ouvert, ses fiches et sa phrase), le
+   compteur et le chevron. Il naît fermé ; ouvrirPartie() décide, une fois les étoiles lues. */
+function voletHtml(id,cle,rang,nom,fiches,phrase,idStars,cls){
+  return '<li class="volet ferme'+cls+'" id="'+id+'" data-volet="'+cle+'" role="button" tabindex="0" aria-expanded="false">'+
+    '<span class="rang">'+rang+'</span>'+
+    '<div class="t"><h4>'+nom+'<span class="fiches">'+fiches+'</span></h4><p>'+phrase+'</p></div>'+
+    '<span class="stars" id="'+idStars+'"></span>'+CHEV_P+'</li>';
+}
+/* Le Bonus : les deux livrets « Deuxième tour », dans leur ordre, un « Je joue » par fiche,
+   sans phrase. Chaque fiche a son parcours (enq11d…) : elle allume SA tache, dorée ✨. */
+const BONUS_LIVRETS=[["Livret 1 · Les trois dessins",0,5],["Livret 2 · Vers le Système",5,10]];
+function bonusHtml(){
+  return voletHtml('enq-bonus','bonus','Bonus','Deuxième tour','fiches 11d à 24d',
+      'Pour aller plus loin\u00a0: tous les types de problèmes, mélangés.','starsBonus',' bonus')+
+    BONUS_LIVRETS.map(([titre,de,a])=>'<li class="livretBonus" data-partie="bonus">'+titre+'</li>'+
+      ENQ_TOUR2.slice(de,a).map(f=>'<li class="etape bonus" id="enq-t2-'+f.code+'" data-partie="bonus">'+
+        '<button class="badge" type="button" disabled>'+
+          '<svg class="tache" viewBox="0 0 110 110"><use class="fond" href="#tacheEtoile" width="110" height="110"/></svg>'+
+          '<span class="n">'+f.code+'</span><span class="eclat" aria-hidden="true">\u2728</span>'+
+        '</button>'+
+        '<div class="corps"><h3>'+f.t+'</h3>'+
+          '<div class="actions"><a class="jouer" href="'+f.j+'">🎮 Je joue</a></div>'+
+        '</div></li>').join('')).join('');
 }
 
 const main=document.getElementById("univers");
@@ -1198,15 +1265,15 @@ else MONDES.forEach((m,mi)=>{
    '<ol class="etapes">'+m.etapes.map((e,ei)=>{
      compteur++;
      /* la partie qui commence à cette étape (lot « six mondes ») : un intertitre
-        dans la liste, avec ses étoiles et sa phrase (ses livrets : en vue prof) */
+        dans la liste, avec ses étoiles et sa phrase (ses livrets : en vue prof) ;
+        depuis le 04/10/2026, un menu déroulant (voletHtml) */
      const v=(m.volets||[]).find(x=>x.de===ei), vi=(m.volets||[]).indexOf(v);
-     const volet=!v?'':'<li class="volet" id="'+m.idp+'-partie-'+(vi+1)+'">'+
-       '<span class="rang">Partie '+(vi+1)+'</span>'+
-       '<div class="t"><h4>'+v.nom+'<span class="fiches">fiches '+compteur+' à '+(compteur+v.a-v.de-1)+'</span></h4><p>'+v.o+'</p></div>'+
-       '<span class="stars" id="stars'+mi+'-'+vi+'"></span>'+
-       '</li>';
+     const volet=!v?'':voletHtml(m.idp+'-partie-'+(vi+1),vi,'Partie '+(vi+1),v.nom,
+       'fiches '+compteur+' à '+(compteur+v.a-v.de-1),v.o,'stars'+mi+'-'+vi,'');
+     /* l'étape et sa partie (data-partie : le menu qui la montre ou la cache) */
+     const partie=(m.volets||[]).findIndex(x=>ei>=x.de&&ei<x.a);
      const badgeAttrs = (m.actif && !e.p) ? ' title="Marquer comme réussie" data-id="'+ids[ei]+'"' : ' disabled';
-     return volet+'<li class="etape" id="'+ids[ei]+'">'+
+     return volet+'<li class="etape" id="'+ids[ei]+'"'+(partie>=0?' data-partie="'+partie+'"':'')+'>'+
        '<button class="badge" type="button"'+badgeAttrs+'>'+
          '<svg class="tache" viewBox="0 0 110 110"><use class="fond" href="#tacheEtoile" width="110" height="110"/></svg>'+
          '<span class="n">'+compteur+'</span>'+
@@ -1223,7 +1290,7 @@ else MONDES.forEach((m,mi)=>{
            : '<div class="actions"><span class="bientot">\ud83d\udea7 Le vrai jeu de ce monde est en construction — bient\u00f4t !</span></div>')+
        '</div>'+
      '</li>';
-   }).join("")+'</ol>';
+   }).join("")+(m===MONDE_ENQUETE?bonusHtml():'')+'</ol>';
   main.appendChild(sec);
 });
 
@@ -1257,6 +1324,19 @@ function majAffichage(){
       sv.textContent="⭐ "+fv+" / "+(v.a-v.de);
     });
   });
+  /* le Bonus du monde 3 : ses taches dorées et son compteur, hors du total (vue élève) */
+  const fichesBonus=document.querySelectorAll("li.etape.bonus");
+  if(fichesBonus.length){
+    let fb=0;
+    ENQ_TOUR2.forEach(f=>{
+      const li=document.getElementById("enq-t2-"+f.code), p="enq"+f.code;
+      const ok=!!(parcours[p]&&parcours[p].fait);
+      if(li) li.classList.toggle("done",ok);
+      if(ok) fb++;
+    });
+    const sb=document.getElementById("starsBonus");
+    if(sb) sb.textContent="\u2728 "+fb+" / "+ENQ_TOUR2.length;
+  }
   document.getElementById("totalTxt").textContent=fait+" / "+total+" étoiles";
   document.getElementById("totalFill").style.width=(total?100*fait/total:0)+"%";
   /* « Continuer » : la première étoile qui reste à gagner, dans l'ordre de l'univers */
@@ -1323,16 +1403,60 @@ document.addEventListener("click",ev=>{
      l'écran, seulement s'il n'y est plus. */
   if(mi>=0){ const r=head.getBoundingClientRect(); if(r.top<0||r.top>innerHeight*0.6) window.scrollTo({top:scrollY+r.top-8,behavior:"smooth"}); }
 });
-/* une étape (ou un lien) lancée depuis un monde, ou « Continuer » : on retient ce monde */
+/* une étape (ou un lien) lancée depuis un monde, ou « Continuer » : on retient ce monde
+   (et, pour une fiche du Bonus, que le Bonus était ouvert) */
 document.addEventListener("click",ev=>{
   const a=ev.target.closest("a[href]");
   if(!a) return;
   if(a.id==="continuerLien"){ retenirMonde(parseInt(a.dataset.monde,10)); return; }
   const sec=a.closest("main>.monde");
   if(sec) retenirMonde([...document.querySelectorAll("main>.monde")].indexOf(sec));
+  if(a.closest("li.etape.bonus")) retenirBonus(true);
 });
 document.addEventListener("keydown",ev=>{
   if((ev.key==="Enter"||ev.key===" ")&&ev.target.matches("main>.monde>.head")){ ev.preventDefault(); ev.target.click(); }
+});
+/* ============ les parties d'un monde : des menus déroulants (vue élève, 04/10/2026) ============
+   Indépendants les uns des autres : en ouvrir un ne ferme pas les autres. À l'arrivée, dans chaque
+   monde, seule la partie EN COURS est ouverte — celle de la première étoile qui reste à gagner ;
+   aucune quand tout est gagné. Le Bonus, fermé par défaut, se rouvre seul si l'élève y était la
+   dernière fois (il l'a ouvert, ou y a lancé une fiche), retenu sur l'appareil comme le monde
+   ouvert. Une adresse qui vise une partie ou une étape (#enq-bonus, #enq-7) ouvre sa partie. */
+const CLE_BONUS_OUVERT="mathsgo-splat-bonus-ouvert";
+function retenirBonus(o){
+  try{ if(o) localStorage.setItem(CLE_BONUS_OUVERT,"1"); else localStorage.removeItem(CLE_BONUS_OUVERT); }catch(e){}
+}
+function bonusRetenu(){ try{ return localStorage.getItem(CLE_BONUS_OUVERT)==="1"; }catch(e){ return false; } }
+function ouvrirPartie(volet,ouvert){
+  volet.classList.toggle("ferme",!ouvert);
+  volet.setAttribute("aria-expanded",ouvert?"true":"false");
+  const cle=volet.dataset.volet;
+  volet.parentElement.querySelectorAll(':scope>li[data-partie="'+cle+'"]').forEach(li=>li.classList.toggle("replieP",!ouvert));
+}
+function ouvrirParties(){
+  const cible=(location.hash||"").slice(1), elCible=cible?document.getElementById(cible):null;
+  document.querySelectorAll("main>.monde").forEach(sec=>{
+    const volets=sec.querySelectorAll(".etapes>.volet[data-volet]");
+    if(!volets.length) return;
+    const premiere=sec.querySelector(".etapes>li.etape[data-partie]:not(.done):not(.bonus)");
+    const enCours=premiere?premiere.dataset.partie:null;
+    volets.forEach(v=>{
+      const cle=v.dataset.volet;
+      let o=cle==="bonus"?bonusRetenu():cle===enCours;
+      if(elCible&&(elCible===v||(sec.contains(elCible)&&elCible.dataset.partie===cle))) o=true;
+      ouvrirPartie(v,o);
+    });
+  });
+}
+document.addEventListener("click",ev=>{
+  const v=ev.target.closest("main .etapes>.volet[data-volet]");
+  if(!v) return;
+  const o=v.classList.contains("ferme");
+  ouvrirPartie(v,o);
+  if(v.dataset.volet==="bonus") retenirBonus(o);
+});
+document.addEventListener("keydown",ev=>{
+  if((ev.key==="Enter"||ev.key===" ")&&ev.target.matches("main .etapes>.volet[data-volet]")){ ev.preventDefault(); ev.target.click(); }
 });
 document.addEventListener("click",ev=>{
   const b=ev.target.closest("[data-id]");
@@ -1361,6 +1485,15 @@ if (PROF) {
 (function(){
   const apres=new URLSearchParams(window.location.search).get("apres");
   if(!apres||PROF) return;
+  /* une fiche du Bonus (04/10/2026) : la fiche bonus suivante, dans l'ordre des livrets ; au
+     retour sur la carte, le monde 3 et son Bonus seront ouverts. Après 24d, le bouton de l'outil
+     ramène directement à la carte (#enq-bonus), sans passer par ici. */
+  const kb=ENQ_TOUR2.findIndex(f=>"enq"+f.code===apres);
+  if(kb>=0){
+    retenirMonde(MONDES.indexOf(MONDE_ENQUETE)); retenirBonus(true);
+    if(kb+1<ENQ_TOUR2.length) window.location.replace(ENQ_TOUR2[kb+1].j);
+    return;
+  }
   /* Mondes en préparation (26/09/2026), comme le bouton de assets/js/splat-etapes.js :
      sans la clé, on les saute ; un élève venu d'un QR déjà imprimé dans un monde en
      préparation continue dans CE monde, jusqu'à sa dernière étape. */
@@ -1374,6 +1507,7 @@ if (PROF) {
   }
 })();
 ouvrirMonde(mondeEnCours(majAffichage()));
+if(!PROF) ouvrirParties();
 /* au retour d'une partie (autre onglet ou bouton retour), on rallume les étoiles gagnées */
 window.addEventListener("pageshow",majAffichage);
 window.addEventListener("focus",majAffichage);

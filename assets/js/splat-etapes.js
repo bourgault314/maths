@@ -19,7 +19,12 @@
 
    Depuis le 26/09/2026, il porte aussi LA liste des mondes « en préparation »
    et la clé de Gwenaël (juste dessous) : la carte des mondes et la page des
-   livrets le chargent pour savoir quoi cacher. */
+   livrets le chargent pour savoir quoi cacher.
+
+   Depuis le 04/10/2026, il porte aussi les dix fiches du Bonus du monde 3 (BONUS,
+   plus bas) : leurs parcours (enq11d…) sont, avec ceux des étapes, TOUS les noms
+   sous lesquels un outil SPLAT! enregistre une série réussie — la liste fermée du
+   serveur de suivi, le jour où SPLAT! s'y branchera, se recopie d'ici. */
 (function () {
   "use strict";
 
@@ -101,6 +106,29 @@
     ["m4e6", 43, "Le grand mélange", "SPLAT! Relatifs", 6]
   ];
 
+  /* Le Bonus du monde 3 (04/10/2026, choix de Gwenaël sur maquettes) : les dix fiches des deux
+     livrets « Deuxième tour », dans l'ordre des livrets. Chacune a SON parcours (enq11d…), sa
+     tache dorée ✨ et son compteur à part, hors des étoiles du haut de la carte : elles ne sont
+     pas des étapes. C'EST UNE COPIE de ENQ_TOUR2 (outils/splat_univers.html) : tests/splat-etape-suivante.test.mjs
+     les compare. Leur écran de fin (choix B du 04/10) : « Étape suivante ▶ » ouvre la fiche bonus
+     suivante (« Bonus 12d · … ») ; après 24d, retour à la carte. Chaque fiche : [parcours, code,
+     titre], toutes dans le monde 3, SPLAT! Enquête. */
+  const BONUS = [
+    ["enq11d", "11d", "Je complète"],
+    ["enq12d", "12d", "Référence, chaîne ou je complète ?"],
+    ["enq13d", "13d", "Tout dans le désordre"],
+    ["enq16d", "16d", "Chaîne, un écart et un rapport"],
+    ["enq17d", "17d", "Je complète, avec un rapport"],
+    ["enq18d", "18d", "Indices composés"],
+    ["enq20d", "20d", "Deux taches réunies"],
+    ["enq22d", "22d", "Les indices en symboles"],
+    ["enq19d", "19d", "Le grand défi"],
+    ["enq24d", "24d", "Unité commune : les petites parts"]
+  ];
+  function estBonus(parcours) {
+    return BONUS.some((b) => b[0] === parcours);
+  }
+
   function echapper(texte) {
     return String(texte).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
@@ -111,12 +139,20 @@
   }
 
   /* L'étape qui suit « parcours » : null si le parcours n'est pas sur la carte,
+     et pour une fiche bonus, la fiche bonus qui la suit (« bonus: true »),
      { derniere: true } quand il n'y a plus rien après (dernière étape de l'univers).
      Sans la clé, on saute les mondes en préparation : après l'étape 9, c'est
      SPLAT! Équations (étape 35) ; après l'étape 37, la carte des mondes. Un élève
      arrivé dans un monde en préparation par un QR déjà imprimé continue dans CE
      monde, jusqu'à sa dernière étape, puis retourne à la carte. */
   function suivante(parcours, cle = CLE) {
+    /* une fiche bonus : la fiche bonus suivante, puis la carte (jamais une étape) */
+    const kb = BONUS.findIndex((b) => b[0] === parcours);
+    if (kb >= 0) {
+      if (kb + 1 >= BONUS.length) return { derniere: true };
+      const [p, code, titre] = BONUS[kb + 1];
+      return { derniere: false, bonus: true, parcours: p, code, titre, monde: "SPLAT! Enquête", nouveauMonde: false };
+    }
     const k = ETAPES.findIndex((e) => e[0] === parcours);
     if (k < 0) return null;
     const ici = ETAPES[k];
@@ -132,6 +168,7 @@
     const s = suivante(parcours, cle);
     if (!s || s.derniere) return "";
     /* espaces insécables : « SPLAT! Classique » ne se coupe pas en deux sur téléphone */
+    if (s.bonus) return `Bonus ${s.code} · ${s.titre}`;
     return s.nouveauMonde
       ? `🌍 Nouveau monde : ${s.monde.replace(/ /g, " ")}`
       : `Étape ${s.numero} · ${s.titre}`;
@@ -144,7 +181,8 @@
   function bouton(parcours, urlCarte, cle = CLE) {
     const s = suivante(parcours, cle);
     if (s && s.derniere) {
-      return { html: "Voir la carte des mondes ▶", href: urlCarte, versCarte: true };
+      /* après la dernière fiche bonus (24d) : la carte, ouverte sur le Bonus */
+      return { html: "Voir la carte des mondes ▶", href: urlCarte + (estBonus(parcours) ? "#enq-bonus" : ""), versCarte: true };
     }
     const sous = sousTitre(parcours, cle);
     return {
@@ -154,5 +192,5 @@
     };
   }
 
-  window.MathsGoSplatEtapes = { ETAPES, MONDES_EN_PREPARATION, CLE_ESSAI, cle: CLE, mondeCache, suivante, sousTitre, bouton };
+  window.MathsGoSplatEtapes = { ETAPES, BONUS, MONDES_EN_PREPARATION, CLE_ESSAI, cle: CLE, mondeCache, estBonus, suivante, sousTitre, bouton };
 })();
