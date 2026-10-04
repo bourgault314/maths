@@ -78,11 +78,12 @@ test("le CSS : une seule échelle, jamais à l’impression ; la hauteur du jeu 
   assert.match(telephone, /\.challenge-playing \.shell \{ height: 100dvh;/, "le téléphone n’est pas touché");
 });
 
-test("Mes calculs, Mon parcours et Lire la table : pages longues, jamais réduites en fenêtre", () => {
+test("Mon parcours (et Mes calculs, qui y vit) et Lire la table : pages longues, jamais réduites en fenêtre", () => {
   // Retouche de Cowork (01/10/2026) : ×1 en fenêtre, comme sur main ; en plein
-  // écran, agrandies d’après la largeur. Sans passer par la mesure.
-  assert.match(ajuster, /if \(\["calculs", "parcours", "lire"\]\.some\(id => !document\.getElementById\(id\)\.hidden\)\) \{\s*racine\.style\.setProperty\("--echelle", bornes\.longue\.toFixed\(3\)\);\s*return;\s*\}/);
-  assert.ok(ajuster.indexOf('["calculs", "parcours", "lire"]') < ajuster.indexOf('corps.classList.add("mesure-cadre")'), "avant toute mesure");
+  // écran, agrandies d’après la largeur. Sans passer par la mesure. Lot « un
+  // seul tableau » : l'écran « calculs » n'existe plus.
+  assert.match(ajuster, /if \(\["parcours", "lire"\]\.some\(id => !document\.getElementById\(id\)\.hidden\)\) \{\s*racine\.style\.setProperty\("--echelle", bornes\.longue\.toFixed\(3\)\);\s*return;\s*\}/);
+  assert.ok(ajuster.indexOf('["parcours", "lire"]') < ajuster.indexOf('corps.classList.add("mesure-cadre")'), "avant toute mesure");
   assert.equal(bornesEchelle(1366, false).longue, 1, "fenêtre : ×1");
   assert.equal(bornesEchelle(1920, true).longue, 1.5, "plein écran : d’après la largeur");
 });

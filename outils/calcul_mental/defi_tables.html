@@ -300,7 +300,7 @@
 
     /* ---- L'accueil « Ma table » (lot 2, 08/09/2026) ----
        Un seul écran de commande : la table en cours et ses trois étapes, le
-       bouton Réviser, deux portes (Mon parcours, Mes calculs). L'appli ne
+       bouton Réviser, une porte (Mon parcours, où vit Mes calculs). L'appli ne
        choisit rien à la place de l'élève : les trois étapes restent toujours
        disponibles, elle SURLIGNE seulement celle qu'elle conseille. */
     /* minmax(0, 1fr) (lot 2a) : la colonne ne s’élargit plus au contenu le plus large — l’accueil des 9 tables débordait de 35 px à 360 px. */
@@ -404,15 +404,6 @@
     .choix-activite strong { display: block; font-size: .95rem; font-weight: 900; line-height: 1.15; }
     .choix-activite small { display: block; margin-top: 2px; color: #5b7286; font-size: .74rem; font-weight: 800; }
     .choix-activite.is-plus { border-style: dashed; background: #fbfdff; }
-    /* « Mes calculs » s'ouvre sur la grille : la barre du haut reste collée,
-       donc le retour « Ma table » ne disparaît jamais de l'écran. */
-    /* R4 bis (13/09/2026) : le rond « ← » semblait posé sur un trait (retour
-       iPhone de Gwenaël). Cause : la barre ne mesurait que 44 px — son bouton
-       est en position absolue et ne compte pas dans sa hauteur — et le rond de
-       44 px, centré sur le contenu, touchait l'ombre du bas. La barre fait
-       maintenant 62 px : 8 px au-dessus du rond, 10 en dessous. */
-    .calculs-screen .settings-toolbar { position: sticky; top: 0; z-index: 5; min-height: 62px; padding: 8px 0 10px; background: #fff; box-shadow: 0 8px 10px -9px rgba(18, 50, 74, .45); }
-    #calculs-grille { scroll-margin-top: 66px; }
     /* Le rang : un badge sous « N tables acquises sur 9 », nulle part ailleurs. */
     .rang { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px 3px 6px; border-radius: 999px; font-size: .74rem; font-weight: 950; border: 1px solid transparent; white-space: nowrap; }
     .rang:empty { display: none; }
@@ -478,8 +469,7 @@
     /* Le rond : des neurones qui se relient (idée de Gwenaël, 12/09) — le
        dessin est blanc sur le rond bleu, gris ardoise sinon. */
     .reviser .num .neurones { display: block; }
-    #calculs-reviser.is-vide { opacity: .55; cursor: default; }
-    /* Le bandeau des cinq boîtes (écran Mes calculs) : le nombre de calculs de
+    /* Le bandeau des cinq boîtes (Mes calculs, dans Mon parcours) : le nombre de calculs de
        chaque boîte et quand elle revient. Rouge / bleu / vert = les couleurs de
        la grille ; toucher une boîte liste ses calculs dans le détail. */
     .calculs-boites { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; margin: 12px 0 0; }
@@ -496,11 +486,14 @@
        calculs se lisait comme un « fois ». */
     .mc-detail-liste.pastilles { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 6px; }
     .mc-detail-liste.pastilles span { display: inline-flex; align-items: center; padding: 4px 9px; border: 1.5px solid currentColor; border-radius: 999px; background: #fff; font-size: .86rem; font-weight: 900; white-space: nowrap; }
-    .acc-liens { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    /* Lot « un seul tableau » : une seule tuile, « Mon parcours » (Mes calculs y vit). */
+    .acc-liens { display: grid; grid-template-columns: 1fr; gap: 8px; }
     .acc-lien { min-height: 64px; display: grid; grid-template-columns: 34px minmax(0, 1fr); align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid #c5d9e6; border-radius: 15px; background: #fff; color: var(--blue); font: inherit; font-weight: 900; text-align: left; cursor: pointer; }
     .acc-lien .ico { width: 34px; height: 34px; }
     .acc-lien span { display: grid; gap: 2px; }
     .acc-lien small { color: #5b7286; font-weight: 800; font-size: .74rem; line-height: 1.25; }
+    /* Une seule tuile : un bouton centré, 300 px au plus, contenu centré (Gwenaël, 04/10 : « un grand bouton aligné à gauche, c'est bizarre »). */
+    .acc-liens > .acc-lien { grid-template-columns: 34px auto; justify-content: center; width: min(100%, 300px); justify-self: center; }
     .acc-bas { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 18px; margin-top: 2px; }
     .acc-bas button { min-height: 44px; padding: 0 4px; border: 0; background: none; color: #5b7286; font: inherit; font-size: .82rem; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
     /* Sous un code (ou venu de son espace), l'élève ne voit ni Réglages
@@ -619,8 +612,6 @@
        la règle est enfermée dans @media screen. */
     @media screen {
       body.mode-fiche #fiche-print, body.voir-fiche #fiche-print { zoom: var(--fiche-zoom, 1); }
-      /* À l'écran, la deuxième feuille se voit : un trait, comme un saut de page. */
-      body.mode-fiche .fiche-page2, body.voir-fiche .fiche-page2 { margin-top: 8mm; padding-top: 6mm; border-top: 1.5px dashed #b9d4e6; }
     }
     @media (max-width: 620px) {
       body.voir-fiche .panel { border-radius: 20px 20px 0 0; }
@@ -628,9 +619,11 @@
     }
     .parcours-confirm p { margin: 0 0 10px; color: var(--ink); font-weight: 900; }
     .parcours-confirm .danger { color: #fff; border: 0; background: var(--red); box-shadow: 0 4px 0 #7a1f1f; }
-    .parcours-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; margin: 12px 0 4px; color: var(--muted); font-size: .8rem; font-weight: 850; }
-    .parcours-legend .cell { width: 22px; height: 22px; min-height: 0; font-size: .8rem; pointer-events: none; }
-    .parcours-list { display: grid; gap: 8px; margin: 10px 0 0; padding: 0; list-style: none; }
+    /* Lot « un seul tableau » : la carte de ma table, puis Mes calculs. */
+    .parcours-matable, .calculs-bloc { margin: 10px 0 0; }
+    .parcours-matable .parcours-row-head { align-items: center; margin-bottom: 0; }
+    .parcours-matable .parcours-row-head strong { font-size: 1.15rem; }
+    .parcours-matable .echelle { margin-top: 8px; padding-top: 0; border-top: 0; }
     .parcours-row {
       padding: 10px 12px 11px;
       border: 2px solid #d4e3ed;
@@ -897,18 +890,10 @@
        conseillée cerclée de bleu, le mot « conseillée » dessous. */
     .decouverte-choix button.is-conseillee { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(7, 85, 184, .18); color: var(--ink); }
     .decouverte-choix button small { display: block; color: var(--blue); font-size: .62rem; font-weight: 800; line-height: 1.1; }
-    .seance-row { align-self: start; }
-    /* Mon parcours avec la séance (lot 2) : la rangée de chaque table, et
-       l'échelle de ma table. */
-    .legende-rangee b { display: inline-grid; place-items: center; width: 22px; height: 22px; margin-right: 3px; border: 2px solid #9fb6c6; border-radius: 6px; background: #fff; color: transparent; font-size: .72rem; font-weight: 900; vertical-align: middle; box-sizing: border-box; }
-    .legende-rangee b.pleine { border-color: var(--teal); background: var(--teal); color: #fff; }
-    .legende-rangee b.entouree { border-color: var(--teal); border-width: 3px; color: var(--teal); }
-    .seance-row .rangee { margin: 2px 0 0; justify-content: flex-start; }
-    .seance-row .rangee b { max-width: 36px; height: 31px; font-size: 14px; }
     /* « 100 » (la table de 10) tient dans sa case jusqu'à 320 px. */
     @media (max-width: 380px) {
       .rangee { gap: 2px; }
-      .rangee b, .seance-row .rangee b { border-radius: 7px; font-size: 11px; letter-spacing: -.04em; }
+      .rangee b { border-radius: 7px; font-size: 11px; letter-spacing: -.04em; }
     }
     .echelle { margin-top: 10px; padding-top: 9px; border-top: 1px dashed #c9dbe6; }
     /* Lot E2 (décision 5, version A « la barre », choisie le 03/10 sur
@@ -941,21 +926,7 @@
 
     /* ---- Mes calculs ---- */
     .parcours-head-etat { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 4px 6px; }
-    .parcours-revoir {
-      display: block;
-      width: 100%;
-      min-height: 44px;
-      margin-top: 8px;
-      padding: 4px 12px;
-      border: 1px solid #f2c59a;
-      border-radius: 12px;
-      color: #9a4207;
-      background: #fff1e4;
-      font-size: .85rem;
-      font-weight: 950;
-      cursor: pointer;
-    }
-    .calculs-screen { max-width: 560px; margin: 0 auto; }
+    .calculs-titre { margin: 0; color: var(--ink); font-size: 1.05rem; }
     .calculs-detail {
       min-height: 78px;
       display: grid;
@@ -980,35 +951,58 @@
     .calculs-detail.is-su { border-color: #9ed4b4; color: var(--green); background: var(--green-soft); }
     .calculs-detail.is-en-cours { border-color: #a9c8e8; color: var(--blue); background: #eef6ff; }
     .calculs-detail.is-a-travailler { border-color: #efb4b4; color: var(--red); background: var(--red-soft); }
+    /* Le tableau (lot « un seul tableau », 04/10/2026, code « D » de la
+       maquette retenue) : les couleurs et les cinq petits carrés de l'ancienne
+       grille, avec le produit écrit en gros dès la première réponse, rouge
+       compris. « Pas encore vu » est blanc et vide ; la moitié miroir est
+       grise, avec le même nombre, seulement pour un calcul déjà vu. Le tableau
+       ne s'élargit pas au-delà de 560 px (cases de 63 px). */
     .calculs-grille {
       display: grid;
       grid-template-columns: auto repeat(8, minmax(0, 1fr));
       gap: 3px;
-      margin: 12px 0 0;
+      max-width: 560px;
+      margin: 12px auto 0;
     }
     .calculs-entete {
-      display: grid;
-      place-items: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 22px;
       min-height: 22px;
       color: var(--muted);
       font-size: .82rem;
       font-weight: 950;
     }
+    /* Ma table : son numéro souligné en bleu ; une table acquise : ✓ vert
+       après son numéro de ligne. */
+    .calculs-entete.is-ma-table { color: var(--blue); text-decoration: underline 3px; text-underline-offset: 3px; }
+    .calculs-entete.is-acquise::after { content: "✓"; margin-left: 1px; color: var(--green); font-size: .78em; }
     .mc-cell {
-      min-height: 44px;
-      display: grid;
-      place-items: center;
-      padding: 2px;
-      border: 2px solid #d4e3ed;
+      aspect-ratio: 1 / 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      padding: 0;
+      border: 2px solid #cfdbe4;
       border-radius: 9px;
       color: #8ba3b5;
-      background: #eef3f7;
+      background: #fff;
+      font: inherit;
+      line-height: 1;
+      overflow: hidden;
       cursor: pointer;
     }
+    .mc-nb { font-size: 19px; font-weight: 900; line-height: 1; letter-spacing: -.02em; }
+    .mc-nb:empty { display: none; }
     .mc-cell.is-a-travailler { border-color: #efb4b4; color: var(--red); background: var(--red-soft); }
     .mc-cell.is-en-cours { border-color: #a9c8e8; color: var(--blue); background: #eef6ff; }
     .mc-cell.is-su { border-color: #9ed4b4; color: var(--green); background: var(--green-soft); }
-    .mc-cell.is-miroir { opacity: .35; }
+    .mc-cell.is-miroir.is-vu { border-color: #d5dbe0; color: #5f6e79; background: #e9edf1; }
+    .mc-cell.is-miroir.is-vu .mc-cases { color: #9aa7b1; }
     /* R4 bis : une boîte touchée s'allume dans la grille — ses calculs gardent
        leur couleur, les autres s'estompent. Aucun contour ajouté (Gwenaël a
        trouvé les anneaux « bizarres » sur la maquette du 13/09). */
@@ -1029,6 +1023,11 @@
     @media (max-width: 339px) {
       .mc-cases { gap: 1px; }
       .mc-case { width: 4px; height: 4px; }
+      .mc-nb { font-size: 15px; }
+      .mc-cell { gap: 2px; border-radius: 6px; }
+    }
+    @media (min-width: 1024px) {
+      .mc-nb { font-size: 22px; }
     }
     .calculs-legende { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px 14px; margin: 10px 0 0; color: var(--muted); font-size: .8rem; font-weight: 850; }
     /* R4 bis : chaque carré s'étirait à la largeur de son mot (« pas encore
@@ -1038,10 +1037,11 @@
     /* Lot audit 2 : dès 480 px, les petites cases passent à 7 px (43 px en
        tout) dans un carré de 44 px dont il ne reste que 36 px dedans — la
        dernière dépassait du cadre de 5 px. Le carré suit ses petites cases. */
-    .calculs-legende .mc-cell { width: auto; min-width: 44px; min-height: 22px; padding: 2px 5px; pointer-events: none; }
+    .calculs-legende .mc-cell { width: auto; min-width: 46px; height: 40px; padding: 0 4px; aspect-ratio: auto; pointer-events: none; }
+    .calculs-legende .mc-nb { font-size: 14px; }
+    .calculs-dix { margin: 8px 0 0; color: var(--green); font-size: .85rem; font-weight: 800; text-align: center; }
     .calculs-action { margin: 14px 0 0; text-align: center; }
     .calculs-action .primary, .calculs-action .secondary { width: min(100%, 340px); }
-    .calculs-hint { margin: 8px 0 0; color: var(--muted); font-size: .85rem; text-align: center; }
 
     .settings-panel {
       margin: 12px 0 0;
@@ -1731,12 +1731,12 @@
       .question.show-learn-sequence { --touche-h: clamp(46px, calc(10.5dvh - 30px), 64px); }
     }
 
-    /* Sur un écran large, Mon parcours passe en deux colonnes plus serrées :
-       on voit 10 blocs sur 11 sans descendre au lieu de 5. Rien ne change en
-       dessous de 1040 px — téléphone et tablette gardent l'écran d'origine. */
+    /* Sur un écran large, les blocs de Mon parcours se resserrent. Rien ne
+       change en dessous de 1040 px — téléphone et tablette gardent l'écran
+       d'origine. (Lot « un seul tableau » : plus de rangées en deux colonnes,
+       la page garde sa largeur de 1120 px ; le tableau, lui, s'arrête à 560.) */
     @media (min-width: 1040px) {
       .parcours-screen { max-width: 1120px; }
-      .parcours-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
       .parcours-row { padding: 7px 10px 8px; border-radius: 13px; }
       .parcours-row-head { margin-bottom: 4px; }
       .parcours-row-head strong { font-size: .98rem; }
@@ -1789,28 +1789,22 @@
     .fiche-identity { display: flex; justify-content: space-between; gap: 6mm; margin: 5mm 0 1mm; font-size: 11pt; font-weight: 700; }
     .fiche-identity span { flex: 1; }
     .fiche-identity b { display: inline-block; min-width: 40mm; border-bottom: .3mm solid #cfe2ed; font-weight: 700; color: #0b57b7; }
-    .fiche-subtitle { margin: 0 0 2.5mm; color: #3f5a6c; font-size: 9pt; }
-    /* La feuille 1 tient sur UNE page A4, pied compris : 273 mm utiles
-       (297 − 2 × 12 de marge). Lot 2b : neuf rangées de 9 mm + 1,2 mm
-       d'écart, l'échelle de ma table, deux blocs, le cadre du professeur
-       (9 lignes au plus) et deux lignes de règles. Mesuré dans le PDF de
-       Chromium : la première version, avec le cadre du professeur plein
-       (9 tables), prenait 287,8 mm et sortait en 3 pages. Tout ajout à
-       cette feuille se remesure au PDF, cadre plein. */
-    .fiche-legende { display: flex; align-items: center; gap: 6mm; margin: 0 0 2mm; color: #3f5a6c; font-size: 8pt; }
-    .fiche-legende span { display: inline-flex; align-items: center; gap: 1.5mm; }
-    .fiche-legende b { margin-left: auto; color: #143451; font-size: 8.5pt; }
-    .fiche-r { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; width: 9mm; height: 6.4mm; line-height: 1; border: .4mm solid #9fb6c6; border-radius: 1.6mm; background: #fff; color: #143451; font-size: 8.5pt; font-style: normal; font-weight: 700; }
-    .fiche-r.entouree { border: .6mm solid #087f75; }
-    .fiche-r.pleine { border-color: #087f75; background: #087f75; color: #fff; }
-    .fiche-rangees { list-style: none; margin: 0; padding: 0; }
+    .fiche-subtitle { display: flex; justify-content: space-between; gap: 6mm; margin: 0 0 2.5mm; color: #3f5a6c; font-size: 9pt; }
+    .fiche-subtitle b { color: #143451; font-size: 8.5pt; }
+    /* La fiche tient sur UNE page A4, pied compris : 273 mm utiles
+       (297 − 2 × 12 de marge). Lot « un seul tableau » : la carte de ma
+       table, le tableau de Mes calculs (8 lignes de 11 mm), sa légende, deux
+       blocs, le cadre du professeur (9 lignes au plus) et deux lignes de
+       règles. Tout ajout à cette feuille se remesure au PDF, cadre plein. */
     .fiche-rangee { display: grid; grid-template-columns: 28mm auto 1fr; align-items: center; column-gap: 3mm; box-sizing: border-box; min-height: 9mm; margin: 0 0 1.2mm; padding: 1mm 3mm; border: .3mm solid #cfe2ed; border-radius: 2.5mm; background: #fff; break-inside: avoid; }
     .fiche-rangee.is-acquise { border-color: #b9dcc8; background: #f2fbf5; }
     .fiche-rangee.is-ma-table { border: .6mm solid #0b57b7; }
     .fiche-rangee > strong { color: #143451; font-size: 11.5pt; }
-    .fiche-cases { display: flex; gap: 1.1mm; }
     .fiche-etat { color: #0a6b3a; font-size: 8pt; font-weight: 700; text-align: right; }
     .fiche-rangee.is-ma-table .fiche-etat { color: #0b57b7; }
+    /* La carte de ma table : le nom à gauche, « ma table » à droite, l'échelle dessous. */
+    .fiche-matable { grid-template-columns: 1fr auto; }
+    .fiche-matable .fiche-echelle { grid-column: 1 / -1; }
     /* Lot E2 (décision 5, « la barre ») : la même échelle qu'à l'écran. Les
        segments gardent un contour : lisibles imprimés en noir et blanc. */
     .fiche-echelle { grid-column: 2 / 4; margin-top: 1.4mm; color: #3f5a6c; font-size: 7.5pt; }
@@ -1844,39 +1838,49 @@
     .fiche-rules strong { display: block; margin-bottom: 1mm; color: #143451; font-size: 9pt; }
     .fiche-rules p { margin: 0 0 1mm; }
     .fiche-foot { margin-top: 6mm; color: #506b7d; font-size: 8pt; text-align: center; }
-    .fiche-page2 { padding-top: 2mm; }
-    .fiche-page2-title { margin: 0; color: #0b57b7; font-size: 21pt; line-height: 1.05; text-align: center; text-transform: uppercase; }
-    .fiche-page2-subtitle { margin: 2mm 0 0; color: #506b7d; font-size: 9pt; text-align: center; }
-    .fiche-calculs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2mm 6mm; margin-top: 5mm; }
-    /* Le carré de Pythagore : les 64 cases, la moitié miroir de la même couleur
-       que son symétrique (7×8 et 8×7 sont un seul calcul à mémoriser). */
-    .fiche-carre { width: 100%; border-collapse: collapse; margin-top: 5mm; table-layout: fixed; }
-    .fiche-carre th, .fiche-carre td { border: .3mm solid #cfe2ed; text-align: center; vertical-align: middle; }
-    .fiche-carre th { padding: 1.2mm 0; background: #eef4fa; color: #0b57b7; font-size: 10pt; font-weight: 700; }
-    .fiche-carre th.coin { background: #fff; border-color: #fff; }
-    .fiche-carre td { height: 13mm; padding: 0; background: #f8fcff; }
-    /* Mêmes couleurs que l'écran « Mes calculs » de l'appli : la fiche imprimée
-       et l'écran racontent exactement la même chose, au même coup d'œil. */
-    .fiche-carre td.jamais-vu { background: #f8fcff; color: #7ea1b8; }
-    .fiche-carre td.a-travailler { background: #ffebeb; color: #a93030; }
-    .fiche-carre td.en-cours { background: #eef6ff; color: #0b57b7; }
-    .fiche-carre td.su { background: #e9f7ef; color: #147447; }
-    .fiche-carre td.miroir { background: #eef1f5; }
-    .fiche-carre .fiche-carre-cases .fiche-case { border-color: currentColor; background: transparent; }
-    .fiche-carre .fiche-carre-cases .fiche-case.is-pleine { background: currentColor; }
-    /* Lot 2b : des boîtes de 3,3 mm (2,7 avant). La colonne des en-têtes
-       passe à 9 mm pour que les cinq boîtes gardent de l'air de chaque côté :
-       à 3,6 mm et colonne large, elles se touchaient d'une case à l'autre
-       (vu à la planche). */
+    /* Le tableau de Mes calculs, le même qu'à l'écran : le nombre en gros dès
+       la première réponse, les cinq carrés de sa boîte, la moitié miroir en
+       gris (seulement pour un calcul déjà vu). Lisible en noir et blanc : le
+       nombre et les carrés pleins disent tout, la couleur ne fait qu'aider. */
+    .fiche-carre { width: 100%; border-collapse: separate; border-spacing: 1.1mm; margin: 1mm 0 0; table-layout: fixed; }
+    .fiche-carre th { padding: 0; color: #0b57b7; font-size: 10pt; font-weight: 700; text-align: center; }
     .fiche-carre tr > th:first-child { width: 9mm; }
-    .fiche-carre .fiche-carre-cases { display: flex; justify-content: center; gap: .5mm; }
-    .fiche-carre .fiche-case { width: 3.3mm; height: 3.3mm; }
-    .fiche-carre-note { margin: 2mm 0 0; color: #506b7d; font-size: 7.5pt; text-align: center; }
-    .fiche-calc { display: flex; align-items: center; justify-content: space-between; padding: 1.6mm 3mm; border: .3mm solid #cfe2ed; border-radius: 2mm; background: #f8fcff; color: #143451; font-size: 11pt; font-weight: 700; break-inside: avoid; }
-    .fiche-calc-cases { display: flex; gap: 1.2mm; }
-    .fiche-case { width: 4.2mm; height: 4.2mm; border: .35mm solid #7ea1b8; border-radius: 1mm; background: #fff; }
-    .fiche-case.is-pleine { border-color: #087f75; background: #087f75; }
-    .fiche-page2 .fiche-rules { margin-top: 5mm; }
+    .fiche-carre th.is-ma-table { text-decoration: underline .6mm; text-underline-offset: .8mm; }
+    .fiche-carre th.is-acquise::after { content: "✓"; margin-left: .3mm; color: #147447; font-size: 8pt; }
+    .fiche-carre td, .fiche-mini { box-sizing: border-box; height: 11mm; padding: 0; border: .4mm solid #cfdbe4; border-radius: 2mm; background: #fff; color: #7ea1b8; text-align: center; vertical-align: middle; }
+    .fiche-carre td b, .fiche-mini b { display: block; font-size: 12.5pt; line-height: 1; letter-spacing: -.02em; }
+    .fiche-carre td b:empty, .fiche-mini b:empty { display: none; }
+    .fiche-carre-cases { display: flex; justify-content: center; gap: .6mm; margin-top: .9mm; }
+    .fiche-carre td b:empty + .fiche-carre-cases, .fiche-mini b:empty + .fiche-carre-cases { margin-top: 0; }
+    .fiche-carre .fiche-case, .fiche-mini .fiche-case { width: 1.9mm; height: 1.9mm; border: .3mm solid currentColor; border-radius: .4mm; background: transparent; }
+    .fiche-carre .fiche-case.is-pleine, .fiche-mini .fiche-case.is-pleine { background: currentColor; }
+    .fiche-carre .a-travailler, .fiche-mini.a-travailler { border-color: #efb4b4; background: #ffebeb; color: #a93030; }
+    .fiche-carre .en-cours, .fiche-mini.en-cours { border-color: #a9c8e8; background: #eef6ff; color: #0b57b7; }
+    .fiche-carre .su, .fiche-mini.su { border-color: #9ed4b4; background: #e5f7eb; color: #147447; }
+    .fiche-carre .miroir.vu, .fiche-mini.miroir.vu { border-color: #d5dbe0; background: #e9edf1; color: #5f6e79; }
+    .fiche-carre .miroir.vu .fiche-carre-cases, .fiche-mini.miroir.vu .fiche-carre-cases { color: #9aa7b1; }
+    .fiche-carre-legende { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5mm 4mm; margin: 1.5mm 0 0; color: #3f5a6c; font-size: 8pt; font-weight: 700; }
+    .fiche-carre-legende > span { display: inline-flex; flex-direction: column; align-items: center; gap: .8mm; }
+    .fiche-mini { display: flex; flex-direction: column; justify-content: center; width: 15mm; height: 9mm; font-style: normal; }
+    .fiche-mini b { font-size: 9pt; }
+    .fiche-mini .fiche-carre-cases { margin-top: .6mm; }
+    .fiche-dix { margin: 1.5mm 0 0; color: #147447; font-size: 8.5pt; font-weight: 700; text-align: center; }
+    /* La fiche ouverte depuis « Ma classe » porte en plus le cadre du
+       professeur (10 lignes) : elle se resserre pour rester sur UNE page —
+       cases de 9 mm au lieu de 11, blocs et cadre plus serrés. Mesuré au PDF,
+       cadre plein (9 tables et la 10). */
+    .fiche-print.avec-prof .fiche-identity { margin-top: 3mm; }
+    .fiche-print.avec-prof .fiche-matable { padding-top: .8mm; padding-bottom: .8mm; }
+    .fiche-print.avec-prof .fiche-carre { border-spacing: .9mm; }
+    .fiche-print.avec-prof .fiche-carre td { height: 9mm; }
+    .fiche-print.avec-prof .fiche-carre td b { font-size: 11pt; }
+    .fiche-print.avec-prof .fiche-carre-cases { margin-top: .6mm; }
+    .fiche-print.avec-prof .fiche-mini { height: 8mm; }
+    .fiche-print.avec-prof .fiche-carre-legende { margin-top: 1mm; }
+    .fiche-print.avec-prof .fiche-block { margin-top: 2mm; padding: 1.6mm 4mm; }
+    .fiche-print.avec-prof .fiche-prof { margin-top: 2mm; }
+    .fiche-print.avec-prof .fiche-prof table { font-size: 7.5pt; }
+    .fiche-print.avec-prof .fiche-prof th, .fiche-print.avec-prof .fiche-prof td { padding: .15mm 1.2mm; }
 
     /* ---------- « Je pousse les perles » : le rekenrek de la table ----------
        Reporté de son boulier (outils/bouliers/rekenrek/tables.html). UNE règle
@@ -2048,7 +2052,6 @@
       html, body { margin: 0; background: #fff !important; color: #143451; }
       body > *:not(#fiche-print) { display: none !important; }
       #fiche-print { display: block !important; }
-      .fiche-page2 { break-before: page; page-break-before: always; }
       /* Le cadre de la feuille à l'écran (« Voir ma fiche » de l'élève, fiche
          d'un élève chez le professeur) ne va pas sur le papier. Sa bordure, ses
          18 px de marge intérieure et sa largeur réduite faisaient dépasser la
@@ -2072,7 +2075,7 @@
        que leurs règles d'origine, placés après elles : l'ordre suffit. */
     .carte-seance .duree, .carte-seance .programme small, .carte-seance .programme > span, .acc-lien small, .semaine, .jours,
     .decouverte-texte, .etape small, .choix-activite small, .matable-droite small, .mc-detail-liste, .mc-detail-etat, .mc-detail-note,
-    .calculs-legende, .calculs-detail, .parcours-legend, .launch-hint, .result-verdict #result-detail, .previous-score, .result-message,
+    .calculs-legende, .calculs-detail, .launch-hint, .result-verdict #result-detail, .previous-score, .result-message,
     .result-parcours, .seance-suite .cadre, .seance-bilan li, .matable-lire, .acc-bas button, .matable-changer, .seance-liens button:not(.rond),
     .seance-suite .arreter, .choix-legende, .etape-choix > p, .marche small, .boite small, .correction-details summary,
     .seance-fil, .suivi-repere, .marche-cell small, .parcours-group-label { font-weight: 700; }
@@ -2160,7 +2163,6 @@
             <div id="acc-semaine" class="semaine" hidden></div>
             <div class="acc-liens">
               <button id="open-parcours" class="acc-lien" type="button" aria-controls="parcours"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5 9 4l6 2.5 6-2.5v13l-6 2.5-6-2.5-6 2.5z" fill="#e7f8f5" stroke="#087a71" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 4v13M15 6.5v13" stroke="#087a71" stroke-width="1.8"/><circle cx="12" cy="10" r="1.8" fill="#e0771a"/></svg><span>Mon parcours<small>tables, mélange, étoiles</small></span></button>
-              <button id="open-calculs" class="acc-lien" type="button" aria-controls="calculs"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3" fill="#fff" stroke="#0755b8" stroke-width="1.8"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18" stroke="#0755b8" stroke-width="1.5"/><rect x="9.8" y="9.8" width="4.4" height="4.4" fill="#147447"/><rect x="15.8" y="3.8" width="4.4" height="4.4" fill="#a93030"/><rect x="3.8" y="15.8" width="4.4" height="4.4" fill="#0755b8"/></svg><span>Mes calculs<small>la grille des 36 calculs</small></span></button>
             </div>
             <div class="acc-bas">
               <button id="acc-fiche" type="button" aria-controls="fiche">Voir ma fiche</button>
@@ -2291,45 +2293,37 @@
             <button id="parcours-confirm-no" class="secondary" type="button">Garder</button>
           </div>
         </div>
-        <div id="parcours-legende" class="parcours-legend legende-rangee" aria-hidden="true">
-          <span><b></b> pas encore</span>
-          <span><b class="entouree"></b> réussi une fois</span>
-          <span><b class="pleine"></b> prêt</span>
-        </div>
-        <ol id="parcours-list" class="parcours-list"></ol>
+        <!-- Lot « un seul tableau » (04/10/2026) : Mon parcours = la carte de ma
+             table (l'échelle et la prochaine séance), puis « Mes calculs » (les
+             cinq boîtes, le détail au toucher, le tableau), puis le mélange et
+             l'escalier. Les dix rangées et l'écran « Mes calculs » à part
+             n'existent plus : c'est le même tableau, ici et sur la fiche. -->
+        <div id="parcours-matable" class="parcours-row is-ma-table parcours-matable"></div>
+        <section id="parcours-calculs" class="parcours-row calculs-bloc" aria-labelledby="calculs-titre">
+          <h2 id="calculs-titre" class="calculs-titre">Mes calculs</h2>
+          <div id="calculs-boites" class="calculs-boites" role="group" aria-label="Mes cinq boîtes"></div>
+          <p id="calculs-detail" class="calculs-detail" role="status" aria-live="polite"></p>
+          <div id="calculs-grille" class="calculs-grille" role="grid" aria-label="Tableau des 36 calculs, de 2 fois 2 à 9 fois 9"></div>
+          <div class="calculs-legende" aria-hidden="true">
+            <span><span class="mc-cell"><span class="mc-nb"></span><span class="mc-cases"><span class="mc-case"></span><span class="mc-case"></span><span class="mc-case"></span><span class="mc-case"></span><span class="mc-case"></span></span></span> pas encore vu</span>
+            <span><span class="mc-cell is-a-travailler"><span class="mc-nb">21</span><span class="mc-cases"><span class="mc-case is-pleine"></span><span class="mc-case"></span><span class="mc-case"></span><span class="mc-case"></span><span class="mc-case"></span></span></span> à revoir</span>
+            <span><span class="mc-cell is-en-cours"><span class="mc-nb">21</span><span class="mc-cases"><span class="mc-case is-pleine"></span><span class="mc-case is-pleine"></span><span class="mc-case is-pleine"></span><span class="mc-case"></span><span class="mc-case"></span></span></span> en route</span>
+            <span><span class="mc-cell is-su"><span class="mc-nb">21</span><span class="mc-cases"><span class="mc-case is-pleine"></span><span class="mc-case is-pleine"></span><span class="mc-case is-pleine"></span><span class="mc-case is-pleine"></span><span class="mc-case is-pleine"></span></span></span> su</span>
+            <span><span class="mc-cell is-miroir is-vu"><span class="mc-nb">21</span><span class="mc-cases"><span class="mc-case is-pleine"></span><span class="mc-case is-pleine"></span><span class="mc-case is-pleine"></span><span class="mc-case"></span><span class="mc-case"></span></span></span> même calcul</span>
+          </div>
+          <p id="calculs-dix" class="calculs-dix" hidden><b>Table de 10</b>&nbsp;: acquise ✓</p>
+          <!-- La révision n'a qu'une porte, la séance. « Encore 10 calculs »
+               seulement les jours où rien ne revient (décision 4). -->
+          <div id="calculs-encore-zone" class="calculs-action" hidden>
+            <button id="calculs-encore" class="secondary" type="button">Encore 10 calculs</button>
+          </div>
+        </section>
         <div id="parcours-melange" class="parcours-row parcours-extra" hidden></div>
         <div id="parcours-expert" class="parcours-row parcours-extra"></div>
         <div class="acc-bas parcours-notice-action">
           <button id="parcours-notice-bouton" type="button" aria-expanded="false" aria-controls="parcours-notice">Comment ça marche&nbsp;?</button>
         </div>
         <div id="parcours-notice" class="notice" data-notice hidden></div>
-      </div>
-
-      <div id="calculs" class="calculs-screen" hidden>
-        <div class="settings-toolbar">
-          <button id="calculs-back" class="settings-back" type="button" aria-label="Retour à Ma table"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="settings-back-label">Ma table</span></button>
-          <h1 id="calculs-title" class="settings-heading" tabindex="-1">Mes calculs</h1>
-        </div>
-        <!-- Le bouton d'abord, sous le titre (décision du 08/09/2026) : c'est
-             l'action ; la grille se lit ensuite. Les règles ne sont plus
-             écrites ici — elles vivent dans « Comment ça marche ? » — et le
-             détail d'une case dit la seule phrase utile au bon moment. -->
-        <div class="calculs-action">
-          <button id="calculs-reviser" class="primary" type="button">Réviser mes calculs du jour</button>
-          <p id="calculs-hint" class="calculs-hint"></p>
-        </div>
-        <!-- Lot mémoire : les cinq boîtes au-dessus de la grille — combien de
-             calculs dans chacune, et quand elle revient. La grille 8×8 reste :
-             c'est elle qui sert à pointer ses rouges, et elle est sur la fiche. -->
-        <div id="calculs-boites" class="calculs-boites" role="group" aria-label="Mes cinq boîtes"></div>
-        <p id="calculs-detail" class="calculs-detail" role="status" aria-live="polite"></p>
-        <div id="calculs-grille" class="calculs-grille" role="grid" aria-label="Grille des 36 calculs, de 2 fois 2 à 9 fois 9"></div>
-        <div class="calculs-legende" aria-hidden="true">
-          <span><span class="mc-cell"><span class="mc-cases"><span class="mc-case"></span><span class="mc-case"></span><span class="mc-case"></span><span class="mc-case"></span><span class="mc-case"></span></span></span> pas encore vu</span>
-          <span><span class="mc-cell is-a-travailler"><span class="mc-cases"><span class="mc-case is-pleine"></span><span class="mc-case"></span><span class="mc-case"></span><span class="mc-case"></span><span class="mc-case"></span></span></span> à revoir</span>
-          <span><span class="mc-cell is-en-cours"><span class="mc-cases"><span class="mc-case is-pleine"></span><span class="mc-case is-pleine"></span><span class="mc-case is-pleine"></span><span class="mc-case"></span><span class="mc-case"></span></span></span> en route</span>
-          <span><span class="mc-cell is-su"><span class="mc-cases"><span class="mc-case is-pleine"></span><span class="mc-case is-pleine"></span><span class="mc-case is-pleine"></span><span class="mc-case is-pleine"></span><span class="mc-case is-pleine"></span></span></span> su</span>
-        </div>
       </div>
 
       <div id="play" hidden>
@@ -2455,17 +2449,20 @@
       <img class="fiche-logo" src="../../assets/img/mathsgo-logo-print.png" alt="" width="420" height="195">
     </header>
     <p class="fiche-identity"><span>Prénom : <b id="fiche-prenom"></b></span><span>Classe : <b id="fiche-classe"></b></span><span>Date : <b id="fiche-date"></b></span></p>
-    <p class="fiche-subtitle" id="fiche-subtitle">Ma progression dans l’application à ce jour.</p>
-    <!-- Lot 2b (03/10/2026) : la fiche montre ce que montre Mon parcours —
-         une rangée de dix cases par table, l'échelle de ma table. Les ronds
-         de J'apprends et de Je m'entraîne ont quitté l'appli au lot 2a. -->
-    <p class="fiche-legende" aria-hidden="true">
-      <span><i class="fiche-r"></i>pas encore</span>
-      <span><i class="fiche-r entouree"></i>réussi une fois</span>
-      <span><i class="fiche-r pleine"></i>prêt</span>
-      <b id="fiche-semaine"></b>
+    <p class="fiche-subtitle"><span id="fiche-subtitle">Ma progression dans l’application à ce jour.</span><b id="fiche-semaine"></b></p>
+    <!-- Lot « un seul tableau » (04/10/2026) : la fiche montre ce que montre
+         Mon parcours — la carte de ma table, le tableau de Mes calculs, le
+         mélange et l'escalier — sur UNE page. -->
+    <div id="fiche-matable" class="fiche-rangee is-ma-table fiche-matable" hidden></div>
+    <table id="fiche-calculs" class="fiche-carre"><tbody></tbody></table>
+    <p class="fiche-carre-legende" aria-hidden="true">
+      <span><i class="fiche-mini jamais-vu"><b></b><span class="fiche-carre-cases"><span class="fiche-case"></span><span class="fiche-case"></span><span class="fiche-case"></span><span class="fiche-case"></span><span class="fiche-case"></span></span></i>pas encore vu</span>
+      <span><i class="fiche-mini a-travailler"><b>21</b><span class="fiche-carre-cases"><span class="fiche-case is-pleine"></span><span class="fiche-case"></span><span class="fiche-case"></span><span class="fiche-case"></span><span class="fiche-case"></span></span></i>à revoir</span>
+      <span><i class="fiche-mini en-cours"><b>21</b><span class="fiche-carre-cases"><span class="fiche-case is-pleine"></span><span class="fiche-case is-pleine"></span><span class="fiche-case is-pleine"></span><span class="fiche-case"></span><span class="fiche-case"></span></span></i>en route</span>
+      <span><i class="fiche-mini su"><b>21</b><span class="fiche-carre-cases"><span class="fiche-case is-pleine"></span><span class="fiche-case is-pleine"></span><span class="fiche-case is-pleine"></span><span class="fiche-case is-pleine"></span><span class="fiche-case is-pleine"></span></span></i>su</span>
+      <span><i class="fiche-mini miroir vu"><b>21</b><span class="fiche-carre-cases"><span class="fiche-case is-pleine"></span><span class="fiche-case is-pleine"></span><span class="fiche-case is-pleine"></span><span class="fiche-case"></span><span class="fiche-case"></span></span></i>même calcul</span>
     </p>
-    <ol id="fiche-rows" class="fiche-rangees"></ol>
+    <p id="fiche-dix" class="fiche-dix" hidden><b>Table de 10</b>&nbsp;: acquise ✓</p>
     <div class="fiche-block fiche-melange">
       <strong>Mon mélange : mes tables acquises</strong>
       <span id="fiche-melange-state" class="fiche-state"></span>
@@ -2487,24 +2484,10 @@
       <p id="fiche-prof-vide" hidden>Aucune séance ni activité enregistrée.</p>
     </div>
     <div class="fiche-rules">
-      <p><b>Ma rangée</b> : une case entourée, réussi une fois ; une case pleine, prêt. Toutes pleines : je peux valider ma table.</p>
+      <p><b>Mes calculs</b> : les 5 carrés d’une case, c’est sa boîte. Réussi le jour où il revient, un calcul monte d’une boîte ; raté, il redescend.</p>
       <p><b>Acquise ✓</b> : 20 questions (résultats et nombres manquants) en 1 min 30, 2 erreurs au plus.</p>
     </div>
     <footer class="fiche-foot">mathsgo.re · CC BY-NC-SA 4.0</footer>
-    <section class="fiche-page2">
-      <h1 class="fiche-page2-title">Mes calculs</h1>
-      <p class="fiche-page2-subtitle" id="fiche-calculs-subtitle">Cinq boîtes par calcul : une bonne réponse le jour où le calcul revient le fait monter d’une boîte, une erreur le fait redescendre. À partir de la boîte 4, le calcul est su.</p>
-      <table id="fiche-calculs" class="fiche-carre"><tbody></tbody></table>
-      <p class="fiche-carre-note">Gris clair : pas encore vu · rouge : à revoir (boîte 1) · bleu : en route (boîtes 2 et 3) · vert : su (boîtes 4 et 5). La moitié grisée est le miroir de l’autre — 7 × 8 et 8 × 7 sont le même calcul.</p>
-      <div class="fiche-rules">
-        <strong>Comment lire la grille</strong>
-        <p><b>7 × 8 = 8 × 7</b> : c’est le même calcul à mémoriser, il n’occupe qu’une case du tableau. C’est pourquoi une moitié est grisée.</p>
-        <p><b>Un calcul monte quand on le réussit le jour où il revient</b> : le lendemain, puis 3 jours, 7 jours et 14 jours après — pas trois fois dans la même minute. Une erreur le fait redescendre d’une boîte, sans limite, et il revient demain.</p>
-        <p><b>Les tables de 1 et de 10 n’y sont pas</b> : elles se retrouvent sans les apprendre par cœur.</p>
-        <p>La grille se remplit dans les entraînements, les validations et les révisions — jamais dans J’apprends, ni dans Réglages, ni dans l’évaluation CM1.</p>
-      </div>
-      <footer class="fiche-foot">mathsgo.re · CC BY-NC-SA 4.0</footer>
-    </section>
   </section>
   <!-- « Comment ça marche ? » : les règles en six phrases, écrites une seule
        fois et clonées dans l'accueil et dans Mon parcours. Rien d'autre
@@ -3587,10 +3570,10 @@
           racine.style.setProperty("--echelle", "1");
           return;
         }
-        // Mes calculs, Mon parcours et Lire la table sont des pages longues :
-        // jamais réduites en fenêtre (×1, elles défilent comme avant), agrandies
-        // d'après la largeur en plein écran. Aucune mesure.
-        if (["calculs", "parcours", "lire"].some(id => !document.getElementById(id).hidden)) {
+        // Mon parcours (et Mes calculs, qui y vit) et Lire la table sont des
+        // pages longues : jamais réduites en fenêtre (×1, elles défilent comme
+        // avant), agrandies d'après la largeur en plein écran. Aucune mesure.
+        if (["parcours", "lire"].some(id => !document.getElementById(id).hidden)) {
           racine.style.setProperty("--echelle", bornes.longue.toFixed(3));
           return;
         }
@@ -3844,10 +3827,9 @@
       // [retour-navigateur:fin]
 
       function show(name) {
-        ["intro", "launch", "play", "result", "parcours", "calculs", "lire", "fiche"].forEach(id => { $(id).hidden = id !== name; });
+        ["intro", "launch", "play", "result", "parcours", "lire", "fiche"].forEach(id => { $(id).hidden = id !== name; });
         if (name === "intro") renderAccueil();
         if (name === "parcours") renderParcours();
-        if (name === "calculs") renderCalculs();
         // R5 : la feuille (#fiche-print, hors de <main>) ne s'affiche à l'écran
         // que sur cet écran ; elle est remplie à l'ouverture, puis réduite à
         // la largeur du téléphone comme dans la vue du professeur.
@@ -3867,7 +3849,6 @@
         if (name === "launch") $("launch-summary").focus?.({preventScroll: true});
         if (name === "result") $("result-title").focus?.({preventScroll: true});
         if (name === "parcours") $("parcours-title").focus?.({preventScroll: true});
-        if (name === "calculs") $("calculs-title").focus?.({preventScroll: true});
         if (name === "fiche") $("fiche-title").focus?.({preventScroll: true});
         if (name === "lire") $("lire-title").focus?.({preventScroll: true});
         suivreHistorique(name);
@@ -5652,7 +5633,6 @@
       }
 
       function homeScreen() {
-        if (state.origin === "calculs") return "calculs";
         return state.origin === "parcours" ? "parcours" : "intro";
       }
 
@@ -5694,13 +5674,13 @@
       }
 
       // Le bouton de sortie dit OÙ il ramène — et quitterSerie ramène là d'où
-      // la série est partie. Les quatre origines ont donc leur mot : sans ça,
-      // « Ma table » mentait aux séries lancées depuis Mon parcours ou depuis
-      // Mes calculs (défaut mesuré par Claude Code, 09/09).
+      // la série est partie. Chaque origine a donc son mot : sans ça, « Ma
+      // table » mentait aux séries lancées depuis Mon parcours (défaut mesuré
+      // par Claude Code, 09/09). Depuis le lot « un seul tableau », Mes calculs
+      // vit dans Mon parcours : son « Encore 10 calculs » y ramène.
       const SORTIES = Object.freeze({
         reglages: {mot: "Réglages", ou: "aux réglages"},
         parcours: {mot: "Mon parcours", ou: "à Mon parcours"},
-        calculs: {mot: "Mes calculs", ou: "à Mes calculs"},
         menu: {mot: "Ma table", ou: "à Ma table"}
       });
 
@@ -5903,22 +5883,6 @@
         "su": "su"
       });
 
-      // La phrase sous le bouton Réviser de Mes calculs (lot mémoire) : les
-      // calculs dus aujourd'hui, 10 à la fois ; rien de dû = rien à réviser,
-      // et la phrase dit quand ça revient. La révision ne propose jamais un
-      // calcul jamais vu (lot 3, décision du 08/09) : une grille vide ne donne
-      // rien, elle se remplit dans les entraînements et les validations.
-      function phraseReviser(agenda, resume) {
-        if (agenda.dus) {
-          const serie = Math.min(agenda.dus, PARCOURS.SEUILS.revision.total);
-          return agenda.dus > serie
-            ? `${pluriel(agenda.dus, "calcul")} t’attendent · ${serie} par ${serie}, sans chrono.`
-            : `${pluriel(agenda.dus, "calcul")} t’attend${agenda.dus > 1 ? "ent" : ""} · sans chrono.`;
-        }
-        if (resume.jamaisVus === resume.total) return "Ta grille est vide : elle se remplit dans Je m’entraîne et les validations.";
-        return `Rien aujourd’hui. ${phraseProchainRetour(agenda)}`;
-      }
-
       // « Reviens demain : 12 calculs t'attendront. » — d'après les échéances.
       function phraseProchainRetour(agenda) {
         const prochain = agenda.prochain;
@@ -5946,18 +5910,14 @@
         return `dans ${jours} jours`;
       }
 
-      // Lot R4 (A2) : la grille est ouverte sur elle-même, donc le cadre du
-      // détail — qui est au-dessus — passe sous la barre collée : l'élève
-      // touchait une case et ne lisait ni le calcul ni sa boîte. On ramène le
-      // cadre dans l'écran, du plus petit mouvement possible (« nearest ») et
-      // sous la barre (scroll-margin-top) : quand il est déjà visible, la page
-      // ne bouge pas d'un pixel, et la grille reste visible en entier.
+      // Lot R4 (A2) : le cadre du détail est au-dessus du tableau ; l'élève
+      // qui touche une case du bas ne le voyait plus. On ramène le cadre dans
+      // l'écran, du plus petit mouvement possible : quand il est déjà visible,
+      // la page ne bouge pas d'un pixel. (Lot « un seul tableau » : Mes calculs
+      // vit dans Mon parcours, dont la barre du haut n'est pas collée.)
       function montrerDetail() {
         const zone = $("calculs-detail");
-        const barre = document.querySelector("#calculs .settings-toolbar");
-        // Le bas de la barre collée, mesuré : c'est la vraie ligne de
-        // flottaison de cet écran, et elle change avec la largeur.
-        const plafond = (barre ? barre.getBoundingClientRect().bottom : 0) + MARGE_DETAIL;
+        const plafond = MARGE_DETAIL;
         const cadre = zone.getBoundingClientRect();
         let delta = 0;
         if (cadre.top < plafond) delta = cadre.top - plafond;
@@ -6068,28 +6028,18 @@
       function renderCalculs() {
         const grille = PARCOURS.grilleCalculs(parcours);
         const agenda = PARCOURS.agendaCalculs(parcours);
-        // La ligne « 14 sus · 14 en route · 8 à revoir » a laissé la place aux
-        // tuiles colorées ; la phrase sous le bouton n'apparaît que quand il
-        // n'y a rien à réviser (le bouton dit déjà « mes 17 calculs du jour »).
-        // R4 bis : au-delà d'une série, le bouton dit ce qu'il lance (« Réviser
-        // 10 calculs ») et la ligne dessous le total du jour (« 36 à faire
-        // aujourd’hui ») — « Réviser mes 36 calculs du jour » faisait peur
-        // (Gwenaël, 13/09) alors que la révision en prend 10 à la fois.
-        const parSerie = PARCOURS.SEUILS.revision.total;
-        const enPlusieurs = agenda.dus > parSerie;
-        $("calculs-hint").textContent = enPlusieurs ? `${agenda.dus} à faire aujourd’hui` : agenda.dus ? "" : phraseReviser(agenda, grille.resume);
-        $("calculs-hint").hidden = Boolean(agenda.dus) && !enPlusieurs;
-        // Rien de dû mais des calculs connus : le bouton devient « Encore 10
-        // calculs » (secondaire — ce n'est plus l'étape du jour) ; grille vide :
-        // il explique et ne lance rien.
+        const etat = PARCOURS.etatAffichage(parcours);
+        const maTable = tableEnCours(etat);
+        const acquises = new Set(etat.acquises);
+        // Lot « un seul tableau » (décision 4) : la révision n'a qu'une porte,
+        // la séance (« Mes calculs du jour », 10 à la fois). Près du tableau,
+        // « Encore 10 calculs » seulement les jours où rien ne revient — les
+        // prochains à revenir, rien ne monte, une erreur descend.
         const libre = !agenda.dus && PARCOURS.calculsAVenir(parcours).length > 0;
-        const bouton = $("calculs-reviser");
-        bouton.textContent = enPlusieurs ? `Réviser ${parSerie} calculs` : agenda.dus ? `Réviser mes ${pluriel(agenda.dus, "calcul")} du jour` : libre ? libelleEncoreLibre() : "Réviser mes calculs du jour";
-        bouton.classList.toggle("primary", Boolean(agenda.dus));
-        bouton.classList.toggle("secondary", !agenda.dus);
-        bouton.dataset.libre = String(libre);
-        bouton.classList.toggle("is-vide", !agenda.dus && !libre);
-        bouton.setAttribute("aria-disabled", String(!agenda.dus && !libre));
+        $("calculs-encore-zone").hidden = !libre;
+        if (libre) $("calculs-encore").textContent = libelleEncoreLibre();
+        // La table de 10 n'est pas dans le tableau : une ligne quand elle est acquise.
+        $("calculs-dix").hidden = !acquises.has(10);
         renderBoites(grille.resume);
         const zone = $("calculs-grille");
         zone.replaceChildren();
@@ -6104,23 +6054,37 @@
         zone.append(coin);
         grille.lignes[0].cellules.forEach(cellule => {
           const entete = document.createElement("span");
-          entete.className = "calculs-entete";
+          entete.className = `calculs-entete${cellule.colonne === maTable ? " is-ma-table" : ""}`;
           entete.textContent = String(cellule.colonne);
           entete.setAttribute("role", "columnheader");
           zone.append(entete);
         });
         grille.lignes.forEach(ligne => {
+          // Le numéro de ligne : ✓ vert pour une table acquise, souligné en
+          // bleu pour ma table.
+          const acquise = acquises.has(ligne.ligne);
           const etiquette = document.createElement("span");
-          etiquette.className = "calculs-entete";
+          etiquette.className = `calculs-entete${ligne.ligne === maTable ? " is-ma-table" : ""}${acquise ? " is-acquise" : ""}`;
           etiquette.textContent = String(ligne.ligne);
           etiquette.setAttribute("role", "rowheader");
+          if (acquise || ligne.ligne === maTable) etiquette.setAttribute("aria-label", `Table de ${ligne.ligne}${ligne.ligne === maTable ? ", ma table" : ""}${acquise ? ", acquise" : ""}`);
           zone.append(etiquette);
           ligne.cellules.forEach(cellule => {
             const bouton = document.createElement("button");
             bouton.type = "button";
             const choisie = calculsSelection && calculsSelection.ligne === cellule.ligne && calculsSelection.colonne === cellule.colonne;
             const dansBoite = Boolean(boiteChoisie) && cellule.active && cellule.boite === boiteChoisie;
-            bouton.className = `mc-cell is-${cellule.etat}${cellule.active ? "" : " is-miroir"}${choisie ? " is-choisie" : ""}${dansBoite ? " is-dans-boite" : ""}`;
+            // Vu = entré dans une boîte (une première réponse, juste ou non).
+            // La moitié miroir n'a pas de couleur : grise quand le calcul est
+            // vu, blanche sinon, comme « pas encore vu ».
+            const vu = cellule.boite > 0;
+            const etatCase = cellule.active ? ` is-${cellule.etat}` : ` is-miroir${vu ? " is-vu" : ""}`;
+            bouton.className = `mc-cell${etatCase}${choisie ? " is-choisie" : ""}${dansBoite ? " is-dans-boite" : ""}`;
+            // Le produit en gros dès la première réponse (rouge compris) ; une
+            // case jamais vue reste vide : elle ne donne pas la réponse.
+            const nombre = document.createElement("span");
+            nombre.className = "mc-nb";
+            nombre.textContent = vu ? String(cellule.ligne * cellule.colonne) : "";
             const casesZone = document.createElement("span");
             casesZone.className = "mc-cases";
             for (let index = 0; index < PARCOURS.SEUILS.revision.boites; index += 1) {
@@ -6128,7 +6092,7 @@
               caseFait.className = `mc-case${index < cellule.boite ? " is-pleine" : ""}`;
               casesZone.append(caseFait);
             }
-            bouton.append(casesZone);
+            bouton.append(nombre, casesZone);
             const miroir = cellule.active ? "" : ` (même calcul que ${PARCOURS.libelleFait(cellule.cle)})`;
             bouton.setAttribute("aria-label", `${cellule.ligne} × ${cellule.colonne} : ${LIBELLES_ETATS_CALCULS[cellule.etat]}${cellule.boite ? `, boîte ${cellule.boite} sur ${PARCOURS.SEUILS.revision.boites}` : ""}${miroir}. Voir le détail.`);
             bouton.addEventListener("click", () => {
@@ -6142,21 +6106,17 @@
         renderCalculsDetail();
       }
 
+      // Mes calculs n'a plus d'écran à part (lot « un seul tableau ») : tout ce
+      // qui l'ouvrait — « Voir mes calculs » après une révision, l'adresse
+      // #calculs ou ouvrir=calculs — ouvre Mon parcours sur le bloc Mes calculs.
       function openCalculs() {
-        configuration.mode = null;
-        configuration.tables = new Set();
-        state.running = false;
-        stopTimer();
-        show("calculs");
-        // « Mes calculs », c'est la grille : on l'ouvre dessus (Gwenaël,
-        // 08/09) au lieu de la laisser sous la ligne de flottaison. La barre
-        // du haut est collée, donc « Ma table » reste atteignable.
-        $("calculs-grille").scrollIntoView?.({block: "start", behavior: "auto"});
+        openParcours();
+        $("parcours-calculs").scrollIntoView?.({block: "start", behavior: "auto"});
       }
 
       // libre = « Encore 10 calculs » : plus rien n'est dû, on prend les
       // prochains à revenir (rien ne monte, une erreur descend — la même règle).
-      function startRevision(table = null, origin = "calculs", libre = false) {
+      function startRevision(table = null, origin = "parcours", libre = false) {
         stopTimer();
         const plan = PARCOURS.planRevision(parcours, {table, libre});
         if (!plan.length) return;
@@ -6276,6 +6236,7 @@
             encore.addEventListener("click", () => startRevision(table, state.origin, true));
             actions.append(encore);
           }
+          // Mes calculs vit dans Mon parcours : le bouton y mène, sur le tableau.
           const voir = document.createElement("button");
           voir.type = "button";
           voir.className = "secondary";
@@ -6285,8 +6246,8 @@
         }
         zone.append(actions);
         renderCorrections();
-        // Ici, l'origine n'est JAMAIS « reglages » : une révision part de l'accueil,
-        // de Mes calculs ou de Mon parcours. Cette ligne ne sert donc qu'à REMETTRE
+        // Ici, l'origine n'est JAMAIS « reglages » : une révision part de la
+        // séance ou de Mon parcours (« Encore 10 calculs »). Cette ligne ne sert donc qu'à REMETTRE
         // le bouton caché — sans elle, une série jouée depuis Réglages libres le
         // laisserait visible, et il s'afficherait sur le résultat de la révision
         // suivante. C'est une remise à zéro, pas un filet pour un cas qui n'existe pas.
@@ -6378,6 +6339,14 @@
       function listeTables(tables) {
         if (tables.length <= 1) return tables.join("");
         return `${tables.slice(0, -1).join(", ")} et ${tables[tables.length - 1]}`;
+      }
+
+      // Lot « un seul tableau » (décision 5) : sur la carte de séance, « Mon
+      // mélange · tables 2, 5 et 10 », ou « mes 9 tables ». Espaces insécables
+      // autour du dernier « et » : « et 10 » ne part jamais seul à la ligne.
+      function tablesDuMelange(tables) {
+        if (tables.length >= PARCOURS_TABLES.length) return `mes ${PARCOURS_TABLES.length} tables`;
+        return `tables ${listeTables(tables).replace(/ et (\d+)$/, "\u00a0et\u00a0$1")}`;
       }
 
       function etoile(on, extra = "") {
@@ -6826,7 +6795,7 @@
         const agenda = etat.agenda;
         const reviser = $("acc-reviser");
         // Avec la séance, « Mes calculs du jour » est sa première étape : le
-        // bloc quitte l'accueil (il reste dans Mes calculs).
+        // bloc quitte l'accueil (la séance est la seule porte de la révision).
         reviser.hidden = true;
         reviser.classList.toggle("is-next", conseil === "reviser");
         const serie = questionsRevision(agenda);
@@ -7308,6 +7277,7 @@
           nom.textContent = etape.nom;
           const detail = etape.type === "revision" ? pluriel(etape.calculs, "calcul")
             : etape.type === "etoile" ? etape.detail
+            : etape.type === "melange" && etape.config ? tablesDuMelange(etape.config.tables)
             : etape.conditionnelle ? "si mes calculs sont prêts" : "";
           if (detail) {
             const petit = document.createElement("small");
@@ -7647,37 +7617,33 @@
         return zone;
       }
 
-      function renderParcoursSeance(list, etat, maTable) {
-        etat.lignes.forEach(ligne => {
-          const table = ligne.table;
-          const item = document.createElement("li");
-          item.className = `parcours-row seance-row${ligne.acquise ? " is-acquise" : ""}${table === maTable ? " is-ma-table" : ""}`;
-          const head = document.createElement("div");
-          head.className = "parcours-row-head";
-          const nom = document.createElement("strong");
-          nom.textContent = `Table de ${table}`;
-          const droite = document.createElement("span");
-          droite.className = "parcours-head-etat";
-          if (table === maTable) {
-            const repere = document.createElement("span");
-            repere.className = "parcours-ma-table";
-            repere.textContent = "ma table";
-            droite.append(repere);
-          }
-          if (ligne.acquise) {
-            const badge = document.createElement("span");
-            badge.className = "parcours-badge";
-            badge.textContent = `acquise le ${dateEnLettres(ligne.acquise)} ✓`;
-            droite.append(badge);
-          }
-          head.append(nom, droite);
-          item.append(head);
-          item.append(rangeeDeTable(table));
-          if (table === maTable && !ligne.acquise) item.append(echelleDeTable(table));
-          const revoir = boutonReviser(ligne);
-          if (revoir) item.append(revoir);
-          list.append(item);
-        });
+      // Lot « un seul tableau » (04/10/2026) : en tête de Mon parcours, la
+      // carte de ma table — son nom, « ma table », et, tant qu'elle n'est pas
+      // acquise, l'échelle et la prochaine séance. Les dix rangées n'existent
+      // plus : le tableau de Mes calculs, juste dessous, dit la même chose.
+      function renderMaTable(zone, etat, maTable) {
+        const ligne = etat.lignes.find(item => item.table === maTable);
+        zone.replaceChildren();
+        zone.classList.toggle("is-acquise", Boolean(ligne && ligne.acquise));
+        const head = document.createElement("div");
+        head.className = "parcours-row-head";
+        const nom = document.createElement("strong");
+        nom.textContent = `Table de ${maTable}`;
+        const droite = document.createElement("span");
+        droite.className = "parcours-head-etat";
+        const repere = document.createElement("span");
+        repere.className = "parcours-ma-table";
+        repere.textContent = "ma table";
+        droite.append(repere);
+        if (ligne && ligne.acquise) {
+          const badge = document.createElement("span");
+          badge.className = "parcours-badge";
+          badge.textContent = `acquise le ${dateEnLettres(ligne.acquise)} ✓`;
+          droite.append(badge);
+        }
+        head.append(nom, droite);
+        zone.append(head);
+        if (ligne && !ligne.acquise) zone.append(echelleDeTable(maTable));
       }
       // [seance:fin]
 
@@ -7752,24 +7718,6 @@
         return label;
       }
 
-      // La barre « Réviser N calculs → » d'une table acquise (audit 2) : ses
-      // calculs rouges dus aujourd'hui, ou rien.
-      function boutonReviser(ligne) {
-        const rouges = ligne.aRevoir ? new Set(PARCOURS.calculsATravailler(parcours, ligne.table)) : new Set();
-        const nombre = PARCOURS.calculsDus(parcours, {table: ligne.table}).filter(cle => rouges.has(cle)).length;
-        if (!nombre) return null;
-        const revoir = document.createElement("button");
-        revoir.type = "button";
-        revoir.className = "parcours-revoir";
-        // Une action, pas un état : « Réviser 2 calculs » (le mot du
-        // bouton de Mes calculs) ; « à revoir » sonnait comme un jugement
-        // sur une table pourtant acquise.
-        revoir.textContent = `Réviser ${pluriel(nombre, "calcul")}\u00a0→`;
-        revoir.setAttribute("aria-label", `Table de ${ligne.table} : réviser ${pluriel(nombre, "calcul")}. Lance une révision sur cette table.`);
-        revoir.addEventListener("click", () => startRevision(ligne.table, "parcours"));
-        return revoir;
-      }
-
       function renderParcours() {
         majLienRetour();
         // L'accueil lit le même parcours : il se redessine avec la carte, pour
@@ -7794,19 +7742,12 @@
           ? "Ton prénom n’est pas envoyé : il reste ici, le temps de ta séance. Ta progression, elle, est enregistrée pour ton professeur."
           : "Ton prénom n’est pas envoyé : il reste ici, le temps de ta séance.";
 
-        // Plus de « Prochaine étape » ni d'entrée Mes calculs ici (lot 2) :
-        // c'est l'accueil « Ma table » qui dit quoi faire. Le parcours est la
-        // carte complète, où l'élève fait ce qu'il veut dans l'ordre qu'il veut.
-        const list = $("parcours-list");
-        list.replaceChildren();
-        // Audit 2 (30/09/2026, version B choisie par Gwenaël) : la table que
-        // l'accueil appelle « Ma table » — la suivante dans l'ordre 2, 10, 5,
-        // 3…, ou celle que l'élève a choisie — porte le même mot ici, et un
-        // cadre bleu pour la trouver en faisant défiler.
-        const maTable = tableEnCours(etat);
-        // Ma séance du jour (lot 2) : chaque table montre sa rangée — la même
-        // que sur l'accueil — et ma table, son échelle (où en est la séance).
-        renderParcoursSeance(list, etat, maTable);
+        // Plus de « Prochaine étape » ici (lot 2) : c'est l'accueil « Ma
+        // table » qui dit quoi faire. Lot « un seul tableau » (04/10/2026) : la
+        // carte de ma table — celle que l'accueil appelle « Ma table » — puis
+        // Mes calculs, le tableau des 36 calculs, à la place des dix rangées.
+        renderMaTable($("parcours-matable"), etat, tableEnCours(etat));
+        renderCalculs();
 
         // « Mon mélange » : dès 2 tables acquises, jusqu'aux 9 — obligatoire
         // avant de valider une nouvelle table, et c'est le mélange des 9 qui
@@ -7983,36 +7924,26 @@
         $("fiche-subtitle").textContent = vide
           ? "Rien d’enregistré pour l’instant."
           : "Ma progression dans l’application à ce jour.";
-        // Lot 2b : une rangée par table, comme dans Mon parcours ; l'échelle
-        // sous la table de la séance. Une fiche vide ne désigne aucune table.
+        // Lot « un seul tableau » (04/10/2026) : la carte de ma table (son
+        // échelle tant qu'elle n'est pas acquise), comme en tête de Mon
+        // parcours. Une fiche vide ne désigne aucune table.
         const maTable = vide ? null : PARCOURS.tableDeSeance(fiche);
         const semaine = PARCOURS.bilanSeances(fiche);
         $("fiche-semaine").textContent = vide ? ""
           : `Cette semaine : ${semaine.semaine} jour${semaine.semaine > 1 ? "s" : ""} avec une séance`;
-        const rows = $("fiche-rows");
-        rows.replaceChildren();
-        etat.lignes.forEach(ligne => {
-          const table = ligne.table;
-          const item = document.createElement("li");
-          const ici = table === maTable && !ligne.acquise;
-          item.className = `fiche-rangee${ligne.acquise ? " is-acquise" : ""}${ici ? " is-ma-table" : ""}`;
+        const carte = $("fiche-matable");
+        carte.replaceChildren();
+        carte.hidden = !maTable;
+        if (maTable) {
+          const ligneTable = etat.lignes.find(item => item.table === maTable);
           const nom = document.createElement("strong");
-          nom.textContent = `Table de ${table}`;
-          const cases = document.createElement("span");
-          cases.className = "fiche-cases";
-          PARCOURS.rangeeTable(fiche, table).cases.forEach(uneCase => {
-            const boite = document.createElement("i");
-            boite.className = `fiche-r${uneCase.etat === "vide" ? "" : ` ${uneCase.etat}`}`;
-            // Comme à l'écran : une case vide ne donne pas le résultat.
-            if (uneCase.etat !== "vide") boite.textContent = String(uneCase.produit);
-            cases.append(boite);
-          });
+          nom.textContent = `Table de ${maTable}`;
           const etatTable = document.createElement("span");
           etatTable.className = "fiche-etat";
-          etatTable.textContent = ligne.acquise ? `✓ acquise le ${dateEnLettres(ligne.acquise)}` : ici ? "ma table" : "";
-          item.append(nom, cases, etatTable);
-          if (ici) {
-            const marches = marchesDeTable(fiche, table);
+          etatTable.textContent = ligneTable && ligneTable.acquise ? `ma table · ✓ acquise le ${dateEnLettres(ligneTable.acquise)}` : "ma table";
+          carte.append(nom, etatTable);
+          if (ligneTable && !ligneTable.acquise) {
+            const marches = marchesDeTable(fiche, maTable);
             const echelle = document.createElement("div");
             echelle.className = "fiche-echelle";
             // Lot E2 (décision 5, « la barre ») : la même échelle qu'à l'écran.
@@ -8027,10 +7958,9 @@
             echelle.append(barre);
             const phrase = phraseProchaineSeance(marches.noms);
             if (phrase) echelle.append(...phrase.childNodes);
-            item.append(echelle);
+            carte.append(echelle);
           }
-          rows.append(item);
-        });
+        }
         // Le cadre du professeur : les compteurs « fois », seulement dans la
         // fiche ouverte depuis « Ma classe » (une source est donnée). Une
         // ligne par table où quelque chose a été fait.
@@ -8062,6 +7992,8 @@
         cadre.hidden = !source;
         cadre.querySelector("table").hidden = !lignesProf.children.length;
         $("fiche-prof-vide").hidden = Boolean(lignesProf.children.length);
+        // Avec ce cadre, la fiche se resserre pour tenir sur une page.
+        $("fiche-print").classList.toggle("avec-prof", Boolean(source));
         // R5 (A17) : « À refaire » seulement s'il a déjà été réussi une fois ;
         // un mélange jamais fait est « À faire » — la règle de Mon parcours.
         $("fiche-melange-state").textContent = etat.melange.visible
@@ -8074,12 +8006,13 @@
           star.append(symboleMarche(marche));
           stars.append(star);
         });
-        $("fiche-calculs-subtitle").textContent = Object.keys(fiche.calculs).length
-          ? "Ma grille dans l’application à ce jour. Cinq boîtes par calcul : su à partir de la boîte 4 ; une erreur fait redescendre d’une boîte."
-          : "Cinq boîtes par calcul : une bonne réponse le jour où le calcul revient le fait monter d’une boîte, une erreur le fait redescendre. À partir de la boîte 4, le calcul est su.";
-        // Le carré de Pythagore, 2 à 9. Chaque case porte les cinq boîtes du
-        // calcul ; la moitié miroir montre le même état, puisque c'est le même
-        // calcul à mémoriser.
+        // Le tableau de Mes calculs, le même qu'à l'écran (lot « un seul
+        // tableau ») : le produit en gros dès la première réponse, les cinq
+        // carrés de sa boîte ; la moitié miroir en gris, seulement pour un
+        // calcul déjà vu ; ✓ après le numéro d'une table acquise, ma table
+        // soulignée. La table de 10 n'y est pas : une ligne quand elle est acquise.
+        const acquises = new Set(etat.acquises);
+        $("fiche-dix").hidden = !acquises.has(10);
         const corpsCarre = $("fiche-calculs").querySelector("tbody");
         corpsCarre.replaceChildren();
         const facteurs = [2, 3, 4, 5, 6, 7, 8, 9];
@@ -8091,6 +8024,7 @@
         facteurs.forEach(colonne => {
           const th = document.createElement("th");
           th.textContent = String(colonne);
+          if (colonne === maTable) th.className = "is-ma-table";
           enTete.append(th);
         });
         corpsCarre.append(enTete);
@@ -8098,27 +8032,23 @@
           const tr = document.createElement("tr");
           const tete = document.createElement("th");
           tete.textContent = String(ligne);
+          tete.className = `${ligne === maTable ? "is-ma-table" : ""}${acquises.has(ligne) ? " is-acquise" : ""}`.trim();
           tr.append(tete);
           facteurs.forEach(colonne => {
             const cle = PARCOURS.cleFait(`${Math.min(ligne, colonne)}-${Math.max(ligne, colonne)}`);
             const fait = fiche.calculs[cle] || null;
             const td = document.createElement("td");
-            // Même code couleur que l'appli ; la moitié miroir est le même
-            // calcul, affichée en pâle plutôt que recomptée.
-            if (colonne < ligne) {
-              // Moitié miroir : le même calcul, on ne le remplit qu'une fois.
-              td.className = "miroir";
-            } else {
-              td.className = PARCOURS.etatFait(fait);
-              const cases = document.createElement("span");
-              cases.className = "fiche-carre-cases";
-              for (let index = 0; index < PARCOURS.SEUILS.revision.boites; index += 1) {
-                const caseFait = document.createElement("span");
-                caseFait.className = `fiche-case${fait && index < fait.boite ? " is-pleine" : ""}`;
-                cases.append(caseFait);
-              }
-              td.append(cases);
+            td.className = colonne < ligne ? `miroir${fait ? " vu" : ""}` : PARCOURS.etatFait(fait);
+            const nombre = document.createElement("b");
+            nombre.textContent = fait ? String(ligne * colonne) : "";
+            const cases = document.createElement("span");
+            cases.className = "fiche-carre-cases";
+            for (let index = 0; index < PARCOURS.SEUILS.revision.boites; index += 1) {
+              const caseFait = document.createElement("span");
+              caseFait.className = `fiche-case${fait && index < fait.boite ? " is-pleine" : ""}`;
+              cases.append(caseFait);
             }
+            td.append(nombre, cases);
             tr.append(td);
           });
           corpsCarre.append(tr);
@@ -8241,9 +8171,7 @@
         $("settings-title").focus?.({preventScroll: true});
       });
       $("parcours-back").addEventListener("click", backToModes);
-      $("open-calculs").addEventListener("click", openCalculs);
-      $("calculs-back").addEventListener("click", backToModes);
-      $("calculs-reviser").addEventListener("click", () => startRevision(null, "calculs", $("calculs-reviser").dataset.libre === "true"));
+      $("calculs-encore").addEventListener("click", () => startRevision(null, "parcours", true));
       $("acc-reviser").addEventListener("click", () => startRevision(null, "menu"));
       $("acc-fiche").addEventListener("click", openFiche);
       $("acc-lire").addEventListener("click", openLire);
@@ -8468,7 +8396,8 @@
       // Depuis le lot 2 (08/09/2026), « ouvrir=parcours » — ce que l'espace
       // élève demande — mène à l'accueil « Ma table », qui EST l'entrée de
       // l'élève (Mon parcours y est à un tap). Seul « calculs » ouvre un autre
-      // écran directement.
+      // écran directement : Mon parcours, sur le bloc Mes calculs (lot « un
+      // seul tableau »).
       if (ENTREE.billet && ENTREE.vue === "fiche") {
         ouvrirFicheParBillet(ENTREE.billet);
       } else if (ENTREE.billet) {

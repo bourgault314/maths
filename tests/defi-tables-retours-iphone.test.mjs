@@ -136,28 +136,25 @@ test("le cadre d’une boîte : « Ils reviennent demain », « Ratés : ils rev
   assert.doesNotMatch(html, /cles\.map\(PARCOURS\.libelleFait\)\.join\(" · "\)/);
 });
 
-test("le bouton de Mes calculs : « Réviser 10 calculs » + « 36 à faire aujourd’hui » au-delà d’une série ; inchangé jusqu’à 10", () => {
-  assert.match(html, /const parSerie = PARCOURS\.SEUILS\.revision\.total;\s*const enPlusieurs = agenda\.dus > parSerie;/);
-  assert.match(html, /\$\("calculs-hint"\)\.textContent = enPlusieurs \? `\$\{agenda\.dus\} à faire aujourd’hui` : agenda\.dus \? "" : phraseReviser\(agenda, grille\.resume\);/);
-  assert.match(html, /\$\("calculs-hint"\)\.hidden = Boolean\(agenda\.dus\) && !enPlusieurs;/);
-  assert.match(html, /bouton\.textContent = enPlusieurs \? `Réviser \$\{parSerie\} calculs` : agenda\.dus \? `Réviser mes \$\{pluriel\(agenda\.dus, "calcul"\)\} du jour`/);
+// Lot « un seul tableau » (04/10/2026) : la révision n'a qu'une porte, la
+// séance ; Mes calculs (dans Mon parcours) n'a plus de bouton « Réviser ».
+test("Mes calculs n’a plus de bouton « Réviser » : la séance s’en charge", () => {
+  assert.doesNotMatch(html, /calculs-reviser|calculs-hint|phraseReviser/);
+  assert.doesNotMatch(html, /`Réviser \$\{parSerie\} calculs`/);
 });
 
 // --------------------------------------------------- 3 et 4. légende, barre
 
-test("la légende : quatre carrés de même largeur, le mot centré dessous", () => {
+test("la légende : cinq carrés de même largeur, le mot centré dessous", () => {
   assert.match(html, /\.calculs-legende > span \{ display: inline-flex; flex-direction: column; align-items: center; gap: 4px; \}/);
-  // Audit 2 (30/09/2026) : 44 px au moins, et le carré suit ses petites cases
-  // (43 px dès 480 px) — la dernière sortait du cadre.
-  assert.match(html, /\.calculs-legende \.mc-cell \{ width: auto; min-width: 44px; min-height: 22px; padding: 2px 5px; pointer-events: none; \}/);
+  // Audit 2 (30/09/2026) : le carré suit ses petites cases (43 px dès 480 px).
+  // Lot « un seul tableau » : 46 px au moins, 40 de haut (le nombre au-dessus).
+  assert.match(html, /\.calculs-legende \.mc-cell \{ width: auto; min-width: 46px; height: 40px; padding: 0 4px; aspect-ratio: auto; pointer-events: none; \}/);
 });
 
-test("la barre collée de Mes calculs : 8 px au-dessus du rond, 10 en dessous, l’ancre de la grille suit", () => {
-  // Le bouton est en position absolue : il ne compte pas dans la hauteur de la
-  // barre, c'est min-height qui la fixe (44 + 8 + 10).
-  assert.match(html, /\.calculs-screen \.settings-toolbar \{ position: sticky; top: 0; z-index: 5; min-height: 62px; padding: 8px 0 10px;/);
-  // 62 px de barre, l'ancre 4 px dessous (avant : 44 → 58).
-  assert.match(html, /#calculs-grille \{ scroll-margin-top: 66px; \}/);
+// Lot « un seul tableau » : l'écran Mes calculs à part et sa barre collée sont partis.
+test("plus de barre collée de Mes calculs : il vit dans Mon parcours", () => {
+  assert.doesNotMatch(html, /\.calculs-screen \.settings-toolbar|#calculs-grille \{ scroll-margin-top/);
 });
 
 // ----------------------------------------------------------- 5. l'en-tête

@@ -35,7 +35,10 @@ test("l’accueil : Ma table et ses trois étapes, Réviser, Mon parcours, Mes c
   // Lot R3 (12/09) : « Expert » avec sa majuscule se lisait comme un nom propre ;
   // le sous-titre reprend le titre du panneau, « je deviens expert ».
   assert.match(html, /id="open-parcours" class="acc-lien"[\s\S]*<svg class="ico"[\s\S]*Mon parcours<small>tables, mélange, étoiles<\/small>/);
-  assert.match(html, /id="open-calculs" class="acc-lien"[\s\S]*<svg class="ico"[\s\S]*Mes calculs<small>la grille des 36 calculs<\/small>/);
+  // Lot « un seul tableau » (04/10/2026) : une seule tuile — Mes calculs vit
+  // dans Mon parcours.
+  assert.doesNotMatch(html, /id="open-calculs"/, "plus de tuile « Mes calculs » sur l’accueil");
+  assert.equal((html.match(/class="acc-lien"/g) || []).length, 1, "une seule tuile : Mon parcours");
   // R5 (13/09, Q7) : « Voir ma fiche » ouvre l'écran de la fiche — le seul chemin.
   assert.match(html, /id="acc-fiche"[^>]*aria-controls="fiche">Voir ma fiche</);
   assert.equal((html.match(/Imprimer ma fiche</g) || []).length, 1, "un seul « Imprimer ma fiche », celui de l'écran de la fiche");
@@ -83,24 +86,25 @@ test("le menu ⋯ du parcours garde ses trois options, dans cet ordre (R5 : plus
   assert.match(html, /id="parcours-notice" class="notice" data-notice hidden/);
   assert.match(html, /\$\("parcours-back"\)\.addEventListener\("click", backToModes\)/);
   assert.match(html, /<span class="settings-back-label">Ma table<\/span><\/button>\s*<h1 id="parcours-title"/);
-  assert.match(html, /\$\("calculs-back"\)\.addEventListener\("click", backToModes\)/, "Mes calculs revient à Ma table, pas au parcours");
+  // Lot « un seul tableau » : plus d'écran Mes calculs à part, donc plus de retour à lui.
+  assert.doesNotMatch(html, /id="calculs" class="calculs-screen"|calculs-back/, "l’écran Mes calculs à part n’existe plus");
 });
 
 // ---------------------------------------------------------------- les mots
 
 test("les trois mots d’état : à revoir (rouge) · en route (bleu) · su (vert), partout", () => {
   assert.match(html, /"a-travailler": "à revoir",\s*"en-cours": "en route",\s*"su": "su"/);
-  assert.match(html, /is-a-travailler"><span class="mc-cases">[\s\S]*?<\/span><\/span> à revoir<\/span>/, "légende de la grille");
-  assert.match(html, /is-en-cours"><span class="mc-cases">[\s\S]*?<\/span><\/span> en route<\/span>/);
-  assert.match(html, /rouge : à revoir \(boîte 1\) · bleu : en route \(boîtes 2 et 3\) · vert : su \(boîtes 4 et 5\)/, "fiche imprimable, page 2");
+  assert.match(html, /is-a-travailler"><span class="mc-nb">21<\/span><span class="mc-cases">[\s\S]*?<\/span><\/span> à revoir<\/span>/, "légende du tableau");
+  assert.match(html, /is-en-cours"><span class="mc-nb">21<\/span><span class="mc-cases">[\s\S]*?<\/span><\/span> en route<\/span>/);
+  assert.match(html, /<i class="fiche-mini a-travailler">[\s\S]*?<\/i>à revoir<\/span>[\s\S]*?<i class="fiche-mini en-cours">[\s\S]*?<\/i>en route<\/span>[\s\S]*?<i class="fiche-mini su">[\s\S]*?<\/i>su<\/span>/, "la fiche imprimable : la même légende");
   assert.match(html, /\.mc-cell\.is-a-travailler \{ border-color: #efb4b4; color: var\(--red\); background: var\(--red-soft\); \}/, "« à revoir » est rouge");
-  assert.match(html, /\.fiche-carre td\.a-travailler \{ background: #ffebeb; color: #a93030; \}/);
+  assert.match(html, /\.fiche-carre \.a-travailler, \.fiche-mini\.a-travailler \{ border-color: #efb4b4; background: #ffebeb; color: #a93030; \}/);
   // Plus aucun « à travailler » ni « en cours » (au sens de la grille) sur les écrans de l'élève.
   assert.doesNotMatch(visible, /à travailler|à retravailler/, "le mot « à travailler » ne s’affiche plus");
   assert.doesNotMatch(visible, /\ben cours\b(?! de route)/, "le mot « en cours » ne s’affiche plus");
-  // Le bouton « à revoir » d'une table acquise existait déjà : même mot, même
-  // sens — depuis l'audit 2, avec le nombre de calculs (« Réviser 2 calculs → »).
-  assert.match(html, /revoir\.textContent = `Réviser \$\{pluriel\(nombre, "calcul"\)\}\\u00a0→`;/);
+  // Lot « un seul tableau » : la barre « Réviser 2 calculs → » des tables
+  // acquises est partie avec les rangées — la révision n'a plus qu'une porte.
+  assert.doesNotMatch(html, /parcours-revoir|function boutonReviser/);
 });
 
 test("le détail d’une case dit la règle du jour, et seulement là", () => {
@@ -158,9 +162,9 @@ function chargerLogiqueAccueil(codeSuivi, session = fauxStockage(), seance = fal
   const fin = "const NOMS_ENTRAINEMENTS";
   const source = html.slice(debut, html.indexOf(fin));
   const util = html.slice(html.indexOf("function pluriel(nombre, mot)"), html.indexOf("const LIBELLES_ETATS_CALCULS"))
-    + html.slice(html.indexOf("function phraseReviser(agenda, resume)"), html.indexOf("function renderCalculsDetail()"));
+    + html.slice(html.indexOf("function phraseProchainRetour(agenda)"), html.indexOf("function renderCalculsDetail()"));
   return new Function("PARCOURS", "PARCOURS_TABLES", "codeSuivi", "stockageSession", "SEANCE", `${util}\n${source}
-    return {lireTableChoisie, ecrireTableChoisie, tableEnCours, etapeConseillee, phraseReviser, questionsRevision, libelleDans};`)(
+    return {lireTableChoisie, ecrireTableChoisie, tableEnCours, etapeConseillee, phraseProchainRetour, questionsRevision, libelleDans};`)(
     PARCOURS, [...PARCOURS.TABLES], codeSuivi, () => session, seance
   );
 }
@@ -249,17 +253,15 @@ test("l’étape conseillée d’une table suit la même lecture que le moteur",
   assert.equal(PARCOURS.prochaineEtape(lea()).table, 5);
 });
 
-test("la phrase de Mes calculs : les dus du jour, 10 par 10 ; sinon quand ça revient ; une grille vide ne lance rien", () => {
+// Lot « un seul tableau » (04/10/2026) : la phrase sous le bouton de l'écran
+// Mes calculs (phraseReviser) est partie avec l'écran — la révision n'a plus
+// qu'une porte, la séance. Reste la phrase du bilan de révision.
+test("la phrase « Reviens demain : N calculs t’attendront » ; 10 à la fois", () => {
   const logique = chargerLogiqueAccueil("");
-  const vide = {aTravailler: 0, enCours: 0, sus: 0, jamaisVus: 36, total: 36};
-  const pleine = {aTravailler: 4, enCours: 6, sus: 6, jamaisVus: 20, total: 36};
-  assert.equal(logique.phraseReviser({dus: 4, demain: 4, prochain: null}, pleine), "4 calculs t’attendent · sans chrono.");
-  assert.equal(logique.phraseReviser({dus: 1, demain: 1, prochain: null}, pleine), "1 calcul t’attend · sans chrono.");
-  assert.equal(logique.phraseReviser({dus: 21, demain: 21, prochain: null}, pleine), "21 calculs t’attendent · 10 par 10, sans chrono.");
-  assert.equal(logique.phraseReviser({dus: 0, demain: 8, prochain: {jour: "2026-09-13", dans: 1, calculs: 8}}, pleine), "Rien aujourd’hui. Reviens demain : 8 calculs t’attendront.");
-  assert.equal(logique.phraseReviser({dus: 0, demain: 0, prochain: {jour: "2026-09-15", dans: 3, calculs: 1}}, pleine), "Rien aujourd’hui. Reviens dans 3 jours : 1 calcul t’attendra.");
-  assert.equal(logique.phraseReviser({dus: 0, demain: 0, prochain: null}, pleine), "Rien aujourd’hui. Rien ne t’attend pour l’instant.");
-  assert.equal(logique.phraseReviser({dus: 0, demain: 0, prochain: null}, vide), "Ta grille est vide : elle se remplit dans Je m’entraîne et les validations.");
+  assert.doesNotMatch(html, /function phraseReviser/);
+  assert.equal(logique.phraseProchainRetour({dus: 0, demain: 8, prochain: {jour: "2026-09-13", dans: 1, calculs: 8}}), "Reviens demain : 8 calculs t’attendront.");
+  assert.equal(logique.phraseProchainRetour({dus: 0, demain: 0, prochain: {jour: "2026-09-15", dans: 3, calculs: 1}}), "Reviens dans 3 jours : 1 calcul t’attendra.");
+  assert.equal(logique.phraseProchainRetour({dus: 0, demain: 0, prochain: null}), "Rien ne t’attend pour l’instant.");
   assert.equal(logique.questionsRevision({dus: 21}), 10);
   assert.equal(logique.questionsRevision({dus: 0}), 0);
   assert.equal(logique.libelleDans(0), "aujourd’hui");

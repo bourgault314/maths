@@ -27,7 +27,10 @@ test("une série lancée depuis l’accueil revient à l’accueil, jamais sur l
 test("le bouton de sortie de l’écran de jeu dit où il ramène", () => {
   assert.match(html, /id="game-menu"[^>]*aria-label="Arrêter la série et revenir à Ma table"/);
   assert.match(html, /<span class="game-menu-label">Ma table<\/span>/, "« Menu » ne disait pas où il menait — et il menait ailleurs");
-  assert.match(html, /const SORTIES = Object\.freeze\(\{\s*reglages: \{mot: "Réglages", ou: "aux réglages"\},\s*parcours: \{mot: "Mon parcours", ou: "à Mon parcours"\},\s*calculs: \{mot: "Mes calculs", ou: "à Mes calculs"\},\s*menu: \{mot: "Ma table", ou: "à Ma table"\}/, "les QUATRE origines ont leur mot : quitterSerie ramène là d’où la série est partie, le bouton doit le dire");
+  // Lot « un seul tableau » : Mes calculs vit dans Mon parcours — trois origines.
+  assert.match(html, /const SORTIES = Object\.freeze\(\{\s*reglages: \{mot: "Réglages", ou: "aux réglages"\},\s*parcours: \{mot: "Mon parcours", ou: "à Mon parcours"\},\s*menu: \{mot: "Ma table", ou: "à Ma table"\}\s*\}\);/, "chaque origine a son mot : quitterSerie ramène là d’où la série est partie, le bouton doit le dire");
+  assert.match(html, /function homeScreen\(\) \{\s*return state\.origin === "parcours" \? "parcours" : "intro";\s*\}/);
+  assert.match(html, /\$\("calculs-encore"\)\.addEventListener\("click", \(\) => startRevision\(null, "parcours", true\)\);/, "« Encore 10 calculs » part de Mon parcours et y revient");
   assert.match(html, /bouton\.querySelector\("\.game-menu-label"\)\.textContent = sortie\.mot;/);
   assert.match(html, /bouton\.setAttribute\("aria-label", `Arrêter la série et revenir \$\{sortie\.ou\}`\);/);
   assert.match(html, /function sortieDeSerie\(\) \{\s*return SORTIES\[state\.origin\] \|\| SORTIES\.menu;/, "une origine inconnue retombe sur Ma table, jamais sur un bouton vide");
@@ -150,8 +153,10 @@ test("une série sans faute ne déroule pas la liste de toutes les bonnes répon
   assert.match(html, /: \(wrongEntries\.length > 1 \? `Mes \$\{wrongEntries\.length\} erreurs` : "Mon erreur"\);/, "lot E2 : « Mon erreur » sans calcul passé, « à revoir » avec");
 });
 
-test("« Mes calculs » s’ouvre sur la grille, et le retour reste à l’écran", () => {
-  assert.match(html, /show\("calculs"\);[\s\S]{0,300}\$\("calculs-grille"\)\.scrollIntoView\?\.\(\{block: "start", behavior: "auto"\}\)/);
-  assert.match(html, /\.calculs-screen \.settings-toolbar \{ position: sticky; top: 0;/, "sinon « ← Ma table » sortirait de l’écran en défilant");
-  assert.match(html, /#calculs-grille \{ scroll-margin-top: 66px; \}/, "la grille s’arrête sous la barre, pas dessous (R4 bis : barre de 62 px)");
+// Lot « un seul tableau » : « Voir mes calculs » et l'adresse #calculs ouvrent
+// Mon parcours, sur le bloc Mes calculs.
+test("« Mes calculs » s’ouvre dans Mon parcours, sur son bloc", () => {
+  assert.match(html, /function openCalculs\(\) \{\s*openParcours\(\);\s*\$\("parcours-calculs"\)\.scrollIntoView\?\.\(\{block: "start", behavior: "auto"\}\);\s*\}/);
+  assert.doesNotMatch(html, /show\("calculs"\)/);
+  assert.match(html, /voir\.textContent = "Voir mes calculs";\s*voir\.addEventListener\("click", openCalculs\);/, "le bilan d’une révision y mène");
 });

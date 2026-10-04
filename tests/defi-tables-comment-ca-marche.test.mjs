@@ -52,7 +52,9 @@ test("la notice dit ce que fait une erreur, et le moteur le confirme : une boît
   // d'une case et la fiche imprimée disent « demain », plus « tout de suite ».
   assert.doesNotMatch(html, /il revient tout de suite/);
   assert.match(html, /note = "Raté aujourd’hui : il revient demain\.";/);
-  assert.match(html, /Une erreur le fait redescendre d’une boîte, sans limite, et il revient demain\.<\/p>/);
+  // Lot « un seul tableau » : la page 2 de la fiche est partie ; la règle
+  // des boîtes y tient en une ligne, sous le tableau.
+  assert.match(html, /<p><b>Mes calculs<\/b> : les 5 carrés d’une case, c’est sa boîte\. Réussi le jour où il revient, un calcul monte d’une boîte ; raté, il redescend\.<\/p>/);
 
   const aujourdhui = PARCOURS.jourLocal();
   const demain = PARCOURS.ajouterJours(aujourdhui, 1);
@@ -79,17 +81,19 @@ test("« Encore 10 calculs » est bien le libellé du bouton", () => {
 
 test("les nombres écrits pour l'élève sont ceux du moteur : 5 boîtes, 10 à la fois, su à la boîte 4, 1 · 3 · 7 · 14 jours", () => {
   assert.equal(PARCOURS.SEUILS.revision.boites, 5);
-  assert.match(html, /Cinq boîtes par calcul/, "la page 2 de la fiche le dit (la notice de la séance, non)");
+  assert.match(html, /les 5 carrés d’une case, c’est sa boîte/, "la fiche le dit (la notice de la séance, non)");
   assert.equal(PARCOURS.SEUILS.revision.total, 10);
   assert.deepEqual(PARCOURS.SEUILS.revision.delais, [0, 1, 3, 7, 14]);
-  // Audit 1 : les délais et la boîte 4 ne sont plus dans la notice courte ;
-  // la page 2 de la fiche imprimée les écrit toujours.
-  assert.match(html, /le lendemain, puis 3 jours, 7 jours et 14 jours après/);
+  // Audit 1 : les délais et la boîte 4 ne sont plus dans la notice courte.
+  // Lot « un seul tableau » : ni sur la fiche (sa page 2 est partie) — le
+  // détail d'une boîte les lit dans le moteur (SEUILS.revision.delais).
+  assert.doesNotMatch(html, /le lendemain, puis 3 jours, 7 jours et 14 jours après/);
+  assert.match(html, /`Ils reviennent \$\{libelleDans\(PARCOURS\.SEUILS\.revision\.delais\[boite - 1\]\)\}`/);
   // « su » commence à la boîte 4 : c'est ce que dit etatFait.
   const fait = boite => ({boite, vu: "2026-01-01", erreur: "", gagne: "", echeance: "2026-01-01", cases: 0});
   assert.equal(PARCOURS.etatFait(fait(3)), "en-cours");
   assert.equal(PARCOURS.etatFait(fait(4)), "su");
-  assert.match(html, /À partir de la boîte 4, le calcul est su\./);
+  assert.match(html, /const etat = boite >= 4 \? "su"/, "le bandeau des boîtes : vert dès la boîte 4");
 });
 
 test("le prénom demandé à l'impression : un formulaire caché dans l'écran de la fiche, le bouton lui laisse la place", () => {

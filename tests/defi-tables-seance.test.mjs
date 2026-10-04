@@ -457,9 +457,11 @@ test("la page : la séance est l'accueil de tous — la clé ?seance=1 est retir
   // Les perles : le doigt (pixels d'écran) est ramené aux pixels du boulier quand le cadre est réduit.
   assert.match(html, /const zoom = rect\.width \/ boulier\.dom\.interieur\.offsetWidth \|\| 1;\s*const x = \(event\.clientX - rect\.left\) \/ zoom;/);
   assert.match(html, /const ecart = \(event\.clientX - drag\.depart\) \/ drag\.zoom;/);
-  // Le bloc « Mes calculs du jour » quitte l'accueil de la séance, pas Mes calculs.
+  // Le bloc « Mes calculs du jour » quitte l'accueil de la séance. Lot « un
+  // seul tableau » : la révision n'a plus qu'une porte, la séance (Mes calculs
+  // n'a plus de bouton « Réviser »).
   assert.match(html, /reviser\.hidden = true;/, "Mes calculs du jour est dans la séance (les 9 tables aussi)");
-  assert.match(html, /<button id="calculs-reviser" class="primary" type="button">/);
+  assert.doesNotMatch(html, /id="calculs-reviser"/);
 });
 
 // Décision de Gwenaël (03/10/2026) : au bilan, une rangée entièrement vide n'est
@@ -684,11 +686,13 @@ test("lot 2a : la page — premier écran, Mon parcours, notice, séance des 9 t
   // Lot E1 (décision 4) : « Non, je commence à apprendre », puis le choix de la table.
   assert.match(html, /commencer\.textContent = etat\.acquises\.length \? "C’est tout" : "Non, je commence à apprendre";/);
   assert.match(html, /parcours = PARCOURS\.commencerApresDecouverte\(parcours, table, \{juste: validation\.score\}\);\s*sauverParcours\(\);\s*ecrireTableChoisie\(table\);\s*fermerDecouverte\(\);/);
-  // Mon parcours : une rangée par table, l'échelle pour ma table.
-  assert.match(html, /const maTable = tableEnCours\(etat\);[\s\S]{0,300}?\n        renderParcoursSeance\(list, etat, maTable\);/);
+  // Mon parcours : lot « un seul tableau » (04/10/2026) — la carte de ma
+  // table (son échelle) puis Mes calculs, à la place des dix rangées.
+  assert.match(html, /\n        renderMaTable\(\$\("parcours-matable"\), etat, tableEnCours\(etat\)\);\s*renderCalculs\(\);/);
+  assert.doesNotMatch(html, /renderParcoursSeance/);
   assert.doesNotMatch(html, /kind: "dot",\s*etat: activite\.etat/, "lot 2b : les ronds de l'ancien parcours sont retirés");
   assert.doesNotMatch(html, /pas fait<\/span>\s*<span><span class="cell is-started">/, "et leur légende aussi");
-  assert.match(html, /item\.append\(rangeeDeTable\(table\)\);\s*if \(table === maTable && !ligne\.acquise\) item\.append\(echelleDeTable\(table\)\);/);
+  assert.match(html, /zone\.append\(head\);\s*if \(ligne && !ligne\.acquise\) zone\.append\(echelleDeTable\(maTable\)\);/, "l’échelle tant que ma table n’est pas acquise");
   // La table de la dernière séance.
   assert.match(html, /if \(etat\.tableSeance\) return etat\.tableSeance;/);
   // Les 9 tables : la carte de la séance dans « Je deviens expert ».
@@ -766,19 +770,24 @@ test("lot 2a : le premier écran suit le parcours rendu par le serveur — il ne
 //   - ne pas finir l'attente quand le billet est refusé ;
 //   - remettre « les deux à la fois » dans le noyau.
 
-test("lot 2b : la fiche — une rangée par table, l'échelle de ma table, « Cette semaine », plus de ronds", () => {
-  const fiche = html.slice(html.indexOf('<section id="fiche-print"'), html.indexOf('<section class="fiche-page2">'));
-  assert.match(fiche, /<ol id="fiche-rows" class="fiche-rangees"><\/ol>/);
+// Lot « un seul tableau » (04/10/2026) : la fiche tient sur UNE page — la
+// carte de ma table, le même tableau qu'à l'écran, le mélange, l'escalier.
+test("la fiche — la carte de ma table, le tableau de Mes calculs, « Cette semaine », une seule page", () => {
+  const fiche = html.slice(html.indexOf('<section id="fiche-print"'), html.indexOf('<template id="notice-seance">'));
+  assert.doesNotMatch(fiche, /fiche-rows|fiche-rangees|fiche-page2|fiche-r entouree/, "plus de rangées, plus de page 2");
   assert.doesNotMatch(fiche, /J’apprends|Je m’entraîne|fiche-table|Colorie les ronds/, "les ronds ont quitté l'appli au lot 2a");
-  assert.match(fiche, /<span><i class="fiche-r"><\/i>pas encore<\/span>\s*<span><i class="fiche-r entouree"><\/i>réussi une fois<\/span>\s*<span><i class="fiche-r pleine"><\/i>prêt<\/span>/, "la légende de Mon parcours");
+  assert.match(fiche, /<div id="fiche-matable" class="fiche-rangee is-ma-table fiche-matable" hidden><\/div>\s*<table id="fiche-calculs" class="fiche-carre"><tbody><\/tbody><\/table>\s*<p class="fiche-carre-legende" aria-hidden="true">/);
+  assert.match(fiche, /<\/i>pas encore vu<\/span>[\s\S]*?<\/i>à revoir<\/span>[\s\S]*?<\/i>en route<\/span>[\s\S]*?<\/i>su<\/span>[\s\S]*?<\/i>même calcul<\/span>/, "la légende de l’écran");
+  assert.match(fiche, /<p id="fiche-dix" class="fiche-dix" hidden><b>Table de 10<\/b>&nbsp;: acquise ✓<\/p>/);
   // Un seul logo, en haut à droite ; le QR à gauche ; la signature seule en pied.
   assert.match(fiche, /<header class="fiche-head">\s*<div class="fiche-qr">[\s\S]*?<\/div>\s*<h1>Mon parcours<br>des tables<\/h1>\s*<img class="fiche-logo" src="\.\.\/\.\.\/assets\/img\/mathsgo-logo-print\.png"/);
-  assert.equal((fiche.match(/mathsgo-logo/g) || []).length, 1, "un seul logo sur la feuille 1");
-  assert.match(html, /<footer class="fiche-foot">mathsgo\.re · CC BY-NC-SA 4\.0<\/footer>\s*<section class="fiche-page2">/);
-  // Le remplissage : la rangée du moteur, lue dans le parcours de LA FICHE (celui d'un autre élève chez le professeur).
-  assert.match(html, /PARCOURS\.rangeeTable\(fiche, table\)\.cases\.forEach\(uneCase => \{/);
-  assert.match(html, /if \(uneCase\.etat !== "vide"\) boite\.textContent = String\(uneCase\.produit\);/, "comme à l'écran : une case vide ne donne pas le résultat");
+  assert.equal((fiche.match(/mathsgo-logo/g) || []).length, 1, "un seul logo");
+  assert.equal((fiche.match(/<footer class="fiche-foot">mathsgo\.re · CC BY-NC-SA 4\.0<\/footer>/g) || []).length, 1, "une seule signature : une seule page");
+  // Le remplissage : le parcours de LA FICHE (celui d'un autre élève chez le professeur).
+  assert.match(html, /const fait = fiche\.calculs\[cle\] \|\| null;\s*const td = document\.createElement\("td"\);\s*td\.className = colonne < ligne \? `miroir\$\{fait \? " vu" : ""\}` : PARCOURS\.etatFait\(fait\);/, "la moitié miroir grise seulement pour un calcul déjà vu");
+  assert.match(html, /nombre\.textContent = fait \? String\(ligne \* colonne\) : "";/, "comme à l'écran : une case jamais vue ne donne pas le résultat");
   assert.match(html, /const maTable = vide \? null : PARCOURS\.tableDeSeance\(fiche\);/, "une fiche vide ne désigne aucune table");
+  assert.match(html, /carte\.hidden = !maTable;/);
   // Relecture de Code (03/10/2026), vue au navigateur : « Fiche » sur un élève
   // qui n'a rien fait — le serveur donne son prénom, et le prénom suffisait à
   // rendre la fiche « non vide » : table de 2 désignée, date, « Ma progression ».
@@ -788,10 +797,13 @@ test("lot 2b : la fiche — une rangée par table, l'échelle de ma table, « Ce
   hugo.prenom = "Hugo";
   assert.equal(P.estVide(hugo), false, "le moteur compte le prénom : c'est à la fiche de l'écarter");
   assert.equal(P.estVide({...hugo, prenom: ""}), true);
-  assert.match(html, /const marches = marchesDeTable\(fiche, table\);/);
+  assert.match(html, /const marches = marchesDeTable\(fiche, maTable\);/);
   assert.match(html, /function echelleDeTable\(table\) \{\s*const \{depart, prochaines, noms\} = marchesDeTable\(parcours, table\);/, "Mon parcours et la fiche lisent l'échelle de la même façon");
   assert.match(html, /const semaine = PARCOURS\.bilanSeances\(fiche\);/);
-  assert.match(html, /\.fiche-carre tr > th:first-child \{ width: 9mm; \}\s*\.fiche-carre \.fiche-carre-cases \{ display: flex; justify-content: center; gap: \.5mm; \}\s*\.fiche-carre \.fiche-case \{ width: 3\.3mm; height: 3\.3mm; \}/, "page 2 : des boîtes de 3,3 mm, qui ne se touchent pas d'une case à l'autre");
+  // Le cadre du professeur (10 lignes) : la fiche se resserre pour rester sur une page.
+  assert.match(html, /\$\("fiche-print"\)\.classList\.toggle\("avec-prof", Boolean\(source\)\);/);
+  assert.match(html, /\.fiche-print\.avec-prof \.fiche-carre td \{ height: 9mm; \}/);
+  assert.doesNotMatch(html, /\.fiche-page2 \{ break-before: page/);
 });
 
 test("lot 2b : les compteurs « fois » sont pour le professeur — le cadre n'existe que dans la fiche ouverte depuis « Ma classe »", () => {
