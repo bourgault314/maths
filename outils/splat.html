@@ -9702,7 +9702,8 @@ function renderMixedClue(targetGroup, cx, cy, seq, mkEl, mkText, isPrint, reveal
    Dessin seulement : rien n'est tiré au sort ici. Les places tirées par
    assignPositionsNumbered ne changent pas (le hasard de la série non plus) ; elles servent
    au plateau unique des réglages « Phrases » et « Symboles ».
-   TROIS (trois sommes, sans total) : « TOTAL ? » en gris ardoise, comme l'Enquête sans total.
+   TROIS (trois paires) : son plateau principal, celui des trois couleurs, n'a pas de total ; il
+   n'est PAS dessiné (sysPlateauxMontres, lot M4-4b) — l'élève ne voit que les trois paires.
 --------------------------------------------------------------------------------------- */
 /* Zones de dessin : écran (1600 × 1000), carte imprimée 4 par page (1600 × 2200, les
    plateaux de 60 à 1540, hauteur 440 à une rangée, 400 à deux, le reste blanc pour
@@ -9728,6 +9729,16 @@ function sysTotalCache(card){
     && card._sys.boards[0] && card._sys.boards[0].total == null);
 }
 
+/* Les plateaux dessinés, par leur rang dans _sys.boards (lot M4-4b, 04/10/2026, Gwenaël) : un
+   plateau sans total ne se montre pas. « Trois paires » perd ainsi son plateau « TOTAL ? »
+   (bleue + rouge + orange) partout où l'élève voit la carte : il donnait la clé (trouver
+   d'abord le total des trois, c'est à l'élève de le découvrir) et faisait croire à un indice
+   oublié. Il reste dans les données : le plan de la correction s'en sert (« Je partage »). */
+function sysPlateauxMontres(card){
+  const boards = card._sys.boards;
+  return boards.map((b, i) => i).filter(i => boards[i].total != null);
+}
+
 /* Rayon d'un jeton sur un plateau (visible, ou caché une fois la tache dévoilée). */
 function sysRayonJeton(r){
   return Math.round(clamp(r * 0.40, 18, 58));
@@ -9736,11 +9747,12 @@ function sysRayonJeton(r){
 /* La grille commune à tous les plateaux d'une carte : chaque tache a la même place (rangée,
    colonne) sur tous les plateaux où elle apparaît. Une seule couleur par tache dans toute la
    carte (EMBOITE1, TROIS…) : une rangée, une colonne par couleur (« noire | violette |
-   orange »), la tache absente d'un indice laisse sa place vide. Dès qu'une couleur se
+   orange »), la tache absente d'un indice laisse sa place vide. Les plateaux montrés seulement
+   (sysPlateauxMontres) : cases[j] est le j-ième plateau dessiné. Dès qu'une couleur se
    répète : une rangée par couleur, les taches de la couleur alignées à gauche (« 2 noires
    + 4 violettes » : deux noires sur la 1re rangée, quatre violettes sur la 2e). */
 function sysGrille(card){
-  const colors = card._sys.colors, boards = card._sys.boards;
+  const colors = card._sys.colors, boards = sysPlateauxMontres(card).map(i => card._sys.boards[i]);
   const presentes = colors.filter(k => boards.some(b => (b.counts[k] || 0) > 0));
   const repete = boards.some(b => presentes.some(k => (b.counts[k] || 0) > 1));
   if(!repete){
@@ -9781,7 +9793,8 @@ function sysRayonMax(lignes, colonnes, nv, w, h, rMax){
 function sysDispositionPlateaux(card, zone){
   const Z = zone || SYS_ZONE_ECRAN, T = SYS_TACHE;
   const boards = card._sys.boards;
-  const n = boards.length;
+  const montres = sysPlateauxMontres(card);
+  const n = montres.length;
   const grille = sysGrille(card);
   /* lot M4-1 : trois plateaux dont la grille a trois rangées (l'escalier) se mettent sur une
      seule rangée — sur deux, les taches tombaient à r = 34 à l'écran, 31 en 6 par page. */
@@ -9805,17 +9818,26 @@ function sysDispositionPlateaux(card, zone){
     vis = sysColonnesVisibles(visibles.length, r, h);
   }
   /* ordre=MELANGE (lot M4-1) : le plateau i est dessiné à la place ordre.indexOf(i) ; la
-     liste rendue reste rangée comme _sys.boards (le plateau principal en premier). */
-  const ordre = Array.isArray(card._sys.ordre) && card._sys.ordre.length === n ? card._sys.ordre : null;
-  const plateaux = boards.map((b, i) => {
-    const rang = ordre ? ordre.indexOf(i) : i;
-    const x = Math.round(Z.x + (rang % cols) * (w + Z.ecartX));
+     liste rendue reste rangée comme _sys.boards (le plateau principal en premier). Un plateau
+     qui n'est pas montré (lot M4-4b) sort de l'ordre : les autres se serrent. P.indice = le
+     rang du plateau dans _sys.boards. */
+  const ordre = Array.isArray(card._sys.ordre) && card._sys.ordre.length === boards.length
+    ? card._sys.ordre.filter(i => montres.indexOf(i) >= 0) : null;
+  /* « Trois paires » sur deux rangées (écran, 4 et 6 par page, lot M4-4b) : la paire seule de la
+     2e rangée se centre sous les deux autres — à gauche, la place vide à côté d'elle faisait
+     croire à un plateau oublié. Les autres cartes ne bougent pas. */
+  const centrerDerniere = montres.length < boards.length && rows > 1 && n % cols !== 0;
+  const plateaux = montres.map((i, j) => {
+    const b = boards[i];
+    const rang = ordre ? ordre.indexOf(i) : j;
+    const decale = centrerDerniere && Math.floor(rang / cols) === rows - 1 ? (cols - n % cols) * (w + Z.ecartX) / 2 : 0;
+    const x = Math.round(Z.x + decale + (rang % cols) * (w + Z.ecartX));
     const yBoite = Math.round(haut + Math.floor(rang / cols) * (hBoite + Z.sousTotal + h + Z.ecartY));
     const y = Math.round(yBoite + hBoite + Z.sousTotal);
     // places mesurées depuis le coin du plateau : les mêmes sur tous les plateaux
     const x0 = (w - vis.largeur) / 2 - (grille.colonnes - 1) * T.pasX * r / 2;
     const cy0 = h / 2 - ((grille.lignes - 1) * T.pasY * r + (T.bas - T.haut) * r) / 2;
-    const places = grille.cases[i].map(c => ({
+    const places = grille.cases[j].map(c => ({
       cx: x + Math.round(x0 + c.colonne * T.pasX * r), cy: y + Math.round(cy0 + c.ligne * T.pasY * r), r, couleur: c.couleur
     }));
     const jetons = [];
@@ -9830,7 +9852,7 @@ function sysDispositionPlateaux(card, zone){
         }
       }
     }
-    return { x, y, w, h, total: b.total, totalX: x + w / 2, totalY: yBoite, taches: places, jetons };
+    return { indice: i, x, y, w, h, total: b.total, totalX: x + w / 2, totalY: yBoite, taches: places, jetons };
   });
   return { r, rJeton: sysRayonJeton(r), echelleTotal: Z.echelleTotal, plateaux };
 }
@@ -9844,7 +9866,7 @@ function sysDispositionPlateaux(card, zone){
 const SYS_ZONE_TEL_ENONCE = { x:20, w:960, haut:10, ecartX:24, ecartY:24, echelleTotal:0.7, sousTotal:14, hRangee:560, centrer:false, rMax:118, ajusterHauteur:true };
 function sysZoneTelephone(card, largeur, hauteur){
   const Z0 = SYS_ZONE_TEL_ENONCE;
-  const n = card._sys.boards.length;
+  const n = sysPlateauxMontres(card).length;
   const hBoite = 210 * Z0.echelleTotal;
   let meilleure = null;
   [n, 2, 1].filter((c, i, a) => c <= n && a.indexOf(c) === i).forEach(c => [Z0.w, 1480].forEach(w => {
@@ -9874,7 +9896,7 @@ function drawSysPlateaux(target, card, zone, opts = {}){
   target.appendChild(g);
   const rj = plan.rJeton;
   plan.plateaux.forEach((P, i) => {
-    const gp = mkEl("g", { class: "sysPlateau", "data-plateau": String(i) });
+    const gp = mkEl("g", { class: "sysPlateau", "data-plateau": String(P.indice) });
     g.appendChild(gp);
     // boîte TOTAL : les métriques de renderCardIntoSvg (280 × 210, « TOTAL » 42 en ligne de
     // base à 70, nombre 96 à 153), réduites d'un même facteur à l'écran
@@ -9888,10 +9910,9 @@ function drawSysPlateaux(target, card, zone, opts = {}){
       "text-anchor": "middle", "font-size": "42", "font-weight": isPrint ? "900" : "800", "letter-spacing": "2",
       fill: isPrint ? "rgba(0,0,0,0.92)" : "var(--total-label)"
     }));
-    const cache = P.total == null;
-    boite.appendChild(mkText(0, 153, cache ? "?" : String(P.total), {
+    boite.appendChild(mkText(0, 153, String(P.total), {
       "text-anchor": "middle", "font-size": "96", "font-weight": "900",
-      fill: cache ? "#64748b" : (isPrint ? "#000" : "var(--ink)")
+      fill: isPrint ? "#000" : "var(--ink)"
     }));
     gp.appendChild(boite);
     // le plateau
@@ -13988,8 +14009,8 @@ function eleveInfosEnquete(card){
    pour 1 noire et 3 rouges). Même forme que eleveInfosEnquete : `ordre` = les taches du
    plateau principal, couleur après couleur dans l'ordre des couleurs de la carte (celui
    des rangées de la grille), pour que les cases se fabriquent avec le même code. Le TOTAL
-   est celui du plateau principal ; « Trois paires » le cache (sysTotalCache) : la case
-   reste « ? », comme l'Enquête sans total. */
+   est celui du plateau principal ; « Trois paires » n'en a pas (sysTotalCache) : son tableau
+   n'a pas de ligne du TOTAL, seulement ses trois cases (lot M4-4b). */
 function eleveInfosSysteme(card){
   if(!sysAPlan(card)) return null;
   const valeurs = Array.isArray(card.hidden) ? card.hidden.map(v => Number(v)) : [];
@@ -14357,16 +14378,18 @@ function renderEleveSplat(){
   eleveEchecs = 0;
   panneau.classList.toggle("enquete", !!enquete); /* avant la consigne, qui le lit */
   panneau.classList.toggle("systeme", !!(enquete && enquete.systeme)); /* le Système : mêmes règles que l'Enquête, plus les siennes */
-  /* « ? » gris ardoise, comme sur le plateau : Enquête sans total, « Trois paires » du Système */
-  panneau.classList.toggle("sansTotal", !!(enquete && ((card._rel && card._rel.sansTotal) || sysTotalCache(card))));
+  /* « ? » gris ardoise, comme sur le plateau : Enquête sans total */
+  panneau.classList.toggle("sansTotal", !!(enquete && card._rel && card._rel.sansTotal));
 
   let bas = "", haut;
   if(enquete){
     /* Enquête : total donné, une case par tache (largeurs égales), voir eleveCasesEnqueteHtml */
     bas = eleveCasesEnqueteHtml(card, enquete);
     /* sans total : la case reste, avec « ? », donnée comme sur le plateau (choix du 23/09) ;
-       Système : le TOTAL du plateau principal, « ? » pour « Trois paires » */
-    haut = eleveCaseDonneeHtml("haut blanche", "Total", ((card._rel && card._rel.sansTotal) || sysTotalCache(card)) ? "?" : card.total);
+       Système : le TOTAL du plateau principal ; « Trois paires » n'a pas de ligne du TOTAL (lot
+       M4-4b : son plateau des trois couleurs n'est plus montré), seulement ses trois cases */
+    haut = (enquete.systeme && sysTotalCache(card)) ? ""
+      : eleveCaseDonneeHtml("haut blanche", "Total", (card._rel && card._rel.sansTotal) ? "?" : card.total);
   }else{
     const flexVis = Math.max(infos.visibleSum, card.total * 0.05, 1);
     const flexHid = Math.max(infos.H, card.total * 0.05, 1);
@@ -14377,7 +14400,7 @@ function renderEleveSplat(){
 
   panneau.innerHTML =
     `<p class="eleveConsigne">${eleveConsigneSchema()}</p>` + /* texte complet sauf sur un téléphone au pavé */
-    `<div class="eleveDiag"><div class="ligneHaut">${haut}</div>` +
+    `<div class="eleveDiag">${haut ? `<div class="ligneHaut">${haut}</div>` : ""}` +
     `<div class="ligneBas">${bas}</div></div>` +
     `<div class="eleveMsg" id="eleveMsg"></div>` +
     `<div class="eleveActions"><button id="eleveValider" type="button">Valider</button></div>`;

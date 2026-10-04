@@ -45,7 +45,7 @@ const CONSTANTES = ["SYS_GESTES", "SYS_GESTES_MIX_DEFAUT", "SYS_MAX_TACHES", "SY
 const GENERATEUR = ["sysNormaliserReglages", "genSystemCarte", "sysMelangerPlateaux", "sysFormes", "sysFormesDouble", "sysSomme", "sysNombreTaches", "sysPlateau",
   "sysTirerSituation", "sysSituationValide", "sysNombreSousEntendu", "sysTexteASousEntendu", "sysSituationSure",
   "sysAssemblerCarte", "sysUneTacheParCouleur", "sysIndice", "sysPhraseIndice", "sysPlanS3", "sysPlan"].map(fn).join("\n");
-const DESSIN = ["sysEnPlateaux", "sysTotalCache", "sysRayonJeton", "sysGrille", "sysColonnesVisibles", "sysRayonMax", "sysDispositionPlateaux", "drawSysPlateaux",
+const DESSIN = ["sysEnPlateaux", "sysTotalCache", "sysPlateauxMontres", "sysRayonJeton", "sysGrille", "sysColonnesVisibles", "sysRayonMax", "sysDispositionPlateaux", "drawSysPlateaux",
   "sysAPlan", "sysBarresMetriques", "sysLargeurTexte", "sysCorrAjuster", "sysBarreCases", "sysBarreLargeur", "sysEtapeTaille", "sysVerifHauteur",
   "sysVerifLargeur", "sysEtapesFlux", "sysJetonCouleurs", "drawSysCaseBarre", "drawSysBarre", "drawSysEtape", "drawSysVerification", "sysSystemeEcrit", "drawSysSystemeEcrit", "drawSysCorrectionImprimee",
   "sysBlocs", "sysBlocMesure", "sysBlocPartageAligne", "sysBlocsFlux", "drawSysCorrectionBlocs", "drawSysLigneReponse",
@@ -241,10 +241,11 @@ test("l'énoncé : les plateaux en une rangée en haut, la ligne réponse en bas
   assert.ok(n >= 900, `${n} cartes`);
 });
 
-test("l'énoncé : quatre plateaux (Trois paires) sur une seule rangée, chacun de la hauteur de ses taches", () => {
+test("l'énoncé : Trois paires montre ses trois paires (lot M4-4b : plus de « TOTAL ? ») sur une seule rangée, chacun de la hauteur de ses taches", () => {
   for(const c of sys.serie(11, 6, { ...REGLAGES_FICHES, geste: "TROIS" })){
     const P = sys.enonce(c).d.plateaux;
-    assert.equal(P.length, 4);
+    assert.equal(P.length, 3);
+    assert.ok(P.every((p) => p.total != null), "aucun plateau sans total");
     assert.equal(new Set(P.map((p) => p.y)).size, 1);
     assert.ok(Math.max(...P.map((p) => p.h)) < 300, "des plateaux à la hauteur des taches, pas de 440");
   }

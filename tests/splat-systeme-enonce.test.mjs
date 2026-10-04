@@ -2,7 +2,8 @@
    Un plateau par situation, chacun sous sa boîte TOTAL, à l'écran comme à l'impression (4 et
    6 par page) ; la même taille de tache et la même grille sur tous les plateaux d'une carte
    (décidé le 23/09 : « A · même grille ») ; le nom de la couleur sur chaque tache ; les
-   jetons visibles en colonne à droite du plateau principal ; « TOTAL ? » pour TROIS ;
+   jetons visibles en colonne à droite du plateau principal ; TROIS ne montre que ses trois
+   paires (lot M4-4b : plus de plateau « TOTAL ? ») ;
    bandeau brun cannelle et consigne du Système ; phrases ET symboles imprimés en haut, à
    droite du TOTAL ; plus de clic mort à l'écran. Dessin seulement : aucun tirage.
    Les fonctions de outils/splat.html sont extraites du fichier et exécutées telles quelles
@@ -30,7 +31,7 @@ const CONSTANTES = ["SYS_GESTES", "SYS_GESTES_MIX_DEFAUT", "SYS_MAX_TACHES", "SY
 const GENERATEUR = ["sysNormaliserReglages", "genSystemCarte", "sysMelangerPlateaux", "sysFormes", "sysFormesDouble", "sysSomme", "sysNombreTaches", "sysPlateau",
   "sysTirerSituation", "sysSituationValide", "sysNombreSousEntendu", "sysTexteASousEntendu", "sysSituationSure",
   "sysAssemblerCarte", "sysUneTacheParCouleur", "sysIndice", "sysPhraseIndice", "sysPlanS3", "sysPlan"].map(fn).join("\n");
-const DISPOSITION = ["sysEnPlateaux", "sysTotalCache", "sysRayonJeton", "sysGrille", "sysColonnesVisibles",
+const DISPOSITION = ["sysEnPlateaux", "sysTotalCache", "sysPlateauxMontres", "sysRayonJeton", "sysGrille", "sysColonnesVisibles",
   "sysRayonMax", "sysDispositionPlateaux"].map(fn).join("\n");
 
 const sys = new Function(`
@@ -52,7 +53,7 @@ const sys = new Function(`
   ${DISPOSITION}
   return {
     ZONES: { ecran: SYS_ZONE_ECRAN, imprime: SYS_ZONE_IMPRIME, six: SYS_ZONE_IMPRIME_6 }, T: SYS_TACHE, GESTES: SYS_GESTES,
-    enPlateaux: sysEnPlateaux, totalCache: sysTotalCache, grille: sysGrille, disposition: sysDispositionPlateaux, rayonJeton: sysRayonJeton,
+    enPlateaux: sysEnPlateaux, totalCache: sysTotalCache, montres: sysPlateauxMontres, grille: sysGrille, disposition: sysDispositionPlateaux, rayonJeton: sysRayonJeton,
     serie(graine, n, reglages){
       const rng = mulberry32(graine);
       const out = [];
@@ -133,7 +134,9 @@ test("tout tient : taches dans leur plateau sans se toucher, visibles à part, T
     for(const [nom, Z] of Object.entries(sys.ZONES)){
       const d = sys.disposition(c, Z);
       const bas = nom === "ecran" ? 1000 : (nom === "six" ? 1000 : 2200);
-      assert.equal(d.plateaux.length, c._sys.boards.length);
+      // lot M4-4b : un plateau sans total (celui de TROIS) n'est pas dessiné
+      assert.equal(d.plateaux.length, c._sys.boards.length - (geste === "TROIS" ? 1 : 0));
+      assert.deepEqual(d.plateaux.map((P) => P.indice), sys.montres(c));
       // lot M4-1 : l'escalier (trois rangées de taches, plateaux sur une rangée) à part
       if(defaut && geste !== "ESCALIER") rMin = Math.min(rMin, d.r);
       if(geste === "ESCALIER") rEscalier = Math.min(rEscalier, d.r);
@@ -141,17 +144,18 @@ test("tout tient : taches dans leur plateau sans se toucher, visibles à part, T
         // plateau dans la scène, sous sa boîte TOTAL (au moins 14 unités de blanc entre les deux)
         assert.ok(P.x >= Z.x - 0.5 && P.x + P.w <= Z.x + Z.w + 0.5 && P.y + P.h <= bas, `${nom} : plateau hors de la carte`);
         assert.ok(P.y - (P.totalY + 210 * Z.echelleTotal) >= 14, `${nom} : TOTAL collé au plateau`);
-        assert.equal(P.total, c._sys.boards[i].total);
+        assert.equal(P.total, c._sys.boards[P.indice].total);
+        assert.notEqual(P.total, null, "aucun « TOTAL ? » dessiné");
         // la bonne composition
         const compte = {};
         P.taches.forEach((s) => { compte[s.couleur] = (compte[s.couleur] || 0) + 1; assert.equal(s.r, d.r, "même rayon sur tous les plateaux"); });
-        assert.deepEqual(compte, Object.fromEntries(Object.entries(c._sys.boards[i].counts).filter(([, n]) => n > 0)));
+        assert.deepEqual(compte, Object.fromEntries(Object.entries(c._sys.boards[P.indice].counts).filter(([, n]) => n > 0)));
         // chaque tache dans son plateau (dessin réel : 1,01 r / 1,05 r / 0,94 r / 1,08 r)
         for(const s of P.taches){
           assert.ok(s.cx - 1.01 * s.r >= P.x + 4 && s.cx + 1.05 * s.r <= P.x + P.w - 4 && s.cy - 0.94 * s.r >= P.y + 4 && s.cy + 1.08 * s.r <= P.y + P.h - 4, `${nom} : une tache sort de son plateau`);
         }
         // jetons visibles : plateau principal seulement, tous là, dans le plateau, hors des taches
-        if(i === 0) assert.deepEqual(P.jetons.map((j) => j.valeur), c.visible);
+        if(P.indice === 0) assert.deepEqual(P.jetons.map((j) => j.valeur), c.visible);
         else assert.equal(P.jetons.length, 0);
         for(const j of P.jetons){
           assert.ok(j.cx - j.r >= P.x && j.cx + j.r <= P.x + P.w && j.cy - j.r >= P.y && j.cy + j.r <= P.y + P.h, `${nom} : jeton visible hors du plateau`);
@@ -213,20 +217,38 @@ test("zones : écran 1600 × 1000, impression 4/page (plateaux de 60 à 1540, 44
     assert.ok(Math.max(...sys.disposition(c, sys.ZONES.six).plateaux.map((P) => P.y + P.h)) <= 995, "6/page : tout tient dans 1000");
     assert.ok(Math.max(...sys.disposition(c, sys.ZONES.ecran).plateaux.map((P) => P.y + P.h)) <= 985, "écran : tout tient dans 1000");
   }
-  // 3 plateaux : le 3e sous le premier ; 4 : deux rangées de deux
+  // 3 plateaux : le 3e sous le premier
   assert.equal(imp3.plateaux[2].x, imp3.plateaux[0].x);
-  const imp4 = sys.disposition(quatre, sys.ZONES.imprime);
-  assert.equal(imp4.plateaux[3].x, imp4.plateaux[1].x);
-  assert.equal(imp4.plateaux[3].y, imp4.plateaux[2].y);
+  // Trois paires (lot M4-4b) : trois plateaux montrés, deux en haut, la troisième paire centrée
+  // dessous — à l'écran, en 4 et en 6 par page (à gauche, la place vide faisait croire à un
+  // plateau oublié)
+  assert.equal(quatre._sys.geste, "TROIS");
+  for(const Z of Object.values(sys.ZONES)){
+    const P = sys.disposition(quatre, Z).plateaux;
+    assert.equal(P.length, 3);
+    assert.equal(P[0].y, P[1].y);
+    assert.ok(P[2].y > P[0].y + P[0].h);
+    assert.ok(Math.abs((P[2].x + P[2].w / 2) - (P[0].x + P[1].x + P[1].w) / 2) <= 1, "la 3e paire centrée sous les deux autres");
+  }
 });
 
-test("TROIS : le plateau principal n'a pas de total (« TOTAL ? » en gris ardoise), partout", () => {
-  for(const { c } of CARTES) assert.equal(sys.totalCache(c), c._sys.geste === "TROIS");
+test("TROIS (lot M4-4b) : le plateau des trois couleurs, sans total, reste dans les données mais n'est jamais dessiné", () => {
+  for(const { c } of CARTES){
+    assert.equal(sys.totalCache(c), c._sys.geste === "TROIS");
+    // les plateaux montrés : tous, sauf celui sans total (le plateau principal de TROIS)
+    const attendus = c._sys.boards.map((b, i) => i).filter((i) => c._sys.boards[i].total != null);
+    assert.deepEqual(sys.montres(c), attendus);
+    if(c._sys.geste === "TROIS"){
+      assert.deepEqual(attendus, [1, 2, 3]);
+      assert.equal(c._sys.boards[0].total, null, "le plateau reste dans les données (le plan s'en sert)");
+      assert.equal(sys.grille(c).cases.length, 3, "la grille : les trois paires");
+    }
+  }
   const src = fn("drawSysPlateaux");
-  assert.match(src, /const cache = P\.total == null;/);
-  assert.match(src, /cache \? "\?" : String\(P\.total\)/);
-  assert.match(src, /fill: cache \? "#64748b"/);
-  // Phrases et Symboles (plateau unique) : la boîte du haut aussi
+  assert.doesNotMatch(src, /P\.total == null/, "plus de « ? » dans la boîte TOTAL des plateaux");
+  assert.match(src, /mkText\(0, 153, String\(P\.total\), \{/);
+  assert.match(src, /"data-plateau": String\(P\.indice\)/);
+  // Phrases et Symboles (plateau unique, réglage du professeur, jamais sur les fiches) : inchangés
   const ecran = html.slice(html.indexOf("\nfunction renderCard("), html.indexOf("\nfunction renderCardIntoSvg("));
   assert.match(ecran, /const sansTotalAffiche = \(card\.family === "C" && card\._rel && card\._rel\.sansTotal\) \|\| sysTotalCache\(card\);/);
   assert.match(fn("renderCardIntoSvg"), /const sansTotalImprime = \(card\.family === "C" && card\._rel && card\._rel\.sansTotal\) \|\| sysTotalCache\(card\);/);
