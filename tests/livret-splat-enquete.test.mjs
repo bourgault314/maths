@@ -101,9 +101,13 @@ test("les dix fiches du deuxième tour — codes, titres, ordre ; aucune consign
 test("vue prof (03/10/2026) : « Projeter » sur les 25 fiches du monde 3, le deuxième tour sous la partie 3", () => {
   ETAPES.forEach((e) => assert.equal(e.jp, `/splat/classique/?${ENQ_FICHES[e.fi].q}&cards=4&unknown=question`, `fiche ${e.n}`));
   assert.match(univers, /if\(m===MONDE_ENQUETE\) e\.jp=EQ\+f\.q\+ENQ_COMMUN;/);
-  assert.match(univers, /\(m===MONDE_ENQUETE\?tour2ProfHtml\(m\):''\)/);
-  assert.match(univers, /tete\(1,'Les trois dessins','11d','17d'\)\+ENQ_TOUR2\.slice\(0,5\)/);
-  assert.match(univers, /tete\(2,'Vers le Système','18d','24d'\)\+ENQ_TOUR2\.slice\(5\)/);
+  /* lot M4-4 (04/10/2026) : tour2ProfHtml sert aux Bonus des mondes 3 et 4 (BONUS_MONDES) ; pour le
+     monde 3, les mêmes deux têtes, les mêmes fiches, les mêmes identifiants qu'avant */
+  assert.match(univers, /\}\)\.join\(''\)\+tour2ProfHtml\(m\)\+'<\/ol>';/);
+  assert.match(univers, /prof:\[\[1,"Les trois dessins","11d","17d",0,5\],\[2,"Vers le Système","18d","24d",5,10\]\]\}/);
+  assert.match(univers, /\{monde:MONDE_ENQUETE,idp:"enq",fiches:ENQ_TOUR2,volet:"enq-bonus",li:"enq-t2-",/);
+  assert.match(univers, /const tete=\(rang,nom,de,a\)=>'<li class="volet" id="'\+b\.idp\+'-tour2-'\+\(rang\|\|1\)\+'"><span class="rang">Deuxième tour'\+\(rang\?' '\+rang:''\)\+'<\/span>'\+/);
+  assert.match(univers, /return b\.prof\.map\(\(\[rang,nom,de,a,i0,i1\]\)=>tete\(rang,nom,de,a\)\+b\.fiches\.slice\(i0,i1\)\.map\(li\)\.join\(''\)\)\.join\(''\);/);
 });
 
 test("le schéma vide sous la carte 1 (modele=1) — fiches 12, 13, 17, 18, 22, 11d, 17d et 18d, les seules", () => {

@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
 <script>document.documentElement.className += " js";</script>
 <!-- La liste des mondes « en préparation » et la clé de Gwenaël (?essai=1) : en tête de assets/js/splat-etapes.js -->
-<script src="../assets/js/splat-etapes.js?v=20261004-1"></script>
+<script src="../assets/js/splat-etapes.js?v=20261004-2"></script>
 <style>
 :root{
   --page:#f6f8fb; --paper:#ffffff; --ink:#10294a; --muted:#5c6c82; --line:#d9e2ec;
@@ -121,6 +121,8 @@ html.js .panneau[hidden]{display:none}
 .liv .couv{display:block;width:100%;max-width:210px;height:auto;border-radius:4px;background:#fff;
   box-shadow:0 6px 16px rgba(22,47,82,.18);transition:transform .15s ease}
 .liv .couv-lien:hover .couv,.liv .couv-lien:focus-visible .couv{transform:translateY(-3px)}
+/* les livrets « tablette » du monde 4 : la couverture est en largeur */
+.liv .couv.paysage{max-width:280px}
 .liv .corps{padding:12px 15px 16px;display:flex;flex-direction:column;gap:10px;flex:1}
 .liv .titre{display:flex;align-items:center;justify-content:space-between;gap:6px 10px;flex-wrap:wrap}
 .liv h3{margin:0;font-size:20px;line-height:1.15;color:#063b7a}
@@ -253,7 +255,7 @@ footer a{font-weight:700}
     <a href="#monde-1" data-m="1" id="onglet-1" role="tab" aria-controls="monde-1" aria-selected="true"><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>1</b></span><span class="txt"><span class="sr">Monde 1 · </span><span class="etiq">Petit SPLAT!</span><span class="fiches">fiches 1 à 6</span></span></a>
     <a href="#monde-2" data-m="2" id="onglet-2" role="tab" aria-controls="monde-2" aria-selected="false"><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>2</b></span><span class="txt"><span class="sr">Monde 2 · </span><span class="etiq">SPLAT! Classique</span><span class="fiches">fiches 7 à 9</span></span></a>
     <a href="#monde-3" data-m="3" id="onglet-3" role="tab" aria-controls="monde-3" aria-selected="false"><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>3</b></span><span class="txt"><span class="sr">Monde 3 · </span><span class="etiq">SPLAT! Enquête</span><span class="fiches">fiches 10 à 24</span></span></a>
-    <a href="#monde-4" data-m="4" id="onglet-4" role="tab" aria-controls="monde-4" aria-selected="false" data-prepa><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>4</b></span><span class="txt"><span class="sr">Monde 4 · </span><span class="etiq">SPLAT! Système</span><span class="fiches">fiches 25 à 34</span></span></a>
+    <a href="#monde-4" data-m="4" id="onglet-4" role="tab" aria-controls="monde-4" aria-selected="false" data-prepa><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>4</b></span><span class="txt"><span class="sr">Monde 4 · </span><span class="etiq">SPLAT! Système</span><span class="fiches">fiches 25 à 28</span></span></a>
     <a href="#monde-5" data-m="5" id="onglet-5" role="tab" aria-controls="monde-5" aria-selected="false"><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>5</b></span><span class="txt"><span class="sr">Monde 5 · </span><span class="etiq">SPLAT! Équations</span><span class="fiches">fiches 35 à 37</span></span></a>
     <a href="#monde-6" data-m="6" id="onglet-6" role="tab" aria-controls="monde-6" aria-selected="false"><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>6</b></span><span class="txt"><span class="sr">Monde 6 · </span><span class="etiq">SPLAT! Relatifs</span><span class="fiches">fiches 38 à 43</span></span></a>
   </nav>
@@ -677,35 +679,32 @@ footer a{font-weight:700}
   </section>
 
   <!-- ===================================================== Monde 4 · SPLAT! Système
-       Le Système (25/09/2026) : plusieurs plateaux, un total pour chacun. Deux livrets, et
-       leurs corrigés en 4 par page (livret) ou en 2 par page (une feuille par fiche). -->
+       Les livrets « tablette » du lot M4-4 (04/10/2026) : toutes les pages en largeur, une
+       fiche = la double page (4 cartes). Le livret pour tous, puis le deuxième tour (le Bonus
+       de la carte des mondes), et leurs corrigés avec les taches ou en lettres. -->
   <section class="panneau" data-m="4" id="monde-4" data-prepa role="tabpanel" aria-labelledby="onglet-4" hidden>
     <h2 class="monde-nom">Monde 4 · SPLAT! Système</h2>
-    <p class="chapo">Les fiches 25 à 34 en deux livrets de 8 pages&nbsp;: plusieurs plateaux, un total pour chacun, et les mêmes couleurs partout. On retire un plateau de l’autre, puis on additionne ou on double avant de comparer. En page 2, un exemple résolu pas à pas&nbsp;; au dos, «&nbsp;Pour se souvenir&nbsp;»&nbsp;; les corrigés rappellent tous les systèmes du collège et où les trouver.</p>
+    <p class="chapo">Plusieurs plateaux, un total pour chacun, les mêmes couleurs partout. Un livret pour tous (fiches 25 à 28), puis le deuxième tour, plus dur (25d à 28d).</p>
     <div class="grille n2">
 
       <article class="liv">
-        <a class="couv-lien" href="/outils/livret_splat_systeme.pdf" target="_blank" rel="noopener" title="Voir le livret SPLAT! Système, partie 1 (PDF, 8 pages)">
-          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-systeme.png?v=2" alt="Couverture du livret SPLAT! Système, partie 1 du monde 4" loading="lazy">
+        <a class="couv-lien" href="/outils/livret_splat_systeme.pdf" target="_blank" rel="noopener" title="Voir le livret SPLAT! Système, monde 4 (PDF, 12 pages en largeur)">
+          <img class="couv paysage" src="/assets/img/thumbnails/splat/livret-splat-systeme.png?v=3" alt="Couverture du livret SPLAT! Système, monde 4" loading="lazy">
         </a>
         <div class="corps">
-          <div class="titre"><h3>Partie 1</h3><span class="plage">fiches 25 à 29</span></div>
+          <div class="titre"><h3>Le livret</h3><span class="plage">fiches 25 à 28</span></div>
           <div class="liens">
-            <a class="lien" href="/outils/livret_splat_systeme.pdf" target="_blank" rel="noopener">📕 PDF · 8 pages</a>
+            <a class="lien" href="/outils/livret_splat_systeme.pdf" target="_blank" rel="noopener">📕 PDF · 12 pages</a>
             <a class="lien a3" href="/outils/livret_splat_systeme_a_plier.pdf" target="_blank" rel="noopener">🖨️ Livret à plier</a>
             <details class="prof">
-              <summary>✅ Les corrigés · «&nbsp;?&nbsp;» ou en lettres</summary>
+              <summary>✅ Les corrigés · avec les taches ou en lettres</summary>
               <div class="prof-corps">
-                <div class="prof-ligne"><span class="nom">«&nbsp;?&nbsp;» <small>4 par page</small></span>
-                  <a class="lien-prof" href="/outils/livret_splat_systeme_correction.pdf" target="_blank" rel="noopener" title="Livret corrigé de SPLAT! Système, inconnue «&nbsp;?&nbsp;», 4 cartes par page (PDF, 8 pages)">PDF</a>
-                  <a class="lien-prof" href="/outils/livret_splat_systeme_correction_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé de SPLAT! Système, inconnue «&nbsp;?&nbsp;», 4 cartes par page, à plier">à plier</a></div>
-                <div class="prof-ligne"><span class="nom">«&nbsp;?&nbsp;» <small>2 par page, en plus gros</small></span>
-                  <a class="lien-prof" href="/outils/livret_splat_systeme_correction_2_par_page.pdf" target="_blank" rel="noopener" title="Corrigé de SPLAT! Système, inconnue «&nbsp;?&nbsp;», 2 cartes par page : une feuille recto verso par fiche (PDF, 10 pages A4 en paysage)">PDF · 5 feuilles</a></div>
-                <div class="prof-ligne"><span class="nom">En lettres <small>4 par page</small></span>
-                  <a class="lien-prof" href="/outils/livret_splat_systeme_correction_lettre.pdf" target="_blank" rel="noopener" title="Livret corrigé de SPLAT! Système, en lettres (N, B…), 4 cartes par page (PDF, 8 pages)">PDF</a>
-                  <a class="lien-prof" href="/outils/livret_splat_systeme_correction_lettre_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé de SPLAT! Système, en lettres, 4 cartes par page, à plier">à plier</a></div>
-                <div class="prof-ligne"><span class="nom">En lettres <small>2 par page, en plus gros</small></span>
-                  <a class="lien-prof" href="/outils/livret_splat_systeme_correction_lettre_2_par_page.pdf" target="_blank" rel="noopener" title="Corrigé de SPLAT! Système, en lettres, 2 cartes par page : une feuille recto verso par fiche (PDF, 10 pages A4 en paysage)">PDF · 5 feuilles</a></div>
+                <div class="prof-ligne"><span class="nom">Avec les taches</span>
+                  <a class="lien-prof" href="/outils/livret_splat_systeme_correction.pdf" target="_blank" rel="noopener" title="Livret corrigé de SPLAT! Système, monde 4, avec les taches (PDF, 12 pages)">PDF</a>
+                  <a class="lien-prof" href="/outils/livret_splat_systeme_correction_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé de SPLAT! Système, monde 4, avec les taches, à plier">à plier</a></div>
+                <div class="prof-ligne"><span class="nom">En lettres</span>
+                  <a class="lien-prof" href="/outils/livret_splat_systeme_correction_lettre.pdf" target="_blank" rel="noopener" title="Livret corrigé de SPLAT! Système, monde 4, en lettres (N, B…) (PDF, 12 pages)">PDF</a>
+                  <a class="lien-prof" href="/outils/livret_splat_systeme_correction_lettre_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé de SPLAT! Système, monde 4, en lettres, à plier">à plier</a></div>
               </div>
             </details>
           </div>
@@ -713,27 +712,23 @@ footer a{font-weight:700}
       </article>
 
       <article class="liv">
-        <a class="couv-lien" href="/outils/livret_splat_systeme_suite.pdf" target="_blank" rel="noopener" title="Voir le livret SPLAT! Système, la suite, partie 2 (PDF, 8 pages)">
-          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-systeme-suite.png?v=2" alt="Couverture du livret SPLAT! Système, la suite, partie 2 du monde 4" loading="lazy">
+        <a class="couv-lien" href="/outils/livret_splat_systeme_tour2.pdf" target="_blank" rel="noopener" title="Voir le livret SPLAT! Système, deuxième tour (PDF, 12 pages en largeur)">
+          <img class="couv paysage" src="/assets/img/thumbnails/splat/livret-splat-systeme-tour2.png?v=3" alt="Couverture du livret SPLAT! Système, deuxième tour" loading="lazy">
         </a>
         <div class="corps">
-          <div class="titre"><h3>Partie 2</h3><span class="plage">fiches 30 à 34</span></div>
+          <div class="titre"><h3>Deuxième tour</h3><span class="plage">fiches 25d à 28d</span></div>
           <div class="liens">
-            <a class="lien" href="/outils/livret_splat_systeme_suite.pdf" target="_blank" rel="noopener">📗 PDF · 8 pages</a>
-            <a class="lien a3" href="/outils/livret_splat_systeme_suite_a_plier.pdf" target="_blank" rel="noopener">🖨️ Livret à plier</a>
+            <a class="lien" href="/outils/livret_splat_systeme_tour2.pdf" target="_blank" rel="noopener">📗 PDF · 12 pages</a>
+            <a class="lien a3" href="/outils/livret_splat_systeme_tour2_a_plier.pdf" target="_blank" rel="noopener">🖨️ Livret à plier</a>
             <details class="prof">
-              <summary>✅ Les corrigés · «&nbsp;?&nbsp;» ou en lettres</summary>
+              <summary>✅ Les corrigés · avec les taches ou en lettres</summary>
               <div class="prof-corps">
-                <div class="prof-ligne"><span class="nom">«&nbsp;?&nbsp;» <small>4 par page</small></span>
-                  <a class="lien-prof" href="/outils/livret_splat_systeme_suite_correction.pdf" target="_blank" rel="noopener" title="Livret corrigé de SPLAT! Système, la suite, inconnue «&nbsp;?&nbsp;», 4 cartes par page (PDF, 8 pages)">PDF</a>
-                  <a class="lien-prof" href="/outils/livret_splat_systeme_suite_correction_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé de SPLAT! Système, la suite, inconnue «&nbsp;?&nbsp;», 4 cartes par page, à plier">à plier</a></div>
-                <div class="prof-ligne"><span class="nom">«&nbsp;?&nbsp;» <small>2 par page, en plus gros</small></span>
-                  <a class="lien-prof" href="/outils/livret_splat_systeme_suite_correction_2_par_page.pdf" target="_blank" rel="noopener" title="Corrigé de SPLAT! Système, la suite, inconnue «&nbsp;?&nbsp;», 2 cartes par page : une feuille recto verso par fiche (PDF, 10 pages A4 en paysage)">PDF · 5 feuilles</a></div>
-                <div class="prof-ligne"><span class="nom">En lettres <small>4 par page</small></span>
-                  <a class="lien-prof" href="/outils/livret_splat_systeme_suite_correction_lettre.pdf" target="_blank" rel="noopener" title="Livret corrigé de SPLAT! Système, la suite, en lettres (N, B…), 4 cartes par page (PDF, 8 pages)">PDF</a>
-                  <a class="lien-prof" href="/outils/livret_splat_systeme_suite_correction_lettre_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé de SPLAT! Système, la suite, en lettres, 4 cartes par page, à plier">à plier</a></div>
-                <div class="prof-ligne"><span class="nom">En lettres <small>2 par page, en plus gros</small></span>
-                  <a class="lien-prof" href="/outils/livret_splat_systeme_suite_correction_lettre_2_par_page.pdf" target="_blank" rel="noopener" title="Corrigé de SPLAT! Système, la suite, en lettres, 2 cartes par page : une feuille recto verso par fiche (PDF, 10 pages A4 en paysage)">PDF · 5 feuilles</a></div>
+                <div class="prof-ligne"><span class="nom">Avec les taches</span>
+                  <a class="lien-prof" href="/outils/livret_splat_systeme_tour2_correction.pdf" target="_blank" rel="noopener" title="Livret corrigé de SPLAT! Système, deuxième tour, avec les taches (PDF, 12 pages)">PDF</a>
+                  <a class="lien-prof" href="/outils/livret_splat_systeme_tour2_correction_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé de SPLAT! Système, deuxième tour, avec les taches, à plier">à plier</a></div>
+                <div class="prof-ligne"><span class="nom">En lettres</span>
+                  <a class="lien-prof" href="/outils/livret_splat_systeme_tour2_correction_lettre.pdf" target="_blank" rel="noopener" title="Livret corrigé de SPLAT! Système, deuxième tour, en lettres (N, B…) (PDF, 12 pages)">PDF</a>
+                  <a class="lien-prof" href="/outils/livret_splat_systeme_tour2_correction_lettre_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé de SPLAT! Système, deuxième tour, en lettres, à plier">à plier</a></div>
               </div>
             </details>
           </div>
@@ -741,7 +736,7 @@ footer a{font-weight:700}
       </article>
 
     </div>
-    <p class="aparte">Sous chaque carte, de la place pour dessiner chaque plateau en barre. Le corrigé existe avec l’inconnue «&nbsp;?&nbsp;» ou en lettres (N pour la noire, B pour la bleue…), en 4 cartes par page (un livret, comme celui de l’élève) ou en 2 cartes par page, calculs plus gros&nbsp;: une feuille A4 recto verso par fiche. Le QR code de chaque fiche rejoue les mêmes cartes en ligne.</p>
+    <p class="aparte">Livrets «&nbsp;tablette&nbsp;»&nbsp;: A3 en hauteur, recto verso, retournement sur le bord court, plié à l’horizontale. Une fiche = la double page. Le QR de chaque fiche rejoue ses 4 cartes en ligne.</p>
   </section>
   <!-- ===================================================== Monde 5 · SPLAT! Équations -->
   <section class="panneau" data-m="5" id="monde-5" role="tabpanel" aria-labelledby="onglet-5" hidden>

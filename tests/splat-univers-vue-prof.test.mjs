@@ -22,7 +22,7 @@ const prepa = univers.match(/const PREPA_PHRASE=[^\n]*\n/)[0];
 const ctx = vm.createContext({ encodeURIComponent, decodeURIComponent, escape, unescape, atob, btoa });
 vm.runInContext(
   bloc("const PS=", "const PROF =") + prepa + bloc("const NOTES_MONDE", "const main=document") +
-  ";globalThis.X={MONDES,NOTES_MONDE,NOTES_PROF,LIVRET_TEXTE,ENQ_TOUR2};" +
+  ";globalThis.X={MONDES,NOTES_MONDE,NOTES_PROF,LIVRET_TEXTE,ENQ_TOUR2,SYS_TOUR2};" +
   "Object.assign(globalThis,{idEtape,eqSeuleLiens,eqBarreLiens,plagesFiches,mondeProfHtml,sommaireProfHtml,intentionHtml,ressourcesHtml,actionsHtml,cartesHtml,PREPA_PHRASE});",
   ctx, { filename: "splat_univers.html" }
 );
@@ -42,7 +42,8 @@ function etapeHtml(h, id) {
 }
 
 test("sommaire et bandeaux : les numéros de fiches des six mondes", () => {
-  assert.deepEqual(JSON.parse(JSON.stringify(PLAGES)), [[1, 6], [7, 9], [10, 24], [25, 34], [35, 37], [38, 43]]);
+  // lot M4-4 (04/10/2026) : le monde 4 a quatre fiches, 25 à 28 (29 à 34 libres)
+  assert.deepEqual(JSON.parse(JSON.stringify(PLAGES)), [[1, 6], [7, 9], [10, 24], [25, 28], [35, 37], [38, 43]]);
   const som = ctx.sommaireProfHtml(PLAGES);
   assert.deepEqual(hrefs(som), [1, 2, 3, 4, 5, 6].map((n) => "#monde-" + n));
   assert.ok(som.includes("fiches 10 à 24") && som.includes("fiches 35 à 37") && som.includes("fiches 38 à 43"));
@@ -69,12 +70,14 @@ test("aucun lien ne change : exactement les liens des données, plus la page des
     if (mi === 0) attendu.add("/outils/splat_intro.html?suite=" + encodeURIComponent("/outils/splat_univers.html?prof=1"));
     attendu.add("/outils/livrets_splat.html#monde-" + (mi + 1)); /* chaque monde a sa page des livrets */
     m.etapes.forEach((e) => {
-      for (const k of ["jp", "j", "f", "fe", "c", "c2"]) if (e[k]) attendu.add(e[k]);
+      for (const k of ["jp", "j", "f", "fe", "c", "c2", "cl"]) if (e[k]) attendu.add(e[k]);
       (e.parties || []).forEach((p) => { attendu.add(p.jp); attendu.add(p.f); });
       (ctx.eqSeuleLiens(e) || ctx.eqBarreLiens(m, e) || []).forEach((u) => attendu.add(u));
     });
     /* (03/10/2026) le deuxième tour du monde 3 : dix lignes sous la partie 3, mêmes boutons */
     if (m.idp === "enq") ctx.X.ENQ_TOUR2.forEach((f) => { for (const k of ["jp", "j", "f", "c"]) attendu.add(f[k]); });
+    /* lot M4-4 : le deuxième tour du monde 4 (Bonus, 25d à 28d), avec ses deux corrigés */
+    if (m.idp === "sys") ctx.X.SYS_TOUR2.forEach((f) => { for (const k of ["jp", "j", "f", "c", "cl"]) attendu.add(f[k]); });
     const vus = new Set(hrefs(html(mi)));
     assert.deepEqual([...vus].sort(), [...attendu].sort(), m.nom);
     total += vus.size;
@@ -86,7 +89,8 @@ test("aucun lien ne change : exactement les liens des données, plus la page des
 });
 
 test("les mêmes mots partout, un seul bouton plein par fiche, et ni émoticône ni encadré", () => {
-  const MOTS = new Set(["Projeter", "Jeu de l’élève", "Jeu de l’élève (les 12 cartes)", "Fiche", "Corrigé", "tableau", "équation", "4 par page", "2 par page"]);
+  // (lot M4-4 : le Système a deux corrigés, comme ses livrets — « taches » et « lettres »)
+  const MOTS = new Set(["Projeter", "Jeu de l’élève", "Jeu de l’élève (les 12 cartes)", "Fiche", "Corrigé", "tableau", "équation", "4 par page", "2 par page", "taches", "lettres"]);
   MONDES.forEach((m, mi) => {
     const h = html(mi);
     assert.doesNotMatch(h, EMOJI, `${m.nom} : une émoticône`);
@@ -136,10 +140,10 @@ test("« Pour la classe » : le diaporama au monde 1, la page des livrets aux mo
   assert.ok(r[5].includes("Un livret par partie, chacun avec son livret Le défi, et leurs corrigés."));
 });
 
-test("les parties des mondes 3, 4 et 6 : un intertitre, sans ligne de PDF (comme aux autres mondes)", () => {
+test("les parties des mondes 3 et 6 : un intertitre, sans ligne de PDF (comme aux autres mondes)", () => {
   /* Décision du 27/09/2026 (cohérence des six mondes) : sous une partie, son numéro, son titre, ses
      fiches et sa phrase — rien d'autre. Les livrets sont sur la page des livrets (« Pour la classe »). */
-  for (const mi of [2, 3, 5]) {
+  for (const mi of [2, 5]) {   // (le monde 4 n'a plus de parties depuis le lot M4-4)
     const m = MONDES[mi], h = html(mi);
     m.volets.forEach((v, vi) => {
       const a = h.indexOf(`<li class="volet" id="${m.idp}-partie-${vi + 1}">`), b = h.indexOf("</li>", a);
@@ -152,7 +156,7 @@ test("les parties des mondes 3, 4 et 6 : un intertitre, sans ligne de PDF (comme
       assert.equal(v.note, undefined, "plus de note de partie (la consigne d'impression vit sur la page des livrets)");
     });
   }
-  assert.deepEqual(J(MONDES.map((m) => (m.volets || []).length)), [0, 0, 3, 2, 0, 2]);
+  assert.deepEqual(J(MONDES.map((m) => (m.volets || []).length)), [0, 0, 3, 0, 0, 2]);
   assert.doesNotMatch(univers, /livL|\.pdf"/, "aucun PDF en lien direct sur la carte des mondes");
 });
 

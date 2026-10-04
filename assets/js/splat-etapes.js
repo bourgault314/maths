@@ -21,7 +21,7 @@
    et la clé de Gwenaël (juste dessous) : la carte des mondes et la page des
    livrets le chargent pour savoir quoi cacher.
 
-   Depuis le 04/10/2026, il porte aussi les dix fiches du Bonus du monde 3 (BONUS,
+   Depuis le 04/10/2026, il porte aussi les fiches des Bonus des mondes 3 et 4 (BONUS,
    plus bas) : leurs parcours (enq11d…) sont, avec ceux des étapes, TOUS les noms
    sous lesquels un outil SPLAT! enregistre une série réussie — la liste fermée du
    serveur de suivi, le jour où SPLAT! s'y branchera, se recopie d'ici. */
@@ -85,16 +85,10 @@
     ["enq22", 22, "Sans total", "SPLAT! Enquête", 3],
     ["enq23", 23, "Sans total, à retourner", "SPLAT! Enquête", 3],
     ["enq24", 24, "Le défi qui rebondit", "SPLAT! Enquête", 3],
-    ["sys25", 25, "Une partie du plateau", "SPLAT! Système", 4],
-    ["sys26", 26, "Avec des jetons visibles", "SPLAT! Système", 4],
-    ["sys27", 27, "Une partie connue", "SPLAT! Système", 4],
-    ["sys28", 28, "Deux pesées", "SPLAT! Système", 4],
-    ["sys29", 29, "Le défi des plateaux", "SPLAT! Système", 4],
-    ["sys30", 30, "Trois paires", "SPLAT! Système", 4],
-    ["sys31", 31, "Doubler, puis comparer", "SPLAT! Système", 4],
-    ["sys32", 32, "En miroir", "SPLAT! Système", 4],
-    ["sys33", 33, "Doubler ou miroir ?", "SPLAT! Système", 4],
-    ["sys34", 34, "Le grand défi du Système", "SPLAT! Système", 4],
+    ["sys25", 25, "Je retire", "SPLAT! Système", 4],
+    ["sys26", 26, "Trois couleurs", "SPLAT! Système", 4],
+    ["sys27", 27, "Je double", "SPLAT! Système", 4],
+    ["sys28", 28, "J'additionne", "SPLAT! Système", 4],
     ["m3e1", 35, "Premières équations", "SPLAT! Équations", 5],
     ["m3e2", 36, "Enlever, puis partager", "SPLAT! Équations", 5],
     ["m3e4", 37, "Des taches sur les deux plateaux", "SPLAT! Équations", 5],
@@ -106,24 +100,29 @@
     ["m4e6", 43, "Le grand mélange", "SPLAT! Relatifs", 6]
   ];
 
-  /* Le Bonus du monde 3 (04/10/2026, choix de Gwenaël sur maquettes) : les dix fiches des deux
-     livrets « Deuxième tour », dans l'ordre des livrets. Chacune a SON parcours (enq11d…), sa
-     tache dorée ✨ et son compteur à part, hors des étoiles du haut de la carte : elles ne sont
-     pas des étapes. C'EST UNE COPIE de ENQ_TOUR2 (outils/splat_univers.html) : tests/splat-etape-suivante.test.mjs
-     les compare. Leur écran de fin (choix B du 04/10) : « Étape suivante ▶ » ouvre la fiche bonus
-     suivante (« Bonus 12d · … ») ; après 24d, retour à la carte. Chaque fiche : [parcours, code,
-     titre], toutes dans le monde 3, SPLAT! Enquête. */
+  /* Les Bonus (monde 3 : 04/10/2026, choix de Gwenaël sur maquettes ; monde 4 : lot M4-4) : les
+     fiches des livrets « Deuxième tour », dans l'ordre des livrets. Chacune a SON parcours
+     (enq11d…, sys25d…), sa tache dorée ✨ et son compteur à part, hors des étoiles du haut de la
+     carte : elles ne sont pas des étapes. C'EST UNE COPIE de ENQ_TOUR2 et SYS_TOUR2
+     (outils/splat_univers.html) : tests/splat-etape-suivante.test.mjs les compare. Leur écran de
+     fin (choix B du 04/10) : « Étape suivante ▶ » ouvre la fiche bonus suivante du même monde
+     (« Bonus 12d · … ») ; après la dernière (24d, 28d), retour à la carte, sur ce Bonus. Chaque
+     fiche : [parcours, code, titre, monde, numéro du monde]. */
   const BONUS = [
-    ["enq11d", "11d", "Je complète"],
-    ["enq12d", "12d", "Référence, chaîne ou je complète ?"],
-    ["enq13d", "13d", "Tout dans le désordre"],
-    ["enq16d", "16d", "Chaîne, un écart et un rapport"],
-    ["enq17d", "17d", "Je complète, avec un rapport"],
-    ["enq18d", "18d", "Indices composés"],
-    ["enq20d", "20d", "Deux taches réunies"],
-    ["enq22d", "22d", "Les indices en symboles"],
-    ["enq19d", "19d", "Le grand défi"],
-    ["enq24d", "24d", "Unité commune : les petites parts"]
+    ["enq11d", "11d", "Je complète", "SPLAT! Enquête", 3],
+    ["enq12d", "12d", "Référence, chaîne ou je complète ?", "SPLAT! Enquête", 3],
+    ["enq13d", "13d", "Tout dans le désordre", "SPLAT! Enquête", 3],
+    ["enq16d", "16d", "Chaîne, un écart et un rapport", "SPLAT! Enquête", 3],
+    ["enq17d", "17d", "Je complète, avec un rapport", "SPLAT! Enquête", 3],
+    ["enq18d", "18d", "Indices composés", "SPLAT! Enquête", 3],
+    ["enq20d", "20d", "Deux taches réunies", "SPLAT! Enquête", 3],
+    ["enq22d", "22d", "Les indices en symboles", "SPLAT! Enquête", 3],
+    ["enq19d", "19d", "Le grand défi", "SPLAT! Enquête", 3],
+    ["enq24d", "24d", "Unité commune : les petites parts", "SPLAT! Enquête", 3],
+    ["sys25d", "25d", "L'escalier", "SPLAT! Système", 4],
+    ["sys26d", "26d", "Je triple", "SPLAT! Système", 4],
+    ["sys27d", "27d", "Avec des jetons visibles", "SPLAT! Système", 4],
+    ["sys28d", "28d", "Dans le désordre", "SPLAT! Système", 4]
   ];
   function estBonus(parcours) {
     return BONUS.some((b) => b[0] === parcours);
@@ -149,9 +148,10 @@
     /* une fiche bonus : la fiche bonus suivante, puis la carte (jamais une étape) */
     const kb = BONUS.findIndex((b) => b[0] === parcours);
     if (kb >= 0) {
-      if (kb + 1 >= BONUS.length) return { derniere: true };
-      const [p, code, titre] = BONUS[kb + 1];
-      return { derniere: false, bonus: true, parcours: p, code, titre, monde: "SPLAT! Enquête", nouveauMonde: false };
+      const ici = BONUS[kb];
+      if (kb + 1 >= BONUS.length || BONUS[kb + 1][4] !== ici[4]) return { derniere: true };
+      const [p, code, titre, monde] = BONUS[kb + 1];
+      return { derniere: false, bonus: true, parcours: p, code, titre, monde, nouveauMonde: false };
     }
     const k = ETAPES.findIndex((e) => e[0] === parcours);
     if (k < 0) return null;
@@ -181,8 +181,9 @@
   function bouton(parcours, urlCarte, cle = CLE) {
     const s = suivante(parcours, cle);
     if (s && s.derniere) {
-      /* après la dernière fiche bonus (24d) : la carte, ouverte sur le Bonus */
-      return { html: "Voir la carte des mondes ▶", href: urlCarte + (estBonus(parcours) ? "#enq-bonus" : ""), versCarte: true };
+      /* après la dernière fiche d'un Bonus (24d, 28d) : la carte, ouverte sur ce Bonus */
+      const b = BONUS.find((x) => x[0] === parcours);
+      return { html: "Voir la carte des mondes ▶", href: urlCarte + (b ? (b[4] === 4 ? "#sys-bonus" : "#enq-bonus") : ""), versCarte: true };
     }
     const sous = sousTitre(parcours, cle);
     return {

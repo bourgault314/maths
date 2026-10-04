@@ -36,14 +36,14 @@ function constante(nom){
 
 const PALETTE = html.slice(html.indexOf("const INVESTIGATE_COLOR_PALETTE = ["), html.indexOf("];", html.indexOf("const INVESTIGATE_COLOR_PALETTE = [")) + 2);
 const CONSTANTES = ["SYS_GESTES", "SYS_GESTES_MIX_DEFAUT", "SYS_MAX_TACHES", "SYS_MAX_TACHES_AVANT", "SYS_ESSAIS", "SYS_NOMBRES_SOUS_ENTENDUS", "SYS_COULEURS_PLURIEL", "SYS_PLAGES",
-  "SYS_ZONE_ECRAN", "SYS_ZONE_IMPRIME", "SYS_ZONE_IMPRIME_6", "SYS_TACHE", "SYS_BARRES", "SYS_BARRES_SERRE", "SYS_BARRES_TAILLES", "SYS_CORR_IMPRIME", "SYS_CORR_ECRAN",
+  "SYS_ZONE_ECRAN", "SYS_ZONE_IMPRIME", "SYS_ZONE_IMPRIME_6", "SYS_TACHE", "SYS_BARRES", "SYS_BARRES_SERRE", "SYS_BARRES_TAILLES", "SYS_CORR_IMPRIME", "SYS_CORR_ECRAN", "SYS_EQ_ECRIT",
   "SYS_ZONE_ECRAN_CORRECTION", "SYS_ZONE_IMPRIME_CORRECTION", "SYS_FIL", "SYS_TEL", "SYS_ZONE_TEL_CORRECTION", "ENQUETE_NOM_ECART"].map(constante).join("\n");
 const GENERATEUR = ["sysNormaliserReglages", "genSystemCarte", "sysMelangerPlateaux", "sysFormes", "sysFormesDouble", "sysSomme", "sysNombreTaches", "sysPlateau",
   "sysTirerSituation", "sysSituationValide", "sysNombreSousEntendu", "sysTexteASousEntendu", "sysSituationSure",
   "sysAssemblerCarte", "sysUneTacheParCouleur", "sysIndice", "sysPhraseIndice", "sysPlanS3", "sysPlan"].map(fn).join("\n");
 const DESSIN = ["sysEnPlateaux", "sysTotalCache", "sysRayonJeton", "sysGrille", "sysColonnesVisibles", "sysRayonMax", "sysDispositionPlateaux", "drawSysPlateaux",
   "sysAPlan", "sysDevoileEleve", "sysBarresMetriques", "sysLargeurTexte", "sysCorrAjuster", "sysBarreCases", "sysBarreLargeur", "sysEtapeTaille", "sysVerifHauteur",
-  "sysVerifLargeur", "sysEtapesFlux", "sysJetonCouleurs", "drawSysCaseBarre", "drawSysBarre", "drawSysEtape", "drawSysVerification", "drawSysCorrectionImprimee",
+  "sysVerifLargeur", "sysEtapesFlux", "sysJetonCouleurs", "drawSysCaseBarre", "drawSysBarre", "drawSysEtape", "drawSysVerification", "sysSystemeEcrit", "drawSysSystemeEcrit", "drawSysCorrectionImprimee",
   "sysCorrEcranEchelle", "sysCorrectionPasAPas", "drawSysCorrectionDirecte", "sysTelEchelle", "blobPath", "wrapTextToWidth", "beadColorForValue",
   "drawInvestigateSplatName", "investigateColorInfo"].map(fn).join("\n");
 
@@ -83,7 +83,7 @@ const sys = new Function(`
     B: SYS_BARRES, SERRE: SYS_BARRES_SERRE, IMP: SYS_CORR_IMPRIME, ECR: SYS_CORR_ECRAN, TEL: SYS_TEL, ZI: SYS_ZONE_IMPRIME_CORRECTION,
     mot: (k) => investigateColorWord(investigateColorByKey(k)),
     initiale: (k) => investigateColorInitial(investigateColorByKey(k)),
-    plan: sysPlan, planS3: sysPlanS3, cases: sysBarreCases, metriques: sysBarresMetriques, taille: sysEtapeTaille,
+    systemeEcrit: sysSystemeEcrit, plan: sysPlan, planS3: sysPlanS3, cases: sysBarreCases, metriques: sysBarresMetriques, taille: sysEtapeTaille,
     flux: sysEtapesFlux, verifHauteur: sysVerifHauteur, ecranEchelle: sysCorrEcranEchelle, telEchelle: sysTelEchelle, largeurBarre: sysBarreLargeur,
     imprimee(card, lettres){
       numberedQuestionMarkMode = !lettres;
@@ -395,6 +395,10 @@ test("impression : chaque nombre écrit vient du plan ; les noms dans les taches
     for(const lettres of [false, true]){
       const { g } = sys.imprimee(c, lettres);
       const mots = new Set(c._sys.colors.map(sys.mot)), initiales = new Set(c._sys.colors.map(sys.initiale));
+      // lot M4-4 : le système écrit à côté des barres de « Les deux plateaux » (quand il y a la place),
+      // lui aussi fait du plan
+      const ecrits0 = new Set(plan.filter((e) => e.role === "plateaux").flatMap((e) => e.barres.map((b) => sys.systemeEcrit(b, lettres))).filter(Boolean));
+      ecrits0.forEach((x) => attendus.add(x));
       for(const t of textes(g)){
         if(/^\d/.test(t.text) || / = /.test(t.text) || t.text === "?") assert.ok(attendus.has(t.text), `« ${t.text} » n'est pas dans le plan`);
         else if(!plan.some((e) => e.titre === t.text || e.titre.includes(t.text))) assert.ok(lettres ? initiales.has(t.text) : mots.has(t.text), `« ${t.text} » dans une case`);
@@ -443,7 +447,9 @@ test("écran : une étape par clic, à une échelle unique pour la carte ; chaqu
   }
   const ecran = fn("drawSysCorrectionEcran");
   assert.match(ecran, /const M = sysBarresMetriques\(sysCorrEcranEchelle\(card, yEtape\)\);/);
-  assert.match(ecran, /else drawSysEtape\(g, etape, SYS_CORR_ECRAN\.x, yEtape, M, ctx, k\);/);
+  assert.match(ecran, /const t = drawSysEtape\(g, etape, SYS_CORR_ECRAN\.x, yEtape, M, ctx, k\);/);
+  // lot M4-4 : le système écrit à côté des barres de « Les deux plateaux », dans le cadre de l'écran
+  assert.match(ecran, /drawSysSystemeEcrit\(g\.children\[g\.children\.length - 1\], p, \[p\], 0, 0, SYS_CORR_ECRAN\.xMax, M, ctx\);/);
 });
 
 test("téléphone : la plus longue barre (calcul compris) tient dans la largeur, à une échelle unique pour la carte", () => {
@@ -476,6 +482,61 @@ test("au tableau, « Pas à pas » décoché : toute la correction d'un coup, da
   assert.match(html, /<input type="checkbox" id="sysPasAPas" checked> <span>Pas à pas<\/span>/);
   assert.match(fn("sysLireReglagesM4"), /if\(sysPasAPasEl\) sysPasAPasEl\.checked = params\.get\("pasapas"\) !== "0";/);
   assert.match(fn("sysEcrireReglagesM4"), /if\(sysPasAPasEl && !sysPasAPasEl\.checked\) params\.set\("pasapas", "0"\);/);
+});
+
+/* Lot M4-4 (04/10/2026, décisions de Gwenaël) : à côté des barres de « Les deux plateaux », le
+   système écrit, chaque corrigé dans sa langue — « 3 noires + 4 rouges = 53 » (avec les taches),
+   « 3 × N + 4 × R = 53 » (en lettres ; « 3 × N », jamais « 3N ») — seulement s'il y a la place,
+   et alors TOUT le système (une ligne par plateau), en un seul corps ; pareil en projection. */
+test("lot M4-4 : le système écrit — en mots, en lettres « 3 × N », tout ou rien, un seul corps, juste", () => {
+  const B = (top, cells) => ({ top, cells });
+  const u = (color) => ({ kind: "unknown", color }), v = (value) => ({ kind: "visible", value });
+  const b53 = B(53, [u("black"), u("black"), u("black"), u("red"), u("red"), u("red"), u("red")]);
+  assert.equal(sys.systemeEcrit(b53, false), "3 noires + 4 rouges = 53");
+  assert.equal(sys.systemeEcrit(b53, true), "3 × N + 4 × R = 53");
+  assert.equal(sys.systemeEcrit(B(16, [u("black"), u("orange"), u("orange")]), false), "1 noire + 2 orange = 16");
+  assert.equal(sys.systemeEcrit(B(16, [u("black"), u("orange"), u("orange")]), true), "N + 2 × O = 16");
+  assert.equal(sys.systemeEcrit(B(30, [u("green"), u("purple"), v(5), v(2)]), true), "Ve + Vi + 5 + 2 = 30");
+  assert.equal(sys.systemeEcrit(B("?", [u("black")]), false), null, "pas de total : rien à écrire");
+  assert.equal(sys.systemeEcrit(B(20, [u("black"), { kind: "bloc", value: 12 }]), false), null, "un plateau déjà remplacé n'est pas le système");
+  const mots = /^(?:\d+ (?:noires?|bleues?|vertes?|orange|rouges?|violettes?|\d*)|\d+)(?: \+ (?:\d+ (?:noires?|bleues?|vertes?|orange|rouges?|violettes?)|\d+))* = \d+$/;
+  const lettres = /^(?:\d+ × )?(?:N|B|Ve|O|R|Vi|\d+)(?: \+ (?:(?:\d+ × )?(?:N|B|Ve|O|R|Vi)|\d+))* = \d+$/;
+  let avec = 0, cartes = 0;
+  for(const r of Object.values(TYPES)) for(const vis of [{ visMin: 0, visMax: 0 }, { visMin: 1, visMax: 3 }]) for(const c of sys.serie(11, 12, { ...REGLAGES_FICHES, ...vis, ...r })){
+    cartes++;
+    const deux = c._sys.plan.find((e) => e.role === "plateaux");
+    const attendues = deux.barres.filter((b) => String(b.top) !== "?").length;
+    const val = (t) => {
+      const k = c._sys.colors.find((x) => sys.mot(x) === t || sys.initiale(x) === t || ["noires", "violettes", "orange", "bleues", "vertes", "rouges"].includes(t) && sys.mot(x).startsWith(t.slice(0, 4)));
+      assert.ok(k, `« ${t} »`);
+      return c._sys.values[k];
+    };
+    for(const l of [false, true]){
+      const { g } = sys.imprimee(c, l);
+      const ecrits = textes(g).filter((t) => t.attrs.class === "sysSystemeEcrit");
+      assert.ok(ecrits.length === 0 || ecrits.length === attendues, `tout ou rien (${ecrits.length} sur ${attendues})`);
+      if(!ecrits.length) continue;
+      if(!l) avec++;
+      assert.equal(new Set(ecrits.map((t) => t.attrs["font-size"])).size, 1, "un seul corps");
+      for(const t of ecrits){
+        assert.match(t.text, l ? lettres : mots, t.text);
+        assert.doesNotMatch(t.text, /\d(?:N|B|Ve|O|R|Vi)\b/, "jamais « 3N »");
+        assert.ok(t.attrs.x + t.text.length * t.attrs["font-size"] * 0.53 <= sys.IMP.xMax + 1, `« ${t.text} » déborde`);
+        // juste : la somme des taches et des jetons fait le total
+        const [gauche, total] = t.text.split(" = ");
+        const somme = gauche.split(" + ").reduce((s, x) => {
+          const m = x.match(/^(\d+)(?: ×)? (.+)$/);
+          if(m) return s + Number(m[1]) * val(m[2]);
+          return s + (/^\d+$/.test(x) ? Number(x) : val(x));
+        }, 0);
+        assert.equal(somme, Number(total), t.text);
+      }
+    }
+  }
+  assert.ok(avec > 0 && avec < cartes, `le système écrit tient sur une partie des cartes (${avec} / ${cartes})`);
+  // au tableau (projection) et en correction directe, la même fonction
+  assert.match(fn("drawSysCorrectionDirecte"), /drawSysSystemeEcrit\(/);
+  assert.match(fn("drawSysCorrectionImprimee"), /drawSysSystemeEcrit\(/);
 });
 
 test("les fonctions des cadres du lot S3 sont retirées ; le dessin ne tire rien au sort", () => {
