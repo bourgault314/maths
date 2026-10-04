@@ -54,7 +54,8 @@ test("décision 6 : Mes calculs, une pastille par calcul, plus de « · » entre
   assert.match(detail, /parJour\.get\(dans\)\.forEach\(cle => groupe\.append\(ligneDetail\("", PARCOURS\.libelleFait\(cle\)\)\)\);/);
   assert.match(detail, /zone\.appendChild\(ligneDetail\("mc-detail-liste", "Aucun calcul pour l’instant\."\)\);/);
   // Le seul « · » du détail sépare « 1 à revoir · 7 à faire monter », jamais deux calculs.
-  assert.deepEqual(detail.match(/[a-zA-Z]+\.join\(" · "\)/g), ["sortes.join(\" · \")"]);
+  // (Lot « retouches après Mon parcours » : deux fois, « Aujourd'hui » et « Demain ».)
+  assert.deepEqual(detail.match(/[a-zA-Z]+\.join\(" · "\)/g), ["sortes.join(\" · \")", "sortes.join(\" · \")"]);
   assert.match(html, /\.mc-detail-jours span \{ display: inline-block; padding: 7px 9px; border: 1\.5px solid currentColor; border-radius: 999px; background: #fff;[^}]*white-space: nowrap;[^}]*\}/, "une pastille ne se coupe jamais");
 });
 
@@ -134,6 +135,6 @@ test("en plus : le fil « Ma séance » sur une ligne au téléphone", () => {
 });
 
 test("des écrans seulement : les moteurs ne changent pas, leurs numéros de cache non plus", () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261004-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261004-2/);
   assert.match(html, /defi_tables_core\.js\?v=20261004-1/);
 });

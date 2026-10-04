@@ -39,6 +39,8 @@ export function parcoursComplet() {
   p.enCours = {jour: "2026-09-23", table: 7, depart: 5, echelle: false, rang: 1,
     file: [16, 26, 7, 200, 300], faites: [100, 8, 10, 0, 6, 5, 10, 1, 200, 17, 20, 4, 303, 24, 25, 2],
     erreurs: [407, 709, 1010], rate: 6, sansFaute: false, remplacee: true, reparee: false, prete: true};
+  // Lot « retouches après Mon parcours » : la liste « À retenir » du jour.
+  p.retenir = {jour: "2026-09-23", erreurs: [308, 709, 310]};
   p.melange = {tables: [...PARCOURS.TABLES], aJour: true, aRefaireAvec: null, dernier: "2026-09-20"};
   // Lot 3 : l'escalier, le rang, les jours travaillés. (L'avis de migration
   // du lot 3 a été retiré au lot 4b ; « beads » s'est ajouté aux activités.)

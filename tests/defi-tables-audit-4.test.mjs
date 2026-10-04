@@ -89,14 +89,14 @@ test("même résultat quel que soit le chemin : la mesure ne dépend que de ce q
   const a = accueil({fenetre: [1366, 650], ferme: 790, ouvert: 780, choixOuvert: true});
   const b = accueil({fenetre: [1366, 650], ferme: 790, ouvert: 780, choixOuvert: false});
   assert.equal(a.z, b.z);
-  assert.ok(a.z < 1 && a.z >= 0.8);
+  assert.ok(a.z < 1 && a.z >= 0.75);
 });
 
 test("si le choix ouvert est plus haut que l’accueil fermé, il prend la plus grande taille en dessous qui tient", () => {
   const r = accueil({ferme: 700, ouvert: 900, choixOuvert: true});
   assert.ok(r.z <= 825 / 900 && r.z > 825 / 900 - 0.01, `le cadre tient (${r.z})`);
   const rien = accueil({ferme: 700, ouvert: 1400, choixOuvert: true});
-  assert.equal(rien.z, 0.8, "rien ne tient : la plus petite taille, comme une série");
+  assert.equal(rien.z, 0.75, "rien ne tient : la plus petite taille, comme une série");
 });
 
 test("la page : l’accueil se remesure choix ouvert compris, et marque le choix ouvert", () => {
@@ -144,6 +144,9 @@ const DEBUT_BLOC = "          const assisted = !stickActivity && state.learnStic
 const FIN_BLOC = "          showAnswerFeedback(question, correct, skip ? null : value, shouldRetry, assisted, donnee);";
 const traiter = new Function("state", "question", "correct", "stickActivity", "assisted", `
   const ERREURS_AVANT_REPONSE = ${constante("ERREURS_AVANT_REPONSE")};
+  const skip = false;
+  ${source("deuxiemeChance")}
+  const essaieEncore = () => {};
   ${source("reponseDonnee")}
   const renderLearnProgress = () => {};
   const renderLearnSequence = () => {};
@@ -154,19 +157,25 @@ const traiter = new Function("state", "question", "correct", "stickActivity", "a
 function jouer(activite, reponse) {
   const multiplicateurs = activite === "gaps" ? [1, 2, 3, 4, 6, 7, 8, 9] : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
   const state = {
-    index: 0, mastered: new Set(), erreursBande: new Map(), casesDonnees: new Set(), casesMontrees: new Set(), correctionBande: null,
+    index: 0, mastered: new Set(), erreursBande: new Map(), casesDonnees: new Set(), casesMontrees: new Set(), correctionBande: null, ratesAuPremierEssai: new Set(),
     configuration: {learnActivity: activite}, lastRevealedLearnMultiplier: null,
     questions: multiplicateurs.map(m => ({multiplier: m, factKey: `${Math.min(m, 7)}-${Math.max(m, 7)}`})),
     revealedLearnResults: new Set(activite === "gaps" ? [0, 5, 10] : [])
   };
   const passages = new Map();
   const vuAvant = [];
+  let memeQuestion = false;
   while (state.index < state.questions.length) {
     const question = state.questions[state.index];
+    // advanceAfterResponse (lot « retouches après Mon parcours ») : quand les
+    // calculs ratés reviennent, toutes les réponses montrées s'effacent.
+    if (!memeQuestion && question.retry) state.casesMontrees.clear();
     vuAvant.push({m: question.multiplier, visibles: [...casesVisibles(state, question)].sort((a, b) => a - b), montrees: [...state.casesMontrees]});
     const n = (passages.get(question.multiplier) || 0) + 1;
     passages.set(question.multiplier, n);
-    traiter(state, question, reponse(question.multiplier, n), true, false);
+    // Deuxième chance : rien n'est corrigé, la même question tout de suite.
+    memeQuestion = !traiter(state, question, reponse(question.multiplier, n), true, false);
+    if (memeQuestion) continue;
     state.correctionBande = null; // clearAnswerFeedback, au passage à la question suivante
     if (state.revealedLearnResults.size >= 11) break;
     state.index += 1;
@@ -174,13 +183,15 @@ function jouer(activite, reponse) {
   return {state, passages, vuAvant};
 }
 
-test("je construis la bande : la réponse ratée reste écrite, la case suivante se construit à partir d’elle", () => {
-  const {state, passages, vuAvant} = jouer("construct", (m, n) => m !== 4 || n >= 2);
+test("je construis la bande : la réponse ratée (au 2e essai) reste écrite, la case suivante se construit à partir d’elle", () => {
+  const {state, passages, vuAvant} = jouer("construct", (m, n) => m !== 4 || n >= 3);
   const apres = vuAvant.find(v => v.m === 5);
   assert.ok(apres.visibles.includes(4), "5 × 7 : la case de 4 × 7 est écrite (ambre) — « Ajoute 7 » est vrai");
-  const retour = vuAvant.filter(v => v.m === 4)[1];
+  const essais = vuAvant.filter(v => v.m === 4);
+  assert.ok(!essais[1].visibles.includes(4), "2e essai : la case est toujours vide, rien n’a été montré");
+  const retour = essais[2];
   assert.ok(retour && !retour.visibles.includes(4), "4 × 7 revient en fin de bande, case vide");
-  assert.equal(passages.get(4), 2);
+  assert.equal(passages.get(4), 3);
   assert.equal(state.revealedLearnResults.size, 11);
   assert.equal(state.casesMontrees.size, 0, "trouvé au retour : la case n’est plus ambre, elle est verte");
   assert.equal(state.casesDonnees.size, 0);
@@ -196,13 +207,13 @@ test("je construis la bande : la limite des 3 erreurs ne change pas", () => {
 });
 
 test("une réponse montrée ne compte pas comme complétée : la bande ne se termine pas avant le retour du calcul", () => {
-  const {passages} = jouer("construct", (m, n) => m !== 10 || n >= 2);
-  assert.equal(passages.get(10), 2, "10 × 7 raté en dernier : il revient quand même");
+  const {passages} = jouer("construct", (m, n) => m !== 10 || n >= 3);
+  assert.equal(passages.get(10), 3, "10 × 7 raté deux fois en dernier : il revient quand même");
 });
 
 test("bande à trous : rien ne reste écrit après la correction", () => {
-  const {state, vuAvant, passages} = jouer("gaps", (m, n) => m !== 6 || n >= 2);
-  assert.equal(passages.get(6), 2);
+  const {state, vuAvant, passages} = jouer("gaps", (m, n) => m !== 6 || n >= 3);
+  assert.equal(passages.get(6), 3);
   assert.ok(vuAvant.every(v => v.montrees.length === 0), "jamais de case montrée dans la bande à trous");
   assert.ok(vuAvant.filter(v => v.m !== 6).every(v => !v.visibles.includes(6) || state.revealedLearnResults.has(6)));
 });

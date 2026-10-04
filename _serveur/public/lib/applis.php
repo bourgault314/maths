@@ -50,10 +50,15 @@ const CATALOGUE_APPLIS = [
         // (les calculs ratés, 407 pour 4 × 7), « rate », « remplacee »,
         // « reparee », « prete » ; « depart », « rang » et « sansFaute » sont
         // déjà déclarées.
+        // Lot « retouches après Mon parcours » (04/10/2026) : au niveau du
+        // parcours, « retenir », la liste « À retenir » du jour (les calculs
+        // ratés de mémoire dans les séances d'aujourd'hui) — « jour » et
+        // « erreurs » (407 pour 4 × 7) sont déjà déclarées.
         'cles' => ['version', 'epoque', 'tables', 'apprends', 'beads', 'construct', 'gaps', 'ordered', 'random',
             'entraine', 'desordre', 'trous', 'mixte', 'dernier', 'entrainement', 'score', 'total', 'fois',
             'bouts', 'seance', 'depart', 'n', 'sansFaute', 'seances',
             'enCours', 'jour', 'table', 'echelle', 'file', 'faites', 'erreurs', 'rate', 'remplacee', 'reparee', 'prete',
+            'retenir',
             'acquise', 'melange', 'aJour', 'aRefaireAvec', 'expert', 'niveau', 'champion',
             'etoiles', 'couronne', 'rang', 'jours',
             'calculs', 'boite', 'cases', 'vu', 'erreur', 'gagne', 'echeance'],

@@ -211,9 +211,14 @@ const bloc = (() => {
   assert.equal(html.indexOf(DEBUT_BLOC, a + 1), -1, "un seul traitement");
   return html.slice(a + DEBUT_BLOC.length, b);
 })();
+// Lot « retouches après Mon parcours » : la 1re erreur donne une deuxième
+// chance (le bloc rend alors la main avant toute correction : undefined).
 const traiter = new Function("state", "question", "correct", "stickActivity", "assisted", `
   const ERREURS_AVANT_REPONSE = ${ERREURS_AVANT_REPONSE};
+  const skip = false;
+  ${source("deuxiemeChance")}
   ${source("reponseDonnee")}
+  const essaieEncore = () => {};
   const renderLearnProgress = () => {};
   const renderLearnSequence = () => {};
   ${bloc}
@@ -232,6 +237,7 @@ function jouerBande(activite, reponse) {
     casesDonnees: new Set(),
     casesMontrees: new Set(),
     correctionBande: null,
+    ratesAuPremierEssai: new Set(),
     configuration: {learnActivity: activite},
     revealedLearnResults: new Set(activite === "gaps" ? [0, 5, 10] : []),
     lastRevealedLearnMultiplier: null
@@ -244,7 +250,10 @@ function jouerBande(activite, reponse) {
     const passage = (passages.get(question.multiplier) || 0) + 1;
     passages.set(question.multiplier, passage);
     const correct = reponse(question.multiplier, passage);
-    const {donnee, shouldRetry} = traiter(state, question, correct, stickActivity, false);
+    const rendu = traiter(state, question, correct, stickActivity, false);
+    // Deuxième chance : la même question, tout de suite.
+    if (!rendu) { messages.push("Essaie encore."); continue; }
+    const {donnee, shouldRetry} = rendu;
     messages.push(correct ? "Bravo !" : shouldRetry ? "Le calcul reviendra." : donnee ? "Je l’écris dans la bande." : "");
     if (stickActivity && state.revealedLearnResults.size >= CASES_BANDE) break;
     state.index += 1;
@@ -255,21 +264,26 @@ function jouerBande(activite, reponse) {
 
 test("je construis la bande : un calcul raté trois fois est écrit dans la case, et la bande se termine", () => {
   const {state, passages, messages} = jouerBande("construct", m => m !== 4);
-  assert.equal(passages.get(4), 3, "4 × 7 est passé trois fois, pas une de plus");
+  assert.equal(passages.get(4), 3, "4 × 7 est répondu trois fois, pas une de plus");
   assert.deepEqual([...state.casesDonnees], [4]);
   assert.equal(state.revealedLearnResults.size, 11, "la bande est complète");
   assert.equal(state.lastRevealedLearnMultiplier, 4, "la case donnée s’allume (en ambre)");
-  assert.deepEqual(messages.filter(m => m !== "Bravo !"), ["Le calcul reviendra.", "Le calcul reviendra.", "Je l’écris dans la bande."]);
+  // Lot « retouches après Mon parcours » : deuxième chance, puis la réponse
+  // en ambre et le retour, puis écrite pour de bon.
+  assert.deepEqual(messages.filter(m => m !== "Bravo !"), ["Essaie encore.", "Le calcul reviendra.", "Je l’écris dans la bande."]);
   assert.equal(state.mastered.has("4-7"), false, "une case donnée n’est pas « trouvée »");
 });
 
-test("trouvé au 2e ou au 3e passage : rien ne change, la case est verte", () => {
+test("trouvé au 2e essai : il ne revient pas ; au 3e (en fin de bande) : la case est verte", () => {
   const deux = jouerBande("construct", (m, n) => m !== 4 || n >= 2);
   assert.equal(deux.passages.get(4), 2);
+  assert.equal(deux.state.questions.length, 11, "aucun calcul ajouté en fin de bande");
   assert.equal(deux.state.casesDonnees.size, 0);
+  assert.equal(deux.state.casesMontrees.size, 0, "rien n’a été montré");
   const trois = jouerBande("construct", (m, n) => m !== 4 || n >= 3);
   assert.equal(trois.passages.get(4), 3);
-  assert.equal(trois.state.casesDonnees.size, 0, "trouvé au 3e passage : c’est une case trouvée, pas donnée");
+  assert.equal(trois.state.questions.length, 12, "raté deux fois : il revient une fois");
+  assert.equal(trois.state.casesDonnees.size, 0, "trouvé au 3e essai : c’est une case trouvée, pas donnée");
 });
 
 test("bande à trous : même règle, même sur plusieurs calculs à la fois", () => {

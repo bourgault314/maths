@@ -354,6 +354,10 @@
       // La séance commencée et pas finie (lot M1), rangée en nombres ; null :
       // aucune. Elle ne vaut que pour son jour (voir seanceEnCours).
       enCours: null,
+      // Les calculs ratés AUJOURD'HUI dans les séances (lot « retouches après
+      // Mon parcours »), rangés en nombres comme ceux de la séance en cours
+      // (407 pour 4 × 7) ; null : aucun. Ils ne valent que pour leur jour.
+      retenir: null,
       calculs: {}
     };
   }
@@ -514,6 +518,7 @@
     }
     parcours.seances = normaliserSeances(brut.seances);
     parcours.enCours = normaliserEnCours(brut.enCours);
+    parcours.retenir = normaliserRetenir(brut.retenir);
     if (brut.calculs && typeof brut.calculs === "object") {
       FAITS.forEach(cle => {
         const source = brut.calculs[cle];
@@ -1631,6 +1636,54 @@
     return codes.slice(0, SEUILS.seance.erreursGardees);
   }
 
+  // ------------------------------------- « À retenir », la liste du jour
+  //
+  // Lot « retouches après Mon parcours » (04/10/2026, décision de Gwenaël) :
+  // « À retenir pour la prochaine séance » montre partout la même liste — TOUS
+  // les calculs ratés dans la journée, quelle que soit la séance : au bilan de
+  // chaque séance et sur l'accueil, une fois la séance du jour faite. Elle
+  // grandit au fil des séances et repart à zéro le lendemain. Elle est gardée
+  // dans le parcours (« retenir »), donc sur le serveur : elle suit l'élève
+  // d'un appareil à l'autre. Les × 1 et × 10, et les erreurs de J'apprends,
+  // y sont comme au bilan — le tableau Mes calculs, lui, ne les connaît pas.
+  // Chaque calcul une fois : 4 × 7 et 7 × 4 sont le même calcul (le premier
+  // raté garde son sens).
+  function normaliserRetenir(brut) {
+    if (!brut || typeof brut !== "object" || Array.isArray(brut)) return null;
+    const jour = dateOuNull(brut.jour);
+    if (!jour) return null;
+    const vus = new Set();
+    const erreurs = normaliserErreursCodees(brut.erreurs).filter(code => {
+      const calcul = memeCalcul(code);
+      if (vus.has(calcul)) return false;
+      vus.add(calcul);
+      return true;
+    });
+    return erreurs.length ? {jour, erreurs} : null;
+  }
+
+  // 407 et 704 : le même calcul.
+  function memeCalcul(code) {
+    const premier = Math.floor(code / 100);
+    const second = code % 100;
+    return Math.min(premier, second) * 100 + Math.max(premier, second);
+  }
+
+  // Ajoute des ratés (des paires [4, 7]) à la liste du jour ; un autre jour,
+  // la liste repart de zéro.
+  function ajouterARetenir(retenir, jour, paires) {
+    const codes = (Array.isArray(paires) ? paires : []).map(coderErreur).filter(code => code !== null);
+    const avant = retenir && retenir.jour === jour ? retenir.erreurs : [];
+    return normaliserRetenir({jour, erreurs: [...avant, ...codes]});
+  }
+
+  // La liste du jour, en paires [4, 7] — vide un autre jour.
+  function aRetenir(parcours, aujourdhui = jourLocal()) {
+    const retenir = parcours && parcours.retenir;
+    if (!retenir || retenir.jour !== aujourdhui) return [];
+    return retenir.erreurs.map(code => [Math.floor(code / 100), code % 100]);
+  }
+
   // La séance rangée en nombres, ou null (rien, ou un JSON qui ne tient pas
   // debout : mieux vaut rouvrir une séance neuve que reprendre n'importe quoi).
   function normaliserEnCours(brut) {
@@ -1864,14 +1917,21 @@
     const faite = {type: etape.type, nom: etape.nom, marche: etape.marche || null, etoile: etape.etoile || null, juste, total, rate: false, reussi: null};
     // Les calculs ratés de l'étape (resultat.erreurs : des paires [4, 7]),
     // gardés une fois chacun pour « À retenir pour demain ».
+    // Lot « retouches après Mon parcours » (décision de Gwenaël) : seulement
+    // les calculs répondus de mémoire — à partir de « Dans le désordre », les
+    // mêmes qui entrent dans les boîtes. Une erreur de J'apprends (perles,
+    // bande, bande à trous, dans l'ordre) n'est pas un calcul oublié.
+    const ratesDeMemoire = etape.type === "apprends" || !Array.isArray(resultat.erreurs) ? [] : resultat.erreurs;
     const dejaRates = new Set((suite.erreurs || []).map(coderErreur));
     suite.erreurs = (suite.erreurs || []).slice();
-    (Array.isArray(resultat.erreurs) ? resultat.erreurs : []).forEach(paire => {
+    ratesDeMemoire.forEach(paire => {
       const code = coderErreur(paire);
       if (code === null || dejaRates.has(code) || suite.erreurs.length >= SEUILS.seance.erreursGardees) return;
       dejaRates.add(code);
       suite.erreurs.push([Number(paire[0]), Number(paire[1])]);
     });
+    // … et dans la liste du jour (« À retenir »), qui, elle, survit à la séance.
+    copie.retenir = ajouterARetenir(copie.retenir, dateOuNull(suite.jour) || jourLocal(), ratesDeMemoire);
     const table = suite.table;
     const ligne = table === null ? null : copie.tables[table];
     if (ligne && suite.echelle) ligne.seance.dernier = dateOuNull(suite.jour) || jourLocal();
@@ -1975,13 +2035,17 @@
     return copie;
   }
 
-  // « Cette semaine ●○○○○ » : les jours avec une séance finie depuis lundi,
-  // l'objectif (5, pas une limite), et le nombre de séances d'aujourd'hui.
+  // Les jours avec une séance finie depuis lundi (« semaine », que lit la page
+  // du professeur), l'objectif (5, pas une limite), le nombre de séances
+  // d'aujourd'hui — et (lot « retouches après Mon parcours ») « fois », le
+  // nombre de séances finies depuis lundi : l'accueil de l'élève écrit
+  // « 3 fois cette semaine », sans objectif (« on n'impose rien »).
   function bilanSeances(parcours, aujourdhui = jourLocal()) {
     const lundi = lundiDe(aujourdhui);
-    const jours = new Set(parcours.seances.filter(jour => jour >= lundi && jour <= aujourdhui));
+    const cetteSemaine = parcours.seances.filter(jour => jour >= lundi && jour <= aujourdhui);
     return {
-      semaine: jours.size,
+      semaine: new Set(cetteSemaine).size,
+      fois: cetteSemaine.length,
       objectif: SEUILS.seance.objectifSemaine,
       aujourdhui: seancesDuJour(parcours, aujourdhui)
     };
@@ -2660,6 +2724,13 @@
       || seconde.faites.length - premiere.faites.length)[0] || null;
     fusion.enCours = enCoursTient(fusion, enCours) ? cloner(enCours) : null;
 
+    // « À retenir » : le jour le plus récent ; le même jour, les deux listes
+    // réunies (une séance sur chaque appareil).
+    const listes = [a.retenir, b.retenir].filter(Boolean).sort((premiere, seconde) => (premiere.jour < seconde.jour ? 1 : premiere.jour > seconde.jour ? -1 : 0));
+    fusion.retenir = listes.length
+      ? normaliserRetenir({jour: listes[0].jour, erreurs: listes.filter(liste => liste.jour === listes[0].jour).flatMap(liste => liste.erreurs)})
+      : null;
+
     return normaliserParcours(fusion);
   }
 
@@ -2783,6 +2854,7 @@
     programmeDeSeance,
     marcheRatee,
     noterEtape,
+    aRetenir,
     bilanSeances,
     resumeProf,
     commencerApresDecouverte,

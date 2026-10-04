@@ -355,9 +355,12 @@ test("le raccourci : 9 sur 10 ou mieux à « Dans le désordre » ET à « Nombr
   assert.equal(P.validationDeSeance(q, 3), false);
 });
 
-test("« Cette semaine » : les jours avec une séance finie, depuis lundi ; une séance arrêtée ne compte pas", () => {
+// Lot « retouches après Mon parcours » : « fois », les séances finies depuis
+// lundi (l'accueil écrit « 3 fois cette semaine ») ; « semaine » reste le
+// nombre de jours (la page du professeur).
+test("« Cette semaine » : les jours et les séances finies, depuis lundi ; une séance arrêtée ne compte pas", () => {
   let p = P.creerParcours();
-  assert.deepEqual(P.bilanSeances(p, jour(1)), {semaine: 0, objectif: 5, aujourdhui: 0});
+  assert.deepEqual(P.bilanSeances(p, jour(1)), {semaine: 0, fois: 0, objectif: 5, aujourdhui: 0});
   // Arrêtée après une étape : rien n'est compté, le départ ne bouge pas.
   let seance = P.ouvrirSeance(p, {aujourdhui: jour(1)});
   ({parcours: p, seance} = jouerEtape(p, seance, P.etapeDeSeance(p, seance, jour(1)), jour(1)));
@@ -367,7 +370,7 @@ test("« Cette semaine » : les jours avec une séance finie, depuis lundi ; une
   p = jouerSeance(p, jour(1), () => 1).parcours;
   p = jouerSeance(p, jour(1), () => 1).parcours;
   p = jouerSeance(p, jour(3), () => 1).parcours;
-  assert.deepEqual(P.bilanSeances(p, jour(3)), {semaine: 2, objectif: 5, aujourdhui: 1}, "deux séances le même jour = un jour");
+  assert.deepEqual(P.bilanSeances(p, jour(3)), {semaine: 2, fois: 3, objectif: 5, aujourdhui: 1}, "deux séances le même jour = un jour, mais deux fois");
   assert.equal(P.bilanSeances(p, jour(1)).aujourdhui, 2);
   assert.equal(P.bilanSeances(p, jour(8)).semaine, 0, "le lundi suivant, on repart de zéro — rien à casser");
 });
@@ -530,8 +533,11 @@ test("le bilan de séance : pas de rangée tant qu'elle est entièrement vide, l
 });
 
 // Relecture de Code (02/10/2026) : la fonction de la page est EXÉCUTÉE avec un
-// faux DOM — un test sur le texte ne dirait rien de l'étiquette restée en place.
-test("« Cette semaine » : à la 5e séance, page ouverte, l'étiquette des ronds ne survit pas au texte", () => {
+// faux DOM — un test sur le texte ne dirait rien d'une étiquette restée en place.
+// Lot « retouches après Mon parcours » (choix de Gwenaël) : plus de ronds (ils
+// faisaient penser aux points d'un carrousel) ni d'objectif — « 3 fois cette
+// semaine », et rien tant qu'aucune séance n'est finie.
+test("« Cette semaine » : « 3 fois cette semaine », rien à zéro, plus de ronds ni d’objectif", () => {
   const debut = html.indexOf("function renderSemaine(etat) {");
   const fin = html.indexOf("// [seance:fin]", debut);
   assert.ok(debut > 0 && fin > debut, "renderSemaine introuvable dans la page");
@@ -540,19 +546,19 @@ test("« Cette semaine » : à la 5e séance, page ouverte, l'étiquette des ron
     setAttribute(nom, valeur) { this.attributs[nom] = String(valeur); },
     removeAttribute(nom) { delete this.attributs[nom]; },
     getAttribute(nom) { return nom in this.attributs ? this.attributs[nom] : null; },
-    append(...enfants) { this.enfants.push(...enfants); },
+    append(...enfants) { this.enfants.push(...enfants.map(e => (typeof e === "string" ? {textContent: e} : e))); },
     replaceChildren() { this.enfants = []; this.texte = ""; },
     set textContent(valeur) { this.enfants = []; this.texte = valeur; },
     get textContent() { return this.texte + this.enfants.map(enfant => enfant.textContent).join(""); },
     querySelector() { return null; }
   });
   const zones = {"acc-semaine": element(), "acc-jours": element(), "open-parcours": element()};
-  let semaine = 4;
+  let fois = 3;
   const fabrique = new Function("$", "PARCOURS", "document", "pluriel", "PARCOURS_TABLES", "parcours",
     `${html.slice(debut, fin)}\nreturn renderSemaine;`);
   const renderSemaine = fabrique(
     id => zones[id],
-    {bilanSeances: () => ({semaine, objectif: 4, aujourdhui: 1})},
+    {bilanSeances: () => ({semaine: 2, fois, objectif: 5, aujourdhui: 1})},
     {createElement: () => element()},
     (nombre, mot) => `${nombre} ${mot}${nombre > 1 ? "s" : ""}`,
     [2, 3, 4, 5, 6, 7, 8, 9, 10],
@@ -560,22 +566,26 @@ test("« Cette semaine » : à la 5e séance, page ouverte, l'étiquette des ron
   );
   const zone = zones["acc-semaine"];
   renderSemaine({acquises: []});
-  assert.equal(zone.getAttribute("aria-label"), "Cette semaine : 4 jours avec une séance sur 4");
-  semaine = 5;
+  assert.equal(zone.hidden, false);
+  assert.equal(zone.textContent, "3\u00a0fois cette semaine", "les séances, pas les jours (deux séances lundi = 2 fois)");
+  assert.equal(zone.getAttribute("aria-label"), null, "le texte se lit seul");
+  fois = 1;
   renderSemaine({acquises: []});
-  assert.equal(zone.textContent, "5 jours cette semaine ✓");
-  assert.equal(zone.getAttribute("aria-label"), null, "l'étiquette « 4 sur 4 » contredirait le texte lu");
-  semaine = 1; // lundi suivant : les ronds et leur étiquette reviennent
+  assert.equal(zone.textContent, "1\u00a0fois cette semaine");
+  fois = 0; // lundi matin
   renderSemaine({acquises: []});
-  assert.equal(zone.getAttribute("aria-label"), "Cette semaine : 1 jour avec une séance sur 4");
+  assert.equal(zone.hidden, true, "aucune séance : rien n’est écrit");
+  assert.equal(zone.textContent, "");
+  assert.doesNotMatch(html.slice(debut, fin), /objectif|rond/, "plus d’objectif, plus de ronds");
+  assert.doesNotMatch(html, /\.semaine i\b/, "le style des ronds est parti");
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie serveur identique, serveur qui accepte les nouvelles clés", () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261004-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261004-2/);
   const moteur = readFileSync(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = readFileSync(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie), "cp outils/calcul_mental/defi_tables_mon_parcours.js _serveur/public/prof/");
-  for (const cle of ["bouts", "seance", "depart", "n", "sansFaute", "seances", "enCours", "jour", "table", "echelle", "file", "faites", "erreurs", "rate", "remplacee", "reparee", "prete"]) {
+  for (const cle of ["bouts", "seance", "depart", "n", "sansFaute", "seances", "enCours", "jour", "table", "echelle", "file", "faites", "erreurs", "rate", "remplacee", "reparee", "prete", "retenir"]) {
     assert.match(applis, new RegExp(`'${cle}'`), `lib/applis.php doit accepter « ${cle} »`);
   }
   const reference = JSON.parse(readFileSync(new URL("../_serveur/tests/parcours-reference.json", import.meta.url), "utf8"));
