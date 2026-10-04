@@ -67,7 +67,7 @@
       "",   /* 23d : retirée le 03/10/2026 */
       "mode=C&clues=SENTENCE&splats=3&structure=UNITE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=30&totalMax=90&seed=17782"
     ];
-    /* Les séries infinies du dos des livrets (?s=16…36 : les livrets du 30/09 et du 03/10/2026 ; ?s=1…15 : celles des anciens livrets, gardées pour un livret déjà imprimé) : les réglages des fiches, sans graine — huit cartes nouvelles à chaque
+    /* Les séries infinies du dos des livrets (?s=16…37 : les livrets du 30/09, du 03/10 et du 04/10/2026 ; ?s=1…15 : celles des anciens livrets, gardées pour un livret déjà imprimé) : les réglages des fiches, sans graine — huit cartes nouvelles à chaque
        ouverture, en mode élève sans étape (rien n'est enregistré). Le QR ne porte que
        « ?s=N » : il reste lisible photocopié, et une série peut être retouchée ici sans
        réimprimer un livret. Les séries des cinq livrets sont celles de
@@ -108,7 +108,9 @@
       "33": "mode=C&clues=SYMBOL&splats=3&structure=HASARD&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
       "34": "mode=C&clues=SENTENCE&splats=3&structure=UNITE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=30&totalMax=90",
       "35": "mode=C&clues=SENTENCE&splats=3&structure=CHAINE&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50",
-      "36": "mode=C&clues=SENTENCE&splats=3&structure=HASARD&ordre=DESSIN&mul=1&div=1&add=0&sub=0&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60"
+      "36": "mode=C&clues=SENTENCE&splats=3&structure=HASARD&ordre=DESSIN&mul=1&div=1&add=0&sub=0&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
+      /* (04/10/2026) « Je révise » de la partie 1 : le monde 2, des taches et des paquets */
+      "37": "mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5"
     };
     var ENQ_SERIE_CARTES = 8;
     var f = new URLSearchParams(window.location.search).get("f");
@@ -213,6 +215,7 @@
     <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=3&amp;structure=UNITE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=30&amp;totalMax=90&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 34</a></li>
     <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=3&amp;structure=CHAINE&amp;ordre=DESSIN&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=12&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=50&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 35</a></li>
     <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=3&amp;structure=HASARD&amp;ordre=DESSIN&amp;mul=1&amp;div=1&amp;add=0&amp;sub=0&amp;deltaMax=12&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 36</a></li>
+    <li><a href="/splat/classique/?mode=N&amp;equation=AX_PLUS_C_EQ_B&amp;tasksMax=5&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 37</a></li>
   </ul>
 </body>
 </html>

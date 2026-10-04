@@ -148,8 +148,8 @@ test("deuxième tour : ?f=11d … ?f=24d ouvre la fiche, avec la MÊME étoile q
 });
 
 test("les séries du dos : huit cartes sans graine, en mode élève sans étape ; les anciennes restent servies", () => {
-  const SERIES = Object.fromEntries([...render.matchAll(/^    (\d+): "(mode=C[^"]+)",$/gm)].map((m) => [m[1], m[2]]));
-  assert.deepEqual(Object.keys(SERIES), ["16", "17", "19", "20", "22", "23", "24", "25", "26", "28", "29", "30", "32", "33", "34", "35", "36"]);
+  const SERIES = Object.fromEntries([...render.matchAll(/^    (\d+): "(mode=[CN][^"]+)",$/gm)].map((m) => [m[1], m[2]]));
+  assert.deepEqual(Object.keys(SERIES), ["16", "17", "19", "20", "22", "23", "24", "25", "26", "28", "29", "30", "32", "33", "34", "35", "36", "37"]);
   assert.match(render, /^SERIE_CARTES = 8$/m);
   for (const [s, q] of Object.entries(SERIES)) {
     const cible = cibleCourte(`?s=${s}`);
@@ -159,18 +159,24 @@ test("les séries du dos : huit cartes sans graine, en mode élève sans étape 
     assert.ok(existe(`${SRC}qr/serie-${s}.png`), `qr/serie-${s}.png`);
     assert.ok(courte.includes(`href="${cible.replace(/&/g, "&amp;")}"`), `lien de repli de la série ${s}`);
   }
-  // chaque série du dos est citée par un seul livret, trois par livret de base, quatre au deuxième tour
+  // trois séries par livret de base, plus « Je révise » (04/10/2026 : une série du livret d'avant —
+  // le monde 2 pour la partie 1, puis 35 et 36) ; quatre au deuxième tour, sans « Je révise »
   const parLivret = LIVRETS.map((nom) => {
     const d = render.indexOf(`"${nom}": dict(`), f = render.indexOf("suite=", d);
     return [...render.slice(d, f).matchAll(/", (\d+)\)/g)].map((m) => Number(m[1]));
   });
-  assert.deepEqual(parLivret, [[16, 17, 35], [19, 36, 20], [22, 23, 24], [25, 26, 28, 29], [30, 32, 33, 34]]);
+  assert.deepEqual(parLivret, [[16, 17, 35, 37], [19, 36, 20, 35], [22, 23, 24, 36], [25, 26, 28, 29], [30, 32, 33, 34]]);
   assert.equal(new URLSearchParams(SERIES["35"]).get("structure"), "CHAINE", "la série « En chaîne »");
   assert.equal(new URLSearchParams(SERIES["36"]).get("add"), "0", "la série « Deux rapports » : sans écart, jamais « je complète »");
   assert.equal(new URLSearchParams(SERIES["30"]).get("compose"), "1", "la série « Indices composés »");
+  assert.equal(new URLSearchParams(SERIES["37"]).get("mode"), "N", "« Je révise » de la partie 1 : le monde 2, taches et paquets");
+  for (const nom of ["additif", "multiplicatif", "rebondit"]) {
+    const d = render.indexOf(`"${nom}": dict(`);
+    assert.match(render.slice(d, render.indexOf("suite=", d)), /\("Je révise", "La partie&nbsp;\d|\("Je révise", "Le monde&nbsp;2/, `${nom} : « Je révise »`);
+  }
   // les séries des anciens livrets (déjà imprimés) répondent encore ; hors bornes, la carte des mondes
   for (const s of ["1", "15", "18", "21", "27", "31"]) assert.match(cibleCourte(`?s=${s}`), /^\/splat\/classique\/\?mode=C/, `?s=${s}`);
-  for (const s of ["0", "37", "x", "", "07"]) assert.equal(cibleCourte(`?s=${s}`), "/outils/splat_univers.html", `?s=${s}`);
+  for (const s of ["0", "38", "x", "", "07"]) assert.equal(cibleCourte(`?s=${s}`), "/outils/splat_univers.html", `?s=${s}`);
   assert.ok(existe(`${SRC}qr/univers.png`));
 });
 
@@ -230,14 +236,21 @@ test("page 2 : les schémas du pas à pas — une colonne jusqu'à cinq dessins,
   for (const m of ["les étapes ne sont pas rangées en deux colonnes", "la page 2 déborde sur le pied"]) assert.ok(render.includes(m), m);
 });
 
-test("le dos (03/10/2026) : deux cartes de rappel du livret d'avant, l'exemple corrigé et sa jumelle à la partie 3, l'unité commune au Deuxième tour 2", () => {
+test("le dos (04/10/2026) : « Le défi ! », deux cartes du même livret plus difficiles ; l'exemple corrigé et sa jumelle à la partie 3, l'unité commune au Deuxième tour 2", () => {
   assert.match(dos, /<div class="lex"><\/div>/);
   assert.doesNotMatch(dos.replace(/<!--[\s\S]*?-->|\/\*[\s\S]*?\*\//g, ""), /Pour se souvenir/);
   const bloc = (nom) => render.slice(render.indexOf(`"${nom}": dict(`), render.indexOf("suite=", render.indexOf(`"${nom}": dict(`)));
-  assert.match(bloc("additif"), /cartes=\[rappel\(R_MONDE2, 2\)\]/);
-  assert.match(bloc("multiplicatif"), /cartes=\[rappel\(R2A\), rappel\(R2B\)\]/);
+  assert.match(bloc("additif"), /rappel=dict\(chip="Le défi&nbsp;!", dit=DEFI_DIT, cartes=\[rappel\(DEFI_1A\), rappel\(DEFI_1B\)\]\)/);
+  assert.match(bloc("multiplicatif"), /rappel=dict\(chip="Le défi&nbsp;!", dit=DEFI_DIT, cartes=\[rappel\(DEFI_2A\), rappel\(DEFI_2B\)\]\)/);
   assert.match(bloc("rebondit"), /cartes=\[rappel\(R3_EXEMPLE, titre="Un exemple corrigé", corrige=True\), rappel\(R3_A_TOI, titre="À toi&nbsp;!"\)\]/);
-  assert.match(bloc("tour2_dessins"), /cartes=\[rappel\(R4A\), rappel\(R4B\)\]/);
+  assert.match(bloc("tour2_dessins"), /rappel=dict\(chip="Le défi&nbsp;!", dit=DEFI_DIT_DESORDRE, cartes=\[rappel\(DEFI_4A\), rappel\(DEFI_4B\)\]\)/);
+  assert.match(bloc("rebondit"), /rappel=dict\(chip="Pour ne pas oublier"/);
+  // les cartes du défi : plus difficiles que les fiches (des jetons visibles, de grands nombres)
+  for (const k of ["DEFI_1A", "DEFI_1B", "DEFI_2A", "DEFI_2B", "DEFI_4A", "DEFI_4B"]) {
+    const q = new URLSearchParams(py(k));
+    assert.equal(q.get("visibleMin"), "1", `${k} : des jetons visibles`);
+    assert.ok(Number(q.get("totalMin")) >= 50, `${k} : de grands nombres`);
+  }
   assert.doesNotMatch(bloc("tour2_systeme"), /rappel=/);
   // l'exemple corrigé et sa jumelle : la même sorte de carte (mêmes réglages), d'autres nombres
   const sansGraine = (q) => q.replace(/&seed=\d+$/, "");
@@ -248,6 +261,8 @@ test("le dos (03/10/2026) : deux cartes de rappel du livret d'avant, l'exemple c
   for (const m of ["les cartes de rappel débordent", "l’unité commune déborde", "les cartes de rappel débordent sur le côté"]) assert.ok(render.includes(m), m);
   // dans cartes.json : les cartes de rappel, aucune n'est une carte des fiches
   assert.deepEqual(LIVRETS.map((n) => cartes[n].rappel.length), [2, 2, 1, 2, 0]);
+  assert.deepEqual(LIVRETS.map((n) => cartes[n].rappel), [[[50, [6, 10, 16]], [78, [12, 26, 30]]], [[83, [11, 24, 33]], [97, [10, 20, 60]]],
+    cartes.rebondit.rappel, [[99, [14, 26, 42]], [93, [20, 22, 44]]], []]);
   const cle = ([t, v]) => t + ":" + [...v].sort((a, b) => a - b).join(",");
   const toutes = new Set(Object.values(cartes).flatMap((c) => Object.values(c.fiches).flat()).map(cle));
   for (const n of LIVRETS) for (const k of cartes[n].rappel) assert.ok(!toutes.has(cle(k)), `${n} : la carte de rappel ${k} est une carte des fiches`);
@@ -377,9 +392,17 @@ test("dans les PDF — couverture, exemple en page 2, les cinq fiches dans l'ord
         assert.doesNotMatch(pages[7], souple("Les barres"), `${s}, dos : le titre de ① est celui de la page 2`);
       }
       else {
-        assert.match(pages[7], /Pour ne pas oublier/i, `${s}, dos : les cartes de rappel`);
         assert.doesNotMatch(pages[7], /Pour se souvenir/i);
-        if (nom === "rebondit") for (const t of ["Un exemple corrigé", "À toi !"]) assert.match(pages[7], souple(t), `${s}, dos : ${t}`);
+        if (nom === "tour2_dessins") assert.doesNotMatch(pages[7], /Je révise/, `${s}, dos : pas de « Je révise » au deuxième tour`);
+        else assert.match(pages[7], /Je révise/, `${s}, dos : le QR « Je révise »`);
+        if (nom === "rebondit") {
+          assert.match(pages[7], /Pour ne pas oublier/i, `${s}, dos : l'exemple corrigé`);
+          for (const t of ["Un exemple corrigé", "À toi !"]) assert.match(pages[7], souple(t), `${s}, dos : ${t}`);
+        }
+        else {
+          assert.match(pages[7], /Le défi/i, `${s}, dos : « Le défi ! »`);
+          assert.match(pages[7], souple("Deux enquêtes plus difficiles"), `${s}, dos : la phrase du défi`);
+        }
       }
       if (v) {
         assert.match(pages[0], /Livret corrigé/);

@@ -26,8 +26,9 @@ mêmes cartes à la même place : …_correction.pdf (inconnue « ? ») et …_c
 (inconnue en lettre), chacun avec son …_a_plier.pdf.
 
 LES PAGES. Couverture, un exemple résolu (le dessin de la première fiche du livret), les cinq
-fiches (4 cartes par page), le dos (les séries en ligne, la suite, et deux cartes de rappel du
-livret d'avant — l'exemple corrigé et sa carte jumelle à la partie 3, l'unité commune résolue au
+fiches (4 cartes par page), le dos (les séries en ligne — avec « Je révise », une série du livret
+d'avant, aux parties 1 à 3 —, la suite, et « Le défi ! » : deux cartes du livret, plus difficiles
+(04/10/2026) ; l'exemple corrigé et sa carte jumelle à la partie 3, l'unité commune résolue au
 Deuxième tour 2). Une fiche = une étape de la carte des mondes = une étoile ;
 le QR d'une fiche ouvre sa série en ligne (?f=12, ou ?f=12d pour le deuxième tour : la même
 étoile).
@@ -46,7 +47,7 @@ chaque carte à la même place que sur la fiche de l'élève ; en lettre, les m�
 avec unknown=letter (les nombres ne bougent pas, vérifié carte par carte au rendu). La
 couverture reçoit le bandeau « Correction » et la ligne « Livret corrigé » (jamais « professeur » :
 le corrigé peut être donné aux élèves, 23/09/2026), la boîte du QR dit « Je rejoue ces cartes
-en ligne » ; l'exemple résolu ne change pas, les cartes de rappel du dos sont corrigées.
+en ligne » ; l'exemple résolu ne change pas, les cartes du bas du dos sont corrigées.
 
 Dépendances : playwright (chromium), pikepdf, qrcode[pil]. qpdf si disponible.
 """
@@ -177,6 +178,11 @@ SERIES = {
     # (fiches 17 et 18 : sans « de plus / de moins », « au hasard » ne tire jamais « je complète »)
     35: "mode=C&clues=SENTENCE&splats=3&structure=CHAINE&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50",
     36: "mode=C&clues=SENTENCE&splats=3&structure=HASARD&ordre=DESSIN&mul=1&div=1&add=0&sub=0&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
+    # (04/10/2026) « Je révise » de la partie 1 : le monde 2 — des taches et des paquets, le grand
+    # mélange de la fiche 9 (la série « Paquets et taches » du dos du livret du monde 2). Les « Je
+    # révise » des parties 2 et 3 reprennent des séries du livret d'avant : 35 (En chaîne) et 36
+    # (Deux rapports, référence ou chaîne).
+    37: "mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5",
 }
 SERIE_CARTES = 8
 
@@ -201,19 +207,37 @@ EX_COMPOSE = "mode=C&clues=SENTENCE&splats=2&compose=1&mul=1&div=0&add=1&sub=0&d
 # total 55 ; les petites parts : 11 parts = 55, 1 part = 5. Une carte de réglages 24d qui n'est pas dans la fiche.
 EX_UNITE = "mode=C&clues=SENTENCE&splats=3&structure=UNITE&mul=1&div=0&add=0&sub=0&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=30&totalMax=60&cards=1&unknown=question&seed=59"
 
-# LES CARTES DE RAPPEL DU DOS (décidées le 02/10, gardées le 03/10) : deux cartes du livret
-# d'avant, à la place de « Pour se souvenir » — énoncé dans le livret de l'élève, correction
-# dans les livrets corrigés, à la même place. Partie 1 : deux cartes du monde 2 (SPLAT!
-# classique, un paquet puis deux paquets) ; Partie 3 : l'exemple sans total résolu reste, et
-# une carte ; Deuxième tour 2 : l'unité commune résolue, sans carte de rappel. Graines vérifiées
-# au script : aucune n'est une carte des 25 fiches ni un exemple.
-R_MONDE2 = "mode=N&equation=AX_PLUS_C_EQ_B&tasksMin=2&tasksMax=5&visibleMin=1&visibleMax=2&seed=16"
-R2A = "mode=C&clues=SENTENCE&splats=2&mul=0&div=0&add=0&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&seed=7"
-R2B = "mode=C&clues=SENTENCE&splats=3&structure=CHAINE&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&seed=4"
-R4A = "mode=C&clues=SENTENCE&splats=2&repeat=3&mul=0&div=0&add=1&sub=1&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=4"
-R4B = "mode=C&clues=SENTENCE&splats=2&noTotal=1&mul=0&div=1&add=0&sub=1&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60&seed=10"
+# LE BAS DU DOS (04/10/2026, décidé avec Gwenaël sur maquette puis sur la planche des cartes) :
+# « Le défi ! » — deux cartes du MÊME livret, plus difficiles (des jetons visibles, de grands
+# nombres ; au deuxième tour 1, les indices dans le désordre), pour l'élève qui a fini avant les
+# autres. Énoncé dans le livret de l'élève, correction à la même place dans les corrigés. Elles
+# remplacent les cartes de rappel du livret d'avant (02-03/10), qui regardaient en arrière sous
+# « Et après ? » : le rappel devient un QR « Je révise » dans « Encore des cartes ! » (parties 1
+# à 3 ; les deux livrets du deuxième tour gardent leurs quatre QR). Exceptions : la partie 3 garde
+# son exemple corrigé et sa carte « À toi ! » ; le deuxième tour 2, l'unité commune résolue.
+# Graines triées au script (moteur de l'outil rejoué, 04/10/2026) : le dessin attendu (la tache
+# commune la plus petite = référence, au milieu = chaîne — l'indice commun départ de l'un, arrivée
+# de l'autre —, la plus grande = je complète), écarts ≥ 2, plus petite tache ≥ 5 et ≥ le sixième
+# de la plus grande, pas de nombre à sous-entendu, aucune carte des fiches ni exemple, deux totaux
+# et deux jeux de couleurs différents par livret, et dans le corrigé aucun nom de couleur réduit
+# à son initiale (une première carte du deuxième tour 1 écrivait « Vi » : écartée).
+#   partie 1 : référence, deux « de plus » (rouge 6, orange 10, bleue 16 ; total 50) ;
+#              chaîne, deux « de moins » (orange 12, rouge 26, verte 30 ; total 78) ;
+#   partie 2 : référence, « 3 fois moins » + « 13 de plus » (bleue 11, rouge 24, orange 33 ; 83) ;
+#              chaîne, « 2 fois moins » puis « 3 fois moins » (verte 10, rouge 20, orange 60 ; 97) ;
+#   2e tour 1 : je complète, « 16 de moins » + « 3 fois moins », dans le désordre (orange 14,
+#              noire 26, bleue 42 ; 99) ; chaîne, « 2 fois moins » + « 2 de moins », dans le
+#              désordre (violette 20, bleue 22, rouge 44 ; 93).
+DEFI_1A = "mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=20&visibleMin=1&visibleMax=3&totalMin=50&totalMax=90&seed=3"
+DEFI_1B = "mode=C&clues=SENTENCE&splats=3&structure=CHAINE&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=20&visibleMin=1&visibleMax=3&totalMin=50&totalMax=90&seed=13"
+DEFI_2A = "mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=1&div=1&add=1&sub=1&deltaMax=20&visibleMin=1&visibleMax=3&totalMin=60&totalMax=100&seed=3"
+DEFI_2B = "mode=C&clues=SENTENCE&splats=3&structure=CHAINE&ordre=DESSIN&mul=1&div=1&add=0&sub=0&deltaMax=20&visibleMin=1&visibleMax=3&totalMin=60&totalMax=100&seed=13"
+DEFI_4A = "mode=C&clues=SENTENCE&splats=3&structure=COMPLETE&ordre=DESORDRE&mul=1&div=1&add=1&sub=1&deltaMax=20&visibleMin=1&visibleMax=3&totalMin=60&totalMax=100&seed=2"
+DEFI_4B = "mode=C&clues=SENTENCE&splats=3&structure=HASARD&ordre=DESORDRE&mul=1&div=1&add=1&sub=1&deltaMax=20&visibleMin=1&visibleMax=3&totalMin=60&totalMax=100&seed=17"
+DEFI_DIT = "Deux enquêtes plus difficiles&nbsp;: des jetons visibles et de grands nombres."
+DEFI_DIT_DESORDRE = "Deux enquêtes plus difficiles&nbsp;: des jetons visibles, de grands nombres, les indices dans le désordre."
 def rappel(q, n=1, titre=None, corrige=False):
-    """n cartes de rappel tirées d'une même adresse (les n premières cartes de la série) ;
+    """n cartes du bas du dos tirées d'une même adresse (les n premières cartes de la série) ;
     corrige : la carte est TOUJOURS corrigée (l'exemple corrigé de la partie 3), même dans le
     livret de l'élève ; titre : écrit au-dessus de la carte."""
     return dict(q=q, n=n, titre=titre, corrige=corrige)
@@ -240,8 +264,9 @@ LIVRETS = {
         dos=dict(
             series=[("Deux taches", "De plus ou de moins, comme les fiches&nbsp;10 et&nbsp;11.", 16),
                     ("Une référence", "Trois taches, comme la fiche&nbsp;12.", 17),
-                    ("En chaîne", "Trois taches, comme les fiches&nbsp;13 et&nbsp;14.", 35)],
-            rappel=dict(dit="Deux cartes du monde&nbsp;2&nbsp;: trouve ce que cache chaque tache.", cartes=[rappel(R_MONDE2, 2)]),
+                    ("En chaîne", "Trois taches, comme les fiches&nbsp;13 et&nbsp;14.", 35),
+                    ("Je révise", "Le monde&nbsp;2, pour ne pas oublier&nbsp;!", 37)],
+            rappel=dict(chip="Le défi&nbsp;!", dit=DEFI_DIT, cartes=[rappel(DEFI_1A), rappel(DEFI_1B)]),
             suite="Continue avec la partie&nbsp;2, <b>Grande enquête</b>&nbsp;: fois plus, fois moins&nbsp;!")),
     "multiplicatif": dict(
         sortie="livret_splat_enquete_multiplicatif", fiches=FICHES_MUL,
@@ -251,8 +276,9 @@ LIVRETS = {
         dos=dict(
             series=[("Fois plus, fois moins", "Deux taches, comme les fiches&nbsp;15 et&nbsp;16.", 19),
                     ("Deux rapports", "Trois taches, comme les fiches&nbsp;17 et&nbsp;18.", 36),
-                    ("Écart et rapport", "Trois taches, comme la fiche&nbsp;19.", 20)],
-            rappel=dict(dit="Deux cartes de la partie&nbsp;1&nbsp;: dessine le schéma, puis trouve ce que cache chaque tache.", cartes=[rappel(R2A), rappel(R2B)]),
+                    ("Écart et rapport", "Trois taches, comme la fiche&nbsp;19.", 20),
+                    ("Je révise", "La partie&nbsp;1, pour ne pas oublier&nbsp;!", 35)],
+            rappel=dict(chip="Le défi&nbsp;!", dit=DEFI_DIT, cartes=[rappel(DEFI_2A), rappel(DEFI_2B)]),
             suite="Continue avec la partie&nbsp;3, <b>L'enquête rebondit</b>&nbsp;: des taches de même couleur, puis sans total&nbsp;!")),
     "rebondit": dict(
         sortie="livret_splat_enquete_rebondit", fiches=FICHES_REB,
@@ -262,8 +288,9 @@ LIVRETS = {
         dos=dict(
             series=[("Taches répétées", "Même couleur, même nombre, comme les fiches&nbsp;20 et&nbsp;21.", 22),
                     ("Sans total", "Deux indices, pas de total, comme les fiches&nbsp;22 et&nbsp;23.", 23),
-                    ("Le défi qui rebondit", "Tout mélangé, comme la fiche&nbsp;24.", 24)],
-            rappel=dict(dit="Une carte sans total corrigée, puis la même sorte de carte à résoudre.",
+                    ("Le défi qui rebondit", "Tout mélangé, comme la fiche&nbsp;24.", 24),
+                    ("Je révise", "La partie&nbsp;2, pour ne pas oublier&nbsp;!", 36)],
+            rappel=dict(chip="Pour ne pas oublier", dit="Une carte sans total corrigée, puis la même sorte de carte à résoudre.",
                         cartes=[rappel(R3_EXEMPLE, titre="Un exemple corrigé", corrige=True), rappel(R3_A_TOI, titre="À toi&nbsp;!")]),
             suite="Continue avec le monde&nbsp;4, <b>SPLAT! Système</b>&nbsp;: plusieurs plateaux, un total pour chacun… compare-les&nbsp;!")),
     # Les livrets « Deuxième tour » (03/10/2026 : deux au lieu de trois) : un second tour plus dur,
@@ -278,7 +305,7 @@ LIVRETS = {
                     ("Dans le désordre", "Comme la fiche&nbsp;13d.", 26),
                     ("Chaîne et rapport", "Comme la fiche&nbsp;16d.", 28),
                     ("Je complète", "Avec un rapport, comme la fiche&nbsp;17d.", 29)],
-            rappel=dict(dit="Deux cartes de la partie&nbsp;3&nbsp;: dessine le schéma, puis trouve ce que cache chaque tache.", cartes=[rappel(R4A), rappel(R4B)]),
+            rappel=dict(chip="Le défi&nbsp;!", dit=DEFI_DIT_DESORDRE, cartes=[rappel(DEFI_4A), rappel(DEFI_4B)]),
             suite="Continue avec le livret <b>Vers le Système</b>&nbsp;: indices composés, symboles, unité commune&nbsp;!")),
     "tour2_systeme": dict(
         sortie="livret_splat_enquete_tour2_systeme", fiches=FICHES_T2_SYSTEME,
@@ -613,15 +640,16 @@ JS_DOS = """(d) => {
     const bas = Math.max(...[...lex.children].map(e => e.getBoundingClientRect().bottom));
     return Math.max(bas - c.top + 4, pied - page);
   };
-  // (03/10/2026, décidé le 02/10) les cartes de rappel du livret d'avant, à la place de « Pour se
-  // souvenir » : dessinées par l'outil (4 par page), l'énoncé pour l'élève, la correction dans
-  // les livrets corrigés ; à la partie 3, un exemple corrigé (toujours corrigé) à gauche de la carte.
+  // les cartes du bas du dos (« Le défi ! » le 04/10/2026, après les cartes de rappel du 03/10) :
+  // dessinées par l'outil (4 par page), l'énoncé pour l'élève, la correction dans les livrets
+  // corrigés, sous la pastille R.chip ; à la partie 3, « Pour ne pas oublier » : un exemple corrigé
+  // (toujours corrigé) à gauche de la carte.
   if (d.rappel) {
     const R = d.rappel;
     lex.className = 'lex rappel';
     document.body.classList.add('dos-serre');
     const titres = R.cartes.some(c => c.titre);
-    lex.innerHTML = '<span class="chip">Pour ne pas oublier</span><p class="r-dit">' + R.dit + '</p>' +
+    lex.innerHTML = '<span class="chip">' + R.chip + '</span><p class="r-dit">' + R.dit + '</p>' +
       '<div class="r-grille">' + R.cartes.map(c => '<div class="r-bloc">' + (titres ? '<h3>' + (c.titre || '') + '</h3>' : '') +
       '<div class="r-carte">' + c.svg + '</div></div>').join('') + '</div>';
     if (lex.querySelectorAll('.r-carte svg').length !== R.cartes.length) return 'cartes de rappel : ' + lex.querySelectorAll('.r-carte svg').length + ' dessins';
@@ -1112,7 +1140,7 @@ async def rendre(niv, tmp, corr=None):
                     AUTRES_EXEMPLES["exemple corrigé du dos"] = r["cles"][0]
                 else:
                     cles_rappel += r["cles"]
-            rappel = dict(dit=d["rappel"]["dit"], cartes=svgs)
+            rappel = dict(chip=d["rappel"]["chip"], dit=d["rappel"]["dit"], cartes=svgs)
         dos = dict(niveaux=[[nom, desc, f"{qrweb}/serie-{s}.png"] for nom, desc, s in d["series"]], unite=unite,
                    rappel=rappel, univers=f"{qrweb}/univers.png", suite=d["suite"])
         await pdf_html(f"{base}{BASE_WEB}/dos.html", tmp / "dos.pdf", JS_DOS, dos)
