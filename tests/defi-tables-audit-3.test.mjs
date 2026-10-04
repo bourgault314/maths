@@ -20,9 +20,12 @@ test("téléphone et tablette : jamais d’échelle, en fenêtre comme en plein 
   }
 });
 
-test("fenêtre normale sur ordinateur : jamais plus grand que nature, réduit jusqu’à ×0,8", () => {
+// Lot « retouches après Mon parcours » (point 6) : la plus petite échelle
+// passe de ×0,8 à ×0,75 — l'accueil d'un élève suivi en 1 366 × 650 et Mon
+// parcours en 1 024 × 600 ne tenaient pas.
+test("fenêtre normale sur ordinateur : jamais plus grand que nature, réduit jusqu’à ×0,75", () => {
   for (const largeur of [1024, 1366, 1440, 1920, 2560]) {
-    assert.deepEqual(bornesEchelle(largeur, false), {min: 0.8, max: 1, longue: 1}, `${largeur} px`);
+    assert.deepEqual(bornesEchelle(largeur, false), {min: 0.75, max: 1, longue: 1}, `${largeur} px`);
   }
 });
 

@@ -116,7 +116,7 @@ function mesCalculs(parcours, {maTable = 3, aujourdhui = AUJ} = {}) {
     const LIBELLES_ETATS_CALCULS = {"jamais-vu": "pas encore vu", "a-travailler": "à revoir", "en-cours": "en route", "su": "su"};
     const pluriel = (n, m) => n + " " + m + (n > 1 ? "s" : "");`;
   const fonctions = ["soude", "jourDuJour", "majuscule", "ligneDetail", "libelleDans", "montrerDetail", "sansAnimation",
-    "jourDeRetour", "renderCalculsDetail", "renderBoites", "renderCalculs", "renderJour"].map(source);
+    "jourDeRetour", "calculsDeDemain", "sortesDeCalculs", "renderCalculsDetail", "renderBoites", "renderCalculs", "renderJour"].map(source);
   // L'écouteur de la carte de ma table (posé une fois au démarrage de la page).
   const ecouteurCarte = html.slice(html.indexOf('      $("parcours-matable").addEventListener("click", () => {'), html.indexOf("      });", html.indexOf('      $("parcours-matable").addEventListener("click", () => {')) + "      });".length);
   const code = [avant, ...fonctions, ecouteurCarte, "renderCalculs();", "return {selection: () => calculsSelection};"].join("\n");
@@ -180,7 +180,8 @@ test("2. ordinateur : deux colonnes — le tableau à gauche, ma table, Aujourd�
   assert.doesNotMatch(html, /essai-[a-z]/, "aucune variante d’essai du prototype");
 });
 
-test("2. l’échelle : Mon parcours est mesuré comme l’accueil (× 0,8 à × 1 en fenêtre, agrandi en plein écran, × 0,8 s’il ne tient pas) ; Lire la table reste une page longue", () => {
+// Lot « retouches après Mon parcours » (point 6) : la plus petite échelle est × 0,75.
+test("2. l’échelle : Mon parcours est mesuré comme l’accueil (× 0,75 à × 1 en fenêtre, agrandi en plein écran, × 0,75 s’il ne tient pas) ; Lire la table reste une page longue", () => {
   // ajusterEchelle, EXÉCUTÉE : la hauteur du corps suit l'échelle (comme le zoom).
   const jouer = ({ecran, hauteur, largeur = 1366, fenetre = 768, plein = false}) => {
     const proprietes = {};
@@ -201,7 +202,7 @@ test("2. l’échelle : Mon parcours est mesuré comme l’accueil (× 0,8 à ×
   const z = jouer({ecran: "parcours", hauteur: 800});
   assert.ok(z < 1 && z >= 0.955 && z <= 768 / 800, `réduit juste ce qu’il faut (${z})`);
   assert.equal(jouer({ecran: "parcours", hauteur: 700}), 1, "jamais plus grand que nature en fenêtre");
-  assert.equal(jouer({ecran: "parcours", hauteur: 1300, fenetre: 650}), 0.8, "il ne tient pas : × 0,8, pas × 1");
+  assert.equal(jouer({ecran: "parcours", hauteur: 1300, fenetre: 650}), 0.75, "il ne tient pas : × 0,75, pas × 1");
   assert.ok(jouer({ecran: "parcours", hauteur: 780, fenetre: 911, plein: true}) > 1.1, "plein écran : agrandi");
   assert.equal(jouer({ecran: "lire", hauteur: 1300, fenetre: 650}), 1, "Lire la table : page longue, × 1 en fenêtre");
 });
@@ -400,9 +401,11 @@ test("12. le bilan : « Demain : N calculs t’attendent » dans le cadre bleu, 
   const code = extraire("function etatsDeRangee(table) {", "// L'écran entre deux étapes")
     + extraire("function renderBilanSeance(zone) {", "// La table de la prochaine séance");
   const {document, $} = fauxDocument();
-  const p = lea();
+  // Lot « retouches après Mon parcours » : la liste du JOUR, gardée dans le
+  // parcours (3 × 8 et 8 × 3 sont le même calcul : une seule pastille).
+  const p = {...lea(), retenir: {jour: AUJ, erreurs: [308, 803, 103]}};
   const renderBilanSeance = new Function("$", "PARCOURS", "parcours", "seance", "document", "pluriel", "soude", "backToModes", "tableDeLaSeance", "commencerSeance", "listeTables",
-    `${code}\nreturn renderBilanSeance;`)($, {...P, agendaCalculs: q => P.agendaCalculs(q, AUJ)}, p,
+    `${code}\nreturn renderBilanSeance;`)($, {...P, agendaCalculs: q => P.agendaCalculs(q, AUJ), aRetenir: q => P.aRetenir(q, AUJ)}, P.normaliserParcours(p),
     {table: 3, faites: [{nom: "Mes calculs du jour", juste: 7, total: 8, rate: false, reussi: null}], erreurs: [[3, 8], [8, 3], [1, 3]]},
     document, (n, m) => `${n} ${m}${n > 1 ? "s" : ""}`, t => t, () => {}, () => 3, () => {}, t => t.join(", "));
   const zone = element();
@@ -533,17 +536,13 @@ test("6 (soir). sous un code, Mon parcours s’appelle « Mon parcours » (le pr
   assert.match(html, /\.parcours-toolbar \.settings-heading\.est-long \{ font-size: clamp\(1\.1rem, 4\.8vw, 1\.45rem\); line-height: 1\.15; text-wrap: balance; overflow-wrap: anywhere; \}/);
 });
 
-test("7 (soir). au téléphone, Mon parcours s’ouvre centré sur Mes calculs ; sur ordinateur, rien ne bouge", () => {
-  const ouvrir = ({ordinateur = false, haut = 330, hauteur = 640, fenetre = 740}) => {
-    const appels = [];
-    const window = {innerHeight: fenetre, scrollY: 0, matchMedia: () => ({matches: ordinateur}), scrollTo: o => appels.push(o.top)};
-    const $ = () => ({getBoundingClientRect: () => ({top: haut, height: hauteur})});
-    new Function("window", "$", `${source("centrerSurCalculs")}\ncentrerSurCalculs();`)(window, $);
-    return appels;
-  };
-  assert.deepEqual(ouvrir({}), [330 - 50], "le bloc (640 px) centré dans l’écran (740 px)");
-  assert.deepEqual(ouvrir({hauteur: 900}), [330 - 8], "plus haut que l’écran : son titre en haut");
-  assert.deepEqual(ouvrir({ordinateur: true}), [], "ordinateur : tout tient, rien ne bouge");
-  assert.deepEqual(ouvrir({haut: 40, hauteur: 300}), [], "déjà au milieu : pas de saut vers le haut");
-  assert.match(html, /show\("parcours"\);\s*centrerSurCalculs\(\);\s*\}/, "appelé à l’ouverture de Mon parcours");
+// Lot « retouches après Mon parcours » (décision 1) : Gwenaël a changé d'avis
+// en essayant — Mon parcours s'ouvre EN HAUT, comme tous les autres écrans.
+test("7 (soir), revu : Mon parcours s’ouvre en haut, au téléphone comme sur ordinateur", () => {
+  const appels = [];
+  const window = {scrollTo: o => appels.push(o.top)};
+  new Function("window", `${source("ouvrirEnHaut")}\nouvrirEnHaut();`)(window);
+  assert.deepEqual(appels, [0]);
+  assert.match(html, /show\("parcours"\);\s*ouvrirEnHaut\(\);\s*\}/, "appelé à l’ouverture de Mon parcours");
+  assert.equal(html.indexOf("centrerSurCalculs"), -1, "plus de centrage sur Mes calculs");
 });

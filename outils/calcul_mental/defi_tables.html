@@ -830,9 +830,8 @@
     .retour-seance { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin: 0 0 4px; padding: 9px 18px; border: 2px solid #c5d9e6; border-radius: 999px; background: #fff; color: var(--blue); font: inherit; font-size: .98rem; font-weight: 900; cursor: pointer; justify-self: start; }
     .retour-seance span { font-size: 1.1em; line-height: 1; }
     .titre-menu { margin: 6px 0 2px; color: var(--muted); font-size: .8rem; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; }
-    .semaine { display: flex; align-items: center; justify-content: center; gap: 8px; margin: -2px 0; color: var(--muted); font-size: .86rem; font-weight: 800; }
-    .semaine i { width: 13px; height: 13px; border: 2px solid var(--teal); border-radius: 50%; box-sizing: border-box; }
-    .semaine i.ok { background: var(--teal); }
+    .semaine { margin: -2px 0; color: var(--muted); font-size: .86rem; font-weight: 800; text-align: center; }
+    .semaine b { color: var(--ink); font-weight: 900; }
     .seance-fil { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; color: var(--muted); font-size: .9rem; font-weight: 850; }
     .seance-fil ol { display: flex; align-items: center; gap: 0; margin: 0; padding: 0; list-style: none; }
     .seance-fil li { display: inline-grid; place-items: center; width: 24px; height: 24px; border: 2px solid #b9cbd8; border-radius: 50%; background: #fff; color: #6b8192; font-size: .78rem; font-weight: 950; line-height: 1; box-sizing: border-box; }
@@ -859,13 +858,19 @@
     .seance-suite .cadre p b { color: var(--blue); }
     /* Lot E2 (décision 3) : « À retenir pour demain », toutes les erreurs de
        la séance écrites justes ; il remplace la liste de la dernière étape. */
-    .seance-suite .retenir { width: 100%; padding: 11px 13px; border: 1px solid #efd28a; border-radius: 13px; background: #fff8e6; text-align: left; box-sizing: border-box; }
-    .seance-suite .retenir h2 { margin: 0 0 7px; color: #8a4c00; font-size: 1rem; font-weight: 950; }
-    .seance-suite .retenir ul { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 7px; padding: 0; list-style: none; }
-    .seance-suite .retenir li { display: inline-flex; padding: 4px 10px; border: 1.5px solid var(--ink); border-radius: 999px; background: #fff; color: var(--ink); font-size: .95rem; font-weight: 900; white-space: nowrap; }
-    .seance-suite .retenir li b { margin-left: .25em; color: var(--green); }
+    .seance-suite .retenir, .carte-seance .retenir { width: 100%; padding: 11px 13px; border: 1px solid #efd28a; border-radius: 13px; background: #fff8e6; text-align: left; box-sizing: border-box; }
+    .seance-suite .retenir h2, .carte-seance .retenir h2 { margin: 0 0 7px; color: #8a4c00; font-size: 1rem; font-weight: 950; }
+    .seance-suite .retenir ul, .carte-seance .retenir ul { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 7px; padding: 0; list-style: none; }
+    .seance-suite .retenir li, .carte-seance .retenir li { display: inline-flex; padding: 4px 10px; border: 1.5px solid var(--ink); border-radius: 999px; background: #fff; color: var(--ink); font-size: .95rem; font-weight: 900; white-space: nowrap; }
+    .seance-suite .retenir li b, .carte-seance .retenir li b { margin-left: .25em; color: var(--green); }
     /* Lot « Mon parcours » : plus de phrase sous les pastilles, la liste ferme le cadre. */
-    .seance-suite .retenir ul:last-child { margin-bottom: 0; }
+    .seance-suite .retenir ul:last-child, .carte-seance .retenir ul:last-child { margin-bottom: 0; }
+    /* Lot « retouches après Mon parcours » (décision 7) : la carte de
+       l'accueil une fois la séance du jour faite. */
+    .carte-seance.est-faite { display: grid; gap: 12px; justify-items: center; cursor: default; }
+    .carte-seance.est-faite .fait { margin: 0; color: var(--green); font-size: 1.3rem; font-weight: 950; line-height: 1.15; }
+    .carte-seance.est-faite .fait i { margin-right: .3em; font-style: normal; }
+    .carte-seance.est-faite .encore { min-width: 220px; }
     /* Lot E2 (décision 12) : le bilan après une table acquise. */
     .seance-suite .cadre .acquise { margin: 0 0 4px; color: var(--green); font-size: 1.15rem; font-weight: 950; }
     .seance-suite .boutons { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; width: 100%; }
@@ -1082,6 +1087,16 @@
     .calculs-jour button b { color: var(--blue); font-weight: 950; }
     .calculs-jour button[aria-pressed="true"] { outline: 3px solid var(--blue); outline-offset: 1px; }
     .calculs-jour p { display: grid; place-items: center; border-style: dashed; color: var(--muted); }
+    /* Lot « retouches après Mon parcours » (décision 2) : « Aujourd'hui » et
+       « Demain », deux boutons côte à côte, en deux lignes au téléphone
+       (« Aujourd'hui » / « 2 calculs »), en une sur ordinateur. */
+    .calculs-jour.avec-demain { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .calculs-jour.avec-demain .jour-nom { display: block; }
+    .calculs-jour.avec-demain .jour-deux-points { display: none; }
+    @media (min-width: 1024px) {
+      .calculs-jour.avec-demain .jour-nom { display: inline; }
+      .calculs-jour.avec-demain .jour-deux-points { display: inline; }
+    }
     .calculs-aide { margin: 8px 0 0; color: var(--muted); font-size: .8rem; font-weight: 700; text-align: center; }
     .calculs-aide.is-cache { display: none; }
     /* Le détail : seulement au toucher, avec ✕. */
@@ -1111,8 +1126,8 @@
     .mp-melange strong { display: block; color: var(--ink); font-size: 1.05rem; }
     .mp-melange small { display: block; color: var(--muted); font-size: .88rem; font-weight: 850; }
     /* Ordinateur : deux colonnes, et Mon parcours se mesure comme les autres
-       écrans (ajusterEchelle) — × 0,8 à × 1 en fenêtre, agrandi en plein
-       écran ; s'il ne tient pas, il garde × 0,8. À gauche, le tableau (titre,
+       écrans (ajusterEchelle) — × 0,75 à × 1 en fenêtre, agrandi en plein
+       écran ; s'il ne tient pas, il garde × 0,75. À gauche, le tableau (titre,
        « Table de 10 : acquise ✓ » en haut à droite, légende dessous) ; à
        droite, ma table, « Aujourd'hui » et les boîtes, le mélange, Expert. Le
        détail se pose sous les boîtes, sur le mélange et Expert : rien ne
@@ -1146,6 +1161,21 @@
       .calculs-detail { position: absolute; z-index: 30; left: 0; right: 0; top: calc(100% + 6px); margin: 0; box-shadow: 0 10px 34px rgba(20, 50, 80, .28); }
       .mc-detail-jours span { padding: 7.5px 9px 6.5px; }
       .parcours-notice-action button { min-height: 34px; }
+      /* Lot « retouches après Mon parcours » (point 6) : les cinq marches de
+         l'escalier sur UNE ligne — en 1 024 px, la couronne passait seule à la
+         ligne et la colonne de droite dépassait l'écran. */
+      #parcours-expert .parcours-extra-cells { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+      #parcours-expert .parcours-extra-cells .cell { width: 100%; min-width: 0; }
+      /* … et « À jour ✓ » à côté de « Mon mélange », pas dessous. */
+      .parcours-suite .mp-melange-droite > span:first-child { flex-basis: 6em; }
+    }
+    /* Lot « retouches après Mon parcours » (point 6, règle du cadre blanc
+       entier) : sur un écran d'ordinateur bas (1 366 × 650, 1 024 × 600), le
+       cadre perd un peu de son blanc en haut et en bas — l'accueil d'un élève
+       suivi dépassait encore de 12 px à × 0,8, la plus petite échelle. */
+    @media (min-width: 1024px) and (max-height: 700px) {
+      .panel { padding-top: 20px; padding-bottom: 20px; }
+      .intro { margin-top: 4px; margin-bottom: 6px; }
     }
 
     .settings-panel {
@@ -1492,6 +1522,9 @@
     .number-stick-cell.is-empty .number-stick-value::after { content: ""; width: 42%; height: 2px; border-radius: 99px; background: #c7d7e0; }
     .number-stick-cell.has-draft .number-stick-value::after { display: none; }
     .expression.is-stick-activity { font-size: clamp(1.8rem, 6vw, 2.8rem); }
+    /* Lot « retouches après Mon parcours » (point 5) : un calcul ne passe
+       jamais à la ligne — ajusterExpression règle sa taille. */
+    .expression.un-seul-trait { flex-wrap: nowrap; white-space: nowrap; }
     /* Lot R1 : dans « Je construis la bande » et « bande à trous », le titre
        « Table de 5 » n'est qu'une étiquette (40 px sur un téléphone, 64 sur
        PC, pendant que la bande — l'objet de l'activité — s'écrivait en
@@ -2077,7 +2110,12 @@
     .perles-rangee { position: relative; width: 100%; }
     /* Lot E2 (question E2 · 3) : la démonstration du geste — une flèche sur la
        rangée, le groupe qui glisse puis revient. */
-    .perles-fleche { position: absolute; top: 50%; z-index: 3; transform: translateY(-50%); padding: 0 .5em; border-radius: 999px; background: var(--blue); color: #fff; font-weight: 900; line-height: 1.45; pointer-events: none; box-shadow: 0 2px 6px rgba(0, 0, 0, .25); }
+    /* Lot « retouches après Mon parcours » (décision de Gwenaël, 04/10) : la
+       flèche part de la perle À ATTRAPER et glisse avec elle — un anneau bleu
+       dessiné DANS la perle (au bord du cadre, il n'est jamais rogné), la
+       flèche collée à sa gauche. */
+    .perles-fleche { position: absolute; top: 50%; z-index: 3; transform: translateY(-50%); border-radius: 50%; box-shadow: inset 0 0 0 3px var(--blue), 0 0 0 1.5px #fff; pointer-events: none; }
+    .perles-fleche b { position: absolute; top: 50%; right: calc(100% + 4px); transform: translateY(-50%); padding: 0 .45em; border-radius: 999px; background: var(--blue); color: #fff; font-weight: 900; line-height: 1.45; white-space: nowrap; box-shadow: 0 2px 6px rgba(0, 0, 0, .25); }
     .perles-tige { position: absolute; top: 50%; right: 0; left: 0; height: 2px; transform: translateY(-50%); background: #a98352; }
     .perle {
       position: absolute;
@@ -2694,7 +2732,7 @@
   </footer>
 
   <script src="./defi_tables_core.js?v=20261004-1"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20261004-1"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20261004-2"></script>
   <script>
     (() => {
       "use strict";
@@ -3746,13 +3784,16 @@
       // les écrans de jeu d'un élève suivi (le repère prend une ligne de plus)
       // n'avaient jamais tenu. Ici on MESURE : la plus grande échelle pour
       // laquelle ni la page ni le cadre du jeu ne défilent.
-      //  - fenêtre normale : jamais plus de ×1 ; réduit jusqu'à ×0,8 au besoin ;
+      //  - fenêtre normale : jamais plus de ×1 ; réduit jusqu'à ×0,75 au besoin
+      //    (×0,8 jusqu'au lot « retouches après Mon parcours » : l'accueil d'un
+      //    élève suivi en 1 366 × 650 et Mon parcours en 1 024 × 600 ne
+      //    tenaient pas) ;
       //  - plein écran : agrandi jusqu'à ×1,6, tant que tout tient ;
       //  - une page longue (Lire la table) ne tient à aucune échelle lisible :
       //    ×1 en fenêtre, la largeur en plein écran ; Mon parcours n'en est plus
       //    une depuis le lot « Mon parcours » (04/10/2026, deux colonnes) ;
       //  - téléphone et tablette (moins de 1 024 px de large) : ×1, toujours.
-      const ECHELLE = Object.freeze({largeurMin: 1024, min: 0.8, max: 1.6, largeurColonne: 850, largeurBase: 1280, basCadre: 12});
+      const ECHELLE = Object.freeze({largeurMin: 1024, min: 0.75, max: 1.6, largeurColonne: 850, largeurBase: 1280, basCadre: 12});
       function bornesEchelle(largeur, pleinEcran) {
         if (largeur < ECHELLE.largeurMin) return {min: 1, max: 1, longue: 1};
         const parLargeur = Math.max(1, Math.min(ECHELLE.max, (largeur - 32) / ECHELLE.largeurColonne));
@@ -3820,7 +3861,7 @@
         if (ouvert) acc.classList.add("mesure-replie");
         // Une série qui ne tient à aucune échelle garde la plus petite : moins
         // il reste à faire défiler, mieux c'est. Mon parcours aussi (lot « Mon
-        // parcours », comme l'accueil : × 0,8 sur un petit portable).
+        // parcours », comme l'accueil : × 0,75 au plus petit).
         let z = chercherEchelle(enJeu || accueil || parcoursOuvert ? {...bornes, longue: bornes.min} : bornes, tient);
         if (ouvert) {
           acc.classList.remove("mesure-replie");
@@ -3835,6 +3876,7 @@
       }
       window.addEventListener("resize", ajusterEchelle);
       window.addEventListener("resize", ajusterFiche);
+      window.addEventListener("resize", ajusterExpression);
       window.addEventListener("resize", retracerSauts);
       let TOTAL = 20;
       let DURATION = null;
@@ -3874,6 +3916,7 @@
         casesDonnees: new Set(),
         casesMontrees: new Set(),
         correctionBande: null,
+        ratesAuPremierEssai: new Set(),
         revealedLearnResults: new Set(),
         lastRevealedLearnMultiplier: null,
         learnStickHelpVisible: false,
@@ -4231,6 +4274,8 @@
         const stickOnly = state.configuration?.mode === "learn"
           && (["construct", "gaps"].includes(state.configuration.learnActivity) || activitePerles(state.configuration));
         $("expression").classList.toggle("is-stick-activity", stickOnly);
+        $("expression").classList.toggle("un-seul-trait", !stickOnly);
+        $("expression").style.removeProperty("font-size");
         if (stickOnly) {
           $("expression").textContent = `Table de ${question.focusTable}`;
           return;
@@ -4244,6 +4289,40 @@
         const after = afterParts.join("?");
         $("expression").replaceChildren(document.createTextNode(before), slot, document.createTextNode(after));
         renderInlineAnswer();
+        ajusterExpression();
+      }
+
+      // Lot « retouches après Mon parcours » (point 5) : « 10 × 10 = 100 »
+      // passait à la ligne au téléphone dès que l'élève tapait le 3e chiffre
+      // (la case grandit). Le calcul tient sur UNE ligne : sa taille se règle
+      // une fois par question, comme si la case contenait déjà trois chiffres
+      // — la plus longue réponse de l'appli (100) —, donc rien ne bouge
+      // pendant la frappe, et la case ne trahit pas le nombre de chiffres.
+      function ajusterExpression() {
+        const zone = $("expression");
+        const slot = $("inline-answer");
+        if (!zone || !slot || !zone.classList.contains("un-seul-trait")) return;
+        zone.style.removeProperty("font-size");
+        const avant = slot.textContent;
+        slot.textContent = "000";
+        const place = zone.clientWidth - parseFloat(getComputedStyle(zone).paddingLeft) - parseFloat(getComputedStyle(zone).paddingRight);
+        const largeur = [...zone.childNodes].reduce((somme, noeud) => {
+          if (noeud.nodeType === 1) return somme + noeud.getBoundingClientRect().width / zoomDe(zone) + parseFloat(getComputedStyle(noeud).marginLeft) + parseFloat(getComputedStyle(noeud).marginRight);
+          const mesure = document.createRange();
+          mesure.selectNodeContents(noeud);
+          return somme + mesure.getBoundingClientRect().width / zoomDe(zone);
+        }, 0);
+        slot.textContent = avant;
+        if (largeur > place && place > 0) {
+          const taille = parseFloat(getComputedStyle(zone).fontSize);
+          zone.style.fontSize = `${Math.floor(taille * place / largeur * 0.98)}px`;
+        }
+      }
+
+      // L'échelle de la colonne (--echelle, ordinateur) : les mesures d'écran
+      // sont en pixels d'écran, les tailles CSS en pixels de la colonne.
+      function zoomDe(element) {
+        return element.offsetWidth ? element.getBoundingClientRect().width / element.offsetWidth : 1;
       }
 
       function createNumberStick(table, revealedMultipliers, {activeMultiplier = null, newMultiplier = null, draftMultiplier = null, draftValue = "", givenMultipliers = null} = {}) {
@@ -4476,6 +4555,26 @@
         const stick = dessin?.previousElementSibling;
         if (!dessin || !stick || !dessin.dataset.sauts) return;
         tracerSauts(stick, dessin, Number(dessin.dataset.table), JSON.parse(dessin.dataset.sauts));
+      }
+
+      // Vrai à la 1re erreur sur ce calcul (et la compte) : l'élève réessaie
+      // tout de suite. Les suivantes passent par reponseDonnee.
+      function deuxiemeChance(erreurs, cle) {
+        if (erreurs.get(cle)) return false;
+        erreurs.set(cle, 1);
+        return true;
+      }
+
+      // « Pas tout à fait, essaie encore. » : la réponse s'efface, la case
+      // reste vide, le pavé reste ouvert. Le message part dès qu'il tape.
+      function essaieEncore() {
+        state.answer = "";
+        renderLearnSequence();
+        renderInlineAnswer();
+        const feedback = $("answer-feedback");
+        feedback.className = "answer-feedback is-wrong";
+        feedback.textContent = "Pas tout à fait, essaie encore.";
+        $("expression").focus?.({preventScroll: true});
       }
 
       // Compte une erreur de plus sur ce calcul ; vrai à la 3e : la réponse
@@ -4727,11 +4826,21 @@
         if (!attendu.nombre) return;
         const rangee = dom.rangees[attendu.rangee];
         const premiere = boulier.etats[attendu.rangee];
+        // Lot « retouches après Mon parcours » (décision de Gwenaël, 04/10) :
+        // la flèche part de la perle À ATTRAPER — pour pousser 7 perles, la
+        // 7e ; pour 1, la seule — et glisse avec elle. C'est le geste du code :
+        // attraper la perle i pousse toutes celles d'avant (perlesPointerMove).
+        // Elle était posée à gauche du groupe, et les perles passaient dessous.
+        const cible = premiere + attendu.nombre - 1;
         const fleche = document.createElement("span");
         fleche.className = "perles-fleche";
         fleche.setAttribute("aria-hidden", "true");
-        fleche.textContent = "←";
-        fleche.style.left = `${Math.max(0, positionPerle(premiere, false) - boulier.taille * 1.7)}px`;
+        fleche.style.width = `${boulier.taille}px`;
+        fleche.style.height = `${boulier.taille}px`;
+        fleche.style.left = `${positionPerle(cible, false)}px`;
+        const pointe = document.createElement("b");
+        pointe.textContent = "←";
+        fleche.append(pointe);
         rangee.element.append(fleche);
         demo = {minuteurs: [], fleche};
         const placer = poussees => {
@@ -4739,6 +4848,8 @@
             rangee.perles[i].style.transition = "left .9s ease-in-out";
             rangee.perles[i].style.left = `${positionPerle(i, poussees)}px`;
           }
+          fleche.style.transition = "left .9s ease-in-out";
+          fleche.style.left = `${positionPerle(cible, poussees)}px`;
         };
         // Mouvement réduit demandé par l'appareil : la flèche seule.
         if (!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
@@ -5505,7 +5616,10 @@
       // Combien de cases de la bande ont demandé plus d'un essai : une case
       // ratée compte une fois, même si le calcul est revenu deux fois.
       function casesRatees() {
-        const ratees = new Set();
+        // Lot « retouches après Mon parcours » (choix de Gwenaël) : une case
+        // trouvée au 2e essai compte comme une erreur — le score dit « du
+        // premier coup », et la marche ratée se juge sur le premier essai.
+        const ratees = new Set(state.ratesAuPremierEssai || []);
         state.questions.forEach((question, index) => {
           const reponse = state.responses[index];
           if (reponse && !reponse.correct) ratees.add(question.multiplier);
@@ -5791,6 +5905,7 @@
         state.casesDonnees = new Set();
         state.casesMontrees = new Set();
         state.correctionBande = null;
+        state.ratesAuPremierEssai = new Set();
         state.revealedLearnResults = new Set(config.mode === "learn"
           ? config.learnActivity === "gaps" ? [0, 5, 10] : config.learnActivity === "beads" ? [0] : []
           : []);
@@ -5952,7 +6067,14 @@
         if (memoryActivity && state.mastered.size >= TOTAL) finish();
         else if (bandeFinie) finish();
         else if (state.index >= state.questions.length) finish();
-        else renderQuestion();
+        else {
+          // Lot « retouches après Mon parcours » (décision 4) : en fin de
+          // bande, quand les calculs ratés reviennent, TOUTES les réponses
+          // écrites en ambre s'effacent ensemble — l'élève remplit lui-même
+          // chaque case ratée. Les autres nombres de la bande restent.
+          if (state.questions[state.index].retry) state.casesMontrees.clear();
+          renderQuestion();
+        }
       }
 
       function next(skip) {
@@ -6016,6 +6138,18 @@
           // Lot « sauts » (30/09) : à la 3e erreur sur le même calcul, la
           // réponse s'écrit dans la case et le calcul ne revient plus. Dans la
           // bande seulement : dans l'ordre et le désordre, rien ne change.
+          // Lot « retouches après Mon parcours » (décision 4, règle de
+          // Gwenaël) : la 1re erreur sur un calcul de la bande donne une
+          // DEUXIÈME CHANCE — « Pas tout à fait, essaie encore. », la case
+          // reste vide, rien n'est montré, la même question tout de suite. La
+          // 2e erreur écrit la réponse en ambre et le calcul reviendra ; la 3e
+          // l'écrit pour de bon (ERREURS_AVANT_REPONSE, inchangé). Un calcul
+          // trouvé au 2e essai ne revient pas.
+          if (stickActivity && !correct && !skip && deuxiemeChance(state.erreursBande, question.factKey)) {
+            state.ratesAuPremierEssai.add(question.multiplier);
+            essaieEncore();
+            return;
+          }
           const donnee = stickActivity && !correct && reponseDonnee(state.erreursBande, question.factKey);
           const shouldRetry = (!correct && !donnee) || assisted;
           if (correct && !assisted) state.mastered.add(question.factKey);
@@ -6183,6 +6317,23 @@
         return Math.max(1, PARCOURS.ecartJours(aujourdhui, fait.echeance));
       }
 
+      // Lot « retouches après Mon parcours » (décision 2) : les calculs de
+      // « Demain » — ceux dont le jour de retour est demain : ratés aujourd'hui,
+      // ou échéance demain. PAS les calculs du jour encore à faire (ils sont
+      // dans « Aujourd'hui »).
+      function calculsDeDemain(aujourdhui = jourDuJour()) {
+        return Object.keys(parcours.calculs).filter(cle => jourDeRetour(parcours.calculs[cle], aujourdhui) === 1);
+      }
+
+      // « 2 à revoir · 3 à faire monter » : les ratés (boîte 1), ceux qui
+      // doivent monter (boîtes 2 à 4), ceux à garder (boîte 5) — seulement les
+      // nombres qui ne sont pas nuls.
+      function sortesDeCalculs(cles) {
+        const combien = garder => cles.filter(cle => garder(parcours.calculs[cle].boite)).length;
+        return [[combien(boite => boite <= 1), "à revoir"], [combien(boite => boite >= 2 && boite <= 4), "à faire monter"], [combien(boite => boite >= 5), "à garder"]]
+          .filter(([nombre]) => nombre).map(([nombre, mots]) => `${nombre} ${mots}`.replace(/ /g, "\u00a0"));
+      }
+
       // Lot « Mon parcours » : le détail n'apparaît qu'au toucher (une case,
       // une boîte ou « Aujourd'hui »), et ✕ le referme. La petite ligne
       // « Touche une case… » se cache pendant ce temps (sur ordinateur, elle
@@ -6210,15 +6361,26 @@
         // ceux à garder (boîte 5) ; seulement les nombres qui ne sont pas nuls.
         if (calculsSelection.jour) {
           const dus = PARCOURS.calculsDus(parcours, {aujourdhui});
-          const combien = garder => dus.filter(cle => garder(parcours.calculs[cle].boite)).length;
-          const sortes = [[combien(boite => boite <= 1), "à revoir"], [combien(boite => boite >= 2 && boite <= 4), "à faire monter"], [combien(boite => boite >= 5), "à garder"]]
-            .filter(([nombre]) => nombre).map(([nombre, mots]) => `${nombre} ${mots}`.replace(/ /g, "\u00a0"));
+          const sortes = sortesDeCalculs(dus);
           zone.className = "calculs-detail is-en-cours";
           zone.replaceChildren(fermer);
           zone.appendChild(ligneDetail("mc-detail-calcul", `Aujourd’hui · ${pluriel(dus.length, "calcul")}`));
           if (sortes.length) zone.appendChild(ligneDetail("mc-detail-etat", sortes.join(" · ")));
           // Le nom de l'étape ne se coupe pas (« jour ». seul à la ligne au téléphone).
           zone.appendChild(ligneDetail("mc-detail-note", "Ils sont dans ta séance : «\u00a0Mes\u00a0calculs\u00a0du\u00a0jour\u00a0»."));
+          return;
+        }
+        // Lot « retouches après Mon parcours » (décision 2) : « Demain » touché
+        // — les calculs qui reviendront demain, rangés comme ceux du jour. On
+        // les voit ; on ne les joue pas en avance.
+        if (calculsSelection.demain) {
+          const cles = calculsDeDemain(aujourdhui);
+          const sortes = sortesDeCalculs(cles);
+          zone.className = "calculs-detail is-en-cours";
+          zone.replaceChildren(fermer);
+          zone.appendChild(ligneDetail("mc-detail-calcul", `Demain · ${pluriel(cles.length, "calcul")}`));
+          if (sortes.length) zone.appendChild(ligneDetail("mc-detail-etat", sortes.join(" · ")));
+          zone.appendChild(ligneDetail("mc-detail-note", "Ils seront dans ta séance de\u00a0demain."));
           return;
         }
         // Une boîte touchée : ses calculs rangés par JOUR de retour (décision 7)
@@ -6343,8 +6505,9 @@
         // de ma table s'éteint.
         const boiteChoisie = calculsSelection && calculsSelection.boite ? calculsSelection.boite : 0;
         const jourChoisi = Boolean(calculsSelection && calculsSelection.jour);
-        zone.classList.toggle("is-filtre", Boolean(boiteChoisie) || jourChoisi);
-        $("parcours-matable").classList.toggle("is-eteinte", Boolean(boiteChoisie) || jourChoisi);
+        const demain = calculsSelection && calculsSelection.demain ? new Set(calculsDeDemain()) : null;
+        zone.classList.toggle("is-filtre", Boolean(boiteChoisie) || jourChoisi || Boolean(demain));
+        $("parcours-matable").classList.toggle("is-eteinte", Boolean(boiteChoisie) || jourChoisi || Boolean(demain));
         const coin = document.createElement("span");
         coin.className = "calculs-entete";
         coin.textContent = "×";
@@ -6374,7 +6537,7 @@
             // entoure 5 × 7 ET 7 × 5 — le même calcul, comme le dit le détail
             // (« 5 × 7 = 7 × 5 = 35 »).
             const choisie = Boolean(calculsSelection && calculsSelection.cle) && calculsSelection.cle === cellule.cle;
-            const dansBoite = cellule.active && ((Boolean(boiteChoisie) && cellule.boite === boiteChoisie) || (jourChoisi && cellule.du));
+            const dansBoite = cellule.active && ((Boolean(boiteChoisie) && cellule.boite === boiteChoisie) || (jourChoisi && cellule.du) || Boolean(demain && demain.has(cellule.cle)));
             // Vu = entré dans une boîte (une première réponse, juste ou non).
             // La moitié miroir n'a pas de couleur : grise quand le calcul est
             // vu, blanche sinon, comme « pas encore vu ».
@@ -6425,29 +6588,59 @@
       // des boîtes — combien de calculs reviennent dans la séance du jour
       // (10 au plus par séance). La toucher allume ces calculs dans le
       // tableau. Rien de dû : une phrase en pointillés, pas un bouton.
+      // Lot « retouches après Mon parcours » (décision 2) : « Demain » à côté,
+      // même principe — un seul des deux allumé à la fois (comme une boîte) ;
+      // rien demain, pas de bouton.
       function renderJour(agenda) {
         const zone = $("calculs-jour");
         zone.replaceChildren();
+        const demain = calculsDeDemain().length;
+        // Côte à côte (choix de Gwenaël) : chaque bouton plus court.
+        const court = demain > 0;
+        zone.classList.toggle("avec-demain", court);
+        // Côte à côte, chaque bouton s'écrit en deux lignes au téléphone
+        // (« Aujourd'hui » / « 2 calculs ») et en une sur ordinateur.
+        const etiquette = (mot, suite) => {
+          const nom = document.createElement("span");
+          nom.className = "jour-nom";
+          nom.textContent = mot;
+          const deuxPoints = document.createElement("span");
+          deuxPoints.className = "jour-deux-points";
+          deuxPoints.textContent = "\u00a0: ";
+          return [nom, deuxPoints, suite];
+        };
+        const bouton = (cle, mot, nombre, fin) => {
+          const choisi = Boolean(calculsSelection && calculsSelection[cle]);
+          const element = document.createElement("button");
+          element.type = "button";
+          const gras = document.createElement("b");
+          gras.textContent = soude(pluriel(nombre, "calcul"));
+          element.append(...etiquette(mot, gras));
+          if (fin) element.append(document.createTextNode(fin));
+          element.setAttribute("aria-pressed", String(choisi));
+          element.addEventListener("click", () => {
+            calculsSelection = choisi ? null : {[cle]: true};
+            renderCalculs();
+            montrerDetail();
+          });
+          return element;
+        };
         if (!agenda.dus) {
           const rien = document.createElement("p");
-          rien.textContent = "Rien ne revient aujourd’hui.";
+          if (court) {
+            // Un seul enfant : la phrase reste centrée dans son cadre.
+            const texte = document.createElement("span");
+            texte.append(...etiquette("Aujourd’hui", document.createTextNode("rien")));
+            rien.append(texte);
+          } else rien.textContent = "Rien ne revient aujourd’hui.";
           zone.append(rien);
-          return;
+        } else {
+          zone.append(bouton("jour", "Aujourd’hui", agenda.dus, court ? ""
+            : agenda.dus > PARCOURS.SEUILS.revision.total ? ` reviennent, ${PARCOURS.SEUILS.revision.total}\u00a0par\u00a0séance`
+              // « 1 calcul revient », pas « reviennent » (relevé au passage).
+              : agenda.dus > 1 ? " reviennent dans ta\u00a0séance" : " revient dans ta\u00a0séance"));
         }
-        const choisi = Boolean(calculsSelection && calculsSelection.jour);
-        const bouton = document.createElement("button");
-        bouton.type = "button";
-        const nombre = document.createElement("b");
-        nombre.textContent = soude(pluriel(agenda.dus, "calcul"));
-        bouton.append(document.createTextNode("Aujourd’hui\u00a0: "), nombre,
-          document.createTextNode(agenda.dus > PARCOURS.SEUILS.revision.total ? ` reviennent, ${PARCOURS.SEUILS.revision.total}\u00a0par\u00a0séance` : " reviennent dans ta\u00a0séance"));
-        bouton.setAttribute("aria-pressed", String(choisi));
-        bouton.addEventListener("click", () => {
-          calculsSelection = choisi ? null : {jour: true};
-          renderCalculs();
-          montrerDetail();
-        });
-        zone.append(bouton);
+        if (demain) zone.append(bouton("demain", "Demain", demain, ""));
       }
 
       // Mes calculs n'a plus d'écran à part (lot « un seul tableau ») : tout ce
@@ -6483,6 +6676,7 @@
         state.casesDonnees = new Set();
         state.casesMontrees = new Set();
         state.correctionBande = null;
+        state.ratesAuPremierEssai = new Set();
         state.revealedLearnResults = new Set();
         state.lastRevealedLearnMultiplier = null;
         state.learnStickHelpVisible = false;
@@ -7471,7 +7665,10 @@
         // Il remplace la liste « Mes erreurs » de la dernière étape. Lot « Mon
         // parcours » (décision 12) : « À retenir pour la prochaine séance »,
         // sans phrase — « Demain : N calculs t'attendent », au-dessus, suffit.
-        const retenir = cadreARetenir(seance.erreurs || []);
+        // Lot « retouches après Mon parcours » (décision 7) : la liste du JOUR
+        // — les ratés de toutes les séances d'aujourd'hui, pas seulement de
+        // celle qui finit (le moteur la garde dans le parcours).
+        const retenir = cadreARetenir(PARCOURS.aRetenir(parcours));
         if (retenir) zone.append(retenir);
         $("corrections").replaceChildren();
         const boutons = document.createElement("div");
@@ -7588,6 +7785,9 @@
         const enPlus = programme.raccourciEnFin;
         const minutes = enPlus ? `${programme.minutes}\u00a0à\u00a0${programme.minutesMax}` : String(programme.minutes);
         const faite = PARCOURS.bilanSeances(parcours).aujourdhui > 0;
+        // Lot « retouches après Mon parcours » (décision 7) : la séance du jour
+        // faite, la carte le dit et garde « À retenir » jusqu'à minuit.
+        if (faite && !reprise) return carteSeanceFaite(table);
         const carte = document.createElement("button");
         carte.type = "button";
         carte.className = "carte-seance";
@@ -7669,6 +7869,37 @@
         return carte;
       }
 
+      // Lot « retouches après Mon parcours » (décision 7, choix de Gwenaël) :
+      // une fois la séance du jour faite, l'accueil ne passait plus qu'à
+      // « Encore une séance » et aux étapes de la séance SUIVANTE — plus rien
+      // ne disait que la séance était faite, et les calculs à retenir avaient
+      // disparu. La carte dit « ✓ Séance du jour faite », puis « À retenir »
+      // (les ratés de la journée, écrits justes : la même liste qu'au bilan),
+      // puis « Encore une séance », qui ouvre la séance suivante comme avant.
+      // Pas la liste des étapes cochées (plus chargé). Rien à retenir : pas de
+      // pastilles. Pendant une séance (« Reprendre ma séance »), rien.
+      function carteSeanceFaite(table) {
+        const carte = document.createElement("div");
+        carte.className = "carte-seance est-faite";
+        const titre = document.createElement("p");
+        titre.className = "fait";
+        const coche = document.createElement("i");
+        coche.setAttribute("aria-hidden", "true");
+        coche.textContent = "✓";
+        titre.append(coche, "Séance du jour faite");
+        carte.append(titre);
+        const retenir = cadreARetenir(PARCOURS.aRetenir(parcours));
+        if (retenir) carte.append(retenir);
+        const encore = document.createElement("button");
+        encore.type = "button";
+        encore.className = "primary encore";
+        encore.id = "acc-seance";
+        encore.textContent = "Encore une séance";
+        encore.addEventListener("click", () => commencerSeance(table));
+        carte.append(encore);
+        return carte;
+      }
+
       // L'accueil : la rangée, puis la carte de la séance et ses
       // liens — ou, « Choisir une activité » ouvert, le menu d'avant.
       function renderSeanceAccueil(etapes, etat, table, ligne) {
@@ -7728,30 +7959,21 @@
         etapes.append(liens);
       }
 
-      // « Cette semaine ●○○○○ » : les jours avec une séance finie, objectif 5
-      // (pas une limite : au-delà, « 6 jours cette semaine ✓ »). Et la tuile
-      // Mon parcours reprend « 3 tables sur 9 · Or ».
+      // Lot « retouches après Mon parcours » (choix de Gwenaël, 04/10) :
+      // « 3 fois cette semaine » — les séances finies depuis lundi, sans
+      // objectif (« on n'impose rien ») ; rien tant qu'il n'y en a pas. Les
+      // cinq ronds d'avant faisaient penser aux points d'un carrousel de
+      // téléphone. Et la tuile Mon parcours reprend « 3 tables sur 9 · Or ».
       function renderSemaine(etat) {
         const zone = $("acc-semaine");
         const bilan = PARCOURS.bilanSeances(parcours);
         zone.replaceChildren();
-        zone.hidden = false;
-        if (bilan.semaine > bilan.objectif) {
-          zone.textContent = `${bilan.semaine} jours cette semaine ✓`;
-          // Le texte se lit seul : l'étiquette des ronds (« 5 jours … sur 5 »)
-          // ne doit pas lui survivre quand la 6e séance arrive page ouverte.
-          zone.removeAttribute("aria-label");
-        } else {
-          const titre = document.createElement("span");
-          titre.textContent = "Cette semaine";
-          zone.append(titre);
-          for (let index = 0; index < bilan.objectif; index += 1) {
-            const rond = document.createElement("i");
-            if (index < bilan.semaine) rond.className = "ok";
-            rond.setAttribute("aria-hidden", "true");
-            zone.append(rond);
-          }
-          zone.setAttribute("aria-label", `Cette semaine : ${pluriel(bilan.semaine, "jour")} avec une séance sur ${bilan.objectif}`);
+        zone.removeAttribute("aria-label");
+        zone.hidden = !bilan.fois;
+        if (bilan.fois) {
+          const nombre = document.createElement("b");
+          nombre.textContent = `${bilan.fois}\u00a0fois`;
+          zone.append(nombre, " cette semaine");
         }
         $("acc-jours").hidden = true;
         const nombre = etat.acquises.length;
@@ -8564,20 +8786,16 @@
         state.running = false;
         stopTimer();
         show("parcours");
-        centrerSurCalculs();
+        ouvrirEnHaut();
       }
 
-      // Lot « Mon parcours » (point 7) : au téléphone (et sur tablette), Mon
-      // parcours s'ouvrait en haut — logo, bandeau, titre. Il s'ouvre centré
-      // sur Mes calculs (« j'aime bien quand c'est centré sur mes calculs ») ;
-      // s'il est plus haut que l'écran, son titre en haut. Sur ordinateur, tout
-      // tient dans l'écran : rien ne bouge.
-      function centrerSurCalculs() {
-        if (window.matchMedia && window.matchMedia("(min-width: 1024px)").matches) return;
-        const bloc = $("parcours-calculs").getBoundingClientRect();
-        const marge = Math.max(8, (window.innerHeight - bloc.height) / 2);
-        const haut = Math.round(bloc.top + window.scrollY - marge);
-        if (haut > 0) window.scrollTo({top: haut, behavior: "auto"});
+      // Lot « retouches après Mon parcours » (décision 1) : au téléphone, Mon
+      // parcours s'ouvre EN HAUT, comme tous les autres écrans — « ← Mon
+      // parcours ⋯ », puis la carte de ma table (« que la table de 2 cochée
+      // reste apparente là-haut »). Le lot « Mon parcours » l'ouvrait centré
+      // sur Mes calculs : Gwenaël a changé d'avis en essayant.
+      function ouvrirEnHaut() {
+        window.scrollTo({top: 0, behavior: "auto"});
       }
 
       $("open-parcours").addEventListener("click", openParcours);
@@ -8599,7 +8817,7 @@
       // table rallume la croix (lot « Mon parcours », décision 4). Au clavier,
       // ✕ ou la même boîte font la même chose.
       $("parcours-matable").addEventListener("click", () => {
-        if (!calculsSelection || !(calculsSelection.boite || calculsSelection.jour)) return;
+        if (!calculsSelection || !(calculsSelection.boite || calculsSelection.jour || calculsSelection.demain)) return;
         calculsSelection = null;
         renderCalculs();
       });

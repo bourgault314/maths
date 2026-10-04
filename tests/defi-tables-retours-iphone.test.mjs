@@ -124,8 +124,9 @@ test("fin de révision : la classe is-revision centre le cadre, cache la rangée
 
 test("une boîte (ou « Aujourd’hui ») touchée s’allume dans la grille : is-filtre sur la grille, is-dans-boite sur ses calculs (pas sur le miroir), sur fond bleu", () => {
   assert.match(html, /const boiteChoisie = calculsSelection && calculsSelection\.boite \? calculsSelection\.boite : 0;/);
-  assert.match(html, /zone\.classList\.toggle\("is-filtre", Boolean\(boiteChoisie\) \|\| jourChoisi\);/);
-  assert.match(html, /const dansBoite = cellule\.active && \(\(Boolean\(boiteChoisie\) && cellule\.boite === boiteChoisie\) \|\| \(jourChoisi && cellule\.du\)\);/, "seule la moitié active s'allume — le miroir reste éteint");
+  // Lot « retouches après Mon parcours » : « Demain » s'allume de la même façon.
+  assert.match(html, /zone\.classList\.toggle\("is-filtre", Boolean\(boiteChoisie\) \|\| jourChoisi \|\| Boolean\(demain\)\);/);
+  assert.match(html, /const dansBoite = cellule\.active && \(\(Boolean\(boiteChoisie\) && cellule\.boite === boiteChoisie\) \|\| \(jourChoisi && cellule\.du\) \|\| Boolean\(demain && demain\.has\(cellule\.cle\)\)\);/, "seule la moitié active s'allume — le miroir reste éteint");
   assert.match(html, /\$\{dansBoite \? " is-dans-boite" : ""\}`;/);
   assert.match(html, /\.calculs-grille\.is-filtre \.mc-cell:not\(\.is-dans-boite\) \{ opacity: \.28; \}/, "les autres s'estompent");
   assert.match(html, /\.calculs-grille\.is-filtre \.mc-cell\.is-miroir \{ opacity: \.12; \}/);

@@ -132,7 +132,7 @@ test("à minuit, la séance pas finie est oubliée : départ inchangé, pas comp
   assert.equal(lendemain.jour, jour(3));
   assert.equal(P.seanceEnCours(coupe.parcours, {aujourdhui: jour(3)}), null);
   assert.equal(lendemain.depart, 4, "le départ n'a pas bougé");
-  assert.deepEqual(P.bilanSeances(coupe.parcours, jour(3)), {semaine: 0, objectif: 5, aujourdhui: 0});
+  assert.deepEqual(P.bilanSeances(coupe.parcours, jour(3)), {semaine: 0, fois: 0, objectif: 5, aujourdhui: 0});
   assert.equal(coupe.parcours.tables[4].seance.depart, 4);
   // La première étape de la nouvelle séance remplace l'ancienne dans le parcours.
   const suite = jouerSeance(coupe.parcours, jour(3), {etapesMax: 1});
@@ -271,8 +271,16 @@ test("les calculs ratés de la séance sont gardés une fois chacun (pour « À 
   let etape = P.etapeDeSeance(p, seance, jour(2));
   ({parcours: p, seance} = P.noterEtape(p, seance, etape, {juste: 6, total: 8, erreurs: [[4, 7], [7, 4], [4, 7], [12, 3], "x", [4]]}, jour(2)));
   assert.deepEqual(seance.erreurs, [[4, 7], [7, 4]], "4 × 7 et 7 × 4 sont deux écritures ; un doublon, un calcul hors tables et du texte sont écartés");
+  // Lot « retouches après Mon parcours » (décision de Gwenaël) : les erreurs
+  // de J'apprends (ici « Dans l'ordre ») ne sont pas gardées — seulement les
+  // calculs répondus de mémoire, ceux qui entrent dans les boîtes.
   etape = P.etapeDeSeance(p, seance, jour(2));
-  ({parcours: p, seance} = P.noterEtape(p, seance, etape, {juste: 10, total: 11, erreurs: [[4, 7], [4, 0], [4, 8]]}, jour(2)));
+  assert.equal(etape.type, "apprends");
+  ({parcours: p, seance} = P.noterEtape(p, seance, etape, {juste: 10, total: 11, erreurs: [[4, 6]]}, jour(2)));
+  assert.deepEqual(seance.erreurs, [[4, 7], [7, 4]], "« Dans l'ordre » : rien de gardé");
+  etape = P.etapeDeSeance(p, seance, jour(2));
+  assert.equal(etape.type, "entraine");
+  ({parcours: p, seance} = P.noterEtape(p, seance, etape, {juste: 9, total: 10, erreurs: [[4, 7], [4, 0], [4, 8]]}, jour(2)));
   assert.deepEqual(seance.erreurs, [[4, 7], [7, 4], [4, 0], [4, 8]], "les erreurs de chaque étape s'ajoutent");
   assert.deepEqual(p.enCours.erreurs, [407, 704, 400, 408]);
   assert.deepEqual(P.ouvrirSeance(p, {aujourdhui: jour(2)}).erreurs, seance.erreurs, "et reviennent à la reprise");
@@ -427,7 +435,7 @@ test("la page : « Reprendre ma séance », ses étapes cochées, « Reprendre �
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie serveur identique", () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261004-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261004-2/);
   assert.match(html, /defi_tables_core\.js\?v=20261004-1/, "le noyau n'a pas changé : son numéro reste");
   const moteur = readFileSync(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = readFileSync(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));

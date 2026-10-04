@@ -52,9 +52,10 @@ test("décision 3 : « À retenir pour demain » — chaque calcul une fois, éc
   assert.deepEqual(cadreARetenir([[1, 3]]).tous("li").map(li => li.textContent), ["1 × 3 =3"], "× 1 aussi : écrit juste, sans phrase fausse");
   assert.equal(cadreARetenir([[1, 3]]).tous("p").length, 0);
   const bilan = corps("renderBilanSeance");
-  assert.match(bilan, /const retenir = cadreARetenir\(seance\.erreurs \|\| \[\]\);\s*if \(retenir\) zone\.append\(retenir\);\s*\$\("corrections"\)\.replaceChildren\(\);/);
+  // Lot « retouches après Mon parcours » : la liste du JOUR, gardée par le moteur.
+  assert.match(bilan, /const retenir = cadreARetenir\(PARCOURS\.aRetenir\(parcours\)\);\s*if \(retenir\) zone\.append\(retenir\);\s*\$\("corrections"\)\.replaceChildren\(\);/);
   assert.ok(bilan.indexOf("cadreARetenir") < bilan.indexOf("boutons.className"), "au-dessus des boutons");
-  assert.match(html, /\.seance-suite \.retenir \{ width: 100%;/);
+  assert.match(html, /\.seance-suite \.retenir, \.carte-seance \.retenir \{ width: 100%;/, "le même cadre au bilan et sur la carte de l’accueil");
 });
 
 test("décision 12 (réponse B) : « Table de 3 acquise ✓ » à la place de la rangée, et une seule phrase pour demain", () => {
@@ -141,7 +142,9 @@ test("E2 · 3 (audit GPT, E) : la démonstration du geste des perles — toute s
   assert.match(html, /if \(premieresPerles\(\)\) setTimeout\(\(\) => \{ if \(boulier\.dom && boulier\.etape === 0 && totalPerles\(\) === 0\) montrerGeste\(\); \}, 700\);/);
   const geste = corps("montrerGeste");
   assert.match(geste, /const attendu = gesteAttendu\(boulier\.etats, boulier\.etape, boulier\.table\);/, "le bon groupe, celui que l'élève doit pousser");
-  assert.match(geste, /fleche\.textContent = "←";/);
+  // Lot « retouches après Mon parcours » : la flèche part de la perle à attraper.
+  assert.match(geste, /const cible = premiere \+ attendu\.nombre - 1;/);
+  assert.match(geste, /pointe\.textContent = "←";/);
   assert.match(geste, /if \(!dom \|\| boulier\.finie \|\| !state\.running \|\| boulier\.drag \|\| !\(boulier\.taille > 0\)\) return;/, "jamais pendant que l'élève tient une perle");
   assert.match(geste, /\[\[300, true\], \[1500, false\], \[2700, true\], \[3900, false\]\]/, "deux allers-retours : les perles reviennent toujours");
   assert.match(geste, /prefers-reduced-motion: reduce/);
