@@ -31,16 +31,16 @@ function constante(nom){
 
 const PALETTE = html.slice(html.indexOf("const INVESTIGATE_COLOR_PALETTE = ["), html.indexOf("];", html.indexOf("const INVESTIGATE_COLOR_PALETTE = [")) + 2);
 const CONSTANTES = ["SYS_GESTES", "SYS_GESTES_MIX_DEFAUT", "SYS_MAX_TACHES", "SYS_MAX_TACHES_AVANT", "SYS_ESSAIS", "SYS_NOMBRES_SOUS_ENTENDUS", "SYS_COULEURS_PLURIEL", "SYS_PLAGES",
-  "SYS_ZONE_ECRAN", "SYS_ZONE_IMPRIME", "SYS_ZONE_IMPRIME_6", "SYS_TACHE", "SYS_CORR", "SYS_CORR_LOUPE_MAX", "SYS_ZONE_ECRAN_CORRECTION", "SYS_ZONE_IMPRIME_CORRECTION",
-  "SYS_FIL", "SYS_UNIQUE_ECRAN", "SYS_UNIQUE_IMPRIME", "SYS_TEL", "SYS_ZONE_TEL_CORRECTION", "ENQUETE_DEPASSE_TRAIT", "ENQUETE_DEPASSE_FOND", "ENQUETE_ECRITURE_FOND", "ENQUETE_ECRITURE_ENCRE",
-  "ENQUETE_NOM_ECART"].map(constante).join("\n");
+  "SYS_ZONE_ECRAN", "SYS_ZONE_IMPRIME", "SYS_ZONE_IMPRIME_6", "SYS_TACHE", "SYS_BARRES", "SYS_BARRES_SERRE", "SYS_BARRES_TAILLES", "SYS_CORR_IMPRIME", "SYS_CORR_ECRAN",
+  "SYS_ZONE_ECRAN_CORRECTION", "SYS_ZONE_IMPRIME_CORRECTION", "SYS_ZONE_TEL_ENONCE",
+  "SYS_FIL", "SYS_UNIQUE_ECRAN", "SYS_UNIQUE_IMPRIME", "SYS_TEL", "SYS_ZONE_TEL_CORRECTION", "ENQUETE_NOM_ECART"].map(constante).join("\n");
 const GENERATEUR = ["sysNormaliserReglages", "genSystemCarte", "sysMelangerPlateaux", "sysFormes", "sysFormesDouble", "sysSomme", "sysNombreTaches", "sysPlateau",
   "sysTirerSituation", "sysSituationValide", "sysNombreSousEntendu", "sysTexteASousEntendu", "sysSituationSure",
-  "sysAssemblerCarte", "sysUneTacheParCouleur", "sysIndice", "sysPhraseIndice", "sysPlan"].map(fn).join("\n");
-const DESSIN = ["sysEnPlateaux", "sysTotalCache", "sysRayonJeton", "sysGrille", "sysColonnesVisibles", "sysRayonMax", "sysDispositionPlateaux", "drawSysPlateaux",
-  "sysAPlan", "sysDevoileEleve", "sysCorrPoids", "sysCorrLongueur", "sysCorrUnite", "sysCorrMetriques", "sysCorrHauteurCadre", "sysCorrMesures", "sysCorrEtiquette",
-  "sysCorrLargeurCalcul", "sysCorrAjuster", "drawSysCase", "drawSysBarre", "drawSysCadre", "blobPath", "wrapTextToWidth", "beadColorForValue",
-  "drawInvestigateSplatName", "investigateColorInfo", "sysTelMesures", "drawSysCadrePortrait", "drawSysCorrectionTelephone"].map(fn).join("\n");
+  "sysAssemblerCarte", "sysUneTacheParCouleur", "sysIndice", "sysPhraseIndice", "sysPlanS3", "sysPlan"].map(fn).join("\n");
+const DESSIN = ["sysEnPlateaux", "sysTotalCache", "sysRayonJeton", "sysGrille", "sysColonnesVisibles", "sysRayonMax", "sysDispositionPlateaux", "sysZoneTelephone", "drawSysPlateaux",
+  "sysAPlan", "sysDevoileEleve", "sysBarresMetriques", "sysLargeurTexte", "sysCorrAjuster", "sysBarreCases", "sysBarreLargeur", "sysEtapeTaille", "sysVerifHauteur",
+  "sysVerifLargeur", "sysEtapesFlux", "sysJetonCouleurs", "drawSysCaseBarre", "drawSysBarre", "drawSysEtape", "drawSysVerification", "blobPath", "wrapTextToWidth",
+  "beadColorForValue", "drawInvestigateSplatName", "investigateColorInfo", "sysTelEchelle", "drawSysCorrectionTelephone"].map(fn).join("\n");
 const ELEVE = ["eleveInfosEnquete", "eleveInfosSysteme", "eleveInfosTableau", "eleveSchemaEtapes", "eleveTacheCouleurHtml", "eleveCaseDonneeHtml",
   "eleveCasesEnqueteHtml", "eleveCaseHtml", "eleveCaseCopieHtml"].map(fn).join("\n");
 
@@ -52,6 +52,8 @@ const FAUX_SVG = `
   let svg = mkEl("svg");
   function clearSvg(){ svg = mkEl("svg"); }
   let numberedQuestionMarkMode = true;
+  /* les jetons visibles prennent leur couleur à la page (beadColorForValue) : une page minimale */
+  const document = { body: { classList: { contains: () => false } }, getElementById: () => null, createElement(){ throw new Error("pas de canevas"); } };
 `;
 
 const sys = new Function(`
@@ -81,13 +83,13 @@ const sys = new Function(`
   ${FAUX_SVG}
   let eleveEnqueteDevoile = false;
   return {
-    GESTES: SYS_GESTES, TEL: SYS_TEL, ZT: SYS_ZONE_TEL_CORRECTION, C: SYS_CORR,
+    GESTES: SYS_GESTES, TEL: SYS_TEL, ZT: SYS_ZONE_TEL_CORRECTION, B: SYS_BARRES,
     mot: (k) => investigateColorWord(investigateColorByKey(k)),
     infos: eleveInfosSysteme, tableau: eleveInfosTableau, etapes: eleveSchemaEtapes, bas: eleveCasesEnqueteHtml, totalCache: sysTotalCache,
     aPlan: sysAPlan, devoile: (card, d) => { eleveEnqueteDevoile = d; return sysDevoileEleve(card); },
-    telMesures: sysTelMesures,
+    telEchelle: sysTelEchelle, metriques: sysBarresMetriques, largeurBarre: sysBarreLargeur, cases: sysBarreCases, taille: sysEtapeTaille, verifHauteur: sysVerifHauteur,
+    zoneTel: sysZoneTelephone, disposition: sysDispositionPlateaux,
     portrait(card, k){ svg = mkEl("svg"); drawSysCorrectionTelephone(card, k); return svg; },
-    cadrePortrait(card, etape, numero){ const r = mkEl("g"); const m = sysTelMesures(card); const h = drawSysCadrePortrait(r, card, etape, 100, m, { mkEl, mkText, isPrint:false, lettres:false, C:m.C }, numero); return { g: r.children[0], h, m }; },
     serie(graine, n, reglages){
       const rng = mulberry32(graine);
       const out = [];
@@ -224,7 +226,7 @@ test("le dévoilement : sysDevoileEleve lit le drapeau, les plateaux se dessinen
   assert.match(ecran, /drawSysPlateaux\(svg, card, SYS_ZONE_ECRAN_CORRECTION, \{ devoile: dernier \|\| devoileEleve, fondu: !devoileEleve, nomMin: SYS_ZONE_ECRAN_CORRECTION\.nomMin \}\);/);
   assert.match(ecran, /renderCard\(sysCarteSansIndices\(card\), \(dernier \|\| devoileEleve\) \? 2 : 0, \{ sansCorrection:true \}\);/);
   const rc = fn("renderCard");
-  assert.match(rc, /drawSysPlateaux\(svg, card, SYS_ZONE_ECRAN, \{ devoile: revealState >= 2 \|\| sysDevoileEleve\(card\) \}\);/);
+  assert.match(rc, /drawSysPlateaux\(svg, card, zone, \{ devoile: revealState >= 2 \|\| sysDevoileEleve\(card\) \}\);/);
   assert.match(rc, /\(isABProjectionLayout \? abRevealPhase : \(sysDevoileEleve\(card\) \? 2 : revealState\)\)/, "plateau unique (Phrases / Symboles) dévoilé aussi");
 });
 
@@ -232,7 +234,9 @@ test("le dévoilement : sysDevoileEleve lit le drapeau, les plateaux se dessinen
 test("le nombre d'étapes du schéma : un cadre par étape du plan ; l'Enquête a les siennes (quatre, lot G1)", () => {
   for(const c of CARTES) assert.equal(sys.etapes(c), c._sys.plan.length);
   assert.equal(sys.etapes({ family: "C", _rel: {} }), 4);
-  assert.ok(CARTES.some((c) => c._sys.plan.length === 4) && CARTES.some((c) => c._sys.plan.length === 5), "des plans de 4 (Trois paires) et de 5");
+  // lot M4-2 : de 5 (une partie connue, une tache par couleur) à 9 étapes (l'escalier, le miroir)
+  const longueurs = new Set(CARTES.map((c) => c._sys.plan.length));
+  assert.ok([...longueurs].every((n) => n >= 5 && n <= 9) && longueurs.size >= 4, [...longueurs].join(", "));
 });
 
 test("eleveVoirSchema : un appui par cadre, le bouton s'efface au dernier cadre du plan (4 pour Trois paires)", () => {
@@ -275,13 +279,20 @@ test("eleveVoirSchema : un appui par cadre, le bouton s'efface au dernier cadre 
     ${fn("eleveSchemaBoutons")}
     ${fn("eleveSchemaPrecedente")}
     function enqueteProjectionPasAPas(){ return null; }
-    return { proposer: eleveProposerSchema, voir: eleveVoirSchema, dessins, etape: () => eleveSchemaEtape };
+    /* lot M4-2 : comme l'Enquête, la solution du tableau s'efface pendant les étapes */
+    const caches = [];
+    function eleveReponseCacher(c){ caches.push(c); }
+    function eleveSchemaTelephone(){ return false; }
+    function eleveTableauCacher(c){ caches.push("tableau:" + c); }
+    return { proposer: eleveProposerSchema, voir: eleveVoirSchema, dessins, caches, etape: () => eleveSchemaEtape };
   `)(document);
   ctx.proposer(valider);
   assert.equal(boutons.length, 1, "le bouton jaune est proposé pour le Système");
   assert.equal(valider.hidden, true);
   for(let k = 0; k < 6; k++) ctx.voir();
   assert.deepEqual(ctx.dessins, [1, 2, 3, 4], "quatre cadres, puis plus rien");
+  assert.deepEqual(ctx.caches, [true, "tableau:true", true, "tableau:true", true, "tableau:true", false, "tableau:true"],
+    "ordinateur : réponse effacée aux étapes 1 à 3, rendue à la dernière ; tableau caché tout du long (comme l'Enquête)");
   assert.equal(boutons.find((b) => b.id === "eleveSchema"), undefined, "le bouton s'est effacé au 4e");
   assert.deepEqual(boutons.map((b) => b.id), ["eleveSchemaPrec"], "il reste « ◀ » (03/10/2026)");
   assert.equal(suivant.focalise, true);
@@ -320,52 +331,58 @@ test("ordinateur : le cadrage est FIXE d'un cadre à l'autre (l'union des cadrag
 
 // --- téléphone : le dessin portrait ---------------------------------------------------------
 test("téléphone : renderCard passe au dessin portrait quand eleveSchemaTel est levé ; le cadre est dans la liste des cadres du téléphone ; pas de bandeau", () => {
-  assert.match(fn("renderCard"), /if\(sysAPlan\(card\) && revealState >= 1 && !opts\.sansCorrection\)\{\n    if\(typeof eleveSchemaTel !== "undefined" && eleveSchemaTel\) drawSysCorrectionTelephone\(card, revealState\);\n    else drawSysCorrectionEcran\(card, revealState\);/);
+  assert.match(fn("renderCard"), /if\(sysAPlan\(card\) && revealState >= 1 && !opts\.sansCorrection\)\{\n    if\(typeof eleveSchemaTel !== "undefined" && eleveSchemaTel\) drawSysCorrectionTelephone\(card, revealState\);\n    else if\(!sysCorrectionPasAPas\(\)\) drawSysCorrectionDirecte\(card\);\n    else drawSysCorrectionEcran\(card, revealState\);/);
+  // le mode élève reste toujours en pas à pas (lot M4-2, comme l'Enquête)
+  assert.match(fn("sysCorrectionPasAPas"), /if\(typeof eleveActif !== "undefined" && eleveActif\) return true;/);
+  // la solution du tableau s'efface pendant les étapes, comme l'Enquête (lot M4-2)
+  assert.match(fn("eleveSchemaMontrerEtape"), /if\(\(card\.family === "C" && enqueteProjectionPasAPas\(card\)\) \|\| sysAPlan\(card\)\)\{/);
   assert.match(ligne("const ELEVE_SCHEMA_CADRES = "), /"sysSchemaTel"\]/);
   assert.match(fn("eleveDessinerSchema"), /if\(!sysAPlan\(card\)\) eleveRappelAfficher\(card\);/);
   assert.match(fn("eleveDessinerSchema"), /for\(let e = 1; e <= eleveSchemaEtapes\(card\); e\+\+\) hMax = Math\.max\(hMax, eleveSchemaTelRendre\(card, e, largeur\)\);/);
   assert.match(fn("eleveVoirSchema"), /if\(!card \|\| eleveSchemaEtape >= eleveSchemaEtapes\(card\)\) return;/);
 });
 
-test("téléphone : chaque cadre du plan se dessine en portrait — titre, barres, calculs SOUS les barres, réponses de la vérification, tout dans la largeur", () => {
-  let cadres = 0;
+test("téléphone : chaque étape du plan se dessine dans la largeur — titre sur deux lignes au plus, barres et calcul gris à droite ; « Je vérifie » : calculs puis réponse encadrée", () => {
+  let etapes = 0;
   for(const c of CARTES.filter((_, i) => i % 7 === 0)){
-    const m = sys.telMesures(c);
-    assert.ok(m.u > 0 && m.u <= sys.TEL.caseMax);
-    const L = Math.max(...c._sys.plan.flatMap((e) => e.barres.map((b) => (Number(b.offset) || 0) + b.cells.reduce((s, x) => s + (x.kind === "visible" ? sys.C.visible : (x.kind === "rest" ? x.covers.reduce((t, y) => t + (y.kind === "visible" ? sys.C.visible : 1), 0) : 1)), 0))));
-    assert.ok(sys.TEL.barX + L * m.u <= sys.TEL.w - sys.TEL.barX + 0.001, "la barre la plus longue tient dans la largeur");
-    c._sys.plan.forEach((etape, k) => {
-      const { g, h } = sys.cadrePortrait(c, etape, k + 1);
-      cadres++;
-      const bord = g.children[0];
-      assert.equal(bord.attrs.width, sys.TEL.w - 2 * sys.TEL.marge);
-      assert.equal(bord.attrs.height, h);
-      const t = textes(g);
-      assert.ok(t[0].text.startsWith(`${k + 1}. `), "le titre porte le numéro de l'étape");
-      // tout élément dessiné reste dans le cadre (droite) : rects et textes ancrés à gauche
-      for(const r of elements(g, "rect")) assert.ok(r.attrs.x + r.attrs.width <= sys.TEL.w - sys.TEL.marge + 0.001, "une case déborde à droite");
-      const calculs = etape.calculs;
-      if(calculs.length){
-        const lignes = t.filter((x) => x.attrs["font-style"] === "italic");
-        assert.deepEqual(lignes.map((x) => x.text), calculs, "les calculs du plan, dans l'ordre");
-        const basBarres = Math.max(100, ...elements(g, "rect").slice(1).map((r) => r.attrs.y + r.attrs.height));
-        for(const l of lignes) assert.ok(l.attrs.y > basBarres, "les calculs sont SOUS les barres");
-      }
+    const f = sys.telEchelle(c);
+    assert.ok(f > 0.3 && f <= sys.TEL.max);
+    const M = sys.metriques(f);
+    const larg = sys.TEL.w - 2 * sys.TEL.marge;
+    for(const e of c._sys.plan) for(const b of e.barres) assert.ok(sys.largeurBarre(b, M) <= larg + 0.5, "la barre la plus longue (calcul compris) tient dans la largeur");
+    for(let k = 1; k <= c._sys.plan.length; k++){
+      const s = sys.portrait(c, k);
+      const g = s.children[0];
+      const etape = c._sys.plan[k - 1];
+      const dessin = elements(g, "g").find((x) => /\bsysEtape\b/.test(x.attrs.class || ""));
+      assert.ok(dessin, "l'étape est dessinée");
+      assert.equal(dessin.attrs["data-role"], etape.role);
+      etapes++;
+      const t = textes(dessin);
+      assert.ok(t[0].text.startsWith(`${k}. `), "le titre porte le numéro de l'étape");
+      // tout reste dans la largeur : rects, lignes
+      for(const r of elements(dessin, "rect")) assert.ok(r.attrs.x >= sys.TEL.marge - 0.5 && r.attrs.x + r.attrs.width <= sys.TEL.w - sys.TEL.marge + 0.5, `un rect déborde : ${JSON.stringify(r.attrs)} ${etape.role} ${JSON.stringify(etape.barres.map(b => [b.top, b.calcul, sys.cases(b)]))} f=${f}`);
       if(etape.role === "verification"){
-        const rep = t.filter((x) => / = \d+$/.test(x.text) && x.attrs["font-weight"] === 900 && x.attrs["font-style"] !== "italic");
+        const rep = t.filter((x) => / = \d+$/.test(x.text));
         assert.deepEqual(rep.map((x) => x.text), etape.reponses.map((r) => `${sys.mot(r.color)} = ${r.value}`), "les réponses, avec le mot de la couleur");
-        const lignesCalc = t.filter((x) => x.attrs["font-style"] === "italic");
-        assert.ok(rep.every((r) => r.attrs.y > Math.max(...lignesCalc.map((l) => l.attrs.y))), "les réponses sous les calculs");
+        const lignes = t.filter((x) => x.text.endsWith("✓"));
+        assert.deepEqual(lignes.map((x) => x.text), etape.lignes);
+        assert.ok(rep.every((r) => r.attrs.y > Math.max(...lignes.map((l) => l.attrs.y))), "les réponses sous les calculs");
+      }else{
+        const titre = t.filter((x) => x.attrs["font-size"] === M.fsTitre);
+        assert.ok(titre.length >= 1 && titre.length <= 2, "titre sur deux lignes au plus");
+        // une barre : la case du total, ses cases ; le calcul gris à droite
+        for(const b of etape.barres){
+          if(b.calcul) assert.ok(t.some((x) => x.text === b.calcul && x.attrs.fill === "#475569"), `calcul « ${b.calcul} »`);
+          assert.ok(t.some((x) => x.text === b.top), `total « ${b.top} »`);
+        }
       }
-      // titre lisible : deux lignes au plus, dans la largeur
-      const titre = t.filter((x) => x.attrs["font-size"] === m.C.fsTitre && x.attrs["text-anchor"] === "middle");
-      assert.ok(titre.length >= 1 && titre.length <= sys.TEL.titreLignes);
-    });
+    }
   }
-  assert.ok(cadres > 400);
+  assert.ok(etapes > 400);
 });
 
-test("téléphone : la scène = la rangée des plateaux dévoilés puis le cadre k, dans #sysSchemaTel, sans fil ; le rect de cadrage donne la largeur", () => {
+test("téléphone : la scène = la rangée des plateaux dévoilés puis l'étape k, dans #sysSchemaTel, sans fil ; le rect de cadrage donne la largeur", () => {
   const c = CARTES.find((x) => x._sys.geste === "TROIS");
   for(let k = 1; k <= c._sys.plan.length; k++){
     const s = sys.portrait(c, k);
@@ -379,15 +396,37 @@ test("téléphone : la scène = la rangée des plateaux dévoilés puis le cadre
     assert.equal(elements(plateaux, "g").filter((x) => x.attrs.class === "sysPlateau").length, c._sys.boards.length);
     // dévoilés : un cercle (jeton caché) sous chaque tache, sans le fondu
     const taches = elements(plateaux, "path").filter((p) => p.attrs.class !== "anim-fade-out");
-    assert.equal(elements(plateaux, "path").filter((p) => p.attrs.class === "anim-fade-out").length, 0, "pas de fondu à chaque cadre");
+    assert.equal(elements(plateaux, "path").filter((p) => p.attrs.class === "anim-fade-out").length, 0, "pas de fondu à chaque étape");
     assert.ok(elements(plateaux, "circle").length >= taches.length);
-    const cadre = elements(g, "g").find((x) => x.attrs.class === "sysCadre sysCadrePortrait");
-    assert.ok(cadre);
-    assert.equal(cadre.attrs["data-role"], c._sys.plan[k - 1].role);
+    const etape = elements(g, "g").find((x) => /\bsysEtape\b/.test(x.attrs.class || ""));
+    assert.ok(etape);
+    assert.equal(etape.attrs["data-role"], c._sys.plan[k - 1].role);
     const basPlateaux = Math.max(...elements(plateaux, "rect").map((r) => r.attrs.y + r.attrs.height));
-    assert.ok(cadre.children[0].attrs.y >= basPlateaux + sys.TEL.ecartPlateaux, "le cadre sous les plateaux, avec l'écart");
+    const hautEtape = Math.min(...textes(etape).map((t) => t.attrs.y)) - 40;
+    assert.ok(hautEtape >= basPlateaux + sys.TEL.ecartPlateaux - 40, "l'étape sous les plateaux, avec l'écart");
     assert.ok(!elements(g, "g").some((x) => x.attrs.id === "sysFil"), "pas de fil au téléphone");
     // le TOTAL « ? » de Trois paires reste « ? »
     assert.ok(textes(plateaux).some((t) => t.text === "?"));
   }
+});
+
+test("téléphone, l'énoncé : la disposition (une rangée, deux colonnes, une colonne) qui donne les plus grandes taches dans le plateau du mode élève", () => {
+  const vus = { rangee: 0, colonnes: 0 };
+  for(const c of CARTES.filter((_, i) => i % 5 === 0)){
+    const Z = sys.zoneTel(c, 352, 371);
+    const n = c._sys.boards.length;
+    assert.ok([n, 2, 1].includes(Z.colonnes));
+    if(Z.colonnes === n) vus.rangee++; else vus.colonnes++;
+    const d = sys.disposition(c, Z);
+    // la même grille sur tous les plateaux, rien ne déborde de la zone
+    for(const P of d.plateaux){
+      assert.ok(P.x >= Z.x - 0.5 && P.x + P.w <= Z.x + Z.w + 0.5);
+      for(const t of P.taches) assert.equal(t.r, d.r, "une tache a la même taille sur tous les plateaux");
+    }
+    // la disposition choisie fait au moins aussi bien qu'une rangée de 1 600 (l'écran)
+    const vu = (D, Zw) => { const h = Math.max(...D.plateaux.map((P) => P.y + P.h)) - Math.min(...D.plateaux.map((P) => P.totalY)); return D.r * Math.min(352 / (Zw + 48), 371 / (h + 48)); };
+    assert.ok(vu(d, Z.w) >= 0.95 * vu(sys.disposition(c, { ...Z, colonnes: n, w: 1480 }), 1480));
+  }
+  assert.ok(vus.rangee > 0 && vus.colonnes > 0, JSON.stringify(vus));
+  assert.match(fn("renderCard"), /zone = sysZoneTelephone\(card, /);
 });
