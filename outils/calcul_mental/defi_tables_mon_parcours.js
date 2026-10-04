@@ -143,6 +143,21 @@
   //    repart des perles ; sinon des entraînements (comme avant).
   // Rien n'est enregistré de plus : pas de changement de version.
 
+  // Lot « divisions » (04/10/2026 — décisions de Gwenaël) : les divisions
+  // entrent dans la séance d'une table, à la place d'une partie des nombres
+  // manquants (même question, autre écriture : 56 ÷ 7 = ?, c'est 7 × ? = 56) :
+  //  - marche 6 « Nombres manquants et divisions » : 5 + 5 ; marche 7
+  //    « Résultats, nombres manquants et divisions » : 6 + 2 + 2 ;
+  //  - validation, mélange et « Comme la validation » : 14 résultats,
+  //    3 nombres manquants, 3 divisions (au lieu de 14 + 6) ;
+  //  - hors d'Expert, une seule forme de division, dans les deux sens
+  //    (56 ÷ 7 = ? et 56 ÷ 8 = ?) ;
+  //  - Mes calculs du jour : nombres manquants et divisions dès que la table
+  //    a réussi la marche 6 ou est acquise ; une question sur deux reste un
+  //    résultat ;
+  //  - une division compte pour son calcul (56 ÷ 7 = case 7 × 8) : rien ne
+  //    change dans ce qui est enregistré, ni les clés, ni la version.
+
   // Version du parcours enregistré. 1 = jusqu'au lot 2 de Défi tables v2 ;
   // 2 = lot 3 (mélange obligatoire, escalier des étoiles, rang, jours) ;
   // 3 = lot mémoire (cinq boîtes et une échéance par calcul). Un parcours
@@ -240,16 +255,20 @@
   const FORMES_TROU = Object.freeze(["right", "left", "reverse-right", "reverse-left"]);
   const FORMES_DIVISION = Object.freeze(["division-quotient", "division-dividend", "division-divisor"]);
 
+  // Lot « divisions » (04/10/2026) : « trous » = 5 nombres manquants et
+  // 5 divisions ; « mixte » = 6 résultats, 2 nombres manquants, 2 divisions
+  // (le dosage est dans le moteur de questions, TRAIN_MIXES). Les clés ne
+  // changent pas : rien à transformer dans les parcours enregistrés.
   const CONFIG_ENTRAINEMENTS = Object.freeze({
     desordre: Object.freeze({questionTypes: Object.freeze(["direct"])}),
-    trous: Object.freeze({questionTypes: Object.freeze(["missing"])}),
-    mixte: Object.freeze({questionTypes: Object.freeze(["direct", "missing"])})
+    trous: Object.freeze({questionTypes: Object.freeze(["missing", "division"])}),
+    mixte: Object.freeze({questionTypes: Object.freeze(["direct", "missing", "division"])})
   });
 
   const LIBELLES_ENTRAINEMENTS = Object.freeze({
     desordre: "produits dans le désordre",
-    trous: "nombres manquants",
-    mixte: "produits et nombres manquants"
+    trous: "nombres manquants et divisions",
+    mixte: "produits, nombres manquants et divisions"
   });
 
   const LIBELLES_APPRENDS = Object.freeze({
@@ -650,8 +669,8 @@
   function entrainementDeConfig(config) {
     const types = [...new Set(config.questionTypes || [])].sort().join("+");
     if (types === "direct") return "desordre";
-    if (types === "missing") return "trous";
-    if (types === "direct+missing") return "mixte";
+    if (types === "division+missing") return "trous";
+    if (types === "direct+division+missing") return "mixte";
     return null;
   }
 
@@ -1156,34 +1175,41 @@
     const source = libre ? calculsAVenir(parcours, {aujourdhui, table}) : calculsDus(parcours, {aujourdhui, table});
     const selection = melanger(source.slice(0, SEUILS.revision.total), random);
     // La forme suit ce que l'élève a déjà rencontré (décision de Gwenaël,
-    // 12/09) : produit toujours ; trou seulement si l'une des deux tables du
-    // calcul a passé l'entraînement « trous » ou est acquise (la validation en
-    // contient) ; division dès la première étoile (elles y sont). Les formes
-    // permises alternent d'une question à l'autre.
+    // 12/09) : produit toujours ; trou ET division (lot « divisions »,
+    // 04/10/2026) si l'une des deux tables du calcul a passé l'entraînement
+    // « nombres manquants et divisions » ou est acquise (la validation en
+    // contient) ; division seule dès la première étoile. Les formes permises
+    // alternent d'une question à l'autre.
     return selection.map((cle, index) => {
       const [premier, second] = melanger(facteursFait(cle), random);
       const permises = formesPermises(parcours, cle);
-      const categorie = permises[index % permises.length];
+      // Lot « divisions » : une question sur deux reste un résultat ; l'autre
+      // alterne nombre manquant et division (56 ÷ 7 = ? ou 56 ÷ 8 = ?, selon
+      // l'ordre tiré des facteurs) — la part des questions « à l'envers » ne
+      // change pas.
+      const tour = permises.includes("missing") && permises.includes("division") ? ["direct", "missing", "direct", "division"] : permises;
+      const categorie = tour[index % tour.length];
       const type = categorie === "direct"
         ? "direct"
         : categorie === "division"
-          ? FORMES_DIVISION[Math.floor(random() * FORMES_DIVISION.length)]
+          ? FORMES_DIVISION[0]
           : FORMES_TROU[Math.floor(random() * FORMES_TROU.length)];
       return {cle, type, first: premier, second};
     });
   }
 
-  // Les formes qu'un calcul peut prendre en révision, dans l'ordre où elles
-  // alternent : « direct » toujours ; « missing » si une de ses tables a réussi
-  // l'entraînement « trous » ou est acquise ; « division » dès une étoile.
+  // Les formes qu'un calcul peut prendre en révision : « direct » toujours ;
+  // « missing » ET « division » si une de ses tables a réussi l'entraînement
+  // « trous » (nombres manquants et divisions, lot « divisions ») ou est
+  // acquise (la validation en contient) ; « division » aussi dès une étoile.
   function formesPermises(parcours, cle) {
     const formes = ["direct"];
     const trous = facteursFait(cle).some(table => {
       const ligne = parcours.tables[table];
       return Boolean(ligne) && (ligne.entraine.trous === 2 || Boolean(ligne.acquise));
     });
-    if (trous) formes.push("missing");
-    if (parcours.expert.etoiles >= 1) formes.push("division");
+    if (trous) formes.push("missing", "division");
+    else if (parcours.expert.etoiles >= 1) formes.push("division");
     return formes;
   }
 
@@ -1404,8 +1430,8 @@
     Object.freeze({marche: 3, type: "apprends", cle: "gaps", nom: "La bande à trous"}),
     Object.freeze({marche: 4, type: "apprends", cle: "ordered", nom: "Dans l’ordre"}),
     Object.freeze({marche: 5, type: "entraine", cle: "desordre", nom: "Dans le désordre"}),
-    Object.freeze({marche: 6, type: "entraine", cle: "trous", nom: "Nombres manquants"}),
-    Object.freeze({marche: 7, type: "entraine", cle: "mixte", nom: "Résultats et nombres manquants"}),
+    Object.freeze({marche: 6, type: "entraine", cle: "trous", nom: "Nombres manquants et divisions"}),
+    Object.freeze({marche: 7, type: "entraine", cle: "mixte", nom: "Résultats, nombres manquants et divisions"}),
     Object.freeze({marche: 8, type: "validation", cle: null, nom: "Je valide ma table"})
   ]);
   const MARCHE_VALIDATION = MARCHES.length;

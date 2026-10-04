@@ -210,8 +210,8 @@ test("la page : le bloc du jour en tête et conseillé, l’unique rond bleu, le
   assert.match(html, /const libre = !agenda\.dus && PARCOURS\.calculsAVenir\(parcours\)\.length > 0;\s*\$\("calculs-encore-zone"\)\.hidden = !libre;/, "dans Mes calculs, « Encore N calculs » seulement quand rien n’est dû");
   assert.match(html, /<button id="calculs-encore" class="secondary" type="button">Encore 10 calculs<\/button>/, "en secondaire : ce n’est pas l’étape du jour");
   assert.match(html, /"Rien ne monte : ces calculs n’étaient pas encore à revoir"/);
-  assert.match(html, /defi_tables_core\.js\?v=20261003-1/);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261003-4/);
+  assert.match(html, /defi_tables_core\.js\?v=20261004-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261004-1/);
 });
 
 test("le serveur : « boite » et « echeance » acceptés, « cases » toujours ; la page du professeur compte les calculs en retard", async () => {

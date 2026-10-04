@@ -79,7 +79,7 @@ test("le mélange : dû dès 2 tables (à faire), à jour quand il est réussi, 
   assert.equal(affichage.expert.ouvert, false);
 });
 
-test("le format du mélange = celui de la validation : 20 questions, 14 produits + 6 trous, tables acquises seulement, 1 min 30, 2 erreurs max, sans division", () => {
+test("le format du mélange = celui de la validation : 20 questions, 14 produits + 3 nombres manquants + 3 divisions (lot « divisions »), tables acquises seulement, 1 min 30, 2 erreurs max", () => {
   const etat = acquerir(P.creerParcours(), [2, 10, 5]);
   const config = n(P.configMelange(etat));
   assert.equal(config.mode, "validation");
@@ -89,18 +89,18 @@ test("le format du mélange = celui de la validation : 20 questions, 14 produits
     const questions = core.generateQuestions(config);
     assert.equal(questions.length, 20);
     assert.equal(questions.filter(question => question.category === "direct").length, 14);
-    assert.equal(questions.filter(question => question.category === "missing").length, 6);
+    assert.equal(questions.filter(question => question.category === "missing").length, 3);
+    assert.equal(questions.filter(question => question.category === "division").length, 3);
     assert.ok(questions.every(question => [2, 5, 10].includes(question.focusTable)), "tables acquises seulement");
-    assert.ok(!questions.some(question => question.category === "division"));
   }
   assert.equal(jouer(etat, P.configMelange(etat), 17, 20).parcours.melange.aJour, false, "3 erreurs : raté");
   assert.equal(jouer(etat, P.configMelange(etat), 18, 20).parcours.melange.aJour, true, "2 erreurs : réussi");
-  // Le dernier, avec les 9 tables : même format, toujours sans division.
+  // Le dernier, avec les 9 tables : même format.
   const neuf = acquerir(P.creerParcours(), [...P.TABLES]);
   const dernier = n(P.configMelange(neuf));
   assert.equal(dernier.total, 20);
   assert.equal(dernier.duration, 90);
-  assert.deepEqual(dernier.questionTypes, ["direct", "missing"]);
+  assert.deepEqual(dernier.questionTypes, ["direct", "missing", "division"]);
 });
 
 // ---------------------------------------------------------------- le verrou
@@ -453,8 +453,8 @@ test("le lancement : le mélange se joue en 1 min 30, comme la validation d’un
 });
 
 test("les scripts modifiés ont un nouveau numéro de cache, et la copie serveur du moteur est identique", async () => {
-  assert.match(html, /defi_tables_core\.js\?v=20261003-1/);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261003-4/);
+  assert.match(html, /defi_tables_core\.js\?v=20261004-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261004-1/);
   const moteur = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie), "_serveur/public/prof/defi_tables_mon_parcours.js doit être la copie octet pour octet du moteur");

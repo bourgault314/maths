@@ -124,7 +124,7 @@ test("la correction dit que le calcul reviendra, comme partout ailleurs", () => 
   assert.match(html, /showAnswerFeedback\(question, correct, skip \? null : value, shouldRetry, assisted, donnee\)/);
   // Audit 4 : dans « Je construis la bande », la réponse reste écrite — la phrase le dit.
   assert.match(html, /const suite = willRetry\s*\? \(montree \? " Je l’écris dans la bande, le calcul reviendra\." : " Le calcul reviendra\."\)\s*: donnee \? " Je l’écris dans la bande\." : "";/);
-  assert.match(html, /Bonne réponse\\u00a0: \$\{question\.answer\}\.\$\{suite\}/);
+  assert.match(html, /Bonne réponse\\u00a0: \$\{question\.answer\}\$\{car\}\.\$\{suite\}/);
 });
 
 test("« Ajoute 4 » laisse la place à « Complète la case bleue » quand la case d’avant est vide", () => {

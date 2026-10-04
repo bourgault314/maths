@@ -94,7 +94,7 @@ test("une séance coupée entre dans le parcours et se reprend le jour même : l
   assert.equal(P.creerParcours().enCours, null);
   assert.equal(P.VERSION, 3, "pas de changement de version : une clé de plus");
   const programme = P.programmeDeSeance(depart, P.ouvrirSeance(depart, {aujourdhui: jour(2)}), jour(2)).etapes.map(etape => etape.nom);
-  assert.deepEqual(programme, ["Mes calculs du jour", "Dans l’ordre", "Dans le désordre", "Nombres manquants"]);
+  assert.deepEqual(programme, ["Mes calculs du jour", "Dans l’ordre", "Dans le désordre", "Nombres manquants et divisions"]);
   // Deux étapes, puis l'onglet se ferme.
   const coupe = jouerSeance(depart, jour(2), {etapesMax: 2, erreursPar: etape => (etape.type === "revision" ? 2 : 0)});
   assert.deepEqual(coupe.noms, ["revision", 4]);
@@ -113,7 +113,7 @@ test("une séance coupée entre dans le parcours et se reprend le jour même : l
   assert.equal(P.etapeDeSeance(relu, reprise, jour(2)).nom, "Dans le désordre", "on reprend à la troisième étape");
   assert.deepEqual(P.seanceEnCours(relu, {aujourdhui: jour(2)}), reprise);
   // Mes calculs du jour, fait, ne revient pas dans la séance reprise.
-  assert.deepEqual(P.programmeDeSeance(relu, reprise, jour(2)).etapes.map(etape => etape.nom), ["Dans le désordre", "Nombres manquants"]);
+  assert.deepEqual(P.programmeDeSeance(relu, reprise, jour(2)).etapes.map(etape => etape.nom), ["Dans le désordre", "Nombres manquants et divisions"]);
   // La fin de la séance reprise : comptée une fois, le départ avance, plus rien en cours.
   const fin = jouerSeance(relu, jour(2), {erreursPar: () => 2});
   assert.deepEqual(fin.noms, [5, 6]);
@@ -427,8 +427,8 @@ test("la page : « Reprendre ma séance », ses étapes cochées, « Reprendre �
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie serveur identique", () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261003-4/);
-  assert.match(html, /defi_tables_core\.js\?v=20261003-1/, "le noyau n'a pas changé : son numéro reste");
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261004-1/);
+  assert.match(html, /defi_tables_core\.js\?v=20261004-1/, "le noyau n'a pas changé : son numéro reste");
   const moteur = readFileSync(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = readFileSync(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie), "cp outils/calcul_mental/defi_tables_mon_parcours.js _serveur/public/prof/");

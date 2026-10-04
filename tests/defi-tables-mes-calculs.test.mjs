@@ -184,19 +184,30 @@ test("la révision = les calculs dus aujourd’hui, boîtes à tour de rôle (le
     assert.equal(parcours.cleFait(question.factKey), plan[index].cle, "chaque question porte bien sur son fait");
   });
   assert.ok(questions.every(question => question.category === "direct"), "aucune table n’a passé l’entraînement « trous » ni n’est acquise : que des produits (la forme suit ce qu’il a rencontré)");
-  // La table de 4 a réussi l'entraînement « trous » : 4-4 peut arriver en trou, les autres non ; jamais de division avant la première étoile.
+  // La table de 4 a réussi l'entraînement « trous » (nombres manquants et
+  // divisions, lot « divisions ») : 4-4 peut arriver en trou ou en division, les autres non.
   const avecTrous = JSON.parse(JSON.stringify(etat));
   avecTrous.tables[4].entraine.trous = 2;
-  assert.deepEqual(parcours.formesPermises(avecTrous, "4-4"), ["direct", "missing"]);
+  assert.deepEqual(parcours.formesPermises(avecTrous, "4-4"), ["direct", "missing", "division"]);
   assert.deepEqual(parcours.formesPermises(avecTrous, "7-8"), ["direct"]);
   const plans = Array.from({length: 20}, (_, graine) => parcours.planRevision(avecTrous, {random: () => (graine % 7) / 7, aujourdhui: "2026-09-12"}));
   const formes = plans.flat();
   assert.ok(formes.every(item => item.cle === "4-4" || item.type === "direct"), "seul 4-4 peut être posé en trou");
   assert.ok(formes.some(item => item.cle === "4-4" && item.type !== "direct"), "et il l’est parfois");
-  assert.ok(formes.every(item => !item.type.startsWith("division")), "pas de division avant la première étoile");
-  // Une table acquise ouvre les trous aussi (la validation en contient).
+  assert.ok(formes.some(item => item.cle === "4-4" && item.type === "division-quotient"), "ni trou ni division sans l'entraînement : 4-4 seulement, et parfois en division");
+  assert.ok(formes.filter(item => item.type.startsWith("division")).every(item => item.type === "division-quotient"), "une seule forme de division : 16 ÷ 4 = ?");
+  // Une table acquise ouvre les trous et les divisions (la validation en contient).
   const acquise = acquerir(JSON.parse(JSON.stringify(etat)), 7);
-  assert.deepEqual(parcours.formesPermises(acquise, "7-8"), ["direct", "missing"]);
+  assert.deepEqual(parcours.formesPermises(acquise, "7-8"), ["direct", "missing", "division"]);
+  // Une question sur deux reste un résultat ; l'autre alterne nombre manquant et division.
+  const tout = JSON.parse(JSON.stringify(etat));
+  [2, 3, 4, 5, 6, 7, 8, 9].forEach(table => { tout.tables[table].acquise = "2026-09-01"; });
+  const plan8 = parcours.planRevision(tout, {random: () => 0, aujourdhui: "2026-09-12"});
+  const categorie = type => type === "direct" ? "direct" : type.startsWith("division") ? "division" : "missing";
+  assert.deepEqual(plan8.map(item => categorie(item.type)), ["direct", "missing", "direct", "division", "direct", "missing"], "la part des questions « à l'envers » ne change pas");
+  // Sans entraînement ni table acquise, une étoile ouvre encore les divisions (Expert).
+  const etoile = JSON.parse(JSON.stringify(etat)); etoile.expert.etoiles = 1;
+  assert.deepEqual(parcours.formesPermises(etoile, "7-8"), ["direct", "division"]);
 });
 
 test("l’agenda : dus aujourd’hui, ce qui attendra demain, le prochain retour ; les calculs en retard", () => {
