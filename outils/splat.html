@@ -10278,9 +10278,10 @@ function drawSysVerification(target, etape, x, y, w, M, ctx, numero){
    l'énoncé, un trait pointillé, les étapes côte à côte puis à la ligne, puis « Je vérifie ».
    Filet (jamais aux réglages des fiches : voir les tests) : si le tout dépasse la carte, il
    est réduit d'un même facteur. Renvoie le bas du dessin. */
-function drawSysCorrectionImprimee(target, card, haut, bas, ctx){
+function drawSysCorrectionImprimee(target, card, haut, bas, ctx, zone){
   const plan = card._sys.plan;
-  const Z = SYS_CORR_IMPRIME;
+  // zone : les bords des étapes (le 2 par page du Système, sans cadres, lot M4-3) ; sinon le 4 par page
+  const Z = zone || SYS_CORR_IMPRIME;
   let M = sysBarresMetriques(1);
   const etapes = plan.filter(e => e.role !== "verification");
   const verif = plan.find(e => e.role === "verification");
@@ -10297,7 +10298,7 @@ function drawSysCorrectionImprimee(target, card, haut, bas, ctx){
   }
   const hauteur = flux.h;
   const k = Math.min(1, (bas - haut) / Math.max(1, hauteur), (Z.xMax - Z.x) / Math.max(1, flux.w));
-  target.appendChild(ctx.mkEl("line", { x1:60, x2:1540, y1:haut - Z.ecartEnonce / 2, y2:haut - Z.ecartEnonce / 2,
+  target.appendChild(ctx.mkEl("line", { x1:Z.x - 10, x2:Z.xMax, y1:haut - Z.ecartEnonce / 2, y2:haut - Z.ecartEnonce / 2,
     stroke:"#94a3b8", "stroke-width":3, "stroke-dasharray":"10 8" }));
   const g = ctx.mkEl("g", { id:"sysCorrectionPrint", "data-echelle":String(Math.round(k * 1000) / 1000),
     transform:k < 1 ? `translate(${Z.x} ${haut}) scale(${k.toFixed(4)}) translate(${-Z.x} ${-haut})` : "" });
@@ -10308,6 +10309,206 @@ function drawSysCorrectionImprimee(target, card, haut, bas, ctx){
     else drawSysEtape(g, p.etape, p.x, haut + p.y, M, ctx, 0, 0, p.taille);
   });
   return haut + hauteur * k;
+}
+
+/* ---------------------------------------------------------------------------------------
+   Le Système, 2 par page (lot M4-3, 04/10/2026). Page A4 PAYSAGE, deux cartes côte à côte : c'est
+   aussi la page du livret « tablette » du monde 4 (feuille A3 en hauteur pliée à l'horizontale, une
+   fiche = 4 cartes sur la double page ouverte). Choisi par Gwenaël sur pages témoins, après
+   comparaison avec le portrait : à place égale pour chercher, la carte en hauteur dessine tout plus
+   grand.
+   La carte remplit sa case (celle du 4 par page, 1 600 × 2 200, y laissait 8 mm de blanc de chaque
+   côté) : 1 830 de large pour l'énoncé (sous le cadre de consigne), 1 740 pour le corrigé (sa
+   feuille n'a pas de cadre de consigne : la case est plus haute). Les mesures restent celles du
+   4 par page (tache, case de barre de 118, nom) : sur le papier, tout est 40 à 47 % plus grand.
+   – Énoncé : les plateaux en une rangée en haut (les mesures de SYS_ZONE_IMPRIME, sur la largeur de
+     la carte), la place pour chercher dessous, la ligne réponse en bas (« noire = …… rouge =
+     …… », les couleurs dans l'ordre de la correction).
+   – Corrigé : l'énoncé dévoilé en haut, un trait pointillé, puis les étapes en BLOCS ENCADRÉS, une
+     idée par cadre (décidé le 04/10 sur les planches 10a, 10b et 11 du lot M4-2). Un bloc commence
+     après « Les deux plateaux », après une étape qui trouve (« Je partage », ou une tache seule) et
+     à chaque « Je remplace » / « Je retrouve » ; « Je partage » juste après les plateaux (l'escalier)
+     reste dans leur cadre, à la hauteur de la barre partagée, une flèche détachée entre les deux.
+     Dedans, rien ne change : mêmes
+     barres, cases de 118, mêmes titres. Une carte dont les cadres ne tiennent pas, même serrés (miroir ou escalier
+     avec des jetons visibles), se dessine sans cadres, comme en 4 par page : jamais de carte
+     réduite. Le 4 par page reste sans cadres (drawSysCorrectionImprimee).
+--------------------------------------------------------------------------------------- */
+const SYS_2P = { w:1830, wCorrection:1740 };
+const SYS_2P_VIEWBOX = `0 0 ${SYS_2P.w} 2200`;
+const SYS_2P_VIEWBOX_CORRECTION = `0 0 ${SYS_2P.wCorrection} 2200`;
+/* énoncé : les plateaux du 4 par page, sur la largeur de la carte, TOUJOURS en une rangée (trois ou
+   quatre plateaux aussi : sur deux rangées, il ne restait presque plus de place pour chercher,
+   remarque de Gwenaël du 04/10), chacun de la hauteur de ses taches (le reste va à la place pour
+   chercher) */
+const SYS_ZONE_IMPRIME_2P = Object.assign({}, SYS_ZONE_IMPRIME, { w:SYS_2P.w - 120, hMax:[440], uneRangee:true, ajusterHauteur:true });
+/* corrigé : les plateaux de la correction 4 par page, sur la largeur de la carte ; les étapes de
+   x = 70 à 60 du bord droit, la dernière ligne au plus à 2 150 */
+const SYS_ZONE_IMPRIME_CORRECTION_2P = Object.assign({}, SYS_ZONE_IMPRIME_CORRECTION, { w:SYS_2P.wCorrection - 120 });
+const SYS_CORR_IMPRIME_2P = { x:70, xMax:SYS_2P.wCorrection - 60, ecartEnonce:50, bas:2150 };
+/* la ligne réponse de l'énoncé : en bas de la carte, centrée */
+const SYS_REPONSE_2P = { y:2140, fs:40, entre:90, pointilles:200 };
+/* un cadre : marges intérieures, écart entre deux cadres, trait gris ardoise ; serré quand la
+   carte est trop longue (comme SYS_BARRES_SERRE) */
+const SYS_BLOC = { pad:18, padHaut:10, gap:20, rx:18, trait:3, encre:"#475569" };
+const SYS_BLOC_SERRE = { pad:12, padHaut:6, gap:12, rx:18, trait:3, encre:"#475569" };
+/* la flèche de la barre partagée vers « Je partage » (escalier) : 45 de blanc à chaque bout
+   (≈ 3 mm), pas de flèche si elle ferait moins de 60 */
+const SYS_BLOC_FLECHE = { ecart:45, pointe:10, trait:4, longueurMin:60 };
+
+/* Imprime-t-on le Système en plateaux, 2 par page ? (la carte qui remplit sa case, les cadres) */
+function sysDeuxParPage(perSheet){
+  return perSheet === 2 && !!activityEl && activityEl.value === "D" && cards.length > 0 && cards.every(sysEnPlateaux);
+}
+/* Les étapes d'un plan (sans « Je vérifie ») rangées en blocs, une idée par bloc. « Je partage »
+   juste après les plateaux (l'escalier : 2 noires = 6, donc noire = 3) reste dans leur cadre : la
+   tache trouvée dépend d'eux (remarque de Gwenaël du 04/10). */
+function sysBlocs(etapes){
+  const out = [];
+  let prev = null;
+  const trouve = p => !!p && (p.role === "partage" || (p.barres.length > 0 && p.barres.every(b => b.cells.length === 1 && b.cells[0].kind === "unknown")));
+  etapes.forEach(e => {
+    const avecPlateaux = !!prev && prev.role === "plateaux" && e.role === "partage";
+    const nouveau = !prev || (prev.role === "plateaux" && !avecPlateaux) || trouve(prev) || ["remplace", "retrouve", "retrouve-reste", "plateaux"].includes(e.role);
+    if(nouveau) out.push([]);
+    out[out.length - 1].push(e);
+    prev = e;
+  });
+  return out;
+}
+/* Taille d'un bloc (ses étapes rangées par sysEtapesFlux dans la largeur intérieure), ou de
+   « Je vérifie ». */
+function sysBlocMesure(it, larg, M, serre){
+  const B = serre === 2 ? SYS_BLOC_SERRE : SYS_BLOC;
+  const dh = B.padHaut - B.pad;
+  if(it.verif) return { w: sysVerifLargeur(it.verif, M) + 10, h: sysVerifHauteur(it.verif, M) + dh };
+  const f = sysEtapesFlux(it.etapes, M, 0, larg - 2 * B.pad, null, serre);
+  sysBlocPartageAligne(f, M);
+  return { flux: f, w: f.w, h: f.h + dh };
+}
+/* Dans le cadre des plateaux, « Je partage » posé à leur droite se met à la hauteur de la barre
+   qu'il partage (celle dont le total est divisé : « 6 ÷ 2 » → la barre 6), et une flèche grise va
+   de l'une à l'autre sans toucher ni l'une ni l'autre (SYS_BLOC_FLECHE, choisi le 04/10 sur
+   planche : « un peu de distance… ça touche pas de chaque côté »). */
+function sysBlocPartageAligne(f, M){
+  const p1 = f.places.find(p => p.etape.role === "plateaux");
+  const p2 = p1 && f.places.find(p => p.etape.role === "partage" && p.rang === p1.rang && p.col === p1.col + 1);
+  if(!p2) return;
+  const n = Number(String(p2.etape.barres[0].calcul || "").split(" ÷ ")[0]);
+  const j = p1.etape.barres.findIndex(b => Number(b.top) === n);
+  if(j < 0) return;
+  const yBarre = p1.y + p1.taille.haut + p1.taille.places[j].dy;
+  p2.y = Math.round(yBarre - p2.taille.haut);
+  const F = SYS_BLOC_FLECHE;
+  const x1 = p1.x + p1.taille.places[j].dx + sysBarreCases(p1.etape.barres[j]) * M.pas + F.ecart * M.f;
+  const x2 = p2.x - F.ecart * M.f;
+  if(x2 - x1 >= F.longueurMin * M.f) p2.fleche = { x1, x2, y: yBarre + M.hCase };
+  f.h = Math.max(f.h, ...f.places.map(p => p.y + p.h));
+}
+/* Les blocs en lignes faites de colonnes (comme les étapes) : un bloc se met sous le dernier de
+   la colonne, dans une nouvelle colonne (seulement si la dernière n'a qu'un bloc : ordre de
+   lecture), ou à la ligne — là où la carte grandit le moins. Dans une ligne, les cadres d'une
+   colonne ont la largeur de la colonne, le dernier descend au bas de la ligne ; la dernière
+   colonne va jusqu'au bord droit. « Je vérifie » vient en dernier : à la ligne (sauf « serre »). */
+function sysBlocsFlux(etapes, verif, M, x0, xMax, serre){
+  const items = sysBlocs(etapes).map(b => ({ etapes: b }));
+  if(verif) items.push({ verif });
+  const B = serre === 2 ? SYS_BLOC_SERRE : SYS_BLOC;
+  const P2 = 2 * B.pad, G = B.gap;
+  const rows = [];
+  let row = null;
+  items.forEach(it => {
+    const options = [];
+    if(row && !(it.verif && !serre)){
+      const col = row.cols[row.cols.length - 1];
+      const La = sysBlocMesure(it, xMax - col.x, M, serre);
+      if(La.w + P2 <= xMax - col.x + 0.5){
+        const hc = col.h + G + La.h + P2;
+        options.push({ cout: Math.max(0, hc - row.h), q: 2, faire: () => { col.items.push(Object.assign(it, { L: La, y: row.y + col.h + G, h: La.h + P2 })); col.h = hc; col.w = Math.max(col.w, La.w + P2); row.h = Math.max(row.h, hc); } });
+      }
+      const x = col.x + col.w + G;
+      if(col.items.length === 1 && xMax - x > P2 + 200){
+        const Lb = sysBlocMesure(it, xMax - x, M, serre);
+        if(Lb.w + P2 <= xMax - x + 0.5){
+          options.push({ cout: Math.max(0, Lb.h + P2 - row.h), q: 0, faire: () => { row.cols.push({ x, w: Lb.w + P2, h: Lb.h + P2, items: [Object.assign(it, { L: Lb, y: row.y, h: Lb.h + P2 })] }); row.h = Math.max(row.h, Lb.h + P2); } });
+        }
+      }
+    }
+    const Lc = sysBlocMesure(it, xMax - x0, M, serre);
+    options.push({ cout: row ? G + Lc.h + P2 : 0, q: 1, faire: () => {
+      const y = row ? row.y + row.h + G : 0;
+      row = { y, h: Lc.h + P2, cols: [{ x: x0, w: Lc.w + P2, h: Lc.h + P2, items: [Object.assign(it, { L: Lc, y, h: Lc.h + P2 })] }] };
+      rows.push(row);
+    } });
+    options.sort((u, v) => u.cout - v.cout || u.q - v.q);
+    options[0].faire();
+  });
+  rows.forEach(r => r.cols.forEach((c, j) => {
+    if(j === r.cols.length - 1) c.w = xMax - c.x;
+    c.items.forEach(it => { it.x = c.x; it.w = c.w; });
+    const d = c.items[c.items.length - 1]; d.h = r.y + r.h - d.y;
+  }));
+  const h = rows.length ? rows[rows.length - 1].y + rows[rows.length - 1].h : 0;
+  const w = Math.max(0, ...rows.flatMap(r => r.cols.map(c => c.x + c.w - x0)));
+  return { rows, h, w, nb: items.length, B };
+}
+/* Le corrigé en blocs encadrés, sous l'énoncé (de haut à bas). La mise en page normale, puis
+   « serrée » si elle ne tient pas (comme en 4 par page) ; si même serrée elle ne tient pas, la
+   carte se dessine sans cadres (drawSysCorrectionImprimee, aux bords de cette carte) : jamais de
+   carte réduite. Renvoie le bas du dessin. */
+function drawSysCorrectionBlocs(target, card, haut, bas, ctx){
+  const Z = SYS_CORR_IMPRIME_2P;
+  const plan = card._sys.plan;
+  let M = sysBarresMetriques(1);
+  const etapes = plan.filter(e => e.role !== "verification");
+  const verif = plan.find(e => e.role === "verification");
+  let flux = sysBlocsFlux(etapes, verif, M, Z.x, Z.xMax, 0);
+  for(let serre = 1; serre <= 2 && flux.h > bas - haut; serre++){
+    const Ms = serre === 2 ? Object.assign({}, M, SYS_BARRES_SERRE) : M;
+    const f = sysBlocsFlux(etapes, verif, Ms, Z.x, Z.xMax, serre);
+    if(f.h < flux.h){ flux = f; M = Ms; }
+  }
+  if(flux.h > bas - haut || flux.w > Z.xMax - Z.x + 0.5) return drawSysCorrectionImprimee(target, card, haut, bas, ctx, Z);
+  target.appendChild(ctx.mkEl("line", { x1:Z.x - 10, x2:Z.xMax, y1:haut - Z.ecartEnonce / 2, y2:haut - Z.ecartEnonce / 2,
+    stroke:"#94a3b8", "stroke-width":3, "stroke-dasharray":"10 8" }));
+  const g = ctx.mkEl("g", { id:"sysCorrectionPrint", "data-echelle":"1", "data-blocs":String(flux.nb), transform:"" });
+  target.appendChild(g);
+  const B = flux.B;
+  flux.rows.forEach(r => r.cols.forEach(c => c.items.forEach(it => {
+    const y = haut + it.y;
+    g.appendChild(ctx.mkEl("rect", { class:"sysBloc", x:it.x, y, width:it.w, height:it.h, rx:B.rx, fill:"none", stroke:B.encre, "stroke-width":B.trait }));
+    const xi = it.x + B.pad, yi = y + B.padHaut;
+    if(it.verif){ drawSysVerification(g, it.verif, xi + 10, yi, it.w - 2 * B.pad - 10, M, ctx); return; }
+    it.L.flux.places.forEach(p => {
+      drawSysEtape(g, p.etape, xi + p.x, yi + p.y, M, ctx, 0, 0, p.taille);
+      if(p.fleche){
+        const F = SYS_BLOC_FLECHE, t = F.pointe * M.f, x1 = xi + p.fleche.x1, x2 = xi + p.fleche.x2, y = yi + p.fleche.y;
+        g.appendChild(ctx.mkEl("path", { class:"sysFleche", d:`M ${x1} ${y} L ${x2} ${y} M ${x2 - 2 * t} ${y - t} L ${x2} ${y} L ${x2 - 2 * t} ${y + t}`,
+          fill:"none", stroke:B.encre, "stroke-width":F.trait * M.f, "stroke-linecap":"round", "stroke-linejoin":"round" }));
+      }
+    });
+  })));
+  return haut + flux.h;
+}
+/* La ligne réponse de l'énoncé : « noire = …… rouge = …… », centrée en bas de la carte ; serrée,
+   puis plus petite, si elle ne tient pas dans la largeur. */
+function drawSysLigneReponse(target, card, ctx){
+  const R = SYS_REPONSE_2P, W = SYS_2P.w;
+  const mots = card._sys.colors.map(k => investigateColorWord(investigateColorByKey(k)) + " =");
+  let fs = R.fs, entre = R.entre, pts = R.pointilles;
+  const largeur = () => mots.reduce((s, t) => s + sysLargeurTexte(t, fs, 900) + 0.4 * fs + pts, 0) + entre * (mots.length - 1);
+  while(largeur() > W - 160 && entre > 40) entre -= 5;
+  while(largeur() > W - 160 && pts > 120) pts -= 10;
+  while(largeur() > W - 160 && fs > 28) fs -= 1;
+  const g = ctx.mkEl("g", { id:"sysLigneReponsePrint" });
+  let x = (W - largeur()) / 2;
+  mots.forEach(t => {
+    g.appendChild(ctx.mkText(x, R.y, t, { "text-anchor":"start", "font-size":fs, "font-weight":900, fill:"#0f172a" }));
+    x += sysLargeurTexte(t, fs, 900) + 0.4 * fs;
+    g.appendChild(ctx.mkEl("line", { x1:x, x2:x + pts, y1:R.y + 4, y2:R.y + 4, stroke:"#475569", "stroke-width":6, "stroke-linecap":"round", "stroke-dasharray":"0.1 16" }));
+    x += pts + entre;
+  });
+  target.appendChild(g);
 }
 
 /* Écran : l'échelle des étapes d'une carte, la même pour toutes (la plus grande à laquelle
@@ -12022,7 +12223,9 @@ function renderCardIntoSvg(targetSvg, card, printMode, opts = {}){
   const colorModeEl = document.getElementById("numColorMode");
   const useTokens = (act === "UPM") || ((act === "NPM") && colorModeEl && colorModeEl.checked);
 
-  const W = 1600;
+  /* Système en plateaux, 2 par page (lot M4-3) : la carte remplit sa case de la page paysage */
+  const deuxParPage = !!opts.deuxParPage && sysEnPlateaux(card);
+  const W = deuxParPage ? (revealAnswers ? SYS_2P.wCorrection : SYS_2P.w) : 1600;
   const H = 2200;
 
   function tEl(name, attrs={}){
@@ -12035,6 +12238,22 @@ function renderCardIntoSvg(targetSvg, card, printMode, opts = {}){
   }
 
   targetSvg.appendChild(tEl("rect",{x:0,y:0,width:opts.sixColonne ? SIX_COLONNE.largeur : W,height:H,rx:26,fill:"#fff"}));
+
+  if(deuxParPage){
+    const ctx = { mkEl:tEl, mkText:tText, isPrint:true, lettres:!numberedQuestionMarkMode };
+    if(revealAnswers){
+      // le corrigé : l'énoncé dévoilé en haut, puis les étapes en blocs encadrés
+      const Z = SYS_ZONE_IMPRIME_CORRECTION_2P;
+      const entete = drawSysPlateaux(targetSvg, card, Z, { mkEl:tEl, mkText:tText, isPrint:true, devoile:true, nomMin:Z.nomMin });
+      const haut = Math.max(...entete.plateaux.map(P => P.y + P.h)) + SYS_CORR_IMPRIME_2P.ecartEnonce;
+      if(sysAPlan(card)) drawSysCorrectionBlocs(targetSvg, card, haut, SYS_CORR_IMPRIME_2P.bas, ctx);
+      return;
+    }
+    // l'énoncé : les plateaux en haut, la place pour chercher, la ligne réponse en bas
+    drawSysPlateaux(targetSvg, card, SYS_ZONE_IMPRIME_2P, { mkEl:tEl, mkText:tText, isPrint:true, devoile:false });
+    drawSysLigneReponse(targetSvg, card, ctx);
+    return;
+  }
 
   /* Système, la correction imprimée (lot S3 ; barres de taches du lot M4-2), 4 et 2 par page. */
   if(revealAnswers && sysAPlan(card) && !opts.sansCorrectionSys && String(targetSvg.getAttribute("viewBox") || "").trim() !== "0 0 1600 1000"){
@@ -12831,10 +13050,15 @@ function createClassicPrintInstruction(slotCards){
   return box;
 }
 
+/* Le pied des fiches imprimées. L'Enquête et le Système : « mathsgo.re/splat », comme au pied de
+   tous les livrets (décidé le 04/10/2026, lot M4-3) — /splat/classique ouvre l'outil en mode
+   Classique, et /splat/enquete, /splat/systeme n'existent pas (seulement leurs pages /livret/).
+   Les modes A, A±, B et B± gardent « mathsgo.re/splat/classique », qui ouvre l'outil. */
 function createClassicPrintFooter(){
   const footer = document.createElement("div");
   footer.className = "print-page-footer";
-  footer.textContent = "mathsgo.re/splat/classique · CC BY-NC-SA 4.0";
+  const act = activityEl ? activityEl.value : "";
+  footer.textContent = (["C", "CD", "D"].includes(act) ? "mathsgo.re/splat" : "mathsgo.re/splat/classique") + " · CC BY-NC-SA 4.0";
   return footer;
 }
 
@@ -12934,6 +13158,8 @@ function printSheet(){
   const plan = getPrintPlan();
   const printArea = document.getElementById("printArea");
   const perSheet = getPrintCardsPerPage();
+  /* Système en plateaux, 2 par page : la carte remplit sa case (lot M4-3) */
+  const deuxSys = sysDeuxParPage(perSheet);
   const layoutClass = perSheet === 1 ? "print-1up" : (perSheet === 2 ? "print-2up" : (perSheet === 6 ? "print-6up" : "print-4up"));
   /* 6/page : le plateau seul (1600×1000) ; sinon la carte haute avec la place du tableau. */
   const cardViewBox = perSheet === 6 ? "0 0 1600 1000" : "0 0 1600 2200";
@@ -12972,11 +13198,13 @@ function printSheet(){
         }else{
           sv.setAttribute("viewBox", cardViewBox);
           sv.style.width = perSheet === 6 ? "80%" : "100%";
+          // Système 2 par page : la carte remplit sa case (lot M4-3)
+          if(deuxSys) sv.setAttribute("viewBox", mode === "correction" ? SYS_2P_VIEWBOX_CORRECTION : SYS_2P_VIEWBOX);
           /* lot 1 : le schéma vide sous la carte 1 de l'énoncé (« modele=1 »), 1, 2 ou 4 par page.
              sixParPage (01/10/2026) : l'Enquête en 6/page passe ici, pas par sixColonne (réservé
              aux modes A et B) — il lui faut son propre drapeau pour garder sa mise en page. */
           renderCardIntoSvg(sv, card, mode, { schemaVide:enqueteSchemaVide && mode === "statement" && perSheet !== 6 && card === cards[0],
-            sixParPage:perSheet === 6 });
+            sixParPage:perSheet === 6, deuxParPage:deuxSys });
         }
         holder.appendChild(sv);
       } else {

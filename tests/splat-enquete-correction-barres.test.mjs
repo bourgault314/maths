@@ -318,7 +318,7 @@ test("l'impression : le plateau de la correction à 22 mm, la correction sous lu
   // sauf en 6/page et pour la carte d'exemple seule des livrets (plateauEntier)
   assert.match(impression, /const enqueteEnoncePetit = enqueteAvecModele && !revealAnswers && !opts\.sixColonne && !opts\.sixParPage && !opts\.plateauEntier;/);
   // l'Enquête en 6/page ne passe pas par sixColonne (modes A et B) : printSheet lui donne sixParPage
-  assert.match(fn("printSheet"), /\}else\{\s*sv\.setAttribute\("viewBox", cardViewBox\);[\s\S]{0,600}renderCardIntoSvg\(sv, card, mode, \{[^}]*sixParPage:perSheet === 6 \}\);/);
+  assert.match(fn("printSheet"), /\}else\{\s*sv\.setAttribute\("viewBox", cardViewBox\);[\s\S]{0,800}renderCardIntoSvg\(sv, card, mode, \{[^}]*sixParPage:perSheet === 6, deuxParPage:deuxSys \}\);/);
   // (lot « plateau en ligne », 03/10/2026) même réduction, et le plateau se referme sur une rangée
   assert.match(impression, /const enqEchelle = Math\.round\(1000 \* ENQ_PLATEAU_CORRECTION_H \/ trayH\) \/ 1000;/);
   assert.match(impression, /const trayHDessine = \(enqueteCompacte \|\| enqueteEnoncePetit\) \? Math\.round\(\(enqBande \? enqBande\.h : trayH\) \* enqEchelle\) : trayH;/);
