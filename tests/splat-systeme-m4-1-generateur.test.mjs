@@ -33,7 +33,7 @@ const CONSTANTES_SYS = ["SYS_GESTES", "SYS_GESTES_MIX_DEFAUT", "SYS_MAX_TACHES",
   .map((nom) => ligne(`const ${nom} = `)).join("\n");
 const FONCTIONS_SYS = ["sysNormaliserReglages", "genSystemCarte", "sysMelangerPlateaux", "sysFormes", "sysFormesDouble", "sysSomme", "sysNombreTaches", "sysPlateau",
   "sysTirerSituation", "sysSituationValide", "sysNombreSousEntendu", "sysTexteASousEntendu", "sysSituationSure",
-  "sysAssemblerCarte", "sysUneTacheParCouleur", "sysIndice", "sysPhraseIndice", "sysPlan", "sysLireGestes"].map(fn).join("\n");
+  "sysAssemblerCarte", "sysUneTacheParCouleur", "sysIndice", "sysPhraseIndice", "sysPlanS3", "sysPlan", "sysLireGestes"].map(fn).join("\n");
 const DESSIN = ["SYS_ZONE_ECRAN", "SYS_ZONE_IMPRIME", "SYS_ZONE_IMPRIME_6", "SYS_ZONE_ECRAN_CORRECTION", "SYS_ZONE_IMPRIME_CORRECTION", "SYS_ZONE_TEL_CORRECTION", "SYS_TACHE"]
   .map((nom) => ligne(`const ${nom} = `)).join("\n")
   + ["sysRayonJeton", "sysGrille", "sysColonnesVisibles", "sysRayonMax", "sysDispositionPlateaux"].map(fn).join("\n");
@@ -66,7 +66,8 @@ const sys = new Function(`
     pluriel: (k) => SYS_COULEURS_PLURIEL[k],
     normaliser: sysNormaliserReglages,
     formes: (geste, r) => sysFormes(geste, sysNormaliserReglages(r)),
-    plan: sysPlan,
+    /* le plan de S3, que le générateur filtre toujours (lot M4-2) */
+    plan: sysPlanS3,
     grille: sysGrille,
     disposition: sysDispositionPlateaux,
     carte: (graine, reglages) => genSystemCarte(mulberry32(graine), reglages),
@@ -185,13 +186,16 @@ function verifierCarte(carte, reglages){
   assert.equal(carte._num.tasks, carte.hidden.length);
   if(P.total !== null) assert.equal(carte.total, P.total);
   assert.equal(carte._inv.indices.length, s.boards.length - 1);
-  const json = JSON.stringify(carte);
+  // le plan de S3, que le générateur filtre (le plan dessiné du lot M4-2 a son propre test)
+  const json = JSON.stringify(Object.assign({}, carte, { _sys: Object.assign({}, carte._sys, { plan: sys.plan(carte._sys) }) }));
   assert.ok(!(json.match(/\d+/g) || []).some(sousEntendu), "nombre à sous-entendu");
   assert.doesNotMatch(json, /Erreur/);
-  // le plan : chaque calcul juste, en mots et en lettres ; chaque barre juste
+  // le plan de S3 (filtré par le générateur) : chaque calcul juste, en mots et en lettres ;
+  // chaque barre juste. Le plan dessiné (lot M4-2) a son propre test.
   const lex = lexique(carte);
   const etablies = new Set();
-  s.plan.forEach((etape, n) => {
+  const planS3 = sys.plan(s);
+  planS3.forEach((etape, n) => {
     assert.ok(etape.titre && etape.role, `étape ${n} sans titre`);
     assert.equal(etape.calculs.length, etape.lettres.length);
     for(const l of etape.calculs.concat(etape.lettres)) verifierLigne(l, lex);
@@ -209,7 +213,7 @@ function verifierCarte(carte, reglages){
     }
   });
   assert.equal(etablies.size, C.length, "le plan ne trouve pas toutes les couleurs");
-  const verif = s.plan[s.plan.length - 1];
+  const verif = planS3[planS3.length - 1];
   assert.equal(verif.role, "verification");
   assert.equal(verif.calculs.length, s.boards.filter((b) => b.total !== null).length);
   // réglages
@@ -462,6 +466,7 @@ test("adresses : les réglages nouveaux, écrits seulement quand ils sont allum�
     sysGesteEl: liste(geste, ["EMBOITE1", "PARTIELLE", "COEF", "DOUBLE", "MIROIR", "TROIS", "ESCALIER", "MIX"]),
     sysEcartEl: liste("", ["", "1", "2"]), sysFoisEl: liste("2", ["2", "3"]), sysIndiceEl: liste("11", ["11", "12"]),
     sysSensEl: liste("PLATEAU", ["PLATEAU", "INDICE"]), sysOrdreEl: liste("", ["", "MELANGE"]),
+    sysPasAPasEl: { checked: true }, // lot M4-2 : coché par défaut, rien n'est écrit
     document: { getElementById: (id) => (id.startsWith("sysMix") ? { checked: coches.includes(id.slice(6)) } : null) }
   });
   const monter = (els) => new Function(...Object.keys(els), `

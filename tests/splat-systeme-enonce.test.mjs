@@ -29,7 +29,7 @@ const CONSTANTES = ["SYS_GESTES", "SYS_GESTES_MIX_DEFAUT", "SYS_MAX_TACHES", "SY
   "SYS_ZONE_ECRAN", "SYS_ZONE_IMPRIME", "SYS_ZONE_IMPRIME_6", "SYS_TACHE"].map((nom) => ligne(`const ${nom} = `)).join("\n");
 const GENERATEUR = ["sysNormaliserReglages", "genSystemCarte", "sysMelangerPlateaux", "sysFormes", "sysFormesDouble", "sysSomme", "sysNombreTaches", "sysPlateau",
   "sysTirerSituation", "sysSituationValide", "sysNombreSousEntendu", "sysTexteASousEntendu", "sysSituationSure",
-  "sysAssemblerCarte", "sysUneTacheParCouleur", "sysIndice", "sysPhraseIndice", "sysPlan"].map(fn).join("\n");
+  "sysAssemblerCarte", "sysUneTacheParCouleur", "sysIndice", "sysPhraseIndice", "sysPlanS3", "sysPlan"].map(fn).join("\n");
 const DISPOSITION = ["sysEnPlateaux", "sysTotalCache", "sysRayonJeton", "sysGrille", "sysColonnesVisibles",
   "sysRayonMax", "sysDispositionPlateaux"].map(fn).join("\n");
 
@@ -235,7 +235,8 @@ test("TROIS : le plateau principal n'a pas de total (« TOTAL ? » en gris ardoi
 test("écran et impression passent par drawSysPlateaux ; aucun tirage au sort dans le dessin", () => {
   const ecran = fn("renderCard");
   // lot S3 : la signature prend « opts » et la correction passe avant (à partir du 1er clic) ; l'énoncé ne change pas
-  assert.match(ecran, /^function renderCard\(card, revealState, opts = \{\}\)\{\n  clearSvg\(\);\n[\s\S]{0,700}if\(sysEnPlateaux\(card\)\)\{\n    drawSysPlateaux\(svg, card, SYS_ZONE_ECRAN, \{ devoile: revealState >= 2 \|\| sysDevoileEleve\(card\) \}\);\n    return;\n  \}/);
+  // lot M4-2 : au téléphone, en mode élève, la zone qui donne les plus grandes taches (sysZoneTelephone)
+  assert.match(ecran, /^function renderCard\(card, revealState, opts = \{\}\)\{\n  clearSvg\(\);\n[\s\S]{0,900}if\(sysEnPlateaux\(card\)\)\{\n[\s\S]{0,120}let zone = SYS_ZONE_ECRAN;\n    if\(typeof eleveActif !== "undefined" && eleveActif && eleveSchemaTelephone\(\)\)\{[\s\S]{0,300}zone = sysZoneTelephone\(card, [^\n]*\);\n    \}\n    drawSysPlateaux\(svg, card, zone, \{ devoile: revealState >= 2 \|\| sysDevoileEleve\(card\) \}\);\n    return;\n  \}/);
   const imp = fn("renderCardIntoSvg");
   assert.match(imp, /if\(sysEnPlateaux\(card\)\)\{\n    const sixParPage = String\(targetSvg\.getAttribute\("viewBox"\) \|\| ""\)\.trim\(\) === "0 0 1600 1000";\n    drawSysPlateaux\(targetSvg, card, sixParPage \? SYS_ZONE_IMPRIME_6 : SYS_ZONE_IMPRIME, \{ mkEl:tEl, mkText:tText, isPrint:true, devoile:revealAnswers \}\);\n    return;\n  \}/);
   // le bloc avant le tray : la carte en plateaux ne dessine ni le grand plateau ni la boîte TOTAL centrée
@@ -287,5 +288,6 @@ test("écran : plus de clic mort — depuis le lot S3, D avance et recule d'un c
   assert.match(prec, /if\(revealState > 0\)\{\n    revealState = revealState - 1;/);
   // les cartes sans étapes sautent toujours de l'énoncé (0) aux taches dévoilées (2)
   assert.match(fn("goNextCardOrStep"), /\} else if \(revealState === 0\) \{\n      revealState = 2;/);
-  assert.match(fn("getMaxRevealState"), /if\(sysAPlan\(card\)\) return card\._sys\.plan\.length;\n  return 2;\n\}\n?$/);
+  // lot M4-2 : un clic par étape, ou un seul (« Pas à pas » décoché, toute la correction d'un coup)
+  assert.match(fn("getMaxRevealState"), /if\(sysAPlan\(card\)\) return sysCorrectionPasAPas\(\) \? card\._sys\.plan\.length : 1;\n  return 2;\n\}\n?$/);
 });

@@ -1,15 +1,18 @@
-/* SPLAT! — le Système (mode D), lot S3 « la correction » (24/09/2026 ; conception S0, §4).
-   Un cadre par étape de card._sys.plan (le plan du générateur, lot S1) : titre, barres (barre
-   du total vert pâle, cases « ? » gris ardoise, cases connues orange pâle, jetons visibles
-   cerclés de vert, « ce qui reste » pointillé cannelle ; une mini-tache et le mot de la couleur
-   dans chaque case), calculs en italique, vérification avec les réponses. Écran : un cadre par
-   clic, en bas de la scène, les plateaux en haut (même taille, décidé le 24/09), le fil des
-   étapes passées à droite ; le dernier clic dévoile les taches. Impression 4 par page :
-   l'énoncé dévoilé en haut (décidé le 24/09), les cadres empilés dessous, le dernier ≤ 2 130.
-   Aucune arithmétique dans le dessin : tout nombre écrit vient du plan.
-   Les fonctions de outils/splat.html sont extraites du fichier et exécutées telles quelles,
-   le dessin sur un faux SVG (objets), sur plusieurs milliers de cartes du générateur. */
+/* SPLAT! — le Système (mode D), la correction en BARRES DE TACHES (lot M4-2, 04/10/2026 ; dessin
+   choisi par Gwenaël sur planches : colonne « A » de hauteur-1c / hauteur-3a, puis les plans des
+   douze types validés le même jour). Remplace les tests des cadres du lot S3.
+   Chaque étape de card._sys.plan : un titre, des barres ; une barre = la case du TOTAL au-dessus
+   (le nombre seul), le calcul gris à sa droite, une case par tache (largeur 118 sur 1 600, la
+   même partout) ; un plateau retrouvé devient un bloc gris portant son total. On vérifie :
+     - le plan refait nombre par nombre, pour quelques milliers de cartes par type (les douze
+       types, avec et sans jetons visibles, plateaux rangés ou mélangés) ;
+     - les cartes ne changent pas : le générateur filtre toujours les nombres du plan d'avant
+       (sysPlanS3), et une empreinte de 8 400 cartes est celle d'avant le lot ;
+     - le dessin imprimé (faux SVG) : jamais réduit aux réglages des fiches, rien ne déborde, rien
+       ne se chevauche ; l'écran, le téléphone et la correction directe tiennent dans leur scène.
+   Les fonctions de outils/splat.html sont extraites du fichier et exécutées telles quelles. */
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
@@ -25,7 +28,6 @@ function ligne(prefix){
   assert.ok(l, `${prefix} introuvable`);
   return l;
 }
-/* une constante sur plusieurs lignes (« const X = { … };») */
 function constante(nom){
   const start = html.indexOf(`\nconst ${nom} = `);
   assert.notEqual(start, -1, `${nom} introuvable`);
@@ -34,14 +36,16 @@ function constante(nom){
 
 const PALETTE = html.slice(html.indexOf("const INVESTIGATE_COLOR_PALETTE = ["), html.indexOf("];", html.indexOf("const INVESTIGATE_COLOR_PALETTE = [")) + 2);
 const CONSTANTES = ["SYS_GESTES", "SYS_GESTES_MIX_DEFAUT", "SYS_MAX_TACHES", "SYS_MAX_TACHES_AVANT", "SYS_ESSAIS", "SYS_NOMBRES_SOUS_ENTENDUS", "SYS_COULEURS_PLURIEL", "SYS_PLAGES",
-  "SYS_ZONE_ECRAN", "SYS_ZONE_IMPRIME", "SYS_ZONE_IMPRIME_6", "SYS_TACHE", "SYS_CORR", "SYS_CORR_LOUPE_MAX", "SYS_ZONE_ECRAN_CORRECTION", "SYS_ZONE_IMPRIME_CORRECTION",
-  "SYS_FIL", "SYS_UNIQUE_ECRAN", "SYS_UNIQUE_IMPRIME", "ENQUETE_DEPASSE_TRAIT", "ENQUETE_DEPASSE_FOND", "ENQUETE_ECRITURE_FOND", "ENQUETE_ECRITURE_ENCRE"].map(constante).join("\n");
+  "SYS_ZONE_ECRAN", "SYS_ZONE_IMPRIME", "SYS_ZONE_IMPRIME_6", "SYS_TACHE", "SYS_BARRES", "SYS_BARRES_SERRE", "SYS_BARRES_TAILLES", "SYS_CORR_IMPRIME", "SYS_CORR_ECRAN",
+  "SYS_ZONE_ECRAN_CORRECTION", "SYS_ZONE_IMPRIME_CORRECTION", "SYS_FIL", "SYS_TEL", "SYS_ZONE_TEL_CORRECTION", "ENQUETE_NOM_ECART"].map(constante).join("\n");
 const GENERATEUR = ["sysNormaliserReglages", "genSystemCarte", "sysMelangerPlateaux", "sysFormes", "sysFormesDouble", "sysSomme", "sysNombreTaches", "sysPlateau",
   "sysTirerSituation", "sysSituationValide", "sysNombreSousEntendu", "sysTexteASousEntendu", "sysSituationSure",
-  "sysAssemblerCarte", "sysUneTacheParCouleur", "sysIndice", "sysPhraseIndice", "sysPlan"].map(fn).join("\n");
-const DESSIN = ["sysEnPlateaux", "sysTotalCache", "sysRayonJeton", "sysGrille", "sysColonnesVisibles", "sysRayonMax", "sysDispositionPlateaux",
-  "sysAPlan", "sysCorrPoids", "sysCorrLongueur", "sysCorrUnite", "sysCorrMetriques", "sysCorrHauteurCadre", "sysCorrMesures", "sysCorrEtiquette",
-  "sysCorrLargeurCalcul", "sysCorrAjuster", "drawSysCase", "drawSysBarre", "drawSysCadre", "drawSysCorrectionImprimee", "blobPath"].map(fn).join("\n");
+  "sysAssemblerCarte", "sysUneTacheParCouleur", "sysIndice", "sysPhraseIndice", "sysPlanS3", "sysPlan"].map(fn).join("\n");
+const DESSIN = ["sysEnPlateaux", "sysTotalCache", "sysRayonJeton", "sysGrille", "sysColonnesVisibles", "sysRayonMax", "sysDispositionPlateaux", "drawSysPlateaux",
+  "sysAPlan", "sysDevoileEleve", "sysBarresMetriques", "sysLargeurTexte", "sysCorrAjuster", "sysBarreCases", "sysBarreLargeur", "sysEtapeTaille", "sysVerifHauteur",
+  "sysVerifLargeur", "sysEtapesFlux", "sysJetonCouleurs", "drawSysCaseBarre", "drawSysBarre", "drawSysEtape", "drawSysVerification", "drawSysCorrectionImprimee",
+  "sysCorrEcranEchelle", "sysCorrectionPasAPas", "drawSysCorrectionDirecte", "sysTelEchelle", "blobPath", "wrapTextToWidth", "beadColorForValue",
+  "drawInvestigateSplatName", "investigateColorInfo"].map(fn).join("\n");
 
 const sys = new Function(`
   ${PALETTE}
@@ -51,8 +55,13 @@ const sys = new Function(`
   ${ligne("const INVESTIGATE_COLOR_INITIALS = ")}
   ${fn("investigateColorInitial")}
   let investigatePaletteKeys = null;
-  let _textMeasureContext = null;
-  ${fn("measureTextWidth")}
+  /* les largeurs de texte : 0,53 corps par signe en gras (Inter, la police du navigateur de
+     contrôle, en fait 0,48 : un dixième de marge pour Segoe UI et les autres) */
+  function measureTextWidth(str, font){
+    const fs = Number((String(font).match(/(\\d+(?:\\.\\d+)?)px/) || [])[1]) || 16;
+    const poids = Number((String(font).match(/^(?:italic )?(\\d{3}) /) || [])[1]) || 400;
+    return String(str == null ? "" : str).length * fs * (poids >= 800 ? 0.53 : 0.5);
+  }
   ${fn("buildInvestigateColorMap")}
   ${ligne("function shuffleInPlace(")}
   ${ligne("function mulberry32(")}
@@ -62,24 +71,31 @@ const sys = new Function(`
   ${CONSTANTES}
   ${GENERATEUR}
   ${DESSIN}
-  /* faux SVG : des objets, les textes gardés dans l'ordre */
+  /* faux SVG : des objets, les textes gardés dans l'ordre ; une page minimale */
   const mkEl = (name, attrs = {}) => ({ name, attrs, children: [], appendChild(c){ this.children.push(c); return c; } });
   const mkText = (x, y, t, attrs = {}) => ({ name: "text", attrs: { x, y, ...attrs }, text: String(t), children: [], appendChild(){} });
+  const el = mkEl, text = mkText;
+  let svg = mkEl("svg");
+  let numberedQuestionMarkMode = true;
+  let eleveActif = false;
+  const document = { body: { classList: { contains: () => false } }, getElementById: () => null, createElement(){ throw new Error("pas de canevas"); } };
   return {
-    C: SYS_CORR, LOUPE: SYS_CORR_LOUPE_MAX, metriques: sysCorrMetriques, ZE: SYS_ZONE_ECRAN_CORRECTION, ZI: SYS_ZONE_IMPRIME_CORRECTION, UE: SYS_UNIQUE_ECRAN, UI: SYS_UNIQUE_IMPRIME, FIL: SYS_FIL,
-    GESTES: SYS_GESTES, mesures: sysCorrMesures, hauteur: sysCorrHauteurCadre, disposition: sysDispositionPlateaux, enPlateaux: sysEnPlateaux,
-    aPlan: sysAPlan, poids: sysCorrPoids, longueur: sysCorrLongueur,
-    cadre(card, etape, lettres, isPrint){
-      const racine = mkEl("g");
-      const m = sysCorrMesures(card);
-      const h = drawSysCadre(racine, card, etape, 500, m, { mkEl, mkText, isPrint: !!isPrint, lettres: !!lettres }, 3);
-      return { g: racine.children[0], h, m };
-    },
-    imprimee(card, haut, lettres){
+    B: SYS_BARRES, SERRE: SYS_BARRES_SERRE, IMP: SYS_CORR_IMPRIME, ECR: SYS_CORR_ECRAN, TEL: SYS_TEL, ZI: SYS_ZONE_IMPRIME_CORRECTION,
+    mot: (k) => investigateColorWord(investigateColorByKey(k)),
+    initiale: (k) => investigateColorInitial(investigateColorByKey(k)),
+    plan: sysPlan, planS3: sysPlanS3, cases: sysBarreCases, metriques: sysBarresMetriques, taille: sysEtapeTaille,
+    flux: sysEtapesFlux, verifHauteur: sysVerifHauteur, ecranEchelle: sysCorrEcranEchelle, telEchelle: sysTelEchelle, largeurBarre: sysBarreLargeur,
+    imprimee(card, lettres){
+      numberedQuestionMarkMode = !lettres;
       const racine = mkEl("svg");
-      const bas = drawSysCorrectionImprimee(racine, card, haut, SYS_CORR.basImprime, { mkEl, mkText, isPrint: true, lettres: !!lettres });
-      return { g: racine.children[0], bas };
+      const entete = drawSysPlateaux(racine, card, SYS_ZONE_IMPRIME_CORRECTION, { mkEl, mkText, isPrint:true, devoile:true, nomMin:16 });
+      const haut = Math.max(...entete.plateaux.map((P) => P.y + P.h)) + SYS_CORR_IMPRIME.ecartEnonce;
+      const bas = drawSysCorrectionImprimee(racine, card, haut, SYS_CORR_IMPRIME.basImprime, { mkEl, mkText, isPrint:true, lettres: !!lettres });
+      numberedQuestionMarkMode = true;
+      return { racine, haut, bas, g: racine.children.find((c) => c.attrs.id === "sysCorrectionPrint") };
     },
+    directe(card){ svg = mkEl("svg"); drawSysCorrectionDirecte(card); return svg; },
+    pasAPas(eleve, coche){ eleveActif = eleve; const d = document.getElementById; document.getElementById = () => ({ checked: coche }); const r = sysCorrectionPasAPas(); document.getElementById = d; eleveActif = false; return r; },
     serie(graine, n, reglages){
       const rng = mulberry32(graine);
       const out = [];
@@ -89,248 +105,382 @@ const sys = new Function(`
   };
 `)();
 
-/* graines fixes, sans nombre à sous-entendu */
 const sousEntendu = (n) => ["69", "88", "420", "666", "1488"].some((x) => String(n).includes(x));
-function graines(n){ const out = []; for(let s = 1; out.length < n; s++) if(!sousEntendu(s)) out.push(s); return out; }
-
-/* 6 gestes × 4 réglages (défaut ; 6 visibles et coefficients 4 ; sans visible ; 10 visibles et grands totaux) × 50 graines × 4 cartes */
-const REGLAGES = [{}, { visMax: 6, coefMax: 4, totalMax: 150 }, { visMin: 0, visMax: 0, coefMax: 4 }, { visMax: 10, totalMax: 300, coefMax: 4 }];
-const CARTES = [];
-for(const geste of sys.GESTES) for(const r of REGLAGES) for(const g of graines(50)) for(const c of sys.serie(g, 4, { geste, ...r })) CARTES.push(c);
-
+function graines(n, depart = 1){ const out = []; for(let s = depart; out.length < n; s++) if(!sousEntendu(s)) out.push(s); return out; }
 const textes = (n, out = []) => { if(!n) return out; if(n.name === "text") out.push(n); (n.children || []).forEach((c) => textes(c, out)); return out; };
 const elements = (n, name, out = []) => { if(!n) return out; if(n.name === name) out.push(n); (n.children || []).forEach((c) => elements(c, name, out)); return out; };
 
-test("toutes les cartes du Système ont un plan : D devient une carte à étapes, un clic par cadre", () => {
-  for(const c of CARTES) assert.ok(sys.aPlan(c));
-  assert.ok(!sys.aPlan({ family: "D" }), "une carte D sans modèle (ancienne) garde les deux états");
-  assert.ok(!sys.aPlan({ family: "C", _sys: { plan: [{}] } }));
-  assert.match(fn("isRevealSequenceCard"), /card\.family === "C" \|\| sysAPlan\(card\)\);/);
-  assert.match(fn("getMaxRevealState"), /if\(sysAPlan\(card\)\) return card\._sys\.plan\.length;\n  return 2;\n\}\n?$/);
-  // en arrière : une étape à la fois (le retour direct à l'énoncé du lot S2 n'a plus lieu d'être)
-  const prec = fn("goPreviousCardOrStep");
-  assert.match(prec, /if\(revealState > 0\)\{\n    revealState = revealState - 1;/);
-  assert.doesNotMatch(prec, /family === "D"/);
-  // l'écran : à partir du 1er clic, la correction ; l'énoncé (état 0) ne change pas
-  // (lot « mode élève du Système » : au téléphone, en mode élève, le dessin portrait)
-  assert.match(fn("renderCard"), /^function renderCard\(card, revealState, opts = \{\}\)\{\n  clearSvg\(\);\n\n  \/\* [^\n]+\n[^\n]+\*\/\n  if\(sysAPlan\(card\) && revealState >= 1 && !opts\.sansCorrection\)\{\n    if\(typeof eleveSchemaTel !== "undefined" && eleveSchemaTel\) drawSysCorrectionTelephone\(card, revealState\);\n    else drawSysCorrectionEcran\(card, revealState\);\n    return;\n  \}/);
-});
+/* les douze types du plan du monde 4 (monde-4-audit-et-plan.md, § 2) */
+const TYPES = {
+  "1a": { geste: "PARTIELLE" }, "1b": { geste: "COEF", ecart: "1" }, "1c": { geste: "COEF", ecart: "2" }, "1d": { geste: "EMBOITE1" },
+  "1e": { geste: "ESCALIER" }, "2a": { geste: "DOUBLE" }, "2b": { geste: "DOUBLE", fois: 3 }, "2c": { geste: "DOUBLE", indice: "12" },
+  "2d": { geste: "DOUBLE", sens: "INDICE" }, "2d·3": { geste: "DOUBLE", sens: "INDICE", fois: 3 }, "3a": { geste: "MIROIR" }, "3b": { geste: "TROIS" }
+};
+/* les titres vus par les élèves : ceux des planches validées le 04/10/2026 */
+const TITRES = [
+  "Les deux plateaux", "Les trois plateaux", "Les trois petits plateaux",
+  "Je remplace le petit plateau par son total", "Je remplace un petit plateau par son total", "Je remplace l’autre petit plateau par son total",
+  "Je remplace le plateau moyen par son total", "Je remplace chaque petit plateau par son total",
+  "Je retrouve 2 fois le petit plateau", "Je retrouve 3 fois le petit plateau", "Je retrouve ce reste dans le petit plateau",
+  "J’additionne : je range par paires", "J’additionne : je range en 2 grands plateaux",
+  "Je retrouve 1 paire dans le plateau", "Je retrouve 2 paires dans le plateau",
+  "Je retire", "Je partage", "Je remplace", "Je vérifie"
+];
 
-test("chaque ligne de calcul dessinée est la ligne du plan (mots, et lettres en unknown=letter), titres et étiquettes compris", () => {
+function evaluer(calcul){
+  let m;
+  if((m = calcul.match(/^(\d+) ÷ (\d+)$/))){ assert.equal(Number(m[1]) % Number(m[2]), 0, `division non exacte « ${calcul} »`); return Number(m[1]) / Number(m[2]); }
+  if(/^\d+( − \d+)+$/.test(calcul)){ const n = calcul.split(" − ").map(Number); return n.slice(1).reduce((s, x) => s - x, n[0]); }
+  if(/^\d+( \+ \d+)+$/.test(calcul)) return calcul.split(" + ").map(Number).reduce((s, x) => s + x, 0);
+  assert.fail(`calcul illisible « ${calcul} »`);
+}
+function verifierLigne(l){
+  const m = l.match(/^(.+) = (\d+) ✓$/);
+  assert.ok(m, `ligne de vérification « ${l} »`);
+  const somme = m[1].split(" + ").reduce((s, t) => { const p = t.match(/^(\d+) × (\d+)$/); return s + (p ? Number(p[1]) * Number(p[2]) : Number(t)); }, 0);
+  assert.equal(somme, Number(m[2]), `ligne fausse « ${l} »`);
+}
+
+/* Une carte : le plan refait nombre par nombre. */
+function verifierPlan(carte){
+  const s = carte._sys;
+  const v = s.values;
+  const plan = s.plan;
+  const totaux = s.boards.map((b) => b.total).filter((t) => t !== null);
+  const tops = [];
+  const trouvees = new Set();
+  assert.ok(plan.length >= 5 && plan.length <= 9, `${s.geste} : ${plan.length} étapes`);
+  plan.forEach((e, n) => {
+    assert.ok(TITRES.includes(e.titre), `titre inconnu « ${e.titre} »`);
+    assert.equal(e.titre === "Je vérifie", n === plan.length - 1, "« Je vérifie » en dernier, et seulement là");
+    if(e.role === "verification") return;
+    assert.ok(e.barres.length >= 1 && e.barres.length <= 3);
+    for(const b of e.barres){
+      const valeur = (c) => (c.kind === "unknown" ? v[c.color] : c.value);
+      const somme = b.cells.reduce((a, c) => a + valeur(c), 0);
+      if(b.top === "?") assert.equal(s.geste, "TROIS");
+      else assert.equal(somme, Number(b.top), `${s.geste} « ${e.titre} » : la barre ${b.top} ≠ ${somme}`);
+      if(b.calcul) assert.equal(evaluer(b.calcul), Number(b.top), `${s.geste} : « ${b.calcul} » ≠ ${b.top}`);
+      for(const c of b.cells){
+        if(c.kind === "known"){
+          assert.equal(c.value, v[c.color]);
+          assert.ok(trouvees.has(c.color), `${s.geste} : ${c.color} montrée avant d'être trouvée`);
+        }
+        if(c.kind === "block"){
+          assert.ok(Number.isInteger(c.covers) && c.covers >= 1);
+          assert.ok(totaux.includes(c.value) || tops.includes(c.value), `${s.geste} : bloc ${c.value} (ni un plateau, ni un total déjà écrit)`);
+        }
+        if(c.kind === "visible") assert.ok((s.boards[0].visible || []).includes(c.value));
+      }
+      // les paquets : coupes croissantes, à l'intérieur de la barre
+      const n = sys.cases(b);
+      assert.ok(b.coupes.every((k, i) => k > 0 && k < n && (i === 0 || k > b.coupes[i - 1])));
+      // une tache seule sous son total : la couleur est trouvée
+      if(b.cells.length === 1 && b.cells[0].kind === "unknown" && b.top !== "?"){
+        assert.equal(Number(b.top), v[b.cells[0].color]);
+        trouvees.add(b.cells[0].color);
+      }
+      if(b.top !== "?") tops.push(Number(b.top));
+    }
+  });
+  assert.equal(trouvees.size, s.colors.length, `${s.geste} : le plan ne trouve pas toutes les couleurs`);
+  const verif = plan[plan.length - 1];
+  assert.equal(verif.role, "verification");
+  assert.equal(verif.lignes.length, totaux.length, "un calcul par plateau qui a un total");
+  verif.lignes.forEach(verifierLigne);
+  assert.deepEqual(verif.reponses, s.colors.map((k) => ({ color: k, value: v[k] })));
+}
+
+const REGLAGES_FICHES = { totalMin: 20, totalMax: 60 };
+
+test("le plan de chaque type, refait nombre par nombre : 12 types × (sans, avec jetons visibles) × (rangés, mélangés)", () => {
   let n = 0;
-  for(const c of CARTES.filter((_, i) => i % 3 === 0)){
-    c._sys.plan.forEach((etape) => {
+  for(const [type, r] of Object.entries(TYPES)) for(const vis of [{ visMin: 0, visMax: 0 }, { visMin: 1, visMax: 3 }]) for(const ordre of ["", "MELANGE"]){
+    for(const g of graines(60)) for(const c of sys.serie(g, 10, { ...REGLAGES_FICHES, ...vis, ...r, ordre })){
+      verifierPlan(c); n++;
+      // aux totaux des fiches, aucun nombre à sous-entendu dans le plan dessiné
+      assert.ok(!(JSON.stringify(c._sys.plan).match(/\d+/g) || []).some(sousEntendu), `${type} : nombre à sous-entendu dans la correction`);
+    }
+  }
+  assert.ok(n >= 23000, `${n} cartes`);
+});
+
+test("le plan, aux autres réglages : totaux 50 à 100, jetons jusqu'à 6, le Mélange de tous les gestes", () => {
+  let n = 0;
+  const tous = { geste: "MIX", gestes: ["EMBOITE1", "PARTIELLE", "COEF", "DOUBLE", "MIROIR", "TROIS", "ESCALIER"] };
+  for(const r of [...Object.values(TYPES), tous]) for(const reg of [{ totalMin: 50, totalMax: 100, visMin: 0, visMax: 3 }, { visMin: 2, visMax: 6, coefMax: 4 }]){
+    for(const g of graines(25)) for(const c of sys.serie(g, 8, { ...reg, ...r })){ verifierPlan(c); n++; }
+  }
+  assert.ok(n >= 2500);
+});
+
+test("les plans des cartes des planches du 04/10 : étapes et nombres", () => {
+  const P = (geste, colors, values, boards) => sys.plan({ geste, colors, values, boards: boards.map(([counts, total, visible]) => (visible ? { counts, total, visible } : { counts, total })) });
+  const resume = (plan) => plan.map((e) => [e.titre, e.barres.map((b) => `${b.top}${b.calcul ? ` (${b.calcul})` : ""} : ${b.cells.map((c) => (c.kind === "block" ? `[${c.value}]` : c.kind === "known" ? `${c.color}=${c.value}` : c.kind === "visible" ? `j${c.value}` : c.color)).join(" ")}`)]);
+  // 1c (hauteur-1c, colonne A) : 2 R + 3 B = 50 ; 2 R + B = 26
+  assert.deepEqual(resume(P("COEF", ["red", "blue"], { red: 7, blue: 12 }, [[{ red: 2, blue: 3 }, 50, []], [{ red: 2, blue: 1 }, 26]])), [
+    ["Les deux plateaux", ["50 : red red blue blue blue", "26 : red red blue"]],
+    ["Je remplace le petit plateau par son total", ["50 : [26] blue blue"]],
+    ["Je retire", ["24 (50 − 26) : blue blue"]],
+    ["Je partage", ["12 (24 ÷ 2) : blue"]],
+    ["Je remplace", ["26 : red red blue=12"]],
+    ["Je retire", ["14 (26 − 12) : red red"]],
+    ["Je partage", ["7 (14 ÷ 2) : red"]],
+    ["Je vérifie", []]
+  ]);
+  // 3a (hauteur-3a) : 3 O + 2 R = 36 ; 2 O + 3 R = 29 — rangés par paires dès la première étape
+  const m = P("MIROIR", ["orange", "red"], { orange: 10, red: 3 }, [[{ orange: 3, red: 2 }, 36, []], [{ orange: 2, red: 3 }, 29]]);
+  assert.deepEqual(resume(m).map((e) => e[0]), ["Les deux plateaux", "J’additionne : je range par paires", "Je partage", "Je retrouve 2 paires dans le plateau", "Je retire", "Je remplace", "Je retire", "Je vérifie"]);
+  assert.deepEqual(m[0].barres.map((b) => b.coupes), [[2, 4], [2, 4]], "« orange rouge | orange rouge | orange »");
+  assert.deepEqual(resume(m).slice(1, 5), [
+    ["J’additionne : je range par paires", ["65 (36 + 29) : orange red orange red orange red orange red orange red"]],
+    ["Je partage", ["13 (65 ÷ 5) : orange red"]],
+    ["Je retrouve 2 paires dans le plateau", ["36 : [13] [13] orange"]],
+    ["Je retire", ["10 (36 − 13 − 13) : orange"]]
+  ]);
+  // 2a (remplace-2a) : 2 R + 3 Vi = 34 ; R + Vi = 15 — rangé par paquets « rouge violette | rouge violette | violette »
+  const d = P("DOUBLE", ["red", "purple"], { red: 11, purple: 4 }, [[{ red: 2, purple: 3 }, 34, []], [{ red: 1, purple: 1 }, 15]]);
+  assert.deepEqual(resume(d), [
+    ["Les deux plateaux", ["34 : red purple red purple purple", "15 : red purple"]],
+    ["Je retrouve 2 fois le petit plateau", ["34 : [15] [15] purple"]],
+    ["Je retire", ["4 (34 − 15 − 15) : purple"]],
+    ["Je remplace", ["15 : red purple=4"]],
+    ["Je retire", ["11 (15 − 4) : red"]],
+    ["Je vérifie", []]
+  ]);
+  assert.deepEqual(d[0].barres[0].coupes, [2, 4]);
+  // 2d : N + 2 V = 14 ; 2 N + 3 V = 23 — le petit plateau une fois, puis ce reste dans le petit plateau
+  assert.deepEqual(resume(P("DOUBLE", ["black", "green"], { black: 4, green: 5 }, [[{ black: 2, green: 3 }, 23, []], [{ black: 1, green: 2 }, 14]])), [
+    ["Les deux plateaux", ["23 : black green green black green", "14 : black green green"]],
+    ["Je remplace le petit plateau par son total", ["23 : [14] black green"]],
+    ["Je retire", ["9 (23 − 14) : black green"]],
+    ["Je retrouve ce reste dans le petit plateau", ["14 : [9] green"]],
+    ["Je retire", ["5 (14 − 9) : green"]],
+    ["Je remplace", ["9 : black green=5"]],
+    ["Je retire", ["4 (9 − 5) : black"]],
+    ["Je vérifie", []]
+  ]);
+  // 1e : on monte l'escalier — le petit plateau, le petit dans le moyen, le moyen dans le grand
+  assert.deepEqual(resume(P("ESCALIER", ["black", "purple", "orange"], { black: 6, purple: 7, orange: 8 }, [[{ black: 2, purple: 1, orange: 2 }, 35, []], [{ black: 2, purple: 1 }, 19], [{ black: 2 }, 12]])), [
+    ["Les trois plateaux", ["35 : black black purple orange orange", "19 : black black purple", "12 : black black"]],
+    ["Je partage", ["6 (12 ÷ 2) : black"]],
+    ["Je remplace le petit plateau par son total", ["19 : [12] purple"]],
+    ["Je retire", ["7 (19 − 12) : purple"]],
+    ["Je remplace le plateau moyen par son total", ["35 : [19] orange orange"]],
+    ["Je retire", ["16 (35 − 19) : orange orange"]],
+    ["Je partage", ["8 (16 ÷ 2) : orange"]],
+    ["Je vérifie", []]
+  ]);
+  // 1d : N + V + O = 79 ; N + V = 44 ; V + O = 54 — je remplace N + V par 44, puis V + O par 54
+  assert.deepEqual(resume(P("EMBOITE1", ["black", "green", "orange"], { black: 25, green: 19, orange: 35 }, [[{ black: 1, green: 1, orange: 1 }, 79, []], [{ black: 1, green: 1 }, 44], [{ green: 1, orange: 1 }, 54]])).slice(1, 7), [
+    ["Je remplace un petit plateau par son total", ["79 : [44] orange"]],
+    ["Je retire", ["35 (79 − 44) : orange"]],
+    ["Je remplace l’autre petit plateau par son total", ["79 : black [54]"]],
+    ["Je retire", ["25 (79 − 54) : black"]],
+    ["Je remplace", ["44 : black=25 green"]],
+    ["Je retire", ["19 (44 − 25) : green"]]
+  ]);
+  // 3b : deux fois le grand plateau, je partage par 2, puis chaque petit plateau remplacé
+  const t = P("TROIS", ["black", "red", "purple"], { black: 10, red: 8, purple: 9 }, [[{ black: 1, red: 1, purple: 1 }, null, []], [{ black: 1, red: 1 }, 18], [{ red: 1, purple: 1 }, 17], [{ black: 1, purple: 1 }, 19]]);
+  assert.deepEqual(resume(t).slice(0, 5), [
+    ["Les trois petits plateaux", ["18 : black red", "17 : red purple", "19 : black purple"]],
+    ["J’additionne : je range en 2 grands plateaux", ["54 (18 + 17 + 19) : black red purple black red purple"]],
+    ["Je partage", ["27 (54 ÷ 2) : black red purple"]],
+    ["Je remplace chaque petit plateau par son total", ["27 : [18] purple", "27 : [17] black", "27 : [19] red"]],
+    ["Je retire", ["9 (27 − 18) : purple", "10 (27 − 17) : black", "8 (27 − 19) : red"]]
+  ]);
+  assert.deepEqual(t[t.length - 1].lignes, ["10 + 8 = 18 ✓", "8 + 9 = 17 ✓", "10 + 9 = 19 ✓"]);
+  // 1f : les jetons visibles sont des cases de la barre, retirés avec le petit plateau
+  const j = P("COEF", ["black", "red"], { black: 3, red: 8 }, [[{ black: 2, red: 3 }, 40, [5, 5]], [{ black: 2, red: 1 }, 14]]);
+  assert.deepEqual(resume(j).slice(0, 3), [
+    ["Les deux plateaux", ["40 : black black red red red j5 j5", "14 : black black red"]],
+    ["Je remplace le petit plateau par son total", ["40 : [14] red red j5 j5"]],
+    ["Je retire", ["16 (40 − 14 − 5 − 5) : red red"]]
+  ]);
+  assert.equal(j[j.length - 1].lignes[0], "2 × 3 + 3 × 8 + 5 + 5 = 40 ✓");
+  // 3a avec jetons : les jetons se retirent d'abord (la barre des paires reste à 10 cases au plus)
+  const mj = P("MIROIR", ["black", "red"], { black: 3, red: 8 }, [[{ black: 2, red: 3 }, 40, [5, 5]], [{ black: 3, red: 2 }, 25]]);
+  assert.deepEqual(resume(mj).slice(1, 3), [
+    ["Je retire", ["30 (40 − 5 − 5) : black red black red red"]],
+    ["J’additionne : je range par paires", ["55 (30 + 25) : black red black red black red black red black red"]]
+  ]);
+});
+
+test("ordre=MELANGE : le plan ne dépend pas de l'ordre de dessin des plateaux", () => {
+  let n = 0, melangees = 0;
+  for(const r of Object.values(TYPES)) for(const g of graines(200)){
+    // la première carte d'une série : mêmes plateaux, rangés ou mélangés (le mélange est tiré
+    // après tout le reste de la carte)
+    const [a] = sys.serie(g, 1, { ...REGLAGES_FICHES, ...r });
+    const [b] = sys.serie(g, 1, { ...REGLAGES_FICHES, ...r, ordre: "MELANGE" });
+    assert.deepEqual(b._sys.boards, a._sys.boards);
+    assert.deepEqual(b._sys.plan, a._sys.plan);
+    if(b._sys.ordre && b._sys.ordre.some((k, i) => k !== i)) melangees++;
+    n++;
+  }
+  assert.ok(n >= 2400 && melangees > n / 3, `${melangees} / ${n} dessinées dans le désordre`);
+  assert.doesNotMatch(fn("sysPlan"), /ordre/, "le plan ne lit pas l'ordre de dessin");
+});
+
+// --- les cartes ne changent pas -------------------------------------------------------------
+test("le générateur filtre toujours les nombres du plan d'avant (sysPlanS3) : mêmes cartes qu'avant le lot", () => {
+  const gen = fn("genSystemCarte");
+  assert.match(gen, /if\(sysTexteASousEntendu\(JSON\.stringify\(sit\) \+ JSON\.stringify\(sysPlanS3\(sit\)\)\)\) continue;\n      return sysMelangerPlateaux\(sysAssemblerCarte\(sit, sysPlan\(sit\), o\.clues, false\), rng, o\);/);
+  assert.match(fn("sysSituationSure"), /JSON\.stringify\(sysPlanS3\(sit\)\)/);
+  assert.match(fn("sysPlanS3"), /calculs: lignes\(MOTS\), lettres: lignes\(LETTRES\)/, "le plan d'avant, tel quel");
+  /* l'empreinte de 8 400 cartes (14 réglages × 3 jetons × 2 totaux × 2 ordres × 5 graines × 10),
+     calculée sur main avant le lot M4-2 (7bbdc07) : valeurs, plateaux, ordre, total, taches */
+  const ORDRE = ["1a", "coef", "1b", "1c", "1d", "1e", "2a", "2b", "2c", "2d", "2d·3", "3a", "3b", "mix"];
+  const parNom = { ...TYPES, coef: { geste: "COEF" }, mix: { geste: "MIX", gestes: ["EMBOITE1", "PARTIELLE", "COEF", "DOUBLE", "MIROIR", "TROIS", "ESCALIER"] } };
+  const h = createHash("sha256");
+  let n = 0;
+  for(const nom of ORDRE) for(const vis of [[0, 0], [0, 3], [1, 3]]) for(const tot of [[20, 60], [50, 100]]) for(const ordre of ["", "MELANGE"]) for(const g of [1, 7, 11, 25, 57]){
+    for(const c of sys.serie(g, 10, { visMin: vis[0], visMax: vis[1], totalMin: tot[0], totalMax: tot[1], ordre, ...parNom[nom] })){
+      const s = c._sys;
+      h.update(JSON.stringify([s.geste, s.colors, s.values, s.boards, s.ordre || null, !!s.secours, c.total, c.hidden, c.visible]));
+      n++;
+    }
+  }
+  assert.equal(n, 8400);
+  assert.equal(h.digest("hex"), "1f7297182b6e07b60938dc8216a216f35e770e51ddad6d4d4dbe4e6d6ad5d609");
+});
+
+// --- le dessin imprimé ----------------------------------------------------------------------
+test("impression : jamais réduite aux réglages des fiches, les cases à 118 partout, rien ne déborde ni ne se chevauche", () => {
+  // décidé le 04/10 : une case = 118 sur 1 600 de large, sur toutes les cartes ; la case du total
+  // a la même hauteur que les cases du dessous
+  assert.equal(sys.B.pas, 118);
+  assert.equal(sys.B.hCase, 101);
+  let n = 0;
+  for(const [type, r] of Object.entries(TYPES)) for(const vis of [{ visMin: 0, visMax: 0 }, { visMin: 1, visMax: 3 }]){
+    for(const g of graines(12)) for(const c of sys.serie(g, 5, { ...REGLAGES_FICHES, ...vis, ...r })){
       for(const lettres of [false, true]){
-        const { g } = sys.cadre(c, etape, lettres, true);
-        const t = textes(g).map((x) => x.text);
-        assert.equal(t[0], `3. ${etape.titre}`, "le titre, numéroté");
-        const attendues = lettres ? etape.lettres : etape.calculs;
-        const italiques = textes(g).filter((x) => x.attrs["font-style"] === "italic").map((x) => x.text);
-        assert.deepEqual(italiques, attendues, `${c._sys.geste} · ${etape.role} : les calculs dessinés ≠ le plan`);
-        etape.barres.forEach((b) => assert.ok(t.includes(String(b.top)), `étiquette ${b.top} absente`));
-        if(etape.role === "verification"){
-          etape.reponses.forEach((r) => assert.ok(t.some((x) => x.endsWith(` = ${r.value}`)), "réponse absente"));
-        }
+        const { g: dessin, haut, bas } = sys.imprimee(c, lettres);
         n++;
-      }
-    });
-  }
-  assert.ok(n > 10000, `${n} cadres`);
-});
-
-test("aucun nombre inventé : tout nombre écrit dans un cadre est déjà dans le plan", () => {
-  for(const c of CARTES.filter((_, i) => i % 2 === 0)){
-    for(const etape of c._sys.plan){
-      const source = [etape.titre, ...etape.calculs, ...etape.lettres, ...etape.barres.map((b) => String(b.top)),
-        ...etape.barres.flatMap((b) => b.cells.flatMap((x) => [x.value, x.label, ...(x.covers || []).map((y) => y.value)])),
-        ...(etape.reponses || []).map((r) => r.value), "3."].filter((x) => x != null).join(" ");
-      const permis = new Set(source.match(/\d+/g) || []);
-      for(const lettres of [false, true]){
-        for(const t of textes(sys.cadre(c, etape, lettres, false).g)){
-          for(const nb of t.text.match(/\d+/g) || []) assert.ok(permis.has(nb), `${nb} n'est pas dans le plan (${t.text})`);
+        assert.equal(dessin.attrs["data-echelle"], "1", `${type} : carte réduite`);
+        assert.equal(dessin.attrs.transform, "");
+        assert.ok(bas <= sys.IMP.basImprime + 0.5, `${type} : le bas à ${bas}`);
+        const etapes = dessin.children;
+        assert.equal(etapes.length, c._sys.plan.length, "une étape dessinée par étape du plan");
+        // les boîtes des étapes : dans la carte, deux à deux disjointes
+        const boites = etapes.map((e) => {
+          const rs = elements(e, "rect"), ts = textes(e);
+          const xs = rs.flatMap((x) => [x.attrs.x, x.attrs.x + x.attrs.width]).concat(ts.map((t) => t.attrs.x));
+          const ys = rs.flatMap((x) => [x.attrs.y, x.attrs.y + x.attrs.height]).concat(ts.map((t) => t.attrs.y));
+          return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys) - 30, y1: Math.max(...ys) };
+        });
+        for(const b of boites){ assert.ok(b.x0 >= sys.IMP.x - 12 && b.x1 <= sys.IMP.xMax + 0.5, `${type} : déborde (${b.x0}, ${b.x1})`); assert.ok(b.y0 >= haut - 30); }
+        for(let i = 0; i < boites.length; i++) for(let k = i + 1; k < boites.length; k++){
+          const a = boites[i], b = boites[k];
+          assert.ok(a.x1 <= b.x0 + 1 || b.x1 <= a.x0 + 1 || a.y1 <= b.y0 + 1 || b.y1 <= a.y0 + 1, `${type} : deux étapes se chevauchent`);
+        }
+        // les cases : 118 de large (un bloc : 118 × les cases qu'il couvre), 101 de haut
+        for(const rect of elements(dessin, "rect").filter((x) => x.attrs.height === sys.B.hCase)){
+          const k = rect.attrs.width / sys.B.pas;
+          assert.ok(Math.abs(k - Math.round(k)) < 1e-6 && k >= 1, `case de ${rect.attrs.width}`);
         }
       }
     }
   }
-  // et le bloc du dessin ne lit jamais les valeurs de la carte
-  const bloc = html.slice(html.indexOf("const SYS_CORR = "), html.indexOf("/* Render écran */"));
-  assert.doesNotMatch(bloc, /_sys\.values|card\.hidden|\.total\s*[-+*/]|rng|Math\.random|rInt\(|shuffleInPlace/);
+  assert.ok(n >= 2800, `${n} cartes`);
 });
 
-test("les barres : largeur d'une case la même pour toute la carte, barres dans leur place, cases dans l'ordre du plan", () => {
-  for(const c of CARTES){
-    const m = sys.mesures(c);
-    // compté ici, sans les fonctions du dessin : 1 par tache, 0,6 par jeton visible, « ce qui reste » = ce qu'il couvre
-    const poids = (x) => x.kind === "visible" ? 0.6 : (x.kind === "rest" ? x.covers.reduce((s, y) => s + poids(y), 0) : 1);
-    const L = Math.max(...c._sys.plan.flatMap((e) => e.barres.map((b) => b.offset + b.cells.reduce((s, x) => s + poids(x), 0))));
-    assert.ok(L * m.u <= sys.C.barres + 0.5, "une barre dépasse sa place");
-    assert.ok(m.u <= sys.C.caseMax && m.u >= 40, `case de ${m.u}`);
-    assert.ok(sys.C.x + sys.C.w - 30 - m.calculX >= 480, "la colonne des calculs est trop étroite");
-  }
-  // une carte à visibles : « ce qui reste » couvre exactement ce qu'il remplace
-  const c = CARTES.find((x) => x._sys.geste === "PARTIELLE" && x.visible.length === 3);
-  const indice = c._sys.plan.find((e) => e.role === "indice");
-  const reste = indice.barres[0].cells.find((x) => x.kind === "rest");
-  assert.ok(Math.abs(sys.poids(reste) - (reste.covers.length - 3 + 3 * sys.C.visible)) < 1e-9);
-  const { g } = sys.cadre(c, indice, false, true);
-  const pointilles = elements(g, "rect").filter((r) => r.attrs["stroke-dasharray"]);
-  assert.equal(pointilles.length, 1);
-  assert.equal(pointilles[0].attrs.stroke, "#92400e");
-  const m = sys.mesures(c);
-  assert.ok(Math.abs(pointilles[0].attrs.width - sys.poids(reste) * m.u) < 0.01);
-  // chaque barre commence à offset largeurs de case du bord : une tache garde sa place d'un cadre à l'autre
-  for(const carte of CARTES.filter((_, i) => i % 7 === 0)){
-    const mm = sys.mesures(carte);
-    for(const etape of carte._sys.plan) etape.barres.forEach((b, i) => {
-      const g = sys.cadre(carte, etape, false, true).g;
-      const vertes = elements(g, "rect").filter((r) => r.attrs.fill === "rgba(22,163,74,0.14)");
-      assert.ok(Math.abs(vertes[i].attrs.x - (sys.C.barX + b.offset * mm.u)) < 0.01, `${carte._sys.geste} · ${etape.role} : barre mal placée`);
-    });
-  }
-});
-
-test("dans chaque case : une mini-tache et le mot de la couleur (ou son initiale si la case est étroite) ; en lettres, la lettre", () => {
-  const c = CARTES.find((x) => x._sys.geste === "COEF" && x.visible.length === 0);
-  const etape = c._sys.plan[0];
-  const mots = c._sys.colors.map((k) => ({ black: "noire", purple: "violette", orange: "orange", blue: "bleue", green: "verte", red: "rouge" })[k]);
-  const t = textes(sys.cadre(c, etape, false, true).g).map((x) => x.text);
-  const nbCases = etape.barres[0].cells.length;
-  assert.equal(t.filter((x) => x === "?").length, nbCases);
-  assert.equal(t.filter((x) => mots.includes(x)).length, nbCases, "le mot de la couleur dans chaque case");
-  const tl = textes(sys.cadre(c, etape, true, true).g).map((x) => x.text);
-  assert.equal(tl.filter((x) => ["N", "Vi", "O", "B", "Ve", "R"].includes(x)).length, nbCases, "la lettre dans chaque case");
-  // lisible en gris : aucun texte clair coloré, dans aucun cadre (cases connues, « ce qui reste », barres du total)
-  for(const carte of CARTES.filter((_, i) => i % 40 === 0)) for(const etape of carte._sys.plan) for(const lettres of [false, true]){
-    for(const x of textes(sys.cadre(carte, etape, lettres, true).g)) assert.ok(["#0f172a", "#334155", "#9a3412", "#92400e", "#14532d"].includes(x.attrs.fill), `texte en ${x.attrs.fill}`);
-  }
-  // une mini-tache par case
-  assert.equal(elements(sys.cadre(c, etape, false, true).g, "path").length, nbCases);
-});
-
-test("écran : chaque cadre tient sous les plateaux (posé juste dessous, 24/09), les plateaux sur une rangée, à la même taille, TOTAL jamais collé", () => {
-  let marge = Infinity;
-  for(const c of CARTES){
-    const m = sys.mesures(c);
-    const d = sys.disposition(c, sys.ZE);
-    const bande = Math.max(...d.plateaux.map((P) => P.y + P.h));
-    assert.ok(bande <= sys.ZE.bas);
-    assert.equal(new Set(d.plateaux.map((P) => P.y)).size, 1, "une seule rangée");
-    d.plateaux.forEach((P) => {
-      assert.ok(P.x + P.w <= sys.FIL.x - 10, "un plateau passe sous le fil");
-      assert.ok(P.y - (P.totalY + 210 * sys.ZE.echelleTotal) >= 14, "TOTAL collé au plateau");
-      P.taches.forEach((s) => assert.equal(s.r, d.r));
-    });
-    // le cadre se pose à bande + 40 : même le plus haut de la carte finit dans la scène
-    // (le filet « jamais sous la scène » ne sert donc jamais en Plateaux : le cadre ne bouge pas)
-    m.hauteurs.forEach((h) => { marge = Math.min(marge, 1000 - 20 - (bande + 40) - h); });
-  }
-  assert.ok(marge >= 0, `un cadre sort de la scène (marge ${marge})`);
-  // Phrases / Symboles : le plateau unique réduit tient au-dessus du plus haut cadre
-  const hMax = Math.max(...CARTES.flatMap((c) => sys.mesures(c).hauteurs));
-  assert.ok(sys.UE.y + sys.UE.hauteur * sys.UE.k <= 1000 - hMax - 20 - 10);
-});
-
-test("impression : l'énoncé dévoilé en haut, puis les cadres empilés ; le dernier finit avant 2 130, sans réduction", () => {
-  let pire = 0;
-  for(const c of CARTES){
-    const d = sys.disposition(c, sys.ZI);
-    assert.equal(new Set(d.plateaux.map((P) => P.y)).size, 1, "une seule rangée");
-    d.plateaux.forEach((P) => assert.ok(P.y - (P.totalY + 210 * sys.ZI.echelleTotal) >= 14, "TOTAL collé au plateau"));
-    const haut = Math.max(...d.plateaux.map((P) => P.y + P.h)) + sys.C.ecartEnonce;
-    const { g, bas } = sys.imprimee(c, haut, false);
-    assert.equal(g.attrs.transform, "", "la pile a dû être réduite");
-    assert.ok(bas <= 2130, `dernier cadre à ${bas}`);
-    // Phrases / Symboles : sous le plateau unique réduit
-    const hautU = sys.UI.y + sys.UI.hauteur * sys.UI.k + sys.C.ecartEnonce;
-    const u = sys.imprimee(c, hautU, true);
-    assert.equal(u.g.attrs.transform, "");
-    pire = Math.max(pire, bas, u.bas);
-    // les cadres ne se chevauchent pas : écart de 26 entre deux
-    const cadres = g.children.map((x) => x.children[0]);
-    for(let i = 1; i < cadres.length; i++) assert.equal(cadres[i].attrs.y - (cadres[i - 1].attrs.y + cadres[i - 1].attrs.height), sys.C.ecartCadres);
-  }
-  assert.ok(pire <= 2130, `pire ${pire}`);
-  // la sûreté : une pile trop haute est réduite d'un même facteur (jamais coupée)
-  const c = CARTES.find((x) => x._sys.geste === "DOUBLE");
-  const { g, bas } = sys.imprimee(c, 1200, false);
-  assert.match(g.attrs.transform, /^translate\(\d+ \d+\) scale\(0\.\d+\)$/);
-  assert.ok(bas <= 2130.5);
-});
-
-test("impression : la correction 4 par page passe par drawSysCorrectionImprimee ; 6 par page garde les taches dévoilées (lot S2)", () => {
-  const imp = fn("renderCardIntoSvg");
-  assert.match(imp, /^function renderCardIntoSvg\(targetSvg, card, printMode, opts = \{\}\)\{/);
-  assert.match(imp, /if\(revealAnswers && sysAPlan\(card\) && !opts\.sansCorrectionSys && String\(targetSvg\.getAttribute\("viewBox"\) \|\| ""\)\.trim\(\) !== "0 0 1600 1000"\)\{/);
-  assert.match(imp, /drawSysPlateaux\(targetSvg, card, SYS_ZONE_IMPRIME_CORRECTION, \{ mkEl:tEl, mkText:tText, isPrint:true, devoile:true, nomMin:SYS_ZONE_IMPRIME_CORRECTION\.nomMin \}\);/);
-  assert.match(imp, /drawSysCorrectionImprimee\(targetSvg, card, haut, SYS_CORR\.basImprime, ctx\);\n    return;/);
-  // le bloc S3 passe avant celui du lot S2 (énoncé, 6 par page)
-  assert.ok(imp.indexOf("drawSysCorrectionImprimee(") < imp.indexOf("drawSysPlateaux(targetSvg, card, sixParPage ? SYS_ZONE_IMPRIME_6 : SYS_ZONE_IMPRIME"));
-  // Phrases / Symboles : la correction d'avant (TOTAL et plateau), sans ses indices, réduite ; les indices en colonne
-  assert.match(imp, /renderCardIntoSvg\(avant, sysCarteSansIndices\(card\), "correction", \{ sansCorrectionSys:true \}\);/);
-  assert.match(fn("sysCarteSansIndices"), /indices: \[\]/);
-});
-
-test("titres retouchés le 24/09 : « une tache orange », jamais « une orange » ; « deux paires et une tache rouge de plus »", () => {
-  const titres = new Set(CARTES.flatMap((c) => c._sys.plan.map((e) => e.titre)));
-  for(const t of titres){
-    assert.doesNotMatch(t, /\bune (noire|violette|orange|bleue|verte|rouge)\b/, t);
-    assert.doesNotMatch(t, /, et une/, t);
-  }
-  assert.ok([...titres].some((t) => /^Ce qui reste : une tache \w+/.test(t)));
-  assert.ok([...titres].some((t) => /^Dans le plateau : (une|deux) paires? et une tache \w+ de plus$/.test(t)));
-  assert.ok([...titres].some((t) => /^Dans le plateau : (une|deux) paires?, une tache \w+ de plus et (le jeton visible|les jetons visibles)$/.test(t)));
-});
-
-test("écran : le fil des étapes passées à droite, le cadre courant en bas ; Phrases / Symboles : le plateau unique réduit, indices et fil à droite", () => {
-  const src = fn("drawSysCorrectionEcran");
-  assert.match(src, /drawSysPlateaux\(svg, card, SYS_ZONE_ECRAN_CORRECTION, \{ devoile: dernier \|\| devoileEleve, fondu: !devoileEleve, nomMin: SYS_ZONE_ECRAN_CORRECTION\.nomMin \}\);/);
-  assert.match(src, /const dernier = k >= plan\.length;/);
-  assert.match(src, /for\(let i = 0; i < k - 1; i\+\+\)\{\n    wrapTextToWidth\(`\$\{i \+ 1\}\. \$\{plan\[i\]\.titre\}`/);
-  // 24/09 : le cadre juste sous les plateaux (et sous le fil au dernier clic), haut fixe pour
-  // toute la carte, agrandi par la loupe autant que le plus haut cadre le permet
-  assert.match(src, /const yCadre = Math\.round\(Math\.min\(Math\.max\(basHaut, filBas - SYS_FIL\.pas\) \+ SYS_CORR_ECRAN_ECART, 1000 - 20 - Math\.max\(\.\.\.mesures\.hauteurs\)\)\);/);
-  assert.match(src, /for\(let i = 0; i < plan\.length - 1; i\+\+\) filBas \+=/, "le fil compté jusqu'au dernier clic, pas jusqu'au clic courant");
-  assert.match(src, /if\(yCadre \+ Math\.max\(\.\.\.m\.hauteurs\) <= 1000 - 20\)\{ mesures = m; break; \}/);
-  assert.match(src, /drawSysCadre\(svg, card, plan\[k - 1\], yCadre, mesures, Object\.assign\(\{\}, ctx, \{ C: mesures\.C \}\), k\);/);
-  assert.doesNotMatch(src, /1000 - h - 20/, "le cadre n'est plus posé en bas de la scène");
-  assert.match(html, /\nconst SYS_CORR_ECRAN_ECART = 40;\n/, "40 sous les plateaux : c'est ce que mesure le test de la marge");
-  assert.match(src, /renderCard\(sysCarteSansIndices\(card\), \(dernier \|\| devoileEleve\) \? 2 : 0, \{ sansCorrection:true \}\);/);
-  // la lettre (𝑥) ou « ? » : le bouton de la page, comme les autres modes
-  assert.match(src, /lettres:!numberedQuestionMarkMode/);
-});
-
-test("la loupe (24/09) : à l'impression, les cadres grandissent autant que la place le permet (au plus ×1,35) ; les largeurs ne bougent pas ; sans loupe, rien ne change", () => {
-  assert.equal(sys.LOUPE, 1.35);
-  assert.equal(sys.metriques(1), sys.C, "facteur 1 : les mesures de S3, telles quelles (l'écran sans loupe)");
-  const M = sys.metriques(1.3);
-  for(const k of ["hHaut", "hCase", "ecartBarres", "titre", "bas", "fsTitre", "fsCalcul", "pasCalcul"]) assert.equal(M[k], Math.round(sys.C[k] * 1.3), k);
-  for(const k of ["x", "w", "barX", "barres", "caseMax", "visible", "ecartCalcul", "ecartCadres", "basImprime", "reponsesX"]) assert.equal(M[k], sys.C[k], `${k} ne change pas`);
-  const loupes = [];
-  for(const c of CARTES){
-    const d = sys.disposition(c, sys.ZI);
-    const haut = Math.max(...d.plateaux.map((P) => P.y + P.h)) + sys.C.ecartEnonce;
-    const { g, bas } = sys.imprimee(c, haut, false);
-    const e = Number(g.attrs["data-loupe"]);
-    assert.ok(e >= 1 && e <= 1.35, `loupe ${e}`);
-    loupes.push(e);
-    assert.ok(bas <= 2130, `dernier cadre à ${bas}`);
-    // le plus grand facteur : un centième de plus, la pile ne tiendrait plus
-    if(e < 1.35){
-      const m = sys.mesures(c, sys.metriques(Math.round(e * 100 + 1) / 100));
-      const pile = m.hauteurs.reduce((s, h) => s + h, 0) + (c._sys.plan.length - 1) * sys.C.ecartCadres;
-      assert.ok(haut + pile > 2130, `la loupe aurait pu aller au-delà de ${e}`);
+test("impression : chaque nombre écrit vient du plan ; les noms dans les taches (lettres : la lettre) ; la tache trouvée garde sa valeur dans un rond blanc", () => {
+  for(const r of Object.values(TYPES)) for(const c of sys.serie(5, 4, { ...REGLAGES_FICHES, visMin: 0, visMax: 2, ...r })){
+    const plan = c._sys.plan;
+    const attendus = new Set(plan.flatMap((e) => e.barres.flatMap((b) => [b.top, b.calcul, ...b.cells.filter((x) => x.kind !== "unknown").map((x) => String(x.value))])).filter(Boolean));
+    const verif = plan[plan.length - 1];
+    verif.lignes.forEach((l) => attendus.add(l));
+    verif.reponses.forEach((x) => attendus.add(`${sys.mot(x.color)} = ${x.value}`));
+    for(const lettres of [false, true]){
+      const { g } = sys.imprimee(c, lettres);
+      const mots = new Set(c._sys.colors.map(sys.mot)), initiales = new Set(c._sys.colors.map(sys.initiale));
+      for(const t of textes(g)){
+        if(/^\d/.test(t.text) || / = /.test(t.text) || t.text === "?") assert.ok(attendus.has(t.text), `« ${t.text} » n'est pas dans le plan`);
+        else if(!plan.some((e) => e.titre === t.text || e.titre.includes(t.text))) assert.ok(lettres ? initiales.has(t.text) : mots.has(t.text), `« ${t.text} » dans une case`);
+      }
+      const inconnues = plan.flatMap((e) => e.barres.flatMap((b) => b.cells.filter((x) => x.kind === "unknown"))).length;
+      const ecrits = textes(g).filter((t) => (lettres ? initiales : mots).has(t.text)).length;
+      assert.equal(ecrits, inconnues, "une tache inconnue = son nom (ou sa lettre) écrit dedans");
     }
-    // les calculs à la loupe (jamais plus grands que 30 × e), la largeur d'une case inchangée
-    const fsCalculs = textes(g).filter((x) => x.attrs["font-style"] === "italic").map((x) => Number(x.attrs["font-size"]));
-    assert.ok(fsCalculs.every((f) => f <= Math.round(30 * e)));
-    assert.equal(sys.mesures(c, sys.metriques(e)).u, sys.mesures(c).u);
   }
-  loupes.sort((a, b) => a - b);
-  const mediane = loupes[loupes.length >> 1];
-  assert.ok(mediane >= 1.25, `loupe médiane ${mediane}`);
-  // sans loupe (l'écran avant le 24/09, et les tests du lot S3) : polices et hauteurs de S3
-  const c = CARTES[0];
-  const { g, h } = sys.cadre(c, c._sys.plan[0], false, false);
-  assert.equal(h, sys.hauteur(c._sys.plan[0]));
-  textes(g).filter((x) => x.attrs["font-style"] === "italic").forEach((x) => assert.ok(Number(x.attrs["font-size"]) <= 30));
+});
+
+test("impression : les cartes courtes gardent la mise en page des planches (« Je vérifie » en bas sur toute la largeur), l'étape seule à côté des deux plateaux est centrée sur leurs barres", () => {
+  const M = sys.metriques(1);
+  const P = (geste, colors, values, boards) => sys.plan({ geste, colors, values, boards: boards.map(([counts, total, visible]) => (visible ? { counts, total, visible } : { counts, total })) });
+  const p = P("COEF", ["red", "blue"], { red: 7, blue: 12 }, [[{ red: 2, blue: 3 }, 50, []], [{ red: 2, blue: 1 }, 26]]);
+  const f = sys.flux(p.slice(0, -1), M, sys.IMP.x, sys.IMP.xMax, p[p.length - 1], 0);
+  const [p1, p2] = f.places;
+  assert.equal(p2.col, 1, "« Je remplace le petit plateau par son total » à côté des deux plateaux");
+  const centre1 = p1.y + p1.taille.haut + (p1.h - p1.taille.haut) / 2, centre2 = p2.y + p2.taille.haut + (p2.h - p2.taille.haut) / 2;
+  assert.ok(Math.abs(centre1 - centre2) <= 1, "centrée sur les deux barres");
+  const v = f.places[f.places.length - 1];
+  assert.ok(v.verif && v.x === sys.IMP.x && v.w === sys.IMP.xMax - sys.IMP.x - 10, "« Je vérifie » à la ligne, la réponse sur toute la largeur");
+  assert.ok(f.places.every((q) => q.taille.lignes === undefined || q.taille.lignes.length === 1), "titres sur une ligne");
+  // serré (« Je vérifie » à côté), puis très serré (écarts, titres et calculs un peu plus
+  // petits, jamais les cases) : seulement quand la carte ne tient pas autrement
+  assert.match(fn("drawSysCorrectionImprimee"), /let flux = sysEtapesFlux\(etapes, M, Z\.x, Z\.xMax, verif, 0\);\n  for\(let serre = 1; serre <= 2 && flux\.h > bas - haut; serre\+\+\)\{/);
+  for(const k of Object.keys(sys.SERRE)) assert.ok(!["pas", "hCase", "rTache", "fsTotal", "fsBloc", "trait", "coupe"].includes(k), `très serré ne touche pas aux cases (${k})`);
+});
+
+// --- l'écran, le téléphone, la correction directe -------------------------------------------
+test("écran : une étape par clic, à une échelle unique pour la carte ; chaque étape tient sous les plateaux", () => {
+  for(const r of Object.values(TYPES)) for(const vis of [{ visMin: 0, visMax: 0 }, { visMin: 1, visMax: 3 }]) for(const c of sys.serie(3, 8, { ...REGLAGES_FICHES, ...vis, ...r })){
+    for(const y of [380, 430, 480]){
+      const f = sys.ecranEchelle(c, y);
+      assert.ok(f >= 0.3 && f <= sys.ECR.max);
+      const M = sys.metriques(f);
+      c._sys.plan.forEach((e, i) => {
+        if(e.role === "verification") assert.ok(y + sys.verifHauteur(e, M) <= sys.ECR.bas + 1);
+        else{
+          const t = sys.taille({ ...e, titre: `${i + 1}. ${e.titre}` }, M);
+          assert.ok(y + t.h <= sys.ECR.bas + 1, "l'étape tient en hauteur");
+          assert.ok(sys.ECR.x + t.w <= sys.ECR.xMax + 1, "l'étape tient en largeur");
+        }
+      });
+    }
+  }
+  const ecran = fn("drawSysCorrectionEcran");
+  assert.match(ecran, /const M = sysBarresMetriques\(sysCorrEcranEchelle\(card, yEtape\)\);/);
+  assert.match(ecran, /else drawSysEtape\(g, etape, SYS_CORR_ECRAN\.x, yEtape, M, ctx, k\);/);
+});
+
+test("téléphone : la plus longue barre (calcul compris) tient dans la largeur, à une échelle unique pour la carte", () => {
+  for(const r of Object.values(TYPES)) for(const c of sys.serie(9, 8, { ...REGLAGES_FICHES, visMin: 0, visMax: 3, ...r })){
+    const f = sys.telEchelle(c);
+    const M = sys.metriques(f);
+    for(const e of c._sys.plan) for(const b of e.barres) assert.ok(sys.largeurBarre(b, M) <= sys.TEL.w - 2 * sys.TEL.marge + 0.5);
+  }
+});
+
+test("au tableau, « Pas à pas » décoché : toute la correction d'un coup, dans la scène ; le mode élève reste en pas à pas", () => {
+  for(const r of Object.values(TYPES)) for(const c of sys.serie(4, 4, { ...REGLAGES_FICHES, visMin: 0, visMax: 3, ...r })){
+    const s = sys.directe(c);
+    const g = s.children[0];
+    assert.equal(g.attrs.id, "sysCorrectionDirecte");
+    const k = Number(g.attrs["data-echelle"]);
+    assert.ok(k >= 0.5, `échelle ${k}`);
+    const [tx, ty] = g.attrs.transform.match(/translate\(([-\d.]+) ([-\d.]+)\)/).slice(1).map(Number);
+    for(const rect of elements(g, "rect")){
+      assert.ok(tx + rect.attrs.x * k >= -0.5 && tx + (rect.attrs.x + rect.attrs.width) * k <= 1600.5, "dans la largeur");
+      assert.ok(ty + rect.attrs.y * k >= -0.5 && ty + (rect.attrs.y + rect.attrs.height) * k <= 1000.5, "dans la hauteur");
+    }
+    assert.equal(elements(g, "g").filter((x) => /\bsysEtape\b/.test(x.attrs.class || "")).length, c._sys.plan.length);
+  }
+  assert.equal(sys.pasAPas(false, true), true);
+  assert.equal(sys.pasAPas(false, false), false);
+  assert.equal(sys.pasAPas(true, false), true, "mode élève : toujours pas à pas");
+  assert.match(fn("getMaxRevealState"), /if\(sysAPlan\(card\)\) return sysCorrectionPasAPas\(\) \? card\._sys\.plan\.length : 1;/);
+  // la case du panneau, et l'adresse : « pasapas=0 » comme l'Enquête, écrit seulement quand c'est décoché
+  assert.match(html, /<input type="checkbox" id="sysPasAPas" checked> <span>Pas à pas<\/span>/);
+  assert.match(fn("sysLireReglagesM4"), /if\(sysPasAPasEl\) sysPasAPasEl\.checked = params\.get\("pasapas"\) !== "0";/);
+  assert.match(fn("sysEcrireReglagesM4"), /if\(sysPasAPasEl && !sysPasAPasEl\.checked\) params\.set\("pasapas", "0"\);/);
+});
+
+test("les fonctions des cadres du lot S3 sont retirées ; le dessin ne tire rien au sort", () => {
+  for(const nom of ["drawSysCadre", "drawSysCadrePortrait", "drawSysCase", "sysCorrMesures", "sysCorrUnite", "sysTelMesures"]) assert.ok(!html.includes(`\nfunction ${nom}(`), `${nom} est encore là`);
+  assert.ok(!html.includes("const SYS_CORR = "));
+  const bloc = html.slice(html.indexOf("const SYS_BARRES = "), html.indexOf("/* Render écran */"));
+  assert.doesNotMatch(bloc, /rng|Math\.random|rInt\(|rFloat\(|shuffleInPlace/);
 });

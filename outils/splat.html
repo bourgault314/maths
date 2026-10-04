@@ -1449,6 +1449,10 @@
           </select>
         </div>
       </div>
+      <label>Correction au tableau</label>
+      <div class="c-ops c-variantes" id="sysCorrectionRow">
+        <label class="checkInline" title="Coché : une étape par appui. Décoché : toute la correction d'un coup, le corrigé imprimé sans l'énoncé. Le mode élève garde toujours le pas à pas."><input type="checkbox" id="sysPasAPas" checked> <span>Pas à pas</span></label>
+      </div>
       <div class="row" style="align-items:flex-end">
         <div style="flex:1.15 1 0">
           <label>Format Indices</label>
@@ -1843,6 +1847,7 @@ const sysFoisEl = document.getElementById("sysFois");
 const sysIndiceEl = document.getElementById("sysIndice");
 const sysSensEl = document.getElementById("sysSens");
 const sysOrdreEl = document.getElementById("sysOrdre");
+const sysPasAPasEl = document.getElementById("sysPasAPas");
 const sysVisibleMinEl = document.getElementById("sysVisibleMin");
 const sysVisibleMaxEl = document.getElementById("sysVisibleMax");
 const sysTotalMinEl = document.getElementById("sysTotalMin");
@@ -2440,6 +2445,8 @@ function sysLireReglagesM4(params){
   lire(sysIndiceEl, "indice", "11");
   lire(sysSensEl, "sens", "PLATEAU");
   lire(sysOrdreEl, "ordre", "");
+  /* lot M4-2 : « pasapas=0 » = la correction directe au tableau, comme l'Enquête */
+  if(sysPasAPasEl) sysPasAPasEl.checked = params.get("pasapas") !== "0";
 }
 
 /* Les gestes que la page peut tirer : le geste choisi, ou les gestes cochés du mélange. */
@@ -2456,6 +2463,7 @@ function sysEcrireReglagesM4(params){
   if(double && sysIndiceEl && sysIndiceEl.value === "12") params.set("indice", "12");
   if(double && sysSensEl && sysSensEl.value === "INDICE") params.set("sens", "INDICE");
   if(sysOrdreEl && sysOrdreEl.value === "MELANGE") params.set("ordre", "MELANGE");
+  if(sysPasAPasEl && !sysPasAPasEl.checked) params.set("pasapas", "0");
 }
 
 function addShareControl(params, name, el){
@@ -3042,7 +3050,7 @@ SYS_GESTES.forEach(g => {
   eightOpEl, eightTasksEl, eightVisibleMaxEl, eightTotalMinEl, eightTotalMaxEl, seedDEl,
   invTaskCountEl, invClueTypeEl, invStructure3El, invOpMulEl, invOpDivEl, invOpAddEl, invOpSubEl, invMaxAddEl, invVisibleMinEl, invVisibleMaxEl, invTotalMinEl, invTotalMaxEl, invNoTotalEl, invRepeatOnEl, invRepeatEl, invOrdreEl, invVocabEl, invComposeEl, invReuniesEl, invPasAPasEl, seedEEl,
   sysGesteEl, sysCoefMaxEl, sysClueTypeEl, sysVisibleMinEl, sysVisibleMaxEl, sysTotalMinEl, sysTotalMaxEl, seedSysEl,
-  sysEcartEl, sysFoisEl, sysIndiceEl, sysSensEl, sysOrdreEl,
+  sysEcartEl, sysFoisEl, sysIndiceEl, sysSensEl, sysOrdreEl, sysPasAPasEl,
   ...SYS_GESTES.map(g => document.getElementById("sysMix" + g))
 ].forEach(el=>{
   if(!el) return;
@@ -4461,9 +4469,9 @@ function genSystemCarte(rng, opts){
     for(let essai = 0; essai < SYS_ESSAIS; essai++){
       const sit = sysTirerSituation(rng, geste, couleurs, plage, o);
       if(!sysSituationValide(sit, plage, o)) continue;
-      const plan = sysPlan(sit);
-      if(sysTexteASousEntendu(JSON.stringify(sit) + JSON.stringify(plan))) continue;
-      return sysMelangerPlateaux(sysAssemblerCarte(sit, plan, o.clues, false), rng, o);
+      /* le filtre lit le plan d'avant (sysPlanS3) : mêmes nombres, mêmes cartes (lot M4-2) */
+      if(sysTexteASousEntendu(JSON.stringify(sit) + JSON.stringify(sysPlanS3(sit)))) continue;
+      return sysMelangerPlateaux(sysAssemblerCarte(sit, sysPlan(sit), o.clues, false), rng, o);
     }
   }
   const sure = sysSituationSure(couleurs, o);
@@ -4667,7 +4675,7 @@ function sysSituationSure(couleurs, o){
       sysPlateau({ [A]: 1, [B]: 1 }, values),
       sysPlateau({ [B]: 1, [C]: 1 }, values)
     ] };
-    if(!sysTexteASousEntendu(JSON.stringify(sit) + JSON.stringify(sysPlan(sit)))) return sit;
+    if(!sysTexteASousEntendu(JSON.stringify(sit) + JSON.stringify(sysPlanS3(sit)))) return sit;
   }
   const values = { [A]: 5, [B]: 7, [C]: 8 };
   return { geste: "EMBOITE1", colors: [A, B, C], values, boards: [
@@ -4756,7 +4764,11 @@ function sysPhraseIndice(sit, board){
   return `Sous ${liste}, il y a ${board.total} jetons en tout.`;
 }
 
-/* Le plan de la correction (conception S0, §4), étape par étape :
+/* Le plan de la correction d'AVANT (lot S3, conception S0, §4) — il ne se dessine plus
+   (lot M4-2 : voir sysPlan, plus bas), mais le générateur rejette toujours une carte dont
+   le texte de CE plan contient un nombre à sous-entendu : les cartes du mode D restent
+   exactement celles d'avant (mêmes valeurs, mêmes plateaux). Ne pas le modifier. Étape par
+   étape :
      { role, titre, barres: [{ top, span, offset, cells }], calculs: [...], lettres: [...] }
    « calculs » écrit les couleurs en mots (inconnue « ? »), « lettres » avec une lettre par
    couleur (unknown=letter : N, Vi, O, B, Ve, R ; « 2 × Vi », décidé le 23/09).
@@ -4768,7 +4780,7 @@ function sysPhraseIndice(sit, board){
      { kind:"rest", label, covers }   « ce qui reste », à la largeur des cases qu'il couvre
    L'étape « verification » porte aussi « reponses » : la valeur de chaque couleur.
    Aucune arithmétique n'est laissée au dessin : tout nombre écrit est déjà ici. */
-function sysPlan(sit){
+function sysPlanS3(sit){
   const v = sit.values;
   const C = sit.colors;
   const une = sysUneTacheParCouleur(sit);
@@ -5009,6 +5021,243 @@ function sysPlan(sit){
     etape("autre-indice", "L’autre indice, puis la dernière tache",
       [barre(S2, inc(B).concat(con(D)), 1)],
       M => [`${M.nom(B)} = ${S2} − ${v[D]} = ${v[B]}`, `${M.nom(A)} = ${S1} − ${v[B]} = ${v[A]}`]),
+    verification()
+  ];
+}
+
+/* Le plan de la correction (lot M4-2, 04/10/2026, décidé sur planches) : des BARRES DE
+   TACHES, le total AU-DESSUS (comme la boîte TOTAL au-dessus du plateau) ; le petit plateau
+   qu'on retrouve dans le grand est REMPLACÉ par un bloc gris portant son total. On retrouve
+   un morceau connu, on le remplace par son total, on retire, on partage. Étape par étape :
+     { role, titre, barres: [{ top, calcul, cells, coupes }] }
+   « top » : le nombre de la case du total (« ? » pour le plateau sans total de « Trois
+   paires ») ; « calcul » : le calcul qui le donne, écrit en gris à droite (« 50 − 26 »,
+   « 24 ÷ 2 » ; vide s'il n'y en a pas) ; « coupes » : après quelles cases un trait épais range
+   la barre par paquets (« rouge violette | rouge violette | violette »). Une case :
+     { kind:"unknown", color }        une tache encore inconnue (son nom écrit dedans)
+     { kind:"known", color, value }   une tache trouvée : sa forme, sa valeur dans un rond blanc
+     { kind:"visible", value }        un jeton visible
+     { kind:"block", value, covers }  un plateau retrouvé, remplacé par son total (covers cases)
+   La dernière étape (« Je vérifie ») porte « lignes » (un calcul par plateau) et
+   « reponses » (la valeur de chaque couleur). Le plan ne dépend que de _sys.boards : l'ordre
+   de dessin des plateaux (ordre=MELANGE) n'y change rien. Aucune arithmétique n'est laissée
+   au dessin : tout nombre écrit est déjà ici. */
+function sysPlan(sit){
+  const v = sit.values;
+  const C = sit.colors;
+  const somme = list => list.reduce((s, x) => s + x, 0);
+  const repeter = (n, f) => Array.from({ length: n }, f);
+  const inc = (k, n = 1) => repeter(n, () => ({ kind: "unknown", color: k }));
+  const con = (k, n = 1) => repeter(n, () => ({ kind: "known", color: k, value: v[k] }));
+  const vis = list => (list || []).map(x => ({ kind: "visible", value: x }));
+  const bloc = (value, covers) => ({ kind: "block", value, covers });
+  const cases = counts => C.reduce((out, k) => out.concat(inc(k, counts[k] || 0)), []);
+  const barre = (top, cells, calcul = "", coupes = []) => ({ top: String(top), calcul, cells, coupes });
+  /* des paquets de cases mis bout à bout, un trait épais entre deux paquets non vides */
+  const paquets = groupes => {
+    const pleins = groupes.filter(g => g.length);
+    const coupes = [];
+    let n = 0;
+    pleins.slice(0, -1).forEach(g => { n += g.length; coupes.push(n); });
+    return { cells: pleins.flat(), coupes };
+  };
+  const moins = (depart, termes) => [depart].concat(termes).join(" − ");
+  const etape = (role, titre, barres) => ({ role, titre, barres });
+  const retire = (top, calcul, cells) => etape("retire", "Je retire", [barre(top, cells, calcul)]);
+  const partage = (k, n) => etape("partage", "Je partage", [barre(v[k], inc(k), `${n * v[k]} ÷ ${n}`)]);
+  const remplaceConnue = (top, cells) => etape("remplace", "Je remplace", [barre(top, cells)]);
+  const verification = () => ({
+    role: "verification", titre: "Je vérifie", barres: [],
+    lignes: sit.boards.filter(b => b.total != null).map(b => {
+      const termes = [];
+      C.forEach(k => { const n = b.counts[k] || 0; if(n) termes.push(n > 1 ? `${n} × ${v[k]}` : `${v[k]}`); });
+      (b.visible || []).forEach(x => termes.push(String(x)));
+      return `${termes.join(" + ")} = ${b.total} ✓`;
+    }),
+    reponses: C.map(k => ({ color: k, value: v[k] }))
+  });
+
+  const P = sit.boards[0];
+  const T = P.total;
+  const visP = P.visible || [];
+  const V = somme(visP);
+
+  if(sit.geste === "PARTIELLE"){
+    // 3 N = 30 ; 3 N + 2 V = 44
+    const [A, B] = C;
+    const a = P.counts[A], b = P.counts[B];
+    const S = sit.boards[1].total;
+    return [
+      etape("plateaux", "Les deux plateaux", [barre(T, cases(P.counts).concat(vis(visP))), barre(S, inc(A, a))]),
+      etape("remplace", "Je remplace le petit plateau par son total", [barre(T, [bloc(S, a)].concat(inc(B, b), vis(visP)))]),
+      retire(b * v[B], moins(T, [S].concat(visP)), inc(B, b)),
+      ...(b > 1 ? [partage(B, b)] : []),
+      partage(A, a),
+      verification()
+    ];
+  }
+
+  if(sit.geste === "COEF"){
+    // 2 N + 4 V = 40 ; 2 N + V = 25 (une tache de plus, ou on partage)
+    const [X, Y] = C;
+    const c = P.counts[X], y = P.counts[Y];
+    const I = sit.boards[1];
+    const y2 = I.counts[Y];
+    const d = y - y2;
+    const S = I.total;
+    return [
+      etape("plateaux", "Les deux plateaux", [barre(T, cases(P.counts).concat(vis(visP))), barre(S, cases(I.counts))]),
+      etape("remplace", "Je remplace le petit plateau par son total", [barre(T, [bloc(S, c + y2)].concat(inc(Y, d), vis(visP)))]),
+      retire(d * v[Y], moins(T, [S].concat(visP)), inc(Y, d)),
+      ...(d > 1 ? [partage(Y, d)] : []),
+      remplaceConnue(S, inc(X, c).concat(con(Y, y2))),
+      retire(c * v[X], moins(S, repeter(y2, () => v[Y])), inc(X, c)),
+      ...(c > 1 ? [partage(X, c)] : []),
+      verification()
+    ];
+  }
+
+  if(sit.geste === "DOUBLE"){
+    // le petit plateau recopié k fois (2 ou 3) ; sens PLATEAU : le grand plateau a d taches
+    // de plus ; sens INDICE : le petit plateau n'y est qu'une fois, on retrouve le reste
+    const [A, B] = C;
+    const I = sit.boards[1];
+    const a = I.counts[A], b = I.counts[B];
+    const k = P.counts[A] / a;
+    const nB = P.counts[B];
+    const S = I.total;
+    const petit = cases(I.counts);
+    if(nB >= k * b){
+      const d = nB - k * b;
+      const range = paquets(repeter(k, () => petit).concat([inc(B, d).concat(vis(visP))]));
+      return [
+        etape("plateaux", "Les deux plateaux", [barre(T, range.cells, "", range.coupes), barre(S, petit)]),
+        etape("retrouve", `Je retrouve ${k} fois le petit plateau`, [barre(T, repeter(k, () => bloc(S, a + b)).concat(inc(B, d), vis(visP)))]),
+        retire(d * v[B], moins(T, repeter(k, () => S).concat(visP)), inc(B, d)),
+        ...(d > 1 ? [partage(B, d)] : []),
+        remplaceConnue(S, inc(A, a).concat(con(B, b))),
+        retire(a * v[A], moins(S, repeter(b, () => v[B])), inc(A, a)),
+        ...(a > 1 ? [partage(A, a)] : []),
+        verification()
+      ];
+    }
+    // sens INDICE (2d) : 2 N + 3 V et N + 2 V, ou 3 N + V et N + V — le petit plateau n'est
+    // qu'une fois dans le grand ; ce qui reste (rA taches A, rB taches B) a pour total R
+    const rA = P.counts[A] - a, rB = nB - b;
+    const R = T - S - V;
+    const range = paquets([petit, inc(A, rA).concat(inc(B, rB), vis(visP))]);
+    const debut = [
+      etape("plateaux", "Les deux plateaux", [barre(T, range.cells, "", range.coupes), barre(S, petit)]),
+      etape("remplace", "Je remplace le petit plateau par son total", [barre(T, [bloc(S, a + b)].concat(inc(A, rA), inc(B, rB), vis(visP)))]),
+      retire(R, moins(T, [S].concat(visP)), inc(A, rA).concat(inc(B, rB)))
+    ];
+    if(rB === 0){
+      // il reste rA taches A : on partage, puis on remplace dans le petit plateau
+      return debut.concat(
+        rA > 1 ? [partage(A, rA)] : [],
+        [remplaceConnue(S, con(A, a).concat(inc(B, b))),
+         retire(b * v[B], moins(S, repeter(a, () => v[A])), inc(B, b))],
+        b > 1 ? [partage(B, b)] : [],
+        [verification()]);
+    }
+    // il reste rA A + rB B : on retrouve ce reste dans le petit plateau
+    const sA = a - rA, sB = b - rB;
+    return debut.concat([
+      etape("retrouve-reste", "Je retrouve ce reste dans le petit plateau", [barre(S, [bloc(R, rA + rB)].concat(inc(A, sA), inc(B, sB)))]),
+      retire(S - R, moins(S, [R]), inc(A, sA).concat(inc(B, sB)))
+    ], sB > 1 ? [partage(B, sB)] : [], [
+      remplaceConnue(R, inc(A, rA).concat(con(B, rB))),
+      retire(rA * v[A], moins(R, repeter(rB, () => v[B])), inc(A, rA))
+    ], rA > 1 ? [partage(A, rA)] : [], [verification()]);
+  }
+
+  if(sit.geste === "MIROIR"){
+    // 2 N + 3 V = 31 ; 3 N + 2 V = 29 : j'additionne, je range par paires, je partage
+    const [A, B] = C;
+    const a = P.counts[A], b = P.counts[B];
+    const O = sit.boards[1];
+    const S = O.total;
+    const n = a + b;
+    const s = v[A] + v[B];
+    const m = Math.min(a, b);
+    const E = a > b ? A : B;
+    const F = E === A ? B : A;
+    const T2 = T - V;
+    const enPaires = (counts, plus) => {
+      const p = Math.min(counts[A] || 0, counts[B] || 0);
+      return paquets(repeter(p, () => inc(A).concat(inc(B))).concat([inc(A, (counts[A] || 0) - p).concat(inc(B, (counts[B] || 0) - p), plus || [])]));
+    };
+    const pP = enPaires(P.counts, vis(visP)), pP2 = enPaires(P.counts), pO = enPaires(O.counts);
+    const tout = paquets(repeter(n, () => inc(A).concat(inc(B))));
+    return [
+      etape("plateaux", "Les deux plateaux", [barre(T, pP.cells, "", pP.coupes), barre(S, pO.cells, "", pO.coupes)]),
+      // les jetons visibles se retirent d'abord : la barre des paires reste à 10 cases au plus
+      ...(V ? [etape("retire", "Je retire", [barre(T2, pP2.cells, moins(T, visP), pP2.coupes)])] : []),
+      etape("additionne", "J’additionne : je range par paires", [barre(T2 + S, tout.cells, `${T2} + ${S}`, tout.coupes)]),
+      etape("partage", "Je partage", [barre(s, inc(A).concat(inc(B)), `${T2 + S} ÷ ${n}`)]),
+      etape("retrouve", `Je retrouve ${m} paire${m > 1 ? "s" : ""} dans le plateau`, [barre(T2, repeter(m, () => bloc(s, 2)).concat(inc(E)))]),
+      retire(v[E], moins(T2, repeter(m, () => s)), inc(E)),
+      remplaceConnue(s, E === A ? con(A).concat(inc(B)) : inc(A).concat(con(B))),
+      retire(v[F], moins(s, [v[E]]), inc(F)),
+      verification()
+    ];
+  }
+
+  if(sit.geste === "TROIS"){
+    // N + V = 12 ; V + O = 15 ; N + O = 13 : deux fois le grand plateau, je partage par 2
+    const [A, B, D] = C;
+    const [s1, s2, s3] = sit.boards.slice(1).map(b => b.total);
+    const sigma = s1 + s2 + s3;
+    const total = sigma / 2;
+    const deux = paquets([inc(A).concat(inc(B), inc(D)), inc(A).concat(inc(B), inc(D))]);
+    return [
+      etape("plateaux", "Les trois petits plateaux", [barre(s1, inc(A).concat(inc(B))), barre(s2, inc(B).concat(inc(D))), barre(s3, inc(A).concat(inc(D)))]),
+      etape("additionne", "J’additionne : je range en 2 grands plateaux", [barre(sigma, deux.cells, `${s1} + ${s2} + ${s3}`, deux.coupes)]),
+      etape("partage", "Je partage", [barre(total, inc(A).concat(inc(B), inc(D)), `${sigma} ÷ 2`)]),
+      etape("remplace", "Je remplace chaque petit plateau par son total", [
+        barre(total, [bloc(s1, 2)].concat(inc(D))), barre(total, [bloc(s2, 2)].concat(inc(A))), barre(total, [bloc(s3, 2)].concat(inc(B)))]),
+      etape("retire", "Je retire", [
+        barre(v[D], inc(D), moins(total, [s1])), barre(v[A], inc(A), moins(total, [s2])), barre(v[B], inc(B), moins(total, [s3]))]),
+      verification()
+    ];
+  }
+
+  if(sit.geste === "ESCALIER"){
+    // 2 N = 12 ; 2 N + V = 19 ; 2 N + V + 2 O = 35 : on retrouve un plateau dans le suivant,
+    // deux fois
+    const [A, B, D] = C;
+    const a = P.counts[A], b = P.counts[B], c = P.counts[D];
+    const I1 = sit.boards[1], I2 = sit.boards[2];
+    const S1 = I1.total, S2 = I2.total;
+    // on monte l'escalier : le petit plateau d'abord, puis le petit dans le moyen, puis le
+    // moyen dans le grand
+    return [
+      etape("plateaux", "Les trois plateaux", [barre(T, cases(P.counts).concat(vis(visP))), barre(S1, cases(I1.counts)), barre(S2, cases(I2.counts))]),
+      partage(A, a),
+      etape("remplace", "Je remplace le petit plateau par son total", [barre(S1, [bloc(S2, a)].concat(inc(B, b)))]),
+      retire(b * v[B], moins(S1, [S2]), inc(B, b)),
+      ...(b > 1 ? [partage(B, b)] : []),
+      etape("remplace", "Je remplace le plateau moyen par son total", [barre(T, [bloc(S1, a + b)].concat(inc(D, c), vis(visP)))]),
+      retire(c * v[D], moins(T, [S1].concat(visP)), inc(D, c)),
+      ...(c > 1 ? [partage(D, c)] : []),
+      verification()
+    ];
+  }
+
+  /* EMBOITE1 : N + V + O = 79 ; N + V = 44 ; V + O = 54 — je remplace N + V par 44, puis
+     V + O par 54, dans le grand plateau */
+  const [A, B, D] = C;
+  const S1 = sit.boards[1].total;
+  const S2 = sit.boards[2].total;
+  return [
+    etape("plateaux", "Les trois plateaux", [barre(T, cases(P.counts).concat(vis(visP))),
+      barre(S1, inc(A).concat(inc(B))), barre(S2, inc(B).concat(inc(D)))]),
+    etape("remplace", "Je remplace un petit plateau par son total", [barre(T, [bloc(S1, 2)].concat(inc(D), vis(visP)))]),
+    retire(v[D], moins(T, [S1].concat(visP)), inc(D)),
+    etape("remplace", "Je remplace l’autre petit plateau par son total", [barre(T, inc(A).concat([bloc(S2, 2)], vis(visP)))]),
+    retire(v[A], moins(T, [S2].concat(visP)), inc(A)),
+    remplaceConnue(S1, con(A).concat(inc(B))),
+    retire(v[B], moins(S1, [v[A]]), inc(B)),
     verification()
   ];
 }
@@ -9522,7 +9771,7 @@ function sysDispositionPlateaux(card, zone){
   const grille = sysGrille(card);
   /* lot M4-1 : trois plateaux dont la grille a trois rangées (l'escalier) se mettent sur une
      seule rangée — sur deux, les taches tombaient à r = 34 à l'écran, 31 en 6 par page. */
-  const cols = (Z.uneRangee || (n === 3 && grille.lignes >= 3)) ? n : (n <= 2 ? n : 2);
+  const cols = Z.colonnes || ((Z.uneRangee || (n === 3 && grille.lignes >= 3)) ? n : (n <= 2 ? n : 2));
   const rows = Math.ceil(n / cols);
   const hBoite = 210 * Z.echelleTotal;
   const place = (Z.bas - Z.haut - rows * (hBoite + Z.sousTotal) - (rows - 1) * Z.ecartY) / rows;
@@ -9570,6 +9819,31 @@ function sysDispositionPlateaux(card, zone){
     return { x, y, w, h, total: b.total, totalX: x + w / 2, totalY: yBoite, taches: places, jetons };
   });
   return { r, rJeton: sysRayonJeton(r), echelleTotal: Z.echelleTotal, plateaux };
+}
+
+/* Téléphone, mode élève (lot M4-2) : l'énoncé du Système se dessine dans le plateau du mode
+   élève (≈ 350 × 370 px), cadré sur ses plateaux. Une rangée de plateaux de 1 600 de large n'y
+   occupait qu'un tiers de la hauteur : taches de 13 à 15 px de rayon sur l'escalier et sur les
+   cartes à 5 taches d'une couleur. On essaie une rangée, deux colonnes, une colonne, dans une
+   scène de 1 000 ou de 1 520 de large, et on garde la disposition dont les taches sont les plus
+   grandes à l'écran (une autre que la première seulement si elle gagne plus de 5 %). */
+const SYS_ZONE_TEL_ENONCE = { x:20, w:960, haut:10, ecartX:24, ecartY:24, echelleTotal:0.7, sousTotal:14, hRangee:560, centrer:false, rMax:118, ajusterHauteur:true };
+function sysZoneTelephone(card, largeur, hauteur){
+  const Z0 = SYS_ZONE_TEL_ENONCE;
+  const n = card._sys.boards.length;
+  const hBoite = 210 * Z0.echelleTotal;
+  let meilleure = null;
+  [n, 2, 1].filter((c, i, a) => c <= n && a.indexOf(c) === i).forEach(c => [Z0.w, 1480].forEach(w => {
+    const rangees = Math.ceil(n / c);
+    const Z = Object.assign({}, Z0, { w, colonnes: c, hMax: [Z0.hRangee, Z0.hRangee, Z0.hRangee, Z0.hRangee],
+      bas: Z0.haut + rangees * (hBoite + Z0.sousTotal + Z0.hRangee) + (rangees - 1) * Z0.ecartY });
+    const d = sysDispositionPlateaux(card, Z);
+    const haut = Math.min(...d.plateaux.map(P => P.totalY));
+    const bas = Math.max(...d.plateaux.map(P => P.y + P.h));
+    const vu = d.r * Math.min(largeur / (Z.w + 48), hauteur / (bas - haut + 48));
+    if(!meilleure || vu > meilleure.vu * 1.05) meilleure = { Z, vu };
+  }));
+  return meilleure.Z;
 }
 
 /* Dessine les plateaux d'une carte (écran : mkEl/mkText de la page ; impression : ceux de
@@ -9660,47 +9934,52 @@ function drawSysPlateaux(target, card, zone, opts = {}){
 }
 
 /* ---------------------------------------------------------------------------------------
-   Le Système (mode D) — la correction (lot S3, 24/09/2026 ; conception S0, §4).
-   Un cadre par étape de card._sys.plan (calculé par le générateur, lot S1) : titre, barres,
-   calculs à droite ; le dernier cadre relit chaque plateau et donne les réponses. Aucune
-   arithmétique ici : tout nombre écrit est déjà dans le plan (étiquettes des barres, valeurs
-   des cases, lignes de calcul, réponses). Dessin seulement : rien n'est tiré au sort.
-   Écran : un cadre par clic, posé en bas de la scène (y = 1000 − h − 20 : certains cadres
-   font plus de 500), les plateaux en haut, le fil des étapes déjà passées à droite ; le
-   dernier clic (vérification) dévoile les taches. Impression 4 par page : l'énoncé en haut,
-   taches dévoilées, puis les cadres empilés, le dernier avant 2 130 (6 par page : les taches
-   dévoilées seulement, comme au lot S2). Plateaux de même taille partout, à l'écran comme à
-   l'impression (décidé le 24/09 : « une tache vaut la même chose sur tous les plateaux »).
-   Même correction pour « Plateaux », « Phrases » et « Symboles » ; pour ces deux derniers,
-   le plateau unique réduit en haut, les indices écrits à sa droite.
-   Les barres : la barre du total vert pâle (celle d'Inconnues en barres et de l'Enquête sans
-   total), les cases « ? » gris ardoise, les cases connues orange pâle, les jetons visibles
-   en cases étroites cerclées de vert, « ce qui reste » pointillé brun cannelle ; dans chaque
-   case une mini-tache et le mot de sa couleur (lisible imprimé en gris). La largeur d'une
-   case est la même dans tous les cadres d'une carte : une tache garde sa place d'un cadre
-   à l'autre.
+   Le Système (mode D) — la correction en BARRES DE TACHES (lot M4-2, 04/10/2026 ; dessin
+   choisi par Gwenaël sur planches, colonne « A » de hauteur-1c / hauteur-3a). Chaque étape de
+   card._sys.plan : son titre, puis une ou plusieurs barres alignées à gauche. Une barre : la
+   case du TOTAL au-dessus (même hauteur que les cases du dessous, le nombre seul), le calcul
+   qui le donne écrit en gris à sa droite (« 50 − 26 »), puis une case par tache, toutes de la
+   même largeur sur toutes les cartes (SYS_BARRES.pas, 118 sur 1 600) — une barre est plus ou
+   moins longue selon son nombre de taches, et c'est ce qui montre que le petit plateau est
+   dans le grand. Dans chaque case, la tache dessinée avec son nom (sans le nom, rien ne se
+   lit en noir et blanc) ; une tache trouvée garde sa forme, sa valeur dans un rond blanc ; un
+   plateau retrouvé est un bloc gris portant son total ; un jeton visible, son jeton chiffré.
+   Version lettres (unknown=letter) : la case est teintée de la couleur, un liseré en haut,
+   la LETTRE de la couleur dedans (N, Vi, O…). « Je vérifie » : un calcul par plateau, puis la
+   réponse encadrée. Aucune arithmétique ici : tout nombre écrit vient du plan.
+   Impression (4 par page et 2 par page, la même carte 1 600 × 2 200) : l'énoncé dévoilé en
+   haut, un trait pointillé, puis les étapes côte à côte tant qu'elles tiennent, puis à la
+   ligne. Écran : un clic par étape, l'étape dessinée sous les plateaux, le fil des étapes
+   passées à droite ; le dernier clic dévoile les taches. Téléphone (mode élève) : la rangée
+   des plateaux, puis l'étape en portrait. Le même dessin partout, seule l'échelle change.
 --------------------------------------------------------------------------------------- */
-const SYS_CORR = { x:60, w:1480, barX:110, barres:820, caseMax:128, visible:0.6, hHaut:76, hCase:76, ecartBarres:12,
-  titre:64, bas:24, fsTitre:34, fsCalcul:30, pasCalcul:46, ecartCalcul:60, ecartCadres:26, ecartEnonce:40, basImprime:2130, reponsesX:1060 };
-/* Correction imprimée : la « loupe » (24/09, les calculs à 5 points étaient trop petits sur
-   papier). Les cadres de la carte grandissent tous du même facteur — hauteurs, polices, cases
-   — autant que la place sous l'énoncé le permet, jusqu'à SYS_CORR_LOUPE_MAX ; les largeurs
-   (cases, colonne des calculs) ne changent pas. L'écran garde le facteur 1. */
-const SYS_CORR_LOUPE_MAX = 1.35;
-function sysCorrMetriques(e){
-  if(!(e > 1)) return SYS_CORR;
-  const C = Object.assign({}, SYS_CORR);
-  ["hHaut", "hCase", "ecartBarres", "titre", "bas", "fsTitre", "fsCalcul", "pasCalcul"].forEach(k => { C[k] = Math.round(SYS_CORR[k] * e); });
-  C.loupe = e;
-  return C;
+const SYS_BARRES = { pas:118, hCase:101, rTache:0.38, fsTotal:50, fsBloc:46, fsCalcul:32, ecartCalcul:18,
+  fsTitre:36, hTitre:48, ecartBarres:20, ecartX:48, ecartY:28, trait:4, coupe:10,
+  fsVerifTitre:40, hVerifTitre:56, fsVerif:34, pasVerif:48, retraitVerif:30, ecartReponses:14, hReponses:74, fsReponse:40, entreReponses:70, ecartVerif:30 };
+const SYS_BARRES_TAILLES = ["pas", "hCase", "fsTotal", "fsBloc", "fsCalcul", "ecartCalcul", "fsTitre", "hTitre", "ecartBarres", "ecartX", "ecartY", "trait", "coupe",
+  "fsVerifTitre", "hVerifTitre", "fsVerif", "pasVerif", "retraitVerif", "ecartReponses", "hReponses", "fsReponse", "entreReponses", "ecartVerif"];
+/* Carte imprimée trop longue même serrée : écarts, titres et calculs un peu plus petits (les
+   cases et les taches gardent leur taille). */
+const SYS_BARRES_SERRE = { fsTitre:32, hTitre:43, fsCalcul:29, ecartCalcul:14, ecartX:36, ecartY:20, fsVerif:30, hVerifTitre:50, pasVerif:42, retraitVerif:20 };
+/* Les mesures à l'échelle f (écran, téléphone) ; à l'impression f = 1. */
+function sysBarresMetriques(f){
+  const M = Object.assign({}, SYS_BARRES);
+  if(f > 0 && f !== 1) SYS_BARRES_TAILLES.forEach(k => { M[k] = SYS_BARRES[k] * f; });
+  M.f = f > 0 ? f : 1;
+  return M;
 }
-/* Zones des plateaux au-dessus des cadres : écran (une rangée, à gauche du fil) et carte
+/* La carte imprimée : les étapes de x = 70 à 1 540, sous l'énoncé (trait pointillé à mi-écart),
+   la dernière ligne au plus à 2 130. */
+const SYS_CORR_IMPRIME = { x:70, xMax:1540, ecartEnonce:50, basImprime:2150 };
+/* Zones des plateaux au-dessus des étapes : écran (une rangée, à gauche du fil) et carte
    imprimée (une rangée, en haut de la carte). */
 const SYS_ZONE_ECRAN_CORRECTION = { x:40, w:1100, haut:14, bas:400, ecartX:20, ecartY:0, echelleTotal:0.6, sousTotal:14, hMax:[260], centrer:false, rMax:90, uneRangee:true, nomMin:12, ajusterHauteur:true };
 const SYS_ZONE_IMPRIME_CORRECTION = { x:60, w:1480, haut:30, bas:500, ecartX:30, ecartY:0, echelleTotal:0.7, sousTotal:16, hMax:[307], centrer:false, rMax:118, uneRangee:true, nomMin:16, ajusterHauteur:true };
-/* Le fil des étapes (écran) : à droite des plateaux. */
+/* Le fil des étapes (écran) : à droite des plateaux. L'étape se dessine à partir de x = 60,
+   SYS_CORR_ECRAN_ECART sous les plateaux et le fil, à une échelle unique pour la carte (la plus
+   grande à laquelle chacune de ses étapes tient, au plus SYS_CORR_ECRAN_MAX). */
 const SYS_FIL = { x:1170, w:390, haut:34, fs:22, pas:28 };
-const SYS_CORR_ECRAN_ECART = 40;
+const SYS_CORR_ECRAN = { x:60, xMax:1540, bas:980, ecart:40, max:1.35 };
 /* Phrases / Symboles : le haut de l'énoncé d'avant (TOTAL et plateau unique, y de 0 à 830)
    réduit, et les indices en colonne à sa droite (écran : le fil passe sous les indices). */
 const SYS_UNIQUE_ECRAN = { x:40, y:8, k:0.465, hauteur:830, indices:{ x:760, y:24, w:800, h:200, fs:26 } };
@@ -9735,217 +10014,317 @@ function drawSysIndicesColonne(target, card, z, ctx){
   return Math.round(z.y + indices.length * pas);
 }
 
-/* La carte a-t-elle une correction en étapes (le plan de S1) ? */
+/* La carte a-t-elle une correction en étapes (le plan du générateur) ? */
 function sysAPlan(card){
   return !!(card && card.family === "D" && card._sys && Array.isArray(card._sys.plan) && card._sys.plan.length > 0);
 }
 /* Parcours élève du Système : une fois la carte validée, les taches restent dévoilées à
-   l'énoncé comme à chaque cadre du schéma (drapeau posé par eleveDevoilerTache ; les bancs
+   l'énoncé comme à chaque étape du schéma (drapeau posé par eleveDevoilerTache ; les bancs
    d'essai des tests dessinent sans lui). */
 function sysDevoileEleve(card){
   return sysAPlan(card) && typeof eleveEnqueteDevoile !== "undefined" && !!eleveEnqueteDevoile;
 }
-/* Place d'une case en largeurs de case : 1 pour une tache, 0,6 pour un jeton visible,
-   la somme de ce qu'elle couvre pour « ce qui reste ». */
-function sysCorrPoids(c){
-  if(!c) return 0;
-  if(c.kind === "visible") return SYS_CORR.visible;
-  if(c.kind === "rest") return (c.covers || []).reduce((s, x) => s + sysCorrPoids(x), 0);
-  return 1;
-}
-function sysCorrLongueur(b){
-  return (Number(b.offset) || 0) + b.cells.reduce((s, c) => s + sysCorrPoids(c), 0);
-}
-/* La largeur d'une case pour toute la carte : la barre la plus longue tient dans
-   SYS_CORR.barres, sans dépasser caseMax. */
-function sysCorrUnite(plan){
-  const L = Math.max(1, ...plan.flatMap(e => e.barres.map(sysCorrLongueur)));
-  return Math.min(SYS_CORR.caseMax, Math.floor(SYS_CORR.barres / L));
-}
-/* Hauteur d'un cadre : titre, puis le plus haut des deux côtés (barres ou calculs). */
-function sysCorrHauteurCadre(etape, C = SYS_CORR){
-  const nb = etape.barres.length;
-  const hBarres = nb ? nb * (C.hHaut + C.hCase) + (nb - 1) * C.ecartBarres : 0;
-  const nl = Math.max(etape.calculs.length, etape.lettres.length, Array.isArray(etape.reponses) ? etape.reponses.length : 0);
-  return C.titre + Math.max(hBarres, nl * C.pasCalcul) + C.bas;
-}
-/* Les mesures de toute la correction d'une carte (sans le dessiner) : largeur d'une case,
-   colonne des calculs, hauteur de chaque cadre. */
-function sysCorrMesures(card, C = SYS_CORR){
-  const plan = card._sys.plan;
-  const u = sysCorrUnite(plan);
-  const L = Math.max(1, ...plan.flatMap(e => e.barres.map(sysCorrLongueur)));
-  const calculX = Math.round(SYS_CORR.barX + L * u + SYS_CORR.ecartCalcul);
-  return { u, calculX, hauteurs: plan.map(e => sysCorrHauteurCadre(e, C)), C };
-}
-/* Le texte d'une case : « ? » ou la lettre de la couleur (N, Vi, O…) pour une tache
-   inconnue, sa valeur pour une tache connue. */
-function sysCorrEtiquette(c, lettres){
-  if(c.kind === "unknown") return lettres ? investigateColorInitial(investigateColorByKey(c.color)) : "?";
-  if(c.kind === "known" || c.kind === "visible") return String(c.value);
-  return String(c.label || "");
-}
 
-/* Largeur d'une ligne de calcul, dans la police où elle est dessinée (italique, graisse 800). */
-function sysCorrLargeurCalcul(t, fs){
-  const w = measureTextWidth(t, `italic 800 ${fs}px SplatLettres, system-ui, -apple-system, "Segoe UI", Roboto, Arial`);
+/* Largeur d'un texte dans la police de la page (sans canevas : 0,6 corps par signe). */
+function sysLargeurTexte(t, fs, poids){
+  const w = measureTextWidth(t, `${poids || 900} ${fs}px SplatLettres, system-ui, -apple-system, "Segoe UI", Roboto, Arial`);
   return Number.isFinite(w) && w > 0 ? w : String(t).length * fs * 0.6;
 }
 /* Le plus grand corps (≤ fs) auquel le texte tient dans la largeur. */
 function sysCorrAjuster(t, fs, largeur, poids, min){
-  const police = f => `${poids || 900} ${f}px SplatLettres, system-ui, -apple-system, "Segoe UI", Roboto, Arial`;
-  const mesure = f => { const w = measureTextWidth(t, police(f)); return Number.isFinite(w) && w > 0 ? w : String(t).length * f * 0.6; };
   let f = fs;
-  while(f > (min || 12) && mesure(f) > largeur) f -= 1;
+  while(f > (min || 12) && sysLargeurTexte(t, f, poids) > largeur) f -= 1;
   return f;
 }
-
-/* Une case d'une barre de correction. ctx : { mkEl, mkText, isPrint, lettres }. */
-function drawSysCase(g, x, y, w, h, c, ctx){
-  const { mkEl, mkText, isPrint, lettres } = ctx;
-  const e = (ctx.C && ctx.C.loupe) || 1;
-  const encre = "#0f172a";
-  if(c.kind === "rest"){
-    g.appendChild(mkEl("rect", { x, y, width:w, height:h, fill:ENQUETE_DEPASSE_FOND, stroke:ENQUETE_DEPASSE_TRAIT, "stroke-width":3.5, "stroke-dasharray":"10 7" }));
-    const label = String(c.label || "");
-    const fs = sysCorrAjuster(label, Math.round(26 * e), w - 12, 900, 18);
-    const mots = label.split(" ");
-    // trop étroite pour une ligne : « ce qui / reste » sur deux lignes
-    const lignes = (fs <= 18 && mots.length > 1) ? [mots.slice(0, Math.ceil(mots.length / 2)).join(" "), mots.slice(Math.ceil(mots.length / 2)).join(" ")] : [label];
-    const f2 = lignes.length > 1 ? Math.min(...lignes.map(l => sysCorrAjuster(l, Math.round(24 * e), w - 10, 900, 13))) : fs;
-    lignes.forEach((l, i) => g.appendChild(mkText(x + w / 2, y + h / 2 + (i - (lignes.length - 1) / 2) * f2 * 1.1, l, {
-      "text-anchor":"middle", "dominant-baseline":"middle", "font-size":f2, "font-weight":900, fill:ENQUETE_DEPASSE_TRAIT
-    })));
-    return;
+/* Le nombre de cases d'une barre (un bloc compte pour les cases qu'il couvre). */
+function sysBarreCases(b){
+  return b.cells.reduce((s, c) => s + (c.kind === "block" ? Math.max(1, Number(c.covers) || 1) : 1), 0);
+}
+/* Largeur d'une barre, son calcul gris compris. */
+function sysBarreLargeur(b, M){
+  return sysBarreCases(b) * M.pas + (b.calcul ? M.ecartCalcul + sysLargeurTexte(b.calcul, M.fsCalcul, 800) : 0);
+}
+/* Taille d'une étape et place de ses barres. Les barres de « Les deux plateaux » (rôle
+   « plateaux ») sont l'une sous l'autre, alignées à gauche : leurs longueurs se comparent ;
+   celles des autres étapes à plusieurs barres (« Trois paires ») côte à côte, sauf « empiler »
+   (téléphone, en portrait). largeurTitre : le titre est coupé à cette largeur (titre sur deux
+   lignes, téléphone). */
+function sysEtapeTaille(etape, M, largeurTitre, empiler){
+  const titreW = sysLargeurTexte(etape.titre, M.fsTitre, 900);
+  const lignes = largeurTitre && titreW > largeurTitre ? wrapTextToWidth(etape.titre, M.fsTitre, largeurTitre, 900) : [etape.titre];
+  const wTitre = Math.max(...lignes.map(l => sysLargeurTexte(l, M.fsTitre, 900)));
+  const haut = M.hTitre + (lignes.length - 1) * M.fsTitre * 1.15;
+  const empile = !!empiler || etape.role === "plateaux" || etape.barres.length < 2;
+  const places = [];
+  let wB = 0, hB = 0, x = 0;
+  etape.barres.forEach((b, i) => {
+    const lb = sysBarreLargeur(b, M);
+    if(empile){ places.push({ dx: 0, dy: i * (2 * M.hCase + M.ecartBarres) }); wB = Math.max(wB, lb); }
+    else{ places.push({ dx: x, dy: 0 }); x += lb + M.ecartX * 0.67; wB = Math.max(wB, x - M.ecartX * 0.67); }
+  });
+  const nb = etape.barres.length;
+  hB = nb ? (empile ? nb * 2 * M.hCase + (nb - 1) * M.ecartBarres : 2 * M.hCase) : 0;
+  return { w: Math.ceil(Math.max(wTitre, wB)), h: Math.ceil(haut + hB), lignes, haut, places, barresW: wB };
+}
+/* Hauteur de « Je vérifie » : son titre, un calcul par plateau, la réponse encadrée. */
+function sysVerifHauteur(etape, M){
+  return Math.ceil(M.hVerifTitre + (etape.lignes || []).length * M.pasVerif + M.ecartReponses + M.hReponses);
+}
+/* Largeur minimale de « Je vérifie » : ses calculs (au corps 28 au plus petit), ou ses
+   réponses côte à côte au corps 28 ; au moins 480. */
+function sysVerifLargeur(etape, M){
+  const fsMin = Math.min(M.fsVerif, 28 * M.f);
+  const lignes = Math.max(0, ...(etape.lignes || []).map(l => M.retraitVerif + sysLargeurTexte(l, fsMin, 800)));
+  const ts = (etape.reponses || []).map(r => `${investigateColorWord(investigateColorByKey(r.color))} = ${r.value}`);
+  const fr = Math.min(M.fsReponse, 28 * M.f);
+  const reponses = ts.reduce((s, t) => s + sysLargeurTexte(t, fr, 900), 0) + 40 * M.f * Math.max(0, ts.length - 1) + 40 * M.f;
+  return Math.ceil(Math.max(480 * M.f, lignes, reponses));
+}
+/* Les étapes de gauche à droite, puis à la ligne : une ligne est faite de colonnes ; une étape
+   se met sous la précédente si elle tient dans la hauteur de la ligne (à côté d'une étape
+   haute, « Les deux plateaux »), sinon dans une nouvelle colonne, sinon à la ligne. Un titre
+   plus large que ses barres passe sur deux lignes si c'est ce qui lui permet de tenir à côté
+   (« Je remplace le petit plateau / par son total » au-dessus de quatre cases). « Je vérifie »
+   (verif) vient en dernier : à la ligne, sa réponse encadrée sur toute la largeur ; « serre »
+   (carte trop longue sinon) : à côté des dernières étapes s'il y tient. Places relatives au
+   haut de la première ligne ; la carte se lit colonne par colonne. */
+function sysEtapesFlux(etapes, M, x0, xMax, verif, serre){
+  const places = [];
+  let rangY = 0, rangH = 0, cols = [], rang = 0;
+  const poser = (tailles, item) => {
+    const col = cols[cols.length - 1];
+    let place = null;
+    if(col) for(const t of tailles){
+      if(col.h + M.ecartY + t.h <= rangH && col.x + t.w <= xMax){
+        place = { x: col.x, y: rangY + col.h + M.ecartY, t, col: cols.length - 1 };
+        col.h += M.ecartY + t.h; col.w = Math.max(col.w, t.w); col.n += 1;
+        break;
+      }
+    }
+    // une nouvelle colonne, seulement si la dernière n'a qu'une étape : sinon la ligne du haut
+    // se lirait dans le désordre
+    if(!place) for(const t of tailles){
+      const x = col ? col.x + col.w + M.ecartX : x0;
+      if(!col || (col.n === 1 && x + t.w <= xMax)){
+        place = { x, y: rangY, t, col: cols.length };
+        cols.push({ x, w: t.w, h: t.h, n: 1 }); rangH = Math.max(rangH, t.h);
+        break;
+      }
+    }
+    if(!place){
+      const t = tailles[0];
+      rangY += rangH + M.ecartY; rang += 1;
+      cols = [{ x: x0, w: t.w, h: t.h, n: 1 }]; rangH = t.h;
+      place = { x: x0, y: rangY, t, col: 0 };
+    }
+    places.push(Object.assign(item, { x: place.x, y: place.y, w: place.t.w, h: place.t.h, taille: place.t, rang, col: place.col }));
+  };
+  etapes.forEach(e => {
+    const t1 = sysEtapeTaille(e, M);
+    let t2 = t1;
+    if(t1.w > t1.barresW + 1){
+      // le titre sur deux lignes (jamais trois), aussi étroit que possible
+      for(let lt = Math.max(t1.barresW, Math.ceil(t1.w * 0.5)); lt <= t1.w; lt += 10){
+        const t = sysEtapeTaille(e, M, lt);
+        if(t.lignes.length <= 2){ t2 = t; break; }
+      }
+    }
+    // très serré (serre = 2) : le titre sur deux lignes dès qu'il dépasse nettement ses barres
+    const tailles = t2 === t1 ? [t1] : (serre === 2 && t1.w > 1.3 * t1.barresW ? [t2, t1] : [t1, t2]);
+    poser(tailles, { etape: e });
+  });
+  if(verif){
+    // sans « serre » : toujours à la ligne, la réponse encadrée sur toute la largeur
+    if(!serre) cols = [{ x: xMax, w: 0, h: rangH, n: 2 }];
+    poser([{ w: sysVerifLargeur(verif, M), h: sysVerifHauteur(verif, M) + (serre ? 0 : M.ecartVerif - M.ecartY) }], { etape: verif, verif: true, decale: serre ? 0 : M.ecartVerif - M.ecartY });
+    const p = places[places.length - 1];
+    p.w = xMax - p.x - 10; // la réponse encadrée va jusqu'au bord droit
   }
-  const connue = c.kind === "known" || c.kind === "visible";
-  g.appendChild(mkEl("rect", { x, y, width:w, height:h, fill:connue ? "rgba(249,115,22,0.16)" : "rgba(15,23,42,0.09)", stroke:"#000", "stroke-width":3 }));
-  const etiquette = sysCorrEtiquette(c, lettres);
+  /* l'étape seule à droite de « Les deux plateaux » (« Je remplace le petit plateau par son
+     total ») se centre sur leurs deux barres : ce sont les deux plateaux qui la donnent (décidé
+     le 04/10 sur planche) */
+  places.forEach(p1 => {
+    if(p1.col !== 0 || p1.etape.role !== "plateaux" || p1.etape.barres.length < 2) return;
+    const meme = places.filter(q => q.rang === p1.rang);
+    const voisins = meme.filter(q => q.col === 1);
+    if(meme.some(q => q.col === 0 && q !== p1) || voisins.length !== 1 || voisins[0].verif) return;
+    const p2 = voisins[0];
+    const centre = p1.y + p1.taille.haut + (p1.h - p1.taille.haut) / 2;
+    p2.y = Math.max(p1.y, Math.round(centre - p2.taille.haut - (p2.h - p2.taille.haut) / 2));
+  });
+  return { places, h: rangY + rangH, w: Math.max(0, ...places.map(p => p.x + p.w - x0)) };
+}
+/* L'anneau d'un jeton visible, comme sur le plateau (couleur selon la valeur). */
+function sysJetonCouleurs(valeur){
+  try{ return beadColorForValue(valeur); }catch(_e){ return { fill:"rgba(132,204,22,0.35)", stroke:"rgba(101,163,13,0.9)" }; }
+}
+
+/* Une case de barre (tache inconnue, tache trouvée, jeton visible), coin en (x, y).
+   ctx : { mkEl, mkText, isPrint, lettres }. */
+function drawSysCaseBarre(g, x, y, c, M, ctx){
+  const { mkEl, mkText, isPrint, lettres } = ctx;
+  const u = M.pas, h = M.hCase, cx = x + u / 2, cy = y + h / 2;
+  const centre = { "text-anchor":"middle", "dominant-baseline":"middle", dy:"0.06em", "font-weight":900 };
   if(c.kind === "visible"){
-    // jeton visible : le chiffre cerclé de vert (anneau vert foncé, lisible en gris)
-    const r = Math.min(w * 0.42, h * 0.34);
-    g.appendChild(mkEl("circle", { cx:x + w / 2, cy:y + h / 2, r, fill:"#fff", stroke:"#65a30d", "stroke-width":5 }));
-    g.appendChild(mkText(x + w / 2, y + h / 2, etiquette, {
-      "text-anchor":"middle", "dominant-baseline":"middle", dy:"0.06em",
-      "font-size":sysCorrAjuster(etiquette, Math.round(r * 1.15), r * 1.7, 900, 14), "font-weight":900, fill:encre
-    }));
+    g.appendChild(mkEl("rect", { x, y, width:u, height:h, fill:"#fff", stroke:"#64748b", "stroke-width":2 * M.f }));
+    const r = u * 0.3, col = sysJetonCouleurs(c.value);
+    const anneau = String(col.stroke).replace(/,\s*[\d.]+\)$/, ", 1)");
+    g.appendChild(mkEl("circle", { cx, cy, r, fill:isPrint ? "#fff" : col.fill, stroke:isPrint ? anneau : col.stroke, "stroke-width":Math.max(3, r * 0.13) }));
+    g.appendChild(mkText(cx, cy, String(c.value), Object.assign({ "font-size":sysCorrAjuster(String(c.value), r * 1.02, r * 1.7, 900, 8), fill:"#000" }, centre)));
     return;
   }
   const info = investigateColorByKey(c.color);
-  const couleur = connue ? "#9a3412" : "#334155";
-  // ligne 1 : mini-tache + « ? » (ou la lettre, ou la valeur) ; ligne 2 : le mot de la couleur
-  const mot = investigateColorWord(info);
-  const avecMot = !lettres;
-  const y1 = avecMot ? y + h * 0.36 : y + h / 2;
-  const rT = Math.max(8, Math.min(13 * e, w * 0.13));
-  const fs1 = sysCorrAjuster(etiquette, Math.round(32 * e), w - 2 * rT - 18, 900, 16);
-  const larg = (() => { const m = measureTextWidth(etiquette, `900 ${fs1}px SplatLettres, system-ui, -apple-system, "Segoe UI", Roboto, Arial`); return Number.isFinite(m) && m > 0 ? m : etiquette.length * fs1 * 0.6; })();
-  const bloc = 2 * rT + 6 + larg;
-  const x0 = x + (w - bloc) / 2;
-  g.appendChild(mkEl("path", { d:blobPath(x0 + rT, y1, rT), fill:isPrint ? info.print : info.screen, stroke:"rgba(0,0,0,.25)", "stroke-width":1.5, "aria-hidden":"true" }));
-  g.appendChild(mkText(x0 + 2 * rT + 6, y1, etiquette, {
-    "text-anchor":"start", "dominant-baseline":"middle", dy:"0.06em", "font-size":fs1, "font-weight":900, fill:couleur
-  }));
-  if(avecMot){
-    // le mot, ou son initiale si la case est trop étroite pour le lire (≥ 15)
-    let t = mot, fs2 = sysCorrAjuster(mot, Math.round(21 * e), w - 8, 800, 12);
-    if(fs2 < 15){ t = investigateColorInitial(info); fs2 = sysCorrAjuster(t, Math.round(21 * e), w - 8, 800, 12); }
-    g.appendChild(mkText(x + w / 2, y + h * 0.76, t, {
-      "text-anchor":"middle", "dominant-baseline":"middle", "font-size":fs2, "font-weight":800, fill:couleur
-    }));
+  const connue = c.kind === "known";
+  if(lettres){
+    // version lettres : la case teintée de la couleur, un liseré en haut, la lettre (ou la valeur)
+    g.appendChild(mkEl("rect", { x, y, width:u, height:h, fill:connue ? "#fff" : (isPrint ? info.printReveal : info.reveal), stroke:"#000", "stroke-width":2.5 * M.f }));
+    g.appendChild(mkEl("rect", { x, y, width:u, height:10 * M.f, fill:isPrint ? info.print : info.screen }));
+    const t = connue ? String(c.value) : investigateColorInitial(info);
+    g.appendChild(mkText(cx, cy + 4 * M.f, t, Object.assign({ "font-size":sysCorrAjuster(t, M.fsBloc, u - 12 * M.f, 900, 8), fill:"#000" }, centre)));
+    return;
+  }
+  g.appendChild(mkEl("rect", { x, y, width:u, height:h, fill:"#fff", stroke:"#64748b", "stroke-width":2 * M.f }));
+  const r = u * M.rTache;
+  g.appendChild(mkEl("path", { d:blobPath(cx, cy, r), fill:isPrint ? info.print : info.screen, stroke:"rgba(0,0,0,0.25)", "stroke-width":3 * M.f }));
+  if(connue){
+    const rj = r * 0.58;
+    g.appendChild(mkEl("circle", { cx, cy, r:rj, fill:"#fff", stroke:"#000", "stroke-width":3 * M.f }));
+    g.appendChild(mkText(cx, cy, String(c.value), Object.assign({ "font-size":sysCorrAjuster(String(c.value), rj * 1.15, rj * 1.8, 900, 8), fill:"#000" }, centre)));
+  }else{
+    const mot = investigateColorWord(info);
+    const fs = sysCorrAjuster(mot, r * 0.44, 1.62 * r, 900, 6);
+    g.appendChild(mkText(cx, cy, mot, { "text-anchor":"middle", "dominant-baseline":"middle", "font-size":fs, "font-weight":900,
+      fill:"#fff", stroke:"rgba(0,0,0,0.8)", "stroke-width":Math.max(2 * M.f, fs * 0.12), "paint-order":"stroke fill" }));
   }
 }
-
-/* Une barre du plan : { top, span, offset, cells } — l'étiquette sur les span premières
-   cases, en vert pâle ; les cases dessous, à partir de offset largeurs de case. */
-function drawSysBarre(g, barre, x, y, u, ctx){
-  const C = ctx.C || SYS_CORR;
-  const x0 = x + (Number(barre.offset) || 0) * u;
-  const largeurs = barre.cells.map(c => sysCorrPoids(c) * u);
-  const span = Math.max(1, Math.min(barre.cells.length, Number(barre.span) || barre.cells.length));
-  const wHaut = largeurs.slice(0, span).reduce((s, w) => s + w, 0);
-  g.appendChild(ctx.mkEl("rect", { x:x0, y, width:wHaut, height:C.hHaut, fill:ENQUETE_ECRITURE_FOND, stroke:"#000", "stroke-width":3 }));
-  const top = String(barre.top);
-  g.appendChild(ctx.mkText(x0 + wHaut / 2, y + C.hHaut / 2, top, {
-    "text-anchor":"middle", "dominant-baseline":"middle", dy:"0.06em",
-    "font-size":sysCorrAjuster(top, Math.round(32 * (C.loupe || 1)), wHaut - 12, 900, 16), "font-weight":900, fill:ENQUETE_ECRITURE_ENCRE
-  }));
-  let cx = x0;
-  barre.cells.forEach((c, i) => {
-    drawSysCase(g, cx, y + C.hHaut, largeurs[i], C.hCase, c, ctx);
-    cx += largeurs[i];
+/* Une barre : la case du total (le nombre seul ; « ? » en gris), le calcul gris à sa droite,
+   puis les cases ; un trait épais entre deux paquets (b.coupes). */
+function drawSysBarre(g, b, x, y, M, ctx){
+  const { mkEl, mkText } = ctx;
+  const n = sysBarreCases(b), u = M.pas, w = n * u, h = M.hCase;
+  const top = String(b.top);
+  g.appendChild(mkEl("rect", { x, y, width:w, height:h, fill:"#fff", stroke:"#000", "stroke-width":M.trait }));
+  g.appendChild(mkText(x + w / 2, y + h / 2, top, { "text-anchor":"middle", "dominant-baseline":"middle", dy:"0.06em",
+    "font-size":sysCorrAjuster(top, M.fsTotal, w - 12 * M.f, 900, 8), "font-weight":900, fill:top === "?" ? "#64748b" : "#000" }));
+  if(b.calcul) g.appendChild(mkText(x + w + M.ecartCalcul, y + h / 2, b.calcul, { "text-anchor":"start", "dominant-baseline":"middle", dy:"0.06em",
+    "font-size":M.fsCalcul, "font-weight":800, fill:"#475569" }));
+  const yc = y + h;
+  const coupes = Array.isArray(b.coupes) ? b.coupes : [];
+  let xx = x, i = 0;
+  b.cells.forEach(c => {
+    if(c.kind === "block"){
+      const nb = Math.max(1, Number(c.covers) || 1), wb = nb * u;
+      g.appendChild(mkEl("rect", { x:xx, y:yc, width:wb, height:h, fill:"#e2e8f0", stroke:"#000", "stroke-width":M.trait }));
+      const t = String(c.value);
+      g.appendChild(mkText(xx + wb / 2, yc + h / 2, t, { "text-anchor":"middle", "dominant-baseline":"middle", dy:"0.06em",
+        "font-size":sysCorrAjuster(t, M.fsBloc, wb - 12 * M.f, 900, 8), "font-weight":900, fill:"#000" }));
+      xx += wb; i += nb;
+    }else{
+      drawSysCaseBarre(g, xx, yc, c, M, ctx);
+      xx += u; i += 1;
+    }
+    if(coupes.includes(i) && i < n) g.appendChild(mkEl("line", { x1:xx, x2:xx, y1:yc, y2:yc + h, stroke:"#000", "stroke-width":M.coupe }));
   });
+  g.appendChild(mkEl("rect", { x, y:yc, width:w, height:h, fill:"none", stroke:"#000", "stroke-width":M.trait }));
 }
-
-/* Un cadre de la correction, coin haut à gauche en (SYS_CORR.x, y). numero : « 3. » devant
-   le titre (écran). Renvoie la hauteur du cadre. */
-function drawSysCadre(target, card, etape, y, mesures, ctx, numero){
-  const C = ctx.C || SYS_CORR;
-  const { mkEl, mkText, lettres } = ctx;
-  const e = C.loupe || 1;
-  const h = sysCorrHauteurCadre(etape, C);
-  const g = mkEl("g", { class:"sysCadre", "data-role":etape.role });
-  g.appendChild(mkEl("rect", { x:C.x, y, width:C.w, height:h, rx:22, fill:"#fff", stroke:"#000", "stroke-width":3 }));
-  const titre = (numero ? `${numero}. ` : "") + etape.titre;
-  g.appendChild(mkText(C.x + C.w / 2, y + Math.round(42 * e), titre, {
-    "text-anchor":"middle", "font-size":sysCorrAjuster(titre, C.fsTitre, C.w - 60, 900, 24), "font-weight":900, fill:"#0f172a"
-  }));
-  const haut = y + C.titre;
-  const hContenu = h - C.titre - C.bas;
-  // les barres, alignées à gauche
-  etape.barres.forEach((b, i) => drawSysBarre(g, b, C.barX, haut + i * (C.hHaut + C.hCase + C.ecartBarres), mesures.u, ctx));
-  // les calculs (ou, pour la vérification, chaque plateau relu), en italique
-  const lignes = (lettres ? etape.lettres : etape.calculs).slice();
-  const verif = etape.role === "verification";
-  const colX = verif ? C.barX : mesures.calculX;
-  const largeurCol = verif ? C.reponsesX - C.barX - 40 : (C.x + C.w - 30 - colX);
-  let fs = C.fsCalcul;
-  while(fs > 16 && lignes.some(t => sysCorrLargeurCalcul(t, fs) > largeurCol)) fs -= 1;
-  const y0 = haut + (hContenu - (lignes.length - 1) * C.pasCalcul) / 2;
-  lignes.forEach((t, i) => g.appendChild(mkText(colX, y0 + i * C.pasCalcul, t, {
-    "text-anchor":"start", "dominant-baseline":"middle", "font-size":fs, "font-weight":800, "font-style":"italic", fill:"#0f172a"
+/* Une étape : le titre (« 3. » devant à l'écran ; coupé à largeurTitre au téléphone), puis
+   ses barres (sysEtapeTaille dit où). taille : celle que le flux a choisie (titre sur une ou
+   deux lignes) ; empiler : les barres l'une sous l'autre (téléphone). */
+function drawSysEtape(target, etape, x, y, M, ctx, numero, largeurTitre, taille, empiler){
+  const { mkEl, mkText } = ctx;
+  const g = mkEl("g", { class:"sysEtape", "data-role":etape.role });
+  const e = numero ? Object.assign({}, etape, { titre: `${numero}. ${etape.titre}` }) : etape;
+  const t = taille || sysEtapeTaille(e, M, largeurTitre, empiler);
+  t.lignes.forEach((l, i) => g.appendChild(mkText(x, y + M.fsTitre * 0.89 + i * M.fsTitre * 1.15, l, {
+    "text-anchor":"start", "font-size":M.fsTitre, "font-weight":900, fill:"#0f172a"
   })));
-  // vérification : les réponses, une par ligne, avec leur mini-tache
-  if(verif && Array.isArray(etape.reponses)){
-    const rx = C.reponsesX;
-    const yr = haut + (hContenu - (etape.reponses.length - 1) * C.pasCalcul) / 2;
-    etape.reponses.forEach((rep, i) => {
-      const info = investigateColorByKey(rep.color);
-      const yy = yr + i * C.pasCalcul;
-      g.appendChild(mkEl("path", { d:blobPath(rx + 14 * e, yy, 14 * e), fill:ctx.isPrint ? info.print : info.screen, stroke:"rgba(0,0,0,.25)", "stroke-width":1.5, "aria-hidden":"true" }));
-      g.appendChild(mkText(rx + 38 * e, yy, `${investigateColorWord(info)} = ${rep.value}`, {
-        "text-anchor":"start", "dominant-baseline":"middle", dy:"0.06em", "font-size":C.fsCalcul, "font-weight":900, fill:"#0f172a"
-      }));
-    });
-  }
+  etape.barres.forEach((b, i) => drawSysBarre(g, b, x + t.places[i].dx, y + t.haut + t.places[i].dy, M, ctx));
   target.appendChild(g);
-  return h;
+  return t;
+}
+/* « Je vérifie » : un calcul par plateau, puis la réponse encadrée (largeur w). Renvoie sa
+   hauteur. */
+function drawSysVerification(target, etape, x, y, w, M, ctx, numero){
+  const { mkEl, mkText } = ctx;
+  const g = mkEl("g", { class:"sysEtape sysVerification", "data-role":"verification" });
+  const encre = "#0f172a";
+  g.appendChild(mkText(x - 10 * M.f, y + M.fsVerifTitre * 0.85, (numero ? `${numero}. ` : "") + etape.titre, { "text-anchor":"start", "font-size":M.fsVerifTitre, "font-weight":900, fill:encre }));
+  let yy = y + M.hVerifTitre;
+  const lignes = etape.lignes || [];
+  let fs = M.fsVerif;
+  while(fs > 10 && lignes.some(l => sysLargeurTexte(l, fs, 800) > w - M.retraitVerif)) fs -= 1;
+  lignes.forEach(l => {
+    g.appendChild(mkText(x + M.retraitVerif, yy + M.fsVerif * 0.88, l, { "text-anchor":"start", "font-size":fs, "font-weight":800, fill:encre }));
+    yy += M.pasVerif;
+  });
+  yy += M.ecartReponses;
+  g.appendChild(mkEl("rect", { x, y:yy, width:w, height:M.hReponses, rx:16 * M.f, fill:"none", stroke:encre, "stroke-width":M.trait }));
+  const ts = (etape.reponses || []).map(r => `${investigateColorWord(investigateColorByKey(r.color))} = ${r.value}`);
+  // les réponses côte à côte, centrées ; serrées puis plus petites s'il le faut
+  let fr = M.fsReponse, entre = M.entreReponses;
+  const largeur = () => ts.reduce((s, t) => s + sysLargeurTexte(t, fr, 900), 0) + entre * (ts.length - 1);
+  while(entre > 40 * M.f && largeur() > w - 40 * M.f) entre -= 2 * M.f;
+  while(fr > 10 && largeur() > w - 40 * M.f) fr -= 1;
+  let xx = x + (w - largeur()) / 2;
+  ts.forEach(t => {
+    g.appendChild(mkText(xx, yy + M.hReponses / 2, t, { "text-anchor":"start", "dominant-baseline":"middle", dy:"0.06em", "font-size":fr, "font-weight":900, fill:encre }));
+    xx += sysLargeurTexte(t, fr, 900) + entre;
+  });
+  target.appendChild(g);
+  return sysVerifHauteur(etape, M);
 }
 
-/* Correction imprimée : les cadres empilés de haut à bas (écart SYS_CORR.ecartCadres) ;
-   si la pile dépasse la place (jamais sur les réglages de la page, filet de sûreté), elle
-   est réduite d'un même facteur, centrée. Renvoie le bas du dernier cadre. */
+/* Correction imprimée (4 par page, et 2 par page : la même carte plus grande) : sous
+   l'énoncé, un trait pointillé, les étapes côte à côte puis à la ligne, puis « Je vérifie ».
+   Filet (jamais aux réglages des fiches : voir les tests) : si le tout dépasse la carte, il
+   est réduit d'un même facteur. Renvoie le bas du dessin. */
 function drawSysCorrectionImprimee(target, card, haut, bas, ctx){
   const plan = card._sys.plan;
-  const hauteurPile = m => m.hauteurs.reduce((s, h) => s + h, 0) + (plan.length - 1) * SYS_CORR.ecartCadres;
-  // la loupe : le plus grand facteur (au centième) qui laisse la pile tenir, au plus SYS_CORR_LOUPE_MAX
-  let mesures = sysCorrMesures(card);
-  for(let e = Math.round(SYS_CORR_LOUPE_MAX * 100); e > 100; e--){
-    const m = sysCorrMesures(card, sysCorrMetriques(e / 100));
-    if(haut + hauteurPile(m) <= bas){ mesures = m; break; }
+  const Z = SYS_CORR_IMPRIME;
+  let M = sysBarresMetriques(1);
+  const etapes = plan.filter(e => e.role !== "verification");
+  const verif = plan.find(e => e.role === "verification");
+  // la mise en page des planches (titres sur une ligne, « Je vérifie » en bas sur toute la
+  // largeur) ; si la carte est trop longue, la mise en page serrée (titres longs sur deux
+  // lignes, « Je vérifie » à côté des dernières étapes)
+  let flux = sysEtapesFlux(etapes, M, Z.x, Z.xMax, verif, 0);
+  for(let serre = 1; serre <= 2 && flux.h > bas - haut; serre++){
+    // très serré : les écarts, les titres et les calculs un peu plus petits ; les cases et les
+    // taches ne changent pas
+    const Ms = serre === 2 ? Object.assign({}, M, SYS_BARRES_SERRE) : M;
+    const f = sysEtapesFlux(etapes, Ms, Z.x, Z.xMax, verif, serre);
+    if(f.h < flux.h){ flux = f; M = Ms; }
   }
-  ctx = Object.assign({}, ctx, { C: mesures.C });
-  const pile = hauteurPile(mesures);
-  const k = Math.min(1, (bas - haut) / pile);
-  const g = ctx.mkEl("g", { id:"sysCorrectionPrint", "data-loupe":String(mesures.C.loupe || 1), transform: k < 1 ? `translate(${Math.round(800 * (1 - k))} ${Math.round(haut * (1 - k))}) scale(${k.toFixed(4)})` : "" });
+  const hauteur = flux.h;
+  const k = Math.min(1, (bas - haut) / Math.max(1, hauteur), (Z.xMax - Z.x) / Math.max(1, flux.w));
+  target.appendChild(ctx.mkEl("line", { x1:60, x2:1540, y1:haut - Z.ecartEnonce / 2, y2:haut - Z.ecartEnonce / 2,
+    stroke:"#94a3b8", "stroke-width":3, "stroke-dasharray":"10 8" }));
+  const g = ctx.mkEl("g", { id:"sysCorrectionPrint", "data-echelle":String(Math.round(k * 1000) / 1000),
+    transform:k < 1 ? `translate(${Z.x} ${haut}) scale(${k.toFixed(4)}) translate(${-Z.x} ${-haut})` : "" });
   target.appendChild(g);
-  let y = haut;
-  plan.forEach(etape => { y += drawSysCadre(g, card, etape, y, mesures, ctx) + SYS_CORR.ecartCadres; });
-  return haut + (y - SYS_CORR.ecartCadres - haut) * k;
+  flux.places.forEach(p => {
+    // « Je vérifie » à la ligne : un peu plus d'air au-dessus (ecartVerif, « decale »)
+    if(p.verif) drawSysVerification(g, p.etape, p.x, haut + p.y + (p.y > 0 ? p.decale : 0), p.w, M, ctx);
+    else drawSysEtape(g, p.etape, p.x, haut + p.y, M, ctx, 0, 0, p.taille);
+  });
+  return haut + hauteur * k;
 }
 
-/* Écran, étape k (1 … nombre de cadres) : les plateaux en haut (taches dévoilées au dernier
-   clic), le fil des étapes passées à droite, le cadre k en bas. */
+/* Écran : l'échelle des étapes d'une carte, la même pour toutes (la plus grande à laquelle
+   chacune tient sous les plateaux, au plus SYS_CORR_ECRAN.max). */
+function sysCorrEcranEchelle(card, yEtape){
+  const M1 = sysBarresMetriques(1);
+  const Z = SYS_CORR_ECRAN;
+  const larg = Z.xMax - Z.x, dispo = Z.bas - yEtape;
+  let f = Z.max;
+  card._sys.plan.forEach((e, i) => {
+    const t = e.role === "verification" ? { w: 0, h: sysVerifHauteur(e, M1) } : sysEtapeTaille(Object.assign({}, e, { titre: `${i + 1}. ${e.titre}` }), M1);
+    f = Math.min(f, dispo / Math.max(1, t.h), larg / Math.max(1, t.w));
+  });
+  return Math.max(0.3, Math.floor(f * 100) / 100);
+}
+/* Écran, étape k (1 … nombre d'étapes) : les plateaux en haut (taches dévoilées au dernier
+   clic), le fil des étapes passées à droite, l'étape k dessous. */
 function drawSysCorrectionEcran(card, etat){
   const plan = card._sys.plan;
   const k = clamp(etat, 1, plan.length);
@@ -9954,7 +10333,7 @@ function drawSysCorrectionEcran(card, etat){
   let filX = SYS_FIL.x, filW = SYS_FIL.w, filHaut = SYS_FIL.haut, basHaut;
   const devoileEleve = sysDevoileEleve(card);
   if(sysEnPlateaux(card)){
-    /* mode élève : déjà dévoilées à la validation, sans rejouer le fondu à chaque cadre */
+    /* mode élève : déjà dévoilées à la validation, sans rejouer le fondu à chaque étape */
     const d = drawSysPlateaux(svg, card, SYS_ZONE_ECRAN_CORRECTION, { devoile: dernier || devoileEleve, fondu: !devoileEleve, nomMin: SYS_ZONE_ECRAN_CORRECTION.nomMin });
     basHaut = Math.max(...d.plateaux.map(P => P.y + P.h));
   }else{
@@ -9979,93 +10358,68 @@ function drawSysCorrectionEcran(card, etat){
     y += 6;
   }
   svg.appendChild(fil);
-  // le cadre courant, juste sous les plateaux (24/09 : il était posé en bas, un grand vide
-  // au-dessus). Son haut ne bouge pas d'un clic à l'autre : il se règle sur le bas des
-  // plateaux et sur le fil au dernier clic ; la loupe l'agrandit autant que le permet le
-  // plus haut cadre de la carte (au plus SYS_CORR_LOUPE_MAX).
+  // l'étape, sous les plateaux et sous le fil tel qu'il est au dernier clic : son haut et son
+  // échelle ne bougent pas d'un clic à l'autre
   let filBas = filHaut;
   for(let i = 0; i < plan.length - 1; i++) filBas += wrapTextToWidth(`${i + 1}. ${plan[i].titre}`, SYS_FIL.fs, filW).length * SYS_FIL.pas + 6;
-  let mesures = sysCorrMesures(card);
-  // filet : jamais sous la scène (le plus haut cadre finit au plus à 1000 − 20)
-  const yCadre = Math.round(Math.min(Math.max(basHaut, filBas - SYS_FIL.pas) + SYS_CORR_ECRAN_ECART, 1000 - 20 - Math.max(...mesures.hauteurs)));
-  for(let e = Math.round(SYS_CORR_LOUPE_MAX * 100); e > 100; e--){
-    const m = sysCorrMesures(card, sysCorrMetriques(e / 100));
-    if(yCadre + Math.max(...m.hauteurs) <= 1000 - 20){ mesures = m; break; }
-  }
-  drawSysCadre(svg, card, plan[k - 1], yCadre, mesures, Object.assign({}, ctx, { C: mesures.C }), k);
+  const yEtape = Math.round(Math.max(basHaut, filBas - SYS_FIL.pas) + SYS_CORR_ECRAN.ecart);
+  const M = sysBarresMetriques(sysCorrEcranEchelle(card, yEtape));
+  const g = el("g", { id:"sysEtapeEcran", "data-echelle":String(M.f) });
+  svg.appendChild(g);
+  const etape = plan[k - 1];
+  if(etape.role === "verification") drawSysVerification(g, etape, SYS_CORR_ECRAN.x + 10 * M.f, yEtape, Math.min(SYS_CORR_ECRAN.xMax - SYS_CORR_ECRAN.x - 10 * M.f, 1460 * M.f), M, ctx, k);
+  else drawSysEtape(g, etape, SYS_CORR_ECRAN.x, yEtape, M, ctx, k);
+}
+
+/* « Pas à pas » (réglage du tableau) : coché par défaut ; le mode élève l'est toujours. */
+function sysCorrectionPasAPas(){
+  if(typeof eleveActif !== "undefined" && eleveActif) return true;
+  try{ const c = document.getElementById("sysPasAPas"); return !c || c.checked; }catch(_e){ return true; }
+}
+/* Écran, correction directe (réglage « Pas à pas » décoché, comme l'Enquête) : toute la
+   correction d'un coup, le dessin du corrigé imprimé sans l'énoncé, à la plus grande échelle à
+   laquelle elle tient dans la scène (on essaie plusieurs largeurs de mise en page). */
+function drawSysCorrectionDirecte(card){
+  const plan = card._sys.plan;
+  const ctx = { mkEl:el, mkText:text, isPrint:false, lettres:!numberedQuestionMarkMode };
+  const etapes = plan.filter(e => e.role !== "verification");
+  const verif = plan.find(e => e.role === "verification");
+  const M = sysBarresMetriques(1);
+  let mieux = null;
+  [1470, 1700, 1950, 2200, 2500].forEach(W => [0, 1].forEach(serre => {
+    const f = sysEtapesFlux(etapes, M, 0, W, verif, serre);
+    const k = Math.min(1500 / Math.max(1, f.w), 960 / Math.max(1, f.h), SYS_CORR_ECRAN.max);
+    if(!mieux || k > mieux.k + 0.001) mieux = { f, k };
+  }));
+  const { f, k } = mieux;
+  const g = el("g", { id:"sysCorrectionDirecte", "data-echelle":String(Math.round(k * 1000) / 1000),
+    transform:`translate(${Math.round((1600 - f.w * k) / 2)} ${Math.round((1000 - f.h * k) / 2)}) scale(${k.toFixed(4)})` });
+  svg.appendChild(g);
+  f.places.forEach(p => {
+    if(p.verif) drawSysVerification(g, p.etape, p.x, p.y + (p.y > 0 ? p.decale : 0), p.w, M, ctx);
+    else drawSysEtape(g, p.etape, p.x, p.y, M, ctx, 0, 0, p.taille);
+  });
 }
 
 /* ---------------------------------------------------------------------------------------
-   Le Système au TÉLÉPHONE, en mode élève (lot « mode élève », 24/09/2026) : le cadre de
-   l'écran (1480 de large, barres à gauche, calculs à droite) écrivait en 7 px sur 390 px.
-   Comme les schémas de l'Enquête (lot E6), le cadre se dessine en PORTRAIT : titre sur une
-   ou deux lignes, barres empilées à pleine largeur, calculs SOUS les barres, réponses de la
-   vérification sous les calculs ; hauteurs et polices agrandies (SYS_TEL.loupe), largeurs
-   inchangées. Au-dessus, la rangée des plateaux (le rappel de l'énoncé : le Système n'a
-   pas de phrase à mettre dans un bandeau) ; pas de fil (le numéro du titre situe l'étape).
-   Le tout dans un groupe #sysSchemaTel cadré par eleveSchemaTelRendre. Rien de ceci ne
-   s'exécute hors du mode élève au téléphone (drapeau eleveSchemaTel).
+   Le Système au TÉLÉPHONE, en mode élève (lot « mode élève », 24/09/2026 ; dessin du lot
+   M4-2) : la rangée des plateaux (le rappel de l'énoncé), puis l'étape, à une échelle unique
+   pour la carte (la plus longue barre, calcul compris, tient dans la largeur), le titre sur
+   deux lignes au plus, les barres toujours l'une sous l'autre (« Trois paires »). Le tout dans un groupe #sysSchemaTel cadré par eleveSchemaTelRendre
+   (son premier rect donne la largeur). Rien de ceci ne s'exécute hors du mode élève au
+   téléphone (drapeau eleveSchemaTel).
 --------------------------------------------------------------------------------------- */
-const SYS_TEL = { w:1000, loupe:1.5, caseMax:150, barX:50, marge:20, titreLignes:2, ecartPlateaux:30, ecartCalculs:26, ecartReponses:18 };
+const SYS_TEL = { w:1000, marge:20, ecartPlateaux:34, max:1.6 };
 const SYS_ZONE_TEL_CORRECTION = { x:20, w:960, haut:10, bas:330, ecartX:16, ecartY:0, echelleTotal:0.6, sousTotal:12, hMax:[250], centrer:false, rMax:90, uneRangee:true, nomMin:12, ajusterHauteur:true };
-/* Les mesures portrait d'une carte : la largeur d'une case pour tous les cadres (la barre la
-   plus longue tient dans la largeur), les métriques agrandies. */
-function sysTelMesures(card){
-  const plan = card._sys.plan;
-  const L = Math.max(1, ...plan.flatMap(e => e.barres.map(sysCorrLongueur)));
-  const u = Math.min(SYS_TEL.caseMax, Math.floor((SYS_TEL.w - 2 * SYS_TEL.barX) / L));
-  const C = Object.assign({}, sysCorrMetriques(SYS_TEL.loupe), { x:SYS_TEL.marge, w:SYS_TEL.w - 2 * SYS_TEL.marge, barX:SYS_TEL.barX });
-  return { u, calculX:SYS_TEL.barX, hauteurs:[], C };
+function sysTelEchelle(card){
+  const M1 = sysBarresMetriques(1);
+  const larg = SYS_TEL.w - 2 * SYS_TEL.marge;
+  let f = SYS_TEL.max;
+  card._sys.plan.forEach(e => (e.barres || []).forEach(b => { f = Math.min(f, larg / Math.max(1, sysBarreLargeur(b, M1))); }));
+  return Math.max(0.3, Math.floor(f * 100) / 100);
 }
-/* Un cadre en portrait, coin haut à gauche en (C.x, y). Renvoie sa hauteur. */
-function drawSysCadrePortrait(target, card, etape, y, mesures, ctx, numero){
-  const C = mesures.C;
-  const { mkEl, mkText, lettres } = ctx;
-  const e = C.loupe || 1;
-  const titre = (numero ? `${numero}. ` : "") + etape.titre;
-  const lignesTitre = wrapTextToWidth(titre, C.fsTitre, C.w - 40, 900).slice(0, SYS_TEL.titreLignes);
-  const hTitre = Math.round(20 * e) + lignesTitre.length * Math.round(C.fsTitre * 1.15) + Math.round(14 * e);
-  const nb = etape.barres.length;
-  const hBarres = nb ? nb * (C.hHaut + C.hCase) + (nb - 1) * C.ecartBarres : 0;
-  const lignes = (lettres ? etape.lettres : etape.calculs).slice();
-  const largeurCol = C.w - 2 * (C.barX - C.x);
-  let fs = C.fsCalcul;
-  while(fs > 22 && lignes.some(t => sysCorrLargeurCalcul(t, fs) > largeurCol)) fs -= 1;
-  const hCalculs = lignes.length ? SYS_TEL.ecartCalculs + lignes.length * C.pasCalcul : 0;
-  const reponses = (etape.role === "verification" && Array.isArray(etape.reponses)) ? etape.reponses : [];
-  const hReponses = reponses.length ? SYS_TEL.ecartReponses + reponses.length * C.pasCalcul : 0;
-  const h = hTitre + hBarres + hCalculs + hReponses + C.bas;
-  const g = mkEl("g", { class:"sysCadre sysCadrePortrait", "data-role":etape.role });
-  g.appendChild(mkEl("rect", { x:C.x, y, width:C.w, height:h, rx:22, fill:"#fff", stroke:"#000", "stroke-width":3 }));
-  lignesTitre.forEach((l, i) => g.appendChild(mkText(C.x + C.w / 2, y + Math.round(20 * e) + Math.round(C.fsTitre * 0.9) + i * Math.round(C.fsTitre * 1.15), l, {
-    "text-anchor":"middle", "font-size":C.fsTitre, "font-weight":900, fill:"#0f172a"
-  })));
-  let yy = y + hTitre;
-  etape.barres.forEach((b, i) => drawSysBarre(g, b, C.barX, yy + i * (C.hHaut + C.hCase + C.ecartBarres), mesures.u, ctx));
-  yy += hBarres;
-  if(lignes.length){
-    yy += SYS_TEL.ecartCalculs;
-    lignes.forEach((t, i) => g.appendChild(mkText(C.barX, yy + i * C.pasCalcul + C.pasCalcul / 2, t, {
-      "text-anchor":"start", "dominant-baseline":"middle", "font-size":fs, "font-weight":800, "font-style":"italic", fill:"#0f172a"
-    })));
-    yy += lignes.length * C.pasCalcul;
-  }
-  if(reponses.length){
-    yy += SYS_TEL.ecartReponses;
-    reponses.forEach((rep, i) => {
-      const info = investigateColorByKey(rep.color);
-      const yr = yy + i * C.pasCalcul + C.pasCalcul / 2;
-      g.appendChild(mkEl("path", { d:blobPath(C.barX + 14 * e, yr, 14 * e), fill:info.screen, stroke:"rgba(0,0,0,.25)", "stroke-width":1.5, "aria-hidden":"true" }));
-      g.appendChild(mkText(C.barX + 38 * e, yr, `${investigateColorWord(info)} = ${rep.value}`, {
-        "text-anchor":"start", "dominant-baseline":"middle", dy:"0.06em", "font-size":C.fsCalcul, "font-weight":900, fill:"#0f172a"
-      }));
-    });
-  }
-  target.appendChild(g);
-  return h;
-}
-/* Téléphone, étape k : la rangée des plateaux (dévoilées : la carte est validée), puis le
-   cadre k en portrait, dans #sysSchemaTel. */
+/* Téléphone, étape k : la rangée des plateaux (dévoilées : la carte est validée), puis
+   l'étape k, dans #sysSchemaTel. */
 function drawSysCorrectionTelephone(card, etat){
   const plan = card._sys.plan;
   const k = clamp(etat, 1, plan.length);
@@ -10079,18 +10433,24 @@ function drawSysCorrectionTelephone(card, etat){
     const d = drawSysPlateaux(g, card, SYS_ZONE_TEL_CORRECTION, { devoile:true, fondu:false, nomMin:SYS_ZONE_TEL_CORRECTION.nomMin });
     bas = Math.max(...d.plateaux.map(P => P.y + P.h));
   }
-  const mesures = sysTelMesures(card);
-  drawSysCadrePortrait(g, card, plan[k - 1], Math.round(bas + (bas ? SYS_TEL.ecartPlateaux : 0)), mesures, Object.assign({}, ctx, { C:mesures.C }), k);
+  const M = sysBarresMetriques(sysTelEchelle(card));
+  const y = Math.round(bas + (bas ? SYS_TEL.ecartPlateaux : 0));
+  const x = SYS_TEL.marge, larg = SYS_TEL.w - 2 * SYS_TEL.marge;
+  const etape = plan[k - 1];
+  if(etape.role === "verification") drawSysVerification(g, etape, x + 10 * M.f, y, larg - 10 * M.f, M, ctx, k);
+  else drawSysEtape(g, etape, x, y, M, ctx, k, larg, null, true);
 }
 
 /* Render écran */
 function renderCard(card, revealState, opts = {}){
   clearSvg();
 
-  /* Système, la correction (lot S3) : un cadre par clic, d'après card._sys.plan ;
-     au téléphone, en mode élève, le dessin portrait (lot « mode élève »). */
+  /* Système, la correction (lot S3, dessin du lot M4-2) : une étape par clic, d'après
+     card._sys.plan, ou toute la correction d'un coup (« Pas à pas » décoché) ; au téléphone,
+     en mode élève, le dessin portrait (lot « mode élève »). */
   if(sysAPlan(card) && revealState >= 1 && !opts.sansCorrection){
     if(typeof eleveSchemaTel !== "undefined" && eleveSchemaTel) drawSysCorrectionTelephone(card, revealState);
+    else if(!sysCorrectionPasAPas()) drawSysCorrectionDirecte(card);
     else drawSysCorrectionEcran(card, revealState);
     return;
   }
@@ -10098,7 +10458,14 @@ function renderCard(card, revealState, opts = {}){
   /* Système en plateaux (lot S2) : un plateau par situation, chacun sous sa boîte TOTAL ;
      l'énoncé (état 0) ; les clics suivants sont ceux de la correction (lot S3, plus haut). */
   if(sysEnPlateaux(card)){
-    drawSysPlateaux(svg, card, SYS_ZONE_ECRAN, { devoile: revealState >= 2 || sysDevoileEleve(card) });
+    /* téléphone, mode élève : la disposition qui donne les plus grandes taches (lot M4-2) */
+    let zone = SYS_ZONE_ECRAN;
+    if(typeof eleveActif !== "undefined" && eleveActif && eleveSchemaTelephone()){
+      const wrap = document.getElementById("svgWrap");
+      const r = wrap ? wrap.getBoundingClientRect() : null;
+      zone = sysZoneTelephone(card, r && r.width > 0 ? r.width : 350, r && r.height > 0 ? r.height : 370);
+    }
+    drawSysPlateaux(svg, card, zone, { devoile: revealState >= 2 || sysDevoileEleve(card) });
     return;
   }
 
@@ -11669,14 +12036,14 @@ function renderCardIntoSvg(targetSvg, card, printMode, opts = {}){
 
   targetSvg.appendChild(tEl("rect",{x:0,y:0,width:opts.sixColonne ? SIX_COLONNE.largeur : W,height:H,rx:26,fill:"#fff"}));
 
-  /* Système, la correction imprimée 4 par page (lot S3) : les cadres de la correction. */
+  /* Système, la correction imprimée (lot S3 ; barres de taches du lot M4-2), 4 et 2 par page. */
   if(revealAnswers && sysAPlan(card) && !opts.sansCorrectionSys && String(targetSvg.getAttribute("viewBox") || "").trim() !== "0 0 1600 1000"){
     const ctx = { mkEl:tEl, mkText:tText, isPrint:true, lettres:!numberedQuestionMarkMode };
     // l'énoncé en haut de la carte, taches dévoilées (décidé le 24/09), puis les cadres
     let haut;
     if(sysEnPlateaux(card)){
       const entete = drawSysPlateaux(targetSvg, card, SYS_ZONE_IMPRIME_CORRECTION, { mkEl:tEl, mkText:tText, isPrint:true, devoile:true, nomMin:SYS_ZONE_IMPRIME_CORRECTION.nomMin });
-      haut = Math.max(...entete.plateaux.map(P => P.y + P.h)) + SYS_CORR.ecartEnonce;
+      haut = Math.max(...entete.plateaux.map(P => P.y + P.h)) + SYS_CORR_IMPRIME.ecartEnonce;
     }else{
       // Phrases / Symboles : la correction imprimée d'avant (TOTAL et plateau dévoilé), réduite
       // en haut à gauche, les indices en colonne à sa droite
@@ -11687,9 +12054,9 @@ function renderCardIntoSvg(targetSvg, card, printMode, opts = {}){
       while(avant.firstChild) g.appendChild(avant.firstChild);
       targetSvg.appendChild(g);
       drawSysIndicesColonne(targetSvg, card, SYS_UNIQUE_IMPRIME.indices, ctx);
-      haut = SYS_UNIQUE_IMPRIME.y + SYS_UNIQUE_IMPRIME.hauteur * SYS_UNIQUE_IMPRIME.k + SYS_CORR.ecartEnonce;
+      haut = SYS_UNIQUE_IMPRIME.y + SYS_UNIQUE_IMPRIME.hauteur * SYS_UNIQUE_IMPRIME.k + SYS_CORR_IMPRIME.ecartEnonce;
     }
-    drawSysCorrectionImprimee(targetSvg, card, haut, SYS_CORR.basImprime, ctx);
+    drawSysCorrectionImprimee(targetSvg, card, haut, SYS_CORR_IMPRIME.basImprime, ctx);
     return;
   }
 
@@ -13019,8 +13386,9 @@ function getMaxRevealState(card){
   if(card.family === "UPM" || card.family === "NPM") return 2;
   if(card.family === "C" && card._directSubstitution) return 3;
   if(card.family === "C") return enqueteDerniereEtape(card);
-  /* le Système (lot S3) : un clic par cadre de la correction, le dernier dévoile les taches */
-  if(sysAPlan(card)) return card._sys.plan.length;
+  /* le Système (lot S3) : un clic par étape de la correction, le dernier dévoile les taches ;
+     « Pas à pas » décoché (lot M4-2) : un seul clic, toute la correction */
+  if(sysAPlan(card)) return sysCorrectionPasAPas() ? card._sys.plan.length : 1;
   return 2;
 }
 
@@ -13971,7 +14339,9 @@ function eleveSchemaPrecedente(){
   eleveSchemaMontrerEtape(card);
 }
 function eleveSchemaMontrerEtape(card){
-  if(card.family === "C" && enqueteProjectionPasAPas(card)){
+  /* le Système fait comme l'Enquête (lot M4-2, 04/10/2026, Gwenaël) : la solution du tableau
+     disparaît pendant les étapes et ne revient qu'à la fin */
+  if((card.family === "C" && enqueteProjectionPasAPas(card)) || sysAPlan(card)){
     const pendant = eleveSchemaEtape < eleveSchemaEtapes(card);
     eleveReponseCacher(pendant);
     /* ordinateur : le tableau reste caché jusqu'au bout, « Je réponds » garde toute la place (02/10) */

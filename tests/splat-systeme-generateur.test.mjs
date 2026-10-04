@@ -27,7 +27,7 @@ const CONSTANTES_SYS = ["SYS_GESTES", "SYS_GESTES_MIX_DEFAUT", "SYS_MAX_TACHES",
   .map((nom) => ligne(`const ${nom} = `)).join("\n");
 const FONCTIONS_SYS = ["sysNormaliserReglages", "genSystemCarte", "sysMelangerPlateaux", "sysFormes", "sysFormesDouble", "sysSomme", "sysNombreTaches", "sysPlateau",
   "sysTirerSituation", "sysSituationValide", "sysNombreSousEntendu", "sysTexteASousEntendu", "sysSituationSure",
-  "sysAssemblerCarte", "sysUneTacheParCouleur", "sysIndice", "sysPhraseIndice", "sysPlan", "sysLireGestes"].map(fn).join("\n");
+  "sysAssemblerCarte", "sysUneTacheParCouleur", "sysIndice", "sysPhraseIndice", "sysPlanS3", "sysPlan", "sysLireGestes"].map(fn).join("\n");
 
 const sys = new Function(`
   ${PALETTE}
@@ -54,7 +54,10 @@ const sys = new Function(`
     sousEntendu: sysNombreSousEntendu,
     normaliser: sysNormaliserReglages,
     formes: sysFormes,
-    plan: sysPlan,
+    /* le plan de S3 (calculs en mots et en lettres) : il ne se dessine plus depuis le lot
+       M4-2, mais le générateur filtre toujours ses nombres — on le vérifie donc toujours */
+    plan: sysPlanS3,
+    planM42: sysPlan,
     phrase: sysPhraseIndice,
     lireGestes: sysLireGestes,
     serie(graine, n, reglages, palette = null){
@@ -183,14 +186,17 @@ function verifierCarte(carte, reglages = {}){
   if(principal.total !== null) assert.equal(carte.total, principal.total);
   // les indices écrits : un par plateau secondaire
   assert.equal(carte._inv.indices.length, s.boards.length - 1);
-  // aucun nombre à sous-entendu, nulle part dans la carte (plan compris)
-  const nombres = JSON.stringify(carte).match(/\d+/g) || [];
+  // aucun nombre à sous-entendu, nulle part dans la carte ni dans le plan de S3, que le
+  // générateur filtre (lot M4-2 : le plan dessiné a son propre test, aux totaux des fiches)
+  const filtree = Object.assign({}, carte, { _sys: Object.assign({}, carte._sys, { plan: sys.plan(carte._sys) }) });
+  const nombres = JSON.stringify(filtree).match(/\d+/g) || [];
   assert.ok(!nombres.some(sousEntendu), `nombre à sous-entendu dans la carte : ${nombres.filter(sousEntendu)}`);
-  assert.doesNotMatch(JSON.stringify(carte), /Erreur/);
+  assert.doesNotMatch(JSON.stringify(filtree), /Erreur/);
   // le plan : chaque calcul est juste, en mots comme en lettres
   const lex = lexique(carte);
   const etablies = new Set();
-  s.plan.forEach((etape, n) => {
+  const planS3 = sys.plan(s);
+  planS3.forEach((etape, n) => {
     assert.ok(etape.titre && etape.role, `étape ${n} sans titre`);
     assert.equal(etape.calculs.length, etape.lettres.length, `étape ${n} : mots et lettres ne se correspondent pas`);
     for(const l of etape.calculs.concat(etape.lettres)) verifierLigne(l, lex);
@@ -216,13 +222,13 @@ function verifierCarte(carte, reglages = {}){
     }
   });
   assert.equal(etablies.size, couleurs.length, "le plan ne trouve pas toutes les couleurs");
-  const verif = s.plan[s.plan.length - 1];
+  const verif = planS3[planS3.length - 1];
   assert.equal(verif.role, "verification");
   assert.equal(verif.titre, "Vérification");
   assert.equal(verif.calculs.length, s.boards.filter((b) => b.total !== null).length, "la vérification relit chaque plateau");
   assert.deepEqual(verif.reponses, couleurs.map((k) => ({ color: k, value: s.values[k] })));
   // lettres : « 2 × Vi », jamais « 2Vi »
-  for(const l of s.plan.flatMap((e) => e.lettres)) assert.doesNotMatch(l, /\d(N|Vi|O|B|Ve|R)\b/, `« ${l} »`);
+  for(const l of planS3.flatMap((e) => e.lettres)) assert.doesNotMatch(l, /\d(N|Vi|O|B|Ve|R)\b/, `« ${l} »`);
   // réglages : total principal et visibles
   if(!s.secours){
     assert.ok(carte.total >= o.totalMin && carte.total <= o.totalMax, `total ${carte.total}`);
@@ -572,6 +578,8 @@ test("adresses : aller-retour buildShareUrl → appliquerConfiguration pour le m
       // lot M4-1
       sysEcartEl: liste("", ["", "1", "2"]), sysFoisEl: liste("2", ["2", "3"]), sysIndiceEl: liste("11", ["11", "12"]),
       sysSensEl: liste("PLATEAU", ["PLATEAU", "INDICE"]), sysOrdreEl: liste("", ["", "MELANGE"]),
+      // lot M4-2 : « Pas à pas » (correction au tableau)
+      sysPasAPasEl: coche(true),
       sysCoefMaxEl: champ(3, { min: "1", max: "4" }),
       sysClueTypeEl: liste("BOARD", ["BOARD", "SENTENCE", "SYMBOL"]),
       sysVisibleMinEl: champ(0, { min: "0", max: "10" }), sysVisibleMaxEl: champ(3, { min: "0", max: "10" }),
