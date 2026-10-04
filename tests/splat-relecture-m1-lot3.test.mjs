@@ -18,8 +18,9 @@ const dos = lire("_sources/livret-petit-splat/dos.html");
 test("A. render.py retire les logos de chaque page-fiche, au rendu", () => {
   assert.match(render, /JS_SANS_LOGO = """\(\) => \{\s*const l = document\.querySelectorAll\('\.activity-logos'\);/);
   assert.match(render, /l\[0\]\.remove\(\);/);
-  // appelé pour les six fiches (élève et corrigé), après le QR et le pied
-  assert.match(render, /r = await pg\.evaluate\(JS_PIED[\s\S]{0,200}r = await pg\.evaluate\(JS_SANS_LOGO\)/);
+  // appelé pour les six fiches (élève et corrigé), après le QR et le pied — pour le livret à plier ;
+  // le PDF page par page garde l'IREMI seul (04/10/2026, tests/splat-logos-iremi-page-par-page.test.mjs)
+  assert.match(render, /r = await pg\.evaluate\(JS_PIED[\s\S]{0,200}r = await pg\.evaluate\(JS_IREMI_SEUL if iremi else JS_SANS_LOGO\)/);
   // l'outil, lui, garde ses deux logos : une fiche imprimée depuis le générateur est signée
   const outil = lire("outils/splat_tache_barre.html");
   assert.match(outil, /<div class="activity-logos">\s*<img class="activity-logo-irem" src="\$\{PRINT_IREM_LOGO_SRC\}"/);

@@ -383,7 +383,8 @@ test("dans le PDF publié : la 2e page de chaque fiche porte « Fiche N bis — 
     assert.ok(titreFiche(pages[verso]).startsWith(bis), `page ${verso + 1} commence par « ${bis} » (lu : ${pages[verso].slice(0, 40)})`);
   }
   // les titres de Claire, tels qu'ils s'impriment
-  assert.match(pages[3], /Fiche 8 — Avec des\s*paquets de jetons/);
+  // (04/10/2026 : avec le logo de l'IREMI, un titre trop long passe à la ligne après le tiret)
+  assert.match(pages[3], /Fiche 8 —\s*Avec des\s*paquets de jetons/);
   assert.match(pages[5], /Fiche 9 — Le dé/);
   // lot P : chaque carte a sa case réponse à droite du plateau — un « = » par carte, rien d'écrit
   // après (les pointillés sont un trait), et c'est le seul « = » de la fiche ; depuis le 26/09/2026
@@ -706,9 +707,15 @@ const CORRECTIONS_M2 = [
   ["livret_splat_classique_correction_schema_lettre", "par le schéma en barres · inconnue en lettre"],
 ];
 // (26/09/2026 : sans les logos, le titre a plus de place dans le bandeau — il se coupe autrement)
+// Ce sont les titres du livret À PLIER, sans logo.
 const TITRES_M2 = ["Fiche 7 — Le même jeu, un nouveau plateau— Correction", "Fiche 7 bis — Le même jeu, un nouveauplateau — Correction",
                    "Fiche 8 — Avec des paquets de jetons —Correction", "Fiche 8 bis — Avec des paquets de jetons —Correction",
                    "Fiche 9 — Le déﬁ — Correction", "Fiche 9 bis — Le déﬁ — Correction"];
+// Le PDF page par page garde le logo de l'IREMI (04/10/2026) : le bandeau a moins de place, un titre
+// trop long se coupe après le tiret et « — Correction » monte sur la première ligne (JS_TITRE).
+const TITRES_M2_PAGE = ["Fiche 7 — CorrectionLe même jeu, un nouveau plateau", "Fiche 7 bis — CorrectionLe même jeu, un nouveau plateau",
+                        "Fiche 8 — CorrectionAvec des paquets de jetons", "Fiche 8 bis — CorrectionAvec des paquets de jetons",
+                        "Fiche 9 — Le déﬁ — Correction", "Fiche 9 bis — Le déﬁ — Correction"];
 // le livret de l'élève qui va avec chaque corrigé : « ? » ou en lettre (relecture du monde 2, 26/09/2026)
 const ELEVE_DE = (s) => /_lettre$/.test(s) ? "livret_splat_classique_lettre" : "livret_splat_classique";
 
@@ -730,7 +737,7 @@ test("K2 : pages 2 à 7 = la correction des fiches, même consigne que l'élève
     assert.equal(corr.length, 8, `${s} : huit pages`);
     for (let p = 1; p <= 6; p++) {
       const t = corr[p];
-      assert.ok(t.startsWith(`Splat!${TITRES_M2[p - 1]}`), `${s} p.${p + 1} : ${TITRES_M2[p - 1]} (lu : ${t.slice(0, 60)})`);
+      assert.ok(t.startsWith(`Splat!${TITRES_M2_PAGE[p - 1]}`), `${s} p.${p + 1} : ${TITRES_M2_PAGE[p - 1]} (lu : ${t.slice(0, 60)})`);
       assert.match(t, /Je rejoueces cartesen ligne/, `${s} p.${p + 1} : la boîte du QR du corrigé`);
       assert.doesNotMatch(t, /terminé/, `${s} p.${p + 1} : plus la phrase de l'élève`);
       assert.ok(t.endsWith("mathsgo.re/splat · CC BY-NC-SA 4.0 · correction"), `${s} p.${p + 1} : pied « · correction »`);
@@ -744,9 +751,12 @@ test("K2 : pages 2 à 7 = la correction des fiches, même consigne que l'élève
     assert.equal(corr[0].replace("CORRECTION", "").replace(`Livret corrigé— ${dit}`, ""),
                  eleve[0].replace("Nom, prénomClasse", ""), `${s} : le reste de la couverture ne change pas`);
     assert.equal(corr[7], eleve[7], `${s} : le dos est identique`);
+    // le livret à plier : les mêmes pages, au titre près (sans logo, le titre se coupe comme avant)
+    const plier = (n) => n >= 2 && n <= 7
+      ? `Splat!${TITRES_M2[n - 2]}` + corr[n - 1].slice(`Splat!${TITRES_M2_PAGE[n - 2]}`.length) : corr[n - 1];
     const a3 = texteExact(`outils/${s}_a_plier.pdf`);
     [[8, 1], [2, 7], [6, 3], [4, 5]].forEach(([g, d], k) =>
-      assert.equal(a3[k], corr[g - 1] + corr[d - 1], `${s} : feuille ${k + 1} = pages ${g} | ${d}`));
+      assert.equal(a3[k], plier(g) + plier(d), `${s} : feuille ${k + 1} = pages ${g} | ${d}`));
   }
 });
 

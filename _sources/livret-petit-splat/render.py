@@ -395,6 +395,22 @@ JS_SANS_LOGO = """() => {
   return 'ok';
 }"""
 
+# LES LOGOS DU PDF « PAGE PAR PAGE » (04/10/2026, décision de Gwenaël par question à choix) :
+# un collègue qui imprime une seule fiche du PDF page par page n'a pas le dos, où sont les
+# logos. Chaque fiche de ce PDF garde donc le logo de l'IREMI dans son bandeau — l'IREMI
+# SEUL : maths&go est déjà au pied de chaque page (mathsgo.re/splat). Le livret à plier ne
+# change pas (aucun logo sur ses fiches, les logos au dos). Chaque fiche est donc rendue
+# DEUX fois, avec les mêmes graines : sans logo (livret à plier) et avec l'IREMI (page par
+# page) ; tests/livret-petit-splat-logos.mjs vérifie qu'elles ne diffèrent que par le bandeau.
+JS_IREMI_SEUL = """() => {
+  const l = document.querySelectorAll('.activity-logos');
+  if (l.length !== 1) return l.length + ' bloc(s) de logos, attendu : 1';
+  const mg = l[0].querySelectorAll('.activity-logo-maths'), ir = l[0].querySelectorAll('.activity-logo-irem');
+  if (mg.length !== 1 || ir.length !== 1) return 'logos inattendus dans le bandeau';
+  mg[0].remove();
+  return 'ok';
+}"""
+
 JS_EXEMPLE = """([target, splatMode, visMin, visMax, hpMin, hpMax, totMin]) => {
   for (let essai = 0; essai < 8000; essai++) {
     currentRand = mulberry32(hashSeed('exemple-' + target + '-' + essai));
@@ -635,7 +651,7 @@ async def pages(niv, tmp, correction=False):
             for e in deux:
                 print(f"   exemple : {e['total']} = {e['visible']} + {e['n']} x {e['hp']}")
 
-        async def pdf(url, sortie, injecter=None, couv=None, dos=None):
+        async def pdf(url, sortie, injecter=None, couv=None, dos=None, iremi=False):
             pg = await nav.new_page(viewport={"width": 794, "height": 1123})
             await pg.goto(url, wait_until="networkidle")
             await pg.wait_for_timeout(1200)
@@ -651,7 +667,7 @@ async def pages(niv, tmp, correction=False):
                 r = await pg.evaluate(JS_PIED, PIED_CORRECTION if correction else PIED_LIVRET)
                 if r != "ok":
                     raise SystemExit(f"pied de page : {r}")
-                r = await pg.evaluate(JS_SANS_LOGO)
+                r = await pg.evaluate(JS_IREMI_SEUL if iremi else JS_SANS_LOGO)
                 if r != "ok":
                     raise SystemExit(f"logos de {url} : {r}")
                 await pg.wait_for_timeout(400)
@@ -696,6 +712,8 @@ async def pages(niv, tmp, correction=False):
                    + ("&correction=1&rv=0" if correction else ""))
             # la fiche N est la page N+1 du livret (la couverture est la page 1)
             await pdf(url, tmp / f"p{f['n']+1}.pdf", injecter=f"{qrweb}/fiche{f['n']}.png")
+            # la même fiche avec le logo de l'IREMI, pour le PDF page par page
+            await pdf(url, tmp / f"p{f['n']+1}_iremi.pdf", injecter=f"{qrweb}/fiche{f['n']}.png", iremi=True)
         dos = dict(niveaux=[[nom, desc, f"{qrweb}/{img}"] for nom, desc, _, img in niv["dos"]],
                    univers=f"{qrweb}/univers.png")
         await pdf(f"{base}{BASE_WEB}/dos.html", tmp / "p8.pdf", dos=dos)
@@ -717,8 +735,11 @@ def assemble(niv, tmp):
     src = [pikepdf.open(str(tmp / f"p{i}.pdf")) for i in range(1, 9)]
     pages = [s.pages[0] for s in src]
 
+    # le PDF page par page prend les fiches avec le logo de l'IREMI ; le livret à plier, sans
+    iremi = [pikepdf.open(str(tmp / f"p{i}_iremi.pdf")) if (tmp / f"p{i}_iremi.pdf").exists() else None
+             for i in range(1, 9)]
     livret = pikepdf.Pdf.new()
-    for p in pages:
+    for p in [a.pages[0] if a else q for a, q in zip(iremi, pages)]:
         page = livret.add_blank_page(page_size=(A4W, A4H))
         pikepdf.Page(page).add_overlay(p, pikepdf.Rectangle(0, 0, A4W, A4H))
     livret.save(str(RACINE / "outils" / f"{niv['sortie']}.pdf"))
@@ -730,7 +751,7 @@ def assemble(niv, tmp):
             pikepdf.Page(feuille).add_overlay(pages[idx - 1],
                                               pikepdf.Rectangle(tx, 0, tx + A4W, A4H))
     a3.save(str(RACINE / "outils" / f"{niv['sortie']}_a_plier.pdf"))
-    for s in src:
+    for s in src + [a for a in iremi if a]:
         s.close()
 
 

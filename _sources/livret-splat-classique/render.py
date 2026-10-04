@@ -334,6 +334,51 @@ JS_SANS_LOGO = """() => {
   return 'ok';
 }"""
 
+# LES LOGOS DU PDF « PAGE PAR PAGE » (04/10/2026, décision de Gwenaël par question à choix) :
+# un collègue qui imprime une seule fiche du PDF page par page n'a pas le dos, où sont les
+# logos. Chaque fiche de ce PDF garde donc le logo de l'IREMI dans son bandeau — l'IREMI
+# SEUL : maths&go est déjà au pied de chaque page (mathsgo.re/splat). La boîte du QR se
+# pousse à gauche ; un titre devenu trop long se coupe après le tiret (JS_TITRE, comme
+# l'Enquête). Le livret à plier ne change pas (aucun logo sur ses fiches, les logos au dos).
+# Chaque fiche est donc rendue DEUX fois, avec les mêmes graines : sans logo (livret à
+# plier) et avec l'IREMI (page par page) — les cartes ne bougent pas, seul le bandeau change.
+JS_IREMI_SEUL = """() => {
+  const l = document.querySelectorAll('.printArea .print-page-logos');
+  if (!l.length) return 'pas de logos dans le bandeau';
+  for (const e of l) {
+    const mg = e.querySelectorAll('.print-page-logo-maths'), ir = e.querySelectorAll('.print-page-logo-irem');
+    if (mg.length !== 1 || ir.length !== 1) return 'logos inattendus dans le bandeau';
+    mg[0].remove();
+  }
+  return 'ok';
+}"""
+
+# Un titre trop long pour une ligne se coupe APRÈS le tiret — « Fiche 7 bis — » / « Le même
+# jeu, un nouveau plateau » —, jamais au milieu du titre ; sur une correction, la 1re ligne
+# devient « Fiche 7 — Correction » (repris de l'Enquête, _sources/livret-splat-enquete).
+JS_TITRE = """() => {
+  const st = document.querySelectorAll('.printArea .print-page-subtitle');
+  if (!st.length) return 'pas de titre';
+  st.forEach(e => {
+    const t = e.textContent, i = t.indexOf(' — ');
+    e.style.whiteSpace = 'nowrap';
+    const bloc = e.parentElement;
+    const trop = bloc.scrollWidth > bloc.clientWidth + 1;
+    e.style.whiteSpace = '';
+    if (trop && i > 0) {
+      const corr = t.endsWith(' — Correction') ? ' — Correction' : '';
+      const tete = t.slice(0, i) + (corr || ' —');
+      const suite = t.slice(i + 3, t.length - corr.length).replace(/(\\d) /g, '$1\\u00a0');
+      e.textContent = ''; e.append(tete); e.appendChild(document.createElement('br')); e.append(suite);
+      const lh = parseFloat(getComputedStyle(e).lineHeight) || parseFloat(getComputedStyle(e).fontSize) * 1.12;
+      const f0 = parseFloat(getComputedStyle(e).fontSize);
+      for (let k = 1; k <= 4 && e.getBoundingClientRect().height > 2.4 * lh * (1 - 0.05 * (k - 1)); k++)
+        e.style.fontSize = (f0 * (1 - 0.05 * k)) + 'px';
+    }
+  });
+  return 'ok';
+}"""
+
 # ---------------------------------------------------------------------------
 # RELECTURE DU MONDE 2 (26/09/2026) — DEUX LIVRETS DE L'ÉLÈVE par niveau, comme les corrigés :
 # inconnue « ? » (le livret d'avant, même nom de fichier) et inconnue en LETTRE (…_lettre.pdf).
@@ -589,7 +634,7 @@ async def pages(niv, tmp, version):
                          margin={"top": "0", "bottom": "0", "left": "0", "right": "0"})
             await pg.close()
 
-        async def pdf_fiche(f, sortie):
+        async def pdf_fiche(f, sortie, iremi=False):
             titre = quote(f"Fiche {f['n']} — {f['t']}")
             # livret de correction : l'outil imprime lui-même sa correction courte 6/page ;
             # en lettre, les mêmes graines avec unknown=letter (les nombres ne changent pas)
@@ -618,15 +663,22 @@ async def pages(niv, tmp, version):
             r = await pg.evaluate(JS_PIED, PIED_CORRECTION if corr else PIED_LIVRET)
             if r != "ok":
                 raise SystemExit(f"fiche {f['n']}, pied : {r}")
-            r = await pg.evaluate(JS_SANS_LOGO)
+            r = await pg.evaluate(JS_IREMI_SEUL if iremi else JS_SANS_LOGO)
             if r != "ok":
                 raise SystemExit(f"fiche {f['n']}, logos : {r}")
+            if iremi:
+                # la mesure du titre se fait à la largeur imprimée (A4 moins les 2 × 8 mm de l'outil)
+                await pg.set_viewport_size({"width": 733, "height": 1062})
+                await pg.emulate_media(media="print")
+                r = await pg.evaluate(JS_TITRE)
+                if r != "ok":
+                    raise SystemExit(f"fiche {f['n']}, titre : {r}")
             await pg.wait_for_timeout(600)
             # marges : celles de la feuille de l'outil (@page 8 mm), comme un professeur
             # qui clique sur Imprimer
             await pg.pdf(path=str(sortie), format="A4", print_background=True, prefer_css_page_size=True)
             await pg.close()
-            print(f"   fiche {f['n']} : {etat['cartes']} cartes sur {etat['feuilles']} pages")
+            print(f"   fiche {f['n']}{' (avec l’IREMI)' if iremi else ''} : {etat['cartes']} cartes sur {etat['feuilles']} pages")
 
         couv = dict(exemple, prof=dict(PROF, dit=corr["dit"]) if corr else None)
         if niv.get("couv"):
@@ -644,6 +696,8 @@ async def pages(niv, tmp, version):
         await pdf_html(f"{base}{BASE_WEB}/couverture.html", tmp / "p1.pdf", couv=couv)
         for f in niv["fiches"]:
             await pdf_fiche(f, tmp / f"fiche{f['n']}.pdf")
+            # la même fiche avec le logo de l'IREMI, pour le PDF page par page
+            await pdf_fiche(f, tmp / f"fiche{f['n']}_iremi.pdf", iremi=True)
         dos = dict(niveaux=[[nom, desc, f"{qrweb}/{img}"] for nom, desc, _, img in niv["dos"]],
                    univers=f"{qrweb}/univers.png",
                    css=niv.get("css_dos"), lettre=lettre)
@@ -672,9 +726,18 @@ def assemble(niv, tmp):
     pages.append(src[-1].pages[0])
     if len(pages) != 8:
         raise SystemExit(f"{len(pages)} pages au lieu de 8")
+    # le PDF page par page prend les fiches avec le logo de l'IREMI ; le livret à plier, sans
+    par_page = [pages[0]]
+    for f in niv["fiches"]:
+        d = pikepdf.open(str(tmp / f"fiche{f['n']}_iremi.pdf"))
+        src.append(d)
+        if len(d.pages) != f["pages"]:
+            raise SystemExit(f"fiche {f['n']} (IREMI) : le PDF fait {len(d.pages)} pages au lieu de {f['pages']}")
+        par_page.extend(d.pages)
+    par_page.append(pages[-1])
 
     livret = pikepdf.Pdf.new()
-    for p in pages:
+    for p in par_page:
         page = livret.add_blank_page(page_size=(A4W, A4H))
         pikepdf.Page(page).add_overlay(p, pikepdf.Rectangle(0, 0, A4W, A4H))
     livret.save(str(RACINE / "outils" / f"{niv['sortie']}.pdf"))

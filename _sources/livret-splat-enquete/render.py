@@ -452,6 +452,25 @@ JS_SANS_LOGO = """() => {
   return 'ok';
 }"""
 
+# LES LOGOS DU PDF « PAGE PAR PAGE » (04/10/2026, décision de Gwenaël par question à choix) :
+# un collègue qui imprime une seule fiche du PDF page par page n'a pas le dos, où sont les
+# logos. Chaque fiche de ce PDF garde donc le logo de l'IREMI dans son bandeau — l'IREMI
+# SEUL : maths&go est déjà au pied de chaque page (mathsgo.re/splat). La boîte du QR se
+# pousse à gauche ; un titre devenu trop long se coupe après le tiret (JS_TITRE). Le livret à
+# plier ne change pas (aucun logo sur ses fiches, les logos au dos). Chaque fiche est donc
+# rendue DEUX fois, avec les mêmes graines : sans logo (livret à plier) et avec l'IREMI
+# (page par page) — les cartes ne bougent pas, seul le bandeau change.
+JS_IREMI_SEUL = """() => {
+  const l = document.querySelectorAll('.printArea .print-page-logos');
+  if (!l.length) return 'pas de logos dans le bandeau';
+  for (const e of l) {
+    const mg = e.querySelectorAll('.print-page-logo-maths'), ir = e.querySelectorAll('.print-page-logo-irem');
+    if (mg.length !== 1 || ir.length !== 1) return 'logos inattendus dans le bandeau';
+    mg[0].remove();
+  }
+  return 'ok';
+}"""
+
 JS_PIED = """(texte) => {
   const f = document.querySelectorAll('.printArea .print-page-footer');
   if (!f.length) return 'pas de pied de page';
@@ -1052,7 +1071,7 @@ async def rendre(niv, tmp, corr=None):
                          margin={"top": "0", "bottom": "0", "left": "0", "right": "0"})
             await pg.close()
 
-        async def pdf_fiche(f, sortie):
+        async def pdf_fiche(f, sortie, iremi=False):
             titre = f"Fiche {f['code']} — {f['t']}"
             q = f["q"] + ENQ_COMMUN
             if corr and corr["lettre"]:
@@ -1077,7 +1096,7 @@ async def rendre(niv, tmp, corr=None):
             r = await pg.evaluate(JS_QR, [f"{qrweb}/fiche{f['code']}.png", QR_PROF if corr else QR_ELEVE])
             if r != "ok":
                 raise SystemExit(f"{titre}, QR : {r}")
-            r = await pg.evaluate(JS_SANS_LOGO)
+            r = await pg.evaluate(JS_IREMI_SEUL if iremi else JS_SANS_LOGO)
             if r != "ok":
                 raise SystemExit(f"{titre}, logos : {r}")
             # la mesure se fait à la largeur imprimée (A4 moins les 2 × 8 mm de l'outil)
@@ -1094,7 +1113,7 @@ async def rendre(niv, tmp, corr=None):
             # qui clique sur Imprimer
             await pg.pdf(path=str(sortie), format="A4", print_background=True, prefer_css_page_size=True)
             await pg.close()
-            print(f"   {titre}")
+            print(f"   {titre}" + (" (avec l’IREMI)" if iremi else ""))
 
         couv = dict(carte=ex["carte"], sur=niv["couv"]["sur"], titre=niv["couv"]["titre"], accroche=niv["couv"]["accroche"], intro=textes["intro"],
                     sommaire=[[f["code"], f["t"], f["resume"]] for f in niv["fiches"]],
@@ -1105,6 +1124,8 @@ async def rendre(niv, tmp, corr=None):
                        donnees_page2(ex, textes))
         for i, f in enumerate(niv["fiches"]):
             await pdf_fiche(f, tmp / f"fiche{i}.pdf")
+            # la même fiche avec le logo de l'IREMI, pour le PDF page par page
+            await pdf_fiche(f, tmp / f"fiche{i}_iremi.pdf", iremi=True)
         d = niv["dos"]
         unite = None
         if d.get("unite"):
@@ -1147,8 +1168,9 @@ async def rendre(niv, tmp, corr=None):
         await nav.close()
     return ex["cle"], cles, cles_rappel
 
-def ordre_des_pages(niv, tmp):
-    fiches = [tmp / f"fiche{i}.pdf" for i in range(len(niv["fiches"]))]
+def ordre_des_pages(niv, tmp, iremi=False):
+    # iremi : les fiches avec le logo de l'IREMI (PDF page par page) ; sinon, sans (livret à plier)
+    fiches = [tmp / f"fiche{i}{'_iremi' if iremi else ''}.pdf" for i in range(len(niv["fiches"]))]
     if len(fiches) != 5:
         raise SystemExit(f"{len(fiches)} pages de fiches au lieu de 5")
     milieu = fiches[:]
@@ -1172,8 +1194,14 @@ def assemble(niv, tmp, sortie):
         src.append(d); pages.append(d.pages[0])
     if len(pages) != 8:
         raise SystemExit(f"{len(pages)} pages au lieu de 8")
+    par_page = []
+    for f in ordre_des_pages(niv, tmp, iremi=True):
+        d = pikepdf.open(str(f))
+        if len(d.pages) != 1:
+            raise SystemExit(f"{f.name} : {len(d.pages)} pages au lieu d'une")
+        src.append(d); par_page.append(d.pages[0])
     livret = pikepdf.Pdf.new()
-    for p in pages:
+    for p in par_page:
         page = livret.add_blank_page(page_size=(A4W, A4H))
         pikepdf.Page(page).add_overlay(p, pikepdf.Rectangle(0, 0, A4W, A4H))
     livret.save(str(RACINE / "outils" / f"{sortie}.pdf"))

@@ -42,7 +42,7 @@ Les livrets « Le défi » ont disparu au lot 2 (30/09), les trois anciens « De
    Les étapes sont numérotées dans une **pastille blanche bordée** (comme les ① ② des corrigés) :
    la tache numérotée reste réservée aux fiches (01/10/2026).
 3. à 7. **Les cinq fiches**, 4 cartes par page, telles que l'outil les imprime, le QR de la fiche
-   dans le bandeau, sans logo. Les fiches 12, 13, 17, 18, 22, 11d, 17d et 18d portent le **schéma vide
+   dans le bandeau, sans logo (le PDF page par page garde l'IREMI : voir « Conventions »). Les fiches 12, 13, 17, 18, 22, 11d, 17d et 18d portent le **schéma vide
    sous la carte 1** (`modele=1`, lot 1) : ce sont celles qui apportent un nouveau dessin.
    Depuis le 01/10/2026, le plateau des énoncés fait **22 mm** (comme la correction) pour laisser
    plus de place pour écrire ; la carte d'exemple seule (couverture, page 2, dos) garde ses 28 mm
@@ -147,8 +147,10 @@ comme les fiches.
 ## Conventions
 
 - **Logos** (décision du 25/09/2026, comme les livrets des mondes 1 et 2) : aucun sur la
-  couverture, les fiches (`JS_SANS_LOGO` retire ceux de l'outil au rendu) ni la page 2 ; IREMI +
-  maths&go une seule fois, au dos, à côté des crédits. Le pied : la signature
+  couverture, les fiches du livret à plier (`JS_SANS_LOGO` retire ceux de l'outil au rendu) ni la
+  page 2 ; IREMI + maths&go une seule fois, au dos, à côté des crédits.
+  **PDF page par page (04/10/2026)** : chaque page-fiche du `….pdf` garde le logo de **l'IREMI seul** (`JS_IREMI_SEUL`), à droite de la boîte du QR, qui se pousse à gauche (un titre trop long se coupe après le tiret, `JS_TITRE`) — un collègue qui imprime une seule fiche n'a pas le dos ; maths&go est déjà au pied (`mathsgo.re/splat`). Le livret à plier (`…_a_plier.pdf`) ne change pas : aucun logo sur ses fiches. Chaque fiche est donc rendue deux fois, mêmes graines ; seul le bandeau diffère.
+  Le pied : la signature
   `mathsgo.re/splat · CC BY-NC-SA 4.0` (gris moyen `#64748b`, 10 px). Claire est remerciée une
   seule fois, au dos.
 - Tout reste lisible imprimé en **noir et blanc** : le framboise ne sert qu'aux fonds, tout

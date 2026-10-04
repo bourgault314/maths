@@ -30,8 +30,9 @@ Il en existe **deux**, mêmes trois étapes, deux calibres de cartes :
   courtes 6/page de l'outil. Au livret Monde 2, une carte à **deux taches** (graine 746 :
   6 + 10 = 16, 38 − 16 = 22, 22 ÷ 2 = 11), pour une résolution complète.
 - **Fiches 8 et 9 en quatre marches de 6 cartes** (voir « Les graines »).
-- **Check-list du monde 1** : plus de logo sur les pages-fiches (retirés au rendu, le QR passe
-  tout à droite du bandeau) ; au dos, crédit à gauche, IREMI + maths&go + Unité apprenante à
+- **Check-list du monde 1** : plus de logo sur les pages-fiches du livret à plier (retirés au
+  rendu, le QR passe tout à droite du bandeau ; le PDF page par page garde l'IREMI, voir
+  « Conventions ») ; au dos, crédit à gauche, IREMI + maths&go + Unité apprenante à
   droite ; tache de « Pour se souvenir » à 52 px ; « TOTAL » au-dessus du 37 ; « Nom, prénom » et
   « Classe » en haut de leur case ; « La suite du voyage » : Enquête (monde 3) puis Système
   (monde 4). **Pas de numéro de page** (retiré aussi au monde 1 : doublon du numéro de fiche).
@@ -250,7 +251,9 @@ l'outil (`@page` 8 mm, `prefer_css_page_size`), la couverture et le dos sans mar
 
 ## Conventions
 
-- Logos IREMI + maths&go dans le bandeau des 8 pages ; rien dans le pied, hormis la
+- Logos : IREMI + maths&go une seule fois, au dos, à côté du crédit ; aucun sur la couverture
+  ni sur les fiches du livret à plier. **PDF page par page (04/10/2026)** : chaque page-fiche du `….pdf` garde le logo de **l'IREMI seul** (`JS_IREMI_SEUL`), à droite de la boîte du QR, qui se pousse à gauche (un titre trop long se coupe après le tiret, `JS_TITRE`) — un collègue qui imprime une seule fiche n'a pas le dos ; maths&go est déjà au pied (`mathsgo.re/splat`). Le livret à plier (`…_a_plier.pdf`) ne change pas : aucun logo sur ses fiches. Chaque fiche est donc rendue deux fois, mêmes graines ; seul le bandeau diffère.
+- Le pied : rien, hormis la
   signature `mathsgo.re/splat · CC BY-NC-SA 4.0` (gris moyen `#64748b`, 10 px sur la
   couverture et le dos, 7 pt sur les fiches — lisible en photocopie). L'outil écrit
   `mathsgo.re/splat/classique` au pied des fiches ; `render.py` le repointe vers
