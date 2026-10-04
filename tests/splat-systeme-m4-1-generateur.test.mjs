@@ -36,7 +36,7 @@ const FONCTIONS_SYS = ["sysNormaliserReglages", "genSystemCarte", "sysMelangerPl
   "sysAssemblerCarte", "sysUneTacheParCouleur", "sysIndice", "sysPhraseIndice", "sysPlanS3", "sysPlan", "sysLireGestes"].map(fn).join("\n");
 const DESSIN = ["SYS_ZONE_ECRAN", "SYS_ZONE_IMPRIME", "SYS_ZONE_IMPRIME_6", "SYS_ZONE_ECRAN_CORRECTION", "SYS_ZONE_IMPRIME_CORRECTION", "SYS_ZONE_TEL_CORRECTION", "SYS_TACHE"]
   .map((nom) => ligne(`const ${nom} = `)).join("\n")
-  + ["sysRayonJeton", "sysGrille", "sysColonnesVisibles", "sysRayonMax", "sysDispositionPlateaux"].map(fn).join("\n");
+  + ["sysPlateauxMontres", "sysRayonJeton", "sysGrille", "sysColonnesVisibles", "sysRayonMax", "sysDispositionPlateaux"].map(fn).join("\n");
 
 const sys = new Function(`
   ${PALETTE}
@@ -379,6 +379,19 @@ test("ordre=MELANGE : tiré après tout le reste — la carte ne change pas, seu
     assert.equal(d1.plateaux[i].y, d0.plateaux[place].y);
   });
   assert.notEqual(d1.plateaux[0].x + "," + d1.plateaux[0].y, d0.plateaux[0].x + "," + d0.plateaux[0].y, "le plateau principal a changé de place");
+  // lot M4-4b : Trois paires ne montre pas son plateau sans total — les trois paires prennent
+  // les trois premières places, dans l'ordre tiré (le plateau caché sort de l'ordre)
+  let paires = 0;
+  for(const x of graines(60)){
+    const t = sys.carte(x, { geste: "TROIS", ordre: "MELANGE" });
+    const vu = t._sys.ordre.filter((i) => i !== 0);
+    const rangee = { ...sys.zones.IMPRIME, uneRangee: true };
+    const d = sys.disposition(t, rangee), r = sys.disposition(sys.carte(x, { geste: "TROIS" }), rangee);
+    assert.deepEqual(d.plateaux.map((P) => P.indice), [1, 2, 3]);
+    vu.forEach((i, place) => assert.equal(d.plateaux[i - 1].x, r.plateaux[place].x, `graine ${x} : la paire ${i} à la place ${place}`));
+    if(vu.join("") !== "123") paires++;
+  }
+  assert.ok(paires > 30, "les paires se mélangent");
 });
 
 test("MIX : Escalier se coche comme les autres gestes, absent du mélange par défaut", () => {

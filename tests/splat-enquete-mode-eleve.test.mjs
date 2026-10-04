@@ -185,8 +185,9 @@ test("seules les cartes d'Enquête ont ce tableau ; une carte du monde 2 ou une 
   assert.match(rendu, /const enquete = infos \? null : eleveInfosTableau\(card\);/);
   assert.match(rendu, /if\(!infos && !enquete\)\{\n    tete\.style\.display = "none";\n    panneau\.innerHTML = `<p class="eleveConsigne">Le parcours élève n'existe pas encore pour ce mode\.<\/p>`;/);
   assert.match(rendu, /panneau\.classList\.toggle\("enquete", !!enquete\);/);
-  // (lot E-sans-total : une carte « sans total » montre « ? » dans la même case donnée)
-  assert.match(rendu, /bas = eleveCasesEnqueteHtml\(card, enquete\);\n    \/\*[^\n]*\n[^\n]*\*\/\n    haut = eleveCaseDonneeHtml\("haut blanche", "Total", \(\(card\._rel && card\._rel\.sansTotal\) \|\| sysTotalCache\(card\)\) \? "\?" : card\.total\);/);
+  // (lot E-sans-total : une carte « sans total » montre « ? » dans la même case donnée ; lot M4-4b :
+  // « Trois paires » du Système n'a plus de ligne du TOTAL)
+  assert.match(rendu, /bas = eleveCasesEnqueteHtml\(card, enquete\);\n    \/\*[\s\S]*?\*\/\n    haut = \(enquete\.systeme && sysTotalCache\(card\)\) \? ""\n      : eleveCaseDonneeHtml\("haut blanche", "Total", \(card\._rel && card\._rel\.sansTotal\) \? "\?" : card\.total\);/);
 });
 
 // --- consigne et message ------------------------------------------------------------------
@@ -624,7 +625,7 @@ test("le bandeau : la case TOTAL puis la ou les phrases d'indice, texte échapp�
   // son « ? » en gris ardoise, dans le bandeau comme dans la case TOTAL du tableau
   const r = regles(feuille);
   assert.equal((r.find((x) => x.sel === "#eleveRappel .eleveRappelTotal b.inconnu, #elevePanel.sansTotal .eleveCase.haut.donnee .eleveDonneeVal") || {}).decl, "color:#64748b");
-  assert.match(fn("renderEleveSplat"), /panneau\.classList\.toggle\("sansTotal", !!\(enquete && \(\(card\._rel && card\._rel\.sansTotal\) \|\| sysTotalCache\(card\)\)\)\);/);
+  assert.match(fn("renderEleveSplat"), /panneau\.classList\.toggle\("sansTotal", !!\(enquete && card\._rel && card\._rel\.sansTotal\)\);/);
 });
 
 test("téléphone : un schéma sans cadre portrait repasse au dessin d'ordinateur, rien ne reste à moitié", () => {

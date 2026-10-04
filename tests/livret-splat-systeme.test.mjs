@@ -68,7 +68,7 @@ test("Système : les huit fiches de render.py sont exactement celles de la carte
   assert.deepEqual(fiches, [...LIVRETS[0].codes, ...LIVRETS[1].codes].map((c, i) => [c, [...LIVRETS[0].titres, ...LIVRETS[1].titres][i], "S" + c.toUpperCase()]));
   // le type de chaque carte, vérifié au rendu (render.py s'arrête si une graine a bougé)
   assert.match(render, /"25": \["1a", "1b", "1c", "1c"\], "26": \["1d"\] \* 4, "27": \["2a", "2a", "2a", "2d"\], "28": \["3a", "3a", "3a", "3b"\],/);
-  assert.match(render, /"25d": \["1e"\] \* 4, "26d": \["2b"\] \* 4, "27d": \["1a", "1d", "2a", "3a"\], "28d": \["1b", "1d", "2a", "3b"\],/);
+  assert.match(render, /"25d": \["1e"\] \* 4, "26d": \["2b"\] \* 4, "27d": \["1a", "1d", "2a", "3a"\], "28d": \["1b", "1d", "2c", "3b"\],/);
   // le réglage « sens=MIX » de la fiche 27 (lot M4-4) : chaque carte tire son sens
   assert.match(S[2], /&geste=DOUBLE&sens=MIX&/);
   // les deux livrets et leurs couvertures

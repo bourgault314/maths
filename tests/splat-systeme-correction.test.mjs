@@ -41,7 +41,7 @@ const CONSTANTES = ["SYS_GESTES", "SYS_GESTES_MIX_DEFAUT", "SYS_MAX_TACHES", "SY
 const GENERATEUR = ["sysNormaliserReglages", "genSystemCarte", "sysMelangerPlateaux", "sysFormes", "sysFormesDouble", "sysSomme", "sysNombreTaches", "sysPlateau",
   "sysTirerSituation", "sysSituationValide", "sysNombreSousEntendu", "sysTexteASousEntendu", "sysSituationSure",
   "sysAssemblerCarte", "sysUneTacheParCouleur", "sysIndice", "sysPhraseIndice", "sysPlanS3", "sysPlan"].map(fn).join("\n");
-const DESSIN = ["sysEnPlateaux", "sysTotalCache", "sysRayonJeton", "sysGrille", "sysColonnesVisibles", "sysRayonMax", "sysDispositionPlateaux", "drawSysPlateaux",
+const DESSIN = ["sysEnPlateaux", "sysTotalCache", "sysPlateauxMontres", "sysRayonJeton", "sysGrille", "sysColonnesVisibles", "sysRayonMax", "sysDispositionPlateaux", "drawSysPlateaux",
   "sysAPlan", "sysDevoileEleve", "sysBarresMetriques", "sysLargeurTexte", "sysCorrAjuster", "sysBarreCases", "sysBarreLargeur", "sysEtapeTaille", "sysVerifHauteur",
   "sysVerifLargeur", "sysEtapesFlux", "sysJetonCouleurs", "drawSysCaseBarre", "drawSysBarre", "drawSysEtape", "drawSysVerification", "sysSystemeEcrit", "drawSysSystemeEcrit", "drawSysCorrectionImprimee",
   "sysCorrEcranEchelle", "sysCorrectionPasAPas", "drawSysCorrectionDirecte", "sysTelEchelle", "blobPath", "wrapTextToWidth", "beadColorForValue",

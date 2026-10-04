@@ -54,9 +54,16 @@ une graine a bougé) :
 | 25d L'escalier | 1e ×4 |
 | 26d Je triple | 2b ×4 |
 | 27d Avec des jetons visibles | 1a · 1d · 2a · 3a, avec des jetons |
-| 28d Dans le désordre | 1b · 1d · 2a · 3b, plateaux mélangés |
+| 28d Dans le désordre (`indice=12`, lot M4-4b) | 1b · 1d · **2c** je double un plateau plus gros · 3b, plateaux mélangés |
 
-Partout : totaux tous différents dans une fiche, deux cartes jamais de la même paire de couleurs,
+**« Trois paires » (3b, lot M4-4b, 04/10/2026)** : l'élève ne voit que les trois paires, chacune
+avec son total — le plateau « TOTAL ? » (les trois couleurs, sans total) n'est plus dessiné, ni sur
+l'énoncé, ni sur l'énoncé dévoilé des corrigés, ni à l'écran (« c'est à l'élève de trouver le
+total », sinon on donne la clé). Il reste dans les données de la carte : le corrigé garde toutes ses
+étapes (« J'additionne : je range en 2 grands plateaux », « Je partage »…). Dans le désordre (28d),
+c'est l'ordre des trois paires montrées qui est mélangé.
+
+Partout : totaux tous différents dans une fiche (ceux des petits plateaux compris), deux cartes jamais de la même paire de couleurs,
 plus petite valeur ≥ 3, aucune carte en double sur les deux livrets, les exemples et les défis
 (`controle_global`). Les cartes rendues sont dans `cartes.json`.
 

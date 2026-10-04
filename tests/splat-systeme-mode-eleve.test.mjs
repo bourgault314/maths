@@ -1,7 +1,7 @@
 /* SPLAT! — le Système (mode D), lot « mode élève » (24/09/2026 ; conception S0, § 8).
    Les cartes du mode D se jouent en ?eleve=1 comme l'Enquête : une case par COULEUR (les
-   taches d'une couleur cachent le même nombre), le TOTAL du plateau principal donné (« ? »
-   pour « Trois paires »), cases de largeur égale avant ET après la validation (décision du
+   taches d'une couleur cachent le même nombre), le TOTAL du plateau principal donné (pas de
+   ligne du TOTAL pour « Trois paires » depuis le lot M4-4b), cases de largeur égale avant ET après la validation (décision du
    24/09), taches dévoilées sur tous les plateaux, « Voir le schéma » qui déroule les cadres
    de la correction S3 (un par appui, cadrage fixe sur ordinateur, dessin portrait au
    téléphone). Les fonctions de outils/splat.html sont extraites du fichier et exécutées
@@ -37,7 +37,7 @@ const CONSTANTES = ["SYS_GESTES", "SYS_GESTES_MIX_DEFAUT", "SYS_MAX_TACHES", "SY
 const GENERATEUR = ["sysNormaliserReglages", "genSystemCarte", "sysMelangerPlateaux", "sysFormes", "sysFormesDouble", "sysSomme", "sysNombreTaches", "sysPlateau",
   "sysTirerSituation", "sysSituationValide", "sysNombreSousEntendu", "sysTexteASousEntendu", "sysSituationSure",
   "sysAssemblerCarte", "sysUneTacheParCouleur", "sysIndice", "sysPhraseIndice", "sysPlanS3", "sysPlan"].map(fn).join("\n");
-const DESSIN = ["sysEnPlateaux", "sysTotalCache", "sysRayonJeton", "sysGrille", "sysColonnesVisibles", "sysRayonMax", "sysDispositionPlateaux", "sysZoneTelephone", "drawSysPlateaux",
+const DESSIN = ["sysEnPlateaux", "sysTotalCache", "sysPlateauxMontres", "sysRayonJeton", "sysGrille", "sysColonnesVisibles", "sysRayonMax", "sysDispositionPlateaux", "sysZoneTelephone", "drawSysPlateaux",
   "sysAPlan", "sysDevoileEleve", "sysBarresMetriques", "sysLargeurTexte", "sysCorrAjuster", "sysBarreCases", "sysBarreLargeur", "sysEtapeTaille", "sysVerifHauteur",
   "sysVerifLargeur", "sysEtapesFlux", "sysJetonCouleurs", "drawSysCaseBarre", "drawSysBarre", "drawSysEtape", "drawSysVerification", "sysSystemeEcrit", "drawSysSystemeEcrit", "blobPath", "wrapTextToWidth",
   "beadColorForValue", "drawInvestigateSplatName", "investigateColorInfo", "sysTelEchelle", "drawSysCorrectionTelephone"].map(fn).join("\n");
@@ -144,7 +144,7 @@ test("hors Système : rien (Enquête, monde 2, carte D sans plan, valeur nulle)"
   assert.deepEqual(sys.tableau(enq), { tasks: 2, valeurs: [10, 5], visibleSum: 0, ordre: [0, 1] });
 });
 
-test("les cases : largeur égale, mini-tache à la couleur + nom, « ? » ; les jetons visibles à remplir ; TOTAL « ? » pour Trois paires", () => {
+test("les cases : largeur égale, mini-tache à la couleur + nom, « ? » ; les jetons visibles à remplir ; Trois paires : trois cases, une par couleur", () => {
   const coef = CARTES.find((c) => c._sys.geste === "COEF" && c.hidden.length === 4 && c.visible.length === 0);
   const i = sys.infos(coef);
   const cases = casesDe(sys.bas(coef, i));
@@ -177,19 +177,27 @@ test("les cases : largeur égale, mini-tache à la couleur + nom, « ? » ; les 
   assert.match(cv[0].contenu, /<span>visibles<\/span><\/span><input class="eleveChamp"/);
   assert.equal(cv.length, 1 + vis.hidden.length);
   cv.filter((x) => x.copie !== undefined).forEach((x) => assert.ok(Number(x.copie) >= 1, "les visibles en tête : le rang compte leur case"));
-  // Trois paires : total du plateau principal caché
+  // Trois paires : le plateau des trois couleurs n'a pas de total (le tableau n'a pas de ligne du
+  // TOTAL, lot M4-4b) ; ses trois cases, une par couleur, à remplir
   const trois = CARTES.find((c) => c._sys.geste === "TROIS");
   assert.ok(sys.totalCache(trois));
   assert.ok(!sys.totalCache(coef));
+  const ct = casesDe(sys.bas(trois, sys.infos(trois)));
+  assert.equal(ct.length, 3);
+  assert.deepEqual(ct.map((x) => x.classes), ["grise", "grise", "grise"]);
 });
 
-test("renderEleveSplat : le Système passe (classe « systeme »), le TOTAL donné ou « ? », le message « n'existe pas » reste pour C9/C8", () => {
+test("renderEleveSplat : le Système passe (classe « systeme »), le TOTAL donné ; Trois paires sans ligne du TOTAL (lot M4-4b) ; le message « n'existe pas » reste pour C9/C8", () => {
   const rendu = fn("renderEleveSplat");
   assert.match(rendu, /const enquete = infos \? null : eleveInfosTableau\(card\);/);
   assert.match(rendu, /if\(!infos && !enquete\)\{\n    tete\.style\.display = "none";\n    panneau\.innerHTML = `<p class="eleveConsigne">Le parcours élève n'existe pas encore pour ce mode\.<\/p>`;/);
   assert.match(rendu, /panneau\.classList\.toggle\("systeme", !!\(enquete && enquete\.systeme\)\);/);
-  assert.match(rendu, /panneau\.classList\.toggle\("sansTotal", !!\(enquete && \(\(card\._rel && card\._rel\.sansTotal\) \|\| sysTotalCache\(card\)\)\)\);/);
-  assert.match(rendu, /haut = eleveCaseDonneeHtml\("haut blanche", "Total", \(\(card\._rel && card\._rel\.sansTotal\) \|\| sysTotalCache\(card\)\) \? "\?" : card\.total\);/);
+  // « ? » gris ardoise : l'Enquête sans total seulement
+  assert.match(rendu, /panneau\.classList\.toggle\("sansTotal", !!\(enquete && card\._rel && card\._rel\.sansTotal\)\);/);
+  // Trois paires : pas de ligne du TOTAL (son plateau des trois couleurs n'est plus montré)
+  assert.match(rendu, /haut = \(enquete\.systeme && sysTotalCache\(card\)\) \? ""\n      : eleveCaseDonneeHtml\("haut blanche", "Total", \(card\._rel && card\._rel\.sansTotal\) \? "\?" : card\.total\);/);
+  assert.match(rendu, /`<div class="eleveDiag">\$\{haut \? `<div class="ligneHaut">\$\{haut\}<\/div>` : ""\}` \+\n    `<div class="ligneBas">\$\{bas\}<\/div><\/div>` \+/);
+  assert.doesNotMatch(rendu, /sysTotalCache\(card\)\) \? "\?"/, "plus jamais « TOTAL ? » pour le Système");
 });
 
 // --- après la validation --------------------------------------------------------------------
@@ -393,7 +401,8 @@ test("téléphone : la scène = la rangée des plateaux dévoilés puis l'étape
     assert.equal(g.children[0].attrs.width, sys.TEL.w, "le premier rect : la largeur du cadrage");
     const plateaux = elements(g, "g").find((x) => x.attrs.id === "sysPlateaux");
     assert.ok(plateaux, "les plateaux sont dans la scène");
-    assert.equal(elements(plateaux, "g").filter((x) => x.attrs.class === "sysPlateau").length, c._sys.boards.length);
+    // lot M4-4b : les trois paires seulement (le plateau sans total n'est pas dessiné)
+    assert.equal(elements(plateaux, "g").filter((x) => x.attrs.class === "sysPlateau").length, c._sys.boards.length - 1);
     // dévoilés : un cercle (jeton caché) sous chaque tache, sans le fondu
     const taches = elements(plateaux, "path").filter((p) => p.attrs.class !== "anim-fade-out");
     assert.equal(elements(plateaux, "path").filter((p) => p.attrs.class === "anim-fade-out").length, 0, "pas de fondu à chaque étape");
@@ -405,8 +414,8 @@ test("téléphone : la scène = la rangée des plateaux dévoilés puis l'étape
     const hautEtape = Math.min(...textes(etape).map((t) => t.attrs.y)) - 40;
     assert.ok(hautEtape >= basPlateaux + sys.TEL.ecartPlateaux - 40, "l'étape sous les plateaux, avec l'écart");
     assert.ok(!elements(g, "g").some((x) => x.attrs.id === "sysFil"), "pas de fil au téléphone");
-    // le TOTAL « ? » de Trois paires reste « ? »
-    assert.ok(textes(plateaux).some((t) => t.text === "?"));
+    // plus de « TOTAL ? » (lot M4-4b)
+    assert.ok(!textes(plateaux).some((t) => t.text === "?"));
   }
 });
 

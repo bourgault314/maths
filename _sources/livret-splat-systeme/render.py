@@ -67,8 +67,10 @@ COURTE = "/splat/systeme/livret/"               # la page courte des QR (?f=fich
 #   25d L'escalier     les quatre formes de l'escalier, de la plus petite à la plus grande
 #   26d Je triple      le petit plateau recopié trois fois
 #   27d Avec des jetons visibles   je retire, trois couleurs, je double, en miroir — des jetons
-#   28d Dans le désordre           je retire, trois couleurs, je double, trois paires — les
-#                                  plateaux mélangés (aucun à sa place habituelle)
+#   28d Dans le désordre           je retire, trois couleurs, je double un plateau plus gros
+#                                  (2c, lot M4-4b : à la place du « je double » simple), trois
+#                                  paires — les plateaux mélangés (aucun à sa place habituelle ;
+#                                  « trois paires » : parmi les trois paires montrées)
 # Et partout : totaux tous différents dans une fiche (ceux des petits plateaux compris), deux
 # cartes jamais de la même paire de couleurs, plus petite valeur ≥ 3, jamais de carte de secours,
 # aucune carte en double sur les deux livrets, les exemples et les défis (controle_global).
@@ -84,12 +86,12 @@ S28 = "mode=D&geste=MIX&gestes=MIROIR,TROIS" + V0 + T + "&seed=53"
 S25D = "mode=D&geste=ESCALIER" + V0 + T + "&seed=3046"
 S26D = "mode=D&geste=DOUBLE&fois=3" + V0 + T + "&seed=1"
 S27D = "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR&visibleMin=1&visibleMax=3" + T + "&seed=1373"
-S28D = "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS&ordre=MELANGE" + V0 + T + "&seed=6334"
+S28D = "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS&indice=12&ordre=MELANGE" + V0 + T + "&seed=5673"
 
 # Le type attendu de chaque carte (vérifié au rendu : render.py s'arrête si une graine a bougé).
 TYPES = {
     "25": ["1a", "1b", "1c", "1c"], "26": ["1d"] * 4, "27": ["2a", "2a", "2a", "2d"], "28": ["3a", "3a", "3a", "3b"],
-    "25d": ["1e"] * 4, "26d": ["2b"] * 4, "27d": ["1a", "1d", "2a", "3a"], "28d": ["1b", "1d", "2a", "3b"],
+    "25d": ["1e"] * 4, "26d": ["2b"] * 4, "27d": ["1a", "1d", "2a", "3a"], "28d": ["1b", "1d", "2c", "3b"],
 }
 
 def fiche(code, t, q, resume):
@@ -138,8 +140,8 @@ ATOI_2 = "mode=D&geste=ESCALIER" + V0 + T + "&cards=1&unknown=question&seed=6"
 # livret de l'élève, la correction à la même place dans les corrigés.
 #   livret 1 : deux cartes qui se ressemblent (2 + 3 taches sur le grand plateau) mais pas le
 #     même geste — je double, puis je retire : le titre ne le dit plus, c'est l'élève qui choisit ;
-#   deuxième tour : « je double un plateau plus gros » (le seul type de la classification qui
-#     n'est dans aucune fiche), puis un escalier dans le désordre avec des jetons visibles.
+#   deuxième tour : « je double un plateau plus gros » (une autre carte que celle de la fiche 28d,
+#     qui l'a aussi depuis le lot M4-4b), puis un escalier dans le désordre avec des jetons visibles.
 DEFI_1 = [dict(q="mode=D&geste=MIX&gestes=COEF,DOUBLE" + V0 + T + "&seed=187", n=2)]
 DEFI_2 = [dict(q="mode=D&geste=DOUBLE&indice=12" + V0 + T + "&seed=2", n=1),
           dict(q="mode=D&geste=ESCALIER&ordre=MELANGE&visibleMin=1&visibleMax=3" + T + "&seed=1", n=1)]
@@ -292,7 +294,8 @@ JS_FICHE = "() => {" + JS_TYPE + r"""
   return {cartes: cards.map(c => [c.total, JSON.stringify(c.hidden.slice().sort((a, b) => a - b)),
                                   JSON.stringify(c._sys.boards.map(b => [c._sys.colors.map(k => b.counts[k] || 0), b.total, b.visible || []]))]),
           types: cards.map(typeSys), secours: cards.some(c => !!c._sys.secours),
-          ordres: cards.map(c => c._sys.ordre || null),
+          // l'ordre des plateaux MONTRÉS (« trois paires » ne montre pas son plateau sans total)
+          ordres: cards.map(c => c._sys.ordre ? c._sys.ordre.filter(i => sysPlateauxMontres(c).includes(i)) : null),
           feuilles: document.querySelectorAll('.printArea .sheet').length, parPage: getPrintCardsPerPage(),
           echelles: [...document.querySelectorAll('#sysCorrectionPrint')].map(g => g.getAttribute('data-echelle'))};
 }"""

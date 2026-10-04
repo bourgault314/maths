@@ -45,7 +45,7 @@ const TOUR2 = [
   ["25d", "L'escalier", "mode=D&geste=ESCALIER" + V0 + T + "&seed=3046"],
   ["26d", "Je triple", "mode=D&geste=DOUBLE&fois=3" + V0 + T + "&seed=1"],
   ["27d", "Avec des jetons visibles", "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR&visibleMin=1&visibleMax=3" + T + "&seed=1373"],
-  ["28d", "Dans le désordre", "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS&ordre=MELANGE" + V0 + T + "&seed=6334"]
+  ["28d", "Dans le désordre", "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS&indice=12&ordre=MELANGE" + V0 + T + "&seed=5673"]
 ];
 const titre = (n, t) => encodeURIComponent(`Fiche ${n} — ${t}`);
 
