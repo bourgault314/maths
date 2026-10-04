@@ -45,8 +45,8 @@ test("décision 3 : « À retenir pour demain » — chaque calcul une fois, éc
   assert.equal(cadre.className, "retenir");
   assert.equal(cadre.tous("h2")[0].textContent, "À retenir pour demain");
   assert.deepEqual(cadre.tous("li").map(li => li.textContent), ["4 × 7 =28", "6 × 4 =24", "3 × 3 =9"], "4 × 7 et 7 × 4 : un seul calcul");
-  assert.equal(cadre.tous("p")[0].textContent, "Mes 3 erreurs de la séance. Elles reviennent demain dans Mes calculs du jour.");
-  assert.equal(cadreARetenir([[2, 9]]).tous("p")[0].textContent, "Mon erreur de la séance. Elle revient demain dans Mes calculs du jour.");
+  assert.equal(cadre.tous("p")[0].textContent, "Mes 3 calculs à revoir. Ils reviennent demain dans Mes calculs du jour.");
+  assert.equal(cadreARetenir([[2, 9]]).tous("p")[0].textContent, "Mon calcul à revoir. Il revient demain dans Mes calculs du jour.");
   const bilan = corps("renderBilanSeance");
   assert.match(bilan, /const retenir = cadreARetenir\(seance\.erreurs \|\| \[\]\);\s*if \(retenir\) zone\.append\(retenir\);\s*\$\("corrections"\)\.replaceChildren\(\);/);
   assert.ok(bilan.indexOf("cadreARetenir") < bilan.indexOf("boutons.className"), "au-dessus des boutons");
@@ -142,10 +142,10 @@ test("E2 · 4 : la police — les textes secondaires en 700, après leurs règle
   assert.equal(html.indexOf("</style>"), fin, "le dernier bloc du premier <style> de la page");
   const regle = html.slice(debut, fin);
   assert.match(regle, /\{ font-weight: 700; \}/);
-  for (const selecteur of [".carte-seance .duree", ".carte-seance .programme > span", ".seance-liens button:not(.rond)", ".semaine", ".acc-lien small", ".titre-menu", ".boite small", ".calculs-legende"]) {
+  for (const selecteur of [".carte-seance .duree", ".carte-seance .programme > span", ".seance-liens button:not(.rond)", ".semaine", ".acc-lien small", ".boite small", ".calculs-legende"]) {
     assert.ok(regle.includes(selecteur), selecteur);
   }
-  for (const nombre of [".expression", ".keypad", ".rangee", ".mc-detail-liste.pastilles span", ".correction-chips", ".given-answer", ".carte-seance .programme i", ".go", ".primary", "h1", ".boite b"]) {
+  for (const nombre of [".expression", ".keypad", ".rangee", ".mc-detail-liste.pastilles span", ".correction-chips", ".given-answer", ".carte-seance .programme i", ".go", ".primary", "h1", ".boite b", ".titre-menu"]) {
     assert.ok(!regle.includes(nombre), `${nombre} ne change pas`);
   }
 });

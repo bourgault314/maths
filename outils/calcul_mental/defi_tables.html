@@ -2068,13 +2068,13 @@
     /* Lot E2 (question E2 · 4, audit GPT) : la police était très grasse
        partout (800 à 950). Les textes secondaires — lignes grises, petits
        textes, liens, noms des étapes de la carte — passent en 700 ; les
-       nombres, les titres et les boutons restent tels quels. Même sélecteurs
+       nombres, les titres (dont « Choisir une activité », 900) et les boutons restent tels quels. Même sélecteurs
        que leurs règles d'origine, placés après elles : l'ordre suffit. */
     .carte-seance .duree, .carte-seance .programme small, .carte-seance .programme > span, .acc-lien small, .semaine, .jours,
     .decouverte-texte, .etape small, .choix-activite small, .matable-droite small, .mc-detail-liste, .mc-detail-etat, .mc-detail-note,
     .calculs-legende, .calculs-detail, .parcours-legend, .launch-hint, .result-verdict #result-detail, .previous-score, .result-message,
     .result-parcours, .seance-suite .cadre, .seance-bilan li, .matable-lire, .acc-bas button, .matable-changer, .seance-liens button:not(.rond),
-    .seance-suite .arreter, .titre-menu, .choix-legende, .etape-choix > p, .marche small, .boite small, .correction-details summary,
+    .seance-suite .arreter, .choix-legende, .etape-choix > p, .marche small, .boite small, .correction-details summary,
     .seance-fil, .suivi-repere, .marche-cell small, .parcours-group-label { font-weight: 700; }
   </style>
 </head>
@@ -7195,8 +7195,8 @@
         });
         const phrase = document.createElement("p");
         phrase.textContent = calculs.length > 1
-          ? `Mes ${calculs.length} erreurs de la séance. Elles reviennent demain dans Mes calculs du jour.`
-          : "Mon erreur de la séance. Elle revient demain dans Mes calculs du jour.";
+          ? `Mes ${calculs.length} calculs à revoir. Ils reviennent demain dans Mes calculs du jour.`
+          : "Mon calcul à revoir. Il revient demain dans Mes calculs du jour.";
         cadre.append(titre, liste, phrase);
         return cadre;
       }
