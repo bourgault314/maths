@@ -169,19 +169,31 @@ function executerPageshow({persisted, codeEnMemoire}) {
   let gestionnaire = null;
   const fenetre = {addEventListener(type, fn) { if (type === "pageshow") gestionnaire = fn; }};
   const nettoyer = brut => (brut || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
-  new Function("$", "window", "ecrireCode", "lireCode", "nettoyer", "afficherErreur", source)(
-    $, fenetre, () => {}, () => codeEnMemoire, nettoyer, () => {});
+  // Le premier écran (05/10/2026) : l'écran du code cache l'en-tête (classe
+  // « sur-code » sur <body>) et redessine ses six cases. L'espace du
+  // précédent élève avait l'en-tête, et ses cases pouvaient garder son code.
+  const classesCorps = new Set();
+  const documentFactice = {body: {classList: {
+    add: c => classesCorps.add(c), remove: c => classesCorps.delete(c)
+  }}};
+  const dessins = {n: 0};
+  new Function("$", "window", "ecrireCode", "lireCode", "nettoyer", "afficherErreur",
+               "dessinerCases", "document", source)(
+    $, fenetre, () => {}, () => codeEnMemoire, nettoyer, () => {},
+    () => { dessins.n += 1; }, documentFactice);
   assert.ok(gestionnaire, "le gestionnaire de « pageshow » doit être posé");
   gestionnaire({persisted});
-  return {$, elements};
+  return {$, elements, classesCorps, dessins};
 }
 
 // Le bouton et le retour de cache doivent faire EXACTEMENT le même ménage :
 // c'est la raison d'être de la fonction commune. Ce test exécute l'autre
 // chemin, celui du bouton, sur le même écran de départ.
 test("« Se déconnecter » fait le même ménage que le retour de cache", () => {
-  const {$} = executerPageshow({persisted: false, codeEnMemoire: "ABC123"});
+  const {$, classesCorps, dessins} = executerPageshow({persisted: false, codeEnMemoire: "ABC123"});
   $("changer").ecouteurs.click();
+  assert.ok(classesCorps.has("sur-code"), "l'écran du code retrouve sa mise en page (sans en-tête)");
+  assert.equal(dessins.n, 1, "les six cases sont redessinées : vides");
   assert.equal($("ecran-code").hidden, false);
   assert.equal($("ecran-espace").hidden, true);
   assert.equal($("titre").textContent, "Mon espace");
@@ -192,7 +204,9 @@ test("« Se déconnecter » fait le même ménage que le retour de cache", () =>
 });
 
 test("après « Se déconnecter », le bouton « précédent » ne rouvre pas l'espace", () => {
-  const {$} = executerPageshow({persisted: true, codeEnMemoire: ""});
+  const {$, classesCorps, dessins} = executerPageshow({persisted: true, codeEnMemoire: ""});
+  assert.ok(classesCorps.has("sur-code"), "l'en-tête du précédent élève est caché");
+  assert.equal(dessins.n, 1, "ses cases ne gardent pas son code");
   assert.equal($("ecran-code").hidden, false, "l'écran du code revient");
   assert.equal($("ecran-espace").hidden, true, "l'espace est refermé");
   assert.equal($("titre").textContent, "Mon espace", "le prénom du précédent élève a disparu");

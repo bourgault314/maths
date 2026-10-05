@@ -1,10 +1,10 @@
 # Manifeste du serveur de suivi maths&go — produit par outils/generer-version.php.
 # Ne pas modifier à la main : un test du dépôt refait ce calcul à chaque passage.
 # verifier.php relit ce fichier en ligne et compare chaque empreinte.
-lot defi-tables-retouches-apres-mon-parcours
-genere_le 2026-10-04
+lot suivi-premier-ecran
+genere_le 2026-10-05
 fichiers 28
-manifeste 7fb322c42159fd40e91508bb68a1280d52681976122fef225d1a280d74f97fee
+manifeste 756e1876f43bf49bbc4d327eef5087cac6fe7dd224e66e13e51061ae989cfdf1
 61b230d36219b3c4515e56c1ff59afb1a85ffa12343956bd73b16ba04867cdca  .htaccess
 d1cdf00b3e672130b90da1f1aa9333949036fc3d5ad866d539cd11aef7fd8204  api/eleve.php
 dc938db0cb546fdfc4121ddeebdf558ca62259f20d6aecb398c84e2382697675  api/parcours.php
@@ -12,7 +12,7 @@ a3e0c097d89c3cb582a59a436ac7263b789e15e72780cb40f83ae36259ede8ee  api/prof.php
 94ac7a5f0a2a898be85b74095b42754e7b1d31b73f2498ebce4771ad48554992  apple-touch-icon.png
 2ebd7777bfa62e332ddaeb0be3a93e6c3a20bde30deccc6d3e86ca4de8345fce  favicon.ico
 b901e292ec96dadfd1a9415bc315027c93b635d0f4254a6da8ff7afd92c6520e  favicon.svg
-03686631e02f4e9c7dc248005c3613221bb31c29df5a4bc097881bf8947e7351  index.php
+d47d2966974398f3c1b02a73715bba307042298896f9da617cb901871a71f523  index.php
 014a992fe48e48144dcaa218601a11ec8745fe1fe7a7d30f3323ec9e213159d5  infos.php
 fa28d421a28ed9b6f4b997d5119c2b8adbacff6e2dd119a179b71230f9664934  lib/.htaccess
 b9ab33ee6840d78b50a27c72f71832e5929223fb62785404c821df214bdf5186  lib/applis.php
