@@ -270,9 +270,10 @@ test("page des livrets : deux boutons choisissent la série du monde 1 (choix B)
   assert.match(page, /s\.hidden = s\.dataset\.serie !== nom;/);
   // la série du premier bouton d'abord : « Je complète le schéma » au monde 1
   assert.match(page, /montre\(groupe\.querySelector\("button\[data-serie\]"\)\.dataset\.serie\);/, "« Je complète le schéma » d'abord");
-  // trois groupes de boutons : le monde 1, le monde 2 (« Avec ? » / « Avec une lettre », 26/09/2026)
-  // et le monde 5 (« Le schéma en barres » / « L’équation », 27/09/2026)
-  assert.equal((page.match(/class="series-choix"/g) || []).length, 3);
+  // quatre groupes de boutons : le monde 1, le monde 2 (« Avec ? » / « Avec une lettre », 26/09/2026),
+  // le monde 3 (« Pour tous » / « Deuxième tour », 05/10/2026) et le monde 5 (« Le schéma en barres » /
+  // « L’équation », 27/09/2026)
+  assert.equal((page.match(/class="series-choix"/g) || []).length, 4);
 });
 
 test("outil : la carte exemple a « ? = 7 » et EXEMPLE en bas de la case, comme les autres", () => {

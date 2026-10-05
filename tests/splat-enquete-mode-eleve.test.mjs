@@ -290,26 +290,33 @@ test("après validation : un bouton jaune « Voir la correction » (ex-« Voir l
   assert.notEqual(m.valider.hidden, true, "et son Valider reste");
   // proposé après la réussite ET après « Voir la réponse »
   assert.match(fn("eleveValiderSplat"), /eleveDevoilerTache\(\);\n    eleveProposerSchema\(bouton\);/);
-  assert.match(fn("eleveMontrerReponse"), /if\(voir\) voir\.remove\(\);\n  eleveProposerSchema\(bouton\);/);
+  assert.match(fn("eleveMontrerReponse"), /bouton\.hidden = true;[^\n]*\n  eleveProposerSchema\(bouton\);/);
 });
 
-test("3e erreur à l'Enquête et au Système (03/10/2026) : « Voir la correction » ouvre le pas à pas, le message parle des deux chemins ; ailleurs « Voir la réponse »", () => {
+test("3 essais, puis la réponse (05/10/2026, mondes 1 à 4) : à la 3e erreur la réponse s'écrit, plus de Valider ; l'Enquête et le Système proposent ensuite « Voir la correction »", () => {
   const v = fn("eleveValiderSplat");
-  assert.match(v, /const avecCorrection = eleveCorrectionPasAPas\(eleveSerie\[eleveIdx\]\);/);
-  assert.match(v, /\? "Pas encore\\u2026 corrige ce qui est en rouge, ou regarde la correction\."\n\s+: "Pas encore\\u2026 corrige ce qui est en rouge et revalide !";/);
-  assert.match(v, /voir\.textContent = avecCorrection \? "Voir la correction" : "Voir la r\\u00e9ponse";/);
-  assert.match(v, /voir\.onclick = avecCorrection \? eleveMontrerCorrection : eleveMontrerReponse;/);
+  const faux = v.slice(v.indexOf("}else{"));
+  assert.match(faux, /eleveEchecs\+\+;\n[\s\S]*?if\(eleveEchecs >= ELEVE_ECHECS_MAX\)\{ eleveMontrerReponse\(\); return; \}\n    msg\.textContent = "Pas encore\\u2026 corrige ce qui est en rouge et revalide !";/);
+  assert.doesNotMatch(html, /eleveVoir\b|eleveMontrerCorrection|ou regarde la correction/, "plus de bouton « Voir la réponse » ni de 3e message");
+  assert.match(html, /const ELEVE_ECHECS_MAX = 3,/);
+  /* la réponse : rangée dans les cases, carte rouge, plus de Valider (caché, pas retiré : le pavé le lit) */
+  const r = fn("eleveMontrerReponse");
+  assert.match(r, /^function eleveMontrerReponse\(\)\{/);
+  assert.match(r, /msg\.textContent = "Voil\\u00e0 la r\\u00e9ponse\. Tu rejoueras cette carte \\u00e0 la fin\.";/);
+  assert.match(r, /eleveResultats\[eleveIdx\] = "ko";/);
+  assert.match(r, /bouton\.disabled = true;\n  bouton\.hidden = true;/);
+  assert.doesNotMatch(r, /eleveVoirSchema\(\)/, "la correction ne démarre plus seule : l'élève l'ouvre s'il veut");
+  /* une carte juste : le Valider s'efface aussi (il restait éteint aux mondes 1-2 sur ordinateur) */
+  const juste = v.slice(v.indexOf("if(toutJuste){"), v.indexOf("}else{"));
+  assert.match(juste, /bouton\.disabled = true;\n[\s\S]*?bouton\.hidden = true;/);
   /* qui a une correction : la carte a un tableau (Enquête, Système) et des étapes */
   const a = new Function(`
     function eleveInfosTableau(c){ return c.tableau ? {} : null; }
     function eleveSchemaEtapes(c){ return c.etapes; }
     ${fn("eleveCorrectionPasAPas")} return eleveCorrectionPasAPas;`)();
   assert.equal(a({ tableau: true, etapes: 5 }), true);
-  assert.equal(a({ tableau: false, etapes: 5 }), false, "mondes 1, 2, 5 : « Voir la réponse »");
+  assert.equal(a({ tableau: false, etapes: 5 }), false, "mondes 1, 2 : pas de correction");
   assert.equal(a(null), false);
-  /* « Voir la correction » : la réponse rangée, la carte rouge, puis la 1re étape tout de suite */
-  assert.match(fn("eleveMontrerCorrection"), /eleveMontrerReponse\(null, true\);/);
-  assert.match(fn("eleveMontrerReponse"), /eleveRemonterApresErreur\(\);[^\n]*\n  if\(correction && document\.getElementById\("eleveSchema"\)\)\{\n    eleveVoirSchema\(\);/);
   /* la case des jetons visibles devient rouge comme les taches (02/10/2026), et plus de case « active » sur une carte finie */
   assert.match(feuille, /\.eleveCase\.blanche input\.eleveChamp\{color:#1d4ed8\}\n[\s\S]*?\.eleveCase\.blanche\.montre input\.eleveChamp\{color:#b91c1c\}/, "la règle rouge APRÈS la règle bleue");
   assert.match(html, /body\.eleve-pave #elevePanel\.avecSchema \.eleveCase\.mg-pave-case-active\{box-shadow:none\}/);

@@ -13690,9 +13690,6 @@ const ELEVE_SCHEMA_TEL_OPTS = { portrait:true, fontScale:1.6, verticalScale:1.3 
    taches seules. Vrai seulement pendant la question d'une carte de l'Enquête, sur un écran
    de moins de 600 px, quand toutes les indications sont des phrases. */
 let eleveIndicesTel = false;
-/* ce que la page a défilé pour montrer « Voir la réponse » (3e erreur) : elle le rend
-   quand la carte est finie (juste, ou réponse montrée), voir eleveRemonterApresErreur */
-let eleveDefileErreur = 0;
 /* sans phrases ni TOTAL, le dessin n'a plus que les taches : il peut descendre plus bas
    que les 150 px des autres modes (à 100 px, ses taches restent plus grandes qu'avant
    sur ces écrans : le dessin n'est plus réduit pour faire tenir des phrases de 1 550
@@ -13702,7 +13699,7 @@ const ELEVE_SCHEMA_ETAPES = 3; /* lots G1-G2 : les barres, le schéma regroupé,
 let eleveIdx = 0, eleveEtoiles = 0, eleveSerie = [], eleveResultats = [], eleveCarteFautee = false, eleveRepriseFaite = false;
 /* parties supplémentaires d'une étape composée (voir « suite » dans l'adresse) */
 let eleveSuite = [];
-/* échecs sur la carte en cours (au 3e, on propose la réponse) et file des cartes rouges à rejouer */
+/* échecs sur la carte en cours (au 3e, la réponse s'écrit dans les cases) et file des cartes rouges à rejouer */
 let eleveEchecs = 0, eleveRejeu = null;
 const ELEVE_ECHECS_MAX = 3, ELEVE_URL_MONDES = "/outils/splat_univers.html";
 const ELEVE_STORE_KEY = "mathsgo-splat-parcours";
@@ -14221,9 +14218,8 @@ function elevePaveCalerCarte(){
   const dispo = elevePaveZone - ELEVE_PAVE_JEU;
   const hauteur = plateau.getBoundingClientRect().height;
   /* Enquête au téléphone (lot E7) : la réserve ne garde que la 2e ligne du message
-     « Pas encore… » ; « Voir la réponse », à la 3e erreur, est montré en faisant
-     défiler la page (eleveMontrerAuDessusDuPave) plutôt que de rapetisser le plateau
-     pour lui à chaque carte. */
+     « Pas encore… » (à la 3e erreur, le pavé s'efface : la réponse et ses boutons
+     prennent sa place). */
   const reserve = eleveIndicesTel ? ELEVE_RESERVE_ENQ_TEL : ELEVE_RESERVE;
   const besoin = boite.getBoundingClientRect().bottom + (window.scrollY || 0) + reserve;
   if(!hauteur || besoin <= dispo) return;
@@ -14349,7 +14345,7 @@ function renderEleveSplat(){
   const infos = eleveInfosCarte(card);
   const enquete = infos ? null : eleveInfosTableau(card); /* Enquête, ou Système (une case par tache) */
   eleveEnqueteDevoile = false; eleveSchemaEtape = 0; /* nouvelle carte : taches couvertes, plateau sans schéma */
-  eleveIndicesTel = !!enquete && eleveIndicesPossible(card) && eleveSchemaTelephone(); eleveDefileErreur = 0; /* lot E7 */
+  eleveIndicesTel = !!enquete && eleveIndicesPossible(card) && eleveSchemaTelephone(); /* lot E7 */
   renderCard(card, 0);
   eleveCadrerScene();
   eleveIndicesAfficher(card);
@@ -14424,6 +14420,11 @@ function renderEleveSplat(){
     });
   });
   document.getElementById("eleveValider").onclick = eleveValiderSplat;
+  /* Ordinateur, Enquête et Système (05/10/2026, Gwenaël) : la place de la correction est prise dès
+     l'arrivée de la carte ; avant, le plateau grossissait au moment où la réponse apparaissait (×1,08
+     à 1280 × 720, ×1,3 à 1440 × 900, ×1,44 à 1920 × 1080). Avec le pavé (tablette), le pavé occupe
+     le bas de l'écran pendant la question : la place se prend toujours à la fin de la carte. */
+  if(!pave && enquete && eleveCorrectionPasAPas(card)) eleveSchemaReserverOrdinateur(card);
 }
 
 function eleveValiderSplat(){
@@ -14449,10 +14450,9 @@ function eleveValiderSplat(){
     if(!eleveCarteFautee && !etaitRouge) eleveEtoiles++;
     eleveResultats[eleveIdx] = !eleveCarteFautee && !etaitRouge;
     bouton.disabled = true;
-    /* juste après la 3e erreur : « Voir la réponse » n'a plus lieu d'être (il restait,
-       et trois boutons ne tenaient pas sur la ligne) */
-    const voirR = document.getElementById("eleveVoir");
-    if(voirR) voirR.remove();
+    /* carte finie : plus rien à valider, le Valider s'efface aussi aux mondes 1-2 sur ordinateur
+       (il y restait éteint à côté de « Carte suivante » ; 05/10/2026, Gwenaël) */
+    bouton.hidden = true;
     msg.textContent = eleveMessageJuste(eleveCarteFautee);
     msg.className = "eleveMsg bravo";
     casesE.forEach(c => { const i = c.querySelector(".eleveChamp"); if(i) i.readOnly = true; });
@@ -14467,27 +14467,16 @@ function eleveValiderSplat(){
     suivant.onclick = eleveCarteSuivante;
     bouton.parentNode.appendChild(suivant);
     suivant.focus();
-    eleveRemonterApresErreur(); /* après le focus, qui peut lui aussi faire défiler */
   }else{
     eleveCarteFautee = true;
     eleveEchecs++;
-    /* Enquête et Système (03/10/2026, Gwenaël) : à la 3e erreur, le bouton jaune ouvre directement
-       la correction pas à pas (avant : « Voir la réponse », puis « Voir la correction », qui
-       recachait la réponse qu'on venait de montrer) ; le message parle des deux chemins */
-    const avecCorrection = eleveCorrectionPasAPas(eleveSerie[eleveIdx]);
-    msg.textContent = (avecCorrection && eleveEchecs >= ELEVE_ECHECS_MAX)
-      ? "Pas encore\u2026 corrige ce qui est en rouge, ou regarde la correction."
-      : "Pas encore\u2026 corrige ce qui est en rouge et revalide !";
+    /* 3 essais, puis la réponse (05/10/2026, Gwenaël, mondes 1 à 4) : à la 3e erreur, la réponse
+       s'écrit tout de suite dans les cases et la carte devient rouge (à rejouer à la fin) ; ensuite le
+       même chemin qu'après une réponse juste — « Voir la correction » (Enquête, Système) et « Carte
+       suivante ». Avant : « Valider » restait, avec « Voir la réponse » ou « Voir la correction ». */
+    if(eleveEchecs >= ELEVE_ECHECS_MAX){ eleveMontrerReponse(); return; }
+    msg.textContent = "Pas encore\u2026 corrige ce qui est en rouge et revalide !";
     msg.className = "eleveMsg rate";
-    /* au 3e échec, on propose de voir la réponse — ou la correction (la carte restera rouge) */
-    if(eleveEchecs >= ELEVE_ECHECS_MAX && !document.getElementById("eleveVoir")){
-      const voir = document.createElement("button");
-      voir.type = "button"; voir.id = "eleveVoir"; voir.className = "secondaire";
-      voir.textContent = avecCorrection ? "Voir la correction" : "Voir la r\u00e9ponse";
-      voir.onclick = avecCorrection ? eleveMontrerCorrection : eleveMontrerReponse;
-      bouton.parentNode.appendChild(voir);
-      eleveMontrerAuDessusDuPave(voir);
-    }
   }
 }
 
@@ -14571,7 +14560,8 @@ function eleveProposerSchema(bouton){
 /* Ordinateur (remarque de Claude Code sur la PR #874) : au premier appui sur « Voir le schéma »,
    le plateau grandissait pour le dessin (eleveDessinerSchema) et les boutons descendaient sous
    la souris de l'élève — 31 px à 1280 × 720, 128 à 1440 × 900, 225 à 1920 × 1080. La place du
-   schéma est donc prise dès que « Voir le schéma » apparaît : la hauteur de la plus haute étape,
+   schéma est donc prise d'avance : dès l'arrivée de la carte (05/10/2026, renderEleveSplat), ou,
+   avec le pavé, quand « Voir la correction » apparaît : la hauteur de la plus haute étape,
    plafonnée comme dans eleveDessinerSchema ; les taches dévoilées grandissent avec le plateau.
    Ensuite « Voir le schéma », puis « Étape suivante », ne bougent plus d'un appui à l'autre.
    Le téléphone a sa propre réserve (eleveSchemaTelReserve). */
@@ -15142,43 +15132,15 @@ function eleveCarteSuivante(){
   renderEleveSplat();
 }
 
-/* Téléphone, question de l'Enquête (lot E7) : les phrases lisibles prennent de la
-   place, et la réserve sous la carte ne garde que la 2e ligne du message ; sur les
-   cartes les plus chargées (deux indices et la règle des taches répétées, surtout sur
-   un petit écran), « Voir la réponse » peut naître sous le pavé. La page défile alors juste assez pour le montrer, 12 px au-dessus du pavé.
-   Ailleurs, rien ne bouge (le bouton est déjà visible). */
-function eleveMontrerAuDessusDuPave(bouton){
-  if(!eleveIndicesTel || !bouton || !elevePave || !elevePave.visible()) return;
-  try{
-    const haut = (window.innerHeight || 0) - elevePave.hauteur();
-    const depasse = Math.round(bouton.getBoundingClientRect().bottom - (haut - 12));
-    if(depasse > 0){ window.scrollBy(0, depasse); eleveDefileErreur += depasse; }
-  }catch(_e){ /* on laisse la page comme elle est */ }
-}
-/* La carte est finie (juste, ou réponse montrée) : le pavé se ferme, la place est libre ;
-   la page remonte d'autant qu'elle était descendue — l'élève retrouve la première phrase
-   et le plateau sans rien faire (décision de Gwenaël, 24/09/2026). */
-function eleveRemonterApresErreur(){
-  const d = eleveDefileErreur;
-  eleveDefileErreur = 0;
-  if(d > 0){ try{ window.scrollBy(0, -d); }catch(_e){ /* la page reste */ } }
-}
-
-/* L'élève bloqué voit la réponse : les cases se remplissent en rouge, la
-   pastille devient rouge, et il passe à la carte suivante quand il veut. */
 /* Enquête et Système : la carte a une correction pas à pas (« Voir la correction »). */
 function eleveCorrectionPasAPas(card){
   return !!card && !!eleveInfosTableau(card) && eleveSchemaEtapes(card) > 0;
 }
-/* « Voir la correction » à la 3e erreur (03/10/2026) : la réponse est rangée dans le tableau et la
-   carte devient rouge, comme avec « Voir la réponse », puis la correction démarre aussitôt à sa
-   première étape ; la réponse revient au dernier appui (« Je réponds », « Je vérifie »). */
-function eleveMontrerCorrection(){
-  eleveMontrerReponse(null, true);
-}
-function eleveMontrerReponse(_ev, correction){
+/* 3e erreur (05/10/2026) : la réponse s'écrit dans les cases, en rouge, la carte devient rouge (à
+   rejouer à la fin) ; plus de Valider. L'Enquête et le Système proposent ensuite « Voir la
+   correction », comme après une réponse juste ; partout, « Carte suivante ». */
+function eleveMontrerReponse(){
   const bouton = document.getElementById("eleveValider");
-  const voir = document.getElementById("eleveVoir");
   const msg = document.getElementById("eleveMsg");
   if(!bouton) return;
   document.querySelectorAll("#elevePanel .eleveCase").forEach(c => {
@@ -15189,14 +15151,14 @@ function eleveMontrerReponse(_ev, correction){
     c.classList.add("montre");
   });
   eleveCopiesSynchroniser();
-  msg.textContent = "Voil\u00e0 la r\u00e9ponse. Regarde bien, tu pourras rejouer cette carte \u00e0 la fin.";
+  msg.textContent = "Voil\u00e0 la r\u00e9ponse. Tu rejoueras cette carte \u00e0 la fin.";
   msg.className = "eleveMsg rate";
   eleveResultats[eleveIdx] = "ko";
   eleveSauverEnCours();
   eleveDevoilerTache();
   bouton.disabled = true;
-  if(voir) voir.remove();
-  eleveProposerSchema(bouton); /* Enquête : le schéma aussi après la réponse montrée */
+  bouton.hidden = true; /* plus rien à valider (05/10/2026) */
+  eleveProposerSchema(bouton); /* Enquête, Système : « Voir la correction » aussi après la réponse */
   eleveEnqueteLargeursVraies();
   const suivant = document.createElement("button");
   suivant.type = "button"; suivant.className = "suivant";
@@ -15204,12 +15166,6 @@ function eleveMontrerReponse(_ev, correction){
   suivant.onclick = eleveCarteSuivante;
   bouton.parentNode.appendChild(suivant);
   suivant.focus();
-  eleveRemonterApresErreur(); /* après le focus, qui peut lui aussi faire défiler */
-  if(correction && document.getElementById("eleveSchema")){
-    eleveVoirSchema(); /* la première étape tout de suite */
-    const etape = document.getElementById("eleveSchema");
-    if(etape) etape.focus(); /* Entrée passe à l'étape suivante */
-  }
   const pastilles = document.querySelector("#eleveTeteHaut .elevePastilles");
   if(pastilles) pastilles.outerHTML = elevePastillesHtml();
 }

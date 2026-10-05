@@ -463,7 +463,6 @@
     .eleve-tete > span { white-space: nowrap; }
     @media (max-width: 520px) { .eleve-tete .eleve-mondes .txt { display: none; } .eleve-tete .eleve-mondes { padding: 3px 7px; } .eleve-tete { font-size: 15px; gap: 8px; } .eleve-pastilles { gap: 3px; } .eleve-pastilles .p { width: 9px; height: 9px; } }
     .eleve-scene .eleve-case.eleve-montre .eleve-input { color: #b91c1c; }
-    .eleve-actions .eleve-secondaire { background: #fde68a; color: #78350f; }
     .eleve-actions .eleve-suivant { background: #16a34a; color: white; }
     .eleve-actions a.eleve-lien { font: inherit; font-weight: 900; border-radius: 12px; padding: 12px 22px; min-height: 48px; display: inline-flex; align-items: center; background: #e0e7ff; color: #1e40af; text-decoration: none; }
     .fin-pastilles { display: flex; justify-content: center; margin: 2px 0 8px; }
@@ -587,8 +586,8 @@
     /* Un seul Valider : celui du pavé fait exactement la même action. Deux
        boutons identiques faisaient hésiter l'élève, et le second coûtait sa
        hauteur au plateau. Le bouton reste dans la page (la validation le lit),
-       seulement caché ; « Voir la réponse » et « Carte suivante » prennent sa
-       place quand ils apparaissent. */
+       seulement caché ; « Carte suivante » prend sa place quand la carte est
+       finie. */
     body.eleve-pave #eleveValider { display: none; }
     /* Place serrée (téléphone) : les marges déjà retenues pour les écrans
        courts, afin que le plateau garde de la hauteur au-dessus du pavé. */
@@ -3055,9 +3054,8 @@ function elevePastillesHtml() {
 let elevePave = null, elevePaveZone = 0, elevePaveLargeur = 0, elevePaveSerre = false;
 /* Le plateau rend les pixels qui manquent pour que la carte tienne, mais
    jamais au point qu'on ne puisse plus y poser un jeton. Une réserve reste
-   libre sous la carte : c'est là que viennent une seconde ligne de message
-   (après une validation fausse) ou, à la 3e erreur, le bouton « Voir la
-   réponse », à la place du Valider caché — il doit rester au-dessus du pavé. */
+   libre sous la carte : c'est là que vient une seconde ligne de message
+   (après une validation fausse) — elle doit rester au-dessus du pavé. */
 const ELEVE_PLATEAU_MIN = 150, ELEVE_RESERVE = 26, ELEVE_PAVE_JEU = 10;
 
 /* Téléphone au pavé (tactile ET moins de 600 px de large) : la consigne de
@@ -3355,6 +3353,9 @@ function eleveValider(main) {
         if (!eleveCarteFautee && !etaitRouge) eleveEtoiles++;
         eleveResultats[eleveIdx] = !eleveCarteFautee && !etaitRouge;
         bouton.disabled = true;
+        /* carte finie : plus rien à valider, le Valider s'efface (il restait éteint à côté de
+           « Carte suivante » sur ordinateur ; 05/10/2026, Gwenaël) */
+        bouton.hidden = true;
         msg.textContent = eleveCarteFautee ? 'Juste ! Regarde sous la tache\u2026' : 'Bravo, du premier coup ! Regarde sous la tache\u2026';
         msg.className = 'eleve-msg bravo';
         cases.forEach(c => { const i = c.querySelector('.eleve-input'); if (i) i.readOnly = true; });
@@ -3371,6 +3372,9 @@ function eleveValider(main) {
     } else {
         eleveCarteFautee = true;
         eleveEchecs++;
+        /* 3 essais, puis la réponse (05/10/2026, Gwenaël, mondes 1 à 4) : à la 3e erreur, la réponse
+           s'écrit tout de suite (avant : « Voir la réponse » à côté du Valider) */
+        if (eleveEchecs >= ELEVE_ECHECS_MAX) { eleveMontrerReponse(main); return; }
         const badgeVide = cases.some(c => {
             if (!c.classList.contains('total-badge')) return false;
             const i = c.querySelector('.eleve-input');
@@ -3384,15 +3388,6 @@ function eleveValider(main) {
             msg.textContent = 'Pas encore : corrige le rouge et revalide !';
         }
         msg.className = 'eleve-msg rate';
-        /* au 3e échec, on propose de voir la réponse (la carte restera rouge) */
-        if (eleveEchecs >= ELEVE_ECHECS_MAX && !document.getElementById('eleveVoir')) {
-            const actions = bouton.parentNode;
-            const voir = document.createElement('button');
-            voir.type = 'button'; voir.id = 'eleveVoir'; voir.className = 'eleve-secondaire';
-            voir.textContent = 'Voir la r\u00e9ponse';
-            voir.onclick = () => eleveMontrerReponse(main);
-            actions.appendChild(voir);
-        }
     }
 }
 
@@ -3484,11 +3479,10 @@ function eleveCarteSuivante(main) {
     renderEleve(main);
 }
 
-/* L'élève bloqué voit la réponse : les cases se remplissent en rouge, la
-   pastille devient rouge, et il passe à la carte suivante quand il veut. */
+/* 3e erreur (05/10/2026) : les cases se remplissent en rouge, la pastille devient
+   rouge, et l'élève passe à la carte suivante quand il veut. */
 function eleveMontrerReponse(main) {
     const bouton = document.getElementById('eleveValider');
-    const voir = document.getElementById('eleveVoir');
     const msg = document.getElementById('eleveMsg');
     if (!bouton) return;
     document.querySelectorAll('.eleve-case').forEach(c => {
@@ -3498,15 +3492,15 @@ function eleveMontrerReponse(main) {
         c.classList.add('eleve-montre');
     });
     const item = eleveItemCourant;
-    let texte = 'Voil\u00e0 la r\u00e9ponse. Regarde bien, tu la rejoueras \u00e0 la fin.';
-    if (item && item.mode === 'construct') texte = `Il fallait ${item.visible} jeton${item.visible > 1 ? 's' : ''}. Regarde bien, tu la rejoueras \u00e0 la fin.`;
+    let texte = 'Voil\u00e0 la r\u00e9ponse. Tu rejoueras cette carte \u00e0 la fin.';
+    if (item && item.mode === 'construct') texte = `Il fallait ${item.visible} jeton${item.visible > 1 ? 's' : ''}. Tu rejoueras cette carte \u00e0 la fin.`;
     msg.textContent = texte;
     msg.className = 'eleve-msg rate';
     eleveResultats[eleveIdx] = 'ko';
     eleveSauverEnCours();
     eleveDevoilerTache();
     bouton.disabled = true;
-    if (voir) voir.remove();
+    bouton.hidden = true; /* plus rien à valider (05/10/2026) */
     const suivant = document.createElement('button');
     suivant.type = 'button'; suivant.className = 'eleve-suivant';
     suivant.textContent = 'Carte suivante \u25b6';

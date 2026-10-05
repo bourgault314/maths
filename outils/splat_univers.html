@@ -1429,11 +1429,12 @@ document.addEventListener("keydown",ev=>{
   if((ev.key==="Enter"||ev.key===" ")&&ev.target.matches("main>.monde>.head")){ ev.preventDefault(); ev.target.click(); }
 });
 /* ============ les parties d'un monde : des menus déroulants (vue élève, 04/10/2026) ============
-   Indépendants les uns des autres : en ouvrir un ne ferme pas les autres. À l'arrivée, dans chaque
-   monde, seule la partie EN COURS est ouverte — celle de la première étoile qui reste à gagner ;
-   aucune quand tout est gagné. Le Bonus, fermé par défaut, se rouvre seul si l'élève y était la
-   dernière fois (il l'a ouvert, ou y a lancé une fiche), retenu sur l'appareil comme le monde
-   ouvert. Une adresse qui vise une partie ou une étape (#enq-bonus, #enq-7) ouvre sa partie. */
+   Une seule partie ouverte à la fois dans un monde, comme les mondes (05/10/2026, Gwenaël) : en
+   ouvrir une referme les autres, Bonus compris. À l'arrivée, dans chaque monde : la partie que vise
+   l'adresse (#enq-bonus, #enq-7), sinon le Bonus si l'élève y était la dernière fois (il l'a ouvert,
+   ou y a lancé une fiche — retenu sur l'appareil comme le monde ouvert), sinon la partie EN COURS,
+   celle de la première étoile qui reste à gagner ; aucune quand tout est gagné. La vue prof n'a pas
+   de menus (ses parties sont des intertitres) : rien n'y change. */
 const CLE_BONUS_OUVERT="mathsgo-splat-bonus-ouvert";
 /* une clé par Bonus (celle du monde 3 ne change pas ; le monde 4 : « …-sys ») */
 function bonusDeSection(sec){
@@ -1458,20 +1459,28 @@ function ouvrirParties(){
     if(!volets.length) return;
     const premiere=sec.querySelector(".etapes>li.etape[data-partie]:not(.done):not(.bonus)");
     const enCours=premiere?premiere.dataset.partie:null;
-    volets.forEach(v=>{
-      const cle=v.dataset.volet;
-      let o=cle==="bonus"?bonusRetenu(bonusDeSection(sec)):cle===enCours;
-      if(elCible&&(elCible===v||(sec.contains(elCible)&&elCible.dataset.partie===cle))) o=true;
-      ouvrirPartie(v,o);
-    });
+    const vise=[...volets].find(v=>elCible&&(elCible===v||(sec.contains(elCible)&&elCible.dataset.partie===v.dataset.volet)));
+    const bonus=[...volets].find(v=>v.dataset.volet==="bonus");
+    const ouverte=vise||(bonus&&bonusRetenu(bonusDeSection(sec))?bonus:null)||[...volets].find(v=>v.dataset.volet===enCours)||null;
+    volets.forEach(v=>ouvrirPartie(v,v===ouverte));
   });
 }
 document.addEventListener("click",ev=>{
   const v=ev.target.closest("main .etapes>.volet[data-volet]");
   if(!v) return;
   const o=v.classList.contains("ferme");
+  const sec=v.closest("main>.monde");
+  /* une à la fois : les autres parties du monde se referment (le Bonus refermé est oublié) */
+  if(o) v.parentElement.querySelectorAll(':scope>.volet[data-volet]').forEach(w=>{
+    if(w===v||w.classList.contains("ferme")) return;
+    ouvrirPartie(w,false);
+    if(w.dataset.volet==="bonus") retenirBonus(false,bonusDeSection(sec));
+  });
   ouvrirPartie(v,o);
-  if(v.dataset.volet==="bonus") retenirBonus(o,bonusDeSection(v.closest("main>.monde")));
+  if(v.dataset.volet==="bonus") retenirBonus(o,bonusDeSection(sec));
+  /* la partie du dessus s'est refermée : la page a remonté sous la partie ouverte ; on ramène
+     son en-tête en haut de l'écran, seulement s'il n'y est plus (comme pour les mondes, 27/09) */
+  if(o){ const r=v.getBoundingClientRect(); if(r.top<0||r.top>innerHeight*0.6) window.scrollTo({top:scrollY+r.top-8,behavior:"smooth"}); }
 });
 document.addEventListener("keydown",ev=>{
   if((ev.key==="Enter"||ev.key===" ")&&ev.target.matches("main .etapes>.volet[data-volet]")){ ev.preventDefault(); ev.target.click(); }
