@@ -9,8 +9,9 @@
    - les boutons ne bougent pas d'un appui à l'autre, la page ne défile pas de côté ;
    - rien du schéma ne sort à droite du plateau (téléphone : les lignes de calcul tiennent) ;
    - 03/10/2026 : sur ordinateur, la même échelle à tous les appuis ; « ◀ » visible dès la 2e étape,
-     il ramène une étape en arrière (réponse recachée, boutons à leur place) ; à la 3e erreur,
-     « Voir la correction » ouvre directement la 1re étape et la carte devient rouge ;
+     il ramène une étape en arrière (réponse recachée, boutons à leur place) ;
+   - 05/10/2026 : à la 3e erreur, la réponse s'écrit dans les cases, la carte devient rouge, le
+     Valider s'efface ; « Voir la correction » ouvre ensuite la 1re étape ;
    - téléphone (02/10/2026) : à chaque appui, le petit plateau est dans le bandeau, sous les phrases,
      aucun trait du schéma ne touche le cadre de l'étape,
      à gauche du TOTAL sans le toucher, avec toutes les taches de la carte ; rien sur ordinateur. */
@@ -150,20 +151,30 @@ const etat = () => {
       await page.evaluate(() => document.getElementById("eleveSchema").click());
       const fin = await page.evaluate(etat);
       assert.ok(!fin.cache && fin.valeurs.every((v, i) => v === attendues[i]), `${ici} : la réponse ne revient pas après ◀ puis ▶`);
-      /* trois erreurs : « Voir la correction » ouvre directement la 1re étape, la carte est rouge */
+      /* trois erreurs (05/10/2026) : la réponse s'écrit, la carte est rouge, plus de Valider ;
+         « Voir la correction » ouvre ensuite la 1re étape */
       await page.goto(`${BASE}/outils/splat.html?${requete}&cards=1&unknown=question&eleve=1`);
       await page.waitForSelector("#eleveValider", { state: "attached" });
       for(let k = 0; k < 3; k++) await page.evaluate(() => {
         document.querySelectorAll("#elevePanel .eleveCase[data-attendu]").forEach((c) => {
           const i = c.querySelector("input");
-          if(i){ i.value = String(Number(c.getAttribute("data-attendu")) + 1); i.dispatchEvent(new Event("input", { bubbles: true })); }
+          if(i && !i.readOnly){ i.value = String(Number(c.getAttribute("data-attendu")) + 1); i.dispatchEvent(new Event("input", { bubbles: true })); }
         });
         document.getElementById("eleveValider").click();
       });
-      const voir = await page.evaluate(() => ({ texte: document.getElementById("eleveVoir").textContent, msg: document.getElementById("eleveMsg").textContent }));
-      assert.equal(voir.texte, "Voir la correction", `${ici} : 3e erreur`);
-      assert.equal(voir.msg, "Pas encore\u2026 corrige ce qui est en rouge, ou regarde la correction.", `${ici} : message de la 3e erreur`);
-      await page.evaluate(() => document.getElementById("eleveVoir").click());
+      const trois = await page.evaluate(() => ({
+        msg: document.getElementById("eleveMsg").textContent,
+        valider: document.getElementById("eleveValider").hidden,
+        voir: !!document.getElementById("eleveVoir"),
+        correction: (document.getElementById("eleveSchema") || {}).textContent || null,
+        rouge: eleveResultats[eleveIdx],
+        valeurs: [...document.querySelectorAll("#elevePanel .eleveCase[data-attendu] .eleveChamp")].map((i) => i.value),
+        attendues: [...document.querySelectorAll("#elevePanel .eleveCase[data-attendu] .eleveChamp")].map((i) => i.closest(".eleveCase").getAttribute("data-attendu"))
+      }));
+      assert.equal(trois.msg, "Voil\u00e0 la r\u00e9ponse. Tu rejoueras cette carte \u00e0 la fin.", `${ici} : message de la 3e erreur`);
+      assert.deepEqual([trois.valider, trois.voir, trois.correction, trois.rouge], [true, false, "Voir la correction", "ko"], `${ici} : 3e erreur`);
+      assert.deepEqual(trois.valeurs, trois.attendues, `${ici} : la réponse n'est pas dans les cases`);
+      await page.evaluate(() => document.getElementById("eleveSchema").click());
       const c1 = await page.evaluate(() => ({ etape: eleveSchemaEtape, rouge: eleveResultats[eleveIdx], suivante: !!document.getElementById("eleveSchema") }));
       assert.deepEqual(c1, { etape: 1, rouge: "ko", suivante: true }, `${ici} : « Voir la correction » n'ouvre pas la 1re étape`);
     }

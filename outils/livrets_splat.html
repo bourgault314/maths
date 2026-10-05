@@ -544,8 +544,15 @@ footer a{font-weight:700}
     <h2 class="monde-nom">Monde 3 · SPLAT! Enquête</h2>
     <p class="chapo">Cinq livrets de 8 pages&nbsp;: un indice relie les taches entre elles. En page 2 de chaque livret, un exemple résolu pas à pas.</p>
     <!-- (03/10/2026) cinq livrets : les trois pour tous, « Ces trois livrets suffisent. », puis le
-         deuxième tour en dessous, en deux livrets (l'ordre écrit en clair : demande de Gwenaël,
-         30/09, « pour que les gens ne se mélangent pas ») -->
+         deuxième tour, en deux livrets (l'ordre écrit en clair : demande de Gwenaël, 30/09, « pour
+         que les gens ne se mélangent pas »). Deux boutons au-dessus, comme aux mondes 1, 2 et 5
+         (05/10/2026, Gwenaël) : « Pour tous » à l'arrivée. Sans JavaScript, les deux rangées
+         restent affichées l'une sous l'autre, avec leurs intertitres. -->
+    <div class="series-choix" role="group" aria-label="Choisir la série de livrets">
+      <button type="button" data-serie="tous" aria-pressed="true">Pour tous</button>
+      <button type="button" data-serie="tour2" aria-pressed="false">Deuxième tour</button>
+    </div>
+    <div class="serie" data-serie="tous">
     <h3 class="partie">Pour tous <span>de plus, de moins · fois plus, fois moins · taches de même couleur, sans total</span></h3>
     <div class="grille">
 
@@ -623,6 +630,8 @@ footer a{font-weight:700}
 
     </div>
     <p class="ordre">Ces trois livrets suffisent.</p>
+    </div>
+    <div class="serie" data-serie="tour2">
     <h3 class="partie">Deuxième tour <span>plus dur, en bonus</span></h3>
     <div class="grille">
 
@@ -674,6 +683,7 @@ footer a{font-weight:700}
         </div>
       </article>
 
+    </div>
     </div>
     <p class="aparte">Sous chaque carte, de la place pour que l’élève dessine le schéma en barres. Le QR code de chaque fiche rejoue les mêmes cartes en ligne.</p>
   </section>
@@ -963,8 +973,9 @@ footer a{font-weight:700}
 </footer>
 
 <script>
-/* Mondes 1 et 2 : les deux boutons montrent une série de livrets à la fois (choix B, 26/09/2026 au soir ;
-   monde 2, « Avec ? » / « Avec une lettre », relecture du monde 2, 26/09/2026) */
+/* Mondes 1, 2, 3 et 5 : les deux boutons montrent une série de livrets à la fois (choix B, 26/09/2026 au soir ;
+   monde 2, « Avec ? » / « Avec une lettre », relecture du monde 2, 26/09/2026 ; monde 3, « Pour tous » /
+   « Deuxième tour », 05/10/2026) */
 (function(){
   Array.prototype.forEach.call(document.querySelectorAll(".series-choix"), function(groupe){
     var panneau = groupe.parentNode;
@@ -980,7 +991,7 @@ footer a{font-weight:700}
       if(b) montre(b.dataset.serie);
     });
     // la série du premier bouton (monde 1 : « Je complète le schéma » ; monde 2 : « Avec ? » ;
-    // monde 5 : « Le schéma en barres »)
+    // monde 3 : « Pour tous » ; monde 5 : « Le schéma en barres »)
     montre(groupe.querySelector("button[data-serie]").dataset.serie);
   });
 })();

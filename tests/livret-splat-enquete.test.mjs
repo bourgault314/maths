@@ -525,7 +525,14 @@ test("page des livrets : l'onglet du monde 3 — les trois livrets pour tous, «
   assert.ok(p.includes(`role="tabpanel" aria-labelledby="onglet-3" hidden>`));
   assert.ok(p.includes("<h2 class=\"monde-nom\">Monde 3 · SPLAT! Enquête</h2>"));
   assert.match(p, /<p class="chapo">Cinq livrets de 8 pages/);
-  assert.match(p, /<\/div>\n    <p class="ordre">Ces trois livrets suffisent\.<\/p>\n    <h3 class="partie">Deuxième tour/);
+  assert.match(p, /<\/div>\n    <p class="ordre">Ces trois livrets suffisent\.<\/p>\n    <\/div>\n    <div class="serie" data-serie="tour2">\n    <h3 class="partie">Deuxième tour/);
+  // deux boutons, comme aux mondes 1, 2 et 5 (05/10/2026) : « Pour tous » d'abord ; sans JavaScript,
+  // les deux rangées restent l'une sous l'autre avec leurs intertitres
+  assert.match(p, /<div class="series-choix" role="group"[^>]*>\s*<button type="button" data-serie="tous" aria-pressed="true">Pour tous<\/button>\s*<button type="button" data-serie="tour2" aria-pressed="false">Deuxième tour<\/button>\s*<\/div>\s*<div class="serie" data-serie="tous">\s*<h3 class="partie">Pour tous/);
+  const tous = p.slice(p.indexOf('<div class="serie" data-serie="tous">'), p.indexOf('<div class="serie" data-serie="tour2">'));
+  const tour2 = p.slice(p.indexOf('<div class="serie" data-serie="tour2">'), p.indexOf('<p class="aparte">'));
+  assert.equal(articles(tous).length, 3, "trois livrets pour tous");
+  assert.equal(articles(tour2).length, 2, "deux livrets du deuxième tour");
   assert.deepEqual([...p.matchAll(/<h3 class="partie">([^<]+)</g)].map((m) => m[1].trim()), ["Pour tous", "Deuxième tour"]);
   const art = articles(p);
   assert.equal(art.length, 5, "cinq livrets");

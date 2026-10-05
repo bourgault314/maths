@@ -123,16 +123,26 @@ test("le compteur du Bonus est à part : « ✨ x / 10 », hors du total et de �
   assert.equal(MONDE_SYSTEME.etapes.length, 4);
 });
 
-test("à l'arrivée : la partie en cours ouverte, le Bonus seulement si l'élève y était ; une adresse peut viser une partie", () => {
+test("à l'arrivée, UNE partie ouverte par monde (05/10/2026) : celle que vise l'adresse, sinon le Bonus si l'élève y était, sinon la partie en cours", () => {
   const f = bloc("function ouvrirParties(){", "document.addEventListener(\"click\",ev=>{\n  const v=");
   assert.match(f, /const premiere=sec\.querySelector\("\.etapes>li\.etape\[data-partie\]:not\(\.done\):not\(\.bonus\)"\);/);
-  assert.match(f, /let o=cle==="bonus"\?bonusRetenu\(bonusDeSection\(sec\)\):cle===enCours;/);
-  assert.match(f, /if\(elCible&&\(elCible===v\|\|\(sec\.contains\(elCible\)&&elCible\.dataset\.partie===cle\)\)\) o=true;/);
+  assert.match(f, /const vise=\[\.\.\.volets\]\.find\(v=>elCible&&\(elCible===v\|\|\(sec\.contains\(elCible\)&&elCible\.dataset\.partie===v\.dataset\.volet\)\)\);/);
+  assert.match(f, /const ouverte=vise\|\|\(bonus&&bonusRetenu\(bonusDeSection\(sec\)\)\?bonus:null\)\|\|\[\.\.\.volets\]\.find\(v=>v\.dataset\.volet===enCours\)\|\|null;/);
+  assert.match(f, /volets\.forEach\(v=>ouvrirPartie\(v,v===ouverte\)\);/, "une seule ouverte");
   assert.match(univers, /ouvrirMonde\(mondeEnCours\(majAffichage\(\)\)\);\nif\(!PROF\) ouvrirParties\(\);/);
   // ouvrir ou fermer le Bonus, ou y lancer une fiche, se retient sur l'appareil
-  assert.match(univers, /if\(v\.dataset\.volet==="bonus"\) retenirBonus\(o,bonusDeSection\(v\.closest\("main>\.monde"\)\)\);/);
+  assert.match(univers, /if\(v\.dataset\.volet==="bonus"\) retenirBonus\(o,bonusDeSection\(sec\)\);/);
   assert.match(univers, /if\(a\.closest\("li\.etape\.bonus"\)\) retenirBonus\(true,bonusDeSection\(sec\)\);/);
   assert.match(univers, /const CLE_BONUS_OUVERT="mathsgo-splat-bonus-ouvert";/);
+});
+
+test("une partie à la fois (05/10/2026) : en ouvrir une referme les autres du même monde, Bonus compris, et ramène son en-tête à l'écran", () => {
+  const f = bloc("document.addEventListener(\"click\",ev=>{\n  const v=", "document.addEventListener(\"keydown\"");
+  assert.match(f, /if\(o\) v\.parentElement\.querySelectorAll\(':scope>\.volet\[data-volet\]'\)\.forEach\(w=>\{\n    if\(w===v\|\|w\.classList\.contains\("ferme"\)\) return;\n    ouvrirPartie\(w,false\);\n    if\(w\.dataset\.volet==="bonus"\) retenirBonus\(false,bonusDeSection\(sec\)\);/);
+  assert.ok(f.indexOf("ouvrirPartie(w,false)") < f.indexOf("ouvrirPartie(v,o)"), "les autres d'abord, puis la partie ouverte");
+  assert.match(f, /if\(o\)\{ const r=v\.getBoundingClientRect\(\); if\(r\.top<0\|\|r\.top>innerHeight\*0\.6\) window\.scrollTo\(\{top:scrollY\+r\.top-8,behavior:"smooth"\}\); \}/);
+  // la vue prof n'a pas de menus : ses parties restent des intertitres (voletProfHtml, sans data-volet)
+  assert.doesNotMatch(bloc("function voletProfHtml(", "\n}"), /data-volet/);
 });
 
 test("?apres=enq11d (ou sys25d) : la fiche bonus suivante du même monde ; jamais une étape", () => {

@@ -5,9 +5,8 @@
    - le TOTAL passe à droite du plateau, à 10 px (jamais collé) ;
    - le dessin est cadré sur les taches seules et le plateau prend la hauteur de son
      dessin (plus de bande blanche au-dessus du TOTAL) ;
-   - la réserve sous la carte ne garde que la 2e ligne du message ; « Voir la réponse »
-     est montré, s'il naît sous le pavé, en faisant défiler la page ;
-   - « Voir la réponse » s'efface quand la carte devient juste.
+   - la réserve sous la carte ne garde que la 2e ligne du message (à la 3e erreur, la réponse
+     s'écrit et le pavé s'efface : plus de bouton « Voir la réponse » sous le pavé, 05/10/2026).
    Ordinateur, tablette, projection et impression : rien ne change (preuve au pixel à part).
    Ces tests exécutent les fonctions de outils/splat.html telles quelles. */
 import assert from "node:assert/strict";
@@ -183,53 +182,13 @@ test("au pavé : réserve de 22 px et plancher de 100 px pour l'Enquête au tél
   assert.equal(cas(false, 900), "150px");
 });
 
-test("3e erreur : « Voir la réponse » né sous le pavé est montré en faisant défiler la page, sinon rien ne bouge", () => {
-  const essai = (tel, basBouton) => {
-    const defile = [];
-    new Function("window", "tel", "basBouton", `
-      let eleveIndicesTel = tel, eleveDefileErreur = 0;
-      const elevePave = { visible: () => true, hauteur: () => 180 };
-      ${fn("eleveMontrerAuDessusDuPave")}
-      eleveMontrerAuDessusDuPave({ getBoundingClientRect: () => ({ bottom: basBouton }) });
-    `)({ innerHeight: 664, scrollBy: (x, y) => defile.push(y) }, tel, basBouton);
-    return defile;
-  };
-  // pavé à 484 (664 − 180) ; bouton attendu à 12 px au-dessus, donc bas ≤ 472
-  assert.deepEqual(essai(true, 520), [48]);
-  assert.deepEqual(essai(true, 460), [], "déjà visible : la page ne bouge pas");
-  assert.deepEqual(essai(false, 520), [], "hors Enquête au téléphone : la page ne bouge pas");
-  assert.match(fn("eleveValiderSplat"), /bouton\.parentNode\.appendChild\(voir\);\n\s+eleveMontrerAuDessusDuPave\(voir\);/);
-});
-
-test("carte finie (juste, ou réponse montrée) : la page remonte d'autant qu'elle était descendue, une seule fois", () => {
-  const defile = [];
-  const o = new Function("window", `
-    let eleveIndicesTel = true, eleveDefileErreur = 0;
-    const elevePave = { visible: () => true, hauteur: () => 180 };
-    ${fn("eleveMontrerAuDessusDuPave")}
-    ${fn("eleveRemonterApresErreur")}
-    return { montrer: (bas) => eleveMontrerAuDessusDuPave({ getBoundingClientRect: () => ({ bottom: bas }) }), remonter: eleveRemonterApresErreur };
-  `)({ innerHeight: 664, scrollBy: (x, y) => defile.push(y) });
-  o.montrer(517);
-  o.remonter();
-  assert.deepEqual(defile, [45, -45]);
-  o.remonter();
-  assert.deepEqual(defile, [45, -45], "rien à rendre : la page ne bouge plus");
-  // sans défilement à la 3e erreur, la carte finie ne fait rien bouger
-  o.montrer(400); o.remonter();
-  assert.deepEqual(defile, [45, -45]);
-  // appelée après le focus de « Carte suivante », dans les deux fins de carte ; remise à zéro à chaque carte
-  const valider = fn("eleveValiderSplat");
-  const juste = valider.slice(valider.indexOf("if(toutJuste){"), valider.indexOf("}else{"));
-  assert.match(juste, /suivant\.focus\(\);\n\s+eleveRemonterApresErreur\(\);/);
-  assert.match(fn("eleveMontrerReponse"), /suivant\.focus\(\);\n\s+eleveRemonterApresErreur\(\);/);
-  assert.match(fn("renderEleveSplat"), /eleveSchemaTelephone\(\); eleveDefileErreur = 0;/);
-});
-
-test("une carte juste après la 3e erreur : « Voir la réponse » s'efface", () => {
-  const src = fn("eleveValiderSplat");
-  const juste = src.slice(src.indexOf("if(toutJuste){"), src.indexOf("}else{"));
-  assert.match(juste, /const voirR = document\.getElementById\("eleveVoir"\);\s*\n\s*if\(voirR\) voirR\.remove\(\);/);
+test("3e erreur (05/10/2026) : la réponse s'écrit et le pavé s'efface — plus de bouton à faire défiler au-dessus du pavé", () => {
+  const v = fn("eleveValiderSplat");
+  assert.match(v, /if\(eleveEchecs >= ELEVE_ECHECS_MAX\)\{ eleveMontrerReponse\(\); return; \}/);
+  assert.doesNotMatch(html, /eleveMontrerAuDessusDuPave|eleveRemonterApresErreur|eleveDefileErreur/, "le défilement d'avant n'a plus lieu d'être");
+  // le pavé suit le Valider : éteint (carte finie), il s'efface
+  assert.match(fn("elevePaveSynchroniser"), /if\(carte && bouton && !bouton\.disabled\) elevePave\.afficher\(\);\n  else elevePave\.masquer\(\);/);
+  assert.match(fn("eleveMontrerReponse"), /bouton\.disabled = true;/);
 });
 
 test("le schéma (lot E6) remplace les phrases du haut par son bandeau TOTAL + phrases", () => {
