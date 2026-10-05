@@ -705,6 +705,14 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
       curseurAuBout();
     }
   });
+  // L'iPhone déplace aussi le curseur sans clic ni touche : appui long (la
+  // loupe), barre d'espace glissée, double-tap qui sélectionne tout le code.
+  // Le navigateur ne le dit que par « selectionchange » : on le ramène au bout,
+  // sinon la lettre suivante entrerait au début ou remplacerait le code.
+  document.addEventListener("selectionchange", () => {
+    const champ = $("code");
+    if (document.activeElement === champ && champ.selectionStart !== champ.value.length) curseurAuBout();
+  });
 
   $("form-code").addEventListener("submit", event => {
     event.preventDefault();

@@ -47,13 +47,14 @@ test("« Entrer » : toute la largeur au téléphone, centré sur ordinateur", (
 });
 
 // Ce bloc EXÉCUTE le code de la page (nettoyer, dessinerCases, curseurAuBout
-// et les écouteurs de la case), sur une fausse case qui se comporte comme un
-// navigateur : une touche s'insère à la position du curseur, puis « input ».
+// et les écouteurs de la case et du document), sur une fausse case qui se
+// comporte comme un navigateur : une touche remplace la sélection (ou
+// s'insère à la position du curseur), puis « input ».
 function monterCases() {
   const debut = page.indexOf("  function nettoyer(brut) {");
   const finAides = page.indexOf("  function afficherErreur(message) {");
   const debutEcoute = page.indexOf('  $("code").addEventListener("input"');
-  const finEcoute = page.indexOf("\n  });", page.indexOf('$("code").addEventListener("keydown"')) + "\n  });".length;
+  const finEcoute = page.indexOf("\n  });", page.indexOf('document.addEventListener("selectionchange"')) + "\n  });".length;
   assert.ok(debut > 0 && finAides > debut && debutEcoute > finAides && finEcoute > debutEcoute);
   const source = page.slice(debut, finAides) + page.slice(debutEcoute, finEcoute)
     + "\nreturn {dessinerCases};";
@@ -65,19 +66,22 @@ function monterCases() {
   const carres = Array.from({length: 6}, () => ({textContent: "", classList: classes()}));
   const conteneur = {classList: classes(), querySelectorAll: () => carres};
   const champ = {
-    value: "", selectionStart: 0, ecouteurs: {},
+    value: "", selectionStart: 0, selectionEnd: 0, ecouteurs: {},
     addEventListener(type, fn) { this.ecouteurs[type] = fn; },
-    setSelectionRange(a) { this.selectionStart = a; }
+    setSelectionRange(a, b = a) { this.selectionStart = a; this.selectionEnd = b; }
   };
+  const documentFactice = {activeElement: champ, ecouteurs: {},
+                           addEventListener(type, fn) { this.ecouteurs[type] = fn; }};
   const $ = id => ({code: champ, cases: conteneur})[id];
-  const fonctions = new Function("$", "setTimeout", source)($, fn => fn());
+  const fonctions = new Function("$", "setTimeout", "document", source)($, fn => fn(), documentFactice);
   const evenement = () => ({target: champ, defaultPrevented: false, preventDefault() { this.defaultPrevented = true; }});
   const taper = texte => {
     for (const lettre of texte) {
-      if (champ.value.length >= 6) continue; // maxlength="6"
       const i = champ.selectionStart;
-      champ.value = champ.value.slice(0, i) + lettre + champ.value.slice(i);
-      champ.selectionStart = i + 1;
+      const j = Math.max(champ.selectionEnd, i);
+      if (champ.value.length - (j - i) >= 6) continue; // maxlength="6"
+      champ.value = champ.value.slice(0, i) + lettre + champ.value.slice(j);
+      champ.setSelectionRange(i + 1);
       champ.ecouteurs.input(evenement());
     }
   };
@@ -85,12 +89,12 @@ function monterCases() {
     const i = champ.selectionStart;
     if (i === 0) return;
     champ.value = champ.value.slice(0, i - 1) + champ.value.slice(i);
-    champ.selectionStart = i - 1;
+    champ.setSelectionRange(i - 1);
     champ.ecouteurs.input(evenement());
   };
   const lire = () => carres.map(c => c.textContent || "·").join("");
   const active = () => carres.findIndex(c => c.classList.ens.has("active"));
-  return {champ, conteneur, carres, taper, effacer, lire, active, evenement, ...fonctions};
+  return {champ, conteneur, carres, taper, effacer, lire, active, evenement, document: documentFactice, ...fonctions};
 }
 
 test("six cases : chaque caractère dans sa case, en majuscule, la suivante entourée", () => {
@@ -135,6 +139,27 @@ test("toucher la 1re case ne glisse pas une lettre au milieu : on écrit et on e
   lettre.preventDefault = function () { this.defaultPrevented = true; };
   c.champ.ecouteurs.keydown(lettre);
   assert.ok(!lettre.defaultPrevented, "une lettre passe");
+});
+
+// Relecture du 05/10/2026 : sur l'iPhone, l'appui long (la loupe), la barre
+// d'espace glissée et le double-tap déplacent le curseur ou sélectionnent le
+// code SANS clic ni touche. Seul « selectionchange » le signale.
+test("le curseur déplacé sans clic ni touche (loupe, double-tap de l'iPhone) revient au bout", () => {
+  const c = monterCases();
+  c.champ.ecouteurs.focus();
+  c.taper("K7M");
+  c.champ.setSelectionRange(0);                   // la loupe pose le curseur au début
+  c.document.ecouteurs.selectionchange();
+  c.taper("4");
+  assert.equal(c.champ.value, "K7M4", "et pas « 4K7M »");
+  c.champ.setSelectionRange(0, 4);                // double-tap : tout le code est sélectionné
+  c.document.ecouteurs.selectionchange();
+  c.taper("Z");
+  assert.equal(c.champ.value, "K7M4Z", "la lettre suivante ne remplace pas le code");
+  c.document.activeElement = null;                // une sélection ailleurs dans la page
+  c.champ.setSelectionRange(1);
+  c.document.ecouteurs.selectionchange();
+  assert.equal(c.champ.selectionStart, 1, "n'est pas touchée");
 });
 
 test("un code remis dans la case par la page (serveur muet) se redessine dans les cases", () => {
