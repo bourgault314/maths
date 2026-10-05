@@ -13,7 +13,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
 <!-- La liste des mondes « en préparation » et la clé de Gwenaël (?essai=1) : en tête de assets/js/splat-etapes.js -->
-<script src="../assets/js/splat-etapes.js?v=20261004-2"></script>
+<script src="../assets/js/splat-etapes.js?v=20261005-1"></script>
 <style>
 :root{
   --page:#f6f8fb; --paper:#ffffff; --ink:#10294a; --muted:#5c6c82; --line:#d9e2ec;
@@ -675,7 +675,7 @@ const SYS_TOUR2=[
   q:"mode=D&geste=DOUBLE&fois=3&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=1"},
  {code:"27d",t:"Avec des jetons visibles",n:"Les gestes du livret 1, avec des jetons à retirer aussi.",
   q:"mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=1373"},
- {code:"28d",t:"Dans le désordre",n:"Les plateaux mélangés : trouver d'abord le grand.",
+ {code:"28d",t:"Dans le désordre",n:"Plateaux mélangés ; carte 3 : doubler un plateau plus gros.",
   q:"mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS&indice=12&ordre=MELANGE&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=5673"}
 ];
 const MONDE_SYSTEME={cls:"msys",idp:"sys",actif:true,nom:"SPLAT! Système",
@@ -969,12 +969,12 @@ const NOTES_MONDE = [
  "<tr><td>pareil, plusieurs taches de chaque couleur</td><td>Enquête, fiches 20 et 21</td><td>6e</td></tr>"+
  "<tr><td>A = k × B <b>et</b> A = B + d, sans total</td><td>Enquête, fiches 22 et 23</td><td>CM2-6e</td></tr>"+
  "<tr><td>une partie connue (3 noires = 30) et le tout</td><td>Système, fiche 25</td><td>CM2-6e (la famille d'Inconnues en barres)</td></tr>"+
- "<tr><td>deux pesées, l'une contenue dans l'autre (2N + 1V = 25 ; 2N + 4V = 40)</td><td>Système, fiches 25, 26 et 25d</td><td>CM2-6e — l'exemple «\u00a0ciseaux et crayons\u00a0» du programme</td></tr>"+
- "<tr><td>il faut doubler (ou tripler) une pesée avant de comparer</td><td>Système, fiches 27 et 26d</td><td>cycle 4</td></tr>"+
+ "<tr><td>deux pesées, l'une contenue dans l'autre (2N + 1V = 25 ; 2N + 4V = 40)</td><td>Système, fiches 25, 26 et 25d</td><td>CM1-6e — l'exemple «\u00a0ciseaux et stylos\u00a0» du programme</td></tr>"+
+ "<tr><td>il faut doubler (ou tripler) une pesée avant de comparer</td><td>Système, fiches 27, 26d et 28d</td><td>fin de cycle 3 («\u00a0lapins et poules\u00a0», Eduscol), cycle 4</td></tr>"+
  "<tr><td>deux pesées en miroir, on additionne</td><td>Système, fiche 28</td><td>cycle 4 (défi)</td></tr>"+
- "<tr><td>trois sommes de paires, sans total</td><td>Système, fiche 28 (dernière carte)</td><td>cycle 3 défi / cycle 4</td></tr>"+
+ "<tr><td>trois paires (N + V ; V + O ; N + O)</td><td>Système, fiches 28 et 28d (dernière carte)</td><td>cycle 3 défi / cycle 4</td></tr>"+
  "<tr><td>l'inconnue dans les deux membres (2x + 4 = 3x + 3)</td><td>mondes 5 et 6</td><td>4e-3e</td></tr>"+
- "<tr><td>systèmes quelconques (3N + 2V ; 2N + 3V)</td><td><b>volontairement hors SPLAT!</b></td><td>lycée</td></tr></table>",
+ "<tr><td>systèmes quelconques (2N + 3V ; 3N + 5V)</td><td><b>volontairement hors SPLAT!</b></td><td>lycée</td></tr></table>",
  "Deux plateaux, la même quantité : l'élève dessine le schéma ou écrit l'équation. Une nouveauté à la fois, tout mélangé à la fin.",
  "Les relatifs : le jeton rouge est négatif, la tache «\u00a0opposé\u00a0» cache −𝑥. L'élève écrit l'équation. Après le monde 5."
 ];

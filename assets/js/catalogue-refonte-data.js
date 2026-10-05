@@ -6528,7 +6528,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-livrets-splat",
       "title": "Les livrets SPLAT! — les fiches de chaque monde à plier",
-      "description": "Les livrets de l’univers SPLAT!, du monde 1 au monde 6, sur une seule page. Pour chaque livret : le PDF de 8 pages, le livret à plier et le corrigé. Chaque fiche porte un QR code vers le jeu en ligne, avec les mêmes cartes. À imprimer en recto-verso sur A3 (ou A4), à plier et agrafer.",
+      "description": "Les livrets de l’univers SPLAT!, du monde 1 au monde 6, sur une seule page. Pour chaque livret : le PDF, le livret à plier et le corrigé. Chaque fiche porte un QR code vers le jeu en ligne, avec les mêmes cartes. À imprimer en recto-verso sur A3 (ou A4), à plier et agrafer.",
       "path": "outils/livrets_splat.html",
       "domains": [
         "algebre"

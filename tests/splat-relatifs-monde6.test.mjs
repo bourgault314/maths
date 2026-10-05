@@ -179,7 +179,7 @@ test("R2 : les huit PDF — 8 pages A4, 4 feuilles A3 imposées, légers ; la pa
   // le monde 6 est public depuis le 27/09/2026 (Gwenaël : « on peut le mettre en ligne directement »)
   assert.match(pageLivrets, /<section class="panneau" data-m="6" id="monde-6" role="tabpanel"/);
   assert.match(pageLivrets, /<a href="#monde-6" data-m="6" id="onglet-6" role="tab" aria-controls="monde-6" aria-selected="false">/);
-  assert.match(etapes, /const MONDES_EN_PREPARATION = \[4\];/, "le monde 6 n'est plus en préparation");
+  assert.match(etapes, /const MONDES_EN_PREPARATION = \[\];/, "le monde 6 n'est plus en préparation (et le 4 non plus depuis le 05/10/2026)");
   // au dos, le seul logo maths&go, sans IREMI, sans Unité apprenante, sans crédit à Claire
   const dos = lire(SRC + "dos.html");
   assert.match(dos, /<img class="mg" src="\/assets\/img\/logos\/mathsgo\/logo-print\.png"/);
