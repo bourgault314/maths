@@ -77,6 +77,45 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     #form-code .actions { justify-content: center; }
     #form-code .actions button { flex: 0 0 auto; min-width: 240px; }
   }
+  /* Le premier écran (05/10/2026, Gwenaël : « c'est le premier écran que
+     voient les élèves, on peut leur faire un beau premier écran ») : sur
+     l'écran du code seulement, plus de barre d'en-tête ; le logo, grand,
+     centré, le titre et la carte centrés dessous. La carte reste en HAUT de
+     l'écran : sur un téléphone, le clavier cache toute la moitié du bas. Une
+     fois l'élève entré, son espace retrouve l'en-tête (sa classe, « Se
+     déconnecter »). */
+  body.sur-code header { display: none; }
+  #ecran-code { text-align: center; padding-top: 10px; }
+  .logo-accueil { display: block; width: 180px; height: auto; margin: 4px auto 16px; }
+  #ecran-code h1 { font-size: 2.15rem; }
+  #ecran-code .sous-titre { margin-bottom: 22px; }
+  #ecran-code .carte { max-width: 430px; margin: 0 auto; padding: 22px 18px; text-align: left; }
+  /* Le code en six cases (05/10/2026) : l'élève voit qu'il en faut six et
+     combien il en reste, et compare case par case avec sa bandelette. Une
+     seule vraie case de saisie, invisible, posée sur les six cases dessinées :
+     le clavier, effacer, la touche « OK » restent ceux d'une case normale.
+     On écrit toujours au bout et on efface depuis le bout (voir
+     dessinerCases) : toucher la 1re case ne doit pas glisser une lettre au
+     milieu du code. */
+  .pour-lecteur { position: absolute; width: 1px; height: 1px; overflow: hidden;
+                  clip: rect(0 0 0 0); white-space: nowrap; }
+  .cases { position: relative; display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;
+           max-width: 372px; margin: 0 auto; }
+  .case { height: 62px; display: grid; place-items: center; background: #fff;
+          border: 2px solid var(--line); border-radius: 12px;
+          font-size: 1.75rem; font-weight: 800; line-height: 1; color: var(--blue-dark); }
+  .case.pleine { border-color: #b8c7da; background: #f5f8fc; }
+  .cases.actif .case.active { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(11,103,178,.22); }
+  .cases.actif .case.active:empty::after { content: ""; width: 2px; height: 28px; background: var(--blue);
+                                            animation: clignote 1s steps(1) infinite; }
+  @keyframes clignote { 50% { opacity: 0; } }
+  .cases input[type=text] { position: absolute; inset: 0; width: 100%; height: 100%; min-height: 0;
+                            padding: 0; border: 0; opacity: 0; font-size: 16px; letter-spacing: 0;
+                            color: transparent; caret-color: transparent; }
+  @media (max-width: 360px) {
+    .cases { gap: 5px; }
+    .case { height: 56px; font-size: 1.45rem; }
+  }
   .erreur { margin-top: 12px; padding: 10px 12px; border-radius: 10px;
             background: #fdecec; color: #a3261f; font-weight: 600; }
   .classe { padding: 4px 11px; border-radius: 999px; background: #e6f6f5;
@@ -162,7 +201,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   [hidden] { display: none !important; }
 </style>
 </head>
-<body>
+<body class="sur-code">
 <div class="barre"></div>
 <header>
   <img src="mathsgo-logo.png" alt="maths&go">
@@ -174,6 +213,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
 
 <main>
   <section id="ecran-code">
+    <img class="logo-accueil" src="mathsgo-logo.png" alt="maths&amp;go" width="180" height="84">
     <h1>Mon espace</h1>
     <p class="sous-titre">Entre le code que ton professeur t’a donné.</p>
     <div class="carte">
@@ -181,18 +221,20 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
            s'il ne s'exécute pas, le navigateur enverrait le formulaire lui-même —
            et en GET le code de l'élève se retrouverait dans la barre d'adresse. -->
       <form id="form-code" method="post" autocomplete="off">
-        <label for="code">Ton code</label>
-        <input id="code" name="code" type="text" inputmode="latin" maxlength="6"
-               spellcheck="false" autocapitalize="characters" placeholder="••••••" required>
+        <label for="code" class="pour-lecteur">Ton code, 6 caractères</label>
+        <div class="cases" id="cases">
+          <input id="code" name="code" type="text" inputmode="latin" maxlength="6"
+                 spellcheck="false" autocapitalize="characters" autocorrect="off" required>
+          <span class="case" aria-hidden="true"></span><span class="case" aria-hidden="true"></span><span class="case" aria-hidden="true"></span><span class="case" aria-hidden="true"></span><span class="case" aria-hidden="true"></span><span class="case" aria-hidden="true"></span>
+        </div>
         <div class="actions">
           <button type="submit" id="valider">Entrer</button>
         </div>
       </form>
       <p class="erreur" id="erreur" hidden></p>
     </div>
-    <!-- 04/10/2026 (Gwenaël) : la phrase d'avant était fausse — un code n'a ni
-         O, ni I, ni 0, ni 1 (lib/codes.php), il n'y a donc jamais à hésiter. -->
-    <p class="aide">Ton code a 6 caractères&nbsp;: des lettres et des chiffres.</p>
+    <!-- 05/10/2026 : plus de phrase sous la carte — les six cases disent qu'il
+         faut six caractères. -->
   </section>
 
   <section id="ecran-espace" hidden>
@@ -235,6 +277,25 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   }
   function nettoyer(brut) {
     return (brut || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+  }
+  // Les six cases dessinées recopient la vraie case de saisie. La case
+  // suivante à remplir est entourée de bleu ; quand les six sont pleines,
+  // aucune ne l'est (le geste suivant, c'est « Entrer »).
+  function dessinerCases() {
+    const valeur = nettoyer($("code").value);
+    $("cases").querySelectorAll(".case").forEach((carre, i) => {
+      carre.textContent = valeur[i] || "";
+      carre.classList.toggle("pleine", i < valeur.length);
+      carre.classList.toggle("active", i === valeur.length);
+    });
+  }
+  // Toujours au bout : la case de saisie est invisible, un doigt posé sur la
+  // 1re case y mettrait le curseur au début et la lettre suivante entrerait
+  // au milieu du code.
+  function curseurAuBout() {
+    const champ = $("code");
+    const fin = champ.value.length;
+    try { champ.setSelectionRange(fin, fin); } catch (_) {}
   }
   function afficherErreur(message) {
     $("erreur").textContent = message;
@@ -583,6 +644,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
 
     $("ecran-code").hidden = true;
     $("ecran-espace").hidden = false;
+    document.body.classList.remove("sur-code");
 
     // La grille est à l'écran, entière : ce qui suit ne peut plus l'empêcher
     // d'exister. Volontairement sans await — rien n'attend la jauge.
@@ -607,7 +669,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
         // panne ou trop sollicité ne doit pas faire oublier un bon code.
         if (reponse.status === 404) ecrireCode("");
         if (silencieux && reponse.status === 404) return;
-        if (silencieux) $("code").value = code;
+        if (silencieux) { $("code").value = code; dessinerCases(); }
         afficherErreur(reponse.status === 404
           ? "Ce code n’existe pas. Vérifie-le, ou demande à ton professeur."
           : (donnees && donnees.erreur) || "Le serveur ne répond pas. Réessaie dans un instant.");
@@ -616,15 +678,32 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
       ecrireCode(code);
       afficherEspace(donnees, code);
     } catch (_) {
-      if (silencieux) $("code").value = code;
+      if (silencieux) { $("code").value = code; dessinerCases(); }
       afficherErreur("Pas de connexion. Réessaie dans un instant.");
     }
   }
 
   $("code").addEventListener("input", event => {
-    const position = event.target.selectionStart;
     event.target.value = nettoyer(event.target.value);
-    event.target.setSelectionRange(position, position);
+    curseurAuBout();
+    dessinerCases();
+  });
+  $("code").addEventListener("focus", () => {
+    $("cases").classList.add("actif");
+    dessinerCases();
+    curseurAuBout();
+    // iOS place le curseur APRÈS l'événement « focus » : on repasse derrière.
+    setTimeout(curseurAuBout, 0);
+  });
+  $("code").addEventListener("blur", () => $("cases").classList.remove("actif"));
+  $("code").addEventListener("click", curseurAuBout);
+  // Les flèches et « début » déplaceraient le curseur dans un code qu'on ne
+  // voit pas : on les neutralise, le code se tape et s'efface depuis le bout.
+  $("code").addEventListener("keydown", event => {
+    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) {
+      event.preventDefault();
+      curseurAuBout();
+    }
   });
 
   $("form-code").addEventListener("submit", event => {
@@ -650,6 +729,8 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     afficherErreur("");
     $("ecran-espace").hidden = true;
     $("ecran-code").hidden = false;
+    document.body.classList.add("sur-code");
+    dessinerCases();
   }
 
   // « Se déconnecter » (lot 7 : le même mot que dans l'appli, un seul geste à
@@ -673,6 +754,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     revenirAuCode();
   });
 
+  dessinerCases();
   if (oublierSiDemande()) {
     $("code").focus();
   } else {
