@@ -1,4 +1,5 @@
-// Défi calcul — les modules (lot 1a, 03/10/2026 ; M2 et D2 au lot 1b).
+// Défi calcul — les modules (lot 1a, 03/10/2026 ; M2 et D2 au lot 1b ;
+// le test de module au lot 2a).
 //
 // Un module = une fiche de données : son nom, ses niveaux, ses générateurs,
 // ses erreurs connues, les trois temps de « J'apprends ». Tout texte vu par
@@ -17,11 +18,6 @@
   else root.MATHSGO_DEFI_CALCUL_CORE = api;
 })(typeof globalThis !== "undefined" ? globalThis : this, () => {
   "use strict";
-
-  // Pendant l'essai du lot 1, les quatre pilotes sont ouverts sans
-  // condition. À retirer au lot 3.
-  const ESSAI_PILOTES = true;
-  const PILOTES = Object.freeze(["A2", "A5", "M2", "D2"]);
 
   const PALIERS = Object.freeze([
     Object.freeze({n: 1, nom: "Le socle"}),
@@ -615,6 +611,9 @@
       test: (calcul, reponse) => estProduit(calcul) && memeNombre(reponse, exact(calcul.reponse / 10)),
       retour: (calcul, reponse) => {
         const {n, p} = calcul.donnees;
+        // × 10 : le nombre est revenu tel quel (38 × 10 → 38). « 38, c'est
+        // 38 × 1 » se lisait mal : la phrase de D2 pour la même erreur.
+        if (p === 10) return `${formaterNombre(reponse)} = ${formaterNombre(n)} : tu n’as pas multiplié. Chaque chiffre doit valoir ${formaterNombre(p)} fois plus : ${formaterNombre(n)} → ${formaterNombre(calcul.reponse)}.`;
         return `${formaterNombre(reponse)}, c’est ${formaterNombre(n)} × ${formaterNombre(p / 10)}. Pour × ${formaterNombre(p)}, chaque chiffre vaut ${formaterNombre(p)} fois plus : ${formaterNombre(n)} → ${formaterNombre(calcul.reponse)}.`;
       }
     }),
@@ -866,7 +865,7 @@
     erreurs: A2_ERREURS, image: a2Image,
     niveaux: [
       {
-        n: 1, titre: "à 10, dizaine suivante", type: "F", avant: [],
+        n: 1, titre: "à 10, dizaine suivante", nom: "Compléments à 10", type: "F", avant: [],
         composer: a2Niveau1,
         imposes: [a2Complement(1, 433, 440, {suivante: true})],
         apprends: a2Apprends({
@@ -878,7 +877,7 @@
         })
       },
       {
-        n: 2, titre: "à 100\u00a0: dizaines et nombres en 5", type: "F", avant: ["A2-1"],
+        n: 2, titre: "à 100\u00a0: dizaines et nombres en 5", nom: "Compléments à 100\u00a0: dizaines", type: "F", avant: ["A2-1"],
         composer: a2Niveau2,
         imposes: [a2Complement(2, 75, 100), a2Difference(2, 35, 100)],
         apprends: a2Apprends({
@@ -890,7 +889,7 @@
         })
       },
       {
-        n: 3, titre: "à 100\u00a0: tous les nombres", type: "P", avant: ["A2-2"],
+        n: 3, titre: "à 100\u00a0: tous les nombres", nom: "Compléments à 100", type: "P", avant: ["A2-2"],
         composer: a2Niveau3,
         imposes: [a2Complement(3, 61, 100), a2Complement(3, 29, 100), a2Complement(3, 13, 100)],
         apprends: a2Apprends({
@@ -902,7 +901,7 @@
         })
       },
       {
-        n: 4, titre: "à 1\u202f000", type: "P", avant: ["A2-3"],
+        n: 4, titre: "à 1\u202f000", nom: "Compléments à 1\u202f000", type: "P", avant: ["A2-3"],
         composer: a2Niveau4,
         imposes: [a2Complement(4, 650, 1000), a2Complement(4, 230, 300, {suivante: true})],
         apprends: a2Apprends({
@@ -956,7 +955,7 @@
     erreurs: M2_ERREURS, image: tableauDe,
     niveaux: [
       {
-        n: 1, titre: "produits", type: "P", avant: [],
+        n: 1, titre: "produits", nom: "× 10, × 100, × 1\u202f000", type: "P", avant: [],
         composer: m2Niveau1,
         imposes: [produit("M2", 1, 38, 10), produit("M2", 1, 9, 100, true)],
         apprends: glisseApprends({
@@ -969,7 +968,7 @@
         })
       },
       {
-        n: 2, titre: "nombres en 0, trous, divisions", type: "P", avant: ["M2-1"],
+        n: 2, titre: "nombres en 0, trous, divisions", nom: "× 10, × 100\u00a0: trous, divisions", type: "P", avant: ["M2-1"],
         composer: m2Niveau2,
         imposes: [produit("M2", 2, 30, 100), trouFacteur("M2", 2, 35, 100), division("M2", 2, 48, 10)],
         apprends: glisseApprends({
@@ -991,7 +990,7 @@
     erreurs: D2_ERREURS, image: tableauDe,
     niveaux: [
       {
-        n: 1, titre: "× 10", type: "P", avant: [],
+        n: 1, titre: "× 10", nom: "Décimal × 10", type: "P", avant: [],
         composer: d2Niveau1,
         imposes: [produit("D2", 1, 0.6, 10), produit("D2", 1, 2.5, 10)],
         apprends: glisseApprends({
@@ -1004,7 +1003,7 @@
         })
       },
       {
-        n: 2, titre: "× 100, × 1\u202f000 sans zéro à écrire", type: "P", avant: ["D2-1"],
+        n: 2, titre: "× 100, × 1\u202f000 sans zéro à écrire", nom: "Décimal × 100, × 1\u202f000", type: "P", avant: ["D2-1"],
         composer: d2Niveau2,
         imposes: [produit("D2", 2, 7.54, 100), produit("D2", 2, 4.107, 1000)],
         apprends: glisseApprends({
@@ -1017,7 +1016,7 @@
         })
       },
       {
-        n: 3, titre: "des zéros à écrire", type: "P", avant: ["D2-2"],
+        n: 3, titre: "des zéros à écrire", nom: "Décimal\u00a0: zéros à écrire", type: "P", avant: ["D2-2"],
         composer: d2Niveau3,
         imposes: [produit("D2", 3, 3.6, 100), produit("D2", 3, 72.4, 100), produit("D2", 3, 0.2, 100)],
         apprends: glisseApprends({
@@ -1030,7 +1029,7 @@
         })
       },
       {
-        n: 4, titre: "trous", type: "P", avant: ["D2-3"],
+        n: 4, titre: "trous", nom: "Décimal\u00a0: trous", type: "P", avant: ["D2-3"],
         composer: d2Niveau4,
         imposes: [trouFacteur("D2", 4, 3.6, 100), trouNombre("D2", 4, 0.45, 100), trouEgal("D2", 4, 1.2, 1000)],
         apprends: glisseApprends({
@@ -1147,13 +1146,22 @@
     return niveau ? {module: fiche, niveau} : null;
   }
 
+  // Le nom court d'une compétence (un niveau), lisible seul : « Compléments
+  // à 100 », « + 9 ». C'est lui que la séance et les bilans affichent. Sans
+  // nom court, le titre du niveau.
+  function nomCompetence(id, numero) {
+    const trouve = niveauDe(`${id}-${numero}`);
+    return trouve ? trouve.niveau.nom || trouve.niveau.titre || "" : "";
+  }
+
   // Ce que le moteur de la progression a besoin de savoir de la carte, sans
-  // les textes ni les générateurs : l'ordre conseillé, les « avant », ce qui
-  // est construit, ce qui est ouvert pendant l'essai.
+  // les textes ni les générateurs : l'ordre (c'est celui de la séance), le
+  // palier, ce qui est construit. Les « avant » ne sont plus des verrous :
+  // l'ordre les respecte déjà ; ils restent une information.
   function carte() {
     return MODULES.map(fiche => ({
       id: fiche.id, palier: fiche.palier, avant: fiche.avant.slice(), niveaux: fiche.niveaux.length,
-      construit: Boolean(fiche.construit), pilote: ESSAI_PILOTES && PILOTES.includes(fiche.id)
+      construit: Boolean(fiche.construit)
     }));
   }
 
@@ -1173,7 +1181,18 @@
     return melanger(rng, niveau.composer(rng, nombre, imposes)).slice(0, nombre);
   }
 
-  // Un seul calcul d'un niveau (le mélange du jour en tire dix, un par un).
+  // Le test de module (« Tu connais déjà ? ») : `parNiveau` calculs de chaque
+  // niveau, sans imposé, mélangés. Chaque calcul porte son niveau.
+  function genererTest(id, {graine = 1, parNiveau = 3} = {}) {
+    const fiche = moduleDe(id);
+    if (!fiche || !fiche.construit) return [];
+    const calculs = fiche.niveaux.flatMap(niveau =>
+      genererSerie(`${id}-${niveau.n}`, {graine: (graine + niveau.n * 7919) >>> 0, genre: "entraine"}).slice(0, parNiveau));
+    return melanger(mulberry32(graine), calculs);
+  }
+
+  // Un seul calcul d'un niveau (Mes calculs du jour en tirent un par
+  // compétence).
   function genererUn(cleNiveau, graine) {
     const serie = genererSerie(cleNiveau, {graine, genre: "entraine"});
     return serie.length ? serie[0] : null;
@@ -1201,8 +1220,6 @@
   }
 
   return Object.freeze({
-    ESSAI_PILOTES,
-    PILOTES,
     PALIERS,
     TOTAUX,
     MODULES,
@@ -1218,8 +1235,10 @@
     decimalesDe,
     moduleDe,
     niveauDe,
+    nomCompetence,
     carte,
     genererSerie,
+    genererTest,
     genererUn,
     diagnostiquer,
     imageDe,

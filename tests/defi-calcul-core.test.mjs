@@ -89,11 +89,14 @@ test("les lots 1a et 1b construisent les quatre pilotes : A2, M2, A5, D2", () =>
   // La touche « , » : les modules à décimales seulement.
   assert.equal(CORE.moduleDe("D2").virgule, true);
   ["A2", "A5", "M2"].forEach(id => assert.ok(!CORE.moduleDe(id).virgule, `${id} : pas de virgule`));
-  assert.deepEqual([...CORE.PILOTES], ["A2", "A5", "M2", "D2"]);
-  assert.equal(CORE.ESSAI_PILOTES, true);
+  // Lot 2a : plus de « pilotes ouverts pendant l'essai » — la séance parcourt
+  // les modules construits, dans l'ordre de la carte.
+  assert.equal("PILOTES" in CORE, false);
+  assert.equal("ESSAI_PILOTES" in CORE, false);
   const carte = CORE.carte();
   assert.equal(carte.length, 71);
-  assert.deepEqual(carte.filter(f => f.pilote).map(f => f.id), ["A2", "M2", "A5", "D2"]);
+  assert.deepEqual(Object.keys(carte[0]), ["id", "palier", "avant", "niveaux", "construit"]);
+  assert.deepEqual(carte.filter(f => f.construit).map(f => f.id), ["A2", "M2", "A5", "D2"]);
   assert.deepEqual(CORE.genererSerie("M3-1", {graine: 1}), [], "un niveau pas encore construit ne génère rien");
 });
 
@@ -438,6 +441,9 @@ const avecEspaces = texte => texte.replace(/[\u202f\u00a0]/g, " ");
 test("M2 : les erreurs connues de la fiche sont reconnues, avec leur phrase", () => {
   const cas = [
     [produit("M2", 38, 10), 3800, 1, "3 800, c’est 38 × 100. Pour × 10, chaque chiffre vaut 10 fois plus : 38 → 380."],
+    // × 10 rendu tel quel : « tu n'as pas multiplié » (plus de « 38, c'est 38 × 1 »).
+    [produit("M2", 38, 10), 38, 2, "38 = 38 : tu n’as pas multiplié. Chaque chiffre doit valoir 10 fois plus : 38 → 380."],
+    [produit("M2", 405, 10, true), 405, 2, "405 = 405 : tu n’as pas multiplié. Chaque chiffre doit valoir 10 fois plus : 405 → 4 050."],
     [produit("M2", 27, 100), 270, 2, "270, c’est 27 × 10. Pour × 100, chaque chiffre vaut 100 fois plus : 27 → 2 700."],
     [produit("M2", 30, 100), 300, 2, "300, c’est 30 × 10. Pour × 100, chaque chiffre vaut 100 fois plus : 30 → 3 000."],
     [produit("M2", 9, 100, true), 9000, 1, "9 000, c’est 9 × 1 000. Pour × 100, chaque chiffre vaut 100 fois plus : 9 → 900."],
@@ -546,7 +552,7 @@ test("les consignes : l'impératif devant « en », pas de signe seul en début 
   };
   CORE.MODULES.filter(fiche => fiche.construit).forEach(fiche => fiche.niveaux.forEach(niveau => {
     const a = niveau.apprends;
-    const textes = [niveau.titre || "", a.bilan, a.represente.consigne, ...(a.manipule ? [a.manipule.consigne, a.manipule.refus || ""] : [])];
+    const textes = [niveau.titre || "", niveau.nom || "", a.bilan, a.represente.consigne, ...(a.manipule ? [a.manipule.consigne, a.manipule.refus || ""] : [])];
     textes.forEach(texte => verifier(texte, fiche.id));
   }));
   // Les noms des 71 modules (les réservés aussi : « Distributivité : … »),
@@ -567,6 +573,34 @@ test("les consignes : l'impératif devant « en », pas de signe seul en début 
   const visibles = page.replace(/<script[\s\S]*?<\/script>/g, "").replace(/<[^>]+>/g, "\n");
   visibles.split("\n").filter(ligne => ligne.trim()).forEach(ligne => verifier(ligne, "la page"));
   assert.match(CORE.niveauDe("A5-1").niveau.apprends.manipule.consigne, /puis retires-en 1\.$/);
+});
+
+test("le nom court d'une compétence se lit seul ; le test de module tire 3 calculs par niveau", () => {
+  const noms = id => CORE.moduleDe(id).niveaux.map(n => avecEspaces(CORE.nomCompetence(id, n.n)));
+  assert.deepEqual(noms("A2"), ["Compléments à 10", "Compléments à 100 : dizaines", "Compléments à 100", "Compléments à 1 000"]);
+  assert.deepEqual(noms("A5"), ["+ 9", "+ 19, 29, 39", "+ 8, 18, 28, 38", "+ 48, 49… 98, 99"], "sans nom court, le titre du niveau");
+  assert.deepEqual(noms("M2"), ["× 10, × 100, × 1 000", "× 10, × 100 : trous, divisions"]);
+  assert.deepEqual(noms("D2"), ["Décimal × 10", "Décimal × 100, × 1 000", "Décimal : zéros à écrire", "Décimal : trous"]);
+  assert.equal(CORE.nomCompetence("A2", 9), "");
+  // Chaque compétence construite a un nom différent : le bilan les nomme sans le module.
+  const tous = NIVEAUX_CONSTRUITS.map(({fiche, niveau}) => CORE.nomCompetence(fiche.id, niveau.n));
+  assert.equal(new Set(tous).size, tous.length);
+  // Le test : 3 calculs de chaque niveau, mélangés, déterministe, sans doublon.
+  ["A2", "A5", "M2", "D2"].forEach(id => {
+    const k = CORE.moduleDe(id).niveaux.length;
+    for (let graine = 1; graine <= 40; graine += 1) {
+      const test = CORE.genererTest(id, {graine});
+      assert.equal(test.length, 3 * k, `${id} : ${3 * k} calculs`);
+      for (let n = 1; n <= k; n += 1) assert.equal(test.filter(c => c.niveau === n).length, 3, `${id} niveau ${n}`);
+      assert.ok(test.every(c => c.module === id));
+      assert.equal(new Set(test.map(c => c.cle)).size, test.length, `${id} graine ${graine} : pas de doublon`);
+      assert.deepEqual(CORE.genererTest(id, {graine}).map(c => c.cle), test.map(c => c.cle));
+    }
+    // Mélangés : les niveaux ne sortent pas toujours dans l'ordre.
+    assert.ok(Array.from({length: 10}, (_, g) => CORE.genererTest(id, {graine: g + 1}).map(c => c.niveau).join("")).some(ordre => ordre !== [...ordre].sort().join("")));
+  });
+  assert.deepEqual(CORE.genererTest("A1", {graine: 1}), [], "un module pas construit n'a pas de test");
+  assert.equal(CORE.genererTest("A5", {graine: 1, parNiveau: 2}).length, 8);
 });
 
 test("J'apprends : trois temps cohérents pour chaque niveau construit", () => {
