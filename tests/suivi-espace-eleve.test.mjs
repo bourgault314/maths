@@ -282,11 +282,16 @@ function parcoursFabrique({acquises = 0, melangeAJour = false, etoiles = 0} = {}
 
 test("le compte de la tuile est mot pour mot celui de l'accueil de Défi tables", () => {
   const lire = lecteurDeJauge()["defi-tables"];
-  assert.equal(lire(PARCOURS, parcoursFabrique({acquises: 4})).compte, "4 tables acquises sur 9");
-  assert.equal(lire(PARCOURS, parcoursFabrique({acquises: 1})).compte, "1 table acquise sur 9",
-    "au singulier, comme sur l'accueil : « 1 table acquise »");
+  // Lot « un seul système » (05/10/2026) : la table est « passée », ici comme
+  // sur l'accueil de l'appli.
+  assert.equal(lire(PARCOURS, parcoursFabrique({acquises: 4})).compte, "4 tables passées sur 9");
+  assert.equal(lire(PARCOURS, parcoursFabrique({acquises: 1})).compte, "1 table passée sur 9",
+    "au singulier, comme sur l'accueil : « 1 table passée »");
   assert.equal(lire(PARCOURS, parcoursFabrique({acquises: 9, melangeAJour: true})).compte,
-    "9 tables acquises sur 9");
+    "9 tables passées sur 9");
+  const appli = readFileSync(new URL("../outils/calcul_mental/defi_tables.html", import.meta.url), "utf8");
+  assert.match(appli, /\$\("acc-acquises"\)\.textContent = `\$\{nombre\} table\$\{nombre > 1 \? "s" : ""\} passée\$\{nombre > 1 \? "s" : ""\} sur \$\{PARCOURS_TABLES\.length\}`;/,
+    "mot pour mot la phrase de l'accueil");
 });
 
 test("la jauge lit le parcours par le moteur, jamais par la page", () => {
@@ -299,13 +304,20 @@ test("la jauge lit le parcours par le moteur, jamais par la page", () => {
     "la page ne doit pas fouiller le parcours elle-même");
 });
 
-test("le rang et le mélange de la tuile sont ceux de l'état, pas un calcul d'ici", () => {
+// Lot « un seul système » (05/10/2026) : Mon mélange est libre, il ne bloque
+// plus rien — la tuile n'a donc plus de note orange « Mon mélange à faire ».
+test("le rang de la tuile est celui de l'état ; plus jamais de « Mon mélange à faire » (le mélange est libre)", () => {
   const lire = lecteurDeJauge()["defi-tables"];
   const quatre = lire(PARCOURS, parcoursFabrique({acquises: 4}));
-  assert.equal(quatre.rang.nom, "Argent", "3 tables acquises ouvrent Argent (règle du moteur)");
-  assert.equal(quatre.note, "Mon mélange à faire", "dès 2 tables acquises, le mélange bloque la suite");
+  assert.equal(quatre.rang.nom, "Argent", "3 tables passées ouvrent Argent (règle du moteur)");
+  assert.equal(quatre.note, "", "mélange jamais joué : rien d'orange dans la tuile, il ne bloque rien");
   const ajour = lire(PARCOURS, parcoursFabrique({acquises: 4, melangeAJour: true}));
-  assert.equal(ajour.note, "", "mélange réussi : plus rien d'orange dans la tuile");
+  assert.equal(ajour.note, "", "mélange réussi : rien non plus");
+  assert.doesNotMatch(page, /"Mon mélange à faire"|etat\.melange\.du\b/, "la page ne lit plus de mélange « dû »");
+  // Les 9 tables passées suffisent pour Platine : plus besoin du mélange.
+  const neuf = lire(PARCOURS, parcoursFabrique({acquises: 9}));
+  assert.equal(neuf.rang.nom, "Platine", "9 tables passées, mélange jamais joué : Platine quand même");
+  assert.equal(neuf.note, "");
   const legende = lire(PARCOURS, parcoursFabrique({acquises: 9, melangeAJour: true, etoiles: 5}));
   assert.equal(legende.rang.cle, "legende");
   assert.equal(legende.fait, legende.total, "la barre est pleine");

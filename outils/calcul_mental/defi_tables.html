@@ -626,6 +626,7 @@
     .parcours-row.is-ma-table { border-color: var(--blue); box-shadow: 0 0 0 1px var(--blue); }
     .parcours-ma-table { padding: 3px 9px; border-radius: 999px; color: #fff; background: var(--blue); font-size: .78rem; font-weight: 950; white-space: nowrap; }
     @media (max-width: 429px) { #question-count .compteur-suite { display: none; } }
+    @media (max-width: 359px) { #question-count .compteur-mot { display: none; } }
     .parcours-row-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 7px; }
     .parcours-row-head strong { color: var(--ink); font-size: 1.05rem; }
     .parcours-badge { padding: 3px 9px; border-radius: 999px; color: var(--green); background: var(--green-soft); font-size: .78rem; font-weight: 950; }
@@ -819,6 +820,28 @@
     .carte-seance .programme .faite i { background: var(--teal); color: #fff; }
     .carte-seance .programme .faite > span { color: var(--muted); }
     .carte-seance .programme .ici i { background: var(--blue); color: #fff; }
+    /* Lot « un seul système » (05/10/2026) : le chrono de Mes calculs du jour
+       s'estompe tant qu'il est arrêté (une correction est à l'écran). La
+       porte : sous la carte, les deux liens grisés sous « Après Mes calculs
+       du jour » tant qu'il n'est pas joué. */
+    #time.en-pause { opacity: .55; }
+    /* Les trois trophées de Mon mélange : trois petites coupes, grises, puis
+       dorées une fois gagnées. Aucun mot, aucun nombre. */
+    .mp-melange-droite > span:first-child { white-space: nowrap; }
+    .mp-trophees { display: inline-flex; align-items: center; gap: 3px; flex: 0 0 auto; }
+    .mp-trophees b { display: inline-flex; width: 26px; height: 26px; color: #c3ced8; }
+    .mp-trophees b svg { display: block; width: 100%; height: 100%; }
+    .mp-trophees b .corps { fill: currentColor; }
+    .mp-trophees b .anses { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+    .mp-trophees b.is-gagne { color: #e0a800; filter: drop-shadow(0 1px 0 #a87b00); }
+    .cell .jouer { display: block; width: 22px; height: 22px; margin: auto; fill: currentColor; }
+    .mp-melange .cell { display: grid; place-items: center; color: #9db4c4; }
+    /* Le bouton « Je me teste sur mes 5 tables », proposé quand une table vient d'être passée. */
+    .defi-melange { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; margin: 10px 0 0; padding: 9px 12px; text-align: center; }
+    .defi-melange b { display: block; font-size: 1rem; }
+    .defi-melange small { display: block; margin-top: 1px; color: var(--muted); font-size: .8rem; font-weight: 800; }
+    .seance-liens.est-fermee button { opacity: .42; filter: grayscale(1); cursor: default; }
+    .seance-liens .porte-mot { flex: 0 0 100%; margin: 2px 0 0; color: var(--muted); font-size: .86rem; font-weight: 800; text-align: center; }
     /* Lot E1 (décision 8 du 03/10/2026) : sous la carte, « Je valide ma table »
        est un bouton rond (c'est une action qui engage), « Choisir une
        activité » un lien de 16 px. Au téléphone, le lien passe sous le bouton. */
@@ -1142,7 +1165,13 @@
       .calculs-tableau { grid-column: 1; grid-row: 1 / span 3; padding-top: 40px; }
       .calculs-titre { grid-column: 1; grid-row: 1; z-index: 1; align-self: start; margin: 12px 14px 0; }
       .calculs-tete { grid-column: 2; grid-row: 2; }
-      .parcours-suite { grid-column: 2; grid-row: 3; }
+      /* Lot « un seul système » : la colonne de droite finit exactement au bas
+         du tableau — « Je deviens expert » prend la hauteur qui reste (avant,
+         les deux colonnes finissaient à 13 px l'une de l'autre). */
+      .parcours-suite { grid-column: 2; grid-row: 3; align-self: stretch; display: flex; flex-direction: column; }
+      .parcours-suite #parcours-expert { flex: 1 1 auto; }
+      .parcours-suite .mp-melange-droite { flex-wrap: nowrap; }
+      .parcours-corps > .calculs-bloc .calculs-tableau, .calculs-tableau { align-self: stretch; }
       .parcours-suite > .parcours-extra:first-child { margin-top: 0; }
       .parcours-suite .parcours-extra { margin-top: 10px; }
       .parcours-suite .parcours-row-head { flex-wrap: wrap; }
@@ -1166,7 +1195,7 @@
          ligne et la colonne de droite dépassait l'écran. */
       #parcours-expert .parcours-extra-cells { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
       #parcours-expert .parcours-extra-cells .cell { width: 100%; min-width: 0; }
-      /* … et « À jour ✓ » à côté de « Mon mélange », pas dessous. */
+      /* … et les trois coupes à côté de « Mon mélange », pas dessous. */
       .parcours-suite .mp-melange-droite > span:first-child { flex-basis: 6em; }
     }
     /* Lot « retouches après Mon parcours » (point 6, règle du cadre blanc
@@ -1176,6 +1205,10 @@
     @media (min-width: 1024px) and (max-height: 700px) {
       .panel { padding-top: 20px; padding-bottom: 20px; }
       .intro { margin-top: 4px; margin-bottom: 6px; }
+      /* Lot « un seul système » : le bloc de Mon mélange se resserre pour que
+         le cadre blanc tienne encore à 1024 × 600. */
+      .parcours-suite #parcours-melange { padding-top: 8px; padding-bottom: 8px; }
+      .parcours-suite .mp-trophees b { width: 22px; height: 22px; }
     }
 
     .settings-panel {
@@ -1982,6 +2015,15 @@
     .fiche-block p { margin: 1.5mm 0 0; color: #506b7d; font-size: 8pt; }
     .fiche-state { position: absolute; top: 3mm; right: 4mm; padding: .8mm 2.5mm; border-radius: 3mm; background: #fff; color: #147447; font-size: 8pt; font-weight: 700; }
     .fiche-state:empty { display: none; }
+    .fiche-state .mp-trophees { gap: 1mm; }
+    /* Sur le papier (souvent en noir et blanc) : une coupe pas encore gagnée
+       est un simple contour, une coupe gagnée est pleine. */
+    .fiche-state .mp-trophees b { width: 6mm; height: 6mm; color: #6b7a87; filter: none; }
+    .fiche-state .mp-trophees b .corps { fill: #fff; stroke: currentColor; stroke-width: 1.3; stroke-linejoin: round; }
+    .fiche-state .mp-trophees b .anses { stroke-width: 1.3; }
+    .fiche-state .mp-trophees b.is-gagne { color: #7a5a00; }
+    .fiche-state .mp-trophees b.is-gagne .corps { fill: currentColor; }
+    .fiche-state .mp-trophees b.is-gagne .anses { stroke-width: 1.8; }
     .fiche-stars { position: absolute; top: 2mm; right: 4mm; color: #c9d6df; font-size: 11pt; letter-spacing: -.5pt; white-space: nowrap; }
     .fiche-stars b, .fiche-stars span { margin-left: 2.5mm; }
     .fiche-stars b { color: #b7791f; font-weight: 400; }
@@ -2331,11 +2373,11 @@
           <!-- L'accueil « Ma table » (lot 2) : tout ce qui s'y lit est calculé
                par renderAccueil() à partir du parcours. Les trois étapes sont
                toujours toutes disponibles, l'appli surligne celle qu'elle
-               conseille — à une exception près, depuis le lot 3 : « Je valide »
-               d'une table non acquise est cadenassé tant que le mélange est dû.
-               Quand les 9 tables sont acquises, le bloc « Je deviens expert »
-               (l'escalier des étoiles) passe devant et « Ma table » devient
-               « Mes tables : 9 sur 9 acquises ». -->
+               conseille. Lot « un seul système » (05/10/2026) : plus de cadenas ;
+               tant que Mes calculs du jour n'est pas joué, rien d'autre ne
+               s'ouvre. Quand les 9 tables sont passées, le bloc « Je deviens
+               expert » (l'escalier des étoiles) passe devant et « Ma table »
+               devient « Mes tables : 9 sur 9 passées ». -->
           <div class="acc">
             <!-- Pas de ligne « Bonjour » (Gwenaël, 08/09) : le bandeau de suivi
                  dit déjà qui est là, l'accueil commence par le bloc Ma table. -->
@@ -2350,7 +2392,7 @@
                 <div><p id="acc-table-eyebrow" class="eyebrow">Ma table</p><h1 id="acc-table-titre" tabindex="-1">La table de 2</h1></div>
                 <div class="matable-droite">
                   <button id="acc-changer" class="matable-changer" type="button" aria-expanded="false" aria-controls="acc-choix">Changer de table</button>
-                  <small id="acc-acquises">0 table acquise sur 9</small>
+                  <small id="acc-acquises">0 table passée sur 9</small>
                   <span id="acc-rang" class="rang"></span>
                 </div>
               </div>
@@ -2463,7 +2505,7 @@
       </div>
 
       <div id="launch" class="launch-screen" hidden>
-        <p class="eyebrow">Tu as choisi</p>
+        <p id="launch-eyebrow" class="eyebrow">Tu as choisi</p>
         <h1 id="launch-summary" class="launch-heading" tabindex="-1"></h1>
         <div id="launch-format" class="launch-format" hidden></div>
         <div class="launch-actions">
@@ -2530,7 +2572,7 @@
               <span><span class="mc-cell is-su"><span class="mc-nb">21</span><span class="mc-cases"><span class="mc-case is-pleine"></span><span class="mc-case is-pleine"></span><span class="mc-case is-pleine"></span><span class="mc-case is-pleine"></span><span class="mc-case is-pleine"></span></span></span> su</span>
               <span><span class="mc-cell is-miroir is-vu"><span class="mc-nb">21</span><span class="mc-cases"><span class="mc-case is-pleine"></span><span class="mc-case is-pleine"></span><span class="mc-case is-pleine"></span><span class="mc-case"></span><span class="mc-case"></span></span></span> même calcul</span>
             </div>
-            <p id="calculs-dix" class="calculs-dix" hidden><b>Table de 10</b>&nbsp;: acquise ✓</p>
+            <p id="calculs-dix" class="calculs-dix" hidden><b>Table de 10</b>&nbsp;: passée ✓</p>
           </div>
         </section>
         <div class="parcours-suite">
@@ -2680,16 +2722,16 @@
       <span><i class="fiche-mini su"><b>21</b><span class="fiche-carre-cases"><span class="fiche-case is-pleine"></span><span class="fiche-case is-pleine"></span><span class="fiche-case is-pleine"></span><span class="fiche-case is-pleine"></span><span class="fiche-case is-pleine"></span></span></i>su</span>
       <span><i class="fiche-mini miroir vu"><b>21</b><span class="fiche-carre-cases"><span class="fiche-case is-pleine"></span><span class="fiche-case is-pleine"></span><span class="fiche-case is-pleine"></span><span class="fiche-case"></span><span class="fiche-case"></span></span></i>même calcul</span>
     </p>
-    <p id="fiche-dix" class="fiche-dix" hidden><b>Table de 10</b>&nbsp;: acquise ✓</p>
+    <p id="fiche-dix" class="fiche-dix" hidden><b>Table de 10</b>&nbsp;: passée ✓</p>
     <div class="fiche-block fiche-melange">
-      <strong>Mon mélange : mes tables acquises</strong>
+      <strong>Mon mélange : mes tables passées</strong>
       <span id="fiche-melange-state" class="fiche-state"></span>
-      <p>Dès 2 tables acquises : 20 questions en 1 min 30, à refaire après chaque nouvelle table.</p>
+      <p>Dès 2 tables passées, quand je veux : 20 questions en 1 min 30. Un trophée avec 3, 6, puis 9 tables.</p>
     </div>
     <div class="fiche-block fiche-expert">
       <strong>Je deviens expert : toutes les tables, de plus en plus vite</strong>
       <span id="fiche-stars" class="fiche-stars"></span>
-      <p>Mes 9 tables acquises : 25 questions avec des divisions — ★ 2 min · ★★ 1 min 45 · ★★★ 1 min 30 · ★★★★ 1 min 15 · 👑 1 min.</p>
+      <p>Mes 9 tables passées : 25 questions avec des divisions — ★ 2 min · ★★ 1 min 45 · ★★★ 1 min 30 · ★★★★ 1 min 15 · 👑 1 min.</p>
     </div>
     <!-- Les compteurs sont pour le professeur : ce cadre n'apparaît que
          dans la fiche ouverte depuis « Ma classe » (décision du 03/10). -->
@@ -2703,7 +2745,7 @@
     </div>
     <div class="fiche-rules">
       <p><b>Mes calculs</b> : les 5 carrés d’une case, c’est sa boîte. Réussi le jour où il revient, un calcul monte d’une boîte ; raté, il redescend.</p>
-      <p><b>Acquise ✓</b> : 20 questions (résultats, nombres manquants et divisions) en 1 min 30, 2 erreurs au plus.</p>
+      <p><b>Passée ✓</b> : le test, 20 questions (résultats, nombres manquants et divisions) en 1 min 30, 2 erreurs au plus.</p>
     </div>
     <footer class="fiche-foot">mathsgo.re · CC BY-NC-SA 4.0</footer>
   </section>
@@ -2717,11 +2759,11 @@
        lignes (la notice d'avant a été retirée avec la clé, lot 2b). -->
   <template id="notice-seance">
     <p><b>Ma séance du jour.</b> 4 étapes (parfois 5), environ 5 min. Réussi&nbsp;: j’avance. Raté&nbsp;: je reprends un peu plus bas.</p>
-    <p><b>Ma table.</b> De marche en marche&nbsp;: les perles, la bande, dans l’ordre, dans le désordre, les nombres manquants et les divisions… jusqu’à «&nbsp;Je valide ma table&nbsp;»&nbsp;: 20 questions en 1 min 30, 2 erreurs au plus.</p>
+    <p><b>Ma table.</b> De marche en marche&nbsp;: les perles, la bande, dans l’ordre, dans le désordre, les nombres manquants et les divisions… jusqu’à «&nbsp;Je passe le test&nbsp;»&nbsp;: 20 questions en 1 min 30, 2 erreurs au plus.</p>
     <p><b>Ma rangée.</b> Les couleurs de Mes calculs&nbsp;: rouge&nbsp;à&nbsp;revoir, bleu&nbsp;en&nbsp;route, vert&nbsp;su.</p>
-    <p><b>Mes calculs du jour.</b> Un calcul réussi revient plus tard. Raté, il revient demain.</p>
-    <p><b>Mon mélange.</b> Dès 2 tables acquises, je réussis le mélange avant de valider une nouvelle table.</p>
-    <p><b>Les étoiles et mon rang.</b> Mes 9 tables acquises&nbsp;: toutes les tables, de plus en plus vite. Bronze… Légende&nbsp;: on ne redescend jamais.</p>
+    <p><b>Mes calculs du jour.</b> D’abord, chaque jour&nbsp;: 10 calculs de mes tables passées, en 1 minute. Réussi, un calcul revient plus tard. Raté, il revient demain.</p>
+    <p><b>Mon mélange.</b> Dès 2 tables passées, quand je veux&nbsp;: 20 questions en 1 min 30. Un trophée avec 3, 6, puis 9 tables.</p>
+    <p><b>Les étoiles et mon rang.</b> Mes 9 tables passées&nbsp;: toutes les tables, de plus en plus vite. Bronze… Légende&nbsp;: on ne redescend jamais.</p>
   </template>
   <footer class="site-footer">
     <a href="mailto:gwenael@mathsgo.re?subject=Contact%20depuis%20mathsgo.re">Me contacter</a><span aria-hidden="true">·</span>
@@ -2731,13 +2773,18 @@
     <span data-mathsgo-confidentialite>Sans cookie ni traceur</span>
   </footer>
 
-  <script src="./defi_tables_core.js?v=20261004-1"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20261004-2"></script>
+  <script src="./defi_tables_core.js?v=20261005-1"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20261005-1"></script>
   <script>
     (() => {
       "use strict";
 
       const CORE = window.MATHSGO_DEFI_TABLES_CORE;
+      // Lot « un seul système » (05/10/2026) : le test d'une table s'appelle
+      // « Je passe le test » (la table est « passée ») ; quand il peut
+      // s'ajouter en 5e étape, la carte dit à quelle condition.
+      const NOM_DU_TEST = "Je passe le test";
+      const CONDITION_DU_TEST = "si j’ai 9 sur 10 aux entraînements";
       if (!CORE) throw new Error("Le moteur de Défi tables est indisponible.");
       const PARCOURS = window.MATHSGO_DEFI_TABLES_MON_PARCOURS;
       if (!PARCOURS) throw new Error("Le moteur de Mon parcours est indisponible.");
@@ -2927,19 +2974,19 @@
           a.textContent = texte;
           return a;
         };
-        const separateur = document.createElement("span");
-        separateur.setAttribute("aria-hidden", "true");
-        separateur.textContent = "·";
-        const infos = lien(SUIVI_URL + "/infos.php", "Infos et confidentialité");
+        // Lot « un seul système » (05/10/2026) : « Infos et confidentialité »
+        // n'est plus qu'à un endroit, la page Mon espace — ici, le pied de
+        // l'élève n'a plus que le logo et « Mon espace », qui y mène.
+        const espace = lien(SUIVI_URL + "/", "Mon espace");
         // PIÈGE, trouvé en relisant l'ordre d'exécution. mention-confidentialite.js
         // (chargé en « defer », donc APRÈS ce script) pose de lui-même, en bas de
         // page, « Sans cookie ni traceur · Confidentialité » — un lien de plus vers
         // le site — SAUF si la page porte déjà un élément marqué
         // « data-mathsgo-confidentialite ». Le pied d'origine en portait un ; en le
         // remplaçant sans le remarquer, on rouvrait la porte qu'on venait de fermer.
-        // Le lien Infos reprend donc la marque : c'est bien lui, ici, la mention de
-        // confidentialité de la page.
-        infos.setAttribute("data-mathsgo-confidentialite", "");
+        // « Mon espace » porte donc la marque : c'est par lui que l'élève
+        // rejoint la page où la confidentialité est expliquée.
+        espace.setAttribute("data-mathsgo-confidentialite", "");
         // Lot « Mon parcours » (point 6) : le logo quitte la barre du haut de
         // l'élève à code ; il est ici, en petit, et ramène à son espace comme
         // celui du haut.
@@ -2953,7 +3000,7 @@
         image.width = 1338;
         image.height = 622;
         logo.append(image);
-        pied.replaceChildren(logo, lien(SUIVI_URL + "/", "Mon espace"), separateur, infos);
+        pied.replaceChildren(logo, espace);
         pied.classList.add("pied-espace");
         piedRefait = true;
       }
@@ -4137,7 +4184,7 @@
           start: "Commencer"
         },
         validation: {
-          title: "Je valide ma table",
+          title: "Je passe le test",
           start: "Commencer"
         },
         evaluation: {
@@ -5275,7 +5322,6 @@
         const zeroDonne = activitePerles(state.configuration) && state.revealedLearnResults.has(0) ? 1 : 0;
         const completed = stickActivity ? state.revealedLearnResults.size - zeroDonne : state.mastered.size;
         const total = stickActivity ? CASES_BANDE - (activitePerles(state.configuration) ? 1 : 0) : TOTAL;
-        const label = stickActivity ? "cases complétées" : "calculs sus";
         if (stickActivity) {
           // Audit 2 (30/09/2026) : « complétées » s'efface sous 430 px —
           // « 11 / 11 cases complétées » passait sur deux lignes à 402 px.
@@ -5284,7 +5330,16 @@
           suite.textContent = " complétées";
           $("question-count").replaceChildren(`${completed} / ${total} cases`, suite);
         } else {
-          $("question-count").textContent = `${completed} / ${total} ${label}`;
+          // Lot « un seul système » (petit reste) : « sus » s'efface aussi
+          // sous 430 px — « 10 / 11 calculs sus » tenait sur trois lignes à 320 px.
+          // Sous 360 px, « calculs » aussi : il reste « 10 / 11 », sur une ligne.
+          const mot = document.createElement("span");
+          mot.className = "compteur-mot";
+          mot.textContent = " calculs";
+          const suite = document.createElement("span");
+          suite.className = "compteur-suite";
+          suite.textContent = " sus";
+          $("question-count").replaceChildren(`${completed} / ${total}`, mot, suite);
         }
         $("progress").style.width = `${completed / total * 100}%`;
       }
@@ -5585,7 +5640,7 @@
         const prochain = ligne.entraine.find(item => item.etat !== 2);
         return prochain
           ? {nom: NOMS_ENTRAINEMENTS[prochain.entrainement], config: PARCOURS.configEntraine(table, prochain.entrainement)}
-          : {nom: "comme la validation, en 2 min", config: PARCOURS.configValidation(table, 120)};
+          : {nom: "comme le test, en 2 min", config: PARCOURS.configValidation(table, 120)};
       }
 
       function renderEntraineConseille(suivi) {
@@ -5678,11 +5733,11 @@
             verdict.score = `${sur(score, total)} · ${formatElapsed(elapsed)}`;
           } else if (validation) {
             verdict.icone = "🎉";
-            verdict.titre = `Table de ${validation.table} acquise !`;
+            verdict.titre = `Table de ${validation.table} passée !`;
             verdict.score = `${sur(score, total)} · ${formatElapsed(elapsed)}`;
           } else if (melange) {
             verdict.icone = "🎉";
-            verdict.titre = melange.escalierOuvert ? "Mélange des 9 tables réussi !" : "Mélange réussi !";
+            verdict.titre = melange.tables.length === PARCOURS_TABLES.length ? "Mélange des 9 tables réussi !" : "Mélange réussi !";
             verdict.score = `${sur(score, total)} · ${formatElapsed(elapsed)}`;
           } else if (rangMonte) {
             verdict.icone = "🏅";
@@ -5739,8 +5794,7 @@
         if (principal) {
           const symbole = principal.type === "etoile" ? PARCOURS.symboleEtoile(principal.etoile) : "";
           verdict.titre = principal.type === "entraine" ? "Entraînement réussi !"
-            : principal.type === "validation" && principal.verrouillee ? "Bravo !"
-            : principal.type === "validation" ? `Table de ${principal.table} toujours acquise ✓`
+            : principal.type === "validation" ? `Test de la table de ${principal.table} réussi encore ✓`
             : principal.type === "preparation" ? "Bravo !"
             : principal.type === "etoile" ? `${symbole} réussie encore`
             : "Réussi !";
@@ -5799,6 +5853,9 @@
 
       function updateTimer() {
         if (!state.running || state.configuration?.duration === null) return;
+        // Mes calculs du jour : le chrono est arrêté tant qu'une correction
+        // (ou « Bravo ! ») est à l'écran.
+        if (state.pauseA) return;
         const remaining = Math.max(0, Math.ceil((state.endAt - Date.now()) / 1000));
         $("time").textContent = formatTime(remaining);
         $("time").classList.toggle("urgent", remaining <= 10);
@@ -5860,6 +5917,8 @@
         state.running = true;
         state.startAt = Date.now();
         state.endAt = DURATION === null ? 0 : state.startAt + DURATION * 1000;
+        state.pauseA = null;
+        $("time").classList.remove("en-pause");
         $("time").textContent = DURATION === null ? "À ton rythme" : formatTime(DURATION);
         $("time").classList.toggle("no-timer", DURATION === null);
         $("time").classList.remove("urgent");
@@ -5931,6 +5990,10 @@
         // rôle utile : le chrono ne part qu'au « C'est parti ! » (lot « Mon
         // parcours », version B de Gwenaël : on ne l'écrit plus).
         renderFormatLancement(config);
+        // Lot « un seul système » : le sur-titre « Tu as choisi » ne reste que
+        // pour une série réglée à la main (Réglages libres) — dans le
+        // parcours, le titre dit déjà ce qui va se jouer.
+        $("launch-eyebrow").hidden = state.origin !== "reglages";
         // La vraie flèche du site (le SVG épais), jamais le caractère « ← » :
         // il est trop maigre et trop petit à côté du texte (règle de Gwenaël).
         const versReglages = state.origin === "reglages";
@@ -6055,6 +6118,11 @@
 
       function advanceAfterResponse() {
         clearAutoAdvance();
+        if (state.pauseA) {
+          state.endAt += Date.now() - state.pauseA;
+          state.pauseA = null;
+          $("time").classList.remove("en-pause");
+        }
         state.index += 1;
         const memoryActivity = state.configuration.mode === "learn"
           && ["ordered", "random"].includes(state.configuration.learnActivity);
@@ -6113,7 +6181,14 @@
           }
           // Un calcul raté revient UNE fois dans la série ; s'il est encore raté,
           // il reste « à revoir » et la prochaine révision le reprendra.
-          const willRetry = !correct && !question.retry;
+          // Mes calculs du jour (chronométré) : il ne revient pas, il revient
+          // demain ; et le chrono s'arrête le temps de lire.
+          const chrono = state.configuration.duration !== null;
+          if (chrono) {
+            state.pauseA = Date.now();
+            $("time").classList.add("en-pause");
+          }
+          const willRetry = !correct && !question.retry && !chrono;
           if (willRetry) {
             const dejaEnAttente = state.questions.slice(state.index + 1).some(candidate => candidate.factKey === question.factKey);
             if (!dejaEnAttente) state.questions.push({...question, retry: true});
@@ -6321,8 +6396,11 @@
       // « Demain » — ceux dont le jour de retour est demain : ratés aujourd'hui,
       // ou échéance demain. PAS les calculs du jour encore à faire (ils sont
       // dans « Aujourd'hui »).
+      // Lot « un seul système » : parmi les calculs que Mes calculs du jour
+      // prendra demain (ceux des tables passées).
       function calculsDeDemain(aujourdhui = jourDuJour()) {
-        return Object.keys(parcours.calculs).filter(cle => jourDeRetour(parcours.calculs[cle], aujourdhui) === 1);
+        const demain = PARCOURS.ajouterJours(aujourdhui, 1);
+        return Object.keys(parcours.calculs).filter(cle => jourDeRetour(parcours.calculs[cle], aujourdhui) === 1 && PARCOURS.prisParMesCalculs(parcours, cle, demain));
       }
 
       // « 2 à revoir · 3 à faire monter » : les ratés (boîte 1), ceux qui
@@ -6360,7 +6438,9 @@
         // (boîte 1, « à revoir »), ceux qui doivent monter (boîtes 2 à 4) et
         // ceux à garder (boîte 5) ; seulement les nombres qui ne sont pas nuls.
         if (calculsSelection.jour) {
-          const dus = PARCOURS.calculsDus(parcours, {aujourdhui});
+          // Lot « un seul système » : la série de Mes calculs du jour, telle
+          // qu'elle sera jouée (les calculs dus, puis le complément).
+          const dus = PARCOURS.serieDuJour(parcours, {aujourdhui}).cles;
           const sortes = sortesDeCalculs(dus);
           zone.className = "calculs-detail is-en-cours";
           zone.replaceChildren(fermer);
@@ -6494,7 +6574,9 @@
         // pas ; ratés, ils descendaient).
         // La table de 10 n'est pas dans le tableau : une ligne quand elle est acquise.
         $("calculs-dix").hidden = !acquises.has(10);
-        renderJour(agenda);
+        const serieDuJour = etat.serieDuJour;
+        const duJour = new Set(serieDuJour.cles);
+        renderJour(serieDuJour);
         renderBoites(grille.resume);
         const zone = $("calculs-grille");
         zone.replaceChildren();
@@ -6528,7 +6610,7 @@
           etiquette.className = `calculs-entete${ligne.ligne === maTable ? " is-ma-table" : ""}${acquise ? " is-acquise" : ""}`;
           etiquette.textContent = String(ligne.ligne);
           etiquette.setAttribute("role", "rowheader");
-          if (acquise || ligne.ligne === maTable) etiquette.setAttribute("aria-label", `Table de ${ligne.ligne}${ligne.ligne === maTable ? ", ma table" : ""}${acquise ? ", acquise" : ""}`);
+          if (acquise || ligne.ligne === maTable) etiquette.setAttribute("aria-label", `Table de ${ligne.ligne}${ligne.ligne === maTable ? ", ma table" : ""}${acquise ? ", passée" : ""}`);
           zone.append(etiquette);
           ligne.cellules.forEach(cellule => {
             const bouton = document.createElement("button");
@@ -6537,7 +6619,7 @@
             // entoure 5 × 7 ET 7 × 5 — le même calcul, comme le dit le détail
             // (« 5 × 7 = 7 × 5 = 35 »).
             const choisie = Boolean(calculsSelection && calculsSelection.cle) && calculsSelection.cle === cellule.cle;
-            const dansBoite = cellule.active && ((Boolean(boiteChoisie) && cellule.boite === boiteChoisie) || (jourChoisi && cellule.du) || Boolean(demain && demain.has(cellule.cle)));
+            const dansBoite = cellule.active && ((Boolean(boiteChoisie) && cellule.boite === boiteChoisie) || (jourChoisi && duJour.has(cellule.cle)) || Boolean(demain && demain.has(cellule.cle)));
             // Vu = entré dans une boîte (une première réponse, juste ou non).
             // La moitié miroir n'a pas de couleur : grise quand le calcul est
             // vu, blanche sinon, comme « pas encore vu ».
@@ -6591,7 +6673,11 @@
       // Lot « retouches après Mon parcours » (décision 2) : « Demain » à côté,
       // même principe — un seul des deux allumé à la fois (comme une boîte) ;
       // rien demain, pas de bouton.
-      function renderJour(agenda) {
+      // Lot « un seul système » : « Aujourd'hui » compte la série de Mes
+      // calculs du jour telle qu'elle sera jouée (10 au plus, complément
+      // compris) ; une fois jouée, les calculs dus qui restent (« encore »),
+      // ou « fait ✓ ».
+      function renderJour(serie) {
         const zone = $("calculs-jour");
         zone.replaceChildren();
         const demain = calculsDeDemain().length;
@@ -6625,20 +6711,21 @@
           });
           return element;
         };
-        if (!agenda.dus) {
+        const nombre = serie.cles.length;
+        if (!nombre) {
           const rien = document.createElement("p");
           if (court) {
             // Un seul enfant : la phrase reste centrée dans son cadre.
             const texte = document.createElement("span");
-            texte.append(...etiquette("Aujourd’hui", document.createTextNode("rien")));
+            texte.append(...etiquette("Aujourd’hui", document.createTextNode(serie.faite ? "fait\u00a0✓" : "rien")));
             rien.append(texte);
-          } else rien.textContent = "Rien ne revient aujourd’hui.";
+          } else rien.textContent = serie.faite ? "Mes calculs du jour\u00a0: fait\u00a0✓" : "Rien ne revient aujourd’hui.";
           zone.append(rien);
         } else {
-          zone.append(bouton("jour", "Aujourd’hui", agenda.dus, court ? ""
-            : agenda.dus > PARCOURS.SEUILS.revision.total ? ` reviennent, ${PARCOURS.SEUILS.revision.total}\u00a0par\u00a0séance`
-              // « 1 calcul revient », pas « reviennent » (relevé au passage).
-              : agenda.dus > 1 ? " reviennent dans ta\u00a0séance" : " revient dans ta\u00a0séance"));
+          const element = bouton("jour", "Aujourd’hui", nombre, court ? "" : serie.faite ? " dans ta prochaine\u00a0séance" : " dans Mes\u00a0calculs du\u00a0jour");
+          // Une fois Mes calculs du jour joué : « encore 6 calculs ».
+          if (serie.faite) element.querySelector("b").before("encore ");
+          zone.append(element);
         }
         if (demain) zone.append(bouton("demain", "Demain", demain, ""));
       }
@@ -6653,6 +6740,15 @@
 
       // Lot « Mon parcours » : plus de révision « libre » (« Encore 10
       // calculs », retiré) — la page ne demande au moteur que les calculs dus.
+      // Lot « un seul système » (05/10/2026) : Mes calculs du jour (sans
+      // table) est CHRONOMÉTRÉ — 6 secondes par calcul, 30 au moins (le
+      // moteur le dit). Le chrono ne part qu'à « C'est parti ! », s'arrête
+      // tant qu'une correction est à l'écran, et un calcul raté ne revient
+      // plus en fin de série : il revient demain.
+      function dureeCourte(secondes) {
+        return secondes < 60 ? `${secondes}\u00a0s` : PARCOURS.libelleDuree(secondes).replace(/ /g, "\u00a0");
+      }
+
       function startRevision(table = null, origin = "parcours") {
         stopTimer();
         const plan = PARCOURS.planRevision(parcours, {table});
@@ -6660,11 +6756,12 @@
         state.revisionMontes = 0;
         state.revisionDescendus = 0;
         TOTAL = plan.length;
-        DURATION = null;
+        DURATION = table === null ? PARCOURS.dureeMesCalculs(plan.length) : null;
+        state.pauseA = null;
         state.questions = plan.map(item => CORE.tableQuestion(item.type, item.first, item.second));
         state.responses = [];
         state.signature = "";
-        state.configuration = {mode: "revision", revisionTable: table, tables: [], learnActivity: null, questionTypes: [], total: TOTAL, duration: null};
+        state.configuration = {mode: "revision", revisionTable: table, tables: [], learnActivity: null, questionTypes: [], total: TOTAL, duration: DURATION};
         state.index = 0;
         state.correct = 0;
         state.answered = 0;
@@ -6686,7 +6783,19 @@
         state.revisionPremierTotal = 0;
         state.origin = origin;
         state.launchReady = true;
-        beginRound();
+        if (DURATION === null) {
+          beginRound();
+          return;
+        }
+        // L'écran de lancement, comme pour un test : le chrono attend
+        // « C'est parti ! ».
+        $("launch-summary").textContent = `Mes calculs du jour\u00a0· ${pluriel(TOTAL, "calcul").replace(" ", "\u00a0")}\u00a0· ${dureeCourte(DURATION)}`;
+        $("launch-format").replaceChildren();
+        $("launch-format").hidden = true;
+        $("launch-eyebrow").hidden = true;
+        $("launch-back-fleche").hidden = false;
+        $("launch-back-label").textContent = sortieDeSerie().mot;
+        show("launch");
       }
 
       function finishRevision() {
@@ -6700,6 +6809,33 @@
         // R4 bis : la classe qui centre le cadre et cache la rangée du bas.
         $("result").classList.add("is-revision");
         $("result-verdict").classList.remove("is-champion");
+        $("result-rang").hidden = true;
+        $("result-message").hidden = true;
+        $("result-previous").hidden = true;
+        $("retry").hidden = true;
+        // Lot « un seul système » : Mes calculs du jour, chronométré. Il ne se
+        // rate pas — « fait », le score ; le temps écoulé, les calculs pas
+        // faits ne sont pas comptés faux, ils reviendront.
+        if (state.configuration.duration !== null) {
+          const pasFaits = Math.max(0, TOTAL - total);
+          $("result-icon").textContent = pasFaits ? "⏱" : "✓";
+          $("result-title").textContent = soude(pasFaits ? "Temps écoulé" : "Mes calculs du jour : fait");
+          $("result-score").textContent = soude(pasFaits
+            ? `${score} sur ${total} · ${pluriel(pasFaits, "calcul")} pas fait${pasFaits > 1 ? "s" : ""}`
+            : `${score} sur ${total}`);
+          $("result-config").textContent = "";
+          $("result-detail").textContent = pasFaits ? (pasFaits > 1 ? "Ils reviendront." : "Il reviendra.") : "";
+          const zoneDuJour = $("result-parcours");
+          zoneDuJour.replaceChildren();
+          zoneDuJour.hidden = true;
+          renderCorrections();
+          $("result-reglages").hidden = true;
+          // Hors d'une séance (aucun chemin n'y mène aujourd'hui), la rangée
+          // du bas reste : l'écran garde son bouton « Ma table ».
+          if (!enSeance()) $("result").classList.remove("is-revision");
+          show("result");
+          return;
+        }
         $("result-icon").textContent = "✓";
         $("result-title").textContent = "Révision terminée";
         // Le temps rejoint le score, comme sur les autres verdicts (« 20 sur 20
@@ -6710,10 +6846,6 @@
         // La règle (retour unique, montée le jour du retour) n'est plus écrite ici :
         // elle vit dans « Comment ça marche ? » et dans le détail d'une case.
         $("result-detail").textContent = "";
-        $("result-rang").hidden = true;
-        $("result-message").hidden = true;
-        $("result-previous").hidden = true;
-        $("retry").hidden = true;
         // Le bilan (lot mémoire) : ce qui est monté d'une boîte, ce qui est
         // redescendu ; puis la suite — « Encore N calculs du jour → Continuer »
         // tant qu'il en reste, sinon « Reviens demain : N calculs t'attendront »,
@@ -6902,14 +7034,14 @@
       function phraseRendezVous(validation, table) {
         const manquants = validation.total - validation.prets;
         if (validation.dus) {
-          return `${pluriel(validation.dus, "calcul")} de la table de ${table} t’attend${validation.dus > 1 ? "ent" : ""} dans Mes calculs du jour : c’est en les revoyant qu’ils rentrent. Tu valideras ta table après.`;
+          return `Encore ${pluriel(validation.dus, "calcul")} de la table de ${table} à réussir aujourd’hui : refais un entraînement, puis passe le test.`;
         }
         if (validation.inconnus) {
-          return `Il te reste ${pluriel(validation.inconnus, "calcul")} de la table de ${table} à rencontrer : refais un entraînement, puis tu valideras ta table.`;
+          return `Il te reste ${pluriel(validation.inconnus, "calcul")} de la table de ${table} à rencontrer : refais un entraînement, puis passe le test.`;
         }
         const quand = !validation.prochain || validation.prochain.dans <= 1 ? "demain" : `dans ${validation.prochain.dans} jours`;
         const sujet = manquants === validation.total ? `Tes ${validation.total} calculs ont` : `Encore ${pluriel(manquants, "calcul")} : ils ont`;
-        return `${sujet} rendez-vous ${quand}. C’est en les revoyant qu’ils rentrent : tu valideras ta table après.`;
+        return `${sujet} rendez-vous ${quand}. C’est en les revoyant qu’ils rentrent : tu passeras le test après.`;
       }
 
       function ligneEtape({classe, num, titre, sousTitre, points, conseille, aria, action, deplie = null, controle = null}) {
@@ -6997,23 +7129,6 @@
         cible?.focus?.({preventScroll: true});
       }
 
-      // Lot R3 (A5, décision Q4 du 11/09) : le cadenas de « Je valide ma table »
-      // mène à « Mon mélange ». Il ne suffit pas d'y poser le focus : au doigt,
-      // l'écran ne bougeait pas d'un pixel et rien ne disait où regarder. On
-      // fait donc défiler jusqu'à la ligne, et on l'illumine une seconde.
-      let montrerMelangeMinuteur = null;
-      function montrerMelange() {
-        const cible = document.querySelector(".etape.melange") || $("acc-expert");
-        if (!cible) return;
-        cible.scrollIntoView({block: "center", behavior: "smooth"});
-        clearTimeout(montrerMelangeMinuteur);
-        cible.classList.remove("est-montree");
-        void cible.offsetWidth; // redémarre l'animation si on retouche le cadenas
-        cible.classList.add("est-montree");
-        cible.focus?.({preventScroll: true});
-        montrerMelangeMinuteur = setTimeout(() => cible.classList.remove("est-montree"), 1000);
-      }
-
       // Le badge du rang (Bronze… Légende des tables) : un point de métal et le
       // nom ; la couronne pour la Légende. Vide avant la première table.
       function badgeRang(rang, badge = document.createElement("span")) {
@@ -7032,25 +7147,92 @@
       }
 
       // Le sous-titre de la ligne « Mon mélange » : les tables (listées jusqu'à
-      // trois, comptées au-delà), l'état, et le format quand il est à faire.
+      // trois, comptées au-delà) et le format.
       function sousTitreMelange(melange) {
         const tables = melange.tables.length <= 3 ? `tables ${listeTables(melange.tables)}` : `mes ${melange.tables.length} tables`;
-        const etat = melange.aJour ? "à jour ✓" : melange.aRefaireAvec ? `à refaire avec la table de ${melange.aRefaireAvec}` : "à faire";
-        return melange.aJour ? `${tables} · ${etat}` : `${tables} · ${etat} · 20\u00a0questions · 1\u00a0min\u00a030`;
+        return `${tables} · 20\u00a0questions · 1\u00a0min\u00a030`;
+      }
+
+      // Les trois trophées de Mon mélange (idée de Gwenaël, 05/10/2026) : le
+      // réussir avec au moins 3, 6, puis ses 9 tables. Trois petites coupes,
+      // grises, qui se dorent une à une — sans un mot, sans un nombre (sa
+      // demande). Rien ne se ferme et rien ne s'ouvre avec elles : c'est ce
+      // que le mélange rapporte.
+      function coupe() {
+        const NS = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(NS, "svg");
+        svg.setAttribute("viewBox", "0 0 24 24");
+        svg.setAttribute("aria-hidden", "true");
+        const anses = document.createElementNS(NS, "path");
+        anses.setAttribute("class", "anses");
+        anses.setAttribute("d", "M7 5.5H3.8v1.3A3.7 3.7 0 0 0 7.5 10.5M17 5.5h3.2v1.3a3.7 3.7 0 0 1-3.7 3.7");
+        const corps = document.createElementNS(NS, "path");
+        corps.setAttribute("class", "corps");
+        corps.setAttribute("d", "M6.6 3h10.8v5.2a5.4 5.4 0 0 1-4.3 5.3v2.7h2.6a1 1 0 0 1 1 1V21H7.3v-3.8a1 1 0 0 1 1-1h2.6v-2.7a5.4 5.4 0 0 1-4.3-5.3V3Z");
+        svg.append(anses, corps);
+        return svg;
+      }
+
+      function tropheesDuMelange(trophees) {
+        const zone = document.createElement("span");
+        zone.className = "mp-trophees";
+        trophees.forEach(trophee => {
+          const medaille = document.createElement("b");
+          medaille.className = trophee.gagne ? "is-gagne" : "";
+          medaille.dataset.tables = String(trophee.tables);
+          medaille.append(coupe());
+          zone.append(medaille);
+        });
+        const gagnes = trophees.filter(trophee => trophee.gagne).map(trophee => trophee.tables);
+        zone.setAttribute("role", "img");
+        zone.setAttribute("aria-label", `Trophées de Mon mélange (avec 3, 6 et 9 tables) : ${gagnes.length ? `gagné avec ${gagnes.join(" et ")} tables` : "aucun pour l’instant"}`);
+        return zone;
+      }
+
+      // Le triangle « jouer » de la case de Mon mélange : un dessin (centré
+      // dans sa case), pas le caractère ▶, qui penchait à gauche.
+      function triangleJouer() {
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("class", "jouer");
+        svg.setAttribute("viewBox", "0 0 24 24");
+        svg.setAttribute("aria-hidden", "true");
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        // Le centre de gravité du triangle (x = 12) est au centre du dessin.
+        path.setAttribute("d", "M7.5 5.2v13.6a.9.9 0 0 0 1.36.77l11.3-6.8a.9.9 0 0 0 0-1.54L8.86 4.43A.9.9 0 0 0 7.5 5.2Z");
+        svg.append(path);
+        return svg;
+      }
+
+      // Une table vient d'être passée (il y en a au moins deux) : le moment
+      // où Mon mélange a du sens. Un bouton le propose — rien d'obligatoire.
+      function boutonMelange() {
+        const etat = PARCOURS.etatAffichage(parcours);
+        if (!etat.melange.visible || etat.porte) return null;
+        // … seulement quand il y a un trophée à gagner maintenant.
+        if (!etat.melange.trophees.some(trophee => trophee.aGagner)) return null;
+        const bouton = document.createElement("button");
+        bouton.type = "button";
+        bouton.className = "secondary defi-melange";
+        const titre = document.createElement("b");
+        titre.textContent = `Je me teste sur mes ${etat.melange.tables.length}\u00a0tables`;
+        const detail = document.createElement("small");
+        detail.textContent = "Mon mélange · un\u00a0trophée à\u00a0gagner";
+        bouton.append(titre, detail);
+        bouton.addEventListener("click", () => launchFromParcours(PARCOURS.configMelange(parcours), "menu"));
+        return bouton;
       }
 
       // Le bloc « Je deviens expert » : l'escalier des étoiles (gagnées dorées,
-      // la suivante cerclée, les autres grises) et un seul bouton — « Tente ★★ »
-      // quand l'escalier est ouvert, « Mon mélange » tant que le mélange des
-      // 9 tables n'est pas réussi. Visible seulement quand les 9 tables sont
-      // acquises.
+      // la suivante cerclée, les autres grises) et un seul bouton, « Tente
+      // ★★ ». Visible dès que les 9 tables sont passées (lot « un seul
+      // système » : plus de mélange à réussir avant).
       function renderExpert(etat, conseil) {
         const zone = $("acc-expert");
         const toutes = etat.acquises.length === PARCOURS_TABLES.length;
         zone.hidden = !toutes;
         if (!toutes) return;
         const expert = etat.expert;
-        $("acc-expert-titre").textContent = expert.ouvert ? "Toutes les tables, de plus en plus vite" : "Réussis le mélange de tes 9 tables";
+        $("acc-expert-titre").textContent = "Toutes les tables, de plus en plus vite";
         const escalier = $("acc-escalier");
         escalier.replaceChildren();
         expert.marches.forEach(marche => {
@@ -7067,24 +7249,10 @@
         });
         const action = $("acc-expert-action");
         action.replaceChildren();
-        // Ma séance du jour (lot 2) : les 9 tables acquises ont aussi leur
-        // séance — Mes calculs du jour, le mélange s'il est dû, l'étoile suivante.
+        // Ma séance du jour (lot 2) : les 9 tables passées ont aussi leur
+        // séance — Mes calculs du jour, puis l'étoile suivante.
         if (PARCOURS.programmeDeSeance(parcours, PARCOURS.ouvrirSeance(parcours)).etapes.length) {
           action.append(carteDeSeance(null));
-          return;
-        }
-        if (!expert.ouvert) {
-          const melange = etat.melange;
-          action.append(ligneEtape({
-            classe: "melange",
-            num: "★",
-            titre: "Mon mélange",
-            sousTitre: sousTitreMelange(melange),
-            points: [etoile(melange.aJour ? 2 : 0)],
-            conseille: conseil === "melange",
-            aria: `Mon mélange, mes 9 tables : ${melange.aJour ? "à jour" : "à faire"}.`,
-            action: () => launchFromParcours(PARCOURS.configMelange(parcours), "menu")
-          }));
           return;
         }
         if (!expert.suivante) {
@@ -7113,7 +7281,7 @@
         const etat = PARCOURS.etatAffichage(parcours);
         const nombre = etat.acquises.length;
         const toutes = nombre === PARCOURS_TABLES.length;
-        $("acc-acquises").textContent = `${nombre} table${nombre > 1 ? "s" : ""} acquise${nombre > 1 ? "s" : ""} sur ${PARCOURS_TABLES.length}`;
+        $("acc-acquises").textContent = `${nombre} table${nombre > 1 ? "s" : ""} passée${nombre > 1 ? "s" : ""} sur ${PARCOURS_TABLES.length}`;
         badgeRang(etat.rang, $("acc-rang"));
 
         // L'étape surlignée : celle que le moteur conseille (Mes calculs du
@@ -7129,7 +7297,6 @@
         // le choix, et une table choisie redéploie ses trois étapes.
         const replie = toutes && !choisie;
         const conseil = prochaine.type === "revision" ? "reviser"
-          : prochaine.type === "melange" ? "melange"
           : prochaine.type === "etoile" || prochaine.type === "legende" ? "expert"
           : etapeConseillee(ligne);
         renderExpert(etat, conseil);
@@ -7139,7 +7306,7 @@
         $("acc-table-eyebrow").textContent = replie ? "Mes tables" : "Ma table";
         const titre = $("acc-table-titre");
         if (replie) {
-          titre.replaceChildren(document.createTextNode("9 sur 9 acquises "), Object.assign(document.createElement("span"), {className: "ok", textContent: "✓"}));
+          titre.replaceChildren(document.createTextNode("9 sur 9 passées "), Object.assign(document.createElement("span"), {className: "ok", textContent: "✓"}));
         } else {
           titre.textContent = `La table de ${table}`;
         }
@@ -7164,7 +7331,7 @@
           bouton.className = `${acquise ? "is-acquise" : ""}${selectionnee ? " is-selected" : ""}`.trim();
           bouton.textContent = acquise ? `${candidate} ✓` : String(candidate);
           bouton.setAttribute("aria-pressed", String(selectionnee));
-          bouton.setAttribute("aria-label", `Table de ${candidate}${acquise ? ", acquise" : ""}`);
+          bouton.setAttribute("aria-label", `Table de ${candidate}${acquise ? ", passée" : ""}`);
           bouton.addEventListener("click", () => {
             ecrireTableChoisie(candidate, {acquise});
             state.choixTableOuvert = false;
@@ -7193,7 +7360,7 @@
         // Appareil neuf sous un code : rien à l'écran tant que le serveur n'a
         // pas dit qui est l'élève (lot 2b).
         document.querySelector(".acc").classList.toggle("en-attente", suiviAttendu || billetEnCours);
-        const carteSeance = avecSeance && !state.choisirActivite;
+        const carteSeance = avecSeance && (!state.choisirActivite || etat.porte);
         if (decouverte) renderDecouverte(etapes, etat);
         else if (avecSeance) renderSeanceAccueil(etapes, etat, table, ligne);
         if (!replie && !carteSeance) {
@@ -7201,8 +7368,7 @@
           // 03/10/2026) : il lance les mêmes activités qu'avant, mais ne dit
           // plus où en est l'élève — ni « N fois », ni ●○○, ni « puis : … »,
           // ni ✓ ○, ni « conseillé » : c'est la séance, la rangée et Mon
-          // parcours qui le disent. Restent le cadenas du mélange et « Ma table
-          // est acquise ».
+          // parcours qui le disent. Reste « Ma table est passée ».
           const apprendsOuvert = state.etapeOuverte === "apprends";
           etapes.append(ligneEtape({
             classe: "apprends",
@@ -7252,8 +7418,8 @@
             // comme une « préparation » : elle ne valide pas la table. Elle
             // reste proposée sur une table acquise (19/09/2026).
             choixEntraine.push({
-              libelle: "Comme la validation, en 2 min",
-              detail: "20 questions · 2 min · avant de valider",
+              libelle: "Comme le test, en 2 min",
+              detail: "20 questions · 2 min · avant le test",
               extraClasse: "is-plus",
               lancer: () => launchFromParcours(PARCOURS.configValidation(table, 120), "menu")
             });
@@ -7264,51 +7430,26 @@
             }));
           }
 
-          // « Je valide ma table » : cadenassé tant que le mélange est dû (une
-          // table déjà acquise se rejoue librement). Le cadenas est un bouton
-          // qui explique et mène à la ligne « Mon mélange » — rien n'est
-          // désactivé en silence.
-          const verrouillee = etat.verrou && !ligne.acquise;
-          if (verrouillee) {
-            const cadenas = document.createElement("span");
-            cadenas.className = "cadenas";
-            cadenas.setAttribute("aria-hidden", "true");
-            cadenas.textContent = "🔒";
-            const ligneVerrou = ligneEtape({
-              classe: "valide verrou",
-              num: "3",
-              titre: "Je valide ma table",
-              sousTitre: "Réussis d’abord ton mélange",
-              points: [cadenas],
-              conseille: false,
-              aria: `Je valide la table de ${table} : verrouillé, réussis d’abord ton mélange.`,
-              action: montrerMelange
-            });
-            ligneVerrou.setAttribute("aria-label", `Je valide la table de ${table} : verrouillé. Réussis d’abord ton mélange.`);
-            ligneVerrou.setAttribute("aria-disabled", "true");
-            etapes.append(ligneVerrou);
-          } else {
-            // Une table acquise le dit en titre (« Ma table est acquise ·
-            // acquise le 13 septembre ») ; toucher la ligne rejoue la
-            // validation, comme avant.
-            etapes.append(ligneEtape({
-              classe: "valide",
-              num: "3",
-              titre: ligne.acquise ? "Ma table est acquise" : "Je valide ma table",
-              sousTitre: ligne.acquise ? `acquise le ${dateEnLettres(ligne.acquise)}` : "20 questions · 1 min 30",
-              points: [],
-              conseille: false,
-              aria: ligne.acquise
-                ? `Ma table de ${table} est acquise depuis le ${dateEnLettres(ligne.acquise)}. Toucher pour la revalider (20 questions en 1 min 30).`
-                : `Je valide la table de ${table}, 20 questions en 1 min 30.`,
-              action: () => launchFromParcours(PARCOURS.configValidation(table), "menu")
-            }));
-          }
+          // « Je passe le test » : plus aucun verrou (lot « un seul
+          // système »). Une table passée le dit en titre (« Ma table est
+          // passée · passée le 13 septembre ») ; toucher la ligne rejoue le test.
+          etapes.append(ligneEtape({
+            classe: "valide",
+            num: "3",
+            titre: ligne.acquise ? "Ma table est passée" : NOM_DU_TEST,
+            sousTitre: ligne.acquise ? `passée le ${dateEnLettres(ligne.acquise)}` : "20 questions · 1 min 30",
+            points: [],
+            conseille: false,
+            aria: ligne.acquise
+              ? `Ma table de ${table} est passée depuis le ${dateEnLettres(ligne.acquise)}. Toucher pour repasser le test (20 questions en 1 min 30).`
+              : `${NOM_DU_TEST} de la table de ${table}, 20 questions en 1 min 30.`,
+            action: () => launchFromParcours(PARCOURS.configValidation(table), "menu")
+          }));
         }
 
-        // Dès 2 tables acquises, la 4e ligne ★ « Mon mélange ». Avec les 9
-        // tables, il vit dans le bloc « Je deviens expert » (renderExpert).
-        if (etat.melange.visible && !toutes && !carteSeance) {
+        // Dès 2 tables passées, la 4e ligne ★ « Mon mélange » — libre : il ne
+        // ferme rien, il n'est jamais « à refaire ».
+        if (etat.melange.visible && !replie && !carteSeance) {
           const melange = etat.melange;
           etapes.append(ligneEtape({
             classe: "melange",
@@ -7317,7 +7458,7 @@
             sousTitre: sousTitreMelange(melange),
             points: [],
             conseille: false,
-            aria: `Mon mélange, tables ${listeTables(melange.tables)} : ${melange.aJour ? "à jour" : melange.aRefaireAvec ? `à refaire avec la table de ${melange.aRefaireAvec}` : "à faire"}.`,
+            aria: `Mon mélange, ${tablesDuMelange(melange.tables)} : 20 questions en 1 min 30.`,
             action: () => launchFromParcours(PARCOURS.configMelange(parcours), "menu")
           }));
         }
@@ -7734,12 +7875,11 @@
         cadre.className = "cadre";
         const titre = document.createElement("p");
         titre.className = "acquise";
-        titre.textContent = `Table de ${table} acquise ✓`;
+        titre.textContent = `Table de ${table} passée ✓`;
         cadre.append(titre);
         const morceaux = [];
         const demain = PARCOURS.agendaCalculs(parcours).demain;
         if (demain) morceaux.push(soude(pluriel(demain, "calcul")));
-        if (PARCOURS.melangeDu(parcours)) morceaux.push(PARCOURS.toutesAcquises(parcours) ? "ton mélange des 9 tables" : `ton mélange des tables ${listeTables(PARCOURS.etatAffichage(parcours).melange.tables)}`);
         const suivante = PARCOURS.tableDeSeance(parcours);
         if (suivante !== null) morceaux.push(`la table de ${suivante}`);
         if (morceaux.length) {
@@ -7757,6 +7897,8 @@
           phrase.append(document.createTextNode("."));
           cadre.append(phrase);
         }
+        const defi = boutonMelange();
+        if (defi) cadre.append(defi);
         return cadre;
       }
 
@@ -7836,9 +7978,8 @@
           numero.textContent = String(index + 1);
           const nom = document.createElement("span");
           nom.textContent = etape.nom;
-          const detail = etape.type === "revision" ? pluriel(etape.calculs, "calcul")
+          const detail = etape.type === "revision" ? `${pluriel(etape.calculs, "calcul")} · ${dureeCourte(etape.duree)}`
             : etape.type === "etoile" ? etape.detail
-            : etape.type === "melange" && etape.config ? tablesDuMelange(etape.config.tables)
             : etape.conditionnelle ? "si mes calculs sont prêts" : "";
           if (detail) {
             const petit = document.createElement("small");
@@ -7854,9 +7995,9 @@
           const numero = document.createElement("i");
           numero.textContent = String(nombre + 1);
           const nom = document.createElement("span");
-          nom.textContent = "Je valide ma table";
+          nom.textContent = NOM_DU_TEST;
           const petit = document.createElement("small");
-          petit.textContent = " · si je réussis mes entraînements";
+          petit.textContent = ` · ${CONDITION_DU_TEST}`;
           nom.append(petit);
           item.append(numero, nom);
           liste.append(item);
@@ -7864,7 +8005,7 @@
         carte.append(tete, liste);
         carte.setAttribute("aria-label", reprise
           ? `${titre.textContent} : ${duree.textContent}. ${dejaFaites.map((passee, index) => `${index + 1}, ${passee.nom}, fait`).join(" ; ")} ; ${programme.etapes.map((etape, index) => `${dejaFaites.length + index + 1}, ${etape.nom}`).join(" ; ")}. Reprendre.`
-          : `${titre.textContent} : ${duree.textContent}. ${programme.etapes.map((etape, index) => `${index + 1}, ${etape.nom}`).join(" ; ")}${enPlus ? ` ; ${nombre + 1}, Je valide ma table, si je réussis mes entraînements` : ""}. Commencer.`);
+          : `${titre.textContent} : ${duree.textContent}. ${programme.etapes.map((etape, index) => `${index + 1}, ${etape.nom}`).join(" ; ")}${enPlus ? ` ; ${nombre + 1}, ${NOM_DU_TEST}, ${CONDITION_DU_TEST}` : ""}. Commencer.`);
         carte.addEventListener("click", () => commencerSeance(table));
         return carte;
       }
@@ -7915,6 +8056,9 @@
           liens.append(bouton);
           return bouton;
         };
+        // La porte fermée : pas de menu « Choisir une activité » (resté ouvert
+        // la veille, par exemple).
+        if (etat.porte) state.choisirActivite = false;
         if (state.choisirActivite) {
           // Lot E1 (décision 8) : « ← Ma séance du jour » à gauche, puis le
           // petit titre CHOISIR UNE ACTIVITÉ au-dessus de l'ancien menu.
@@ -7940,16 +8084,7 @@
         }
         etapes.append(carteDeSeance(table));
         if (!ligne.acquise) {
-          lien("Je valide ma table", () => {
-            // Le seul verrou : le mélange dû. On ouvre le menu sur sa ligne.
-            if (etat.verrou) {
-              state.choisirActivite = true;
-              renderAccueil();
-              montrerMelange();
-              return;
-            }
-            launchFromParcours(PARCOURS.configValidation(table), "menu");
-          }, "rond");
+          lien(NOM_DU_TEST, () => launchFromParcours(PARCOURS.configValidation(table), "menu"), "rond");
         }
         lien("Choisir une activité", () => {
           state.choisirActivite = true;
@@ -7957,6 +8092,18 @@
           document.querySelector("#acc-etapes .etape")?.focus?.({preventScroll: true});
         });
         etapes.append(liens);
+        // La porte (lot « un seul système », version A choisie par Gwenaël) :
+        // tant que Mes calculs du jour n'est pas joué, les deux liens sont
+        // grisés sous « Après Mes calculs du jour ». Une fois joué — quel que
+        // soit le score — tout s'ouvre.
+        if (etat.porte) {
+          liens.classList.add("est-fermee");
+          liens.querySelectorAll("button").forEach(bouton => { bouton.disabled = true; });
+          const mot = document.createElement("p");
+          mot.className = "porte-mot";
+          mot.textContent = "Après Mes calculs du jour";
+          liens.prepend(mot);
+        }
       }
 
       // Lot « retouches après Mon parcours » (choix de Gwenaël, 04/10) :
@@ -8024,7 +8171,7 @@
         $("acc-table-titre").textContent = "Tu connais déjà des tables ?";
         const texte = document.createElement("p");
         texte.className = "decouverte-texte";
-        texte.textContent = "Valide celles que tu connais : 20 questions en 1 min 30.";
+        texte.textContent = "Passe le test de celles que tu connais : 20 questions en 1 min 30.";
         const choix = document.createElement("div");
         choix.className = "matable-choix decouverte-choix";
         PARCOURS_TABLES.forEach(candidate => {
@@ -8033,7 +8180,7 @@
           const acquise = etat.acquises.includes(candidate);
           bouton.className = acquise ? "is-acquise" : "";
           bouton.textContent = acquise ? `${candidate} ✓` : String(candidate);
-          bouton.setAttribute("aria-label", acquise ? `Table de ${candidate}, acquise` : `Valider la table de ${candidate}`);
+          bouton.setAttribute("aria-label", acquise ? `Table de ${candidate}, passée` : `Passer le test de la table de ${candidate}`);
           if (acquise) bouton.setAttribute("aria-disabled", "true");
           else bouton.addEventListener("click", () => {
             decouverteEngagee = true;
@@ -8087,7 +8234,7 @@
             petit.textContent = "conseillée";
             bouton.append(petit);
           }
-          bouton.setAttribute("aria-label", `Table de ${candidate}${acquise ? ", acquise" : conseil ? ", conseillée" : ""}`);
+          bouton.setAttribute("aria-label", `Table de ${candidate}${acquise ? ", passée" : conseil ? ", conseillée" : ""}`);
           // Une table déjà validée est cochée, pas proposée (comme au premier écran).
           if (acquise) bouton.setAttribute("aria-disabled", "true");
           else bouton.addEventListener("click", () => {
@@ -8221,7 +8368,7 @@
         if (ligne && ligne.acquise) {
           const badge = document.createElement("span");
           badge.className = "parcours-badge";
-          badge.textContent = `acquise le ${dateEnLettres(ligne.acquise)} ✓`;
+          badge.textContent = `passée le ${dateEnLettres(ligne.acquise)} ✓`;
           droite.append(badge);
         }
         head.append(nom, droite);
@@ -8242,6 +8389,12 @@
 
       function launchFromParcours(config, origin = "parcours") {
         if (!config) return;
+        // La porte : tant que Mes calculs du jour n'est pas joué, seule la
+        // séance (qui commence par lui) lance quelque chose.
+        if (origin !== "seance" && PARCOURS.mesCalculsAFaire(parcours)) {
+          renderAccueil();
+          return;
+        }
         if (config.mode === "revision") {
           startRevision(config.table ?? null, origin);
           return;
@@ -8339,17 +8492,17 @@
         renderMaTable($("parcours-matable"), etat, tableEnCours(etat));
         renderCalculs();
 
-        // « Mon mélange » : dès 2 tables acquises, jusqu'aux 9 — obligatoire
-        // avant de valider une nouvelle table, et c'est le mélange des 9 qui
-        // ouvre l'escalier.
+        // « Mon mélange » : dès 2 tables passées, jusqu'aux 9 — libre (lot « un
+        // seul système ») : il ne ferme rien et n'ouvre rien. À droite, ses
+        // trois coupes. La porte fermée, il attend Mes calculs du jour.
+        const porte = etat.porte;
         const melange = $("parcours-melange");
         melange.hidden = !etat.melange.visible;
         melange.replaceChildren();
         if (etat.melange.visible) {
           // Lot « Mon parcours » (décision 11) : compact — le carré qui lance
-          // le mélange, « Mon mélange » et ses tables dessous, le badge à droite
-          // (ou dessous quand il est long : « À refaire avec la table de 10 »
-          // écrasait les tables sur un téléphone de 320 px).
+          // le mélange, « Mon mélange » et ses tables dessous, les trois coupes
+          // à droite.
           const ligneMelange = document.createElement("div");
           ligneMelange.className = "mp-melange";
           const droite = document.createElement("span");
@@ -8358,24 +8511,30 @@
           const title = document.createElement("strong");
           title.textContent = "Mon mélange";
           const tables = document.createElement("small");
-          tables.textContent = tablesDuMelange(etat.melange.tables);
+          // « tables 2, 3 et 5 », puis « mes 4 tables » : court, sur une ligne,
+          // à côté des trophées.
+          tables.textContent = etat.melange.tables.length <= 3 ? tablesDuMelange(etat.melange.tables) : `mes ${etat.melange.tables.length}\u00a0tables`;
           textes.append(title, tables);
-          const badge = document.createElement("span");
-          badge.className = `parcours-badge${etat.melange.aJour ? "" : " is-pending"}`;
-          badge.textContent = etat.melange.aJour ? "À jour ✓" : etat.melange.aRefaireAvec ? `À refaire avec la table de ${etat.melange.aRefaireAvec}` : "À faire";
-          droite.append(textes, badge);
+          if (porte) tables.textContent = "après Mes calculs du jour";
+          droite.append(textes, tropheesDuMelange(etat.melange.trophees));
           ligneMelange.append(makeCell({
-            kind: "check",
-            etat: etat.melange.aJour ? 2 : 0,
-            label: "Mon mélange, mes tables acquises (20 questions en 1 min 30)",
-            config: PARCOURS.configMelange(parcours)
+            kind: "star",
+            etat: 0,
+            label: `Mon mélange, mes tables passées (20 questions en 1 min 30)${porte ? " — après Mes calculs du jour" : ""}`,
+            config: porte ? null : PARCOURS.configMelange(parcours),
+            extraClass: porte ? "is-fermee" : "",
+            texte: triangleJouer(),
+            action: porte ? () => {} : null
           }), droite);
           melange.append(ligneMelange);
         }
 
-        // « Je deviens expert » : l'escalier des cinq marches, ouvert quand les
-        // 9 tables sont acquises et le dernier mélange réussi. Chaque marche est
-        // une case ; une marche réussie valide les précédentes.
+        // « Je deviens expert » : l'escalier des cinq marches, ouvert dès que les
+        // 9 tables sont passées. Chaque marche est une case ; une marche
+        // réussie valide les précédentes. La porte fermée, il attend Mes
+        // calculs du jour.
+        const expertOuvert = etat.expert.ouvert && !porte;
+        const expertAttend = porte && etat.expert.ouvert ? "après Mes calculs du jour" : "après mes 9 tables";
         const expert = $("parcours-expert");
         expert.replaceChildren();
         const expertHead = document.createElement("div");
@@ -8385,7 +8544,7 @@
         const expertBadge = document.createElement("span");
         const couronne = etat.expert.niveau === PARCOURS.ETOILES_MAX;
         expertBadge.className = `parcours-badge${couronne ? "" : " is-pending"}`;
-        expertBadge.textContent = couronne ? "👑 Légende des tables" : etat.expert.niveau ? PARCOURS.symboleEtoile(etat.expert.niveau) : etat.expert.ouvert ? "" : "après le mélange des 9 tables";
+        expertBadge.textContent = couronne ? "👑 Légende des tables" : etat.expert.niveau ? PARCOURS.symboleEtoile(etat.expert.niveau) : expertOuvert ? "" : expertAttend;
         expertHead.append(expertTitle, expertBadge);
         const stars = document.createElement("div");
         stars.className = "parcours-extra-cells";
@@ -8395,11 +8554,11 @@
           colonne.append(makeCell({
             kind: "star",
             etat: marche.gagnee ? 2 : 0,
-            label: `${marche.symbole} : toutes les tables, produits, trous et divisions, 25 questions en ${marche.libelleDuree}${etat.expert.ouvert ? "" : " — après le mélange des 9 tables"}`,
-            config: etat.expert.ouvert ? marche.config : null,
-            extraClass: `n${marche.etoile}${etat.expert.ouvert ? "" : " is-fermee"}`,
+            label: `${marche.symbole} : toutes les tables, produits, trous et divisions, 25 questions en ${marche.libelleDuree}${expertOuvert ? "" : ` — ${expertAttend}`}`,
+            config: expertOuvert ? marche.config : null,
+            extraClass: `n${marche.etoile}${expertOuvert ? "" : " is-fermee"}`,
             texte: symboleMarche(marche),
-            action: etat.expert.ouvert ? null : () => $("parcours-melange").querySelector(".cell")?.focus?.()
+            action: expertOuvert ? null : () => {}
           }));
           const duree = document.createElement("small");
           duree.textContent = marche.libelleDuree;
@@ -8426,41 +8585,49 @@
 
       // La suite, en UNE phrase (« Et maintenant : … »). Le verdict a déjà dit
       // le score, le réussi ou raté et le rang : il ne reste que ce que l'élève
-      // fait ensuite. Après une table acquise, le mélange à refaire et la table
-      // suivante tiennent dans la même phrase — avant, deux consignes se
-      // suivaient (audit, A10).
+      // fait ensuite. Après une table passée : la table suivante (lot « un seul
+      // système » : plus de mélange à refaire).
       function suiteApresSerie(evenements, fete) {
         const liste = evenements || [];
         const trouve = type => liste.find(evenement => evenement.type === type);
         if (fete.validation) {
           const suivante = tableSuivanteApres(fete.validation.table);
-          const puis = suivante ? `, puis la table de ${suivante}` : "";
-          if (trouve("toutes-acquises")) return "Toutes tes tables sont acquises ! Réussis le mélange des 9 pour ouvrir l’escalier des étoiles.";
-          if (trouve("melange-a-refaire")) return `Refais ton mélange avec la table de ${fete.validation.table}${puis}.`;
-          if (trouve("melange-debloque")) return `Deux tables acquises : réussis ton mélange${puis}.`;
+          if (trouve("toutes-acquises")) return "Tes 9 tables sont passées : l’escalier des étoiles est ouvert !";
           return suivante ? `On continue avec la table de ${suivante}.` : "";
         }
-        if (fete.melange) return fete.melange.escalierOuvert ? "L’escalier des étoiles est ouvert !" : "Tu peux valider une nouvelle table.";
+        // Mon mélange, libre : réussi, il n'ouvre rien — il rapporte un trophée.
+        if (fete.melange) return fete.melange.trophee ? `Tu gagnes le trophée des ${fete.melange.trophee} tables\u00a0!` : "";
         if (fete.etoile) return fete.etoile.couronne ? "" : `Tente ${PARCOURS.symboleEtoile(fete.etoile.etoile + 1)} en ${PARCOURS.libelleDuree(PARCOURS.dureeEtoile(fete.etoile.etoile + 1))}.`;
         const validation = trouve("validation");
-        if (validation && validation.reussi && validation.verrouillee) return "Réussis d’abord ton mélange, puis reviens valider ta table.";
         const preparation = trouve("preparation");
         if (preparation) return preparation.reussi
-          ? "Maintenant, essaie en 1 min 30 pour valider ta table."
+          ? "Maintenant, passe le test en 1 min 30."
           : "Continue à t’entraîner, puis vise 18 sur 20 en 1 min 30.";
         const entraine = trouve("entraine");
         if (entraine && entraine.reussi && entraine.pret) {
           // Les trois réussis : « tu peux valider » seulement si les 8 calculs
           // sont en boîte 3 ; sinon la même phrase que l'accueil (le rendez-vous).
-          if (!entraine.validation || entraine.validation.prete) return "Tes trois entraînements sont réussis : tu peux valider ta table !";
+          if (!entraine.validation || entraine.validation.prete) return "Tes trois entraînements sont réussis : tu peux passer le test !";
           return `Tes trois entraînements sont réussis ! ${phraseRendezVous(entraine.validation, entraine.table)}`;
         }
         // Audit 1 (30/09/2026) : une validation ou un mélange ratés disent
         // aussi la suite — les erreurs (et les calculs passés) reviennent
         // demain dans Mes calculs ; sans erreur, c'est le temps qui a manqué.
         const melange = trouve("melange");
+        // Lot « un seul système » : Mes calculs du jour ne prend que les
+        // calculs des tables passées — après un test raté sur une table qui
+        // ne l'est pas encore, ses erreurs ne « reviennent » pas demain : la
+        // phrase envoie s'entraîner.
+        if (validation && !validation.reussi && !validation.dejaAcquise) return phraseTestRate();
         if ((validation && !validation.reussi) || (melange && !melange.reussi)) return phraseErreursDemain();
         return "";
+      }
+
+      function phraseTestRate() {
+        const erreurs = state.answered - state.correct + calculsPasses();
+        if (erreurs) return "Entraîne‑toi, puis repasse le test.";
+        const tempsEcoule = state.configuration.duration !== null && TOTAL - state.index > 0;
+        return tempsEcoule ? "Tu manques de temps : entraîne-toi, puis réessaie." : "";
       }
 
       function phraseErreursDemain() {
@@ -8486,6 +8653,10 @@
         etiquette.textContent = "Et maintenant\u00a0:";
         line.append(etiquette, document.createTextNode(` ${soude(texte)}`));
         zone.append(line);
+        // Une table vient d'être passée, hors séance : Mon mélange est proposé.
+        const fete = feteDuResultat(suivi.evenements);
+        const defi = fete.validation && !enSeance() && state.origin !== "decouverte" ? boutonMelange() : null;
+        if (defi) zone.append(defi);
         zone.hidden = false;
         // Le bouton « Ma table » ramène à l'accueil, qui surligne l'étape.
       }
@@ -8567,7 +8738,7 @@
           nom.textContent = `Table de ${maTable}`;
           const etatTable = document.createElement("span");
           etatTable.className = "fiche-etat";
-          etatTable.textContent = ligneTable && ligneTable.acquise ? `ma table · ✓ acquise le ${dateEnLettres(ligneTable.acquise)}` : "ma table";
+          etatTable.textContent = ligneTable && ligneTable.acquise ? `ma table · ✓ passée le ${dateEnLettres(ligneTable.acquise)}` : "ma table";
           carte.append(nom, etatTable);
           if (ligneTable && !ligneTable.acquise) {
             const marches = marchesDeTable(fiche, maTable);
@@ -8621,11 +8792,9 @@
         $("fiche-prof-vide").hidden = Boolean(lignesProf.children.length);
         // Avec ce cadre, la fiche se resserre pour tenir sur une page.
         $("fiche-print").classList.toggle("avec-prof", Boolean(source));
-        // R5 (A17) : « À refaire » seulement s'il a déjà été réussi une fois ;
-        // un mélange jamais fait est « À faire » — la règle de Mon parcours.
-        $("fiche-melange-state").textContent = etat.melange.visible
-          ? `${etat.melange.aJour ? "À jour ✓" : etat.melange.aRefaireAvec ? "À refaire" : "À faire"} (${etat.melange.tables.join(", ")})`
-          : "";
+        // Mon mélange, libre : ses trois trophées (vides sur la fiche vierge,
+        // à colorier).
+        $("fiche-melange-state").replaceChildren(tropheesDuMelange(etat.melange.trophees));
         const stars = $("fiche-stars");
         stars.replaceChildren();
         etat.expert.marches.forEach(marche => {

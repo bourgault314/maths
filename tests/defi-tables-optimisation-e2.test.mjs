@@ -29,6 +29,7 @@ class Noeud {
   append(...noeuds) { noeuds.forEach(n => this.enfants.push(typeof n === "string" ? texteNoeud(n) : n)); }
   replaceChildren(...noeuds) { this.enfants = []; this.append(...noeuds); }
   setAttribute(cle, valeur) { this.attributs[cle] = valeur; }
+  addEventListener(nom, action) { (this.ecouteurs ||= {})[nom] = action; }
   set textContent(valeur) { this._texte = String(valeur); this.enfants = []; }
   get textContent() { return this._texte !== null && !this.enfants.length ? this._texte : (this._texte || "") + this.enfants.map(e => e.textContent).join(""); }
   tous(tag) { return [...(this.tag === tag ? [this] : []), ...this.enfants.flatMap(e => (e.tous ? e.tous(tag) : []))]; }
@@ -58,20 +59,53 @@ test("décision 3 : « À retenir pour demain » — chaque calcul une fois, éc
   assert.match(html, /\.seance-suite \.retenir, \.carte-seance \.retenir \{ width: 100%;/, "le même cadre au bilan et sur la carte de l’accueil");
 });
 
-test("décision 12 (réponse B) : « Table de 3 acquise ✓ » à la place de la rangée, et une seule phrase pour demain", () => {
-  // Lot « Mon parcours » (décision 12) : les tables du mélange sont écrites ;
-  // la phrase se coupe après une virgule, jamais ailleurs dans un morceau.
-  const listeTables = new Function(`${corps("listeTables")}; return listeTables;`)();
-  const fabrique = (demain, melange, toutes, suivante, tables = [2, 3, 5, 10]) => new Function("document", "soude", "pluriel", "PARCOURS", "parcours", "listeTables", `${corps("cadreTableAcquise")}; return cadreTableAcquise;`)(
+test("décision 12 (réponse B) : « Table de 3 passée ✓ » à la place de la rangée, une seule phrase pour demain (sans mélange), et le bouton « Je me teste sur mes N tables » quand un trophée est à gagner", () => {
+  // Lot « un seul système » : le mélange n'est plus dans la séance du
+  // lendemain — la phrase ne l'annonce plus ; à la place, un bouton le propose
+  // (rien d'obligatoire). Lot « les trophées » : seulement quand un trophée
+  // de Mon mélange est à gagner maintenant (3, 6 ou 9 tables passées, pas
+  // encore réussi avec autant). Les vraies fonctions de la page
+  // (cadreTableAcquise, boutonMelange) sont exécutées.
+  // Les trophées comme le moteur les donne : « reussi » = le plus grand nombre
+  // de tables avec lequel le mélange a été réussi (0 : jamais).
+  const tropheesDe = (tables, reussi) => [3, 6, 9].map(n => ({tables: n, gagne: reussi >= n, aGagner: reussi < n && tables.length >= n}));
+  const lances = [];
+  const fabrique = (demain, suivante, {visible = true, tables = [2, 3, 5, 10], porte = false, reussi = 0} = {}) => new Function("document", "soude", "pluriel", "PARCOURS", "parcours", "launchFromParcours",
+    `${corps("boutonMelange")}\n${corps("cadreTableAcquise")}; return cadreTableAcquise;`)(
     document, soude, pluriel,
-    {agendaCalculs: () => ({demain}), melangeDu: () => melange, toutesAcquises: () => toutes, tableDeSeance: () => suivante, etatAffichage: () => ({melange: {tables}})}, {}, listeTables);
-  let cadre = fabrique(3, true, false, 4)(3);
-  assert.equal(cadre.tous("p")[0].textContent, "Table de 3 acquise ✓");
-  assert.equal(cadre.tous("p")[1].textContent, "Demain\u00a0: 3\u00a0calculs, ton\u00a0mélange\u00a0des\u00a0tables\u00a02, 3, 5\u00a0et\u00a010, puis la\u00a0table\u00a0de\u00a04.");
-  assert.equal(fabrique(1, true, false, 4)(3).tous("p")[1].textContent, "Demain\u00a0: 1\u00a0calcul, ton\u00a0mélange\u00a0des\u00a0tables\u00a02, 3, 5\u00a0et\u00a010, puis la\u00a0table\u00a0de\u00a04.", "la phrase de la décision 12");
-  assert.equal(fabrique(0, true, false, 4, [2, 5])(3).tous("p")[1].textContent, "Demain\u00a0: ton\u00a0mélange\u00a0des\u00a0tables\u00a02\u00a0et\u00a05, puis la\u00a0table\u00a0de\u00a04.");
-  assert.equal(fabrique(0, false, false, 10)(2).tous("p")[1].textContent, "Demain : la\u00a0table\u00a0de\u00a010.", "la première table acquise : pas encore de mélange");
-  assert.equal(fabrique(2, true, true, null)(9).tous("p")[1].textContent, "Demain : 2 calculs, puis ton\u00a0mélange\u00a0des\u00a09\u00a0tables.");
+    {agendaCalculs: () => ({demain}), tableDeSeance: () => suivante, etatAffichage: () => ({melange: {visible, tables, trophees: tropheesDe(tables, reussi)}, porte}), configMelange: () => ({mode: "validation", tables})}, {},
+    (config, origine) => lances.push([config, origine]));
+  let cadre = fabrique(3, 4)(3);
+  assert.equal(cadre.tous("p")[0].textContent, "Table de 3 passée ✓");
+  assert.equal(cadre.tous("p")[1].textContent, "Demain\u00a0: 3\u00a0calculs, puis la\u00a0table\u00a0de\u00a04.");
+  assert.equal(fabrique(1, 4)(3).tous("p")[1].textContent, "Demain\u00a0: 1\u00a0calcul, puis la\u00a0table\u00a0de\u00a04.", "la phrase de la décision 12, sans le mélange");
+  assert.equal(fabrique(0, 4, {tables: [2, 5]})(3).tous("p")[1].textContent, "Demain\u00a0: la\u00a0table\u00a0de\u00a04.");
+  assert.doesNotMatch(cadre.textContent, /ton\u00a0mélange|ton mélange/, "le mélange n'est plus annoncé pour demain");
+  // Le bouton : « Je me teste sur mes 4 tables », il lance Mon mélange.
+  const bouton = cadre.tous("button")[0];
+  assert.equal(bouton.className, "secondary defi-melange");
+  assert.equal(bouton.tous("b")[0].textContent, "Je me teste sur mes 4\u00a0tables");
+  assert.equal(bouton.tous("small")[0].textContent, "Mon mélange · un\u00a0trophée à\u00a0gagner");
+  bouton.ecouteurs.click();
+  assert.deepEqual(lances, [[{mode: "validation", tables: [2, 3, 5, 10]}, "menu"]]);
+  // La première table passée : pas encore de mélange, pas de bouton.
+  cadre = fabrique(0, 10, {visible: false, tables: [2]})(2);
+  assert.equal(cadre.tous("p")[1].textContent, "Demain\u00a0: la\u00a0table\u00a0de\u00a010.");
+  assert.equal(cadre.tous("button").length, 0, "une seule table passée : pas de bouton");
+  // La porte fermée (Mes calculs du jour pas joué) : pas de bouton non plus.
+  assert.equal(fabrique(0, 4, {porte: true})(3).tous("button").length, 0);
+  // Pas de trophée à gagner maintenant : pas de bouton. Deux tables passées
+  // (il en faut 3), ou le trophée des 3 tables déjà gagné avec 4 tables (le
+  // suivant attend la 6e).
+  assert.equal(fabrique(0, 4, {tables: [2, 5]})(5).tous("button").length, 0, "2 tables : aucun trophée à tenter");
+  assert.equal(fabrique(0, 4, {reussi: 3})(3).tous("button").length, 0, "trophée des 3 tables déjà gagné, 4 tables : rien à gagner");
+  assert.equal(fabrique(0, 4, {reussi: 2})(3).tous("button").length, 1, "réussi avec 2 tables seulement : le trophée des 3 reste à gagner");
+  assert.equal(fabrique(0, 7, {tables: [2, 3, 4, 5, 6, 10], reussi: 4})(6).tous("button")[0].tous("b")[0].textContent, "Je me teste sur mes 6\u00a0tables", "la 6e table : le deuxième trophée");
+  // Les 9 tables passées : plus de table suivante ; le bouton propose les 9.
+  cadre = fabrique(2, null, {tables: [2, 3, 4, 5, 6, 7, 8, 9, 10]})(9);
+  assert.equal(cadre.tous("p")[1].textContent, "Demain\u00a0: 2\u00a0calculs.");
+  assert.equal(cadre.tous("button")[0].tous("b")[0].textContent, "Je me teste sur mes 9\u00a0tables");
+  assert.equal(fabrique(0, null)(9).tous("p").length, 1, "rien pour demain : pas de phrase");
   const bilan = corps("renderBilanSeance");
   assert.match(bilan, /const acquiseIci = table !== null && seance\.faites\.some\(faite => faite\.type === "validation" && faite\.reussi\) && Boolean\(parcours\.tables\[table\]\.acquise\);/);
   assert.match(bilan, /if \(acquiseIci\) \{\s*zone\.append\(cadreTableAcquise\(table\)\);\s*\} else if \(table !== null\) \{/, "la rangée de la table finie n'est plus montrée");

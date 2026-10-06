@@ -48,15 +48,24 @@ test("l’accueil : Ma table et ses trois étapes, Réviser, Mon parcours, Mes c
   // 4e ligne ★ n'existe qu'à partir de 2 tables acquises.
   assert.match(html, /num: "1",\s*titre: "J’apprends"/);
   assert.match(html, /num: "2",\s*titre: "Je m’entraîne"/);
-  assert.match(html, /num: "3",\s*titre: ligne\.acquise \? "Ma table est acquise" : "Je valide ma table"/, "lot dosage + validation : une table acquise le dit en titre");
+  // Lot « un seul système » (05/10/2026) : la table est « passée », le test
+  // s'appelle « Je passe le test » (NOM_DU_TEST, écrit une seule fois).
+  assert.match(html, /const NOM_DU_TEST = "Je passe le test";/);
+  assert.match(html, /num: "3",\s*titre: ligne\.acquise \? "Ma table est passée" : NOM_DU_TEST/, "une table passée le dit en titre ; sinon « Je passe le test »");
+  assert.doesNotMatch(html, /Ma table est acquise|"Je valide ma table"/, "plus de « acquise » ni de « Je valide ma table » dans les titres");
   assert.match(html, /num: "★",\s*titre: "Mon mélange"/, "lot 3 : la ligne ★ s’appelle « Mon mélange »");
-  assert.match(html, /if \(etat\.melange\.visible && !toutes && !carteSeance\) \{/, "la ligne ★ suit la règle du moteur : dès 2 tables acquises ; avec les 9, elle vit dans le bloc Je deviens expert");
-  assert.match(html, /sousTitre: ligne\.acquise \? `acquise le \$\{dateEnLettres\(ligne\.acquise\)\}` : "20 questions · 1 min 30"/, "la seule règle écrite sur l’accueil");
+  assert.match(html, /if \(etat\.melange\.visible && !replie && !carteSeance\) \{/, "la ligne ★ suit la règle du moteur : dès 2 tables passées, dans le menu d’une table (pas sur le bloc replié « Mes tables »)");
+  assert.match(html, /sousTitre: ligne\.acquise \? `passée le \$\{dateEnLettres\(ligne\.acquise\)\}` : "20 questions · 1 min 30"/, "la seule règle écrite sur l’accueil");
 });
 
 test("l’appli ne choisit rien : les trois étapes restent des boutons, elle surligne seulement la conseillée", () => {
   assert.match(html, /bouton\.className = `etape \$\{classe\}\$\{conseille \? " is-next" : ""\}`/);
-  assert.doesNotMatch(html, /bouton\.disabled = /, "rien n’est désactivé en silence : le cadenas du lot 3 est un bouton qui explique et mène au mélange");
+  // Lot « un seul système » : plus de cadenas. Le seul endroit où des boutons
+  // sont désactivés est la porte de Mes calculs du jour — et elle le dit
+  // (« Après Mes calculs du jour ») : rien n'est désactivé en silence.
+  assert.equal((html.match(/bouton\.disabled = /g) || []).length, 1, "un seul endroit désactive des boutons : la porte");
+  assert.match(html, /if \(etat\.porte\) \{\s*liens\.classList\.add\("est-fermee"\);\s*liens\.querySelectorAll\("button"\)\.forEach\(bouton => \{ bouton\.disabled = true; \}\);\s*const mot = document\.createElement\("p"\);\s*mot\.className = "porte-mot";\s*mot\.textContent = "Après Mes calculs du jour";/, "la porte fermée dit pourquoi");
+  assert.doesNotMatch(html, /classe: "valide verrou"|ligneVerrou|cadenas\.textContent/, "la ligne du test n’est plus jamais cadenassée");
   assert.match(html, /const conseil = prochaine\.type === "revision" \? "reviser"/, "le conseil suit prochaineEtape du moteur");
   assert.match(html, /\.etape\.is-next \{ border-color: var\(--blue\)/);
   assert.match(html, /\.etape\.is-next \.num \{ background: var\(--blue\); color: #fff; \}/);
@@ -148,7 +157,11 @@ test("la notice « Comment ça marche ? » : les règles, écrites une fois, clo
   assert.ok(notice, "le gabarit de la notice existe");
   const texte = notice[1];
   assert.equal((texte.match(/<p>/g) || []).length, 6, "six lignes, une par sujet");
-  assert.match(texte, /<p><b>Mon mélange\.<\/b> Dès 2 tables acquises, je réussis le mélange avant de valider une nouvelle table\.<\/p>/);
+  // Lot « un seul système » : Mon mélange est libre — la notice ne parle plus
+  // d'un mélange à réussir avant le test d'une nouvelle table. Lot « les
+  // trophées » : elle dit ce qu'il rapporte (un trophée avec 3, 6, puis 9 tables).
+  assert.match(texte, /<p><b>Mon mélange\.<\/b> Dès 2 tables passées, quand je veux&nbsp;: 20 questions en 1 min 30\. Un trophée avec 3, 6, puis 9 tables\.<\/p>/);
+  assert.doesNotMatch(texte, /avant de valider|acquise/, "ni verrou ni « acquise » dans la notice");
   assert.doesNotMatch(texte, /je m’entraîne 3 fois|25 produits|Champion|★ produits/);
   assert.equal((html.match(/data-notice hidden/g) || []).length, 2, "accueil + parcours");
   assert.match(html, /document\.querySelectorAll\("\[data-notice\]"\)\.forEach\(zone => zone\.append\(modele\.content\.cloneNode\(true\)\)\)/);
@@ -391,15 +404,17 @@ test("lot R3 · le bleu ne désigne plus que l’étape conseillée", () => {
   assert.doesNotMatch(html, /tag\.textContent = "conseillé";/);
 });
 
-test("lot R3 · toucher le cadenas descend jusqu’à « Mon mélange » et l’illumine", () => {
-  // A5, décision Q4 : aucun texte nouveau, un geste qui répond.
-  assert.match(html, /action: montrerMelange/);
-  const corps = html.slice(html.indexOf("function montrerMelange()"), html.indexOf("function badgeRang"));
-  assert.match(corps, /document\.querySelector\("\.etape\.melange"\) \|\| \$\("acc-expert"\)/);
-  assert.match(corps, /cible\.scrollIntoView\(\{block: "center", behavior: "smooth"\}\)/);
-  assert.match(corps, /cible\.classList\.add\("est-montree"\)/);
-  assert.match(corps, /setTimeout\(\(\) => cible\.classList\.remove\("est-montree"\), 1000\)/);
-  assert.match(html, /\.etape\.est-montree \{ box-shadow:/, "le halo est une ombre : il reste visible sans animation");
+test("lot « un seul système » · plus de cadenas : « Je passe le test » lance toujours le test, Mon mélange ne ferme rien", () => {
+  // Le cadenas du lot R3 (qui descendait jusqu'à « Mon mélange ») est parti
+  // avec le verrou : la ligne 3 et le lien de la carte lancent le test.
+  assert.doesNotMatch(html, /montrerMelange/, "plus de geste « va d’abord faire ton mélange »");
+  assert.doesNotMatch(html, /Réussis d’abord ton mélange/);
+  assert.doesNotMatch(html, /etat\.verrou|verrouillee/, "l’état du moteur n’a plus de verrou, l’événement non plus");
+  assert.doesNotMatch(html, /PARCOURS\.melangeDu/, "melangeDu a quitté le moteur");
+  assert.match(html, /titre: ligne\.acquise \? "Ma table est passée" : NOM_DU_TEST,[\s\S]{0,700}?action: \(\) => launchFromParcours\(PARCOURS\.configValidation\(table\), "menu"\)/, "la ligne 3 lance le test, sans condition");
+  assert.match(html, /lien\(NOM_DU_TEST, \(\) => launchFromParcours\(PARCOURS\.configValidation\(table\), "menu"\), "rond"\);/, "le lien de la carte de séance aussi");
+  // La seule chose qui retient : la porte de Mes calculs du jour.
+  assert.match(html, /if \(origin !== "seance" && PARCOURS\.mesCalculsAFaire\(parcours\)\) \{\s*renderAccueil\(\);\s*return;\s*\}/);
   // Rien n'a été ajouté sur l'écran de l'élève : pas de phrase de plus.
   assert.doesNotMatch(html.replace(/<!--[\s\S]*?-->/g, ""), /Fais d’abord ton mélange pour/);
 });

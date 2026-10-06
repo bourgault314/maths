@@ -20,6 +20,19 @@ function acquerir(etat, table) {
   return parcours.appliquerSerie(etat, normaliser(parcours.configValidation(table)), {correct: 20, total: 20, date: DATE}).parcours;
 }
 
+// Lot « un seul système, les boîtes » (05/10/2026) : Mes calculs du jour ne
+// prend que les calculs des tables PASSÉES AVANT le jour. Les parcours de ces
+// tests reçoivent donc les tables concernées, passées à une date antérieure.
+function copie(etat) {
+  return JSON.parse(JSON.stringify(etat));
+}
+
+function avecTablesPassees(etat, tables, date = "2026-08-31") {
+  const suite = copie(etat);
+  tables.forEach(table => { suite.tables[table].acquise = date; });
+  return suite;
+}
+
 test("la grille compte 36 faits, de 2×2 à 9×9, sens confondus", () => {
   assert.equal(parcours.FAITS.length, 36);
   assert.equal(parcours.FAITS[0], "2-2");
@@ -135,7 +148,7 @@ test("le résumé et la grille 8×8 : moitié active, miroir grisé du même fai
   assert.equal(miroir76.etat, "a-travailler", "le miroir montre l’état du même fait");
 });
 
-test("la révision = les calculs dus aujourd’hui, boîtes à tour de rôle (les plus en retard d’abord dans chaque boîte), verts compris, ordre de passage mélangé — jamais un calcul jamais vu", () => {
+test("la révision = les calculs dus aujourd’hui des tables passées, boîtes à tour de rôle (les plus en retard d’abord dans chaque boîte), verts compris, ordre de passage mélangé — jamais un calcul jamais vu ; sans table passée, rien", () => {
   let etat = parcours.creerParcours();
   etat = repondre(etat, "6-7", false, "2026-09-01");
   etat = repondre(etat, "7-8", false, "2026-09-03");
@@ -155,12 +168,37 @@ test("la révision = les calculs dus aujourd’hui, boîtes à tour de rôle (le
   assert.deepEqual(parcours.calculsDus(etat, {aujourdhui: "2026-09-12"}), ["6-7", "2-5", "4-4", "8-8", "3-9", "7-8"], "le 12 : tout est dû — un rouge, un bleu (boîte 2), un boîte 3, le vert (c’est l’entretien), puis les rouges restants");
   assert.deepEqual(parcours.calculsDus(etat, {aujourdhui: "2026-09-03"}), ["6-7", "2-5", "3-9"], "le 3 : 7-8 vient d’être raté aujourd’hui, il n’est plus dû aujourd’hui (retour demain) ; 4-4 vient de monter aujourd’hui, il revient le 6");
 
-  const plan = parcours.planRevision(etat, {random: () => 0, aujourdhui: "2026-09-12"});
+  // La nouvelle règle : aucune table passée, Mes calculs du jour ne prend rien
+  // (ces calculs dus restent aux marches de leur table).
+  assert.deepEqual(parcours.planRevision(etat, {random: () => 0, aujourdhui: "2026-09-12"}), [], "sans table passée : six calculs dus, aucune question");
+  assert.deepEqual(parcours.dusDuJour(etat, "2026-09-12"), []);
+  assert.equal(parcours.mesCalculsAFaire(etat, "2026-09-12"), false, "et aucune porte");
+  // Une table passée le jour même n'entre que le lendemain.
+  const ceJour = avecTablesPassees(etat, [7], "2026-09-12");
+  assert.equal(parcours.calculDesTablesPassees(ceJour, "6-7", "2026-09-12"), false);
+  assert.deepEqual(parcours.dusDuJour(ceJour, "2026-09-12"), [], "table de 7 passée le 12 : rien le 12");
+  assert.deepEqual(parcours.dusDuJour(ceJour, "2026-09-13").sort(), ["6-7", "7-8"], "le 13 : ses deux calculs dus, et eux seuls");
+  assert.equal(parcours.prisParMesCalculs(ceJour, "7-8", "2026-09-13"), true);
+  assert.equal(parcours.prisParMesCalculs(ceJour, "3-9", "2026-09-13"), false, "3 × 9 : ni la table de 3 ni celle de 9 n’est passée");
+
+  // Les tables de 2, 3, 4, 7 et 8 passées le 31 août : les six calculs sont pris.
+  const passe = avecTablesPassees(etat, [2, 3, 4, 7, 8]);
+  assert.deepEqual(parcours.dusDuJour(passe, "2026-09-12").sort(), parcours.calculsDus(passe, {aujourdhui: "2026-09-12"}).sort());
+  const plan = parcours.planRevision(passe, {random: () => 0, aujourdhui: "2026-09-12"});
   assert.equal(plan.length, 6, "six calculs dus : six questions, pas une de plus");
   assert.deepEqual(plan.map(item => item.cle).sort(), ["2-5", "3-9", "4-4", "6-7", "7-8", "8-8"], "les six, dans un ordre de passage mélangé");
   assert.ok(plan.every(item => etat.calculs[item.cle]), "aucun calcul jamais vu");
   assert.equal(new Set(plan.map(item => item.cle)).size, 6, "jamais deux fois le même fait");
-  assert.deepEqual(parcours.planRevision(etat, {random: () => 0, aujourdhui: "2026-09-06"}).map(item => item.cle).sort(), ["2-5", "3-9", "4-4", "6-7", "7-8"], "le 6 : 8-8 (retour le 12) n’y est pas");
+  // Le 6 : cinq dus ; 8-8 (retour le 12) n'est pas dû. La première série du
+  // jour le prend en complément (un calcul d'une table passée, vu avant
+  // aujourd'hui) ; une fois Mes calculs du jour joué, il n'y est plus.
+  assert.deepEqual(parcours.serieDuJour(passe, {aujourdhui: "2026-09-06"}), {cles: [...parcours.dusDuJour(passe, "2026-09-06"), "8-8"], dus: 5, complement: 1, restants: 0, faite: false});
+  assert.deepEqual(parcours.dusDuJour(passe, "2026-09-06").sort(), ["2-5", "3-9", "4-4", "6-7", "7-8"]);
+  assert.deepEqual(parcours.planRevision(passe, {random: () => 0, aujourdhui: "2026-09-06"}).map(item => item.cle).sort(), ["2-5", "3-9", "4-4", "6-7", "7-8", "8-8"], "le 6, la première série : les cinq dus, complétés par 8-8");
+  const joue = {...passe, calculsDuJour: "2026-09-06"};
+  assert.deepEqual(parcours.planRevision(joue, {random: () => 0, aujourdhui: "2026-09-06"}).map(item => item.cle).sort(), ["2-5", "3-9", "4-4", "6-7", "7-8"], "le 6, déjà joué : les dus seulement — 8-8 (retour le 12) n’y est pas");
+  assert.equal(parcours.serieDuJour(joue, {aujourdhui: "2026-09-06"}).faite, true);
+  assert.deepEqual([parcours.dureeMesCalculs(10), parcours.dureeMesCalculs(6), parcours.dureeMesCalculs(3)], [60, 36, 30], "6 secondes par calcul, 30 secondes au moins");
   // Trente calculs dus, répartis : chaque série de dix mêle les boîtes.
   let charge = parcours.creerParcours();
   parcours.FAITS.slice(0, 30).forEach((cle, index) => {
@@ -183,20 +221,33 @@ test("la révision = les calculs dus aujourd’hui, boîtes à tour de rôle (le
   questions.forEach((question, index) => {
     assert.equal(parcours.cleFait(question.factKey), plan[index].cle, "chaque question porte bien sur son fait");
   });
-  assert.ok(questions.every(question => question.category === "direct"), "aucune table n’a passé l’entraînement « trous » ni n’est acquise : que des produits (la forme suit ce qu’il a rencontré)");
+  // La forme suit ce qu'il a rencontré. Dans Mes calculs du jour, chaque
+  // calcul a une table passée (le test contient nombres manquants et
+  // divisions) : les trois formes y sont. La règle « que des produits » se lit
+  // donc sur la révision d'UNE table, qui ne demande pas de table passée.
+  assert.ok(questions.some(question => question.category !== "direct"), "tables passées : pas que des produits");
+  const planTable7 = parcours.planRevision(etat, {table: 7, random: () => 0, aujourdhui: "2026-09-12"});
+  assert.deepEqual(planTable7.map(item => item.cle).sort(), ["6-7", "7-8"]);
+  assert.ok(planTable7.every(item => item.type === "direct"), "aucune table n’a passé l’entraînement « trous » ni n’est passée : que des produits (la forme suit ce qu’il a rencontré)");
   // La table de 4 a réussi l'entraînement « trous » (nombres manquants et
-  // divisions, lot « divisions ») : 4-4 peut arriver en trou ou en division, les autres non.
-  const avecTrous = JSON.parse(JSON.stringify(etat));
+  // divisions, lot « divisions ») : sur la révision de la table de 7, 4-7 peut
+  // arriver en trou ou en division, les autres non.
+  const avecTrous = copie(etat);
   avecTrous.tables[4].entraine.trous = 2;
+  ["2-7", "3-7", "4-7"].forEach(cle => {
+    avecTrous.calculs[cle] = {boite: 2, cases: 1, vu: "2026-09-01", erreur: null, gagne: "2026-09-01", echeance: "2026-09-02"};
+  });
   assert.deepEqual(parcours.formesPermises(avecTrous, "4-4"), ["direct", "missing", "division"]);
+  assert.deepEqual(parcours.formesPermises(avecTrous, "4-7"), ["direct", "missing", "division"]);
   assert.deepEqual(parcours.formesPermises(avecTrous, "7-8"), ["direct"]);
-  const plans = Array.from({length: 20}, (_, graine) => parcours.planRevision(avecTrous, {random: () => (graine % 7) / 7, aujourdhui: "2026-09-12"}));
+  const plans = Array.from({length: 20}, (_, graine) => parcours.planRevision(avecTrous, {table: 7, random: () => (graine % 7) / 7, aujourdhui: "2026-09-12"}));
   const formes = plans.flat();
-  assert.ok(formes.every(item => item.cle === "4-4" || item.type === "direct"), "seul 4-4 peut être posé en trou");
-  assert.ok(formes.some(item => item.cle === "4-4" && item.type !== "direct"), "et il l’est parfois");
-  assert.ok(formes.some(item => item.cle === "4-4" && item.type === "division-quotient"), "ni trou ni division sans l'entraînement : 4-4 seulement, et parfois en division");
-  assert.ok(formes.filter(item => item.type.startsWith("division")).every(item => item.type === "division-quotient"), "une seule forme de division : 16 ÷ 4 = ?");
-  // Une table acquise ouvre les trous et les divisions (la validation en contient).
+  assert.ok(plans.every(plan7 => plan7.length === 5), "les cinq calculs dus de la table de 7");
+  assert.ok(formes.every(item => item.cle === "4-7" || item.type === "direct"), "seul 4-7 peut être posé en trou");
+  assert.ok(formes.some(item => item.cle === "4-7" && item.type !== "direct"), "et il l’est parfois");
+  assert.ok(formes.some(item => item.cle === "4-7" && item.type === "division-quotient"), "ni trou ni division sans l'entraînement : 4-7 seulement, et parfois en division");
+  assert.ok(formes.filter(item => item.type.startsWith("division")).every(item => item.type === "division-quotient"), "une seule forme de division : 28 ÷ 4 = ?");
+  // Une table passée ouvre les trous et les divisions (le test en contient).
   const acquise = acquerir(JSON.parse(JSON.stringify(etat)), 7);
   assert.deepEqual(parcours.formesPermises(acquise, "7-8"), ["direct", "missing", "division"]);
   // Une question sur deux reste un résultat ; l'autre alterne nombre manquant et division.
@@ -210,19 +261,29 @@ test("la révision = les calculs dus aujourd’hui, boîtes à tour de rôle (le
   assert.deepEqual(parcours.formesPermises(etoile, "7-8"), ["direct", "division"]);
 });
 
-test("l’agenda : dus aujourd’hui, ce qui attendra demain, le prochain retour ; les calculs en retard", () => {
-  let etat = parcours.creerParcours();
+test("l’agenda : dus aujourd’hui, ce qui attendra demain, le prochain retour ; les calculs en retard — ceux des tables passées avant le jour, eux seuls", () => {
+  // La table de 5 est passée depuis le 31 août : ses calculs sont ceux de Mes calculs du jour.
+  let etat = avecTablesPassees(parcours.creerParcours(), [5]);
   etat = repondre(etat, "2-5", true, "2026-09-01");   // retour le 2
   etat = repondre(etat, "3-5", true, "2026-09-01");   // retour le 2
   etat = repondre(etat, "4-5", true, "2026-09-01");
   etat = repondre(etat, "4-5", true, "2026-09-02");   // boîte 3, retour le 5
+  // Les mêmes réponses sans table passée : rien pour Mes calculs du jour.
+  const sansTable = copie(etat);
+  sansTable.tables[5].acquise = null;
+  assert.deepEqual(parcours.agendaCalculs(sansTable, "2026-09-03"), {dus: 0, demain: 0, prochain: null}, "sans table passée : rien de dû, rien demain, aucun retour annoncé");
+  assert.deepEqual(parcours.calculsEnRetard(sansTable, "2026-09-07"), [], "ni rien en retard pour la page du professeur");
+  // Table passée le 3 : rien le 3 (la porte ne se referme pas en pleine journée), ses calculs dès le 4.
+  const passeeLe3 = avecTablesPassees(sansTable, [5], "2026-09-03");
+  assert.deepEqual(parcours.agendaCalculs(passeeLe3, "2026-09-03"), {dus: 0, demain: 2, prochain: {jour: "2026-09-04", dans: 1, calculs: 2}}, "une table passée aujourd’hui entre dans Mes calculs du jour demain");
   assert.deepEqual(parcours.agendaCalculs(etat, "2026-09-01"), {dus: 0, demain: 2, prochain: {jour: "2026-09-02", dans: 1, calculs: 2}});
   assert.deepEqual(parcours.agendaCalculs(etat, "2026-09-03"), {dus: 2, demain: 2, prochain: {jour: "2026-09-04", dans: 1, calculs: 2}}, "les dus restés dus comptent pour demain");
   etat = repondre(etat, "2-5", true, "2026-09-03");   // boîte 3, retour le 6
   etat = repondre(etat, "3-5", false, "2026-09-03");  // boîte 1, dû… demain (raté aujourd’hui)
   assert.deepEqual(parcours.agendaCalculs(etat, "2026-09-03"), {dus: 0, demain: 1, prochain: {jour: "2026-09-04", dans: 1, calculs: 1}}, "un calcul raté aujourd’hui attend demain");
-  assert.deepEqual(parcours.agendaCalculs(repondre(parcours.creerParcours(), "9-9", true, "2026-09-01"), "2026-09-01").prochain, {jour: "2026-09-02", dans: 1, calculs: 1});
-  const loin = parcours.normaliserParcours({calculs: {"9-9": {boite: 4, vu: "2026-09-01", erreur: null, gagne: "2026-09-01", echeance: "2026-09-08"}}});
+  assert.deepEqual(parcours.agendaCalculs(repondre(avecTablesPassees(parcours.creerParcours(), [9]), "9-9", true, "2026-09-01"), "2026-09-01").prochain, {jour: "2026-09-02", dans: 1, calculs: 1});
+  assert.equal(parcours.agendaCalculs(repondre(parcours.creerParcours(), "9-9", true, "2026-09-01"), "2026-09-01").prochain, null, "table de 9 pas passée : aucun retour annoncé");
+  const loin = parcours.normaliserParcours({tables: {9: {acquise: "2026-08-31"}}, calculs: {"9-9": {boite: 4, vu: "2026-09-01", erreur: null, gagne: "2026-09-01", echeance: "2026-09-08"}}});
   assert.deepEqual(parcours.agendaCalculs(loin, "2026-09-05"), {dus: 0, demain: 0, prochain: {jour: "2026-09-08", dans: 3, calculs: 1}}, "« Reviens dans 3 jours : 1 calcul t’attendra »");
   assert.deepEqual(parcours.agendaCalculs(parcours.creerParcours(), "2026-09-05"), {dus: 0, demain: 0, prochain: null});
 
@@ -235,16 +296,27 @@ test("l’agenda : dus aujourd’hui, ce qui attendra demain, le prochain retour
   assert.deepEqual(parcours.calculsDeLaBoite(etat, 5), []);
 });
 
-test("la révision ne propose jamais un calcul jamais vu, même sur une table acquise ; une grille vide ne donne rien", () => {
+test("la révision ne propose jamais un calcul jamais vu, même sur une table passée ; une grille vide ne donne rien ; rien de dû : la première série du jour se complète, puis plus rien", () => {
   assert.deepEqual(parcours.planRevision(parcours.creerParcours()), [], "grille vide : aucune question");
-  let etat = acquerir(parcours.creerParcours(), 2);
-  // table 2 acquise ; 6-7 su (boîte 4, retour le 12) ; tout le reste jamais vu
+  let etat = acquerir(acquerir(parcours.creerParcours(), 2), 7);
+  // tables 2 et 7 passées le 1er ; 6-7 su (boîte 4, retour le 12) ; tout le reste jamais vu
   etat = repondre(etat, "6-7", true, "2026-09-01");
   etat = repondre(etat, "6-7", true, "2026-09-02");
   etat = repondre(etat, "6-7", true, "2026-09-05");
   const plan = parcours.planRevision(etat, {random: () => 0, aujourdhui: "2026-09-12"});
-  assert.deepEqual(plan.map(item => item.cle), ["6-7"], "seul le calcul vu (su, en entretien) ; les faits jamais vus de la table 2 restent hors révision");
-  assert.deepEqual(parcours.planRevision(etat, {random: () => 0, aujourdhui: "2026-09-08"}), [], "le 8, rien n’est dû : aucune question — rejouer ne fait rien monter");
+  assert.deepEqual(plan.map(item => item.cle), ["6-7"], "seul le calcul vu (su, en entretien) ; les faits jamais vus des tables 2 et 7 restent hors révision");
+  // Le 8, rien n'est dû. La première série du jour (la porte) se complète avec
+  // les calculs des tables passées vus avant aujourd'hui — ici 6-7, et lui
+  // seul : jamais un calcul jamais vu. Il n'est pas dû, il ne monte pas.
+  assert.deepEqual(parcours.serieDuJour(etat, {aujourdhui: "2026-09-08"}), {cles: ["6-7"], dus: 0, complement: 1, restants: 0, faite: false});
+  assert.deepEqual(parcours.planRevision(etat, {random: () => 0, aujourdhui: "2026-09-08"}).map(item => item.cle), ["6-7"], "le 8, la première série : 6-7 en complément");
+  const rejoue = parcours.appliquerReponse(etat, "6-7", {correcte: true, date: "2026-09-08"});
+  assert.deepEqual([rejoue.fait.monte, rejoue.fait.boite], [false, 4], "pas dû : le réussir ne fait rien monter");
+  assert.deepEqual(parcours.planRevision({...rejoue.parcours, calculsDuJour: "2026-09-08"}, {random: () => 0, aujourdhui: "2026-09-08"}), [], "le 8, une fois joué : rien n’est dû, aucune question");
+  // Sans la table de 7 (ni celle de 6) passée, 6-7 n'est jamais pris.
+  const sansLa7 = copie(etat);
+  sansLa7.tables[7].acquise = null;
+  assert.deepEqual(parcours.planRevision(sansLa7, {random: () => 0, aujourdhui: "2026-09-12"}), [], "6 × 7 dû, mais ni la table de 6 ni celle de 7 n’est passée : rien");
   assert.deepEqual(parcours.planRevision(etat, {table: 2, aujourdhui: "2026-09-12"}), [], "sur la table 2 : rien de vu, rien à réviser");
 });
 
@@ -253,25 +325,34 @@ test("l’entretien : les sus reviennent tous les 14 jours, les plus en retard d
   parcours.FAITS.forEach(cle => {
     etat.calculs[cle] = {boite: 5, vu: "2026-09-05", erreur: null, gagne: "2026-09-05", echeance: "2026-09-19"};
   });
+  // Les 8 tables de la grille passées depuis l'été : tout est pris par Mes calculs du jour.
+  [2, 3, 4, 5, 6, 7, 8, 9].forEach(table => { etat.tables[table].acquise = "2026-07-01"; });
   etat.calculs["6-7"] = {boite: 5, vu: "2026-08-01", erreur: null, gagne: "2026-08-01", echeance: "2026-08-15"};
   etat.calculs["2-9"] = {boite: 5, vu: "2026-08-15", erreur: null, gagne: "2026-08-15", echeance: "2026-08-29"};
   etat = parcours.normaliserParcours(etat);
-  assert.deepEqual(parcours.planRevision(etat, {random: () => 0, aujourdhui: "2026-09-10"}).map(item => item.cle).sort(), ["2-9", "6-7"], "le 10 : seuls les deux en retard sont dus");
+  assert.deepEqual(parcours.dusDuJour(etat, "2026-09-10"), ["6-7", "2-9"], "le 10 : seuls les deux en retard sont dus");
+  // La première série du jour : les deux dus d'abord, complétés jusqu'à dix
+  // par les calculs vus depuis le plus longtemps ; une fois jouée, les dus seuls.
+  const porte = parcours.serieDuJour(etat, {aujourdhui: "2026-09-10"});
+  assert.deepEqual([porte.cles.length, porte.cles.slice(0, 2), porte.dus, porte.complement, porte.restants], [10, ["6-7", "2-9"], 2, 8, 0]);
+  assert.equal(new Set(porte.cles).size, 10, "jamais deux fois le même");
+  assert.deepEqual(parcours.planRevision({...etat, calculsDuJour: "2026-09-10"}, {random: () => 0, aujourdhui: "2026-09-10"}).map(item => item.cle).sort(), ["2-9", "6-7"], "le 10, déjà joué : les deux dus, sans complément");
   assert.deepEqual(parcours.calculsDus(etat, {aujourdhui: "2026-09-19"}).slice(0, 2), ["6-7", "2-9"], "le plus ancien d’abord");
   const plan = parcours.planRevision(etat, {random: () => 0, aujourdhui: "2026-09-19"});
   assert.equal(plan.length, 10, "le 19, tout est dû : 10 à la fois");
   assert.ok(["6-7", "2-9"].every(cle => plan.some(item => item.cle === cle)), "les deux plus en retard sont dans la première série");
   assert.equal(parcours.calculsDus(etat, {aujourdhui: "2026-09-19"}).length, 36, "et il en reste 26 pour les séries suivantes (« Encore N »)");
+  assert.equal(parcours.serieDuJour(etat, {aujourdhui: "2026-09-19"}).restants, 26);
 });
 
-// Un parcours au sommet de l'escalier : les 9 tables, le mélange, puis une marche.
+// Un parcours au sommet de l'escalier : les 9 tables passées (plus de mélange
+// à réussir, lot « un seul système »), puis une marche.
 function legende(etoile = 1) {
   let etat = parcours.creerParcours();
   parcours.TABLES.forEach(table => {
-    if (parcours.melangeDu(etat)) etat = parcours.appliquerSerie(etat, normaliser(parcours.configMelange(etat)), {correct: 20, total: 20, date: DATE}).parcours;
     etat = parcours.appliquerSerie(etat, normaliser(parcours.configValidation(table)), {correct: 20, total: 20, date: DATE}).parcours;
   });
-  etat = parcours.appliquerSerie(etat, normaliser(parcours.configMelange(etat)), {correct: 20, total: 20, date: DATE}).parcours;
+  assert.equal(etat.melange.dernier, null, "le mélange n’a pas été joué : l’escalier est ouvert quand même");
   return parcours.appliquerSerie(etat, normaliser(parcours.configEtoile(etoile)), {correct: 25, total: 25, date: DATE}).parcours;
 }
 
@@ -294,29 +375,46 @@ test("révision sur une table : les calculs vus de cette table, ratés d’abord
   assert.deepEqual(plan.map(item => item.cle).sort(), ["6-7", "7-8"]);
   assert.ok(plan.every(item => parcours.facteursFait(item.cle).includes(7)));
   // Dix calculs dus ou plus : dix questions, jamais deux fois le même.
-  let plein = parcours.creerParcours();
+  // (Sans table : Mes calculs du jour — il faut les tables de 2 et de 3 passées avant le 3.)
+  let plein = avecTablesPassees(parcours.creerParcours(), [2, 3], "2026-09-01");
   parcours.FAITS.slice(0, 14).forEach(cle => { plein = repondre(plein, cle, cle.endsWith("5"), "2026-09-02"); });
+  const sansTable = copie(plein);
+  sansTable.tables[2].acquise = sansTable.tables[3].acquise = null;
+  assert.deepEqual(parcours.planRevision(sansTable, {random: () => 0, aujourdhui: "2026-09-03"}), [], "sans table passée : 14 calculs dus, Mes calculs du jour n’en prend aucun");
+  assert.equal(parcours.planRevision(sansTable, {table: 2, random: () => 0, aujourdhui: "2026-09-03"}).length, 8, "la révision d’une table, elle, ne demande pas que la table soit passée");
   const dix = parcours.planRevision(plein, {random: () => 0, aujourdhui: "2026-09-03"});
   assert.equal(dix.length, 10);
   assert.equal(new Set(dix.map(item => item.cle)).size, 10);
 });
 
-test("la prochaine étape : « Mes calculs du jour » dès qu’un calcul est dû, devant tout le reste — un conseil, pas un verrou", () => {
-  let etat = parcours.creerParcours();
+test("la prochaine étape : « Mes calculs du jour » dès qu’un calcul d’une table passée est dû, devant tout le reste — la porte de la journée ; plus jamais « mélange »", () => {
+  // La table de 2 est passée depuis le 31 août.
+  let etat = avecTablesPassees(parcours.creerParcours(), [2]);
   etat = repondre(etat, "2-6", true, "2026-09-01");
   assert.notEqual(parcours.prochaineEtape(etat, "2026-09-01").type, "revision", "rien de dû aujourd’hui : la table");
+  assert.equal(parcours.mesCalculsAFaire(etat, "2026-09-01"), false, "ni porte : le calcul vient d’être vu");
   const etape = parcours.prochaineEtape(etat, "2026-09-02");
   assert.equal(etape.type, "revision");
   assert.equal(etape.dus, 1);
-  assert.match(etape.libelle, /Mes calculs du jour : 1 calcul à réviser/);
+  assert.equal(etape.libelle, "Mes calculs du jour : 1 calcul");
   assert.deepEqual(etape.config, {mode: "revision", table: null});
   assert.equal(parcours.etatAffichage(etat, "2026-09-02").prochaine.type, "revision");
-  // Devant le mélange dû, aussi.
+  // La porte : fermée tant que Mes calculs du jour n'est pas joué ce jour-là.
+  assert.equal(parcours.mesCalculsAFaire(etat, "2026-09-02"), true);
+  assert.equal(parcours.etatAffichage(etat, "2026-09-02").porte, true);
+  assert.equal(parcours.mesCalculsAFaire({...etat, calculsDuJour: "2026-09-02"}, "2026-09-02"), false, "joué : tout s’ouvre, même s’il reste un calcul dû");
+  // Sans table passée : le même calcul dû reste aux marches de sa table.
+  const sansTable = copie(etat);
+  sansTable.tables[2].acquise = null;
+  assert.notEqual(parcours.prochaineEtape(sansTable, "2026-09-02").type, "revision", "sans table passée : jamais « Mes calculs du jour »");
+  assert.equal(parcours.mesCalculsAFaire(sansTable, "2026-09-02"), false);
+  // Le mélange n'est plus jamais une étape : deux tables passées aujourd'hui, la suite est la table de 5.
   let deux = acquerir(acquerir(parcours.creerParcours(), 2), 10);
   parcours.faitsDeLaTable(2).forEach(cle => { deux = repondre(deux, cle, true, "2026-09-01"); });
-  assert.equal(parcours.prochaineEtape(deux, "2026-09-01").type, "melange", "les calculs joués aujourd’hui ne sont pas dus le jour même : le mélange dû reste devant");
-  assert.equal(parcours.prochaineEtape(deux, "2026-09-02").type, "revision", "le lendemain, les 8 calculs de la table de 2 passent devant le mélange");
+  assert.deepEqual([parcours.prochaineEtape(deux, "2026-09-01").type, parcours.prochaineEtape(deux, "2026-09-01").table], ["apprends", 5], "les calculs joués aujourd’hui ne sont pas dus le jour même, et le mélange (libre) n’est plus une étape : la table suivante");
+  assert.equal(parcours.prochaineEtape(deux, "2026-09-02").type, "revision", "le lendemain, les 8 calculs de la table de 2 passent devant");
   assert.equal(parcours.prochaineEtape(deux, "2026-09-02").dus, 8);
+  assert.equal(parcours.prochaineEtape(deux, "2026-09-02").libelle, "Mes calculs du jour : 8 calculs");
 });
 
 test("les étoiles valident par échantillon : le parcours ne dit « fini » que grille verte", () => {
@@ -340,7 +438,14 @@ test("les étoiles valident par échantillon : le parcours ne dit « fini » que
     etat = repondre(etat, cle, true, "2026-09-03");
     etat = repondre(etat, cle, true, "2026-09-06");
   });
+  // Le 7, tout est vert et rien n'est dû — mais la porte du jour existe
+  // toujours (lot « un seul système ») : dix calculs des tables passées, vus
+  // depuis le plus longtemps. Une fois jouée, le parcours dit « tout est là ».
+  assert.deepEqual([parcours.agendaCalculs(etat, "2026-09-07").dus, parcours.resumeCalculs(etat, "2026-09-07").sus], [0, 36]);
   etape = parcours.prochaineEtape(etat, "2026-09-07");
+  assert.deepEqual([etape.type, etape.dus], ["revision", 10], "la première série du jour : dix calculs en complément, aucun dû");
+  assert.equal(parcours.serieDuJour(etat, {aujourdhui: "2026-09-07"}).complement, 10);
+  etape = parcours.prochaineEtape({...etat, calculsDuJour: "2026-09-07"}, "2026-09-07");
   assert.equal(etape.type, "legende");
   assert.match(etape.libelle, /36 calculs sont verts/);
 });
@@ -355,7 +460,7 @@ test("passerelle : une table acquise avec 2 calculs à 0 est « à revoir », le
   const ligne7 = affichage.lignes.find(ligne => ligne.table === 7);
   assert.equal(ligne7.aRevoir, true);
   assert.equal(ligne7.acquise, DATE, "le ✓ reste");
-  assert.equal(affichage.lignes.find(ligne => ligne.table === 6).aRevoir, false, "la table de 6 n’est pas acquise");
+  assert.equal(affichage.lignes.find(ligne => ligne.table === 6).aRevoir, false, "la table de 6 n’est pas passée");
   assert.deepEqual(affichage.calculs, parcours.resumeCalculs(etat));
   assert.deepEqual(affichage.agenda, parcours.agendaCalculs(etat));
 });
@@ -436,18 +541,25 @@ test("le détail d’une case écrit le calcul dans les deux sens et empile ses 
   assert.match(html, /\.calculs-detail\.is-ferme \{ display: block; height: 0;/);
 });
 
-test("seule la première réponse compte pour la grille, et un raté ne revient qu’une fois", () => {
+test("seule la première réponse compte pour la grille ; un raté ne revient qu’une fois — et plus du tout dans Mes calculs du jour, chronométré", () => {
   assert.match(html, /if \(!question\.retry\) alimenterMesCalculs\(question, correct && !skip\);/, "les calculs qui reviennent n’alimentent pas la grille");
-  assert.match(html, /const willRetry = !correct && !question\.retry;/, "un calcul raté revient une seule fois par série de révision");
+  assert.match(html, /const chrono = state\.configuration\.duration !== null;/);
+  assert.match(html, /const willRetry = !correct && !question\.retry && !chrono;/, "un calcul raté revient une seule fois par série de révision ; avec le chrono de Mes calculs du jour, il ne revient pas (il reviendra demain)");
+  assert.match(html, /if \(chrono\) \{\s*state\.pauseA = Date\.now\(\);/, "le chrono s’arrête le temps de lire la correction");
   assert.doesNotMatch(html, /repartira dans la prochaine révision/, "la règle n’est plus écrite sur l’écran de résultat (lot 2)");
   // Relecture du lot R2 : le temps de la révision est passé sur la ligne du
   // score ; la ligne du dessous reste vide (ni la règle, ni « Série terminée »).
   assert.match(html, /\$\("result-detail"\)\.textContent = "";/);
 });
 
-test("la révision : les calculs dus, 10 par 10, « Encore N → Continuer », puis « Reviens demain : N calculs t’attendront » (plus d’« Encore 10 calculs »)", () => {
+test("la révision : Mes calculs du jour chronométré (« fait » ou « Temps écoulé ») ; sur une table : les calculs dus, 10 par 10, « Encore N → Continuer », puis « Reviens demain : N calculs t’attendront » (plus d’« Encore 10 calculs »)", () => {
   assert.match(html, /function startRevision\(/);
   assert.match(html, /mode: "revision"/);
+  // Lot « un seul système » : sans table, c'est Mes calculs du jour — 6 s par
+  // calcul (30 s au moins), et un bilan qui ne dit jamais « raté ».
+  assert.match(html, /DURATION = table === null \? PARCOURS\.dureeMesCalculs\(plan\.length\) : null;/);
+  assert.match(html, /soude\(pasFaits \? "Temps écoulé" : "Mes calculs du jour : fait"\)/);
+  assert.match(html, /\$\("result-detail"\)\.textContent = pasFaits \? \(pasFaits > 1 \? "Ils reviendront\." : "Il reviendra\."\) : "";/, "les calculs pas faits ne sont pas comptés faux");
   assert.doesNotMatch(html, /Encore une révision/, "à zéro, rejouer ne ferait rien monter : le bouton n’existe plus");
   assert.match(html, /const restants = PARCOURS\.calculsDus\(parcours, \{table\}\)\.length;/, "ce qui reste dû après la série");
   assert.match(html, /encore \$\{pluriel\(restants, "calcul"\)\} du jour\./);
@@ -473,7 +585,7 @@ test("la révision : les calculs dus, 10 par 10, « Encore N → Continuer », p
   assert.match(html, /id="result-verdict"/, "lot R2 : la fête est le cadre du verdict");
   assert.match(html, /renderVerdict\(suivi, elapsed\)/);
   assert.match(html, /verdict\.titre = "Légende des tables !";/, "écran de fête 👑");
-  assert.match(html, /Table de \$\{validation\.table\} acquise !/, "écran de fête 🎉 à chaque table validée");
+  assert.match(html, /Table de \$\{validation\.table\} passée !/, "écran de fête 🎉 à chaque table passée");
   assert.match(html, /animation: none !important/, "la fête respecte prefers-reduced-motion");
 });
 

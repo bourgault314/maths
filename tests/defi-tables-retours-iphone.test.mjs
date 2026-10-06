@@ -82,13 +82,16 @@ function fauxDocument(ids) {
 
 // Lot « Mon parcours » (04/10/2026, décision de Gwenaël) : « Encore 10 calculs »
 // est retiré — à zéro, « Ma table » et « Voir mes calculs ».
-test("fin de révision : le cadre porte les boutons — Continuer + Ma table, ou Ma table + Voir mes calculs", () => {
+// Lot « un seul système » (05/10/2026) : ce cadre est celui d'une révision
+// SANS chrono (les calculs d'une table). Mes calculs du jour, lui, est
+// chronométré et a son propre bilan (test suivant).
+test("fin de révision (sans chrono) : le cadre porte les boutons — Continuer + Ma table, ou Ma table + Voir mes calculs", () => {
   const cas = [];
   for (const restants of [11, 0]) {
     const {document, $} = fauxDocument(["result", "result-verdict", "result-icon", "result-title", "result-score", "result-config", "result-detail", "result-rang", "result-message", "result-previous", "retry", "result-parcours", "result-reglages", "result-accueil"]);
     const avant = `
       const document = ARG.document; const $ = ARG.$;
-      const state = {startAt: 0, configuration: {revisionTable: null}, revisionPremierTotal: 10, revisionPremierScore: 10, revisionMontes: 10, revisionDescendus: 0, origin: "menu"};
+      const state = {startAt: 0, configuration: {revisionTable: 7, duration: null}, revisionPremierTotal: 10, revisionPremierScore: 10, revisionMontes: 10, revisionDescendus: 0, origin: "menu"};
       const parcours = {};
       const PARCOURS = {calculsDus: () => new Array(${restants}), agendaCalculs: () => ({dus: ${restants}, prochain: {dans: 1, calculs: 3}}), calculsAVenir: () => [1, 2, 3]};
       const soude = t => t; const pluriel = (n, m) => n + " " + m + (n > 1 ? "s" : ""); const formatElapsed = () => "17 s";
@@ -104,6 +107,34 @@ test("fin de révision : le cadre porte les boutons — Continuer + Ma table, ou
     {restants: 11, revision: true, boutons: ["Continuer →", "Ma table [secondary]"].map((t, i) => i === 0 ? "Continuer → [primary]" : t)},
     {restants: 0, revision: true, boutons: ["Ma table [primary]", "Voir mes calculs [secondary]"]}
   ], "deux boutons tant qu'il en reste, deux à zéro (plus d’« Encore 10 calculs ») — et « Voir mon parcours » n'est plus là");
+});
+
+// Lot « un seul système » (05/10/2026) : Mes calculs du jour est chronométré.
+// Il ne se rate pas : « fait » et le score ; le temps écoulé, les calculs pas
+// faits ne sont pas comptés faux — ils reviendront. Pas de bilan des boîtes
+// ni de « Continuer » : la séance prend la suite.
+test("fin de Mes calculs du jour (chronométré) : « Mes calculs du jour : fait » et le score, ou « Temps écoulé » et ce qui n’a pas été fait", () => {
+  const jouer = (faits, score) => {
+    const {document, $} = fauxDocument(["result", "result-verdict", "result-icon", "result-title", "result-score", "result-config", "result-detail", "result-rang", "result-message", "result-previous", "retry", "result-parcours", "result-reglages", "result-accueil"]);
+    const avant = `
+      const document = ARG.document; const $ = ARG.$; const TOTAL = 10;
+      const state = {startAt: 0, configuration: {revisionTable: null, duration: 60}, revisionPremierTotal: ${faits}, revisionPremierScore: ${score}, revisionMontes: 0, revisionDescendus: 0, origin: "seance"};
+      const parcours = {}; const PARCOURS = {};
+      const soude = t => t; const pluriel = (n, m) => n + " " + m + (n > 1 ? "s" : ""); const formatElapsed = () => "17 s";
+      const renderCorrections = () => {}; const show = () => {}; const enSeance = () => true;`;
+    new Function("ARG", `${avant}\n${source("finishRevision")}\nfinishRevision();`)({document, $});
+    return {icone: $("result-icon").textContent, titre: $("result-title").textContent, score: $("result-score").textContent, detail: $("result-detail").textContent,
+      zoneCachee: $("result-parcours").hidden, boutons: $("result-parcours").children.length, rejouer: !$("retry").hidden};
+  };
+  assert.deepEqual(jouer(10, 9), {icone: "✓", titre: "Mes calculs du jour : fait", score: "9 sur 10", detail: "", zoneCachee: true, boutons: 0, rejouer: false});
+  assert.deepEqual(jouer(7, 6), {icone: "⏱", titre: "Temps écoulé", score: "6 sur 7 · 3 calculs pas faits", detail: "Ils reviendront.", zoneCachee: true, boutons: 0, rejouer: false});
+  assert.deepEqual(jouer(9, 9), {icone: "⏱", titre: "Temps écoulé", score: "9 sur 9 · 1 calcul pas fait", detail: "Il reviendra.", zoneCachee: true, boutons: 0, rejouer: false});
+  // Le chrono : 6 secondes par calcul (30 au moins), seulement sans table ;
+  // il s'arrête tant qu'une correction est à l'écran, et un calcul raté ne
+  // revient pas en fin de série.
+  assert.match(html, /DURATION = table === null \? PARCOURS\.dureeMesCalculs\(plan\.length\) : null;/);
+  assert.match(html, /if \(state\.pauseA\) return;/);
+  assert.match(html, /const willRetry = !correct && !question\.retry && !chrono;/);
 });
 
 test("fin de révision : la classe is-revision centre le cadre, cache la rangée du bas, et disparaît sur les autres verdicts", () => {
@@ -126,7 +157,11 @@ test("une boîte (ou « Aujourd’hui ») touchée s’allume dans la grille : i
   assert.match(html, /const boiteChoisie = calculsSelection && calculsSelection\.boite \? calculsSelection\.boite : 0;/);
   // Lot « retouches après Mon parcours » : « Demain » s'allume de la même façon.
   assert.match(html, /zone\.classList\.toggle\("is-filtre", Boolean\(boiteChoisie\) \|\| jourChoisi \|\| Boolean\(demain\)\);/);
-  assert.match(html, /const dansBoite = cellule\.active && \(\(Boolean\(boiteChoisie\) && cellule\.boite === boiteChoisie\) \|\| \(jourChoisi && cellule\.du\) \|\| Boolean\(demain && demain\.has\(cellule\.cle\)\)\);/, "seule la moitié active s'allume — le miroir reste éteint");
+  // Lot « un seul système » (05/10/2026) : « Aujourd'hui » allume la série de
+  // Mes calculs du jour (etat.serieDuJour : tables passées, 10 au plus), plus
+  // tous les calculs dus.
+  assert.match(html, /const serieDuJour = etat\.serieDuJour;\s*const duJour = new Set\(serieDuJour\.cles\);\s*renderJour\(serieDuJour\);/);
+  assert.match(html, /const dansBoite = cellule\.active && \(\(Boolean\(boiteChoisie\) && cellule\.boite === boiteChoisie\) \|\| \(jourChoisi && duJour\.has\(cellule\.cle\)\) \|\| Boolean\(demain && demain\.has\(cellule\.cle\)\)\);/, "seule la moitié active s'allume — le miroir reste éteint");
   assert.match(html, /\$\{dansBoite \? " is-dans-boite" : ""\}`;/);
   assert.match(html, /\.calculs-grille\.is-filtre \.mc-cell:not\(\.is-dans-boite\) \{ opacity: \.28; \}/, "les autres s'estompent");
   assert.match(html, /\.calculs-grille\.is-filtre \.mc-cell\.is-miroir \{ opacity: \.12; \}/);

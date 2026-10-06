@@ -91,7 +91,7 @@ test("le moteur reconnaît les nouveaux entraînements, et plus les anciens", ()
   assert.equal(P.classerSerie(p, {mode: "train", tables: [7], total: 10, questionTypes: ["missing"]}), null, "l'ancien « nombres manquants » seul ne compte plus");
   assert.equal(P.classerSerie(p, {mode: "train", tables: [7], total: 10, questionTypes: ["direct", "missing"]}), null);
   assert.equal(P.VERSION, 3, "rien ne change dans ce qui est enregistré");
-  assert.deepEqual(P.MARCHES.map(marche => marche.nom).slice(4), ["Dans le désordre", "Nombres manquants et divisions", "Résultats, nombres manquants et divisions", "Je valide ma table"]);
+  assert.deepEqual(P.MARCHES.map(marche => marche.nom).slice(4), ["Dans le désordre", "Nombres manquants et divisions", "Résultats, nombres manquants et divisions", "Je passe le test"]);
   assert.deepEqual(P.MARCHES.map(marche => marche.cle).slice(4, 7), ["desordre", "trous", "mixte"], "les clés ne changent pas");
 });
 
@@ -99,7 +99,7 @@ test("la page : mêmes types que le moteur, mêmes noms partout, la fiche et la 
   const types = new Function(`${html.match(/const TRAIN_TYPES = \{[^}]*\};/)[0]} return TRAIN_TYPES;`)();
   for (const [cle, liste] of Object.entries(types)) assert.deepEqual(P.configEntraine(7, cle).questionTypes, liste, cle);
   assert.match(html, /const NOMS_ENTRAINEMENTS = Object\.freeze\(\{desordre: "dans le désordre", trous: "nombres manquants et divisions", mixte: "résultats, nombres manquants et divisions"\}\);/);
-  assert.match(html, /<p><b>Acquise ✓<\/b> : 20 questions \(résultats, nombres manquants et divisions\) en 1 min 30, 2 erreurs au plus\.<\/p>/);
+  assert.match(html, /<p><b>Passée ✓<\/b> : le test, 20 questions \(résultats, nombres manquants et divisions\) en 1 min 30, 2 erreurs au plus\.<\/p>/);
   assert.match(html, /dans le désordre, les nombres manquants et les divisions… jusqu’à/);
   // Ajout de Code (04/10) : les en-têtes de la fiche du professeur portent les noms des marches 6 et 7.
   const entetes = [...html.match(/<div id="fiche-prof"[\s\S]*?<thead>([\s\S]*?)<\/thead>/)[1].matchAll(/<th>([\s\S]*?)<\/th>/g)].map(m => m[1].replace(/<br>/g, " "));

@@ -156,13 +156,13 @@ test("la moitié miroir : grise avec le même nombre pour un calcul vu, blanche 
 
 // Lot « Mon parcours » (décision 3) : le soulignement n'était pas compris —
 // ma table est sur une bande bleue, sa ligne ET sa colonne (« la croix ») ;
-// le ✓ des tables acquises passe À GAUCHE du numéro de ligne.
-test("les en-têtes : ✓ avant le numéro des tables acquises ; ma table : la croix (ligne et colonne), plus de soulignement", () => {
+// le ✓ des tables passées passe À GAUCHE du numéro de ligne.
+test("les en-têtes : ✓ avant le numéro des tables passées ; ma table : la croix (ligne et colonne), plus de soulignement", () => {
   const p = construire({acquises: [2, 5]});
   const t = tableau(p, {maTable: 3});
   assert.equal(t.enTete(2).className, "calculs-entete is-acquise");
   assert.equal(t.enTete(5).className, "calculs-entete is-acquise");
-  assert.equal(t.enTete(2).attrs["aria-label"], "Table de 2, acquise");
+  assert.equal(t.enTete(2).attrs["aria-label"], "Table de 2, passée", "lot « un seul système » : la table est « passée »");
   assert.equal(t.enTete(3).className, "calculs-entete is-ma-table");
   assert.equal(t.colonnes[1].className, "calculs-entete is-ma-table", "la colonne 3 aussi");
   assert.equal(t.enTete(4).className, "calculs-entete");
@@ -177,7 +177,8 @@ test("les en-têtes : ✓ avant le numéro des tables acquises ; ma table : la c
   assert.match(html, /\.calculs-grille\.is-filtre \.calculs-croix \{ display: none; \}/, "une boîte ou « Aujourd’hui » allumé : la croix s’efface");
 });
 
-test("« Table de 10 : acquise ✓ » quand elle l’est (la 10 n’est pas dans le tableau)", () => {
+test("« Table de 10 : passée ✓ » quand elle l’est (la 10 n’est pas dans le tableau)", () => {
+  assert.match(html, /<p id="calculs-dix" class="calculs-dix" hidden><b>Table de 10<\/b>&nbsp;: passée ✓<\/p>/);
   assert.equal(tableau(construire({acquises: [2, 10]})).$("calculs-dix").hidden, false);
   assert.equal(tableau(construire({acquises: [2]})).$("calculs-dix").hidden, true);
 });
@@ -194,20 +195,35 @@ test("plus d’« Encore 10 calculs » près du tableau, même quand rien ne rev
   assert.doesNotMatch(html, /calculs-encore|libelleEncoreLibre/);
 });
 
-test("la carte de séance : « Mon mélange · tables 2, 5 et 10 », « mes 9 tables », « et 10 » jamais seul à la ligne", () => {
+// Lot « un seul système » (05/10/2026) : Mon mélange est libre — il n'est
+// plus une étape de la séance. Ses tables s'écrivent toujours de la même
+// façon, là où il vit : la ligne ★ du menu et Mon parcours (qui abrège en
+// « mes N tables » au-delà de 3 tables, lot « trophées »).
+test("Mon mélange : « tables 2, 5 et 10 », « mes 9 tables » (« mes N tables » dès 4 dans Mon parcours), « et 10 » jamais seul à la ligne — et plus jamais une étape de la séance", () => {
   const tablesDuMelange = new Function("PARCOURS_TABLES", `${source("listeTables")}\n${source("tablesDuMelange")}\nreturn tablesDuMelange;`)([...P.TABLES]);
   assert.equal(tablesDuMelange([2, 5, 10]), "tables 2, 5 et 10");
   assert.equal(tablesDuMelange([2, 10]), "tables 2 et 10");
   assert.equal(tablesDuMelange([2, 3, 4, 5, 6, 7, 8, 10]), "tables 2, 3, 4, 5, 6, 7, 8 et 10");
   assert.equal(tablesDuMelange([...P.TABLES]), "mes 9 tables");
-  assert.match(html, /: etape\.type === "melange" && etape\.config \? tablesDuMelange\(etape\.config\.tables\)/, "les tables de la série qui sera jouée");
-  // La configuration du mélange de la séance porte bien ses tables.
+  assert.doesNotMatch(html, /etape\.type === "melange"/, "la carte de séance n’a plus d’étape « Mon mélange »");
+  // Lot « trophées » : dans Mon parcours, à côté des trois coupes, la liste
+  // jusqu'à 3 tables, puis « mes N tables » (court, sur une ligne).
+  assert.match(html, /tables\.textContent = etat\.melange\.tables\.length <= 3 \? tablesDuMelange\(etat\.melange\.tables\) : `mes \$\{etat\.melange\.tables\.length\}\\u00a0tables`;/, "Mon parcours");
+  assert.match(html, /aria: `Mon mélange, \$\{tablesDuMelange\(melange\.tables\)\} : 20 questions en 1 min 30\.`,/, "la ligne ★ du menu");
+  // La configuration du mélange porte bien ses tables, réussi ou non.
   const p = construire({acquises: [2, 5, 10]});
   p.melange = {...p.melange, aJour: false};
   assert.deepEqual(P.configMelange(p).tables, [2, 5, 10]);
+  // Le moteur n'en met plus dans la séance, même quand il n'a jamais été
+  // joué ; et il saute celui d'une vieille séance restée ouverte.
+  const seance = P.ouvrirSeance(p, {aujourdhui: AUJ});
+  assert.equal(seance.file.some(etape => etape.type === "melange"), false, "pas de mélange dans la séance");
+  const vieille = {...seance, file: [{type: "melange"}, ...seance.file]};
+  const suivante = P.etapeDeSeance(p, vieille, AUJ);
+  assert.ok(suivante && suivante.type !== "melange", "un mélange venu d’une vieille séance est sauté");
 });
 
-test("la carte de ma table : l’échelle tant qu’elle n’est pas acquise ; acquise, la date", () => {
+test("la carte de ma table : l’échelle tant qu’elle n’est pas passée ; passée, la date", () => {
   const jouer = (parcours, maTable) => {
     const {document, $} = fauxDocument();
     const avant = `const document = ARG.document; const $ = ARG.$; const PARCOURS = ARG.P; const parcours = ARG.parcours;
@@ -224,8 +240,8 @@ test("la carte de ma table : l’échelle tant qu’elle n’est pas acquise ; a
   assert.equal(enCours.children[1].className, "echelle");
   assert.equal(enCours.classList.contains("is-acquise"), false);
   const acquise = jouer(p, 2);
-  assert.equal(acquise.children.length, 1, "pas d’échelle pour une table acquise");
-  assert.match(acquise.children[0].children[1].textContent, /^ma tableacquise le 25 septembre ✓$/);
+  assert.equal(acquise.children.length, 1, "pas d’échelle pour une table passée");
+  assert.match(acquise.children[0].children[1].textContent, /^ma tablepassée le 25 septembre ✓$/);
   assert.equal(acquise.classList.contains("is-acquise"), true);
 });
 

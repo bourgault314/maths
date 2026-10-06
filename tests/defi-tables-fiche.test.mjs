@@ -64,30 +64,88 @@ test("fiche vierge et feuille des tables : plus aucun lien dans l'appli élève,
   assert.match(prof, /#ecran-classe > \*:not\(\.fiche\):not\(\.bandelettes\):not\(\.note-impression\) \{ display: none !important; \}/);
 });
 
-test("« À faire » sur la fiche pour un mélange jamais réussi, « À refaire » après une nouvelle table, « À jour ✓ » sinon (A17)", () => {
-  assert.match(html, /\$\("fiche-melange-state"\)\.textContent = etat\.melange\.visible\s*\n\s*\? `\$\{etat\.melange\.aJour \? "À jour ✓" : etat\.melange\.aRefaireAvec \? "À refaire" : "À faire"\} \(\$\{etat\.melange\.tables\.join\(", "\)\}\)`\s*\n\s*: "";/);
-  // La même règle que le badge de Mon parcours, dont on ne change rien.
-  assert.match(html, /badge\.textContent = etat\.melange\.aJour \? "À jour ✓" : etat\.melange\.aRefaireAvec \? `À refaire avec la table de \$\{etat\.melange\.aRefaireAvec\}` : "À faire";/);
-  // Et le moteur distingue bien les deux cas : deux tables validées sans
-  // mélange → aRefaireAvec vide ; une 3e table après un mélange réussi → renseigné.
+// Lot « un seul système » (05/10/2026) : Mon mélange est libre. La fiche ne
+// dit plus « À faire » / « À refaire » / « À jour ✓ » (A17). Lot « les
+// trophées » : elle montre ce que le mélange a rapporté — trois coupes, comme
+// dans Mon parcours, sans un mot ni un nombre (plus de « Dernier : 17 sur 20 »).
+test("sur la fiche, Mon mélange n’est jamais « à faire » ni « à refaire » : ses trois trophées (3, 6, 9 tables), gris puis gagnés, les mêmes que dans Mon parcours", () => {
+  assert.match(html, /\$\("fiche-melange-state"\)\.replaceChildren\(tropheesDuMelange\(etat\.melange\.trophees\)\);/);
+  // Le même dessin que dans Mon parcours.
+  assert.match(html, /droite\.append\(textes, tropheesDuMelange\(etat\.melange\.trophees\)\);/);
+  assert.match(html, /<span id="fiche-melange-state" class="fiche-state"><\/span>\s*<p>Dès 2 tables passées, quand je veux : 20 questions en 1 min 30\. Un trophée avec 3, 6, puis 9 tables\.<\/p>/);
+  assert.doesNotMatch(html.replace(/\/\/[^\n]*/g, ""), /"À jour ✓"|"À refaire"|"À faire"|À refaire avec la table de/, "plus aucun état « à faire » du mélange (hors commentaires)");
+  assert.doesNotMatch(html, /etat\.verrou|melange\.aRefaireAvec|melange\.aJour/, "la page ne lit plus le verrou ni ses restes");
+  assert.doesNotMatch(html, /dernierMelange|Dernier : |réussi avec \$\{/, "plus de dernier score ni de « réussi avec N tables ✓ »");
+  // Lisibles à l'impression : gris pour un trophée à gagner, plus foncé une fois gagné, sans ombre.
+  // Lisible en noir et blanc : pas encore gagnée, la coupe est un contour
+  // (fond blanc) ; gagnée, elle est pleine.
+  assert.match(html, /\.fiche-state \.mp-trophees b \{ width: 6mm; height: 6mm; color: #6b7a87; filter: none; \}/);
+  assert.match(html, /\.fiche-state \.mp-trophees b \.corps \{ fill: #fff; stroke: currentColor; stroke-width: 1\.3; stroke-linejoin: round; \}/);
+  assert.match(html, /\.fiche-state \.mp-trophees b\.is-gagne \{ color: #7a5a00; \}/);
+  assert.match(html, /\.fiche-state \.mp-trophees b\.is-gagne \.corps \{ fill: currentColor; \}/);
+  // tropheesDuMelange, EXÉCUTÉE avec un tout petit DOM : ce que la fiche montre.
+  const noeud = tag => {
+    const n = {tag, className: "", dataset: {}, attributs: {}, enfants: [], _texte: "",
+      append: (...e) => n.enfants.push(...e), setAttribute: (cle, valeur) => { n.attributs[cle] = String(valeur); },
+      get textContent() { return n._texte + n.enfants.map(e => e.textContent).join(""); }, set textContent(v) { n._texte = String(v); }};
+    return n;
+  };
+  const fonction = nom => html.match(new RegExp(`function ${nom}\\([^)]*\\) \\{[\\s\\S]*?\\n      \\}`))[0];
+  const tropheesDuMelange = new Function("document", `${fonction("coupe")}\n${fonction("tropheesDuMelange")}; return tropheesDuMelange;`)(
+    {createElement: noeud, createElementNS: (_, tag) => noeud(tag)});
+  // Ce que la fiche dessine : "3- 6- 9-" (aucun), "3G 6- 9-" (celui des 3 tables)…
+  const dessin = melange => {
+    const zone = tropheesDuMelange(melange.trophees);
+    assert.equal(zone.className, "mp-trophees");
+    assert.equal(zone.attributs.role, "img");
+    assert.equal(zone.textContent, "", "aucun mot, aucun nombre : trois coupes");
+    assert.equal(zone.enfants.length, 3);
+    assert.ok(zone.enfants.every(b => b.tag === "b" && b.enfants.length === 1 && b.enfants[0].tag === "svg"), "une coupe dessinée par trophée");
+    return zone.enfants.map(b => `${b.dataset.tables}${b.className === "is-gagne" ? "G" : b.className === "" ? "-" : "?"}`).join(" ");
+  };
+  // Et le moteur : deux tables passées sans mélange → trois coupes grises ; un
+  // mélange raté → toujours grises ; réussi avec 2 tables → pas encore de
+  // trophée ; une 3e table passe SANS refaire le mélange (plus de verrou) → le
+  // trophée des 3 tables est à gagner ; le mélange réussi avec 3 → gagné.
   const faits = t => PARCOURS.faitsDeLaTable(t);
   const vingt = liste => liste.concat(liste.slice(0, 20 - liste.length));
   const jouer = (p, config, liste, date) => {
     liste.forEach(cle => { p = PARCOURS.appliquerReponse(p, cle, {correcte: true, date}).parcours; });
     return PARCOURS.appliquerSerie(p, config, {correct: liste.length, total: liste.length, date}).parcours;
   };
+  // La fiche vierge (un parcours neuf) : trois coupes vides, à colorier.
+  assert.equal(dessin(PARCOURS.etatAffichage(PARCOURS.creerParcours()).melange), "3- 6- 9-", "fiche vierge : trois trophées vides");
   let p = PARCOURS.creerParcours();
   p = jouer(p, PARCOURS.configValidation(2), vingt(faits(2)), "2026-09-10");
   p = jouer(p, PARCOURS.configValidation(10), vingt(faits(10)), "2026-09-10");
   let etat = PARCOURS.etatAffichage(p);
   assert.equal(etat.melange.visible, true);
-  assert.equal(etat.melange.aJour, false);
-  assert.equal(etat.melange.aRefaireAvec, null, "jamais fait → « À faire »");
+  assert.equal("verrou" in etat, false, "l’état n’a plus de verrou");
+  assert.deepEqual(Object.keys(etat.melange).sort(), ["dernier", "reussi", "score", "tables", "trophees", "visible"]);
+  assert.equal(dessin(etat.melange), "3- 6- 9-", "jamais joué → trois coupes grises");
+  // Raté : 17 sur 20.
+  p = PARCOURS.appliquerSerie(p, PARCOURS.configMelange(p), {correct: 17, total: 20, date: "2026-09-10"}).parcours;
+  etat = PARCOURS.etatAffichage(p);
+  assert.equal(etat.melange.reussi, null);
+  assert.equal(etat.melange.score, 17);
+  assert.equal(dessin(etat.melange), "3- 6- 9-", "raté → rien de gagné, et plus de score affiché");
+  // Raté, et pourtant la table de 5 passe : plus de verrou.
+  let sansMelange = jouer(p, PARCOURS.configValidation(5), vingt(faits(5)), "2026-09-11");
+  assert.equal(sansMelange.tables[5].acquise, "2026-09-11", "plus de verrou : la table est passée même sans mélange réussi");
   p = jouer(p, PARCOURS.configMelange(p), vingt(faits(2)), "2026-09-10");
+  etat = PARCOURS.etatAffichage(p);
+  assert.equal(etat.melange.reussi, 2);
+  assert.equal(dessin(etat.melange), "3- 6- 9-", "réussi avec 2 tables : pas encore de trophée");
   p = jouer(p, PARCOURS.configValidation(5), vingt(faits(5)), "2026-09-11");
   etat = PARCOURS.etatAffichage(p);
-  assert.equal(etat.melange.aJour, false);
-  assert.equal(etat.melange.aRefaireAvec, 5, "réussi puis nouvelle table → « À refaire »");
+  assert.equal(p.tables[5].acquise, "2026-09-11");
+  assert.equal(p.melange.aRefaireAvec, null, "jamais « à refaire »");
+  assert.equal(dessin(etat.melange), "3- 6- 9-", "une table de plus depuis : le trophée des 3 tables reste à gagner, sans rien fermer");
+  assert.deepEqual(etat.melange.trophees[0], {tables: 3, gagne: false, aGagner: true});
+  p = jouer(p, PARCOURS.configMelange(p), vingt(faits(5)), "2026-09-11");
+  etat = PARCOURS.etatAffichage(p);
+  assert.equal(etat.melange.reussi, 3);
+  assert.equal(dessin(etat.melange), "3G 6- 9-", "réussi avec 3 tables : le premier trophée est gagné");
 });
 
 test("la couronne est un dessin en currentColor, partout où une marche s'affiche : elle se grise comme les étoiles (A18)", () => {
@@ -147,7 +205,9 @@ test("la feuille des tables (PDF) décrit le parcours réel et la révision du j
   // generer_fiche_tables.py ; generer_pdf.py (lancé par la publication) l'appelle.
   const source = await readFile(new URL("_sources/defi-tables/generer_fiche_tables.py", racine), "utf8");
   assert.match(source, /GUIDE_TEXT = "Chaque jour, fais Ma séance du jour : quelques minutes suffisent\."/, "la séance du jour, plus l'ancien parcours en trois étapes");
-  assert.match(source, /GUIDE_TEXT_2 = "Quand toutes les cases de ta table sont pleines, valide ta table\."/);
+  // Lot « un seul système » (05/10/2026) : « passe le test », plus « valide ta table ».
+  assert.match(source, /GUIDE_TEXT_2 = "Quand toutes les cases de ta table sont pleines, passe le test\."/);
+  assert.doesNotMatch(source, /valide ta table/);
   assert.doesNotMatch(source, /Suis le parcours|Je m’entraîne  →/);
   assert.doesNotMatch(source, /Je deviens expert/);
   assert.match(source, /pdf\.drawString\(margin \+ 4 \* mm, guide_y \+ guide_h - 10 \* mm, GUIDE_TEXT\)\s*\n\s*pdf\.drawString\(margin \+ 4 \* mm, guide_y \+ guide_h - 14\.2 \* mm, GUIDE_TEXT_2\)/);

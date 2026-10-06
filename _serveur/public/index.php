@@ -485,9 +485,11 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
       return {
         fait, total,
         // Mot pour mot la phrase de l'accueil de Défi tables.
-        compte: `${fait} table${fait > 1 ? "s" : ""} acquise${fait > 1 ? "s" : ""} sur ${total}`,
+        compte: `${fait} table${fait > 1 ? "s" : ""} passée${fait > 1 ? "s" : ""} sur ${total}`,
         rang: etat.rang,
-        note: etat.melange.du ? "Mon mélange à faire" : ""
+        // Plus de « Mon mélange à faire » : le mélange est libre (lot « un
+        // seul système », 05/10/2026).
+        note: ""
       };
     }
   };

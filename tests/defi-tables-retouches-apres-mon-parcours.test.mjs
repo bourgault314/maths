@@ -84,10 +84,17 @@ test("7. « À retenir » est gardé dans le parcours : un jour, chaque calcul u
 });
 
 // Une élève de la table de 4 (départ 4), dont les calculs reviennent aujourd'hui.
-function eleve() {
+// Lot « un seul système » (05/10/2026) : Mes calculs du jour ne prend que les
+// calculs des tables PASSÉES — elle a donc passé la table de 2 (le 2 octobre),
+// dont les calculs reviennent aujourd'hui : sa séance commence par eux.
+function eleve({tablePassee = true} = {}) {
   let p = P.creerParcours();
   p.tables[4].seance = {depart: 4, n: 3, dernier: "2026-10-05"};
   for (let m = 2; m <= 9; m += 1) p = P.appliquerReponse(p, `4-${m}`, {correcte: true, date: "2026-10-05"}).parcours;
+  if (tablePassee) {
+    p.tables[2].acquise = "2026-10-02";
+    for (let m = 2; m <= 9; m += 1) p = P.appliquerReponse(p, `2-${m}`, {correcte: true, date: "2026-10-05"}).parcours;
+  }
   return P.normaliserParcours(p);
 }
 // Joue une séance entière ; erreurs(etape) = les ratés de l'étape.
@@ -105,16 +112,23 @@ function jouerSeance(p, erreurs = () => []) {
 }
 
 test("7. la liste de la JOURNÉE : elle grandit au fil des séances, sans les erreurs de J’apprends", () => {
-  const une = jouerSeance(eleve(), etape => (etape.type === "revision" ? [[4, 7]] : etape.type === "apprends" ? [[4, 6]] : [[4, 9], [4, 10]]));
+  const une = jouerSeance(eleve(), etape => (etape.type === "revision" ? [[2, 7]] : etape.type === "apprends" ? [[4, 6]] : [[4, 9], [4, 10]]));
+  assert.equal(une.types[0], "revision", "une table passée : la séance commence par Mes calculs du jour");
   assert.ok(une.types.includes("apprends") && une.types.includes("entraine"), `une séance complète (${une.types})`);
   assert.equal(une.seance.finie, true);
   assert.equal(une.parcours.enCours, null, "finie : la séance n’est plus en cours…");
-  assert.deepEqual(P.aRetenir(une.parcours, AUJ), [[4, 7], [4, 9], [4, 10]], "… mais sa liste reste ; « Dans l’ordre » (J’apprends) n’y met rien, × 10 oui");
-  assert.deepEqual(une.seance.erreurs, [[4, 7], [4, 9], [4, 10]], "le bilan et la séance disent la même chose");
-  const deux = jouerSeance(une.parcours, etape => (etape.type === "entraine" ? [[7, 4], [8, 4]] : []));
+  assert.equal(une.parcours.calculsDuJour, AUJ, "Mes calculs du jour est noté joué : la porte est ouverte");
+  assert.deepEqual(P.aRetenir(une.parcours, AUJ), [[2, 7], [4, 9], [4, 10]], "… mais sa liste reste ; « Dans l’ordre » (J’apprends) n’y met rien, × 10 oui");
+  assert.deepEqual(une.seance.erreurs, [[2, 7], [4, 9], [4, 10]], "le bilan et la séance disent la même chose");
+  const deux = jouerSeance(une.parcours, etape => (etape.type === "entraine" ? [[9, 4], [8, 4]] : []));
   assert.equal(deux.seance.finie, true);
-  assert.deepEqual(P.aRetenir(deux.parcours, AUJ), [[4, 7], [4, 9], [4, 10], [8, 4]], "la 2e séance ajoute ses ratés ; 7 × 4 est déjà là (4 × 7)");
-  assert.deepEqual(deux.seance.erreurs, [[7, 4], [8, 4]], "la séance, elle, ne garde que les siens");
+  assert.deepEqual(P.aRetenir(deux.parcours, AUJ), [[2, 7], [4, 9], [4, 10], [8, 4]], "la 2e séance ajoute ses ratés ; 9 × 4 est déjà là (4 × 9)");
+  assert.deepEqual(deux.seance.erreurs, [[9, 4], [8, 4]], "la séance, elle, ne garde que les siens");
+  // Sans table passée, jamais d'étape « Mes calculs du jour » : les calculs
+  // dus de la table en cours n'y vont pas, la séance a ses 4 marches.
+  const sansTablePassee = jouerSeance(eleve({tablePassee: false}));
+  assert.equal(sansTablePassee.types.includes("revision"), false, `pas de Mes calculs du jour sans table passée (${sansTablePassee.types})`);
+  assert.equal(sansTablePassee.types.length, 4);
   assert.deepEqual(P.aRetenir(deux.parcours, DEMAIN), []);
   // Le lendemain, une séance repart d'une liste vide.
   let p = deux.parcours;
@@ -196,8 +210,12 @@ function mesCalculs(parcours) {
 }
 // Léa, mardi : 3 × 7 et 3 × 8 reviennent aujourd'hui ; 3 × 3, 3 × 4 et 3 × 6
 // demain ; 3 × 9 dans deux jours ; 3 × 5 raté AUJOURD'HUI (il revient demain).
-function lea() {
+// Lot « un seul système » (05/10/2026) : « Aujourd'hui » et « Demain » ne
+// comptent que les calculs des tables PASSÉES — Léa a passé la table de 3 le
+// 1er octobre (passee: false : la même, sans table passée).
+function lea({passee = true} = {}) {
   let p = P.creerParcours();
+  if (passee) p.tables[3].acquise = "2026-10-01";
   const rep = (cle, ok, date) => { p = P.appliquerReponse(p, cle, {correcte: ok, date}).parcours; };
   for (const c of ["3-3", "3-4", "3-6", "3-7", "3-8", "3-9", "3-5"]) rep(c, true, "2026-10-02");
   for (const c of ["3-3", "3-4", "3-6"]) rep(c, true, "2026-10-04");
@@ -207,12 +225,19 @@ function lea() {
   return P.normaliserParcours(p);
 }
 
-test("2. « Demain » : les ratés d’aujourd’hui et ce qui revient demain — pas les calculs du jour encore à faire", () => {
+test("2. « Demain » : les ratés d’aujourd’hui et ce qui revient demain, parmi les tables passées — pas les calculs dus aujourd’hui", () => {
   const t = mesCalculs(lea());
   assert.deepEqual(t.etat.demain().sort(), ["3-3", "3-4", "3-5", "3-6"]);
+  assert.ok(!t.etat.demain().includes("3-7") && !t.etat.demain().includes("3-8"), "les deux calculs dus aujourd’hui ne sont pas dans « Demain »");
   const [aujourdhui, demain] = t.jour().children;
   assert.equal(t.jour().classList.contains("avec-demain"), true, "côte à côte");
-  assert.equal(aujourdhui.textContent, "Aujourd’hui\u00a0: 2\u00a0calculs", "chaque bouton plus court");
+  // « Aujourd'hui » : la série de Mes calculs du jour telle qu'elle sera jouée
+  // — les 2 calculs dus, et 1 de complément (3 × 9, de la table passée, vu
+  // avant aujourd'hui). 3 × 5, raté aujourd'hui, n'y est pas ; 3 × 3, 3 × 4 et
+  // 3 × 6, attendus DEMAIN, non plus : ils seront posés demain, le jour où
+  // ils peuvent monter — le même calcul n'est pas annoncé deux fois.
+  assert.deepEqual(P.serieDuJour(lea(), {aujourdhui: AUJ}).cles, ["3-7", "3-8", "3-9"]);
+  assert.equal(aujourdhui.textContent, "Aujourd’hui\u00a0: 3\u00a0calculs", "chaque bouton plus court");
   assert.equal(demain.textContent, "Demain\u00a0: 4\u00a0calculs");
   assert.deepEqual(parClasse(demain, "jour-nom").map(n => n.textContent), ["Demain"], "au téléphone, deux lignes (« Demain » / « 4 calculs »)");
   demain.click();
@@ -225,20 +250,30 @@ test("2. « Demain » : les ratés d’aujourd’hui et ce qui revient demain �
   t.jour().children[0].click();
   assert.deepEqual(t.etat.selection(), {jour: true});
   assert.equal(t.jour().children[1].attrs["aria-pressed"], "false");
-  assert.deepEqual(t.allumees().sort((a, b) => a - b), ["21", "24"]);
+  assert.deepEqual(t.allumees().sort((a, b) => a - b), ["21", "24", "27"], "la série du jour : 3 × 7 et 3 × 8 (dus), puis le complément (3 × 9) — ni 3 × 5, ni les calculs de demain");
   t.jour().children[0].click();
   assert.equal(t.etat.selection(), null);
+  // Sans table passée : rien ne revient, ni aujourd'hui ni demain — Mes
+  // calculs du jour ne prend pas les calculs de la table en cours.
+  const sans = mesCalculs(lea({passee: false}));
+  assert.deepEqual(sans.etat.demain(), []);
+  assert.equal(sans.jour().classList.contains("avec-demain"), false);
+  assert.deepEqual(sans.jour().children.map(n => [n.tag, n.textContent]), [["p", "Rien ne revient aujourd’hui."]]);
 });
 
 test("2. rien demain : pas de bouton ; rien aujourd’hui : « Aujourd’hui · rien » à côté de « Demain »", () => {
+  // (La table de 3 est passée : sans table passée, rien ne revient.)
   let p = P.creerParcours();
+  p.tables[3].acquise = "2026-09-30";
   p = P.appliquerReponse(p, "3-4", {correcte: true, date: "2026-10-01"}).parcours;
   p = P.appliquerReponse(p, "3-4", {correcte: true, date: "2026-10-02"}).parcours; // boîte 3, revient le 5
   const seul = mesCalculs(P.normaliserParcours(p));
   assert.equal(seul.jour().children.length, 1);
   assert.equal(seul.jour().classList.contains("avec-demain"), false);
-  assert.equal(seul.jour().children[0].textContent, "Aujourd’hui\u00a0: 1\u00a0calcul revient dans ta\u00a0séance", "seul, la phrase d’avant (au singulier)");
-  const rienAujourdhui = P.normaliserParcours(P.appliquerReponse(P.creerParcours(), "3-4", {correcte: false, date: AUJ}).parcours);
+  assert.equal(seul.jour().children[0].textContent, "Aujourd’hui\u00a0: 1\u00a0calcul dans Mes\u00a0calculs du\u00a0jour", "seul, la phrase entière (au singulier)");
+  const passee = P.creerParcours();
+  passee.tables[3].acquise = "2026-09-30";
+  const rienAujourdhui = P.normaliserParcours(P.appliquerReponse(passee, "3-4", {correcte: false, date: AUJ}).parcours);
   const r = mesCalculs(rienAujourdhui);
   const [rien, demain] = r.jour().children;
   assert.equal(rien.tag, "p", "rien de dû : pas un bouton");
@@ -368,9 +403,9 @@ test("5. le calcul tient sur une ligne : sa taille se règle pour trois chiffres
 
 // ------------------------------------------------- 6. le cadre blanc entier
 
-test("6. les petits écrans d’ordinateur : moins de blanc, l’escalier sur une ligne, × 0,75 au plus petit", () => {
+test("6. les petits écrans d’ordinateur : moins de blanc (trophées plus petits), l’escalier sur une ligne, × 0,75 au plus petit", () => {
   assert.match(html, /const ECHELLE = Object\.freeze\(\{largeurMin: 1024, min: 0\.75, max: 1\.6,/);
-  assert.match(html, /@media \(min-width: 1024px\) and \(max-height: 700px\) \{\s*\.panel \{ padding-top: 20px; padding-bottom: 20px; \}\s*\.intro \{ margin-top: 4px; margin-bottom: 6px; \}\s*\}/);
+  assert.match(html, /@media \(min-width: 1024px\) and \(max-height: 700px\) \{\s*\.panel \{ padding-top: 20px; padding-bottom: 20px; \}\s*\.intro \{ margin-top: 4px; margin-bottom: 6px; \}[\s\S]*?\.parcours-suite #parcours-melange \{ padding-top: 8px; padding-bottom: 8px; \}\s*\.parcours-suite \.mp-trophees b \{ width: 22px; height: 22px; \}\s*\}/, "lot « trophées » : sur un écran bas, les coupes passent de 26 à 22 px");
   assert.match(html, /#parcours-expert \.parcours-extra-cells \{ display: grid; grid-template-columns: repeat\(5, minmax\(0, 1fr\)\); gap: 6px; \}/);
   assert.match(html, /\.parcours-suite \.mp-melange-droite > span:first-child \{ flex-basis: 6em; \}/);
 });
@@ -385,7 +420,7 @@ test("1. Mon parcours s’ouvre en haut", () => {
 // ------------------------------------------------- le moteur a changé
 
 test("le moteur a changé : numéro de cache, copie du serveur, « fois » dans bilanSeances", async () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261004-2/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261005-1/);
   const moteur = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie));

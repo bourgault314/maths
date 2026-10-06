@@ -78,6 +78,6 @@ test("les entraînements, validations, mélanges et étoiles gardent leurs DEUX 
 });
 
 test("le numéro du noyau monte : un navigateur qui a l'ancien en cache poserait les questions à l'envers", () => {
-  assert.match(html, /\.\/defi_tables_core\.js\?v=20261004-1/);
+  assert.match(html, /\.\/defi_tables_core\.js\?v=20261005-1/);
   assert.doesNotMatch(html, /defi_tables_core\.js\?v=20260912-1/);
 });
