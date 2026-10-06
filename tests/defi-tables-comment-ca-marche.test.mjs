@@ -19,15 +19,21 @@ test("la notice garde six phrases et prend le nom que l'appli donne au mélange"
   assert.match(notice, /<b>Mon mélange\.<\/b>/);
   assert.doesNotMatch(notice, /<b>Le mélange\.<\/b>/);
   // « Mon mélange » est bien le libellé affiché, sur l'écran et sur la fiche.
-  assert.match(html, /<strong>Mon mélange : mes tables acquises<\/strong>/);
+  // Lot « un seul système » (05/10/2026) : les tables sont « passées », et
+  // le mélange est libre (« quand je veux »).
+  assert.match(html, /<strong>Mon mélange : mes tables passées<\/strong>/);
+  assert.match(notice, /<b>Mon mélange\.<\/b> Dès 2 tables passées, quand je veux&nbsp;: 20 questions en 1 min 30\./);
+  assert.doesNotMatch(notice, /acquise|avant de valider/);
 });
 
-test("la notice dit « 10 à la fois », et le moteur les prend dans chaque boîte, à tour de rôle", () => {
+test("la notice dit « 10 calculs de mes tables passées, en 1 minute », et le moteur les prend dans chaque boîte, à tour de rôle", () => {
   // Audit 1 (30/09/2026) : la notice tient en six lignes courtes ; le « à
   // tour de rôle » n'y est plus écrit, mais le moteur tire toujours ainsi.
   // Lot 2b : la notice de la séance ne dit plus « 10 à la fois » (Mes calculs
   // du jour est une étape de la séance) ; le moteur, lui, tire toujours ainsi.
-  assert.match(notice, /<b>Mes calculs du jour\.<\/b> Un calcul réussi revient plus tard\. Raté, il revient demain\./);
+  // Lot « un seul système » (05/10/2026) : Mes calculs du jour est la porte
+  // du jour — 10 calculs des tables passées, chronométrés ; la notice le dit.
+  assert.match(notice, /<b>Mes calculs du jour\.<\/b> D’abord, chaque jour&nbsp;: 10 calculs de mes tables passées, en 1 minute\. Réussi, un calcul revient plus tard\. Raté, il revient demain\./);
   // Et le moteur tire bien ainsi : sur 30 calculs dus répartis dans les cinq
   // boîtes, la première série de 10 en prend dans chacune — pas dix rouges.
   const aujourdhui = PARCOURS.jourLocal();
@@ -43,10 +49,20 @@ test("la notice dit « 10 à la fois », et le moteur les prend dans chaque boî
   assert.equal(dix.length, 10);
   const boites = new Set(dix.map(cle => parcours.calculs[cle].boite));
   assert.equal(boites.size, 5, "les cinq boîtes sont représentées dans la première série");
+  // Ce que la notice promet, le moteur le fait : sans table passée, pas de
+  // Mes calculs du jour ; avec les tables passées (avant aujourd'hui), 10
+  // calculs au plus, tous de ces tables, en 1 minute.
+  assert.deepEqual(PARCOURS.serieDuJour(parcours, {aujourdhui}).cles, [], "aucune table passée : rien dans Mes calculs du jour");
+  PARCOURS.TABLES.forEach(table => { parcours.tables[table].acquise = PARCOURS.ajouterJours(aujourdhui, -1); });
+  const serie = PARCOURS.serieDuJour(parcours, {aujourdhui});
+  assert.equal(serie.cles.length, 10, "10 calculs, pas les 30 dus");
+  assert.ok(serie.cles.every(cle => PARCOURS.prisParMesCalculs(parcours, cle, aujourdhui)), "tous des tables passées");
+  assert.equal(new Set(serie.cles.map(cle => parcours.calculs[cle].boite)).size, 5, "toujours à tour de rôle dans les boîtes");
+  assert.equal(PARCOURS.dureeMesCalculs(serie.cles.length), 60, "« en 1 minute » : 6 secondes par calcul");
 });
 
 test("la notice dit ce que fait une erreur, et le moteur le confirme : une boîte de moins, et demain", () => {
-  assert.match(notice, /Un calcul réussi revient plus tard\. Raté, il revient demain\./);
+  assert.match(notice, /Réussi, un calcul revient plus tard\. Raté, il revient demain\./);
   assert.doesNotMatch(notice, /il revient tout de suite/);
   // La même phrase partout où l'élève lit la règle (audit 1) : le détail
   // d'une case et la fiche imprimée disent « demain », plus « tout de suite ».

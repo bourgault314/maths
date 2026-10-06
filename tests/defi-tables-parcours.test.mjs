@@ -234,7 +234,13 @@ test("J’apprends garde la bande pour construire et la propose en aide temporai
   assert.match(html, /if \(correct && !assisted\) state\.mastered\.add\(question\.factKey\)/);
   assert.match(html, /showAnswerFeedback\(question, correct, skip \? null : value, shouldRetry, assisted, donnee\)/);
   assert.match(html, /assisted \? "Bravo\\u00a0! On le reverra sans la bande\." : "Bravo\\u00a0!"/);
-  assert.match(html, /const label = stickActivity \? "cases complétées" : "calculs sus"/);
+  // Lot « un seul système » (05/10/2026) : le compteur « 10 / 11 calculs sus »
+  // est en trois morceaux — « calculs » (.compteur-mot) s'efface sous 360 px,
+  // « sus » (.compteur-suite) sous 430 px, comme « complétées » pour les cases.
+  assert.match(html, /suite\.textContent = " complétées";\s*\$\("question-count"\)\.replaceChildren\(`\$\{completed\} \/ \$\{total\} cases`, suite\);/);
+  assert.match(html, /mot\.className = "compteur-mot";\s*mot\.textContent = " calculs";\s*const suite = document\.createElement\("span"\);\s*suite\.className = "compteur-suite";\s*suite\.textContent = " sus";\s*\$\("question-count"\)\.replaceChildren\(`\$\{completed\} \/ \$\{total\}`, mot, suite\);/);
+  assert.match(html, /@media \(max-width: 429px\) \{ #question-count \.compteur-suite \{ display: none; \} \}/);
+  assert.match(html, /@media \(max-width: 359px\) \{ #question-count \.compteur-mot \{ display: none; \} \}/);
   assert.match(html, /question\?\.multiplier === 0 \? "Commence à 0\."\s*: suitUnePleine \? `Ajoute \$\{table\}\.` : "Complète la case bleue\.";/);
   assert.match(html, /if \(correct\) \{[\s\S]*\$\("validate"\)\.style\.visibility = "hidden";[\s\S]*scheduleAutoAdvance\(stickActivity \? DELAI_SUIVANT_BANDE : DELAI_SUIVANT\);/);
   assert.match(html, /\$\("validate"\)\.style\.visibility = "";[\s\S]*setAnswerControlsEnabled\(true\)/);
@@ -255,7 +261,7 @@ test("J’apprends garde la bande pour construire et la propose en aide temporai
   assert.match(html, /textContent = enabled \? "Valider" : "Suivant"/);
   assert.match(html, /completeReview = state\.configuration\.mode === "test"/);
   assert.match(html, /Mes \$\{wrongEntries\.length\} erreurs/, "lot R2 : les erreurs d’abord, sous leur titre");
-  assert.match(html, /defi_tables_core\.js\?v=20261004-1/);
+  assert.match(html, /defi_tables_core\.js\?v=20261005-1/);
   // Le moteur était le seul des deux scripts sans épingle, et le lot A2 est
   // passé au travers : il ajoutait chargerSync / sauverSync / casesDetachees au
   // moteur sans monter son numéro. Un navigateur qui avait déjà l'ancien moteur
@@ -263,7 +269,7 @@ test("J’apprends garde la bande pour construire et la propose en aide temporai
   // « PARCOURS.chargerSync is not a function », plus de repère de suivi, plus
   // rien envoyé au professeur, et une page d'accueil d'apparence normale.
   // Changer ce numéro à chaque modification du moteur ; ce test le rappelle.
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261004-2/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261005-1/);
 });
 
 test("une erreur = une ligne : le calcul avec sa bonne réponse, la réponse donnée barrée à côté", () => {

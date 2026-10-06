@@ -41,7 +41,10 @@ export function parcoursComplet() {
     erreurs: [407, 709, 1010], rate: 6, sansFaute: false, remplacee: true, reparee: false, prete: true};
   // Lot « retouches après Mon parcours » : la liste « À retenir » du jour.
   p.retenir = {jour: "2026-09-23", erreurs: [308, 709, 310]};
-  p.melange = {tables: [...PARCOURS.TABLES], aJour: true, aRefaireAvec: null, dernier: "2026-09-20"};
+  // Lot « un seul système » : le mélange libre (dernier score, trophée) et le
+  // jour où Mes calculs du jour a été joué.
+  p.melange = {tables: [...PARCOURS.TABLES], aJour: true, aRefaireAvec: null, dernier: "2026-09-20", score: 19, reussi: 9};
+  p.calculsDuJour = "2026-09-23";
   // Lot 3 : l'escalier, le rang, les jours travaillés. (L'avis de migration
   // du lot 3 a été retiré au lot 4b ; « beads » s'est ajouté aux activités.)
   p.expert = {etoiles: 5, dernier: "2026-09-21", couronne: "2026-09-22"};

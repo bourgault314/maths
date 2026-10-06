@@ -80,10 +80,15 @@ function acceptableParLeServeur(valeur) {
   return scalaire(valeur) || (Array.isArray(valeur) && valeur.every(scalaire));
 }
 
-// Un élève avec la table de 4 en cours (départ 4) et des calculs dus.
+// Un élève avec la table de 4 en cours (départ 4) et des calculs dus. Lot « un
+// seul système » : Mes calculs du jour ne prend que les calculs des tables
+// passées avant aujourd'hui — la table de 2 est donc passée la veille, et ce
+// sont ses 8 calculs qui sont dus (ceux de la table de 4 restent à ses marches).
 function eleveEnRoute() {
   let p = P.creerParcours();
+  p.tables[2].acquise = jour(1);
   p.tables[4].seance = {depart: 4, n: 3, dernier: jour(1)};
+  for (let m = 2; m <= 9; m += 1) p = P.appliquerReponse(p, `2-${m}`, {correcte: true, date: jour(1)}).parcours;
   for (let m = 2; m <= 9; m += 1) p = P.appliquerReponse(p, `4-${m}`, {correcte: true, date: jour(1)}).parcours;
   return P.normaliserParcours(p);
 }
@@ -199,7 +204,7 @@ test("un JSON forgé ou abîmé : pas de séance en cours, jamais de texte gard�
   assert.equal(avec({table: null, file: [300], faites: [100, 9, 10, 0]}).depart, null);
 });
 
-test("l'aller-retour est exact quoi qu'il arrive dans la séance : marche ratée, reprise, raccourci, validation ratée, mélange, étoile", () => {
+test("l'aller-retour est exact quoi qu'il arrive dans la séance : marche ratée, reprise, raccourci, validation ratée, étoile — et le mélange d'une vieille séance se relit encore", () => {
   let graine = 12345;
   const hasard = () => { graine = (graine * 1103515245 + 12345) % 2147483648; return graine / 2147483648; };
   let reprises = 0;
@@ -243,7 +248,24 @@ test("l'aller-retour est exact quoi qu'il arrive dans la séance : marche ratée
   }
   assert.ok(reprises > 1500, `assez de reprises jouées (${reprises})`);
   assert.deepEqual([...drapeaux].sort((a, b) => a - b), [0, 10, 20, 30], "la file a porté une marche d'en dessous, une marche refaite et un raccourci");
-  assert.ok([0, 1, 2, 4, 5].every(issue => issues.has(issue)), `toutes les issues ont été rangées (${[...issues].sort()})`);
+  // Lot « un seul système » : le mélange n'est plus dans la séance. Une étape
+  // « réussie » (2) ou « pas réussie » sans raté (4) ne reste donc plus jamais
+  // dans une séance EN COURS : le test réussi et l'étoile finissent la séance ;
+  // il reste la marche faite (0), la marche ratée (1), le test raté (5).
+  assert.deepEqual([...issues].sort(), [0, 1, 5], "les issues rangées : marche faite, marche ratée, test raté");
+  // Une séance commencée sous l'appli d'avant (un mélange joué, un mélange à
+  // venir) se relit toujours : l'étape faite garde son nom, l'étape à venir s'efface.
+  for (const [issue, reussi] of [[2, true], [4, false]]) {
+    let vieux = P.creerParcours();
+    vieux.tables[2].acquise = jour(1); vieux.tables[10].acquise = jour(1);
+    vieux.enCours = {jour: jour(2), table: 5, depart: 1, echelle: true, file: [200, 1, 2], faites: [200, 18, 20, issue], rate: null, sansFaute: true, remplacee: false, reparee: false, prete: false, rang: 0, erreurs: []};
+    vieux = P.normaliserParcours(vieux);
+    assert.deepEqual(vieux.enCours.faites, [200, 18, 20, issue]);
+    const relue = P.seanceEnCours(vieux, {aujourdhui: jour(2)});
+    assert.equal(relue.faites[0].type, "melange");
+    assert.equal(relue.faites[0].reussi, reussi);
+    assert.equal(P.etapeDeSeance(vieux, relue, jour(2)).marche, 1, "le mélange encore dans la file est sauté");
+  }
 });
 
 test("la séance des 9 tables se reprend aussi : l'étoile tentée garde son nom", () => {
@@ -342,52 +364,56 @@ test("la fusion : la séance la plus récente gagne ; finie sur un autre apparei
   assert.deepEqual(P.fusionner(apresDeux.parcours, ancien).enCours, apresDeux.parcours.enCours);
 });
 
-test("la validation réussie termine la séance ; le mélange ouvre la suivante, avec deux marches seulement", () => {
+test("la validation réussie termine la séance et passe la table, sans mélange ; la séance suivante n'a pas de mélange non plus", () => {
   let p = P.creerParcours();
   p.tables[2].acquise = jour(1); p.tables[10].acquise = jour(1);
-  p.melange = {tables: [2, 10], aJour: true, aRefaireAvec: null, dernier: jour(1)};
   p.tables[5].seance = {depart: 6, n: 5, dernier: jour(1)};
   p = P.normaliserParcours(p);
   for (const date of [jour(1), jour(2)]) for (let m = 1; m <= 10; m += 1) p = P.appliquerReponse(p, `5-${m}`, {correcte: true, date}).parcours;
-  assert.equal(P.melangeDu(p), false);
+  assert.equal(P.melangeDu, undefined, "plus de mélange dû : la fonction est retirée du moteur");
+  assert.equal(p.melange.dernier, null, "deux tables passées, mélange jamais joué");
   const s = jouerSeance(p, jour(3), {erreursPar: etape => (etape.type === "entraine" ? 2 : 1)});
-  assert.equal(s.noms[s.noms.length - 1], "validation");
-  assert.equal(s.noms.filter(nom => nom === "melange").length, 0, "plus de mélange dans la même séance : un seul chrono");
+  assert.deepEqual(s.noms, ["revision", 6, 7, "validation"], "2 × 5, calcul d'une table passée, ouvre la séance : quatre étapes");
+  assert.equal(s.noms.filter(nom => nom === "melange").length, 0, "pas de mélange dans la séance");
   assert.equal(s.seance.finie, true);
   assert.deepEqual(s.seance.file, []);
-  assert.equal(s.parcours.tables[5].acquise, jour(3));
+  assert.equal(s.parcours.tables[5].acquise, jour(3), "plus de verrou : le test réussi passe la table");
   assert.equal(s.parcours.enCours, null);
   assert.deepEqual(s.parcours.seances, [jour(3)], "la séance compte");
-  assert.equal(P.melangeDu(s.parcours), true, "le mélange est dû : le verrou ne change pas");
-  assert.equal(P.validationDeSeance(s.parcours, 3), false);
-  // La séance suivante : le mélange l'ouvre (après Mes calculs du jour s'il y
-  // en a), et jamais plus de quatre étapes.
+  assert.equal(s.parcours.calculsDuJour, jour(3), "Mes calculs du jour est joué : la porte du jour est ouverte");
+  // Trois tables passées, mélange toujours pas joué : la validation de la table suivante n'est pas retenue.
+  let pret = s.parcours;
+  pret.tables[3].sansFaute = {desordre: 1, trous: 1};
+  pret = P.normaliserParcours(pret);
+  assert.equal(P.validationDeSeance(pret, 3), true);
+  // La séance suivante : jamais de mélange, jamais plus de quatre étapes.
   const typesDe = date => P.ouvrirSeance(s.parcours, {aujourdhui: date}).file.map(prevue => prevue.type === "marche" ? prevue.marche : prevue.type);
   assert.equal(P.ouvrirSeance(s.parcours, {aujourdhui: jour(3)}).table, 3);
-  assert.deepEqual(typesDe(jour(3)), ["melange", 1, 2, 3], "« Encore une séance » le jour même : le mélange, puis la table de 3");
-  assert.deepEqual(typesDe(jour(4)), ["revision", "melange", 1, 2], "le lendemain : calculs, mélange, deux marches de la table de 3");
+  assert.deepEqual(typesDe(jour(3)), [1, 2, 3, 4], "« Encore une séance » le jour même : Mes calculs du jour est fait, plus rien de dû — quatre marches de la table de 3");
+  assert.deepEqual(typesDe(jour(4)), ["revision", 1, 2, 3], "le lendemain : Mes calculs du jour, trois marches de la table de 3");
   // Validation ratée : rien ne change (la marche 7, puis fin).
   const rate = jouerSeance(p, jour(3), {erreursPar: etape => (etape.type === "validation" ? 6 : 2)});
   assert.deepEqual(rate.noms.slice(-2), ["validation", 7]);
 });
 
-test("quatre étapes au plus à l'ouverture : quatre marches (lot M2), trois avec Mes calculs du jour ou le mélange, deux avec les deux", () => {
+test("quatre étapes au plus à l'ouverture : quatre marches (lot M2), trois après Mes calculs du jour (calculs des tables passées seulement) — jamais de mélange", () => {
   assert.equal(P.SEUILS.seance.plafond, 4);
   assert.equal(P.SEUILS.seance.marchesMin, 2);
   const marchesDe = (parcours, date, table = null) => P.ouvrirSeance(parcours, {aujourdhui: date, table}).file.map(prevue => prevue.type === "marche" ? prevue.marche : prevue.type);
   let p = P.creerParcours();
   assert.deepEqual(marchesDe(p, jour(1)), [1, 2, 3, 4], "rien de dû : quatre marches (lot M2 : toujours 4 étapes)");
   p = P.appliquerReponse(p, "2-6", {correcte: true, date: jour(1)}).parcours;
-  assert.deepEqual(marchesDe(p, jour(2)), ["revision", 1, 2, 3], "les calculs seuls : trois marches");
+  assert.deepEqual(marchesDe(p, jour(2)), [1, 2, 3, 4], "un calcul dû de la table en cours, aucune table passée : pas de Mes calculs du jour, quatre marches");
   let q = P.creerParcours();
   q.tables[2].acquise = jour(1); q.tables[10].acquise = jour(1);
   q = P.normaliserParcours(q);
-  assert.deepEqual(marchesDe(q, jour(2)), ["melange", 1, 2, 3], "le mélange seul : trois marches");
+  assert.deepEqual(marchesDe(q, jour(2)), [1, 2, 3, 4], "deux tables passées, mélange jamais joué : pas d'étape mélange, quatre marches");
   q = P.appliquerReponse(q, "2-6", {correcte: true, date: jour(1)}).parcours;
-  assert.deepEqual(marchesDe(q, jour(2)), ["revision", "melange", 1, 2], "les deux : deux marches");
+  assert.deepEqual(marchesDe(q, jour(2)), ["revision", 1, 2, 3], "un calcul d'une table passée : Mes calculs du jour, trois marches");
+  assert.deepEqual(marchesDe(q, jour(1)), [1, 2, 3, 4], "le jour même où la table est passée : pas encore (demain)");
   q.tables[5].seance = {depart: 6, n: 4, dernier: jour(1)};
-  assert.deepEqual(marchesDe(P.normaliserParcours(q), jour(2)), ["revision", "melange", 6, 7], "la validation attend le lendemain (le mélange la verrouille de toute façon)");
-  assert.deepEqual(marchesDe(q, jour(2), 2), ["revision", "melange", 5, 6], "une table acquise choisie exprès : deux entraînements");
+  assert.deepEqual(marchesDe(P.normaliserParcours(q), jour(2)), ["revision", 6, 7, 8], "au sommet : la marche 8 (le test) est dans la séance, plus de verrou");
+  assert.deepEqual(marchesDe(q, jour(2), 2), ["revision", 5, 6, 7], "une table passée choisie exprès : ses trois entraînements");
 });
 
 test("cinq points par semaine, des durées justes", () => {
@@ -397,15 +423,23 @@ test("cinq points par semaine, des durées justes", () => {
   const minutes = (parcours, date) => P.programmeDeSeance(parcours, P.ouvrirSeance(parcours, {aujourdhui: date}), date);
   assert.equal(minutes(p, jour(1)).minutes, 5, "perles 2 + bande 1 + bande à trous 1 + dans l’ordre 1 (lot M2 : quatre marches)");
   p = P.appliquerReponse(p, "2-6", {correcte: true, date: jour(1)}).parcours;
+  // Aucune table passée : pas de Mes calculs du jour, les quatre marches.
+  assert.deepEqual(minutes(p, jour(2)).etapes.map(etape => etape.minutes), [2, 1, 1, 1]);
+  // La table de 6 passée la veille : 2 × 6 ouvre la séance (1 min), puis trois marches.
+  p.tables[6].acquise = jour(1);
+  p = P.normaliserParcours(p);
   const programme = minutes(p, jour(2));
   assert.equal(programme.etapes.length, 4);
   assert.equal(programme.minutes, 5, "« 4 étapes · environ 5 min »");
   assert.deepEqual(programme.etapes.map(etape => etape.minutes), [1, 2, 1, 1]);
+  // Le seul chrono de la séance est le test (le mélange n'y est plus) : 2 min.
   let q = P.creerParcours();
   q.tables[2].acquise = jour(1); q.tables[10].acquise = jour(1);
   q.tables[5].seance = {depart: 5, n: 4, dernier: jour(1)};
+  q.tables[5].sansFaute = {desordre: 1, trous: 1};
   q = P.normaliserParcours(q);
-  assert.deepEqual(minutes(q, jour(2)).etapes.map(etape => etape.minutes), [2, 1, 1, 1], "un chrono : 2 min ; chaque marche : 1 min");
+  assert.deepEqual(minutes(q, jour(2)).etapes.map(etape => etape.type), ["entraine", "entraine", "entraine", "validation"]);
+  assert.deepEqual(minutes(q, jour(2)).etapes.map(etape => etape.minutes), [1, 1, 1, 2], "chaque marche : 1 min ; un chrono : 2 min");
 });
 
 test("la page : « Reprendre ma séance », ses étapes cochées, « Reprendre » ; les erreurs de l'étape partent au moteur", () => {
@@ -435,8 +469,8 @@ test("la page : « Reprendre ma séance », ses étapes cochées, « Reprendre �
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie serveur identique", () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261004-2/);
-  assert.match(html, /defi_tables_core\.js\?v=20261004-1/, "le noyau n'a pas changé : son numéro reste");
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261005-1/);
+  assert.match(html, /defi_tables_core\.js\?v=20261005-1/, "le noyau n'a pas changé : son numéro reste");
   const moteur = readFileSync(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = readFileSync(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie), "cp outils/calcul_mental/defi_tables_mon_parcours.js _serveur/public/prof/");

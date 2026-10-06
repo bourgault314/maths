@@ -54,11 +54,16 @@ const CATALOGUE_APPLIS = [
         // parcours, « retenir », la liste « À retenir » du jour (les calculs
         // ratés de mémoire dans les séances d'aujourd'hui) — « jour » et
         // « erreurs » (407 pour 4 × 7) sont déjà déclarées.
+        // Lot « un seul système, les boîtes » (05/10/2026) : au niveau du
+        // parcours, « calculsDuJour » (le jour où Mes calculs du jour a été
+        // joué : une date) ; dans « melange », « reussi » (le nombre de tables
+        // du plus grand mélange réussi : un entier) — « score » et « dernier »
+        // sont déjà déclarées.
         'cles' => ['version', 'epoque', 'tables', 'apprends', 'beads', 'construct', 'gaps', 'ordered', 'random',
             'entraine', 'desordre', 'trous', 'mixte', 'dernier', 'entrainement', 'score', 'total', 'fois',
             'bouts', 'seance', 'depart', 'n', 'sansFaute', 'seances',
             'enCours', 'jour', 'table', 'echelle', 'file', 'faites', 'erreurs', 'rate', 'remplacee', 'reparee', 'prete',
-            'retenir',
+            'retenir', 'calculsDuJour', 'reussi',
             'acquise', 'melange', 'aJour', 'aRefaireAvec', 'expert', 'niveau', 'champion',
             'etoiles', 'couronne', 'rang', 'jours',
             'calculs', 'boite', 'cases', 'vu', 'erreur', 'gagne', 'echeance'],

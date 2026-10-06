@@ -552,7 +552,7 @@ function eleveProf({acquises = [], commencees = {}, melange = true} = {}) {
   return MON_PARCOURS.normaliserParcours(p);
 }
 
-test("« En cours » : une ligne courte — table et cases pleines, deux tables, mélange à faire, étoiles, couronne", () => {
+test("« En cours » : une ligne courte — table et cases pleines, deux tables, étoiles, couronne ; plus jamais « mélange à faire »", () => {
   const resume = p => MON_PARCOURS.resumeProf(p, jourP(4));
   assert.equal(resume(MON_PARCOURS.creerParcours()).enCours.texte, "—", "rien fait : un tiret");
   // 2 et 5 acquises, la 3 en cours : 3 × 2 et 3 × 5 sont déjà pleins (boîte 4).
@@ -564,8 +564,13 @@ test("« En cours » : une ligne courte — table et cases pleines, deux tables,
   assert.equal(resume(deux).enCours.texte, "tables 3 et 7");
   const trois = eleveProf({acquises: [2, 5], commencees: {3: {n: 1, dernier: jourP(1)}, 4: {n: 1, dernier: jourP(2)}, 7: {n: 1, dernier: jourP(3)}}});
   assert.equal(resume(trois).enCours.texte, "tables 3, 4 et 7");
+  // Lot « un seul système » (05/10/2026) : Mon mélange est libre — un mélange
+  // jamais joué ne passe plus devant la table, « En cours » dit la table.
   const melange = eleveProf({acquises: [2, 5], commencees: {3: {n: 2, dernier: jourP(3)}}, melange: false});
-  assert.equal(resume(melange).enCours.texte, "mélange à faire", "le mélange dû passe devant la table");
+  assert.deepEqual({...resume(melange).enCours}, {...resume(lea).enCours}, "mélange joué ou non : la même ligne, la table en cours");
+  assert.equal(resume(melange).enCours.texte, "table de 3 · 2 sur 10");
+  const source = readFileSync(MOTEUR_PROF, "utf8");
+  assert.doesNotMatch(source.slice(source.indexOf("function resumeProf("), source.indexOf("// ---------------------------------------------------- le rangement par code")), /mélange|melange/, "resumeProf ne parle plus du mélange");
   const toutes = eleveProf({acquises: [...MON_PARCOURS.TABLES]});
   assert.equal(resume(toutes).enCours.texte, "les 9 tables");
   const etoiles = MON_PARCOURS.normaliserParcours({...toutes, expert: {...toutes.expert, etoiles: 2}});
@@ -574,16 +579,19 @@ test("« En cours » : une ligne courte — table et cases pleines, deux tables,
   assert.equal(resume(legende).enCours.texte, "👑", "la couronne est la marche d'après les quatre étoiles, pas une cinquième étoile");
 });
 
-test("« En cours » se trie : rien, puis les tables dans l'ordre conseillé et par cases pleines, le mélange, les étoiles", () => {
+test("« En cours » se trie : rien, puis les tables dans l'ordre conseillé et par cases pleines, les étoiles — le mélange ne déplace personne", () => {
   const ordre = p => MON_PARCOURS.resumeProf(p, jourP(4)).enCours.ordre;
   const rien = ordre(MON_PARCOURS.creerParcours());
   const table2 = ordre(eleveProf({commencees: {2: {n: 1, dernier: jourP(1)}}}));
   const table3 = ordre(eleveProf({acquises: [2, 10, 5], commencees: {3: {n: 1, dernier: jourP(1)}}}));
   const table7 = ordre(eleveProf({acquises: [2, 10, 5], commencees: {7: {n: 1, dernier: jourP(1)}}}));
-  const melange = ordre(eleveProf({acquises: [2, 5], melange: false}));
   const toutes = ordre(eleveProf({acquises: [...MON_PARCOURS.TABLES]}));
-  assert.ok(rien < table2 && table2 < table3 && table3 < table7 && table7 < melange && melange < toutes,
-    `ordre attendu croissant : ${[rien, table2, table3, table7, melange, toutes].join(" < ")}`);
+  assert.ok(rien < table2 && table2 < table3 && table3 < table7 && table7 < toutes,
+    `ordre attendu croissant : ${[rien, table2, table3, table7, toutes].join(" < ")}`);
+  // Lot « un seul système » (05/10/2026) : un mélange jamais joué ne range
+  // plus l'élève à part — il est trié sur sa table, comme les autres.
+  assert.equal(ordre(eleveProf({acquises: [2, 5], melange: false})), ordre(eleveProf({acquises: [2, 5]})), "mélange joué ou non : la même place");
+  assert.equal(MON_PARCOURS.resumeProf(eleveProf({acquises: [2, 5], melange: false}), jourP(4)).enCours.type, "table");
 });
 
 test("les alertes : la table qui dure (8 séances), les séances de la semaine — lues dans le parcours, sans compteur de plus", () => {
@@ -621,7 +629,11 @@ test("« rien depuis N jours » : compté depuis la dernière activité, à l'he
 test("le tableau : sept colonnes, la liste des tables écrite, les gestes rares derrière « ⋯ »", () => {
   const entete = page.slice(page.indexOf('<table id="tableau">'), page.indexOf('<tbody id="corps">'));
   assert.deepEqual([...entete.matchAll(/<th>(?:<button type="button" data-tri="(\w+)">)?([^<]*)/g)].map(m => `${m[2]}${m[1] ? `:${m[1]}` : ""}`),
-    ["Élève:prenom", "Code", "Tables acquises:acquises", "En cours:encours", "Cette semaine:semaine", "En retard:retard", "Dernière activité:date", ""]);
+    ["Élève:prenom", "Code", "Tables passées:acquises", "En cours:encours", "Cette semaine:semaine", "En retard:retard", "Dernière activité:date", ""]);
+  // Lot « un seul système » (05/10/2026) : « Tables passées » partout (la clé de tri reste « acquises »).
+  assert.match(page, /<option value="acquises">Tables passées<\/option>/);
+  assert.match(page, /cAcquises\.dataset\.libelle = "Passées";/);
+  assert.doesNotMatch(page, /Tables acquises|"Acquises"/);
   assert.doesNotMatch(page, /À travailler|cMelange|cExpert|caseExpert|badgeRang|calculsATravailler\(/, "les trois colonnes d'avant sont retirées, et leur code avec");
   assert.match(page, /if \(tri\.colonne === "encours"\) return eleve\.lu\.enCours\.ordre;\s*if \(tri\.colonne === "semaine"\) return eleve\.lu\.seances;/);
   assert.match(page, /<option value="encours">En cours<\/option>\s*<option value="semaine">Séances cette semaine<\/option>/);
@@ -686,8 +698,8 @@ test("la jauge de classe additionne, et ne nomme personne", () => {
     eleveDeTest("Amina", "ABCD03", 0, 0)
   ]);
   const compte = zones.get("objectif-compte").textContent;
-  assert.equal(compte, "Ensemble : 13 tables acquises sur 27", "9 + 4 + 0 sur 3 élèves × 9 tables");
-  assert.ok(compte.includes("tables acquises"), "au pluriel dès 2 : le singulier est réservé à « 1 table acquise »");
+  assert.equal(compte, "Ensemble : 13 tables passées sur 27", "9 + 4 + 0 sur 3 élèves × 9 tables");
+  assert.ok(compte.includes("tables passées"), "au pluriel dès 2 : le singulier est réservé à « 1 table passée »");
   const tout = [compte, JSON.stringify([...zones.values()].map(z => [z.textContent, z.enfants]))].join(" ");
   ["Léa", "Noé", "Amina", "ABCD01", "ABCD02", "ABCD03"].forEach(interdit =>
     assert.ok(!tout.includes(interdit),
@@ -741,13 +753,13 @@ test("des élèves qui ont ouvert l'appli sans rien acquérir ne suffisent pas",
     "ils ont bien travaillé, mais la jauge n'a toujours rien à montrer : « 0 table acquise sur 27 » est la barre vide qu'on refuse");
 });
 
-test("une seule table acquise dans toute la classe suffit à ouvrir la jauge", () => {
+test("une seule table passée dans toute la classe suffit à ouvrir la jauge", () => {
   const {zones} = jaugeDeClasse([
     eleveDeTest("Léa", "ABCD01", 1, 1),
     {prenom: "Noé", code: "ABCD02", lu: {acquises: [], semaine: 0, parcours: null, melange: "—"}}
   ]);
   assert.equal(zones.get("objectif").hidden, false, "dès qu'un chiffre bouge, la classe a un objectif");
-  assert.equal(zones.get("objectif-compte").textContent, "Ensemble : 1 table acquise sur 18",
+  assert.equal(zones.get("objectif-compte").textContent, "Ensemble : 1 table passée sur 18",
     "le dénominateur compte TOUS les élèves, y compris ceux qui n'ont pas commencé");
 });
 

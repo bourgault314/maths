@@ -145,7 +145,15 @@ test("le rond bleu : les trois réussis ne suffisent plus — il reste sur Je m�
   assert.equal(ligne(j1, J1).conseil, "entraine", "jour 1 : les 8 calculs en boîte 2 → toujours Je m’entraîne");
   assert.equal(P.etapeTable(j1, 7, J1).type, "entraine");
   assert.equal(ligne(j1, J2).conseil, "entraine", "jour 2 avant la révision : toujours Je m’entraîne (et Mes calculs du jour devant)");
-  assert.equal(P.prochaineEtape(j1, J2).type, "revision");
+  // Lot « un seul système » : les calculs dus de la table EN COURS restent à ses
+  // marches — sans table passée, Mes calculs du jour ne passe pas devant.
+  assert.notEqual(P.prochaineEtape(j1, J2).type, "revision", "aucune table passée : pas de Mes calculs du jour");
+  assert.equal(P.agendaCalculs(j1, J2).dus, 0);
+  // Avec la table de 2 passée la veille : 2 × 7 est un calcul des tables passées, il passe devant.
+  const avecPassee = P.normaliserParcours({...j1, tables: {...j1.tables, 2: {...j1.tables[2], acquise: J1}}});
+  assert.equal(P.prochaineEtape(avecPassee, J2).type, "revision");
+  assert.equal(P.prochaineEtape(avecPassee, J2).libelle, "Mes calculs du jour : 1 calcul");
+  assert.equal(P.prochaineEtape(avecPassee, J1).type === "revision", false, "passée aujourd'hui : seulement demain");
   let j2 = j1;
   P.calculsDus(j2, {aujourdhui: J2}).forEach(cle => { j2 = P.appliquerReponse(j2, cle, {correcte: true, date: J2}).parcours; });
   assert.equal(ligne(j2, J2).conseil, "valide", "jour 2 après la révision : les 8 en boîte 3 → Je valide ma table");
@@ -201,7 +209,7 @@ test("l’accueil : le menu « Choisir une activité » ne compte plus (lot E1) 
   assert.doesNotMatch(html, /points: ligne\.entraine\.map\(item => etoile\(item\.etat\)\)/, "plus de ●○○");
   assert.match(html, /sousTitre: `facultatif · \$\{ligne\.apprends\.length\} activités`,\s*points: \[\],/);
   assert.match(html, /sousTitre: `\$\{ligne\.entraine\.length\} entraînements · sans chrono`,\s*points: \[\],/);
-  assert.equal((html.match(/conseille: false,/g) || []).length, 5, "aucune ligne du menu n'est conseillée (le cadenas non plus)");
+  assert.equal((html.match(/conseille: false,/g) || []).length, 4, "aucune ligne du menu n'est conseillée — J'apprends, Je m'entraîne, Je passe le test, Mon mélange (plus de cadenas)");
 });
 
 test("la phrase du rendez-vous : sur l’écran de résultat (lot E1 : plus dans le menu)", () => {
@@ -215,21 +223,21 @@ test("la phrase du rendez-vous : sur l’écran de résultat (lot E1 : plus dans
     + html.slice(debut, html.indexOf("\n      }\n", debut) + 8);
   const {phraseRendezVous} = new Function(`${source}\nreturn {phraseRendezVous};`)();
   assert.equal(phraseRendezVous({total: 8, prets: 0, inconnus: 0, dus: 0, aVenir: 8, prochain: {jour: J2, dans: 1}}, 7),
-    "Tes 8 calculs ont rendez-vous demain. C’est en les revoyant qu’ils rentrent : tu valideras ta table après.");
+    "Tes 8 calculs ont rendez-vous demain. C’est en les revoyant qu’ils rentrent : tu passeras le test après.");
   assert.equal(phraseRendezVous({total: 8, prets: 5, inconnus: 0, dus: 0, aVenir: 3, prochain: {jour: J5, dans: 3}}, 7),
-    "Encore 3 calculs : ils ont rendez-vous dans 3 jours. C’est en les revoyant qu’ils rentrent : tu valideras ta table après.");
+    "Encore 3 calculs : ils ont rendez-vous dans 3 jours. C’est en les revoyant qu’ils rentrent : tu passeras le test après.");
   assert.equal(phraseRendezVous({total: 8, prets: 7, inconnus: 0, dus: 0, aVenir: 1, prochain: {jour: J2, dans: 1}}, 7),
-    "Encore 1 calcul : ils ont rendez-vous demain. C’est en les revoyant qu’ils rentrent : tu valideras ta table après.");
+    "Encore 1 calcul : ils ont rendez-vous demain. C’est en les revoyant qu’ils rentrent : tu passeras le test après.");
   assert.equal(phraseRendezVous({total: 8, prets: 0, inconnus: 0, dus: 8, aVenir: 0, prochain: null}, 7),
-    "8 calculs de la table de 7 t’attendent dans Mes calculs du jour : c’est en les revoyant qu’ils rentrent. Tu valideras ta table après.");
+    "Encore 8 calculs de la table de 7 à réussir aujourd’hui : refais un entraînement, puis passe le test.", "les calculs de la table en cours ne sont plus dans Mes calculs du jour : ils se réussissent aux entraînements");
   assert.equal(phraseRendezVous({total: 8, prets: 7, inconnus: 0, dus: 1, aVenir: 0, prochain: null}, 7),
-    "1 calcul de la table de 7 t’attend dans Mes calculs du jour : c’est en les revoyant qu’ils rentrent. Tu valideras ta table après.");
+    "Encore 1 calcul de la table de 7 à réussir aujourd’hui : refais un entraînement, puis passe le test.");
   assert.equal(phraseRendezVous({total: 8, prets: 6, inconnus: 2, dus: 0, aVenir: 0, prochain: null}, 7),
-    "Il te reste 2 calculs de la table de 7 à rencontrer : refais un entraînement, puis tu valideras ta table.");
+    "Il te reste 2 calculs de la table de 7 à rencontrer : refais un entraînement, puis passe le test.");
 });
 
-test("l’écran de résultat après le troisième entraînement : « tu peux valider » seulement si la grille est prête, sinon le rendez-vous", () => {
-  assert.match(html, /if \(entraine && entraine\.reussi && entraine\.pret\) \{\s*\/\/[^\n]*\n\s*\/\/[^\n]*\n\s*if \(!entraine\.validation \|\| entraine\.validation\.prete\) return "Tes trois entraînements sont réussis : tu peux valider ta table !";\s*return `Tes trois entraînements sont réussis ! \$\{phraseRendezVous\(entraine\.validation, entraine\.table\)\}`;/);
+test("l’écran de résultat après le troisième entraînement : « tu peux passer le test » seulement si la grille est prête, sinon le rendez-vous", () => {
+  assert.match(html, /if \(entraine && entraine\.reussi && entraine\.pret\) \{\s*\/\/[^\n]*\n\s*\/\/[^\n]*\n\s*if \(!entraine\.validation \|\| entraine\.validation\.prete\) return "Tes trois entraînements sont réussis : tu peux passer le test !";\s*return `Tes trois entraînements sont réussis ! \$\{phraseRendezVous\(entraine\.validation, entraine\.table\)\}`;/);
 });
 
 test("le point de Jackie : une table acquise choisie depuis « Changer de table » reste « ma table » ; validée après avoir été choisie, elle cède la place", () => {
@@ -258,18 +266,20 @@ test("le point de Jackie : une table acquise choisie depuis « Changer de table 
   // n'est conseillée, acquise ou non.
   assert.match(html, /ecrireTableChoisie\(candidate, \{acquise\}\);/);
   assert.doesNotMatch(html, /conseilCarte/);
-  assert.match(html, /titre: ligne\.acquise \? "Ma table est acquise" : "Je valide ma table",\s*sousTitre: ligne\.acquise \? `acquise le \$\{dateEnLettres\(ligne\.acquise\)\}` : "20 questions · 1 min 30",/);
+  assert.match(html, /titre: ligne\.acquise \? "Ma table est passée" : NOM_DU_TEST,\s*sousTitre: ligne\.acquise \? `passée le \$\{dateEnLettres\(ligne\.acquise\)\}` : "20 questions · 1 min 30",/);
+  assert.match(html, /const NOM_DU_TEST = "Je passe le test";/);
 });
 
-test("« Comme la validation, en 2 min » reste proposée sur une table acquise", () => {
-  const debut = html.indexOf('libelle: "Comme la validation, en 2 min"');
+test("« Comme le test, en 2 min » reste proposée sur une table passée", () => {
+  const debut = html.indexOf('libelle: "Comme le test, en 2 min"');
+  assert.ok(debut > 0, "« Comme le test, en 2 min » introuvable dans la page");
   const avant = html.slice(debut - 400, debut);
   assert.doesNotMatch(avant, /if \(!ligne\.acquise\)/, "plus de condition « pas acquise » devant l’option");
   assert.match(avant, /\n\s*choixEntraine\.push\(\{\s*$/);
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie serveur identique, parcours de référence à jour", async () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261004-2/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261005-1/);
   const moteur = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie), "_serveur/public/prof/defi_tables_mon_parcours.js : la copie octet pour octet (dépôt FTP)");

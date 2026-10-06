@@ -158,6 +158,30 @@
   //  - une division compte pour son calcul (56 ÷ 7 = case 7 × 8) : rien ne
   //    change dans ce qui est enregistré, ni les clés, ni la version.
 
+  // Lot « un seul système, les boîtes » (05/10/2026 — décisions de Gwenaël) :
+  //  - UN seul système de mémoire, les boîtes. Mes calculs du jour est la
+  //    PORTE de la journée : une fois par jour, en premier, tant qu'il n'est
+  //    pas joué rien d'autre ne s'ouvre. Dix calculs chronométrés (6 secondes
+  //    par calcul, 30 secondes au moins) : les calculs dus d'abord, puis des
+  //    calculs des tables passées vus depuis le plus longtemps ; jamais deux
+  //    fois le même. Il ne se rate pas : le temps écoulé, les calculs pas
+  //    faits restent dus, et tout s'ouvre. « calculsDuJour » garde le jour où
+  //    il a été joué ;
+  //  - les séances suivantes du même jour commencent par les calculs dus qui
+  //    restent (dix au plus, sans complément, sans porte), puis trois marches ;
+  //    plus rien de dû : quatre marches ;
+  //  - Mes calculs du jour ne prend que les calculs des tables PASSÉES (avant
+  //    aujourd'hui) : ceux de la table en cours restent aux marches ;
+  //  - le mélange n'est plus obligatoire : plus de verrou, plus de « à
+  //    refaire », il n'est plus dans la séance et n'ouvre plus l'escalier.
+  //    « Mon mélange » reste, libre (20 questions, 1 min 30, dès 2 tables) ;
+  //    ses réponses comptent dans les boîtes ;
+  //  - le test d'une table s'appelle « Je passe le test », la table est
+  //    « passée » (la clé enregistrée reste « acquise ») ; « Je deviens
+  //    expert » s'ouvre dès 9 tables passées, Platine = 9 tables passées.
+  // Pas de changement de version : une clé de plus (« calculsDuJour »), et
+  // « melange.score » (le dernier score du mélange libre) ; absentes = rien.
+
   // Version du parcours enregistré. 1 = jusqu'au lot 2 de Défi tables v2 ;
   // 2 = lot 3 (mélange obligatoire, escalier des étoiles, rang, jours) ;
   // 3 = lot mémoire (cinq boîtes et une échéance par calcul). Un parcours
@@ -190,9 +214,12 @@
     // — deux rendez-vous réussis, donc au plus tôt le lendemain des
     // entraînements. Un conseil, jamais un verrou : « Je valide » reste libre.
     validation: Object.freeze({total: 20, dureeMax: 90, erreursMax: 2, boiteMin: 3}),
-    // Le mélange a le format de la validation : 20 questions (14 produits +
-    // 6 trous) en 1 min 30, 2 erreurs max — dès 2 tables acquises.
-    melange: Object.freeze({total: 20, dureeMax: 90, erreursMax: 2, tablesMin: 2}),
+    // Le mélange a le format du test d'une table : 20 questions en 1 min 30,
+    // 2 erreurs max — dès 2 tables passées. Libre depuis le lot « un seul
+    // système » : il ne verrouille rien.
+    // « trophees » : les trois trophées de Mon mélange — réussi avec au
+    // moins 3, 6, puis les 9 tables (les seuils des rangs Argent, Or, Platine).
+    melange: Object.freeze({total: 20, dureeMax: 90, erreursMax: 2, tablesMin: 2, trophees: Object.freeze([3, 6, 9])}),
     // L'escalier des étoiles : 25 questions, toutes les tables, produits +
     // trous + divisions, 2 erreurs max ; une durée par marche, en secondes.
     etoile: Object.freeze({total: 25, erreursMax: 2, durees: Object.freeze([120, 105, 90, 75, 60])}),
@@ -200,7 +227,10 @@
     // nombre de jours avant qu'un calcul revienne, par boîte (boîte 1 : le
     // jour même). « aRevoirMin » : dès 2 calculs rouges, une table acquise
     // porte le repère « à revoir ».
-    revision: Object.freeze({total: 10, boites: 5, delais: Object.freeze([0, 1, 3, 7, 14]), aRevoirMin: 2}),
+    // Lot « un seul système » : Mes calculs du jour est chronométré —
+    // « secondesParCalcul » par calcul, « dureeMin » au moins ;
+    // « passeesSeulement » : il ne prend que les calculs des tables passées.
+    revision: Object.freeze({total: 10, boites: 5, delais: Object.freeze([0, 1, 3, 7, 14]), aRevoirMin: 2, secondesParCalcul: 6, dureeMin: 30, passeesSeulement: true}),
     // Les jours travaillés gardés dans le parcours (dates, sans heure).
     jours: Object.freeze({garder: 14}),
     // Ma séance du jour : trois marches par séance, un départ entre 1 et 6
@@ -342,7 +372,13 @@
       epoque: 0,
       prenom: "",
       tables,
-      melange: {tables: [], aJour: false, aRefaireAvec: null, dernier: null},
+      // Mon mélange (libre) : « dernier », le jour où il a été joué pour la
+      // dernière fois, et « score », ses bonnes réponses sur 20 ce jour-là.
+      // « aJour » et « aRefaireAvec » datent du mélange obligatoire : plus rien
+      // ne les lit, ils restent pour les appareils restés sur l'appli d'avant.
+      // « reussi » : le plus grand nombre de tables avec lequel il a été
+      // réussi (18 sur 20 ou mieux) — un trophée, jamais une obligation.
+      melange: {tables: [], aJour: false, aRefaireAvec: null, dernier: null, score: null, reussi: null},
       // etoiles : 0 à 5 (5 = 👑) ; couronne : le jour de la Légende.
       expert: {etoiles: 0, dernier: null, couronne: null},
       // Le meilleur rang atteint (0 à 6) : il ne redescend jamais.
@@ -358,6 +394,9 @@
       // Mon parcours »), rangés en nombres comme ceux de la séance en cours
       // (407 pour 4 × 7) ; null : aucun. Ils ne valent que pour leur jour.
       retenir: null,
+      // Le jour où Mes calculs du jour a été joué pour la dernière fois (la
+      // porte de la journée) ; null : jamais.
+      calculsDuJour: null,
       calculs: {}
     };
   }
@@ -499,6 +538,8 @@
       parcours.melange.aJour = Boolean(brut.melange.aJour);
       parcours.melange.aRefaireAvec = entier(brut.melange.aRefaireAvec, 2, 10, null);
       parcours.melange.dernier = dateOuNull(brut.melange.dernier);
+      parcours.melange.score = brut.melange.score === null || brut.melange.score === undefined ? null : entier(brut.melange.score, 0, SEUILS.melange.total, null);
+      parcours.melange.reussi = brut.melange.reussi === null || brut.melange.reussi === undefined ? null : entier(brut.melange.reussi, SEUILS.melange.tablesMin, TABLES.length, null);
     }
     if (brut.expert && typeof brut.expert === "object") {
       parcours.expert.dernier = dateOuNull(brut.expert.dernier);
@@ -519,6 +560,7 @@
     parcours.seances = normaliserSeances(brut.seances);
     parcours.enCours = normaliserEnCours(brut.enCours);
     parcours.retenir = normaliserRetenir(brut.retenir);
+    parcours.calculsDuJour = dateOuNull(brut.calculsDuJour);
     if (brut.calculs && typeof brut.calculs === "object") {
       FAITS.forEach(cle => {
         const source = brut.calculs[cle];
@@ -581,7 +623,7 @@
     const etoiles = parcours.expert.etoiles;
     if (etoiles >= ETOILES_MAX) return 6;
     if (etoiles >= ETOILES_MAX - 1) return 5;
-    if (acquises === TABLES.length && parcours.melange.aJour) return 4;
+    if (acquises === TABLES.length) return 4;
     if (acquises >= SEUILS_RANG.or) return 3;
     if (acquises >= SEUILS_RANG.argent) return 2;
     if (acquises >= 1) return 1;
@@ -592,16 +634,9 @@
     return RANGS[entier(niveau, 0, RANGS.length - 1)];
   }
 
-  // Vrai tant que le mélange est dû : dès 2 tables acquises et tant qu'il n'est
-  // pas « à jour ». C'est lui qui verrouille « Je valide » des autres tables.
-  function melangeDu(parcours) {
-    return tablesAcquises(parcours).length >= SEUILS.melange.tablesMin && !parcours.melange.aJour;
-  }
-
-  // L'escalier des étoiles n'est ouvert que quand les 9 tables sont acquises ET
-  // que le dernier mélange (avec les 9) est réussi.
+  // L'escalier des étoiles s'ouvre dès que les 9 tables sont passées.
   function escalierOuvert(parcours) {
-    return toutesAcquises(parcours) && parcours.melange.aJour;
+    return toutesAcquises(parcours);
   }
 
   // Note un jour travaillé (au plus SEUILS.jours.garder jours gardés).
@@ -695,9 +730,9 @@
     if (config.mode === "validation") {
       const duree = Number(config.duration);
       if (Number(config.total) !== SEUILS.validation.total || !duree) return null;
-      // Le mélange a le format de la validation, sur EXACTEMENT les tables
-      // acquises (au moins 2), en 1 min 30 — un mélange choisi à la main, ou
-      // joué en 2 ou 3 minutes, ne compte pas.
+      // Le mélange a le format du test, sur EXACTEMENT les tables passées (au
+      // moins 2), en 1 min 30 — un mélange choisi à la main, ou joué en 2 ou
+      // 3 minutes, n'est pas « Mon mélange ».
       const tables = (config.tables || []).map(Number);
       if (tables.length > 1) {
         const acquises = tablesAcquises(parcours);
@@ -733,22 +768,12 @@
     return copie;
   }
 
-  // Une table de plus : dès la deuxième, le mélange est dû (« à faire », puis
-  // « à refaire avec la table de N ») — y compris la neuvième, dont le mélange
-  // ouvre l'escalier des étoiles.
+  // Une table de plus est passée. La neuvième ouvre l'escalier des étoiles.
   function acquerir(copie, table, date, evenements) {
     const ligne = copie.tables[table];
     if (ligne.acquise) return false;
     ligne.acquise = date;
-    const acquises = tablesAcquises(copie);
-    copie.melange.tables = acquises;
-    if (acquises.length >= SEUILS.melange.tablesMin) {
-      const etaitAJour = copie.melange.aJour;
-      copie.melange.aJour = false;
-      copie.melange.aRefaireAvec = acquises.length === SEUILS.melange.tablesMin ? null : table;
-      if (acquises.length === SEUILS.melange.tablesMin) evenements.push({type: "melange-debloque", tables: acquises});
-      else if (etaitAJour) evenements.push({type: "melange-a-refaire", table, tables: acquises});
-    }
+    copie.melange.tables = tablesAcquises(copie);
     if (toutesAcquises(copie)) evenements.push({type: "toutes-acquises"});
     return true;
   }
@@ -811,29 +836,31 @@
     } else if (classement.type === "validation") {
       const reussi = erreurs <= SEUILS.validation.erreursMax;
       const dejaAcquise = Boolean(copie.tables[classement.table].acquise);
-      // Le verrou : tant que le mélange est dû, une NOUVELLE table ne se valide
-      // pas — la série est jouée, comptée dans la grille, mais la table reste à
-      // valider après le mélange. Une table déjà acquise se rejoue librement.
-      // Sauf sur le premier écran (« Tu connais déjà des tables ? », lot 2) :
-      // l'élève y valide d'affilée les tables qu'il sait déjà ; le mélange
-      // dû ouvrira sa première séance.
-      const verrouillee = !dejaAcquise && melangeDu(copie) && !(resultat && resultat.decouverte);
-      const evenement = {type: "validation", table: classement.table, reussi, score: correct, total, dejaAcquise, nouvelle: false, verrouillee};
+      // Plus aucun verrou (lot « un seul système ») : le test réussi, la
+      // table est passée. Une table déjà passée se rejoue librement.
+      const evenement = {type: "validation", table: classement.table, reussi, score: correct, total, dejaAcquise, nouvelle: false};
       evenements.push(evenement);
-      if (reussi && !verrouillee) evenement.nouvelle = acquerir(copie, classement.table, date, evenements);
+      if (reussi) evenement.nouvelle = acquerir(copie, classement.table, date, evenements);
     } else if (classement.type === "preparation") {
       const reussi = erreurs <= SEUILS.validation.erreursMax;
       evenements.push({type: "preparation", table: classement.table, reussi, score: correct, total, duree: classement.duree});
     } else if (classement.type === "melange") {
+      // Mon mélange, libre : il ne ferme ni n'ouvre rien. Le parcours garde
+      // le jour et le score du dernier joué.
       const reussi = erreurs <= SEUILS.melange.erreursMax;
-      const evenement = {type: "melange", reussi, score: correct, total, tables: classement.tables, escalierOuvert: false};
+      copie.melange.dernier = date;
+      copie.melange.score = Math.min(correct, SEUILS.melange.total);
+      copie.melange.aRefaireAvec = null;
+      // « trophee » : le trophée gagné par ce mélange (3, 6 ou 9), ou null.
+      let trophee = null;
       if (reussi) {
+        const avant = tropheesMelange(copie).filter(item => item.gagne).length;
         copie.melange.aJour = true;
-        copie.melange.aRefaireAvec = null;
-        copie.melange.dernier = date;
-        evenement.escalierOuvert = escalierOuvert(copie);
+        copie.melange.reussi = Math.max(copie.melange.reussi || 0, classement.tables.length);
+        const gagnes = tropheesMelange(copie).filter(item => item.gagne);
+        if (gagnes.length > avant) trophee = gagnes[gagnes.length - 1].tables;
       }
-      evenements.push(evenement);
+      evenements.push({type: "melange", reussi, score: correct, total, tables: classement.tables, trophee});
     } else if (classement.type === "etoile") {
       const reussi = erreurs <= SEUILS.etoile.erreursMax;
       const avant = copie.expert.etoiles;
@@ -870,12 +897,21 @@
     return {mode: "validation", tables: [table], total: SEUILS.validation.total, duration: duree};
   }
 
-  // Le mélange de mes tables acquises : le format de la validation, sur toutes
-  // les tables acquises (au moins 2) — jusqu'aux 9.
+  // Le mélange de mes tables passées : le format du test, sur toutes les
+  // tables passées (au moins 2) — jusqu'aux 9.
   function configMelange(parcours) {
     const acquises = tablesAcquises(parcours);
     if (acquises.length < SEUILS.melange.tablesMin) return null;
     return {mode: "validation", tables: acquises, total: SEUILS.melange.total, duration: SEUILS.melange.dureeMax};
+  }
+
+  // Les trois trophées de Mon mélange : « gagne » — il a été réussi avec au
+  // moins ce nombre de tables ; « aGagner » — pas encore gagné, et l'élève a
+  // assez de tables passées pour le tenter maintenant.
+  function tropheesMelange(parcours) {
+    const passees = tablesAcquises(parcours).length;
+    const reussi = parcours.melange.reussi || 0;
+    return SEUILS.melange.trophees.map(tables => ({tables, gagne: reussi >= tables, aGagner: reussi < tables && passees >= tables}));
   }
 
   // Une marche de l'escalier (1 à 5) : tout, de plus en plus vite.
@@ -1120,11 +1156,101 @@
     return tourDeRole(aVenir);
   }
 
-  // Les calculs en retard : dus AVANT aujourd'hui et pas encore refaits. C'est
-  // le compteur de la page du professeur — rien d'autre n'y est ajouté.
+  // ---------------------------------- Mes calculs du jour (lot « un seul système »)
+  //
+  // Un calcul « des tables passées » : l'une de ses deux tables est passée —
+  // AVANT ce jour-là. Une table passée aujourd'hui n'entre dans Mes calculs
+  // du jour que demain : sinon la porte, ouverte ce matin, se refermerait en
+  // pleine journée au moment où l'élève réussit son test.
+  function calculDesTablesPassees(parcours, cle, jour = jourLocal()) {
+    return facteursFait(cle).some(table => {
+      const ligne = parcours.tables[table];
+      return Boolean(ligne && ligne.acquise && ligne.acquise < jour);
+    });
+  }
+
+  // Ce que Mes calculs du jour peut prendre parmi les calculs dus : ceux des
+  // tables passées. Les calculs de la table en cours restent à ses marches
+  // (ils montent là, dans les entraînements et au test).
+  function prisParMesCalculs(parcours, cle, jour) {
+    return !SEUILS.revision.passeesSeulement || calculDesTablesPassees(parcours, cle, jour);
+  }
+
+  // Un nombre stable pour un calcul et un jour : à échéance égale, il mêle
+  // les tables (sinon : 2 × 2, 2 × 3, 2 × 4… d'affilée) sans rien tirer au
+  // hasard — la série annoncée par l'accueil est celle qui sera jouée.
+  function grainDuJour(cle, jour) {
+    let grain = 7;
+    for (const caractere of `${cle}|${jour}`) grain = (grain * 31 + caractere.charCodeAt(0)) % 9973;
+    return grain;
+  }
+
+  // Les calculs dus que Mes calculs du jour prendra, dans l'ordre : les boîtes
+  // à tour de rôle, les plus en retard d'abord dans chaque boîte.
+  function dusDuJour(parcours, aujourdhui = jourLocal()) {
+    const dus = Object.entries(parcours.calculs)
+      .filter(([cle, fait]) => faitDu(fait, aujourdhui) && prisParMesCalculs(parcours, cle, aujourdhui));
+    const files = Array.from({length: SEUILS.revision.boites}, (_, index) => dus
+      .filter(([, fait]) => fait.boite === index + 1)
+      .sort((premier, second) => String(premier[1].echeance || "").localeCompare(String(second[1].echeance || ""))
+        || grainDuJour(premier[0], aujourdhui) - grainDuJour(second[0], aujourdhui))
+      .map(([cle]) => cle));
+    const ordre = [];
+    while (files.some(file => file.length)) {
+      files.forEach(file => { if (file.length) ordre.push(file.shift()); });
+    }
+    return ordre;
+  }
+
+  // La série de Mes calculs du jour : dix calculs au plus, jamais deux fois
+  // le même.
+  //  - la première de la journée (la porte) : les calculs dus, puis, s'il en
+  //    manque, des calculs des tables passées vus depuis le plus longtemps
+  //    (« complement ») — vus AVANT aujourd'hui seulement, pas ratés
+  //    aujourd'hui, et pas attendus demain (ceux-là seront posés demain,
+  //    le jour où ils peuvent monter) ; moins de dix s'il n'y en a pas assez ;
+  //  - une fois jouée (calculsDuJour = aujourd'hui) : les calculs dus qui
+  //    restent, sans complément.
+  // « restants » : les calculs dus que cette série ne prend pas (au-delà de dix).
+  function serieDuJour(parcours, {aujourdhui = jourLocal()} = {}) {
+    const total = SEUILS.revision.total;
+    const tousDus = dusDuJour(parcours, aujourdhui);
+    const dus = tousDus.slice(0, total);
+    const faite = parcours.calculsDuJour === aujourdhui;
+    const serie = {cles: dus, dus: dus.length, complement: 0, restants: tousDus.length - dus.length, faite};
+    if (faite || dus.length >= total) return serie;
+    const pris = new Set(tousDus);
+    const demain = ajouterJours(aujourdhui, 1);
+    const reserve = Object.entries(parcours.calculs)
+      .filter(([cle, fait]) => !pris.has(cle) && fait.vu < aujourdhui && fait.erreur !== aujourdhui && !faitDu(fait, demain) && calculDesTablesPassees(parcours, cle, aujourdhui))
+      .sort((premier, second) => String(premier[1].vu).localeCompare(String(second[1].vu))
+        || grainDuJour(premier[0], aujourdhui) - grainDuJour(second[0], aujourdhui))
+      .slice(0, total - dus.length)
+      .map(([cle]) => cle);
+    serie.cles = dus.concat(reserve);
+    serie.complement = reserve.length;
+    return serie;
+  }
+
+  // La porte : Mes calculs du jour n'a pas encore été joué aujourd'hui et il
+  // y a de quoi le jouer. Tant qu'elle est fermée, l'accueil n'ouvre rien
+  // d'autre. Le premier jour (aucun calcul vu avant aujourd'hui), rien n'est
+  // fermé.
+  function mesCalculsAFaire(parcours, aujourdhui = jourLocal()) {
+    return parcours.calculsDuJour !== aujourdhui && serieDuJour(parcours, {aujourdhui}).cles.length > 0;
+  }
+
+  // Le temps de Mes calculs du jour, en secondes, pour une série de N calculs.
+  function dureeMesCalculs(nombre) {
+    return Math.max(SEUILS.revision.dureeMin, entier(nombre, 0, 100) * SEUILS.revision.secondesParCalcul);
+  }
+
+  // Les calculs en retard : dus AVANT aujourd'hui et pas encore refaits —
+  // parmi ceux que Mes calculs du jour prend. C'est le compteur de la page
+  // du professeur — rien d'autre n'y est ajouté.
   function calculsEnRetard(parcours, aujourdhui = jourLocal()) {
     return Object.entries(parcours.calculs)
-      .filter(([, fait]) => fait.echeance && fait.echeance < aujourdhui)
+      .filter(([cle, fait]) => fait.echeance && fait.echeance < aujourdhui && prisParMesCalculs(parcours, cle, aujourdhui))
       .map(([cle]) => cle);
   }
 
@@ -1132,19 +1258,22 @@
   // attendront demain si rien d'autre n'est joué, et le prochain jour où
   // quelque chose revient (avec son nombre) — pour « Reviens demain : N
   // calculs t'attendront ».
+  // Lot « un seul système » : seuls comptent les calculs que Mes calculs du
+  // jour prend ce jour-là (ceux des tables passées avant ce jour).
   function agendaCalculs(parcours, aujourdhui = jourLocal()) {
-    const faits = Object.values(parcours.calculs);
+    const faits = Object.entries(parcours.calculs);
     const demainJour = ajouterJours(aujourdhui, 1);
-    const dus = faits.filter(fait => faitDu(fait, aujourdhui)).length;
-    const demain = faits.filter(fait => faitDu(fait, demainJour)).length;
-    const aVenir = faits.map(fait => fait.echeance).filter(jour => jour && jour > aujourdhui).sort();
+    const dusLe = jour => faits.filter(([cle, fait]) => faitDu(fait, jour) && prisParMesCalculs(parcours, cle, jour)).length;
+    const dus = dusLe(aujourdhui);
+    const demain = dusLe(demainJour);
     // Le prochain jour (après aujourd'hui) où un calcul revient, et tout ce qui
     // sera dû ce jour-là — les dus d'aujourd'hui restés dus compris.
     let prochain = null;
     if (demain) prochain = {jour: demainJour, dans: 1, calculs: demain};
-    else if (aVenir.length) {
-      const jour = aVenir[0];
-      prochain = {jour, dans: ecartJours(aujourdhui, jour), calculs: faits.filter(fait => faitDu(fait, jour)).length};
+    else {
+      const jours = [...new Set(faits.map(([, fait]) => fait.echeance).filter(jour => jour && jour > aujourdhui))].sort();
+      const jour = jours.find(candidat => dusLe(candidat) > 0);
+      if (jour) prochain = {jour, dans: ecartJours(aujourdhui, jour), calculs: dusLe(jour)};
     }
     return {dus, demain, prochain};
   }
@@ -1176,8 +1305,12 @@
   // étoiles. Rien de dû (ou grille vide) = aucune question.
   // « libre » (Encore 10 calculs) : plus rien n'est dû, on prend les prochains
   // à revenir. L'ordre de passage est mélangé dans les deux cas.
+  // Lot « un seul système » : sans table, c'est la série de Mes calculs du
+  // jour (serieDuJour : les dus, puis le complément la première fois).
   function planRevision(parcours, {table = null, random = Math.random, aujourdhui = jourLocal(), libre = false} = {}) {
-    const source = libre ? calculsAVenir(parcours, {aujourdhui, table}) : calculsDus(parcours, {aujourdhui, table});
+    const source = libre ? calculsAVenir(parcours, {aujourdhui, table})
+      : table === null ? serieDuJour(parcours, {aujourdhui}).cles
+      : calculsDus(parcours, {aujourdhui, table});
     const selection = melanger(source.slice(0, SEUILS.revision.total), random);
     // La forme suit ce que l'élève a déjà rencontré (décision de Gwenaël,
     // 12/09) : produit toujours ; trou ET division (lot « divisions »,
@@ -1186,7 +1319,7 @@
     // contient) ; division seule dès la première étoile. Les formes permises
     // alternent d'une question à l'autre.
     return selection.map((cle, index) => {
-      const [premier, second] = melanger(facteursFait(cle), random);
+      let [premier, second] = melanger(facteursFait(cle), random);
       const permises = formesPermises(parcours, cle);
       // Lot « divisions » : une question sur deux reste un résultat ; l'autre
       // alterne nombre manquant et division (56 ÷ 7 = ? ou 56 ÷ 8 = ?, selon
@@ -1199,8 +1332,26 @@
         : categorie === "division"
           ? FORMES_DIVISION[0]
           : FORMES_TROU[Math.floor(random() * FORMES_TROU.length)];
+      // Un nombre manquant se pose comme dans les entraînements de la table
+      // que l'élève connaît : c'est ELLE qui est écrite, et l'autre nombre
+      // qui manque (« 2 × ? = 16 », jamais « 16 = 8 × ? » pour qui n'a que
+      // la table de 2). Les deux tables connues, ou aucune : comme tiré.
+      if (categorie === "missing" && premier !== second) {
+        const connues = [premier, second].filter(facteur => tableConnue(parcours, facteur));
+        if (connues.length === 1) {
+          const ecrit = connues[0];
+          const cherche = ecrit === premier ? second : premier;
+          [premier, second] = type === "right" || type === "reverse-right" ? [ecrit, cherche] : [cherche, ecrit];
+        }
+      }
       return {cle, type, first: premier, second};
     });
+  }
+
+  // Une table que l'élève connaît ou travaille : passée, ou commencée.
+  function tableConnue(parcours, table) {
+    const ligne = parcours.tables[table];
+    return Boolean(ligne) && (Boolean(ligne.acquise) || tableCommencee(ligne));
   }
 
   // Les formes qu'un calcul peut prendre en révision : « direct » toujours ;
@@ -1274,7 +1425,7 @@
     if (ligne.acquise) return null;
     const conseil = conseilTable(ligne, validationTable(parcours, table, aujourdhui));
     if (conseil === "valide") {
-      return {type: "validation", table, libelle: `Table de ${table} : valide ta table (20 questions en 1 min 30)`, config: configValidation(table)};
+      return {type: "validation", table, libelle: `Table de ${table} : passe le test (20 questions en 1 min 30)`, config: configValidation(table)};
     }
     if (conseil === "apprends") {
       // La première activité qui n'est pas terminée, dans l'ordre : les perles d'abord.
@@ -1295,30 +1446,15 @@
   }
 
   function prochaineEtape(parcours, aujourdhui = jourLocal()) {
-    // Des calculs sont dus : « Mes calculs du jour » passe devant tout — un
-    // conseil (le rond bleu), jamais un verrou. Plus rien de dû, le bloc
-    // s'efface et la table reprend le conseil.
-    const dus = calculsDus(parcours, {aujourdhui}).length;
+    // Mes calculs du jour passe devant tout : la porte de la journée, puis,
+    // une fois jouée, les calculs dus qui restent.
+    const dus = serieDuJour(parcours, {aujourdhui}).cles.length;
     if (dus) {
       return {
         type: "revision",
         dus,
-        libelle: `Mes calculs du jour : ${dus} calcul${dus > 1 ? "s" : ""} à réviser (sans chrono)`,
+        libelle: `Mes calculs du jour : ${dus} calcul${dus > 1 ? "s" : ""}`,
         config: configRevision()
-      };
-    }
-    const acquises = tablesAcquises(parcours);
-    // Le mélange dû passe avant tout le reste du parcours : il verrouille
-    // « Je valide » des autres tables (J'apprends et Je m'entraîne restent
-    // libres), et c'est lui qui ouvre l'escalier après la neuvième table.
-    if (melangeDu(parcours)) {
-      const avec = parcours.melange.aRefaireAvec;
-      return {
-        type: "melange",
-        libelle: toutesAcquises(parcours)
-          ? "Réussis le mélange de tes 9 tables pour ouvrir l’escalier des étoiles"
-          : avec ? `Refais le mélange de tes tables acquises avec la table de ${avec}` : `Mélange tes tables acquises (${acquises.join(", ")})`,
-        config: configMelange(parcours)
       };
     }
     for (const table of ORDRE_CONSEIL) {
@@ -1385,10 +1521,11 @@
         conseil: conseilTable(ligne, validation)
       };
     });
+    // Mon mélange, libre : proposé dès 2 tables passées ; le jour et le
+    // score du dernier joué.
     const visible = acquises.length >= SEUILS.melange.tablesMin;
-    const melange = visible
-      ? {visible: true, tables: acquises, aJour: parcours.melange.aJour, aRefaireAvec: parcours.melange.aRefaireAvec, du: melangeDu(parcours), dernier: parcours.melange.dernier}
-      : {visible: false, tables: acquises, aJour: false, aRefaireAvec: null, du: false, dernier: null};
+    const melange = {visible, tables: acquises, dernier: visible ? parcours.melange.dernier : null, score: visible ? parcours.melange.score : null,
+      reussi: visible ? parcours.melange.reussi : null, trophees: tropheesMelange(parcours)};
     const ouvert = escalierOuvert(parcours);
     const etoiles = parcours.expert.etoiles;
     const marches = SEUILS.etoile.durees.map((duree, index) => ({
@@ -1404,9 +1541,10 @@
       prenom: parcours.prenom,
       lignes,
       acquises,
-      // Le verrou de « Je valide » (les tables non acquises seulement).
-      verrou: melangeDu(parcours),
       melange,
+      // Mes calculs du jour : la porte est-elle fermée, et la série du moment.
+      porte: mesCalculsAFaire(parcours, aujourdhui),
+      serieDuJour: serieDuJour(parcours, {aujourdhui}),
       // « niveau » reste le nombre d'étoiles, pour la page du professeur.
       expert: {niveau: etoiles, etoiles: marches.map(marche => marche.gagnee), ouvert, marches, suivante: ouvert && etoiles < ETOILES_MAX ? marches[etoiles] : null, couronne: parcours.expert.couronne},
       rang: rang(parcours.rang),
@@ -1437,7 +1575,7 @@
     Object.freeze({marche: 5, type: "entraine", cle: "desordre", nom: "Dans le désordre"}),
     Object.freeze({marche: 6, type: "entraine", cle: "trous", nom: "Nombres manquants et divisions"}),
     Object.freeze({marche: 7, type: "entraine", cle: "mixte", nom: "Résultats, nombres manquants et divisions"}),
-    Object.freeze({marche: 8, type: "validation", cle: null, nom: "Je valide ma table"})
+    Object.freeze({marche: 8, type: "validation", cle: null, nom: "Je passe le test"})
   ]);
   const MARCHE_VALIDATION = MARCHES.length;
   // L'entraînement qui prend la place de la validation quand la table n'est
@@ -1479,16 +1617,15 @@
     return CLES_SANS_FAUTE.every(cle => ligne.sansFaute[cle] === 1);
   }
 
-  // La séance peut-elle proposer « Je valide ma table » ? Pas sur une table
-  // acquise, pas tant que le mélange est dû (le seul verrou du parcours), et
-  // seulement si la rangée est prête ou le raccourci gagné.
+  // La séance peut-elle proposer « Je passe le test » ? Pas sur une table
+  // passée, et seulement si la rangée est prête ou le raccourci gagné.
   // « seance » : une table vue prête PENDANT la séance le reste jusqu'à sa
   // fin — une erreur dans l'entraînement qui précède la validation fait
   // redescendre un calcul d'une boîte, pas la validation promise ce matin
   // (sans cela, l'élève à 9 sur 10 chaque jour ne validait jamais).
   function validationDeSeance(parcours, table, seance = null) {
     const ligne = parcours.tables[table];
-    if (!ligne || ligne.acquise || melangeDu(parcours)) return false;
+    if (!ligne || ligne.acquise) return false;
     return Boolean(seance && seance.prete) || tablePrete(parcours, table);
   }
 
@@ -1518,24 +1655,23 @@
   }
 
   // Ouvre une séance : la file de ses étapes. Mes calculs du jour s'il y en a
-  // (une série, 10 au plus), le mélange s'il est dû, puis les marches de la
-  // table à partir de son départ — quatre étapes en tout (lot M2). Une table déjà acquise (choisie exprès) se
-  // retravaille par ses trois entraînements, sans rien déplacer.
+  // (la porte de la journée, ou les calculs dus qui restent : une série, 10
+  // au plus), puis les marches de la table à partir de son départ — quatre
+  // étapes en tout (trois marches après Mes calculs du jour, quatre sinon).
+  // Une table déjà passée (choisie exprès) se retravaille par ses trois
+  // entraînements, sans rien déplacer.
   // Lot M1 : la séance du jour déjà commencée est REPRISE là où elle en est
-  // (ses étapes faites, sa file) ; et quatre étapes au plus au départ — avec
-  // Mes calculs du jour ET le mélange, la table ne donne que deux marches.
+  // (ses étapes faites, sa file).
   function ouvrirSeance(parcours, {table = null, aujourdhui = jourLocal()} = {}) {
     const reprise = seanceEnCours(parcours, {table, aujourdhui});
     if (reprise) return reprise;
     const file = [];
-    const dus = calculsDus(parcours, {aujourdhui}).length;
-    if (dus) file.push({type: "revision"});
-    if (melangeDu(parcours)) file.push({type: "melange"});
+    if (serieDuJour(parcours, {aujourdhui}).cles.length) file.push({type: "revision"});
     const choisie = TABLES.includes(Number(table)) ? Number(table) : tableDeSeance(parcours);
     let depart = null;
     let echelle = false;
-    // Les 9 tables acquises et aucune choisie (lot 2) : après Mes calculs du
-    // jour et le mélange, la marche suivante de l'escalier des étoiles.
+    // Les 9 tables passées et aucune choisie (lot 2) : après Mes calculs du
+    // jour, la marche suivante de l'escalier des étoiles.
     if (choisie === null && toutesAcquises(parcours)) file.push({type: "etoile"});
     if (choisie !== null) {
       const ligne = parcours.tables[choisie];
@@ -1644,8 +1780,11 @@
   // chaque séance et sur l'accueil, une fois la séance du jour faite. Elle
   // grandit au fil des séances et repart à zéro le lendemain. Elle est gardée
   // dans le parcours (« retenir »), donc sur le serveur : elle suit l'élève
-  // d'un appareil à l'autre. Les × 1 et × 10, et les erreurs de J'apprends,
-  // y sont comme au bilan — le tableau Mes calculs, lui, ne les connaît pas.
+  // d'un appareil à l'autre. Les × 1 et × 10 y sont, comme au bilan (le
+  // tableau Mes calculs, lui, ne les connaît pas) ; les erreurs de J'apprends
+  // n'y sont PAS : seulement les calculs répondus de mémoire (voir noterEtape).
+  // Lot « un seul système » : c'est un AFFICHAGE, rien de plus — il n'y a pas
+  // de « je rejoue mes erreurs de la veille » à part, les boîtes s'en chargent.
   // Chaque calcul une fois : 4 × 7 et 7 × 4 sont le même calcul (le premier
   // raté garde son sens).
   function normaliserRetenir(brut) {
@@ -1786,22 +1925,21 @@
   // L'étape à jouer maintenant, prête à lancer : son nom, sa série, sa durée.
   // C'est ICI que la marche 8 se décide — la validation si la table est prête
   // (ou le raccourci gagné), sinon un entraînement à sa place — et qu'une
-  // étape devenue sans objet s'efface (plus rien de dû, mélange déjà réussi).
+  // étape devenue sans objet s'efface (plus rien de dû).
   function etapeDeSeance(parcours, seance, aujourdhui = jourLocal()) {
     for (const prevue of seance.file) {
       if (prevue.type === "revision") {
-        const dus = calculsDus(parcours, {aujourdhui}).length;
-        if (!dus) continue;
-        const calculs = Math.min(dus, SEUILS.revision.total);
-        return {type: "revision", nom: "Mes calculs du jour", calculs, config: configRevision(), minutes: MINUTES_ETAPE.revision, prevue};
+        const serie = serieDuJour(parcours, {aujourdhui});
+        const calculs = serie.cles.length;
+        if (!calculs) continue;
+        return {type: "revision", nom: "Mes calculs du jour", calculs, duree: dureeMesCalculs(calculs), porte: !serie.faite, config: configRevision(), minutes: MINUTES_ETAPE.revision, prevue};
       }
-      if (prevue.type === "melange") {
-        if (!melangeDu(parcours)) continue;
-        return {type: "melange", nom: "Mon mélange", config: configMelange(parcours), minutes: MINUTES_ETAPE.melange, prevue};
-      }
+      // Le mélange n'est plus une étape de la séance (lot « un seul
+      // système ») : celui d'une séance commencée sous l'appli d'avant s'efface.
+      if (prevue.type === "melange") continue;
       if (prevue.type === "etoile") {
-        // Pas avant que le mélange des 9 ait ouvert l'escalier ; la couronne
-        // gagnée, c'est elle qui se rejoue (l'entretien).
+        // Pas avant les 9 tables passées ; la couronne gagnée, c'est elle
+        // qui se rejoue (l'entretien).
         if (!escalierOuvert(parcours)) continue;
         const etoile = Math.min(ETOILES_MAX, parcours.expert.etoiles + 1);
         return {type: "etoile", etoile, nom: `Tente ${symboleEtoile(etoile)}`, detail: libelleDuree(dureeEtoile(etoile)), config: configEtoile(etoile), minutes: MINUTES_ETAPE.etoile, prevue};
@@ -1866,18 +2004,12 @@
   // « Nombres manquants » jouée comme marche (pas la marche 8 remplacée), son
   // 9 sur 10 manque encore, et l'autre est déjà gagné ou se joue plus tôt
   // dans la séance ; pas de validation déjà prévue ; validation possible
-  // (table pas acquise, pas de mélange dû — ou il se joue plus tôt dans la
-  // séance). La carte dit alors « 4 ou 5 étapes ».
+  // (table pas encore passée). La carte dit alors « 4 ou 5 étapes ».
   function raccourciEnFin(parcours, seance, etapes) {
     if (!seance.echelle || !etapes.length || seance.table === null) return false;
     if (seance.faites.length + etapes.length >= SEUILS.seance.etapesMax) return false;
     const ligne = parcours.tables[seance.table];
     if (!ligne || ligne.acquise) return false;
-    // Le mélange dû verrouille la validation… sauf s'il se joue plus tôt dans
-    // cette séance (Mes calculs, le mélange, deux marches) : réussi, il la
-    // rouvre, et le raccourci gagné à la dernière marche l'ajoute en 5e étape.
-    const melangeAvant = etapes.slice(0, -1).some(etape => etape.type === "melange");
-    if (melangeDu(parcours) && !melangeAvant) return false;
     if (seance.faites.some(passee => passee.type === "validation")) return false;
     if (etapes.some(etape => etape.prevue.type === "marche" && etape.prevue.marche === MARCHE_VALIDATION)) return false;
     const derniere = etapes[etapes.length - 1];
@@ -1903,8 +2035,7 @@
   //    si la reprise est réussie et la séance finie ;
   //  - les deux « 10 sur 10 » du raccourci réunis : la suite devient la
   //    validation ;
-  //  - validation réussie : la séance est finie (lot M1 — le mélange dû ouvre
-  //    la séance suivante) ; ratée : retour à la marche 7 ;
+  //  - test réussi : la séance est finie ; raté : retour à la marche 7 ;
   //  - plus d'étape : la séance est finie — le départ avance (d'une marche,
   //    de deux si tout était sans faute) et le jour est compté.
   function noterEtape(parcours, seance, etape, resultat = {}, aujourdhui = jourLocal()) {
@@ -1982,13 +2113,16 @@
       }
     } else if (etape.type === "validation") {
       faite.reussi = Boolean(resultat.reussi);
-      // Réussie : la fête termine la séance. Le mélange, s'il est dû, ouvre
-      // la séance suivante (lot M1 : plus jamais deux chronos de suite).
+      // Réussie : la table est passée, la fête termine la séance.
       if (faite.reussi) suite.file = [];
       // Une validation ratée ne se retente pas dans la séance : la marche 7, puis fin.
       else { faite.rate = true; descendre(MARCHE_VALIDATION, false); }
     } else if (etape.type === "melange" || etape.type === "etoile") {
       faite.reussi = Boolean(resultat.reussi);
+    } else if (etape.type === "revision") {
+      // Mes calculs du jour est joué : la porte de la journée est ouverte,
+      // quel que soit le score, même si le temps a manqué.
+      copie.calculsDuJour = dateOuNull(suite.jour) || jourLocal();
     }
     suite.faites.push(faite);
     // Prête maintenant (les calculs du jour viennent de monter) : elle le
@@ -2056,12 +2190,12 @@
   // de plus n'est enregistré.
   //  - « enCours » : une ligne courte, pas les dix cases (illisibles sur 28
   //    lignes et à l'impression) — « table de 5 · 6 sur 10 », « tables 5 et
-  //    7 » quand deux tables sont commencées, « mélange à faire », « ★★ ».
+  //    7 » quand deux tables sont commencées, « ★★ ».
   //    Une table est « commencée » quand l'élève y a fait une séance ou une
   //    activité : sa rangée ne suffit pas à le dire (3 × 2 et 3 × 5 y sont
   //    pleins dès que les tables de 2 et de 5 sont acquises).
   //  - « ordre » : la clé du tri de la colonne (rien, puis les tables dans
-  //    l'ordre conseillé et par cases pleines, le mélange, les étoiles).
+  //    l'ordre conseillé et par cases pleines, les étoiles).
   //  - « seances » : les jours de la semaine avec une séance finie.
   //  - « longue » : le nombre de séances sur la table en cours, quand il
   //    atteint le seuil ; null sinon.
@@ -2076,9 +2210,7 @@
     const rien = {type: "rien", tables: [], pleines: 0, total: 10, texte: "—", ordre: 0};
     if (estVide(parcours) && !TABLES.some(table => tableCommencee(parcours.tables[table]))) return {enCours: rien, seances, longue: null};
     let enCours;
-    if (melangeDu(parcours)) {
-      enCours = {type: "melange", tables: [], pleines: 0, total: 10, texte: "mélange à faire", ordre: 2000};
-    } else if (acquises.length === TABLES.length) {
+    if (acquises.length === TABLES.length) {
       const etoiles = parcours.expert.etoiles;
       const texte = parcours.expert.couronne ? "👑" : (etoiles ? "★".repeat(etoiles) : "les 9 tables");
       enCours = {type: "expert", tables: [], pleines: 0, total: 10, texte, ordre: 3000 + etoiles + (parcours.expert.couronne ? 1 : 0)};
@@ -2645,21 +2777,20 @@
       cible.acquise = dateLaPlusAncienne(ligneA.acquise, ligneB.acquise);
     });
 
-    // Le mélange n'est « à jour » que s'il a été réussi avec TOUTES les tables
-    // du parcours fusionné : celui qui l'avait fait avec 5 tables alors que
-    // l'autre appareil en a 7 doit le refaire.
-    const acquisesFusion = tablesAcquises(fusion);
-    const aJourA = a.melange.aJour && tablesAcquises(a).length === acquisesFusion.length;
-    const aJourB = b.melange.aJour && tablesAcquises(b).length === acquisesFusion.length;
-    fusion.melange.tables = acquisesFusion;
+    // Mon mélange (libre) : le dernier joué — le jour le plus récent et son
+    // score ; le même jour, le meilleur des deux scores. « aJour » ne sert
+    // plus qu'aux appareils restés sur l'appli d'avant : gagné d'un côté, il
+    // le reste.
+    fusion.melange.tables = tablesAcquises(fusion);
     fusion.melange.dernier = dateLaPlusRecente(a.melange.dernier, b.melange.dernier);
-    if (aJourA || aJourB) {
-      fusion.melange.aJour = true;
-      fusion.melange.aRefaireAvec = null;
-    } else {
-      fusion.melange.aJour = false;
-      fusion.melange.aRefaireAvec = acquisesFusion.length >= 3 ? derniereTableAcquise(fusion) : null;
-    }
+    const scores = [a.melange, b.melange].filter(melange => melange.dernier === fusion.melange.dernier && melange.score !== null).map(melange => melange.score);
+    fusion.melange.score = fusion.melange.dernier && scores.length ? Math.max(...scores) : null;
+    fusion.melange.reussi = Math.max(a.melange.reussi || 0, b.melange.reussi || 0) || null;
+    fusion.melange.aJour = a.melange.aJour || b.melange.aJour;
+    fusion.melange.aRefaireAvec = null;
+    // Mes calculs du jour : joué d'un côté aujourd'hui, il l'est (le jour le
+    // plus récent).
+    fusion.calculsDuJour = dateLaPlusRecente(a.calculsDuJour, b.calculsDuJour);
 
     // Les étoiles prennent le meilleur des deux, la couronne sa première date ;
     // le rang ne redescend jamais ; les jours travaillés se réunissent.
@@ -2734,14 +2865,6 @@
     return normaliserParcours(fusion);
   }
 
-  function derniereTableAcquise(parcours) {
-    const acquises = tablesAcquises(parcours);
-    if (!acquises.length) return null;
-    return acquises.reduce((meilleure, table) =>
-      String(parcours.tables[table].acquise) >= String(parcours.tables[meilleure].acquise) ? table : meilleure,
-      acquises[0]);
-  }
-
   // ------------------------------------------------------- la vue d'une classe
 
   // Les calculs qui coincent chez le plus d'élèves de la classe, pour savoir
@@ -2799,11 +2922,11 @@
     configEntraine,
     configValidation,
     configMelange,
+    tropheesMelange,
     configEtoile,
     dureeEtoile,
     symboleEtoile,
     libelleDuree,
-    melangeDu,
     escalierOuvert,
     rang,
     rangDeLEtat,
@@ -2831,6 +2954,12 @@
     calculsDus,
     calculsAVenir,
     calculsEnRetard,
+    calculDesTablesPassees,
+    prisParMesCalculs,
+    dusDuJour,
+    serieDuJour,
+    mesCalculsAFaire,
+    dureeMesCalculs,
     formesPermises,
     agendaCalculs,
     calculsATravailler,

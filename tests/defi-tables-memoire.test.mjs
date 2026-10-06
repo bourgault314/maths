@@ -24,6 +24,9 @@ function jouer(p, config, faits, {date, rates = []}) {
   return P.appliquerSerie(p, normaliser(config), {correct: faits.length - rates.length, total: faits.length, date}).parcours;
 }
 // Une révision du jour : les dus, 10 par 10, jusqu'à zéro. Rend le nombre de séries.
+// Lot « un seul système » (05/10/2026) : la première série jouée pose
+// « calculsDuJour » (c'est ce que fait noterEtape dans la séance) ; les
+// suivantes ne prennent que les dus qui restent, sans complément.
 function reviser(p, date, rates = []) {
   let series = 0;
   for (;;) {
@@ -31,6 +34,7 @@ function reviser(p, date, rates = []) {
     if (!plan.length) break;
     series += 1;
     plan.forEach(item => { p = P.appliquerReponse(p, item.cle, {correcte: !rates.includes(item.cle), date}).parcours; });
+    p = {...p, calculsDuJour: date};
     if (series > 10) throw new Error("la révision tourne en rond");
   }
   return {parcours: p, series};
@@ -77,6 +81,11 @@ test("le miroir « cases » : un appareil resté sur l’appli d’avant lit la 
 test("un calcul raté aujourd’hui n’est plus « dû » aujourd’hui : la révision ne tourne pas en rond, il revient demain", () => {
   let p = P.creerParcours();
   P.faitsDeLaTable(2).forEach(cle => { p = P.appliquerReponse(p, cle, {correcte: true, date: J(0)}).parcours; });
+  // Lot « un seul système » : Mes calculs du jour ne prend que les calculs des
+  // tables passées avant le jour — sans table passée, rien.
+  assert.equal(P.agendaCalculs(p, J(1)).dus, 0, "table de 2 pas passée : ses 8 calculs dus restent à ses marches");
+  assert.deepEqual(P.planRevision(p, {aujourdhui: J(1), random: () => 0}), []);
+  p.tables[2].acquise = J(-7); // la table de 2 est passée depuis une semaine
   assert.equal(P.agendaCalculs(p, J(1)).dus, 8);
   const {parcours: apres, series} = reviser(p, J(1), ["2-3", "2-7"]);
   assert.equal(series, 1, "une seule série : les deux ratés ne reviennent pas dans une 2e série le même jour");
@@ -87,7 +96,7 @@ test("un calcul raté aujourd’hui n’est plus « dû » aujourd’hui : la r�
   assert.deepEqual(P.calculsEnRetard(apres, J(3)).sort(), ["2-3", "2-7"], "pas refaits le 15 : en retard le 16");
 });
 
-test("élève 1 · aucune table sue : la table de 2 sur plusieurs jours, ses calculs montent via Réviser ET le mélange pendant qu’il apprend la 10", () => {
+test("élève 1 · aucune table sue : la table de 2 sur plusieurs jours, ses calculs montent via Mes calculs du jour ET le mélange (libre) pendant qu’il apprend la 10", () => {
   let p = P.creerParcours();
   const t2 = P.faitsDeLaTable(2);
   // Lundi : trois entraînements (3 × 2 raté au premier), puis la validation.
@@ -95,6 +104,10 @@ test("élève 1 · aucune table sue : la table de 2 sur plusieurs jours, ses cal
   p = jouer(p, P.configEntraine(2, "trous"), t2, {date: J(0)});
   p = jouer(p, P.configEntraine(2, "mixte"), t2, {date: J(0)});
   assert.deepEqual(boites(p), [1, 7, 0, 0, 0], "7 en boîte 2 ; 3 × 2 en boîte 1 (raté, puis réussi le même jour : pas de regain)");
+  // S'il s'arrêtait là, sans passer le test : mardi, pas de Mes calculs du jour
+  // (les calculs de la table en cours restent à ses marches).
+  assert.equal(P.agendaCalculs(p, J(1)).dus, 0);
+  assert.notEqual(P.prochaineEtape(p, J(1)).type, "revision", "table pas passée : jamais d’étape « Mes calculs du jour »");
   p = jouer(p, P.configValidation(2), t2.concat(t2.slice(0, 12)), {date: J(0)});
   assert.deepEqual(P.tablesAcquises(p), [2]);
   assert.deepEqual(boites(p), [1, 7, 0, 0, 0], "la validation le jour même ne fait rien monter : rien n’est dû");
@@ -113,7 +126,7 @@ test("élève 1 · aucune table sue : la table de 2 sur plusieurs jours, ses cal
   p = reviser(p, J(2)).parcours;
   assert.equal(P.agendaCalculs(p, J(3)).dus, 0, "jeudi : rien de dû, pas de bloc");
   assert.equal(P.agendaCalculs(p, J(4)).dus, 7);
-  // Vendredi, il valide la table de 10 puis joue le mélange (2 et 10) au lieu de Réviser :
+  // Vendredi, il passe la table de 10 (aucun mélange à réussir avant) puis joue le mélange (2 et 10) au lieu de Réviser :
   // les calculs de la table de 2 qui s'y trouvent montent aussi.
   p = P.appliquerSerie(p, normaliser(P.configValidation(10)), {correct: 20, total: 20, date: J(4)}).parcours;
   assert.deepEqual(P.tablesAcquises(p), [2, 10]);
@@ -121,8 +134,8 @@ test("élève 1 · aucune table sue : la table de 2 sur plusieurs jours, ses cal
   p = jouer(p, melange, ["2-4", "2-5", "2-6"], {date: J(4)});
   assert.equal(P.etatFait(p.calculs["2-4"]), "su", "2 × 4 était dû : réussi dans le mélange, il passe en boîte 4 — vert");
   assert.equal(p.calculs["2-4"].echeance, J(11));
-  assert.equal(P.agendaCalculs(p, J(4)).dus, 4, "il reste 4 calculs du jour : le bloc reste, un conseil");
-  assert.equal(P.melangeDu(p), false);
+  assert.equal(P.agendaCalculs(p, J(4)).dus, 4, "il reste 4 calculs du jour");
+  assert.deepEqual([p.melange.dernier, p.melange.reussi, p.melange.aRefaireAvec], [J(4), 2, null], "le mélange, libre : le parcours garde le jour et le trophée (réussi avec 2 tables), rien n’est « à refaire »");
 });
 
 test("élève 2 · quatre tables déjà sues : validations rapides, ~24 dus le lendemain, « Encore N », boîte 4 en deux semaines ; le parcours ne l’attend pas", () => {
@@ -130,8 +143,8 @@ test("élève 2 · quatre tables déjà sues : validations rapides, ~24 dus le l
   [2, 10, 5, 3].forEach(table => {
     const faits = P.faitsDeLaTable(table);
     p = jouer(p, P.configValidation(table), faits.length ? faits.concat(faits.slice(0, 20 - faits.length)) : [], {date: J(0)});
-    if (P.melangeDu(p)) p = jouer(p, P.configMelange(p), faits, {date: J(0)});
   });
+  assert.equal(p.melange.dernier, null, "quatre tables passées d’affilée sans jouer le mélange : plus aucun verrou");
   assert.deepEqual(P.tablesAcquises(p), [2, 3, 5, 10]);
   assert.equal(P.rang(p.rang).nom, "Argent");
   assert.equal(P.agendaCalculs(p, J(0)).dus, 0, "lundi soir : rien de dû");
@@ -154,27 +167,32 @@ test("élève 2 · quatre tables déjà sues : validations rapides, ~24 dus le l
   assert.equal(P.prochaineEtape(p, J(5)).table, 4);
 });
 
-test("élève 3 · un 3e qui sait tout : 9 tables en une soirée, Platine ; 36 dus le lendemain ; une marche pose 25 calculs sur 36 et ils montent seuls", () => {
+test("élève 3 · un 3e qui sait tout : 9 tables en une soirée, Platine sans mélange ; 36 dus le lendemain ; une marche pose 25 calculs sur 36 et ils montent seuls", () => {
   let p = P.creerParcours();
   P.ORDRE_CONSEIL.forEach(table => {
     const faits = P.faitsDeLaTable(table);
     p = jouer(p, P.configValidation(table), faits.length ? faits.concat(faits.slice(0, 20 - faits.length)) : [], {date: J(0)});
-    if (P.melangeDu(p)) p = jouer(p, P.configMelange(p), faits, {date: J(0)});
   });
+  assert.equal(p.melange.dernier, null, "le mélange n’a pas été joué");
   assert.equal(P.tablesAcquises(p).length, 9);
   assert.equal(P.rang(p.rang).nom, "Platine");
   assert.equal(P.escalierOuvert(p), true);
   assert.equal(Object.keys(p.calculs).length, 36);
   assert.deepEqual(boites(p), [0, 36, 0, 0, 0]);
   assert.equal(P.agendaCalculs(p, J(1)).dus, 36, "36 dus le lendemain");
-  assert.equal(P.prochaineEtape(p, J(1)).type, "revision", "le bloc du jour reste un conseil : rien ne verrouille l’escalier");
+  assert.equal(P.agendaCalculs(p, J(0)).dus, 0, "le soir même : les tables passées aujourd’hui n’entrent que demain");
+  assert.equal(P.prochaineEtape(p, J(1)).type, "revision", "Mes calculs du jour passe devant");
+  assert.equal(P.mesCalculsAFaire(p, J(1)), true, "c’est la porte de la journée (la page la tient fermée ; le moteur, lui, compte une marche jouée)");
+  assert.deepEqual(P.serieDuJour(p, {aujourdhui: J(1)}), {cles: P.dusDuJour(p, J(1)).slice(0, 10), dus: 10, complement: 0, restants: 26, faite: false}, "dix calculs à la fois, 26 restent dus");
   // Mardi, il tente ★ (25 calculs sur 36) sans passer par Réviser.
   const marche = P.FAITS.slice(0, 25);
   p = jouer(p, P.configEtoile(1), marche, {date: J(1)});
   assert.equal(p.expert.etoiles, 1);
   assert.deepEqual(boites(p), [0, 11, 25, 0, 0], "les 25 calculs de la marche sont montés seuls ; 11 restent dus");
   assert.equal(P.agendaCalculs(p, J(1)).dus, 11);
-  assert.equal(P.prochaineEtape(p, J(1)).dus, 11);
+  assert.deepEqual(P.serieDuJour(p, {aujourdhui: J(1)}).dus + P.serieDuJour(p, {aujourdhui: J(1)}).restants, 11);
+  assert.equal(P.prochaineEtape(p, J(1)).dus, 10, "l’étape annonce la série qui sera jouée : dix calculs au plus (le 11e reste dû pour la suivante)");
+  assert.equal(P.prochaineEtape(p, J(1)).libelle, "Mes calculs du jour : 10 calculs");
   // Il ne fait pas les 11 : mercredi, ils sont en retard sur la page du professeur.
   assert.equal(P.calculsEnRetard(p, J(2)).length, 11);
   assert.equal(P.calculsEnRetard(p, J(1)).length, 0, "dus aujourd’hui, pas encore en retard");
@@ -209,8 +227,8 @@ test("la page : le bloc du jour en tête et conseillé, l’unique rond bleu, le
   // tableau : à zéro, « Ma table » principal et « Voir mes calculs ».
   assert.match(html, /\} else \{\s*actions\.append\(maTable\);[\s\S]{0,260}const voir = document\.createElement\("button"\);/, "sur le résultat, quand plus rien n’est dû");
   assert.doesNotMatch(html, /calculs-encore|libelleEncoreLibre|Rien ne monte : ces calculs n’étaient pas encore à revoir/);
-  assert.match(html, /defi_tables_core\.js\?v=20261004-1/);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261004-2/);
+  assert.match(html, /defi_tables_core\.js\?v=20261005-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261005-1/);
 });
 
 test("le serveur : « boite » et « echeance » acceptés, « cases » toujours ; la page du professeur compte les calculs en retard", async () => {
@@ -226,10 +244,15 @@ test("le serveur : « boite » et « echeance » acceptés, « cases » toujours
   assert.match(prof, /cRetard\.dataset\.libelle = "En retard";/);
   assert.match(prof, /ligne\.append\(cNom, cCode, cAcquises, cEnCours, cSemaine, cRetard, cDate, cActions\);/);
   // Le compteur est bien celui du moteur : dus AVANT aujourd'hui.
-  const p = P.normaliserParcours({calculs: {
+  // Lot « un seul système » : parmi les calculs que Mes calculs du jour prend
+  // (ceux des tables passées avant aujourd'hui).
+  const calculs = {
     "2-2": {boite: 2, vu: "2026-09-10", erreur: null, gagne: "2026-09-10", echeance: "2026-09-11"},
     "2-3": {boite: 3, vu: "2026-09-10", erreur: null, gagne: "2026-09-10", echeance: "2026-09-14"},
     "2-4": {boite: 4, vu: "2026-09-10", erreur: null, gagne: "2026-09-10", echeance: "2026-09-20"}
-  }});
+  };
+  const p = P.normaliserParcours({tables: {2: {acquise: "2026-09-09"}}, calculs});
   assert.deepEqual(P.calculsEnRetard(p, "2026-09-14"), ["2-2"], "2-3 est dû aujourd’hui (pas en retard), 2-4 revient le 20");
+  assert.deepEqual(P.calculsEnRetard(P.normaliserParcours({calculs}), "2026-09-14"), [], "table de 2 pas passée : rien « en retard » — ces calculs sont à ses marches");
+  assert.deepEqual(P.calculsEnRetard(P.normaliserParcours({tables: {2: {acquise: "2026-09-14"}}, calculs}), "2026-09-14"), [], "table passée aujourd’hui : pas avant demain");
 });

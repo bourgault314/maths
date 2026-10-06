@@ -5,6 +5,13 @@
 // travaillés de la semaine ; le jour LOCAL de l'appareil ; la migration
 // versionnée des parcours d'avant. Le moteur d'abord (exécuté), puis ce que la
 // page et le serveur en font.
+//
+// Lot « un seul système, les boîtes » (05/10/2026, décisions de Gwenaël) : le
+// mélange n'est plus obligatoire — plus de verrou, plus de « à refaire », il
+// n'ouvre plus l'escalier (9 tables passées suffisent, Platine aussi). « Mon
+// mélange » reste, libre. La table est « passée » (la clé reste « acquise »),
+// le test s'appelle « Je passe le test ». Les tests ci-dessous disent ces
+// règles-là.
 
 // Le fuseau de la Réunion, AVANT toute date : c'est là que le jour UTC
 // (toISOString) basculait à 4 h du matin.
@@ -27,59 +34,76 @@ const n = config => core.normalizeConfiguration(config);
 const jouer = (etat, config, correct, total, date = DATE) => P.appliquerSerie(etat, n(config), {correct, total, date});
 const types = resultat => resultat.evenements.map(evenement => evenement.type);
 
-// Valide des tables l'une après l'autre en réussissant le mélange dès qu'il est dû.
+// Passe des tables l'une après l'autre : le test réussi suffit, plus aucun
+// mélange à réussir entre deux.
 function acquerir(etat, tables, date = DATE) {
-  return tables.reduce((courant, table) => {
-    const libre = P.melangeDu(courant) ? jouer(courant, P.configMelange(courant), 20, 20, date).parcours : courant;
-    return jouer(libre, P.configValidation(table), 20, 20, date).parcours;
-  }, etat);
+  return tables.reduce((courant, table) => jouer(courant, P.configValidation(table), 20, 20, date).parcours, etat);
 }
 
-// Les 9 tables, le mélange des 9 : l'escalier est ouvert.
+// Les 9 tables passées : l'escalier est ouvert (sans mélange).
 function escalierOuvert(date = DATE) {
-  const neuf = acquerir(P.creerParcours(), [...P.TABLES], date);
-  return jouer(neuf, P.configMelange(neuf), 20, 20, date).parcours;
+  return acquerir(P.creerParcours(), [...P.TABLES], date);
 }
 
 // ---------------------------------------------------------------- le mélange
 
-test("le mélange : dû dès 2 tables (à faire), à jour quand il est réussi, à refaire à chaque nouvelle table — jusqu’aux 9", () => {
+// Les trois trophées de Mon mélange (3, 6, 9 tables) : ceux qui sont gagnés,
+// ceux qui sont à gagner maintenant.
+const trophees = (gagnes = [], aGagner = []) => [3, 6, 9].map(tables => ({tables, gagne: gagnes.includes(tables), aGagner: aGagner.includes(tables)}));
+
+test("le mélange est libre : proposé dès 2 tables passées, jamais dû ni « à refaire » ; il garde le dernier joué, son score et le plus grand nombre de tables réussi — jusqu’aux 9 — et ses trois trophées (3, 6, 9 tables)", () => {
+  assert.equal(typeof P.melangeDu, "undefined", "« melangeDu » a quitté le moteur : le mélange n’est plus jamais dû");
   let etat = acquerir(P.creerParcours(), [2]);
-  assert.equal(P.melangeDu(etat), false, "une table : rien à mélanger");
+  assert.equal(P.configMelange(etat), null, "une table : rien à mélanger");
   assert.equal(P.etatAffichage(etat).melange.visible, false);
 
   etat = jouer(etat, P.configValidation(10), 20, 20).parcours;
-  assert.equal(P.melangeDu(etat), true, "deux tables : le mélange est dû");
   let affichage = P.etatAffichage(etat);
-  assert.equal(affichage.melange.visible, true);
-  assert.equal(affichage.melange.du, true);
-  assert.equal(affichage.melange.aRefaireAvec, null, "« à faire », pas « à refaire »");
-  assert.equal(affichage.verrou, true);
-  assert.equal(affichage.prochaine.type, "melange");
+  assert.deepEqual(affichage.melange, {visible: true, tables: [2, 10], dernier: null, score: null, reussi: null, trophees: trophees()}, "deux tables : le mélange est proposé, jamais joué — aucun trophée à gagner avant 3 tables");
+  assert.ok(!("du" in affichage.melange) && !("aJour" in affichage.melange) && !("aRefaireAvec" in affichage.melange), "ni « dû », ni « à jour », ni « à refaire »");
+  assert.ok(!("verrou" in affichage), "plus de verrou");
+  assert.equal(affichage.prochaine.type, "apprends", "la prochaine étape n’est jamais le mélange : la table suivante");
+  assert.equal(affichage.prochaine.table, 5);
 
-  etat = jouer(etat, P.configMelange(etat), 18, 20).parcours;
-  assert.equal(P.melangeDu(etat), false);
+  // Raté : le parcours garde le jour et le score, rien d'autre ne bouge.
+  const rate = jouer(etat, P.configMelange(etat), 17, 20);
+  assert.deepEqual(rate.evenements, [{type: "melange", reussi: false, score: 17, total: 20, tables: [2, 10], trophee: null}], "l’événement : réussi ou non, le score, les tables, le trophée gagné — plus de « escalierOuvert »");
+  assert.deepEqual(rate.parcours.melange, {tables: [2, 10], aJour: false, aRefaireAvec: null, dernier: DATE, score: 17, reussi: null});
+  assert.deepEqual(P.etatAffichage(rate.parcours).melange, {visible: true, tables: [2, 10], dernier: DATE, score: 17, reussi: null, trophees: trophees()}, "le moteur garde le score du dernier joué (la page ne l’affiche plus)");
+
+  // Réussi le lendemain : « reussi » = le nombre de tables du mélange ; avec 2
+  // tables, pas encore de trophée.
+  const reussi = jouer(rate.parcours, P.configMelange(rate.parcours), 18, 20, "2026-09-09");
+  assert.deepEqual(reussi.evenements, [{type: "melange", reussi: true, score: 18, total: 20, tables: [2, 10], trophee: null}]);
+  assert.deepEqual(reussi.parcours.melange, {tables: [2, 10], aJour: true, aRefaireAvec: null, dernier: "2026-09-09", score: 18, reussi: 2});
+
+  // Une table de plus : rien n'est remis « à refaire », « reussi » reste — et
+  // le trophée des 3 tables est à gagner.
+  const cinq = jouer(reussi.parcours, P.configValidation(5), 20, 20, "2026-09-09");
+  assert.ok(!types(cinq).some(type => type.startsWith("melange")), "plus d’événement « melange-a-refaire »");
+  etat = cinq.parcours;
   affichage = P.etatAffichage(etat);
-  assert.equal(affichage.melange.aJour, true);
-  assert.equal(affichage.verrou, false);
+  assert.deepEqual(affichage.melange, {visible: true, tables: [2, 5, 10], dernier: "2026-09-09", score: 18, reussi: 2, trophees: trophees([], [3])}, "réussi avec 2 tables, il y en a une de plus depuis : le trophée des 3 tables est à gagner");
+  assert.equal(etat.melange.aRefaireAvec, null);
+  // Rejoué avec les 3 tables et raté : le dernier score change, « reussi » ne redescend pas, aucun trophée gagné.
+  etat = jouer(etat, P.configMelange(etat), 12, 20, "2026-09-10").parcours;
+  assert.deepEqual([etat.melange.dernier, etat.melange.score, etat.melange.reussi], ["2026-09-10", 12, 2]);
 
-  etat = jouer(etat, P.configValidation(5), 20, 20).parcours;
-  affichage = P.etatAffichage(etat);
-  assert.equal(affichage.melange.du, true);
-  assert.equal(affichage.melange.aRefaireAvec, 5, "à refaire avec la table de 5");
-  assert.deepEqual(affichage.melange.tables, [2, 5, 10]);
-
-  // Jusqu'à la neuvième : le mélange reste visible et dû avec les 9 tables.
+  // Jusqu'à la neuvième : le mélange reste visible, avec les 9 tables — et il n'ouvre rien.
   etat = acquerir(etat, [3, 4, 6, 7, 8, 9]);
   assert.ok(P.toutesAcquises(etat));
   affichage = P.etatAffichage(etat);
   assert.equal(affichage.melange.visible, true, "avec les 9 tables, le mélange existe encore");
-  assert.equal(affichage.melange.aRefaireAvec, 9);
+  assert.deepEqual(affichage.melange.tables, [...P.TABLES]);
   assert.deepEqual(P.configMelange(etat), {mode: "validation", tables: [...P.TABLES], total: 20, duration: 90});
-  assert.equal(affichage.expert.ouvert, false);
+  assert.equal(affichage.expert.ouvert, true, "l’escalier est ouvert par les 9 tables, sans mélange");
+  const neuf = jouer(etat, P.configMelange(etat), 20, 20, "2026-09-11");
+  assert.deepEqual(neuf.evenements, [{type: "melange", reussi: true, score: 20, total: 20, tables: [...P.TABLES], trophee: 9}], "le mélange des 9 tables réussi : ni rang, ni escalier — tout était déjà là ; il rapporte le plus grand trophée");
+  assert.equal(neuf.parcours.melange.reussi, 9);
+  assert.deepEqual(P.etatAffichage(neuf.parcours).melange.trophees, trophees([3, 6, 9]), "les trois trophées d’un coup");
 });
 
-test("le format du mélange = celui de la validation : 20 questions, 14 produits + 3 nombres manquants + 3 divisions (lot « divisions »), tables acquises seulement, 1 min 30, 2 erreurs max", () => {
+test("le format du mélange = celui du test d’une table : 20 questions, 14 produits + 3 nombres manquants + 3 divisions (lot « divisions »), tables passées seulement, 1 min 30, 2 erreurs max", () => {
   const etat = acquerir(P.creerParcours(), [2, 10, 5]);
   const config = n(P.configMelange(etat));
   assert.equal(config.mode, "validation");
@@ -91,10 +115,17 @@ test("le format du mélange = celui de la validation : 20 questions, 14 produits
     assert.equal(questions.filter(question => question.category === "direct").length, 14);
     assert.equal(questions.filter(question => question.category === "missing").length, 3);
     assert.equal(questions.filter(question => question.category === "division").length, 3);
-    assert.ok(questions.every(question => [2, 5, 10].includes(question.focusTable)), "tables acquises seulement");
+    assert.ok(questions.every(question => [2, 5, 10].includes(question.focusTable)), "tables passées seulement");
   }
-  assert.equal(jouer(etat, P.configMelange(etat), 17, 20).parcours.melange.aJour, false, "3 erreurs : raté");
-  assert.equal(jouer(etat, P.configMelange(etat), 18, 20).parcours.melange.aJour, true, "2 erreurs : réussi");
+  assert.equal(jouer(etat, P.configMelange(etat), 17, 20).evenements[0].reussi, false, "3 erreurs : raté");
+  assert.equal(jouer(etat, P.configMelange(etat), 17, 20).parcours.melange.reussi, null);
+  assert.equal(jouer(etat, P.configMelange(etat), 18, 20).evenements[0].reussi, true, "2 erreurs : réussi");
+  assert.equal(jouer(etat, P.configMelange(etat), 18, 20).parcours.melange.reussi, 3, "réussi avec ses 3 tables");
+  // « Mon mélange » = exactement les tables passées, en 1 min 30 : choisi à
+  // la main ou joué plus lentement, ce n'est pas lui.
+  assert.deepEqual(P.classerSerie(etat, config), {type: "melange", tables: [2, 5, 10]});
+  assert.equal(P.classerSerie(etat, n({mode: "validation", tables: [2, 10], total: 20, duration: 90})), null, "deux tables sur trois : pas « Mon mélange »");
+  assert.equal(P.classerSerie(etat, n({mode: "validation", tables: [2, 5, 10], total: 20, duration: 120})), null, "en 2 min : pas « Mon mélange »");
   // Le dernier, avec les 9 tables : même format.
   const neuf = acquerir(P.creerParcours(), [...P.TABLES]);
   const dernier = n(P.configMelange(neuf));
@@ -103,25 +134,30 @@ test("le format du mélange = celui de la validation : 20 questions, 14 produits
   assert.deepEqual(dernier.questionTypes, ["direct", "missing", "division"]);
 });
 
-// ---------------------------------------------------------------- le verrou
+// ------------------------------------------------------- plus de verrou
 
-test("le verrou ne touche que « Je valide » d’une table non acquise ; J’apprends et Je m’entraîne restent libres", () => {
+test("plus de verrou : un test réussi passe la table, toujours — même sans mélange, même après un mélange raté ; J’apprends et Je m’entraîne restent libres", () => {
   const etat = acquerir(P.creerParcours(), [2, 10]);
-  assert.ok(P.melangeDu(etat));
+  assert.equal(etat.melange.dernier, null, "deux tables, le mélange jamais joué");
   const tentative = jouer(etat, P.configValidation(5), 20, 20);
-  assert.equal(tentative.evenements[0].verrouillee, true);
-  assert.equal(tentative.parcours.tables[5].acquise, null);
-  assert.equal(P.tablesAcquises(tentative.parcours).length, 2);
-  // Mais la série a bien été jouée : le meilleur essai est noté, la grille compte.
+  assert.deepEqual(tentative.evenements[0], {type: "validation", table: 5, reussi: true, score: 20, total: 20, dejaAcquise: false, nouvelle: true}, "l’événement n’a plus de champ « verrouillee »");
+  assert.equal(tentative.parcours.tables[5].acquise, DATE);
+  assert.equal(P.tablesAcquises(tentative.parcours).length, 3);
+  assert.deepEqual(types(tentative), ["validation", "rang"], "ni « melange-debloque », ni « melange-a-refaire »");
+  // Un mélange raté ne ferme rien non plus.
+  const rate = jouer(etat, P.configMelange(etat), 5, 20).parcours;
+  assert.equal(jouer(rate, P.configValidation(5), 20, 20).evenements[0].nouvelle, true);
+  // Seul le test lui-même décide : 3 erreurs, la table n'est pas passée.
+  const manque = jouer(etat, P.configValidation(5), 17, 20);
+  assert.deepEqual([manque.evenements[0].reussi, manque.evenements[0].nouvelle, manque.parcours.tables[5].acquise], [false, false, null]);
+  // La grille et les autres étapes, comme avant.
   const grille = P.appliquerReponse(etat, "5-7", {correcte: true, date: DATE});
-  assert.equal(grille.parcours.calculs["5-7"].cases, 1, "la grille ne connaît pas le verrou");
+  assert.equal(grille.parcours.calculs["5-7"].cases, 1);
   assert.equal(jouer(etat, P.configEntraine(5, "mixte"), 10, 10).parcours.tables[5].entraine.mixte, 2);
   assert.equal(jouer(etat, P.configApprends(5, "construct"), 11, 11).parcours.tables[5].apprends.construct, 2);
-  assert.equal(jouer(etat, P.configValidation(10), 20, 20).evenements[0].verrouillee, false, "une table acquise se rejoue");
-  assert.equal(jouer(etat, P.configValidation(5, 180), 20, 20).evenements[0].type, "preparation", "2 ou 3 min = préparation, verrou ou pas");
-  // Le mélange réussi lève le verrou pour de bon, jusqu'à la table suivante.
-  const libre = jouer(etat, P.configMelange(etat), 20, 20).parcours;
-  assert.equal(jouer(libre, P.configValidation(5), 20, 20).evenements[0].nouvelle, true);
+  const rejouee = jouer(etat, P.configValidation(10), 20, 20).evenements[0];
+  assert.deepEqual([rejouee.dejaAcquise, rejouee.nouvelle, "verrouillee" in rejouee], [true, false, false], "une table passée se rejoue");
+  assert.equal(jouer(etat, P.configValidation(5, 180), 20, 20).evenements[0].type, "preparation", "2 ou 3 min = préparation");
 });
 
 // --------------------------------------------------------------- l'escalier
@@ -159,15 +195,20 @@ test("l’escalier : 5 marches par la durée seule, tout dedans, 2 erreurs max ;
   assert.equal(P.symboleEtoile(4), "★★★★");
 });
 
-test("l’escalier est fermé sans les 9 tables ou sans le dernier mélange : une marche jouée ne compte pas", () => {
+test("l’escalier est fermé sans les 9 tables : une marche jouée ne compte pas ; les 9 tables passées l’ouvrent, sans mélange", () => {
   const huit = acquerir(P.creerParcours(), [2, 10, 5, 3, 4, 6, 7, 8]);
+  assert.equal(P.escalierOuvert(huit), false);
   assert.equal(P.classerSerie(huit, n(P.configEtoile(1))), null);
   assert.equal(P.etatAffichage(huit).expert.ouvert, false);
+  assert.equal(jouer(huit, P.configEtoile(1), 25, 25).classement, null, "8 tables : la marche jouée ne compte pas");
+  // Un mélange réussi avec 8 tables n'ouvre rien.
+  assert.equal(P.escalierOuvert(jouer(huit, P.configMelange(huit), 20, 20).parcours), false);
   const neuf = acquerir(P.creerParcours(), [...P.TABLES]);
-  assert.equal(P.melangeDu(neuf), true);
-  assert.equal(P.classerSerie(neuf, n(P.configEtoile(1))), null, "9 tables, mélange à refaire : fermé");
-  assert.equal(jouer(neuf, P.configEtoile(1), 25, 25).classement, null);
-  assert.equal(P.prochaineEtape(neuf).type, "melange");
+  assert.equal(neuf.melange.dernier, null, "9 tables, le mélange jamais joué");
+  assert.equal(P.escalierOuvert(neuf), true, "9 tables passées : ouvert");
+  assert.deepEqual(P.classerSerie(neuf, n(P.configEtoile(1))), {type: "etoile", etoile: 1});
+  assert.equal(jouer(neuf, P.configEtoile(1), 25, 25).parcours.expert.etoiles, 1);
+  assert.equal(P.prochaineEtape(neuf).type, "etoile", "la prochaine étape : la première marche, plus jamais « melange »");
   // Les anciens tests Expert (niveau 1 ou 2, ou 3 minutes) ne sont plus des marches.
   const ouvert = escalierOuvert();
   assert.equal(P.classerSerie(ouvert, n({mode: "test", tables: [...P.TABLES], testLevel: 1, duration: 120})), null);
@@ -177,16 +218,19 @@ test("l’escalier est fermé sans les 9 tables ou sans le dernier mélange : un
 
 // ------------------------------------------------------------------ le rang
 
-test("le rang : Bronze à 1 table, Argent à 3, Or à 6, Platine à 9 + mélange, Diamant à ★★★★, Légende à 👑", () => {
+test("le rang : Bronze à 1 table, Argent à 3, Or à 6, Platine à 9 tables passées (sans mélange), Diamant à ★★★★, Légende à 👑", () => {
   let etat = P.creerParcours();
   assert.equal(P.etatAffichage(etat).rang.niveau, 0, "avant la première table : pas de badge");
-  const attendu = [[2, "Bronze"], [10, "Bronze"], [5, "Argent"], [3, "Argent"], [4, "Argent"], [6, "Or"], [7, "Or"], [8, "Or"], [9, "Or"]];
+  const attendu = [[2, "Bronze"], [10, "Bronze"], [5, "Argent"], [3, "Argent"], [4, "Argent"], [6, "Or"], [7, "Or"], [8, "Or"]];
   attendu.forEach(([table, nom]) => {
     etat = acquerir(etat, [table]);
     assert.equal(P.etatAffichage(etat).rang.nom, nom, `${P.tablesAcquises(etat).length} tables → ${nom}`);
   });
-  const platine = jouer(etat, P.configMelange(etat), 20, 20);
+  // La neuvième table donne Platine tout de suite : le mélange n'y est plus pour rien.
+  const platine = jouer(etat, P.configValidation(9), 20, 20);
   assert.equal(platine.parcours.rang, 4);
+  assert.equal(platine.parcours.melange.dernier, null, "sans avoir jamais joué le mélange");
+  assert.deepEqual(types(platine), ["validation", "toutes-acquises", "rang"]);
   assert.deepEqual(platine.evenements.find(evenement => evenement.type === "rang"), {type: "rang", rang: 4, nom: "Platine", cle: "platine"});
   etat = jouer(platine.parcours, P.configEtoile(3), 25, 25).parcours;
   assert.equal(P.etatAffichage(etat).rang.nom, "Platine", "★★★ ne suffit pas");
@@ -273,10 +317,14 @@ test("« N jours cette semaine » compte depuis lundi, aujourd’hui compris —
   assert.equal(P.lundiDe("2026-09-07"), "2026-09-07", "un lundi reste lundi");
   assert.equal(P.lundiDe("2026-09-13"), "2026-09-07", "dimanche 13 → lundi 7");
   assert.equal(P.lundiDe("2026-09-14"), "2026-09-14");
+  // Lot « un seul système » : « dus » et « demain » ne comptent que les calculs
+  // des tables passées AVANT le jour — ici la table de 2, passée le 1er.
+  const reponses = [["2026-09-03", "2-3"], ["2026-09-05", "2-4"], ["2026-09-07", "2-6"], ["2026-09-08", "2-7"], ["2026-09-08", "2-8"]];
+  const avecReponses = depart => reponses.reduce((courant, [jour, cle]) => P.appliquerReponse(courant, cle, {correcte: true, date: jour}).parcours, depart);
   let etat = P.creerParcours();
-  [["2026-09-03", "2-3"], ["2026-09-05", "2-4"], ["2026-09-07", "2-6"], ["2026-09-08", "2-7"], ["2026-09-08", "2-8"]].forEach(([jour, cle]) => {
-    etat = P.appliquerReponse(etat, cle, {correcte: true, date: jour}).parcours;
-  });
+  etat.tables[2].acquise = "2026-09-01";
+  etat = avecReponses(etat);
+  assert.deepEqual(P.bilanJours(avecReponses(P.creerParcours()), "2026-09-08"), {semaine: 2, dus: 0, demain: 0, aujourdhui: true}, "sans table passée : les jours comptent, mais aucun calcul n’est « dû » pour Mes calculs du jour");
   // Lot mémoire : chaque calcul réussi (jamais vu) entre en boîte 2, retour le lendemain.
   assert.deepEqual(P.bilanJours(etat, "2026-09-08"), {semaine: 2, dus: 3, demain: 5, aujourdhui: true}, "lundi 7 et mardi 8 ; 2-3, 2-4 et 2-6 sont dus (revenus le 4, le 6, le 8) ; demain, les 5");
   assert.equal(P.bilanJours(etat, "2026-09-09").semaine, 2, "mercredi sans travail : toujours 2, rien ne se casse");
@@ -285,6 +333,7 @@ test("« N jours cette semaine » compte depuis lundi, aujourd’hui compris —
   assert.equal(P.bilanJours(etat, "2026-09-06").semaine, 2, "la semaine du 31/08 au 06/09 : jeudi 3 et samedi 5");
   // Un calcul monté en boîte 4 aujourd'hui revient dans 7 jours : rien demain.
   let su = P.creerParcours();
+  su.tables[7].acquise = "2026-08-31";
   ["2026-09-01", "2026-09-02", "2026-09-05"].forEach(jour => { su = P.appliquerReponse(su, "7-8", {correcte: true, date: jour}).parcours; });
   assert.equal(su.calculs["7-8"].boite, 4);
   assert.deepEqual(P.bilanJours(su, "2026-09-05"), {semaine: 3, dus: 0, demain: 0, aujourdhui: true}, "mardi 1er, mercredi 2, samedi 5 : trois jours");
@@ -294,7 +343,7 @@ test("« N jours cette semaine » compte depuis lundi, aujourd’hui compris —
 
 // ------------------------------------------------------------- la migration
 
-test("migration des parcours d’avant : tables gardées, ★/★★ → rien, ★★★ → ★, mélange remis à faire, une seule fois, version 2", () => {
+test("migration des parcours d’avant : tables gardées, ★/★★ → rien, ★★★ → ★, l’ancien mélange ne vaut pas un mélange réussi (et ne ferme rien), une seule fois, version 2", () => {
   const ancien = {
     version: 1,
     epoque: 2,
@@ -312,20 +361,22 @@ test("migration des parcours d’avant : tables gardées, ★/★★ → rien, �
   assert.deepEqual(migre.calculs["2-5"], {boite: 3, cases: 2, vu: "2026-09-01", erreur: null, gagne: "2026-09-01", echeance: "2026-09-04"}, "la grille ne bouge pas : 2 cases → boîte 3 (bleu), échéance recalculée (lot mémoire)");
   assert.equal(migre.expert.etoiles, 0, "★★ d’avant ne vaut rien");
   assert.equal(migre.expert.couronne, null);
-  assert.equal(migre.melange.aJour, false, "le mélange est remis à faire");
+  assert.equal(migre.melange.aJour, false, "l’ancien mélange (25 produits en 2 min) ne vaut pas le nouveau");
   assert.equal(migre.melange.aRefaireAvec, null);
   assert.equal(migre.melange.dernier, "2026-09-02", "la date du dernier reste, pour mémoire");
-  assert.ok(P.melangeDu(migre));
+  assert.deepEqual(P.etatAffichage(migre).melange, {visible: true, tables: [2, 5, 10], dernier: "2026-09-02", score: null, reussi: null, trophees: trophees([], [3])}, "proposé, jamais réussi au nouveau format — sans score, sans trophée (celui des 3 tables est à gagner)");
+  assert.equal(jouer(migre, P.configValidation(3), 20, 20).evenements[0].nouvelle, true, "mais il ne ferme rien : la table suivante se passe sans lui");
   assert.equal(migre.rang, 2, "et il reçoit son rang : 3 tables = Argent");
   assert.ok(!("avis" in migre) && !("avisVu" in migre), "lot 4b : la migration ne pose plus d’avis à lire");
 
-  // Champion d'avant (★★★ : divisions en 2 min) → la nouvelle ★, escalier fermé.
+  // Champion d'avant (★★★ : divisions en 2 min) → la nouvelle ★ ; avec ses 9
+  // tables, l'escalier est ouvert et il est Platine, sans mélange à refaire.
   const champion = P.normaliserParcours({version: 1, tables: Object.fromEntries(P.TABLES.map(t => [t, {acquise: "2026-09-01"}])), melange: {aJour: false}, expert: {niveau: 3, champion: "2026-09-02", dernier: "2026-09-02"}});
   assert.equal(champion.expert.etoiles, 1);
   assert.equal(champion.expert.dernier, "2026-09-02");
-  assert.equal(P.escalierOuvert(champion), false, "il lui reste le mélange des 9 tables");
-  assert.equal(champion.rang, 3, "9 tables sans le mélange : Or, pas Platine");
-  assert.equal(P.prochaineEtape(champion).type, "melange");
+  assert.equal(P.escalierOuvert(champion), true, "9 tables passées : l’escalier est ouvert, sans le mélange des 9 tables");
+  assert.equal(champion.rang, 4, "9 tables : Platine");
+  assert.deepEqual([P.prochaineEtape(champion).type, P.prochaineEtape(champion).etoile], ["etoile", 2], "la suite : ★★");
   assert.equal(P.etatAffichage(champion).expert.niveau, 1);
 
   // Sans version : c'est un parcours d'avant aussi.
@@ -337,8 +388,10 @@ test("migration des parcours d’avant : tables gardées, ★/★★ → rien, �
   // refait son mélange entre-temps.
   const refait = jouer(migre, P.configMelange(migre), 20, 20).parcours;
   assert.equal(refait.melange.aJour, true);
+  assert.equal(refait.melange.reussi, 3);
   const relu = P.normaliserParcours(JSON.parse(JSON.stringify(refait)));
   assert.equal(relu.melange.aJour, true, "pas de seconde migration");
+  assert.deepEqual([relu.melange.reussi, relu.melange.score, relu.melange.dernier], [3, 20, DATE], "le mélange réussi est relu tel quel");
   assert.equal(relu.version, 3);
   // Les anciens champs (niveau, champion) n'existent plus dans un parcours à jour.
   assert.equal("niveau" in relu.expert, false);
@@ -346,7 +399,7 @@ test("migration des parcours d’avant : tables gardées, ★/★★ → rien, �
 });
 
 test("migration robuste à un appareil resté sur l’ancienne version : ce qu’il renvoie repasse par la migration et ne fait rien perdre", () => {
-  // Léa a migré sur son téléphone, refait son mélange et validé une table de plus.
+  // Léa a migré sur son téléphone, réussi son mélange (2 tables) et passé une table de plus.
   let telephone = P.normaliserParcours({version: 1, tables: {2: {acquise: "2026-08-30"}, 10: {acquise: "2026-08-31"}}, melange: {aJour: true}});
   telephone = jouer(telephone, P.configMelange(telephone), 20, 20).parcours;
   telephone = jouer(telephone, P.configValidation(5), 20, 20).parcours;
@@ -355,20 +408,26 @@ test("migration robuste à un appareil resté sur l’ancienne version : ce qu�
   // version 1 : deux tables, un mélange « à jour » à l'ancienne (25 produits
   // en 2 min), et même une ancienne ★★ gagnée entre-temps.
   const ordinateur = {version: 1, tables: {2: {acquise: "2026-08-30"}, 10: {acquise: "2026-08-31"}}, melange: {aJour: true, tables: [2, 10]}, expert: {niveau: 2}};
+  assert.deepEqual([P.normaliserParcours(ordinateur).melange.aJour, P.normaliserParcours(ordinateur).melange.reussi], [false, null], "le mélange à l’ancienne, seul, ne compte pas");
   [P.fusionner(telephone, ordinateur), P.fusionner(ordinateur, telephone)].forEach(fusion => {
     assert.deepEqual(P.tablesAcquises(fusion), [2, 5, 10], "rien ne se perd");
     assert.equal(fusion.expert.etoiles, 0, "l’ancienne ★★ ne vaut rien");
-    assert.equal(fusion.melange.aJour, false, "le mélange à l’ancienne ne compte pas, et la table de 5 le remet de toute façon");
+    assert.equal(fusion.melange.reussi, 2, "le mélange réussi sur le téléphone est gardé (le plus grand nombre de tables) ; la table de 5 ne le remet plus « à refaire »");
+    assert.equal(fusion.melange.aJour, true, "« aJour » = l’un OU l’autre");
+    assert.equal(fusion.melange.aRefaireAvec, null);
+    assert.deepEqual(fusion.melange.tables, [2, 5, 10]);
     assert.equal(fusion.version, 3);
     assert.equal(fusion.rang, 2);
   });
   // Et si l'ancien appareil renvoie plus (un parcours avancé sous les vieilles
-  // règles) : ses tables sont gardées, ses étoiles converties, son mélange à refaire.
+  // règles) : ses tables sont gardées, ses étoiles converties ; les 9 tables
+  // ouvrent l'escalier (plus de mélange des 9 tables à réussir).
   const avance = {version: 1, tables: Object.fromEntries(P.TABLES.map(t => [t, {acquise: "2026-09-01"}])), melange: {aJour: true}, expert: {niveau: 3, champion: "2026-09-02"}};
   const fusion = P.fusionner(telephone, avance);
   assert.ok(P.toutesAcquises(fusion));
   assert.equal(fusion.expert.etoiles, 1);
-  assert.equal(P.escalierOuvert(fusion), false);
+  assert.equal(P.escalierOuvert(fusion), true);
+  assert.equal(fusion.rang, 4, "9 tables passées : Platine");
 });
 
 test("l’avis « le parcours a changé » n’existe plus : ni dans le moteur, ni dans la page, ni au serveur", () => {
@@ -386,20 +445,25 @@ test("l’avis « le parcours a changé » n’existe plus : ni dans le moteur, 
 
 // -------------------------------------------------------------- la page
 
-test("l’accueil : « Mon mélange » surligné, le cadenas sur Je valide, l’escalier comme bloc principal, le badge de rang, la ligne des jours", () => {
+test("l’accueil : « Mon mélange » libre, plus de cadenas sur « Je passe le test », l’escalier comme bloc principal dès 9 tables passées, le badge de rang, la ligne des jours", () => {
   assert.match(html, /titre: "Mon mélange"/);
-  assert.match(html, /sousTitre: "Réussis d’abord ton mélange"/);
-  assert.match(html, /classe: "valide verrou"/);
-  assert.match(html, /cadenas\.textContent = "🔒";/);
-  assert.match(html, /ligneVerrou\.setAttribute\("aria-disabled", "true"\)/, "le cadenas se lit, il n’est pas un bouton désactivé en silence");
-  assert.match(html, /const verrouillee = etat\.verrou && !ligne\.acquise;/, "le verrou ne touche que « Je valide » d’une table non acquise");
+  assert.match(html, /sousTitre: sousTitreMelange\(melange\),\s*points: \[\],\s*conseille: false,/, "la ligne du mélange dit ses tables et son format ; elle n’est jamais l’étape conseillée");
+  assert.doesNotMatch(html, /Réussis d’abord ton mélange/);
+  assert.match(html, /const NOM_DU_TEST = "Je passe le test";/);
+  assert.match(html, /const CONDITION_DU_TEST = "si j’ai 9 sur 10 aux entraînements";/);
+  assert.match(html, /classe: "valide",\s*num: "3",\s*titre: ligne\.acquise \? "Ma table est passée" : NOM_DU_TEST,/);
+  assert.match(html, /action: \(\) => launchFromParcours\(PARCOURS\.configValidation\(table\), "menu"\)/, "« Je passe le test » lance toujours le test");
+  assert.doesNotMatch(html, /classe: "valide verrou"|cadenas\.textContent|ligneVerrou|verrouillee|etat\.verrou|montrerMelange|kind: "lock"/, "plus de cadenas ni de verrou dans la page : aucune ligne, aucune case n’est créée cadenassée");
   assert.match(html, /\.etape\.melange\.is-next \{ border-color: #e0a800/, "le mélange dû est surligné en jaune");
   assert.match(html, /<section id="acc-expert" class="expert"[^>]*hidden>[\s\S]*<div id="acc-escalier" class="escalier"/);
-  assert.match(html, /"Toutes les tables, de plus en plus vite" : "Réussis le mélange de tes 9 tables"/);
+  assert.match(html, /const toutes = etat\.acquises\.length === PARCOURS_TABLES\.length;\s*zone\.hidden = !toutes;/, "le bloc de l’escalier apparaît dès les 9 tables passées");
+  assert.match(html, /\$\("acc-expert-titre"\)\.textContent = "Toutes les tables, de plus en plus vite";/);
+  assert.doesNotMatch(html, /Réussis le mélange de tes 9 tables/);
   assert.match(html, /titre: `Tente \$\{suivante\.symbole\}`/, "un seul bouton « Tente ★★★ »");
   assert.match(html, /"M’entraîner sur une table"/);
-  assert.match(html, /"9 sur 9 acquises "/);
-  assert.match(html, /<span id="acc-rang" class="rang"><\/span>/, "le badge de rang, sous « N tables acquises sur 9 »");
+  assert.match(html, /"9 sur 9 passées "/);
+  assert.match(html, /<small id="acc-acquises">0 table passée sur 9<\/small>/);
+  assert.match(html, /<span id="acc-rang" class="rang"><\/span>/, "le badge de rang, sous « N tables passées sur 9 »");
   assert.ok(html.indexOf('id="acc-acquises"') < html.indexOf('id="acc-rang"'));
   assert.equal((html.match(/badgeRang\(/g) || []).length, 3, "le badge : l’accueil, la fête de rang, et sa définition — nulle part ailleurs");
   assert.match(html, /<div id="acc-jours" class="jours" hidden><\/div>/);
@@ -417,29 +481,41 @@ test("l’accueil : « Mon mélange » surligné, le cadenas sur Je valide, l’
   assert.doesNotMatch(visible, /25 produits/);
 });
 
-test("le parcours : Acquise cadenassée, « Mon mélange » jusqu’aux 9 tables, l’escalier à cinq marches avec leur durée", () => {
+test("le parcours : « Mon mélange » en bouton (triangle dessiné) jusqu’aux 9 tables (ses trois trophées à droite, sans mot ni nombre), l’escalier à cinq marches avec leur durée, ouvert après mes 9 tables", () => {
   // Lot « Mon parcours » (décision 11) : « Mon mélange », ses tables dessous.
-  assert.match(html, /title\.textContent = "Mon mélange";\s*const tables = document\.createElement\("small"\);\s*tables\.textContent = tablesDuMelange\(etat\.melange\.tables\);/);
-  assert.match(html, /label: "Mon mélange, mes tables acquises \(20 questions en 1 min 30\)"/);
+  // Lot « trophées » : « tables 2, 3 et 5 » jusqu'à 3 tables, puis « mes N tables ».
+  assert.match(html, /title\.textContent = "Mon mélange";\s*const tables = document\.createElement\("small"\);[^;]*?\s*tables\.textContent = etat\.melange\.tables\.length <= 3 \? tablesDuMelange\(etat\.melange\.tables\) : `mes \$\{etat\.melange\.tables\.length\}\\u00a0tables`;/);
+  assert.match(html, /label: `Mon mélange, mes tables passées \(20 questions en 1 min 30\)\$\{porte \? " — après Mes calculs du jour" : ""\}`,/);
+  assert.match(html, /texte: triangleJouer\(\),/, "la case du mélange est un bouton : un triangle dessiné, centré");
+  assert.doesNotMatch(html, /createTextNode\("▶"\)/, "plus le caractère ▶, qui penchait à gauche");
+  assert.match(html, /function triangleJouer\(\) \{\s*const svg = document\.createElementNS\("http:\/\/www\.w3\.org\/2000\/svg", "svg"\);\s*svg\.setAttribute\("class", "jouer"\);/);
+  assert.match(html, /if \(porte\) tables\.textContent = "après Mes calculs du jour";/, "la porte fermée : le sous-titre le dit");
+  assert.match(html, /droite\.append\(textes, tropheesDuMelange\(etat\.melange\.trophees\)\);/, "à droite : les trois trophées");
+  assert.doesNotMatch(html, /dernierMelange|réussi avec \$\{|Dernier : \$\{melange\.score\}/, "plus de « Dernier : 17 sur 20 » ni de « réussi avec N tables ✓ »");
   assert.match(html, /expertTitle\.textContent = "Je deviens expert : toutes les tables, de plus en plus vite";/);
   assert.match(html, /etat\.expert\.marches\.forEach\(marche => \{/);
-  assert.match(html, /config: etat\.expert\.ouvert \? marche\.config : null/, "fermé : les marches ne lancent rien");
-  assert.match(html, /"après le mélange des 9 tables"/);
+  assert.match(html, /const expertOuvert = etat\.expert\.ouvert && !porte;/);
+  assert.match(html, /config: expertOuvert \? marche\.config : null/, "fermé : les marches ne lancent rien");
+  assert.match(html, /const expertAttend = porte && etat\.expert\.ouvert \? "après Mes calculs du jour" : "après mes 9 tables";/);
+  assert.doesNotMatch(html, /après le mélange des 9 tables/);
   assert.match(html, /\.cell\.is-lock \{/);
   assert.match(html, /\.cell\.is-star\.n4 \{/);
 });
 
-test("le résultat et les fêtes : 🎉 table et mélange, 🌟 étoile, un écran de rang, 👑 au sommet — sobres, sans son", () => {
+test("le résultat et les fêtes : 🎉 table passée et mélange, 🌟 étoile, un écran de rang, 👑 au sommet — sobres, sans son ; un mélange proposé, jamais exigé", () => {
   // Lot R2 : la fête est le cadre du verdict, en plus grand.
-  assert.match(html, /verdict\.titre = `Table de \$\{validation\.table\} acquise !`;/);
-  assert.match(html, /verdict\.titre = melange\.escalierOuvert \? "Mélange des 9 tables réussi !" : "Mélange réussi !";/);
+  assert.match(html, /verdict\.titre = `Table de \$\{validation\.table\} passée !`;/);
+  assert.match(html, /verdict\.titre = melange\.tables\.length === PARCOURS_TABLES\.length \? "Mélange des 9 tables réussi !" : "Mélange réussi !";/, "l’événement n’a plus « escalierOuvert » : le titre compte les tables");
   assert.match(html, /verdict\.icone = "🌟";\s*verdict\.titre = `\$\{PARCOURS\.symboleEtoile\(etoile\.etoile\)\} obtenue !`;/);
   assert.match(html, /verdict\.icone = "👑";\s*verdict\.titre = "Légende des tables !";/);
   assert.match(html, /rang\.append\(document\.createTextNode\("Tu passes "\), badgeRang\(PARCOURS\.rang\(verdict\.rang\)\)\);/);
   assert.match(html, /animation: none !important/, "prefers-reduced-motion");
   assert.doesNotMatch(html, /new Audio\(|AudioContext/, "sans son");
-  assert.match(html, /Réussis d’abord ton mélange, puis reviens valider ta table\./, "une validation verrouillée le dit");
-  assert.match(html, /L’escalier des étoiles est ouvert !/);
+  assert.doesNotMatch(html, /Réussis d’abord ton mélange|reviens valider ta table/, "plus de validation verrouillée");
+  assert.match(html, /if \(trouve\("toutes-acquises"\)\) return "Tes 9 tables sont passées : l’escalier des étoiles est ouvert !";/, "c’est la neuvième table qui ouvre l’escalier");
+  assert.match(html, /if \(fete\.melange\) return fete\.melange\.trophee \? `Tu gagnes le trophée des \$\{fete\.melange\.trophee\} tables\\u00a0!` : "";/, "le mélange réussi n’ouvre rien : il rapporte un trophée, ou le verdict suffit");
+  assert.match(html, /titre\.textContent = `Je me teste sur mes \$\{etat\.melange\.tables\.length\}\\u00a0tables`;/, "une table vient d’être passée : le mélange est proposé");
+  assert.match(html, /const defi = fete\.validation && !enSeance\(\) && state\.origin !== "decouverte" \? boutonMelange\(\) : null;/);
   assert.match(html, /verdict\.titre = "Nouveau rang !";/, "un rang gagné sans autre nouvelle a sa fête à lui");
 });
 
@@ -455,8 +531,8 @@ test("le lancement : le mélange se joue en 1 min 30, comme la validation d’un
 });
 
 test("les scripts modifiés ont un nouveau numéro de cache, et la copie serveur du moteur est identique", async () => {
-  assert.match(html, /defi_tables_core\.js\?v=20261004-1/);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261004-2/);
+  assert.match(html, /defi_tables_core\.js\?v=20261005-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261005-1/);
   const moteur = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie), "_serveur/public/prof/defi_tables_mon_parcours.js doit être la copie octet pour octet du moteur");

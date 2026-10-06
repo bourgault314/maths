@@ -48,7 +48,7 @@ function source(nom) {
 function element(tag = "div") {
   const classes = new Set();
   const el = {
-    tag, type: "", hidden: false, children: [], attrs: {}, ecouteurs: {}, style: {}, _texte: "",
+    tag, type: "", hidden: false, children: [], attrs: {}, dataset: {}, ecouteurs: {}, style: {}, _texte: "",
     get className() { return [...classes].join(" "); },
     set className(v) { classes.clear(); String(v).split(/\s+/).filter(Boolean).forEach(c => classes.add(c)); },
     get textContent() { return el.children.length ? el.children.map(n => (typeof n === "string" ? n : n.textContent)).join("") : el._texte; },
@@ -169,7 +169,14 @@ test("2. ordinateur : deux colonnes — le tableau à gauche, ma table, Aujourd�
   assert.match(ordi, /\.calculs-tableau \{ grid-column: 1; grid-row: 1 \/ span 3;/);
   assert.match(ordi, /\.calculs-titre \{ grid-column: 1; grid-row: 1;/);
   assert.match(ordi, /\.calculs-tete \{ grid-column: 2; grid-row: 2; \}/);
-  assert.match(ordi, /\.parcours-suite \{ grid-column: 2; grid-row: 3; \}/);
+  // Lot « les trophées » : la colonne de droite finit au bas du tableau —
+  // « Je deviens expert » prend la hauteur qui reste ; les trophées restent à
+  // côté de « Mon mélange », sur la même ligne.
+  assert.match(ordi, /\.parcours-suite \{ grid-column: 2; grid-row: 3; align-self: stretch; display: flex; flex-direction: column; \}/);
+  assert.match(ordi, /\.parcours-suite #parcours-expert \{ flex: 1 1 auto; \}/);
+  assert.match(ordi, /\.parcours-suite \.mp-melange-droite \{ flex-wrap: nowrap; \}/);
+  // Écran bas (1024 × 600) : le bloc de Mon mélange et ses trophées se resserrent.
+  assert.match(html, /@media \(min-width: 1024px\) and \(max-height: 700px\) \{[^@]*?\.parcours-suite #parcours-melange \{ padding-top: 8px; padding-bottom: 8px; \}\s*\.parcours-suite \.mp-trophees b \{ width: 22px; height: 22px; \}\s*\}/);
   assert.match(ordi, /\.calculs-grille \{ width: 398px; max-width: none; margin-top: 6px; grid-template-columns: 22px repeat\(8, 44px\); \}/, "cases de 44 px");
   assert.match(ordi, /\.calculs-dix \{ position: absolute; top: 13px; right: 14px; margin: 0; \}/, "« Table de 10 : acquise ✓ » en haut à droite du tableau");
   assert.match(ordi, /\.calculs-detail \{ position: absolute; z-index: 30; left: 0; right: 0; top: calc\(100% \+ 6px\);/, "sous les boîtes, posé sur le mélange et Expert : rien ne bouge");
@@ -276,27 +283,59 @@ test("7. le jour de retour d’un calcul : 0 s’il est dû, 1 s’il a été ra
   assert.equal(jourDeRetour(fait(5, "2026-10-20"), AUJ), 14);
 });
 
-test("5. « Aujourd’hui » : la ligne, les calculs du jour allumés, et ce qu’ils sont ; rien de dû : une phrase, pas un bouton", () => {
+// Lot « un seul système » (05/10/2026) : « Aujourd'hui » montre la série de
+// Mes calculs du jour telle qu'elle sera jouée — seulement des calculs des
+// tables PASSÉES (2, 5 et 10 pour Léa), 10 au plus : les calculs dus, complétés
+// jusqu'à 10 par d'autres calculs de ces tables.
+test("5. « Aujourd’hui » : la série de Mes calculs du jour (tables passées, 10 au plus), allumée, et ce qu’elle est ; jouée : « fait ✓ » ; rien : une phrase, pas un bouton", () => {
   const t = mesCalculs(lea());
   assert.equal(t.jour().tag, "button");
-  assert.equal(t.jour().textContent, "Aujourd’hui : 8 calculs reviennent dans ta séance", "« séance » ne part pas seule à la ligne");
+  assert.equal(t.jour().textContent, "Aujourd’hui\u00a0: 10\u00a0calculs dans Mes\u00a0calculs du\u00a0jour", "« jour » ne part pas seul à la ligne");
+  // Des 8 calculs dus, 6 sont pris (la boîte 4 : table de 5, passée) ; 3 × 7
+  // et 3 × 8 — ma table, pas encore passée — n'y sont pas. 4 de complément.
+  const serieDeLea = P.serieDuJour(lea(), {aujourdhui: AUJ});
+  assert.deepEqual({dus: serieDeLea.dus, complement: serieDeLea.complement, restants: serieDeLea.restants, faite: serieDeLea.faite}, {dus: 6, complement: 4, restants: 0, faite: false});
+  assert.ok(!serieDeLea.cles.includes("3-7") && !serieDeLea.cles.includes("3-8"), "les calculs dus de la table en cours n’y sont pas");
+  assert.ok(serieDeLea.cles.every(cle => P.prisParMesCalculs(lea(), cle, AUJ)));
   assert.equal(t.jour().attrs["aria-pressed"], "false");
   t.jour().click();
   assert.equal(t.jour().attrs["aria-pressed"], "true");
   assert.equal(t.carte.classList.contains("is-eteinte"), true);
   const allumees = t.cases().filter(c => c.classList.contains("is-dans-boite")).map(c => c.textContent.replace(/\D/g, ""));
-  assert.deepEqual(allumees.sort((a, b) => a - b), ["20", "21", "24", "25", "30", "35", "40", "45"], "les 8 calculs du jour");
-  assert.deepEqual(t.lignesDetail(), ["Aujourd’hui · 8 calculs", "1 à revoir · 7 à faire monter", "Ils sont dans ta séance : « Mes calculs du jour »."]);
+  assert.deepEqual(allumees.sort((a, b) => a - b), serieDeLea.cles.map(cle => String(cle.split("-")[0] * cle.split("-")[1])).sort((a, b) => a - b), "les cases allumées sont celles de la série");
+  assert.deepEqual(allumees, ["4", "14", "16", "18", "20", "25", "30", "35", "40", "45"], "les 6 calculs dus de la table de 5 et 4 calculs de la table de 2 — ni 21 ni 24 (table de 3)");
+  assert.deepEqual(t.lignesDetail(), ["Aujourd’hui · 10 calculs", "6\u00a0à\u00a0faire\u00a0monter · 4\u00a0à\u00a0garder", "Ils sont dans ta séance : «\u00a0Mes\u00a0calculs\u00a0du\u00a0jour\u00a0»."]);
   t.jour().click();
   assert.equal(t.etat.selection(), null, "la même ligne rallume ma table");
-  // Plus de dix : « 10 par séance ».
+  // Des calculs dus de tables pas passées (6 à 9) : ils ne comptent pas.
   const beaucoup = lea();
   for (const cle of ["6-6", "6-7", "6-8", "6-9", "7-7", "7-8", "7-9", "8-8", "8-9", "9-9"]) beaucoup.calculs[cle] = {boite: 5, cases: 0, vu: "2026-09-01", erreur: "", gagne: "", echeance: "2026-10-01"};
   const b = mesCalculs(beaucoup);
-  assert.equal(b.jour().textContent, "Aujourd’hui : 18 calculs reviennent, 10 par séance");
-  b.jour().click();
-  assert.equal(b.lignesDetail()[1], "1 à revoir · 7 à faire monter · 10 à garder", "seulement les nombres non nuls, la boîte 5 « à garder »");
-  // Rien de dû : une phrase en pointillés.
+  assert.equal(b.jour().textContent, "Aujourd’hui\u00a0: 10\u00a0calculs dans Mes\u00a0calculs du\u00a0jour");
+  // Les 9 tables passées et 18 calculs dus : 10 dans la série, jamais plus
+  // (plus de « 18 calculs reviennent, 10 par séance »).
+  P.TABLES.forEach(table => { beaucoup.tables[table].acquise = "2026-10-02"; });
+  const serieLongue = P.serieDuJour(beaucoup, {aujourdhui: AUJ});
+  assert.deepEqual({nombre: serieLongue.cles.length, dus: serieLongue.dus, complement: serieLongue.complement, restants: serieLongue.restants}, {nombre: 10, dus: 10, complement: 0, restants: 8});
+  const c = mesCalculs(beaucoup);
+  assert.equal(c.jour().textContent, "Aujourd’hui\u00a0: 10\u00a0calculs dans Mes\u00a0calculs du\u00a0jour");
+  c.jour().click();
+  assert.equal(c.lignesDetail()[1], "1\u00a0à\u00a0revoir · 5\u00a0à\u00a0faire\u00a0monter · 4\u00a0à\u00a0garder", "seulement les nombres non nuls, la boîte 5 « à garder »");
+  assert.doesNotMatch(source("renderJour"), /par\\u00a0séance|reviennent/);
+  // Une fois Mes calculs du jour joué : plus de complément — les calculs dus
+  // qui restent (« encore … dans ta prochaine séance »), ou « fait ✓ ».
+  const joue = P.serieDuJour({...lea(), calculsDuJour: AUJ}, {aujourdhui: AUJ});
+  assert.deepEqual({nombre: joue.cles.length, complement: joue.complement, faite: joue.faite}, {nombre: 6, complement: 0, faite: true});
+  assert.match(source("renderJour"), /serie\.faite \? " dans ta prochaine\\u00a0séance" : " dans Mes\\u00a0calculs du\\u00a0jour"/);
+  assert.match(source("renderJour"), /if \(serie\.faite\) element\.querySelector\("b"\)\.before\("encore "\);/);
+  const toutFait = P.creerParcours();
+  toutFait.calculs["2-4"] = {boite: 3, cases: 0, vu: "2026-10-06", erreur: "", gagne: "", echeance: "2026-10-20"};
+  toutFait.tables[2].acquise = "2026-10-02";
+  toutFait.calculsDuJour = AUJ;
+  const f = mesCalculs(P.normaliserParcours(toutFait));
+  assert.equal(f.jour().tag, "p");
+  assert.equal(f.jour().textContent, "Mes calculs du jour\u00a0: fait\u00a0✓");
+  // Rien de dû (et aucune table passée) : une phrase en pointillés.
   const sansDu = P.creerParcours();
   sansDu.calculs["3-4"] = {boite: 3, cases: 0, vu: "2026-10-01", erreur: "", gagne: "", echeance: "2026-10-20"};
   const r = mesCalculs(P.normaliserParcours(sansDu));
@@ -385,14 +424,67 @@ test("13. la rangée (accueil et bilan) aux couleurs du tableau : vide sans nomb
   assert.doesNotMatch(html, /Une case entourée|Toutes pleines/);
 });
 
-test("11. Mon mélange compact : le carré qui le lance, « Mon mélange » et ses tables dessous, le badge à droite", () => {
+test("11. Mon mélange compact : le triangle qui le lance, « Mon mélange » et ses tables dessous, les trois trophées à droite — jamais « à faire »", () => {
   const rendu = source("renderParcours");
   assert.match(rendu, /ligneMelange\.className = "mp-melange";/);
-  assert.match(rendu, /droite\.append\(textes, badge\);\s*ligneMelange\.append\(makeCell\(\{[\s\S]*?config: PARCOURS\.configMelange\(parcours\)\s*\}\), droite\);/);
-  assert.match(rendu, /tables\.textContent = tablesDuMelange\(etat\.melange\.tables\);/, "« et 10 » jamais seul à la ligne, comme sur la carte de séance");
+  // Lot « un seul système » (05/10/2026) : Mon mélange est libre. La case est
+  // un bouton « jouer » (plus une coche « à faire »). Lot « les trophées » : à
+  // droite, plus de badge ni de dernier score — les trois trophées (toujours
+  // là, gris tant qu'ils ne sont pas gagnés). La porte fermée, il attend Mes
+  // calculs du jour : c'est le sous-titre qui le dit.
+  assert.match(rendu, /textes\.append\(title, tables\);\s*if \(porte\) tables\.textContent = "après Mes calculs du jour";\s*droite\.append\(textes, tropheesDuMelange\(etat\.melange\.trophees\)\);\s*ligneMelange\.append\(makeCell\(\{\s*kind: "star",\s*etat: 0,[\s\S]*?config: porte \? null : PARCOURS\.configMelange\(parcours\),\s*extraClass: porte \? "is-fermee" : "",\s*texte: triangleJouer\(\),\s*action: porte \? \(\) => \{\} : null\s*\}\), droite\);/);
+  assert.doesNotMatch(rendu, /"À jour ✓"|"À faire"|aRefaireAvec|melange\.aJour|etat\.verrou/, "plus d’état « à faire » / « à refaire » ni de verrou");
+  assert.doesNotMatch(rendu, /après le mélange des 9 tables/, "l’escalier n’attend plus le mélange");
+  assert.match(rendu, /const expertOuvert = etat\.expert\.ouvert && !porte;/);
+  assert.doesNotMatch(html, /function dernierMelange\(|Dernier : \$\{|réussi avec \$\{/, "plus de dernier score ni de « réussi avec N tables ✓ »");
+  assert.doesNotMatch(rendu, /"▶"/, "le caractère ▶ penchait à gauche : un dessin centré à la place");
+  // Les trois trophées, EXÉCUTÉS : trois coupes (un dessin chacune), grises
+  // puis gagnées — sans un mot, sans un nombre.
+  const {document} = fauxDocument();
+  const tropheesDuMelange = new Function("document", `${source("coupe")}\n${source("tropheesDuMelange")}; return tropheesDuMelange;`)(document);
+  const dessin = p => {
+    const zone = tropheesDuMelange(P.etatAffichage(p, AUJ).melange.trophees);
+    assert.equal(zone.tag, "span");
+    assert.equal(zone.className, "mp-trophees");
+    assert.equal(zone.attrs.role, "img");
+    assert.equal(zone.textContent, "", "aucun mot, aucun nombre affiché");
+    assert.deepEqual(zone.children.map(b => [b.tag, b.dataset.tables]), [["b", "3"], ["b", "6"], ["b", "9"]]);
+    zone.children.forEach(b => {
+      assert.equal(b.children.length, 1);
+      assert.equal(b.children[0].tag, "svg", "une coupe dessinée");
+      assert.equal(b.children[0].attrs["aria-hidden"], "true");
+      assert.deepEqual(b.children[0].children.map(path => path.attrs.class), ["anses", "corps"]);
+    });
+    return {gagnes: zone.children.map(b => b.className), nom: zone.attrs["aria-label"]};
+  };
+  const avecMelange = (p, reussi) => P.normaliserParcours({...p, melange: {...p.melange, dernier: AUJ, score: 19, reussi}});
+  // Léa : 3 tables passées, jamais joué.
+  assert.deepEqual(dessin(lea()), {gagnes: ["", "", ""], nom: "Trophées de Mon mélange (avec 3, 6 et 9 tables) : aucun pour l’instant"});
+  assert.deepEqual(dessin(avecMelange(lea(), 2)).gagnes, ["", "", ""], "réussi avec 2 tables : pas encore de trophée");
+  assert.deepEqual(dessin(avecMelange(lea(), 3)), {gagnes: ["is-gagne", "", ""], nom: "Trophées de Mon mélange (avec 3, 6 et 9 tables) : gagné avec 3 tables"});
+  assert.deepEqual(dessin(avecMelange(lea(), 7)), {gagnes: ["is-gagne", "is-gagne", ""], nom: "Trophées de Mon mélange (avec 3, 6 et 9 tables) : gagné avec 3 et 6 tables"});
+  assert.deepEqual(dessin(avecMelange(lea(), 9)).gagnes, ["is-gagne", "is-gagne", "is-gagne"]);
+  assert.match(html, /\.mp-trophees \{ display: inline-flex; align-items: center; gap: 3px; flex: 0 0 auto; \}/);
+  assert.match(html, /\.mp-trophees b \{ display: inline-flex; width: 26px; height: 26px; color: #c3ced8; \}/, "grises…");
+  assert.match(html, /\.mp-trophees b\.is-gagne \{ color: #e0a800;/, "… puis dorées");
+  // Le triangle « jouer », EXÉCUTÉ : un dessin, centré dans sa case.
+  const triangle = new Function("document", `${source("triangleJouer")}; return triangleJouer;`)(document)();
+  assert.equal(triangle.tag, "svg");
+  assert.equal(triangle.attrs.class, "jouer");
+  assert.equal(triangle.attrs["aria-hidden"], "true");
+  assert.equal(triangle.children.length, 1);
+  assert.match(html, /\.cell \.jouer \{ display: block; width: 22px; height: 22px; margin: auto; fill: currentColor; \}/);
+  assert.match(html, /\.mp-melange \.cell \{ display: grid; place-items: center;/);
+  // Le sous-titre : « tables 2, 3 et 5 » jusqu'à 3 tables (« et 5 » jamais seul
+  // à la ligne), puis « mes N tables » — court, à côté des trophées.
+  assert.match(rendu, /tables\.textContent = etat\.melange\.tables\.length <= 3 \? tablesDuMelange\(etat\.melange\.tables\) : `mes \$\{etat\.melange\.tables\.length\}\\u00a0tables`;/);
+  const tablesDuMelange = new Function("PARCOURS_TABLES", "listeTables", `${source("tablesDuMelange")}; return tablesDuMelange;`)(
+    [...P.TABLES], t => (t.length > 1 ? `${t.slice(0, -1).join(", ")} et ${t[t.length - 1]}` : String(t[0])));
+  assert.equal(tablesDuMelange([2, 5, 10]), "tables 2, 5 et 10");
   assert.match(html, /\.mp-melange \{ display: grid; grid-template-columns: 52px minmax\(0, 1fr\); align-items: center; gap: 10px; \}/);
-  // Un badge long (« À refaire avec la table de 10 ») passe SOUS les tables au lieu de les écraser (320 px).
+  // Sur un téléphone étroit, les trophées passent SOUS les tables au lieu de les écraser (320 px).
   assert.match(html, /\.mp-melange-droite \{ display: flex; flex-wrap: wrap;[^}]*\}\s*\.mp-melange-droite > span:first-child \{ flex: 1 1 10em; min-width: 0; \}/);
+  assert.match(html, /\.mp-melange-droite > span:first-child \{ white-space: nowrap; \}/);
   assert.doesNotMatch(rendu, /"Mon mélange : mes 9 tables"/);
 });
 
@@ -444,6 +536,9 @@ function fiche(laSource, {parcoursAppareil = P.creerParcours(), modeFiche = fals
     const dateEnLettres = jour => jour; const symboleMarche = marche => marche.symbole;
     const marchesDeTable = () => ({depart: 4, prochaines: [4, 5, 6], noms: ["Dans l’ordre", "Dans le désordre", "Nombres manquants et divisions"]});
     const nomDeMarche = nom => nom.charAt(0).toLowerCase() + nom.slice(1);
+    const soude = texte => texte;
+    ${source("coupe")}
+    ${source("tropheesDuMelange")}
     ${source("phraseProchaineSeance")}\n${source("renderFiche")}\nrenderFiche(ARG.source);`;
   new Function("ARG", code)({document, $, P, parcoursAppareil, source: laSource});
   const corps = $("fiche-calculs-corps");
@@ -490,6 +585,22 @@ test("15. la fiche vierge : la même fiche, vide — carte « Table de ___ · ma
   assert.equal(tds.length, 64);
   assert.ok(tds.every(td => ["jamais-vu", "miroir"].includes(td.className)), "rien de l’élève, pas de croix");
   assert.ok(tds.every(td => td.children[0].textContent === ""));
+  // Lot « les trophées » : Mon mélange, libre — sur la fiche vierge, ses trois
+  // trophées vides (à colorier), sans un mot ; sur celle de Léa (jamais joué),
+  // les mêmes ; gagnés, ils se marquent.
+  const tropheesFiche = f => {
+    const etat = f.$("fiche-melange-state");
+    assert.equal(etat.textContent, "", "ni « Dernier : … », ni nombre");
+    assert.equal(etat.children.length, 1);
+    assert.equal(etat.children[0].className, "mp-trophees");
+    return etat.children[0].children.map(b => `${b.dataset.tables}${b.className === "is-gagne" ? "G" : b.className === "" ? "-" : "?"}`).join(" ");
+  };
+  assert.equal(tropheesFiche(vierge), "3- 6- 9-");
+  assert.equal(tropheesFiche(fiche(lea())), "3- 6- 9-");
+  const gagnante = P.normaliserParcours({...lea(), melange: {...lea().melange, dernier: AUJ, score: 19, reussi: 3}});
+  assert.equal(tropheesFiche(fiche(gagnante)), "3G 6- 9-");
+  // La fiche vierge reste vide même si l'appareil a gagné des trophées.
+  assert.equal(tropheesFiche(fiche("vierge", {parcoursAppareil: gagnante, modeFiche: true})), "3- 6- 9-");
   // La fiche d'un élève, elle, n'a pas la ligne à remplir.
   assert.equal(parClasse(fiche(lea()).$("fiche-matable"), "fiche-blanc").length, 0);
 });

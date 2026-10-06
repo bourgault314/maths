@@ -99,8 +99,20 @@ test("F. l’onglet qui redevient visible redessine l’accueil affiché (Mes ca
   assert.match(html, /if \(document\.visibilityState === "hidden"\) envoyerAvantDeFermer\(\);[\s\S]{0,300}else if \(document\.visibilityState === "visible" && !\$\("intro"\)\.hidden && !\$\("mode-screen"\)\.hidden\) renderAccueil\(\);/);
 });
 
-test("1. validation ou mélange ratés : les erreurs reviennent demain ; sans erreur, le temps a manqué", () => {
-  assert.match(html, /const melange = trouve\("melange"\);\s*if \(\(validation && !validation\.reussi\) \|\| \(melange && !melange\.reussi\)\) return phraseErreursDemain\(\);\s*return "";/);
+test("1. test ou mélange ratés : les erreurs d’une table passée reviennent demain, celles d’une table pas passée envoient s’entraîner ; sans erreur, le temps a manqué", () => {
+  // Lot « un seul système » (05/10/2026) : Mes calculs du jour ne prend que
+  // les calculs des tables passées. Le test raté d'une table pas encore
+  // passée n'annonce donc plus « reviennent demain » : il envoie s'entraîner.
+  assert.match(html, /const melange = trouve\("melange"\);[\s\S]{0,400}?if \(validation && !validation\.reussi && !validation\.dejaAcquise\) return phraseTestRate\(\);\s*if \(\(validation && !validation\.reussi\) \|\| \(melange && !melange\.reussi\)\) return phraseErreursDemain\(\);\s*return "";/);
+  const testRate = new Function("state", "TOTAL", `${fonction("calculsPasses")}\n${fonction("phraseTestRate")}; return phraseTestRate();`);
+  const rate = (answered, correct, passees, index, duration = 90) => ({
+    answered, correct, index, configuration: {duration},
+    responses: Array.from({length: passees}, () => ({skipped: true}))
+  });
+  assert.equal(testRate(rate(20, 15, 0, 20), 20), "Entraîne‑toi, puis repasse le test.", "des erreurs : pas de « demain », la table n’est pas passée");
+  assert.equal(testRate(rate(14, 12, 2, 20), 20), "Entraîne‑toi, puis repasse le test.", "les calculs passés comptent");
+  assert.equal(testRate(rate(12, 12, 0, 12), 20), "Tu manques de temps : entraîne-toi, puis réessaie.", "sans erreur, le temps a manqué");
+  assert.equal(testRate(rate(20, 20, 0, 20), 20), "");
   const phrase = new Function("state", "TOTAL", `${fonction("calculsPasses")}\n${fonction("phraseErreursDemain")}; return phraseErreursDemain();`);
   const serie = (answered, correct, passees, index, duration = 90) => ({
     answered, correct, index, configuration: {duration},
@@ -133,28 +145,33 @@ test("1. validation ratée : « Je m’entraîne : … » en bouton bleu, l’en
   assert.equal(conseil.nom, "nombres manquants et divisions", "la même lecture que la tuile : le premier pas encore réussi");
   parcours.tables[7].entraine = {...parcours.tables[7].entraine, trous: 2, mixte: 2};
   conseil = conseille(parcours, 7);
-  assert.equal(conseil.nom, "comme la validation, en 2 min");
+  assert.equal(conseil.nom, "comme le test, en 2 min", "lot « un seul système » : la validation s’appelle « le test »");
   assert.deepEqual(conseil.config, PARCOURS.configValidation(7, 120));
 });
 
-test("2. le même vocabulaire partout : les trois entraînements, « sans chrono », « acquise », « Tente », « sur »", () => {
+test("2. le même vocabulaire partout : les trois entraînements, « sans chrono », « passée », « Tente », « sur »", () => {
   assert.match(html, /const NOMS_ENTRAINEMENTS = Object\.freeze\(\{desordre: "dans le désordre", trous: "nombres manquants et divisions", mixte: "résultats, nombres manquants et divisions"\}\);/);
   assert.match(html, /libelle: majuscule\(NOMS_ENTRAINEMENTS\[item\.entrainement\]\),/, "le panneau : « Dans le désordre », « Nombres manquants et divisions », « Résultats, nombres manquants et divisions » (lot « divisions »)");
   assert.doesNotMatch(html, /LIBELLES_ENTRAINEMENTS/, "plus aucun libellé d’entraînement pris au moteur");
   assert.doesNotMatch(html, /"les deux à la fois"|· les deux</, "lot 2b : « résultats et nombres manquants » partout, fiche comprise");
   assert.doesNotMatch(html, /sans chronomètre/i);
-  assert.match(html, /sousTitre: ligne\.acquise \? `acquise le \$\{dateEnLettres\(ligne\.acquise\)\}`/);
-  assert.match(html, /Ma table de \$\{table\} est acquise depuis le \$\{dateEnLettres\(ligne\.acquise\)\}\./);
+  // Lot « un seul système » : la table est « passée », partout.
+  assert.match(html, /sousTitre: ligne\.acquise \? `passée le \$\{dateEnLettres\(ligne\.acquise\)\}`/);
+  assert.match(html, /Ma table de \$\{table\} est passée depuis le \$\{dateEnLettres\(ligne\.acquise\)\}\./);
+  assert.doesNotMatch(html, /`acquise le \$\{|est acquise depuis/);
   assert.doesNotMatch(html, /Tenter \$\{/);
   assert.match(html, /`Série précédente\\u00a0: \$\{previousScore\} sur \$\{TOTAL\}\.`/);
-  assert.match(html, /const label = stickActivity \? "cases complétées" : "calculs sus";/);
+  // « 10 / 11 calculs sus » : les mêmes mots, dans deux morceaux qui
+  // s'effacent sur les petits écrans (.compteur-mot, .compteur-suite).
+  assert.match(html, /mot\.className = "compteur-mot";\s*mot\.textContent = " calculs";\s*const suite = document\.createElement\("span"\);\s*suite\.className = "compteur-suite";\s*suite\.textContent = " sus";\s*\$\("question-count"\)\.replaceChildren\(`\$\{completed\} \/ \$\{total\}`, mot, suite\);/);
+  assert.match(html, /\$\("question-count"\)\.replaceChildren\(`\$\{completed\} \/ \$\{total\} cases`, suite\);/, "la bande : « cases complétées »");
 });
 
 test("8. les ronds gris lisibles, les sous-titres courts, « Tape » et « appuie »", () => {
   assert.match(html, /\.etape \.dots i\.is-check\.off \{ color: #698197; \}/);
   // Lot E1 : plus de rond ✓ ○ dans les panneaux du menu (liste simple).
   assert.doesNotMatch(html, /\.choix-activite \.etat/);
-  assert.match(html, /detail: "20 questions · 2 min · avant de valider",/);
+  assert.match(html, /detail: "20 questions · 2 min · avant le test",/);
   assert.match(html, /Mon parcours<small>tables, mélange, étoiles<\/small>/);
   assert.match(html, /"Tape une réponse ou appuie sur «\\u00a0Passer\\u00a0»\."/);
   assert.match(html, /Sinon, appuie sur «&nbsp;Non&nbsp;»/);

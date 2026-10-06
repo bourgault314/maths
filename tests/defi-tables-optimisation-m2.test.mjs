@@ -63,7 +63,7 @@ function jouerSeance(parcours, date, erreursPar = () => 0, table = null) {
 const marchesDe = (parcours, date, table = null) => P.ouvrirSeance(parcours, {aujourdhui: date, table}).file.map(prevue => prevue.type === "marche" ? prevue.marche : prevue.type);
 const avecDepart = (depart, table = 3) => { const p = P.creerParcours(); p.tables[table].seance = {depart, n: depart}; return P.normaliserParcours(p); };
 
-test("toujours 4 étapes : quatre marches quand rien n'est dû, trois avec Mes calculs du jour ou le mélange, deux avec les deux", () => {
+test("toujours 4 étapes : quatre marches, ou Mes calculs du jour (les calculs des tables passées) et trois marches — jamais de mélange", () => {
   assert.equal(P.SEUILS.seance.marches, 4);
   assert.equal(P.SEUILS.seance.plafond, 4);
   assert.equal(P.SEUILS.seance.departMax, 6, "un parcours enregistré au départ 6 ne doit pas retomber à 1");
@@ -77,6 +77,11 @@ test("au sommet, la fenêtre s'arrête à la marche 8 : départ 6, rien de dû �
   assert.deepEqual(marchesDe(avecDepart(4), jour(1), 3), [4, 5, 6, 7]);
   let p = avecDepart(6);
   p = P.appliquerReponse(p, "3-6", {correcte: true, date: jour(1)}).parcours;
+  // Lot « un seul système » : un calcul dû de la table en cours reste à ses marches.
+  assert.deepEqual(marchesDe(p, jour(2), 3), [5, 6, 7, 8], "aucune table passée : pas de Mes calculs du jour, 5-6-7-8");
+  // La table de 6 passée la veille : 3 × 6 est un calcul des tables passées, il ouvre la séance.
+  p.tables[6].acquise = jour(1);
+  p = P.normaliserParcours(p);
   assert.deepEqual(marchesDe(p, jour(2), 3), ["revision", 6, 7, 8], "Mes calculs du jour : trois marches, 6-7-8");
   assert.equal(avecDepart(6).tables[3].seance.depart, 6);
   // Une table acquise, choisie exprès : ses trois entraînements, comme avant.
@@ -134,11 +139,17 @@ test("la 5e étape du raccourci est annoncée : « raccourciEnFin » quand il pe
   ({parcours: reprise, seance} = jouerEtape(reprise, seance, P.etapeDeSeance(reprise, seance, jour(1)), jour(1), 4));
   assert.deepEqual(seance.file.map(prevue => prevue.marche), [3, 4, 5, 6]);
   assert.equal(P.programmeDeSeance(reprise, seance, jour(1)).raccourciEnFin, false);
-  // La marche 8 dans la fenêtre, le mélange dû, une table acquise : jamais.
+  // La marche 8 dans la fenêtre, une table passée choisie exprès : jamais.
   assert.equal(programme(avecDepart(5)).raccourciEnFin, false);
+  const passee = avecDepart(3);
+  passee.tables[3].acquise = jour(1);
+  assert.equal(programme(P.normaliserParcours(passee), jour(2)).raccourciEnFin, false);
+  // Deux tables passées, mélange jamais joué : plus de verrou, la séance garde
+  // ses quatre marches et la 5e étape reste annoncée.
   const melange = avecDepart(3);
   melange.tables[2].acquise = jour(1); melange.tables[10].acquise = jour(1);
-  assert.equal(programme(P.normaliserParcours(melange), jour(2)).raccourciEnFin, false);
+  assert.deepEqual(programme(P.normaliserParcours(melange), jour(2)).etapes.map(etape => etape.marche || etape.type), [3, 4, 5, 6]);
+  assert.equal(programme(P.normaliserParcours(melange), jour(2)).raccourciEnFin, true);
   // Joué : 9 sur 10 aux deux → la validation en 5e étape, comme annoncé.
   const s = jouerSeance(avecDepart(3), jour(1), etape => (etape.type === "entraine" ? 1 : 0), 3);
   assert.equal(s.programme.raccourciEnFin, true);
@@ -146,24 +157,28 @@ test("la 5e étape du raccourci est annoncée : « raccourciEnFin » quand il pe
   assert.equal(s.parcours.tables[3].acquise, jour(1));
 });
 
-test("Mes calculs, le mélange dû, puis deux marches : la validation possible en 5e étape est annoncée aussi (« 4 ou 5 »)", () => {
-  // Contrôle de Claude Code (03/10) : le mélange se joue en 2e étape, réussi il
-  // rouvre la validation, et le raccourci gagné à la 4e l'ajoutait en 5e étape
-  // sans que la carte l'ait dit (6 séances sur 33 600 au hasard).
-  let p = avecDepart(5);
+test("Mes calculs du jour, puis trois marches : la validation possible en 5e étape est annoncée aussi (« 4 ou 5 »), sans mélange", () => {
+  // Contrôle de Claude Code (03/10) : le raccourci gagné à la 4e étape ajoutait
+  // la validation en 5e sans que la carte l'ait dit. Lot « un seul système » :
+  // le mélange n'est plus dans la séance — Mes calculs du jour (2 × 3, la table
+  // de 2 passée la veille), puis les marches 4-5-6.
+  let p = avecDepart(4);
   p.tables[2].acquise = jour(1); p.tables[10].acquise = jour(1);
   p.tables[3].sansFaute = {desordre: 0, trous: 0};
   p = P.normaliserParcours(p);
-  p = P.appliquerReponse(p, "3-4", {correcte: true, date: jour(1)}).parcours;
+  p = P.appliquerReponse(p, "2-3", {correcte: true, date: jour(1)}).parcours;
   const s = jouerSeance(p, jour(2), etape => (etape.type === "entraine" ? 1 : 0), 3);
-  assert.deepEqual(s.programme.etapes.map(etape => etape.marche || etape.type), ["revision", "melange", 5, 6]);
+  assert.deepEqual(s.programme.etapes.map(etape => etape.marche || etape.type), ["revision", 4, 5, 6]);
   assert.equal(s.programme.raccourciEnFin, true, "la carte dit « 4 ou 5 étapes »");
   assert.equal(s.programme.minutesMax, s.programme.minutes + 2);
-  assert.deepEqual(s.noms, ["revision", "melange", 5, 6, "validation"], "la 5e étape jouée est celle annoncée");
-  // Le mélange dû et absent de la séance (raté plus tôt, déjà joué) : toujours rien d'annoncé.
+  assert.deepEqual(s.noms, ["revision", 4, 5, 6, "validation"], "la 5e étape jouée est celle annoncée");
+  assert.equal(s.parcours.tables[3].acquise, jour(2), "le test réussi passe la table, sans mélange");
+  // Une séance commencée sous l'appli d'avant, avec un mélange dans sa file : l'étape s'efface, l'annonce ne change pas.
   const ouverte = P.ouvrirSeance(p, {aujourdhui: jour(2), table: 3});
-  const sansMelange = P.programmeDeSeance(p, {...ouverte, file: ouverte.file.filter(prevue => prevue.type !== "melange")}, jour(2));
-  assert.equal(sansMelange.raccourciEnFin, false);
+  assert.ok(ouverte.file.every(prevue => prevue.type !== "melange"));
+  const vieille = P.programmeDeSeance(p, {...ouverte, file: [ouverte.file[0], {type: "melange"}, ...ouverte.file.slice(1)]}, jour(2));
+  assert.deepEqual(vieille.etapes.map(etape => etape.marche || etape.type), ["revision", 4, 5, 6]);
+  assert.equal(vieille.raccourciEnFin, true);
 });
 
 test("le raccourci gagné sur la marche 8 jouée en « Dans le désordre » : pas de 5e étape non annoncée, la validation est pour demain", () => {
@@ -200,7 +215,8 @@ test("premier écran : moins de 10 sur 20, la séance repart des perles ; sinon 
 test("la page : « 4 ou 5 étapes », la 5e ligne, la phrase après une marche ratée, la notice", () => {
   assert.match(html, /const enPlus = programme\.raccourciEnFin;/);
   assert.match(html, /`\$\{nombre\}\\u00a0ou\\u00a0\$\{nombre \+ 1\}\\u00a0étapes · environ\\u00a0\$\{minutes\}\\u00a0min`/);
-  assert.match(html, /petit\.textContent = " · si je réussis mes entraînements";/);
+  assert.match(html, /petit\.textContent = ` · \$\{CONDITION_DU_TEST\}`;/);
+  assert.match(html, /const CONDITION_DU_TEST = "si j’ai 9 sur 10 aux entraînements";/);
   assert.match(html, /item\.className = "en-plus";/);
   assert.match(html, /\.carte-seance \.programme \.en-plus i \{ background: #fff; border: 2px dashed #9fb6c6;/);
   assert.match(html, /`On reprend un peu plus bas\\u00a0: \$\{pluriel\(etapesAjoutees, "étape"\)\} de plus\.`/);

@@ -352,7 +352,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
       <label for="tri" style="margin:0;font-size:.88rem;color:var(--muted);font-weight:600">Trier&nbsp;par</label>
       <select id="tri" style="width:auto;min-width:170px">
         <option value="prenom">Prénom</option>
-        <option value="acquises">Tables acquises</option>
+        <option value="acquises">Tables passées</option>
         <option value="encours">En cours</option>
         <option value="semaine">Séances cette semaine</option>
         <option value="retard">Calculs en retard</option>
@@ -384,7 +384,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
           <tr>
             <th><button type="button" data-tri="prenom">Élève</button></th>
             <th>Code</th>
-            <th><button type="button" data-tri="acquises">Tables acquises</button></th>
+            <th><button type="button" data-tri="acquises">Tables passées</button></th>
             <th><button type="button" data-tri="encours">En cours</button></th>
             <th><button type="button" data-tri="semaine">Cette semaine</button></th>
             <th><button type="button" data-tri="retard">En retard</button></th>
@@ -1081,7 +1081,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
 
       cNom.dataset.libelle = "";
       cCode.dataset.libelle = "Code";
-      cAcquises.dataset.libelle = "Acquises";
+      cAcquises.dataset.libelle = "Passées";
       cEnCours.dataset.libelle = "En cours";
       cSemaine.dataset.libelle = "Séances";
       cRetard.dataset.libelle = "En retard";
@@ -1162,7 +1162,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     // c'est l'état d'une classe le lendemain de la distribution des codes.
     const pluriel = objectif.fait > 1 ? "s" : "";
     $("objectif-compte").textContent =
-      `Ensemble : ${objectif.fait} table${pluriel} acquise${pluriel} sur ${objectif.total}`;
+      `Ensemble : ${objectif.fait} table${pluriel} passée${pluriel} sur ${objectif.total}`;
     // Une seule petite ligne, et c'est le SIGNE DE VIE de la semaine : est-ce
     // que ça tourne, ou pas. « N élèves ont réussi leur mélange » a été écarté
     // le 08/09/2026 : ce nombre DESCEND quand un élève acquiert une table (son

@@ -50,7 +50,11 @@ test("« J’apprends » et « Je m’entraîne » se déplient sur l’accueil 
   assert.match(html, /legende: "Choisis ton activité"/);
   assert.match(html, /legende: "Choisis ton entraînement"/);
   assert.match(html, /state\.etapeOuverte = state\.etapeOuverte === nom \? null : nom;/, "un deuxième appui referme");
-  assert.doesNotMatch(html, /bouton\.disabled = /, "rien n’est désactivé : l’élève peut relancer une activité déjà faite");
+  // Lot « un seul système » (05/10/2026) : la seule chose qui désactive des
+  // boutons est la porte de Mes calculs du jour (les deux liens sous la carte
+  // de séance, tant qu'il n'est pas joué) — jamais une activité déjà faite.
+  assert.equal((html.match(/bouton\.disabled = /g) || []).length, 1, "un seul endroit désactive des boutons");
+  assert.match(html, /if \(etat\.porte\) \{\s*liens\.classList\.add\("est-fermee"\);\s*liens\.querySelectorAll\("button"\)\.forEach\(bouton => \{ bouton\.disabled = true; \}\);/, "c’est la porte : l’élève peut toujours relancer une activité déjà faite, une fois Mes calculs du jour joué");
 });
 
 test("l’ordre des activités est celui du parcours, jamais imposé — et le menu ne conseille plus (lot E1)", () => {
@@ -83,15 +87,16 @@ test("« Je valide ma table » se joue en 1 min 30, sans choix de durée", () =>
 });
 
 test("la même épreuve avec plus de temps devient un entraînement de l’étape 2", () => {
-  assert.match(html, /libelle: "Comme la validation, en 2 min"/);
+  // Lot « un seul système » : la validation s'appelle « le test ».
+  assert.match(html, /libelle: "Comme le test, en 2 min"/);
   assert.match(html, /lancer: \(\) => launchFromParcours\(PARCOURS\.configValidation\(table, 120\), "menu"\)/, "le moteur la classe déjà en « préparation » : elle ne valide pas la table");
   // Lot dosage + validation (19/09/2026) : proposée AUSSI sur une table
   // acquise — se remettre en jambes sur une table validée est un vrai usage.
   assert.doesNotMatch(html, /if \(!ligne\.acquise\) \{\s*choixEntraine\.push\(/, "plus de condition « pas acquise » sur l’option 2 min");
-  assert.match(html, /\n\s*choixEntraine\.push\(\{\s*libelle: "Comme la validation, en 2 min"/);
+  assert.match(html, /\n\s*choixEntraine\.push\(\{\s*libelle: "Comme le test, en 2 min"/);
   // Lot E1 : plus de rond d'état dans le menu, donc plus de ⏱ pour s'en
   // distinguer ; le cadre en pointillés (is-plus) suffit.
-  assert.match(html, /detail: "20 questions · 2 min · avant de valider",\s*extraClasse: "is-plus",/);
+  assert.match(html, /detail: "20 questions · 2 min · avant le test",\s*extraClasse: "is-plus",/);
 });
 
 // ------------------------------------------- 4. l’accueil dit ce qu’il fait
@@ -114,10 +119,15 @@ test("l’écran de résultat ne dit pas deux fois la même chose", () => {
   assert.match(html, /const \{etoile, melange, validation, rangMonte\} = fete;/, "le verdict ne recalcule pas la fête dans son coin");
   assert.match(html, /verdict\.rang = rangMonte\.rang;/, "le rang est sur le badge du verdict, et nulle part ailleurs");
   assert.doesNotMatch(html, /Nouveau rang : \$\{evenement\.nom\}/, "plus de ligne « Nouveau rang : … » sous la fête");
-  // Lot R2 (audit, A10) : après une table acquise, le mélange à refaire et la
-  // table suivante tiennent dans UNE phrase, au lieu de deux consignes.
+  // Lot R2 (audit, A10) : après une table acquise, UNE phrase. Lot « un seul
+  // système » (05/10/2026) : plus de mélange à refaire ni à réussir — la
+  // phrase n'annonce que la table suivante (ou l'escalier, aux 9 tables).
   assert.match(html, /function suiteApresSerie\(evenements, fete\) \{/);
-  assert.match(html, /if \(trouve\("melange-a-refaire"\)\) return `Refais ton mélange avec la table de \$\{fete\.validation\.table\}\$\{puis\}\.`;/);
+  assert.match(html, /if \(fete\.validation\) \{\s*const suivante = tableSuivanteApres\(fete\.validation\.table\);\s*if \(trouve\("toutes-acquises"\)\) return "Tes 9 tables sont passées : l’escalier des étoiles est ouvert !";\s*return suivante \? `On continue avec la table de \$\{suivante\}\.` : "";\s*\}/);
+  assert.doesNotMatch(html, /melange-a-refaire|melange-debloque|Refais ton mélange|réussis ton mélange|Réussis le mélange des 9/, "plus aucune consigne « fais d’abord ton mélange »");
+  // Lot « les trophées » : un mélange réussi n'ouvre toujours rien — il
+  // rapporte un trophée (3, 6 ou 9 tables), dit en une phrase ; sinon rien.
+  assert.match(html, /if \(fete\.melange\) return fete\.melange\.trophee \? `Tu gagnes le trophée des \$\{fete\.melange\.trophee\} tables\\u00a0!` : "";/, "un mélange réussi n’ouvre rien : le trophée gagné, ou le verdict seul");
   assert.match(html, /const texte = suiteApresSerie\(suivi\.evenements, feteDuResultat\(suivi\.evenements\)\);/);
   assert.match(html, /etiquette\.textContent = "Et maintenant\\u00a0:";/);
   assert.doesNotMatch(html, /function evenementMessage\(/, "les anciens messages par événement n’ont plus d’appelant");

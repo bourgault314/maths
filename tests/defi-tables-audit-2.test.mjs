@@ -194,8 +194,12 @@ test("5. la police : Nunito servie par le site, sur un écran d’ordinateur seu
   assert.match(html, /\n      font-family: Inter, ui-rounded, "Arial Rounded MT Bold", "Segoe UI", sans-serif;/, "les téléphones gardent leur police");
 });
 
-test("6. dans la bande, « complétées » s’efface sous 430 px (« 11 / 11 cases » sur une ligne)", () => {
+test("6. « complétées » et « sus » s’effacent sous 430 px, « calculs » sous 360 px (« 11 / 11 cases », « 10 / 11 » sur une ligne)", () => {
   assert.match(html, /suite\.className = "compteur-suite";\s*suite\.textContent = " complétées";\s*\$\("question-count"\)\.replaceChildren\(`\$\{completed\} \/ \$\{total\} cases`, suite\);/);
   assert.match(html, /@media \(max-width: 429px\) \{ #question-count \.compteur-suite \{ display: none; \} \}/);
-  assert.match(html, /\} else \{\s*\$\("question-count"\)\.textContent = `\$\{completed\} \/ \$\{total\} \$\{label\}`;/, "« calculs sus » ne change pas");
+  // Lot « un seul système » (05/10/2026) : « 10 / 11 calculs sus » tenait sur
+  // trois lignes à 320 px — « sus » s'efface comme « complétées », et
+  // « calculs » sous 360 px. Sur un grand écran, les mots ne changent pas.
+  assert.match(html, /\} else \{[\s\S]{0,400}?mot\.className = "compteur-mot";\s*mot\.textContent = " calculs";\s*const suite = document\.createElement\("span"\);\s*suite\.className = "compteur-suite";\s*suite\.textContent = " sus";\s*\$\("question-count"\)\.replaceChildren\(`\$\{completed\} \/ \$\{total\}`, mot, suite\);/, "« calculs sus », en deux morceaux");
+  assert.match(html, /@media \(max-width: 359px\) \{ #question-count \.compteur-mot \{ display: none; \} \}/);
 });

@@ -16,13 +16,10 @@ function jouer(etat, config, correct, total) {
   return parcours.appliquerSerie(etat, normaliser(config), {correct, total, date: DATE});
 }
 
-// Valide des tables l'une après l'autre — en réussissant le mélange dès qu'il
-// est dû (lot 3 : sinon « Je valide » est verrouillé).
+// Passe des tables l'une après l'autre. Lot « un seul système » (05/10/2026) :
+// plus de verrou, le mélange n'a plus à être réussi entre deux tables.
 function acquerirTables(etat, tables) {
-  return tables.reduce((courant, table) => {
-    const debloque = parcours.melangeDu(courant) ? jouer(courant, parcours.configMelange(courant), 20, 20).parcours : courant;
-    return jouer(debloque, parcours.configValidation(table), 20, 20).parcours;
-  }, etat);
+  return tables.reduce((courant, table) => jouer(courant, parcours.configValidation(table), 20, 20).parcours, etat);
 }
 
 function stockageMemoire(initial = {}) {
@@ -89,7 +86,7 @@ test("les configurations du parcours sont acceptées par le moteur de questions"
   assert.deepEqual(compter(questions), [14, 3, 3], "14 résultats, 3 nombres manquants, 3 divisions");
   assert.ok(questions.filter(question => question.category === "division").every(question => question.type === "division-quotient"));
   assert.ok(questions.every(question => question.focusTable === 7));
-  assert.equal(core.configurationLabel(validation), "Je valide ma table · Table de 7 · 20 questions · 1 min 30");
+  assert.equal(core.configurationLabel(validation), "Je passe le test · Table de 7 · 20 questions · 1 min 30");
   assert.equal(core.durationLabel(90), "1 min 30");
   assert.equal(normaliser(parcours.configValidation(7, 60)).duration, 90, "pas de validation en 1 minute");
   assert.equal(normaliser(parcours.configValidation(7, 180)).duration, 180);
@@ -162,7 +159,7 @@ test("un entraînement sur plusieurs tables ou de 20 questions ne compte pas", (
   assert.equal(parcours.classerSerie(etat, normaliser({mode: "evaluation"})), null);
 });
 
-test("Acquise : 20 questions en 1 min 30 avec 2 erreurs max ; 2 ou 3 minutes = préparation", () => {
+test("Passée : « Je passe le test », 20 questions en 1 min 30 avec 2 erreurs max ; 2 ou 3 minutes = préparation", () => {
   let etat = parcours.creerParcours();
   let resultat = jouer(etat, parcours.configValidation(7), 17, 20);
   assert.equal(resultat.evenements[0].reussi, false);
@@ -172,9 +169,9 @@ test("Acquise : 20 questions en 1 min 30 avec 2 erreurs max ; 2 ou 3 minutes = p
   etat = resultat.parcours;
   assert.equal(etat.tables[7].acquise, DATE);
   assert.deepEqual(resultat.evenements, [
-    {type: "validation", table: 7, reussi: true, score: 18, total: 20, dejaAcquise: false, nouvelle: true, verrouillee: false},
+    {type: "validation", table: 7, reussi: true, score: 18, total: 20, dejaAcquise: false, nouvelle: true},
     {type: "rang", rang: 1, nom: "Bronze", cle: "bronze"}
-  ], "la première table donne le rang Bronze");
+  ], "la première table donne le rang Bronze — et l’événement n’a plus de champ « verrouillee »");
 
   const encore = jouer(etat, parcours.configValidation(7), 20, 20);
   assert.equal(encore.evenements[0].dejaAcquise, true);
@@ -186,7 +183,13 @@ test("Acquise : 20 questions en 1 min 30 avec 2 erreurs max ; 2 ou 3 minutes = p
   assert.equal(jouer(parcours.creerParcours(), parcours.configValidation(8, 120), 20, 20).evenements[0].type, "preparation");
 });
 
-test("le mélange apparaît à 2 tables acquises et repasse « à refaire » à chaque nouvelle table", () => {
+// Lot « un seul système » (05/10/2026) : Mon mélange est libre. Il apparaît
+// toujours à 2 tables passées, mais il n'est plus jamais dû : plus de
+// « mélange débloqué », plus de « à refaire », il ne passe devant rien.
+// Les trois trophées de Mon mélange, quand aucun n'est gagné ni à gagner.
+const SANS_TROPHEE = [3, 6, 9].map(tables => ({tables, gagne: false, aGagner: false}));
+
+test("le mélange apparaît à 2 tables passées ; libre, il n’est jamais dû et ne repasse plus « à refaire »", () => {
   let etat = parcours.creerParcours();
   assert.equal(parcours.configMelange(etat), null);
 
@@ -196,29 +199,80 @@ test("le mélange apparaît à 2 tables acquises et repasse « à refaire » à 
 
   resultat = jouer(etat, parcours.configValidation(5), 20, 20);
   etat = resultat.parcours;
-  assert.deepEqual(resultat.evenements.map(evenement => evenement.type), ["validation", "melange-debloque"]);
+  assert.deepEqual(resultat.evenements.map(evenement => evenement.type), ["validation"], "plus d’événement « melange-debloque »");
   assert.deepEqual(parcours.configMelange(etat), {mode: "validation", tables: [2, 5], total: 20, duration: 90});
   assert.equal(etat.melange.aJour, false);
-  assert.equal(parcours.prochaineEtape(etat).type, "melange", "le mélange passe avant la table suivante");
+  assert.deepEqual(parcours.etatAffichage(etat, DATE).melange, {visible: true, tables: [2, 5], dernier: null, score: null, reussi: null, trophees: SANS_TROPHEE}, "proposé, jamais joué ; 2 tables : aucun trophée à gagner encore");
+  assert.equal(parcours.prochaineEtape(etat, DATE).type, "apprends", "le mélange ne passe plus devant la table suivante");
+  assert.equal(parcours.prochaineEtape(etat, DATE).table, 10);
 
+  // Raté : le parcours garde quand même le jour et le score du dernier joué.
   resultat = jouer(etat, parcours.configMelange(etat), 17, 20);
-  assert.equal(resultat.evenements[0].type, "melange");
-  assert.equal(resultat.evenements[0].reussi, false);
+  assert.deepEqual(resultat.evenements, [{type: "melange", reussi: false, score: 17, total: 20, tables: [2, 5], trophee: null}]);
   assert.equal(resultat.parcours.melange.aJour, false);
+  assert.equal(resultat.parcours.melange.dernier, DATE);
+  assert.equal(resultat.parcours.melange.score, 17);
+  assert.equal(resultat.parcours.melange.reussi, null, "jamais réussi");
 
   resultat = jouer(etat, parcours.configMelange(etat), 18, 20);
   etat = resultat.parcours;
+  assert.deepEqual(resultat.evenements, [{type: "melange", reussi: true, score: 18, total: 20, tables: [2, 5], trophee: null}], "plus de champ « escalierOuvert » ; réussi avec 2 tables : pas encore de trophée");
   assert.equal(etat.melange.aJour, true);
   assert.equal(etat.melange.dernier, DATE);
-  assert.equal(parcours.prochaineEtape(etat).table, 10, "mélange à jour → table suivante dans l’ordre conseillé");
+  assert.equal(etat.melange.score, 18);
+  assert.equal(etat.melange.reussi, 2, "réussi avec 2 tables");
+  assert.equal(parcours.prochaineEtape(etat, DATE).table, 10, "table suivante dans l’ordre conseillé");
 
+  // Une nouvelle table ne remet rien « à refaire ».
   resultat = jouer(etat, parcours.configValidation(10), 19, 20);
   etat = resultat.parcours;
-  assert.deepEqual(resultat.evenements.map(evenement => evenement.type), ["validation", "melange-a-refaire", "rang"]);
-  assert.equal(etat.melange.aJour, false);
-  assert.equal(etat.melange.aRefaireAvec, 10);
+  assert.deepEqual(resultat.evenements.map(evenement => evenement.type), ["validation", "rang"], "plus d’événement « melange-a-refaire »");
+  assert.equal(etat.melange.aJour, true);
+  assert.equal(etat.melange.aRefaireAvec, null);
   assert.deepEqual(etat.melange.tables, [2, 5, 10]);
-  assert.match(parcours.prochaineEtape(etat).libelle, /avec la table de 10/);
+  assert.equal(etat.melange.reussi, 2, "le mélange reste réussi avec 2 tables");
+  assert.equal(parcours.prochaineEtape(etat, DATE).type, "apprends", "jamais « melange »");
+  assert.equal(parcours.prochaineEtape(etat, DATE).table, 3);
+  assert.doesNotMatch(parcours.prochaineEtape(etat, DATE).libelle, /mélange/i);
+  // Trois tables passées, mélange réussi avec 2 seulement : le trophée des 3
+  // tables est à gagner, pas gagné.
+  assert.deepEqual(parcours.etatAffichage(etat, DATE).melange, {visible: true, tables: [2, 5, 10], dernier: DATE, score: 18, reussi: 2,
+    trophees: [{tables: 3, gagne: false, aGagner: true}, {tables: 6, gagne: false, aGagner: false}, {tables: 9, gagne: false, aGagner: false}]});
+});
+
+// Lot « les trophées » (05/10/2026) : Mon mélange rapporte trois trophées —
+// le réussir avec au moins 3, 6, puis 9 tables. Rien ne se ferme avec eux.
+test("les trophées de Mon mélange : 3, 6, puis 9 tables — gagnés par un mélange réussi, jamais repris", () => {
+  assert.deepEqual([...parcours.SEUILS.melange.trophees], [3, 6, 9]);
+  const lire = etat => parcours.tropheesMelange(etat).map(item => `${item.tables}${item.gagne ? "G" : item.aGagner ? "a" : "-"}`).join(" ");
+  let etat = acquerirTables(parcours.creerParcours(), [2, 5]);
+  assert.equal(lire(etat), "3- 6- 9-", "2 tables : rien à gagner encore");
+  etat = acquerirTables(etat, [10]);
+  assert.equal(lire(etat), "3a 6- 9-", "3 tables passées : le premier trophée est à gagner");
+  // Raté : rien n'est gagné, l'événement ne porte pas de trophée.
+  let resultat = jouer(etat, parcours.configMelange(etat), 17, 20);
+  assert.equal(resultat.evenements[0].trophee, null);
+  assert.equal(lire(resultat.parcours), "3a 6- 9-");
+  resultat = jouer(etat, parcours.configMelange(etat), 18, 20);
+  etat = resultat.parcours;
+  assert.equal(resultat.evenements[0].trophee, 3, "le mélange réussi avec 3 tables gagne le trophée des 3");
+  assert.equal(lire(etat), "3G 6- 9-");
+  // Rejoué et réussi : le trophée est déjà là, la série n'en gagne pas.
+  resultat = jouer(etat, parcours.configMelange(etat), 20, 20);
+  assert.equal(resultat.evenements[0].trophee, null, "un trophée ne se gagne qu’une fois");
+  // Six tables passées : le deuxième est à gagner, le premier reste gagné
+  // (même après un mélange raté).
+  etat = acquerirTables(etat, [3, 4, 6]);
+  assert.equal(lire(etat), "3G 6a 9-");
+  assert.equal(lire(jouer(etat, parcours.configMelange(etat), 10, 20).parcours), "3G 6a 9-", "raté : rien n’est repris");
+  // Les 9 tables d'un coup : la série gagne les deux derniers, l'événement
+  // porte le plus grand.
+  etat = acquerirTables(etat, [7, 8, 9]);
+  assert.equal(lire(etat), "3G 6a 9a");
+  resultat = jouer(etat, parcours.configMelange(etat), 19, 20);
+  assert.equal(resultat.evenements[0].trophee, 9, "le plus grand trophée gagné par la série");
+  assert.equal(lire(resultat.parcours), "3G 6G 9G");
+  assert.deepEqual(parcours.etatAffichage(resultat.parcours, DATE).melange.trophees, parcours.tropheesMelange(resultat.parcours), "l’état d’affichage porte les mêmes trophées");
 });
 
 test("un mélange choisi à la main, ou joué en 2 ou 3 minutes, ne compte pas", () => {
@@ -228,27 +282,34 @@ test("un mélange choisi à la main, ou joué en 2 ou 3 minutes, ne compte pas",
   assert.equal(parcours.classerSerie(etat, normaliser({mode: "validation", tables: [2, 5, 10], total: 20, duration: 180})), null, "3 minutes non plus");
   assert.deepEqual(parcours.classerSerie(etat, normaliser({mode: "validation", tables: [2, 5, 10], total: 20, duration: 90})), {type: "melange", tables: [2, 5, 10]});
   assert.equal(parcours.classerSerie(etat, normaliser({mode: "test", tables: [2, 5, 10], testLevel: 1})), null, "l’ancien mélange à 25 (mode test) ne compte plus");
-  assert.equal(parcours.classerSerie(etat, normaliser({mode: "test", tables: [2, 3, 4, 5, 6, 7, 8, 9, 10], testLevel: 3, duration: 120})), null, "l’escalier est fermé tant que les 9 tables + le mélange ne sont pas là");
+  assert.equal(parcours.classerSerie(etat, normaliser({mode: "test", tables: [2, 3, 4, 5, 6, 7, 8, 9, 10], testLevel: 3, duration: 120})), null, "l’escalier est fermé tant que les 9 tables ne sont pas passées");
 });
 
-test("l’escalier n’est ouvert qu’avec les 9 tables ET le dernier mélange ; ★ à 👑 par la durée seule", () => {
+test("l’escalier s’ouvre dès les 9 tables passées, sans mélange ; ★ à 👑 par la durée seule", () => {
   let etat = acquerirTables(parcours.creerParcours(), [2, 10, 5, 3, 4, 6, 7, 8]);
-  assert.equal(parcours.classerSerie(etat, normaliser(parcours.configEtoile(1))), null, "8 tables : fermé");
-  etat = acquerirTables(etat, [9]);
-  assert.ok(parcours.toutesAcquises(etat));
-  assert.equal(etat.melange.aRefaireAvec, 9, "la neuvième table remet le mélange à refaire, comme les autres");
   assert.equal(parcours.escalierOuvert(etat), false);
-  assert.equal(parcours.classerSerie(etat, normaliser(parcours.configEtoile(1))), null, "9 tables mais mélange à refaire : fermé");
-  assert.equal(parcours.prochaineEtape(etat).type, "melange");
-  assert.match(parcours.prochaineEtape(etat).libelle, /9 tables/);
-
-  let resultat = jouer(etat, parcours.configMelange(etat), 20, 20);
+  assert.equal(parcours.classerSerie(etat, normaliser(parcours.configEtoile(1))), null, "8 tables : fermé");
+  // La neuvième table ouvre l'escalier et donne Platine : le mélange n'y est
+  // plus pour rien (aucun n'a été joué ici).
+  let resultat = jouer(etat, parcours.configValidation(9), 20, 20);
   etat = resultat.parcours;
-  assert.equal(resultat.evenements[0].escalierOuvert, true);
-  assert.deepEqual(resultat.evenements.map(evenement => evenement.type), ["melange", "rang"]);
-  assert.equal(resultat.evenements[1].nom, "Platine");
+  assert.ok(parcours.toutesAcquises(etat));
+  assert.deepEqual(resultat.evenements.map(evenement => evenement.type), ["validation", "toutes-acquises", "rang"]);
+  assert.equal(resultat.evenements[2].nom, "Platine", "Platine = 9 tables passées");
+  assert.equal(etat.rang, 4);
+  assert.equal(etat.melange.dernier, null, "aucun mélange joué");
+  assert.equal(etat.melange.aRefaireAvec, null, "la neuvième table ne remet rien à refaire");
   assert.ok(parcours.escalierOuvert(etat));
+  assert.equal(parcours.classerSerie(etat, normaliser(parcours.configEtoile(1))).type, "etoile", "9 tables : ouvert, sans mélange");
+  assert.notEqual(parcours.prochaineEtape(etat).type, "melange");
   assert.deepEqual(parcours.prochaineEtape(etat).config, parcours.configEtoile(1));
+
+  // Le mélange des 9 tables reste jouable, libre : il n'ouvre rien et ne
+  // donne aucun rang — il rapporte ses trophées (lot « les trophées »).
+  resultat = jouer(etat, parcours.configMelange(etat), 20, 20);
+  assert.deepEqual(resultat.evenements, [{type: "melange", reussi: true, score: 20, total: 20, tables: [2, 3, 4, 5, 6, 7, 8, 9, 10], trophee: 9}], "ni « escalierOuvert », ni rang : seulement le trophée des 9 tables");
+  assert.equal(resultat.parcours.melange.reussi, 9);
+  assert.equal(resultat.parcours.rang, 4);
 
   resultat = jouer(etat, parcours.configEtoile(1), 22, 25);
   assert.equal(resultat.evenements[0].reussi, false, "3 erreurs : raté");
@@ -285,27 +346,31 @@ test("l’escalier n’est ouvert qu’avec les 9 tables ET le dernier mélange 
   assert.match(apres.libelle, /Légende des tables/);
 });
 
-test("le verrou : tant que le mélange est dû, une nouvelle table ne se valide pas — les entraînements restent libres", () => {
+// Lot « un seul système » (05/10/2026) : le verrou du mélange est supprimé.
+test("plus de verrou : une nouvelle table est passée même sans mélange — entraînements et mélange restent libres", () => {
   let etat = acquerirTables(parcours.creerParcours(), [2, 10]);
-  assert.ok(parcours.melangeDu(etat));
+  assert.equal(parcours.melangeDu, undefined, "« melangeDu » a quitté le moteur");
+  assert.equal(etat.melange.dernier, null, "le mélange n’a jamais été joué");
   let resultat = jouer(etat, parcours.configValidation(5), 20, 20);
-  assert.equal(resultat.evenements[0].reussi, true, "la série est réussie…");
-  assert.equal(resultat.evenements[0].verrouillee, true, "…mais verrouillée");
-  assert.equal(resultat.evenements[0].nouvelle, false);
-  assert.equal(resultat.parcours.tables[5].acquise, null, "la table n’est pas acquise");
-  assert.equal(parcours.etatAffichage(etat).verrou, true);
+  assert.equal(resultat.evenements[0].reussi, true, "le test est réussi…");
+  assert.ok(!("verrouillee" in resultat.evenements[0]), "…et l’événement n’a plus de champ « verrouillee »");
+  assert.equal(resultat.evenements[0].nouvelle, true);
+  assert.equal(resultat.parcours.tables[5].acquise, DATE, "la table est passée, sans mélange");
+  assert.ok(!resultat.evenements.some(evenement => evenement.type === "melange-debloque" || evenement.type === "melange-a-refaire"));
+  assert.ok(!("verrou" in parcours.etatAffichage(etat, DATE)), "l’état d’affichage n’a plus de verrou");
   // J'apprends et Je m'entraîne, sur n'importe quelle table : libres.
   assert.equal(jouer(etat, parcours.configEntraine(5, "trous"), 10, 10).parcours.tables[5].entraine.trous, 2);
   assert.equal(jouer(etat, parcours.configApprends(7, "ordered"), 11, 11).parcours.tables[7].apprends.ordered, 2);
-  // Une table déjà acquise se rejoue librement.
-  assert.equal(jouer(etat, parcours.configValidation(2), 20, 20).evenements[0].verrouillee, false);
-  // Le mélange réussi lève le verrou.
-  etat = jouer(etat, parcours.configMelange(etat), 19, 20).parcours;
-  assert.equal(parcours.melangeDu(etat), false);
-  assert.equal(parcours.etatAffichage(etat).verrou, false);
-  resultat = jouer(etat, parcours.configValidation(5), 20, 20);
+  // Une table déjà passée se rejoue librement.
+  const rejoue = jouer(etat, parcours.configValidation(2), 20, 20).evenements[0];
+  assert.equal(rejoue.dejaAcquise, true);
+  assert.equal(rejoue.nouvelle, false);
+  // Un mélange raté ne ferme rien non plus.
+  etat = jouer(etat, parcours.configMelange(etat), 10, 20).parcours;
+  assert.equal(etat.melange.aJour, false);
+  resultat = jouer(etat, parcours.configValidation(5), 18, 20);
   assert.equal(resultat.evenements[0].nouvelle, true);
-  assert.ok(parcours.melangeDu(resultat.parcours), "et la nouvelle table le remet");
+  assert.deepEqual(parcours.tablesAcquises(resultat.parcours), [2, 5, 10]);
 });
 
 test("la prochaine étape suit le parcours d’une table : perles → entraînements → validation", () => {
@@ -355,26 +420,37 @@ test("la prochaine étape suit le parcours d’une table : perles → entraînem
   assert.equal(etape.type, "validation");
   assert.deepEqual(etape.config, {mode: "validation", tables: [2], total: 20, duration: 90});
 
+  assert.equal(etape.libelle, "Table de 2 : passe le test (20 questions en 1 min 30)");
+
   etat = jouer(etat, etape.config, 20, 20).parcours;
-  assert.equal(parcours.prochaineEtape(etat).table, 10, "après la table de 2 vient la table de 10");
+  assert.equal(parcours.prochaineEtape(etat, DATE).table, 10, "le jour même, après la table de 2 vient la table de 10");
+  // Lot « un seul système » : dès le lendemain, Mes calculs du jour (la porte)
+  // passe devant — rien n'est dû (échéances en 2099), la série se complète
+  // avec les 8 calculs de la table passée, vus la veille.
+  const lendemain = parcours.prochaineEtape(etat, "2026-09-02");
+  assert.equal(lendemain.type, "revision");
+  assert.equal(lendemain.libelle, "Mes calculs du jour : 8 calculs");
 });
 
 test("l’état d’affichage résume la carte sans DOM", () => {
   let etat = acquerirTables(parcours.creerParcours(), [2, 5]);
   etat = jouer(etat, parcours.configEntraine(7, "trous"), 6, 10).parcours;
-  const etat2 = parcours.etatAffichage(etat);
+  const etat2 = parcours.etatAffichage(etat, DATE);
   assert.equal(etat2.lignes.length, 9);
   const ligne7 = etat2.lignes.find(ligne => ligne.table === 7);
   assert.deepEqual(ligne7.entraine.map(item => item.etat), [0, 1, 0]);
   assert.deepEqual(ligne7.dernierEntrainement, {entrainement: "trous", score: 6, total: 10});
   assert.equal(etat2.lignes.find(ligne => ligne.table === 2).acquise, DATE);
   assert.deepEqual(etat2.acquises, [2, 5]);
-  assert.equal(etat2.melange.visible, true);
-  assert.equal(etat2.melange.du, true);
+  assert.deepEqual(etat2.melange, {visible: true, tables: [2, 5], dernier: null, score: null, reussi: null, trophees: SANS_TROPHEE}, "Mon mélange : proposé, libre, jamais dû");
+  assert.ok(!("verrou" in etat2), "plus de verrou");
+  assert.equal(etat2.porte, false, "aucun calcul vu avant aujourd’hui : la porte n’est pas fermée");
+  assert.deepEqual(etat2.serieDuJour, {cles: [], dus: 0, complement: 0, restants: 0, faite: false});
   assert.deepEqual(etat2.expert.etoiles, [false, false, false, false, false]);
   assert.equal(etat2.expert.ouvert, false);
   assert.equal(etat2.rang.nom, "Bronze", "2 tables acquises : Bronze (Argent à 3)");
-  assert.equal(etat2.prochaine.type, "melange");
+  assert.equal(etat2.prochaine.type, "apprends", "plus jamais « melange » : la table suivante");
+  assert.equal(etat2.prochaine.table, 10);
 });
 
 test("prénom : nettoyé, limité à 20 caractères, conservé à la remise à zéro", () => {
@@ -737,19 +813,46 @@ test("les dates ne sont gardées que sous la forme AAAA-MM-JJ", () => {
   assert.deepEqual(abime.calculs["6-7"], {boite: 2, cases: 1, vu: "2026-09-03", erreur: null, gagne: "2026-09-03", echeance: "2026-09-04"}, "version 2 : cases 1 → boîte 2, échéance recalculée depuis le dernier gain (+1 jour)");
 });
 
-test("fusion : le mélange redevient à refaire si l’autre appareil a plus de tables", () => {
+// Lot « un seul système » (05/10/2026) : le mélange n'est plus jamais « à
+// refaire ». La fusion garde le dernier joué et son score, le plus grand
+// « réussi », et la date la plus récente de Mes calculs du jour.
+test("fusion : Mon mélange garde le dernier joué et le plus grand « réussi », rien ne redevient à refaire ; Mes calculs du jour, la date la plus récente", () => {
   const cinq = acquerirTables(parcours.creerParcours(), [2, 3, 4, 5, 6]);
   const cinqAJour = jouer(cinq, parcours.configMelange(cinq), 20, 20).parcours;
   assert.equal(cinqAJour.melange.aJour, true);
+  assert.equal(cinqAJour.melange.reussi, 5);
 
+  // L'autre appareil a plus de tables : le mélange réussi avec 5 reste réussi.
   const sept = acquerirTables(parcours.creerParcours(), [2, 3, 4, 5, 6, 7, 8]);
-  const fusion = parcours.fusionner(cinqAJour, sept);
-  assert.equal(parcours.tablesAcquises(fusion).length, 7);
-  assert.equal(fusion.melange.aJour, false, "le mélange n'avait pas été fait avec les 7 tables");
+  for (const fusion of [parcours.fusionner(cinqAJour, sept), parcours.fusionner(sept, cinqAJour)]) {
+    assert.equal(parcours.tablesAcquises(fusion).length, 7);
+    assert.deepEqual(fusion.melange, {tables: [2, 3, 4, 5, 6, 7, 8], aJour: true, aRefaireAvec: null, dernier: DATE, score: 20, reussi: 5},
+      "gagné d’un côté, il le reste : rien à refaire avec les 7 tables");
+  }
 
-  // Même nombre de tables des deux côtés : le mélange reste acquis.
-  const memeCinq = acquerirTables(parcours.creerParcours(), [2, 3, 4, 5, 6]);
-  assert.equal(parcours.fusionner(cinqAJour, memeCinq).melange.aJour, true);
+  // Deux jours différents : le plus récent, avec SON score (même moins bon).
+  const plusTard = parcours.appliquerSerie(cinq, normaliser(parcours.configMelange(cinq)), {correct: 15, total: 20, date: "2026-09-03"}).parcours;
+  for (const fusion of [parcours.fusionner(cinqAJour, plusTard), parcours.fusionner(plusTard, cinqAJour)]) {
+    assert.equal(fusion.melange.dernier, "2026-09-03");
+    assert.equal(fusion.melange.score, 15);
+    assert.equal(fusion.melange.reussi, 5, "le trophée, lui, ne se perd pas");
+    assert.equal(fusion.melange.aJour, true);
+  }
+  // Le même jour des deux côtés : le meilleur des deux scores.
+  const memeJour = jouer(cinq, parcours.configMelange(cinq), 17, 20).parcours;
+  assert.equal(parcours.fusionner(memeJour, cinqAJour).melange.score, 20);
+  assert.equal(parcours.fusionner(cinqAJour, memeJour).melange.score, 20);
+  // Jamais joué nulle part : rien.
+  const jamais = parcours.fusionner(cinq, sept).melange;
+  assert.deepEqual([jamais.aJour, jamais.dernier, jamais.score, jamais.reussi], [false, null, null, null]);
+
+  // Mes calculs du jour : joué d'un côté, il l'est.
+  const mardi = parcours.normaliserParcours({calculsDuJour: "2026-09-02"});
+  const jeudi = parcours.normaliserParcours({calculsDuJour: "2026-09-04"});
+  assert.equal(parcours.fusionner(mardi, jeudi).calculsDuJour, "2026-09-04");
+  assert.equal(parcours.fusionner(jeudi, mardi).calculsDuJour, "2026-09-04");
+  assert.equal(parcours.fusionner(parcours.creerParcours(), mardi).calculsDuJour, "2026-09-02");
+  assert.equal(parcours.fusionner(parcours.creerParcours(), parcours.creerParcours()).calculsDuJour, null);
 });
 
 test("fusion : les étoiles prennent le meilleur des deux, la couronne sa première date, le rang ne redescend pas, les jours se réunissent", () => {
@@ -1129,10 +1232,11 @@ test("le lien du haut ramène l’élève suivi à son espace, les autres au cat
   // 08/09/2026 — le pied de page. C'était la dernière poignée de portes de
   // sortie : quatre liens (Me contacter, Mentions légales, Confidentialité,
   // Licence) qui déposent un élève sur des pages écrites pour un visiteur du
-  // site. Pour un élève suivi, le pied devient deux liens qui restent chez lui.
+  // site. Pour un élève suivi, le pied reste chez lui — depuis le lot « un seul
+  // système » (05/10/2026) : le petit logo et « Mon espace », rien d'autre.
   assert.equal(executer(false).pied.enfants, null,
     "pour un visiteur ordinaire, le pied du site n'est pas touché");
-  assert.equal(executer(false, "expire").pied.enfants.length, 4,
+  assert.equal(executer(false, "expire").pied.enfants.length, 2,
     "un billet refusé laisse quand même un élève venu de son espace");
 
   const piedSuivi = executer(true).pied.enfants;
@@ -1145,20 +1249,21 @@ test("le lien du haut ramène l’élève suivi à son espace, les autres au cat
   assert.equal(logoPied.attributs["aria-label"], "maths&go — Retour à mon espace");
   assert.equal(logoPied.enfants[0].tag, "img");
   assert.equal(logoPied.enfants[0].alt, "", "l’image est décorative : le lien porte le nom");
+  assert.equal(piedSuivi.length, 2, "le petit logo et « Mon espace », rien d’autre");
   const liens = piedSuivi.filter(noeud => noeud.href && noeud.textContent);
-  assert.equal(liens.length, 2, "un élève suivi n'a que deux liens écrits sous les yeux (et le petit logo)");
-  assert.deepEqual(liens.map(a => a.href),
-    ["https://suivi.mathsgo.re/", "https://suivi.mathsgo.re/infos.php"],
-    "et tous les deux restent sur son espace");
-  assert.deepEqual(liens.map(a => a.textContent), ["Mon espace", "Infos et confidentialité"]);
+  assert.equal(liens.length, 1, "un élève suivi n'a qu'un lien écrit sous les yeux (et le petit logo)");
+  assert.deepEqual(liens.map(a => a.href), ["https://suivi.mathsgo.re/"], "et il reste sur son espace");
+  assert.deepEqual(liens.map(a => a.textContent), ["Mon espace"]);
+  // « Infos et confidentialité » n'est plus qu'à un endroit : la page Mon espace.
+  assert.ok(!piedSuivi.some(noeud => /infos\.php/.test(noeud.href)), "plus de lien « Infos et confidentialité » dans le pied");
 
   // mention-confidentialite.js, chargé en « defer », s'exécute APRÈS ce script :
   // il ajoute de lui-même « Sans cookie ni traceur · Confidentialité » en bas de
   // page — un lien de plus vers le site — sauf si la page porte déjà un élément
   // marqué. Le pied d'origine en portait un ; en le remplaçant sans reprendre la
   // marque, on rouvrait la porte qu'on venait de fermer.
-  assert.ok("data-mathsgo-confidentialite" in liens[1].attributs,
-    "le lien Infos reprend la marque du pied d'origine, sinon la mention flottante revient avec son lien vers le site");
+  assert.ok("data-mathsgo-confidentialite" in liens[0].attributs,
+    "« Mon espace » reprend la marque du pied d'origine, sinon la mention flottante revient avec son lien vers le site");
 
   // Sur une tablette, le pied du site aligne cinq éléments en tout petit : ses
   // liens font 18 px de haut. Ceux de l'élève suivi sont élargis à 44 px, sans

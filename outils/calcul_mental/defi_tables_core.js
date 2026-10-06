@@ -285,7 +285,7 @@
       learn: "J’apprends",
       train: "Je m’entraîne",
       test: "Je deviens expert",
-      validation: "Je valide ma table",
+      validation: "Je passe le test",
       custom: "Réglages"
     };
     // Le mélange du parcours a le format de la validation, sur plusieurs tables.

@@ -32,18 +32,28 @@ test("J’apprends n’a ni score ni temps : on s’entraîne, on ne se chronom�
 
 test("la fête est le cadre du verdict, et le rang s’y affiche une fois", () => {
   assert.match(html, /if \(fete\.principal\) \{[\s\S]*?verdict\.classe = "is-fete";/);
-  assert.match(html, /verdict\.icone = "🎉";\s*verdict\.titre = `Table de \$\{validation\.table\} acquise !`;/);
+  assert.match(html, /verdict\.icone = "🎉";\s*verdict\.titre = `Table de \$\{validation\.table\} passée !`;/, "lot « un seul système » : la table est « passée »");
   assert.match(html, /if \(rangMonte && !\(etoile && etoile\.couronne\)\) \{\s*verdict\.rang = rangMonte\.rang;/);
   assert.match(html, /<p id="result-rang" class="result-fete-rang" hidden><\/p>/);
   assert.match(html, /\.result-verdict\.is-champion \{ border-color: #e7c86a;/);
 });
 
-test("la suite tient en une phrase, et les nombres ne se coupent pas", () => {
+// Lot « un seul système » (05/10/2026) : plus de mélange dû, donc plus de
+// « Refais ton mélange… » ni de « Réussis d'abord ton mélange… » ; après une
+// table passée, la suite ne dit que la table suivante (ou l'escalier ouvert).
+test("la suite tient en une phrase, sans mélange à refaire (un trophée gagné se dit), et les nombres ne se coupent pas", () => {
   assert.match(html, /function suiteApresSerie\(evenements, fete\) \{/);
-  assert.match(html, /if \(trouve\("melange-a-refaire"\)\) return `Refais ton mélange avec la table de \$\{fete\.validation\.table\}\$\{puis\}\.`;/, "mélange à refaire + table suivante = une phrase");
+  const suite = html.slice(html.indexOf("function suiteApresSerie(evenements, fete) {"), html.indexOf("function phraseTestRate() {"));
+  assert.match(suite, /if \(trouve\("toutes-acquises"\)\) return "Tes 9 tables sont passées : l’escalier des étoiles est ouvert !";\s*return suivante \? `On continue avec la table de \$\{suivante\}\.` : "";/, "table passée : la table suivante, ou l’escalier ouvert par la neuvième");
+  assert.doesNotMatch(suite, /melange-a-refaire|melange-debloque|verrouillee|escalierOuvert/, "plus aucun événement du mélange obligatoire");
+  assert.doesNotMatch(suite, /Refais ton mélange|réussis ton mélange|Réussis d’abord ton mélange|Réussis le mélange/, "ni aucune de ses phrases");
+  // Lot « trophées » : Mon mélange réussi n'ouvre rien — il dit le trophée
+  // gagné, et rien quand il n'en gagne pas (le verdict suffit).
+  assert.match(suite, /if \(fete\.melange\) return fete\.melange\.trophee \? `Tu gagnes le trophée des \$\{fete\.melange\.trophee\} tables\\u00a0!` : "";/, "Mon mélange réussi : le trophée gagné, sinon rien");
+  assert.match(suite, /\? "Maintenant, passe le test en 1 min 30\."/);
   // Lot dosage + validation : « tu peux valider » seulement quand les 8
   // calculs sont en boîte 3 ; sinon la phrase du rendez-vous, la même que l’accueil.
-  assert.match(html, /if \(!entraine\.validation \|\| entraine\.validation\.prete\) return "Tes trois entraînements sont réussis : tu peux valider ta table !";/);
+  assert.match(html, /if \(!entraine\.validation \|\| entraine\.validation\.prete\) return "Tes trois entraînements sont réussis : tu peux passer le test !";/);
   assert.match(html, /return `Tes trois entraînements sont réussis ! \$\{phraseRendezVous\(entraine\.validation, entraine\.table\)\}`;/);
   assert.match(html, /return fete\.etoile\.couronne \? "" : `Tente \$\{PARCOURS\.symboleEtoile\(fete\.etoile\.etoile \+ 1\)\}/);
   assert.match(html, /function soude\(texte\) \{/);
@@ -55,7 +65,8 @@ test("la suite tient en une phrase, et les nombres ne se coupent pas", () => {
   const soude = new Function(`${html.match(/function soude\(texte\) \{[\s\S]*?;\s*\}/)[0]}; return soude;`)();
   const nb = String.fromCharCode(160);
   assert.equal(soude("4 réponses sur 20 en 1 min 30 — il en faut 18"), `4${nb}réponses sur${nb}20 en 1${nb}min${nb}30 — il${nb}en${nb}faut${nb}18`);
-  assert.equal(soude("Refais ton mélange avec la table de 5, puis la table de 3."), `Refais ton mélange avec la table de${nb}5, puis la table de${nb}3.`);
+  assert.equal(soude("On continue avec la table de 3."), `On continue avec la table de${nb}3.`);
+  assert.equal(soude("Maintenant, passe le test en 1 min 30."), `Maintenant, passe le test en 1${nb}min${nb}30.`);
 });
 
 test("les corrections : les erreurs seules, les réponses justes repliées, jamais de cadre vert", () => {
