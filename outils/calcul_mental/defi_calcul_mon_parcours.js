@@ -1,10 +1,18 @@
-// Défi calcul — la progression de l'élève (lot 1a, 03/10/2026).
+// Défi calcul — la progression de l'élève (format définitif, lot 2a, 05/10/2026).
 //
 // Ce fichier ne connaît AUCUN texte ni aucun générateur : seulement les
 // codes des modules et leur nombre de niveaux. Il tient le format enregistré
-// (version 1), la validation d'un niveau, le mélange du jour (boîtes au
-// niveau du MODULE), la file de la séance, la fusion entre deux appareils et
-// le rangement par code sur l'appareil.
+// (version 1), les boîtes (une par COMPÉTENCE : un niveau d'un module), la
+// séance guidée, le test de module, Mes calculs du jour, la fusion entre deux
+// appareils et le rangement par code sur l'appareil.
+//
+// Les règles sont celles de « defi-calcul-seance-guidee.md » (étape 5a) :
+//  - une compétence ENTRE dans les boîtes par un entraînement réussi
+//    (boîte 2) ou par le test de module (boîte 3) ;
+//  - elle ne BOUGE que dans Mes calculs du jour : juste et due, elle monte ;
+//    fausse, elle descend. Nulle part ailleurs une erreur ne compte ;
+//  - elle est SUE à la boîte 4 ; un module est su quand toutes ses
+//    compétences le sont.
 //
 // Copié de defi_tables_mon_parcours.js puis adapté, jamais partagé : Défi
 // tables reste intact. Le rangement par code (empreinte SHA-256 salée, purge
@@ -13,8 +21,8 @@
 //
 // Tout ce qui est enregistré tient dans des clés courtes : le serveur compte
 // les clés à toute profondeur (2 000 au plus) et borne la progression à
-// 40 000 octets. Aucun prénom sous un code, aucun texte libre, aucun calcul
-// en clair.
+// 40 000 octets. Les listes ne comptent pas comme des clés. Aucun prénom sous
+// un code, aucun texte libre, aucun calcul en clair.
 (function initDefiCalculMonParcours(root, factory) {
   const api = factory();
   if (typeof module === "object" && module.exports) module.exports = api;
@@ -31,7 +39,7 @@
   const ALPHABET_CODE = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
   const LONGUEUR_CODE = 6;
 
-  // Les 71 codes et leur nombre de niveaux, dans l'ordre conseillé (les 42
+  // Les 71 codes et leur nombre de niveaux, dans l'ordre de la carte (les 42
   // modules construits ou à construire, puis les 29 réservés). Un test
   // compare cette table aux fiches de defi_calcul_core.js.
   const NIVEAUX = Object.freeze({
@@ -45,25 +53,63 @@
   });
   const CODES = Object.freeze(Object.keys(NIVEAUX));
 
+  // Le rang d'une compétence : sa place dans la liste de toutes les
+  // compétences (216), module après module. Il sert à ranger une compétence
+  // dans un nombre (le plan de la séance).
+  const RANGS = (() => {
+    const debut = {};
+    let rang = 0;
+    CODES.forEach(id => { debut[id] = rang; rang += NIVEAUX[id]; });
+    return Object.freeze({debut: Object.freeze(debut), total: rang});
+  })();
+
+  function rangDe(id, niveau) {
+    return RANGS.debut[id] + niveau - 1;
+  }
+
+  function competenceDeRang(rang) {
+    const id = CODES.find(code => rang >= RANGS.debut[code] && rang < RANGS.debut[code] + NIVEAUX[code]);
+    return id ? {module: id, niveau: rang - RANGS.debut[id] + 1} : null;
+  }
+
   const SEUILS = Object.freeze({
     // Un entraînement : 10 calculs, réussi à 8 justes (première réponse).
     entraine: Object.freeze({total: 10, justes: 8}),
-    // Un niveau de faits : 12 calculs, 10 justes, 4 s par calcul en moyenne.
-    faits: Object.freeze({total: 12, justes: 10, moyenneMs: 4000}),
-    // Un niveau de procédure : 10 calculs, 8 justes ; un calcul juste
-    // au-delà de 30 s est « juste, mais trop long » et ne compte pas.
-    procedures: Object.freeze({total: 10, justes: 8, plafondMs: 30000}),
-    // Les boîtes de Défi tables : 0, 1, 3, 7, 14 jours.
-    revision: Object.freeze({boites: 5, delais: Object.freeze([0, 1, 3, 7, 14])}),
-    // Le mélange : 10 calculs, les modules à tour de rôle (donc au plus 3
-    // d'un module quand plus de 3 sont dus) ; « à revoir » dès 2 erreurs,
-    // 5 calculs de reprise, 4 justes.
-    melange: Object.freeze({total: 10, erreursRevoir: 2, reprise: 5, repriseJustes: 4}),
-    seance: Object.freeze({etapesMax: 4, garder: 60, objectifSemaine: 4}),
+    // Le test de module : 3 calculs par niveau, un niveau entre à 3 sur 3 ;
+    // 4 tests au plus dans une séance.
+    test: Object.freeze({parNiveau: 3, parSeance: 4}),
+    // Les boîtes : délais de retour 1, 1, 3, 7, 14 jours. Une compétence
+    // entre en boîte 2 (entraînement) ou 3 (test) ; elle est sue en boîte 4.
+    revision: Object.freeze({boites: 5, delais: Object.freeze([1, 1, 3, 7, 14]), entraine: 2, test: 3, su: 4}),
+    // Mes calculs du jour : 10 à 20 calculs, un par compétence. Pour un
+    // niveau de faits, un calcul juste au-delà de 5 s ne fait pas monter.
+    jour: Object.freeze({minimum: 10, maximum: 20, lentMs: 5000}),
+    // Deux ratés de suite dans Mes calculs du jour : un rattrapage.
+    rattrapage: Object.freeze({echecs: 2}),
+    seance: Object.freeze({garder: 60, etapes: 99}),
     jours: Object.freeze({garder: 14}),
     compteur: 9999,
     causes: 12
   });
+
+  // `test`, à la racine : le test de module est-il proposé au prochain module
+  // intact ?
+  //   1  oui ;
+  //   2  non, mais le module en cours n'a eu aucun entraînement raté : s'il
+  //      se termine ainsi, le test redevient proposé ;
+  //   0  non, et le module en cours a eu un entraînement raté.
+  const TEST = Object.freeze({non: 0, oui: 1, propre: 2});
+
+  // Le plan de la séance en cours, `seance.p` : cinq nombres.
+  //   [0] 1 si la séance est ouverte (commencée, pas finie) ;
+  //   [1] 1 si Mes calculs du jour restent à jouer ;
+  //   [2] rang + 1 de la compétence à rattraper, 0 s'il n'y en a pas (ou plus) ;
+  //   [3] le nombre de tests de module joués ;
+  //   [4] la nouveauté : 0 à faire, 1 un entraînement raté (un second suit),
+  //       2 faite, 3 arrêtée après deux ratés (rien de nouveau avant demain).
+  const PLAN = Object.freeze({ouverte: 0, jour: 1, rattrapage: 2, tests: 3, nouveaute: 4});
+  const NOUVEAUTE = Object.freeze({aFaire: 0, encore: 1, faite: 2, arretee: 3});
+  const PLAN_MAX = Object.freeze([1, 1, RANGS.total, SEUILS.test.parSeance, 3]);
 
   function cloner(valeur) {
     return JSON.parse(JSON.stringify(valeur));
@@ -110,10 +156,22 @@
     return jourLocal(d);
   }
 
-  // Le jour où un module revient quand il vient d'entrer dans une boîte.
+  // Le délai de retour d'une boîte, en jours, et le jour où une compétence
+  // revient quand elle vient d'y entrer.
+  function delaiDeBoite(boite) {
+    return SEUILS.revision.delais[entier(boite, 1, SEUILS.revision.boites, 1) - 1];
+  }
+
   function echeanceDeBoite(boite, jour) {
-    const rang = entier(boite, 1, SEUILS.revision.boites, 1);
-    return ajouterJours(jour, SEUILS.revision.delais[rang - 1]);
+    return ajouterJours(jour, delaiDeBoite(boite));
+  }
+
+  // La couleur d'une boîte : gris (pas entrée), rouge (à revoir), bleu (en
+  // route), vert (sue).
+  function couleurDeBoite(boite) {
+    if (!boite) return "gris";
+    if (boite === 1) return "rouge";
+    return boite >= SEUILS.revision.su ? "vert" : "bleu";
   }
 
   function normaliserJours(liste) {
@@ -142,9 +200,19 @@
     return Array.from({length: nombre}, () => valeur);
   }
 
+  // Un module : pour chaque niveau, sa boîte `b` (0 = pas entrée), son
+  // échéance `e`, « J'apprends » fait `a`, les séries jouées `f`, les échecs
+  // consécutifs dans Mes calculs du jour `x` ; et les erreurs par cause `c`.
+  // Une compétence pas entrée n'a pas d'échéance : null, et surtout pas "" —
+  // le serveur retire d'une liste toute chaîne qui n'est pas une date, les
+  // échéances suivantes glisseraient d'un rang.
   function moduleVide(id) {
     const k = NIVEAUX[id];
-    return {vu: null, ok: null, nv: 1, v: listeDe(k), a: listeDe(k), t: listeDe(k), f: listeDe(k), err: 0, r: false, c: {}};
+    return {vu: null, ok: null, b: listeDe(k), e: listeDe(k, null), a: listeDe(k), f: listeDe(k), x: listeDe(k), c: {}};
+  }
+
+  function planVide() {
+    return [0, 0, 0, 0, 0];
   }
 
   function creerParcours() {
@@ -152,9 +220,9 @@
       version: VERSION,
       epoque: 0,
       prenom: "",
-      mod: "",
+      test: TEST.oui,
       modules: {},
-      seance: {jour: null, etape: 0, n: 0},
+      seance: {jour: null, etape: 0, n: 0, p: planVide()},
       seances: [],
       jours: []
     };
@@ -171,13 +239,16 @@
     if (!brut || typeof brut !== "object") return ligne;
     ligne.vu = dateOuNull(brut.vu);
     ligne.ok = dateOuNull(brut.ok);
-    ligne.nv = entier(brut.nv, 1, k, 1);
-    ligne.v = normaliserListe(brut.v, k, 1);
+    ligne.b = normaliserListe(brut.b, k, SEUILS.revision.boites);
     ligne.a = normaliserListe(brut.a, k, 1);
-    ligne.t = normaliserListe(brut.t, k, SEUILS.compteur);
     ligne.f = normaliserListe(brut.f, k, SEUILS.compteur);
-    ligne.err = entier(brut.err, 0, 99);
-    ligne.r = brut.r === true;
+    ligne.x = normaliserListe(brut.x, k, SEUILS.rattrapage.echecs);
+    const echeances = Array.isArray(brut.e) ? brut.e : [];
+    for (let i = 0; i < k; i += 1) {
+      // L'échéance et les échecs n'existent que pour une compétence entrée.
+      if (ligne.b[i]) ligne.e[i] = dateOuNull(echeances[i]) || ligne.vu || jourLocal();
+      else ligne.x[i] = 0;
+    }
     if (brut.c && typeof brut.c === "object" && !Array.isArray(brut.c)) {
       Object.keys(brut.c).filter(cause => /^\d{1,2}$/.test(cause)).sort((x, y) => Number(x) - Number(y))
         .slice(0, SEUILS.causes).forEach(cause => {
@@ -185,18 +256,12 @@
           if (compte) ligne.c[String(Number(cause))] = compte;
         });
     }
-    // La boîte et l'échéance n'existent que si un niveau est validé.
-    if (ligne.v.some(Boolean)) {
-      ligne.b = entier(brut.b, 1, SEUILS.revision.boites, 1);
-      ligne.e = dateOuNull(brut.e) || ligne.vu || jourLocal();
-    } else {
-      ligne.ok = null;
-      ligne.err = 0;
-      ligne.r = false;
-    }
-    // Le module est « validé » le jour où tous ses niveaux le sont.
-    if (!ligne.v.every(Boolean)) ligne.ok = null;
     return ligne;
+  }
+
+  function normaliserPlan(brut) {
+    const liste = Array.isArray(brut) ? brut : [];
+    return PLAN_MAX.map((maximum, index) => entier(liste[index], 0, maximum));
   }
 
   function normaliserParcours(brut) {
@@ -204,7 +269,7 @@
     if (!brut || typeof brut !== "object") return parcours;
     parcours.epoque = entier(brut.epoque, 0, 1000000);
     parcours.prenom = nettoyerPrenom(brut.prenom);
-    parcours.mod = typeof brut.mod === "string" && Object.prototype.hasOwnProperty.call(NIVEAUX, brut.mod) ? brut.mod : "";
+    parcours.test = entier(brut.test, 0, 2, TEST.oui);
     if (brut.modules && typeof brut.modules === "object" && !Array.isArray(brut.modules)) {
       CODES.forEach(id => {
         if (Object.prototype.hasOwnProperty.call(brut.modules, id)) parcours.modules[id] = normaliserModule(id, brut.modules[id]);
@@ -213,8 +278,9 @@
     const seance = brut.seance && typeof brut.seance === "object" ? brut.seance : {};
     parcours.seance = {
       jour: dateOuNull(seance.jour),
-      etape: entier(seance.etape, 0, SEUILS.seance.etapesMax),
-      n: entier(seance.n, 0, SEUILS.compteur)
+      etape: entier(seance.etape, 0, SEUILS.seance.etapes),
+      n: entier(seance.n, 0, SEUILS.compteur),
+      p: normaliserPlan(seance.p)
     };
     parcours.seances = normaliserSeances(brut.seances);
     parcours.jours = normaliserJours(brut.jours);
@@ -248,89 +314,250 @@
     if (jour && !parcours.jours.includes(jour)) parcours.jours = normaliserJours([...parcours.jours, jour]);
   }
 
-  // ------------------------------------------------- les modules : ouverts, en cours
+  // ------------------------------------------------- les modules et leurs couleurs
 
-  // `carte` : la liste rendue par CORE.carte() — l'ordre conseillé, les
-  // « avant », ce qui est construit, les pilotes ouverts pendant l'essai.
+  // `carte` : la liste rendue par CORE.carte() — l'ordre, le palier, ce qui
+  // est construit. La séance ne parcourt que les modules construits.
   function ficheCarte(carte, id) {
     return (carte || []).find(fiche => fiche.id === id) || null;
   }
 
-  function estValide(parcours, id) {
+  function construits(carte) {
+    return (carte || []).filter(fiche => fiche.construit && fiche.palier > 0 && Object.prototype.hasOwnProperty.call(NIVEAUX, fiche.id));
+  }
+
+  // Le module est su quand toutes ses compétences sont en boîte 4 ou 5.
+  function toutSu(ligne) {
+    return ligne.b.every(boite => boite >= SEUILS.revision.su);
+  }
+
+  function toutEntre(ligne) {
+    return ligne.b.every(Boolean);
+  }
+
+  // Un module intact : rien n'y est entré, rien n'y a été joué ni appris.
+  function estIntact(ligne) {
+    return !ligne.b.some(Boolean) && !ligne.f.some(Boolean) && !ligne.a.some(Boolean);
+  }
+
+  // Le module a été su un jour : il reste coché.
+  function estSu(parcours, id) {
     return Boolean(parcours.modules[id] && parcours.modules[id].ok);
   }
 
-  // Un module s'ouvre quand tous ses « avant » sont validés — ou quand le
-  // professeur le met en avant, ou pendant l'essai pour les pilotes.
-  function estOuvert(parcours, id, carte, {enAvant = null} = {}) {
-    const fiche = ficheCarte(carte, id);
-    if (!fiche || !fiche.construit) return false;
-    if (fiche.pilote || enAvant === id) return true;
-    return fiche.avant.every(avant => estValide(parcours, avant));
+  // La première compétence grise de l'ordre : c'est « Mon niveau », et son
+  // module est « Mon module ». null quand tout est entré.
+  function competenceCourante(parcours, carte) {
+    for (const fiche of construits(carte)) {
+      const ligne = ligneDe(parcours, fiche.id);
+      const index = ligne.b.findIndex(boite => !boite);
+      if (index >= 0) return {module: fiche.id, niveau: index + 1};
+    }
+    return null;
   }
 
-  // Les cinq états du parcours, plus « bientôt » pour un module pas encore
-  // construit : validé, à revoir, en cours, pas commencé, pas encore ouvert.
-  function etatModule(parcours, id, carte, {enAvant = null} = {}) {
+  function moduleCourant(parcours, carte) {
+    const courante = competenceCourante(parcours, carte);
+    return courante ? courante.module : null;
+  }
+
+  // L'état d'un module dans le parcours, et la couleur de chaque compétence :
+  //   bientot  pas encore construit ;
+  //   su       il a été su (il reste coché) ;
+  //   revoir   su, mais une de ses compétences est rouge ;
+  //   encours  commencé ;
+  //   libre    pas commencé.
+  function etatModule(parcours, id, carte) {
     const fiche = ficheCarte(carte, id);
     const ligne = ligneDe(parcours, id);
-    const base = {id, niveau: ligne.nv, niveaux: NIVEAUX[id], apres: []};
+    const courante = competenceCourante(parcours, carte);
+    const base = {
+      id,
+      niveaux: NIVEAUX[id],
+      couleurs: ligne.b.map(couleurDeBoite),
+      ici: courante && courante.module === id ? courante.niveau : 0
+    };
     if (!fiche || !fiche.construit) return Object.assign(base, {etat: "bientot"});
-    if (ligne.ok) return Object.assign(base, {etat: ligne.r ? "revoir" : "valide"});
-    if (!estOuvert(parcours, id, carte, {enAvant})) {
-      return Object.assign(base, {etat: "ferme", apres: fiche.avant.filter(avant => !estValide(parcours, avant))});
-    }
-    const commence = parcours.mod === id || ligne.v.some(Boolean) || ligne.f.some(Boolean) || ligne.a.some(Boolean);
-    return Object.assign(base, {etat: commence ? "encours" : "libre"});
+    if (ligne.ok) return Object.assign(base, {etat: ligne.b.includes(1) ? "revoir" : "su"});
+    return Object.assign(base, {etat: estIntact(ligne) ? "libre" : "encours"});
   }
 
-  // Le module à faire : le premier de l'ordre conseillé qui n'est pas validé
-  // et qui est ouvert. null quand tout ce qui est ouvert est validé.
-  function moduleSuivant(parcours, carte, {enAvant = null} = {}) {
-    const fiche = (carte || []).find(f => f.construit && !estValide(parcours, f.id) && estOuvert(parcours, f.id, carte, {enAvant}));
-    return fiche ? fiche.id : null;
-  }
-
-  // « Mon module » : celui que l'élève a choisi, sinon le suivant.
-  function moduleCourant(parcours, carte, options = {}) {
-    if (parcours.mod && estOuvert(parcours, parcours.mod, carte, options) && !estValide(parcours, parcours.mod)) return parcours.mod;
-    return moduleSuivant(parcours, carte, options) || parcours.mod || null;
-  }
-
+  // Les modules sus, palier par palier, et les compétences par couleur.
   function compter(parcours, carte) {
     const paliers = new Map();
+    const competences = {gris: 0, rouge: 0, bleu: 0, vert: 0};
     (carte || []).filter(fiche => fiche.palier > 0).forEach(fiche => {
-      const compte = paliers.get(fiche.palier) || {palier: fiche.palier, valides: 0, total: 0};
+      const compte = paliers.get(fiche.palier) || {palier: fiche.palier, sus: 0, total: 0};
       compte.total += 1;
-      if (estValide(parcours, fiche.id)) compte.valides += 1;
+      if (estSu(parcours, fiche.id)) compte.sus += 1;
       paliers.set(fiche.palier, compte);
+      ligneDe(parcours, fiche.id).b.forEach(boite => { competences[couleurDeBoite(boite)] += 1; });
     });
     const liste = [...paliers.values()].sort((x, y) => x.palier - y.palier);
     return {
       paliers: liste,
-      valides: liste.reduce((s, p) => s + p.valides, 0),
-      total: liste.reduce((s, p) => s + p.total, 0)
+      sus: liste.reduce((s, p) => s + p.sus, 0),
+      total: liste.reduce((s, p) => s + p.total, 0),
+      competences
     };
   }
 
-  function choisirModule(parcours, id, aujourdhui = jourLocal()) {
-    const copie = normaliserParcours(parcours);
-    if (!Object.prototype.hasOwnProperty.call(NIVEAUX, id)) return copie;
-    copie.mod = id;
-    copie.modules[id] = ligneDe(copie, id);
-    copie.modules[id].vu = aujourdhui;
-    return copie;
+  // ------------------------------------------------------------ la séance guidée
+
+  function aujourdhuiFinie(parcours, aujourdhui) {
+    return parcours.seances.includes(aujourdhui);
   }
 
-  // Les niveaux sont libres dans un module ouvert : toucher une case en fait
-  // le niveau que la séance propose.
-  function choisirNiveau(parcours, id, niveau, aujourdhui = jourLocal()) {
-    const copie = choisirModule(parcours, id, aujourdhui);
-    if (copie.modules[id]) copie.modules[id].nv = entier(niveau, 1, NIVEAUX[id], copie.modules[id].nv);
-    return copie;
+  // Une séance est ouverte quand elle a été commencée aujourd'hui et qu'elle
+  // n'est pas finie. Celle de la veille ne compte plus.
+  function seanceOuverte(parcours, aujourdhui = jourLocal()) {
+    return parcours.seance.jour === aujourdhui && parcours.seance.p[PLAN.ouverte] === 1;
   }
 
-  // ---------------------------------------------------------- valider, s'entraîner
+  // Deux entraînements ratés aujourd'hui : rien de nouveau avant demain.
+  function nouveauteArretee(parcours, aujourdhui) {
+    return parcours.seance.jour === aujourdhui && parcours.seance.p[PLAN.nouveaute] === NOUVEAUTE.arretee;
+  }
+
+  // Toutes les compétences entrées dans les boîtes, des modules construits.
+  function competencesEntrees(parcours, carte) {
+    const liste = [];
+    construits(carte).forEach((fiche, ordre) => {
+      const ligne = parcours.modules[fiche.id];
+      if (!ligne) return;
+      ligne.b.forEach((boite, index) => {
+        if (boite) liste.push({module: fiche.id, niveau: index + 1, boite, echeance: ligne.e[index], echecs: ligne.x[index], ordre: ordre * 10 + index});
+      });
+    });
+    return liste;
+  }
+
+  const parRetard = (p, q) => p.boite - q.boite || String(p.echeance).localeCompare(String(q.echeance)) || p.ordre - q.ordre;
+  const parEcheance = (p, q) => String(p.echeance).localeCompare(String(q.echeance)) || p.ordre - q.ordre;
+
+  // Mes calculs du jour : un calcul par compétence.
+  //  - les compétences dues, les plus en retard d'abord (boîte la plus basse,
+  //    puis échéance la plus ancienne), 20 au plus ;
+  //  - s'il y en a moins de 10 (et `entretien`), on complète avec les
+  //    compétences non dues, par échéance la plus proche.
+  // Avec peu de compétences dans les boîtes, la série est plus courte que 10.
+  // La seconde séance d'un même jour ne rejoue que ce qui est encore dû.
+  function tirerCalculsDuJour(parcours, carte, {aujourdhui = jourLocal(), entretien = true} = {}) {
+    const entrees = competencesEntrees(parcours, carte);
+    const dues = entrees.filter(c => c.echeance <= aujourdhui).sort(parRetard).slice(0, SEUILS.jour.maximum);
+    const tirage = dues.map(c => ({module: c.module, niveau: c.niveau, du: true}));
+    if (entretien && tirage.length < SEUILS.jour.minimum) {
+      entrees.filter(c => c.echeance > aujourdhui).sort(parEcheance)
+        .slice(0, SEUILS.jour.minimum - tirage.length)
+        .forEach(c => tirage.push({module: c.module, niveau: c.niveau, du: false}));
+    }
+    return tirage;
+  }
+
+  // La compétence à rattraper : 2 échecs consécutifs, la plus ancienne.
+  function aRattraper(parcours, carte) {
+    const liste = competencesEntrees(parcours, carte).filter(c => c.echecs >= SEUILS.rattrapage.echecs).sort(parEcheance);
+    return liste.length ? {module: liste[0].module, niveau: liste[0].niveau} : null;
+  }
+
+  // Le premier module construit de son palier : le test y est toujours proposé.
+  function premierDuPalier(carte, id) {
+    const fiche = ficheCarte(carte, id);
+    const premier = fiche ? construits(carte).find(f => f.palier === fiche.palier) : null;
+    return Boolean(premier && premier.id === id);
+  }
+
+  // Les calculs du jour d'une séance. Quand une séance a déjà fini
+  // aujourd'hui, ils ne rejouent que ce qui est encore dû (pas d'entretien).
+  function calculsDeSeance(parcours, carte, aujourdhui) {
+    const entretien = !(aujourdhuiFinie(parcours, aujourdhui) || nouveauteArretee(parcours, aujourdhui));
+    return {entretien, calculs: tirerCalculsDuJour(parcours, carte, {aujourdhui, entretien}).length};
+  }
+
+  // Le plan d'une séance qui commence : ce qui est décidé à l'ouverture.
+  function planNeuf(parcours, carte, aujourdhui) {
+    const rattrapage = aRattraper(parcours, carte);
+    return [
+      0,
+      calculsDeSeance(parcours, carte, aujourdhui).calculs ? 1 : 0,
+      rattrapage ? rangDe(rattrapage.module, rattrapage.niveau) + 1 : 0,
+      0,
+      nouveauteArretee(parcours, aujourdhui) ? NOUVEAUTE.arretee : NOUVEAUTE.aFaire
+    ];
+  }
+
+  function planDe(parcours, carte, aujourdhui) {
+    return seanceOuverte(parcours, aujourdhui) ? parcours.seance.p.slice() : planNeuf(parcours, carte, aujourdhui);
+  }
+
+  // La file de la séance : les étapes qui RESTENT, d'après le plan et l'état.
+  //   {type: "jour", calculs}             Mes calculs du jour
+  //   {type: "rattrape", module, niveau}  Je m'entraîne encore (rattrapage)
+  //   {type: "test", module}              Tu connais déjà ?
+  //   {type: "nouveau"}                   « une chose nouvelle », après un test
+  //   {type: "apprends", module, niveau}  J'apprends
+  //   {type: "entraine", module, niveau}  Je m'entraîne
+  //   {type: "encore", module, niveau}    Je m'entraîne encore (après un raté)
+  // Rend aussi `faites` (les étapes déjà jouées), `ouverte`, `finie` (une
+  // séance a fini aujourd'hui) et `minutes`.
+  const MINUTES = Object.freeze({jour: 2, rattrape: 2, test: 2, nouveau: 6, apprends: 3, entraine: 3, encore: 3});
+
+  function fileSeance(parcours, carte, {aujourdhui = jourLocal()} = {}) {
+    const ouverte = seanceOuverte(parcours, aujourdhui);
+    const plan = planDe(parcours, carte, aujourdhui);
+    const etapes = [];
+    if (plan[PLAN.jour]) {
+      const {entretien, calculs} = calculsDeSeance(parcours, carte, aujourdhui);
+      if (calculs) etapes.push({type: "jour", calculs, entretien});
+    }
+    if (plan[PLAN.rattrapage]) etapes.push(Object.assign({type: "rattrape"}, competenceDeRang(plan[PLAN.rattrapage] - 1)));
+    const courante = competenceCourante(parcours, carte);
+    if (courante && plan[PLAN.nouveaute] === NOUVEAUTE.encore) {
+      etapes.push({type: "encore", module: courante.module, niveau: courante.niveau});
+    } else if (courante && plan[PLAN.nouveaute] === NOUVEAUTE.aFaire) {
+      const ligne = ligneDe(parcours, courante.module);
+      const propose = estIntact(ligne)
+        && (parcours.test === TEST.oui || premierDuPalier(carte, courante.module))
+        && plan[PLAN.tests] < SEUILS.test.parSeance;
+      if (propose) {
+        etapes.push({type: "test", module: courante.module}, {type: "nouveau"});
+      } else {
+        if (!ligne.a[courante.niveau - 1]) etapes.push({type: "apprends", module: courante.module, niveau: courante.niveau});
+        etapes.push({type: "entraine", module: courante.module, niveau: courante.niveau});
+      }
+    }
+    return {
+      etapes,
+      faites: ouverte ? parcours.seance.etape : 0,
+      ouverte,
+      finie: aujourdhuiFinie(parcours, aujourdhui) || nouveauteArretee(parcours, aujourdhui),
+      minutes: etapes.reduce((somme, etape) => somme + MINUTES[etape.type], 0)
+    };
+  }
+
+  // Une étape vient d'être jouée : le plan avance. Quand il ne reste rien,
+  // la séance est finie et comptée. `changer(plan)` dit ce que l'étape change.
+  // Le plan est décidé sur l'état d'AVANT l'étape (`avant`).
+  function avancerSeance(copie, avant, carte, aujourdhui, changer) {
+    const plan = planDe(avant, carte, aujourdhui);
+    const etape = seanceOuverte(avant, aujourdhui) ? avant.seance.etape : 0;
+    changer(plan);
+    plan[PLAN.ouverte] = 1;
+    copie.seance = {jour: aujourdhui, etape: Math.min(SEUILS.seance.etapes, etape + 1), n: copie.seance.n, p: plan};
+    if (fileSeance(copie, carte, {aujourdhui}).etapes.length) return false;
+    // Finie : elle compte, et le plan se referme. L'arrêt après deux ratés
+    // reste noté jusqu'à demain.
+    copie.seance = {
+      jour: aujourdhui,
+      etape: 0,
+      n: Math.min(SEUILS.compteur, copie.seance.n + 1),
+      p: [0, 0, 0, 0, plan[PLAN.nouveaute] === NOUVEAUTE.arretee ? NOUVEAUTE.arretee : 0]
+    };
+    copie.seances = normaliserSeances([...copie.seances, aujourdhui]);
+    return true;
+  }
+
+  // ---------------------------------------------------------- apprendre, s'entraîner
 
   // Le verdict d'un entraînement : `reponses` = les premières réponses,
   // {juste}. Réussi à 8 justes sur 10.
@@ -339,230 +566,204 @@
     return {justes, total: reponses.length, reussi: justes >= SEUILS.entraine.justes};
   }
 
-  // Le verdict d'une validation. `reponses` = {juste, ms} dans l'ordre ; un
-  // calcul passé est faux, avec son temps.
-  //  - fait (F) : 10 justes sur 12 ET 4 s par calcul en moyenne, sinon
-  //    « trop lentement » ;
-  //  - procédure (P) : 8 justes sur 10 ; un calcul juste au-delà de 30 s est
-  //    « juste, mais trop long » et ne compte pas dans les 8.
-  function verdictValidation(type, reponses) {
-    const total = reponses.length;
-    const exactes = reponses.filter(r => r && r.juste).length;
-    const moyenneMs = total ? reponses.reduce((s, r) => s + Math.max(0, Number(r && r.ms) || 0), 0) / total : 0;
-    if (type === "F") {
-      const assez = exactes >= SEUILS.faits.justes;
-      const tropLent = assez && moyenneMs > SEUILS.faits.moyenneMs;
-      return {type, total, justes: exactes, lents: [], tropLent, moyenneMs, valide: assez && !tropLent};
-    }
-    const lents = [];
-    reponses.forEach((r, index) => { if (r && r.juste && r.ms > SEUILS.procedures.plafondMs) lents.push(index); });
-    const justes = exactes - lents.length;
-    return {type, total, justes, lents, tropLent: false, moyenneMs, valide: justes >= SEUILS.procedures.justes};
-  }
-
   function ajouterCauses(ligne, causes) {
     Object.keys(causes || {}).forEach(cause => {
       if (!/^\d{1,2}$/.test(cause)) return;
       const cle = String(Number(cause));
       const ajout = entier(causes[cause], 0, SEUILS.compteur);
-      if (ajout) ligne.c[cle] = Math.min(SEUILS.compteur, (ligne.c[cle] || 0) + ajout);
+      if (!ajout) return;
+      if (!ligne.c[cle] && Object.keys(ligne.c).length >= SEUILS.causes) return;
+      ligne.c[cle] = Math.min(SEUILS.compteur, (ligne.c[cle] || 0) + ajout);
     });
   }
 
-  // Une série finie, hors mélange. `serie` :
-  //   {module, niveau, genre: "apprends" | "entraine" | "valide", type: "F" | "P",
-  //    reponses: [{juste, ms}], causes: {cause: nombre}}
-  // Rend le parcours, le verdict et les événements (« niveau » validé,
-  // « module » validé avec le module suivant).
-  // Le niveau à faire : celui qu'on donne s'il n'est pas validé, sinon le
-  // premier qui ne l'est pas (le même quand tous le sont).
-  function niveauAFaire(valides, niveau) {
-    if (!valides[niveau - 1]) return niveau;
-    const premier = valides.findIndex(valide => !valide);
-    return premier >= 0 ? premier + 1 : niveau;
-  }
-
-  function appliquerSerie(parcours, serie, {aujourdhui = jourLocal(), carte = null, enAvant = null} = {}) {
-    const copie = normaliserParcours(parcours);
+  // Une série finie, hors Mes calculs du jour. `serie` :
+  //   {module, niveau, genre: "apprends" | "entraine" | "rattrape",
+  //    reponses: [{juste}], causes: {cause: nombre}}
+  // Avec `seance: true`, la série est une étape de la séance du jour.
+  //  - apprends : « J'apprends » est fait pour ce niveau ;
+  //  - entraine : réussi (8 sur 10), la compétence entre en boîte 2 et revient
+  //    demain ; raté, rien ne bouge — dans la séance, un second entraînement
+  //    suit, et raté une seconde fois la séance s'arrête, « J'apprends » est à
+  //    refaire ;
+  //  - rattrape : les échecs consécutifs repartent de 0, la boîte ne bouge pas.
+  // Une erreur ne fait JAMAIS descendre ici.
+  function appliquerSerie(parcours, serie, {aujourdhui = jourLocal(), carte = null, seance = false} = {}) {
+    const avant = normaliserParcours(parcours);
+    const copie = cloner(avant);
     const id = serie && serie.module;
     const evenements = [];
-    if (!Object.prototype.hasOwnProperty.call(NIVEAUX, id)) return {parcours: copie, verdict: null, evenements};
-    const k = NIVEAUX[id];
-    const n = entier(serie.niveau, 1, k, 1);
+    if (!Object.prototype.hasOwnProperty.call(NIVEAUX, id)) return {parcours: copie, verdict: null, evenements, finie: false};
+    const n = entier(serie.niveau, 1, NIVEAUX[id], 1);
     const ligne = ligneDe(copie, id);
     copie.modules[id] = ligne;
     ligne.vu = aujourdhui;
+    let finie = false;
     if (serie.genre === "apprends") {
       ligne.a[n - 1] = 1;
-      return {parcours: copie, verdict: null, evenements};
+      if (seance) finie = avancerSeance(copie, avant, carte, aujourdhui, () => {});
+      return {parcours: copie, verdict: null, evenements, finie};
     }
-    const reponses = Array.isArray(serie.reponses) ? serie.reponses : [];
+    const verdict = verdictEntrainement(Array.isArray(serie.reponses) ? serie.reponses : []);
     ligne.f[n - 1] = Math.min(SEUILS.compteur, ligne.f[n - 1] + 1);
     ajouterCauses(ligne, serie.causes);
     noterJour(copie, aujourdhui);
-    if (serie.genre !== "valide") return {parcours: copie, verdict: verdictEntrainement(reponses), evenements};
-    const verdict = verdictValidation(serie.type === "F" ? "F" : "P", reponses);
-    if (!verdict.valide) return {parcours: copie, verdict, evenements};
-    const premier = !ligne.v.some(Boolean);
-    ligne.v[n - 1] = 1;
-    ligne.t[n - 1] = Math.max(1, Math.min(SEUILS.compteur, Math.round(verdict.moyenneMs / 100)));
-    // Le niveau à faire : le premier qui n'est pas encore validé.
-    ligne.nv = niveauAFaire(ligne.v, n);
-    evenements.push({type: "niveau", module: id, niveau: n});
-    // Le module entre dans le mélange dès son premier niveau validé :
-    // boîte 1, il revient demain.
-    if (premier) {
-      ligne.b = 1;
-      ligne.e = ajouterJours(aujourdhui, 1);
+    if (serie.genre === "rattrape") {
+      ligne.x[n - 1] = 0;
+      if (seance) finie = avancerSeance(copie, avant, carte, aujourdhui, plan => { plan[PLAN.rattrapage] = 0; });
+      return {parcours: copie, verdict, evenements, finie};
     }
-    // Le module est validé quand tous ses niveaux le sont (décision du
-    // 03/10/2026) : réussir le dernier seul ne suffit pas.
-    if (ligne.v.every(Boolean) && !ligne.ok) {
-      ligne.ok = aujourdhui;
-      const etaitMonModule = !copie.mod || copie.mod === id;
-      const suivant = moduleSuivant(copie, carte, {enAvant});
-      if (etaitMonModule && suivant) copie.mod = suivant;
-      evenements.push({type: "module", module: id, suivant});
+    const nouvelle = !ligne.b[n - 1];
+    if (verdict.reussi && nouvelle) {
+      ligne.b[n - 1] = SEUILS.revision.entraine;
+      ligne.e[n - 1] = echeanceDeBoite(SEUILS.revision.entraine, aujourdhui);
+      evenements.push({type: "entree", module: id, niveau: n, boite: SEUILS.revision.entraine});
+      // Le module est entré en entier : sans entraînement raté, le test
+      // redevient proposé ; sinon le module suivant repart « propre ».
+      if (toutEntre(ligne)) copie.test = copie.test === TEST.non ? TEST.propre : TEST.oui;
+    } else if (!verdict.reussi && nouvelle && copie.test === TEST.propre) {
+      copie.test = TEST.non;
     }
-    return {parcours: copie, verdict, evenements};
+    if (seance) {
+      const second = planDe(avant, carte, aujourdhui)[PLAN.nouveaute] === NOUVEAUTE.encore;
+      // Raté deux fois : demain repart de « J'apprends ».
+      if (!verdict.reussi && second) ligne.a[n - 1] = 0;
+      finie = avancerSeance(copie, avant, carte, aujourdhui, plan => {
+        plan[PLAN.nouveaute] = verdict.reussi ? NOUVEAUTE.faite : second ? NOUVEAUTE.arretee : NOUVEAUTE.encore;
+      });
+    }
+    return {parcours: copie, verdict, evenements, finie};
   }
 
-  // ------------------------------------------------------------------ le mélange
+  // ------------------------------------------------------------ le test de module
 
-  function mulberry32(graine) {
-    let a = graine >>> 0;
-    return function suivant() {
-      a = (a + 0x6D2B79F5) >>> 0;
-      let t = a;
-      t = Math.imul(t ^ (t >>> 15), t | 1);
-      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  // « Tu connais déjà ? » : 3 calculs par niveau. `test` :
+  //   {module, niveaux: [{niveau, justes, total}], causes}
+  // Un niveau à 3 sur 3 entre en boîte 3 et revient dans 3 jours ; les autres
+  // restent à apprendre. Le test ne fait qu'entrer : il ne descend rien.
+  // Réussi en entier, le test reste proposé au module suivant ; sinon il ne
+  // l'est plus, jusqu'à un module entré sans entraînement raté.
+  function appliquerTest(parcours, test, {aujourdhui = jourLocal(), carte = null, seance = false} = {}) {
+    const avant = normaliserParcours(parcours);
+    const copie = cloner(avant);
+    const id = test && test.module;
+    if (!Object.prototype.hasOwnProperty.call(NIVEAUX, id)) return {parcours: copie, bilan: [], tout: false, finie: false};
+    const ligne = ligneDe(copie, id);
+    copie.modules[id] = ligne;
+    ligne.vu = aujourdhui;
+    noterJour(copie, aujourdhui);
+    ajouterCauses(ligne, test.causes);
+    const bilan = Array.from({length: NIVEAUX[id]}, (_, index) => {
+      const resultat = (Array.isArray(test.niveaux) ? test.niveaux : []).find(r => r && r.niveau === index + 1) || {};
+      const total = entier(resultat.total, 0, 99);
+      const justes = entier(resultat.justes, 0, total);
+      const connu = total >= SEUILS.test.parNiveau && justes === total;
+      ligne.f[index] = Math.min(SEUILS.compteur, ligne.f[index] + 1);
+      const entre = connu && !ligne.b[index];
+      if (entre) {
+        ligne.b[index] = SEUILS.revision.test;
+        ligne.e[index] = echeanceDeBoite(SEUILS.revision.test, aujourdhui);
+      }
+      return {niveau: index + 1, justes, total, connu, entre};
+    });
+    const tout = bilan.every(niveau => niveau.connu);
+    copie.test = tout ? TEST.oui : TEST.propre;
+    let finie = false;
+    if (seance) finie = avancerSeance(copie, avant, carte, aujourdhui, plan => { plan[PLAN.tests] = Math.min(SEUILS.test.parSeance, plan[PLAN.tests] + 1); });
+    return {parcours: copie, bilan, tout, finie};
+  }
+
+  // -------------------------------------------------------- Mes calculs du jour
+
+  // UNE réponse de Mes calculs du jour — le seul moment qui compte. `retour` :
+  //   {module, niveau, juste, ms, type: "F" | "P", cause}
+  //  - juste et due : la boîte monte (5 au plus), nouvelle échéance ;
+  //    pour un niveau de faits, juste mais au-delà de 5 s : la boîte reste,
+  //    l'échéance passe à demain ;
+  //  - juste et pas due : rien ;
+  //  - fausse ou passée : la boîte descend (1 au moins), échéance demain, un
+  //    échec consécutif de plus.
+  // Une compétence ne monte pas deux fois le même jour : montée ou descendue,
+  // elle n'est plus due aujourd'hui.
+  function appliquerRetour(parcours, retour, {aujourdhui = jourLocal()} = {}) {
+    const copie = normaliserParcours(parcours);
+    const id = retour && retour.module;
+    const evenements = [];
+    if (!Object.prototype.hasOwnProperty.call(NIVEAUX, id)) return {parcours: copie, mouvement: null, evenements};
+    const index = entier(retour.niveau, 1, NIVEAUX[id], 1) - 1;
+    const ligne = ligneDe(copie, id);
+    const boite = ligne.b[index];
+    if (!boite) return {parcours: copie, mouvement: null, evenements};
+    copie.modules[id] = ligne;
+    ligne.vu = aujourdhui;
+    noterJour(copie, aujourdhui);
+    const due = ligne.e[index] <= aujourdhui;
+    if (retour.juste) {
+      const lent = retour.type === "F" && Number(retour.ms) > SEUILS.jour.lentMs;
+      if (due && lent) ligne.e[index] = ajouterJours(aujourdhui, 1);
+      else if (due) {
+        ligne.b[index] = Math.min(SEUILS.revision.boites, boite + 1);
+        ligne.e[index] = echeanceDeBoite(ligne.b[index], aujourdhui);
+      }
+      ligne.x[index] = 0;
+    } else {
+      ligne.b[index] = Math.max(1, boite - 1);
+      ligne.e[index] = ajouterJours(aujourdhui, 1);
+      ligne.x[index] = Math.min(SEUILS.rattrapage.echecs, ligne.x[index] + 1);
+      if (retour.cause) ajouterCauses(ligne, {[retour.cause]: 1});
+    }
+    // Le module devient su : la date est posée une fois, elle ne s'efface pas.
+    if (!ligne.ok && toutSu(ligne)) {
+      ligne.ok = aujourdhui;
+      evenements.push({type: "module", module: id});
+    }
+    const apres = ligne.b[index];
+    return {
+      parcours: copie,
+      mouvement: {
+        module: id, niveau: index + 1, avant: boite, apres, due,
+        sens: apres > boite ? "monte" : !retour.juste ? "descend" : "reste",
+        couleur: couleurDeBoite(apres),
+        jours: ecartJours(aujourdhui, ligne.e[index])
+      },
+      evenements
     };
   }
 
-  function moduleDu(ligne, aujourdhui = jourLocal()) {
-    return Boolean(ligne && ligne.e && ligne.e <= aujourdhui);
+  // Mes calculs du jour sont finis : l'étape est faite.
+  function terminerCalculsDuJour(parcours, {aujourdhui = jourLocal(), carte = null} = {}) {
+    const avant = normaliserParcours(parcours);
+    const copie = cloner(avant);
+    const finie = avancerSeance(copie, avant, carte, aujourdhui, plan => { plan[PLAN.jour] = 0; });
+    return {parcours: copie, finie};
   }
 
-  function trierParEcheance(entrees) {
-    return entrees.slice().sort((premier, second) =>
-      String(premier[1].e || "").localeCompare(String(second[1].e || ""))
-      || String(premier[1].vu || "").localeCompare(String(second[1].vu || ""))
-      || CODES.indexOf(premier[0]) - CODES.indexOf(second[0]));
+  // « Commencer » : le plan de la séance est décidé et rangé, pour qu'elle se
+  // reprenne telle quelle le jour même, ici ou sur un autre appareil. Une
+  // séance déjà ouverte aujourd'hui n'est pas touchée.
+  function ouvrirSeance(parcours, carte, {aujourdhui = jourLocal()} = {}) {
+    const copie = normaliserParcours(parcours);
+    if (seanceOuverte(copie, aujourdhui)) return copie;
+    const plan = planNeuf(copie, carte, aujourdhui);
+    plan[PLAN.ouverte] = 1;
+    copie.seance = {jour: aujourdhui, etape: 0, n: copie.seance.n, p: plan};
+    return copie;
   }
 
-  // Entrelace des entrées [code, ligne] boîte par boîte, chaque boîte triée
-  // par échéance (le plus en retard, ou le plus proche, d'abord).
-  function tourDeRole(entrees) {
-    const files = Array.from({length: SEUILS.revision.boites}, (_, index) =>
-      trierParEcheance(entrees.filter(([, ligne]) => ligne.b === index + 1)).map(([code]) => code));
-    const ordre = [];
-    while (files.some(file => file.length)) {
-      files.forEach(file => { if (file.length) ordre.push(file.shift()); });
-    }
-    return ordre;
+  // « Demain : … » : la compétence qui vient, et les calculs qui reviennent.
+  function demain(parcours, carte, {aujourdhui = jourLocal()} = {}) {
+    const lendemain = ajouterJours(aujourdhui, 1);
+    return {
+      prochaine: competenceCourante(parcours, carte),
+      reviennent: tirerCalculsDuJour(parcours, carte, {aujourdhui: lendemain}).length
+    };
   }
 
-  // Les modules qui peuvent revenir : au moins un niveau validé. Un module
-  // mis en avant par le professeur n'y est pas, sauf s'il est déjà validé.
-  function modulesDuMelange(parcours, {enAvant = null} = {}) {
-    return Object.entries(parcours.modules).filter(([id, ligne]) =>
-      ligne.v.some(Boolean) && (id !== enAvant || Boolean(ligne.ok)));
-  }
-
-  // `nombre` tirages parmi des modules, à tour de rôle : avec plus de 3
-  // modules, aucun n'a plus de 3 calculs sur 10.
-  function distribuer(codes, nombre) {
-    const tirages = [];
-    while (codes.length && tirages.length < nombre) {
-      for (const code of codes) {
-        if (tirages.length >= nombre) break;
-        tirages.push(code);
-      }
-    }
-    return tirages;
-  }
-
-  // Le mélange du jour : 10 tirages {module, niveau, du, reprise}.
-  //  - d'abord, s'il y a un module « à revoir » : 5 calculs de ce module
-  //    (le plus ancien si plusieurs), puis 5 du mélange ordinaire ;
-  //  - les modules dus, à tour de rôle par boîte : au plus 3 calculs d'un
-  //    même module quand plus de 3 modules sont dus ;
-  //  - rien n'est dû : les modules non dus, par échéance la plus proche
-  //    (entretien) ;
-  //  - le niveau est tiré au hasard parmi les niveaux validés du module.
-  // La page demande ensuite le calcul au générateur du niveau.
-  function tirerMelange(parcours, {aujourdhui = jourLocal(), graine = 1, enAvant = null, total = SEUILS.melange.total} = {}) {
-    const candidats = modulesDuMelange(parcours, {enAvant});
-    if (!candidats.length) return [];
-    const rng = mulberry32(graine);
-    const aRevoir = trierParEcheance(candidats.filter(([, ligne]) => ligne.r));
-    const reprise = aRevoir.length ? aRevoir[0][0] : null;
-    const nombreReprise = reprise ? Math.min(SEUILS.melange.reprise, total) : 0;
-    const dus = tourDeRole(candidats.filter(([, ligne]) => moduleDu(ligne, aujourdhui)));
-    const nonDus = trierParEcheance(candidats.filter(([, ligne]) => !moduleDu(ligne, aujourdhui))).map(([code]) => code);
-    const reste = total - nombreReprise;
-    // Les modules dus d'abord ; rien n'est dû : l'entretien, par échéance.
-    const ordinaires = distribuer(dus.length ? dus : nonDus, reste);
-    const codes = [...listeDe(nombreReprise, reprise), ...ordinaires];
-    return codes.map((code, index) => {
-      const ligne = parcours.modules[code];
-      const valides = ligne.v.map((v, i) => (v ? i + 1 : 0)).filter(Boolean);
-      return {
-        module: code,
-        niveau: valides[Math.floor(rng() * valides.length)],
-        du: moduleDu(ligne, aujourdhui),
-        reprise: index < nombreReprise
-      };
-    });
-  }
-
-  // ------------------------------------------------------------ la séance du jour
-
-  // La file des étapes du jour (4 au plus) :
-  //  1. le module mis en avant par le professeur, s'il n'est pas validé :
-  //     « J'apprends » si ce niveau n'a jamais été appris, sinon
-  //     « Je m'entraîne » ;
-  //  2. « Mes calculs du jour », s'il existe un module avec un niveau validé ;
-  //  3. Mon module : « J'apprends » (si pas fait) puis « Je m'entraîne »,
-  //     puis « Je valide » — jouée seulement si l'entraînement du jour est
-  //     réussi (voir suiteDeFile).
-  // La validation attend le lendemain si elle tombe au-delà de 4 étapes.
-  function fileSeance(parcours, carte, {enAvant = null} = {}) {
-    const file = [];
-    const avant = enAvant && ficheCarte(carte, enAvant) && ficheCarte(carte, enAvant).construit && !estValide(parcours, enAvant) ? enAvant : null;
-    if (avant) {
-      const ligne = ligneDe(parcours, avant);
-      file.push({type: ligne.a[ligne.nv - 1] ? "entraine" : "apprends", module: avant, niveau: ligne.nv, enAvant: true});
-    }
-    if (modulesDuMelange(parcours, {enAvant: avant}).length) file.push({type: "melange", calculs: SEUILS.melange.total});
-    const mod = moduleCourant(parcours, carte, {enAvant: avant});
-    if (mod && mod !== avant && !estValide(parcours, mod)) {
-      const ligne = ligneDe(parcours, mod);
-      if (!ligne.a[ligne.nv - 1]) file.push({type: "apprends", module: mod, niveau: ligne.nv});
-      file.push({type: "entraine", module: mod, niveau: ligne.nv});
-      file.push({type: "valide", module: mod, niveau: ligne.nv, conditionnelle: true});
-    }
-    return file.slice(0, SEUILS.seance.etapesMax);
-  }
-
-  // Après l'entraînement de Mon module : raté, la validation qui suivait
-  // devient « Je m'entraîne encore » (sans validation ce jour-là).
-  function suiteDeFile(file, index, {reussi = false} = {}) {
-    const etape = file[index];
-    if (!etape || etape.type !== "entraine" || etape.enAvant || reussi) return file.slice();
-    return file.map((suivante, rang) => (rang > index && suivante.type === "valide" && suivante.module === etape.module
-      ? {type: "entraine", module: suivante.module, niveau: suivante.niveau, encore: true}
-      : suivante));
-  }
-
-  // « Cette semaine » : les jours avec une séance finie depuis lundi.
+  // « N fois cette semaine » : les séances finies depuis lundi.
   function bilanSeances(parcours, aujourdhui = jourLocal()) {
     const lundi = lundiDe(aujourdhui);
-    const jours = new Set(parcours.seances.filter(jour => jour >= lundi && jour <= aujourdhui));
     return {
-      semaine: jours.size,
-      objectif: SEUILS.seance.objectifSemaine,
+      semaine: parcours.seances.filter(jour => jour >= lundi && jour <= aujourdhui).length,
       aujourdhui: parcours.seances.filter(jour => jour === aujourdhui).length
     };
   }
@@ -925,6 +1126,7 @@
     }
   }
 
+
   // ------------------------------------------------------------------ la fusion
 
   function dateLaPlusRecente(premiere, seconde) {
@@ -940,15 +1142,14 @@
   }
 
   // Lequel des deux côtés a vu le module le plus récemment ; à égalité, un
-  // choix qui ne dépend pas de l'ordre des arguments (la boîte la plus
-  // basse, puis le texte le plus petit).
+  // choix qui ne dépend pas de l'ordre des arguments (les boîtes les plus
+  // basses, puis le texte le plus petit).
   function coteLePlusRecent(a, b) {
     const va = a.vu || "";
     const vb = b.vu || "";
     if (va !== vb) return va > vb ? a : b;
-    const ba = a.b || 0;
-    const bb = b.b || 0;
-    if (ba !== bb) return ba < bb ? a : b;
+    const somme = ligne => ligne.b.reduce((s, boite) => s + boite, 0);
+    if (somme(a) !== somme(b)) return somme(a) < somme(b) ? a : b;
     return JSON.stringify(a) <= JSON.stringify(b) ? a : b;
   }
 
@@ -959,30 +1160,24 @@
     const ligne = moduleVide(id);
     ligne.vu = dateLaPlusRecente(a.vu, b.vu);
     ligne.ok = dateLaPlusAncienne(a.ok, b.ok);
+    // Les boîtes, les échéances et les échecs : en bloc, du côté qui a vu le
+    // module le plus récemment. Une compétence entrée seulement de l'autre
+    // côté n'est pas perdue : elle garde sa boîte de là-bas.
+    const recent = coteLePlusRecent(a, b);
+    const autre = recent === a ? b : a;
     for (let i = 0; i < k; i += 1) {
-      ligne.v[i] = Math.max(a.v[i], b.v[i]);
       ligne.a[i] = Math.max(a.a[i], b.a[i]);
       ligne.f[i] = Math.max(a.f[i], b.f[i]);
-      // Le temps : celui du côté qui a le plus joué ce niveau.
-      ligne.t[i] = a.f[i] === b.f[i] ? Math.max(a.t[i], b.t[i]) : a.f[i] > b.f[i] ? a.t[i] : b.t[i];
+      const source = recent.b[i] || !autre.b[i] ? recent : autre;
+      ligne.b[i] = source.b[i];
+      ligne.e[i] = source.e[i];
+      ligne.x[i] = source.x[i];
     }
-    ligne.nv = niveauAFaire(ligne.v, Math.max(a.nv, b.nv));
-    // Deux appareils qui ont validé chacun une partie des niveaux : le
-    // module est validé le jour du dernier travail.
-    if (!ligne.ok && ligne.v.every(Boolean)) ligne.ok = ligne.vu;
     [...new Set([...Object.keys(a.c), ...Object.keys(b.c)])].sort((x, y) => Number(x) - Number(y)).forEach(cause => {
       ligne.c[cause] = Math.max(a.c[cause] || 0, b.c[cause] || 0);
     });
-    // La boîte, l'échéance, les erreurs du mélange et « à revoir » : en bloc,
-    // du côté qui a vu le module le plus récemment.
-    const recent = coteLePlusRecent(a, b);
-    ligne.err = recent.err;
-    ligne.r = recent.r;
-    if (ligne.v.some(Boolean)) {
-      const source = recent.b ? recent : (a.b ? a : b);
-      ligne.b = source.b || 1;
-      ligne.e = source.e || ligne.vu || jourLocal();
-    }
+    // Deux appareils qui ont chacun une partie des compétences sues.
+    if (!ligne.ok && toutSu(ligne)) ligne.ok = ligne.vu;
     return ligne;
   }
 
@@ -999,16 +1194,14 @@
     CODES.forEach(id => {
       if (a.modules[id] || b.modules[id]) fusion.modules[id] = fusionnerModule(id, a.modules[id], b.modules[id]);
     });
-    // « Mon module » : celui du côté qui l'a vu le plus récemment.
-    const vuDe = cote => (cote.mod && cote.modules[cote.mod] && cote.modules[cote.mod].vu) || "";
-    if (!a.mod || !b.mod) fusion.mod = a.mod || b.mod;
-    else if (vuDe(a) !== vuDe(b)) fusion.mod = vuDe(a) > vuDe(b) ? a.mod : b.mod;
-    else fusion.mod = CODES.indexOf(a.mod) <= CODES.indexOf(b.mod) ? a.mod : b.mod;
-    // La séance : celle qui a le plus de séances finies.
-    const rangSeance = s => [s.n, s.jour || "", s.etape];
-    const [ra, rb] = [rangSeance(a.seance), rangSeance(b.seance)];
-    const aDevant = ra[0] !== rb[0] ? ra[0] > rb[0] : ra[1] !== rb[1] ? ra[1] > rb[1] : ra[2] >= rb[2];
+    // La séance, son plan et « le test est proposé » : du côté qui a le plus
+    // de séances finies, puis le jour le plus récent, puis l'étape la plus
+    // avancée ; à égalité complète, le texte le plus petit.
+    const rang = cote => [cote.seance.n, cote.seance.jour || "", cote.seance.etape, JSON.stringify([cote.seance.p, cote.test])];
+    const [ra, rb] = [rang(a), rang(b)];
+    const aDevant = ra[0] !== rb[0] ? ra[0] > rb[0] : ra[1] !== rb[1] ? ra[1] > rb[1] : ra[2] !== rb[2] ? ra[2] > rb[2] : ra[3] <= rb[3];
     fusion.seance = cloner(aDevant ? a.seance : b.seance);
+    fusion.test = aDevant ? a.test : b.test;
     // Les séances finies : par date, le plus grand des deux comptes.
     const compte = liste => liste.reduce((m, jour) => m.set(jour, (m.get(jour) || 0) + 1), new Map());
     const [ca, cb] = [compte(a.seances), compte(b.seances)];
@@ -1045,6 +1238,9 @@
     NIVEAUX,
     CODES,
     SEUILS,
+    TEST,
+    PLAN,
+    NOUVEAUTE,
     creerParcours,
     normaliserParcours,
     nettoyerPrenom,
@@ -1055,24 +1251,26 @@
     ajouterJours,
     ecartJours,
     lundiDe,
+    delaiDeBoite,
     echeanceDeBoite,
-    estValide,
-    estOuvert,
+    couleurDeBoite,
+    rangDe,
+    competenceDeRang,
+    estSu,
     etatModule,
-    moduleSuivant,
+    competenceCourante,
     moduleCourant,
     compter,
-    choisirModule,
-    choisirNiveau,
     verdictEntrainement,
-    verdictValidation,
     appliquerSerie,
-    moduleDu,
-    trierParEcheance,
-    tourDeRole,
-    tirerMelange,
+    appliquerTest,
+    appliquerRetour,
+    terminerCalculsDuJour,
+    tirerCalculsDuJour,
+    ouvrirSeance,
+    seanceOuverte,
     fileSeance,
-    suiteDeFile,
+    demain,
     bilanSeances,
     mesurer,
     CLE_SEL,

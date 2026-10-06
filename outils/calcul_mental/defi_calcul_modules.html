@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Défi calcul, par modules | maths&amp;go</title>
   <meta name="description" content="Défi calcul par modules, en construction : le calcul mental, module par module.">
-  <!-- En construction (lot 1a, 03/10/2026) : la page n'est reliée à rien,
-       ni au catalogue ni au plan du site. À l'ouverture, elle prendra
-       l'adresse defi_calcul.html. -->
+  <!-- En construction (lot 1a, 03/10/2026 ; la séance guidée au lot 2a,
+       05/10/2026) : la page n'est reliée à rien, ni au catalogue ni au plan
+       du site. À l'ouverture, elle prendra l'adresse defi_calcul.html. -->
   <meta name="robots" content="noindex">
   <link rel="icon" href="/favicon.ico" sizes="48x48">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -39,7 +39,7 @@
       var aEffacer = false;
       try {
         var brut = String(window.location.hash || "").replace(/^#/, "");
-        if (brut === "parcours" || brut === "calculs") {
+        if (brut === "parcours") {
           entree.ouvrir = brut;
         } else if (brut) {
           var morceaux = brut.split("&");
@@ -79,7 +79,7 @@
     })(window);
   </script>
   <script defer src="../../assets/js/mention-confidentialite.js"></script>
-  <link rel="stylesheet" href="./defi_calcul.css?v=20261003-3">
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261005-2">
 </head>
 <body>
   <main class="shell">
@@ -88,7 +88,6 @@
         <img src="/assets/img/mathsgo-logo.png" alt="maths&amp;go" width="1338" height="622">
       </a>
       <div class="topbar-actions">
-        <button id="suivi-sortie" class="catalogue-link suivi-sortie" type="button" hidden>Se déconnecter</button>
         <a id="lien-retour" class="catalogue-link" href="../index.html?domain=nombres-calculs&amp;notion=calcul-mental" aria-label="Retour au calcul mental"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="catalogue-link-label">Calcul mental</span></a>
         <button class="fullscreen-toggle" type="button" data-fullscreen-toggle aria-pressed="false" aria-label="Passer en plein écran"><span class="fullscreen-toggle-icon" data-fullscreen-icon aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path class="fullscreen-expand" d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/><path class="fullscreen-collapse" d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg></span><span data-fullscreen-label>Plein écran</span></button>
       </div>
@@ -114,24 +113,30 @@
     </header>
 
     <section class="panel">
-      <!-- L'accueil (variante A des maquettes) : Mon module et sa séance à
-           gauche, le parcours à droite, un seul palier ouvert à la fois.
-           Tout ce qui s'y lit est calculé par renderAccueil(). -->
+      <!-- Le mode professeur (?prof=1) : tous les menus, rien n'est
+           enregistré. La pilule est sur l'accueil et sur l'écran d'un module. -->
+      <p id="prof-pilule" class="prof-pilule" hidden><b>Mode professeur</b><span>· tous les menus, rien n’est enregistré ·</span><button id="prof-quitter" type="button">Quitter</button></p>
+      <p id="prof-refus" class="prof-pilule est-refus" hidden><b>Mode professeur</b><span>· déconnecte-toi d’abord</span></p>
+      <!-- L'accueil : Mon module et sa séance à gauche, le parcours à
+           droite, un seul palier ouvert à la fois. L'élève n'a pas de
+           menus : sa séance est prête. Tout ce qui s'y lit est calculé par
+           renderAccueil(). -->
       <div id="intro" class="intro dc-large">
         <div class="acc dc-a">
           <div class="gauche">
             <section class="matable" aria-labelledby="acc-module-titre">
               <div class="matable-head">
                 <div><p class="eyebrow">Mon module</p><h1 id="acc-module-titre" tabindex="-1">Défi calcul</h1></div>
+                <div id="acc-droite" class="matable-droite" hidden><button id="acc-changer" class="matable-changer" type="button">Changer de module</button></div>
               </div>
               <div id="acc-niv" class="dc-niv"></div>
               <div id="acc-seance"></div>
-              <div class="seance-liens">
-                <button id="acc-valide" type="button">Je valide</button>
+              <div id="acc-liens" class="seance-liens" hidden>
+                <button id="acc-test" type="button">Tu connais déjà&nbsp;? (le test)</button>
                 <button id="acc-choisir" type="button">Choisir une activité</button>
               </div>
             </section>
-            <div id="acc-semaine" class="semaine"></div>
+            <div id="acc-semaine" class="semaine" hidden></div>
             <div class="acc-bas">
               <button id="acc-notice-bouton" type="button">Comment ça marche&nbsp;?</button>
             </div>
@@ -140,12 +145,14 @@
             <div class="dc-ptete"><p id="parcours-eyebrow" class="eyebrow">Mon parcours</p><small id="parcours-compte"></small></div>
             <div id="parcours-paliers" class="dc-paliers" role="group" aria-label="Les paliers"></div>
             <p id="parcours-titre" class="dc-ptitre"></p>
-            <div id="parcours-modules" class="dc-mods"></div>
+            <div id="parcours-modules" class="dc-mods" role="list"></div>
+            <p class="dc-legende"><span><span class="dc-comp" aria-hidden="true"><i></i></span>à apprendre</span><span><span class="dc-comp" aria-hidden="true"><i class="b"></i></span>en route</span><span><span class="dc-comp" aria-hidden="true"><i class="v"></i></span>su</span><span><span class="dc-comp" aria-hidden="true"><i class="r"></i></span>à revoir</span></p>
           </section>
         </div>
       </div>
 
-      <!-- L'écran d'un module : les cases de niveau, les trois étapes. -->
+      <!-- L'écran d'un module, en mode professeur seulement : les cases de
+           niveau, J'apprends, Je m'entraîne, le test. -->
       <div id="module" class="dc-module" hidden>
         <section class="matable" aria-labelledby="module-titre">
           <div class="matable-head">
@@ -159,13 +166,15 @@
       </div>
 
       <div id="play" hidden>
-        <!-- « J'apprends » : où j'en suis des trois temps, au-dessus de la barre. -->
-        <div id="seance-fil" class="seance-fil" hidden></div>
+        <!-- Le fil de la séance (« Ma séance ①②③④ ») ; celui des trois temps
+             de « J'apprends » est dans la barre, à côté du bouton de retour. -->
+        <div id="fil-seance" class="seance-fil seance" hidden></div>
         <div class="status">
           <div class="status-left">
-            <button id="game-menu" class="game-menu" type="button" aria-label="Arrêter et revenir à Mon module"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="game-menu-label">Mon module</span></button>
+            <button id="game-menu" class="game-menu" type="button" aria-label="Arrêter et revenir à l’accueil"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="game-menu-label">Accueil</span></button>
             <span id="question-count"></span>
           </div>
+          <div id="seance-fil" class="seance-fil" hidden></div>
           <strong id="time" class="no-timer">À ton rythme</strong>
         </div>
         <div class="progress-track" aria-hidden="true"><b id="progress"></b></div>
@@ -188,9 +197,10 @@
       </div>
 
       <div id="result" class="result" hidden>
-        <!-- Le verdict d'abord, puis la suite en une phrase et les boutons,
+        <!-- Le fil de la séance, le verdict, puis la suite et les boutons,
              les erreurs en dernier. À la fin de « J'apprends », le verdict
              laisse la place à la phrase-bilan. -->
+        <div id="result-fil" class="seance-fil centre" hidden></div>
         <div id="result-verdict" class="result-verdict">
           <span id="result-icon" class="hero-icon" aria-hidden="true">✓</span>
           <h1 id="result-title" tabindex="-1"></h1>
@@ -207,19 +217,18 @@
       </div>
 
       <!-- « Comment ça marche ? » : les règles en cinq phrases, écrites une
-           seule fois. Les lignes de la séance et du mélange viendront au
-           lot 2. -->
+           seule fois. -->
       <div id="notice" class="notice-screen" hidden>
         <div class="settings-toolbar">
           <button id="notice-back" class="settings-back" type="button" aria-label="Retour à l’accueil"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="settings-back-label">Accueil</span></button>
           <h1 id="notice-title" class="settings-heading" tabindex="-1">Comment ça marche&nbsp;?</h1>
         </div>
         <div class="notice">
-          <p><b>Mon module.</b> Une façon de calculer, en plusieurs niveaux.</p>
-          <p><b>J’apprends.</b> Trois temps&nbsp;: je manipule, je représente, j’écris.</p>
-          <p><b>Je m’entraîne.</b> 10 calculs, sans chrono. 8 justes&nbsp;: je peux valider.</p>
-          <p><b>Je valide.</b> Un niveau à la fois&nbsp;: 8 justes sur 10. Pour ce qui se sait par cœur&nbsp;: 10 justes sur 12, sans traîner. Le dernier niveau valide le module.</p>
-          <p><b>Mon parcours.</b> 4 paliers. Un module s’ouvre quand ceux d’avant sont validés.</p>
+          <p><b>Ma séance du jour.</b> Je clique, elle est prête&nbsp;: mes calculs du jour, puis une chose nouvelle.</p>
+          <p><b>Mes calculs du jour.</b> Les calculs qui reviennent. Juste, ils montent d’une boîte&nbsp;; raté, ils redescendent. C’est là que ça compte.</p>
+          <p><b>J’apprends, je m’entraîne.</b> Trois temps, puis 10 calculs avec les aides. Ici, se tromper ne compte pas.</p>
+          <p><b>Tu connais déjà&nbsp;?</b> Un test à l’entrée d’un module&nbsp;: ce que je sais déjà entre directement.</p>
+          <p><b>Mes couleurs.</b> Bleu&nbsp;: en route. Vert&nbsp;: su, ça revient de temps en temps. Rouge&nbsp;: à revoir demain.</p>
         </div>
       </div>
     </section>
@@ -232,9 +241,9 @@
     <span data-mathsgo-confidentialite>Sans cookie ni traceur</span>
   </footer>
 
-  <script src="./defi_calcul_core.js?v=20261003-3"></script>
-  <script src="./defi_calcul_mon_parcours.js?v=20261003-3"></script>
-  <script src="./defi_calcul_aides.js?v=20261003-3"></script>
+  <script src="./defi_calcul_core.js?v=20261005-2"></script>
+  <script src="./defi_calcul_mon_parcours.js?v=20261005-2"></script>
+  <script src="./defi_calcul_aides.js?v=20261005-2"></script>
   <script>
     (() => {
       "use strict";
@@ -245,8 +254,8 @@
       if (!PARCOURS) throw new Error("Le moteur de la progression est indisponible.");
       const AIDES = window.MATHSGO_DEFI_CALCUL_AIDES;
       if (!AIDES) throw new Error("Les aides de Défi calcul sont indisponibles.");
-      // L'ordre conseillé, les « avant », ce qui est construit : la carte que
-      // le moteur de la progression lit sans connaître les textes.
+      // L'ordre, les paliers, ce qui est construit : la carte que le moteur
+      // de la progression lit sans connaître les textes.
       const CARTE = CORE.carte();
       const $ = id => document.getElementById(id);
 
@@ -274,7 +283,12 @@
         // L'aide qu'on touche dans « J'apprends » (rekenrek, glisse-nombres).
         manip: null,
         palier: null,
+        // La séance qui se joue : son étape, et ce qui a été joué (pour
+        // « Séance du jour faite »).
+        seance: null,
+        // Mode professeur : le module ouvert, le niveau choisi dans chacun.
         module: null,
+        niveauxProf: {},
         titreResultat: "result-title"
       };
 
@@ -282,7 +296,7 @@
       //
       // Copié de Défi tables (billet, bandeau, envoi, garde d'inactivité),
       // avec appli « defi-calcul ». Tant que le serveur ne connaît pas cette
-      // appli (lot 2), il refuse la lecture et l'envoi : le bandeau le dit,
+      // appli (lot 2b), il refuse la lecture et l'envoi : le bandeau le dit,
       // et le travail reste sur l'appareil.
       //
       // Trois règles tenues par le code ci-dessous :
@@ -331,8 +345,33 @@
       // l'appareil. La case du code qui arrive n'est jamais purgée.
       if (ENTREE.billet) PARCOURS.effacerCode(stockageSession());
       let codeSuivi = codeInitial(ENTREE);
-      PARCOURS.purger(storage(), {maintenant: Date.now(), garder: codeSuivi});
-      let parcours = codeSuivi ? PARCOURS.charger(storage(), codeSuivi) : caseSansCode();
+
+      // Le mode professeur : la clé « ?prof=1 », gardée dans l'onglet. Tous
+      // les menus, et RIEN n'est enregistré : la progression vit en mémoire
+      // (ni stockage de l'appareil, ni envoi), elle disparaît à la fermeture.
+      // Avec un code d'élève dans l'onglet, la clé est ignorée : l'élève reste
+      // suivi, et l'accueil dit « déconnecte-toi d'abord ».
+      const REQUETE = new URLSearchParams(window.location.search);
+      const CLE_PROF = "mathsgo-defi-calcul-prof";
+      function cleProfDansOnglet() {
+        try { return stockageSession().getItem(CLE_PROF) === "1"; } catch (_) { return false; }
+      }
+      const eleveDansOnglet = Boolean(codeSuivi || ENTREE.billet);
+      const PROF_REFUSE = REQUETE.get("prof") === "1" && eleveDansOnglet;
+      const MODE_PROF = !eleveDansOnglet && (REQUETE.get("prof") === "1" || cleProfDansOnglet());
+      try {
+        // Un élève qui entre dans un onglet où le professeur est passé : la
+        // clé gardée s'efface, sans rien lui dire.
+        if (MODE_PROF) stockageSession().setItem(CLE_PROF, "1");
+        else stockageSession().removeItem(CLE_PROF);
+      } catch (_) {}
+      function quitterModeProf() {
+        try { stockageSession().removeItem(CLE_PROF); } catch (_) {}
+        try { window.location.assign(window.location.pathname); } catch (_) {}
+      }
+
+      if (!MODE_PROF) PARCOURS.purger(storage(), {maintenant: Date.now(), garder: codeSuivi});
+      let parcours = MODE_PROF ? PARCOURS.creerParcours() : codeSuivi ? PARCOURS.charger(storage(), codeSuivi) : caseSansCode();
       // L'état de synchronisation de la case active : dernière révision connue
       // du serveur, travail en attente d'envoi (dirty), code refusé (détaché).
       // Il survit à la fermeture de la page : ce qui n'est pas parti partira.
@@ -421,7 +460,20 @@
         // Le lien Infos reprend donc la marque : c'est bien lui, ici, la mention de
         // confidentialité de la page.
         infos.setAttribute("data-mathsgo-confidentialite", "");
-        pied.replaceChildren(lien(SUIVI_URL + "/", "Mon espace"), separateur, infos);
+        // Comme dans Défi tables : le logo quitte la barre du haut de
+        // l'élève à code ; il est ici, en petit, et ramène à son espace comme
+        // celui du haut.
+        const logo = document.createElement("a");
+        logo.className = "pied-logo";
+        logo.href = RETOUR_ESPACE.logoHref;
+        logo.setAttribute("aria-label", "maths&go — " + RETOUR_ESPACE.logoAria);
+        const image = document.createElement("img");
+        image.src = "/assets/img/mathsgo-logo.png";
+        image.alt = "";
+        image.width = 1338;
+        image.height = 622;
+        logo.append(image);
+        pied.replaceChildren(logo, lien(SUIVI_URL + "/", "Mon espace"), separateur, infos);
         pied.classList.add("pied-espace");
         piedRefait = true;
       }
@@ -429,6 +481,9 @@
       function majLienRetour() {
         // Un élève dont le billet a été refusé vient quand même de son espace.
         const vers = suiviActif() || entreeRefusee ? RETOUR_ESPACE : RETOUR_CATALOGUE;
+        // Comme dans Défi tables : l'élève à code (body.mode-eleve) n'a qu'une
+        // barre fine en haut, sans logo, « Se déconnecter » dans le bandeau.
+        if (document.body) document.body.classList.toggle("mode-eleve", Boolean(suiviActif() || entreeRefusee));
         majPiedDePage(vers === RETOUR_ESPACE);
         // Le logo suit la même règle que le lien du haut. C'était la dernière
         // porte qui faisait sortir un élève suivi de son espace : pour lui, le
@@ -651,6 +706,8 @@
       // Ranger la case active sur l'appareil. Sous un code, le moteur retire
       // le prénom lui-même.
       function sauverCase() {
+        // Mode professeur : rien ne s'écrit sur l'appareil.
+        if (MODE_PROF) return;
         PARCOURS.sauver(storage(), parcours, codeSuivi);
       }
 
@@ -707,7 +764,6 @@
       // répondu, orange quand rien n'est encore parti. Jamais un secret, et la
       // porte de sortie est dessus.
       function renderRepere() {
-        renderSortieBarre();
         const repere = document.getElementById("suivi-repere");
         if (!repere) return;
         if (!suiviActif() && entreeRefusee) { renderEntreeRefusee(repere); return; }
@@ -729,7 +785,29 @@
         else if (erreurDefinitive) texte = "Suivi par ton professeur · impossible d’envoyer ce travail";
         else if (suiviHorsLigne) texte = "Suivi par ton professeur · travail gardé ici, pas encore envoyé";
         else texte = `Suivi par ton professeur${qui}${ou}`;
-        repere.append(puce, document.createTextNode(texte));
+        // Comme dans Défi tables : « Suivi par ton
+        // professeur », le prénom, la classe, chacun dans son morceau — au
+        // téléphone, trois lignes centrées (le texte lu reste le même :
+        // « Suivi par ton professeur · Léa · 6e B »).
+        const morceaux = document.createElement("span");
+        morceaux.className = "repere-texte";
+        if (!sync.detache && !erreurDefinitive && !suiviHorsLigne && (qui || ou)) {
+          const suivi = document.createElement("span");
+          suivi.textContent = "Suivi par ton professeur";
+          morceaux.append(suivi);
+          [["repere-prenom", qui], ["repere-classe", ou]].filter(([, valeur]) => valeur).forEach(([classe, valeur]) => {
+            const ligne = document.createElement("span");
+            ligne.className = classe;
+            const separe = document.createElement("span");
+            separe.className = "repere-sep";
+            separe.textContent = " · ";
+            ligne.append(separe, document.createTextNode(valeur.replace(/^ · /, "")));
+            morceaux.append(ligne);
+          });
+        } else {
+          morceaux.textContent = texte;
+        }
+        repere.append(puce, morceaux);
         // La porte de sortie est ICI, sur le repère, et pas dans un menu :
         // sans elle, un appareil partagé reste celui du dernier élève, et
         // même les liens de retour ramènent à son espace. Elle s'appelle
@@ -754,13 +832,6 @@
         repere.append(bloc);
       }
 
-      // La pilule « Se déconnecter » de l'en-tête compact (téléphone) : le même
-      // geste que la sortie du repère, visible seulement sous un code.
-      function renderSortieBarre() {
-        const pilule = document.getElementById("suivi-sortie");
-        if (pilule) pilule.hidden = !suiviActif();
-      }
-
       // Le billet n'a rien ouvert : on le dit à la place du repère, avec le
       // seul geste utile — repasser par l'espace, qui a encore le code dans
       // son onglet. Rien d'autre ne change : l'appli reste utilisable sans
@@ -780,6 +851,7 @@
         retour.href = SUIVI_URL + "/";
         retour.textContent = "Mon espace";
         const bloc = document.createElement("span");
+        bloc.className = "repere-lien";
         bloc.append(document.createTextNode("· "), retour);
         repere.append(puce, document.createTextNode(texte), bloc);
       }
@@ -1289,7 +1361,7 @@
       // Une espace insécable là où une ligne ne doit pas se couper.
       function soude(texte) {
         return String(texte)
-          .replace(/(\d) (min|s|sur|calculs?|justes?|erreurs?|étapes?|modules?)\b/g, "$1 $2")
+          .replace(/(\d) (min|s|sur|calculs?|justes?|erreurs?|étapes?|modules?|fois|temps|jours?|niveaux?)\b/g, "$1 $2")
           .replace(/\bsur (\d)/g, "sur $1")
           .replace(/\bfaut (\d)/g, "faut $1")
           .replace(/\bniveau (\d)/gi, m => m.replace(" ", " "))
@@ -1353,6 +1425,13 @@
       const ECRANS = Object.freeze(["intro", "module", "play", "result", "notice"]);
       const TITRES = Object.freeze({intro: "acc-module-titre", module: "module-titre", notice: "notice-title"});
 
+      // La pilule du mode professeur : sur l'accueil et sur l'écran d'un
+      // module. Avec un code d'élève, la clé est ignorée et l'accueil le dit.
+      function majPilule(name) {
+        $("prof-pilule").hidden = !(MODE_PROF && (name === "intro" || name === "module"));
+        $("prof-refus").hidden = !(PROF_REFUSE && suiviActif() && name === "intro");
+      }
+
       function show(name) {
         ECRANS.forEach(id => { $(id).hidden = id !== name; });
         if (name === "intro") renderAccueil();
@@ -1361,6 +1440,7 @@
         // Hors de l'accueil, le lien du site « ← Calcul mental » s'efface :
         // la seule flèche à l'écran est celle de l'appli.
         document.body.classList.toggle("ecran-interne", name !== "intro");
+        majPilule(name);
         window.scrollTo({top: 0, behavior: "auto"});
         if (TITRES[name]) $(TITRES[name]).focus?.({preventScroll: true});
         if (name === "result") $(state.titreResultat)?.focus?.({preventScroll: true});
@@ -1375,172 +1455,197 @@
       }
 
       // ------------------------------------------------- l'accueil
+      //
+      // L'élève n'a plus de menus : sa séance est prête, il clique dessus. Le
+      // mode professeur garde « Changer de module », « Choisir une activité »
+      // et le test.
 
-      function moduleCourant() {
-        return PARCOURS.moduleCourant(parcours, CARTE);
-      }
+      const jourCourant = () => PARCOURS.jourLocal();
+      const competenceCourante = () => PARCOURS.competenceCourante(parcours, CARTE);
+      const nomCompetence = (id, n) => CORE.nomCompetence(id, n);
 
       function ligneDe(id) {
         return PARCOURS.normaliserParcours({modules: {[id]: parcours.modules[id]}}).modules[id];
       }
 
-      // La ligne des niveaux : une case par niveau (pleine = validé, bleue =
-      // le niveau en cours), et à côté « Niveau 2 sur 4 » avec son contenu.
+      // Les couleurs des boîtes : la classe CSS et le mot.
+      const CLASSES_COULEUR = Object.freeze({gris: "", rouge: "r", bleu: "b", vert: "v"});
+      const MOTS_COULEUR = Object.freeze({gris: "à apprendre", rouge: "à revoir", bleu: "en route", vert: "su"});
+
+      // La ligne des niveaux : une case par compétence, colorée par sa boîte
+      // (le niveau en cours est cerclé), et à côté « Niveau 3 sur 4 ».
       function ligneNiveaux(zone, id, {texte = true} = {}) {
         zone.replaceChildren();
+        zone.removeAttribute("aria-label");
         const fiche = id ? CORE.moduleDe(id) : null;
         if (!fiche) return;
-        const ligne = ligneDe(id);
+        const etat = PARCOURS.etatModule(parcours, id, CARTE);
         const cases = document.createElement("span");
         cases.className = "cases";
         fiche.niveaux.forEach(niveau => {
           const b = document.createElement("b");
           b.textContent = String(niveau.n);
-          if (ligne.v[niveau.n - 1]) b.className = "ok";
-          else if (niveau.n === ligne.nv) b.className = "ici";
+          b.className = niveau.n === etat.ici ? "ici" : CLASSES_COULEUR[etat.couleurs[niveau.n - 1]];
           cases.append(b);
         });
         zone.append(cases);
-        zone.setAttribute("aria-label", `Niveau ${ligne.nv} sur ${fiche.niveaux.length}`);
-        if (!texte) return;
+        const lecture = fiche.niveaux.map(niveau => `niveau ${niveau.n} ${niveau.n === etat.ici ? "en cours" : MOTS_COULEUR[etat.couleurs[niveau.n - 1]]}`).join(", ");
+        zone.setAttribute("aria-label", lecture);
+        if (!texte || !etat.ici) return;
         const txt = document.createElement("span");
         txt.className = "txt";
         const petit = document.createElement("small");
-        petit.textContent = fiche.niveaux[ligne.nv - 1].titre || "";
-        txt.append(soude(`Niveau ${ligne.nv} sur ${fiche.niveaux.length}`), petit);
+        petit.textContent = fiche.niveaux[etat.ici - 1].titre || "";
+        txt.append(soude(`Niveau ${etat.ici} sur ${fiche.niveaux.length}`), petit);
         zone.append(txt);
       }
 
-      const titreNiveau = (id, n) => CORE.niveauDe(`${id}-${n}`)?.niveau.titre || "";
-
-      // Le nom d'une étape de la séance, d'après les fiches.
+      // Le nom d'une étape de la séance, et ce qu'elle contient.
       function nomEtape(etape) {
-        if (etape.type === "melange") return "Mes calculs du jour";
-        if (etape.type === "valide") return `Je valide le niveau ${etape.niveau}`;
-        if (etape.type === "apprends") return `J’apprends : ${titreNiveau(etape.module, etape.niveau)}`;
-        return etape.encore ? "Je m’entraîne encore" : `Je m’entraîne : ${titreNiveau(etape.module, etape.niveau)}`;
+        if (etape.type === "jour") return "Mes calculs du jour";
+        if (etape.type === "test") return `Tu connais déjà ? ${CORE.moduleDe(etape.module).nom}`;
+        if (etape.type === "nouveau") return "Une chose nouvelle";
+        const nom = nomCompetence(etape.module, etape.niveau);
+        if (etape.type === "apprends") return `J’apprends : ${nom}`;
+        if (etape.type === "entraine") return `Je m’entraîne : ${nom}`;
+        return `Je m’entraîne encore : ${nom}`;
       }
 
-      // La carte « Ma séance du jour » : le programme calculé par le moteur.
-      // Lot 1a (décision du 03/10/2026) : « Commencer » lance l'étape de Mon
-      // module — J'apprends si ce n'est pas fait, sinon Je m'entraîne —
-      // comme une activité ordinaire. L'enchaînement des étapes, le fil et
-      // « Mes calculs du jour » arrivent au lot 2.
-      function carteDeSeance(id) {
-        // Lot 1a : la carte ne montre que les étapes jouables ; « Mes calculs
-        // du jour » y revient au lot 2, avec le mélange.
-        const file = PARCOURS.fileSeance(parcours, CARTE).filter(etape => etape.type !== "melange");
-        const premiere = file.find(etape => etape.module === id && (etape.type === "apprends" || etape.type === "entraine"));
-        if (!premiere) return null;
-        const carte = document.createElement("button");
-        carte.type = "button";
-        carte.className = "carte-seance";
+      function tempsDe(id, n) {
+        const apprends = CORE.niveauDe(`${id}-${n}`).niveau.apprends;
+        return [...(apprends.manipule ? ["manipule"] : []), "represente", "ecris"];
+      }
+
+      function detailEtape(etape) {
+        if (etape.type === "jour") return `${pluriel(etape.calculs, "calcul")} · ça compte`;
+        if (etape.type === "test") return `${PARCOURS.SEUILS.test.parNiveau} calculs par niveau, sans aide`;
+        if (etape.type === "nouveau") return "selon ton test";
+        if (etape.type === "apprends") return `${tempsDe(etape.module, etape.niveau).length} temps`;
+        if (etape.type === "entraine") return "10 calculs";
+        return "10 calculs, avec les aides";
+      }
+
+      // Sur le bouton « Étape 3 : j'apprends + 8, 18, 28, 38 → ».
+      function nomBouton(etape) {
+        if (etape.type === "jour") return "mes calculs du jour";
+        if (etape.type === "test") return "tu connais déjà ?";
+        if (etape.type === "apprends") return `j’apprends ${nomCompetence(etape.module, etape.niveau)}`;
+        if (etape.type === "entraine") return "je m’entraîne";
+        return "je m’entraîne encore";
+      }
+
+      // La carte « Ma séance du jour » : les étapes qui restent, calculées par
+      // le moteur. Trois visages : à commencer, à reprendre (arrêtée au
+      // milieu), faite (« Encore une séance », ou « À demain ! » quand il ne
+      // reste rien à jouer aujourd'hui).
+      function carteDeSeance() {
+        const file = PARCOURS.fileSeance(parcours, CARTE, {aujourdhui: jourCourant()});
+        const reste = file.etapes;
+        if (!reste.length && !file.finie) return null;
+        const jouable = reste.length > 0;
+        const reprise = file.ouverte && file.faites > 0;
+        const carte = document.createElement(jouable ? "button" : "div");
+        if (jouable) carte.type = "button";
+        carte.className = `carte-seance${jouable ? "" : " est-faite"}`;
         carte.id = "acc-carte";
         const tete = document.createElement("span");
         tete.className = "tete";
         const texte = document.createElement("span");
         const titre = document.createElement("strong");
-        titre.textContent = "Ma séance du jour";
+        titre.textContent = file.finie && !file.ouverte ? "Séance du jour faite ✓" : "Ma séance du jour";
         const duree = document.createElement("span");
         duree.className = "duree";
-        duree.textContent = soude(`${pluriel(file.length, "étape")} · environ 10 min`);
+        if (!jouable) duree.textContent = soude("À demain !");
+        else if (reprise) duree.textContent = soude(`étape ${file.faites + 1} sur ${file.faites + reste.length}`);
+        else if (reste.length === 1 && reste[0].type === "jour" && !competenceCourante()) duree.textContent = soude(`Tout est en route ! ${pluriel(reste[0].calculs, "calcul")} aujourd’hui.`);
+        else duree.textContent = soude(`${pluriel(reste.length, "étape")} · environ ${file.minutes} min`);
         texte.append(titre, duree);
+        tete.append(texte);
+        carte.append(tete);
+        if (!jouable) return carte;
         const go = document.createElement("span");
         go.className = "go";
-        go.textContent = "Commencer →";
-        tete.append(texte, go);
+        go.textContent = reprise ? "Reprendre →" : file.finie ? "Encore une séance →" : "Commencer →";
+        tete.append(go);
         const liste = document.createElement("span");
         liste.className = "programme";
-        file.forEach((etape, index) => {
+        reste.forEach((etape, index) => {
           const item = document.createElement("span");
           const numero = document.createElement("i");
-          numero.textContent = String(index + 1);
+          numero.textContent = String(file.faites + index + 1);
           const nom = document.createElement("span");
           nom.textContent = soude(nomEtape(etape));
+          const detail = document.createElement("small");
+          detail.textContent = soude(detailEtape(etape));
+          nom.append(detail);
           item.append(numero, nom);
           liste.append(item);
         });
-        carte.append(tete, liste);
-        carte.setAttribute("aria-label", `Ma séance du jour : ${duree.textContent}. ${file.map((etape, index) => `${index + 1}, ${nomEtape(etape)}`).join(" ; ")}. Commencer.`);
-        carte.addEventListener("click", () => {
-          if (premiere.type === "apprends") lancerApprends(premiere.module, premiere.niveau, "intro");
-          else lancerSerie(premiere.module, premiere.niveau, "entraine", "intro");
-        });
+        carte.append(liste);
+        carte.setAttribute("aria-label", `${titre.textContent} : ${duree.textContent}. ${reste.map((etape, index) => `${file.faites + index + 1}, ${nomEtape(etape)}`).join(" ; ")}. ${go.textContent.replace(" →", "")}.`);
+        carte.addEventListener("click", lancerSeance);
         return carte;
       }
 
-      // « Cette semaine ●○○○ » : les jours avec une séance finie.
-      function renderSemaine() {
-        const zone = $("acc-semaine");
-        const bilan = PARCOURS.bilanSeances(parcours);
-        zone.replaceChildren();
-        if (bilan.semaine > bilan.objectif) {
-          zone.textContent = `${bilan.semaine} jours cette semaine ✓`;
-          zone.removeAttribute("aria-label");
-          return;
-        }
-        const titre = document.createElement("span");
-        titre.textContent = "Cette semaine";
-        zone.append(titre);
-        for (let index = 0; index < bilan.objectif; index += 1) {
-          const rond = document.createElement("i");
-          if (index < bilan.semaine) rond.className = "ok";
-          rond.setAttribute("aria-hidden", "true");
-          zone.append(rond);
-        }
-        zone.setAttribute("aria-label", `Cette semaine : ${pluriel(bilan.semaine, "jour")} avec une séance sur ${bilan.objectif}`);
+      // « 3 fois cette semaine » : les séances finies depuis lundi.
+      function texteSemaine() {
+        const fois = PARCOURS.bilanSeances(parcours, jourCourant()).semaine;
+        return fois ? `${fois} fois cette semaine` : "";
       }
 
-      const CLASSES_ETAT = Object.freeze({valide: "valide", revoir: "revoir", encours: "encours", libre: "", ferme: "ferme", bientot: "bientot"});
+      function renderSemaine() {
+        const zone = $("acc-semaine");
+        zone.textContent = texteSemaine();
+        zone.hidden = !zone.textContent;
+      }
+
+      const CLASSES_ETAT = Object.freeze({su: "su", revoir: "rouge", encours: "encours", libre: "", bientot: "bientot"});
+      const MOTS_ETAT = Object.freeze({su: "su", revoir: "su, à revoir", encours: "en cours", libre: "pas commencé", bientot: "bientôt"});
 
       // Une ligne du parcours : l'état (une forme, pas seulement une couleur),
-      // le nom, et à droite un calcul d'exemple ou une étiquette.
+      // le nom, et un petit carré par compétence. Pour l'élève, la ligne ne
+      // s'ouvre pas : elle montre. En mode professeur, elle ouvre le module.
       function ligneModule(fiche) {
         const etat = PARCOURS.etatModule(parcours, fiche.id, CARTE);
-        const bouton = document.createElement("button");
-        bouton.type = "button";
-        bouton.className = `dc-mod ${CLASSES_ETAT[etat.etat]}`.trim();
-        bouton.dataset.module = fiche.id;
+        const ouvrable = MODE_PROF && etat.etat !== "bientot";
+        const ligne = document.createElement(ouvrable ? "button" : "div");
+        if (ouvrable) ligne.type = "button";
+        else ligne.setAttribute("role", "listitem");
+        // Mon module est encadré, même s'il n'est pas encore commencé.
+        const classe = etat.ici && etat.etat !== "revoir" ? "encours" : CLASSES_ETAT[etat.etat];
+        ligne.className = `dc-mod ${classe}`.trim();
+        ligne.dataset.module = fiche.id;
         const st = document.createElement("i");
         st.className = "st";
         st.setAttribute("aria-hidden", "true");
-        st.textContent = etat.etat === "valide" ? "✓" : etat.etat === "revoir" ? "↻" : "";
+        st.textContent = etat.etat === "su" ? "✓" : etat.etat === "revoir" ? "↻" : "";
         const nom = document.createElement("span");
         nom.className = "nom";
         nom.textContent = fiche.nom;
-        const ferme = etat.etat === "ferme" || etat.etat === "bientot";
-        let dessous = "";
-        if (etat.etat === "bientot") dessous = "bientôt";
-        else if (etat.etat === "ferme") dessous = `après ${etat.apres.map(id => `« ${CORE.moduleDe(id).nom} »`).join(" et ")}`;
-        if (dessous) {
+        if (etat.etat === "bientot") {
           const petit = document.createElement("small");
-          petit.textContent = dessous;
+          petit.textContent = "bientôt";
           nom.append(petit);
         }
-        bouton.append(st, nom);
-        let lecture = "";
-        if (etat.etat === "revoir" || etat.etat === "encours") {
-          const tag = document.createElement("span");
-          tag.className = "tag";
-          tag.textContent = etat.etat === "revoir" ? "à revoir" : soude(`niveau ${etat.niveau} sur ${etat.niveaux}`);
-          lecture = tag.textContent;
-          bouton.append(tag);
-        } else if (!ferme) {
-          const ex = document.createElement("span");
-          ex.className = "ex";
-          ex.textContent = fiche.exemple;
-          bouton.append(ex);
-        }
-        const mots = {valide: "validé", revoir: "validé, à revoir", encours: "en cours", libre: "pas commencé", ferme: "pas encore ouvert", bientot: "bientôt"};
-        bouton.setAttribute("aria-label", [fiche.nom, mots[etat.etat], lecture && etat.etat === "encours" ? lecture : "", etat.etat === "ferme" ? dessous : ""].filter(Boolean).join(", "));
-        bouton.disabled = ferme;
-        if (!ferme) bouton.addEventListener("click", () => ouvrirModule(fiche.id));
-        return bouton;
+        const carres = document.createElement("span");
+        carres.className = "dc-comp";
+        carres.setAttribute("aria-hidden", "true");
+        etat.couleurs.forEach(couleur => {
+          const carre = document.createElement("i");
+          if (CLASSES_COULEUR[couleur]) carre.className = CLASSES_COULEUR[couleur];
+          carres.append(carre);
+        });
+        ligne.append(st, nom, carres);
+        const comptes = ["vert", "bleu", "rouge", "gris"].map(couleur => [etat.couleurs.filter(c => c === couleur).length, MOTS_COULEUR[couleur]])
+          .filter(([nombre]) => nombre).map(([nombre, mot]) => `${nombre} ${mot}`).join(", ");
+        ligne.setAttribute("aria-label", [fiche.nom, MOTS_ETAT[etat.etat], etat.etat === "bientot" ? "" : `niveaux : ${comptes}`].filter(Boolean).join(", "));
+        if (ouvrable) ligne.addEventListener("click", () => ouvrirModule(fiche.id));
+        return ligne;
       }
 
       function renderParcoursPaliers(id) {
         const compte = PARCOURS.compter(parcours, CARTE);
-        $("parcours-compte").textContent = soude(`${compte.valides} module${compte.valides > 1 ? "s" : ""} validé${compte.valides > 1 ? "s" : ""} sur ${compte.total}`);
+        $("parcours-compte").textContent = soude(`${compte.sus} module${compte.sus > 1 ? "s" : ""} su${compte.sus > 1 ? "s" : ""} sur ${compte.total}`);
         const fiche = id ? CORE.moduleDe(id) : null;
         if (state.palier === null) state.palier = fiche && fiche.palier ? fiche.palier : 1;
         const paliers = $("parcours-paliers");
@@ -1548,18 +1653,18 @@
           const bouton = document.createElement("button");
           bouton.type = "button";
           const ici = palier.palier === state.palier;
-          bouton.className = [ici ? "ici" : "", palier.valides === palier.total ? "fini" : ""].filter(Boolean).join(" ");
+          bouton.className = [ici ? "ici" : "", palier.sus === palier.total ? "fini" : ""].filter(Boolean).join(" ");
           const numero = document.createElement("b");
           numero.textContent = String(palier.palier);
           const petit = document.createElement("small");
-          petit.textContent = `${palier.valides}/${palier.total}`;
+          petit.textContent = `${palier.sus}/${palier.total}`;
           bouton.append(numero, petit);
           const nom = CORE.PALIERS.find(p => p.n === palier.palier).nom;
-          bouton.setAttribute("aria-label", `Palier ${palier.palier}, ${nom} : ${palier.valides} sur ${palier.total}`);
+          bouton.setAttribute("aria-label", `Palier ${palier.palier}, ${nom} : ${palier.sus} sur ${palier.total}`);
           bouton.setAttribute("aria-pressed", String(ici));
           bouton.addEventListener("click", () => {
             state.palier = palier.palier;
-            renderParcoursPaliers(moduleCourant());
+            renderParcoursPaliers(PARCOURS.moduleCourant(parcours, CARTE));
             ajusterEchelle();
           });
           return bouton;
@@ -1575,24 +1680,33 @@
         // un appareil neuf ne montre pas un instant le premier module à un
         // élève qui en est au troisième.
         acc.classList.toggle("en-attente", suiviAttendu);
-        const id = moduleCourant();
+        const courante = competenceCourante();
+        const id = courante ? courante.module : null;
         const fiche = id ? CORE.moduleDe(id) : null;
         $("acc-module-titre").textContent = fiche ? fiche.nom : "Défi calcul";
         ligneNiveaux($("acc-niv"), id);
-        const carte = id ? carteDeSeance(id) : null;
+        const carte = carteDeSeance();
         $("acc-seance").replaceChildren(...(carte ? [carte] : []));
-        // « Je valide » : le niveau en cours, directement.
-        $("acc-valide").hidden = !fiche || PARCOURS.estValide(parcours, id);
-        $("acc-choisir").hidden = !fiche;
+        // Les menus : pour le professeur seulement.
+        $("acc-droite").hidden = !MODE_PROF;
+        $("acc-liens").hidden = !MODE_PROF || !fiche;
         renderSemaine();
         renderParcoursPaliers(id);
       }
 
       // ------------------------------------------------- l'écran du module
+      //
+      // Réservé au mode professeur : les cases de niveau, J'apprends,
+      // Je m'entraîne, et le test du module.
 
-      function ouvrirModule(id) {
+      function ouvrirModule(id, niveau = 0) {
+        if (!MODE_PROF) return;
+        const fiche = CORE.moduleDe(id);
+        if (!fiche || !fiche.construit) return;
         arreterActivite();
+        state.seance = null;
         state.module = id;
+        if (niveau >= 1 && niveau <= fiche.niveaux.length) state.niveauxProf[id] = niveau;
         state.origine = "module";
         show("module");
       }
@@ -1601,46 +1715,41 @@
       const DETAIL_APPRENDS = Object.freeze({perles: "avec les perles et la droite", glisse: "avec le glisse-nombres et le tableau", aucun: "avec la droite"});
 
       function renderModule() {
-        const id = state.module || moduleCourant();
+        const id = state.module || PARCOURS.moduleCourant(parcours, CARTE);
         const fiche = id ? CORE.moduleDe(id) : null;
         if (!fiche || !fiche.construit) return;
         state.module = id;
         const ligne = ligneDe(id);
+        const choisi = state.niveauxProf[id] || 1;
         $("module-titre").textContent = fiche.nom;
         const niveaux = $("module-niveaux");
         niveaux.className = `dc-niveaux n${fiche.niveaux.length}`;
         niveaux.replaceChildren(...fiche.niveaux.map(niveau => {
           const bouton = document.createElement("button");
           bouton.type = "button";
-          const valide = Boolean(ligne.v[niveau.n - 1]);
-          const ici = niveau.n === ligne.nv;
-          bouton.className = [valide ? "ok" : "", ici ? "ici" : ""].filter(Boolean).join(" ");
+          const ici = niveau.n === choisi;
+          bouton.className = ici ? "ici" : "";
           bouton.setAttribute("aria-pressed", String(ici));
           const petit = document.createElement("small");
-          petit.textContent = soude(`Niveau ${niveau.n}${valide ? " ✓" : ""}`);
+          petit.textContent = soude(`Niveau ${niveau.n}`);
           const fort = document.createElement("strong");
           fort.textContent = niveau.titre;
           bouton.append(petit, fort);
           // Les « avant » d'un niveau ne sont qu'un conseil, pas un verrou.
-          const avant = (niveau.avant || []).map(cle => cle.split("-")).filter(([module, n]) => module === id && !ligne.v[Number(n) - 1]);
-          if (avant.length && !valide) {
+          const avant = (niveau.avant || []).map(cle => cle.split("-")).filter(([module, n]) => module === id && !ligne.b[Number(n) - 1]);
+          if (avant.length) {
             const conseil = document.createElement("em");
             conseil.textContent = soude(`après le niveau ${avant[0][1]}`);
             bouton.append(conseil);
           }
           bouton.addEventListener("click", () => {
-            // Revoir un niveau d'un module déjà validé ne change pas « Mon module ».
-            const monModule = parcours.mod;
-            parcours = PARCOURS.choisirNiveau(parcours, id, niveau.n);
-            if (PARCOURS.estValide(parcours, id)) parcours.mod = monModule;
-            sauverParcours();
+            state.niveauxProf[id] = niveau.n;
             renderModule();
             ajusterEchelle();
           });
           return bouton;
         }));
-        const niveau = fiche.niveaux[ligne.nv - 1];
-        const fait = niveau.type === "F";
+        const niveau = fiche.niveaux[choisi - 1];
         const etape = (numero, titre, detail, action) => {
           const bouton = document.createElement("button");
           bouton.type = "button";
@@ -1666,8 +1775,8 @@
           etape(1, "J’apprends", DETAIL_APPRENDS[niveau.apprends.manipule ? niveau.apprends.manipule.outil : "aucun"],
             () => lancerApprends(id, niveau.n, "module")),
           etape(2, "Je m’entraîne", "10 calculs, sans chrono", () => lancerSerie(id, niveau.n, "entraine", "module")),
-          etape(3, `Je valide le niveau ${niveau.n}`, fait ? "12 calculs · 10 justes, sans traîner" : "10 calculs · 8 justes",
-            () => lancerSerie(id, niveau.n, "valide", "module"))
+          etape(3, "Tu connais déjà ? (le test du module)", `${PARCOURS.SEUILS.test.parNiveau} calculs par niveau, sans aide`,
+            () => lancerTest(id, "module"))
         );
       }
 
@@ -1694,17 +1803,15 @@
         retirerAide();
       }
 
-      // Quitter une activité : on revient là d'où elle est partie.
+      // Quitter une activité : on revient là d'où elle est partie — l'écran
+      // du module pour le professeur, l'accueil sinon. Une séance quittée au
+      // milieu d'une étape garde ses étapes faites.
       function quitterSerie() {
         arreterActivite();
-        show(state.origine === "module" ? "module" : "intro");
-      }
-
-      // Travailler un module qui n'est pas validé en fait « Mon module ».
-      function travailler(id) {
-        if (PARCOURS.estValide(parcours, id) || parcours.mod === id) return;
-        parcours = PARCOURS.choisirModule(parcours, id);
-        sauverParcours();
+        if (state.origine === "module") { show("module"); return; }
+        state.seance = null;
+        state.origine = "intro";
+        show("intro");
       }
 
       const DELAI_SUIVANT = 800;
@@ -1854,28 +1961,118 @@
         $("question-count").textContent = compte;
         const temps = $("time");
         temps.textContent = pastille;
-        temps.style.visibility = pastille ? "" : "hidden";
+        temps.hidden = !pastille;
         $("progress").style.width = `${Math.max(0, Math.min(100, avance))}%`;
+      }
+
+      // ------------------------------------------------- la séance du jour
+      //
+      // Les étapes s'enchaînent : après chacune, le moteur dit ce qui reste.
+      // « Arrêter la séance » ne perd rien : les étapes faites restent faites,
+      // et la séance se reprend le jour même, ici ou sur un autre appareil.
+
+      const enSeance = () => state.origine === "seance" && Boolean(state.seance);
+
+      function lancerSeance() {
+        parcours = PARCOURS.ouvrirSeance(parcours, CARTE, {aujourdhui: jourCourant()});
+        sauverParcours();
+        state.seance = {jouees: []};
+        etapeSuivante();
+      }
+
+      // L'étape à jouer maintenant : la première de celles qui restent.
+      function etapeSuivante() {
+        const file = PARCOURS.fileSeance(parcours, CARTE, {aujourdhui: jourCourant()});
+        const etape = file.etapes[0];
+        if (!etape || !state.seance) { quitterSeance(); return; }
+        state.seance.etape = Object.assign({}, etape, {numero: file.faites + 1, total: file.faites + file.etapes.length});
+        if (etape.type === "jour") lancerCalculsDuJour(etape);
+        else if (etape.type === "test") lancerTest(etape.module, "seance");
+        else if (etape.type === "apprends") lancerApprends(etape.module, etape.niveau, "seance");
+        else lancerSerie(etape.module, etape.niveau, etape.type === "rattrape" ? "rattrape" : "entraine", "seance");
+      }
+
+      function quitterSeance() {
+        state.seance = null;
+        versAccueil();
+      }
+
+      // Le fil de la séance : « Ma séance ①②③④ », les étapes faites en vert,
+      // celle qui se joue en bleu, et son nom.
+      function renderFilSeance(zone, {faites, total, enCours = true, nom = "", coupable = false}) {
+        const titre = document.createElement("span");
+        titre.textContent = "Ma séance";
+        const liste = document.createElement("ol");
+        for (let index = 0; index < total; index += 1) {
+          const point = document.createElement("li");
+          point.textContent = String(index + 1);
+          if (index < faites) point.className = "ok";
+          else if (index === faites && enCours) point.className = "ici";
+          liste.append(point);
+        }
+        const morceaux = [titre, liste];
+        if (nom) {
+          // « Je m'entraîne : Compléments à 100 » : sur un téléphone, seul le
+          // début est écrit (le fil tient sur une ligne, la place va au calcul).
+          const [debut, ...suite] = soude(nom).split("\u00a0: ");
+          const fort = document.createElement("b");
+          fort.textContent = debut;
+          if (suite.length && coupable) {
+            const quoi = document.createElement("span");
+            quoi.className = "quoi";
+            quoi.textContent = `\u00a0: ${suite.join("\u00a0: ")}`;
+            fort.append(quoi);
+          } else if (suite.length) fort.textContent = soude(nom);
+          morceaux.push(fort);
+        }
+        zone.replaceChildren(...morceaux);
+        zone.hidden = false;
+        zone.setAttribute("aria-label", enCours
+          ? `Ma séance, étape ${faites + 1} sur ${total}${nom ? ` : ${nom}` : ""}`
+          : `Ma séance, ${pluriel(faites, "étape")} sur ${total}`);
+      }
+
+      // Pendant une étape : le fil au-dessus du jeu. Hors séance, rien.
+      function majFilDeJeu() {
+        const fil = $("fil-seance");
+        $("play").classList.toggle("en-seance", enSeance());
+        if (!enSeance()) { fil.hidden = true; fil.replaceChildren(); return; }
+        const etape = state.seance.etape;
+        renderFilSeance(fil, {faites: etape.numero - 1, total: etape.total, nom: nomEtape(etape), coupable: Boolean(etape.niveau)});
+      }
+
+      // Sur un bilan : le fil avec l'étape qui vient d'être faite.
+      function majFilDeBilan() {
+        const fil = $("result-fil");
+        if (!enSeance()) { fil.hidden = true; fil.replaceChildren(); return; }
+        const file = PARCOURS.fileSeance(parcours, CARTE, {aujourdhui: jourCourant()});
+        const faites = file.ouverte ? file.faites : state.seance.etape.numero;
+        renderFilSeance(fil, {faites, total: faites + (file.ouverte ? file.etapes.length : 0), enCours: false});
+      }
+
+      // Le bouton de retour d'une étape : « ← Accueil » pour la séance,
+      // « ← Mon module » quand le professeur vient de l'écran d'un module.
+      function majBoutonRetour() {
+        const versModule = state.origine === "module";
+        $("game-menu").querySelector(".game-menu-label").textContent = versModule ? "Mon module" : "Accueil";
+        $("game-menu").setAttribute("aria-label", versModule ? "Arrêter et revenir à Mon module" : "Arrêter et revenir à l’accueil");
       }
 
       // ------------------------------------------------- J'apprends, en trois temps
 
       const NOMS_TEMPS = Object.freeze({manipule: "Je manipule", represente: "Je représente", ecris: "J’écris"});
 
-      function lancerApprends(id, n, origine) {
+      function lancerApprends(id, n, origine, {revoir = false} = {}) {
         const trouve = CORE.niveauDe(`${id}-${n}`);
         if (!trouve || !trouve.niveau.apprends) return;
         arreterActivite();
-        travailler(id);
         const apprends = trouve.niveau.apprends;
-        state.serie = {
-          genre: "apprends", module: id, niveau: n, apprends,
-          temps: [...(apprends.manipule ? ["manipule"] : []), "represente", "ecris"],
-          index: 0
-        };
+        state.serie = {genre: "apprends", module: id, niveau: n, apprends, temps: tempsDe(id, n), index: 0, revoir};
         state.origine = origine;
         state.running = true;
         show("play");
+        majFilDeJeu();
+        majBoutonRetour();
         renderTemps();
         ajusterEchelle();
       }
@@ -1885,8 +2082,10 @@
         const serie = state.serie;
         const fil = $("seance-fil");
         fil.hidden = false;
+        // Dans une séance, le fil de la séance dit déjà « J'apprends : … ».
         const titre = document.createElement("span");
         titre.textContent = "J’apprends";
+        titre.hidden = enSeance();
         const liste = document.createElement("ol");
         serie.temps.forEach((nom, index) => {
           const point = document.createElement("li");
@@ -1963,9 +2162,15 @@
           return;
         }
         // Les trois temps sont faits : la phrase-bilan, sur un écran à elle.
+        // « Revoir l'exemple » ne compte pas une seconde fois.
         arreterActivite();
-        parcours = PARCOURS.appliquerSerie(parcours, {module: serie.module, niveau: serie.niveau, genre: "apprends"}, {carte: CARTE}).parcours;
-        sauverParcours();
+        if (!serie.revoir) {
+          const suivi = PARCOURS.appliquerSerie(parcours, {module: serie.module, niveau: serie.niveau, genre: "apprends"},
+            {aujourdhui: jourCourant(), carte: CARTE, seance: enSeance()});
+          parcours = suivi.parcours;
+          sauverParcours();
+          noterEtape("✓");
+        }
         renderRetenir(serie);
         show("result");
       }
@@ -1988,7 +2193,7 @@
           state.waitingForContinue = true;
           renderInlineAnswer("is-correct");
           $("answer-feedback").className = "answer-feedback is-correct";
-          $("answer-feedback").textContent = "Bravo !";
+          $("answer-feedback").textContent = soude("Bravo !");
           setAnswerControlsEnabled(false);
           $("validate").style.visibility = "hidden";
           scheduleAutoAdvance(avancerTemps);
@@ -2031,46 +2236,124 @@
         return rangee;
       }
 
+      // Le lien discret sous les boutons d'un bilan.
+      function lienDiscret(texte, action) {
+        const bouton = document.createElement("button");
+        bouton.type = "button";
+        bouton.className = "arreter";
+        bouton.textContent = texte;
+        bouton.addEventListener("click", action);
+        return bouton;
+      }
+
+      // Ce qui suit un bilan d'étape : le bouton « Étape 3 : … → » et
+      // « Arrêter la séance ». Rend [] quand la séance est finie.
+      function suiteDeSeance() {
+        const file = PARCOURS.fileSeance(parcours, CARTE, {aujourdhui: jourCourant()});
+        if (!file.ouverte || !file.etapes.length) return [];
+        const etape = file.etapes[0];
+        const bouton = document.createElement("button");
+        bouton.type = "button";
+        bouton.className = "primary";
+        bouton.textContent = soude(`Étape ${file.faites + 1} : ${nomBouton(etape)} →`);
+        bouton.addEventListener("click", etapeSuivante);
+        return [bouton, lienDiscret("Arrêter la séance", quitterSeance)];
+      }
+
+      // La phrase-bilan de « J'apprends ». Trois sorties : la suite, revoir
+      // l'exemple, et un lien discret pour s'arrêter là.
       function renderRetenir(serie) {
         const result = $("result");
-        result.classList.remove("is-fete", "is-rate");
+        result.classList.remove("is-fete", "is-rate", "is-neutre");
         $("result-verdict").hidden = true;
         $("result-retenir").hidden = false;
         $("retenir-phrase").textContent = serie.apprends.bilan;
         $("retenir-image").innerHTML = AIDES.dessinerImage(serie.apprends.image);
-        $("result-suite").replaceChildren(boutonsDeSuite(
-          ["Je m’entraîne →", "primary", () => lancerSerie(serie.module, serie.niveau, "entraine", state.origine)],
-          ["Revoir l’exemple", "secondary", () => lancerApprends(serie.module, serie.niveau, state.origine)]
-        ));
+        majFilDeBilan();
+        const revoir = ["Revoir l’exemple", "secondary", () => lancerApprends(serie.module, serie.niveau, state.origine, {revoir: true})];
+        if (enSeance()) {
+          const file = PARCOURS.fileSeance(parcours, CARTE, {aujourdhui: jourCourant()});
+          const etape = file.etapes[0];
+          $("result-suite").replaceChildren(
+            boutonsDeSuite(etape ? [`Étape ${file.faites + 1} : ${nomBouton(etape)} →`, "primary", etapeSuivante] : null, revoir),
+            lienDiscret("Arrêter la séance", quitterSeance));
+        } else {
+          $("result-suite").replaceChildren(
+            boutonsDeSuite(["Je m’entraîne →", "primary", () => lancerSerie(serie.module, serie.niveau, "entraine", state.origine)], revoir),
+            lienDiscret("Accueil", versAccueil));
+        }
         $("corrections").replaceChildren();
         state.titreResultat = "retenir-phrase";
       }
 
-      // ------------------------------------------------- Je m'entraîne, Je valide
+      // ------------------------------------------------- les séries de calculs
+      //
+      // Quatre genres, un seul écran :
+      //   entraine   10 calculs d'un niveau, avec les aides après une erreur ;
+      //   rattrape   la même chose, pour une compétence ratée deux fois ;
+      //   test       « Tu connais déjà ? » : 3 calculs par niveau, sans aide,
+      //              sans retour après chaque calcul ;
+      //   jour       Mes calculs du jour : un calcul par compétence, le seul
+      //              moment qui fait monter ou descendre une boîte.
 
       function nouvelleGraine() {
         return (Date.now() ^ Math.floor(Math.random() * 4294967296)) >>> 0;
       }
 
-      function lancerSerie(id, n, genre, origine) {
-        const trouve = CORE.niveauDe(`${id}-${n}`);
-        if (!trouve) return;
-        const calculs = CORE.genererSerie(`${id}-${n}`, {graine: nouvelleGraine(), genre});
-        if (!calculs.length) return;
+      function demarrerSerie(serie, origine) {
         arreterActivite();
-        travailler(id);
-        state.serie = {
-          genre, module: id, niveau: n, type: trouve.niveau.type, total: calculs.length,
-          questions: calculs.map(calcul => ({calcul, retour: false})),
-          index: 0, reponses: [], causes: {}, debut: 0
-        };
+        state.serie = Object.assign({index: 0, reponses: [], causes: {}, debut: 0}, serie);
         state.origine = origine;
         state.running = true;
         $("seance-fil").hidden = true;
         show("play");
+        majFilDeJeu();
+        majBoutonRetour();
         renderQuestion();
         // La première question est à l'écran : c'est elle qu'on mesure.
         ajusterEchelle();
+      }
+
+      function lancerSerie(id, n, genre, origine) {
+        const trouve = CORE.niveauDe(`${id}-${n}`);
+        if (!trouve) return;
+        const calculs = CORE.genererSerie(`${id}-${n}`, {graine: nouvelleGraine(), genre: "entraine"});
+        if (!calculs.length) return;
+        demarrerSerie({
+          genre, module: id, niveau: n, total: calculs.length,
+          questions: calculs.map(calcul => ({calcul, retour: false}))
+        }, origine);
+      }
+
+      function lancerTest(id, origine) {
+        const calculs = CORE.genererTest(id, {graine: nouvelleGraine(), parNiveau: PARCOURS.SEUILS.test.parNiveau});
+        if (!calculs.length) return;
+        demarrerSerie({
+          genre: "test", module: id, total: calculs.length,
+          questions: calculs.map(calcul => ({calcul, retour: false}))
+        }, origine);
+      }
+
+      // Mes calculs du jour : la graine vient du jour et du code, pour que
+      // deux appareils du même élève tirent la même série.
+      function lancerCalculsDuJour(etape) {
+        const aujourdhui = jourCourant();
+        const tirage = PARCOURS.tirerCalculsDuJour(parcours, CARTE, {aujourdhui, entretien: etape.entretien});
+        const graine = CORE.graineDe(`${aujourdhui}:${codeSuivi}`);
+        const rng = CORE.mulberry32(graine);
+        // L'ordre est mélangé : deux niveaux d'un même module ne se suivent
+        // pas d'office, et rien ne dit de quel module vient un calcul.
+        const ordre = tirage.slice();
+        for (let i = ordre.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(rng() * (i + 1));
+          [ordre[i], ordre[j]] = [ordre[j], ordre[i]];
+        }
+        const questions = ordre.map(tire => {
+          const calcul = CORE.genererUn(`${tire.module}-${tire.niveau}`, (graine + PARCOURS.rangDe(tire.module, tire.niveau) * 977) >>> 0);
+          return calcul ? {calcul, retour: false} : null;
+        }).filter(Boolean);
+        if (!questions.length) { quitterSeance(); return; }
+        demarrerSerie({genre: "jour", total: questions.length, questions, mouvements: [], sus: []}, "seance");
       }
 
       function renderQuestion() {
@@ -2082,18 +2365,26 @@
         const faits = Math.min(serie.reponses.length + 1, serie.total);
         majBarre({
           compte: `${faits} / ${serie.total}${question.retour ? " · il revient" : ""}`,
-          pastille: serie.genre === "valide" ? "Validation" : "À ton rythme",
+          // Mes calculs du jour : pas de pastille, le temps d'un fait compte
+          // sans être montré.
+          pastille: serie.genre === "jour" ? "" : "À ton rythme",
           avance: serie.reponses.length / serie.total * 100
         });
         $("question-card").classList.remove("no-skip");
         state.answer = "";
         state.effacerAuProchain = false;
         renderExpression(question.calcul.texte);
-        renderTouches(serie.module);
+        // La touche « , » suit le calcul, pas la série : dans Mes calculs du
+        // jour, elle n'apparaît que sur un calcul à décimales.
+        renderTouches(question.calcul.module);
         clearAnswerFeedback();
         $("question-card").scrollTop = 0;
         $("expression").focus?.({preventScroll: true});
-        if (avecAide) ajusterEchelle();
+        // La touche « , » qui arrive ou qui s'en va change la hauteur du jeu :
+        // le cadre se remesure.
+        const virgule = !$("touches").hidden;
+        if (avecAide || (serie.virgule !== undefined && virgule !== serie.virgule)) ajusterEchelle();
+        serie.virgule = virgule;
         // Le temps d'un calcul : de son affichage à « Valider ». Jamais montré.
         serie.debut = performance.now();
       }
@@ -2106,9 +2397,9 @@
         else renderQuestion();
       }
 
-      // Après une réponse d'entraînement : « Bravo ! », ou la correction —
-      // la phrase de la cause et l'image, le pas oublié en gras, quand
-      // l'erreur est connue ; sinon le retour de Défi tables.
+      // Après une réponse : « Bravo ! », ou la correction — la phrase de la
+      // cause et l'image, le pas oublié en gras, quand l'erreur est connue ;
+      // sinon le retour de Défi tables.
       function montrerRetour(question, juste, valeur, passe, cause) {
         state.waitingForContinue = true;
         state.correctionAfficheeA = juste ? 0 : Date.now();
@@ -2117,7 +2408,7 @@
         const attendue = CORE.formaterNombre(question.calcul.reponse);
         if (juste) {
           renderInlineAnswer("is-correct");
-          feedback.textContent = "Bravo !";
+          feedback.textContent = soude("Bravo !");
         } else {
           state.answer = attendue;
           renderInlineAnswer("is-corrected");
@@ -2128,13 +2419,27 @@
             // va à l'image.
             $("touches").hidden = true;
           } else {
-            feedback.textContent = passe
-              ? `Pas de réponse. Bonne réponse : ${attendue}.`
-              : `Ta réponse : ${CORE.formaterNombre(valeur)}. Bonne réponse : ${attendue}.`;
+            feedback.textContent = soude(passe
+              ? `Pas de réponse. Bonne réponse : ${attendue}.`
+              : `Ta réponse : ${CORE.formaterNombre(valeur)}. Bonne réponse : ${attendue}.`);
           }
         }
         setAnswerControlsEnabled(false);
         $("validate").focus?.({preventScroll: true});
+      }
+
+      // Une réponse de Mes calculs du jour : la boîte de la compétence bouge
+      // tout de suite, et le bilan s'en souviendra.
+      function noterRetour(serie, calcul, juste, ms, cause) {
+        const trouve = CORE.niveauDe(`${calcul.module}-${calcul.niveau}`);
+        const suivi = PARCOURS.appliquerRetour(parcours, {
+          module: calcul.module, niveau: calcul.niveau, juste, ms,
+          type: trouve ? trouve.niveau.type : "P", cause: cause ? cause.c : 0
+        }, {aujourdhui: jourCourant()});
+        parcours = suivi.parcours;
+        sauverParcours();
+        if (suivi.mouvement && suivi.mouvement.sens !== "reste") serie.mouvements.push(suivi.mouvement);
+        suivi.evenements.filter(evenement => evenement.type === "module").forEach(evenement => serie.sus.push(evenement.module));
       }
 
       function repondreSerie(passe) {
@@ -2150,13 +2455,16 @@
         const ms = Math.round(performance.now() - serie.debut);
         const juste = !passe && CORE.memeNombre(valeur, question.calcul.reponse);
         const cause = !juste && !passe ? CORE.diagnostiquer(question.calcul, valeur, state.answer) : null;
-        // Seule la première réponse à un calcul compte, pour le score comme
-        // pour les causes d'erreur : celui qui revient vient d'être corrigé
-        // sous les yeux de l'élève.
-        if (cause && !question.retour) serie.causes[cause.c] = (serie.causes[cause.c] || 0) + 1;
-        if (!question.retour) serie.reponses.push({juste, ms, valeur, passe, calcul: question.calcul});
-        if (serie.genre === "valide") {
-          // Pas de retour après chaque calcul : les erreurs sont au bilan.
+        // Seule la première réponse à un calcul compte, pour le score, pour
+        // les boîtes et pour les causes d'erreur : celui qui revient vient
+        // d'être corrigé sous les yeux de l'élève.
+        if (!question.retour) {
+          if (cause) serie.causes[cause.c] = (serie.causes[cause.c] || 0) + 1;
+          serie.reponses.push({juste, ms, valeur, passe, calcul: question.calcul});
+          if (serie.genre === "jour") noterRetour(serie, question.calcul, juste, ms, cause);
+        }
+        if (serie.genre === "test") {
+          // Pas de retour après chaque calcul : le bilan dit ce qui est su.
           avancerSerie();
           return;
         }
@@ -2196,46 +2504,68 @@
         clearAnswerError();
       }
 
-      // ------------------------------------------------- le bilan d'une série
+      // ------------------------------------------------- les bilans
+
+      // Ce que la séance retient d'une étape, pour « Séance du jour faite ».
+      function noterEtape(score) {
+        if (!enSeance()) return;
+        state.seance.jouees.push({nom: nomEtape(state.seance.etape), score});
+      }
 
       function finish() {
         if (!state.running) return;
         const serie = state.serie;
         arreterActivite();
-        const suivi = PARCOURS.appliquerSerie(parcours, {
-          module: serie.module, niveau: serie.niveau, genre: serie.genre, type: serie.type,
-          reponses: serie.reponses.map(reponse => ({juste: reponse.juste, ms: reponse.ms})),
-          causes: serie.causes
-        }, {carte: CARTE});
+        const options = {aujourdhui: jourCourant(), carte: CARTE, seance: enSeance()};
+        const justes = serie.reponses.filter(reponse => reponse.juste).length;
+        const sur = `${justes} sur ${serie.total}`;
+        let suivi;
+        if (serie.genre === "jour") {
+          suivi = PARCOURS.terminerCalculsDuJour(parcours, options);
+          noterEtape(sur);
+        } else if (serie.genre === "test") {
+          const niveaux = CORE.moduleDe(serie.module).niveaux.map(niveau => {
+            const reponses = serie.reponses.filter(reponse => reponse.calcul.niveau === niveau.n);
+            return {niveau: niveau.n, justes: reponses.filter(reponse => reponse.juste).length, total: reponses.length};
+          });
+          suivi = PARCOURS.appliquerTest(parcours, {module: serie.module, niveaux, causes: serie.causes}, options);
+          const connus = suivi.bilan.filter(niveau => niveau.connu).length;
+          noterEtape(`${connus} niveau${connus > 1 ? "x" : ""} sur ${suivi.bilan.length}`);
+        } else {
+          suivi = PARCOURS.appliquerSerie(parcours, {
+            module: serie.module, niveau: serie.niveau, genre: serie.genre,
+            reponses: serie.reponses.map(reponse => ({juste: reponse.juste})), causes: serie.causes
+          }, options);
+          noterEtape(suivi.evenements.some(evenement => evenement.type === "entree") ? `${sur} · en route` : sur);
+        }
         parcours = suivi.parcours;
         sauverParcours();
-        renderVerdict(serie, suivi);
-        renderCorrections(serie, suivi.verdict);
+        // Deux entraînements ratés : la séance s'arrête là.
+        const arretee = enSeance() && suivi.finie && serie.genre === "entraine" && !suivi.verdict.reussi;
+        if (enSeance() && suivi.finie) renderFinDeSeance(serie, sur, arretee);
+        else if (serie.genre === "jour") renderBilanDuJour(serie, sur);
+        else if (serie.genre === "test") renderBilanTest(serie, suivi, sur);
+        else renderBilanEntrainement(serie, suivi, sur);
+        majFilDeBilan();
+        // Le test ne montre pas ses erreurs : le bilan dit, niveau par niveau,
+        // ce qui est su ; ce qui ne l'est pas va être appris.
+        if (serie.genre === "test") $("corrections").replaceChildren();
+        else renderCorrections(serie);
         show("result");
       }
 
       function poserVerdict({classe = "", icone = "✓", titre, score}) {
         const result = $("result");
-        result.classList.remove("is-fete", "is-rate");
+        result.classList.remove("is-fete", "is-rate", "is-neutre");
         if (classe) result.classList.add(classe);
         $("result-verdict").hidden = false;
         $("result-retenir").hidden = true;
         $("result-icon").textContent = icone;
+        $("result-icon").hidden = !icone;
         $("result-title").textContent = soude(titre);
         $("result-score").textContent = soude(score);
+        $("result-score").hidden = !score;
         state.titreResultat = "result-title";
-      }
-
-      function cadreDeSuite(id, contenu) {
-        const cadre = document.createElement("div");
-        cadre.className = "cadre";
-        const niveaux = document.createElement("div");
-        niveaux.className = "dc-niv centre";
-        ligneNiveaux(niveaux, id, {texte: false});
-        const phrase = document.createElement("p");
-        phrase.append(...contenu);
-        cadre.append(niveaux, phrase);
-        return cadre;
       }
 
       const gras = texte => {
@@ -2244,61 +2574,166 @@
         return b;
       };
 
-      function renderVerdict(serie, suivi) {
+      function cadre(...contenu) {
+        const boite = document.createElement("div");
+        boite.className = "cadre";
+        boite.append(...contenu);
+        return boite;
+      }
+
+      function phrase(...contenu) {
+        const p = document.createElement("p");
+        p.append(...contenu);
+        return p;
+      }
+
+      // « revient demain », « revient dans 3 jours ».
+      const dansJours = jours => (jours <= 1 ? "demain" : `dans ${jours} jours`);
+
+      // Les compétences qui ont bougé de boîte, une par ligne : en vert ce
+      // qui monte, en rouge ce qui redescend. C'est ICI, et seulement ici, que
+      // les compétences sont nommées.
+      function listeMouvements(serie) {
+        const liste = document.createElement("div");
+        liste.className = "mouv";
+        // Ce qui monte d'abord, ce qui redescend ensuite.
+        const ordre = [...serie.mouvements.filter(m => m.sens === "monte"), ...serie.mouvements.filter(m => m.sens !== "monte")];
+        ordre.forEach(mouvement => {
+          const ligne = document.createElement("span");
+          ligne.className = mouvement.sens;
+          const nom = document.createElement("span");
+          nom.textContent = nomCompetence(mouvement.module, mouvement.niveau);
+          const suite = document.createElement("span");
+          const ou = mouvement.apres === 1 ? "à revoir" : mouvement.sens === "monte" && mouvement.couleur === "vert" ? "vert" : `boîte ${mouvement.apres}`;
+          suite.textContent = soude(`→ ${ou}, revient ${dansJours(mouvement.jours)}`);
+          ligne.append(nom, suite);
+          liste.append(ligne);
+        });
+        return liste;
+      }
+
+      // « Module su ! » : le jour où toutes ses compétences sont vertes.
+      function fetesDeModule(serie) {
+        return serie.sus.map(id => cadre(phrase(gras("Module su !"), ` ${CORE.moduleDe(id).nom}`)));
+      }
+
+      function renderBilanDuJour(serie, sur) {
+        poserVerdict({classe: serie.sus.length ? "is-fete" : "is-neutre", icone: "", titre: "Mes calculs du jour", score: sur});
+        $("result-suite").replaceChildren(
+          ...fetesDeModule(serie),
+          ...(serie.mouvements.length ? [cadre(listeMouvements(serie))] : []),
+          ...suiteDeSeance());
+      }
+
+      // Le bilan du test : niveau par niveau, ce qui entre et ce qui reste à
+      // apprendre.
+      function renderBilanTest(serie, suivi, sur) {
+        const fiche = CORE.moduleDe(serie.module);
+        const connus = suivi.bilan.filter(niveau => niveau.connu).length;
+        const total = suivi.bilan.length;
+        const justes = sur.replace(" sur ", " justes sur ").replace(/^1 justes/, "1 juste");
+        if (suivi.tout) poserVerdict({classe: "is-fete", titre: `Tu connais déjà ${fiche.nom} !`, score: justes});
+        else if (connus) poserVerdict({classe: "is-fete", titre: `${connus} niveau${connus > 1 ? "x" : ""} sur ${total} déjà connu${connus > 1 ? "s" : ""} !`, score: `${justes} · ${fiche.nom}`});
+        else poserVerdict({classe: "is-rate", icone: "✗", titre: "Pas encore", score: `${justes} · ${fiche.nom}`});
+        const liste = document.createElement("div");
+        liste.className = "bilan-niveaux";
+        const delai = dansJours(PARCOURS.delaiDeBoite(PARCOURS.SEUILS.revision.test));
+        suivi.bilan.forEach(niveau => {
+          const ligne = document.createElement("span");
+          ligne.className = niveau.connu ? "oui" : "non";
+          const marque = document.createElement("i");
+          marque.setAttribute("aria-hidden", "true");
+          marque.textContent = niveau.connu ? "✓" : "✗";
+          const nom = document.createElement("span");
+          nom.textContent = nomCompetence(serie.module, niveau.niveau);
+          const detail = document.createElement("small");
+          detail.textContent = soude(`${niveau.justes} sur ${niveau.total} · ${niveau.connu ? `en route, ${delai}` : "à apprendre"}`);
+          ligne.append(marque, nom, detail);
+          liste.append(ligne);
+        });
+        const suite = enSeance() ? suiteDeSeance() : [boutonsDeSuite(["Mon module", "primary", () => ouvrirModule(serie.module)], ["Accueil", "secondary", versAccueil])];
+        $("result-suite").replaceChildren(cadre(liste), ...suite);
+      }
+
+      // Le bilan d'un entraînement ou d'un rattrapage, quand la séance
+      // continue — ou hors séance, en mode professeur.
+      function renderBilanEntrainement(serie, suivi, sur) {
         const {module: id, niveau: n} = serie;
         const verdict = suivi.verdict;
-        const sur = `${verdict.justes} sur ${verdict.total}`;
-        const accueil = classe => ["Accueil", classe, versAccueil];
-        const suite = $("result-suite");
-        if (serie.genre === "entraine") {
-          if (verdict.reussi) {
-            poserVerdict({titre: "Entraînement réussi !", score: sur});
-            suite.replaceChildren(boutonsDeSuite(
-              [`Je valide le niveau ${n} →`, "primary", () => lancerSerie(id, n, "valide", state.origine)], accueil("secondary")));
-          } else {
-            poserVerdict({classe: "is-rate", icone: "✗", titre: "Pas encore", score: `${sur} — il en faut ${PARCOURS.SEUILS.entraine.justes}`});
-            suite.replaceChildren(boutonsDeSuite(
-              ["Je m’entraîne encore", "primary", () => lancerSerie(id, n, "entraine", state.origine)], accueil("secondary")));
-          }
+        if (verdict.reussi) poserVerdict({titre: "Entraînement réussi !", score: sur});
+        else poserVerdict({classe: "is-rate", icone: "✗", titre: "Pas encore", score: `${sur} — il en faut ${PARCOURS.SEUILS.entraine.justes}`});
+        const entree = suivi.evenements.some(evenement => evenement.type === "entree");
+        const morceaux = entree ? [cadre(phrase(gras(nomCompetence(id, n)), " revient demain."))] : [];
+        if (enSeance()) {
+          $("result-suite").replaceChildren(...morceaux, ...suiteDeSeance());
           return;
         }
-        if (!verdict.valide) {
-          const seuil = verdict.type === "F" ? PARCOURS.SEUILS.faits.justes : PARCOURS.SEUILS.procedures.justes;
-          poserVerdict({
-            classe: "is-rate", icone: "✗", titre: "Pas encore",
-            score: verdict.tropLent ? `${sur} ✓ mais trop lentement. Entraîne-toi encore.` : `${sur} — il en faut ${seuil}`
-          });
-          suite.replaceChildren(boutonsDeSuite(
-            ["Je m’entraîne", "primary", () => lancerSerie(id, n, "entraine", state.origine)], accueil("secondary")));
-          return;
+        $("result-suite").replaceChildren(...morceaux, boutonsDeSuite(
+          verdict.reussi ? ["Mon module", "primary", () => ouvrirModule(id)] : ["Je m’entraîne encore", "primary", () => lancerSerie(id, n, serie.genre, state.origine)],
+          verdict.reussi ? ["Accueil", "secondary", versAccueil] : ["Mon module", "secondary", () => ouvrirModule(id)]));
+      }
+
+      // Après deux entraînements ratés : ce que l'élève retrouvera demain.
+      const REPRISE = Object.freeze({perles: "avec les perles", glisse: "avec le glisse-nombres", aucun: "avec la droite"});
+
+      // La fin de la séance : les étapes et leur score, « Demain : … », le
+      // nombre de fois cette semaine. Après deux entraînements ratés, le
+      // titre le dit : demain repart de « J'apprends ».
+      function renderFinDeSeance(serie, sur, arretee) {
+        const aujourdhui = jourCourant();
+        if (arretee) {
+          const manipule = CORE.niveauDe(`${serie.module}-${serie.niveau}`).niveau.apprends.manipule;
+          poserVerdict({classe: "is-rate", icone: "✗", titre: "Pas encore", score: `Demain, on reprend ${REPRISE[manipule ? manipule.outil : "aucun"]}.`});
+        } else {
+          poserVerdict({classe: "is-fete", titre: "Séance du jour faite", score: ""});
         }
-        poserVerdict({classe: "is-fete", icone: "🎉", titre: `Niveau ${n} validé !`, score: sur});
-        const fini = suivi.evenements.find(evenement => evenement.type === "module");
-        if (fini) {
-          const suivant = fini.suivant ? CORE.moduleDe(fini.suivant) : null;
-          suite.replaceChildren(
-            cadreDeSuite(id, suivant ? ["Module validé ! Ensuite : ", gras(suivant.nom), "."] : ["Module validé !"]),
-            boutonsDeSuite(accueil("primary")));
-          return;
+        const etapes = document.createElement("div");
+        etapes.className = "mouv";
+        state.seance.jouees.forEach(etape => {
+          const ligne = document.createElement("span");
+          const nom = document.createElement("span");
+          nom.textContent = soude(etape.nom);
+          const score = document.createElement("span");
+          score.textContent = soude(etape.score);
+          ligne.append(nom, score);
+          etapes.append(ligne);
+        });
+        const morceaux = [cadre(etapes)];
+        if (serie.genre === "jour") {
+          morceaux.push(...fetesDeModule(serie));
+          if (serie.mouvements.length) morceaux.push(cadre(listeMouvements(serie)));
         }
-        // Un niveau rejoué dans un module déjà validé : rien ne vient ensuite.
-        if (PARCOURS.estValide(parcours, id)) {
-          suite.replaceChildren(boutonsDeSuite(accueil("primary")));
-          return;
+        // « Demain : + 48, 49… 98, 99, et 9 calculs qui reviennent. »
+        const demain = PARCOURS.demain(parcours, CARTE, {aujourdhui});
+        const prochaine = demain.prochaine;
+        const intact = prochaine && !ligneDe(prochaine.module).f.some(Boolean) && !ligneDe(prochaine.module).a.some(Boolean) && !ligneDe(prochaine.module).b.some(Boolean);
+        const nouveau = prochaine ? (intact ? CORE.moduleDe(prochaine.module).nom : nomCompetence(prochaine.module, prochaine.niveau)) : "";
+        const reviennent = demain.reviennent ? `${pluriel(demain.reviennent, "calcul")} qui ${demain.reviennent > 1 ? "reviennent" : "revient"}` : "";
+        if (nouveau || reviennent) {
+          morceaux.push(cadre(phrase("Demain : ", ...(nouveau ? [gras(nouveau)] : []), nouveau && reviennent ? `, et ${reviennent}.` : nouveau ? "." : `${reviennent}.`)));
         }
-        const prochain = ligneDe(id).nv;
-        suite.replaceChildren(
-          cadreDeSuite(id, ["Ensuite : ", gras(`niveau ${prochain}`), `, ${titreNiveau(id, prochain)}.`]),
-          boutonsDeSuite([`Niveau ${prochain} →`, "primary", () => ouvrirModule(id)], accueil("secondary")));
+        const semaine = document.createElement("div");
+        semaine.className = "semaine";
+        semaine.textContent = texteSemaine();
+        // Après deux ratés, le moteur ne propose plus rien de nouveau aujourd'hui.
+        const encore = PARCOURS.fileSeance(parcours, CARTE, {aujourdhui}).etapes.length > 0;
+        $("result-suite").replaceChildren(...morceaux, semaine, boutonsDeSuite(
+          ["Accueil", "primary", quitterSeance],
+          encore ? ["Encore une séance", "secondary", lancerSeance] : null));
       }
 
       // Les erreurs, en lignes courtes : le calcul avec sa bonne réponse, la
-      // réponse donnée barrée à droite. Puis, pour une procédure, les calculs
-      // « justes, mais trop longs » — sans temps affiché.
-      function renderCorrections(serie, verdict) {
+      // réponse donnée barrée à droite.
+      function renderCorrections(serie) {
         const zone = $("corrections");
         zone.replaceChildren();
-        const ligne = (reponse, avecDonnee) => {
+        const erreurs = serie.reponses.filter(reponse => !reponse.juste);
+        if (!erreurs.length) return;
+        const h2 = document.createElement("h2");
+        h2.textContent = erreurs.length > 1 ? `Mes ${erreurs.length} erreurs` : "Mon erreur";
+        const ol = document.createElement("ol");
+        ol.className = "correction-list";
+        ol.append(...erreurs.map(reponse => {
           const item = document.createElement("li");
           const question = document.createElement("div");
           question.className = "correction-question";
@@ -2311,54 +2746,41 @@
           expression.append(document.createTextNode(insecable(avant)), attendue, document.createTextNode(insecable(apres ?? "")));
           question.append(expression);
           item.append(question);
-          if (avecDonnee) {
-            const donnee = document.createElement("span");
-            donnee.className = "given-answer";
-            if (reponse.passe) {
-              donnee.classList.add("is-passe");
-              donnee.textContent = "Pas de réponse";
-            } else {
-              donnee.textContent = CORE.formaterNombre(reponse.valeur);
-              donnee.setAttribute("aria-label", `Ta réponse : ${donnee.textContent}`);
-            }
-            item.append(donnee);
+          const donnee = document.createElement("span");
+          donnee.className = "given-answer";
+          if (reponse.passe) {
+            donnee.classList.add("is-passe");
+            donnee.textContent = "Pas de réponse";
+          } else {
+            donnee.textContent = CORE.formaterNombre(reponse.valeur);
+            donnee.setAttribute("aria-label", `Ta réponse : ${donnee.textContent}`);
           }
+          item.append(donnee);
           return item;
-        };
-        const liste = (titre, reponses, classe, avecDonnee) => {
-          if (!reponses.length) return;
-          const h2 = document.createElement("h2");
-          h2.textContent = titre;
-          if (classe) h2.className = classe;
-          const ol = document.createElement("ol");
-          ol.className = `correction-list${classe ? ` ${classe}` : ""}`;
-          ol.append(...reponses.map(reponse => ligne(reponse, avecDonnee)));
-          zone.append(h2, ol);
-        };
-        const erreurs = serie.reponses.filter(reponse => !reponse.juste);
-        liste(erreurs.length > 1 ? `Mes ${erreurs.length} erreurs` : "Mon erreur", erreurs, "", true);
-        const lents = (verdict && verdict.lents ? verdict.lents : []).map(index => serie.reponses[index]);
-        liste("Juste, mais trop long", lents, "lent", false);
+        }));
+        zone.append(h2, ol);
       }
 
       // ------------------------------------------------- les gestes
 
-      $("suivi-sortie").addEventListener("click", quitterSuivi);
-      $("acc-valide").addEventListener("click", () => {
-        const id = moduleCourant();
-        if (id) lancerSerie(id, ligneDe(id).nv, "valide", "intro");
+      // Le mode professeur : ses trois liens, et « Quitter ».
+      $("acc-test").addEventListener("click", () => {
+        const id = PARCOURS.moduleCourant(parcours, CARTE);
+        if (MODE_PROF && id) lancerTest(id, "intro");
       });
       $("acc-choisir").addEventListener("click", () => {
-        const id = moduleCourant();
-        if (id) ouvrirModule(id);
+        const courante = competenceCourante();
+        if (courante) ouvrirModule(courante.module, courante.niveau);
       });
-      $("acc-notice-bouton").addEventListener("click", () => show("notice"));
-      $("notice-back").addEventListener("click", versAccueil);
       // « Changer de module » : le parcours est sur l'accueil.
+      $("acc-changer").addEventListener("click", () => $("acc-parcours").scrollIntoView?.({block: "nearest"}));
       $("module-changer").addEventListener("click", () => {
         versAccueil();
         $("acc-parcours").scrollIntoView?.({block: "nearest"});
       });
+      $("prof-quitter").addEventListener("click", quitterModeProf);
+      $("acc-notice-bouton").addEventListener("click", () => show("notice"));
+      $("notice-back").addEventListener("click", versAccueil);
       $("game-menu").addEventListener("click", quitterSerie);
       document.querySelectorAll("[data-key]").forEach(button => button.addEventListener("click", () => {
         const key = button.dataset.key;
@@ -2400,7 +2822,7 @@
       });
       // Pour les contrôles au navigateur (?test) : le calcul à l'écran et la
       // progression, en lecture seule.
-      if (new URLSearchParams(window.location.search).has("test")) {
+      if (REQUETE.has("test")) {
         const arretsDeLaBande = [];
         document.addEventListener("decalage", event => arretsDeLaBande.push(Object.assign({}, event.detail)));
         Object.defineProperty(window, "__MATHSGO_DEFI_CALCUL_TEST__", {
@@ -2408,6 +2830,10 @@
           value: Object.freeze({
             calcul: () => (state.running && state.serie && state.serie.questions ? state.serie.questions[state.serie.index].calcul : null),
             parcours: () => JSON.parse(JSON.stringify(parcours)),
+            // L'étape de la séance qui se joue, et le genre de la série.
+            etape: () => (enSeance() && state.seance.etape ? Object.assign({}, state.seance.etape) : null),
+            genre: () => (state.running && state.serie ? state.serie.genre : null),
+            prof: () => MODE_PROF,
             perles: () => (state.manip && state.manip.outil === "perles" ? {etape: state.manip.etape, total: state.manip.total, fini: state.manip.fini} : null),
             glisse: () => (state.manip && state.manip.outil === "glisse" ? {decalage: state.manip.decalage, fini: state.manip.fini} : null),
             // Les arrêts de la bande, dans l'ordre : {decalage, accepte}.
@@ -2417,6 +2843,7 @@
       }
       majLienRetour();
       renderRepere();
+      majPilule("intro");
       renderAccueil();
       ajusterEchelle();
       // L'adresse a été lue et nettoyée par le script du <head>. L'espace
@@ -2426,6 +2853,9 @@
       if (ENTREE.billet && ENTREE.vue !== "fiche") entrerParBillet(ENTREE.billet, versAccueil);
       else demarrerSuivi();
       // [aiguillage:fin]
+      // « ?prof=1&module=A2&niveau=3 » : le lien « ouvrir en classe » de la
+      // page du professeur ouvre directement un niveau.
+      if (MODE_PROF && REQUETE.get("module")) ouvrirModule(REQUETE.get("module"), Number(REQUETE.get("niveau")) || 0);
     })();
   </script>
 </body>

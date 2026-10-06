@@ -106,7 +106,6 @@ body.mesure-cadre .site-footer { display: none !important; }
                         font: inherit; color: inherit; text-decoration: underline;
                         cursor: pointer; opacity: .85; min-height: 44px; }
 .suivi-repere .sortie:hover, .suivi-repere .sortie:focus-visible { opacity: 1; }
-.catalogue-link.suivi-sortie { display: none; }
 /* R4 bis (13/09/2026) : le lien du site « ← Calcul mental » ne s'affiche
    que sur l'accueil de l'appli. Sur Mes calculs, Mon parcours, une série
    ou un résultat, la seule flèche à l'écran est celle de l'appli — Gwenaël
@@ -129,7 +128,6 @@ body.ecran-interne #lien-retour { display: none; }
 .suivi-garde-erreur[hidden] { display: none; }
 
 .brand img { display: block; width: 105px; height: auto; }
-#launch-back { display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
 .back-icon { display: grid; place-items: center; flex: 0 0 auto; }
 .back-icon svg { display: block; width: 20px; height: 20px; }
 .catalogue-link {
@@ -222,8 +220,6 @@ p { line-height: 1.5; }
 .etape .num { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: #e3ecf2; color: #2c4a63; font-weight: 950; }
 .etape strong { display: block; font-size: 1.05rem; line-height: 1.15; }
 .etape small { display: block; color: #5b7286; font-size: .78rem; font-weight: 800; line-height: 1.25; margin-top: 2px; }
-.etape.is-next { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(7, 85, 184, .18), 0 2px 0 #b7cfe8; background: #fff; }
-.etape.is-next .num { background: var(--blue); color: #fff; }
 .acc-bas { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 18px; margin-top: 2px; }
 .acc-bas button { min-height: 44px; padding: 0 4px; border: 0; background: none; color: #5b7286; font: inherit; font-size: .82rem; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 
@@ -263,8 +259,6 @@ p { line-height: 1.5; }
 .seance-liens { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 18px; margin: 8px 0 -6px; }
 .seance-liens button { min-height: 44px; padding: 0 2px; border: 0; background: none; color: var(--blue); font: inherit; font-size: .9rem; font-weight: 850; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .semaine { display: flex; align-items: center; justify-content: center; gap: 8px; margin: -2px 0; color: var(--muted); font-size: .86rem; font-weight: 800; }
-.semaine i { width: 13px; height: 13px; border: 2px solid var(--teal); border-radius: 50%; box-sizing: border-box; }
-.semaine i.ok { background: var(--teal); }
 .seance-fil { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; color: var(--muted); font-size: .9rem; font-weight: 850; }
 .seance-fil ol { display: flex; align-items: center; gap: 0; margin: 0; padding: 0; list-style: none; }
 .seance-fil li { display: inline-grid; place-items: center; width: 24px; height: 24px; border: 2px solid #b9cbd8; border-radius: 50%; background: #fff; color: #6b8192; font-size: .78rem; font-weight: 950; line-height: 1; box-sizing: border-box; }
@@ -279,7 +273,6 @@ p { line-height: 1.5; }
 .seance-suite .primary { min-height: 48px; padding: 12px 18px 8px; }
 .seance-suite .arreter { min-height: 44px; margin-top: -8px; padding: 0 4px; border: 0; background: none; color: var(--blue); font: inherit; font-size: .88rem; font-weight: 850; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .seance-suite .cadre { width: 100%; padding: 11px 13px; border: 1px solid #cfe0f2; border-radius: 13px; background: #eef6ff; color: var(--ink); font-weight: 800; box-sizing: border-box; }
-.seance-suite .cadre .rangee { margin: 2px auto 8px; max-width: 440px; }
 .seance-suite .cadre p { margin: 0; line-height: 1.4; }
 .seance-suite .cadre p b { color: var(--blue); }
 .seance-suite .boutons { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; width: 100%; }
@@ -356,7 +349,6 @@ body.challenge-playing .question { touch-action: manipulation; }
   text-align: center;
 }
 
-.status strong.urgent { color: var(--red); background: var(--red-soft); }
 .status strong.no-timer { color: var(--teal); background: #e7f8f5; font-size: .92rem; }
 .progress-track { height: 10px; margin: 12px 0 18px; overflow: hidden; border-radius: 99px; background: #dfebf3; }
 .progress-track b { display: block; width: 0; height: 100%; background: linear-gradient(90deg, var(--teal), var(--blue)); transition: width .2s; }
@@ -487,13 +479,11 @@ body.challenge-playing .question { touch-action: manipulation; }
 .correction-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .correction-list li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; padding: 9px 11px; border: 1px solid #f1c2c2; border-radius: 12px; background: #fff6f6; }
 .correction-question { display: flex; align-items: center; gap: 8px; }
-.correction-number { flex: 0 0 auto; padding: 3px 7px; border-radius: 999px; color: #31566c; background: #eaf3f8; font-size: .72rem; font-weight: 950; }
 .correction-expression { color: var(--ink); font-size: 1.05rem; font-weight: 900; }
 .correction-expression .expected-answer { color: var(--green); font-weight: 950; }
 .given-answer { color: var(--red); font-size: .95rem; font-weight: 800; text-decoration: line-through; }
 /* Un calcul passé n'a pas de réponse à barrer (relecture du lot R2). */
 .given-answer.is-passe { text-decoration: none; }
-.result-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 14px; }
 .site-footer {
   width: min(100%, 960px);
   display: flex;
@@ -584,13 +574,23 @@ body.fullscreen-active .shell { min-height: calc((100dvh - var(--bas-cadre, 0px)
   .topbar-actions { gap: 4px; }
   .catalogue-link { padding: 0 10px; font-size: .73rem; }
   .fullscreen-toggle { display: none; }
-  /* En-tête compact : ligne 1 = logo, « Se déconnecter » en pilule, flèche ;
-     ligne 2 = le repère de suivi sur toute la largeur, une seule ligne. */
-  .suivi-repere { display: block; margin: -2px 0 0; padding: 4px 10px; font-size: .8rem; border-radius: 10px; text-align: center; }
-  .suivi-repere .puce { display: inline-block; vertical-align: middle; margin-right: 6px; }
-  .suivi-repere:not(.detache):not(.hors-ligne) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .suivi-repere .sortie-bloc { display: none; }
-  .catalogue-link.suivi-sortie { display: inline-flex; }
+  /* Le bloc de suivi (comme dans Défi tables) :
+     trois lignes centrées — « Suivi par ton professeur », le prénom, la
+     classe — et « Se déconnecter » à droite, DANS le bloc (plus de pilule
+     dans l'en-tête). Centré en hauteur : le texte était collé en haut d'un
+     bandeau de 44 px. Les états longs (code refusé, hors ligne) passent à
+     la ligne : rien n'y est coupé. */
+  .suivi-repere { display: flex; flex-wrap: nowrap; align-items: center; gap: 8px; min-height: 44px; margin: -2px 0 0; padding: 5px 6px 5px 10px;
+                  font-size: .78rem; line-height: 1.22; border-radius: 10px; text-align: center; }
+  .suivi-repere .puce { margin: 0; }
+  .repere-texte { flex: 1 1 auto; min-width: 0; }
+  .repere-texte > span { display: block; }
+  .repere-prenom { font-weight: 900; color: var(--ink); }
+  .repere-sep { display: none; }
+  .suivi-repere .sortie-bloc { flex: 0 0 auto; font-size: 0; }
+  .suivi-repere .repere-lien { flex: 0 0 auto; white-space: nowrap; }
+  .suivi-repere .sortie { min-height: 36px; padding: 0 11px; border: 1px solid #b7d9d6; border-radius: 999px; background: #fff;
+                          font-size: .74rem; font-weight: 900; text-decoration: none; opacity: 1; }
   .panel { min-height: calc(100vh - 96px); padding: 18px 12px 27px; border-right: 0; border-left: 0; border-radius: 20px; }
   .intro,
   .result { margin: 20px auto; }
@@ -654,7 +654,6 @@ body.fullscreen-active .shell { min-height: calc((100dvh - var(--bas-cadre, 0px)
     --valider-gap: 16px;
     --valider-police: 1.25rem;
   }
-  .question.show-learn-sequence { --touche-h: clamp(46px, calc(10.5dvh - 30px), 56px); }
 }
 @media (min-width: 1040px) {
   #play {
@@ -665,7 +664,6 @@ body.fullscreen-active .shell { min-height: calc((100dvh - var(--bas-cadre, 0px)
     --valider-gap: 18px;
     --valider-police: 1.35rem;
   }
-  .question.show-learn-sequence { --touche-h: clamp(46px, calc(10.5dvh - 30px), 64px); }
 }
 @media (max-width: 400px) {
   .catalogue-link-label { display: none; }
@@ -680,11 +678,14 @@ body.fullscreen-active .shell { min-height: calc((100dvh - var(--bas-cadre, 0px)
 .dc-niv { display: flex; align-items: center; gap: 8px; margin: 2px 0 12px; }
 .dc-niv .cases { display: flex; gap: 5px; }
 .dc-niv .cases b { display: inline-grid; place-items: center; width: 34px; height: 34px; border: 2px solid #9fb6c6; border-radius: 9px; background: #fff; color: #4d6578; font-size: 15px; font-weight: 900; line-height: 1; box-sizing: border-box; }
-.dc-niv .cases b.ok { border-color: var(--teal); background: var(--teal); color: #fff; }
-.dc-niv .cases b.ici { border: 3px solid var(--blue); color: var(--blue); }
+/* Une case par compétence, de la couleur de sa boîte : vert su, bleu en
+   route, rouge à revoir ; le niveau en cours est cerclé. */
+.dc-niv .cases b.v { border-color: var(--teal); background: var(--teal); color: #fff; }
+.dc-niv .cases b.b { border-color: var(--blue); background: var(--blue); color: #fff; }
+.dc-niv .cases b.r { border-color: #c62828; background: #c62828; color: #fff; }
+.dc-niv .cases b.ici { border: 3px solid var(--blue); background: #fff; color: var(--blue); }
 .dc-niv span.txt { color: var(--ink); font-size: .92rem; font-weight: 850; line-height: 1.2; }
 .dc-niv span.txt small { display: block; color: var(--muted); font-size: .8rem; font-weight: 800; }
-.dc-niv.centre { justify-content: center; margin: 2px 0 8px; }
 
 /* ---- l'écran du module : les cases de niveau, les trois étapes ---- */
 .dc-module { max-width: 620px; margin: 0 auto; text-align: left; }
@@ -729,17 +730,26 @@ body.fullscreen-active .shell { min-height: calc((100dvh - var(--bas-cadre, 0px)
 .dc-mod .st { display: inline-grid; place-items: center; width: 20px; height: 20px; border: 2px solid #8fa6b7; border-radius: 50%; box-sizing: border-box; font-style: normal; font-size: 12px; font-weight: 950; line-height: 1; color: #fff; }
 .dc-mod .nom { font-size: .9rem; font-weight: 850; line-height: 1.15; }
 .dc-mod .nom small { display: block; color: #5b7286; font-size: .72rem; font-weight: 800; }
-.dc-mod .ex { color: #5b7286; font-size: .82rem; font-weight: 800; white-space: nowrap; }
-.dc-mod .tag { padding: 2px 8px; border-radius: 99px; font-size: .72rem; font-weight: 900; white-space: nowrap; }
-.dc-mod.valide .st { border-color: var(--teal); background: var(--teal); }
+.dc-mod.su .st { border-color: var(--teal); background: var(--teal); }
 .dc-mod.encours { border: 2px solid var(--blue); background: #f3f8ff; }
 .dc-mod.encours .st { border-color: var(--blue); background: linear-gradient(90deg, var(--blue) 50%, #fff 50%); }
-.dc-mod.encours .tag { background: var(--blue); color: #fff; }
-.dc-mod.revoir { border: 2px solid #9a6400; background: #fff8e6; }
-.dc-mod.revoir .st { border-color: #9a6400; background: #fff; color: #9a6400; font-size: 13px; }
-.dc-mod.revoir .tag { background: #9a6400; color: #fff; }
-.dc-mod.ferme, .dc-mod.bientot { border-style: dashed; background: #f4f7f9; color: #6b8192; }
-.dc-mod.ferme .st, .dc-mod.bientot .st { border-style: dashed; border-color: #a9bbc8; }
+.dc-mod.rouge { border: 2px solid #c62828; background: #fff5f5; }
+.dc-mod.rouge .st { border-color: #c62828; background: #fff; color: #c62828; font-size: 13px; }
+.dc-mod.bientot { border-style: dashed; background: #f4f7f9; color: #6b8192; }
+/* « bientôt » sur la ligne du nom : avec la légende, le palier de 14 modules
+   doit encore tenir dans le cadre. */
+.dc-mod.bientot .nom small { display: inline; margin-left: 6px; }
+/* Un petit carré par compétence, à droite de la ligne. */
+.dc-comp { display: inline-flex; gap: 4px; align-items: center; }
+.dc-comp i { width: 14px; height: 14px; border: 2px solid #9fb6c6; border-radius: 4px; background: #fff; box-sizing: border-box; }
+.dc-comp i.r { border-color: #c62828; background: #c62828; }
+.dc-comp i.b { border-color: var(--blue); background: var(--blue); }
+.dc-comp i.v { border-color: var(--teal); background: var(--teal); }
+.dc-mod .dc-comp { justify-self: end; }
+div.dc-mod { cursor: default; }
+.dc-legende { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 8px 2px 0; color: #5b7286; font-size: .74rem; font-weight: 800; }
+.dc-legende > span { display: inline-flex; align-items: center; gap: 5px; }
+.dc-mod.bientot .st { border-style: dashed; border-color: #a9bbc8; }
 
 @media (min-width: 1040px) {
   .intro.dc-large { max-width: none; }
@@ -786,8 +796,8 @@ body.fullscreen-active .shell { min-height: calc((100dvh - var(--bas-cadre, 0px)
 @media (min-width: 621px) {
   .question.aide-image, .question.ecrit { --touche-h: clamp(46px, calc(10.5dvh - 30px), 56px); }
   /* Le fil de « J'apprends » se pose sur la ligne du bouton de retour. */
-  #play { position: relative; }
-  #play .seance-fil { position: absolute; top: 0; left: 150px; min-height: 44px; margin: 0; }
+  #play .status { position: relative; }
+  #play .status .seance-fil { position: absolute; top: 0; left: 150px; min-height: 44px; margin: 0; }
 }
 @media (min-width: 1040px) {
   .question.aide-image, .question.ecrit { --touche-h: clamp(46px, calc(10.5dvh - 30px), 64px); }
@@ -924,9 +934,6 @@ body.fullscreen-active .shell { min-height: calc((100dvh - var(--bas-cadre, 0px)
 .dc-retenir .cahier { margin: 8px 0 0; color: #5b7286; font-size: .9rem; font-weight: 800; }
 
 /* ---- le bilan : « Juste, mais trop long » ---- */
-.corrections h2.lent { margin-top: 14px; color: #8a4b00; }
-.corrections h2.lent:first-child { margin-top: 0; }
-.correction-list.lent li { border-color: #efd48a; background: #fff8e1; }
 .result .seance-suite .cadre { max-width: 520px; text-align: center; }
 
 /* ---- « Comment ça marche ? » ---- */
@@ -946,4 +953,78 @@ body.fullscreen-active .shell { min-height: calc((100dvh - var(--bas-cadre, 0px)
   *,
   *::before,
   *::after { transition: none !important; animation: none !important; }
+}
+
+/* ------------------------------------------------- la séance guidée (lot 2a) */
+.carte-seance .programme small { display: block; }
+/* Le bouton de la carte : sous le programme, sur toute la largeur, son texte
+   au milieu — au téléphone comme sur ordinateur. */
+.carte-seance { display: flex; flex-direction: column; }
+.carte-seance .tete { display: contents; }
+.carte-seance .tete > span:first-child { order: 1; }
+.carte-seance .programme { order: 2; }
+.carte-seance .go { order: 3; margin-top: 12px; padding: 10px 18px; line-height: 1.2; text-align: center; }
+/* Deux boutons côte à côte ont la même hauteur (l'ombre du bouton bleu comprise). */
+.seance-suite .boutons { align-items: flex-start; }
+.seance-suite .boutons .secondary { min-height: 48px; padding: 12px 18px 8px; box-shadow: 0 5px 0 #d3e1ea; }
+.carte-seance.est-faite { border-color: #9fd3cb; box-shadow: none; text-align: left; }
+.carte-seance.est-faite .tete strong { color: var(--teal); }
+/* Le fil de la séance : sur sa ligne, centré, au-dessus de la barre. */
+#play .seance-fil.seance { justify-content: center; margin: 0 0 6px; }
+@media (max-width: 620px) {
+  /* Téléphone : le fil des trois temps a sa ligne, au-dessus du bouton de
+     retour ; dans une séance (le fil de la séance est déjà au-dessus), il
+     partage la ligne du bouton. */
+  #play .status { flex-wrap: wrap; }
+  #play .status .seance-fil { order: -1; flex: 0 0 100%; margin: 0; }
+  #play.en-seance .status .seance-fil { order: 0; flex: 0 1 auto; margin-left: auto; }
+  #play .seance-fil.seance { justify-content: flex-start; flex-wrap: wrap; gap: 2px 8px; }
+  /* Le nom de la compétence est sur la carte et dans les bilans : ici, le
+     fil tient sur une ligne. */
+  #play .seance-fil.seance .quoi { display: none; }
+}
+/* Le mode professeur. */
+.prof-pilule { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px 8px; max-width: 560px; margin: 0 auto 10px; padding: 7px 14px; border-radius: 999px; background: #3b1f6b; color: #fff; font-size: .86rem; font-weight: 850; line-height: 1.25; }
+.prof-pilule b { font-weight: 950; }
+.prof-pilule button { padding: 0; border: 0; background: none; color: #fff; font: inherit; font-weight: 900; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.prof-pilule.est-refus { background: #5b7286; }
+/* Le bilan du test : une ligne par niveau. */
+.bilan-niveaux { display: grid; gap: 6px; width: 100%; margin: 0; }
+.bilan-niveaux > span { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 7px 10px; border: 1px solid #cfe0f2; border-radius: 10px; background: #fff; font-size: .95rem; font-weight: 850; text-align: left; }
+.bilan-niveaux i { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; color: #fff; font-style: normal; font-size: 13px; font-weight: 950; line-height: 1; }
+.bilan-niveaux .oui i { background: var(--teal); }
+.bilan-niveaux .non i { background: #c62828; }
+.bilan-niveaux small { color: #5b7286; font-size: .78rem; font-weight: 800; text-align: right; }
+.bilan-niveaux .oui small { color: var(--teal); }
+/* Téléphone : le détail passe sous le nom du niveau. */
+@media (max-width: 620px) {
+  .bilan-niveaux > span { grid-template-columns: 22px minmax(0, 1fr); gap: 0 8px; }
+  .bilan-niveaux small { grid-column: 2; text-align: left; }
+}
+/* Ce qui monte et ce qui redescend, et les étapes d'une séance faite. */
+.mouv { display: grid; gap: 4px; width: 100%; margin: 0; font-size: .92rem; font-weight: 850; text-align: left; }
+.mouv > span { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.mouv > span > span:last-child { text-align: right; }
+.mouv .monte { color: var(--teal); }
+.mouv .descend { color: #c62828; }
+
+/* Comme dans Défi tables : l'élève à code
+   (body.mode-eleve) n'a plus qu'UNE barre fine en haut — « ← Mon
+   espace » (la flèche seule au téléphone), le bloc de suivi avec
+   « Se déconnecter » dedans, et « Plein écran » sur ordinateur. Le logo
+   passe, en petit, dans le pied de page. Le visiteur sans code garde
+   l'en-tête du site : le logo est son chemin vers le site. */
+body.mode-eleve .topbar { flex-wrap: nowrap; min-height: 0; padding-top: 8px; padding-bottom: 8px; gap: 8px; }
+body.mode-eleve .topbar > .brand { display: none; }
+body.mode-eleve .topbar-actions { display: contents; }
+body.mode-eleve #lien-retour { order: 1; flex: 0 0 auto; }
+body.mode-eleve .suivi-repere { order: 2; flex: 1 1 auto; min-width: 0; margin: 0; }
+body.mode-eleve .fullscreen-toggle { order: 3; flex: 0 0 auto; }
+.site-footer .pied-logo { display: inline-flex; padding: 6px 8px; text-decoration: none; }
+.site-footer .pied-logo img { display: block; width: 64px; height: auto; }
+@media (max-width: 620px) {
+  body.mode-eleve .topbar { padding: 6px 10px; gap: 6px; }
+  body.mode-eleve #lien-retour { width: 40px; min-width: 40px; min-height: 40px; padding: 0; }
+  body.mode-eleve #lien-retour .catalogue-link-label { display: none; }
+  .site-footer .pied-logo img { width: 56px; }
 }
