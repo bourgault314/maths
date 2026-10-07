@@ -1643,13 +1643,13 @@ function fractionQuantityCourse(context){
  ]};
 }
 function percentChangeCourse(context){
- const p=Number(context&&context.percent||0),increase=!context||context.direction!=='decrease';
- const sign=increase?'+':'−',coefficient=courseNumber(1+(increase?1:-1)*p/100),verb=increase?'augmentation':'diminution';
- const amount=courseNumber(200*p/100),result=courseNumber(200+(increase?1:-1)*200*p/100);
- return {title:(increase?'Augmenter':'Diminuer')+' de '+p+' %',rules:[
-   ['1. Calculer la variation',p+' % de la valeur initiale = '+courseFraction(p,100)+' × valeur initiale.'],
-   ['2. Obtenir la nouvelle valeur','Nouvelle valeur = valeur initiale '+sign+' variation.'],
-   ['Coefficient multiplicateur','On peut aussi multiplier directement par '+coefficient+'.<span class="course-example">Exemple : '+verb+' de '+p+' % sur 200 → variation = '+amount+' ; nouvelle valeur = '+result+'.</span>']
+ // Refonte dnb_35 : trois cartes courtes qui tiennent à l’écran (1366 × 625),
+ // exemples du brevet (baisse de 10 % sur 60 € ; hausse de 20 % sur 15 €).
+ const line=text=>'<span style="display:block">'+text+'</span>';
+ return {title:'Hausse et baisse en %',rules:[
+   ['On calcule p % du prix, puis on l’ajoute ou on l’enlève','<span class="course-example">'+line('Baisse de 10 % sur 60 € :')+line('10 % de 60 € = 6 € ; 60 − 6 = 54 €')+'</span><span class="course-example">'+line('Hausse de 20 % sur 15 € :')+line('20 % de 15 € = 3 € ; 15 + 3 = 18 €')+'</span>',true],
+   ['Les repères',line('10 % : on divise par 10.')+line('5 % : la moitié de 10 %.')+line('30 % : 3 fois 10 %.')+line('25 % : ÷ 4 ; 50 % : ÷ 2.')],
+   ['Le coefficient multiplicateur',line('+ 20 % : × 1,2 (120 %)')+line('− 10 % : × 0,9 (90 %)')+line('+ 3 % : × 1,03 (pas × 1,3)')]
  ]};
 }
 function conversionCourse(context){

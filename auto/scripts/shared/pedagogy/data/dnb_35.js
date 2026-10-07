@@ -9,8 +9,9 @@ MATHSGO_PEDAGOGY.registerModule('dnb_35',{
       {id:'increase-total',label:'Valeur finale après augmentation'},
       {id:'decrease-total',label:'Valeur finale après diminution'},
       {id:'coefficient',label:'Coefficient multiplicateur'},
-      {id:'expression',label:'Choix d’une expression de calcul'},
-      {id:'amount',label:'Montant de l’évolution'}
+      {id:'expression',label:'Choix du calcul (forme du brevet)'},
+      {id:'amount',label:'Montant de l’évolution'},
+      {id:'traps',label:'QCM des erreurs fréquentes'}
     ],
     reasoning:[
       {id:'amount',label:'Calculer la part',rule:'Le montant d’une évolution de p % est la valeur initiale multipliée par p/100.'},
@@ -37,10 +38,11 @@ MATHSGO_PEDAGOGY.registerModule('dnb_35',{
     ]
   },
   questionTypes:[
-    {id:'calculer-valeur-apres-hausse',label:'Calculer la valeur finale après augmentation',questions:[1,3],response:'numeric',visual:{policy:'optional',component:null},helpSections:['amount','increase','check']},
-    {id:'calculer-valeur-apres-baisse',label:'Calculer la valeur finale après diminution',questions:[2,4,9],response:'numeric',visual:{policy:'optional',component:null},helpSections:['amount','decrease','check']},
-    {id:'calculer-coefficient',label:'Calculer un coefficient multiplicateur',questions:[5,6],response:'numeric',visual:{policy:'optional',component:null},helpSections:['increase','decrease','coefficient']},
-    {id:'choisir-expression',label:'Choisir l’expression utilisant le coefficient',questions:[7,8],response:'qcm-one',visual:{policy:'optional',component:null},helpSections:['coefficient','check']},
-    {id:'calculer-montant-hausse',label:'Calculer seulement le montant de l’augmentation',questions:[10],response:'numeric',visual:{policy:'optional',component:null},helpSections:['amount','check']}
+    {id:'calculer-valeur-apres-hausse',label:'Calculer la valeur finale après une augmentation',questions:[1,3],response:'numeric',visual:{policy:'optional',component:null},helpSections:['amount','increase','check']},
+    {id:'calculer-valeur-apres-baisse',label:'Calculer la valeur finale après une diminution',questions:[2,4],response:'numeric',visual:{policy:'optional',component:null},helpSections:['amount','decrease','check']},
+    {id:'calculer-coefficient',label:'Trouver le coefficient multiplicateur',questions:[5,6],response:'numeric',visual:{policy:'optional',component:null},helpSections:['increase','decrease','coefficient']},
+    {id:'choisir-calcul',label:'Choisir le calcul qui donne le nouveau prix',questions:[7,8],response:'qcm-one',visual:{policy:'optional',component:null},helpSections:['coefficient','check']},
+    {id:'calculer-montant',label:'Calculer seulement le montant de l’augmentation ou de la baisse',questions:[10],response:'numeric',visual:{policy:'optional',component:null},helpSections:['amount','check']},
+    {id:'eviter-les-pieges',label:'Reconnaître le bon résultat parmi les erreurs fréquentes',questions:[11],response:'qcm-one',visual:{policy:'optional',component:null},helpSections:['amount','check']}
   ]
 });
