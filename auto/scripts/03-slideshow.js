@@ -1049,6 +1049,20 @@ svg{display:block;max-width:100%;height:auto}
 .pied-btn.valider{font-size:1.12rem}
 .carte-correction{padding:7px 10px}
 }
+/* Relecture — téléphone : options de QCM un peu plus serrées (52 px, soit
+   44 px encore après la réduction × 0,85) ; écran court (barre d'adresse
+   visible, 320 × 640) : en-tête, verdict, marges et Passer | Valider se
+   resserrent. Les touches du pavé ne descendent jamais sous 44 px. */
+@media(max-width:600px){
+.diapo .options.options-lot-t{gap:8px}
+.diapo .options.options-lot-t>.opt.opt-lettree{min-height:52px;padding:8px 14px}
+}
+@media(max-width:899px) and (max-height:740px){
+.answer-dock{--verdict-h:30px;--actions-h:44px;padding-bottom:max(6px,env(safe-area-inset-bottom))}
+.pied{gap:6px}
+.diapo.interactive-mode>.top{height:52px;padding-top:4px;padding-bottom:4px}
+.diapo.interactive-mode .stage{padding-top:4px;padding-bottom:6px}
+}
 /* Projection (diaporama) : la correction en grand. */
 @media(min-width:1600px){.diapo:not(.interactive-mode){--opt-taille:1.6rem}}
 @media print{.diapo{--stage-top:20px;--stage-x:20px;--stage-bottom:20px;height:auto;min-height:100vh;overflow:visible}.top{display:none}.stage{min-height:auto;overflow:visible;padding:var(--stage-top) var(--stage-x) var(--stage-bottom)}}
@@ -1878,10 +1892,20 @@ function render(){
    jusqu'à × 1,6 pour remplir l'écran projeté. Téléphone et tablette : × 1,
    la zone question défile si besoin. L'échelle est calculée une fois par
    question, sur la question ET sur sa correction : rien ne change de taille
-   à la validation. */
-function zoomBounds(){
+   à la validation.
+   Relecture : au téléphone, le pied du lot T est plus haut ; une question
+   trop longue (saisie ou QCM) peut être réduite jusqu'à × 0,85 avant de
+   défiler. Les manipulations ne sont jamais réduites au téléphone (cibles
+   tactiles), et les outils qui lisent la position du doigt avec
+   getBoundingClientRect (droite graduée, curseur des conversions, axes du
+   produit de fractions) ne sont réduits nulle part : Safari et les anciens
+   Chrome ne corrigent pas ces mesures du zoom CSS, le point tomberait à côté. */
+const ZOOM_OUTILS_POINTEUR='.conversion-tool,.fraction-product-manipulator';
+function zoomBounds(current){
+ const spec=current&&current.interactiveSpec;
+ if(spec&&spec.kind==='numberline-point') return {min:1,max:1};
  if(!interactiveMode) return {min:.6,max:window.innerWidth>=1200?1.6:1.15};
- if(coarsePointerMedia.matches) return {min:1,max:1};
+ if(coarsePointerMedia.matches) return spec&&(spec.kind==='qcm'||spec.kind==='slots')?{min:.85,max:1}:{min:1,max:1};
  return {min:.66,max:1};
 }
 function applySlideZoom(slide,zoom){
@@ -1891,10 +1915,12 @@ function slideFits(stage){
  return stage.scrollHeight<=stage.clientHeight+1&&stage.scrollWidth<=stage.clientWidth+1;
 }
 function measureSlideZoom(current){
- const bounds=zoomBounds();
+ const bounds=zoomBounds(current);
  if(bounds.max<=bounds.min) return bounds.max;
  const slide=document.getElementById('slide'),stage=document.getElementById('stage');
  if(!slide||!stage) return 1;
+ const probe=document.createElement('div');probe.innerHTML=current.questionHtml;
+ if(probe.querySelector(ZOOM_OUTILS_POINTEUR)) return Math.min(1,bounds.max);
  const states=[current.questionHtml,current.correctionHtml];
  let best=bounds.max;
  states.forEach((html,stateIndex)=>{
@@ -3089,7 +3115,7 @@ function openAide(){
  renderAide();
  const back=document.querySelector('#aidePanel .aide-back');if(back) back.focus({preventScroll:true});
 }
-function closeAide(){aideOpen=false;renderAide();}
+function closeAide(){const panel=document.getElementById('aidePanel');if(panel&&panel.contains(document.activeElement))document.activeElement.blur();aideOpen=false;renderAide();}
 function aideNextStep(){
  const steps=slides[idx].aideSteps||[];
  aideStep=Math.min(steps.length,aideStep+1);
@@ -3178,7 +3204,13 @@ document.addEventListener('keydown',event=>{
    return;
  }
  if(interactiveFinished)return;
- if(aideOpen){if(event.key==='Enter'){event.preventDefault();closeAide();}return;}
+ if(aideOpen){
+   // Entrée sur « Un autre indice » montre l'indice ; ailleurs, elle referme.
+   const active=document.activeElement;
+   if(event.key==='Enter'&&active&&active.id==='aideMore') return;
+   if(event.key==='Enter'){event.preventDefault();closeAide();}
+   return;
+ }
  const spec=slides[idx].interactiveSpec;
  if(event.key==='Enter'||event.key==='ArrowRight'){
    const active=document.activeElement;
@@ -3186,7 +3218,7 @@ document.addEventListener('keydown',event=>{
    // clavier (Passer, Cours, Aide, Menu, une carte à placer…). Mais une case
    // de réponse, le bouton clavier ou un bouton désactivé (Passer après
    // validation) gardent le focus après un clic de souris : là, Entrée valide.
-   if(event.key==='Enter'&&active&&active.tagName==='BUTTON'&&!active.disabled&&!active.matches('.key,#interactiveAction,.interactive-input-slot,#keyboardToggle')) return;
+   if(event.key==='Enter'&&active&&active.tagName==='BUTTON'&&!active.disabled&&active.getClientRects().length&&!active.matches('.key,#interactiveAction,.interactive-input-slot,#keyboardToggle')) return;
    event.preventDefault();submitInteractive();return;
  }
  if(interactiveLocked)return;
