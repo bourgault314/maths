@@ -19,7 +19,8 @@
   function pLabel(label){return label?'P(\\text{'+label+'})':'P';}
   function pLine(label,n,d){return '$$'+pLabel(label)+' = '+fracChain(n,d)+'$$';}
   function strong(value){return '<strong>'+value+'</strong>';}
-  function sumText(counts){return counts.length>1?counts.join(' + ')+' = '+strong(sum(counts)):strong(sum(counts));}
+  // Une somme ne se coupe jamais en fin de ligne (« 1 + 1 = » puis « 2 »).
+  function sumText(counts){return counts.length>1?counts.join(NB+'+'+NB)+NB+'='+NB+strong(sum(counts)):strong(sum(counts));}
   function listText(values){
     const items=values.map(String);
     return items.length<2?items.join(''):items.slice(0,-1).join(', ')+' et '+items[items.length-1];
