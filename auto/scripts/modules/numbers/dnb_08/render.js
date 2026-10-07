@@ -1,70 +1,91 @@
 (function registerDivisibilityRenderer(global){
-  function equalSharingVisual(instance,correction){
-    const component=global.MATHSGO_VISUALS&&global.MATHSGO_VISUALS.get('arithmetic.equal-sharing-board');
-    const share=Number(instance&&instance.scope&&instance.scope.P);
-    if(!component||!Number.isFinite(share)) return '';
-    return component.render({shares:3,total:share*3,share,showTotal:true},correction);
+  /*
+   * Rendu dnb_08 (refonte du 8 octobre 2026).
+   * - La question ne contient plus l'aide : le dessin d'aide part dans le panneau
+   *   « Aide » (inst.aideHtml) et l'explication dans la carte de correction
+   *   (inst.correctionSteps), comme le prévoit le contrat de la refonte.
+   * - Les choix « coche toutes les bonnes réponses » portent data-select-all :
+   *   l'élève peut toujours cocher plusieurs cases, et l'écran ne dit plus
+   *   combien de réponses sont justes.
+   */
+  const NBSP='&nbsp;';
+
+  function optionMarkup({label,index,correctSet,correction,exclusive=false,letter=false,errorCode='',extraClass=''}){
+    const option=String(index+1),isCorrect=correctSet.has(option);
+    const code=errorCode||(isCorrect?'correct':'incorrect');
+    const prefix=letter?`<strong>${String.fromCharCode(65+index)}.</strong> `:'';
+    return `<div class="opt ${correction&&isCorrect?'correct':''} ${extraClass}" data-error-code="${code}"${exclusive?' data-exclusive="true"':''}>${prefix}${label}</div>`;
   }
 
-  function insertBeforeOptions(html,content){
-    if(!content) return html;
-    return html.replace('<div class="options ',content+'<div class="options ');
+  // « Par quels nombres N est-il divisible ? » : 2 · 5 · 10 sur la première ligne,
+  // 3 · 9 · Aucun sur la seconde (les deux familles du gabarit plastifiable).
+  function selectDivisors(instance,correction){
+    const data=instance.divisibilityData,correctSet=new Set(instance.answers.map(String));
+    const prompt=`<div class="question divisibility-prompt">Par quels nombres <strong class="divisibility-number">${formatNumber(data.value)}</strong> est-il divisible${NBSP}?<small>Coche toutes les bonnes réponses.</small></div>`;
+    const options=data.labels.map((label,index)=>optionMarkup({
+      label,index,correctSet,correction,exclusive:index===data.labels.length-1,
+      errorCode:correctSet.has(String(index+1))?'correct':(index===data.labels.length-1?'none-while-divisible':`incorrect-divisor-${label}`)
+    })).join('');
+    return prompt+`<div class="options divisibility-options divisibility-grid-3" data-select-all="true">${options}</div>`;
   }
 
-  function verdict(ok){
-    return `<span class="divisibility-verdict ${ok?'is-yes':'is-no'}">${ok?'✓ oui':'✕ non'}</span>`;
+  function selectNumbers(instance,correction){
+    const data=instance.divisibilityData,correctSet=new Set(instance.answers.map(String));
+    const prompt=`<div class="question divisibility-prompt">Coche tous les nombres divisibles par <strong class="divisibility-number">${data.divisor}</strong>.<small>Un, plusieurs ou aucun.</small></div>`;
+    const options=data.labels.map((label,index)=>optionMarkup({
+      label,index,correctSet,correction,exclusive:index===data.labels.length-1,
+      extraClass:index===data.labels.length-1?'divisibility-option-wide':''
+    })).join('');
+    return prompt+`<div class="options divisibility-options divisibility-grid-2" data-select-all="true">${options}</div>`;
   }
 
-  function inspectionMarkup(data,correction){
-    const digits=data.digits;
-    const digitCards=digits.map((digit,index)=>`<span class="divisibility-digit ${index===digits.length-1?'is-unit':''}">${digit}</span>`).join('');
-    const sumExpression=digits.join(' + ')+(correction?` = ${data.digitSum}`:' = □');
-    const divides=divisor=>data.divisors.includes(divisor);
-    if(!correction){
-      return `<div class="divisibility-inspector" aria-label="Aide pour tester les critères de divisibilité">
-        <section class="divisibility-step"><span class="divisibility-step-number">1</span><div><strong>Observe le chiffre des unités</strong><div class="divisibility-digits">${digitCards}</div><small>Il décide pour 2, 5 et 10.</small></div></section>
-        <section class="divisibility-step"><span class="divisibility-step-number">2</span><div><strong>Additionne les chiffres</strong><div class="divisibility-sum">${sumExpression}</div><small>La somme décide pour 3 et 9.</small></div></section>
-      </div>`;
-    }
-    const conclusion=data.divisors.length?data.divisors.join(', '):'aucun des nombres proposés';
-    return `<div class="divisibility-inspector is-correction" aria-label="Correction pas à pas des critères de divisibilité">
-      <section class="divisibility-step"><span class="divisibility-step-number">1</span><div><strong>Unité : ${digits[digits.length-1]}</strong><div class="divisibility-tests"><span>par 2 ${verdict(divides(2))}</span><span>par 5 ${verdict(divides(5))}</span><span>par 10 ${verdict(divides(10))}</span></div></div></section>
-      <section class="divisibility-step"><span class="divisibility-step-number">2</span><div><strong>Somme : ${sumExpression}</strong><div class="divisibility-tests"><span>par 3 ${verdict(divides(3))}</span><span>par 9 ${verdict(divides(9))}</span></div></div></section>
-      <p class="divisibility-conclusion"><strong>Conclusion :</strong> ${data.value} est divisible par ${conclusion}.</p>
-    </div>`;
+  function sharing(instance,correction){
+    const data=instance.divisibilityData,correctSet=new Set(instance.answers.map(String));
+    const prompt=`<div class="question divisibility-prompt divisibility-prompt-text">${data.prompt}</div>`;
+    const options=data.labels.map((label,index)=>optionMarkup({label,index,correctSet,correction})).join('');
+    return prompt+`<div class="options divisibility-options divisibility-grid-2 divisibility-yes-no">${options}</div>`;
   }
 
-  function optionsMarkup(instance,correction){
-    const data=instance.divisibilityData,corrects=new Set(instance.answers.map(String));
-    const labels=data.proposedDivisors.map(String).concat('Aucun');
-    return `<div class="options options-6 divisibility-options">${labels.map((label,index)=>{
-      const option=String(index+1),isCorrect=corrects.has(option),exclusive=index===labels.length-1;
-      const errorCode=isCorrect?'correct':exclusive?'none-while-divisible':`incorrect-divisor-${label}`;
-      return `<div class="opt ${correction&&isCorrect?'correct':''}" data-error-code="${errorCode}"${exclusive?' data-exclusive="true"':''}><strong>${String.fromCharCode(65+index)}.</strong> ${label}</div>`;
-    }).join('')}</div>`;
+  function twoNumbers(instance,correction){
+    const data=instance.divisibilityData,correctSet=new Set(instance.answers.map(String));
+    const prompt=`<div class="question divisibility-prompt divisibility-prompt-text">On s’intéresse à la divisibilité par ${data.divisor} des nombres&nbsp;:<span class="divisibility-pair"><span>N${NBSP}=${NBSP}${formatNumber(data.n)}</span><span>P${NBSP}=${NBSP}${formatNumber(data.p)}</span></span></div>`;
+    const options=data.labels.map((label,index)=>optionMarkup({label,index,correctSet,correction,letter:true})).join('');
+    return prompt+`<div class="options divisibility-options divisibility-text-options">${options}</div>`;
   }
 
-  function renderSelectionQuestion({instance,correction,mode}){
+  function shortAnswer(instance,correction,renderPlaceholders){
     const data=instance.divisibilityData;
-    const prompt=`<div class="question divisibility-prompt">Par quels nombres <strong>${data.value}</strong> est-il divisible ?<small>Sélectionne toutes les réponses correctes.</small></div>`;
-    let help='';
-    if(correction) help=inspectionMarkup(data,true);
-    else if(mode==='with') help=inspectionMarkup(data,false);
-    else if(mode==='without-reveal') help='<div class="visual-placeholder divisibility-inspector-placeholder"></div>';
-    return prompt+help+optionsMarkup(instance,correction);
+    let statement=instance.rawStatement;
+    if(data.kind==='missing-digit'){
+      const number=data.digits.map((digit,index)=>index===data.hidden?'<span class="divisibility-box" aria-label="chiffre manquant">□</span>':String(digit)).join('');
+      statement=statement.replace(data.shown,`<strong class="divisibility-number divisibility-missing">${number}</strong>`);
+    }
+    const footer=renderPlaceholders(instance.rawFooter,instance.answers,correction?'correction':'question');
+    return `<div class="question divisibility-prompt divisibility-prompt-text">${statement}</div><div class="footer divisibility-answer-line">${footer}</div>`;
   }
 
-  function renderQuestion({instance,correction,mode,renderGenericQuestion}){
-    if(instance?.divisibilityData) return renderSelectionQuestion({instance,correction,mode});
-    const html=renderGenericQuestion(instance,correction,mode);
-    if(Number(instance&&instance.q&&instance.q.n)!==10) return html;
-    if(mode==='without-reveal') return insertBeforeOptions(html,'<div class="visual-placeholder divisibility-sharing-placeholder"></div>');
-    if(mode!=='with') return html;
-    return insertBeforeOptions(html,equalSharingVisual(instance,correction));
+  function formatNumber(value){
+    const text=String(value);
+    return text.length<4?text:text.replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+  }
+
+  function renderQuestion({instance,correction,renderGenericQuestion,mode,renderPlaceholders}){
+    const kind=instance?.divisibilityData?.kind;
+    if(kind==='select-divisors') return selectDivisors(instance,correction);
+    if(kind==='select-numbers') return selectNumbers(instance,correction);
+    if(kind==='sharing') return sharing(instance,correction);
+    if(kind==='two-numbers') return twoNumbers(instance,correction);
+    if(kind==='give-divisor'||kind==='build-number'||kind==='missing-digit') return shortAnswer(instance,correction,renderPlaceholders);
+    return renderGenericQuestion(instance,correction,mode);
+  }
+
+  // Dessin du panneau « Aide » : il est fabriqué par le générateur (inst.aideHtml).
+  function aideHtml(instance){
+    return String(instance&&instance.aideHtml||'');
   }
 
   if(!global.MATHSGO_MODULE_RUNTIME) throw new Error('Le registre fonctionnel doit être chargé avant le rendu dnb_08.');
   global.MATHSGO_MODULE_RUNTIME.register('dnb_08',{
-    renderer:{version:'2.0.0',renderQuestion}
+    renderer:{version:'3.0.0',renderQuestion,aideHtml}
   });
 })(globalThis);
