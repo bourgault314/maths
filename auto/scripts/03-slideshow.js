@@ -965,7 +965,7 @@ svg{display:block;max-width:100%;height:auto}
 .quit-confirm{color:#42556b}
 /* Fin de série : le score, les boutons, puis « À revoir ». */
 .interactive-finish{width:min(100%,680px);margin:4vh auto 16px}
-.diapo .interactive-finish-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:min(100%,480px);margin:0 auto}
+.diapo .interactive-finish-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch;gap:10px;width:min(100%,480px);margin:0 auto}
 .diapo .interactive-finish-actions .btn,.diapo .interactive-finish-actions .btn.primary{width:100%;min-width:0;min-height:50px;padding:10px 12px;line-height:1.15}
 .diapo .interactive-finish-actions .btn.primary,.diapo .interactive-finish-actions .btn.primary:first-child~.btn:last-child:nth-child(even){grid-column:1/-1}
 .finish-misses{margin:22px 0 0;text-align:left}
@@ -985,7 +985,7 @@ svg{display:block;max-width:100%;height:auto}
 .diapo .options.options-lot-t.options-moyennes{width:min(100%,780px)}
 .diapo .options.options-lot-t>.opt.opt-lettree{display:flex;align-items:center;justify-content:flex-start;gap:0;min-height:56px;margin:0;padding:10px 16px;border-radius:14px;font-family:Arial,"Helvetica Neue",Helvetica,sans-serif;font-size:var(--opt-taille);font-weight:700;line-height:1.25;letter-spacing:0;text-align:left}
 .diapo .options.options-lot-t.options-courtes>.opt.opt-lettree{justify-content:center}
-.diapo .opt.opt-lettree .opt-letter{flex:none;margin-right:.45em;color:#073a75;font-family:Arial,"Helvetica Neue",Helvetica,sans-serif;font-size:1em;font-weight:900;line-height:1}
+.diapo .opt.opt-lettree .opt-letter{flex:none;margin-right:.45em;color:#073a75;font-family:Arial,"Helvetica Neue",Helvetica,sans-serif;font-size:1em;font-weight:900;line-height:1.25}
 .diapo .opt.opt-lettree .opt-body{min-width:0;font-family:inherit;font-size:1em;font-weight:inherit}
 .diapo .options.options-lot-t .opt-body *{font-family:inherit!important}
 /* Diaporama : la démarche apparaît étape par étape ; les étapes à venir gardent leur place. */
@@ -3005,7 +3005,7 @@ function decorateCorrectedSlide(current){
 function studentAnswerHtml(spec){
  const current=slides[idx];
  const values=interactiveValues.slice();
- if(spec.kind==='qcm') return [...selectedOptions].sort((a,b)=>a-b).map(index=>String.fromCharCode(65+index)).join(' et ');
+ if(spec.kind==='qcm') return [...selectedOptions].sort((a,b)=>a-b).map(index=>String.fromCharCode(65+index)).join(', ').replace(/, ([A-Z])$/,' et $1');
  if(spec.kind==='relative-tokens'){
    if(!relativeBoardState||!relativeBoardState.tokens.every(token=>token.zone==='result')) return '';
    return lotTValeurHtml(String(relativeBoardState.tokens.reduce((sum,token)=>sum+token.sign,0)));
@@ -3609,7 +3609,11 @@ function typographieSourceForPage(){
   ].join('\n');
 }
 function lotTTypo(html){
-  return typeof typographieHtml==='function'?typographieHtml(html):String(html??'');
+  // Au passage : height="auto" n'est pas une hauteur valide pour une figure
+  // <svg> (le navigateur l'ignore et l'écrit en erreur dans la console) ; la
+  // hauteur suit de toute façon la largeur et le viewBox.
+  const source=String(html??'').replace(/(<svg\b[^>]*?)\sheight="auto"/gi,'$1');
+  return typeof typographieHtml==='function'?typographieHtml(source):source;
 }
 
 /* Lot T — champs « correction », « aide » et « pavé » d'une question (voir
@@ -3671,7 +3675,7 @@ function lotTAideDrawing(inst,policy){
 function lotTExpectedHtml(inst,spec){
   if(!spec) return '';
   try{
-    if(spec.kind==='qcm') return (spec.correctIndices||[]).map(index=>String.fromCharCode(65+index)).join(' et ');
+    if(spec.kind==='qcm') return (spec.correctIndices||[]).map(index=>String.fromCharCode(65+index)).join(', ').replace(/, ([A-Z])$/,' et $1');
     const first=(spec.acceptedCombinations||[])[0]||[];
     if(spec.layout==='fraction'&&first.length===2) return lotTFracHtml(lotTValeurHtml(first[0]),lotTValeurHtml(first[1]));
     if(spec.layout==='polynomial'&&first.length) return lotTPolynomeHtml(first,(spec.slots||[]).map(slot=>slot.term));
@@ -3706,6 +3710,8 @@ function lotTShortPrompt(questionHtml){
     probe.querySelectorAll('.frac').forEach(node=>{const num=node.querySelector('.frac-num'),den=node.querySelector('.frac-den');node.replaceWith(num&&den?' '+num.textContent.trim()+'/'+den.textContent.trim()+' ':node.textContent);});
     probe.querySelectorAll('sup').forEach(node=>{const raw=node.textContent.trim();node.replaceWith(/^[−-]?[0-9]+$/.test(raw)?raw.split('').map(character=>exposants[character]||character).join(''):'^'+raw);});
     probe.querySelectorAll('.answer-slot').forEach(node=>node.replaceWith(' … '));
+    probe.querySelectorAll('br').forEach(node=>node.replaceWith(' '));
+    probe.querySelectorAll('div,p,li,section,small,h2,h3,table').forEach(node=>{node.before(' ');node.after(' ');});
     const clean=node=>(node.textContent||'').replace(/\s+/g,' ').trim();
     const question=probe.querySelector('.question')||probe;
     let text=clean(question);
