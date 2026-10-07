@@ -1066,7 +1066,7 @@ function courseDecimalColumns(lines,operator){
 function courseDecimalPlaceTable(values,column){
  const head=['unités','dixièmes','centièmes'];
  const cell=(value,index,tag='td')=>'<'+tag+' style="padding:3px 8px;border:1px solid #c9d6e6;text-align:center'+(index===column?';background:#fff1df;color:#9a4100':'')+'">'+value+'</'+tag+'>';
- const rows=values.map(text=>{const [whole,decimals]=text.split(',');return '<tr>'+cell(whole+',',0)+cell(decimals[0],1)+cell(decimals[1]||'0',2)+'</tr>';}).join('');
+ const rows=values.map(text=>{const [whole,decimals]=text.split(',');return '<tr>'+cell(whole+',',0)+cell(decimals[0],1)+cell(decimals[1]||'<span style="color:#8a97a8">0</span>',2)+'</tr>';}).join('');
  return '<table aria-label="Tableau de numération" style="margin:7px auto 2px;border-collapse:collapse;font:800 1.05em Cambria Math,Times New Roman,serif;color:#17283f"><tr>'+head.map((label,index)=>cell('<span style="font:800 .72em Arial,sans-serif">'+label+'</span>',index,'th')).join('')+'</tr>'+rows+'</table>';
 }
 function courseReadDataTableVisual(){
@@ -1161,10 +1161,10 @@ Object.assign(courseCatalog,{
     ['Rendre irréductible','On divise le numérateur et le dénominateur par un même diviseur commun.<span class="course-example"><span class="course-equation">'+courseFraction(60,100)+' = '+courseFraction(3,5)+'</span></span>']
   ]},
   decimal_numbers:{title:'Comparer et calculer avec des décimaux',rules:[
-    ['Comparer, ranger','J’écris les nombres avec <strong>autant de chiffres après la virgule</strong> (j’ajoute des zéros), puis je compare de gauche à droite : partie entière, dixièmes, centièmes.'+courseDecimalPlaceTable(['4,70','4,09','4,68'],1)+'<span class="course-example">4,09 &lt; 4,68 &lt; 4,7 — le plus court n’est pas forcément le plus petit.</span>',false,'place-values'],
+    ['Comparer, ranger','J’écris les nombres avec <b>autant de chiffres après la virgule</b> (j’ajoute des zéros), puis je compare de gauche à droite : partie entière, dixièmes, centièmes.'+courseDecimalPlaceTable(['4,7','4,09','4,68'],1)+'<span class="course-example">4,09 &lt; 4,68 &lt; 4,7 — le plus court n’est pas forcément le plus petit.</span>',false,'place-values'],
     ['Encadrer','L’entier juste avant est la partie entière ; l’entier juste après est le suivant.'+courseDecimalVisual('frame')+'<span class="course-example">9 &lt; 9,32 &lt; 10</span>',false,'consecutive-integers'],
     ['Compléter','J’avance par étapes : jusqu’au dixième suivant, puis jusqu’à l’unité.<span class="course-example">0,35 + 0,05 = 0,4 ; 0,4 + 0,6 = 1 : il manque 0,05 + 0,6 = 0,65.</span>',false,'complete-unit'],
-    ['Additionner, soustraire','J’aligne les virgules et je complète avec des zéros.'+courseDecimalColumns(['11,0','7,5','3,5'],'−')+'<span class="course-example">4,45 + 0,3 = 4,45 + 0,30 = 4,75</span>',false,'align-comma'],
+    ['Additionner, soustraire','J’aligne les virgules et je complète avec des zéros.'+courseDecimalColumns(['11','7,5','3,5'],'−')+'<span class="course-example">4,45 + 0,3 = 4,45 + 0,30 = 4,75</span>',false,'align-comma'],
     ['Multiplier par un entier','Je décompose le décimal, puis je multiplie chaque partie.'+courseDecimalVisual('multiply'),false,'distributivity'],
     ['Multiplier en dixièmes','<span class="course-example">0,6 × 7 = 6 dixièmes × 7 = 42 dixièmes = 4,2</span><span class="course-example">0,3 × 0,2 : 3 × 2 = 6 ; 2 chiffres après la virgule → 0,06</span>',false,'multiply-units'],
     ['Diviser','J’écris le nombre en dixièmes (ou en centièmes), puis je partage.<span class="course-example">5,2 ÷ 4 = 52 dixièmes ÷ 4 = 13 dixièmes = 1,3</span><span class="course-example">66 ÷ 5 = 660 dixièmes ÷ 5 = 132 dixièmes = 13,2</span>',false,'equal-sharing'],
