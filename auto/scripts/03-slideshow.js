@@ -3323,14 +3323,20 @@ function typographieSourceForPage(){
   if(typeof typographieTexte!=='function'||typeof typographieHtml!=='function'){
     return "function typographieTexte(text){return String(text??'');}\nfunction typographieHtml(html){return String(html??'');}";
   }
+  // Dans une fermeture : la série s'écrit souvent dans le MÊME onglet que le
+  // menu (document.open), où les « const TYPO_… » du moteur existent déjà ;
+  // les redéclarer au niveau global arrêtait tout le script de la série.
   return [
+    '(function(){',
     'const TYPO_EXPOSANTS='+JSON.stringify(TYPO_EXPOSANTS)+';',
     'const TYPO_ESPACE='+JSON.stringify(TYPO_ESPACE)+';',
     'const TYPO_MOINS_SIGNE='+TYPO_MOINS_SIGNE.toString()+';',
     'const TYPO_MOINS_ENTRE_NOMBRES='+TYPO_MOINS_ENTRE_NOMBRES.toString()+';',
     'const TYPO_MOINS_APRES_LETTRE='+TYPO_MOINS_APRES_LETTRE.toString()+';',
     typographieTexte.toString(),
-    typographieHtml.toString()
+    typographieHtml.toString(),
+    'window.typographieTexte=typographieTexte;window.typographieHtml=typographieHtml;',
+    '})();'
   ].join('\n');
 }
 function lotTTypo(html){
