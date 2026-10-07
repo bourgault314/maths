@@ -1,148 +1,246 @@
 (function registerCoordinatePlane(global){
+  // Repère du plan (dnb_15). Un seul traceur sert à la question, à la
+  // correction, à l'aide et au cours : graduations lisibles au téléphone,
+  // vrai signe moins, lettres qui évitent les graduations, projections
+  // orange (abscisse) et turquoise (ordonnée) comme sur le gabarit
+  // plastifiable du site, avec des pointillés différents pour le noir et blanc.
+  const COLORS=Object.freeze({
+    ink:'#17384d',grid:'#cfd8e3',gridMajor:'#aebccb',paper:'#ffffff',
+    point:'#b3261e',chosen:'#6b4fa0',expected:'#0b7a55',
+    abscissa:'#e86a00',abscissaText:'#a84a00',ordinate:'#079c96',ordinateText:'#00706b'
+  });
+  const MINUS='−';
+  const FONT_NUMBER='Trebuchet MS,Segoe UI,Arial,sans-serif';
+  const FONT_POINT='Georgia,Times New Roman,serif';
+  const MARGIN={left:40,right:34,top:30,bottom:40};
+
   function svgEscape(value){
     return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[ch]));
   }
-  function legacyCoordinatePlaneSvg(data){
-    const lines=['<svg xmlns="http://www.w3.org/2000/svg" width="400" height="auto" viewBox="0 0 400 400" style="max-width:380px">'];
-    if(data?.halfSteps){
-      lines.push('<g stroke="#eee" stroke-width="1">');
-      for(let y=60;y<=340;y+=40) lines.push(`<line x1="40" y1="${y}" x2="360" y2="${y}"/>`);
-      for(let x=60;x<=340;x+=40) lines.push(`<line x1="${x}" y1="40" x2="${x}" y2="360"/>`);
-      lines.push('</g>');
-    }
-    lines.push('<g stroke="#ccc" stroke-width="1">');
-    [40,80,120,160,240,280,320,360].forEach(y=>lines.push(`<line x1="40" y1="${y}" x2="360" y2="${y}"/>`));
-    [40,80,120,160,240,280,320,360].forEach(x=>lines.push(`<line x1="${x}" y1="40" x2="${x}" y2="360"/>`));
-    lines.push('</g>');
-    lines.push('<line x1="40" y1="200" x2="370" y2="200" stroke="#222" stroke-width="1.5"/>');
-    lines.push('<polygon points="370,200 360,195 360,205" fill="#222"/>');
-    lines.push('<line x1="200" y1="360" x2="200" y2="30" stroke="#222" stroke-width="1.5"/>');
-    lines.push('<polygon points="200,30 195,40 205,40" fill="#222"/>');
-    [[80,'-3'],[120,'-2'],[160,'-1'],[240,'1'],[280,'2'],[320,'3']].forEach(([x,label])=>lines.push(`<text x="${x}" y="218" font-family="sans-serif" font-size="14" text-anchor="middle">${label}</text>`));
-    [[85,'3'],[125,'2'],[165,'1'],[245,'-1'],[285,'-2'],[325,'-3']].forEach(([y,label])=>lines.push(`<text x="186" y="${y}" font-family="sans-serif" font-size="14" text-anchor="end">${label}</text>`));
-    lines.push('<text x="190" y="218" font-family="sans-serif" font-size="14" text-anchor="end">0</text>');
-    (data?.points||[]).forEach(point=>{
-      const x=svgEscape(point.x),y=svgEscape(point.y),color=svgEscape(point.color||'#c0392b'),label=svgEscape(point.label||'M');
-      lines.push(`<g class="coordinate-point-marker" transform="translate(${x} ${y})" stroke="${color}" stroke-width="3.2" stroke-linecap="round"><line x1="-7" y1="0" x2="7" y2="0"/><line x1="0" y1="-7" x2="0" y2="7"/></g>`);
-      lines.push(`<text x="${x}" y="${y}" dx="10" dy="-7" font-family="serif" font-style="italic" font-size="20" fill="${color}">${label}</text>`);
-    });
-    lines.push('</svg>');
-    return lines.join('\n');
-  }
-
-  function cleanNumber(value){
-    const rounded=Math.round(Number(value)*1e10)/1e10;
+  function clean(value){
+    const rounded=Math.round(Number(value)*100)/100;
     return Object.is(rounded,-0)?0:rounded;
   }
-  function numberLabel(value){return String(cleanNumber(value)).replace('.',',');}
-  function coordinateTracerSvg(data){
-    const bounds=data.bounds||{},xMin=Number(bounds.xMin),xMax=Number(bounds.xMax),yMin=Number(bounds.yMin),yMax=Number(bounds.yMax);
-    const step=Math.abs(Number(data.step))||1,minorStep=Math.abs(Number(data.minorStep))||0;
-    if(![xMin,xMax,yMin,yMax].every(Number.isFinite)||xMax<=xMin||yMax<=yMin){
-      throw new TypeError('Un repère paramétrable exige des bornes valides sur les deux axes.');
-    }
-    const width=Math.max(300,Math.min(1000,Number(data.width)||520));
-    const height=Math.max(260,Math.min(900,Number(data.height)||420));
-    const margin={left:48,right:30,top:28,bottom:42};
-    const plot={left:margin.left,right:width-margin.right,top:margin.top,bottom:height-margin.bottom};
-    const toX=value=>plot.left+((value-xMin)/(xMax-xMin))*(plot.right-plot.left);
-    const toY=value=>plot.bottom-((value-yMin)/(yMax-yMin))*(plot.bottom-plot.top);
-    const axisX=xMin<=0&&xMax>=0?toX(0):plot.left;
-    const axisY=yMin<=0&&yMax>=0?toY(0):plot.bottom;
-    const values=(min,max,increment)=>{
-      const count=Math.floor((max-min)/increment+1e-8);
-      if(count>200)throw new RangeError('Le repère est limité à 200 intervalles par axe.');
-      return Array.from({length:count+1},(_,index)=>cleanNumber(min+index*increment)).filter(value=>value<=max+1e-8);
-    };
-    const xValues=values(xMin,xMax,step),yValues=values(yMin,yMax,step);
-    const lines=[`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="auto" viewBox="0 0 ${width} ${height}" style="max-width:${width}px">`];
-    if(data.showGrid!==false){
-      if(minorStep&&minorStep<step){
-        lines.push('<g stroke="#edf1f4" stroke-width="1">');
-        values(xMin,xMax,minorStep).forEach(value=>lines.push(`<line x1="${cleanNumber(toX(value))}" y1="${plot.top}" x2="${cleanNumber(toX(value))}" y2="${plot.bottom}"/>`));
-        values(yMin,yMax,minorStep).forEach(value=>lines.push(`<line x1="${plot.left}" y1="${cleanNumber(toY(value))}" x2="${plot.right}" y2="${cleanNumber(toY(value))}"/>`));
-        lines.push('</g>');
-      }
-      lines.push('<g stroke="#cbd3da" stroke-width="1">');
-      xValues.forEach(value=>lines.push(`<line x1="${cleanNumber(toX(value))}" y1="${plot.top}" x2="${cleanNumber(toX(value))}" y2="${plot.bottom}"/>`));
-      yValues.forEach(value=>lines.push(`<line x1="${plot.left}" y1="${cleanNumber(toY(value))}" x2="${plot.right}" y2="${cleanNumber(toY(value))}"/>`));
-      lines.push('</g>');
-    }
-    lines.push(`<line x1="${plot.left}" y1="${cleanNumber(axisY)}" x2="${plot.right+10}" y2="${cleanNumber(axisY)}" stroke="#222" stroke-width="1.7"/>`);
-    lines.push(`<polygon points="${plot.right+10},${cleanNumber(axisY)} ${plot.right},${cleanNumber(axisY-5)} ${plot.right},${cleanNumber(axisY+5)}" fill="#222"/>`);
-    lines.push(`<line x1="${cleanNumber(axisX)}" y1="${plot.bottom}" x2="${cleanNumber(axisX)}" y2="${plot.top-10}" stroke="#222" stroke-width="1.7"/>`);
-    lines.push(`<polygon points="${cleanNumber(axisX)},${plot.top-10} ${cleanNumber(axisX-5)},${plot.top} ${cleanNumber(axisX+5)},${plot.top}" fill="#222"/>`);
-    const tickSize=Math.max(3,Math.min(10,Number(data.tickSize)||5));
-    xValues.forEach(value=>{
-      const x=cleanNumber(toX(value));
-      lines.push(`<line x1="${x}" y1="${cleanNumber(axisY-tickSize)}" x2="${x}" y2="${cleanNumber(axisY+tickSize)}" stroke="#222" stroke-width="1.5"/>`);
-      if(value!==0&&data.showLabels!==false)lines.push(`<text x="${x}" y="${cleanNumber(axisY+20)}" font-family="sans-serif" font-size="13" text-anchor="middle">${svgEscape(numberLabel(value))}</text>`);
-    });
-    yValues.forEach(value=>{
-      const y=cleanNumber(toY(value));
-      lines.push(`<line x1="${cleanNumber(axisX-tickSize)}" y1="${y}" x2="${cleanNumber(axisX+tickSize)}" y2="${y}" stroke="#222" stroke-width="1.5"/>`);
-      if(value!==0&&data.showLabels!==false)lines.push(`<text x="${cleanNumber(axisX-10)}" y="${cleanNumber(y+4)}" font-family="sans-serif" font-size="13" text-anchor="end">${svgEscape(numberLabel(value))}</text>`);
-    });
-    if(xMin<=0&&xMax>=0&&yMin<=0&&yMax>=0&&data.showLabels!==false){
-      lines.push(`<text x="${cleanNumber(axisX-9)}" y="${cleanNumber(axisY+20)}" font-family="sans-serif" font-size="13" text-anchor="end">0</text>`);
-    }
-    (data.points||[]).forEach(point=>{
-      const px=Number(point.x),py=Number(point.y);
-      if(!Number.isFinite(px)||!Number.isFinite(py)||px<xMin||px>xMax||py<yMin||py>yMax)return;
-      const x=cleanNumber(toX(px)),y=cleanNumber(toY(py)),color=svgEscape(point.color||'#c0392b'),label=svgEscape(point.label||'M');
-      lines.push(`<g class="coordinate-point-marker" transform="translate(${x} ${y})" stroke="${color}" stroke-width="3.2" stroke-linecap="round"><line x1="-7" y1="0" x2="7" y2="0"/><line x1="0" y1="-7" x2="0" y2="7"/></g>`);
-      lines.push(`<text x="${x}" y="${y}" dx="10" dy="-7" font-family="serif" font-style="italic" font-size="19" fill="${color}">${label}</text>`);
-    });
-    lines.push('</svg>');
-    return lines.join('\n');
+  function numberLabel(value){
+    const v=clean(value),text=String(Math.abs(v)).replace('.',',');
+    return v<0?MINUS+text:text;
   }
-  function coordinatePlaneSvg(data={}){
-    return data.mode==='coordinates'||data.bounds?coordinateTracerSvg(data):legacyCoordinatePlaneSvg(data);
+  function onStep(value,step){return Math.abs(value/step-Math.round(value/step))<1e-9;}
+
+  function geometry(data){
+    const bounds=data.bounds||{xMin:-4,xMax:4,yMin:-3,yMax:3};
+    const xMin=Number(bounds.xMin),xMax=Number(bounds.xMax),yMin=Number(bounds.yMin),yMax=Number(bounds.yMax);
+    if(![xMin,xMax,yMin,yMax].every(Number.isFinite)||xMax<=xMin||yMax<=yMin||xMin>0||xMax<0||yMin>0||yMax<0){
+      throw new TypeError('Le repère exige des bornes valides qui contiennent l’origine.');
+    }
+    const step=Number(data.step)===0.5?0.5:1;
+    const unit=Number(data.unit)||(step===0.5?54:46);
+    const width=clean(MARGIN.left+MARGIN.right+(xMax-xMin)*unit);
+    const height=clean(MARGIN.top+MARGIN.bottom+(yMax-yMin)*unit);
+    const left=MARGIN.left,right=width-MARGIN.right,top=MARGIN.top,bottom=height-MARGIN.bottom;
+    const toX=value=>clean(left+(value-xMin)*unit);
+    const toY=value=>clean(bottom-(value-yMin)*unit);
+    return {xMin,xMax,yMin,yMax,step,unit,width,height,left,right,top,bottom,toX,toY,axisX:toX(0),axisY:toY(0)};
+  }
+  function values(min,max,step){
+    const list=[];
+    for(let value=min;value<=max+1e-9;value+=step) list.push(clean(value));
+    return list;
   }
 
+  function text(x,y,content,{size=20,weight=600,color=COLORS.ink,anchor='middle',font=FONT_NUMBER,italic=false,halo=true,cls=''}={}){
+    return '<text'+(cls?' class="'+cls+'"':'')+' x="'+clean(x)+'" y="'+clean(y)+'" text-anchor="'+anchor+'" font-family="'+font+'" font-size="'+size+'" font-weight="'+weight+'"'
+      +(italic?' font-style="italic"':'')+' fill="'+color+'"'
+      +(halo?' paint-order="stroke" stroke="#fff" stroke-width="5" stroke-linejoin="round"':'')+'>'+svgEscape(content)+'</text>';
+  }
+  function line(x1,y1,x2,y2,color,width,extra=''){
+    return '<line x1="'+clean(x1)+'" y1="'+clean(y1)+'" x2="'+clean(x2)+'" y2="'+clean(y2)+'" stroke="'+color+'" stroke-width="'+width+'" '+extra+'/>';
+  }
+  function arrowHead(fromX,fromY,toX,toY,color,size=11){
+    const dx=toX-fromX,dy=toY-fromY,length=Math.hypot(dx,dy);
+    if(length<1) return '';
+    const ux=dx/length,uy=dy/length,px=-uy,py=ux,bx=toX-ux*size,by=toY-uy*size;
+    return '<polygon points="'+[[toX,toY],[bx+px*size*.5,by+py*size*.5],[bx-px*size*.5,by-py*size*.5]].map(p=>clean(p[0])+','+clean(p[1])).join(' ')+'" fill="'+color+'"/>';
+  }
+
+  // Rectangles occupés par les nombres des axes : une lettre de point ne s'y pose jamais.
+  function rectFor(x,y,content,anchor,size){
+    const w=Math.max(12,String(content).length*size*.62),h=size*1.02;
+    const leftX=anchor==='start'?x:(anchor==='end'?x-w:x-w/2);
+    return {l:leftX,r:leftX+w,t:y-h*.82,b:y+h*.22};
+  }
+  function overlap(a,b,m=2){return !(a.r+m<b.l||b.r+m<a.l||a.b+m<b.t||b.b+m<a.t);}
+  function tickLabelPositions(g,size){
+    const items=[];
+    values(g.xMin,g.xMax,1).forEach(value=>{if(value!==0) items.push({axis:'x',value,x:g.toX(value),y:g.axisY+size+6,anchor:'middle'});});
+    values(g.yMin,g.yMax,1).forEach(value=>{if(value!==0) items.push({axis:'y',value,x:g.axisX-9,y:g.toY(value)+size*.36,anchor:'end'});});
+    items.push({axis:'o',value:0,x:g.axisX-8,y:g.axisY+size+6,anchor:'end'});
+    return items.map(item=>({...item,content:item.value===0?'0':numberLabel(item.value),rect:rectFor(item.x,item.y,item.value===0?'0':numberLabel(item.value),item.anchor,size)}));
+  }
+  function chooseLabels(points,g,obstacles,size){
+    const offsets=[
+      {dx:11,dy:-11,anchor:'start'},{dx:-11,dy:-11,anchor:'end'},{dx:11,dy:size+6,anchor:'start'},{dx:-11,dy:size+6,anchor:'end'},
+      {dx:0,dy:-14,anchor:'middle'},{dx:0,dy:size+10,anchor:'middle'},{dx:14,dy:size*.36,anchor:'start'},{dx:-14,dy:size*.36,anchor:'end'}
+    ];
+    const axisBands=[
+      {l:g.left-4,r:g.right+12,t:g.axisY-2,b:g.axisY+2},
+      {l:g.axisX-2,r:g.axisX+2,t:g.top-12,b:g.bottom+4}
+    ];
+    const placed=[];
+    points.forEach(point=>{
+      const px=g.toX(point.x),py=g.toY(point.y);
+      let best=null;
+      offsets.forEach((offset,rank)=>{
+        const x=px+offset.dx,y=py+offset.dy,rect=rectFor(x,y,point.label,offset.anchor,size);
+        let score=rank;
+        if(rect.l<2||rect.r>g.width-2||rect.t<2||rect.b>g.height-2) score+=1000;
+        score+=obstacles.filter(obstacle=>overlap(rect,obstacle)).length*100;
+        score+=axisBands.filter(band=>overlap(rect,band,0)).length*30;
+        if(!best||score<best.score) best={x,y,anchor:offset.anchor,rect,score};
+      });
+      placed.push({point,...best});
+      obstacles.push(best.rect);
+    });
+    return placed;
+  }
+
+  function cross(x,y,color,half=6.5){
+    const draw=(width,stroke)=>line(x-half,y-half,x+half,y+half,stroke,width,'stroke-linecap="round"')+line(x-half,y+half,x+half,y-half,stroke,width,'stroke-linecap="round"');
+    return draw(7.5,COLORS.paper)+draw(3.4,color);
+  }
+
+  /**
+   * data = {
+   *   bounds:{xMin,xMax,yMin,yMax}, step:1|0.5, unit,
+   *   points:[{x,y,label,role:'given'|'chosen'|'expected',hideLabel}],
+   *   guides:[{x,y,axis:'x'|'y',ring:true}]   projections vers les axes (correction, aide),
+   *   path:{x,y}                               trajet depuis O (placement),
+   *   hits:true                                zones à toucher (placement),
+   *   ariaLabel, className
+   * }
+   */
+  function coordinateFigureSvg(data={}){
+    const g=geometry(data);
+    const size=Number(data.fontSize)||20,pointSize=Number(data.pointFontSize)||25;
+    const out=[];
+    const cls=['coordinate-figure-svg',data.className||''].filter(Boolean).join(' ');
+    out.push('<svg xmlns="http://www.w3.org/2000/svg" class="'+cls+'" viewBox="0 0 '+g.width+' '+g.height+'" width="'+g.width+'" height="'+g.height+'" style="--c15-ratio:'+clean(g.width/g.height)+'" role="img" aria-label="'+svgEscape(data.ariaLabel||'Repère du plan')+'"'+(data.attributes?' '+data.attributes:'')+'>');
+    out.push('<rect x="'+g.left+'" y="'+g.top+'" width="'+clean(g.right-g.left)+'" height="'+clean(g.bottom-g.top)+'" fill="'+COLORS.paper+'"/>');
+    // Quadrillage : en demi-unités, chaque carreau vaut 0,5 ; les lignes entières sont un peu plus marquées.
+    const grid=[];
+    values(g.xMin,g.xMax,g.step).forEach(value=>{const strong=g.step===0.5&&Number.isInteger(value);grid.push(line(g.toX(value),g.top,g.toX(value),g.bottom,strong?COLORS.gridMajor:COLORS.grid,strong?1.4:1.1));});
+    values(g.yMin,g.yMax,g.step).forEach(value=>{const strong=g.step===0.5&&Number.isInteger(value);grid.push(line(g.left,g.toY(value),g.right,g.toY(value),strong?COLORS.gridMajor:COLORS.grid,strong?1.4:1.1));});
+    out.push('<g class="coordinate-grid">'+grid.join('')+'</g>');
+    const axisXColor=data.highlightAxis==='x'?COLORS.abscissa:COLORS.ink,axisYColor=data.highlightAxis==='y'?COLORS.ordinate:COLORS.ink;
+    out.push(line(g.left,g.axisY,g.right+14,g.axisY,axisXColor,data.highlightAxis==='x'?4:2.4,'data-axe="abscisses"')+arrowHead(g.right,g.axisY,g.right+18,g.axisY,axisXColor,12));
+    out.push(line(g.axisX,g.bottom,g.axisX,g.top-14,axisYColor,data.highlightAxis==='y'?4:2.4,'data-axe="ordonnees"')+arrowHead(g.axisX,g.top,g.axisX,g.top-18,axisYColor,12));
+    values(g.xMin,g.xMax,g.step).forEach(value=>{if(value!==g.xMax) out.push(line(g.toX(value),g.axisY-5,g.toX(value),g.axisY+5,axisXColor,1.8));});
+    values(g.yMin,g.yMax,g.step).forEach(value=>{if(value!==g.yMax) out.push(line(g.axisX-5,g.toY(value),g.axisX+5,g.toY(value),axisYColor,1.8));});
+
+    const labels=tickLabelPositions(g,size);
+    const guides=Array.isArray(data.guides)?data.guides:[];
+    const ringed=new Set();
+    guides.forEach(guide=>{if(guide.ring!==false) ringed.add(guide.axis+':'+clean(guide.axis==='x'?guide.x:guide.y));});
+
+    // Projections (sous les nombres et les points).
+    guides.forEach(guide=>{
+      const px=g.toX(guide.x),py=g.toY(guide.y);
+      if(guide.axis==='x'){
+        if(guide.y!==0) out.push(line(px,py,px,g.axisY,COLORS.abscissa,3.2,'class="coordinate-guide coordinate-guide-x" stroke-dasharray="10 6" stroke-linecap="round"'));
+        out.push('<circle cx="'+px+'" cy="'+g.axisY+'" r="5.5" fill="'+COLORS.paper+'" stroke="'+COLORS.abscissa+'" stroke-width="3"/>');
+      }else{
+        if(guide.x!==0) out.push(line(px,py,g.axisX,py,COLORS.ordinate,3.2,'class="coordinate-guide coordinate-guide-y" stroke-dasharray="3 5" stroke-linecap="round"'));
+        out.push('<circle cx="'+g.axisX+'" cy="'+py+'" r="5.5" fill="'+COLORS.paper+'" stroke="'+COLORS.ordinate+'" stroke-width="3"/>');
+      }
+    });
+
+    if(data.path){
+      const ox=g.axisX,oy=g.axisY,mx=g.toX(data.path.x),ty=g.toY(data.path.y);
+      out.push('<circle cx="'+ox+'" cy="'+oy+'" r="8" fill="none" stroke="'+COLORS.ink+'" stroke-width="2.4" stroke-dasharray="3 3"/>');
+      if(data.path.x!==0) out.push(line(ox,oy,mx-(mx>ox?9:-9),oy,COLORS.abscissa,5,'class="coordinate-path-x" stroke-linecap="round"')+arrowHead(ox,oy,mx,oy,COLORS.abscissa,14));
+      if(data.path.y!==0) out.push(line(mx,oy,mx,ty-(ty>oy?9:-9),COLORS.ordinate,5,'class="coordinate-path-y" stroke-linecap="round"')+arrowHead(mx,oy,mx,ty,COLORS.ordinate,14));
+    }
+
+    // Nombres des axes : vrai signe moins, halo blanc ; la graduation lue est entourée en correction.
+    labels.forEach(item=>{
+      const key=item.axis==='o'?null:item.axis+':'+item.value;
+      const ringX=item.axis==='x'&&ringed.has(key),ringY=item.axis==='y'&&ringed.has(key);
+      const ringO=item.axis==='o'&&(ringed.has('x:0')||ringed.has('y:0'));
+      if(ringX||ringY||ringO){
+        const color=ringX?COLORS.abscissa:(ringY?COLORS.ordinate:(ringed.has('x:0')?COLORS.abscissa:COLORS.ordinate));
+        const r=item.rect,pad=4;
+        out.push('<rect x="'+clean(r.l-pad)+'" y="'+clean(r.t-pad)+'" width="'+clean(r.r-r.l+pad*2)+'" height="'+clean(r.b-r.t+pad*2)+'" rx="8" fill="#fff" stroke="'+color+'" stroke-width="3"/>');
+      }
+      const strong=ringX||ringY||ringO;
+      const color=ringX?COLORS.abscissaText:(ringY?COLORS.ordinateText:COLORS.ink);
+      out.push(text(item.x,item.y,item.content,{size,weight:strong?800:600,color,anchor:item.anchor}));
+    });
+
+    const points=(Array.isArray(data.points)?data.points:[]).filter(point=>Number.isFinite(Number(point.x))&&Number.isFinite(Number(point.y)));
+    points.forEach(point=>{
+      const x=g.toX(Number(point.x)),y=g.toY(Number(point.y));
+      if(point.role==='chosen'){
+        out.push('<g class="coordinate-chosen-point"><circle cx="'+x+'" cy="'+y+'" r="13" fill="none" stroke="'+COLORS.paper+'" stroke-width="6"/><circle cx="'+x+'" cy="'+y+'" r="13" fill="none" stroke="'+COLORS.chosen+'" stroke-width="3" stroke-dasharray="4 4"/>'+cross(x,y,COLORS.chosen,5)+'</g>');
+      }else{
+        out.push('<g class="coordinate-point-marker">'+cross(x,y,point.role==='expected'?COLORS.expected:COLORS.point)+'</g>');
+      }
+    });
+    const obstacles=labels.map(item=>item.rect);
+    points.forEach(point=>{const x=g.toX(point.x),y=g.toY(point.y);obstacles.push({l:x-9,r:x+9,t:y-9,b:y+9});});
+    chooseLabels(points.filter(point=>point.label&&!point.hideLabel),g,obstacles,pointSize).forEach(choice=>{
+      const color=choice.point.role==='chosen'?COLORS.chosen:(choice.point.role==='expected'?COLORS.expected:COLORS.point);
+      out.push(text(choice.x,choice.y,choice.point.label,{size:pointSize,weight:700,color,anchor:choice.anchor,font:FONT_POINT,italic:true,cls:'coordinate-point-label'}));
+    });
+
+    if(data.hits){
+      const radius=clean(Math.max(14,Math.min(26,g.unit*g.step/2-1)));
+      const hits=[];
+      values(g.xMin,g.xMax,g.step).forEach(x=>values(g.yMin,g.yMax,g.step).forEach(y=>{
+        hits.push('<circle class="coordinate-grid-hit" data-grid-x="'+x+'" data-grid-y="'+y+'" cx="'+g.toX(x)+'" cy="'+g.toY(y)+'" r="'+radius+'" fill="transparent"/>');
+      }));
+      out.push('<g class="coordinate-grid-hits">'+hits.join('')+'</g>');
+    }
+    out.push('</svg>');
+    return out.join('');
+  }
+
+  // Compatibilité : l'ancien appel par coordonnées mathématiques passe par le nouveau traceur.
+  function coordinatePlaneSvg(data={}){
+    return coordinateFigureSvg({...data,points:(data.points||[]).map(point=>({...point,role:point.role||'given'}))});
+  }
   function coordinatePlacementSvg(data={},correction=false){
-    const bounds=data.bounds||{xMin:-3,xMax:3,yMin:-3,yMax:3};
-    const xMin=Number(bounds.xMin),xMax=Number(bounds.xMax),yMin=Number(bounds.yMin),yMax=Number(bounds.yMax);
-    const step=Math.abs(Number(data.step))||1;
-    const width=Math.max(300,Math.min(1000,Number(data.width)||500));
-    const height=Math.max(260,Math.min(900,Number(data.height)||420));
     const targets=(data.targets||[]).filter(point=>Number.isFinite(Number(point.x))&&Number.isFinite(Number(point.y)));
-    const base=coordinateTracerSvg({...data,mode:'coordinates',bounds,step,width,height,points:correction?targets:[]})
-      .replace('<svg ',`<svg class="coordinate-placement-svg" data-coordinate-placement="1" data-coordinate-point-count="${targets.length}" `);
-    const plot={left:48,right:width-30,top:28,bottom:height-42};
-    const toX=value=>plot.left+((value-xMin)/(xMax-xMin))*(plot.right-plot.left);
-    const toY=value=>plot.bottom-((value-yMin)/(yMax-yMin))*(plot.bottom-plot.top);
-    const gridValues=(min,max)=>{
-      const count=Math.floor((max-min)/step+1e-8);
-      return Array.from({length:count+1},(_,index)=>cleanNumber(min+index*step)).filter(value=>value<=max+1e-8);
-    };
-    const hitRadius=Math.max(13,Math.min(23,Number(data.hitRadius)||18));
-    const hits=[];
-    gridValues(xMin,xMax).forEach(x=>gridValues(yMin,yMax).forEach(y=>{
-      hits.push(`<circle class="coordinate-grid-hit" data-grid-x="${x}" data-grid-y="${y}" cx="${cleanNumber(toX(x))}" cy="${cleanNumber(toY(y))}" r="${hitRadius}" fill="transparent"/>`);
-    }));
-    return correction?base:base.replace('</svg>',`<g class="coordinate-grid-hits">${hits.join('')}</g></svg>`);
+    return coordinateFigureSvg({
+      ...data,
+      className:'coordinate-placement-svg',
+      attributes:'data-coordinate-placement="1" data-coordinate-point-count="'+targets.length+'"'+(correction?' data-locked="1"':''),
+      points:correction?targets.map(point=>({...point,role:'expected'})):[],
+      path:correction&&targets.length===1?{x:targets[0].x,y:targets[0].y}:null,
+      // En correction, les zones restent (inactives) pour que le lecteur retrouve la place du point de l'élève.
+      hits:true
+    });
   }
 
   const presets=Object.freeze([
-    {id:'point',label:'Un point',supports:['phone','computer','projection','print'],data:{points:[{x:280,y:120,label:'M'}]}},
-    {id:'axe',label:'Point sur un axe',supports:['phone','computer','projection','print'],data:{points:[{x:200,y:80,label:'M'}]}},
-    {id:'deux-points',label:'Deux points',supports:['phone','computer','projection','print'],data:{points:[{x:120,y:120,label:'M'},{x:280,y:280,label:'N',color:'#2471a3'}]}},
-    {id:'demi-unites',label:'Demi-unités',supports:['phone','computer','projection','print'],data:{halfSteps:true,points:[{x:260,y:140,label:'M'}]}},
-    {id:'compact-parametre',label:'Repère compact gradué',supports:['phone','computer','projection','print'],data:{mode:'coordinates',bounds:{xMin:-3,xMax:3,yMin:-2,yMax:2},step:1,width:430,height:330,points:[{x:2,y:1,label:'P'}]}},
-    {id:'grand-parametre',label:'Grand repère gradué',supports:['computer','projection','print'],data:{mode:'coordinates',bounds:{xMin:-5,xMax:5,yMin:-4,yMax:4},step:1,width:720,height:540,points:[{x:-3,y:2,label:'A'},{x:4,y:-2,label:'B',color:'#2471a3'}]}},
-    {id:'demi-pas-parametre',label:'Graduations de 0,5',supports:['phone','computer','projection','print'],data:{mode:'coordinates',bounds:{xMin:-2,xMax:2,yMin:-2,yMax:2},step:.5,minorStep:.25,width:520,height:440,points:[{x:1.5,y:-.5,label:'M'}]}},
-    {id:'rectangulaire',label:'Repère rectangulaire',supports:['computer','projection','print'],data:{mode:'coordinates',bounds:{xMin:-4,xMax:6,yMin:-2,yMax:3},step:1,width:760,height:380,points:[{x:-2,y:2,label:'R'},{x:5,y:-1,label:'S',color:'#7c3aed'}]}}
-  ].map(item=>Object.freeze({id:item.id,label:item.label,supports:Object.freeze(item.supports),data:Object.freeze(Object.fromEntries(Object.entries(item.data).map(([key,value])=>[key,Array.isArray(value)?Object.freeze(value.map(entry=>Object.freeze(entry))):(value&&typeof value==='object'?Object.freeze(value):value)])))})));
+    {id:'point',label:'Un point',supports:['phone','computer','projection','print'],data:{bounds:{xMin:-4,xMax:4,yMin:-3,yMax:3},points:[{x:-2,y:1,label:'A'}]}},
+    {id:'axe',label:'Point sur un axe',supports:['phone','computer','projection','print'],data:{bounds:{xMin:-4,xMax:4,yMin:-3,yMax:3},points:[{x:0,y:-2,label:'D'}]}},
+    {id:'correction',label:'Correction tracée',supports:['phone','computer','projection','print'],data:{bounds:{xMin:-5,xMax:3,yMin:-3,yMax:3},points:[{x:-4,y:2,label:'A'}],guides:[{x:-4,y:2,axis:'x'},{x:-4,y:2,axis:'y'}]}},
+    {id:'demi-unites',label:'Demi-unités',supports:['phone','computer','projection','print'],data:{bounds:{xMin:-3,xMax:3,yMin:-3,yMax:3},step:.5,points:[{x:1.5,y:-.5,label:'M'}]}},
+    {id:'deux-points',label:'Deux points',supports:['phone','computer','projection','print'],data:{bounds:{xMin:-5,xMax:3,yMin:-3,yMax:3},points:[{x:-4,y:1,label:'A'},{x:-2,y:-1,label:'B'}]}},
+    {id:'placement',label:'Trajet depuis O',supports:['phone','computer','projection','print'],data:{bounds:{xMin:-4,xMax:4,yMin:-3,yMax:3},points:[{x:2,y:-3,label:'P',role:'expected'},{x:-3,y:2,label:'',role:'chosen'}],path:{x:2,y:-3}}}
+  ].map(item=>Object.freeze({id:item.id,label:item.label,supports:Object.freeze(item.supports),data:Object.freeze(item.data)})));
 
   global.MATHSGO_VISUALS.register('geometry.coordinate-plane',{
-    version:'1.2.0',
+    version:'2.0.0',
     label:'Repère du plan',
     family:'Géométrie',
-    description:'Traceur de repères : dimensions, bornes, pas, sous-grille, petits traits de graduation, plusieurs points et placement tactile sont paramétrables. Le rendu historique reste figé.',
+    description:'Repère gradué en coordonnées mathématiques : graduations lisibles, vrai signe moins, lettres qui évitent les graduations, projections orange (abscisse) et turquoise (ordonnée), trajet depuis O et placement tactile.',
     presets,
+    colors:COLORS,
     render:coordinatePlaneSvg,
-    renderPlacement:coordinatePlacementSvg
+    renderFigure:coordinateFigureSvg,
+    renderPlacement:coordinatePlacementSvg,
+    numberLabel
   });
   global.coordinatePlaneSvg=coordinatePlaneSvg;
 })(globalThis);
