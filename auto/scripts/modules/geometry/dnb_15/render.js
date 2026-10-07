@@ -13,7 +13,7 @@
     '.c15-x{color:#a84a00}.c15-y{color:#00706b}',
     '.c15-figure{display:flex;justify-content:center;width:100%;margin:2px auto 0}',
     '.c15-figure svg{display:block;height:auto;width:min(100%,calc(var(--c15-h,54vh) * var(--c15-ratio,1.1)));max-width:100%;margin:0 auto;touch-action:manipulation;overflow:visible}',
-    '.diapo.coordinate-mode .c15-figure{--c15-h:min(56vh,640px)}',
+    '.diapo.coordinate-mode .c15-figure{--c15-h:min(58vh,660px)}',
     '.c15-footer{margin-top:6px!important}',
     '.c15-footer-two{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 48px}',
     '.c15-footer-two .c15-part{display:inline-flex;align-items:center;white-space:nowrap}',
@@ -34,7 +34,7 @@
     '.c15-options{gap:8px}',
     '.c15-options .opt{min-height:52px;font-size:clamp(1.15rem,5.2vw,1.4rem)!important}',
     '}',
-    '@media(min-width:1600px){.diapo.coordinate-mode .c15-figure{--c15-h:min(60vh,720px)}}'
+    '@media(min-width:1600px){.diapo.coordinate-mode .c15-figure{--c15-h:min(64vh,760px)}}'
   ].join('\n');
   // Le diaporama est un document à part : le style voyage avec chaque diapositive.
   function styleTag(){return '<style data-c15-style="1">'+CSS+'</style>';}

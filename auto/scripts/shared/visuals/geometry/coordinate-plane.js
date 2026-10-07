@@ -70,11 +70,25 @@
     return {l:leftX,r:leftX+w,t:y-h*.82,b:y+h*.22};
   }
   function overlap(a,b,m=2){return !(a.r+m<b.l||b.r+m<a.l||a.b+m<b.t||b.b+m<a.t);}
-  function tickLabelPositions(g,size){
+  // Côté des nombres : à gauche de l'axe vertical et sous l'axe horizontal, sauf
+  // si un point est collé à cette colonne (abscisse entre −1 et 0) ou à cette
+  // ligne (ordonnée entre −1 et 0) : les nombres passent alors de l'autre côté,
+  // pour qu'un point ne se lise jamais « ×−3 » ou « ×2 ».
+  function labelSides(points,data){
+    const near=(value,low,high)=>value>=low&&value<high;
+    const xs=points.map(point=>Number(point.x)),ys=points.map(point=>Number(point.y));
+    let ySide=data.yLabelSide||'left',xSide=data.xLabelSide||'below';
+    if(!data.yLabelSide&&points.some((point,index)=>near(xs[index],-1,0)&&ys[index]!==0)&&!points.some((point,index)=>xs[index]>0&&xs[index]<=1&&ys[index]!==0)) ySide='right';
+    if(!data.xLabelSide&&points.some((point,index)=>near(ys[index],-1,0)&&xs[index]!==0)&&!points.some((point,index)=>ys[index]>0&&ys[index]<=1&&xs[index]!==0)) xSide='above';
+    return {ySide,xSide};
+  }
+  function tickLabelPositions(g,size,sides){
     const items=[];
-    values(g.xMin,g.xMax,1).forEach(value=>{if(value!==0) items.push({axis:'x',value,x:g.toX(value),y:g.axisY+size+6,anchor:'middle'});});
-    values(g.yMin,g.yMax,1).forEach(value=>{if(value!==0) items.push({axis:'y',value,x:g.axisX-9,y:g.toY(value)+size*.36,anchor:'end'});});
-    items.push({axis:'o',value:0,x:g.axisX-8,y:g.axisY+size+6,anchor:'end'});
+    const xRow=sides.xSide==='above'?g.axisY-11:g.axisY+size+8;
+    const yX=sides.ySide==='right'?g.axisX+13:g.axisX-13,yAnchor=sides.ySide==='right'?'start':'end';
+    values(g.xMin,g.xMax,1).forEach(value=>{if(value!==0) items.push({axis:'x',value,x:g.toX(value),y:xRow,anchor:'middle'});});
+    values(g.yMin,g.yMax,1).forEach(value=>{if(value!==0) items.push({axis:'y',value,x:yX,y:g.toY(value)+size*.36,anchor:yAnchor});});
+    items.push({axis:'o',value:0,x:sides.ySide==='right'?g.axisX+10:g.axisX-10,y:xRow,anchor:sides.ySide==='right'?'start':'end'});
     return items.map(item=>({...item,content:item.value===0?'0':numberLabel(item.value),rect:rectFor(item.x,item.y,item.value===0?'0':numberLabel(item.value),item.anchor,size)}));
   }
   function chooseLabels(points,g,obstacles,size){
@@ -137,7 +151,9 @@
     values(g.xMin,g.xMax,g.step).forEach(value=>{if(value!==g.xMax) out.push(line(g.toX(value),g.axisY-5,g.toX(value),g.axisY+5,axisXColor,1.8));});
     values(g.yMin,g.yMax,g.step).forEach(value=>{if(value!==g.yMax) out.push(line(g.axisX-5,g.toY(value),g.axisX+5,g.toY(value),axisYColor,1.8));});
 
-    const labels=tickLabelPositions(g,size);
+    const allPoints=(Array.isArray(data.points)?data.points:[]).concat(data.path?[{x:data.path.x,y:data.path.y}]:[]);
+    const sides=labelSides(allPoints,data);
+    const labels=tickLabelPositions(g,size,sides);
     const guides=Array.isArray(data.guides)?data.guides:[];
     const ringed=new Set();
     guides.forEach(guide=>{if(guide.ring!==false) ringed.add(guide.axis+':'+clean(guide.axis==='x'?guide.x:guide.y));});
@@ -146,11 +162,11 @@
     guides.forEach(guide=>{
       const px=g.toX(guide.x),py=g.toY(guide.y);
       if(guide.axis==='x'){
-        if(guide.y!==0) out.push(line(px,py,px,g.axisY,COLORS.abscissa,3.2,'class="coordinate-guide coordinate-guide-x" stroke-dasharray="10 6" stroke-linecap="round"'));
-        out.push('<circle cx="'+px+'" cy="'+g.axisY+'" r="5.5" fill="'+COLORS.paper+'" stroke="'+COLORS.abscissa+'" stroke-width="3"/>');
+        if(guide.y!==0&&guide.line!==false) out.push(line(px,py,px,g.axisY,COLORS.abscissa,3.2,'class="coordinate-guide coordinate-guide-x" stroke-dasharray="10 6" stroke-linecap="round"'));
+        if(guide.line!==false) out.push('<circle cx="'+px+'" cy="'+g.axisY+'" r="5.5" fill="'+COLORS.paper+'" stroke="'+COLORS.abscissa+'" stroke-width="3"/>');
       }else{
-        if(guide.x!==0) out.push(line(px,py,g.axisX,py,COLORS.ordinate,3.2,'class="coordinate-guide coordinate-guide-y" stroke-dasharray="3 5" stroke-linecap="round"'));
-        out.push('<circle cx="'+g.axisX+'" cy="'+py+'" r="5.5" fill="'+COLORS.paper+'" stroke="'+COLORS.ordinate+'" stroke-width="3"/>');
+        if(guide.x!==0&&guide.line!==false) out.push(line(px,py,g.axisX,py,COLORS.ordinate,3.2,'class="coordinate-guide coordinate-guide-y" stroke-dasharray="3 5" stroke-linecap="round"'));
+        if(guide.line!==false) out.push('<circle cx="'+g.axisX+'" cy="'+py+'" r="5.5" fill="'+COLORS.paper+'" stroke="'+COLORS.ordinate+'" stroke-width="3"/>');
       }
     });
 
@@ -160,6 +176,26 @@
       if(data.path.x!==0) out.push(line(ox,oy,mx-(mx>ox?9:-9),oy,COLORS.abscissa,5,'class="coordinate-path-x" stroke-linecap="round"')+arrowHead(ox,oy,mx,oy,COLORS.abscissa,14));
       if(data.path.y!==0) out.push(line(mx,oy,mx,ty-(ty>oy?9:-9),COLORS.ordinate,5,'class="coordinate-path-y" stroke-linecap="round"')+arrowHead(mx,oy,mx,ty,COLORS.ordinate,14));
     }
+
+    // Valeur lue non écrite sur l'axe (demi-unités) : elle s'affiche dans sa bulle, sur une seconde ligne.
+    const extraLabels=[];
+    guides.forEach(guide=>{
+      if(guide.ring===false) return;
+      const value=clean(guide.axis==='x'?guide.x:guide.y);
+      if(Number.isInteger(value)) return;
+      if(guide.axis==='x'){
+        const y=sides.xSide==='above'?g.axisY-11-size-8:g.axisY+size+8+size+8;
+        extraLabels.push({axis:'x',value,x:g.toX(value),y,anchor:'middle',content:numberLabel(value),rect:rectFor(g.toX(value),y,numberLabel(value),'middle',size)});
+      }else{
+        const x=sides.ySide==='right'?g.axisX+13:g.axisX-13,anchor=sides.ySide==='right'?'start':'end',y=g.toY(value)+size*.36;
+        extraLabels.push({axis:'y',value,x,y,anchor,content:numberLabel(value),rect:rectFor(x,y,numberLabel(value),anchor,size)});
+      }
+    });
+    extraLabels.forEach(item=>{
+      const color=item.axis==='x'?COLORS.abscissa:COLORS.ordinate,r=item.rect,pad=4;
+      out.push('<rect x="'+clean(r.l-pad)+'" y="'+clean(r.t-pad)+'" width="'+clean(r.r-r.l+pad*2)+'" height="'+clean(r.b-r.t+pad*2)+'" rx="8" fill="#fff" stroke="'+color+'" stroke-width="3"/>');
+      out.push(text(item.x,item.y,item.content,{size,weight:800,color:item.axis==='x'?COLORS.abscissaText:COLORS.ordinateText,anchor:item.anchor}));
+    });
 
     // Nombres des axes : vrai signe moins, halo blanc ; la graduation lue est entourée en correction.
     labels.forEach(item=>{
@@ -186,7 +222,16 @@
       }
     });
     const obstacles=labels.map(item=>item.rect);
-    points.forEach(point=>{const x=g.toX(point.x),y=g.toY(point.y);obstacles.push({l:x-9,r:x+9,t:y-9,b:y+9});});
+    points.forEach(point=>{
+      const x=g.toX(point.x),y=g.toY(point.y);
+      obstacles.push({l:x-9,r:x+9,t:y-9,b:y+9});
+      // Les lettres évitent aussi les trajets de lecture : elles restent à la même place en question et en correction.
+      if(point.role!=='chosen'){
+        obstacles.push({l:x-4,r:x+4,t:Math.min(y,g.axisY),b:Math.max(y,g.axisY)});
+        obstacles.push({l:Math.min(x,g.axisX),r:Math.max(x,g.axisX),t:y-4,b:y+4});
+      }
+    });
+    extraLabels.forEach(item=>obstacles.push(item.rect));
     chooseLabels(points.filter(point=>point.label&&!point.hideLabel),g,obstacles,pointSize).forEach(choice=>{
       const color=choice.point.role==='chosen'?COLORS.chosen:(choice.point.role==='expected'?COLORS.expected:COLORS.point);
       out.push(text(choice.x,choice.y,choice.point.label,{size:pointSize,weight:700,color,anchor:choice.anchor,font:FONT_POINT,italic:true,cls:'coordinate-point-label'}));

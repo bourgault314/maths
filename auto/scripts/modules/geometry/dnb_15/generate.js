@@ -98,10 +98,10 @@
     let x=0,y=0;
     if(onX){do{x=randomInt(bounds.xMin,bounds.xMax-1);}while(x===0);}
     else{do{y=randomInt(bounds.yMin,bounds.yMax-1);}while(y===0);}
-    const data={bounds,step:1,points:[{x,y,label:letter}],guides:onX?[{x,y,axis:'x'},{x,y,axis:'y'}]:[{x,y,axis:'y'},{x,y,axis:'x'}]};
+    const data={bounds,step:1,points:[{x,y,label:letter}],guides:onX?[{x,y,axis:'x'},{x,y,axis:'y',line:false}]:[{x,y,axis:'y'},{x,y,axis:'x',line:false}]};
     const steps=onX
-      ?[letterHtml(letter)+' est sur l’axe horizontal (axe des abscisses)'+NBSP+': son ordonnée est '+ys(0)+'.','Abscisse'+NBSP+': je lis la graduation où se trouve '+letterHtml(letter)+''+NBSP+': '+xs(x)+'.',writePair(letter,x,y)]
-      :[letterHtml(letter)+' est sur l’axe vertical (axe des ordonnées)'+NBSP+': son abscisse est '+xs(0)+'.','Ordonnée'+NBSP+': je lis la graduation où se trouve '+letterHtml(letter)+'.'+NBSP+'Je lis '+ys(y)+'.',writePair(letter,x,y)];
+      ?[letterHtml(letter)+' est sur l’axe horizontal (axe des abscisses)'+NBSP+': son ordonnée est '+ys(0)+'.','Abscisse'+NBSP+': je lis la graduation où se trouve '+letterHtml(letter)+NBSP+': '+xs(x)+'.',writePair(letter,x,y)]
+      :[letterHtml(letter)+' est sur l’axe vertical (axe des ordonnées)'+NBSP+': son abscisse est '+xs(0)+'.','Ordonnée'+NBSP+': je lis la graduation où se trouve '+letterHtml(letter)+NBSP+': '+ys(y)+'.',writePair(letter,x,y)];
     return base(module,question,'axis',{letter,x,y,onX,...bounds},[x,y],data,{
       prompt:q('Quelles sont les coordonnées du point '+letterHtml(letter)+' ?'),
       footer:'$$'+letter+'(\\,[[formula]]\\,;\\,[[formula]]\\,)$$',
@@ -117,7 +117,8 @@
     const bounds=choose([{xMin:-5,xMax:3,yMin:-3,yMax:3},{xMin:-5,xMax:4,yMin:-3,yMax:3},{xMin:-4,xMax:4,yMin:-4,yMax:3},{xMin:-5,xMax:3,yMin:-4,yMax:3}],randomInt);
     const big=randomInt(0,1)===1;
     const a=quadrantPoint(randomInt,bounds,{distinctAbs:false,accept:(x)=>!big||Math.abs(x)>=3});
-    const b=quadrantPoint(randomInt,bounds,{avoid:[a],accept:(x,y)=>!(Math.sign(x)===Math.sign(a.x)&&Math.sign(y)===Math.sign(a.y))});
+    const clash=(u,v)=>(u===-1&&v===1)||(u===1&&v===-1);
+    const b=quadrantPoint(randomInt,bounds,{avoid:[a],accept:(x,y)=>!(Math.sign(x)===Math.sign(a.x)&&Math.sign(y)===Math.sign(a.y))&&!clash(x,a.x)&&!clash(y,a.y)});
     const data={bounds,step:1,points:[{x:a.x,y:a.y,label:'A'},{x:b.x,y:b.y,label:'B'}],guides:[{x:a.x,y:a.y,axis:'x'},{x:b.x,y:b.y,axis:'x'},{x:b.x,y:b.y,axis:'y'}],two:true};
     return base(module,question,'abscissa-pair',{xA:a.x,yA:a.y,xB:b.x,yB:b.y,...bounds},[a.x,b.x,b.y],data,{
       prompt:'<span class="c15-line">a.'+NBSP+'Quelle est l’abscisse du point '+letterHtml('A')+NBSP+'?</span><span class="c15-line">b.'+NBSP+'Quelles sont les coordonnées du point '+letterHtml('B')+NBSP+'?</span>',
@@ -144,7 +145,8 @@
       break;
     }
     const data={bounds,step:0.5,points:[{x,y,label:letter}],guides:[{x,y,axis:'x'},{x,y,axis:'y'}]};
-    return base(module,question,'half-steps',{letter,x,y},[x,y],data,{
+    const comma=value=>String(value).replace('.',',');
+    return base(module,question,'half-steps',{letter,x,y},[comma(x),comma(y)],data,{
       prompt:q('Quelles sont les coordonnées du point '+letterHtml(letter)+' ?'),
       footer:'$$'+letter+'(\\,[[formula]]\\,;\\,[[formula]]\\,)$$',
       steps:[
@@ -240,10 +242,11 @@
     if(claimKind==='x-sign') claim.x=-p.x;
     if(claimKind==='y-sign') claim.y=-p.y;
     const isTrue=claimKind==='correct';
-    const options=shuffle([
+    // Toujours « Vrai » puis « Faux », dans cet ordre.
+    const options=[
       {value:'Vrai',errorCode:isTrue?'correct':claimKind},
       {value:'Faux',errorCode:isTrue?'reject-correct-pair':'correct'}
-    ]);
+    ];
     const correctIndex=options.findIndex(option=>option.errorCode==='correct')+1;
     const why={'swap-coordinates':'elle inverse l’abscisse et l’ordonnée','x-sign':'le signe de l’abscisse est faux'+NBSP+': '+letterHtml(letter)+' est '+signSide(p.x),'y-sign':'le signe de l’ordonnée est faux'+NBSP+': '+letterHtml(letter)+' est '+signUp(p.y)}[claimKind];
     const feedback={};
