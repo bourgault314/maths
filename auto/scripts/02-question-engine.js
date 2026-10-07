@@ -928,7 +928,7 @@ function makeModule01Instance(mod,q){
     const sign=Math.abs(other-value)<1e-9?'=':(value<other?'<':'>');
     const shownSign=fractionLeft?sign:(sign==='<'?'>':(sign==='>'?'<':'='));
     const leftLatex=fractionLeft?module01FracLatex(num,den):otherText, rightLatex=fractionLeft?otherText:module01FracLatex(num,den);
-    prompt='Complète par &lt;, =&nbsp;ou&nbsp;&gt;.';
+    prompt='Complète par <span style="white-space:nowrap">&lt;, = ou &gt;</span>.';
     display='$$'+leftLatex+'$$[[compare]]$$'+rightLatex+'$$';
     const signs=['<','=','>'];
     qcm={options:signs,codes:[null,null,null],correctIndex:String(signs.indexOf(shownSign)+1),kind:'signs'};
