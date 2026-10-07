@@ -44,7 +44,7 @@ MATHSGO_PEDAGOGY.registerModule('dnb_02',{
     ]
   },
   questionTypes:[
-    {id:'comparer-decimaux-positifs',label:'Choisir le plus grand ou le plus petit parmi quatre décimaux',questions:[1],response:'qcm-one',visual:{policy:'none'},helpSections:['place-values']},
+    {id:'comparer-decimaux-positifs',label:'Trouver le plus grand ou le plus petit parmi quatre décimaux (réponse courte ou QCM)',questions:[1],response:'numeric',visual:{policy:'none'},helpSections:['place-values']},
     {id:'ranger-decimaux',label:'Ranger trois décimaux par cartes',questions:[3],response:'manipulation',visual:{policy:'essential',component:'numbers.order-cards'},helpSections:['place-values']},
     {id:'encadrer-decimal',label:'Placer les entiers voisins sur une droite',questions:[4],response:'manipulation',visual:{policy:'essential',component:'numbers.number-line'},helpSections:['consecutive-integers']},
     {id:'soustraction-decimale',label:'Soustraire deux décimaux positifs',questions:[7],response:'numeric',visual:{policy:'none'},helpSections:['align-comma','check-subtract']},
@@ -53,7 +53,7 @@ MATHSGO_PEDAGOGY.registerModule('dnb_02',{
     {id:'division-decimale',label:'Diviser un décimal par un entier',questions:[10],response:'numeric',visual:{policy:'optional',component:'arithmetic.relation-bar'},helpSections:['equal-sharing','check-divide']},
     {id:'partage-decimal-contexte',label:'Partager une quantité dans un problème court',questions:[11],response:'numeric',visual:{policy:'optional',component:'arithmetic.relation-bar'},helpSections:['equal-sharing','check-divide']},
     {id:'produit-tables-decimal',label:'Multiplier en dixièmes ou en centièmes (0,6 × 7 ; 40 × 0,03)',questions:[13],response:'numeric',visual:{policy:'none'},helpSections:['multiply-units','check-multiply']},
-    {id:'produit-qcm',label:'QCM : produit de deux décimaux ou volume d’un pavé',questions:[14],response:'qcm-one',visual:{policy:'none'},helpSections:['multiply-units','check-multiply']},
+    {id:'produit-decimaux',label:'Produit de deux décimaux ou volume d’un pavé (réponse courte ou QCM)',questions:[14],response:'numeric',visual:{policy:'none'},helpSections:['multiply-units','check-multiply']},
     {id:'addition-decimale',label:'Additionner avec une retenue ou des longueurs différentes',questions:[15],response:'numeric',visual:{policy:'none'},helpSections:['align-comma']},
     {id:'difference-contexte',label:'Calculer une différence dans un problème court',questions:[16],response:'numeric',visual:{policy:'none'},helpSections:['align-comma','check-subtract']},
     {id:'division-entier-decimal',label:'Diviser un entier quand le quotient est décimal (66 ÷ 5)',questions:[17],response:'numeric',visual:{policy:'none'},helpSections:['equal-sharing','check-divide']},

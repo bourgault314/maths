@@ -18,13 +18,13 @@ const MODULE_DNB_02 = {
   "questions": [
     {
       "n": 1,
-      "statement": "Parmi ces nombres, lequel est le plus ${askWord}&nbsp;?&&${o1}&&${o2}&&${o3}&&${o4}&&",
+      "statement": "${stem}",
       "answer": "[\"ok\"]",
       "options": {
         "decimal_kind": "compare-positive-qcm",
         "decimal_block": "compare-order"
       },
-      "footer": ""
+      "footer": "${slot}"
     },
     {
       "n": 3,
@@ -108,13 +108,13 @@ const MODULE_DNB_02 = {
     },
     {
       "n": 14,
-      "statement": "${prompt}&&${o1}&&${o2}&&${o3}&&${o4}&&",
+      "statement": "${stem}",
       "answer": "[\"ok\"]",
       "options": {
         "decimal_kind": "multiply-qcm",
         "decimal_block": "multiplicative"
       },
-      "footer": ""
+      "footer": "${slot}"
     },
     {
       "n": 15,

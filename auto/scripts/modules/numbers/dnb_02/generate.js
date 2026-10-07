@@ -90,15 +90,26 @@
       value,label:'$$'+fr(value)+'$$',correct:value===answer,
       feedback:value===answer?'':compareReason(value,answer,askSmallest)
     }));
+    // Une fois sur deux, réponse courte à saisir (forme du brevet 2027), sinon QCM à 4 propositions.
+    const typed=randomInt(0,1)===1;
     const scope=qcmScope(randomInt,choices);
     const shown=scope.optionValues;
     const letter=String.fromCharCode(64+scope.ok);
     scope.askWord=askSmallest?'petit':'grand';
     scope.answerValue=answer;
+    if(typed){
+      scope.stem=`Écris le plus ${scope.askWord} de ces nombres&nbsp;:<br>$$${shown.map(fr).join(' ; ')}$$`;
+      scope.slot='$$[[formula]]$$';
+      scope.ok=answer;
+      delete scope.distractorFeedback;
+    }else{
+      scope.stem=`Parmi ces nombres, lequel est le plus ${scope.askWord}&nbsp;?&&${scope.o1}&&${scope.o2}&&${scope.o3}&&${scope.o4}&&`;
+      scope.slot='';
+    }
     scope.correctionSteps=[
       `On écrit les nombres avec 2 chiffres après la virgule : ${shown.map(value=>pad(value,2)).join(' ; ')}.`,
       `On compare la partie entière, puis les dixièmes, puis les centièmes : ${sorted.map(value=>pad(value,2)).join(' < ')}.`,
-      `Le plus ${scope.askWord} est ${letter} : ${fr(answer)}.`
+      typed?`Le plus ${scope.askWord} est ${fr(answer)}.`:`Le plus ${scope.askWord} est ${letter} : ${fr(answer)}.`
     ];
     const longValue=cut(values[1]),shortValue=cut(values[0]);
     const notes={
@@ -325,7 +336,11 @@
         {value:cut(x+y),label:'$$'+fr(cut(x+y))+'$$',feedback:'Tu as additionné les deux nombres au lieu de les multiplier.'}
       ];
       const scope=qcmScope(randomInt,choices);
-      scope.prompt=`Combien vaut $$${fr(x)} \\times ${fr(y)}$$&nbsp;?`;
+      if(randomInt(0,1)){
+        scope.stem='Calcule&nbsp;:';scope.slot=`$$${fr(x)} \\times ${fr(y)} = [[formula]]$$`;scope.ok=correct;delete scope.distractorFeedback;
+      }else{
+        scope.stem=`Combien vaut $$${fr(x)} \\times ${fr(y)}$$&nbsp;?&&${scope.o1}&&${scope.o2}&&${scope.o3}&&${scope.o4}&&`;scope.slot='';
+      }
       scope.correctionSteps=[
         `Sans les virgules : ${m} × ${n} = ${m*n}.`,
         `${fr(x)} et ${fr(y)} ont chacun 1 chiffre après la virgule : le produit en a 2.`,
@@ -346,7 +361,12 @@
       {value:ab,label:`$$${fr(ab)}${unit}$$`,feedback:`Tu as oublié de multiplier par ${c}.`}
     ];
     const scope=qcmScope(randomInt,choices);
-    scope.prompt=`Un pavé droit mesure ${fr(a)}&nbsp;cm de long, ${b}&nbsp;cm de large et ${c}&nbsp;cm de haut. Son volume est&nbsp;:`;
+    const solid=`Un pavé droit mesure ${fr(a)}&nbsp;cm de long, ${b}&nbsp;cm de large et ${c}&nbsp;cm de haut.`;
+    if(randomInt(0,1)){
+      scope.stem=`${solid} Calcule son volume.`;scope.slot=`$$V = [[formula]]${unit}$$`;scope.ok=correct;delete scope.distractorFeedback;
+    }else{
+      scope.stem=`${solid} Son volume est&nbsp;:&&${scope.o1}&&${scope.o2}&&${scope.o3}&&${scope.o4}&&`;scope.slot='';
+    }
     scope.correctionSteps=[
       `V = ${fr(a)} × ${b} × ${c}`,
       `V = ${fr(ab)} × ${c}`,
