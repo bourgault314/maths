@@ -914,6 +914,7 @@ svg{display:block;max-width:100%;height:auto}
 /* La carte « Comment on trouve » : exactement la place de la zone de travail. */
 .carte-correction{overflow-y:auto;overscroll-behavior:contain;padding:9px 14px 10px;border:1.5px solid #f2c48d;border-radius:16px;background:#fffaf4;color:#0b2147;font-size:18px;line-height:1.3;text-align:left}
 .carte-correction[hidden]{display:none!important}
+.diapo.interactive-mode .stage.deborde{-webkit-mask-image:linear-gradient(#000 calc(100% - 40px),rgba(0,0,0,.22));mask-image:linear-gradient(#000 calc(100% - 40px),rgba(0,0,0,.22))}
 .carte-correction.deborde{-webkit-mask-image:linear-gradient(#000 calc(100% - 28px),rgba(0,0,0,.18));mask-image:linear-gradient(#000 calc(100% - 28px),rgba(0,0,0,.18))}
 .carte-titre{margin:0 0 4px;color:#9a4100;font-size:.84em;font-weight:900;letter-spacing:.01em}
 .carte-etapes{margin:0;padding-left:1.25em;font-weight:750}
@@ -1864,6 +1865,7 @@ function render(){
  const stage=document.getElementById('stage');
  if(interactiveFinished){
    aideOpen=false;renderAide();
+   if(stage) stage.classList.remove('deborde');
    slide.style.zoom='';
    slide.innerHTML=finishScreenHtml();
    if(stage) stage.scrollTop=0;
@@ -1888,10 +1890,18 @@ function render(){
    setupInteractiveSlide(current);
    if(interactiveLocked) decorateCorrectedSlide(current);
    renderAide();
+   updateStageOverflow();
  }else{
    updatePresentationButton();
    requestAnimationFrame(fitNavNumbers);
  }
+}
+// Relecture : quand la question dépasse (téléphone, écran court), le bas de
+// la zone question s'estompe, comme la carte de correction : l'élève voit
+// qu'il y a une suite (une option C ou D sous le bord, par exemple).
+function updateStageOverflow(){
+ const stage=document.getElementById('stage');
+ if(stage) stage.classList.toggle('deborde',interactiveMode&&!interactiveFinished&&stage.scrollTop+stage.clientHeight<stage.scrollHeight-2);
 }
 /* Lot T — mise à l'échelle mesurée (comme ajusterEchelle de Défi tables).
    Ordinateur : la question est réduite (jamais agrandie) pour tenir sans
@@ -3198,6 +3208,7 @@ function prev(){
 }
 function toggleFS(){const d=document.getElementById('diapo');if(!document.fullscreenElement)d.requestFullscreen();else document.exitFullscreen();}
 document.getElementById('correctionCard').addEventListener('scroll',updateCorrectionCardOverflow,{passive:true});
+document.getElementById('stage').addEventListener('scroll',updateStageOverflow,{passive:true});
 document.getElementById('keypad').addEventListener('pointerdown',event=>{if(event.target.closest('.key'))event.preventDefault();});
 document.getElementById('keypad').addEventListener('click',event=>{const key=event.target.closest('.key');if(!key)return;if(key.dataset.action==='backspace')backspaceInteractive();else appendInteractiveValue(key.dataset.value||'');});
 document.addEventListener('keydown',event=>{
@@ -3259,7 +3270,7 @@ window.addEventListener('popstate',()=>{
 });
 let resizeTimer=null,lastViewport=window.innerWidth+'x'+window.innerHeight;
 window.addEventListener('resize',()=>{
- requestAnimationFrame(()=>{fitNavNumbers();fitVerdictLine();fitCorrectionCard();});
+ requestAnimationFrame(()=>{fitNavNumbers();fitVerdictLine();fitCorrectionCard();updateStageOverflow();});
  clearTimeout(resizeTimer);
  resizeTimer=setTimeout(()=>{
    const viewport=window.innerWidth+'x'+window.innerHeight;
