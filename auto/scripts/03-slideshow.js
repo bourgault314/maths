@@ -1214,10 +1214,10 @@ Object.assign(courseCatalog,{
     ['Vérifier','L’abscisse lue doit être cohérente avec les repères voisins et avec le signe du nombre.']
   ]},
   coordinates:{title:'Lire et placer un point dans un repère',rules:[
-    ['Le repère','L’axe horizontal est l’<strong>axe des abscisses</strong>. L’axe vertical est l’<strong>axe des ordonnées</strong>. Ils se coupent en <em>O</em>, l’origine&nbsp;: <em>O</em>(0&nbsp;;&nbsp;0).',true],
-    ['Lire les coordonnées de A',courseCoordinatesVisual()+'<span class="course-step"><strong style="color:#a84a00">1.</strong> Abscisse&nbsp;: de <em>A</em>, je descends jusqu’à l’axe horizontal, je lis <strong style="color:#a84a00">−2</strong>.</span><br><span class="course-step"><strong style="color:#00706b">2.</strong> Ordonnée&nbsp;: de <em>A</em>, je vais vers la droite jusqu’à l’axe vertical, je lis <strong style="color:#00706b">3</strong>.</span><br><span class="course-step"><strong>3.</strong> J’écris l’abscisse en premier&nbsp;: <strong><em>A</em>(−2&nbsp;;&nbsp;3)</strong>.</span><span class="course-example"><strong>Astuce&nbsp;:</strong> dans l’alphabet, le <strong>A</strong> d’<strong>abscisse</strong> vient avant le <strong>O</strong> d’<strong>ordonnée</strong>.</span>',true],
-    ['Attention','Sur l’axe des abscisses, l’ordonnée vaut 0&nbsp;: <em>C</em>(3&nbsp;;&nbsp;0).<br>Sur l’axe des ordonnées, l’abscisse vaut 0&nbsp;: <em>D</em>(0&nbsp;;&nbsp;−2).<br>Avant de lire, je regarde ce que vaut un carreau.'],
-    ['Placer B(2 ; −1)',courseCoordinatesPlacementVisual()+'Je pars de <em>O</em>. Je vais de 2 vers la <strong style="color:#a84a00">droite</strong>, puis je <strong style="color:#00706b">descends</strong> de 1.']
+    ['Le repère','<div>L’axe horizontal est l’<strong>axe des abscisses</strong>. L’axe vertical est l’<strong>axe des ordonnées</strong>. Ils se coupent en <em>O</em>, l’origine&nbsp;: <em>O</em>(0&nbsp;;&nbsp;0).</div>',true],
+    ['Lire les coordonnées de A',courseCoordinatesVisual()+'<div><span class="course-step"><strong style="color:#a84a00">1.</strong> Abscisse&nbsp;: de <em>A</em>, je descends jusqu’à l’axe horizontal, je lis <strong style="color:#a84a00">−2</strong>.</span><br><span class="course-step"><strong style="color:#00706b">2.</strong> Ordonnée&nbsp;: de <em>A</em>, je vais vers la droite jusqu’à l’axe vertical, je lis <strong style="color:#00706b">3</strong>.</span><br><span class="course-step"><strong>3.</strong> J’écris l’abscisse en premier&nbsp;: <strong><em>A</em>(−2&nbsp;;&nbsp;3)</strong>.</span><span class="course-example"><strong>Astuce&nbsp;:</strong> dans l’alphabet, le <strong>A</strong> d’<strong>abscisse</strong> vient avant le <strong>O</strong> d’<strong>ordonnée</strong>.</span></div>',true],
+    ['Attention','<div>Sur l’axe des abscisses, l’ordonnée vaut 0&nbsp;: <em>C</em>(3&nbsp;;&nbsp;0).<br>Sur l’axe des ordonnées, l’abscisse vaut 0&nbsp;: <em>D</em>(0&nbsp;;&nbsp;−2).<br>Avant de lire, je regarde ce que vaut un carreau.</div>'],
+    ['Placer B(2 ; −1)',courseCoordinatesPlacementVisual()+'<div>Je pars de <em>O</em>. Je vais de 2 vers la <strong style="color:#a84a00">droite</strong>, puis je <strong style="color:#00706b">descends</strong> de 1.</div>']
   ]},
   figure_coding:{title:'Lire le codage d’une figure',rules:[
     ['Traits identiques','Des côtés portant le même codage ont la même longueur.'],
@@ -1824,7 +1824,7 @@ function setupCoordinatePointInteraction(spec){
      // Correction : le point de l'élève reste visible (cercle pointillé) à côté du point attendu.
      if(String(x)===String(target.x)&&String(y)===String(target.y))return;
      const box=svg.viewBox&&svg.viewBox.baseVal,width=box&&box.width||400,height=box&&box.height||400;
-     const anchor=cx>width*.62?'end':'start',dx=anchor==='end'?-17:17,dy=cy<height*.3?30:-17;
+     const anchor='middle',dx=0,dy=cy>height*.62?-21:34;
      mark.innerHTML='<circle r="13" fill="none" stroke="#fff" stroke-width="6"/><circle r="13" fill="none" stroke="#6b4fa0" stroke-width="3" stroke-dasharray="4 4"/><path d="M-5 -5L5 5M-5 5L5 -5" stroke="#6b4fa0" stroke-width="3" stroke-linecap="round"/><text x="'+dx+'" y="'+dy+'" text-anchor="'+anchor+'" fill="#6b4fa0" font-family="Arial,sans-serif" font-size="18" font-weight="800" paint-order="stroke" stroke="#fff" stroke-width="5" stroke-linejoin="round">ton point</text>';
    }
    svg.append(mark);

@@ -25,7 +25,7 @@
     '.coordinate-grid-hit:focus:not(:focus-visible){stroke:none;fill:transparent}',
     '.coordinate-grid-hit:focus-visible{stroke:#e86a00;stroke-width:3;fill:rgba(232,106,0,.12)}',
     '.coordinate-placement-svg[data-locked] .coordinate-grid-hit{pointer-events:none;cursor:default}',
-    '.coordinate-placement-svg .coordinate-chosen-point text{font-family:Arial,sans-serif;font-size:17px;font-style:normal;font-weight:800}',
+    '.coordinate-placement-svg[data-locked] .coordinate-selected-point text{font-family:Arial,sans-serif;font-size:18px;font-style:normal;font-weight:800}',
     '.c15-reset{min-height:44px;margin:6px auto 0;padding:8px 18px;border:2px solid #9fb9d8;border-radius:12px;background:#fff;color:#0b3570;font-size:1rem;font-weight:800;cursor:pointer;touch-action:manipulation}',
     '@media(max-width:800px){',
     '.diapo.coordinate-mode .c15-figure{--c15-h:min(48vh,420px)}',

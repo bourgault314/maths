@@ -54,8 +54,9 @@
     for(let attempt=0;attempt<200;attempt++){
       const quadrant=options.quadrant||randomInt(1,4);
       const sx=quadrant===1||quadrant===4?1:-1,sy=quadrant<=2?1:-1;
-      const x=signedValue(randomInt,sx,sx>0?bounds.xMax-1:-bounds.xMin);
-      const y=signedValue(randomInt,sy,sy>0?bounds.yMax-1:-bounds.yMin);
+      // Jamais sur le bord du quadrillage : un point de coin semble posé hors du repère.
+      const x=signedValue(randomInt,sx,sx>0?bounds.xMax-1:-bounds.xMin-1);
+      const y=signedValue(randomInt,sy,sy>0?bounds.yMax-1:-bounds.yMin-1);
       if(options.distinctAbs!==false&&Math.abs(x)===Math.abs(y)) continue;
       if(options.avoid&&options.avoid.some(point=>Math.abs(point.x-x)+Math.abs(point.y-y)<3)) continue;
       if(options.accept&&!options.accept(x,y)) continue;
@@ -96,8 +97,8 @@
   function axisPoint(module,question,randomInt){
     const bounds=pickBounds(randomInt),letter=choose(LETTERS,randomInt),onX=randomInt(0,1)===0;
     let x=0,y=0;
-    if(onX){do{x=randomInt(bounds.xMin,bounds.xMax-1);}while(x===0);}
-    else{do{y=randomInt(bounds.yMin,bounds.yMax-1);}while(y===0);}
+    if(onX){do{x=randomInt(bounds.xMin+1,bounds.xMax-1);}while(x===0);}
+    else{do{y=randomInt(bounds.yMin+1,bounds.yMax-1);}while(y===0);}
     const data={bounds,step:1,points:[{x,y,label:letter}],guides:onX?[{x,y,axis:'x'},{x,y,axis:'y',line:false}]:[{x,y,axis:'y'},{x,y,axis:'x',line:false}]};
     const steps=onX
       ?[letterHtml(letter)+' est sur l’axe horizontal (axe des abscisses)'+NBSP+': son ordonnée est '+ys(0)+'.','Abscisse'+NBSP+': je lis la graduation où se trouve '+letterHtml(letter)+NBSP+': '+xs(x)+'.',writePair(letter,x,y)]
