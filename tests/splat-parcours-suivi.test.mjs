@@ -412,3 +412,33 @@ test("une série en cours à l’écran n’est pas interrompue : la fusion se f
   await tic();
   assert.equal(appli.client.sync.revision, 2);
 });
+
+// Relecture de Code sur le lot 1 (07/10/2026) : une série notée PENDANT qu'un
+// envoi est en vol programme un envoi groupé (700 ms) ; le 200 de l'envoi en
+// vol remettait « dirty » à faux, et une fermeture d'onglet dans ces 700 ms ne
+// déclenchait pas de sendBeacon : la série restait sur l'appareil jusqu'à sa
+// prochaine ouverture. Le même défaut existait dans Défi tables.
+test("une série notée pendant un envoi en vol reste « à envoyer » après le 200 : la fermeture de l’onglet l’emporte", async () => {
+  const temps = fauxTemps();
+  const serveur = fauxServeur();
+  serveur.delai = 30;
+  const appli = demarrerClient({codeOnglet: B, reseau: serveur, minuteries: temps});
+  await appli.client.demarrer();
+  await tic(50);
+  appli.client.noterSerie("m1e1", serie(true, 4, 4, 0));
+  await temps.avancer(700);
+  appli.client.noterSerie("m1e2", serie(true, 4, 4, 0));
+  await tic(50);
+  assert.equal(appli.client.sync.revision, 1, "le premier envoi est arrivé");
+  assert.equal(appli.client.sync.dirty, true, "mais la série notée pendant le vol est encore à envoyer");
+  assert.deepEqual(temps.enAttente(), [700], "l’envoi groupé est toujours programmé");
+  appli.declencher("pagehide");
+  assert.equal(appli.balises.length, 1, "la fermeture emporte la série");
+  const paquet = JSON.parse(await appli.balises[0].blob.text());
+  assert.equal(paquet.parcours.etapes.m1e2.fait, true);
+  assert.equal(paquet.base_revision, 1);
+  // La balise a pris la place de l'envoi groupé ; sa réponse ne se lit pas :
+  // « dirty » reste levé, le prochain démarrage confirmera (au pire par un 409).
+  assert.deepEqual(temps.enAttente(), [], "l’envoi groupé est annulé");
+  assert.equal(appli.client.sync.dirty, true);
+});
