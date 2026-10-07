@@ -1061,13 +1061,13 @@ function courseDecimalColumns(lines,operator){
   const decimals=Array.from({length:decimalWidth},(_,position)=>part.decimals[position]===undefined?cell('0','color:#8a97a8'):cell(part.decimals[position])).join('');
   return '<tr><td style="padding:0 .25em 0 0;text-align:right">'+(index===1?operator:'')+'</td>'+whole+cell(',')+decimals+'</tr>';
  }).join('');
- return '<table aria-label="Opération posée" style="margin:7px auto 2px;border-collapse:collapse;font:800 1.22em \'Cambria Math\',\'Times New Roman\',serif;color:#17283f">'+rows+'</table>';
+ return '<table aria-label="Opération posée" style="margin:7px auto 2px;border-collapse:collapse;font:800 1.22em Cambria Math,Times New Roman,serif;color:#17283f">'+rows+'</table>';
 }
 function courseDecimalPlaceTable(values,column){
  const head=['unités','dixièmes','centièmes'];
  const cell=(value,index,tag='td')=>'<'+tag+' style="padding:3px 8px;border:1px solid #c9d6e6;text-align:center'+(index===column?';background:#fff1df;color:#9a4100':'')+'">'+value+'</'+tag+'>';
  const rows=values.map(text=>{const [whole,decimals]=text.split(',');return '<tr>'+cell(whole+',',0)+cell(decimals[0],1)+cell(decimals[1]||'0',2)+'</tr>';}).join('');
- return '<table aria-label="Tableau de numération" style="margin:7px auto 2px;border-collapse:collapse;font:800 1.05em \'Cambria Math\',\'Times New Roman\',serif;color:#17283f"><tr>'+head.map((label,index)=>cell('<span style="font:800 .72em Arial,sans-serif">'+label+'</span>',index,'th')).join('')+'</tr>'+rows+'</table>';
+ return '<table aria-label="Tableau de numération" style="margin:7px auto 2px;border-collapse:collapse;font:800 1.05em Cambria Math,Times New Roman,serif;color:#17283f"><tr>'+head.map((label,index)=>cell('<span style="font:800 .72em Arial,sans-serif">'+label+'</span>',index,'th')).join('')+'</tr>'+rows+'</table>';
 }
 function courseReadDataTableVisual(){
  return '<table class="read-data-course-table" aria-label="Exemple de lecture croisée dans un tableau"><tbody>'+

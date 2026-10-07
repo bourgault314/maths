@@ -62,7 +62,7 @@
     const component=global.MATHSGO_VISUALS&&global.MATHSGO_VISUALS.get('arithmetic.relation-bar');
     if(!component) return '';
     const scope=instance.scope||{};
-    return component.render({kind:'fraction_direct',divisor:Number(scope.divisor),value:Number(scope.total),result:Number(scope.share),showValue:true,questionLabel:'une part\u00a0?',balanced:true,arrowStyle:'hand'},correction);
+    return component.render({kind:'fraction_direct',divisor:Number(scope.divisor),value:Number(scope.total),result:Number(scope.share),showValue:true,questionLabel:'une part ?',balanced:true,arrowStyle:'hand'},correction);
   }
 
   function distributivityBoard(instance,correction=false){
