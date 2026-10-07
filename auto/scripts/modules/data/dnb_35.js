@@ -12,7 +12,7 @@ const MODULE_DNB_35 = {
   "questions": [
     {
       "n": 1,
-      "statement": "Un article coûte un prix rond. Son prix augmente d’un pourcentage repère. Quel est son nouveau prix ?",
+      "statement": "Un article coûte 15 €. Quel sera son prix après une augmentation de 20 % ?",
       "answer": "[]",
       "options": {
         "evolution_kind": "price_increase"
@@ -21,7 +21,7 @@ const MODULE_DNB_35 = {
     },
     {
       "n": 2,
-      "statement": "Un article coûte un prix rond. Son prix baisse de 10 % (une fois sur deux) ou d’un autre pourcentage repère. Quel est son nouveau prix ?",
+      "statement": "Un article coûte 45 €. Quel sera son prix après une réduction de 10 % ?",
       "answer": "[]",
       "options": {
         "evolution_kind": "price_decrease"
@@ -30,7 +30,7 @@ const MODULE_DNB_35 = {
     },
     {
       "n": 3,
-      "statement": "Un effectif (habitants, adhérents, élèves) augmente d’un pourcentage repère. Quel est le nouvel effectif ?",
+      "statement": "Un village compte 800 habitants. Sa population augmente de 10 %. Combien d’habitants compte-t-il après cette augmentation ?",
       "answer": "[]",
       "options": {
         "evolution_kind": "count_increase"
@@ -39,7 +39,7 @@ const MODULE_DNB_35 = {
     },
     {
       "n": 4,
-      "statement": "Un effectif (habitants, adhérents, élèves) diminue d’un pourcentage repère. Quel est le nouvel effectif ?",
+      "statement": "Un collège compte 540 élèves. L’année suivante, l’effectif baisse de 5 %. Combien d’élèves compte alors le collège ?",
       "answer": "[]",
       "options": {
         "evolution_kind": "count_decrease"
@@ -48,7 +48,7 @@ const MODULE_DNB_35 = {
     },
     {
       "n": 5,
-      "statement": "Augmenter de p %, c’est multiplier par quel nombre ? (seul, ou pour compléter le calcul du nouveau prix)",
+      "statement": "Augmenter une quantité de 3 % revient à la multiplier par quel nombre ? (ou : 20 × … pour une hausse de 40 %)",
       "answer": "[]",
       "options": {
         "evolution_kind": "increase_coefficient"
@@ -57,7 +57,7 @@ const MODULE_DNB_35 = {
     },
     {
       "n": 6,
-      "statement": "Diminuer de p %, c’est multiplier par quel nombre ? (seul, ou pour compléter le calcul du nouveau prix)",
+      "statement": "Diminuer une quantité de 20 % revient à la multiplier par quel nombre ? (ou : 80 × … pour une baisse de 10 %)",
       "answer": "[]",
       "options": {
         "evolution_kind": "decrease_coefficient"
@@ -66,7 +66,7 @@ const MODULE_DNB_35 = {
     },
     {
       "n": 7,
-      "statement": "Le prix d’un article augmente de p %. Quel calcul donne le nouveau prix ? (QCM, forme du brevet)",
+      "statement": "Le prix d’un article coûtant 20 € augmente de 40 %. Quel calcul donne le nouveau prix ? (QCM)",
       "answer": "[]",
       "options": {
         "evolution_kind": "increase_qcm"
@@ -75,7 +75,7 @@ const MODULE_DNB_35 = {
     },
     {
       "n": 8,
-      "statement": "Le prix d’un article baisse de p %. Quel calcul donne le prix final ? (QCM, forme du brevet)",
+      "statement": "Un article coûte 80 €. Son prix baisse de 10 %. Quel calcul donne le prix final ? (QCM)",
       "answer": "[]",
       "options": {
         "evolution_kind": "decrease_qcm"
@@ -84,7 +84,7 @@ const MODULE_DNB_35 = {
     },
     {
       "n": 10,
-      "statement": "Un prix ou un effectif augmente ou baisse de p %. De combien augmente-t-il ou baisse-t-il ?",
+      "statement": "Un article coûte 45 €. Son prix baisse de 10 %. De combien d’euros le prix baisse-t-il ?",
       "answer": "[]",
       "options": {
         "evolution_kind": "change_amount"
@@ -93,7 +93,7 @@ const MODULE_DNB_35 = {
     },
     {
       "n": 11,
-      "statement": "Hausse ou baisse en pourcentage : quatre résultats, un seul juste (QCM à pièges)",
+      "statement": "Un village de 800 habitants a connu une augmentation de 10 % de sa population. Combien y a-t-il d’habitants après cette augmentation ? (QCM)",
       "answer": "[]",
       "options": {
         "evolution_kind": "trap_qcm"
