@@ -512,47 +512,50 @@ function makeSimpleReductionQcm(groups){
   };
 }
 
-const MODULE01_OFFICIAL=[
-  {num:1,den:2,dec:'0,5'},
-  {num:1,den:4,dec:'0,25'},
-  {num:3,den:4,dec:'0,75'},
-  {num:3,den:2,dec:'1,5'},
-  {num:4,den:2,dec:'2'},
-  {num:5,den:2,dec:'2,5'},
-  {num:1,den:10,dec:'0,1'},
-  {num:100,den:100,dec:'1'},
-  {num:2,den:1,dec:'2'},
-  {num:3,den:1,dec:'3'},
-  {num:4,den:1,dec:'4'}
+// dnb_01 — Écriture décimale des fractions simples (refonte du 7-8 octobre 2026).
+// Cible DNB (liste officielle NC1) : 1/2 ; 1/4 ; 3/4 ; 3/2 ; 4/2 ; 5/2 ; 1/10 ;
+// 100/100 ; 7/1, et la question réelle du DNB 2026 « Donner une écriture du
+// nombre 0,75 sous la forme d'une fraction » (toute fraction égale est juste).
+// Les numéros des types retirés (7, 8, 12, 14, 18, 20) ne sont pas réutilisés.
+const MODULE01_OFFICIAL_F2D=[
+  {num:1,den:2},{num:1,den:4},{num:3,den:4},{num:3,den:2},{num:4,den:2},{num:5,den:2},
+  {num:1,den:10},{num:1,den:100},{num:100,den:100},{num:7,den:1}
+];
+// Sens décimal → fraction : jamais un entier caché (plus de « 1 = 1/1 »).
+const MODULE01_OFFICIAL_D2F=[
+  {num:1,den:2},{num:1,den:4},{num:3,den:4},{num:3,den:2},{num:5,den:2},
+  {num:1,den:10},{num:1,den:100},{num:5,den:4},{num:7,den:4}
+];
+const MODULE01_QCM_D2F=[
+  {num:1,den:2},{num:1,den:4},{num:3,den:4},{num:3,den:2},{num:5,den:2},
+  {num:5,den:4},{num:7,den:4},{num:1,den:5},{num:2,den:5}
 ];
 const MODULE01_TEMPLATES=[
   {n:1,options:{module01_kind:'fixed_f2d',module01_format:'open'}},
   {n:2,options:{module01_kind:'fixed_f2d',module01_format:'qcm'}},
   {n:3,options:{module01_kind:'fixed_d2f',module01_format:'open'}},
-  {n:4,options:{module01_kind:'fixed_d2f',module01_format:'qcm'}},
+  {n:4,options:{module01_kind:'benchmark_d2f',module01_format:'qcm'}},
   {n:5,options:{module01_kind:'tenths_f2d',module01_format:'open'}},
   {n:6,options:{module01_kind:'hundredths_f2d',module01_format:'open'}},
-  {n:7,options:{module01_kind:'integer_thirds_f2d',module01_format:'open'}},
-  {n:8,options:{module01_kind:'integer_thirds_f2d',module01_format:'qcm'}},
   {n:9,options:{module01_kind:'benchmark_improper_f2d',module01_format:'qcm'}},
   {n:10,options:{module01_kind:'improper_f2d',module01_format:'open'}},
-  {n:11,options:{module01_kind:'improper_f2d',module01_format:'truefalse',truth:true}},
-  {n:12,options:{module01_kind:'integer_f2d',module01_format:'open'}},
+  {n:11,options:{module01_kind:'benchmark_improper_f2d',module01_format:'truefalse'}},
   {n:13,options:{module01_kind:'reducible_f2d',module01_format:'open'}},
-  {n:14,options:{module01_kind:'reducible_f2d',module01_format:'truefalse',truth:false}},
   {n:15,options:{module01_kind:'tenths_d2f',module01_format:'open'}},
-  {n:16,options:{module01_kind:'tenths_d2f',module01_format:'qcm'}},
+  {n:16,options:{module01_kind:'place_d2f',module01_format:'qcm'}},
   {n:17,options:{module01_kind:'hundredths_d2f',module01_format:'open'}},
-  {n:18,options:{module01_kind:'hundredths_d2f',module01_format:'qcm'}},
   {n:19,options:{module01_kind:'improper_d2f',module01_format:'open'}},
-  {n:20,options:{module01_kind:'read_visual',module01_format:'open'}}
+  {n:21,options:{module01_kind:'compare',module01_format:'compare'}},
+  {n:22,options:{module01_kind:'sum_f2d',module01_format:'open'}},
+  {n:23,options:{module01_kind:'extreme',module01_format:'qcm'}}
 ].map(q=>({...q,statement:'',answer:'[]',footer:''}));
-let module01State={fixedF2D:[],fixedD2F:[]};
-function resetModule01State(){ module01State={fixedF2D:[],fixedD2F:[]}; }
-function module01DistinctOfficial(key){
-  let available=MODULE01_OFFICIAL.map((_,i)=>i).filter(i=>!module01State[key].includes(i));
-  if(!available.length){ module01State[key]=[]; available=MODULE01_OFFICIAL.map((_,i)=>i); }
-  const index=pick(available); module01State[key].push(index); return MODULE01_OFFICIAL[index];
+let module01State={};
+function resetModule01State(){ module01State={}; }
+function module01DistinctFrom(key,list){
+  if(!Array.isArray(module01State[key])) module01State[key]=[];
+  let available=list.map((_,i)=>i).filter(i=>!module01State[key].includes(i));
+  if(!available.length){ module01State[key]=[]; available=list.map((_,i)=>i); }
+  const index=pick(available); module01State[key].push(index); return {...list[index]};
 }
 function module01Decimal(num,den){
   const value=num/den;
@@ -563,130 +566,430 @@ function module01Reduced(num,den){
   const g=GCD(num,den); return {num:num/g,den:den/g};
 }
 function module01FracLatex(num,den){ return '\\dfrac{'+num+'}{'+den+'}'; }
-function module01VisualKindForDen(den){
-  return ([20,25,50].includes(den)||100%den!==0)?'bar':'grouped';
+// Espaces autour de =, + , × et ÷ dans les formules (« 2,5 = » et non « 2,5= »).
+function module01TidyLatex(latex){
+  return String(latex)
+    .replace(/\s*=\s*/g,' = ')
+    .replace(/\s*\+\s*/g,' + ')
+    .replace(/\s*\\times\s*/g,' \\times ')
+    .replace(/\s*\\div\s*/g,' \\div ');
 }
-function module01AccessibleNumerator(den){
-  const pools={
-    20:[2,4,5,8,10,12,15,16,18],
-    25:[5,10,15,20],
-    50:[5,10,15,20,25,30,35,40,45]
+function module01Tidy(text){
+  return String(text||'').replace(/\$\$([\s\S]*?)\$\$/g,(m,inner)=>'$$'+module01TidyLatex(inner)+'$$');
+}
+function module01Frac(num,den){ return '$$'+module01FracLatex(num,den)+'$$'; }
+function module01Num(value){ return '$$'+value+'$$'; }
+// Nombre décimal (chaîne « 1,25 ») → nombre de dixièmes ou de centièmes.
+function module01DecimalParts(dec){
+  const [intPart,decPart='']=String(dec).split(',');
+  const places=decPart.length, den=Math.pow(10,places);
+  const num=Number(intPart)*den+Number(decPart||0);
+  return {intPart:Number(intPart),decPart,places,num,den};
+}
+function module01PlaceName(places,count=2){
+  return places===1?(count>1?'dixièmes':'dixième'):(count>1?'centièmes':'centième');
+}
+// Compare deux décimaux rang par rang et dit pourquoi : « 5 dixièmes > 4 dixièmes ».
+function module01RankReason(a,b){
+  const split=t=>{const [i,d='']=String(t).split(',');return [Number(i),Number(d[0]||0),Number(d[1]||0)];};
+  const A=split(a),B=split(b),names=[['unité','unités'],['dixième','dixièmes'],['centième','centièmes']];
+  for(let k=0;k<3;k++) if(A[k]!==B[k]){
+    const w=n=>n+' '+(n>1?names[k][1]:names[k][0]);
+    return w(A[k])+(A[k]<B[k]?' &lt; ':' &gt; ')+w(B[k]);
+  }
+  return '';
+}
+function module01QcmFrom(correct,distractors){
+  // distractors : [{value,code,feedback}] déjà distincts entre eux et de la bonne réponse.
+  const items=shuffleLocal([{value:correct,code:null,feedback:''},...distractors.slice(0,3)]);
+  const correctIndex=String(items.findIndex(item=>item.value===correct)+1);
+  const feedback={};
+  items.forEach((item,index)=>{ if(item.feedback) feedback[String(index+1)]=item.feedback; });
+  return {options:items.map(item=>item.value),codes:items.map(item=>item.code),correctIndex,feedback};
+}
+function module01PickDistinct(candidates,isCorrect,count=3){
+  const out=[], seen=new Set();
+  candidates.forEach(candidate=>{
+    if(!candidate||out.length>=count) return;
+    const key=String(candidate.key??candidate.value);
+    if(seen.has(key)||isCorrect(candidate)) return;
+    seen.add(key); out.push(candidate);
+  });
+  return out;
+}
+// Distracteurs « fraction → décimal » : chacun correspond à une erreur nommée.
+function module01OfficialDecimalDistractors(num,den,dec){
+  const F=module01Frac(num,den);
+  const comma=num+','+den, dual='0,'+num+den;
+  const list={
+    '1/2':[[comma,'E1','La barre de fraction n’est pas une virgule : '+F+' n’est pas '+comma+'.'],['0,2','E-den','0,2 vaut '+module01Frac(1,5)+' : le dénominateur 2 n’est pas le chiffre des dixièmes.'],['2','E6','2 vaut '+module01Frac(2,1)+' : tu as inversé numérateur et dénominateur.']],
+    '1/4':[[comma,'E1','La barre de fraction n’est pas une virgule : '+F+' n’est pas '+comma+'.'],['0,4','E-den','0,4 vaut 4 dixièmes : le dénominateur 4 n’est pas le chiffre des dixièmes.'],['4','E6','4 vaut '+module01Frac(4,1)+' : tu as inversé numérateur et dénominateur.']],
+    '3/4':[[comma,'E1','La barre de fraction n’est pas une virgule : '+F+' n’est pas '+comma+'.'],[dual,'E3',''+F+' n’est pas 0,34 : on ne recopie pas les deux nombres après la virgule.'],['0,25','E-comp','0,25 vaut un seul quart, '+module01Frac(1,4)+'. Ici, il y a 3 quarts.']],
+    '3/2':[[comma,'E1','La barre de fraction n’est pas une virgule : '+F+' n’est pas '+comma+'.'],['0,5','E2','0,5 vaut un seul demi. '+F+' est plus grand que 1 : tu as oublié l’unité.'],[dual,'E3',''+F+' est plus grand que 1 : sa valeur ne commence pas par 0,…']],
+    '4/2':[[comma,'E1','La barre de fraction n’est pas une virgule : '+F+' n’est pas '+comma+'.'],['8','E-mult','8 = 4 × 2 : 4 demis ne font pas 8 unités.'],['0,5','E2','0,5 vaut un seul demi. 4 demis font plus que 1.']],
+    '5/2':[[comma,'E1','La barre de fraction n’est pas une virgule : '+F+' n’est pas '+comma+'.'],['0,5','E2','0,5 vaut un seul demi. '+F+' est plus grand que 1 : tu as oublié les unités.'],[dual,'E3','5 demis font plus que 1 : la valeur ne commence pas par 0,…']],
+    '1/10':[['10','E6','10 vaut '+module01Frac(10,1)+' : tu as inversé numérateur et dénominateur.'],['0,01','E4','0,01 vaut un centième, '+module01Frac(1,100)+'.'],['1,1','E1','La barre de fraction n’est pas une virgule.']],
+    '1/100':[['0,1','E4','0,1 vaut un dixième, '+module01Frac(1,10)+'. Un centième s’écrit avec un zéro de plus.'],['100','E6','100 vaut '+module01Frac(100,1)+' : tu as inversé numérateur et dénominateur.'],['0,001','E4b','0,001 vaut un millième, pas un centième.']],
+    '100/100':[['100','E-num','100 centièmes ne font pas 100 unités.'],['0,01','E4','0,01 vaut un seul centième. Ici, il y a 100 centièmes.'],['10','E-num','100 centièmes ne font pas 10 unités.']]
   };
-  return pick(pools[den]||Array.from({length:den-1},(_,i)=>i+1));
+  let rows=list[num+'/'+den];
+  if(den===1) rows=[[num+',1','E1','La barre de fraction n’est pas une virgule.'],['0,'+num,'E-den1','Le dénominateur 1 ne partage pas l’unité : '+F+' n’est pas plus petit que 1.'],['1','E-un',''+F+' compte '+num+' unités, pas une seule.']];
+  return (rows||[]).map(([value,code,feedback])=>({value,code,feedback}));
 }
-function module01DecimalDistractors(num,den,correct){
-  const target=num/den, out=[], seen=new Set([target.toFixed(8)]);
-  function add(value){
-    if(!Number.isFinite(value)||value<0) return;
-    const key=value.toFixed(8); if(seen.has(key)) return;
-    seen.add(key); out.push(module01Decimal(Math.round(value*1000),1000));
+function module01ImproperDecimalDistractors(num,den,dec){
+  const whole=Math.floor(num/den), rest=num-whole*den, F=module01Frac(num,den);
+  const candidates=[
+    {value:num+','+den,code:'E1',feedback:'La barre de fraction n’est pas une virgule : '+F+' n’est pas '+num+','+den+'.'},
+    {value:module01Decimal(rest,den),code:'E2',feedback:module01Decimal(rest,den)+' vaut seulement '+module01Frac(rest,den)+' : tu as oublié '+(whole>1?'les '+whole+' unités':'l’unité')+'.'},
+    {value:whole+','+rest,code:'E5',feedback:module01Frac(rest,den)+' ne vaut pas 0,'+rest+' : '+module01Frac(rest,den)+' = '+module01Decimal(rest,den)+'.'},
+    {value:den+','+num,code:'E1b',feedback:'La barre de fraction n’est pas une virgule.'}
+  ];
+  return module01PickDistinct(candidates,item=>item.value===dec);
+}
+// Distracteurs « décimal → fraction » (QCM de type 4).
+function module01FractionDistractors(num,den){
+  const dec=module01Decimal(num,den), parts=module01DecimalParts(dec), D='$$'+dec+'$$';
+  const digits=String(parts.num), equal=(n,d)=>d>0&&n*den===num*d;
+  const frac=(n,d)=>'\\dfrac{'+n+'}{'+d+'}';
+  const candidates=[];
+  // Lecture des chiffres : la virgule prise pour une barre de fraction.
+  if(digits.length>=2){
+    const n=Number(digits.slice(0,-1)), d=Number(digits.slice(-1));
+    if(n>0&&d>0) candidates.push({value:frac(n,d),key:n+'/'+d,code:'E-virgule',feedback:'Une virgule n’est pas une barre de fraction : '+module01Frac(n,d)+' = '+module01Decimal(n,d)+'.'});
+  } else if(Number(digits)>1){
+    const d=Number(digits);
+    candidates.push({value:frac(1,d),key:'1/'+d,code:'E-confusion',feedback:module01Frac(1,d)+' = '+module01Decimal(1,d)+' : ne confonds pas 0,'+d+' et '+module01Frac(1,d)+'.'});
   }
-  add(Number(String(Math.abs(num))+'.'+String(Math.abs(den))));
-  add(den/10); add(num/100); add(den/100); add(target/10); add(target*10);
-  if(target>1) add(target-Math.floor(target));
-  add(Math.abs(num-den)/Math.max(den,1));
-  let bump=1;
-  while(out.length<3){ add(target+bump/10); bump++; }
-  return shuffleLocal(out).slice(0,3);
-}
-function module01FractionDistractors(sourceNum,sourceDen,reduced){
-  const out=[], seen=new Set([reduced.num+'/'+reduced.den]);
-  function equivalent(n,d){ return n*reduced.den===reduced.num*d; }
-  function add(n,d){
-    n=Math.abs(Math.trunc(n)); d=Math.abs(Math.trunc(d));
-    if(!n||!d) return;
-    const key=n+'/'+d; if(seen.has(key)) return;
-    if(equivalent(n,d)) return;
-    seen.add(key); out.push(module01FracLatex(n,d));
+  // Mauvais rang : dixièmes et centièmes échangés.
+  const wrongDen=parts.places===2?10:100;
+  candidates.push({value:frac(parts.num,wrongDen),key:parts.num+'/'+wrongDen,code:'E3',feedback:module01Frac(parts.num,wrongDen)+' = '+module01Decimal(parts.num,wrongDen)+' : '+dec+' se lit en '+module01PlaceName(parts.places)+'.'});
+  // Inversion.
+  candidates.push({value:frac(den,num),key:den+'/'+num,code:'E6',feedback:'Tu as inversé numérateur et dénominateur : '+module01Frac(den,num)+(num<den?' est plus grand que 1.':' est plus petit que 1.')});
+  // Oubli des unités.
+  if(parts.intPart>=1){
+    const r=module01Reduced(num-parts.intPart*den,den);
+    candidates.push({value:frac(r.num,r.den),key:r.num+'/'+r.den,code:'E2',feedback:module01Frac(r.num,r.den)+' = '+module01Decimal(r.num,r.den)+' : tu as oublié '+(parts.intPart>1?'les '+parts.intPart+' unités':'l’unité')+'.'});
   }
-  // A reducible writing of the right value is still mathematically equal to it.
-  // Do not use it as a distractor when pupils are asked for the corresponding
-  // irreducible fraction: every wrong choice must represent another number.
-  add(reduced.num*10+1,reduced.den*10);
-  add(reduced.den,reduced.num);
-  add(reduced.num,reduced.den*10);
-  add(reduced.num+1,reduced.den);
-  add(reduced.num,reduced.den+1);
-  let bump=2;
-  while(out.length<3){ add(reduced.num+bump,reduced.den); bump++; }
-  return shuffleLocal(out).slice(0,3);
+  candidates.push({value:frac(parts.num,1000),key:parts.num+'/1000',code:'E4',feedback:module01Frac(parts.num,1000)+' = '+module01Decimal(parts.num,1000)+'.'});
+  return module01PickDistinct(candidates,item=>{const [n,d]=item.key.split('/').map(Number);return equal(n,d);});
 }
-function module01Qcm(correct,distractors){
-  const options=shuffleLocal([correct,...distractors].slice(0,4));
-  return {options,correctIndex:String(options.indexOf(correct)+1)};
+// QCM de type 16 : 0,n ; 0,0n ; 0,ab → quelle fraction ?
+function module01PlaceFractionDistractors(parts){
+  const frac=(n,d)=>'\\dfrac{'+n+'}{'+d+'}', N=parts.num, dec=module01Decimal(parts.num,parts.den);
+  const candidates=[];
+  if(parts.places===1){
+    candidates.push({value:frac(N,100),key:N+'/100',code:'E3',feedback:module01Frac(N,100)+' = '+module01Decimal(N,100)+' : '+dec+' se lit en dixièmes.'});
+    if(N>1) candidates.push({value:frac(1,N),key:'1/'+N,code:'E-confusion',feedback:'Ne confonds pas '+dec+' et '+module01Frac(1,N)+' : '+dec+' vaut '+N+' dixièmes.'});
+    candidates.push({value:frac(10,N),key:'10/'+N,code:'E6',feedback:'Tu as inversé numérateur et dénominateur : '+module01Frac(10,N)+' est plus grand que 1.'});
+    candidates.push({value:frac(N,1000),key:N+'/1000',code:'E4',feedback:module01Frac(N,1000)+' = '+module01Decimal(N,1000)+'.'});
+  } else if(N<10){
+    candidates.push({value:frac(N,10),key:N+'/10',code:'E4',feedback:module01Frac(N,10)+' = 0,'+N+' : le zéro de '+dec+' compte, '+N+' est au rang des centièmes.'});
+    candidates.push({value:frac(N,1000),key:N+'/1000',code:'E4b',feedback:module01Frac(N,1000)+' = '+module01Decimal(N,1000)+' : c’est un millième, pas un centième.'});
+    candidates.push({value:frac(100,N),key:'100/'+N,code:'E6',feedback:'Tu as inversé numérateur et dénominateur : '+module01Frac(100,N)+' est plus grand que 1.'});
+  } else {
+    candidates.push({value:frac(N,10),key:N+'/10',code:'E3',feedback:module01Frac(N,10)+' = '+module01Decimal(N,10)+' : '+dec+' se lit en centièmes.'});
+    const a=Math.floor(N/10), b=N%10;
+    if(a>0&&b>0) candidates.push({value:frac(a,b),key:a+'/'+b,code:'E-virgule',feedback:'Une virgule n’est pas une barre de fraction : '+module01Frac(a,b)+' n’est pas '+dec+'.'});
+    candidates.push({value:frac(N,1000),key:N+'/1000',code:'E4b',feedback:module01Frac(N,1000)+' = '+module01Decimal(N,1000)+' : c’est des millièmes.'});
+  }
+  return module01PickDistinct(candidates,item=>{const [n,d]=item.key.split('/').map(Number);return n*parts.den===parts.num*d;});
 }
+
+// ----- Corrections, indices et dessins d'aide (contrat de la refonte, §1) -----
+function module01F2DSteps(num,den,dec){
+  const F=module01Frac(num,den), D='$$'+dec+'$$';
+  if(den===1) return [F+' : le dénominateur 1 ne partage pas l’unité, chaque part est une unité entière.','$$'+module01FracLatex(num,den)+'='+dec+'$$'];
+  if(num===den) return [num+' '+module01PlaceWord(den,num)+' font une unité entière.','$$'+module01FracLatex(num,den)+'=1$$'];
+  if(den===10||den===100||den===1000){
+    const places=den===10?1:2;
+    const lines=[F+', c’est '+num+' '+module01PlaceName(places,num)+'.'];
+    if(num>=den){
+      const whole=Math.floor(num/den), rest=num-whole*den;
+      lines.push(den+' '+module01PlaceName(places)+' font 1 unité : $$'+module01FracLatex(num,den)+'='+whole+'+'+module01FracLatex(rest,den)+'$$');
+      lines.push('$$'+module01FracLatex(num,den)+'='+whole+'+'+module01Decimal(rest,den)+'='+dec+'$$');
+      return lines;
+    }
+    lines.push((places===2&&num<10?'Le '+num+' s’écrit au rang des centièmes : ':'')+'$$'+module01FracLatex(num,den)+'='+dec+'$$');
+    return lines;
+  }
+  if(num>den){
+    const whole=Math.floor(num/den), rest=num-whole*den;
+    if(rest===0){
+      const groups=Array.from({length:whole},()=>module01FracLatex(den,den)).join('+');
+      return [den+' '+module01PlaceWord(den,den)+' font 1 unité.','$$'+module01FracLatex(num,den)+'='+groups+'='+Array.from({length:whole},()=>'1').join('+')+'='+whole+'$$'];
+    }
+    return [
+      den+' '+module01PlaceWord(den,den)+' font 1 unité : $$'+module01FracLatex(num,den)+'='+module01FracLatex(whole*den,den)+'+'+module01FracLatex(rest,den)+'$$',
+      '$$'+module01FracLatex(num,den)+'='+whole+'+'+module01Decimal(rest,den)+'='+dec+'$$'
+    ];
+  }
+  // Fraction plus petite que 1 : une fraction égale de dénominateur 10 ou 100.
+  const target=100%den===0&&(den===2||den===5)?10:100, k=target/den;
+  return [
+    'On écrit une fraction égale de dénominateur '+target+'.',
+    '$$'+module01FracLatex(num,den)+'='+module01FracLatex(num+'\\times'+k,den+'\\times'+k)+'='+module01FracLatex(num*k,target)+'='+dec+'$$'
+  ];
+}
+function module01PlaceWord(den,count=2){
+  const plural=count>1;
+  const words={1:['unité','unités'],2:['demi','demis'],4:['quart','quarts'],5:['cinquième','cinquièmes'],10:['dixième','dixièmes'],100:['centième','centièmes']};
+  const word=words[den]||[den+'e',den+'es'];
+  return plural?word[1]:word[0];
+}
+// Fraction affichée en correction : la lecture en dixièmes ou centièmes (8/100),
+// simplifiée seulement quand on retrouve un repère (dénominateur 2, 4 ou 5 : 3/4, 5/2, 2/5).
+function module01D2FShown(dec,reduced){
+  const parts=module01DecimalParts(dec);
+  return reduced.den<=5&&reduced.den<parts.den?{num:reduced.num,den:reduced.den,simplified:true}:{num:parts.num,den:parts.den,simplified:false};
+}
+function module01D2FSteps(dec,reduced){
+  const parts=module01DecimalParts(dec), D='$$'+dec+'$$', place=module01PlaceName(parts.places,parts.num);
+  const lines=[D+', c’est '+parts.num+' '+place+'.','$$'+dec+'='+module01FracLatex(parts.num,parts.den)+'$$'];
+  const shown=module01D2FShown(dec,reduced);
+  if(shown.simplified) lines.push('On peut simplifier par '+(parts.den/shown.den)+' : $$'+module01FracLatex(parts.num,parts.den)+'='+module01FracLatex(shown.num,shown.den)+'$$');
+  return lines;
+}
+function module01D2FAide(dec){
+  const parts=module01DecimalParts(dec);
+  const where=parts.places===1?'Le chiffre après la virgule est au rang des dixièmes.':'Le deuxième chiffre après la virgule est au rang des centièmes.';
+  return [where, '$$'+dec+'$$ se lit en '+module01PlaceName(parts.places)+'. Un '+module01PlaceName(parts.places,1)+' s’écrit $$'+module01FracLatex(1,parts.den)+'$$.'];
+}
+function module01F2DAide(num,den){
+  const F=module01Frac(num,den);
+  if(den===1) return [F+' : l’unité n’est pas partagée, chaque part est une unité entière.','Combien d’unités entières y a-t-il ?'];
+  if(num===den) return ['Regarde le dénominateur : en combien de parts l’unité est-elle partagée ?','Combien de parts faut-il pour faire une unité entière ?'];
+  if(den===10||den===100){
+    const places=den===10?1:2;
+    return ['Le dénominateur '+den+' indique des '+module01PlaceName(places)+' : '+F+' = '+num+' '+module01PlaceName(places,num)+'.', places===1?'Les dixièmes s’écrivent au 1<sup>er</sup> rang après la virgule.':'Les centièmes s’écrivent au 2<sup>e</sup> rang après la virgule.'];
+  }
+  if(num>den) return ['Combien de '+module01PlaceWord(den)+' font une unité ?','Écris '+F+' comme une somme : des unités entières + ce qui reste.'];
+  return ['Cherche une fraction égale avec 10 ou 100 au dénominateur.','Par combien multiplier '+den+' pour obtenir '+(den===2||den===5?'10':'100')+' ?'];
+}
+function module01AideVisual(data){
+  // Dessin du panneau d'aide : jamais la réponse (aucun « 1 » écrit sur les unités).
+  const component=globalThis.MATHSGO_VISUALS&&globalThis.MATHSGO_VISUALS.get('arithmetic.fraction-decimal-grid');
+  if(!component||!data||(!data.kind&&(!data.visualKind||data.visualKind==='none'))) return '';
+  return component.render(data,false);
+}
+
 function makeModule01Instance(mod,q){
   const kind=q.options.module01_kind, format=q.options.module01_format;
-  let num=1,den=2,dec='0,5',direction='f2d',visualKind='grouped',reduced={num:1,den:2};
+  let num=1,den=2,direction='f2d',visualKind='grouped';
+  let qcm=null, prompt='', display='', answers=[], equality='', extra={};
+  let steps=[], note='', aide=[], feedback=null, fractionPolicy='exact';
 
   if(kind==='fixed_f2d'){
-    const e=module01DistinctOfficial('fixedF2D'); num=e.num;den=e.den;dec=e.dec;visualKind=num>den&&den>1?'bar':visualKind;
+    const e=module01DistinctFrom('fixedF2D',MODULE01_OFFICIAL_F2D);
+    num=e.num; den=e.den;
+    if(den===1) num=pick([2,3,5,6,7,8,9]);
+    visualKind=den===1||num===den?'none':((den===10||den===100)?'place-empty':'grouped');
   } else if(kind==='fixed_d2f'){
-    const e=module01DistinctOfficial('fixedD2F'); num=e.num;den=e.den;dec=e.dec;direction='d2f';visualKind=num>den&&den>1?'bar':(den===10?'grouped':'neutral');
+    const e=module01DistinctFrom('fixedD2F',MODULE01_OFFICIAL_D2F); num=e.num; den=e.den; direction='d2f';
+  } else if(kind==='benchmark_d2f'){
+    const e=module01DistinctFrom('qcmD2F',MODULE01_QCM_D2F); num=e.num; den=e.den; direction='d2f';
   } else if(kind==='tenths_f2d'){
-    num=RD(1,9);den=10;dec=module01Decimal(num,den);
+    num=RD(1,9); den=10; visualKind='place-empty';
   } else if(kind==='hundredths_f2d'){
-    do{num=RD(1,99);}while(num%10===0); den=100;dec=module01Decimal(num,den);
-  } else if(kind==='integer_thirds_f2d'){
-    den=3;num=pick([3,6,9]);dec=module01Decimal(num,den);visualKind='bar';
+    // Un tirage sur trois travaille le zéro de position (9/100 = 0,09).
+    if(rnd()<1/3) num=RD(1,9); else do{num=RD(11,99);}while(num%10===0);
+    den=100; visualKind='place-empty';
   } else if(kind==='benchmark_improper_f2d'){
-    const e=pick([{n:3,d:2},{n:5,d:2},{n:5,d:4},{n:7,d:4},{n:15,d:10}]);
-    num=e.n;den=e.d;dec=module01Decimal(num,den);visualKind='bar';
+    const e=pick([{n:3,d:2},{n:5,d:2},{n:7,d:2},{n:5,d:4},{n:7,d:4},{n:9,d:4}]);
+    num=e.n; den=e.d; visualKind='bar';
   } else if(kind==='improper_f2d'){
-    den=pick([2,4,5,10]);
-    do{num=RD(den+1,3*den-1);}while(num===2*den);
-    dec=module01Decimal(num,den);visualKind='bar';
-  } else if(kind==='integer_f2d'){
-    den=1;num=pick([2,3,4]);dec=String(num);visualKind='bar';
+    den=pick([2,4,4,10]);
+    do{num=RD(den+1,3*den-1);}while(num%den===0||(den===4&&num%2===0));
+    visualKind='bar';
   } else if(kind==='reducible_f2d'){
-    const bases=[{n:1,d:2},{n:1,d:4},{n:3,d:4},{n:1,d:5},{n:2,d:5},{n:3,d:5},{n:4,d:5}];
-    let base,k;
-    do{base=pick(bases);k=pick([2,3,4]);}while(base.d*k>20);
-    num=base.n*k;den=base.d*k;dec=module01Decimal(base.n,base.d);visualKind=module01VisualKindForDen(den);
+    const e=pick([{n:2,d:4},{n:3,d:6},{n:4,d:8},{n:5,d:10},{n:50,d:100},{n:2,d:8},{n:3,d:12},{n:5,d:20},{n:25,d:100},{n:6,d:8},{n:9,d:12},{n:15,d:20},{n:75,d:100},{n:6,d:4},{n:10,d:4}]);
+    num=e.n; den=e.d; visualKind=(den===20||den===100)?'neutral':'bar';
   } else if(kind==='tenths_d2f'){
-    num=RD(1,9);den=10;dec=module01Decimal(num,den);direction='d2f';visualKind='grouped';
+    num=RD(1,9); den=10; direction='d2f';
+  } else if(kind==='place_d2f'){
+    const r=rnd(); direction='d2f';
+    if(r<1/3){ num=RD(1,9); den=10; }
+    else if(r<2/3){ num=RD(1,9); den=100; }
+    else { do{num=RD(11,99);}while(num%10===0); den=100; }
   } else if(kind==='hundredths_d2f'){
-    do{num=RD(1,99);}while(num%10===0);den=100;dec=module01Decimal(num,den);direction='d2f';visualKind='neutral';
+    if(rnd()<0.3) num=RD(1,9); else do{num=RD(11,99);}while(num%10===0);
+    den=100; direction='d2f';
   } else if(kind==='improper_d2f'){
-    den=pick([10,100]);
-    do{num=RD(den+1,3*den-1);}while(num%den===0||(den===100&&num%10===0));
-    dec=module01Decimal(num,den);direction='d2f';visualKind=den===10?'grouped':'neutral';
-  } else if(kind==='read_visual'){
-    den=pick([2,4,5,10,20,25,50,100]);num=[20,25,50].includes(den)?module01AccessibleNumerator(den):RD(1,den-1);dec=module01Decimal(num,den);direction='visual';visualKind=module01VisualKindForDen(den);
+    const whole=RD(1,3), part=pick([{n:1,d:2},{n:1,d:4},{n:3,d:4},{n:RD(1,9,[5]),d:10}]);
+    num=whole*part.d+part.n; den=part.d; direction='d2f';
   }
 
-  reduced=module01Reduced(num,den);
-  let prompt='',display='',answers=[],qcm=null,equality='';
-  if(direction==='f2d'){
-    prompt=format==='truefalse'?'Cette égalité est-elle vraie ?':(format==='qcm'?'Quelle est l’écriture décimale ?':'Donne l’écriture décimale :');
+  const reduced=module01Reduced(num,den);
+  let dec=module01Decimal(num,den);
+  const F=module01Frac(num,den);
+  let visualData=null, correctionVisualData=null;
+
+  const special=['compare','sum_f2d','extreme'].includes(kind);
+  if(!special&&direction==='f2d'){
+    steps=module01F2DSteps(num,den,dec);
+    aide=module01F2DAide(num,den);
+    if(num>den&&den>1) note='Attention : '+F+' n’est pas '+num+','+den+'. La barre de fraction n’est pas une virgule.';
+    else if(den===100&&num<10) note='Attention : '+F+' = '+dec+' et non 0,'+num+' (0,'+num+' vaut '+num+' '+module01PlaceName(1,num)+').';
+    else if(kind==='reducible_f2d') note='';
+    if(kind==='reducible_f2d'){
+      const g=GCD(num,den);
+      steps=['On simplifie d’abord par '+g+' : $$'+module01FracLatex(num,den)+'='+module01FracLatex(num+'\\div'+g,den+'\\div'+g)+'='+module01FracLatex(reduced.num,reduced.den)+'$$'].concat(module01F2DSteps(reduced.num,reduced.den,dec).slice(-1));
+      aide=['Simplifie d’abord la fraction : divise le numérateur et le dénominateur par un même nombre.','Tu dois retrouver une fraction à connaître : '+module01Frac(1,2)+', '+module01Frac(1,4)+', '+module01Frac(3,4)+', '+module01Frac(3,2)+' ou '+module01Frac(5,2)+'.'];
+    }
     if(format==='open'){
-      display='$$'+module01FracLatex(num,den)+'=[[dec]]$$'; answers=[dec];
+      prompt='Donne l’écriture décimale de '+F+'.';
+      display='$$'+module01FracLatex(num,den)+' = [[dec]]$$'; answers=[dec];
     } else if(format==='qcm'){
+      prompt='Quelle est l’écriture décimale de '+F+'&nbsp;?';
       display='$$'+module01FracLatex(num,den)+'$$';
-      qcm=module01Qcm(dec,module01DecimalDistractors(num,den,dec)); answers=[qcm.correctIndex];
+      const distractors=kind==='fixed_f2d'?module01OfficialDecimalDistractors(num,den,dec):module01ImproperDecimalDistractors(num,den,dec);
+      qcm=module01QcmFrom(dec,distractors); answers=[qcm.correctIndex]; feedback=qcm.feedback;
     } else {
-      const truth=!!q.options.truth;
-      const shown=truth?dec:module01DecimalDistractors(num,den,dec)[0];
-      equality='$$'+module01FracLatex(num,den)+'='+shown+'$$';display=equality;
-      qcm={options:['Vrai','Faux'],correctIndex:truth?'1':'2'};answers=[qcm.correctIndex];
+      const wrong=module01ImproperDecimalDistractors(num,den,dec);
+      const truth=rnd()<0.5, shownItem=truth?null:pick(wrong.slice(0,3));
+      const shown=truth?dec:shownItem.value;
+      equality='$$'+module01FracLatex(num,den)+' = '+shown+'$$'; display=equality;
+      prompt='Cette égalité est-elle vraie&nbsp;?';
+      qcm={options:['Vrai','Faux'],codes:[null,truth?null:shownItem.code],correctIndex:truth?'1':'2'}; answers=[qcm.correctIndex];
+      steps=steps.concat([truth?'L’égalité est vraie.':''+F+' = '+dec+' et non '+shown+' : l’égalité est fausse.']);
+      feedback=truth?{'2':'Si : '+F+' vaut bien '+dec+'.'}:{'1':shownItem.feedback};
+      extra.truth=truth; extra.shown=shown;
     }
-  } else if(direction==='d2f'){
-    prompt=format==='qcm'?'Quelle est la fraction irréductible correspondante ?':'Donne la fraction irréductible correspondante :';
+    visualData={num,den,reduced,visualKind,dec};
+    correctionVisualData=visualKind==='place-empty'?{kind:'place-value',value:dec}:(visualKind==='none'?null:{num,den,reduced,visualKind,showUnits:true});
+  } else if(!special&&direction==='d2f'){
+    fractionPolicy='equivalent';
+    steps=module01D2FSteps(dec,reduced);
+    aide=module01D2FAide(dec);
+    const D='$$'+dec+'$$';
     if(format==='open'){
-      display='$$'+dec+'=[[frac-simp]]$$';answers=[String(reduced.num),String(reduced.den)];
+      prompt='Écris '+D+' sous forme de fraction.';
+      const parts=module01DecimalParts(dec), shown=module01D2FShown(dec,reduced);
+      display='$$'+dec+' = [[frac-simp]]$$'; answers=[String(shown.num),String(shown.den)];
+      note=shown.simplified?'$$'+module01FracLatex(parts.num,parts.den)+'$$ et $$'+module01FracLatex(shown.num,shown.den)+'$$ sont justes toutes les deux : toute fraction égale convient.':'';
     } else {
-      display='$$'+dec+'$$';
-      const correct=module01FracLatex(reduced.num,reduced.den);
-      qcm=module01Qcm(correct,module01FractionDistractors(num,den,reduced));answers=[qcm.correctIndex];
+      prompt='Quelle fraction est égale à '+D+'&nbsp;?';
+      display=D;
+      const parts=module01DecimalParts(dec);
+      const correct=kind==='place_d2f'?module01FracLatex(parts.num,parts.den):module01FracLatex(reduced.num,reduced.den);
+      const distractors=kind==='place_d2f'?module01PlaceFractionDistractors(parts):module01FractionDistractors(num,den);
+      qcm=module01QcmFrom(correct,distractors); answers=[qcm.correctIndex]; feedback=qcm.feedback;
+      if(kind==='place_d2f') steps=steps.slice(0,2);
     }
-  } else {
-    prompt='Quelle écriture décimale est représentée ?';
-    display='$$[[dec]]$$';answers=[dec];
+    visualData={kind:'place-value',value:dec};
+    correctionVisualData={kind:'place-value',value:dec};
+  } else if(kind==='compare'){
+    // « Complète par <, = ou > » (sujet de référence n° 1, Q4 : comparer 7/4 et des décimaux).
+    const e=pick([{n:1,d:2},{n:1,d:4},{n:3,d:4},{n:3,d:2},{n:5,d:2},{n:5,d:4},{n:7,d:4},{n:1,d:10}]);
+    num=e.n; den=e.d; dec=module01Decimal(num,den);
+    const F=module01Frac(num,den);
+    const value=num/den, r=rnd();
+    let other;
+    if(r<0.25) other=value;
+    else if(r<0.45&&den<10){
+      // Piège : un décimal qui recopie les chiffres de la fraction (3/4 et 0,34 ; 5/2 et 5,2).
+      other=num<den?Number('0.'+num+den):Number(num+'.'+den);
+    }
+    else {
+      const deltas=value<0.5?[0.05,0.1,0.15]:[0.05,0.1,0.2,0.25];
+      let tries=0;
+      do{ other=Math.round((value+(rnd()<0.5?-1:1)*pick(deltas))*100)/100; tries++; }while((other<=0||Math.abs(other-value)<1e-9)&&tries<20);
+      if(other<=0) other=Math.round((value+0.1)*100)/100;
+    }
+    // Piège visé : un décimal qui reprend les chiffres de la fraction (3/4 et 0,34 ; 5/2 et 2,5…).
+    const otherText=String(Number(other.toFixed(2))).replace('.',',');
+    const fractionLeft=rnd()<0.5;
+    const sign=Math.abs(other-value)<1e-9?'=':(value<other?'<':'>');
+    const shownSign=fractionLeft?sign:(sign==='<'?'>':(sign==='>'?'<':'='));
+    const leftLatex=fractionLeft?module01FracLatex(num,den):otherText, rightLatex=fractionLeft?otherText:module01FracLatex(num,den);
+    prompt='Complète par &lt;, = ou &gt;.';
+    display='$$'+leftLatex+'$$[[compare]]$$'+rightLatex+'$$';
+    const signs=['<','=','>'];
+    qcm={options:signs,codes:[null,null,null],correctIndex:String(signs.indexOf(shownSign)+1),kind:'signs'};
+    answers=[qcm.correctIndex];
+    const sym=s=>s==='<'?'&lt;':(s==='>'?'&gt;':'=');
+    const leftText=fractionLeft?F:'$$'+otherText+'$$', rightText=fractionLeft?'$$'+otherText+'$$':F;
+    steps=[
+      'On écrit la fraction en écriture décimale : '+F+' = $$'+dec+'$$.',
+      sign==='='?'$$'+dec+'$$ et $$'+otherText+'$$ sont égaux.':'$$'+(fractionLeft?dec:otherText)+'$$ '+(shownSign==='<'?'&lt;':'&gt;')+' $$'+(fractionLeft?otherText:dec)+'$$ car '+module01RankReason(fractionLeft?dec:otherText,fractionLeft?otherText:dec)+'.',
+      leftText+' '+sym(shownSign)+' '+rightText
+    ];
+    aide=['Écris d’abord '+F+' en écriture décimale.','Compare ensuite les deux décimaux : les unités, puis les dixièmes, puis les centièmes.'];
+    feedback={};
+    signs.forEach((s,i)=>{ if(s!==shownSign) feedback[String(i+1)]=F+' = '+dec+'. Compare '+dec+' et '+otherText+' rang par rang.'; });
+    if(('0,'+num+den)===otherText||(num+','+den)===otherText) note='Attention : '+F+' n’est pas '+otherText+'. La barre de fraction n’est pas une virgule.';
+    extra={other,otherText,sign:shownSign,fractionLeft};
+    visualData=null; correctionVisualData=null; visualKind='none';
+    direction='compare';
+  } else if(kind==='sum_f2d'){
+    // « 1 + 3/100 » : sujet de référence n° 1, Q4.
+    const whole=RD(1,3), useHundredths=rnd()<0.6, k=RD(1,9);
+    den=useHundredths?100:10; num=k;
+    const total=whole+k/den;
+    dec=String(Number(total.toFixed(2))).replace('.',',');
+    const expr=whole+'+'+module01FracLatex(k,den);
+    prompt='Donne l’écriture décimale de $$'+expr+'$$.';
+    display='$$'+expr+' = [[dec]]$$'; answers=[dec];
+    const part=module01Decimal(k,den);
+    steps=[
+      module01Frac(k,den)+', c’est '+k+' '+module01PlaceName(useHundredths?2:1,k)+' : $$'+module01FracLatex(k,den)+'='+part+'$$',
+      '$$'+expr+'='+whole+'+'+part+'='+dec+'$$'
+    ];
+    aide=['Écris d’abord '+module01Frac(k,den)+' en écriture décimale.',whole>1?'Ajoute ensuite les '+whole+' unités.':'Ajoute ensuite 1 unité.'];
+    if(useHundredths) note='Attention : $$'+expr+'$$ = '+dec+' et non '+whole+','+k+' ('+whole+','+k+' = $$'+whole+'+'+module01FracLatex(k,10)+'$$).';
+    visualData={kind:'place-value',value:null}; correctionVisualData={kind:'place-value',value:dec};
+    visualKind='place-empty'; direction='sum';
+  } else if(kind==='extreme'){
+    // « Quel est le plus grand (petit) nombre ? » : fractions et décimaux mélangés.
+    const base=pick([{n:5,d:4},{n:3,d:2},{n:7,d:4},{n:5,d:2},{n:9,d:4}]);
+    num=base.n; den=base.d;
+    const whole=Math.floor(num/den), value=num/den;
+    const askMax=rnd()<0.5;
+    let items, tries=0;
+    do{
+      const k=RD(1,9), tenth=RD(1,9), hundredth=RD(11,99), sumDen=rnd()<0.6?100:10;
+      items=[
+        {label:module01FracLatex(num,den),value,display:module01Frac(num,den),decimal:module01Decimal(num,den)},
+        {label:whole+'+'+module01FracLatex(k,sumDen),value:whole+k/sumDen,display:'$$'+whole+'+'+module01FracLatex(k,sumDen)+'$$',decimal:String(Number((whole+k/sumDen).toFixed(2))).replace('.',',')},
+        {label:whole+','+tenth,value:whole+tenth/10,display:'$$'+whole+','+tenth+'$$',decimal:whole+','+tenth},
+        {label:(hundredth%10===0?null:whole+','+String(hundredth)),value:whole+hundredth/100,display:'$$'+whole+','+hundredth+'$$',decimal:whole+','+hundredth}
+      ];
+      tries++;
+    }while(tries<60&&(items.some(item=>!item.label)||new Set(items.map(item=>Math.round(item.value*100))).size<4||(()=>{const sorted=items.map(item=>item.value).sort((a,b)=>a-b);return sorted.some((v,i)=>i>0&&v-sorted[i-1]<0.04);})()));
+    const best=items.reduce((acc,item)=>askMax?(item.value>acc.value?item:acc):(item.value<acc.value?item:acc),items[0]);
+    const order=shuffleLocal(items.map((_,i)=>i));
+    const shuffled=order.map(i=>items[i]);
+    qcm={options:shuffled.map(item=>item.label),codes:shuffled.map(item=>item===best?null:'E-compare'),correctIndex:String(shuffled.indexOf(best)+1)};
+    answers=[qcm.correctIndex];
+    prompt=askMax?'Quel est le plus grand de ces nombres&nbsp;?':'Quel est le plus petit de ces nombres&nbsp;?';
+    display='';
+    const asDec=items.map(item=>item.display+' = $$'+item.decimal+'$$');
+    steps=[
+      'On écrit chaque nombre en écriture décimale : '+asDec.slice(0,2).join(' ; ')+'.',
+      'On compare les dixièmes, puis les centièmes : '+items.slice().sort((a,b)=>a.value-b.value).map(item=>'$$'+item.decimal+'$$').join(' &lt; ')+'.',
+      'Le plus '+(askMax?'grand':'petit')+' est '+best.display+'.'
+    ];
+    aide=['Écris chaque nombre en écriture décimale.','Compare d’abord les unités, puis les dixièmes, puis les centièmes.'];
+    feedback={};
+    const withValue=item=>item.display.replace(/\$\$/g,'')===item.decimal?'$$'+item.decimal+'$$':item.display+' = $$'+item.decimal+'$$';
+    shuffled.forEach((item,i)=>{ if(item!==best) feedback[String(i+1)]=withValue(item)+' est '+(askMax?'plus petit':'plus grand')+' que '+withValue(best)+'.'; });
+    extra={items:items.map(item=>({label:item.label,value:item.value,decimal:item.decimal})),askMax};
+    visualData=null; correctionVisualData=null; visualKind='none'; direction='extreme';
   }
 
+  // Le dessin du sens décimal → fraction est un tableau de numération rempli (lecture des rangs).
+  const aideHtml=visualData?module01AideVisual(visualData.kind?visualData:{...visualData}):'';
+  const hasVisual=!!aideHtml;
+  prompt=module01Tidy(prompt); display=module01Tidy(display); equality=module01Tidy(equality);
+  if(qcm&&qcm.kind!=='signs') qcm.options=qcm.options.map(option=>['Vrai','Faux'].includes(option)?option:module01TidyLatex(option));
+  if(feedback) Object.keys(feedback).forEach(key=>{feedback[key]=module01Tidy(feedback[key]);});
   return {
-    module:mod,q,scope:{},answers,rawStatement:prompt,rawFooter:display,hasSvg:true,
-    module01:{kind,format,direction,num,den,dec,reduced,visualKind,qcm,prompt,display,equality}
+    module:mod,q,scope:{},answers,rawStatement:prompt,rawFooter:display,hasSvg:hasVisual,
+    correctionSteps:steps.filter(Boolean).slice(0,3).map(module01Tidy),
+    correctionNote:module01Tidy(note),
+    distractorFeedback:feedback||null,
+    aideSteps:aide.slice(0,2).map(module01Tidy),
+    aideHtml,
+    module01:{kind,format,direction,num,den,dec,reduced,visualKind,visualData,correctionVisualData,qcm,prompt,display,equality,fractionPolicy,extra}
   };
 }
 
@@ -3483,26 +3786,40 @@ function renderAverageModule(inst,correction=false,mode=null){
 function module01VisualHtml(data,correction=false){
   const component=globalThis.MATHSGO_VISUALS&&globalThis.MATHSGO_VISUALS.get('arithmetic.fraction-decimal-grid');
   if(!component) throw new Error('Le composant arithmetic.fraction-decimal-grid doit être chargé avant dnb_01.');
+  if(!data) return '';
   return component.render(data,correction);
 }
 function renderModule01(inst,correction=false,mode=null){
   if(mode===null) mode=document.getElementById('visualMode').value;
   const d=inst.module01;
   let html='<div class="question module01-prompt">'+renderMathSegments(d.prompt)+'</div>';
-  if(d.qcm) html+='<div class="module01-source">'+renderMathSegments(d.display)+'</div>';
-  if(!isWithoutVisuals(mode)) html+=module01VisualHtml(d,correction);
-  else html+=visualPlaceholder(mode);
+  // Le dessin n'est jamais la réponse : dans la question, c'est l'aide (sans « 1 » sur les unités) ;
+  // dans la correction, les unités complètes sont repérées et le tableau de numération est rempli.
+  const visualData=correction?(d.correctionVisualData||null):(d.visualData||null);
+  if(d.qcm&&d.display) html+='<div class="module01-source">'+renderMathSegments(d.display.replace('[[compare]]',module01CompareSlot(d,correction)))+'</div>';
+  if(visualData){
+    if(!isWithoutVisuals(mode)) html+=module01VisualHtml(visualData,correction);
+    else html+=visualPlaceholder(mode);
+  }
   if(d.qcm){
-    html+='<div class="options module01-options options-'+d.qcm.options.length+'">';
+    const signs=d.qcm.kind==='signs';
+    html+='<div class="options module01-options'+(signs?' module01-sign-options':'')+' options-'+d.qcm.options.length+'">';
     d.qcm.options.forEach((option,i)=>{
       const isCorrect=correction&&String(i+1)===String(d.qcm.correctIndex);
-      html+='<div class="opt '+(isCorrect?'correct':'')+'"><strong>'+String.fromCharCode(65+i)+'.</strong> '+renderMathSegments('$$'+option+'$$')+'</div>';
+      const code=d.qcm.codes&&d.qcm.codes[i]?' data-error-code="'+escapeHtml(d.qcm.codes[i])+'"':'';
+      const label=signs?'<span class="module01-sign">'+escapeHtml(option)+'</span>':(['Vrai','Faux'].includes(option)?option:renderMathSegments('$$'+option+'$$'));
+      html+='<div class="opt '+(isCorrect?'correct':'')+'"'+code+'><strong>'+String.fromCharCode(65+i)+'.</strong> '+label+'</div>';
     });
     html+='</div>';
   } else {
     html+='<div class="footer module01-answer">'+renderMathSegments(renderPlaceholders(d.display,inst.answers,correction?'correction':'question'))+'</div>';
   }
   return html;
+}
+function module01CompareSlot(d,correction){
+  const sign=d.extra&&d.extra.sign;
+  const shown=correction&&sign?escapeHtml(sign):'…';
+  return '<span class="module01-compare-slot" style="display:inline-block;min-width:1.5em;margin:0 .3em;padding:0 .12em;border-bottom:.08em solid currentColor;text-align:center;line-height:1.1'+(correction?';color:#0b7c67':'')+'">'+shown+'</span>';
 }
 
 function fractionOpsVisualHtml(data,correction=false){
@@ -4059,6 +4376,8 @@ const LEVEL_4E_QUESTIONS={
 // Le filtre DNB reste volontairement classique : calculs directs et QCM
 // courts sur la distributivité simple, sans manipulation ni identité remarquable.
 const LEVEL_DNB_QUESTIONS={
+  // dnb_01 : le vrai/faux (type 11) n'est pas une forme du DNB général.
+  dnb_01:[1,2,3,4,5,6,9,10,13,15,16,17,19,21,22,23],
   dnb_12:[1,2,3,4,5,6,7,8,9,15,16,17]
 };
 
