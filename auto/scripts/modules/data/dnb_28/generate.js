@@ -81,6 +81,8 @@
     });
     return chosen;
   }
+  // Correction d'un QCM : 2 étapes, puis la phrase du piège choisi, sur une ligne
+  // (la carte « Comment on trouve » a une hauteur fixe, au téléphone comme à l'ordinateur).
   function qcm(correct,distractors,shuffle,{keepOrder=false}={}){
     const all=[{...correct,code:'correct'},...distractors];
     const ordered=keepOrder?all.slice().sort((a,b)=>(a.order??a.value)-(b.order??b.value)):shuffle(all);
@@ -92,7 +94,7 @@
       correctIndex,feedback
     };
   }
-  function answerLetter(correctIndex){return 'c’est la réponse '+letterOf(correctIndex-1)+'.';}
+  function answerLetter(correctIndex){return 'réponse '+letterOf(correctIndex-1)+'.';}
 
   function base(module,question,kind,scope,answers,data,fields){
     return {
@@ -188,20 +190,23 @@
     const f=event.fav.length,value=f/faces,g=gcd(f,faces);
     const showSimplified=g>1&&randomInt(0,1)===1;
     const correct=showSimplified?{n:f/g,d:faces/g,value}:{n:f,d:faces,value};
-    const notText=event.kind==='pair'?'un nombre impair':event.kind==='impair'?'un nombre pair':'une face qui ne convient pas';
+    // Les pièges de l'audit d'abord : fraction renversée, une seule face, erreur
+    // de comptage ; puis, à défaut, diviser par les autres faces ou le contraire.
+    const recount={code:'count',feedback:'Recompte les faces'+NB+': '+listText(event.fav)+'.'};
+    const counts=f>1&&randomInt(0,1)===1?[{n:f-1,d:faces,...recount},{n:f+1,d:faces,...recount}]:[{n:f+1,d:faces,...recount},f>1?{n:f-1,d:faces,...recount}:null];
     const candidates=[
-      {n:faces,d:f,code:'reversed',feedback:'Une probabilité ne dépasse jamais 1'+NB+': le nombre de faces en tout s’écrit en bas.'},
-      f!==1?{n:1,d:faces,code:'single-face',feedback:frac(1,faces)+', c’est pour une seule face. Ici, '+f+' faces conviennent.'}:null,
-      faces-f>0?{n:f,d:faces-f,code:'over-unfavorable',feedback:'Tu as divisé par les faces qui ne conviennent pas. On divise par toutes les faces'+NB+': '+faces+'.'}:null,
-      {n:faces-f,d:faces,code:'complement',feedback:'Ça, c’est la probabilité d’obtenir '+notText+'.'},
-      {n:f+1,d:faces,code:'count',feedback:'Recompte les faces qui conviennent'+NB+': '+listText(event.fav)+'.'},
-      f>1?{n:f-1,d:faces,code:'count',feedback:'Recompte les faces qui conviennent'+NB+': '+listText(event.fav)+'.'}:null
+      {n:faces,d:f,code:'reversed',feedback:'Une probabilité ne dépasse jamais 1.'},
+      {n:1,d:faces,code:'single-face',feedback:'Ça, c’est pour une seule face.'},
+      counts[0],
+      faces-f>0?{n:f,d:faces-f,code:'over-unfavorable',feedback:'On divise par toutes les faces'+NB+': '+faces+'.'}:null,
+      {n:faces-f,d:faces,code:'complement',feedback:'Ça, c’est la probabilité contraire.'},
+      counts[1]
     ];
     const set=qcm(correct,pickDistractors(value,candidates),shuffle);
     const final=fracChain(f,faces);
     return base(module,question,'de-qcm',{faces,f,event:event.kind,shown:correct.n+'/'+correct.d},[set.correctIndex],{options:set.options,correctIndex:set.correctIndex},{
       prompt:q('On lance un dé équilibré à 6 faces numérotées de 1 à 6.<br>Quelle est la probabilité d’obtenir '+event.text+' ?'),
-      steps:['Faces en tout'+NB+': '+strong(faces),event.title+NB+': '+listText(event.fav)+facesCount(event.fav),'$$'+pLabel(event.label)+' = '+final+'$$'+NB+': '+answerLetter(set.correctIndex)],
+      steps:['Faces qui conviennent'+NB+': '+listText(event.fav)+'.','$$'+pLabel(event.label)+' = '+final+'$$'+NB+': '+answerLetter(set.correctIndex)],
       feedback:set.feedback,
       aide:['Écris les faces qui conviennent.'+templateFraction('faces qui conviennent','faces en tout'),'Le dé a 6 faces'+NB+': 1, 2, 3, 4, 5, 6. Entoure celles qui conviennent.']
     });
@@ -264,12 +269,10 @@
     const n=randomInt(Math.max(8,2*d+1),20);
     const fav=Array.from({length:Math.floor(n/d)},(_,i)=>(i+1)*d),f=fav.length;
     const label='multiple de '+d;
-    const note=n%d===0?'Attention'+NB+': la carte '+n+' compte aussi, '+n+' est un multiple de '+d+'.':'';
     return base(module,question,'cartes',{n,d,f},[f,n],{},{
       prompt:q('On choisit au hasard une carte parmi '+n+' cartes numérotées de 1 à '+n+'.<br>Quelle est la probabilité d’obtenir un multiple de '+d+' ?'),
       footer:fractionFooter(label),
       steps:['Cartes en tout'+NB+': '+strong(n),'Multiples de '+d+NB+': '+listText(fav)+' ('+strong(f)+' cartes)',pLine(label,f,n)],
-      note,
       aide:['Écris la liste des multiples de '+d+' jusqu’à '+n+'.'+templateFraction('multiples de '+d,'cartes en tout'),'Les multiples de '+d+' sont dans la table de '+d+NB+': '+d+', '+(2*d)+'…'],
       aideHtml:chipsHtml(Array.from({length:n},(_,i)=>i+1))
     });
@@ -283,13 +286,13 @@
     const repeated=Object.keys(counts).filter(letter=>counts[letter]>=2);
     const letter=choose(repeated,randomInt);
     const k=counts[letter],n=letters.length,m=Object.keys(counts).length;
-    const allLetters='On compte toutes les lettres, même celles qui se répètent'+NB+': '+n+' lettres en tout.';
+    const allLetters='Compte toutes les cases'+NB+': '+n+'.';
     const candidates=[
-      {n:1,d:n,code:'once',feedback:'La lettre '+letter+' apparaît '+k+' fois dans le mot'+NB+': '+k+' cases conviennent.'},
+      {n:1,d:n,code:'once',feedback:'Le '+letter+' apparaît '+k+' fois dans le mot.'},
       {n:k,d:m,code:'distinct-letters',feedback:allLetters},
-      {n:k,d:n-k,code:'over-others',feedback:'Tu as divisé par les autres lettres. On divise par toutes les lettres'+NB+': '+n+'.'},
+      {n:k,d:n-k,code:'over-others',feedback:'On divise par toutes les cases'+NB+': '+n+'.'},
       {n:1,d:m,code:'distinct-letters',feedback:allLetters},
-      {n:n,d:k,code:'reversed',feedback:'Une probabilité ne dépasse jamais 1'+NB+': le nombre de lettres en tout s’écrit en bas.'}
+      {n:n,d:k,code:'reversed',feedback:'Une probabilité ne dépasse jamais 1.'}
     ];
     const on=letters.map(value=>value===letter);
     const prompt=q('On choisit au hasard une lettre de ce mot. Chaque lettre a la même chance d’être choisie.<br>Quelle est la probabilité de choisir la lettre '+letter+' ?');
@@ -299,15 +302,14 @@
     if(randomInt(0,1)===1){
       return base(module,question,'mot',{word,letter,k,n,short:true},[k,n],{figure},{
         prompt,footer:fractionFooter(letter),
-        steps:['Lettres en tout'+NB+': '+strong(n),'Lettres '+letter+NB+': '+strong(k),pLine(letter,k,n)],
-        note:'On compte toutes les lettres, même celles qui se répètent.',
+        steps:['Cases en tout'+NB+': '+strong(n),'Cases '+letter+NB+': '+strong(k),pLine(letter,k,n)],
         aide
       });
     }
     const set=qcm({n:k,d:n,value:k/n},pickDistractors(k/n,candidates),shuffle);
     return base(module,question,'mot',{word,letter,k,n,short:false},[set.correctIndex],{figure,options:set.options,correctIndex:set.correctIndex},{
       prompt,
-      steps:['Lettres en tout'+NB+': '+strong(n),'Lettres '+letter+NB+': '+strong(k),'$$'+pLabel(letter)+' = '+fracChain(k,n)+'$$'+NB+': '+answerLetter(set.correctIndex)],
+      steps:['Cases en tout'+NB+': '+strong(n)+NB+'; cases '+letter+NB+': '+strong(k)+'.','$$'+pLabel(letter)+' = '+fracChain(k,n)+'$$'+NB+': '+answerLetter(set.correctIndex)],
       feedback:set.feedback,
       aide
     });
@@ -322,7 +324,7 @@
     return base(module,question,'piece-de',{side,f,event:event.kind},[f,T],{},{
       prompt:q('On lance une pièce équilibrée et un dé équilibré à 6 faces.<br>Quelle est la probabilité d’obtenir '+guillemets(side)+' et '+event.text+' ?'),
       footer:fractionFooter(''),
-      steps:['Issues en tout'+NB+': 2 × 6 = '+strong(T),'Issues qui conviennent'+NB+': '+listText(issues)+' ('+strong(f)+')',pLine('',f,T)],
+      steps:['Issues en tout'+NB+': 2 × 6 = '+strong(T),'Issues qui conviennent'+NB+': '+listText(issues)+', soit '+strong(f),pLine('',f,T)],
       aide:['Fais le tableau des issues'+NB+': 2 lignes (pile, face) et 6 colonnes (1 à 6).','Il y a 2 × 6 = 12 issues. Coche celles qui conviennent.'],
       aideHtml:issuesTableHtml(6)
     });
@@ -343,44 +345,44 @@
     let ask,label,value,n,lines,askedColor=absent;
     if(kind==='impossible'){
       ask='de tirer '+oneText(objet,absent);label=sing(absent);value=0;n=0;
-      lines=[groupTitle(objet,absent)+NB+': '+strong(0)+' sur '+T,'$$'+pLabel(label)+' = \\dfrac{0}{'+T+'} = 0$$'+NB+': l’événement est impossible'];
+      lines=['Aucune boule '+sing(absent)+NB+': '+strong(0)+' sur '+T+'.','$$'+pLabel(label)+' = \\dfrac{0}{'+T+'} = 0$$',' impossible'];
     }else if(kind==='certain'){
       const notAbsent=randomInt(0,1)===1;
       ask=notAbsent?'de tirer une boule qui n’est pas '+sing(absent):'de tirer une boule '+sing(present[0])+' ou '+sing(present[1]);
       label=notAbsent?'pas '+sing(absent):sing(present[0])+' ou '+sing(present[1]);value=1;n=T;
-      const title=notAbsent?'Boules qui ne sont pas '+plur(absent):'Boules '+plur(present[0])+' ou '+plur(present[1]);
-      lines=[title+NB+': '+strong(T)+' sur '+T+' (toutes)','$$'+pLabel(label)+' = \\dfrac{'+T+'}{'+T+'} = 1$$'+NB+': l’événement est certain'];
+      lines=['Les '+T+' boules conviennent (toutes).','$$'+pLabel(label)+' = \\dfrac{'+T+'}{'+T+'} = 1$$',' certain'];
     }else{
       const asked=randomInt(0,1);
       askedColor=present[asked];
       ask='de tirer '+oneText(objet,askedColor);label=sing(askedColor);n=counts[asked];value=n/T;
-      lines=['Boules en tout'+NB+': '+sumText(counts)+'. '+groupTitle(objet,present[asked])+NB+': '+strong(n),pLine(label,n,T)];
+      lines=[groupTitle(objet,present[asked])+NB+': '+strong(n)+' sur '+T+'.',pLine(label,n,T),''];
     }
     const prompt=q('Une urne contient '+contentText(objet,present,counts)+'.<br>On tire une boule au hasard. Quelle est la probabilité '+ask+' ?');
     const aide=['Une probabilité va de 0 (impossible) à 1 (certain).','Compte les boules qui conviennent.'+templateFraction('boules qui conviennent','boules en tout')];
     if(short){
       return base(module,question,'impossible-certain',{kind,T,short:true},[value],{},{
         prompt,footer:'$$'+pLabel(label)+' = [[formula]]$$',
-        steps:[lines[0]+'.',lines[1]+'.'],
+        steps:[lines[0],lines[1]+NB+':'+lines[2]+'.'],
         aide
       });
     }
     // Choix rangés dans l'ordre : 0, la fraction, 1, « On ne peut pas savoir ».
     const middle=kind==='entre'?{n,d:T}:(kind==='impossible'?{n:1,d:3}:{n:1,d:2});
-    const zeroWhy=kind==='certain'?'Ici, toutes les boules conviennent.':'Ici, il y a '+groupText(objet,askedColor,n)+'.';
-    const oneWhy=kind==='impossible'?'Ici, aucune boule n’est '+sing(absent)+'.':'Ici, il n’y a pas que des boules '+plur(askedColor)+'.';
+    // La correction dit déjà « certain » ou « impossible » : le piège reste court.
+    const zeroWhy=kind==='certain'?'':NB+': il y a '+groupText(objet,askedColor,n);
+    const oneWhy=kind==='impossible'?'':NB+': les boules ne sont pas toutes '+plur(askedColor);
     const options=[
-      {html:'$$0$$',code:value===0?'correct':'zero',feedback:'0, c’est pour un événement impossible. '+zeroWhy},
-      {html:frac(middle.n,middle.d),code:kind==='entre'?'correct':'one-per-color',feedback:'On compte les boules, pas les couleurs'+NB+': '+(kind==='impossible'?'il n’y a aucune boule '+sing(absent)+'.':'toutes les boules conviennent.')},
-      {html:'$$1$$',code:value===1?'correct':'one',feedback:'1, c’est pour un événement certain. '+oneWhy},
-      {html:'On ne peut pas savoir',code:'unknown',feedback:'On peut savoir'+NB+': on connaît toutes les boules de l’urne.'}
+      {html:'$$0$$',code:value===0?'correct':'zero',feedback:'0 veut dire impossible'+zeroWhy+'.'},
+      {html:frac(middle.n,middle.d),code:kind==='entre'?'correct':'one-per-color',feedback:'On compte les boules, pas les couleurs.'},
+      {html:'$$1$$',code:value===1?'correct':'one',feedback:'1 veut dire certain'+oneWhy+'.'},
+      {html:'On ne peut pas savoir',code:'unknown',feedback:'On connaît toutes les boules de l’urne.'}
     ];
     const correctIndex=options.findIndex(option=>option.code==='correct')+1;
     const feedback={};
     options.forEach((option,index)=>{if(option.code!=='correct') feedback[String(index+1)]=option.feedback;});
     return base(module,question,'impossible-certain',{kind,T,short:false},[correctIndex],{options:options.map(option=>({html:option.html,errorCode:option.code})),correctIndex},{
       prompt,
-      steps:[lines[0]+'.',lines[1]+(kind==='entre'?NB+': ':', ')+answerLetter(correctIndex)],
+      steps:[lines[0],lines[1]+NB+':'+(lines[2]?lines[2]+',':'')+' '+answerLetter(correctIndex)],
       feedback,
       aide
     });
@@ -419,8 +421,7 @@
       prompt:q(choose(CONTENANTS,randomInt)+' contient '+contentText(objet,colors,counts)+'.<br>On tire '+un(objet)+' '+objet.sing+' au hasard. Quelle est la probabilité de ne pas tirer '+oneText(objet,couleur)+' ?'),
       footer:fractionFooter(label),
       steps:[cap(objet.plur)+' en tout'+NB+': '+sumText(counts),cap(objet.plur)+' qui ne sont pas '+adj(objet,couleur,2)+NB+': '+sumText(others),pLine(label,f,T)],
-      note:'Autre méthode'+NB+': $$1 − '+tex(b,T)+' = '+tex(f,T)+'$$',
-      aide:['Compte '+(objet.fem?'toutes':'tous')+' les '+objet.plur+', puis '+(objet.fem?'celles':'ceux')+' qui ne sont pas '+adj(objet,couleur,2)+'.'+templateFraction(objet.plur+' pas '+adj(objet,couleur,2),objet.plur+' en tout'),'En tout'+NB+': '+counts.join(' + ')+' = '+T+' '+objet.plur+'.']
+      aide:['Compte '+(objet.fem?'toutes':'tous')+' les '+objet.plur+', puis '+(objet.fem?'celles':'ceux')+' qui ne sont pas '+adj(objet,couleur,2)+'.'+templateFraction(objet.plur+' pas '+adj(objet,couleur,2),objet.plur+' en tout'),'En tout'+NB+': '+counts.join(' + ')+' = '+T+' '+objet.plur+'. Autre méthode'+NB+': $$'+pLabel(label)+' = 1 − '+pLabel(adj(objet,couleur,1))+'$$.']
     });
   }
 
@@ -442,31 +443,29 @@
     }
     const f=counts[asked],T=sum(counts),couleur=colors[asked],label=adj(objet,couleur,1),value=f/T;
     const titleAsked=groupTitle(objet,couleur).toLowerCase();
-    const overOthers={n:f,d:T-f,code:'over-others',feedback:'Tu as divisé par les boules qui ne sont pas '+adj(objet,couleur,2)+'. On divise par toutes les boules'+NB+': '+T+'.'};
+    const overOthers={n:f,d:T-f,code:'over-others',feedback:'On divise par toutes les boules'+NB+': '+T+'.'};
+    const oneColor={n:1,d:3,code:'one-per-color',feedback:'On compte les boules, pas les couleurs.'};
+    const complement={n:T-f,d:T,code:'complement',feedback:'Ça, c’est la probabilité contraire.'};
+    const reversed={n:T,d:f,code:'reversed',feedback:'Une probabilité ne dépasse jamais 1.'};
     let candidates;
     if(pro){
       const others=[0,1,2].filter(i=>i!==asked);
       candidates=[
-        ...others.map(i=>({n:counts[i],d:T,code:'other-color',feedback:'Tu as compté les '+groupTitle(objet,colors[i]).toLowerCase()+'. Compte les '+titleAsked+'.'})),
-        overOthers,
-        {n:1,d:3,code:'one-per-color',feedback:'Il y a 3 couleurs, mais pas le même nombre de boules de chaque couleur'+NB+': on compte les boules.'},
-        {n:T-f,d:T,code:'complement',feedback:'Ça, c’est la probabilité de ne pas tirer '+oneText(objet,couleur)+'.'},
-        {n:T,d:f,code:'reversed',feedback:'Une probabilité ne dépasse jamais 1'+NB+': le nombre de boules en tout s’écrit en bas.'}
+        ...others.map(i=>({n:counts[i],d:T,code:'other-color',feedback:'Ça, ce sont les '+groupTitle(objet,colors[i]).toLowerCase()+'.'})),
+        overOthers,oneColor,complement,reversed
       ];
     }else{
       const g=gcd(f,T-f);
       candidates=[
         overOthers,
-        g>1?{n:f/g,d:(T-f)/g,code:'over-others-simplified',sameValueOk:true,feedback:frac(f/g,(T-f)/g)+' = '+frac(f,T-f)+'. C’est le nombre de '+titleAsked+' sur les autres boules. On divise par toutes les boules'+NB+': '+T+'.'}:null,
-        {n:1,d:3,code:'one-per-color',feedback:'Il y a 3 couleurs, mais pas le même nombre de boules de chaque couleur'+NB+': on compte les boules.'},
-        {n:T-f,d:T,code:'complement',feedback:'Ça, c’est la probabilité de ne pas tirer '+oneText(objet,couleur)+'.'},
-        {n:T,d:f,code:'reversed',feedback:'Une probabilité ne dépasse jamais 1'+NB+': le nombre de boules en tout s’écrit en bas.'}
+        g>1?{n:f/g,d:(T-f)/g,code:'over-others-simplified',sameValueOk:true,feedback:'Tu as divisé par '+(T-f)+', puis simplifié.'}:null,
+        oneColor,complement,reversed
       ];
     }
     const set=qcm({n:f,d:T,value},pickDistractors(value,candidates),shuffle);
     return base(module,question,'sac-qcm',{f,T,couleur,variant:pro?'pro':'reunion'},[set.correctIndex],{options:set.options,correctIndex:set.correctIndex},{
       prompt:q((pro?'Une urne':'Un sac')+' contient '+contentText(objet,colors,counts)+', indiscernables au toucher.<br>On tire une boule au hasard. Quelle est la probabilité d’obtenir '+oneText(objet,couleur)+' ?'),
-      steps:['Boules en tout'+NB+': '+sumText(counts),groupTitle(objet,couleur)+NB+': '+strong(f),'$$'+pLabel(label)+' = '+fracChain(f,T)+'$$'+NB+': '+answerLetter(set.correctIndex)],
+      steps:['En tout'+NB+': '+sumText(counts)+'. '+cap(adj(objet,couleur,2))+NB+': '+strong(f)+'.','$$'+pLabel(label)+' = '+fracChain(f,T)+'$$'+NB+': '+answerLetter(set.correctIndex)],
       feedback:set.feedback,
       aide:['Compte toutes les boules, puis les '+titleAsked+'.'+templateFraction(titleAsked,'boules en tout'),'En tout'+NB+': '+counts.join(' + ')+' = '+T+' boules.']
     });
