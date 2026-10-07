@@ -148,13 +148,13 @@ const MODULE_DNB_02 = {
     },
     {
       "n": 18,
-      "statement": "Calcule&nbsp;:",
+      "statement": "Calcule&nbsp;: $$A = ${expression}$$",
       "answer": "[\"result\"]",
       "options": {
         "decimal_kind": "priorities",
         "decimal_block": "additive"
       },
-      "footer": "$$A = ${expression} = [[formula]]$$"
+      "footer": "$$A = [[formula]]$$"
     }
   ]
 };
