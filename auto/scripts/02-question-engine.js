@@ -4803,7 +4803,8 @@ const LEVEL_5E_QUESTIONS={
   dnb_22:'all',
   dnb_23:'all',
   dnb_27:[1,2,3,4,5,7,8,11,12,13],
-  dnb_28:[1,2,3,4,5,6,8,9,10],
+  // dnb_28 : la pièce et le dé (type 7, deux épreuves) est un attendu de 3e.
+  dnb_28:[1,2,3,4,5,6,8,9,10,11],
   dnb_29:'all',
   dnb_30:'all',
   dnb_32:'all',
@@ -4818,7 +4819,8 @@ const LEVEL_4E_QUESTIONS={
   dnb_02:[1,3,4,7,8,9,10,11,13,15,16,17,18],
   // dnb_10 : l’opposé d’une parenthèse (type 8) est un automatisme de 3e.
   dnb_10:[1,2,3,4,6,7,9,10,11],
-  dnb_12:Array.from({length:18},(_,index)=>index+1)
+  dnb_12:Array.from({length:18},(_,index)=>index+1),
+  dnb_28:[1,2,3,4,5,6,8,9,10,11]
 };
 
 // Le filtre DNB reste volontairement classique : calculs directs et QCM
@@ -4829,7 +4831,9 @@ const LEVEL_DNB_QUESTIONS={
   // dnb_02 : l'encadrement entre deux entiers (type 4) reste en 5e-4e.
   dnb_02:[1,3,7,8,9,10,11,13,14,15,16,17,18],
   dnb_10:[1,2,3,4,6,7,8,9,10,11],
-  dnb_12:[1,2,3,4,5,6,7,8,9,15,16,17]
+  dnb_12:[1,2,3,4,5,6,7,8,9,15,16,17],
+  // dnb_28 : deux épreuves (type 7) jamais posées dans les automatismes 2026.
+  dnb_28:[1,2,3,4,5,6,8,9,10,11]
 };
 
 // Pendant la transition des programmes, ces contenus sont déjà travaillés
