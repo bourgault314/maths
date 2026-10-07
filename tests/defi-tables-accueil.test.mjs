@@ -39,9 +39,12 @@ test("l’accueil : Ma table et ses trois étapes, Réviser, Mon parcours, Mes c
   // dans Mon parcours.
   assert.doesNotMatch(html, /id="open-calculs"/, "plus de tuile « Mes calculs » sur l’accueil");
   assert.equal((html.match(/class="acc-lien"/g) || []).length, 1, "une seule tuile : Mon parcours");
-  // R5 (13/09, Q7) : « Voir ma fiche » ouvre l'écran de la fiche — le seul chemin.
-  assert.match(html, /id="acc-fiche"[^>]*aria-controls="fiche">Voir ma fiche</);
-  assert.equal((html.match(/Imprimer ma fiche</g) || []).length, 1, "un seul « Imprimer ma fiche », celui de l'écran de la fiche");
+  // R5 (13/09, Q7) : l'écran de la fiche a un seul chemin. Lot « Mon mélange
+  // sur l'accueil et l'expert » : il part de Mon parcours (« Imprimer ma
+  // fiche ») — « Voir ma fiche » a quitté l'accueil.
+  assert.doesNotMatch(html, /id="acc-fiche"|Voir ma fiche</);
+  assert.match(html, /id="parcours-fiche" class="parcours-imprimer" type="button" aria-controls="fiche">[\s\S]*?<span>Imprimer ma fiche<\/span><\/button>/);
+  assert.equal((html.match(/Imprimer ma fiche</g) || []).length, 2, "« Imprimer ma fiche » dans Mon parcours, et sur l'écran de la fiche");
   assert.match(html, /id="acc-notice-bouton"[^>]*aria-controls="acc-notice">Comment ça marche&nbsp;\?</);
   assert.match(html, /id="acc-notice" class="notice" data-notice hidden/);
   // Les trois étapes sont construites par renderAccueil, numérotées 1-2-3 ; la
@@ -159,9 +162,10 @@ test("la notice « Comment ça marche ? » : les règles, écrites une fois, clo
   assert.equal((texte.match(/<p>/g) || []).length, 6, "six lignes, une par sujet");
   // Lot « un seul système » : Mon mélange est libre — la notice ne parle plus
   // d'un mélange à réussir avant le test d'une nouvelle table. Lot « les
-  // trophées » : elle dit ce qu'il rapporte (un trophée avec 3, 6, puis 9 tables).
+  // trophées » : elle dit ce qu'il rapporte (une coupe avec 3, 6, puis 9 tables
+  // — le mot « trophée » est parti au lot « Mon mélange sur l'accueil et l'expert »).
   // Lot « retours de classe » : le nombre et son mot ne se séparent plus (&nbsp;).
-  assert.match(texte, /<p><b>Mon mélange\.<\/b> Dès 2&nbsp;tables passées, quand je veux&nbsp;: 20&nbsp;questions en 1&nbsp;min&nbsp;30\. Un trophée avec 3, 6, puis 9&nbsp;tables\.<\/p>/);
+  assert.match(texte, /<p><b>Mon mélange\.<\/b> Dès 2&nbsp;tables passées, quand je veux&nbsp;: 20&nbsp;questions en 1&nbsp;min&nbsp;30\. Une coupe avec 3, 6, puis 9&nbsp;tables\.<\/p>/);
   assert.doesNotMatch(texte, /avant de valider|acquise/, "ni verrou ni « acquise » dans la notice");
   assert.doesNotMatch(texte, /je m’entraîne 3 fois|25 produits|Champion|★ produits/);
   assert.equal((html.match(/data-notice hidden/g) || []).length, 2, "accueil + parcours");

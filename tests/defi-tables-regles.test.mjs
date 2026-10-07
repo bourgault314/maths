@@ -502,7 +502,7 @@ test("le parcours : « Mon mélange » en bouton (triangle dessiné) jusqu’aux
   assert.match(html, /\.cell\.is-star\.n4 \{/);
 });
 
-test("le résultat et les fêtes : 🎉 table passée et mélange, 🌟 étoile, un écran de rang, 👑 au sommet — sobres, sans son ; un mélange proposé, jamais exigé", () => {
+test("le résultat et les fêtes : 🎉 table passée et mélange, 🌟 étoile, un écran de rang, 👑 au sommet — sobres, sans son ; un mélange jamais exigé", () => {
   // Lot R2 : la fête est le cadre du verdict, en plus grand.
   assert.match(html, /verdict\.titre = `Table de \$\{validation\.table\} passée !`;/);
   assert.match(html, /verdict\.titre = melange\.tables\.length === PARCOURS_TABLES\.length \? "Mélange des 9 tables réussi !" : "Mélange réussi !";/, "l’événement n’a plus « escalierOuvert » : le titre compte les tables");
@@ -513,9 +513,10 @@ test("le résultat et les fêtes : 🎉 table passée et mélange, 🌟 étoile,
   assert.doesNotMatch(html, /new Audio\(|AudioContext/, "sans son");
   assert.doesNotMatch(html, /Réussis d’abord ton mélange|reviens valider ta table/, "plus de validation verrouillée");
   assert.match(html, /if \(trouve\("toutes-acquises"\)\) return "Tes 9 tables sont passées : l’escalier des étoiles est ouvert !";/, "c’est la neuvième table qui ouvre l’escalier");
-  assert.match(html, /if \(fete\.melange\) return fete\.melange\.trophee \? `Tu gagnes le trophée des \$\{fete\.melange\.trophee\} tables\\u00a0!` : "";/, "le mélange réussi n’ouvre rien : il rapporte un trophée, ou le verdict suffit");
-  assert.match(html, /titre\.textContent = `Je me teste sur mes \$\{etat\.melange\.tables\.length\}\\u00a0tables`;/, "une table vient d’être passée : le mélange est proposé");
-  assert.match(html, /const defi = fete\.validation && !enSeance\(\) && state\.origin !== "decouverte" \? boutonMelange\(\) : null;/);
+  assert.match(html, /if \(fete\.melange\) return fete\.melange\.trophee \? `Tu gagnes la coupe des \$\{fete\.melange\.trophee\} tables\\u00a0!` : "";/, "le mélange réussi n’ouvre rien : il rapporte une coupe, ou le verdict suffit");
+  // Lot « Mon mélange sur l'accueil et l'expert » : plus de bouton « Je me
+  // teste sur mes N tables » après une table passée — Mon mélange est sur l'accueil.
+  assert.doesNotMatch(html, /Je me teste sur mes|boutonMelange\(\)/);
   assert.match(html, /verdict\.titre = "Nouveau rang !";/, "un rang gagné sans autre nouvelle a sa fête à lui");
 });
 
@@ -532,7 +533,7 @@ test("le lancement : le mélange se joue en 1 min 30, comme la validation d’un
 
 test("les scripts modifiés ont un nouveau numéro de cache, et la copie serveur du moteur est identique", async () => {
   assert.match(html, /defi_tables_core\.js\?v=20261005-1/);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261006-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261007-1/);
   const moteur = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie), "_serveur/public/prof/defi_tables_mon_parcours.js doit être la copie octet pour octet du moteur");

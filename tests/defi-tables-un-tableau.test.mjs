@@ -205,7 +205,10 @@ test("Mon mélange : « tables 2, 5 et 10 », « mes 9 tables » (« mes N table
   assert.equal(tablesDuMelange([2, 10]), "tables 2 et 10");
   assert.equal(tablesDuMelange([2, 3, 4, 5, 6, 7, 8, 10]), "tables 2, 3, 4, 5, 6, 7, 8 et 10");
   assert.equal(tablesDuMelange([...P.TABLES]), "mes 9 tables");
-  assert.doesNotMatch(html, /etape\.type === "melange"/, "la carte de séance n’a plus d’étape « Mon mélange »");
+  // Lot « Mon mélange sur l'accueil et l'expert » : la carte de séance n'a
+  // d'étape « Mon mélange » que pour l'élève aux 9 tables (son détail :
+  // « mes 9 tables · 1 min 30 », comme l'étoile) — jamais sur une table.
+  assert.match(html, /: etape\.type === "etoile" \|\| etape\.type === "melange" \? etape\.detail/);
   // Lot « trophées » : dans Mon parcours, à côté des trois coupes, la liste
   // jusqu'à 3 tables, puis « mes N tables » (court, sur une ligne).
   assert.match(html, /tables\.textContent = etat\.melange\.tables\.length <= 3 \? tablesDuMelange\(etat\.melange\.tables\) : `mes \$\{etat\.melange\.tables\.length\}\\u00a0tables`;/, "Mon parcours");

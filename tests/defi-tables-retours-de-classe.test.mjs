@@ -104,11 +104,13 @@ test("4-5-6-7 : le test en 5e étape, annoncé, seulement si la marche 7 est ré
   let s = jouerSeance(avecDepart(4), jour(1), neuf, 3);
   assert.equal(s.programme.raccourciEnFin, true);
   assert.deepEqual(s.noms, [4, 5, 6, 7, "test"]);
-  // 8 sur 10 à la marche 7 : pas de test, et la marche 8 de demain est « Dans le désordre » tant qu'elle n'est pas réussie.
+  // 8 sur 10 à la marche 7 : pas de test ; demain, la marche 8 se joue en
+  // marche 7 refaite tant que la marche 7 n'a pas 9 sur 10 (lot « Mon
+  // mélange sur l'accueil et l'expert » : avant, « Dans le désordre »).
   s = jouerSeance(avecDepart(4), jour(1), etape => (etape.cle === "mixte" ? 2 : neuf(etape)), 3);
   assert.deepEqual(s.noms, [4, 5, 6, 7]);
   const demain = jouerSeance(s.parcours, jour(2), etape => (etape.cle === "mixte" ? 2 : neuf(etape)), 3);
-  assert.deepEqual(demain.noms, [5, 6, 7, 5], "8 sur 10 à la marche 7 : « Dans le désordre » à la place du test");
+  assert.deepEqual(demain.noms, [5, 6, 7, 7], "8 sur 10 à la marche 7 : la marche 7 refaite à la place du test");
   assert.equal(demain.parcours.tables[3].acquise, null);
   // Le test raté : la marche 7 en reprise ne rouvre pas un second test le même jour.
   const rate = jouerSeance(avecDepart(5), jour(1), etape => (etape.type === "validation" ? 6 : neuf(etape)), 3);
@@ -131,7 +133,7 @@ test("la marche 7 à 9 sur 10 suffit : ni les marches 5 et 6 à 9 sur 10, ni la 
   const ouverte = P.programmeDeSeance(p, P.ouvrirSeance(p, {aujourdhui: jour(3), table: 3}), jour(3));
   assert.equal(ouverte.etapes[3].conditionnelle, true, "même la rangée pleine : le test est annoncé « si j'ai 9 sur 10 juste avant »");
   s = jouerSeance(p, jour(3), etape => (etape.cle === "mixte" ? 2 : 0), 3);
-  assert.deepEqual(s.noms, [5, 6, 7, 5], "8 sur 10 à la marche 7 : pas de test, même la rangée pleine");
+  assert.deepEqual(s.noms, [5, 6, 7, 7], "8 sur 10 à la marche 7 (deux fois) : pas de test, même la rangée pleine");
   // Le moteur ne lit plus la rangée pour le test : « prete » ne sert plus.
   assert.doesNotMatch(moteur, /function tablePrete\(|avantLaSeptOk/);
   assert.equal(P.ouvrirSeance(p, {aujourdhui: jour(3), table: 3}).prete, false);
@@ -351,7 +353,7 @@ test("la fiche de l'élève a des cases carrées ; celle du professeur garde les
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie du serveur identique ; « Ajouter des élèves » propose 1 dans une classe qui a déjà des élèves", () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261006-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261007-1/);
   assert.match(html, /defi_tables_core\.js\?v=20261005-1/, "le noyau n'a pas changé");
   const copie = readFileSync(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url), "utf8");
   assert.equal(copie, readFileSync(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url), "utf8"));

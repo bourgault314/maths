@@ -462,10 +462,10 @@ test("11. Mon mélange compact : le triangle qui le lance, « Mon mélange » et
   };
   const avecMelange = (p, reussi) => P.normaliserParcours({...p, melange: {...p.melange, dernier: AUJ, score: 19, reussi}});
   // Léa : 3 tables passées, jamais joué.
-  assert.deepEqual(dessin(lea()), {gagnes: ["", "", ""], nom: "Trophées de Mon mélange (avec 3, 6 et 9 tables) : aucun pour l’instant"});
+  assert.deepEqual(dessin(lea()), {gagnes: ["", "", ""], nom: "Coupes de Mon mélange (avec 3, 6 et 9 tables) : aucune pour l’instant"});
   assert.deepEqual(dessin(avecMelange(lea(), 2)).gagnes, ["", "", ""], "réussi avec 2 tables : pas encore de trophée");
-  assert.deepEqual(dessin(avecMelange(lea(), 3)), {gagnes: ["is-gagne", "", ""], nom: "Trophées de Mon mélange (avec 3, 6 et 9 tables) : gagné avec 3 tables"});
-  assert.deepEqual(dessin(avecMelange(lea(), 7)), {gagnes: ["is-gagne", "is-gagne", ""], nom: "Trophées de Mon mélange (avec 3, 6 et 9 tables) : gagné avec 3 et 6 tables"});
+  assert.deepEqual(dessin(avecMelange(lea(), 3)), {gagnes: ["is-gagne", "", ""], nom: "Coupes de Mon mélange (avec 3, 6 et 9 tables) : gagnée avec 3 tables"});
+  assert.deepEqual(dessin(avecMelange(lea(), 7)), {gagnes: ["is-gagne", "is-gagne", ""], nom: "Coupes de Mon mélange (avec 3, 6 et 9 tables) : gagnées avec 3 et 6 tables"});
   assert.deepEqual(dessin(avecMelange(lea(), 9)).gagnes, ["is-gagne", "is-gagne", "is-gagne"]);
   assert.match(html, /\.mp-trophees \{ display: inline-flex; align-items: center; gap: 3px; flex: 0 0 auto; \}/);
   assert.match(html, /\.mp-trophees b \{ display: inline-flex; width: 26px; height: 26px; color: #c3ced8; \}/, "grises…");
