@@ -219,7 +219,9 @@ function balancedFormatsForCount(count){
 }
 
 function assignReductionFormats(entries){
-  const simpleKinds=['one_no_cancel','one_cancel','already_reduced'];
+  // Types 1 et 2 : une fois sur deux en QCM. Les autres types de dnb_10
+  // ont un format fixe, décidé dans makeReductionInstance.
+  const simpleKinds=['one_no_cancel','one_cancel'];
   const formatsByKind={};
 
   simpleKinds.forEach(kind=>{
@@ -231,7 +233,7 @@ function assignReductionFormats(entries){
     formatsByKind[kind]=balancedFormatsForCount(count);
   });
 
-  const positions={one_no_cancel:0,one_cancel:0,already_reduced:0};
+  const positions={one_no_cancel:0,one_cancel:0};
 
   return entries.map(e=>{
     if(e.m.id!=='dnb_10' || !e.q.options) return e;
@@ -277,9 +279,8 @@ function visualPolicyForQuestion(m,q){
   if(m.id==='dnb_06') return 'optional';
   if(m.id==='dnb_07') return Number(q.n)===7?'none':'optional';
   if(m.id==='dnb_09') return [1,2,3,4,5,6,8,9,10,11,12,13,14,15,16,17,18,19].includes(Number(q.n))?'optional':'none';
-  if(m.id==='dnb_10'){
-    return q.options&&q.options.reduction_kind==='read_tiles'?'essential':'optional';
-  }
+  // dnb_10 : les tuiles ne sont qu’une aide (panneau Aide), jamais dans la question.
+  if(m.id==='dnb_10') return 'aid-only';
   if(m.id==='dnb_11') return Number(q.n)===7?'none':'optional';
   if(m.id==='dnb_13') return 'optional';
   if(m.id==='dnb_18') return [2,3,4,5,6,7,8,9,10].includes(Number(q.n))?'optional':'none';

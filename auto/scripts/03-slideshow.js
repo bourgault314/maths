@@ -458,6 +458,8 @@ button{font:inherit;-webkit-appearance:none;appearance:none;-webkit-tap-highligh
 .diapo.reduction-mode .reduction-answer{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-style:normal;font-size:clamp(3.4rem,5.6vw,6rem);font-weight:900;color:var(--answer);line-height:1.05;margin:7px auto 0}.diapo.reduction-mode .reduction-options{margin-top:14px;max-width:1320px}.diapo.reduction-mode .reduction-options .opt{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-style:normal;font-size:clamp(1.6rem,2.35vw,2.65rem);text-align:left}
 .diapo.reduction-mode .reduction-text-fallback{font-size:clamp(2.2rem,4vw,4.3rem);line-height:1.35;margin:18px auto}
 .diapo.reduction-mode .reduction-tiles svg{max-width:none}
+.diapo.reduction-mode .reduction-expression{font-size:clamp(3rem,5.2vw,6.6rem)}.diapo.reduction-mode .reduction-options .opt{font-size:clamp(1.6rem,2.6vw,3.2rem)}.diapo.reduction-mode .reduction-option{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif}.diapo.reduction-mode .interactive-polynomial-separator{margin:0 .14em}.diapo.reduction-mode .interactive-polynomial-response{margin-top:16px}
+@media(max-width:800px){.diapo.reduction-mode .reduction-prompt{font-size:clamp(1.3rem,5.9vw,1.7rem);line-height:1.15;margin-bottom:6px}.diapo.reduction-mode .reduction-expression{font-size:clamp(1.95rem,9.4vw,2.75rem);line-height:1.2;row-gap:2px}.diapo.reduction-mode .reduction-answer{font-size:clamp(2rem,9vw,2.7rem)}.diapo.reduction-mode .reduction-options .opt{font-size:clamp(1.3rem,5.6vw,1.6rem)}.diapo.reduction-mode .interactive-polynomial-response{font-size:clamp(1.9rem,8.4vw,2.5rem);margin-top:12px}}
 .diapo.squares-mode .footer,.diapo.squares-mode .math-display{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-style:normal}
 .diapo.squares-mode sup{font-size:.5em;line-height:0;vertical-align:.78em;margin-left:.02em}
 .diapo.squares-mode .answer-dots{min-width:1.2em}
@@ -1468,9 +1470,12 @@ Object.assign(courseCatalog,{
     ['Entiers voisins','Le prédécesseur d’un entier n est n − 1 ; son successeur est n + 1.<span class="course-example">Pour n = 12 : prédécesseur 11, successeur 13.</span>']
   ]},
   reduce_expression:{title:'Réduire une expression littérale',rules:[
-    ['Regrouper','On additionne seulement les termes de même nature : les x² ensemble, les x ensemble et les nombres ensemble.'],
-    ['Attention','x² et x ne sont pas des termes semblables : on ne peut pas les regrouper.'],
-    ['Exemple','<span class="course-equation">3x + 5 − x + 2 = 2x + 7</span><span class="course-example">Les tuiles de même forme représentent des termes de même nature.</span>']
+    ['Trois familles','Les 𝑥² (𝑥² = 𝑥 × 𝑥), les 𝑥 et les nombres. On ne regroupe que des termes de la même famille.'+'<svg class="course-visual" viewBox="0 0 360 112" role="img" aria-label="Une tuile de chaque famille : x², x et 1"><rect x="40" y="10" width="64" height="64" fill="#12A886" stroke="#111" stroke-width="2"/><text x="72" y="49" text-anchor="middle" class="math-text" font-size="22" font-weight="700" fill="#111">𝑥²</text><rect x="148" y="34" width="64" height="17" fill="#12A886" stroke="#111" stroke-width="2"/><text x="180" y="48" text-anchor="middle" class="math-text" font-size="15" font-weight="700" fill="#111">𝑥</text><rect x="270" y="34" width="17" height="17" fill="#12A886" stroke="#111" stroke-width="2"/><text x="278.5" y="48" text-anchor="middle" font-size="12" font-weight="700" fill="#111">1</text><text x="72" y="100" text-anchor="middle" font-size="16" font-weight="800" fill="#17384d">les 𝑥²</text><text x="180" y="100" text-anchor="middle" font-size="16" font-weight="800" fill="#17384d">les 𝑥</text><text x="278.5" y="100" text-anchor="middle" font-size="16" font-weight="800" fill="#17384d">les nombres</text></svg>'],
+    ['Le signe reste avec le terme','<span>Dans <b>5 − 3𝑥 + 2𝑥</b>, les termes sont <b>5</b>, <b>−3𝑥</b> et <b>+2𝑥</b>.</span>'],
+    ['On additionne les coefficients','<span class="course-equation">3𝑥 + 2𝑥 = (3 + 2)𝑥 = 5𝑥</span><span class="course-example">2𝑥 − 5𝑥 = −3𝑥<br>4𝑥 − 4𝑥 = 0<br>𝑥 + 𝑥 = 2𝑥 (on écrit 𝑥, pas 1𝑥)</span>'],
+    ['Exemple','<span class="course-equation">3𝑥 + 5 − 𝑥 + 2</span><span class="course-equation">= 3𝑥 − 𝑥 + 5 + 2</span><span class="course-equation">= 2𝑥 + 7</span>'],
+    ['Somme ou produit&nbsp;?','<span class="course-equation">𝑥 + 𝑥 = 2𝑥</span><span class="course-equation">𝑥 × 𝑥 = 𝑥²</span><span class="course-example">3𝑥 × 2𝑥 = 3 × 2 × 𝑥 × 𝑥 = 6𝑥²</span>'],
+    ['Les parenthèses','<span class="course-equation">−(3𝑥 − 5) = −3𝑥 + 5</span><span class="course-example">Le − change le signe de chaque terme.</span><span class="course-equation">−4(2𝑥 + 3) = −8𝑥 − 12</span><span class="course-example">Le −4 multiplie les deux termes.</span>']
   ]},
   substitution:{title:'Calculer une expression pour une valeur donnée',rules:[
     ['Remplacer','On remplace chaque lettre par sa valeur, entre parenthèses si elle est négative.'],
@@ -3382,26 +3387,19 @@ function parseInteractivePolynomial(value){
 }
 function reductionResponseTermIndices(inst,polynomialCombinations){
   const reduction=inst&&inst.reduction||{};
+  const order=['x2','x','u'];
+  // Une case par famille présente dans l’énoncé (x², x, nombres), jamais
+  // selon le résultat : une annulation ne doit pas être révélée par la
+  // disparition de sa case.
+  if(Array.isArray(reduction.slotTypes)&&reduction.slotTypes.length){
+    return order.map((type,index)=>reduction.slotTypes.includes(type)?index:null).filter(index=>index!==null);
+  }
   const sourceTypes=new Set();
   (Array.isArray(reduction.groups)?reduction.groups:[]).forEach(group=>{
-    if(group&&['x2','x','u'].includes(group.type)&&Number(group.coeff)!==0) sourceTypes.add(group.type);
+    if(group&&order.includes(group.type)&&Number(group.coeff)!==0) sourceTypes.add(group.type);
   });
-  if(reduction.readCoeffs&&typeof reduction.readCoeffs==='object'){
-    ['x2','x','u'].forEach(type=>{
-      const coefficient=Number(reduction.readCoeffs[type]);
-      if(Number.isFinite(coefficient)&&coefficient!==0) sourceTypes.add(type);
-    });
-  }
-
-  // La forme de réponse dépend du degré présent au départ, jamais des termes
-  // qui survivent après réduction : une annulation ne doit pas être révélée
-  // par la disparition de sa case.
-  if(sourceTypes.has('x2')) return [0,1,2];
-  if(sourceTypes.has('x')) return [1,2];
-  if(sourceTypes.has('u')) return [2];
-
-  // Repli pour une ancienne instance qui ne porterait pas encore les données
-  // du plateau.
+  const fromGroups=order.map((type,index)=>sourceTypes.has(type)?index:null).filter(index=>index!==null);
+  if(fromGroups.length) return fromGroups;
   const resultIndices=[0,1,2].filter(index=>polynomialCombinations.some(combination=>Math.abs(Number(combination[index]))>1e-12));
   return resultIndices.length?resultIndices:[2];
 }
@@ -3602,20 +3600,30 @@ function interactiveSpecForInstance(inst,correctionHtml){
   }
 
   if(moduleId==='dnb_10'){
-    const polynomialCombinations=acceptedCombinations.map(combination=>parseInteractivePolynomial(combination[0])).filter(Boolean);
-    if(polynomialCombinations.length){
-      const terms=['x2','x','u'];
-      const responseIndices=reductionResponseTermIndices(inst,polynomialCombinations);
-      const compactCombinations=polynomialCombinations.map(combination=>responseIndices.map(index=>combination[index]));
+    const reduction=inst.reduction||{};
+    const terms=['x2','x','u'];
+    let coefficients=reduction.sums&&reduction.format==='direct'?terms.map(type=>Number(reduction.sums[type])||0):null;
+    if(!coefficients){
+      const parsed=acceptedCombinations.map(combination=>parseInteractivePolynomial(combination[0])).filter(Boolean)[0];
+      coefficients=parsed?parsed.map(value=>Number(String(value).replace(',','.'))):null;
+    }
+    if(coefficients){
+      const responseIndices=reductionResponseTermIndices(inst,[coefficients.map(String)]);
+      // Une case laissée vide vaut 0 : chaque famille nulle accepte « » ou « 0 ».
+      let combinations=[[]];
+      responseIndices.forEach(index=>{
+        const value=coefficients[index];
+        const choices=value===0?['','0']:[String(value)];
+        combinations=combinations.flatMap(prefix=>choices.map(choice=>prefix.concat(choice)));
+      });
       return {
         kind:'slots',layout:'polynomial',
         slots:responseIndices.map(index=>({
           term:terms[index],
-          label:index===0?'Coefficient de x carré':(index===1?'Coefficient de x':'Constante'),
-          initialValue:'0'
+          label:index===0?'Coefficient de x carré':(index===1?'Coefficient de x':'Nombre')
         })),
-        acceptedCombinations:compactCombinations,
-        expectedDisplay:'réponse : '+rawAnswers[0],
+        acceptedCombinations:combinations,
+        expectedDisplay:'réponse : '+(reduction.answer||rawAnswers[0]),
         keys:keypadKeysFor(inst)
       };
     }
