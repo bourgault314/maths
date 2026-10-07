@@ -258,6 +258,8 @@
     return coordinateFigureSvg({
       ...data,
       className:'coordinate-placement-svg',
+      // Placement : les nombres restent toujours au même endroit (sous l'axe horizontal, à gauche de l'axe vertical).
+      xLabelSide:data.xLabelSide||'below',yLabelSide:data.yLabelSide||'left',
       attributes:'data-coordinate-placement="1" data-coordinate-point-count="'+targets.length+'"'+(correction?' data-locked="1"':''),
       points:correction?targets.map(point=>({...point,role:'expected'})):[],
       path:correction&&targets.length===1?{x:targets[0].x,y:targets[0].y}:null,
