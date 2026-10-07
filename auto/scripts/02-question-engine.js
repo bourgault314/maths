@@ -287,23 +287,27 @@ function hasRepeatedNature(groups){
 }
 
 /*
-Les six modèles sont strictement équiprobables dans le sac du module :
-1. une seule nature, sans annulation ;
-2. une seule nature, avec annulation ;
-3. plusieurs natures, sans annulation ;
-4. plusieurs natures, avec annulation ;
-5. lecture de tuiles déjà regroupées.
-6. expression déjà réduite, sans termes semblables à regrouper.
+Module dnb_10 — Simplifier des expressions littérales (refonte d’octobre 2026).
+Types (numéros stables, le 5 « lire des tuiles » est retiré) :
+1. une seule famille de termes en lettre, même signe (saisie ou QCM) ;
+2. une seule famille de termes en lettre, signes mélangés (saisie ou QCM) ;
+3. plusieurs familles, chaque famille garde un seul signe (saisie) ;
+4. plusieurs familles avec changements de signe, 5 termes au plus (saisie) ;
+6. expression déjà réduite à reconnaître (QCM seulement) ;
+7. k(mx + n) dans une somme, forme du sujet de référence 2027 (saisie) ;
+8. opposé d’une parenthèse : 7x − (3x − 5) (saisie) ;
+9. produit de deux facteurs : 3a × 2a, 4 × 5y (QCM) ;
+10. somme ou produit : 3x + 2x ou 3x × 2x (QCM) ;
+11. k(ma + n) dans une somme, en QCM avec une autre lettre (QCM).
 
-Bornes validées :
-- coefficient d’un groupe : x² <= 4, x <= 5, unité <= 5 ;
-- charge totale par signe : x² <= 6, x <= 8, unité <= 10.
+Bornes : coefficient d’un terme x² <= 4, x <= 5, nombre <= 5 ;
+charge totale par signe : x² <= 6, x <= 8, nombre <= 10.
 */
 
 function makeOneNoCancel(){
-  const type=pick(['x2','x','u']);
+  const type=pick(['x2','x']);
   for(let tries=0;tries<500;tries++){
-    const sign=pick([-1,1]);
+    const sign=pick([-1,1,1]);
     const count=RD(2,3);
     const groups=[];
     for(let i=0;i<count;i++){
@@ -315,7 +319,7 @@ function makeOneNoCancel(){
 }
 
 function makeOneCancel(){
-  const type=pick(['x2','x','u']);
+  const type=pick(['x2','x']);
   for(let tries=0;tries<700;tries++){
     const count=RD(3,4);
     const groups=[];
@@ -352,13 +356,15 @@ function makeMultiCancel(){
   for(let tries=0;tries<1000;tries++){
     const typeCount=pick([2,3]);
     const types=shuffleLocal(['x2','x','u']).slice(0,typeCount);
-    const groupCount=RD(Math.max(4,typeCount+1),6);
+    const groupCount=RD(Math.max(4,typeCount+1),5);
     const sequence=distributeGroups(types,groupCount);
     const groups=sequence.map(type=>({
       type,
       coeff:nzRand(-typeLimit(type),typeLimit(type))
     }));
-    if(hasCancellation(groups) && hasRepeatedNature(groups) && validTileLoad(groups)){
+    const sums=coeffSums(groups);
+    const allZero=!sums.x2&&!sums.x&&!sums.u;
+    if(!allZero && hasCancellation(groups) && hasRepeatedNature(groups) && validTileLoad(groups)){
       return shuffleLocal(groups);
     }
   }
@@ -370,46 +376,115 @@ function makeMultiCancel(){
   ];
 }
 
-function makeReadCoeffs(){
-  const typeCount=pick([1,2,3]);
-  const types=shuffleLocal(['x2','x','u']).slice(0,typeCount);
-  const coeffs={x2:0,x:0,u:0};
-  types.forEach(type=>{
-    coeffs[type]=nzRand(-totalLimit(type),totalLimit(type));
-  });
-  return coeffs;
-}
-
-function makeAlreadyReduced(groupCount=null){
-  const count=groupCount||pick([2,2,3]);
-  const types=shuffleLocal(['x2','x','u']).slice(0,count);
-  return shuffleLocal(types.map(type=>({type,coeff:RD(1,typeLimit(type))})));
-}
-
 function makeAlreadyReducedQcmGroups(){
-  for(let tries=0;tries<100;tries++){
-    const groups=makeAlreadyReduced(2);
+  for(let tries=0;tries<200;tries++){
+    const types=shuffleLocal(['x2','x','u']).slice(0,2);
+    const groups=types.map((type,index)=>({type,coeff:index===1&&rnd()<.3?-RD(1,typeLimit(type)):RD(1,typeLimit(type))}));
     const a=groups[0].coeff,b=groups[1].coeff;
-    if(a*b!==a+b) return groups;
+    if(a+b!==0 && Math.abs(a+b)!==1 && a*b!==a+b) return groups;
   }
-  return [{type:'u',coeff:2},{type:'x',coeff:3}];
+  return [{type:'x2',coeff:3},{type:'x',coeff:1}];
 }
 
+/* ---------- Écriture des expressions (vrai signe −, lettre italique) ---------- */
+const REDUCTION_LETTERS={x:'𝑥',a:'𝑎',y:'𝑦',t:'𝑡'};
+const REDUCTION_POWERS={0:'',1:'',2:'²',3:'³',4:'⁴'};
+function redLetter(L){ return REDUCTION_LETTERS[L]||L; }
+function redFamilyBody(type,L){ return type==='x2'?redLetter(L)+'²':(type==='x'?redLetter(L):''); }
+function redPowerBody(power,L){ return power===0?'':redLetter(L)+REDUCTION_POWERS[power]; }
+// Monôme sans son signe : 3𝑥, 𝑥², 5.
+function redMonoAbs(coeff,body){
+  const a=Math.abs(coeff);
+  if(!body) return String(a);
+  return (a===1?'':String(a))+body;
+}
+// Un terme = {sign:'+'|'−', body:'3𝑥'}.
+function redPiece(coeff,body){ return {sign:coeff<0?'−':'+',body:redMonoAbs(coeff,body)}; }
+function redPiecesText(pieces){
+  return pieces.map((p,i)=>i===0?(p.sign==='−'?'−':'')+p.body:' '+p.sign+' '+p.body).join('');
+}
+function redPiecesHtml(pieces){
+  return pieces.map((p,i)=>'<span class="reduction-term">'+(i===0?(p.sign==='−'?'−':''):' '+p.sign+' ')+p.body+'</span>').join('');
+}
+function redGroupsPieces(groups,L){ return groups.map(g=>redPiece(g.coeff,redFamilyBody(g.type,L))); }
+function redSumsGroups(sums){
+  const out=[];
+  ['x2','x','u'].forEach(type=>{ const c=sums[type]||0; if(c!==0) out.push({type,coeff:c}); });
+  return out;
+}
+function redReducedText(sums,L){
+  const groups=redSumsGroups(sums);
+  return groups.length?redPiecesText(redGroupsPieces(groups,L)):'0';
+}
+function redMonomialText(coeff,power,L){
+  if(coeff===0) return '0';
+  return (coeff<0?'−':'')+redMonoAbs(coeff,redPowerBody(power,L));
+}
+// Liste de coefficients écrite comme une somme : 1 − 3 + 4.
+function redCoeffSum(coeffs){
+  return coeffs.map((c,i)=>i===0?(c<0?'−':'')+Math.abs(c):(c<0?' − ':' + ')+Math.abs(c)).join('');
+}
+// Facteur écrit dans un produit : un négatif placé après un × prend des parenthèses.
+function redFactor(coeff,body,afterTimes){
+  const text=(coeff<0?'−':'')+redMonoAbs(coeff,body);
+  return coeff<0&&afterTimes?'('+text+')':text;
+}
+function redNumberFactor(n,afterTimes){ return n<0?(afterTimes?'(−'+Math.abs(n)+')':'−'+Math.abs(n)):String(n); }
+const REDUCTION_FAMILY_NAMES={x2:'les 𝑥²',x:'les 𝑥',u:'les nombres'};
+function redFamilyName(type,L){ return type==='u'?'les nombres':'les '+redFamilyBody(type,L); }
+
+/* ---------- Aide : expression soulignée par famille + tuiles ---------- */
+const REDUCTION_UNDERLINES={
+  x2:'text-decoration:underline solid #17384d 3px;text-underline-offset:.2em',
+  x:'text-decoration:underline dashed #17384d 3px;text-underline-offset:.2em',
+  u:'text-decoration:underline wavy #17384d 2px;text-underline-offset:.24em'
+};
+function redFamiliesAideHtml(groups,L,withTiles){
+  const terms=groups.map((g,i)=>{
+    const p=redPiece(g.coeff,redFamilyBody(g.type,L));
+    const text=i===0?(p.sign==='−'?'−':'')+p.body:p.sign+' '+p.body;
+    return '<span style="'+REDUCTION_UNDERLINES[g.type]+'">'+text+'</span>';
+  }).join(' ');
+  const present=['x2','x','u'].filter(type=>groups.some(g=>g.type===type));
+  const legendNames={x2:'trait plein : '+redFamilyName('x2',L),x:'tirets : '+redFamilyName('x',L),u:'vagues : les nombres'};
+  let html='<div class="reduction-aide">'
+    +'<div class="reduction-aide-expression" style="font-family:\'Cambria Math\',\'STIX Two Math\',\'Times New Roman\',serif;font-weight:700;font-size:1.55em;line-height:2;text-align:center">'+terms+'</div>'
+    +'<div class="reduction-aide-legend" style="text-align:center;font-size:.9em;color:#33475b">'+present.map(type=>legendNames[type]).join(' · ')+'</div>';
+  if(withTiles && L==='x' && typeof globalThis.algebraTiles==='function'){
+    const tileTerms=groups.map(g=>({kind:g.type,count:Math.abs(g.coeff),sign:g.coeff<0?-1:1}));
+    html+='<div class="reduction-aide-tiles" style="max-width:560px;margin:6px auto 0">'+globalThis.algebraTiles({title:'Chaque terme en tuiles',terms:tileTerms})+'</div>';
+  }
+  return html+'</div>';
+}
+
+/* ---------- QCM : options + phrase de diagnostic par distracteur ---------- */
+function redFinishQcm(correct,candidates,fallback){
+  const options=[{text:correct,feedback:null}];
+  candidates.forEach(c=>{ if(c && c.text!==correct && !options.some(o=>o.text===c.text) && options.length<4) options.push(c); });
+  let bump=1;
+  while(options.length<4 && bump<40){
+    const f=fallback(bump++);
+    if(f && !options.some(o=>o.text===f.text)) options.push(f);
+  }
+  const shuffled=shuffleLocal(options);
+  const correctIndex=shuffled.findIndex(o=>o.feedback===null)+1;
+  const distractorFeedback={};
+  shuffled.forEach((o,i)=>{ if(o.feedback) distractorFeedback[String(i+1)]=o.feedback; });
+  return {options:shuffled.map(o=>o.text),correctIndex:String(correctIndex),distractorFeedback};
+}
 
 function simpleQcmGroups(kind){
   const type=pick(['x','x2']);
   const lim=typeLimit(type);
-
   if(kind==='one_no_cancel'){
     for(let tries=0;tries<300;tries++){
-      const a=RD(1,lim);
-      const b=RD(1,lim);
+      const a=RD(1,lim),b=RD(1,lim);
+      if(a*b===a+b) continue;
       const groups=[{type,coeff:a},{type,coeff:b}];
       if(validTileLoad(groups)) return groups;
     }
     return [{type,coeff:2},{type,coeff:3}];
   }
-
   for(let tries=0;tries<300;tries++){
     const b=RD(1,Math.max(1,lim-1));
     const a=RD(b+1,lim);
@@ -419,98 +494,279 @@ function simpleQcmGroups(kind){
   return [{type,coeff:4},{type,coeff:-2}];
 }
 
-function qcmPowerError(coefficient,type){
-  const a=Math.abs(coefficient);
-  const sign=coefficient<0?'-':'';
-  const body=type==='x2'?'𝑥^4':'𝑥^2';
-  return sign+(a===1?'':String(a))+body;
-}
-
-function qcmSamePower(coefficient,type){
-  const sums={x2:0,x:0,u:0};
-  sums[type]=coefficient;
-  return reducedLatex(sums);
-}
-
-function qcmMonomial(coefficient,power){
-  const sign=coefficient<0?'-':'';
-  const a=Math.abs(coefficient);
-  if(power===0) return sign+String(a);
-  const body=power===1?'𝑥':'𝑥^'+power;
-  return sign+(a===1?'':String(a))+body;
-}
-
-function qcmProductError(a,b,type){
-  return qcmMonomial(a*b,type==='x2'?4:2);
-}
-
-function makeAlreadyReducedQcm(groups){
-  const powers={u:0,x:1,x2:2};
-  const correct=expressionLatex(groups);
+function makeOneFamilyQcm(groups,L){
+  const type=groups[0].type,power=type==='x2'?2:1;
   const a=groups[0].coeff,b=groups[1].coeff,sum=a+b;
-  const ordered=[...groups].sort((g1,g2)=>powers[g1.type]-powers[g2.type]);
-  const low=ordered[0].type,high=ordered[1].type;
-  const distractors=[
-    qcmSamePower(sum,high),
-    low==='u'?String(sum):qcmSamePower(sum,low),
-    qcmMonomial(a*b,powers[groups[0].type]+powers[groups[1].type])
-  ];
-  const unique=[correct];
-  distractors.forEach(option=>{if(option!==correct&&!unique.includes(option)) unique.push(option);});
-  let bump=1;
-  while(unique.length<4){
-    const fallback=qcmSamePower(sum+bump,high);
-    if(!unique.includes(fallback)) unique.push(fallback);
-    bump++;
+  const fam=redFamilyBody(type,L);
+  const correct=redMonomialText(sum,power,L);
+  const candidates=[];
+  if(b<0){
+    candidates.push({text:redMonomialText(Math.abs(a)+Math.abs(b),power,L),feedback:'Tu as additionné '+Math.abs(a)+' et '+Math.abs(b)+' : le signe − fait partie du terme −'+redMonoAbs(b,fam)+'.'});
   }
-  const options=shuffleLocal(unique.slice(0,4));
-  return {options,correctIndex:String(options.indexOf(correct)+1)};
+  candidates.push({text:redMonomialText(sum,power*2,L),feedback:'On additionne des '+fam+' : le résultat reste en '+fam+', l’exposant ne change pas.'});
+  candidates.push({text:redMonomialText(a*b,power*2,L),feedback:'Tu as multiplié les deux termes. Ici, c’est une '+(b<0?'soustraction':'addition')+'.'});
+  if(b>0) candidates.push({text:redMonomialText(a*b,power,L),feedback:'Tu as multiplié '+a+' et '+b+' : il faut les additionner.'});
+  return redFinishQcm(correct,candidates,bump=>({text:redMonomialText(sum+bump,power,L),feedback:'Recompte les coefficients : '+redCoeffSum([a,b])+' = '+sum+'.'}));
 }
 
-function makeSimpleReductionQcm(groups){
-  const type=groups[0].type;
-  const a=groups[0].coeff;
-  const b=groups[1].coeff;
-  const isAddition=(a>0 && b>0);
+function makeAlreadyReducedQcm(groups,L){
+  const powers={u:0,x:1,x2:2};
+  const reordered=[groups[1],groups[0]];
+  const correct=redPiecesText(redGroupsPieces(reordered,L));
+  const a=groups[0].coeff,b=groups[1].coeff,sum=a+b;
+  const ordered=[...groups].sort((g1,g2)=>powers[g2.type]-powers[g1.type]);
+  const high=ordered[0].type,low=ordered[1].type;
+  const highBody=redFamilyBody(high,L),lowBody=redFamilyBody(low,L);
+  const diff='Tu as additionné des termes de familles différentes : '+(low==='u'?'un nombre':'des '+lowBody)+' et des '+highBody+' ne se regroupent pas.';
+  const candidates=[
+    {text:redMonomialText(sum,powers[high],L),feedback:diff},
+    {text:redMonomialText(sum,powers[low],L),feedback:diff},
+    {text:redMonomialText(a*b,powers[high]+powers[low],L),feedback:'Tu as multiplié les deux termes, mais c’est une '+(b<0?'soustraction':'addition')+'.'}
+  ];
+  return redFinishQcm(correct,candidates,bump=>({text:redMonomialText(sum+bump,powers[high],L),feedback:diff}));
+}
 
-  const correctCoeff=a+b;
-  const correct=qcmSamePower(correctCoeff,type);
-  let distractors=[];
-
-  if(isAddition){
-    distractors=[
-      qcmPowerError(correctCoeff,type),
-      qcmSamePower(a*b,type),
-      qcmProductError(a,b,type)
-    ];
-  } else {
-    const positiveA=Math.abs(a);
-    const positiveB=Math.abs(b);
-    distractors=[
-      qcmSamePower(positiveA+positiveB,type),
-      qcmPowerError(correctCoeff,type),
-      qcmProductError(a,b,type)
-    ];
-  }
-
-  const unique=[correct];
-  distractors.forEach(option=>{
-    if(option!==correct && !unique.includes(option)) unique.push(option);
-  });
-
-  let bump=1;
-  while(unique.length<4){
-    const fallback=qcmSamePower(correctCoeff+bump,type);
-    if(!unique.includes(fallback)) unique.push(fallback);
-    bump++;
-  }
-
-  const options=shuffleLocal(unique.slice(0,4));
+/* ---------- Corrections rédigées ---------- */
+function redFinalStrong(text){ return '<strong>'+text+'</strong>'; }
+function redOneFamilyCorrection(groups,L){
+  const type=groups[0].type,body=redFamilyBody(type,L);
+  const sum=groups.reduce((s,g)=>s+g.coeff,0);
+  const expr=redPiecesText(redGroupsPieces(groups,L));
+  const result=redMonomialText(sum,type==='x2'?2:1,L);
+  let line=expr+' = ('+redCoeffSum(groups.map(g=>g.coeff))+')'+body;
+  if(sum===0) line+=' = 0'+body+' = '+redFinalStrong('0');
+  else if(Math.abs(sum)===1) line+=' = '+(sum<0?'−':'')+'1'+body+' = '+redFinalStrong(result);
+  else line+=' = '+redFinalStrong(result);
   return {
-    options,
-    correctIndex:String(options.indexOf(correct)+1)
+    steps:['Tous les termes sont des '+body+' : on additionne leurs coefficients, avec leur signe.',line],
+    note:sum===0?'Les termes s’annulent : il reste 0.':(Math.abs(sum)===1?'On écrit '+(sum<0?'−':'')+redLetter(L)+(type==='x2'?'²':'')+' et non '+(sum<0?'−':'')+'1'+body+'.':null)
   };
 }
+function redMultiCorrection(groups,L){
+  const sums=coeffSums(groups);
+  const expr=redPiecesText(redGroupsPieces(groups,L));
+  const ordered=[];
+  ['x2','x','u'].forEach(type=>groups.filter(g=>g.type===type).forEach(g=>ordered.push(g)));
+  const regrouped=redPiecesText(redGroupsPieces(ordered,L));
+  const familyParts=[];
+  const vanished=[];
+  ['x2','x','u'].forEach(type=>{
+    const members=groups.filter(g=>g.type===type);
+    if(!members.length) return;
+    if(members.length===1){ familyParts.push(redPiece(members[0].coeff,redFamilyBody(type,L))); return; }
+    if(sums[type]===0) vanished.push(type);
+    familyParts.push({sign:'+',body:'('+redCoeffSum(members.map(g=>g.coeff))+')'+redFamilyBody(type,L),plainFirst:true});
+  });
+  const familyText=familyParts.map((p,i)=>i===0?(p.plainFirst?'':(p.sign==='−'?'−':''))+p.body:' '+p.sign+' '+p.body).join('');
+  const result=redReducedText(sums,L);
+  const present=['x2','x','u'].filter(type=>groups.some(g=>g.type===type)).map(type=>redFamilyName(type,L));
+  const steps=regrouped===expr
+    ?['On regroupe chaque famille ('+present.join(', ')+') ; chaque terme garde son signe.',expr+' = '+familyText+' = '+redFinalStrong(result)]
+    :['On range par famille ('+present.join(', ')+') ; chaque terme garde son signe.',expr+' = '+regrouped,'= '+familyText+' = '+redFinalStrong(result)];
+  return {
+    steps,
+    note:vanished.length?vanished.map(type=>'('+redCoeffSum(groups.filter(g=>g.type===type).map(g=>g.coeff))+')'+redFamilyBody(type,L)+' = 0 : '+redFamilyName(type,L)+' disparaissent.').join(' '):null
+  };
+}
+
+/* ---------- Types 7 et 11 : k(mL + n) dans une somme ---------- */
+function makeParenFactorData(L){
+  for(let tries=0;tries<500;tries++){
+    const p=rnd()<.75?RD(1,6):-RD(1,6);
+    const q=nzRand(-9,9);
+    const k=rnd()<.65?-RD(2,5):RD(2,5);
+    const m=RD(1,5);
+    const n=rnd()<.65?RD(1,6):-RD(1,6);
+    const cx=p+k*m,cu=q+k*n;
+    if(cx===0||cu===0) continue;
+    if(Math.abs(k)===Math.abs(n)) continue;
+    if(Math.abs(cx)>30||Math.abs(cu)>40) continue;
+    const parenFirst=rnd()<.25;
+    return {p,q,k,m,n,cx,cu,parenFirst};
+  }
+  return {p:3,q:-1,k:-4,m:2,n:3,cx:-5,cu:-13,parenFirst:false};
+}
+function parenFactorPieces(d,L){
+  const inner=redPiecesText([redPiece(d.m,redLetter(L)),redPiece(d.n,'')]);
+  const parenPiece={sign:d.k<0?'−':'+',body:Math.abs(d.k)+'('+inner+')'};
+  const outside=[redPiece(d.p,redLetter(L)),redPiece(d.q,'')];
+  return d.parenFirst?[parenPiece,...outside]:[...outside,parenPiece];
+}
+function parenFactorWork(d,L){
+  const pieces=parenFactorPieces(d,L);
+  const expr=redPiecesText(pieces);
+  const inner=redPiecesText([redPiece(d.m,redLetter(L)),redPiece(d.n,'')]);
+  const kText=(d.k<0?'−':'')+Math.abs(d.k);
+  const developed=redPiecesText([redPiece(d.k*d.m,redLetter(L)),redPiece(d.k*d.n,'')]);
+  const devPieces=[redPiece(d.k*d.m,redLetter(L)),redPiece(d.k*d.n,'')];
+  const outside=[redPiece(d.p,redLetter(L)),redPiece(d.q,'')];
+  const after=redPiecesText(d.parenFirst?[...devPieces,...outside]:[...outside,...devPieces]);
+  const xs=d.parenFirst?[d.k*d.m,d.p]:[d.p,d.k*d.m];
+  const us=d.parenFirst?[d.k*d.n,d.q]:[d.q,d.k*d.n];
+  const result=redReducedText({x2:0,x:d.cx,u:d.cu},L);
+  const steps=[
+    'On développe : '+kText+'('+inner+') = '+developed+'. Le '+kText+' multiplie les deux termes.',
+    expr+' = '+after,
+    '= ('+redCoeffSum(xs)+')'+redLetter(L)+' + ('+redCoeffSum(us)+') = '+redFinalStrong(result)
+  ];
+  let note=null;
+  if(d.k<0) note='Attention : '+kText+' × '+redNumberFactor(d.n,true)+' = '+(d.k*d.n<0?'−':'')+Math.abs(d.k*d.n)+'. Le signe − devant le '+Math.abs(d.k)+' change le signe des deux produits.';
+  else note='Attention : le '+d.k+' multiplie aussi le '+redNumberFactor(d.n,false)+' : '+d.k+' × '+redNumberFactor(d.n,true)+' = '+(d.k*d.n<0?'−':'')+Math.abs(d.k*d.n)+'.';
+  const aide=[
+    'Commence par développer : le nombre devant la parenthèse multiplie chacun des deux termes. Ensuite, regroupe les '+redLetter(L)+' et les nombres.',
+    'Ici, calcule '+redNumberFactor(d.k,false)+' × '+redMonoAbs(d.m,redLetter(L))+' puis '+redNumberFactor(d.k,false)+' × '+redNumberFactor(d.n,true)+'.'
+  ];
+  return {pieces,expr,result,steps,note,aide};
+}
+function makeParenFactorQcm(d,L){
+  const correct=redReducedText({x2:0,x:d.cx,u:d.cu},L);
+  const kText=(d.k<0?'−':'')+Math.abs(d.k);
+  const candidates=[
+    {text:redReducedText({x2:0,x:d.cx,u:d.q+d.n},L),feedback:'Tu n’as multiplié que le premier terme : le '+kText+' multiplie aussi le '+redNumberFactor(d.n,false)+'.'},
+    {text:redReducedText({x2:0,x:d.cx,u:d.q-d.k*d.n},L),feedback:'Erreur de signe : '+kText+' × '+redNumberFactor(d.n,true)+' = '+(d.k*d.n<0?'−':'')+Math.abs(d.k*d.n)+'.'},
+    {text:redReducedText({x2:0,x:d.p-d.k*d.m,u:d.cu},L),feedback:'Erreur de signe sur les '+redLetter(L)+' : '+kText+' × '+redMonoAbs(d.m,redLetter(L))+' = '+redMonomialText(d.k*d.m,1,L)+'.'}
+  ];
+  return redFinishQcm(correct,candidates,bump=>({text:redReducedText({x2:0,x:d.cx+bump,u:d.cu},L),feedback:'Recompte les '+redLetter(L)+' : ('+redCoeffSum([d.p,d.k*d.m])+')'+redLetter(L)+' = '+redMonomialText(d.cx,1,L)+'.'}));
+}
+
+/* ---------- Type 8 : opposé d’une parenthèse ---------- */
+function makeOppositeData(){
+  for(let tries=0;tries<500;tries++){
+    const a=RD(2,9);
+    const withD=rnd()<.4;
+    const d=withD?nzRand(-9,9):0;
+    const b=RD(1,9);
+    const c=RD(1,9);
+    const innerSign=pick([-1,1]);
+    const xFirst=rnd()<.7;
+    const inner=xFirst?[{type:'x',coeff:b},{type:'u',coeff:innerSign*c}]:[{type:'u',coeff:c},{type:'x',coeff:innerSign*b}];
+    const innerX=inner.find(g=>g.type==='x').coeff,innerU=inner.find(g=>g.type==='u').coeff;
+    const cx=a-innerX,cu=d-innerU;
+    if(cx===0||cu===0) continue;
+    if(a===b) continue;
+    const dFirst=withD&&rnd()<.4;
+    return {a,d,inner,cx,cu,withD,dFirst};
+  }
+  return {a:7,d:0,inner:[{type:'x',coeff:3},{type:'u',coeff:-5}],cx:4,cu:5,withD:false,dFirst:false};
+}
+function oppositeWork(o){
+  const L='x';
+  const innerText=redPiecesText(redGroupsPieces(o.inner,L));
+  const outside=o.withD?(o.dFirst?[{type:'u',coeff:o.d},{type:'x',coeff:o.a}]:[{type:'x',coeff:o.a},{type:'u',coeff:o.d}]):[{type:'x',coeff:o.a}];
+  const pieces=[...redGroupsPieces(outside,L),{sign:'−',body:'('+innerText+')'}];
+  const expr=redPiecesText(pieces);
+  const opposite=o.inner.map(g=>({type:g.type,coeff:-g.coeff}));
+  const oppositeText=redPiecesText(redGroupsPieces(opposite,L));
+  const after=redPiecesText(redGroupsPieces([...outside,...opposite],L));
+  const all=[...outside,...opposite];
+  const xs=all.filter(g=>g.type==='x').map(g=>g.coeff),us=all.filter(g=>g.type==='u').map(g=>g.coeff);
+  const result=redReducedText({x2:0,x:o.cx,u:o.cu},L);
+  const xPart='('+redCoeffSum(xs)+')𝑥';
+  const uPart=us.length>1?' + ('+redCoeffSum(us)+')':' '+(us[0]<0?'−':'+')+' '+Math.abs(us[0]);
+  const innerU=o.inner.find(g=>g.type==='u').coeff;
+  return {
+    pieces,expr,result,
+    steps:[
+      'On enlève la parenthèse précédée de − en changeant le signe de chaque terme : −('+innerText+') = '+oppositeText+'.',
+      expr+' = '+after,
+      '= '+xPart+uPart+' = '+redFinalStrong(result)
+    ],
+    note:innerU<0?'Attention : −(−'+Math.abs(innerU)+') = +'+Math.abs(innerU)+'. Le second terme change de signe lui aussi.':'Attention : on change le signe de tous les termes de la parenthèse, pas seulement du premier.',
+    aide:[
+      'Une parenthèse précédée de − s’enlève en changeant le signe de chaque terme qu’elle contient.',
+      'Ici, écris d’abord l’opposé de '+innerText+', puis regroupe les 𝑥 et les nombres.'
+    ]
+  };
+}
+
+/* ---------- Types 9 et 10 : produits et « somme ou produit » ---------- */
+function makeProductData(){
+  const form=pick(['mono','mono','numFirst','numLast']);
+  for(let tries=0;tries<300;tries++){
+    let a,b;
+    if(form==='mono'){ a=RD(1,6); b=RD(1,6); }
+    else { a=RD(2,6); b=RD(2,6); }
+    if(rnd()<.4){ if(rnd()<.5) a=-a; else b=-b; }
+    if(form==='mono' && Math.abs(a)===1 && Math.abs(b)===1) continue;
+    if(Math.abs(a)+Math.abs(b)===Math.abs(a*b)) continue;
+    return {form,a,b,letter:pick(['x','x','a','y','t'])};
+  }
+  return {form:'mono',a:3,b:2,letter:'x'};
+}
+function productWork(d){
+  const L=d.letter,Ll=redLetter(L);
+  const firstBody=d.form==='numFirst'?'':Ll,secondBody=d.form==='numLast'?'':Ll;
+  const expr=redFactor(d.a,firstBody,false)+' × '+redFactor(d.b,secondBody,true);
+  const power=d.form==='mono'?2:1;
+  const prod=d.a*d.b;
+  const result=redMonomialText(prod,power,L);
+  const numbers=[d.a,d.b].filter(c=>c!==1);
+  const detail=(numbers.length?numbers.map((c,i)=>redNumberFactor(c,i>0)).join(' × ')+' × ':'')+(power===2?Ll+' × '+Ll:Ll);
+  return {
+    expr,result,power,
+    steps:[
+      'On multiplie les nombres entre eux et les lettres entre elles.',
+      expr+' = '+detail+' = '+redFinalStrong(result)
+    ],
+    note:power===2?'Attention : '+Ll+' × '+Ll+' = '+Ll+'², mais '+Ll+' + '+Ll+' = 2'+Ll+'.':'Il n’y a qu’un seul '+Ll+' dans ce produit : pas de carré.',
+    aide:['Dans un produit, multiplie les nombres entre eux, puis les lettres entre elles.','Écris le produit en détail : '+detail+'.']
+  };
+}
+function makeProductQcm(d){
+  const L=d.letter,Ll=redLetter(L);
+  const power=d.form==='mono'?2:1,prod=d.a*d.b,sum=d.a+d.b;
+  const correct=redMonomialText(prod,power,L);
+  const candidates=[];
+  if(prod<0) candidates.push({text:redMonomialText(-prod,power,L),feedback:'Erreur de signe : un des facteurs est négatif, donc le produit est négatif.'});
+  candidates.push({text:redMonomialText(sum,1,L),feedback:'Tu as additionné les coefficients : ici, c’est une multiplication.'});
+  if(power===2){
+    candidates.push({text:redMonomialText(prod,1,L),feedback:Ll+' × '+Ll+' = '+Ll+'² : il manque le carré.'});
+    candidates.push({text:redMonomialText(sum,2,L),feedback:'Les nombres se multiplient'+(Math.abs(d.a)===1||Math.abs(d.b)===1?' ('+Ll+' compte pour 1'+Ll+')':'')+' : '+redNumberFactor(d.a,false)+' × '+redNumberFactor(d.b,true)+' = '+String(prod).replace('-','−')+', on ne les additionne pas.'});
+  } else {
+    candidates.push({text:redMonomialText(prod,2,L),feedback:'Il n’y a qu’un seul '+Ll+' : le résultat reste en '+Ll+', sans carré.'});
+    candidates.push({text:String(prod).replace('-','−'),feedback:'Tu as oublié la lettre '+Ll+'.'});
+  }
+  return redFinishQcm(correct,candidates,bump=>({text:redMonomialText(prod+bump,power,L),feedback:'Recalcule '+redNumberFactor(d.a,false)+' × '+redNumberFactor(d.b,true)+'.'}));
+}
+function makeSumOrProductData(){
+  for(let tries=0;tries<200;tries++){
+    const a=pick([1,1,2,3,4]),b=pick([1,1,2,3,4,5]);
+    if(a===2&&b===2) continue;
+    if(a*b===a+b) continue;
+    return {a,b,op:pick(['+','×'])};
+  }
+  return {a:3,b:2,op:'+'};
+}
+function sumOrProductWork(d){
+  const L='x',Ll='𝑥';
+  const ta=redMonoAbs(d.a,Ll),tb=redMonoAbs(d.b,Ll);
+  const expr=ta+' '+d.op+' '+tb;
+  if(d.op==='+'){
+    const result=redMonomialText(d.a+d.b,1,L);
+    const first=(d.a===1&&d.b===1)?Ll+' + '+Ll+', c’est deux fois '+Ll+'.':ta+' + '+tb+', c’est '+d.a+' fois '+Ll+' plus '+d.b+' fois '+Ll+'.';
+    return {expr,result,steps:[first,expr+' = ('+d.a+' + '+d.b+')'+Ll+' = '+redFinalStrong(result)],note:'Attention : '+Ll+' + '+Ll+' = 2'+Ll+', mais '+Ll+' × '+Ll+' = '+Ll+'².',aide:['Regarde l’opération : + ou × ? Elles ne donnent pas le même résultat.','Ici, c’est une addition de termes en '+Ll+'.']};
+  }
+  const result=redMonomialText(d.a*d.b,2,L);
+  const nums=[d.a,d.b].filter(c=>c!==1);
+  const detail=(nums.length?nums.join(' × ')+' × ':'')+Ll+' × '+Ll;
+  return {expr,result,steps:['On multiplie les nombres entre eux et les lettres entre elles.',expr+' = '+detail+' = '+redFinalStrong(result)],note:'Attention : '+Ll+' × '+Ll+' = '+Ll+'², mais '+Ll+' + '+Ll+' = 2'+Ll+'.',aide:['Regarde l’opération : + ou × ? Elles ne donnent pas le même résultat.','Ici, c’est un produit : écris-le en détail, '+detail+'.']};
+}
+function makeSumOrProductQcm(d){
+  const L='x',Ll='𝑥',sum=d.a+d.b,prod=d.a*d.b;
+  if(d.op==='+'){
+    return redFinishQcm(redMonomialText(sum,1,L),[
+      {text:redMonomialText(prod,2,L),feedback:'Tu as calculé un produit. Ici, c’est une addition.'},
+      {text:redMonomialText(sum,2,L),feedback:'Quand on additionne des '+Ll+', le résultat reste en '+Ll+' : pas de carré.'},
+      {text:redMonomialText(prod,1,L),feedback:'Tu as multiplié '+d.a+' et '+d.b+' : il faut les additionner.'}
+    ],bump=>({text:redMonomialText(sum+bump,1,L),feedback:'Recompte : '+d.a+' + '+d.b+' = '+sum+'.'}));
+  }
+  return redFinishQcm(redMonomialText(prod,2,L),[
+    {text:redMonomialText(sum,1,L),feedback:'Tu as additionné. Ici, c’est une multiplication.'},
+    {text:redMonomialText(prod,1,L),feedback:Ll+' × '+Ll+' = '+Ll+'² : il manque le carré.'},
+    {text:redMonomialText(sum,2,L),feedback:'Les nombres se multiplient'+(d.a===1||d.b===1?' ('+Ll+' compte pour 1'+Ll+')':'')+' : '+d.a+' × '+d.b+' = '+prod+'.'}
+  ],bump=>({text:redMonomialText(prod+bump,2,L),feedback:'Recalcule '+d.a+' × '+d.b+'.'}));
+}
+
 
 const MODULE01_OFFICIAL=[
   {num:1,den:2,dec:'0,5'},
@@ -1135,52 +1391,132 @@ function makeEquationInstance(mod,q){
   return {module:mod,q,scope:{},answers,rawStatement:prompt,rawFooter:'',hasSvg:true,equationData:data};
 }
 
+const REDUCTION_ALWAYS_QCM=['already_reduced','product','sum_or_product','paren_factor_qcm'];
+const REDUCTION_HALF_QCM=['one_no_cancel','one_cancel'];
+function redSecondHint(groups,L){
+  const types=['x2','x','u'];
+  const repeated=types.find(type=>groups.filter(g=>g.type===type).length>=2);
+  const families=new Set(groups.map(g=>g.type));
+  if(families.size>1 && repeated){
+    const members=groups.filter(g=>g.type===repeated).map((g,i)=>{const p=redPiece(g.coeff,redFamilyBody(g.type,L));return (p.sign==='−'?'−':(groups.indexOf(g)===0?'':'+'))+p.body;});
+    return 'Ici, '+redFamilyName(repeated,L)+' sont '+members.slice(0,-1).join(', ')+' et '+members[members.length-1]+'.';
+  }
+  const negative=groups.find((g,i)=>g.coeff<0);
+  if(negative){
+    const body=redFamilyBody(negative.type,L);
+    return 'Le signe fait partie du terme : −'+redMonoAbs(negative.coeff,body)+' a pour coefficient −'+Math.abs(negative.coeff)+'.';
+  }
+  const one=groups.find(g=>Math.abs(g.coeff)===1&&g.type!=='u');
+  if(one) return redFamilyBody(one.type,L)+' seul compte pour 1'+redFamilyBody(one.type,L)+'.';
+  return 'Commence par '+redPiecesText(redGroupsPieces(groups.slice(0,2),L))+'.';
+}
 function makeReductionInstance(mod,q){
   const kind=q.options.reduction_kind;
-  const requestedFormat=q.options.reduction_format||'direct';
-  const qcmAllowed=(kind==='one_no_cancel' || kind==='one_cancel' || kind==='already_reduced');
-  const format=(requestedFormat==='qcm' && qcmAllowed)?'qcm':'direct';
+  const requested=q.options.reduction_format||'direct';
+  const format=REDUCTION_ALWAYS_QCM.includes(kind)?'qcm':((requested==='qcm'&&REDUCTION_HALF_QCM.includes(kind))?'qcm':'direct');
+  const qcmPrompt='Quelle est la forme réduite de cette expression ?';
+  let L='x',pieces=[],groups=[],sums={x2:0,x:0,u:0},slotTypes=['x','u'],answer='',qcm=null,work=null,aideHtml=null,aide=[];
+  let prompt=format==='qcm'?qcmPrompt:'Réduis l’expression :';
 
-  let groups=[];
-  let readCoeffs=null;
-
-  if(format==='qcm'){
-    groups=kind==='already_reduced'?makeAlreadyReducedQcmGroups():simpleQcmGroups(kind);
-  } else {
-    if(kind==='one_no_cancel') groups=makeOneNoCancel();
-    if(kind==='one_cancel') groups=makeOneCancel();
-    if(kind==='multi_no_cancel') groups=makeMultiNoCancel();
-    if(kind==='multi_cancel') groups=makeMultiCancel();
-    if(kind==='already_reduced') groups=makeAlreadyReduced();
-    if(kind==='read_tiles') readCoeffs=makeReadCoeffs();
+  if(['one_no_cancel','one_cancel','multi_no_cancel','multi_cancel','already_reduced'].includes(kind)){
+    if(format==='qcm'){
+      L=pick(['x','x','a','y','t']);
+      groups=kind==='already_reduced'?makeAlreadyReducedQcmGroups():simpleQcmGroups(kind);
+    } else {
+      if(kind==='one_no_cancel') groups=makeOneNoCancel();
+      if(kind==='one_cancel') groups=makeOneCancel();
+      if(kind==='multi_no_cancel') groups=makeMultiNoCancel();
+      if(kind==='multi_cancel') groups=makeMultiCancel();
+    }
+    sums=coeffSums(groups);
+    pieces=redGroupsPieces(groups,L);
+    slotTypes=['x2','x','u'].filter(type=>groups.some(g=>g.type===type));
+    answer=redReducedText(sums,L);
+    aideHtml=redFamiliesAideHtml(groups,L,true);
+    if(kind==='already_reduced'){
+      qcm=makeAlreadyReducedQcm(groups,L);
+      answer=qcm.options[Number(qcm.correctIndex)-1];
+      const t1=redMonomialText(groups[0].coeff,groups[0].type==='x2'?2:(groups[0].type==='x'?1:0),L);
+      const t2=redMonomialText(groups[1].coeff,groups[1].type==='x2'?2:(groups[1].type==='x'?1:0),L);
+      work={
+        steps:[t1+' et '+t2+' ne sont pas de la même famille : on ne peut pas les regrouper.',redPiecesText(pieces)+' est déjà réduite. Écrite dans l’autre ordre : '+redFinalStrong(answer)+'.'],
+        note:groups.some(g=>g.type==='u')
+          ?'Attention : un nombre seul ne se regroupe pas avec des '+redFamilyBody(groups.find(g=>g.type!=='u').type,L)+'.'
+          :'Attention : '+redLetter(L)+'² = '+redLetter(L)+' × '+redLetter(L)+' : ce n’est pas la même famille que '+redLetter(L)+'.'
+      };
+      aide=['On ne regroupe que des termes de la même famille : les '+redLetter(L)+'², les '+redLetter(L)+', les nombres.','Ici, '+t1+' et '+t2+' sont-ils de la même famille ?'];
+    } else if(kind==='one_no_cancel'||kind==='one_cancel'){
+      work=redOneFamilyCorrection(groups,L);
+      if(format==='qcm') qcm=makeOneFamilyQcm(groups,L);
+      aide=['Tous les termes sont des '+redFamilyBody(groups[0].type,L)+' : additionne leurs coefficients, avec leur signe.',redSecondHint(groups,L)];
+    } else {
+      work=redMultiCorrection(groups,L);
+      aide=['Regroupe les termes de la même famille : les '+redLetter(L)+'² ensemble, les '+redLetter(L)+' ensemble, les nombres ensemble.',redSecondHint(groups,L)];
+    }
+  } else if(kind==='paren_factor'||kind==='paren_factor_qcm'){
+    L=kind==='paren_factor_qcm'?pick(['a','a','y','t']):'x';
+    const d=makeParenFactorData(L);
+    work=parenFactorWork(d,L);
+    pieces=work.pieces;
+    sums={x2:0,x:d.cx,u:d.cu};
+    answer=work.result;
+    aide=work.aide;
+    if(kind==='paren_factor_qcm') qcm=makeParenFactorQcm(d,L);
+  } else if(kind==='opposite_paren'){
+    const o=makeOppositeData();
+    work=oppositeWork(o);
+    pieces=work.pieces;
+    sums={x2:0,x:o.cx,u:o.cu};
+    answer=work.result;
+    aide=work.aide;
+  } else if(kind==='product'){
+    const d=makeProductData();
+    L=d.letter;
+    work=productWork(d);
+    pieces=[{sign:'+',body:work.expr}];
+    answer=work.result;
+    aide=work.aide;
+    qcm=makeProductQcm(d);
+    prompt='Quelle est la forme réduite de ce produit ?';
+  } else if(kind==='sum_or_product'){
+    const d=makeSumOrProductData();
+    work=sumOrProductWork(d);
+    pieces=[{sign:'+',body:work.expr}];
+    answer=work.result;
+    aide=work.aide;
+    qcm=makeSumOrProductQcm(d);
   }
+  if(qcm) prompt=kind==='product'?prompt:qcmPrompt;
 
-  const sums=readCoeffs||coeffSums(groups);
-  const answer=kind==='already_reduced'?expressionLatex(groups):reducedLatex(sums);
-  const qcm=(format==='qcm')
-    ? (kind==='already_reduced'?makeAlreadyReducedQcm(groups):makeSimpleReductionQcm(groups))
-    : null;
-
-  return {
+  const inst={
     module:mod,
     q,
     scope:{},
     answers:qcm?[qcm.correctIndex]:[answer],
-    rawStatement:q.statement,
+    rawStatement:prompt,
     rawFooter:'',
-    hasSvg:true,
+    hasSvg:false,
+    correctionSteps:work.steps,
+    aideSteps:aide,
     reduction:{
       kind,
-      format:(kind==='read_tiles'?'direct':format),
+      format:qcm?'qcm':'direct',
+      letter:L,
+      prompt,
       groups,
-      readCoeffs,
       sums,
+      slotTypes,
       answer,
-      expr:groups.length?expressionLatex(groups):'',
+      exprText:redPiecesText(pieces),
+      exprHtml:redPiecesHtml(pieces),
       qcmOptions:qcm?qcm.options:null,
       qcmCorrectIndex:qcm?qcm.correctIndex:null
     }
   };
+  if(work.note) inst.correctionNote=work.note;
+  if(qcm) inst.distractorFeedback=qcm.distractorFeedback;
+  if(aideHtml) inst.aideHtml=aideHtml;
+  return inst;
 }
 const SOLID_NAMES=['un cube','un pavé droit','un prisme droit','un cylindre','une pyramide','un cône','une sphère','une boule'];
 function solidVisualForQuestion(q){
@@ -3771,78 +4107,24 @@ function renderModule07(inst, correction=false, mode=null){
 }
 
 
-function tileSvg(type,sign,cancelled=false){
-  const positive=sign>0;
-  const fill=positive?'#31a98e':'#ef5142';
-  const label=type==='x2'?(positive?'𝑥²':'−𝑥²'):(type==='x'?(positive?'𝑥':'−𝑥'):(positive?'1':'−1'));
-  const w=type==='u'?32:96;
-  const h=type==='x2'?96:32;
-  const fs=type==='x2'?27:(type==='x'?24:18);
-  const baseline=type==='x2'?58:23;
-  const cross=cancelled?`<g stroke="#3e4650" stroke-width="4" stroke-linecap="round"><line x1="4" y1="4" x2="${w-4}" y2="${h-4}"/><line x1="${w-4}" y1="4" x2="4" y2="${h-4}"/></g>`:'';
-  return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" style="width:${w}px;max-width:none;height:${h}px;display:block;flex:none"><rect x="1" y="1" width="${w-2}" height="${h-2}" fill="${fill}" stroke="#171717" stroke-width="2"/><text x="${w/2}" y="${baseline}" font-family="Cambria Math, STIX Two Math, Times New Roman, serif" font-style="normal" font-size="${fs}" font-weight="700" text-anchor="middle" fill="#111">${label}</text>${cross}</svg>`;
-}
-function tilesGrid(type,count,sign,cancelCount=0){
-  if(count<=0) return '';
-  const cols=type==='u'?Math.min(5,count):Math.min(2,count);
-  const gap=type==='u'?7:10;
-  let tiles='';
-  for(let i=0;i<count;i++) tiles+=tileSvg(type,sign,i<cancelCount);
-  return `<div style="display:grid;grid-template-columns:repeat(${cols},max-content);gap:${gap}px;align-content:start;justify-content:center">${tiles}</div>`;
-}
-function originalGroupHtml(group,index){
-  const count=Math.abs(group.coeff);
-  return `<div style="display:flex;flex-direction:column;align-items:center;min-width:116px;padding:0 5px">${tilesGrid(group.type,count,group.coeff>0?1:-1,0)}</div>`;
-}
-function originalGroupsHtml(groups){
-  return `<div class="reduction-tiles" style="display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-start;gap:34px 54px;margin:10px auto 4px;max-width:1380px">${groups.map(originalGroupHtml).join('')}</div>`;
-}
-function groupedFamilyHtml(groups,type){
-  const counts=countSigns(groups,type);
-  if(counts.pos===0&&counts.neg===0) return '';
-  const cancel=Math.min(counts.pos,counts.neg);
-  return `<div style="display:flex;flex-direction:column;align-items:center;gap:10px;min-width:230px"><div style="display:flex;align-items:flex-start;justify-content:center;gap:20px">${tilesGrid(type,counts.pos,1,cancel)}${tilesGrid(type,counts.neg,-1,cancel)}</div></div>`;
-}
-function correctionGroupsHtml(groups){
-  return `<div class="reduction-tiles" style="display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-start;gap:38px 68px;margin:10px auto 4px;max-width:1380px">${['x2','x','u'].map(t=>groupedFamilyHtml(groups,t)).join('')}</div>`;
-}
-function readTilesHtml(coeffs){
-  const groups=[];
-  ['x2','x','u'].forEach(type=>{const c=coeffs[type]||0;if(c!==0)groups.push({type,coeff:c});});
-  return `<div class="reduction-tiles" style="display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-start;gap:40px 70px;margin:10px auto 4px;max-width:1320px">${groups.map(g=>`<div style="display:flex;flex-direction:column;align-items:center">${tilesGrid(g.type,Math.abs(g.coeff),g.coeff>0?1:-1,0)}</div>`).join('')}</div>`;
-}
 function renderModule10(inst,correction=false,mode=null){
-  if(mode===null) mode=document.getElementById('visualMode').value;
+  // Les tuiles ne sont plus dessinées dans la question : elles vont dans le
+  // panneau Aide (inst.aideHtml). La correction rédigée est dans
+  // inst.correctionSteps, affichée par la coque commune.
   const d=inst.reduction;
   const isQcm=d.format==='qcm';
-  const prompt=isQcm?'Quelle est la forme réduite de cette expression ?':inst.q.statement;
-  let html='<div class="question reduction-prompt">'+renderMathSegments(prompt)+'</div>';
-
-  if(d.kind==='read_tiles'){
-    if(!isWithoutVisuals(mode)){
-      html+=readTilesHtml(d.readCoeffs);
-    } else html+=visualPlaceholder(mode);
-  } else {
-    const terms=String(d.expr||'').match(/[+\-−]?[^+\-−]+/g)||[String(d.expr||'')];
-    html+='<div class="reduction-expression">'+terms.map(term=>'<span class="reduction-term">'+renderMathSegments('$$'+term+'$$')+'</span>').join('')+'</div>';
-
-    if(!isWithoutVisuals(mode)){
-      html+=correction?correctionGroupsHtml(d.groups):originalGroupsHtml(d.groups);
-    } else html+=visualPlaceholder(mode);
-  }
-
+  let html='<div class="question reduction-prompt">'+d.prompt+'</div>';
+  html+='<div class="reduction-expression">'+d.exprHtml+'</div>';
   if(isQcm){
-    const corrects=new Set([String(d.qcmCorrectIndex)]);
     html+='<div class="options reduction-options options-'+d.qcmOptions.length+'">';
     d.qcmOptions.forEach((o,i)=>{
-      const isC=correction&&corrects.has(String(i+1));
-      html+='<div class="opt '+(isC?'correct':'')+'"><strong>'+String.fromCharCode(65+i)+'.</strong> '+renderMathSegments('$$'+o+'$$')+'</div>';
+      const isC=correction&&String(i+1)===String(d.qcmCorrectIndex);
+      html+='<div class="opt '+(isC?'correct':'')+'"><strong>'+String.fromCharCode(65+i)+'.</strong> <span class="reduction-option">'+o+'</span></div>';
     });
     html+='</div>';
   } else if(correction){
-    html+='<div class="footer reduction-answer">'+renderMathSegments('$$='+d.answer+'$$')+'</div>';
+    html+='<div class="footer reduction-answer">= '+d.answer+'</div>';
   }
-
   return html;
 }
 
@@ -4026,7 +4308,7 @@ const LEVEL_5E_QUESTIONS={
   dnb_07:'all',
   dnb_08:'all',
   dnb_09:[2,3,4,5,6,8,9,10,11,12,13,14,15,16,17,18,19],
-  dnb_10:[1,2,5,6],
+  dnb_10:[1,2,6,10],
   dnb_11:[1,4,6,11],
   dnb_12:[1,2,3,4,5,6,7,9,10,11,12,13,14],
   dnb_13:[1,2,3],
@@ -4053,12 +4335,15 @@ const LEVEL_5E_QUESTIONS={
 };
 
 const LEVEL_4E_QUESTIONS={
+  // dnb_10 : l’opposé d’une parenthèse (type 8) est un automatisme de 3e.
+  dnb_10:[1,2,3,4,6,7,9,10,11],
   dnb_12:Array.from({length:18},(_,index)=>index+1)
 };
 
 // Le filtre DNB reste volontairement classique : calculs directs et QCM
 // courts sur la distributivité simple, sans manipulation ni identité remarquable.
 const LEVEL_DNB_QUESTIONS={
+  dnb_10:[1,2,3,4,6,7,8,9,10,11],
   dnb_12:[1,2,3,4,5,6,7,8,9,15,16,17]
 };
 
