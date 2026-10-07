@@ -138,7 +138,7 @@ s'il est installé (les PDF pèsent deux fois moins). Puis refaire les miniature
 livrets (page 1 à 120 dpi → 993 × 1404, en PNG et en WebP plus légère) :
 `assets/img/thumbnails/splat/livret-splat-equations-schema.png/.webp` et `…-equation.png/.webp`.
 
-*mathsgo.re · CC BY-NC-SA 4.0 — d'après la progression « SPLAT! cycle 3 » de Claire.*
+*mathsgo.re · CC BY-NC-SA 4.0*
 
 ## Le livret « Le défi » (lot Q5, 25/09/2026)
 

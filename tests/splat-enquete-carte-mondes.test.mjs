@@ -336,9 +336,9 @@ test("les textes qui comptent les mondes suivent l'ajout", () => {
      livrets, plus la liste des mondes ni le lien « vue professeur » en double */
   assert.doesNotMatch(univers, /progression cycle 3 en quatre séquences/);
   assert.match(univers, /<span class="credits">Jeu <strong>SPLAT!<\/strong> créé par Steve Wyborney/);
-  /* cohérence du 27/09/2026 (décision de Gwenaël) : le monde 5, refait en huit marches, rejoint les prolongements */
-  assert.match(univers, /mondes 1, 2 et 3 d\\u2019apr\\u00e8s la progression/);
-  assert.match(univers, /\(mondes 4, 5 et 6 : prolongements maths&go/);
+  /* 07/10/2026 (Gwenaël) : plus aucune mention de la progression, ni dans le pied de la vue
+     prof (« mondes 1, 2 et 3 d'après la progression… », lien Digipad), ni dans la description */
+  assert.doesNotMatch(univers, /d\\u2019apr\\u00e8s la progression|prolongements maths&go|progression SPLAT!/);
   assert.doesNotMatch(univers, /quatre mondes|cinq mondes/i);
   assert.match(univers, /content="Six mondes à jouer en ligne/);
   // les notes du professeur qui citent un numéro de monde suivent aussi
