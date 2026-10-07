@@ -256,7 +256,7 @@
     {unit:'€',build:(total,divisor)=>`${divisor}&nbsp;amis partagent une dépense de ${total}&nbsp;€ en parts égales. Combien paie chacun&nbsp;?`,answer:'Chacun paie'}
   ];
   function divide(randomInt,context){
-    const divisor=randomInt(2,6),maxTenths=context?19:29;
+    const divisor=randomInt(2,5),maxTenths=context?19:29;
     let shareTenths=randomInt(2,maxTenths);
     while((shareTenths*divisor)%10===0) shareTenths=randomInt(2,maxTenths);
     const share=shareTenths/10,total=cut(divisor*share),totalTenths=Math.round(total*10);
