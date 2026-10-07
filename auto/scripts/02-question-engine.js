@@ -4020,7 +4020,7 @@ const LEVEL_5E_QUESTIONS={
   dnb_01:'all',
   dnb_02:'all',
   dnb_02b:'all',
-  dnb_03:[1,2,3,4,5,6,7],
+  dnb_03:[1,3,5,6,7],
   dnb_04:'all',
   dnb_05:'all',
   dnb_07:'all',
@@ -4059,6 +4059,9 @@ const LEVEL_4E_QUESTIONS={
 // Le filtre DNB reste volontairement classique : calculs directs et QCM
 // courts sur la distributivité simple, sans manipulation ni identité remarquable.
 const LEVEL_DNB_QUESTIONS={
+  // Fractions : les types 3, 5 et 6 (même dénominateur ou même numérateur)
+  // restent un échauffement de 5e-4e ; le niveau DNB garde les formes du brevet.
+  dnb_03:[1,2,4,7,8,9,10,11],
   dnb_12:[1,2,3,4,5,6,7,8,9,15,16,17]
 };
 
