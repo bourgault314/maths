@@ -450,7 +450,7 @@ test("l’accueil : « Mon mélange » libre, plus de cadenas sur « Je passe le
   assert.match(html, /sousTitre: sousTitreMelange\(melange\),\s*points: \[\],\s*conseille: false,/, "la ligne du mélange dit ses tables et son format ; elle n’est jamais l’étape conseillée");
   assert.doesNotMatch(html, /Réussis d’abord ton mélange/);
   assert.match(html, /const NOM_DU_TEST = "Je passe le test";/);
-  assert.match(html, /const CONDITION_DU_TEST = "si j’ai 9 sur 10 aux entraînements";/);
+  assert.match(html, /const CONDITION_DU_TEST = "si j’ai 9\\u00a0sur\\u00a010 juste\\u00a0avant";/);
   assert.match(html, /classe: "valide",\s*num: "3",\s*titre: ligne\.acquise \? "Ma table est passée" : NOM_DU_TEST,/);
   assert.match(html, /action: \(\) => launchFromParcours\(PARCOURS\.configValidation\(table\), "menu"\)/, "« Je passe le test » lance toujours le test");
   assert.doesNotMatch(html, /classe: "valide verrou"|cadenas\.textContent|ligneVerrou|verrouillee|etat\.verrou|montrerMelange|kind: "lock"/, "plus de cadenas ni de verrou dans la page : aucune ligne, aucune case n’est créée cadenassée");
@@ -498,7 +498,7 @@ test("le parcours : « Mon mélange » en bouton (triangle dessiné) jusqu’aux
   assert.match(html, /config: expertOuvert \? marche\.config : null/, "fermé : les marches ne lancent rien");
   assert.match(html, /const expertAttend = porte && etat\.expert\.ouvert \? "après Mes calculs du jour" : "après mes 9 tables";/);
   assert.doesNotMatch(html, /après le mélange des 9 tables/);
-  assert.match(html, /\.cell\.is-lock \{/);
+  assert.doesNotMatch(html, /\.cell\.is-lock|\.etape\.verrou|est-montree/, "lot « retours de classe » : le CSS du cadenas, qui ne servait plus, est retiré");
   assert.match(html, /\.cell\.is-star\.n4 \{/);
 });
 
@@ -532,7 +532,7 @@ test("le lancement : le mélange se joue en 1 min 30, comme la validation d’un
 
 test("les scripts modifiés ont un nouveau numéro de cache, et la copie serveur du moteur est identique", async () => {
   assert.match(html, /defi_tables_core\.js\?v=20261005-1/);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261005-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261006-1/);
   const moteur = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie), "_serveur/public/prof/defi_tables_mon_parcours.js doit être la copie octet pour octet du moteur");

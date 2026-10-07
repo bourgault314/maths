@@ -78,9 +78,10 @@ const CATALOGUE_APPLIS = [
         // déclare rien n'est pas comptée.
         'compteur' => 'calculs',
     ],
-    // Les entrées qui suivent sont ANNONCÉES, pas ouvertes : l'appli ne sait pas
-    // encore parler au serveur (« disponible » à false, « url » à null). Elles
-    // s'affichent dans l'espace élève avec la pastille « Bientôt », sans lien.
+    // Les entrées qui suivent ne sont PAS ouvertes : l'appli ne sait pas encore
+    // parler au serveur (« disponible » à false, « url » à null). Depuis le lot
+    // « retours de classe » (06/10/2026), elles ne s'affichent plus du tout
+    // dans l'espace élève (plus de pastille « Bientôt »).
     // L'ORDRE DE CE TABLEAU EST L'ORDRE D'AFFICHAGE (choisi par Gwenaël le
     // 07/09/2026) : tables, calcul, automatismes, Splat, Solèy.
     // Le jour où l'une d'elles s'ouvre, elle reçoit son adresse, ses clés
@@ -157,16 +158,15 @@ function appli_affichable(string $cle): array
     return $appli;
 }
 
-// D'abord les activités de la classe — celles que l'élève peut vraiment ouvrir,
-// dans l'ordre choisi par son professeur. Puis, pour TOUT LE MONDE, celles que
-// le catalogue annonce sans les avoir ouvertes, dans l'ordre du catalogue.
+// Les activités de la classe — celles que l'élève peut vraiment ouvrir, dans
+// l'ordre choisi par son professeur. Rien d'autre.
 //
-// Une activité « bientôt » est une annonce, pas une attribution : elle n'a pas
-// d'adresse, donc rien à ouvrir, et la liste de la classe garde entièrement la
-// main sur ce qui est accessible. C'est ce qui permet à un élève de voir ce qui
-// se prépare sans que le professeur ait à cocher quoi que ce soit — et le jour
-// où l'activité s'ouvre, elle disparaît d'ici : elle n'apparaît plus que dans
-// les classes qui l'ont dans leur liste.
+// Lot « retours de classe » (06/10/2026, décision de Gwenaël) : plus
+// d'annonces « Bientôt ». Jusqu'ici, les activités que le catalogue annonce
+// sans les avoir ouvertes suivaient, pour tout le monde ; elles restent au
+// catalogue (prêtes pour le jour où elles s'ouvrent), mais un élève ne voit
+// une appli que lorsqu'elle existe. Une activité pas encore ouverte, même
+// inscrite dans la liste d'une classe, n'est pas montrée.
 function applis_de_classe(string $liste): array
 {
     $sortie = [];
@@ -175,11 +175,8 @@ function applis_de_classe(string $liste): array
         $cle = trim($cle);
         if (!appli_connue($cle) || isset($vues[$cle])) continue;
         $vues[$cle] = true;
+        if (!(CATALOGUE_APPLIS[$cle]['disponible'] ?? false) || !CATALOGUE_APPLIS[$cle]['url']) continue;
         $sortie[] = appli_affichable($cle);
-    }
-    foreach (CATALOGUE_APPLIS as $cle => $appli) {
-        if (isset($vues[$cle]) || ($appli['disponible'] ?? false)) continue;
-        $sortie[] = appli_affichable((string)$cle);
     }
     return $sortie;
 }

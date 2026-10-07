@@ -138,16 +138,9 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
      « critères de divisibilité ». Il sert à retrouver d'un coup d'œil une
      activité déjà connue, pas à la deviner. */
   .icone { flex: 0 0 auto; display: block; }
-  /* Une activité annoncée mais pas ouverte. Elle est visiblement en retrait —
-     fond plus pâle, titre gris, pas de liseré coloré — mais son DESSIN garde ses
-     couleurs : le soleil de Solèy et l'orange de Splat sont justement ce qui
-     donne envie d'y revenir. Grisés, les cinq à venir se ressemblaient tous
-     (comparé au navigateur le 07/09/2026). La pastille dit le reste. */
-  .appli.bientot { border-left-color: var(--line); background: #fbfcfe; cursor: default; }
-  .appli.bientot strong { color: var(--muted); }
-  .pastille { margin-left: auto; flex: 0 0 auto; background: #eef2f7; color: var(--muted);
-              font-size: .68rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
-              padding: 4px 9px; border-radius: 999px; }
+  /* Lot « retours de classe » (06/10/2026, décision de Gwenaël) : plus de
+     tuiles « Bientôt » — une appli n'apparaît que lorsqu'elle existe (le
+     serveur ne les envoie plus, lib/applis.php). */
   /* La jauge d'une activite COMMENCEE : une barre, le compte, le rang. Les
      memes mots et le meme badge que sur l'accueil de l'activite
      (outils/calcul_mental/defi_tables.html) : l'eleve doit retrouver son
@@ -158,8 +151,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   /* La jauge occupe toute la largeur de la tuile, sous la ligne du nom : la
      barre est lisible, et « 4 tables acquises sur 9 » tient a cote du rang
      meme sur un telephone. Seule une tuile qui PORTE une jauge passe en
-     plusieurs lignes ; les autres gardent leur mise en page d'avant (une
-     pastille « Bientot » ne doit pas se retrouver a la ligne). */
+     plusieurs lignes ; les autres gardent leur mise en page d'avant. */
   .appli.a-jauge { flex-wrap: wrap; }
   .appli.a-jauge .jauge { flex: 0 0 100%; }
   /* Sans base zero, le texte garde sa largeur de contenu et c'est LUI qui
@@ -556,10 +548,9 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   }
 
   // Les activités commencées passent en tête : c'est là que l'élève retourne.
-  // L'ordre des autres ne bouge pas, et les annonces « Bientôt » restent après
-  // (elles sont déjà les dernières de la liste). Avec une seule activité
-  // ouverte aujourd'hui, cela ne se voit pas — c'est le jour où il y en aura
-  // trois que la règle servira.
+  // L'ordre des autres ne bouge pas. Avec une seule activité ouverte
+  // aujourd'hui, cela ne se voit pas — c'est le jour où il y en aura trois que
+  // la règle servira.
   function remonter(li) {
     const liste = $("applis");
     if (liste.firstChild && liste.firstChild !== li) liste.insertBefore(li, liste.firstChild);
@@ -595,8 +586,10 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
 
     const liste = $("applis");
     liste.textContent = "";
+    // Seules les applis ouvertes (le serveur n'envoie plus que celles-là ; un
+    // serveur d'avant le lot « retours de classe » enverrait encore les
+    // annonces : elles sont simplement ignorées).
     const disponibles = (donnees.applis || []).filter(a => a.disponible && a.url);
-    const bientot = (donnees.applis || []).filter(a => !a.disponible || !a.url);
 
     disponibles.forEach(appli => {
       const li = document.createElement("li");
@@ -621,19 +614,6 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
       lien.querySelector("strong").textContent = appli.nom;
       lien.querySelector("span").textContent = appli.description;
       li.appendChild(lien);
-      liste.appendChild(li);
-    });
-
-    bientot.forEach(appli => {
-      const li = document.createElement("li");
-      const bloc = document.createElement("div");
-      bloc.className = "appli bientot";
-      bloc.innerHTML = icone(appli.cle)
-        + '<div class="texte"><strong></strong><span></span></div>'
-        + '<span class="pastille">Bientôt</span>';
-      bloc.querySelector("strong").textContent = appli.nom;
-      bloc.querySelector(".texte span").textContent = appli.description || "";
-      li.appendChild(bloc);
       liste.appendChild(li);
     });
 

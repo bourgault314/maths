@@ -32,7 +32,8 @@ test("bilan de la séance : « Les perles 10 sur 10 », comme leur compteur", ()
   assert.deepEqual(scoreEtape("construct", 2), {juste: 9, total: 11, erreurs: []});
   assert.deepEqual(scoreEtape("gaps"), {juste: 8, total: 8, erreurs: []});
   // La ligne du bilan écrit ce score tel quel.
-  assert.match(html, /score\.textContent = soude\(`\$\{faite\.juste\} sur \$\{faite\.total\}`\);/);
+  // (Lot « retours de classe » : sauf Mes calculs du jour sans aucune réponse, « temps écoulé ».)
+  assert.match(html, /score\.textContent = faite\.type === "revision" && faite\.reussi === false \? "temps écoulé" : soude\(`\$\{faite\.juste\} sur \$\{faite\.total\}`\);/);
 });
 
 test("10 sur 10 ou 11 sur 11 : le moteur décide exactement pareil (étape réussie, séance sans faute)", () => {

@@ -492,7 +492,7 @@ test("la page : la porte de l'accueil, et rien ne se lance à côté", () => {
 
 test("la page : les mots, le trophée du mélange et les petits restes", () => {
   assert.match(html, /const NOM_DU_TEST = "Je passe le test";/);
-  assert.match(html, /const CONDITION_DU_TEST = "si j’ai 9 sur 10 aux entraînements";/);
+  assert.match(html, /const CONDITION_DU_TEST = "si j’ai 9\\u00a0sur\\u00a010 juste\\u00a0avant";/);
   assert.ok(html.indexOf("const NOM_DU_TEST") < html.indexOf("function renderAccueil("), "défini avant le premier dessin de l'accueil");
   assert.doesNotMatch(html, /Je valide ma table"|acquise !`|Réussis d’abord ton mélange|montrerMelange|etat\.verrou|melangeDu/);
   assert.match(html, /titre\.textContent = `Je me teste sur mes \$\{etat\.melange\.tables\.length\}\\u00a0tables`;/);
@@ -504,7 +504,9 @@ test("la page : les mots, le trophée du mélange et les petits restes", () => {
   assert.match(html, /detail\.textContent = "Mon mélange · un\\u00a0trophée à\\u00a0gagner";/);
   assert.match(html, /droite\.append\(textes, tropheesDuMelange\(etat\.melange\.trophees\)\);/);
   assert.match(html, /\$\("fiche-melange-state"\)\.replaceChildren\(tropheesDuMelange\(etat\.melange\.trophees\)\);/, "la fiche imprimée aussi");
-  assert.equal(html.match(/20 questions en 1 min 30\. Un trophée avec 3, 6, puis 9 tables\.<\/p>/g).length, 2, "la notice et la fiche disent la règle");
+  // Lot « retours de classe » : la notice soude ses nombres (&nbsp;), la fiche imprimée garde ses espaces.
+  assert.equal(html.match(/20 questions en 1 min 30\. Un trophée avec 3, 6, puis 9 tables\.<\/p>/g).length, 1, "la fiche dit la règle");
+  assert.equal(html.match(/20&nbsp;questions en 1&nbsp;min&nbsp;30\. Un trophée avec 3, 6, puis 9&nbsp;tables\.<\/p>/g).length, 1, "la notice aussi");
   assert.match(html, /if \(validation && !validation\.reussi && !validation\.dejaAcquise\) return phraseTestRate\(\);/);
   // « Tu as choisi » : seulement depuis les réglages.
   assert.match(html, /\$\("launch-eyebrow"\)\.hidden = state\.origin !== "reglages";/);
@@ -516,7 +518,7 @@ test("la page : les mots, le trophée du mélange et les petits restes", () => {
   assert.match(html, /@media \(max-width: 359px\) \{ #question-count \.compteur-mot \{ display: none; \} \}/);
   // Les numéros de cache ont monté.
   assert.match(html, /defi_tables_core\.js\?v=20261005-1/);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261005-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261006-1/);
 });
 
 test("le serveur : la copie du moteur, « Tables passées », la tuile sans « Mon mélange à faire »", () => {

@@ -160,7 +160,8 @@ test("la notice « Comment ça marche ? » : les règles, écrites une fois, clo
   // Lot « un seul système » : Mon mélange est libre — la notice ne parle plus
   // d'un mélange à réussir avant le test d'une nouvelle table. Lot « les
   // trophées » : elle dit ce qu'il rapporte (un trophée avec 3, 6, puis 9 tables).
-  assert.match(texte, /<p><b>Mon mélange\.<\/b> Dès 2 tables passées, quand je veux&nbsp;: 20 questions en 1 min 30\. Un trophée avec 3, 6, puis 9 tables\.<\/p>/);
+  // Lot « retours de classe » : le nombre et son mot ne se séparent plus (&nbsp;).
+  assert.match(texte, /<p><b>Mon mélange\.<\/b> Dès 2&nbsp;tables passées, quand je veux&nbsp;: 20&nbsp;questions en 1&nbsp;min&nbsp;30\. Un trophée avec 3, 6, puis 9&nbsp;tables\.<\/p>/);
   assert.doesNotMatch(texte, /avant de valider|acquise/, "ni verrou ni « acquise » dans la notice");
   assert.doesNotMatch(texte, /je m’entraîne 3 fois|25 produits|Champion|★ produits/);
   assert.equal((html.match(/data-notice hidden/g) || []).length, 2, "accueil + parcours");

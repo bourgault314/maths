@@ -128,7 +128,7 @@ test("7. la liste de la JOURNÉE : elle grandit au fil des séances, sans les er
   // dus de la table en cours n'y vont pas, la séance a ses 4 marches.
   const sansTablePassee = jouerSeance(eleve({tablePassee: false}));
   assert.equal(sansTablePassee.types.includes("revision"), false, `pas de Mes calculs du jour sans table passée (${sansTablePassee.types})`);
-  assert.equal(sansTablePassee.types.length, 4);
+  assert.equal(sansTablePassee.types.filter(type => type !== "validation").length, 4, "ses 4 marches (le test peut suivre la marche 7 : lot « retours de classe »)");
   assert.deepEqual(P.aRetenir(deux.parcours, DEMAIN), []);
   // Le lendemain, une séance repart d'une liste vide.
   let p = deux.parcours;
@@ -420,7 +420,7 @@ test("1. Mon parcours s’ouvre en haut", () => {
 // ------------------------------------------------- le moteur a changé
 
 test("le moteur a changé : numéro de cache, copie du serveur, « fois » dans bilanSeances", async () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261005-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261006-1/);
   const moteur = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie));

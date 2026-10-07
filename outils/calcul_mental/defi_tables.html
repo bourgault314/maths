@@ -57,6 +57,19 @@
         }
       } catch (e) {}
       window.MATHSGO_ENTREE = entree;
+      // Lot « retours de classe » (06/10/2026, retour de Gwenaël : « une
+      // latence, un écran derrière, comme si quelque chose chargeait ») : au
+      // premier chargement d'un téléphone, le navigateur peignait l'accueil
+      // écrit dans le HTML (« La table de 2 », « Réglages libres »,
+      // « Évaluation CM1 ») le temps que le script arrive. « js-attente » le
+      // cache (des points de chargement à la place) jusqu'à ce que l'appli
+      // ait dessiné le sien (body.charge). Sans JavaScript, ce script ne
+      // tourne pas : le HTML reste visible, comme avant. « entree-eleve » :
+      // l'élève qui arrive de son espace ne voit pas non plus l'en-tête du
+      // site avant sa barre de suivi (body.mode-eleve).
+      try {
+        window.document.documentElement.className += " js-attente" + (entree.billet ? " entree-eleve" : "");
+      } catch (e) {}
       if (aEffacer || entree.billet) {
         try {
           window.history.replaceState(null, "", window.location.pathname
@@ -263,6 +276,7 @@
     body.fullscreen-active .fullscreen-collapse { display: block; }
 
     .panel {
+      position: relative;
       min-height: 650px;
       padding: clamp(20px, 5vw, 42px);
       overflow-anchor: none;
@@ -323,6 +337,7 @@
     .lire-cartes { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; margin: 18px auto 0; padding: 8px 16px; width: fit-content; border: 1px solid #c5d9e6; border-radius: 13px; background: #fff; color: var(--blue); font-size: .95rem; font-weight: 950; text-decoration: none; }
     .lire-cartes svg { flex: none; }
     .lire-note { margin: 10px 0 0; color: var(--muted); font-size: .85rem; text-align: center; }
+    .lire-toutes { margin-top: 14px; }
     @media (max-width: 620px) { .lire-liste li { font-size: 1.25rem; padding: 6px 12px; } }
     .matable-changer { min-height: 44px; padding: 0 6px; border: 0; background: none; color: var(--blue); font-size: .84rem; font-weight: 850; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; cursor: pointer; }
     /* Lot R3 bis : au doigt, choisir sa table est une décision SEULE à l'écran.
@@ -365,27 +380,11 @@
        couleur d'encre : la troisième fait pareil. */
     .etape.melange .num { background: #fff3cd; color: #7a5a00; }
     .etape.melange.is-next .num { background: #e0a800; color: #fff; }
-    /* Lot 3 : le mélange dû est surligné en jaune, « Je valide » d'une table
-       non acquise est cadenassé tant qu'il n'est pas réussi. */
+    /* Lot 3 : le mélange dû est surligné en jaune. (Le cadenas de « Je valide »
+       et ses règles sont partis au lot « retours de classe » : plus de verrou
+       depuis le lot « un seul système ».) */
     .etape.melange.is-next { border-color: #e0a800; box-shadow: 0 0 0 2px rgba(224, 168, 0, .22), 0 2px 0 #e9cf86; background: #fffdf5; }
     .etape.melange.is-next strong { color: #7a5a00; }
-    .etape.verrou { background: #f3f6f8; border-style: dashed; box-shadow: none; color: #6b7f90; }
-    .etape.verrou .num { background: #e9eef2; color: #8093a3; }
-    .etape.verrou strong { color: #6b7f90; }
-    .etape.verrou small { color: #7a5a00; }
-    .etape.verrou .cadenas { font-size: 1.15rem; line-height: 1; }
-    /* Lot R3 (A5, Q4) : toucher le cadenas ne faisait RIEN de visible. L'écran
-       descend maintenant jusqu'à « Mon mélange », qui s'illumine une seconde —
-       aucun texte nouveau, la ligne dit déjà « Réussis d'abord ton mélange ».
-       Le halo est une ombre, pas une animation : il reste visible pour qui a
-       demandé « moins d'animations » à son téléphone. */
-    .etape.est-montree { box-shadow: 0 0 0 4px rgba(224, 168, 0, .55), 0 2px 0 #e9cf86; }
-    .etape.est-montree { animation: etape-montree 1s ease-out 1; }
-    @keyframes etape-montree {
-      0% { box-shadow: 0 0 0 0 rgba(224, 168, 0, .8), 0 2px 0 #e9cf86; }
-      35% { box-shadow: 0 0 0 7px rgba(224, 168, 0, .55), 0 2px 0 #e9cf86; }
-      100% { box-shadow: 0 0 0 4px rgba(224, 168, 0, .45), 0 2px 0 #e9cf86; }
-    }
     /* Le choix déplié sous une étape (09/09/2026) : l'élève voit les cinq
        activités, leur état et celle qu'on lui conseille — il choisit, et il
        peut en refaire une plus tard. Rien n'est verrouillé, rien n'impose
@@ -671,9 +670,7 @@
     .cell.is-check.is-done { color: #fff; border-color: var(--green); background: var(--green); }
     .cell.is-star { color: #c9d6df; font-size: 1.4rem; }
     .cell.is-star.is-done { color: #b7791f; border-color: #e7c86a; background: #fff8e1; }
-    /* Lot 3 : la case Acquise cadenassée tant que le mélange est dû ; les cinq
-       marches de l'escalier, avec leur durée dessous. */
-    .cell.is-lock { color: #8093a3; font-size: 1.1rem; border-style: dashed; background: #f3f6f8; }
+    /* Lot 3 : les cinq marches de l'escalier, avec leur durée dessous. */
     .cell.is-star.n2 { font-size: 1.05rem; letter-spacing: -.08em; }
     .cell.is-star.n3 { font-size: .85rem; letter-spacing: -.08em; }
     .cell.is-star.n4 { font-size: .68rem; letter-spacing: -.1em; }
@@ -804,6 +801,13 @@
     .rangee b.is-a-travailler { border-color: #efb4b4; background: var(--red-soft); color: var(--red); }
     .rangee b.is-en-cours { border-color: #a9c8e8; background: #eef6ff; color: var(--blue); }
     .rangee b.is-su { border-color: #9ed4b4; background: var(--green-soft); color: var(--green); }
+    /* Lot « retours de classe » (06/10/2026) : « vu » — la table construite
+       (perles, bande), pas encore répondue de mémoire : le nombre en gris,
+       sur la case blanche, sans couleur. */
+    .rangee b.is-vu { border-color: #c3d1db; background: #fff; color: #8496a6; font-weight: 800; }
+    /* Lot « retours de classe » : la rangée a onze cases (le 0 d'abord) ; la
+       case « 100 » de la table de 10, un peu plus large, tient à 320 px. */
+    .rangee b.is-long { flex-grow: 1.4; max-width: 50px; }
     .carte-seance { display: block; width: 100%; padding: 16px; border: 2px solid var(--blue); border-radius: 18px; background: #fff; box-shadow: 0 0 0 3px rgba(7, 85, 184, .16), 0 3px 0 #b7cfe8; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
     .carte-seance .tete { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
     .carte-seance .tete strong { display: block; color: var(--blue); font-size: 1.3rem; font-weight: 950; line-height: 1.15; }
@@ -910,6 +914,25 @@
     .acc.en-decouverte #acc-changer, .acc.en-decouverte #acc-lire, .acc.en-decouverte #acc-fiche,
     .acc.en-decouverte > :not(.matable):not(.acc-bas):not(#acc-notice) { display: none; }
     .acc.en-attente > * { visibility: hidden; }
+    /* Lot « retours de classe » (06/10/2026, retour de Gwenaël : « il y a une
+       latence, comme si quelque chose chargeait ») : tant que la page n'a pas
+       dessiné l'accueil (html.js-attente, body sans .charge — l'accueil
+       écrit dans le HTML est caché), ou qu'elle attend le serveur
+       (.acc.en-attente), trois points disent que ça charge. Ils n'apparaissent
+       qu'au bout de 0,4 s : un chargement rapide ne montre rien. Posés par-dessus
+       le cadre, ils ne décalent rien. */
+    .chargement { display: none; }
+    html.js-attente body:not(.charge) #intro { visibility: hidden; animation: attente-filet 0s linear 10s forwards; }
+    html.js-attente body:not(.charge) .chargement, .panel:has(.acc.en-attente) .chargement {
+      position: absolute; left: 0; right: 0; top: 110px; display: flex; justify-content: center; gap: 9px;
+      opacity: 0; animation: chargement-apparait .2s ease-out .4s forwards; pointer-events: none;
+    }
+    .chargement i { width: 11px; height: 11px; border-radius: 50%; background: #9fb6c6; animation: chargement-point 1s ease-in-out infinite; }
+    .chargement i:nth-child(2) { animation-delay: .15s; }
+    .chargement i:nth-child(3) { animation-delay: .3s; }
+    @keyframes chargement-apparait { to { opacity: 1; } }
+    @keyframes chargement-point { 0%, 100% { transform: translateY(0); opacity: .45; } 50% { transform: translateY(-6px); opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { .chargement i { animation: none; } }
     .decouverte-texte { margin: 2px 0 12px; color: var(--muted); font-size: .95rem; font-weight: 800; }
     .decouverte-choix button { min-height: 52px; font-size: 1.12rem; }
     .decouverte-choix button.is-acquise { cursor: default; }
@@ -2049,6 +2072,14 @@
     .fiche-carre-cases { display: flex; justify-content: center; gap: .6mm; margin-top: .9mm; }
     .fiche-carre td b:empty + .fiche-carre-cases, .fiche-mini b:empty + .fiche-carre-cases { margin-top: 0; }
     .fiche-carre .fiche-case, .fiche-mini .fiche-case { width: 1.9mm; height: 1.9mm; border: .3mm solid currentColor; border-radius: .4mm; background: transparent; }
+    /* Lot « retours de classe » (06/10/2026, retour de Gwenaël : rectangulaires,
+       les cases « font moins table de Pythagore ») : des cases CARRÉES de
+       13,5 mm, le tableau centré — la fiche tient toujours sur une page. La
+       fiche ouverte depuis « Ma classe » (.avec-prof) garde ses cases basses :
+       carrées, elle passerait sur deux pages. */
+    .fiche-print:not(.avec-prof) .fiche-carre { width: auto; margin-left: auto; margin-right: auto; }
+    .fiche-print:not(.avec-prof) .fiche-carre tr > th:first-child { width: 7mm; }
+    .fiche-print:not(.avec-prof) .fiche-carre td { width: 13.5mm; height: 13.5mm; }
     .fiche-carre .fiche-case.is-pleine, .fiche-mini .fiche-case.is-pleine { background: currentColor; }
     .fiche-carre .a-travailler, .fiche-mini.a-travailler { border-color: #efb4b4; background: #ffebeb; color: #a93030; }
     .fiche-carre .en-cours, .fiche-mini.en-cours { border-color: #a9c8e8; background: #eef6ff; color: #0b57b7; }
@@ -2321,6 +2352,13 @@
        l'en-tête du site : le logo est son chemin vers le site. */
     body.mode-eleve .topbar { flex-wrap: nowrap; min-height: 0; padding-top: 8px; padding-bottom: 8px; gap: 8px; }
     body.mode-eleve .topbar > .brand { display: none; }
+    /* Lot « retours de classe » : arrivée par l'espace élève (html.entree-eleve,
+       posé dans <head>) — l'en-tête du site ne clignote plus avant la barre de
+       suivi. S'il manquait quelque chose, il revient de lui-même après 3 s. */
+    html.entree-eleve body:not(.mode-eleve) .topbar > * { visibility: hidden; animation: attente-filet 0s linear 10s forwards; }
+    /* Le filet : si l'appli n'a rien dessiné au bout de 10 s (réseau très
+       lent, erreur), ce qui est caché revient de lui-même. */
+    @keyframes attente-filet { to { visibility: visible; } }
     body.mode-eleve .topbar-actions { display: contents; }
     body.mode-eleve #lien-retour { order: 1; flex: 0 0 auto; }
     body.mode-eleve .suivi-repere { order: 2; flex: 1 1 auto; min-width: 0; margin: 0; }
@@ -2368,6 +2406,9 @@
     </header>
 
     <section class="panel">
+      <!-- Lot « retours de classe » (06/10/2026) : pendant un chargement lent
+           (premier passage, téléphone), le cadre blanc restait vide. -->
+      <div class="chargement" aria-hidden="true"><i></i><i></i><i></i></div>
       <div id="intro" class="intro">
         <section id="mode-screen" class="mode-screen">
           <!-- L'accueil « Ma table » (lot 2) : tout ce qui s'y lit est calculé
@@ -2666,6 +2707,11 @@
         <ol id="lire-liste" class="lire-liste"></ol>
         <a id="lire-cartes" class="lire-cartes" href="./cartes_table_2.pdf" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="3" y="5" width="13" height="16" rx="2" fill="#fff" stroke="currentColor" stroke-width="1.8"/><path d="M8 3h13v16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M6.5 11h6M6.5 15h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Cartes de la table de 2 à imprimer</span></a>
         <p class="lire-note">Onze cartes à découper : le calcul devant, la réponse derrière.</p>
+        <!-- Lot « retours de classe » (06/10/2026, décision de Gwenaël) : la
+             feuille de toutes les tables, réservée aux professeurs depuis R5,
+             revient pour l'élève — ici, à côté de la table qu'il lit, pas sur
+             l'accueil. -->
+        <a id="lire-toutes" class="lire-cartes lire-toutes" href="./fiche_tables_multiplication.pdf" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2" fill="#fff" stroke="currentColor" stroke-width="1.8"/><path d="M8 8h8M8 12h8M8 16h8M12 6v12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span>Toutes les tables sur une page</span></a>
       </div>
 
       <div id="fiche" class="fiche-screen" hidden>
@@ -2758,12 +2804,12 @@
   <!-- Ma séance du jour (lot 2, 03/10/2026) : la notice de la séance, six
        lignes (la notice d'avant a été retirée avec la clé, lot 2b). -->
   <template id="notice-seance">
-    <p><b>Ma séance du jour.</b> 4 étapes (parfois 5), environ 5 min. Réussi&nbsp;: j’avance. Raté&nbsp;: je reprends un peu plus bas.</p>
-    <p><b>Ma table.</b> De marche en marche&nbsp;: les perles, la bande, dans l’ordre, dans le désordre, les nombres manquants et les divisions… jusqu’à «&nbsp;Je passe le test&nbsp;»&nbsp;: 20 questions en 1 min 30, 2 erreurs au plus.</p>
-    <p><b>Ma rangée.</b> Les couleurs de Mes calculs&nbsp;: rouge&nbsp;à&nbsp;revoir, bleu&nbsp;en&nbsp;route, vert&nbsp;su.</p>
-    <p><b>Mes calculs du jour.</b> D’abord, chaque jour&nbsp;: 10 calculs de mes tables passées, en 1 minute. Réussi, un calcul revient plus tard. Raté, il revient demain.</p>
-    <p><b>Mon mélange.</b> Dès 2 tables passées, quand je veux&nbsp;: 20 questions en 1 min 30. Un trophée avec 3, 6, puis 9 tables.</p>
-    <p><b>Les étoiles et mon rang.</b> Mes 9 tables passées&nbsp;: toutes les tables, de plus en plus vite. Bronze… Légende&nbsp;: on ne redescend jamais.</p>
+    <p><b>Ma séance du jour.</b> 4&nbsp;étapes (parfois 5), environ 5&nbsp;min. Réussi&nbsp;: j’avance. Raté&nbsp;: je reprends un peu plus bas.</p>
+    <p><b>Ma table.</b> De marche en marche&nbsp;: les perles, la bande, dans l’ordre, dans le désordre, les nombres manquants et les divisions… jusqu’à «&nbsp;Je passe le test&nbsp;»&nbsp;: 20&nbsp;questions en 1&nbsp;min&nbsp;30, 2&nbsp;erreurs au plus.</p>
+    <p><b>Ma rangée.</b> En gris quand je l’ai construite, puis les couleurs de Mes calculs&nbsp;: rouge&nbsp;à&nbsp;revoir, bleu&nbsp;en&nbsp;route, vert&nbsp;su.</p>
+    <p><b>Mes calculs du jour.</b> D’abord, chaque jour&nbsp;: 10&nbsp;calculs de mes tables passées, en 1&nbsp;minute. Réussi, un calcul revient plus tard. Raté, il revient demain.</p>
+    <p><b>Mon mélange.</b> Dès 2&nbsp;tables passées, quand je veux&nbsp;: 20&nbsp;questions en 1&nbsp;min&nbsp;30. Un trophée avec 3, 6, puis 9&nbsp;tables.</p>
+    <p><b>Les étoiles et mon rang.</b> Mes 9&nbsp;tables passées&nbsp;: toutes les tables, de plus en plus vite. Bronze… Légende&nbsp;: on ne redescend jamais.</p>
   </template>
   <footer class="site-footer">
     <a href="mailto:gwenael@mathsgo.re?subject=Contact%20depuis%20mathsgo.re">Me contacter</a><span aria-hidden="true">·</span>
@@ -2774,7 +2820,7 @@
   </footer>
 
   <script src="./defi_tables_core.js?v=20261005-1"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20261005-1"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20261006-1"></script>
   <script>
     (() => {
       "use strict";
@@ -2784,7 +2830,7 @@
       // « Je passe le test » (la table est « passée ») ; quand il peut
       // s'ajouter en 5e étape, la carte dit à quelle condition.
       const NOM_DU_TEST = "Je passe le test";
-      const CONDITION_DU_TEST = "si j’ai 9 sur 10 aux entraînements";
+      const CONDITION_DU_TEST = "si j’ai 9\u00a0sur\u00a010 juste\u00a0avant";
       if (!CORE) throw new Error("Le moteur de Défi tables est indisponible.");
       const PARCOURS = window.MATHSGO_DEFI_TABLES_MON_PARCOURS;
       if (!PARCOURS) throw new Error("Le moteur de Mon parcours est indisponible.");
@@ -5825,7 +5871,7 @@
       // point d'exclamation seul en début de ligne.
       function soude(texte) {
         return String(texte)
-          .replace(/(\d) (min|s|minute|minutes|sur|questions?|calculs?|réponses?|erreurs?|justes?|passées?)\b/g, "$1\u00a0$2")
+          .replace(/(\d) (min|s|minute|minutes|sur|questions?|calculs?|réponses?|erreurs?|justes?|passées?|tables?|étapes?)\b/g, "$1\u00a0$2")
           .replace(/\bmin (\d)/g, "min\u00a0$1")
           .replace(/\bsur (\d)/g, "sur\u00a0$1")
           .replace(/\bfaut (\d)/g, "faut\u00a0$1")
@@ -6820,9 +6866,11 @@
           const pasFaits = Math.max(0, TOTAL - total);
           $("result-icon").textContent = pasFaits ? "⏱" : "✓";
           $("result-title").textContent = soude(pasFaits ? "Temps écoulé" : "Mes calculs du jour : fait");
-          $("result-score").textContent = soude(pasFaits
-            ? `${score} sur ${total} · ${pluriel(pasFaits, "calcul")} pas fait${pasFaits > 1 ? "s" : ""}`
-            : `${score} sur ${total}`);
+          // Rien répondu avant la fin du temps : pas de « 0 sur 0 », seulement
+          // ce qui reste à faire (lot « retours de classe »).
+          const restent = `${pluriel(pasFaits, "calcul")} pas fait${pasFaits > 1 ? "s" : ""}`;
+          $("result-score").textContent = soude(!pasFaits ? `${score} sur ${total}`
+            : total ? `${score} sur ${total} · ${restent}` : restent);
           $("result-config").textContent = "";
           $("result-detail").textContent = pasFaits ? (pasFaits > 1 ? "Ils reviendront." : "Il reviendra.") : "";
           const zoneDuJour = $("result-parcours");
@@ -7577,7 +7625,9 @@
       function resultatDeLEtape(suivi) {
         const config = state.configuration;
         const erreurs = erreursDeLEtape();
-        if (config.mode === "revision") return {juste: state.revisionPremierScore, total: Math.max(1, state.revisionPremierTotal), erreurs};
+        // Lot « retours de classe » : le temps écoulé avant la première
+        // réponse (« rien ») n'est pas « 0 sur 1 » — la séance le note à part.
+        if (config.mode === "revision") return {juste: state.revisionPremierScore, total: Math.max(1, state.revisionPremierTotal), rien: state.revisionPremierTotal === 0, erreurs};
         if (config.mode === "learn") {
           if (activitePerles(config)) return {juste: CASES_BANDE - 1, total: CASES_BANDE - 1, erreurs};
           const total = config.learnActivity === "gaps" ? TOTAL : CASES_BANDE;
@@ -7669,12 +7719,20 @@
       // couleurs du tableau — l'état de chaque calcul d'après sa boîte (rouge,
       // bleu, vert), et × 1 et × 10, hors des boîtes, en vert une fois
       // réussis. null : le calcul n'est entré dans aucune boîte.
+      // Lot « retours de classe » (06/10/2026, décision de Gwenaël) : « je
+      // l'ai vue » n'est pas « je la sais ». Dès que l'élève a construit sa
+      // table — « Je construis la bande » faite (ou une activité de J'apprends
+      // qui vient après) —, les nombres de sa rangée s'écrivent en gris
+      // (« vu ») ; les couleurs suivent toujours les boîtes, et le test reste
+      // lié aux boîtes (le gris ne remplit rien).
       function etatsDeRangee(table) {
         const ligne = parcours.tables[table];
+        const apres = PARCOURS.ACTIVITES_APPRENDS.slice(PARCOURS.ACTIVITES_APPRENDS.indexOf("construct"));
+        const vu = apres.some(activite => ligne.apprends[activite] === 2) ? "vu" : null;
         return PARCOURS.rangeeTable(parcours, table).cases.map(item => {
-          if (item.bout) return {produit: item.produit, etat: ligne.bouts.includes(item.multiplicateur) ? "su" : null};
+          if (item.bout) return {produit: item.produit, etat: ligne.bouts.includes(item.multiplicateur) ? "su" : vu};
           const fait = parcours.calculs[PARCOURS.cleFait(`${table}-${item.multiplicateur}`)] || null;
-          return {produit: item.produit, etat: fait ? PARCOURS.etatFait(fait) : null};
+          return {produit: item.produit, etat: fait ? PARCOURS.etatFait(fait) : vu};
         });
       }
 
@@ -7682,6 +7740,19 @@
         const cases = etatsDeRangee(table);
         const zone = document.createElement("div");
         zone.className = "rangee";
+        // Lot « retours de classe » (06/10/2026, idée de Gwenaël, planche 8
+        // bis) : la rangée commence à 0, comme la bande qu'il construit (onze
+        // cases, de 0 × 4 à 10 × 4). Le 0 s'écrit en vert en même temps que
+        // les autres nombres (dès « Je construis la bande ») ; avant, sa case
+        // est vide comme les autres. Il n'est demandé qu'à J'apprends et ne
+        // compte pas : « sur 10 calculs », le test et le bilan l'ignorent.
+        const zero = document.createElement("b");
+        zero.className = "is-zero";
+        if (cases.some(item => item.etat)) {
+          zero.classList.add("is-su");
+          zero.textContent = "0";
+        }
+        zone.append(zero);
         cases.forEach(item => {
           const cellule = document.createElement("b");
           // Une case vide reste SANS nombre (idée de Gwenaël, 02/10) : le
@@ -7692,10 +7763,12 @@
             cellule.className = `is-${item.etat}`;
             cellule.textContent = String(item.produit);
           }
+          // « 100 » (table de 10) : sa case un peu plus large, pour tenir à 320 px.
+          if (item.produit >= 100) cellule.classList.add("is-long");
           zone.append(cellule);
         });
         const compte = etat => cases.filter(item => item.etat === etat).length;
-        const morceaux = [[compte("su"), "su"], [compte("en-cours"), "en route"], [compte("a-travailler"), "à revoir"]]
+        const morceaux = [[compte("su"), "su"], [compte("en-cours"), "en route"], [compte("a-travailler"), "à revoir"], [compte("vu"), compte("vu") > 1 ? "vus" : "vu"]]
           .filter(([nombre]) => nombre).map(([nombre, mots]) => `${nombre} ${mots}`);
         zone.setAttribute("role", "img");
         zone.setAttribute("aria-label", `Table de ${table}, sur ${cases.length} calculs : ${morceaux.length ? morceaux.join(", ") : "aucun encore vu"}`);
@@ -7767,7 +7840,8 @@
         liste.hidden = false;
         seance.faites.forEach(faite => {
           const ligne = document.createElement("li");
-          const rate = faite.rate || faite.reussi === false;
+          // Mes calculs du jour ne se rate pas : son « temps écoulé » garde la coche.
+          const rate = faite.rate || (faite.reussi === false && faite.type !== "revision");
           if (rate) ligne.className = "rate";
           const marque = document.createElement("i");
           marque.setAttribute("aria-hidden", "true");
@@ -7775,7 +7849,7 @@
           const nom = document.createElement("span");
           nom.textContent = faite.nom;
           const score = document.createElement("span");
-          score.textContent = soude(`${faite.juste} sur ${faite.total}`);
+          score.textContent = faite.type === "revision" && faite.reussi === false ? "temps écoulé" : soude(`${faite.juste} sur ${faite.total}`);
           ligne.append(marque, nom, score);
           liste.append(ligne);
         });
@@ -7964,7 +8038,7 @@
           nom.textContent = passee.nom;
           if (passee.type === "revision") {
             const petit = document.createElement("small");
-            petit.textContent = ` · ${pluriel(passee.total, "calcul")}`;
+            petit.textContent = passee.reussi === false ? " · temps écoulé" : soude(` · ${pluriel(passee.total, "calcul")}`);
             nom.append(petit);
           }
           item.append(coche, nom);
@@ -7978,9 +8052,9 @@
           numero.textContent = String(index + 1);
           const nom = document.createElement("span");
           nom.textContent = etape.nom;
-          const detail = etape.type === "revision" ? `${pluriel(etape.calculs, "calcul")} · ${dureeCourte(etape.duree)}`
+          const detail = etape.type === "revision" ? soude(`${pluriel(etape.calculs, "calcul")} · ${dureeCourte(etape.duree)}`)
             : etape.type === "etoile" ? etape.detail
-            : etape.conditionnelle ? "si mes calculs sont prêts" : "";
+            : etape.conditionnelle ? CONDITION_DU_TEST : "";
           if (detail) {
             const petit = document.createElement("small");
             petit.textContent = ` · ${detail}`;
@@ -8171,7 +8245,9 @@
         $("acc-table-titre").textContent = "Tu connais déjà des tables ?";
         const texte = document.createElement("p");
         texte.className = "decouverte-texte";
-        texte.textContent = "Passe le test de celles que tu connais : 20 questions en 1 min 30.";
+        // Lot « retours de classe » : « 20 » restait seul en fin de ligne au
+        // téléphone (375 à 430 px) — le nombre et son mot ne se séparent plus.
+        texte.textContent = soude("Passe le test de celles que tu connais : 20 questions en 1 min 30.");
         const choix = document.createElement("div");
         choix.className = "matable-choix decouverte-choix";
         PARCOURS_TABLES.forEach(candidate => {
@@ -8433,18 +8509,17 @@
       function makeCell({kind, etat, label, config, extraClass = "", texte = null, action = null}) {
         const cell = document.createElement("button");
         cell.type = "button";
-        cell.className = `cell ${kind === "dot" ? "" : kind === "check" ? "is-check" : kind === "lock" ? "is-lock" : "is-star"} ${etat === 1 ? "is-started" : etat === 2 ? "is-done" : ""} ${extraClass}`.replace(/\s+/g, " ").trim();
+        cell.className = `cell ${kind === "dot" ? "" : kind === "check" ? "is-check" : "is-star"} ${etat === 1 ? "is-started" : etat === 2 ? "is-done" : ""} ${extraClass}`.replace(/\s+/g, " ").trim();
         if (kind === "dot") {
           const dot = document.createElement("span");
           dot.className = "dot";
           cell.append(dot);
         } else {
-          cell.replaceChildren(texte !== null ? texte : document.createTextNode(kind === "check" ? "✓" : kind === "lock" ? "🔒" : "★"));
+          cell.replaceChildren(texte !== null ? texte : document.createTextNode(kind === "check" ? "✓" : "★"));
         }
-        // Le cadenas dit déjà « verrouillé » dans son label : ne pas le répéter.
-        const stateLabel = kind === "lock" ? "" : etat === 2 ? "réussi" : etat === 1 ? "commencé" : "pas encore fait";
+        const stateLabel = etat === 2 ? "réussi" : etat === 1 ? "commencé" : "pas encore fait";
         cell.setAttribute("aria-label", `${label}${stateLabel ? ` : ${stateLabel}` : ""}. ${config ? "Lancer." : ""}`.trim());
-        if (kind === "lock" || (!config && action)) cell.setAttribute("aria-disabled", "true");
+        if (!config && action) cell.setAttribute("aria-disabled", "true");
         cell.title = label;
         cell.addEventListener("click", () => (config ? launchFromParcours(config) : action && action()));
         return cell;
@@ -9237,6 +9312,10 @@
         demarrerSuivi();
       }
       // [aiguillage:fin]
+      // La page est dessinée : les points de chargement s'effacent (lot
+      // « retours de classe ») — sauf pendant l'attente du serveur, que
+      // .acc.en-attente montre à part.
+      document.body.classList.add("charge");
     })();
   </script>
 </body>

@@ -505,35 +505,25 @@ verifier("la page élève reconnaît le code et donne les applis de la classe", 
     egal('defi-tables', $r['json']['applis'][0]['cle'], 'la classe a Défi tables, en premier');
     egal(true, $r['json']['applis'][0]['disponible']);
     vrai(str_contains($r['json']['applis'][0]['url'], 'defi_tables.html'), "l'appli doit pointer vers mathsgo.re");
-    // 07/09/2026 : les activités que le catalogue annonce sans les avoir
-    // ouvertes suivent, pour TOUTE classe, dans l'ordre du catalogue. Ce ne
-    // sont pas des attributions : ni adresse, ni « disponible ».
-    $suite = array_slice($r['json']['applis'], 1);
-    vrai($suite !== [], 'les activités à venir sont annoncées');
-    foreach ($suite as $appli) {
-        egal(false, $appli['disponible'], $appli['cle'] . " est annoncée, pas ouverte");
-        egal(null, $appli['url'], $appli['cle'] . " ne doit avoir aucune adresse à ouvrir");
-        vrai(($appli['description'] ?? '') !== '', $appli['cle'] . " doit dire ce qu'elle sera");
-    }
-    egal(['defi-calcul', 'automatismes', 'splat-equations', 'soley'],
-        array_column($suite, 'cle'), "l'ordre est celui du catalogue");
+    // Lot « retours de classe » (06/10/2026, décision de Gwenaël) : plus
+    // d'annonces « Bientôt ». Jusqu'ici, les activités pas encore ouvertes
+    // suivaient pour toute classe ; une appli n'apparaît plus que lorsqu'elle
+    // existe.
+    egal(['defi-tables'], array_column($r['json']['applis'], 'cle'), 'seulement Défi tables : aucune annonce');
 });
 
-// Le filtre « disponible » de applis_de_classe() ne se voit pas depuis l'API
-// tant qu'une seule appli est ouverte ET qu'elle est dans la liste de la
-// classe : sans lui, la sortie serait la même. Il se prouve donc sur la
-// fonction elle-même, avec une classe qui n'a PAS Défi tables — sans le
-// filtre, Défi tables serait annoncée à cette classe, adresse comprise, donc
-// ouvrable par un élève à qui elle n'est pas proposée.
-verifier("une activité OUVERTE n'est jamais annoncée à une classe qui ne l'a pas", function () {
+// Le filtre « disponible » de applis_de_classe() : une activité ouverte n'est
+// donnée qu'aux classes qui l'ont, et une activité PAS ouverte n'est donnée à
+// personne, même à une classe qui l'a dans sa liste (« automatismes » est
+// proposable à une classe, mais pas encore ouvert).
+verifier("une activité n'est donnée que si elle est ouverte ET dans la liste de la classe", function () {
     require_once __DIR__ . '/../public/lib/applis.php';
-    $cles = array_column(applis_de_classe('automatismes'), 'cle');
-    vrai(!in_array('defi-tables', $cles, true),
-        'Défi tables est ouverte : elle ne doit apparaître que dans les classes qui l’ont');
-    egal('automatismes', $cles[0], 'la liste de la classe passe devant');
-    foreach (applis_de_classe('automatismes') as $appli) {
-        if ($appli['disponible']) continue;
-        egal(null, $appli['url'], $appli['cle'] . ' : une annonce n’a rien à ouvrir');
+    egal([], applis_de_classe('automatismes'), 'automatismes n’est pas encore ouverte : rien à montrer');
+    egal(['defi-tables'], array_column(applis_de_classe('automatismes,defi-tables'), 'cle'), 'seule l’appli ouverte de la liste');
+    egal([], applis_de_classe(''), 'une classe sans appli : rien, pas même des annonces');
+    foreach (applis_de_classe('defi-tables') as $appli) {
+        egal(true, $appli['disponible']);
+        vrai(is_string($appli['url']) && $appli['url'] !== '', $appli['cle'] . ' a une adresse');
     }
 });
 
