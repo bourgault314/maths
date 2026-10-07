@@ -943,7 +943,7 @@ svg{display:block;max-width:100%;height:auto}
 .reponse-eleve-frac{margin-right:.3em;vertical-align:middle}.reponse-eleve-frac::after{transform:rotate(-28deg)}
 .answer-slot.a-reponse-eleve strong{color:#087a55}
 /* Le panneau d'aide se pose sur le pied ; la question reste visible au-dessus. */
-.aide-panel{position:fixed;left:0;right:0;bottom:0;z-index:60;display:flex;flex-direction:column;min-height:var(--pied-h,240px);max-height:min(64dvh,calc(100dvh - 120px));padding:12px max(12px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));border-top:2px solid #6f97c6;border-radius:20px 20px 0 0;background:#fff;box-shadow:0 -14px 34px rgba(11,33,71,.16);font-family:Arial,"Helvetica Neue",Helvetica,sans-serif}
+.aide-panel{position:fixed;left:0;right:0;bottom:0;z-index:60;display:flex;flex-direction:column;min-height:var(--pied-h,240px);max-height:min(64vh,calc(100vh - 120px));max-height:min(64dvh,calc(100dvh - 120px));padding:12px max(12px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));border-top:2px solid #6f97c6;border-radius:20px 20px 0 0;background:#fff;box-shadow:0 -14px 34px rgba(11,33,71,.16);font-family:Arial,"Helvetica Neue",Helvetica,sans-serif}
 .aide-panel[hidden]{display:none!important}
 .aide-scroll{flex:1 1 auto;min-height:0;width:min(100%,640px);margin:0 auto;overflow-y:auto;overscroll-behavior:contain}
 .aide-title{display:flex;align-items:center;gap:7px;margin:0 0 8px;color:#073a75;font-size:1.08rem;font-weight:900}
@@ -957,7 +957,7 @@ svg{display:block;max-width:100%;height:auto}
 .aide-dessin{display:flex;flex-direction:column;align-items:stretch;gap:8px;margin-top:10px}
 .aide-dessin[hidden]{display:none}
 .aide-figure{width:100%;min-width:0}
-.aide-dessin svg{display:block;width:min(100%,560px)!important;max-width:100%!important;height:auto!important;max-height:min(36dvh,320px)!important;margin:0 auto!important}
+.aide-dessin svg{display:block;width:min(100%,560px)!important;max-width:100%!important;height:auto!important;max-height:min(36vh,320px)!important;max-height:min(36dvh,320px)!important;margin:0 auto!important}
 .aide-back{flex:none;width:min(100%,560px);height:var(--aide-back-h,52px);margin:10px auto 0;border:1px solid #003b7a;border-radius:14px;background:#003b7a;color:#fff;font-size:1.12rem;font-weight:900;cursor:pointer;touch-action:manipulation}
 .aide-back:focus-visible{outline:3px solid #9cc0ea;outline-offset:2px}
 /* Quitter la série ? */
@@ -1015,7 +1015,7 @@ svg{display:block;max-width:100%;height:auto}
 .aide-scroll{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"titre dessin" "etapes dessin" "plus dessin" "vide dessin";grid-template-rows:auto auto auto 1fr;column-gap:28px;width:min(100%,1100px)}
 .aide-title{grid-area:titre}.aide-steps{grid-area:etapes}.aide-more{grid-area:plus;justify-self:start}
 .aide-dessin{grid-area:dessin;width:min(52vw,560px);margin-top:0}
-.aide-dessin svg{max-height:min(34dvh,340px)!important}
+.aide-dessin svg{max-height:min(34vh,340px)!important;max-height:min(34dvh,340px)!important}
 .aide-scroll:has(.aide-steps[hidden]){grid-template-columns:minmax(0,1fr);grid-template-areas:"titre" "dessin" "plus" "vide";justify-items:center}
 .aide-scroll:has(.aide-steps[hidden]) .aide-title{justify-self:center}
 .aide-back{width:min(100%,360px)}
@@ -1048,6 +1048,27 @@ svg{display:block;max-width:100%;height:auto}
 .verdict{font-size:.92rem}
 .pied-btn.valider{font-size:1.12rem}
 .carte-correction{padding:7px 10px}
+}
+/* Relecture — navigateurs sans l'unité dvh (iOS avant 15.4, Chrome avant
+   108) : une variable qui la contient devient invalide là où elle est
+   employée, et les touches tombaient à 23 px de haut. Repli en vh. */
+@supports not (height:1dvh){
+.answer-dock{--touche-h:clamp(44px,6.5vh,56px);--actions-h:clamp(48px,6.4vh,56px);--carte-h:clamp(116px,17vh,150px);--zone-reduite:clamp(80px,11vh,96px)}
+@media(min-width:900px){.answer-dock{--carte-h:clamp(116px,19vh,160px)}}
+}
+/* Relecture — téléphone : options de QCM un peu plus serrées (52 px, soit
+   44 px encore après la réduction × 0,85) ; écran court (barre d'adresse
+   visible, 320 × 640) : en-tête, verdict, marges et Passer | Valider se
+   resserrent. Les touches du pavé ne descendent jamais sous 44 px. */
+@media(max-width:600px){
+.diapo .options.options-lot-t{gap:8px}
+.diapo .options.options-lot-t>.opt.opt-lettree{min-height:52px;padding:8px 14px}
+}
+@media(max-width:899px) and (max-height:740px){
+.answer-dock{--verdict-h:30px;--actions-h:44px;padding-bottom:max(6px,env(safe-area-inset-bottom))}
+.pied{gap:6px}
+.diapo.interactive-mode>.top{height:52px;padding-top:4px;padding-bottom:4px}
+.diapo.interactive-mode .stage{padding-top:4px;padding-bottom:6px}
 }
 /* Projection (diaporama) : la correction en grand. */
 @media(min-width:1600px){.diapo:not(.interactive-mode){--opt-taille:1.6rem}}
@@ -1176,7 +1197,9 @@ function demanderRetourMenu(){
  returnToMenu();
 }
 function closeQuit(){const modal=document.getElementById('quitModal');if(modal)modal.hidden=true;}
+let retourMenuConfirme=false;
 function returnToMenu(){
+ retourMenuConfirme=true;
  if(history.state&&history.state.mathsgoView==='questionnaire'){history.back();return;}
  location.replace(menuUrl);
 }
@@ -1876,10 +1899,20 @@ function render(){
    jusqu'à × 1,6 pour remplir l'écran projeté. Téléphone et tablette : × 1,
    la zone question défile si besoin. L'échelle est calculée une fois par
    question, sur la question ET sur sa correction : rien ne change de taille
-   à la validation. */
-function zoomBounds(){
+   à la validation.
+   Relecture : au téléphone, le pied du lot T est plus haut ; une question
+   trop longue (saisie ou QCM) peut être réduite jusqu'à × 0,85 avant de
+   défiler. Les manipulations ne sont jamais réduites au téléphone (cibles
+   tactiles), et les outils qui lisent la position du doigt avec
+   getBoundingClientRect (droite graduée, curseur des conversions, axes du
+   produit de fractions) ne sont réduits nulle part : Safari et les anciens
+   Chrome ne corrigent pas ces mesures du zoom CSS, le point tomberait à côté. */
+const ZOOM_OUTILS_POINTEUR='.conversion-tool,.fraction-product-manipulator';
+function zoomBounds(current){
+ const spec=current&&current.interactiveSpec;
+ if(spec&&spec.kind==='numberline-point') return {min:1,max:1};
  if(!interactiveMode) return {min:.6,max:window.innerWidth>=1200?1.6:1.15};
- if(coarsePointerMedia.matches) return {min:1,max:1};
+ if(coarsePointerMedia.matches) return spec&&(spec.kind==='qcm'||spec.kind==='slots')?{min:.85,max:1}:{min:1,max:1};
  return {min:.66,max:1};
 }
 function applySlideZoom(slide,zoom){
@@ -1889,10 +1922,12 @@ function slideFits(stage){
  return stage.scrollHeight<=stage.clientHeight+1&&stage.scrollWidth<=stage.clientWidth+1;
 }
 function measureSlideZoom(current){
- const bounds=zoomBounds();
+ const bounds=zoomBounds(current);
  if(bounds.max<=bounds.min) return bounds.max;
  const slide=document.getElementById('slide'),stage=document.getElementById('stage');
  if(!slide||!stage) return 1;
+ const probe=document.createElement('div');probe.innerHTML=current.questionHtml;
+ if(probe.querySelector(ZOOM_OUTILS_POINTEUR)) return Math.min(1,bounds.max);
  const states=[current.questionHtml,current.correctionHtml];
  let best=bounds.max;
  states.forEach((html,stateIndex)=>{
@@ -1957,7 +1992,9 @@ function setupInteractiveSlide(current){
      option.classList.toggle('wrong-choice',interactiveLocked&&selectedOptions.has(index)&&!option.classList.contains('correct'));
      if(!interactiveLocked){
        option.onclick=()=>toggleInteractiveOption(index);
-       option.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();toggleInteractiveOption(index);}};
+       // Espace coche ou décoche ; Entrée coche une option libre, et sur une
+       // option déjà cochée (clic puis Entrée) elle valide, comme partout.
+       option.onkeydown=event=>{if(event.key===' '||(event.key==='Enter'&&!selectedOptions.has(index))){event.preventDefault();event.stopPropagation();toggleInteractiveOption(index);}};
      }
    });
  }else if(spec.kind==='grid-point'){
@@ -3085,7 +3122,7 @@ function openAide(){
  renderAide();
  const back=document.querySelector('#aidePanel .aide-back');if(back) back.focus({preventScroll:true});
 }
-function closeAide(){aideOpen=false;renderAide();}
+function closeAide(){const panel=document.getElementById('aidePanel');if(panel&&panel.contains(document.activeElement))document.activeElement.blur();aideOpen=false;renderAide();}
 function aideNextStep(){
  const steps=slides[idx].aideSteps||[];
  aideStep=Math.min(steps.length,aideStep+1);
@@ -3174,11 +3211,21 @@ document.addEventListener('keydown',event=>{
    return;
  }
  if(interactiveFinished)return;
- if(aideOpen){if(event.key==='Enter'){event.preventDefault();closeAide();}return;}
+ if(aideOpen){
+   // Entrée sur « Un autre indice » montre l'indice ; ailleurs, elle referme.
+   const active=document.activeElement;
+   if(event.key==='Enter'&&active&&active.id==='aideMore') return;
+   if(event.key==='Enter'){event.preventDefault();closeAide();}
+   return;
+ }
  const spec=slides[idx].interactiveSpec;
  if(event.key==='Enter'||event.key==='ArrowRight'){
    const active=document.activeElement;
-   if(event.key==='Enter'&&active&&active.tagName==='BUTTON'&&!active.classList.contains('key')&&active.id!=='interactiveAction') return;
+   // Entrée garde son effet natif sur un bouton que l'élève a choisi au
+   // clavier (Passer, Cours, Aide, Menu, une carte à placer…). Mais une case
+   // de réponse, le bouton clavier ou un bouton désactivé (Passer après
+   // validation) gardent le focus après un clic de souris : là, Entrée valide.
+   if(event.key==='Enter'&&active&&active.tagName==='BUTTON'&&!active.disabled&&active.getClientRects().length&&!active.matches('.key,#interactiveAction,.interactive-input-slot,#keyboardToggle')) return;
    event.preventDefault();submitInteractive();return;
  }
  if(interactiveLocked)return;
@@ -3200,7 +3247,16 @@ document.addEventListener('keydown',event=>{
    if(allowed.has(value)){event.preventDefault();appendInteractiveValue(value);}
  }
 });
-window.addEventListener('popstate',()=>location.reload());
+// Le retour arrière du navigateur (ou le geste « retour » du téléphone) pose
+// la même question que « ← Menu » quand la série est commencée.
+window.addEventListener('popstate',()=>{
+ if(!retourMenuConfirme&&interactiveMode&&!interactiveFinished&&answeredCount>0){
+   try{const url=new URL(location.href);url.hash='questionnaire';history.pushState({mathsgoView:'questionnaire'},'',url.href);}catch(error){location.reload();return;}
+   demanderRetourMenu();
+   return;
+ }
+ location.reload();
+});
 let resizeTimer=null,lastViewport=window.innerWidth+'x'+window.innerHeight;
 window.addEventListener('resize',()=>{
  requestAnimationFrame(()=>{fitNavNumbers();fitVerdictLine();fitCorrectionCard();});
