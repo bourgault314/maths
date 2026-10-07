@@ -1071,6 +1071,21 @@ svg{display:block;max-width:100%;height:auto}
 .diapo.interactive-mode>.top{height:52px;padding-top:4px;padding-bottom:4px}
 .diapo.interactive-mode .stage{padding-top:4px;padding-bottom:6px}
 }
+/* Relecture — téléphone tenu en largeur (tactile, hauteur ≤ 500 px) : le
+   pied passe à droite de la question (verdict, pavé, Passer | Valider en
+   colonne) ; empilé, il ne laissait que 110 px à la question. Le panneau
+   d'aide se pose sur cette colonne. */
+@media(orientation:landscape) and (max-height:500px) and (pointer:coarse){
+.diapo.interactive-mode:not(.finished){display:grid;grid-template-columns:minmax(0,1fr) min(44vw,360px);grid-template-rows:auto minmax(0,1fr)}
+.diapo.interactive-mode:not(.finished)>.top{grid-column:1/-1;grid-row:1;height:52px;padding-top:4px;padding-bottom:4px}
+.diapo.interactive-mode:not(.finished) .stage{grid-column:1;grid-row:2;min-height:0;padding-top:4px;padding-bottom:6px}
+.diapo.interactive-mode:not(.finished) .answer-dock{grid-column:2;grid-row:2;display:flex;flex-direction:column;justify-content:flex-end;min-height:0;--verdict-h:30px;--actions-h:44px;padding-top:4px;border-top:0;border-left:1px solid var(--border)}
+.diapo.interactive-mode:not(.finished) .pied{display:flex;flex-direction:column;gap:6px;width:100%}
+.diapo.interactive-mode .aide-panel{left:auto;top:52px;width:min(44vw,360px);min-height:0;max-height:none;border-top:0;border-left:2px solid #6f97c6}
+.diapo.interactive-mode .aide-scroll{display:block;width:100%}
+.diapo.interactive-mode .aide-dessin{width:auto;margin-top:10px}
+.diapo.interactive-mode .aide-back{width:100%}
+}
 /* Projection (diaporama) : la correction en grand. */
 @media(min-width:1600px){.diapo:not(.interactive-mode){--opt-taille:1.6rem}}
 @media print{.diapo{--stage-top:20px;--stage-x:20px;--stage-bottom:20px;height:auto;min-height:100vh;overflow:visible}.top{display:none}.stage{min-height:auto;overflow:visible;padding:var(--stage-top) var(--stage-x) var(--stage-bottom)}}
