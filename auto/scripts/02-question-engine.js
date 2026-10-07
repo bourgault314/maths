@@ -2847,15 +2847,15 @@ function evoItem(price){return pick(EVO_ITEMS.filter(([,min,max])=>price>=min&&p
 // Effectifs : nom au pluriel, phrase de départ, sujet de l’évolution, question.
 const EVO_GROUPS=[
   {unit:'habitants',values:Array.from({length:22},(_,i)=>300+100*i),
-   start:n=>'Un village compte '+n+'.',subject:'Sa population',
+   start:n=>'Un village compte '+n+'.<br>',subject:'Sa population',
    ask:(up)=>'Combien d’habitants compte-t-il après cette '+(up?'augmentation':'baisse')+EVO_INSEC+'?',
    howMuch:(up)=>'De combien d’habitants la population '+(up?'augmente':'baisse')+'-t-elle'+EVO_INSEC+'?'},
   {unit:'adhérents',values:Array.from({length:19},(_,i)=>40+20*i),
-   start:n=>'Un club de sport compte '+n+'.',subject:'L’année suivante, le nombre d’adhérents',
+   start:n=>'Un club de sport compte '+n+'.<br>',subject:'L’année suivante, ce nombre',
    ask:()=>'Combien d’adhérents compte alors le club'+EVO_INSEC+'?',
    howMuch:(up)=>'De combien d’adhérents ce nombre '+(up?'augmente':'baisse')+'-t-il'+EVO_INSEC+'?'},
   {unit:'élèves',values:Array.from({length:31},(_,i)=>300+20*i),
-   start:n=>'Un collège compte '+n+'.',subject:'L’année suivante, l’effectif',
+   start:n=>'Un collège compte '+n+'.<br>',subject:'L’année suivante, l’effectif',
    ask:()=>'Combien d’élèves compte alors le collège'+EVO_INSEC+'?',
    howMuch:(up)=>'De combien d’élèves l’effectif '+(up?'augmente':'baisse')+'-t-il'+EVO_INSEC+'?'}
 ];
@@ -2946,12 +2946,12 @@ function makeEvolutionInstance(mod,q){
     initial=evoPickPrice(p);
     const item=evoItem(initial),X=evoQty(initial,'€'),P=evoPct(p),form=rnd();
     if(up) rawStatement=form<.4
-      ?item+' coûte '+X+'. Son prix augmente '+evoDe(p)+'.<br>'+ask
+      ?item+' coûte '+X+'.<br>Son prix augmente '+evoDe(p)+'.<br>'+ask
       :(form<.7
         ?item+' coûte '+X+'.<br>Quel sera son prix après une augmentation '+evoDe(p)+EVO_INSEC+'?'
         :'Le prix d’'+evoLower(item)+' de '+X+' augmente '+evoDe(p)+'.<br>'+ask);
     else rawStatement=form<.3
-      ?item+' coûte '+X+'. Son prix baisse '+evoDe(p)+'.<br>'+ask
+      ?item+' coûte '+X+'.<br>Son prix baisse '+evoDe(p)+'.<br>'+ask
       :(form<.55
         ?item+' coûte '+X+'.<br>Quel sera son prix après une réduction '+evoDe(p)+EVO_INSEC+'?'
         :(form<.8
@@ -2969,7 +2969,7 @@ function makeEvolutionInstance(mod,q){
     const drawn=evoPickGroup(p),group=drawn.group;
     initial=drawn.n;unit=group.unit;
     const P=evoPct(p),result=up?initial*(1+p/100):initial*(1-p/100);
-    rawStatement=group.start(evoQty(initial,unit))+' '+group.subject+' '+(up?'augmente':'baisse')+' '+evoDe(p)+'.<br>'+group.ask(up);
+    rawStatement=group.start(evoQty(initial,unit))+group.subject+' '+(up?'augmente':'baisse')+' '+evoDe(p)+'.<br>'+group.ask(up);
     answers=[evoNum(result)];
     rawFooter='[[formula]]'+EVO_INSEC+unit;
     steps=[(up?'On ajoute ':'On enlève ')+P+' des '+unit+'.',evoPartLine(initial,p,''),
@@ -2989,7 +2989,7 @@ function makeEvolutionInstance(mod,q){
       rawFooter='× [[formula]]';
     }else{
       initial=evoPickPrice(10,true);
-      rawStatement=evoItem(initial)+' coûte '+evoQty(initial,'€')+'. Son prix '+(up?'augmente':'baisse')+' '+evoDe(p)+'.<br>Complète le calcul qui donne le nouveau prix.';
+      rawStatement=evoItem(initial)+' coûte '+evoQty(initial,'€')+'.<br>Son prix '+(up?'augmente':'baisse')+' '+evoDe(p)+'.<br>Complète le calcul qui donne le nouveau prix.';
       rawFooter=evoEuroNum(initial)+' × [[formula]]';
     }
     steps=['On passe à 100'+EVO_FINE+'% '+sign+' '+P+' = '+evoPct(total)+'.',
@@ -3037,7 +3037,7 @@ function makeEvolutionInstance(mod,q){
     const result=up?initial*(1+p/100):initial*(1-p/100),amount=initial*p/100;
     const prompt=up
       ?'Le prix d’un article coûtant '+money(initial)+' augmente '+evoDe(p)+'.<br>Quel calcul donne le nouveau prix'+EVO_INSEC+'?'
-      :'Un article coûte '+money(initial)+'. Son prix baisse '+evoDe(p)+'.<br>Quel calcul donne le prix final'+EVO_INSEC+'?';
+      :'Un article coûte '+money(initial)+'.<br>Son prix baisse '+evoDe(p)+'.<br>Quel calcul donne le prix final'+EVO_INSEC+'?';
     const qcm=evoQcm(prompt,options[0].text,options.slice(1));
     rawStatement=qcm.rawStatement;answers=qcm.answers;feedback=qcm.feedback;
     if(brevet){
@@ -3058,7 +3058,7 @@ function makeEvolutionInstance(mod,q){
     const P=evoPct(p);
     if(rnd()<.6){
       initial=evoPickPrice(p);unit='€';
-      rawStatement=evoItem(initial)+' coûte '+evoQty(initial,'€')+'. Son prix '+(up?'augmente':'baisse')+' '+evoDe(p)+'.<br>De combien d’euros le prix '+(up?'augmente':'baisse')+'-t-il'+EVO_INSEC+'?';
+      rawStatement=evoItem(initial)+' coûte '+evoQty(initial,'€')+'.<br>Son prix '+(up?'augmente':'baisse')+' '+evoDe(p)+'.<br>De combien d’euros le prix '+(up?'augmente':'baisse')+'-t-il'+EVO_INSEC+'?';
       rawFooter='[[formula]]'+EVO_INSEC+'€';
       answers=[evoEuroNum(initial*p/100)];
       steps=[(up?'L’augmentation':'La baisse')+' vaut '+P+' du prix.',evoPartLine(initial,p,'€').replace(/= ([^=]+)$/,'= <strong>$1</strong>')];
@@ -3066,7 +3066,7 @@ function makeEvolutionInstance(mod,q){
     }else{
       const drawn=evoPickGroup(p),group=drawn.group;
       initial=drawn.n;unit=group.unit;
-      rawStatement=group.start(evoQty(initial,unit))+' '+group.subject+' '+(up?'augmente':'baisse')+' '+evoDe(p)+'.<br>'+group.howMuch(up);
+      rawStatement=group.start(evoQty(initial,unit))+group.subject+' '+(up?'augmente':'baisse')+' '+evoDe(p)+'.<br>'+group.howMuch(up);
       rawFooter='[[formula]]'+EVO_INSEC+unit;
       answers=[evoNum(initial*p/100)];
       steps=[(up?'L’augmentation':'La baisse')+' vaut '+P+' de '+evoNum(initial)+'.',(evoPartLine(initial,p,'')+EVO_INSEC+unit).replace(/= ([^=]+)$/,'= <strong>$1</strong>')];
@@ -3090,7 +3090,7 @@ function makeEvolutionInstance(mod,q){
     }while(new Set(Object.values(values).map(v=>Math.round(v*100))).size<4&&tries<50);
     const P=evoPct(p),a=initial*p/100;
     const prompt=unit==='€'
-      ?evoItem(initial)+' coûte '+evoQty(initial,'€')+'. Son prix '+(up?'augmente':'baisse')+' '+evoDe(p)+'.<br>'+ask
+      ?evoItem(initial)+' coûte '+evoQty(initial,'€')+'.<br>Son prix '+(up?'augmente':'baisse')+' '+evoDe(p)+'.<br>'+ask
       :'Un village de '+evoQty(initial,'habitants')+' a connu une '+(up?'augmentation':'baisse')+' '+evoDe(p)+' de sa population.<br>Combien y a-t-il d’habitants après cette '+(up?'augmentation':'baisse')+EVO_INSEC+'?';
     const qcm=evoQcm(prompt,evoQty(values.good,unit),[
       {text:evoQty(values.add,unit),feedback:(up?'Tu as ajouté ':'Tu as enlevé ')+evoQty(p,unit)+', pas '+P+(unit==='€'?' du prix':'')+'.'},
