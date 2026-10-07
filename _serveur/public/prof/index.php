@@ -1900,8 +1900,11 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   $("ajouter").addEventListener("click", async () => {
     const bouton = $("ajouter");
     if (bouton.disabled) return;
+    // Lot « retours de classe » (06/10/2026, décision de Gwenaël) : 25 pour
+    // une classe vide (on crée la classe entière), 1 pour une classe qui a
+    // déjà ses élèves (on ajoute un élève arrivé en cours d'année).
     const reponse = await demander("Combien d’élèves ajouter à cette classe ?",
-      [{nom: "nombre", libelle: "Nombre d’élèves", type: "number", valeur: "25", min: 1, max: 60}]);
+      [{nom: "nombre", libelle: "Nombre d’élèves", type: "number", valeur: eleves.length ? "1" : "25", min: 1, max: 60}]);
     if (!reponse) return;
     const nombre = parseInt(reponse.nombre, 10);
     if (!nombre || nombre < 1 || nombre > 60) {

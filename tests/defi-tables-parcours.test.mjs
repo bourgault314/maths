@@ -269,7 +269,7 @@ test("J’apprends garde la bande pour construire et la propose en aide temporai
   // « PARCOURS.chargerSync is not a function », plus de repère de suivi, plus
   // rien envoyé au professeur, et une page d'accueil d'apparence normale.
   // Changer ce numéro à chaque modification du moteur ; ce test le rappelle.
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261005-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261006-1/);
 });
 
 test("une erreur = une ligne : le calcul avec sa bonne réponse, la réponse donnée barrée à côté", () => {
@@ -292,9 +292,9 @@ test("les détails mobiles restent alignés et les titres programmatiquement cib
 test("la fiche PDF est publique mais sa source modifiable n’est pas proposée aux élèves", () => {
   assert.equal(revisionPdf.subarray(0, 4).toString(), "%PDF");
   assert.equal(editableSource.subarray(0, 2).toString(), "PK");
-  // R5 : la feuille des tables est un papier de professeur (catalogue, page
-  // prof) ; l'élève lit sa table à l'écran (« Lire la table de 7 »).
-  assert.doesNotMatch(html, /fiche_tables_multiplication\.pdf/);
+  // R5 : la feuille des tables était un papier de professeur ; lot « retours
+  // de classe » : un seul lien pour l'élève, dans « Lire la table », vers le PDF.
+  assert.equal((html.match(/fiche_tables_multiplication\.pdf/g) || []).length, 1);
   assert.doesNotMatch(html, /\.pdf"[^>]*\sdownload/);
   assert.doesNotMatch(html, /fiche_tables_multiplication\.docx/);
 });

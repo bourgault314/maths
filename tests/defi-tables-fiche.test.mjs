@@ -47,9 +47,15 @@ test("la vue « fiche d'un élève » du professeur est intacte (mode-fiche, #fi
   assert.match(html, /function afficherFicheEleve\(\{existe, parcours: brut, maj_le, prenom, classe\}\) \{[\s\S]*renderFiche\(distant\);\s*\n\s*ajusterFiche\(\);/);
 });
 
-test("fiche vierge et feuille des tables : plus aucun lien dans l'appli élève, mais le catalogue et la page prof les gardent (Q6)", () => {
+test("fiche vierge : aucun lien dans l'appli élève ; la feuille des tables, un seul, dans « Lire la table » ; le catalogue et la page prof gardent les deux (Q6)", () => {
   assert.doesNotMatch(html, /fiche_parcours_tables\.pdf/);
-  assert.doesNotMatch(html, /fiche_tables_multiplication\.pdf/);
+  // Lot « retours de classe » (06/10/2026, décision de Gwenaël, qui revient
+  // sur R5) : la feuille de toutes les tables revient pour l'élève, mais à un
+  // seul endroit — l'écran « Lire la table », pas l'accueil.
+  assert.equal((html.match(/fiche_tables_multiplication\.pdf/g) || []).length, 1);
+  assert.match(html, /<a id="lire-toutes" class="lire-cartes lire-toutes" href="\.\/fiche_tables_multiplication\.pdf" target="_blank" rel="noopener">[\s\S]*?<span>Toutes les tables sur une page<\/span><\/a>/);
+  const lire = html.slice(html.indexOf('<div id="lire" class="lire-screen" hidden>'), html.indexOf('<div id="fiche" class="fiche-screen" hidden>'));
+  assert.match(lire, /id="lire-toutes"/, "dans l'écran « Lire la table »");
   const chemins = catalogue().resources.filter(r => r.status === "published").map(r => r.path);
   assert.ok(chemins.includes("outils/calcul_mental/fiche_parcours_tables.pdf"));
   assert.ok(chemins.includes("outils/calcul_mental/fiche_tables_multiplication.pdf"));
@@ -156,7 +162,8 @@ test("la couronne est un dessin en currentColor, partout où une marche s'affich
   assert.match(html, /star\.append\(symboleMarche\(marche\)\);/, "la ligne des étoiles de la fiche");
   assert.match(html, /\.fiche-stars \.couronne \{ width: 4\.6mm; height: 3\.8mm;/);
   // makeCell accepte un nœud pour « texte » (la couronne), pas seulement une chaîne.
-  assert.match(html, /cell\.replaceChildren\(texte !== null \? texte : document\.createTextNode\(kind === "check" \? "✓" : kind === "lock" \? "🔒" : "★"\)\);/);
+  // Lot « retours de classe » : le cadenas (« lock ») est retiré, il ne servait plus.
+  assert.match(html, /cell\.replaceChildren\(texte !== null \? texte : document\.createTextNode\(kind === "check" \? "✓" : "★"\)\);/);
   // Le moteur, lui, garde 👑 : c'est un symbole de texte pour les fêtes et les libellés.
   assert.equal(PARCOURS.symboleEtoile(5), "👑");
   assert.doesNotMatch(html, /bloc\.textContent = marche\.symbole/);
@@ -197,7 +204,7 @@ test("les cartes : un PDF de 2 pages par table de 2 à 10, un PDF de 18 pages po
   const png = await stat(new URL(vignette, racine));
   const webp = await stat(new URL(vignette.replace(/\.png$/, ".webp"), racine));
   assert.ok(webp.size < png.size, "la webp est plus légère que la png");
-  assert.match(cataloguePage, /catalogue-refonte-data\.js\?v=monde4-ouvert-20261005-1/, "le cache-buster du catalogue suit");
+  assert.match(cataloguePage, /catalogue-refonte-data\.js\?v=defi-tables-retours-20261006-1/, "le cache-buster du catalogue suit");
 });
 
 test("la feuille des tables (PDF) décrit le parcours réel et la révision du jour (A21)", async () => {

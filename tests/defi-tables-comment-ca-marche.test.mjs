@@ -22,7 +22,7 @@ test("la notice garde six phrases et prend le nom que l'appli donne au mélange"
   // Lot « un seul système » (05/10/2026) : les tables sont « passées », et
   // le mélange est libre (« quand je veux »).
   assert.match(html, /<strong>Mon mélange : mes tables passées<\/strong>/);
-  assert.match(notice, /<b>Mon mélange\.<\/b> Dès 2 tables passées, quand je veux&nbsp;: 20 questions en 1 min 30\./);
+  assert.match(notice, /<b>Mon mélange\.<\/b> Dès 2&nbsp;tables passées, quand je veux&nbsp;: 20&nbsp;questions en 1&nbsp;min&nbsp;30\./);
   assert.doesNotMatch(notice, /acquise|avant de valider/);
 });
 
@@ -33,7 +33,7 @@ test("la notice dit « 10 calculs de mes tables passées, en 1 minute », et le 
   // du jour est une étape de la séance) ; le moteur, lui, tire toujours ainsi.
   // Lot « un seul système » (05/10/2026) : Mes calculs du jour est la porte
   // du jour — 10 calculs des tables passées, chronométrés ; la notice le dit.
-  assert.match(notice, /<b>Mes calculs du jour\.<\/b> D’abord, chaque jour&nbsp;: 10 calculs de mes tables passées, en 1 minute\. Réussi, un calcul revient plus tard\. Raté, il revient demain\./);
+  assert.match(notice, /<b>Mes calculs du jour\.<\/b> D’abord, chaque jour&nbsp;: 10&nbsp;calculs de mes tables passées, en 1&nbsp;minute\. Réussi, un calcul revient plus tard\. Raté, il revient demain\./);
   // Et le moteur tire bien ainsi : sur 30 calculs dus répartis dans les cinq
   // boîtes, la première série de 10 en prend dans chacune — pas dix rouges.
   const aujourdhui = PARCOURS.jourLocal();

@@ -60,11 +60,11 @@ test("chaque appli du catalogue a son propre dessin", () => {
   }
 });
 
-// 07/09/2026 — les activités annoncées. Gwenaël veut que les élèves voient
-// arriver ce qui se prépare ; elles s'affichent donc pour toutes les classes,
-// sans lien, avec une pastille. Deux choses à tenir : leur ORDRE (le sien) et
-// le fait que leur dessin garde ses COULEURS — grisées, les cinq à venir se
-// ressemblaient toutes, et c'est justement la couleur qui donne envie.
+// 07/09/2026 — les activités annoncées : elles s'affichaient pour toutes les
+// classes, sans lien, avec une pastille « Bientôt ». Lot « retours de classe »
+// (06/10/2026, décision de Gwenaël) : plus d'annonces — une appli n'apparaît
+// que lorsqu'elle existe. Le catalogue garde son ordre (celui des tuiles le
+// jour où elles s'ouvrent).
 
 test("l'ordre d'affichage du catalogue est celui décidé le 07/09/2026", () => {
   const cles = [...catalogue.matchAll(/^\s{4}'([a-z0-9-]+)' => \[$/gm)].map(m => m[1]);
@@ -72,17 +72,14 @@ test("l'ordre d'affichage du catalogue est celui décidé le 07/09/2026", () => 
     "l'ordre du tableau CATALOGUE_APPLIS est l'ordre des tuiles chez l'élève");
 });
 
-test("les activités pas encore ouvertes sont annoncées à toutes les classes", () => {
-  assert.match(catalogue, /foreach \(CATALOGUE_APPLIS as \$cle => \$appli\) \{\s*\n\s*if \(isset\(\$vues\[\$cle\]\) \|\| \(\$appli\['disponible'\] \?\? false\)\) continue;/,
-    "une annonce ne dépend pas de la liste de la classe ; une activité ouverte, si");
-});
-
-test("une tuile « bientôt » garde son dessin en couleur et porte la pastille", () => {
-  assert.doesNotMatch(page, /\.bientot[^{]*\{[^}]*grayscale/,
-    "griser le dessin efface le soleil de Solèy et l'orange de Splat");
-  assert.match(page, /<span class="pastille">Bientôt<\/span>/, "la pastille dit ce que la couleur ne dit plus");
-  assert.match(page, /bloc\.querySelector\("\.texte span"\)\.textContent = appli\.description/,
-    "la pastille est un <span> elle aussi : viser celui du texte, pas le premier venu");
+test("plus d'annonces « Bientôt » : seules les applis ouvertes de la classe sont envoyées et montrées", () => {
+  assert.doesNotMatch(catalogue, /foreach \(CATALOGUE_APPLIS as \$cle => \$appli\)/,
+    "le serveur n'ajoute plus les activités pas encore ouvertes");
+  assert.match(catalogue, /if \(!\(CATALOGUE_APPLIS\[\$cle\]\['disponible'\] \?\? false\) \|\| !CATALOGUE_APPLIS\[\$cle\]\['url'\]\) continue;/,
+    "une activité pas encore ouverte, même dans la liste de la classe, n'est pas envoyée");
+  assert.doesNotMatch(page, /class="pastille"|"appli bientot"|\.appli\.bientot|>Bientôt</, "la page n'a plus de quoi dessiner une tuile « Bientôt »");
+  assert.match(page, /const disponibles = \(donnees\.applis \|\| \[\]\)\.filter\(a => a\.disponible && a\.url\);/,
+    "un serveur d'avant qui enverrait encore des annonces : elles sont ignorées");
 });
 
 // -------------------------------------------------------------------------

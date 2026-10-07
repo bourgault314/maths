@@ -182,6 +182,21 @@
   // Pas de changement de version : une clé de plus (« calculsDuJour »), et
   // « melange.score » (le dernier score du mélange libre) ; absentes = rien.
 
+  // Lot « retours de classe » (06/10/2026 — décisions de Gwenaël après les
+  // premiers jours en classe et une simulation de 1 000 élèves) :
+  //  - le test d'une table ne vient plus que JUSTE APRÈS 9 sur 10 à la
+  //    marche 7 (« Résultats, nombres manquants et divisions »), dans la même
+  //    séance — avec, en plus, 9 sur 10 une fois aux marches 5 et 6, ou la
+  //    rangée pleine. Avant, 9 sur 10 aux marches 5 et 6 suffisaient et le
+  //    test arrivait tout de suite : la marche 7 sautait presque toujours.
+  //    Environ une séance de plus par table ; rien de nouveau n'est
+  //    enregistré (la séance se souvient de la rangée pleine dans « prete »,
+  //    qui existait déjà), une séance déjà commencée garde ce qu'elle avait
+  //    promis ;
+  //  - Mes calculs du jour sans aucune réponse avant la fin du temps se note
+  //    « pas réussi » (le bilan écrit « temps écoulé », pas « 0 sur 1 »).
+  // Pas de changement de version.
+
   // Version du parcours enregistré. 1 = jusqu'au lot 2 de Défi tables v2 ;
   // 2 = lot 3 (mélange obligatoire, escalier des étoiles, rang, jours) ;
   // 3 = lot mémoire (cinq boîtes et une échéance par calcul). Un parcours
@@ -331,6 +346,9 @@
   // lot M1 elle veut dire « 9 sur 10 ou mieux » (le nom reste : un parcours
   // déjà enregistré garde ce qu'il a gagné).
   const CLES_SANS_FAUTE = Object.freeze(["desordre", "trous"]);
+  // Lot « retours de classe » (06/10/2026) : le raccourci se termine par la
+  // marche 7 (« Résultats, nombres manquants et divisions ») à 9 sur 10.
+  const CLE_RACCOURCI_FIN = "mixte";
 
   function foisVides() {
     return Object.fromEntries(CLES_FOIS.map(cle => [cle, 0]));
@@ -1611,26 +1629,70 @@
     return {table, cases, pleines, total: cases.length, prete: pleines === cases.length};
   }
 
-  // Le raccourci vers la validation : 9 sur 10 ou mieux aux deux formes.
+  // Les deux premiers entraînements du test : 9 sur 10 ou mieux à « Dans le
+  // désordre » ET à « Nombres manquants et divisions », gagnés une fois et
+  // gardés (« sansFaute »).
   function raccourciValidation(parcours, table) {
     const ligne = parcours.tables[table];
     return CLES_SANS_FAUTE.every(cle => ligne.sansFaute[cle] === 1);
   }
 
+  // Lot « retours de classe » (06/10/2026, décision de Gwenaël, après
+  // simulation) : le test ne vient plus que JUSTE APRÈS 9 sur 10 à
+  // « Résultats, nombres manquants et divisions » (la marche 7, celle qui
+  // ressemble le plus au test), dans la même séance — que la table ait les
+  // deux autres entraînements à 9 sur 10 ou sa rangée pleine. Avant, les deux
+  // entraînements suffisaient et le test arrivait tout de suite : 9 tests sur
+  // 10 étaient proposés sans que la marche 7 ait jamais été faite.
+  // Rien n'est enregistré de plus : la séance lit la marche 7 réussie dans
+  // ses étapes faites, et se souvient de la rangée pleine (« prete »).
+  const MARCHE_RACCOURCI_FIN = 7;
+
+  // 9 sur 10 ou mieux (une erreur au plus).
+  function marcheSeptReussie(juste, total) {
+    return total - juste <= SEUILS.seance.raccourciErreursMax;
+  }
+
+  // La marche 7 a-t-elle été réussie à 9 sur 10 dans CETTE séance ?
+  function septReussieDansLaSeance(seance) {
+    return Boolean(seance) && (seance.faites || []).some(passee => passee.type === "entraine"
+      && passee.marche === MARCHE_RACCOURCI_FIN && !passee.rate && marcheSeptReussie(passee.juste, passee.total));
+  }
+
+  // Ce qu'il faut AVANT la marche 7 : « Dans le désordre » et « Nombres
+  // manquants et divisions » gagnés à 9 sur 10, ou la rangée pleine — pleine
+  // maintenant, ou pleine à un moment de la séance (« seance.prete ») : une
+  // erreur de la séance (Mes calculs du jour, un entraînement à 8 sur 10) qui
+  // fait redescendre un calcul ne reprend pas ce que la rangée avait ouvert.
+  function avantLaSeptOk(parcours, table, seance = null) {
+    return raccourciValidation(parcours, table) || Boolean(seance && seance.prete) || tablePrete(parcours, table);
+  }
+
+  // L'étape qui vient d'être jouée ouvre-t-elle le test ?
+  function raccourciDeLEtape(parcours, table, etape, juste, total, seance = null) {
+    return etape.type === "entraine" && etape.cle === CLE_RACCOURCI_FIN
+      && marcheSeptReussie(juste, total)
+      && avantLaSeptOk(parcours, table, seance);
+  }
+
   // La séance peut-elle proposer « Je passe le test » ? Pas sur une table
-  // passée, et seulement si la rangée est prête ou le raccourci gagné.
-  // « seance » : une table vue prête PENDANT la séance le reste jusqu'à sa
-  // fin — une erreur dans l'entraînement qui précède la validation fait
-  // redescendre un calcul d'une boîte, pas la validation promise ce matin
-  // (sans cela, l'élève à 9 sur 10 chaque jour ne validait jamais).
+  // passée, et seulement si la marche 7 a été réussie à 9 sur 10 dans la
+  // séance (lue dans ses étapes faites), les deux autres entraînements gagnés
+  // ou la rangée pleine.
   function validationDeSeance(parcours, table, seance = null) {
     const ligne = parcours.tables[table];
     if (!ligne || ligne.acquise) return false;
-    return Boolean(seance && seance.prete) || tablePrete(parcours, table);
+    return septReussieDansLaSeance(seance) && avantLaSeptOk(parcours, table, seance);
   }
 
+  // Prête par la rangée : ses dix cases pleines (les huit calculs en boîte 3
+  // ou plus, × 1 et × 10 réussis). Depuis le lot « retours de classe », elle
+  // n'ouvre plus le test seule : elle remplace les deux premiers
+  // entraînements, la marche 7 à 9 sur 10 reste demandée. La séance s'en
+  // souvient (« seance.prete ») : pleine à l'ouverture ou après une étape,
+  // elle le reste jusqu'à la fin de la séance.
   function tablePrete(parcours, table) {
-    return rangeeTable(parcours, table).prete || raccourciValidation(parcours, table);
+    return rangeeTable(parcours, table).prete;
   }
 
   // La table de la séance quand l'élève n'en a pas choisi dans l'onglet :
@@ -1688,6 +1750,9 @@
       }
     }
     return {jour: aujourdhui, table: choisie, depart, echelle, file, faites: [], rate: null, sansFaute: true, remplacee: false, reparee: false, finie: false, avance: 0,
+      // Lot « retours de classe » : « prete » = la rangée pleine, vue dans la
+      // séance (ici à l'ouverture, puis après chaque étape) ; le test, lui,
+      // se gagne toujours à la marche 7 de la séance.
       prete: echelle && tablePrete(parcours, choisie),
       // Le nombre de séances déjà finies ce jour-là : c'est lui qui dit, à la
       // reprise et à la fusion, si CETTE séance est encore la séance en cours.
@@ -1923,8 +1988,9 @@
   }
 
   // L'étape à jouer maintenant, prête à lancer : son nom, sa série, sa durée.
-  // C'est ICI que la marche 8 se décide — la validation si la table est prête
-  // (ou le raccourci gagné), sinon un entraînement à sa place — et qu'une
+  // C'est ICI que la marche 8 se décide — le test si la marche 7 vient d'être
+  // réussie dans la séance (lot « retours de classe »), sinon un
+  // entraînement à sa place — et qu'une
   // étape devenue sans objet s'efface (plus rien de dû).
   function etapeDeSeance(parcours, seance, aujourdhui = jourLocal()) {
     for (const prevue of seance.file) {
@@ -1948,7 +2014,8 @@
       let numero = prevue.marche;
       let condition = false;
       if (numero === MARCHE_VALIDATION) {
-        if (validationDeSeance(parcours, table, seance)) {
+        // Un test déjà promis par la marche 7 (« raccourci ») reste promis.
+        if (!parcours.tables[table].acquise && (prevue.raccourci || validationDeSeance(parcours, table, seance))) {
           return {type: "validation", marche: numero, table, nom: marche(numero).nom, config: configValidation(table), minutes: MINUTES_ETAPE.validation, prevue};
         }
         // Pas prête : un entraînement à la place — sauf si la table vient
@@ -1964,8 +2031,9 @@
         table,
         cle: definition.cle,
         nom: definition.nom,
-        // « Je valide ma table · si mes calculs sont prêts » : la marche 8
-        // prévue, jouée en entraînement tant que la table n'est pas prête.
+        // « Je passe le test · si j'ai 9 sur 10 aux entraînements » : la
+        // marche 8 prévue, jouée en entraînement quand la marche 7 n'a pas
+        // ouvert le test.
         aLaPlaceDeLaValidation: condition,
         config: definition.type === "apprends" ? configApprends(table, definition.cle) : configEntraine(table, definition.cle),
         minutes: MINUTES_ETAPE[definition.cle],
@@ -1976,16 +2044,16 @@
   }
 
   // Le programme d'une séance, pour l'annoncer : ses étapes telles qu'elles
-  // se présentent maintenant (la marche 8 dite « si mes calculs sont prêts »
-  // quand elle n'est pas encore sûre), et la durée.
+  // se présentent maintenant (la marche 8 dite « si j'ai 9 sur 10 aux
+  // entraînements » quand elle n'est pas encore sûre), et la durée.
   function programmeDeSeance(parcours, seance, aujourdhui = jourLocal()) {
     const etapes = [];
     let reste = {...seance, file: seance.file.slice()};
     for (let garde = 0; garde < 12; garde += 1) {
       const etape = etapeDeSeance(parcours, reste, aujourdhui);
       if (!etape) break;
-      // Une validation qui dépend d'une étape encore à jouer (les calculs du
-      // jour font monter les boîtes) est annoncée « si mes calculs sont prêts ».
+      // Une validation qui dépend d'une étape encore à jouer (la marche 7)
+      // est annoncée « si j'ai 9 sur 10 aux entraînements ».
       const prevueValidation = etape.prevue.type === "marche" && etape.prevue.marche === MARCHE_VALIDATION;
       etapes.push(prevueValidation && etape.type !== "validation"
         ? {...etape, nom: marche(MARCHE_VALIDATION).nom, conditionnelle: true}
@@ -1998,12 +2066,13 @@
   }
 
   // Lot M2 : la validation du raccourci peut-elle s'ajouter EN PLUS des
-  // étapes annoncées (une 5e étape) ? Seulement si le raccourci se complète
-  // à la DERNIÈRE étape du programme — plus tôt, la validation prend la place
-  // de la suite. Donc : la dernière étape est « Dans le désordre » ou
-  // « Nombres manquants » jouée comme marche (pas la marche 8 remplacée), son
-  // 9 sur 10 manque encore, et l'autre est déjà gagné ou se joue plus tôt
-  // dans la séance ; pas de validation déjà prévue ; validation possible
+  // étapes annoncées (une 5e étape) ? Lot « retours de classe » (06/10/2026) :
+  // le raccourci se complète TOUJOURS à la marche 7, donc seulement quand la
+  // DERNIÈRE étape du programme est « Résultats, nombres manquants et
+  // divisions » jouée comme marche, et que la rangée est pleine, ou que
+  // « Dans le désordre » et « Nombres manquants et divisions » sont déjà
+  // gagnés à 9 sur 10 ou se jouent plus tôt dans la séance ; pas de
+  // validation déjà prévue ; validation possible
   // (table pas encore passée). La carte dit alors « 4 ou 5 étapes ».
   function raccourciEnFin(parcours, seance, etapes) {
     if (!seance.echelle || !etapes.length || seance.table === null) return false;
@@ -2013,9 +2082,10 @@
     if (seance.faites.some(passee => passee.type === "validation")) return false;
     if (etapes.some(etape => etape.prevue.type === "marche" && etape.prevue.marche === MARCHE_VALIDATION)) return false;
     const derniere = etapes[etapes.length - 1];
-    if (derniere.type !== "entraine" || !CLES_SANS_FAUTE.includes(derniere.cle) || ligne.sansFaute[derniere.cle] === 1) return false;
+    if (derniere.type !== "entraine" || derniere.cle !== CLE_RACCOURCI_FIN || derniere.aLaPlaceDeLaValidation) return false;
+    if (seance.prete || tablePrete(parcours, seance.table)) return true;
     const avant = etapes.slice(0, -1);
-    return CLES_SANS_FAUTE.every(cle => cle === derniere.cle || ligne.sansFaute[cle] === 1
+    return CLES_SANS_FAUTE.every(cle => ligne.sansFaute[cle] === 1
       || avant.some(etape => etape.type === "entraine" && etape.cle === cle));
   }
 
@@ -2097,18 +2167,20 @@
       if (faite.rate) descendre(etape.marche);
       // La marche ratée, refaite et réussie : le raté est réparé.
       else if (etape.prevue.reprise) suite.reparee = true;
-      // Lot M2 : gagné sur la marche 8 jouée en entraînement (« si mes calculs
-      // sont prêts »), le raccourci ne rajoute pas une 5e étape que la carte
-      // n'a pas annoncée : la validation est pour demain (départ 6).
-      const surLaMarche8 = Boolean(etape.aLaPlaceDeLaValidation) && !suite.file.length;
-      // … et cinq étapes au plus : gagné à la 5e étape (après un raté), il
-      // attend lui aussi le lendemain.
+      // Lot « retours de classe » (06/10/2026, décision de Gwenaël) : le
+      // raccourci ne se complète qu'à la marche 7 (« Résultats, nombres
+      // manquants et divisions ») à 9 sur 10, les deux autres entraînements
+      // déjà gagnés — la marche 7 ne se saute plus. La séance s'en souvient :
+      // la marche 8 qui suit devient le test.
+      const raccourci = !faite.rate && suite.echelle && raccourciDeLEtape(copie, table, etape, juste, total, suite);
+      // Cinq étapes au plus : complété à la 5e étape (après un raté), il
+      // attend le lendemain (départ 6 : la marche 7 revient, puis le test).
       const pasDePlace = suite.faites.length + 2 > SEUILS.seance.etapesMax;
       // Lot M2 : la marche 8 déjà prévue (séance 5-6-7-8) devient elle-même la
       // validation une fois le raccourci gagné — la séance garde ses 4 étapes.
-      if (!faite.rate && !surLaMarche8 && !pasDePlace && suite.echelle && !suite.file.some(prevue => prevue.marche === MARCHE_VALIDATION) && !suite.faites.some(passee => passee.type === "validation")
-        && raccourciValidation(copie, table) && validationDeSeance(copie, table, suite)) {
-        // Le raccourci : la validation tout de suite, à la place de la suite.
+      if (raccourci && !pasDePlace && !suite.file.some(prevue => prevue.marche === MARCHE_VALIDATION) && !suite.faites.some(passee => passee.type === "validation")
+        && !copie.tables[table].acquise) {
+        // Le test tout de suite après la marche 7, à la place de la suite.
         suite.file = [{type: "marche", marche: MARCHE_VALIDATION, table, raccourci: true}];
       }
     } else if (etape.type === "validation") {
@@ -2123,11 +2195,16 @@
       // Mes calculs du jour est joué : la porte de la journée est ouverte,
       // quel que soit le score, même si le temps a manqué.
       copie.calculsDuJour = dateOuNull(suite.jour) || jourLocal();
+      // Lot « retours de classe » (06/10/2026) : le temps écoulé avant la
+      // première réponse se note « pas réussi » (le bilan écrit « temps
+      // écoulé », pas « 0 sur 1 ») — rien n'est compté faux pour autant.
+      if (resultat.rien === true) faite.reussi = false;
     }
     suite.faites.push(faite);
-    // Prête maintenant (les calculs du jour viennent de monter) : elle le
-    // reste pour la marche 8 de cette séance.
-    if (suite.echelle && tablePrete(copie, table)) suite.prete = true;
+    // La rangée devenue pleine pendant la séance : la séance s'en souvient
+    // jusqu'à sa fin (« prete »), même si une erreur plus loin la refait
+    // redescendre.
+    if (suite.echelle && table !== null && tablePrete(copie, table)) suite.prete = true;
     if (!etapeDeSeance(copie, suite, aujourdhui)) {
       suite.file = [];
       suite.finie = true;

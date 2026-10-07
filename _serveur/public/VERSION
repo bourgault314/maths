@@ -1,10 +1,10 @@
 # Manifeste du serveur de suivi maths&go — produit par outils/generer-version.php.
 # Ne pas modifier à la main : un test du dépôt refait ce calcul à chaque passage.
 # verifier.php relit ce fichier en ligne et compare chaque empreinte.
-lot defi-tables-un-seul-systeme
-genere_le 2026-10-05
+lot defi-tables-retours-de-classe
+genere_le 2026-10-06
 fichiers 28
-manifeste 91b240cbb7ebc13ef1edc777f4533585d56efd6365e2b638b5354cb6972caa10
+manifeste 30938e1deeeba020c0aa1ff75b15a525dc3d69e1619684eb1f1d94f09a7c1fcb
 61b230d36219b3c4515e56c1ff59afb1a85ffa12343956bd73b16ba04867cdca  .htaccess
 d1cdf00b3e672130b90da1f1aa9333949036fc3d5ad866d539cd11aef7fd8204  api/eleve.php
 dc938db0cb546fdfc4121ddeebdf558ca62259f20d6aecb398c84e2382697675  api/parcours.php
@@ -12,10 +12,10 @@ a3e0c097d89c3cb582a59a436ac7263b789e15e72780cb40f83ae36259ede8ee  api/prof.php
 94ac7a5f0a2a898be85b74095b42754e7b1d31b73f2498ebce4771ad48554992  apple-touch-icon.png
 2ebd7777bfa62e332ddaeb0be3a93e6c3a20bde30deccc6d3e86ca4de8345fce  favicon.ico
 b901e292ec96dadfd1a9415bc315027c93b635d0f4254a6da8ff7afd92c6520e  favicon.svg
-172a3d97de06fabde1f1cbfcdef87f5968b388d53197d776522a6a9bdec5dcd7  index.php
+d6562ad5510ed50522bf93e29fa3adb9370f9188c318754ee82029c4df838752  index.php
 014a992fe48e48144dcaa218601a11ec8745fe1fe7a7d30f3323ec9e213159d5  infos.php
 fa28d421a28ed9b6f4b997d5119c2b8adbacff6e2dd119a179b71230f9664934  lib/.htaccess
-58330f1476b979caaa22cc6c03fc4c88cac1c708608d07e7cbfe666e13e3db47  lib/applis.php
+16dc1b692d668497461346ec81f425350af17fc08d4a3edc078008c9010e726e  lib/applis.php
 e082ac8fa5282bb3b7b78ec75e1e9d3c726c44d8f8e8a9e3e4f4e776b4645270  lib/archives.php
 817e5e7501933e4bf2ca5b6bce94ba921e652d056540b864fdcad427823f8ac8  lib/auth.php
 e37d31d8793760bcc94e06112ba335a350c83a441eda960ebaf2f30eed91c96d  lib/bd.php
@@ -30,6 +30,6 @@ a71c9980e7aa65eee108c8f26f84dca8812d4b246ec9f9e25958ca2417d6fbf5  lib/reponse.ph
 b476cc832c9b7497eed6194afecee863a686469e9162ad1832bd7e7732ccc304  mathsgo-logo-print.png
 2a442b4a4ae2452f649f77224a0aae91e6fe0ac83566253d65d1dc1807cdb6a2  mathsgo-logo.png
 4cc15b863e2b7d4afaa761685a411b7309fe133ecff7625420ff1dedfa365502  menage.php
-73cbbd5b0a89dbe279c89ce8b08f175b1bcead6837ffbf2a1c28d0c781726de0  prof/defi_tables_mon_parcours.js
-aa5794e75e3998b156cd3da61df329c024735f3df320cf6fcdd6d7beec0afb0b  prof/index.php
+3a9cf1d6e8f78f1bce7942930f7c3517575aa3c8179154120a7b8d6cb94495f5  prof/defi_tables_mon_parcours.js
+300f9dc4d6946b3d7686fec51ab0ce269884ab8e8e5f2827d3037a45e478d55a  prof/index.php
 bd509f1f05320588a65c6256a121c478a2a0c6f01adc37f15e83ca44038f00bc  verifier.php

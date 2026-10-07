@@ -406,8 +406,10 @@ test("13. la rangée (accueil et bilan) aux couleurs du tableau : vide sans nomb
     const pluriel = (n, m) => n + " " + m + (n > 1 ? "s" : "");
     ${source("etatsDeRangee")}\n${source("rangeeDeTable")}\nreturn rangeeDeTable(3);`;
   const rangee = new Function("ARG", code)({document, P, parcours: P.normaliserParcours(p)});
+  // Lot « retours de classe » (planche 8 bis) : le 0 d'abord, en vert dès que
+  // les autres nombres s'écrivent ; il ne compte pas.
   assert.deepEqual(rangee.children.map(b => [b.className, b.textContent]), [
-    ["is-su", "3"], ["is-su", "6"], ["is-en-cours", "9"], ["is-en-cours", "12"], ["is-su", "15"],
+    ["is-zero is-su", "0"], ["is-su", "3"], ["is-su", "6"], ["is-en-cours", "9"], ["is-en-cours", "12"], ["is-su", "15"],
     ["is-en-cours", "18"], ["is-en-cours", "21"], ["is-a-travailler", "24"], ["is-en-cours", "27"], ["", ""]],
     "× 1 réussi : vert ; 3 × 2 (boîte 5) et 3 × 5 (boîte 5) : verts ; boîtes 2 et 3 : bleues ; 3 × 8 raté : rouge AVEC son nombre ; × 10 jamais réussi : vide");
   assert.equal(rangee.attrs["aria-label"], "Table de 3, sur 10 calculs : 3 su, 5 en route, 1 à revoir");
@@ -420,7 +422,8 @@ test("13. la rangée (accueil et bilan) aux couleurs du tableau : vide sans nomb
   // Le moteur ne change pas : la rangée « prête » sert toujours au raccourci de validation.
   assert.equal(P.rangeeTable(P.normaliserParcours(p), 3).cases[7].etat, "vide");
   // La notice le dit (choix de Gwenaël).
-  assert.match(html, /<p><b>Ma rangée\.<\/b> Les couleurs de Mes calculs&nbsp;: rouge&nbsp;à&nbsp;revoir, bleu&nbsp;en&nbsp;route, vert&nbsp;su\.<\/p>/, "chaque couleur reste avec son mot");
+  // Lot « retours de classe » : le gris « vu » s'ajoute en tête de la ligne.
+  assert.match(html, /<p><b>Ma rangée\.<\/b> En gris quand je l’ai construite, puis les couleurs de Mes calculs&nbsp;: rouge&nbsp;à&nbsp;revoir, bleu&nbsp;en&nbsp;route, vert&nbsp;su\.<\/p>/, "chaque couleur reste avec son mot");
   assert.doesNotMatch(html, /Une case entourée|Toutes pleines/);
 });
 
