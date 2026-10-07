@@ -372,10 +372,9 @@ test("la validation réussie termine la séance et passe la table, sans mélange
   for (const date of [jour(1), jour(2)]) for (let m = 1; m <= 10; m += 1) p = P.appliquerReponse(p, `5-${m}`, {correcte: true, date}).parcours;
   assert.equal(P.melangeDu, undefined, "plus de mélange dû : la fonction est retirée du moteur");
   assert.equal(p.melange.dernier, null, "deux tables passées, mélange jamais joué");
-  // Lot « retours de classe » : la marche 7 réussie juste avant (9 sur 10), la
-  // rangée pleine à l'ouverture — une erreur partout (2 × 5 à Mes calculs du
-  // jour, une à chaque marche) fait redescendre des calculs, mais la séance se
-  // souvient de la rangée pleine.
+  // Lot « retours de classe » : le test vient juste après 9 sur 10 à la
+  // marche 7 — une erreur partout (2 × 5 à Mes calculs du jour, une à chaque
+  // marche) n'y change rien.
   const s = jouerSeance(p, jour(3), {erreursPar: () => 1});
   assert.deepEqual(s.noms, ["revision", 6, 7, "validation"], "2 × 5, calcul d'une table passée, ouvre la séance : quatre étapes");
   assert.equal(s.noms.filter(nom => nom === "melange").length, 0, "pas de mélange dans la séance");
@@ -401,7 +400,7 @@ test("la validation réussie termine la séance et passe la table, sans mélange
   // Validation ratée : rien ne change (la marche 7, puis fin).
   const rate = jouerSeance(p, jour(3), {erreursPar: etape => (etape.type === "validation" ? 6 : 1)});
   assert.deepEqual(rate.noms.slice(-2), ["validation", 7]);
-  // 8 sur 10 à la marche 7 : la rangée pleine ne suffit plus, « Dans le désordre » à la place du test.
+  // 8 sur 10 à la marche 7 : pas de test (la rangée pleine ne compte plus), « Dans le désordre » à la place.
   const sans = jouerSeance(p, jour(3), {erreursPar: etape => (etape.cle === "mixte" ? 2 : 1)});
   assert.deepEqual(sans.noms, ["revision", 6, 7, 5]);
   assert.equal(sans.parcours.tables[5].acquise, null);
@@ -450,7 +449,7 @@ test("cinq points par semaine, des durées justes", () => {
   q.tables[5].sansFaute = {desordre: 1, trous: 1};
   q = P.normaliserParcours(q);
   // Lot « retours de classe » : à l'ouverture, le test n'est qu'annoncé (« si
-  // j'ai 9 sur 10 aux entraînements ») ; la marche 7 réussie, il est là, 2 min.
+  // j'ai 9 sur 10 juste avant ») ; la marche 7 réussie, il est là, 2 min.
   const ouverture = minutes(q, jour(2)).etapes;
   assert.deepEqual(ouverture.map(etape => etape.type), ["entraine", "entraine", "entraine", "entraine"]);
   assert.equal(ouverture[3].conditionnelle, true);

@@ -205,20 +205,17 @@ test("Mes calculs du jour, puis trois marches : le test possible en 5e étape es
 
 test("la marche 8 jouée en « Dans le désordre » n'ouvre jamais le test : il ne vient qu'après la marche 7", () => {
   let p = avecDepart(5);
-  // 8 sur 10 au premier désordre, 9 sur 10 aux nombres manquants et à la
-  // marche 7, 10 sur 10 au désordre de la marche 8.
-  let premier = true;
-  const s = jouerSeance(p, jour(1), etape => {
-    if (etape.cle === "desordre" && premier) { premier = false; return 2; }
-    return etape.cle === "trous" || etape.cle === "mixte" ? 1 : 0;
-  }, 3);
-  assert.deepEqual(s.noms, [5, 6, 7, 5], "quatre étapes, pas de test ajouté");
-  assert.equal(P.raccourciValidation(s.parcours, 3), true, "les deux premiers entraînements sont gagnés");
+  // 10 sur 10 au premier désordre, 9 sur 10 aux nombres manquants, 8 sur 10 à
+  // la marche 7, 10 sur 10 au désordre de la marche 8 (lot « retours de
+  // classe », règle simplifiée : seule la marche 7 à 9 sur 10 ouvre le test).
+  const s = jouerSeance(p, jour(1), etape => (etape.cle === "trous" ? 1 : etape.cle === "mixte" ? 2 : 0), 3);
+  assert.deepEqual(s.noms, [5, 6, 7, 5], "quatre étapes, pas de test ajouté : le 10 sur 10 de la marche 8 ne l'ouvre pas");
+  assert.equal(P.raccourciValidation(s.parcours, 3), true, "les deux premiers entraînements sont gagnés, et ne suffisent pas");
   assert.equal(s.seance.finie, true);
   p = s.parcours;
   const demain = P.programmeDeSeance(p, P.ouvrirSeance(p, {aujourdhui: jour(2), table: 3}), jour(2)).etapes;
   assert.deepEqual(demain.map(etape => etape.marche), [5, 6, 7, 5]);
-  assert.equal(demain[demain.length - 1].conditionnelle, true, "le lendemain, la marche 8 est annoncée « si j'ai 9 sur 10 aux entraînements »");
+  assert.equal(demain[demain.length - 1].conditionnelle, true, "le lendemain, la marche 8 est annoncée « si j'ai 9 sur 10 juste avant »");
   // Joué : 9 sur 10 à la marche 7, la marche 8 devient le test.
   const joue = jouerSeance(p, jour(2), etape => (etape.type === "entraine" ? 1 : 0), 3);
   assert.deepEqual(joue.noms, [5, 6, 7, "validation"]);
@@ -243,7 +240,7 @@ test("la page : « 4 ou 5 étapes », la 5e ligne, la phrase après une marche r
   assert.match(html, /const enPlus = programme\.raccourciEnFin;/);
   assert.match(html, /`\$\{nombre\}\\u00a0ou\\u00a0\$\{nombre \+ 1\}\\u00a0étapes · environ\\u00a0\$\{minutes\}\\u00a0min`/);
   assert.match(html, /petit\.textContent = ` · \$\{CONDITION_DU_TEST\}`;/);
-  assert.match(html, /const CONDITION_DU_TEST = "si j’ai 9\\u00a0sur\\u00a010 aux entraînements";/);
+  assert.match(html, /const CONDITION_DU_TEST = "si j’ai 9\\u00a0sur\\u00a010 juste\\u00a0avant";/);
   assert.match(html, /item\.className = "en-plus";/);
   assert.match(html, /\.carte-seance \.programme \.en-plus i \{ background: #fff; border: 2px dashed #9fb6c6;/);
   assert.match(html, /`On reprend un peu plus bas\\u00a0: \$\{pluriel\(etapesAjoutees, "étape"\)\} de plus\.`/);

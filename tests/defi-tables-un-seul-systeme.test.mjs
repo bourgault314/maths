@@ -492,7 +492,7 @@ test("la page : la porte de l'accueil, et rien ne se lance à côté", () => {
 
 test("la page : les mots, le trophée du mélange et les petits restes", () => {
   assert.match(html, /const NOM_DU_TEST = "Je passe le test";/);
-  assert.match(html, /const CONDITION_DU_TEST = "si j’ai 9\\u00a0sur\\u00a010 aux entraînements";/);
+  assert.match(html, /const CONDITION_DU_TEST = "si j’ai 9\\u00a0sur\\u00a010 juste\\u00a0avant";/);
   assert.ok(html.indexOf("const NOM_DU_TEST") < html.indexOf("function renderAccueil("), "défini avant le premier dessin de l'accueil");
   assert.doesNotMatch(html, /Je valide ma table"|acquise !`|Réussis d’abord ton mélange|montrerMelange|etat\.verrou|melangeDu/);
   assert.match(html, /titre\.textContent = `Je me teste sur mes \$\{etat\.melange\.tables\.length\}\\u00a0tables`;/);

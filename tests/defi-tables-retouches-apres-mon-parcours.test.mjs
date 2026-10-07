@@ -128,7 +128,7 @@ test("7. la liste de la JOURNÉE : elle grandit au fil des séances, sans les er
   // dus de la table en cours n'y vont pas, la séance a ses 4 marches.
   const sansTablePassee = jouerSeance(eleve({tablePassee: false}));
   assert.equal(sansTablePassee.types.includes("revision"), false, `pas de Mes calculs du jour sans table passée (${sansTablePassee.types})`);
-  assert.equal(sansTablePassee.types.length, 4);
+  assert.equal(sansTablePassee.types.filter(type => type !== "validation").length, 4, "ses 4 marches (le test peut suivre la marche 7 : lot « retours de classe »)");
   assert.deepEqual(P.aRetenir(deux.parcours, DEMAIN), []);
   // Le lendemain, une séance repart d'une liste vide.
   let p = deux.parcours;

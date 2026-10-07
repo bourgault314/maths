@@ -450,7 +450,7 @@ test("l’accueil : « Mon mélange » libre, plus de cadenas sur « Je passe le
   assert.match(html, /sousTitre: sousTitreMelange\(melange\),\s*points: \[\],\s*conseille: false,/, "la ligne du mélange dit ses tables et son format ; elle n’est jamais l’étape conseillée");
   assert.doesNotMatch(html, /Réussis d’abord ton mélange/);
   assert.match(html, /const NOM_DU_TEST = "Je passe le test";/);
-  assert.match(html, /const CONDITION_DU_TEST = "si j’ai 9\\u00a0sur\\u00a010 aux entraînements";/);
+  assert.match(html, /const CONDITION_DU_TEST = "si j’ai 9\\u00a0sur\\u00a010 juste\\u00a0avant";/);
   assert.match(html, /classe: "valide",\s*num: "3",\s*titre: ligne\.acquise \? "Ma table est passée" : NOM_DU_TEST,/);
   assert.match(html, /action: \(\) => launchFromParcours\(PARCOURS\.configValidation\(table\), "menu"\)/, "« Je passe le test » lance toujours le test");
   assert.doesNotMatch(html, /classe: "valide verrou"|cadenas\.textContent|ligneVerrou|verrouillee|etat\.verrou|montrerMelange|kind: "lock"/, "plus de cadenas ni de verrou dans la page : aucune ligne, aucune case n’est créée cadenassée");

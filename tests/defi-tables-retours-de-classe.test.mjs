@@ -1,9 +1,10 @@
 // Lot « retours de classe » (06/10/2026 — décisions de Gwenaël après les
 // premiers jours en classe, planches et simulation de 1 000 élèves) :
 //  - le test d'une table ne vient plus que JUSTE APRÈS 9 sur 10 à la marche 7
-//    (« Résultats, nombres manquants et divisions ») ; avant, 9 sur 10 aux
-//    marches 5 et 6 l'ouvraient tout de suite et la marche 7 sautait ;
-//  - « si j'ai 9 sur 10 aux entraînements » partout où le test est annoncé ;
+//    (« Résultats, nombres manquants et divisions »), et c'est tout (règle
+//    simplifiée le 07/10) ; avant, 9 sur 10 aux marches 5 et 6, ou la rangée
+//    pleine, l'ouvraient tout de suite et la marche 7 sautait ;
+//  - « si j'ai 9 sur 10 juste avant » partout où le test est annoncé ;
 //  - la rangée de ma table en GRIS dès « Je construis la bande » (« vu »), et
 //    onze cases : le 0 d'abord, vert en même temps que les autres nombres ; la
 //    case « 100 » de la table de 10 un peu plus large ;
@@ -25,6 +26,7 @@ const require = createRequire(import.meta.url);
 const P = require("../outils/calcul_mental/defi_tables_mon_parcours.js");
 const html = readFileSync(new URL("../outils/calcul_mental/defi_tables.html", import.meta.url), "utf8");
 const prof = readFileSync(new URL("../_serveur/public/prof/index.php", import.meta.url), "utf8");
+const moteur = readFileSync(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url), "utf8");
 
 const J1 = "2026-10-05"; // un lundi
 const jour = n => P.ajouterJours(J1, n - 1);
@@ -92,7 +94,7 @@ test("le test ne vient qu'après la marche 7 : 9 sur 10 aux marches 5 et 6 ne l'
   assert.equal(s.parcours.tables[2].seance.depart, 6, "… et mènent droit aux marches 5-6-7-8");
   // Jour 3 : la marche 7, puis le test.
   const programme = P.programmeDeSeance(s.parcours, P.ouvrirSeance(s.parcours, {aujourdhui: jour(3), table: 2}), jour(3));
-  assert.equal(programme.etapes[3].conditionnelle, true, "la marche 8 est annoncée « si j'ai 9 sur 10 aux entraînements »");
+  assert.equal(programme.etapes[3].conditionnelle, true, "la marche 8 est annoncée « si j'ai 9 sur 10 juste avant »");
   s = jouerSeance(s.parcours, jour(3), neuf, 2);
   assert.deepEqual(s.noms, [5, 6, 7, "test"], "juste après la marche 7");
   assert.equal(s.parcours.tables[2].acquise, jour(3));
@@ -115,99 +117,73 @@ test("4-5-6-7 : le test en 5e étape, annoncé, seulement si la marche 7 est ré
   assert.equal(rate.parcours.tables[3].seance.depart, 6);
 });
 
-test("la rangée pleine remplace les deux premiers entraînements, jamais la marche 7", () => {
-  // Pas de 9 sur 10 aux marches 5 et 6, mais les dix cases pleines (les huit
-  // calculs réussis deux jours différents, × 1 et × 10) : la marche 7 réussie
-  // ouvre le test ; ratée à 8 sur 10, non — avant, la rangée pleine suffisait.
+test("la marche 7 à 9 sur 10 suffit : ni les marches 5 et 6 à 9 sur 10, ni la rangée pleine ne comptent (règle simplifiée le 07/10)", () => {
+  // 8 sur 10 aux marches 5 et 6, rangée vide : 9 sur 10 à la marche 7, le test.
+  let s = jouerSeance(avecDepart(5), jour(1), etape => (etape.type === "entraine" ? (etape.cle === "mixte" ? 1 : 2) : 0), 3);
+  assert.deepEqual(s.noms, [5, 6, 7, "test"], "8 sur 10 aux marches 5 et 6, 9 sur 10 à la marche 7 : le test");
+  assert.equal(P.raccourciValidation(s.parcours, 3), false, "les deux premiers entraînements ne sont pas gagnés");
+  // La rangée pleine (les huit calculs réussis deux jours différents, × 1 et
+  // × 10) n'ouvre rien : 8 sur 10 à la marche 7, pas de test.
   let p = avecDepart(6);
   for (const date of [jour(1), jour(2)]) for (let m = 1; m <= 10; m += 1) p = P.appliquerReponse(p, `3-${m}`, {correcte: true, date}).parcours;
   p = P.normaliserParcours(p);
-  assert.equal(P.raccourciValidation(p, 3), false);
   assert.equal(P.rangeeTable(p, 3).prete, true);
   const ouverte = P.programmeDeSeance(p, P.ouvrirSeance(p, {aujourdhui: jour(3), table: 3}), jour(3));
-  assert.equal(ouverte.etapes[3].conditionnelle, true, "même la rangée pleine : le test est annoncé « si j'ai 9 sur 10 aux entraînements »");
-  let s = jouerSeance(p, jour(3), etape => (etape.type === "entraine" && etape.cle !== "mixte" ? 2 : 0), 3);
-  assert.deepEqual(s.noms, [5, 6, 7, "test"], "8 sur 10 aux marches 5 et 6, la rangée pleine, 10 sur 10 à la marche 7 : le test");
+  assert.equal(ouverte.etapes[3].conditionnelle, true, "même la rangée pleine : le test est annoncé « si j'ai 9 sur 10 juste avant »");
   s = jouerSeance(p, jour(3), etape => (etape.cle === "mixte" ? 2 : 0), 3);
   assert.deepEqual(s.noms, [5, 6, 7, 5], "8 sur 10 à la marche 7 : pas de test, même la rangée pleine");
+  // Le moteur ne lit plus la rangée pour le test : « prete » ne sert plus.
+  assert.doesNotMatch(moteur, /function tablePrete\(|avantLaSeptOk/);
+  assert.equal(P.ouvrirSeance(p, {aujourdhui: jour(3), table: 3}).prete, false);
 });
 
-test("la carte « 4 ou 5 étapes » et la rangée pleine : la 5e étape seulement derrière la marche 7, même à la reprise", () => {
-  // Relecture de Code (07/10/2026) : sans ce test, les deux sabotages de
+test("la carte « 4 ou 5 étapes » : la 5e étape seulement derrière la marche 7, même à la reprise", () => {
+  // Relecture de Code (07/10/2026) : sans ce test, les sabotages de
   // raccourciEnFin ne faisaient rougir que « VERSION décrit les fichiers ».
-  const pleine = depart => {
-    let p = avecDepart(depart);
-    for (const date of [jour(1), jour(2)]) for (let m = 1; m <= 10; m += 1) p = P.appliquerReponse(p, `3-${m}`, {correcte: true, date}).parcours;
-    return P.normaliserParcours(p);
-  };
-  // Départ 3, rangée pleine : 3-4-5-6, la dernière étape est la marche 6 — pas de 5e étape annoncée.
-  let p = pleine(3);
-  assert.equal(P.rangeeTable(p, 3).prete, true);
-  const sixEnFin = P.programmeDeSeance(p, P.ouvrirSeance(p, {aujourdhui: jour(3), table: 3}), jour(3));
+  // Départ 3 : 3-4-5-6, la dernière étape est la marche 6 — pas de 5e étape annoncée.
+  let p = avecDepart(3);
+  const sixEnFin = P.programmeDeSeance(p, P.ouvrirSeance(p, {aujourdhui: jour(1), table: 3}), jour(1));
   assert.equal(sixEnFin.etapes.at(-1).marche, 6);
   assert.equal(sixEnFin.raccourciEnFin, false, "la marche 6 en dernier n'annonce jamais le test");
-  // Départ 4, rangée pleine, 8 sur 10 aux marches 5 et 6 (rien de gagné) : à la
-  // reprise devant la marche 7, il ne reste qu'elle — c'est la rangée vue
-  // pleine dans la séance qui garde « 4 ou 5 étapes ».
-  p = pleine(4);
-  let seance = P.ouvrirSeance(p, {aujourdhui: jour(3), table: 3});
-  for (const erreurs of [0, 2, 2]) ({parcours: p, seance} = jouerEtape(p, seance, P.etapeDeSeance(p, seance, jour(3)), jour(3), erreurs));
+  // Départ 4, 8 sur 10 aux marches 5 et 6 (rien de gagné) : à la reprise
+  // devant la marche 7, il ne reste qu'elle — la carte annonce encore le test.
+  p = avecDepart(4);
+  let seance = P.ouvrirSeance(p, {aujourdhui: jour(1), table: 3});
+  for (const erreurs of [0, 2, 2]) ({parcours: p, seance} = jouerEtape(p, seance, P.etapeDeSeance(p, seance, jour(1)), jour(1), erreurs));
   assert.deepEqual(seance.file.map(prevue => prevue.marche), [7]);
   assert.equal(P.raccourciValidation(p, 3), false);
-  assert.equal(seance.prete, true);
-  assert.equal(P.programmeDeSeance(p, seance, jour(3)).raccourciEnFin, true, "la carte de reprise annonce encore le test");
-  ({parcours: p, seance} = jouerEtape(p, seance, P.etapeDeSeance(p, seance, jour(3)), jour(3), 0));
-  assert.equal(P.etapeDeSeance(p, seance, jour(3)).type, "validation", "et il vient, juste après la marche 7");
+  assert.equal(P.programmeDeSeance(p, seance, jour(1)).raccourciEnFin, true, "la carte de reprise annonce encore le test");
+  ({parcours: p, seance} = jouerEtape(p, seance, P.etapeDeSeance(p, seance, jour(1)), jour(1), 0));
+  assert.equal(P.etapeDeSeance(p, seance, jour(1)).type, "validation", "et il vient, juste après la marche 7");
 });
 
 test("hors séance, rien n'est promis : validationDeSeance ne dit oui qu'à une séance qui a réussi sa marche 7", () => {
   let p = avecDepart(6);
-  p.tables[3].sansFaute = {desordre: 1, trous: 1};
-  for (const date of [jour(1), jour(2)]) for (let m = 1; m <= 10; m += 1) p = P.appliquerReponse(p, `3-${m}`, {correcte: true, date}).parcours;
-  p = P.normaliserParcours(p);
-  assert.equal(P.rangeeTable(p, 3).prete, true);
   assert.equal(P.validationDeSeance(p, 3), false);
-  const ouverte = P.ouvrirSeance(p, {aujourdhui: jour(3), table: 3});
-  assert.equal(ouverte.prete, true, "la rangée pleine à l'ouverture : la séance s'en souvient");
-  assert.equal(P.validationDeSeance(p, 3, ouverte), false, "… mais le test attend la marche 7");
+  const ouverte = P.ouvrirSeance(p, {aujourdhui: jour(1), table: 3});
+  assert.equal(P.validationDeSeance(p, 3, ouverte), false, "le test attend la marche 7");
   const sept = (juste, rate = false) => ({...ouverte, faites: [{type: "entraine", marche: 7, juste, total: 10, rate, reussi: null}]});
-  assert.equal(P.validationDeSeance(p, 3, sept(9)), true, "9 sur 10 à la marche 7 dans la séance : le test");
+  assert.equal(P.validationDeSeance(p, 3, sept(9)), true, "9 sur 10 à la marche 7 dans la séance : le test (rien d'autre à remplir)");
+  assert.equal(P.validationDeSeance(p, 3, sept(10)), true);
   assert.equal(P.validationDeSeance(p, 3, sept(8)), false, "8 sur 10 : non");
   assert.equal(P.validationDeSeance(p, 3, {...sept(10), faites: [{type: "entraine", marche: 5, juste: 10, total: 10, rate: false, reussi: null}]}), false, "la marche 5 à 10 sur 10 (à la place du test) : non");
-  p.tables[3].acquise = jour(2);
+  p.tables[3].acquise = jour(1);
   assert.equal(P.validationDeSeance(P.normaliserParcours(p), 3, sept(10)), false, "une table passée : jamais");
 });
 
-test("la séance se souvient de la rangée pleine, même reprise après l'onglet fermé", () => {
-  // Relecture de Code (07/10/2026) : les erreurs de jouerEtape tombent selon
-  // « tour », partagé par tout le fichier. Sans cette remise à zéro, un test
-  // ajouté plus haut pouvait faire tomber les deux erreurs sur × 1 ou × 10
-  // (des bouts, qui restent pleins) : la rangée ne se vidait plus et ce test
-  // rougissait sans que rien soit cassé.
-  tour = 0;
+test("la séance reprise après l'onglet fermé se souvient de la marche 7 réussie", () => {
   let p = avecDepart(6);
-  for (const date of [jour(1), jour(2)]) for (let m = 1; m <= 10; m += 1) p = P.appliquerReponse(p, `3-${m}`, {correcte: true, date}).parcours;
-  p = P.normaliserParcours(p);
-  let seance = P.ouvrirSeance(p, {aujourdhui: jour(3), table: 3});
-  assert.equal(seance.prete, true);
-  // « Dans le désordre » à 8 sur 10 : deux calculs redescendent, la rangée n'est plus pleine.
-  ({parcours: p, seance} = jouerEtape(p, seance, P.etapeDeSeance(p, seance, jour(3)), jour(3), 2));
-  assert.equal(P.rangeeTable(p, 3).prete, false);
-  assert.equal(seance.prete, true, "la séance s'en souvient");
+  let seance = P.ouvrirSeance(p, {aujourdhui: jour(1), table: 3});
+  for (const juste of [10, 10, 9]) {
+    ({parcours: p, seance} = jouerEtape(p, seance, P.etapeDeSeance(p, seance, jour(1)), jour(1), 10 - juste));
+  }
+  assert.deepEqual(seance.faites.map(faite => faite.marche), [5, 6, 7]);
   // L'onglet se ferme : la séance revient du parcours (envoyé au serveur), sans nouvelle clé.
   p = P.normaliserParcours(JSON.parse(JSON.stringify(p)));
-  seance = P.ouvrirSeance(p, {aujourdhui: jour(3), table: 3});
-  assert.equal(seance.prete, true, "reprise : toujours prête");
-  assert.equal(seance.faites.length, 1);
-  const noms = [];
-  for (let garde = 0; garde < 6 && !seance.finie; garde += 1) {
-    const etape = P.etapeDeSeance(p, seance, jour(3));
-    if (!etape) break;
-    noms.push(etape.type === "validation" ? "test" : etape.marche);
-    ({parcours: p, seance} = jouerEtape(p, seance, etape, jour(3), etape.type === "validation" ? 0 : etape.marche === 7 ? 1 : 2));
-  }
-  assert.deepEqual(noms, [6, 7, "test"], "8 sur 10 à la marche 6, 9 sur 10 à la marche 7 : le test");
-  assert.equal(p.tables[3].acquise, jour(3));
+  seance = P.ouvrirSeance(p, {aujourdhui: jour(1), table: 3});
+  assert.equal(seance.faites.length, 3);
+  const etape = P.etapeDeSeance(p, seance, jour(1));
+  assert.equal(etape.type, "validation", "reprise : le test, juste après la marche 7");
 });
 
 test("élèves déjà en route : rien ne se perd, rien ne se bloque", () => {

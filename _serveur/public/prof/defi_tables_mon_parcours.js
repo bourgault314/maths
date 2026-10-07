@@ -186,13 +186,11 @@
   // premiers jours en classe et une simulation de 1 000 élèves) :
   //  - le test d'une table ne vient plus que JUSTE APRÈS 9 sur 10 à la
   //    marche 7 (« Résultats, nombres manquants et divisions »), dans la même
-  //    séance — avec, en plus, 9 sur 10 une fois aux marches 5 et 6, ou la
-  //    rangée pleine. Avant, 9 sur 10 aux marches 5 et 6 suffisaient et le
-  //    test arrivait tout de suite : la marche 7 sautait presque toujours.
-  //    Environ une séance de plus par table ; rien de nouveau n'est
-  //    enregistré (la séance se souvient de la rangée pleine dans « prete »,
-  //    qui existait déjà), une séance déjà commencée garde ce qu'elle avait
-  //    promis ;
+  //    séance, et c'est tout (règle simplifiée le 07/10). Avant, 9 sur 10 aux
+  //    marches 5 et 6, ou la rangée pleine, ouvraient le test tout de suite :
+  //    la marche 7 sautait presque toujours. Environ une séance de plus par
+  //    table ; rien de nouveau n'est enregistré (« prete » ne sert plus), une
+  //    séance déjà commencée garde le test qu'elle avait promis ;
   //  - Mes calculs du jour sans aucune réponse avant la fin du temps se note
   //    « pas réussi » (le bilan écrit « temps écoulé », pas « 0 sur 1 »).
   // Pas de changement de version.
@@ -1637,15 +1635,17 @@
     return CLES_SANS_FAUTE.every(cle => ligne.sansFaute[cle] === 1);
   }
 
-  // Lot « retours de classe » (06/10/2026, décision de Gwenaël, après
+  // Lot « retours de classe » (06/10/2026, décisions de Gwenaël, après
   // simulation) : le test ne vient plus que JUSTE APRÈS 9 sur 10 à
   // « Résultats, nombres manquants et divisions » (la marche 7, celle qui
-  // ressemble le plus au test), dans la même séance — que la table ait les
-  // deux autres entraînements à 9 sur 10 ou sa rangée pleine. Avant, les deux
-  // entraînements suffisaient et le test arrivait tout de suite : 9 tests sur
-  // 10 étaient proposés sans que la marche 7 ait jamais été faite.
+  // ressemble le plus au test), dans la même séance — et c'est tout (règle
+  // simplifiée le 07/10 : ni les deux autres entraînements, ni la rangée
+  // pleine n'entrent plus en compte ; pour arriver à la marche 7, l'élève a
+  // déjà réussi les marches 5 et 6). Avant, 9 sur 10 aux marches 5 et 6, ou
+  // la rangée pleine, ouvraient le test tout de suite : 9 tests sur 10
+  // étaient proposés sans que la marche 7 ait jamais été faite.
   // Rien n'est enregistré de plus : la séance lit la marche 7 réussie dans
-  // ses étapes faites, et se souvient de la rangée pleine (« prete »).
+  // ses étapes faites.
   const MARCHE_RACCOURCI_FIN = 7;
 
   // 9 sur 10 ou mieux (une erreur au plus).
@@ -1659,40 +1659,19 @@
       && passee.marche === MARCHE_RACCOURCI_FIN && !passee.rate && marcheSeptReussie(passee.juste, passee.total));
   }
 
-  // Ce qu'il faut AVANT la marche 7 : « Dans le désordre » et « Nombres
-  // manquants et divisions » gagnés à 9 sur 10, ou la rangée pleine — pleine
-  // maintenant, ou pleine à un moment de la séance (« seance.prete ») : une
-  // erreur de la séance (Mes calculs du jour, un entraînement à 8 sur 10) qui
-  // fait redescendre un calcul ne reprend pas ce que la rangée avait ouvert.
-  function avantLaSeptOk(parcours, table, seance = null) {
-    return raccourciValidation(parcours, table) || Boolean(seance && seance.prete) || tablePrete(parcours, table);
-  }
-
   // L'étape qui vient d'être jouée ouvre-t-elle le test ?
-  function raccourciDeLEtape(parcours, table, etape, juste, total, seance = null) {
+  function raccourciDeLEtape(etape, juste, total) {
     return etape.type === "entraine" && etape.cle === CLE_RACCOURCI_FIN
-      && marcheSeptReussie(juste, total)
-      && avantLaSeptOk(parcours, table, seance);
+      && marcheSeptReussie(juste, total);
   }
 
   // La séance peut-elle proposer « Je passe le test » ? Pas sur une table
   // passée, et seulement si la marche 7 a été réussie à 9 sur 10 dans la
-  // séance (lue dans ses étapes faites), les deux autres entraînements gagnés
-  // ou la rangée pleine.
+  // séance (lue dans ses étapes faites).
   function validationDeSeance(parcours, table, seance = null) {
     const ligne = parcours.tables[table];
     if (!ligne || ligne.acquise) return false;
-    return septReussieDansLaSeance(seance) && avantLaSeptOk(parcours, table, seance);
-  }
-
-  // Prête par la rangée : ses dix cases pleines (les huit calculs en boîte 3
-  // ou plus, × 1 et × 10 réussis). Depuis le lot « retours de classe », elle
-  // n'ouvre plus le test seule : elle remplace les deux premiers
-  // entraînements, la marche 7 à 9 sur 10 reste demandée. La séance s'en
-  // souvient (« seance.prete ») : pleine à l'ouverture ou après une étape,
-  // elle le reste jusqu'à la fin de la séance.
-  function tablePrete(parcours, table) {
-    return rangeeTable(parcours, table).prete;
+    return septReussieDansLaSeance(seance);
   }
 
   // La table de la séance quand l'élève n'en a pas choisi dans l'onglet :
@@ -1750,10 +1729,10 @@
       }
     }
     return {jour: aujourdhui, table: choisie, depart, echelle, file, faites: [], rate: null, sansFaute: true, remplacee: false, reparee: false, finie: false, avance: 0,
-      // Lot « retours de classe » : « prete » = la rangée pleine, vue dans la
-      // séance (ici à l'ouverture, puis après chaque étape) ; le test, lui,
-      // se gagne toujours à la marche 7 de la séance.
-      prete: echelle && tablePrete(parcours, choisie),
+      // Lot « retours de classe » : « prete » ne sert plus (le test se gagne
+      // à la marche 7 de la séance) ; le champ reste dans le format de la
+      // séance en cours.
+      prete: false,
       // Le nombre de séances déjà finies ce jour-là : c'est lui qui dit, à la
       // reprise et à la fusion, si CETTE séance est encore la séance en cours.
       rang: seancesDuJour(parcours, aujourdhui), erreurs: []};
@@ -2031,7 +2010,7 @@
         table,
         cle: definition.cle,
         nom: definition.nom,
-        // « Je passe le test · si j'ai 9 sur 10 aux entraînements » : la
+        // « Je passe le test · si j'ai 9 sur 10 juste avant » : la
         // marche 8 prévue, jouée en entraînement quand la marche 7 n'a pas
         // ouvert le test.
         aLaPlaceDeLaValidation: condition,
@@ -2053,7 +2032,7 @@
       const etape = etapeDeSeance(parcours, reste, aujourdhui);
       if (!etape) break;
       // Une validation qui dépend d'une étape encore à jouer (la marche 7)
-      // est annoncée « si j'ai 9 sur 10 aux entraînements ».
+      // est annoncée « si j'ai 9 sur 10 juste avant » (la marche 7).
       const prevueValidation = etape.prevue.type === "marche" && etape.prevue.marche === MARCHE_VALIDATION;
       etapes.push(prevueValidation && etape.type !== "validation"
         ? {...etape, nom: marche(MARCHE_VALIDATION).nom, conditionnelle: true}
@@ -2067,13 +2046,11 @@
 
   // Lot M2 : la validation du raccourci peut-elle s'ajouter EN PLUS des
   // étapes annoncées (une 5e étape) ? Lot « retours de classe » (06/10/2026) :
-  // le raccourci se complète TOUJOURS à la marche 7, donc seulement quand la
+  // le test vient TOUJOURS juste après la marche 7, donc seulement quand la
   // DERNIÈRE étape du programme est « Résultats, nombres manquants et
-  // divisions » jouée comme marche, et que la rangée est pleine, ou que
-  // « Dans le désordre » et « Nombres manquants et divisions » sont déjà
-  // gagnés à 9 sur 10 ou se jouent plus tôt dans la séance ; pas de
-  // validation déjà prévue ; validation possible
-  // (table pas encore passée). La carte dit alors « 4 ou 5 étapes ».
+  // divisions » jouée comme marche ; pas de validation déjà prévue ;
+  // validation possible (table pas encore passée). La carte dit alors
+  // « 4 ou 5 étapes ».
   function raccourciEnFin(parcours, seance, etapes) {
     if (!seance.echelle || !etapes.length || seance.table === null) return false;
     if (seance.faites.length + etapes.length >= SEUILS.seance.etapesMax) return false;
@@ -2083,10 +2060,7 @@
     if (etapes.some(etape => etape.prevue.type === "marche" && etape.prevue.marche === MARCHE_VALIDATION)) return false;
     const derniere = etapes[etapes.length - 1];
     if (derniere.type !== "entraine" || derniere.cle !== CLE_RACCOURCI_FIN || derniere.aLaPlaceDeLaValidation) return false;
-    if (seance.prete || tablePrete(parcours, seance.table)) return true;
-    const avant = etapes.slice(0, -1);
-    return CLES_SANS_FAUTE.every(cle => ligne.sansFaute[cle] === 1
-      || avant.some(etape => etape.type === "entraine" && etape.cle === cle));
+    return true;
   }
 
   // Une marche est-elle ratée ? Plus de 3 erreurs sur 10 (moins de 7 sur 10) ;
@@ -2168,11 +2142,10 @@
       // La marche ratée, refaite et réussie : le raté est réparé.
       else if (etape.prevue.reprise) suite.reparee = true;
       // Lot « retours de classe » (06/10/2026, décision de Gwenaël) : le
-      // raccourci ne se complète qu'à la marche 7 (« Résultats, nombres
-      // manquants et divisions ») à 9 sur 10, les deux autres entraînements
-      // déjà gagnés — la marche 7 ne se saute plus. La séance s'en souvient :
-      // la marche 8 qui suit devient le test.
-      const raccourci = !faite.rate && suite.echelle && raccourciDeLEtape(copie, table, etape, juste, total, suite);
+      // test ne vient qu'après 9 sur 10 à la marche 7 (« Résultats, nombres
+      // manquants et divisions ») — la marche 7 ne se saute plus. La séance
+      // s'en souvient (ses étapes faites) : la marche 8 qui suit devient le test.
+      const raccourci = !faite.rate && suite.echelle && raccourciDeLEtape(etape, juste, total);
       // Cinq étapes au plus : complété à la 5e étape (après un raté), il
       // attend le lendemain (départ 6 : la marche 7 revient, puis le test).
       const pasDePlace = suite.faites.length + 2 > SEUILS.seance.etapesMax;
@@ -2201,10 +2174,6 @@
       if (resultat.rien === true) faite.reussi = false;
     }
     suite.faites.push(faite);
-    // La rangée devenue pleine pendant la séance : la séance s'en souvient
-    // jusqu'à sa fin (« prete »), même si une erreur plus loin la refait
-    // redescendre.
-    if (suite.echelle && table !== null && tablePrete(copie, table)) suite.prete = true;
     if (!etapeDeSeance(copie, suite, aujourdhui)) {
       suite.file = [];
       suite.finie = true;
