@@ -151,8 +151,8 @@ comme les fiches.
   page 2 ; IREMI + maths&go une seule fois, au dos, à côté des crédits.
   **PDF page par page (04/10/2026)** : chaque page-fiche du `….pdf` garde le logo de **l'IREMI seul** (`JS_IREMI_SEUL`), à droite de la boîte du QR, qui se pousse à gauche (un titre trop long se coupe après le tiret, `JS_TITRE`) — un collègue qui imprime une seule fiche n'a pas le dos ; maths&go est déjà au pied (`mathsgo.re/splat`). Le livret à plier (`…_a_plier.pdf`) ne change pas : aucun logo sur ses fiches. Chaque fiche est donc rendue deux fois, mêmes graines ; seul le bandeau diffère.
   Le pied : la signature
-  `mathsgo.re/splat · CC BY-NC-SA 4.0` (gris moyen `#64748b`, 10 px). Claire est remerciée une
-  seule fois, au dos.
+  `mathsgo.re/splat · CC BY-NC-SA 4.0` (gris moyen `#64748b`, 10 px). Plus de ligne de crédit pour la
+  progression (07/10/2026).
 - Tout reste lisible imprimé en **noir et blanc** : le framboise ne sert qu'aux fonds, tout
   texte coloré est foncé (`#831843`), le nom de la couleur est écrit sur chaque tache, le
   QR est dans une boîte blanche.
