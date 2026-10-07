@@ -1,0 +1,415 @@
+{
+  "version": 1,
+  "epoque": 2,
+  "etapes": {
+    "m1e1": {
+      "fait": true,
+      "etoiles": 4,
+      "cartes": 4,
+      "vues": 1,
+      "essais": 2,
+      "date": "2026-09-01"
+    },
+    "m1e2": {
+      "fait": true,
+      "etoiles": 4,
+      "cartes": 5,
+      "vues": 0,
+      "essais": 1,
+      "date": "2026-09-02"
+    },
+    "m1e3": {
+      "fait": true,
+      "etoiles": 4,
+      "cartes": 6,
+      "vues": 0,
+      "essais": 1,
+      "date": "2026-09-03"
+    },
+    "m1e4": {
+      "fait": true,
+      "etoiles": 7,
+      "cartes": 7,
+      "vues": 0,
+      "essais": 1,
+      "date": "2026-09-04"
+    },
+    "m1e5": {
+      "fait": true,
+      "etoiles": 7,
+      "cartes": 8,
+      "vues": 0,
+      "essais": 2,
+      "date": "2026-09-05"
+    },
+    "m1e6": {
+      "fait": true,
+      "etoiles": 7,
+      "cartes": 9,
+      "vues": 1,
+      "essais": 1,
+      "date": "2026-09-06"
+    },
+    "m2e1": {
+      "fait": true,
+      "etoiles": 10,
+      "cartes": 10,
+      "vues": 0,
+      "essais": 1,
+      "date": "2026-09-07"
+    },
+    "m2e4": {
+      "fait": true,
+      "etoiles": 10,
+      "cartes": 11,
+      "vues": 0,
+      "essais": 1,
+      "date": "2026-09-08"
+    },
+    "m2e5": {
+      "fait": true,
+      "etoiles": 10,
+      "cartes": 12,
+      "vues": 0,
+      "essais": 2,
+      "date": "2026-09-09"
+    },
+    "enq10": {
+      "fait": true,
+      "etoiles": 4,
+      "cartes": 4,
+      "vues": 0,
+      "essais": 1,
+      "date": "2026-09-10"
+    },
+    "enq11": {
+      "fait": true,
+      "etoiles": 4,
+      "cartes": 5,
+      "vues": 1,
+      "essais": 1,
+      "date": "2026-09-11"
+    },
+    "enq12": {
+      "fait": true,
+      "etoiles": 4,
+      "cartes": 6,
+      "vues": 0,
+      "essais": 1,
+      "date": "2026-09-12"
+    },
+    "enq13": {
+      "fait": true,
+      "etoiles": 7,
+      "cartes": 7,
+      "vues": 0,
+      "essais": 2,
+      "date": "2026-09-13"
+    },
+    "enq14": {
+      "fait": false,
+      "etoiles": 2,
+      "cartes": 8,
+      "vues": 1,
+      "essais": 1,
+      "date": "2026-10-07",
+      "idx": 3
+    },
+    "enq15": {
+      "fait": true,
+      "etoiles": 7,
+      "cartes": 9,
+      "vues": 0,
+      "essais": 1,
+      "date": "2026-09-15"
+    },
+    "enq16": {
+      "fait": true,
+      "etoiles": 10,
+      "cartes": 10,
+      "vues": 1,
+      "essais": 1,
+      "date": "2026-09-16"
+    },
+    "enq17": {
+      "fait": true,
+      "etoiles": 10,
+      "cartes": 11,
+      "vues": 0,
+      "essais": 2,
+      "date": "2026-09-17"
+    },
+    "enq18": {
+      "fait": true,
+      "etoiles": 10,
+      "cartes": 12,
+      "vues": 0,
+      "essais": 1,
+      "date": "2026-09-18"
+    },
+    "enq19": {
+      "fait": true,
+      "etoiles": 4,
+      "cartes": 4,
+      "vues": 0,
+      "essais": 1,
+      "date": "2026-09-19"
+    },
+    "enq20": {
+      "fait": true,
+      "etoiles": 4,
+      "cartes": 5,
+      "vues": 0,
+      "essais": 1,
+      "date": "2026-09-20"
+    },
+    "enq21": {
+      "fait": true,
+      "etoiles": 4,
+      "cartes": 6,
+      "vues": 1,
+      "essais": 2,
+      "date": "2026-09-21"
+    },
+    "enq22": {
+      "fait": true,
+      "etoiles": 7,
+      "cartes": 7,
+      "vues": 0,
+      "essais": 1,
+      "date": "2026-09-22"
+    },
+    "enq23": {
+      "fait": true,
+      "etoiles": 7,
+      "cartes": 8,
+      "vues": 0,
+      "essais": 1,
+      "date": "2026-09-23"
+    },
+    "enq24": {
+      "fait": true,
+      "etoiles": 7,
+      "cartes": 9,
+      "vues": 0,
+      "essais": 1,
+      "date": "2026-09-24"
+    },
+    "sys25": {
+      "fait": true,
+      "etoiles": 10,
+      "cartes": 10,
+      "vues": 0,
+      "essais": 2,
+      "date": "2026-09-25"
+    },
+    "sys26": {
+      "fait": true,
+      "etoiles": 10,
+      "cartes": 11,
+      "vues": 1,
+      "essais": 1,
+      "date": "2026-09-26"
+    },
+    "sys27": {
+      "fait": true,
+      "etoiles": 10,
+      "cartes": 12,
+      "vues": 0,
+      "essais": 1,
+      "date": "2026-09-27"
+    },
+    "sys28": {
+      "fait": true,
+      "etoiles": 4,
+      "cartes": 4,
+      "vues": 0,
+      "essais": 1,
+      "date": "2026-09-28"
+    },
+    "m3e1": {
+      "fait": true,
+      "etoiles": 4,
+      "cartes": 5,
+      "vues": 0,
+      "essais": 2,
+      "date": "2026-09-01"
+    },
+    "m3e2": {
+      "fait": true,
+      "etoiles": 4,
+      "cartes": 6,
+      "vues": 0,
+      "essais": 1,
+      "date": "2026-09-02"
+    },
+    "m3e4": {
+      "fait": true,
+      "etoiles": 7,
+      "cartes": 7,
+      "vues": 1,
+      "essais": 1,
+      "date": "2026-09-03"
+    },
+    "m4e1": {
+      "fait": true,
+      "etoiles": 7,
+      "cartes": 8,
+      "vues": 0,
+      "essais": 1,
+      "date": "2026-09-04"
+    },
+    "m4e2": {
+      "fait": true,
+      "etoiles": 7,
+      "cartes": 9,
+      "vues": 0,
+      "essais": 2,
+      "date": "2026-09-05"
+    },
+    "m4e3": {
+      "fait": true,
+      "etoiles": 10,
+      "cartes": 10,
+      "vues": 0,
+      "essais": 1,
+      "date": "2026-09-06"
+    },
+    "m4e4": {
+      "fait": true,
+      "etoiles": 10,
+      "cartes": 11,
+      "vues": 0,
+      "essais": 1,
+      "date": "2026-09-07"
+    },
+    "m4e5": {
+      "fait": true,
+      "etoiles": 10,
+      "cartes": 12,
+      "vues": 1,
+      "essais": 1,
+      "date": "2026-09-08"
+    },
+    "m4e6": {
+      "fait": true,
+      "etoiles": 4,
+      "cartes": 4,
+      "vues": 0,
+      "essais": 2,
+      "date": "2026-09-09"
+    },
+    "enq11d": {
+      "fait": true,
+      "etoiles": 4,
+      "cartes": 5,
+      "vues": 0,
+      "essais": 1,
+      "date": "2026-09-10"
+    },
+    "enq12d": {
+      "fait": true,
+      "etoiles": 4,
+      "cartes": 6,
+      "vues": 0,
+      "essais": 1,
+      "date": "2026-09-11"
+    },
+    "enq13d": {
+      "fait": true,
+      "etoiles": 7,
+      "cartes": 7,
+      "vues": 0,
+      "essais": 1,
+      "date": "2026-09-12"
+    },
+    "enq16d": {
+      "fait": true,
+      "etoiles": 7,
+      "cartes": 8,
+      "vues": 1,
+      "essais": 2,
+      "date": "2026-09-13"
+    },
+    "enq17d": {
+      "fait": true,
+      "etoiles": 7,
+      "cartes": 9,
+      "vues": 0,
+      "essais": 1,
+      "date": "2026-09-14"
+    },
+    "enq18d": {
+      "fait": true,
+      "etoiles": 10,
+      "cartes": 10,
+      "vues": 0,
+      "essais": 1,
+      "date": "2026-09-15"
+    },
+    "enq20d": {
+      "fait": true,
+      "etoiles": 10,
+      "cartes": 11,
+      "vues": 0,
+      "essais": 1,
+      "date": "2026-09-16"
+    },
+    "enq22d": {
+      "fait": true,
+      "etoiles": 10,
+      "cartes": 12,
+      "vues": 0,
+      "essais": 2,
+      "date": "2026-09-17"
+    },
+    "enq19d": {
+      "fait": true,
+      "etoiles": 4,
+      "cartes": 4,
+      "vues": 1,
+      "essais": 1,
+      "date": "2026-09-18"
+    },
+    "enq24d": {
+      "fait": true,
+      "etoiles": 4,
+      "cartes": 5,
+      "vues": 0,
+      "essais": 1,
+      "date": "2026-09-19"
+    },
+    "sys25d": {
+      "fait": true,
+      "etoiles": 4,
+      "cartes": 6,
+      "vues": 0,
+      "essais": 1,
+      "date": "2026-09-20"
+    },
+    "sys26d": {
+      "fait": true,
+      "etoiles": 7,
+      "cartes": 7,
+      "vues": 0,
+      "essais": 2,
+      "date": "2026-09-21"
+    },
+    "sys27d": {
+      "fait": true,
+      "etoiles": 7,
+      "cartes": 8,
+      "vues": 0,
+      "essais": 1,
+      "date": "2026-09-22"
+    },
+    "sys28d": {
+      "fait": true,
+      "etoiles": 7,
+      "cartes": 9,
+      "vues": 1,
+      "essais": 1,
+      "date": "2026-09-23"
+    }
+  }
+}
