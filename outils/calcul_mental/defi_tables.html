@@ -2954,6 +2954,9 @@
       let suiviIdentite = PARCOURS.chargerIdentiteOnglet(stockageSession(), codeSuivi);
       let suiviHorsLigne = false;
       let envoiEnAttente = null;
+      // Vrai tant qu'un envoi groupé est programmé et n'est pas encore parti
+      // (tenu à part de l'identifiant du minuteur, voir traiterReponseEnvoi).
+      let envoiGroupe = false;
       let envoiEnVol = false;
       let renvoiDemande = false;
       let relance = null;
@@ -3160,11 +3163,19 @@
       // n'envoie qu'une fois par 700 ms, et jamais deux envois en même temps.
       function envoyerParcours() {
         if (!envoiPossible()) return;
-        if (envoiEnAttente !== null) window.clearTimeout(envoiEnAttente);
+        annulerEnvoiGroupe();
+        envoiGroupe = true;
         envoiEnAttente = window.setTimeout(() => {
           envoiEnAttente = null;
+          envoiGroupe = false;
           envoyerMaintenant();
         }, 700);
+      }
+
+      function annulerEnvoiGroupe() {
+        if (envoiEnAttente !== null) window.clearTimeout(envoiEnAttente);
+        envoiEnAttente = null;
+        envoiGroupe = false;
       }
 
       function envoyerMaintenant() {
@@ -3211,7 +3222,13 @@
         const donnees = reponse.donnees;
         if (reponse.statut === 200 && donnees && donnees.ok) {
           sync.revision = Number.isInteger(donnees.revision) ? donnees.revision : base + 1;
-          sync.dirty = renvoiDemande;
+          // Du nouveau pendant le vol : un envoi direct demandé (renvoiDemande)
+          // OU un envoi groupé encore en attente — dans les deux cas « dirty »
+          // reste levé. Sans le second cas (relecture de Code, lot 1 SPLAT!,
+          // 07/10/2026), une série notée pendant le vol puis une fermeture
+          // d'onglet avant les 700 ms ne partaient pas : sendBeacon ne part que
+          // si dirty, et la série attendait la prochaine ouverture.
+          sync.dirty = renvoiDemande || envoiGroupe;
           echecsSuccessifs = 0;
           fusionsSuccessives = 0;
           suiviHorsLigne = false;
@@ -3263,8 +3280,7 @@
       // un 409 sans conséquence).
       function envoyerAvantDeFermer() {
         if (!envoiPossible() || !sync.dirty) return;
-        if (envoiEnAttente !== null) window.clearTimeout(envoiEnAttente);
-        envoiEnAttente = null;
+        annulerEnvoiGroupe();
         const paquet = paquetParcours(codeSuivi, parcours, sync.revision);
         try {
           if (navigator.sendBeacon) {
