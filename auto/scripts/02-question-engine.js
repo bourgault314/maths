@@ -840,7 +840,7 @@ function makeModule01Instance(mod,q){
       display='$$'+module01FracLatex(num,den)+' = [[dec]]$$'; answers=[dec];
     } else if(format==='qcm'){
       prompt='Quelle est l’écriture décimale de '+F+'&nbsp;?';
-      display='$$'+module01FracLatex(num,den)+'$$';
+      display='';
       const distractors=kind==='fixed_f2d'?module01OfficialDecimalDistractors(num,den,dec):module01ImproperDecimalDistractors(num,den,dec);
       qcm=module01QcmFrom(dec,distractors); answers=[qcm.correctIndex]; feedback=qcm.feedback;
     } else {
@@ -868,14 +868,15 @@ function makeModule01Instance(mod,q){
       note=shown.simplified?'$$'+module01FracLatex(parts.num,parts.den)+'$$ et $$'+module01FracLatex(shown.num,shown.den)+'$$ sont justes toutes les deux : toute fraction égale convient.':'';
     } else {
       prompt='Quelle fraction est égale à '+D+'&nbsp;?';
-      display=D;
+      display='';
       const parts=module01DecimalParts(dec);
       const correct=kind==='place_d2f'?module01FracLatex(parts.num,parts.den):module01FracLatex(reduced.num,reduced.den);
       const distractors=kind==='place_d2f'?module01PlaceFractionDistractors(parts):module01FractionDistractors(num,den);
       qcm=module01QcmFrom(correct,distractors); answers=[qcm.correctIndex]; feedback=qcm.feedback;
       if(kind==='place_d2f') steps=steps.slice(0,2);
     }
-    visualData={kind:'place-value',value:dec};
+    // Question : tableau vide (dans quel rang est chaque chiffre ?) ; correction : tableau rempli.
+    visualData={kind:'place-value',value:null};
     correctionVisualData={kind:'place-value',value:dec};
   } else if(kind==='compare'){
     // « Complète par <, = ou > » (sujet de référence n° 1, Q4 : comparer 7/4 et des décimaux).
@@ -901,7 +902,7 @@ function makeModule01Instance(mod,q){
     const sign=Math.abs(other-value)<1e-9?'=':(value<other?'<':'>');
     const shownSign=fractionLeft?sign:(sign==='<'?'>':(sign==='>'?'<':'='));
     const leftLatex=fractionLeft?module01FracLatex(num,den):otherText, rightLatex=fractionLeft?otherText:module01FracLatex(num,den);
-    prompt='Complète par &lt;, = ou &gt;.';
+    prompt='Complète par &lt;, =&nbsp;ou&nbsp;&gt;.';
     display='$$'+leftLatex+'$$[[compare]]$$'+rightLatex+'$$';
     const signs=['<','=','>'];
     qcm={options:signs,codes:[null,null,null],correctIndex:String(signs.indexOf(shownSign)+1),kind:'signs'};
@@ -3803,12 +3804,15 @@ function renderModule01(inst,correction=false,mode=null){
   }
   if(d.qcm){
     const signs=d.qcm.kind==='signs';
-    html+='<div class="options module01-options'+(signs?' module01-sign-options':'')+' options-'+d.qcm.options.length+'">';
+    // Les trois signes : trois gros boutons côte à côte, signe centré.
+    const signGrid=signs?' style="grid-template-columns:repeat(3,minmax(0,1fr));max-width:620px;margin-left:auto;margin-right:auto"':'';
+    html+='<div class="options module01-options'+(signs?' module01-sign-options':'')+' options-'+d.qcm.options.length+'"'+signGrid+'>';
     d.qcm.options.forEach((option,i)=>{
       const isCorrect=correction&&String(i+1)===String(d.qcm.correctIndex);
       const code=d.qcm.codes&&d.qcm.codes[i]?' data-error-code="'+escapeHtml(d.qcm.codes[i])+'"':'';
-      const label=signs?'<span class="module01-sign">'+escapeHtml(option)+'</span>':(['Vrai','Faux'].includes(option)?option:renderMathSegments('$$'+option+'$$'));
-      html+='<div class="opt '+(isCorrect?'correct':'')+'"'+code+'><strong>'+String.fromCharCode(65+i)+'.</strong> '+label+'</div>';
+      const label=signs?'<span class="module01-sign" style="font-size:1.7em;font-weight:800;line-height:1">'+escapeHtml(option)+'</span>':(['Vrai','Faux'].includes(option)?option:renderMathSegments('$$'+option+'$$'));
+      const optStyle=signs?' style="display:flex;align-items:center;justify-content:center;gap:.45em;text-align:center"':'';
+      html+='<div class="opt '+(isCorrect?'correct':'')+'"'+code+optStyle+'><strong>'+String.fromCharCode(65+i)+'.</strong> '+label+'</div>';
     });
     html+='</div>';
   } else {
