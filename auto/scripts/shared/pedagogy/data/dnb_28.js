@@ -9,7 +9,8 @@ MATHSGO_PEDAGOGY.registerModule('dnb_28',{
       {id:'one-trial',label:'Une expérience aléatoire à issues équiprobables'},
       {id:'two-trials',label:'Deux expériences indépendantes successives'},
       {id:'complement',label:'Événement contraire'},
-      {id:'impossible',label:'Événement impossible'}
+      {id:'impossible',label:'Événement impossible'},
+      {id:'certain',label:'Événement certain'}
     ],
     reasoning:[
       {id:'outcomes',label:'Identifier l’univers',rule:'Lister ou compter toutes les issues possibles sans en oublier.'},
@@ -41,9 +42,9 @@ MATHSGO_PEDAGOGY.registerModule('dnb_28',{
     {id:'calculer-equiprobabilite',label:'Calculer une probabilité par dénombrement',questions:[1,2,5],response:'numeric',visual:{policy:'none',component:null},helpSections:['outcomes','favorable','ratio']},
     {id:'lire-une-roue',label:'Lire une roue partagée en secteurs de même taille',questions:[3],response:'numeric',visual:{policy:'essential',component:'dnb_28.wheel'},helpSections:['outcomes','favorable','ratio']},
     {id:'reconnaitre-probabilite-de',label:'Choisir la probabilité d’un événement sur un dé',questions:[4],response:'qcm-one',visual:{policy:'none',component:null},helpSections:['outcomes','favorable','ratio']},
-    {id:'reconnaitre-probabilite-mot',label:'Dénombrer les lettres favorables dans un mot',questions:[6],response:'qcm-one',visual:{policy:'essential',component:'dnb_28.word'},helpSections:['outcomes','favorable','ratio']},
+    {id:'reconnaitre-probabilite-mot',label:'Dénombrer les lettres favorables dans un mot (réponse courte ou QCM)',questions:[6],response:'numeric',visual:{policy:'essential',component:'dnb_28.word'},helpSections:['outcomes','favorable','ratio']},
     {id:'composer-deux-epreuves',label:'Composer une pièce et un dé',questions:[7],response:'numeric',visual:{policy:'none',component:null},helpSections:['outcomes','product']},
-    {id:'reconnaitre-impossible-certain',label:'Reconnaître un événement impossible ou certain',questions:[8],response:'qcm-one',visual:{policy:'none',component:null},helpSections:['outcomes']},
+    {id:'reconnaitre-impossible-certain',label:'Reconnaître un événement impossible ou certain (réponse courte ou QCM)',questions:[8],response:'numeric',visual:{policy:'none',component:null},helpSections:['outcomes']},
     {id:'lire-un-tableau-effectifs',label:'Calculer une probabilité à partir d’un tableau d’effectifs',questions:[9],response:'numeric',visual:{policy:'essential',component:'dnb_28.table'},helpSections:['outcomes','favorable','ratio']},
     {id:'calculer-evenement-contraire',label:'Calculer la probabilité de ne pas obtenir une couleur',questions:[10],response:'numeric',visual:{policy:'none',component:null},helpSections:['ratio','complement']},
     {id:'choisir-probabilite-sac',label:'Choisir la probabilité d’une couleur dans un sac à 3 couleurs',questions:[11],response:'qcm-one',visual:{policy:'none',component:null},helpSections:['outcomes','favorable','ratio']}
