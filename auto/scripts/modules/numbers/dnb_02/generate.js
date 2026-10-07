@@ -131,7 +131,7 @@
         'Les parties entières sont égales : on compare les dixièmes, puis les centièmes.',
         `${sorted.map(fr).join(' < ')}`
       ],
-      correctionNote:short!==undefined?`Attention : ${fr(short)} = ${pad(short,2)}, ce n’est pas le plus petit parce qu’il est le plus court.`:'',
+      correctionNote:short!==undefined&&short!==sorted[0]?`Attention : ${fr(short)} est le plus court, mais ce n’est pas le plus petit : ${pad(short,2)} > ${pad(sorted[0],2)}.`:'',
       aideSteps:[
         'Écris les trois nombres avec 2 chiffres après la virgule, puis compare les dixièmes.',
         short!==undefined?`${fr(short)} = ${pad(short,2)}.`:'Les parties entières sont égales.'
@@ -256,9 +256,9 @@
     {unit:'€',build:(total,divisor)=>`${divisor}&nbsp;amis partagent une dépense de ${total}&nbsp;€ en parts égales. Combien paie chacun&nbsp;?`,answer:'Chacun paie'}
   ];
   function divide(randomInt,context){
-    const divisor=randomInt(2,5);
-    let shareTenths=randomInt(2,19);
-    while((shareTenths*divisor)%10===0) shareTenths=randomInt(2,19);
+    const divisor=randomInt(2,6),maxTenths=context?19:29;
+    let shareTenths=randomInt(2,maxTenths);
+    while((shareTenths*divisor)%10===0) shareTenths=randomInt(2,maxTenths);
     const share=shareTenths/10,total=cut(divisor*share),totalTenths=Math.round(total*10);
     const scope={divisor,share,total};
     const steps=[
