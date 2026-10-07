@@ -1052,7 +1052,7 @@ function makeModule01Instance(mod,q){
       else text='Avec deux chiffres après la virgule, compare '+pad2(fractionLeft?dec:otherText)+' et '+pad2(fractionLeft?otherText:dec)+'.';
       feedback[String(i+1)]=text;
     });
-    if(trap) note='Attention : '+F+' n’est pas '+otherText+'. La barre de fraction n’est pas une virgule.';
+    if(trap) note='Attention : la barre de fraction n’est pas une virgule, ce n’est pas '+otherText+'.';
     extra={other,otherText,sign:shownSign,fractionLeft};
     visualData=null; correctionVisualData=null; visualKind='none';
     direction='compare';
@@ -1069,7 +1069,7 @@ function makeModule01Instance(mod,q){
       prompt='Donne l’écriture décimale de ce nombre.';
       display='$$'+expr+' = [[dec]]$$'; answers=[dec];
       steps=[
-        module01Frac(k,10)+', c’est '+k+' '+module01PlaceName(1,k)+' ; '+module01Frac(h,100)+', c’est '+h+' '+module01PlaceName(2,h)+'.',
+        module01Frac(k,10)+' = $$'+module01Decimal(k,10)+'$$ et '+module01Frac(h,100)+' = $$'+module01Decimal(h,100)+'$$',
         '$$'+expr+'='+whole+'+'+module01Decimal(k,10)+'+'+module01Decimal(h,100)+'='+dec+'$$'
       ];
       aide=['Écris chaque fraction en écriture décimale.','Les dixièmes vont au 1<sup>er</sup> rang après la virgule, les centièmes au 2<sup>e</sup>.'];
@@ -1082,11 +1082,11 @@ function makeModule01Instance(mod,q){
       display='$$'+expr+' = [[dec]]$$'; answers=[dec];
       const part=module01Decimal(k,den);
       steps=[
-        module01Frac(k,den)+', c’est '+k+' '+module01PlaceName(useHundredths?2:1,k)+' : $$'+module01FracLatex(k,den)+'='+part+'$$',
+        module01Frac(k,den)+' = '+k+' '+module01PlaceName(useHundredths?2:1,k)+' = $$'+part+'$$',
         '$$'+expr+'='+whole+'+'+part+'='+dec+'$$'
       ];
       aide=['Écris d’abord '+module01Frac(k,den)+' en écriture décimale.',whole>1?'Ajoute ensuite les '+whole+' unités.':'Ajoute ensuite 1 unité.'];
-      if(useHundredths) note='Attention : $$'+expr+'$$ = '+dec+' et non '+whole+','+k+' ('+whole+','+k+' = $$'+whole+'+'+module01FracLatex(k,10)+'$$).';
+      if(useHundredths) note='Attention : ce n’est pas '+whole+','+k+' ('+whole+','+k+' = '+whole+' unité'+(whole>1?'s':'')+' et '+k+' '+module01PlaceName(1,k)+').';
     }
     visualData={kind:'place-value',value:null}; correctionVisualData={kind:'place-value',value:dec};
     visualKind='place-empty'; direction='sum';
@@ -3969,8 +3969,10 @@ function renderModule01(inst,correction=false,mode=null){
     html+='</div>';
   } else {
     const answerLine=renderMathSegments(renderPlaceholders(d.display,inst.answers,correction?'correction':'question'));
-    // 2 + 1/10 + 1/100 = … : ligne plus petite au téléphone pour tenir dans la largeur.
-    html+='<div class="footer module01-answer">'+(d.extra&&d.extra.threeTerms?'<span style="font-size:min(100%,8.6vw)">'+answerLine+'</span>':answerLine)+'</div>';
+    // Lignes larges (2 + 1/10 + 1/100 = … ; 2,75 = 11/4 avec la réponse barrée) : plus petites
+    // sur un petit téléphone pour tenir dans la largeur ; inchangées à l'ordinateur.
+    const shrink=d.extra&&d.extra.threeTerms?'8.6vw':(['sum','d2f'].includes(d.direction)?'12vw':'');
+    html+='<div class="footer module01-answer">'+(shrink?'<span style="font-size:min(100%,'+shrink+')">'+answerLine+'</span>':answerLine)+'</div>';
   }
   return html;
 }

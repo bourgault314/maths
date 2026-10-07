@@ -27,7 +27,7 @@ MATHSGO_PEDAGOGY.registerModule('dnb_01',{
     visualRules:[
       'Le dessin d’aide ne donne jamais la réponse : les unités complètes ne sont repérées qu’en correction.',
       'Les unités complètes gardent exactement la même taille que l’unité partiellement colorée.',
-      'Pas de dessin pour n/1, 100/100 ni pour les comparaisons.'
+      'Pas de dessin quand la fraction vaut un entier (n/1, 4/2, 100/100), ni pour les comparaisons.'
     ],
     cautions:[
       '3/2 n’est pas 3,2 : la barre de fraction n’est pas une virgule.',
