@@ -18,7 +18,17 @@
 # Les deux coches « serveur » ne sont réclamées que si la pull request touche au
 # serveur (voir le job « changements » ci-dessous). Sur une pull request qui ne
 # change qu'un outil du site, elles sont SAUTÉES : la coche existe, elle est
-# verte, et la fusion reste possible. « verifications », lui, tourne toujours.
+# verte, et la fusion reste possible. « verifications », lui, tourne sur chaque
+# pull request.
+#
+# À l'arrivée sur main (depuis le 06/10/2026, pour tenir dans les minutes
+# incluses de GitHub) :
+#   - les tests du serveur suivent le même tri, sur tout ce que la fusion
+#     apporte à main ;
+#   - « verifications » ne tourne PAS ici : la publication (publier.yml) rejoue
+#     exactement les mêmes contrôles bloquants sur le même commit avant de
+#     mettre le site en ligne, et ne publie rien s'ils échouent.
+# Le dimanche soir et sur « Run workflow » : tout tourne, sans tri.
 
 name: Vérifications
 
@@ -53,6 +63,12 @@ jobs:
   # touche qu'un outil du site — mais ils tirent à chaque fois, et un test de
   # bout en bout qui tire souvent finit par rougir sans raison.
   #
+  # Même chose à l'arrivée sur main : avant le 06/10/2026, chaque fusion les
+  # relançait sans condition (≈ 825 minutes facturées sur 30 jours, pour des
+  # fusions qui, neuf fois sur dix, ne touchaient pas au serveur). Le serveur
+  # n'est jamais mis en ligne par ce workflow (dépôt FTP à la main) : ces tests
+  # ne gardent aucune publication, et le passage du dimanche les rejoue tous.
+  #
   # Pourquoi pas un « paths: » sur le workflow entier ? Parce qu'un workflow qui
   # ne se déclenche pas ne produit AUCUNE coche : « serveur (SQLite) » resterait
   # « Expected » pour toujours, et la fusion serait bloquée sans rien à cliquer.
@@ -65,25 +81,36 @@ jobs:
       - name: Récupérer le dépôt
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
-          # Tout l'historique : sans lui, la base de la pull request n'est pas
-          # là et le « git diff » ci-dessous n'a rien à comparer.
+          # Tout l'historique : sans lui, la base de la pull request (ou l'état
+          # de main avant la fusion) n'est pas là, et le « git diff » ci-dessous
+          # n'a rien à comparer.
           fetch-depth: 0
 
       - name: Décider si les tests du serveur doivent tourner
         id: tri
         env:
           EVENEMENT: ${{ github.event_name }}
-          BASE: ${{ github.event.pull_request.base.sha }}
-          TETE: ${{ github.event.pull_request.head.sha }}
+          # Pull request : sa base et sa tête. Arrivée sur main : main avant la
+          # fusion (« before ») et main après. Les autres événements ne trient pas.
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          TETE: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           tout() {
             echo "serveur=true" >> "$GITHUB_OUTPUT"
             echo "-> $1"
             exit 0
           }
-          # Hors pull request (mise à jour de main, rendez-vous hebdomadaire,
-          # lancement à la main), on ne trie pas : tout tourne.
-          [ "$EVENEMENT" = "pull_request" ] || tout "événement « $EVENEMENT » : les tests du serveur tournent."
+          # Rendez-vous hebdomadaire et lancement à la main : on ne trie pas,
+          # tout tourne. Seules les pull requests et l'arrivée sur main sont triées.
+          case "$EVENEMENT" in
+            pull_request|push) ;;
+            *) tout "événement « $EVENEMENT » : les tests du serveur tournent." ;;
+          esac
+          # Une branche qui vient de naître n'a pas d'état précédent : GitHub
+          # donne alors un « before » fait de zéros. Rien à comparer : tout.
+          case "$BASE" in
+            ""|0000000000000000000000000000000000000000) tout "pas d'état précédent : par prudence, les tests du serveur tournent." ;;
+          esac
           # En cas de doute — un SHA absent, un diff impossible — on lance tout.
           # Mieux vaut une minute de trop qu'un contrôle sauté par erreur.
           git cat-file -e "$BASE^{commit}" 2>/dev/null || tout "base introuvable : par prudence, les tests du serveur tournent."
@@ -117,7 +144,17 @@ jobs:
             echo "-> aucune dépendance du serveur n'a bougé : ses tests sont sautés."
           fi
 
+  # Les contrôles du site. Ils tournent sur chaque pull request, chaque
+  # dimanche et à la demande — jamais sautés là.
+  #
+  # À l'arrivée sur main, ils ne tournent PAS ici : l'étape « Vérifications
+  # bloquantes » de publier.yml rejoue les mêmes commandes sur le même commit
+  # avant de publier, et refuse de publier si l'une échoue. Les jouer ici aussi,
+  # c'était les payer deux fois à chaque fusion (≈ 750 minutes sur 30 jours,
+  # mesuré le 06/10/2026). tests/ci-tests-serveur-cibles.test.mjs exige que
+  # chaque contrôle bloquant d'ici figure aussi dans publier.yml.
   verifications:
+    if: github.event_name != 'push'
     runs-on: ubuntu-latest
     steps:
       - name: Récupérer le dépôt
@@ -128,8 +165,15 @@ jobs:
         with:
           node-version: 22
 
+      # Deux fichiers de test à la fois. La machine que GitHub prête à un dépôt
+      # privé n'a que deux processeurs, et « node --test » en garde un de côté
+      # (il lance « processeurs − 1 » fichiers à la fois) : ici, il les passait
+      # UN PAR UN. Sur une machine à deux processeurs, le 06/10/2026 : 255 s
+      # seul, 167 s à deux, 3 689 tests verts dans les deux cas. Sur un
+      # ordinateur plus puissant (celui de Gwenaël, celui de Code), node lance
+      # déjà plusieurs fichiers à la fois : la suite tourne ainsi depuis toujours.
       - name: Tests unitaires des packages
-        run: node --test
+        run: node --test --test-concurrency=2
 
       - name: Catalogue (cohérence des ressources)
         run: node scripts/validate-catalogue.mjs

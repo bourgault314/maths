@@ -56,9 +56,15 @@ jobs:
           python -m pip install --disable-pip-version-check reportlab
           python _sources/defi-tables/generer_pdf.py
 
+      # Depuis le 06/10/2026, c'est le SEUL passage de ces contrôles à
+      # l'arrivée sur main : le job « verifications » de verifications.yml n'y
+      # tourne plus, puisqu'il jouait exactement les mêmes commandes sur le même
+      # commit. tests/ci-tests-serveur-cibles.test.mjs garde les deux listes
+      # alignées. « --test-concurrency=2 » : voir verifications.yml (deux
+      # processeurs sur la machine de GitHub, deux fichiers de test à la fois).
       - name: Vérifications bloquantes
         run: |
-          node --test
+          node --test --test-concurrency=2
           node scripts/validate-catalogue.mjs
           node scripts/generate-seo.mjs --check
           node scripts/validate-sitemap.mjs
