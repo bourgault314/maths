@@ -909,6 +909,8 @@ svg{display:block;max-width:100%;height:auto}
 /* La consigne prend la place du pavé quand la question n'en a pas besoin (QCM, manipulation) ou quand il est caché (ordinateur). */
 .zone-consigne{display:flex;align-items:center;justify-content:center;padding:6px 14px;border:1.5px dashed #c6d6e9;border-radius:16px;color:#42556b;font-size:1.02rem;font-weight:800;line-height:1.3;text-align:center;visibility:hidden}
 .answer-dock.sans-pave:not(.locked) .zone-consigne,.answer-dock.qcm-mode:not(.locked) .zone-consigne{visibility:visible}
+/* dnb_32 : tant que l'élève n'a pas touché la ligne à lire, tout le pied reste caché (comme avant), consigne et pavé compris. */
+.diapo.interactive-mode.read-data-observation-pending .answer-dock *{visibility:hidden!important}
 /* La carte « Comment on trouve » : exactement la place de la zone de travail. */
 .carte-correction{overflow-y:auto;overscroll-behavior:contain;padding:9px 14px 10px;border:1.5px solid #f2c48d;border-radius:16px;background:#fffaf4;color:#0b2147;font-size:18px;line-height:1.3;text-align:left}
 .carte-correction[hidden]{display:none!important}
