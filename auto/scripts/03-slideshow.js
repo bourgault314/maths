@@ -2669,7 +2669,19 @@ function hasInteractiveAnswer(){
    return angleSumPlacementValidated?!!interactiveTouched[count]:interactiveTouched.slice(0,count).length===count&&interactiveTouched.slice(0,count).every(Boolean);
  }
  if(spec.kind==='decimal-order'||spec.kind==='decimal-frame'||spec.kind==='decimal-distributivity') return interactiveTouched.length===spec.slots.length&&interactiveTouched.every(Boolean);
- return interactiveTouched.some(Boolean);
+ return interactiveTouched.some(Boolean)&&incompleteSlotIndex(spec)<0;
+}
+// Relecture : une réponse en plusieurs cases (fraction, coordonnées, gabarit
+// de factorisation) n'est complète que si chaque case est remplie. Valider
+// (ou Entrée, ou →) avec une case encore vide ne compte pas la question
+// fausse : la case vide devient la case active. Les coefficients d'un
+// polynôme, déjà remplis par 0, ne sont pas concernés.
+function incompleteSlotIndex(spec){
+ if(!spec||spec.kind!=='slots'||!['fraction','inline','algebra-template'].includes(spec.layout)) return -1;
+ if(!interactiveTouched.some(Boolean)) return -1;
+ const count=(spec.slots||[]).length;
+ for(let index=0;index<count;index++) if(!String(interactiveValues[index]??'').trim()) return index;
+ return -1;
 }
 function readingDelayLeft(){
  return interactiveLocked?Math.max(0,LECTURE_MIN_MS-(performance.now()-lockedAt)):0;
@@ -2687,6 +2699,9 @@ function updateInteractiveControls(){
  }
  if(skip){skip.disabled=interactiveLocked;skip.setAttribute('aria-disabled',String(interactiveLocked));}
  if(dock) dock.classList.toggle('answer-ready',!interactiveLocked&&hasAnswer);
+ // La phrase « Écris ta réponse… » s'efface dès que la réponse est complète.
+ const feedback=document.getElementById('answerFeedback');
+ if(!interactiveLocked&&hasAnswer&&feedback&&feedback.classList.contains('info')) setInteractiveFeedback('','');
 }
 function toggleInteractiveOption(index){
  if(interactiveLocked) return;
@@ -2940,6 +2955,8 @@ function submitInteractive(){
    if(!placementCorrect){angleSumBuilderFeedback('Ce placement ne traduit pas encore la somme des trois angles. Essaie à nouveau.','error');return;}
    angleSumPlacementValidated=true;angleSumSelectedToken=null;activeSlotIndex=count;interactiveValues[count]='';interactiveTouched[count]=false;setInteractiveFeedback('','');render();return;
  }
+ const missing=incompleteSlotIndex(spec);
+ if(missing>=0){activeSlotIndex=missing;updateInteractiveSlots();setInteractiveFeedback('Termine ta réponse, ou touche Passer.','info');return;}
  if(!hasInteractiveAnswer()){setInteractiveFeedback(emptyAnswerMessage(spec),'info');return;}
  const validation=evaluateInteractiveAnswer(spec);
  lockQuestion(validation,validation.isCorrect?'correct':'incorrect');
