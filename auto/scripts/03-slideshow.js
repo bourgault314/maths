@@ -1940,6 +1940,9 @@ function zoomBounds(current){
  if(coarsePointerMedia.matches) return spec&&(spec.kind==='qcm'||spec.kind==='slots')?{min:.85,max:1}:{min:1,max:1};
  return {min:.66,max:1};
 }
+// Relecture : dans une question réduite (zoom CSS), un déplacement en px est
+// réduit lui aussi ; la carte glissée suit le pointeur si on le divise.
+function slideZoomFactor(){const slide=document.getElementById('slide');return slide&&parseFloat(slide.style.zoom)||1;}
 function applySlideZoom(slide,zoom){
  slide.style.zoom=Math.abs(zoom-1)<.001?'':zoom.toFixed(3);
 }
@@ -2102,7 +2105,7 @@ function setupDecimalCardInteraction(spec){
        const dx=moveEvent.clientX-startX,dy=moveEvent.clientY-startY;
        if(Math.hypot(dx,dy)>7)moved=true;
        if(!moved)return;
-       moveEvent.preventDefault();card.classList.add('is-dragging');card.style.transform='translate('+dx+'px,'+dy+'px)';
+       moveEvent.preventDefault();card.classList.add('is-dragging');card.style.transform='translate('+(dx/slideZoomFactor())+'px,'+(dy/slideZoomFactor())+'px)';
      };
      const finish=(endEvent,cancelled=false)=>{
        card.classList.remove('is-dragging');card.style.transform='';
@@ -2269,7 +2272,7 @@ function setupPythagorasTactileInteraction(spec){
    node.onpointerdown=event=>{
      if(interactiveLocked||used||event.button>0)return;
      const startX=event.clientX,startY=event.clientY;let moved=false;
-     const move=moveEvent=>{const dx=moveEvent.clientX-startX,dy=moveEvent.clientY-startY;if(Math.hypot(dx,dy)>7)moved=true;if(moved){moveEvent.preventDefault();node.classList.add('is-dragging');node.style.transform='translate('+dx+'px,'+dy+'px)';}};
+     const move=moveEvent=>{const dx=moveEvent.clientX-startX,dy=moveEvent.clientY-startY;if(Math.hypot(dx,dy)>7)moved=true;if(moved){moveEvent.preventDefault();node.classList.add('is-dragging');node.style.transform='translate('+(dx/slideZoomFactor())+'px,'+(dy/slideZoomFactor())+'px)';}};
      const finish=(endEvent,cancelled=false)=>{node.classList.remove('is-dragging');node.style.transform='';if(!moved||cancelled)return;pythagorasSuppressClickUntil=Date.now()+250;const target=document.elementFromPoint(endEvent.clientX,endEvent.clientY)?.closest?.('[data-pythagoras-slot]');if(target)placePythagorasBuilderToken(spec,value,group,Number(target.dataset.pythagorasSlot));};
      beginTrackedPointerDrag(node,event,{move,end:endEvent=>finish(endEvent,false),cancel:endEvent=>finish(endEvent,true)});
    };
@@ -2314,7 +2317,7 @@ function setupAngleSumTactileInteraction(spec){
    node.onpointerdown=event=>{
      if(interactiveLocked||angleSumPlacementValidated||used||event.button>0)return;
      const startX=event.clientX,startY=event.clientY;let moved=false;
-     const move=moveEvent=>{const dx=moveEvent.clientX-startX,dy=moveEvent.clientY-startY;if(Math.hypot(dx,dy)>7)moved=true;if(moved){moveEvent.preventDefault();node.classList.add('is-dragging');node.style.transform='translate('+dx+'px,'+dy+'px)';}};
+     const move=moveEvent=>{const dx=moveEvent.clientX-startX,dy=moveEvent.clientY-startY;if(Math.hypot(dx,dy)>7)moved=true;if(moved){moveEvent.preventDefault();node.classList.add('is-dragging');node.style.transform='translate('+(dx/slideZoomFactor())+'px,'+(dy/slideZoomFactor())+'px)';}};
      const finish=(endEvent,cancelled=false)=>{node.classList.remove('is-dragging');node.style.transform='';if(!moved||cancelled)return;angleSumSuppressClickUntil=Date.now()+300;const target=document.elementsFromPoint(endEvent.clientX,endEvent.clientY).map(item=>item.closest?.('[data-angle-sum-slot]')).find(Boolean);if(target)placeAngleSumBuilderToken(spec,value,Number(target.dataset.angleSumSlot));};
      beginTrackedPointerDrag(node,event,{move,end:endEvent=>finish(endEvent,false),cancel:endEvent=>finish(endEvent,true)});
    };
