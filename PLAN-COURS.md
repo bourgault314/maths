@@ -66,3 +66,4 @@ ajoutés) ; les tests permanents des cours étendus (listes coursIds/titres, tes
 CI « les cours en bandes démontrent ce qu'ils affirment » pour toute scène à
 parts) ; batteries complètes ; captures des 5 panneaux pour validation de
 Gwenael AVANT la session Code.
+<!-- essai CI : PR de test, à fermer sans fusionner -->
