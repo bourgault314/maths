@@ -76,6 +76,67 @@ function escapeHtml(s){
   return String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 }
 
+/* --- Typographie commune (lot T) : début ---
+   Une seule passe, appliquée au TEXTE affiché, jamais aux balises :
+   - vrai signe moins (U+2212) pour le signe d'un nombre et la soustraction
+     entre nombres ou lettres (graduations et coordonnées comprises) ;
+   - espace fine insécable avant % (17 %) ;
+   - jamais de « ^ » brut : x^2 devient x², 90^° devient 90° ;
+   - apostrophe typographique dans les mots (d’un), sans toucher aux primes
+     des figures (A'B') ;
+   - espace insécable avant ? ! ; : pour qu'ils ne partent pas seuls à la ligne.
+   Les attributs, les classes, les identifiants, les URL, le contenu des
+   <script> et <style> ne sont jamais modifiés. Aucune expression rationnelle
+   avec « lookbehind » : elle casserait le moteur sur les vieux iPhone. */
+const TYPO_EXPOSANTS={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','-':'⁻','−':'⁻'};
+const TYPO_ESPACE='(?:[ \\t\\n\\r\\u00a0\\u202f]|&nbsp;|&#160;)';
+const TYPO_MOINS_SIGNE=new RegExp('(^|[ \\t\\n\\r(\\[{;=<>≤≥×÷+−:|/\\u00a0\\u202f]|&nbsp;|&#160;|&lt;|&gt;)-(?=[0-9]|[𝑥𝑦]|[a-zA-Z](?![a-zA-ZÀ-ÖØ-öø-ÿ]))','gu');
+const TYPO_MOINS_ENTRE_NOMBRES=new RegExp('([0-9)\\]²³°%𝑥𝑦])('+TYPO_ESPACE+'+)-(?='+TYPO_ESPACE+'+(?:[0-9(𝑥𝑦]|[a-zA-Z](?![a-zA-ZÀ-ÖØ-öø-ÿ])))','gu');
+const TYPO_MOINS_APRES_LETTRE=new RegExp('(^|[^A-Za-zÀ-ÖØ-öø-ÿ])([a-zA-Z])('+TYPO_ESPACE+'+)-(?='+TYPO_ESPACE+'+(?:[0-9(𝑥𝑦]|[a-zA-Z](?![a-zA-ZÀ-ÖØ-öø-ÿ])))','gu');
+function typographieTexte(text){
+  let s=String(text ?? '');
+  if(!s) return s;
+  // 1. Exposants écrits à la main.
+  s=s.replace(/\^\{?\s*(?:°|\\circ)\s*\}?/g,'°')
+     .replace(/\^\{([−-]?[0-9]+)\}|\^([−-]?[0-9]+)/g,(m,a,b)=>Array.from(a||b).map(c=>TYPO_EXPOSANTS[c]||c).join(''));
+  // 2. Signe moins : signe d'un nombre, puis soustraction (avec ou sans espaces).
+  s=s.replace(TYPO_MOINS_SIGNE,'$1−')
+     .replace(TYPO_MOINS_ENTRE_NOMBRES,'$1$2−')
+     .replace(TYPO_MOINS_APRES_LETTRE,'$1$2$3−')
+     .replace(/([0-9)\]²³𝑥𝑦])-(?=[0-9(𝑥𝑦]|[a-z](?![a-zA-ZÀ-ÖØ-öø-ÿ]))/gu,'$1−')
+     .replace(/(^|[^A-Za-zÀ-ÖØ-öø-ÿ])([a-z])-(?=[0-9(])/g,'$1$2−');
+  // 3. Pourcentage : 17 %, jamais 17%.
+  s=s.replace(new RegExp('([0-9])'+TYPO_ESPACE+'*%','g'),'$1 %');
+  // 4. Apostrophe dans les mots (d’un, l’aire, qu’il), pas les primes (A'B').
+  s=s.replace(/([A-Za-zÀ-ÖØ-öø-ÿ])(?:'|&#39;|&#x27;)(?=[a-zà-öø-ÿ])/g,'$1’');
+  // 5. Ponctuation haute : pas de « ? » seul en début de ligne.
+  s=s.replace(new RegExp('([^ \\t\\n\\r])'+TYPO_ESPACE+'+([?!;])','g'),'$1 $2')
+     .replace(new RegExp('([^ \\t\\n\\r])'+TYPO_ESPACE+'+(:)(?=[ \\t\\n\\r]|$|&nbsp;|<)','g'),'$1 $2');
+  return s;
+}
+function typographieHtml(html){
+  const source=String(html ?? '');
+  if(!source) return source;
+  // Découpe en balises et en texte ; seul le texte est retouché.
+  const parts=source.split(/(<!-[-][\s\S]*?-->|<[^>]*>)/);
+  let skip=null;
+  for(let index=0;index<parts.length;index++){
+    const part=parts[index];
+    if(!part) continue;
+    if(part.charAt(0)==='<'){
+      const tag=part.match(/^<\/?\s*([a-zA-Z][\w-]*)/);
+      const name=tag?tag[1].toLowerCase():'';
+      if(skip){ if(/^<\//.test(part)&&name===skip) skip=null; continue; }
+      if(!/^<\//.test(part)&&['script','style','textarea','code','pre'].includes(name)&&!/\/>$/.test(part)) skip=name;
+      continue;
+    }
+    if(skip) continue;
+    parts[index]=typographieTexte(part);
+  }
+  return parts.join('');
+}
+/* --- Typographie commune (lot T) : fin --- */
+
 function latexCore(s){
   s=String(s ?? '');
 
@@ -95,6 +156,10 @@ function latexCore(s){
   s=s.replace(/\\text\{([^{}]*)\}/g,'<span class="math-text">$1</span>')
      .replace(/\\mathcal\{([^{}]+)\}/g,'<span class="mathcal">$1</span>')
      .replace(/\\widehat\{([^{}]+)\}/g,'<span class="widehat">$1</span>');
+
+  // Degrés écrits en exposant : 90^\circ, 90^{\circ} et 90^° deviennent 90°
+  // (sinon il restait « 90^° » à l'écran, dnb_37).
+  s=s.replace(/\^\{?\s*(?:\\circ|°)\s*\}?/g,'°');
 
   // Fonctions, symboles et espacements présents dans les 37 modules.
   s=s.replace(/\\cos/g,'cos')
@@ -127,15 +192,33 @@ function latexCore(s){
   return s;
 }
 
+const LATEX_SANS_DELIMITEUR=/\\(?:d?frac|text|mathcal|widehat|cos|sin|tan|times|div|quad|qquad|sqrt|pi|in|circ)|\\%|\^[{A-Za-z0-9°\\-]|_[{A-Za-z0-9]/;
+// LaTeX sans délimiteur dans un texte qui contient aussi des balises (une
+// figure <svg>) : seuls les morceaux de TEXTE hors des <svg> sont traduits ; les
+// entités HTML (&nbsp;…) sont protégées, latexCore effaçant les « & ».
+function latexHorsFigures(html){
+  return String(html).split(/(<svg[\s\S]*?<\/svg>)/i).map(block=>{
+    if(/^<svg/i.test(block)||!LATEX_SANS_DELIMITEUR.test(block)) return block;
+    return block.split(/(<[^>]*>)/).map(part=>{
+      if(!part||part.charAt(0)==='<'||!LATEX_SANS_DELIMITEUR.test(part)) return part;
+      const entities=[];
+      const protectedText=part.replace(/&(#?[A-Za-z0-9]+);/g,entity=>'@@ENT'+(entities.push(entity)-1)+'@@');
+      return latexCore(protectedText).replace(/@@ENT(\d+)@@/g,(m,index)=>entities[Number(index)]);
+    }).join('');
+  }).join('');
+}
 function renderMathSegments(html){
   html=String(html ?? '');
 
   // Les blocs mathématiques explicites.
   html=html.replace(/\$\$([\s\S]*?)\$\$/g,(m,expr)=>'<span class="math-display">'+latexCore(expr)+'</span>');
 
-  // Certains choix QCM contiennent du LaTeX sans délimiteur.
-  if(!/<svg[\s>]/i.test(html) && /\\(?:d?frac|text|mathcal|widehat|cos|sin|tan|times|div|quad|qquad|sqrt|pi|in)|\\%|\^[{A-Za-z0-9-]|_[{A-Za-z0-9]/.test(html)){
-    html='<span class="math-inline">'+latexCore(html)+'</span>';
+  // Certains choix QCM contiennent du LaTeX sans délimiteur. Avec une figure
+  // <svg>, on traduit le texte autour de la figure sans toucher à la figure
+  // (avant le lot T, rien n'était traduit dès qu'une figure était présente).
+  if(LATEX_SANS_DELIMITEUR.test(html)){
+    if(/<svg[\s>]/i.test(html)) html=latexHorsFigures(html);
+    else html='<span class="math-inline">'+latexCore(html)+'</span>';
   }
   return html;
 }
@@ -210,7 +293,9 @@ function shuffledQcm(statement, answers){
     const newIndex=permutation.indexOf(oldIndex);
     return newIndex>=0 ? String(newIndex+1) : String(a);
   });
-  return {statement:prompt+'&&'+shuffled.join('&&')+'&&',answers:remapped};
+  // permutation[nouvelle place] = ancienne place : sert à retrouver la phrase
+  // « distractor_feedback » écrite pour l'ordre du gabarit (lot T).
+  return {statement:prompt+'&&'+shuffled.join('&&')+'&&',answers:remapped,permutation};
 }
 
 function shuffleLocal(arr){
@@ -2868,14 +2953,16 @@ function makeGenericInstance(mod,q,generatedScope=null){
   let answers=answerChoices.map(choices=>choices[0]||'');
   let rawStatement=subVars(q.statement||'', scope);
   const rawFooter=subVars(q.footer||'', scope);
+  let qcmPermutation=null;
   if(q.options&&q.options.shuffle_answers){
     const shuffled=shuffledQcm(rawStatement,answers);
     rawStatement=shuffled.statement;
     answers=shuffled.answers;
     answerChoices=answers.map(answer=>[answer]);
+    qcmPermutation=shuffled.permutation||null;
   }
   const hasSvg=/<svg/i.test(rawStatement+rawFooter);
-  return {module:mod, q, scope, answers, answerChoices, rawStatement, rawFooter, hasSvg};
+  return {module:mod, q, scope, answers, answerChoices, rawStatement, rawFooter, hasSvg, qcmPermutation};
 }
 function makeInstance(mod,q){
   const runtime=globalThis.MATHSGO_MODULE_RUNTIME&&globalThis.MATHSGO_MODULE_RUNTIME.get(mod&&mod.id);
