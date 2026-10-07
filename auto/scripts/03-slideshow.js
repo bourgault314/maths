@@ -1554,10 +1554,10 @@ Object.assign(courseCatalog,{
     ['Translation','Tous les points se déplacent selon le même mouvement : même direction, même sens et même longueur.'+courseTransformationVisual('translation')]
   ]},
   probability:{title:'Calculer une probabilité',rules:[
-    ['Quand ?','Tirage <b>au hasard</b>, dé <b>équilibré</b>, boules <b>indiscernables</b>, secteurs <b>de même taille</b>&nbsp;: chaque cas a la même chance.'],
+    ['Quand ?','<b>Au hasard</b>, dé <b>équilibré</b>, boules <b>indiscernables</b>, secteurs <b>de même taille</b>&nbsp;: chaque cas a la même chance.'],
     ['La méthode','<div>P = '+courseFraction('cas qui conviennent','cas en tout')+'</div><div>On compte d’abord <b>tout</b>, puis ce qui <b>convient</b>.</div>'],
-    ['Exemple',courseProbabilityBagVisual()+'<div>3 boules rouges et 5 boules vertes.<br>En tout&nbsp;: 3 + 5 = 8. Rouges&nbsp;: 3.<br><b>P(rouge) = '+courseFraction(3,8)+'</b></div>'],
-    ['À savoir','<div>0&nbsp;: impossible. 1&nbsp;: certain.<br>P(pas rouge) = 1 − P(rouge)<br>'+courseFraction(4,20)+' = '+courseFraction(1,5)+'&nbsp;: les deux sont justes.</div>']
+    ['Exemple',courseProbabilityBagVisual()+'<div>En tout&nbsp;: 3 + 5 = 8. Rouges&nbsp;:&nbsp;3.<br><b>P(rouge) = '+courseFraction(3,8)+'</b></div>'],
+    ['À savoir','<div>P = 0&nbsp;: impossible.<br>P = 1&nbsp;: certain.<br>P(pas rouge) = 1 − P(rouge)<br>'+courseFraction(4,20)+' = '+courseFraction(1,5)+'&nbsp;: les deux sont justes.</div>']
   ]},
   frequency:{title:'Calculer une fréquence',rules:[
     ['Formule','Fréquence = '+courseFraction('effectif de la valeur','effectif total')+'.'],
