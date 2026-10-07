@@ -49,12 +49,12 @@
     const scope=instance.scope||{};
     const data={
       style:'decimal-decomposition',compact:true,interactive,
-      title:'Décomposer '+display(scope.a)+' × '+display(scope.factor),
+      title:interactive?'Décomposer '+display(scope.a)+' × '+display(scope.factor):false,
       rows:[{coefficient:Number(scope.whole),power:0},{coefficient:Number(scope.tenths),power:0}],
       columns:[{coefficient:Number(scope.factor),power:0}],
-      answer:`${display(scope.a)} × ${display(scope.factor)} = ${display(scope.whole)} × ${display(scope.factor)} + ${display(scope.tenths)} × ${display(scope.factor)} = ${display(scope.result)}`
+      answer:`${display(scope.a)} × ${display(scope.factor)} = ${display(scope.firstResult)} + ${display(scope.secondResult)} = ${display(scope.result)}`
     };
-    if(interactive) data.cellLabels=[`${display(scope.firstProduct)} = ${display(scope.firstResult)}`,`${display(scope.secondProduct)} = ${display(scope.secondResult)}`];
+    if(interactive||correction) data.cellLabels=[`${display(scope.firstProduct)} = ${display(scope.firstResult)}`,`${display(scope.secondProduct)} = ${display(scope.secondResult)}`];
     return component.render(data,correction);
   }
 
@@ -62,7 +62,7 @@
     const component=global.MATHSGO_VISUALS&&global.MATHSGO_VISUALS.get('arithmetic.relation-bar');
     if(!component) return '';
     const scope=instance.scope||{};
-    return component.render({kind:'fraction_direct',divisor:Number(scope.divisor),value:Number(scope.total),result:Number(scope.share),showValue:true,questionLabel:'une part ?',balanced:true,arrowStyle:'hand'},correction);
+    return component.render({kind:'fraction_direct',divisor:Number(scope.divisor),value:Number(scope.total),result:Number(scope.share),showValue:true,questionLabel:'une part ?',balanced:true,prominent:true,arrowStyle:'hand'},correction);
   }
 
   function distributivityBoard(instance,correction=false){
@@ -89,14 +89,25 @@
     if(kind==='distributivity-reasoning') return distributivityBoard(instance,correction);
     const html=renderGenericQuestion(instance,correction,mode);
     if(kind==='add-to-one') return optionalVisual(html,complementVisual(instance,correction,false),mode);
-    if(kind==='missing-complement') return optionalVisual(html,complementVisual(instance,correction,true),mode);
     if(kind==='multiply-direct') return optionalVisual(html,multiplicationVisual(instance,correction,false),mode);
     if(kind==='divide-direct'||kind==='division-context') return optionalVisual(html,divisionVisual(instance,correction),mode);
     return html;
   }
 
+  // Dessin du panneau « Aide » (contrat de la refonte, §1.2) : il pose le
+  // calcul sans jamais écrire le résultat.
+  function aideHtml(instance){
+    const kind=String(instance&&instance.q&&instance.q.options&&instance.q.options.decimal_kind||'');
+    if(kind==='multiply-direct') return multiplicationVisual(instance,false,false);
+    if(kind==='divide-direct'||kind==='division-context') return divisionVisual(instance,false);
+    return '';
+  }
+
   if(!global.MATHSGO_MODULE_RUNTIME) throw new Error('Le registre fonctionnel doit être chargé avant le rendu dnb_02.');
-  ['dnb_02','dnb_39'].forEach(moduleId=>global.MATHSGO_MODULE_RUNTIME.register(moduleId,{
+  global.MATHSGO_MODULE_RUNTIME.register('dnb_02',{
+    renderer:{version:'3.0.0',renderQuestion,aideHtml}
+  });
+  global.MATHSGO_MODULE_RUNTIME.register('dnb_39',{
     renderer:{version:'2.1.0',renderQuestion}
-  }));
+  });
 })(globalThis);

@@ -1307,10 +1307,29 @@ function courseDecimalVisual(kind){
  if(kind==='frame')data={mode:'scale',min:9,max:10,step:1,width:560,height:154,axisPadding:.1,autoLabels:true,tickFontSize:21,pointFontSize:28,points:[{value:9.32,label:'9,32',color:'#0b79d0'}]};
  if(kind==='relative-frame')data={mode:'scale',min:-3,max:-2,step:1,width:560,height:154,axisPadding:.1,autoLabels:true,tickFontSize:21,pointFontSize:28,points:[{value:-2.4,label:'−2,4',color:'#0b79d0'}]};
  if(kind==='unit')data={kind:'decimal-complement',filledA:9,filledB:1,showSecond:true};
- if(kind==='multiply')data={style:'decimal-decomposition',compact:true,title:'Décomposer 4,7 × 4',rows:[{coefficient:4,power:0},{coefficient:.7,power:0}],columns:[{coefficient:4,power:0}],answer:'4,7 × 4 = 4 × 4 + 0,7 × 4 = 18,8'};
+ if(kind==='multiply')data={style:'decimal-decomposition',compact:true,title:false,rows:[{coefficient:4,power:0},{coefficient:.7,power:0}],columns:[{coefficient:4,power:0}],cellLabels:['4 × 4 = 16','0,7 × 4 = 2,8'],answer:'4,7 × 4 = 16 + 2,8 = 18,8'};
  if(kind==='divide')data={kind:'fraction_direct',divisor:3,value:2.1,result:.7,showValue:true,questionLabel:'une part',balanced:true,arrowStyle:'hand'};
  const html=component.render(data,correction);
  return '<div class="course-visual decimal-course-visual">'+html+'</div>';
+}
+// Cours dnb_02 : opération posée (virgules alignées, zéros ajoutés en gris).
+function courseDecimalColumns(lines,operator){
+ const parts=lines.map(text=>{const [whole,decimals='']=String(text).split(',');return {whole,decimals};});
+ const wholeWidth=Math.max(...parts.map(part=>part.whole.length)),decimalWidth=Math.max(...parts.map(part=>part.decimals.length));
+ const rows=parts.map((part,index)=>{
+  const line=index===parts.length-1?'border-top:2px solid #17283f;':'';
+  const cell=(value,extra='')=>'<td style="'+line+'padding:0 .08em;text-align:center;min-width:.62em;'+extra+'">'+value+'</td>';
+  const whole=part.whole.padStart(wholeWidth,' ').split('').map(digit=>cell(digit===' '?'':digit)).join('');
+  const decimals=Array.from({length:decimalWidth},(_,position)=>part.decimals[position]===undefined?cell('0','color:#8a97a8'):cell(part.decimals[position])).join('');
+  return '<tr><td style="padding:0 .25em 0 0;text-align:right">'+(index===1?operator:'')+'</td>'+whole+cell(',')+decimals+'</tr>';
+ }).join('');
+ return '<table aria-label="Opération posée" style="margin:7px auto 2px;border-collapse:collapse;font:800 1.22em Cambria Math,Times New Roman,serif;color:#17283f">'+rows+'</table>';
+}
+function courseDecimalPlaceTable(values,column){
+ const head=['unités','dixièmes','centièmes'];
+ const cell=(value,index,tag='td')=>'<'+tag+' style="padding:3px 8px;border:1px solid #c9d6e6;text-align:center'+(index===column?';background:#fff1df;color:#9a4100':'')+'">'+value+'</'+tag+'>';
+ const rows=values.map(text=>{const [whole,decimals]=text.split(',');return '<tr>'+cell(whole+',',0)+cell(decimals[0],1)+cell(decimals[1]||'<span style="color:#8a97a8">0</span>',2)+'</tr>';}).join('');
+ return '<table aria-label="Tableau de numération" style="margin:7px auto 2px;border-collapse:collapse;font:800 1.05em Cambria Math,Times New Roman,serif;color:#17283f"><tr>'+head.map((label,index)=>cell('<span style="font:800 .72em Arial,sans-serif">'+label+'</span>',index,'th')).join('')+'</tr>'+rows+'</table>';
 }
 function courseReadDataTableVisual(){
  return '<table class="read-data-course-table" aria-label="Exemple de lecture croisée dans un tableau"><tbody>'+
@@ -1404,13 +1423,17 @@ Object.assign(courseCatalog,{
     ['Plus grand que 1','<span class="course-example"><span class="course-equation" style="margin-top:0;font-size:1.1em">'+courseFraction(7,4)+'&nbsp;=&nbsp;'+courseFraction(4,4)+'&nbsp;+&nbsp;'+courseFraction(3,4)+'&nbsp;= 1 + 0,75 = 1,75</span></span>La barre n’est pas une virgule : <span style="white-space:nowrap">'+courseFraction(3,2)+' = 1,5, pas 3,2.</span>']
   ]},
   decimal_numbers:{title:'Comparer et calculer avec des décimaux',rules:[
-    ['Comparer les rangs','On compare d’abord les parties entières, puis les dixièmes, les centièmes… Ajouter des zéros à droite ne change pas le nombre : 4,7 = 4,70.'+courseDecimalVisual('order'),false,'place-values'],
-    ['Encadrer','On repère l’entier immédiatement avant le décimal et l’entier immédiatement après. Ils doivent être consécutifs.'+courseDecimalVisual('frame'),false,'consecutive-integers'],
-    ['Compléter une unité','Dix dixièmes forment une unité entière. Les deux couleurs complètent la même bande : 0,9 + 0,1 = 1.'+courseDecimalVisual('unit'),false,'complete-unit'],
-    ['Additionner ou soustraire','On aligne les virgules pour placer unités sous unités, dixièmes sous dixièmes et centièmes sous centièmes.',false,'align-comma'],
-    ['Multiplier par un entier','On peut décomposer le décimal, puis distribuer le même multiplicateur à chaque partie.'+courseDecimalVisual('multiply'),false,'distributivity'],
-    ['Partager également','Diviser un total par le nombre de parts donne la valeur d’une part. Le schéma montre le total au-dessus et les parts égales en dessous.'+courseDecimalVisual('divide'),false,'equal-sharing'],
-    ['Vérifier','Avant de valider, on estime l’ordre de grandeur : multiplier par un entier supérieur à 1 augmente le nombre ; partager en plusieurs parts le diminue.',false,'estimate']
+    ['Comparer, ranger','J’écris les nombres avec <b>autant de chiffres après la virgule</b> (j’ajoute des zéros), puis je compare de gauche à droite : partie entière, dixièmes, centièmes.'+courseDecimalPlaceTable(['4,7','4,09','4,68'],1)+'<span class="course-example">4,09 &lt; 4,68 &lt; 4,7 — le plus court n’est pas forcément le plus petit.</span>',false,'place-values'],
+    ['Encadrer','L’entier juste avant est la partie entière ; l’entier juste après est le suivant.'+courseDecimalVisual('frame')+'<span class="course-example">9 &lt; 9,32 &lt; 10</span>',false,'consecutive-integers'],
+    ['Compléter','J’avance par étapes : jusqu’au dixième suivant, puis jusqu’à l’unité.<span class="course-example">0,35 + 0,05 = 0,4 ; 0,4 + 0,6 = 1 : il manque 0,05 + 0,6 = 0,65.</span>',false,'complete-unit'],
+    ['Additionner, soustraire','J’aligne les virgules et je complète avec des zéros.'+courseDecimalColumns(['11','7,5','3,5'],'−')+'<span class="course-example">4,45 + 0,3 = 4,45 + 0,30 = 4,75</span>',false,'align-comma'],
+    ['Multiplier par un entier','Je décompose le décimal, puis je multiplie chaque partie.'+courseDecimalVisual('multiply'),false,'distributivity'],
+    ['Multiplier en dixièmes','<span class="course-example">0,6 × 7 = 6 dixièmes × 7 = 42 dixièmes = 4,2</span><span class="course-example">0,3 × 0,2 : 3 × 2 = 6 ; 2 chiffres après la virgule → 0,06</span>',false,'multiply-units'],
+    ['Diviser','J’écris le nombre en dixièmes (ou en centièmes), puis je partage.<span class="course-example">5,2 ÷ 4 = 52 dixièmes ÷ 4 = 13 dixièmes = 1,3</span><span class="course-example">66 ÷ 5 = 660 dixièmes ÷ 5 = 132 dixièmes = 13,2</span>',false,'equal-sharing'],
+    ['Priorités','La multiplication se calcule avant l’addition et la soustraction.<span class="course-example"><span style="display:block">A = 7,5 − 2,5 × 2</span><span style="display:block">A = 7,5 − 5</span><span style="display:block">A = 2,5</span></span>',false,'priorities'],
+    ['Contrôler','Résultat + nombre enlevé = nombre de départ.<span class="course-example">11 − 7,5 = 3,5 car 3,5 + 7,5 = 11</span>',false,'check-subtract'],
+    ['Contrôler','J’encadre le produit avec des entiers.<span class="course-example">2,4 × 9 est entre 2 × 9 = 18 et 3 × 9 = 27.</span>',false,'check-multiply'],
+    ['Contrôler','Une part × le nombre de parts = le total.<span class="course-example">5,2 ÷ 4 = 1,3 car 4 × 1,3 = 5,2</span>',false,'check-divide']
   ]},
   decimal_relative_numbers:{title:'Comparer et calculer avec des décimaux relatifs',rules:[
     ['Comparer des nombres négatifs','Sur une droite graduée, le nombre le plus à droite est le plus grand. Parmi deux nombres négatifs, le plus grand est donc le plus proche de 0.<span class="course-example">−2,4 &gt; −3,1.</span>',false,'sign-order'],
@@ -1773,7 +1796,8 @@ function courseForSlide(slide){
  }
  if(slide.courseKind==='decimal_numbers'){
    const course=courseCatalog.decimal_numbers,sections=Array.isArray(slide.courseContext&&slide.courseContext.helpSections)?slide.courseContext.helpSections:[];
-   const rules=course.rules.filter(rule=>sections.includes(rule[3]));
+   // Une carte seule (ou la dernière d'un nombre impair) prend toute la largeur.
+   const rules=course.rules.filter(rule=>sections.includes(rule[3])).map((rule,index,list)=>list.length%2&&index===list.length-1?[rule[0],rule[1],true,rule[3]]:rule);
    return {title:course.title,rules:rules.length?rules:course.rules};
  }
  if(slide.courseKind==='expand_factor'){

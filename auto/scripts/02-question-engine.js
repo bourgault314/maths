@@ -4497,7 +4497,8 @@ function renderQuestion(inst, correction=false, mode=null){
 // banque, tandis que le filtre DNB reste volontairement plus classique.
 const LEVEL_5E_QUESTIONS={
   dnb_01:'all',
-  dnb_02:'all',
+  // dnb_02 : en 5e, comparer, ranger, encadrer et calculer sans problème rédigé.
+  dnb_02:[1,3,4,7,8,9,10,11,13,15],
   dnb_02b:'all',
   dnb_03:[1,2,3,4,5,6,7],
   dnb_04:'all',
@@ -4532,6 +4533,7 @@ const LEVEL_5E_QUESTIONS={
 };
 
 const LEVEL_4E_QUESTIONS={
+  dnb_02:[1,3,4,7,8,9,10,11,13,15,16,17,18],
   dnb_12:Array.from({length:18},(_,index)=>index+1)
 };
 
@@ -4540,6 +4542,8 @@ const LEVEL_4E_QUESTIONS={
 const LEVEL_DNB_QUESTIONS={
   // dnb_01 : le vrai/faux (type 11) n'est pas une forme du DNB général.
   dnb_01:[1,2,3,4,5,6,9,10,13,15,16,17,19,21,22,23],
+  // dnb_02 : l'encadrement entre deux entiers (type 4) reste en 5e-4e.
+  dnb_02:[1,3,7,8,9,10,11,13,14,15,16,17,18],
   dnb_12:[1,2,3,4,5,6,7,8,9,15,16,17]
 };
 
