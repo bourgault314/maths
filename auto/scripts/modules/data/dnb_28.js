@@ -1,9 +1,10 @@
 // dnb_28 — Probabilités, équiprobabilité (liste officielle OGD1 : « attribuer
 // des probabilités dans des cas simples »). Les questions sont fabriquées par
-// dnb_28/generate.js et dessinées par dnb_28/render.js ; ce fichier ne garde
-// que la liste des types. Refonte du 08/10/2026 : chaque type est tiré au
-// hasard (les types 4, 6, 7 et 8 étaient figés) ; type 11 créé (QCM du sac à
-// 3 couleurs, Métropole–La Réunion 2026).
+// dnb_28/generate.js, tirées par dnb_28/selection.js et dessinées par
+// dnb_28/render.js ; ce fichier ne garde que la liste des types. Refonte du
+// 08/10/2026 : chaque type est tiré au hasard (les types 4, 6, 7 et 8 étaient
+// figés, le type 4 déclarait 5/6 juste) ; types 6 et 8 une fois sur deux en
+// réponse courte ; type 11 créé (QCM du sac à 3 couleurs, Métropole–La Réunion 2026).
 const MODULE_DNB_28 = {
   "id": "dnb_28",
   "num": 28,

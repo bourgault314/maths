@@ -176,7 +176,7 @@
     const event=dieEvent(randomInt,faces);
     const f=event.fav.length;
     return base(module,question,'de',{faces,f,event:event.kind},[f,faces],{},{
-      prompt:q('On lance un dé équilibré à '+faces+' faces numérotées de 1 à '+faces+'.<br>Quelle est la probabilité d’obtenir '+event.text+' ?'),
+      prompt:q('On lance un dé équilibré à '+faces+' faces numérotées de 1'+NB+'à'+NB+faces+'.<br>Quelle est la probabilité d’obtenir '+event.text+' ?'),
       footer:fractionFooter(event.label),
       steps:['Faces en tout'+NB+': '+strong(faces),event.title+NB+': '+listText(event.fav)+facesCount(event.fav),pLine(event.label,f,faces)],
       aide:['Écris les faces qui conviennent.'+templateFraction('faces qui conviennent','faces en tout'),'Le dé a '+faces+' faces'+NB+': entoure '+(event.kind==='one'?'le '+event.m:'les nombres qui conviennent')+'.'],
@@ -206,7 +206,7 @@
     const set=qcm(correct,pickDistractors(value,candidates),shuffle);
     const final=fracChain(f,faces);
     return base(module,question,'de-qcm',{faces,f,event:event.kind,shown:correct.n+'/'+correct.d},[set.correctIndex],{options:set.options,correctIndex:set.correctIndex},{
-      prompt:q('On lance un dé équilibré à 6 faces numérotées de 1 à 6.<br>Quelle est la probabilité d’obtenir '+event.text+' ?'),
+      prompt:q('On lance un dé équilibré à 6 faces numérotées de 1'+NB+'à'+NB+'6.<br>Quelle est la probabilité d’obtenir '+event.text+' ?'),
       steps:['Faces qui conviennent'+NB+': '+listText(event.fav)+'.','$$'+pLabel(event.label)+' = '+final+'$$'+NB+': '+answerLetter(set.correctIndex)],
       feedback:set.feedback,
       aide:['Écris les faces qui conviennent.'+templateFraction('faces qui conviennent','faces en tout'),'Le dé a 6 faces'+NB+': 1, 2, 3, 4, 5, 6. Entoure celles qui conviennent.']
@@ -234,7 +234,7 @@
       const f=event.fav.length;
       const sectors=all.map(v=>({label:String(v),fill:v%2?'#dbe8fb':'#fff3c4',on:event.fav.includes(v)}));
       return base(module,question,'roue',{n,f,variant:'nombres'},[f,n],{figure:{type:'wheel',numbers:true,sectors}},{
-        prompt:q('Une roue est partagée en '+n+' secteurs de même taille, numérotés de 1 à '+n+'. On la fait tourner une fois.<br>Quelle est la probabilité '+event.text+' ?'),
+        prompt:q('Une roue est partagée en '+n+' secteurs de même taille, numérotés de 1'+NB+'à'+NB+n+'. On la fait tourner une fois.<br>Quelle est la probabilité '+event.text+' ?'),
         footer:fractionFooter(event.label),
         steps:['Secteurs en tout'+NB+': '+strong(n),event.title+NB+': '+listText(event.fav)+' ('+strong(f)+')',pLine(event.label,f,n)],
         aide:['Compte les secteurs qui conviennent.'+templateFraction('secteurs qui conviennent','secteurs en tout'),'Il y a '+n+' secteurs en tout. Repère ceux qui conviennent.']
@@ -271,7 +271,7 @@
     const fav=Array.from({length:Math.floor(n/d)},(_,i)=>(i+1)*d),f=fav.length;
     const label='multiple de '+d;
     return base(module,question,'cartes',{n,d,f},[f,n],{},{
-      prompt:q('On choisit au hasard une carte parmi '+n+' cartes numérotées de 1 à '+n+'.<br>Quelle est la probabilité d’obtenir un multiple de '+d+' ?'),
+      prompt:q('On choisit au hasard une carte parmi '+n+' cartes numérotées de 1'+NB+'à'+NB+n+'.<br>Quelle est la probabilité d’obtenir un multiple de '+d+' ?'),
       footer:fractionFooter(label),
       steps:['Cartes en tout'+NB+': '+strong(n),'Multiples de '+d+NB+': '+listText(fav)+' ('+strong(f)+' cartes)',pLine(label,f,n)],
       aide:['Écris la liste des multiples de '+d+' jusqu’à '+n+'.'+templateFraction('multiples de '+d,'cartes en tout'),'Les multiples de '+d+' sont dans la table de '+d+NB+': '+d+', '+(2*d)+'…'],
