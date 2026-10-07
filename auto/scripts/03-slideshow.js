@@ -1398,10 +1398,10 @@ Object.assign(courseCatalog,{
     ['Réciproque','Pour prouver qu’un triangle est rectangle, on compare le carré du plus long côté à la somme des carrés des deux autres.',false,'converse'],
     ['Vérification','À la fin, l’hypoténuse doit être le plus grand côté du triangle.',false,'coherence']
   ]},
-  fraction_decimal:{title:'Passer d’une fraction à un nombre décimal',rules:[
-    ['Comprendre','Une fraction représente une division : '+courseFraction('a','b')+' = a ÷ b.'],
-    ['Dénominateur 10 ou 100','Les dixièmes et les centièmes se lisent directement avec la numération décimale.<span class="course-example"><span class="course-equation">'+courseFraction(7,10)+' = 0,7 &nbsp; et &nbsp; '+courseFraction(23,100)+' = 0,23</span></span>'],
-    ['Rendre irréductible','On divise le numérateur et le dénominateur par un même diviseur commun.<span class="course-example"><span class="course-equation">'+courseFraction(60,100)+' = '+courseFraction(3,5)+'</span></span>']
+  fraction_decimal:{title:'Fractions et décimaux',rules:[
+    ['Les repères à connaître','<span class="course-example" style="display:flex;flex-wrap:wrap;justify-content:center;gap:0 18px">'+[[1,2,'0,5'],[1,4,'0,25'],[3,4,'0,75'],[3,2,'1,5'],[5,2,'2,5'],[4,2,'2'],[1,10,'0,1'],[100,100,'1'],[7,1,'7']].map(([n,d,v])=>'<span class="course-equation" style="white-space:nowrap;margin-top:3px;font-size:1.1em">'+courseFraction(n,d)+'&nbsp;=&nbsp;'+v+'</span>').join('')+'</span>',true],
+    ['Dixièmes et centièmes','<span class="course-example"><span class="course-equation" style="margin-top:0;font-size:1.1em">'+courseFraction(9,100)+'&nbsp;= 9 centièmes = 0,09</span><span class="course-equation" style="font-size:1.1em"><span style="white-space:nowrap">0,75 = 75 centièmes</span><span style="display:inline-flex;align-items:center;gap:.12em;white-space:nowrap">&nbsp;=&nbsp;'+courseFraction(75,100)+'&nbsp;=&nbsp;'+courseFraction(3,4)+'</span></span></span>Toute fraction égale est juste.'],
+    ['Plus grand que 1','<span class="course-example"><span class="course-equation" style="margin-top:0;font-size:1.1em">'+courseFraction(7,4)+'&nbsp;=&nbsp;'+courseFraction(4,4)+'&nbsp;+&nbsp;'+courseFraction(3,4)+'&nbsp;= 1 + 0,75 = 1,75</span></span>La barre n’est pas une virgule : <span style="white-space:nowrap">'+courseFraction(3,2)+' = 1,5, pas 3,2.</span>']
   ]},
   decimal_numbers:{title:'Comparer et calculer avec des décimaux',rules:[
     ['Comparer les rangs','On compare d’abord les parties entières, puis les dixièmes, les centièmes… Ajouter des zéros à droite ne change pas le nombre : 4,7 = 4,70.'+courseDecimalVisual('order'),false,'place-values'],
@@ -3603,7 +3603,8 @@ function interactiveSpecForInstance(inst,correctionHtml){
     const fractionKind=inst.fractionOps&&inst.fractionOps.kind;
     const equivalentFraction=(moduleId==='dnb_03'&&['add_same_den','subtract_same_den','add_multiple_den'].includes(fractionKind))
       ||(moduleId==='dnb_03b'&&fractionKind==='multiply')
-      ||moduleId==='dnb_28'||moduleId==='dnb_29';
+      ||moduleId==='dnb_28'||moduleId==='dnb_29'
+      ||(moduleId==='dnb_01'&&inst.module01&&inst.module01.fractionPolicy==='equivalent');
     return {
       kind:'slots',layout:'fraction',
       slots:[{label:'Numérateur'},{label:'Dénominateur'}],
