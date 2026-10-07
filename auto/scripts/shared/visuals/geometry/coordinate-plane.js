@@ -259,7 +259,9 @@
       ...data,
       className:'coordinate-placement-svg',
       // Placement : les nombres restent toujours au même endroit (sous l'axe horizontal, à gauche de l'axe vertical).
-      xLabelSide:data.xLabelSide||'below',yLabelSide:data.yLabelSide||'left',
+      // En correction, si le trajet descend, les nombres de l'axe horizontal passent au-dessus pour ne pas être barrés.
+      xLabelSide:data.xLabelSide||(correction&&targets.length===1&&Number(targets[0].y)<0&&Number(targets[0].x)!==0?'above':'below'),yLabelSide:data.yLabelSide||'left',
+      guides:correction&&targets.length===1?[{x:Number(targets[0].x),y:Number(targets[0].y),axis:'x',line:false},{x:Number(targets[0].x),y:Number(targets[0].y),axis:'y',line:false}]:[],
       attributes:'data-coordinate-placement="1" data-coordinate-point-count="'+targets.length+'"'+(correction?' data-locked="1"':''),
       points:correction?targets.map(point=>({...point,role:'expected'})):[],
       path:correction&&targets.length===1?{x:targets[0].x,y:targets[0].y}:null,
