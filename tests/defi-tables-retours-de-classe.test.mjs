@@ -287,6 +287,10 @@ test("la rangée : les nombres en gris dès « Je construis la bande », les cou
   r = rangee(p, 2);
   assert.deepEqual(vue(r).map(([c]) => c), ["is-zero is-su", "is-su", "is-vu", "is-vu", "is-vu", "is-vu", "is-vu", "is-en-cours", "is-a-travailler", "is-vu", "is-vu"]);
   assert.equal(r.attrs["aria-label"], "Table de 2, sur 10 calculs : 1 su, 1 en route, 1 à revoir, 7 vus");
+  // Relecture de Code : une seule case grise se dit « 1 vu » (Léa, table de 4 : seul × 1 reste gris).
+  let un = p;
+  for (const m of [2, 3, 4, 5, 6, 9]) un = P.appliquerReponse(un, `2-${m}`, {correcte: true, date: jour(2)}).parcours;
+  assert.match(rangee(un, 2).attrs["aria-label"], /, 1 vu$/);
   // Le gris ne remplit rien : le moteur n'a pas changé d'avis sur la rangée.
   assert.equal(P.rangeeTable(P.normaliserParcours(p), 2).prete, false);
   // Le style : case blanche, nombre gris (le gris « même calcul » de Mon parcours, lui, est une case grise).

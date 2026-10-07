@@ -7768,7 +7768,7 @@
           zone.append(cellule);
         });
         const compte = etat => cases.filter(item => item.etat === etat).length;
-        const morceaux = [[compte("su"), "su"], [compte("en-cours"), "en route"], [compte("a-travailler"), "à revoir"], [compte("vu"), "vus"]]
+        const morceaux = [[compte("su"), "su"], [compte("en-cours"), "en route"], [compte("a-travailler"), "à revoir"], [compte("vu"), compte("vu") > 1 ? "vus" : "vu"]]
           .filter(([nombre]) => nombre).map(([nombre, mots]) => `${nombre} ${mots}`);
         zone.setAttribute("role", "img");
         zone.setAttribute("aria-label", `Table de ${table}, sur ${cases.length} calculs : ${morceaux.length ? morceaux.join(", ") : "aucun encore vu"}`);
