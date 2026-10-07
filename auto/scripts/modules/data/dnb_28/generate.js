@@ -254,7 +254,7 @@
       prompt:q('Une roue est partagée en '+n+' secteurs de même taille. On la fait tourner une fois.<br>Quelle est la probabilité '+set.ask(target)+' ?'),
       footer:fractionFooter(target),
       steps:['Secteurs en tout'+NB+': '+strong(n),set.title(target)+NB+': '+strong(k),pLine(target,k,n)],
-      aide:['Compte les secteurs qui conviennent.'+templateFraction('secteurs '+target+(set.labels.includes('rouge')?'s':''),'secteurs en tout'),'Il y a '+n+' secteurs en tout. Compte ceux où il est écrit '+guillemets(target)+'.']
+      aide:['Compte les secteurs qui conviennent.'+templateFraction(set.labels.includes('rouge')?'secteurs '+target+'s':'secteurs '+guillemets(target),'secteurs en tout'),'Il y a '+n+' secteurs en tout. Compte ceux où il est écrit '+guillemets(target)+'.']
     });
   }
 
@@ -291,13 +291,25 @@
       {n:1,d:m,code:'distinct-letters',feedback:allLetters},
       {n:n,d:k,code:'reversed',feedback:'Une probabilité ne dépasse jamais 1'+NB+': le nombre de lettres en tout s’écrit en bas.'}
     ];
-    const set=qcm({n:k,d:n,value:k/n},pickDistractors(k/n,candidates),shuffle);
     const on=letters.map(value=>value===letter);
-    return base(module,question,'mot-qcm',{word,letter,k,n},[set.correctIndex],{figure:{type:'word',letters,on},options:set.options,correctIndex:set.correctIndex},{
-      prompt:q('On choisit au hasard une lettre de ce mot. Chaque lettre a la même chance d’être choisie.<br>Quelle est la probabilité de choisir la lettre '+letter+' ?'),
+    const prompt=q('On choisit au hasard une lettre de ce mot. Chaque lettre a la même chance d’être choisie.<br>Quelle est la probabilité de choisir la lettre '+letter+' ?');
+    const aide=['Compte toutes les cases du mot, puis les cases '+letter+'.'+templateFraction('cases '+letter,'cases en tout'),'Le mot a '+n+' lettres.'];
+    const figure={type:'word',letters,on};
+    // Brevet 2027 (réponses courtes) : une fois sur deux à taper, une fois sur deux en QCM.
+    if(randomInt(0,1)===1){
+      return base(module,question,'mot',{word,letter,k,n,short:true},[k,n],{figure},{
+        prompt,footer:fractionFooter(letter),
+        steps:['Lettres en tout'+NB+': '+strong(n),'Lettres '+letter+NB+': '+strong(k),pLine(letter,k,n)],
+        note:'On compte toutes les lettres, même celles qui se répètent.',
+        aide
+      });
+    }
+    const set=qcm({n:k,d:n,value:k/n},pickDistractors(k/n,candidates),shuffle);
+    return base(module,question,'mot',{word,letter,k,n,short:false},[set.correctIndex],{figure,options:set.options,correctIndex:set.correctIndex},{
+      prompt,
       steps:['Lettres en tout'+NB+': '+strong(n),'Lettres '+letter+NB+': '+strong(k),'$$'+pLabel(letter)+' = '+fracChain(k,n)+'$$'+NB+': '+answerLetter(set.correctIndex)],
       feedback:set.feedback,
-      aide:['Compte toutes les cases du mot, puis les cases '+letter+'.'+templateFraction('cases '+letter,'cases en tout'),'Le mot a '+n+' lettres.']
+      aide
     });
   }
 
@@ -306,7 +318,7 @@
     const side=choose(['pile','face'],randomInt);
     const event=dieEvent(randomInt,6);
     const f=event.fav.length,T=12;
-    const issues=event.fav.map(value=>side+' et '+value);
+    const issues=event.fav.map(value=>'('+side+NB+'; '+value+')');
     return base(module,question,'piece-de',{side,f,event:event.kind},[f,T],{},{
       prompt:q('On lance une pièce équilibrée et un dé équilibré à 6 faces.<br>Quelle est la probabilité d’obtenir '+guillemets(side)+' et '+event.text+' ?'),
       footer:fractionFooter(''),
@@ -397,8 +409,10 @@
   function contraire(module,question,randomInt,shuffle){
     const objet=OBJETS[choose(['jeton','boule'],randomInt)];
     const colors=shuffle(['rouge','bleu','vert','jaune','noir','blanc']).slice(0,3);
-    const counts=drawCounts(randomInt,3,1,7,6,18,c=>new Set(c).size>=2);
-    const asked=randomInt(0,2),T=sum(counts),b=counts[asked],f=T-b,couleur=colors[asked];
+    const asked=randomInt(0,2);
+    // Jamais P(pas bleu) = P(bleu) : le piège « j'ai compté les bleus » doit être faux.
+    const counts=drawCounts(randomInt,3,1,7,6,18,c=>new Set(c).size>=2&&2*c[asked]!==sum(c));
+    const T=sum(counts),b=counts[asked],f=T-b,couleur=colors[asked];
     const others=counts.filter((_,i)=>i!==asked);
     const label='pas '+adj(objet,couleur,1);
     return base(module,question,'contraire',{f,T,couleur},[f,T],{},{
@@ -464,7 +478,7 @@
     'roue':args=>roue(args.module,args.question,args.randomInt,args.shuffle),
     'de-qcm':args=>deQcm(args.module,args.question,args.randomInt,args.shuffle),
     'cartes':args=>cartes(args.module,args.question,args.randomInt),
-    'mot-qcm':args=>mot(args.module,args.question,args.randomInt,args.shuffle),
+    'mot':args=>mot(args.module,args.question,args.randomInt,args.shuffle),
     'piece-de':args=>pieceDe(args.module,args.question,args.randomInt),
     'impossible-certain':args=>impossibleCertain(args.module,args.question,args.randomInt,args.shuffle),
     'club':args=>club(args.module,args.question,args.randomInt),

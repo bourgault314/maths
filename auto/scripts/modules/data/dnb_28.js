@@ -22,7 +22,7 @@ const MODULE_DNB_28 = {
     {"n": 3, "title": "Roue dessinée", "statement": "", "answer": "[\"f\",\"T\"]", "footer": "", "options": {"probability_kind": "roue", "template_version": 2}},
     {"n": 4, "title": "QCM : lancer d’un dé", "statement": "", "answer": "[\"correctIndex\"]", "footer": "", "options": {"probability_kind": "de-qcm", "template_version": 2}},
     {"n": 5, "title": "Cartes numérotées : multiples", "statement": "", "answer": "[\"f\",\"T\"]", "footer": "", "options": {"probability_kind": "cartes", "template_version": 2}},
-    {"n": 6, "title": "QCM : une lettre d’un mot", "statement": "", "answer": "[\"correctIndex\"]", "footer": "", "options": {"probability_kind": "mot-qcm", "template_version": 2}},
+    {"n": 6, "title": "Une lettre d’un mot", "statement": "", "answer": "[\"f\",\"T\"]", "footer": "", "options": {"probability_kind": "mot", "template_version": 2}},
     {"n": 7, "title": "Une pièce et un dé", "statement": "", "answer": "[\"f\",\"T\"]", "footer": "", "options": {"probability_kind": "piece-de", "template_version": 2}},
     {"n": 8, "title": "Impossible ou certain", "statement": "", "answer": "[\"value\"]", "footer": "", "options": {"probability_kind": "impossible-certain", "template_version": 2}},
     {"n": 9, "title": "Tableau d’effectifs", "statement": "", "answer": "[\"f\",\"T\"]", "footer": "", "options": {"probability_kind": "club", "template_version": 2}},
