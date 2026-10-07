@@ -19,7 +19,7 @@
   const M=expr=>'$$'+expr+'$$';
   const FM=(num,den)=>M(F(num,den));
   const dec=value=>String(Math.round(value*100)/100).replace('.',',');
-  const opLatex=op=>op==='+'?'+':MINUS;
+  const opLatex=op=>op==='+'?' + ':' '+MINUS+' ';
 
   // Noms des parts, pour les phrases de correction (« des septièmes »).
   const PARTS={2:'demis',3:'tiers',4:'quarts',5:'cinquièmes',6:'sixièmes',7:'septièmes',8:'huitièmes',9:'neuvièmes',10:'dixièmes',11:'onzièmes',12:'douzièmes',14:'quatorzièmes',15:'quinzièmes',16:'seizièmes',18:'dix-huitièmes',20:'vingtièmes',21:'vingt-et-unièmes',24:'vingt-quatrièmes',28:'vingt-huitièmes',30:'trentièmes',35:'trente-cinquièmes'};
@@ -81,7 +81,7 @@
     const {factor,base,big}=data;
     const steps=[
       big.num+' et '+big.den+' sont tous les deux dans la table de '+factor+'.',
-      M(F(big.num,big.den)+'='+F(big.num+' \\div '+factor,big.den+' \\div '+factor)+'='+F(base.num,base.den))
+      M(F(big.num,big.den)+' = '+F(big.num+' \\div '+factor,big.den+' \\div '+factor)+' = '+F(base.num,base.den))
     ];
     let note='';
     if(isPrime(factor)){
@@ -89,7 +89,7 @@
     }else{
       const chain=[F(big.num,big.den)];let n=big.num,d=big.den;
       primeFactors(factor).forEach(p=>{n/=p;d/=p;chain.push(F(n,d));});
-      steps.push('On peut aussi diviser en plusieurs fois : '+M(chain.join('='))+'.');
+      steps.push('On peut aussi diviser en plusieurs fois : '+M(chain.join(' = '))+'.');
       const s=smallestPrimeFactor(factor);
       note='Si tu divises seulement par '+s+', tu trouves '+FM(big.num/s,big.den/s)+' : c’est égal, mais pas encore irréductible.';
     }
@@ -112,7 +112,7 @@
     }else{
       fractions=retry(()=>{
         const num=pick([2,3,4,5,7]);
-        const dens=shuffle([3,4,5,6,7,8,9,10,12].filter(den=>den!==num&&num%den!==0)).slice(0,4);
+        const dens=shuffle([3,4,5,6,7,8,9,10,11,12].filter(den=>den!==num&&gcd(num,den)===1)).slice(0,4);
         if(dens.length<4) return null;
         return dens.map(den=>({num,den}));
       });
@@ -167,6 +167,7 @@
       const maxNum=Math.max(...fractions.map(f=>f.num));
       const maxDen=Math.max(...dens);
       if(best.num===maxNum||best.den===maxDen) return null;
+      if(values.filter(v=>v>0.5).length<2) return null;
       // Écart d'au moins une part du dénominateur commun entre la plus grande et la suivante.
       return {fractions,best,maxNum,maxDen,common:dens.reduce(lcm)};
     });
@@ -182,7 +183,7 @@
       return {html:FM(f.num,f.den),latex:F(f.num,f.den),correct,code,feedback};
     });
     const qcm=qcmFrom(options,shuffle);
-    const conversions=fractions.map(f=>f.den===common?FM(f.num,f.den):M(F(f.num,f.den)+'='+F(f.num*common/f.den,common))).join(' ; ');
+    const conversions=fractions.map(f=>f.den===common?FM(f.num,f.den):M(F(f.num,f.den)+' = '+F(f.num*common/f.den,common))).join(' ; ');
     const dens=fractions.map(f=>f.den);
     const first=fractions.find(f=>f.den!==common);
     const k=common/first.den;
@@ -197,7 +198,7 @@
       note:'On ne compare pas les numérateurs seuls : les parts doivent avoir la même taille.',
       aide:[
         'Cherche un nombre qui est dans les tables de '+dens.slice(0,-1).join(', ')+' et '+dens[dens.length-1]+' : ce sera le dénominateur commun.',
-        'Par exemple : '+M(F(first.num,first.den)+'='+F(first.num+' \\times '+k,first.den+' \\times '+k)+'='+F(first.num*k,common))+'.'
+        'Par exemple : '+M(F(first.num,first.den)+' = '+F(first.num+' \\times '+k,first.den+' \\times '+k)+' = '+F(first.num*k,common))+'.'
       ],
       aideHtml:''
     };
@@ -224,9 +225,9 @@
     const expression=F(a,den)+sign+F(b,den);
     const steps=[
       'Même dénominateur '+den+' : on '+(op==='+'?'additionne':'soustrait')+' les numérateurs, le dénominateur ne change pas.',
-      M(expression+'='+F(a+' '+sign+' '+b,den)+'='+F(raw,den))
+      M(expression+' = '+F(a+sign+b,den)+' = '+F(raw,den))
     ];
-    if(result.den!==den) steps.push('On simplifie par '+(den/result.den)+' : '+M(F(raw,den)+'='+F(result.num,result.den))+'.');
+    if(result.den!==den) steps.push('On simplifie par '+(den/result.den)+' : '+M(F(raw,den)+' = '+F(result.num,result.den))+'.');
     const note=op==='+'
       ?'Le dénominateur reste '+den+' : '+M(expression)+' ne fait pas '+FM(a+b,2*den)+'.'
       :'Le dénominateur reste '+den+' : on ne calcule pas '+den+' '+MINUS+' '+den+'.';
@@ -255,10 +256,10 @@
       return {small,big,factor,a,b,op,smallFirst,converted,raw,result:reduce(raw,big)};
     });
     const {small,big,factor,a,b,op,smallFirst,converted,raw,result}=data;
-    const sign=op==='+'?'+':MINUS;
+    const sign=op==='+'?' + ':' '+MINUS+' ';
     const expression=smallFirst?F(a,small)+sign+F(b,big):F(b,big)+sign+F(a,small);
     const convertedExpression=smallFirst?F(converted,big)+sign+F(b,big):F(b,big)+sign+F(converted,big);
-    const last=convertedExpression+'='+F(raw,big)+(result.den!==big?'='+F(result.num,result.den):'');
+    const last=convertedExpression+' = '+F(raw,big)+(result.den!==big?' = '+F(result.num,result.den):'');
     const wrongNum=op==='+'?a+b:Math.abs(smallFirst?a-b:b-a);
     const note=op==='+'
       ?M(expression)+' ne fait pas '+FM(wrongNum,small+big)+' : on n’additionne pas les dénominateurs.'
@@ -267,7 +268,7 @@
       kind:'add_multiple_den',op,prompt:'Réduis au même dénominateur, puis calcule.',expression,result,
       steps:[
         big+' est dans la table de '+small+' : on écrit '+FM(a,small)+' en '+parts(big)+'.',
-        M(F(a,small)+'='+F(a+' \\times '+factor,small+' \\times '+factor)+'='+F(converted,big)),
+        M(F(a,small)+' = '+F(a+' \\times '+factor,small+' \\times '+factor)+' = '+F(converted,big)),
         M(last)
       ],
       note,
@@ -300,10 +301,11 @@
       return {d1,d2,n1,n2,op,common,k1,k2,raw,result:reduce(raw,common)};
     });
     const {d1,d2,n1,n2,op,common,k1,k2,raw,result}=data;
-    const expression=F(n1,d1)+op+F(n2,d2);
-    const conversion=M(F(n1,d1)+'='+F(n1+' \\times '+k1,d1+' \\times '+k1)+'='+F(n1*k1,common))
-      +' et '+M(F(n2,d2)+'='+F(n2+' \\times '+k2,d2+' \\times '+k2)+'='+F(n2*k2,common));
-    const last=expression+'='+F(n1*k1,common)+op+F(n2*k2,common)+'='+F(raw,common)+(result.den!==common?'='+F(result.num,result.den):'');
+    const sp=' '+op+' ';
+    const expression=F(n1,d1)+sp+F(n2,d2);
+    const conversion=M(F(n1,d1)+' = '+F(n1+' \\times '+k1,d1+' \\times '+k1)+' = '+F(n1*k1,common))
+      +' et '+M(F(n2,d2)+' = '+F(n2+' \\times '+k2,d2+' \\times '+k2)+' = '+F(n2*k2,common));
+    const last=expression+' = '+F(n1*k1,common)+sp+F(n2*k2,common)+' = '+F(raw,common)+(result.den!==common?' = '+F(result.num,result.den):'');
     const first=lcmPairs
       ?'Dénominateur commun : '+common+' est dans la table de '+d1+' et dans la table de '+d2+' (plus simple que '+d1+' × '+d2+' = '+(d1*d2)+').'
       :'Dénominateur commun : '+common+' est dans la table de '+d1+' et dans la table de '+d2+'.';
@@ -346,8 +348,8 @@
       return {a,b,n1,n2,sum,product};
     });
     const {a,b,n1,n2,sum,product}=data;
-    const expression=F(n1,a)+'+'+F(n2,b);
-    const convert=M(F(n1,a)+'='+F(n1*b,product));
+    const expression=F(n1,a)+' + '+F(n2,b);
+    const convert=M(F(n1,a)+' = '+F(n1*b,product));
     const options=forms?[
       {html:M(F(a+'+'+b,a+' \\times '+b)),latex:F(a+'+'+b,a+'\\times '+b),correct:true},
       {html:M(F('1+1',a+'+'+b)),latex:F('1+1',a+'+'+b),code:'haut-et-bas',feedback:'Tu as additionné en haut et en bas. On n’additionne que des parts de même taille : il faut un dénominateur commun.'},
@@ -362,9 +364,9 @@
     const qcm=qcmFrom(options.map(option=>Object.assign({correct:false},option)),shuffle);
     const steps=[
       'Dénominateur commun : '+a+' × '+b+' = '+product+'.',
-      M(expression+'='+F(n1*b,product)+'+'+F(n2*a,product)+'='+F(sum,product))
+      M(expression+' = '+F(n1*b,product)+' + '+F(n2*a,product)+' = '+F(sum,product))
     ];
-    if(forms) steps.push('Or '+M(F(a+'+'+b,a+' \\times '+b)+'='+F(sum,product))+' : c’est la proposition '+qcm.letter+'.');
+    if(forms) steps.push('Or '+M(F(a+'+'+b,a+' \\times '+b)+' = '+F(sum,product))+' : c’est la proposition '+qcm.letter+'.');
     return {
       kind:'sum_qcm',prompt:'Le nombre '+M(expression)+' est égal à :',qcm,steps,
       note:'Le piège : additionner « en haut et en bas » ('+FM(n1+n2,a+b)+').',
@@ -384,8 +386,9 @@
       const small=randomInt(tenthsA+1,9);
       if(small===tenthsC) return null;
       const q=[2,4,5][randomInt(0,2)],r=randomInt(1,q-1);
+      if(gcd(r,q)!==1) return null;
       const items=[
-        {id:'centiemes',value:unit+small/100,label:M(unit+'+'+F(small,100)),decimal:dec(unit+small/100)},
+        {id:'centiemes',value:unit+small/100,label:M(unit+' + '+F(small,100)),decimal:dec(unit+small/100)},
         {id:'long',value:unit+(10*tenthsA+hundredthsA)/100,label:unit+','+tenthsA+hundredthsA,decimal:unit+','+tenthsA+hundredthsA},
         {id:'court',value:unit+tenthsC/10,label:unit+','+tenthsC,decimal:unit+','+tenthsC},
         {id:'fraction',value:unit+r/q,label:FM(unit*q+r,q),decimal:dec(unit+r/q),num:unit*q+r,den:q}
@@ -408,7 +411,7 @@
     const qcm=qcmFrom([
       {html:html(correct),correct:true},
       {html:html(digitsTrap),correct:false,code:'plus-de-chiffres',feedback:'Tu as cru que '+longLabel+' &gt; '+shortLabel+' parce qu’il a plus de chiffres. Compare les dixièmes : '+tenthsA+' &lt; '+tenthsC+'.'},
-      {html:html(readingTrap),correct:false,code:'centiemes-lus-dixiemes',feedback:'Tu as lu '+M(unit+'+'+F(small,100))+' comme '+unit+','+small+'. Or '+FM(small,100)+' = 0,0'+small+'.'},
+      {html:html(readingTrap),correct:false,code:'centiemes-lus-dixiemes',feedback:'Tu as lu '+M(unit+' + '+F(small,100))+' comme '+unit+','+small+'. Or '+FM(small,100)+' = 0,0'+small+'.'},
       {html:html(descending),correct:false,code:'ordre-decroissant',feedback:'C’est l’ordre décroissant (du plus grand au plus petit).'}
     ],shuffle);
     const fraction=byId.fraction;
@@ -419,7 +422,7 @@
       listHtml:shuffle(items).map(item=>item.label).join(' ; '),
       qcm,
       steps:[
-        'On écrit chaque nombre en écriture décimale : '+FM(fraction.num,fraction.den)+' = '+fraction.decimal+' et '+M(unit+'+'+F(small,100))+' = '+byId.centiemes.decimal+'.',
+        'On écrit chaque nombre en écriture décimale : '+FM(fraction.num,fraction.den)+' = '+fraction.decimal+' et '+M(unit+' + '+F(small,100))+' = '+byId.centiemes.decimal+'.',
         'On compare : '+sortedDecimals+'.',
         'Donc '+html(correct)+'.'
       ],

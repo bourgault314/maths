@@ -23,13 +23,13 @@
       options.forEach((option,index)=>{
         const correct=correction&&String(index+1)===String(data.qcm.correctIndex);
         const code=option.code?' data-error-code="'+option.code+'"':'';
-        html+='<div class="opt'+(correct?' correct':'')+'"'+code+' style="text-align:center;min-height:56px"><strong>'+String.fromCharCode(65+index)+'.</strong> '+R(option.html)+'</div>';
+        html+='<div class="opt'+(correct?' correct':'')+'"'+code+' style="text-align:center;min-height:56px;font-size:'+(data.listHtml?'clamp(1.12rem,1.8vw,1.65rem)':'clamp(1.35rem,2.3vw,2.2rem)')+'"><strong>'+String.fromCharCode(65+index)+'.</strong> '+R(option.html)+'</div>';
       });
       return html+'</div>';
     }
 
     const result=data.result.den===1?String(data.result.num):'\\dfrac{'+data.result.num+'}{'+data.result.den+'}';
-    html+='<div class="footer fraction-ops-answer fraction-ops-answer-top"><span>'+R('$$'+data.expression+'=$$')+'</span>'
+    html+='<div class="footer fraction-ops-answer fraction-ops-answer-top"><span>'+R('$$'+data.expression+' =$$')+'</span>'
       +(correction?'<strong>'+R('$$'+result+'$$')+'</strong>':'<span class="answer-dots">…</span>')+'</div>';
     return html;
   }
