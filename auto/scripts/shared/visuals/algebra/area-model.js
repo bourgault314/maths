@@ -75,10 +75,10 @@
         return `<span class="decimal-decomposition-slot is-filled">${escapeHtml(label)}</span>`;
       }
       if(data.interactive)return `<button class="decimal-decomposition-slot area-model-slot" type="button" data-distributive-slot="${index}" aria-label="Produit partiel ${index+1}"><span data-distributive-value="${index}"></span></button>`;
-      return `<span class="decimal-decomposition-term">${escapeHtml(productLabels[index])}</span>`;
+      return `<span class="decimal-decomposition-term" style="border-style:solid;border-color:#b9cde4">${escapeHtml(productLabels[index])}</span>`;
     };
     const finalLine=correction?`<div class="decimal-decomposition-result">${escapeHtml(data.answer||'')}</div>`:'';
-    return `<div class="area-model-help area-model-compact decimal-decomposition" role="group" aria-label="Décomposition distributive de ${escapeHtml(display(decimal))} multiplié par ${escapeHtml(display(factor))}"><div class="decimal-decomposition-title">${escapeHtml(data.title||'Décomposer le produit')}</div><div class="decimal-decomposition-line decimal-decomposition-start">${escapeHtml(display(decimal))} × ${escapeHtml(display(factor))}</div><div class="decimal-decomposition-line">= (${escapeHtml(display(whole))} + ${escapeHtml(display(tenths))}) × ${escapeHtml(display(factor))}</div><div class="decimal-decomposition-line decimal-decomposition-products"><span>=</span>${slot(0)}<span>+</span>${slot(1)}</div>${finalLine}</div>`;
+    return `<div class="area-model-help area-model-compact decimal-decomposition" role="group" aria-label="Décomposition distributive de ${escapeHtml(display(decimal))} multiplié par ${escapeHtml(display(factor))}">${data.title===false?'':`<div class="decimal-decomposition-title">${escapeHtml(data.title||'Décomposer le produit')}</div>`}<div class="decimal-decomposition-line decimal-decomposition-start">${escapeHtml(display(decimal))} × ${escapeHtml(display(factor))}</div><div class="decimal-decomposition-line">= (${escapeHtml(display(whole))} + ${escapeHtml(display(tenths))}) × ${escapeHtml(display(factor))}</div><div class="decimal-decomposition-line decimal-decomposition-products"><span>=</span>${slot(0)}<span>+</span>${slot(1)}</div>${finalLine}</div>`;
   }
 
   function areaModel(data,correction=false){

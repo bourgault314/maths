@@ -16,8 +16,8 @@
     const slots=values.map((value,index)=>{
       const filled=value!==''&&value!==null&&value!==undefined;
       const endpoint=index===0?'plus petit':(index===values.length-1?'plus grand':'milieu');
-      return `<span class="decimal-order-position"><button class="decimal-drop-slot${filled?' is-filled':''}" type="button" data-decimal-slot="${index}" aria-label="Position ${index+1}">${filled?escapeHtml(display(value)):'…'}</button><span class="decimal-order-endpoint${endpoint==='milieu'?' is-empty':''}">${endpoint}</span></span>`;
-    }).join('<span class="decimal-order-sign" aria-hidden="true">≤</span>');
+      return `<span class="decimal-order-position"><button class="decimal-drop-slot${filled?' is-filled':''}" type="button" data-decimal-slot="${index}" aria-label="Position ${index+1}">${filled?escapeHtml(display(value)):'…'}</button><span class="decimal-order-endpoint${endpoint==='milieu'?' is-empty':''}" style="font-size:max(14px,.9rem)">${endpoint}</span></span>`;
+    }).join('<span class="decimal-order-sign" aria-hidden="true">&lt;</span>');
     return `<div class="decimal-manipulation decimal-order-board${correction?' is-correction':''}" data-decimal-manipulation="order"><div class="decimal-card-tray" aria-label="Nombres à ranger">${cards}</div><div class="decimal-order-slots">${slots}</div></div>`;
   }
 
