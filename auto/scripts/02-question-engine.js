@@ -2835,42 +2835,248 @@ function makeAngleSumInstance(mod,q){
   return {module:mod,q,scope,answers,rawStatement,rawFooter,hasSvg:/<svg/i.test(rawStatement+rawFooter),angleSum:{kind,bar}};
 }
 
+// dnb_35 — hausse et baisse en pourcentage (refonte V1, octobre 2026).
+// Le générateur tire tout ici : énoncé, réponse, correction en 1 à 3 lignes,
+// indices de l’aide (jamais la réponse), une phrase par piège des QCM et le
+// dessin d’aide (la barre de 100 %, sans total ni accolade).
+const EVO_FINE='\u202f',EVO_INSEC='\u00a0';
+const EVO_PRICES=[12,15,18,20,24,25,30,35,40,45,48,50,60,64,70,75,80,90,120,150,160,180,200,240,250,300,350,400,450,500,600,800];
+// Objets et fourchettes de prix crédibles (un livre ne coûte pas 450 €).
+const EVO_ITEMS=[['Un article',0,1e9],['Un livre',12,30],['Un jeu',15,70],['Un sac',20,90],['Une veste',30,150],['Un casque',24,150],['Une montre',40,250],['Un vélo',150,800],['Un téléphone',150,800]];
+function evoItem(price){return pick(EVO_ITEMS.filter(([,min,max])=>price>=min&&price<=max))[0];}
+// Effectifs : nom au pluriel, phrase de départ, sujet de l’évolution, question.
+const EVO_GROUPS=[
+  {unit:'habitants',values:Array.from({length:22},(_,i)=>300+100*i),
+   start:n=>'Un village compte '+n+'.',subject:'Sa population',
+   ask:(up)=>'Combien d’habitants compte-t-il après cette '+(up?'augmentation':'baisse')+EVO_INSEC+'?',
+   howMuch:(up)=>'De combien d’habitants la population '+(up?'augmente':'baisse')+'-t-elle'+EVO_INSEC+'?'},
+  {unit:'adhérents',values:Array.from({length:19},(_,i)=>40+20*i),
+   start:n=>'Un club de sport compte '+n+'.',subject:'L’année suivante, le nombre d’adhérents',
+   ask:()=>'Combien d’adhérents compte alors le club'+EVO_INSEC+'?',
+   howMuch:(up)=>'De combien d’adhérents ce nombre '+(up?'augmente':'baisse')+'-t-il'+EVO_INSEC+'?'},
+  {unit:'élèves',values:Array.from({length:31},(_,i)=>300+20*i),
+   start:n=>'Un collège compte '+n+'.',subject:'L’année suivante, l’effectif',
+   ask:()=>'Combien d’élèves compte alors le collège'+EVO_INSEC+'?',
+   howMuch:(up)=>'De combien d’élèves l’effectif '+(up?'augmente':'baisse')+'-t-il'+EVO_INSEC+'?'}
+];
+function evoNum(value){
+  const v=Math.round(Number(value)*1000)/1000;
+  const [whole,decimals]=String(Math.abs(v)).split('.');
+  const grouped=whole.length>3?whole.replace(/\B(?=(\d{3})+(?!\d))/g,EVO_FINE):whole;
+  return (v<0?'−':'')+grouped+(decimals?','+decimals:'');
+}
+// Prix : 40,5 s’écrit 40,50.
+function evoEuroNum(value){
+  const cents=Math.round(Number(value)*100);
+  return cents%100===0?evoNum(cents/100):evoNum(Math.floor(cents/100))+','+String(cents%100).padStart(2,'0');
+}
+function evoPct(p){return p+EVO_FINE+'%';}
+function evoNumFor(value,unit){return unit==='€'?evoEuroNum(value):evoNum(value);}
+function evoQty(value,unit){return evoNumFor(value,unit)+(unit?EVO_INSEC+unit:'');}
+function evoFrac(a,b){return '$$\\frac{'+a+'}{'+b+'}$$';}
+// p % de x, calculé de tête (ligne de correction).
+function evoPartLine(x,p,unit){
+  const money=unit==='€',X=evoNumFor(x,unit),A=evoNumFor(x*p/100,unit)+(money?EVO_INSEC+'€':'');
+  const of=evoPct(p)+' de '+(money?evoQty(x,unit):X)+' = ';
+  const tenth=evoPct(10)+' de '+(money?evoQty(x,unit):X)+' = '+evoNumFor(x/10,unit)+(money?EVO_INSEC+'€':'');
+  if(p===10) return of+X+' ÷ 10 = '+A;
+  if(p===50) return of+X+' ÷ 2 = '+A;
+  if(p===25) return of+X+' ÷ 4 = '+A;
+  if(p===5) return tenth+' ; '+evoPct(5)+' = '+evoNumFor(x/10,unit)+' ÷ 2 = '+A;
+  if(p%10===0) return tenth+' ; '+evoPct(p)+' = '+(p/10)+' × '+evoNumFor(x/10,unit)+' = '+A;
+  return of+evoFrac(p,100)+' × '+X+' = '+A;
+}
+// La même chose, sans le résultat (indice de l’aide).
+function evoPartHint(x,p,unit){
+  const X=evoNumFor(x,unit);
+  if(p===10) return 'Ici, '+evoPct(10)+' de '+X+', c’est '+X+' ÷ 10.';
+  if(p===50) return 'Ici, '+evoPct(50)+' de '+X+', c’est la moitié : '+X+' ÷ 2.';
+  if(p===25) return 'Ici, '+evoPct(25)+' de '+X+', c’est le quart : '+X+' ÷ 4.';
+  if(p===5) return 'Ici, prends '+evoPct(10)+' de '+X+' ('+X+' ÷ 10), puis la moitié.';
+  if(p%10===0) return 'Ici, prends '+evoPct(10)+' de '+X+' ('+X+' ÷ 10), puis multiplie par '+(p/10)+'.';
+  return 'Ici, '+evoPct(p)+' de '+X+', c’est '+evoFrac(p,100)+' × '+X+'.';
+}
+function evoAmountIsSimple(x,p){
+  const a=x*p/100;
+  if(Math.abs(a*10-Math.round(a*10))>1e-9) return false;
+  return p!==25||x%4===0;
+}
+function evoPickPrice(p,integerOnly=false){
+  const ok=EVO_PRICES.filter(x=>evoAmountIsSimple(x,p)&&(!integerOnly||Number.isInteger(x*p/100))&&x!==100);
+  return pick(ok);
+}
+function evoPickGroup(p){
+  const group=pick(EVO_GROUPS);
+  const values=group.values.filter(n=>Number.isInteger(n*p/100)&&n!==100);
+  return {group,n:pick(values)};
+}
+function evoBar(initial,p,up,normalized){
+  const unit=GCD(100,p),baseCells=100/unit,deltaCells=p/unit;
+  return {kind:'',direction:up?'increase':'decrease',percent:p,initial,amount:initial*p/100,
+    newTotal:up?initial*(1+p/100):initial*(1-p/100),normalized,baseCells,deltaCells,cellValue:initial/baseCells,
+    braceMode:normalized?'coefficient':(up?'newTotal':'remainder')};
+}
+function evoQcm(prompt,correct,traps){
+  // traps : [{text, feedback}] ; les quatre choix sont mélangés.
+  const options=[{text:correct,feedback:null},...traps];
+  const order=shuffleLocal(options.map((_,i)=>i));
+  const shown=order.map(i=>options[i]);
+  const feedback={};
+  shown.forEach((option,index)=>{if(option.feedback) feedback[String(index+1)]=option.feedback;});
+  return {rawStatement:prompt+'&&'+shown.map(option=>option.text).join('&&')+'&&',answers:[String(order.indexOf(0)+1)],feedback};
+}
+
 function makeEvolutionInstance(mod,q){
-  const scope=q.options&&q.options.formula_code?runCode(q.options.formula_code):{};
-  let answers=parseAnswer(q,scope);
-  let rawStatement=subVars(q.statement||'',scope);
-  const rawFooter=subVars(q.footer||'',scope);
-  if(q.options&&q.options.shuffle_answers){
-    const shuffled=shuffledQcm(rawStatement,answers);
-    rawStatement=shuffled.statement;
-    answers=shuffled.answers;
+  const kind=String(q.options&&q.options.evolution_kind||'');
+  const up=/increase/.test(kind)||(kind==='change_amount'||kind==='trap_qcm'?rnd()<.5:false);
+  const sign=up?'+':'−',verb=up?'Augmenter':'Baisser',addOrRemove=up?'ajouter':'enlever';
+  let rawStatement='',rawFooter='',answers=[],steps=[],aide=[],note='',feedback=null,bar=null,p=10,initial=0,unit='€';
+
+  if(kind==='price_increase'||kind==='price_decrease'){
+    p=up?pick([10,10,20,20,25,40,50,5,30]):(rnd()<.5?10:pick([20,25,50,5,30,40]));
+    initial=evoPickPrice(p);
+    const item=evoItem(initial),X=evoQty(initial,'€'),P=evoPct(p),form=rnd();
+    if(up) rawStatement=form<.5
+      ?item+' coûte '+X+'. Son prix augmente de '+P+'.<br>Quel est son nouveau prix'+EVO_INSEC+'?'
+      :'Le prix d’'+item.replace(/^Une? /,m=>m==='Une '?'une ':'un ').trim()+' de '+X+' augmente de '+P+'.<br>Quel est son nouveau prix'+EVO_INSEC+'?';
+    else rawStatement=form<.4
+      ?item+' coûte '+X+'. Son prix baisse de '+P+'.<br>Quel est son nouveau prix'+EVO_INSEC+'?'
+      :(form<.7
+        ?item+' coûte '+X+'.<br>Quel sera son prix après une réduction de '+P+EVO_INSEC+'?'
+        :'Pendant les soldes, le prix d’'+item.replace(/^Une? /,m=>m==='Une '?'une ':'un ').trim()+' à '+X+' baisse de '+P+'.<br>Quel est son nouveau prix'+EVO_INSEC+'?');
+    const result=up?initial*(1+p/100):initial*(1-p/100);
+    answers=[evoEuroNum(result)];
+    rawFooter='[[formula]]'+EVO_INSEC+'€';
+    steps=[verb+' de '+P+', c’est '+addOrRemove+' '+P+' du prix.',evoPartLine(initial,p,'€'),
+      evoEuroNum(initial)+' '+sign+' '+evoEuroNum(initial*p/100)+' = <strong>'+evoQty(result,'€')+'</strong>'];
+    aide=['Calcule d’abord '+P+' du prix : c’est '+(up?'l’augmentation':'la baisse')+'. '+(up?'Ajoute-la ensuite au prix.':'Enlève-la ensuite du prix.'),evoPartHint(initial,p,'€')];
+    bar=evoBar(initial,p,up,false);
+  }else if(kind==='count_increase'||kind==='count_decrease'){
+    p=pick([5,10,10,20,25]);
+    const drawn=evoPickGroup(p),group=drawn.group;
+    initial=drawn.n;unit=group.unit;
+    const P=evoPct(p),result=up?initial*(1+p/100):initial*(1-p/100);
+    rawStatement=group.start(evoQty(initial,unit))+' '+group.subject+' '+(up?'augmente':'baisse')+' de '+P+'.<br>'+group.ask(up);
+    answers=[evoNum(result)];
+    rawFooter='[[formula]]'+EVO_INSEC+unit;
+    steps=[verb+' de '+P+', c’est '+addOrRemove+' '+P+' des '+unit+'.',evoPartLine(initial,p,''),
+      evoNum(initial)+' '+sign+' '+evoNum(initial*p/100)+' = <strong>'+evoQty(result,unit)+'</strong>'];
+    aide=['Calcule d’abord '+P+' de '+evoNum(initial)+', puis '+(up?'ajoute-le à ':'enlève-le de ')+evoNum(initial)+'.',evoPartHint(initial,p,'')];
+    bar=evoBar(initial,p,up,false);
+  }else if(kind==='increase_coefficient'||kind==='decrease_coefficient'){
+    p=pick(up?[2,3,4,5,8,10,12,15,20,25,30,40,50,60,75]:[2,3,4,5,8,10,12,15,20,25,30,40,50,60,75]);
+    const P=evoPct(p),total=up?100+p:100-p,coefficient=total/100;
+    answers=[evoNum(coefficient)];
+    if(rnd()<.5){
+      rawStatement=(up?'Augmenter':'Diminuer')+' une quantité de '+P+' revient à la multiplier par quel nombre'+EVO_INSEC+'?';
+      rawFooter='× [[formula]]';
+      steps=['On garde 100'+EVO_FINE+'% et on '+(up?'ajoute':'enlève')+' '+P+' : 100'+EVO_FINE+'% '+sign+' '+P+' = '+evoPct(total)+'.',
+        evoPct(total)+' = '+evoFrac(total,100)+' = <strong>'+evoNum(coefficient)+'</strong>'];
+    }else{
+      initial=evoPickPrice(10,true);
+      const item=evoItem(initial);
+      rawStatement=item+' coûte '+evoQty(initial,'€')+'. Son prix '+(up?'augmente':'baisse')+' de '+P+'.<br>Complète le calcul qui donne le nouveau prix.';
+      rawFooter=evoEuroNum(initial)+' × [[formula]]';
+      steps=['Le nouveau prix vaut 100'+EVO_FINE+'% '+sign+' '+P+' = '+evoPct(total)+' du prix.',
+        evoPct(total)+' = '+evoFrac(total,100)+' = '+evoNum(coefficient),
+        'Nouveau prix : '+evoEuroNum(initial)+' × <strong>'+evoNum(coefficient)+'</strong>'];
+    }
+    aide=[(up?'Après la hausse':'Après la baisse')+', on a 100'+EVO_FINE+'% '+sign+' '+P+' de la quantité de départ.','Écris ce pourcentage sous forme de fraction sur 100, puis en nombre décimal.'];
+    if(p<10) note='Attention : '+sign+' '+P+', c’est × '+evoNum(coefficient)+' et non × '+evoNum(up?1+p/10:1-p/10)+'.';
+    bar=evoBar(1,p,up,true);
+    initial=initial||1;
+  }else if(kind==='increase_qcm'||kind==='decrease_qcm'){
+    // QCM « quel calcul ? » : corrections d’une ligne et phrases courtes,
+    // car au téléphone la carte n’a que la hauteur du pied (pas de pavé).
+    p=pick([10,10,20,25,30,40,50]);
+    initial=evoPickPrice(p,true);
+    const x=evoNum(initial),P=evoPct(p),frac='\\frac{'+p+'}{100}',op=up?'+':'−',total=up?100+p:100-p,c=evoNum(total/100),d=evoNum(p/100);
+    const result=up?initial*(1+p/100):initial*(1-p/100),amount=initial*p/100;
+    const prompt=up
+      ?'Le prix d’un article coûtant '+evoQty(initial,'€')+' augmente de '+P+'.<br>Quel calcul donne le nouveau prix'+EVO_INSEC+'?'
+      :'Un article coûte '+evoQty(initial,'€')+'. Son prix baisse de '+P+'.<br>Quel calcul donne le prix final'+EVO_INSEC+'?';
+    const money=v=>evoQty(v,'€'),did=up?'Tu as ajouté ':'Tu as enlevé ';
+    const added={text:'$$'+x+' '+op+' '+p+'$$',feedback:did+p+EVO_INSEC+'€, pas '+P+' du prix.'};
+    const tooBig=evoNum((up?initial+p/100:initial-p/100)*initial);
+    const onlyPart=text=>({text,feedback:'C’est seulement '+(up?'l’augmentation':'la baisse')+' ('+money(amount)+').'});
+    if(rnd()<.6){
+      // Forme du brevet 2026 (G1, AG-pro) : x − p/100 × x.
+      const third=rnd()<.5
+        ?{text:'$$('+x+' '+op+' '+frac+') \\times '+x+'$$',feedback:'Ce calcul vaut '+tooBig+EVO_INSEC+'€'+EVO_INSEC+'!'}
+        :onlyPart('$$'+frac+' \\times '+x+'$$');
+      const qcm=evoQcm(prompt,'$$'+x+' '+op+' '+frac+' \\times '+x+'$$',[
+        added,{text:'$$'+x+' '+op+' '+frac+'$$',feedback:did+d+EVO_INSEC+'€, pas '+P+' du prix.'},third]);
+      rawStatement=qcm.rawStatement;answers=qcm.answers;feedback=qcm.feedback;
+      steps=[P+' de '+money(initial)+' = '+money(amount),x+' '+sign+' '+evoNum(amount)+' = <strong>'+money(result)+'</strong>'];
+      aide=[verb+' de '+P+', c’est '+addOrRemove+' '+P+' du prix.','Calcule de tête '+P+' de '+money(initial)+', puis cherche le calcul qui '+(up?'l’ajoute à ':'l’enlève à ')+x+'.'];
+    }else{
+      const third=rnd()<.5&&(up||p!==50)
+        ?onlyPart('$$'+x+' \\times '+d+'$$')
+        :{text:'$$'+x+' \\times '+evoNum(up?1-p/100:1+p/100)+'$$',feedback:'× '+evoNum(up?1-p/100:1+p/100)+' fait '+(up?'baisser':'augmenter')+' le prix.'};
+      const qcm=evoQcm(prompt,'$$'+x+' \\times '+c+'$$',[
+        added,{text:'$$'+x+' '+op+' '+d+'$$',feedback:did+d+EVO_INSEC+'€, pas '+P+' du prix.'},third]);
+      rawStatement=qcm.rawStatement;answers=qcm.answers;feedback=qcm.feedback;
+      steps=['100'+EVO_FINE+'% '+sign+' '+P+' = '+evoPct(total)+' = '+c,x+' × '+c+' = <strong>'+money(result)+'</strong>'];
+      aide=[verb+' de '+P+', c’est multiplier par un seul nombre.','Après '+(up?'la hausse':'la baisse')+', le prix vaut 100'+EVO_FINE+'% '+sign+' '+P+' du prix de départ. Écris ce pourcentage en nombre décimal.'];
+    }
+    bar=evoBar(initial,p,up,false);
+  }else if(kind==='change_amount'){
+    p=pick([5,10,10,20,25,30,40,50]);
+    const P=evoPct(p),word=up?'l’augmentation':'la baisse';
+    if(rnd()<.6){
+      initial=evoPickPrice(p);unit='€';
+      rawStatement=evoItem(initial)+' coûte '+evoQty(initial,'€')+'. Son prix '+(up?'augmente':'baisse')+' de '+P+'.<br>De combien d’euros le prix '+(up?'augmente':'baisse')+'-t-il'+EVO_INSEC+'?';
+      rawFooter='[[formula]]'+EVO_INSEC+'€';
+      answers=[evoEuroNum(initial*p/100)];
+      steps=[(up?'L’augmentation':'La baisse')+' vaut '+P+' du prix.',evoPartLine(initial,p,'€').replace(/= ([^=]+)$/,'= <strong>$1</strong>')];
+      note=(up?'L’augmentation':'La baisse')+' ('+evoQty(initial*p/100,'€')+') n’est pas le nouveau prix ('+evoQty(up?initial*(1+p/100):initial*(1-p/100),'€')+').';
+    }else{
+      const drawn=evoPickGroup(p),group=drawn.group;
+      initial=drawn.n;unit=group.unit;
+      rawStatement=group.start(evoQty(initial,unit))+' '+group.subject+' '+(up?'augmente':'baisse')+' de '+P+'.<br>'+group.howMuch(up);
+      rawFooter='[[formula]]'+EVO_INSEC+unit;
+      answers=[evoNum(initial*p/100)];
+      steps=[(up?'L’augmentation':'La baisse')+' vaut '+P+' de '+evoNum(initial)+'.',(evoPartLine(initial,p,'')+EVO_INSEC+unit).replace(/= ([^=]+)$/,'= <strong>$1</strong>')];
+      note=(up?'L’augmentation':'La baisse')+' ('+evoQty(initial*p/100,unit)+') n’est pas le nouvel effectif ('+evoQty(up?initial*(1+p/100):initial*(1-p/100),unit)+').';
+    }
+    aide=[(up?'L’augmentation':'La baisse')+', c’est '+P+' de '+evoNumFor(initial,unit)+'. On ne demande pas le nouveau '+(unit==='€'?'prix':'nombre')+'.',evoPartHint(initial,p,unit)];
+    bar=evoBar(initial,p,up,false);
+  }else if(kind==='trap_qcm'){
+    // 50 % est exclu : le résultat d’une baisse de 50 % (ou celui de la
+    // baisse quand on demandait une hausse) est égal à la part calculée.
+    let values;
+    let tries=0;
+    do{
+      p=pick([10,10,20,25,40]);
+      if(rnd()<.5){unit='€';initial=evoPickPrice(p,true);}
+      else{const drawn=evoPickGroup(p);unit='habitants';initial=drawn.n;}
+      const a=initial*p/100;
+      values={good:up?initial+a:initial-a,add:up?initial+p:initial-p,opposite:up?initial-a:initial+a,amount:a};
+      tries++;
+    }while(new Set(Object.values(values).map(v=>Math.round(v*100))).size<4&&tries<50);
+    const P=evoPct(p),a=initial*p/100;
+    const prompt=unit==='€'
+      ?evoItem(initial)+' coûte '+evoQty(initial,'€')+'. Son prix '+(up?'augmente':'baisse')+' de '+P+'.<br>Quel est son nouveau prix'+EVO_INSEC+'?'
+      :'Un village de '+evoQty(initial,'habitants')+' a connu une '+(up?'augmentation':'baisse')+' de '+P+' de sa population.<br>Combien y a-t-il d’habitants après cette '+(up?'augmentation':'baisse')+EVO_INSEC+'?';
+    const qcm=evoQcm(prompt,evoQty(values.good,unit),[
+      {text:evoQty(values.add,unit),feedback:(up?'Tu as ajouté ':'Tu as enlevé ')+evoQty(p,unit)+', pas '+P+(unit==='€'?' du prix':'')+'.'},
+      {text:evoQty(values.opposite,unit),feedback:'C’est le résultat d’'+(up?'une baisse.':'une hausse.')},
+      {text:evoQty(values.amount,unit),feedback:'C’est seulement '+(up?'l’augmentation.':'la baisse.')}]);
+    rawStatement=qcm.rawStatement;answers=qcm.answers;feedback=qcm.feedback;
+    steps=[P+' de '+evoQty(initial,unit)+' = '+evoQty(a,unit),evoNumFor(initial,unit)+' '+sign+' '+evoNumFor(a,unit)+' = <strong>'+evoQty(values.good,unit)+'</strong>'];
+    aide=['Calcule d’abord '+P+' de '+evoNumFor(initial,unit)+', puis '+(up?'ajoute-le.':'enlève-le.'),evoPartHint(initial,p,unit==='€'?'€':'')];
+    bar=evoBar(initial,p,up,false);
   }
 
-  const n=Number(q.n),kind=q.options&&q.options.evolution_kind;
-  const increase=String(kind||'').startsWith('increase');
-  const percent=Number(scope.p);
-  const normalized=kind==='increase_coefficient'||kind==='decrease_coefficient';
-  const initial=normalized?1:Number(n===3||n===4?scope.n:(n===10?scope.qte:scope.prix));
-  const amount=initial*percent/100;
-  const newTotal=increase?initial+amount:initial-amount;
-  const unitPercent=GCD(100,percent);
-  const baseCells=100/unitPercent;
-  const deltaCells=percent/unitPercent;
-  const cellValue=initial/baseCells;
-  const evolution={
-    kind,
-    direction:increase?'increase':'decrease',
-    percent,
-    initial,
-    amount,
-    newTotal,
-    normalized,
-    baseCells,
-    deltaCells,
-    cellValue,
-    braceMode:kind==='increase_amount'?'amount':(normalized?'coefficient':(increase?'newTotal':'remainder'))
-  };
-  return {module:mod,q,scope,answers,rawStatement,rawFooter,hasSvg:false,evolution};
+  bar.kind=kind;
+  const evolution=bar;
+  const cells=evolution.baseCells+(up?evolution.deltaCells:0);
+  const aideHtml=cells<=24?evolutionBarSvg(evolution,false):'';
+  const inst={module:mod,q,scope:{p,initial},answers,rawStatement,rawFooter,hasSvg:false,evolution,
+    correctionSteps:steps,aideSteps:aide,aideHtml};
+  if(note) inst.correctionNote=note;
+  if(feedback) inst.distractorFeedback=feedback;
+  return inst;
 }
 
 function makeRelationInstance(mod,q){
@@ -3958,7 +4164,9 @@ function evolutionBarSvg(data,correction=false){
     body+=text(x+(i+.5)*cellW,bottomY+bottomH/2,cellLabel,data.normalized?Math.max(17,cellFont):(correction?cellFont:Math.max(17,cellFont)),800);
   }
 
-  if(correction||data.braceMode==='coefficient'){
+  // Refonte : l’accolade et son total n’apparaissent qu’en correction ; le
+  // dessin d’aide (question) ne doit jamais écrire « 110 % » ni le total.
+  if(correction){
     let x1=x,x2=x+bottomW,color='#4778ff',label='';
     if(data.braceMode==='remainder'){
       x2=x+cellW*(data.baseCells-data.deltaCells);
@@ -3992,22 +4200,20 @@ function evolutionBarSvg(data,correction=false){
 }
 
 function renderEvolutionModule(inst,correction=false,mode=null){
-  if(mode===null) mode=document.getElementById('visualMode').value;
+  // Refonte dnb_35 : la barre n’est plus dans la question ; c’est le dessin
+  // du panneau Aide (inst.aideHtml). Choix et pied comme les autres modules.
   const qcm=splitQCM(inst.rawStatement);
-  const prompt=qcm?qcm.prompt:inst.rawStatement;
-  const promptClass=prompt.includes('legacy-statement-table-wrap')?'question evolution-prompt legacy-statement-question':'question evolution-prompt';
-  let html='<div class="'+promptClass+'">'+renderMathSegments(prompt)+'</div>';
-  html+=isWithoutVisuals(mode)?visualPlaceholder(mode):evolutionBarSvg(inst.evolution,correction);
+  let html='<div class="question">'+renderMathSegments(qcm?qcm.prompt:inst.rawStatement)+'</div>';
   if(qcm){
     const corrects=new Set(inst.answers.map(value=>String(value)));
-    html+='<div class="options evolution-options options-'+qcm.opts.length+compactQcmClass(qcm.opts)+'">';
+    html+='<div class="options options-'+qcm.opts.length+compactQcmClass(qcm.opts)+'">';
     qcm.opts.forEach((option,index)=>{
       const isCorrect=correction&&corrects.has(String(index+1));
       html+='<div class="opt '+(isCorrect?'correct':'')+'"><strong>'+String.fromCharCode(65+index)+'.</strong> '+renderMathSegments(option)+'</div>';
     });
     html+='</div>';
   }else if(inst.rawFooter){
-    html+='<div class="footer evolution-answer">'+renderPlaceholders(inst.rawFooter,inst.answers,correction?'correction':'question')+'</div>';
+    html+='<div class="footer">'+renderPlaceholders(inst.rawFooter,inst.answers,correction?'correction':'question')+'</div>';
   }
   return html;
 }
@@ -4818,7 +5024,9 @@ const LEVEL_4E_QUESTIONS={
   dnb_02:[1,3,4,7,8,9,10,11,13,15,16,17,18],
   // dnb_10 : l’opposé d’une parenthèse (type 8) est un automatisme de 3e.
   dnb_10:[1,2,3,4,6,7,9,10,11],
-  dnb_12:Array.from({length:18},(_,index)=>index+1)
+  dnb_12:Array.from({length:18},(_,index)=>index+1),
+  // dnb_35 : le coefficient multiplicateur (types 5 à 8) est une notion de 3e.
+  dnb_35:[1,2,3,4,10,11]
 };
 
 // Le filtre DNB reste volontairement classique : calculs directs et QCM

@@ -12,105 +12,98 @@ const MODULE_DNB_35 = {
   "questions": [
     {
       "n": 1,
-      "statement": "Un article coûte $$${prix}\\text{ €}$$. Son prix augmente de $$${p}\\%$$.<br>Quel est son nouveau prix ?",
-      "answer": "[\"nouveau\"]",
+      "statement": "Un article coûte un prix rond. Son prix augmente d’un pourcentage repère. Quel est son nouveau prix ?",
+      "answer": "[]",
       "options": {
-        "formula_code": "setNB(1)\np=[5,10,15,20,25,50][RD(5)]\nprix=RD(2,30)*20\nnouveau=prix*(100+p)/100",
-        "evolution_kind": "increase_total"
+        "evolution_kind": "price_increase"
       },
-      "footer": "$$[[formula]]\\text{ €}$$"
+      "footer": ""
     },
     {
       "n": 2,
-      "statement": "Un vélo coûte $$${prix}\\text{ €}$$. Pendant les soldes, son prix diminue de $$${p}\\%$$.<br>Quel est son nouveau prix ?",
-      "answer": "[\"nouveau\"]",
+      "statement": "Un article coûte un prix rond. Son prix baisse de 10 % (une fois sur deux) ou d’un autre pourcentage repère. Quel est son nouveau prix ?",
+      "answer": "[]",
       "options": {
-        "formula_code": "setNB(1)\np=[5,10,15,20,25,50][RD(5)]\nprix=RD(2,30)*20\nnouveau=prix*(100-p)/100",
-        "evolution_kind": "decrease_total"
+        "evolution_kind": "price_decrease"
       },
-      "footer": "$$[[formula]]\\text{ €}$$"
+      "footer": ""
     },
     {
       "n": 3,
-      "statement": "Dans une ville, il y avait $$${n}$$ habitants. La population augmente de $$${p}\\%$$.<br>Combien y a-t-il d’habitants après cette augmentation ?",
-      "answer": "[\"nouveau\"]",
+      "statement": "Un effectif (habitants, adhérents, élèves) augmente d’un pourcentage repère. Quel est le nouvel effectif ?",
+      "answer": "[]",
       "options": {
-        "formula_code": "setNB(1)\np=[5,10,20,25,50][RD(4)]\nn=RD(10,80)*20\nnouveau=n*(100+p)/100",
-        "evolution_kind": "increase_total"
+        "evolution_kind": "count_increase"
       },
-      "footer": "$$[[formula]]\\text{ habitants}$$"
+      "footer": ""
     },
     {
       "n": 4,
-      "statement": "Un collège compte $$${n}$$ élèves. L’année suivante, l’effectif diminue de $$${p}\\%$$.<br>Quel est le nouvel effectif ?",
-      "answer": "[\"nouveau\"]",
+      "statement": "Un effectif (habitants, adhérents, élèves) diminue d’un pourcentage repère. Quel est le nouvel effectif ?",
+      "answer": "[]",
       "options": {
-        "formula_code": "setNB(1)\np=[5,10,20,25,50][RD(4)]\nn=RD(10,80)*20\nnouveau=n*(100-p)/100",
-        "evolution_kind": "decrease_total"
+        "evolution_kind": "count_decrease"
       },
-      "footer": "$$[[formula]]\\text{ élèves}$$"
+      "footer": ""
     },
     {
       "n": 5,
-      "statement": "Augmenter une quantité de $$${p}\\%$$ revient à la multiplier par quel coefficient ?",
-      "answer": "[\"1+p/100\"]",
+      "statement": "Augmenter de p %, c’est multiplier par quel nombre ? (seul, ou pour compléter le calcul du nouveau prix)",
+      "answer": "[]",
       "options": {
-        "formula_code": "setNB(1)\np=[5,10,15,20,25,50][RD(5)]",
         "evolution_kind": "increase_coefficient"
       },
-      "footer": "$$[[formula]]$$"
+      "footer": ""
     },
     {
       "n": 6,
-      "statement": "Diminuer une quantité de $$${p}\\%$$ revient à la multiplier par quel coefficient ?",
-      "answer": "[\"1-p/100\"]",
+      "statement": "Diminuer de p %, c’est multiplier par quel nombre ? (seul, ou pour compléter le calcul du nouveau prix)",
+      "answer": "[]",
       "options": {
-        "formula_code": "setNB(1)\np=[5,10,15,20,25,50][RD(5)]",
         "evolution_kind": "decrease_coefficient"
       },
-      "footer": "$$[[formula]]$$"
+      "footer": ""
     },
     {
       "n": 7,
-      "statement": "Un prix de $$${prix}\\text{ €}$$ subit une hausse de $$${p}\\%$$.<br>Quelle expression permet de calculer le nouveau prix ?&&$$${prix}\\times ${coef}$$&&$$${prix}+${p}$$&&$$${prix}\\times ${p}$$&&$$${prix}\\div ${coef}$$&&",
-      "answer": "[\"1\"]",
+      "statement": "Le prix d’un article augmente de p %. Quel calcul donne le nouveau prix ? (QCM, forme du brevet)",
+      "answer": "[]",
       "options": {
-        "formula_code": "setNB(1)\np=[10,20,25,50][RD(3)]\nprix=RD(2,20,[5])*20\ncoef=1+p/100",
-        "shuffle_answers": true,
         "evolution_kind": "increase_qcm"
       },
-      "footer": "[[formula_qcm1]]"
+      "footer": ""
     },
     {
       "n": 8,
-      "statement": "Un prix de $$${prix}\\text{ €}$$ subit une remise de $$${p}\\%$$.<br>Quelle expression permet de calculer le nouveau prix ?&&$$${prix}\\times ${coef}$$&&$$${prix}-${p}$$&&$$${prix}\\times ${p}$$&&$$${prix}\\div ${coef}$$&&",
-      "answer": "[\"1\"]",
+      "statement": "Le prix d’un article baisse de p %. Quel calcul donne le prix final ? (QCM, forme du brevet)",
+      "answer": "[]",
       "options": {
-        "formula_code": "setNB(1)\np=[10,20,25,50][RD(3)]\nprix=RD(2,20,[5])*20\ncoef=1-p/100",
-        "shuffle_answers": true,
         "evolution_kind": "decrease_qcm"
       },
-      "footer": "[[formula_qcm1]]"
-    },
-    {
-      "n": 9,
-      "statement": "Un magasin applique une remise de $$${p}\\%$$ sur tous les articles.<div class=\"legacy-statement-table-wrap legacy-table-dnb_35-9-wrap\"><table class=\"legacy-statement-table legacy-table-dnb_35-9\" style=\"border-collapse:collapse;margin:auto;text-align:center;font-size:18px\"><tr><td style=\"border:1px solid #555;padding:8px 18px\">ancien prix</td><td style=\"border:1px solid #555;padding:8px 18px\">$$${prix}\\text{ €}$$</td></tr><tr><td style=\"border:1px solid #555;padding:8px 18px\">remise</td><td style=\"border:1px solid #555;padding:8px 18px\">$$${p}\\%$$</td></tr></table></div>Calcule le prix après remise.",
-      "answer": "[\"nouveau\"]",
-      "options": {
-        "formula_code": "setNB(1)\np=[10,20,25,50][RD(3)]\nprix=RD(3,30)*20\nnouveau=prix*(100-p)/100",
-        "evolution_kind": "decrease_total"
-      },
-      "footer": "$$[[formula]]\\text{ €}$$"
+      "footer": ""
     },
     {
       "n": 10,
-      "statement": "Une quantité vaut d’abord $$${qte}$$. Elle augmente de $$${p}\\%$$.<br>De combien cette quantité a-t-elle augmenté ?",
-      "answer": "[\"hausse\"]",
+      "statement": "Un prix ou un effectif augmente ou baisse de p %. De combien augmente-t-il ou baisse-t-il ?",
+      "answer": "[]",
       "options": {
-        "formula_code": "setNB(1)\np=[5,10,15,20,25,50][RD(5)]\nqte=RD(2,30)*20\nhausse=qte*p/100",
-        "evolution_kind": "increase_amount"
+        "evolution_kind": "change_amount"
       },
-      "footer": "$$[[formula]]$$"
+      "footer": ""
+    },
+    {
+      "n": 11,
+      "statement": "Hausse ou baisse en pourcentage : quatre résultats, un seul juste (QCM à pièges)",
+      "answer": "[]",
+      "options": {
+        "evolution_kind": "trap_qcm"
+      },
+      "footer": ""
     }
-  ]
+  ],
+  "keypad": {
+    "context": [
+      ","
+    ]
+  }
 };

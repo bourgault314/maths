@@ -1636,13 +1636,13 @@ function fractionQuantityCourse(context){
  ]};
 }
 function percentChangeCourse(context){
- const p=Number(context&&context.percent||0),increase=!context||context.direction!=='decrease';
- const sign=increase?'+':'−',coefficient=courseNumber(1+(increase?1:-1)*p/100),verb=increase?'augmentation':'diminution';
- const amount=courseNumber(200*p/100),result=courseNumber(200+(increase?1:-1)*200*p/100);
- return {title:(increase?'Augmenter':'Diminuer')+' de '+p+' %',rules:[
-   ['1. Calculer la variation',p+' % de la valeur initiale = '+courseFraction(p,100)+' × valeur initiale.'],
-   ['2. Obtenir la nouvelle valeur','Nouvelle valeur = valeur initiale '+sign+' variation.'],
-   ['Coefficient multiplicateur','On peut aussi multiplier directement par '+coefficient+'.<span class="course-example">Exemple : '+verb+' de '+p+' % sur 200 → variation = '+amount+' ; nouvelle valeur = '+result+'.</span>']
+ // Refonte dnb_35 : quatre cartes fixes, exemples du brevet (60 € − 10 % ; 15 € + 20 %).
+ const line=text=>'<span style="display:block">'+text+'</span>';
+ return {title:'Augmenter ou baisser de p %',rules:[
+   ['Baisser de 10 %','On calcule 10 % du prix, puis on l’enlève.<span class="course-example">'+line('Un article coûte 60 €.')+line('10 % de 60 € = 60 ÷ 10 = 6 €')+line('60 − 6 = 54 : le nouveau prix est 54 €.')+'</span>'],
+   ['Augmenter de 20 %','On calcule 20 % du prix, puis on l’ajoute.<span class="course-example">'+line('Un article coûte 15 €.')+line('10 % de 15 € = 1,50 € ; 20 % = 2 × 1,50 = 3 €')+line('15 + 3 = 18 : le nouveau prix est 18 €.')+'</span>'],
+   ['Les pourcentages repères',line('10 % : on divise par 10.')+line('50 % : la moitié ; 25 % : le quart.')+line('20 %, 30 %, 40 % : 2, 3, 4 fois 10 %.')+line('5 % : la moitié de 10 %.')],
+   ['Le coefficient multiplicateur',line('+ 20 % : 100 % + 20 % = 120 % = 1,2 : on multiplie par 1,2.')+line('− 10 % : 100 % − 10 % = 90 % = 0,9 : on multiplie par 0,9.')+'<span class="course-example">Attention : + 3 %, c’est × 1,03 (pas × 1,3).</span>']
  ]};
 }
 function conversionCourse(context){
