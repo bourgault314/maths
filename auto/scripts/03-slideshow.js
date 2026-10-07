@@ -1534,7 +1534,8 @@ function courseForSlide(slide){
  }
  if(slide.courseKind==='decimal_numbers'){
    const course=courseCatalog.decimal_numbers,sections=Array.isArray(slide.courseContext&&slide.courseContext.helpSections)?slide.courseContext.helpSections:[];
-   const rules=course.rules.filter(rule=>sections.includes(rule[3]));
+   // Une carte seule (ou la dernière d'un nombre impair) prend toute la largeur.
+   const rules=course.rules.filter(rule=>sections.includes(rule[3])).map((rule,index,list)=>list.length%2&&index===list.length-1?[rule[0],rule[1],true,rule[3]]:rule);
    return {title:course.title,rules:rules.length?rules:course.rules};
  }
  if(slide.courseKind==='expand_factor'){
