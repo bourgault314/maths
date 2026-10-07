@@ -132,6 +132,34 @@ test("la rangée pleine remplace les deux premiers entraînements, jamais la mar
   assert.deepEqual(s.noms, [5, 6, 7, 5], "8 sur 10 à la marche 7 : pas de test, même la rangée pleine");
 });
 
+test("la carte « 4 ou 5 étapes » et la rangée pleine : la 5e étape seulement derrière la marche 7, même à la reprise", () => {
+  // Relecture de Code (07/10/2026) : sans ce test, les deux sabotages de
+  // raccourciEnFin ne faisaient rougir que « VERSION décrit les fichiers ».
+  const pleine = depart => {
+    let p = avecDepart(depart);
+    for (const date of [jour(1), jour(2)]) for (let m = 1; m <= 10; m += 1) p = P.appliquerReponse(p, `3-${m}`, {correcte: true, date}).parcours;
+    return P.normaliserParcours(p);
+  };
+  // Départ 3, rangée pleine : 3-4-5-6, la dernière étape est la marche 6 — pas de 5e étape annoncée.
+  let p = pleine(3);
+  assert.equal(P.rangeeTable(p, 3).prete, true);
+  const sixEnFin = P.programmeDeSeance(p, P.ouvrirSeance(p, {aujourdhui: jour(3), table: 3}), jour(3));
+  assert.equal(sixEnFin.etapes.at(-1).marche, 6);
+  assert.equal(sixEnFin.raccourciEnFin, false, "la marche 6 en dernier n'annonce jamais le test");
+  // Départ 4, rangée pleine, 8 sur 10 aux marches 5 et 6 (rien de gagné) : à la
+  // reprise devant la marche 7, il ne reste qu'elle — c'est la rangée vue
+  // pleine dans la séance qui garde « 4 ou 5 étapes ».
+  p = pleine(4);
+  let seance = P.ouvrirSeance(p, {aujourdhui: jour(3), table: 3});
+  for (const erreurs of [0, 2, 2]) ({parcours: p, seance} = jouerEtape(p, seance, P.etapeDeSeance(p, seance, jour(3)), jour(3), erreurs));
+  assert.deepEqual(seance.file.map(prevue => prevue.marche), [7]);
+  assert.equal(P.raccourciValidation(p, 3), false);
+  assert.equal(seance.prete, true);
+  assert.equal(P.programmeDeSeance(p, seance, jour(3)).raccourciEnFin, true, "la carte de reprise annonce encore le test");
+  ({parcours: p, seance} = jouerEtape(p, seance, P.etapeDeSeance(p, seance, jour(3)), jour(3), 0));
+  assert.equal(P.etapeDeSeance(p, seance, jour(3)).type, "validation", "et il vient, juste après la marche 7");
+});
+
 test("hors séance, rien n'est promis : validationDeSeance ne dit oui qu'à une séance qui a réussi sa marche 7", () => {
   let p = avecDepart(6);
   p.tables[3].sansFaute = {desordre: 1, trous: 1};
