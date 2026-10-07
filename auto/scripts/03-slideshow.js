@@ -1176,7 +1176,9 @@ function demanderRetourMenu(){
  returnToMenu();
 }
 function closeQuit(){const modal=document.getElementById('quitModal');if(modal)modal.hidden=true;}
+let retourMenuConfirme=false;
 function returnToMenu(){
+ retourMenuConfirme=true;
  if(history.state&&history.state.mathsgoView==='questionnaire'){history.back();return;}
  location.replace(menuUrl);
 }
@@ -1957,7 +1959,9 @@ function setupInteractiveSlide(current){
      option.classList.toggle('wrong-choice',interactiveLocked&&selectedOptions.has(index)&&!option.classList.contains('correct'));
      if(!interactiveLocked){
        option.onclick=()=>toggleInteractiveOption(index);
-       option.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();toggleInteractiveOption(index);}};
+       // Espace coche ou décoche ; Entrée coche une option libre, et sur une
+       // option déjà cochée (clic puis Entrée) elle valide, comme partout.
+       option.onkeydown=event=>{if(event.key===' '||(event.key==='Enter'&&!selectedOptions.has(index))){event.preventDefault();event.stopPropagation();toggleInteractiveOption(index);}};
      }
    });
  }else if(spec.kind==='grid-point'){
@@ -3178,7 +3182,11 @@ document.addEventListener('keydown',event=>{
  const spec=slides[idx].interactiveSpec;
  if(event.key==='Enter'||event.key==='ArrowRight'){
    const active=document.activeElement;
-   if(event.key==='Enter'&&active&&active.tagName==='BUTTON'&&!active.classList.contains('key')&&active.id!=='interactiveAction') return;
+   // Entrée garde son effet natif sur un bouton que l'élève a choisi au
+   // clavier (Passer, Cours, Aide, Menu, une carte à placer…). Mais une case
+   // de réponse, le bouton clavier ou un bouton désactivé (Passer après
+   // validation) gardent le focus après un clic de souris : là, Entrée valide.
+   if(event.key==='Enter'&&active&&active.tagName==='BUTTON'&&!active.disabled&&!active.matches('.key,#interactiveAction,.interactive-input-slot,#keyboardToggle')) return;
    event.preventDefault();submitInteractive();return;
  }
  if(interactiveLocked)return;
@@ -3200,7 +3208,16 @@ document.addEventListener('keydown',event=>{
    if(allowed.has(value)){event.preventDefault();appendInteractiveValue(value);}
  }
 });
-window.addEventListener('popstate',()=>location.reload());
+// Le retour arrière du navigateur (ou le geste « retour » du téléphone) pose
+// la même question que « ← Menu » quand la série est commencée.
+window.addEventListener('popstate',()=>{
+ if(!retourMenuConfirme&&interactiveMode&&!interactiveFinished&&answeredCount>0){
+   try{const url=new URL(location.href);url.hash='questionnaire';history.pushState({mathsgoView:'questionnaire'},'',url.href);}catch(error){location.reload();return;}
+   demanderRetourMenu();
+   return;
+ }
+ location.reload();
+});
 let resizeTimer=null,lastViewport=window.innerWidth+'x'+window.innerHeight;
 window.addEventListener('resize',()=>{
  requestAnimationFrame(()=>{fitNavNumbers();fitVerdictLine();fitCorrectionCard();});
