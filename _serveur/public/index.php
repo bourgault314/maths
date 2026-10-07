@@ -7,12 +7,18 @@ header('Content-Type: text/html; charset=utf-8');
 // Politique de contenu (voir lib/entetes.php) : seul le script portant ce
 // nonce s'exécute dans la page.
 $nonce = entetes_page();
-// Le moteur de Defi tables, copie du depot servie d'ici (prof/), est charge par
-// la page pour lire un parcours : lui seul connait les regles (tables acquises,
-// rang, melange). Sa version dans l'adresse suit son contenu, comme dans
-// prof/index.php : un nouveau fichier depose n'est jamais masque par le cache.
-$moteur = __DIR__ . '/prof/defi_tables_mon_parcours.js';
-$versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
+// Les moteurs des activites, copies du depot servies d'ici (prof/), sont
+// charges par la page pour lire un parcours : eux seuls connaissent les regles
+// (tables acquises, rang ; etapes reussies, mondes finis). Leur version dans
+// l'adresse suit leur contenu, comme dans prof/index.php : un nouveau fichier
+// depose n'est jamais masque par le cache.
+function version_moteur(string $fichier): string
+{
+    $chemin = __DIR__ . '/prof/' . $fichier;
+    return is_file($chemin) ? substr(md5_file($chemin), 0, 10) : '0';
+}
+$versionMoteur = version_moteur('defi_tables_mon_parcours.js');
+$versionSplat = version_moteur('splat-parcours.js');
 ?>
 <!doctype html>
 <html lang="fr">
@@ -186,6 +192,15 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
                     transform: rotate(45deg) scale(.85); }
   .appli .rang.legende { background: linear-gradient(135deg, #fff1c2, #ffe08a); color: #6b4a00;
                          border-color: #e6c25a; }
+  /* SPLAT! (lot « splat-suivi-3 », 07/10/2026, choix B de Gwenaël) : une
+     pastille par monde dans la couleur du monde sur la carte — vide, à moitié
+     (en cours), pleine (fini) —, le compte des étapes réussies dessous, et les
+     Bonus à part, dans une pastille dorée. */
+  .mondes { display: flex; flex-wrap: wrap; gap: 8px; }
+  .monde-p { display: block; flex: 0 0 auto; overflow: visible; }
+  .appli .jauge-ligne .bonus { padding: 2px 9px; border-radius: 999px; border: 1px solid #f0dc8c;
+                               background: #fff4cc; color: #7a5a00; font-size: .78rem; font-weight: 800;
+                               white-space: nowrap; }
   .aide { margin-top: 20px; color: var(--muted); font-size: .9rem; }
   footer { padding: 16px; border-top: 1px solid var(--line); background: var(--paper);
            color: var(--muted); font-size: .82rem; text-align: center; }
@@ -351,11 +366,11 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
       + 'fill="#f58220" stroke="#a8440b" stroke-width="1.2"/></g><rect data-mathsgo-metronome-pivot="" x="28.5" y="12'
       + '" width="7" height="5.5" rx="1.4" fill="#f9bf3b" stroke="#a85b08" stroke-width="1.2"/><path d="M15 53h34v6H1'
       + '5Z" fill="#0b67b2" stroke="#063f86" stroke-width="1.8" stroke-linejoin="round"/></svg>',
-    // Splat ! Équations : LE SPLAT de la même bibliothèque (clé « splat »),
-    // repris tel quel SAUF la couleur, passée du violet au bleu maths&go.
-    // Sur le site la lettre change chaque jour (daily-splat-letter.js) ; ici
-    // elle reste « x », l'inconnue.
-    "splat-equations":
+    // SPLAT! : LE SPLAT de la même bibliothèque (clé « splat »), repris tel
+    // quel SAUF la couleur, passée du violet au bleu maths&go. Sur le site la
+    // lettre change chaque jour (daily-splat-letter.js) ; ici elle reste « x »,
+    // l'inconnue. (Clé « splat-equations » jusqu'au 07/10/2026.)
+    "splat":
       '<svg class="icone" width="40" height="40" viewBox="-2 -2 28 28" aria-hidden="true"><path d="M21.45 12c.529.4'
       + '93 1.283 1.157 1.472 1.73.189.573-.034 1.225-.337 1.709-.303.485-.991.847-1.481 1.2-.49.352-.965.666-1.459.9'
       + '16-.494.25-.993.462-1.506.584-.513.122-1.142.006-1.572.147-.43.141-.732.251-1.007.701-.274.451-.335 1.345-.6'
@@ -424,9 +439,10 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
 
   // ------------------------------------------------------------------ la jauge
   //
-  // Ce que la tuile d'une activité COMMENCÉE montre en plus : une barre, le
-  // compte (« 4 tables acquises sur 9 ») et le rang. Trois règles tiennent
-  // tout ce qui suit :
+  // Ce que la tuile d'une activité COMMENCÉE montre en plus : pour Défi tables,
+  // une barre, le compte (« 4 tables passées sur 9 ») et le rang ; pour SPLAT!,
+  // une pastille par monde et le compte (« 13 étapes réussies sur 37 »). Trois
+  // règles tiennent tout ce qui suit :
   //  1. la grille s'affiche d'abord, entière, et la jauge arrive après. Un
   //     serveur muet, une réponse illisible, un moteur qui ne se charge pas :
   //     la tuile reste exactement ce qu'elle était, sans message d'erreur.
@@ -435,56 +451,84 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   //     par textContent — c'est la règle du serveur depuis le premier lot, et
   //     un parcours est un objet fabriqué par un appareil d'élève ;
   //  3. c'est le MOTEUR de l'activité qui lit son parcours, jamais cette page :
-  //     « acquise », « rang », « mélange » sont ses règles à lui, et elles
-  //     changent (elles ont changé le 08/09/2026). La page ne fait que
-  //     l'appeler.
-  const MOTEUR = "prof/defi_tables_mon_parcours.js?v=<?= htmlspecialchars($versionMoteur, ENT_QUOTES) ?>";
-  let moteurEnCours = null;
+  //     « acquise », « rang », « étape réussie », « monde fini » sont ses
+  //     règles à lui, et elles changent (celles de Défi tables ont changé le
+  //     08/09/2026). La page ne fait que l'appeler.
+  //
+  // Une entrée par activité qui sait se raconter : où est son moteur (servi
+  // d'ici, copie du dépôt — politique de contenu : jamais un script de
+  // mathsgo.re dans cette page), sous quel nom il s'installe dans la fenêtre,
+  // et son lecteur. Tant qu'une activité n'a pas d'entrée ici, elle n'a pas de
+  // jauge — et rien ne casse.
+  const JAUGES = {
+    "defi-tables": {
+      url: "prof/defi_tables_mon_parcours.js?v=<?= htmlspecialchars($versionMoteur, ENT_QUOTES) ?>",
+      global: "MATHSGO_DEFI_TABLES_MON_PARCOURS",
+      lecteur: (P, brut) => {
+        const parcours = P.normaliserParcours(brut);
+        const etat = P.etatAffichage(parcours);
+        const fait = etat.acquises.length;
+        const total = P.TABLES.length;
+        // Pas de jauge tant qu'AUCUNE table n'est acquise : activité jamais
+        // ouverte, ou ouverte et jouée sans encore réussir une table — il faut
+        // 20 bonnes réponses en 1 min 30 avec 2 erreurs au plus, et le jour de
+        // la distribution des codes, c'est toute la classe. « 0 table acquise
+        // sur 9 » au-dessus d'une barre vide est le reproche qu'on refuse ;
+        // c'est le même seuil que la carte de classe du professeur (09/09/2026).
+        if (!fait) return null;
+        return {
+          fait, total,
+          // Mot pour mot la phrase de l'accueil de Défi tables.
+          compte: `${fait} table${fait > 1 ? "s" : ""} passée${fait > 1 ? "s" : ""} sur ${total}`,
+          rang: etat.rang,
+          // Plus de « Mon mélange à faire » : le mélange est libre (lot « un
+          // seul système », 05/10/2026).
+          note: ""
+        };
+      }
+    },
+    // SPLAT! (lot « splat-suivi-3 », 07/10/2026, choix B de Gwenaël) : les six
+    // mondes en pastilles — vide, à moitié (en cours), pleine (fini) — et le
+    // compte des étapes réussies, les Bonus à part. Le total est celui de la
+    // carte (37 étapes), jamais écrit ici.
+    "splat": {
+      url: "prof/splat-parcours.js?v=<?= htmlspecialchars($versionSplat, ENT_QUOTES) ?>",
+      global: "MathsGoSplatParcours",
+      lecteur: (P, brut) => {
+        const resume = P.resumeProf(brut);
+        const fait = resume.faits;
+        // Même règle que Défi tables : rien tant qu'aucune étape n'est réussie
+        // (une série en cours, ou un Bonus seul, ne fait pas encore de jauge).
+        if (!fait) return null;
+        const bonus = resume.bonus.faits;
+        return {
+          fait, total: resume.total,
+          compte: `${fait} étape${fait > 1 ? "s" : ""} réussie${fait > 1 ? "s" : ""} sur ${resume.total}`,
+          bonus: bonus ? `✨ ${bonus} bonus` : "",
+          mondes: resume.mondes.map(monde => ({numero: monde.numero, etat: monde.etat}))
+        };
+      }
+    }
+  };
+  const moteursEnCours = {};
 
-  // Le moteur est chargé UNE fois, et seulement s'il y a une activité commencée
+  // Un moteur est chargé UNE fois, et seulement si son activité a un parcours
   // à habiller : 70 ko qu'un élève qui n'a rien commencé n'a aucune raison de
-  // télécharger. Il est servi d'ici (politique de contenu : jamais un script
-  // de mathsgo.re dans cette page) ; le fichier est le même que celui de la
-  // page du professeur, gardé identique au dépôt par un test.
-  function chargerMoteur() {
-    if (window.MATHSGO_DEFI_TABLES_MON_PARCOURS) return Promise.resolve(window.MATHSGO_DEFI_TABLES_MON_PARCOURS);
-    if (moteurEnCours) return moteurEnCours;
-    moteurEnCours = new Promise(resolve => {
+  // télécharger. C'est le même fichier que celui de la page du professeur,
+  // gardé identique au dépôt par un test.
+  function chargerMoteur(cle) {
+    const jauge = JAUGES[cle];
+    if (window[jauge.global]) return Promise.resolve(window[jauge.global]);
+    if (moteursEnCours[cle]) return moteursEnCours[cle];
+    moteursEnCours[cle] = new Promise(resolve => {
       const script = document.createElement("script");
-      script.src = MOTEUR;
-      script.addEventListener("load", () => resolve(window.MATHSGO_DEFI_TABLES_MON_PARCOURS || null));
+      script.src = jauge.url;
+      script.addEventListener("load", () => resolve(window[jauge.global] || null));
       script.addEventListener("error", () => resolve(null));
       document.head.appendChild(script);
     });
-    return moteurEnCours;
+    return moteursEnCours[cle];
   }
-
-  // Une entrée par activité qui sait se raconter. Tant qu'une activité n'a pas
-  // de lecteur ici, elle n'a pas de jauge — et rien ne casse.
-  const JAUGES = {
-    "defi-tables": (P, brut) => {
-      const parcours = P.normaliserParcours(brut);
-      const etat = P.etatAffichage(parcours);
-      const fait = etat.acquises.length;
-      const total = P.TABLES.length;
-      // Pas de jauge tant qu'AUCUNE table n'est acquise : activité jamais
-      // ouverte, ou ouverte et jouée sans encore réussir une table — il faut
-      // 20 bonnes réponses en 1 min 30 avec 2 erreurs au plus, et le jour de
-      // la distribution des codes, c'est toute la classe. « 0 table acquise
-      // sur 9 » au-dessus d'une barre vide est le reproche qu'on refuse ; c'est
-      // le même seuil que la carte de classe du professeur (09/09/2026).
-      if (!fait) return null;
-      return {
-        fait, total,
-        // Mot pour mot la phrase de l'accueil de Défi tables.
-        compte: `${fait} table${fait > 1 ? "s" : ""} passée${fait > 1 ? "s" : ""} sur ${total}`,
-        rang: etat.rang,
-        // Plus de « Mon mélange à faire » : le mélange est libre (lot « un
-        // seul système », 05/10/2026).
-        note: ""
-      };
-    }
-  };
 
   // Le parcours d'une activité, lu comme tout le reste : le code dans le CORPS
   // d'un POST, jamais dans l'adresse. Toute avarie rend null.
@@ -519,24 +563,83 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     return badge;
   }
 
+  // Les couleurs des six mondes SPLAT!, celles de la carte des mondes
+  // (outils/splat_univers.html, « --c ») : orange, bleu, framboise, cannelle,
+  // sarcelle, violet.
+  const COULEURS_MONDES = {1: "#d9690c", 2: "#0b67b2", 3: "#be185d", 4: "#92400e", 5: "#08857f", 6: "#7b42b4"};
+  const ETATS_MONDE = {vide: "pas commencé", cours: "en cours", fini: "fini"};
+  const SVG = "http://www.w3.org/2000/svg";
+
+  function elementSvg(nom, attributs) {
+    const element = document.createElementNS(SVG, nom);
+    Object.keys(attributs).forEach(cle => element.setAttribute(cle, attributs[cle]));
+    return element;
+  }
+
+  // Une pastille de monde : un rond de 24 px dans la couleur du monde — vide,
+  // à moitié (en cours) ou plein (fini) — et le numéro du monde au centre.
+  // Dessinée en SVG pour que le chiffre soit centré quelle que soit la police :
+  // son pied est posé 0,35 em sous le centre, la moitié de la hauteur d'un
+  // chiffre. Sur la pastille à moitié, le chiffre est blanc cerné de la
+  // couleur du monde : il se lit d'un seul tenant des deux côtés (essayé :
+  // un chiffre de couleur cerné de blanc se lisait en deux morceaux).
+  function pastilleMonde(monde) {
+    const etat = Object.prototype.hasOwnProperty.call(ETATS_MONDE, monde.etat) ? monde.etat : "vide";
+    const couleur = COULEURS_MONDES[monde.numero] || "#063f86";
+    const dessin = elementSvg("svg", {class: `monde-p ${etat}`, width: "24", height: "24", viewBox: "0 0 24 24",
+      "aria-hidden": "true", focusable: "false"});
+    dessin.append(elementSvg("circle", {cx: "12", cy: "12", r: "11", fill: etat === "fini" ? couleur : "#fff",
+      stroke: couleur, "stroke-width": "2"}));
+    if (etat === "cours") dessin.append(elementSvg("path", {d: "M12 1A11 11 0 0 0 12 23Z", fill: couleur}));
+    const chiffre = elementSvg("text", {x: "12", y: "16.375", "text-anchor": "middle", "font-size": "12.5",
+      "font-weight": "800", fill: etat === "vide" ? couleur : "#fff"});
+    if (etat === "cours") {
+      chiffre.setAttribute("stroke", couleur);
+      chiffre.setAttribute("stroke-width", "3");
+      chiffre.setAttribute("stroke-linejoin", "round");
+      chiffre.setAttribute("paint-order", "stroke");
+    }
+    chiffre.textContent = String(monde.numero);
+    dessin.append(chiffre);
+    return dessin;
+  }
+
   // La jauge posée dans la tuile. Tout est construit par createElement et
   // textContent : rien du serveur ne devient du HTML.
   function poserJauge(tuile, jauge) {
     const bloc = document.createElement("div");
     bloc.className = "jauge";
-    const barre = document.createElement("div");
-    barre.className = "jauge-barre";
-    const remplie = document.createElement("i");
-    const part = jauge.total > 0 ? Math.max(0, Math.min(1, jauge.fait / jauge.total)) : 0;
-    remplie.style.width = `${Math.round(part * 100)}%`;
-    barre.append(remplie);
+    if (jauge.mondes) {
+      const mondes = document.createElement("div");
+      mondes.className = "mondes";
+      mondes.setAttribute("role", "img");
+      mondes.setAttribute("aria-label", jauge.mondes
+        .map(monde => `Monde ${monde.numero} : ${ETATS_MONDE[monde.etat] || ETATS_MONDE.vide}`).join(", "));
+      jauge.mondes.forEach(monde => mondes.append(pastilleMonde(monde)));
+      bloc.append(mondes);
+    } else {
+      const barre = document.createElement("div");
+      barre.className = "jauge-barre";
+      const remplie = document.createElement("i");
+      const part = jauge.total > 0 ? Math.max(0, Math.min(1, jauge.fait / jauge.total)) : 0;
+      remplie.style.width = `${Math.round(part * 100)}%`;
+      barre.append(remplie);
+      bloc.append(barre);
+    }
     const ligne = document.createElement("div");
     ligne.className = "jauge-ligne";
     const compte = document.createElement("span");
     compte.className = "compte";
     compte.textContent = jauge.compte;
-    ligne.append(compte, badgeRang(jauge.rang));
-    bloc.append(barre, ligne);
+    ligne.append(compte);
+    if (jauge.rang) ligne.append(badgeRang(jauge.rang));
+    if (jauge.bonus) {
+      const bonus = document.createElement("span");
+      bonus.className = "bonus";
+      bonus.textContent = jauge.bonus;
+      ligne.append(bonus);
+    }
+    bloc.append(ligne);
     if (jauge.note) {
       const note = document.createElement("span");
       note.className = "jauge-note";
@@ -548,9 +651,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   }
 
   // Les activités commencées passent en tête : c'est là que l'élève retourne.
-  // L'ordre des autres ne bouge pas. Avec une seule activité ouverte
-  // aujourd'hui, cela ne se voit pas — c'est le jour où il y en aura trois que
-  // la règle servira.
+  // L'ordre des autres ne bouge pas.
   function remonter(li) {
     const liste = $("applis");
     if (liste.firstChild && liste.firstChild !== li) liste.insertBefore(li, liste.firstChild);
@@ -563,15 +664,16 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     if (!aLire.length) return;
     const parcours = await Promise.all(aLire.map(cle => lireParcours(code, cle)));
     if (!parcours.some(Boolean)) return;
-    const P = await chargerMoteur();
-    if (!P) return;
+    // Un moteur par activité, et seulement pour celles qui ont un parcours.
+    const moteurs = await Promise.all(aLire.map((cle, i) => (parcours[i] ? chargerMoteur(cle) : null)));
     // À l'envers : la première activité commencée finit bien la première.
     for (let i = aLire.length - 1; i >= 0; i -= 1) {
-      if (!parcours[i]) continue;
+      const P = moteurs[i];
+      if (!parcours[i] || !P) continue;
       const tuile = $("applis").querySelector(`.appli[data-cle="${CSS.escape(aLire[i])}"]`);
       if (!tuile || tuile.querySelector(".jauge")) continue;
       let jauge = null;
-      try { jauge = JAUGES[aLire[i]](P, parcours[i]); } catch (_) { jauge = null; }
+      try { jauge = JAUGES[aLire[i]].lecteur(P, parcours[i]); } catch (_) { jauge = null; }
       if (!jauge) continue;
       poserJauge(tuile, jauge);
       remonter(tuile.closest("li"));

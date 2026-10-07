@@ -21,7 +21,9 @@ require_once __DIR__ . '/../lib/versions.php';
 require_once __DIR__ . '/../lib/journal.php';
 
 const MAX_ELEVES_PAR_LOT = 60;
-const APPLIS_PROPOSABLES = ['defi-tables', 'automatismes'];
+// L'ordre de cette liste est celui des activités dans la liste d'une classe
+// (array_intersect le garde) : celui du catalogue, lib/applis.php.
+const APPLIS_PROPOSABLES = ['defi-tables', 'automatismes', 'splat'];
 const DROITS_PARTAGE = ['lecture', 'ecriture'];
 
 // ------------------------------------------------------------------- quotas

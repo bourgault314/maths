@@ -576,8 +576,8 @@ verifier("le manifeste connaît la page Infos", function () {
     $manifeste = (string)file_get_contents(__DIR__ . '/../public/VERSION');
     vrai((bool)preg_match('/^[0-9a-f]{64}  infos\.php$/m', $manifeste),
         'infos.php doit figurer au manifeste : sans lui, verifier.php ne dirait pas si la page déposée est la bonne');
-    vrai((bool)preg_match('/^fichiers 28$/m', $manifeste),
-        'le serveur compte 28 fichiers depuis l’ajout de la page Infos');
+    vrai((bool)preg_match('/^fichiers 29$/m', $manifeste),
+        'le serveur compte 28 fichiers depuis l’ajout de la page Infos, 29 depuis la copie du moteur SPLAT! (lot splat-suivi-3)');
 });
 
 verifier("la page élève refuse un code inconnu ou mal formé", function () {
@@ -3818,6 +3818,140 @@ verifier("lot B — menage.php refuse par HTTP SANS annoncer la version de PHP",
     egal(404, $r['code'], 'refusé par HTTP');
     vrai(entete($r, 'X-Powered-By') === null, 'et sans annoncer la version de PHP');
     egal('', trim((string)$r['texte']), 'ni rien d’autre');
+});
+
+// ---------------------------------------------- lot « splat-suivi-3 » (07/10/2026)
+//
+// Le serveur apprend SPLAT! : la clé « splat » (à la place de
+// « splat-equations », qui n'avait jamais servi), une liste fermée de
+// parcours — celle de la carte des mondes, recopiée dans le moteur
+// assets/js/splat-parcours.js —, et la copie du moteur dans prof/. Rien ne
+// change chez l'élève ni chez le professeur tant qu'aucune classe n'a
+// « splat » dans sa liste.
+
+verifier("splat-suivi-3 — le parcours de référence de SPLAT! ressort identique du filtre du serveur", function () {
+    require_once dirname(__DIR__) . '/public/lib/applis.php';
+    require_once dirname(__DIR__) . '/public/lib/progression.php';
+    $chemin = __DIR__ . '/parcours-reference-splat.json';
+    vrai(is_file($chemin), "tests/parcours-reference-splat.json manque : node scripts/generer-parcours-reference-splat.mjs");
+    $texte = (string)file_get_contents($chemin);
+    $attendu = json_encode(json_decode($texte, false), JSON_UNESCAPED_UNICODE);
+    $obtenu = json_encode(filtrer_progression('splat', json_decode($texte, false)), JSON_UNESCAPED_UNICODE);
+    egal($attendu, $obtenu, "le filtre du serveur jette un champ que le moteur SPLAT! produit : compléter 'cles'/'motifs' de « splat » dans lib/applis.php");
+    egal(51, count(get_object_vars(json_decode($texte, false)->etapes)), 'les 51 parcours de la carte (37 étapes, 14 Bonus)');
+    vrai(strlen($attendu) > 3000, 'la référence est bien un parcours complet');
+    egal(51, compter_elements_declares('splat', $attendu), '« Revenir à… » compte les étapes');
+});
+
+verifier("splat-suivi-3 — un texte, une clé étrangère ou un parcours inconnu sont retirés", function () {
+    require_once dirname(__DIR__) . '/public/lib/applis.php';
+    require_once dirname(__DIR__) . '/public/lib/progression.php';
+    $propre = json_decode((string)file_get_contents(__DIR__ . '/parcours-reference-splat.json'), false);
+    $attendu = json_encode($propre, JSON_UNESCAPED_UNICODE);
+    $sale = json_decode($attendu, false);
+    $sale->prenom = 'Léa';
+    $sale->etapes->m1e1->sig = 'm1e1-ABCD';
+    $sale->etapes->m1e1->res = ['ok', 'ko', 'orange'];
+    $sale->etapes->m1e1->enCours = (object)['sig' => 'x', 'idx' => 2, 'res' => ['ok']];
+    $sale->etapes->m1e2->date = 'mardi';
+    $sale->etapes->m9e9 = (object)['fait' => true, 'etoiles' => 4, 'cartes' => 4, 'vues' => 0, 'essais' => 1, 'date' => '2026-10-01'];
+    $sale->etapes->perso42 = (object)['fait' => true];
+    $obtenu = filtrer_progression('splat', $sale);
+    vrai(!isset($obtenu->prenom), 'le prénom reste sur l’appareil');
+    vrai(!isset($obtenu->etapes->m1e1->sig) && !isset($obtenu->etapes->m1e1->res) && !isset($obtenu->etapes->m1e1->enCours),
+        'ni la signature, ni les résultats carte par carte, ni la reprise en cours');
+    vrai(!isset($obtenu->etapes->m1e2->date), 'un texte à la place d’une date saute');
+    vrai(!isset($obtenu->etapes->m9e9) && !isset($obtenu->etapes->perso42), 'un parcours hors de la carte saute');
+    unset($propre->etapes->m1e2->date);
+    egal(json_encode($propre, JSON_UNESCAPED_UNICODE), json_encode($obtenu, JSON_UNESCAPED_UNICODE),
+        'tout le reste ressort intact');
+    $texte = json_encode($obtenu, JSON_UNESCAPED_UNICODE);
+    vrai(!str_contains($texte, 'Léa') && !str_contains($texte, 'ABCD') && !str_contains($texte, 'mardi'), 'aucun texte libre ne ressort');
+    // Le filtre est propre à chaque appli : un parcours SPLAT! envoyé sous
+    // « defi-tables » ne laisse passer aucune étape.
+    egal('{"version":1,"epoque":2}', json_encode(filtrer_progression('defi-tables', $propre)),
+        'les étapes de SPLAT! ne sont pas des clés de Défi tables');
+});
+
+$classeSplat = null;
+verifier("splat-suivi-3 — SPLAT! s'enregistre et se relit par l'API élève, à côté de Défi tables", function () use (&$jetonS1, &$classeSplat) {
+    vider_compteurs();
+    $r = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'test-splat', 'applis' => ['defi-tables', 'splat']], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'classe créée avec SPLAT!');
+    $classe = $r['json']['id'];
+    $eleves = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 2], ['jeton' => $jetonS1])['json']['eleves'];
+    $classeSplat = ['id' => $classe, 'eleves' => $eleves];
+    $code = $eleves[0]['code'];
+    $reference = json_decode((string)file_get_contents(__DIR__ . '/parcours-reference-splat.json'), true);
+    egal(false, lire($code, 'splat')['json']['existe'], 'rien avant le premier envoi');
+    $w = ecrire($code, $reference, 0, 'splat');
+    egal(200, $w['code'], 'premier envoi accepté (révision 0)');
+    egal(1, $w['json']['revision']);
+    $r = lire($code, 'splat');
+    egal(true, $r['json']['existe']);
+    egal($reference, $r['json']['parcours'], 'relu exactement tel que le moteur l’a envoyé');
+    egal(false, lire($code)['json']['existe'], 'Défi tables du même élève n’a pas bougé');
+    $ligne = bd_test()->prepare("SELECT calculs FROM versions WHERE eleve_id = ? AND appli = 'splat'");
+    $ligne->execute([(int)$eleves[0]['id']]);
+    egal(51, (int)$ligne->fetchColumn(), 'la version du jour est comptée en étapes');
+    $r = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $classe, 'appli' => 'splat'], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'le tableau de la classe se demande pour SPLAT!');
+    $lu = null;
+    foreach ($r['json']['eleves'] as $e) if ((int)$e['id'] === (int)$eleves[0]['id']) $lu = $e;
+    vrai($lu !== null && is_array($lu['parcours'] ?? null) && isset($lu['parcours']['etapes']['enq14']),
+        'le tableau rend le parcours SPLAT! de l’élève');
+});
+
+verifier("splat-suivi-3 — rien ne change tant qu'aucune classe n'a « splat » dans sa liste", function () use (&$jetonS1, &$classeSplat) {
+    require_once __DIR__ . '/../public/lib/applis.php';
+    egal(['defi-tables'], array_column(applis_de_classe('defi-tables'), 'cle'), 'une classe de Défi tables ne reçoit pas SPLAT!');
+    egal(['defi-tables', 'splat'], array_column(applis_de_classe('defi-tables,splat'), 'cle'), 'une classe qui l’a le reçoit, dans son ordre');
+    egal([], applis_de_classe('splat-equations'), 'l’ancienne clé n’existe plus');
+    vider_compteurs();
+    // Une classe créée comme aujourd'hui (sans liste) : Défi tables seul.
+    $classe = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'test-sans-splat'], ['jeton' => $jetonS1])['json']['id'];
+    $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
+    egal(['defi-tables'], array_column(identite($eleve['code'])['json']['applis'], 'cle'), 'l’espace de l’élève ne montre que Défi tables');
+    // La classe qui a SPLAT! : la tuile reçoit le nom, l'adresse de la carte, rien d'autre.
+    $applis = identite($classeSplat['eleves'][0]['code'])['json']['applis'];
+    egal(['defi-tables', 'splat'], array_column($applis, 'cle'));
+    egal(['cle' => 'splat', 'nom' => 'SPLAT!', 'description' => 'Six mondes de taches et de jetons, étape par étape.',
+        'url' => 'https://mathsgo.re/outils/splat_univers.html', 'ancre' => null, 'disponible' => true], $applis[1],
+        'pas de « cles » ni de « motifs » : le mode d’emploi du filtre ne sort pas');
+});
+
+verifier("splat-suivi-3 — classes.modifier accepte SPLAT! et range la liste dans l'ordre du catalogue", function () use (&$jetonS1, &$classeSplat) {
+    vider_compteurs();
+    $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classeSplat['id'], 'applis' => ['splat', 'defi-tables', 'splat-equations']], ['jeton' => $jetonS1]);
+    egal(200, $r['code']);
+    $classes = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1])['json']['classes'];
+    $trouvee = null;
+    foreach ($classes as $c) if ((int)$c['id'] === (int)$classeSplat['id']) $trouvee = $c;
+    egal(['defi-tables', 'splat'], $trouvee['applis'], 'l’ancienne clé est ignorée, l’ordre est celui du catalogue');
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classeSplat['id'], 'applis' => ['defi-tables']], ['jeton' => $jetonS1]);
+    egal(['defi-tables'], array_column(identite($classeSplat['eleves'][0]['code'])['json']['applis'], 'cle'),
+        'décochée : la tuile disparaît de l’espace élève');
+    egal(true, lire($classeSplat['eleves'][0]['code'], 'splat')['json']['existe'], 'et son parcours reste en base');
+});
+
+verifier("splat-suivi-3 — l'espace élève charge le moteur SPLAT! d'ici, identique à celui du dépôt", function () use ($racine) {
+    $r = page('/');
+    vrai((bool)preg_match('#"prof/splat-parcours\.js\?v=([0-9a-f]{10})"#', $r['texte'], $m), 'le moteur est relatif, avec une version');
+    vrai((bool)preg_match('#"prof/defi_tables_mon_parcours\.js\?v=[0-9a-f]{10}"#', $r['texte']), 'celui de Défi tables aussi, toujours');
+    $moteur = page('/prof/splat-parcours.js');
+    egal(200, $moteur['code'], 'le moteur est servi');
+    vrai(str_contains($moteur['texte'], 'MathsGoSplatParcours'), "c'est bien le moteur de SPLAT!");
+    egal(substr(md5($moteur['texte']), 0, 10), $m[1], 'la version dans l’adresse est l’empreinte du fichier servi');
+    $original = dirname($racine) . '/assets/js/splat-parcours.js';
+    if (is_file($original)) {
+        egal(md5_file($original), md5($moteur['texte']), 'octet pour octet le moteur du site (sinon : cp assets/js/splat-parcours.js _serveur/public/prof/)');
+    }
+});
+
+verifier("splat-suivi-3 — verifier.php contrôle le moteur SPLAT!", function () {
+    $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai((bool)preg_match('#class="etat oui">✓</span>\s*Moteur SPLAT! servi localement\s*<div class="detail">en place \(#u', $r['texte']),
+        'la ligne existe, et elle est verte');
 });
 
 // ---------------------------------------------------------------------- résultat
