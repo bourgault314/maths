@@ -974,8 +974,8 @@ function makeModule01Instance(mod,q){
       qcm={options:['Vrai','Faux'],codes:[null,truth?null:shownItem.code],correctIndex:truth?'1':'2'}; answers=[qcm.correctIndex];
       // Le verdict tient sur la dernière ligne du calcul.
       steps=steps.slice(0,-1).concat([steps[steps.length-1]+(truth?' : l’égalité est vraie.':', et non '+shown+' : l’égalité est fausse.')]);
-      // La phrase « n’est pas 3,2 » ne sert que si l’égalité montrée est justement 3/2 = 3,2.
-      if(shown!==num+','+den) note='';
+      // Le verdict et la phrase du piège disent déjà « ce n’est pas 3,2 » : pas de note en plus.
+      note='';
       feedback=truth?{'2':'Si : '+F+' vaut bien '+dec+'.'}:{'1':shownItem.feedback};
       extra.truth=truth; extra.shown=shown;
     }
