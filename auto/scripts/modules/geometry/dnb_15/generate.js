@@ -29,6 +29,7 @@
 
   // Trajets de lecture (le verbe suit la position du point).
   function toXAxis(letter,y){return y>0?'de '+letterHtml(letter)+', je descends jusqu’à l’axe horizontal':'de '+letterHtml(letter)+', je monte jusqu’à l’axe horizontal';}
+  function toXAxisTu(letter,y){return 'de '+letterHtml(letter)+', '+(y>0?'descends':'monte')+' tout droit jusqu’à l’axe horizontal';}
   function toYAxis(letter,x){return x<0?'de '+letterHtml(letter)+', je vais vers la droite jusqu’à l’axe vertical':'de '+letterHtml(letter)+', je vais vers la gauche jusqu’à l’axe vertical';}
   function readX(letter,x,y){return y===0?'Abscisse'+NBSP+': '+letterHtml(letter)+' est sur l’axe horizontal, je lis '+xs(x)+'.':'Abscisse'+NBSP+': '+toXAxis(letter,y)+', je lis '+xs(x)+'.';}
   function readY(letter,x,y){return x===0?'Ordonnée'+NBSP+': '+letterHtml(letter)+' est sur l’axe vertical, je lis '+ys(y)+'.':'Ordonnée'+NBSP+': '+toYAxis(letter,x)+', je lis '+ys(y)+'.';}
@@ -88,7 +89,7 @@
       footer:'$$'+letter+'(\\,[[formula]]\\,;\\,[[formula]]\\,)$$',
       steps:[readX(letter,p.x,p.y),readY(letter,p.x,p.y),writePair(letter,p.x,p.y)],
       note:'Attention'+NBSP+': on écrit toujours l’abscisse en premier, puis l’ordonnée.',
-      aide:['L’abscisse se lit sur l’axe horizontal, l’ordonnée sur l’axe vertical.','Commence par l’abscisse'+NBSP+': '+toXAxis(letter,p.y)+'.'],
+      aide:['L’abscisse se lit sur l’axe horizontal, l’ordonnée sur l’axe vertical.','Commence par l’abscisse'+NBSP+': '+toXAxisTu(letter,p.y)+'.'],
       aideHtml:aidFigure(data,[{x:p.x,y:p.y,axis:'x'}])
     });
   }
@@ -130,7 +131,7 @@
         writePair('B',b.x,b.y)
       ],
       note:'Attention'+NBSP+': l’abscisse se lit sur l’axe horizontal et s’écrit en premier.',
-      aide:['L’abscisse se lit sur l’axe horizontal, l’ordonnée sur l’axe vertical.','a.'+NBSP+'Pour '+letterHtml('A')+NBSP+': '+toXAxis('A',a.y)+'.'],
+      aide:['L’abscisse se lit sur l’axe horizontal, l’ordonnée sur l’axe vertical.','a.'+NBSP+'Pour '+letterHtml('A')+NBSP+': '+toXAxisTu('A',a.y)+'.'],
       aideHtml:aidFigure(data,[{x:a.x,y:a.y,axis:'x'}])
     });
   }
@@ -261,7 +262,7 @@
       prompt:'Le point '+letterHtml(letter)+' a pour coordonnées <strong>'+pairText(claim.x,claim.y)+'</strong>.<br>Vrai ou faux'+NBSP+'?',
       steps:[
         'Je lis les coordonnées de '+letterHtml(letter)+NBSP+': abscisse '+xs(p.x)+', ordonnée '+ys(p.y)+'.',
-        isTrue?'L’affirmation donne bien '+pairHtml(letter,p.x,p.y)+NBSP+': c’est <strong>vrai</strong>.':'L’affirmation dit '+pairText(claim.x,claim.y)+NBSP+': '+why+'. C’est <strong>faux</strong>.'
+        isTrue?'L’affirmation dit bien '+pairHtml(letter,p.x,p.y)+NBSP+': c’est <strong>vrai</strong>.':'L’affirmation dit '+pairText(claim.x,claim.y)+NBSP+': '+why+'. C’est <strong>faux</strong>.'
       ],
       note:'',
       feedback,
