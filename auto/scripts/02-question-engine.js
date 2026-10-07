@@ -2992,13 +2992,14 @@ function makeEvolutionInstance(mod,q){
       rawStatement=evoItem(initial)+' coûte '+evoQty(initial,'€')+'.<br>Son prix '+(up?'augmente':'baisse')+' '+evoDe(p)+'.<br>Complète le calcul qui donne le nouveau prix.';
       rawFooter=evoEuroNum(initial)+' × [[formula]]';
     }
-    steps=['On passe à 100'+EVO_FINE+'% '+sign+' '+P+' = '+evoPct(total)+'.',
+    // Lignes courtes : la carte tient aussi au téléphone de 320 px.
+    steps=['100'+EVO_FINE+'% '+sign+' '+P+' = '+evoPct(total),
       evoPct(total)+' = '+evoFrac(total,100)+' = <strong>'+C+'</strong>'];
     aide=[(up?'Après la hausse':'Après la baisse')+', on a 100'+EVO_FINE+'% '+sign+' '+P+' '+(context?'du prix de départ.':'de la quantité de départ.'),
       'Écris ce pourcentage sous forme de fraction sur 100, puis en nombre décimal.'];
     note=p<10
-      ?'Attention : '+sign+' '+P+', c’est × '+C+' et non × '+evoNum(up?1+p/10:1-p/10)+'.'
-      :'Attention : × '+evoNum(p/100)+' ne calcule que '+(up?'la hausse.':'la baisse.');
+      ?'Attention : × '+evoNum(up?1+p/10:1-p/10)+', ce serait '+sign+' '+evoPct(p*10)+'.'
+      :'Attention : × '+evoNum(p/100)+' calcule '+(up?'la hausse.':'la baisse.');
     bar=evoBar(1,p,up,true);
     initial=initial||1;
   }else if(kind==='increase_qcm'||kind==='decrease_qcm'){
