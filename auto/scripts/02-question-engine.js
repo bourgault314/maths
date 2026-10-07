@@ -882,10 +882,12 @@ function module01AideVisual(data){
   // Dessin du panneau d'aide : jamais la réponse (aucun « 1 » écrit sur les unités).
   const component=globalThis.MATHSGO_VISUALS&&globalThis.MATHSGO_VISUALS.get('arithmetic.fraction-decimal-grid');
   if(!component||!data||(!data.kind&&(!data.visualKind||data.visualKind==='none'))) return '';
-  // Au plus 180 px de haut dans le panneau : le dessin et les indices tiennent ensemble à l'écran.
+  // Au plus 180 px de haut dans le panneau (22 % de la hauteur sur un petit écran) : le dessin
+  // et les indices tiennent ensemble à l'écran.
   const html=component.render(data,false), box=html.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/);
-  const maxWidth=box?Math.round(180*Number(box[1])/Number(box[2])):360;
-  return html.replace(/^<div class="module01-visual([^"]*)"/,'<div class="module01-visual$1" style="max-width:'+maxWidth+'px;width:100%;margin:0 auto"');
+  const ratio=box?Number(box[1])/Number(box[2]):2;
+  const maxWidth='min('+Math.round(180*ratio)+'px,'+(22*ratio).toFixed(1)+'vh)';
+  return html.replace(/^<div class="module01-visual([^"]*)"/,'<div class="module01-visual$1" style="max-width:'+maxWidth+';width:100%;margin:0 auto"');
 }
 
 function makeModule01Instance(mod,q){
