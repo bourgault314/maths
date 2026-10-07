@@ -943,7 +943,7 @@ svg{display:block;max-width:100%;height:auto}
 .reponse-eleve-frac{margin-right:.3em;vertical-align:middle}.reponse-eleve-frac::after{transform:rotate(-28deg)}
 .answer-slot.a-reponse-eleve strong{color:#087a55}
 /* Le panneau d'aide se pose sur le pied ; la question reste visible au-dessus. */
-.aide-panel{position:fixed;left:0;right:0;bottom:0;z-index:60;display:flex;flex-direction:column;min-height:var(--pied-h,240px);max-height:min(64dvh,calc(100dvh - 120px));padding:12px max(12px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));border-top:2px solid #6f97c6;border-radius:20px 20px 0 0;background:#fff;box-shadow:0 -14px 34px rgba(11,33,71,.16);font-family:Arial,"Helvetica Neue",Helvetica,sans-serif}
+.aide-panel{position:fixed;left:0;right:0;bottom:0;z-index:60;display:flex;flex-direction:column;min-height:var(--pied-h,240px);max-height:min(64vh,calc(100vh - 120px));max-height:min(64dvh,calc(100dvh - 120px));padding:12px max(12px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));border-top:2px solid #6f97c6;border-radius:20px 20px 0 0;background:#fff;box-shadow:0 -14px 34px rgba(11,33,71,.16);font-family:Arial,"Helvetica Neue",Helvetica,sans-serif}
 .aide-panel[hidden]{display:none!important}
 .aide-scroll{flex:1 1 auto;min-height:0;width:min(100%,640px);margin:0 auto;overflow-y:auto;overscroll-behavior:contain}
 .aide-title{display:flex;align-items:center;gap:7px;margin:0 0 8px;color:#073a75;font-size:1.08rem;font-weight:900}
@@ -957,7 +957,7 @@ svg{display:block;max-width:100%;height:auto}
 .aide-dessin{display:flex;flex-direction:column;align-items:stretch;gap:8px;margin-top:10px}
 .aide-dessin[hidden]{display:none}
 .aide-figure{width:100%;min-width:0}
-.aide-dessin svg{display:block;width:min(100%,560px)!important;max-width:100%!important;height:auto!important;max-height:min(36dvh,320px)!important;margin:0 auto!important}
+.aide-dessin svg{display:block;width:min(100%,560px)!important;max-width:100%!important;height:auto!important;max-height:min(36vh,320px)!important;max-height:min(36dvh,320px)!important;margin:0 auto!important}
 .aide-back{flex:none;width:min(100%,560px);height:var(--aide-back-h,52px);margin:10px auto 0;border:1px solid #003b7a;border-radius:14px;background:#003b7a;color:#fff;font-size:1.12rem;font-weight:900;cursor:pointer;touch-action:manipulation}
 .aide-back:focus-visible{outline:3px solid #9cc0ea;outline-offset:2px}
 /* Quitter la série ? */
@@ -1015,7 +1015,7 @@ svg{display:block;max-width:100%;height:auto}
 .aide-scroll{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"titre dessin" "etapes dessin" "plus dessin" "vide dessin";grid-template-rows:auto auto auto 1fr;column-gap:28px;width:min(100%,1100px)}
 .aide-title{grid-area:titre}.aide-steps{grid-area:etapes}.aide-more{grid-area:plus;justify-self:start}
 .aide-dessin{grid-area:dessin;width:min(52vw,560px);margin-top:0}
-.aide-dessin svg{max-height:min(34dvh,340px)!important}
+.aide-dessin svg{max-height:min(34vh,340px)!important;max-height:min(34dvh,340px)!important}
 .aide-scroll:has(.aide-steps[hidden]){grid-template-columns:minmax(0,1fr);grid-template-areas:"titre" "dessin" "plus" "vide";justify-items:center}
 .aide-scroll:has(.aide-steps[hidden]) .aide-title{justify-self:center}
 .aide-back{width:min(100%,360px)}
@@ -1048,6 +1048,13 @@ svg{display:block;max-width:100%;height:auto}
 .verdict{font-size:.92rem}
 .pied-btn.valider{font-size:1.12rem}
 .carte-correction{padding:7px 10px}
+}
+/* Relecture — navigateurs sans l'unité dvh (iOS avant 15.4, Chrome avant
+   108) : une variable qui la contient devient invalide là où elle est
+   employée, et les touches tombaient à 23 px de haut. Repli en vh. */
+@supports not (height:1dvh){
+.answer-dock{--touche-h:clamp(44px,6.5vh,56px);--actions-h:clamp(48px,6.4vh,56px);--carte-h:clamp(116px,17vh,150px);--zone-reduite:clamp(80px,11vh,96px)}
+@media(min-width:900px){.answer-dock{--carte-h:clamp(116px,19vh,160px)}}
 }
 /* Relecture — téléphone : options de QCM un peu plus serrées (52 px, soit
    44 px encore après la réduction × 0,85) ; écran court (barre d'adresse
