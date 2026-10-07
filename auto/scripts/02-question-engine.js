@@ -549,6 +549,32 @@ const MODULE01_TEMPLATES=[
   {n:22,options:{module01_kind:'sum_f2d',module01_format:'open'}},
   {n:23,options:{module01_kind:'extreme',module01_format:'qcm'}}
 ].map(q=>({...q,statement:'',answer:'[]',footer:''}));
+// Composition d'une série : un tour de toutes les familles avant de répéter
+// (une question par famille, dans un ordre tiré au hasard), et une question de
+// repère (1/2, 7/10…) en tête plutôt qu'une question difficile.
+function module01Family(q){
+  const n=Number(q&&q.n);
+  if([1,2].includes(n)) return 'reperes';
+  if([5,6].includes(n)) return 'dixiemes-centiemes';
+  if([9,10,11].includes(n)) return 'plus-grand-que-1';
+  if(n===13) return 'simplifier';
+  if([4,16].includes(n)) return 'vers-fraction-qcm';
+  if([21,23].includes(n)) return 'comparer';
+  if(n===22) return 'somme';
+  return 'vers-fraction';
+}
+function module01CoverageCycle(questions){
+  const pools=new Map();
+  questions.forEach(q=>{const f=module01Family(q);if(!pools.has(f))pools.set(f,[]);pools.get(f).push(q);});
+  pools.forEach((items,key)=>pools.set(key,shuffledCopy(items)));
+  const cycle=[];
+  while([...pools.values()].some(items=>items.length)){
+    shuffledCopy([...pools.keys()].filter(key=>pools.get(key).length)).forEach(key=>cycle.push(pools.get(key).shift()));
+  }
+  const first=cycle.findIndex(q=>['reperes','dixiemes-centiemes'].includes(module01Family(q)));
+  if(first>0) cycle.unshift(cycle.splice(first,1)[0]);
+  return cycle;
+}
 let module01State={};
 function resetModule01State(){ module01State={}; }
 function module01DistinctFrom(key,list){

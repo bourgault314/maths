@@ -450,7 +450,9 @@ function buildBalancedQuiz(mods,count){
 
   const selections=allocateModuleCounts(usable,count).map(item=>{
     const moduleCount=item.moduleCount;
-    let chosen=item.m.id==='dnb_03b'
+    let chosen=item.m.id==='dnb_01'
+      ? drawFromQuestionDeck(item.m.id+':coverage',item.questions,moduleCount,()=>module01CoverageCycle(item.questions))
+      : item.m.id==='dnb_03b'
       ? chooseFractionMulDivQuestions(item.m.id,item.questions,moduleCount)
       : item.m.id==='dnb_04'
       ? chooseFractionPercentQuestions(item.m.id,item.questions,moduleCount)
