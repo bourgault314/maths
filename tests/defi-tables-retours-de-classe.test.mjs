@@ -179,6 +179,12 @@ test("hors séance, rien n'est promis : validationDeSeance ne dit oui qu'à une 
 });
 
 test("la séance se souvient de la rangée pleine, même reprise après l'onglet fermé", () => {
+  // Relecture de Code (07/10/2026) : les erreurs de jouerEtape tombent selon
+  // « tour », partagé par tout le fichier. Sans cette remise à zéro, un test
+  // ajouté plus haut pouvait faire tomber les deux erreurs sur × 1 ou × 10
+  // (des bouts, qui restent pleins) : la rangée ne se vidait plus et ce test
+  // rougissait sans que rien soit cassé.
+  tour = 0;
   let p = avecDepart(6);
   for (const date of [jour(1), jour(2)]) for (let m = 1; m <= 10; m += 1) p = P.appliquerReponse(p, `3-${m}`, {correcte: true, date}).parcours;
   p = P.normaliserParcours(p);
