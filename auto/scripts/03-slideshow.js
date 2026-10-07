@@ -709,8 +709,8 @@ button{font:inherit;-webkit-appearance:none;appearance:none;-webkit-tap-highligh
 .interactive-algebra-template-response{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:.08em;margin:4px auto 0;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(2.25rem,4.6vw,4.8rem);font-weight:850;line-height:1.18}
 .interactive-expand-source{white-space:nowrap}.interactive-expand-result{display:inline-flex;align-items:center;justify-content:center;gap:.08em;white-space:nowrap}
 .interactive-expand-answer{width:100%;font-family:inherit}.interactive-expand-answer>.interactive-polynomial-response,.interactive-expand-answer>.interactive-algebra-template-response{margin:0 auto}
-.relative-token-prompt{font-size:clamp(1.75rem,3.7vw,3.55rem);line-height:1.14;margin:0 auto 16px}.relative-token-board,.relative-token-static-board{width:min(100%,1040px);margin:0 auto;text-align:center}.relative-token-zone{min-height:112px;margin:10px auto;padding:10px 12px;border:1px dashed #b7cbe3;border-radius:14px;background:#fbfdff}.relative-token-zone h3{margin:0 0 8px;color:#073a75;font-size:clamp(1rem,1.75vw,1.3rem);font-weight:900}.relative-token-zone-a,.relative-token-zone-b{display:inline-flex;width:calc(50% - 8px);vertical-align:top;flex-direction:column}.relative-token-zone-result{min-height:122px;border-color:#86a8cf;background:#f4f8fe}.relative-token-list{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;min-height:58px}.relative-token{display:inline-grid;place-items:center;width:54px;height:54px;min-width:54px;border:2px solid #111;border-radius:50%;color:#111;font-size:1.18rem;font-weight:900;line-height:1;box-shadow:0 2px 0 rgba(11,33,71,.12)}.relative-token-positive{background:#31a98e}.relative-token-negative{background:#ef5142}button.relative-token{cursor:pointer;touch-action:manipulation}.relative-token:active{transform:translateY(1px);box-shadow:none}.relative-token.is-null-pair{box-shadow:0 0 0 4px #f59e0b,0 2px 0 rgba(11,33,71,.12)}.relative-token-empty{display:inline-grid;place-items:center;min-width:54px;height:54px;color:#60708c;font-size:1.5rem}.relative-token-instruction{margin:12px auto 8px;color:#405875;font-size:clamp(1rem,1.8vw,1.28rem);font-weight:750;line-height:1.25}.relative-token-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin:8px auto 0}.relative-token-action{min-height:46px;padding:9px 14px;border:1px solid #9fb9d8;border-radius:11px;background:#fff;color:#073a75;font-size:1rem;font-weight:850;cursor:pointer;touch-action:manipulation}.relative-token-result{margin:14px auto 0;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(1.7rem,3.2vw,3.1rem);font-weight:800}.relative-token-result strong{color:var(--answer)}.relative-token-placeholder{min-height:86px}.answer-dock.relative-tokens-dock .answer-main{min-height:58px}
-@media(max-width:800px){.relative-token-prompt{font-size:clamp(1.45rem,7vw,2.15rem);margin-bottom:8px}.relative-token-zone{min-height:96px;margin:7px auto;padding:8px 7px;border-radius:12px}.relative-token-zone-a,.relative-token-zone-b{width:calc(50% - 4px)}.relative-token-zone h3{font-size:.92rem;margin-bottom:5px}.relative-token-list{gap:5px;min-height:50px}.relative-token{width:46px;height:46px;min-width:46px;font-size:1.02rem}.relative-token-empty{min-width:46px;height:46px}.relative-token.is-null-pair{box-shadow:0 0 0 3px #f59e0b,0 2px 0 rgba(11,33,71,.12)}.relative-token-instruction{margin:8px auto 5px;font-size:.95rem}.relative-token-actions{margin-top:5px}.relative-token-action{min-height:44px;padding:8px 10px;font-size:.92rem}.relative-token-result{margin-top:9px;font-size:clamp(1.45rem,7vw,2.1rem)}.answer-dock.relative-tokens-dock .answer-body{grid-template-columns:minmax(0,1fr) 154px}.answer-dock.relative-tokens-dock .answer-main{height:62px}}
+.relative-token-prompt{font-size:clamp(1.75rem,3.7vw,3.55rem);line-height:1.14;margin:0 auto 16px}.relative-token-board,.relative-token-static-board{width:min(100%,1040px);margin:0 auto;text-align:center}.relative-token-zone{min-height:112px;margin:10px auto;padding:10px 12px;border:1px dashed #b7cbe3;border-radius:14px;background:#fbfdff}.relative-token-zone h3{margin:0 0 8px;color:#073a75;font-size:clamp(1rem,1.75vw,1.3rem);font-weight:900}.relative-token-zone-a,.relative-token-zone-b{display:inline-flex;width:calc(50% - 8px);vertical-align:top;flex-direction:column}.relative-token-zone-result{min-height:122px;border-color:#86a8cf;background:#f4f8fe}.relative-token-list{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;min-height:58px}.relative-token{display:inline-grid;place-items:center;width:54px;height:54px;min-width:54px;border:2px solid #111;border-radius:50%;color:#111;font-size:1.18rem;font-weight:900;line-height:1;box-shadow:0 2px 0 rgba(11,33,71,.12)}.relative-token-positive{background:#31a98e}.relative-token-negative{background:#ef5142}button.relative-token{cursor:pointer;touch-action:manipulation}.relative-token:active{transform:translateY(1px);box-shadow:none}.relative-token.is-null-pair{box-shadow:0 0 0 4px #f59e0b,0 2px 0 rgba(11,33,71,.12)}.relative-token-empty{display:inline-grid;place-items:center;min-width:54px;height:54px;color:#60708c;font-size:1.5rem}.relative-token-instruction{margin:12px auto 8px;color:#405875;font-size:clamp(1rem,1.8vw,1.28rem);font-weight:750;line-height:1.25}.relative-token-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin:8px auto 0}.relative-token-action{min-height:46px;padding:9px 14px;border:1px solid #9fb9d8;border-radius:11px;background:#fff;color:#073a75;font-size:1rem;font-weight:850;cursor:pointer;touch-action:manipulation}.relative-token-result{margin:14px auto 0;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(1.7rem,3.2vw,3.1rem);font-weight:800}.relative-token-result strong{color:var(--answer)}.relative-token-placeholder{min-height:86px}
+@media(max-width:800px){.relative-token-prompt{font-size:clamp(1.45rem,7vw,2.15rem);margin-bottom:8px}.relative-token-zone{min-height:96px;margin:7px auto;padding:8px 7px;border-radius:12px}.relative-token-zone-a,.relative-token-zone-b{width:calc(50% - 4px)}.relative-token-zone h3{font-size:.92rem;margin-bottom:5px}.relative-token-list{gap:5px;min-height:50px}.relative-token{width:46px;height:46px;min-width:46px;font-size:1.02rem}.relative-token-empty{min-width:46px;height:46px}.relative-token.is-null-pair{box-shadow:0 0 0 3px #f59e0b,0 2px 0 rgba(11,33,71,.12)}.relative-token-instruction{margin:8px auto 5px;font-size:.95rem}.relative-token-actions{margin-top:5px}.relative-token-action{min-height:44px;padding:8px 10px;font-size:.92rem}.relative-token-result{margin-top:9px;font-size:clamp(1.45rem,7vw,2.1rem)}}
 @media(min-width:801px){.diapo.interactive-mode .stage{padding:6px 18px 10px}.diapo.interactive-mode .question svg{max-height:255px;width:auto;margin-left:auto;margin-right:auto}}
 @media(min-width:801px) and (max-height:760px){.diapo.interactive-mode.module01-mode .module01-prompt{font-size:clamp(2rem,3vw,2.7rem);margin-bottom:4px}.diapo.interactive-mode.module01-mode .module01-source{font-size:clamp(2.45rem,4vw,3.75rem);margin:1px auto 3px}.diapo.interactive-mode.module01-mode .module01-visual{margin:3px auto 2px}.diapo.interactive-mode.module01-mode .module01-visual svg{width:auto;max-width:100%;max-height:220px}.diapo.interactive-mode.module01-mode .module01-options .opt{padding:9px 14px}.diapo.interactive-mode.median-mode .question{font-size:clamp(1.9rem,3.3vw,2.85rem);line-height:1.12;margin-bottom:10px}.diapo.interactive-mode.median-mode .options{gap:10px 14px;margin-top:10px}.diapo.interactive-mode.median-mode .opt{padding:13px 16px;font-size:clamp(1.15rem,1.7vw,1.55rem)}.diapo.interactive-mode.angle-sum-mode .angle-sum-prompt{font-size:clamp(1.65rem,2.4vw,2.15rem);margin-bottom:2px}.diapo.interactive-mode.angle-sum-mode .angle-sum-prompt svg{max-height:158px;margin-top:3px}.diapo.interactive-mode.angle-sum-mode .angle-bar-help{height:138px;margin-top:0}.diapo.interactive-mode.geometry-long-prompt-mode .question svg{max-height:285px!important}.diapo.interactive-mode.geometry-long-prompt-mode .opt{min-height:54px;padding:11px 14px}.diapo.interactive-mode.proportion-table-mode .proportion-line-desktop{width:min(100%,760px)}}
 @media(min-width:801px) and (max-height:760px){.diapo.interactive-mode.fraction-ops-mode .fraction-product-manipulator .fraction-ops-area{max-height:285px}.diapo.interactive-mode.fraction-ops-mode .fraction-product-manipulator{padding-top:5px;padding-bottom:4px}.diapo.interactive-mode.fraction-ops-mode .fraction-product-manipulator p{font-size:.8rem}}
@@ -849,6 +849,200 @@ svg{display:block;max-width:100%;height:auto}
 @media(max-width:800px){.diapo.divisibility-sharing-mode .stage{padding:5px 6px 8px}.diapo.divisibility-sharing-mode .question{font-size:clamp(1.08rem,4.75vw,1.38rem);margin-bottom:1px}.equal-sharing-help{height:clamp(185px,27vh,220px);margin:0 auto 1px}.diapo.divisibility-sharing-mode .options{grid-template-columns:1fr;gap:5px;margin-top:3px}.diapo.divisibility-sharing-mode .opt{min-height:0;padding:7px 9px;font-size:clamp(.82rem,3.6vw,1rem)}}
 @media(max-width:800px){.diapo.divisibility-mode .stage{padding:5px 6px 8px}.diapo.divisibility-mode .slide{width:100%}.divisibility-prompt{font-size:clamp(1.2rem,5.25vw,1.5rem);margin-bottom:4px}.divisibility-prompt small{margin-top:3px;font-size:.76rem}.divisibility-inspector{grid-template-columns:1fr;gap:5px;margin:3px auto}.divisibility-step{grid-template-columns:31px minmax(0,1fr);gap:7px;padding:7px 8px;border-radius:11px}.divisibility-step-number{width:29px;height:29px;font-size:.92rem}.divisibility-step strong{font-size:.91rem}.divisibility-step small{margin-top:2px;font-size:.72rem}.divisibility-digits{gap:3px;margin:4px auto 1px}.divisibility-digit{min-width:29px;height:33px;padding:0 4px;border-width:1.5px;border-radius:7px;font-size:1.15rem}.divisibility-sum{margin:6px auto 2px;font-size:1.2rem}.divisibility-tests{gap:4px 6px;margin-top:5px}.divisibility-tests>span{min-width:92px;padding:3px 5px;font-size:.75rem}.divisibility-conclusion{padding:6px 7px;font-size:.82rem}.diapo.divisibility-mode .divisibility-options{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin-top:4px}.diapo.divisibility-mode .divisibility-options .opt{min-height:48px;padding:7px 8px;font-size:1rem}.divisibility-inspector-placeholder{height:170px}.course-card.divisibility-course-card{padding:18px 10px 14px}.course-divisibility-units{grid-template-columns:1fr}.course-divisibility-share .equal-sharing-help{height:125px}.course-divisibility-share .equal-sharing-svg{max-height:125px}}
 @media (hover:none) and (pointer:coarse){.navnums{display:none!important}.mobile-counter{display:block!important}}
+/* ===== Lot T — coque commune : en-tête, pied (verdict, pavé, Passer/Valider, carte « Comment on trouve »), aide, fin de série, options de QCM, étapes du diaporama ===== */
+/* La zone question est alignée en haut (rien ne remonte quand un élément apparaît). */
+.diapo .stage>.slide{margin-top:0!important;margin-bottom:auto!important}
+.diapo.interactive-mode .stage{padding-top:8px}
+.diapo:not(.interactive-mode) .stage>.slide{margin-top:min(3vh,28px)!important}
+.diapo.interactive-mode.equation-mode .slide{justify-content:flex-start;min-height:0}
+/* En-tête du mode interactif : Menu | 3 / 10 | score, clavier, plein écran, Cours, Aide. */
+.diapo.interactive-mode>.top{order:1;height:64px;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;border-top:0;border-bottom:1px solid var(--border);padding:8px max(14px,env(safe-area-inset-right)) 8px max(14px,env(safe-area-inset-left))}
+.diapo.interactive-mode .top .btn{min-height:46px}
+.diapo.interactive-mode .menu-btn{min-width:0;padding:0 14px;border-radius:13px;white-space:nowrap}
+.diapo.interactive-mode .interactive-summary{position:static;grid-column:2;justify-self:center;max-width:100%;transform:none;font-size:1.02rem}
+.diapo.interactive-mode .left{grid-column:1}.diapo.interactive-mode .right{grid-column:3;gap:8px}
+@media(min-width:1100px){.diapo.interactive-mode .interactive-summary{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}}
+@media(max-width:899px){.counter-word{display:none}}
+.course-btn,.aide-btn{min-height:46px;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:0 13px;border-radius:13px;font-family:Arial,"Helvetica Neue",Helvetica,sans-serif;font-size:.95rem;font-weight:850;cursor:pointer;touch-action:manipulation;white-space:nowrap}
+.top .course-btn{border:1.5px solid #e86100;background:#fff7ed;color:#7a3500;box-shadow:none}
+.aide-btn{border:1.5px solid #6f97c6;background:#eef5fd;color:#073a75}
+.aide-btn svg,.course-btn svg{width:20px;height:20px;flex:none}
+.aide-btn.is-open{border-color:#003b7a;background:#003b7a;color:#fff}
+.aide-btn.is-unavailable{visibility:hidden;pointer-events:none}
+.aide-btn[hidden]{display:none!important}
+/* Le pied : une ligne de verdict à hauteur réservée, puis la zone de travail (pavé, consigne ou carte de correction, toujours à la même place et à la même hauteur), puis Passer | Valider. */
+.answer-dock{--touche-h:clamp(44px,6.5dvh,56px);--touche-ecart:3px;--pave-rangs:3;--verdict-h:32px;--actions-h:clamp(48px,6.4dvh,56px);--carte-h:clamp(116px,17dvh,150px);--zone-h:var(--carte-h);position:relative;z-index:5;flex:0 0 auto;order:3;padding:0 max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));border-top:1px solid var(--border);background:#f8fbff;font-family:Arial,"Helvetica Neue",Helvetica,sans-serif}
+.answer-dock[hidden]{display:none!important}
+.answer-dock.avec-pave{--zone-h:calc(var(--pave-rangs) * var(--touche-h) + 2 * var(--touche-ecart))}
+.verdict{height:var(--verdict-h);display:flex;align-items:center;justify-content:center;gap:0;overflow:hidden;padding:0 4px;color:#24364f;font-size:1rem;font-weight:800;line-height:1.1;text-align:center;white-space:nowrap}
+.verdict-texte{display:inline-flex;align-items:center;gap:0;white-space:nowrap}
+.verdict-texte>span{display:inline-flex;align-items:center;gap:.3em}
+.verdict-sep{margin:0 .45em;color:#8a9bb0}
+.verdict-ok{color:#087a55;font-weight:900}
+.verdict-bonne b{color:#087a55;font-weight:900}
+.verdict-eleve{color:#24364f}
+.verdict-passe{color:#42556b}
+.verdict.info{color:#9a4100}
+.verdict.verdict-court .verdict-bonne,.verdict.verdict-court .verdict-sep{display:none}
+.verdict .frac{font-size:.78em;line-height:1}
+.pied{display:flex;flex-direction:column;gap:8px;width:min(100%,560px);margin:0 auto}
+.zone-travail{position:relative;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);height:var(--zone-h);min-width:0}
+.zone-travail>*{grid-area:1/1;min-width:0;min-height:0}
+/* Le pavé (comme celui de Défi tables) : fond teinté, faces blanches en retrait, aucune zone morte. 1 2 3 4 5 / 6 7 8 9 0 / rangée de l'automatisme + ⌫ */
+.pave{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-auto-rows:var(--touche-h);align-content:start;gap:0;padding:var(--touche-ecart);border-radius:18px;background:#e3ecf2;visibility:hidden}
+.pave .key{position:relative;isolation:isolate;min-width:0;min-height:0;height:var(--touche-h);margin:0;padding:0 2px;border:0;border-radius:0;background:none;color:#0b2147;font-family:Arial,"Helvetica Neue",Helvetica,sans-serif;font-size:1.5rem;font-weight:900;line-height:1;cursor:pointer;touch-action:manipulation;box-shadow:none;-webkit-user-select:none;user-select:none}
+.pave .key::before{content:"";position:absolute;inset:var(--touche-ecart);z-index:-1;border-radius:12px;background:#fff;box-shadow:0 1px 0 #b3c6d3}
+.pave .key.context{color:#073a75}
+.pave .key.context::before{background:#f6f9fc}
+.pave .key.utility{display:grid;place-items:center;color:#2c4a63}
+.pave .key.utility::before{background:#cbdae5}
+.pave .key.utility svg{width:28px;height:28px;pointer-events:none}
+.pave .key:active::before{background:#d6e3ec;box-shadow:none}
+.pave .key:disabled{opacity:.45;cursor:default}
+.pave .key:focus-visible{outline:none}.pave .key:focus-visible::before{outline:3px solid #0f6cf9;outline-offset:1px}
+.answer-dock.avec-pave:not(.qcm-mode):not(.locked) .pave{visibility:visible}
+/* La consigne prend la place du pavé quand la question n'en a pas besoin (QCM, manipulation) ou quand il est caché (ordinateur). */
+.zone-consigne{display:flex;align-items:center;justify-content:center;padding:6px 14px;border:1.5px dashed #c6d6e9;border-radius:16px;color:#42556b;font-size:1.02rem;font-weight:800;line-height:1.3;text-align:center;visibility:hidden}
+.answer-dock.sans-pave:not(.locked) .zone-consigne,.answer-dock.qcm-mode:not(.locked) .zone-consigne{visibility:visible}
+/* La carte « Comment on trouve » : exactement la place de la zone de travail. */
+.carte-correction{overflow-y:auto;overscroll-behavior:contain;padding:9px 14px 10px;border:1.5px solid #f2c48d;border-radius:16px;background:#fffaf4;color:#0b2147;font-size:18px;line-height:1.3;text-align:left}
+.carte-correction[hidden]{display:none!important}
+.carte-correction.deborde{-webkit-mask-image:linear-gradient(#000 calc(100% - 28px),rgba(0,0,0,.18));mask-image:linear-gradient(#000 calc(100% - 28px),rgba(0,0,0,.18))}
+.carte-titre{margin:0 0 4px;color:#9a4100;font-size:.84em;font-weight:900;letter-spacing:.01em}
+.carte-etapes{margin:0;padding-left:1.25em;font-weight:750}
+.carte-etapes li{margin:0;padding-left:.15em}.carte-etapes li+li{margin-top:3px}
+.carte-etapes li::marker{color:#9a4100;font-weight:900}
+.carte-reponse{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:100%;margin:0;text-align:center}
+.carte-correction.sans-etapes{display:flex;flex-direction:column;justify-content:center}
+.carte-correction.sans-etapes .carte-reponse{min-height:0}
+.carte-reponse-mot{color:#42556b;font-size:.84em;font-weight:800}
+.carte-reponse b{color:#087a55;font-size:1.45em;font-weight:900;line-height:1.15}
+.carte-diagnostic{margin:6px 0 0;color:#7a3500;font-weight:750}
+.carte-note{margin:5px 0 0;color:#42556b;font-size:.92em;font-weight:700}
+.carte-correction .math-inline,.carte-correction .math-display{white-space:normal}
+/* Passer à gauche (discret), Valider à droite (large, orange). Ils ne bougent jamais. */
+.pied-actions{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:8px;height:var(--actions-h)}
+.pied-btn{min-width:0;height:100%;margin:0;padding:0 10px;border-radius:14px;font-family:Arial,"Helvetica Neue",Helvetica,sans-serif;font-weight:900;line-height:1.1;cursor:pointer;touch-action:manipulation;white-space:nowrap}
+.pied-btn.passer{border:1.5px solid #c6d6e9;background:#fff;color:#42556b;font-size:1.02rem}
+.pied-btn.valider{border:1px solid #e86100;background:#ff7a1a;color:#fff;font-size:1.22rem;box-shadow:0 3px 0 #c95300}
+.pied-btn.valider:active{transform:translateY(1px);box-shadow:0 2px 0 #c95300}
+.pied-btn.valider.attente{background:#ffb47a;border-color:#ffb47a;box-shadow:none;cursor:default}
+.pied-btn:disabled{opacity:.42;cursor:default}
+.pied-btn:focus-visible{outline:3px solid #0f6cf9;outline-offset:2px}
+/* Après validation : la réponse de l'élève reste dans la case, barrée, la bonne réponse à côté en vert. */
+.answer-slot.a-reponse-eleve{width:auto!important;gap:.28em;padding:0 .1em}
+.reponse-eleve,.finish-given{position:relative;display:inline-block;color:#5b6b80;font-weight:700;text-decoration:none}
+.reponse-eleve::after,.finish-given::after{content:"";position:absolute;left:-.1em;right:-.1em;top:52%;border-top:.09em solid #b42318;pointer-events:none}
+.reponse-eleve-frac{margin-right:.3em;vertical-align:middle}.reponse-eleve-frac::after{transform:rotate(-28deg)}
+.answer-slot.a-reponse-eleve strong{color:#087a55}
+/* Le panneau d'aide se pose sur le pied ; la question reste visible au-dessus. */
+.aide-panel{position:fixed;left:0;right:0;bottom:0;z-index:60;display:flex;flex-direction:column;min-height:var(--pied-h,240px);max-height:min(64dvh,calc(100dvh - 120px));padding:12px max(12px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));border-top:2px solid #6f97c6;border-radius:20px 20px 0 0;background:#fff;box-shadow:0 -14px 34px rgba(11,33,71,.16);font-family:Arial,"Helvetica Neue",Helvetica,sans-serif}
+.aide-panel[hidden]{display:none!important}
+.aide-scroll{flex:1 1 auto;min-height:0;width:min(100%,640px);margin:0 auto;overflow-y:auto;overscroll-behavior:contain}
+.aide-title{display:flex;align-items:center;gap:7px;margin:0 0 8px;color:#073a75;font-size:1.08rem;font-weight:900}
+.aide-title svg{width:21px;height:21px;flex:none}
+.aide-steps{margin:0;padding-left:1.35em;color:#0b2147;font-size:18px;font-weight:750;line-height:1.35;text-align:left}
+.aide-steps[hidden]{display:none}
+.aide-steps li+li{margin-top:7px}
+.aide-steps li::marker{color:#003b7a;font-weight:900}
+.aide-more{display:block;min-height:44px;margin:10px 0 0;padding:8px 16px;border:1.5px solid #6f97c6;border-radius:12px;background:#eef5fd;color:#073a75;font-size:1rem;font-weight:850;cursor:pointer}
+.aide-more[hidden]{display:none}
+.aide-dessin{display:flex;flex-direction:column;align-items:stretch;gap:8px;margin-top:10px}
+.aide-dessin[hidden]{display:none}
+.aide-figure{width:100%;min-width:0}
+.aide-dessin svg{display:block;width:min(100%,560px)!important;max-width:100%!important;height:auto!important;max-height:min(36dvh,320px)!important;margin:0 auto!important}
+.aide-back{flex:none;width:min(100%,560px);height:var(--aide-back-h,52px);margin:10px auto 0;border:1px solid #003b7a;border-radius:14px;background:#003b7a;color:#fff;font-size:1.12rem;font-weight:900;cursor:pointer;touch-action:manipulation}
+.aide-back:focus-visible{outline:3px solid #9cc0ea;outline-offset:2px}
+/* Quitter la série ? */
+.quit-modal{position:fixed;inset:0;z-index:130;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(11,33,71,.48)}
+.quit-modal[hidden]{display:none!important}
+.quit-card{width:min(400px,100%);padding:22px 20px 18px;border-radius:20px;background:#fff;text-align:center;box-shadow:0 24px 70px rgba(11,33,71,.28)}
+.quit-card h2{margin:0 0 6px;color:#073a75;font-size:1.4rem}
+.quit-card p{margin:0 0 16px;color:#42556b;font-size:1rem;font-weight:700}
+.quit-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.quit-actions .btn{min-height:50px;padding:10px 12px}
+.quit-actions .btn:first-child{border-color:#003b7a;background:#003b7a;color:#fff}
+.quit-confirm{color:#42556b}
+/* Fin de série : le score, les boutons, puis « À revoir ». */
+.interactive-finish{width:min(100%,680px);margin:4vh auto 16px}
+.diapo .interactive-finish-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:min(100%,480px);margin:0 auto}
+.diapo .interactive-finish-actions .btn,.diapo .interactive-finish-actions .btn.primary{width:100%;min-width:0;min-height:50px;padding:10px 12px;line-height:1.15}
+.diapo .interactive-finish-actions .btn.primary,.diapo .interactive-finish-actions .btn.primary:first-child~.btn:last-child:nth-child(even){grid-column:1/-1}
+.finish-misses{margin:22px 0 0;text-align:left}
+.finish-misses h3{margin:0 0 8px;color:#073a75;font-size:1.12rem;font-weight:900}
+.finish-list{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.finish-list li{display:grid;grid-template-columns:30px minmax(0,1fr) auto;align-items:center;gap:10px;padding:8px 12px;border:1.5px solid var(--border);border-radius:12px;background:#fff}
+.finish-num{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#eef4fc;color:#073a75;font-size:.92rem;font-weight:900}
+.finish-prompt{min-width:0;color:#24364f;font-size:1rem;font-weight:700;line-height:1.25;overflow-wrap:anywhere}
+.finish-answers{display:inline-flex;align-items:center;justify-content:flex-end;gap:10px;font-size:1.1rem;white-space:nowrap}
+.finish-skip{color:#8a9bb0;font-size:.88em;font-style:italic;font-weight:700}
+.finish-expected{color:#087a55;font-weight:900}
+.finish-answers .frac{font-size:.85em}
+/* Options de QCM : une seule police (celle de l'interface), une seule taille, la lettre suivie d'une espace, au moins 56 px de haut. */
+.diapo{--opt-taille:clamp(1.3rem,1.6vw,1.6rem)}
+.diapo .options.options-lot-t{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;width:min(100%,780px);max-width:780px;margin:14px auto 0}
+.diapo .options.options-lot-t.options-courtes{grid-template-columns:repeat(2,minmax(0,1fr));width:min(100%,560px)}
+.diapo .options.options-lot-t.options-moyennes{width:min(100%,780px)}
+.diapo .options.options-lot-t>.opt.opt-lettree{display:flex;align-items:center;justify-content:flex-start;gap:0;min-height:56px;margin:0;padding:10px 16px;border-radius:14px;font-family:Arial,"Helvetica Neue",Helvetica,sans-serif;font-size:var(--opt-taille);font-weight:700;line-height:1.25;letter-spacing:0;text-align:left}
+.diapo .options.options-lot-t.options-courtes>.opt.opt-lettree{justify-content:center}
+.diapo .opt.opt-lettree .opt-letter{flex:none;margin-right:.45em;color:#073a75;font-family:Arial,"Helvetica Neue",Helvetica,sans-serif;font-size:1em;font-weight:900;line-height:1}
+.diapo .opt.opt-lettree .opt-body{min-width:0;font-family:inherit;font-size:1em;font-weight:inherit}
+.diapo .options.options-lot-t .opt-body *{font-family:inherit!important}
+/* Diaporama : la démarche apparaît étape par étape ; les étapes à venir gardent leur place. */
+.diapo-etapes{width:min(100%,1100px);margin:16px auto 0;padding:12px 22px 14px;border:2px solid #f2c48d;border-radius:18px;background:#fffaf4;color:#0b2147;font-size:clamp(1.25rem,1.9vw,2.4rem);line-height:1.3;text-align:left}
+.diapo-etapes-titre{margin:0 0 4px;color:#9a4100;font-size:.72em;font-weight:900}
+.diapo-etapes ol{margin:0;padding-left:1.4em;font-weight:750}
+.diapo-etapes li+li{margin-top:4px}
+.diapo-etapes li::marker{color:#9a4100;font-weight:900}
+.diapo-etape.is-hidden,.diapo-etape-note.is-hidden{visibility:hidden}
+.diapo-etape-note{margin:6px 0 0;color:#42556b;font-size:.85em;font-weight:700}
+/* Ordinateur et grande tablette : le pied s'étale en largeur (zone de travail | Passer, Valider) pour laisser la hauteur à la question. */
+@media(min-width:900px){
+.answer-dock{--verdict-h:34px;--actions-h:54px;--carte-h:clamp(116px,19dvh,160px);--zone-w:min(720px,56vw);--actions-w:300px;padding-bottom:max(10px,env(safe-area-inset-bottom))}
+.answer-dock.avec-pave{--zone-w:min(460px,44vw)}
+.pied{display:grid;grid-template-columns:var(--zone-w) var(--actions-w);justify-content:center;align-items:end;column-gap:16px;width:auto}
+.verdict{font-size:1.08rem}
+.carte-correction{padding:7px 14px 8px;font-size:19px;line-height:1.25}
+.carte-titre{margin-bottom:2px}
+.aide-scroll{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"titre dessin" "etapes dessin" "plus dessin" "vide dessin";grid-template-rows:auto auto auto 1fr;column-gap:28px;width:min(100%,1100px)}
+.aide-title{grid-area:titre}.aide-steps{grid-area:etapes}.aide-more{grid-area:plus;justify-self:start}
+.aide-dessin{grid-area:dessin;width:min(52vw,560px);margin-top:0}
+.aide-dessin svg{max-height:min(34dvh,340px)!important}
+.aide-scroll:has(.aide-steps[hidden]){grid-template-columns:minmax(0,1fr);grid-template-areas:"titre" "dessin" "plus" "vide";justify-items:center}
+.aide-scroll:has(.aide-steps[hidden]) .aide-title{justify-self:center}
+.aide-back{width:min(100%,360px)}
+}
+/* Téléphone */
+@media(max-width:600px){
+.diapo{--opt-taille:1.15rem}
+.diapo.interactive-mode>.top{height:56px;gap:6px;padding:5px max(8px,env(safe-area-inset-right)) 5px max(8px,env(safe-area-inset-left))}
+.diapo.interactive-mode .top .btn{min-height:44px}
+.diapo.interactive-mode .menu-btn{padding:0 10px;border-radius:12px;font-size:.86rem}
+.diapo.interactive-mode .right{gap:5px}
+.diapo.interactive-mode .interactive-summary{font-size:.95rem}
+.diapo.interactive-mode .interactive-score{padding:5px 8px;font-size:.88rem}
+.diapo.interactive-mode .course-btn,.diapo.interactive-mode .aide-btn{flex-direction:column;gap:1px;width:48px;min-height:44px;height:44px;padding:2px 0 3px;border-radius:12px;font-size:.66rem;line-height:1}
+.diapo.interactive-mode .course-btn svg,.diapo.interactive-mode .aide-btn svg{width:19px;height:19px}
+.diapo.interactive-mode .stage{padding-top:6px}
+.pave .key{font-size:1.45rem}
+.zone-consigne{font-size:.98rem}
+.finish-list li{grid-template-columns:28px minmax(0,1fr);row-gap:4px}
+.finish-num{width:28px;height:28px}
+.finish-answers{grid-column:2;justify-content:flex-start}
+.interactive-finish{margin-top:2vh}
+.diapo-etapes{padding:10px 14px}
+}
+@media(max-width:360px){
+.diapo.interactive-mode .menu-btn{padding:0 8px;font-size:.8rem}
+.diapo.interactive-mode .interactive-summary{font-size:.88rem}
+.diapo.interactive-mode .interactive-score{padding:4px 6px;font-size:.82rem}
+.diapo.interactive-mode .course-btn,.diapo.interactive-mode .aide-btn{width:44px}
+.verdict{font-size:.92rem}
+.pied-btn.valider{font-size:1.12rem}
+.carte-correction{padding:7px 10px}
+}
+/* Projection (diaporama) : la correction en grand. */
+@media(min-width:1600px){.diapo:not(.interactive-mode){--opt-taille:1.6rem}}
 @media print{.diapo{--stage-top:20px;--stage-x:20px;--stage-bottom:20px;height:auto;min-height:100vh;overflow:visible}.top{display:none}.stage{min-height:auto;overflow:visible;padding:var(--stage-top) var(--stage-x) var(--stage-bottom)}}
 </style>
 </head>
@@ -873,7 +1067,7 @@ svg{display:block;max-width:100%;height:auto}
     </div>
     <div class="pied-actions">
       <button class="pied-btn passer" id="skipAction" type="button" onclick="skipInteractive()">Passer</button>
-      <button class="pied-btn valider dock-action" id="interactiveAction" type="button" onclick="submitInteractive()">Valider</button>
+      <button class="pied-btn valider" id="interactiveAction" type="button" onclick="submitInteractive()">Valider</button>
     </div>
   </div>
 </section>
@@ -1646,6 +1840,7 @@ function render(){
    const keyboardToggle=document.getElementById('keyboardToggle');if(keyboardToggle) keyboardToggle.hidden=true;
    return;
  }
+ prepareDock();
  const key=seriesIndex+':'+idx+':'+slides.length+':'+(slides[idx]&&slides[idx].questionNumber)+':'+current.moduleId;
  if(key!==fitKey){
    fitKey=key;
@@ -1697,6 +1892,12 @@ function measureSlideZoom(current){
    tuneRenderedGeometry(current,slide);
    normalizeOptions(slide);
    if(!interactiveMode&&stateIndex===1) appendPresentationSteps(slide,current,true);
+   // La question telle que l'élève la voit : avec ses cases de saisie (la
+   // ligne des coefficients d'un polynôme s'ajoute sous l'énoncé).
+   const spec=current.interactiveSpec;
+   if(interactiveMode&&stateIndex===0&&spec&&specUsesKeypad(spec)&&spec.kind!=='angle-sum-tactile'){
+     try{ensureInteractiveEntryState(spec);injectInteractiveResponse(spec);}catch(error){}
+   }
    const fits=zoom=>{applySlideZoom(slide,zoom);return slideFits(stage);};
    if(fits(best)) return;
    if(!fits(bounds.min)){best=bounds.min;return;}
@@ -2348,21 +2549,48 @@ function renderInteractiveKeypad(spec){
  const used=context.length%5;
  backspace.style.gridColumn='span '+(used===0?5:5-used);
  keypad.append(backspace);
- keypad.style.setProperty('--pave-rangs',String(2+contextRows));
+}
+/* Lot T — le pied a la même hauteur pendant toute la série : le nombre de
+   rangées du pavé est celui de la question qui en demande le plus, et une
+   série où AUCUNE question n'utilise le pavé a un pied réduit (consigne +
+   Passer/Valider). Calculé une fois par série. */
+let serieInfoCache=null;
+function seriesKeypadInfo(){
+ if(serieInfoCache&&serieInfoCache.slides===slides) return serieInfoCache;
+ let uses=false,rows=1;
+ (slides||[]).forEach(slide=>{
+   const spec=slide&&slide.interactiveSpec;
+   if(!spec||(spec.kind!=='angle-sum-tactile'&&SANS_PAVE_KINDS.includes(spec.kind))) return;
+   uses=true;
+   const context=(slide.keypadContext||[',','−']).filter(value=>!/^\d$/.test(String(value)));
+   rows=Math.max(rows,Math.ceil((context.length+1)/5));
+ });
+ serieInfoCache={slides,uses,rows};
+ return serieInfoCache;
+}
+// Le pied prend sa forme définitive AVANT la mesure de la question
+// (measureSlideZoom) : sinon la première question est mesurée sans pied.
+function prepareDock(){
+ if(!interactiveMode) return;
  const dock=document.getElementById('answerDock');
- if(dock) dock.style.setProperty('--pave-rangs',String(2+contextRows));
+ if(!dock) return;
+ dock.hidden=false;
+ const info=seriesKeypadInfo();
+ dock.classList.toggle('serie-sans-pave',!info.uses);
+ dock.style.setProperty('--pave-rangs',String(2+info.rows));
+ applyKeypadVisibility();
 }
 function applyKeypadVisibility(spec=slides[idx]&&slides[idx].interactiveSpec){
  const dock=document.getElementById('answerDock'),toggle=document.getElementById('keyboardToggle');
  if(!dock) return;
- const visible=coarsePointerMedia.matches||keypadVisible;
+ const info=seriesKeypadInfo();
+ const visible=info.uses&&(coarsePointerMedia.matches||keypadVisible);
  // La disposition du pied ne dépend que de l'appareil (et du bouton clavier),
  // jamais de la question : les boutons Passer et Valider ne bougent pas.
  dock.classList.toggle('avec-pave',visible);
  dock.classList.toggle('sans-pave',!visible);
- dock.classList.toggle('keypad-collapsed',!visible);
  if(toggle){
-   toggle.hidden=!interactiveMode||interactiveFinished||coarsePointerMedia.matches;
+   toggle.hidden=!interactiveMode||interactiveFinished||coarsePointerMedia.matches||!info.uses;
    toggle.disabled=false;
    toggle.setAttribute('aria-pressed',String(visible));
    const label=visible?'Masquer le pavé':'Afficher le pavé';
@@ -2600,9 +2828,16 @@ function fitVerdictLine(){
  const line=feedback&&feedback.querySelector('.verdict-texte');
  if(!line) return;
  line.style.fontSize='';
+ feedback.classList.remove('verdict-court');
  const base=parseFloat(getComputedStyle(line).fontSize)||18;
- let size=base;
- while(line.scrollWidth>feedback.clientWidth+1&&size>base*.68){size-=.5;line.style.fontSize=size+'px';}
+ const shrink=minimum=>{let size=base;line.style.fontSize='';while(line.scrollWidth>feedback.clientWidth+1&&size>base*minimum){size-=.5;line.style.fontSize=size+'px';}};
+ shrink(.82);
+ // Trop long même un peu réduit : la bonne réponse reste dans la carte
+ // « Comment on trouve », juste en dessous ; la ligne garde « Ta réponse ».
+ if(line.scrollWidth>feedback.clientWidth+1&&line.querySelector('.verdict-bonne')&&(line.querySelector('.verdict-eleve')||line.querySelector('.verdict-passe'))){
+   feedback.classList.add('verdict-court');
+   shrink(.7);
+ }else if(line.scrollWidth>feedback.clientWidth+1) shrink(.7);
 }
 function verdictHtml(result){
  if(!result) return '';
@@ -2691,7 +2926,9 @@ function finishScreenHtml(){
  const newSeriesButton=seriesBank.length>1?'<button class="btn'+(missed.length?'':' primary')+'" type="button" onclick="startNextSeries()">Nouvelle série</button>':'';
  const retryButton=missed.length?'<button class="btn primary" type="button" onclick="retryMissed()">Refaire les questions ratées</button>':'';
  const list=missed.length?'<section class="finish-misses" aria-labelledby="finishMissesTitle"><h3 id="finishMissesTitle">À revoir</h3><ol class="finish-list">'+missed.map(result=>'<li><span class="finish-num">'+(result.index+1)+'</span><span class="finish-prompt">'+result.prompt+'</span><span class="finish-answers">'+(result.givenHtml?'<s class="finish-given">'+result.givenHtml+'</s>':'<span class="finish-skip">passée</span>')+'<b class="finish-expected">'+(result.expectedHtml||'')+'</b></span></li>').join('')+'</ol></section>':'';
- return '<div class="interactive-finish"><div class="interactive-finish-mark">✓</div><h2>Série terminée</h2><div class="interactive-finish-score">'+correctCount+' / '+slides.length+'</div>'+list+'<div class="interactive-finish-actions">'+retryButton+newSeriesButton+'<button class="btn" type="button" onclick="returnToMenu()">Menu</button></div></div>';
+ // Les boutons d'abord, la liste « À revoir » ensuite (comme Défi tables) :
+ // sur téléphone, dix lignes ratées ne repoussent pas les boutons hors de l'écran.
+ return '<div class="interactive-finish'+(missed.length?' has-misses':'')+'"><div class="interactive-finish-mark">✓</div><h2>Série terminée</h2><div class="interactive-finish-score">'+correctCount+' / '+slides.length+'</div><div class="interactive-finish-actions">'+retryButton+newSeriesButton+'<button class="btn" type="button" onclick="restartInteractive()">Recommencer</button><button class="btn" type="button" onclick="returnToMenu()">Retour au menu</button></div>'+list+'</div>';
 }
 function openCourse(){const modal=document.getElementById('courseModal'),course=courseForSlide(slides[idx]);if(modal&&course){markQuestionHelp('course');const card=modal.querySelector('.course-card');if(card){card.classList.toggle('thales-course-card',course.layout==='thales');card.classList.toggle('place-value-course-card',course.layout==='place-value');card.classList.toggle('read-data-course-card',slides[idx].courseKind==='read_data');card.classList.toggle('recognize-proportion-course-card',slides[idx].courseKind==='recognize_proportion');card.classList.toggle('angles-course-card',course.layout==='angles');card.classList.toggle('divisibility-course-card',course.layout==='divisibility');card.classList.toggle('expand-factor-course-card',course.layout==='expand-factor');}document.getElementById('courseTitle').textContent=course.title;document.getElementById('courseGrid').innerHTML=typographieHtml(course.rules.map(rule=>'<div class="course-rule'+(rule[2]?' course-rule-wide':'')+'"><strong>'+rule[0]+'</strong>'+rule[1]+'</div>').join(''));modal.hidden=false;setupPlaceValueTools(modal);const close=modal.querySelector('.course-close');if(close)close.focus();}}
 function closeCourse(){const modal=document.getElementById('courseModal');if(modal)modal.hidden=true;}
@@ -2734,8 +2971,8 @@ function normalizeOptions(root){
    const lengths=options.map(option=>(option.querySelector('.opt-body')||option).textContent.replace(/[ \\n\\t]+/g,' ').trim().length);
    const longest=Math.max(...lengths);
    group.classList.add('options-lot-t');
-   group.classList.toggle('options-courtes',options.length%2===0&&longest<=14);
-   group.classList.toggle('options-moyennes',longest>14&&longest<=48);
+   group.classList.toggle('options-courtes',options.length%2===0&&longest<=10);
+   group.classList.toggle('options-moyennes',longest>10&&longest<=48);
  });
 }
 /* Lot T — après validation : la case garde la réponse de l'élève, barrée,
@@ -2748,6 +2985,15 @@ function decorateCorrectedSlide(current){
  const filled=[...document.querySelectorAll('#slide .answer-slot-filled')];
  const values=interactiveValues.slice(0,spec.slots.length);
  if(filled.length!==values.length) return;
+ // Une fraction en deux cases : la fraction de l'élève, barrée, devant la bonne.
+ const fraction=spec.layout==='fraction'&&filled.length===2&&filled[0].closest('.frac');
+ if(fraction&&fraction===filled[1].closest('.frac')){
+   if(!values[0]&&!values[1]) return;
+   const struck=document.createElement('s');struck.className='reponse-eleve reponse-eleve-frac';
+   struck.innerHTML=lotTFracHtml(lotTValeurHtml(values[0]||'?'),lotTValeurHtml(values[1]||'?'));
+   fraction.before(struck);fraction.classList.add('frac-corrigee');
+   return;
+ }
  filled.forEach((slot,index)=>{
    const value=values[index];
    if(!value) return;
@@ -2796,6 +3042,24 @@ function renderCorrectionCard(current){
  card.classList.toggle('sans-etapes',!steps.length);
  card.hidden=false;
  card.scrollTop=0;
+ fitCorrectionCard();
+}
+// La carte garde la hauteur du pavé : si la démarche est longue, le texte
+// rétrécit un peu (jamais sous 18 px au téléphone, 15 px à l'ordinateur),
+// puis la carte défile, avec un fondu en bas qui montre qu'il y a une suite.
+function fitCorrectionCard(){
+ const card=document.getElementById('correctionCard');
+ if(!card||card.hidden) return;
+ card.style.fontSize='';
+ const base=parseFloat(getComputedStyle(card).fontSize)||18;
+ const minimum=Math.min(base,coarsePointerMedia.matches?18:15);
+ let size=base;
+ while(card.scrollHeight>card.clientHeight+1&&size>minimum){size-=.5;card.style.fontSize=size+'px';}
+ updateCorrectionCardOverflow();
+}
+function updateCorrectionCardOverflow(){
+ const card=document.getElementById('correctionCard');
+ if(card) card.classList.toggle('deborde',!card.hidden&&card.scrollTop+card.clientHeight<card.scrollHeight-2);
 }
 /* Lot T — l'aide : un bouton fixe dans l'en-tête, un panneau qui se pose sur
    le pied (téléphone) ou à droite de la question (ordinateur large). */
@@ -2837,6 +3101,10 @@ function renderAide(){
  if(!panel) return;
  panel.hidden=!aideOpen;
  if(!aideOpen) return;
+ // Le panneau se pose sur le pied : au moins sa hauteur, pour le couvrir
+ // entièrement ; la question reste visible au-dessus.
+ const dock=document.getElementById('answerDock');
+ if(diapo&&dock&&!dock.hidden) diapo.style.setProperty('--pied-h',Math.round(dock.getBoundingClientRect().height)+'px');
  const steps=current.aideSteps||[];
  const list=document.getElementById('aideSteps'),more=document.getElementById('aideMore'),drawing=document.getElementById('aideDessin');
  if(list){list.innerHTML=steps.slice(0,Math.max(1,aideStep)).map(step=>'<li>'+step+'</li>').join('');list.hidden=!steps.length;}
@@ -2883,6 +3151,7 @@ function prev(){
  if(idx>0){idx--;corr=false;stepReveal=0;render();}
 }
 function toggleFS(){const d=document.getElementById('diapo');if(!document.fullscreenElement)d.requestFullscreen();else document.exitFullscreen();}
+document.getElementById('correctionCard').addEventListener('scroll',updateCorrectionCardOverflow,{passive:true});
 document.getElementById('keypad').addEventListener('pointerdown',event=>{if(event.target.closest('.key'))event.preventDefault();});
 document.getElementById('keypad').addEventListener('click',event=>{const key=event.target.closest('.key');if(!key)return;if(key.dataset.action==='backspace')backspaceInteractive();else appendInteractiveValue(key.dataset.value||'');});
 document.addEventListener('keydown',event=>{
@@ -2925,7 +3194,7 @@ document.addEventListener('keydown',event=>{
 window.addEventListener('popstate',()=>location.reload());
 let resizeTimer=null,lastViewport=window.innerWidth+'x'+window.innerHeight;
 window.addEventListener('resize',()=>{
- requestAnimationFrame(()=>{fitNavNumbers();fitVerdictLine();});
+ requestAnimationFrame(()=>{fitNavNumbers();fitVerdictLine();fitCorrectionCard();});
  clearTimeout(resizeTimer);
  resizeTimer=setTimeout(()=>{
    const viewport=window.innerWidth+'x'+window.innerHeight;
@@ -3431,9 +3700,21 @@ function lotTShortPrompt(questionHtml){
   try{
     const probe=document.createElement('div');
     probe.innerHTML=questionHtml;
-    probe.querySelectorAll('svg,.options,.opt,script,style,button,.visual-placeholder,.footer').forEach(node=>node.remove());
+    probe.querySelectorAll('svg,.options,.opt,script,style,button,[class*="button"],.visual-placeholder,.footer,table').forEach(node=>node.remove());
+    // Écritures empilées remises sur une ligne : 4/8, x², case « … ».
+    const exposants={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','-':'⁻','−':'⁻'};
+    probe.querySelectorAll('.frac').forEach(node=>{const num=node.querySelector('.frac-num'),den=node.querySelector('.frac-den');node.replaceWith(num&&den?' '+num.textContent.trim()+'/'+den.textContent.trim()+' ':node.textContent);});
+    probe.querySelectorAll('sup').forEach(node=>{const raw=node.textContent.trim();node.replaceWith(/^[−-]?[0-9]+$/.test(raw)?raw.split('').map(character=>exposants[character]||character).join(''):'^'+raw);});
+    probe.querySelectorAll('.answer-slot').forEach(node=>node.replaceWith(' … '));
+    const clean=node=>(node.textContent||'').replace(/\s+/g,' ').trim();
     const question=probe.querySelector('.question')||probe;
-    let text=(question.textContent||'').replace(/\s+/g,' ').trim();
+    let text=clean(question);
+    // Énoncé trop court (« Résous cette équation. ») : on ajoute ce qui suit (l'équation).
+    if(question!==probe&&text.length<40){
+      let next=question.nextElementSibling;
+      while(next&&text.length<60){const more=clean(next);if(more) text+=' '+more;next=next.nextElementSibling;}
+    }
+    text=text.replace(/\s*=\s*/g,' = ').replace(/\s+/g,' ').trim();
     if(text.length>90) text=text.slice(0,88).replace(/\s+\S*$/,'')+'…';
     return lotTTypo(text.replace(/[&<>]/g,character=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[character])));
   }catch(error){return '';}
