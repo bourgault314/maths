@@ -2960,7 +2960,7 @@ function makeEvolutionInstance(mod,q){
     const result=up?initial*(1+p/100):initial*(1-p/100);
     answers=[evoEuroNum(result)];
     rawFooter='[[formula]]'+EVO_INSEC+'€';
-    steps=[verb+' '+evoDe(p)+', c’est '+addOrRemove+' '+P+' du prix.',evoPartLine(initial,p,'€'),
+    steps=[(up?'On ajoute ':'On enlève ')+P+' du prix.',evoPartLine(initial,p,'€'),
       evoEuroNum(initial)+' '+sign+' '+evoEuroNum(initial*p/100)+' = <strong>'+evoQty(result,'€')+'</strong>'];
     aide=['Calcule d’abord '+P+' du prix : c’est '+(up?'l’augmentation':'la baisse')+'. '+(up?'Ajoute-la ensuite au prix.':'Enlève-la ensuite du prix.'),evoPartHint(initial,p,'€')];
     bar=evoBar(initial,p,up,false);
@@ -2972,7 +2972,7 @@ function makeEvolutionInstance(mod,q){
     rawStatement=group.start(evoQty(initial,unit))+' '+group.subject+' '+(up?'augmente':'baisse')+' '+evoDe(p)+'.<br>'+group.ask(up);
     answers=[evoNum(result)];
     rawFooter='[[formula]]'+EVO_INSEC+unit;
-    steps=[verb+' '+evoDe(p)+', c’est '+addOrRemove+' '+P+' des '+unit+'.',evoPartLine(initial,p,''),
+    steps=[(up?'On ajoute ':'On enlève ')+P+' des '+unit+'.',evoPartLine(initial,p,''),
       evoNum(initial)+' '+sign+' '+evoNum(initial*p/100)+' = <strong>'+evoQty(result,unit)+'</strong>'];
     aide=['Calcule d’abord '+P+' de '+evoNum(initial)+', puis '+(up?'ajoute-le à ':'enlève-le de ')+evoNum(initial)+'.',evoPartHint(initial,p,'')];
     bar=evoBar(initial,p,up,false);
@@ -2992,13 +2992,13 @@ function makeEvolutionInstance(mod,q){
       rawStatement=evoItem(initial)+' coûte '+evoQty(initial,'€')+'. Son prix '+(up?'augmente':'baisse')+' '+evoDe(p)+'.<br>Complète le calcul qui donne le nouveau prix.';
       rawFooter=evoEuroNum(initial)+' × [[formula]]';
     }
-    steps=[verbC+' '+evoDe(p)+', c’est passer à 100'+EVO_FINE+'% '+sign+' '+P+' = '+evoPct(total)+'.',
+    steps=['On passe à 100'+EVO_FINE+'% '+sign+' '+P+' = '+evoPct(total)+'.',
       evoPct(total)+' = '+evoFrac(total,100)+' = <strong>'+C+'</strong>'];
     aide=[(up?'Après la hausse':'Après la baisse')+', on a 100'+EVO_FINE+'% '+sign+' '+P+' '+(context?'du prix de départ.':'de la quantité de départ.'),
       'Écris ce pourcentage sous forme de fraction sur 100, puis en nombre décimal.'];
     note=p<10
       ?'Attention : '+sign+' '+P+', c’est × '+C+' et non × '+evoNum(up?1+p/10:1-p/10)+'.'
-      :'Attention : × '+evoNum(p/100)+' calcule seulement '+(up?'la hausse.':'la baisse.');
+      :'Attention : × '+evoNum(p/100)+' ne calcule que '+(up?'la hausse.':'la baisse.');
     bar=evoBar(1,p,up,true);
     initial=initial||1;
   }else if(kind==='increase_qcm'||kind==='decrease_qcm'){
@@ -3020,7 +3020,7 @@ function makeEvolutionInstance(mod,q){
         const part=order<.5?frac+' \\times '+x:x+' \\times '+frac;
         correct={text:'$$'+x+' '+op+' '+part+'$$'};
         thirds=[{text:'$$('+x+' '+op+' '+frac+') \\times '+x+'$$',value:(initial+s*p/100)*initial,
-          feedback:'Les parenthèses font calculer '+evoNum(initial+s*p/100)+' × '+x+' : c’est bien trop.'},onlyPart('$$'+part+'$$')];
+          feedback:'Ce calcul vaut '+evoNum(initial+s*p/100)+' × '+x+'.'},onlyPart('$$'+part+'$$')];
       }else{
         const wrong=evoNum(1-s*p/100);
         correct={text:'$$'+x+' \\times '+evoNum(1+s*p/100)+'$$'};
@@ -3041,13 +3041,14 @@ function makeEvolutionInstance(mod,q){
     const qcm=evoQcm(prompt,options[0].text,options.slice(1));
     rawStatement=qcm.rawStatement;answers=qcm.answers;feedback=qcm.feedback;
     if(brevet){
-      steps=[(up?'On ajoute ':'On enlève ')+P+' du prix : '+evoFrac(p,100)+' × '+x+' = '+money(amount)+'.',
+      // Au téléphone, la carte d’un QCM n’a que 3 lignes : étapes courtes.
+      steps=[P+' de '+money(initial)+' = '+money(amount),
         x+' '+sign+' '+evoNum(amount)+' = <strong>'+money(result)+'</strong>'];
       aide=[verb+' '+evoDe(p)+', c’est '+addOrRemove+' '+P+' du prix.','Calcule de tête '+P+' de '+money(initial)+', puis cherche le calcul qui '+(up?'l’ajoute à ':'l’enlève à ')+x+'.'];
     }else{
-      steps=[verb+' '+evoDe(p)+', c’est multiplier par 100'+EVO_FINE+'% '+sign+' '+P+' = '+evoPct(total)+' = '+c+'.',
+      steps=['100'+EVO_FINE+'% '+sign+' '+P+' = '+evoPct(total)+' = '+c,
         x+' × '+c+' = <strong>'+money(result)+'</strong>'];
-      aide=[verb+' '+evoDe(p)+', c’est multiplier par un seul nombre.','Après '+(up?'la hausse':'la baisse')+', le prix vaut 100'+EVO_FINE+'% '+sign+' '+P+' du prix de départ. Écris ce pourcentage en nombre décimal.'];
+      aide=[verb+' '+evoDe(p)+', c’est multiplier par un seul nombre.','Calcule 100'+EVO_FINE+'% '+sign+' '+P+', puis écris ce pourcentage en nombre décimal.'];
     }
     bar=evoBar(initial,p,up,false);
   }else if(kind==='change_amount'){
@@ -3092,11 +3093,11 @@ function makeEvolutionInstance(mod,q){
       ?evoItem(initial)+' coûte '+evoQty(initial,'€')+'. Son prix '+(up?'augmente':'baisse')+' '+evoDe(p)+'.<br>'+ask
       :'Un village de '+evoQty(initial,'habitants')+' a connu une '+(up?'augmentation':'baisse')+' '+evoDe(p)+' de sa population.<br>Combien y a-t-il d’habitants après cette '+(up?'augmentation':'baisse')+EVO_INSEC+'?';
     const qcm=evoQcm(prompt,evoQty(values.good,unit),[
-      {text:evoQty(values.add,unit),feedback:(up?'Tu as ajouté ':'Tu as enlevé ')+evoQty(p,unit)+', pas '+P+(unit==='€'?' du prix':' des habitants')+'.'},
+      {text:evoQty(values.add,unit),feedback:(up?'Tu as ajouté ':'Tu as enlevé ')+evoQty(p,unit)+', pas '+P+(unit==='€'?' du prix':'')+'.'},
       {text:evoQty(values.opposite,unit),feedback:'C’est le résultat d’'+(up?'une baisse.':'une hausse.')},
       {text:evoQty(values.amount,unit),feedback:'C’est seulement '+(up?'l’augmentation.':'la baisse.')}]);
     rawStatement=qcm.rawStatement;answers=qcm.answers;feedback=qcm.feedback;
-    steps=[P+' de '+evoQty(initial,unit)+' = '+evoQty(a,unit),evoNumFor(initial,unit)+' '+sign+' '+evoNumFor(a,unit)+' = <strong>'+evoQty(values.good,unit)+'</strong>'];
+    steps=[P+' de '+evoNumFor(initial,unit)+' = '+evoNumFor(a,unit),evoNumFor(initial,unit)+' '+sign+' '+evoNumFor(a,unit)+' = <strong>'+evoQty(values.good,unit)+'</strong>'];
     aide=['Calcule d’abord '+P+' de '+evoNumFor(initial,unit)+', puis '+(up?'ajoute-le.':'enlève-le.'),evoPartHint(initial,p,unit==='€'?'€':'')];
     bar=evoBar(initial,p,up,false);
   }
