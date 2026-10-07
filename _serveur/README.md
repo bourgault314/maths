@@ -506,3 +506,4 @@ Après toute modification de `public/` : `php outils/generer-version.php <lot>`
 
 Le fichier `config.php` (identifiants de la base) vit uniquement sur
 l'hébergement OVH. Il ne doit jamais entrer dans le dépôt.
+<!-- essai CI : tri des tests serveur (PR de test, à fermer sans fusionner) -->
