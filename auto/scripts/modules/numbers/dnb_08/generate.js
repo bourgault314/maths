@@ -56,10 +56,14 @@
     return items[randomInt(0,items.length-1)];
   }
   // Longueur des nombres : 3 chiffres (40 %), 4 chiffres (40 %), 5 chiffres (20 %).
-  function drawLength(randomInt){
+  function drawLength(randomInt,rare=false){
     const roll=randomInt(1,10);
+    if(rare) return roll<=2?3:(roll<=7?4:5);
     return roll<=4?3:(roll<=8?4:5);
   }
+  // Profils qui n'ont qu'une dizaine de nombres à 3 chiffres (135, 225… ; 180, 270…) :
+  // ils sortent surtout à 4 et 5 chiffres, pour ne pas revenir sans cesse.
+  const rareProfiles=Object.freeze(['five-nine','zero-nine','zero-three','five-three']);
   function randomOfLength(randomInt,length){
     return randomInt(10**(length-1),10**length-1);
   }
@@ -126,7 +130,7 @@
   }
   function selectDivisorsInstance({module,question,randomInt}){
     const profile=String(question.options.divisibility_profile);
-    const value=drawProfileValue(randomInt,profile,drawLength(randomInt));
+    const value=drawProfileValue(randomInt,profile,drawLength(randomInt,rareProfiles.includes(profile)));
     const divisors=divisorSet(value);
     const has=divisor=>divisors.includes(divisor);
     const labels=displayOrder.map(String).concat('Aucun');
@@ -295,7 +299,7 @@
       rawStatement:`${prompt}&&Oui&&Non&&`,rawFooter:'',hasSvg:false,
       divisibilityData:{kind:'sharing',value,divisor,prompt,labels:['Oui','Non']},
       correctionSteps,
-      correctionNote:'Pas besoin de poser la division : le critère suffit.',
+      correctionNote:`Pas besoin de poser la division${NBSP}: le critère suffit.`,
       distractorFeedback,
       aideSteps:[
         `Partager sans reste en ${divisor} parts égales, c’est la même chose qu’être divisible par ${divisor}.`,
@@ -339,7 +343,7 @@
       correctionSteps,
       correctionNote:`1 et ${N} divisent toujours ${N}${NBSP}: la consigne les exclut.`,
       aideSteps:[
-        'Teste les critères : 2, 5 et 10 avec le chiffre des unités, 3 et 9 avec la somme des chiffres.',
+        `Teste les critères${NBSP}: 2, 5 et 10 avec le chiffre des unités, 3 et 9 avec la somme des chiffres.`,
         `Chiffre des unités${NBSP}: ${unitOf(value)}. Somme des chiffres${NBSP}: ${sumText(value)} = …`
       ],
       aideHtml:aideCard(value)
@@ -450,7 +454,7 @@
       rawStatement:`On s’intéresse à la divisibilité par ${divisor} des nombres N${NBSP}=${NBSP}${fr(n)} et P${NBSP}=${NBSP}${fr(p)}.&&${labels.join('&&')}&&`,rawFooter:'',hasSvg:false,
       divisibilityData:{kind:'two-numbers',divisor,n,p,labels},
       correctionSteps,
-      correctionNote:threeNotNine?'Pour 9, une somme dans la table de 3 ne suffit pas : il faut la table de 9.':'',
+      correctionNote:threeNotNine?`Pour 9, une somme dans la table de 3 ne suffit pas${NBSP}: il faut la table de 9.`:'',
       distractorFeedback,
       aideSteps:[
         `Par ${divisor}${NBSP}: additionne les chiffres de N, puis ceux de P.`,
@@ -489,7 +493,7 @@
     const prompt=unique
       ?`Quel chiffre faut-il écrire à la place du □ pour que ${shown} soit divisible ${criteria}${NBSP}?`
       :`Donne un chiffre à écrire à la place du □ pour que ${shown} soit divisible ${criteria}.`;
-    const sums=solutions.map(digit=>`${known} + ${digit} = ${known+digit}`).join(' ; ');
+    const sums=solutions.map(digit=>`${known} + ${digit} = ${known+digit}`).join(`${NBSP}; `);
     const correctionSteps=unitDivisor
       ?[
         `Par ${unitDivisor}, le chiffre des unités est ${unitList(unitDivisor)}.`,
@@ -506,7 +510,7 @@
       rawStatement:prompt,rawFooter:'□ = [[formula]]',hasSvg:false,
       divisibilityData:{kind:'missing-digit',divisors,digits,hidden,shown,solutions},
       correctionSteps,
-      correctionNote:sumDivisor===9?'Pour 9, la somme doit être dans la table de 9 : 9, 18, 27…':'Pour 3, la somme doit être dans la table de 3 : 3, 6, 9, 12…',
+      correctionNote:sumDivisor===9?`Pour 9, la somme doit être dans la table de 9${NBSP}: 9, 18, 27…`:`Pour 3, la somme doit être dans la table de 3${NBSP}: 3, 6, 9, 12…`,
       aideSteps:unitDivisor
         ?[`Par ${unitDivisor}, le chiffre des unités doit être ${unitList(unitDivisor)}.`,`Par ${sumDivisor}, la somme des chiffres doit être ${tableWord(sumDivisor)}${NBSP}: ${terms} = ${known} + □.`]
         :[`Additionne les chiffres connus, puis cherche ce qu’il faut ajouter pour tomber ${tableWord(sumDivisor)}.`,`${terms} = ${known} + □`],

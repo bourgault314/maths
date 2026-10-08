@@ -33,13 +33,27 @@
     byKind.forEach((list,kind)=>{
       for(let index=0;index<(WEIGHTS[kind]||1);index++) tokens.push(kind);
     });
-    const shuffled=shuffle(tokens),order=[];
-    while(shuffled.length){
-      const last=order.length?order[order.length-1]:null;
-      let index=shuffled.findIndex(kind=>kind!==last);
-      if(index<0) index=0;
-      order.push(shuffled.splice(index,1)[0]);
-    }
+    // Deux questions de suite ne sont jamais de la même famille : on essaie
+    // quelques ordres tirés au hasard, puis, à défaut, on place d'abord la
+    // famille qui a le plus de questions restantes.
+    const arrange=greedy=>{
+      const shuffled=shuffle(tokens),order=[];
+      while(shuffled.length){
+        const last=order.length?order[order.length-1]:null;
+        const left=kind=>shuffled.filter(other=>other===kind).length;
+        let index=-1;
+        shuffled.forEach((kind,position)=>{
+          if(kind===last) return;
+          if(index<0||(greedy&&left(kind)>left(shuffled[index]))) index=position;
+        });
+        if(index<0){if(!greedy) return null;index=0;}
+        order.push(shuffled.splice(index,1)[0]);
+      }
+      return order;
+    };
+    let order=null;
+    for(let attempt=0;attempt<30&&!order;attempt++) order=arrange(false);
+    if(!order) order=arrange(true);
     const available=(byKind.get('select-divisors')||[]).map(question=>question.options.divisibility_profile);
     return order.map(kind=>{
       const list=byKind.get(kind);
