@@ -283,6 +283,41 @@ test("le bandeau du pas à pas : sans case, le plateau seul, centré, à la mêm
   assert.ok(phrases && phrases.enfants.length === 1 && phrases.enfants[0].attrs.x === 800);
 });
 
+/* Sur le papier, sans case (08/10/2026, question à choix de Gwenaël : variante C) : le bloc de
+   phrases se centre au-dessus du plateau, même plan, lignes alignées à gauche ; au corrigé et au
+   dernier appui, les indices en symboles se centrent aussi. */
+test("sans case : les phrases de l'énoncé et les indices en symboles se centrent au-dessus du plateau", () => {
+  const imp = fn("renderCardIntoSvg");
+  assert.match(imp, /const plan = layoutEnqueteClueBand\(card\._inv\.indices, band\);\n[^\n]*\n    const xPhrases = enqueteSansCase\(card\) \? enqueteBlocPhrasesX\(plan, printTray\.x \+ printTray\.w \/ 2\) : band\.x;/);
+  assert.match(imp, /targetSvg\.appendChild\(tText\(xPhrases, y, line, \{"text-anchor":"start"/, "lignes alignées à gauche, depuis le bord du bloc");
+  /* le bord gauche du bloc : centre − la plus longue ligne / 2 (mesure de repli : 0,56 × police par caractère) */
+  const blocX = new Function(`function measureTextWidth(){ return NaN; } ${fn("enqueteBlocPhrasesX")} return enqueteBlocPhrasesX;`)();
+  assert.equal(blocX({ fontSize: 40, blocks: [["abcd", "ab"], ["abcdef"]] }, 800), Math.round(800 - 6 * 40 * 0.56 / 2));
+  assert.equal(blocX({ fontSize: 42, blocks: [["x".repeat(48)], ["x".repeat(20)]] }, 800), Math.round(800 - 48 * 42 * 0.56 / 2));
+  /* le plateau imprimé est centré sur 800 : le bloc aussi */
+  const plateau = new Function(`${fn("getTrayConfig")} ${fn("getPrintTrayConfig")} return getPrintTrayConfig("C");`)();
+  assert.equal(plateau.x + plateau.w / 2, 800);
+  /* les indices en symboles : centrés sans case (papier : toute la largeur), à droite de la case sinon */
+  const appels = [];
+  const indices = new Function("appels", `
+    function el(){ return { appendChild(){} }; } function text(){ return {}; }
+    function relationGraphicClueParts(){ return [{ type: "text", val: "x" }]; }
+    function renderMixedClue(g, cx, cy, seq, mkEl, mkText, isPrint, revealed, card, opts){ appels.push({ cx, isPrint, opts }); }
+    ${fn("enqueteSansCase")}
+    ${fn("drawRelationGraphicClues")}
+    return drawRelationGraphicClues;`)(appels);
+  const rels = [{ op: "MUL" }, { op: "ADD" }];
+  const cible = { appendChild(){} };
+  indices(cible, { family: "C", _rel: { sansTotal: true, relations: rels } }, { isPrint: true });
+  indices(cible, { family: "C", _rel: { sansTotal: true, relations: rels } });
+  indices(cible, { family: "C", _rel: { relations: rels } }, { isPrint: true });
+  indices(cible, { family: "C", _rel: { relations: rels } });
+  assert.deepEqual(appels.map((a) => a.cx), [800, 800, 800, 800, 1155, 1155, 1155, 1155]);
+  assert.deepEqual(appels[0].opts, { labels: true, left: 40, maxW: 1520 }, "papier, sans case : toute la largeur");
+  assert.deepEqual(appels[4].opts, { labels: true, left: 964, maxW: 1580 - 964 }, "papier, avec la case : à sa droite, comme avant");
+  assert.deepEqual(appels[2].opts, {}, "écran : rien d'autre ne change");
+});
+
 // --- 2. le modèle ------------------------------------------------------------------------------
 test("le symbole : « ? », 𝑥 en lettre (sur toutes les cartes) ; « 2 × ? », jamais « 2? » ni « 2𝑥 »", () => {
   assert.equal(Q.symbole(false), "?");

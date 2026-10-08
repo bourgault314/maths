@@ -6442,15 +6442,19 @@ function drawRelationGraphicClues(targetGroup, card, opts = {}){
   const isPrint = !!opts.isPrint;
   const mkEl = opts.mkEl || el;
   const mkText = opts.mkText || text;
-  const cx = opts.cx ?? 1155;
+  /* Enquête sans total (08/10/2026, question à choix de Gwenaël) : pas de case à côté, les indices
+     se centrent au-dessus du plateau (x 800), à l'écran comme sur le papier */
+  const sansCase = enqueteSansCase(card);
+  const cx = opts.cx ?? (sansCase ? 800 : 1155);
   const cy = opts.cy ?? (rels.length > 1 ? 72 : 96);
   const lineH = opts.lineH ?? 58;
 
   const g = mkEl("g", { id:"relationGraphicClues" });
   // Correction imprimée : le nom de chaque couleur accompagne sa pastille ; la ligne
   // reste entre la case TOTAL (bord droit 940) et le bord de la carte (1580), réduite
-  // d'un même facteur si elle est trop large. L'écran ne change pas.
-  const clueOpts = isPrint ? { labels:true, left:964, maxW:1580 - 964 } : {};
+  // d'un même facteur si elle est trop large ; sans case, toute la largeur de la carte.
+  // L'écran ne change pas.
+  const clueOpts = isPrint ? (sansCase ? { labels:true, left:40, maxW:1520 } : { labels:true, left:964, maxW:1580 - 964 }) : {};
   rels.forEach((rel, i) => {
     const seq = relationGraphicClueParts(rel);
     if(seq.length){
@@ -7944,12 +7948,13 @@ function enqueteNomUnites(card, i, n, lettres){
    le Système ne change pas) : dans la correction et le pas à pas, la barre de référence s'écrit
    « ? » (« 𝑥 » dans le corrigé en lettre), les calculs « 2 × ? + 8 = 26 », « ? = 18 ÷ 2 = 9 », puis
    « La tache noire cache donc 9 jetons » ; les autres taches gardent leur nom. */
-/* Carte sans total de l'Enquête : PAS DE CASE du total (08/10/2026, question à choix de Gwenaël,
-   colonne C de la planche « sans total » ; le « PAS DE TOTAL » du 07/10 était un malentendu). Ni
-   « TOTAL ? », ni « PAS DE TOTAL », ni boîte vide — sur le papier, à l'écran, en mode élève. Sa
-   place reste vide : les phrases d'indice et le plateau ne bougent pas (à l'écran, un rect
-   invisible de la taille de la case garde les cadrages ; en HTML, la case est là mais invisible).
-   Enquête seulement : le Système garde son « TOTAL ? » (sysTotalCache). */
+/* Carte sans total de l'Enquête : PAS DE CASE du total (08/10/2026, questions à choix de Gwenaël ;
+   le « PAS DE TOTAL » du 07/10 était un malentendu). Ni « TOTAL ? », ni « PAS DE TOTAL », ni boîte
+   vide — sur le papier, à l'écran, en mode élève. Le plateau ne bouge pas (à l'écran, un rect
+   invisible de la taille de la case garde les cadrages). Sur le papier, les phrases se centrent
+   au-dessus du plateau (enqueteBlocPhrasesX) ; au corrigé et au dernier appui, les indices en
+   symboles aussi (drawRelationGraphicClues). Enquête seulement : le Système garde son « TOTAL ? »
+   (sysTotalCache). */
 function enqueteSansCase(card){
   return !!(card && card.family === "C" && card._rel && card._rel.sansTotal);
 }
@@ -9671,6 +9676,16 @@ function layoutEnqueteClueBand(sentences, band){
     if(total <= band.height || fs === 30) return { fontSize: fs, lineH, gap, blocks, total };
   }
   return null;
+}
+/* Énoncé imprimé d'une carte de l'Enquête sans total : pas de case à gauche, le bloc de phrases
+   (même plan, même taille, lignes alignées à gauche) se centre au-dessus du plateau — choisi par
+   Gwenaël le 08/10/2026 (variante C de la planche « phrases centrées »). Renvoie le x de son bord
+   gauche ; la largeur se mesure comme pour couper les phrases (wrapTextToWidth). */
+function enqueteBlocPhrasesX(plan, cx){
+  const font = `700 ${plan.fontSize}px SplatLettres, system-ui, -apple-system, "Segoe UI", Roboto, Arial`;
+  const largeur = (t) => { const w = measureTextWidth(t, font); return (Number.isFinite(w) && w > 0) ? w : t.length * plan.fontSize * 0.56; };
+  const lmax = Math.max(0, ...plan.blocks.flat().map(largeur));
+  return Math.round(cx - lmax / 2);
 }
 function renderMixedClue(targetGroup, cx, cy, seq, mkEl, mkText, isPrint, revealed, card=null, opts={}) {
   // opts.labels (impression, Enquête) : chaque pastille porte le nom de sa couleur
@@ -12600,11 +12615,13 @@ function renderCardIntoSvg(targetSvg, card, printMode, opts = {}){
   if(enqueteClueBand && (printRevealState === 0 || card.family === "D")){
     const band = ENQUETE_PRINT_CLUES_BAND;
     const plan = layoutEnqueteClueBand(card._inv.indices, band);
+    /* sans case (08/10/2026) : le même bloc, centré au-dessus du plateau */
+    const xPhrases = enqueteSansCase(card) ? enqueteBlocPhrasesX(plan, printTray.x + printTray.w / 2) : band.x;
     // bloc centré verticalement dans le bandeau, texte aligné à gauche
     let y = band.top + Math.max(0, (band.height - plan.total) / 2) + Math.round(plan.fontSize * 0.85);
     plan.blocks.forEach((lines, i) => {
       lines.forEach(line => {
-        targetSvg.appendChild(tText(band.x, y, line, {"text-anchor":"start","font-size":String(plan.fontSize),"fill":"#000","font-weight":"700"}));
+        targetSvg.appendChild(tText(xPhrases, y, line, {"text-anchor":"start","font-size":String(plan.fontSize),"fill":"#000","font-weight":"700"}));
         y += plan.lineH;
       });
       y += plan.gap;

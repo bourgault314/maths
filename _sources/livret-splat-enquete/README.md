@@ -129,8 +129,9 @@ Décidée avec Gwenaël le 07/10/2026 ; le Système (monde 4) ne change pas.
   nombre sont reliés par une flèche (« → 17 », gris : déjà trouvée ; noir : celle de l'étape).
 - **« Je vérifie »** : le total seulement ; sans total, seulement l'indice de l'écart.
 - **Pas de case du total** sur les cartes sans total (08/10/2026 : ni « TOTAL ? », ni « PAS DE
-  TOTAL » ; énoncés, corrigés, écran, mode élève) : sa place reste blanche, les phrases d'indice ne
-  bougent pas.
+  TOTAL » ; énoncés, corrigés, écran, mode élève). Sur l'énoncé, le bloc de phrases se centre
+  au-dessus du plateau (même taille, lignes alignées à gauche) ; au corrigé, les indices en
+  symboles se centrent aussi.
 
 ## Les livrets corrigés (pour tous)
 
