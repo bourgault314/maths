@@ -170,29 +170,34 @@ button{font:inherit;-webkit-appearance:none;appearance:none;-webkit-tap-highligh
 .equal-sharing-svg{display:block;width:min(100%,760px);height:auto;max-height:100%}
 .diapo.divisibility-sharing-mode .options{grid-template-columns:repeat(3,minmax(0,1fr));gap:9px 12px;max-width:900px;margin-top:4px}
 .diapo.divisibility-sharing-mode .opt{min-height:54px;padding:10px 13px;font-size:clamp(1rem,1.55vw,1.35rem)}
-.diapo.divisibility-mode .stage{align-items:center;padding:8px 18px 12px}
+.diapo.divisibility-mode .stage{align-items:center;padding:10px 18px 12px}
 .diapo.divisibility-mode .slide{width:100%;max-width:1180px}
-.divisibility-prompt{font-size:clamp(1.55rem,2.55vw,2.7rem);line-height:1.12;margin:0 auto 8px}
-.divisibility-prompt small{display:block;margin-top:5px;color:#60708c;font:800 clamp(.85rem,1.2vw,1.05rem)/1.15 Arial,sans-serif}
-.divisibility-inspector{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:min(100%,1040px);margin:6px auto 4px}
-.divisibility-step{display:grid;grid-template-columns:40px minmax(0,1fr);gap:10px;align-items:start;padding:11px 13px;border:2px solid #c9dced;border-radius:15px;background:#f8fbff;color:#17384d;text-align:left}
-.divisibility-step-number{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:#0b6fc2;color:#fff;font-size:1.18rem;font-weight:950}
-.divisibility-step strong{display:block;font-size:clamp(1rem,1.45vw,1.3rem);line-height:1.12}
-.divisibility-step small{display:block;margin-top:4px;color:#60708c;font-size:clamp(.78rem,1vw,.92rem);font-weight:750}
-.divisibility-digits{display:flex;justify-content:center;gap:5px;margin:7px auto 3px}
-.divisibility-digit{display:grid;place-items:center;min-width:35px;height:42px;padding:0 6px;border:2px solid #afc4d7;border-radius:9px;background:#fff;font:900 1.45rem/1 Arial,sans-serif}
+.divisibility-prompt{font-size:clamp(1.7rem,3vw,3.1rem);line-height:1.15;margin:0 auto 16px}
+.divisibility-prompt.divisibility-prompt-text{font-size:clamp(1.5rem,2.55vw,2.7rem);max-width:1080px}
+.divisibility-prompt small{display:block;margin-top:8px;color:#3d4f68;font:800 clamp(1rem,1.35vw,1.35rem)/1.2 Arial,sans-serif}
+.divisibility-number{font-weight:900;white-space:nowrap}
+.divisibility-pair{display:flex;flex-wrap:wrap;justify-content:center;gap:.25em 1.4em;margin-top:.3em;font-size:1.08em;font-weight:900;white-space:nowrap}
+.divisibility-missing{letter-spacing:.03em}.divisibility-box{color:#c2410c}
+.diapo.divisibility-mode .divisibility-answer-line{margin-top:6px}
+.diapo.divisibility-mode .divisibility-options:not(.divisibility-grid-text){gap:12px 14px;width:min(100%,780px);max-width:none;margin:12px auto 0}
+.diapo.divisibility-mode .divisibility-options:not(.divisibility-grid-text) .opt{display:flex;align-items:center;justify-content:center;min-height:64px;padding:10px 14px;font-size:clamp(1.4rem,2.3vw,2.3rem);font-weight:850;line-height:1.1;text-align:center;white-space:nowrap}
+.divisibility-grid-divisors{grid-template-columns:repeat(3,minmax(0,1fr))}
+.divisibility-grid-numbers{grid-template-columns:repeat(4,minmax(0,1fr))}.diapo.divisibility-mode .divisibility-grid-numbers{width:min(100%,900px)}.divisibility-option-none{grid-column:2/span 2}
+.divisibility-grid-list{grid-template-columns:repeat(9,minmax(0,1fr))}.diapo.divisibility-mode .divisibility-grid-list{width:min(100%,1120px);gap:10px}.diapo.divisibility-mode .divisibility-grid-list .opt{padding:10px 4px}
+.divisibility-grid-yes-no{grid-template-columns:repeat(2,minmax(0,1fr))}.diapo.divisibility-mode .divisibility-grid-yes-no{width:min(100%,560px)}
+.divisibility-aide{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:100%;max-width:520px;margin:0 auto}.divisibility-aide.is-single{grid-template-columns:minmax(0,1fr);max-width:300px}
+.divisibility-step{padding:8px 8px 9px;border:2px solid #c9dced;border-radius:12px;background:#f8fbff;color:#17384d;text-align:center}
+.divisibility-step strong{display:block;font-size:1rem;line-height:1.15}
+.divisibility-step small{display:block;margin-top:6px;color:#3d4f68;font-size:.86rem;font-weight:750;line-height:1.3}
+.divisibility-digits{display:flex;justify-content:center;gap:4px;margin:7px auto 0}
+.divisibility-digit{display:grid;place-items:center;min-width:28px;height:34px;padding:0 4px;border:2px solid #afc4d7;border-radius:8px;background:#fff;font:900 1.2rem/1 Arial,sans-serif}
 .divisibility-digit.is-unit{border-color:#e86100;background:#fff0df;color:#9a4100;box-shadow:0 0 0 2px rgba(232,97,0,.12)}
-.divisibility-sum{margin:12px auto 5px;color:#0b3570;font:900 clamp(1.25rem,2vw,1.8rem)/1.1 "Cambria Math","Times New Roman",serif;text-align:center}
-.divisibility-tests{display:flex;flex-wrap:wrap;gap:6px 9px;margin-top:8px}
-.divisibility-tests>span{display:flex;align-items:center;justify-content:space-between;gap:7px;min-width:112px;padding:5px 8px;border:1px solid #d9e5f1;border-radius:9px;background:#fff;font-size:.9rem;font-weight:850}
-.divisibility-verdict{white-space:nowrap}.divisibility-verdict.is-yes{color:#087a55}.divisibility-verdict.is-no{color:#b42318}
-.divisibility-conclusion{grid-column:1/-1;margin:0;padding:9px 12px;border-radius:12px;background:#eaf8f4;color:#075f48;font-size:clamp(.95rem,1.35vw,1.15rem);font-weight:750;text-align:center}
-.diapo.divisibility-mode .divisibility-options{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 11px;width:min(100%,940px);margin-top:7px}
-.diapo.divisibility-mode .divisibility-options .opt{min-height:54px;padding:9px 13px;font-size:clamp(1.05rem,1.55vw,1.38rem);text-align:center}
-.divisibility-inspector-placeholder{width:min(100%,1040px);height:145px;margin:5px auto}
-.course-card.divisibility-course-card{max-width:1040px}.course-divisibility-share .equal-sharing-help{height:155px;margin:7px auto 0}.course-divisibility-share .equal-sharing-svg{width:min(100%,520px)}
-.course-divisibility-units{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-top:8px}.course-divisibility-units span{padding:6px 5px;border-radius:8px;background:#edf5ff;color:#0b4f86;font-weight:900;text-align:center}
-.course-divisibility-example{margin-top:8px;padding:8px 9px;border-radius:10px;background:#f8fbff}.course-divisibility-example b{color:#0b6fc2}.course-divisibility-result{display:block;margin-top:6px;color:#087a55;font-weight:900}
+.divisibility-sum{margin:9px auto 0;color:#0b3570;font:900 1.15rem/1.2 Arial,sans-serif;text-align:center;white-space:nowrap}
+.course-card.divisibility-course-card{width:min(980px,100%);max-width:980px}.course-card.divisibility-course-card .course-rule{font-size:1.08rem;line-height:1.3}.course-divisibility-line{display:block;margin-top:5px}.course-divisibility-line b{white-space:nowrap}
+.course-divisibility-units{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:6px}.course-divisibility-units span{padding:6px 5px;border-radius:9px;background:#edf5ff;color:#0b4f86;font-weight:800;line-height:1.2;text-align:center}.course-divisibility-units b{display:block}
+@media(min-width:1600px){.diapo.divisibility-mode:not(.interactive-mode) .divisibility-prompt{font-size:3.5rem}.diapo.divisibility-mode:not(.interactive-mode) .divisibility-prompt.divisibility-prompt-text{font-size:3rem}.diapo.divisibility-mode:not(.interactive-mode) .divisibility-options:not(.divisibility-grid-text){width:min(100%,960px)}.diapo.divisibility-mode:not(.interactive-mode) .divisibility-grid-list{width:min(100%,1400px)}.diapo.divisibility-mode:not(.interactive-mode) .divisibility-options:not(.divisibility-grid-text) .opt{min-height:80px;font-size:2.8rem}}
+@media(max-width:360px){.course-divisibility-units span{font-size:.86em}}
+.course-divisibility-unit{color:#c2410c;font-weight:900}.course-divisibility-warning{display:block;margin-top:8px;color:#7a3500;font-size:.92em;font-weight:750}
 .pythagoras-builder{width:min(100%,780px);margin:0 auto;padding:10px 14px 11px;border:1px solid #cddcf0;border-radius:18px;background:linear-gradient(180deg,#fff,#f7fbff);color:#0b2147;user-select:none}
 .pythagoras-builder-prompt{margin:0 auto 2px;font-size:clamp(1.12rem,2vw,1.48rem);font-weight:850;line-height:1.18}
 .pythagoras-builder-triangle{display:block;width:min(100%,365px);max-height:205px;margin:0 auto}
@@ -849,7 +854,7 @@ svg{display:block;max-width:100%;height:auto}
 @media(max-width:800px){.multiple-forms-help.multiple-forms-line{height:clamp(245px,39vh,315px)}.multiple-forms-line-desktop{display:none}.multiple-forms-line-mobile{display:block;width:min(100%,390px)!important;height:auto}.fraction-ops-result-separated{margin-top:13px}.fraction-ops-simplification{max-width:360px;margin-bottom:3px;font-size:.88rem;line-height:1.12}.legacy-statement-table-wrap{margin:15px auto 20px}}
 @media(max-width:600px){.fullscreen-btn{display:none!important}.diapo:not(.interactive-mode) .top{gap:5px;padding-left:7px;padding-right:7px}.diapo:not(.interactive-mode) .left{gap:4px}.diapo:not(.interactive-mode) .menu-btn{min-width:54px;min-height:42px;padding:0 7px;font-size:.82rem}.diapo:not(.interactive-mode) .prev-btn{width:42px;min-height:42px;padding:0;font-size:0}.diapo:not(.interactive-mode) .prev-btn::before{content:'←';font-size:1.05rem}.diapo:not(.interactive-mode) .right{gap:6px}.diapo:not(.interactive-mode) .course-btn{width:42px;height:42px;min-height:42px;padding:0;display:inline-grid;place-items:center;border-radius:50%}.diapo:not(.interactive-mode) .course-btn svg{width:21px;height:21px}.diapo:not(.interactive-mode) .course-btn span{display:none}}
 @media(max-width:800px){.diapo.divisibility-sharing-mode .stage{padding:5px 6px 8px}.diapo.divisibility-sharing-mode .question{font-size:clamp(1.08rem,4.75vw,1.38rem);margin-bottom:1px}.equal-sharing-help{height:clamp(185px,27vh,220px);margin:0 auto 1px}.diapo.divisibility-sharing-mode .options{grid-template-columns:1fr;gap:5px;margin-top:3px}.diapo.divisibility-sharing-mode .opt{min-height:0;padding:7px 9px;font-size:clamp(.82rem,3.6vw,1rem)}}
-@media(max-width:800px){.diapo.divisibility-mode .stage{padding:5px 6px 8px}.diapo.divisibility-mode .slide{width:100%}.divisibility-prompt{font-size:clamp(1.2rem,5.25vw,1.5rem);margin-bottom:4px}.divisibility-prompt small{margin-top:3px;font-size:.76rem}.divisibility-inspector{grid-template-columns:1fr;gap:5px;margin:3px auto}.divisibility-step{grid-template-columns:31px minmax(0,1fr);gap:7px;padding:7px 8px;border-radius:11px}.divisibility-step-number{width:29px;height:29px;font-size:.92rem}.divisibility-step strong{font-size:.91rem}.divisibility-step small{margin-top:2px;font-size:.72rem}.divisibility-digits{gap:3px;margin:4px auto 1px}.divisibility-digit{min-width:29px;height:33px;padding:0 4px;border-width:1.5px;border-radius:7px;font-size:1.15rem}.divisibility-sum{margin:6px auto 2px;font-size:1.2rem}.divisibility-tests{gap:4px 6px;margin-top:5px}.divisibility-tests>span{min-width:92px;padding:3px 5px;font-size:.75rem}.divisibility-conclusion{padding:6px 7px;font-size:.82rem}.diapo.divisibility-mode .divisibility-options{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin-top:4px}.diapo.divisibility-mode .divisibility-options .opt{min-height:48px;padding:7px 8px;font-size:1rem}.divisibility-inspector-placeholder{height:170px}.course-card.divisibility-course-card{padding:18px 10px 14px}.course-divisibility-units{grid-template-columns:1fr}.course-divisibility-share .equal-sharing-help{height:125px}.course-divisibility-share .equal-sharing-svg{max-height:125px}}
+@media(max-width:800px){.diapo.divisibility-mode .stage{padding:8px 8px 10px}.diapo.divisibility-mode .slide{width:100%}.divisibility-prompt{font-size:clamp(1.3rem,6vw,1.62rem);line-height:1.18;margin-bottom:10px}.divisibility-prompt.divisibility-prompt-text{font-size:clamp(1.15rem,5.3vw,1.42rem)}.divisibility-prompt small{margin-top:6px;font-size:.92rem}.divisibility-pair{gap:.15em 1.1em}.diapo.divisibility-mode .divisibility-options:not(.divisibility-grid-text){gap:8px;width:100%;margin-top:8px}.diapo.divisibility-mode .divisibility-options:not(.divisibility-grid-text) .opt{min-height:54px;padding:8px 6px;border-radius:14px;font-size:clamp(1.25rem,6vw,1.55rem)}.divisibility-grid-numbers{grid-template-columns:repeat(2,minmax(0,1fr))}.diapo.divisibility-mode .divisibility-grid-numbers{width:100%}.divisibility-option-none{grid-column:1/-1}.divisibility-grid-list{grid-template-columns:repeat(3,minmax(0,1fr))}.diapo.divisibility-mode .divisibility-grid-list{width:100%;gap:8px}.diapo.divisibility-mode .divisibility-grid-yes-no{width:100%}.course-card.divisibility-course-card{padding:16px 10px 12px}.course-card.divisibility-course-card .course-title{margin-bottom:10px}.course-card.divisibility-course-card .course-grid{gap:7px}.course-card.divisibility-course-card .course-rule{padding:9px 10px;font-size:.95rem}.course-card.divisibility-course-card .course-example{margin-top:6px;padding:5px 8px}.course-divisibility-units{gap:4px}.course-divisibility-units span{padding:4px 3px}}
 @media (hover:none) and (pointer:coarse){.navnums{display:none!important}.mobile-counter{display:block!important}}
 /* ===== Lot T — coque commune : en-tête, pied (verdict, pavé, Passer/Valider, carte « Comment on trouve »), aide, fin de série, options de QCM, étapes du diaporama ===== */
 /* La zone question est alignée en haut (rien ne remonte quand un élément apparaît). */
@@ -1382,16 +1387,11 @@ function courseReadDataChartVisual(){
 function courseReadDataPictogramVisual(){
  return '<div class="read-data-pictogram" role="img" aria-label="Trois symboles, chaque symbole représente cinq élèves"><strong>espagnol</strong><span class="read-data-stars" aria-hidden="true">★ ★ ★</span><span class="read-data-legend">1 ★ représente 5 élèves</span></div><div class="read-data-course-caption"><b>3 × 5 = 15 élèves</b> : on multiplie, on ne compte pas seulement les symboles.</div>';
 }
-function courseDivisibilitySharingVisual(){
- const component=globalThis.MATHSGO_VISUALS&&globalThis.MATHSGO_VISUALS.get('arithmetic.equal-sharing-board');
- return component?'<div class="course-divisibility-share">'+component.render({shares:3,total:12,share:4,showTotal:true},true)+'</div>':'';
-}
 const courseCatalog={
   divisibility_rules:{title:'Critères de divisibilité',rules:[
-    ['1. Comprendre « divisible »','On peut partager sans reste en parts entières égales.<span class="course-example">12 est divisible par 3 car 12 objets forment 3 parts de 4.</span>'+courseDivisibilitySharingVisual(),true],
-    ['2. Regarder l’unité','Le chiffre des unités suffit pour 2, 5 et 10.<div class="course-divisibility-units"><span>par 2<br>0, 2, 4, 6, 8</span><span>par 5<br>0 ou 5</span><span>par 10<br>0</span></div><span class="course-example">Pourquoi ? Chaque dizaine est déjà divisible par 2, 5 et 10 : seules les unités peuvent laisser un reste.</span>'],
-    ['3. Additionner les chiffres','Pour 3 et 9, on additionne tous les chiffres.<span class="course-example">273 → 2 + 7 + 3 = 12.<br>12 est divisible par 3, mais pas par 9 : 273 est donc divisible par 3, pas par 9.</span>'],
-    ['4. Appliquer toujours la même méthode','<div class="course-divisibility-example"><b>Exemple : 8 730</b><br>① Unité 0 → oui pour 2, 5 et 10.<br>② Somme 8 + 7 + 3 + 0 = 18 → oui pour 3 et 9.<span class="course-divisibility-result">Conclusion : 8 730 est divisible par 2, 3, 5, 9 et 10.</span></div><span class="course-example">Teste chaque proposition. Plusieurs réponses — ou aucune — peuvent être correctes.</span>',true]
+    ['Divisible&nbsp;: le reste est 0','<span class="course-divisibility-line"><b>12 = 3 × 4 + 0</b>&nbsp;: 12 est divisible par 3.</span><span class="course-divisibility-line"><b>13 = 3 × 4 + 1</b>&nbsp;: 13 n’est pas divisible par 3.</span><span class="course-example">3 divise 12 ⇔ 12 est divisible par 3 ⇔ 12 est un multiple de 3</span>',true],
+    ['Par 2, 5 et 10&nbsp;: le chiffre des unités','<div class="course-divisibility-units"><span>par 2<b>0, 2, 4, 6, 8</b></span><span>par 5<b>0 ou 5</b></span><span>par 10<b>0</b></span></div><span class="course-example">23<span class="course-divisibility-unit">0</span>&nbsp;: par 2, 5 et 10<br>23<span class="course-divisibility-unit">5</span>&nbsp;: par 5 · 23<span class="course-divisibility-unit">6</span>&nbsp;: par 2</span><span class="course-divisibility-line">Par 10 = par 2 et par 5.</span>'],
+    ['Par 3 et 9&nbsp;: la somme des chiffres','<span class="course-divisibility-line">par 3&nbsp;: table de 3 (3, 6, 9, 12, 15, 18…)</span><span class="course-divisibility-line">par 9&nbsp;: table de 9 (9, 18, 27, 36…)</span><span class="course-example">372 → 3 + 7 + 2 = 12&nbsp;: par 3, pas par 9<br>729 → 7 + 2 + 9 = 18&nbsp;: par 3 et par 9</span><span class="course-divisibility-warning">Attention&nbsp;: 43 a 3 pour chiffre des unités, mais 4 + 3 = 7&nbsp;: pas divisible par 3.</span>']
   ],layout:'divisibility'},
   fraction_mul_div:{title:'Multiplier et diviser des fractions',rules:[
     ['Multiplier','On multiplie les numérateurs entre eux et les dénominateurs entre eux.<span class="course-example"><span class="course-equation">'+courseFraction(2,3)+' × '+courseFraction(5,4)+' = '+courseFraction(10,12)+' = '+courseFraction(5,6)+'</span></span>'],
@@ -3244,6 +3244,10 @@ function decorateCorrectedSlide(current){
 function studentAnswerHtml(spec){
  const current=slides[idx];
  const values=interactiveValues.slice();
+ if(spec.kind==='qcm'&&spec.answerLabels){
+   const chosen=[...selectedOptions].sort((a,b)=>a-b).map(index=>((spec.options||[])[index]||{}).displayedValue||'');
+   return chosen.length>1?chosen.slice(0,-1).join(', ')+' et '+chosen[chosen.length-1]:chosen.join('');
+ }
  if(spec.kind==='qcm') return [...selectedOptions].sort((a,b)=>a-b).map(index=>String.fromCharCode(65+index)).join(', ').replace(/, ([A-Z])$/,' et $1');
  if(spec.kind==='relative-tokens'){
    if(!relativeBoardState||!relativeBoardState.tokens.every(token=>token.zone==='result')) return '';
@@ -3798,13 +3802,22 @@ function interactiveSpecForInstance(inst,correctionHtml){
     const correctIndices=options.map((option,index)=>option.classList.contains('correct')?index:null).filter(index=>index!==null);
     const exclusiveIndices=options.map((option,index)=>option.dataset.exclusive==='true'?index:null).filter(index=>index!==null);
     const letters=correctIndices.map(index=>String.fromCharCode(65+index));
+    // dnb_08 : des choix marqués data-select-all se cochent toujours à
+    // plusieurs (la consigne ne trahit pas le nombre de bonnes réponses) ;
+    // data-answer-labels : la réponse se dit avec les choix (2, 3 et 9), pas en lettres.
+    const container=probe.querySelector('.options');
+    const selectAll=!!container&&container.getAttribute('data-select-all')==='true';
+    const answerLabels=!!container&&container.getAttribute('data-answer-labels')==='true';
+    const displayed=options.map(option=>option.textContent.replace(/^\s*[A-Z]\.\s*/,'').replace(/\s+/g,' ').trim());
+    const shown=answerLabels?correctIndices.map(index=>displayed[index]):letters;
     return {
       kind:'qcm',
-      multiple:correctIndices.length>1,
+      multiple:selectAll||correctIndices.length>1,
+      answerLabels,
       correctIndices,
       exclusiveIndices,
-      options:options.map((option,index)=>({index,displayedValue:option.textContent.replace(/^\s*[A-Z]\.\s*/,'').replace(/\s+/g,' ').trim(),errorCode:option.dataset.errorCode||null,exclusive:option.dataset.exclusive==='true'})),
-      expectedDisplay:(letters.length>1?'réponses ':'réponse ')+letters.join(' et ')
+      options:options.map((option,index)=>({index,displayedValue:displayed[index],errorCode:option.dataset.errorCode||null,exclusive:option.dataset.exclusive==='true'})),
+      expectedDisplay:(shown.length>1?'réponses ':'réponse ')+shown.join(' et ')
     };
   }
 
@@ -4053,9 +4066,15 @@ function lotTAideDrawing(inst,policy){
 }
 // La bonne réponse, écrite comme en maths (vrai signe moins, fraction
 // empilée, x², 17 %), pour la ligne de verdict, la carte et la fin de série.
+// dnb_08 : « 2, 3 et 9 » (réponses écrites avec les choix, data-answer-labels).
+function lotTListeEt(items){
+  const list=items.map(String).filter(Boolean);
+  return list.length>1?list.slice(0,-1).join(', ')+' et '+list[list.length-1]:list.join('');
+}
 function lotTExpectedHtml(inst,spec){
   if(!spec) return '';
   try{
+    if(spec.kind==='qcm'&&spec.answerLabels) return lotTTypo(lotTListeEt((spec.correctIndices||[]).map(index=>((spec.options||[])[index]||{}).displayedValue||'')));
     if(spec.kind==='qcm') return (spec.correctIndices||[]).map(index=>String.fromCharCode(65+index)).join(', ').replace(/, ([A-Z])$/,' et $1');
     const first=(spec.acceptedCombinations||[])[0]||[];
     if(spec.layout==='fraction'&&first.length===2) return lotTFracHtml(lotTValeurHtml(first[0]),lotTValeurHtml(first[1]));

@@ -6,40 +6,44 @@ MATHSGO_PEDAGOGY.registerModule('dnb_08',{
   courseKind:'divisibility_rules',
   generatorContract:{
     configurations:[
-      {id:'single-rule',label:'Un seul critère garanti'},
-      {id:'several-rules',label:'Plusieurs critères simultanés'},
-      {id:'choose-numbers',label:'Choisir des nombres divisibles'},
-      {id:'justify',label:'Justifier avec la somme des chiffres'},
-      {id:'sharing',label:'Interpréter la divisibilité comme un partage sans reste'}
+      {id:'select-divisors',label:'Par quels nombres N est-il divisible ? (2, 5, 10, 3, 9 ou aucun)'},
+      {id:'select-numbers',label:'Cocher les nombres divisibles par un nombre donné'},
+      {id:'sharing',label:'Partage sans reste : oui ou non'},
+      {id:'give-divisor',label:'Donner un diviseur autre que 1 et N (réponse courte)'},
+      {id:'build-number',label:'Fabriquer un nombre divisible par 3 ou 9, ou par deux nombres (réponse courte)'},
+      {id:'two-numbers',label:'Divisibilité de deux nombres proches (QCM du brevet 2026)'},
+      {id:'missing-digit',label:'Chiffre manquant, critère 3 ou 9, ou deux critères (réponse courte)'},
+      {id:'list-divisors',label:'Les nombres d’une liste qui divisent un petit nombre (DNB 2026, série professionnelle)'}
     ],
     reasoning:[
-      {id:'last-digit',label:'Observer le chiffre des unités',rule:'Un nombre est divisible par 2 si son chiffre des unités est pair, par 5 s’il se termine par 0 ou 5 et par 10 s’il se termine par 0.'},
-      {id:'digit-sum',label:'Additionner les chiffres',rule:'Un nombre est divisible par 3 ou par 9 lorsque la somme de ses chiffres l’est.'},
-      {id:'combine-rules',label:'Croiser plusieurs critères',rule:'Tester séparément chaque diviseur proposé ; plusieurs réponses peuvent être vraies.'},
-      {id:'share-without-remainder',label:'Relier au partage',rule:'Être divisible par n signifie pouvoir former n parts entières égales sans reste.'},
-      {id:'verify',label:'Vérifier',rule:'Une multiplication par le diviseur ou une division entière confirme le critère.'}
+      {id:'last-digit',label:'Regarder le chiffre des unités',rule:'Divisible par 2 : chiffre des unités 0, 2, 4, 6 ou 8. Par 5 : 0 ou 5. Par 10 : 0.'},
+      {id:'digit-sum',label:'Additionner les chiffres',rule:'Divisible par 3 : la somme des chiffres est dans la table de 3. Par 9 : dans la table de 9.'},
+      {id:'combine-rules',label:'Tester chaque critère',rule:'Tester séparément chaque diviseur proposé ; plusieurs réponses, ou aucune, peuvent être justes.'},
+      {id:'share-without-remainder',label:'Relier au partage',rule:'Être divisible par n, c’est pouvoir partager en n parts égales sans reste.'},
+      {id:'divisor-word',label:'Diviseur, multiple',rule:'3 divise 12 ⇔ 12 est divisible par 3 ⇔ 12 est un multiple de 3. 1 et N divisent toujours N.'}
     ],
     representations:[
-      {id:'highlight-digits',label:'Chiffre des unités ou somme des chiffres surlignés'},
-      {id:'equal-sharing',label:'Partage équitable sans reste'}
+      {id:'highlight-digits',label:'Le nombre chiffre par chiffre, chiffre des unités encadré (panneau Aide)'}
     ],
     visualRules:[
-      'Le chiffre décisif ou les chiffres additionnés sont mis en évidence sans masquer le nombre.',
-      'Une question à plusieurs critères annonce clairement que plusieurs réponses sont possibles.',
-      'Le partage est utilisé comme aide de sens, pas pour remplacer le critère.'
+      'La question ne montre aucune aide : le dessin des chiffres est dans le panneau Aide.',
+      'Le dessin d’aide laisse la somme à calculer (□) : il ne donne jamais la réponse.',
+      'Les choix « coche toutes les bonnes réponses » ne disent jamais combien de réponses sont justes.'
     ],
     cautions:[
       'Un nombre divisible par 9 est aussi divisible par 3.',
-      'Le critère de 5 dépend seulement du chiffre des unités.',
-      'Un nombre divisible par 10 est aussi divisible par 2 et par 5.',
-      'Ne pas conclure qu’un nombre est divisible par 9 parce qu’il contient le chiffre 9.'
+      'Divisible par 10 = divisible par 2 et par 5.',
+      'Pour 3 et 9, le chiffre des unités ne suffit pas : 43 n’est pas divisible par 3.'
     ]
   },
   questionTypes:[
-    {id:'identifier-critere-simple',label:'Identifier le critère garanti',questions:[1,2,3],response:'qcm-multiple',visual:{policy:'none',component:null},helpSections:['last-digit','digit-sum','verify']},
-    {id:'identifier-plusieurs-criteres',label:'Identifier plusieurs diviseurs possibles',questions:[4,5,6,7],response:'qcm-multiple',visual:{policy:'none',component:null},helpSections:['last-digit','digit-sum','combine-rules']},
-    {id:'choisir-divisibles-par-cinq',label:'Choisir les nombres divisibles par 5',questions:[8],response:'qcm-multiple',visual:{policy:'none',component:null},helpSections:['last-digit','combine-rules']},
-    {id:'justifier-par-somme-chiffres',label:'Utiliser le critère de divisibilité par 9',questions:[9],response:'qcm-one',visual:{policy:'none',component:null},helpSections:['digit-sum','verify']},
-    {id:'partage-sans-reste',label:'Interpréter la divisibilité dans un partage',questions:[10],response:'qcm-one',visual:{policy:'optional',component:'arithmetic.equal-sharing-board'},helpSections:['share-without-remainder','verify']}
+    {id:'quels-diviseurs',label:'Par quels nombres N est-il divisible ?',questions:[11,12,13,14,15,16,17,18,19,20,21,22],response:'qcm-multiple',visual:{policy:'none',component:null},helpSections:['last-digit','digit-sum','combine-rules']},
+    {id:'cocher-nombres-divisibles',label:'Cocher les nombres divisibles par un nombre donné',questions:[23],response:'qcm-multiple',visual:{policy:'none',component:null},helpSections:['last-digit','digit-sum']},
+    {id:'partage-sans-reste',label:'Partage sans reste : oui ou non',questions:[24],response:'qcm-one',visual:{policy:'none',component:null},helpSections:['share-without-remainder','last-digit','digit-sum']},
+    {id:'donner-un-diviseur',label:'Donner un diviseur autre que 1 et N',questions:[25],response:'numeric',visual:{policy:'none',component:null},helpSections:['last-digit','digit-sum','divisor-word']},
+    {id:'fabriquer-un-nombre',label:'Fabriquer un nombre divisible par 3 ou 9, ou par deux nombres',questions:[26],response:'numeric',visual:{policy:'none',component:null},helpSections:['last-digit','digit-sum']},
+    {id:'deux-nombres-un-critere',label:'Divisibilité de deux nombres proches',questions:[27],response:'qcm-one',visual:{policy:'none',component:null},helpSections:['digit-sum']},
+    {id:'chiffre-manquant',label:'Chiffre manquant',questions:[28],response:'numeric',visual:{policy:'none',component:null},helpSections:['last-digit','digit-sum']},
+    {id:'diviseurs-petit-nombre',label:'Les nombres d’une liste qui divisent un petit nombre',questions:[29],response:'qcm-multiple',visual:{policy:'none',component:null},helpSections:['divisor-word']}
   ]
 });

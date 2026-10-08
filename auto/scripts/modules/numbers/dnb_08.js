@@ -1,3 +1,8 @@
+// dnb_08 — refonte d'octobre 2026 : les anciens gabarits 1 à 10 sont retirés
+// (1 à 7 jamais tirés ; 8, 9 et 10 avaient toujours la même réponse).
+// Les types 11 à 22 (un profil chacun) étaient fabriqués à la volée ; ils sont
+// maintenant déclarés ici. Les types 23 à 29 sont nouveaux (formes du brevet).
+// Les énoncés sont fabriqués par dnb_08/generate.js ; ce fichier liste les types.
 const MODULE_DNB_08 = {
   "id": "dnb_08",
   "num": 8,
@@ -7,98 +12,232 @@ const MODULE_DNB_08 = {
     "3e",
     "DNB"
   ],
-  "source": "import_dnb_zip",
+  "source": "refonte_2026_10_dnb08",
   "has_svg": false,
+  "keypad": {
+    "context": []
+  },
   "questions": [
     {
-      "n": 1,
-      "statement": "$$${2*P}$$ est divisible par :&&par 2&&par 3&&par 5&&par 9&&par 10&&",
-      "answer": "[\"1\"]",
+      "n": 11,
+      "title": "Par quels nombres N est-il divisible ? (chiffre des unités pair, somme hors de la table de 3)",
+      "statement": "",
+      "answer": "[\"correctIndexes\"]",
+      "footer": "",
       "options": {
-        "formula_code": "setNB(1)\nP=[101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199,211,223,227,229,233,239,241,251,257][RD(29)]"
-      },
-      "footer": "[[formula_qcm]]"
+        "divisibility_kind": "select-divisors",
+        "divisibility_profile": "even-none",
+        "template_version": 3
+      }
     },
     {
-      "n": 2,
-      "statement": "$$${3*P}$$ est divisible par :&&par 2&&par 3&&par 5&&par 9&&par 10&&",
-      "answer": "[\"2\"]",
+      "n": 12,
+      "title": "Par quels nombres N est-il divisible ? (chiffre des unités pair, somme dans la table de 3, pas de 9)",
+      "statement": "",
+      "answer": "[\"correctIndexes\"]",
+      "footer": "",
       "options": {
-        "formula_code": "setNB(1)\nP=[101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199,211,223,227,229,233,239,241,251,257][RD(29)]"
-      },
-      "footer": "[[formula_qcm]]"
+        "divisibility_kind": "select-divisors",
+        "divisibility_profile": "even-three",
+        "template_version": 3
+      }
     },
     {
-      "n": 3,
-      "statement": "$$${5*P}$$ est divisible par :&&par 2&&par 3&&par 5&&par 9&&par 10&&",
-      "answer": "[\"3\"]",
+      "n": 13,
+      "title": "Par quels nombres N est-il divisible ? (chiffre des unités pair, somme dans la table de 9)",
+      "statement": "",
+      "answer": "[\"correctIndexes\"]",
+      "footer": "",
       "options": {
-        "formula_code": "setNB(1)\nP=[101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199,211,223,227,229,233,239,241,251,257][RD(29)]"
-      },
-      "footer": "[[formula_qcm]]"
+        "divisibility_kind": "select-divisors",
+        "divisibility_profile": "even-nine",
+        "template_version": 3
+      }
     },
     {
-      "n": 4,
-      "statement": "$$${9*P}$$ est divisible par :&&par 2&&par 3&&par 5&&par 9&&par 10&&",
-      "answer": "[\"2\",\"4\"]",
+      "n": 14,
+      "title": "Par quels nombres N est-il divisible ? (chiffre des unités 5, somme hors de la table de 3)",
+      "statement": "",
+      "answer": "[\"correctIndexes\"]",
+      "footer": "",
       "options": {
-        "formula_code": "setNB(1)\nP=[101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199,211,223,227,229,233,239,241,251,257][RD(29)]"
-      },
-      "footer": "[[formula_qcm]]"
+        "divisibility_kind": "select-divisors",
+        "divisibility_profile": "five-none",
+        "template_version": 3
+      }
     },
     {
-      "n": 5,
-      "statement": "$$${10*P}$$ est divisible par :&&par 2&&par 3&&par 5&&par 9&&par 10&&",
-      "answer": "[\"1\",\"3\",\"5\"]",
+      "n": 15,
+      "title": "Par quels nombres N est-il divisible ? (chiffre des unités 5, somme dans la table de 3, pas de 9)",
+      "statement": "",
+      "answer": "[\"correctIndexes\"]",
+      "footer": "",
       "options": {
-        "formula_code": "setNB(1)\nP=[101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199,211,223,227,229,233,239,241,251,257][RD(29)]"
-      },
-      "footer": "[[formula_qcm]]"
+        "divisibility_kind": "select-divisors",
+        "divisibility_profile": "five-three",
+        "template_version": 3
+      }
     },
     {
-      "n": 6,
-      "statement": "$$${6*P}$$ est divisible par :&&par 2&&par 3&&par 5&&par 9&&par 10&&",
-      "answer": "[\"1\",\"2\"]",
+      "n": 16,
+      "title": "Par quels nombres N est-il divisible ? (chiffre des unités 5, somme dans la table de 9)",
+      "statement": "",
+      "answer": "[\"correctIndexes\"]",
+      "footer": "",
       "options": {
-        "formula_code": "setNB(1)\nP=[101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199,211,223,227,229,233,239,241,251,257][RD(29)]"
-      },
-      "footer": "[[formula_qcm]]"
+        "divisibility_kind": "select-divisors",
+        "divisibility_profile": "five-nine",
+        "template_version": 3
+      }
     },
     {
-      "n": 7,
-      "statement": "Le nombre $$${15*P}$$ est divisible par :&&par 3&&par 5&&par 9&&par 2&&par 10&&",
-      "answer": "[\"1\",\"2\"]",
+      "n": 17,
+      "title": "Par quels nombres N est-il divisible ? (chiffre des unités 0, somme hors de la table de 3)",
+      "statement": "",
+      "answer": "[\"correctIndexes\"]",
+      "footer": "",
       "options": {
-        "formula_code": "setNB(1)\nP=[101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199,211,223,227,229,233,239,241,251,257][RD(29)]"
-      },
-      "footer": "[[formula_qcm]]"
+        "divisibility_kind": "select-divisors",
+        "divisibility_profile": "zero-none",
+        "template_version": 3
+      }
     },
     {
-      "n": 8,
-      "statement": "Parmi ces nombres, lesquels sont divisibles par 5 ?&&$$${a}$$&&$$${b}$$&&$$${cc}$$&&$$${e}$$&&",
-      "answer": "[\"1\",\"3\"]",
+      "n": 18,
+      "title": "Par quels nombres N est-il divisible ? (chiffre des unités 0, somme dans la table de 3, pas de 9)",
+      "statement": "",
+      "answer": "[\"correctIndexes\"]",
+      "footer": "",
       "options": {
-        "formula_code": "setNB(1)\nka=RD(10,99)\nkc=RD(10,99,[ka])\na=ka*5\nb=RD(10,99)*10+RD(1,4)\ncc=kc*5\ne=RD(10,99)*10+RD(6,9)"
-      },
-      "footer": "[[formula_qcm]]"
+        "divisibility_kind": "select-divisors",
+        "divisibility_profile": "zero-three",
+        "template_version": 3
+      }
     },
     {
-      "n": 9,
-      "statement": "Pour savoir si $$${9*P}$$ est divisible par 9, on calcule la somme de ses chiffres. Cette somme est-elle divisible par 9 ?&&Oui, donc le nombre est divisible par 9&&Non, donc le nombre n'est pas divisible par 9&&On ne peut pas savoir avec ce critère&&",
-      "answer": "[\"1\"]",
+      "n": 19,
+      "title": "Par quels nombres N est-il divisible ? (chiffre des unités 0, somme dans la table de 9)",
+      "statement": "",
+      "answer": "[\"correctIndexes\"]",
+      "footer": "",
       "options": {
-        "formula_code": "setNB(1)\nP=[101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199,211,223,227,229,233,239,241,251,257][RD(29)]"
-      },
-      "footer": "[[formula_qcm1]]"
+        "divisibility_kind": "select-divisors",
+        "divisibility_profile": "zero-nine",
+        "template_version": 3
+      }
     },
     {
-      "n": 10,
-      "statement": "<div style=\"text-align:justify\">On a $$${3*P}$$ bonbons. Peut-on les répartir équitablement (sans reste) dans 3 sachets ?</div>&&Oui&&Non&&Seulement si on en retire un&&",
-      "answer": "[\"1\"]",
+      "n": 20,
+      "title": "Par quels nombres N est-il divisible ? (chiffre des unités impair (pas 5), somme hors de la table de 3)",
+      "statement": "",
+      "answer": "[\"correctIndexes\"]",
+      "footer": "",
       "options": {
-        "formula_code": "setNB(1)\nP=[101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199,211,223,227,229,233,239,241,251,257][RD(29)]"
-      },
-      "footer": "[[formula_qcm1]]"
+        "divisibility_kind": "select-divisors",
+        "divisibility_profile": "odd-none",
+        "template_version": 3
+      }
+    },
+    {
+      "n": 21,
+      "title": "Par quels nombres N est-il divisible ? (chiffre des unités impair (pas 5), somme dans la table de 3, pas de 9)",
+      "statement": "",
+      "answer": "[\"correctIndexes\"]",
+      "footer": "",
+      "options": {
+        "divisibility_kind": "select-divisors",
+        "divisibility_profile": "odd-three",
+        "template_version": 3
+      }
+    },
+    {
+      "n": 22,
+      "title": "Par quels nombres N est-il divisible ? (chiffre des unités impair (pas 5), somme dans la table de 9)",
+      "statement": "",
+      "answer": "[\"correctIndexes\"]",
+      "footer": "",
+      "options": {
+        "divisibility_kind": "select-divisors",
+        "divisibility_profile": "odd-nine",
+        "template_version": 3
+      }
+    },
+    {
+      "n": 23,
+      "title": "Coche tous les nombres divisibles par 3, 9, 2, 5 ou 10",
+      "statement": "",
+      "answer": "[\"generated\"]",
+      "footer": "",
+      "options": {
+        "divisibility_kind": "select-numbers",
+        "template_version": 1
+      }
+    },
+    {
+      "n": 24,
+      "title": "Partage sans reste : oui ou non ?",
+      "statement": "",
+      "answer": "[\"generated\"]",
+      "footer": "",
+      "options": {
+        "divisibility_kind": "sharing",
+        "template_version": 1
+      }
+    },
+    {
+      "n": 25,
+      "title": "Donne un diviseur de N autre que 1 et N (DNB 2026 Amérique du Nord)",
+      "statement": "",
+      "answer": "[\"generated\"]",
+      "footer": "",
+      "options": {
+        "divisibility_kind": "give-divisor",
+        "template_version": 1
+      }
+    },
+    {
+      "n": 26,
+      "title": "Donne un nombre à 4 ou 5 chiffres divisible par 3 ou 9 de chiffre des unités imposé, ou divisible par deux nombres (sujet de référence 2027)",
+      "statement": "",
+      "answer": "[\"generated\"]",
+      "footer": "",
+      "options": {
+        "divisibility_kind": "build-number",
+        "template_version": 1
+      }
+    },
+    {
+      "n": 27,
+      "title": "Divisibilité par 3 ou 9 de N et P (DNB 2026 Asie)",
+      "statement": "",
+      "answer": "[\"generated\"]",
+      "footer": "",
+      "options": {
+        "divisibility_kind": "two-numbers",
+        "template_version": 1
+      }
+    },
+    {
+      "n": 28,
+      "title": "Chiffre manquant pour être divisible par 3 ou 9 (ou par deux nombres)",
+      "statement": "",
+      "answer": "[\"generated\"]",
+      "footer": "",
+      "options": {
+        "divisibility_kind": "missing-digit",
+        "template_version": 1
+      }
+    },
+    {
+      "n": 29,
+      "title": "Coche les nombres de la liste qui divisent N (DNB 2026 Métropole, série professionnelle)",
+      "statement": "",
+      "answer": "[\"generated\"]",
+      "footer": "",
+      "options": {
+        "divisibility_kind": "list-divisors",
+        "template_version": 1
+      }
     }
   ]
 };
