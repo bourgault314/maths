@@ -19,10 +19,43 @@ const serie = (fait, etoiles, cartes, vues) => ({fait, etoiles, cartes, vues});
 test("PARCOURS_VALIDES est exactement ETAPES + BONUS de splat-etapes.js, dans cet ordre (37 étapes + 14 Bonus = 51)", () => {
   const attendu = [...ETAPES.map(e => e[0]), ...BONUS.map(b => b[0])];
   assert.deepEqual([...PARCOURS.PARCOURS_VALIDES], attendu,
-    "la carte a changé : recopier dans PARCOURS_VALIDES (assets/js/splat-parcours.js) la liste suivante, puis le motif dans lib/applis.php :\n" + JSON.stringify(attendu));
+    "la carte a changé : recopier dans CARTE_ETAPES et CARTE_BONUS (assets/js/splat-parcours.js) les lignes que donne le test « la carte réduite du moteur… », puis le motif dans lib/applis.php :\n" + JSON.stringify(attendu));
   assert.equal(ETAPES.length, 37, "la numérotation de la carte saute de 28 à 35 : 37 étapes, pas 40");
   assert.equal(BONUS.length, 14);
   assert.equal(new Set(attendu).size, 51, "aucun doublon");
+});
+
+// Lot 3 « serveur + tuile » (07/10/2026) : les pages du serveur de suivi n'ont
+// que le moteur (copié dans _serveur/public/prof/), pas splat-etapes.js. Le
+// moteur porte donc la carte réduite — numéro et monde de chaque parcours,
+// sans les titres — et resumeProf la prend quand on ne lui donne rien.
+test("la carte réduite du moteur est ETAPES et BONUS de splat-etapes.js, sans les titres", () => {
+  const sansTitre = ligne => [ligne[0], ligne[1], ligne[3], ligne[4]];
+  const attenduEtapes = ETAPES.map(sansTitre);
+  const attenduBonus = BONUS.map(sansTitre);
+  const aRecopier = "\nCARTE_ETAPES : " + JSON.stringify(ETAPES.map(e => [e[0], e[1], e[4]]))
+    + "\nCARTE_BONUS : " + JSON.stringify(BONUS.map(b => [b[0], b[1], b[4]]));
+  assert.deepEqual(PARCOURS.CARTE.ETAPES.map(sansTitre), attenduEtapes,
+    "la carte des mondes a changé (numéro, monde ou parcours d’une étape) : recopier dans assets/js/splat-parcours.js" + aRecopier);
+  assert.deepEqual(PARCOURS.CARTE.BONUS.map(sansTitre), attenduBonus,
+    "les Bonus ont changé : recopier dans assets/js/splat-parcours.js" + aRecopier);
+  const mondes = [...new Map(ETAPES.map(e => [e[4], e[3]])).entries()];
+  assert.deepEqual(PARCOURS.CARTE.MONDES.map(m => [m[0], m[1]]), mondes, "les six mondes, leur numéro et leur nom");
+  assert.ok([...PARCOURS.CARTE.ETAPES, ...PARCOURS.CARTE.BONUS].every(l => l[2] === ""),
+    "aucun titre : une retouche de titre ne doit demander aucun dépôt sur le serveur de suivi");
+});
+
+test("resumeProf sans carte (pages du serveur de suivi) rend la même chose qu’avec celle de splat-etapes.js", () => {
+  let p = PARCOURS.creer();
+  ETAPES.filter(e => e[4] <= 2).forEach(e => { p = PARCOURS.enregistrerSerie(p, e[0], serie(true, 4, 4, 0), "2026-09-20"); });
+  p = PARCOURS.enregistrerSerie(p, "enq10", serie(true, 3, 4, 1), "2026-10-01");
+  p = PARCOURS.enregistrerEnCours(p, "enq11", {idx: 2, etoiles: 1, cartes: 4}, "2026-10-02");
+  p = PARCOURS.enregistrerSerie(p, "sys25d", serie(true, 4, 4, 0), "2026-10-03");
+  const avecLaCarte = PARCOURS.resumeProf(p, ETAPES, BONUS);
+  const sansRien = PARCOURS.resumeProf(p);
+  assert.deepEqual(sansRien, avecLaCarte);
+  assert.equal(sansRien.total, 37, "le total vient de la carte : 37 étapes");
+  assert.deepEqual(sansRien.mondes.map(m => m.etat), ["fini", "fini", "cours", "cours", "vide", "vide"]);
 });
 
 test("le motif PHP du serveur (lot 3) accepte les 51 parcours et rien d’autre", () => {
