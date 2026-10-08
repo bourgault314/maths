@@ -2,7 +2,8 @@
    Sur un écran de moins de 600 px, pendant la question d'une carte de l'Enquête :
    - les phrases d'indice quittent le dessin et s'écrivent en HTML, en haut, sur toute la
      largeur, en 14 px (elles tombaient à 9-10 px, 7 px sur un petit téléphone) ;
-   - le TOTAL passe à droite du plateau, à 10 px (jamais collé) ;
+   - le TOTAL passe à droite du plateau, à 10 px (jamais collé) ; une carte sans total n'a pas de
+     case (08/10/2026) : le plateau garde la taille qu'il avait à côté d'elle, centré ;
    - le dessin est cadré sur les taches seules et le plateau prend la hauteur de son
      dessin (plus de bande blanche au-dessus du TOTAL) ;
    - la réserve sous la carte ne garde que la 2e ligne du message (à la 3e erreur, la réponse
@@ -38,7 +39,7 @@ function decl(sel){
 // --- un tout petit DOM : juste ce que les fonctions lisent ----------------------------------
 class N {
   constructor(tag, id = ""){ this.tagName = tag; /* SVG : minuscules, comme dans le navigateur */ this.id = id; this.enfants = []; this.parentNode = null; this.style = {}; this._cls = new Set(); this.innerHTML = ""; this.className = ""; this.rect = { width: 0, height: 0, top: 0, bottom: 0 }; }
-  get classList(){ const s = this._cls; return { add: (c) => s.add(c), remove: (c) => s.delete(c), contains: (c) => s.has(c), toggle: (c, v) => (v ? s.add(c) : s.delete(c)) }; }
+  get classList(){ const s = this._cls; return { add: (c) => s.add(c), remove: (...c) => c.forEach((x) => s.delete(x)), contains: (c) => s.has(c), toggle: (c, v) => (v ? s.add(c) : s.delete(c)) }; }
   appendChild(n){ n.parentNode = this; this.enfants.push(n); return n; }
   insertBefore(n, ref){ n.parentNode = this; const i = ref ? this.enfants.indexOf(ref) : -1; if(i < 0) this.enfants.push(n); else this.enfants.splice(i, 0, n); return n; }
   removeChild(n){ const i = this.enfants.indexOf(n); if(i >= 0) this.enfants.splice(i, 1); n.parentNode = null; return n; }
@@ -74,10 +75,11 @@ const carteC = (extra = {}) => ({
 const outils = (document, svg, etat = {}) => new Function("document", "svg", "etat", `
   let eleveIndicesTel = !!etat.tel;
   ${constLine("const ELEVE_PLATEAU_MIN_ENQ")}
+  ${constLine("const ELEVE_TOTAL_TEL_PLACE")}
   ${constLine("const ENQUETE_REGLE_REPETEES")}
   ${fn("eleveIndicesPossible")}
   ${fn("eleveIndicesHtml")}
-  ${fn("enquetePasDeTotal")}
+  ${fn("enqueteSansCase")}
   ${fn("eleveIndicesAfficher")}
   ${fn("eleveIndicesHauteurPlateau")}
   ${fn("eleveCadrerScene")}
@@ -114,12 +116,18 @@ test("téléphone : les phrases au-dessus du plateau, le TOTAL dans la 2e colonn
   assert.equal(tot.parentNode, plateau, "le TOTAL est dans le plateau (sa 2e colonne)");
   assert.equal(tot.innerHTML, "<span>TOTAL</span><b>38</b>");
   assert.ok(plateau.classList.contains("avecTotalTel"));
-  // une carte de l'Enquête sans total dit « PAS DE TOTAL » (07/10/2026) ; une autre carte sans total
-  // (hors Enquête) garde son « ? » gris ardoise
+  // une carte de l'Enquête sans total n'a PAS DE CASE (08/10/2026) : ni « TOTAL ? » ni « PAS DE
+  // TOTAL », les phrases restent ; le plateau garde sa taille (classe sansCaseTel, voir plus bas)
   o.afficher(carteC({ _rel: { sansTotal: true } }));
-  assert.equal(document.getElementById("eleveTotalTel").innerHTML, '<span>PAS DE</span><b class="pasDe">TOTAL</b>');
-  o.afficher(carteC({ family: "D", _rel: { sansTotal: true } }));
-  assert.equal(document.getElementById("eleveTotalTel").innerHTML, '<span>TOTAL</span><b class="inconnu">?</b>');
+  assert.equal(document.getElementById("eleveTotalTel"), null, "sans total : pas de case");
+  assert.ok(document.getElementById("eleveIndices"), "les phrases restent");
+  assert.equal(plateau.classList.contains("avecTotalTel"), false);
+  assert.ok(plateau.classList.contains("sansCaseTel"));
+  // la carte suivante, avec total : sa case revient, la classe ne reste pas
+  o.afficher(carteC());
+  assert.equal(document.getElementById("eleveTotalTel").innerHTML, "<span>TOTAL</span><b>38</b>");
+  assert.equal(plateau.classList.contains("sansCaseTel"), false, "la classe ne reste pas d'une carte à l'autre");
+  assert.doesNotMatch(fn("eleveIndicesAfficher"), /inconnu|"\?"/, "plus de « TOTAL ? » au téléphone");
   assert.equal(carte.enfants.filter((n) => n.id === "eleveIndices").length, 1, "jamais deux blocs");
   // hors téléphone (ou écran de fin) : tout s'en va
   o.regler(false);
@@ -127,6 +135,7 @@ test("téléphone : les phrases au-dessus du plateau, le TOTAL dans la 2e colonn
   assert.equal(document.getElementById("eleveIndices"), null);
   assert.equal(document.getElementById("eleveTotalTel"), null);
   assert.equal(plateau.classList.contains("avecTotalTel"), false);
+  assert.equal(plateau.classList.contains("sansCaseTel"), false);
 });
 
 test("le dessin est cadré sans les phrases ni le TOTAL (au téléphone seulement)", () => {
@@ -157,6 +166,11 @@ test("le plateau prend la hauteur de son dessin, à la largeur de sa colonne (TO
   const attendu = Math.round((352 - 62 - 10) * 600 / 1400);
   assert.equal(plateau.style.height, attendu + "px");
   assert.equal(plateau.style.minHeight, attendu + "px");
+  // Enquête sans total (08/10/2026) : plus de case, mais sa place (80 px) est ôtée quand même — le
+  // plateau garde la taille qu'il avait à côté d'elle, et le dessin se centre
+  o.afficher(carteC({ _rel: { sansTotal: true } }));
+  o.hauteur();
+  assert.equal(plateau.style.height, Math.round((352 - 80) * 600 / 1400) + "px");
   const autre = monter();
   outils(autre.document, autre.svg, { tel: false }).hauteur();
   assert.equal(autre.plateau.style.height, undefined, "hors téléphone : la hauteur du CSS");
@@ -199,7 +213,7 @@ test("le schéma (lot E6) remplace les phrases du haut par son bandeau TOTAL + p
   const { document, svg, carte, plateau } = monter();
   const o = outils(document, svg, { tel: true });
   o.afficher(carteC());
-  new Function("document", `${fn("enquetePasDeTotal")} ${fn("eleveRappelHtml")} ${fn("eleveRappelAfficher")} eleveRappelAfficher(arguments[1]);`)(document, carteC());
+  new Function("document", `${fn("enqueteSansCase")} ${fn("eleveRappelHtml")} ${fn("eleveRappelAfficher")} eleveRappelAfficher(arguments[1]);`)(document, carteC());
   assert.equal(document.getElementById("eleveIndices"), null, "pas deux fois les phrases");
   const bandeau = document.getElementById("eleveRappel");
   assert.equal(carte.enfants.indexOf(bandeau), carte.enfants.indexOf(plateau) - 1);

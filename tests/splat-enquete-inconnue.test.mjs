@@ -1,8 +1,9 @@
 /* SPLAT! Enquête — l'inconnue « ? » (proposition de Claire, décidée avec Gwenaël le 07/10/2026 ;
    monde 3 seulement : le Système ne change pas). Ces tests exécutent les fonctions de
    outils/splat.html telles quelles (extraites du fichier), sur les 25 fiches des cinq livrets.
-   1. « PAS DE TOTAL » à la place de « TOTAL ? » : les cartes sans total de l'Enquête seulement ;
-      le Système garde son « TOTAL ? » ; la case garde sa taille.
+   1. Pas de case du total sur les cartes sans total de l'Enquête (08/10/2026 : ni « TOTAL ? », ni
+      « PAS DE TOTAL », le malentendu du 07/10) ; sa place reste vide, le bandeau du pas à pas
+      centre le plateau seul ; le Système garde son « TOTAL ? ».
    2. Le modèle de la correction : la référence s'écrit « ? » (𝑥 en lettre, sur toutes les cartes),
       « 2 × ? », jamais « 2? » ni « 2𝑥 » ; la ligne « La tache noire cache donc 9 jetons » avant les
       autres taches (sauf l'unité commune) ; ① « Schéma de comparaison » ; « Je vérifie » : le total
@@ -150,8 +151,7 @@ const outils = new Function("document", "numberedQuestionMarkMode", `
   ${fn("enqueteInitiale")}
   ${fn("enqueteArticle")}
   ${fn("enqueteNomUnites")}
-  ${fn("enquetePasDeTotal")}
-  ${fn("enquetePasDeTotalSvg")}
+  ${fn("enqueteSansCase")}
   ${ligne("function enqueteSymbole(")}
   ${ligne("function enqueteFoisSymbole(")}
   ${ligne("function enqueteLigneCalcul(")}
@@ -187,68 +187,100 @@ const outils = new Function("document", "numberedQuestionMarkMode", `
   ${fn("enqueteG3DessinerFin")}
   ${fn("enqueteG3Dessiner")}
   return { modele: enqueteBarresModele, plan: enqueteProjectionPasAPas, dessiner: enqueteG3Dessiner, lignes: enqueteG3Lignes,
-    profil: enqueteProfil, largeur: enqueteTexteLargeur, pasDeTotal: enquetePasDeTotal, pasDeTotalSvg: enquetePasDeTotalSvg,
+    profil: enqueteProfil, largeur: enqueteTexteLargeur, sansCase: enqueteSansCase,
     verifIndices: enqueteG3VerifIndices, symbole: enqueteSymbole, fois: enqueteFoisSymbole, ligneCalcul: enqueteLigneCalcul, mot: enqueteMotCouleur };
 `);
 const DOC = fauxDocument();
 const Q = outils(DOC, true), L = outils(DOC, false);
 
-// --- 1. « PAS DE TOTAL » -----------------------------------------------------------------------
-test("« PAS DE TOTAL » : les cartes sans total de l'Enquête seulement ; le Système garde « TOTAL ? »", () => {
-  assert.equal(Q.pasDeTotal({ family: "C", _rel: { sansTotal: true } }), true);
-  assert.equal(Q.pasDeTotal({ family: "C", _rel: {} }), false, "une carte avec total garde son total");
-  assert.equal(Q.pasDeTotal({ family: "D", _rel: { sansTotal: true } }), false, "le Système ne change pas");
-  assert.equal(Q.pasDeTotal(null), false);
+// --- 1. pas de case ---------------------------------------------------------------------------
+test("pas de case du total : les cartes sans total de l'Enquête seulement ; le Système garde « TOTAL ? »", () => {
+  assert.equal(Q.sansCase({ family: "C", _rel: { sansTotal: true } }), true);
+  assert.equal(Q.sansCase({ family: "C", _rel: {} }), false, "une carte avec total garde sa case");
+  assert.equal(Q.sansCase({ family: "D", _rel: { sansTotal: true } }), false, "le Système ne change pas");
+  assert.equal(Q.sansCase(null), false);
   /* sur les 25 fiches : exactement les cartes sans total (fiches 22, 23, et celles de la 24) */
-  const sans = CARTES.filter(({ c }) => Q.pasDeTotal(c)).map(({ ou }) => ou.split(",")[0]);
+  const sans = CARTES.filter(({ c }) => Q.sansCase(c)).map(({ ou }) => ou.split(",")[0]);
   assert.deepEqual([...new Set(sans)], ["E22", "E23", "E24"]);
-  assert.ok(CARTES.filter(({ c }) => c._rel.sansTotal).every(({ c }) => Q.pasDeTotal(c)));
-  /* l'écran et l'impression ne remplacent le TOTAL que derrière enquetePasDeTotal ; le Système
-     (sysTotalCache) garde son « ? » */
+  assert.ok(CARTES.filter(({ c }) => c._rel.sansTotal).every(({ c }) => Q.sansCase(c)));
+  assert.equal(CARTES.filter(({ ou, c }) => ou.startsWith("E22,") && Q.sansCase(c)).length, 4, "fiche 22 : les quatre cartes");
+  /* l'écran : la case est mesurée comme « TOTAL ? », puis vidée ; à sa place un rect invisible de
+     sa taille (le plateau, les phrases et les cadrages ne bougent pas). Le Système (sysTotalCache)
+     garde son « ? ». */
   const ecran = fn("renderCard");
   assert.match(ecran, /const sansTotalAffiche = \(card\.family === "C" && card\._rel && card\._rel\.sansTotal\) \|\| sysTotalCache\(card\);/);
-  assert.match(ecran, /if\(enquetePasDeTotal\(card\)\)\{\n      svg\.appendChild\(gTotal\);\n      enquetePasDeTotalSvg\(gTotal, tLabel, tNum, tx, Number\(totalLabelFs\), 800, totalLabelColor, \(n, a\) => el\(n, a\)\);/);
-  /* l'impression donne la case (la feuille est encore cachée quand on la dessine : getBBox y rend une
-     boîte vide, « PAS DE » partait hors de la carte — vu au rendu des livrets le 07/10/2026) */
-  assert.match(fn("renderCardIntoSvg"), /const boxH = 210;\n  const boxY = ty - 70;\n  let boxW = opts\.sixColonne \? SIX_COLONNE\.colonneW : 280;\n  let boxX = tx - boxW\/2;\n[\s\S]*?if\(enquetePasDeTotal\(card\)\) enquetePasDeTotalSvg\(g, lbl, num, tx, totalLabelSize, 900, totalLabelColor, \(n, a\) => tEl\(n, a\), \{ x:boxX, y:boxY, width:boxW, height:boxH \}\);/);
-  assert.match(fn("eleveRappelHtml"), /if\(enquetePasDeTotal\(card\)\) return `<div class="eleveRappelTotal"><span>PAS DE<\/span><b class="pasDe">TOTAL<\/b><\/div>`/);
-  assert.match(fn("eleveIndicesAfficher"), /tot\.innerHTML = enquetePasDeTotal\(card\) \? `<span>PAS DE<\/span><b class="pasDe">TOTAL<\/b>`/);
-  assert.match(fn("renderEleveSplat"), /\(enquetePasDeTotal\(card\) \? eleveCaseDonneeHtml\("haut blanche pasDe", "Pas de", "Total"\)/);
+  assert.match(ecran, /const bbTotal = gTotal\.getBBox\(\);\n[^\n]*\n  \/\*[\s\S]*?\*\/\n  const sansCase = enqueteSansCase\(card\);\n  if\(sansCase\) while\(gTotal\.firstChild\) gTotal\.removeChild\(gTotal\.firstChild\);/);
+  assert.match(ecran, /fill: sansCase \? "none" : totalBoxFill,\n      stroke: sansCase \? "none" : totalBoxStroke,\n      "stroke-width":"4",\n      \.\.\.\(sansCase \? \{ class:"totalPlace" \} : \{\}\)/);
+  /* l'impression : ni le groupe ni la boîte (leur place reste blanche) */
+  assert.match(fn("renderCardIntoSvg"), /if\(!enqueteSansCase\(card\)\)\{\n    g\.appendChild\(lbl\); g\.appendChild\(num\);\n    const hoteTotal = opts\.sixColonne \? racine : targetSvg;\n    hoteTotal\.appendChild\(g\);\n    hoteTotal\.insertBefore\(tEl\("rect",\{/);
+  /* le mode élève : pas de ligne du TOTAL dans le tableau, pas de case dans le bandeau du téléphone
+     ni à côté du plateau (le plateau y garde sa taille) */
+  assert.match(fn("renderEleveSplat"), /haut = \(\(enquete\.systeme && sysTotalCache\(card\)\) \|\| enqueteSansCase\(card\)\) \? ""/);
+  assert.match(fn("eleveRappelHtml"), /const caseTotal = enqueteSansCase\(card\) \? ""/);
+  assert.match(fn("eleveIndicesAfficher"), /if\(enqueteSansCase\(card\)\)\{ plateau\.classList\.add\("sansCaseTel"\); return; \}/);
+  /* plus rien de « PAS DE TOTAL » */
+  assert.doesNotMatch(html, /enquetePasDeTotal|pasDeTotalPlace|class="pasDe"|"PAS DE"/);
 });
 
-test("« PAS DE TOTAL » dans le SVG : « PAS DE » puis « TOTAL » en gras, centrés, à la place des deux lignes — la case garde sa taille", () => {
-  const g = DOC.createElementNS("", "g");
-  g.getBBox = () => ({ x: 100, y: 200, width: 180, height: 120 });
-  const tLabel = g.appendChild(DOC.createElementNS("", "text")); tLabel.textContent = "TOTAL";
-  const tNum = g.appendChild(DOC.createElementNS("", "text")); tNum.textContent = "?";
-  Q.pasDeTotalSvg(g, tLabel, tNum, 190, 30, 800, "#111", (n, a) => { const e = DOC.createElementNS("", n); for(const k in a) e.setAttribute(k, a[k]); return e; });
-  const textes = g.children.filter((x) => x.name === "text");
-  assert.deepEqual(textes.map((t) => t.textContent), ["PAS DE", "TOTAL"], "« TOTAL ? » n'est plus là");
-  assert.ok(textes.every((t) => t.attrs["text-anchor"] === "middle" && t.attrs.x === "190" && t.attrs["font-size"] === "30"), "centrés, même taille");
-  assert.equal(textes[0].attrs["font-weight"], "800");
-  assert.equal(textes[1].attrs["font-weight"], "900", "« TOTAL » en gras");
-  const place = g.children.find((x) => x.attrs.class === "pasDeTotalPlace");
-  assert.deepEqual(["x", "y", "width", "height"].map((k) => Number(place.attrs[k])), [100, 200, 180, 120], "la place des deux lignes d'avant");
-  assert.equal(place.attrs.fill, "none");
-  /* les deux lignes autour du milieu de la case */
-  const y = textes.map((t) => Number(t.attrs.y)), milieu = 260;
-  assert.ok(y[0] < milieu && y[1] > milieu, y.join(" / "));
-  /* la case donnée (impression) : centré sur elle, même si getBBox rend une boîte vide */
-  const mk = (n, a) => { const e = DOC.createElementNS("", n); for(const k in a) e.setAttribute(k, a[k]); return e; };
-  const deux = () => { const h = DOC.createElementNS("", "g"); h.getBBox = () => ({ x: 0, y: 0, width: 0, height: 0 });
-    const a = h.appendChild(DOC.createElementNS("", "text")); a.setAttribute("y", "92"); a.setAttribute("font-size", "42"); a.textContent = "TOTAL";
-    const b = h.appendChild(DOC.createElementNS("", "text")); b.setAttribute("y", "175"); b.setAttribute("font-size", "96"); b.textContent = "?";
-    return [h, a, b]; };
-  const [h1, a1, b1] = deux();
-  Q.pasDeTotalSvg(h1, a1, b1, 260, 42, 900, "#111", mk, { x: 120, y: 22, width: 280, height: 210 });
-  const y1 = h1.children.filter((x) => x.name === "text").map((t) => Number(t.attrs.y));
-  assert.deepEqual(y1.map((v) => Math.round(v * 10) / 10), [Math.round((127 - 0.24 * 42) * 10) / 10, 127 + 42], "centré sur la case (milieu 127)");
-  /* boîte vide et pas de case : estimée d'après les deux lignes, jamais au-dessus de la carte */
-  const [h2, a2, b2] = deux();
-  Q.pasDeTotalSvg(h2, a2, b2, 260, 42, 900, "#111", mk);
-  const y2 = h2.children.filter((x) => x.name === "text").map((t) => Number(t.attrs.y));
-  assert.ok(y2[0] > 92 - 42 && y2[1] < 175 + 30, `entre les deux lignes d'avant : ${y2.join(" / ")}`);
-  assert.ok(Math.abs((y2[0] + y2[1]) / 2 - (y1[0] + y1[1]) / 2) < 6, "à quelques unités près de la case");
+/* Le bandeau du pas à pas (projection et ordinateur), sur une scène factice : la case et le plateau
+   côte à côte, centrés ; sans case, le plateau seul, centré, à la même taille. */
+function bandeau(sansCase){
+  const noeud = (tag, attrs = {}) => ({
+    tagName: tag, attrs: { ...attrs }, enfants: [], parentNode: null, bb: null, textContent: "",
+    setAttribute(k, v){ this.attrs[k] = String(v); }, getAttribute(k){ return this.attrs[k]; },
+    appendChild(n){ if(n.parentNode) n.parentNode.removeChild(n); n.parentNode = this; this.enfants.push(n); return n; },
+    insertBefore(n, ref){ if(n.parentNode) n.parentNode.removeChild(n); n.parentNode = this; const i = ref ? this.enfants.indexOf(ref) : -1; if(i < 0) this.enfants.push(n); else this.enfants.splice(i, 0, n); return n; },
+    removeChild(n){ this.enfants = this.enfants.filter((x) => x !== n); n.parentNode = null; return n; },
+    remove(){ if(this.parentNode) this.parentNode.removeChild(this); },
+    get previousElementSibling(){ if(!this.parentNode) return null; const i = this.parentNode.enfants.indexOf(this); return i > 0 ? this.parentNode.enfants[i - 1] : null; },
+    get nextSibling(){ if(!this.parentNode) return null; const i = this.parentNode.enfants.indexOf(this); return this.parentNode.enfants[i + 1] || null; },
+    getBBox(){
+      if(this.bb) return this.bb;
+      const bs = this.enfants.map((e) => e.getBBox()).filter((b) => b.width > 0);
+      if(!bs.length) return { x: 0, y: 0, width: 0, height: 0 };
+      const x = Math.min(...bs.map((b) => b.x)), y = Math.min(...bs.map((b) => b.y));
+      return { x, y, width: Math.max(...bs.map((b) => b.x + b.width)) - x, height: Math.max(...bs.map((b) => b.y + b.height)) - y };
+    },
+  });
+  const svg = noeud("svg");
+  /* comme renderCard : la boîte (ou sa place invisible), juste avant #totalGroup, vide sans case */
+  const boite = noeud("rect", sansCase ? { fill: "none", stroke: "none", class: "totalPlace" } : { fill: "#fff" });
+  boite.bb = { x: 690, y: 6, width: 220, height: 150 };
+  const total = noeud("g", { id: "totalGroup" });
+  if(!sansCase){ const t = noeud("text"); t.bb = { x: 714, y: 20, width: 172, height: 122 }; total.appendChild(t); }
+  const plateau = noeud("g", { id: "relationTrayScale" }); plateau.bb = { x: 324, y: 152, width: 952, height: 380 };
+  svg.appendChild(boite); svg.appendChild(total); svg.appendChild(plateau);
+  const document = { getElementById: (id) => { const c = (n) => (n.attrs.id === id ? n : n.enfants.map(c).find(Boolean)); return c(svg) || null; } };
+  const carte = { family: "C", _rel: sansCase ? { sansTotal: true } : {}, _inv: { indices: ["Une phrase."] } };
+  new Function("svg", "document", "el", "text", "carte", `
+    ${ligne("const ENQ_G3_BANDEAU_H = ")}
+    ${ligne("const ENQ_G3_PHRASE_MAX = ")}
+    function measureTextWidth(){ return 600; }
+    function layoutClueSentence(t, fs){ return { lines: [t], fontSize: fs }; }
+    function renderMixedClue(){}
+    ${fn("enqueteSansCase")}
+    ${fn("enqueteG3Phrase")}
+    ${fn("enqueteG3Bandeau")}
+    enqueteG3Bandeau(carte);`)(svg, document, noeud, (x, y, t, a) => { const n = noeud("text", { x, y, ...a }); n.textContent = t; return n; }, carte);
+  const tous = (n) => [n, ...n.enfants.flatMap(tous)];
+  const wP = tous(svg).find((n) => n.attrs.id === "enqueteG3Plateau");
+  const m = /^translate\((-?[\d.]+) (-?[\d.]+)\) scale\(([\d.]+)\)/.exec(wP.attrs.transform);
+  return { svg, tous: tous(svg), x: Number(m[1]), k: Number(m[3]), largeurPlateau: plateau.bb.width };
+}
+
+test("le bandeau du pas à pas : sans case, le plateau seul, centré, à la même taille ; avec la case, rien ne change", () => {
+  const avec = bandeau(false), sans = bandeau(true);
+  /* avec la case : la case, l'écart de 60, le plateau — l'ensemble centré sur 800 */
+  assert.ok(avec.tous.some((n) => n.attrs.id === "enqueteG3Total" && n.enfants.some((e) => e.attrs.id === "totalGroup")));
+  const lAvec = 220 + 60 + avec.largeurPlateau * avec.k;
+  assert.equal(avec.x, Math.round(800 - lAvec / 2 + 220 + 60));
+  /* sans case : ni la case, ni sa place, ni son groupe ; le plateau centré sur 800 */
+  assert.ok(!sans.tous.some((n) => ["enqueteG3Total", "totalGroup"].includes(n.attrs.id) || n.tagName === "rect"), "rien de la case ne reste");
+  assert.equal(sans.k, avec.k, "le plateau garde sa taille");
+  assert.equal(sans.x, Math.round(800 - sans.largeurPlateau * sans.k / 2));
+  /* les phrases restent dessous, centrées */
+  const phrases = sans.tous.find((n) => n.attrs.id === "enqueteG3Phrases");
+  assert.ok(phrases && phrases.enfants.length === 1 && phrases.enfants[0].attrs.x === 800);
 });
 
 // --- 2. le modèle ------------------------------------------------------------------------------

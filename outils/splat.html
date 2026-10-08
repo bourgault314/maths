@@ -856,19 +856,19 @@
   #eleveRappel .eleveRappelTotal{flex:0 0 auto;border:2.5px solid #000;border-radius:10px;background:var(--totalbox-fill);padding:4px 10px 5px;text-align:center;line-height:1}
   #eleveRappel .eleveRappelTotal span{display:block;font-size:10px;font-weight:800;letter-spacing:1.5px;color:var(--total-label)}
   #eleveRappel .eleveRappelTotal b{display:block;font-size:24px;font-weight:900;margin-top:2px}
-  /* Enquête sans total : le « ? » du TOTAL en gris ardoise, comme sur le plateau et à l'impression */
-  #eleveRappel .eleveRappelTotal b.inconnu, #elevePanel.sansTotal .eleveCase.haut.donnee .eleveDonneeVal{color:#64748b}
   #eleveRappel .eleveRappelIndices{flex:1 1 auto;min-width:0}
   #eleveRappel .eleveRappelIndices p{margin:0;font-size:13.5px;font-weight:700;line-height:1.28;color:var(--ink)}
   #eleveRappel .eleveRappelIndices p+p{margin-top:4px}
   /* Petit plateau pendant les étapes (02/10/2026) : le même ordre que la question — les phrases
-     en haut, puis le plateau et le TOTAL à sa droite, jamais collés (12 px) */
+     en haut, puis le plateau et le TOTAL à sa droite, jamais collés (12 px) ; sans total (08/10/2026),
+     pas de case : le plateau seul, centré */
   #eleveRappel.avecPlateau{flex-wrap:wrap;justify-content:center;row-gap:6px}
   #eleveRappel.avecPlateau .eleveRappelIndices{order:-1;flex:1 1 100%}
   #eleveRappelPlateau{order:0;flex:0 1 auto;display:block;height:78px;min-width:0;max-width:calc(100% - 96px)}
   #eleveRappel.avecPlateau .eleveRappelTotal{order:1}
   /* Téléphone, question de l'Enquête (lot E7) : les phrases d'indice en HTML, en haut, sur
-     toute la largeur ; le TOTAL à droite du plateau (2e colonne de #svgWrap), à 10 px */
+     toute la largeur ; le TOTAL à droite du plateau (2e colonne de #svgWrap), à 10 px ; sans total
+     (08/10/2026), pas de case : le plateau garde sa taille, centré (eleveIndicesHauteurPlateau) */
   #eleveIndices{margin:4px 6px 8px}
   #eleveIndices p{margin:0;font-size:14px;font-weight:700;line-height:1.3;color:var(--ink)}
   #eleveIndices p+p{margin-top:5px}
@@ -877,11 +877,6 @@
   #eleveTotalTel{border:2.5px solid #000;border-radius:10px;background:var(--totalbox-fill);padding:4px 10px 5px;text-align:center;line-height:1;margin-right:2px}
   #eleveTotalTel span{display:block;font-size:10px;font-weight:800;letter-spacing:1.5px;color:var(--total-label)}
   #eleveTotalTel b{display:block;font-size:24px;font-weight:900;margin-top:2px}
-  #eleveTotalTel b.inconnu{color:#64748b}
-  /* « PAS DE TOTAL » (Enquête sans total, 07/10/2026) : « TOTAL » à la taille de « PAS DE », en gras, sur
-     la hauteur de ligne du nombre (la case garde sa taille) */
-  #eleveRappel .eleveRappelTotal b.pasDe, #eleveTotalTel b.pasDe{font-size:10px;letter-spacing:1.5px;line-height:24px;height:24px;color:var(--total-label)}
-  .eleveCase.haut.donnee.pasDe .eleveDonneeVal{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:900;color:#475569}
   body.eleve-mode #svgWrap.eleveSchemaTel #eleveTotalTel{display:none}
   /* petit téléphone : la question tient sur une ligne (la ligne gagnée va au plateau) */
   @media (max-width:379px){ #elevePanel.enquete .eleveConsigne{font-size:14px} }
@@ -7949,33 +7944,14 @@ function enqueteNomUnites(card, i, n, lettres){
    le Système ne change pas) : dans la correction et le pas à pas, la barre de référence s'écrit
    « ? » (« 𝑥 » dans le corrigé en lettre), les calculs « 2 × ? + 8 = 26 », « ? = 18 ÷ 2 = 9 », puis
    « La tache noire cache donc 9 jetons » ; les autres taches gardent leur nom. */
-/* « PAS DE TOTAL » (07/10/2026, question à choix de Gwenaël, planche « sans total ») : avec le « ? »
-   de la référence, « TOTAL ? » ferait deux « ? » de sens différents. Enquête seulement (le Système
-   garde son « TOTAL ? ») : « PAS DE » à la place du mot TOTAL, « TOTAL » en gras dessous, centrés,
-   la case garde sa taille. */
-function enquetePasDeTotal(card){
+/* Carte sans total de l'Enquête : PAS DE CASE du total (08/10/2026, question à choix de Gwenaël,
+   colonne C de la planche « sans total » ; le « PAS DE TOTAL » du 07/10 était un malentendu). Ni
+   « TOTAL ? », ni « PAS DE TOTAL », ni boîte vide — sur le papier, à l'écran, en mode élève. Sa
+   place reste vide : les phrases d'indice et le plateau ne bougent pas (à l'écran, un rect
+   invisible de la taille de la case garde les cadrages ; en HTML, la case est là mais invisible).
+   Enquête seulement : le Système garde son « TOTAL ? » (sysTotalCache). */
+function enqueteSansCase(card){
   return !!(card && card.family === "C" && card._rel && card._rel.sansTotal);
-}
-/* Remplace « TOTAL » / « ? » d'une case du total en SVG par « PAS DE » / « TOTAL », centrés dans la
-   place des deux lignes d'avant (rectangle invisible de cette taille : la case ne change pas).
-   place : la boîte où centrer, quand on la connaît (l'impression : la case elle-même) ; sinon
-   mesurée (getBBox, à l'écran) ; et si la mesure est vide (dessin encore caché), estimée d'après
-   les deux lignes (hampes et jambages d'une police courante). */
-function enquetePasDeTotalSvg(g, tLabel, tNum, tx, fs, poids, couleur, mk, place){
-  let bb = place || null;
-  if(!bb){ try{ bb = g.getBBox(); }catch(_e){ bb = null; } }
-  if(!bb || !(bb.width > 0) || !(bb.height > 0)){
-    const y0 = Number(tLabel.getAttribute("y")), f0 = Number(tLabel.getAttribute("font-size")) || fs;
-    const y1 = Number(tNum.getAttribute("y")), f1 = Number(tNum.getAttribute("font-size")) || fs;
-    const haut = y0 - 0.93 * f0, bas = y1 + 0.24 * f1, l = 3.6 * fs;
-    bb = { x:tx - l / 2, y:haut, width:l, height:bas - haut };
-  }
-  tLabel.remove(); tNum.remove();
-  g.appendChild(mk("rect", { x:bb.x, y:bb.y, width:bb.width, height:bb.height, fill:"none", stroke:"none", class:"pasDeTotalPlace" }));
-  const cy = bb.y + bb.height / 2, attrs = { "text-anchor":"middle", "font-size":String(fs), fill:couleur, "letter-spacing":"2" };
-  const t1 = mk("text", { ...attrs, x:tx, y:cy - 0.24 * fs, "font-weight":String(poids) }); t1.textContent = "PAS DE";
-  const t2 = mk("text", { ...attrs, x:tx, y:cy + 1.0 * fs, "font-weight":"900" }); t2.textContent = "TOTAL";
-  g.appendChild(t1); g.appendChild(t2);
 }
 /* Le symbole de l'inconnue : « ? », ou 𝑥 dans le corrigé en lettre — 𝑥 sur toutes les cartes
    (07/10/2026, question à choix de Gwenaël : pas de lettres variées). Toujours avec le « × » :
@@ -9445,15 +9421,21 @@ function enqueteG3Bandeau(card){
   if(symboles) symboles.remove();
   /* la boîte du TOTAL est le rect que renderCard glisse juste avant #totalGroup */
   const boite = tg.previousElementSibling && tg.previousElementSibling.tagName === "rect" ? tg.previousElementSibling : null;
+  /* Enquête sans total (08/10/2026) : pas de case — sa place invisible part aussi, le plateau est
+     seul, centré */
+  const sansCase = enqueteSansCase(card);
   const wT = el("g", { id:"enqueteG3Total" }), wP = el("g", { id:"enqueteG3Plateau" });
   svg.insertBefore(wT, tray); svg.insertBefore(wP, tray);
-  if(boite) wT.appendChild(boite);
-  wT.appendChild(tg);
+  if(sansCase){ if(boite) boite.remove(); tg.remove(); wT.remove(); }
+  else{
+    if(boite) wT.appendChild(boite);
+    wT.appendChild(tg);
+  }
   wP.appendChild(tray);
-  const bt = wT.getBBox(), bp = wP.getBBox();
-  const H = ENQ_G3_BANDEAU_H, k = H / bp.height, gap = ENQ_G3_BANDEAU_ECART, top = ENQ_G3_BANDEAU_HAUT;
+  const bt = sansCase ? { x:0, y:0, width:0, height:0 } : wT.getBBox(), bp = wP.getBBox();
+  const H = ENQ_G3_BANDEAU_H, k = H / bp.height, gap = sansCase ? 0 : ENQ_G3_BANDEAU_ECART, top = ENQ_G3_BANDEAU_HAUT;
   const largeur = bt.width + gap + bp.width * k, x0 = 800 - largeur / 2;
-  wT.setAttribute("transform", `translate(${Math.round(x0 - bt.x)} ${Math.round(top + (H - bt.height) / 2 - bt.y)})`);
+  if(!sansCase) wT.setAttribute("transform", `translate(${Math.round(x0 - bt.x)} ${Math.round(top + (H - bt.height) / 2 - bt.y)})`);
   wP.setAttribute("transform", `translate(${Math.round(x0 + bt.width + gap)} ${top}) scale(${Math.round(1000 * k) / 1000}) translate(${-bp.x} ${-bp.y})`);
   const indices = card._inv && Array.isArray(card._inv.indices) ? card._inv.indices : [];
   const g = el("g", { id:"enqueteG3Phrases" });
@@ -11139,7 +11121,8 @@ function renderCard(card, revealState, opts = {}){
       "text-anchor":"middle","font-size": totalLabelFs,
       "fill":totalLabelColor,"font-weight":"800","letter-spacing":"2"
     });
-    // Enquête sans total : « TOTAL ? », le point d'interrogation en gris ardoise
+    // total caché : « TOTAL ? », le point d'interrogation en gris ardoise (le Système ; l'Enquête
+    // sans total n'a pas de case : « TOTAL ? » n'y sert qu'à mesurer sa place, voir plus bas)
     const sansTotalAffiche = (card.family === "C" && card._rel && card._rel.sansTotal) || sysTotalCache(card);
     const tNum = text(tx, ty + totalNumDy, sansTotalAffiche ? "?" : String(card.total), {
       "text-anchor":"middle","font-size": totalNumFs,
@@ -11147,15 +11130,16 @@ function renderCard(card, revealState, opts = {}){
     });
     gTotal.appendChild(tLabel);
     gTotal.appendChild(tNum);
-    if(enquetePasDeTotal(card)){
-      svg.appendChild(gTotal);
-      enquetePasDeTotalSvg(gTotal, tLabel, tNum, tx, Number(totalLabelFs), 800, totalLabelColor, (n, a) => el(n, a));
-    }
   }
   svg.appendChild(gTotal);
 
   const bbTotal = gTotal.getBBox();
   const padX = relationTotalCompact ? 24 : (introTotalCompact ? 30 : 40), padY = relationTotalCompact ? 14 : (introTotalCompact ? 18 : 26);
+  /* Enquête sans total : pas de case (08/10/2026). Elle est mesurée comme « TOTAL ? » puis vidée ;
+     à sa place, un rect invisible de sa taille : le plateau, les phrases, le bandeau du pas à pas
+     (enqueteG3Bandeau) et le cadrage du mode élève (eleveCadrerScene) ne bougent pas. */
+  const sansCase = enqueteSansCase(card);
+  if(sansCase) while(gTotal.firstChild) gTotal.removeChild(gTotal.firstChild);
   
   if(!isBarModelTotal){
     let boxX = bbTotal.x - padX;
@@ -11165,9 +11149,10 @@ function renderCard(card, revealState, opts = {}){
       width: bbTotal.width + padX*2,
       height: bbTotal.height + padY*2,
         rx: relationTotalCompact ? 16 : (introTotalCompact ? 18 : 22),
-      fill: totalBoxFill,
-      stroke: totalBoxStroke,
-      "stroke-width":"4"
+      fill: sansCase ? "none" : totalBoxFill,
+      stroke: sansCase ? "none" : totalBoxStroke,
+      "stroke-width":"4",
+      ...(sansCase ? { class:"totalPlace" } : {})
     }), gTotal);
   }
 
@@ -12588,23 +12573,21 @@ function renderCardIntoSvg(targetSvg, card, printMode, opts = {}){
   const lbl = tText(tx, ty, "TOTAL", {"text-anchor":"middle","font-size":String(totalLabelSize),"fill":totalLabelColor,"font-weight":"900","letter-spacing":"2"});
   const sansTotalImprime = (card.family === "C" && card._rel && card._rel.sansTotal) || sysTotalCache(card);
   const num = tText(tx, ty+totalNumberDy, sansTotalImprime ? "?" : String(card.total), {"text-anchor":"middle","font-size":String(totalNumberSize),"fill":sansTotalImprime ? "#64748b" : totalColor,"font-weight":"900"});
-  g.appendChild(lbl); g.appendChild(num);
-  const hoteTotal = opts.sixColonne ? racine : targetSvg;
-  hoteTotal.appendChild(g);
-
   const boxH = 210;
   const boxY = ty - 70;
   let boxW = opts.sixColonne ? SIX_COLONNE.colonneW : 280;
   let boxX = tx - boxW/2;
-  /* « PAS DE TOTAL » centré dans la case : la place est DONNÉE (la case), car la feuille
-     d'impression est encore cachée quand on la dessine — getBBox y rend une boîte vide et le
-     texte partait hors de la carte (vu au rendu des livrets, 07/10/2026) */
-  if(enquetePasDeTotal(card)) enquetePasDeTotalSvg(g, lbl, num, tx, totalLabelSize, 900, totalLabelColor, (n, a) => tEl(n, a), { x:boxX, y:boxY, width:boxW, height:boxH });
-
-  hoteTotal.insertBefore(tEl("rect",{
-    x:Math.round(boxX), y:Math.round(boxY), width:Math.round(boxW), height:Math.round(boxH), rx:22,
-    fill:boxFill, stroke:boxStroke, "stroke-width":"4"
-  }), g);
+  /* Enquête sans total : pas de case (08/10/2026) — ni le groupe ni la boîte ; leur place reste
+     blanche, les phrases d'indice (layoutEnqueteClueBand, à band.x) ne bougent pas. */
+  if(!enqueteSansCase(card)){
+    g.appendChild(lbl); g.appendChild(num);
+    const hoteTotal = opts.sixColonne ? racine : targetSvg;
+    hoteTotal.appendChild(g);
+    hoteTotal.insertBefore(tEl("rect",{
+      x:Math.round(boxX), y:Math.round(boxY), width:Math.round(boxW), height:Math.round(boxH), rx:22,
+      fill:boxFill, stroke:boxStroke, "stroke-width":"4"
+    }), g);
+  }
 
   // lot P : en bas de la colonne, la case réponse « ? = ……… » (la valeur en correction)
   if(opts.sixColonne) drawSixReponseCase(racine, revealAnswers ? sixCorrectionData(card).h : null, tEl, tText, sixReponseInconnue(card));
@@ -13808,6 +13791,9 @@ let eleveIndicesTel = false;
    sur ces écrans : le dessin n'est plus réduit pour faire tenir des phrases de 1 550
    unités) ; la réserve sous la carte et l'écart TOTAL / plateau, voir elevePaveCalerCarte */
 const ELEVE_PLATEAU_MIN_ENQ = 100, ELEVE_RESERVE_ENQ_TEL = 22, ELEVE_TOTAL_TEL_ECART = 10;
+/* la place de la case TOTAL à droite du plateau au téléphone (case + écart, 80 px mesurés le
+   08/10/2026) : une carte de l'Enquête sans total n'a plus de case mais garde ce plateau */
+const ELEVE_TOTAL_TEL_PLACE = 80;
 const ELEVE_SCHEMA_ETAPES = 3; /* lots G1-G2 : les barres, le schéma regroupé, je calcule (2 sans total) */
 let eleveIdx = 0, eleveEtoiles = 0, eleveSerie = [], eleveResultats = [], eleveCarteFautee = false, eleveRepriseFaite = false;
 /* parties supplémentaires d'une étape composée (voir « suite » dans l'adresse) */
@@ -14487,19 +14473,17 @@ function renderEleveSplat(){
   eleveEchecs = 0;
   panneau.classList.toggle("enquete", !!enquete); /* avant la consigne, qui le lit */
   panneau.classList.toggle("systeme", !!(enquete && enquete.systeme)); /* le Système : mêmes règles que l'Enquête, plus les siennes */
-  /* « ? » gris ardoise, comme sur le plateau : Enquête sans total */
-  panneau.classList.toggle("sansTotal", !!(enquete && card._rel && card._rel.sansTotal));
 
   let bas = "", haut;
   if(enquete){
     /* Enquête : total donné, une case par tache (largeurs égales), voir eleveCasesEnqueteHtml */
     bas = eleveCasesEnqueteHtml(card, enquete);
-    /* sans total : la case reste, avec « ? », donnée comme sur le plateau (choix du 23/09) ;
-       Système : le TOTAL du plateau principal ; « Trois paires » n'a pas de ligne du TOTAL (lot
-       M4-4b : son plateau des trois couleurs n'est plus montré), seulement ses trois cases */
-    haut = (enquete.systeme && sysTotalCache(card)) ? ""
-      : (enquetePasDeTotal(card) ? eleveCaseDonneeHtml("haut blanche pasDe", "Pas de", "Total")
-      : eleveCaseDonneeHtml("haut blanche", "Total", (card._rel && card._rel.sansTotal) ? "?" : card.total));
+    /* Système : le TOTAL du plateau principal ; « Trois paires » n'a pas de ligne du TOTAL (lot
+       M4-4b : son plateau des trois couleurs n'est plus montré), seulement ses trois cases ;
+       Enquête sans total : pas de ligne du TOTAL non plus (08/10/2026, pas de case), seulement
+       une case par tache */
+    haut = ((enquete.systeme && sysTotalCache(card)) || enqueteSansCase(card)) ? ""
+      : eleveCaseDonneeHtml("haut blanche", "Total", card.total);
   }else{
     const flexVis = Math.max(infos.visibleSum, card.total * 0.05, 1);
     const flexHid = Math.max(infos.H, card.total * 0.05, 1);
@@ -15017,11 +15001,11 @@ function eleveRappelHtml(card){
   const indices = (card && card._inv && Array.isArray(card._inv.indices) ? card._inv.indices : [])
     .filter(t => typeof t === "string");
   const esc = t => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;");
-  /* une carte « sans total » (lot E-sans-total) garde son « ? » */
-  const sansTotal = !!(card && card._rel && card._rel.sansTotal);
-  if(enquetePasDeTotal(card)) return `<div class="eleveRappelTotal"><span>PAS DE</span><b class="pasDe">TOTAL</b></div>` +
-    `<div class="eleveRappelIndices">${indices.map(t => `<p>${esc(t)}</p>`).join("")}</div>`;
-  return `<div class="eleveRappelTotal"><span>TOTAL</span><b${sansTotal ? ' class="inconnu"' : ""}>${sansTotal ? "?" : esc(card.total)}</b></div>` +
+  /* une carte sans total (lot E-sans-total) n'a pas de case (08/10/2026) : le petit plateau seul,
+     centré (#eleveRappel.avecPlateau) */
+  const caseTotal = enqueteSansCase(card) ? ""
+    : `<div class="eleveRappelTotal"><span>TOTAL</span><b>${esc(card.total)}</b></div>`;
+  return caseTotal +
     `<div class="eleveRappelIndices">${indices.map(t => `<p>${esc(t)}</p>`).join("")}</div>`;
 }
 function eleveRappelAfficher(card){
@@ -15103,18 +15087,18 @@ function eleveIndicesAfficher(card){
   if(vieux) vieux.remove();
   const vieuxT = document.getElementById("eleveTotalTel");
   if(vieuxT) vieuxT.remove();
-  if(plateau) plateau.classList.remove("avecTotalTel");
+  if(plateau) plateau.classList.remove("avecTotalTel", "sansCaseTel");
   if(!eleveIndicesTel || !plateau || !plateau.parentNode) return;
   const bloc = document.createElement("div");
   bloc.id = "eleveIndices";
   bloc.innerHTML = eleveIndicesHtml(card);
   plateau.parentNode.insertBefore(bloc, plateau);
-  /* une carte « sans total » garde son « ? », gris ardoise comme sur le plateau */
-  const sansTotal = !!(card._rel && card._rel.sansTotal);
+  /* Enquête sans total : pas de case (08/10/2026) ; le plateau garde la taille qu'il avait à côté
+     d'elle (eleveIndicesHauteurPlateau), centré */
+  if(enqueteSansCase(card)){ plateau.classList.add("sansCaseTel"); return; }
   const tot = document.createElement("div");
   tot.id = "eleveTotalTel";
-  tot.innerHTML = enquetePasDeTotal(card) ? `<span>PAS DE</span><b class="pasDe">TOTAL</b>`
-    : `<span>TOTAL</span><b${sansTotal ? ' class="inconnu"' : ""}>${sansTotal ? "?" : String(Number(card.total))}</b>`;
+  tot.innerHTML = `<span>TOTAL</span><b>${String(Number(card.total))}</b>`;
   plateau.appendChild(tot);
   plateau.classList.add("avecTotalTel");
 }
@@ -15128,6 +15112,9 @@ function eleveIndicesHauteurPlateau(){
     let largeur = plateau.getBoundingClientRect().width;
     const tot = document.getElementById("eleveTotalTel");
     if(tot) largeur -= tot.getBoundingClientRect().width + ELEVE_TOTAL_TEL_ECART; /* la colonne du dessin */
+    /* Enquête sans total (08/10/2026) : la case n'est plus là, sa place est retirée quand même —
+       le plateau ne grandit pas ; à la hauteur ainsi calculée, le dessin se centre (viewBox) */
+    else if(plateau.classList.contains("sansCaseTel")) largeur -= ELEVE_TOTAL_TEL_PLACE;
     if(!(vb && vb.width > 0 && largeur > 0)) return;
     const h = Math.round(largeur * vb.height / vb.width);
     plateau.style.height = h + "px";

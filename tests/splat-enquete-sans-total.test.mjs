@@ -349,18 +349,20 @@ test("écran : deux clics sans total (les barres, calculs), taches dévoilées a
   assert.ok(!cadres.includes("enqueteBarresVide"), "plus d'étape « barres vides » (29/09/2026)");
 });
 
-test("mode élève : la case du haut reste, « PAS DE TOTAL » (07/10/2026), rien à saisir ; les autres cartes gardent leur total", () => {
+test("mode élève : pas de case du TOTAL (08/10/2026) — le tableau n'a qu'une case par tache ; les autres cartes gardent leur total", () => {
   const src = fn("renderEleveSplat");
-  // (lot M4-4b : « Trois paires » du Système n'a plus de ligne du TOTAL ; 07/10/2026 : l'Enquête sans total
-  // dit « PAS DE TOTAL » — avec le « ? » de la référence, « TOTAL ? » ferait deux « ? » de sens différents)
-  assert.match(src, /haut = \(enquete\.systeme && sysTotalCache\(card\)\) \? ""\n      : \(enquetePasDeTotal\(card\) \? eleveCaseDonneeHtml\("haut blanche pasDe", "Pas de", "Total"\)\n      : eleveCaseDonneeHtml\("haut blanche", "Total", \(card\._rel && card\._rel\.sansTotal\) \? "\?" : card\.total\)\);/);
+  // (lot M4-4b : « Trois paires » du Système n'a plus de ligne du TOTAL ; 08/10/2026 : l'Enquête sans
+  // total non plus — ni « TOTAL ? », ni « PAS DE TOTAL » (malentendu du 07/10), ni case vide)
+  assert.match(src, /haut = \(\(enquete\.systeme && sysTotalCache\(card\)\) \|\| enqueteSansCase\(card\)\) \? ""\n      : eleveCaseDonneeHtml\("haut blanche", "Total", card\.total\);/);
+  assert.match(src, /`<div class="eleveDiag">\$\{haut \? `<div class="ligneHaut">\$\{haut\}<\/div>` : ""\}`/);
+  const sansCase = new Function(`${fn("enqueteSansCase")}\nreturn enqueteSansCase;`)();
+  assert.equal(sansCase({ family: "C", _rel: { sansTotal: true } }), true);
+  assert.equal(sansCase({ family: "C", _rel: {} }), false, "une carte avec total garde sa case");
+  assert.equal(sansCase({ family: "D", _sys: {} }), false, "le Système ne change pas");
+  // la case des autres cartes : donnée, sans champ (la validation l'ignore)
   const donnee = new Function(`${fn("eleveCaseDonneeHtml")}\nreturn eleveCaseDonneeHtml;`)();
-  const h = donnee("haut blanche", "Total", "?");
+  const h = donnee("haut blanche", "Total", 38);
   assert.doesNotMatch(h, /<input/, "une case donnée n'a pas de champ : la validation l'ignore");
-  assert.match(h, /<span class="eleveDonneeVal">\?<\/span>/);
-  const pasDe = donnee("haut blanche pasDe", "Pas de", "Total");
-  assert.doesNotMatch(pasDe, /<input/);
-  assert.match(pasDe, /<span class="eleveDonneeVal">Total<\/span>/);
-  // la case garde sa taille : « TOTAL » en capitales, à la taille de « PAS DE », en gras
-  assert.match(html, /\.eleveCase\.haut\.donnee\.pasDe \.eleveDonneeVal\{font-size:11px;letter-spacing:\.08em;text-transform:uppercase;font-weight:900;color:#475569\}/);
+  assert.match(h, /<span class="eleveDonneeVal">38<\/span>/);
+  assert.doesNotMatch(html, /pasDe|["'`>]PAS DE|"Pas de", "Total"/, "plus rien de « PAS DE TOTAL » (ni texte, ni classe)");
 });

@@ -128,8 +128,9 @@ Décidée avec Gwenaël le 07/10/2026 ; le Système (monde 4) ne change pas.
 - ① s'appelle **« Schéma de comparaison »** ; ② reste le schéma regroupé ; une barre et un
   nombre sont reliés par une flèche (« → 17 », gris : déjà trouvée ; noir : celle de l'étape).
 - **« Je vérifie »** : le total seulement ; sans total, seulement l'indice de l'écart.
-- **« PAS DE TOTAL »** à la place de « TOTAL ? » sur les cartes sans total (énoncés, corrigés,
-  écran, mode élève) : deux « ? » de sens différents prêteraient à confusion.
+- **Pas de case du total** sur les cartes sans total (08/10/2026 : ni « TOTAL ? », ni « PAS DE
+  TOTAL » ; énoncés, corrigés, écran, mode élève) : sa place reste blanche, les phrases d'indice ne
+  bougent pas.
 
 ## Les livrets corrigés (pour tous)
 

@@ -54,6 +54,9 @@ const etat = () => {
   return {
     petit: petit ? { ...boite(petit), taches: petit.querySelectorAll("path").length, ids: petit.querySelectorAll("[id]").length } : null,
     total: total ? boite(total) : null, phrasesBas: phrases ? phrases.getBoundingClientRect().bottom : null,
+    /* une carte de l'Enquête sans total n'a pas de case (08/10/2026) : le petit plateau seul, centré */
+    sansCase: enqueteSansCase(eleveSerie[eleveIdx]),
+    bandeau: document.getElementById("eleveRappel") ? boite(document.getElementById("eleveRappel")) : null,
     /* de combien un trait du schéma sort du cadre de l'étape, à droite (la case vide du total) */
     horsCadre: (() => {
       const cadre = document.querySelector("#enqueteBarres, #enqueteLigne, #enqueteCalculs");
@@ -128,8 +131,15 @@ const etat = () => {
         }
         if(f.isMobile){
           assert.ok(e.petit, `${ici}, appui ${n} : pas de petit plateau dans le bandeau`);
-          assert.ok(e.petit.l >= 60 && e.petit.g >= 0 && e.total.d <= e.largeur, `${ici}, appui ${n} : le petit plateau ou le TOTAL sort de l'écran`);
-          assert.ok(e.total.g - e.petit.d >= 8, `${ici}, appui ${n} : le TOTAL est collé au plateau (${Math.round(e.total.g - e.petit.d)} px)`);
+          if(e.sansCase){
+            assert.equal(e.total, null, `${ici}, appui ${n} : une case du total sur une carte sans total`);
+            assert.ok(e.petit.l >= 60 && e.petit.g >= 0 && e.petit.d <= e.largeur, `${ici}, appui ${n} : le petit plateau sort de l'écran`);
+            const ecart = (e.petit.g + e.petit.d) / 2 - (e.bandeau.g + e.bandeau.d) / 2;
+            assert.ok(Math.abs(ecart) <= 2, `${ici}, appui ${n} : le petit plateau n'est pas centré (${Math.round(ecart)} px)`);
+          }else{
+            assert.ok(e.petit.l >= 60 && e.petit.g >= 0 && e.total.d <= e.largeur, `${ici}, appui ${n} : le petit plateau ou le TOTAL sort de l'écran`);
+            assert.ok(e.total.g - e.petit.d >= 8, `${ici}, appui ${n} : le TOTAL est collé au plateau (${Math.round(e.total.g - e.petit.d)} px)`);
+          }
           assert.ok(e.petit.h >= e.phrasesBas - 1, `${ici}, appui ${n} : le petit plateau n'est pas sous les phrases`);
           assert.ok(e.petit.taches >= e.tachesCarte, `${ici}, appui ${n} : ${e.petit.taches} tache(s) dans le petit plateau pour ${e.tachesCarte}`);
           assert.ok(e.horsCadre < 0, `${ici}, appui ${n} : un trait du schéma touche ou dépasse le cadre (${e.horsCadre} px)`);

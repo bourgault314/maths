@@ -192,10 +192,9 @@ test("renderEleveSplat : le Système passe (classe « systeme »), le TOTAL donn
   assert.match(rendu, /const enquete = infos \? null : eleveInfosTableau\(card\);/);
   assert.match(rendu, /if\(!infos && !enquete\)\{\n    tete\.style\.display = "none";\n    panneau\.innerHTML = `<p class="eleveConsigne">Le parcours élève n'existe pas encore pour ce mode\.<\/p>`;/);
   assert.match(rendu, /panneau\.classList\.toggle\("systeme", !!\(enquete && enquete\.systeme\)\);/);
-  // « ? » gris ardoise : l'Enquête sans total seulement
-  assert.match(rendu, /panneau\.classList\.toggle\("sansTotal", !!\(enquete && card\._rel && card\._rel\.sansTotal\)\);/);
-  // Trois paires : pas de ligne du TOTAL (son plateau des trois couleurs n'est plus montré)
-  assert.match(rendu, /haut = \(enquete\.systeme && sysTotalCache\(card\)\) \? ""\n      : \(enquetePasDeTotal\(card\) \? eleveCaseDonneeHtml\("haut blanche pasDe", "Pas de", "Total"\)\n      : eleveCaseDonneeHtml\("haut blanche", "Total", \(card\._rel && card\._rel\.sansTotal\) \? "\?" : card\.total\)\);/);
+  // Trois paires : pas de ligne du TOTAL (son plateau des trois couleurs n'est plus montré) ; l'Enquête
+  // sans total non plus (08/10/2026)
+  assert.match(rendu, /haut = \(\(enquete\.systeme && sysTotalCache\(card\)\) \|\| enqueteSansCase\(card\)\) \? ""\n      : eleveCaseDonneeHtml\("haut blanche", "Total", card\.total\);/);
   assert.match(rendu, /`<div class="eleveDiag">\$\{haut \? `<div class="ligneHaut">\$\{haut\}<\/div>` : ""\}` \+\n    `<div class="ligneBas">\$\{bas\}<\/div><\/div>` \+/);
   assert.doesNotMatch(rendu, /sysTotalCache\(card\)\) \? "\?"/, "plus jamais « TOTAL ? » pour le Système");
 });
