@@ -10,15 +10,17 @@ MATHSGO_PEDAGOGY.registerModule('dnb_08',{
       {id:'select-numbers',label:'Cocher les nombres divisibles par un nombre donné'},
       {id:'sharing',label:'Partage sans reste : oui ou non'},
       {id:'give-divisor',label:'Donner un diviseur autre que 1 et N (réponse courte)'},
-      {id:'build-number',label:'Fabriquer un nombre divisible par 3 ou 9 (réponse courte)'},
+      {id:'build-number',label:'Fabriquer un nombre divisible par 3 ou 9, ou par deux nombres (réponse courte)'},
       {id:'two-numbers',label:'Divisibilité de deux nombres proches (QCM du brevet 2026)'},
-      {id:'missing-digit',label:'Chiffre manquant (réponse courte)'}
+      {id:'missing-digit',label:'Chiffre manquant, critère 3 ou 9, ou deux critères (réponse courte)'},
+      {id:'list-divisors',label:'Les nombres d’une liste qui divisent un petit nombre (DNB 2026, série professionnelle)'}
     ],
     reasoning:[
       {id:'last-digit',label:'Regarder le chiffre des unités',rule:'Divisible par 2 : chiffre des unités 0, 2, 4, 6 ou 8. Par 5 : 0 ou 5. Par 10 : 0.'},
       {id:'digit-sum',label:'Additionner les chiffres',rule:'Divisible par 3 : la somme des chiffres est dans la table de 3. Par 9 : dans la table de 9.'},
       {id:'combine-rules',label:'Tester chaque critère',rule:'Tester séparément chaque diviseur proposé ; plusieurs réponses, ou aucune, peuvent être justes.'},
-      {id:'share-without-remainder',label:'Relier au partage',rule:'Être divisible par n, c’est pouvoir partager en n parts égales sans reste.'}
+      {id:'share-without-remainder',label:'Relier au partage',rule:'Être divisible par n, c’est pouvoir partager en n parts égales sans reste.'},
+      {id:'divisor-word',label:'Diviseur, multiple',rule:'3 divise 12 ⇔ 12 est divisible par 3 ⇔ 12 est un multiple de 3. 1 et N divisent toujours N.'}
     ],
     representations:[
       {id:'highlight-digits',label:'Le nombre chiffre par chiffre, chiffre des unités encadré (panneau Aide)'}
@@ -38,9 +40,10 @@ MATHSGO_PEDAGOGY.registerModule('dnb_08',{
     {id:'quels-diviseurs',label:'Par quels nombres N est-il divisible ?',questions:[11,12,13,14,15,16,17,18,19,20,21,22],response:'qcm-multiple',visual:{policy:'none',component:null},helpSections:['last-digit','digit-sum','combine-rules']},
     {id:'cocher-nombres-divisibles',label:'Cocher les nombres divisibles par un nombre donné',questions:[23],response:'qcm-multiple',visual:{policy:'none',component:null},helpSections:['last-digit','digit-sum']},
     {id:'partage-sans-reste',label:'Partage sans reste : oui ou non',questions:[24],response:'qcm-one',visual:{policy:'none',component:null},helpSections:['share-without-remainder','last-digit','digit-sum']},
-    {id:'donner-un-diviseur',label:'Donner un diviseur autre que 1 et N',questions:[25],response:'numeric',visual:{policy:'none',component:null},helpSections:['last-digit','digit-sum']},
-    {id:'fabriquer-un-nombre',label:'Fabriquer un nombre divisible par 3 ou 9',questions:[26],response:'numeric',visual:{policy:'none',component:null},helpSections:['digit-sum']},
+    {id:'donner-un-diviseur',label:'Donner un diviseur autre que 1 et N',questions:[25],response:'numeric',visual:{policy:'none',component:null},helpSections:['last-digit','digit-sum','divisor-word']},
+    {id:'fabriquer-un-nombre',label:'Fabriquer un nombre divisible par 3 ou 9, ou par deux nombres',questions:[26],response:'numeric',visual:{policy:'none',component:null},helpSections:['last-digit','digit-sum']},
     {id:'deux-nombres-un-critere',label:'Divisibilité de deux nombres proches',questions:[27],response:'qcm-one',visual:{policy:'none',component:null},helpSections:['digit-sum']},
-    {id:'chiffre-manquant',label:'Chiffre manquant',questions:[28],response:'numeric',visual:{policy:'none',component:null},helpSections:['digit-sum']}
+    {id:'chiffre-manquant',label:'Chiffre manquant',questions:[28],response:'numeric',visual:{policy:'none',component:null},helpSections:['last-digit','digit-sum']},
+    {id:'diviseurs-petit-nombre',label:'Les nombres d’une liste qui divisent un petit nombre',questions:[29],response:'qcm-multiple',visual:{policy:'none',component:null},helpSections:['divisor-word']}
   ]
 });

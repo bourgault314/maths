@@ -1,5 +1,7 @@
-// dnb_08 — refonte du 8 octobre 2026 : les anciens gabarits 1 à 10 sont retirés
-// (1 à 7 jamais tirés, 8, 9 et 10 avaient toujours la même réponse).
+// dnb_08 — refonte d'octobre 2026 : les anciens gabarits 1 à 10 sont retirés
+// (1 à 7 jamais tirés ; 8, 9 et 10 avaient toujours la même réponse).
+// Les types 11 à 22 (un profil chacun) étaient fabriqués à la volée ; ils sont
+// maintenant déclarés ici. Les types 23 à 29 sont nouveaux (formes du brevet).
 // Les énoncés sont fabriqués par dnb_08/generate.js ; ce fichier liste les types.
 const MODULE_DNB_08 = {
   "id": "dnb_08",
@@ -195,7 +197,7 @@ const MODULE_DNB_08 = {
     },
     {
       "n": 26,
-      "title": "Donne un nombre à 4 ou 5 chiffres divisible par 3 ou 9, de chiffre des unités imposé (sujet de référence 2027)",
+      "title": "Donne un nombre à 4 ou 5 chiffres divisible par 3 ou 9 de chiffre des unités imposé, ou divisible par deux nombres (sujet de référence 2027)",
       "statement": "",
       "answer": "[\"generated\"]",
       "footer": "",
@@ -217,12 +219,23 @@ const MODULE_DNB_08 = {
     },
     {
       "n": 28,
-      "title": "Chiffre manquant pour être divisible par 3 ou 9",
+      "title": "Chiffre manquant pour être divisible par 3 ou 9 (ou par deux nombres)",
       "statement": "",
       "answer": "[\"generated\"]",
       "footer": "",
       "options": {
         "divisibility_kind": "missing-digit",
+        "template_version": 1
+      }
+    },
+    {
+      "n": 29,
+      "title": "Coche les nombres de la liste qui divisent N (DNB 2026 Métropole, série professionnelle)",
+      "statement": "",
+      "answer": "[\"generated\"]",
+      "footer": "",
+      "options": {
+        "divisibility_kind": "list-divisors",
         "template_version": 1
       }
     }
