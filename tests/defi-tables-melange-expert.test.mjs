@@ -330,8 +330,9 @@ test("la page : plus de bouton au bilan ; Mon mélange à droite de « Je passe 
   const accueil = source("renderSeanceAccueil");
   assert.match(accueil, /lien\(NOM_DU_TEST, \(\) => launchFromParcours\(PARCOURS\.configValidation\(table\), "menu"\), "rond"\);\s*\}\s*\/\/[^\n]*\n\s*const melange = boutonMelangeAccueil\(etat\);\s*if \(melange\) \{\s*liens\.append\(melange\);\s*liens\.classList\.add\("deux"\);\s*\}/, "Mon mélange, juste après « Je passe le test »");
   assert.match(accueil, /saut\.className = "saut";\s*liens\.append\(saut\);\s*lien\("Choisir une activité", \(\) => \{[\s\S]*?\}, "gris"\);/, "« Choisir une activité » sur sa ligne, en gris");
-  // La porte fermée grise TOUS les liens, Mon mélange compris (planche 1).
-  assert.ok(accueil.indexOf("boutonMelangeAccueil(etat)") < accueil.indexOf('liens.querySelectorAll("button").forEach(bouton => { bouton.disabled = true; });'));
+  // Lot « Mes calculs du jour d'abord » : la porte ne grise plus rien, Mon
+  // mélange compris — il lance Mes calculs du jour d'abord.
+  assert.doesNotMatch(accueil, /disabled|est-fermee/);
   // Même largeur que le test ; côte à côte dès 360 px, l'un sous l'autre en dessous.
   assert.match(html, /\.seance-liens\.deux button\.rond \{ flex: 1 1 0; min-width: 0; max-width: 190px; padding: 9px 6px; white-space: nowrap; \}/);
   assert.match(html, /@media \(max-width: 359px\) \{ \.seance-liens\.deux button\.rond \{ flex: 0 0 100%; \} \}/);

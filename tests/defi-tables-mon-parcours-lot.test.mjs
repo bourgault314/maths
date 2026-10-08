@@ -435,12 +435,13 @@ test("11. Mon mélange compact : le triangle qui le lance, « Mon mélange » et
   // Lot « un seul système » (05/10/2026) : Mon mélange est libre. La case est
   // un bouton « jouer » (plus une coche « à faire »). Lot « les trophées » : à
   // droite, plus de badge ni de dernier score — les trois trophées (toujours
-  // là, gris tant qu'ils ne sont pas gagnés). La porte fermée, il attend Mes
-  // calculs du jour : c'est le sous-titre qui le dit.
-  assert.match(rendu, /textes\.append\(title, tables\);\s*if \(porte\) tables\.textContent = "après Mes calculs du jour";\s*droite\.append\(textes, tropheesDuMelange\(etat\.melange\.trophees\)\);\s*ligneMelange\.append\(makeCell\(\{\s*kind: "star",\s*etat: 0,[\s\S]*?config: porte \? null : PARCOURS\.configMelange\(parcours\),\s*extraClass: porte \? "is-fermee" : "",\s*texte: triangleJouer\(\),\s*action: porte \? \(\) => \{\} : null\s*\}\), droite\);/);
+  // là, gris tant qu'ils ne sont pas gagnés). Lot « Mes calculs du jour
+  // d'abord » : jamais grisé — tant que Mes calculs du jour n'est pas joué,
+  // la case le lance d'abord (launchFromParcours).
+  assert.match(rendu, /textes\.append\(title, tables\);\s*droite\.append\(textes, tropheesDuMelange\(etat\.melange\.trophees\)\);\s*ligneMelange\.append\(makeCell\(\{\s*kind: "star",\s*etat: 0,[\s\S]*?texte: triangleJouer\(\),\s*config: PARCOURS\.configMelange\(parcours\)\s*\}\), droite\);/);
   assert.doesNotMatch(rendu, /"À jour ✓"|"À faire"|aRefaireAvec|melange\.aJour|etat\.verrou/, "plus d’état « à faire » / « à refaire » ni de verrou");
   assert.doesNotMatch(rendu, /après le mélange des 9 tables/, "l’escalier n’attend plus le mélange");
-  assert.match(rendu, /const expertOuvert = etat\.expert\.ouvert && !porte;/);
+  assert.match(rendu, /const expertOuvert = etat\.expert\.ouvert;/);
   assert.doesNotMatch(html, /function dernierMelange\(|Dernier : \$\{|réussi avec \$\{/, "plus de dernier score ni de « réussi avec N tables ✓ »");
   assert.doesNotMatch(rendu, /"▶"/, "le caractère ▶ penchait à gauche : un dessin centré à la place");
   // Les trois trophées, EXÉCUTÉS : trois coupes (un dessin chacune), grises

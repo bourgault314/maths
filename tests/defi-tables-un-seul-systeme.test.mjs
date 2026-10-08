@@ -494,13 +494,15 @@ test("la page : Mes calculs du jour chronométré, lancé par « C'est parti ! �
   assert.match(html, /\$\{pluriel\(etape\.calculs, "calcul"\)\} · \$\{dureeCourte\(etape\.duree\)\}/);
 });
 
-test("la page : la porte de l'accueil, et rien ne se lance à côté", () => {
-  assert.match(html, /if \(etat\.porte\) \{\s+liens\.classList\.add\("est-fermee"\);\s+liens\.querySelectorAll\("button"\)\.forEach\(bouton => \{ bouton\.disabled = true; \}\);/);
-  assert.match(html, /mot\.textContent = "Après Mes calculs du jour";/);
-  assert.match(html, /if \(origin !== "seance" && PARCOURS\.mesCalculsAFaire\(parcours\)\) \{\s+renderAccueil\(\);\s+return;\s+\}/);
-  assert.match(html, /if \(etat\.porte\) state\.choisirActivite = false;/);
-  assert.match(html, /config: porte \? null : PARCOURS\.configMelange\(parcours\)/);
-  assert.match(html, /const expertOuvert = etat\.expert\.ouvert && !porte;/);
+// Lot « Mes calculs du jour d'abord » (08/10/2026, décision de Gwenaël,
+// planches 19 et 20) : la porte ne grise plus rien ; rien ne se lance à côté
+// pour autant — Mes calculs du jour d'abord, puis ce qui a été touché.
+test("la page : la porte de l'accueil enchaîne, et rien ne se lance à côté", () => {
+  assert.doesNotMatch(html, /est-fermee|porte-mot|bouton\.disabled = true/);
+  assert.match(html, /if \(origin !== "seance" && PARCOURS\.mesCalculsAFaire\(parcours\)\) \{\s*if \(config\.mode !== "revision"\) state\.apresMesCalculs = \{config, origin, nom: nomDeLaSuite\(config\)\};\s*startRevision\(null, origin\);\s*return;\s*\}/);
+  assert.doesNotMatch(html, /if \(etat\.porte\) state\.choisirActivite = false;/);
+  assert.match(html, /config: PARCOURS\.configMelange\(parcours\)\s*\}\), droite\);/);
+  assert.match(html, /const expertOuvert = etat\.expert\.ouvert;/);
 });
 
 test("la page : les mots, les coupes du mélange et les petits restes", () => {
