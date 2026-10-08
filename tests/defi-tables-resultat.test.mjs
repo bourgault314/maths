@@ -41,15 +41,15 @@ test("la fête est le cadre du verdict, et le rang s’y affiche une fois", () =
 // Lot « un seul système » (05/10/2026) : plus de mélange dû, donc plus de
 // « Refais ton mélange… » ni de « Réussis d'abord ton mélange… » ; après une
 // table passée, la suite ne dit que la table suivante (ou l'escalier ouvert).
-test("la suite tient en une phrase, sans mélange à refaire (un trophée gagné se dit), et les nombres ne se coupent pas", () => {
+test("la suite tient en une phrase, sans mélange à refaire (une coupe gagnée se dit), et les nombres ne se coupent pas", () => {
   assert.match(html, /function suiteApresSerie\(evenements, fete\) \{/);
   const suite = html.slice(html.indexOf("function suiteApresSerie(evenements, fete) {"), html.indexOf("function phraseTestRate() {"));
   assert.match(suite, /if \(trouve\("toutes-acquises"\)\) return "Tes 9 tables sont passées : l’escalier des étoiles est ouvert !";\s*return suivante \? `On continue avec la table de \$\{suivante\}\.` : "";/, "table passée : la table suivante, ou l’escalier ouvert par la neuvième");
   assert.doesNotMatch(suite, /melange-a-refaire|melange-debloque|verrouillee|escalierOuvert/, "plus aucun événement du mélange obligatoire");
   assert.doesNotMatch(suite, /Refais ton mélange|réussis ton mélange|Réussis d’abord ton mélange|Réussis le mélange/, "ni aucune de ses phrases");
-  // Lot « trophées » : Mon mélange réussi n'ouvre rien — il dit le trophée
-  // gagné, et rien quand il n'en gagne pas (le verdict suffit).
-  assert.match(suite, /if \(fete\.melange\) return fete\.melange\.trophee \? `Tu gagnes le trophée des \$\{fete\.melange\.trophee\} tables\\u00a0!` : "";/, "Mon mélange réussi : le trophée gagné, sinon rien");
+  // Lot « trophées » : Mon mélange réussi n'ouvre rien — il dit la coupe
+  // gagnée, et rien quand il n'en gagne pas (le verdict suffit).
+  assert.match(suite, /if \(fete\.melange\) return fete\.melange\.trophee \? `Tu gagnes la coupe des \$\{fete\.melange\.trophee\} tables\\u00a0!` : "";/, "Mon mélange réussi : la coupe gagnée, sinon rien");
   assert.match(suite, /\? "Maintenant, passe le test en 1 min 30\."/);
   // Lot dosage + validation : « tu peux valider » seulement quand les 8
   // calculs sont en boîte 3 ; sinon la phrase du rendez-vous, la même que l’accueil.

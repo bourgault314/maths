@@ -924,6 +924,13 @@
   // Les trois trophées de Mon mélange : « gagne » — il a été réussi avec au
   // moins ce nombre de tables ; « aGagner » — pas encore gagné, et l'élève a
   // assez de tables passées pour le tenter maintenant.
+  // La coupe des 9 tables : Mon mélange réussi avec les 9 tables (lot « Mon
+  // mélange sur l'accueil et l'expert ») — tant qu'elle manque, il entre dans
+  // la séance de l'élève aux 9 tables.
+  function coupeDesNeuf(parcours) {
+    return (parcours.melange.reussi || 0) >= TABLES.length;
+  }
+
   function tropheesMelange(parcours) {
     const passees = tablesAcquises(parcours).length;
     const reussi = parcours.melange.reussi || 0;
@@ -1594,9 +1601,12 @@
     Object.freeze({marche: 8, type: "validation", cle: null, nom: "Je passe le test"})
   ]);
   const MARCHE_VALIDATION = MARCHES.length;
-  // L'entraînement qui prend la place de la validation quand la table n'est
-  // pas prête : « Dans le désordre ».
-  const MARCHE_DE_REMPLACEMENT = 5;
+  // Une table déjà passée, choisie exprès, se retravaille par ses trois
+  // entraînements, à partir de « Dans le désordre ». (Jusqu'au lot « Mon
+  // mélange sur l'accueil et l'expert », « Dans le désordre » prenait aussi la
+  // place du test pas encore ouvert : c'est maintenant la marche 7, refaite —
+  // voir etapeDeSeance.)
+  const MARCHE_TABLE_PASSEE = 5;
   // Ce que dure une étape, en minutes (pour « environ 5 min »). Lot M1 : les
   // durées du lot 1 annonçaient le double du temps réel (compté question par
   // question le 03/10 : 2 min 45 à 5 min 10 pour quatre étapes, selon
@@ -1651,6 +1661,13 @@
   // 9 sur 10 ou mieux (une erreur au plus).
   function marcheSeptReussie(juste, total) {
     return total - juste <= SEUILS.seance.raccourciErreursMax;
+  }
+
+  // La marche 7 a-t-elle déjà été jouée dans CETTE séance ? Alors la marche 8
+  // qui reste n'est plus le test annoncé : c'est la marche 7, refaite.
+  function septJoueeDansLaSeance(seance) {
+    return Boolean(seance) && (seance.faites || []).some(passee => passee.type === "entraine"
+      && passee.marche === MARCHE_RACCOURCI_FIN);
   }
 
   // La marche 7 a-t-elle été réussie à 9 sur 10 dans CETTE séance ?
@@ -1712,12 +1729,20 @@
     let depart = null;
     let echelle = false;
     // Les 9 tables passées et aucune choisie (lot 2) : après Mes calculs du
-    // jour, la marche suivante de l'escalier des étoiles.
-    if (choisie === null && toutesAcquises(parcours)) file.push({type: "etoile"});
+    // jour, la marche suivante de l'escalier des étoiles. Lot « Mon mélange
+    // sur l'accueil et l'expert » (07/10/2026, décision de Gwenaël) : tant
+    // que la coupe des 9 tables n'est pas gagnée, Mon mélange des 9 tables
+    // vient avant l'étoile. Raté, l'étoile vient quand même, et il revient à
+    // la séance suivante ; gagnée, la séance repasse à Mes calculs du jour,
+    // puis l'étoile.
+    if (choisie === null && toutesAcquises(parcours)) {
+      if (!coupeDesNeuf(parcours)) file.push({type: "melange"});
+      file.push({type: "etoile"});
+    }
     if (choisie !== null) {
       const ligne = parcours.tables[choisie];
       echelle = !ligne.acquise;
-      depart = echelle ? bornerDepart(ligne.seance.depart) : MARCHE_DE_REMPLACEMENT;
+      depart = echelle ? bornerDepart(ligne.seance.depart) : MARCHE_TABLE_PASSEE;
       const derniere = echelle ? MARCHE_VALIDATION : MARCHE_VALIDATION - 1;
       const marches = Math.min(SEUILS.seance.marches, Math.max(SEUILS.seance.marchesMin, SEUILS.seance.plafond - file.length));
       // Lot M2 : au sommet, la fenêtre s'arrête à la marche 8 au lieu de
@@ -1746,7 +1771,7 @@
   // de nombres (lib/progression.php : aucun texte, aucune liste d'objets) :
   // la séance est donc rangée en nombres.
   //  - « file » : un code par étape à venir — 100 Mes calculs du jour, 200 le
-  //    mélange, 300 l'étoile, et pour une marche son numéro (1 à 8), + 10
+  //    mélange (celui de l'élève aux 9 tables), 300 l'étoile, et pour une marche son numéro (1 à 8), + 10
   //    pour la marche d'en dessous après un raté, + 20 pour la marche ratée
   //    refaite, + 30 pour la validation du raccourci ;
   //  - « faites » : quatre nombres par étape faite — son code (100, 200,
@@ -1968,8 +1993,8 @@
 
   // L'étape à jouer maintenant, prête à lancer : son nom, sa série, sa durée.
   // C'est ICI que la marche 8 se décide — le test si la marche 7 vient d'être
-  // réussie dans la séance (lot « retours de classe »), sinon un
-  // entraînement à sa place — et qu'une
+  // réussie dans la séance (lot « retours de classe »), sinon la marche 7
+  // refaite à sa place — et qu'une
   // étape devenue sans objet s'efface (plus rien de dû).
   function etapeDeSeance(parcours, seance, aujourdhui = jourLocal()) {
     for (const prevue of seance.file) {
@@ -1979,9 +2004,16 @@
         if (!calculs) continue;
         return {type: "revision", nom: "Mes calculs du jour", calculs, duree: dureeMesCalculs(calculs), porte: !serie.faite, config: configRevision(), minutes: MINUTES_ETAPE.revision, prevue};
       }
-      // Le mélange n'est plus une étape de la séance (lot « un seul
-      // système ») : celui d'une séance commencée sous l'appli d'avant s'efface.
-      if (prevue.type === "melange") continue;
+      // Mon mélange n'est une étape que dans la séance de l'élève aux 9
+      // tables (aucune table choisie), tant que la coupe des 9 n'est pas
+      // gagnée (lot « Mon mélange sur l'accueil et l'expert ») : gagné ailleurs
+      // entre-temps, il s'efface ; celui d'une séance d'avant le lot « un seul
+      // système » (sur une table) s'efface aussi.
+      if (prevue.type === "melange") {
+        if (seance.table !== null || !toutesAcquises(parcours) || coupeDesNeuf(parcours)) continue;
+        return {type: "melange", nom: "Mon mélange", detail: `mes ${TABLES.length}\u00a0tables · ${libelleDuree(SEUILS.melange.dureeMax).replace(/ /g, "\u00a0")}`,
+          config: configMelange(parcours), minutes: MINUTES_ETAPE.melange, prevue};
+      }
       if (prevue.type === "etoile") {
         // Pas avant les 9 tables passées ; la couronne gagnée, c'est elle
         // qui se rejoue (l'entretien).
@@ -1997,10 +2029,14 @@
         if (!parcours.tables[table].acquise && (prevue.raccourci || validationDeSeance(parcours, table, seance))) {
           return {type: "validation", marche: numero, table, nom: marche(numero).nom, config: configValidation(table), minutes: MINUTES_ETAPE.validation, prevue};
         }
-        // Pas prête : un entraînement à la place — sauf si la table vient
-        // d'être acquise (validation libre depuis l'accueil).
+        // Pas ouvert (la marche 7 a eu 7 ou 8 sur 10) : la marche 7 REFAITE
+        // à la place (lot « Mon mélange sur l'accueil et l'expert », 07/10/2026,
+        // décision de Gwenaël — avant, « Dans le désordre »). Il n'y a qu'une
+        // marche 8 par séance : une seule reprise. 9 sur 10 cette fois, et le
+        // test vient juste après (noterEtape), en 5e étape au plus. Rien
+        // à la place si la table vient d'être passée (test libre de l'accueil).
         if (parcours.tables[table].acquise) continue;
-        numero = MARCHE_DE_REMPLACEMENT;
+        numero = MARCHE_RACCOURCI_FIN;
         condition = true;
       }
       const definition = marche(numero);
@@ -2011,7 +2047,7 @@
         cle: definition.cle,
         nom: definition.nom,
         // « Je passe le test · si j'ai 9 sur 10 juste avant » : la
-        // marche 8 prévue, jouée en entraînement quand la marche 7 n'a pas
+        // marche 8 prévue, jouée en marche 7 refaite quand la marche 7 n'a pas
         // ouvert le test.
         aLaPlaceDeLaValidation: condition,
         config: definition.type === "apprends" ? configApprends(table, definition.cle) : configEntraine(table, definition.cle),
@@ -2032,9 +2068,12 @@
       const etape = etapeDeSeance(parcours, reste, aujourdhui);
       if (!etape) break;
       // Une validation qui dépend d'une étape encore à jouer (la marche 7)
-      // est annoncée « si j'ai 9 sur 10 juste avant » (la marche 7).
+      // est annoncée « si j'ai 9 sur 10 juste avant » (la marche 7). La
+      // marche 7 déjà jouée sans 9 sur 10 (séance reprise), la marche 8 se
+      // jouera en marche 7 refaite : c'est elle qu'on annonce, et le test
+      // devient la 5e étape possible (raccourciEnFin).
       const prevueValidation = etape.prevue.type === "marche" && etape.prevue.marche === MARCHE_VALIDATION;
-      etapes.push(prevueValidation && etape.type !== "validation"
+      etapes.push(prevueValidation && etape.type !== "validation" && !septJoueeDansLaSeance(seance)
         ? {...etape, nom: marche(MARCHE_VALIDATION).nom, conditionnelle: true}
         : etape);
       reste = {...reste, file: reste.file.slice(reste.file.indexOf(etape.prevue) + 1)};
@@ -2048,19 +2087,19 @@
   // étapes annoncées (une 5e étape) ? Lot « retours de classe » (06/10/2026) :
   // le test vient TOUJOURS juste après la marche 7, donc seulement quand la
   // DERNIÈRE étape du programme est « Résultats, nombres manquants et
-  // divisions » jouée comme marche ; pas de validation déjà prévue ;
-  // validation possible (table pas encore passée). La carte dit alors
-  // « 4 ou 5 étapes ».
+  // divisions » ; pas de test déjà prévu ni annoncé ; validation possible
+  // (table pas encore passée). La carte dit alors « 4 ou 5 étapes ». Lot
+  // « Mon mélange sur l'accueil et l'expert » : la marche 7 refaite (à la
+  // place de la marche 8) compte aussi.
   function raccourciEnFin(parcours, seance, etapes) {
     if (!seance.echelle || !etapes.length || seance.table === null) return false;
     if (seance.faites.length + etapes.length >= SEUILS.seance.etapesMax) return false;
     const ligne = parcours.tables[seance.table];
     if (!ligne || ligne.acquise) return false;
     if (seance.faites.some(passee => passee.type === "validation")) return false;
-    if (etapes.some(etape => etape.prevue.type === "marche" && etape.prevue.marche === MARCHE_VALIDATION)) return false;
+    if (etapes.some(etape => etape.type === "validation" || etape.conditionnelle)) return false;
     const derniere = etapes[etapes.length - 1];
-    if (derniere.type !== "entraine" || derniere.cle !== CLE_RACCOURCI_FIN || derniere.aLaPlaceDeLaValidation) return false;
-    return true;
+    return derniere.type === "entraine" && derniere.cle === CLE_RACCOURCI_FIN;
   }
 
   // Une marche est-elle ratée ? Plus de 3 erreurs sur 10 (moins de 7 sur 10) ;
@@ -2969,6 +3008,7 @@
     configValidation,
     configMelange,
     tropheesMelange,
+    coupeDesNeuf,
     configEtoile,
     dureeEtoile,
     symboleEtoile,

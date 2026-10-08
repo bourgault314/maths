@@ -381,10 +381,10 @@ test("trophées, page : trois coupes, sans un mot ni un nombre — grises, doré
   assert.equal(zone.textContent, "");
   // Le dessin se dit à qui ne le voit pas.
   assert.equal(zone.attrs.role, "img");
-  assert.equal(zone.attrs["aria-label"], "Trophées de Mon mélange (avec 3, 6 et 9 tables) : gagné avec 3 et 6 tables");
+  assert.equal(zone.attrs["aria-label"], "Coupes de Mon mélange (avec 3, 6 et 9 tables) : gagnées avec 3 et 6 tables", "lot « Mon mélange sur l'accueil et l'expert » : « coupe », plus « trophée »");
   const vide = tropheesDuMelange(trophees());
   assert.deepEqual(vide.children.map(b => b.className), ["", "", ""], "trois coupes grises");
-  assert.equal(vide.attrs["aria-label"], "Trophées de Mon mélange (avec 3, 6 et 9 tables) : aucun pour l’instant");
+  assert.equal(vide.attrs["aria-label"], "Coupes de Mon mélange (avec 3, 6 et 9 tables) : aucune pour l’instant");
   // La source : aucun texte posé dans ces deux fonctions, aucun « Trophées » affiché ailleurs.
   assert.doesNotMatch(source("coupe") + source("tropheesDuMelange"), /textContent|createTextNode|innerHTML/);
   assert.doesNotMatch(html, /textContent = [`"'][^;\n]*Troph/, "le mot « Trophées » n'est écrit nulle part à l'écran");
@@ -394,14 +394,20 @@ test("trophées, page : trois coupes, sans un mot ni un nombre — grises, doré
   assert.match(html, /\.mp-trophees b\.is-gagne \{ color: #e0a800;/);
 });
 
-test("trophées, page : le bouton « Je me teste sur mes N tables » seulement si le mélange est visible, la porte ouverte ET un trophée à gagner", () => {
+// Lot « Mon mélange sur l'accueil et l'expert » (07/10/2026, planche 1) : le
+// bouton « Je me teste sur mes N tables » du bilan est remplacé par Mon
+// mélange, sur l'accueil, à droite de « Je passe le test ». Même règle : le
+// mélange visible ET une coupe à gagner. La porte fermée, il est là, grisé
+// avec les autres liens (renderSeanceAccueil les désactive tous).
+test("coupes, page : Mon mélange sur l'accueil seulement si le mélange est visible ET une coupe à gagner", () => {
   const bouton = (parcours, jour) => {
     const lances = [];
     const PARCOURS = {...P, etatAffichage: p => P.etatAffichage(p, jour)};
-    const fabrique = new Function("document", "PARCOURS", "parcours", "launchFromParcours", `${source("boutonMelange")}\nreturn boutonMelange;`);
-    const rendu = fabrique(fauxDocument, PARCOURS, parcours, (config, origine) => lances.push([config, origine]))();
+    const fabrique = new Function("document", "PARCOURS", "parcours", "launchFromParcours", `${source("coupe")}\n${source("boutonMelangeAccueil")}\nreturn etat => boutonMelangeAccueil(etat);`);
+    const rendu = fabrique(fauxDocument, PARCOURS, parcours, (config, origine) => lances.push([config, origine]))(PARCOURS.etatAffichage(parcours));
     return {rendu, lances};
   };
+  assert.equal(html.indexOf("function boutonMelange("), -1, "l'ancien bouton du bilan est retiré");
   // Une seule table : pas de mélange du tout.
   assert.equal(bouton(eleve([2], [LUNDI]), LUNDI).rendu, null, "le mélange n'est pas visible");
   // Deux tables : le mélange existe, mais aucun trophée à gagner.
@@ -412,35 +418,40 @@ test("trophées, page : le bouton « Je me teste sur mes N tables » seulement s
   p = eleve([2, 3, 5], [LUNDI]);
   assert.equal(P.etatAffichage(p, LUNDI).porte, false);
   const {rendu, lances} = bouton(p, LUNDI);
-  assert.ok(rendu, "3 tables : un trophée à gagner");
+  assert.ok(rendu, "3 tables : une coupe à gagner");
   assert.equal(rendu.tag, "button");
-  assert.equal(rendu.className, "secondary defi-melange");
-  assert.deepEqual(rendu.children.map(n => n.textContent), ["Je me teste sur mes 3\u00a0tables", "Mon mélange · un\u00a0trophée à\u00a0gagner"]);
+  assert.equal(rendu.id, "acc-melange");
+  assert.equal(rendu.className, "rond melange", "la forme de « Je passe le test »");
+  assert.equal(rendu._texte, "Mon mélange");
+  assert.equal(rendu.children.length, 1);
+  assert.equal(rendu.children[0].className, "coupe-a-gagner", "une petite coupe dans le bouton");
+  assert.equal(rendu.children[0].children[0].tag, "svg");
+  assert.equal(rendu.attrs["aria-label"], "Mon mélange : mes 3 tables, une coupe à gagner");
   rendu.ecouteurs.click();
   assert.deepEqual(lances, [[P.configMelange(p), "menu"]], "il lance le mélange des tables passées");
-  // Le lendemain, la porte est fermée : Mes calculs du jour d'abord.
+  // Le lendemain, la porte est fermée : le bouton est là (la page le grise avec les autres).
   assert.equal(P.etatAffichage(p, MARDI).porte, true);
-  assert.equal(bouton(p, MARDI).rendu, null, "porte fermée : pas de bouton");
-  // Trophée gagné, pas de table de plus : plus de bouton ; une 6e table : il revient.
+  assert.ok(bouton(p, MARDI).rendu, "porte fermée : le bouton reste, grisé par la page");
+  // Coupe gagnée, pas de table de plus : plus de bouton ; une 6e table : il revient.
   p = melanger(eleve([2, 3, 4, 5, 10], [LUNDI]), 20, LUNDI).parcours;
-  assert.equal(bouton(p, LUNDI).rendu, null, "le trophée des 3 tables est gagné, celui des 6 pas encore à gagner");
+  assert.equal(bouton(p, LUNDI).rendu, null, "la coupe des 3 tables est gagnée, celle des 6 pas encore à gagner");
   p = passer(p, [6], LUNDI);
-  assert.equal(bouton(p, LUNDI).rendu.children[0].textContent, "Je me teste sur mes 6\u00a0tables");
+  assert.equal(bouton(p, LUNDI).rendu.attrs["aria-label"], "Mon mélange : mes 6 tables, une coupe à gagner");
   // Tout gagné : plus jamais.
   p = melanger(eleve([...P.TABLES], [LUNDI]), 20, LUNDI).parcours;
   assert.equal(bouton(p, LUNDI).rendu, null);
 });
 
-test("trophées, page : « Tu gagnes le trophée des N tables ! » après un mélange qui en gagne un, rien sinon", () => {
+test("coupes, page : « Tu gagnes la coupe des N tables ! » après un mélange qui en gagne une, rien sinon", () => {
   const suiteApresSerie = new Function("tableSuivanteApres", "PARCOURS", `${source("suiteApresSerie")}\nreturn suiteApresSerie;`)(() => null, P);
   const phrase = suite => suiteApresSerie(suite.evenements, {melange: suite.evenements.find(evenement => evenement.type === "melange")});
   const p = eleve([2, 3, 4, 5, 10], [LUNDI]);
   const gagne = melanger(p, 18, MARDI);
-  assert.equal(phrase(gagne), "Tu gagnes le trophée des 3 tables\u00a0!");
+  assert.equal(phrase(gagne), "Tu gagnes la coupe des 3 tables\u00a0!");
   assert.equal(phrase(melanger(gagne.parcours, 20, MERCREDI)), "", "rejoué et réussi : rien de neuf, le verdict suffit");
-  assert.equal(phrase(melanger(eleve([...P.TABLES], [LUNDI]), 19, MARDI)), "Tu gagnes le trophée des 9 tables\u00a0!", "d'un coup avec 9 tables : le plus grand");
+  assert.equal(phrase(melanger(eleve([...P.TABLES], [LUNDI]), 19, MARDI)), "Tu gagnes la coupe des 9 tables\u00a0!", "d'un coup avec 9 tables : la plus grande");
   // La page ne fête (fete.melange) qu'un mélange réussi.
-  assert.match(html, /if \(fete\.melange\) return fete\.melange\.trophee \? `Tu gagnes le trophée des \$\{fete\.melange\.trophee\} tables\\u00a0!` : "";/);
+  assert.match(html, /if \(fete\.melange\) return fete\.melange\.trophee \? `Tu gagnes la coupe des \$\{fete\.melange\.trophee\} tables\\u00a0!` : "";/);
 });
 
 test("trophées, page : sur ordinateur, la colonne de droite s'étire jusqu'au bas du tableau et « Je deviens expert » prend la hauteur qui reste", () => {
@@ -464,8 +475,10 @@ test("« Je passe le test », l'escalier et Platine dès 9 tables passées", () 
   assert.equal(P.escalierOuvert(p), true);
   assert.equal(P.rangDeLEtat(p), 4, "Platine");
   assert.equal(P.classerSerie(p, P.configEtoile(1)).type, "etoile");
-  assert.deepEqual(P.ouvrirSeance(p, {aujourdhui: LUNDI}).file.map(etape => etape.type), ["etoile"], "le premier jour, rien n'est fermé");
-  assert.deepEqual(P.ouvrirSeance(p, {aujourdhui: MARDI}).file.map(etape => etape.type), ["revision", "etoile"]);
+  // Lot « Mon mélange sur l'accueil et l'expert » : la coupe des 9 tables pas
+  // encore gagnée, Mon mélange des 9 tables vient avant l'étoile.
+  assert.deepEqual(P.ouvrirSeance(p, {aujourdhui: LUNDI}).file.map(etape => etape.type), ["melange", "etoile"], "le premier jour, rien n'est fermé");
+  assert.deepEqual(P.ouvrirSeance(p, {aujourdhui: MARDI}).file.map(etape => etape.type), ["revision", "melange", "etoile"]);
   assert.equal(P.resumeProf(p, MARDI).enCours.type, "expert");
 });
 
@@ -490,23 +503,24 @@ test("la page : la porte de l'accueil, et rien ne se lance à côté", () => {
   assert.match(html, /const expertOuvert = etat\.expert\.ouvert && !porte;/);
 });
 
-test("la page : les mots, le trophée du mélange et les petits restes", () => {
+test("la page : les mots, les coupes du mélange et les petits restes", () => {
   assert.match(html, /const NOM_DU_TEST = "Je passe le test";/);
   assert.match(html, /const CONDITION_DU_TEST = "si j’ai 9\\u00a0sur\\u00a010 juste\\u00a0avant";/);
   assert.ok(html.indexOf("const NOM_DU_TEST") < html.indexOf("function renderAccueil("), "défini avant le premier dessin de l'accueil");
   assert.doesNotMatch(html, /Je valide ma table"|acquise !`|Réussis d’abord ton mélange|montrerMelange|etat\.verrou|melangeDu/);
-  assert.match(html, /titre\.textContent = `Je me teste sur mes \$\{etat\.melange\.tables\.length\}\\u00a0tables`;/);
-  assert.match(html, /if \(!etat\.melange\.visible \|\| etat\.porte\) return null;/);
+  // Lot « Mon mélange sur l'accueil et l'expert » : le bouton du bilan est
+  // retiré ; Mon mélange est sur l'accueil (boutonMelangeAccueil).
+  assert.doesNotMatch(html, /Je me teste sur mes|function boutonMelange\(/);
+  assert.match(html, /if \(!etat\.melange\.visible \|\| !etat\.melange\.trophees\.some\(trophee => trophee\.aGagner\)\) return null;/);
   // Lot « trophées » : plus de « Dernier : 17 sur 20 » ni de « réussi avec N
   // tables ✓ » — trois coupes ; le bouton seulement s'il y a un trophée à gagner.
   assert.doesNotMatch(html, /dernierMelange|réussi avec \$\{|Dernier : \$\{melange\.score\}/);
-  assert.match(html, /if \(!etat\.melange\.trophees\.some\(trophee => trophee\.aGagner\)\) return null;/);
-  assert.match(html, /detail\.textContent = "Mon mélange · un\\u00a0trophée à\\u00a0gagner";/);
+  assert.doesNotMatch(html, /trophée à/);
   assert.match(html, /droite\.append\(textes, tropheesDuMelange\(etat\.melange\.trophees\)\);/);
   assert.match(html, /\$\("fiche-melange-state"\)\.replaceChildren\(tropheesDuMelange\(etat\.melange\.trophees\)\);/, "la fiche imprimée aussi");
   // Lot « retours de classe » : la notice soude ses nombres (&nbsp;), la fiche imprimée garde ses espaces.
-  assert.equal(html.match(/20 questions en 1 min 30\. Un trophée avec 3, 6, puis 9 tables\.<\/p>/g).length, 1, "la fiche dit la règle");
-  assert.equal(html.match(/20&nbsp;questions en 1&nbsp;min&nbsp;30\. Un trophée avec 3, 6, puis 9&nbsp;tables\.<\/p>/g).length, 1, "la notice aussi");
+  assert.equal(html.match(/20 questions en 1 min 30\. Une coupe avec 3, 6, puis 9 tables\.<\/p>/g).length, 1, "la fiche dit la règle");
+  assert.equal(html.match(/20&nbsp;questions en 1&nbsp;min&nbsp;30\. Une coupe avec 3, 6, puis 9&nbsp;tables\.<\/p>/g).length, 1, "la notice aussi");
   assert.match(html, /if \(validation && !validation\.reussi && !validation\.dejaAcquise\) return phraseTestRate\(\);/);
   // « Tu as choisi » : seulement depuis les réglages.
   assert.match(html, /\$\("launch-eyebrow"\)\.hidden = state\.origin !== "reglages";/);
@@ -518,7 +532,7 @@ test("la page : les mots, le trophée du mélange et les petits restes", () => {
   assert.match(html, /@media \(max-width: 359px\) \{ #question-count \.compteur-mot \{ display: none; \} \}/);
   // Les numéros de cache ont monté.
   assert.match(html, /defi_tables_core\.js\?v=20261005-1/);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261006-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261007-1/);
 });
 
 test("le serveur : la copie du moteur, « Tables passées », la tuile sans « Mon mélange à faire »", () => {

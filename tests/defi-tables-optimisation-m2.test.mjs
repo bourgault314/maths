@@ -203,18 +203,18 @@ test("Mes calculs du jour, puis trois marches : le test possible en 5e étape es
   assert.equal(vieille.raccourciEnFin, true);
 });
 
-test("la marche 8 jouée en « Dans le désordre » n'ouvre jamais le test : il ne vient qu'après la marche 7", () => {
+test("la marche 8 jouée en marche 7 refaite : 8 sur 10 encore, pas de test — il ne vient qu'après 9 sur 10 à la marche 7", () => {
   let p = avecDepart(5);
-  // 10 sur 10 au premier désordre, 9 sur 10 aux nombres manquants, 8 sur 10 à
-  // la marche 7, 10 sur 10 au désordre de la marche 8 (lot « retours de
-  // classe », règle simplifiée : seule la marche 7 à 9 sur 10 ouvre le test).
+  // 10 sur 10 au désordre, 9 sur 10 aux nombres manquants, 8 sur 10 à la
+  // marche 7, puis 8 sur 10 à la marche 7 refaite (lot « Mon mélange sur
+  // l'accueil et l'expert » : elle prend la place de « Dans le désordre »).
   const s = jouerSeance(p, jour(1), etape => (etape.cle === "trous" ? 1 : etape.cle === "mixte" ? 2 : 0), 3);
-  assert.deepEqual(s.noms, [5, 6, 7, 5], "quatre étapes, pas de test ajouté : le 10 sur 10 de la marche 8 ne l'ouvre pas");
+  assert.deepEqual(s.noms, [5, 6, 7, 7], "quatre étapes, pas de test ajouté : 8 sur 10 deux fois");
   assert.equal(P.raccourciValidation(s.parcours, 3), true, "les deux premiers entraînements sont gagnés, et ne suffisent pas");
   assert.equal(s.seance.finie, true);
   p = s.parcours;
   const demain = P.programmeDeSeance(p, P.ouvrirSeance(p, {aujourdhui: jour(2), table: 3}), jour(2)).etapes;
-  assert.deepEqual(demain.map(etape => etape.marche), [5, 6, 7, 5]);
+  assert.deepEqual(demain.map(etape => etape.marche), [5, 6, 7, 7]);
   assert.equal(demain[demain.length - 1].conditionnelle, true, "le lendemain, la marche 8 est annoncée « si j'ai 9 sur 10 juste avant »");
   // Joué : 9 sur 10 à la marche 7, la marche 8 devient le test.
   const joue = jouerSeance(p, jour(2), etape => (etape.type === "entraine" ? 1 : 0), 3);

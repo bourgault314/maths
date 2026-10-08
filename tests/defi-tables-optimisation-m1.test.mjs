@@ -248,13 +248,16 @@ test("l'aller-retour est exact quoi qu'il arrive dans la séance : marche ratée
   }
   assert.ok(reprises > 1500, `assez de reprises jouées (${reprises})`);
   assert.deepEqual([...drapeaux].sort((a, b) => a - b), [0, 10, 20, 30], "la file a porté une marche d'en dessous, une marche refaite et un raccourci");
-  // Lot « un seul système » : le mélange n'est plus dans la séance. Une étape
-  // « réussie » (2) ou « pas réussie » sans raté (4) ne reste donc plus jamais
-  // dans une séance EN COURS : le test réussi et l'étoile finissent la séance ;
-  // il reste la marche faite (0), la marche ratée (1), le test raté (5).
-  assert.deepEqual([...issues].sort(), [0, 1, 5], "les issues rangées : marche faite, marche ratée, test raté");
+  // Lot « un seul système » : le mélange n'est plus dans la séance d'une
+  // table. Lot « Mon mélange sur l'accueil et l'expert » : il revient dans
+  // celle de l'élève aux 9 tables (coupe des 9 pas gagnée), avant l'étoile —
+  // réussi (2) ou pas (4), il reste dans la séance en cours. Le test réussi et
+  // l'étoile finissent la séance ; restent aussi la marche faite (0), la marche
+  // ratée (1), le test raté (5).
+  assert.deepEqual([...issues].sort(), [0, 1, 2, 4, 5], "les issues rangées : marche faite, marche ratée, mélange réussi ou pas, test raté");
   // Une séance commencée sous l'appli d'avant (un mélange joué, un mélange à
-  // venir) se relit toujours : l'étape faite garde son nom, l'étape à venir s'efface.
+  // venir) se relit toujours : l'étape faite garde son nom, l'étape à venir
+  // s'efface (une séance de table n'a jamais de mélange).
   for (const [issue, reussi] of [[2, true], [4, false]]) {
     let vieux = P.creerParcours();
     vieux.tables[2].acquise = jour(1); vieux.tables[10].acquise = jour(1);
@@ -271,7 +274,10 @@ test("l'aller-retour est exact quoi qu'il arrive dans la séance : marche ratée
 test("la séance des 9 tables se reprend aussi : l'étoile tentée garde son nom", () => {
   let p = P.creerParcours();
   P.TABLES.forEach(table => { p.tables[table].acquise = jour(1); });
-  p.melange = {tables: [...P.TABLES], aJour: true, aRefaireAvec: null, dernier: jour(1)};
+  // La coupe des 9 tables gagnée : la séance est Mes calculs du jour, puis
+  // l'étoile (sans elle, Mon mélange vient avant l'étoile : voir
+  // tests/defi-tables-melange-expert.test.mjs).
+  p.melange = {tables: [...P.TABLES], aJour: true, aRefaireAvec: null, dernier: jour(1), reussi: 9};
   p.expert = {etoiles: 1, dernier: jour(1), couronne: null};
   p = P.normaliserParcours(p);
   for (let m = 2; m <= 9; m += 1) p = P.appliquerReponse(p, `7-${m}`, {correcte: true, date: jour(1)}).parcours;
@@ -400,9 +406,11 @@ test("la validation réussie termine la séance et passe la table, sans mélange
   // Validation ratée : rien ne change (la marche 7, puis fin).
   const rate = jouerSeance(p, jour(3), {erreursPar: etape => (etape.type === "validation" ? 6 : 1)});
   assert.deepEqual(rate.noms.slice(-2), ["validation", 7]);
-  // 8 sur 10 à la marche 7 : pas de test (la rangée pleine ne compte plus), « Dans le désordre » à la place.
+  // 8 sur 10 à la marche 7 : pas de test (la rangée pleine ne compte plus) ;
+  // la marche 7 refaite à la place (lot « Mon mélange sur l'accueil et
+  // l'expert ») — 8 sur 10 encore : la séance s'arrête là.
   const sans = jouerSeance(p, jour(3), {erreursPar: etape => (etape.cle === "mixte" ? 2 : 1)});
-  assert.deepEqual(sans.noms, ["revision", 6, 7, 5]);
+  assert.deepEqual(sans.noms, ["revision", 6, 7, 7]);
   assert.equal(sans.parcours.tables[5].acquise, null);
 });
 
@@ -491,7 +499,7 @@ test("la page : « Reprendre ma séance », ses étapes cochées, « Reprendre �
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie serveur identique", () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261006-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261007-1/);
   assert.match(html, /defi_tables_core\.js\?v=20261005-1/, "le noyau n'a pas changé : son numéro reste");
   const moteur = readFileSync(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = readFileSync(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
