@@ -533,7 +533,8 @@ JS_EXEMPLE = r"""() => {
   const trouve = pas.filter(e => e.type === 'barresValeurs' && e.egal !== false);
   const liste = pas.filter(e => !trouve.includes(e) || e === trouve[trouve.length - 1]);
   const etapes = liste.map(e => {
-    let et = e, titre = e.type === 'barres' ? 'Je fais le schéma de la situation' : e.titre;
+    // ① s'appelle « Schéma de comparaison » (proposition de Claire, 07/10/2026)
+    let et = e, titre = e.type === 'barres' ? 'Schéma de comparaison' : e.titre;
     if (trouve.includes(e) && trouve.length > 1) { et = {...e, noirDes: 0}; titre = modele.mode === 'unite' ? 'Je trouve les taches' : 'Je trouve les autres taches'; }
     const sv = mk(); const g = document.createElementNS(NS, 'g'); sv.appendChild(g);
     enqueteG3Dessiner(g, card, et, plan.modele, prof);
@@ -823,6 +824,22 @@ def _enquete(T, n, indices, pluriel):
             "<p class=\"but\">Mon enquête&nbsp;: trouver ce que cache chaque tache.</p>")
 
 
+# L'inconnue « ? » (proposition de Claire, décidée le 07/10/2026) : la couverture explique les deux
+# schémas et la référence « ? » (le « ? » est un nombre, pas la barre) — texte choisi par Gwenaël le
+# 07/10 pour le livret 1, repris partout ; les légendes de la page 2 disent ce que fait chaque
+# dessin, rien de plus (retour de Claire : « il faut faire plus simple ») ;
+# « Je vérifie » : le total seulement.
+REF_PETITE = "La plus petite tache sert de référence&nbsp;: on note «&nbsp;?&nbsp;» le nombre de jetons qu'elle cache."
+
+def _couv(phrase, ref=REF_PETITE):
+    return (f"{phrase}"
+            "\n      <span>On dessine <b>deux schémas en barres</b>&nbsp;: le premier compare les taches, "
+            f"le second les met bout à bout pour résoudre. {ref} La page&nbsp;2 montre l'enquête pas à pas.</span>")
+
+BARRES = "Je représente chaque tache par une barre, les unes sous les autres."
+LIGNE = "Je mets les barres bout à bout, sous le total."
+
+
 def textes_exemple_deux(ex):
     """Livrets de base 1 et 2 (lot 2, 30/09/2026) : deux taches, un indice « de plus » ou
     « fois plus » — le dessin des fiches 10 et 15. Écrits à partir de la carte rendue."""
@@ -834,16 +851,15 @@ def textes_exemple_deux(ex):
         raise SystemExit("l'exemple : « de plus » ou « fois plus », depuis la plus petite tache")
     u, g = mots[ref], mots[1 - ref]
     assert B["unite"] == u and T == sum(v)
-    r0, r1 = B["rows"]
-    dit = f"a {r['k']} jetons de plus" if r["op"] == "ADD" else f"a {r['k']} fois plus de jetons"
-    barres = (f"Tout s'écrit avec la plus petite, la tache {u}. {_art(g).capitalize()} {dit}&nbsp;: {_cases(r1['cells'], u)}.")
-    tous = r0["cells"] + r1["cells"]
-    ligne = f"Les barres bout à bout sous le total&nbsp;: {_cases(tous, u)} font {T}."
     resous = f"D'abord la tache {u}, l'unité&nbsp;; puis la tache {g} à partir d'elle."
     fin = (f"La tache {u} cache <b>{v[ref]}</b> jetons, la tache {g} <b>{v[1 - ref]}</b>.|||"
-           + "&nbsp;✓&nbsp;; ".join(_verifs(ex)) + "&nbsp;✓")
-    intro = _intro(T, 2, f"la tache {u} et la tache {g}", "Un indice les relie.", u)
-    return dict(intro=intro, enquete=_enquete(T, 2, ex["indices"], False), legendes=[barres, ligne, resous, fin])
+           + f"{ex['verification']}&nbsp;✓")
+    intro = _couv(f"Sur cette carte, il y a {T} jetons au total, tous cachés sous deux taches&nbsp;: "
+                  f"la tache {u} et la tache {g}. Un indice les relie.")
+    par_titre = {"Je retire": (f"J'enlève {r['k']} en haut et en bas." if r["op"] == "ADD" else ""),
+                 "Je partage": f"Je trouve ce que cache la tache {u}."}
+    return dict(intro=intro, enquete=_enquete(T, 2, ex["indices"], False), legendes=[BARRES, LIGNE, resous, fin],
+                par_titre=par_titre)
 
 
 def textes_exemple_reunies(ex):
@@ -873,8 +889,8 @@ def textes_exemple_reunies(ex):
 def textes_exemple_complete(ex):
     """Deuxième tour 1 (03/10/2026) : trois taches, deux indices « de plus » vers la plus grande —
     le dessin de la fiche 11d, « je complète ». La tache commune est la PLUS GRANDE : chaque autre
-    barre, complétée de son écart, fait une barre de la grande. Écrits à partir de la carte rendue
-    et de son modèle de correction (mode « complete »)."""
+    barre, complétée de son écart, fait une barre de la grande ; c'est elle la référence « ? ».
+    Écrits à partir de la carte rendue et de son modèle de correction (mode « complete »)."""
     v, mots, T, B = ex["valeurs"], ex["mots"], ex["total"], ex["barres"]
     if ex["visibles"] or len(v) != 3 or len(ex["relations"]) != 2 or B["mode"] != "complete":
         raise SystemExit("l'exemple du Deuxième tour 1 : je complète, trois taches, sans jeton visible")
@@ -884,22 +900,23 @@ def textes_exemple_complete(ex):
     gi = mots.index(g)
     assert gi == ex["relations"][0]["target"] and v[gi] == max(v) and T == sum(v)
     ps = [r for r in B["rows"] if r["tache"] != g]   # les deux barres complétées
-    k = {r["tache"]: [c["nombre"] for c in r["cells"] if "nombre" in c][0] for r in ps}
     a, b = ps[0]["tache"], ps[1]["tache"]
-    gs = g if g == "orange" else g + "s"
-    barres = (f"La tache commune est la plus grande, la tache {g}&nbsp;: je complète les deux autres. "
-              f"{_art(a).capitalize()} et {k[a]} font une {g}&nbsp;; {_art(b)} et {k[b]} aussi.")
-    ligne = f"Complétées, les barres font trois {gs}&nbsp;: {T} + {k[a]} + {k[b]} = {B['accolade']}."
+    a_, b_ = (a, b) if v[mots.index(a)] < v[mots.index(b)] else (b, a)
+    barres = (f"Je représente chaque tache par une barre. Je complète la {a_} et la {b_}&nbsp;: "
+              f"elles deviennent aussi longues que la {g}.")
+    ligne = f"Je mets les barres bout à bout. Avec ce que j'ai ajouté, le total devient {B['accolade']}."
     resous = f"D'abord la tache {g}&nbsp;; puis j'enlève ce que j'ai ajouté aux deux autres."
     ordre = sorted(range(3), key=lambda i: v[i])
     fin = ("L" + ", ".join(f"la tache {mots[i]} cache <b>{v[i]}</b> jetons" for i in ordre)[1:] + ".|||"
-           + "&nbsp;✓&nbsp;; ".join(_verifs(ex)) + "&nbsp;✓")
-    intro = (f"Sur cette carte, il y a {T} jetons au total, tous cachés sous trois taches&nbsp;: "
-             f"la tache {mots[ordre[0]]}, la tache {mots[ordre[1]]} et la tache {g}. Deux indices les relient."
-             "\n      <span>Pour mener l'enquête, on dessine un <b>schéma en barres</b>&nbsp;: une "
-             f"barre par tache. Ici, les deux indices parlent de la tache {g}, "
-             "la plus grande&nbsp;: on complète les deux autres. La page&nbsp;2 mène cette enquête pas à pas, jusqu'à la réponse.</span>")
-    return dict(intro=intro, enquete=_enquete(T, 3, ex["indices"], True), legendes=[barres, ligne, resous, fin])
+           + f"{ex['verification']}&nbsp;✓")
+    intro = _couv(f"Sur cette carte, il y a {T} jetons au total, tous cachés sous trois taches&nbsp;: "
+                  f"la tache {mots[ordre[0]]}, la tache {mots[ordre[1]]} et la tache {g}. Deux indices les relient.",
+                  f"Ici, les deux indices parlent de la tache {g}, la plus grande&nbsp;: elle sert de référence, "
+                  "on note «&nbsp;?&nbsp;» le nombre de jetons qu'elle cache. On complète les deux autres barres.")
+    par_titre = {"Je partage": f"Je trouve ce que cache la tache {g}.",
+                 "Je trouve les autres taches": "J'enlève ce que j'avais ajouté."}
+    return dict(intro=intro, enquete=_enquete(T, 3, ex["indices"], True), legendes=[barres, ligne, resous, fin],
+                par_titre=par_titre)
 
 
 def textes_exemple_compose(ex):
@@ -913,16 +930,15 @@ def textes_exemple_compose(ex):
         raise SystemExit("l'exemple du Deuxième tour 2 : « … de plus que le double », depuis la plus petite")
     u, g = mots[ref], mots[1 - ref]
     assert B["unite"] == u and T == sum(v)
-    r0, r1 = B["rows"]
-    mot_k = {2: "le double", 3: "le triple"}[r["k"]]
-    barres = (f"Tout s'écrit avec la plus petite, la tache {u}. {_art(g).capitalize()} a {r['d']} jetons de plus que "
-              f"{mot_k} de la {u}&nbsp;: {_cases(r1['cells'], u)}.")
-    ligne = f"Les barres bout à bout sous le total&nbsp;: {_cases(r0['cells'] + r1['cells'], u)} font {T}."
     resous = f"D'abord la tache {u}, l'unité&nbsp;; puis la tache {g} à partir d'elle."
     fin = (f"La tache {u} cache <b>{v[ref]}</b> jetons, la tache {g} <b>{v[1 - ref]}</b>.|||"
-           + "&nbsp;✓&nbsp;; ".join(_verifs(ex)) + "&nbsp;✓")
-    intro = _intro(T, 2, f"la tache {u} et la tache {g}", "Un seul indice les relie, avec deux gestes&nbsp;: le double, puis de plus.", u)
-    return dict(intro=intro, enquete=_enquete(T, 2, ex["indices"], False), legendes=[barres, ligne, resous, fin])
+           + f"{ex['verification']}&nbsp;✓")
+    intro = _couv(f"Sur cette carte, il y a {T} jetons au total, tous cachés sous deux taches&nbsp;: "
+                  f"la tache {u} et la tache {g}. Un seul indice les relie, avec deux gestes&nbsp;: le double, puis de plus.")
+    par_titre = {"Je retire": f"J'enlève {r['d']} en haut et en bas.",
+                 "Je partage": f"Je trouve ce que cache la tache {u}."}
+    return dict(intro=intro, enquete=_enquete(T, 2, ex["indices"], False), legendes=[BARRES, LIGNE, resous, fin],
+                par_titre=par_titre)
 
 
 def textes_exemple_repet(ex):
@@ -938,27 +954,25 @@ def textes_exemple_repet(ex):
         raise SystemExit("l'exemple de « L'enquête rebondit » : la référence seule, l'autre couleur deux fois, « de plus »")
     x, k, o = v[ref], r["k"], mots[autres[0]]
     assert all(v[i] == x + k for i in autres) and T == 3 * x + 2 * k
-    B = ex["barres"]
     rr, oo = mots[ref], o
     oos = oo if oo == "orange" else oo + "s"            # « orange » est invariable
-    barres = (f"Tout s'écrit avec la plus petite, la tache {rr}. "
-              f"Chaque tache {oo}&nbsp;: une {rr} et {k} — les deux {oos} cachent le même nombre.")
-    ligne = f"Les barres bout à bout sous le total&nbsp;: trois {rr}s, {k} et {k} font {T}."
+    barres = f"Je représente chaque tache par une barre, les unes sous les autres. Les deux {oos} ont la même barre."
     resous = f"D'abord la tache {rr}, l'unité&nbsp;; puis les taches {oos} à partir d'elle."
     fin = (f"La tache {rr} cache <b>{x}</b> jetons, chaque tache {oo} <b>{x + k}</b>. "
-           f"|||{ex['verification']}&nbsp;✓&nbsp;; {x} + {k} = {x + k}&nbsp;✓")
+           f"|||{ex['verification']}&nbsp;✓")
     indices = "<br>".join(f"<q>{i}</q>" for i in ex["indices"])
-    intro = (f"Sur cette carte, il y a {T} jetons au total, tous cachés sous trois taches&nbsp;: "
-             f"une tache {rr} et deux taches {oos}. Les taches de même couleur cachent le même nombre de jetons&nbsp;; "
-             "un indice relie les deux couleurs."
-             "\n      <span>Pour mener l'enquête, on dessine un <b>schéma en barres</b>&nbsp;: une "
-             f"barre par tache. Ici, tout s'écrit avec la tache {rr}, "
-             "la plus petite. La page&nbsp;2 mène cette enquête pas à pas, jusqu'à la réponse.</span>")
+    intro = _couv(f"Sur cette carte, il y a {T} jetons au total, tous cachés sous trois taches&nbsp;: "
+                  f"une tache {rr} et deux taches {oos}. Les taches de même couleur cachent le même nombre de jetons&nbsp;; "
+                  "un indice relie les deux couleurs.")
     enquete = (f"<p><b>Le total</b>&nbsp;: {T} jetons, tous cachés sous trois taches.</p>"
                "<p><b>La règle</b>&nbsp;: les taches de même couleur cachent le même nombre de jetons.</p>"
                f"<p><b>L'indice</b>&nbsp;: {indices}</p>"
                "<p class=\"but\">Mon enquête&nbsp;: trouver ce que cache chaque tache.</p>")
-    return dict(intro=intro, enquete=enquete, legendes=[barres, ligne, resous, fin])
+    par_titre = {"Je range": "Je mets les «&nbsp;?&nbsp;» d'un côté, les nombres de l'autre.",
+                 "Je regroupe": f"Je regroupe les nombres&nbsp;: {k} + {k} = {2 * k}.",
+                 "Je retire": f"J'enlève {2 * k} en haut et en bas.",
+                 "Je partage": f"Je trouve ce que cache la tache {rr}."}
+    return dict(intro=intro, enquete=enquete, legendes=[barres, LIGNE, resous, fin], par_titre=par_titre)
 
 
 def donnees_page2(ex, textes):
@@ -966,7 +980,8 @@ def donnees_page2(ex, textes):
     pour les deux premiers : les barres, le schéma regroupé) et la dernière étape, en texte :
     la réponse et la vérification, séparées par « ||| » dans la dernière légende."""
     leg = textes["legendes"]
-    etapes = [dict(e, legende=leg[i] if i < 2 else "") for i, e in enumerate(ex["etapes"])]
+    pt = textes.get("par_titre") or {}
+    etapes = [dict(e, legende=leg[i] if i < 2 else pt.get(e["titre"], "")) for i, e in enumerate(ex["etapes"])]
     reponse, verif = leg[-1].split("|||")       # « Je réponds » ||| « Je vérifie » (03/10/2026)
     return dict(carte=ex["carte"], etapes=etapes, enquete=textes["enquete"],
                 fin=dict(reponse=reponse.strip(), verif=verif))
@@ -1140,7 +1155,7 @@ async def rendre(niv, tmp, corr=None):
             unite = dict(carte=ux["carte"], etapes=ux["etapes"], cle=ux["cle"],
                          indices=f"<b>Total&nbsp;: {ux['total']} jetons.</b><br>" + "<br>".join(f"<q>{i}</q>" for i in ux["indices"]),
                          fin="L" + ", ".join(f"la tache {mots[i]} cache <b>{v[i]}</b> jetons" for i in ordre)[1:]
-                             + ".<br>" + "&nbsp;✓&nbsp;; ".join(_verifs(ux)) + "&nbsp;✓")
+                             + ".<br>" + ux["verification"] + "&nbsp;✓")   # « Je vérifie » : le total seulement (07/10/2026)
             AUTRES_EXEMPLES["unite commune"] = ux["cle"]
         rappel, cles_rappel = None, []
         if d.get("rappel"):

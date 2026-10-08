@@ -349,12 +349,18 @@ test("écran : deux clics sans total (les barres, calculs), taches dévoilées a
   assert.ok(!cadres.includes("enqueteBarresVide"), "plus d'étape « barres vides » (29/09/2026)");
 });
 
-test("mode élève : la case du haut reste, « TOTAL ? » donné, rien à saisir ; les autres cartes gardent leur total", () => {
+test("mode élève : la case du haut reste, « PAS DE TOTAL » (07/10/2026), rien à saisir ; les autres cartes gardent leur total", () => {
   const src = fn("renderEleveSplat");
-  // (lot M4-4b : « Trois paires » du Système n'a plus de ligne du TOTAL ; l'Enquête sans total garde son « ? »)
-  assert.match(src, /haut = \(enquete\.systeme && sysTotalCache\(card\)\) \? ""\n      : eleveCaseDonneeHtml\("haut blanche", "Total", \(card\._rel && card\._rel\.sansTotal\) \? "\?" : card\.total\);/);
+  // (lot M4-4b : « Trois paires » du Système n'a plus de ligne du TOTAL ; 07/10/2026 : l'Enquête sans total
+  // dit « PAS DE TOTAL » — avec le « ? » de la référence, « TOTAL ? » ferait deux « ? » de sens différents)
+  assert.match(src, /haut = \(enquete\.systeme && sysTotalCache\(card\)\) \? ""\n      : \(enquetePasDeTotal\(card\) \? eleveCaseDonneeHtml\("haut blanche pasDe", "Pas de", "Total"\)\n      : eleveCaseDonneeHtml\("haut blanche", "Total", \(card\._rel && card\._rel\.sansTotal\) \? "\?" : card\.total\)\);/);
   const donnee = new Function(`${fn("eleveCaseDonneeHtml")}\nreturn eleveCaseDonneeHtml;`)();
   const h = donnee("haut blanche", "Total", "?");
   assert.doesNotMatch(h, /<input/, "une case donnée n'a pas de champ : la validation l'ignore");
   assert.match(h, /<span class="eleveDonneeVal">\?<\/span>/);
+  const pasDe = donnee("haut blanche pasDe", "Pas de", "Total");
+  assert.doesNotMatch(pasDe, /<input/);
+  assert.match(pasDe, /<span class="eleveDonneeVal">Total<\/span>/);
+  // la case garde sa taille : « TOTAL » en capitales, à la taille de « PAS DE », en gras
+  assert.match(html, /\.eleveCase\.haut\.donnee\.pasDe \.eleveDonneeVal\{font-size:11px;letter-spacing:\.08em;text-transform:uppercase;font-weight:900;color:#475569\}/);
 });

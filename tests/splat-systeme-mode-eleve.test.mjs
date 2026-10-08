@@ -195,7 +195,7 @@ test("renderEleveSplat : le Système passe (classe « systeme »), le TOTAL donn
   // « ? » gris ardoise : l'Enquête sans total seulement
   assert.match(rendu, /panneau\.classList\.toggle\("sansTotal", !!\(enquete && card\._rel && card\._rel\.sansTotal\)\);/);
   // Trois paires : pas de ligne du TOTAL (son plateau des trois couleurs n'est plus montré)
-  assert.match(rendu, /haut = \(enquete\.systeme && sysTotalCache\(card\)\) \? ""\n      : eleveCaseDonneeHtml\("haut blanche", "Total", \(card\._rel && card\._rel\.sansTotal\) \? "\?" : card\.total\);/);
+  assert.match(rendu, /haut = \(enquete\.systeme && sysTotalCache\(card\)\) \? ""\n      : \(enquetePasDeTotal\(card\) \? eleveCaseDonneeHtml\("haut blanche pasDe", "Pas de", "Total"\)\n      : eleveCaseDonneeHtml\("haut blanche", "Total", \(card\._rel && card\._rel\.sansTotal\) \? "\?" : card\.total\)\);/);
   assert.match(rendu, /`<div class="eleveDiag">\$\{haut \? `<div class="ligneHaut">\$\{haut\}<\/div>` : ""\}` \+\n    `<div class="ligneBas">\$\{bas\}<\/div><\/div>` \+/);
   assert.doesNotMatch(rendu, /sysTotalCache\(card\)\) \? "\?"/, "plus jamais « TOTAL ? » pour le Système");
 });

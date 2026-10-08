@@ -178,6 +178,9 @@ const modele = new Function("numberedQuestionMarkMode", `
   ${fn("enqueteInitiale")}
   ${fn("enqueteArticle")}
   ${fn("enqueteNomUnites")}
+  ${ligne("function enqueteSymbole(")}
+  ${ligne("function enqueteFoisSymbole(")}
+  ${ligne("function enqueteLigneCalcul(")}
   ${fn("enqueteBarresModele")}
   return { modele: enqueteBarresModele, etapes: enqueteDerniereEtape };
 `);
@@ -191,54 +194,56 @@ function carte({ couleurs, valeurs, relations, visibles = [], sansTotal = false,
     _rel: { taskCount: valeurs.length, hiddenValues: valeurs, relations: rels, colorMap: couleurs, visibleSum: visibles.reduce((a, b) => a + b, 0),
             ...(sansTotal ? { sansTotal: true } : {}), ...(repetees ? { repetees } : {}) } };
 }
+/* la ligne telle que l'outil l'écrit : sa phrase (« La tache verte cache donc… », 07/10/2026), sinon « g = d » */
+const enqueteLigne = new Function(`${ligne("function enqueteLigneCalcul(")} return enqueteLigneCalcul;`)();
 const texte = (m) => ({ mode: m.mode, unite: m.unit, titre1: m.titre1, refo: m.reformulation, pre: m.preLignes, accolade: m.accolade,
   rows: m.rows.map((r) => [r.label, r.cells.map((c) => c.kind === "tache" ? m.texteCellule(c) : (c.kind === "ajout" ? `[${c.v}]` : String(c.v))).join(" | "), r.sous.map((s) => s.label)]),
   ligne: m.ligne ? [m.ligne.total, m.ligne.groupes.map((g) => g.label)] : null,
-  calculs: m.calculs.map((l) => l ? `${l.g} = ${l.d}` : "—"), verif: m.verification });
+  calculs: m.calculs.map((l) => l ? enqueteLigne(l) : "—"), verif: m.verification });
 
-test("deux taches, « de moins » : je retourne, les mots dans les cases, les calculs en phrases (page témoin)", () => {
+test("deux taches, « de moins » : je retourne, « ? » pour la référence et les mots dans les autres cases, les calculs en phrases (page témoin)", () => {
   // TOTAL 25 — la noire a 7 de moins que la bleue (noire 9, bleue 16)
   const c = carte({ couleurs: ["black", "blue"], valeurs: [9, 16], relations: [[0, "SUB", 1, 7]] });
   const m = texte(enQuestion.modele(c));
   assert.equal(m.mode, "reference");
   assert.equal(m.refo, "Je retourne : la bleue a 7 de plus que la noire.");
-  assert.deepEqual(m.rows, [["noire", "noire", []], ["bleue", "noire | 7", []]]);
+  assert.deepEqual(m.rows, [["noire", "?", []], ["bleue", "? | 7", []]]);
   assert.deepEqual(m.ligne, [25, ["noire", "bleue"]]);
-  assert.deepEqual(m.calculs, ["2 noires + 7 = 25", "2 noires = 25 − 7 = 18", "1 noire = 18 ÷ 2 = 9", "—", "bleue = 9 + 7 = 16"]);
+  assert.deepEqual(m.calculs, ["2 × ? + 7 = 25", "2 × ? = 25 − 7 = 18", "? = 18 ÷ 2 = 9", "La tache noire cache donc 9 jetons", "—", "La tache bleue cache donc 9 + 7 = 16 jetons"]);
   assert.equal(m.accolade, 25);
-  // en lettre : les initiales dans les cases et dans les calculs
+  // en lettre : 𝑥 à la place du « ? » (07/10/2026, 𝑥 sur toutes les cartes) ; les autres taches gardent leur nom
   const l = texte(enLettre.modele(c));
-  assert.deepEqual(l.rows.map((r) => r[1]), ["N", "N | 7"]);
-  assert.deepEqual(l.calculs, ["2N + 7 = 25", "2N = 25 − 7 = 18", "N = 18 ÷ 2 = 9", "—", "B = 9 + 7 = 16"]);
+  assert.deepEqual(l.rows.map((r) => r[1]), ["𝑥", "𝑥 | 7"]);
+  assert.deepEqual(l.calculs, ["2 × 𝑥 + 7 = 25", "2 × 𝑥 = 25 − 7 = 18", "𝑥 = 18 ÷ 2 = 9", "La tache noire cache donc 9 jetons", "—", "La tache bleue cache donc 9 + 7 = 16 jetons"]);
 });
 
 test("trois taches : une référence (la commune est la plus petite), une chaîne (au milieu), je complète (la plus grande)", () => {
   // une référence, deux rapports (n° 8) : rouge = 2 × noire, bleue = 3 × noire — 6, 12, 18
   const ref = texte(enQuestion.modele(carte({ couleurs: ["black", "red", "blue"], valeurs: [6, 12, 18], relations: [[1, "MUL", 0, 2], [2, "MUL", 0, 3]] })));
   assert.equal(ref.mode, "reference");
-  assert.deepEqual(ref.rows, [["noire", "noire", []], ["rouge", "noire | noire", []], ["bleue", "noire | noire | noire", []]]);
-  assert.deepEqual(ref.calculs, ["6 noires = 36", "1 noire = 36 ÷ 6 = 6", "—", "rouge = 2 × 6 = 12", "bleue = 3 × 6 = 18"]);
+  assert.deepEqual(ref.rows, [["noire", "?", []], ["rouge", "? | ?", []], ["bleue", "? | ? | ?", []]]);
+  assert.deepEqual(ref.calculs, ["6 × ? = 36", "? = 36 ÷ 6 = 6", "La tache noire cache donc 6 jetons", "—", "La tache rouge cache donc 2 × 6 = 12 jetons", "La tache bleue cache donc 3 × 6 = 18 jetons"]);
   // une chaîne, deux écarts (n° 6) : violette = noire + 10, orange = violette + 6 — 5, 15, 21
   const ch = texte(enQuestion.modele(carte({ couleurs: ["black", "purple", "orange"], valeurs: [5, 15, 21], relations: [[1, "ADD", 0, 10], [2, "ADD", 1, 6]] })));
   assert.equal(ch.mode, "chaine");
-  assert.equal(ch.titre1, "Les barres — je remplace la violette");
-  assert.deepEqual(ch.rows, [["noire", "noire", []], ["violette", "noire | 10", []], ["orange", "noire | 10 | 6", ["violette"]]]);
+  assert.equal(ch.titre1, "Schéma de comparaison — je remplace la violette");
+  assert.deepEqual(ch.rows, [["noire", "?", []], ["violette", "? | 10", []], ["orange", "? | 10 | 6", ["violette"]]]);
   assert.deepEqual(ch.ligne, [41, ["noire", "violette", "orange"]]);
-  assert.deepEqual(ch.calculs, ["3 noires + 10 + 10 + 6 = 41", "3 noires = 41 − 26 = 15", "1 noire = 15 ÷ 3 = 5", "—", "violette = 5 + 10 = 15", "orange = 15 + 6 = 21"]);
+  assert.deepEqual(ch.calculs, ["3 × ? + 10 + 10 + 6 = 41", "3 × ? = 41 − 26 = 15", "? = 15 ÷ 3 = 5", "La tache noire cache donc 5 jetons", "—", "La tache violette cache donc 5 + 10 = 15 jetons", "La tache orange cache donc 15 + 6 = 21 jetons"]);
   // une chaîne, un écart puis un rapport (n° 11) : bleue = noire + 2, orange = 3 × bleue — 5, 7, 21
   const ch2 = texte(enQuestion.modele(carte({ couleurs: ["black", "blue", "orange"], valeurs: [5, 7, 21], relations: [[1, "ADD", 0, 2], [2, "MUL", 1, 3]] })));
-  assert.equal(ch2.titre1, "Les barres — je remplace chaque bleue");
-  assert.deepEqual(ch2.rows[2], ["orange", "noire | 2 | noire | 2 | noire | 2", ["bleue", "bleue", "bleue"]]);
-  assert.deepEqual(ch2.calculs, ["5 noires + 2 + 2 + 2 + 2 = 33", "5 noires = 33 − 8 = 25", "1 noire = 25 ÷ 5 = 5", "—", "bleue = 5 + 2 = 7", "orange = 3 × 7 = 21"]);
+  assert.equal(ch2.titre1, "Schéma de comparaison — je remplace chaque bleue");
+  assert.deepEqual(ch2.rows[2], ["orange", "? | 2 | ? | 2 | ? | 2", ["bleue", "bleue", "bleue"]]);
+  assert.deepEqual(ch2.calculs, ["5 × ? + 2 + 2 + 2 + 2 = 33", "5 × ? = 33 − 8 = 25", "? = 25 ÷ 5 = 5", "La tache noire cache donc 5 jetons", "—", "La tache bleue cache donc 5 + 2 = 7 jetons", "La tache orange cache donc 3 × 7 = 21 jetons"]);
   // je complète (n° 7) : violette = noire + 10, violette = orange + 6 — 7, 17, 11 (fiche 13, carte 4 de la page témoin)
   const cp = texte(enQuestion.modele(carte({ couleurs: ["black", "purple", "orange"], valeurs: [7, 17, 11], relations: [[1, "ADD", 0, 10], [1, "ADD", 2, 6]] })));
   assert.equal(cp.mode, "complete");
-  assert.equal(cp.titre1, "Les barres — je complète la noire et l'orange");
+  assert.equal(cp.titre1, "Schéma de comparaison — je complète la noire et l'orange");
   assert.deepEqual(cp.pre, ["35 + 10 + 6 = 51"]);
   assert.equal(cp.accolade, 51);
-  assert.deepEqual(cp.rows, [["noire + 10", "noire | [10]", []], ["orange + 6", "orange | [6]", []], ["violette", "violette", []]]);
+  assert.deepEqual(cp.rows, [["noire + 10", "noire | [10]", []], ["orange + 6", "orange | [6]", []], ["violette", "?", []]]);
   assert.deepEqual(cp.ligne, [51, ["une violette", "une violette", "violette"]]);
-  assert.deepEqual(cp.calculs, ["3 violettes = 51", "1 violette = 51 ÷ 3 = 17", "—", "noire = 17 − 10 = 7", "orange = 17 − 6 = 11"]);
+  assert.deepEqual(cp.calculs, ["3 × ? = 51", "? = 51 ÷ 3 = 17", "La tache violette cache donc 17 jetons", "—", "La tache noire cache donc 17 − 10 = 7 jetons", "La tache orange cache donc 17 − 6 = 11 jetons"]);
   // deux « de moins » vers la plus grande (7 bis) : une seule phrase « Je retourne »
   const cp2 = texte(enQuestion.modele(carte({ couleurs: ["green", "orange", "red"], valeurs: [6, 9, 17], relations: [[0, "SUB", 2, 11], [1, "SUB", 2, 8]] })));
   assert.equal(cp2.mode, "complete");
@@ -251,22 +256,22 @@ test("jetons visibles, sans total, taches répétées", () => {
   const v = texte(enQuestion.modele(carte({ couleurs: ["red", "green"], valeurs: [9, 14], relations: [[1, "ADD", 0, 5]], visibles: [2, 4] })));
   assert.deepEqual(v.pre, ["29 − 2 − 4 = 23 jetons sous les taches"]);
   assert.equal(v.accolade, 23);
-  assert.deepEqual(v.calculs, ["2 rouges + 5 = 23", "2 rouges = 23 − 5 = 18", "1 rouge = 18 ÷ 2 = 9", "—", "verte = 9 + 5 = 14"]);
+  assert.deepEqual(v.calculs, ["2 × ? + 5 = 23", "2 × ? = 23 − 5 = 18", "? = 18 ÷ 2 = 9", "La tache rouge cache donc 9 jetons", "—", "La tache verte cache donc 9 + 5 = 14 jetons"]);
   // sans total (n° 19) : bleue = 3 × orange ET bleue = orange + 18 — 9, 27
   const st = texte(enQuestion.modele(carte({ couleurs: ["orange", "blue"], valeurs: [9, 27], relations: [[1, "MUL", 0, 3], [1, "ADD", 0, 18]], sansTotal: true })));
   assert.equal(st.mode, "sansTotal");
   assert.equal(st.ligne, null, "pas de ligne ② sans total");
-  assert.deepEqual(st.rows, [["orange", "orange", []], ["bleue", "orange | orange | orange", ["18 de plus que l'orange"]]]);
-  assert.deepEqual(st.calculs, ["2 orange = 18", "1 orange = 18 ÷ 2 = 9", "—", "bleue = 3 × 9 = 27"]);
+  assert.deepEqual(st.rows, [["orange", "?", []], ["bleue", "? | ? | ?", ["18 de plus que l'orange"]]]);
+  assert.deepEqual(st.calculs, ["2 × ? = 18", "? = 18 ÷ 2 = 9", "La tache orange cache donc 9 jetons", "—", "La tache bleue cache donc 3 × 9 = 27 jetons"]);
   assert.equal(enQuestion.etapes(carte({ couleurs: ["orange", "blue"], valeurs: [9, 27], relations: [[1, "MUL", 0, 3], [1, "ADD", 0, 18]], sansTotal: true })), 2);
   assert.equal(enQuestion.etapes(v && carte({ couleurs: ["red", "green"], valeurs: [9, 14], relations: [[1, "ADD", 0, 5]] })), 3);
   // taches répétées (n° 18) : une noire, deux bleues, une bleue = une noire + 7 — 8, 15, 15, total 38
   const rp = texte(enQuestion.modele(carte({ couleurs: ["black", "blue", "blue"], valeurs: [8, 15, 15], relations: [[1, "ADD", 0, 7]],
     repetees: { couleurDe: [0, 1, 1], nombre: [1, 2] } })));
-  assert.equal(rp.titre1, "Les barres — une barre par tache");
-  assert.deepEqual(rp.rows, [["noire", "noire", []], ["bleue", "noire | 7", []], ["bleue", "noire | 7", []]]);
+  assert.equal(rp.titre1, "Schéma de comparaison — une barre par tache");
+  assert.deepEqual(rp.rows, [["noire", "?", []], ["bleue", "? | 7", []], ["bleue", "? | 7", []]]);
   assert.deepEqual(rp.ligne, [38, ["noire", "bleue", "bleue"]]);
-  assert.deepEqual(rp.calculs, ["3 noires + 7 + 7 = 38", "3 noires = 38 − 7 − 7 = 24", "1 noire = 24 ÷ 3 = 8", "—", "bleue = 8 + 7 = 15"]);
+  assert.deepEqual(rp.calculs, ["3 × ? + 7 + 7 = 38", "3 × ? = 38 − 7 − 7 = 24", "? = 24 ÷ 3 = 8", "La tache noire cache donc 8 jetons", "—", "Chaque tache bleue cache donc 8 + 7 = 15 jetons"]);
   // répétées, « de moins » : « Je retourne : une bleue a 7 de plus qu'une noire. »
   const rp2 = texte(enQuestion.modele(carte({ couleurs: ["black", "blue", "blue"], valeurs: [8, 15, 15], relations: [[0, "SUB", 1, 7]],
     repetees: { couleurDe: [0, 1, 1], nombre: [1, 2] } })));
@@ -353,7 +358,9 @@ test("l'écran : trois étapes (les barres, schéma regroupé, je calcule), les 
   // la réponse encadrée sur fond blanc ; en deux colonnes, « Je vérifie » passe dessous (les schémas gardent leur taille)
   assert.match(exemple, /\.et\.texte \.rep\{[^}]*background:#fff;border:1\.2px solid #0f172a/);
   assert.match(exemple, /\.etapes\.deux \.et\.texte \.duo\{flex-direction:column/);
-  assert.match(render, /Je fais le schéma de la situation/);
+  // ① « Schéma de comparaison » (proposition de Claire, 07/10/2026), plus « Je fais le schéma de la situation »
+  assert.match(render, /titre = e\.type === 'barres' \? 'Schéma de comparaison' : e\.titre;/);
+  assert.doesNotMatch(render, /Je fais le schéma de la situation/);
   assert.doesNotMatch(exemple, /class="fin"|Je les remplis avec les mots/);
 });
 
@@ -362,16 +369,16 @@ test("G2 — je complète avec un rapport (n° 12, 12 bis) : l'unité est la pet
   // n° 12 : rouge = 2 × noire ; rouge = orange + 5 — noire 8, orange 11, rouge 16 (le générateur l'écartait)
   const m = texte(enQuestion.modele(carte({ couleurs: ["black", "orange", "red"], valeurs: [8, 11, 16], relations: [[2, "MUL", 0, 2], [2, "ADD", 1, 5]] })));
   assert.equal(m.mode, "complete");
-  assert.equal(m.titre1, "Les barres — je complète l'orange");
+  assert.equal(m.titre1, "Schéma de comparaison — je complète l'orange");
   assert.deepEqual(m.pre, ["35 + 5 = 40"]);
-  assert.deepEqual(m.rows, [["noire", "noire", []], ["rouge", "noire | noire", []], ["orange + 5", "orange | [5]", []]]);
+  assert.deepEqual(m.rows, [["noire", "?", []], ["rouge", "? | ?", []], ["orange + 5", "orange | [5]", []]]);
   assert.deepEqual(m.ligne, [40, ["noire", "rouge", "une rouge"]]);
-  assert.deepEqual(m.calculs, ["orange + 5 = rouge = 2 noires", "5 noires = 40", "1 noire = 40 ÷ 5 = 8", "—", "rouge = 2 × 8 = 16", "orange = 16 − 5 = 11"]);
+  assert.deepEqual(m.calculs, ["orange + 5 = rouge = 2 × ?", "5 × ? = 40", "? = 40 ÷ 5 = 8", "La tache noire cache donc 8 jetons", "—", "La tache rouge cache donc 2 × 8 = 16 jetons", "La tache orange cache donc 16 − 5 = 11 jetons"]);
   assert.equal(m.verif, "8 + 16 + 11 = 35");
   // n° 12 bis (planche 4-tous-les-cas) : rouge = noire + 12 ; rouge = 2 × orange — orange 9, rouge 18, noire 6
   const b = texte(enQuestion.modele(carte({ couleurs: ["orange", "red", "black"], valeurs: [9, 18, 6], relations: [[1, "ADD", 2, 12], [1, "MUL", 0, 2]] })));
-  assert.deepEqual(b.rows, [["orange", "orange", []], ["rouge", "orange | orange", []], ["noire + 12", "noire | [12]", []]]);
-  assert.deepEqual(b.calculs, ["noire + 12 = rouge = 2 orange", "5 orange = 45", "1 orange = 45 ÷ 5 = 9", "—", "rouge = 2 × 9 = 18", "noire = 18 − 12 = 6"]);
+  assert.deepEqual(b.rows, [["orange", "?", []], ["rouge", "? | ?", []], ["noire + 12", "noire | [12]", []]]);
+  assert.deepEqual(b.calculs, ["noire + 12 = rouge = 2 × ?", "5 × ? = 45", "? = 45 ÷ 5 = 9", "La tache orange cache donc 9 jetons", "—", "La tache rouge cache donc 2 × 9 = 18 jetons", "La tache noire cache donc 18 − 12 = 6 jetons"]);
 });
 
 test("l'unité commune (n° 13, problème B) : les petites parts (01/10/2026, à la place de « je double tout »)", () => {
@@ -383,7 +390,7 @@ test("l'unité commune (n° 13, problème B) : les petites parts (01/10/2026, à
   assert.deepEqual(m.rows, [["orange", "orange", []], ["rouge", "orange | orange | orange | orange | orange", ["cinq orange"]], ["noire", "noire", ["la moitié de la rouge"]]]);
   // la grande tache (rouge) se coupe en 2 × 5 = 10 petites parts ; la noire en vaut 5, l'orange 2
   const M = enQuestion.modele(c), P = M.parts;
-  assert.equal(P.titre, "Les barres — je coupe en petites parts");
+  assert.equal(P.titre, "Schéma de comparaison — je coupe en petites parts");
   assert.equal(P.phrase, "Je coupe la rouge en 10 petites parts (2\u00a0×\u00a05).");
   assert.deepEqual([P.part, P.nTot], [2, 17]);
   assert.deepEqual(P.rows.map((r) => [r.label, r.nParts, r.cells.every((x) => x.kind === "part" && x.v === 2 && x.de === r.i)]),
@@ -395,8 +402,8 @@ test("l'unité commune (n° 13, problème B) : les petites parts (01/10/2026, à
   const L = M.ligne;
   assert.deepEqual(L.avant, []);
   assert.deepEqual([L.total, L.groupes.map((g) => [g.label, g.cells.length])], [34, [["orange", 2], ["rouge", 10], ["noire", 5]]]);
-  assert.deepEqual(m.calculs, ["17 parts = 34", "1 part = 34 ÷ 17 = 2", "—", "orange = 2 × 2 = 4", "rouge = 10 × 2 = 20", "noire = 5 × 2 = 10"]);
-  assert.deepEqual(texte(enLettre.modele(c)).calculs, ["17 parts = 34", "1 part = 34 ÷ 17 = 2", "—", "O = 2 × 2 = 4", "R = 10 × 2 = 20", "N = 5 × 2 = 10"]);
+  assert.deepEqual(m.calculs, ["17 × ? = 34", "? = 34 ÷ 17 = 2", "—", "La tache orange cache donc 2 × 2 = 4 jetons", "La tache rouge cache donc 10 × 2 = 20 jetons", "La tache noire cache donc 5 × 2 = 10 jetons"]);
+  assert.deepEqual(texte(enLettre.modele(c)).calculs, ["17 × 𝑥 = 34", "𝑥 = 34 ÷ 17 = 2", "—", "La tache orange cache donc 2 × 2 = 4 jetons", "La tache rouge cache donc 10 × 2 = 20 jetons", "La tache noire cache donc 5 × 2 = 10 jetons"]);
   // plus rien de « je double tout »
   assert.doesNotMatch(html, /Je double tout|je double tout\)|enqueteUniteAvecLigne/);
   // deux rapports dont l'un divise l'autre (rouge = 2 noires = 4 orange) : une chaîne, comme au lot G1
@@ -406,33 +413,33 @@ test("l'unité commune (n° 13, problème B) : les petites parts (01/10/2026, à
 test("G2 — les indices composés (n° 15, 15 bis) : un rapport suivi d'un écart ; « de moins que le triple » se complète", () => {
   // rouge = 2 × noire + 3 — noire 10, rouge 23
   const m = texte(enQuestion.modele(carte({ couleurs: ["black", "red"], valeurs: [10, 23], relations: [[1, "COMPOSE", 0, 2, { d: 3 }]] })));
-  assert.deepEqual(m.rows, [["noire", "noire", []], ["rouge", "noire | noire | 3", []]]);
-  assert.deepEqual(m.calculs, ["3 noires + 3 = 33", "3 noires = 33 − 3 = 30", "1 noire = 30 ÷ 3 = 10", "—", "rouge = 2 × 10 + 3 = 23"]);
+  assert.deepEqual(m.rows, [["noire", "?", []], ["rouge", "? | ? | 3", []]]);
+  assert.deepEqual(m.calculs, ["3 × ? + 3 = 33", "3 × ? = 33 − 3 = 30", "? = 30 ÷ 3 = 10", "La tache noire cache donc 10 jetons", "—", "La tache rouge cache donc 2 × 10 + 3 = 23 jetons"]);
   // rouge = 3 × noire − 5 — noire 9, rouge 22 : rouge + 5 = 3 noires
   const b = texte(enQuestion.modele(carte({ couleurs: ["black", "red"], valeurs: [9, 22], relations: [[1, "COMPOSE", 0, 3, { d: -5 }]] })));
-  assert.equal(b.titre1, "Les barres — je complète la rouge");
+  assert.equal(b.titre1, "Schéma de comparaison — je complète la rouge");
   assert.deepEqual(b.pre, ["31 + 5 = 36"]);
-  assert.deepEqual(b.rows, [["noire", "noire", []], ["rouge + 5", "rouge | [5]", []]]);
-  assert.deepEqual(b.ligne, [36, ["noire", "3 noires"]]);
-  assert.deepEqual(b.calculs, ["rouge + 5 = 3 noires", "4 noires = 36", "1 noire = 36 ÷ 4 = 9", "—", "rouge = 3 × 9 − 5 = 22"]);
+  assert.deepEqual(b.rows, [["noire", "?", []], ["rouge + 5", "rouge | [5]", []]]);
+  assert.deepEqual(b.ligne, [36, ["noire", "3 × ?"]]);
+  assert.deepEqual(b.calculs, ["rouge + 5 = 3 × ?", "4 × ? = 36", "? = 36 ÷ 4 = 9", "La tache noire cache donc 9 jetons", "—", "La tache rouge cache donc 3 × 9 − 5 = 22 jetons"]);
   // à trois taches (référence) : rouge = 2 × noire + 3 ; bleue = noire + 4 — 9, 21, 13
   const t = texte(enQuestion.modele(carte({ couleurs: ["black", "red", "blue"], valeurs: [9, 21, 13], relations: [[1, "COMPOSE", 0, 2, { d: 3 }], [2, "ADD", 0, 4]] })));
-  assert.deepEqual(t.calculs, ["4 noires + 3 + 4 = 43", "4 noires = 43 − 3 − 4 = 36", "1 noire = 36 ÷ 4 = 9", "—", "rouge = 2 × 9 + 3 = 21", "bleue = 9 + 4 = 13"]);
+  assert.deepEqual(t.calculs, ["4 × ? + 3 + 4 = 43", "4 × ? = 43 − 3 − 4 = 36", "? = 36 ÷ 4 = 9", "La tache noire cache donc 9 jetons", "—", "La tache rouge cache donc 2 × 9 + 3 = 21 jetons", "La tache bleue cache donc 9 + 4 = 13 jetons"]);
   // en chaîne, sur le dernier maillon : violette = noire + 10 ; orange = 2 × violette − 5 — 5, 15, 25
   const ch = texte(enQuestion.modele(carte({ couleurs: ["black", "purple", "orange"], valeurs: [5, 15, 25], relations: [[1, "ADD", 0, 10], [2, "COMPOSE", 1, 2, { d: -5 }]] })));
-  assert.equal(ch.titre1, "Les barres — je remplace chaque violette et je complète l'orange");
+  assert.equal(ch.titre1, "Schéma de comparaison — je remplace chaque violette et je complète l'orange");
   assert.deepEqual(ch.ligne, [50, ["noire", "violette", "2 violettes"]]);
-  assert.deepEqual(ch.calculs, ["orange + 5 = 2 violettes", "4 noires + 10 + 10 + 10 = 50", "4 noires = 50 − 30 = 20", "1 noire = 20 ÷ 4 = 5", "—", "violette = 5 + 10 = 15", "orange = 2 × 15 − 5 = 25"]);
+  assert.deepEqual(ch.calculs, ["orange + 5 = 2 violettes", "4 × ? + 10 + 10 + 10 = 50", "4 × ? = 50 − 30 = 20", "? = 20 ÷ 4 = 5", "La tache noire cache donc 5 jetons", "—", "La tache violette cache donc 5 + 10 = 15 jetons", "La tache orange cache donc 2 × 15 − 5 = 25 jetons"]);
 });
 
 test("G2 — deux taches réunies (n° 16) : la grande barre = les deux autres bout à bout", () => {
   // rouge = noire + bleue ; bleue = noire + 4 — 7, 11, 18 (planche 4-tous-les-cas)
   const m = texte(enQuestion.modele(carte({ couleurs: ["black", "blue", "red"], valeurs: [7, 11, 18], relations: [[2, "SUM", 0, 1, { source2: 1 }], [1, "ADD", 0, 4]] })));
   assert.equal(m.mode, "reunies");
-  assert.equal(m.titre1, "Les barres — je remplace la bleue");
-  assert.deepEqual(m.rows, [["noire", "noire", []], ["bleue", "noire | 4", []], ["rouge", "noire | noire | 4", ["noire", "bleue"]]]);
+  assert.equal(m.titre1, "Schéma de comparaison — je remplace la bleue");
+  assert.deepEqual(m.rows, [["noire", "?", []], ["bleue", "? | 4", []], ["rouge", "? | ? | 4", ["noire", "bleue"]]]);
   assert.deepEqual(m.ligne, [36, ["noire", "bleue", "rouge"]]);
-  assert.deepEqual(m.calculs, ["4 noires + 4 + 4 = 36", "4 noires = 36 − 4 − 4 = 28", "1 noire = 28 ÷ 4 = 7", "—", "bleue = 7 + 4 = 11", "rouge = 7 + 11 = 18"]);
+  assert.deepEqual(m.calculs, ["4 × ? + 4 + 4 = 36", "4 × ? = 36 − 4 − 4 = 28", "? = 28 ÷ 4 = 7", "La tache noire cache donc 7 jetons", "—", "La tache bleue cache donc 7 + 4 = 11 jetons", "La tache rouge cache donc 7 + 11 = 18 jetons"]);
   // « de moins » dans la paire : Je retourne
   const r = texte(enQuestion.modele(carte({ couleurs: ["black", "blue", "red"], valeurs: [7, 11, 18], relations: [[2, "SUM", 0, 1, { source2: 1 }], [0, "SUB", 1, 4]] })));
   assert.equal(r.refo, "Je retourne : la bleue a 4 de plus que la noire.");
