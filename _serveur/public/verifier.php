@@ -208,6 +208,20 @@ if ($autorise) {
         return "$versions version(s) sur $journees journée(s) gardée(s) (sept au plus), "
             . "$actions ligne(s) de journal (douze mois, effacées par la tâche planifiée)";
     });
+    // Lot « splat-suivi-5 » (08/10/2026) : les mondes de SPLAT! ouverts à
+    // chaque classe vivent dans classes.reglages, ajoutée par migrer.php. Sans
+    // elle, rien ne tombe en panne (tout se lit « tous les mondes ouverts »),
+    // mais le choix des mondes dans « Ma classe » répond « mise à niveau ».
+    verif($lignes, "Mondes ouverts par classe", function () {
+        $pdo = bd();
+        if (!colonne_existe($pdo, 'classes', 'reglages')) {
+            throw new RuntimeException("manque la colonne « classes.reglages » — ouvre migrer.php avec ton mot de passe d'installation.");
+        }
+        $reglees = (int)$pdo->query("SELECT COUNT(*) FROM classes WHERE reglages IS NOT NULL AND reglages <> ''")->fetchColumn();
+        return $reglees === 0
+            ? "en place (toutes les classes ont tous leurs mondes ouverts)"
+            : "en place ($reglees classe(s) avec un choix de mondes)";
+    });
     // Le limiteur d'essais s'écrit avec une instruction propre à chaque moteur
     // (MySQL chez OVH, SQLite dans les tests) : on la joue ici, sur la vraie
     // base, pour voir qu'elle passe. Deux passages doivent compter 2.

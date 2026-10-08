@@ -70,7 +70,8 @@ function schema(string $pilote): array
   prof_id INTEGER NOT NULL DEFAULT 0,
   libelle VARCHAR(40) NOT NULL,
   applis VARCHAR(255) NOT NULL DEFAULT 'defi-tables',
-  cree_le VARCHAR(25) NOT NULL"
+  cree_le VARCHAR(25) NOT NULL,
+  reglages TEXT NULL"
         . ($mysql ? ",\n  KEY classes_prof (prof_id)" : "")
         . "\n)$fin",
 
@@ -260,6 +261,14 @@ function migrer_schema(?PDO $pdo = null): array
     if (table_existe($pdo, 'profs') && !colonne_existe($pdo, 'profs', 'mdp_temporaire')) {
         $pdo->exec('ALTER TABLE profs ADD COLUMN mdp_temporaire INTEGER NOT NULL DEFAULT 0');
         $faits[] = "Colonne « mot de passe temporaire » ajoutée aux comptes professeurs.";
+    }
+    // Lot « splat-suivi-5 » (08/10/2026) : les réglages d'une classe, par
+    // activité — aujourd'hui les mondes de SPLAT! ouverts à la classe
+    // (lib/applis.php). Vide pour toutes les classes existantes : rien ne
+    // change pour elles tant que le professeur ne choisit rien.
+    if (table_existe($pdo, 'classes') && !colonne_existe($pdo, 'classes', 'reglages')) {
+        $pdo->exec('ALTER TABLE classes ADD COLUMN reglages TEXT NULL');
+        $faits[] = "Colonne « réglages » ajoutée aux classes (les mondes de SPLAT! ouverts à chaque classe).";
     }
 
     // Puis les tables et index absents (dont « partages »), sans toucher au reste.

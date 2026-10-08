@@ -53,6 +53,11 @@
       try { codeOnglet = window.sessionStorage.getItem("mathsgo-suivi-code") || ""; } catch (e) {}
       if ((entree.billet || codeOnglet) && !/[?&]prof=1(&|$)/.test(String(window.location.search || ""))) {
         window.document.documentElement.className += " suivi-eleve";
+        // Lot « splat-suivi-5 » : pendant l'échange du billet, on ne sait pas
+        // encore quels mondes sont ouverts à la classe de l'élève : la liste
+        // des mondes attend (1,5 s au plus), au lieu de s'afficher ouverte
+        // puis de se griser. La page la montre dès qu'elle sait (majSuivi).
+        if (entree.billet) window.document.documentElement.className += " suivi-attente";
       }
     } catch (e) {}
     if (aEffacer || entree.billet) {
@@ -73,10 +78,10 @@
   })(window);
 </script>
 <!-- La liste des mondes « en préparation » et la clé de Gwenaël (?essai=1) : en tête de assets/js/splat-etapes.js -->
-<script src="../assets/js/splat-etapes.js?v=20261005-1"></script>
+<script src="../assets/js/splat-etapes.js?v=20261008-5"></script>
 <!-- Le parcours de l'élève (moteur partagé avec les trois outils et le serveur de suivi), et
      l'habillage du suivi de classe (bandeau, garde) : lot 2 « outils + carte », 08/10/2026 -->
-<script src="../assets/js/splat-parcours.js?v=20261008-2"></script>
+<script src="../assets/js/splat-parcours.js?v=20261008-5"></script>
 <script src="../assets/js/splat-suivi.js?v=20261008-2"></script>
 <style>
 :root{
@@ -176,6 +181,21 @@ main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
 .monde>.head .chev svg{width:18px;height:18px;stroke:#fff;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .monde.replie>.head .chev{transform:rotate(-90deg)}
 .monde.replie>.desc,.monde.replie>.intro,.monde.replie>.etapes{display:none}
+/* Un monde que le professeur n'a pas ouvert à la classe de l'élève (lot « splat-suivi-5 »,
+   08/10/2026, choix de Gwenaël sur maquettes) : le bandeau reste à sa place, grisé, sans
+   étapes ni lien, avec un cadenas (« pas encore ouvert » sur grand écran, le cadenas seul
+   au téléphone) ; les étoiles déjà gagnées dans ce monde restent écrites à côté (rien
+   n'est effacé), mais le total du haut ne compte que les mondes ouverts. */
+.monde.verrouille>.head{filter:saturate(.35);opacity:.85;cursor:default}
+.monde.verrouille>.desc,.monde.verrouille>.intro,.monde.verrouille>.etapes,.monde.verrouille>.head .chev{display:none}
+.monde .head .verrou{display:none;align-items:center;gap:5px;font-size:15px;font-weight:800;white-space:nowrap;
+  background:rgba(255,255,255,.18);border-radius:12px;padding:6px 9px}
+.monde .head .verrou svg{width:15px;height:15px;flex:0 0 auto}
+.monde.verrouille .head .verrou{display:inline-flex}
+.monde.verrouille .head .stars[hidden]{display:none}
+@media(max-width:559px){.monde .head .verrou .mot{display:none}}
+/* pendant l'échange du billet (amorce du <head>) : la liste des mondes attend */
+html.suivi-attente main#univers{visibility:hidden}
 .monde.replie{box-shadow:0 4px 12px rgba(22,47,82,.08)}
 .monde.replie+.monde{margin-top:12px}
 /* « Continuer » : la prochaine étoile à gagner, sous la barre de progression */
@@ -1036,7 +1056,17 @@ if (PROF) document.body.classList.add("prof");
    rien n'est caché. */
 const SPLAT_ETAPES=window.MathsGoSplatEtapes||null;
 MONDES.forEach((m,mi)=>{ m.cache=!!(SPLAT_ETAPES&&SPLAT_ETAPES.mondeCache(mi+1)); });
-function jouable(m){return m.actif&&!m.cache;}
+function jouable(m){return m.actif&&!m.cache&&!m.verrouille;}
+/* Les mondes fermés à la classe de l'élève suivi (lot « splat-suivi-5 ») : la liste vient du
+   moteur, qui la range dans l'onglet à chaque lecture de l'identité ; splat-etapes.js la
+   relit ; la carte la demande au client du suivi (qui la tient dès l'échange du billet, avant
+   même que le code soit rangé dans l'onglet), et à l'onglet sans moteur. Pas en vue professeur,
+   pas sans code. Appelé dès que le client existe, puis quand la liste arrive (suiviParcours). */
+function lireVerrous(){
+  const ouverts=SUIVI&&SUIVI.client?SUIVI.client.mondesOuverts:undefined;
+  MONDES.forEach((m,mi)=>{ m.verrouille=!PROF&&!m.cache&&!!(SPLAT_ETAPES&&SPLAT_ETAPES.mondeFerme&&SPLAT_ETAPES.mondeFerme(mi+1,ouverts)); });
+}
+const VERROU_SVG='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"/><rect x="4.5" y="10.5" width="15" height="11" rx="2.5" fill="#fff"/></svg>';
 const PREPA_BANDEAU="\ud83d\udea7 en pr\u00e9paration";
 const PREPA_PHRASE="Ce monde est en pr\u00e9paration\u00a0: il arrive bient\u00f4t\u00a0!";
 const KEY="mathsgo-splat-univers";
@@ -1050,6 +1080,7 @@ function ecrireFaits(f){try{localStorage.setItem(KEY,JSON.stringify(f))}catch(_e
    billet (on ne sait pas encore qui entre), aucune étoile. Sans le moteur, lecture directe des
    deux formats. Pas de suivi en vue professeur. */
 const SUIVI=(!PROF&&window.MathsGoSplatSuivi)?window.MathsGoSplatSuivi.creer({surRepere:majSuivi,surParcours:suiviParcours}):null;
+lireVerrous();
 function lireParcours(){
   if(SUIVI){ if(SUIVI.attente()) return {}; const p=SUIVI.lire(); if(p) return p.etapes; }
   try{const brut=JSON.parse(localStorage.getItem(KEY_PARCOURS))||{};return (brut.etapes&&typeof brut.etapes==="object")?brut.etapes:brut;}catch(_e){return{}}
@@ -1373,6 +1404,7 @@ else MONDES.forEach((m,mi)=>{
      '<svg class="blob" viewBox="0 0 110 110"><use href="#tacheEtoile" width="110" height="110" fill="rgba(255,255,255,.92)"/></svg>'+
      '<div class="t"><div class="num">Monde '+(mi+1)+'</div><h2>'+m.nom+'</h2></div>'+
      (m.actif?'<div class="stars" id="stars'+mi+'"></div>':'<div class="stars">\ud83d\udea7 en pr\u00e9paration</div>')+
+     (m.actif?'<span class="verrou" role="img" aria-label="pas encore ouvert">'+VERROU_SVG+'<span class="mot" aria-hidden="true">pas encore ouvert</span></span>':'')+
      '<span class="chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span>'+
    '</div>'+
    '<p class="desc">'+m.desc+'</p>'+
@@ -1419,18 +1451,20 @@ function majAffichage(){
   let total=0,fait=0,prochaine=null;
   const parcours=lireParcours();
   MONDES.forEach((m,mi)=>{
-    if(!jouable(m)) return;
+    if(!m.actif||m.cache) return;
     let f=0;
     m.etapes.forEach((e,ei)=>{
-      total++;
+      if(!m.verrouille) total++;
       const id=idEtape(m,e,ei), li=document.getElementById(id);
       const ok=etapeFaite(m,e,ei,parcours);
       li.classList.toggle("done",ok);
-      if(ok){f++;fait++;}
-      else if(!prochaine&&e.j) prochaine={m,mi,e,n:li.querySelector(".n").textContent};
+      if(ok){f++; if(!m.verrouille) fait++;}
+      else if(!prochaine&&e.j&&!m.verrouille) prochaine={m,mi,e,n:li.querySelector(".n").textContent};
     });
     const st=document.getElementById("stars"+mi);
     if(st) st.textContent="⭐ "+f+" / "+m.etapes.length;
+    /* fermé à la classe : ses étoiles déjà gagnées restent écrites, pas « ⭐ 0 / 3 » */
+    if(st) st.hidden=!!m.verrouille&&!f;
     (m.volets||[]).forEach((v,vi)=>{
       const sv=document.getElementById("stars"+mi+"-"+vi);
       if(!sv) return;
@@ -1488,26 +1522,27 @@ function mondeRetenu(){
 }
 function ouvrirMonde(mi){
   document.querySelectorAll("main>.monde").forEach((sec,i)=>{
-    const ouvert=i===mi;
+    const ouvert=i===mi&&!sec.classList.contains("verrouille");
     sec.classList.toggle("replie",!ouvert);
-    if(!sec.classList.contains("cache")) sec.querySelector(".head").setAttribute("aria-expanded",ouvert?"true":"false");
+    if(!sec.classList.contains("cache")&&!sec.classList.contains("verrouille")) sec.querySelector(".head").setAttribute("aria-expanded",ouvert?"true":"false");
   });
 }
 function mondeEnCours(prochaine){
   const cible=(location.hash||"").slice(1);
   if(cible){
     const el=document.getElementById(cible), sec=el&&el.closest("main>.monde");
-    if(sec) return [...document.querySelectorAll("main>.monde")].indexOf(sec);
+    if(sec&&!sec.classList.contains("verrouille")) return [...document.querySelectorAll("main>.monde")].indexOf(sec);
   }
   const retenu=mondeRetenu();
-  if(retenu>=0&&!MONDES[retenu].cache) return retenu; /* un monde passé en préparation ne se rouvre pas seul */
+  /* un monde passé en préparation, ou fermé à la classe, ne se rouvre pas seul */
+  if(retenu>=0&&!MONDES[retenu].cache&&!MONDES[retenu].verrouille) return retenu;
   if(PROF) return 0; /* vue prof : le monde 1, sauf adresse précise ou monde retenu */
   if(prochaine) return prochaine.mi;
   const jouables=MONDES.map((m,mi)=>jouable(m)?mi:-1).filter(mi=>mi>=0);
   return jouables.length?jouables[jouables.length-1]:MONDES.length-1;
 }
 document.addEventListener("click",ev=>{
-  const head=ev.target.closest("main>.monde:not(.cache)>.head");
+  const head=ev.target.closest("main>.monde:not(.cache):not(.verrouille)>.head");
   if(!head) return;
   const sec=head.parentElement, mondes=[...document.querySelectorAll("main>.monde")];
   const mi=sec.classList.contains("replie")?mondes.indexOf(sec):-1;
@@ -1622,6 +1657,7 @@ let APRES_REDIRIGE=false; /* la carte part aussitôt : le suivi n'a pas à déma
   for(const b of BONUS_MONDES){
     const kb=b.fiches.findIndex(f=>b.idp+f.code===apres);
     if(kb<0) continue;
+    if(b.monde.verrouille) return; /* monde fermé à la classe (lot « splat-suivi-5 ») : la carte */
     retenirMonde(MONDES.indexOf(b.monde)); retenirBonus(true,b);
     if(kb+1<b.fiches.length){ APRES_REDIRIGE=true; window.location.replace(b.fiches[kb+1].j); }
     return;
@@ -1639,6 +1675,19 @@ let APRES_REDIRIGE=false; /* la carte part aussitôt : le suivi n'a pas à déma
     window.location.replace(suite[k+1].j);
   }
 })();
+/* Les mondes fermés à la classe : la classe « verrouille » sur leur section, et — s'ils ont
+   changé pendant que la carte était ouverte — le monde ouvert qui vient de se fermer se replie. */
+function poserVerrous(){
+  document.querySelectorAll("main>.monde").forEach((sec,i)=>{
+    const m=MONDES[i]; if(!m||m.cache||!m.actif) return;
+    const avant=sec.classList.contains("verrouille");
+    sec.classList.toggle("verrouille",!!m.verrouille);
+    const head=sec.querySelector(".head");
+    if(m.verrouille){ sec.classList.add("replie"); head.removeAttribute("role"); head.removeAttribute("tabindex"); head.removeAttribute("aria-expanded"); }
+    else if(avant){ head.setAttribute("role","button"); head.setAttribute("tabindex","0"); head.setAttribute("aria-expanded",sec.classList.contains("replie")?"false":"true"); }
+  });
+}
+poserVerrous();
 ouvrirMonde(mondeEnCours(majAffichage()));
 if(!PROF) ouvrirParties();
 /* au retour d'une partie (autre onglet ou bouton retour), on rallume les étoiles gagnées */
@@ -1661,6 +1710,8 @@ function majLiensRetour(){
 }
 function majSuivi(){
   majLiensRetour();
+  /* la liste des mondes attendait l'échange du billet (amorce du <head>) : on sait */
+  if(!(SUIVI&&SUIVI.attente())) document.documentElement.classList.remove("suivi-attente");
   /* le choix « Élève | Professeur » disparaît pour l'élève venu de son espace : sous un code,
      pendant l'échange de son billet, ou quand son billet est refusé (posé dès le <head>) */
   document.documentElement.classList.toggle("suivi-eleve",!!(SUIVI&&(SUIVI.actif()||SUIVI.attente()||SUIVI.client.entreeRefusee)));
@@ -1671,12 +1722,21 @@ function majSuivi(){
 let carteTouchee=false;
 ["pointerdown","keydown"].forEach(t=>document.getElementById("univers").addEventListener(t,()=>{carteTouchee=true;},true));
 function suiviParcours(){
+  /* lot « splat-suivi-5 » : la liste des mondes ouverts à la classe arrive avec l'identité */
+  const avant=MONDES.map(m=>!!m.verrouille).join();
+  lireVerrous();
+  const changes=MONDES.map(m=>!!m.verrouille).join()!==avant;
+  if(changes) poserVerrous();
+  if(!(SUIVI&&SUIVI.attente())) document.documentElement.classList.remove("suivi-attente");
   const prochaine=majAffichage();
   if(carteTouchee) return;
   ouvrirMonde(mondeEnCours(prochaine));
   ouvrirParties();
 }
 if(SUIVI&&!APRES_REDIRIGE){ majSuivi(); SUIVI.lancer(); }
+/* la liste des mondes n'attend jamais plus de 1,5 s (serveur lent ou muet), ni sans moteur */
+if(!SUIVI) document.documentElement.classList.remove("suivi-attente");
+else setTimeout(()=>document.documentElement.classList.remove("suivi-attente"),1500);
 </script>
 </body>
 </html>

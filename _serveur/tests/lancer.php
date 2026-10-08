@@ -3965,6 +3965,207 @@ verifier("splat-suivi-4 — « Ma classe » charge le moteur SPLAT! d'ici, à la
     vrai(str_contains($r['texte'], 'id="bloc-activites" hidden'), '« Activités de la classe » : caché tant qu’aucune classe n’est ouverte');
 });
 
+// ------------------------------------------- lot « splat-suivi-5 » (08/10/2026)
+//
+// Les mondes de SPLAT! ouverts, classe par classe : classes.reglages (JSON,
+// vide par défaut), {"splat": {"mondes": [1, 2]}} = les mondes OUVERTS ; tous
+// ouverts = rien d'écrit. Écrits par classes.modifier (propriétaire, lecture
+// STRICTE), rendus à « Ma classe » (classes.liste, tableau) et à l'élève
+// (api/eleve.php, par son code et à l'échange du billet).
+
+$classe5 = null;
+
+// Lecture directe de la ligne d'une classe. Le curseur est FERMÉ aussitôt : un
+// curseur SQLite resté ouvert dans ce processus garde un verrou sur la base, et
+// le serveur de test, bloqué à sa prochaine écriture, ne répond plus.
+function classe_en_base(int $id): array
+{
+    $ligne = bd_test()->prepare('SELECT libelle, applis, reglages FROM classes WHERE id = ?');
+    $ligne->execute([$id]);
+    $classe = $ligne->fetch();
+    $ligne->closeCursor();
+    return $classe;
+}
+
+verifier("splat-suivi-5 — par défaut, une classe a tous ses mondes ouverts : rien n'est écrit, « {} » partout", function () use (&$jetonS1, &$classe5) {
+    vider_compteurs();
+    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'test-mondes', 'applis' => ['defi-tables', 'splat']], ['jeton' => $jetonS1])['json']['id'];
+    $eleves = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 2], ['jeton' => $jetonS1])['json']['eleves'];
+    $classe5 = ['id' => $id, 'eleves' => $eleves];
+    egal(null, classe_en_base($id)['reglages'], 'la colonne reste vide');
+    $liste = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1]);
+    $trouvee = null;
+    foreach ($liste['json']['classes'] as $c) if ((int)$c['id'] === $id) $trouvee = $c;
+    egal([], $trouvee['reglages'], 'classes.liste : aucun réglage');
+    vrai(str_contains($liste['texte'], '"reglages":{}'), 'un objet JSON « {} », pas une liste « [] »');
+    $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $id, 'appli' => 'splat'], ['jeton' => $jetonS1]);
+    egal([], $t['json']['classe']['reglages'], 'tableau : aucun réglage');
+    $e = identite($eleves[0]['code']);
+    egal(200, $e['code']);
+    vrai(str_contains($e['texte'], '"reglages":{}'), 'l’élève reçoit « {} » : tous les mondes ouverts');
+});
+
+verifier("splat-suivi-5 — classes.modifier range les mondes ouverts, triés, sans doublon ; tous cochés = rien d'écrit", function () use (&$jetonS1, &$classe5) {
+    vider_compteurs();
+    $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classe5['id'], 'reglages' => ['splat' => ['mondes' => [2, 1, 2]]]], ['jeton' => $jetonS1]);
+    egal(200, $r['code']);
+    egal(['splat' => ['mondes' => [1, 2]]], $r['json']['reglages'], 'la réponse rend la nouvelle valeur');
+    $classe = classe_en_base($classe5['id']);
+    egal('{"splat":{"mondes":[1,2]}}', $classe['reglages'], 'en base : la liste propre');
+    egal('test-mondes', $classe['libelle'], 'le nom ne bouge pas');
+    egal('defi-tables,splat', $classe['applis'], 'les activités ne bougent pas');
+    $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $classe5['id'], 'appli' => 'splat'], ['jeton' => $jetonS1]);
+    egal(['splat' => ['mondes' => [1, 2]]], $t['json']['classe']['reglages'], 'tableau');
+    // Tout recocher : on revient à « rien d'écrit ».
+    $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classe5['id'], 'reglages' => ['splat' => ['mondes' => [1, 2, 3, 4, 5, 6]]]], ['jeton' => $jetonS1]);
+    egal(200, $r['code']);
+    vrai(str_contains($r['texte'], '"reglages":{}'), 'réponse « {} »');
+    egal(null, classe_en_base($classe5['id'])['reglages'], 'en base : NULL, comme une classe où personne n’a rien choisi');
+    // Renommer sans « reglages » ne touche pas aux mondes.
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classe5['id'], 'reglages' => ['splat' => ['mondes' => [1, 2]]]], ['jeton' => $jetonS1]);
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classe5['id'], 'libelle' => 'test-mondes-2'], ['jeton' => $jetonS1]);
+    $classe = classe_en_base($classe5['id']);
+    egal('test-mondes-2', $classe['libelle']);
+    egal('{"splat":{"mondes":[1,2]}}', $classe['reglages'], 'renommer garde les mondes');
+});
+
+verifier("splat-suivi-5 — une valeur fausse est refusée avec un message, et rien n'est écrit", function () use (&$jetonS1, &$classe5) {
+    vider_compteurs();
+    $avant = classe_en_base($classe5['id'])['reglages'];
+    foreach ([
+        [[], 'Une classe garde au moins un monde ouvert.', 'aucun monde'],
+        [[7], 'Monde inconnu.', 'un monde qui n’existe pas'],
+        [[0, 1], 'Monde inconnu.', 'le monde 0'],
+        [['1'], 'Monde inconnu.', 'un texte'],
+        [[1.5], 'Monde inconnu.', 'un nombre à virgule'],
+        [[true], 'Monde inconnu.', 'un booléen'],
+        ['1,2', 'Liste de mondes illisible.', 'une chaîne'],
+        [['a' => 1], 'Liste de mondes illisible.', 'un objet'],
+    ] as [$mondes, $message, $quoi]) {
+        $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classe5['id'], 'reglages' => ['splat' => ['mondes' => $mondes]]], ['jeton' => $jetonS1]);
+        egal(400, $r['code'], "$quoi : refusé");
+        egal($message, $r['json']['erreur'] ?? null, "$quoi : le message");
+    }
+    foreach ([
+        [['defi-tables' => ['mondes' => [1]]], 'Réglage inconnu.', 'une activité sans réglage'],
+        [['soley' => ['mondes' => [1]]], 'Réglage inconnu.', 'une activité fermée'],
+        [['inconnue' => ['mondes' => [1]]], 'Réglage inconnu.', 'une activité inconnue'],
+        [['splat' => ['tables' => [1]]], 'Réglage inconnu.', 'un réglage non déclaré'],
+        [['splat' => 'mondes'], 'Réglage inconnu.', 'un réglage illisible'],
+        ['tout', 'Réglages illisibles.', 'une chaîne'],
+        [[1, 2], 'Réglages illisibles.', 'une liste'],
+    ] as [$reglages, $message, $quoi]) {
+        $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classe5['id'], 'reglages' => $reglages], ['jeton' => $jetonS1]);
+        egal(400, $r['code'], "$quoi : refusé");
+        egal($message, $r['json']['erreur'] ?? null, "$quoi : le message");
+    }
+    egal($avant, classe_en_base($classe5['id'])['reglages'], 'la classe n’a pas bougé');
+});
+
+verifier("splat-suivi-5 — seul le propriétaire choisit les mondes ; un collègue les voit", function () use (&$jetonS1, &$classe5) {
+    vider_compteurs();
+    $tmp = appel('/api/prof.php', ['action' => 'profs.ajouter', 'identifiant' => 'collegue-mondes'], ['jeton' => $jetonS1])['json']['motdepasse'];
+    $jc = connexion('collegue-mondes', $tmp)['json']['jeton'];
+    appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => $tmp, 'nouveau' => 'mondes-collegue-2026'], ['jeton' => $jc]);
+    $idc = null;
+    foreach (appel('/api/prof.php', ['action' => 'profs.liste'], ['jeton' => $jetonS1])['json']['profs'] as $pr) {
+        if ($pr['identifiant'] === 'collegue-mondes') $idc = $pr['id'];
+    }
+    foreach (['lecture', 'ecriture'] as $droit) {
+        appel('/api/prof.php', ['action' => 'partages.supprimer', 'classe_id' => $classe5['id'], 'prof_id' => $idc], ['jeton' => $jetonS1]);
+        egal(200, appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $classe5['id'], 'prof_id' => $idc, 'droit' => $droit], ['jeton' => $jetonS1])['code'], "partage en $droit");
+        $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classe5['id'], 'reglages' => ['splat' => ['mondes' => [1]]]], ['jeton' => $jc]);
+        egal(403, $r['code'], "un collègue en $droit ne choisit pas les mondes");
+        $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $classe5['id'], 'appli' => 'splat'], ['jeton' => $jc]);
+        egal(['splat' => ['mondes' => [1, 2]]], $t['json']['classe']['reglages'], "un collègue en $droit voit les mondes ouverts (pastilles grises)");
+    }
+    egal('{"splat":{"mondes":[1,2]}}', classe_en_base($classe5['id'])['reglages'], 'rien n’a bougé');
+});
+
+verifier("splat-suivi-5 — l'élève reçoit les mondes ouverts par son code et à l'échange du billet, tant que SPLAT! est dans sa liste", function () use (&$jetonS1, &$classe5) {
+    vider_compteurs();
+    $code = $classe5['eleves'][0]['code'];
+    $e = identite($code);
+    egal(['splat' => ['mondes' => [1, 2]]], $e['json']['reglages'], 'par le code (espace élève, et chaque page qui relit l’identité)');
+    $billet = appel('/api/eleve.php', ['code' => $code, 'billet' => true])['json']['billet'];
+    $r = echanger($billet, ['appli' => 'splat']);
+    egal(200, $r['code']);
+    egal('entree', $r['json']['type']);
+    egal(['splat' => ['mondes' => [1, 2]]], $r['json']['reglages'], 'à l’échange du billet (la carte des mondes)');
+    // SPLAT! décoché : l'élève ne reçoit plus rien de SPLAT! ; recoché : ses mondes reviennent.
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classe5['id'], 'applis' => ['defi-tables']], ['jeton' => $jetonS1]);
+    vrai(str_contains(identite($code)['texte'], '"reglages":{}'), 'SPLAT! décoché : rien de SPLAT! pour l’élève');
+    egal('{"splat":{"mondes":[1,2]}}', classe_en_base($classe5['id'])['reglages'],
+        'mais le choix reste gardé');
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classe5['id'], 'applis' => ['defi-tables', 'splat']], ['jeton' => $jetonS1]);
+    egal(['splat' => ['mondes' => [1, 2]]], identite($code)['json']['reglages'], 'SPLAT! recoché : les mêmes mondes');
+});
+
+verifier("splat-suivi-5 — en base, une valeur abîmée se lit « tous ouverts » ou ce qui reste lisible, jamais une panne", function () use (&$jetonS1, &$classe5) {
+    vider_compteurs();
+    $code = $classe5['eleves'][0]['code'];
+    $maj = bd_test()->prepare('UPDATE classes SET reglages = ? WHERE id = ?');
+    // (une écriture ne laisse pas de curseur ouvert : pas de verrou qui traîne)
+    foreach ([
+        ['pas du json', '{}'], ['[1,2]', '{}'], ['{"splat":{"mondes":"1"}}', '{}'], ['{"splat":{"mondes":[]}}', '{}'],
+        ['{"splat":{"mondes":[1,2,3,4,5,6]}}', '{}'], ['{"inconnue":{"mondes":[1]}}', '{}'],
+        ['{"splat":{"mondes":[9,"2",2,1,1]}}', '{"splat":{"mondes":[1,2]}}'],
+    ] as [$brut, $attendu]) {
+        $maj->execute([$brut, $classe5['id']]);
+        $r = identite($code);
+        egal(200, $r['code'], "« $brut » : l’élève entre");
+        vrai(str_contains($r['texte'], '"reglages":' . $attendu), "« $brut » → $attendu");
+        egal(200, appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1])['code'], "« $brut » : Ma classe s’ouvre");
+    }
+    $maj->execute(['{"splat":{"mondes":[1,2]}}', $classe5['id']]);
+});
+
+verifier("splat-suivi-5 — avant migrer.php (colonne absente) : tout se lit « tous ouverts », seul le choix des mondes demande la mise à niveau", function () use (&$jetonS1, &$classe5) {
+    vider_compteurs();
+    // La base d'avant migrer.php : la colonne retirée le temps de l'essai (SQLite
+    // comme MySQL savent le faire), remise par migrer_schema() dans le finally.
+    bd_test()->exec('ALTER TABLE classes DROP COLUMN reglages');
+    try {
+        egal(false, colonne_existe(bd_test(), 'classes', 'reglages'), 'la colonne est retirée pour l’essai');
+        $code = $classe5['eleves'][0]['code'];
+        $e = identite($code);
+        egal(200, $e['code'], 'l’élève entre');
+        vrai(str_contains($e['texte'], '"reglages":{}'), 'et tous ses mondes sont ouverts');
+        $billet = appel('/api/eleve.php', ['code' => $code, 'billet' => true])['json']['billet'];
+        egal(200, echanger($billet, ['appli' => 'splat'])['code'], 'le billet s’échange');
+        $l = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1]);
+        egal(200, $l['code'], 'Ma classe s’ouvre');
+        egal(200, appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $classe5['id'], 'appli' => 'splat'], ['jeton' => $jetonS1])['code']);
+        egal(200, appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classe5['id'], 'libelle' => 'test-mondes-3'], ['jeton' => $jetonS1])['code'],
+            'renommer marche encore');
+        $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classe5['id'], 'reglages' => ['splat' => ['mondes' => [1]]]], ['jeton' => $jetonS1]);
+        egal(503, $r['code'], 'choisir les mondes : mise à niveau à faire');
+        vrai(str_contains($r['json']['erreur'] ?? '', 'migrer.php'), 'le message dit quoi faire : ' . ($r['json']['erreur'] ?? ''));
+        $v = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+        vrai((bool)preg_match('#class="etat non">✗</span>\s*Mondes ouverts par classe\s*<div class="detail">manque la colonne « classes\.reglages » — ouvre migrer\.php#u', $v['texte']),
+            'verifier.php le dit, en rouge');
+    } finally {
+        $faits = migrer_schema(bd_test());
+    }
+    vrai(in_array('Colonne « réglages » ajoutée aux classes (les mondes de SPLAT! ouverts à chaque classe).', $faits, true),
+        'migrer.php ajoute la colonne et le dit : ' . implode(' | ', $faits));
+    egal([], migrer_schema(bd_test()), 'relancer ne fait plus rien');
+    egal(true, colonne_existe(bd_test(), 'classes', 'reglages'));
+    $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classe5['id'], 'reglages' => ['splat' => ['mondes' => [1, 2]]]], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'après la mise à niveau, le choix des mondes marche');
+    $v = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai((bool)preg_match('#class="etat oui">✓</span>\s*Mondes ouverts par classe\s*<div class="detail">en place \(\d+ classe\(s\) avec un choix de mondes\)#u', $v['texte']),
+        'verifier.php : la ligne est verte');
+});
+
+verifier("splat-suivi-5 — le nombre de mondes déclaré au catalogue est celui de la carte du moteur", function () use ($racine) {
+    require_once __DIR__ . '/../public/lib/applis.php';
+    $moteur = (string)file_get_contents($racine . '/public/prof/splat-parcours.js');
+    vrai((bool)preg_match('#const MONDES = Object\.freeze\(\[(.*?)\]\);#s', $moteur, $m), 'la liste des mondes du moteur');
+    egal(preg_match_all('#Object\.freeze\(\[(\d), "#', $m[1]), CATALOGUE_APPLIS['splat']['reglages']['mondes'],
+        'lib/applis.php déclare autant de mondes que la carte');
+});
+
 // ---------------------------------------------------------------------- résultat
 
 echo "\n";

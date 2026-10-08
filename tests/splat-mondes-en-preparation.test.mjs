@@ -21,7 +21,7 @@ const moduleEtapes = lire("assets/js/splat-etapes.js");
 const univers = lire("outils/splat_univers.html");
 const livrets = lire("outils/livrets_splat.html");
 const URL_CARTE = "/outils/splat_univers.html";
-const VERSION = "20261005-1";   // le monde 4 public (05/10/2026)
+const VERSION = "20261008-5";   // les mondes fermés à la classe (lot splat-suivi-5, 08/10/2026)
 
 // ---------- le module, exécuté avec une fausse fenêtre ----------
 function stockage(initial = {}) {
@@ -150,12 +150,15 @@ test("la carte des mondes charge splat-etapes.js (même version que les outils) 
   assert.match(univers, /'<span class="fichesTete">'\+\(m\.cache\?'en préparation':/);
   assert.match(univers, /'<span class="sf">'\+\(m\.cache\?'en préparation':/);
   assert.match(univers, /const mi=\+a\.dataset\.mi; if\(MONDES\[mi\]\.cache\) return;/, "le sommaire n'ouvre pas un monde caché");
-  // les étoiles, « Continuer » et ?apres= ne comptent que les mondes jouables
-  assert.match(univers, /if\(!jouable\(m\)\) return;\n    let f=0;/);
+  // les étoiles, « Continuer » et ?apres= ne comptent que les mondes jouables (lot « splat-suivi-5 » :
+  // un monde fermé à la classe garde ses étoiles sur son bandeau, hors du total et de « Continuer »)
+  assert.match(univers, /if\(!m\.actif\|\|m\.cache\) return;\n    let f=0;/);
+  assert.match(univers, /if\(!m\.verrouille\) total\+\+;/);
+  assert.match(univers, /if\(ok\)\{f\+\+; if\(!m\.verrouille\) fait\+\+;\}/);
   assert.match(univers, /const suite=ici&&ici\.cache\?ici\.etapes:MONDES\.flatMap\(m=>jouable\(m\)\?m\.etapes:\[\]\);/);
   assert.doesNotMatch(univers, /flatMap\(m=>m\.actif\?m\.etapes:\[\]\)/, "plus d'enchaînement qui ignore les mondes cachés");
   // le monde retenu sur l'appareil ne rouvre pas un monde caché
-  assert.match(univers, /if\(retenu>=0&&!MONDES\[retenu\]\.cache\) return retenu;/);
+  assert.match(univers, /if\(retenu>=0&&!MONDES\[retenu\]\.cache&&!MONDES\[retenu\]\.verrouille\) return retenu;/);
   // les textes choisis par Gwenaël (26/09)
   assert.match(univers, /const PREPA_BANDEAU="\\ud83d\\udea7 en pr\\u00e9paration";/);
   assert.match(univers, /const PREPA_PHRASE="Ce monde est en pr\\u00e9paration\\u00a0: il arrive bient\\u00f4t\\u00a0!";/);

@@ -431,7 +431,7 @@ function serveurDesParcours(parActivite) {
   };
 }
 
-function jouerHabillage({reponse, moteurCharge = true, applis = ["defi-tables"]}) {
+function jouerHabillage({reponse, moteurCharge = true, applis = ["defi-tables"], reglages}) {
   const debut = page.indexOf("  const JAUGES = {");
   assert.ok(debut > 0, "la page doit nommer les moteurs qu'elle charge");
   const ancre = page.indexOf("  async function habillerJauges(donnees, code) {", debut);
@@ -490,7 +490,8 @@ function jouerHabillage({reponse, moteurCharge = true, applis = ["defi-tables"]}
     }}};
   const habiller = new Function("$", "window", "document", "fetch", "CSS", "Promise", "Math", source)(
     $, fenetre, doc, reponse, {escape: x => x}, Promise, Math);
-  const donnees = {applis: applis.map(cle => ({cle, disponible: true, url: "https://exemple/", ancre: null}))};
+  const donnees = {applis: applis.map(cle => ({cle, disponible: true, url: "https://exemple/", ancre: null})),
+    ...(reglages ? {reglages} : {})};
   return {habiller: habiller(donnees, "ABC123"), tuile: tuiles[applis[0]], tuiles, charges, remontees};
 }
 
@@ -708,4 +709,68 @@ test("moteur SPLAT! introuvable : la tuile SPLAT! reste nue, celle de Défi tabl
   assert.deepEqual(tuiles.splat.enfants, [], "rien ne peut lire le parcours SPLAT! : la tuile ne bouge pas");
   assert.deepEqual(tuiles.splat.classes, []);
   assert.equal(tuiles["defi-tables"].enfants.length, 1, "l'autre activité n'en souffre pas");
+});
+
+// -------------------------------------------------------------------------
+// Lot « splat-suivi-5 » (08/10/2026, choix de Gwenaël sur maquettes) : quand
+// le professeur n'a ouvert que certains mondes à la classe, la tuile les
+// montre en gris (pointillés), et les comptes ne portent que sur les mondes
+// ouverts — « 9 étapes réussies sur 9 » quand les mondes 1 et 2 sont finis.
+// La liste arrive avec l'identité (api/eleve.php, reglages.splat.mondes) ;
+// c'est le moteur qui la lit.
+
+const MONDES_1_2 = {splat: {mondes: [1, 2]}};
+
+test("SPLAT!, mondes 1 et 2 ouverts : les autres en gris, les comptes sur les mondes ouverts", () => {
+  const lire = lecteurDeJauge().splat;
+  const lea = lire(SPLAT, LEA(), MONDES_1_2);
+  assert.equal(lea.compte, "9 étapes réussies sur 9", "les 4 étapes du monde 3 fermé ne comptent plus");
+  assert.equal(lea.total, 9);
+  assert.equal(lea.bonus, "", "son Bonus est dans le monde 3, fermé : pas de ✨");
+  assert.deepEqual(lea.mondes, [
+    {numero: 1, etat: "fini"}, {numero: 2, etat: "fini"}, {numero: 3, etat: "ferme"},
+    {numero: 4, etat: "ferme"}, {numero: 5, etat: "ferme"}, {numero: 6, etat: "ferme"}]);
+  const ines = lire(SPLAT, parcoursSplat({mondesFinis: [1], enCours: "m2e1"}), MONDES_1_2);
+  assert.equal(ines.compte, "6 étapes réussies sur 9");
+  assert.deepEqual(ines.mondes.map(m => m.etat), ["fini", "cours", "ferme", "ferme", "ferme", "ferme"]);
+  // Les mondes 5 et 6 seulement (une 4e) : « sur 9 » aussi (3 + 6).
+  const quatrieme = lire(SPLAT, parcoursSplat({mondesFinis: [1, 2, 5]}), {splat: {mondes: [5, 6]}});
+  assert.equal(quatrieme.compte, "3 étapes réussies sur 9");
+  assert.deepEqual(quatrieme.mondes.map(m => m.etat), ["ferme", "ferme", "ferme", "ferme", "fini", "vide"]);
+});
+
+test("SPLAT! : du travail seulement dans des mondes fermés, pas de jauge ; tous ouverts ou rien de lisible, rien ne change", () => {
+  const lire = lecteurDeJauge().splat;
+  assert.equal(lire(SPLAT, parcoursSplat({mondesFinis: [3]}), MONDES_1_2), null,
+    "« 0 étape réussie sur 9 » serait le reproche qu'on refuse");
+  for (const reglages of [undefined, {}, {splat: {mondes: [1, 2, 3, 4, 5, 6]}}, {splat: {mondes: "1,2"}}]) {
+    assert.equal(lire(SPLAT, LEA(), reglages).compte, "13 étapes réussies sur 37", JSON.stringify(reglages));
+  }
+  // Un moteur d'avant le lot sur le serveur (FTP incomplet) : tout ouvert, rien ne casse.
+  const ancien = Object.assign({}, SPLAT, {mondesDeReglages: undefined});
+  assert.equal(lire(ancien, LEA(), MONDES_1_2).compte, "13 étapes réussies sur 37");
+});
+
+test("SPLAT! : l'espace passe les réglages de la classe à la jauge, et la pastille d'un monde fermé est grise en pointillés", async () => {
+  const {habiller, tuiles} = jouerHabillage({applis: ["splat"], reglages: MONDES_1_2,
+    reponse: () => Promise.resolve({ok: true, json: () => Promise.resolve({ok: true, existe: true, parcours: LEA()})})});
+  await habiller;
+  const tuile = tuiles.splat;
+  assert.equal(tuile.enfants.length, 1, "la jauge est posée");
+  const tous = (noeud, sortie = []) => { (noeud.enfants || []).forEach(n => { sortie.push(n); tous(n, sortie); }); return sortie; };
+  const noeuds = tous(tuile);
+  const svgs = noeuds.filter(n => n.nom === "svg");
+  assert.deepEqual(svgs.map(s => s.attributs.class), ["monde-p fini", "monde-p fini", "monde-p ferme", "monde-p ferme", "monde-p ferme", "monde-p ferme"]);
+  const ferme = svgs[2];
+  const cercle = ferme.enfants.find(n => n.nom === "circle");
+  const chiffre = ferme.enfants.find(n => n.nom === "text");
+  assert.equal(cercle.attributs["stroke-dasharray"], "3.2 2.4", "pointillés");
+  assert.equal(cercle.attributs.fill, "#fff");
+  assert.equal(cercle.attributs.stroke, chiffre.attributs.fill, "anneau et chiffre du même gris");
+  assert.ok(!ferme.enfants.some(n => n.nom === "path"), "pas de moitié : le travail d'un monde fermé ne se lit pas dans la tuile");
+  assert.equal(chiffre.attributs.y, "16.375", "le chiffre centré comme sur les autres pastilles");
+  assert.equal(chiffre.textContent, "3");
+  assert.ok(noeuds.some(n => n.textContent === "9 étapes réussies sur 9"));
+  const etiquette = noeuds.find(n => n.attributs && n.attributs["aria-label"]);
+  assert.match(etiquette.attributs["aria-label"], /Monde 3 : fermé pour ta classe/);
 });

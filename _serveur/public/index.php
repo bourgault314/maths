@@ -491,11 +491,21 @@ $versionSplat = version_moteur('splat-parcours.js');
     // mondes en pastilles — vide, à moitié (en cours), pleine (fini) — et le
     // compte des étapes réussies, les Bonus à part. Le total est celui de la
     // carte (37 étapes), jamais écrit ici.
+    // Lot « splat-suivi-5 » (08/10/2026, choix de Gwenaël) : quand le professeur
+    // n'a pas ouvert tous les mondes à la classe, les mondes fermés sont des
+    // pastilles grises en pointillés, et les comptes ne portent que sur les
+    // mondes ouverts (« 9 étapes réussies sur 9 » quand les mondes 1 et 2 sont
+    // finis). C'est le moteur qui lit la liste rendue par le serveur.
     "splat": {
       url: "prof/splat-parcours.js?v=<?= htmlspecialchars($versionSplat, ENT_QUOTES) ?>",
       global: "MathsGoSplatParcours",
-      lecteur: (P, brut) => {
-        const resume = P.resumeProf(brut);
+      lecteur: (P, brut, reglages) => {
+        const ouverts = typeof P.mondesDeReglages === "function" ? P.mondesDeReglages(reglages) : null;
+        const ouvert = numero => !ouverts || ouverts.includes(numero);
+        const tout = P.resumeProf(brut);
+        const resume = ouverts
+          ? P.resumeProf(brut, P.CARTE.ETAPES.filter(etape => ouvert(etape[4])), P.CARTE.BONUS.filter(etape => ouvert(etape[4])))
+          : tout;
         const fait = resume.faits;
         // Même règle que Défi tables : rien tant qu'aucune étape n'est réussie
         // (une série en cours, ou un Bonus seul, ne fait pas encore de jauge).
@@ -505,7 +515,7 @@ $versionSplat = version_moteur('splat-parcours.js');
           fait, total: resume.total,
           compte: `${fait} étape${fait > 1 ? "s" : ""} réussie${fait > 1 ? "s" : ""} sur ${resume.total}`,
           bonus: bonus ? `✨ ${bonus} bonus` : "",
-          mondes: resume.mondes.map(monde => ({numero: monde.numero, etat: monde.etat}))
+          mondes: tout.mondes.map(monde => ({numero: monde.numero, etat: ouvert(monde.numero) ? monde.etat : "ferme"}))
         };
       }
     }
@@ -567,7 +577,10 @@ $versionSplat = version_moteur('splat-parcours.js');
   // (outils/splat_univers.html, « --c ») : orange, bleu, framboise, cannelle,
   // sarcelle, violet.
   const COULEURS_MONDES = {1: "#d9690c", 2: "#0b67b2", 3: "#be185d", 4: "#92400e", 5: "#08857f", 6: "#7b42b4"};
-  const ETATS_MONDE = {vide: "pas commencé", cours: "en cours", fini: "fini"};
+  const ETATS_MONDE = {vide: "pas commencé", cours: "en cours", fini: "fini", ferme: "fermé pour ta classe"};
+  // Un monde que ton professeur n'a pas encore ouvert (lot « splat-suivi-5 ») :
+  // anneau gris en pointillés, chiffre gris.
+  const GRIS_FERME = "#949eaa";
   const SVG = "http://www.w3.org/2000/svg";
 
   function elementSvg(nom, attributs) {
@@ -588,6 +601,15 @@ $versionSplat = version_moteur('splat-parcours.js');
     const couleur = COULEURS_MONDES[monde.numero] || "#063f86";
     const dessin = elementSvg("svg", {class: `monde-p ${etat}`, width: "24", height: "24", viewBox: "0 0 24 24",
       "aria-hidden": "true", focusable: "false"});
+    if (etat === "ferme") {
+      dessin.append(elementSvg("circle", {cx: "12", cy: "12", r: "11", fill: "#fff", stroke: GRIS_FERME,
+        "stroke-width": "2", "stroke-dasharray": "3.2 2.4"}));
+      const chiffreFerme = elementSvg("text", {x: "12", y: "16.375", "text-anchor": "middle", "font-size": "12.5",
+        "font-weight": "800", fill: GRIS_FERME});
+      chiffreFerme.textContent = String(monde.numero);
+      dessin.append(chiffreFerme);
+      return dessin;
+    }
     dessin.append(elementSvg("circle", {cx: "12", cy: "12", r: "11", fill: etat === "fini" ? couleur : "#fff",
       stroke: couleur, "stroke-width": "2"}));
     if (etat === "cours") dessin.append(elementSvg("path", {d: "M12 1A11 11 0 0 0 12 23Z", fill: couleur}));
@@ -673,7 +695,7 @@ $versionSplat = version_moteur('splat-parcours.js');
       const tuile = $("applis").querySelector(`.appli[data-cle="${CSS.escape(aLire[i])}"]`);
       if (!tuile || tuile.querySelector(".jauge")) continue;
       let jauge = null;
-      try { jauge = JAUGES[aLire[i]].lecteur(P, parcours[i]); } catch (_) { jauge = null; }
+      try { jauge = JAUGES[aLire[i]].lecteur(P, parcours[i], donnees.reglages || {}); } catch (_) { jauge = null; }
       if (!jauge) continue;
       poserJauge(tuile, jauge);
       remonter(tuile.closest("li"));

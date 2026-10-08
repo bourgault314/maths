@@ -153,14 +153,16 @@ test("accordéon : un monde ouvert à la fois, le monde en cours à l'arrivée, 
   assert.match(univers, /\.monde\.replie>\.desc,\.monde\.replie>\.intro,\.monde\.replie>\.etapes\{display:none\}/);
   assert.match(univers, /\.monde\.replie>\.head \.chev\{transform:rotate\(-90deg\)\}/);
   /* ouvrirMonde replie tous les autres ; un clic sur le bandeau ouvert referme tout */
-  assert.match(univers, /function ouvrirMonde\(mi\)\{\s*document\.querySelectorAll\("main>\.monde"\)\.forEach\(\(sec,i\)=>\{\s*const ouvert=i===mi;\s*sec\.classList\.toggle\("replie",!ouvert\);/);
+  /* (lot « splat-suivi-5 ») un monde fermé à la classe reste replié */
+  assert.match(univers, /function ouvrirMonde\(mi\)\{\s*document\.querySelectorAll\("main>\.monde"\)\.forEach\(\(sec,i\)=>\{\s*const ouvert=i===mi&&!sec\.classList\.contains\("verrouille"\);\s*sec\.classList\.toggle\("replie",!ouvert\);/);
   assert.match(univers, /const mi=sec\.classList\.contains\("replie"\)\?mondes\.indexOf\(sec\):-1;\s*ouvrirMonde\(mi\);\s*retenirMonde\(mi\);/);
   /* relecture du monde 1 (25/09/2026) : le monde ouvert ou lancé est retenu sur l'appareil
      (une clé élève, une clé prof) et rouvert au retour, avant le monde en cours */
   assert.match(univers, /const CLE_MONDE_OUVERT="mathsgo-splat-monde-ouvert"\+\(PROF\?"-prof":""\);/);
   assert.match(univers, /try\{ localStorage\.setItem\(CLE_MONDE_OUVERT,String\(mi\)\); \}catch\(e\)\{\}/);
   /* (26/09/2026) un monde passé « en préparation » ne se rouvre pas tout seul */
-  assert.match(univers, /const retenu=mondeRetenu\(\);\s*if\(retenu>=0&&!MONDES\[retenu\]\.cache\) return retenu;[^\n]*\s*if\(PROF\) return 0;/);
+  /* (08/10/2026, lot « splat-suivi-5 ») ni un monde fermé à la classe */
+  assert.match(univers, /const retenu=mondeRetenu\(\);\s*(?:\/\*[^\n]*\*\/\s*)?if\(retenu>=0&&!MONDES\[retenu\]\.cache&&!MONDES\[retenu\]\.verrouille\) return retenu;[^\n]*\s*if\(PROF\) return 0;/);
   assert.match(univers, /const sec=a\.closest\("main>\.monde"\);\s*if\(sec\) retenirMonde\(/);
   /* le monde en cours : celui de l'adresse (#monde-N ou un identifiant d'étape), sinon celui
      de la prochaine étoile, sinon le dernier monde jouable (26/09/2026 : pas un monde en
@@ -179,7 +181,8 @@ test("accordéon : un monde ouvert à la fois, le monde en cours à l'arrivée, 
 
 test("Continuer : la première étoile à gagner, dans l'ordre de l'univers, absent en vue prof", () => {
   assert.match(univers, /<div class="continuer" id="continuer" hidden><a id="continuerLien" href="#"><\/a><\/div>/);
-  assert.match(univers, /else if\(!prochaine&&e\.j\) prochaine=\{m,mi,e,n:li\.querySelector\("\.n"\)\.textContent\};/);
+  /* (lot « splat-suivi-5 ») jamais dans un monde fermé à la classe */
+  assert.match(univers, /else if\(!prochaine&&e\.j&&!m\.verrouille\) prochaine=\{m,mi,e,n:li\.querySelector\("\.n"\)\.textContent\};/);
   /* lot 2 du suivi (08/10/2026) : caché aussi tant que le billet de l'élève n'est pas échangé */
   assert.match(univers, /if\(cont&&!PROF\)\{\s*cont\.hidden=!prochaine\|\|!!\(SUIVI&&SUIVI\.attente\(\)\);/);
   assert.match(univers, /a\.href=prochaine\.e\.j; a\.dataset\.monde=prochaine\.mi; a\.innerHTML="\\u25b6 Continuer <small>\\u00b7 \\u00e9tape "\+prochaine\.n\+", "\+prochaine\.e\.t\+"<\/small>";/);

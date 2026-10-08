@@ -4,10 +4,11 @@
 // arrive avec un billet.
 //
 // Deux entrées, toujours en POST, jamais dans l'adresse :
-//  - {code}            → prénom, classe, applis ; avec {code, billet: true},
+//  - {code}            → prénom, classe, applis, réglages de la classe (lot
+//                        « splat-suivi-5 ») ; avec {code, billet: true},
 //                        un billet d'entrée à usage unique en plus (lib/billets.php)
 //  - {billet}          → l'échange : un billet d'entrée rend {code, prenom,
-//                        classe} ; un billet de fiche rend la progression en
+//                        classe, reglages} ; un billet de fiche rend la progression en
 //                        lecture seule, sans le code. Le billet est consommé.
 
 declare(strict_types=1);
@@ -21,10 +22,18 @@ require_once __DIR__ . '/../lib/billets.php';
 
 cors();
 
+// Lot « splat-suivi-5 » : la colonne des réglages de la classe (les mondes de
+// SPLAT! ouverts) n'existe qu'après migrer.php ; avant, on ne la demande pas,
+// et tout se lit « tous les mondes ouverts ».
+function colonnes_reglages(PDO $pdo): string
+{
+    return reglages_disponibles($pdo) ? ', c.reglages' : '';
+}
+
 function identite_eleve(PDO $pdo, int $eleveId): array|false
 {
     $requete = $pdo->prepare(
-        'SELECT e.id, e.code, e.prenom, c.libelle, c.applis
+        'SELECT e.id, e.code, e.prenom, c.libelle, c.applis' . colonnes_reglages($pdo) . '
          FROM eleves e JOIN classes c ON c.id = e.classe_id
          WHERE e.id = ?'
     );
@@ -102,6 +111,9 @@ try {
             'code' => $eleve['code'],
             'prenom' => $eleve['prenom'],
             'classe' => $eleve['libelle'],
+            // Les réglages de la classe pour ses activités (aujourd'hui : les
+            // mondes de SPLAT! ouverts) — « {} » quand rien n'est réglé.
+            'reglages' => reglages_json(reglages_de_classe($eleve, true)),
         ]);
     }
 
@@ -115,7 +127,7 @@ try {
 
     $pdo = bd();
     $requete = $pdo->prepare(
-        'SELECT e.id, e.prenom, c.libelle, c.applis
+        'SELECT e.id, e.prenom, c.libelle, c.applis' . colonnes_reglages($pdo) . '
          FROM eleves e JOIN classes c ON c.id = e.classe_id
          WHERE e.code = ?'
     );
@@ -132,6 +144,9 @@ try {
         'prenom' => $eleve['prenom'],
         'classe' => $eleve['libelle'],
         'applis' => applis_de_classe($eleve['applis']),
+        // Lot « splat-suivi-5 » : la tuile de l'espace et la carte des mondes
+        // grisent les mondes que le professeur n'a pas ouverts à la classe.
+        'reglages' => reglages_json(reglages_de_classe($eleve, true)),
     ];
     // Le billet n'est tiré que si on le demande : l'appli relit l'identité à
     // chaque ouverture sans en avoir besoin, et un billet que personne
