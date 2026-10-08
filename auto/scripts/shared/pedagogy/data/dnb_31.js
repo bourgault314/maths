@@ -6,42 +6,49 @@ MATHSGO_PEDAGOGY.registerModule('dnb_31',{
   courseKind:'median',
   generatorContract:{
     configurations:[
-      {id:'odd',label:'Série d’effectif impair'},
-      {id:'even',label:'Série d’effectif pair'},
-      {id:'ordered',label:'Série déjà ordonnée'},
+      {id:'odd',label:'Série non rangée de 5, 7 ou 9 valeurs, avec des répétitions'},
+      {id:'even',label:'Nombre pair de valeurs (programme de 4e, jamais posé au brevet 2026)'},
+      {id:'ordered',label:'Série déjà rangée de 9 ou 11 décimaux'},
       {id:'table',label:'Valeurs données dans un tableau'},
+      {id:'relative',label:'Températures avec des nombres négatifs'},
+      {id:'counts',label:'Notes lues sur un diagramme en barres ou un tableau d’effectifs'},
       {id:'range',label:'Calcul de l’étendue'}
     ],
     reasoning:[
-      {id:'sort',label:'Ranger les valeurs',rule:'La médiane se cherche après avoir rangé toutes les valeurs dans l’ordre croissant.'},
-      {id:'odd',label:'Effectif impair',rule:'La médiane est la valeur centrale de la série ordonnée.'},
-      {id:'even',label:'Effectif pair',rule:'La médiane est la moyenne des deux valeurs centrales de la série ordonnée.'},
-      {id:'range',label:'Calculer l’étendue',rule:'L’étendue est la différence entre la valeur maximale et la valeur minimale.'},
-      {id:'check',label:'Contrôler',rule:'La médiane appartient à l’intervalle entre le minimum et le maximum.'}
+      {id:'sort',label:'Ranger les valeurs',rule:'La médiane se cherche après avoir rangé toutes les valeurs dans l’ordre croissant, en gardant celles qui se répètent.'},
+      {id:'odd',label:'Nombre impair de valeurs',rule:'La médiane est la valeur du milieu : autant de valeurs avant qu’après (7 valeurs : la 4e).'},
+      {id:'even',label:'Nombre pair de valeurs',rule:'La médiane est la moyenne des deux valeurs du milieu de la série rangée.'},
+      {id:'counts',label:'Effectifs',rule:'On additionne les effectifs pour avoir le nombre de valeurs, puis on compte jusqu’au rang du milieu.'},
+      {id:'range',label:'Calculer l’étendue',rule:'L’étendue est la plus grande valeur moins la plus petite valeur.'},
+      {id:'check',label:'Contrôler',rule:'La médiane est entre la plus petite et la plus grande valeur.'}
     ],
     representations:[
-      {id:'ordered-list',label:'Liste ordonnée avec position centrale repérée'},
-      {id:'data-table',label:'Tableau de valeurs fourni dans l’énoncé'},
-      {id:'range-line',label:'Segment du minimum au maximum'}
+      {id:'ordered-list',label:'Série rangée avec la valeur du milieu surlignée (correction)'},
+      {id:'data-table',label:'Tableau de valeurs fourni dans l’énoncé (coupé en deux au téléphone)'},
+      {id:'bar-chart',label:'Diagramme en barres des notes (la barre médiane est surlignée en correction)'}
     ],
     visualRules:[
-      'La liste ou le tableau qui contient les valeurs reste toujours visible : il porte les données de l’énoncé.',
-      'Une aide d’ordonnancement conserve chaque valeur, y compris les répétitions.',
-      'Pour un effectif pair, les deux positions centrales restent séparées avant le calcul de leur moyenne.'
+      'La série, le tableau ou le diagramme qui porte les valeurs reste toujours visible : il porte les données de l’énoncé.',
+      'La série est écrite dans la police du texte, au moins aussi grande que la consigne.',
+      'La médiane n’est jamais écrite au milieu de la série non rangée, ni à une place fixe.',
+      'En correction, la figure garde sa taille ; la série rangée est écrite dans la carte « Comment on trouve ».'
     ],
     cautions:[
-      'La valeur écrite au milieu n’est pas forcément la médiane si la série n’est pas ordonnée.',
-      'Une valeur répétée doit être conservée autant de fois qu’elle apparaît.',
-      'L’étendue est maximum moins minimum, pas le nombre de valeurs.'
+      'La valeur écrite au milieu n’est pas la médiane si la série n’est pas rangée.',
+      'Une valeur répétée est gardée autant de fois qu’elle apparaît.',
+      'Un nombre négatif est plus petit que 0 : −5 < −1 < 0.',
+      'La médiane n’est ni la moyenne ni le milieu entre la plus petite et la plus grande valeur.',
+      'L’étendue est la plus grande valeur moins la plus petite, pas le nombre de valeurs.'
     ]
   },
   questionTypes:[
-    {id:'mediane-impaire-non-ordonnee',label:'Médiane d’une série impaire non ordonnée',questions:[1,2,9],response:'numeric',visual:{policy:'none',component:null},helpSections:['sort','odd','check']},
-    {id:'mediane-paire-non-ordonnee',label:'Médiane d’une série paire non ordonnée',questions:[3],response:'numeric',visual:{policy:'none',component:null},helpSections:['sort','even','check']},
-    {id:'mediane-paire-ordonnee',label:'Médiane d’une série paire déjà ordonnée',questions:[4,10],response:'numeric',visual:{policy:'none',component:null},helpSections:['even','check']},
-    {id:'reconnaitre-methode-mediane',label:'Reconnaître la méthode de calcul',questions:[5],response:'qcm-one',visual:{policy:'none',component:null},helpSections:['sort','odd','even']},
-    {id:'mediane-donnees-tableau',label:'Calculer la médiane de données en tableau',questions:[6,7],response:'numeric',visual:{policy:'none',component:null},helpSections:['sort','odd','check']},
-    {id:'refuter-position-ecrite',label:'Refuser la valeur placée au milieu de l’écriture',questions:[8],response:'qcm-one',visual:{policy:'none',component:null},helpSections:['sort','odd']},
-    {id:'calculer-etendue',label:'Calculer l’étendue d’une série',questions:[11,12],response:'numeric',visual:{policy:'none',component:null},helpSections:['range']}
+    {id:'mediane-serie-non-rangee',label:'Médiane d’une série non rangée de 5, 7 ou 9 valeurs',questions:[2],response:'numeric',visual:{policy:'none',component:null},helpSections:['sort','odd','check']},
+    {id:'mediane-paire-non-rangee',label:'Médiane d’une série de 4 ou 6 valeurs (nombre pair)',questions:[3],response:'numeric',visual:{policy:'none',component:null},helpSections:['sort','even','check']},
+    {id:'mediane-serie-rangee-decimaux',label:'Médiane d’une série déjà rangée de 9 ou 11 décimaux',questions:[4],response:'numeric',visual:{policy:'none',component:null},helpSections:['odd','check']},
+    {id:'mediane-donnees-tableau',label:'Médiane de valeurs données dans un tableau',questions:[6],response:'numeric',visual:{policy:'essential',component:'dnb_31.table'},helpSections:['sort','odd','check']},
+    {id:'choisir-mediane',label:'Choisir la médiane parmi 4 valeurs (écrite au milieu, moyenne, milieu des extrêmes)',questions:[8],response:'qcm-one',visual:{policy:'none',component:null},helpSections:['sort','odd']},
+    {id:'calculer-etendue',label:'Calculer l’étendue d’une série (liste, tableau, températures)',questions:[11],response:'numeric',visual:{policy:'none',component:null},helpSections:['range']},
+    {id:'mediane-relatifs',label:'Médiane de températures avec des nombres négatifs',questions:[13],response:'numeric',visual:{policy:'none',component:null},helpSections:['sort','odd','check']},
+    {id:'mediane-effectifs',label:'Note médiane lue sur un diagramme en barres ou un tableau d’effectifs',questions:[14],response:'numeric',visual:{policy:'essential',component:'dnb_31.counts'},helpSections:['counts','odd']}
   ]
 });

@@ -5064,6 +5064,8 @@ const LEVEL_4E_QUESTIONS={
   dnb_10:[1,2,3,4,6,7,9,10,11],
   dnb_12:Array.from({length:18},(_,index)=>index+1),
   dnb_28:[1,2,3,4,5,6,8,9,10,11],
+  // dnb_31 : l’étendue (type 11) et la médiane lue sur un diagramme (type 14) sont des attendus de 3e.
+  dnb_31:[2,3,4,6,8,13],
   // dnb_35 : le coefficient multiplicateur (types 5 à 8) est une notion de 3e.
   dnb_35:[1,2,3,4,10,11]
 };
@@ -5078,7 +5080,9 @@ const LEVEL_DNB_QUESTIONS={
   dnb_10:[1,2,3,4,6,7,8,9,10,11],
   dnb_12:[1,2,3,4,5,6,7,8,9,15,16,17],
   // dnb_28 : deux épreuves (type 7) jamais posées dans les automatismes 2026.
-  dnb_28:[1,2,3,4,5,6,8,9,10,11]
+  dnb_28:[1,2,3,4,5,6,8,9,10,11],
+  // dnb_31 : jamais de nombre pair de valeurs au brevet 2026 (type 3 : programme de 4e).
+  dnb_31:[2,4,6,8,11,13,14]
 };
 
 // Pendant la transition des programmes, ces contenus sont déjà travaillés

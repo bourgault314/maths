@@ -43,7 +43,7 @@ const MATHSGO_MODULE_MANIFEST=Object.freeze([
   {id:'dnb_28',title:'Probabilités — équiprobabilité',level_tags:['4e','3e','DNB'],domain:'data',globalName:'MODULE_DNB_28',file:'scripts/modules/data/dnb_28.js',runtimeFiles:['scripts/modules/data/dnb_28/generate.js','scripts/modules/data/dnb_28/selection.js','scripts/modules/data/dnb_28/render.js']},
   {id:'dnb_29',title:'Fréquences simples',level_tags:['4e','3e','DNB'],domain:'data',globalName:'MODULE_DNB_29',file:'scripts/modules/data/dnb_29.js'},
   {id:'dnb_30',title:'Moyennes',level_tags:['4e','3e','DNB'],domain:'data',globalName:'MODULE_DNB_30',file:'scripts/modules/data/dnb_30.js'},
-  {id:'dnb_31',title:'Médiane et étendue',level_tags:['4e','3e','DNB'],domain:'data',globalName:'MODULE_DNB_31',file:'scripts/modules/data/dnb_31.js'},
+  {id:'dnb_31',title:'Médiane et étendue',level_tags:['4e','3e','DNB'],domain:'data',globalName:'MODULE_DNB_31',file:'scripts/modules/data/dnb_31.js',runtimeFiles:['scripts/modules/data/dnb_31/generate.js','scripts/modules/data/dnb_31/selection.js','scripts/modules/data/dnb_31/render.js']},
   {id:'dnb_32',title:'Lire des tableaux, diagrammes et graphiques',level_tags:['4e','3e','DNB'],domain:'data',globalName:'MODULE_DNB_32',file:'scripts/modules/data/dnb_32.js',runtimeFiles:['scripts/modules/data/dnb_32/render.js']},
   {id:'dnb_33',title:'Reconnaître une situation de proportionnalité',level_tags:['4e','3e','DNB'],domain:'data',globalName:'MODULE_DNB_33',file:'scripts/modules/data/dnb_33.js'},
   {id:'dnb_34',title:'Résoudre un problème de proportionnalité',level_tags:['4e','3e','DNB'],domain:'data',globalName:'MODULE_DNB_34',file:'scripts/modules/data/dnb_34.js'},
