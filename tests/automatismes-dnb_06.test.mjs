@@ -187,7 +187,7 @@ for(const question of mod.questions){
         assert.ok(lastStep.includes('B = 10'+(e<0?'−':'')+Math.abs(e)),where);
         answers.add(expression);exponents.add(e);
       }else if(kind==='power_calc'){
-        const expression=data.prompt.split('B = ')[1];
+        const expression=data.prompt.replace(/<\/?span[^>]*>/g,'').replace(/\u00a0/g,' ').split('B = ')[1];
         const terms=expression.replace(/ ([+−]) /g,'|$1').split('|');
         const values=terms.map((term,index)=>{
           const sign=index&&term[0]==='−'?-1n:1n;

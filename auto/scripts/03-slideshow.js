@@ -1489,10 +1489,10 @@ Object.assign(courseCatalog,{
   // dnb_06 (refonte d’octobre 2026) : la forme, les deux sens de l’exposant,
   // le retour à l’écriture décimale ; un exemple par carte, jamais coupé.
   scientific_notation:{title:'Notation scientifique',rules:[
-    ['La forme a × 10<sup>n</sup>','Un seul chiffre non nul avant la virgule&nbsp;: <b>1 ≤ a &lt; 10</b>. L’exposant n peut être positif ou négatif.<span class="course-example"><span style="white-space:nowrap"><span style="color:#087a55">✔</span> 4,5 × 10<sup>3</sup></span> &nbsp; <span style="white-space:nowrap"><span style="color:#b42318">✘</span> 45 × 10<sup>2</sup></span> &nbsp; <span style="white-space:nowrap"><span style="color:#b42318">✘</span> 0,45 × 10<sup>4</sup></span></span>'],
+    ['La forme a × 10<sup>n</sup>','Un seul chiffre non nul avant la virgule&nbsp;: <b>1 ≤ a &lt; 10</b>.<span class="course-example"><span style="white-space:nowrap"><span style="color:#087a55">✔</span> 4,5 × 10<sup>3</sup></span> &nbsp; <span style="white-space:nowrap"><span style="color:#b42318">✘</span> 45 × 10<sup>2</sup></span> &nbsp; <span style="white-space:nowrap"><span style="color:#b42318">✘</span> 0,45 × 10<sup>4</sup></span></span>'],
     ['Nombre plus grand que 10','Exposant <b>positif</b>.<span class="course-example"><span style="white-space:nowrap">45 300 = 4,53 × 10 000</span> <span style="white-space:nowrap">= 4,53 × 10<sup>4</sup></span></span>'],
     ['Nombre entre 0 et 1','Exposant <b>négatif</b>.<span class="course-example"><span style="white-space:nowrap">0,0032 = 3,2 × 0,001</span> <span style="white-space:nowrap">= 3,2 × 10<sup>−3</sup></span></span>'],
-    ['Dans l’autre sens','× 10<sup>n</sup>&nbsp;: les chiffres glissent de n rangs, vers la gauche si n &gt; 0, vers la droite si n &lt; 0.<span class="course-example"><span style="white-space:nowrap">6,1 × 10<sup>3</sup> = 6 100</span> &nbsp; <span style="white-space:nowrap">5,9 × 10<sup>−2</sup> = 0,059</span></span>']
+    ['Dans l’autre sens','× 10<sup>n</sup>&nbsp;: les chiffres glissent de n rangs (vers la gauche si n &gt; 0, vers la droite si n &lt; 0).<span class="course-example"><span style="white-space:nowrap">6,1 × 10<sup>3</sup> = 6 100</span> &nbsp; <span style="white-space:nowrap">5,9 × 10<sup>−2</sup> = 0,059</span></span>']
   ]},
   squares:{title:'Carrés et carrés parfaits',rules:[
     ['Définition','Le carré de n est le produit de n par lui-même : n² = n × n.'],

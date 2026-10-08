@@ -91,7 +91,7 @@
     const highPower=Math.max(0,e);
     const powers=[];
     for(let p=highPower;p>=lowPower;p--) powers.push(p);
-    const cellW=46,x0=6,headH=34,rowH=50,y0=6;
+    const cellW=46,x0=6,headH=30,rowH=44,y0=4;
     const W=x0*2+cellW*powers.length,H=y0+headH+rowH*2+6;
     const colX=p=>x0+(powers.indexOf(p)+.5)*cellW;
     let body='';
@@ -99,19 +99,21 @@
       const x=x0+i*cellW;
       body+='<rect x="'+x+'" y="'+y0+'" width="'+cellW+'" height="'+headH+'" fill="#f3f7fd" stroke="#9fb3cf" stroke-width="1.3"/>';
       const label=p===0?'1':(p===1?'10':'10<tspan dy="-8" font-size="14">'+sgn(p)+'</tspan>');
-      body+='<text x="'+(x+cellW/2)+'" y="'+(y0+24)+'" font-family="Arial, sans-serif" font-size="19" font-weight="700" text-anchor="middle" fill="#3b4b63">'+label+'</text>';
+      body+='<text x="'+(x+cellW/2)+'" y="'+(y0+22)+'" font-family="Arial, sans-serif" font-size="19" font-weight="700" text-anchor="middle" fill="#3b4b63">'+label+'</text>';
       body+='<rect x="'+x+'" y="'+(y0+headH)+'" width="'+cellW+'" height="'+rowH+'" fill="#eaf3ff" stroke="#1f5f99" stroke-width="1.5"/>';
       body+='<rect x="'+x+'" y="'+(y0+headH+rowH)+'" width="'+cellW+'" height="'+rowH+'" fill="#fbfdff" stroke="#9fb3cf" stroke-width="1.5" stroke-dasharray="5 4"/>';
     });
     // La virgule, entre la colonne des unités et celle des dixièmes, sur les deux lignes.
     const commaX=x0+(powers.indexOf(0)+1)*cellW;
     [y0+headH,y0+headH+rowH].forEach(rowY=>{
-      body+='<circle cx="'+commaX+'" cy="'+(rowY+33)+'" r="4" fill="#c2410c"/><path d="M '+(commaX+1)+' '+(rowY+36)+' Q '+commaX+' '+(rowY+44)+' '+(commaX-6)+' '+(rowY+47)+'" fill="none" stroke="#c2410c" stroke-width="3.2" stroke-linecap="round"/>';
+      body+='<circle cx="'+commaX+'" cy="'+(rowY+30)+'" r="4" fill="#c2410c"/><path d="M '+(commaX+1)+' '+(rowY+33)+' Q '+commaX+' '+(rowY+40)+' '+(commaX-6)+' '+(rowY+43)+'" fill="none" stroke="#c2410c" stroke-width="3.2" stroke-linecap="round"/>';
     });
     [...D].forEach((digit,i)=>{
-      body+='<text x="'+colX(-i)+'" y="'+(y0+headH+35)+'" font-family="Cambria Math, STIX Two Math, Times New Roman, serif" font-size="30" font-weight="800" text-anchor="middle" fill="#17384d">'+digit+'</text>';
+      body+='<text x="'+colX(-i)+'" y="'+(y0+headH+32)+'" font-family="Cambria Math, STIX Two Math, Times New Roman, serif" font-size="30" font-weight="800" text-anchor="middle" fill="#17384d">'+digit+'</text>';
     });
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+W+' '+H+'" width="'+W+'" style="display:block;width:100%;max-width:'+Math.round(W*1.25)+'px;height:auto;margin:0 auto" role="img" aria-label="Tableau : les chiffres de '+mant(D)+' sur la ligne du haut, la ligne du bas est à remplir">'+body+'</svg>';
+    // L'enveloppe limite l'agrandissement (le panneau Aide met ses dessins à
+    // 100 % de sa largeur) : un tableau de 4 ou 5 colonnes reste à sa taille.
+    return '<div style="width:min(100%,'+Math.round(W*1.05)+'px);margin:0 auto"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+W+' '+H+'" width="'+W+'" style="display:block;width:100%;height:auto;margin:0 auto" role="img" aria-label="Tableau : les chiffres de '+mant(D)+' sur la ligne du haut, la ligne du bas est à remplir">'+body+'</svg></div>';
   }
 
   // ── Instance commune ────────────────────────────────────────────────────
@@ -226,7 +228,7 @@
         S+' = '+M+' × '+unit(e)+' = '+strong(N)
       ],
       aide:[
-        'Avec × 10<sup>n</sup>, les chiffres glissent de n rangs'+NB+': vers la gauche si n est positif, vers la droite si n est négatif.',
+        'Avec × 10<sup>n</sup>, les chiffres glissent de n rangs'+NB+': vers la gauche si n'+NB+'&gt;'+NB+'0, vers la droite si n'+NB+'&lt;'+NB+'0.',
         'Ici, × '+pw(e)+NB+': '+rangs+' vers la '+(left?'gauche.':'droite.')
       ],
       aideHtml:glideDrawing(D,e)
@@ -249,8 +251,8 @@
       option(D+' × '+pw(e-len+1),D+' × '+pw(e-len+1)+' vaut bien '+N+', mais '+D+' n’est pas entre 1 et 10.','entier')
     ];
     const signFeedback=small
-      ?M+' × '+pw(-e)+' = '+value(D,-e)+'. '+N+' est entre 0 et 1'+NB+': l’exposant est négatif.'
-      :M+' × '+pw(-e)+' = '+value(D,-e)+'. '+N+' est plus grand que 10'+NB+': l’exposant est positif.';
+      ?M+' × '+pw(-e)+' est plus grand que 10'+NB+': l’exposant doit être négatif.'
+      :M+' × '+pw(-e)+' est entre 0 et 1'+NB+': l’exposant doit être positif.';
     const others=[
       option(M+' × '+pw(-e),signFeedback,'signe'),
       option(M+' × '+pw(e+1),M+' × '+pw(e+1)+' = '+value(D,e+1)+', pas '+N+'.','rang'),
@@ -278,7 +280,7 @@
       options:order.map(item=>({html:item.text,feedback:item.feedback,errorCode:item.kind})),
       correctIndex,
       steps:[
-        M+' est entre 1 et 10'+NB+': '+N+' = '+M+' × '+unit(e),
+        N+' = '+M+' × '+unit(e),
         N+' = '+strong(sci(D,e))+NB+': réponse '+strong(letter(correctIndex-1))
       ],
       aide:[
@@ -414,10 +416,11 @@
         {text:c+' × '+pw(-1),value:c*100,sign:-1}];
     }
     const total=terms.reduce((sum,term)=>sum+term.sign*term.value,0);
-    const join=list=>list.map((item,index)=>(index?(terms[index].sign<0?' − ':' + '):'')+item).join('');
-    const expression=join(terms.map(term=>term.text));
+    const join=list=>list.map((item,index)=>(index?(terms[index].sign<0?' −':' +')+NB:'')+item).join('');
+    const nowrap=text=>'<span style="white-space:nowrap">'+text+'</span>';
+    const expression=join(terms.map(term=>nowrap(term.text)));
     const answer=show(total);
-    const prompt='Calcule'+NB+':<br>B = '+expression;
+    const prompt='Calcule'+NB+':<br>B'+NB+'='+NB+expression;
     return base(module,question,'power_calc',{
       prompt,statement:plain(prompt),
       footer:'$$B\\,=\\,[[dots]]$$',
@@ -425,7 +428,7 @@
       slotLabels:['Valeur de B'],
       expected:answer,
       steps:[
-        terms.map(term=>term.text+' = '+show(term.value)).join(NB+'; '),
+        terms.map(term=>nowrap(term.text+' = '+show(term.value))).join(NB+'; '),
         'B = '+join(terms.map(term=>show(term.value))),
         'B = '+strong(answer)
       ],
