@@ -3281,42 +3281,53 @@ function renderCorrectionCard(current){
 // rétrécit un peu (jamais sous 18 px au téléphone, 15 px à l'ordinateur),
 // puis la carte défile, avec un fondu en bas qui montre qu'il y a une suite.
 // Lot T2 : avant de rétrécir le texte, la carte prend la hauteur de ses
-// lignes (voir correctionCardMax).
+// lignes (voir correctionCardLimits) : d'abord dans la place libre sous la
+// question ; si c'est encore trop long au plus petit texte, elle recouvre
+// ce qui suit la réponse de l'élève (au texte normal) ; enfin, elle défile.
 function fitCorrectionCard(){
  const card=document.getElementById('correctionCard');
  if(!card) return;
  if(card.hidden){card.style.maxHeight='';return;}
  card.style.fontSize='';
- if(interactiveMode){
-   const zone=document.getElementById('zoneTravail');
-   const minimum=Math.round(parseFloat(getComputedStyle(zone).minHeight)||0);
-   if(minimum>0){card.style.maxHeight=minimum+'px';card.style.maxHeight=correctionCardMax(minimum)+'px';}
- }
  const base=parseFloat(getComputedStyle(card).fontSize)||18;
- const minimum=Math.min(base,coarsePointerMedia.matches?18:15);
- let size=base;
- while(card.scrollHeight>card.clientHeight+1&&size>minimum){size-=.5;card.style.fontSize=size+'px';}
+ const smallest=Math.min(base,coarsePointerMedia.matches?18:15);
+ const shrink=()=>{let size=base;card.style.fontSize='';while(card.scrollHeight>card.clientHeight+1&&size>smallest){size-=.5;card.style.fontSize=size+'px';}};
+ const zone=document.getElementById('zoneTravail');
+ const minimum=interactiveMode&&zone?Math.round(parseFloat(getComputedStyle(zone).minHeight)||0):0;
+ if(minimum>0){
+   card.style.maxHeight=minimum+'px';
+   const limits=correctionCardLimits(minimum);
+   card.style.maxHeight=limits.libre+'px';
+   shrink();
+   if(card.scrollHeight>card.clientHeight+1&&limits.reponse>limits.libre){card.style.fontSize='';card.style.maxHeight=limits.reponse+'px';shrink();}
+ }else shrink();
  updateCorrectionCardOverflow();
  updateStageOverflow();
 }
-/* Lot T2 — hauteur maximale de la carte. Elle part de la place de la zone de
-   travail (le pavé ; 3 lignes pour une question sans pavé) et peut monter :
-   - pied sous la question (téléphone, ordinateur) : jusqu'à 8 px sous la
-     réponse de l'élève (cases remplies, option choisie, bonne option ; à
-     défaut, le bas de la question), et jamais au-delà de 42 % de l'écran ;
-   - pied à côté de la question (téléphone en largeur) : dans la place libre
-     de la colonne.
+/* Lot T2 — hauteurs maximales de la carte. Elle part de la place de la zone
+   de travail (le pavé ; 3 lignes pour une question sans pavé) et peut monter :
+   - pied sous la question (téléphone, ordinateur) : « libre » = la place
+     libre sous la question (rien n'est recouvert) ; « reponse » = jusqu'à la
+     réponse de l'élève (cases remplies, option choisie) et la bonne option,
+     jamais au-dessus : seules les options non choisies d'un QCM peuvent être
+     recouvertes. Sans réponse repérable (manipulation), rien n'est recouvert.
+     Jamais au-delà de 42 % de l'écran ;
+   - pied à côté de la question (téléphone en largeur) : la place libre de
+     la colonne.
    Le pied grandit vers le haut : Passer et Valider ne bougent pas. */
-function correctionCardMax(minimum){
+function correctionCardLimits(minimum){
+ const same=value=>({libre:value,reponse:value});
  const dock=document.getElementById('answerDock'),stage=document.getElementById('stage'),slide=document.getElementById('slide'),feedback=document.getElementById('answerFeedback');
- if(!dock||!stage||!slide||!feedback) return minimum;
+ if(!dock||!stage||!slide||!feedback) return same(minimum);
  const dockRect=dock.getBoundingClientRect(),stageRect=stage.getBoundingClientRect();
  const free=Math.max(0,feedback.getBoundingClientRect().top-dockRect.top-(parseFloat(getComputedStyle(dock).paddingTop)||0));
- if(dockRect.top<stageRect.bottom-2) return Math.round(minimum+free);
- const marks=[...slide.querySelectorAll('.answer-slot-filled,.reponse-eleve,.interactive-input-slot,.opt.selected,.opt.correct')].filter(element=>element.getClientRects().length);
- const answerBottom=marks.length?Math.max(...marks.map(element=>element.getBoundingClientRect().bottom)):slide.getBoundingClientRect().bottom;
- const room=free+Math.max(0,dockRect.top-(answerBottom+8));
- return Math.round(Math.max(minimum,Math.min(minimum+room,window.innerHeight*.42)));
+ if(dockRect.top<stageRect.bottom-2) return same(Math.round(minimum+free));
+ const margin=(parseFloat(getComputedStyle(stage).paddingBottom)||0)+2;
+ const limit=bottom=>Math.round(Math.max(minimum,Math.min(minimum+free+Math.max(0,dockRect.top-(bottom+margin)),window.innerHeight*.42)));
+ const marks=[...slide.querySelectorAll('.answer-slot-filled,.reponse-eleve,.opt.selected,.opt.correct')].filter(element=>element.getClientRects().length);
+ const contentBottom=slide.getBoundingClientRect().bottom;
+ const answerBottom=marks.length?Math.max(...marks.map(element=>element.getBoundingClientRect().bottom)):contentBottom;
+ return {libre:limit(contentBottom),reponse:limit(Math.min(answerBottom,contentBottom))};
 }
 function updateCorrectionCardOverflow(){
  const card=document.getElementById('correctionCard');
