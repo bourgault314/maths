@@ -609,6 +609,10 @@
 <script defer src="../assets/js/mathsgo-pave-chiffres.js?v=20260918-1"></script>
 <!-- Le texte du bouton « Étape suivante ▶ » de l'écran de fin (lot A). -->
 <script src="../assets/js/splat-etapes.js?v=20261005-1"></script>
+<!-- Le parcours de l'élève (moteur partagé avec la carte des mondes et le serveur de suivi), et
+     l'habillage du suivi de classe (pastille, garde) : lot 2 « outils + carte », 08/10/2026 -->
+<script src="../assets/js/splat-parcours.js?v=20261008-1"></script>
+<script src="../assets/js/splat-suivi.js?v=20261008-1"></script>
 <!-- Le QR « je rejoue en ligne » des fiches classiques (26/09/2026) : le générateur de QR
      déjà présent dans le dépôt (exerciseur, fiche du Moulin), chargé avant window.onload. -->
 <script defer src="../auto/scripts/vendor/qrcode-generator.js"></script>
@@ -873,6 +877,12 @@ let eleveIdx = 0, eleveEtoiles = 0, eleveErreurs = 0, eleveSerie = [], eleveResu
 let eleveEchecs = 0, eleveRejeu = null;
 const ELEVE_ECHECS_MAX = 3, ELEVE_URL_MONDES = '/outils/splat_univers.html';
 let eleveJetonsPoses = [], eleveItemCourant = null, eleveRepriseFaite = false;
+/* cartes de la série dont la réponse a été montrée (3e erreur) : rejouées, elles deviennent
+   orange comme une carte réussie après une erreur — on les compte donc à part (lot 2 du suivi) */
+let eleveVues = 0;
+/* la série en cours est-elle déjà notée ? Sa fin s'enregistre dès la dernière carte jouée, puis
+   l'écran de fin la redemande : la seconde fois ne compte pas une série de plus */
+let eleveSerieNotee = false;
 let seedMode = 'auto';
 let activeSeed = '';
 /* ?sansjetons=N (Petit Splat classique, 26/09/2026, livrets « je dessine le schéma ») : N
@@ -1397,6 +1407,7 @@ function startGen() {
      doit être reconstruite à partir des cartes qui viennent d'être générées. */
   eleveSerie = [];
   eleveResultats = [];
+  eleveVues = 0;
   const totalItems = cols * rows;
 
   const sansJetons = !jetonsAutourCoche();
@@ -2864,15 +2875,44 @@ function eleveDessinBande(item) {
    Réservé au « Petit Splat classique » pour l'instant. La réussite d'une série
    est mémorisée dans le navigateur (clé partagée avec la carte des mondes)
    quand l'adresse porte ?parcours=identifiant. */
-const ELEVE_STORE_KEY = 'mathsgo-splat-parcours';
+/* Lot 2 « outils + carte » du suivi (08/10/2026) : le parcours s'écrit par le moteur partagé
+   (assets/js/splat-parcours.js), au format que garde le serveur, dans la case de l'élève à code
+   (son code est dans l'onglet, jamais dans l'adresse) ou dans la case sans code d'aujourd'hui ;
+   « la meilleure série gagne ». assets/js/splat-suivi.js crée le client au premier besoin, met
+   la pastille « ● Léa » dans la barre du haut et pose la garde. Sans ces fichiers, le jeu reste
+   jouable : rien n'est enregistré. */
+let eleveSuiviObjet;
+function eleveSuivi() {
+    if (eleveSuiviObjet === undefined) {
+        eleveSuiviObjet = null;
+        if (parcoursId && window.MathsGoSplatSuivi) {
+            eleveSuiviObjet = window.MathsGoSplatSuivi.creer({ surRepere: () => eleveSuiviObjet && eleveSuiviObjet.majPastilles() });
+            if (eleveSuiviObjet) eleveSuiviObjet.lancer();
+        }
+    }
+    return eleveSuiviObjet;
+}
+function eleveSuiviPastilleHtml() { const s = eleveSuivi(); return s ? s.pastilleHtml() : ''; }
+/* l'étape telle que la case la garde À CET INSTANT ({fait, etoiles, cartes, vues, essais, date,
+   idx?, enCours?}), ou null */
+function eleveEtapeLue() {
+    const s = eleveSuivi(), p = s ? s.lire() : null;
+    return p && p.etapes[parcoursId] ? p.etapes[parcoursId] : null;
+}
+/* à la reprise : les réponses montrées de la série en cours — celles encore rouges, ou ce que
+   la case en a gardé (une étape pas encore étoilée garde le compte, rouges rejouées comprises) */
+function eleveVuesReprise(etape, res) {
+    const rouges = res.filter(r => r === 'ko').length;
+    return etape && !etape.fait ? Math.max(rouges, Number(etape.vues) || 0) : rouges;
+}
 
 function eleveEnregistrerReussite(sansFaute, total) {
-    if (!parcoursId || !total) return;
-    try {
-        const tout = JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || '{}');
-        tout[parcoursId] = { fait: true, etoiles: sansFaute, cartes: total, date: new Date().toISOString().slice(0, 10) };
-        localStorage.setItem(ELEVE_STORE_KEY, JSON.stringify(tout));
-    } catch (e) { /* stockage indisponible : le jeu reste jouable */ }
+    if (!parcoursId || !total || eleveSerieNotee) return;
+    eleveSerieNotee = true;
+    const s = eleveSuivi();
+    /* l'étoile ; la sauvegarde « en cours » disparaît. Une série moins bonne que celle déjà
+       gardée (plus de réponses vues, moins de cartes du premier coup) ne la remplace pas. */
+    if (s) s.ecrire((P, p) => P.enregistrerSerie(p, parcoursId, { fait: true, etoiles: sansFaute, cartes: total, vues: eleveVues }));
 }
 
 const ELEVE_MINI_TACHE = '<svg class="miniTache" viewBox="40 10 220 180" aria-hidden="true"><path d="' + SPLAT_SHAPES[0] + '" fill="#111827"/></svg>';
@@ -3187,18 +3227,17 @@ function renderEleve(main) {
         /* La série suit la fiche : toutes les cartes de la mise en page
            (12 en 3×4, 9 en 3×3…), dans le même ordre. */
         eleveSerie = state.slice();
-        eleveEtoiles = 0; eleveResultats = [];
+        eleveEtoiles = 0; eleveResultats = []; eleveVues = 0; eleveSerieNotee = false;
         /* série interrompue la dernière fois ? on reprend où on en était */
         if (eleveSerie.length && !eleveRepriseFaite && parcoursId) {
             eleveRepriseFaite = true;
             try {
                 /* répare les entrées écrites par l'ancien bug : « réussi » sans aucune carte */
-                const tout = JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || '{}');
-                if (tout[parcoursId] && tout[parcoursId].fait && !tout[parcoursId].cartes) {
-                    delete tout[parcoursId];
-                    localStorage.setItem(ELEVE_STORE_KEY, JSON.stringify(tout));
+                const ancienne = eleveEtapeLue();
+                if (ancienne && ancienne.fait && !ancienne.cartes) {
+                    eleveSuivi().ecrire((P, p) => { delete p.etapes[parcoursId]; return p; });
                 }
-                const entree = (JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || '{}'))[parcoursId];
+                const entree = eleveEtapeLue(); /* la case de l'élève, par le moteur (lot 2 du suivi) */
                 /* la reprise ne vaut que pour la série qui l'a écrite : même adresse
                    ?parcours=, mais des cartes différentes d'un livret à l'autre */
                 /* idx = nombre de cartes : série finie avec des cartes rouges, retour sur
@@ -3213,6 +3252,7 @@ function renderEleve(main) {
                     /* reprise : le détail par carte est mémorisé, sinon pastilles grises */
                     const res = Array.isArray(entree.enCours.res) ? entree.enCours.res : [];
                     eleveResultats = Array.from({ length: eleveIdx }, (_, i) => (res[i] === true || res[i] === false || res[i] === 'ko') ? res[i] : null);
+                    eleveVues = eleveVuesReprise(entree, eleveResultats);
                 }
             } catch (e) { /* stockage indisponible */ }
         }
@@ -3226,8 +3266,9 @@ function renderEleve(main) {
     const scene = document.createElement('div');
     scene.className = 'eleve-scene';
 
+    /* « ● Léa » au bout de la barre, sous un code (lot 2 du suivi) */
     let html = `<div class="eleve-tete">${eleveLienMondesHtml()}<span>Carte ${eleveIdx + 1} / ${eleveSerie.length}</span>` +
-               `${elevePastillesHtml()}</div>`;
+               `${elevePastillesHtml()}${eleveSuiviPastilleHtml()}</div>`;
 
     const estConstruct = item.mode === 'construct';
     eleveItemCourant = item;
@@ -3433,11 +3474,11 @@ function eleveSauverEnCours() {
     if (!parcoursId) return;
     /* dernière carte jouée, ou carte rouge rejouée : la série est finie */
     if (eleveRejeu || eleveIdx + 1 >= eleveSerie.length) { eleveSauverFinDeSerie(); return; }
-    try {
-        const tout = JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || '{}');
-        tout[parcoursId] = Object.assign({}, tout[parcoursId] || {}, { enCours: { sig: eleveSignatureSerie(), idx: eleveIdx + 1, etoiles: eleveEtoiles, res: eleveResultats.slice(0, eleveIdx + 1) } });
-        localStorage.setItem(ELEVE_STORE_KEY, JSON.stringify(tout));
-    } catch (e) { /* stockage indisponible */ }
+    /* l'étoile déjà gagnée ne bouge pas ; la reprise (empreinte, pastilles) reste sur l'appareil,
+       le serveur ne reçoit que la carte atteinte et les comptes */
+    const s = eleveSuivi();
+    if (s) s.ecrire((P, p) => P.enregistrerEnCours(p, parcoursId, { sig: eleveSignatureSerie(), idx: eleveIdx + 1, etoiles: eleveEtoiles,
+        res: eleveResultats.slice(0, eleveIdx + 1), vues: eleveVues, cartes: eleveSerie.length }));
 }
 
 /* Série finie (dernière carte jouée, ou carte rouge rejouée), enregistrée tout de
@@ -3450,11 +3491,9 @@ function eleveSauverFinDeSerie() {
     const res = Array.from({ length: total }, (_, i) => eleveResultats[i] === undefined ? null : eleveResultats[i]);
     const vertes = res.filter(r => r === true).length;
     if (!res.includes('ko')) { eleveEnregistrerReussite(vertes, total); return; }
-    try {
-        const tout = JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || '{}');
-        tout[parcoursId] = Object.assign({}, tout[parcoursId] || {}, { enCours: { sig: eleveSignatureSerie(), idx: total, etoiles: vertes, res: res } });
-        localStorage.setItem(ELEVE_STORE_KEY, JSON.stringify(tout));
-    } catch (e) { /* stockage indisponible */ }
+    const s = eleveSuivi();
+    if (s) s.ecrire((P, p) => P.enregistrerEnCours(p, parcoursId, { sig: eleveSignatureSerie(), idx: total, etoiles: vertes, res: res,
+        vues: eleveVues, cartes: total }));
 }
 
 /* « Rejouer toute la série » : l'élève repart de zéro, la sauvegarde « en cours »
@@ -3462,10 +3501,9 @@ function eleveSauverFinDeSerie() {
    revient sur la carte 1, comme dans ÉquaSplat (décision de Gwenaël, 03/10/2026). */
 function eleveEffacerEnCours() {
     if (!parcoursId) return;
-    try {
-        const tout = JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || '{}');
-        if (tout[parcoursId] && tout[parcoursId].enCours) { delete tout[parcoursId].enCours; localStorage.setItem(ELEVE_STORE_KEY, JSON.stringify(tout)); }
-    } catch (e) { /* stockage indisponible */ }
+    const e = eleveEtapeLue();
+    if (!e || (!e.enCours && !e.idx)) return; /* rien en cours : rien à écrire ni à envoyer */
+    eleveSuivi().ecrire((P, p) => P.effacerEnCours(p, parcoursId));
 }
 
 /* Carte suivante : dans l'ordre, ou la prochaine carte rouge quand on les rejoue. */
@@ -3496,6 +3534,7 @@ function eleveMontrerReponse(main) {
     if (item && item.mode === 'construct') texte = `Il fallait ${item.visible} jeton${item.visible > 1 ? 's' : ''}. Tu rejoueras cette carte \u00e0 la fin.`;
     msg.textContent = texte;
     msg.className = 'eleve-msg rate';
+    if (eleveResultats[eleveIdx] !== 'ko') eleveVues++; /* une rouge rejouée ne compte pas deux fois */
     eleveResultats[eleveIdx] = 'ko';
     eleveSauverEnCours();
     eleveDevoilerTache();
@@ -3556,7 +3595,7 @@ function renderEleveFin(main) {
         const suivante = document.getElementById('eleveEtapeSuivante');
         if (suivante) suivante.onclick = () => { window.location.href = suite.href; };
     }
-    document.getElementById('eleveRejouer').onclick = () => { eleveEffacerEnCours(); eleveIdx = 0; eleveEtoiles = 0; eleveSerie = []; eleveResultats = []; eleveRejeu = null; renderEleve(main); };
+    document.getElementById('eleveRejouer').onclick = () => { eleveEffacerEnCours(); eleveIdx = 0; eleveEtoiles = 0; eleveSerie = []; eleveResultats = []; eleveVues = 0; eleveRejeu = null; renderEleve(main); };
 }
 
 window.onload = () => {

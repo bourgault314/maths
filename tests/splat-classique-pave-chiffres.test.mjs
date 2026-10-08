@@ -474,7 +474,8 @@ test("la page ne laisse rien se dessiner par-dessus le pavé, ni lui changer sa 
 });
 
 test("la génération, la correction, le dévoilement et les étoiles ne sont pas touchés", () => {
-  assert.match(page, /tout\[parcoursId\] = \{ fait: true, etoiles: sansFaute, cartes: total, date: new Date\(\)\.toISOString\(\)\.slice\(0, 10\) \};/);
+  // l'étoile s'écrit par le moteur partagé depuis le lot 2 du suivi (08/10/2026)
+  assert.match(page, /P\.enregistrerSerie\(p, parcoursId, \{ fait: true, etoiles: sansFaute, cartes: total, vues: eleveVues \}\)/);
   assert.match(source("eleveDevoilerTache"), /if\(\(p\.getAttribute\("fill"\) \|\| ""\) === "var\(--splat-cover\)"\) p\.classList\.add\("eleveDevoile"\);/);
   assert.match(source("genererSerieComposee"), /^function genererSerieComposee\(\)\{\n  generate\(\);\n  const toutes = cards\.slice\(\);/);
   assert.match(source("eleveValiderSplat"), /suivant\.onclick = eleveCarteSuivante;\n    bouton\.parentNode\.appendChild\(suivant\);\n    suivant\.focus\(\);/);
