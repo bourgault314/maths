@@ -43,8 +43,8 @@
   // à gauche de la bande. Il montre la taille des parts, jamais la réponse.
   function partsBands(denominators){
     const rows=[...new Set(denominators)].sort((a,b)=>a-b);
-    const X=58,W=330,H=30,GAP=12,TOP=6;
-    const height=TOP+rows.length*(H+GAP)-GAP+6;
+    const X=56,W=320,H=34,GAP=12,TOP=4;
+    const height=TOP+rows.length*(H+GAP)-GAP+8;
     let body='';
     rows.forEach((den,row)=>{
       const y=TOP+row*(H+GAP),cell=W/den;
@@ -52,13 +52,13 @@
       body+='<rect x="'+X+'" y="'+y+'" width="'+cell+'" height="'+H+'" fill="#bfe3f3"/>';
       for(let k=1;k<den;k++) body+='<line x1="'+(X+k*cell)+'" y1="'+y+'" x2="'+(X+k*cell)+'" y2="'+(y+H)+'" stroke="#14739a" stroke-width="1.4"/>';
       body+='<rect x="'+X+'" y="'+y+'" width="'+W+'" height="'+H+'" fill="none" stroke="#14739a" stroke-width="2"/>';
-      const cx=26,cy=y+H/2;
-      body+='<text x="'+cx+'" y="'+(cy-4)+'" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="15" font-weight="800" fill="#17384d">1</text>'
-        +'<line x1="'+(cx-12)+'" y1="'+cy+'" x2="'+(cx+12)+'" y2="'+cy+'" stroke="#17384d" stroke-width="1.8"/>'
-        +'<text x="'+cx+'" y="'+(cy+15)+'" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="15" font-weight="800" fill="#17384d">'+den+'</text>';
+      const cx=25,cy=y+H/2;
+      body+='<text x="'+cx+'" y="'+(cy-4)+'" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="19" font-weight="800" fill="#17384d">1</text>'
+        +'<line x1="'+(cx-14)+'" y1="'+cy+'" x2="'+(cx+14)+'" y2="'+cy+'" stroke="#17384d" stroke-width="2"/>'
+        +'<text x="'+cx+'" y="'+(cy+18)+'" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="19" font-weight="800" fill="#17384d">'+den+'</text>';
     });
     const names=rows.map(den=>'un '+(PARTS[den]||den+'e').replace(/s$/,'')).join(', ');
-    return '<svg class="fraction-ops-aide-bandes" viewBox="0 0 396 '+height+'" style="display:block;width:100%;max-width:440px;height:auto;margin:0 auto" role="img" aria-label="Taille d’une part : '+names+'">'+body+'</svg>';
+    return '<svg class="fraction-ops-aide-bandes" viewBox="0 0 380 '+height+'" style="display:block;width:100%;max-width:440px;height:auto;margin:0 auto" role="img" aria-label="Taille d’une part : '+names+'">'+body+'</svg>';
   }
   function qcmFrom(options,shuffle){
     // options : [{html, correct, code, feedback}]
@@ -513,8 +513,7 @@
       qcm,
       steps:[
         'En écriture décimale : '+FM(fraction.num,fraction.den)+' = '+fraction.decimal+' et '+M(unit+' + '+F(small,100))+' = '+byId.centiemes.decimal+'.',
-        sortedDecimals,
-        'Donc '+html(correct)+'.'
+        sortedDecimals+' : c’est la proposition '+qcm.letter+'.'
       ],
       note:'Un nombre qui a plus de chiffres n’est pas forcément plus grand : '+shortLabel+' &gt; '+longLabel+'.',
       aide:['Écris chaque nombre en écriture décimale, puis compare chiffre par chiffre.',FM(small,100)+', c’est '+small+' centièmes : '+FM(small,100)+' = 0,0'+small+'.'],
