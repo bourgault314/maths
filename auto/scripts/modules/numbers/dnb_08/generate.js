@@ -101,9 +101,9 @@
   function aideCard(value,{showUnits=true,showSum=true}={}){
     const digits=digitsOf(value);
     const cards=digits.map((digit,index)=>`<span class="divisibility-digit${index===digits.length-1?' is-unit':''}">${digit}</span>`).join('');
-    const unitRow=showUnits?`<section class="divisibility-step"><strong>Chiffre des unités</strong><div class="divisibility-digits">${cards}</div><small>par 2${NBSP}: 0, 2, 4, 6, 8 · par 5${NBSP}: 0 ou 5 · par 10${NBSP}: 0</small></section>`:'';
-    const sumRow=showSum?`<section class="divisibility-step"><strong>Somme des chiffres</strong><div class="divisibility-sum">${digits.join(' + ')} = □</div><small>par 3${NBSP}: dans la table de 3 · par 9${NBSP}: dans la table de 9</small></section>`:'';
-    return `<div class="divisibility-aide" aria-label="Aide : chiffre des unités et somme des chiffres">${unitRow}${sumRow}</div>`;
+    const unitRow=showUnits?`<section class="divisibility-step"><strong>Chiffre des unités</strong><div class="divisibility-digits">${cards}</div><small>par 2${NBSP}: 0, 2, 4, 6, 8<br>par 5${NBSP}: 0 ou 5<br>par 10${NBSP}: 0</small></section>`:'';
+    const sumRow=showSum?`<section class="divisibility-step"><strong>Somme des chiffres</strong><div class="divisibility-sum">${digits.join(' + ')} = □</div><small>par 3${NBSP}: table de 3<br>par 9${NBSP}: table de 9</small></section>`:'';
+    return `<div class="divisibility-aide${showUnits&&showSum?'':' is-single'}" aria-label="Aide : chiffre des unités et somme des chiffres">${unitRow}${sumRow}</div>`;
   }
 
   /* ---------- Types 11 à 22 : « Par quels nombres N est-il divisible ? » ---------- */
@@ -168,7 +168,7 @@
       divisibilityData:{kind:'select-divisors',value,digits:digitsOf(value),digitSum:sum,divisors,proposedDivisors:[...displayOrder],labels,profile},
       correctionSteps,correctionNote,distractorFeedback,
       aideSteps:[
-        'Pour 2, 5 et 10, regarde le chiffre des unités. Pour 3 et 9, additionne tous les chiffres.',
+        `Pour 2, 5 et 10${NBSP}: le chiffre des unités. Pour 3 et 9${NBSP}: la somme des chiffres.`,
         `Chiffre des unités${NBSP}: ${unit}. Somme des chiffres${NBSP}: ${sumText(value)} = …`
       ],
       aideHtml:aideCard(value)
