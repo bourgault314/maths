@@ -258,7 +258,7 @@
     const lead='Voici une série de nombres'+NB+':',ask='Quelle est la médiane de cette série'+NB+'?';
     const instance=base(module,question,'qcm',correctIndex,{texts,separated:true,options:options.map(option=>({html:num(option.value),errorCode:option.code})),correctIndex},{
       statement:q(lead)+'<br>'+plainSeries(texts,true)+'<br>'+ask,
-      steps:['On range'+NB+': '+sortedLine(up.map(String),[2]),'5 valeurs'+NB+': la médiane est la 3<sup>e</sup>. Médiane = '+strong(String(median))+NB+': réponse '+letter+'.'],
+      steps:['On range'+NB+': '+sortedLine(up.map(String),[2]),'Médiane = '+strong(String(median))+NB+': réponse '+letter+'.'],
       feedback,
       aide:['Range les 5 valeurs dans l’ordre croissant.',aideOdd(5,3)],
       lead:q(lead),ask
@@ -302,7 +302,7 @@
     return base(module,question,'etendue',f(range),table?{table}:{texts,separated},{
       statement:q(lead)+'<br>'+statementData+'<br>'+ask,
       footer:footer('étendue',unit),
-      steps:['Plus grande valeur'+NB+': '+withUnit(maxText,unit)+'. Plus petite'+NB+': '+withUnit(minText,unit)+'.','Étendue = '+calc],
+      steps:['Plus'+NB+'grande'+NB+'valeur'+NB+':'+NB+withUnit(maxText,unit)+'. Plus'+NB+'petite'+NB+'valeur'+NB+':'+NB+withUnit(minText,unit)+'.','Étendue = '+calc],
       aide:['Étendue = plus grande valeur − plus petite valeur.','Ici, la plus grande valeur est '+withUnit(maxText,unit)+'.'],
       lead:q(lead),ask
     });
@@ -359,19 +359,18 @@
     const lead=chart?'Le diagramme en barres donne les notes des élèves d’une classe à un contrôle.':'Le tableau donne les notes des élèves d’une classe à un contrôle.';
     const ask='Quelle est la note médiane'+NB+'?';
     const sumText=counts.join(' + ')+' = '+total;
-    // « Notes 8 et 10 : les 3 + 4 = 7 premières. Notes 12 : de la 8e à la 12e. »
+    // « Jusqu'à la note 10 : 3 + 4 = 7 notes. Notes 12 : 8e à 12e. »
     const S=sum(before),c=counts[index];
-    const firsts=S===1?'la 1<sup>re</sup>':'les '+(before.length>1?before.join(' + ')+' = ':'')+S+' premières';
-    const medianRanks=c===1?'la '+ord(S+1):'de la '+ord(S+1)+' à la '+ord(S+c);
-    const runLine='Notes '+listText(beforeNotes.map(String))+NB+': '+firsts+'. Notes '+median+NB+': '+medianRanks+'.';
+    const upTo='Jusqu’à la note '+beforeNotes[beforeNotes.length-1]+NB+': '+(before.length>1?before.join(' + ')+' = ':'')+S+(S>1?' notes.':' note.');
+    const medianRanks=c===1?ord(S+1):ord(S+1)+' à '+ord(S+c);
+    const runLine=upTo+' Notes '+median+NB+': '+medianRanks+'. Médiane = '+strong(String(median));
     return base(module,question,'effectifs',median,{notes,counts,on:index,chart},{
       statement:q(lead)+'<br>'+notes.map((note,i)=>note+' : '+counts[i]).join(' ; ')+'<br>'+q(ask),
       footer:footer('médiane',''),
       hasSvg:chart,
       steps:[
-        'Élèves'+NB+': '+sumText+'. La médiane est la '+ord(rank)+' note.',
-        runLine,
-        medianLine(String(median),'')
+        'Élèves'+NB+': '+sumText+'. Médiane'+NB+': la '+ord(rank)+' note.',
+        runLine
       ],
       aide:['Compte tous les élèves, puis cherche la note du milieu (autant de notes avant que après).','En tout'+NB+': '+sumText+' élèves. La médiane est la '+ord(rank)+' note.'],
       lead:q(lead),ask:q(ask)

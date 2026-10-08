@@ -13,14 +13,16 @@
     '.m31-task{display:flex;flex-direction:column;align-items:center;width:100%}',
     '.m31-prompt{margin:0 auto 4px!important;text-align:center}',
     '.m31-lead,.m31-ask{display:block}',
-    // La série : même police que la consigne, un peu plus grande, valeurs jamais coupées.
-    '.m31-serie{display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;gap:.12em .42em;max-width:100%;margin:.28em auto .3em;font-size:1.1em;font-weight:800;line-height:1.3;color:#13263f}',
-    '.m31-serie.m31-espaces{gap:.12em 1.05em}',
-    '.m31-item{white-space:nowrap}',
-    '.m31-sep{margin-left:.16em;color:#5b6b82;font-weight:700}',
+    // La série : même police que la consigne, un peu plus grande, valeurs jamais
+    // coupées, lignes équilibrées (pas une valeur seule sur la dernière ligne).
+    '.m31-serie{display:block;max-width:100%;margin:.28em auto .3em;text-align:center;text-wrap:balance;font-size:1.1em;font-weight:800;line-height:1.35;color:#13263f}',
+    '.m31-item{display:inline-block;margin:0 .2em;white-space:nowrap}',
+    '.m31-serie.m31-espaces .m31-item{margin:0 .48em}',
+    '.m31-sep{margin-left:.24em;color:#5b6b82;font-weight:700}',
     '.m31-on{padding:0 .14em;border-radius:.16em;background:#ffe08a;box-shadow:inset 0 -.14em 0 #b45309}',
     // Tableaux : au moins 90 % de la consigne, même sous la règle commune des tableaux.
-    '.slide .question table.m31-table{border-collapse:collapse;width:auto;margin:.3em auto!important;font-size:.92em!important;line-height:1.15;background:#fff}',
+    '.slide .question table.m31-table{border-collapse:collapse;width:auto;margin:.3em auto!important;font-size:.8em!important;line-height:1.15;background:#fff}',
+    '@media(max-width:800px){.slide .question table.m31-table{font-size:.92em!important}}',
     '.slide .question table.m31-table th,.slide .question table.m31-table td{border:1.5px solid #4b5563!important;padding:.22em .42em!important;text-align:center;font-weight:700;color:#13263f;white-space:nowrap}',
     '.slide .question table.m31-table th{background:#f2f5fa}',
     '.slide .question table.m31-table th.m31-label{white-space:normal;max-width:6.4em;line-height:1.05}',
@@ -29,10 +31,16 @@
     '.m31-split table.m31-table+table.m31-table{margin-top:.25em!important}',
     '@media(max-width:600px){.m31-tables.m31-cols-6 .m31-wide,.m31-tables.m31-cols-7 .m31-wide,.m31-tables.m31-cols-8 .m31-wide,.m31-tables.m31-cols-9 .m31-wide{display:none}.m31-tables.m31-cols-6 .m31-split,.m31-tables.m31-cols-7 .m31-split,.m31-tables.m31-cols-8 .m31-split,.m31-tables.m31-cols-9 .m31-split{display:block}}',
     '@media(max-width:360px){.m31-tables.m31-cols-5 .m31-wide{display:none}.m31-tables.m31-cols-5 .m31-split{display:block}.slide .question table.m31-table{font-size:.86em!important}.slide .question table.m31-table th,.slide .question table.m31-table td{padding:.2em .32em!important}.m31-serie{font-size:1.04em}}',
-    // Diagramme en barres : la hauteur manque plus que la largeur (ordinateur, projection).
-    '.m31-chart{display:block;width:min(100%,calc(var(--m31-h,34vh) * var(--m31-ratio,1.5)),620px);height:auto;margin:.15em auto .1em;overflow:visible}',
+    // Diagramme en barres : sous la question au téléphone ; à gauche de la
+    // question sur un écran large (ordinateur, projection), où la hauteur manque.
+    '.m31-chart-task{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"q" "f" "r";justify-items:center;width:100%}',
+    '.m31-chart-task>.question{grid-area:q}.m31-chart-task>.m31-figure{grid-area:f;width:100%}.m31-chart-task>.footer{grid-area:r}',
+    '.m31-chart{display:block;width:min(100%,calc(var(--m31-h,36vh) * var(--m31-ratio,1.5)),560px);height:auto;margin:.15em auto .1em;overflow:visible}',
     '.m31-chart text{font-family:Arial,Helvetica,sans-serif;fill:#13263f}',
-    '@media(min-width:1600px){.m31-chart{width:min(100%,calc(var(--m31-h,36vh) * var(--m31-ratio,1.5)),900px)}}',
+    '@media(min-width:901px){.m31-chart-task{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"f q" "f r";align-items:center;column-gap:clamp(18px,3vw,48px);max-width:1600px;margin:0 auto}.m31-chart-task>.question{align-self:end}.m31-chart-task>.footer{align-self:start}.m31-chart-task .m31-chart{width:min(calc(var(--m31-h,58vh) * var(--m31-ratio,1.5)),44vw,620px)}}',
+    '@media(min-width:1600px){.m31-chart-task .m31-chart{width:min(calc(var(--m31-h,56vh) * var(--m31-ratio,1.5)),46vw,860px)}}',
+    // Le cadre de la question s'élargit (avant : 1220 px au plus, le tableau de 7 jours débordait à droite en projection).
+    '.diapo.median-mode .slide{max-width:min(1640px,100%)}',
     '.m31-footer{margin-top:6px!important}'
   ].join('\n');
   function styleTag(){return '<style data-m31-style="1">'+CSS+'</style>';}
@@ -44,7 +52,7 @@
     const last=data.texts.length-1;
     return '<div class="m31-serie'+(data.separated?'':' m31-espaces')+'">'+data.texts.map((text,index)=>
       '<span class="m31-item"><span class="m31-v'+(on.includes(index)?' m31-on':'')+'">'+esc(text)+'</span>'+(data.separated&&index<last?'<span class="m31-sep">;</span>':'')+'</span>'
-    ).join('')+'</div>';
+    ).join(' ')+'</div>';
   }
 
   // ── Tableau (une ligne d'en-têtes, une ligne de valeurs) ────────────────
@@ -106,11 +114,16 @@
   function renderQuestion({instance,correction,renderPlaceholders,renderMathSegments}){
     const data=instance.median;
     const state=correction?'correction':'question';
+    const footerHtml=instance.rawFooter?'<div class="footer m31-footer">'+renderPlaceholders(instance.rawFooter,instance.answers,state)+'</div>':'';
+    if(data.kind==='effectifs'&&data.chart){
+      return styleTag()+'<div class="m31-task m31-chart-task"><div class="question m31-prompt"><span class="m31-lead">'+renderMathSegments(data.lead)+'</span>'
+        +'<span class="m31-ask">'+renderMathSegments(data.ask)+'</span></div><div class="m31-figure">'+chartSvg(data,correction)+'</div>'+footerHtml+'</div>';
+    }
     let html='<div class="m31-task"><div class="question m31-prompt"><span class="m31-lead">'+renderMathSegments(data.lead)+'</span>'
       +figureHtml(data,correction)
       +'<span class="m31-ask">'+renderMathSegments(data.ask)+'</span></div>';
     if(Array.isArray(data.options)) html+=optionsHtml(data,correction,renderMathSegments);
-    else if(instance.rawFooter) html+='<div class="footer m31-footer">'+renderPlaceholders(instance.rawFooter,instance.answers,state)+'</div>';
+    else html+=footerHtml;
     return styleTag()+html+'</div>';
   }
 
