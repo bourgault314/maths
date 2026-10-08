@@ -49,7 +49,7 @@ Les livrets « Le défi » ont disparu au lot 2 (30/09), les trois anciens « De
    Depuis le 01/10/2026, le plateau des énoncés fait **22 mm** (comme la correction) pour laisser
    plus de place pour écrire ; la carte d'exemple seule (couverture, page 2, dos) garde ses 28 mm
    (`plateauEntier`).
-4. **Dos** — « Encore des cartes ! » (huit cartes à chaque ouverture) : trois séries infinies et,
+4. **Dos** — « Encore des cartes ! » (quatre cartes à chaque ouverture — huit jusqu'au 08/10/2026) : trois séries infinies et,
    aux parties 1 à 3, un 4e QR **« Je révise »**, une série du livret d'avant (partie 1 : le monde 2 ;
    partie 2 : la partie 1 ; partie 3 : la partie 2) ; quatre séries au deuxième tour, sans « Je
    révise ». Puis « La suite du voyage », et en bas (04/10/2026, décidé avec Gwenaël sur maquette puis
@@ -176,7 +176,9 @@ comme les fiches.
   progression (07/10/2026).
 - Tout reste lisible imprimé en **noir et blanc** : le framboise ne sert qu'aux fonds, tout
   texte coloré est foncé (`#831843`), le nom de la couleur est écrit sur chaque tache, le
-  QR est dans une boîte blanche.
+  QR est dans une boîte blanche. Sur le papier (lot du 08/10/2026, version « C » de la feuille
+  d'essai), ce nom a un liseré noir PUR `#000000` épais et grossit de 15 % (`NOM_PAPIER` dans
+  `outils/splat.html`) : le liseré noir à 80 % sortait tramé sur l'orange, la verte et la violette.
 - Un titre de fiche trop long pour une ligne se coupe **après le tiret** (« Fiche 18 — » / la
   suite), jamais au milieu du titre (`JS_TITRE`), et rapetisse jusqu'à 80 % s'il le faut.
 - Vocabulaire : « jeton », « paquet de jetons », « tache », « indice », « ? », « schéma en

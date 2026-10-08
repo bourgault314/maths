@@ -83,7 +83,7 @@ plus petite valeur ≥ 3, aucune carte en double sur les deux livrets, les exemp
 
 `https://mathsgo.re/splat/systeme/livret/?f=25` … `?f=28` et `?f=25d` … `?f=28d` ouvrent la série en
 ligne de la fiche (les mêmes cartes ; l'étoile `sys25`… ou la tache dorée `sys25d`…) ; `?s=7` …
-`?s=12` ouvrent une série du dos (sans graine, `&cards=8&unknown=question&eleve=1`). Les séries 1 à 6
+`?s=12` ouvrent une série du dos (sans graine, `&cards=4&unknown=question&eleve=1` — huit cartes jusqu'au 08/10/2026). Les séries 1 à 6
 des livrets du 25/09 (jamais distribués) restent servies. Le QR est imprimé **une fois par fiche**, en
 haut de sa première page.
 
@@ -118,7 +118,12 @@ dans les fiches).
 
 - Signature `mathsgo.re/splat · CC BY-NC-SA 4.0` au pied de chaque page.
 - Lisible en **noir et blanc** : le cannelle ne sert qu'aux fonds, tout texte coloré est brun foncé
-  (`#7c2d12`) ; le nom de la couleur est écrit sur chaque tache (l'outil).
+  (`#7c2d12`) ; le nom de la couleur est écrit sur chaque tache (l'outil). **Sur le papier** (lot du
+  08/10/2026, version « C ») : liseré noir pur `#000000` épais (22 % du corps), mot 15 % plus gros
+  mais jamais plus large que sa tache (`NOM_PAPIER` dans `outils/splat.html`), sur les taches des
+  cartes comme dans les cases des barres ; l'écran ne change pas. Pages 2-3 : la petite carte
+  s'élargit d'au plus `ELARGIR_CARTE` mm dans le blanc laissé par le dessin de droite (deuxième
+  tour : 76 → 110 mm ; livret de base : le dessin prend toute la largeur, rien ne bouge).
 - Crédits (au dos) : le jeu SPLAT! de Steve Wyborney ; le livret et l'outil SPLAT! Système de
   maths&go, avec l'IREMI de La Réunion (plus de ligne de crédit pour la progression, 07/10/2026).
   Les fiches, réglages, graines, livrets et PDF du Système sont le travail de

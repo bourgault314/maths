@@ -110,7 +110,8 @@ FICHES_2 = [
     fiche("28d", "Dans le désordre", S28D, "Je cherche d'abord le grand plateau."),
 ]
 
-# Les séries infinies du dos : pas de graine, huit cartes nouvelles à chaque ouverture, en mode
+# Les séries infinies du dos : pas de graine, quatre cartes nouvelles à chaque ouverture (huit
+# jusqu'au 08/10/2026, Enquête et Système ; « Je révise » compris), en mode
 # élève sans étape (rien n'est enregistré). Leurs QR passent par la page courte (?s=7…12 ; les
 # séries 1 à 6 des livrets du 25/09 restent servies pour un livret déjà imprimé).
 SERIES = {
@@ -121,7 +122,7 @@ SERIES = {
     11: "mode=D&geste=DOUBLE&fois=3" + V0 + T,
     12: "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS,ESCALIER&sens=MIX&ordre=MELANGE&visibleMin=1&visibleMax=3" + T,
 }
-SERIE_CARTES = 8
+SERIE_CARTES = 4
 
 # Les exemples (couverture et pages 2-3) : le geste de la première fiche du livret, une carte
 # HORS des fiches, la tache noire et la tache bleue (comme les exemples de l'Enquête).
@@ -446,6 +447,10 @@ JS_COUV = """(d) => {
 
 # Pages 2 et 3 : la carte et son texte à gauche ; à droite soit un grand dessin (toute la
 # correction, ou le schéma à compléter), soit des étapes (pastille, titre, légende, dessin).
+# La colonne de la petite carte (pages 2-3) s'élargit d'au plus ELARGIR_CARTE mm dans le blanc
+# laissé par le dessin de droite (lot du 08/10/2026) ; 0 la laisse à 76 mm.
+ELARGIR_CARTE = 34
+
 JS_PAGE = """(d) => {
   const txt = (sel, html) => { const x = document.querySelector(sel); if (!x) return false; x.innerHTML = html; return true; };
   if (!txt('.tete .sur', d.sur) || !txt('.tete h1', d.h1)) return 'bandeau';
@@ -462,6 +467,19 @@ JS_PAGE = """(d) => {
       '<li class="et"><span class="badge"><svg viewBox="2 5 106 105" fill="#7c2d12"><use href="#tacheBadge"/></svg><b>' + et.n + '</b></span>' +
       '<div class="txt"><h3>' + et.h3 + '</h3><p class="leg">' + et.leg + '</p></div>' +
       '<svg class="outil" xmlns="http://www.w3.org/2000/svg" viewBox="' + et.vb + '">' + et.svg + '</svg></li>').join('') + '</ol>' + (d.apres || '');
+  }
+  // La petite carte grandit dans le blanc que laisse le dessin de droite (lot du 08/10/2026 : au
+  // deuxième tour, ses taches faisaient 5 mm) : la colonne de gauche s'élargit d'au plus
+  // d.elargir mm, tant que le dessin de droite garde exactement sa taille.
+  const gauche = document.querySelector('.gauche'), dessin = document.querySelector('.droite .dessin svg');
+  if (d.elargir && gauche && dessin && document.querySelector('.carte')) {
+    const mm = 96 / 25.4, avant = dessin.getBoundingClientRect().width;
+    const libre = document.querySelector('.droite').getBoundingClientRect().width - avant;
+    const plus = Math.min(d.elargir * mm, libre - 2 * mm);
+    if (plus > 2 * mm) {
+      gauche.style.flex = '0 0 ' + (gauche.getBoundingClientRect().width + plus).toFixed(1) + 'px';
+      if (Math.abs(dessin.getBoundingClientRect().width - avant) > 0.5) gauche.style.flex = '';
+    }
   }
   const pied = document.querySelector('.pied').getBoundingClientRect();
   for (const s of ['.gauche', '.droite']) {
@@ -693,11 +711,11 @@ async def rendre(niv, tmp, corr=None, page3="atoi"):
         lg = "La carte et ses plateaux"
         if page3 == "atoi":
             p2 = dict(sur="Un exemple résolu", h1="Le système pas à pas", carte=ex["carte"]["svg"], vbCarte=ex["carte"]["vb"], lgCarte=lg,
-                      texte=textes["texte"], dessin=dict(svg=ex["tout"]["svg"], vb=ex["tout"]["vb"]))
+                      texte=textes["texte"], dessin=dict(svg=ex["tout"]["svg"], vb=ex["tout"]["vb"]), elargir=ELARGIR_CARTE)
             p3 = dict(sur="À toi&nbsp;!", h1="La même sorte de carte" + (" — corrigée" if corr else ""),
                       carte=ax["carte"]["svg"], vbCarte=ax["carte"]["vb"], lgCarte="La carte et ses plateaux",
                       texte=textes_atoi(ax) if not corr else textes_atoi(ax).replace("écris les totaux et les calculs dans le schéma, puis la réponse", "le schéma rempli"),
-                      dessin=dict(svg=ax["tout"]["svg"], vb=ax["tout"]["vb"]))
+                      dessin=dict(svg=ax["tout"]["svg"], vb=ax["tout"]["vb"]), elargir=ELARGIR_CARTE)
         else:
             bl = ex["blocs"]
             coupe = (len(bl) + 1) // 2 if len(bl) > 3 else 2

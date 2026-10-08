@@ -153,13 +153,13 @@ test("deuxième tour : ?f=11d … ?f=24d ouvre la fiche, avec SON parcours (le B
   assert.doesNotMatch(courte, /ENQ_DEFI/);
 });
 
-test("les séries du dos : huit cartes sans graine, en mode élève sans étape ; les anciennes restent servies", () => {
+test("les séries du dos : quatre cartes sans graine, en mode élève sans étape ; les anciennes restent servies", () => {
   const SERIES = Object.fromEntries([...render.matchAll(/^    (\d+): "(mode=[CN][^"]+)",$/gm)].map((m) => [m[1], m[2]]));
   assert.deepEqual(Object.keys(SERIES), ["16", "17", "19", "20", "22", "23", "24", "25", "26", "28", "29", "30", "32", "33", "34", "35", "36", "37"]);
-  assert.match(render, /^SERIE_CARTES = 8$/m);
+  assert.match(render, /^SERIE_CARTES = 4$/m);
   for (const [s, q] of Object.entries(SERIES)) {
     const cible = cibleCourte(`?s=${s}`);
-    assert.equal(cible, `/splat/classique/?${q}&cards=8&unknown=question&eleve=1`, `?s=${s}`);
+    assert.equal(cible, `/splat/classique/?${q}&cards=4&unknown=question&eleve=1`, `?s=${s}`);
     const r = new URLSearchParams(cible.split("?")[1]);
     for (const k of ["seed", "parcours", "modele"]) assert.equal(r.get(k), null, `série ${s} : pas de « ${k} »`);
     assert.ok(existe(`${SRC}qr/serie-${s}.png`), `qr/serie-${s}.png`);
@@ -394,7 +394,7 @@ test("dans les PDF — couverture, exemple en page 2, les cinq fiches dans l'ord
         if (v) assert.match(p, /Correction/, `${s}, page ${3 + k}`);
       });
       assert.match(pages[7], /Et après/);
-      assert.match(pages[7], /huit nouvelles/);
+      assert.match(pages[7], /quatre nouvelles/);
       if (nom === "tour2_systeme") {
         // (lot « petite part », 01/10/2026) l'unité commune par les petites parts, plus « je double tout »
         assert.match(pages[7], new RegExp(souple("Un exemple résolu : les petites parts").source, "i"));
@@ -599,7 +599,7 @@ test("page des livrets : l'onglet du monde 3 — les trois livrets pour tous, «
     assert.ok(taille(webp) < taille(png), `${nom} : la WebP est plus légère`);
     const b = readFileSync(new URL(`../${png}`, import.meta.url));
     assert.deepEqual([b.readUInt32BE(16), b.readUInt32BE(20)], [993, 1404], `${nom} : page 1 rendue à 120 dpi`);
-    assert.ok(d.includes(`src="/assets/img/thumbnails/splat/${nom}.png?v=5"`), `${nom} : sur la page (?v=5 : couvertures du 07/10/2026, le « ? »)`);
+    assert.ok(d.includes(`src="/assets/img/thumbnails/splat/${nom}.png?v=6"`), `${nom} : sur la page (?v=6 : couvertures du 08/10/2026, le nom des taches en noir pur)`);
   });
   ["fiches 10 à 14", "fiches 15 à 19", "fiches 20 à 24", "fiches 11d à 17d", "fiches 18d à 24d"]
     .forEach((plage, i) => assert.ok(art[i].includes(`<span class="plage">${plage}</span>`), plage));
