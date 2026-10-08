@@ -307,17 +307,17 @@ test("Système : les logos page par page — rien sur la couverture ni les pages
     assert.doesNotMatch(t.replace(/\/\*[\s\S]*?\*\//g, ""), /(?:^|[;{])color:#(?:92400e|b45309|fbe9dc|f59e0b|fb923c)/i, `${nom} : pas de texte cannelle ou orange clair`);
 });
 
-test("Système : les crédits du dos — Steve Wyborney, maths&go avec l'IREMI, et Claire une seule fois, pour sa progression", () => {
+test("Système : les crédits du dos — Steve Wyborney, maths&go avec l'IREMI, plus de crédit de progression (07/10/2026)", () => {
   const credits = dos.slice(dos.indexOf('<div class="credits">'));
   assert.match(credits, /Jeu <b>SPLAT!<\/b> créé par <span class="steve">Steve Wyborney<\/span>/);
   assert.match(credits, /Livret et outil <b>SPLAT! Système<\/b> de maths&amp;go, avec l'IREMI de La Réunion\./);
-  // le Système est le travail de Gwenaël : Claire est remerciée pour la progression « SPLAT! cycle 3 »
-  assert.equal(sansCommentaires(couv + exemple + dos).match(/Claire/g).length, 1);
-  assert.match(dos, /Merci à Claire pour la progression «&nbsp;SPLAT! cycle 3&nbsp;», ses idées et sa relecture\./);
+  // le Système est le travail de Gwenaël ; plus de ligne de crédit pour la progression (Gwenaël, 07/10/2026)
+  assert.equal((sansCommentaires(couv + exemple + dos).match(/Claire|progression «/g) || []).length, 0);
+  assert.match(credits, /avec l'IREMI de La Réunion\.<br>\s*Libre d'être imprimé/);
   for (const L of LIVRETS) {
     const t = texteDesPages(`outils/${L.sortie}.pdf`);
-    assert.equal((t.join(" ").match(/Claire/g) || []).length, 1, `${L.sortie} : Claire une fois, au dos`);
-    assert.match(t[11], /Claire/);
+    assert.equal((t.join(" ").match(/Claire/g) || []).length, 0, `${L.sortie} : plus de crédit de progression`);
+    assert.match(t[11], /Steve Wyborney/);
   }
 });
 

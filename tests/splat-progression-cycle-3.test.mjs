@@ -20,15 +20,16 @@ const catalogue = loadCatalogue();
 const classification = catalogue.resourceClassifications[digipadUrl];
 const resource = catalogue.resources.find((item) => item.path === digipadUrl);
 
-test("la progression cycle 3 n'a plus de carte au catalogue, son lien reste dans la carte des mondes", () => {
-  // relecture du monde 1, lot 2 (25/09/2026), Gwenaël : « ça on enlève », la progression est dans
-  // l'univers. La ressource est masquée (réversible), pas effacée ; le lien vers le Digipad de
-  // Claire reste dans le pied de la vue professeur de la carte des mondes.
+test("la progression cycle 3 n'a plus de carte au catalogue, ni de lien dans la carte des mondes", () => {
+  // relecture du monde 1, lot 2 (25/09/2026), Gwenaël : « ça on enlève ». La ressource est masquée
+  // (réversible), pas effacée. Le 07/10/2026, le lien du pied de la vue professeur part aussi :
+  // plus aucune mention de la progression sur le site.
   assert.ok(resource, "le Digipad reste décrit dans le catalogue");
   assert.equal(resource.title, "SPLAT! cycle 3 — une progression possible");
   assert.equal(resource.status, "hidden");
   const univers = readFileSync(new URL("../outils/splat_univers.html", import.meta.url), "utf8");
-  assert.ok(univers.includes(`<a href="${digipadUrl}" target="_blank" rel="noopener">`), "le lien reste dans la carte des mondes");
+  assert.ok(!univers.includes(digipadUrl), "plus de lien dans la carte des mondes");
+  assert.ok(!univers.includes("progression d\\u2019origine"), "plus de « sa progression d'origine » dans la vue prof");
   const annuaire = readFileSync(new URL("../outils/toutes-les-ressources.html", import.meta.url), "utf8");
   assert.ok(!annuaire.includes(digipadUrl), "plus dans l'annuaire de toutes les ressources");
   assert.deepEqual(Array.from(classification.collections), ["splat"]);

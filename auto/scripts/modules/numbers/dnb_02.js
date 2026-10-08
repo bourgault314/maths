@@ -10,21 +10,25 @@ const MODULE_DNB_02 = {
   ],
   "source": "source_dynamique_dnb02",
   "has_svg": false,
+  "keypad": {
+    "context": [
+      ","
+    ]
+  },
   "questions": [
     {
       "n": 1,
-      "statement": "Parmi ces nombres, lequel est le plus grand ?&&$$${mx}$$&&$$${d1}$$&&$$${d2}$$&&",
-      "answer": "[\"1\"]",
+      "statement": "${stem}",
+      "answer": "[\"ok\"]",
       "options": {
         "decimal_kind": "compare-positive-qcm",
-        "decimal_block": "compare-order",
-        "shuffle_answers": true
+        "decimal_block": "compare-order"
       },
-      "footer": "[[formula_qcm1]]"
+      "footer": "${slot}"
     },
     {
       "n": 3,
-      "statement": "Range ces trois nombres dans l'ordre croissant.",
+      "statement": "Range ces trois nombres dans l’ordre croissant.",
       "answer": "[\"mn\",\"md\",\"mx\"]",
       "options": {
         "decimal_kind": "order-cards",
@@ -43,38 +47,28 @@ const MODULE_DNB_02 = {
       "footer": ""
     },
     {
-      "n": 6,
-      "statement": "Calcule :",
-      "answer": "[\"sum\"]",
-      "options": {
-        "decimal_kind": "add-to-one",
-        "decimal_block": "additive"
-      },
-      "footer": "$$${a} + ${b} = [[formula]]$$"
-    },
-    {
       "n": 7,
-      "statement": "Calcule :",
+      "statement": "Calcule&nbsp;:",
       "answer": "[\"result\"]",
       "options": {
         "decimal_kind": "subtract",
         "decimal_block": "additive"
       },
-      "footer": "$$${a} - ${b} = [[formula]]$$"
+      "footer": "$$${a} − ${b} = [[formula]]$$"
     },
     {
       "n": 8,
-      "statement": "Complète pour obtenir une unité entière :",
+      "statement": "Complète&nbsp;:",
       "answer": "[\"missing\"]",
       "options": {
         "decimal_kind": "missing-complement",
         "decimal_block": "additive"
       },
-      "footer": "$$${a} + [[formula]] = 1$$"
+      "footer": "$$${a} + [[formula]] = ${target}$$"
     },
     {
       "n": 9,
-      "statement": "Calcule :",
+      "statement": "Calcule&nbsp;:",
       "answer": "[\"result\"]",
       "options": {
         "decimal_kind": "multiply-direct",
@@ -84,7 +78,7 @@ const MODULE_DNB_02 = {
     },
     {
       "n": 10,
-      "statement": "Calcule :",
+      "statement": "Calcule&nbsp;:",
       "answer": "[\"share\"]",
       "options": {
         "decimal_kind": "divide-direct",
@@ -94,23 +88,73 @@ const MODULE_DNB_02 = {
     },
     {
       "n": 11,
-      "statement": "On répartit $$${total}\\text{ L}$$ également dans $$${divisor}$$ bouteilles. Quelle quantité contient chaque bouteille ?",
+      "statement": "${prompt}",
       "answer": "[\"share\"]",
       "options": {
         "decimal_kind": "division-context",
         "decimal_block": "multiplicative"
       },
-      "footer": "$$[[formula]]\\text{ L}$$"
+      "footer": "$$[[formula]]\\text{ ${unit}}$$"
     },
     {
-      "n": 12,
-      "statement": "Place les deux produits dans les bonnes cases pour décomposer le calcul.",
-      "answer": "[\"firstProduct\",\"secondProduct\"]",
+      "n": 13,
+      "statement": "Calcule&nbsp;:",
+      "answer": "[\"result\"]",
       "options": {
-        "decimal_kind": "distributivity-reasoning",
+        "decimal_kind": "multiply-tables",
         "decimal_block": "multiplicative"
       },
-      "footer": ""
+      "footer": "$$${left} \\times ${right} = [[formula]]$$"
+    },
+    {
+      "n": 14,
+      "statement": "${stem}",
+      "answer": "[\"ok\"]",
+      "options": {
+        "decimal_kind": "multiply-qcm",
+        "decimal_block": "multiplicative"
+      },
+      "footer": "${slot}"
+    },
+    {
+      "n": 15,
+      "statement": "Calcule&nbsp;:",
+      "answer": "[\"sum\"]",
+      "options": {
+        "decimal_kind": "add-decimals",
+        "decimal_block": "additive"
+      },
+      "footer": "$$${a} + ${b} = [[formula]]$$"
+    },
+    {
+      "n": 16,
+      "statement": "${prompt}",
+      "answer": "[\"result\"]",
+      "options": {
+        "decimal_kind": "subtract-context",
+        "decimal_block": "additive"
+      },
+      "footer": "$$[[formula]]\\text{ ${unit}}$$"
+    },
+    {
+      "n": 17,
+      "statement": "Calcule&nbsp;:",
+      "answer": "[\"result\"]",
+      "options": {
+        "decimal_kind": "divide-integer",
+        "decimal_block": "multiplicative"
+      },
+      "footer": "$$${dividend} \\div ${divisor} = [[formula]]$$"
+    },
+    {
+      "n": 18,
+      "statement": "Calcule&nbsp;: $$A = ${expression}$$",
+      "answer": "[\"result\"]",
+      "options": {
+        "decimal_kind": "priorities",
+        "decimal_block": "additive"
+      },
+      "footer": "$$A = [[formula]]$$"
     }
   ]
 };

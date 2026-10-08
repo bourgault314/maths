@@ -120,6 +120,6 @@ dans les fiches).
 - Lisible en **noir et blanc** : le cannelle ne sert qu'aux fonds, tout texte coloré est brun foncé
   (`#7c2d12`) ; le nom de la couleur est écrit sur chaque tache (l'outil).
 - Crédits (au dos) : le jeu SPLAT! de Steve Wyborney ; le livret et l'outil SPLAT! Système de
-  maths&go, avec l'IREMI de La Réunion ; merci à Claire pour la progression « SPLAT! cycle 3 », ses
-  idées et sa relecture. Les fiches, réglages, graines, livrets et PDF du Système sont le travail de
+  maths&go, avec l'IREMI de La Réunion (plus de ligne de crédit pour la progression, 07/10/2026).
+  Les fiches, réglages, graines, livrets et PDF du Système sont le travail de
   Gwenaël Bourgault.
