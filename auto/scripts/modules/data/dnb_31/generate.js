@@ -383,7 +383,7 @@
         'Élèves'+NB+': '+sumText+'. Médiane'+NB+': la '+ord(rank)+' note.',
         runLine
       ],
-      aide:['Compte tous les élèves, puis cherche la note du milieu (autant de notes avant que après).','En tout'+NB+': '+sumText+' élèves. La médiane est la '+ord(rank)+' note.'],
+      aide:['Compte tous les élèves, puis cherche la note du milieu (autant de notes avant qu’après).','En tout'+NB+': '+sumText+' élèves. La médiane est la '+ord(rank)+' note.'],
       lead:q(lead),ask:q(ask)
     });
   }
