@@ -261,6 +261,9 @@ const modele = new Function(`
   ${fn("enqueteInitiale")}
   ${fn("enqueteArticle")}
   ${fn("enqueteNomUnites")}
+  ${ligne("function enqueteSymbole(")}
+  ${ligne("function enqueteFoisSymbole(")}
+  ${ligne("function enqueteLigneCalcul(")}
   ${fn("enqueteBarresModele")}
   ${fn("enqueteReponsePhrase")}
   const numberedQuestionMarkMode = true;
@@ -292,7 +295,7 @@ test("les cartes du corrigé : « Je réponds » (cadre) puis « Je vérifie » 
   assert.match(calc, /"data-cadre":"reponse"/, "le cadre de la réponse");
   assert.match(calc, /stroke:"#111827", "stroke-width":4, "data-cadre":"reponse"/, "un trait noir de 4, comme à l'écran");
   assert.match(calc, /\{ t:"Je vérifie :", poids:800, fill:"#374151" \}/, "« Je vérifie : » puis les vérifications à la suite");
-  assert.match(calc, /const verifs = \(modele\.verification \? \[`\$\{modele\.verification\} ✓`\] : \[\]\)\.concat\(enqueteG3VerifIndices\(card, modele\.lettres\)\);/, "le total puis chaque indice");
+  assert.match(calc, /const verifs = \(modele\.verification \? \[`\$\{modele\.verification\} ✓`\] : \[\]\)\.concat\(modele\.sansIndices \? \[\] : enqueteG3VerifIndices\(card, modele\.filtreIndices\)\);/, "le total seulement (07/10/2026) ; sans total, l'indice de l'écart");
   assert.match(calc, /if\(k && xv \+ w > x0 \+ largeur\)\{ xv = x0; y \+= Math\.round\(vf \* 1\.25\); \}/, "à la ligne quand ça ne tient plus");
   // une ligne jusqu'à repFont − 6, sinon deux lignes à repFont (jamais une ligne minuscule)
   assert.match(calc, /while\(une > P\.repFont - 6 && largeurSeg\(segments, une\) > largeurR\) une -= 2;/);

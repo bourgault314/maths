@@ -126,8 +126,8 @@ test("l’écran de résultat ne dit pas deux fois la même chose", () => {
   assert.match(html, /if \(fete\.validation\) \{\s*const suivante = tableSuivanteApres\(fete\.validation\.table\);\s*if \(trouve\("toutes-acquises"\)\) return "Tes 9 tables sont passées : l’escalier des étoiles est ouvert !";\s*return suivante \? `On continue avec la table de \$\{suivante\}\.` : "";\s*\}/);
   assert.doesNotMatch(html, /melange-a-refaire|melange-debloque|Refais ton mélange|réussis ton mélange|Réussis le mélange des 9/, "plus aucune consigne « fais d’abord ton mélange »");
   // Lot « les trophées » : un mélange réussi n'ouvre toujours rien — il
-  // rapporte un trophée (3, 6 ou 9 tables), dit en une phrase ; sinon rien.
-  assert.match(html, /if \(fete\.melange\) return fete\.melange\.trophee \? `Tu gagnes le trophée des \$\{fete\.melange\.trophee\} tables\\u00a0!` : "";/, "un mélange réussi n’ouvre rien : le trophée gagné, ou le verdict seul");
+  // rapporte une coupe (3, 6 ou 9 tables), dite en une phrase ; sinon rien.
+  assert.match(html, /if \(fete\.melange\) return fete\.melange\.trophee \? `Tu gagnes la coupe des \$\{fete\.melange\.trophee\} tables\\u00a0!` : "";/, "un mélange réussi n’ouvre rien : la coupe gagnée, ou le verdict seul");
   assert.match(html, /const texte = suiteApresSerie\(suivi\.evenements, feteDuResultat\(suivi\.evenements\)\);/);
   assert.match(html, /etiquette\.textContent = "Et maintenant\\u00a0:";/);
   assert.doesNotMatch(html, /function evenementMessage\(/, "les anciens messages par événement n’ont plus d’appelant");
@@ -145,7 +145,9 @@ test("quand l’écran fête une nouvelle, il ne garde que l’essentiel", () =>
   assert.match(html, /\.result\.is-rate \.result-verdict \{ border-color: #f1c2c2;/);
   assert.match(html, /\.result\.is-temps \.result-verdict \{ border-color: #efd48a;/);
   assert.match(html, /\.result\.is-fete \.result-verdict \{ animation: fete-pop \.5s ease-out; \}/);
-  assert.match(html, /<div id="result-verdict" class="result-verdict">\s*<span id="result-icon" class="hero-icon" aria-hidden="true">✓<\/span>\s*<h1 id="result-title" tabindex="-1">Résultat<\/h1>\s*<p id="result-score" class="result-score"><\/p>\s*<p id="result-config" class="result-config"><\/p>\s*<p id="result-detail"><\/p>/);
+  // Lot « Mon mélange sur l'accueil et l'expert » : la coupe gagnée par un
+  // mélange se montre sous le titre (cachée sinon).
+  assert.match(html, /<div id="result-verdict" class="result-verdict">\s*<span id="result-icon" class="hero-icon" aria-hidden="true">✓<\/span>\s*<h1 id="result-title" tabindex="-1">Résultat<\/h1>\s*<!--[^>]*-->\s*<p id="result-coupes" class="result-coupes" hidden><\/p>\s*<p id="result-score" class="result-score"><\/p>\s*<p id="result-config" class="result-config"><\/p>\s*<p id="result-detail"><\/p>/);
   assert.match(html, /<div id="result-parcours" class="result-parcours" hidden><\/div>\s*<div class="result-actions">/, "la suite, puis les boutons — avant les corrections");
   assert.match(html, /<\/div>\s*<p id="result-message" class="result-message"><\/p>\s*<p id="result-previous" class="previous-score" hidden><\/p>\s*<section id="corrections" class="corrections" aria-live="polite"><\/section>\s*<\/div>/, "les corrections ferment l’écran");
   assert.doesNotMatch(html, /<p class="eyebrow">Série terminée<\/p>/, "le verdict dit déjà que la série est finie");

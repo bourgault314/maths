@@ -30,6 +30,34 @@ test("le moteur servi par suivi.mathsgo.re est la copie exacte de celui de l'app
   );
 });
 
+// Lot « splat-suivi-3 » (07/10/2026) : même règle pour le moteur de SPLAT!. La
+// tuile SPLAT! de l'espace élève le charge pour dessiner les mondes, « Ma
+// classe » le chargera pour son tableau. Tout lot qui touche
+// assets/js/splat-parcours.js recopie le fichier dans _serveur/public/prof/ ET
+// le met dans son dossier à déposer.
+const ORIGINAL_SPLAT = "assets/js/splat-parcours.js";
+const COPIE_SPLAT = "_serveur/public/prof/splat-parcours.js";
+
+test("le moteur SPLAT! servi par suivi.mathsgo.re est la copie exacte de celui du site", () => {
+  const original = readFileSync(join(racine, ORIGINAL_SPLAT));
+  const copie = readFileSync(join(racine, COPIE_SPLAT));
+  assert.ok(original.length > 1000, `${ORIGINAL_SPLAT} doit être le vrai moteur`);
+  assert.ok(
+    original.equals(copie),
+    `${COPIE_SPLAT} diffère de ${ORIGINAL_SPLAT} (${copie.length} contre ${original.length} octets) : `
+      + `recopie le fichier (cp ${ORIGINAL_SPLAT} ${COPIE_SPLAT}) et ajoute-le au dossier à déposer.`
+  );
+});
+
+test("l'espace élève charge ses moteurs d'ici, avec une version qui suit leur contenu", () => {
+  const page = readFileSync(join(racine, "_serveur/public/index.php"), "utf8");
+  assert.match(page, /url: "prof\/defi_tables_mon_parcours\.js\?v=<\?= htmlspecialchars\(\$versionMoteur, ENT_QUOTES\) \?>"/);
+  assert.match(page, /url: "prof\/splat-parcours\.js\?v=<\?= htmlspecialchars\(\$versionSplat, ENT_QUOTES\) \?>"/);
+  assert.match(page, /\$versionSplat = version_moteur\('splat-parcours\.js'\);/,
+    "la version dans l'adresse est l'empreinte du fichier déposé : un nouveau dépôt n'est jamais masqué par le cache");
+  assert.doesNotMatch(page, /https?:\/\/[^"']*\.js/, "aucun script d'un autre domaine");
+});
+
 test("la page prof charge le moteur d'ici, jamais depuis mathsgo.re", () => {
   const page = readFileSync(join(racine, "_serveur/public/prof/index.php"), "utf8");
   assert.match(page, /<script src="defi_tables_mon_parcours\.js\?v=<\?= /,

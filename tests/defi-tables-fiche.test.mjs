@@ -23,9 +23,14 @@ function catalogue() {
   return contexte.window.MATHSGO_CATALOGUE;
 }
 
-test("« Voir ma fiche » : un seul chemin, en bas de l'accueil, vers un écran qui montre la feuille et l'imprime (Q7)", () => {
-  assert.match(html, /<button id="acc-fiche" type="button" aria-controls="fiche">Voir ma fiche<\/button>/);
-  assert.equal((html.match(/Voir ma fiche</g) || []).length, 1, "un seul « Voir ma fiche »");
+// Lot « Mon mélange sur l'accueil et l'expert » (07/10/2026, planche 9) :
+// « Voir ma fiche » quitte l'accueil ; le chemin part de Mon parcours, par un
+// bouton « Imprimer ma fiche », et la flèche de l'écran y ramène.
+test("« Imprimer ma fiche » : un seul chemin, depuis Mon parcours, vers un écran qui montre la feuille et l'imprime (Q7)", () => {
+  assert.doesNotMatch(html, /id="acc-fiche"|Voir ma fiche</, "plus rien sur l'accueil");
+  const parcours = html.slice(html.indexOf('<div id="parcours" class="parcours-screen" hidden>'), html.indexOf('<div id="play" hidden>'));
+  assert.match(parcours, /<button id="parcours-fiche" class="parcours-imprimer" type="button" aria-controls="fiche"><svg [^>]*aria-hidden="true">[\s\S]*?<\/svg><span>Imprimer ma fiche<\/span><\/button>\s*<span class="saut" aria-hidden="true"><\/span>\s*<button id="parcours-notice-bouton"/, "en bas de Mon parcours, au-dessus de « Comment ça marche ? »");
+  assert.match(html, /id="fiche-back" class="settings-back" type="button" aria-label="Retour à Mon parcours">[\s\S]*?<span class="settings-back-label">Mon parcours<\/span><\/button>/);
   assert.doesNotMatch(html, /id="acc-print"|id="parcours-print"|parcours-print-option|revision-sheet-link|parcours-print-action/);
   // L'écran : la barre (retour, titre), le bouton, et la feuille #fiche-print
   // affichée par body.voir-fiche — la même que celle du professeur.
@@ -35,7 +40,7 @@ test("« Voir ma fiche » : un seul chemin, en bas de l'accueil, vers un écran 
   assert.match(html, /body\.mode-fiche #fiche-print, body\.voir-fiche #fiche-print \{ display: block;/);
   assert.match(html, /body\.mode-fiche #fiche-print, body\.voir-fiche #fiche-print \{ zoom: var\(--fiche-zoom, 1\); \}/);
   assert.match(html, /document\.body\.classList\.contains\("mode-fiche"\) \|\| document\.body\.classList\.contains\("voir-fiche"\)/, "ajusterFiche réduit la feuille sur les deux écrans");
-  assert.match(html, /\$\("acc-fiche"\)\.addEventListener\("click", openFiche\);[\s\S]{0,200}\$\("fiche-back"\)\.addEventListener\("click", backToModes\);\s*\n\s*\$\("fiche-imprimer"\)\.addEventListener\("click", printFiche\);/);
+  assert.match(html, /\$\("parcours-fiche"\)\.addEventListener\("click", openFiche\);[\s\S]{0,200}\$\("fiche-back"\)\.addEventListener\("click", openParcours\);\s*\n\s*\$\("fiche-imprimer"\)\.addEventListener\("click", printFiche\);/);
   // L'impression, elle, n'a pas bougé : la feuille seule, en A4, remplie sur beforeprint.
   assert.match(html, /body > \*:not\(#fiche-print\) \{ display: none !important; \}/);
   assert.match(html, /window\.addEventListener\("beforeprint", \(\) => renderFiche\(ficheAffichee\)\)/);
@@ -78,7 +83,7 @@ test("sur la fiche, Mon mélange n’est jamais « à faire » ni « à refaire 
   assert.match(html, /\$\("fiche-melange-state"\)\.replaceChildren\(tropheesDuMelange\(etat\.melange\.trophees\)\);/);
   // Le même dessin que dans Mon parcours.
   assert.match(html, /droite\.append\(textes, tropheesDuMelange\(etat\.melange\.trophees\)\);/);
-  assert.match(html, /<span id="fiche-melange-state" class="fiche-state"><\/span>\s*<p>Dès 2 tables passées, quand je veux : 20 questions en 1 min 30\. Un trophée avec 3, 6, puis 9 tables\.<\/p>/);
+  assert.match(html, /<span id="fiche-melange-state" class="fiche-state"><\/span>\s*<p>Dès 2 tables passées, quand je veux : 20 questions en 1 min 30\. Une coupe avec 3, 6, puis 9 tables\.<\/p>/);
   assert.doesNotMatch(html.replace(/\/\/[^\n]*/g, ""), /"À jour ✓"|"À refaire"|"À faire"|À refaire avec la table de/, "plus aucun état « à faire » du mélange (hors commentaires)");
   assert.doesNotMatch(html, /etat\.verrou|melange\.aRefaireAvec|melange\.aJour/, "la page ne lit plus le verrou ni ses restes");
   assert.doesNotMatch(html, /dernierMelange|Dernier : |réussi avec \$\{/, "plus de dernier score ni de « réussi avec N tables ✓ »");
@@ -204,7 +209,7 @@ test("les cartes : un PDF de 2 pages par table de 2 à 10, un PDF de 18 pages po
   const png = await stat(new URL(vignette, racine));
   const webp = await stat(new URL(vignette.replace(/\.png$/, ".webp"), racine));
   assert.ok(webp.size < png.size, "la webp est plus légère que la png");
-  assert.match(cataloguePage, /catalogue-refonte-data\.js\?v=sans-progression-20261007-1/, "le cache-buster du catalogue suit");
+  assert.match(cataloguePage, /catalogue-refonte-data\.js\?v=defi-tables-melange-20261007-1/, "le cache-buster du catalogue suit");
 });
 
 test("la feuille des tables (PDF) décrit le parcours réel et la révision du jour (A21)", async () => {

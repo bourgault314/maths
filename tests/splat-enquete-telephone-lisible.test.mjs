@@ -77,6 +77,7 @@ const outils = (document, svg, etat = {}) => new Function("document", "svg", "et
   ${constLine("const ENQUETE_REGLE_REPETEES")}
   ${fn("eleveIndicesPossible")}
   ${fn("eleveIndicesHtml")}
+  ${fn("enquetePasDeTotal")}
   ${fn("eleveIndicesAfficher")}
   ${fn("eleveIndicesHauteurPlateau")}
   ${fn("eleveCadrerScene")}
@@ -113,8 +114,11 @@ test("téléphone : les phrases au-dessus du plateau, le TOTAL dans la 2e colonn
   assert.equal(tot.parentNode, plateau, "le TOTAL est dans le plateau (sa 2e colonne)");
   assert.equal(tot.innerHTML, "<span>TOTAL</span><b>38</b>");
   assert.ok(plateau.classList.contains("avecTotalTel"));
-  // une carte sans total garde son « ? » gris ardoise
+  // une carte de l'Enquête sans total dit « PAS DE TOTAL » (07/10/2026) ; une autre carte sans total
+  // (hors Enquête) garde son « ? » gris ardoise
   o.afficher(carteC({ _rel: { sansTotal: true } }));
+  assert.equal(document.getElementById("eleveTotalTel").innerHTML, '<span>PAS DE</span><b class="pasDe">TOTAL</b>');
+  o.afficher(carteC({ family: "D", _rel: { sansTotal: true } }));
   assert.equal(document.getElementById("eleveTotalTel").innerHTML, '<span>TOTAL</span><b class="inconnu">?</b>');
   assert.equal(carte.enfants.filter((n) => n.id === "eleveIndices").length, 1, "jamais deux blocs");
   // hors téléphone (ou écran de fin) : tout s'en va
@@ -195,7 +199,7 @@ test("le schéma (lot E6) remplace les phrases du haut par son bandeau TOTAL + p
   const { document, svg, carte, plateau } = monter();
   const o = outils(document, svg, { tel: true });
   o.afficher(carteC());
-  new Function("document", `${fn("eleveRappelHtml")} ${fn("eleveRappelAfficher")} eleveRappelAfficher(arguments[1]);`)(document, carteC());
+  new Function("document", `${fn("enquetePasDeTotal")} ${fn("eleveRappelHtml")} ${fn("eleveRappelAfficher")} eleveRappelAfficher(arguments[1]);`)(document, carteC());
   assert.equal(document.getElementById("eleveIndices"), null, "pas deux fois les phrases");
   const bandeau = document.getElementById("eleveRappel");
   assert.equal(carte.enfants.indexOf(bandeau), carte.enfants.indexOf(plateau) - 1);

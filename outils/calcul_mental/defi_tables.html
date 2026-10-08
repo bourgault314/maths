@@ -321,8 +321,9 @@
     .matable-head .eyebrow { margin: 0; font-size: .74rem; letter-spacing: .06em; }
     .matable-head h1 { display: block; margin: 0; font-size: 1.55rem; font-weight: 900; color: var(--ink); line-height: 1.1; }
     .matable-head h1:focus { outline: none; }
-    /* R5 : « Lire la table de 7 », sous les trois étapes — l'écran qui montre
-       la table entière, et d'où l'on prend ses cartes à imprimer. */
+    /* R5 : « Lire la table de 7 » — l'écran qui montre la table entière, et
+       d'où l'on prend ses cartes à imprimer. Lot « Mon mélange sur l'accueil
+       et l'expert » : il monte dans le haut de la carte (voir plus bas). */
     .matable-lire { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; min-height: 44px; margin: 4px 0 -4px; padding: 0 4px; border: 0; background: none; color: #5b7286; font: inherit; font-size: .82rem; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
     .matable-lire svg { flex: none; }
     .matable.is-toutes .matable-lire { display: none; }
@@ -340,6 +341,33 @@
     .lire-toutes { margin-top: 14px; }
     @media (max-width: 620px) { .lire-liste li { font-size: 1.25rem; padding: 6px 12px; } }
     .matable-changer { min-height: 44px; padding: 0 6px; border: 0; background: none; color: var(--blue); font-size: .84rem; font-weight: 850; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; cursor: pointer; }
+    /* Lot « Mon mélange sur l'accueil et l'expert » (07/10/2026, planches 7
+       et 11, décision de Gwenaël) : « Changer de table » reste à droite du
+       titre, comme avant ; « Lire la table de N » passe sous le titre. Sous les
+       boutons de la carte, il ne reste que « Choisir une activité ». Sous 360 px
+       seulement (petits téléphones), le titre se couperait en « La table / de
+       6 » : il reste seul sur sa ligne, « Lire la table » à gauche et « Changer
+       de table » à droite dessous. Les 9 tables passées (is-toutes) : rien ne
+       change. */
+    .matable:not(.is-toutes) .matable-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "titre droite" "lire ."; align-items: start; column-gap: 10px; row-gap: 0; margin-bottom: 4px; }
+    .matable-head > .matable-titre { grid-area: titre; min-width: 0; }
+    .matable-head > .matable-droite { grid-area: droite; }
+    .matable-head > .matable-lire { grid-area: lire; justify-self: start; justify-content: flex-start; width: auto; min-height: 44px; margin: 0 0 0 -2px; padding: 0 2px; }
+    @media (max-width: 359px) {
+      .matable:not(.is-toutes) .matable-head { grid-template-areas: "titre titre" "lire droite"; align-items: center; }
+      .matable:not(.is-toutes) .matable-head > .matable-droite { padding-top: 0; }
+    }
+    /* « Changer de table » ouvert au téléphone, le lien dit « Je garde la
+       table de 10 », plus long : il passe sous le titre, qui ne se coupe plus
+       (« La table / de 10 » sur main, de 320 à 390 px). */
+    @media (max-width: 620px) {
+      .acc.choix-ouvert .matable:not(.is-toutes) .matable-head { grid-template-areas: "titre titre" "lire droite"; align-items: center; }
+      .acc.choix-ouvert .matable:not(.is-toutes) .matable-head > .matable-droite { padding-top: 0; }
+    }
+    @media (min-width: 621px) {
+      .matable:not(.is-toutes) .matable-head { margin-bottom: 6px; }
+      .matable-head > .matable-lire { min-height: 34px; margin-top: 2px; }
+    }
     /* Lot R3 bis : au doigt, choisir sa table est une décision SEULE à l'écran.
        Tant que le choix est ouvert, le reste de l'accueil s'efface — le titre
        « La table de N » reste, pour savoir d'où l'on part. Sur ordinateur
@@ -484,6 +512,11 @@
     .acc-lien small { color: #5b7286; font-weight: 800; font-size: .74rem; line-height: 1.25; }
     /* Une seule tuile : un bouton centré, 300 px au plus, contenu centré (Gwenaël, 04/10 : « un grand bouton aligné à gauche, c'est bizarre »). */
     .acc-liens > .acc-lien { grid-template-columns: 34px auto; justify-content: center; width: min(100%, 300px); justify-self: center; }
+    /* Lot « Mon mélange sur l'accueil et l'expert » : les trois coupes, à droite dans la tuile. */
+    .acc-liens > .acc-lien.avec-coupes { grid-template-columns: 34px auto auto; column-gap: 10px; }
+    .acc-lien .acc-coupes { display: inline-flex; margin-left: 10px; }
+    .acc-lien .acc-coupes .mp-trophees { display: inline-flex; gap: 3px; }
+    .acc-lien .acc-coupes .mp-trophees b { width: 22px; height: 22px; }
     .acc-bas { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 18px; margin-top: 2px; }
     .acc-bas button { min-height: 44px; padding: 0 4px; border: 0; background: none; color: #5b7286; font: inherit; font-size: .82rem; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
     /* Sous un code (ou venu de son espace), l'élève ne voit ni Réglages
@@ -686,6 +719,9 @@
     .parcours-extra-cells .secondary { min-height: 44px; padding: 8px 14px; }
     .parcours-extra p { margin: 6px 0 0; color: var(--muted); font-size: .88rem; }
     .parcours-notice-action { margin-top: 14px; }
+    .acc-bas .parcours-imprimer { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 9px 18px; border: 2px solid #c5d9e6; border-radius: 999px; background: #fff; box-shadow: 0 2px 0 #c3d8e5; color: var(--blue); font-size: .98rem; font-weight: 900; text-decoration: none; }
+    .acc-bas .parcours-imprimer svg { flex: none; }
+    .acc-bas .saut { flex: 0 0 100%; height: 0; }
     .launch-hint { margin: 0; color: var(--muted); font-size: .9rem; }
     /* Lot E2 (question E2 · 1) : le format de l'épreuve, au-dessus du chrono. */
     .launch-format { display: grid; gap: 6px; margin: 0 0 10px; color: var(--ink); font-size: .95rem; font-weight: 700; line-height: 1.35; }
@@ -758,6 +794,13 @@
     /* Lot 3 : le passage d'un rang, sous la fête du moment (ou seul). */
     .result-fete-rang { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 10px 0 0; color: var(--ink); font-weight: 850; font-size: .95rem; }
     .result-fete-rang .rang { font-size: .86rem; padding: 4px 11px 4px 8px; }
+    /* Lot « Mon mélange sur l'accueil et l'expert » (planche 8) : la coupe
+       gagnée grossit, puis se pose en se dorant. */
+    .result-coupes { display: flex; justify-content: center; margin: 10px 0 2px; }
+    .result-coupes .mp-trophees { gap: 10px; }
+    .result-coupes .mp-trophees b { width: 40px; height: 40px; }
+    .result-coupes .mp-trophees b.is-nouvelle { animation: coupe-doree .8s ease-out .3s both; }
+    @keyframes coupe-doree { 0% { transform: scale(.7); color: #c3ced8; filter: none; } 55% { transform: scale(1.3); } 100% { transform: scale(1); } }
     /* Sur un échec, retenter est le geste naturel : « Rejouer » prend la place
        du bouton principal, « Ma table » reste à côté (Gwenaël, 11/09). */
     .result.is-rate .result-actions > #retry { order: -1; color: #fff; border: 0; background: var(--blue); box-shadow: 0 5px 0 #043f8c; }
@@ -829,8 +872,10 @@
        porte : sous la carte, les deux liens grisés sous « Après Mes calculs
        du jour » tant qu'il n'est pas joué. */
     #time.en-pause { opacity: .55; }
-    /* Les trois trophées de Mon mélange : trois petites coupes, grises, puis
-       dorées une fois gagnées. Aucun mot, aucun nombre. */
+    /* Les trois coupes de Mon mélange : grises, puis dorées une fois
+       gagnées. Aucun mot, aucun nombre. (Le mot « trophée » ne s'écrit plus
+       nulle part depuis le lot « Mon mélange sur l'accueil et l'expert » ;
+       il reste dans les noms du code.) */
     .mp-melange-droite > span:first-child { white-space: nowrap; }
     .mp-trophees { display: inline-flex; align-items: center; gap: 3px; flex: 0 0 auto; }
     .mp-trophees b { display: inline-flex; width: 26px; height: 26px; color: #c3ced8; }
@@ -840,10 +885,6 @@
     .mp-trophees b.is-gagne { color: #e0a800; filter: drop-shadow(0 1px 0 #a87b00); }
     .cell .jouer { display: block; width: 22px; height: 22px; margin: auto; fill: currentColor; }
     .mp-melange .cell { display: grid; place-items: center; color: #9db4c4; }
-    /* Le bouton « Je me teste sur mes 5 tables », proposé quand une table vient d'être passée. */
-    .defi-melange { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; margin: 10px 0 0; padding: 9px 12px; text-align: center; }
-    .defi-melange b { display: block; font-size: 1rem; }
-    .defi-melange small { display: block; margin-top: 1px; color: var(--muted); font-size: .8rem; font-weight: 800; }
     .seance-liens.est-fermee button { opacity: .42; filter: grayscale(1); cursor: default; }
     .seance-liens .porte-mot { flex: 0 0 100%; margin: 2px 0 0; color: var(--muted); font-size: .86rem; font-weight: 800; text-align: center; }
     /* Lot E1 (décision 8 du 03/10/2026) : sous la carte, « Je valide ma table »
@@ -852,6 +893,20 @@
     .seance-liens { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 18px; margin: 12px 0 -4px; }
     .seance-liens button { min-height: 44px; padding: 0 2px; border: 0; background: none; color: var(--blue); font: inherit; font-size: 1rem; font-weight: 850; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
     .seance-liens button.rond { display: inline-flex; align-items: center; justify-content: center; padding: 9px 18px; border: 2px solid #c5d9e6; border-radius: 999px; background: #fff; font-size: .98rem; font-weight: 900; text-decoration: none; }
+    /* Lot « Mon mélange sur l'accueil et l'expert » (planche 1) : « Je passe
+       le test » et Mon mélange côte à côte, de la même largeur, à partir de
+       360 px ; à 320 px, l'un sous l'autre. « Choisir une activité » passe
+       dessous, en gris. */
+    .seance-liens .saut { flex: 0 0 100%; height: 0; }
+    .seance-liens button.gris { min-height: 40px; color: #5b7286; font-size: .92rem; font-weight: 800; }
+    .seance-liens.deux { gap: 4px 10px; }
+    .seance-liens.deux button.rond { flex: 1 1 0; min-width: 0; max-width: 190px; padding: 9px 6px; white-space: nowrap; }
+    @media (max-width: 359px) { .seance-liens.deux button.rond { flex: 0 0 100%; } }
+    .seance-liens button.melange { gap: 6px; }
+    .seance-liens button.melange .coupe-a-gagner { display: inline-flex; flex: none; width: 20px; height: 20px; color: #d49b00; }
+    .seance-liens button.melange .coupe-a-gagner svg { display: block; width: 100%; height: 100%; }
+    .seance-liens button.melange .coupe-a-gagner .corps { fill: #fff3c4; stroke: currentColor; stroke-width: 1.5; stroke-linejoin: round; }
+    .seance-liens button.melange .coupe-a-gagner .anses { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
     /* « Choisir une activité » ouvert : « ← Ma séance du jour » à gauche (la
        grammaire du « ← Ma table » d'une activité), puis un petit titre. */
     .retour-seance { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin: 0 0 4px; padding: 9px 18px; border: 2px solid #c5d9e6; border-radius: 999px; background: #fff; color: var(--blue); font: inherit; font-size: .98rem; font-weight: 900; cursor: pointer; justify-self: start; }
@@ -868,6 +923,10 @@
     .seance-fil li.ok + li::before { background: var(--teal); }
     .seance-fil li.ici { border-color: var(--blue); background: var(--blue); color: #fff; box-shadow: 0 0 0 3px rgba(7, 85, 184, .18); }
     .seance-fil b { color: var(--ink); font-weight: 900; }
+    /* Lot « Mon mélange sur l'accueil et l'expert » : un nom d'étape long
+       (« Résultats, nombres manquants et divisions ») passe sur deux lignes ;
+       « Ma séance » et les ronds, eux, ne se coupent jamais. */
+    .seance-fil .fil-titre, .seance-fil ol { flex: none; white-space: nowrap; }
     .seance-fil.centre { justify-content: center; margin: 0 0 12px; }
     .result.en-seance .result-actions,
     .result.en-seance #result-parcours,
@@ -911,7 +970,7 @@
     /* « Tu connais déjà des tables ? » (lot 2) : le premier écran. */
     /* Le bas de l'accueil reste : « Comment ça marche ? », et, sans code,
        les deux portes des professeurs (Réglages libres, Évaluation CM1). */
-    .acc.en-decouverte #acc-changer, .acc.en-decouverte #acc-lire, .acc.en-decouverte #acc-fiche,
+    .acc.en-decouverte #acc-changer, .acc.en-decouverte #acc-lire,
     .acc.en-decouverte > :not(.matable):not(.acc-bas):not(#acc-notice) { display: none; }
     .acc.en-attente > * { visibility: hidden; }
     /* Lot « retours de classe » (06/10/2026, retour de Gwenaël : « il y a une
@@ -1228,6 +1287,11 @@
     @media (min-width: 1024px) and (max-height: 700px) {
       .panel { padding-top: 20px; padding-bottom: 20px; }
       .intro { margin-top: 4px; margin-bottom: 6px; }
+      /* Lot « Mon mélange sur l'accueil et l'expert » : « Imprimer ma fiche »
+         et « Comment ça marche ? » sur une ligne, pour que le cadre blanc de
+         Mon parcours tienne encore à 1024 × 600. */
+      .parcours-notice-action .saut { display: none; }
+      .acc-bas .parcours-imprimer { min-height: 36px; padding: 5px 14px; }
       /* Lot « un seul système » : le bloc de Mon mélange se resserre pour que
          le cadre blanc tienne encore à 1024 × 600. */
       .parcours-suite #parcours-melange { padding-top: 8px; padding-bottom: 8px; }
@@ -2430,7 +2494,8 @@
             </section>
             <section class="matable" aria-labelledby="acc-table-titre">
               <div class="matable-head">
-                <div><p id="acc-table-eyebrow" class="eyebrow">Ma table</p><h1 id="acc-table-titre" tabindex="-1">La table de 2</h1></div>
+                <div class="matable-titre"><p id="acc-table-eyebrow" class="eyebrow">Ma table</p><h1 id="acc-table-titre" tabindex="-1">La table de 2</h1></div>
+                <button id="acc-lire" class="matable-lire" type="button" aria-controls="lire"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M3 5.5h7a2 2 0 0 1 2 2V20a2 2 0 0 0-2-1.5H3zM21 5.5h-7a2 2 0 0 0-2 2V20a2 2 0 0 1 2-1.5h7z" fill="#fff" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span>Lire la table de 2</span></button>
                 <div class="matable-droite">
                   <button id="acc-changer" class="matable-changer" type="button" aria-expanded="false" aria-controls="acc-choix">Changer de table</button>
                   <small id="acc-acquises">0 table passée sur 9</small>
@@ -2440,7 +2505,6 @@
               <p id="acc-choix-legende" class="choix-legende">Choisis ta table</p>
               <div id="acc-choix" class="matable-choix" role="group" aria-labelledby="acc-choix-legende" hidden></div>
               <div id="acc-etapes" class="etapes"></div>
-              <button id="acc-lire" class="matable-lire" type="button" aria-controls="lire"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M3 5.5h7a2 2 0 0 1 2 2V20a2 2 0 0 0-2-1.5H3zM21 5.5h-7a2 2 0 0 0-2 2V20a2 2 0 0 1 2-1.5h7z" fill="#fff" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span>Lire la table de 2</span></button>
             </section>
             <!-- Lot mémoire (12/09/2026) : « Mes calculs du jour ». Quand des
                  calculs sont dus, ce bloc passe EN TÊTE de l'accueil (order: -1)
@@ -2455,7 +2519,6 @@
               <button id="open-parcours" class="acc-lien" type="button" aria-controls="parcours"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5 9 4l6 2.5 6-2.5v13l-6 2.5-6-2.5-6 2.5z" fill="#e7f8f5" stroke="#087a71" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 4v13M15 6.5v13" stroke="#087a71" stroke-width="1.8"/><circle cx="12" cy="10" r="1.8" fill="#e0771a"/></svg><span>Mon parcours<small>tables, mélange, étoiles</small></span></button>
             </div>
             <div class="acc-bas">
-              <button id="acc-fiche" type="button" aria-controls="fiche">Voir ma fiche</button>
               <button id="acc-notice-bouton" type="button" aria-expanded="false" aria-controls="acc-notice">Comment ça marche&nbsp;?</button>
               <!-- Sans code (mathsgo.re) seulement : deux portes pour les
                    professeurs. Avec un code élève, body.mode-eleve les retire. -->
@@ -2621,7 +2684,13 @@
           <div id="parcours-expert" class="parcours-row parcours-extra"></div>
         </div>
         </div>
+        <!-- Lot « Mon mélange sur l'accueil et l'expert » (07/10/2026, planche 9,
+             proposition B choisie par Gwenaël) : « Voir ma fiche » quitte
+             l'accueil ; l'élève imprime sa fiche d'ici — elle montre ce que
+             montre Mon parcours. Le bouton ouvre l'écran « Ma fiche ». -->
         <div class="acc-bas parcours-notice-action">
+          <button id="parcours-fiche" class="parcours-imprimer" type="button" aria-controls="fiche"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M7 9V3.5h10V9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><rect x="3" y="9" width="18" height="8" rx="2" fill="#fff" stroke="currentColor" stroke-width="1.8"/><rect x="7" y="13.5" width="10" height="7" rx="1" fill="#fff" stroke="currentColor" stroke-width="1.8"/></svg><span>Imprimer ma fiche</span></button>
+          <span class="saut" aria-hidden="true"></span>
           <button id="parcours-notice-bouton" type="button" aria-expanded="false" aria-controls="parcours-notice">Comment ça marche&nbsp;?</button>
         </div>
         <div id="parcours-notice" class="notice" data-notice hidden></div>
@@ -2664,6 +2733,10 @@
         <div id="result-verdict" class="result-verdict">
           <span id="result-icon" class="hero-icon" aria-hidden="true">✓</span>
           <h1 id="result-title" tabindex="-1">Résultat</h1>
+          <!-- Lot « Mon mélange sur l'accueil et l'expert » (07/10/2026,
+               planche 8, décision de Gwenaël) : la coupe que ce mélange vient
+               de gagner — les trois coupes sous le titre, la nouvelle dorée. -->
+          <p id="result-coupes" class="result-coupes" hidden></p>
           <p id="result-score" class="result-score"></p>
           <p id="result-config" class="result-config"></p>
           <p id="result-detail"></p>
@@ -2716,7 +2789,7 @@
 
       <div id="fiche" class="fiche-screen" hidden>
         <div class="settings-toolbar">
-          <button id="fiche-back" class="settings-back" type="button" aria-label="Retour à Ma table"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="settings-back-label">Ma table</span></button>
+          <button id="fiche-back" class="settings-back" type="button" aria-label="Retour à Mon parcours"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="settings-back-label">Mon parcours</span></button>
           <h1 id="fiche-title" class="settings-heading" tabindex="-1">Ma fiche</h1>
         </div>
         <!-- R6 (13/09/2026) : le prénom demandé au moment d'imprimer, pour
@@ -2772,7 +2845,7 @@
     <div class="fiche-block fiche-melange">
       <strong>Mon mélange : mes tables passées</strong>
       <span id="fiche-melange-state" class="fiche-state"></span>
-      <p>Dès 2 tables passées, quand je veux : 20 questions en 1 min 30. Un trophée avec 3, 6, puis 9 tables.</p>
+      <p>Dès 2 tables passées, quand je veux : 20 questions en 1 min 30. Une coupe avec 3, 6, puis 9 tables.</p>
     </div>
     <div class="fiche-block fiche-expert">
       <strong>Je deviens expert : toutes les tables, de plus en plus vite</strong>
@@ -2808,7 +2881,7 @@
     <p><b>Ma table.</b> De marche en marche&nbsp;: les perles, la bande, dans l’ordre, dans le désordre, les nombres manquants et les divisions… jusqu’à «&nbsp;Je passe le test&nbsp;»&nbsp;: 20&nbsp;questions en 1&nbsp;min&nbsp;30, 2&nbsp;erreurs au plus.</p>
     <p><b>Ma rangée.</b> En gris quand je l’ai construite, puis les couleurs de Mes calculs&nbsp;: rouge&nbsp;à&nbsp;revoir, bleu&nbsp;en&nbsp;route, vert&nbsp;su.</p>
     <p><b>Mes calculs du jour.</b> D’abord, chaque jour&nbsp;: 10&nbsp;calculs de mes tables passées, en 1&nbsp;minute. Réussi, un calcul revient plus tard. Raté, il revient demain.</p>
-    <p><b>Mon mélange.</b> Dès 2&nbsp;tables passées, quand je veux&nbsp;: 20&nbsp;questions en 1&nbsp;min&nbsp;30. Un trophée avec 3, 6, puis 9&nbsp;tables.</p>
+    <p><b>Mon mélange.</b> Dès 2&nbsp;tables passées, quand je veux&nbsp;: 20&nbsp;questions en 1&nbsp;min&nbsp;30. Une coupe avec 3, 6, puis 9&nbsp;tables.</p>
     <p><b>Les étoiles et mon rang.</b> Mes 9&nbsp;tables passées&nbsp;: toutes les tables, de plus en plus vite. Bronze… Légende&nbsp;: on ne redescend jamais.</p>
   </template>
   <footer class="site-footer">
@@ -2820,7 +2893,7 @@
   </footer>
 
   <script src="./defi_tables_core.js?v=20261005-1"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20261006-1"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20261007-1"></script>
   <script>
     (() => {
       "use strict";
@@ -5755,7 +5828,7 @@
         const tempsEcoule = config.duration !== null && remaining > 0;
         const fete = feteDuResultat(suivi.evenements);
         const principal = suivi.evenements.find(evenement => typeof evenement.reussi === "boolean");
-        const verdict = {icone: "✓", titre: "", score: "", config: configurationLabel(config), detail: "", classe: "", champion: false, rang: null};
+        const verdict = {icone: "✓", titre: "", score: "", config: configurationLabel(config), detail: "", classe: "", champion: false, rang: null, coupe: null};
         const sur = (score, total) => `${score} sur ${total}`;
         if (config.mode === "learn") {
           // Audit 1 (30/09/2026) : le titre dit l'activité qui vient de finir,
@@ -5801,6 +5874,8 @@
             verdict.icone = "🎉";
             verdict.titre = melange.tables.length === PARCOURS_TABLES.length ? "Mélange des 9 tables réussi !" : "Mélange réussi !";
             verdict.score = `${sur(score, total)} · ${formatElapsed(elapsed)}`;
+            // La coupe que ce mélange fait gagner (3, 6 ou 9), ou rien.
+            verdict.coupe = melange.trophee || null;
           } else if (rangMonte) {
             verdict.icone = "🏅";
             verdict.titre = "Nouveau rang !";
@@ -5911,6 +5986,16 @@
         rang.replaceChildren();
         rang.hidden = verdict.rang === null;
         if (verdict.rang !== null) rang.append(document.createTextNode("Tu passes "), badgeRang(PARCOURS.rang(verdict.rang)));
+        // La coupe gagnée : les trois coupes, la nouvelle dorée (elle se dore
+        // à l'écran). Un mélange réussi qui ne gagne rien n'en montre aucune.
+        const coupes = $("result-coupes");
+        coupes.replaceChildren();
+        coupes.hidden = !verdict.coupe;
+        if (verdict.coupe) {
+          const zone = tropheesDuMelange(PARCOURS.etatAffichage(parcours).melange.trophees);
+          zone.querySelector(`[data-tables="${verdict.coupe}"]`)?.classList.add("is-nouvelle");
+          coupes.append(zone);
+        }
       }
 
       function updateTimer() {
@@ -7217,7 +7302,7 @@
         return `${tables} · 20\u00a0questions · 1\u00a0min\u00a030`;
       }
 
-      // Les trois trophées de Mon mélange (idée de Gwenaël, 05/10/2026) : le
+      // Les trois coupes de Mon mélange (idée de Gwenaël, 05/10/2026) : le
       // réussir avec au moins 3, 6, puis ses 9 tables. Trois petites coupes,
       // grises, qui se dorent une à une — sans un mot, sans un nombre (sa
       // demande). Rien ne se ferme et rien ne s'ouvre avec elles : c'est ce
@@ -7249,7 +7334,8 @@
         });
         const gagnes = trophees.filter(trophee => trophee.gagne).map(trophee => trophee.tables);
         zone.setAttribute("role", "img");
-        zone.setAttribute("aria-label", `Trophées de Mon mélange (avec 3, 6 et 9 tables) : ${gagnes.length ? `gagné avec ${gagnes.join(" et ")} tables` : "aucun pour l’instant"}`);
+        const liste = gagnes.length > 1 ? `${gagnes.slice(0, -1).join(", ")} et ${gagnes[gagnes.length - 1]}` : String(gagnes[0]);
+        zone.setAttribute("aria-label", `Coupes de Mon mélange (avec 3, 6 et 9 tables) : ${gagnes.length ? `${gagnes.length > 1 ? "gagnées" : "gagnée"} avec ${liste} tables` : "aucune pour l’instant"}`);
         return zone;
       }
 
@@ -7265,25 +7351,6 @@
         path.setAttribute("d", "M7.5 5.2v13.6a.9.9 0 0 0 1.36.77l11.3-6.8a.9.9 0 0 0 0-1.54L8.86 4.43A.9.9 0 0 0 7.5 5.2Z");
         svg.append(path);
         return svg;
-      }
-
-      // Une table vient d'être passée (il y en a au moins deux) : le moment
-      // où Mon mélange a du sens. Un bouton le propose — rien d'obligatoire.
-      function boutonMelange() {
-        const etat = PARCOURS.etatAffichage(parcours);
-        if (!etat.melange.visible || etat.porte) return null;
-        // … seulement quand il y a un trophée à gagner maintenant.
-        if (!etat.melange.trophees.some(trophee => trophee.aGagner)) return null;
-        const bouton = document.createElement("button");
-        bouton.type = "button";
-        bouton.className = "secondary defi-melange";
-        const titre = document.createElement("b");
-        titre.textContent = `Je me teste sur mes ${etat.melange.tables.length}\u00a0tables`;
-        const detail = document.createElement("small");
-        detail.textContent = "Mon mélange · un\u00a0trophée à\u00a0gagner";
-        bouton.append(titre, detail);
-        bouton.addEventListener("click", () => launchFromParcours(PARCOURS.configMelange(parcours), "menu"));
-        return bouton;
       }
 
       // Le bloc « Je deviens expert » : l'escalier des étoiles (gagnées dorées,
@@ -7549,6 +7616,7 @@
         // rien à dire.
         renderJours({...etat.jours, demain: agenda.dus ? 0 : etat.jours.demain});
         renderSemaine(etat);
+        renderCoupesDeLaTuile(etat);
         // Audit 4 : un choix déplié prend la place des autres étapes (CSS,
         // ordinateur seulement) — seulement s'il est vraiment affiché (les 9
         // tables acquises replient le bloc : pas d'étapes, rien à cacher).
@@ -7987,8 +8055,9 @@
           phrase.append(document.createTextNode("."));
           cadre.append(phrase);
         }
-        const defi = boutonMelange();
-        if (defi) cadre.append(defi);
+        // Lot « Mon mélange sur l'accueil et l'expert » (décision de Gwenaël) :
+        // plus de bouton qui propose Mon mélange ici — il attend l'élève sur
+        // l'accueil, à côté de « Je passe le test ».
         return cadre;
       }
 
@@ -8069,7 +8138,7 @@
           const nom = document.createElement("span");
           nom.textContent = etape.nom;
           const detail = etape.type === "revision" ? soude(`${pluriel(etape.calculs, "calcul")} · ${dureeCourte(etape.duree)}`)
-            : etape.type === "etoile" ? etape.detail
+            : etape.type === "etoile" || etape.type === "melange" ? etape.detail
             : etape.conditionnelle ? CONDITION_DU_TEST : "";
           if (detail) {
             const petit = document.createElement("small");
@@ -8131,6 +8200,45 @@
         return carte;
       }
 
+      // Lot « Mon mélange sur l'accueil et l'expert » (07/10/2026, planche 1,
+      // décision de Gwenaël) : Mon mélange, à droite de « Je passe le test »,
+      // de la même forme et de la même largeur, avec une petite coupe en
+      // contour doré — seulement quand une coupe est à gagner. La porte
+      // fermée, il est là, grisé avec les autres. Il reste aussi dans Mon
+      // parcours et dans « Choisir une activité ». (Il remplace le bouton qui
+      // le proposait au bilan d'une table passée.)
+      function boutonMelangeAccueil(etat) {
+        if (!etat.melange.visible || !etat.melange.trophees.some(trophee => trophee.aGagner)) return null;
+        const bouton = document.createElement("button");
+        bouton.type = "button";
+        bouton.id = "acc-melange";
+        bouton.className = "rond melange";
+        bouton.textContent = "Mon mélange";
+        const pictogramme = document.createElement("b");
+        pictogramme.className = "coupe-a-gagner";
+        pictogramme.append(coupe());
+        bouton.append(pictogramme);
+        bouton.setAttribute("aria-label", `Mon mélange : mes ${etat.melange.tables.length} tables, une coupe à gagner`);
+        bouton.addEventListener("click", () => launchFromParcours(PARCOURS.configMelange(parcours), "menu"));
+        return bouton;
+      }
+
+      // Lot « Mon mélange sur l'accueil et l'expert » (planche 2, proposition
+      // A choisie par Gwenaël) : les trois coupes de Mon mélange dans la tuile
+      // Mon parcours, en bas de l'accueil (aussi pour l'élève aux 9 tables) —
+      // grises, elles se dorent ; aucun mot. Dès que Mon mélange existe (2
+      // tables passées), comme dans Mon parcours.
+      function renderCoupesDeLaTuile(etat) {
+        const tuile = $("open-parcours");
+        tuile.querySelector(".acc-coupes")?.remove();
+        tuile.classList.toggle("avec-coupes", etat.melange.visible);
+        if (!etat.melange.visible) return;
+        const coupes = document.createElement("span");
+        coupes.className = "acc-coupes";
+        coupes.append(tropheesDuMelange(etat.melange.trophees));
+        tuile.append(coupes);
+      }
+
       // L'accueil : la rangée, puis la carte de la séance et ses
       // liens — ou, « Choisir une activité » ouvert, le menu d'avant.
       function renderSeanceAccueil(etapes, etat, table, ligne) {
@@ -8176,15 +8284,25 @@
         if (!ligne.acquise) {
           lien(NOM_DU_TEST, () => launchFromParcours(PARCOURS.configValidation(table), "menu"), "rond");
         }
+        // Mon mélange, à droite de « Je passe le test », quand une coupe est à gagner.
+        const melange = boutonMelangeAccueil(etat);
+        if (melange) {
+          liens.append(melange);
+          liens.classList.add("deux");
+        }
+        // « Choisir une activité », en gris, toujours sur sa ligne, dessous.
+        const saut = document.createElement("span");
+        saut.className = "saut";
+        liens.append(saut);
         lien("Choisir une activité", () => {
           state.choisirActivite = true;
           renderAccueil();
           document.querySelector("#acc-etapes .etape")?.focus?.({preventScroll: true});
-        });
+        }, "gris");
         etapes.append(liens);
         // La porte (lot « un seul système », version A choisie par Gwenaël) :
-        // tant que Mes calculs du jour n'est pas joué, les deux liens sont
-        // grisés sous « Après Mes calculs du jour ». Une fois joué — quel que
+        // tant que Mes calculs du jour n'est pas joué, les liens (et Mon
+        // mélange) sont grisés sous « Après Mes calculs du jour ». Une fois joué — quel que
         // soit le score — tout s'ouvre.
         if (etat.porte) {
           liens.classList.add("est-fermee");
@@ -8686,8 +8804,8 @@
           if (trouve("toutes-acquises")) return "Tes 9 tables sont passées : l’escalier des étoiles est ouvert !";
           return suivante ? `On continue avec la table de ${suivante}.` : "";
         }
-        // Mon mélange, libre : réussi, il n'ouvre rien — il rapporte un trophée.
-        if (fete.melange) return fete.melange.trophee ? `Tu gagnes le trophée des ${fete.melange.trophee} tables\u00a0!` : "";
+        // Mon mélange, libre : réussi, il n'ouvre rien — il rapporte une coupe.
+        if (fete.melange) return fete.melange.trophee ? `Tu gagnes la coupe des ${fete.melange.trophee} tables\u00a0!` : "";
         if (fete.etoile) return fete.etoile.couronne ? "" : `Tente ${PARCOURS.symboleEtoile(fete.etoile.etoile + 1)} en ${PARCOURS.libelleDuree(PARCOURS.dureeEtoile(fete.etoile.etoile + 1))}.`;
         const validation = trouve("validation");
         const preparation = trouve("preparation");
@@ -8744,10 +8862,6 @@
         etiquette.textContent = "Et maintenant\u00a0:";
         line.append(etiquette, document.createTextNode(` ${soude(texte)}`));
         zone.append(line);
-        // Une table vient d'être passée, hors séance : Mon mélange est proposé.
-        const fete = feteDuResultat(suivi.evenements);
-        const defi = fete.validation && !enSeance() && state.origin !== "decouverte" ? boutonMelange() : null;
-        if (defi) zone.append(defi);
         zone.hidden = false;
         // Le bouton « Ma table » ramène à l'accueil, qui surligne l'étape.
       }
@@ -9023,7 +9137,9 @@
         show("lire");
       }
 
-      // R5 (Q7) : « Voir ma fiche » depuis le bas de l'accueil — le seul chemin.
+      // R5 (Q7) : l'écran « Ma fiche ». Lot « Mon mélange sur l'accueil et
+      // l'expert » : on y vient de Mon parcours (« Imprimer ma fiche »), et la
+      // flèche y ramène.
       function openFiche() {
         configuration.mode = null;
         configuration.tables = new Set();
@@ -9082,10 +9198,10 @@
         renderCalculs();
       });
       $("acc-reviser").addEventListener("click", () => startRevision(null, "menu"));
-      $("acc-fiche").addEventListener("click", openFiche);
+      $("parcours-fiche").addEventListener("click", openFiche);
       $("acc-lire").addEventListener("click", openLire);
       $("lire-back").addEventListener("click", backToModes);
-      $("fiche-back").addEventListener("click", backToModes);
+      $("fiche-back").addEventListener("click", openParcours);
       $("fiche-imprimer").addEventListener("click", printFiche);
       $("fiche-prenom-form").addEventListener("submit", event => {
         event.preventDefault();

@@ -54,6 +54,7 @@ _serveur/
     index.php          page d'accueil des élèves : un code, les applis de sa classe
     prof/index.php     page « Ma classe » : classes, codes, tableau, impression, Mon compte
     prof/defi_tables_mon_parcours.js  COPIE du moteur de l'appli (voir « Le moteur »)
+    prof/splat-parcours.js  COPIE du moteur de SPLAT! (voir « Le moteur »)
     api/parcours.php   API élève : lire/écrire la progression par code
     api/eleve.php      API élève : prénom, classe et applis à partir du code
     api/prof.php       API prof : connexion, classes, élèves, tableau
@@ -123,6 +124,16 @@ _serveur/public/prof/`) et le met dans son dossier à déposer par FTP.** Pas de
 `?v=` à penser pour cette copie : la page calcule la version dans l'adresse à
 partir de l'empreinte du fichier, un nouveau dépôt n'est jamais masqué par le
 cache.
+
+Même règle, depuis le lot « splat-suivi-3 » (07/10/2026), pour le moteur de
+SPLAT! : `_serveur/public/prof/splat-parcours.js` est la copie octet pour octet
+de `assets/js/splat-parcours.js` (même test). La tuile SPLAT! de l'espace élève
+le charge pour dessiner les mondes ; « Ma classe » le chargera pour son
+tableau. **Tout lot qui touche `assets/js/splat-parcours.js` recopie le fichier
+(`cp assets/js/splat-parcours.js _serveur/public/prof/`) et le met dans son
+dossier à déposer.** Le moteur porte la carte des mondes réduite (numéro et
+monde de chaque étape, sans les titres) : retoucher un titre dans
+`assets/js/splat-etapes.js` ne demande aucun dépôt ici.
 
 ### Chacun ses classes
 
