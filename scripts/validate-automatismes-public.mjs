@@ -35,7 +35,8 @@ vm.runInContext(manifest,context,{filename:'auto/scripts/00-module-manifest.js'}
 vm.runInContext(modules,context,{filename:'auto/scripts/01-modules.js'});
 const domains=vm.runInContext('[...new Set(RAW_MODULES.map(module=>module.domain))].sort()',context);
 assert.deepEqual([...domains],['algorithm','data','geometry','numbers'],'Les quatre domaines d’automatismes ne sont pas tous disponibles au démarrage.');
-assert.equal(vm.runInContext('RAW_MODULES.length',context),43,'Le catalogue public doit contenir 43 automatismes.');
+// 42 depuis le 08/10/2026 : dnb_26b (trigonométrie avec calculatrice) est sorti des séries.
+assert.equal(vm.runInContext('RAW_MODULES.length',context),42,'Le catalogue public doit contenir 42 automatismes.');
 assert.match(slideshow,/divisibility_rules:\{title:'Critères de divisibilité'/,'Le catalogue des cours doit raccorder les critères de divisibilité.');
 for(const binding of ['integer_squares:courseCatalog.squares','solid_recognition:courseCatalog.solids','area:courseCatalog.area_formulas','volume:courseCatalog.volume_formulas']){
   assert.ok(slideshow.includes(binding),`Le cours ${binding.split(':')[0]} n’est pas raccordé au catalogue.`);

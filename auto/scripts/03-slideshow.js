@@ -1320,6 +1320,7 @@ function coursePythagorasLibraryVisual(kind){
  if(kind==='leg') data={step:'isolate',target:'legA',values:{legA:5,legB:12,hypotenuse:13},sideNames:{legA:'a',legB:'b',hypotenuse:'h'}};
  return component.render(data,correction).replace('class="','class="course-visual ');
 }
+function courseCosineVisual(){return '<svg class="course-visual course-cosine-visual" viewBox="0 0 380 205" role="img" aria-label="Triangle DEF rectangle en E : hypoténuse [DF], côté adjacent à l’angle D [DE], côté opposé [EF]"><polygon points="44,168 300,168 300,40" fill="#f2f7fd" stroke="#17384d" stroke-width="3" stroke-linejoin="round"/><line x1="44" y1="168" x2="300" y2="40" stroke="#7a3db8" stroke-width="6" stroke-linecap="round"/><line x1="44" y1="168" x2="300" y2="168" stroke="#0a6fc2" stroke-width="6" stroke-linecap="round"/><path d="M286 168V154H300" fill="none" stroke="#17384d" stroke-width="2.4"/><path d="M80 168A36 36 0 0 0 76.2 152" fill="none" stroke="#d35400" stroke-width="3.2"/><g font-family="Arial,Helvetica,sans-serif" font-weight="700" paint-order="stroke" stroke="#fff" stroke-width="5" stroke-linejoin="round" text-anchor="middle"><text x="28" y="176" font-size="22" font-style="italic" fill="#17384d">D</text><text x="316" y="184" font-size="22" font-style="italic" fill="#17384d">E</text><text x="316" y="38" font-size="22" font-style="italic" fill="#17384d">F</text><text x="140" y="80" font-size="18" fill="#7a3db8">hypoténuse</text><text x="172" y="194" font-size="18" fill="#0a6fc2">adjacent à D</text><text x="344" y="110" font-size="18" fill="#b23a48">opposé</text></g></svg>';}
 function courseTrigVisual(){return '<svg class="course-visual course-trig-visual" viewBox="0 0 470 235" role="img" aria-label="Triangle ABC rectangle en B avec les côtés repérés par rapport à l’angle A"><polygon points="42,194 318,194 318,42" fill="#eef6ff" stroke="#17384d" stroke-width="3"/><path d="M318 174H298V194" fill="none" stroke="#e86100" stroke-width="4"/><path d="M82 194A40 40 0 0 0 77 173" fill="none" stroke="#e86100" stroke-width="4"/><text x="22" y="216" font-size="22" font-style="italic">A</text><text x="326" y="216" font-size="22" font-style="italic">B</text><text x="326" y="40" font-size="22" font-style="italic">C</text><text x="178" y="222" text-anchor="middle" fill="#0879d0" font-size="17" font-weight="900">côté adjacent</text><text x="360" y="120" text-anchor="middle" fill="#b23a48" font-size="17" font-weight="900">côté opposé</text><text x="178" y="102" text-anchor="middle" fill="#7651b5" font-size="17" font-weight="900" transform="rotate(-29 178 102)">hypoténuse</text><text x="410" y="70" text-anchor="middle" fill="#17384d" font-size="17" font-weight="900">par rapport</text><text x="410" y="94" text-anchor="middle" fill="#17384d" font-size="17" font-weight="900">à l’angle Â</text></svg>';}
 function courseConversionVisual(kind){
  if(kind==='duration') return '<div class="duration-course-discs" role="img" aria-label="Équivalences entre heures, minutes et secondes"><span class="duration-equivalence-pair"><span class="duration-disc duration-disc-hour">1 h</span><b>=</b><span class="duration-disc duration-disc-minute">60 min</span></span><span class="duration-equivalence-pair"><span class="duration-disc duration-disc-minute">1 min</span><b>=</b><span class="duration-disc duration-disc-second">60 s</span></span></div>';
@@ -1707,13 +1708,20 @@ function conversionCourse(context){
 }
 function trigonometryCourse(context,calculator=false){
  const visual=courseTrigVisual();
- if(!calculator) return {title:'Trigonométrie sans calculatrice',rules:[
-   ['Condition','On utilise ces rapports dans un <strong>triangle rectangle</strong><br>Commence toujours par repérer l’angle droit et l’angle étudié.'+visual],
-   ['Nommer les côtés','L’hypoténuse est opposée à l’angle droit. Par rapport à l’angle étudié, l’autre côté qui touche l’angle est adjacent ; celui d’en face est opposé.'],
-   ['Les trois rapports','<span class="course-equation">cos(Â) = '+courseFraction('adjacent','hypoténuse')+'</span> · <span class="course-equation">sin(Â) = '+courseFraction('opposé','hypoténuse')+'</span> · <span class="course-equation">tan(Â) = '+courseFraction('opposé','adjacent')+'</span>.'],
-   ['Pourquoi ces rapports fonctionnent','Des triangles rectangles qui ont le même angle aigu sont semblables : leurs dimensions changent, mais les rapports entre côtés correspondants restent identiques.'],
-   ['Choisir la méthode','Deux côtés connus et un troisième côté cherché : Pythagore. Un angle aigu et un côté connus : trigonométrie. Deux côtés pour chercher un angle : trigonométrie inverse. Trois côtés pour vérifier l’angle droit : réciproque de Pythagore. Sans angle droit ni données suffisantes : aucune de ces méthodes directement.']
- ]};
+ // dnb_26 (refonte du 08/10/2026) : le cosinus seul, comme au brevet ; quatre
+ // cartes courtes (les côtés, le cosinus, une longueur, je contrôle) qui tiennent
+ // au téléphone et à l’ordinateur 1366 × 625. Couleurs : hypoténuse violette,
+ // adjacent bleu (les mêmes qu’à la correction).
+ if(!calculator){
+   const hypW='<b style="color:#7a3db8">hypoténuse</b>',adjW='<b style="color:#0a6fc2">adjacent</b>';
+   const hat=name=>'<span class="widehat">'+name+'</span>',nw=html=>'<span style="white-space:nowrap">'+html+'</span>';
+   return {title:'Cosinus d’un angle aigu',rules:[
+     ['Les côtés',courseCosineVisual()+'<div>L’'+hypW+' est en face de l’angle droit. Le côté '+adjW+' touche le sommet de l’angle&nbsp;: dans '+hat('EDF')+', c’est D, la lettre du milieu.</div>'],
+     ['Le cosinus','<div>Dans un triangle rectangle, pour un angle aigu&nbsp;:</div><div style="margin-top:6px;font-size:1.15em;font-weight:900">cos = '+courseFraction(adjW,hypW)+'</div><span class="course-example">DE = 6&nbsp;cm et DF = 10&nbsp;cm<br>'+nw('cos('+hat('EDF')+') = '+courseFraction('DE','DF')+' = '+courseFraction(6,10)+' = '+courseFraction(3,5))+'</span>'],
+     ['Une longueur','<span class="course-example" style="margin-top:0">'+nw('cos(60°) = '+courseFraction('AB',5))+'<br>'+nw('AB = 5 × cos(60°)')+'</span><div style="margin-top:6px">Longueur cherchée en haut&nbsp;: on <b>multiplie</b>.<br>En bas&nbsp;: on <b>divise</b>.</div>'],
+     ['Je contrôle','<div>Un cosinus est toujours plus petit que 1.<br>L’hypoténuse est le plus long côté.<br>Pas d’angle droit&nbsp;: pas de cosinus.</div>']
+   ]};
+ }
  return {title:'Trigonométrie avec calculatrice',rules:[
    ['1. Choisir le rapport','Repère les deux côtés utiles, puis choisis sinus, cosinus ou tangente. Écris d’abord l’égalité avec les noms des côtés.'+visual],
    ['2. Chercher une longueur','Les six cas sont possibles : adjacent ou hypoténuse avec le cosinus ; opposé ou hypoténuse avec le sinus ; opposé ou adjacent avec la tangente.<span class="course-example">Exemple : <span class="course-equation">cos(40°) = '+courseFraction('AB','12')+'</span>, donc <span class="course-equation">AB = 12 × cos(40°)</span>. Si la longueur cherchée est au dénominateur, on divise.</span>'],

@@ -5126,7 +5126,7 @@ const MODULE_MENU_GROUPS={
     {id:'reperage',title:'Repérage',moduleIds:['dnb_15']},
     {id:'transformations',title:'Transformations',moduleIds:['dnb_27']},
     {id:'angles-triangles',title:'Angles et triangles',moduleIds:['dnb_16','dnb_17','dnb_18']},
-    {id:'theoremes-trigonometrie',title:'Pythagore, Thalès et trigonométrie',moduleIds:['dnb_24','dnb_25','dnb_26','dnb_26b']},
+    {id:'theoremes-trigonometrie',title:'Pythagore, Thalès et trigonométrie',moduleIds:['dnb_24','dnb_25','dnb_26']},
     {id:'manipuler-telephone',title:'Manipuler sur téléphone',moduleIds:['dnb_24b']},
     {id:'mesures',title:'Conversions, aires et périmètres',moduleIds:['dnb_19','dnb_21','dnb_22']},
     {id:'espace',title:'Espace, solides et patrons',moduleIds:['dnb_20','dnb_23']}

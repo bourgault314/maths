@@ -37,8 +37,10 @@ const MATHSGO_MODULE_MANIFEST=Object.freeze([
   {id:'dnb_24',title:'Théorème de Pythagore : égalité et situations',level_tags:['4e','3e','DNB'],domain:'geometry',globalName:'MODULE_DNB_24',file:'scripts/modules/geometry/dnb_24.js'},
   {id:'dnb_24b',title:'Pythagore — manipuler sur téléphone',level_tags:['4e','3e','DNB'],domain:'geometry',globalName:'MODULE_DNB_24_TACTILE',file:'scripts/modules/geometry/dnb_24b.js',interactive_only:true},
   {id:'dnb_25',title:'Théorème de Thalès : triangles emboîtés',level_tags:['3e','DNB'],domain:'geometry',globalName:'MODULE_DNB_25',file:'scripts/modules/geometry/dnb_25.js'},
-  {id:'dnb_26',title:'Trigonométrie sans calculatrice',level_tags:['3e','DNB'],domain:'geometry',globalName:'MODULE_DNB_26',file:'scripts/modules/geometry/dnb_26.js'},
-  {id:'dnb_26b',title:'Trigonométrie avec calculatrice',level_tags:['3e'],domain:'geometry',globalName:'MODULE_DNB_26B',file:'scripts/modules/geometry/dnb_26b.js'},
+  {id:'dnb_26',title:'Trigonométrie sans calculatrice',level_tags:['4e','3e','DNB'],domain:'geometry',globalName:'MODULE_DNB_26',file:'scripts/modules/geometry/dnb_26.js',runtimeFiles:['scripts/modules/geometry/dnb_26/generate.js','scripts/modules/geometry/dnb_26/selection.js','scripts/modules/geometry/dnb_26/render.js']},
+  // dnb_26b (trigonométrie avec calculatrice) est sorti des séries le 08/10/2026 :
+  // la partie 1 du brevet se fait sans calculatrice. Ses fichiers restent dans le
+  // dépôt ; ses figures servent au type 14 de dnb_26 (« quel calcul donne AB ? »).
   {id:'dnb_27',title:'Symétries axiale, centrale et translation',level_tags:['4e','3e','DNB'],domain:'geometry',globalName:'MODULE_DNB_27',file:'scripts/modules/geometry/dnb_27.js'},
   {id:'dnb_28',title:'Probabilités — équiprobabilité',level_tags:['4e','3e','DNB'],domain:'data',globalName:'MODULE_DNB_28',file:'scripts/modules/data/dnb_28.js',runtimeFiles:['scripts/modules/data/dnb_28/generate.js','scripts/modules/data/dnb_28/selection.js','scripts/modules/data/dnb_28/render.js']},
   {id:'dnb_29',title:'Fréquences simples',level_tags:['4e','3e','DNB'],domain:'data',globalName:'MODULE_DNB_29',file:'scripts/modules/data/dnb_29.js'},
