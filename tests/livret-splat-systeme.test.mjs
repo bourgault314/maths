@@ -125,7 +125,7 @@ test("Système : QR des fiches ?f=25…28, 25d…28d et des séries ?s=7…12 pa
     assert.equal(r.get("totalMax"), "60", `série ${s} : les totaux des fiches`);
   }
   assert.ok(existe(`${SRC}qr/univers.png`));
-  assert.match(render, /^SERIE_CARTES = 8$/m);
+  assert.match(render, /^SERIE_CARTES = 4$/m);
   // la page courte, exécutée : fiches, fiches bonus, séries ; hors bornes, la carte des mondes
   const courte = lire("splat/systeme/livret/index.html");
   const cible = (search) => {
@@ -137,7 +137,7 @@ test("Système : QR des fiches ?f=25…28, 25d…28d et des séries ?s=7…12 pa
   };
   for (const [s, q] of Object.entries(SERIES)) {
     const c = cible(`?s=${s}`);
-    assert.equal(c, `/splat/classique/?${q}&cards=8&unknown=question&eleve=1`, `?s=${s}`);
+    assert.equal(c, `/splat/classique/?${q}&cards=4&unknown=question&eleve=1`, `?s=${s}`);
     assert.ok(courte.includes(`href="${c.replace(/&/g, "&amp;")}"`), `lien de repli de la série ${s}`);
   }
   SYS_FICHES.forEach((f, i) => assert.equal(cible(`?f=${25 + i}`), `/splat/classique/?${f.q}&cards=4&unknown=question&eleve=1&parcours=sys${25 + i}`));
@@ -350,7 +350,7 @@ test("page des livrets : l'onglet du monde 4 — le livret et son deuxième tour
     assert.ok(taille(webp) < taille(png), `${nom} : la WebP est plus légère`);
     const b = readFileSync(new URL(`../${png}`, import.meta.url));
     assert.deepEqual([b.readUInt32BE(16), b.readUInt32BE(20)], [1404, 993], `${nom} : page 1 en largeur, rendue à 120 dpi`);
-    assert.ok(d.includes(`/assets/img/thumbnails/splat/${nom}.png?v=3"`), `${nom} : sur la page`);
+    assert.ok(d.includes(`/assets/img/thumbnails/splat/${nom}.png?v=4"`), `${nom} : sur la page (?v=4 : couvertures du 08/10/2026, le nom des taches en noir pur)`);
   });
   assert.match(page, /\[data-m="4"\]\{--c:#92400e;/);
   assert.match(page, /\.liv \.couv\.paysage\{max-width:280px\}/);

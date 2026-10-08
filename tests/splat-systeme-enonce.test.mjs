@@ -268,8 +268,10 @@ test("écran et impression passent par drawSysPlateaux ; aucun tirage au sort da
   // le nom de la couleur sur chaque tache, par la fonction de l'Enquête, à 0,36 r
   const dessin = fn("drawSysPlateaux");
   // lot S3 : les petits plateaux de la correction abaissent le plancher (opts.nomMin) ; l'énoncé garde 26
-  assert.match(dessin, /drawInvestigateSplatName\(gp, s, 0, nomCarte, devoile, \{ mkEl, mkText, fs: clamp\(Math\.round\(s\.r \* SYS_TACHE\.nom\), opts\.nomMin \|\| 26, 60\) \}\);/);
-  assert.match(fn("drawInvestigateSplatName"), /const fs = Number\(api\.fs\) > 0 \? Number\(api\.fs\) : clamp\(Math\.round\(s\.r \* 0\.30\), 26, 60\);/);
+  assert.match(dessin, /drawInvestigateSplatName\(gp, s, 0, nomCarte, devoile, \{ mkEl, mkText, isPrint, fs: clamp\(Math\.round\(s\.r \* SYS_TACHE\.nom\), opts\.nomMin \|\| 26, 60\) \}\);/);
+  assert.match(fn("drawInvestigateSplatName"), /const fs0 = Number\(api\.fs\) > 0 \? Number\(api\.fs\) : clamp\(Math\.round\(s\.r \* 0\.30\), 26, 60\);/);
+  // sur le papier, la version « C » (lot du 08/10/2026, tests/splat-nom-taches-papier.test.mjs)
+  assert.match(fn("drawInvestigateSplatName"), /const fs = papier \? nomPapierCorps\(word, fs0, s\.r\) : fs0;/);
   // dévoilé : les couleurs pâles de l'Enquête et le jeton gris (contraste mesuré ≥ 10 : 1 à l'écran)
   assert.match(dessin, /fill: devoile \? \(isPrint \? info\.printReveal : info\.reveal\) : \(isPrint \? info\.print : info\.screen\)/);
   assert.match(dessin, /fill: isPrint \? "rgba\(0,0,0,0\.06\)" : "var\(--beadH-fill\)"/);

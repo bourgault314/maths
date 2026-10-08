@@ -6369,19 +6369,38 @@ function formatRelationNumber(n){
    pas la place à 3 taches). Blanc à fin liseré noir sur la tache couverte, comme
    « opposé » en B± ; une fois la tache dévoilée, le mot monte en haut de la tache et
    passe en noir, le nombre restant au centre. Dessin seulement : aucun tirage. */
+/* Sur le PAPIER (lot livrets Enquête + Système, 08/10/2026, version « C » de la feuille
+   d'essai) : l'imprimante tramait le liseré noir à 80 % par-dessus la trame de la couleur
+   (orange, verte, violette illisibles ; la noire parfaite). Le noir PUR est le seul ton posé
+   en plein, en couleur comme en noir et blanc : liseré #000000 épais (22 % du corps, joints
+   ronds), mot 15 % plus gros — mais jamais plus large que sa tache (1,62 rayon, liseré
+   compris, la règle des cases des barres) : « violette » garde alors sa taille d'avant.
+   L'écran, la projection et le mode élève ne changent pas. */
+const NOM_PAPIER = { agrandi:1.15, contour:0.22, largeur:1.62 };
+function nomPapierCorps(mot, fs, r){
+  let f = fs * NOM_PAPIER.agrandi;
+  const largeur = r * NOM_PAPIER.largeur;
+  while(f > 6 && sysLargeurTexte(mot, f, 900) + f * NOM_PAPIER.contour > largeur) f -= 0.5;
+  return Math.round(f * 10) / 10;
+}
+function nomPapierAttrs(fs){
+  return { fill:"#ffffff", stroke:"#000000", "stroke-width":String(Math.round(fs * NOM_PAPIER.contour * 10) / 10), "stroke-linejoin":"round" };
+}
 function drawInvestigateSplatName(target, s, idx, card, revealed, api = {}){
   const mkEl = api.mkEl || el;
   const mkText = api.mkText || text;
   const word = investigateColorWord(investigateColorInfo(card, idx));
   // api.fs : taille imposée (le Système, dont les taches sont plus petites, lot S2)
-  const fs = Number(api.fs) > 0 ? Number(api.fs) : clamp(Math.round(s.r * 0.30), 26, 60);
+  const fs0 = Number(api.fs) > 0 ? Number(api.fs) : clamp(Math.round(s.r * 0.30), 26, 60);
+  const papier = !!api.isPrint && !revealed;
+  const fs = papier ? nomPapierCorps(word, fs0, s.r) : fs0;
   // Tache dévoilée : le mot se pose juste au-dessus du jeton du centre, à
   // ENQUETE_NOM_ECART du bord du jeton (retouche du 22/09 : à la hauteur du mot
   // « opposé » de B±, il flottait trop haut dans la tache). Écran et impression
   // passent ici : le même écart partout.
   const beadR = Number(card && card._beadR) || 58;
   const y = revealed ? (s.cy - beadR - ENQUETE_NOM_ECART - fs * 0.34) : s.cy;
-  target.appendChild(mkText(s.cx, y, word, {
+  target.appendChild(mkText(s.cx, y, word, Object.assign({
     "text-anchor":"middle",
     "dominant-baseline":"middle",
     "font-size":String(fs),
@@ -6391,7 +6410,7 @@ function drawInvestigateSplatName(target, s, idx, card, revealed, api = {}){
     "stroke-width":(revealed ? "5" : String(Math.max(2, Math.round(fs * 0.09)))),
     "paint-order":"stroke fill",
     "aria-hidden":"true"
-  }));
+  }, papier ? nomPapierAttrs(fs) : {})));
 }
 function taskShortName(idx, card){
   if(card && (card.family === "C" || (card.family === "D" && card._sys))) return investigateColorInfo(card, idx).short;
@@ -10048,7 +10067,7 @@ function drawSysPlateaux(target, card, zone, opts = {}){
         fill: devoile ? (isPrint ? info.printReveal : info.reveal) : (isPrint ? info.print : info.screen),
         stroke: isPrint ? "rgba(0,0,0,0.18)" : "var(--splat-stroke)", "stroke-width": "5"
       }));
-      drawInvestigateSplatName(gp, s, 0, nomCarte, devoile, { mkEl, mkText, fs: clamp(Math.round(s.r * SYS_TACHE.nom), opts.nomMin || 26, 60) });
+      drawInvestigateSplatName(gp, s, 0, nomCarte, devoile, { mkEl, mkText, isPrint, fs: clamp(Math.round(s.r * SYS_TACHE.nom), opts.nomMin || 26, 60) });
       if(fondu){
         gp.appendChild(mkEl("path", { d: blobPath(s.cx, s.cy, s.r), fill: info.screen, stroke: "none", class: "anim-fade-out" }));
       }
@@ -10333,9 +10352,11 @@ function drawSysCaseBarre(g, x, y, c, M, ctx){
     g.appendChild(mkText(cx, cy, String(c.value), Object.assign({ "font-size":sysCorrAjuster(String(c.value), rj * 1.15, rj * 1.8, 900, 8), fill:"#000" }, centre)));
   }else{
     const mot = investigateColorWord(info);
-    const fs = sysCorrAjuster(mot, r * 0.44, 1.62 * r, 900, 6);
-    g.appendChild(mkText(cx, cy, mot, { "text-anchor":"middle", "dominant-baseline":"middle", "font-size":fs, "font-weight":900,
-      fill:"#fff", stroke:"rgba(0,0,0,0.8)", "stroke-width":Math.max(2 * M.f, fs * 0.12), "paint-order":"stroke fill" }));
+    // sur le papier, le nom des taches de l'énoncé (NOM_PAPIER, lot du 08/10/2026)
+    const fs0 = sysCorrAjuster(mot, r * 0.44, 1.62 * r, 900, 6);
+    const fs = isPrint ? nomPapierCorps(mot, fs0, r) : fs0;
+    g.appendChild(mkText(cx, cy, mot, Object.assign({ "text-anchor":"middle", "dominant-baseline":"middle", "font-size":fs, "font-weight":900,
+      fill:"#fff", stroke:"rgba(0,0,0,0.8)", "stroke-width":Math.max(2 * M.f, fs * 0.12), "paint-order":"stroke fill" }, isPrint ? nomPapierAttrs(fs) : {})));
   }
 }
 /* Une barre : la case du total (le nombre seul ; « ? » en gris), le calcul gris à sa droite,
@@ -15374,11 +15395,29 @@ function renderEleveFinSplat(panneau){
         ? `<div class="finAction"><button id="eleveEtapeSuivante" type="button">${suite.html}</button></div>` +
           `<div class="finSorties"><button id="eleveRejouer" type="button">Rejouer la s\u00e9rie</button>` +
           `${suite.versCarte ? "" : eleveLienMondesHtml("finLien", "Retour \u00e0 la carte des mondes")}</div></div>`
-        : `<div class="eleveActions"><button id="eleveRejouer" type="button">Rejouer la s\u00e9rie</button>${eleveLienMondesHtml("eleveLien")}</div></div>`);
+        : `<div class="eleveActions">${eleveNouvellesCartesPossible()
+            ? `<button id="eleveNouvelles" type="button">Nouvelles cartes \u25b6</button>`
+            : `<button id="eleveRejouer" type="button">Rejouer la s\u00e9rie</button>`}${eleveLienMondesHtml("eleveLien")}</div></div>`);
+    const nouvelles = document.getElementById("eleveNouvelles");
+    if(nouvelles) nouvelles.onclick = eleveNouvellesCartes;
     const suivante = document.getElementById("eleveEtapeSuivante");
     if(suivante) suivante.onclick = () => { window.location.href = suite.href; };
   }
-  document.getElementById("eleveRejouer").onclick = () => { eleveEffacerEnCours(); eleveIdx = 0; eleveEtoiles = 0; eleveSerie = []; eleveResultats = []; eleveVues = 0; eleveRejeu = null; renderEleveSplat(); };
+  const rejouer = document.getElementById("eleveRejouer");
+  if(rejouer) rejouer.onclick = () => { eleveEffacerEnCours(); eleveIdx = 0; eleveEtoiles = 0; eleveSerie = []; eleveResultats = []; eleveVues = 0; eleveRejeu = null; renderEleveSplat(); };
+}
+/* Fin d'une série du dos des livrets (lot du 08/10/2026) : hors parcours, sans graine imposée et
+   sans « suite », « Nouvelles cartes ▶ » remplace « Rejouer la série » (qui rejouait les MÊMES
+   cartes) : le jeu tire d'autres cartes du même réglage — generate() prend une graine neuve —,
+   sans rescanner le QR. Avec une graine dans l'adresse, les cartes seraient les mêmes : le
+   bouton reste « Rejouer la série ». */
+function eleveNouvellesCartesPossible(){
+  return !parcoursId && !eleveSuite.length && getSeedForCurrentMode() === "";
+}
+function eleveNouvellesCartes(){
+  eleveEffacerEnCours();
+  eleveIdx = 0; eleveEtoiles = 0; eleveSerie = []; eleveResultats = []; eleveVues = 0; eleveRejeu = null;
+  generate(); /* updateUI() redessine la série élève sur les nouvelles cartes */
 }
 
 if(!loadSharedConfiguration()){

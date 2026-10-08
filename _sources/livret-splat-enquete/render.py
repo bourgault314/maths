@@ -152,7 +152,8 @@ FICHES_T2_SYSTEME = [
     fiche(24, "Unité commune : les petites parts", E24D, "Je coupe en petites parts.", code="24d"),
 ]
 
-# Les séries infinies du dos : pas de graine, huit cartes nouvelles à chaque ouverture, en mode
+# Les séries infinies du dos : pas de graine, quatre cartes nouvelles à chaque ouverture (huit
+# jusqu'au 08/10/2026, Enquête et Système ; « Je révise » compris), en mode
 # élève sans étape (rien n'est enregistré). Leurs QR passent par la page courte (?s=N). Les
 # réglages sont ceux des fiches, sans graine (ni « modele », qui ne sert qu'à l'impression).
 # 1 à 15 : les anciens livrets ; 16 à 34 : les six livrets du 30/09 ; 35 et 36 : les cinq
@@ -184,7 +185,7 @@ SERIES = {
     # (Deux rapports, référence ou chaîne).
     37: "mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5",
 }
-SERIE_CARTES = 8
+SERIE_CARTES = 4
 
 # LES EXEMPLES (couverture et page 2) : la page 2 de chaque livret montre le dessin de SA
 # première fiche (décision du 30/09), sur une carte qui n'est dans aucun livret :

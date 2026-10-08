@@ -143,7 +143,8 @@ for (const [nom, fichier, fin] of [["splat.html", "outils/splat.html", "renderEl
     const p = store.lire().p;
     assert.equal(p.enCours, undefined, "la reprise s'efface");
     assert.deepEqual([p.fait, p.etoiles, p.cartes], [true, 4, 4], "l'étoile reste");
-    assert.match(source(page, fin), /getElementById\(["']eleveRejouer["']\)\.onclick = \(\) => \{ eleveEffacerEnCours\(\);/);
+    // (08/10/2026) splat.html : le bouton peut être « Nouvelles cartes ▶ » à la place (série du dos)
+    assert.match(source(page, fin), /getElementById\(["']eleveRejouer["']\)(\.onclick|;\s*if\(rejouer\) rejouer\.onclick) = \(\) => \{ eleveEffacerEnCours\(\);/);
   });
 }
 test("equasplat.html : « Rejouer toute la série » efface déjà la sauvegarde (référence des deux autres)", () => {

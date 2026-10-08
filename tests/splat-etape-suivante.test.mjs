@@ -17,7 +17,8 @@ import vm from "node:vm";
      suivant ; après la dernière étape : « Voir la carte des mondes ▶ » ;
    - « Rejouer la série » et « Retour à la carte des mondes » en liens dessous ;
    - cartes rouges : rien de plus (choix A), et « ma carte rouge » au singulier.
-   Hors parcours, l'écran de fin ne change pas.
+   Hors parcours, l'écran de fin ne change pas (sauf, dans SPLAT!, « Nouvelles cartes ▶ »
+   à la place de « Rejouer la série » : lot du 08/10/2026).
 
    Ces tests EXÉCUTENT le code des pages (fonctions extraites telles quelles), avec
    un faux document juste assez grand pour elles. Le trajet complet (fin de série →
@@ -133,7 +134,7 @@ function source(page, nom, retrait = "") {
 
 // ---------- splat.html (mondes 2, 3 et 4) ----------
 const splat = lire("outils/splat.html");
-function finSplat({ parcours, resultats, avecModule = true }) {
+function finSplat({ parcours, resultats, avecModule = true, graine = "", suite = [] }) {
   const d = fauxDocument(), w = fenetre(avecModule), panneau = d.noeud();
   const code = `
     const ELEVE_URL_MONDES = "${URL_CARTE}", ELEVE_STORE_KEY = "mathsgo-splat-parcours";
@@ -141,9 +142,12 @@ function finSplat({ parcours, resultats, avecModule = true }) {
         eleveEtoiles = 0, eleveEnqueteDevoile = true, eleveSchemaEtape = 1, eleveIndicesTel = true, eleveRejeu = null, eleveIdx = 0;
     const renderCard = () => {}, eleveCadrerScene = () => {}, eleveIndicesAfficher = () => {}, elevePastillesHtml = () => "",
           eleveEnregistrerReussite = () => {}, renderEleveSplat = () => {}, eleveCarteSuivante = () => {},
-          eleveSauverFinDeSerie = () => {};
+          eleveSauverFinDeSerie = () => {}, eleveNouvellesCartes = () => {};
+    let eleveSuite = ${JSON.stringify(suite)};
+    const getSeedForCurrentMode = () => ${JSON.stringify(graine)};
     ${source(splat, "eleveEtapeSuivante")}
     ${source(splat, "eleveLienMondesHtml")}
+    ${source(splat, "eleveNouvellesCartesPossible")}
     ${source(splat, "renderEleveFinSplat")}
     renderEleveFinSplat(panneau);`;
   new Function("document", "window", "localStorage", "panneau", "resultats", code)(d.document, w, stockage(), panneau, resultats);
@@ -226,10 +230,17 @@ for (const [nom, fin, parcours, , mot] of OUTILS) {
     assert.equal(w.location.href, URL_CARTE);
   });
 
-  test(`${nom} : hors parcours, l'écran de fin ne change pas (pas d'Étape suivante)`, () => {
+  test(`${nom} : hors parcours, pas d'Étape suivante`, () => {
     const { html } = fin({ parcours: "", resultats: TOUT_VERT });
     assert.doesNotMatch(html, /eleveEtapeSuivante|carte des mondes/);
-    assert.match(html, /id="eleveRejouer"[^>]*>Rejouer la s\u00e9rie</);
+    if (fin === finSplat) {
+      /* lot du 08/10/2026 : à la fin d'une série du dos (sans graine), « Nouvelles cartes ▶ »
+         remplace « Rejouer la série », qui rejouait les mêmes cartes */
+      assert.match(html, /id="eleveNouvelles"[^>]*>Nouvelles cartes \u25b6</);
+      assert.doesNotMatch(html, /eleveRejouer/);
+    } else {
+      assert.match(html, /id="eleveRejouer"[^>]*>Rejouer la s\u00e9rie</);
+    }
   });
 
   test(`${nom} : cartes rouges → rien de plus (pas d'Étape suivante), et « ma … rouge » au singulier`, () => {
@@ -334,4 +345,19 @@ test("Bonus : l'écran de fin de splat.html — ✨, « Ta tache bonus est doré
   assert.match(etape, /href="\/outils\/splat_univers\.html" title=/);
   // sans splat-etapes.js : l'écran d'une étape, sans rien casser
   assert.match(finSplat({ parcours: "enq11d", resultats: TOUT_VERT, avecModule: false }).html, /étoile est allumée/);
+});
+
+test("splat.html : « Nouvelles cartes ▶ » seulement sans graine, sans « suite » et hors parcours (lot du 08/10/2026)", () => {
+  const avec = (o) => finSplat({ resultats: TOUT_VERT, ...o }).html;
+  assert.match(avec({ parcours: "" }), />Nouvelles cartes \u25b6</);
+  // une graine dans l'adresse : les cartes seraient les mêmes → « Rejouer la série »
+  assert.match(avec({ parcours: "", graine: 42 }), /id="eleveRejouer"[^>]*>Rejouer la s\u00e9rie</);
+  assert.doesNotMatch(avec({ parcours: "", graine: 42 }), /eleveNouvelles/);
+  // une série composée (« suite ») : rejouer, comme avant
+  assert.match(avec({ parcours: "", suite: ["mode=N"] }), /id="eleveRejouer"/);
+  // dans le parcours : rien ne change
+  assert.doesNotMatch(avec({ parcours: "sys27" }), /eleveNouvelles/);
+  // le bouton est branché
+  const { d } = finSplat({ parcours: "", resultats: TOUT_VERT });
+  assert.equal(typeof d.elements.eleveNouvelles.onclick, "function");
 });
