@@ -873,7 +873,7 @@ svg{display:block;max-width:100%;height:auto}
 .aide-btn.is-unavailable{visibility:hidden;pointer-events:none}
 .aide-btn[hidden]{display:none!important}
 /* Le pied : une ligne de verdict à hauteur réservée, puis la zone de travail (pavé, consigne ou carte de correction, toujours à la même place et à la même hauteur), puis Passer | Valider. */
-.answer-dock{--touche-h:clamp(44px,6.5dvh,56px);--touche-ecart:3px;--pave-rangs:3;--verdict-h:32px;--actions-h:clamp(48px,6.4dvh,56px);--carte-h:clamp(116px,17dvh,150px);--zone-reduite:clamp(80px,11dvh,96px);--zone-h:var(--carte-h);position:relative;z-index:5;flex:0 0 auto;order:3;padding:0 max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));border-top:1px solid var(--border);background:#f8fbff;font-family:Arial,"Helvetica Neue",Helvetica,sans-serif}
+.answer-dock{--touche-h:clamp(44px,6.5dvh,56px);--touche-ecart:3px;--pave-rangs:3;--verdict-h:32px;--actions-h:clamp(48px,6.4dvh,56px);--carte-h:clamp(116px,17dvh,150px);--zone-reduite:clamp(80px,11dvh,96px);--carte-min-qcm:clamp(92px,14dvh,120px);--zone-h:var(--carte-h);--carte-min:var(--zone-h);position:relative;z-index:5;flex:0 0 auto;order:3;padding:0 max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));border-top:1px solid var(--border);background:#f8fbff;font-family:Arial,"Helvetica Neue",Helvetica,sans-serif}
 .answer-dock[hidden]{display:none!important}
 .answer-dock.avec-pave{--zone-h:calc(var(--pave-rangs) * var(--touche-h) + 2 * var(--touche-ecart))}
 /* Série où aucune question n'utilise le pavé : pied réduit (la consigne, puis Passer | Valider) ; la carte de correction y tient en trois lignes, sans titre. */
@@ -890,7 +890,8 @@ svg{display:block;max-width:100%;height:auto}
 .verdict-eleve{color:#24364f}
 .verdict-passe{color:#42556b}
 .verdict.info{color:#9a4100}
-.verdict.verdict-court .verdict-bonne,.verdict.verdict-court .verdict-sep{display:none}
+.verdict.verdict-court .verdict-bonne,.verdict.verdict-court .verdict-sep,.verdict.verdict-court .verdict-ok-reponse{display:none}
+.verdict-ok-reponse b{font-weight:900}
 .verdict .frac{font-size:.78em;line-height:1}
 .pied{display:flex;flex-direction:column;gap:8px;width:min(100%,560px);margin:0 auto}
 .zone-travail{position:relative;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);height:var(--zone-h);min-width:0}
@@ -911,6 +912,15 @@ svg{display:block;max-width:100%;height:auto}
 /* La consigne prend la place du pavé quand la question n'en a pas besoin (QCM, manipulation) ou quand il est caché (ordinateur). */
 .zone-consigne{display:flex;align-items:center;justify-content:center;padding:6px 14px;border:1.5px dashed #c6d6e9;border-radius:16px;color:#42556b;font-size:1.02rem;font-weight:800;line-height:1.3;text-align:center;visibility:hidden}
 .answer-dock.sans-pave:not(.locked) .zone-consigne,.answer-dock.qcm-mode:not(.locked) .zone-consigne{visibility:visible}
+/* Lot T2 — question SANS pavé (QCM, manipulation) au téléphone et à la tablette : la zone de travail se réduit à la consigne ; Passer et Valider restent en bas, seule la zone question gagne de la hauteur. Après la réponse, la carte garde au moins la place de 3 lignes (titre et 2 lignes ; dans une série sans pavé, sans titre, la hauteur réduite du lot T). */
+.answer-dock.consigne-reduite.question-sans-pave{--carte-min:var(--carte-min-qcm)}
+.answer-dock.serie-sans-pave{--carte-min-qcm:var(--zone-reduite)}
+.answer-dock.consigne-reduite.question-sans-pave:not(.locked) .zone-travail{height:auto}
+.answer-dock.consigne-reduite.question-sans-pave:not(.locked) .pave{display:none}
+.answer-dock.consigne-reduite.question-sans-pave .zone-consigne{min-height:44px}
+/* Lot T2 — après la réponse, la carte « Comment on trouve » prend la hauteur de ses lignes : au moins la place de la zone de travail, plus si besoin (la limite haute, calculée par fitCorrectionCard, ne recouvre pas la réponse de l'élève). */
+.answer-dock.locked .zone-travail{height:auto;min-height:var(--carte-min)}
+.answer-dock.locked .pave,.answer-dock.locked .zone-consigne{display:none}
 /* dnb_32 : tant que l'élève n'a pas touché la ligne à lire, tout le pied reste caché (comme avant), consigne et pavé compris. */
 .diapo.interactive-mode.read-data-observation-pending .answer-dock *{visibility:hidden!important}
 /* La carte « Comment on trouve » : exactement la place de la zone de travail. */
@@ -1056,7 +1066,7 @@ svg{display:block;max-width:100%;height:auto}
    108) : une variable qui la contient devient invalide là où elle est
    employée, et les touches tombaient à 23 px de haut. Repli en vh. */
 @supports not (height:1dvh){
-.answer-dock{--touche-h:clamp(44px,6.5vh,56px);--actions-h:clamp(48px,6.4vh,56px);--carte-h:clamp(116px,17vh,150px);--zone-reduite:clamp(80px,11vh,96px)}
+.answer-dock{--touche-h:clamp(44px,6.5vh,56px);--actions-h:clamp(48px,6.4vh,56px);--carte-h:clamp(116px,17vh,150px);--zone-reduite:clamp(80px,11vh,96px);--carte-min-qcm:clamp(92px,14vh,120px)}
 @media(min-width:900px){.answer-dock{--carte-h:clamp(116px,19vh,160px)}}
 }
 /* Relecture — téléphone : options de QCM un peu plus serrées (52 px, soit
@@ -1087,6 +1097,16 @@ svg{display:block;max-width:100%;height:auto}
 .diapo.interactive-mode .aide-scroll{display:block;width:100%}
 .diapo.interactive-mode .aide-dessin{width:auto;margin-top:10px}
 .diapo.interactive-mode .aide-back{width:100%}
+}
+/* Lot T2 — ordinateur (fenêtre d'au moins 1100 × 501 px) : l'aide se pose à droite de la question, entre l'en-tête et le pied ; la question se range à gauche (réduite si besoin, voir fitSlideForAide) et le pied reste visible. */
+@media(min-width:1100px) and (min-height:501px){
+.diapo.interactive-mode{--aide-w:clamp(340px,30vw,440px)}
+.diapo.interactive-mode.aide-ouverte .stage{padding-right:calc(var(--aide-w) + 18px)}
+.diapo.interactive-mode .aide-panel{top:var(--entete-h,64px);bottom:var(--pied-h,164px);left:auto;right:0;width:var(--aide-w);min-height:0;max-height:none;padding:14px 16px 12px;border-top:0;border-left:2px solid #6f97c6;border-radius:20px 0 0 20px;box-shadow:-12px 0 30px rgba(11,33,71,.12)}
+.diapo.interactive-mode .aide-scroll{display:block;width:100%}
+.diapo.interactive-mode .aide-dessin{width:auto;margin-top:10px}
+.diapo.interactive-mode .aide-dessin svg{max-height:min(30vh,300px)!important;max-height:min(30dvh,300px)!important}
+.diapo.interactive-mode .aide-back{width:100%;height:48px}
 }
 /* Projection (diaporama) : la correction en grand. */
 @media(min-width:1600px){.diapo:not(.interactive-mode){--opt-taille:1.6rem}}
@@ -1199,6 +1219,10 @@ let advanceTimer=null;
    d'office. */
 const coarsePointerMedia=window.matchMedia('(pointer: coarse)');
 const tniMedia=window.matchMedia('(any-pointer: coarse) and (min-width: 1100px)');
+// Lot T2 : assez large pour poser l'aide à droite de la question (même
+// condition que le CSS du panneau).
+const aideCoteMedia=window.matchMedia('(min-width: 1100px) and (min-height: 501px)');
+function aideACote(){return interactiveMode&&aideCoteMedia.matches;}
 let keypadVisible=coarsePointerMedia.matches||tniMedia.matches;
 let lockedAt=0;
 const LECTURE_MIN_MS=700;
@@ -1940,7 +1964,7 @@ function render(){
  setupPlaceValueTools();setupConversionTools();setupFractionProductTools();setupReadDataTools();
  if(interactiveMode){
    setupInteractiveSlide(current);
-   if(interactiveLocked) decorateCorrectedSlide(current);
+   if(interactiveLocked){decorateCorrectedSlide(current);fitCorrectionCard();}
    renderAide();
    updateStageOverflow();
  }else{
@@ -1995,7 +2019,15 @@ function measureSlideZoom(current){
  if(probe.querySelector(ZOOM_OUTILS_POINTEUR)) return Math.min(1,bounds.max);
  const states=[current.questionHtml,current.correctionHtml];
  let best=bounds.max;
+ // Lot T2 : l'échelle de référence se mesure aide fermée (la place que
+ // prend le panneau ouvert est rendue par fitSlideForAide).
+ const diapo=document.getElementById('diapo'),aideClass=!!diapo&&diapo.classList.contains('aide-ouverte'),aidePadding=stage.style.paddingBottom;
+ if(diapo) diapo.classList.remove('aide-ouverte');
+ stage.style.paddingBottom='';
  states.forEach((html,stateIndex)=>{
+   // Lot T2 : le pied mesuré est celui de l'état mesuré (consigne seule pour
+   // une question sans pavé, carte à sa hauteur minimale pour la correction).
+   if(interactiveMode) setDockState(current.interactiveSpec,stateIndex===1);
    slide.innerHTML=html;
    tuneRenderedGeometry(current,slide);
    normalizeOptions(slide);
@@ -2014,7 +2046,19 @@ function measureSlideZoom(current){
    best=Math.floor(low*100)/100;
  });
  slide.style.zoom='';
+ if(interactiveMode) setDockState(current.interactiveSpec,interactiveLocked);
+ if(diapo&&aideClass) diapo.classList.add('aide-ouverte');
+ stage.style.paddingBottom=aidePadding;
  return best;
+}
+// Lot T2 : l'état du pied qui change sa hauteur (question sans pavé, question
+// validée), posé avant la mesure de la question.
+function setDockState(spec,locked){
+ const dock=document.getElementById('answerDock');
+ if(!dock||!spec) return;
+ dock.classList.toggle('qcm-mode',!specUsesKeypad(spec));
+ dock.classList.toggle('question-sans-pave',SANS_PAVE_KINDS.includes(spec.kind));
+ dock.classList.toggle('locked',!!locked);
 }
 const SANS_PAVE_KINDS=['qcm','grid-point','coordinate-points','numberline-point','relative-tokens','pythagoras-tactile','decimal-order','decimal-frame','decimal-distributivity'];
 function specUsesKeypad(spec){
@@ -2041,9 +2085,8 @@ function setupInteractiveSlide(current){
  const spec=current.interactiveSpec;
  const decimalCards=spec.kind==='decimal-order'||spec.kind==='decimal-frame'||spec.kind==='decimal-distributivity';
  dock.hidden=false;
- dock.classList.toggle('qcm-mode',!specUsesKeypad(spec));
+ setDockState(spec,interactiveLocked);
  dock.classList.toggle('relative-tokens-dock',spec.kind==='relative-tokens');
- dock.classList.toggle('locked',interactiveLocked);
  const kind=document.getElementById('answerKind');
  if(kind) kind.textContent=consigneForSpec(spec);
  const options=[...document.querySelectorAll('#slide .opt')];
@@ -2535,6 +2578,8 @@ function makeInteractiveSlot(index){
  button.dataset.slotIndex=String(index);
  button.setAttribute('aria-label',slot.label||('Réponse '+(index+1)));
  button.addEventListener('click',()=>setActiveInteractiveSlot(index));
+ // Lot T2 : la case qui reçoit le focus au clavier devient la case active.
+ button.addEventListener('focus',()=>{if(!interactiveLocked&&activeSlotIndex!==index)setActiveInteractiveSlot(index);});
  return button;
 }
 function interactiveTargets(){
@@ -2696,6 +2741,7 @@ function prepareDock(){
  dock.classList.toggle('serie-sans-pave',!info.uses);
  dock.style.setProperty('--pave-rangs',String(2+info.rows));
  applyKeypadVisibility();
+ setDockState(slides[idx]&&slides[idx].interactiveSpec,interactiveLocked);
 }
 function applyKeypadVisibility(spec=slides[idx]&&slides[idx].interactiveSpec){
  const dock=document.getElementById('answerDock'),toggle=document.getElementById('keyboardToggle');
@@ -2706,6 +2752,10 @@ function applyKeypadVisibility(spec=slides[idx]&&slides[idx].interactiveSpec){
  // jamais de la question : les boutons Passer et Valider ne bougent pas.
  dock.classList.toggle('avec-pave',visible);
  dock.classList.toggle('sans-pave',!visible);
+ // Lot T2 : là où le pied porte un pavé (téléphone, tablette, pavé affiché),
+ // ou au téléphone dans une série sans pavé, une question sans pavé n'a que
+ // sa consigne. À l'ordinateur, pavé caché, la consigne garde son cadre.
+ dock.classList.toggle('consigne-reduite',visible||(!info.uses&&coarsePointerMedia.matches));
  if(toggle){
    toggle.hidden=!interactiveMode||interactiveFinished||coarsePointerMedia.matches||!info.uses;
    toggle.disabled=false;
@@ -2970,10 +3020,17 @@ function fitVerdictLine(){
    feedback.classList.add('verdict-court');
    shrink(.7);
  }else if(line.scrollWidth>feedback.clientWidth+1) shrink(.7);
+ // Lot T2 : une bonne réponse trop longue pour la ligne garde « ✓ Bonne réponse ».
+ if(line.scrollWidth>feedback.clientWidth+1&&line.querySelector('.verdict-ok-reponse')){
+   feedback.classList.add('verdict-court');
+   shrink(.82);
+ }
 }
 function verdictHtml(result){
  if(!result) return '';
- if(result.status==='correct') return '<span class="verdict-ok">✓ Bonne réponse</span>';
+ // Lot T2 : une bonne réponse tapée s'affiche telle que l'élève l'a écrite
+ // (75/100 reste 75/100) ; la carte donne ensuite la démarche.
+ if(result.status==='correct') return '<span class="verdict-ok">✓ Bonne réponse'+(result.typed&&result.givenHtml?'<span class="verdict-ok-reponse"> : <b>'+result.givenHtml+'</b></span>':'')+'</span>';
  const expected=result.expectedHtml?'<span class="verdict-bonne">Bonne réponse : <b>'+result.expectedHtml+'</b></span>':'';
  if(result.status==='skipped') return '<span class="verdict-passe">Question passée</span>'+(expected?'<span class="verdict-sep"> · </span>'+expected:'');
  const given=result.givenHtml?'<span class="verdict-eleve">Ta réponse : '+result.givenHtml+'</span>':'';
@@ -2996,7 +3053,7 @@ function lockQuestion(validation,status){
  let givenHtml='';
  try{givenHtml=status==='skipped'?'':studentAnswerHtml(spec);}catch(error){givenHtml='';}
  const current=slides[idx];
- results[idx]={index:idx,status,givenHtml,expectedHtml:current.expectedHtml||'',prompt:promptForResults(current),diagnostic:diagnosticForValidation(validation,spec),chosen:[...selectedOptions]};
+ results[idx]={index:idx,status,givenHtml,typed:specUsesKeypad(spec),expectedHtml:current.expectedHtml||'',prompt:promptForResults(current),diagnostic:diagnosticForValidation(validation,spec),chosen:[...selectedOptions]};
  setInteractiveFeedback(verdictHtml(results[idx]),status==='correct'?'good':(status==='skipped'?'skipped':'bad'));
  render();
  recordInteractiveAttempt(validation);
@@ -3064,7 +3121,37 @@ function finishScreenHtml(){
  // sur téléphone, dix lignes ratées ne repoussent pas les boutons hors de l'écran.
  return '<div class="interactive-finish'+(missed.length?' has-misses':'')+'"><div class="interactive-finish-mark">✓</div><h2>Série terminée</h2><div class="interactive-finish-score">'+correctCount+' / '+slides.length+'</div><div class="interactive-finish-actions">'+retryButton+newSeriesButton+'<button class="btn" type="button" onclick="restartInteractive()">Recommencer</button><button class="btn" type="button" onclick="returnToMenu()">Retour au menu</button></div>'+list+'</div>';
 }
-function openCourse(){const modal=document.getElementById('courseModal'),course=courseForSlide(slides[idx]);if(modal&&course){markQuestionHelp('course');const card=modal.querySelector('.course-card');if(card){card.classList.toggle('thales-course-card',course.layout==='thales');card.classList.toggle('place-value-course-card',course.layout==='place-value');card.classList.toggle('read-data-course-card',slides[idx].courseKind==='read_data');card.classList.toggle('recognize-proportion-course-card',slides[idx].courseKind==='recognize_proportion');card.classList.toggle('angles-course-card',course.layout==='angles');card.classList.toggle('divisibility-course-card',course.layout==='divisibility');card.classList.toggle('expand-factor-course-card',course.layout==='expand-factor');}document.getElementById('courseTitle').textContent=course.title;document.getElementById('courseGrid').innerHTML=typographieHtml(course.rules.map(rule=>'<div class="course-rule'+(rule[2]?' course-rule-wide':'')+'"><strong>'+rule[0]+'</strong>'+rule[1]+'</div>').join(''));modal.hidden=false;setupPlaceValueTools(modal);const close=modal.querySelector('.course-close');if(close)close.focus();}}
+function openCourse(){const modal=document.getElementById('courseModal'),course=courseForSlide(slides[idx]);if(modal&&course){markQuestionHelp('course');const card=modal.querySelector('.course-card');if(card){card.classList.toggle('thales-course-card',course.layout==='thales');card.classList.toggle('place-value-course-card',course.layout==='place-value');card.classList.toggle('read-data-course-card',slides[idx].courseKind==='read_data');card.classList.toggle('recognize-proportion-course-card',slides[idx].courseKind==='recognize_proportion');card.classList.toggle('angles-course-card',course.layout==='angles');card.classList.toggle('divisibility-course-card',course.layout==='divisibility');card.classList.toggle('expand-factor-course-card',course.layout==='expand-factor');}document.getElementById('courseTitle').textContent=course.title;document.getElementById('courseGrid').innerHTML=typographieHtml(course.rules.map(rule=>'<div class="course-rule'+(rule[2]?' course-rule-wide':'')+'"><strong>'+rule[0]+'</strong>'+rule[1]+'</div>').join(''));modal.hidden=false;setupPlaceValueTools(modal);fitCourseCard(card);const close=modal.querySelector('.course-close');if(close)close.focus();}}
+// Lot T2 — diaporama projeté (fenêtre d'au moins 1200 × 700 px) : le cours
+// s'agrandit comme la question (jusqu'à × 1,6) tant qu'il tient dans l'écran ;
+// un cours trop haut est d'abord élargi (ses règles prennent moins de
+// lignes) pour pouvoir grandir. Pas d'agrandissement s'il contient un outil
+// à glisser (tableau de numération) : le glissé ne suivrait plus la souris.
+// Téléphone et mode interactif : inchangés.
+function fitCourseCard(card){
+ if(!card) return;
+ card.style.zoom='';card.style.maxHeight='';card.style.width='';
+ if(interactiveMode||window.innerWidth<1200||window.innerHeight<700||card.querySelector('.place-value-tool')) return;
+ const vw=window.innerWidth-48,vh=window.innerHeight-48;
+ card.style.maxHeight='none';
+ const natural=card.offsetWidth;
+ const zoomFor=()=>Math.min(1.6,vw/card.offsetWidth,vh/card.scrollHeight);
+ let best={zoom:zoomFor(),width:''};
+ [1.25,1.5,1.75,2].forEach(factor=>{
+   if(best.zoom>=1.6) return;
+   const width=Math.min(vw,Math.round(natural*factor));
+   card.style.width=width+'px';
+   const zoom=zoomFor();
+   if(zoom>best.zoom+.02) best={zoom,width:width+'px'};
+ });
+ card.style.width=best.width;
+ // Trop long même élargi : il garde sa taille et défile, mais sur toute la
+ // hauteur de l'écran (au lieu de 720 px).
+ if(best.zoom<1.05){if(best.zoom<1)card.style.width='';card.style.maxHeight=(window.innerHeight-36)+'px';return;}
+ card.style.zoom=best.zoom.toFixed(3);
+ card.style.maxHeight=Math.floor((window.innerHeight-36)/best.zoom)+'px';
+}
+
 function closeCourse(){const modal=document.getElementById('courseModal');if(modal)modal.hidden=true;}
 function openEquationDetail(){const modal=document.getElementById('equationDetailModal'),body=document.getElementById('equationDetailBody'),detail=slides[idx].equationDetailHtml;if(modal&&body&&detail){markQuestionHelp('equation-detail');body.innerHTML=detail;modal.hidden=false;const close=modal.querySelector('.equation-detail-close');if(close)close.focus();}}
 function closeEquationDetail(){const modal=document.getElementById('equationDetailModal');if(modal)modal.hidden=true;}
@@ -3114,12 +3201,24 @@ function normalizeOptions(root){
    et la bonne réponse s'écrit à côté, en vert. */
 function decorateCorrectedSlide(current){
  const result=results[idx];
- if(!result||result.status!=='incorrect') return;
+ if(!result||(result.status!=='incorrect'&&result.status!=='correct')) return;
  const spec=current.interactiveSpec;
  if(!spec||spec.kind==='qcm'||!Array.isArray(spec.slots)||!['entry','inline','fraction'].includes(spec.layout)) return;
  const filled=[...document.querySelectorAll('#slide .answer-slot-filled')];
  const values=interactiveValues.slice(0,spec.slots.length);
  if(filled.length!==values.length) return;
+ // Lot T2 : bonne réponse écrite autrement (75/100 pour 3/4, 0,50 pour 0,5) :
+ // la case garde l'écriture de l'élève, en vert. Seulement quand la case et
+ // la saisie sont des nombres (une case « 12 cm » n'est pas réécrite).
+ if(result.status==='correct'){
+   const numbers=filled.every((slot,index)=>values[index]&&safeInteractiveNumber(values[index])!==null&&safeInteractiveNumber(slot.textContent)!==null);
+   if(!numbers) return;
+   filled.forEach((slot,index)=>{
+     if(normalizeInteractiveAnswer(values[index])===normalizeInteractiveAnswer(slot.textContent)) return;
+     slot.innerHTML='<strong>'+lotTValeurHtml(values[index])+'</strong>';slot.classList.add('reponse-eleve-juste');
+   });
+   return;
+ }
  // Une fraction en deux cases : la fraction de l'élève, barrée, devant la bonne.
  const fraction=spec.layout==='fraction'&&filled.length===2&&filled[0].closest('.frac');
  if(fraction&&fraction===filled[1].closest('.frac')){
@@ -3182,15 +3281,45 @@ function renderCorrectionCard(current){
 // La carte garde la hauteur du pavé : si la démarche est longue, le texte
 // rétrécit un peu (jamais sous 18 px au téléphone, 15 px à l'ordinateur),
 // puis la carte défile, avec un fondu en bas qui montre qu'il y a une suite.
+// Lot T2 : avant de rétrécir le texte, la carte prend la hauteur de ses
+// lignes, dans la place libre sous la question (voir correctionCardMax) ;
+// ensuite seulement le texte rétrécit, puis la carte défile.
 function fitCorrectionCard(){
  const card=document.getElementById('correctionCard');
- if(!card||card.hidden) return;
+ if(!card) return;
+ if(card.hidden){card.style.maxHeight='';return;}
  card.style.fontSize='';
  const base=parseFloat(getComputedStyle(card).fontSize)||18;
- const minimum=Math.min(base,coarsePointerMedia.matches?18:15);
- let size=base;
- while(card.scrollHeight>card.clientHeight+1&&size>minimum){size-=.5;card.style.fontSize=size+'px';}
+ const smallest=Math.min(base,coarsePointerMedia.matches?18:15);
+ const shrink=()=>{let size=base;card.style.fontSize='';while(card.scrollHeight>card.clientHeight+1&&size>smallest){size-=.5;card.style.fontSize=size+'px';}};
+ const zone=document.getElementById('zoneTravail');
+ const minimum=interactiveMode&&zone?Math.round(parseFloat(getComputedStyle(zone).minHeight)||0):0;
+ if(minimum>0){
+   card.style.maxHeight=minimum+'px';
+   card.style.maxHeight=correctionCardMax(minimum)+'px';
+   shrink();
+ }else shrink();
  updateCorrectionCardOverflow();
+ updateStageOverflow();
+}
+/* Lot T2 — hauteur maximale de la carte. Elle part de la place de la zone
+   de travail (le pavé ; 3 lignes pour une question sans pavé) et prend :
+   - pied sous la question (téléphone, ordinateur) : la place libre sous la
+     question. Rien n'est recouvert (ni la réponse de l'élève, ni la figure,
+     ni une option) et la zone question ne se met pas à défiler. Jamais
+     au-delà de 42 % de l'écran ;
+   - pied à côté de la question (téléphone en largeur) : la place libre de
+     la colonne.
+   Le pied grandit vers le haut : Passer et Valider ne bougent pas. */
+function correctionCardMax(minimum){
+ const dock=document.getElementById('answerDock'),stage=document.getElementById('stage'),slide=document.getElementById('slide'),feedback=document.getElementById('answerFeedback');
+ if(!dock||!stage||!slide||!feedback) return minimum;
+ const dockRect=dock.getBoundingClientRect(),stageRect=stage.getBoundingClientRect();
+ const free=Math.max(0,Math.floor(feedback.getBoundingClientRect().top-dockRect.top-dock.clientTop-(parseFloat(getComputedStyle(dock).paddingTop)||0)));
+ if(dockRect.top<stageRect.bottom-2) return Math.round(minimum+free);
+ const margin=(parseFloat(getComputedStyle(stage).paddingBottom)||0)+2;
+ const room=Math.max(0,dockRect.top-(slide.getBoundingClientRect().bottom+margin));
+ return Math.round(Math.max(minimum,Math.min(minimum+free+room,window.innerHeight*.42)));
 }
 function updateCorrectionCardOverflow(){
  const card=document.getElementById('correctionCard');
@@ -3235,16 +3364,65 @@ function renderAide(){
  if(diapo) diapo.classList.toggle('aide-ouverte',aideOpen);
  if(!panel) return;
  panel.hidden=!aideOpen;
- if(!aideOpen) return;
+ if(!aideOpen){fitSlideForAide();return;}
  // Le panneau se pose sur le pied : au moins sa hauteur, pour le couvrir
- // entièrement ; la question reste visible au-dessus.
- const dock=document.getElementById('answerDock');
+ // entièrement ; la question reste visible au-dessus. Lot T2 : à
+ // l'ordinateur large, il se pose à droite, entre l'en-tête et le pied.
+ const dock=document.getElementById('answerDock'),header=diapo&&diapo.querySelector('.top');
  if(diapo&&dock&&!dock.hidden) diapo.style.setProperty('--pied-h',Math.round(dock.getBoundingClientRect().height)+'px');
+ if(diapo&&header) diapo.style.setProperty('--entete-h',Math.round(header.getBoundingClientRect().bottom)+'px');
  const steps=current.aideSteps||[];
  const list=document.getElementById('aideSteps'),more=document.getElementById('aideMore'),drawing=document.getElementById('aideDessin');
  if(list){list.innerHTML=steps.slice(0,Math.max(1,aideStep)).map(step=>'<li>'+step+'</li>').join('');list.hidden=!steps.length;}
  if(more) more.hidden=!(aideStep<steps.length);
  if(drawing){drawing.innerHTML=current.aideHtml||'';drawing.hidden=!current.aideHtml;}
+ // Lot T2 : un dessin d'aide plus large que le panneau (dessin en HTML, à
+ // largeur fixe, dans le panneau étroit de l'ordinateur) est réduit pour
+ // tenir en entier ; c'est une image, pas un outil à manipuler.
+ if(drawing){
+   drawing.style.zoom='';
+   const sorties=()=>{const box=drawing.getBoundingClientRect();let left=box.left,right=box.right;drawing.querySelectorAll('*').forEach(element=>{const rect=element.getBoundingClientRect();if(rect.width>0){left=Math.min(left,rect.left);right=Math.max(right,rect.right);}});return {box,left,right};};
+   for(let essai=0;essai<4&&current.aideHtml&&!drawing.hidden;essai++){
+     const {box,left,right}=sorties();
+     if(left>=box.left-1&&right<=box.right+1) break;
+     const zoom=(parseFloat(drawing.style.zoom)||1)*box.width/(right-left+8);
+     if(zoom<.55){drawing.style.zoom='0.550';break;}
+     drawing.style.zoom=zoom.toFixed(3);
+   }
+ }
+ fitSlideForAide();
+}
+/* Lot T2 — l'aide ouverte ne cache ni la case réponse ni la figure. À
+   l'ordinateur large, la question se range à gauche du panneau ; plus
+   étroit (pointeur souris), elle doit tenir au-dessus du panneau posé sur
+   le pied. Dans les deux cas, elle est réduite comme dans measureSlideZoom
+   (jamais agrandie, jamais sous le minimum, jamais pour les outils qui
+   lisent la position du pointeur), puis rendue à son échelle à la fermeture.
+   Au téléphone, rien ne change. */
+let aideZoomActif=false;
+function fitSlideForAide(){
+ const slide=document.getElementById('slide'),stage=document.getElementById('stage'),panel=document.getElementById('aidePanel');
+ if(!slide||!stage||!interactiveMode||interactiveFinished) return;
+ const ouverte=aideOpen&&panel&&!panel.hidden;
+ if(!ouverte&&!aideZoomActif) return;
+ stage.style.paddingBottom='';
+ if(!ouverte){aideZoomActif=false;applySlideZoom(slide,fitZoom);updateStageOverflow();return;}
+ const cote=aideACote();
+ if(!cote&&coarsePointerMedia.matches){if(aideZoomActif){aideZoomActif=false;applySlideZoom(slide,fitZoom);}return;}
+ aideZoomActif=true;
+ if(!cote){
+   const overlap=Math.round(stage.getBoundingClientRect().bottom-panel.getBoundingClientRect().top);
+   if(overlap>0) stage.style.paddingBottom=(overlap+(parseFloat(getComputedStyle(stage).paddingBottom)||0))+'px';
+ }
+ const bounds=zoomBounds(slides[idx]);
+ const fits=value=>{applySlideZoom(slide,value);return slideFits(stage);};
+ let zoom=fitZoom;
+ if(!fits(zoom)&&bounds.min<zoom&&!slide.querySelector(ZOOM_OUTILS_POINTEUR)){
+   if(!fits(bounds.min)) zoom=bounds.min;
+   else{let low=bounds.min,high=zoom;while(high-low>.01){const middle=(low+high)/2;if(fits(middle))low=middle;else high=middle;}zoom=Math.floor(low*100)/100;}
+ }
+ applySlideZoom(slide,zoom);
+ updateStageOverflow();
 }
 /* Lot T — diaporama : la correction se donne étape par étape. Chaque appui
    sur → (ou « Correction → ») montre la ligne suivante de la démarche ; les
@@ -3305,10 +3483,37 @@ document.addEventListener('keydown',event=>{
    // Entrée sur « Un autre indice » montre l'indice ; ailleurs, elle referme.
    const active=document.activeElement;
    if(event.key==='Enter'&&active&&active.id==='aideMore') return;
-   if(event.key==='Enter'){event.preventDefault();closeAide();}
-   return;
+   if(event.key==='Enter'){event.preventDefault();closeAide();return;}
+   // Lot T2 : à l'ordinateur large, l'aide est à droite de la question et le
+   // pied reste visible : l'élève peut taper sa réponse sans la refermer.
+   if(!aideACote()||event.key==='ArrowRight'||event.key==='Tab') return;
  }
  const spec=slides[idx].interactiveSpec;
+ // Lot T2 — réponse en plusieurs cases (fraction, polynôme, coordonnées) au
+ // clavier : Tab, ↓, → et « / » (fraction, quand « / » n'est pas une touche
+ // du pavé) passent à la case suivante ; Maj+Tab, ↑ et ← reviennent. Sur la
+ // dernière case, → et Entrée valident comme avant, Tab sort des cases.
+ const slotCount=!interactiveLocked&&spec&&spec.kind==='slots'&&Array.isArray(spec.slots)?spec.slots.length:0;
+ if(slotCount>1&&!event.altKey&&!event.ctrlKey&&!event.metaKey){
+   const active=document.activeElement;
+   const inSlots=!active||active===document.body||active.matches('.interactive-input-slot,.key,#keyboardToggle');
+   let step=0;
+   if(event.key==='Tab'){if(inSlots) step=event.shiftKey?-1:1;}
+   else if(event.key==='ArrowDown') step=1;
+   else if(event.key==='ArrowUp'||event.key==='ArrowLeft') step=-1;
+   else if(event.key==='ArrowRight'&&activeSlotIndex<slotCount-1) step=1;
+   else if(event.key==='/'&&spec.layout==='fraction'&&!(slides[idx].keypadContext||[]).includes('/')) step=1;
+   if(step){
+     const target=activeSlotIndex+step;
+     if(target>=0&&target<slotCount){
+       event.preventDefault();
+       setActiveInteractiveSlot(target);
+       if(active&&active.matches('.interactive-input-slot')){const button=document.querySelector('#slide .interactive-input-slot[data-slot-index="'+target+'"]');if(button)button.focus({preventScroll:true});}
+       return;
+     }
+     if(event.key==='/'){event.preventDefault();return;}
+   }
+ }
  if(event.key==='Enter'||event.key==='ArrowRight'){
    const active=document.activeElement;
    // Entrée garde son effet natif sur un bouton que l'élève a choisi au
