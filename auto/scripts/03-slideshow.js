@@ -2570,6 +2570,8 @@ function makeInteractiveSlot(index){
  button.dataset.slotIndex=String(index);
  button.setAttribute('aria-label',slot.label||('Réponse '+(index+1)));
  button.addEventListener('click',()=>setActiveInteractiveSlot(index));
+ // Lot T2 : la case qui reçoit le focus au clavier devient la case active.
+ button.addEventListener('focus',()=>{if(!interactiveLocked&&activeSlotIndex!==index)setActiveInteractiveSlot(index);});
  return button;
 }
 function interactiveTargets(){
@@ -3190,7 +3192,7 @@ function decorateCorrectedSlide(current){
    if(!numbers) return;
    filled.forEach((slot,index)=>{
      if(normalizeInteractiveAnswer(values[index])===normalizeInteractiveAnswer(slot.textContent)) return;
-     slot.innerHTML=lotTValeurHtml(values[index]);slot.classList.add('reponse-eleve-juste');
+     slot.innerHTML='<strong>'+lotTValeurHtml(values[index])+'</strong>';slot.classList.add('reponse-eleve-juste');
    });
    return;
  }
