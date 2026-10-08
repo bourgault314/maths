@@ -1486,10 +1486,13 @@ Object.assign(courseCatalog,{
     ['Fraction vers décimal','Une fraction est une division. On peut aussi chercher une fraction équivalente de dénominateur 10 ou 100.<span class="course-example"><span class="course-equation">'+courseFraction(3,5)+' = '+courseFraction(6,10)+' = 0,6</span></span>'],
     ['Décimal vers pourcentage','On cherche le nombre de centièmes.<span class="course-example">0,37 = 37 centièmes = 37 %.</span>']
   ]},
+  // dnb_06 (refonte d’octobre 2026) : la forme, les deux sens de l’exposant,
+  // le retour à l’écriture décimale ; un exemple par carte, jamais coupé.
   scientific_notation:{title:'Notation scientifique',rules:[
-    ['Forme attendue','Un nombre en notation scientifique s’écrit a × 10ⁿ avec 1 ≤ a &lt; 10 et n entier.'],
-    ['Trouver a','On place la virgule juste après le premier chiffre non nul.'],
-    ['Trouver n','On compte les déplacements de la virgule : grand nombre → exposant positif ; petit nombre → exposant négatif.<span class="course-example">45 000 = 4,5 × 10⁴ et 0,0032 = 3,2 × 10⁻³.</span>']
+    ['La forme a × 10<sup>n</sup>','Un seul chiffre non nul avant la virgule&nbsp;: <b>1 ≤ a &lt; 10</b>.<span class="course-example"><span style="white-space:nowrap"><span style="color:#087a55">✔</span> 4,5 × 10<sup>3</sup></span> &nbsp; <span style="white-space:nowrap"><span style="color:#b42318">✘</span> 45 × 10<sup>2</sup></span> &nbsp; <span style="white-space:nowrap"><span style="color:#b42318">✘</span> 0,45 × 10<sup>4</sup></span></span>'],
+    ['Nombre plus grand que 10','Exposant <b>positif</b>.<span class="course-example"><span style="white-space:nowrap">45 300 = 4,53 × 10 000</span> <span style="white-space:nowrap">= 4,53 × 10<sup>4</sup></span></span>'],
+    ['Nombre entre 0 et 1','Exposant <b>négatif</b>.<span class="course-example"><span style="white-space:nowrap">0,0032 = 3,2 × 0,001</span> <span style="white-space:nowrap">= 3,2 × 10<sup>−3</sup></span></span>'],
+    ['Dans l’autre sens','× 10<sup>n</sup>&nbsp;: les chiffres glissent de n rangs (vers la gauche si n &gt; 0, vers la droite si n &lt; 0).<span class="course-example"><span style="white-space:nowrap">6,1 × 10<sup>3</sup> = 6 100</span> &nbsp; <span style="white-space:nowrap">5,9 × 10<sup>−2</sup> = 0,059</span></span>']
   ]},
   squares:{title:'Carrés et carrés parfaits',rules:[
     ['Définition','Le carré de n est le produit de n par lui-même : n² = n × n.'],
@@ -3843,6 +3846,18 @@ function interactiveSpecForInstance(inst,correctionHtml){
     }
   }
 
+  // dnb_06 : cases nommées (nombre devant × 10, exposant) et bonne réponse
+  // écrite comme en maths (4,52 × 10⁻³, pas « 4,52 ; -3 »).
+  if(moduleId==='dnb_06'&&inst.scientific&&Array.isArray(inst.scientific.slotLabels)){
+    return {
+      kind:'slots',layout:inst.scientific.slotLabels.length>1?'inline':'entry',
+      slots:inst.scientific.slotLabels.map(label=>({label})),
+      acceptedCombinations,
+      expectedDisplay:'réponse : '+(inst.scientific.expectedDisplay||rawAnswers.join(' ; ')),
+      keys:keypadKeysFor(inst)
+    };
+  }
+
   const pairedFractionModules=['dnb_01','dnb_03','dnb_03b','dnb_05','dnb_28','dnb_29'];
   const isPairedFraction=rawAnswers.length===2&&pairedFractionModules.includes(moduleId);
   const splitFractionCombinations=acceptedCombinations.map(combination=>{
@@ -4060,6 +4075,8 @@ function lotTExpectedHtml(inst,spec){
 // lit dans le pied de l'énoncé (coordonnées de dnb_15 : « A(… ; …) »).
 function lotTAnswerTemplate(inst,spec){
   if(!spec||spec.kind!=='slots'||!['inline','entry'].includes(spec.layout)) return '';
+  // dnb_06 : « Ta réponse : 45,2 × 10⁻⁴ » (les deux cases dans l'écriture).
+  if(inst.module.id==='dnb_06') return inst.scientific&&inst.scientific.answerTemplate||'';
   if(inst.module.id!=='dnb_15') return '';
   const answers=(inst.answers||[]).map(String);
   if(answers.length<2) return '';

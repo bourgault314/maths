@@ -1,3 +1,13 @@
+// dnb_06 — Notation scientifique (liste officielle NC6 : « Passer d'une écriture
+// décimale à la notation scientifique » ; sujets de référence 2027 : « Effectuer
+// des calculs numériques simples impliquant des puissances »). Les questions
+// sont fabriquées par dnb_06/generate.js, tirées par dnb_06/selection.js et
+// dessinées par dnb_06/render.js ; ce fichier ne garde que la liste des types.
+// Refonte du 08/10/2026 : énoncés neutres (plus de « grand / petit nombre »),
+// exposants tirés de −7 à 9, pavé constant « , − », QCM mélangés aux pièges du
+// brevet, sens inverse en un seul type par série. Types créés : 12 (contexte),
+// 13 (compléter 1 200 = 1,2 × 10^…), 14 (puissance de 10, R2 2), 15 (calcul
+// avec des puissances de 10, R1 2).
 const MODULE_DNB_06 = {
   "id": "dnb_06",
   "num": 6,
@@ -7,118 +17,24 @@ const MODULE_DNB_06 = {
     "3e",
     "DNB"
   ],
-  "source": "import_dnb_zip",
+  "source": "moteur_mathsgo_notation_scientifique_v2",
   "has_svg": false,
+  "keypad": {"context": [",", "−"]},
   "questions": [
-    {
-      "n": 1,
-      "statement": "Écris ce grand nombre en notation scientifique :",
-      "answer": "[\"m\",\"3\"]",
-      "options": {
-        "formula_code": "setNB(1)\nn=RD(1000,9999)\nm=n/1000",
-        "scientific_kind": "to_scientific"
-      },
-      "footer": "$$${n}=[[dots]]\\times10^{[[dots]]}$$"
-    },
-    {
-      "n": 2,
-      "statement": "Écris ce grand nombre en notation scientifique :",
-      "answer": "[\"m\",\"4\"]",
-      "options": {
-        "formula_code": "setNB(1)\nd=RD(100,999)\nn=d*100\nm=n/10000",
-        "scientific_kind": "to_scientific"
-      },
-      "footer": "$$${n}=[[dots]]\\times10^{[[dots]]}$$"
-    },
-    {
-      "n": 3,
-      "statement": "Écris ce petit nombre en notation scientifique :",
-      "answer": "[\"m\",\"0-3\"]",
-      "options": {
-        "formula_code": "setNB(1)\nd=RD(100,999)\nn=CUT(d/100000,8)\nm=d/100",
-        "scientific_kind": "to_scientific"
-      },
-      "footer": "$$${n}=[[dots]]\\times10^{[[dots]]}$$"
-    },
-    {
-      "n": 4,
-      "statement": "Écris ce petit nombre en notation scientifique :",
-      "answer": "[\"m\",\"0-2\"]",
-      "options": {
-        "formula_code": "setNB(1)\nd=RD(11,99)\nn=CUT(d/1000,8)\nm=d/10",
-        "scientific_kind": "to_scientific"
-      },
-      "footer": "$$${n}=[[dots]]\\times10^{[[dots]]}$$"
-    },
-    {
-      "n": 5,
-      "statement": "Écris ce nombre en notation scientifique :",
-      "answer": "[\"m\",\"5\"]",
-      "options": {
-        "formula_code": "setNB(1)\nd=RD(1000,9999)\nn=d*100\nm=n/100000",
-        "scientific_kind": "to_scientific"
-      },
-      "footer": "$$${n}=[[dots]]\\times10^{[[dots]]}$$"
-    },
-    {
-      "n": 6,
-      "statement": "Écris ce petit nombre en notation scientifique :",
-      "answer": "[\"m\",\"0-4\"]",
-      "options": {
-        "formula_code": "setNB(1)\nd=RD(100,999)\nn=CUT(d/1000000,8)\nm=d/100",
-        "scientific_kind": "to_scientific"
-      },
-      "footer": "$$${n}=[[dots]]\\times10^{[[dots]]}$$"
-    },
-    {
-      "n": 7,
-      "statement": "Écris ce nombre en notation scientifique :",
-      "answer": "[\"m\",\"6\"]",
-      "options": {
-        "formula_code": "setNB(1)\nd=RD(11,99)\nn=d*100000\nm=d/10",
-        "scientific_kind": "to_scientific"
-      },
-      "footer": "$$${n}=[[dots]]\\times10^{[[dots]]}$$"
-    },
-    {
-      "n": 8,
-      "statement": "Cette notation scientifique correspond à quel nombre décimal ?",
-      "answer": "[\"n\"]",
-      "options": {
-        "formula_code": "setNB(1)\nd=RD(11,99)\nm=d/10\ne=RD(2,4)\nn=m*10**e",
-        "scientific_kind": "from_scientific"
-      },
-      "footer": "$$${m}\\times10^{${e}}=[[dots]]$$"
-    },
-    {
-      "n": 9,
-      "statement": "Quelle est l'écriture scientifique de $$${n}$$ ?&&$$${m}\\times10^{3}$$&&$$${md}\\times10^{2}$$&&$$${m}\\times10^{4}$$&&$$${mu}\\times10^{3}$$&&",
-      "answer": "[\"1\"]",
-      "options": {
-        "formula_code": "setNB(1)\nd=RD(100,999)\nm=d/100\nn=d*10\nmd=m*10\nmu=CUT(m/10,8)",
-        "scientific_kind": "to_scientific_qcm"
-      },
-      "footer": "[[formula_qcm1]]"
-    },
-    {
-      "n": 10,
-      "statement": "Le nombre $$${m}\\times10^{${e}}$$ est-il écrit en notation scientifique ?&&Oui, c'est une écriture scientifique correcte&&Non, car la partie entière n’est pas comprise entre 1 et 10&&Non, car l'exposant doit être positif&&",
-      "answer": "[\"2\"]",
-      "options": {
-        "formula_code": "setNB(1)\nd=RD(105,995)\nm=d/10\ne=RD(2,5)",
-        "scientific_kind": "recognition"
-      },
-      "footer": "[[formula_qcm1]]"
-    },
-    {
-      "n": 11,
-      "statement": "Cette notation scientifique correspond à quel nombre décimal ?",
-      "answer": "[\"n\"]",
-      "options": {
-        "formula_code": "setNB(1)\nd=RD(11,99)\nm=d/10\ne=0-RD(2,4)\nn=CUT(m*10**e,8)",
-        "scientific_kind": "from_scientific"
-      },
-      "footer": "$$${m}\\times10^{${e}}=[[dots]]$$"
-    }
+    {"n": 1, "title": "Grand nombre (10² ou 10³)", "statement": "", "answer": "[\"m\",\"e\"]", "footer": "", "options": {"scientific_kind": "to_scientific", "exponents": [2, 3], "template_version": 2}},
+    {"n": 2, "title": "Grand nombre (10⁴ ou 10⁵)", "statement": "", "answer": "[\"m\",\"e\"]", "footer": "", "options": {"scientific_kind": "to_scientific", "exponents": [4, 5], "template_version": 2}},
+    {"n": 3, "title": "Petit nombre (10⁻³)", "statement": "", "answer": "[\"m\",\"e\"]", "footer": "", "options": {"scientific_kind": "to_scientific", "exponents": [-3, -3], "template_version": 2}},
+    {"n": 4, "title": "Petit nombre (10⁻¹ ou 10⁻²)", "statement": "", "answer": "[\"m\",\"e\"]", "footer": "", "options": {"scientific_kind": "to_scientific", "exponents": [-2, -1], "template_version": 2}},
+    {"n": 5, "title": "Grand nombre (10⁶ ou 10⁷)", "statement": "", "answer": "[\"m\",\"e\"]", "footer": "", "options": {"scientific_kind": "to_scientific", "exponents": [6, 7], "template_version": 2}},
+    {"n": 6, "title": "Petit nombre (10⁻⁴ à 10⁻⁶)", "statement": "", "answer": "[\"m\",\"e\"]", "footer": "", "options": {"scientific_kind": "to_scientific", "exponents": [-6, -4], "template_version": 2}},
+    {"n": 7, "title": "Grand nombre (10⁸ ou 10⁹)", "statement": "", "answer": "[\"m\",\"e\"]", "footer": "", "options": {"scientific_kind": "to_scientific", "exponents": [8, 9], "template_version": 2}},
+    {"n": 8, "title": "Écriture décimale (exposant positif)", "statement": "", "answer": "[\"n\"]", "footer": "", "options": {"scientific_kind": "from_scientific", "exponents": [2, 6], "template_version": 2}},
+    {"n": 9, "title": "QCM : choisir la notation scientifique", "statement": "", "answer": "[\"correctIndex\"]", "footer": "", "options": {"scientific_kind": "choose_qcm", "template_version": 2}},
+    {"n": 10, "title": "QCM : laquelle est une notation scientifique ?", "statement": "", "answer": "[\"correctIndex\"]", "footer": "", "options": {"scientific_kind": "recognize_qcm", "template_version": 2}},
+    {"n": 11, "title": "Écriture décimale (exposant négatif)", "statement": "", "answer": "[\"n\"]", "footer": "", "options": {"scientific_kind": "from_scientific", "exponents": [-4, -1], "template_version": 2}},
+    {"n": 12, "title": "Notation scientifique en contexte", "statement": "", "answer": "[\"m\",\"e\"]", "footer": "", "options": {"scientific_kind": "context", "template_version": 2}},
+    {"n": 13, "title": "Compléter : 1 200 = 1,2 × 10^…", "statement": "", "answer": "[\"e\"]", "footer": "", "options": {"scientific_kind": "complete_power", "template_version": 2}},
+    {"n": 14, "title": "Écrire sous la forme d’une puissance de 10", "statement": "", "answer": "[\"e\"]", "footer": "", "options": {"scientific_kind": "power_of_ten", "template_version": 2}},
+    {"n": 15, "title": "Calcul avec des puissances de 10", "statement": "", "answer": "[\"b\"]", "footer": "", "options": {"scientific_kind": "power_calc", "template_version": 2}}
   ]
 };

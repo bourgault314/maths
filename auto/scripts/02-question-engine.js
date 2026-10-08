@@ -5060,6 +5060,9 @@ const LEVEL_5E_QUESTIONS={
 
 const LEVEL_4E_QUESTIONS={
   dnb_02:[1,3,4,7,8,9,10,11,13,15,16,17,18],
+  // dnb_06 : les calculs avec des puissances de 10 (types 14 et 15, sujets de
+  // référence 2027) restent en 3e.
+  dnb_06:[1,2,3,4,5,6,7,8,9,10,11,12,13],
   // dnb_10 : l’opposé d’une parenthèse (type 8) est un automatisme de 3e.
   dnb_10:[1,2,3,4,6,7,9,10,11],
   dnb_12:Array.from({length:18},(_,index)=>index+1),

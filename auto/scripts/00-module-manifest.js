@@ -14,7 +14,7 @@ const MATHSGO_MODULE_MANIFEST=Object.freeze([
   {id:'dnb_03b',title:'Fractions : multiplier et diviser',level_tags:['4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_03B',file:'scripts/modules/numbers/dnb_03b.js'},
   {id:'dnb_04',title:'Fractions d’une quantité et pourcentages repères',level_tags:['4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_04',file:'scripts/modules/numbers/dnb_04.js'},
   {id:'dnb_05',title:'Un même nombre sous plusieurs formes',level_tags:['4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_05',file:'scripts/modules/numbers/dnb_05.js'},
-  {id:'dnb_06',title:'Notation scientifique',level_tags:['4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_06',file:'scripts/modules/numbers/dnb_06.js'},
+  {id:'dnb_06',title:'Notation scientifique',level_tags:['4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_06',file:'scripts/modules/numbers/dnb_06.js',runtimeFiles:['scripts/modules/numbers/dnb_06/generate.js','scripts/modules/numbers/dnb_06/selection.js','scripts/modules/numbers/dnb_06/render.js']},
   {id:'dnb_07',title:'Carrés des entiers de 1 à 12',level_tags:['4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_07',file:'scripts/modules/numbers/dnb_07.js'},
   {id:'dnb_08',title:'Critères de divisibilité par 2, 3, 5, 9 et 10',level_tags:['4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_08',file:'scripts/modules/numbers/dnb_08.js',runtimeFiles:['scripts/modules/numbers/dnb_08/generate.js','scripts/modules/numbers/dnb_08/selection.js','scripts/modules/numbers/dnb_08/render.js']},
   {id:'dnb_09',title:'Double, triple, moitié, prédécesseur, successeur et carré',level_tags:['4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_09',file:'scripts/modules/numbers/dnb_09.js'},
