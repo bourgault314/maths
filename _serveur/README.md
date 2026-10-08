@@ -113,6 +113,19 @@ toute la base). `verifier.php` devient rouge tant que l'un d'eux traîne, et
   étapes réussies (✨ pour les Bonus, à part), dernière activité, un
   « Détail » qui déplie les étapes monde par monde (réussie, réussie avec des
   réponses vues, en cours), et sa carte « Notre classe, ensemble ».
+  Depuis le lot « splat-suivi-5 » (08/10/2026), sous SPLAT!, le propriétaire
+  choisit les **mondes ouverts à la classe** (un bouton par monde ; tous par
+  défaut). Rangés dans `classes.reglages` (JSON, `{"splat":{"mondes":[1,2]}}` =
+  les mondes OUVERTS ; rien d'écrit quand ils le sont tous), écrits par
+  `classes.modifier` (lecture stricte, `lib/applis.php`), rendus à « Ma classe »
+  (`classes.liste`, `tableau`) et à l'élève (`api/eleve.php`, par son code et à
+  l'échange du billet). Un monde fermé reste sur la carte de l'élève, grisé
+  avec un cadenas ; les comptes de la tuile et de « Ma classe » ne portent que
+  sur les mondes ouverts. Ça guide la classe, ça ne verrouille rien : sans code
+  (mathsgo.re, QR des livrets), tout reste ouvert. La colonne arrive par
+  `migrer.php` ; tant qu'elle manque, tout se lit « tous ouverts » et seul le
+  choix des mondes répond « mise à niveau » (ligne « Mondes ouverts par
+  classe » de `verifier.php`).
 
 ### Le moteur
 

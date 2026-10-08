@@ -141,8 +141,8 @@ const TOM = parcours({m1e1: etape(false, 0, 5)});
 
 const SOURCES_TABLEAU = ["nomAffiche", "dateLisible", "celluleNom", "celluleCode", "celluleDate", "poserGestes",
   "elementSvg", "pastilleMonde", "ligneDetailSplat", "dessinerTableauSplat", "objectifSplat",
-  "dessinerObjectifSplat", "resumeDeLaClasse", "lireSplat"].map(fonction).join("\n");
-const CONSTANTES = ["COULEURS_MONDES", "ETATS_MONDE", "CASES_ETAPE", "SVG"].map(constante).join("\n");
+  "dessinerObjectifSplat", "resumeDeLaClasse", "lireSplat", "mondesOuverts"].map(fonction).join("\n");
+const CONSTANTES = ["COULEURS_MONDES", "ETATS_MONDE", "GRIS_FERME", "CASES_ETAPE", "SVG", "NOMBRE_MONDES"].map(constante).join("\n");
 
 function ongletSplat(liste, options = {}) {
   const {zones, $} = creerZones();
@@ -150,11 +150,13 @@ function ongletSplat(liste, options = {}) {
   const messages = [];
   const etat = {detailsOuverts: options.detailsOuverts || new Set()};
   const moteur = options.sansMoteur ? null : SPLAT;
+  // Lot « splat-suivi-5 » : la classe ouverte porte ses réglages (les mondes ouverts).
   const fabrique = new Function("document", "$", "SPLAT", "droitClasse", "detailsOuverts", "messager",
-    "dessinerPapier", "nommer", "revenirA", "regenerer", "supprimerEleve", "placerMenu",
+    "dessinerPapier", "nommer", "revenirA", "regenerer", "supprimerEleve", "placerMenu", "classe",
     `${CONSTANTES}\nlet eleves = [];\n${SOURCES_TABLEAU}\nreturn {poser: liste => { eleves = liste; }, lireSplat, dessinerTableauSplat, objectifSplat};`);
   const f = fabrique(document, $, moteur, options.droit || "proprietaire", etat.detailsOuverts,
-    (id, t, type) => messages.push({id, t, type}), () => {}, () => {}, () => {}, () => {}, () => {}, () => {});
+    (id, t, type) => messages.push({id, t, type}), () => {}, () => {}, () => {}, () => {}, () => {}, () => {},
+    {id: 7, libelle: "405", reglages: options.reglages || {}});
   const eleves = liste.map((e, i) => Object.assign({id: i + 1, code: `CODE0${i}`, initiale: "", restaurable: false, journees: []},
     e, {lu: f.lireSplat(e.parcours)}));
   f.poser(eleves);
@@ -379,17 +381,35 @@ test("l'activité montrée : le dernier choix si la classe l'a, sinon la premiè
   assert.match(fonction("deconnecter"), /sessionStorage\.removeItem\(CLE_APPLI\)/);
 });
 
-function poserAppliRejoue(applis, appliAffichee, droit = "proprietaire", triAvant = {colonne: "acquises", sens: -1}) {
+function casesMondes() {
+  return [1, 2, 3, 4, 5, 6].map(n => {
+    const puce = Object.assign(new Noeud("label"), {dataset: {monde: String(n)}});
+    puce.classList = {toggle: (c, oui) => {
+      const liste = (puce.className || "").split(" ").filter(x => x && x !== c);
+      if (oui) liste.push(c);
+      puce.className = liste.join(" ");
+    }};
+    const caseMonde = Object.assign(new Noeud("input"), {dataset: {monde: String(n)}});
+    caseMonde.closest = () => puce;
+    caseMonde.puce = puce;
+    return caseMonde;
+  });
+}
+
+function poserAppliRejoue(applis, appliAffichee, droit = "proprietaire", triAvant = {colonne: "acquises", sens: -1}, reglages = {}) {
   const {$} = creerZones();
   const boutons = ["defi-tables", "splat"].map(cle => Object.assign(new Noeud("button"), {dataset: {appli: cle}}));
   const cases = ["defi-tables", "splat"].map(cle => Object.assign(new Noeud("input"), {dataset: {appli: cle}}));
-  const doc = Object.assign({}, document, {querySelectorAll: s => (s.startsWith("#choix-appli") ? boutons : cases)});
+  const mondes = casesMondes();
+  const doc = Object.assign({}, document, {querySelectorAll: s => (s.startsWith("#choix-appli") ? boutons
+    : s.startsWith("#mondes-ouverts") ? mondes : cases)});
   const TRIS = {"defi-tables": [["prenom", "Prénom"], ["acquises", "Tables passées"], ["date", "Dernière activité"]],
     "splat": [["prenom", "Prénom"], ["etapes", "Étapes réussies"], ["date", "Dernière activité"]]};
   const etat = new Function("document", "$", "classe", "appliAffichee", "droitClasse", "TRIS", "APPLIS", "triInitial",
-    `let tri = triInitial;\n${["lesApplisConnues", "applisDeLaClasse", "poserAppli", "poserTris", "poserActivites"].map(fonction).join("\n")}\nposerAppli();\nreturn {tri};`)(
-    doc, $, {applis}, appliAffichee, droit, TRIS, [{cle: "defi-tables"}, {cle: "splat"}], triAvant);
-  return {$, boutons, cases, tri: etat.tri};
+    `let tri = triInitial;\n${constante("NOMBRE_MONDES")}\n${["lesApplisConnues", "applisDeLaClasse", "poserAppli", "poserTris", "poserActivites",
+      "mondesOuverts", "poserPuce"].map(fonction).join("\n")}\nposerAppli();\nreturn {tri};`)(
+    doc, $, {applis, reglages}, appliAffichee, droit, TRIS, [{cle: "defi-tables"}, {cle: "splat"}], triAvant);
+  return {$, boutons, cases, mondes, tri: etat.tri};
 }
 
 test("le choix n'apparaît qu'avec deux activités ; l'onglet SPLAT! change l'en-tête, les tris, et cache ce qui est à Défi tables", () => {
@@ -615,4 +635,157 @@ test("à la déconnexion, le choix, l'onglet et les activités partent avec le r
   assert.ok(zones.BLOCS_A_CACHER.includes("choix-appli"));
   const oublier = fonction("oublierEtat");
   assert.match(oublier, /appliAffichee = "defi-tables";\s*tableaux = \{\};\s*detailsOuverts\.clear\(\);/);
+});
+
+// ------------------------------------------------------------ lot « splat-suivi-5 »
+//
+// Les mondes de SPLAT! ouverts, classe par classe (08/10/2026, choix de
+// Gwenaël sur maquettes) : sous SPLAT! dans « Activités de la classe », un
+// bouton par monde ; dans l'onglet SPLAT!, les mondes fermés en gris
+// (pointillés) et les comptes sur les mondes ouverts seulement ; le Détail
+// garde tout le travail, les mondes fermés plus pâles avec un cadenas.
+
+const MONDES_1_2 = {splat: {mondes: [1, 2]}};
+
+test("mondes 1 et 2 ouverts : pastilles grises pour les autres, étapes comptées sur 9, Bonus des mondes fermés hors compte", () => {
+  const {lignes} = ongletSplat(classe8(), {reglages: MONDES_1_2});
+  const [lea, maelys, tom, yanis] = lignes;
+  assert.deepEqual(pastilles(lea).map(etatPastille), ["fini", "fini", "ferme", "ferme", "ferme", "ferme"]);
+  assert.deepEqual(pastilles(tom).map(etatPastille), ["cours", "vide", "ferme", "ferme", "ferme", "ferme"]);
+  assert.deepEqual(pastilles(maelys).map(etatPastille), ["fini", "fini", "ferme", "ferme", "ferme", "ferme"]);
+  const compte = tr => cellules(tr)[3].premier(n => aClasse(n, "pastille")).textContent;
+  const bonus = tr => (cellules(tr)[3].premier(n => aClasse(n, "bonus-compte")) || {textContent: ""}).textContent;
+  assert.equal(compte(lea), "9 / 9");
+  assert.equal(compte(maelys), "9 / 9");
+  assert.equal(compte(tom), "0 / 9");
+  assert.equal(compte(yanis), "0 / 9");
+  assert.equal(bonus(lea), "", "le Bonus de Léa est dans le monde 3, fermé");
+  assert.equal(bonus(maelys), "", "les Bonus sont tous dans les mondes 3 et 4");
+  const titres = pastilles(lea).map(svg => svg.premier(n => n.tag === "title").textContent);
+  assert.equal(titres[2], "Monde 3 · SPLAT! Enquête : fermé pour la classe");
+  assert.equal(titres[0], "Monde 1 · Petit SPLAT! : 6 / 6");
+  // Le dessin d'un monde fermé : anneau gris en pointillés, chiffre gris centré, pas de moitié.
+  const ferme = pastilles(lea)[2];
+  const cercle = ferme.premier(n => n.tag === "circle");
+  const chiffre = ferme.premier(n => n.tag === "text");
+  assert.equal(cercle.attributs["stroke-dasharray"], "3.2 2.4");
+  assert.equal(cercle.attributs.fill, "#fff");
+  assert.equal(cercle.attributs.stroke, chiffre.attributs.fill);
+  assert.equal(chiffre.attributs.y, "16.375");
+  assert.equal(ferme.premier(n => n.tag === "path"), null);
+  // Les mondes 5 et 6 seulement : 3 + 6 = 9 étapes.
+  const {lignes: l2} = ongletSplat(classe8(), {reglages: {splat: {mondes: [5, 6]}}});
+  assert.equal(cellules(l2[1])[3].premier(n => aClasse(n, "pastille")).textContent, "9 / 9", "Maëlys a tout fini");
+  assert.deepEqual(pastilles(l2[1]).map(etatPastille), ["ferme", "ferme", "ferme", "ferme", "fini", "fini"]);
+});
+
+test("mondes fermés : le Détail garde tout le travail, les rangées des mondes fermés plus pâles avec un cadenas", () => {
+  const {corps, lignes} = ongletSplat(classe8(), {reglages: MONDES_1_2});
+  cellules(lignes[0])[5].children[0].cliquer();
+  const detail = corps.children[1];
+  const rangees = detail.tous(n => (n.className || "").startsWith("detail-monde"));
+  const noms = rangees.map(r => r.premier(n => n.tag === "b").textContent);
+  assert.deepEqual(noms, ["Monde 1 · Petit SPLAT!", "Monde 2 · SPLAT! Classique", "🔒 Monde 3 · SPLAT! Enquête",
+    "🔒 Monde 4 · SPLAT! Système", "🔒 Monde 5 · SPLAT! Équations", "🔒 Monde 6 · SPLAT! Relatifs",
+    "🔒 ✨ Bonus du monde 3", "🔒 ✨ Bonus du monde 4"]);
+  assert.deepEqual(rangees.map(r => aClasse(r, "ferme")), [false, false, true, true, true, true, true, true]);
+  const cases = rangees[2].tous(n => aClasse(n, "et"));
+  assert.ok(aClasse(cases[1], "aide"), "l'étape 11 de Léa, réussie avec des réponses vues, reste visible");
+  assert.ok(aClasse(cases[0], "ok"));
+});
+
+test("mondes fermés : la carte de classe compte sur les mondes ouverts, et ne cite qu'eux", () => {
+  const {f} = ongletSplat(classe8(), {reglages: MONDES_1_2});
+  const objectif = f.objectifSplat();
+  assert.equal(objectif.total, 4 * 9, "quatre élèves, neuf étapes ouvertes");
+  assert.equal(objectif.fait, 9 + 9 + 0 + 0);
+  assert.deepEqual(objectif.mondes.map(m => m.numero), [1, 2]);
+  assert.deepEqual(objectif.mondes.map(m => m.finis), [2, 2]);
+  const tous = ongletSplat(classe8()).f.objectifSplat();
+  assert.equal(tous.total, 4 * 37, "sans réglage : les 37 étapes");
+  assert.equal(tous.mondes.length, 6);
+});
+
+test("mondesOuverts : la liste de la classe, ou null (tous ouverts) — rien de lisible, tout ouvert", () => {
+  const lire = reglages => new Function("classe", `${constante("NOMBRE_MONDES")}\n${fonction("mondesOuverts")}\nreturn mondesOuverts();`)(
+    reglages === undefined ? null : {reglages});
+  assert.deepEqual(lire(MONDES_1_2), [1, 2]);
+  assert.deepEqual(lire({splat: {mondes: [2, 9, "3", 0]}}), [2]);
+  for (const r of [undefined, {}, {splat: {}}, {splat: {mondes: []}}, {splat: {mondes: [1, 2, 3, 4, 5, 6]}}, {splat: {mondes: "1,2"}}]) {
+    assert.equal(lire(r), null, JSON.stringify(r));
+  }
+});
+
+test("« Activités de la classe » : les six mondes sous SPLAT!, cochés d'après la classe ; cachés sans SPLAT!", () => {
+  const sans = poserAppliRejoue(["defi-tables"], "defi-tables");
+  assert.equal(sans.$("mondes-ouverts").hidden, true, "pas de SPLAT! : pas de mondes");
+  const tous = poserAppliRejoue(["defi-tables", "splat"], "splat");
+  assert.equal(tous.$("mondes-ouverts").hidden, false);
+  assert.deepEqual(tous.mondes.map(c => c.checked), Array(6).fill(true), "par défaut : tous ouverts");
+  assert.deepEqual(tous.mondes.map(c => aClasse(c.puce, "ferme")), Array(6).fill(false));
+  const deux = poserAppliRejoue(["defi-tables", "splat"], "splat", "proprietaire", undefined, MONDES_1_2);
+  assert.deepEqual(deux.mondes.map(c => c.checked), [true, true, false, false, false, false]);
+  assert.deepEqual(deux.mondes.map(c => aClasse(c.puce, "ferme")), [false, false, true, true, true, true]);
+  assert.equal(poserAppliRejoue(["defi-tables", "splat"], "splat", "ecriture", undefined, MONDES_1_2).$("bloc-activites").hidden, true,
+    "un collègue ne choisit pas les mondes");
+});
+
+function changerMondeRejoue({ouverts = [1, 2, 3, 4, 5, 6], clic, echec = null}) {
+  const {$} = creerZones();
+  const mondes = casesMondes();
+  mondes.forEach((c, i) => { c.checked = ouverts.includes(i + 1); });
+  const appels = [], messages = [], erreurs = [];
+  let rouvertes = 0;
+  const doc = {querySelectorAll: () => mondes};
+  const changer = new Function("document", "$", "classe", "api", "ouvrirClasse", "messager", "surErreur",
+    `${["poserPuce", "changerMonde"].map(fonction).join("\n")}\nreturn changerMonde;`)(
+    doc, $, {id: 7, libelle: "405"},
+    async (action, corps) => { appels.push([action, corps]); if (echec) throw echec; return {ok: true}; },
+    async () => { rouvertes += 1; },
+    (id, t, type) => messages.push([id, t, type]), (e, zone) => erreurs.push([e.message, zone]));
+  const cible = mondes[clic - 1];
+  cible.checked = !cible.checked;
+  return {fin: changer(cible), mondes, appels, messages, erreurs, rouvertes: () => rouvertes};
+}
+
+test("fermer un monde : la liste des mondes cochés part au serveur, la classe est relue, un message court", async () => {
+  const r = changerMondeRejoue({clic: 3});
+  await r.fin;
+  assert.deepEqual(r.appels, [["classes.modifier", {classe_id: 7, reglages: {splat: {mondes: [1, 2, 4, 5, 6]}}}]]);
+  assert.equal(r.rouvertes(), 1, "la classe est relue : comptes et pastilles suivent");
+  assert.deepEqual(r.messages.at(-1), ["message-activites", "Monde 3 fermé pour la 405.", "ok"]);
+  assert.ok(r.mondes.every(c => !c.disabled), "les cases redeviennent cliquables");
+  const ouvrir = changerMondeRejoue({ouverts: [1, 2], clic: 3});
+  await ouvrir.fin;
+  assert.deepEqual(ouvrir.appels[0][1].reglages.splat.mondes, [1, 2, 3]);
+  assert.deepEqual(ouvrir.messages.at(-1), ["message-activites", "Monde 3 ouvert pour la 405.", "ok"]);
+});
+
+test("fermer le dernier monde ouvert : refusé sans appel ; une erreur du serveur remet la case", async () => {
+  const dernier = changerMondeRejoue({ouverts: [2], clic: 2});
+  await dernier.fin;
+  assert.deepEqual(dernier.appels, [], "rien ne part");
+  assert.equal(dernier.mondes[1].checked, true, "la case se recoche");
+  assert.deepEqual(dernier.messages.at(-1), ["message-activites", "Une classe garde au moins un monde ouvert.", "erreur"]);
+  const panne = changerMondeRejoue({clic: 4, echec: new Error("Le serveur doit être mis à niveau.")});
+  await panne.fin;
+  assert.equal(panne.mondes[3].checked, true, "le monde 4 reste ouvert : rien n'a changé");
+  assert.equal(aClasse(panne.mondes[3].puce, "ferme"), false);
+  assert.deepEqual(panne.erreurs, [["Le serveur doit être mis à niveau.", "message-activites"]]);
+});
+
+test("les six boutons de mondes : ceux de la carte du moteur, dans l'ordre, aux couleurs des mondes", () => {
+  const puces = [...page.matchAll(/<label class="puce-monde" data-monde="(\d)"><input type="checkbox" data-monde="(\d)"><i aria-hidden="true">(\d)<\/i>([^<]+)<\/label>/g)];
+  assert.equal(puces.length, SPLAT.CARTE.MONDES.length);
+  puces.forEach((m, i) => {
+    const [numero, nom] = SPLAT.CARTE.MONDES[i];
+    assert.deepEqual([m[1], m[2], m[3]].map(Number), [numero, numero, numero]);
+    assert.equal(nom.replace(/\s*SPLAT!\s*/, "").trim() || nom, m[4], `le nom court du monde ${numero}`);
+  });
+  assert.equal(new Function(`${constante("NOMBRE_MONDES")}\nreturn NOMBRE_MONDES;`)(), SPLAT.CARTE.MONDES.length);
+  const couleurs = new Function(`${constante("COULEURS_MONDES")}\nreturn COULEURS_MONDES;`)();
+  for (let n = 1; n <= 6; n += 1) {
+    assert.match(page, new RegExp(`\\.puce-monde\\[data-monde="${n}"\\] \\{ --c: ${couleurs[n]}; \\}`), `couleur du monde ${n}`);
+  }
+  assert.match(fonction("changerMonde"), /api\("classes\.modifier", \{classe_id: classe\.id, reglages: \{splat: \{mondes: voulus\}\}\}\)/);
 });

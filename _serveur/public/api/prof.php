@@ -19,6 +19,7 @@ require_once __DIR__ . '/../lib/billets.php';
 require_once __DIR__ . '/../lib/archives.php';
 require_once __DIR__ . '/../lib/versions.php';
 require_once __DIR__ . '/../lib/journal.php';
+require_once __DIR__ . '/../lib/applis.php';
 
 const MAX_ELEVES_PAR_LOT = 60;
 // L'ordre de cette liste est celui des activités dans la liste d'une classe
@@ -507,7 +508,10 @@ try {
             // tâche planifiée d'OVH, qui tient la promesse du 1er août.
             $echues = classes_a_proposer($pdo, $profId);
             $requete = $pdo->prepare(
-                'SELECT c.id, c.libelle, c.applis, c.cree_le, c.prof_id,
+                // c.* plutôt que la liste des colonnes : « reglages » n'existe
+                // qu'après migrer.php (lot « splat-suivi-5 ») — avant, la classe
+                // se lit « tous les mondes ouverts » au lieu de tomber en panne.
+                'SELECT c.*,
                         (SELECT COUNT(*) FROM eleves e WHERE e.classe_id = c.id) AS eleves,
                         (SELECT p.identifiant FROM profs p WHERE p.id = c.prof_id) AS proprietaire,
                         (SELECT g.droit FROM partages g WHERE g.classe_id = c.id AND g.prof_id = ?) AS partage
@@ -524,6 +528,7 @@ try {
                     'id' => (int)$ligne['id'],
                     'libelle' => $ligne['libelle'],
                     'applis' => explode(',', (string)$ligne['applis']),
+                    'reglages' => reglages_json(reglages_de_classe($ligne)),
                     'cree_le' => $ligne['cree_le'],
                     'annee' => annee_scolaire((string)$ligne['cree_le']),
                     'eleves' => (int)$ligne['eleves'],
@@ -570,10 +575,33 @@ try {
             if ($libelle === '') erreur("Donne un nom à la classe.", 400);
             $applis = array_values(array_intersect(APPLIS_PROPOSABLES, (array)($corps['applis'] ?? explode(',', $classe['applis']))));
             if ($applis === []) $applis = ['defi-tables'];
-            $pdo->prepare('UPDATE classes SET libelle = ?, applis = ? WHERE id = ?')
-                ->execute([$libelle, implode(',', $applis), (int)$classe['id']]);
+            // Lot « splat-suivi-5 » : les réglages de la classe (aujourd'hui les
+            // mondes de SPLAT! ouverts), seulement s'ils sont envoyés. Lus
+            // STRICTEMENT (lib/applis.php) : une valeur fausse est refusée, rien
+            // n'est arrangé en silence. Ceux des autres activités restent tels
+            // quels, et décocher une activité garde ses réglages (la recocher
+            // les retrouve).
+            $reglages = null;
+            if (array_key_exists('reglages', $corps)) {
+                if (!reglages_disponibles($pdo)) {
+                    erreur("Le serveur doit être mis à niveau : ouvre migrer.php avec ton mot de passe d'installation.", 503);
+                }
+                try {
+                    $reglages = reglages_recus($corps['reglages'], reglages_de_classe($classe));
+                } catch (InvalidArgumentException $e) {
+                    erreur($e->getMessage(), 400);
+                }
+            }
+            if ($reglages === null) {
+                $pdo->prepare('UPDATE classes SET libelle = ?, applis = ? WHERE id = ?')
+                    ->execute([$libelle, implode(',', $applis), (int)$classe['id']]);
+            } else {
+                $pdo->prepare('UPDATE classes SET libelle = ?, applis = ?, reglages = ? WHERE id = ?')
+                    ->execute([$libelle, implode(',', $applis),
+                        $reglages === [] ? null : json_encode($reglages, JSON_UNESCAPED_UNICODE), (int)$classe['id']]);
+            }
             journaliser($pdo, $profId, 'classes.modifier', 'classe', (int)$classe['id']);
-            repondre(['ok' => true]);
+            repondre(['ok' => true] + ($reglages === null ? [] : ['reglages' => reglages_json($reglages)]));
 
         case 'classes.supprimer':
             // Supprimer une classe efface des progressions : réservé au
@@ -871,6 +899,7 @@ try {
                     'id' => (int)$classe['id'],
                     'libelle' => $classe['libelle'],
                     'applis' => explode(',', (string)$classe['applis']),
+                    'reglages' => reglages_json(reglages_de_classe($classe)),
                     'droit' => $classe['droit'],
                 ],
                 'eleves' => $lignes,

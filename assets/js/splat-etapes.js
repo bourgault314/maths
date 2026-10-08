@@ -24,7 +24,11 @@
    Depuis le 04/10/2026, il porte aussi les fiches des Bonus des mondes 3 et 4 (BONUS,
    plus bas) : leurs parcours (enq11d…) sont, avec ceux des étapes, TOUS les noms
    sous lesquels un outil SPLAT! enregistre une série réussie — la liste fermée du
-   serveur de suivi, le jour où SPLAT! s'y branchera, se recopie d'ici. */
+   serveur de suivi, le jour où SPLAT! s'y branchera, se recopie d'ici.
+
+   Depuis le 08/10/2026 (lot « splat-suivi-5 »), il sait aussi quels mondes le
+   professeur a ouverts à la CLASSE de l'élève suivi (mondeFerme, plus bas) : la carte
+   les grise, « Continuer » et « Étape suivante » ne les proposent plus. */
 (function () {
   "use strict";
 
@@ -137,18 +141,45 @@
     return !cle && MONDES_EN_PREPARATION.includes(numero);
   }
 
+  /* Les mondes que le professeur a ouverts à la classe de l'élève (lot « splat-suivi-5 »,
+     08/10/2026 — demande de Gwenaël : « à certaines classes, je veux ouvrir que les deux
+     premiers mondes, et après ouvrir le reste »). Seulement pour l'élève suivi : le
+     moteur (assets/js/splat-parcours.js) range la liste dans l'ONGLET, liée à son code,
+     chaque fois qu'il relit son identité ; ce fichier la relit là. Sans code, ou sans
+     liste : null, tous les mondes sont ouverts. Ça guide la classe, ça ne verrouille
+     rien : un outil ouvert directement (QR d'un livret) se joue toujours. */
+  const CLE_MONDES = "mathsgo-splat-mondes", CLE_CODE = "mathsgo-suivi-code";
+  function mondesOuverts() {
+    try {
+      const code = window.sessionStorage.getItem(CLE_CODE);
+      const lu = JSON.parse(window.sessionStorage.getItem(CLE_MONDES) || "null");
+      if (!code || !lu || typeof lu !== "object" || lu.code !== code || !Array.isArray(lu.mondes)) return null;
+      const mondes = lu.mondes.filter((n) => Number.isInteger(n));
+      return mondes.length ? mondes : null;
+    } catch (e) { return null; }
+  }
+
+  /* Un monde (numéro de la carte) est-il fermé à la classe ? ouverts = null : aucun. */
+  function mondeFerme(numero, ouverts = mondesOuverts()) {
+    return Array.isArray(ouverts) && !ouverts.includes(numero);
+  }
+
   /* L'étape qui suit « parcours » : null si le parcours n'est pas sur la carte,
      et pour une fiche bonus, la fiche bonus qui la suit (« bonus: true »),
      { derniere: true } quand il n'y a plus rien après (dernière étape de l'univers).
      Sans la clé, on saute les mondes en préparation : après l'étape 9, c'est
      SPLAT! Équations (étape 35) ; après l'étape 37, la carte des mondes. Un élève
      arrivé dans un monde en préparation par un QR déjà imprimé continue dans CE
-     monde, jusqu'à sa dernière étape, puis retourne à la carte. */
-  function suivante(parcours, cle = CLE) {
+     monde, jusqu'à sa dernière étape, puis retourne à la carte.
+     Les mondes fermés à la classe (ouverts, lot « splat-suivi-5 ») ne sont jamais
+     proposés ; un élève qui joue dans un monde fermé (il l'avait ouvert avant la
+     fermeture) retourne à la carte. */
+  function suivante(parcours, cle = CLE, ouverts = mondesOuverts()) {
     /* une fiche bonus : la fiche bonus suivante, puis la carte (jamais une étape) */
     const kb = BONUS.findIndex((b) => b[0] === parcours);
     if (kb >= 0) {
       const ici = BONUS[kb];
+      if (mondeFerme(ici[4], ouverts)) return { derniere: true };
       if (kb + 1 >= BONUS.length || BONUS[kb + 1][4] !== ici[4]) return { derniere: true };
       const [p, code, titre, monde] = BONUS[kb + 1];
       return { derniere: false, bonus: true, parcours: p, code, titre, monde, nouveauMonde: false };
@@ -156,16 +187,17 @@
     const k = ETAPES.findIndex((e) => e[0] === parcours);
     if (k < 0) return null;
     const ici = ETAPES[k];
+    if (mondeFerme(ici[4], ouverts)) return { derniere: true };
     const apres = ETAPES.slice(k + 1).filter((e) =>
-      mondeCache(ici[4], cle) ? e[4] === ici[4] : !mondeCache(e[4], cle));
+      (mondeCache(ici[4], cle) ? e[4] === ici[4] : !mondeCache(e[4], cle)) && !mondeFerme(e[4], ouverts));
     if (!apres.length) return { derniere: true };
     const [p, numero, titre, monde] = apres[0];
     return { derniere: false, parcours: p, numero, titre, monde, nouveauMonde: monde !== ici[3] };
   }
 
   /* La petite ligne sous « Étape suivante ▶ » (texte brut, "" si inconnue). */
-  function sousTitre(parcours, cle = CLE) {
-    const s = suivante(parcours, cle);
+  function sousTitre(parcours, cle = CLE, ouverts = mondesOuverts()) {
+    const s = suivante(parcours, cle, ouverts);
     if (!s || s.derniere) return "";
     /* espaces insécables : « SPLAT! Classique » ne se coupe pas en deux sur téléphone */
     if (s.bonus) return `Bonus ${s.code} · ${s.titre}`;
@@ -178,14 +210,15 @@
      urlCarte = l'adresse de la carte des mondes de l'outil. Parcours inconnu
      de la carte : « Étape suivante ▶ » seul (la carte fera au mieux). Plus rien
      après : le bouton ramène à la carte. */
-  function bouton(parcours, urlCarte, cle = CLE) {
-    const s = suivante(parcours, cle);
+  function bouton(parcours, urlCarte, cle = CLE, ouverts = mondesOuverts()) {
+    const s = suivante(parcours, cle, ouverts);
     if (s && s.derniere) {
-      /* après la dernière fiche d'un Bonus (24d, 28d) : la carte, ouverte sur ce Bonus */
+      /* après la dernière fiche d'un Bonus (24d, 28d) : la carte, ouverte sur ce Bonus —
+         sauf si son monde est fermé à la classe (lot « splat-suivi-5 ») : la carte seule */
       const b = BONUS.find((x) => x[0] === parcours);
-      return { html: "Voir la carte des mondes ▶", href: urlCarte + (b ? (b[4] === 4 ? "#sys-bonus" : "#enq-bonus") : ""), versCarte: true };
+      return { html: "Voir la carte des mondes ▶", href: urlCarte + (b && !mondeFerme(b[4], ouverts) ? (b[4] === 4 ? "#sys-bonus" : "#enq-bonus") : ""), versCarte: true };
     }
-    const sous = sousTitre(parcours, cle);
+    const sous = sousTitre(parcours, cle, ouverts);
     return {
       html: "Étape suivante ▶" + (sous ? `<span class="finSuiteOu">${echapper(sous)}</span>` : ""),
       href: `${urlCarte}?apres=${encodeURIComponent(parcours)}`,
@@ -193,5 +226,5 @@
     };
   }
 
-  window.MathsGoSplatEtapes = { ETAPES, BONUS, MONDES_EN_PREPARATION, CLE_ESSAI, cle: CLE, mondeCache, estBonus, suivante, sousTitre, bouton };
+  window.MathsGoSplatEtapes = { ETAPES, BONUS, MONDES_EN_PREPARATION, CLE_ESSAI, cle: CLE, mondeCache, mondesOuverts, mondeFerme, estBonus, suivante, sousTitre, bouton };
 })();

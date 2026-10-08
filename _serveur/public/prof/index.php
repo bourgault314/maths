@@ -216,6 +216,27 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
   .activites label { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin: 0;
                      font-size: .95rem; cursor: pointer; }
   .activites input { width: 20px; height: 20px; margin: 0; accent-color: var(--blue); }
+  /* Lot « splat-suivi-5 » (choix de Gwenaël sur maquettes, 08/10/2026) : sous SPLAT!,
+     les mondes ouverts à la classe, monde par monde. Ouvert : bordure et rond de la
+     couleur du monde (celle de la carte) ; fermé : pointillés gris. */
+  .mondes-ouverts { margin: 6px 0 2px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .mondes-ouverts p { margin: 0 0 8px; font-size: .88rem; font-weight: 700; color: var(--ink); }
+  .puces-mondes { display: flex; flex-wrap: wrap; gap: 8px; }
+  .puce-monde { position: relative; display: inline-flex; align-items: center; gap: 7px; min-height: 44px; margin: 0;
+                padding: 0 12px 0 8px; border: 2px solid var(--c); border-radius: 999px; background: #fff;
+                color: var(--ink); font-size: .86rem; font-weight: 700; cursor: pointer; }
+  .puce-monde i { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
+                  background: var(--c); color: #fff; font-style: normal; font-size: .78rem; font-weight: 800; }
+  .puce-monde input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+  .puce-monde.ferme { border-style: dashed; border-color: #b9c1cb; background: #f6f8fa; color: #6b7685; }
+  .puce-monde.ferme i { background: #fff; color: #6b7685; border: 2px dashed #b9c1cb; width: 18px; height: 18px; }
+  .puce-monde:focus-within { outline: 3px solid #7fb3e0; outline-offset: 2px; }
+  .puces-mondes[aria-busy="true"] .puce-monde { opacity: .6; cursor: progress; }
+  .puce-monde[data-monde="1"] { --c: #d9690c; } .puce-monde[data-monde="2"] { --c: #0b67b2; }
+  .puce-monde[data-monde="3"] { --c: #be185d; } .puce-monde[data-monde="4"] { --c: #92400e; }
+  .puce-monde[data-monde="5"] { --c: #08857f; } .puce-monde[data-monde="6"] { --c: #7b42b4; }
+  /* dans le Détail : la rangée d'un monde fermé à la classe, plus pâle, avec un cadenas */
+  .detail-monde.ferme { opacity: .5; }
   /* Le papier (lot 7). Deux impressions distinctes, jamais ensemble : les
      BANDELETTES à distribuer (adresse, code, consigne — aucun prénom du côté
      donné à l'élève) et la FEUILLE prénom ↔ code, que le professeur garde.
@@ -486,6 +507,21 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
         <div class="activites" id="liste-activites">
           <label><input type="checkbox" data-appli="defi-tables"> Défi tables</label>
           <label><input type="checkbox" data-appli="splat"> SPLAT!</label>
+        </div>
+        <!-- Lot « splat-suivi-5 » : les mondes de SPLAT! ouverts à la classe (tous par
+             défaut). Un monde fermé reste sur la carte de l'élève, grisé, avec un
+             cadenas ; rien n'est effacé. Les six mondes de la carte, dans l'ordre
+             (un test les compare au moteur). -->
+        <div class="mondes-ouverts" id="mondes-ouverts" hidden>
+          <p id="titre-mondes-ouverts">Mondes de SPLAT! ouverts à la classe</p>
+          <div class="puces-mondes" id="puces-mondes" role="group" aria-labelledby="titre-mondes-ouverts">
+            <label class="puce-monde" data-monde="1"><input type="checkbox" data-monde="1"><i aria-hidden="true">1</i>Petit</label>
+            <label class="puce-monde" data-monde="2"><input type="checkbox" data-monde="2"><i aria-hidden="true">2</i>Classique</label>
+            <label class="puce-monde" data-monde="3"><input type="checkbox" data-monde="3"><i aria-hidden="true">3</i>Enquête</label>
+            <label class="puce-monde" data-monde="4"><input type="checkbox" data-monde="4"><i aria-hidden="true">4</i>Système</label>
+            <label class="puce-monde" data-monde="5"><input type="checkbox" data-monde="5"><i aria-hidden="true">5</i>Équations</label>
+            <label class="puce-monde" data-monde="6"><input type="checkbox" data-monde="6"><i aria-hidden="true">6</i>Relatifs</label>
+          </div>
         </div>
         <p class="message" id="message-activites" hidden></p>
       </div>
@@ -962,14 +998,41 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
   // étapes du parcours (un test y veille). Un élève sans parcours a ses six
   // mondes vides et « 0 / 37 » : resumeProf part d'un parcours vierge. Le total
   // est celui de la carte du moteur, jamais écrit ici.
+  //
+  // Lot « splat-suivi-5 » : quand la classe n'a pas tous ses mondes ouverts, les
+  // comptes (étapes réussies, Bonus, séries en cours, carte de classe) ne portent
+  // que sur les mondes ouverts — « 9 / 9 » quand les mondes 1 et 2 sont finis —
+  // et les pastilles des mondes fermés sont grises. Le Détail, lui, garde tout le
+  // travail de l'élève (les états de TOUTES les étapes).
   function lireSplat(brut) {
     const vide = {faits: 0, total: 0, bonus: 0, cours: 0, mondes: [], etats: {}, lisible: false};
     if (!SPLAT) return vide;
     try {
-      const resume = SPLAT.resumeProf(brut || null);
+      const ouverts = mondesOuverts();
+      const ouvert = numero => !ouverts || ouverts.includes(numero);
+      const tout = SPLAT.resumeProf(brut || null);
+      const resume = ouverts
+        ? SPLAT.resumeProf(brut || null, SPLAT.CARTE.ETAPES.filter(etape => ouvert(etape[4])),
+            SPLAT.CARTE.BONUS.filter(etape => ouvert(etape[4])))
+        : tout;
       return {faits: resume.faits, total: resume.total, bonus: resume.bonus.faits,
-              cours: resume.cours + resume.bonus.cours, mondes: resume.mondes, etats: resume.etapes, lisible: true};
+              cours: resume.cours + resume.bonus.cours,
+              mondes: tout.mondes.map(monde => (ouvert(monde.numero) ? monde : Object.assign({}, monde, {etat: "ferme"}))),
+              etats: tout.etapes, lisible: true};
     } catch (_) { return vide; }
+  }
+
+  // Les mondes de SPLAT! ouverts à la classe ouverte (classe.reglages, lot
+  // « splat-suivi-5 ») : null quand ils le sont tous — le cas de toute classe où
+  // personne n'a rien choisi. NOMBRE_MONDES : les mondes de la carte (un test le
+  // compare au moteur, et aux six cases de « Activités de la classe »).
+  const NOMBRE_MONDES = 6;
+  function mondesOuverts() {
+    const reglages = classe && classe.reglages;
+    const liste = reglages && reglages.splat && reglages.splat.mondes;
+    if (!Array.isArray(liste)) return null;
+    const ouverts = liste.filter(numero => Number.isInteger(numero) && numero >= 1 && numero <= NOMBRE_MONDES);
+    return ouverts.length && ouverts.length < NOMBRE_MONDES ? ouverts : null;
   }
 
   function elevesLus(cle, liste) {
@@ -1371,7 +1434,10 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
   // Les couleurs des six mondes, celles de la carte des mondes et de la tuile
   // de l'espace élève (index.php) — le même dessin partout.
   const COULEURS_MONDES = {1: "#d9690c", 2: "#0b67b2", 3: "#be185d", 4: "#92400e", 5: "#08857f", 6: "#7b42b4"};
-  const ETATS_MONDE = {vide: "pas commencé", cours: "en cours", fini: "fini"};
+  const ETATS_MONDE = {vide: "pas commencé", cours: "en cours", fini: "fini", ferme: "fermé pour la classe"};
+  // Un monde fermé à la classe (lot « splat-suivi-5 ») : anneau gris en pointillés,
+  // chiffre gris, quel que soit le travail fait — le Détail le montre.
+  const GRIS_FERME = "#949eaa";
   // L'état d'une étape (moteur) → la case du Détail.
   const CASES_ETAPE = {reussie: "ok", aide: "aide", cours: "cours", vide: ""};
   const SVG = "http://www.w3.org/2000/svg";
@@ -1392,8 +1458,17 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
     const dessin = elementSvg("svg", {class: `monde-p ${etat}`, width: "24", height: "24", viewBox: "0 0 24 24",
       focusable: "false"});
     const titre = elementSvg("title", {});
-    titre.textContent = `Monde ${monde.numero} · ${monde.nom} : ${monde.faits} / ${monde.total}`;
+    titre.textContent = `Monde ${monde.numero} · ${monde.nom} : ${etat === "ferme" ? ETATS_MONDE.ferme : `${monde.faits} / ${monde.total}`}`;
     dessin.append(titre);
+    if (etat === "ferme") {
+      dessin.append(elementSvg("circle", {cx: "12", cy: "12", r: "11", fill: "#fff", stroke: GRIS_FERME,
+        "stroke-width": "2", "stroke-dasharray": "3.2 2.4"}));
+      const chiffreFerme = elementSvg("text", {x: "12", y: "16.375", "text-anchor": "middle", "font-size": "12.5",
+        "font-weight": "800", fill: GRIS_FERME});
+      chiffreFerme.textContent = String(monde.numero);
+      dessin.append(chiffreFerme);
+      return dessin;
+    }
     dessin.append(elementSvg("circle", {cx: "12", cy: "12", r: "11", fill: etat === "fini" ? couleur : "#fff",
       stroke: couleur, "stroke-width": "2"}));
     if (etat === "cours") dessin.append(elementSvg("path", {d: "M12 1A11 11 0 0 0 12 23Z", fill: couleur}));
@@ -1419,12 +1494,16 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
     cellule.colSpan = colonnes;
     cellule.dataset.libelle = "";
     const etats = eleve.lu.etats || {};
+    const ouverts = mondesOuverts();
     const rangee = (titre, etapes, bonus) => {
       if (!etapes.length) return;
       const div = document.createElement("div");
-      div.className = "detail-monde";
+      // un monde fermé à la classe : sa rangée reste (le travail est là), plus pâle
+      const ferme = Boolean(ouverts) && !ouverts.includes(etapes[0][4]);
+      div.className = ferme ? "detail-monde ferme" : "detail-monde";
       const nom = document.createElement("b");
-      nom.textContent = titre;
+      nom.textContent = ferme ? `🔒 ${titre}` : titre;
+      if (ferme) nom.title = "Monde fermé pour la classe";
       div.append(nom);
       etapes.forEach(etape => {
         const caseEtape = document.createElement("span");
@@ -1547,10 +1626,13 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
   function objectifSplat() {
     if (!SPLAT || !eleves.length) return null;
     const lus = eleves.map(eleve => eleve.lu).filter(lu => lu.lisible);
+    // Lot « splat-suivi-5 » : seulement les mondes ouverts à la classe.
+    const ouverts = mondesOuverts();
+    const ouvert = numero => !ouverts || ouverts.includes(numero);
     return {
       fait: lus.reduce((somme, lu) => somme + lu.faits, 0),
-      total: eleves.length * SPLAT.CARTE.ETAPES.length,
-      mondes: SPLAT.CARTE.MONDES.map(([numero]) => ({
+      total: eleves.length * SPLAT.CARTE.ETAPES.filter(etape => ouvert(etape[4])).length,
+      mondes: SPLAT.CARTE.MONDES.filter(([numero]) => ouvert(numero)).map(([numero]) => ({
         numero,
         finis: lus.filter(lu => lu.mondes.some(monde => monde.numero === numero && monde.etat === "fini")).length
       }))
@@ -2016,6 +2098,51 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
       caseActivite.checked = presentes.includes(caseActivite.dataset.appli);
       caseActivite.disabled = false;
     });
+    // Lot « splat-suivi-5 » : les mondes ouverts, seulement quand la classe a SPLAT!.
+    $("mondes-ouverts").hidden = !presentes.includes("splat");
+    const ouverts = mondesOuverts();
+    document.querySelectorAll("#mondes-ouverts input[data-monde]").forEach(caseMonde => {
+      caseMonde.checked = !ouverts || ouverts.includes(Number(caseMonde.dataset.monde));
+      caseMonde.disabled = false;
+      poserPuce(caseMonde);
+    });
+  }
+
+  // Le dessin d'une case de monde suit la case (pointillés gris quand il est fermé).
+  function poserPuce(caseMonde) {
+    caseMonde.closest(".puce-monde").classList.toggle("ferme", !caseMonde.checked);
+  }
+
+  // Ouvrir ou fermer un monde de SPLAT! pour la classe (lot « splat-suivi-5 »,
+  // choix de Gwenaël : monde par monde). Pas de question : rien n'est effacé et
+  // un clic le rouvre. Un monde reste toujours ouvert (pour retirer SPLAT!, on
+  // décoche SPLAT!). L'élève le voit à la prochaine page qu'il ouvre.
+  async function changerMonde(caseMonde) {
+    const numero = Number(caseMonde.dataset.monde);
+    const ouvre = caseMonde.checked;
+    const cases = [...document.querySelectorAll("#mondes-ouverts input[data-monde]")];
+    const voulus = cases.filter(uneCase => uneCase.checked).map(uneCase => Number(uneCase.dataset.monde));
+    if (!voulus.length) {
+      caseMonde.checked = true;
+      messager("message-activites", "Une classe garde au moins un monde ouvert.", "erreur");
+      return;
+    }
+    poserPuce(caseMonde);
+    cases.forEach(uneCase => { uneCase.disabled = true; });
+    $("puces-mondes").setAttribute("aria-busy", "true");
+    try {
+      await api("classes.modifier", {classe_id: classe.id, reglages: {splat: {mondes: voulus}}});
+      await ouvrirClasse(classe.id);
+      messager("message-activites",
+        `Monde ${numero} ${ouvre ? "ouvert" : "fermé"} pour la ${classe.libelle}.`, "ok");
+    } catch (erreur) {
+      caseMonde.checked = !ouvre;
+      poserPuce(caseMonde);
+      surErreur(erreur, "message-activites");
+    } finally {
+      cases.forEach(uneCase => { uneCase.disabled = false; });
+      $("puces-mondes").setAttribute("aria-busy", "false");
+    }
   }
 
   // Cocher : la tuile apparaît dans l'espace des élèves. Décocher : elle
@@ -2765,6 +2892,9 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
   });
   document.querySelectorAll("#liste-activites input[data-appli]").forEach(caseActivite => {
     caseActivite.addEventListener("change", () => changerActivite(caseActivite));
+  });
+  document.querySelectorAll("#mondes-ouverts input[data-monde]").forEach(caseMonde => {
+    caseMonde.addEventListener("change", () => changerMonde(caseMonde));
   });
 
   document.querySelectorAll("th button[data-tri]").forEach(bouton => {

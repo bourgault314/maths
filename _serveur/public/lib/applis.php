@@ -131,6 +131,11 @@ const CATALOGUE_APPLIS = [
         // « Revenir à… » nomme une version par ce compte : les étapes
         // commencées, Bonus compris (lib/versions.php).
         'compteur' => 'etapes',
+        // Lot « splat-suivi-5 » (08/10/2026) : ce qu'un professeur peut régler
+        // pour SA classe — les mondes ouverts (1 à 6, ceux de la carte des
+        // mondes ; un test compare ce nombre à la carte du moteur). Par défaut,
+        // tous : rien n'est écrit. Voir reglages_recus() plus bas.
+        'reglages' => ['mondes' => 6],
     ],
     'soley' => [
         'nom' => 'Solèy',
@@ -188,6 +193,130 @@ function applis_de_classe(string $liste): array
         $vues[$cle] = true;
         if (!(CATALOGUE_APPLIS[$cle]['disponible'] ?? false) || !CATALOGUE_APPLIS[$cle]['url']) continue;
         $sortie[] = appli_affichable($cle);
+    }
+    return $sortie;
+}
+
+// ------------------------------------------------------- réglages d'une classe
+//
+// Lot « splat-suivi-5 » (08/10/2026, demande de Gwenaël : « à certaines
+// classes, je veux ouvrir que les deux premiers mondes et après ouvrir le
+// reste »). Une classe peut porter, par activité, ce que le catalogue déclare
+// dans « reglages » — aujourd'hui une seule chose : les mondes de SPLAT!
+// ouverts à la classe. Rangé dans classes.reglages (JSON) :
+//
+//     {"splat": {"mondes": [1, 2]}}
+//
+// La liste est celle des mondes OUVERTS. Tous ouverts = rien d'écrit : c'est
+// l'état de toutes les classes tant que leur professeur ne choisit rien. Le
+// serveur ne garde que des entiers de 1 à N, triés, sans doublon, au moins un.
+//
+// Un monde fermé l'est pour l'élève qui passe par son espace (la carte et les
+// outils lisent la liste sous son code). Sur mathsgo.re sans code, tout reste
+// ouvert : ça guide la classe, ça ne verrouille rien.
+
+// La colonne classes.reglages existe-t-elle ? Elle arrive par migrer.php. Tant
+// qu'elle manque, tout se lit « tous les mondes ouverts » et seul le choix des
+// mondes répond « mise à niveau à faire » : rien d'autre ne tombe en panne si
+// la migration est oubliée. Une requête par appel de page, gardée ensuite.
+function reglages_disponibles(PDO $pdo): bool
+{
+    static $vu = [];
+    $cle = spl_object_id($pdo);
+    if (!array_key_exists($cle, $vu)) $vu[$cle] = colonne_existe($pdo, 'classes', 'reglages');
+    return $vu[$cle];
+}
+
+// Les mondes ouverts, propres : null quand ils le sont TOUS (rien à garder).
+// Lecture indulgente (ce qui sort de la base) : un élément faux est ignoré.
+function mondes_lus(mixed $liste, int $nombre): ?array
+{
+    if (!is_array($liste)) return null;
+    $mondes = [];
+    foreach ($liste as $monde) {
+        if (is_int($monde) && $monde >= 1 && $monde <= $nombre) $mondes[$monde] = $monde;
+    }
+    if ($mondes === [] || count($mondes) === $nombre) return null;
+    ksort($mondes);
+    return array_values($mondes);
+}
+
+// Les réglages d'une classe tels qu'on les relit de la base : seulement ce que
+// le catalogue déclare, et — si on la donne — seulement pour les activités de
+// la liste de la classe (l'élève ne reçoit rien d'une activité qu'il n'a pas).
+function reglages_lus(?string $json, ?array $applis = null): array
+{
+    if ($json === null || $json === '') return [];
+    $brut = json_decode($json, true);
+    if (!is_array($brut)) return [];
+    $sortie = [];
+    foreach ($brut as $cle => $reglageBrut) {
+        if (!is_string($cle) || !appli_connue($cle) || !is_array($reglageBrut)) continue;
+        $declares = CATALOGUE_APPLIS[$cle]['reglages'] ?? [];
+        if ($declares === []) continue;
+        if ($applis !== null && !in_array($cle, $applis, true)) continue;
+        $reglage = [];
+        if (isset($declares['mondes'])) {
+            $mondes = mondes_lus($reglageBrut['mondes'] ?? null, (int)$declares['mondes']);
+            if ($mondes !== null) $reglage['mondes'] = $mondes;
+        }
+        if ($reglage !== []) $sortie[$cle] = $reglage;
+    }
+    return $sortie;
+}
+
+// Ce qu'on renvoie en JSON : toujours un objet (« {} » et non « [] » quand rien
+// n'est réglé), pour que la page lise reglages.splat sans se poser de question.
+function reglages_json(array $reglages): array|object
+{
+    return $reglages === [] ? new stdClass() : $reglages;
+}
+
+// Les réglages d'une classe par sa ligne de la base (SELECT * : la colonne peut
+// manquer tant que migrer.php n'a pas été ouvert).
+function reglages_de_classe(array $classe, bool $pourEleve = false): array
+{
+    $applis = $pourEleve ? explode(',', (string)($classe['applis'] ?? '')) : null;
+    return reglages_lus(isset($classe['reglages']) ? (string)$classe['reglages'] : null, $applis);
+}
+
+// Ce que le professeur envoie (classes.modifier) : lecture STRICTE. Rien n'est
+// deviné ni arrangé en silence — une valeur fausse est refusée avec un message.
+// Rend la nouvelle valeur complète de la colonne : les réglages actuels, dans
+// lesquels on remplace ceux des activités reçues.
+function reglages_recus(mixed $recus, array $actuels): array
+{
+    if (!is_array($recus) || ($recus !== [] && array_is_list($recus))) {
+        throw new InvalidArgumentException("Réglages illisibles.");
+    }
+    $sortie = $actuels;
+    foreach ($recus as $cle => $reglage) {
+        $declares = is_string($cle) && appli_connue($cle) ? (CATALOGUE_APPLIS[$cle]['reglages'] ?? []) : [];
+        if ($declares === [] || !is_array($reglage) || ($reglage !== [] && array_is_list($reglage))) {
+            throw new InvalidArgumentException("Réglage inconnu.");
+        }
+        foreach (array_keys($reglage) as $nom) {
+            if (!array_key_exists($nom, $declares)) throw new InvalidArgumentException("Réglage inconnu.");
+        }
+        $nouveau = $sortie[$cle] ?? [];
+        if (array_key_exists('mondes', $reglage)) {
+            $nombre = (int)$declares['mondes'];
+            $liste = $reglage['mondes'];
+            if (!is_array($liste) || !array_is_list($liste)) throw new InvalidArgumentException("Liste de mondes illisible.");
+            $mondes = [];
+            foreach ($liste as $monde) {
+                if (!is_int($monde) || $monde < 1 || $monde > $nombre) {
+                    throw new InvalidArgumentException("Monde inconnu.");
+                }
+                $mondes[$monde] = $monde;
+            }
+            if ($mondes === []) throw new InvalidArgumentException("Une classe garde au moins un monde ouvert.");
+            ksort($mondes);
+            if (count($mondes) === $nombre) unset($nouveau['mondes']);
+            else $nouveau['mondes'] = array_values($mondes);
+        }
+        if ($nouveau === []) unset($sortie[$cle]);
+        else $sortie[$cle] = $nouveau;
     }
     return $sortie;
 }

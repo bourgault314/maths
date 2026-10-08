@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS classes (
   libelle VARCHAR(40) NOT NULL,
   applis VARCHAR(255) NOT NULL DEFAULT 'defi-tables',
   cree_le VARCHAR(25) NOT NULL,
+  reglages TEXT NULL,
   KEY classes_prof (prof_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
