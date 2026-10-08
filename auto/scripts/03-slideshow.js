@@ -1421,11 +1421,13 @@ const courseCatalog={
     ['Cylindre','V = aire du disque de base × hauteur = π × rayon × rayon × hauteur'+courseSolidVisual('cylinder')+'<span class="course-example">Exemple : V ≈ 3,14 × 3 × 3 × 5 = 141,3 cm³. Si le diamètre est donné, on calcule d’abord le rayon.</span>'],
     ['Solide composé','On additionne les volumes des solides simples.<span class="course-example">Exemple : deux cubes identiques → volume total = 2 × volume d’un cube.</span>']
   ]},
+  // dnb_31 (refonte du 08/10/2026) : la médiane en deux temps (ranger, puis le
+  // milieu : autant avant qu'après), le nombre pair, l'étendue. Les calculs ne
+  // se coupent pas en fin de ligne ; tient au téléphone et à l'ordinateur 1366 × 625.
   median:{title:'Médiane et étendue',rules:[
-    ['Avant de commencer','Ranger les valeurs dans l’ordre croissant.<span class="course-example">Exemple : 8 ; 3 ; 5 → 3 ; 5 ; 8.</span>'],
-    ['Effectif impair','La médiane est la valeur centrale.<span class="course-example"><span class="median-course-values"><span>3</span> ; <span class="median-middle">5</span> ; <span>8</span></span>La valeur du milieu est 5.</span>'],
-    ['Effectif pair','On repère les deux valeurs centrales, puis on calcule leur moyenne.<span class="course-example"><span class="median-course-values"><span>2</span> ; <span class="median-middle">4</span> ; <span class="median-middle">7</span> ; <span>9</span></span>Médiane = (4 + 7) ÷ 2 = 5,5.</span>'],
-    ['Étendue','Étendue = maximum − minimum.<span class="course-example">Pour 3 ; 5 ; 8 : étendue = 8 − 3 = 5.</span>']
+    ['Médiane','<b>1.</b> Range <b>toutes</b> les valeurs dans l’ordre croissant, même celles qui se répètent.<br><b>2.</b> La médiane est au milieu&nbsp;: <b>autant de valeurs avant qu’après</b>.<span class="course-example"><span class="median-course-values" style="flex-wrap:wrap"><span style="white-space:nowrap">12 ; 3 ; 8 ; 3 ; 6 →</span> <span>3</span> ; <span>3</span> ; <span class="median-middle">6</span> ; <span>8</span> ; <span>12</span> <span style="white-space:nowrap">→ médiane = 6</span></span></span>',true],
+    ['Nombre pair de valeurs','Deux valeurs au milieu&nbsp;: la médiane est leur <b>moyenne</b>.<span class="course-example"><span class="median-course-values"><span>2</span> ; <span class="median-middle">4</span> ; <span class="median-middle">7</span> ; <span>9</span></span><span style="white-space:nowrap">Médiane = (4 + 7) ÷ 2 = 5,5</span></span>'],
+    ['Étendue','<span style="white-space:nowrap">Étendue = plus grande valeur</span> <span style="white-space:nowrap">− plus petite valeur</span><span class="course-example">3 ; 3 ; 6 ; 8 ; 12&nbsp;: <span style="white-space:nowrap">étendue = 12 − 3 = 9</span></span>']
   ]}
 };
 Object.assign(courseCatalog,{
