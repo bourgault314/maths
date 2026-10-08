@@ -67,10 +67,19 @@
   }
   // Ordre d'écriture : la médiane n'est jamais écrite au milieu (ni une valeur
   // égale à elle), et la série n'est pas déjà rangée (ni à l'envers).
-  function writtenOrder(values,median,shuffle,{middleMustDiffer=true}={}){
-    const up=sorted(values),down=up.slice().reverse();
+  // La place de la médiane est tirée à part, uniformément parmi les places
+  // autres que le milieu (le mélange seul la mettait 1 fois sur 4 en tête).
+  function writtenOrder(values,median,shuffle,{middleMustDiffer=true,randomInt=null}={}){
+    const up=sorted(values),down=up.slice().reverse(),n=values.length,mid=(n-1)/2;
     for(let attempt=0;attempt<200;attempt++){
-      const order=shuffle(values.slice());
+      let order;
+      if(randomInt&&median!==null&&values.includes(median)){
+        const others=values.slice();others.splice(others.indexOf(median),1);
+        let place=randomInt(0,n-2);
+        if(place>=mid) place++;
+        order=shuffle(others);
+        order.splice(place,0,median);
+      }else order=shuffle(values.slice());
       const middle=order[(order.length-1)/2];
       if(middleMustDiffer&&middle===median) continue;
       if(order.every((v,i)=>v===up[i])||order.every((v,i)=>v===down[i])) continue;
@@ -95,7 +104,7 @@
   }
   function footer(label,unit){return '$$\\text{'+label+'} = [[formula]]'+(unit?'\\,\\text{'+unit+'}':'')+'$$';}
   // Texte brut de la série (pour la liste « À revoir » et le suivi).
-  function plainSeries(texts,separated){return texts.join(separated?' ; ':'   ');}
+  function plainSeries(texts,separated){return texts.join(separated?NB+'; ':'   ');}
 
   // ── Type 2 : série non rangée de 5, 7 ou 9 valeurs (brevet 2026) ────────
   const SERIE_CONTEXTS=Object.freeze([
@@ -110,7 +119,7 @@
     let values,order;
     for(let attempt=0;attempt<300;attempt++){
       values=drawValues(randomInt,n,lo,hi,randomInt(0,2));
-      order=writtenOrder(values,sorted(values)[(n-1)/2],shuffle);
+      order=writtenOrder(values,sorted(values)[(n-1)/2],shuffle,{randomInt});
       if(order) break;
     }
     const up=sorted(values),r=(n+1)/2,median=up[r-1];
@@ -214,13 +223,13 @@
       values=drawValues(randomInt,n,lo,hi,randomInt(0,2));
       // Températures d'hiver : au moins deux valeurs négatives.
       if(kind==='jours'&&lo<0&&values.filter(v=>v<0).length<2) continue;
-      order=writtenOrder(values,sorted(values)[(n-1)/2],shuffle);
+      order=writtenOrder(values,sorted(values)[(n-1)/2],shuffle,{randomInt});
       if(order) break;
     }
     const up=sorted(values),r=(n+1)/2,median=up[r-1];
     const cells=order.map(v=>fixed(v,1));
     return base(module,question,'tableau',fixed(median,1),{table:{head,rowLabel,columns,cells}},{
-      statement:q(lead)+'<br>'+columns.map((c,i)=>c+' : '+cells[i]).join(' ; ')+'<br>'+ask,
+      statement:q(lead)+'<br>'+columns.map((c,i)=>c+NB+': '+cells[i]).join(NB+'; ')+'<br>'+ask,
       footer:footer(label,unit),
       steps:['On range'+NB+': '+sortedLine(up.map(v=>fixed(v,1)),[r-1]),oddRankLine(n,r),medianLine(fixed(median,1),unit)],
       aide:['Range les '+n+' '+valuesName+' dans l’ordre croissant'+(kind==='jours'&&lo<0?'. Un nombre négatif est plus petit que 0.':', sans oublier celles qui se répètent.'),aideOdd(n,r)],
@@ -236,7 +245,7 @@
       values=drawValues(randomInt,5,2,30,0);
       const up=sorted(values);
       median=up[2];mean=sum(values)/5;mid=(up[0]+up[4])/2;
-      order=writtenOrder(values,median,shuffle);
+      order=writtenOrder(values,median,shuffle,{randomInt});
       if(!order) continue;
       written=order[2];
       const all=[median,mean,mid,written].map(v=>Math.round(v*100));
@@ -298,7 +307,7 @@
     }
     const maxText=f(max),minText=f(min);
     const calc=min<0?maxText+' − '+paren(minText)+' = '+maxText+' + '+f(-min)+' = '+strong(withUnit(f(range),unit)):maxText+' − '+minText+' = '+strong(withUnit(f(range),unit));
-    const statementData=table?table.columns.map((c,i)=>c+' : '+table.cells[i]).join(' ; '):plainSeries(texts,separated);
+    const statementData=table?table.columns.map((c,i)=>c+NB+': '+table.cells[i]).join(NB+'; '):plainSeries(texts,separated);
     return base(module,question,'etendue',f(range),table?{table}:{texts,separated},{
       statement:q(lead)+'<br>'+statementData+'<br>'+ask,
       footer:footer('étendue',unit),
@@ -318,7 +327,7 @@
       if(values.filter(v=>v<0).length<2) continue;
       const median=sorted(values)[(n-1)/2];
       if((median<=0)!==wantNonPositive) continue;
-      order=writtenOrder(values,median,shuffle);
+      order=writtenOrder(values,median,shuffle,{randomInt});
       if(order) break;
     }
     const up=sorted(values),r=(n+1)/2,median=up[r-1];
@@ -365,7 +374,7 @@
     const medianRanks=c===1?ord(S+1):ord(S+1)+' à '+ord(S+c);
     const runLine=upTo+' Notes '+median+NB+': '+medianRanks+'. Médiane = '+strong(String(median));
     return base(module,question,'effectifs',median,{notes,counts,on:index,chart},{
-      statement:q(lead)+'<br>'+notes.map((note,i)=>note+' : '+counts[i]).join(' ; ')+'<br>'+q(ask),
+      statement:q(lead)+'<br>'+notes.map((note,i)=>note+NB+': '+counts[i]).join(NB+'; ')+'<br>'+q(ask),
       footer:footer('médiane',''),
       hasSvg:chart,
       steps:[
