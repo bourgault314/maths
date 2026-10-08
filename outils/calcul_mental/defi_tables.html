@@ -868,9 +868,7 @@
     .carte-seance .programme .faite > span { color: var(--muted); }
     .carte-seance .programme .ici i { background: var(--blue); color: #fff; }
     /* Lot « un seul système » (05/10/2026) : le chrono de Mes calculs du jour
-       s'estompe tant qu'il est arrêté (une correction est à l'écran). La
-       porte : sous la carte, les deux liens grisés sous « Après Mes calculs
-       du jour » tant qu'il n'est pas joué. */
+       s'estompe tant qu'il est arrêté (une correction est à l'écran). */
     #time.en-pause { opacity: .55; }
     /* Les trois coupes de Mon mélange : grises, puis dorées une fois
        gagnées. Aucun mot, aucun nombre. (Le mot « trophée » ne s'écrit plus
@@ -885,8 +883,6 @@
     .mp-trophees b.is-gagne { color: #e0a800; filter: drop-shadow(0 1px 0 #a87b00); }
     .cell .jouer { display: block; width: 22px; height: 22px; margin: auto; fill: currentColor; }
     .mp-melange .cell { display: grid; place-items: center; color: #9db4c4; }
-    .seance-liens.est-fermee button { opacity: .42; filter: grayscale(1); cursor: default; }
-    .seance-liens .porte-mot { flex: 0 0 100%; margin: 2px 0 0; color: var(--muted); font-size: .86rem; font-weight: 800; text-align: center; }
     /* Lot E1 (décision 8 du 03/10/2026) : sous la carte, « Je valide ma table »
        est un bouton rond (c'est une action qui engage), « Choisir une
        activité » un lien de 16 px. Au téléphone, le lien passe sous le bouton. */
@@ -4158,6 +4154,10 @@
         // l'accueil MONTRE la séance suivante — ses étapes et « Commencer » —
         // au lieu de la lancer d'un coup. Remis à faux dès qu'une séance part.
         encoreOuverte: false,
+        // Lot « Mes calculs du jour d'abord » (08/10/2026) : ce que l'élève a
+        // touché avant d'avoir joué Mes calculs du jour — {config, origin, nom}
+        // —, lancé juste après lui par UN bouton (« Je passe le test → »).
+        apresMesCalculs: null,
         revisionPremierScore: 0,
         revisionPremierTotal: 0,
         revisionMontes: 0,
@@ -4399,6 +4399,7 @@
 
       function backToModes() {
         quitterSeance();
+        state.apresMesCalculs = null;
         configuration.mode = null;
         configuration.tables = new Set();
         state.origin = "menu";
@@ -5785,6 +5786,10 @@
           if (enSeance()) {
             noterEtapeDeSeance(null);
             ajusterEchelle();
+          } else if (state.apresMesCalculs) {
+            ouvrirLaJournee();
+            renderSuiteMesCalculs();
+            ajusterEchelle();
           }
           return;
         }
@@ -7030,9 +7035,11 @@
           zoneDuJour.hidden = true;
           renderCorrections();
           $("result-reglages").hidden = true;
-          // Hors d'une séance (aucun chemin n'y mène aujourd'hui), la rangée
-          // du bas reste : l'écran garde son bouton « Ma table ».
-          if (!enSeance()) $("result").classList.remove("is-revision");
+          // Hors d'une séance et sans suite (aucun chemin n'y mène aujourd'hui),
+          // la rangée du bas reste : l'écran garde son bouton « Ma table ». Avant
+          // le test (lot « Mes calculs du jour d'abord »), l'écran est celui de
+          // la séance.
+          if (!enSeance() && !state.apresMesCalculs) $("result").classList.remove("is-revision");
           show("result");
           return;
         }
@@ -7542,7 +7549,7 @@
         // Appareil neuf sous un code : rien à l'écran tant que le serveur n'a
         // pas dit qui est l'élève (lot 2b).
         document.querySelector(".acc").classList.toggle("en-attente", suiviAttendu || billetEnCours);
-        const carteSeance = avecSeance && (!state.choisirActivite || etat.porte);
+        const carteSeance = avecSeance && !state.choisirActivite;
         if (decouverte) renderDecouverte(etapes, etat);
         else if (avecSeance) renderSeanceAccueil(etapes, etat, table, ligne);
         if (!replie && !carteSeance) {
@@ -7740,6 +7747,7 @@
       // étapes faites restent faites, on reprend à la suivante.
       function commencerSeance(table) {
         state.encoreOuverte = false;
+        state.apresMesCalculs = null;
         seance = PARCOURS.ouvrirSeance(parcours, {table});
         lancerEtapeDeSeance();
       }
@@ -8320,9 +8328,6 @@
           liens.append(bouton);
           return bouton;
         };
-        // La porte fermée : pas de menu « Choisir une activité » (resté ouvert
-        // la veille, par exemple).
-        if (etat.porte) state.choisirActivite = false;
         if (state.choisirActivite) {
           // Lot E1 (décision 8) : « ← Ma séance du jour » à gauche, puis le
           // petit titre CHOISIR UNE ACTIVITÉ au-dessus de l'ancien menu.
@@ -8366,18 +8371,9 @@
           document.querySelector("#acc-etapes .etape")?.focus?.({preventScroll: true});
         }, "gris");
         etapes.append(liens);
-        // La porte (lot « un seul système », version A choisie par Gwenaël) :
-        // tant que Mes calculs du jour n'est pas joué, les liens (et Mon
-        // mélange) sont grisés sous « Après Mes calculs du jour ». Une fois joué — quel que
-        // soit le score — tout s'ouvre.
-        if (etat.porte) {
-          liens.classList.add("est-fermee");
-          liens.querySelectorAll("button").forEach(bouton => { bouton.disabled = true; });
-          const mot = document.createElement("p");
-          mot.className = "porte-mot";
-          mot.textContent = "Après Mes calculs du jour";
-          liens.prepend(mot);
-        }
+        // Lot « Mes calculs du jour d'abord » : plus rien de grisé sous la carte
+        // (c'était « Après Mes calculs du jour ») — tant qu'il n'est pas joué,
+        // ces liens le lancent d'abord (voir launchFromParcours).
       }
 
       // Lot « retouches après Mon parcours » (choix de Gwenaël, 04/10) :
@@ -8665,10 +8661,17 @@
 
       function launchFromParcours(config, origin = "parcours") {
         if (!config) return;
-        // La porte : tant que Mes calculs du jour n'est pas joué, seule la
-        // séance (qui commence par lui) lance quelque chose.
+        state.apresMesCalculs = null;
+        // La porte. Lot « Mes calculs du jour d'abord » (08/10/2026, décision
+        // de Gwenaël, planches 19 et 20) : elle ne bloque plus rien. Tant que
+        // Mes calculs du jour n'est pas joué, ce que l'élève touche hors de la
+        // séance — le test, Mon mélange, une activité, une étoile — lance
+        // D'ABORD Mes calculs du jour (les mêmes calculs que la séance), puis
+        // un seul bouton mène à ce qu'il a touché. La séance du jour n'est pas
+        // commencée : elle reste entière (sans Mes calculs du jour, joué).
         if (origin !== "seance" && PARCOURS.mesCalculsAFaire(parcours)) {
-          renderAccueil();
+          if (config.mode !== "revision") state.apresMesCalculs = {config, origin, nom: nomDeLaSuite(config)};
+          startRevision(null, origin);
           return;
         }
         if (config.mode === "revision") {
@@ -8688,6 +8691,51 @@
         configuration.testLevel = config.testLevel || 1;
         state.origin = origin;
         start();
+      }
+
+      // Lot « Mes calculs du jour d'abord » : le nom de la suite, le même que
+      // sur le bouton touché (« Je passe le test », « Mon mélange », « Tente
+      // ★★ », « Je pousse les perles », « Dans le désordre »…).
+      function nomDeLaSuite(config) {
+        const classement = PARCOURS.classerSerie(parcours, config);
+        const type = classement ? classement.type : null;
+        if (type === "validation") return NOM_DU_TEST;
+        if (type === "melange") return "Mon mélange";
+        if (type === "etoile") return `Tente ${PARCOURS.symboleEtoile(classement.etoile)}`;
+        if (type === "preparation") return "Comme le test, en 2 min";
+        if (type === "apprends") return majuscule(PARCOURS.LIBELLES_APPRENDS[classement.activite]);
+        if (type === "entraine") return majuscule(NOMS_ENTRAINEMENTS[classement.entrainement]);
+        return "Continuer";
+      }
+
+      // Mes calculs du jour joué hors de la séance : la journée est ouverte,
+      // comme quand la séance le note (quel que soit le score, même si le
+      // temps a manqué) — le moteur ne regarde que ce jour.
+      function ouvrirLaJournee() {
+        parcours = {...parcours, calculsDuJour: PARCOURS.jourLocal()};
+        sauverParcours();
+      }
+
+      // L'écran de résultat de Mes calculs du jour, comme dans la séance — le
+      // verdict, ses erreurs —, avec UN seul bouton vers ce que l'élève avait
+      // touché (à la place de « Étape 2 : … → »). Aucun écran nouveau.
+      function renderSuiteMesCalculs() {
+        const suite = state.apresMesCalculs;
+        const zone = $("seance-suite");
+        $("result").classList.add("en-seance");
+        zone.replaceChildren();
+        zone.hidden = false;
+        const bouton = document.createElement("button");
+        bouton.type = "button";
+        bouton.className = "primary";
+        bouton.id = "apres-mes-calculs";
+        bouton.textContent = `${suite.nom}\u00a0→`;
+        bouton.addEventListener("click", () => {
+          state.apresMesCalculs = null;
+          effacerSuiteSeance();
+          launchFromParcours(suite.config, suite.origin);
+        });
+        zone.append(bouton);
       }
 
       // R5 (A18) : le symbole d'une marche prêt à poser dans la page — les
@@ -8769,8 +8817,8 @@
 
         // « Mon mélange » : dès 2 tables passées, jusqu'aux 9 — libre (lot « un
         // seul système ») : il ne ferme rien et n'ouvre rien. À droite, ses
-        // trois coupes. La porte fermée, il attend Mes calculs du jour.
-        const porte = etat.porte;
+        // trois coupes. Lot « Mes calculs du jour d'abord » : plus grisé —
+        // tant que Mes calculs du jour n'est pas joué, il le lance d'abord.
         const melange = $("parcours-melange");
         melange.hidden = !etat.melange.visible;
         melange.replaceChildren();
@@ -8790,26 +8838,23 @@
           // à côté des trophées.
           tables.textContent = etat.melange.tables.length <= 3 ? tablesDuMelange(etat.melange.tables) : `mes ${etat.melange.tables.length}\u00a0tables`;
           textes.append(title, tables);
-          if (porte) tables.textContent = "après Mes calculs du jour";
           droite.append(textes, tropheesDuMelange(etat.melange.trophees));
           ligneMelange.append(makeCell({
             kind: "star",
             etat: 0,
-            label: `Mon mélange, mes tables passées (20 questions en 1 min 30)${porte ? " — après Mes calculs du jour" : ""}`,
-            config: porte ? null : PARCOURS.configMelange(parcours),
-            extraClass: porte ? "is-fermee" : "",
+            label: "Mon mélange, mes tables passées (20 questions en 1 min 30)",
             texte: triangleJouer(),
-            action: porte ? () => {} : null
+            config: PARCOURS.configMelange(parcours)
           }), droite);
           melange.append(ligneMelange);
         }
 
         // « Je deviens expert » : l'escalier des cinq marches, ouvert dès que les
         // 9 tables sont passées. Chaque marche est une case ; une marche
-        // réussie valide les précédentes. La porte fermée, il attend Mes
-        // calculs du jour.
-        const expertOuvert = etat.expert.ouvert && !porte;
-        const expertAttend = porte && etat.expert.ouvert ? "après Mes calculs du jour" : "après mes 9 tables";
+        // réussie valide les précédentes. Lot « Mes calculs du jour d'abord » :
+        // tant que Mes calculs du jour n'est pas joué, une étoile le lance d'abord.
+        const expertOuvert = etat.expert.ouvert;
+        const expertAttend = "après mes 9 tables";
         const expert = $("parcours-expert");
         expert.replaceChildren();
         const expertHead = document.createElement("div");
@@ -8966,7 +9011,7 @@
         lignesProf.replaceChildren();
         ["fiche-prof-qui", "fiche-prof-melange", "fiche-prof-expert", "fiche-prof-calculs", "fiche-prof-jours"].forEach(id => { $(id).textContent = ""; });
         if (!fiche) return;
-        $("fiche-prof-qui").textContent = [$("fiche-prenom").textContent, $("fiche-classe").textContent, $("fiche-date").textContent].filter(Boolean).join(" · ");
+        $("fiche-prof-qui").textContent = [$("fiche-prenom").textContent, $("fiche-classe").textContent, $("fiche-date").textContent].filter(Boolean).join("\u00a0· ");
         PARCOURS_TABLES.forEach(table => {
           const ligne = fiche.tables[table];
           const fois = ligne.fois;
@@ -8989,6 +9034,8 @@
           lignesProf.append(tr);
         });
         // Chaque ligne finit par un point, un seul (« 8 oct. » en a déjà un).
+        // Relecture de Code (PR #953) : le « · » colle au mot qui le précède
+        // (espace insécable) — il ne reste plus seul en fin de ligne.
         const phrase = texte => (texte.endsWith(".") ? texte : `${texte}.`);
         // Mon mélange : ses coupes, et le dernier joué.
         const coupes = etat.melange.trophees.filter(trophee => trophee.gagne).map(trophee => trophee.tables);
@@ -8997,25 +9044,25 @@
             : `les coupes des ${coupes.slice(0, -1).join(", ")} et ${coupes[coupes.length - 1]} tables`;
         const melange = fiche.melange;
         const score = Number.isInteger(melange.score) ? ` : ${melange.score} sur ${PARCOURS.SEUILS.melange.total}` : "";
-        $("fiche-prof-melange").textContent = phrase(`${texteCoupes} · ${melange.dernier ? `dernier joué le ${dateCourte(melange.dernier)}${score}` : "jamais joué"}`);
+        $("fiche-prof-melange").textContent = phrase(`${texteCoupes}\u00a0· ${melange.dernier ? `dernier joué le ${dateCourte(melange.dernier)}${score}` : "jamais joué"}`);
         // Je deviens expert : la couronne, ses étoiles, ou rien encore.
         const expert = fiche.expert;
         $("fiche-prof-expert").textContent = phrase(expert.etoiles >= PARCOURS.SEUILS.etoile.durees.length
           ? `la couronne${expert.couronne ? `, gagnée le ${dateCourte(expert.couronne)}` : ""}`
           : expert.etoiles
-            ? `${PARCOURS.symboleEtoile(expert.etoiles)}${expert.dernier ? ` · dernière réussite le ${dateCourte(expert.dernier)}` : ""}`
+            ? `${PARCOURS.symboleEtoile(expert.etoiles)}${expert.dernier ? `\u00a0· dernière réussite le ${dateCourte(expert.dernier)}` : ""}`
             : "aucune étoile pour l’instant");
         // Mes calculs : combien dans chaque boîte, combien pas encore vus.
         const resume = etat.calculs;
         const vus = resume.boites.reduce((somme, nombre) => somme + nombre, 0);
-        $("fiche-prof-calculs").textContent = `${resume.boites.map((nombre, index) => `boîte\u00a0${index + 1}\u00a0:\u00a0${nombre}`).join(" · ")} · pas encore vus\u00a0:\u00a0${resume.total - vus}.`;
+        $("fiche-prof-calculs").textContent = `${resume.boites.map((nombre, index) => `boîte\u00a0${index + 1}\u00a0:\u00a0${nombre}`).join("\u00a0· ")}\u00a0· pas encore vus\u00a0:\u00a0${resume.total - vus}.`;
         // Les jours de travail gardés (les 14 derniers), et les séances finies ce jour-là.
         const jours = [...fiche.jours].sort();
         $("fiche-prof-jours").textContent = phrase(jours.length
           ? jours.map(jour => {
             const seances = fiche.seances.filter(seance => seance === jour).length;
             return `${dateCourte(jour)}${seances ? `\u00a0(${seances}\u00a0séance${seances > 1 ? "s" : ""})` : ""}`;
-          }).join(" · ")
+          }).join("\u00a0· ")
           : "aucun");
       }
 

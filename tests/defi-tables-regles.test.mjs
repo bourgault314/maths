@@ -485,18 +485,18 @@ test("le parcours : « Mon mélange » en bouton (triangle dessiné) jusqu’aux
   // Lot « Mon parcours » (décision 11) : « Mon mélange », ses tables dessous.
   // Lot « trophées » : « tables 2, 3 et 5 » jusqu'à 3 tables, puis « mes N tables ».
   assert.match(html, /title\.textContent = "Mon mélange";\s*const tables = document\.createElement\("small"\);[^;]*?\s*tables\.textContent = etat\.melange\.tables\.length <= 3 \? tablesDuMelange\(etat\.melange\.tables\) : `mes \$\{etat\.melange\.tables\.length\}\\u00a0tables`;/);
-  assert.match(html, /label: `Mon mélange, mes tables passées \(20 questions en 1 min 30\)\$\{porte \? " — après Mes calculs du jour" : ""\}`,/);
+  assert.match(html, /label: "Mon mélange, mes tables passées \(20 questions en 1 min 30\)",/);
   assert.match(html, /texte: triangleJouer\(\),/, "la case du mélange est un bouton : un triangle dessiné, centré");
   assert.doesNotMatch(html, /createTextNode\("▶"\)/, "plus le caractère ▶, qui penchait à gauche");
   assert.match(html, /function triangleJouer\(\) \{\s*const svg = document\.createElementNS\("http:\/\/www\.w3\.org\/2000\/svg", "svg"\);\s*svg\.setAttribute\("class", "jouer"\);/);
-  assert.match(html, /if \(porte\) tables\.textContent = "après Mes calculs du jour";/, "la porte fermée : le sous-titre le dit");
+  assert.doesNotMatch(html, /tables\.textContent = "après Mes calculs du jour"/, "lot « Mes calculs du jour d'abord » : plus grisé, il le lance d'abord");
   assert.match(html, /droite\.append\(textes, tropheesDuMelange\(etat\.melange\.trophees\)\);/, "à droite : les trois trophées");
   assert.doesNotMatch(html, /dernierMelange|réussi avec \$\{|Dernier : \$\{melange\.score\}/, "plus de « Dernier : 17 sur 20 » ni de « réussi avec N tables ✓ »");
   assert.match(html, /expertTitle\.textContent = "Je deviens expert : toutes les tables, de plus en plus vite";/);
   assert.match(html, /etat\.expert\.marches\.forEach\(marche => \{/);
-  assert.match(html, /const expertOuvert = etat\.expert\.ouvert && !porte;/);
+  assert.match(html, /const expertOuvert = etat\.expert\.ouvert;/);
   assert.match(html, /config: expertOuvert \? marche\.config : null/, "fermé : les marches ne lancent rien");
-  assert.match(html, /const expertAttend = porte && etat\.expert\.ouvert \? "après Mes calculs du jour" : "après mes 9 tables";/);
+  assert.match(html, /const expertAttend = "après mes 9 tables";/, "lot « Mes calculs du jour d'abord » : l'escalier n'attend plus Mes calculs du jour");
   assert.doesNotMatch(html, /après le mélange des 9 tables/);
   assert.doesNotMatch(html, /\.cell\.is-lock|\.etape\.verrou|est-montree/, "lot « retours de classe » : le CSS du cadenas, qui ne servait plus, est retiré");
   assert.match(html, /\.cell\.is-star\.n4 \{/);

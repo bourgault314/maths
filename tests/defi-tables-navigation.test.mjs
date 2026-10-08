@@ -50,11 +50,11 @@ test("« J’apprends » et « Je m’entraîne » se déplient sur l’accueil 
   assert.match(html, /legende: "Choisis ton activité"/);
   assert.match(html, /legende: "Choisis ton entraînement"/);
   assert.match(html, /state\.etapeOuverte = state\.etapeOuverte === nom \? null : nom;/, "un deuxième appui referme");
-  // Lot « un seul système » (05/10/2026) : la seule chose qui désactive des
-  // boutons est la porte de Mes calculs du jour (les deux liens sous la carte
-  // de séance, tant qu'il n'est pas joué) — jamais une activité déjà faite.
-  assert.equal((html.match(/bouton\.disabled = /g) || []).length, 1, "un seul endroit désactive des boutons");
-  assert.match(html, /if \(etat\.porte\) \{\s*liens\.classList\.add\("est-fermee"\);\s*liens\.querySelectorAll\("button"\)\.forEach\(bouton => \{ bouton\.disabled = true; \}\);/, "c’est la porte : l’élève peut toujours relancer une activité déjà faite, une fois Mes calculs du jour joué");
+  // Lot « un seul système » (05/10/2026) : jamais une activité déjà faite
+  // n'est désactivée. Lot « Mes calculs du jour d'abord » (08/10/2026) : la
+  // porte de Mes calculs du jour non plus — elle le lance d'abord.
+  assert.equal((html.match(/bouton\.disabled = /g) || []).length, 0, "aucun bouton désactivé");
+  assert.doesNotMatch(html, /est-fermee/);
 });
 
 test("l’ordre des activités est celui du parcours, jamais imposé — et le menu ne conseille plus (lot E1)", () => {

@@ -493,7 +493,7 @@ test("la page : « Reprendre ma séance », ses étapes cochées, « Reprendre �
   assert.equal((html.match(/, erreurs\};/g) || []).length, 4, "les quatre sorties de resultatDeLEtape rendent les erreurs");
   // La séance n'est plus gardée que dans l'onglet : c'est le moteur qui la rend.
   // (Lot « Encore une séance » : la séance qui part referme d'abord « Encore une séance ».)
-  assert.match(html, /function commencerSeance\(table\) \{\s+state\.encoreOuverte = false;\s+seance = PARCOURS\.ouvrirSeance\(parcours, \{table\}\);/);
+  assert.match(html, /function commencerSeance\(table\) \{\s+state\.encoreOuverte = false;\s+state\.apresMesCalculs = null;\s+seance = PARCOURS\.ouvrirSeance\(parcours, \{table\}\);/);
   assert.match(html, /seance = note\.seance;\s+etapeEnCours = null;\s+sauverParcours\(\);/, "le parcours (avec la séance en cours) est sauvé après chaque étape");
   assert.match(html, /<p><b>Ma séance du jour\.<\/b> 4&nbsp;étapes \(parfois 5\), environ 5&nbsp;min\./, "la notice annonce la même durée que la carte (lot M2)");
   assert.doesNotMatch(html, /environ 8 min/);
