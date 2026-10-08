@@ -21,7 +21,9 @@ test("la notice garde six phrases et prend le nom que l'appli donne au mélange"
   // « Mon mélange » est bien le libellé affiché, sur l'écran et sur la fiche.
   // Lot « un seul système » (05/10/2026) : les tables sont « passées », et
   // le mélange est libre (« quand je veux »).
-  assert.match(html, /<strong>Mon mélange : mes tables passées<\/strong>/);
+  // Lot « Une seule fiche » (08/10/2026) : sur la fiche, le titre court
+  // « Mon mélange », la règle dessous (« Mes tables passées, … »).
+  assert.match(html, /<div class="fiche-block fiche-melange">\s*<strong>Mon mélange<\/strong>\s*<span id="fiche-melange-state" class="fiche-state"><\/span>\s*<p>Mes tables passées, 20 questions en 1 min 30\./);
   assert.match(notice, /<b>Mon mélange\.<\/b> Dès 2&nbsp;tables passées, quand je veux&nbsp;: 20&nbsp;questions en 1&nbsp;min&nbsp;30\./);
   assert.doesNotMatch(notice, /acquise|avant de valider/);
 });
@@ -69,8 +71,10 @@ test("la notice dit ce que fait une erreur, et le moteur le confirme : une boît
   assert.doesNotMatch(html, /il revient tout de suite/);
   assert.match(html, /note = "Raté aujourd’hui : il reviendra demain dans ta séance\.";/, "lot « Mon parcours »");
   // Lot « un seul tableau » : la page 2 de la fiche est partie ; la règle
-  // des boîtes y tient en une ligne, sous le tableau.
-  assert.match(html, /<p><b>Mes calculs<\/b> : les 5 carrés d’une case, c’est sa boîte\. Réussi le jour où il revient, un calcul monte d’une boîte ; raté, il redescend\.<\/p>/);
+  // des boîtes y tenait en une ligne, sous le tableau. Lot « Une seule
+  // fiche » (08/10/2026, décision 4 de Gwenaël) : les deux lignes du bas de
+  // la fiche sont retirées.
+  assert.doesNotMatch(html, /fiche-rules|<b>Mes calculs<\/b> : les 5 carrés/);
 
   const aujourdhui = PARCOURS.jourLocal();
   const demain = PARCOURS.ajouterJours(aujourdhui, 1);
@@ -101,7 +105,9 @@ test("« Encore 10 calculs » n’existe plus : ni sous le tableau, ni à la fin
 
 test("les nombres écrits pour l'élève sont ceux du moteur : 5 boîtes, 10 à la fois, su à la boîte 4, 1 · 3 · 7 · 14 jours", () => {
   assert.equal(PARCOURS.SEUILS.revision.boites, 5);
-  assert.match(html, /les 5 carrés d’une case, c’est sa boîte/, "la fiche le dit (la notice de la séance, non)");
+  // Lot « Une seule fiche » : la fiche ne l'écrit plus, elle le dessine —
+  // autant de carrés par case que de boîtes.
+  assert.match(html, /for \(let index = 0; index < PARCOURS\.SEUILS\.revision\.boites; index \+= 1\)/, "la fiche dessine les 5 carrés de chaque case");
   assert.equal(PARCOURS.SEUILS.revision.total, 10);
   assert.deepEqual(PARCOURS.SEUILS.revision.delais, [0, 1, 3, 7, 14]);
   // Audit 1 : les délais et la boîte 4 ne sont plus dans la notice courte.

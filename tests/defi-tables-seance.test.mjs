@@ -856,11 +856,16 @@ test("la fiche — la carte de ma table, le tableau de Mes calculs, « Cette sem
   assert.doesNotMatch(fiche, /J’apprends|Je m’entraîne|fiche-table|Colorie les ronds/, "les ronds ont quitté l'appli au lot 2a");
   assert.match(fiche, /<div id="fiche-matable" class="fiche-rangee is-ma-table fiche-matable" hidden><\/div>\s*<table id="fiche-calculs" class="fiche-carre"><tbody><\/tbody><\/table>\s*<p class="fiche-carre-legende" aria-hidden="true">/);
   assert.match(fiche, /<\/i>pas encore vu<\/span>[\s\S]*?<\/i>à revoir<\/span>[\s\S]*?<\/i>en route<\/span>[\s\S]*?<\/i>su<\/span>[\s\S]*?<\/i>même calcul<\/span>/, "la légende de l’écran");
-  assert.match(fiche, /<p id="fiche-dix" class="fiche-dix" hidden><b>Table de 10<\/b>&nbsp;: passée ✓<\/p>/);
+  // Lot « Une seule fiche » : la table de 10 passée prend la pastille.
+  assert.match(fiche, /<p id="fiche-dix" class="fiche-dix" hidden><i class="fiche-passee">✓10<\/i>Table de 10&nbsp;: passée<\/p>/);
   // Un seul logo, en haut à droite ; le QR à gauche ; la signature seule en pied.
   assert.match(fiche, /<header class="fiche-head">\s*<div class="fiche-qr">[\s\S]*?<\/div>\s*<h1>Mon parcours<br>des tables<\/h1>\s*<img class="fiche-logo" src="\.\.\/\.\.\/assets\/img\/mathsgo-logo-print\.png"/);
   assert.equal((fiche.match(/mathsgo-logo/g) || []).length, 1, "un seul logo");
-  assert.equal((fiche.match(/<footer class="fiche-foot">mathsgo\.re · CC BY-NC-SA 4\.0<\/footer>/g) || []).length, 1, "une seule signature : une seule page");
+  // Lot « Une seule fiche » : la page 1 a sa signature (une seule page pour
+  // l'élève) ; la page du professeur, la sienne.
+  const page1 = fiche.slice(0, fiche.indexOf('<div id="fiche-prof"'));
+  assert.equal((page1.match(/<footer class="fiche-foot">mathsgo\.re · CC BY-NC-SA 4\.0<\/footer>/g) || []).length, 1, "une seule signature : une seule page");
+  assert.equal((fiche.match(/<footer class="fiche-foot">mathsgo\.re · CC BY-NC-SA 4\.0<\/footer>/g) || []).length, 2);
   // Le remplissage : le parcours de LA FICHE (celui d'un autre élève chez le professeur).
   assert.match(html, /const fait = fiche\.calculs\[cle\] \|\| null;\s*const td = document\.createElement\("td"\);\s*td\.className = colonne < ligne \? `miroir\$\{fait \? " vu" : ""\}` : PARCOURS\.etatFait\(fait\);/, "la moitié miroir grise seulement pour un calcul déjà vu");
   assert.match(html, /nombre\.textContent = fait \? String\(ligne \* colonne\) : "";/, "comme à l'écran : une case jamais vue ne donne pas le résultat");
@@ -878,22 +883,28 @@ test("la fiche — la carte de ma table, le tableau de Mes calculs, « Cette sem
   assert.match(html, /const marches = marchesDeTable\(fiche, maTable\);/);
   assert.match(html, /function echelleDeTable\(table\) \{\s*const \{depart, prochaines, noms\} = marchesDeTable\(parcours, table\);/, "Mon parcours et la fiche lisent l'échelle de la même façon");
   assert.match(html, /const semaine = PARCOURS\.bilanSeances\(fiche\);/);
-  // Le cadre du professeur (10 lignes) : la fiche se resserre pour rester sur une page.
-  assert.match(html, /\$\("fiche-print"\)\.classList\.toggle\("avec-prof", Boolean\(source\)\);/);
-  assert.match(html, /\.fiche-print\.avec-prof \.fiche-carre td \{ height: 9mm; \}/);
+  // Lot « Une seule fiche » (08/10/2026) : la page 1 ne se resserre plus
+  // (elle se resserrait pour faire tenir le cadre du professeur) ; le cadre
+  // est une page 2, seulement depuis « Ma classe ».
+  assert.doesNotMatch(html, /avec-prof/);
+  assert.match(html, /\$\("fiche-prof"\)\.hidden = !source;\s*renderFicheProf\(source \? fiche : null, etat\);/);
+  assert.match(html, /\.fiche-page-prof \{ break-before: page; margin-top: 0; \}/);
   assert.doesNotMatch(html, /\.fiche-page2 \{ break-before: page/);
 });
 
 test("lot 2b : les compteurs « fois » sont pour le professeur — le cadre n'existe que dans la fiche ouverte depuis « Ma classe »", () => {
-  assert.match(html, /<div id="fiche-prof" class="fiche-prof" hidden>\s*<strong>Pour le professeur <small>— combien de fois chaque activité a été faite<\/small><\/strong>/);
-  const rendu = html.slice(html.indexOf("      function renderFiche(source) {"), html.indexOf("      function printFiche() {"));
-  assert.match(rendu, /lignesProf\.replaceChildren\(\);\s*if \(source\) \{/, "sans source (la fiche de l'élève sur son appareil), aucune ligne");
-  // Toujours là pour le professeur ; sans rien à compter, une phrase le dit.
-  assert.match(rendu, /cadre\.hidden = !source;\s*cadre\.querySelector\("table"\)\.hidden = !lignesProf\.children\.length;\s*\$\("fiche-prof-vide"\)\.hidden = Boolean\(lignesProf\.children\.length\);/);
-  assert.match(html, /<p id="fiche-prof-vide" hidden>Aucune séance ni activité enregistrée\.<\/p>/);
+  // Lot « Une seule fiche » (08/10/2026, planche 16) : une page 2, titrée.
+  assert.match(html, /<div id="fiche-prof" class="fiche-page-prof" hidden>\s*<div class="fiche-prof">\s*<h2 class="fiche-prof-titre">Pour le professeur <span id="fiche-prof-qui"><\/span><\/h2>\s*<p class="fiche-prof-sous">Combien de fois chaque activité a été faite, table par table\.<\/p>/);
+  const rendu = html.slice(html.indexOf("      function renderFicheProf(fiche, etat) {"), html.indexOf("      function printFiche() {"));
+  assert.match(rendu, /lignesProf\.replaceChildren\(\);[\s\S]*?if \(!fiche\) return;/, "sans source (la fiche de l'élève sur son appareil), aucune ligne");
+  assert.match(rendu, /\$\("fiche-prof"\)\.hidden = !source;\s*renderFicheProf\(source \? fiche : null, etat\);/);
+  // Toujours les 9 tables : plus de phrase « aucune séance » (Toti avait
+  // passé ses 9 tables par le test, la fiche disait « Aucune séance ni
+  // activité enregistrée ») — la colonne « Passée » dit « test direct ».
+  assert.doesNotMatch(html, /fiche-prof-vide|Aucune séance ni activité enregistrée/);
   // Le nom proposé à l'enregistrement du PDF : le titre de la page.
   assert.match(html, /document\.title = `Fiche Défi tables\$\{distant\.prenom \? ` - \$\{distant\.prenom\}` : ""\}\$\{classe \? ` - \$\{classe\}` : ""\}`;/);
-  assert.match(rendu, /const nombres = \[ligne\.seance\.n, fois\.beads, fois\.construct, fois\.gaps, fois\.ordered,\s*fois\.random \+ fois\.desordre, fois\.trous, fois\.mixte\];\s*if \(!nombres\.some\(Boolean\)\) return;/, "une ligne par table où quelque chose a été fait");
+  assert.match(rendu, /const nombres = \[ligne\.seance\.n, fois\.beads, fois\.construct, fois\.gaps, fois\.ordered,\s*fois\.random \+ fois\.desordre, fois\.trous, fois\.mixte\];\s*const tr = document\.createElement\("tr"\);/, "une ligne par table, les 9, toujours");
   assert.equal((html.match(/<th>Séances<\/th><th>Perles<\/th>/g) || []).length, 1);
   // Le professeur passe toujours une source ; l'élève, jamais.
   assert.match(html, /renderFiche\(distant\);/);
@@ -971,7 +982,10 @@ test("lot 2b : « résultats et nombres manquants » partout — noyau, fiche vi
   assert.match(vierge, /await page\.goto\(PAGE\.as_uri\(\) \+ "\?vierge"\)/);
   assert.match(vierge, /pw\.chromium\.launch\(channel="chromium"\)/, "le vrai Chromium, pas le headless shell (largeur du texte)");
   assert.doesNotMatch(vierge, /APPRENDS|ENTRAINE|les deux|LEGENDE = |j’entoure|je colorie/, "plus de rangées à entourer ni à colorier");
-  assert.match(html, /<p><b>Passée ✓<\/b> : le test, 20 questions \(résultats, nombres manquants et divisions\) en 1 min 30, 2 erreurs au plus\.<\/p>/);
+  // Lot « Une seule fiche » : la ligne « Passée ✓ : le test… » quitte la
+  // fiche ; le nom reste dans l'en-tête du cadre du professeur.
+  assert.doesNotMatch(html, /<b>Passée ✓<\/b> : le test/);
+  assert.match(html, /<th>Résultats, nombres<br>manquants et divisions<\/th><th>Passée<\/th>/);
   const publication = lire(".github/workflows/publier.yml");
   assert.match(publication, /python -m pip install --disable-pip-version-check reportlab\n/);
   assert.doesNotMatch(publication, /PyMuPDF|pypdf/);

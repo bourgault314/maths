@@ -264,12 +264,14 @@ test("la page : une seule tuile, plus d’écran Mes calculs ; Mon parcours = ma
   assert.match(html, /function openCalculs\(\) \{\s*openParcours\(\);\s*\$\("parcours-calculs"\)\.scrollIntoView/);
 });
 
-test("la fiche : une page, le même tableau, et la fiche du professeur se resserre (cadre plein)", () => {
+test("la fiche : une page, le même tableau, des cases carrées partout (lot « Une seule fiche »)", () => {
   assert.doesNotMatch(html, /fiche-page2|id="fiche-rows"/);
-  assert.match(html, /<p><b>Mes calculs<\/b> : les 5 carrés d’une case, c’est sa boîte\. Réussi le jour où il revient, un calcul monte d’une boîte ; raté, il redescend\.<\/p>/, "la ligne « Ma rangée » remplacée (choix de Gwenaël)");
+  // Lot « Une seule fiche » (décision 4) : la ligne « Mes calculs : les 5
+  // carrés… » (qui avait remplacé « Ma rangée ») quitte la fiche.
+  assert.doesNotMatch(html, /<b>Mes calculs<\/b> : les 5 carrés/);
   assert.doesNotMatch(html, /<b>Ma rangée<\/b> : une case entourée/);
-  assert.match(html, /\.fiche-print\.avec-prof \.fiche-carre td \{ height: 9mm; \}/);
-  assert.match(html, /\.fiche-carre td, \.fiche-mini \{ box-sizing: border-box; height: 11mm;/, "11 mm pour l’élève");
+  assert.doesNotMatch(html, /avec-prof/, "la fiche du professeur ne se resserre plus");
+  assert.match(html, /\.fiche-carre td \{ width: 13\.5mm; height: 13\.5mm; \}/, "13,5 mm sur toutes les fiches");
   // Noir et blanc : le texte coloré des cases est foncé (rouge, bleu, vert, gris).
   assert.match(html, /\.fiche-carre \.a-travailler, \.fiche-mini\.a-travailler \{ border-color: #efb4b4; background: #ffebeb; color: #a93030; \}/);
   assert.match(html, /\.fiche-carre \.miroir\.vu, \.fiche-mini\.miroir\.vu \{ border-color: #d5dbe0; background: #e9edf1; color: #5f6e79; \}/);

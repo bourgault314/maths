@@ -1091,6 +1091,13 @@
        acquise : ✓ vert À GAUCHE de son numéro de ligne (décision 3). */
     .calculs-entete.is-ma-table[role="rowheader"] { color: var(--blue); }
     .calculs-entete.is-acquise::before { content: "✓"; margin-right: 2px; color: var(--green); font-size: .78em; }
+    /* Lot « Une seule fiche » (planche 16) : comme sur la fiche, le numéro
+       de ligne d'une table passée devient une pastille verte pleine, « ✓2 »
+       en blanc, de la hauteur des cases (la colonne s'élargit à 32 px au
+       téléphone, 30 px sur ordinateur). */
+    .calculs-entete.is-acquise[role="rowheader"] { border-radius: 9px; background: var(--green); color: #fff; }
+    .calculs-entete.is-acquise[role="rowheader"]::before { color: #fff; }
+    .calculs-grille > .calculs-entete[role="rowheader"] { min-width: 32px; }
     .mc-cell {
       aspect-ratio: 1 / 1;
       min-width: 0;
@@ -1181,6 +1188,12 @@
     .calculs-aide { order: 7; }
     .calculs-dix { order: 8; }
     .parcours-suite > .parcours-extra:first-child { margin-top: 12px; }
+    /* Lot « Une seule fiche » (planche 16) : les coupes de la tuile Mon
+       mélange un peu plus grandes (26 → 30 px). Sur un ordinateur bas, la
+       règle « max-height: 700px » plus bas les garde à 22 px : le cadre
+       blanc doit tenir entier. */
+    .parcours-suite .mp-trophees { gap: 5px; }
+    .parcours-suite .mp-trophees b { width: 30px; height: 30px; }
     /* « Aujourd'hui : 8 calculs reviennent dans ta séance » : les calculs du
        jour (« Mes calculs du jour », la 1re étape de la séance) se voient
        ici ; touchée, la ligne les allume dans le tableau. Rien de dû : une
@@ -1257,7 +1270,10 @@
       .parcours-suite > .parcours-extra:first-child { margin-top: 0; }
       .parcours-suite .parcours-extra { margin-top: 10px; }
       .parcours-suite .parcours-row-head { flex-wrap: wrap; }
-      .calculs-grille { width: 398px; max-width: none; margin-top: 6px; grid-template-columns: 22px repeat(8, 44px); }
+      /* Lot « Une seule fiche » : 30 px pour la pastille d'une table passée,
+         les cases passent à 43 px — la largeur (398 px) ne change pas. */
+      .calculs-grille { width: 398px; max-width: none; margin-top: 6px; grid-template-columns: 30px repeat(8, 43px); }
+      .calculs-grille > .calculs-entete[role="rowheader"] { min-width: 0; }
       .calculs-grille .mc-cell { gap: 2px; border-radius: 8px; }
       .calculs-grille .mc-nb { font-size: 20px; }
       .calculs-grille .mc-cases { gap: 1.5px; }
@@ -2064,10 +2080,13 @@
     .fiche-subtitle { display: flex; justify-content: space-between; gap: 6mm; margin: 0 0 2.5mm; color: #3f5a6c; font-size: 9pt; }
     .fiche-subtitle b { color: #143451; font-size: 8.5pt; }
     /* La fiche tient sur UNE page A4, pied compris : 273 mm utiles
-       (297 − 2 × 12 de marge). Lot « un seul tableau » : la carte de ma
-       table, le tableau de Mes calculs (8 lignes de 11 mm), sa légende, deux
-       blocs, le cadre du professeur (9 lignes au plus) et deux lignes de
-       règles. Tout ajout à cette feuille se remesure au PDF, cadre plein. */
+       (297 − 2 × 12 de marge). Lot « Une seule fiche » (08/10/2026) : la
+       page 1 est la même partout (« Imprimer ma fiche » de l'élève, fiche
+       ouverte depuis « Ma classe ») — la carte de ma table, le tableau de Mes
+       calculs (8 lignes de 13,5 mm), sa légende, les deux cartes Mon mélange
+       et Je deviens expert, le pied. Le cadre du professeur est une page 2,
+       seulement depuis « Ma classe ». Tout ajout à cette feuille se remesure
+       au PDF. */
     .fiche-rangee { display: grid; grid-template-columns: 28mm auto 1fr; align-items: center; column-gap: 3mm; box-sizing: border-box; min-height: 9mm; margin: 0 0 1.2mm; padding: 1mm 3mm; border: .3mm solid #cfe2ed; border-radius: 2.5mm; background: #fff; break-inside: avoid; }
     .fiche-rangee.is-acquise { border-color: #b9dcc8; background: #f2fbf5; }
     .fiche-rangee.is-ma-table { border: .6mm solid #0b57b7; }
@@ -2085,39 +2104,59 @@
     .fiche-echelle .barre i.faite { border-color: #6fb8a6; background: #bfe5dc; }
     .fiche-echelle .barre i.ici { border-color: #0b57b7; background: #0b57b7; }
     .fiche-echelle b { color: #0b57b7; }
-    .fiche-prof { margin-top: 2.5mm; padding: 1.8mm 3mm; border: .4mm dashed #7a8ea0; border-radius: 2.5mm; break-inside: avoid; }
-    .fiche-prof > strong { display: block; margin-bottom: 1.5mm; color: #143451; font-size: 9.5pt; }
-    .fiche-prof > strong small { color: #3f5a6c; font-size: 8pt; font-weight: 400; }
-    .fiche-prof table { width: 100%; border-collapse: collapse; font-size: 8pt; }
-    .fiche-prof th, .fiche-prof td { padding: .3mm 1.2mm; border: .2mm solid #b8c7d3; text-align: center; }
+    /* Lot « Une seule fiche » (08/10/2026, planche 16) : le cadre du
+       professeur est une PAGE 2, seulement dans la fiche ouverte depuis « Ma
+       classe » — le titre (prénom, classe, date), les 9 tables toujours, avec
+       la colonne « Passée » (« test direct » : passée sans aucune séance ni
+       activité), puis quatre lignes : Mon mélange, Je deviens expert, Mes
+       calculs, les jours de travail. À l'écran, sous la page 1 ; sur le
+       papier, une page à elle, avec son pied (voir @media print). */
+    .fiche-page-prof { margin-top: 10mm; }
+    .fiche-prof { padding: 4mm 5mm; border: .4mm dashed #7a8ea0; border-radius: 2.5mm; break-inside: avoid; }
+    .fiche-prof-titre { margin: 0 0 1mm; color: #143451; font-size: 15pt; }
+    .fiche-prof-titre span { margin-left: 3mm; color: #3f5a6c; font-size: 11pt; font-weight: 700; }
+    .fiche-prof-sous { margin: 0 0 2mm; color: #3f5a6c; font-size: 9pt; }
+    .fiche-prof table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+    .fiche-prof th, .fiche-prof td { padding: 1.2mm; border: .2mm solid #b8c7d3; text-align: center; }
     .fiche-prof thead th { background: #eef3f9; color: #143451; font-size: 7.5pt; line-height: 1.1; }
     .fiche-prof tbody th { text-align: left; white-space: nowrap; }
     .fiche-prof td.zero { color: #9fb0bd; }
-    .fiche-prof p { margin: 0; color: #3f5a6c; font-size: 8.3pt; }
-    .fiche-block { position: relative; margin: 2.5mm 0 0; padding: 2.2mm 4mm; border: .3mm solid #a9e4dc; border-radius: 3mm; background: #e7f7f4; break-inside: avoid; }
+    .fiche-prof td.passee { color: #147447; font-weight: 700; white-space: nowrap; }
+    .fiche-prof-ligne { margin: 2.5mm 0 0; color: #143451; font-size: 9.5pt; }
+    .fiche-prof-ligne b { margin-right: 1mm; }
+    /* Lot « Une seule fiche » (proposition A, planche 15) : Mon mélange et Je
+       deviens expert, deux cartes côte à côte — le titre court, centré ; les
+       coupes et les étoiles au centre, sur une pastille blanche ; la règle en
+       petit dessous. */
+    .fiche-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm; margin-top: 3mm; }
+    .fiche-block { margin: 0; padding: 3mm 4mm; border: .3mm solid #a9e4dc; border-radius: 3mm; background: #e7f7f4; text-align: center; break-inside: avoid; }
     .fiche-expert { border-color: #e7c86a; background: #fff8e1; }
-    .fiche-block strong { display: block; font-size: 11pt; }
-    .fiche-melange strong { padding-right: 58mm; }
-    .fiche-expert strong { padding-right: 58mm; }
-    .fiche-block p { margin: 1.5mm 0 0; color: #506b7d; font-size: 8pt; }
-    .fiche-state { position: absolute; top: 3mm; right: 4mm; padding: .8mm 2.5mm; border-radius: 3mm; background: #fff; color: #147447; font-size: 8pt; font-weight: 700; }
+    .fiche-block strong { display: block; font-size: 13pt; }
+    .fiche-block p { margin: 1mm 0 0; color: #506b7d; font-size: 8.3pt; }
+    .fiche-state, .fiche-stars { display: inline-flex; align-items: center; justify-content: center; margin: 2mm auto 1mm; padding: 1mm 3mm; border-radius: 3mm; background: #fff; }
     .fiche-state:empty { display: none; }
-    .fiche-state .mp-trophees { gap: 1mm; }
+    .fiche-state .mp-trophees { gap: 2.5mm; }
     /* Sur le papier (souvent en noir et blanc) : une coupe pas encore gagnée
-       est un simple contour, une coupe gagnée est pleine. */
-    .fiche-state .mp-trophees b { width: 6mm; height: 6mm; color: #6b7a87; filter: none; }
+       est un simple contour gris, une coupe gagnée est pleine — jaune doré,
+       contour foncé (planche 14). */
+    .fiche-state .mp-trophees b { width: 10mm; height: 10mm; color: #6b7a87; filter: none; }
     .fiche-state .mp-trophees b .corps { fill: #fff; stroke: currentColor; stroke-width: 1.3; stroke-linejoin: round; }
     .fiche-state .mp-trophees b .anses { stroke-width: 1.3; }
-    .fiche-state .mp-trophees b.is-gagne { color: #7a5a00; }
-    .fiche-state .mp-trophees b.is-gagne .corps { fill: currentColor; }
+    .fiche-state .mp-trophees b.is-gagne { color: #8a6500; }
+    .fiche-state .mp-trophees b.is-gagne .corps { fill: #f4c430; }
     .fiche-state .mp-trophees b.is-gagne .anses { stroke-width: 1.8; }
-    .fiche-stars { position: absolute; top: 2mm; right: 4mm; color: #c9d6df; font-size: 11pt; letter-spacing: -.5pt; white-space: nowrap; }
-    .fiche-stars b, .fiche-stars span { margin-left: 2.5mm; }
-    .fiche-stars b { color: #b7791f; font-weight: 400; }
-    .fiche-stars .couronne { width: 4.6mm; height: 3.8mm; vertical-align: -.3mm; }
-    .fiche-rules { margin-top: 3mm; color: #3f5a6c; font-size: 8.3pt; }
-    .fiche-rules strong { display: block; margin-bottom: 1mm; color: #143451; font-size: 9pt; }
-    .fiche-rules p { margin: 0 0 1mm; }
+    /* Les étoiles, comme les coupes : pas encore gagnée, un contour gris,
+       vide ; gagnée, jaune doré au contour foncé. Choix B de Gwenaël
+       (planche 17) : le gris plein (#c9d6df, puis #9fb0bd) ne se voyait pas
+       assez, et imprimé en noir et blanc il sortait PLUS FONCÉ que le jaune
+       des étoiles gagnées. */
+    .fiche-stars { color: #fff; -webkit-text-stroke: .35pt #6b7a87; font-size: 15pt; letter-spacing: -.5pt; white-space: nowrap; }
+    .fiche-stars b, .fiche-stars span { margin-right: 2.2mm; }
+    .fiche-stars > :last-child { margin-right: 0; }
+    .fiche-stars b { color: #f4c430; -webkit-text-stroke: .35pt #8a6500; font-weight: 400; }
+    .fiche-stars .couronne { width: 6.5mm; height: 5.4mm; vertical-align: -.3mm; overflow: visible; }
+    .fiche-stars .couronne path { stroke: #6b7a87; stroke-width: 1.3; stroke-linejoin: round; paint-order: stroke; }
+    .fiche-stars b .couronne path { stroke: #8a6500; }
     .fiche-foot { margin-top: 6mm; color: #506b7d; font-size: 8pt; text-align: center; }
     /* Le tableau de Mes calculs, le même qu'à l'écran : le nombre en gros dès
        la première réponse, les cinq carrés de sa boîte, la moitié miroir en
@@ -2128,8 +2167,15 @@
     .fiche-carre tr > th:first-child { width: 9mm; }
     /* Lot « Mon parcours » (04/10/2026) : comme à l'écran — plus de
        soulignement, la croix de ma table derrière les cases (voir plus bas),
-       le ✓ d'une table acquise À GAUCHE de son numéro de ligne. */
-    .fiche-carre th.is-acquise::before { content: "✓"; margin-right: .4mm; color: #147447; font-size: 8pt; }
+       le ✓ d'une table acquise À GAUCHE de son numéro de ligne. Lot « Une
+       seule fiche » (proposition A, planche 15) : le numéro d'une table
+       passée devient une pastille verte pleine, « ✓2 » en blanc, de la
+       hauteur des cases (la colonne fait 9 mm) — la même pastille dans la
+       légende (« table passée ») et pour la table de 10 (.fiche-passee).
+       Lisible imprimée en noir et blanc. */
+    .fiche-carre th.is-acquise { border-radius: 2mm; background: #147447; color: #fff; font-size: 11pt; }
+    .fiche-carre th.is-acquise::before { content: "✓"; margin-right: .3mm; color: #fff; font-size: 9pt; }
+    .fiche-passee { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-width: 9mm; height: 9mm; padding: 0 1mm; border-radius: 2mm; background: #147447; color: #fff; font-size: 10pt; font-style: normal; font-weight: 700; }
     .fiche-carre td, .fiche-mini { box-sizing: border-box; height: 11mm; padding: 0; border: .4mm solid #cfdbe4; border-radius: 2mm; background: #fff; color: #7ea1b8; text-align: center; vertical-align: middle; }
     .fiche-carre td b, .fiche-mini b { display: block; font-size: 12.5pt; line-height: 1; letter-spacing: -.02em; }
     .fiche-carre td b:empty, .fiche-mini b:empty { display: none; }
@@ -2138,12 +2184,12 @@
     .fiche-carre .fiche-case, .fiche-mini .fiche-case { width: 1.9mm; height: 1.9mm; border: .3mm solid currentColor; border-radius: .4mm; background: transparent; }
     /* Lot « retours de classe » (06/10/2026, retour de Gwenaël : rectangulaires,
        les cases « font moins table de Pythagore ») : des cases CARRÉES de
-       13,5 mm, le tableau centré — la fiche tient toujours sur une page. La
-       fiche ouverte depuis « Ma classe » (.avec-prof) garde ses cases basses :
-       carrées, elle passerait sur deux pages. */
-    .fiche-print:not(.avec-prof) .fiche-carre { width: auto; margin-left: auto; margin-right: auto; }
-    .fiche-print:not(.avec-prof) .fiche-carre tr > th:first-child { width: 7mm; }
-    .fiche-print:not(.avec-prof) .fiche-carre td { width: 13.5mm; height: 13.5mm; }
+       13,5 mm, le tableau centré — la fiche tient toujours sur une page. Lot
+       « Une seule fiche » (08/10/2026) : sur TOUTES les fiches. Celle qu'on
+       ouvre depuis « Ma classe » gardait des cases basses pour que le cadre
+       du professeur tienne sur sa page ; le cadre est passé en page 2. */
+    .fiche-carre { width: auto; margin-left: auto; margin-right: auto; }
+    .fiche-carre td { width: 13.5mm; height: 13.5mm; }
     .fiche-carre .fiche-case.is-pleine, .fiche-mini .fiche-case.is-pleine { background: currentColor; }
     .fiche-carre .a-travailler, .fiche-mini.a-travailler { border-color: #efb4b4; background: #ffebeb; color: #a93030; }
     .fiche-carre .en-cours, .fiche-mini.en-cours { border-color: #a9c8e8; background: #eef6ff; color: #0b57b7; }
@@ -2155,7 +2201,8 @@
     .fiche-mini { display: flex; flex-direction: column; justify-content: center; width: 15mm; height: 9mm; font-style: normal; }
     .fiche-mini b { font-size: 9pt; }
     .fiche-mini .fiche-carre-cases { margin-top: .6mm; }
-    .fiche-dix { margin: 1.5mm 0 0; color: #147447; font-size: 8.5pt; font-weight: 700; text-align: center; }
+    .fiche-dix { display: flex; align-items: center; justify-content: center; gap: 1.5mm; margin: 1.5mm 0 0; color: #143451; font-size: 9pt; font-weight: 700; }
+    .fiche-dix[hidden] { display: none; }
     /* La fiche vierge (lot « Mon parcours ») : « Table de ___ » à remplir. */
     .fiche-blanc { display: inline-block; width: 12mm; border-bottom: .3mm solid #7ea1b8; vertical-align: baseline; }
     /* La croix de ma table sur la fiche (lot « Mon parcours ») : la même bande
@@ -2174,22 +2221,6 @@
     .fiche-carre td.croix-c::after { inset: -.8mm -1mm; }
     .fiche-carre td.croix-c.haut::after { top: -1mm; border-radius: 2.8mm 2.8mm 0 0; }
     .fiche-carre td.croix-c.bas::after { bottom: -1mm; border-radius: 0 0 2.8mm 2.8mm; }
-    /* La fiche ouverte depuis « Ma classe » porte en plus le cadre du
-       professeur (10 lignes) : elle se resserre pour rester sur UNE page —
-       cases de 9 mm au lieu de 11, blocs et cadre plus serrés. Mesuré au PDF,
-       cadre plein (9 tables et la 10). */
-    .fiche-print.avec-prof .fiche-identity { margin-top: 3mm; }
-    .fiche-print.avec-prof .fiche-matable { padding-top: .8mm; padding-bottom: .8mm; }
-    .fiche-print.avec-prof .fiche-carre { border-spacing: .9mm; }
-    .fiche-print.avec-prof .fiche-carre td { height: 9mm; }
-    .fiche-print.avec-prof .fiche-carre td b { font-size: 11pt; }
-    .fiche-print.avec-prof .fiche-carre-cases { margin-top: .6mm; }
-    .fiche-print.avec-prof .fiche-mini { height: 8mm; }
-    .fiche-print.avec-prof .fiche-carre-legende { margin-top: 1mm; }
-    .fiche-print.avec-prof .fiche-block { margin-top: 2mm; padding: 1.6mm 4mm; }
-    .fiche-print.avec-prof .fiche-prof { margin-top: 2mm; }
-    .fiche-print.avec-prof .fiche-prof table { font-size: 7.5pt; }
-    .fiche-print.avec-prof .fiche-prof th, .fiche-print.avec-prof .fiche-prof td { padding: .15mm 1.2mm; }
 
     /* ---------- « Je pousse les perles » : le rekenrek de la table ----------
        Reporté de son boulier (outils/bouliers/rekenrek/tables.html). UNE règle
@@ -2375,6 +2406,9 @@
       body.mode-fiche #fiche-print, body.voir-fiche #fiche-print {
         width: auto; max-width: none; margin: 0; padding: 0; border: 0; border-radius: 0;
       }
+      /* Lot « Une seule fiche » : le cadre du professeur commence une
+         nouvelle feuille, APRÈS le pied de la page 1 ; il porte le sien. */
+      .fiche-page-prof { break-before: page; margin-top: 0; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -2840,33 +2874,45 @@
       <span><i class="fiche-mini en-cours"><b>21</b><span class="fiche-carre-cases"><span class="fiche-case is-pleine"></span><span class="fiche-case is-pleine"></span><span class="fiche-case is-pleine"></span><span class="fiche-case"></span><span class="fiche-case"></span></span></i>en route</span>
       <span><i class="fiche-mini su"><b>21</b><span class="fiche-carre-cases"><span class="fiche-case is-pleine"></span><span class="fiche-case is-pleine"></span><span class="fiche-case is-pleine"></span><span class="fiche-case is-pleine"></span><span class="fiche-case is-pleine"></span></span></i>su</span>
       <span><i class="fiche-mini miroir vu"><b>21</b><span class="fiche-carre-cases"><span class="fiche-case is-pleine"></span><span class="fiche-case is-pleine"></span><span class="fiche-case is-pleine"></span><span class="fiche-case"></span><span class="fiche-case"></span></span></i>même calcul</span>
+      <span><i class="fiche-passee">✓3</i>table passée</span>
     </p>
-    <p id="fiche-dix" class="fiche-dix" hidden><b>Table de 10</b>&nbsp;: passée ✓</p>
-    <div class="fiche-block fiche-melange">
-      <strong>Mon mélange : mes tables passées</strong>
-      <span id="fiche-melange-state" class="fiche-state"></span>
-      <p>Dès 2 tables passées, quand je veux : 20 questions en 1 min 30. Une coupe avec 3, 6, puis 9 tables.</p>
-    </div>
-    <div class="fiche-block fiche-expert">
-      <strong>Je deviens expert : toutes les tables, de plus en plus vite</strong>
-      <span id="fiche-stars" class="fiche-stars"></span>
-      <p>Mes 9 tables passées : 25 questions avec des divisions — ★ 2 min · ★★ 1 min 45 · ★★★ 1 min 30 · ★★★★ 1 min 15 · 👑 1 min.</p>
-    </div>
-    <!-- Les compteurs sont pour le professeur : ce cadre n'apparaît que
-         dans la fiche ouverte depuis « Ma classe » (décision du 03/10). -->
-    <div id="fiche-prof" class="fiche-prof" hidden>
-      <strong>Pour le professeur <small>— combien de fois chaque activité a été faite</small></strong>
-      <table>
-        <thead><tr><th></th><th>Séances</th><th>Perles</th><th>Je construis<br>la bande</th><th>Bande<br>à trous</th><th>Dans<br>l’ordre</th><th>Dans le<br>désordre</th><th>Nombres manquants<br>et divisions</th><th>Résultats, nombres<br>manquants et divisions</th></tr></thead>
-        <tbody id="fiche-prof-rows"></tbody>
-      </table>
-      <p id="fiche-prof-vide" hidden>Aucune séance ni activité enregistrée.</p>
-    </div>
-    <div class="fiche-rules">
-      <p><b>Mes calculs</b> : les 5 carrés d’une case, c’est sa boîte. Réussi le jour où il revient, un calcul monte d’une boîte ; raté, il redescend.</p>
-      <p><b>Passée ✓</b> : le test, 20 questions (résultats, nombres manquants et divisions) en 1 min 30, 2 erreurs au plus.</p>
+    <p id="fiche-dix" class="fiche-dix" hidden><i class="fiche-passee">✓10</i>Table de 10&nbsp;: passée</p>
+    <!-- Lot « Une seule fiche » (08/10/2026) : la page 1 est la même partout.
+         Mon mélange et Je deviens expert, deux cartes côte à côte ; plus de
+         lignes de règles en bas (la légende dit « table passée »). -->
+    <div class="fiche-duo">
+      <div class="fiche-block fiche-melange">
+        <strong>Mon mélange</strong>
+        <span id="fiche-melange-state" class="fiche-state"></span>
+        <p>Mes tables passées, 20 questions en 1 min 30. Une coupe avec 3, 6, puis 9 tables.</p>
+      </div>
+      <div class="fiche-block fiche-expert">
+        <strong>Je deviens expert</strong>
+        <span id="fiche-stars" class="fiche-stars"></span>
+        <p>Mes 9 tables passées : 25 questions. ★ 2 min · ★★ 1 min 45 · ★★★ 1 min 30 · ★★★★ 1 min 15 · 👑 1 min</p>
+      </div>
     </div>
     <footer class="fiche-foot">mathsgo.re · CC BY-NC-SA 4.0</footer>
+    <!-- Les compteurs sont pour le professeur (décision du 03/10) : une page 2,
+         seulement dans la fiche ouverte depuis « Ma classe » (lot « Une seule
+         fiche », planche 16). Toujours les 9 tables ; « Passée » : le jour, et
+         « test direct » quand la table a été passée sans aucune séance ni
+         activité. -->
+    <div id="fiche-prof" class="fiche-page-prof" hidden>
+      <div class="fiche-prof">
+        <h2 class="fiche-prof-titre">Pour le professeur <span id="fiche-prof-qui"></span></h2>
+        <p class="fiche-prof-sous">Combien de fois chaque activité a été faite, table par table.</p>
+        <table>
+          <thead><tr><th></th><th>Séances</th><th>Perles</th><th>Je construis<br>la bande</th><th>Bande<br>à trous</th><th>Dans<br>l’ordre</th><th>Dans le<br>désordre</th><th>Nombres manquants<br>et divisions</th><th>Résultats, nombres<br>manquants et divisions</th><th>Passée</th></tr></thead>
+          <tbody id="fiche-prof-rows"></tbody>
+        </table>
+        <p class="fiche-prof-ligne"><b>Mon mélange :</b> <span id="fiche-prof-melange"></span></p>
+        <p class="fiche-prof-ligne"><b>Je deviens expert :</b> <span id="fiche-prof-expert"></span></p>
+        <p class="fiche-prof-ligne"><b>Mes calculs :</b> <span id="fiche-prof-calculs"></span></p>
+        <p class="fiche-prof-ligne"><b>Jours de travail (les 14 derniers) :</b> <span id="fiche-prof-jours"></span></p>
+      </div>
+      <footer class="fiche-foot">mathsgo.re · CC BY-NC-SA 4.0</footer>
+    </div>
   </section>
   <!-- « Comment ça marche ? » : les règles en six phrases, écrites une seule
        fois et clonées dans l'accueil et dans Mon parcours. Rien d'autre
@@ -8899,6 +8945,80 @@
       // d'un élève n'y entre (ni prénom, ni classe, ni date, ni parcours).
       const FICHE_VIERGE = "vierge";
 
+      // Lot « Une seule fiche » (08/10/2026) : « 8 oct. », la date courte de
+      // la page du professeur (insécable : elle ne se coupe pas en fin de ligne).
+      function dateCourte(jour) {
+        const [annee, mois, date] = String(jour).split("-").map(Number);
+        if (!annee || !mois || !date) return "";
+        return new Date(annee, mois - 1, date, 12).toLocaleDateString("fr-FR", {day: "numeric", month: "short"}).replace(/\s/g, "\u00a0");
+      }
+
+      // La page 2 de la fiche ouverte depuis « Ma classe » (planche 16), pour
+      // le professeur : les 9 tables, toujours, avec leurs compteurs « fois »
+      // et la colonne « Passée » — le jour, et « test direct » quand la table
+      // a été passée sans aucune séance ni activité (Toti, 08/10 : ses 9
+      // tables passées par le test, le cadre disait « Aucune séance ni
+      // activité enregistrée ») ; puis Mon mélange, Je deviens expert, Mes
+      // calculs et les jours de travail. Le compteur « Séances » ne change
+      // pas : un test réussi n'est pas une séance. fiche = null : vide.
+      function renderFicheProf(fiche, etat) {
+        const lignesProf = $("fiche-prof-rows");
+        lignesProf.replaceChildren();
+        ["fiche-prof-qui", "fiche-prof-melange", "fiche-prof-expert", "fiche-prof-calculs", "fiche-prof-jours"].forEach(id => { $(id).textContent = ""; });
+        if (!fiche) return;
+        $("fiche-prof-qui").textContent = [$("fiche-prenom").textContent, $("fiche-classe").textContent, $("fiche-date").textContent].filter(Boolean).join(" · ");
+        PARCOURS_TABLES.forEach(table => {
+          const ligne = fiche.tables[table];
+          const fois = ligne.fois;
+          const nombres = [ligne.seance.n, fois.beads, fois.construct, fois.gaps, fois.ordered,
+            fois.random + fois.desordre, fois.trous, fois.mixte];
+          const tr = document.createElement("tr");
+          const tete = document.createElement("th");
+          tete.textContent = `Table de ${table}`;
+          tr.append(tete);
+          nombres.forEach(nombre => {
+            const td = document.createElement("td");
+            td.textContent = nombre ? String(nombre) : "·";
+            if (!nombre) td.className = "zero";
+            tr.append(td);
+          });
+          const passee = document.createElement("td");
+          passee.className = "passee";
+          if (ligne.acquise) passee.textContent = `${dateCourte(ligne.acquise)}${nombres.some(Boolean) ? "" : " · test direct"}`;
+          tr.append(passee);
+          lignesProf.append(tr);
+        });
+        // Chaque ligne finit par un point, un seul (« 8 oct. » en a déjà un).
+        const phrase = texte => (texte.endsWith(".") ? texte : `${texte}.`);
+        // Mon mélange : ses coupes, et le dernier joué.
+        const coupes = etat.melange.trophees.filter(trophee => trophee.gagne).map(trophee => trophee.tables);
+        const texteCoupes = !coupes.length ? "aucune coupe"
+          : coupes.length === 1 ? `la coupe des ${coupes[0]} tables`
+            : `les coupes des ${coupes.slice(0, -1).join(", ")} et ${coupes[coupes.length - 1]} tables`;
+        const melange = fiche.melange;
+        const score = Number.isInteger(melange.score) ? ` : ${melange.score} sur ${PARCOURS.SEUILS.melange.total}` : "";
+        $("fiche-prof-melange").textContent = phrase(`${texteCoupes} · ${melange.dernier ? `dernier joué le ${dateCourte(melange.dernier)}${score}` : "jamais joué"}`);
+        // Je deviens expert : la couronne, ses étoiles, ou rien encore.
+        const expert = fiche.expert;
+        $("fiche-prof-expert").textContent = phrase(expert.etoiles >= PARCOURS.SEUILS.etoile.durees.length
+          ? `la couronne${expert.couronne ? `, gagnée le ${dateCourte(expert.couronne)}` : ""}`
+          : expert.etoiles
+            ? `${PARCOURS.symboleEtoile(expert.etoiles)}${expert.dernier ? ` · dernière réussite le ${dateCourte(expert.dernier)}` : ""}`
+            : "aucune étoile pour l’instant");
+        // Mes calculs : combien dans chaque boîte, combien pas encore vus.
+        const resume = etat.calculs;
+        const vus = resume.boites.reduce((somme, nombre) => somme + nombre, 0);
+        $("fiche-prof-calculs").textContent = `${resume.boites.map((nombre, index) => `boîte\u00a0${index + 1}\u00a0:\u00a0${nombre}`).join(" · ")} · pas encore vus\u00a0:\u00a0${resume.total - vus}.`;
+        // Les jours de travail gardés (les 14 derniers), et les séances finies ce jour-là.
+        const jours = [...fiche.jours].sort();
+        $("fiche-prof-jours").textContent = phrase(jours.length
+          ? jours.map(jour => {
+            const seances = fiche.seances.filter(seance => seance === jour).length;
+            return `${dateCourte(jour)}${seances ? `\u00a0(${seances}\u00a0séance${seances > 1 ? "s" : ""})` : ""}`;
+          }).join(" · ")
+          : "aucun");
+      }
+
       function renderFiche(source) {
         ficheAffichee = source || null;
         const vierge = source === FICHE_VIERGE;
@@ -8984,39 +9104,11 @@
             carte.append(echelle);
           }
         }
-        // Le cadre du professeur : les compteurs « fois », seulement dans la
-        // fiche ouverte depuis « Ma classe » (une source est donnée). Une
-        // ligne par table où quelque chose a été fait.
-        const cadre = $("fiche-prof");
-        const lignesProf = $("fiche-prof-rows");
-        lignesProf.replaceChildren();
-        if (source) {
-          PARCOURS_TABLES.forEach(table => {
-            const ligne = fiche.tables[table];
-            const fois = ligne.fois;
-            const nombres = [ligne.seance.n, fois.beads, fois.construct, fois.gaps, fois.ordered,
-              fois.random + fois.desordre, fois.trous, fois.mixte];
-            if (!nombres.some(Boolean)) return;
-            const tr = document.createElement("tr");
-            const tete = document.createElement("th");
-            tete.textContent = `Table de ${table}`;
-            tr.append(tete);
-            nombres.forEach(nombre => {
-              const td = document.createElement("td");
-              td.textContent = nombre ? String(nombre) : "·";
-              if (!nombre) td.className = "zero";
-              tr.append(td);
-            });
-            lignesProf.append(tr);
-          });
-        }
-        // Toujours là pour le professeur ; sans rien à compter, il le dit
-        // (une fiche sans cadre faisait croire à un oubli).
-        cadre.hidden = !source;
-        cadre.querySelector("table").hidden = !lignesProf.children.length;
-        $("fiche-prof-vide").hidden = Boolean(lignesProf.children.length);
-        // Avec ce cadre, la fiche se resserre pour tenir sur une page.
-        $("fiche-print").classList.toggle("avec-prof", Boolean(source));
+        // Le cadre du professeur : la page 2, seulement dans la fiche ouverte
+        // depuis « Ma classe » (une source est donnée). Lot « Une seule
+        // fiche » : la page 1 ne change plus — rien ne s'y resserre.
+        $("fiche-prof").hidden = !source;
+        renderFicheProf(source ? fiche : null, etat);
         // Mon mélange, libre : ses trois trophées (vides sur la fiche vierge,
         // à colorier).
         $("fiche-melange-state").replaceChildren(tropheesDuMelange(etat.melange.trophees));
