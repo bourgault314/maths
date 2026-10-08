@@ -21,7 +21,7 @@
   const dec=value=>String(Math.round(value*100)/100).replace('.',',');
   const opLatex=op=>op==='+'?' + ':' '+MINUS+' ';
 
-  // Noms des parts, pour les phrases de correction (« des septièmes »).
+  // Noms des parts, pour les phrases de correction (« des septièmes »).
   const PARTS={2:'demis',3:'tiers',4:'quarts',5:'cinquièmes',6:'sixièmes',7:'septièmes',8:'huitièmes',9:'neuvièmes',10:'dixièmes',11:'onzièmes',12:'douzièmes',14:'quatorzièmes',15:'quinzièmes',16:'seizièmes',18:'dix-huitièmes',20:'vingtièmes',21:'vingt-et-unièmes',24:'vingt-quatrièmes',28:'vingt-huitièmes',30:'trentièmes',35:'trente-cinquièmes'};
   const ONE_PART={2:'un demi',3:'un tiers',4:'un quart',5:'un cinquième',6:'un sixième',7:'un septième',8:'un huitième',9:'un neuvième',10:'un dixième',11:'un onzième',12:'un douzième'};
   const parts=den=>PARTS[den]||('parts de '+FM(1,den));
@@ -277,7 +277,7 @@
     const wrongNum=op==='+'?a+b:Math.abs(smallFirst?a-b:b-a);
     const note=op==='+'
       ?M(expression)+' ne fait pas '+FM(wrongNum,small+big)+' : on n’additionne pas les dénominateurs.'
-      :'On ne soustrait pas « en haut et en bas » : il faut d’abord des parts de même taille.';
+      :'On ne soustrait pas « en haut et en bas » : il faut d’abord des parts de même taille.';
     return {
       kind:'add_multiple_den',op,prompt:'Réduis au même dénominateur, puis calcule.',expression,result,
       steps:[
@@ -297,8 +297,8 @@
   // ---------------------------------------------------------------------------
   // Types 8 et 9 — dénominateurs différents, résultat irréductible (sujets 2026-2027).
   // Type 8 : deux consignes du brevet, tirées une fois sur deux.
-  //  - « Calcule » (Amérique du Nord 2026 : 2/3 + 3/4) : toute fraction égale est juste ;
-  //  - « … sous forme de fraction irréductible » (sujet de référence 2027 n° 1 : 3/5 − 1/4).
+  //  - « Calcule » (Amérique du Nord 2026 : 2/3 + 3/4) : toute fraction égale est juste ;
+  //  - « … sous forme de fraction irréductible » (sujet de référence 2027 n° 1 : 3/5 − 1/4).
   // Avec deux dénominateurs premiers entre eux et deux fractions irréductibles,
   // le résultat sur d1 × d2 est toujours irréductible : seule une fraction égale
   // écrite avec un plus grand dénominateur (34/24 pour 17/12) est refusée.
@@ -337,8 +337,8 @@
       const wrongNum=op==='+'?n1+n2:n1-n2,wrongDen=op==='+'?d1+d2:d1-d2;
       const verb=op==='+'?'on n’additionne pas':'on ne soustrait pas';
       note=(wrongNum>0&&wrongDen>1)
-        ?M(expression)+' ne fait pas '+FM(wrongNum,wrongDen)+' : '+verb+' « en haut et en bas ».'
-        :'Attention, '+verb+' « en haut et en bas » : il faut d’abord des parts de même taille.';
+        ?M(expression)+' ne fait pas '+FM(wrongNum,wrongDen)+' : '+verb+' « en haut et en bas ».'
+        :'Attention, '+verb+' « en haut et en bas » : il faut d’abord des parts de même taille.';
     }
     const bigger=Math.max(d1,d2),smaller=Math.min(d1,d2);
     const aide=lcmPairs
@@ -358,7 +358,7 @@
 
   // ---------------------------------------------------------------------------
   // Type 12 — comparer deux fractions sans numérateur ni dénominateur commun :
-  // « Complète par <, = ou > » (réponse courte du brevet 2027 : 2/3 < 3/4).
+  // « Complète par <, = ou > » (réponse courte du brevet 2027 : 2/3 < 3/4).
   const SIGNS=['<','=','>'];
   const signHtml=sign=>sign==='<'?'&lt;':(sign==='>'?'&gt;':'=');
   function compareTwo(ctx){
@@ -424,7 +424,7 @@
   }
 
   // ---------------------------------------------------------------------------
-  // Type 10 — QCM « Le nombre 1/3 + 1/4 est égal à : » (sujet zéro, série pro B).
+  // Type 10 — QCM « Le nombre 1/3 + 1/4 est égal à : » (sujet zéro, série pro B).
   function sumQcm(ctx){
     const {randomInt,pick,shuffle}=ctx;
     const forms=randomInt(0,1)===0;
@@ -460,7 +460,7 @@
     if(forms) steps.push('Or '+M(F(a+'+'+b,a+' \\times '+b)+' = '+F(sum,product))+' : c’est la proposition '+qcm.letter+'.');
     return {
       kind:'sum_qcm',prompt:'Le nombre '+M(expression)+' est égal à :',qcm,steps,
-      note:'Le piège : additionner « en haut et en bas » ('+FM(n1+n2,a+b)+').',
+      note:'Le piège : additionner « en haut et en bas » ('+FM(n1+n2,a+b)+').',
       aide:['Pour additionner deux fractions, il faut le même dénominateur.','Écris '+FM(n1,a)+' et '+FM(n2,b)+' avec le dénominateur '+product+'.'],
       aideHtml:''
     };
@@ -546,8 +546,8 @@
     else throw new Error('dnb_03 : type de question inconnu ('+kind+').');
 
     // Politique de la réponse (lue par la coque, 03-slideshow.js) : une consigne
-    // « Calcule » accepte toute fraction égale (comme au brevet) ; une consigne
-    // « irréductible » exige la forme irréductible.
+    // « Calcule » accepte toute fraction égale (comme au brevet) ; une consigne
+    // « irréductible » exige la forme irréductible.
     if(!d.qcm&&!d.fractionPolicy) d.fractionPolicy=EQUIVALENT_KINDS.includes(d.kind)?'equivalent':'exact';
     const answers=d.qcm?[d.qcm.correctIndex]:[String(d.result.num),String(d.result.den)];
     const instance={
