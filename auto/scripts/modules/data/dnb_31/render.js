@@ -41,7 +41,11 @@
     '@media(min-width:1600px){.m31-chart-task .m31-chart{width:min(calc(var(--m31-h,56vh) * var(--m31-ratio,1.5)),46vw,860px)}}',
     // Le cadre de la question s'élargit (avant : 1220 px au plus, le tableau de 7 jours débordait à droite en projection).
     '.diapo.median-mode .slide{max-width:min(1640px,100%)}',
-    '.m31-footer{margin-top:6px!important}'
+    '.m31-footer{margin-top:6px!important}',
+    // Case réponse : largeur fixe tant qu'elle est vide (sa largeur ne dit pas la
+    // longueur de la réponse), ajustée au nombre une fois remplie (« 4 °C », pas « 4  °C »).
+    '.m31-footer .answer-slot:not(.answer-slot-filled){width:2.2em!important}',
+    '.m31-footer .answer-slot-filled{width:auto!important;margin:0 .06em}'
   ].join('\n');
   function styleTag(){return '<style data-m31-style="1">'+CSS+'</style>';}
   function esc(value){return String(value).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
