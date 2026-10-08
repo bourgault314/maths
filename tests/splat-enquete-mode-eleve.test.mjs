@@ -187,7 +187,7 @@ test("seules les cartes d'Enquête ont ce tableau ; une carte du monde 2 ou une 
   assert.match(rendu, /panneau\.classList\.toggle\("enquete", !!enquete\);/);
   // (lot E-sans-total : une carte « sans total » montre « ? » dans la même case donnée ; lot M4-4b :
   // « Trois paires » du Système n'a plus de ligne du TOTAL)
-  assert.match(rendu, /bas = eleveCasesEnqueteHtml\(card, enquete\);\n    \/\*[\s\S]*?\*\/\n    haut = \(enquete\.systeme && sysTotalCache\(card\)\) \? ""\n      : eleveCaseDonneeHtml\("haut blanche", "Total", \(card\._rel && card\._rel\.sansTotal\) \? "\?" : card\.total\);/);
+  assert.match(rendu, /bas = eleveCasesEnqueteHtml\(card, enquete\);\n    \/\*[\s\S]*?\*\/\n    haut = \(enquete\.systeme && sysTotalCache\(card\)\) \? ""\n      : \(enquetePasDeTotal\(card\) \? eleveCaseDonneeHtml\("haut blanche pasDe", "Pas de", "Total"\)\n      : eleveCaseDonneeHtml\("haut blanche", "Total", \(card\._rel && card\._rel\.sansTotal\) \? "\?" : card\.total\)\);/);
 });
 
 // --- consigne et message ------------------------------------------------------------------
@@ -548,6 +548,7 @@ function harnaisTelephone({ hauteurs = { 1: 300, 2: 470, 3: 660 }, avant = 448, 
     ${fn("eleveSchemaTelephone")}
     ${fn("eleveSchemaTelRendre")}
     ${fn("eleveDessinerSchema")}
+    ${fn("enquetePasDeTotal")}
     ${fn("eleveRappelHtml")}
     ${fn("eleveRappelAfficher")}
     ${constLine("const ELEVE_RAPPEL_PLATEAU_MARGE = ")}
@@ -622,13 +623,16 @@ test("téléphone : nouvelle carte ou appareil tourné, tout revient comme avant
 });
 
 test("le bandeau : la case TOTAL puis la ou les phrases d'indice, texte échappé", () => {
-  const rappel = new Function(`${fn("eleveRappelHtml")} return eleveRappelHtml;`)();
+  const rappel = new Function(`${fn("enquetePasDeTotal")} ${fn("eleveRappelHtml")} return eleveRappelHtml;`)();
   const h = rappel({ total: 38, _inv: { indices: ["Sous la tache noire, il y a 12 jetons de plus que sous la tache bleue.", [{ type: "splat" }], "A < B & C"] } });
   assert.equal(h, '<div class="eleveRappelTotal"><span>TOTAL</span><b>38</b></div>' +
     '<div class="eleveRappelIndices"><p>Sous la tache noire, il y a 12 jetons de plus que sous la tache bleue.</p><p>A &lt; B &amp; C</p></div>',
     "seules les phrases (pas les indices en symboles), dans l'ordre");
   assert.equal(rappel({ total: 5 }), '<div class="eleveRappelTotal"><span>TOTAL</span><b>5</b></div><div class="eleveRappelIndices"></div>');
   assert.match(rappel({ total: 48, _rel: { sansTotal: true } }), /<b class="inconnu">\?<\/b>/, "une carte sans total ne donne pas son total");
+  // (07/10/2026) une carte de l'Enquête sans total dit « PAS DE TOTAL » : « TOTAL ? » ferait deux « ? »
+  assert.equal(rappel({ family: "C", total: 48, _rel: { sansTotal: true }, _inv: { indices: ["A"] } }),
+    '<div class="eleveRappelTotal"><span>PAS DE</span><b class="pasDe">TOTAL</b></div><div class="eleveRappelIndices"><p>A</p></div>');
   // son « ? » en gris ardoise, dans le bandeau comme dans la case TOTAL du tableau
   const r = regles(feuille);
   assert.equal((r.find((x) => x.sel === "#eleveRappel .eleveRappelTotal b.inconnu, #elevePanel.sansTotal .eleveCase.haut.donnee .eleveDonneeVal") || {}).decl, "color:#64748b");

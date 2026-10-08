@@ -116,13 +116,16 @@ const g3 = new Function(`
   ${fn("enqueteInitiale")}
   ${fn("enqueteArticle")}
   ${fn("enqueteNomUnites")}
+  ${ligne("function enqueteSymbole(")}
+  ${ligne("function enqueteFoisSymbole(")}
+  ${ligne("function enqueteLigneCalcul(")}
   ${fn("enqueteBarresModele")}
   ${fn("enqueteCorrectionPasAPas")}
   ${fn("enqueteG3Regrouper")}
   ${fn("enqueteProjectionPasAPas")}
   ${fn("enqueteG3Etapes")}
   ${fn("enqueteG3VerifIndices")}
-  return { modele: enqueteBarresModele, plan: enqueteProjectionPasAPas, detail: enqueteG3Etapes, regrouper: enqueteG3Regrouper, derniere: enqueteDerniereEtape, nb: enqueteNbEtapes, verifIndices: enqueteG3VerifIndices,
+  return { modele: enqueteBarresModele, plan: enqueteProjectionPasAPas, detail: enqueteG3Etapes, regrouper: enqueteG3Regrouper, derniere: enqueteDerniereEtape, nb: enqueteNbEtapes, verifIndices: enqueteG3VerifIndices, ligneCalcul: enqueteLigneCalcul,
     eleve: (v) => { eleveActif = v; } };
 `)();
 
@@ -155,12 +158,17 @@ function carteDe(nom, k){
 // --- 1. les 11 exemples de la maquette ---------------------------------------------------------
 /* La suite des appuis, relevée sur la maquette validée (G3-maquette-1 à 11) */
 const SUITES = {
-  EX_ADD2: ["vide", "barres", "Schéma regroupé : 2 noires + 8 = 26", "Je retire : 2 noires = 26 − 8 = 18", "Je partage : 1 noire = 18 ÷ 2 = 9", "Je trouve la verte : verte = 9 + 8 = 17", "fin"],
-  EX_REB: ["vide", "barres", "Schéma regroupé : 3 noires + 7 + 7 = 38", "Je range : 3 noires + 7 + 7 = 38", "Je regroupe : 3 noires + 14 = 38",
-    "Je retire : 3 noires = 38 − 14 = 24", "Je partage : 1 noire = 24 ÷ 3 = 8", "Je trouve une bleue : bleue = 8 + 7 = 15", "fin"],
-  /* (lot « petite part », 01/10/2026) la situation, je coupe, le schéma regroupé, je partage, chaque tache */
-  EX_UNITE: ["vide", "barres", "Je coupe en petites parts", "Schéma regroupé : 11 parts = 55", "Je partage : 1 part = 55 ÷ 11 = 5",
-    "Je trouve la noire : noire = 2 × 5 = 10", "Je trouve la verte : verte = 6 × 5 = 30", "Je trouve la rouge : rouge = 3 × 5 = 15", "fin"],
+  /* (07/10/2026, proposition de Claire) « ? » pour la référence ; « Je partage » montre « ? = 18 ÷ 2 = 9 » et
+     la phrase « La tache noire cache donc 9 jetons » dans le même appui (la ligne en noir est la phrase) */
+  EX_ADD2: ["vide", "barres", "Schéma regroupé : 2 × ? + 8 = 26", "Je retire : 2 × ? = 26 − 8 = 18", "Je partage : La tache noire cache donc 9 jetons",
+    "Je trouve la verte : La tache verte cache donc 9 + 8 = 17 jetons", "fin"],
+  EX_REB: ["vide", "barres", "Schéma regroupé : 3 × ? + 7 + 7 = 38", "Je range : 3 × ? + 7 + 7 = 38", "Je regroupe : 3 × ? + 14 = 38",
+    "Je retire : 3 × ? = 38 − 14 = 24", "Je partage : La tache noire cache donc 8 jetons", "Je trouve une bleue : Chaque tache bleue cache donc 8 + 7 = 15 jetons", "fin"],
+  /* (lot « petite part », 01/10/2026) la situation, je coupe, le schéma regroupé, je partage, chaque tache ;
+     « ? » dans chaque petite part (07/10/2026) */
+  EX_UNITE: ["vide", "barres", "Je coupe en petites parts", "Schéma regroupé : 11 × ? = 55", "Je partage : ? = 55 ÷ 11 = 5",
+    "Je trouve la noire : La tache noire cache donc 2 × 5 = 10 jetons", "Je trouve la verte : La tache verte cache donc 6 × 5 = 30 jetons",
+    "Je trouve la rouge : La tache rouge cache donc 3 × 5 = 15 jetons", "fin"],
 };
 const APPUIS = { EX_ADD2: 7, EX_MUL2: 6, EX_REB: 9, EX_UNITE: 9, EX_ADD: 10, EX_MUL: 10, E11D: 7, E14: 10, E22: 6, EX_REU: 10, E18D: 6 };
 
@@ -193,8 +201,8 @@ test("un calcul par appui : la ligne d'avant en gris, la nouvelle en noir ; « J
   assert.deepEqual(partage.top.slice(0, 3).map((t) => [t.de, t.a, t.parts, t.t]), [[0, 0, 1, "8"], [1, 1, 1, "8"], [2, 2, 1, "8"]]);
   assert.deepEqual(partage.top.slice(3).map((t) => [t.t, t.retire]), [["14", true]]);
   /* le récapitulatif ③ reprend les calculs de la projection (avec « Je regroupe ») */
-  assert.deepEqual(reb.etapes[8].calculs.map((l) => l ? `${l.g} = ${l.d}` : "—"),
-    ["3 noires + 7 + 7 = 38", "3 noires + 14 = 38", "3 noires = 38 − 14 = 24", "1 noire = 24 ÷ 3 = 8", "—", "bleue = 8 + 7 = 15"]);
+  assert.deepEqual(reb.etapes[8].calculs.map((l) => l ? g3.ligneCalcul(l) : "—"),
+    ["3 × ? + 7 + 7 = 38", "3 × ? + 14 = 38", "3 × ? = 38 − 14 = 24", "? = 24 ÷ 3 = 8", "La tache noire cache donc 8 jetons", "—", "Chaque tache bleue cache donc 8 + 7 = 15 jetons"]);
   /* un seul écart : ni « Je range » ni « Je regroupe », les calculs du corrigé */
   const add2c = carteDe("EX_ADD2", 0), add2 = g3.detail(add2c);
   assert.ok(!add2.etapes.some((e) => e.titre === "Je range" || e.titre === "Je regroupe"));
@@ -261,7 +269,7 @@ test("les 25 fiches des cinq livrets : chaque carte a son pas à pas, et il ne t
       /* chaque ligne en noir existe, et les autres taches sont celles de la réponse */
       p.etapes.filter((e) => e.type === "ligne").forEach((e) => assert.ok(e.lignes[e.courante], `${ou} : ${e.titre}`));
       const m = g3.modele(c);
-      const apres = m.calculs.slice(m.calculs.indexOf(null) + 1).map((l) => `${l.g} = ${l.d}`);
+      const apres = m.calculs.slice(m.calculs.indexOf(null) + 1).map(g3.ligneCalcul);
       const vues = p.etapes.filter((e) => e.type === "barresValeurs" && e.egal).map((e) => e.lignes[e.idx]);
       if(m.ligne && m.mode !== "unite") assert.deepEqual(vues, apres, `${ou} : les autres taches`);
       /* le récapitulatif : les calculs du corrigé, « Je regroupe » ajouté quand il y a deux écarts */
@@ -337,10 +345,12 @@ test("le dernier appui : les calculs déjà vus en gris, la réponse encadrée e
   assert.match(html, /const ENQ_G3_VERIF_ECART = 18, ENQ_G3_VERIF_GRIS = "#374151";/);
   assert.match(html, /const ENQ_G3_RAPPEL = false;/);
   assert.match(html, /const ENQ_G3_REPONSE_FONT = 66, ENQ_G3_VERIF_FONT = 56, ENQ_G3_RESUME_GRIS = "#9ca3af", ENQ_G3_REPONSE_JEU = 20;/);
-  /* la vérification : le total, puis chaque indice, sous le cadre de la réponse */
-  assert.match(f, /const verifs = \(modele\.verification \? \[`\$\{modele\.verification\} ✓`\] : \[\]\)\.concat\(enqueteG3VerifIndices\(card\)\);/);
+  /* la vérification, sous le cadre de la réponse : le total seulement (proposition de Claire,
+     07/10/2026) ; sans total, seulement l'indice de l'écart */
+  assert.match(f, /const verifs = \(modele\.verification \? \[`\$\{modele\.verification\} ✓`\] : \[\]\)\.concat\(modele\.sansIndices \? \[\] : enqueteG3VerifIndices\(card, modele\.filtreIndices\)\);/);
   const c = carteDe("EX_ADD2", 0);
-  assert.deepEqual(g3.verifIndices(c), ["verte = noire + 8 : 17 = 9 + 8 ✓"]);
+  assert.equal(g3.modele(c).sansIndices, true, "avec un total : le total seulement");
+  assert.deepEqual(g3.verifIndices(c), ["verte = noire + 8 : 17 = 9 + 8 ✓"], "la fonction sait toujours vérifier un indice");
   /* l'impression garde drawEnqueteCalculs (tout en noir, la réponse en petit) */
   assert.ok(!/enqueteG3DessinerFin/.test(fn("drawEnqueteCorrectionImprimee")));
   /* les titres : un verbe par opération (décidé le 30/09) */
@@ -398,10 +408,20 @@ test("pages 2 : les dessins G3 prennent le profil d'impression ; sans option, la
   assert.match(fn("enqueteG3Lignes"), /if\(P\.isPrint && k < noir\) return;/);
 });
 
-test("corrigé imprimé : la vérification des indices sous la réponse, seulement à l'impression", () => {
+test("corrigé imprimé : « Je vérifie » sous la réponse — le total seulement ; sans total, l'indice de l'écart (07/10/2026)", () => {
   const f = fn("drawEnqueteCalculs");
-  assert.match(f, /if\(opts\.isPrint\)\{\s*const verifs = \(modele\.verification && !entries\.some\(e => e\.verif\) \? \[`\$\{modele\.verification\} ✓`\] : \[\]\)\.concat\(enqueteG3VerifIndices\(card, modele\.lettres\)\);/);
-  assert.match(fn("enqueteG3VerifIndices"), /const w = i => lettres \? enqueteInitiale\(card, i\) : enqueteMotCouleur\(card, i\)/);
+  assert.match(f, /if\(opts\.isPrint\)\{\s*const verifs = \(modele\.verification && !entries\.some\(e => e\.verif\) \? \[`\$\{modele\.verification\} ✓`\] : \[\]\)\.concat\(modele\.sansIndices \? \[\] : enqueteG3VerifIndices\(card, modele\.filtreIndices\)\);/);
+  /* en mots, même dans le corrigé en lettre (𝑥 n'est que la référence) */
+  assert.match(fn("enqueteG3VerifIndices"), /^function enqueteG3VerifIndices\(card, filtre\)\{/);
+  assert.match(fn("enqueteG3VerifIndices"), /const w = i => enqueteMotCouleur\(card, i\)/);
+  /* sans total : seul l'indice de l'écart (le rapport vient de servir au dernier calcul) */
+  const st = carteDe("E22", 0), m = g3.modele(st);
+  assert.equal(m.mode, "sansTotal");
+  assert.equal(m.verification, undefined, "pas de total à vérifier");
+  const v = g3.verifIndices(st, m.filtreIndices);
+  assert.equal(v.length, 1, v.join(" / "));
+  assert.match(v[0], / \+ \d+ : /, "l'indice de l'écart");
+  assert.equal(g3.verifIndices(st).length, 2, "sans filtre, les deux indices");
 });
 
 /* --- 02/10/2026 : à l'écran, les autres taches en un appui ; la case « Pas à pas » du professeur ---- */

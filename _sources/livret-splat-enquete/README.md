@@ -25,15 +25,17 @@ Les livrets « Le défi » ont disparu au lot 2 (30/09), les trois anciens « De
 ## Les 8 pages
 
 1. **Couverture** — sans logo ; sur-titre « Mon livret · Monde 3 · Partie N » (« Monde 3 · Deuxième
-   tour · N »), « Comment ça marche ? » avec la carte de l'exemple, « Nom, prénom » + Classe,
-   le sommaire des cinq fiches (badges 10 … 24, 11d … 24d).
+   tour · N »), « Comment ça marche ? » avec la carte de l'exemple (« On dessine **deux schémas en
+   barres** … La plus petite tache sert de référence : on note « ? » le nombre de jetons qu'elle
+   cache », 07/10/2026), « Nom, prénom » + Classe, le sommaire des cinq fiches (badges 10 … 24,
+   11d … 24d).
 2. **Un exemple résolu — « L'enquête pas à pas »** : le dessin de la première fiche du livret, sur
    une carte qui n'est dans aucun livret. Les **schémas successifs du pas à pas de la projection**
-   (lot G3 ; lot « pages 2 », 30/09/2026) : ① Je fais le schéma de la situation · ② Schéma
+   (lot G3 ; lot « pages 2 », 30/09/2026) : ① Schéma de comparaison · ② Schéma
    regroupé, puis un dessin par opération — Je range · Je regroupe · Je retire (26 − 8 → 18) ·
    Je partage (18 ÷ 2 ; 28 en 4 × 7) — et les barres avec les nombres (« Je trouve la verte », ou
    « Je trouve les autres taches » en un seul dessin) ; enfin, en texte, « Je réponds » (la
-   phrase de réponse, encadrée sur fond blanc) puis « Je vérifie » — côte à côte en une colonne,
+   phrase de réponse, encadrée sur fond blanc) puis « Je vérifie » (le total seulement) — côte à côte en une colonne,
    l'un sous l'autre en deux colonnes, sans rien prendre aux schémas (03/10/2026) —, et « À toi ! ». Jusqu'à cinq dessins (parties 1 et 2) : une colonne ;
    au-delà : **deux colonnes lues de haut en bas**, un filet entre les deux. La case retirée est
    hachurée **comme en projection**, seulement moins estompée (teintes fixes, sans transparence), pour
@@ -112,13 +114,30 @@ carte qui n'a pas le dessin attendu. Les dessins sont ceux de l'outil (`drawEnqu
 `drawEnqueteLigne`, `drawEnqueteCalculs`) au profil d'impression de la correction ; les couleurs
 `var(--…)` de l'outil sont résolues (sinon une pastille orange sortait noire).
 
+## L'inconnue « ? » (proposition de Claire, 07/10/2026 — monde 3 seulement)
+
+Décidée avec Gwenaël le 07/10/2026 ; le Système (monde 4) ne change pas.
+
+- La plus petite tache (la **référence**) s'écrit « ? » dans sa barre et dans les calculs :
+  « 2 × ? + 8 = 26 », « ? = 18 ÷ 2 = 9 », puis la ligne **« La tache noire cache donc 9 jetons »**
+  (taches répétées : « Chaque tache bleue cache donc … ») avant les autres taches ; les autres
+  taches gardent leur nom (« La tache verte cache donc 9 + 8 = 17 jetons »). Toujours « 2 × ? »,
+  jamais « 2𝑥 ». « Je complète » sans rapport (11d) : les deux indices parlent de la plus grande,
+  c'est elle la référence.
+- Unité commune : « ? » dans chaque petite part, les taches gardent leur nom dans ①.
+- ① s'appelle **« Schéma de comparaison »** ; ② reste le schéma regroupé ; une barre et un
+  nombre sont reliés par une flèche (« → 17 », gris : déjà trouvée ; noir : celle de l'étape).
+- **« Je vérifie »** : le total seulement ; sans total, seulement l'indice de l'écart.
+- **« PAS DE TOTAL »** à la place de « TOTAL ? » sur les cartes sans total (énoncés, corrigés,
+  écran, mode élève) : deux « ? » de sens différents prêteraient à confusion.
+
 ## Les livrets corrigés (pour tous)
 
 Mêmes 8 pages, même pliage, **mêmes cartes à la même place** (`render.py` s'arrête si une carte
 diffère entre l'élève, la correction et la lettre). Fiches : la correction imprimée de l'outil
-(`print=correction`) ; en lettre, `unknown=letter` (initiales des couleurs dans les calculs, la
-police du 𝑥 arrondi reste posée : `CSS_X`). Sous la réponse, le corrigé **vérifie les indices**
-(« verte = rouge + 2 : 5 = 3 + 2 ✓ », en lettre « V = R + 2 : 5 = 3 + 2 ✓ »), comme le dernier
+(`print=correction`) ; en lettre, `unknown=letter` : **𝑥 sur toutes les cartes** à la place du
+« ? » (pas de lettres variées, 07/10/2026), la police du 𝑥 arrondi reste posée (`CSS_X`). Sous la
+réponse encadrée, « Je vérifie » : le total (sans total : l'indice de l'écart), comme le dernier
 appui de la projection. Couverture : bandeau « Correction », « Livret corrigé »
 — jamais « professeur » (le corrigé peut être donné aux élèves).
 
@@ -159,5 +178,6 @@ comme les fiches.
 - Un titre de fiche trop long pour une ligne se coupe **après le tiret** (« Fiche 18 — » / la
   suite), jamais au milieu du titre (`JS_TITRE`), et rapetisse jusqu'à 80 % s'il le faut.
 - Vocabulaire : « jeton », « paquet de jetons », « tache », « indice », « ? », « schéma en
-  barres » — jamais d'autre nom pour la représentation, jamais de nom de forme pour un jeton.
+  barres », « schéma de comparaison », « barre » (jamais « brique ») — jamais d'autre nom pour la
+  représentation, jamais de nom de forme pour un jeton.
 - L'imposition A3 passe par **pikepdf** et `add_overlay` (avec pypdf, les dégradés ne suivent pas).

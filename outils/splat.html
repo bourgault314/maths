@@ -878,6 +878,10 @@
   #eleveTotalTel span{display:block;font-size:10px;font-weight:800;letter-spacing:1.5px;color:var(--total-label)}
   #eleveTotalTel b{display:block;font-size:24px;font-weight:900;margin-top:2px}
   #eleveTotalTel b.inconnu{color:#64748b}
+  /* « PAS DE TOTAL » (Enquête sans total, 07/10/2026) : « TOTAL » à la taille de « PAS DE », en gras, sur
+     la hauteur de ligne du nombre (la case garde sa taille) */
+  #eleveRappel .eleveRappelTotal b.pasDe, #eleveTotalTel b.pasDe{font-size:10px;letter-spacing:1.5px;line-height:24px;height:24px;color:var(--total-label)}
+  .eleveCase.haut.donnee.pasDe .eleveDonneeVal{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:900;color:#475569}
   body.eleve-mode #svgWrap.eleveSchemaTel #eleveTotalTel{display:none}
   /* petit téléphone : la question tient sur une ligne (la ligne gagnée va au plateau) */
   @media (max-width:379px){ #elevePanel.enquete .eleveConsigne{font-size:14px} }
@@ -7941,6 +7945,46 @@ function enqueteNomUnites(card, i, n, lettres){
   if(lettres){ const I = enqueteInitiale(card, i); return n === 1 ? I : `${n}${I}`; }
   return n === 1 ? `1 ${enqueteMotCouleur(card, i)}` : `${n} ${SYS_COULEURS_PLURIEL[investigateColorInfo(card, i).key] || enqueteMotCouleur(card, i)}`;
 }
+/* L'inconnue « ? » (proposition de Claire, décidée avec Gwenaël le 07/10/2026 ; Enquête seulement,
+   le Système ne change pas) : dans la correction et le pas à pas, la barre de référence s'écrit
+   « ? » (« 𝑥 » dans le corrigé en lettre), les calculs « 2 × ? + 8 = 26 », « ? = 18 ÷ 2 = 9 », puis
+   « La tache noire cache donc 9 jetons » ; les autres taches gardent leur nom. */
+/* « PAS DE TOTAL » (07/10/2026, question à choix de Gwenaël, planche « sans total ») : avec le « ? »
+   de la référence, « TOTAL ? » ferait deux « ? » de sens différents. Enquête seulement (le Système
+   garde son « TOTAL ? ») : « PAS DE » à la place du mot TOTAL, « TOTAL » en gras dessous, centrés,
+   la case garde sa taille. */
+function enquetePasDeTotal(card){
+  return !!(card && card.family === "C" && card._rel && card._rel.sansTotal);
+}
+/* Remplace « TOTAL » / « ? » d'une case du total en SVG par « PAS DE » / « TOTAL », centrés dans la
+   place des deux lignes d'avant (rectangle invisible de cette taille : la case ne change pas).
+   place : la boîte où centrer, quand on la connaît (l'impression : la case elle-même) ; sinon
+   mesurée (getBBox, à l'écran) ; et si la mesure est vide (dessin encore caché), estimée d'après
+   les deux lignes (hampes et jambages d'une police courante). */
+function enquetePasDeTotalSvg(g, tLabel, tNum, tx, fs, poids, couleur, mk, place){
+  let bb = place || null;
+  if(!bb){ try{ bb = g.getBBox(); }catch(_e){ bb = null; } }
+  if(!bb || !(bb.width > 0) || !(bb.height > 0)){
+    const y0 = Number(tLabel.getAttribute("y")), f0 = Number(tLabel.getAttribute("font-size")) || fs;
+    const y1 = Number(tNum.getAttribute("y")), f1 = Number(tNum.getAttribute("font-size")) || fs;
+    const haut = y0 - 0.93 * f0, bas = y1 + 0.24 * f1, l = 3.6 * fs;
+    bb = { x:tx - l / 2, y:haut, width:l, height:bas - haut };
+  }
+  tLabel.remove(); tNum.remove();
+  g.appendChild(mk("rect", { x:bb.x, y:bb.y, width:bb.width, height:bb.height, fill:"none", stroke:"none", class:"pasDeTotalPlace" }));
+  const cy = bb.y + bb.height / 2, attrs = { "text-anchor":"middle", "font-size":String(fs), fill:couleur, "letter-spacing":"2" };
+  const t1 = mk("text", { ...attrs, x:tx, y:cy - 0.24 * fs, "font-weight":String(poids) }); t1.textContent = "PAS DE";
+  const t2 = mk("text", { ...attrs, x:tx, y:cy + 1.0 * fs, "font-weight":"900" }); t2.textContent = "TOTAL";
+  g.appendChild(t1); g.appendChild(t2);
+}
+/* Le symbole de l'inconnue : « ? », ou 𝑥 dans le corrigé en lettre — 𝑥 sur toutes les cartes
+   (07/10/2026, question à choix de Gwenaël : pas de lettres variées). Toujours avec le « × » :
+   « 2 × ? », « 2 × 𝑥 », jamais « 2𝑥 », comme le programme du cycle 3 (décidé au Système, 23/09 et
+   04/10/2026). */
+function enqueteSymbole(lettres){ return lettres ? "𝑥" : "?"; }
+function enqueteFoisSymbole(n, sym){ return n === 1 ? sym : `${n} × ${sym}`; }
+/* le texte d'une ligne de calcul : sa phrase s'il en a une (« La tache verte cache donc… »), sinon « g = d » */
+function enqueteLigneCalcul(l){ return l.phrase || `${l.g} = ${l.d}`; }
 function enqueteTexteLargeur(t, fs, poids){
   const w = measureTextWidth(t, `${poids || 700} ${fs}px SplatLettres, system-ui, -apple-system, "Segoe UI", Roboto, Arial`);
   return (Number.isFinite(w) && w > 0) ? w : String(t).length * fs * 0.58;
@@ -8000,7 +8044,19 @@ function enqueteBarresModele(card){
   const cellTache = (i, txtDe) => ({ kind:"tache", i, v:vals[i], de: txtDe == null ? i : txtDe });
   const cellNombre = v => ({ kind:"nombre", v });
   const cellAjout = v => ({ kind:"ajout", v });
-  const texteCellule = c => c.kind === "tache" ? (lettres ? enqueteInitiale(card, c.de) : mot(c.de)) : N(c.v);
+  /* l'inconnue « ? » (𝑥 en lettre, 07/10/2026) : la tache de référence s'écrit SYM, les autres
+     gardent leur nom (dans les cases comme dans les calculs) */
+  const SYM = enqueteSymbole(lettres);
+  let uniteQ = null; /* la tache écrite « ? » (la référence) ; null pour les petites parts */
+  const texteCellule = c => c.kind === "tache" ? (c.de === uniteQ ? SYM : mot(c.de)) : N(c.v);
+  /* « La tache verte cache donc 2 × 9 = 18 jetons » ; taches répétées : « Chaque tache bleue… » */
+  const phraseTache = (t, d) => `${repet && tachesDe(couleurDe[t]).length > 1 ? "Chaque tache" : "La tache"} ${mot(t)} cache donc ${d} jetons`;
+  const ligneTacheQ = (t, d) => ({ g:mot(t), d, phrase:phraseTache(t, d) });
+  /* (remarque de Claire, 07/10/2026) une fois « ? » trouvé, on dit quelle tache il est —
+     « ? = 51 ÷ 3 = 17 », puis « La tache rouge cache donc 17 jetons », avant les autres taches ;
+     sinon l'élève doit se souvenir que « ? », c'est la rouge. Pas pour les petites parts (aucune
+     tache n'y vaut « ? »). ref:true : le pas à pas l'écrit avec la ligne du partage. */
+  const ligneRef = t => ({ ...ligneTacheQ(t, N(vals[t])), ref:true });
 
   /* ---- sans total : la grande tache écrite dans l'unité, ce qui dépasse est l'écart ---- */
   if(rel.sansTotal){
@@ -8012,12 +8068,16 @@ function enqueteBarresModele(card){
       { i:g, label:mot(g), cells:Array.from({ length:k }, () => cellTache(u)), sous:[{ de:1, a:k - 1, label:`${N(d)} de plus ${que(u)}` }] }
     ];
     const calculs = [];
-    calculs.push({ g:enqueteNomUnites(card, u, k - 1, lettres), d:N(d) });
-    if(k - 1 > 1) calculs.push({ g:enqueteNomUnites(card, u, 1, lettres), d:`${N(d)} ÷ ${k - 1} = ${N(vals[u])}` });
+    uniteQ = u;
+    calculs.push({ g:enqueteFoisSymbole(k - 1, SYM), d:N(d) });
+    if(k - 1 > 1) calculs.push({ g:SYM, d:`${N(d)} ÷ ${k - 1} = ${N(vals[u])}` });
+    calculs.push(ligneRef(u));
     calculs.push(null);
-    calculs.push({ g:lettres ? enqueteInitiale(card, g) : mot(g), d:`${k} × ${N(vals[u])} = ${N(vals[g])}` });
-    return { mode:"sansTotal", lettres, unit:u, reformulation, preLignes:[],
-      titre1:"Les barres — pas de total : je regarde ce qui dépasse", rows, accolade:null, ligne:null, calculs,
+    calculs.push(ligneTacheQ(g, `${k} × ${N(vals[u])} = ${N(vals[g])}`));
+    /* « Je vérifie » (07/10/2026) : sans total, seul l'indice de l'écart se vérifie (le rapport
+       vient de servir au dernier calcul) */
+    return { mode:"sansTotal", lettres, symbole:SYM, filtreIndices:r => r.op === "ADD" || r.op === "SUB", unit:u, reformulation, preLignes:[],
+      titre1:"Schéma de comparaison — pas de total : je regarde ce qui dépasse", rows, accolade:null, ligne:null, calculs,
       reponse:[u, g].map(i => ({ i, texte:`${mot(i)} = ${N(vals[i])}` })), texteCellule };
   }
 
@@ -8058,6 +8118,7 @@ function enqueteBarresModele(card){
       else { u = c; }
     }else{ mode = "chaine"; u = autres.reduce((a, b) => vals[a] <= vals[b] ? a : b); }
   }
+  if(mode !== "unite") uniteQ = u;
   function relEntreK(a, b){ const r = rels.find(r => r.kind === "ratio" && r.small === a && r.large === b); return r ? r.k : 0; }
   const relEntre = (a, b) => rels.find(r => r.kind !== "sum" && ((r.small === a && r.large === b) || (r.small === b && r.large === a)));
   const copie = cells => cells.map(x => ({ ...x }));
@@ -8085,7 +8146,7 @@ function enqueteBarresModele(card){
     return { cells:out, sous:(depuis !== u) ? [{ de:0, a:cellsDepuisT.length - 1, label:mot(depuis) }] : [], equiv:copie(out), ajout:0 };
   };
   const rowsRep = {}; // par représentant : { cells, sous, label, equiv, ajout, complete }
-  let titre1 = "Les barres", accolade = totalCache, ligneTotal = totalCache;
+  let titre1 = "Schéma de comparaison", accolade = totalCache, ligneTotal = totalCache;
   const ordreReps = [];
   const poseRow = (t, d, label) => { rowsRep[t] = { equiv:d.cells, ajout:0, ...d, label:label == null ? (d.complete ? `${mot(t)} + ${N(d.ajout)}` : mot(t)) : label }; ordreReps.push(t); };
   const lettresDe = n => ENQ_NOMBRES_LETTRES[n] || String(n);
@@ -8093,9 +8154,9 @@ function enqueteBarresModele(card){
     poseRow(u, { cells:[cellTache(u)], sous:[] });
     /* les autres dans l'ordre des indices */
     rels.forEach(r => { const t = r.small === u ? r.large : r.small; if(t !== u && !rowsRep[t]) poseRow(t, cellsDepuis(t, u, rowsRep[u].cells)); });
-    if(repet) titre1 = "Les barres — une barre par tache";
+    if(repet) titre1 = "Schéma de comparaison — une barre par tache";
     const completes = ordreReps.filter(t => rowsRep[t].complete);
-    if(completes.length) titre1 = `Les barres — je complète ${completes.map(art).join(" et ")}`;
+    if(completes.length) titre1 = `Schéma de comparaison — je complète ${completes.map(art).join(" et ")}`;
   }else if(mode === "reunies"){
     poseRow(u, { cells:[cellTache(u)], sous:[] });
     const g = pair.large;
@@ -8104,7 +8165,7 @@ function enqueteBarresModele(card){
     const cellsU = copie(rowsRep[u].cells), cellsG = copie(rowsRep[g].cells);
     const sous = [{ de:0, a:cellsU.length - 1, label:mot(u) }, { de:cellsU.length, a:cellsU.length + cellsG.length - 1, label:mot(g) }];
     poseRow(c, { cells:[...cellsU, ...cellsG], sous });
-    titre1 = `Les barres — je remplace ${art(g)}`;
+    titre1 = `Schéma de comparaison — je remplace ${art(g)}`;
   }else if(mode === "chaine"){
     /* u → c → t ; deux rapports vers la plus grande : u → moyen → c (le moyen joue le milieu) */
     const milieu = (vals[c] === Math.max(...reps.map(i => vals[i]))) ? autres.find(i => i !== u) : c;
@@ -8122,7 +8183,7 @@ function enqueteBarresModele(card){
           return { cells:out, sous, equiv:copie(out), ajout:0 }; })();
     poseRow(haut, d2);
     const rM = relEntre(milieu, haut);
-    titre1 = `Les barres — je remplace ${rM && (rM.kind === "ratio" || rM.kind === "compose") ? `chaque ${mot(milieu)}` : art(milieu)}`;
+    titre1 = `Schéma de comparaison — je remplace ${rM && (rM.kind === "ratio" || rM.kind === "compose") ? `chaque ${mot(milieu)}` : art(milieu)}`;
     if(d2.complete) titre1 += ` et je complète ${art(haut)}`;
   }else if(mode === "complete"){
     const completes = [];
@@ -8145,7 +8206,7 @@ function enqueteBarresModele(card){
        l'unité, la grande, puis la complétée */
     ordreReps.length = 0;
     if(u !== c) ordreReps.push(u, c, ...completes); else ordreReps.push(...completes, c);
-    titre1 = `Les barres — je complète ${completes.map(art).join(" et ")}`;
+    titre1 = `Schéma de comparaison — je complète ${completes.map(art).join(" et ")}`;
   }else if(mode === "unite"){
     /* n° 13, à la façon de Gwenaël : les barres (u la plus petite, c = kb × u, le moyen à part,
        « la moitié de la rouge ») ; puis les petites parts (plus bas, 01/10/2026) */
@@ -8171,10 +8232,12 @@ function enqueteBarresModele(card){
   const ajouts = rows.reduce((s, r) => s + r.ajout, 0);
   accolade = totalCache + ajouts; ligneTotal = accolade;
   if(ajouts > 0) preLignes.push(`${N(totalCache)} + ${rows.filter(r => r.ajout).map(r => N(r.ajout)).join(" + ")} = ${N(accolade)}`);
-  const nomCalc = i => lettres ? enqueteInitiale(card, i) : mot(i);
+  const nomCalc = i => i === uniteQ ? SYM : mot(i);
+  /* « 3 × ? » pour la référence, « 3 noires » pour une autre tache */
+  const nomUnitesDe = (t, n) => t === uniteQ ? enqueteFoisSymbole(n, SYM) : enqueteNomUnites(card, t, n, false);
   /* le nom d'un groupe de ② : la tache, « une violette » pour un bout complété jusqu'à la
      grande, « 3 noires » pour une tache complétée jusqu'à k unités */
-  const labelGroupe = r => r.complete ? (r.versC ? `une ${mot(c)}` : enqueteNomUnites(card, r.depuis, r.k, false)) : mot(r.i);
+  const labelGroupe = r => r.complete ? (r.versC ? `une ${mot(c)}` : nomUnitesDe(r.depuis, r.k)) : mot(r.i);
   let ligne;
   const calculs = [];
   let parts = null;
@@ -8192,15 +8255,15 @@ function enqueteBarresModele(card){
       return { ...r, cells, sous, sousRepli, nParts:n };
     });
     const nTot = partsRows.reduce((t, r) => t + r.nParts, 0);
-    parts = { rows:partsRows, part, nTot, titre:"Les barres — je coupe en petites parts",
+    parts = { rows:partsRows, part, nTot, titre:"Schéma de comparaison — je coupe en petites parts", symbole:SYM,
       phrase:`Je coupe ${art(c)} en ${nParts} petites parts (${ka}\u00a0×\u00a0${kb}).` };
     /* ② le schéma regroupé : les parts bout à bout, à la même échelle que ① (choisi par Gwenaël
        le 01/10/2026, question à choix : AVEC le schéma regroupé) */
     ligne = { total:totalCache, avant:[], groupes:partsRows.map(r => ({ cells:copie(r.cells), label:mot(r.i) })) };
-    calculs.push({ g:`${nTot} parts`, d:N(totalCache) });
-    calculs.push({ g:"1 part", d:`${N(totalCache)} ÷ ${nTot} = ${N(part)}` });
+    calculs.push({ g:enqueteFoisSymbole(nTot, SYM), d:N(totalCache) });
+    calculs.push({ g:SYM, d:`${N(totalCache)} ÷ ${nTot} = ${N(part)}` });
     calculs.push(null);
-    ordreReps.forEach(rp => calculs.push({ g:nomCalc(rp), d:`${nbParts(rp)} × ${N(part)} = ${N(vals[rp])}` }));
+    ordreReps.forEach(rp => calculs.push(ligneTacheQ(rp, `${nbParts(rp)} × ${N(part)} = ${N(vals[rp])}`)));
   }else{
     ligne = { total:ligneTotal, avant:[], groupes:rows.map(r => ({ cells:copie(r.cells), label:labelGroupe(r) })) };
     /* ③ je calcule : d'abord ce que vaut une tache complétée (« noire + 12 = rouge = 2 oranges »,
@@ -8208,15 +8271,16 @@ function enqueteBarresModele(card){
     const vus = new Set();
     rows.filter(r => r.complete && !(mode === "complete" && u === c)).forEach(r => {
       if(vus.has(r.rp)) return; vus.add(r.rp);
-      let d = r.k === 1 ? nomCalc(r.depuis) : enqueteNomUnites(card, r.depuis, r.k, lettres);
+      let d = r.k === 1 ? nomCalc(r.depuis) : nomUnitesDe(r.depuis, r.k);
       const dep = rowsRep[r.depuis];
-      if(r.depuis !== u && dep && dep.equiv && !dep.equiv.some(x => x.kind === "nombre")) d += ` = ${enqueteNomUnites(card, u, nbTachesCells(r.equiv), lettres)}`;
+      if(r.depuis !== u && dep && dep.equiv && !dep.equiv.some(x => x.kind === "nombre")) d += ` = ${nomUnitesDe(u, nbTachesCells(r.equiv))}`;
       calculs.push({ g:`${nomCalc(r.i)} + ${N(r.ajout)}`, d });
     });
     const reste = ligneTotal - sommeEcarts;
-    calculs.push({ g:enqueteNomUnites(card, u, nbUnites, lettres) + (ecarts.length ? " + " + ecarts.map(N).join(" + ") : ""), d:N(ligneTotal) });
-    if(ecarts.length) calculs.push({ g:enqueteNomUnites(card, u, nbUnites, lettres), d:`${N(ligneTotal)} − ${ecarts.length <= 2 ? ecarts.map(N).join(" − ") : N(sommeEcarts)} = ${N(reste)}` });
-    if(nbUnites > 1) calculs.push({ g:enqueteNomUnites(card, u, 1, lettres), d:`${N(reste)} ÷ ${nbUnites} = ${N(vals[u])}` });
+    calculs.push({ g:nomUnitesDe(u, nbUnites) + (ecarts.length ? " + " + ecarts.map(N).join(" + ") : ""), d:N(ligneTotal) });
+    if(ecarts.length) calculs.push({ g:nomUnitesDe(u, nbUnites), d:`${N(ligneTotal)} − ${ecarts.length <= 2 ? ecarts.map(N).join(" − ") : N(sommeEcarts)} = ${N(reste)}` });
+    if(nbUnites > 1) calculs.push({ g:nomUnitesDe(u, 1), d:`${N(reste)} ÷ ${nbUnites} = ${N(vals[u])}` });
+    calculs.push(ligneRef(u));
     calculs.push(null);
     const deja = new Set([u]);
     const ligneTache = (t, depuis) => {
@@ -8227,7 +8291,7 @@ function enqueteBarresModele(card){
       if(r.kind === "ratio") d = r.large === t ? `${r.k} × ${N(vals[depuis])} = ${N(vals[t])}` : `${N(vals[depuis])} ÷ ${r.k} = ${N(vals[t])}`;
       else if(r.kind === "compose") d = r.large === t ? `${r.k} × ${N(vals[depuis])} ${r.d < 0 ? "−" : "+"} ${N(Math.abs(r.d))} = ${N(vals[t])}` : `(${N(vals[depuis])} ${r.d < 0 ? "+" : "−"} ${N(Math.abs(r.d))}) ÷ ${r.k} = ${N(vals[t])}`;
       else d = r.large === t ? `${N(vals[depuis])} + ${N(r.d)} = ${N(vals[t])}` : `${N(vals[depuis])} − ${N(r.d)} = ${N(vals[t])}`;
-      calculs.push({ g:nomCalc(t), d });
+      calculs.push(ligneTacheQ(t, d));
       deja.add(t);
     };
     if(mode === "chaine"){
@@ -8237,7 +8301,7 @@ function enqueteBarresModele(card){
       ordreReps.filter(t => t !== u && t !== c).forEach(t => ligneTache(t, c));
     }else if(mode === "reunies"){
       ligneTache(pair.large, u);
-      calculs.push({ g:nomCalc(c), d:`${N(vals[sumRel.a])} + ${N(vals[sumRel.b])} = ${N(vals[c])}` });
+      calculs.push(ligneTacheQ(c, `${N(vals[sumRel.a])} + ${N(vals[sumRel.b])} = ${N(vals[c])}`));
       deja.add(c);
     }else{
       ordreReps.slice(1).forEach(t => ligneTache(t, u));
@@ -8248,7 +8312,8 @@ function enqueteBarresModele(card){
   const reponse = ordreReps.map(i => ({ i, texte:`${mot(i)} = ${N(vals[i])}` }));
   /* la vérification du total, à côté de la réponse quand il y a la place (retour du 29/09) */
   const verification = `${rows.map(r => N(vals[r.i])).concat(visibles.map(N)).join(" + ")} = ${N(total)}`;
-  return { mode, lettres, unit:u, commun:c, reformulation, preLignes, titre1, rows, parts, accolade, ligne, calculs, reponse, verification, texteCellule,
+  /* « Je vérifie » (07/10/2026, proposition de Claire) : le total seulement (sansIndices) */
+  return { mode, lettres, symbole:SYM, sansIndices:true, unit:u, commun:c, reformulation, preLignes, titre1, rows, parts, accolade, ligne, calculs, reponse, verification, texteCellule,
     motCellule:c => c.kind === "tache" ? mot(c.de) : N(c.v) };
 }
 
@@ -8284,6 +8349,8 @@ function enqueteTexteCase(card, cell, w, P, modele){
   const libre = w - 2 * P.cellPad;
   if(cell.kind !== "tache") return { t:formatRelationNumber(cell.v), fs:P.numFont, poids:800 };
   const mot = modele.texteCellule(cell);
+  /* « ? » (𝑥 en lettre) : le symbole de l'inconnue s'écrit comme un nombre (même taille, même graisse) */
+  if(modele.symbole && mot === modele.symbole) return { t:mot, fs:P.numFont, poids:800 };
   for(let fs = P.wordFont; fs >= P.wordMin; fs -= 2){ if(enqueteTexteLargeur(mot, fs, 700) <= libre) return { t:mot, fs, poids:700 }; }
   const ini = enqueteInitiale(card, cell.de);
   for(let fs = P.wordFont; fs >= P.wordMin; fs -= 2){ if(enqueteTexteLargeur(ini, fs, 700) <= libre) return { t:ini, fs, poids:700 }; }
@@ -8327,6 +8394,9 @@ function enqueteDessinerCase(g, card, cell, x, y, w, h, P, modele, vide){
   if(cell.kind === "part"){
     /* une petite part : la couleur de sa tache, pas de nom ; sa valeur une fois le partage fait */
     g.appendChild(el("rect", { x, y, width:w, height:h, fill:taskSplatRevealColor(cell.de, card, isPrint), stroke:taskSplatColor(cell.de, card, isPrint), "stroke-width":3.5 }));
+    if(cell.valeur == null && modele && modele.parts && modele.parts.symbole && !vide){
+      g.appendChild(text(x + w / 2, y + h / 2 + 1, modele.parts.symbole, { "text-anchor":"middle", "dominant-baseline":"middle", "font-size":P.wordFont, "font-weight":800, fill:"#111827" }));
+    }
     if(cell.valeur != null){
       const t = formatRelationNumber(cell.valeur);
       let fs = P.numFont; while(fs > 26 && enqueteTexteLargeur(t, fs, 900) > w - 8) fs -= 2;
@@ -8601,7 +8671,8 @@ function drawEnqueteCalculs(targetGroup, card, opts = {}){
   const largeurG = f => Math.max(...lignes.filter(Boolean).map(l => enqueteTexteLargeur(l.g, f, 700)));
   const largeurD = f => Math.max(...lignes.filter(Boolean).map(l => enqueteTexteLargeur(l.d, f, 700)));
   const egal = f => enqueteTexteLargeur("=", f, 900);
-  while(fs > P.calcFont * 0.6 && largeurG(fs) + egal(fs) + 2 * 14 + largeurD(fs) > largeur) fs -= 2;
+  const largeurPhrase = f => Math.max(0, ...lignes.filter(Boolean).map(l => enqueteTexteLargeur(enqueteLigneCalcul(l), f, 700)));
+  while(fs > P.calcFont * 0.6 && (largeurG(fs) + egal(fs) + 2 * 14 + largeurD(fs) > largeur || (ENQ_CALCULS_A_GAUCHE && largeurPhrase(fs) > largeur))) fs -= 2;
   const pas = Math.round(P.calcPas * fs / P.calcFont);
   const xEgal = x0 + largeurG(fs) + 14 + egal(fs) / 2;
   /* ENQ_CALCULS_A_GAUCHE : les lignes commencent toutes à gauche (variante A de la planche
@@ -8610,7 +8681,7 @@ function drawEnqueteCalculs(targetGroup, card, opts = {}){
     if(!l){ y += P.calcBlanc; return; }
     const cy = y + pas / 2 + 1;
     if(ENQ_CALCULS_A_GAUCHE){
-      g.appendChild(text(x0, cy, `${l.g} = ${l.d}`, { "text-anchor":"start", "dominant-baseline":"middle", "font-size":fs, "font-weight":700, fill:"#111827" }));
+      g.appendChild(text(x0, cy, enqueteLigneCalcul(l), { "text-anchor":"start", "dominant-baseline":"middle", "font-size":fs, "font-weight":700, fill:"#111827" }));
     }else{
       g.appendChild(text(xEgal - egal(fs) / 2 - 14, cy, l.g, { "text-anchor":"end", "dominant-baseline":"middle", "font-size":fs, "font-weight":700, fill:"#111827" }));
       g.appendChild(text(xEgal, cy, "=", { "text-anchor":"middle", "dominant-baseline":"middle", "font-size":fs, "font-weight":900, fill:"#111827" }));
@@ -8667,7 +8738,7 @@ function drawEnqueteCalculs(targetGroup, card, opts = {}){
     });
     y += J - Math.round(rf * 0.1);
     g.insertBefore(el("rect", { x:x0, y:haut, width:Math.min(largeur, Math.round(plusLarge + 2 * J)), height:Math.round(y - haut), rx:14, fill:"none", stroke:"#111827", "stroke-width":4, "data-cadre":"reponse" }), g.firstChild);
-    const verifs = (modele.verification ? [`${modele.verification} ✓`] : []).concat(enqueteG3VerifIndices(card, modele.lettres));
+    const verifs = (modele.verification ? [`${modele.verification} ✓`] : []).concat(modele.sansIndices ? [] : enqueteG3VerifIndices(card, modele.filtreIndices));
     if(verifs.length){
       y += 8;
       /* « Je vérifie : » puis les vérifications à la suite, à la ligne quand ça ne tient plus */
@@ -8709,7 +8780,7 @@ function drawEnqueteCalculs(targetGroup, card, opts = {}){
        5 = 3 + 2 ✓ », dans l'écriture de la vérification du total. Le total d'abord, s'il n'a pas
        tenu sur la ligne de la réponse ; tout sur une ligne si ça tient, sinon une ligne chacun. */
     if(opts.isPrint){
-      const verifs = (modele.verification && !entries.some(e => e.verif) ? [`${modele.verification} ✓`] : []).concat(enqueteG3VerifIndices(card, modele.lettres));
+      const verifs = (modele.verification && !entries.some(e => e.verif) ? [`${modele.verification} ✓`] : []).concat(modele.sansIndices ? [] : enqueteG3VerifIndices(card, modele.filtreIndices));
       if(verifs.length){
         const ecartV = Math.round(rf * 1.2);
         const surUne = verifs.reduce((a, t) => a + enqueteTexteLargeur(t, rf, 900), 0) + (verifs.length - 1) * ecartV <= largeur;
@@ -8948,7 +9019,7 @@ function enqueteG3Etapes(card){
   const groupesLigne = []; let j = 0;
   if(modele.ligne) modele.ligne.groupes.forEach(g => { groupesLigne.push({ de:j, a:j + g.cells.length - 1, label:g.label }); j += g.cells.length; });
   const total = modele.ligne ? modele.ligne.total : null;
-  const lignes1 = part1.map(l => `${l.g} = ${l.d}`);
+  const lignes1 = part1.map(enqueteLigneCalcul);
 
   if(modele.mode === "unite"){
     /* la petite part : la situation, je coupe, (schéma regroupé), je partage, puis chaque tache */
@@ -8960,16 +9031,16 @@ function enqueteG3Etapes(card){
     const connuesU = new Set();
     modele.reponse.map(r => r.i).forEach((i, q) => {
       connuesU.add(i);
-      etapes.push({ type:"barresValeurs", parts:true, titre:`Je trouve ${enqueteArticle(enqueteMotCouleur(card, i), !!card._rel.repetees)}`, connues:new Set(connuesU), courante:i, lignes:part2.map(x => `${x.g} = ${x.d}`), idx:q, egal:true });
+      etapes.push({ type:"barresValeurs", parts:true, titre:`Je trouve ${enqueteArticle(enqueteMotCouleur(card, i), !!card._rel.repetees)}`, connues:new Set(connuesU), courante:i, lignes:part2.map(enqueteLigneCalcul), idx:q, egal:true });
     });
     etapes.push({ type:"fin" });
     return plan;
   }else if(!modele.ligne){
     /* sans total : pas de ligne ②, tout se fait sur les barres ① (ce qui dépasse, puis le partage) */
-    const toutes = calc.filter(Boolean).map(l => `${l.g} = ${l.d}`);
+    const toutes = calc.filter(Boolean).map(enqueteLigneCalcul);
     const connues = new Set();
     let q = 0;
-    part1.forEach(l => { const partage = /^1 /.test(l.g) || / ÷ /.test(l.d); if(partage) connues.add(u); etapes.push({ type:"barresValeurs", titre:partage ? "Je partage" : "Je calcule", connues:new Set(connues), courante:u, lignes:toutes, idx:q++, egal:false }); });
+    part1.forEach(l => { if(l.ref){ const der = etapes[etapes.length - 1]; der.idx = q; der.noirDes = q - 1; q++; return; } const partage = /^1 /.test(l.g) || / ÷ /.test(l.d) || (modele.symbole && l.g === modele.symbole); if(partage) connues.add(u); etapes.push({ type:"barresValeurs", titre:partage ? "Je partage" : "Je calcule", connues:new Set(connues), courante:u, lignes:toutes, idx:q++, egal:false }); });
     part2.forEach(l => { const i = modele.reponse.map(r => r.i).find(t => t !== u && enqueteMotCouleur(card, t) === l.g); connues.add(i); etapes.push({ type:"barresValeurs", titre:`Je trouve ${enqueteArticle(enqueteMotCouleur(card, i), !!card._rel.repetees)}`, connues:new Set(connues), courante:i, lignes:toutes, idx:q++, egal:false }); });
     etapes.push({ type:"fin" });
     return plan;
@@ -8988,23 +9059,23 @@ function enqueteG3Etapes(card){
     const nb = range.length - nombres.length;
     const dejaRange = !cellsLigne.some((x, q) => x.kind === "nombre" && cellsLigne.slice(q + 1).some(y => y.kind !== "nombre"));
     const nU = blocs.reduce((t, bl) => t + bl.unites, 0);
-    const grRange = [{ de:0, a:nb - 1, label:enqueteNomUnites(card, u, nU, false) }];
+    const grRange = [{ de:0, a:nb - 1, label:enqueteFoisSymbole(nU, modele.symbole) }];
     const topNombres = nombres.map((x, q) => ({ de:nb + q, a:nb + q, t:N(x.v), retire:true }));
     /* plusieurs écarts : je les regroupe d'abord (« 3 noires + 11 = 26 »), puis je les retire
        ensemble (idée de Gwenaël, 30/09) — une opération par appui */
     const S = nombres.reduce((t, x) => t + x.v, 0), reste = total - S;
-    const nomU = enqueteNomUnites(card, u, nU, modele.lettres);
+    const nomU = enqueteFoisSymbole(nU, modele.symbole);
     const regroupe = nombres.length >= 2;
     const calculsP = part1.slice(0, k0 + 1).map(l => ({ ...l }));
     if(regroupe){
       calculsP.push({ g:`${nomU} + ${N(S)}`, d:N(total) }, { g:nomU, d:`${N(total)} − ${N(S)} = ${N(reste)}` });
       /* la ligne du partage : « 1 bleue = 36 ÷ 3 = 12 », en lettre « B = 36 ÷ 3 = 12 » (02/10/2026 : en
          lettre, elle manquait à l'écran « Je partage » de la projection) */
-      part1.slice(k0 + 1).filter(l => /^1 /.test(l.g) || / ÷ /.test(l.d)).forEach(l => calculsP.push({ ...l }));
+      part1.slice(k0 + 1).filter(l => /^1 /.test(l.g) || / ÷ /.test(l.d) || l.ref).forEach(l => calculsP.push({ ...l }));
     }else{
       part1.slice(k0 + 1).forEach(l => calculsP.push({ ...l }));
     }
-    const L = calculsP.map(l => `${l.g} = ${l.d}`);
+    const L = calculsP.map(enqueteLigneCalcul);
     etapes[etapes.length - 1].lignes = L;
     plan.calculs = [...calculsP, null, ...part2];
     const cellsR = regroupe ? blocs.flatMap(bl => bl.cells).concat([{ kind:"nombre", v:S }]) : range;
@@ -9028,13 +9099,21 @@ function enqueteG3Etapes(card){
         cells:cellsR.map(x => ({ ...x, retire:x.kind === "nombre" })), groupes:grRange, lignes:L, courante:k });
     }
   }
+  /* la phrase de la référence (« La tache rouge cache donc 17 jetons », 07/10/2026) s'écrit avec la
+     ligne qui trouve « ? », dans la même étape (« Je partage », ou « Je retire » s'il n'y a pas de
+     partage) — pas d'appui à elle */
+  if(plan.calculs && plan.calculs.indexOf(null) > 0 && plan.calculs[plan.calculs.indexOf(null) - 1].ref){
+    const iRef = plan.calculs.indexOf(null) - 1;
+    const derL = [...etapes].reverse().find(e => e.type === "ligne");
+    if(derL && derL.courante === iRef - 1){ derL.courante = iRef; derL.noirDes = iRef - 1; }
+  }
   /* les autres taches, une par étape, sur les barres ① */
   const connues = new Set([u]);
   const ordre = modele.reponse.map(r => r.i).filter(i => i !== u);
   part2.forEach((l, q) => {
     const i = ordre.find(t => enqueteMotCouleur(card, t) === l.g) ?? ordre[q];
     connues.add(i);
-    etapes.push({ type:"barresValeurs", titre:`Je trouve ${enqueteArticle(enqueteMotCouleur(card, i), !!card._rel.repetees)}`, connues:new Set(connues), courante:i, lignes:part2.map(x => `${x.g} = ${x.d}`), idx:q, egal:true });
+    etapes.push({ type:"barresValeurs", titre:`Je trouve ${enqueteArticle(enqueteMotCouleur(card, i), !!card._rel.repetees)}`, connues:new Set(connues), courante:i, lignes:part2.map(enqueteLigneCalcul), idx:q, egal:true });
   });
   etapes.push({ type:"fin", calculs:plan.calculs });
   return plan;
@@ -9095,11 +9174,22 @@ function enqueteG3Case(g, card, cell, x, y, w, h, P, modele, texteForce){
    les suivantes absentes ; noirDes : à partir de quelle ligne tout est en noir (② : les lignes
    « orange + 10 = 3 violettes » et la somme s'écrivent ensemble). */
 function enqueteG3Lignes(g, x0, y, lignes, courante, P, noirDes, largeur){
-  /* téléphone (mode élève, portrait) : la police descend jusqu'à ce que la plus longue ligne de la
-     liste tienne — la même pour toutes les étapes de la carte ; projection et papier : inchangés */
-  if(P.portrait && largeur > 0 && lignes.length){
+  /* la police descend jusqu'à ce que la plus longue ligne de la liste tienne — la même pour toutes
+     les étapes de la carte. Téléphone (mode élève, portrait) depuis le lot G3 ; projection et papier
+     aussi depuis le « ? » (07/10/2026) : « Chaque tache noire cache donc 7 + 4 = 11 jetons » sortait
+     du cadre en projection (fiche 20). Une liste qui tient ne bouge pas.
+     Téléphone (07/10/2026) : une phrase trop longue (« La tache orange cache donc 2 × 13 = 26
+     jetons ») se coupe en deux lignes après « donc » plutôt que de faire rapetisser tous les
+     calculs de 40 %. */
+  const L = (l, f) => enqueteTexteLargeur(l, f, 800);
+  const decoupe = l => {
+    const i = P.portrait && largeur > 0 ? l.indexOf(" donc ") : -1;
+    return i > 0 && L(l, P.calcFont * 0.85) > largeur ? [l.slice(0, i + 5), l.slice(i + 6)] : [l];
+  };
+  if(largeur > 0 && lignes.length){
+    const morceaux = lignes.flatMap(decoupe);
     let fs = P.calcFont;
-    while(fs > P.calcFont * 0.6 && Math.max(...lignes.map(l => enqueteTexteLargeur(l, fs, 800))) > largeur) fs -= 2;
+    while(fs > P.calcFont * 0.6 && Math.max(...morceaux.map(l => L(l, fs))) > largeur) fs -= 2;
     if(fs < P.calcFont) P = { ...P, calcFont:fs, calcPas:Math.round(P.calcPas * fs / P.calcFont) };
   }
   let yy = y;
@@ -9108,8 +9198,10 @@ function enqueteG3Lignes(g, x0, y, lignes, courante, P, noirDes, largeur){
     if(k < Math.min(noir, courante - 1)) return;
     if(P.isPrint && k < noir) return; /* papier : pas de ligne grise, seulement le calcul de l'étape */
     const cur = k >= noir;
-    g.appendChild(text(x0, yy + P.calcPas / 2 + 1, l, { "text-anchor":"start", "dominant-baseline":"middle", "font-size":P.calcFont, "font-weight":cur ? 800 : 700, fill:cur ? "#111827" : "#9ca3af" }));
-    yy += P.calcPas;
+    decoupe(l).forEach(m => {
+      g.appendChild(text(x0, yy + P.calcPas / 2 + 1, m, { "text-anchor":"start", "dominant-baseline":"middle", "font-size":P.calcFont, "font-weight":cur ? 800 : 700, fill:cur ? "#111827" : "#9ca3af" }));
+      yy += P.calcPas;
+    });
   });
   return yy - y;
 }
@@ -9178,7 +9270,18 @@ function enqueteG3DessinerBarresValeurs(target, card, et, modele, opts = {}){
     sous.forEach(sa => enqueteSousAccolade(g, xs[sa.de], xs[sa.a] + ws[sa.a], yr + P.rowH + 4, sa.label, P));
     if(et.egal !== false && et.connues.has(row.rp ?? row.i) && !row.complete){
       const cur = et.noirDes != null || (row.rp ?? row.i) === et.courante; /* noirDes : le dessin unique des livrets, tout en noir */
-      g.appendChild(text(x + 22, yr + P.rowH / 2 + 1, `= ${formatRelationNumber(vals[row.i])}`, { "text-anchor":"start", "dominant-baseline":"middle", "font-size":P.totalFont, "font-weight":900, fill:cur ? "#111827" : "#6b7280" }));
+      const coul = cur ? "#111827" : "#6b7280", ym = yr + P.rowH / 2;
+      /* (retour de Claire, 07/10/2026) une flèche plutôt qu'un « = » entre une barre et un nombre —
+         la barre n'« est » pas 17, elle représente 17 jetons. La flèche raccourcit (jusqu'à moitié)
+         si le nombre au bout sortirait du cadre : au téléphone, la place à droite des barres est
+         celle de l'accolade et du total, plus courte que « → 13 » (4 px de trop sur 16 cartes, vu
+         le 07/10/2026) */
+      const nb = formatRelationNumber(vals[row.i]), bordD = P.boxX + P.boxW - 8;
+      const fl = Math.max(36, Math.min(72, bordD - (x + 20) - 12 - enqueteTexteLargeur(nb, P.totalFont, 900)));
+      const x1 = x + 20, x2 = x1 + fl, t = 14;
+      g.appendChild(el("line", { x1, y1:ym, x2:x2 - t, y2:ym, stroke:coul, "stroke-width":7, "stroke-linecap":"round", class:"enqFleche" }));
+      g.appendChild(el("polygon", { points:`${x2},${ym} ${x2 - 2 * t},${ym - t} ${x2 - 2 * t},${ym + t}`, fill:coul, class:"enqFleche" }));
+      g.appendChild(text(x2 + 12, ym + 1, nb, { "text-anchor":"start", "dominant-baseline":"middle", "font-size":P.totalFont, "font-weight":900, fill:coul }));
     }
   });
   const der = lesRows[lesRows.length - 1];
@@ -9205,14 +9308,16 @@ function enqueteG3Dessiner(target, card, et, modele, opts = {}){
 
 /* La vérification des indices, au dernier appui : « verte = rouge + 2 : 5 = 3 + 2 ✓ » — la phrase de
    l'indice en mots, puis les valeurs trouvées. Une ligne qui ne se vérifierait pas n'est pas
-   écrite (le test des 30 fiches exige qu'elles se vérifient toutes). */
-function enqueteG3VerifIndices(card, lettres){
+   écrite (le test des 30 fiches exige qu'elles se vérifient toutes). Depuis le 07/10/2026
+   (proposition de Claire), « Je vérifie » ne vérifie plus que le total ; sans total, seulement
+   l'indice de l'écart (filtre : modele.filtreIndices). En mots, même dans le corrigé en lettre. */
+function enqueteG3VerifIndices(card, filtre){
   const rels = card && card._rel && Array.isArray(card._rel.relations) ? card._rel.relations : [];
   const vals = card._rel.hiddenValues.map(Number);
-  /* lettres : le corrigé imprimé « en lettre » écrit les initiales, comme ses calculs */
-  const w = i => lettres ? enqueteInitiale(card, i) : enqueteMotCouleur(card, i), v = i => formatRelationNumber(vals[i]), N = formatRelationNumber;
+  const w = i => enqueteMotCouleur(card, i), v = i => formatRelationNumber(vals[i]), N = formatRelationNumber;
   const out = [];
   rels.forEach(r => {
+    if(filtre && !filtre(r)) return;
     const t = r.target, s = r.source, k = Number(r.k);
     let mots = null, nombres = null, ok = false;
     if(r.op === "ADD"){ mots = `${w(t)} = ${w(s)} + ${N(k)}`; nombres = `${v(t)} = ${v(s)} + ${N(k)}`; ok = vals[t] === vals[s] + k; }
@@ -9258,12 +9363,12 @@ function enqueteG3DessinerFin(target, card, modele, opts = {}){
   /* le résumé, en gris : chaque ligne commence à gauche, la police descend si la plus longue déborde */
   const lignes = ENQ_G3_RAPPEL ? modele.calculs : [];
   let fs = P.calcFont;
-  const plusLongue = f => Math.max(0, ...lignes.filter(Boolean).map(l => enqueteTexteLargeur(`${l.g} = ${l.d}`, f, 700)));
+  const plusLongue = f => Math.max(0, ...lignes.filter(Boolean).map(l => enqueteTexteLargeur(enqueteLigneCalcul(l), f, 700)));
   while(fs > P.calcFont * 0.6 && plusLongue(fs) > largeur) fs -= 2;
   const pas = Math.round(P.calcPas * fs / P.calcFont);
   lignes.forEach(l => {
     if(!l){ y += P.calcBlanc; return; }
-    g.appendChild(text(x0, y + pas / 2 + 1, `${l.g} = ${l.d}`, { "text-anchor":"start", "dominant-baseline":"middle", "font-size":fs, "font-weight":700, fill:ENQ_G3_RESUME_GRIS }));
+    g.appendChild(text(x0, y + pas / 2 + 1, enqueteLigneCalcul(l), { "text-anchor":"start", "dominant-baseline":"middle", "font-size":fs, "font-weight":700, fill:ENQ_G3_RESUME_GRIS }));
     y += pas;
   });
   /* la réponse, en noir et en grand : une valeur par tache */
@@ -9294,7 +9399,7 @@ function enqueteG3DessinerFin(target, card, modele, opts = {}){
     /* la vérification, une ligne chacune : le total (pas de total : rien), puis chaque indice
        (retour de Gwenaël, 30/09 : « il faut vérifier aussi que les indices fonctionnent ») ;
        une même police pour toutes, la plus grande qui tient */
-    const verifs = (modele.verification ? [`${modele.verification} ✓`] : []).concat(enqueteG3VerifIndices(card));
+    const verifs = (modele.verification ? [`${modele.verification} ✓`] : []).concat(modele.sansIndices ? [] : enqueteG3VerifIndices(card, modele.filtreIndices));
     if(verifs.length){
       y += ENQ_G3_VERIF_ECART;
       /* deux endroits sur le même écran (Gwenaël, 02/10) : « Je réponds » (le cadre), puis « Je vérifie » */
@@ -11042,6 +11147,10 @@ function renderCard(card, revealState, opts = {}){
     });
     gTotal.appendChild(tLabel);
     gTotal.appendChild(tNum);
+    if(enquetePasDeTotal(card)){
+      svg.appendChild(gTotal);
+      enquetePasDeTotalSvg(gTotal, tLabel, tNum, tx, Number(totalLabelFs), 800, totalLabelColor, (n, a) => el(n, a));
+    }
   }
   svg.appendChild(gTotal);
 
@@ -12487,6 +12596,10 @@ function renderCardIntoSvg(targetSvg, card, printMode, opts = {}){
   const boxY = ty - 70;
   let boxW = opts.sixColonne ? SIX_COLONNE.colonneW : 280;
   let boxX = tx - boxW/2;
+  /* « PAS DE TOTAL » centré dans la case : la place est DONNÉE (la case), car la feuille
+     d'impression est encore cachée quand on la dessine — getBBox y rend une boîte vide et le
+     texte partait hors de la carte (vu au rendu des livrets, 07/10/2026) */
+  if(enquetePasDeTotal(card)) enquetePasDeTotalSvg(g, lbl, num, tx, totalLabelSize, 900, totalLabelColor, (n, a) => tEl(n, a), { x:boxX, y:boxY, width:boxW, height:boxH });
 
   hoteTotal.insertBefore(tEl("rect",{
     x:Math.round(boxX), y:Math.round(boxY), width:Math.round(boxW), height:Math.round(boxH), rx:22,
@@ -14385,7 +14498,8 @@ function renderEleveSplat(){
        Système : le TOTAL du plateau principal ; « Trois paires » n'a pas de ligne du TOTAL (lot
        M4-4b : son plateau des trois couleurs n'est plus montré), seulement ses trois cases */
     haut = (enquete.systeme && sysTotalCache(card)) ? ""
-      : eleveCaseDonneeHtml("haut blanche", "Total", (card._rel && card._rel.sansTotal) ? "?" : card.total);
+      : (enquetePasDeTotal(card) ? eleveCaseDonneeHtml("haut blanche pasDe", "Pas de", "Total")
+      : eleveCaseDonneeHtml("haut blanche", "Total", (card._rel && card._rel.sansTotal) ? "?" : card.total));
   }else{
     const flexVis = Math.max(infos.visibleSum, card.total * 0.05, 1);
     const flexHid = Math.max(infos.H, card.total * 0.05, 1);
@@ -14905,6 +15019,8 @@ function eleveRappelHtml(card){
   const esc = t => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;");
   /* une carte « sans total » (lot E-sans-total) garde son « ? » */
   const sansTotal = !!(card && card._rel && card._rel.sansTotal);
+  if(enquetePasDeTotal(card)) return `<div class="eleveRappelTotal"><span>PAS DE</span><b class="pasDe">TOTAL</b></div>` +
+    `<div class="eleveRappelIndices">${indices.map(t => `<p>${esc(t)}</p>`).join("")}</div>`;
   return `<div class="eleveRappelTotal"><span>TOTAL</span><b${sansTotal ? ' class="inconnu"' : ""}>${sansTotal ? "?" : esc(card.total)}</b></div>` +
     `<div class="eleveRappelIndices">${indices.map(t => `<p>${esc(t)}</p>`).join("")}</div>`;
 }
@@ -14997,7 +15113,8 @@ function eleveIndicesAfficher(card){
   const sansTotal = !!(card._rel && card._rel.sansTotal);
   const tot = document.createElement("div");
   tot.id = "eleveTotalTel";
-  tot.innerHTML = `<span>TOTAL</span><b${sansTotal ? ' class="inconnu"' : ""}>${sansTotal ? "?" : String(Number(card.total))}</b>`;
+  tot.innerHTML = enquetePasDeTotal(card) ? `<span>PAS DE</span><b class="pasDe">TOTAL</b>`
+    : `<span>TOTAL</span><b${sansTotal ? ' class="inconnu"' : ""}>${sansTotal ? "?" : String(Number(card.total))}</b>`;
   plateau.appendChild(tot);
   plateau.classList.add("avecTotalTel");
 }

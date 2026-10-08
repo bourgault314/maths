@@ -213,7 +213,7 @@ test("les exemples : la page 2 montre le dessin de la première fiche du livret,
   // profil d'impression ; ni le schéma vide ni le dernier appui ; les autres taches en un dessin
   for (const f of ["plan = enqueteG3Etapes(card);", "enqueteG3Dessiner(g, card, et, plan.modele, prof);",
                    "const prof = {isPrint:true, modele, sansTitre:true};", "e.type !== 'vide' && e.type !== 'fin'",
-                   "'Je trouve les autres taches'", "'Je fais le schéma de la situation'"])
+                   "'Je trouve les autres taches'", "'Schéma de comparaison'"])
     assert.ok(render.includes(f), f);
   assert.match(render, /if \(n < 4 \|\| n > 7\) return/);
   // (01/10/2026, question à choix) les étapes de la page 2 sont numérotées dans une pastille
@@ -368,17 +368,24 @@ test("dans les PDF — couverture, exemple en page 2, les cinq fiches dans l'ord
       else assert.match(pages[0], new RegExp(`MONDE 3 · DEUXIÈME TOUR · ${l - 2}`, "i"), `${s} : sur-titre`);
       if (l < 3) assert.doesNotMatch(pages[0], /Deuxième tour/i);
       assert.match(pages[0], /Sur cette carte, il y a \d+ jetons au ?total/);
+      // (07/10/2026, le « ? » de Claire) la couverture : les deux schémas, et la référence notée « ? »
+      assert.match(pages[0], souple("On dessine deux schémas en barres"), `${s} : couverture`);
+      assert.match(pages[0], souple("sert de référence"), `${s} : couverture`);
+      assert.match(pages[0], souple("le nombre de jetons qu'elle cache"), `${s} : couverture`);
       assert.match(pages[1], /L'enquête pas à pas/);
       // (lot « pages 2 ») les étapes du pas à pas : le retrait sauf « fois plus » seul (28 = 4 × 7),
       // « je range » et « je regroupe » dès qu'il y a plusieurs écarts (partie 3 et Deuxième tour)
-      const etapes = ["Je fais le schéma de la situation", "Schéma regroupé", "Je partage", "Je réponds", "Je vérifie"]
+      const etapes = ["Schéma de comparaison", "Schéma regroupé", "Je partage", "Je réponds", "Je vérifie"]
         .concat(ETAPES_P2[nom]);
+      assert.doesNotMatch(pages[1], souple("Je fais le schéma de la situation"), `${s}, page 2 : ① s'appelle « Schéma de comparaison »`);
       for (const t of etapes) assert.match(pages[1], souple(t), `${s}, page 2 : ${t}`);
       assert.doesNotMatch(pages[1], souple("Je calcule"), `${s}, page 2 : plus de « Je calcule » en bloc`);
       // (03/10/2026) « Je réponds » (la phrase encadrée) et « Je vérifie » : deux endroits, comme à l'écran
       assert.doesNotMatch(pages[1], souple("J'écris la réponse et je vérifie"), `${s}, page 2 : l'ancien titre unique`);
       assert.doesNotMatch(pages[1], souple("Je vérifie :"), `${s}, page 2 : « Je vérifie » est un titre, plus un bout de phrase`);
       assert.match(pages[1], souple(`${EXEMPLES_P2[nom]} ✓`), `${s} : l'exemple de la page 2`);
+      // « Je vérifie » : le total seulement (07/10/2026), plus les indices à la suite
+      assert.doesNotMatch(pages[1], /✓ ?;/, `${s}, page 2 : une seule vérification`);
       TITRES[nom].forEach((f, k) => {
         // (03/10/2026) l'en-tête « Splat! » se lit aussi (Segoe UI Black, Type 3 sous Linux)
         const p = pages[2 + k].replace(/^Splat! ?/, "");
@@ -391,10 +398,11 @@ test("dans les PDF — couverture, exemple en page 2, les cinq fiches dans l'ord
       if (nom === "tour2_systeme") {
         // (lot « petite part », 01/10/2026) l'unité commune par les petites parts, plus « je double tout »
         assert.match(pages[7], new RegExp(souple("Un exemple résolu : les petites parts").source, "i"));
-        for (const t of ["Je fais le schéma de la situation", "Je coupe en petites parts", "Je coupe la verte en 6 petites parts (2 × 3).",
-                         "Schéma regroupé", "11 parts = 55", "Je partage", "1 part = 55 ÷ 11 = 5", "Je trouve les taches", "Je vérifie"])
+        // (07/10/2026) « ? » dans chaque petite part : « 11 × ? = 55 », « ? = 55 ÷ 11 = 5 »
+        for (const t of ["Schéma de comparaison", "Je coupe en petites parts", "Je coupe la verte en 6 petites parts (2 × 3).",
+                         "Schéma regroupé", "11 × ? = 55", "Je partage", "? = 55 ÷ 11 = 5", "Je trouve les taches", "Je vérifie"])
           assert.match(pages[7], souple(t), `${s}, dos : ${t}`);
-        for (const t of ["Je double tout", "Je remplace", "110"]) assert.doesNotMatch(pages[7], souple(t), `${s}, dos : plus de « ${t} »`);
+        for (const t of ["Je double tout", "Je remplace", "110", "11 parts", "1 part ="]) assert.doesNotMatch(pages[7], souple(t), `${s}, dos : plus de « ${t} »`);
         assert.doesNotMatch(pages[7], souple("Les barres"), `${s}, dos : le titre de ① est celui de la page 2`);
       }
       else {
@@ -420,12 +428,28 @@ test("dans les PDF — couverture, exemple en page 2, les cinq fiches dans l'ord
   });
 });
 
-test("les corrigés vérifient aussi les indices, comme le dernier appui de la projection (30/09/2026)", () => {
+test("les corrigés : « ? » pour la référence, puis « La tache … cache donc … » ; « Je vérifie » : le total seulement, sans total l'indice de l'écart ; « PAS DE TOTAL » (07/10/2026)", () => {
   const p = (s, k) => norm(texteDesPages(`outils/${s}.pdf`)[k]);
-  assert.match(p("livret_splat_enquete_additif_correction", 2), souple("bleue = orange + 6 : 13 = 7 + 6 ✓"));
-  assert.match(p("livret_splat_enquete_additif_correction_lettre", 2), souple("B = O + 6 : 13 = 7 + 6 ✓"));
+  const f10 = p("livret_splat_enquete_additif_correction", 2);
+  for (const t of ["2 × ? + 6 = 20", "2 × ? = 20 − 6 = 14", "? = 14 ÷ 2 = 7", "La tache orange cache donc 7 jetons", "La tache bleue cache donc 7 + 6 = 13 jetons", "Je vérifie : 7 + 13 = 20 ✓"])
+    assert.match(f10, souple(t), `fiche 10, carte 1 : ${t}`);
+  assert.doesNotMatch(f10, souple("bleue = orange + 6 : 13 = 7 + 6 ✓"), "plus la vérification de l'indice");
+  assert.doesNotMatch(f10, /\d noires?|1 orange =|2 orange \+/, "plus « 2 orange + 6 »");
   // l'énoncé de l'élève n'en porte aucune
   assert.doesNotMatch(p("livret_splat_enquete_additif", 2), /✓/);
+  // taches répétées : « Chaque tache noire cache donc … »
+  assert.match(p("livret_splat_enquete_rebondit_correction", 2), souple("Chaque tache noire cache donc 7 + 4 = 11 jetons"));
+  // sans total : « PAS DE TOTAL », et seul l'indice de l'écart se vérifie
+  for (const s of ["livret_splat_enquete_rebondit", "livret_splat_enquete_rebondit_correction", "livret_splat_enquete_rebondit_correction_lettre"]) {
+    const f22 = p(s, 4);
+    assert.ok((f22.match(/PAS DE ?TOTAL/g) || []).length === 4, `${s}, fiche 22 : « PAS DE TOTAL » sur les quatre cartes`);
+    assert.doesNotMatch(f22, /TOTAL ?\?/, `${s}, fiche 22 : plus de « TOTAL ? »`);
+  }
+  const f22 = p("livret_splat_enquete_rebondit_correction", 4);
+  assert.match(f22, souple("Je vérifie : orange = bleue + 12 : 24 = 12 + 12 ✓"));
+  assert.doesNotMatch(f22, souple("orange = 2 × bleue :"), "le rapport ne se vérifie plus");
+  // le dos de la partie 3 : l'exemple corrigé et la carte « À toi ! » sont des cartes sans total
+  assert.equal((p("livret_splat_enquete_rebondit", 7).match(/PAS DE ?TOTAL/g) || []).length, 2, "dos : « PAS DE TOTAL » sur les deux cartes");
 });
 
 test("la suite du voyage : partie 1 → 2 → 3 → monde 4, et le deuxième tour de même", () => {
@@ -442,12 +466,21 @@ function policesDuPdf(p) {
   return new Set([...texte.matchAll(/\/BaseFont\s*\/(?:[A-Z]{6}\+)?([A-Za-z0-9-]+)/g)].map((m) => m[1]));
 }
 
-test("en lettre, les initiales des couleurs dans les calculs, jamais un x droit", () => {
+test("en lettre, 𝑥 pour la référence sur toutes les cartes (07/10/2026), « 2 × 𝑥 », jamais un x droit ni les initiales", () => {
   assert.match(render, /unicode-range:U\+1D465/);
   for (const s of SORTIES) {
     assert.ok(!policesDuPdf(`outils/${s}_correction_lettre.pdf`).has("FreeSans"), `${s} : le x droit (FreeSans)`);
     const pages = texteDesPages(`outils/${s}_correction_lettre.pdf`).map(norm);
-    for (let k = 2; k < 7; k++) assert.match(pages[k], /(?<![A-Za-z])(N|Vi|O|B|Ve|R) ?= ?\d+/, `${s} en lettre, page ${k + 1}`);
+    for (let k = 2; k < 7; k++) {
+      assert.match(pages[k], /𝑥 ?= ?\d+/, `${s} en lettre, page ${k + 1} : « 𝑥 = … »`);
+      assert.doesNotMatch(pages[k], /(?<![A-Za-z])(N|Vi|O|B|Ve|R) ?= ?\d+/, `${s} en lettre, page ${k + 1} : plus les initiales`);
+      assert.doesNotMatch(pages[k], /[𝑛𝑎𝑡𝑦𝑘]/u, `${s} en lettre, page ${k + 1} : pas de lettres variées`);
+    }
+    // « 2 × 𝑥 », avec le × (le texte extrait colle les lignes : « 2𝑥 » se contrôle sur le modèle, tests/splat-enquete-inconnue.test.mjs)
+    assert.ok(pages.slice(2, 7).some((p) => /\d × 𝑥/u.test(p)), `${s} en lettre : « 2 × 𝑥 »`);
+    // les corrigés « ? » n'ont pas de 𝑥
+    const q = texteDesPages(`outils/${s}_correction.pdf`).map(norm);
+    for (let k = 2; k < 7; k++) assert.doesNotMatch(q[k], /𝑥/u, `${s} « ? », page ${k + 1}`);
   }
 });
 
@@ -554,7 +587,7 @@ test("page des livrets : l'onglet du monde 3 — les trois livrets pour tous, «
     assert.ok(taille(webp) < taille(png), `${nom} : la WebP est plus légère`);
     const b = readFileSync(new URL(`../${png}`, import.meta.url));
     assert.deepEqual([b.readUInt32BE(16), b.readUInt32BE(20)], [993, 1404], `${nom} : page 1 rendue à 120 dpi`);
-    assert.ok(d.includes(`src="/assets/img/thumbnails/splat/${nom}.png?v=4"`), `${nom} : sur la page (?v=4 : couvertures du 03/10/2026)`);
+    assert.ok(d.includes(`src="/assets/img/thumbnails/splat/${nom}.png?v=5"`), `${nom} : sur la page (?v=5 : couvertures du 07/10/2026, le « ? »)`);
   });
   ["fiches 10 à 14", "fiches 15 à 19", "fiches 20 à 24", "fiches 11d à 17d", "fiches 18d à 24d"]
     .forEach((plage, i) => assert.ok(art[i].includes(`<span class="plage">${plage}</span>`), plage));
