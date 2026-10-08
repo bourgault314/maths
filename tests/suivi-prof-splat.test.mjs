@@ -1,0 +1,618 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+import { createRequire } from "node:module";
+
+// Lot « splat-suivi-4 » (08/10/2026) — SPLAT! dans « Ma classe ».
+//
+// La page prof montre une activité à la fois : un choix « Défi tables |
+// SPLAT! » sous le nom de la classe (seulement s'il y a le choix), un onglet
+// SPLAT! (six pastilles de monde, étapes réussies, ✨ Bonus, Détail, carte de
+// classe), et « Activités de la classe » pour cocher SPLAT! (propriétaire).
+//
+// Ces tests EXÉCUTENT les fonctions de la page, telles qu'elles y sont
+// écrites, avec le VRAI moteur servi par le serveur (prof/splat-parcours.js)
+// et un document de poche. Le reste (le vrai navigateur, le vrai serveur) est
+// joué par le banc du lot : voir la notice.
+//
+// Sabotages attendus (chacun rend au moins un test rouge) : voir
+// splat-suivi-lot-4-sabotages.py dans le dossier du lot.
+
+const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
+const lire = chemin => readFileSync(join(racine, chemin), "utf8");
+const page = lire("_serveur/public/prof/index.php");
+const espace = lire("_serveur/public/index.php");
+const BALISE = '<script nonce="<?= htmlspecialchars($nonce, ENT_QUOTES) ?>">';
+const script = (() => {
+  const debut = page.indexOf(BALISE);
+  const fin = page.indexOf("</script>", debut);
+  assert.ok(debut > 0 && fin > debut, "le script en ligne de la page prof doit être trouvé");
+  return page.slice(debut, fin);
+})();
+const SPLAT = createRequire(import.meta.url)(join(racine, "_serveur/public/prof/splat-parcours.js"));
+
+function blocDepuis(source, position) {
+  const ouvre = source.indexOf("{", position);
+  let profondeur = 0;
+  for (let i = ouvre; i < source.length; i += 1) {
+    if (source[i] === "{") profondeur += 1;
+    else if (source[i] === "}") {
+      profondeur -= 1;
+      if (profondeur === 0) return source.slice(position, i + 1);
+    }
+  }
+  throw new Error("bloc non fermé");
+}
+
+function fonction(nom) {
+  const motif = new RegExp(`(?:async )?function ${nom}\\(`);
+  const m = motif.exec(script);
+  assert.ok(m, `la page doit définir ${nom}()`);
+  return blocDepuis(script, m.index);
+}
+
+function constante(nom) {
+  const position = script.indexOf(`const ${nom} = `);
+  assert.ok(position > 0, `la page doit définir ${nom}`);
+  const debut = position + `const ${nom} = `.length;
+  let i = debut, profondeur = 0, dansTexte = "";
+  for (; i < script.length; i += 1) {
+    const c = script[i];
+    if (dansTexte) { if (c === dansTexte && script[i - 1] !== "\\") dansTexte = ""; continue; }
+    if (c === '"' || c === "'" || c === "`") { dansTexte = c; continue; }
+    if ("[{(".includes(c)) profondeur += 1;
+    else if ("]})".includes(c)) profondeur -= 1;
+    else if (c === ";" && profondeur === 0) break;
+  }
+  return script.slice(position, i + 1);
+}
+
+// La partie SPLAT! du script : de « l'onglet SPLAT! » à « feuille imprimée ».
+const sectionSplat = script.slice(script.indexOf("// ---------------------------------------------------------------- l'onglet SPLAT!"),
+  script.indexOf("// ---------------------------------------------------------------- feuille imprimée"));
+
+// ------------------------------------------------------------ un document de poche
+
+class Noeud {
+  constructor(tag) {
+    this.tag = tag; this.enfants = []; this.attributs = {}; this.dataset = {}; this.style = {};
+    this.className = ""; this.hidden = false; this._texte = ""; this.ecouteurs = {}; this.parent = null;
+    this.value = ""; this.checked = false; this.disabled = false;
+  }
+  get children() { return this.enfants.filter(e => e.tag !== "#texte"); }
+  set textContent(v) { this.enfants = []; this._texte = v === null || v === undefined ? "" : String(v); }
+  get textContent() { return this.enfants.length ? this.enfants.map(e => e.textContent).join("") : this._texte; }
+  append(...noeuds) {
+    noeuds.forEach(n => { const x = typeof n === "string" ? texte(n) : n; x.parent = this; this.enfants.push(x); });
+  }
+  appendChild(n) { this.append(n); return n; }
+  after(n) {
+    if (!this.parent) return;
+    const i = this.parent.enfants.indexOf(this);
+    n.parent = this.parent;
+    this.parent.enfants.splice(i + 1, 0, n);
+  }
+  remove() {
+    if (!this.parent) return;
+    this.parent.enfants.splice(this.parent.enfants.indexOf(this), 1);
+    this.parent = null;
+  }
+  setAttribute(k, v) { this.attributs[k] = String(v); if (k === "class") this.className = String(v); }
+  getAttribute(k) { return k === "class" ? this.className : this.attributs[k]; }
+  addEventListener(type, f) { (this.ecouteurs[type] = this.ecouteurs[type] || []).push(f); }
+  cliquer() { (this.ecouteurs.click || []).forEach(f => f()); }
+  tous(predicat, sortie = []) {
+    this.enfants.forEach(e => { if (predicat(e)) sortie.push(e); e.tous(predicat, sortie); });
+    return sortie;
+  }
+  premier(predicat) { return this.tous(predicat)[0] || null; }
+}
+function texte(t) { const n = new Noeud("#texte"); n._texte = String(t); return n; }
+const document = {
+  createElement: tag => new Noeud(tag),
+  createElementNS: (_, tag) => new Noeud(tag),
+  createTextNode: t => texte(t),
+};
+function creerZones() {
+  const zones = new Map();
+  return {zones, $: id => { if (!zones.has(id)) zones.set(id, new Noeud("div")); return zones.get(id); }};
+}
+const aClasse = (noeud, classe) => (noeud.className || "").split(" ").includes(classe);
+
+// ------------------------------------------------------------ des élèves
+
+const M1 = ["m1e1", "m1e2", "m1e3", "m1e4", "m1e5", "m1e6"];
+const M2 = ["m2e1", "m2e4", "m2e5"];
+const ENQ = Array.from({length: 15}, (_, i) => `enq${i + 10}`);
+const SYS = ["sys25", "sys26", "sys27", "sys28"];
+const M5 = ["m3e1", "m3e2", "m3e4"];
+const M6 = ["m4e1", "m4e2", "m4e3", "m4e4", "m4e5", "m4e6"];
+const etape = (fait, vues = 0, idx = 0) => Object.assign({fait, etoiles: 3, cartes: 4, vues, essais: 1, date: "2026-10-05"}, idx ? {idx} : {});
+const faits = (liste, vues = []) => Object.fromEntries(liste.map(id => [id, etape(true, vues.includes(id) ? 1 : 0)]));
+const parcours = etapes => ({version: 1, epoque: 0, etapes});
+
+const LEA = parcours({...faits(M1), ...faits(M2), ...faits(ENQ.slice(0, 4), ["enq11"]), enq14: etape(false, 0, 3), enq11d: etape(true)});
+const MAELYS = parcours({...faits([...M1, ...M2, ...ENQ, ...SYS, ...M5, ...M6]), ...faits(SPLAT.CARTE.BONUS.map(b => b[0]))});
+const TOM = parcours({m1e1: etape(false, 0, 5)});
+
+// ------------------------------------------------------------ la page, exécutée
+
+const SOURCES_TABLEAU = ["nomAffiche", "dateLisible", "celluleNom", "celluleCode", "celluleDate", "poserGestes",
+  "elementSvg", "pastilleMonde", "ligneDetailSplat", "dessinerTableauSplat", "objectifSplat",
+  "dessinerObjectifSplat", "resumeDeLaClasse", "lireSplat"].map(fonction).join("\n");
+const CONSTANTES = ["COULEURS_MONDES", "ETATS_MONDE", "CASES_ETAPE", "SVG"].map(constante).join("\n");
+
+function ongletSplat(liste, options = {}) {
+  const {zones, $} = creerZones();
+  const corps = new Noeud("tbody");
+  const messages = [];
+  const etat = {detailsOuverts: options.detailsOuverts || new Set()};
+  const moteur = options.sansMoteur ? null : SPLAT;
+  const fabrique = new Function("document", "$", "SPLAT", "droitClasse", "detailsOuverts", "messager",
+    "dessinerPapier", "nommer", "revenirA", "regenerer", "supprimerEleve", "placerMenu",
+    `${CONSTANTES}\nlet eleves = [];\n${SOURCES_TABLEAU}\nreturn {poser: liste => { eleves = liste; }, lireSplat, dessinerTableauSplat, objectifSplat};`);
+  const f = fabrique(document, $, moteur, options.droit || "proprietaire", etat.detailsOuverts,
+    (id, t, type) => messages.push({id, t, type}), () => {}, () => {}, () => {}, () => {}, () => {}, () => {});
+  const eleves = liste.map((e, i) => Object.assign({id: i + 1, code: `CODE0${i}`, initiale: "", restaurable: false, journees: []},
+    e, {lu: f.lireSplat(e.parcours)}));
+  f.poser(eleves);
+  f.dessinerTableauSplat(corps, (options.droit || "proprietaire") !== "lecture");
+  const lignes = corps.children.filter(tr => !aClasse(tr, "detail"));
+  return {zones, corps, lignes, messages, eleves, f, etat};
+}
+
+const classe8 = () => [
+  {prenom: "Léa", parcours: LEA, maj_le: "2026-10-07T07:40:00Z"},
+  {prenom: "Maëlys", parcours: MAELYS, maj_le: "2026-10-07T12:00:00Z"},
+  {prenom: "Tom", parcours: TOM, maj_le: "2026-10-05T08:00:00Z"},
+  {prenom: "Yanis", parcours: null, maj_le: null},
+];
+
+const cellules = tr => tr.children;
+const COULEUR = n => ({1: "#d9690c", 2: "#0b67b2", 3: "#be185d", 4: "#92400e", 5: "#08857f", 6: "#7b42b4"})[n];
+const pastilles = tr => tr.tous(n => n.tag === "svg");
+const etatPastille = svg => svg.className.replace("monde-p ", "");
+
+test("l'onglet SPLAT! : six pastilles, les étapes sur 37, ✨ pour les Bonus, « Détail » et « ⋯ » — plus de « Fiche »", () => {
+  const {lignes} = ongletSplat(classe8());
+  assert.equal(lignes.length, 4);
+  lignes.forEach(tr => assert.equal(cellules(tr).length, 6, "Élève · Code · Mondes · Étapes réussies · Dernière activité · gestes"));
+  const [lea, maelys, tom, yanis] = lignes;
+  assert.deepEqual(pastilles(lea).map(etatPastille), ["fini", "fini", "cours", "vide", "vide", "vide"]);
+  assert.deepEqual(pastilles(maelys).map(etatPastille), Array(6).fill("fini"));
+  assert.deepEqual(pastilles(tom).map(etatPastille), ["cours", "vide", "vide", "vide", "vide", "vide"], "une série en cours met le monde à moitié");
+  assert.deepEqual(pastilles(yanis).map(etatPastille), Array(6).fill("vide"), "rien fait : six mondes vides");
+  const compte = tr => cellules(tr)[3].premier(n => aClasse(n, "pastille")).textContent;
+  const bonus = tr => (cellules(tr)[3].premier(n => aClasse(n, "bonus-compte")) || {textContent: ""}).textContent;
+  assert.equal(compte(lea), "13 / 37");
+  assert.equal(bonus(lea), "✨ 1", "les Bonus comptés à part (Q3)");
+  assert.equal(compte(maelys), "37 / 37");
+  assert.equal(bonus(maelys), "✨ 14");
+  assert.equal(compte(tom), "0 / 37");
+  assert.equal(bonus(tom), "", "pas de ✨ 0");
+  assert.equal(compte(yanis), "0 / 37");
+  assert.ok(aClasse(cellules(lea)[3].children[0], "p-vert") && aClasse(cellules(yanis)[3].children[0], "p-gris"));
+  assert.equal(cellules(yanis)[4].textContent, "rien fait");
+  lignes.forEach(tr => {
+    const boutons = cellules(tr)[5].children.filter(n => n.tag === "button").map(b => b.textContent);
+    assert.deepEqual(boutons, ["Détail ▾"], "« Détail » à la place de « Fiche »");
+    assert.ok(cellules(tr)[5].premier(n => n.tag === "details"), "« ⋯ » garde Nouveau code / Supprimer");
+  });
+  assert.equal(SPLAT.CARTE.ETAPES.length, 37, "le total vient du moteur, jamais écrit dans la page");
+  assert.doesNotMatch(sectionSplat, /\b37\b|\b40\b/, "aucun total écrit en dur");
+});
+
+test("la pastille : le dessin de l'espace élève, et « Monde 3 · SPLAT! Enquête : 4 / 15 » au survol", () => {
+  const {lignes} = ongletSplat(classe8());
+  const titres = pastilles(lignes[0]).map(svg => svg.premier(n => n.tag === "title").textContent);
+  assert.deepEqual(titres, ["Monde 1 · Petit SPLAT! : 6 / 6", "Monde 2 · SPLAT! Classique : 3 / 3",
+    "Monde 3 · SPLAT! Enquête : 4 / 15", "Monde 4 · SPLAT! Système : 0 / 4", "Monde 5 · SPLAT! Équations : 0 / 3",
+    "Monde 6 · SPLAT! Relatifs : 0 / 6"]);
+  // Le même dessin que la tuile de l'espace élève (homogénéité) : mêmes
+  // couleurs, même rond, même moitié, même chiffre (centré au quart de pixel).
+  const dessinEspace = blocDepuis(espace, espace.indexOf("function pastilleMonde("));
+  const dessinPage = fonction("pastilleMonde");
+  [/elementSvg\("circle", \{cx: "12", cy: "12", r: "11", fill: etat === "fini" \? couleur : "#fff",\s*stroke: couleur, "stroke-width": "2"\}\)/,
+   /\{d: "M12 1A11 11 0 0 0 12 23Z", fill: couleur\}/,
+   /\{x: "12", y: "16\.375", "text-anchor": "middle", "font-size": "12\.5",\s*"font-weight": "800", fill: etat === "vide" \? couleur : "#fff"\}/,
+   /chiffre\.setAttribute\("paint-order", "stroke"\);/].forEach(motif => {
+    assert.match(dessinEspace, motif, "repère dans l'espace élève");
+    assert.match(dessinPage, motif, "le même dessin dans Ma classe");
+  });
+  const couleurs = src => src.slice(src.indexOf("const COULEURS_MONDES"), src.indexOf(";", src.indexOf("const COULEURS_MONDES")));
+  assert.equal(couleurs(script), couleurs(espace), "les couleurs des mondes : celles de la tuile et de la carte");
+  const moitie = pastilles(lignes[0])[2];
+  const chiffre = moitie.premier(n => n.tag === "text");
+  assert.equal(chiffre.attributs.fill, "#fff", "sur la moitié, le chiffre est blanc…");
+  assert.equal(chiffre.attributs.stroke, COULEUR(3), "… cerné de la couleur du monde");
+});
+
+test("le Détail : une rangée par monde, les Bonus à part, la légende — et il se replie", () => {
+  const {corps, lignes, etat} = ongletSplat(classe8());
+  const bouton = cellules(lignes[0])[5].children[0];
+  bouton.cliquer();
+  assert.equal(bouton.textContent, "Replier ▴");
+  assert.equal(bouton.attributs["aria-expanded"], "true");
+  assert.ok(etat.detailsOuverts.has(1), "Léa (id 1) est retenue comme dépliée");
+  const detail = corps.children[1];
+  assert.ok(aClasse(detail, "detail"), "le Détail se déplie JUSTE sous la ligne de l'élève");
+  assert.equal(detail.children[0].colSpan, 6);
+  const rangees = detail.tous(n => aClasse(n, "detail-monde"));
+  assert.deepEqual(rangees.map(r => r.children[0].textContent), ["Monde 1 · Petit SPLAT!", "Monde 2 · SPLAT! Classique",
+    "Monde 3 · SPLAT! Enquête", "Monde 4 · SPLAT! Système", "Monde 5 · SPLAT! Équations", "Monde 6 · SPLAT! Relatifs",
+    "✨ Bonus du monde 3", "✨ Bonus du monde 4"]);
+  const cases = r => Object.fromEntries(r.children.slice(1).map(c => [c.textContent, c.className]));
+  const m3 = cases(rangees[2]);
+  assert.equal(Object.keys(m3).join(","), "10,11,12,13,14,15,16,17,18,19,20,21,22,23,24", "les numéros de la carte");
+  assert.equal(m3["10"], "et ok", "réussie : vert");
+  assert.equal(m3["11"], "et aide", "réussie avec une réponse vue : orange");
+  assert.equal(m3["14"], "et cours", "en cours : pointillés");
+  assert.equal(m3["15"], "et", "pas encore faite : blanc");
+  assert.equal(Object.keys(cases(rangees[4])).join(","), "35,36,37");
+  assert.equal(Object.keys(cases(rangees[5])).join(","), "38,39,40,41,42,43");
+  const b3 = cases(rangees[6]);
+  assert.equal(b3["11d"], "et bonus ok", "un Bonus réussi : doré");
+  assert.equal(b3["12d"], "et bonus");
+  assert.equal(Object.keys(cases(rangees[7])).join(","), "25d,26d,27d,28d");
+  assert.deepEqual(detail.premier(n => aClasse(n, "legende-detail")).children.map(s => s.textContent),
+    ["réussie", "réussie avec des réponses vues", "en cours", "pas encore faite", "bonus"]);
+  bouton.cliquer();
+  assert.equal(bouton.textContent, "Détail ▾");
+  assert.ok(!corps.children.some(tr => aClasse(tr, "detail")), "replié : la rangée part");
+  assert.equal(etat.detailsOuverts.size, 0);
+});
+
+test("un Détail déplié le reste quand le tableau est redessiné (tri, saisie)", () => {
+  const {corps} = ongletSplat(classe8(), {detailsOuverts: new Set([2])});
+  const ordre = corps.children.map(tr => (aClasse(tr, "detail") ? "détail" : tr.children[0].children[0].value));
+  assert.deepEqual(ordre, ["Léa", "Maëlys", "détail", "Tom", "Yanis"]);
+});
+
+test("la carte de classe SPLAT! : les étapes de tout le monde, les mondes finis — personne n'est nommé", () => {
+  const {zones} = ongletSplat(classe8());
+  assert.equal(zones.get("objectif").hidden, false);
+  assert.equal(zones.get("objectif-compte").textContent, "Ensemble : 50 étapes réussies sur 148", "13 + 37 + 0 + 0, sur 4 élèves × 37");
+  assert.equal(zones.get("objectif-lignes").textContent,
+    "Monde 1 fini par 2 élèves · monde 2 par 2 · monde 3 par 1 · monde 4 par 1 · monde 5 par 1 · monde 6 par 1");
+  assert.equal(zones.get("objectif-barre").style.width, "34%");
+  const tout = [...zones.values()].map(z => z.textContent).join(" ");
+  ["Léa", "Maëlys", "Tom", "Yanis", "CODE0"].forEach(interdit => assert.ok(!tout.includes(interdit), `« ${interdit} » dans la carte de classe`));
+  assert.doesNotMatch(fonction("objectifSplat") + fonction("dessinerObjectifSplat"), /\bapi\(|fetch\(/, "rien de plus demandé au serveur");
+});
+
+test("la carte de classe se tait tant qu'aucune étape n'est réussie — séries en cours et Bonus seuls compris", () => {
+  const cachee = liste => ongletSplat(liste).zones.get("objectif").hidden;
+  assert.equal(cachee([]), true, "classe vide");
+  assert.equal(cachee([{prenom: "A", parcours: null}, {prenom: "B", parcours: null}]), true, "personne n'a commencé");
+  assert.equal(cachee([{prenom: "A", parcours: TOM}]), true, "une série en cours n'est pas une étape réussie");
+  assert.equal(cachee([{prenom: "A", parcours: parcours({enq11d: etape(true)})}]), true, "un Bonus seul non plus (Q3)");
+  const un = ongletSplat([{prenom: "A", parcours: parcours({m1e1: etape(true)})}, {prenom: "B", parcours: null}]);
+  assert.equal(un.zones.get("objectif").hidden, false);
+  assert.equal(un.zones.get("objectif-compte").textContent, "Ensemble : 1 étape réussie sur 74", "au singulier");
+  assert.equal(un.zones.get("objectif-lignes").textContent, "", "aucun monde fini : pas de ligne");
+  const seul = ongletSplat([{prenom: "A", parcours: parcours(faits(M2))}]);
+  assert.equal(seul.zones.get("objectif-lignes").textContent, "Monde 2 fini par 1 élève", "le premier monde cité prend la majuscule, au singulier");
+});
+
+test("sans moteur : l'onglet le dit, chaque ligne reste lisible, ni carte ni Détail", () => {
+  const {lignes, messages, zones} = ongletSplat(classe8(), {sansMoteur: true});
+  assert.equal(lignes.length, 4);
+  lignes.forEach(tr => {
+    assert.equal(cellules(tr)[3].textContent, "—");
+    assert.deepEqual(cellules(tr)[5].children.filter(n => n.tag === "button"), []);
+  });
+  assert.equal(zones.get("objectif").hidden, true);
+  assert.ok(messages.some(m => m.id === "message-classe" && /prof\/splat-parcours\.js/.test(m.t) && m.type === "erreur"));
+});
+
+test("en lecture seule : pas de code, pas de saisie, pas de « ⋯ » vide", () => {
+  const {lignes} = ongletSplat(classe8().map(e => ({...e, code: null})), {droit: "lecture"});
+  lignes.forEach(tr => {
+    assert.equal(cellules(tr)[1].textContent, "");
+    assert.equal(cellules(tr)[0].children[0].readOnly, true);
+    assert.equal(cellules(tr)[5].premier(n => n.tag === "details"), null);
+  });
+});
+
+test("c'est le moteur qui lit le parcours : la page ne touche jamais aux étapes elle-même", () => {
+  const lecteur = fonction("lireSplat");
+  assert.match(lecteur, /SPLAT\.resumeProf\(brut \|\| null\)/);
+  const splat = lecteur + sectionSplat;
+  assert.doesNotMatch(splat, /(?:brut|parcours)\.etapes|\.etapes\[/, "pas de lecture de parcours.etapes dans la page");
+  assert.doesNotMatch(splat, /\.(?:vues|idx|etoiles|essais|cartes)\b/, "les champs d'une étape ne sont lus que par le moteur");
+  assert.doesNotMatch(splat, /innerHTML/, "rien de ce que renvoie le serveur ne devient du HTML");
+  // Exécuté : un parcours vide, un parcours illisible, pas de moteur.
+  const {f} = ongletSplat([]);
+  const vide = f.lireSplat(null);
+  assert.deepEqual([vide.faits, vide.total, vide.bonus, vide.lisible, vide.mondes.length], [0, 37, 0, true, 6]);
+  assert.equal(f.lireSplat("n'importe quoi").faits, 0);
+  assert.equal(f.lireSplat(LEA).etats.enq11, "aide");
+});
+
+// ------------------------------------------------------------ le choix de l'activité
+
+test("APPLIS : ce que la page sait montrer est disponible au catalogue, proposé par l'API, dans l'ordre du catalogue", () => {
+  const APPLIS = new Function(`${constante("APPLIS")}\nreturn APPLIS;`)();
+  const catalogue = lire("_serveur/public/lib/applis.php");
+  const api = lire("_serveur/public/api/prof.php");
+  const proposables = JSON.parse(api.match(/const APPLIS_PROPOSABLES = (\[[^\]]+\]);/)[1].replace(/'/g, '"'));
+  const ordre = [...catalogue.matchAll(/^ {4}'([a-z-]+)' => \[/gm)].map(m => m[1]);
+  assert.deepEqual(APPLIS.map(a => a.cle), ["defi-tables", "splat"]);
+  APPLIS.forEach(appli => {
+    const entree = catalogue.slice(catalogue.indexOf(`'${appli.cle}' => [`));
+    const bloc = entree.slice(0, entree.indexOf("\n    ],"));
+    assert.match(bloc, /'disponible' => true,/, `${appli.cle} disponible au catalogue`);
+    assert.ok(proposables.includes(appli.cle), `${appli.cle} proposée par l'API`);
+    const compteur = bloc.match(/'compteur' => '(\w+)'/)[1];
+    assert.equal({calculs: "calculs", etapes: "étapes"}[compteur], appli.unite[1], "« Revenir à… » compte ce que compte le serveur");
+  });
+  assert.deepEqual(APPLIS.map(a => a.cle), ordre.filter(c => APPLIS.some(a => a.cle === c)));
+  // Le HTML suit la même liste : les boutons du choix, les cases des activités.
+  const boutons = [...page.matchAll(/<button type="button" data-appli="([\w-]+)" aria-pressed="(\w+)">([^<]+)<\/button>/g)];
+  assert.deepEqual(boutons.map(m => [m[1], m[3]]), APPLIS.map(a => [a.cle, a.nom]));
+  const cases = [...page.matchAll(/<label><input type="checkbox" data-appli="([\w-]+)"> ([^<]+)<\/label>/g)];
+  assert.deepEqual(cases.map(m => [m[1], m[2]]), APPLIS.map(a => [a.cle, a.nom]));
+  assert.match(page, /<div class="choix-appli" id="choix-appli" role="group" aria-label="Activité affichée" hidden>/,
+    "caché tant que la classe n'a pas deux activités");
+  const entete = page.slice(page.indexOf('<tr id="entete-splat" hidden>'), page.indexOf("</tr>", page.indexOf('<tr id="entete-splat"')));
+  assert.deepEqual([...entete.matchAll(/<th>(?:<button type="button" data-tri="(\w+)">)?([^<]*)/g)].map(m => `${m[2]}${m[1] ? `:${m[1]}` : ""}`),
+    ["Élève:prenom", "Code", "Mondes", "Étapes réussies:etapes", "Dernière activité:date", ""]);
+});
+
+function choixAppli() {
+  return new Function(`${fonction("appliAMontrer")}\nreturn appliAMontrer;`)();
+}
+
+test("l'activité montrée : le dernier choix si la classe l'a, sinon la première de la classe", () => {
+  const appliAMontrer = choixAppli();
+  assert.equal(appliAMontrer(["defi-tables", "splat"], "splat"), "splat");
+  assert.equal(appliAMontrer(["defi-tables"], "splat"), "defi-tables", "une classe sans SPLAT! montre Défi tables");
+  assert.equal(appliAMontrer(["splat"], ""), "splat");
+  assert.equal(appliAMontrer(["defi-tables", "splat"], ""), "defi-tables", "sans choix : la première, dans l'ordre du catalogue");
+  assert.match(fonction("ouvrirClasse"), /api\("tableau", \{classe_id: id, appli: voulue\}\)/, "le tableau lu est celui de l'activité montrée");
+  assert.match(fonction("ouvrirClasse"), /memeClasse \? appliAffichee : lireChoixAppli\(\)/, "rouvrir la même classe garde l'onglet");
+  assert.match(fonction("afficherAppli"), /retenirChoixAppli\(cle\);/);
+  assert.match(script, /const CLE_APPLI = "mathsgo-suivi-prof-appli";/);
+  assert.match(fonction("lireChoixAppli"), /sessionStorage\.getItem\(CLE_APPLI\)/, "retenu le temps de l'onglet, pas plus");
+  assert.match(fonction("deconnecter"), /sessionStorage\.removeItem\(CLE_APPLI\)/);
+});
+
+function poserAppliRejoue(applis, appliAffichee, droit = "proprietaire", triAvant = {colonne: "acquises", sens: -1}) {
+  const {$} = creerZones();
+  const boutons = ["defi-tables", "splat"].map(cle => Object.assign(new Noeud("button"), {dataset: {appli: cle}}));
+  const cases = ["defi-tables", "splat"].map(cle => Object.assign(new Noeud("input"), {dataset: {appli: cle}}));
+  const doc = Object.assign({}, document, {querySelectorAll: s => (s.startsWith("#choix-appli") ? boutons : cases)});
+  const TRIS = {"defi-tables": [["prenom", "Prénom"], ["acquises", "Tables passées"], ["date", "Dernière activité"]],
+    "splat": [["prenom", "Prénom"], ["etapes", "Étapes réussies"], ["date", "Dernière activité"]]};
+  const etat = new Function("document", "$", "classe", "appliAffichee", "droitClasse", "TRIS", "APPLIS", "triInitial",
+    `let tri = triInitial;\n${["lesApplisConnues", "applisDeLaClasse", "poserAppli", "poserTris", "poserActivites"].map(fonction).join("\n")}\nposerAppli();\nreturn {tri};`)(
+    doc, $, {applis}, appliAffichee, droit, TRIS, [{cle: "defi-tables"}, {cle: "splat"}], triAvant);
+  return {$, boutons, cases, tri: etat.tri};
+}
+
+test("le choix n'apparaît qu'avec deux activités ; l'onglet SPLAT! change l'en-tête, les tris, et cache ce qui est à Défi tables", () => {
+  const seule = poserAppliRejoue(["defi-tables"], "defi-tables");
+  assert.equal(seule.$("choix-appli").hidden, true, "une seule activité : pas de choix");
+  assert.equal(seule.$("entete-splat").hidden, true);
+  assert.equal(seule.$("bloc-imprimer").hidden, false);
+  const deux = poserAppliRejoue(["defi-tables", "splat"], "splat");
+  assert.equal(deux.$("choix-appli").hidden, false);
+  assert.deepEqual(deux.boutons.map(b => [b.hidden, b.attributs["aria-pressed"]]), [[false, "false"], [false, "true"]]);
+  assert.equal(deux.$("entete-defi-tables").hidden, true);
+  assert.equal(deux.$("entete-splat").hidden, false);
+  assert.equal(deux.$("bloc-imprimer").hidden, true, "« À imprimer » (papiers de Défi tables) caché");
+  assert.equal(deux.$("fragiles").hidden, true, "« Les calculs qui coincent » caché");
+  assert.deepEqual(deux.$("tri").children.map(o => o.textContent), ["Prénom", "Étapes réussies", "Dernière activité"]);
+  assert.deepEqual(deux.tri, {colonne: "prenom", sens: 1}, "un tri qui n'existe pas dans l'onglet revient au prénom");
+  assert.equal(poserAppliRejoue(["defi-tables", "splat"], "splat", "proprietaire", {colonne: "date", sens: -1}).tri.colonne, "date",
+    "« Dernière activité » existe des deux côtés : il reste");
+  // Les activités de la classe : propriétaire seulement, cases à l'état du serveur.
+  assert.equal(deux.$("bloc-activites").hidden, false);
+  assert.deepEqual(deux.cases.map(c => c.checked), [true, true]);
+  assert.deepEqual(seule.cases.map(c => c.checked), [true, false]);
+  assert.equal(poserAppliRejoue(["defi-tables", "splat"], "splat", "ecriture").$("bloc-activites").hidden, true, "un collègue en écriture ne change pas les activités");
+  assert.equal(poserAppliRejoue(["defi-tables", "splat"], "splat", "lecture").$("bloc-activites").hidden, true);
+});
+
+test("le tri « Étapes réussies » : les étapes, puis les Bonus, puis une série en cours", () => {
+  const eleves = [
+    {prenom: "Rien", code: "A", lu: {faits: 0, bonus: 0, cours: 0}},
+    {prenom: "Cours", code: "B", lu: {faits: 0, bonus: 0, cours: 1}},
+    {prenom: "Treize", code: "C", lu: {faits: 13, bonus: 0, cours: 0}},
+    {prenom: "TreizeBonus", code: "D", lu: {faits: 13, bonus: 2, cours: 0}},
+    {prenom: "Tout", code: "E", lu: {faits: 37, bonus: 14, cours: 0}},
+  ];
+  const trier = new Function("eleves", "tri", `${fonction("trierEleves")}\ntrierEleves();\nreturn eleves.map(e => e.prenom);`);
+  assert.deepEqual(trier(eleves.slice(), {colonne: "etapes", sens: -1}), ["Tout", "TreizeBonus", "Treize", "Cours", "Rien"]);
+});
+
+test("passer d'un onglet à l'autre : une liste déjà lue est reprise, sinon un appel ; deux clics rapprochés, le dernier gagne", async () => {
+  const appels = [];
+  const attentes = [];
+  const api = (action, corps) => { appels.push(corps.appli); return new Promise(r => attentes.push(() => r({eleves: [{id: 1, prenom: corps.appli}]}))); };
+  const retenus = [];
+  let dessins = 0;
+  const monde = new Function("api", "retenirChoixAppli", "redessin", "classe", "chargerMoteurSplat", "elevesLus",
+    "messager", "poserAppli", "surErreur", "APPLIS",
+    `let appliAffichee = "defi-tables", eleves = [], tableaux = {"defi-tables": [{id: 1, prenom: "cache"}]}, demandeAppli = 0;\n`
+    + `${["lesApplisConnues", "applisDeLaClasse", "afficherAppli"].map(fonction).join("\n")}\n`
+    + "return {afficherAppli, etat: () => ({appliAffichee, eleves, tableaux})};")(
+    api, cle => retenus.push(cle), {demander: () => { dessins += 1; }}, {id: 7, applis: ["defi-tables", "splat"]},
+    async () => SPLAT, (cle, liste) => liste, () => {}, () => {}, e => { throw e; }, [{cle: "defi-tables"}, {cle: "splat"}]);
+  const p1 = monde.afficherAppli("splat");
+  await new Promise(r => setTimeout(r, 0));
+  const p2 = monde.afficherAppli("defi-tables");
+  await p2;
+  assert.equal(monde.etat().appliAffichee, "defi-tables", "Défi tables, déjà lu, s'affiche sans appel");
+  attentes[0]();
+  await p1;
+  assert.equal(monde.etat().appliAffichee, "defi-tables", "la réponse SPLAT! arrivée APRÈS le second clic ne repasse pas devant");
+  assert.deepEqual(appels, ["splat"], "un seul appel : Défi tables était déjà lu");
+  assert.deepEqual(retenus, ["defi-tables"], "seul le choix affiché est retenu");
+  assert.equal(monde.etat().tableaux.splat, undefined, "une réponse dépassée n'est pas rangée (elle pourrait être d'une autre classe)");
+  assert.equal(dessins, 1);
+  await monde.afficherAppli("automatismes");
+  assert.equal(monde.etat().appliAffichee, "defi-tables", "une activité que la classe n'a pas ne s'affiche pas");
+});
+
+test("un prénom, un code changés — ou un élève supprimé — valent pour toutes les listes déjà lues", () => {
+  const rejoue = new Function("tableaux", "eleves", "appliAffichee",
+    `${fonction("reporterEleve")}\nreturn {reporterEleve, tableaux: () => tableaux};`);
+  const tables = [{id: 1, prenom: "", code: "AAA"}, {id: 2, prenom: "Noé", code: "BBB"}];
+  const splat = [{id: 1, prenom: "", code: "AAA"}, {id: 2, prenom: "Noé", code: "BBB"}];
+  const monde = rejoue({"defi-tables": tables, splat}, splat, "splat");
+  splat[0].prenom = "Léa"; splat[0].initiale = "B"; splat[0].code = "CCC";
+  monde.reporterEleve(splat[0]);
+  assert.deepEqual([tables[0].prenom, tables[0].initiale, tables[0].code], ["Léa", "B", "CCC"]);
+  assert.match(fonction("nommer"), /await api\("eleves\.nommer"[^;]*;\s*reporterEleve\(eleve\);/);
+  assert.match(fonction("regenerer"), /eleve\.code = donnees\.code;\s*reporterEleve\(eleve\);/);
+  const reste = splat.filter(e => e.id !== 2);
+  const monde2 = rejoue({"defi-tables": tables, splat}, reste, "splat");
+  monde2.reporterEleve({id: 2}, true);
+  assert.deepEqual(monde2.tableaux()["defi-tables"].map(e => e.id), [1]);
+  assert.equal(monde2.tableaux().splat, reste, "la liste affichée reste celle de la page");
+  assert.match(fonction("supprimerEleve"), /eleves = eleves\.filter\(autre => autre\.id !== eleve\.id\);\s*reporterEleve\(eleve, true\);/);
+});
+
+test("« Revenir à… » revient dans l'activité affichée, et compte ses étapes", () => {
+  const proposees = appli => new Function("APPLIS", "appliAffichee", "dateLisible", "jourLisible",
+    `${fonction("versionsProposees")}\nreturn versionsProposees;`)(
+    [{cle: "defi-tables", unite: ["calcul", "calculs"]}, {cle: "splat", unite: ["étape", "étapes"]}], appli, () => "", j => j);
+  const eleve = {restaurable: false, journees: [{jour: "2026-10-07", calculs: 13}, {jour: "2026-10-06", calculs: 1}]};
+  assert.deepEqual(proposees("splat")(eleve).map(o => o.libelle),
+    ["fin de journée du 2026-10-07 — 13 étapes", "fin de journée du 2026-10-06 — 1 étape"]);
+  assert.deepEqual(proposees("defi-tables")(eleve).map(o => o.libelle),
+    ["fin de journée du 2026-10-07 — 13 calculs", "fin de journée du 2026-10-06 — 1 calcul"]);
+  assert.match(fonction("revenirA"), /const corps = \{eleve_id: eleve\.id, appli: appliAffichee\};/);
+  assert.doesNotMatch(fonction("revenirA"), /"defi-tables"/);
+});
+
+// ------------------------------------------------------------ « Activités de la classe »
+
+async function changerRejoue(applis, cle, coche, options = {}) {
+  const appels = [];
+  const questions = [];
+  const messages = [];
+  const caseActivite = Object.assign(new Noeud("input"), {dataset: {appli: cle}, checked: coche});
+  const cases = [caseActivite];
+  let rouvert = 0;
+  const api = async (action, corps) => {
+    appels.push({action, corps, desactivees: cases.every(c => c.disabled)});
+    if (options.panne) { const e = new Error("Le serveur ne répond pas."); throw e; }
+    return {ok: true};
+  };
+  const demander = async texte => { questions.push(texte); return options.reponse === undefined ? {} : options.reponse; };
+  await new Function("document", "classe", "api", "demander", "messager", "surErreur", "ouvrirClasse", "APPLIS",
+    `${fonction("lesApplisConnues")}\n${fonction("changerActivite")}\nreturn changerActivite;`)(
+    {querySelectorAll: () => cases}, {id: 4, libelle: "405", applis}, api, demander,
+    (id, t, type) => messages.push({id, t, type}), (e, zone) => messages.push({id: zone, t: e.message, type: "erreur"}),
+    async () => { rouvert += 1; },
+    [{cle: "defi-tables", nom: "Défi tables"}, {cle: "splat", nom: "SPLAT!"}])(caseActivite);
+  return {appels, questions, messages, caseActivite, rouvert};
+}
+
+test("cocher SPLAT! : la liste de la classe part au serveur, la classe est relue, un mot court", async () => {
+  const r = await changerRejoue(["defi-tables"], "splat", true);
+  assert.deepEqual(r.questions, [], "ajouter ne demande rien");
+  assert.deepEqual(r.appels.map(a => [a.action, a.corps]), [["classes.modifier", {classe_id: 4, applis: ["defi-tables", "splat"]}]]);
+  assert.equal(r.appels[0].desactivees, true, "les cases sont désactivées pendant l'envoi");
+  assert.equal(r.rouvert, 1, "la classe est relue : le choix « Défi tables | SPLAT! » apparaît");
+  assert.deepEqual(r.messages.at(-1), {id: "message-activites", t: "SPLAT! ajouté : la tuile apparaît dans l’espace des élèves.", type: "ok"});
+  assert.equal(r.caseActivite.disabled, false);
+});
+
+test("décocher SPLAT! : on demande d'abord, on dit que rien n'est effacé ; « Annuler » ne change rien", async () => {
+  const non = await changerRejoue(["defi-tables", "splat"], "splat", false, {reponse: null});
+  assert.deepEqual(non.questions, ["Retirer SPLAT! de la classe 405 ? La tuile disparaît de l’espace des élèves. Leur travail reste enregistré : rien n’est effacé."]);
+  assert.deepEqual(non.appels, [], "rien ne part sans un oui");
+  assert.equal(non.caseActivite.checked, true, "la case revient cochée");
+  const oui = await changerRejoue(["defi-tables", "splat"], "splat", false);
+  assert.deepEqual(oui.appels.map(a => a.corps.applis), [["defi-tables"]]);
+  assert.deepEqual(oui.messages.at(-1), {id: "message-activites", t: "SPLAT! retiré de l’espace des élèves. Rien n’est effacé.", type: "ok"});
+  // Ce que la phrase promet est vrai : classes.modifier ne touche qu'à la liste.
+  const api = lire("_serveur/public/api/prof.php");
+  const modifier = api.slice(api.indexOf("case 'classes.modifier':"), api.indexOf("case 'classes.supprimer':"));
+  assert.doesNotMatch(modifier, /DELETE|progressions/, "décocher n'efface aucune progression");
+});
+
+test("une classe garde au moins une activité ; une activité que la page ne montre pas n'est pas perdue", async () => {
+  const seule = await changerRejoue(["defi-tables"], "defi-tables", false);
+  assert.deepEqual(seule.appels, [], "rien ne part");
+  assert.deepEqual(seule.questions, []);
+  assert.equal(seule.caseActivite.checked, true);
+  assert.deepEqual(seule.messages.at(-1), {id: "message-activites", t: "Une classe garde au moins une activité.", type: "erreur"});
+  const autre = await changerRejoue(["defi-tables", "automatismes"], "splat", true);
+  assert.deepEqual(autre.appels[0].corps.applis, ["defi-tables", "automatismes", "splat"], "« automatismes » (pas encore montrée ici) reste dans la liste");
+  const panne = await changerRejoue(["defi-tables"], "splat", true, {panne: true});
+  assert.equal(panne.caseActivite.checked, false, "le serveur ne répond pas : la case revient à son état");
+  assert.equal(panne.messages.at(-1).id, "message-activites");
+});
+
+test("le bilan de « Supprimer la classe » parle des tables, même depuis l'onglet SPLAT!", async () => {
+  const PARCOURS = {TABLES: [2, 3, 4, 5, 6, 7, 8, 9, 10]};
+  const bilan = (eleves, tables) => new Function("PARCOURS", "eleves",
+    `${fonction("combienAuBoutDesTables")}\n${fonction("texteBilanDeLaClasse")}\nreturn texteBilanDeLaClasse;`)(PARCOURS, eleves)(tables);
+  const splat = [{maj_le: "x", lu: {faits: 3}}, {maj_le: null, lu: {faits: 0}}, {maj_le: "x", lu: {faits: 1}}];
+  const tables = [{maj_le: "x", lu: {lisible: true, acquises: [2, 3, 4, 5, 6, 7, 8, 9, 10]}}, {maj_le: null, lu: {lisible: true, acquises: []}}, {maj_le: null, lu: {lisible: true, acquises: []}}];
+  assert.equal(bilan(splat, tables), "3 élèves, 1 entraîné, 1 au bout des tables");
+  assert.equal(bilan(splat, null), "3 élèves, 2 entraînés", "classe sans Défi tables : pas de « au bout des tables »");
+  const appels = [];
+  const lireListe = (classeApplis, cache) => new Function("classe", "tableaux", "api", "elevesLus", "APPLIS",
+    `${fonction("lesApplisConnues")}\n${fonction("applisDeLaClasse")}\n${fonction("listeDefiTables")}\nreturn listeDefiTables;`)(
+    {id: 4, applis: classeApplis}, cache, async (action, corps) => { appels.push(corps.appli); return {eleves: tables}; },
+    (cle, liste) => liste, [{cle: "defi-tables"}, {cle: "splat"}])();
+  assert.equal(await lireListe(["splat"], {}), null, "classe sans Défi tables : rien à lire");
+  assert.equal(await lireListe(["defi-tables", "splat"], {"defi-tables": tables}), tables, "déjà lue : reprise");
+  assert.deepEqual(appels, []);
+  assert.equal(await lireListe(["defi-tables", "splat"], {}), tables);
+  assert.deepEqual(appels, ["defi-tables"]);
+  const gestionnaire = blocDepuis(script, script.indexOf('$("supprimer-classe").addEventListener'));
+  assert.ok(gestionnaire.indexOf("await listeDefiTables()") < gestionnaire.indexOf("await demander("));
+  assert.match(gestionnaire, /texteBilanDeLaClasse\(tables\)/);
+});
+
+// ------------------------------------------------------------ le moteur, chargé paresseusement
+
+test("le moteur SPLAT! est servi d'ici, chargé à la première ouverture de l'onglet, une seule fois", async () => {
+  assert.match(page, /\$moteurSplat = __DIR__ \. '\/splat-parcours\.js';\n\$versionSplat = is_file\(\$moteurSplat\) \? substr\(md5_file\(\$moteurSplat\), 0, 10\) : '0';/,
+    "sa version dans l'adresse suit son contenu");
+  assert.match(script, /const MOTEUR_SPLAT = "splat-parcours\.js\?v=<\?= htmlspecialchars\(\$versionSplat, ENT_QUOTES\) \?>";/);
+  assert.doesNotMatch(page, /<script src="splat-parcours\.js/, "pas chargé d'office : une classe sans SPLAT! ne le télécharge pas");
+  const scripts = [];
+  const fenetre = {};
+  const charger = new Function("document", "window", "MOTEUR_SPLAT",
+    `let SPLAT = null, chargementSplat = null;\n${fonction("chargerMoteurSplat")}\nreturn chargerMoteurSplat;`)(
+    {createElement: () => { const s = new Noeud("script"); scripts.push(s); return s; }, head: {appendChild: () => {}}},
+    fenetre, "splat-parcours.js?v=abc");
+  const p1 = charger();
+  const p2 = charger();
+  assert.equal(scripts.length, 1, "deux demandes, un seul script");
+  assert.equal(scripts[0].src, "splat-parcours.js?v=abc");
+  fenetre.MathsGoSplatParcours = SPLAT;
+  scripts[0].ecouteurs.load[0]();
+  assert.equal(await p1, SPLAT);
+  assert.equal(await p2, SPLAT);
+  assert.equal(await charger(), SPLAT, "ensuite, plus aucun script");
+  assert.equal(scripts.length, 1);
+  // En panne : null, et on pourra réessayer.
+  const scripts2 = [];
+  const charger2 = new Function("document", "window", "MOTEUR_SPLAT",
+    `let SPLAT = null, chargementSplat = null;\n${fonction("chargerMoteurSplat")}\nreturn chargerMoteurSplat;`)(
+    {createElement: () => { const s = new Noeud("script"); scripts2.push(s); return s; }, head: {appendChild: () => {}}}, {}, "x");
+  const p3 = charger2();
+  scripts2[0].ecouteurs.error[0]();
+  assert.equal(await p3, null);
+  charger2();
+  assert.equal(scripts2.length, 2, "une nouvelle tentative à la prochaine ouverture de l'onglet");
+});
+
+test("à la déconnexion, le choix, l'onglet et les activités partent avec le reste", () => {
+  const zones = new Function(`${constante("ZONES_MESSAGE")}\n${constante("BLOCS_A_CACHER")}\nreturn {ZONES_MESSAGE, BLOCS_A_CACHER};`)();
+  assert.ok(zones.ZONES_MESSAGE.includes("message-activites"));
+  assert.ok(zones.BLOCS_A_CACHER.includes("bloc-activites"));
+  assert.ok(zones.BLOCS_A_CACHER.includes("choix-appli"));
+  const oublier = fonction("oublierEtat");
+  assert.match(oublier, /appliAffichee = "defi-tables";\s*tableaux = \{\};\s*detailsOuverts\.clear\(\);/);
+});

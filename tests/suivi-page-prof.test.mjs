@@ -627,7 +627,10 @@ test("« rien depuis N jours » : compté depuis la dernière activité, à l'he
 });
 
 test("le tableau : sept colonnes, la liste des tables écrite, les gestes rares derrière « ⋯ »", () => {
-  const entete = page.slice(page.indexOf('<table id="tableau">'), page.indexOf('<tbody id="corps">'));
+  // Lot « splat-suivi-4 » : l'en-tête de Défi tables est la rangée
+  // « entete-defi-tables » (celle de SPLAT! est testée dans suivi-prof-splat).
+  const debutEntete = page.indexOf('<tr id="entete-defi-tables">');
+  const entete = page.slice(debutEntete, page.indexOf("</tr>", debutEntete));
   assert.deepEqual([...entete.matchAll(/<th>(?:<button type="button" data-tri="(\w+)">)?([^<]*)/g)].map(m => `${m[2]}${m[1] ? `:${m[1]}` : ""}`),
     ["Élève:prenom", "Code", "Tables passées:acquises", "En cours:encours", "Cette semaine:semaine", "En retard:retard", "Dernière activité:date", ""]);
   // Lot « un seul système » (05/10/2026) : « Tables passées » partout (la clé de tri reste « acquises »).
