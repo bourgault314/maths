@@ -428,7 +428,7 @@ test("dans les PDF — couverture, exemple en page 2, les cinq fiches dans l'ord
   });
 });
 
-test("les corrigés : « ? » pour la référence, puis « La tache … cache donc … » ; « Je vérifie » : le total seulement, sans total l'indice de l'écart ; « PAS DE TOTAL » (07/10/2026)", () => {
+test("les corrigés : « ? » pour la référence, puis « La tache … cache donc … » ; « Je vérifie » : le total seulement, sans total l'indice de l'écart ; sans total, pas de case (08/10/2026)", () => {
   const p = (s, k) => norm(texteDesPages(`outils/${s}.pdf`)[k]);
   const f10 = p("livret_splat_enquete_additif_correction", 2);
   for (const t of ["2 × ? + 6 = 20", "2 × ? = 20 − 6 = 14", "? = 14 ÷ 2 = 7", "La tache orange cache donc 7 jetons", "La tache bleue cache donc 7 + 6 = 13 jetons", "Je vérifie : 7 + 13 = 20 ✓"])
@@ -439,17 +439,29 @@ test("les corrigés : « ? » pour la référence, puis « La tache … cache do
   assert.doesNotMatch(p("livret_splat_enquete_additif", 2), /✓/);
   // taches répétées : « Chaque tache noire cache donc … »
   assert.match(p("livret_splat_enquete_rebondit_correction", 2), souple("Chaque tache noire cache donc 7 + 4 = 11 jetons"));
-  // sans total : « PAS DE TOTAL », et seul l'indice de l'écart se vérifie
+  // sans total : pas de case (08/10/2026 — ni « TOTAL ? », ni « PAS DE TOTAL », le malentendu du
+  // 07/10), et seul l'indice de l'écart se vérifie
   for (const s of ["livret_splat_enquete_rebondit", "livret_splat_enquete_rebondit_correction", "livret_splat_enquete_rebondit_correction_lettre"]) {
-    const f22 = p(s, 4);
-    assert.ok((f22.match(/PAS DE ?TOTAL/g) || []).length === 4, `${s}, fiche 22 : « PAS DE TOTAL » sur les quatre cartes`);
-    assert.doesNotMatch(f22, /TOTAL ?\?/, `${s}, fiche 22 : plus de « TOTAL ? »`);
+    const f22 = p(s, 4), f23 = p(s, 5);
+    for (const [n, f] of [[22, f22], [23, f23]]) {
+      assert.doesNotMatch(f, /TOTAL/, `${s}, fiche ${n} : aucune case du total`);
+      assert.doesNotMatch(f, /PAS DE/, `${s}, fiche ${n} : plus de « PAS DE TOTAL »`);
+    }
+    /* les quatre cartes sont bien là : deux phrases chacune sur l'énoncé, un « Je vérifie » sur le corrigé */
+    if (s.includes("correction")) assert.equal((f22.match(/Je vérifie/g) || []).length, 4, `${s}, fiche 22 : quatre cartes`);
+    else assert.equal((f22.match(/Sous la tache/g) || []).length, 8, `${s}, fiche 22 : quatre cartes`);
+    /* fiche 24 : ses cartes avec total (taches répétées) gardent leur case */
+    assert.equal((p(s, 6).match(/TOTAL/g) || []).length, 2, `${s}, fiche 24 : les deux cartes avec total gardent leur case`);
   }
   const f22 = p("livret_splat_enquete_rebondit_correction", 4);
   assert.match(f22, souple("Je vérifie : orange = bleue + 12 : 24 = 12 + 12 ✓"));
   assert.doesNotMatch(f22, souple("orange = 2 × bleue :"), "le rapport ne se vérifie plus");
-  // le dos de la partie 3 : l'exemple corrigé et la carte « À toi ! » sont des cartes sans total
-  assert.equal((p("livret_splat_enquete_rebondit", 7).match(/PAS DE ?TOTAL/g) || []).length, 2, "dos : « PAS DE TOTAL » sur les deux cartes");
+  // le dos de la partie 3 : l'exemple corrigé et la carte « À toi ! » sont des cartes sans total, sans case
+  for (const s of ["livret_splat_enquete_rebondit", "livret_splat_enquete_rebondit_correction"]) {
+    const d = p(s, 7);
+    assert.match(d, /Un exemple corrigé/); assert.match(d, /À toi/);
+    assert.doesNotMatch(d, /TOTAL|PAS DE/, `${s}, dos : pas de case sur les deux cartes`);
+  }
 });
 
 test("la suite du voyage : partie 1 → 2 → 3 → monde 4, et le deuxième tour de même", () => {
