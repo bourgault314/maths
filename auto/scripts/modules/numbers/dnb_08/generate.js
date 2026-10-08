@@ -239,6 +239,8 @@
         if(missing.length) distractorFeedback[key]=`${fr(value)} est juste, mais il fallait aussi cocher ${andList(missing)}.`;
         return;
       }
+      // Le piège expliqué par la remarque n'a pas de seconde phrase identique.
+      if(value===trapValue) return;
       distractorFeedback[key]=isUnitCriterion(divisor)
         ?`Le chiffre des unités de ${fr(value)} est ${unitOf(value)}${NBSP}: pas divisible par ${divisor}.`
         :`${fr(value)}${NBSP}: ${sumText(value)} = ${digitSum(value)}, pas ${tableWord(divisor)}.`;
