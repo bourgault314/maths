@@ -5082,7 +5082,7 @@ const LEVEL_DNB_QUESTIONS={
   dnb_02:[1,3,7,8,9,10,11,13,14,15,16,17,18],
   // dnb_03 : les types 3, 5 et 6 (même dénominateur ou même numérateur)
   // restent un échauffement de 5e-4e ; le niveau DNB garde les formes du brevet.
-  dnb_03:[1,2,4,7,8,9,10,11],
+  dnb_03:[1,2,4,7,8,9,10,11,12],
   dnb_10:[1,2,3,4,6,7,8,9,10,11],
   dnb_12:[1,2,3,4,5,6,7,8,9,15,16,17],
   // dnb_28 : deux épreuves (type 7) jamais posées dans les automatismes 2026.

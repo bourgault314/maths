@@ -3883,7 +3883,7 @@ function interactiveSpecForInstance(inst,correctionHtml){
     const combinations=isPairedFraction?acceptedCombinations:splitFractionCombinations;
     const display=isPairedFraction?rawAnswers.join('/'):(rawAnswers[0]||'');
     const fractionKind=inst.fractionOps&&inst.fractionOps.kind;
-    const equivalentFraction=(moduleId==='dnb_03'&&['add_same_den','subtract_same_den','add_multiple_den'].includes(fractionKind))
+    const equivalentFraction=(moduleId==='dnb_03'&&inst.module03&&inst.module03.fractionPolicy==='equivalent')
       ||(moduleId==='dnb_03b'&&fractionKind==='multiply')
       ||moduleId==='dnb_28'||moduleId==='dnb_29'
       ||(moduleId==='dnb_01'&&inst.module01&&inst.module01.fractionPolicy==='equivalent');

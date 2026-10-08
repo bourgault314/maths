@@ -47,9 +47,10 @@ MATHSGO_PEDAGOGY.registerModule('dnb_03',{
     {id:'additionner-meme-denominateur',label:'Additionner des fractions de même dénominateur',questions:[5],response:'numeric',visual:{policy:'none'},helpSections:['same-parts','operate-numerators','reduce']},
     {id:'soustraire-meme-denominateur',label:'Soustraire des fractions de même dénominateur',questions:[6],response:'numeric',visual:{policy:'none'},helpSections:['same-parts','operate-numerators','reduce']},
     {id:'additionner-denominateurs-multiples',label:'Mettre au même dénominateur (multiple) puis calculer',questions:[7],response:'numeric',visual:{policy:'optional',component:'arithmetic.fraction-wall'},helpSections:['common-denominator','operate-numerators','reduce']},
-    {id:'somme-denominateurs-premiers-entre-eux',label:'Somme ou différence, dénominateurs 3 et 4, 4 et 5… : fraction irréductible',questions:[8],response:'numeric',visual:{policy:'none'},helpSections:['common-denominator','operate-numerators','reduce']},
+    {id:'somme-denominateurs-premiers-entre-eux',label:'Somme ou différence, dénominateurs 3 et 4, 4 et 5… (consigne « Calcule » ou « fraction irréductible »)',questions:[8],response:'numeric',visual:{policy:'none'},helpSections:['common-denominator','operate-numerators','reduce']},
     {id:'somme-plus-petit-denominateur-commun',label:'Somme ou différence, dénominateurs 4 et 6, 6 et 8… : fraction irréductible',questions:[9],response:'numeric',visual:{policy:'none'},helpSections:['common-denominator','operate-numerators','reduce']},
     {id:'qcm-somme-de-fractions',label:'QCM : à quoi est égale une somme de fractions',questions:[10],response:'qcm-one',visual:{policy:'none'},helpSections:['common-denominator','operate-numerators']},
-    {id:'ranger-decimaux-et-fractions',label:'Ranger des décimaux et des fractions dans l’ordre croissant',questions:[11],response:'qcm-one',visual:{policy:'none'},helpSections:['check-value']}
+    {id:'ranger-decimaux-et-fractions',label:'Ranger des décimaux et des fractions dans l’ordre croissant',questions:[11],response:'qcm-one',visual:{policy:'none'},helpSections:['check-value']},
+    {id:'comparer-deux-fractions',label:'Comparer deux fractions de dénominateurs différents (<, = ou >)',questions:[12],response:'qcm-one',visual:{policy:'none'},helpSections:['common-denominator','same-parts']}
   ]
 });

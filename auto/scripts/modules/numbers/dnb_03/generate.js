@@ -282,10 +282,17 @@
 
   // ---------------------------------------------------------------------------
   // Types 8 et 9 — dénominateurs différents, résultat irréductible (sujets 2026-2027).
+  // Type 8 : deux consignes du brevet, tirées une fois sur deux.
+  //  - « Calcule » (Amérique du Nord 2026 : 2/3 + 3/4) : toute fraction égale est juste ;
+  //  - « … sous forme de fraction irréductible » (sujet de référence 2027 n° 1 : 3/5 − 1/4).
+  // Avec deux dénominateurs premiers entre eux et deux fractions irréductibles,
+  // le résultat sur d1 × d2 est toujours irréductible : seule une fraction égale
+  // écrite avec un plus grand dénominateur (34/24 pour 17/12) est refusée.
   const COPRIME_PAIRS=[[2,3],[2,5],[2,7],[3,4],[3,5],[3,7],[4,5],[4,7],[5,7]];
   const SIMPLE_LCM_PAIRS=[[4,6],[6,8],[6,9],[4,10],[6,10],[8,12],[10,15]];
   function differentDenominators(ctx,lcmPairs){
     const {randomInt,pick}=ctx;
+    const irreducible=lcmPairs||randomInt(0,1)===1;
     const data=retry(()=>{
       const pair=pick(lcmPairs?SIMPLE_LCM_PAIRS:COPRIME_PAIRS);
       const swap=randomInt(0,1)===1;
@@ -306,29 +313,99 @@
     const conversion=M(F(n1,d1)+' = '+F(n1+' \\times '+k1,d1+' \\times '+k1)+' = '+F(n1*k1,common))
       +' et '+M(F(n2,d2)+' = '+F(n2+' \\times '+k2,d2+' \\times '+k2)+' = '+F(n2*k2,common));
     const last=expression+' = '+F(n1*k1,common)+sp+F(n2*k2,common)+' = '+F(raw,common)+(result.den!==common?' = '+F(result.num,result.den):'');
-    const first=lcmPairs
-      ?'Dénominateur commun : '+common+' est dans la table de '+d1+' et dans la table de '+d2+' (plus simple que '+d1+' × '+d2+' = '+(d1*d2)+').'
-      :'Dénominateur commun : '+common+' est dans la table de '+d1+' et dans la table de '+d2+'.';
+    const first='Dénominateur commun : '+common+' est dans la table de '+d1+' et dans la table de '+d2+'.';
     let note;
     if(lcmPairs){
       const product=d1*d2,rawProduct=op==='+'?n1*d2+n2*d1:n1*d2-n2*d1;
-      note='Avec '+product+' comme dénominateur, tu trouves '+FM(rawProduct,product)+' : c’est égal, mais il faut encore simplifier.';
+      note='Avec '+product+' = '+d1+' × '+d2+' comme dénominateur, tu trouves '+FM(rawProduct,product)+' : c’est égal, mais pas encore irréductible.';
     }else{
+      // Le piège mesuré par la DEPP en début de 2de : 4/5 − 1/3 = 3/2 (23 % des élèves).
       const wrongNum=op==='+'?n1+n2:n1-n2,wrongDen=op==='+'?d1+d2:d1-d2;
+      const verb=op==='+'?'on n’additionne pas':'on ne soustrait pas';
       note=(wrongNum>0&&wrongDen>1)
-        ?'Attention : on ne calcule pas « en haut et en bas ». '+M(expression)+' ne fait pas '+FM(wrongNum,wrongDen)+'.'
-        :'Attention : on ne calcule pas « en haut et en bas » : il faut d’abord des parts de même taille.';
+        ?M(expression)+' ne fait pas '+FM(wrongNum,wrongDen)+' : '+verb+' « en haut et en bas ».'
+        :'Attention, '+verb+' « en haut et en bas » : il faut d’abord des parts de même taille.';
     }
     const bigger=Math.max(d1,d2),smaller=Math.min(d1,d2);
     const aide=lcmPairs
       ?['Cherche le plus petit nombre qui est dans la table de '+d1+' et dans la table de '+d2+'.','Récite la table de '+bigger+' : '+bigger+', '+(2*bigger)+', '+(3*bigger)+'… lequel est aussi dans la table de '+smaller+' ?']
       :['Cherche un nombre qui est à la fois dans la table de '+d1+' et dans la table de '+d2+'.','Écris '+FM(n1,d1)+' avec ce dénominateur : multiplie le numérateur et le dénominateur par le même nombre.'];
     return {
-      kind:lcmPairs?'add_lcm_irreducible':'add_coprime_irreducible',op,
-      prompt:'Calcule et donne le résultat sous forme de fraction irréductible.',
+      kind:lcmPairs?'add_lcm_irreducible':(irreducible?'add_coprime_irreducible':'add_coprime'),op,
+      fractionPolicy:irreducible?'exact':'equivalent',
+      prompt:irreducible
+        ?'Calcule et donne le résultat sous forme de fraction irréductible.'
+        :(op==='+'?'Calcule cette somme.':'Calcule cette différence.'),
       expression,result,
       steps:[first,conversion,M(last)],
       note,aide,aideHtml:''
+    };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Type 12 — comparer deux fractions sans numérateur ni dénominateur commun :
+  // « Complète par <, = ou > » (réponse courte du brevet 2027 : 2/3 < 3/4).
+  const SIGNS=['<','=','>'];
+  const signHtml=sign=>sign==='<'?'&lt;':(sign==='>'?'&gt;':'=');
+  function compareTwo(ctx){
+    const {randomInt,pick}=ctx;
+    const equal=randomInt(1,6)===1;
+    const data=retry(()=>{
+      let left,right;
+      if(equal){
+        const d=pick([2,3,4,5,6]),n=randomInt(1,d-1),k=pick([2,3,4]);
+        if(gcd(n,d)!==1||d*k>24) return null;
+        const base={num:n,den:d},big={num:n*k,den:d*k};
+        [left,right]=randomInt(0,1)?[base,big]:[big,base];
+      }else{
+        const dens=[2,3,4,5,6,7,8,9,10,12];
+        const d1=pick(dens),d2=pick(dens);
+        if(d1===d2||lcm(d1,d2)>36) return null;
+        const n1=randomInt(1,d1-1),n2=randomInt(1,d2-1);
+        if(n1===n2||gcd(n1,d1)!==1||gcd(n2,d2)!==1) return null;
+        const gap=Math.abs(n1/d1-n2/d2);
+        if(gap<1e-9||gap>0.25) return null;
+        left={num:n1,den:d1};right={num:n2,den:d2};
+      }
+      return {left,right};
+    });
+    const {left,right}=data;
+    const common=lcm(left.den,right.den);
+    const ln=left.num*common/left.den,rn=right.num*common/right.den;
+    const sign=ln<rn?'<':(ln>rn?'>':'=');
+    const write=f=>f.den===common?FM(f.num,f.den):M(F(f.num,f.den)+' = '+F(f.num*common/f.den,common));
+    const conversions=[left,right].filter(f=>f.den!==common);
+    const firstLine='Même dénominateur '+common+' : '+conversions.map(write).join(' et ')+'.';
+    const steps=sign==='='
+      ?[firstLine,'Donc '+FM(left.num,left.den)+' = '+FM(right.num,right.den)+'.']
+      :[firstLine,ln+' '+signHtml(sign)+' '+rn+', donc '+FM(left.num,left.den)+' '+signHtml(sign)+' '+FM(right.num,right.den)+'.'];
+    // Le piège : le plus grand numérateur n'est pas toujours la plus grande fraction (5/6 et 7/9).
+    const numeratorSign=left.num<right.num?'<':'>';
+    const feedback={};
+    SIGNS.forEach((s,index)=>{
+      if(s===sign) return;
+      let text;
+      if(sign==='=') text='Avec le dénominateur '+common+', les deux fractions s’écrivent '+FM(ln,common)+' : elles sont égales.';
+      else if(s==='=') text='Elles ne sont pas égales : '+FM(ln,common)+' et '+FM(rn,common)+'.';
+      else if(s===numeratorSign) text='Tu as comparé les numérateurs seuls : les parts n’ont pas la même taille.';
+      else text='Le signe est à l’envers : '+FM(ln,common)+' '+signHtml(sign)+' '+FM(rn,common)+'.';
+      feedback[String(index+1)]=text;
+    });
+    const correctIndex=String(SIGNS.indexOf(sign)+1);
+    const bigger=Math.max(left.den,right.den),smaller=Math.min(left.den,right.den);
+    return {
+      kind:'compare_two',
+      prompt:'Complète par <span style="white-space:nowrap">&lt;, = ou &gt;</span>.',
+      compare:{left,right,sign},
+      qcm:{options:SIGNS.map(s=>({html:signHtml(s),latex:s,correct:s===sign})),correctIndex,letter:String.fromCharCode(64+Number(correctIndex)),distractorFeedback:feedback,signs:true},
+      steps,note:'',
+      aide:[
+        'Écris les deux fractions avec le même dénominateur, puis compare les numérateurs.',
+        bigger%smaller===0
+          ?common+' est dans la table de '+smaller+'.'
+          :'Cherche un nombre qui est dans la table de '+left.den+' et dans la table de '+right.den+'.'
+      ],
+      aideHtml:''
     };
   }
 
@@ -433,6 +510,7 @@
   }
 
   // ---------------------------------------------------------------------------
+  const EQUIVALENT_KINDS=['add_same_den','subtract_same_den','add_multiple_den','add_coprime'];
   function createInstance(ctx){
     const question=ctx.question,module=ctx.module;
     const kind=String(question&&question.options&&question.options.fraction_ops_kind||'');
@@ -448,24 +526,27 @@
     else if(kind==='subtract_same_den') d=sameDenominator(ctx,MINUS);
     else if(kind==='add_multiple_den') d=multipleDenominator(ctx);
     else if(kind==='add_coprime_irreducible') d=differentDenominators(ctx,false);
+    else if(kind==='compare_two') d=compareTwo(ctx);
     else if(kind==='add_lcm_irreducible') d=differentDenominators(ctx,true);
     else if(kind==='sum_qcm') d=sumQcm(ctx);
     else if(kind==='order_numbers') d=orderNumbers(ctx);
     else throw new Error('dnb_03 : type de question inconnu ('+kind+').');
 
+    // Politique de la réponse (lue par la coque, 03-slideshow.js) : une consigne
+    // « Calcule » accepte toute fraction égale (comme au brevet) ; une consigne
+    // « irréductible » exige la forme irréductible.
+    if(!d.qcm&&!d.fractionPolicy) d.fractionPolicy=EQUIVALENT_KINDS.includes(d.kind)?'equivalent':'exact';
     const answers=d.qcm?[d.qcm.correctIndex]:[String(d.result.num),String(d.result.den)];
     const instance={
       module,q:question,scope:{},answers,
       rawStatement:d.prompt,rawFooter:'',hasSvg:!!d.aideHtml,
-      // fractionOps.kind est lu par la coque pour la politique d'équivalence
-      // des fractions (03-slideshow.js) : les types « Calcule » acceptent une
-      // fraction égale, les types « irréductible » exigent la forme irréductible.
       fractionOps:{kind:d.kind},
       module03:d,
       correctionSteps:d.steps.slice(0,3),
       aideSteps:d.aide.slice(0,2)
     };
-    if(d.note) instance.correctionNote=d.note;
+    // Dans un QCM, la phrase du piège choisi (distractorFeedback) tient lieu de remarque.
+    if(d.note&&!d.qcm) instance.correctionNote=d.note;
     if(d.aideHtml) instance.aideHtml=d.aideHtml;
     if(d.qcm) instance.distractorFeedback=d.qcm.distractorFeedback;
     return instance;

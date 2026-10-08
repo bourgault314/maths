@@ -71,7 +71,7 @@ const MODULE_DNB_03 = {
     },
     {
       "n": 8,
-      "statement": "Calcule et donne le résultat sous forme de fraction irréductible (dénominateurs 3 et 4, 4 et 5…).",
+      "statement": "Calcule (dénominateurs 3 et 4, 4 et 5…), avec ou sans « fraction irréductible » dans la consigne.",
       "answer": "[\"p\",\"q\"]",
       "options": {
         "fraction_ops_kind": "add_coprime_irreducible"
@@ -99,6 +99,14 @@ const MODULE_DNB_03 = {
       "answer": "[\"1\"]",
       "options": {
         "fraction_ops_kind": "order_numbers"
+      }
+    },
+    {
+      "n": 12,
+      "statement": "Complète par <, = ou > (deux fractions de dénominateurs différents).",
+      "answer": "[\"1\"]",
+      "options": {
+        "fraction_ops_kind": "compare_two"
       }
     }
   ]
