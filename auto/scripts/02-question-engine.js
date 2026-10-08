@@ -76,6 +76,67 @@ function escapeHtml(s){
   return String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 }
 
+/* --- Typographie commune (lot T) : début ---
+   Une seule passe, appliquée au TEXTE affiché, jamais aux balises :
+   - vrai signe moins (U+2212) pour le signe d'un nombre et la soustraction
+     entre nombres ou lettres (graduations et coordonnées comprises) ;
+   - espace fine insécable avant % (17 %) ;
+   - jamais de « ^ » brut : x^2 devient x², 90^° devient 90° ;
+   - apostrophe typographique dans les mots (d’un), sans toucher aux primes
+     des figures (A'B') ;
+   - espace insécable avant ? ! ; : pour qu'ils ne partent pas seuls à la ligne.
+   Les attributs, les classes, les identifiants, les URL, le contenu des
+   <script> et <style> ne sont jamais modifiés. Aucune expression rationnelle
+   avec « lookbehind » : elle casserait le moteur sur les vieux iPhone. */
+const TYPO_EXPOSANTS={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','-':'⁻','−':'⁻'};
+const TYPO_ESPACE='(?:[ \\t\\n\\r\\u00a0\\u202f]|&nbsp;|&#160;)';
+const TYPO_MOINS_SIGNE=new RegExp('(^|[ \\t\\n\\r(\\[{;=<>≤≥×÷+−:|/\\u00a0\\u202f]|&nbsp;|&#160;|&lt;|&gt;)-(?=[0-9]|[𝑥𝑦]|[a-zA-Z](?![a-zA-ZÀ-ÖØ-öø-ÿ]))','gu');
+const TYPO_MOINS_ENTRE_NOMBRES=new RegExp('([0-9)\\]²³°%𝑥𝑦])('+TYPO_ESPACE+'+)-(?='+TYPO_ESPACE+'+(?:[0-9(𝑥𝑦]|[a-zA-Z](?![a-zA-ZÀ-ÖØ-öø-ÿ])))','gu');
+const TYPO_MOINS_APRES_LETTRE=new RegExp('(^|[^A-Za-zÀ-ÖØ-öø-ÿ])([a-zA-Z])('+TYPO_ESPACE+'+)-(?='+TYPO_ESPACE+'+(?:[0-9(𝑥𝑦]|[a-zA-Z](?![a-zA-ZÀ-ÖØ-öø-ÿ])))','gu');
+function typographieTexte(text){
+  let s=String(text ?? '');
+  if(!s) return s;
+  // 1. Exposants écrits à la main.
+  s=s.replace(/\^\{?\s*(?:°|\\circ)\s*\}?/g,'°')
+     .replace(/\^\{([−-]?[0-9]+)\}|\^([−-]?[0-9]+)/g,(m,a,b)=>Array.from(a||b).map(c=>TYPO_EXPOSANTS[c]||c).join(''));
+  // 2. Signe moins : signe d'un nombre, puis soustraction (avec ou sans espaces).
+  s=s.replace(TYPO_MOINS_SIGNE,'$1−')
+     .replace(TYPO_MOINS_ENTRE_NOMBRES,'$1$2−')
+     .replace(TYPO_MOINS_APRES_LETTRE,'$1$2$3−')
+     .replace(/([0-9)\]²³𝑥𝑦])-(?=[0-9(𝑥𝑦]|[a-z](?![a-zA-ZÀ-ÖØ-öø-ÿ]))/gu,'$1−')
+     .replace(/(^|[^A-Za-zÀ-ÖØ-öø-ÿ])([a-z])-(?=[0-9(])/g,'$1$2−');
+  // 3. Pourcentage : 17 %, jamais 17%.
+  s=s.replace(new RegExp('([0-9])'+TYPO_ESPACE+'*%','g'),'$1 %');
+  // 4. Apostrophe dans les mots (d’un, l’aire, qu’il), pas les primes (A'B').
+  s=s.replace(/([A-Za-zÀ-ÖØ-öø-ÿ])(?:'|&#39;|&#x27;)(?=[a-zà-öø-ÿ])/g,'$1’');
+  // 5. Ponctuation haute : pas de « ? » seul en début de ligne.
+  s=s.replace(new RegExp('([^ \\t\\n\\r])'+TYPO_ESPACE+'+([?!;])','g'),'$1 $2')
+     .replace(new RegExp('([^ \\t\\n\\r])'+TYPO_ESPACE+'+(:)(?=[ \\t\\n\\r]|$|&nbsp;|<)','g'),'$1 $2');
+  return s;
+}
+function typographieHtml(html){
+  const source=String(html ?? '');
+  if(!source) return source;
+  // Découpe en balises et en texte ; seul le texte est retouché.
+  const parts=source.split(/(<!-[-][\s\S]*?-->|<[^>]*>)/);
+  let skip=null;
+  for(let index=0;index<parts.length;index++){
+    const part=parts[index];
+    if(!part) continue;
+    if(part.charAt(0)==='<'){
+      const tag=part.match(/^<\/?\s*([a-zA-Z][\w-]*)/);
+      const name=tag?tag[1].toLowerCase():'';
+      if(skip){ if(/^<\//.test(part)&&name===skip) skip=null; continue; }
+      if(!/^<\//.test(part)&&['script','style','textarea','code','pre'].includes(name)&&!/\/>$/.test(part)) skip=name;
+      continue;
+    }
+    if(skip) continue;
+    parts[index]=typographieTexte(part);
+  }
+  return parts.join('');
+}
+/* --- Typographie commune (lot T) : fin --- */
+
 function latexCore(s){
   s=String(s ?? '');
 
@@ -95,6 +156,10 @@ function latexCore(s){
   s=s.replace(/\\text\{([^{}]*)\}/g,'<span class="math-text">$1</span>')
      .replace(/\\mathcal\{([^{}]+)\}/g,'<span class="mathcal">$1</span>')
      .replace(/\\widehat\{([^{}]+)\}/g,'<span class="widehat">$1</span>');
+
+  // Degrés écrits en exposant : 90^\circ, 90^{\circ} et 90^° deviennent 90°
+  // (sinon il restait « 90^° » à l'écran, dnb_37).
+  s=s.replace(/\^\{?\s*(?:\\circ|°)\s*\}?/g,'°');
 
   // Fonctions, symboles et espacements présents dans les 37 modules.
   s=s.replace(/\\cos/g,'cos')
@@ -127,15 +192,33 @@ function latexCore(s){
   return s;
 }
 
+const LATEX_SANS_DELIMITEUR=/\\(?:d?frac|text|mathcal|widehat|cos|sin|tan|times|div|quad|qquad|sqrt|pi|in|circ)|\\%|\^[{A-Za-z0-9°\\-]|_[{A-Za-z0-9]/;
+// LaTeX sans délimiteur dans un texte qui contient aussi des balises (une
+// figure <svg>) : seuls les morceaux de TEXTE hors des <svg> sont traduits ; les
+// entités HTML (&nbsp;…) sont protégées, latexCore effaçant les « & ».
+function latexHorsFigures(html){
+  return String(html).split(/(<svg[\s\S]*?<\/svg>)/i).map(block=>{
+    if(/^<svg/i.test(block)||!LATEX_SANS_DELIMITEUR.test(block)) return block;
+    return block.split(/(<[^>]*>)/).map(part=>{
+      if(!part||part.charAt(0)==='<'||!LATEX_SANS_DELIMITEUR.test(part)) return part;
+      const entities=[];
+      const protectedText=part.replace(/&(#?[A-Za-z0-9]+);/g,entity=>'@@ENT'+(entities.push(entity)-1)+'@@');
+      return latexCore(protectedText).replace(/@@ENT(\d+)@@/g,(m,index)=>entities[Number(index)]);
+    }).join('');
+  }).join('');
+}
 function renderMathSegments(html){
   html=String(html ?? '');
 
   // Les blocs mathématiques explicites.
   html=html.replace(/\$\$([\s\S]*?)\$\$/g,(m,expr)=>'<span class="math-display">'+latexCore(expr)+'</span>');
 
-  // Certains choix QCM contiennent du LaTeX sans délimiteur.
-  if(!/<svg[\s>]/i.test(html) && /\\(?:d?frac|text|mathcal|widehat|cos|sin|tan|times|div|quad|qquad|sqrt|pi|in)|\\%|\^[{A-Za-z0-9-]|_[{A-Za-z0-9]/.test(html)){
-    html='<span class="math-inline">'+latexCore(html)+'</span>';
+  // Certains choix QCM contiennent du LaTeX sans délimiteur. Avec une figure
+  // <svg>, on traduit le texte autour de la figure sans toucher à la figure
+  // (avant le lot T, rien n'était traduit dès qu'une figure était présente).
+  if(LATEX_SANS_DELIMITEUR.test(html)){
+    if(/<svg[\s>]/i.test(html)) html=latexHorsFigures(html);
+    else html='<span class="math-inline">'+latexCore(html)+'</span>';
   }
   return html;
 }
@@ -210,7 +293,9 @@ function shuffledQcm(statement, answers){
     const newIndex=permutation.indexOf(oldIndex);
     return newIndex>=0 ? String(newIndex+1) : String(a);
   });
-  return {statement:prompt+'&&'+shuffled.join('&&')+'&&',answers:remapped};
+  // permutation[nouvelle place] = ancienne place : sert à retrouver la phrase
+  // « distractor_feedback » écrite pour l'ordre du gabarit (lot T).
+  return {statement:prompt+'&&'+shuffled.join('&&')+'&&',answers:remapped,permutation};
 }
 
 function shuffleLocal(arr){
@@ -287,23 +372,27 @@ function hasRepeatedNature(groups){
 }
 
 /*
-Les six modèles sont strictement équiprobables dans le sac du module :
-1. une seule nature, sans annulation ;
-2. une seule nature, avec annulation ;
-3. plusieurs natures, sans annulation ;
-4. plusieurs natures, avec annulation ;
-5. lecture de tuiles déjà regroupées.
-6. expression déjà réduite, sans termes semblables à regrouper.
+Module dnb_10 — Simplifier des expressions littérales (refonte d’octobre 2026).
+Types (numéros stables, le 5 « lire des tuiles » est retiré) :
+1. une seule famille de termes en lettre, même signe (saisie ou QCM) ;
+2. une seule famille de termes en lettre, signes mélangés (saisie ou QCM) ;
+3. plusieurs familles, chaque famille garde un seul signe (saisie) ;
+4. plusieurs familles avec changements de signe, 5 termes au plus (saisie) ;
+6. expression déjà réduite à reconnaître (QCM seulement) ;
+7. k(mx + n) dans une somme, forme du sujet de référence 2027 (saisie) ;
+8. opposé d’une parenthèse : 7x − (3x − 5) (saisie) ;
+9. produit de deux facteurs : 3a × 2a, 4 × 5y (QCM) ;
+10. somme ou produit : 3x + 2x ou 3x × 2x (QCM) ;
+11. k(ma + n) dans une somme, en QCM avec une autre lettre (QCM).
 
-Bornes validées :
-- coefficient d’un groupe : x² <= 4, x <= 5, unité <= 5 ;
-- charge totale par signe : x² <= 6, x <= 8, unité <= 10.
+Bornes : coefficient d’un terme x² <= 4, x <= 5, nombre <= 5 ;
+charge totale par signe : x² <= 6, x <= 8, nombre <= 10.
 */
 
 function makeOneNoCancel(){
-  const type=pick(['x2','x','u']);
+  const type=pick(['x2','x']);
   for(let tries=0;tries<500;tries++){
-    const sign=pick([-1,1]);
+    const sign=pick([-1,1,1]);
     const count=RD(2,3);
     const groups=[];
     for(let i=0;i<count;i++){
@@ -315,7 +404,7 @@ function makeOneNoCancel(){
 }
 
 function makeOneCancel(){
-  const type=pick(['x2','x','u']);
+  const type=pick(['x2','x']);
   for(let tries=0;tries<700;tries++){
     const count=RD(3,4);
     const groups=[];
@@ -352,13 +441,15 @@ function makeMultiCancel(){
   for(let tries=0;tries<1000;tries++){
     const typeCount=pick([2,3]);
     const types=shuffleLocal(['x2','x','u']).slice(0,typeCount);
-    const groupCount=RD(Math.max(4,typeCount+1),6);
+    const groupCount=RD(Math.max(4,typeCount+1),5);
     const sequence=distributeGroups(types,groupCount);
     const groups=sequence.map(type=>({
       type,
       coeff:nzRand(-typeLimit(type),typeLimit(type))
     }));
-    if(hasCancellation(groups) && hasRepeatedNature(groups) && validTileLoad(groups)){
+    const sums=coeffSums(groups);
+    const allZero=!sums.x2&&!sums.x&&!sums.u;
+    if(!allZero && hasCancellation(groups) && hasRepeatedNature(groups) && validTileLoad(groups)){
       return shuffleLocal(groups);
     }
   }
@@ -370,46 +461,115 @@ function makeMultiCancel(){
   ];
 }
 
-function makeReadCoeffs(){
-  const typeCount=pick([1,2,3]);
-  const types=shuffleLocal(['x2','x','u']).slice(0,typeCount);
-  const coeffs={x2:0,x:0,u:0};
-  types.forEach(type=>{
-    coeffs[type]=nzRand(-totalLimit(type),totalLimit(type));
-  });
-  return coeffs;
-}
-
-function makeAlreadyReduced(groupCount=null){
-  const count=groupCount||pick([2,2,3]);
-  const types=shuffleLocal(['x2','x','u']).slice(0,count);
-  return shuffleLocal(types.map(type=>({type,coeff:RD(1,typeLimit(type))})));
-}
-
 function makeAlreadyReducedQcmGroups(){
-  for(let tries=0;tries<100;tries++){
-    const groups=makeAlreadyReduced(2);
+  for(let tries=0;tries<200;tries++){
+    const types=shuffleLocal(['x2','x','u']).slice(0,2);
+    const groups=types.map((type,index)=>({type,coeff:index===1&&rnd()<.3?-RD(1,typeLimit(type)):RD(1,typeLimit(type))}));
     const a=groups[0].coeff,b=groups[1].coeff;
-    if(a*b!==a+b) return groups;
+    if(a+b!==0 && Math.abs(a+b)!==1 && a*b!==a+b) return groups;
   }
-  return [{type:'u',coeff:2},{type:'x',coeff:3}];
+  return [{type:'x2',coeff:3},{type:'x',coeff:1}];
 }
 
+/* ---------- Écriture des expressions (vrai signe −, lettre italique) ---------- */
+const REDUCTION_LETTERS={x:'𝑥',a:'𝑎',y:'𝑦',t:'𝑡'};
+const REDUCTION_POWERS={0:'',1:'',2:'²',3:'³',4:'⁴'};
+function redLetter(L){ return REDUCTION_LETTERS[L]||L; }
+function redFamilyBody(type,L){ return type==='x2'?redLetter(L)+'²':(type==='x'?redLetter(L):''); }
+function redPowerBody(power,L){ return power===0?'':redLetter(L)+REDUCTION_POWERS[power]; }
+// Monôme sans son signe : 3𝑥, 𝑥², 5.
+function redMonoAbs(coeff,body){
+  const a=Math.abs(coeff);
+  if(!body) return String(a);
+  return (a===1?'':String(a))+body;
+}
+// Un terme = {sign:'+'|'−', body:'3𝑥'}.
+function redPiece(coeff,body){ return {sign:coeff<0?'−':'+',body:redMonoAbs(coeff,body)}; }
+function redPiecesText(pieces){
+  return pieces.map((p,i)=>i===0?(p.sign==='−'?'−':'')+p.body:' '+p.sign+' '+p.body).join('');
+}
+function redPiecesHtml(pieces){
+  return pieces.map((p,i)=>'<span class="reduction-term">'+(i===0?(p.sign==='−'?'−':''):' '+p.sign+' ')+p.body+'</span>').join('');
+}
+function redGroupsPieces(groups,L){ return groups.map(g=>redPiece(g.coeff,redFamilyBody(g.type,L))); }
+function redSumsGroups(sums){
+  const out=[];
+  ['x2','x','u'].forEach(type=>{ const c=sums[type]||0; if(c!==0) out.push({type,coeff:c}); });
+  return out;
+}
+function redReducedText(sums,L){
+  const groups=redSumsGroups(sums);
+  return groups.length?redPiecesText(redGroupsPieces(groups,L)):'0';
+}
+function redMonomialText(coeff,power,L){
+  if(coeff===0) return '0';
+  return (coeff<0?'−':'')+redMonoAbs(coeff,redPowerBody(power,L));
+}
+// Liste de coefficients écrite comme une somme : 1 − 3 + 4.
+function redCoeffSum(coeffs){
+  return coeffs.map((c,i)=>i===0?(c<0?'−':'')+Math.abs(c):(c<0?' − ':' + ')+Math.abs(c)).join('');
+}
+// Facteur écrit dans un produit : un négatif placé après un × prend des parenthèses.
+function redFactor(coeff,body,afterTimes){
+  const text=(coeff<0?'−':'')+redMonoAbs(coeff,body);
+  return coeff<0&&afterTimes?'('+text+')':text;
+}
+function redNumberFactor(n,afterTimes){ return n<0?(afterTimes?'(−'+Math.abs(n)+')':'−'+Math.abs(n)):String(n); }
+const REDUCTION_FAMILY_NAMES={x2:'les 𝑥²',x:'les 𝑥',u:'les nombres'};
+function redFamilyName(type,L){ return type==='u'?'les nombres':'les '+redFamilyBody(type,L); }
+
+/* ---------- Aide : expression soulignée par famille + tuiles ---------- */
+const REDUCTION_UNDERLINES={
+  x2:'text-decoration:underline solid #17384d 3px;text-underline-offset:.2em',
+  x:'text-decoration:underline dashed #17384d 3px;text-underline-offset:.2em',
+  u:'text-decoration:underline wavy #17384d 2px;text-underline-offset:.24em'
+};
+function redFamiliesAideHtml(groups,L,withTiles){
+  const terms=groups.map((g,i)=>{
+    const p=redPiece(g.coeff,redFamilyBody(g.type,L));
+    const text=i===0?(p.sign==='−'?'−':'')+p.body:p.sign+' '+p.body;
+    return '<span style="'+REDUCTION_UNDERLINES[g.type]+'">'+text+'</span>';
+  }).join(' ');
+  const present=['x2','x','u'].filter(type=>groups.some(g=>g.type===type));
+  const legendNames={x2:'trait plein : '+redFamilyName('x2',L),x:'tirets : '+redFamilyName('x',L),u:'vagues : les nombres'};
+  let html='<div class="reduction-aide">'
+    +'<div class="reduction-aide-expression" style="font-family:\'Cambria Math\',\'STIX Two Math\',\'Times New Roman\',serif;font-weight:700;font-size:1.55em;line-height:2;text-align:center">'+terms+'</div>'
+    +'<div class="reduction-aide-legend" style="text-align:center;font-size:.9em;color:#33475b">'+present.map(type=>legendNames[type]).join(' · ')+'</div>';
+  if(withTiles && L==='x' && typeof globalThis.algebraTiles==='function'){
+    const tileTerms=groups.map(g=>({kind:g.type,count:Math.abs(g.coeff),sign:g.coeff<0?-1:1}));
+    html+='<div class="reduction-aide-tiles" style="max-width:560px;margin:6px auto 0">'+globalThis.algebraTiles({title:'Chaque terme en tuiles',terms:tileTerms})+'</div>';
+  }
+  return html+'</div>';
+}
+
+/* ---------- QCM : options + phrase de diagnostic par distracteur ---------- */
+function redFinishQcm(correct,candidates,fallback){
+  const options=[{text:correct,feedback:null}];
+  candidates.forEach(c=>{ if(c && c.text!==correct && !options.some(o=>o.text===c.text) && options.length<4) options.push(c); });
+  let bump=1;
+  while(options.length<4 && bump<40){
+    const f=fallback(bump++);
+    if(f && !options.some(o=>o.text===f.text)) options.push(f);
+  }
+  const shuffled=shuffleLocal(options);
+  const correctIndex=shuffled.findIndex(o=>o.feedback===null)+1;
+  const distractorFeedback={};
+  shuffled.forEach((o,i)=>{ if(o.feedback) distractorFeedback[String(i+1)]=o.feedback; });
+  return {options:shuffled.map(o=>o.text),correctIndex:String(correctIndex),distractorFeedback};
+}
 
 function simpleQcmGroups(kind){
   const type=pick(['x','x2']);
   const lim=typeLimit(type);
-
   if(kind==='one_no_cancel'){
     for(let tries=0;tries<300;tries++){
-      const a=RD(1,lim);
-      const b=RD(1,lim);
+      const a=RD(1,lim),b=RD(1,lim);
+      if(a*b===a+b) continue;
       const groups=[{type,coeff:a},{type,coeff:b}];
       if(validTileLoad(groups)) return groups;
     }
     return [{type,coeff:2},{type,coeff:3}];
   }
-
   for(let tries=0;tries<300;tries++){
     const b=RD(1,Math.max(1,lim-1));
     const a=RD(b+1,lim);
@@ -419,140 +579,350 @@ function simpleQcmGroups(kind){
   return [{type,coeff:4},{type,coeff:-2}];
 }
 
-function qcmPowerError(coefficient,type){
-  const a=Math.abs(coefficient);
-  const sign=coefficient<0?'-':'';
-  const body=type==='x2'?'𝑥^4':'𝑥^2';
-  return sign+(a===1?'':String(a))+body;
-}
-
-function qcmSamePower(coefficient,type){
-  const sums={x2:0,x:0,u:0};
-  sums[type]=coefficient;
-  return reducedLatex(sums);
-}
-
-function qcmMonomial(coefficient,power){
-  const sign=coefficient<0?'-':'';
-  const a=Math.abs(coefficient);
-  if(power===0) return sign+String(a);
-  const body=power===1?'𝑥':'𝑥^'+power;
-  return sign+(a===1?'':String(a))+body;
-}
-
-function qcmProductError(a,b,type){
-  return qcmMonomial(a*b,type==='x2'?4:2);
-}
-
-function makeAlreadyReducedQcm(groups){
-  const powers={u:0,x:1,x2:2};
-  const correct=expressionLatex(groups);
+function makeOneFamilyQcm(groups,L){
+  const type=groups[0].type,power=type==='x2'?2:1;
   const a=groups[0].coeff,b=groups[1].coeff,sum=a+b;
-  const ordered=[...groups].sort((g1,g2)=>powers[g1.type]-powers[g2.type]);
-  const low=ordered[0].type,high=ordered[1].type;
-  const distractors=[
-    qcmSamePower(sum,high),
-    low==='u'?String(sum):qcmSamePower(sum,low),
-    qcmMonomial(a*b,powers[groups[0].type]+powers[groups[1].type])
-  ];
-  const unique=[correct];
-  distractors.forEach(option=>{if(option!==correct&&!unique.includes(option)) unique.push(option);});
-  let bump=1;
-  while(unique.length<4){
-    const fallback=qcmSamePower(sum+bump,high);
-    if(!unique.includes(fallback)) unique.push(fallback);
-    bump++;
+  const fam=redFamilyBody(type,L);
+  const correct=redMonomialText(sum,power,L);
+  const candidates=[];
+  if(b<0){
+    candidates.push({text:redMonomialText(Math.abs(a)+Math.abs(b),power,L),feedback:'Tu as additionné '+Math.abs(a)+' et '+Math.abs(b)+' : le signe − fait partie du terme −'+redMonoAbs(b,fam)+'.'});
   }
-  const options=shuffleLocal(unique.slice(0,4));
-  return {options,correctIndex:String(options.indexOf(correct)+1)};
+  candidates.push({text:redMonomialText(sum,power*2,L),feedback:'On additionne des '+fam+' : le résultat reste en '+fam+', l’exposant ne change pas.'});
+  candidates.push({text:redMonomialText(a*b,power*2,L),feedback:'Tu as multiplié les deux termes. Ici, c’est une '+(b<0?'soustraction':'addition')+'.'});
+  if(b>0) candidates.push({text:redMonomialText(a*b,power,L),feedback:'Tu as multiplié '+a+' et '+b+' : il faut les additionner.'});
+  return redFinishQcm(correct,candidates,bump=>({text:redMonomialText(sum+bump,power,L),feedback:'Recompte les coefficients : '+redCoeffSum([a,b])+' = '+sum+'.'}));
 }
 
-function makeSimpleReductionQcm(groups){
-  const type=groups[0].type;
-  const a=groups[0].coeff;
-  const b=groups[1].coeff;
-  const isAddition=(a>0 && b>0);
+function makeAlreadyReducedQcm(groups,L){
+  const powers={u:0,x:1,x2:2};
+  const reordered=[groups[1],groups[0]];
+  const correct=redPiecesText(redGroupsPieces(reordered,L));
+  const a=groups[0].coeff,b=groups[1].coeff,sum=a+b;
+  const ordered=[...groups].sort((g1,g2)=>powers[g2.type]-powers[g1.type]);
+  const high=ordered[0].type,low=ordered[1].type;
+  const highBody=redFamilyBody(high,L),lowBody=redFamilyBody(low,L);
+  const diff='Tu as additionné des termes de familles différentes : '+(low==='u'?'un nombre':'des '+lowBody)+' et des '+highBody+' ne se regroupent pas.';
+  const candidates=[
+    {text:redMonomialText(sum,powers[high],L),feedback:diff},
+    {text:redMonomialText(sum,powers[low],L),feedback:diff},
+    {text:redMonomialText(a*b,powers[high]+powers[low],L),feedback:'Tu as multiplié les deux termes, mais c’est une '+(b<0?'soustraction':'addition')+'.'}
+  ];
+  return redFinishQcm(correct,candidates,bump=>({text:redMonomialText(sum+bump,powers[high],L),feedback:diff}));
+}
 
-  const correctCoeff=a+b;
-  const correct=qcmSamePower(correctCoeff,type);
-  let distractors=[];
-
-  if(isAddition){
-    distractors=[
-      qcmPowerError(correctCoeff,type),
-      qcmSamePower(a*b,type),
-      qcmProductError(a,b,type)
-    ];
-  } else {
-    const positiveA=Math.abs(a);
-    const positiveB=Math.abs(b);
-    distractors=[
-      qcmSamePower(positiveA+positiveB,type),
-      qcmPowerError(correctCoeff,type),
-      qcmProductError(a,b,type)
-    ];
-  }
-
-  const unique=[correct];
-  distractors.forEach(option=>{
-    if(option!==correct && !unique.includes(option)) unique.push(option);
-  });
-
-  let bump=1;
-  while(unique.length<4){
-    const fallback=qcmSamePower(correctCoeff+bump,type);
-    if(!unique.includes(fallback)) unique.push(fallback);
-    bump++;
-  }
-
-  const options=shuffleLocal(unique.slice(0,4));
+/* ---------- Corrections rédigées ---------- */
+function redFinalStrong(text){ return '<strong>'+text+'</strong>'; }
+function redOneFamilyCorrection(groups,L){
+  const type=groups[0].type,body=redFamilyBody(type,L);
+  const sum=groups.reduce((s,g)=>s+g.coeff,0);
+  const expr=redPiecesText(redGroupsPieces(groups,L));
+  const result=redMonomialText(sum,type==='x2'?2:1,L);
+  let line=expr+' = ('+redCoeffSum(groups.map(g=>g.coeff))+')'+body;
+  if(sum===0) line+=' = 0'+body+' = '+redFinalStrong('0');
+  else if(Math.abs(sum)===1) line+=' = '+(sum<0?'−':'')+'1'+body+' = '+redFinalStrong(result);
+  else line+=' = '+redFinalStrong(result);
   return {
-    options,
-    correctIndex:String(options.indexOf(correct)+1)
+    steps:['Tous les termes sont des '+body+' : on additionne leurs coefficients, avec leur signe.',line],
+    note:sum===0?'Les termes s’annulent : il reste 0.':(Math.abs(sum)===1?'On écrit '+(sum<0?'−':'')+redLetter(L)+(type==='x2'?'²':'')+' et non '+(sum<0?'−':'')+'1'+body+'.':null)
+  };
+}
+function redMultiCorrection(groups,L){
+  const sums=coeffSums(groups);
+  const expr=redPiecesText(redGroupsPieces(groups,L));
+  const ordered=[];
+  ['x2','x','u'].forEach(type=>groups.filter(g=>g.type===type).forEach(g=>ordered.push(g)));
+  const regrouped=redPiecesText(redGroupsPieces(ordered,L));
+  const familyParts=[];
+  const vanished=[];
+  ['x2','x','u'].forEach(type=>{
+    const members=groups.filter(g=>g.type===type);
+    if(!members.length) return;
+    if(members.length===1){ familyParts.push(redPiece(members[0].coeff,redFamilyBody(type,L))); return; }
+    if(sums[type]===0) vanished.push(type);
+    familyParts.push({sign:'+',body:'('+redCoeffSum(members.map(g=>g.coeff))+')'+redFamilyBody(type,L),plainFirst:true});
+  });
+  const familyText=familyParts.map((p,i)=>i===0?(p.plainFirst?'':(p.sign==='−'?'−':''))+p.body:' '+p.sign+' '+p.body).join('');
+  const result=redReducedText(sums,L);
+  const present=['x2','x','u'].filter(type=>groups.some(g=>g.type===type)).map(type=>redFamilyName(type,L));
+  const steps=regrouped===expr
+    ?['On regroupe chaque famille ('+present.join(', ')+') ; chaque terme garde son signe.',expr+' = '+familyText+' = '+redFinalStrong(result)]
+    :['On range par famille ('+present.join(', ')+') ; chaque terme garde son signe.',expr+' = '+regrouped,'= '+familyText+' = '+redFinalStrong(result)];
+  return {
+    steps,
+    note:vanished.length?vanished.map(type=>'('+redCoeffSum(groups.filter(g=>g.type===type).map(g=>g.coeff))+')'+redFamilyBody(type,L)+' = 0 : '+redFamilyName(type,L)+' disparaissent.').join(' '):null
   };
 }
 
-const MODULE01_OFFICIAL=[
-  {num:1,den:2,dec:'0,5'},
-  {num:1,den:4,dec:'0,25'},
-  {num:3,den:4,dec:'0,75'},
-  {num:3,den:2,dec:'1,5'},
-  {num:4,den:2,dec:'2'},
-  {num:5,den:2,dec:'2,5'},
-  {num:1,den:10,dec:'0,1'},
-  {num:100,den:100,dec:'1'},
-  {num:2,den:1,dec:'2'},
-  {num:3,den:1,dec:'3'},
-  {num:4,den:1,dec:'4'}
+/* ---------- Types 7 et 11 : k(mL + n) dans une somme ---------- */
+function makeParenFactorData(L){
+  for(let tries=0;tries<500;tries++){
+    const p=rnd()<.75?RD(1,6):-RD(1,6);
+    const q=nzRand(-9,9);
+    const k=rnd()<.65?-RD(2,5):RD(2,5);
+    const m=RD(1,5);
+    const n=rnd()<.65?RD(1,6):-RD(1,6);
+    const cx=p+k*m,cu=q+k*n;
+    if(cx===0||cu===0) continue;
+    if(Math.abs(k)===Math.abs(n)) continue;
+    if(Math.abs(cx)>30||Math.abs(cu)>40) continue;
+    const parenFirst=rnd()<.25;
+    return {p,q,k,m,n,cx,cu,parenFirst};
+  }
+  return {p:3,q:-1,k:-4,m:2,n:3,cx:-5,cu:-13,parenFirst:false};
+}
+function parenFactorPieces(d,L){
+  const inner=redPiecesText([redPiece(d.m,redLetter(L)),redPiece(d.n,'')]);
+  const parenPiece={sign:d.k<0?'−':'+',body:Math.abs(d.k)+'('+inner+')'};
+  const outside=[redPiece(d.p,redLetter(L)),redPiece(d.q,'')];
+  return d.parenFirst?[parenPiece,...outside]:[...outside,parenPiece];
+}
+function parenFactorWork(d,L){
+  const pieces=parenFactorPieces(d,L);
+  const expr=redPiecesText(pieces);
+  const inner=redPiecesText([redPiece(d.m,redLetter(L)),redPiece(d.n,'')]);
+  const kText=(d.k<0?'−':'')+Math.abs(d.k);
+  const developed=redPiecesText([redPiece(d.k*d.m,redLetter(L)),redPiece(d.k*d.n,'')]);
+  const devPieces=[redPiece(d.k*d.m,redLetter(L)),redPiece(d.k*d.n,'')];
+  const outside=[redPiece(d.p,redLetter(L)),redPiece(d.q,'')];
+  const after=redPiecesText(d.parenFirst?[...devPieces,...outside]:[...outside,...devPieces]);
+  const xs=d.parenFirst?[d.k*d.m,d.p]:[d.p,d.k*d.m];
+  const us=d.parenFirst?[d.k*d.n,d.q]:[d.q,d.k*d.n];
+  const result=redReducedText({x2:0,x:d.cx,u:d.cu},L);
+  const steps=[
+    'On développe : '+kText+'('+inner+') = '+developed+'. Le '+kText+' multiplie les deux termes.',
+    expr+' = '+after,
+    '= ('+redCoeffSum(xs)+')'+redLetter(L)+' + ('+redCoeffSum(us)+') = '+redFinalStrong(result)
+  ];
+  let note=null;
+  if(d.k<0) note='Attention : '+kText+' × '+redNumberFactor(d.n,true)+' = '+(d.k*d.n<0?'−':'')+Math.abs(d.k*d.n)+'. Le signe − devant le '+Math.abs(d.k)+' change le signe des deux produits.';
+  else note='Attention : le '+d.k+' multiplie aussi le '+redNumberFactor(d.n,false)+' : '+d.k+' × '+redNumberFactor(d.n,true)+' = '+(d.k*d.n<0?'−':'')+Math.abs(d.k*d.n)+'.';
+  const aide=[
+    'Commence par développer : le nombre devant la parenthèse multiplie chacun des deux termes. Ensuite, regroupe les '+redLetter(L)+' et les nombres.',
+    'Ici, calcule '+redNumberFactor(d.k,false)+' × '+redMonoAbs(d.m,redLetter(L))+' puis '+redNumberFactor(d.k,false)+' × '+redNumberFactor(d.n,true)+'.'
+  ];
+  return {pieces,expr,result,steps,note,aide};
+}
+function makeParenFactorQcm(d,L){
+  const correct=redReducedText({x2:0,x:d.cx,u:d.cu},L);
+  const kText=(d.k<0?'−':'')+Math.abs(d.k);
+  const candidates=[
+    {text:redReducedText({x2:0,x:d.cx,u:d.q+d.n},L),feedback:'Tu n’as multiplié que le premier terme : le '+kText+' multiplie aussi le '+redNumberFactor(d.n,false)+'.'},
+    {text:redReducedText({x2:0,x:d.cx,u:d.q-d.k*d.n},L),feedback:'Erreur de signe : '+kText+' × '+redNumberFactor(d.n,true)+' = '+(d.k*d.n<0?'−':'')+Math.abs(d.k*d.n)+'.'},
+    {text:redReducedText({x2:0,x:d.p-d.k*d.m,u:d.cu},L),feedback:'Erreur de signe sur les '+redLetter(L)+' : '+kText+' × '+redMonoAbs(d.m,redLetter(L))+' = '+redMonomialText(d.k*d.m,1,L)+'.'}
+  ];
+  return redFinishQcm(correct,candidates,bump=>({text:redReducedText({x2:0,x:d.cx+bump,u:d.cu},L),feedback:'Recompte les '+redLetter(L)+' : ('+redCoeffSum([d.p,d.k*d.m])+')'+redLetter(L)+' = '+redMonomialText(d.cx,1,L)+'.'}));
+}
+
+/* ---------- Type 8 : opposé d’une parenthèse ---------- */
+function makeOppositeData(){
+  for(let tries=0;tries<500;tries++){
+    const a=RD(2,9);
+    const withD=rnd()<.4;
+    const d=withD?nzRand(-9,9):0;
+    const b=RD(1,9);
+    const c=RD(1,9);
+    const innerSign=pick([-1,1]);
+    const xFirst=rnd()<.7;
+    const inner=xFirst?[{type:'x',coeff:b},{type:'u',coeff:innerSign*c}]:[{type:'u',coeff:c},{type:'x',coeff:innerSign*b}];
+    const innerX=inner.find(g=>g.type==='x').coeff,innerU=inner.find(g=>g.type==='u').coeff;
+    const cx=a-innerX,cu=d-innerU;
+    if(cx===0||cu===0) continue;
+    if(a===b) continue;
+    const dFirst=withD&&rnd()<.4;
+    return {a,d,inner,cx,cu,withD,dFirst};
+  }
+  return {a:7,d:0,inner:[{type:'x',coeff:3},{type:'u',coeff:-5}],cx:4,cu:5,withD:false,dFirst:false};
+}
+function oppositeWork(o){
+  const L='x';
+  const innerText=redPiecesText(redGroupsPieces(o.inner,L));
+  const outside=o.withD?(o.dFirst?[{type:'u',coeff:o.d},{type:'x',coeff:o.a}]:[{type:'x',coeff:o.a},{type:'u',coeff:o.d}]):[{type:'x',coeff:o.a}];
+  const pieces=[...redGroupsPieces(outside,L),{sign:'−',body:'('+innerText+')'}];
+  const expr=redPiecesText(pieces);
+  const opposite=o.inner.map(g=>({type:g.type,coeff:-g.coeff}));
+  const oppositeText=redPiecesText(redGroupsPieces(opposite,L));
+  const after=redPiecesText(redGroupsPieces([...outside,...opposite],L));
+  const all=[...outside,...opposite];
+  const xs=all.filter(g=>g.type==='x').map(g=>g.coeff),us=all.filter(g=>g.type==='u').map(g=>g.coeff);
+  const result=redReducedText({x2:0,x:o.cx,u:o.cu},L);
+  const xPart='('+redCoeffSum(xs)+')𝑥';
+  const uPart=us.length>1?' + ('+redCoeffSum(us)+')':' '+(us[0]<0?'−':'+')+' '+Math.abs(us[0]);
+  const innerU=o.inner.find(g=>g.type==='u').coeff;
+  return {
+    pieces,expr,result,
+    steps:[
+      'On enlève la parenthèse précédée de − en changeant le signe de chaque terme : −('+innerText+') = '+oppositeText+'.',
+      expr+' = '+after,
+      '= '+xPart+uPart+' = '+redFinalStrong(result)
+    ],
+    note:innerU<0?'Attention : −(−'+Math.abs(innerU)+') = +'+Math.abs(innerU)+'. Le second terme change de signe lui aussi.':'Attention : on change le signe de tous les termes de la parenthèse, pas seulement du premier.',
+    aide:[
+      'Une parenthèse précédée de − s’enlève en changeant le signe de chaque terme qu’elle contient.',
+      'Ici, écris d’abord l’opposé de '+innerText+', puis regroupe les 𝑥 et les nombres.'
+    ]
+  };
+}
+
+/* ---------- Types 9 et 10 : produits et « somme ou produit » ---------- */
+function makeProductData(){
+  const form=pick(['mono','mono','numFirst','numLast']);
+  for(let tries=0;tries<300;tries++){
+    let a,b;
+    if(form==='mono'){ a=RD(1,6); b=RD(1,6); }
+    else { a=RD(2,6); b=RD(2,6); }
+    if(rnd()<.4){ if(rnd()<.5) a=-a; else b=-b; }
+    if(form==='mono' && Math.abs(a)===1 && Math.abs(b)===1) continue;
+    if(Math.abs(a)+Math.abs(b)===Math.abs(a*b)) continue;
+    return {form,a,b,letter:pick(['x','x','a','y','t'])};
+  }
+  return {form:'mono',a:3,b:2,letter:'x'};
+}
+function productWork(d){
+  const L=d.letter,Ll=redLetter(L);
+  const firstBody=d.form==='numFirst'?'':Ll,secondBody=d.form==='numLast'?'':Ll;
+  const expr=redFactor(d.a,firstBody,false)+' × '+redFactor(d.b,secondBody,true);
+  const power=d.form==='mono'?2:1;
+  const prod=d.a*d.b;
+  const result=redMonomialText(prod,power,L);
+  const numbers=[d.a,d.b].filter(c=>c!==1);
+  const detail=(numbers.length?numbers.map((c,i)=>redNumberFactor(c,i>0)).join(' × ')+' × ':'')+(power===2?Ll+' × '+Ll:Ll);
+  return {
+    expr,result,power,
+    steps:[
+      'On multiplie les nombres entre eux et les lettres entre elles.',
+      expr+' = '+detail+' = '+redFinalStrong(result)
+    ],
+    note:power===2?'Attention : '+Ll+' × '+Ll+' = '+Ll+'², mais '+Ll+' + '+Ll+' = 2'+Ll+'.':'Il n’y a qu’un seul '+Ll+' dans ce produit : pas de carré.',
+    aide:['Dans un produit, multiplie les nombres entre eux, puis les lettres entre elles.','Écris le produit en détail : '+detail+'.']
+  };
+}
+function makeProductQcm(d){
+  const L=d.letter,Ll=redLetter(L);
+  const power=d.form==='mono'?2:1,prod=d.a*d.b,sum=d.a+d.b;
+  const correct=redMonomialText(prod,power,L);
+  const candidates=[];
+  if(prod<0) candidates.push({text:redMonomialText(-prod,power,L),feedback:'Erreur de signe : un des facteurs est négatif, donc le produit est négatif.'});
+  candidates.push({text:redMonomialText(sum,1,L),feedback:'Tu as additionné les coefficients : ici, c’est une multiplication.'});
+  if(power===2){
+    candidates.push({text:redMonomialText(prod,1,L),feedback:Ll+' × '+Ll+' = '+Ll+'² : il manque le carré.'});
+    candidates.push({text:redMonomialText(sum,2,L),feedback:'Les nombres se multiplient'+(Math.abs(d.a)===1||Math.abs(d.b)===1?' ('+Ll+' compte pour 1'+Ll+')':'')+' : '+redNumberFactor(d.a,false)+' × '+redNumberFactor(d.b,true)+' = '+String(prod).replace('-','−')+', on ne les additionne pas.'});
+  } else {
+    candidates.push({text:redMonomialText(prod,2,L),feedback:'Il n’y a qu’un seul '+Ll+' : le résultat reste en '+Ll+', sans carré.'});
+    candidates.push({text:String(prod).replace('-','−'),feedback:'Tu as oublié la lettre '+Ll+'.'});
+  }
+  return redFinishQcm(correct,candidates,bump=>({text:redMonomialText(prod+bump,power,L),feedback:'Recalcule '+redNumberFactor(d.a,false)+' × '+redNumberFactor(d.b,true)+'.'}));
+}
+function makeSumOrProductData(){
+  for(let tries=0;tries<200;tries++){
+    const a=pick([1,1,2,3,4]),b=pick([1,1,2,3,4,5]);
+    if(a===2&&b===2) continue;
+    if(a*b===a+b) continue;
+    return {a,b,op:pick(['+','×'])};
+  }
+  return {a:3,b:2,op:'+'};
+}
+function sumOrProductWork(d){
+  const L='x',Ll='𝑥';
+  const ta=redMonoAbs(d.a,Ll),tb=redMonoAbs(d.b,Ll);
+  const expr=ta+' '+d.op+' '+tb;
+  if(d.op==='+'){
+    const result=redMonomialText(d.a+d.b,1,L);
+    const first=(d.a===1&&d.b===1)?Ll+' + '+Ll+', c’est deux fois '+Ll+'.':ta+' + '+tb+', c’est '+d.a+' fois '+Ll+' plus '+d.b+' fois '+Ll+'.';
+    return {expr,result,steps:[first,expr+' = ('+d.a+' + '+d.b+')'+Ll+' = '+redFinalStrong(result)],note:'Attention : '+Ll+' + '+Ll+' = 2'+Ll+', mais '+Ll+' × '+Ll+' = '+Ll+'².',aide:['Regarde l’opération : + ou × ? Elles ne donnent pas le même résultat.','Ici, c’est une addition de termes en '+Ll+'.']};
+  }
+  const result=redMonomialText(d.a*d.b,2,L);
+  const nums=[d.a,d.b].filter(c=>c!==1);
+  const detail=(nums.length?nums.join(' × ')+' × ':'')+Ll+' × '+Ll;
+  return {expr,result,steps:['On multiplie les nombres entre eux et les lettres entre elles.',expr+' = '+detail+' = '+redFinalStrong(result)],note:'Attention : '+Ll+' × '+Ll+' = '+Ll+'², mais '+Ll+' + '+Ll+' = 2'+Ll+'.',aide:['Regarde l’opération : + ou × ? Elles ne donnent pas le même résultat.','Ici, c’est un produit : écris-le en détail, '+detail+'.']};
+}
+function makeSumOrProductQcm(d){
+  const L='x',Ll='𝑥',sum=d.a+d.b,prod=d.a*d.b;
+  if(d.op==='+'){
+    return redFinishQcm(redMonomialText(sum,1,L),[
+      {text:redMonomialText(prod,2,L),feedback:'Tu as calculé un produit. Ici, c’est une addition.'},
+      {text:redMonomialText(sum,2,L),feedback:'Quand on additionne des '+Ll+', le résultat reste en '+Ll+' : pas de carré.'},
+      {text:redMonomialText(prod,1,L),feedback:'Tu as multiplié '+d.a+' et '+d.b+' : il faut les additionner.'}
+    ],bump=>({text:redMonomialText(sum+bump,1,L),feedback:'Recompte : '+d.a+' + '+d.b+' = '+sum+'.'}));
+  }
+  return redFinishQcm(redMonomialText(prod,2,L),[
+    {text:redMonomialText(sum,1,L),feedback:'Tu as additionné. Ici, c’est une multiplication.'},
+    {text:redMonomialText(prod,1,L),feedback:Ll+' × '+Ll+' = '+Ll+'² : il manque le carré.'},
+    {text:redMonomialText(sum,2,L),feedback:'Les nombres se multiplient'+(d.a===1||d.b===1?' ('+Ll+' compte pour 1'+Ll+')':'')+' : '+d.a+' × '+d.b+' = '+prod+'.'}
+  ],bump=>({text:redMonomialText(prod+bump,2,L),feedback:'Recalcule '+d.a+' × '+d.b+'.'}));
+}
+
+
+// dnb_01 — Écriture décimale des fractions simples (refonte du 7-8 octobre 2026).
+// Cible DNB (liste officielle NC1) : 1/2 ; 1/4 ; 3/4 ; 3/2 ; 4/2 ; 5/2 ; 1/10 ;
+// 100/100 ; 7/1, et la question réelle du DNB 2026 « Donner une écriture du
+// nombre 0,75 sous la forme d'une fraction » (toute fraction égale est juste).
+// Les numéros des types retirés (7, 8, 12, 14, 18, 20) ne sont pas réutilisés.
+const MODULE01_OFFICIAL_F2D=[
+  {num:1,den:2},{num:1,den:4},{num:3,den:4},{num:3,den:2},{num:4,den:2},{num:5,den:2},
+  {num:1,den:10},{num:1,den:100},{num:100,den:100},{num:7,den:1}
+];
+// Sens décimal → fraction : jamais un entier caché (plus de « 1 = 1/1 »).
+const MODULE01_OFFICIAL_D2F=[
+  {num:1,den:2},{num:1,den:4},{num:3,den:4},{num:3,den:2},{num:5,den:2},
+  {num:1,den:10},{num:1,den:100},{num:5,den:4},{num:7,den:4}
+];
+const MODULE01_QCM_D2F=[
+  {num:1,den:2},{num:1,den:4},{num:3,den:4},{num:3,den:2},{num:5,den:2},
+  {num:5,den:4},{num:7,den:4},{num:1,den:5},{num:2,den:5}
 ];
 const MODULE01_TEMPLATES=[
   {n:1,options:{module01_kind:'fixed_f2d',module01_format:'open'}},
   {n:2,options:{module01_kind:'fixed_f2d',module01_format:'qcm'}},
   {n:3,options:{module01_kind:'fixed_d2f',module01_format:'open'}},
-  {n:4,options:{module01_kind:'fixed_d2f',module01_format:'qcm'}},
+  {n:4,options:{module01_kind:'benchmark_d2f',module01_format:'qcm'}},
   {n:5,options:{module01_kind:'tenths_f2d',module01_format:'open'}},
   {n:6,options:{module01_kind:'hundredths_f2d',module01_format:'open'}},
-  {n:7,options:{module01_kind:'integer_thirds_f2d',module01_format:'open'}},
-  {n:8,options:{module01_kind:'integer_thirds_f2d',module01_format:'qcm'}},
   {n:9,options:{module01_kind:'benchmark_improper_f2d',module01_format:'qcm'}},
   {n:10,options:{module01_kind:'improper_f2d',module01_format:'open'}},
-  {n:11,options:{module01_kind:'improper_f2d',module01_format:'truefalse',truth:true}},
-  {n:12,options:{module01_kind:'integer_f2d',module01_format:'open'}},
+  {n:11,options:{module01_kind:'benchmark_improper_f2d',module01_format:'truefalse'}},
   {n:13,options:{module01_kind:'reducible_f2d',module01_format:'open'}},
-  {n:14,options:{module01_kind:'reducible_f2d',module01_format:'truefalse',truth:false}},
   {n:15,options:{module01_kind:'tenths_d2f',module01_format:'open'}},
-  {n:16,options:{module01_kind:'tenths_d2f',module01_format:'qcm'}},
+  {n:16,options:{module01_kind:'place_d2f',module01_format:'qcm'}},
   {n:17,options:{module01_kind:'hundredths_d2f',module01_format:'open'}},
-  {n:18,options:{module01_kind:'hundredths_d2f',module01_format:'qcm'}},
   {n:19,options:{module01_kind:'improper_d2f',module01_format:'open'}},
-  {n:20,options:{module01_kind:'read_visual',module01_format:'open'}}
+  {n:21,options:{module01_kind:'compare',module01_format:'compare'}},
+  {n:22,options:{module01_kind:'sum_f2d',module01_format:'open'}},
+  {n:23,options:{module01_kind:'extreme',module01_format:'qcm'}}
 ].map(q=>({...q,statement:'',answer:'[]',footer:''}));
-let module01State={fixedF2D:[],fixedD2F:[]};
-function resetModule01State(){ module01State={fixedF2D:[],fixedD2F:[]}; }
-function module01DistinctOfficial(key){
-  let available=MODULE01_OFFICIAL.map((_,i)=>i).filter(i=>!module01State[key].includes(i));
-  if(!available.length){ module01State[key]=[]; available=MODULE01_OFFICIAL.map((_,i)=>i); }
-  const index=pick(available); module01State[key].push(index); return MODULE01_OFFICIAL[index];
+// Composition d'une série : un tour de toutes les familles avant de répéter
+// (une question par famille, dans un ordre tiré au hasard), et une question de
+// repère (1/2, 7/10…) en tête plutôt qu'une question difficile.
+function module01Family(q){
+  const n=Number(q&&q.n);
+  if([1,2].includes(n)) return 'reperes';
+  if([5,6].includes(n)) return 'dixiemes-centiemes';
+  if([9,10,11].includes(n)) return 'plus-grand-que-1';
+  if(n===13) return 'simplifier';
+  // Les QCM décimal → fraction (4, 16) tournent avec les réponses à écrire : brevet 2027 sans QCM.
+  if([21,23].includes(n)) return 'comparer';
+  if(n===22) return 'somme';
+  return 'vers-fraction';
+}
+function module01CoverageCycle(questions){
+  const pools=new Map();
+  questions.forEach(q=>{const f=module01Family(q);if(!pools.has(f))pools.set(f,[]);pools.get(f).push(q);});
+  pools.forEach((items,key)=>pools.set(key,shuffledCopy(items)));
+  const cycle=[];
+  while([...pools.values()].some(items=>items.length)){
+    shuffledCopy([...pools.keys()].filter(key=>pools.get(key).length)).forEach(key=>cycle.push(pools.get(key).shift()));
+  }
+  const first=cycle.findIndex(q=>['reperes','dixiemes-centiemes'].includes(module01Family(q)));
+  if(first>0) cycle.unshift(cycle.splice(first,1)[0]);
+  return cycle;
+}
+let module01State={};
+function resetModule01State(){ module01State={}; }
+function module01DistinctFrom(key,list){
+  if(!Array.isArray(module01State[key])) module01State[key]=[];
+  let available=list.map((_,i)=>i).filter(i=>!module01State[key].includes(i));
+  if(!available.length){ module01State[key]=[]; available=list.map((_,i)=>i); }
+  const index=pick(available); module01State[key].push(index); return {...list[index]};
 }
 function module01Decimal(num,den){
   const value=num/den;
@@ -563,130 +933,472 @@ function module01Reduced(num,den){
   const g=GCD(num,den); return {num:num/g,den:den/g};
 }
 function module01FracLatex(num,den){ return '\\dfrac{'+num+'}{'+den+'}'; }
-function module01VisualKindForDen(den){
-  return ([20,25,50].includes(den)||100%den!==0)?'bar':'grouped';
+// Espaces autour de =, + , × et ÷ dans les formules (« 2,5 = » et non « 2,5= »).
+function module01TidyLatex(latex){
+  return String(latex)
+    .replace(/\s*=\s*/g,' = ')
+    .replace(/\s*\+\s*/g,' + ')
+    .replace(/\s*\\times\s*/g,' \\times ')
+    .replace(/\s*\\div\s*/g,' \\div ');
 }
-function module01AccessibleNumerator(den){
-  const pools={
-    20:[2,4,5,8,10,12,15,16,18],
-    25:[5,10,15,20],
-    50:[5,10,15,20,25,30,35,40,45]
+function module01Tidy(text){
+  // Formules : espaces autour des signes. Texte : espace insécable avant « : », « ? », « ! » et « ; ».
+  return String(text||'').split(/(\$\$[\s\S]*?\$\$)/).map(part=>/^\$\$[\s\S]*\$\$$/.test(part)
+    ?'$$'+module01TidyLatex(part.slice(2,-2))+'$$'
+    :part.replace(/ ([:?!;])(?=\s|$|<)/g,' $1')).join('');
+}
+// Vrai si num/den a une écriture décimale finie (dénominateur réduit fait de 2 et de 5).
+function module01Terminating(num,den){
+  let d=module01Reduced(num,den).den;
+  while(d%2===0) d/=2;
+  while(d%5===0) d/=5;
+  return d===1;
+}
+function module01Frac(num,den){ return '$$'+module01FracLatex(num,den)+'$$'; }
+function module01Num(value){ return '$$'+value+'$$'; }
+// Nombre décimal (chaîne « 1,25 ») → nombre de dixièmes ou de centièmes.
+function module01DecimalParts(dec){
+  const [intPart,decPart='']=String(dec).split(',');
+  const places=decPart.length, den=Math.pow(10,places);
+  const num=Number(intPart)*den+Number(decPart||0);
+  return {intPart:Number(intPart),decPart,places,num,den};
+}
+function module01PlaceName(places,count=2){
+  return places===1?(count>1?'dixièmes':'dixième'):(count>1?'centièmes':'centième');
+}
+// Compare deux décimaux rang par rang et dit pourquoi : « 5 dixièmes > 4 dixièmes ».
+function module01RankReason(a,b){
+  const split=t=>{const [i,d='']=String(t).split(',');return [Number(i),Number(d[0]||0),Number(d[1]||0)];};
+  const A=split(a),B=split(b),names=[['unité','unités'],['dixième','dixièmes'],['centième','centièmes']];
+  for(let k=0;k<3;k++) if(A[k]!==B[k]){
+    const w=n=>n+' '+(n>1?names[k][1]:names[k][0]);
+    return w(A[k])+(A[k]<B[k]?' &lt; ':' &gt; ')+w(B[k]);
+  }
+  return '';
+}
+function module01QcmFrom(correct,distractors){
+  // distractors : [{value,code,feedback}] déjà distincts entre eux et de la bonne réponse.
+  const items=shuffleLocal([{value:correct,code:null,feedback:''},...distractors.slice(0,3)]);
+  const correctIndex=String(items.findIndex(item=>item.value===correct)+1);
+  const feedback={};
+  items.forEach((item,index)=>{ if(item.feedback) feedback[String(index+1)]=item.feedback; });
+  return {options:items.map(item=>item.value),codes:items.map(item=>item.code),correctIndex,feedback};
+}
+function module01PickDistinct(candidates,isCorrect,count=3){
+  const out=[], seen=new Set();
+  candidates.forEach(candidate=>{
+    if(!candidate||out.length>=count) return;
+    const key=String(candidate.key??candidate.value);
+    if(seen.has(key)||isCorrect(candidate)) return;
+    seen.add(key); out.push(candidate);
+  });
+  return out;
+}
+// Distracteurs « fraction → décimal » : chacun correspond à une erreur nommée.
+function module01OfficialDecimalDistractors(num,den,dec){
+  const F=module01Frac(num,den);
+  const comma=num+','+den, dual='0,'+num+den;
+  const list={
+    '1/2':[[comma,'E1','La barre de fraction n’est pas une virgule : '+F+' n’est pas '+comma+'.'],['0,2','E-den','0,2 vaut '+module01Frac(1,5)+' : le dénominateur 2 n’est pas le chiffre des dixièmes.'],['2','E6','2 vaut '+module01Frac(2,1)+' : tu as inversé numérateur et dénominateur.']],
+    '1/4':[[comma,'E1','La barre de fraction n’est pas une virgule : '+F+' n’est pas '+comma+'.'],['0,4','E-den','0,4 vaut 4 dixièmes : le dénominateur 4 n’est pas le chiffre des dixièmes.'],['4','E6','4 vaut '+module01Frac(4,1)+' : tu as inversé numérateur et dénominateur.']],
+    '3/4':[[comma,'E1','La barre de fraction n’est pas une virgule : '+F+' n’est pas '+comma+'.'],[dual,'E3',''+F+' n’est pas 0,34 : on ne recopie pas les deux nombres après la virgule.'],['0,25','E-comp','0,25 vaut un seul quart, '+module01Frac(1,4)+'. Ici, il y a 3 quarts.']],
+    '3/2':[[comma,'E1','La barre de fraction n’est pas une virgule : '+F+' n’est pas '+comma+'.'],['0,5','E2','0,5 vaut un seul demi. '+F+' est plus grand que 1 : tu as oublié l’unité.'],[dual,'E3',''+F+' est plus grand que 1 : sa valeur ne commence pas par 0,…']],
+    '4/2':[[comma,'E1','La barre de fraction n’est pas une virgule : '+F+' n’est pas '+comma+'.'],['8','E-mult','8 = 4 × 2 : 4 demis ne font pas 8 unités.'],['0,5','E2','0,5 vaut un seul demi. 4 demis font plus que 1.']],
+    '5/2':[[comma,'E1','La barre de fraction n’est pas une virgule : '+F+' n’est pas '+comma+'.'],['0,5','E2','0,5 vaut un seul demi. '+F+' est plus grand que 1 : tu as oublié les unités.'],[dual,'E3','5 demis font plus que 1 : la valeur ne commence pas par 0,…']],
+    '1/10':[['10','E6','10 vaut '+module01Frac(10,1)+' : tu as inversé numérateur et dénominateur.'],['0,01','E4','0,01 vaut un centième, '+module01Frac(1,100)+'.'],['1,1','E1','La barre de fraction n’est pas une virgule.']],
+    '1/100':[['0,1','E4','0,1 vaut un dixième, '+module01Frac(1,10)+'. Un centième s’écrit avec un zéro de plus.'],['100','E6','100 vaut '+module01Frac(100,1)+' : tu as inversé numérateur et dénominateur.'],['0,001','E4b','0,001 vaut un millième, pas un centième.']],
+    '100/100':[['100','E-num','100 centièmes ne font pas 100 unités.'],['0,01','E4','0,01 vaut un seul centième. Ici, il y a 100 centièmes.'],['10','E-num','100 centièmes ne font pas 10 unités.']]
   };
-  return pick(pools[den]||Array.from({length:den-1},(_,i)=>i+1));
+  let rows=list[num+'/'+den];
+  if(den===1) rows=[[num+',1','E1','La barre de fraction n’est pas une virgule.'],['0,'+num,'E-den1','Le dénominateur 1 ne partage pas l’unité : '+F+' n’est pas plus petit que 1.'],['1','E-un',''+F+' compte '+num+' unités, pas une seule.']];
+  return (rows||[]).map(([value,code,feedback])=>({value,code,feedback}));
 }
-function module01DecimalDistractors(num,den,correct){
-  const target=num/den, out=[], seen=new Set([target.toFixed(8)]);
-  function add(value){
-    if(!Number.isFinite(value)||value<0) return;
-    const key=value.toFixed(8); if(seen.has(key)) return;
-    seen.add(key); out.push(module01Decimal(Math.round(value*1000),1000));
+function module01ImproperDecimalDistractors(num,den,dec){
+  const whole=Math.floor(num/den), rest=num-whole*den, F=module01Frac(num,den);
+  const candidates=[
+    {value:num+','+den,code:'E1',feedback:'La barre de fraction n’est pas une virgule : '+F+' n’est pas '+num+','+den+'.'},
+    {value:module01Decimal(rest,den),code:'E2',feedback:module01Decimal(rest,den)+' vaut seulement '+module01Frac(rest,den)+' : tu as oublié '+(whole>1?'les '+whole+' unités':'l’unité')+'.'},
+    {value:whole+','+rest,code:'E5',feedback:module01Frac(rest,den)+' ne vaut pas 0,'+rest+' : '+module01Frac(rest,den)+' = '+module01Decimal(rest,den)+'.'},
+    {value:den+','+num,code:'E1b',feedback:'La barre de fraction n’est pas une virgule.'}
+  ];
+  return module01PickDistinct(candidates,item=>item.value===dec);
+}
+// Distracteurs « décimal → fraction » (QCM de type 4).
+function module01FractionDistractors(num,den){
+  const dec=module01Decimal(num,den), parts=module01DecimalParts(dec), D='$$'+dec+'$$';
+  const digits=String(parts.num), equal=(n,d)=>d>0&&n*den===num*d;
+  const frac=(n,d)=>'\\dfrac{'+n+'}{'+d+'}';
+  const candidates=[];
+  // Lecture des chiffres : la virgule prise pour une barre de fraction.
+  if(digits.length>=2){
+    const n=Number(digits.slice(0,-1)), d=Number(digits.slice(-1));
+    if(n>0&&d>0) candidates.push({value:frac(n,d),key:n+'/'+d,code:'E-virgule',feedback:'Une virgule n’est pas une barre de fraction : '+module01Frac(n,d)+' = '+module01Decimal(n,d)+'.'});
+  } else if(Number(digits)>1){
+    const d=Number(digits);
+    candidates.push({value:frac(1,d),key:'1/'+d,code:'E-confusion',feedback:module01Frac(1,d)+' = '+module01Decimal(1,d)+' : ne confonds pas 0,'+d+' et '+module01Frac(1,d)+'.'});
   }
-  add(Number(String(Math.abs(num))+'.'+String(Math.abs(den))));
-  add(den/10); add(num/100); add(den/100); add(target/10); add(target*10);
-  if(target>1) add(target-Math.floor(target));
-  add(Math.abs(num-den)/Math.max(den,1));
-  let bump=1;
-  while(out.length<3){ add(target+bump/10); bump++; }
-  return shuffleLocal(out).slice(0,3);
-}
-function module01FractionDistractors(sourceNum,sourceDen,reduced){
-  const out=[], seen=new Set([reduced.num+'/'+reduced.den]);
-  function equivalent(n,d){ return n*reduced.den===reduced.num*d; }
-  function add(n,d){
-    n=Math.abs(Math.trunc(n)); d=Math.abs(Math.trunc(d));
-    if(!n||!d) return;
-    const key=n+'/'+d; if(seen.has(key)) return;
-    if(equivalent(n,d)) return;
-    seen.add(key); out.push(module01FracLatex(n,d));
+  // Mauvais rang : dixièmes et centièmes échangés.
+  const wrongDen=parts.places===2?10:100;
+  candidates.push({value:frac(parts.num,wrongDen),key:parts.num+'/'+wrongDen,code:'E3',feedback:module01Frac(parts.num,wrongDen)+' = '+module01Decimal(parts.num,wrongDen)+' : '+dec+' se lit en '+module01PlaceName(parts.places)+'.'});
+  // Inversion.
+  candidates.push({value:frac(den,num),key:den+'/'+num,code:'E6',feedback:'Tu as inversé les deux nombres : '+module01Frac(den,num)+(module01Terminating(den,num)?' = '+module01Decimal(den,num)+'.':(num<den?' est plus grand que 1.':' est plus petit que 1.'))});
+  // Oubli des unités.
+  if(parts.intPart>=1){
+    const r=module01Reduced(num-parts.intPart*den,den);
+    candidates.push({value:frac(r.num,r.den),key:r.num+'/'+r.den,code:'E2',feedback:module01Frac(r.num,r.den)+' = '+module01Decimal(r.num,r.den)+' : tu as oublié '+(parts.intPart>1?'les '+parts.intPart+' unités':'l’unité')+'.'});
   }
-  // A reducible writing of the right value is still mathematically equal to it.
-  // Do not use it as a distractor when pupils are asked for the corresponding
-  // irreducible fraction: every wrong choice must represent another number.
-  add(reduced.num*10+1,reduced.den*10);
-  add(reduced.den,reduced.num);
-  add(reduced.num,reduced.den*10);
-  add(reduced.num+1,reduced.den);
-  add(reduced.num,reduced.den+1);
-  let bump=2;
-  while(out.length<3){ add(reduced.num+bump,reduced.den); bump++; }
-  return shuffleLocal(out).slice(0,3);
+  candidates.push({value:frac(parts.num,1000),key:parts.num+'/1000',code:'E4',feedback:module01Frac(parts.num,1000)+' = '+module01Decimal(parts.num,1000)+'.'});
+  return module01PickDistinct(candidates,item=>{const [n,d]=item.key.split('/').map(Number);return equal(n,d);});
 }
-function module01Qcm(correct,distractors){
-  const options=shuffleLocal([correct,...distractors].slice(0,4));
-  return {options,correctIndex:String(options.indexOf(correct)+1)};
+// QCM de type 16 : 0,n ; 0,0n ; 0,ab → quelle fraction ?
+function module01PlaceFractionDistractors(parts){
+  const frac=(n,d)=>'\\dfrac{'+n+'}{'+d+'}', N=parts.num, dec=module01Decimal(parts.num,parts.den);
+  const candidates=[];
+  if(parts.places===1){
+    candidates.push({value:frac(N,100),key:N+'/100',code:'E3',feedback:module01Frac(N,100)+' = '+module01Decimal(N,100)+' : '+dec+' se lit en dixièmes.'});
+    if(N>1) candidates.push({value:frac(1,N),key:'1/'+N,code:'E-confusion',feedback:'Ne confonds pas '+dec+' et '+module01Frac(1,N)+' : '+dec+' vaut '+N+' dixièmes.'});
+    candidates.push({value:frac(10,N),key:'10/'+N,code:'E6',feedback:'Tu as inversé les deux nombres : '+module01Frac(10,N)+' est plus grand que 1.'});
+    candidates.push({value:frac(N,1000),key:N+'/1000',code:'E4',feedback:module01Frac(N,1000)+' = '+module01Decimal(N,1000)+'.'});
+  } else if(N<10){
+    candidates.push({value:frac(N,10),key:N+'/10',code:'E4',feedback:module01Frac(N,10)+' = 0,'+N+' : le zéro de '+dec+' compte, '+N+' est au rang des centièmes.'});
+    candidates.push({value:frac(N,1000),key:N+'/1000',code:'E4b',feedback:module01Frac(N,1000)+' = '+module01Decimal(N,1000)+' : c’est un millième, pas un centième.'});
+    candidates.push({value:frac(100,N),key:'100/'+N,code:'E6',feedback:'Tu as inversé les deux nombres : '+module01Frac(100,N)+' est plus grand que 1.'});
+  } else {
+    candidates.push({value:frac(N,10),key:N+'/10',code:'E3',feedback:module01Frac(N,10)+' = '+module01Decimal(N,10)+' : '+dec+' se lit en centièmes.'});
+    const a=Math.floor(N/10), b=N%10;
+    if(a>0&&b>0) candidates.push({value:frac(a,b),key:a+'/'+b,code:'E-virgule',feedback:'Une virgule n’est pas une barre de fraction : '+module01Frac(a,b)+' n’est pas '+dec+'.'});
+    candidates.push({value:frac(N,1000),key:N+'/1000',code:'E4b',feedback:module01Frac(N,1000)+' = '+module01Decimal(N,1000)+' : c’est des millièmes.'});
+  }
+  return module01PickDistinct(candidates,item=>{const [n,d]=item.key.split('/').map(Number);return n*parts.den===parts.num*d;});
 }
+
+// ----- Corrections, indices et dessins d'aide (contrat de la refonte, §1) -----
+function module01F2DSteps(num,den,dec){
+  const F=module01Frac(num,den), D='$$'+dec+'$$';
+  // Lignes courtes : la carte « Comment on trouve » du téléphone tient en 170 px environ.
+  if(den===1) return ['Le dénominateur 1 ne partage pas l’unité : $$'+module01FracLatex(num,den)+'='+dec+'$$'];
+  if(num===den) return [num+' '+module01PlaceWord(den,num)+' font une unité : $$'+module01FracLatex(num,den)+'=1$$'];
+  // Dixièmes et centièmes, comme dans le cours : « 9/100 = 9 centièmes = 0,09 ».
+  if((den===10||den===100)&&num<den) return [F+' = '+num+' '+module01PlaceName(den===10?1:2,num)+' = '+D];
+  if(num>den){
+    const whole=Math.floor(num/den), rest=num-whole*den;
+    if(rest===0){
+      const groups=Array.from({length:whole},()=>module01FracLatex(den,den)).join('+');
+      return [den+' '+module01PlaceWord(den,den)+' font 1 unité.','$$'+module01FracLatex(num,den)+'='+groups+'='+Array.from({length:whole},()=>'1').join('+')+'='+whole+'$$'];
+    }
+    return [
+      den+' '+module01PlaceWord(den,den)+' font 1 unité : $$'+module01FracLatex(num,den)+'='+module01FracLatex(whole*den,den)+'+'+module01FracLatex(rest,den)+'$$',
+      '$$'+module01FracLatex(num,den)+'='+whole+'+'+module01Decimal(rest,den)+'='+dec+'$$'
+    ];
+  }
+  // Fraction plus petite que 1 : une fraction égale de dénominateur 10 ou 100.
+  const target=100%den===0&&(den===2||den===5)?10:100, k=target/den;
+  return [
+    'On écrit une fraction égale de dénominateur '+target+'.',
+    '$$'+module01FracLatex(num,den)+'='+module01FracLatex(num+'\\times'+k,den+'\\times'+k)+'='+module01FracLatex(num*k,target)+'='+dec+'$$'
+  ];
+}
+function module01PlaceWord(den,count=2){
+  const plural=count>1;
+  const words={1:['unité','unités'],2:['demi','demis'],4:['quart','quarts'],5:['cinquième','cinquièmes'],10:['dixième','dixièmes'],100:['centième','centièmes']};
+  const word=words[den]||[den+'e',den+'es'];
+  return plural?word[1]:word[0];
+}
+// Fraction affichée en correction : la lecture en dixièmes ou centièmes (8/100),
+// simplifiée seulement quand on retrouve un repère (dénominateur 2, 4 ou 5 : 3/4, 5/2, 2/5).
+function module01D2FShown(dec,reduced){
+  const parts=module01DecimalParts(dec);
+  return reduced.den<=5&&reduced.den<parts.den?{num:reduced.num,den:reduced.den,simplified:true}:{num:parts.num,den:parts.den,simplified:false};
+}
+function module01D2FSteps(dec,reduced){
+  const parts=module01DecimalParts(dec), D='$$'+dec+'$$', place=module01PlaceName(parts.places,parts.num);
+  // Comme dans le cours : « 0,75 = 75 centièmes = 75/100 », puis la simplification si elle mène à un repère.
+  const lines=[D+' = '+parts.num+' '+place+' = $$'+module01FracLatex(parts.num,parts.den)+'$$'];
+  const shown=module01D2FShown(dec,reduced);
+  if(shown.simplified) lines.push('On simplifie par '+(parts.den/shown.den)+' : $$'+module01FracLatex(parts.num,parts.den)+'='+module01FracLatex(shown.num,shown.den)+'$$');
+  return lines;
+}
+function module01D2FAide(dec){
+  const parts=module01DecimalParts(dec);
+  const where=parts.places===1?'Le chiffre après la virgule est au rang des dixièmes.':'Le deuxième chiffre après la virgule est au rang des centièmes.';
+  return [where, '$$'+dec+'$$ se lit en '+module01PlaceName(parts.places)+'. Un '+module01PlaceName(parts.places,1)+' s’écrit $$'+module01FracLatex(1,parts.den)+'$$.'];
+}
+function module01F2DAide(num,den){
+  const F=module01Frac(num,den);
+  if(den===1) return [F+' : l’unité n’est pas partagée, chaque part est une unité entière.','Combien d’unités entières y a-t-il ?'];
+  if(num===den) return ['Regarde le dénominateur : en combien de parts l’unité est-elle partagée ?','Combien de parts faut-il pour faire une unité entière ?'];
+  if(den===10||den===100){
+    const places=den===10?1:2;
+    return ['Le dénominateur '+den+' indique des '+module01PlaceName(places)+' : '+F+' = '+num+' '+module01PlaceName(places,num)+'.', places===1?'Les dixièmes s’écrivent au 1<sup>er</sup> rang après la virgule.':'Les centièmes s’écrivent au 2<sup>e</sup> rang après la virgule.'];
+  }
+  if(num>den) return ['Combien de '+module01PlaceWord(den)+' font une unité ?','Écris '+F+' comme une somme : des unités entières + ce qui reste.'];
+  return ['Cherche une fraction égale avec 10 ou 100 au dénominateur.','Par combien multiplier '+den+' pour obtenir '+(den===2||den===5?'10':'100')+' ?'];
+}
+function module01AideVisual(data){
+  // Dessin du panneau d'aide : jamais la réponse (aucun « 1 » écrit sur les unités).
+  const component=globalThis.MATHSGO_VISUALS&&globalThis.MATHSGO_VISUALS.get('arithmetic.fraction-decimal-grid');
+  if(!component||!data||(!data.kind&&(!data.visualKind||data.visualKind==='none'))) return '';
+  // Au plus 180 px de haut dans le panneau (22 % de la hauteur sur un petit écran) : le dessin
+  // et les indices tiennent ensemble à l'écran.
+  const html=component.render(data,false), box=html.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/);
+  const ratio=box?Number(box[1])/Number(box[2]):2;
+  const maxWidth='min('+Math.round(180*ratio)+'px,'+(22*ratio).toFixed(1)+'vh)';
+  return html.replace(/^<div class="module01-visual([^"]*)"/,'<div class="module01-visual$1" style="max-width:'+maxWidth+';width:100%;margin:0 auto"');
+}
+
 function makeModule01Instance(mod,q){
   const kind=q.options.module01_kind, format=q.options.module01_format;
-  let num=1,den=2,dec='0,5',direction='f2d',visualKind='grouped',reduced={num:1,den:2};
+  let num=1,den=2,direction='f2d',visualKind='grouped';
+  let qcm=null, prompt='', display='', answers=[], equality='', extra={};
+  let steps=[], note='', aide=[], feedback=null, fractionPolicy='exact';
 
   if(kind==='fixed_f2d'){
-    const e=module01DistinctOfficial('fixedF2D'); num=e.num;den=e.den;dec=e.dec;visualKind=num>den&&den>1?'bar':visualKind;
+    const e=module01DistinctFrom('fixedF2D',MODULE01_OFFICIAL_F2D);
+    num=e.num; den=e.den;
+    if(den===1) num=pick([2,3,5,6,7,8,9]);
+    // Pas de dessin quand la fraction vaut un entier (n/1, 4/2, 100/100) : compter les unités donnerait la réponse.
+    visualKind=num%den===0?'none':((den===10||den===100)?'place-empty':'grouped');
   } else if(kind==='fixed_d2f'){
-    const e=module01DistinctOfficial('fixedD2F'); num=e.num;den=e.den;dec=e.dec;direction='d2f';visualKind=num>den&&den>1?'bar':(den===10?'grouped':'neutral');
+    const e=module01DistinctFrom('fixedD2F',MODULE01_OFFICIAL_D2F); num=e.num; den=e.den; direction='d2f';
+  } else if(kind==='benchmark_d2f'){
+    const e=module01DistinctFrom('qcmD2F',MODULE01_QCM_D2F); num=e.num; den=e.den; direction='d2f';
   } else if(kind==='tenths_f2d'){
-    num=RD(1,9);den=10;dec=module01Decimal(num,den);
+    num=RD(1,9); den=10; visualKind='place-empty';
   } else if(kind==='hundredths_f2d'){
-    do{num=RD(1,99);}while(num%10===0); den=100;dec=module01Decimal(num,den);
-  } else if(kind==='integer_thirds_f2d'){
-    den=3;num=pick([3,6,9]);dec=module01Decimal(num,den);visualKind='bar';
+    // Un tirage sur trois travaille le zéro de position (9/100 = 0,09).
+    if(rnd()<1/3) num=RD(1,9); else do{num=RD(11,99);}while(num%10===0);
+    den=100; visualKind='place-empty';
   } else if(kind==='benchmark_improper_f2d'){
-    const e=pick([{n:3,d:2},{n:5,d:2},{n:5,d:4},{n:7,d:4},{n:15,d:10}]);
-    num=e.n;den=e.d;dec=module01Decimal(num,den);visualKind='bar';
+    const e=pick([{n:3,d:2},{n:5,d:2},{n:7,d:2},{n:5,d:4},{n:7,d:4},{n:9,d:4}]);
+    num=e.n; den=e.d; visualKind='bar';
   } else if(kind==='improper_f2d'){
-    den=pick([2,4,5,10]);
-    do{num=RD(den+1,3*den-1);}while(num===2*den);
-    dec=module01Decimal(num,den);visualKind='bar';
-  } else if(kind==='integer_f2d'){
-    den=1;num=pick([2,3,4]);dec=String(num);visualKind='bar';
+    den=pick([2,4,4,10]);
+    do{num=RD(den+1,3*den-1);}while(num%den===0||(den===4&&num%2===0));
+    visualKind='bar';
   } else if(kind==='reducible_f2d'){
-    const bases=[{n:1,d:2},{n:1,d:4},{n:3,d:4},{n:1,d:5},{n:2,d:5},{n:3,d:5},{n:4,d:5}];
-    let base,k;
-    do{base=pick(bases);k=pick([2,3,4]);}while(base.d*k>20);
-    num=base.n*k;den=base.d*k;dec=module01Decimal(base.n,base.d);visualKind=module01VisualKindForDen(den);
+    // Il faut simplifier pour retrouver un repère (1/2, 1/4, 3/4, 3/2, 5/2) ; 50/100 ou 75/100 se lisent
+    // directement en centièmes (type 6), ils ne sont plus ici.
+    const e=pick([{n:2,d:4},{n:3,d:6},{n:4,d:8},{n:2,d:8},{n:3,d:12},{n:5,d:20},{n:6,d:8},{n:9,d:12},{n:15,d:20},{n:6,d:4},{n:10,d:4}]);
+    num=e.n; den=e.d; visualKind=den===20?'neutral':'bar';
   } else if(kind==='tenths_d2f'){
-    num=RD(1,9);den=10;dec=module01Decimal(num,den);direction='d2f';visualKind='grouped';
+    num=RD(1,9); den=10; direction='d2f';
+  } else if(kind==='place_d2f'){
+    const r=rnd(); direction='d2f';
+    if(r<1/3){ num=RD(1,9); den=10; }
+    else if(r<2/3){ num=RD(1,9); den=100; }
+    else { do{num=RD(11,99);}while(num%10===0); den=100; }
   } else if(kind==='hundredths_d2f'){
-    do{num=RD(1,99);}while(num%10===0);den=100;dec=module01Decimal(num,den);direction='d2f';visualKind='neutral';
+    if(rnd()<0.3) num=RD(1,9); else do{num=RD(11,99);}while(num%10===0);
+    den=100; direction='d2f';
   } else if(kind==='improper_d2f'){
-    den=pick([10,100]);
-    do{num=RD(den+1,3*den-1);}while(num%den===0||(den===100&&num%10===0));
-    dec=module01Decimal(num,den);direction='d2f';visualKind=den===10?'grouped':'neutral';
-  } else if(kind==='read_visual'){
-    den=pick([2,4,5,10,20,25,50,100]);num=[20,25,50].includes(den)?module01AccessibleNumerator(den):RD(1,den-1);dec=module01Decimal(num,den);direction='visual';visualKind=module01VisualKindForDen(den);
+    const whole=RD(1,3), part=pick([{n:1,d:2},{n:1,d:4},{n:3,d:4},{n:RD(1,9,[5]),d:10}]);
+    num=whole*part.d+part.n; den=part.d; direction='d2f';
   }
 
-  reduced=module01Reduced(num,den);
-  let prompt='',display='',answers=[],qcm=null,equality='';
-  if(direction==='f2d'){
-    prompt=format==='truefalse'?'Cette égalité est-elle vraie ?':(format==='qcm'?'Quelle est l’écriture décimale ?':'Donne l’écriture décimale :');
+  const reduced=module01Reduced(num,den);
+  let dec=module01Decimal(num,den);
+  const F=module01Frac(num,den);
+  let visualData=null, correctionVisualData=null;
+
+  const special=['compare','sum_f2d','extreme'].includes(kind);
+  if(!special&&direction==='f2d'){
+    steps=module01F2DSteps(num,den,dec);
+    aide=module01F2DAide(num,den);
+    // Notes en texte seul (sans fraction empilée) : elles tiennent sur une ligne dans la carte.
+    if(num>den&&den>1&&den<10) note='Attention : la barre de fraction n’est pas une virgule, ce n’est pas '+num+','+den+'.';
+    else if(den===100&&num<10) note='Attention : le '+num+' s’écrit au rang des centièmes. 0,'+num+' vaut '+num+' '+module01PlaceName(1,num)+'.';
+    // QCM : la phrase du piège choisi suffit.
+    if(format==='qcm') note='';
+    else if(kind==='reducible_f2d') note='';
+    if(kind==='reducible_f2d'){
+      const g=GCD(num,den);
+      steps=['On simplifie par '+g+' : $$'+module01FracLatex(num,den)+'='+module01FracLatex(reduced.num,reduced.den)+'$$'].concat(module01F2DSteps(reduced.num,reduced.den,dec).slice(-1));
+      aide=['Simplifie d’abord la fraction : divise le numérateur et le dénominateur par un même nombre.','Tu dois retrouver une fraction à connaître : '+module01Frac(1,2)+', '+module01Frac(1,4)+', '+module01Frac(3,4)+', '+module01Frac(3,2)+' ou '+module01Frac(5,2)+'.'];
+    }
     if(format==='open'){
-      display='$$'+module01FracLatex(num,den)+'=[[dec]]$$'; answers=[dec];
+      prompt='Donne l’écriture décimale de '+F+'.';
+      display='$$'+module01FracLatex(num,den)+' = [[dec]]$$'; answers=[dec];
     } else if(format==='qcm'){
-      display='$$'+module01FracLatex(num,den)+'$$';
-      qcm=module01Qcm(dec,module01DecimalDistractors(num,den,dec)); answers=[qcm.correctIndex];
+      prompt='Quelle est l’écriture décimale de '+F+'&nbsp;?';
+      display='';
+      const distractors=kind==='fixed_f2d'?module01OfficialDecimalDistractors(num,den,dec):module01ImproperDecimalDistractors(num,den,dec);
+      qcm=module01QcmFrom(dec,distractors); answers=[qcm.correctIndex]; feedback=qcm.feedback;
     } else {
-      const truth=!!q.options.truth;
-      const shown=truth?dec:module01DecimalDistractors(num,den,dec)[0];
-      equality='$$'+module01FracLatex(num,den)+'='+shown+'$$';display=equality;
-      qcm={options:['Vrai','Faux'],correctIndex:truth?'1':'2'};answers=[qcm.correctIndex];
+      const wrong=module01ImproperDecimalDistractors(num,den,dec);
+      const truth=rnd()<0.5, shownItem=truth?null:pick(wrong.slice(0,3));
+      const shown=truth?dec:shownItem.value;
+      equality='$$'+module01FracLatex(num,den)+' = '+shown+'$$'; display=equality;
+      prompt='Cette égalité est-elle vraie&nbsp;?';
+      qcm={options:['Vrai','Faux'],codes:[null,truth?null:shownItem.code],correctIndex:truth?'1':'2'}; answers=[qcm.correctIndex];
+      // Le verdict tient sur la dernière ligne du calcul.
+      steps=steps.slice(0,-1).concat([steps[steps.length-1]+(truth?' : l’égalité est vraie.':', et non '+shown+' : l’égalité est fausse.')]);
+      // Le verdict et la phrase du piège disent déjà « ce n’est pas 3,2 » : pas de note en plus.
+      note='';
+      feedback=truth?{'2':'Si : '+F+' vaut bien '+dec+'.'}:{'1':shownItem.feedback};
+      extra.truth=truth; extra.shown=shown;
     }
-  } else if(direction==='d2f'){
-    prompt=format==='qcm'?'Quelle est la fraction irréductible correspondante ?':'Donne la fraction irréductible correspondante :';
+    visualData={num,den,reduced,visualKind,dec};
+    correctionVisualData=visualKind==='place-empty'?{kind:'place-value',value:dec}:(visualKind==='none'?null:{num,den,reduced,visualKind,showUnits:true});
+  } else if(!special&&direction==='d2f'){
+    fractionPolicy='equivalent';
+    steps=module01D2FSteps(dec,reduced);
+    aide=module01D2FAide(dec);
+    const D='$$'+dec+'$$';
     if(format==='open'){
-      display='$$'+dec+'=[[frac-simp]]$$';answers=[String(reduced.num),String(reduced.den)];
+      prompt='Écris '+D+' sous forme de fraction.';
+      const parts=module01DecimalParts(dec), shown=module01D2FShown(dec,reduced);
+      display='$$'+dec+' = [[frac-simp]]$$'; answers=[String(shown.num),String(shown.den)];
+      note=shown.simplified?'Les deux fractions sont justes.':'';
     } else {
-      display='$$'+dec+'$$';
-      const correct=module01FracLatex(reduced.num,reduced.den);
-      qcm=module01Qcm(correct,module01FractionDistractors(num,den,reduced));answers=[qcm.correctIndex];
+      prompt='Quelle fraction est égale à '+D+'&nbsp;?';
+      display='';
+      const parts=module01DecimalParts(dec);
+      const correct=kind==='place_d2f'?module01FracLatex(parts.num,parts.den):module01FracLatex(reduced.num,reduced.den);
+      const distractors=kind==='place_d2f'?module01PlaceFractionDistractors(parts):module01FractionDistractors(num,den);
+      qcm=module01QcmFrom(correct,distractors); answers=[qcm.correctIndex]; feedback=qcm.feedback;
+      if(kind==='place_d2f') steps=steps.slice(0,1);
     }
-  } else {
-    prompt='Quelle écriture décimale est représentée ?';
-    display='$$[[dec]]$$';answers=[dec];
+    // Question : tableau vide (dans quel rang est chaque chiffre ?) ; correction : tableau rempli.
+    visualData={kind:'place-value',value:null};
+    correctionVisualData={kind:'place-value',value:dec};
+  } else if(kind==='compare'){
+    // « Complète par <, = ou > » (sujet de référence n° 1, Q4 : comparer 7/4 et des décimaux).
+    const e=pick([{n:1,d:2},{n:1,d:4},{n:3,d:4},{n:3,d:2},{n:5,d:2},{n:5,d:4},{n:7,d:4},{n:1,d:10}]);
+    num=e.n; den=e.d; dec=module01Decimal(num,den);
+    const F=module01Frac(num,den);
+    const value=num/den, r=rnd();
+    let other;
+    if(r<0.25) other=value;
+    else if(r<0.45&&den<10){
+      // Piège : un décimal qui recopie les chiffres de la fraction (3/4 et 0,34 ; 5/2 et 5,2).
+      other=num<den?Number('0.'+num+den):Number(num+'.'+den);
+    }
+    else {
+      const deltas=value<0.5?[0.05,0.1,0.15]:[0.05,0.1,0.2,0.25];
+      let tries=0;
+      do{ other=Math.round((value+(rnd()<0.5?-1:1)*pick(deltas))*100)/100; tries++; }while((other<=0||Math.abs(other-value)<1e-9)&&tries<20);
+      if(other<=0) other=Math.round((value+0.1)*100)/100;
+    }
+    // Piège visé : un décimal qui reprend les chiffres de la fraction (3/4 et 0,34 ; 5/2 et 2,5…).
+    const otherText=String(Number(other.toFixed(2))).replace('.',',');
+    const fractionLeft=rnd()<0.5;
+    const sign=Math.abs(other-value)<1e-9?'=':(value<other?'<':'>');
+    const shownSign=fractionLeft?sign:(sign==='<'?'>':(sign==='>'?'<':'='));
+    const leftLatex=fractionLeft?module01FracLatex(num,den):otherText, rightLatex=fractionLeft?otherText:module01FracLatex(num,den);
+    prompt='Complète par <span style="white-space:nowrap">&lt;, = ou &gt;</span>.';
+    display='$$'+leftLatex+'$$[[compare]]$$'+rightLatex+'$$';
+    const signs=['<','=','>'];
+    qcm={options:signs,codes:[null,null,null],correctIndex:String(signs.indexOf(shownSign)+1),kind:'signs'};
+    answers=[qcm.correctIndex];
+    const sym=s=>s==='<'?'&lt;':(s==='>'?'&gt;':'=');
+    const leftText=fractionLeft?F:'$$'+otherText+'$$', rightText=fractionLeft?'$$'+otherText+'$$':F;
+    steps=[
+      'En écriture décimale : '+F+' = $$'+dec+'$$.',
+      (sign==='='?'$$'+dec+'$$ et $$'+otherText+'$$ sont égaux':'$$'+(fractionLeft?dec:otherText)+'$$ '+(shownSign==='<'?'&lt;':'&gt;')+' $$'+(fractionLeft?otherText:dec)+'$$ car '+module01RankReason(fractionLeft?dec:otherText,fractionLeft?otherText:dec))+', donc '+leftText+' '+sym(shownSign)+' '+rightText+'.'
+    ];
+    aide=['Écris d’abord '+F+' en écriture décimale.','Compare ensuite les deux décimaux : les unités, puis les dixièmes, puis les centièmes.'];
+    feedback={};
+    // Une phrase par piège : « = » (la fraction lue comme un décimal : 3/4 et 0,34) ; signe inversé
+    // (le nombre le plus long n'est pas le plus grand : on écrit les deux avec deux décimales).
+    const trap=('0,'+num+den)===otherText||(num+','+den)===otherText;
+    const pad2=t=>{const [i,d='']=String(t).split(',');return i+','+(d+'00').slice(0,2);};
+    signs.forEach((s,i)=>{
+      if(s===shownSign) return;
+      let text;
+      if(sign==='=') text=F+' = '+dec+'&nbsp;: les deux nombres sont égaux.';
+      else if(s==='=') text=trap?'La barre de fraction n’est pas une virgule : '+F+' n’est pas '+otherText+'.':F+' = '+dec+', ce n’est pas '+otherText+'.';
+      else text='Avec deux chiffres après la virgule, compare '+pad2(fractionLeft?dec:otherText)+' et '+pad2(fractionLeft?otherText:dec)+'.';
+      feedback[String(i+1)]=text;
+    });
+    if(trap) note='Attention : la barre de fraction n’est pas une virgule, ce n’est pas '+otherText+'.';
+    extra={other,otherText,sign:shownSign,fractionLeft};
+    visualData=null; correctionVisualData=null; visualKind='none';
+    direction='compare';
+  } else if(kind==='sum_f2d'){
+    // « 1 + 3/100 » : sujet de référence n° 1, Q4.
+    // Une fois sur quatre, trois termes : 2 + 6/10 + 3/100 (item voisin de l'évaluation DEPP de 4e).
+    const whole=RD(1,3), r=rnd(), threeTerms=r<0.25, useHundredths=!threeTerms&&r<0.7, k=RD(1,9);
+    den=useHundredths?100:10; num=k;
+    if(threeTerms){
+      const h=RD(1,9), total=whole+k/10+h/100;
+      dec=String(Number(total.toFixed(2))).replace('.',',');
+      const expr=whole+'+'+module01FracLatex(k,10)+'+'+module01FracLatex(h,100);
+      // L'expression est longue : elle n'est écrite qu'une fois, sur la ligne de réponse.
+      prompt='Donne l’écriture décimale de ce nombre.';
+      display='$$'+expr+' = [[dec]]$$'; answers=[dec];
+      steps=[
+        module01Frac(k,10)+' = $$'+module01Decimal(k,10)+'$$ et '+module01Frac(h,100)+' = $$'+module01Decimal(h,100)+'$$',
+        '$$'+expr+'='+whole+'+'+module01Decimal(k,10)+'+'+module01Decimal(h,100)+'='+dec+'$$'
+      ];
+      aide=['Écris chaque fraction en écriture décimale.','Les dixièmes vont au 1<sup>er</sup> rang après la virgule, les centièmes au 2<sup>e</sup>.'];
+      extra={threeTerms:true,whole,tenths:k,hundredths:h};
+    } else {
+      const total=whole+k/den;
+      dec=String(Number(total.toFixed(2))).replace('.',',');
+      const expr=whole+'+'+module01FracLatex(k,den);
+      prompt='Donne l’écriture décimale de $$'+expr+'$$.';
+      display='$$'+expr+' = [[dec]]$$'; answers=[dec];
+      const part=module01Decimal(k,den);
+      steps=[
+        module01Frac(k,den)+' = '+k+' '+module01PlaceName(useHundredths?2:1,k)+' = $$'+part+'$$',
+        '$$'+expr+'='+whole+'+'+part+'='+dec+'$$'
+      ];
+      aide=['Écris d’abord '+module01Frac(k,den)+' en écriture décimale.',whole>1?'Ajoute ensuite les '+whole+' unités.':'Ajoute ensuite 1 unité.'];
+      if(useHundredths) note='Attention : ce n’est pas '+whole+','+k+' ('+whole+','+k+' = '+whole+' unité'+(whole>1?'s':'')+' et '+k+' '+module01PlaceName(1,k)+').';
+    }
+    visualData={kind:'place-value',value:null}; correctionVisualData={kind:'place-value',value:dec};
+    visualKind='place-empty'; direction='sum';
+  } else if(kind==='extreme'){
+    // « Quel est le plus grand (petit) nombre ? » : fractions et décimaux mélangés.
+    const base=pick([{n:5,d:4},{n:3,d:2},{n:7,d:4},{n:5,d:2},{n:9,d:4}]);
+    num=base.n; den=base.d;
+    const whole=Math.floor(num/den), value=num/den;
+    const askMax=rnd()<0.5;
+    let items, tries=0;
+    do{
+      const k=RD(1,9), tenth=RD(1,9), hundredth=RD(11,99), sumDen=rnd()<0.6?100:10;
+      items=[
+        {label:module01FracLatex(num,den),value,display:module01Frac(num,den),decimal:module01Decimal(num,den)},
+        {label:whole+'+'+module01FracLatex(k,sumDen),value:whole+k/sumDen,display:'$$'+whole+'+'+module01FracLatex(k,sumDen)+'$$',decimal:String(Number((whole+k/sumDen).toFixed(2))).replace('.',',')},
+        {label:whole+','+tenth,value:whole+tenth/10,display:'$$'+whole+','+tenth+'$$',decimal:whole+','+tenth},
+        {label:(hundredth%10===0?null:whole+','+String(hundredth)),value:whole+hundredth/100,display:'$$'+whole+','+hundredth+'$$',decimal:whole+','+hundredth}
+      ];
+      tries++;
+    }while(tries<60&&(items.some(item=>!item.label)||new Set(items.map(item=>Math.round(item.value*100))).size<4||(()=>{const sorted=items.map(item=>item.value).sort((a,b)=>a-b);return sorted.some((v,i)=>i>0&&v-sorted[i-1]<0.04);})()));
+    const best=items.reduce((acc,item)=>askMax?(item.value>acc.value?item:acc):(item.value<acc.value?item:acc),items[0]);
+    const order=shuffleLocal(items.map((_,i)=>i));
+    const shuffled=order.map(i=>items[i]);
+    qcm={options:shuffled.map(item=>item.label),codes:shuffled.map(item=>item===best?null:'E-compare'),correctIndex:String(shuffled.indexOf(best)+1)};
+    answers=[qcm.correctIndex];
+    prompt=askMax?'Quel est le plus grand de ces nombres&nbsp;?':'Quel est le plus petit de ces nombres&nbsp;?';
+    display='';
+    const asDec=items.map(item=>item.display+' = $$'+item.decimal+'$$');
+    steps=[
+      'En écriture décimale : '+asDec.slice(0,2).join(' ; ')+'.',
+      items.slice().sort((a,b)=>a.value-b.value).map(item=>'$$'+item.decimal+'$$').join(' &lt; ')+' : le plus '+(askMax?'grand':'petit')+' est '+best.decimal+'.'
+    ];
+    aide=['Écris chaque nombre en écriture décimale.','Compare d’abord les unités, puis les dixièmes, puis les centièmes.'];
+    feedback={};
+    // Les écritures décimales sont dans la correction : la phrase compare seulement les décimaux.
+    shuffled.forEach((item,i)=>{ if(item!==best) feedback[String(i+1)]=item.decimal+' est '+(askMax?'plus petit':'plus grand')+' que '+best.decimal+'.'; });
+    extra={items:items.map(item=>({label:item.label,value:item.value,decimal:item.decimal})),askMax};
+    visualData=null; correctionVisualData=null; visualKind='none'; direction='extreme';
   }
 
+  // Le dessin du sens décimal → fraction est un tableau de numération rempli (lecture des rangs).
+  const aideHtml=visualData?module01AideVisual(visualData.kind?visualData:{...visualData}):'';
+  const hasVisual=!!aideHtml;
+  prompt=module01Tidy(prompt); display=module01Tidy(display); equality=module01Tidy(equality);
+  if(qcm&&qcm.kind!=='signs') qcm.options=qcm.options.map(option=>['Vrai','Faux'].includes(option)?option:module01TidyLatex(option));
+  if(feedback) Object.keys(feedback).forEach(key=>{feedback[key]=module01Tidy(feedback[key]);});
   return {
-    module:mod,q,scope:{},answers,rawStatement:prompt,rawFooter:display,hasSvg:true,
-    module01:{kind,format,direction,num,den,dec,reduced,visualKind,qcm,prompt,display,equality}
+    module:mod,q,scope:{},answers,rawStatement:prompt,rawFooter:display,hasSvg:hasVisual,
+    correctionSteps:steps.filter(Boolean).slice(0,3).map(module01Tidy),
+    correctionNote:module01Tidy(note),
+    distractorFeedback:feedback||null,
+    aideSteps:aide.slice(0,2).map(module01Tidy),
+    aideHtml,
+    module01:{kind,format,direction,num,den,dec,reduced,visualKind,visualData,correctionVisualData,qcm,prompt,display,equality,fractionPolicy,extra}
   };
 }
 
@@ -1135,52 +1847,132 @@ function makeEquationInstance(mod,q){
   return {module:mod,q,scope:{},answers,rawStatement:prompt,rawFooter:'',hasSvg:true,equationData:data};
 }
 
+const REDUCTION_ALWAYS_QCM=['already_reduced','product','sum_or_product','paren_factor_qcm'];
+const REDUCTION_HALF_QCM=['one_no_cancel','one_cancel'];
+function redSecondHint(groups,L){
+  const types=['x2','x','u'];
+  const repeated=types.find(type=>groups.filter(g=>g.type===type).length>=2);
+  const families=new Set(groups.map(g=>g.type));
+  if(families.size>1 && repeated){
+    const members=groups.filter(g=>g.type===repeated).map((g,i)=>{const p=redPiece(g.coeff,redFamilyBody(g.type,L));return (p.sign==='−'?'−':(groups.indexOf(g)===0?'':'+'))+p.body;});
+    return 'Ici, '+redFamilyName(repeated,L)+' sont '+members.slice(0,-1).join(', ')+' et '+members[members.length-1]+'.';
+  }
+  const negative=groups.find((g,i)=>g.coeff<0);
+  if(negative){
+    const body=redFamilyBody(negative.type,L);
+    return 'Le signe fait partie du terme : −'+redMonoAbs(negative.coeff,body)+' a pour coefficient −'+Math.abs(negative.coeff)+'.';
+  }
+  const one=groups.find(g=>Math.abs(g.coeff)===1&&g.type!=='u');
+  if(one) return redFamilyBody(one.type,L)+' seul compte pour 1'+redFamilyBody(one.type,L)+'.';
+  return 'Commence par '+redPiecesText(redGroupsPieces(groups.slice(0,2),L))+'.';
+}
 function makeReductionInstance(mod,q){
   const kind=q.options.reduction_kind;
-  const requestedFormat=q.options.reduction_format||'direct';
-  const qcmAllowed=(kind==='one_no_cancel' || kind==='one_cancel' || kind==='already_reduced');
-  const format=(requestedFormat==='qcm' && qcmAllowed)?'qcm':'direct';
+  const requested=q.options.reduction_format||'direct';
+  const format=REDUCTION_ALWAYS_QCM.includes(kind)?'qcm':((requested==='qcm'&&REDUCTION_HALF_QCM.includes(kind))?'qcm':'direct');
+  const qcmPrompt='Quelle est la forme réduite de cette expression ?';
+  let L='x',pieces=[],groups=[],sums={x2:0,x:0,u:0},slotTypes=['x','u'],answer='',qcm=null,work=null,aideHtml=null,aide=[];
+  let prompt=format==='qcm'?qcmPrompt:'Réduis l’expression :';
 
-  let groups=[];
-  let readCoeffs=null;
-
-  if(format==='qcm'){
-    groups=kind==='already_reduced'?makeAlreadyReducedQcmGroups():simpleQcmGroups(kind);
-  } else {
-    if(kind==='one_no_cancel') groups=makeOneNoCancel();
-    if(kind==='one_cancel') groups=makeOneCancel();
-    if(kind==='multi_no_cancel') groups=makeMultiNoCancel();
-    if(kind==='multi_cancel') groups=makeMultiCancel();
-    if(kind==='already_reduced') groups=makeAlreadyReduced();
-    if(kind==='read_tiles') readCoeffs=makeReadCoeffs();
+  if(['one_no_cancel','one_cancel','multi_no_cancel','multi_cancel','already_reduced'].includes(kind)){
+    if(format==='qcm'){
+      L=pick(['x','x','a','y','t']);
+      groups=kind==='already_reduced'?makeAlreadyReducedQcmGroups():simpleQcmGroups(kind);
+    } else {
+      if(kind==='one_no_cancel') groups=makeOneNoCancel();
+      if(kind==='one_cancel') groups=makeOneCancel();
+      if(kind==='multi_no_cancel') groups=makeMultiNoCancel();
+      if(kind==='multi_cancel') groups=makeMultiCancel();
+    }
+    sums=coeffSums(groups);
+    pieces=redGroupsPieces(groups,L);
+    slotTypes=['x2','x','u'].filter(type=>groups.some(g=>g.type===type));
+    answer=redReducedText(sums,L);
+    aideHtml=redFamiliesAideHtml(groups,L,true);
+    if(kind==='already_reduced'){
+      qcm=makeAlreadyReducedQcm(groups,L);
+      answer=qcm.options[Number(qcm.correctIndex)-1];
+      const t1=redMonomialText(groups[0].coeff,groups[0].type==='x2'?2:(groups[0].type==='x'?1:0),L);
+      const t2=redMonomialText(groups[1].coeff,groups[1].type==='x2'?2:(groups[1].type==='x'?1:0),L);
+      work={
+        steps:[t1+' et '+t2+' ne sont pas de la même famille : on ne peut pas les regrouper.',redPiecesText(pieces)+' est déjà réduite. Écrite dans l’autre ordre : '+redFinalStrong(answer)+'.'],
+        note:groups.some(g=>g.type==='u')
+          ?'Attention : un nombre seul ne se regroupe pas avec des '+redFamilyBody(groups.find(g=>g.type!=='u').type,L)+'.'
+          :'Attention : '+redLetter(L)+'² = '+redLetter(L)+' × '+redLetter(L)+' : ce n’est pas la même famille que '+redLetter(L)+'.'
+      };
+      aide=['On ne regroupe que des termes de la même famille : les '+redLetter(L)+'², les '+redLetter(L)+', les nombres.','Ici, '+t1+' et '+t2+' sont-ils de la même famille ?'];
+    } else if(kind==='one_no_cancel'||kind==='one_cancel'){
+      work=redOneFamilyCorrection(groups,L);
+      if(format==='qcm') qcm=makeOneFamilyQcm(groups,L);
+      aide=['Tous les termes sont des '+redFamilyBody(groups[0].type,L)+' : additionne leurs coefficients, avec leur signe.',redSecondHint(groups,L)];
+    } else {
+      work=redMultiCorrection(groups,L);
+      aide=['Regroupe les termes de la même famille : les '+redLetter(L)+'² ensemble, les '+redLetter(L)+' ensemble, les nombres ensemble.',redSecondHint(groups,L)];
+    }
+  } else if(kind==='paren_factor'||kind==='paren_factor_qcm'){
+    L=kind==='paren_factor_qcm'?pick(['a','a','y','t']):'x';
+    const d=makeParenFactorData(L);
+    work=parenFactorWork(d,L);
+    pieces=work.pieces;
+    sums={x2:0,x:d.cx,u:d.cu};
+    answer=work.result;
+    aide=work.aide;
+    if(kind==='paren_factor_qcm') qcm=makeParenFactorQcm(d,L);
+  } else if(kind==='opposite_paren'){
+    const o=makeOppositeData();
+    work=oppositeWork(o);
+    pieces=work.pieces;
+    sums={x2:0,x:o.cx,u:o.cu};
+    answer=work.result;
+    aide=work.aide;
+  } else if(kind==='product'){
+    const d=makeProductData();
+    L=d.letter;
+    work=productWork(d);
+    pieces=[{sign:'+',body:work.expr}];
+    answer=work.result;
+    aide=work.aide;
+    qcm=makeProductQcm(d);
+    prompt='Quelle est la forme réduite de ce produit ?';
+  } else if(kind==='sum_or_product'){
+    const d=makeSumOrProductData();
+    work=sumOrProductWork(d);
+    pieces=[{sign:'+',body:work.expr}];
+    answer=work.result;
+    aide=work.aide;
+    qcm=makeSumOrProductQcm(d);
   }
+  if(qcm) prompt=kind==='product'?prompt:qcmPrompt;
 
-  const sums=readCoeffs||coeffSums(groups);
-  const answer=kind==='already_reduced'?expressionLatex(groups):reducedLatex(sums);
-  const qcm=(format==='qcm')
-    ? (kind==='already_reduced'?makeAlreadyReducedQcm(groups):makeSimpleReductionQcm(groups))
-    : null;
-
-  return {
+  const inst={
     module:mod,
     q,
     scope:{},
     answers:qcm?[qcm.correctIndex]:[answer],
-    rawStatement:q.statement,
+    rawStatement:prompt,
     rawFooter:'',
-    hasSvg:true,
+    hasSvg:false,
+    correctionSteps:work.steps,
+    aideSteps:aide,
     reduction:{
       kind,
-      format:(kind==='read_tiles'?'direct':format),
+      format:qcm?'qcm':'direct',
+      letter:L,
+      prompt,
       groups,
-      readCoeffs,
       sums,
+      slotTypes,
       answer,
-      expr:groups.length?expressionLatex(groups):'',
+      exprText:redPiecesText(pieces),
+      exprHtml:redPiecesHtml(pieces),
       qcmOptions:qcm?qcm.options:null,
       qcmCorrectIndex:qcm?qcm.correctIndex:null
     }
   };
+  if(work.note) inst.correctionNote=work.note;
+  if(qcm) inst.distractorFeedback=qcm.distractorFeedback;
+  if(aideHtml) inst.aideHtml=aideHtml;
+  return inst;
 }
 const SOLID_NAMES=['un cube','un pavé droit','un prisme droit','un cylindre','une pyramide','un cône','une sphère','une boule'];
 function solidVisualForQuestion(q){
@@ -2043,42 +2835,283 @@ function makeAngleSumInstance(mod,q){
   return {module:mod,q,scope,answers,rawStatement,rawFooter,hasSvg:/<svg/i.test(rawStatement+rawFooter),angleSum:{kind,bar}};
 }
 
+// dnb_35 — hausse et baisse en pourcentage (refonte V1, octobre 2026).
+// Le générateur tire tout ici : énoncé, réponse, correction en 1 à 3 lignes,
+// indices de l’aide (jamais la réponse), une phrase par piège des QCM et le
+// dessin d’aide (la barre de 100 %, sans total ni accolade).
+const EVO_FINE='\u202f',EVO_INSEC='\u00a0';
+const EVO_PRICES=[12,15,18,20,24,25,30,35,40,45,48,50,60,64,70,75,80,90,120,150,160,180,200,240,250,300,350,400,450,500,600,800];
+// Objets et fourchettes de prix crédibles (un livre ne coûte pas 450 €).
+const EVO_ITEMS=[['Un article',0,1e9],['Un livre',12,30],['Un jeu',15,70],['Un sac',20,90],['Une veste',30,150],['Un casque',24,150],['Une montre',40,250],['Un vélo',150,800],['Un téléphone',150,800]];
+function evoItem(price){return pick(EVO_ITEMS.filter(([,min,max])=>price>=min&&price<=max))[0];}
+// Effectifs : nom au pluriel, phrase de départ, sujet de l’évolution, question.
+const EVO_GROUPS=[
+  {unit:'habitants',values:Array.from({length:22},(_,i)=>300+100*i),
+   start:n=>'Un village compte '+n+'.<br>',subject:'Sa population',
+   ask:(up)=>'Combien d’habitants compte-t-il après cette '+(up?'augmentation':'baisse')+EVO_INSEC+'?',
+   howMuch:(up)=>'De combien d’habitants la population '+(up?'augmente':'baisse')+'-t-elle'+EVO_INSEC+'?'},
+  {unit:'adhérents',values:Array.from({length:19},(_,i)=>40+20*i),
+   start:n=>'Un club de sport compte '+n+'.<br>',subject:'L’année suivante, ce nombre',
+   ask:()=>'Combien d’adhérents compte alors le club'+EVO_INSEC+'?',
+   howMuch:(up)=>'De combien d’adhérents ce nombre '+(up?'augmente':'baisse')+'-t-il'+EVO_INSEC+'?'},
+  {unit:'élèves',values:Array.from({length:31},(_,i)=>300+20*i),
+   start:n=>'Un collège compte '+n+'.<br>',subject:'L’année suivante, l’effectif',
+   ask:()=>'Combien d’élèves compte alors le collège'+EVO_INSEC+'?',
+   howMuch:(up)=>'De combien d’élèves l’effectif '+(up?'augmente':'baisse')+'-t-il'+EVO_INSEC+'?'}
+];
+function evoNum(value){
+  const v=Math.round(Number(value)*1000)/1000;
+  const [whole,decimals]=String(Math.abs(v)).split('.');
+  const grouped=whole.length>3?whole.replace(/\B(?=(\d{3})+(?!\d))/g,EVO_FINE):whole;
+  return (v<0?'−':'')+grouped+(decimals?','+decimals:'');
+}
+// Prix : 40,5 s’écrit 40,50.
+function evoEuroNum(value){
+  const cents=Math.round(Number(value)*100);
+  return cents%100===0?evoNum(cents/100):evoNum(Math.floor(cents/100))+','+String(cents%100).padStart(2,'0');
+}
+function evoPct(p){return p+EVO_FINE+'%';}
+function evoNumFor(value,unit){return unit==='€'?evoEuroNum(value):evoNum(value);}
+function evoQty(value,unit){return evoNumFor(value,unit)+(unit?EVO_INSEC+unit:'');}
+function evoFrac(a,b){return '$$\\frac{'+a+'}{'+b+'}$$';}
+// p % de x, calculé de tête (ligne de correction).
+function evoPartLine(x,p,unit){
+  const money=unit==='€',X=evoNumFor(x,unit),A=evoNumFor(x*p/100,unit)+(money?EVO_INSEC+'€':'');
+  const of=evoPct(p)+' de '+(money?evoQty(x,unit):X)+' = ';
+  const tenth=evoPct(10)+' de '+(money?evoQty(x,unit):X)+' = '+evoNumFor(x/10,unit)+(money?EVO_INSEC+'€':'');
+  if(p===10) return of+X+' ÷ 10 = '+A;
+  if(p===50) return of+X+' ÷ 2 = '+A;
+  if(p===25) return of+X+' ÷ 4 = '+A;
+  if(p===5) return tenth+' ; '+evoPct(5)+' = '+evoNumFor(x/10,unit)+' ÷ 2 = '+A;
+  if(p%10===0) return tenth+' ; '+evoPct(p)+' = '+(p/10)+' × '+evoNumFor(x/10,unit)+' = '+A;
+  return of+evoFrac(p,100)+' × '+X+' = '+A;
+}
+// La même chose, sans le résultat (indice de l’aide).
+function evoPartHint(x,p,unit){
+  const X=evoNumFor(x,unit);
+  if(p===10) return 'Ici, '+evoPct(10)+' de '+X+', c’est '+X+' ÷ 10.';
+  if(p===50) return 'Ici, '+evoPct(50)+' de '+X+', c’est la moitié : '+X+' ÷ 2.';
+  if(p===25) return 'Ici, '+evoPct(25)+' de '+X+', c’est le quart : '+X+' ÷ 4.';
+  if(p===5) return 'Ici, prends '+evoPct(10)+' de '+X+' ('+X+' ÷ 10), puis la moitié.';
+  if(p%10===0) return 'Ici, prends '+evoPct(10)+' de '+X+' ('+X+' ÷ 10), puis multiplie par '+(p/10)+'.';
+  return 'Ici, '+evoPct(p)+' de '+X+', c’est '+evoFrac(p,100)+' × '+X+'.';
+}
+function evoAmountIsSimple(x,p){
+  const a=x*p/100;
+  if(Math.abs(a*10-Math.round(a*10))>1e-9) return false;
+  return p!==25||x%4===0;
+}
+function evoPickPrice(p,integerOnly=false){
+  const ok=EVO_PRICES.filter(x=>evoAmountIsSimple(x,p)&&(!integerOnly||Number.isInteger(x*p/100))&&x!==100);
+  return pick(ok);
+}
+function evoPickGroup(p){
+  const group=pick(EVO_GROUPS);
+  const values=group.values.filter(n=>Number.isInteger(n*p/100)&&n!==100);
+  return {group,n:pick(values)};
+}
+function evoBar(initial,p,up,normalized){
+  const unit=GCD(100,p),baseCells=100/unit,deltaCells=p/unit;
+  return {kind:'',direction:up?'increase':'decrease',percent:p,initial,amount:initial*p/100,
+    newTotal:up?initial*(1+p/100):initial*(1-p/100),normalized,baseCells,deltaCells,cellValue:initial/baseCells,
+    braceMode:normalized?'coefficient':(up?'newTotal':'remainder')};
+}
+function evoQcm(prompt,correct,traps){
+  // traps : [{text, feedback}] ; les quatre choix sont mélangés.
+  const options=[{text:correct,feedback:null},...traps];
+  const order=shuffleLocal(options.map((_,i)=>i));
+  const shown=order.map(i=>options[i]);
+  const feedback={};
+  shown.forEach((option,index)=>{if(option.feedback) feedback[String(index+1)]=option.feedback;});
+  return {rawStatement:prompt+'&&'+shown.map(option=>option.text).join('&&')+'&&',answers:[String(order.indexOf(0)+1)],feedback};
+}
+
+// « de 10 % » : l’espace insécable garde « de » avec le pourcentage (pas de
+// « 10 %. » seul en bout de ligne).
+function evoDe(p){return 'de'+EVO_INSEC+evoPct(p);}
+function evoLower(item){return item.replace(/^Une? /,m=>m==='Une '?'une ':'un ');}
+
 function makeEvolutionInstance(mod,q){
-  const scope=q.options&&q.options.formula_code?runCode(q.options.formula_code):{};
-  let answers=parseAnswer(q,scope);
-  let rawStatement=subVars(q.statement||'',scope);
-  const rawFooter=subVars(q.footer||'',scope);
-  if(q.options&&q.options.shuffle_answers){
-    const shuffled=shuffledQcm(rawStatement,answers);
-    rawStatement=shuffled.statement;
-    answers=shuffled.answers;
+  // La carte « Comment on trouve » tient 3 lignes à l’ordinateur 1366 × 625 :
+  // étapes + note (ou phrase du piège) ne dépassent jamais 3 lignes.
+  const kind=String(q.options&&q.options.evolution_kind||'');
+  const up=/increase/.test(kind)||(kind==='change_amount'||kind==='trap_qcm'?rnd()<.5:false);
+  const sign=up?'+':'−',verb=up?'Augmenter':'Baisser',addOrRemove=up?'ajouter':'enlever';
+  const ask='Quel est son nouveau prix'+EVO_INSEC+'?';
+  let rawStatement='',rawFooter='',answers=[],steps=[],aide=[],note='',feedback=null,bar=null,p=10,initial=0,unit='€';
+
+  if(kind==='price_increase'||kind==='price_decrease'){
+    // Formes des sujets : AN 2, AA 7, PO 5 (baisse de 10 %), R1 9 (15 €, + 20 %).
+    p=up?pick([10,10,20,20,25,40,50,5,30]):(rnd()<.5?10:pick([20,25,50,5,30,40]));
+    initial=evoPickPrice(p);
+    const item=evoItem(initial),X=evoQty(initial,'€'),P=evoPct(p),form=rnd();
+    if(up) rawStatement=form<.4
+      ?item+' coûte '+X+'.<br>Son prix augmente '+evoDe(p)+'.<br>'+ask
+      :(form<.7
+        ?item+' coûte '+X+'.<br>Quel sera son prix après une augmentation '+evoDe(p)+EVO_INSEC+'?'
+        :'Le prix d’'+evoLower(item)+' de '+X+' augmente '+evoDe(p)+'.<br>'+ask);
+    else rawStatement=form<.3
+      ?item+' coûte '+X+'.<br>Son prix baisse '+evoDe(p)+'.<br>'+ask
+      :(form<.55
+        ?item+' coûte '+X+'.<br>Quel sera son prix après une réduction '+evoDe(p)+EVO_INSEC+'?'
+        :(form<.8
+          ?item+' coûte '+X+'.<br>Calcule son nouveau prix après une baisse '+evoDe(p)+'.'
+          :'Pendant les soldes, le prix d’'+evoLower(item)+' à '+X+' baisse '+evoDe(p)+'.<br>'+ask));
+    const result=up?initial*(1+p/100):initial*(1-p/100);
+    answers=[evoEuroNum(result)];
+    rawFooter='[[formula]]'+EVO_INSEC+'€';
+    steps=[(up?'On ajoute ':'On enlève ')+P+' du prix.',evoPartLine(initial,p,'€'),
+      evoEuroNum(initial)+' '+sign+' '+evoEuroNum(initial*p/100)+' = <strong>'+evoQty(result,'€')+'</strong>'];
+    aide=['Calcule d’abord '+P+' du prix : c’est '+(up?'l’augmentation':'la baisse')+'. '+(up?'Ajoute-la ensuite au prix.':'Enlève-la ensuite du prix.'),evoPartHint(initial,p,'€')];
+    bar=evoBar(initial,p,up,false);
+  }else if(kind==='count_increase'||kind==='count_decrease'){
+    p=pick([5,10,10,20,25]);
+    const drawn=evoPickGroup(p),group=drawn.group;
+    initial=drawn.n;unit=group.unit;
+    const P=evoPct(p),result=up?initial*(1+p/100):initial*(1-p/100);
+    rawStatement=group.start(evoQty(initial,unit))+group.subject+' '+(up?'augmente':'baisse')+' '+evoDe(p)+'.<br>'+group.ask(up);
+    answers=[evoNum(result)];
+    rawFooter='[[formula]]'+EVO_INSEC+unit;
+    steps=[(up?'On ajoute ':'On enlève ')+P+' des '+unit+'.',evoPartLine(initial,p,''),
+      evoNum(initial)+' '+sign+' '+evoNum(initial*p/100)+' = <strong>'+evoQty(result,unit)+'</strong>'];
+    aide=['Calcule d’abord '+P+' de '+evoNum(initial)+', puis '+(up?'ajoute-le à ':'enlève-le de ')+evoNum(initial)+'.',evoPartHint(initial,p,'')];
+    bar=evoBar(initial,p,up,false);
+  }else if(kind==='increase_coefficient'||kind==='decrease_coefficient'){
+    // p de 2 à 60 % ; une fois sur deux en contexte « 20 × … » (AG-pro 9).
+    // Les petits pourcentages entraînent le piège de la DEPP (+ 3 % : × 1,3).
+    p=pick([2,3,4,5,6,8,10,12,15,20,25,30,40,50,60]);
+    const P=evoPct(p),total=up?100+p:100-p,coefficient=total/100,C=evoNum(coefficient);
+    const context=rnd()<.5;
+    const verbC=context?verb:(up?'Augmenter':'Diminuer');
+    answers=[C];
+    if(!context){
+      rawStatement=verbC+' une quantité '+evoDe(p)+' revient à la multiplier par quel nombre'+EVO_INSEC+'?';
+      rawFooter='× [[formula]]';
+    }else{
+      initial=evoPickPrice(10,true);
+      rawStatement=evoItem(initial)+' coûte '+evoQty(initial,'€')+'.<br>Son prix '+(up?'augmente':'baisse')+' '+evoDe(p)+'.<br>Complète le calcul qui donne le nouveau prix.';
+      rawFooter=evoEuroNum(initial)+' × [[formula]]';
+    }
+    // Lignes courtes : la carte tient aussi au téléphone de 320 px.
+    steps=['100'+EVO_FINE+'% '+sign+' '+P+' = '+evoPct(total),
+      evoPct(total)+' = '+evoFrac(total,100)+' = <strong>'+C+'</strong>'];
+    aide=[(up?'Après la hausse':'Après la baisse')+', on a 100'+EVO_FINE+'% '+sign+' '+P+' '+(context?'du prix de départ.':'de la quantité de départ.'),
+      'Écris ce pourcentage sous forme de fraction sur 100, puis en nombre décimal.'];
+    note=p<10
+      ?'Attention : × '+evoNum(up?1+p/10:1-p/10)+', ce serait '+sign+' '+evoPct(p*10)+'.'
+      :'Attention : × '+evoNum(p/100)+' calcule '+(up?'la hausse.':'la baisse.');
+    bar=evoBar(1,p,up,true);
+    initial=initial||1;
+  }else if(kind==='increase_qcm'||kind==='decrease_qcm'){
+    // « Quel calcul donne le nouveau prix ? » : G1 8 (80 − 10/100 × 80, et ses
+    // trois pièges) et AG-pro 9 (20 + 20 × 40/100 ou 20 × 1,4). Chaque choix
+    // porte sa valeur : on refait le tirage si deux choix sont égaux.
+    const brevet=rnd()<.6,firstThird=rnd(),order=rnd();
+    let options,tries=0;
+    do{
+      p=pick([10,10,20,25,30,40,50]);
+      initial=evoPickPrice(p,true);
+      const x=evoNum(initial),P=evoPct(p),frac='\\frac{'+p+'}{100}',op=up?'+':'−',s=up?1:-1,d=evoNum(p/100),money=v=>evoQty(v,'€');
+      const did=up?'Tu as ajouté ':'Tu as enlevé ',amount=initial*p/100;
+      const added={text:'$$'+x+' '+op+' '+p+'$$',value:initial+s*p,feedback:did+p+EVO_INSEC+'€, pas '+P+' du prix.'};
+      const tiny={text:'$$'+x+' '+op+' '+(brevet?frac:d)+'$$',value:initial+s*p/100,feedback:did+d+EVO_INSEC+'€, pas '+P+' du prix.'};
+      const onlyPart=text=>({text,value:amount,feedback:'C’est seulement '+(up?'l’augmentation':'la baisse')+' ('+money(amount)+').'});
+      let correct,thirds;
+      if(brevet){
+        const part=order<.5?frac+' \\times '+x:x+' \\times '+frac;
+        correct={text:'$$'+x+' '+op+' '+part+'$$'};
+        thirds=[{text:'$$('+x+' '+op+' '+frac+') \\times '+x+'$$',value:(initial+s*p/100)*initial,
+          feedback:'Ce calcul vaut '+evoNum(initial+s*p/100)+' × '+x+'.'},onlyPart('$$'+part+'$$')];
+      }else{
+        const wrong=evoNum(1-s*p/100);
+        correct={text:'$$'+x+' \\times '+evoNum(1+s*p/100)+'$$'};
+        thirds=[{text:'$$'+x+' \\times '+wrong+'$$',value:initial*(1-s*p/100),feedback:'× '+wrong+' fait '+(up?'baisser':'augmenter')+' le prix.'},onlyPart('$$'+x+' \\times '+d+'$$')];
+      }
+      correct.value=initial*(1+s*p/100);
+      if(firstThird>=(brevet?.6:.5)) thirds.reverse();
+      const third=thirds.find(t=>![correct,added,tiny].some(o=>Math.abs(o.value-t.value)<1e-9));
+      options=third?[correct,added,tiny,third]:null;
+      if(options&&new Set(options.map(o=>Math.round(o.value*1000))).size<4) options=null;
+      tries++;
+    }while(!options&&tries<50);
+    const x=evoNum(initial),P=evoPct(p),total=up?100+p:100-p,c=evoNum(total/100),money=v=>evoQty(v,'€');
+    const result=up?initial*(1+p/100):initial*(1-p/100),amount=initial*p/100;
+    const prompt=up
+      ?'Le prix d’un article coûtant '+money(initial)+' augmente '+evoDe(p)+'.<br>Quel calcul donne le nouveau prix'+EVO_INSEC+'?'
+      :'Un article coûte '+money(initial)+'.<br>Son prix baisse '+evoDe(p)+'.<br>Quel calcul donne le prix final'+EVO_INSEC+'?';
+    const qcm=evoQcm(prompt,options[0].text,options.slice(1));
+    rawStatement=qcm.rawStatement;answers=qcm.answers;feedback=qcm.feedback;
+    if(brevet){
+      // Au téléphone, la carte d’un QCM n’a que 3 lignes : étapes courtes.
+      steps=[P+' de '+money(initial)+' = '+money(amount),
+        x+' '+sign+' '+evoNum(amount)+' = <strong>'+money(result)+'</strong>'];
+      aide=[verb+' '+evoDe(p)+', c’est '+addOrRemove+' '+P+' du prix.','Calcule de tête '+P+' de '+money(initial)+', puis cherche le calcul qui '+(up?'l’ajoute à ':'l’enlève à ')+x+'.'];
+    }else{
+      steps=['100'+EVO_FINE+'% '+sign+' '+P+' = '+evoPct(total)+' = '+c,
+        x+' × '+c+' = <strong>'+money(result)+'</strong>'];
+      aide=[verb+' '+evoDe(p)+', c’est multiplier par un seul nombre.','Calcule 100'+EVO_FINE+'% '+sign+' '+P+', puis écris ce pourcentage en nombre décimal.'];
+    }
+    bar=evoBar(initial,p,up,false);
+  }else if(kind==='change_amount'){
+    // « De combien le prix baisse-t-il ? » : la part seule (PO-pro 7 en
+    // contexte), à ne pas confondre avec le nouveau prix.
+    p=pick([5,10,10,20,25,30,40,50]);
+    const P=evoPct(p);
+    if(rnd()<.6){
+      initial=evoPickPrice(p);unit='€';
+      rawStatement=evoItem(initial)+' coûte '+evoQty(initial,'€')+'.<br>Son prix '+(up?'augmente':'baisse')+' '+evoDe(p)+'.<br>De combien d’euros le prix '+(up?'augmente':'baisse')+'-t-il'+EVO_INSEC+'?';
+      rawFooter='[[formula]]'+EVO_INSEC+'€';
+      answers=[evoEuroNum(initial*p/100)];
+      steps=[(up?'L’augmentation':'La baisse')+' vaut '+P+' du prix.',evoPartLine(initial,p,'€').replace(/= ([^=]+)$/,'= <strong>$1</strong>')];
+      note=(up?'L’augmentation':'La baisse')+' ('+evoQty(initial*p/100,'€')+') n’est pas le nouveau prix ('+evoQty(up?initial*(1+p/100):initial*(1-p/100),'€')+').';
+    }else{
+      const drawn=evoPickGroup(p),group=drawn.group;
+      initial=drawn.n;unit=group.unit;
+      rawStatement=group.start(evoQty(initial,unit))+group.subject+' '+(up?'augmente':'baisse')+' '+evoDe(p)+'.<br>'+group.howMuch(up);
+      rawFooter='[[formula]]'+EVO_INSEC+unit;
+      answers=[evoNum(initial*p/100)];
+      steps=[(up?'L’augmentation':'La baisse')+' vaut '+P+' de '+evoNum(initial)+'.',(evoPartLine(initial,p,'')+EVO_INSEC+unit).replace(/= ([^=]+)$/,'= <strong>$1</strong>')];
+      note=(up?'L’augmentation':'La baisse')+' ('+evoQty(initial*p/100,unit)+') n’est pas le nouvel effectif ('+evoQty(up?initial*(1+p/100):initial*(1-p/100),unit)+').';
+    }
+    aide=[(up?'L’augmentation':'La baisse')+', c’est '+P+' de '+evoNumFor(initial,unit)+'. On ne demande pas le nouveau '+(unit==='€'?'prix':'nombre')+'.',evoPartHint(initial,p,unit)];
+    bar=evoBar(initial,p,up,false);
+  }else if(kind==='trap_qcm'){
+    // ZPA 8 (village de 800 habitants, + 10 %) : le bon résultat parmi
+    // « ajoute 10 », « baisse au lieu de hausse » et « la part seule ».
+    // 50 % est exclu : la part et le résultat d’une baisse seraient égaux.
+    let values;
+    let tries=0;
+    do{
+      p=pick([10,10,20,25,40]);
+      if(rnd()<.5){unit='€';initial=evoPickPrice(p,true);}
+      else{const drawn=evoPickGroup(p);unit='habitants';initial=drawn.n;}
+      const a=initial*p/100;
+      values={good:up?initial+a:initial-a,add:up?initial+p:initial-p,opposite:up?initial-a:initial+a,amount:a};
+      tries++;
+    }while(new Set(Object.values(values).map(v=>Math.round(v*100))).size<4&&tries<50);
+    const P=evoPct(p),a=initial*p/100;
+    const prompt=unit==='€'
+      ?evoItem(initial)+' coûte '+evoQty(initial,'€')+'.<br>Son prix '+(up?'augmente':'baisse')+' '+evoDe(p)+'.<br>'+ask
+      :'Un village de '+evoQty(initial,'habitants')+' a connu une '+(up?'augmentation':'baisse')+' '+evoDe(p)+' de sa population.<br>Combien y a-t-il d’habitants après cette '+(up?'augmentation':'baisse')+EVO_INSEC+'?';
+    const qcm=evoQcm(prompt,evoQty(values.good,unit),[
+      {text:evoQty(values.add,unit),feedback:(up?'Tu as ajouté ':'Tu as enlevé ')+evoQty(p,unit)+', pas '+P+(unit==='€'?' du prix':'')+'.'},
+      {text:evoQty(values.opposite,unit),feedback:'C’est le résultat d’'+(up?'une baisse.':'une hausse.')},
+      {text:evoQty(values.amount,unit),feedback:'C’est seulement '+(up?'l’augmentation.':'la baisse.')}]);
+    rawStatement=qcm.rawStatement;answers=qcm.answers;feedback=qcm.feedback;
+    steps=[P+' de '+evoNumFor(initial,unit)+' = '+evoNumFor(a,unit),evoNumFor(initial,unit)+' '+sign+' '+evoNumFor(a,unit)+' = <strong>'+evoQty(values.good,unit)+'</strong>'];
+    aide=['Calcule d’abord '+P+' de '+evoNumFor(initial,unit)+', puis '+(up?'ajoute-le.':'enlève-le.'),evoPartHint(initial,p,unit==='€'?'€':'')];
+    bar=evoBar(initial,p,up,false);
   }
 
-  const n=Number(q.n),kind=q.options&&q.options.evolution_kind;
-  const increase=String(kind||'').startsWith('increase');
-  const percent=Number(scope.p);
-  const normalized=kind==='increase_coefficient'||kind==='decrease_coefficient';
-  const initial=normalized?1:Number(n===3||n===4?scope.n:(n===10?scope.qte:scope.prix));
-  const amount=initial*percent/100;
-  const newTotal=increase?initial+amount:initial-amount;
-  const unitPercent=GCD(100,percent);
-  const baseCells=100/unitPercent;
-  const deltaCells=percent/unitPercent;
-  const cellValue=initial/baseCells;
-  const evolution={
-    kind,
-    direction:increase?'increase':'decrease',
-    percent,
-    initial,
-    amount,
-    newTotal,
-    normalized,
-    baseCells,
-    deltaCells,
-    cellValue,
-    braceMode:kind==='increase_amount'?'amount':(normalized?'coefficient':(increase?'newTotal':'remainder'))
-  };
-  return {module:mod,q,scope,answers,rawStatement,rawFooter,hasSvg:false,evolution};
+  bar.kind=kind;
+  const evolution=bar;
+  const cells=evolution.baseCells+(up?evolution.deltaCells:0);
+  const aideHtml=cells<=24?evolutionBarSvg(evolution,false):'';
+  const inst={module:mod,q,scope:{p,initial},answers,rawStatement,rawFooter,hasSvg:false,evolution,
+    correctionSteps:steps,aideSteps:aide,aideHtml};
+  if(note) inst.correctionNote=note;
+  if(feedback) inst.distractorFeedback=feedback;
+  return inst;
 }
 
 function makeRelationInstance(mod,q){
@@ -2538,14 +3571,16 @@ function makeGenericInstance(mod,q,generatedScope=null){
   let answers=answerChoices.map(choices=>choices[0]||'');
   let rawStatement=subVars(q.statement||'', scope);
   const rawFooter=subVars(q.footer||'', scope);
+  let qcmPermutation=null;
   if(q.options&&q.options.shuffle_answers){
     const shuffled=shuffledQcm(rawStatement,answers);
     rawStatement=shuffled.statement;
     answers=shuffled.answers;
     answerChoices=answers.map(answer=>[answer]);
+    qcmPermutation=shuffled.permutation||null;
   }
   const hasSvg=/<svg/i.test(rawStatement+rawFooter);
-  return {module:mod, q, scope, answers, answerChoices, rawStatement, rawFooter, hasSvg};
+  return {module:mod, q, scope, answers, answerChoices, rawStatement, rawFooter, hasSvg, qcmPermutation};
 }
 function makeInstance(mod,q){
   const runtime=globalThis.MATHSGO_MODULE_RUNTIME&&globalThis.MATHSGO_MODULE_RUNTIME.get(mod&&mod.id);
@@ -3134,7 +4169,9 @@ function evolutionBarSvg(data,correction=false){
   const braceY=bottomY+bottomH+8;
   // La hauteur est réservée dès l'énoncé : le tableau ne change ainsi jamais
   // d'échelle lorsque l'accolade et la correction apparaissent.
-  const H=braceY+74;
+  // Refonte dnb_35 : la barre n’est plus que le dessin du panneau Aide (sans
+  // accolade) ; on ne réserve la place de l’accolade qu’en correction.
+  const H=correction?braceY+74:bottomY+bottomH+6;
   const text=(cx,cy,value,size=28,weight=800,fill=border)=>`<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle" font-family="Arial,Helvetica,sans-serif" font-size="${size}" font-weight="${weight}" fill="${fill}">${escapeHtml(value)}</text>`;
   let body='<defs><pattern id="evolution-hatch" patternUnits="userSpaceOnUse" width="18" height="18" patternTransform="rotate(45)"><rect width="18" height="18" fill="#fff8fa"/><line x1="0" y1="0" x2="0" y2="18" stroke="#ffb8c6" stroke-width="4"/></pattern></defs>';
   body+=`<rect x="${x}" y="${topY}" width="${baseW}" height="${topH}" fill="${familyTopFill}"/>`;
@@ -3152,7 +4189,7 @@ function evolutionBarSvg(data,correction=false){
   body+=`<path d="M ${x} ${bottomY} V ${topY} H ${x+baseW} V ${bottomY}" fill="none" stroke="${border}" stroke-width="2.6"/><rect x="${x}" y="${bottomY}" width="${bottomW}" height="${bottomH}" fill="none" stroke="${border}" stroke-width="2.6"/>`;
   for(let i=1;i<totalCells;i++) body+=`<line x1="${x+i*cellW}" y1="${bottomY}" x2="${x+i*cellW}" y2="${bottomY+bottomH}" stroke="${border}" stroke-width="2.1"/>`;
 
-  const topLabel=data.normalized?'100 %':fmt(data.initial);
+  const topLabel=data.normalized?evoPct(100):evoNum(data.initial);
   body+=text(x+baseW/2,topY+topH/2,topLabel,data.normalized?37:36,850);
   const cellFont=Math.max(14,Math.min(30,cellW*.44));
   for(let i=0;i<totalCells;i++){
@@ -3164,7 +4201,9 @@ function evolutionBarSvg(data,correction=false){
     body+=text(x+(i+.5)*cellW,bottomY+bottomH/2,cellLabel,data.normalized?Math.max(17,cellFont):(correction?cellFont:Math.max(17,cellFont)),800);
   }
 
-  if(correction||data.braceMode==='coefficient'){
+  // Refonte : l’accolade et son total n’apparaissent qu’en correction ; le
+  // dessin d’aide (question) ne doit jamais écrire « 110 % » ni le total.
+  if(correction){
     let x1=x,x2=x+bottomW,color='#4778ff',label='';
     if(data.braceMode==='remainder'){
       x2=x+cellW*(data.baseCells-data.deltaCells);
@@ -3198,22 +4237,20 @@ function evolutionBarSvg(data,correction=false){
 }
 
 function renderEvolutionModule(inst,correction=false,mode=null){
-  if(mode===null) mode=document.getElementById('visualMode').value;
+  // Refonte dnb_35 : la barre n’est plus dans la question ; c’est le dessin
+  // du panneau Aide (inst.aideHtml). Choix et pied comme les autres modules.
   const qcm=splitQCM(inst.rawStatement);
-  const prompt=qcm?qcm.prompt:inst.rawStatement;
-  const promptClass=prompt.includes('legacy-statement-table-wrap')?'question evolution-prompt legacy-statement-question':'question evolution-prompt';
-  let html='<div class="'+promptClass+'">'+renderMathSegments(prompt)+'</div>';
-  html+=isWithoutVisuals(mode)?visualPlaceholder(mode):evolutionBarSvg(inst.evolution,correction);
+  let html='<div class="question">'+renderMathSegments(qcm?qcm.prompt:inst.rawStatement)+'</div>';
   if(qcm){
     const corrects=new Set(inst.answers.map(value=>String(value)));
-    html+='<div class="options evolution-options options-'+qcm.opts.length+compactQcmClass(qcm.opts)+'">';
+    html+='<div class="options options-'+qcm.opts.length+compactQcmClass(qcm.opts)+'">';
     qcm.opts.forEach((option,index)=>{
       const isCorrect=correction&&corrects.has(String(index+1));
       html+='<div class="opt '+(isCorrect?'correct':'')+'"><strong>'+String.fromCharCode(65+index)+'.</strong> '+renderMathSegments(option)+'</div>';
     });
     html+='</div>';
   }else if(inst.rawFooter){
-    html+='<div class="footer evolution-answer">'+renderPlaceholders(inst.rawFooter,inst.answers,correction?'correction':'question')+'</div>';
+    html+='<div class="footer">'+renderPlaceholders(inst.rawFooter,inst.answers,correction?'correction':'question')+'</div>';
   }
   return html;
 }
@@ -3483,26 +4520,47 @@ function renderAverageModule(inst,correction=false,mode=null){
 function module01VisualHtml(data,correction=false){
   const component=globalThis.MATHSGO_VISUALS&&globalThis.MATHSGO_VISUALS.get('arithmetic.fraction-decimal-grid');
   if(!component) throw new Error('Le composant arithmetic.fraction-decimal-grid doit être chargé avant dnb_01.');
+  if(!data) return '';
   return component.render(data,correction);
 }
 function renderModule01(inst,correction=false,mode=null){
   if(mode===null) mode=document.getElementById('visualMode').value;
   const d=inst.module01;
   let html='<div class="question module01-prompt">'+renderMathSegments(d.prompt)+'</div>';
-  if(d.qcm) html+='<div class="module01-source">'+renderMathSegments(d.display)+'</div>';
-  if(!isWithoutVisuals(mode)) html+=module01VisualHtml(d,correction);
-  else html+=visualPlaceholder(mode);
+  // Le dessin n'est jamais la réponse : dans la question, c'est l'aide (sans « 1 » sur les unités) ;
+  // dans la correction, les unités complètes sont repérées et le tableau de numération est rempli.
+  const visualData=correction?(d.correctionVisualData||null):(d.visualData||null);
+  if(d.qcm&&d.display) html+='<div class="module01-source">'+renderMathSegments(d.display.replace('[[compare]]',module01CompareSlot(d,correction)))+'</div>';
+  if(visualData){
+    if(!isWithoutVisuals(mode)) html+=module01VisualHtml(visualData,correction);
+    else html+=visualPlaceholder(mode);
+  }
   if(d.qcm){
-    html+='<div class="options module01-options options-'+d.qcm.options.length+'">';
+    const signs=d.qcm.kind==='signs';
+    // Les trois signes : trois gros boutons côte à côte, signe centré.
+    const signGrid=signs?' style="grid-template-columns:repeat(3,minmax(0,1fr));max-width:620px;margin-left:auto;margin-right:auto"':'';
+    html+='<div class="options module01-options'+(signs?' module01-sign-options':'')+' options-'+d.qcm.options.length+'"'+signGrid+'>';
     d.qcm.options.forEach((option,i)=>{
       const isCorrect=correction&&String(i+1)===String(d.qcm.correctIndex);
-      html+='<div class="opt '+(isCorrect?'correct':'')+'"><strong>'+String.fromCharCode(65+i)+'.</strong> '+renderMathSegments('$$'+option+'$$')+'</div>';
+      const code=d.qcm.codes&&d.qcm.codes[i]?' data-error-code="'+escapeHtml(d.qcm.codes[i])+'"':'';
+      const label=signs?'<span class="module01-sign" style="font-size:1.7em;font-weight:800;line-height:1">'+escapeHtml(option)+'</span>':(['Vrai','Faux'].includes(option)?option:renderMathSegments('$$'+option+'$$'));
+      const optStyle=signs?' style="display:flex;align-items:center;justify-content:center;gap:.45em;text-align:center"':'';
+      html+='<div class="opt '+(isCorrect?'correct':'')+'"'+code+optStyle+'><strong>'+String.fromCharCode(65+i)+'.</strong> '+label+'</div>';
     });
     html+='</div>';
   } else {
-    html+='<div class="footer module01-answer">'+renderMathSegments(renderPlaceholders(d.display,inst.answers,correction?'correction':'question'))+'</div>';
+    const answerLine=renderMathSegments(renderPlaceholders(d.display,inst.answers,correction?'correction':'question'));
+    // Lignes larges (2 + 1/10 + 1/100 = … ; 2,75 = 11/4 avec la réponse barrée) : plus petites
+    // sur un petit téléphone pour tenir dans la largeur ; inchangées à l'ordinateur.
+    const shrink=d.extra&&d.extra.threeTerms?'8.6vw':(['sum','d2f'].includes(d.direction)?'12vw':'');
+    html+='<div class="footer module01-answer">'+(shrink?'<span style="font-size:min(100%,'+shrink+')">'+answerLine+'</span>':answerLine)+'</div>';
   }
   return html;
+}
+function module01CompareSlot(d,correction){
+  const sign=d.extra&&d.extra.sign;
+  const shown=correction&&sign?escapeHtml(sign):'…';
+  return '<span class="module01-compare-slot" style="display:inline-block;min-width:1.5em;margin:0 .3em;padding:0 .12em;border-bottom:.08em solid currentColor;text-align:center;line-height:1.1'+(correction?';color:#0b7c67':'')+'">'+shown+'</span>';
 }
 
 function fractionOpsVisualHtml(data,correction=false){
@@ -3771,78 +4829,24 @@ function renderModule07(inst, correction=false, mode=null){
 }
 
 
-function tileSvg(type,sign,cancelled=false){
-  const positive=sign>0;
-  const fill=positive?'#31a98e':'#ef5142';
-  const label=type==='x2'?(positive?'𝑥²':'−𝑥²'):(type==='x'?(positive?'𝑥':'−𝑥'):(positive?'1':'−1'));
-  const w=type==='u'?32:96;
-  const h=type==='x2'?96:32;
-  const fs=type==='x2'?27:(type==='x'?24:18);
-  const baseline=type==='x2'?58:23;
-  const cross=cancelled?`<g stroke="#3e4650" stroke-width="4" stroke-linecap="round"><line x1="4" y1="4" x2="${w-4}" y2="${h-4}"/><line x1="${w-4}" y1="4" x2="4" y2="${h-4}"/></g>`:'';
-  return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" style="width:${w}px;max-width:none;height:${h}px;display:block;flex:none"><rect x="1" y="1" width="${w-2}" height="${h-2}" fill="${fill}" stroke="#171717" stroke-width="2"/><text x="${w/2}" y="${baseline}" font-family="Cambria Math, STIX Two Math, Times New Roman, serif" font-style="normal" font-size="${fs}" font-weight="700" text-anchor="middle" fill="#111">${label}</text>${cross}</svg>`;
-}
-function tilesGrid(type,count,sign,cancelCount=0){
-  if(count<=0) return '';
-  const cols=type==='u'?Math.min(5,count):Math.min(2,count);
-  const gap=type==='u'?7:10;
-  let tiles='';
-  for(let i=0;i<count;i++) tiles+=tileSvg(type,sign,i<cancelCount);
-  return `<div style="display:grid;grid-template-columns:repeat(${cols},max-content);gap:${gap}px;align-content:start;justify-content:center">${tiles}</div>`;
-}
-function originalGroupHtml(group,index){
-  const count=Math.abs(group.coeff);
-  return `<div style="display:flex;flex-direction:column;align-items:center;min-width:116px;padding:0 5px">${tilesGrid(group.type,count,group.coeff>0?1:-1,0)}</div>`;
-}
-function originalGroupsHtml(groups){
-  return `<div class="reduction-tiles" style="display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-start;gap:34px 54px;margin:10px auto 4px;max-width:1380px">${groups.map(originalGroupHtml).join('')}</div>`;
-}
-function groupedFamilyHtml(groups,type){
-  const counts=countSigns(groups,type);
-  if(counts.pos===0&&counts.neg===0) return '';
-  const cancel=Math.min(counts.pos,counts.neg);
-  return `<div style="display:flex;flex-direction:column;align-items:center;gap:10px;min-width:230px"><div style="display:flex;align-items:flex-start;justify-content:center;gap:20px">${tilesGrid(type,counts.pos,1,cancel)}${tilesGrid(type,counts.neg,-1,cancel)}</div></div>`;
-}
-function correctionGroupsHtml(groups){
-  return `<div class="reduction-tiles" style="display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-start;gap:38px 68px;margin:10px auto 4px;max-width:1380px">${['x2','x','u'].map(t=>groupedFamilyHtml(groups,t)).join('')}</div>`;
-}
-function readTilesHtml(coeffs){
-  const groups=[];
-  ['x2','x','u'].forEach(type=>{const c=coeffs[type]||0;if(c!==0)groups.push({type,coeff:c});});
-  return `<div class="reduction-tiles" style="display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-start;gap:40px 70px;margin:10px auto 4px;max-width:1320px">${groups.map(g=>`<div style="display:flex;flex-direction:column;align-items:center">${tilesGrid(g.type,Math.abs(g.coeff),g.coeff>0?1:-1,0)}</div>`).join('')}</div>`;
-}
 function renderModule10(inst,correction=false,mode=null){
-  if(mode===null) mode=document.getElementById('visualMode').value;
+  // Les tuiles ne sont plus dessinées dans la question : elles vont dans le
+  // panneau Aide (inst.aideHtml). La correction rédigée est dans
+  // inst.correctionSteps, affichée par la coque commune.
   const d=inst.reduction;
   const isQcm=d.format==='qcm';
-  const prompt=isQcm?'Quelle est la forme réduite de cette expression ?':inst.q.statement;
-  let html='<div class="question reduction-prompt">'+renderMathSegments(prompt)+'</div>';
-
-  if(d.kind==='read_tiles'){
-    if(!isWithoutVisuals(mode)){
-      html+=readTilesHtml(d.readCoeffs);
-    } else html+=visualPlaceholder(mode);
-  } else {
-    const terms=String(d.expr||'').match(/[+\-−]?[^+\-−]+/g)||[String(d.expr||'')];
-    html+='<div class="reduction-expression">'+terms.map(term=>'<span class="reduction-term">'+renderMathSegments('$$'+term+'$$')+'</span>').join('')+'</div>';
-
-    if(!isWithoutVisuals(mode)){
-      html+=correction?correctionGroupsHtml(d.groups):originalGroupsHtml(d.groups);
-    } else html+=visualPlaceholder(mode);
-  }
-
+  let html='<div class="question reduction-prompt">'+d.prompt+'</div>';
+  html+='<div class="reduction-expression">'+d.exprHtml+'</div>';
   if(isQcm){
-    const corrects=new Set([String(d.qcmCorrectIndex)]);
     html+='<div class="options reduction-options options-'+d.qcmOptions.length+'">';
     d.qcmOptions.forEach((o,i)=>{
-      const isC=correction&&corrects.has(String(i+1));
-      html+='<div class="opt '+(isC?'correct':'')+'"><strong>'+String.fromCharCode(65+i)+'.</strong> '+renderMathSegments('$$'+o+'$$')+'</div>';
+      const isC=correction&&String(i+1)===String(d.qcmCorrectIndex);
+      html+='<div class="opt '+(isC?'correct':'')+'"><strong>'+String.fromCharCode(65+i)+'.</strong> <span class="reduction-option">'+o+'</span></div>';
     });
     html+='</div>';
   } else if(correction){
-    html+='<div class="footer reduction-answer">'+renderMathSegments('$$='+d.answer+'$$')+'</div>';
+    html+='<div class="footer reduction-answer">= '+d.answer+'</div>';
   }
-
   return html;
 }
 
@@ -4018,7 +5022,8 @@ function renderQuestion(inst, correction=false, mode=null){
 // banque, tandis que le filtre DNB reste volontairement plus classique.
 const LEVEL_5E_QUESTIONS={
   dnb_01:'all',
-  dnb_02:'all',
+  // dnb_02 : en 5e, comparer, ranger, encadrer et calculer sans problème rédigé.
+  dnb_02:[1,3,4,7,8,9,10,11,13,15],
   dnb_02b:'all',
   dnb_03:[1,3,5,6,7],
   dnb_04:'all',
@@ -4026,7 +5031,7 @@ const LEVEL_5E_QUESTIONS={
   dnb_07:'all',
   dnb_08:'all',
   dnb_09:[2,3,4,5,6,8,9,10,11,12,13,14,15,16,17,18,19],
-  dnb_10:[1,2,5,6],
+  dnb_10:[1,2,6,10],
   dnb_11:[1,4,6,11],
   dnb_12:[1,2,3,4,5,6,7,9,10,11,12,13,14],
   dnb_13:[1,2,3],
@@ -4041,7 +5046,8 @@ const LEVEL_5E_QUESTIONS={
   dnb_22:'all',
   dnb_23:'all',
   dnb_27:[1,2,3,4,5,7,8,11,12,13],
-  dnb_28:[1,2,3,4,5,6,8,9,10],
+  // dnb_28 : la pièce et le dé (type 7, deux épreuves) est un attendu de 3e.
+  dnb_28:[1,2,3,4,5,6,8,9,10,11],
   dnb_29:'all',
   dnb_30:'all',
   dnb_32:'all',
@@ -4053,16 +5059,36 @@ const LEVEL_5E_QUESTIONS={
 };
 
 const LEVEL_4E_QUESTIONS={
-  dnb_12:Array.from({length:18},(_,index)=>index+1)
+  dnb_02:[1,3,4,7,8,9,10,11,13,15,16,17,18],
+  // dnb_06 : les calculs avec des puissances de 10 (types 14 et 15, sujets de
+  // référence 2027) restent en 3e.
+  dnb_06:[1,2,3,4,5,6,7,8,9,10,11,12,13],
+  // dnb_10 : l’opposé d’une parenthèse (type 8) est un automatisme de 3e.
+  dnb_10:[1,2,3,4,6,7,9,10,11],
+  dnb_12:Array.from({length:18},(_,index)=>index+1),
+  dnb_28:[1,2,3,4,5,6,8,9,10,11],
+  // dnb_31 : l’étendue (type 11) et la médiane lue sur un diagramme (type 14) sont des attendus de 3e.
+  dnb_31:[2,3,4,6,8,13],
+  // dnb_35 : le coefficient multiplicateur (types 5 à 8) est une notion de 3e.
+  dnb_35:[1,2,3,4,10,11]
 };
 
 // Le filtre DNB reste volontairement classique : calculs directs et QCM
 // courts sur la distributivité simple, sans manipulation ni identité remarquable.
 const LEVEL_DNB_QUESTIONS={
-  // Fractions : les types 3, 5 et 6 (même dénominateur ou même numérateur)
+  // dnb_01 : le vrai/faux (type 11) n'est pas une forme du DNB général.
+  dnb_01:[1,2,3,4,5,6,9,10,13,15,16,17,19,21,22,23],
+  // dnb_02 : l'encadrement entre deux entiers (type 4) reste en 5e-4e.
+  dnb_02:[1,3,7,8,9,10,11,13,14,15,16,17,18],
+  // dnb_03 : les types 3, 5 et 6 (même dénominateur ou même numérateur)
   // restent un échauffement de 5e-4e ; le niveau DNB garde les formes du brevet.
   dnb_03:[1,2,4,7,8,9,10,11],
-  dnb_12:[1,2,3,4,5,6,7,8,9,15,16,17]
+  dnb_10:[1,2,3,4,6,7,8,9,10,11],
+  dnb_12:[1,2,3,4,5,6,7,8,9,15,16,17],
+  // dnb_28 : deux épreuves (type 7) jamais posées dans les automatismes 2026.
+  dnb_28:[1,2,3,4,5,6,8,9,10,11],
+  // dnb_31 : jamais de nombre pair de valeurs au brevet 2026 (type 3 : programme de 4e).
+  dnb_31:[2,4,6,8,11,13,14]
 };
 
 // Pendant la transition des programmes, ces contenus sont déjà travaillés

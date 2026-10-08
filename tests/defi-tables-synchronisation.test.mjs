@@ -338,3 +338,29 @@ test("pendant une série, un 409 fusionne sans redessiner", async () => {
   assert.equal(a.rendus.length, 0, "pas de redessin pendant la série");
   assert.equal(a.api.sync.revision, 6);
 });
+
+// Relecture de Code sur le lot 1 de SPLAT! ↔ suivi (07/10/2026), défaut partagé
+// par les trois clients du suivi : une série notée PENDANT qu'un envoi est en
+// vol programme un envoi groupé (700 ms) ; le 200 de l'envoi en vol remettait
+// « dirty » à faux, et une fermeture d'onglet dans ces 700 ms ne déclenchait
+// pas de sendBeacon — la série restait sur l'appareil jusqu'à sa prochaine
+// ouverture (sur une tablette de classe : jamais).
+test("une série notée pendant un envoi en vol reste « à envoyer » après le 200 : la fermeture de l’onglet l’emporte", async () => {
+  const serveur = fauxServeur();
+  serveur.delai = 30;
+  const a = appli(serveur);
+  a.api.demarrerSuivi();
+  await tic(50);
+  travailler(a, 3);
+  await a.temps.avancer(700); // l'envoi part, la réponse met 30 ms
+  travailler(a, 4); // pendant le vol
+  await tic(50); // le 200 arrive
+  assert.equal(a.api.sync.revision, 1, "le premier envoi est arrivé");
+  assert.equal(a.api.sync.dirty, true, "mais la table 4, notée pendant le vol, est encore à envoyer");
+  assert.deepEqual(a.temps.enAttente(), [700], "l’envoi groupé est toujours programmé");
+  a.api.envoyerAvantDeFermer();
+  const paquet = JSON.parse(await a.balises.at(-1).blob.text());
+  assert.equal(paquet.parcours.tables["4"].acquise, "2026-09-04", "la fermeture emporte la table 4");
+  assert.equal(paquet.base_revision, 1);
+  assert.deepEqual(a.temps.enAttente(), [], "l’envoi groupé est annulé : la balise a pris sa place");
+});

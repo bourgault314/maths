@@ -489,7 +489,11 @@ test("logos (décision du 25/09/2026) : aucun sur la couverture, les fiches et l
   }
   assert.match(dos, /<div class="logos-bas">/);
   assert.match(dos, /avec l'IREMI de La Réunion/);
-  assert.equal((dos.match(/Claire/g) || []).length, 1, "le crédit de Claire, une seule fois, au dos");
+  // le dos nomme le livret du monde 3, pas celui du monde 2 (erreur de copie corrigée le 07/10/2026)
+  assert.match(dos, /Livret et outil <b>SPLAT! Enquête<\/b> de maths&amp;go/);
+  assert.doesNotMatch(dos, /SPLAT! classique/);
+  // plus de ligne de crédit pour la progression (Gwenaël, 07/10/2026)
+  assert.equal((dos.match(/Claire|progression «/g) || []).length, 0, "plus de crédit de progression au dos");
   // les fiches sont celles de l'outil, dont on retire les logos au rendu (jamais dans l'outil) — dans
   // le livret à plier ; le PDF page par page garde l'IREMI seul (04/10/2026,
   // tests/splat-logos-iremi-page-par-page.test.mjs)

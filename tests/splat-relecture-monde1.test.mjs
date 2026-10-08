@@ -15,7 +15,8 @@ test("carte des mondes : le bouton Professeur n'a plus d'icône", () => {
 test("carte des mondes : le pied reprend celui de la page des livrets", () => {
   const pied = univers.match(/<footer>([\s\S]*?)<\/footer>/)[1];
   assert.match(pied, /Steve Wyborney/);
-  assert.match(pied, /progression «&nbsp;SPLAT! cycle 3&nbsp;» de Claire/);
+  // plus de crédit pour la progression (Gwenaël, 07/10/2026)
+  assert.doesNotMatch(pied, /Claire|progression/);
   assert.match(pied, /avec l'IREMI de La Réunion/);
   assert.match(pied, /<a href="\/licence\.html">mathsgo\.re · CC BY-NC-SA 4\.0<\/a>/);
   assert.doesNotMatch(pied, /vue professeur/i, "la vue professeur a son bouton en haut");

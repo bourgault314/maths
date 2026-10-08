@@ -6,10 +6,11 @@ MATHSGO_PEDAGOGY.registerModule('dnb_10',{
   courseKind:'reduce_expression',
   generatorContract:{
     configurations:[
-      {id:'one-family',label:'Une seule famille de termes, avec ou sans annulation'},
-      {id:'several-families',label:'Termes en x², en x et constants mélangés'},
-      {id:'read-tiles',label:'Expression donnée uniquement par des tuiles'},
-      {id:'already-reduced',label:'Expression déjà réduite à reconnaître'}
+      {id:'one-family',label:'Une seule famille de termes en lettre, avec ou sans changement de signe'},
+      {id:'several-families',label:'Termes en x², en x et nombres mélangés'},
+      {id:'already-reduced',label:'Expression déjà réduite à reconnaître (QCM)'},
+      {id:'parenthesis',label:'Parenthèse à développer ou à enlever avant de réduire'},
+      {id:'product',label:'Produit de deux facteurs, somme ou produit'}
     ],
     reasoning:[
       {id:'like-terms',label:'Identifier les termes semblables',rule:'Regrouper séparément les x², les x et les constantes.'},
@@ -36,11 +37,14 @@ MATHSGO_PEDAGOGY.registerModule('dnb_10',{
     ]
   },
   questionTypes:[
-    {id:'reduire-une-famille',label:'Réduire une seule famille sans annulation',questions:[1],response:'expression',visual:{policy:'optional',component:'algebra.algebra-tiles'},helpSections:['like-terms','canonical-order','verify']},
-    {id:'reduire-une-famille-avec-annulation',label:'Réduire une famille avec des termes opposés',questions:[2],response:'expression',visual:{policy:'optional',component:'algebra.algebra-tiles'},helpSections:['like-terms','zero-pairs','verify']},
-    {id:'reduire-plusieurs-familles',label:'Réduire plusieurs familles sans annulation',questions:[3],response:'expression',visual:{policy:'optional',component:'algebra.algebra-tiles'},helpSections:['like-terms','canonical-order','verify']},
-    {id:'reduire-plusieurs-familles-avec-annulation',label:'Réduire plusieurs familles avec annulations',questions:[4],response:'expression',visual:{policy:'optional',component:'algebra.algebra-tiles'},helpSections:['like-terms','zero-pairs','canonical-order','verify']},
-    {id:'lire-tuiles',label:'Écrire l’expression représentée par des tuiles',questions:[5],response:'expression',visual:{policy:'essential',component:'algebra.algebra-tiles'},helpSections:['read-tiles','canonical-order']},
-    {id:'reconnaitre-deja-reduite',label:'Traiter une expression déjà réduite',questions:[6],response:'expression',visual:{policy:'optional',component:'algebra.algebra-tiles'},helpSections:['like-terms','verify']}
+    {id:'reduire-une-famille',label:'Réduire une seule famille sans changement de signe',questions:[1],response:'expression',visual:{policy:'aid-only',component:'algebra.algebra-tiles'},helpSections:['like-terms','canonical-order','verify']},
+    {id:'reduire-une-famille-avec-annulation',label:'Réduire une famille avec des signes différents',questions:[2],response:'expression',visual:{policy:'aid-only',component:'algebra.algebra-tiles'},helpSections:['like-terms','zero-pairs','verify']},
+    {id:'reduire-plusieurs-familles',label:'Réduire plusieurs familles sans annulation',questions:[3],response:'expression',visual:{policy:'aid-only',component:'algebra.algebra-tiles'},helpSections:['like-terms','canonical-order','verify']},
+    {id:'reduire-plusieurs-familles-avec-annulation',label:'Réduire plusieurs familles avec annulations',questions:[4],response:'expression',visual:{policy:'aid-only',component:'algebra.algebra-tiles'},helpSections:['like-terms','zero-pairs','canonical-order','verify']},
+    {id:'reconnaitre-deja-reduite',label:'Reconnaître une expression déjà réduite',questions:[6],response:'qcm',visual:{policy:'aid-only',component:'algebra.algebra-tiles'},helpSections:['like-terms','verify']},
+    {id:'developper-puis-reduire',label:'Développer k(mx + n) puis réduire (sujet de référence 2027)',questions:[7,11],response:'expression',visual:{policy:'none'},helpSections:['like-terms','verify']},
+    {id:'oppose-parenthese',label:'Enlever une parenthèse précédée de −',questions:[8],response:'expression',visual:{policy:'none'},helpSections:['like-terms','verify']},
+    {id:'reduire-un-produit',label:'Réduire un produit : 3x × 2x, 4 × 5x',questions:[9],response:'qcm',visual:{policy:'none'},helpSections:['verify']},
+    {id:'somme-ou-produit',label:'Distinguer somme et produit : 3x + 2x et 3x × 2x',questions:[10],response:'qcm',visual:{policy:'none'},helpSections:['verify']}
   ]
 });

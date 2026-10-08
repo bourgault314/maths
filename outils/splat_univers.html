@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <title>L’univers SPLAT! — le parcours des élèves | maths&amp;go</title>
-  <meta name="description" content="Six mondes à jouer en ligne, du cycle 3 (progression SPLAT!) au cycle 4 (relatifs), avec validation en ligne et étoiles au mérite.">
+  <meta name="description" content="Six mondes à jouer en ligne, du cycle 3 au cycle 4 (relatifs), avec validation en ligne et étoiles au mérite.">
   <link rel="canonical" href="https://mathsgo.re/outils/splat_univers.html">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -479,7 +479,7 @@ body.prof .volet p{font-size:14.5px}
 <!-- Pied (relecture du monde 1, 25/09/2026) : le même que la page des livrets —
      crédits puis licence. La vue professeur a son bouton en haut, pas de doublon ici. -->
 <footer>
-  <span class="credits">Jeu <strong>SPLAT!</strong> créé par Steve Wyborney · progression «&nbsp;SPLAT! cycle 3&nbsp;» de Claire ·
+  <span class="credits">Jeu <strong>SPLAT!</strong> créé par Steve Wyborney ·
   outils <strong>SPLAT!</strong> de maths&amp;go, avec l'IREMI de La Réunion.</span><br>
   <a href="/licence.html">mathsgo.re · CC BY-NC-SA 4.0</a> — libre d'être imprimé, partagé et adapté, sans usage commercial.
 </footer>
@@ -1498,8 +1498,7 @@ if (PROF) {
   const oe=document.getElementById('optEleve'); if(oe){ oe.classList.remove('actif'); oe.href=window.location.pathname; }
   const op=document.getElementById('optProf'); if(op){ op.classList.add('actif'); op.removeAttribute('href'); }
   const tb=document.getElementById('totalBar'); if(tb) tb.style.display='none';
-  const fp=document.querySelector('footer span.credits'); if(fp) fp.innerHTML='Jeu <strong>SPLAT!</strong> cr\u00e9\u00e9 par Steve Wyborney \u00b7 outils <strong>SPLAT!</strong> de maths&amp;go, avec l\u2019IREMI de La R\u00e9union.<br>Vue professeur — mondes 1, 2 et 3 d\u2019apr\u00e8s la progression \u00ab\u00a0SPLAT! cycle 3\u00a0\u00bb de Claire (mondes 4, 5 et 6 : prolongements maths&go — le Syst\u00e8me, les \u00e9quations, puis les relatifs au cycle 4) : '+
-    '<a href="https://digipad.app/p/1754235/397f3f517445b" target="_blank" rel="noopener">sa progression d\u2019origine (Digipad)</a> \u00b7 '+
+  const fp=document.querySelector('footer span.credits'); if(fp) fp.innerHTML='Jeu <strong>SPLAT!</strong> cr\u00e9\u00e9 par Steve Wyborney \u00b7 outils <strong>SPLAT!</strong> de maths&amp;go, avec l\u2019IREMI de La R\u00e9union.<br>Vue professeur \u00b7 '+
     '<a href="'+window.location.pathname+'">revenir \u00e0 la vue \u00e9l\u00e8ve</a>.';
 }
 /* ?apres=<parcours> (24/09/2026, demande de Gwenaël : des élèves qui finissent une

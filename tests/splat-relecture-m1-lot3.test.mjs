@@ -40,11 +40,11 @@ test("C. au dos, IREMI puis maths&go une seule fois, à droite du crédit, l'Uni
   const credits = dos.slice(dos.indexOf('<div class="credits">'), dos.indexOf('<footer class="pied">'));
   assert.match(credits, /<div class="txt">[\s\S]*Steve Wyborney[\s\S]*avec l'IREMI de La Réunion\.[\s\S]*<\/div>\s*<div class="droite">\s*<div class="logos-bas">\s*<img class="irem" src="\/assets\/img\/logos\/irem\/logo-print\.png" alt="IREMI La Réunion">\s*<img class="mg" src="\/assets\/img\/logos\/mathsgo\/logo-print\.png" alt="maths&amp;go">\s*<\/div>/,
     "le texte du crédit, puis IREMI, puis maths&go en dernier");
-  // le texte du crédit (26/09/2026) : le livret et l'outil sont de maths&go ; le merci à Claire sur sa
-  // propre ligne, une seule fois ; l'Unité apprenante n'a que son logo
-  assert.match(credits, /Livret et outil <b>Petit SPLAT!<\/b> de maths&amp;go, avec l'IREMI de La Réunion\.<br>\s*Merci à Claire pour la progression «&nbsp;SPLAT! cycle 3&nbsp;», ses idées et sa relecture\.<br>/);
+  // le texte du crédit (26/09/2026) : le livret et l'outil sont de maths&go ; plus de ligne de crédit
+  // pour la progression (Gwenaël, 07/10/2026) ; l'Unité apprenante n'a que son logo
+  assert.match(credits, /Livret et outil <b>Petit SPLAT!<\/b> de maths&amp;go, avec l'IREMI de La Réunion\.<br>\s*Libre d'être imprimé/);
   const lu = dos.replace(/<style>[\s\S]*?<\/style>/, "");
-  assert.equal((lu.match(/Claire/g) || []).length, 1, "Claire citée une seule fois dans ce qu'on lit");
+  assert.equal((lu.match(/Claire|progression «/g) || []).length, 0, "plus de crédit de progression dans ce qu'on lit");
   assert.doesNotMatch(credits.replace(/<div class="ua">[\s\S]*$/, ""), /Unité apprenante/, "pas de texte sur l'Unité apprenante dans le crédit");
   // sous les deux logos, l'Unité apprenante Michel Debré (Claire, 26/09/2026, réponse U2) :
   // le nom en entier, sans l'adresse aca.re
