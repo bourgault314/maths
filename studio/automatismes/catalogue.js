@@ -32,7 +32,7 @@
       { id: 'reperage', titre: 'Repérage', modules: ['dnb_15'] },
       { id: 'transformations', titre: 'Transformations', modules: ['dnb_27'] },
       { id: 'angles-triangles', titre: 'Angles et triangles', modules: ['dnb_16', 'dnb_17', 'dnb_18'] },
-      { id: 'theoremes-trigonometrie', titre: 'Pythagore, Thalès et trigonométrie', modules: ['dnb_24', 'dnb_25', 'dnb_26', 'dnb_26b'] },
+      { id: 'theoremes-trigonometrie', titre: 'Pythagore, Thalès et trigonométrie', modules: ['dnb_24', 'dnb_25', 'dnb_26'] },
       { id: 'manipuler-telephone', titre: 'Manipuler sur téléphone', modules: ['dnb_24b'] },
       { id: 'mesures', titre: 'Conversions, aires et périmètres', modules: ['dnb_19', 'dnb_21', 'dnb_22'] },
       { id: 'espace', titre: 'Espace, solides et patrons', modules: ['dnb_20', 'dnb_23'] }
@@ -77,8 +77,7 @@
     ['volumes', 'dnb_23', 24, 'Volumes : cube, pavé droit, prisme et cylindre', ['4e', '3e', 'DNB'], 'geometry'],
     ['pythagore', 'dnb_24', 25, 'Théorème de Pythagore : égalité et situations', ['4e', '3e', 'DNB'], 'geometry'],
     ['thales', 'dnb_25', 26, 'Théorème de Thalès : triangles emboîtés', ['3e', 'DNB'], 'geometry'],
-    ['trigonometrie-sans-calculatrice', 'dnb_26', 27, 'Trigonométrie sans calculatrice', ['3e', 'DNB'], 'geometry'],
-    ['trigonometrie-avec-calculatrice', 'dnb_26b', 28, 'Trigonométrie avec calculatrice', ['3e'], 'geometry'],
+    ['trigonometrie-sans-calculatrice', 'dnb_26', 27, 'Trigonométrie sans calculatrice', ['4e', '3e', 'DNB'], 'geometry'],
     ['transformations', 'dnb_27', 29, 'Symétries axiale, centrale et translation', ['4e', '3e', 'DNB'], 'geometry'],
     ['probabilites-equiprobabilite', 'dnb_28', 30, 'Probabilités — équiprobabilité', ['4e', '3e', 'DNB'], 'data'],
     ['frequences', 'dnb_29', 31, 'Fréquences simples', ['4e', '3e', 'DNB'], 'data'],

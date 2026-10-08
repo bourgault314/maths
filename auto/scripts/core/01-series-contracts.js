@@ -40,7 +40,6 @@ const MATHSGO_MODULE_REGISTRY=Object.freeze([
   ['pythagore','dnb_24',25],
   ['thales','dnb_25',26],
   ['trigonometrie-sans-calculatrice','dnb_26',27],
-  ['trigonometrie-avec-calculatrice','dnb_26b',28],
   ['transformations','dnb_27',29],
   ['probabilites-equiprobabilite','dnb_28',30],
   ['frequences','dnb_29',31],
@@ -57,6 +56,13 @@ const MATHSGO_MODULE_REGISTRY=Object.freeze([
   ['decimaux-relatifs-comparer-calculer','dnb_39',42]
 ].map(([id,legacyId,code])=>Object.freeze({id,legacyId,code,aliases:Object.freeze([legacyId])})));
 
+// Modules retirés des séries : leur code reste réservé (jamais réutilisé) et un
+// ancien lien qui les contient ouvre le module qui les remplace.
+// 28 = dnb_26b « Trigonométrie avec calculatrice », retiré le 08/10/2026 (la
+// partie 1 du brevet se fait sans calculatrice) → dnb_26 « sans calculatrice ».
+const MATHSGO_RETIRED_MODULES=Object.freeze([
+  Object.freeze({code:28,ids:Object.freeze(['trigonometrie-avec-calculatrice','dnb_26b']),replacement:'trigonometrie-sans-calculatrice'})
+]);
 const MATHSGO_MODULE_BY_ID=new Map(MATHSGO_MODULE_REGISTRY.map(entry=>[entry.id,entry]));
 const MATHSGO_MODULE_BY_ALIAS=new Map(MATHSGO_MODULE_REGISTRY.flatMap(entry=>entry.aliases.map(alias=>[alias,entry])));
 const MATHSGO_MODULE_BY_CODE=new Map(MATHSGO_MODULE_REGISTRY.map(entry=>[entry.code,entry]));
@@ -68,7 +74,9 @@ class MathsgoSeriesError extends Error{
 }
 
 function mathsgoCanonicalModuleId(value){
-  const id=String(value||'').trim();
+  const raw=String(value||'').trim();
+  const retired=MATHSGO_RETIRED_MODULES.find(entry=>entry.ids.includes(raw));
+  const id=retired?retired.replacement:raw;
   return MATHSGO_MODULE_BY_ID.get(id)?.id||MATHSGO_MODULE_BY_ALIAS.get(id)?.id||null;
 }
 
@@ -371,11 +379,14 @@ function decodeSeriesDefinition(input){
   const allowedKeys=new Set(['v','g','l','q','m','s','a','x','b']);
   if(Object.keys(compact).some(key=>!allowedKeys.has(key))) throw new MathsgoSeriesError('UNKNOWN_FIELD','Le code contient un réglage inconnu.');
   if(!Array.isArray(compact.m)) throw new MathsgoSeriesError('INVALID_MODULES','La liste de modules du code est invalide.');
-  const moduleIds=compact.m.map(value=>{
+  const decodedIds=compact.m.map(value=>{
     if(typeof value==='number'&&Number.isInteger(value)&&MATHSGO_MODULE_BY_CODE.has(value)) return MATHSGO_MODULE_BY_CODE.get(value).id;
-    if(typeof value==='string') return value;
+    if(typeof value==='number'){const retired=MATHSGO_RETIRED_MODULES.find(entry=>entry.code===value);if(retired) return retired.replacement;}
+    if(typeof value==='string') return mathsgoCanonicalModuleId(value)||value;
     return null;
   });
+  // Un module retiré remplacé par un module déjà présent ne compte qu'une fois.
+  const moduleIds=decodedIds.filter((id,index)=>id===null||decodedIds.indexOf(id)===index);
   return normalizeSeriesDefinition({schemaVersion:compact.v,generatorVersion:compact.g,level:compact.l,questionCount:compact.q,moduleIds,seed:compact.s,visualMode:compact.a,experienceMode:compact.x,seriesCount:compact.b},{strict:true});
 }
 
