@@ -2018,6 +2018,11 @@ function measureSlideZoom(current){
  if(probe.querySelector(ZOOM_OUTILS_POINTEUR)) return Math.min(1,bounds.max);
  const states=[current.questionHtml,current.correctionHtml];
  let best=bounds.max;
+ // Lot T2 : l'échelle de référence se mesure aide fermée (la place que
+ // prend le panneau ouvert est rendue par fitSlideForAide).
+ const diapo=document.getElementById('diapo'),aideClass=!!diapo&&diapo.classList.contains('aide-ouverte'),aidePadding=stage.style.paddingBottom;
+ if(diapo) diapo.classList.remove('aide-ouverte');
+ stage.style.paddingBottom='';
  states.forEach((html,stateIndex)=>{
    // Lot T2 : le pied mesuré est celui de l'état mesuré (consigne seule pour
    // une question sans pavé, carte à sa hauteur minimale pour la correction).
@@ -2041,6 +2046,8 @@ function measureSlideZoom(current){
  });
  slide.style.zoom='';
  if(interactiveMode) setDockState(current.interactiveSpec,interactiveLocked);
+ if(diapo&&aideClass) diapo.classList.add('aide-ouverte');
+ stage.style.paddingBottom=aidePadding;
  return best;
 }
 // Lot T2 : l'état du pied qui change sa hauteur (question sans pavé, question
@@ -3115,20 +3122,35 @@ function finishScreenHtml(){
 }
 function openCourse(){const modal=document.getElementById('courseModal'),course=courseForSlide(slides[idx]);if(modal&&course){markQuestionHelp('course');const card=modal.querySelector('.course-card');if(card){card.classList.toggle('thales-course-card',course.layout==='thales');card.classList.toggle('place-value-course-card',course.layout==='place-value');card.classList.toggle('read-data-course-card',slides[idx].courseKind==='read_data');card.classList.toggle('recognize-proportion-course-card',slides[idx].courseKind==='recognize_proportion');card.classList.toggle('angles-course-card',course.layout==='angles');card.classList.toggle('divisibility-course-card',course.layout==='divisibility');card.classList.toggle('expand-factor-course-card',course.layout==='expand-factor');}document.getElementById('courseTitle').textContent=course.title;document.getElementById('courseGrid').innerHTML=typographieHtml(course.rules.map(rule=>'<div class="course-rule'+(rule[2]?' course-rule-wide':'')+'"><strong>'+rule[0]+'</strong>'+rule[1]+'</div>').join(''));modal.hidden=false;setupPlaceValueTools(modal);fitCourseCard(card);const close=modal.querySelector('.course-close');if(close)close.focus();}}
 // Lot T2 — diaporama projeté (fenêtre d'au moins 1200 × 700 px) : le cours
-// s'agrandit comme la question (jusqu'à × 1,6) tant qu'il tient dans l'écran.
-// Pas d'agrandissement s'il contient un outil à glisser (tableau de
-// numération) : le glissé ne suivrait plus la souris. Téléphone et mode
-// interactif : inchangés.
+// s'agrandit comme la question (jusqu'à × 1,6) tant qu'il tient dans l'écran ;
+// un cours trop haut est d'abord élargi (ses règles prennent moins de
+// lignes) pour pouvoir grandir. Pas d'agrandissement s'il contient un outil
+// à glisser (tableau de numération) : le glissé ne suivrait plus la souris.
+// Téléphone et mode interactif : inchangés.
 function fitCourseCard(card){
  if(!card) return;
- card.style.zoom='';card.style.maxHeight='';
+ card.style.zoom='';card.style.maxHeight='';card.style.width='';
  if(interactiveMode||window.innerWidth<1200||window.innerHeight<700||card.querySelector('.place-value-tool')) return;
+ const vw=window.innerWidth-48,vh=window.innerHeight-48;
  card.style.maxHeight='none';
- const zoom=Math.min(1.6,(window.innerWidth-48)/card.offsetWidth,(window.innerHeight-48)/card.scrollHeight);
- if(zoom<1.05){card.style.maxHeight='';return;}
- card.style.zoom=zoom.toFixed(3);
- card.style.maxHeight=Math.floor((window.innerHeight-36)/zoom)+'px';
+ const natural=card.offsetWidth;
+ const zoomFor=()=>Math.min(1.6,vw/card.offsetWidth,vh/card.scrollHeight);
+ let best={zoom:zoomFor(),width:''};
+ [1.25,1.5,1.75,2].forEach(factor=>{
+   if(best.zoom>=1.6) return;
+   const width=Math.min(vw,Math.round(natural*factor));
+   card.style.width=width+'px';
+   const zoom=zoomFor();
+   if(zoom>best.zoom+.02) best={zoom,width:width+'px'};
+ });
+ card.style.width=best.width;
+ // Trop long même élargi : il garde sa taille et défile, mais sur toute la
+ // hauteur de l'écran (au lieu de 720 px).
+ if(best.zoom<1.05){if(best.zoom<1)card.style.width='';card.style.maxHeight=(window.innerHeight-36)+'px';return;}
+ card.style.zoom=best.zoom.toFixed(3);
+ card.style.maxHeight=Math.floor((window.innerHeight-36)/best.zoom)+'px';
 }
+
 function closeCourse(){const modal=document.getElementById('courseModal');if(modal)modal.hidden=true;}
 function openEquationDetail(){const modal=document.getElementById('equationDetailModal'),body=document.getElementById('equationDetailBody'),detail=slides[idx].equationDetailHtml;if(modal&&body&&detail){markQuestionHelp('equation-detail');body.innerHTML=detail;modal.hidden=false;const close=modal.querySelector('.equation-detail-close');if(close)close.focus();}}
 function closeEquationDetail(){const modal=document.getElementById('equationDetailModal');if(modal)modal.hidden=true;}
