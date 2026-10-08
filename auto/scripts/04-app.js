@@ -466,7 +466,7 @@ function buildBalancedQuiz(mods,count){
         ? chooseAreaQuestions(item.m.id,item.questions,moduleCount)
         : item.m.id==='dnb_14'
           ? drawRuntimeModuleQuestions(item.m,item.questions,moduleCount)
-        : ['dnb_26','dnb_26b'].includes(item.m.id)
+        : item.m.id==='dnb_26b'
           ? chooseTrigQuestions(item.m.id,item.questions,moduleCount)
         : drawRuntimeModuleQuestions(item.m,item.questions,moduleCount);
     return {m:item.m,questions:chosen};
