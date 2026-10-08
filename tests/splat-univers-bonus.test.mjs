@@ -148,7 +148,8 @@ test("une partie à la fois (05/10/2026) : en ouvrir une referme les autres du m
 test("?apres=enq11d (ou sys25d) : la fiche bonus suivante du même monde ; jamais une étape", () => {
   const f = bloc("const apres=new URLSearchParams(window.location.search).get(\"apres\");", "ouvrirMonde(mondeEnCours(");
   assert.match(f, /for\(const b of BONUS_MONDES\)\{\s*const kb=b\.fiches\.findIndex\(f=>b\.idp\+f\.code===apres\);/);
-  assert.match(f, /if\(kb\+1<b\.fiches\.length\) window\.location\.replace\(b\.fiches\[kb\+1\]\.j\);\n    return;/);
+  /* APRES_REDIRIGE (lot 2 du suivi, 08/10/2026) : la carte repart, le suivi n'y démarre pas */
+  assert.match(f, /if\(kb\+1<b\.fiches\.length\)\{ APRES_REDIRIGE=true; window\.location\.replace\(b\.fiches\[kb\+1\]\.j\); \}\n    return;/);
   assert.ok(f.indexOf("const kb=") < f.indexOf("const ici="), "le Bonus est traité avant les étapes");
 });
 

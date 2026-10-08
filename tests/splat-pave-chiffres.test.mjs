@@ -451,7 +451,8 @@ test("rien de tout cela ne s'applique sur ordinateur : chaque règle neuve est s
 
 test("la génération, la correction et les étoiles ne sont pas touchées", () => {
   // Les repères des lots précédents (PR 536, 542, 547) restent en place.
-  assert.match(petit, /tout\[parcoursId\] = \{ fait: true, etoiles: sansFaute, cartes: total, date: new Date\(\)\.toISOString\(\)\.slice\(0, 10\) \};/);
+  // l'étoile s'écrit par le moteur partagé depuis le lot 2 du suivi (08/10/2026)
+  assert.match(petit, /P\.enregistrerSerie\(p, parcoursId, \{ fait: true, etoiles: sansFaute, cartes: total, vues: eleveVues \}\)/);
   assert.match(petit, /function eleveDevoilerTache\(\) \{\s*const part = document\.querySelector\('\.eleve-scene \.part-splat'\);/);
   assert.match(petit, /<a data-mathsgo-confidentialite href="\.\.\/confidentialite\.html">Sans cookie ni traceur · Confidentialité<\/a>/);
 });

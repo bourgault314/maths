@@ -4564,7 +4564,17 @@
     body.importMode.eleveMode main{flex:1 1 auto;min-height:0;height:auto;max-height:none}
     /* équation résolue : le bouton vert prend la place des pastilles (une seule ligne) */
     body.importMode.eleveMode #eleveBarre.avecSuivante .elevePastilles{display:none}
+    /* Suivi de classe (lot 2, 08/10/2026) : avec « Passer ▶ » ou un message (« ✅ Résolue ! »), il ne
+       reste plus la place du prénom de la pastille « ● Léa » — le point seul, collé à ce qui le
+       précède : la barre reste sur une ligne (mesuré de 360 à 414 px, douze pastilles). */
+    body.importMode.eleveMode #eleveBarre #elevePasser + .suivi-pastille,
+    body.importMode.eleveMode #eleveBarre .eleveBarreNote + .suivi-pastille{margin-left:-4px;padding:2px 5px;gap:0}
+    body.importMode.eleveMode #eleveBarre #elevePasser + .suivi-pastille .nom,
+    body.importMode.eleveMode #eleveBarre .eleveBarreNote + .suivi-pastille .nom{display:none}
   }
+  /* la pastille « ● Léa » (lot 2 du suivi) suit le bouton « Passer ▶ » ou « Équation suivante ▶ »
+     quand il est là, au lieu de partager avec lui la place libre */
+  #eleveBarre #elevePasser + .suivi-pastille, #eleveBarre #eleveSuivante + .suivi-pastille{margin-left:0}
   .eleveVoile{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
     background:rgba(16,41,74,.45)}
   .eleveCarton{background:#fff;border-radius:20px;padding:28px 36px;text-align:center;
@@ -4589,6 +4599,10 @@
 <script defer src="../assets/js/mention-confidentialite.js"></script>
 <!-- Le texte du bouton « Étape suivante ▶ » de l'écran de fin (lot A). -->
 <script src="../assets/js/splat-etapes.js?v=20261005-1"></script>
+<!-- Le parcours de l'élève (moteur partagé avec la carte des mondes et le serveur de suivi), et
+     l'habillage du suivi de classe (pastille, garde) : lot 2 « outils + carte », 08/10/2026 -->
+<script src="../assets/js/splat-parcours.js?v=20261008-1"></script>
+<script src="../assets/js/splat-suivi.js?v=20261008-1"></script>
 </head>
 <body>
 <main id="appMain" class="startMode">
@@ -9735,24 +9749,66 @@
      Une série d'équations à résoudre sur le plateau, l'une après l'autre.
      La progression est mémorisée dans le navigateur : on peut s'arrêter
      au milieu et reprendre plus tard là où on en était. ══════════════ */
-  const ELEVE_STORE_KEY = "mathsgo-splat-parcours";
   let eleveMode = false, eleveParcours = "", eleveEqs = [], eleveIdx = 0, eleveResolues = 0, eleveCompteeCourante = false, eleveAttenteSuivante = false;
   /* eleveRes[i] : true = résolue, "ko" = passée (rouge, à rejouer) ; eleveRejeu : file des rouges à rejouer ;
      elevePasserVisible : le bouton « Passer » n'apparaît qu'après un moment sur la même équation. */
   let eleveRes = [], eleveRejeu = null, elevePasserVisible = false, elevePasserTimer = null;
   const ELEVE_PASSER_DELAI = 90000, ELEVE_URL_MONDES = "/outils/splat_univers.html";
+  /* équations de la série passées (« Passer ») : rejouées et résolues, elles redeviennent vertes —
+     on les compte donc à part, c'est ce que le professeur voit (lot 2 du suivi) ; et la série
+     est-elle déjà notée (sa fin s'écrit à la dernière équation, puis l'écran de fin la redemande) */
+  let eleveVues = 0, eleveSerieNotee = false;
 
+  /* Le parcours de l'élève (lot 2 « outils + carte » du suivi, 08/10/2026) : il s'écrit par le
+     moteur partagé (assets/js/splat-parcours.js), au format que garde le serveur, dans la case
+     de l'élève à code (son code est dans l'onglet, jamais dans l'adresse) ou dans la case sans
+     code d'aujourd'hui ; « la meilleure série gagne ». assets/js/splat-suivi.js crée le client
+     au premier besoin, met la pastille « ● Léa » dans la barre du haut et pose la garde. Sans
+     ces fichiers, le jeu reste jouable : rien n'est enregistré. eleveLireEntree et
+     eleveEcrireEntree gardent leur forme d'avant : {fait, etoiles, cartes} ou
+     {enCours:{sig, idx, resolues, res}}, ou {} pour effacer la sauvegarde « en cours ». */
+  let eleveSuiviObjet;
+  function eleveSuivi(){
+    if(eleveSuiviObjet === undefined){
+      eleveSuiviObjet = null;
+      if(eleveParcours && window.MathsGoSplatSuivi){
+        eleveSuiviObjet = window.MathsGoSplatSuivi.creer({ surRepere: () => eleveSuiviObjet && eleveSuiviObjet.majPastilles() });
+        if(eleveSuiviObjet) eleveSuiviObjet.lancer();
+      }
+    }
+    return eleveSuiviObjet;
+  }
+  function eleveSuiviPastilleHtml(){ const s = eleveSuivi(); return s ? s.pastilleHtml() : ""; }
   function eleveLireEntree(){
-    try{ return (JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || "{}"))[eleveParcours] || null; }catch(e){ return null; }
+    const s = eleveSuivi(), p = s ? s.lire() : null;
+    const etape = p && p.etapes[eleveParcours] ? p.etapes[eleveParcours] : null;
+    if(!etape) return null;
+    const entree = Object.assign({}, etape);
+    /* le moteur range « etoiles » ; ÉquaSplat lit « resolues » */
+    if(etape.enCours) entree.enCours = { sig: etape.enCours.sig, idx: etape.enCours.idx, resolues: etape.enCours.etoiles, res: etape.enCours.res };
+    return entree;
   }
   function eleveEcrireEntree(entree){
-    if(!eleveParcours) return;
-    try{
-      const tout = JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || "{}");
-      tout[eleveParcours] = Object.assign({}, tout[eleveParcours] || {}, entree);
-      if(!entree.enCours && tout[eleveParcours].enCours) delete tout[eleveParcours].enCours;
-      localStorage.setItem(ELEVE_STORE_KEY, JSON.stringify(tout));
-    }catch(e){ /* stockage indisponible : le jeu reste jouable */ }
+    if(!eleveParcours || !entree) return;
+    const s = eleveSuivi();
+    if(!s) return;
+    if(entree.fait){
+      if(eleveSerieNotee) return;
+      eleveSerieNotee = true;
+      s.ecrire((P, p) => P.enregistrerSerie(p, eleveParcours, { fait: true, etoiles: entree.etoiles, cartes: entree.cartes, vues: eleveVues }));
+    }else if(entree.enCours){
+      const e = entree.enCours;
+      s.ecrire((P, p) => P.enregistrerEnCours(p, eleveParcours, { sig: e.sig, idx: e.idx, etoiles: e.resolues, res: e.res, vues: eleveVues, cartes: eleveEqs.length }));
+    }else{
+      const avant = eleveLireEntree();
+      if(avant && (avant.enCours || avant.idx)) s.ecrire((P, p) => P.effacerEnCours(p, eleveParcours));
+    }
+  }
+  /* à la reprise : les équations passées de la série en cours — celles encore rouges, ou ce que
+     la case en a gardé (une étape pas encore étoilée garde le compte, rouges rejouées comprises) */
+  function eleveVuesReprise(entree, res){
+    const rouges = res.filter(r => r === "ko").length;
+    return entree && !entree.fait ? Math.max(rouges, Number(entree.vues) || 0) : rouges;
   }
 
   /* Une pastille par équation : verte = résolue, rouge = passée (à rejouer),
@@ -9792,7 +9848,8 @@
            elevePastillesHtml() +
            (message && !(eleveAttenteSuivante && eleveEcranEtroit()) ? `<span class="eleveBarreNote">${message}</span>` : "") +
            (eleveAttenteSuivante ? `<button type="button" id="eleveSuivante">${eleveEcranEtroit() ? "\u2705 " : ""}\u00c9quation suivante \u25b6</button>` : "") +
-           (!eleveAttenteSuivante && elevePasserVisible ? `<button type="button" id="elevePasser" title="Je bloque : passer \u00e0 la suivante, je la rejouerai \u00e0 la fin">Passer \u25b6</button>` : "");
+           (!eleveAttenteSuivante && elevePasserVisible ? `<button type="button" id="elevePasser" title="Je bloque : passer \u00e0 la suivante, je la rejouerai \u00e0 la fin">Passer \u25b6</button>` : "") +
+           eleveSuiviPastilleHtml(); /* « ● Léa » au bout de la barre, sous un code (lot 2 du suivi) */
   }
   function eleveMajBarre(message){
     let barre = document.getElementById("eleveBarre");
@@ -9885,6 +9942,7 @@
     if(eleveCompteeCourante) return;
     eleveCompteeCourante = true;
     if(elevePasserTimer) window.clearTimeout(elevePasserTimer);
+    if(eleveRes[eleveIdx] !== "ko") eleveVues++; /* une rouge repassée ne compte pas deux fois */
     eleveRes[eleveIdx] = "ko";
     eleveSauverEnCours();
     eleveEquationSuivante();
@@ -9894,6 +9952,7 @@
     eleveMode = true;
     eleveEqs = payload.serie;
     document.body.classList.add("eleveMode");
+    eleveVues = 0; eleveSerieNotee = false;
     const entree = eleveLireEntree();
     let reprise = "";
     /* idx = nombre d'équations : série finie avec des rouges, retour sur
@@ -9904,6 +9963,7 @@
     if(finAvecRouges){
       eleveRes = entree.enCours.res.map(r => r === true ? true : (r === "ko" ? "ko" : undefined));
       eleveResolues = Number(entree.enCours.resolues) || 0;
+      eleveVues = eleveVuesReprise(entree, entree.enCours.res);
       eleveIdx = eleveEqs.length - 1; /* la dernière équation reste dessous, comme en fin de série */
       const okFin = eleveChargerEquation();
       eleveCompteeCourante = true; /* rien à surveiller ni à passer sous l'écran de fin */
@@ -9919,6 +9979,7 @@
       const res = Array.isArray(entree.enCours.res) ? entree.enCours.res : null;
       /* détail mémorisé (vert/rouge) ; sinon, ancienne sauvegarde : tout en vert */
       eleveRes = Array.from({ length: eleveIdx }, (_, i) => res ? (res[i] === "ko" ? "ko" : (res[i] === true ? true : undefined)) : true);
+      eleveVues = eleveVuesReprise(entree, eleveRes);
       reprise = `Tu reprends l\u00e0 o\u00f9 tu t'\u00e9tais arr\u00eat\u00e9 !`;
     }
     const ok = eleveChargerEquation();
@@ -10019,7 +10080,7 @@
     }
     voile.querySelector("#eleveRejouer").addEventListener("click", () => {
       voile.remove();
-      eleveIdx = 0; eleveResolues = 0; eleveRes = []; eleveRejeu = null;
+      eleveIdx = 0; eleveResolues = 0; eleveRes = []; eleveRejeu = null; eleveVues = 0; eleveSerieNotee = false;
       eleveEcrireEntree({});
       eleveChargerEquation();
     });

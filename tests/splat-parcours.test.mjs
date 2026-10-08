@@ -76,15 +76,32 @@ test("le moteur est un fichier de page : il s’analyse seul, s’exporte pour n
   assert.deepEqual(Object.keys(PARCOURS.creer()), ["version", "epoque", "etapes"]);
 });
 
-test("aucune page ne charge encore le moteur (lot invisible) — le lot 2 branchera la carte et les trois outils", async () => {
+// Lot 2 « outils + carte » (08/10/2026) : le test « aucune page ne charge encore
+// le moteur » du lot 1 est inversé. La carte et les trois outils chargent le
+// moteur, puis l'habillage du suivi (assets/js/splat-suivi.js), sans « defer »
+// (les outils dessinent leur première carte pendant le chargement), avec le MÊME
+// ?v= partout — à bumper partout ensemble quand l'un des deux fichiers change
+// (le moteur se recopie aussi dans _serveur/public/prof/ : test de copie).
+test("la carte et les trois outils chargent le moteur puis l’habillage du suivi, sans defer, avec le même ?v= partout", async () => {
   const racine = new URL("../", import.meta.url);
   const pages = ["outils/splat_univers.html", "outils/splat.html", "outils/splat_tache_barre.html", "outils/equasplat.html"];
+  const versions = {moteur: new Set(), habillage: new Set()};
   for (const page of pages) {
     const html = await readFile(new URL(page, racine), "utf8");
-    assert.doesNotMatch(html, /splat-parcours\.js/, `${page} : ce test est à inverser au lot 2`);
+    const tete = html.slice(0, html.indexOf("</head>"));
+    const moteur = [...html.matchAll(/<script src="\.\.\/assets\/js\/splat-parcours\.js\?v=([\w-]+)"><\/script>/g)];
+    const habillage = [...html.matchAll(/<script src="\.\.\/assets\/js\/splat-suivi\.js\?v=([\w-]+)"><\/script>/g)];
+    assert.equal(moteur.length, 1, `${page} : le moteur, une fois, sans defer`);
+    assert.equal(habillage.length, 1, `${page} : l’habillage, une fois, sans defer`);
+    assert.ok(moteur[0].index < habillage[0].index, `${page} : le moteur d’abord`);
+    assert.ok(habillage[0].index < tete.length, `${page} : dans le <head>, avant le script de la page`);
+    versions.moteur.add(moteur[0][1]);
+    versions.habillage.add(habillage[0][1]);
   }
+  assert.equal(versions.moteur.size, 1, "même ?v= du moteur dans les quatre pages");
+  assert.equal(versions.habillage.size, 1, "même ?v= de l’habillage dans les quatre pages");
   const fichiers = await readdir(new URL("assets/js/", racine));
-  assert.ok(fichiers.includes("splat-parcours.js"));
+  assert.ok(fichiers.includes("splat-parcours.js") && fichiers.includes("splat-suivi.js"));
 });
 
 // ------------------------------------------------------------- le format

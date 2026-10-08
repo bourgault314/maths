@@ -12,8 +12,72 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<script>
+  // Suivi de classe (lot 2 « outils + carte », 08/10/2026), repris du <head>
+  // de Défi tables, en JavaScript ancien (pas de const, pas d'URLSearchParams) :
+  // quoi qu'il arrive au reste, le billet sort de la barre d'adresse avant tout.
+  // L'espace élève ouvre la carte avec un BILLET (#b=…, usage unique, deux
+  // minutes), jamais le code ; la page l'échange ensuite contre le code
+  // (assets/js/splat-parcours.js). Le code ne doit apparaître dans AUCUNE
+  // adresse : une adresse reste dans l'historique et s'affiche quand la page
+  // est projetée. Les ancres de la carte (#enq-bonus, #sys-bonus, #monde-4…)
+  // restent. Un #code= ou un #fiche= tapé à la main n'ouvre rien : il est
+  // seulement effacé de l'adresse.
+  (function (window) {
+    var entree = {billet: ""};
+    var reste = [];
+    var aEffacer = false;
+    try {
+      var brut = String(window.location.hash || "").replace(/^#/, "");
+      if (brut) {
+        var morceaux = brut.split("&");
+        for (var i = 0; i < morceaux.length; i++) {
+          var egal = morceaux[i].indexOf("=");
+          var cle = egal < 0 ? morceaux[i] : morceaux[i].slice(0, egal);
+          var valeur = egal < 0 ? "" : morceaux[i].slice(egal + 1);
+          try { cle = decodeURIComponent(cle); valeur = decodeURIComponent(valeur); } catch (e) {}
+          if (cle === "code" || cle === "fiche") aEffacer = true;
+          else if (cle === "b") entree.billet = valeur;
+          else if (morceaux[i]) reste.push(morceaux[i]);
+        }
+      }
+    } catch (e) {}
+    window.MATHSGO_ENTREE = entree;
+    // L'élève qui arrive de son espace (un billet, ou son code déjà dans
+    // l'onglet) ne voit pas le choix « Élève | Professeur » (demande de
+    // Gwenaël, 08/10/2026) : posé ici, avant le premier affichage, pour que
+    // le sélecteur ne clignote pas. La page le confirme ensuite (majSuivi).
+    // La vue professeur (?prof=1) garde son sélecteur.
+    try {
+      var codeOnglet = "";
+      try { codeOnglet = window.sessionStorage.getItem("mathsgo-suivi-code") || ""; } catch (e) {}
+      if ((entree.billet || codeOnglet) && !/[?&]prof=1(&|$)/.test(String(window.location.search || ""))) {
+        window.document.documentElement.className += " suivi-eleve";
+      }
+    } catch (e) {}
+    if (aEffacer || entree.billet) {
+      try {
+        window.history.replaceState(null, "", window.location.pathname
+          + window.location.search + (reste.length ? "#" + reste.join("&") : ""));
+      } catch (e) {}
+    }
+    // Un lien #b= posé sur une carte DÉJÀ ouverte n'est pas un nouveau
+    // document : ce script ne rejouerait pas et le billet resterait affiché.
+    // On recharge : le document neuf repasse par ici.
+    try {
+      window.addEventListener("hashchange", function () {
+        var hash = String(window.location.hash || "");
+        if (/(^#|&)(code|fiche|b)=/.test(hash)) window.location.reload();
+      });
+    } catch (e) {}
+  })(window);
+</script>
 <!-- La liste des mondes « en préparation » et la clé de Gwenaël (?essai=1) : en tête de assets/js/splat-etapes.js -->
 <script src="../assets/js/splat-etapes.js?v=20261005-1"></script>
+<!-- Le parcours de l'élève (moteur partagé avec les trois outils et le serveur de suivi), et
+     l'habillage du suivi de classe (bandeau, garde) : lot 2 « outils + carte », 08/10/2026 -->
+<script src="../assets/js/splat-parcours.js?v=20261008-1"></script>
+<script src="../assets/js/splat-suivi.js?v=20261008-1"></script>
 <style>
 :root{
   --page:#f6f8fb; --paper:#ffffff; --ink:#10294a; --muted:#5c6c82; --line:#d9e2ec;
@@ -41,6 +105,31 @@ header .modeBar{background:#eef4fb;border:1px solid var(--line);border-radius:99
 header .modeOpt{font-size:13px;font-weight:800;color:var(--muted);border-radius:999px;padding:6px 13px;text-decoration:none;white-space:nowrap}
 header .modeOpt.actif{color:#fff;background:var(--blue)}
 header .modeOpt:not(.actif):hover{color:var(--ink)}
+
+/* ---------- suivi de classe (lot 2 « outils + carte », 08/10/2026) ----------
+   L'élève venu de son espace (suivi.mathsgo.re) : un bandeau sous l'en-tête, le même
+   dessin que Défi tables — vert d'eau quand le serveur a répondu, orange quand rien
+   n'est encore parti, gris quand le code ne vaut plus rien. Maquette validée par
+   Gwenaël (planche 1 du chantier SPLAT! ↔ suivi). Dessiné par assets/js/splat-suivi.js. */
+.suivi-repere{display:flex;align-items:center;justify-content:center;gap:4px 8px;flex-wrap:wrap;
+  min-height:40px;margin:0;padding:0 12px;background:#eef6f6;color:#0b5f5c;font-weight:800;font-size:.9rem;
+  box-shadow:inset 0 -1px 0 #d5e8e7;text-align:center} /* le filet du bas en ombre : 40 px tout rond */
+.suivi-repere[hidden]{display:none}
+.suivi-repere .puce{width:9px;height:9px;border-radius:50%;background:#08aaa5;flex:0 0 auto}
+.suivi-repere .liens{display:inline-flex;gap:8px;align-items:center;white-space:nowrap}
+.suivi-repere .sep{opacity:.55}
+.suivi-repere .espace{color:inherit;text-decoration:underline;opacity:.85}
+.suivi-repere .sortie{border:0;background:none;margin:0;padding:0 2px;font:inherit;color:inherit;
+  text-decoration:underline;cursor:pointer;opacity:.85;min-height:40px}
+.suivi-repere .espace:hover,.suivi-repere .espace:focus-visible,
+.suivi-repere .sortie:hover,.suivi-repere .sortie:focus-visible{opacity:1}
+.suivi-repere.hors-ligne{background:#fdf0e3;color:#8a4c0a;box-shadow:inset 0 -1px 0 #efd3b4}
+.suivi-repere.hors-ligne .puce{background:#d9822b}
+.suivi-repere.detache{background:#eceff3;color:#3d4a5a;box-shadow:inset 0 -1px 0 #d6dce4}
+.suivi-repere.detache .puce{display:none}
+@media(max-width:520px){.suivi-repere{font-size:.8rem;gap:0 6px;padding:2px 8px}}
+/* l'élève suivi n'a pas le choix « Élève | Professeur » (demande de Gwenaël, 08/10/2026) */
+html.suivi-eleve header .modeBar{display:none}
 
 /* ---------- bandeau titre ---------- */
 .hero{max-width:980px;margin:0 auto;padding:26px 16px 8px;text-align:center;position:relative}
@@ -454,6 +543,7 @@ body.prof .volet p{font-size:14.5px}
     <a class="modeOpt" id="optProf" href="?prof=1">Professeur</a>
   </nav>
 </header>
+<p id="suivi-repere" class="suivi-repere" hidden></p>
 
 
 <div class="hero">
@@ -953,7 +1043,20 @@ const KEY="mathsgo-splat-univers";
 const KEY_PARCOURS="mathsgo-splat-parcours"; /* écrite par les outils en mode « Parcours élève » */
 function lireFaits(){try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(_e){return{}}}
 function ecrireFaits(f){try{localStorage.setItem(KEY,JSON.stringify(f))}catch(_e){}}
-function lireParcours(){try{return JSON.parse(localStorage.getItem(KEY_PARCOURS))||{}}catch(_e){return{}}}
+/* Suivi de classe (lot 2 « outils + carte », 08/10/2026) : les outils écrivent par le moteur
+   partagé (assets/js/splat-parcours.js), au format que garde le serveur — {version, epoque,
+   etapes:{parcours:{fait,…}}} — dans la case de l'élève à code, ou dans la case sans code
+   d'aujourd'hui. La carte lit la case de CET onglet par le moteur ; pendant l'échange d'un
+   billet (on ne sait pas encore qui entre), aucune étoile. Sans le moteur, lecture directe des
+   deux formats. Pas de suivi en vue professeur. */
+const SUIVI=(!PROF&&window.MathsGoSplatSuivi)?window.MathsGoSplatSuivi.creer({surRepere:majSuivi,surParcours:suiviParcours}):null;
+function lireParcours(){
+  if(SUIVI){ if(SUIVI.attente()) return {}; const p=SUIVI.lire(); if(p) return p.etapes; }
+  try{const brut=JSON.parse(localStorage.getItem(KEY_PARCOURS))||{};return (brut.etapes&&typeof brut.etapes==="object")?brut.etapes:brut;}catch(_e){return{}}
+}
+/* les étoiles cochées à la main (« J'ai réussi ! », une étape sans jeu en ligne) restent sur
+   l'appareil : elles ne comptent pas pour l'élève à code, dont la carte est celle du serveur */
+function faitsLocaux(){return !SUIVI||(!SUIVI.actif()&&!SUIVI.attente());}
 let faits=lireFaits();
 
 /* ============ rendu ============ */
@@ -1310,7 +1413,7 @@ else MONDES.forEach((m,mi)=>{
    ou si elle a été cochée à la main (travail sur fiche) */
 function etapeFaite(m,e,ei,parcours){
   const id=idEtape(m,e,ei);
-  return !!faits[id]||!!(e.p&&parcours[e.p]&&parcours[e.p].fait);
+  return (faitsLocaux()&&!!faits[id])||!!(e.p&&parcours[e.p]&&parcours[e.p].fait);
 }
 function majAffichage(){
   let total=0,fait=0,prochaine=null;
@@ -1354,7 +1457,7 @@ function majAffichage(){
   /* « Continuer » : la première étoile qui reste à gagner, dans l'ordre de l'univers */
   const cont=document.getElementById("continuer");
   if(cont&&!PROF){
-    cont.hidden=!prochaine;
+    cont.hidden=!prochaine||!!(SUIVI&&SUIVI.attente());
     if(prochaine){ const a=document.getElementById("continuerLien");
       a.href=prochaine.e.j; a.dataset.monde=prochaine.mi; a.innerHTML="\u25b6 Continuer <small>\u00b7 \u00e9tape "+prochaine.n+", "+prochaine.e.t+"</small>"; }
   }
@@ -1508,6 +1611,7 @@ if (PROF) {
    (« Étape suivante ▶ » = /outils/splat_univers.html?apres=m1e1), sans avoir à
    connaître l'adresse du jeu suivant. Dernière étape, ou parcours inconnu : la carte
    s'affiche normalement, ouverte sur le monde en cours. */
+let APRES_REDIRIGE=false; /* la carte part aussitôt : le suivi n'a pas à démarrer ici */
 (function(){
   const apres=new URLSearchParams(window.location.search).get("apres");
   if(!apres||PROF) return;
@@ -1519,7 +1623,7 @@ if (PROF) {
     const kb=b.fiches.findIndex(f=>b.idp+f.code===apres);
     if(kb<0) continue;
     retenirMonde(MONDES.indexOf(b.monde)); retenirBonus(true,b);
-    if(kb+1<b.fiches.length) window.location.replace(b.fiches[kb+1].j);
+    if(kb+1<b.fiches.length){ APRES_REDIRIGE=true; window.location.replace(b.fiches[kb+1].j); }
     return;
   }
   /* Mondes en préparation (26/09/2026), comme le bouton de assets/js/splat-etapes.js :
@@ -1531,6 +1635,7 @@ if (PROF) {
   if(k>=0&&k+1<suite.length&&suite[k+1].j){
     /* au retour sur la carte, c'est le monde de l'étape suivante qui s'ouvrira */
     retenirMonde(MONDES.findIndex(m=>m.actif&&m.etapes.includes(suite[k+1])));
+    APRES_REDIRIGE=true;
     window.location.replace(suite[k+1].j);
   }
 })();
@@ -1539,6 +1644,39 @@ if(!PROF) ouvrirParties();
 /* au retour d'une partie (autre onglet ou bouton retour), on rallume les étoiles gagnées */
 window.addEventListener("pageshow",majAffichage);
 window.addEventListener("focus",majAffichage);
+
+/* ============ suivi de classe (lot 2 « outils + carte », 08/10/2026) ============
+   L'élève arrive de son espace (suivi.mathsgo.re) avec un billet, ou avec son code déjà dans
+   l'onglet (retour d'un outil) : le bandeau sous l'en-tête dit qu'il est suivi, la flèche et le
+   logo ramènent à son espace, les étoiles sont celles de sa case (le serveur fait foi, puis
+   « la meilleure série gagne »). Les outils, ouverts dans le même onglet, retrouvent le code
+   dans l'onglet : aucun paramètre dans les liens. Sans code, rien ne change. */
+const RETOUR_SITE=(()=>{const b=document.querySelector("header .back"),l=document.querySelector("header .brand");
+  return {back:b?b.getAttribute("href"):"",title:b?b.getAttribute("title"):"",brand:l?l.getAttribute("href"):"/",aria:l?l.getAttribute("aria-label"):""};})();
+function majLiensRetour(){
+  const espace=!!(SUIVI&&(SUIVI.actif()||SUIVI.client.entreeRefusee));
+  const b=document.querySelector("header .back"),l=document.querySelector("header .brand");
+  if(b){ b.setAttribute("href",espace?SUIVI.ADRESSE_ESPACE:RETOUR_SITE.back); b.setAttribute("title",espace?"Mon espace":RETOUR_SITE.title); }
+  if(l){ l.setAttribute("href",espace?SUIVI.ADRESSE_ESPACE:RETOUR_SITE.brand); l.setAttribute("aria-label",espace?"Mon espace":RETOUR_SITE.aria); }
+}
+function majSuivi(){
+  majLiensRetour();
+  /* le choix « Élève | Professeur » disparaît pour l'élève venu de son espace : sous un code,
+     pendant l'échange de son billet, ou quand son billet est refusé (posé dès le <head>) */
+  document.documentElement.classList.toggle("suivi-eleve",!!(SUIVI&&(SUIVI.actif()||SUIVI.attente()||SUIVI.client.entreeRefusee)));
+  if(SUIVI) SUIVI.dessinerBandeau(document.getElementById("suivi-repere"));
+}
+/* la case de l'élève est arrivée (billet échangé, serveur lu) : les étoiles, et — tant que
+   l'élève n'a encore rien touché — le monde et la partie en cours, comme à l'arrivée */
+let carteTouchee=false;
+["pointerdown","keydown"].forEach(t=>document.getElementById("univers").addEventListener(t,()=>{carteTouchee=true;},true));
+function suiviParcours(){
+  const prochaine=majAffichage();
+  if(carteTouchee) return;
+  ouvrirMonde(mondeEnCours(prochaine));
+  ouvrirParties();
+}
+if(SUIVI&&!APRES_REDIRIGE){ majSuivi(); SUIVI.lancer(); }
 </script>
 </body>
 </html>

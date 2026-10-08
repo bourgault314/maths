@@ -16,6 +16,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { PARCOURS, fauxStockage, fauxOnglet } from "./splat-suivi-monde.mjs";
 
 const page = readFileSync(new URL("../outils/splat.html", import.meta.url), "utf8");
 const univers = readFileSync(new URL("../outils/splat_univers.html", import.meta.url), "utf8");
@@ -46,11 +47,16 @@ const [M2A1, M2A2, M2A3] = ["M2A1", "M2A2", "M2A3"].map(constante);
 const ETAPE7 = `?${M2A1}&eleve=1&parcours=m2e1&suite=${encodeURIComponent(M2A2)};${encodeURIComponent(M2A3)}`;
 const ETAPE8 = "?mode=N&equation=X_PLUS_A_EQ_B&cards=12&seed=347&unknown=question&eleve=1&parcours=m2e4";
 
-// Un faux localStorage, pré-rempli.
+// Un faux localStorage, pré-rempli (la clé sans code : son contenu d'avant le lot 2
+// du suivi, à plat, se lit tel quel par le moteur). lire() rend les étapes telles
+// que le moteur les range depuis le lot 2 (assets/js/splat-parcours.js).
 function stockage(contenu) {
-  const m = new Map([[CLE, JSON.stringify(contenu)]]);
-  return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), lire: () => JSON.parse(m.get(CLE) || "{}") };
+  const local = fauxStockage({ [CLE]: JSON.stringify(contenu) });
+  local.lire = () => PARCOURS.charger(local, "").etapes;
+  return local;
 }
+// Les fonctions du parcours qui lisent et écrivent par le moteur (lot 2 du suivi).
+const MOTEUR_PAGE = ["eleveSuivi", "eleveEtapeLue", "eleveVuesReprise"].map(source).join("\n");
 
 // Le bloc de reprise de renderEleveSplat, exécuté tel quel à l'ouverture d'une série de 12 cartes.
 function ouvrir(store, serieAffichee, parcoursId = "m2e1") {
@@ -60,11 +66,12 @@ function ouvrir(store, serieAffichee, parcoursId = "m2e1") {
   const fin = page.indexOf(finTexte, debut);
   assert.ok(fin > debut, "fin du bloc de reprise introuvable");
   const bloc = page.slice(debut, fin + finTexte.length) + "\n}";
-  return new Function("localStorage", "ELEVE_STORE_KEY", "parcoursId", "eleveSignatureSerie", `
-    let eleveSerie = new Array(12).fill({}), eleveRepriseFaite = false;
-    let eleveIdx = 0, eleveEtoiles = 0, eleveResultats = [];
+  return new Function("window", "parcoursId", "eleveSignatureSerie", `
+    let eleveSerie = new Array(12).fill({}), eleveRepriseFaite = false, eleveSuiviObjet;
+    let eleveIdx = 0, eleveEtoiles = 0, eleveResultats = [], eleveVues = 0;
+    ${MOTEUR_PAGE}
     ${bloc}
-    return { eleveIdx, eleveEtoiles, eleveResultats };`)(store, CLE, parcoursId, () => serieAffichee);
+    return { eleveIdx, eleveEtoiles, eleveResultats, eleveVues };`)(fauxOnglet({ local: store }).fenetre, parcoursId, () => serieAffichee);
 }
 
 test("l'empreinte de l'étape 7 : les réglages des cartes, graine et « suite » compris, clés triées", () => {
@@ -104,10 +111,10 @@ test("chaque réglage qui détermine les cartes change l'empreinte — tous ceux
 
 test("la sauvegarde « en cours » porte l'empreinte de la série qui l'écrit, sans toucher l'étoile", () => {
   const store = stockage({ m2e1: { fait: true, etoiles: 12, cartes: 12, date: "2026-09-17" } });
-  new Function("localStorage", "ELEVE_STORE_KEY", "parcoursId", "eleveRejeu", "eleveIdx", "eleveSerie",
+  new Function("window", "parcoursId", "eleveRejeu", "eleveIdx", "eleveSerie",
     "eleveEtoiles", "eleveResultats", "eleveSignatureSerie",
-    `${source("eleveSauverEnCours")}\neleveSauverEnCours();`)(
-    store, CLE, "m2e1", null, 2, new Array(12).fill({}), 3, [true, true, true], () => empreinte(ETAPE7));
+    `let eleveSuiviObjet, eleveVues = 0;\n${MOTEUR_PAGE}\n${source("eleveSauverEnCours")}\neleveSauverEnCours();`)(
+    fauxOnglet({ local: store }).fenetre, "m2e1", null, 2, new Array(12).fill({}), 3, [true, true, true], () => empreinte(ETAPE7));
   const entree = store.lire().m2e1;
   assert.deepEqual(entree.enCours, { sig: empreinte(ETAPE7), idx: 3, etoiles: 3, res: [true, true, true] });
   assert.equal(entree.fait, true, "l'étoile déjà gagnée reste allumée");
