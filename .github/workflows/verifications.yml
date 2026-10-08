@@ -121,9 +121,9 @@ jobs:
           echo "$fichiers" | sed 's/^/  /'
           # Ce que le serveur de suivi lit vraiment. Hors _serveur/, la liste ne
           # se devine pas : elle vient de _serveur/tests/lancer.php lui-même, qui
-          # compare octet pour octet le moteur de Défi tables et les images
-          # servies à ceux du dépôt (« octet pour octet le fichier de l'appli »,
-          # « le logo et les icônes sont servis d'ici »). Toucher l'un de ces
+          # compare octet pour octet les moteurs de Défi tables et de SPLAT! et
+          # les images servies à ceux du dépôt (« octet pour octet le fichier de
+          # l'appli », « le logo et les icônes sont servis d'ici »). Toucher l'un de ces
           # fichiers sans recopier sa copie dans _serveur/public/ rend les tests
           # du serveur rouges : ils doivent donc tourner.
           # Les workflows eux-mêmes en font partie : les modifier, c'est changer
@@ -131,6 +131,7 @@ jobs:
           motif='^_serveur/'
           motif="$motif"'|^\.github/workflows/'
           motif="$motif"'|^outils/calcul_mental/defi_tables_mon_parcours\.js$'
+          motif="$motif"'|^assets/js/splat-parcours\.js$'
           motif="$motif"'|^assets/img/mathsgo-logo-390\.png$'
           motif="$motif"'|^assets/img/mathsgo-logo-print\.png$'
           motif="$motif"'|^assets/img/apple-touch-icon\.png$'

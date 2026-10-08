@@ -78,10 +78,10 @@ const CATALOGUE_APPLIS = [
         // déclare rien n'est pas comptée.
         'compteur' => 'calculs',
     ],
-    // Les entrées qui suivent ne sont PAS ouvertes : l'appli ne sait pas encore
-    // parler au serveur (« disponible » à false, « url » à null). Depuis le lot
-    // « retours de classe » (06/10/2026), elles ne s'affichent plus du tout
-    // dans l'espace élève (plus de pastille « Bientôt »).
+    // Les entrées qui suivent, SPLAT! excepté, ne sont PAS ouvertes : l'appli
+    // ne sait pas encore parler au serveur (« disponible » à false, « url » à
+    // null). Depuis le lot « retours de classe » (06/10/2026), elles ne
+    // s'affichent plus du tout dans l'espace élève (plus de pastille « Bientôt »).
     // L'ORDRE DE CE TABLEAU EST L'ORDRE D'AFFICHAGE (choisi par Gwenaël le
     // 07/09/2026) : tables, calcul, automatismes, Splat, Solèy.
     // Le jour où l'une d'elles s'ouvre, elle reçoit son adresse, ses clés
@@ -110,16 +110,27 @@ const CATALOGUE_APPLIS = [
         'motifs' => [],
         'compteur' => null,
     ],
-    'splat-equations' => [
-        'nom' => 'Splat ! Équations',
-        'description' => 'Trouver le nombre caché sous la tache.',
-        'url' => null,
+    // L'univers SPLAT! (lot « splat-suivi-3 », 07/10/2026), à la place de
+    // « splat-equations », qui n'avait jamais servi : l'élève arrive sur la
+    // carte des mondes, qui ouvre les trois outils. Une ligne par élève :
+    // { version, epoque, etapes: { <parcours>: { fait, etoiles, cartes, vues,
+    // essais, date, idx } } } — rien que des nombres, des booléens et des
+    // dates. Les parcours acceptés sont la liste fermée de la carte
+    // (assets/js/splat-etapes.js, recopiée dans assets/js/splat-parcours.js) :
+    // le motif est celui que rend motifPhp() du moteur, un test le compare.
+    // Tant qu'aucune classe n'a « splat » dans sa liste, personne ne le voit.
+    'splat' => [
+        'nom' => 'SPLAT!',
+        'description' => 'Six mondes de taches et de jetons, étape par étape.',
+        'url' => 'https://mathsgo.re/outils/splat_univers.html',
         'ancre' => null,
-        'disponible' => false,
-        'cles' => [],
+        'disponible' => true,
+        'cles' => ['version', 'epoque', 'etapes', 'fait', 'etoiles', 'cartes', 'vues', 'essais', 'date', 'idx'],
         'mots' => [],
-        'motifs' => [],
-        'compteur' => null,
+        'motifs' => ['/^(?:m1e1|m1e2|m1e3|m1e4|m1e5|m1e6|m2e1|m2e4|m2e5|enq10|enq11|enq12|enq13|enq14|enq15|enq16|enq17|enq18|enq19|enq20|enq21|enq22|enq23|enq24|sys25|sys26|sys27|sys28|m3e1|m3e2|m3e4|m4e1|m4e2|m4e3|m4e4|m4e5|m4e6|enq11d|enq12d|enq13d|enq16d|enq17d|enq18d|enq20d|enq22d|enq19d|enq24d|sys25d|sys26d|sys27d|sys28d)$/'],
+        // « Revenir à… » nomme une version par ce compte : les étapes
+        // commencées, Bonus compris (lib/versions.php).
+        'compteur' => 'etapes',
     ],
     'soley' => [
         'nom' => 'Solèy',

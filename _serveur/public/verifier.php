@@ -308,6 +308,20 @@ if ($autorise) {
         }
         return "en place (" . number_format((float)filesize($chemin), 0, ',', ' ') . " octets, empreinte " . substr(md5_file($chemin), 0, 10) . ")";
     });
+    // Lot « splat-suivi-3 » (07/10/2026) : le moteur de SPLAT!, servi d'ici
+    // pour la même raison. S'il manque, la tuile SPLAT! de l'espace élève
+    // reste sans pastilles (rien ne casse), et « Ma classe » ne saura pas lire
+    // les parcours SPLAT!.
+    verif($lignes, "Moteur SPLAT! servi localement", function () {
+        $chemin = __DIR__ . '/prof/splat-parcours.js';
+        if (!is_file($chemin) || filesize($chemin) === 0) {
+            throw new RuntimeException("prof/splat-parcours.js absent : à déposer (copie de assets/js/splat-parcours.js du dépôt).");
+        }
+        if (!str_contains((string)file_get_contents($chemin), 'MathsGoSplatParcours')) {
+            throw new RuntimeException("prof/splat-parcours.js n'est pas le moteur attendu.");
+        }
+        return "en place (" . number_format((float)filesize($chemin), 0, ',', ' ') . " octets, empreinte " . substr(md5_file($chemin), 0, 10) . ")";
+    });
     // Lot 7 (03/09/2026) : le logo et les icônes sont servis d'ici, la
     // politique de contenu n'accepte plus d'image d'un autre domaine. S'ils
     // manquent, les deux pages s'affichent sans logo et sans favicon.

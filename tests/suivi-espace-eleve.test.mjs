@@ -53,8 +53,14 @@ test("les dessins sont écrits dans la page, jamais construits avec une valeur d
 test("chaque appli du catalogue a son propre dessin", () => {
   const cles = [...catalogue.matchAll(/^\s{4}'([a-z0-9-]+)' => \[$/gm)].map(m => m[1]);
   assert.ok(cles.length >= 5, "le catalogue doit être lisible ici");
+  // Dans le tableau ICONES lui-même : depuis le lot « splat-suivi-3 », JAUGES
+  // porte aussi des clés d'appli, et ne dessine pas d'icône.
+  const debut = page.indexOf("  const ICONES = {");
+  const icones = page.slice(debut, page.indexOf("\n  };", debut));
+  assert.ok(debut > 0 && icones.length > 1000, "la page doit ranger ses dessins dans ICONES");
+  assert.doesNotMatch(icones, /"splat-equations":/, "l'ancienne clé est renommée « splat » (07/10/2026)");
   for (const cle of cles) {
-    assert.ok(page.includes(`"${cle}":`),
+    assert.ok(icones.includes(`"${cle}":`),
       `l'appli « ${cle} » n'a pas de dessin dans ICONES : une activité au dessin générique a l'air inachevée. `
       + `Ajoute-le dans _serveur/public/index.php.`);
   }
@@ -68,7 +74,8 @@ test("chaque appli du catalogue a son propre dessin", () => {
 
 test("l'ordre d'affichage du catalogue est celui décidé le 07/09/2026", () => {
   const cles = [...catalogue.matchAll(/^\s{4}'([a-z0-9-]+)' => \[$/gm)].map(m => m[1]);
-  assert.deepEqual(cles, ["defi-tables", "defi-calcul", "automatismes", "splat-equations", "soley"],
+  // « splat-equations » est devenu « splat » le 07/10/2026 (lot splat-suivi-3), à la même place.
+  assert.deepEqual(cles, ["defi-tables", "defi-calcul", "automatismes", "splat", "soley"],
     "l'ordre du tableau CATALOGUE_APPLIS est l'ordre des tuiles chez l'élève");
 });
 
@@ -259,12 +266,17 @@ const PARCOURS = createRequire(import.meta.url)(MOTEUR_SERVI);
 // La fonction de lecture telle qu'elle est ÉCRITE dans la page, exécutée sur
 // le vrai moteur : une assertion sur le texte du fichier décrirait l'intention
 // au lieu de la vérifier.
+// Depuis le lot « splat-suivi-3 », chaque entrée de JAUGES porte l'adresse de
+// son moteur, son nom dans la fenêtre et son lecteur : on rend les lecteurs.
 function lecteurDeJauge() {
   const debut = page.indexOf("  const JAUGES = {");
   assert.ok(debut > 0, "la page doit ranger ses lecteurs de jauge dans JAUGES");
   const fin = page.indexOf("\n  };", debut) + "\n  };".length;
   const source = page.slice(debut, fin) + "\n  return JAUGES;";
-  return new Function(source)();
+  const jauges = new Function(source)();
+  const lecteurs = {};
+  Object.keys(jauges).forEach(cle => { lecteurs[cle] = jauges[cle].lecteur; });
+  return lecteurs;
 }
 
 function parcoursFabrique({acquises = 0, melangeAJour = false, etoiles = 0} = {}) {
@@ -347,16 +359,19 @@ test("une activité ouverte et jouée sans table acquise n'a pas de jauge non pl
     "dès la première table, la jauge apparaît");
 });
 
-test("le moteur est servi d'ici et n'est chargé que s'il y a un parcours à lire", () => {
-  assert.match(page, /const MOTEUR = "prof\/defi_tables_mon_parcours\.js\?v=/,
+test("les moteurs sont servis d'ici et ne sont chargés que s'il y a un parcours à lire", () => {
+  assert.match(page, /url: "prof\/defi_tables_mon_parcours\.js\?v=/,
     "la copie servie par le suivi : la politique de contenu interdit un script d'un autre domaine");
+  assert.match(page, /url: "prof\/splat-parcours\.js\?v=/, "même chose pour le moteur de SPLAT!");
   const bloc = page.slice(page.indexOf("  async function habillerJauges"));
   const lecture = bloc.indexOf("lireParcours(code, cle)");
-  const chargement = bloc.indexOf("await chargerMoteur()");
+  const chargement = bloc.indexOf("chargerMoteur(cle)");
   assert.ok(lecture > 0 && chargement > lecture,
     "70 ko de moteur ne se téléchargent qu'après avoir su qu'il y a quelque chose à afficher");
   assert.match(bloc, /if \(!parcours\.some\(Boolean\)\) return;/,
     "aucun parcours : on s'arrête avant le moteur");
+  assert.match(bloc, /parcours\[i\] \? chargerMoteur\(cle\) : null/,
+    "un moteur par activité, et seulement pour celle qui a un parcours");
 });
 
 test("la grille s'affiche avant la jauge, et rien ne l'attend", () => {
@@ -373,6 +388,12 @@ test("la jauge se construit par textContent, jamais en HTML", () => {
   assert.doesNotMatch(bloc, /innerHTML/, "un parcours est fabriqué par l'appareil d'un élève");
   assert.match(bloc, /compte\.textContent = jauge\.compte;/);
   assert.match(bloc, /note\.textContent = jauge\.note;/);
+  assert.match(bloc, /bonus\.textContent = jauge\.bonus;/);
+  const debutPastille = page.indexOf("  function pastilleMonde(");
+  const pastille = page.slice(debutPastille, page.indexOf("\n  }", debutPastille));
+  assert.ok(debutPastille > 0, "les pastilles de SPLAT! sont dessinées par pastilleMonde");
+  assert.doesNotMatch(pastille, /innerHTML/);
+  assert.match(pastille, /chiffre\.textContent = String\(monde\.numero\);/);
 });
 
 test("lire un parcours n'écrit jamais le code dans une adresse", () => {
@@ -388,49 +409,89 @@ test("lire un parcours n'écrit jamais le code dans une adresse", () => {
 // La règle nº 1, exécutée et pas décrite : serveur muet, la grille reste
 // intacte. Le bloc de la jauge est extrait tel qu'il est écrit dans la page,
 // et joué avec un serveur qui ne répond jamais.
-function jouerHabillage({reponse, moteurCharge = true}) {
-  const debut = page.indexOf('  const MOTEUR = "prof/defi_tables_mon_parcours.js');
-  assert.ok(debut > 0, "la page doit nommer le moteur qu'elle charge");
+// Le moteur de SPLAT!, tel qu'il est servi par le suivi (la copie de prof/).
+const MOTEUR_SPLAT = join(racine, "_serveur/public/prof/splat-parcours.js");
+const SPLAT = createRequire(import.meta.url)(MOTEUR_SPLAT);
+
+// Depuis le lot « splat-suivi-3 », un moteur par activité : chaque faux
+// <script> installe le sien dans la fausse fenêtre, d'après son adresse.
+const MOTEURS_DES_ADRESSES = [
+  ["defi_tables_mon_parcours.js", "MATHSGO_DEFI_TABLES_MON_PARCOURS", PARCOURS],
+  ["splat-parcours.js", "MathsGoSplatParcours", SPLAT]
+];
+
+// Un faux serveur qui répond par activité : {cle: parcours ou null}.
+function serveurDesParcours(parActivite) {
+  return (_adresse, options) => {
+    const {appli} = JSON.parse(options.body);
+    const parcours = parActivite[appli] || null;
+    return Promise.resolve({ok: true, json: () => Promise.resolve(parcours
+      ? {ok: true, existe: true, parcours: JSON.parse(JSON.stringify(parcours))}
+      : {ok: true, existe: false, parcours: null})});
+  };
+}
+
+function jouerHabillage({reponse, moteurCharge = true, applis = ["defi-tables"]}) {
+  const debut = page.indexOf("  const JAUGES = {");
+  assert.ok(debut > 0, "la page doit nommer les moteurs qu'elle charge");
   const ancre = page.indexOf("  async function habillerJauges(donnees, code) {", debut);
   const fin = page.indexOf("\n  }", page.indexOf("for (let i = aLire.length - 1", ancre)) + "\n  }".length;
   const source = page.slice(debut, fin)
-    .replace(/<\?=[\s\S]*?\?>/, "0123456789")
+    .replace(/<\?=[\s\S]*?\?>/g, "0123456789")
     + "\n  return habillerJauges;";
 
-  const tuile = {
-    classes: [],
-    enfants: [],
-    classList: {add(nom) { tuile.classes.push(nom); }},
-    querySelector: () => null,
-    closest: () => ({}),
-    append(noeud) { tuile.enfants.push(noeud); }
-  };
-  const applis = {querySelector: () => tuile, firstChild: null, insertBefore() {}};
-  const $ = () => applis;
-  const faireNoeud = () => {
-    const noeud = {style: {}, textContent: "", enfants: [], ecouteurs: {},
+  const faireNoeud = (nom, espace) => {
+    const noeud = {nom, espace, style: {}, textContent: "", enfants: [], ecouteurs: {}, attributs: {},
       append(...n) { noeud.enfants.push(...n); },
       // La page écoute « load » et « error » par addEventListener : sans cette
       // ligne, le faux <script> n'a pas d'écouteur du tout et la promesse du
       // moteur ne se résout jamais.
       addEventListener(type, fn) { noeud.ecouteurs[type] = fn; },
-      setAttribute() {}, querySelector: () => null};
+      setAttribute(cle, valeur) { noeud.attributs[cle] = String(valeur); },
+      querySelector: () => null};
     return noeud;
   };
+  const tuiles = {};
+  applis.forEach(cle => {
+    const tuile = {cle, classes: [], enfants: [],
+      classList: {add(nom) { tuile.classes.push(nom); }},
+      querySelector: () => (tuile.enfants.length ? tuile.enfants[0] : null),
+      closest: () => ({cle}),
+      append(noeud) { tuile.enfants.push(noeud); }};
+    tuiles[cle] = tuile;
+  });
+  const remontees = [];
+  const liste = {
+    querySelector: selecteur => tuiles[(selecteur.match(/data-cle="([^"]+)"/) || [])[1]] || null,
+    firstChild: {cle: "premiere"},
+    insertBefore(li) { remontees.push(li.cle); }
+  };
+  const $ = () => liste;
   // Le moteur se charge par un <script> ajouté à la volée. Le faux document
-  // rend « load » ou « error » selon `moteurCharge` : c'est le seul moyen
-  // d'éprouver le MOTEUR INTROUVABLE, un cas qu'aucun serveur simulé ne
+  // installe le moteur et rend « load », ou rend « error » selon
+  // `moteurCharge` (un booléen, ou une fonction de l'adresse) : c'est le seul
+  // moyen d'éprouver le MOTEUR INTROUVABLE, un cas qu'aucun serveur simulé ne
   // produit — et le troisième pied de la règle nº 1, à côté du serveur muet et
   // de la réponse illisible.
-  const doc = {createElement: faireNoeud, createTextNode: t => ({texte: t}),
+  const fenetre = {};
+  const charges = [];
+  const doc = {createElement: nom => faireNoeud(nom), createElementNS: (espace, nom) => faireNoeud(nom, espace),
+    createTextNode: t => ({texte: t}),
     head: {appendChild(script) {
-      setTimeout(() => script.ecouteurs[moteurCharge ? "load" : "error"]?.(), 0);
+      charges.push(script.src);
+      const reussit = typeof moteurCharge === "function" ? moteurCharge(script.src) : moteurCharge;
+      setTimeout(() => {
+        if (reussit) {
+          const [, nom, moteur] = MOTEURS_DES_ADRESSES.find(([fichier]) => script.src.includes(fichier));
+          fenetre[nom] = moteur;
+        }
+        script.ecouteurs[reussit ? "load" : "error"]?.();
+      }, 0);
     }}};
-  const fenetre = {MATHSGO_DEFI_TABLES_MON_PARCOURS: moteurCharge ? PARCOURS : null};
   const habiller = new Function("$", "window", "document", "fetch", "CSS", "Promise", "Math", source)(
-    $, fenetre, doc, reponse, {escape: s => s}, Promise, Math);
-  const donnees = {applis: [{cle: "defi-tables", disponible: true, url: "https://exemple/", ancre: null}]};
-  return {habiller: habiller(donnees, "ABC123"), tuile};
+    $, fenetre, doc, reponse, {escape: x => x}, Promise, Math);
+  const donnees = {applis: applis.map(cle => ({cle, disponible: true, url: "https://exemple/", ancre: null}))};
+  return {habiller: habiller(donnees, "ABC123"), tuile: tuiles[applis[0]], tuiles, charges, remontees};
 }
 
 test("serveur muet : la tuile reste exactement ce qu'elle était", async () => {
@@ -499,4 +560,152 @@ test("la barre de la tuile est remplie à la mesure des tables acquises", async 
   assert.equal(await largeurDeLaBarre(4), "44%", "4 tables sur 9 : 44,4 % arrondi à 44");
   assert.equal(await largeurDeLaBarre(1), "11%", "1 table sur 9");
   assert.equal(await largeurDeLaBarre(9), "100%", "9 sur 9 : la barre est pleine");
+});
+
+// -------------------------------------------------------------------------
+// Lot « splat-suivi-3 » (07/10/2026). La tuile SPLAT!, choix B de Gwenaël :
+// six pastilles rondes, une par monde, dans la couleur du monde — vide (pas
+// commencé), à moitié (en cours), pleine (fini) —, et dessous « 13 étapes
+// réussies sur 37 » (+ « ✨ 2 bonus »). Rien tant qu'aucune étape n'est
+// réussie. Le total vient de la carte, par le moteur : jamais écrit ici.
+//
+// Sabotages attendus (chacun rend un test rouge) :
+//   u) compter les étapes dans la page (`brut.etapes`) au lieu d'appeler
+//      resumeProf
+//   v) enlever le garde-fou « aucune étape réussie » de SPLAT!
+//   w) écrire « sur 40 » (ou tout total en dur) au lieu de resume.total
+//   x) forcer le pluriel (« 1 étapes réussies »)
+//   y) charger le moteur SPLAT! même sans parcours SPLAT!
+//   z) dessiner la pastille « en cours » sans sa moitié colorée
+
+const serie = (fait, etoiles, cartes, vues) => ({fait, etoiles, cartes, vues});
+const CARTE_SPLAT = SPLAT.CARTE.ETAPES.map(e => ({parcours: e[0], monde: e[4]}));
+
+// Un parcours SPLAT! construit par le moteur, comme le serveur le rend.
+function parcoursSplat({mondesFinis = [], enMonde = null, faitsEnMonde = 0, aide = false, enCours = null, bonus = 0} = {}) {
+  let p = SPLAT.creer();
+  CARTE_SPLAT.filter(e => mondesFinis.includes(e.monde))
+    .forEach(e => { p = SPLAT.enregistrerSerie(p, e.parcours, serie(true, 4, 4, 0), "2026-09-28"); });
+  CARTE_SPLAT.filter(e => e.monde === enMonde).slice(0, faitsEnMonde)
+    .forEach((e, i) => { p = SPLAT.enregistrerSerie(p, e.parcours, serie(true, 3, 4, aide && i === 0 ? 1 : 0), "2026-10-05"); });
+  if (enCours) p = SPLAT.enregistrerEnCours(p, enCours, {idx: 3, etoiles: 2, cartes: 4}, "2026-10-07");
+  SPLAT.CARTE.BONUS.slice(0, bonus).forEach(b => { p = SPLAT.enregistrerSerie(p, b[0], serie(true, 4, 4, 0), "2026-10-06"); });
+  return JSON.parse(JSON.stringify(SPLAT.pourServeur(p)));
+}
+// Léa, 405 : mondes 1 et 2 finis (9 étapes), 4 étapes du monde 3 dont une avec
+// des réponses vues, une série en cours, 1 bonus — 13 étapes réussies.
+const LEA = () => parcoursSplat({mondesFinis: [1, 2], enMonde: 3, faitsEnMonde: 4, aide: true, enCours: "enq14", bonus: 1});
+
+test("SPLAT! : « N étape(s) réussie(s) sur 37 », le total de la carte, les Bonus à part", () => {
+  const lire = lecteurDeJauge().splat;
+  const lea = lire(SPLAT, LEA());
+  assert.equal(lea.compte, "13 étapes réussies sur 37", "une réussite avec des réponses vues est une étape réussie");
+  assert.equal(lea.bonus, "✨ 1 bonus");
+  assert.equal(lea.total, 37, "37 étapes sur la carte (la numérotation saute de 28 à 35), pas 40");
+  const une = lire(SPLAT, parcoursSplat({enMonde: 1, faitsEnMonde: 1}));
+  assert.equal(une.compte, "1 étape réussie sur 37", "au singulier");
+  assert.equal(une.bonus, "", "pas de Bonus : rien");
+  assert.equal(lire(SPLAT, parcoursSplat({mondesFinis: [1], bonus: 3})).bonus, "✨ 3 bonus");
+  const tout = lire(SPLAT, parcoursSplat({mondesFinis: [1, 2, 3, 4, 5, 6], bonus: 14}));
+  assert.equal(tout.compte, "37 étapes réussies sur 37");
+  assert.equal(tout.bonus, "✨ 14 bonus");
+  const jauges = page.slice(page.indexOf("  const JAUGES = {"), page.indexOf("\n  };", page.indexOf("  const JAUGES = {")));
+  assert.doesNotMatch(jauges, /sur (37|40)\b/, "le total n'est jamais écrit dans la page : c'est la carte qui le donne");
+});
+
+test("SPLAT! : pas de jauge tant qu'aucune étape n'est réussie", () => {
+  const lire = lecteurDeJauge().splat;
+  assert.equal(lire(SPLAT, SPLAT.pourServeur(SPLAT.creer())), null, "jamais ouvert");
+  assert.equal(lire(SPLAT, parcoursSplat({enCours: "m1e1"})), null,
+    "une première série commencée et pas finie : « 0 étape réussie » serait le reproche qu'on refuse");
+  assert.equal(lire(SPLAT, parcoursSplat({bonus: 1})), null, "un Bonus seul ne fait pas d'étape réussie");
+  assert.notEqual(lire(SPLAT, parcoursSplat({enMonde: 1, faitsEnMonde: 1})), null, "dès la première étape, la tuile parle");
+});
+
+test("SPLAT! : les six mondes, vide / en cours / fini, comme la carte des mondes", () => {
+  const lire = lecteurDeJauge().splat;
+  assert.deepEqual(lire(SPLAT, LEA()).mondes, [
+    {numero: 1, etat: "fini"}, {numero: 2, etat: "fini"}, {numero: 3, etat: "cours"},
+    {numero: 4, etat: "vide"}, {numero: 5, etat: "vide"}, {numero: 6, etat: "vide"}]);
+  // Un monde est fini quand ses étapes sont faites, Bonus ou pas (comme la carte).
+  const sansBonus = lire(SPLAT, parcoursSplat({mondesFinis: [3]}));
+  assert.equal(sansBonus.mondes[2].etat, "fini");
+});
+
+test("SPLAT! : la page lit le parcours par le moteur, jamais elle-même", () => {
+  const debut = page.indexOf('    "splat": {', page.indexOf("  const JAUGES = {"));
+  const lecteur = page.slice(debut, page.indexOf("\n    }", debut));
+  assert.match(lecteur, /P\.resumeProf\(brut\)/, "le moteur résume le parcours (la carte réduite est dans le moteur)");
+  assert.doesNotMatch(lecteur, /\.etapes\b|\.fait\b|\.vues\b|\.idx\b/, "la page ne fouille pas le parcours elle-même");
+});
+
+test("parcours SPLAT! reçu : six pastilles numérotées, la moitié pour le monde en cours, le compte dessous", async () => {
+  const {habiller, tuiles} = jouerHabillage({reponse: serveurDesParcours({splat: LEA()}), applis: ["defi-tables", "splat"]});
+  await habiller;
+  const tuile = tuiles.splat;
+  assert.deepEqual(tuile.classes, ["a-jauge"]);
+  assert.deepEqual(tuiles["defi-tables"].enfants, [], "Défi tables, jamais ouvert, reste sans jauge");
+  const [bloc] = tuile.enfants;
+  const [mondes, ligne] = bloc.enfants;
+  assert.equal(mondes.className, "mondes");
+  assert.equal(mondes.attributs.role, "img");
+  assert.equal(mondes.attributs["aria-label"],
+    "Monde 1 : fini, Monde 2 : fini, Monde 3 : en cours, Monde 4 : pas commencé, Monde 5 : pas commencé, Monde 6 : pas commencé");
+  assert.equal(mondes.enfants.length, 6);
+  mondes.enfants.forEach((pastille, i) => {
+    assert.equal(pastille.espace, "http://www.w3.org/2000/svg", "une pastille est un dessin SVG");
+    const chiffre = pastille.enfants.find(n => n.nom === "text");
+    assert.equal(chiffre.textContent, String(i + 1), "le numéro du monde, dans l'ordre de la carte");
+    assert.equal(chiffre.attributs["text-anchor"], "middle");
+    assert.equal(chiffre.attributs.x, "12", "centré en largeur");
+    assert.equal(Number(chiffre.attributs.y), 12 + 0.35 * Number(chiffre.attributs["font-size"]),
+      "centré en hauteur : le pied du chiffre 0,35 em sous le centre");
+  });
+  const etats = mondes.enfants.map(p => p.attributs.class);
+  assert.deepEqual(etats, ["monde-p fini", "monde-p fini", "monde-p cours", "monde-p vide", "monde-p vide", "monde-p vide"]);
+  const moitie = n => n.enfants.some(e => e.nom === "path");
+  assert.deepEqual(mondes.enfants.map(moitie), [false, false, true, false, false, false], "seul le monde en cours a sa moitié colorée");
+  const rond = n => n.enfants.find(e => e.nom === "circle").attributs.fill;
+  assert.equal(rond(mondes.enfants[0]), "#d9690c", "plein, dans la couleur du monde 1 sur la carte");
+  assert.equal(rond(mondes.enfants[3]), "#fff", "vide : un rond blanc");
+  assert.equal(mondes.enfants[3].enfants.find(e => e.nom === "circle").attributs.stroke, "#92400e", "cerclé de la couleur du monde 4");
+  const chiffreDe = n => n.enfants.find(e => e.nom === "text").attributs;
+  assert.equal(chiffreDe(mondes.enfants[0]).fill, "#fff", "fini : chiffre blanc sur la couleur");
+  assert.equal(chiffreDe(mondes.enfants[3]).fill, "#92400e", "vide : chiffre de la couleur du monde");
+  assert.deepEqual([chiffreDe(mondes.enfants[2]).fill, chiffreDe(mondes.enfants[2]).stroke, chiffreDe(mondes.enfants[2])["paint-order"]],
+    ["#fff", "#be185d", "stroke"], "à moitié : chiffre blanc cerné de la couleur, lisible des deux côtés");
+  const [compte, bonus] = ligne.enfants;
+  assert.equal(compte.textContent, "13 étapes réussies sur 37");
+  assert.equal(bonus.className, "bonus");
+  assert.equal(bonus.textContent, "✨ 1 bonus");
+});
+
+test("le moteur SPLAT! n'est chargé que si l'élève a un parcours SPLAT!", async () => {
+  const tables = parcoursFabrique({acquises: 4});
+  const seulTables = jouerHabillage({reponse: serveurDesParcours({"defi-tables": tables}), applis: ["defi-tables", "splat"], moteurCharge: true});
+  await seulTables.habiller;
+  assert.deepEqual(seulTables.charges, ["prof/defi_tables_mon_parcours.js?v=0123456789"], "pas de moteur SPLAT! sans parcours SPLAT!");
+  assert.equal(seulTables.tuiles["defi-tables"].enfants.length, 1);
+  const seulSplat = jouerHabillage({reponse: serveurDesParcours({splat: LEA()}), applis: ["defi-tables", "splat"]});
+  await seulSplat.habiller;
+  assert.deepEqual(seulSplat.charges, ["prof/splat-parcours.js?v=0123456789"], "et pas celui de Défi tables sans parcours de tables");
+  const lesDeux = jouerHabillage({reponse: serveurDesParcours({"defi-tables": tables, splat: LEA()}), applis: ["defi-tables", "splat"]});
+  await lesDeux.habiller;
+  assert.equal(lesDeux.charges.length, 2);
+  assert.equal(lesDeux.tuiles["defi-tables"].enfants.length, 1);
+  assert.equal(lesDeux.tuiles.splat.enfants.length, 1);
+  assert.deepEqual(lesDeux.remontees, ["splat", "defi-tables"],
+    "les deux commencées remontent, la première de la liste finit en tête");
+});
+
+test("moteur SPLAT! introuvable : la tuile SPLAT! reste nue, celle de Défi tables a sa jauge", {timeout: 5000}, async () => {
+  const {habiller, tuiles} = jouerHabillage({
+    reponse: serveurDesParcours({"defi-tables": parcoursFabrique({acquises: 4}), splat: LEA()}),
+    applis: ["defi-tables", "splat"],
+    moteurCharge: adresse => !adresse.includes("splat-parcours.js")
+  });
+  await habiller;
+  assert.deepEqual(tuiles.splat.enfants, [], "rien ne peut lire le parcours SPLAT! : la tuile ne bouge pas");
+  assert.deepEqual(tuiles.splat.classes, []);
+  assert.equal(tuiles["defi-tables"].enfants.length, 1, "l'autre activité n'en souffre pas");
 });

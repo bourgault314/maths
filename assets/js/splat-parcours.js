@@ -66,20 +66,66 @@
   const CLE_IDENTITE = "mathsgo-suivi-identite";
   const CLE_DERNIER_GESTE = "mathsgo-suivi-dernier-geste";
 
-  // La liste fermée des parcours sous lesquels un outil SPLAT! enregistre une
-  // série : ETAPES puis BONUS de assets/js/splat-etapes.js, dans cet ordre.
-  // tests/splat-parcours.test.mjs échoue si les deux listes diffèrent ; le
-  // motif PHP du serveur (lib/applis.php, lot 3) se recopie de motifPhp().
-  const PARCOURS_VALIDES = Object.freeze([
-    "m1e1", "m1e2", "m1e3", "m1e4", "m1e5", "m1e6",
-    "m2e1", "m2e4", "m2e5",
-    "enq10", "enq11", "enq12", "enq13", "enq14", "enq15", "enq16", "enq17", "enq18", "enq19", "enq20", "enq21", "enq22", "enq23", "enq24",
-    "sys25", "sys26", "sys27", "sys28",
-    "m3e1", "m3e2", "m3e4",
-    "m4e1", "m4e2", "m4e3", "m4e4", "m4e5", "m4e6",
-    "enq11d", "enq12d", "enq13d", "enq16d", "enq17d", "enq18d", "enq20d", "enq22d", "enq19d", "enq24d",
-    "sys25d", "sys26d", "sys27d", "sys28d"
+  // LA CARTE DES MONDES, RÉDUITE à ce que le suivi doit en savoir : pour
+  // chaque parcours, son numéro sur la carte (14, ou « 11d » pour un Bonus) et
+  // le numéro de son monde — ETAPES puis BONUS de assets/js/splat-etapes.js,
+  // dans cet ordre, SANS les titres.
+  //
+  // Lot 3 « serveur + tuile » (07/10/2026) : resumeProf a besoin de savoir à
+  // quel monde appartient chaque étape. Les pages du site le lui donnent depuis
+  // splat-etapes.js ; les pages du serveur de suivi (la tuile de l'espace élève,
+  // puis « Ma classe ») n'ont que ce moteur, copié dans _serveur/public/prof/.
+  // Copier aussi splat-etapes.js là-bas obligerait à redéposer un fichier par
+  // FTP à chaque retouche d'un titre ou d'un monde « en préparation » : le
+  // moteur porte donc la carte sans ce qui bouge souvent. Elle ne change que
+  // si une étape naît, change de numéro ou de monde — et alors la liste fermée
+  // du serveur change aussi (motif de lib/applis.php).
+  // tests/splat-parcours.test.mjs compare ces lignes à splat-etapes.js et
+  // affiche la liste à recopier au premier écart.
+  const MONDES = Object.freeze([
+    Object.freeze([1, "Petit SPLAT!"]),
+    Object.freeze([2, "SPLAT! Classique"]),
+    Object.freeze([3, "SPLAT! Enquête"]),
+    Object.freeze([4, "SPLAT! Système"]),
+    Object.freeze([5, "SPLAT! Équations"]),
+    Object.freeze([6, "SPLAT! Relatifs"])
   ]);
+  // [parcours, numéro sur la carte, numéro du monde]
+  const CARTE_ETAPES = Object.freeze([
+    ["m1e1", 1, 1], ["m1e2", 2, 1], ["m1e3", 3, 1], ["m1e4", 4, 1], ["m1e5", 5, 1], ["m1e6", 6, 1],
+    ["m2e1", 7, 2], ["m2e4", 8, 2], ["m2e5", 9, 2],
+    ["enq10", 10, 3], ["enq11", 11, 3], ["enq12", 12, 3], ["enq13", 13, 3], ["enq14", 14, 3],
+    ["enq15", 15, 3], ["enq16", 16, 3], ["enq17", 17, 3], ["enq18", 18, 3], ["enq19", 19, 3],
+    ["enq20", 20, 3], ["enq21", 21, 3], ["enq22", 22, 3], ["enq23", 23, 3], ["enq24", 24, 3],
+    ["sys25", 25, 4], ["sys26", 26, 4], ["sys27", 27, 4], ["sys28", 28, 4],
+    ["m3e1", 35, 5], ["m3e2", 36, 5], ["m3e4", 37, 5],
+    ["m4e1", 38, 6], ["m4e2", 39, 6], ["m4e3", 40, 6], ["m4e4", 41, 6], ["m4e5", 42, 6], ["m4e6", 43, 6]
+  ].map(Object.freeze));
+  // [parcours, code du Bonus, numéro du monde]
+  const CARTE_BONUS = Object.freeze([
+    ["enq11d", "11d", 3], ["enq12d", "12d", 3], ["enq13d", "13d", 3], ["enq16d", "16d", 3], ["enq17d", "17d", 3],
+    ["enq18d", "18d", 3], ["enq20d", "20d", 3], ["enq22d", "22d", 3], ["enq19d", "19d", 3], ["enq24d", "24d", 3],
+    ["sys25d", "25d", 4], ["sys26d", "26d", 4], ["sys27d", "27d", 4], ["sys28d", "28d", 4]
+  ].map(Object.freeze));
+
+  // Les mêmes lignes au format de splat-etapes.js — [parcours, numéro, titre,
+  // monde, numéro du monde] —, le titre vide : c'est ce que resumeProf lit
+  // quand on ne lui donne pas la carte (les pages du serveur de suivi).
+  const nomDuMonde = numero => {
+    const monde = MONDES.find(m => m[0] === numero);
+    return monde ? monde[1] : "";
+  };
+  const CARTE = Object.freeze({
+    MONDES,
+    ETAPES: Object.freeze(CARTE_ETAPES.map(e => Object.freeze([e[0], e[1], "", nomDuMonde(e[2]), e[2]]))),
+    BONUS: Object.freeze(CARTE_BONUS.map(b => Object.freeze([b[0], b[1], "", nomDuMonde(b[2]), b[2]])))
+  });
+
+  // La liste fermée des parcours sous lesquels un outil SPLAT! enregistre une
+  // série : les étapes puis les Bonus de la carte ci-dessus, dans cet ordre.
+  // Le motif PHP du serveur (lib/applis.php) se recopie de motifPhp() ;
+  // tests/suivi-splat-serveur.test.mjs échoue si les deux diffèrent.
+  const PARCOURS_VALIDES = Object.freeze(CARTE_ETAPES.map(e => e[0]).concat(CARTE_BONUS.map(b => b[0])));
   const ENSEMBLE_VALIDES = new Set(PARCOURS_VALIDES);
 
   // Les clés que le serveur devra déclarer pour « splat » (lib/applis.php) :
@@ -388,8 +434,12 @@
   // Par monde : étapes faites / total, réussites avec réponses vues, étapes en
   // cours, et l'état du monde (vide / cours / fini — fini quand ses étapes sont
   // faites, bonus ou pas, comme la carte) ; les Bonus comptés à part ; l'état de
-  // chaque parcours. `etapes` et `bonus` : ETAPES et BONUS de splat-etapes.js.
+  // chaque parcours. `etapes` et `bonus` : ETAPES et BONUS de splat-etapes.js ;
+  // sans eux (les pages du serveur de suivi, qui n'ont que ce moteur), la carte
+  // réduite du moteur — mêmes parcours, mêmes numéros, mêmes mondes.
   function resumeProf(parcours, etapes, bonus) {
+    if (etapes === undefined) etapes = CARTE.ETAPES;
+    if (bonus === undefined) bonus = CARTE.BONUS;
     const p = normaliser(parcours);
     const etats = {};
     const compter = liste => {
@@ -1432,6 +1482,7 @@
     CLE_IDENTITE,
     CLE_DERNIER_GESTE,
     PARCOURS_VALIDES,
+    CARTE,
     CLES_SERVEUR,
     ETATS,
     TEXTES,

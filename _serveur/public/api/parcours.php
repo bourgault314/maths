@@ -16,7 +16,9 @@ require __DIR__ . '/../lib/progression.php';
 require __DIR__ . '/../lib/versions.php';
 
 const TAILLE_MAX_PROGRESSION = 40000; // octets
-const APPLIS_CONNUES = ['defi-tables', 'automatismes'];
+// SPLAT! (lot « splat-suivi-3 », 07/10/2026) : la carte des mondes et ses trois
+// outils enregistrent sous « splat » (assets/js/splat-parcours.js).
+const APPLIS_CONNUES = ['defi-tables', 'automatismes', 'splat'];
 
 function lire_progression(PDO $pdo, int $eleveId, string $appli): ?array
 {
