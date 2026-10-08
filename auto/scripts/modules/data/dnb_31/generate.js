@@ -47,7 +47,9 @@
     return texts.map((text,index)=>middle.includes(index)?'<span class="median-middle">'+text+'</span>':text).join(NB+'; ');
   }
   // n valeurs (impair) : la médiane est la (n + 1)/2-ième.
-  function oddRankLine(n,r){return n+' valeurs'+NB+': la médiane est la '+ord(r)+' ('+(r-1)+' avant, '+(r-1)+' après).';}
+  // (Ligne courte : la carte « Comment on trouve » a la hauteur du pavé ; « 4 avant,
+  // 4 après » est dans l'aide et la valeur du milieu est surlignée à la ligne 1.)
+  function oddRankLine(n,r){return n+' valeurs'+NB+': la '+ord(r)+' est au milieu.';}
   function medianLine(text,unit){return 'Médiane = '+strong(withUnit(text,unit));}
   const AIDE_RANGER='Range les valeurs dans l’ordre croissant, sans oublier celles qui se répètent.';
   function aideOdd(n,r){return 'Ici, il y a '+n+' valeurs'+NB+': la médiane est la '+ord(r)+' ('+(r-1)+' avant, '+(r-1)+' après).';}
@@ -161,7 +163,7 @@
       footer:footer('médiane',''),
       steps:[
         'On range'+NB+': '+sortedLine(upTexts,[n/2-1,n/2]),
-        n+' valeurs'+NB+': deux valeurs au milieu, '+a+' et '+b+'.',
+        'Au milieu'+NB+': '+a+' et '+b+'.',
         'Médiane = ('+a+' + '+b+') ÷ 2 = '+strong(num(median))
       ],
       aide:['Range les valeurs dans l’ordre croissant.','Ici, il y a '+n+' valeurs'+NB+': deux valeurs au milieu, la '+ord(n/2)+' et la '+ord(n/2+1)+'. La médiane est leur moyenne.'],
@@ -370,7 +372,7 @@
     const sumText=counts.join(' + ')+' = '+total;
     // « Jusqu'à la note 10 : 3 + 4 = 7 notes. Notes 12 : 8e à 12e. »
     const S=sum(before),c=counts[index];
-    const upTo='Jusqu’à la note '+beforeNotes[beforeNotes.length-1]+NB+': '+(before.length>1?before.join(' + ')+' = ':'')+S+(S>1?' notes.':' note.');
+    const upTo='Jusqu’à la note '+beforeNotes[beforeNotes.length-1]+NB+': '+S+(S>1?' notes.':' note.');
     const medianRanks=c===1?ord(S+1):ord(S+1)+' à '+ord(S+c);
     const runLine=upTo+' Notes '+median+NB+': '+medianRanks+'. Médiane = '+strong(String(median));
     return base(module,question,'effectifs',median,{notes,counts,on:index,chart},{
