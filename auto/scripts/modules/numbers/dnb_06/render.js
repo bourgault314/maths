@@ -14,8 +14,8 @@
     '.s06-footer .answer-slot:not(.answer-slot-filled){width:2.4em!important}',
     '.s06-footer sup .answer-slot:not(.answer-slot-filled){width:1.5em!important}',
     // La case de l’exposant : assez grande pour le doigt (44 px au téléphone).
-    '.s06-footer sup{font-size:.62em;vertical-align:.9em;margin-left:.04em}',
-    '.s06-footer sup .interactive-input-slot{min-width:2em;min-height:1.5em;font-size:1em;vertical-align:baseline}',
+    '.s06-footer sup{font-size:.7em;vertical-align:.72em;margin-left:.05em;line-height:1}',
+    '.s06-footer sup .interactive-input-slot{min-width:max(2em,46px);min-height:max(1.6em,44px);font-size:1em;vertical-align:baseline}',
     '.s06-footer .interactive-input-slot{min-width:2.4em}',
     '.s06-math{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-weight:800;white-space:nowrap}',
     '.s06-math sup{font-size:.7em;margin-left:.04em}',

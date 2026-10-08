@@ -37,7 +37,7 @@
   function unit(e){return e>=0?group('1'+'0'.repeat(e)):'0,'+'0'.repeat(-e-1)+'1';}
   function strong(text){return '<strong>'+text+'</strong>';}
   // Écriture « LaTeX » d'un nombre pour le pied (renderPlaceholders).
-  function tex(text){return text.replace(/,/g,'{,}').replace(new RegExp(FINE,'g'),'\\,');}
+  function tex(text){return text.replace(new RegExp(FINE,'g'),'\\,');}
   function texPow(n){return '10^{'+sgn(n)+'}';}
   const PLACES={9:'milliards',8:'centaines de millions',7:'dizaines de millions',6:'millions',
     5:'centaines de mille',4:'dizaines de mille',3:'unités de mille',2:'centaines',1:'dizaines',0:'unités',
@@ -315,7 +315,7 @@
       options:order.map(item=>({html:item.text,feedback:item.feedback,errorCode:item.kind})),
       correctIndex,
       steps:[
-        'Le nombre devant × 10 doit être entre 1 et 10 (1 ≤ a &lt; 10).',
+        'Le nombre devant × 10 doit être entre 1 et 10 (10 exclu).',
         'Seul '+a+' convient'+NB+': réponse '+strong(letter(correctIndex-1))+'.'
       ],
       note:'L’exposant peut être positif ou négatif.',
@@ -341,8 +341,8 @@
       expected:sci(D,e),
       steps:[N+' = '+M+' × '+unit(e),unit(e)+' = '+pw(e),N+' = '+M+' × '+strong(pw(e))],
       aide:[
-        'Cherche par quel nombre il faut multiplier '+M+' pour obtenir '+N+'.',
-        '10 = 10<sup>1</sup>'+NB+'; 100 = 10<sup>2</sup>'+NB+'; 0,1 = 10<sup>'+MINUS+'1</sup>'+NB+'; 0,01 = 10<sup>'+MINUS+'2</sup>'
+        'Cherche par quel nombre il faut multiplier '+M+' pour obtenir '+N+', puis écris ce nombre comme une puissance de 10.',
+        'Ici, '+N+' = '+M+' × '+unit(e)+'.'
       ]
     });
   }
@@ -359,7 +359,7 @@
       else if(form==='nombre'){a=randomInt(2,4);result=a+b;}
       else{k=randomInt(2,3);a=2*k;result=a+b;}
       tries++;
-    }while((result===0||result===1||result>7||result<-4||(form==='cent'&&b>0))&&tries<100);
+    }while((result===0||result===1||result>7||result<-4||(form==='cent'&&b>0)||(form==='produit'&&a*b===a+b))&&tries<100);
     let expression,steps,aide2;
     if(form==='produit'){
       expression=pw(a)+' × '+pw(b);
