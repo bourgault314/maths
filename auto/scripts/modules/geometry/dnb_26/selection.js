@@ -9,6 +9,15 @@
     return question&&question.options&&question.options.trig_kind||('q'+Number(question&&question.n));
   }
 
+  // Choix au hasard, mais jamais deux fois le même type de suite, même en fin
+  // de cycle : on n'accepte un type que si le reste peut encore s'ordonner
+  // (un simple tirage pouvait finir par 5, 5).
+  function canFinish(counts,last,size){
+    for(const [family,count] of counts){
+      if(family===last?count>Math.floor(size/2):count>Math.ceil(size/2)) return false;
+    }
+    return true;
+  }
   function weightedCycle(questions,shuffle){
     const pool=[];
     questions.forEach(question=>{
@@ -18,8 +27,15 @@
     const shuffled=shuffle(pool),cycle=[];
     while(shuffled.length){
       const last=cycle.length?familyForQuestion(cycle[cycle.length-1]):null;
-      let index=shuffled.findIndex(question=>familyForQuestion(question)!==last);
-      if(index<0) index=0;
+      const counts=new Map();
+      shuffled.forEach(question=>{const family=familyForQuestion(question);counts.set(family,(counts.get(family)||0)+1);});
+      let index=shuffled.findIndex(question=>{
+        const family=familyForQuestion(question);
+        if(family===last) return false;
+        const after=new Map(counts);after.set(family,after.get(family)-1);
+        return canFinish(after,family,shuffled.length-1);
+      });
+      if(index<0) index=Math.max(0,shuffled.findIndex(question=>familyForQuestion(question)!==last));
       cycle.push(shuffled.splice(index,1)[0]);
     }
     return cycle;

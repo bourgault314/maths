@@ -247,6 +247,13 @@ test('dnb_26 : niveaux (4e, 3e, brevet), tirage pondéré et pavé',()=>{
   assert.equal(picked.length,13);
   assert.equal(picked.filter(q=>q.n===13).length,3);
   picked.forEach((q,i)=>{if(i) assert.notEqual(q.n,picked[i-1].n,'deux fois le même type de suite');});
+  // Sur 300 cycles, jamais deux fois le même type de suite (même en fin de cycle).
+  for(let seed=1;seed<=300;seed++){
+    engine.setSeed(seed*7919%233280);
+    const cycle=selection.selectQuestions({module:mod,questions:mod.questions,count:13,shuffle:engine.shuffle,draw:(key,pool,count,build)=>build().slice(0,count)});
+    assert.equal(cycle.length,13);
+    cycle.forEach((q,i)=>{if(i) assert.notEqual(q.n,cycle[i-1].n,'cycle '+seed+' : deux fois le type '+q.n+' de suite');});
+  }
   assert.deepEqual([...mod.keypad.context],['×','÷','cos']);
 });
 

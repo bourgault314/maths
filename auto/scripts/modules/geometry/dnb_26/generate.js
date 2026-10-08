@@ -40,7 +40,7 @@
   function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){[a,b]=[b,a%b];}return a||1;}
   function q(text){return String(text).replace(/ \?/g,NBSP+'?').replace(/ :/g,NBSP+':');}
   function hat(name){return '<span class="widehat">'+name+'</span>';}
-  function cosOf(name){return 'cos('+hat(name)+')';}
+  function cosOf(name){return '<span class="c26-nw">cos('+hat(name)+')</span>';}
   function frac(top,bottom){return '<span class="frac"><span class="frac-num">'+top+'</span><span class="frac-den">'+bottom+'</span></span>';}
   function seg(name){return '['+name+']';}
   // Fraction écrite sur une ligne (phrases des pièges : la carte reste basse).
