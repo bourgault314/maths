@@ -4107,6 +4107,11 @@
         launchReady: false,
         origin: "menu",
         etapeOuverte: null,
+        // Lot « Encore une séance » (08/10/2026, planche 13, choix A de
+        // Gwenaël) : « Encore une séance » touché (au bilan ou sur l'accueil),
+        // l'accueil MONTRE la séance suivante — ses étapes et « Commencer » —
+        // au lieu de la lancer d'un coup. Remis à faux dès qu'une séance part.
+        encoreOuverte: false,
         revisionPremierScore: 0,
         revisionPremierTotal: 0,
         revisionMontes: 0,
@@ -7688,6 +7693,7 @@
       // en a une (elle est dans le parcours, donc aussi sur le serveur) — les
       // étapes faites restent faites, on reprend à la suivante.
       function commencerSeance(table) {
+        state.encoreOuverte = false;
         seance = PARCOURS.ouvrirSeance(parcours, {table});
         lancerEtapeDeSeance();
       }
@@ -7978,15 +7984,21 @@
         maTable.textContent = "Ma table";
         maTable.addEventListener("click", backToModes);
         boutons.append(maTable);
-        // « Encore une séance » : la séance du jour suivant, tout de suite.
-        // Les boîtes, elles, ne montent toujours qu'une fois par jour.
+        // « Encore une séance » : l'accueil montre la séance suivante (ses
+        // étapes, « Commencer »), comme le matin — elle ne part plus d'un coup
+        // (lot « Encore une séance », planche 13). Les boîtes, elles, ne
+        // montent toujours qu'une fois par jour.
         const prochaineTable = tableDeLaSeance();
         if (prochaineTable !== undefined) {
           const encore = document.createElement("button");
           encore.type = "button";
           encore.className = "secondary";
           encore.textContent = "Encore une séance";
-          encore.addEventListener("click", () => commencerSeance(prochaineTable));
+          encore.addEventListener("click", () => {
+            state.encoreOuverte = true;
+            backToModes();
+            $("acc-seance")?.focus?.({preventScroll: true});
+          });
           boutons.append(encore);
         }
         zone.append(boutons);
@@ -8087,8 +8099,11 @@
         const minutes = enPlus ? `${programme.minutes}\u00a0à\u00a0${programme.minutesMax}` : String(programme.minutes);
         const faite = PARCOURS.bilanSeances(parcours).aujourdhui > 0;
         // Lot « retouches après Mon parcours » (décision 7) : la séance du jour
-        // faite, la carte le dit et garde « À retenir » jusqu'à minuit.
-        if (faite && !reprise) return carteSeanceFaite(table);
+        // faite, la carte le dit et garde « À retenir » jusqu'à minuit — sauf
+        // une fois « Encore une séance » touché : la carte de la séance
+        // suivante (« Encore une séance », ses étapes, « Commencer ») prend sa
+        // place, à la hauteur de la carte du matin (planche 13, choix A).
+        if (faite && !reprise && !state.encoreOuverte) return carteSeanceFaite(table);
         const carte = document.createElement("button");
         carte.type = "button";
         carte.className = "carte-seance";
@@ -8175,7 +8190,8 @@
       // ne disait que la séance était faite, et les calculs à retenir avaient
       // disparu. La carte dit « ✓ Séance du jour faite », puis « À retenir »
       // (les ratés de la journée, écrits justes : la même liste qu'au bilan),
-      // puis « Encore une séance », qui ouvre la séance suivante comme avant.
+      // puis « Encore une séance », qui montre la séance suivante (lot
+      // « Encore une séance » : elle ne part plus d'un coup).
       // Pas la liste des étapes cochées (plus chargé). Rien à retenir : pas de
       // pastilles. Pendant une séance (« Reprendre ma séance »), rien.
       function carteSeanceFaite(table) {
@@ -8195,7 +8211,11 @@
         encore.className = "primary encore";
         encore.id = "acc-seance";
         encore.textContent = "Encore une séance";
-        encore.addEventListener("click", () => commencerSeance(table));
+        encore.addEventListener("click", () => {
+          state.encoreOuverte = true;
+          renderAccueil();
+          $("acc-seance")?.focus?.({preventScroll: true});
+        });
         carte.append(encore);
         return carte;
       }

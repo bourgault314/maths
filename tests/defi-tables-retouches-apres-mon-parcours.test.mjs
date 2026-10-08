@@ -13,7 +13,8 @@
 //   6. le cadre blanc entier sur les petits écrans d'ordinateur ;
 //   7. l'accueil une fois la séance du jour faite : « ✓ Séance du jour faite »,
 //      « À retenir » (la liste de la JOURNÉE, seulement les calculs répondus de
-//      mémoire), « Encore une séance » ;
+//      mémoire), « Encore une séance » (qui MONTRE la séance suivante depuis le
+//      lot « Encore une séance » du 08/10, voir defi-tables-encore-une-seance) ;
 //   8. « 3 fois cette semaine » à la place des ronds, rien à zéro.
 //
 // Le moteur est chargé tel quel ; les fonctions de la page sont EXTRAITES et
@@ -160,8 +161,11 @@ const cadreARetenir = document => new Function("document", `${source("cadreARete
 test("7. l’accueil, séance du jour faite : « ✓ Séance du jour faite », la liste du jour, « Encore une séance »", () => {
   const {document} = fauxDocument();
   let lancee = null;
-  const fabrique = parcours => new Function("document", "PARCOURS", "parcours", "commencerSeance", "cadreARetenir",
-    `${source("carteSeanceFaite")}; return carteSeanceFaite;`)(document, {...P, aRetenir: q => P.aRetenir(q, AUJ)}, parcours, table => { lancee = table; }, cadreARetenir(document));
+  let rendus = 0;
+  const state = {encoreOuverte: false};
+  const fabrique = parcours => new Function("document", "PARCOURS", "parcours", "commencerSeance", "cadreARetenir", "state", "renderAccueil", "$",
+    `${source("carteSeanceFaite")}; return carteSeanceFaite;`)(document, {...P, aRetenir: q => P.aRetenir(q, AUJ)}, parcours, table => { lancee = table; }, cadreARetenir(document),
+    state, () => { rendus += 1; }, () => null);
   const avec = fabrique(P.normaliserParcours({...P.creerParcours(), retenir: {jour: AUJ, erreurs: [308, 309, 310, 703]}}))(3);
   assert.equal(avec.tag, "div", "la carte n’est plus un bouton (le bouton est dedans)");
   assert.equal(parClasse(avec, "fait")[0].textContent, "✓Séance du jour faite");
@@ -172,7 +176,9 @@ test("7. l’accueil, séance du jour faite : « ✓ Séance du jour faite », l
   assert.equal(encore.textContent, "Encore une séance");
   assert.equal(encore.id, "acc-seance", "le même identifiant : le retour du menu y remet le focus");
   encore.click();
-  assert.equal(lancee, 3, "« Encore une séance » ouvre la séance suivante, comme avant");
+  assert.equal(lancee, null, "« Encore une séance » ne lance plus la séance d'un coup (lot « Encore une séance »)…");
+  assert.equal(state.encoreOuverte, true, "… il la fait montrer par l'accueil");
+  assert.equal(rendus, 1, "l'accueil est redessiné une fois");
   assert.deepEqual(parTag(avec, "li").length, 4, "pas la liste des étapes cochées (refusée : plus chargé)");
   const sans = fabrique(P.creerParcours())(3);
   assert.equal(parClasse(sans, "retenir").length, 0, "rien à retenir : pas de pastilles");
@@ -180,7 +186,7 @@ test("7. l’accueil, séance du jour faite : « ✓ Séance du jour faite », l
   const hier = fabrique(P.normaliserParcours({...P.creerParcours(), retenir: {jour: "2026-10-05", erreurs: [308]}}))(3);
   assert.equal(parClasse(hier, "retenir").length, 0, "la liste d’hier ne s’affiche pas");
   // La carte « faite » seulement quand une séance est finie aujourd'hui et qu'aucune n'est en cours.
-  assert.match(source("carteDeSeance"), /const faite = PARCOURS\.bilanSeances\(parcours\)\.aujourdhui > 0;\s*(\/\/[^\n]*\s*)*if \(faite && !reprise\) return carteSeanceFaite\(table\);/);
+  assert.match(source("carteDeSeance"), /const faite = PARCOURS\.bilanSeances\(parcours\)\.aujourdhui > 0;\s*(\/\/[^\n]*\s*)*if \(faite && !reprise && !state\.encoreOuverte\) return carteSeanceFaite\(table\);/);
 });
 
 test("7. le bilan de chaque séance montre la liste du jour", () => {
