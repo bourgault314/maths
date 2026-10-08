@@ -3954,6 +3954,17 @@ verifier("splat-suivi-3 — verifier.php contrôle le moteur SPLAT!", function (
         'la ligne existe, et elle est verte');
 });
 
+verifier("splat-suivi-4 — « Ma classe » charge le moteur SPLAT! d'ici, à la demande, à l'empreinte du fichier servi", function () {
+    $r = page('/prof/');
+    egal(200, $r['code'], 'la page « Ma classe » répond');
+    vrai((bool)preg_match('#const MOTEUR_SPLAT = "splat-parcours\.js\?v=([0-9a-f]{10})";#', $r['texte'], $m),
+        'l’adresse du moteur, relative (même origine : la politique de contenu l’autorise), avec une version');
+    vrai(!str_contains($r['texte'], '<script src="splat-parcours.js'), 'pas chargé d’office : seulement à l’ouverture de l’onglet SPLAT!');
+    $moteur = page('/prof/splat-parcours.js');
+    egal(substr(md5($moteur['texte']), 0, 10), $m[1], 'la version dans l’adresse est l’empreinte du fichier servi');
+    vrai(str_contains($r['texte'], 'id="bloc-activites" hidden'), '« Activités de la classe » : caché tant qu’aucune classe n’est ouverte');
+});
+
 // ---------------------------------------------------------------------- résultat
 
 echo "\n";

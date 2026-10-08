@@ -103,6 +103,16 @@ toute la base). `verifier.php` devient rouge tant que l'un d'eux traîne, et
   créer une classe, générer N codes, saisir prénom + initiale, voir le tableau
   (tables acquises, mélange, Expert, dernière activité), trier, régénérer un code,
   supprimer, imprimer la liste code ↔ élève.
+  Depuis le lot « splat-suivi-4 » (08/10/2026), une classe peut avoir plusieurs
+  activités : le bloc **« Activités de la classe »** (propriétaire seulement)
+  coche celles que les élèves trouvent dans leur espace (`classes.modifier` ;
+  décocher retire la tuile et n'efface aucune progression). Avec deux
+  activités, un choix **« Défi tables | SPLAT! »** apparaît sous le nom de la
+  classe (retenu le temps de l'onglet) ; chaque activité a son tableau (un
+  appel `tableau` par activité). L'onglet SPLAT! : six pastilles de monde,
+  étapes réussies (✨ pour les Bonus, à part), dernière activité, un
+  « Détail » qui déplie les étapes monde par monde (réussie, réussie avec des
+  réponses vues, en cours), et sa carte « Notre classe, ensemble ».
 
 ### Le moteur
 
@@ -128,8 +138,8 @@ cache.
 Même règle, depuis le lot « splat-suivi-3 » (07/10/2026), pour le moteur de
 SPLAT! : `_serveur/public/prof/splat-parcours.js` est la copie octet pour octet
 de `assets/js/splat-parcours.js` (même test). La tuile SPLAT! de l'espace élève
-le charge pour dessiner les mondes ; « Ma classe » le chargera pour son
-tableau. **Tout lot qui touche `assets/js/splat-parcours.js` recopie le fichier
+le charge pour dessiner les mondes ; « Ma classe » le charge à la première
+ouverture de l'onglet SPLAT! d'une classe (lot « splat-suivi-4 »). **Tout lot qui touche `assets/js/splat-parcours.js` recopie le fichier
 (`cp assets/js/splat-parcours.js _serveur/public/prof/`) et le met dans son
 dossier à déposer.** Le moteur porte la carte des mondes réduite (numéro et
 monde de chaque étape, sans les titres) : retoucher un titre dans
