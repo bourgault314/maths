@@ -83,17 +83,20 @@ test("sur la fiche, Mon mélange n’est jamais « à faire » ni « à refaire 
   assert.match(html, /\$\("fiche-melange-state"\)\.replaceChildren\(tropheesDuMelange\(etat\.melange\.trophees\)\);/);
   // Le même dessin que dans Mon parcours.
   assert.match(html, /droite\.append\(textes, tropheesDuMelange\(etat\.melange\.trophees\)\);/);
-  assert.match(html, /<span id="fiche-melange-state" class="fiche-state"><\/span>\s*<p>Dès 2 tables passées, quand je veux : 20 questions en 1 min 30\. Une coupe avec 3, 6, puis 9 tables\.<\/p>/);
+  // Lot « Une seule fiche » (proposition A) : la règle en petit, sous les coupes.
+  assert.match(html, /<span id="fiche-melange-state" class="fiche-state"><\/span>\s*<p>Mes tables passées, 20 questions en 1 min 30\. Une coupe avec 3, 6, puis 9 tables\.<\/p>/);
   assert.doesNotMatch(html.replace(/\/\/[^\n]*/g, ""), /"À jour ✓"|"À refaire"|"À faire"|À refaire avec la table de/, "plus aucun état « à faire » du mélange (hors commentaires)");
   assert.doesNotMatch(html, /etat\.verrou|melange\.aRefaireAvec|melange\.aJour/, "la page ne lit plus le verrou ni ses restes");
   assert.doesNotMatch(html, /dernierMelange|Dernier : |réussi avec \$\{/, "plus de dernier score ni de « réussi avec N tables ✓ »");
   // Lisibles à l'impression : gris pour un trophée à gagner, plus foncé une fois gagné, sans ombre.
   // Lisible en noir et blanc : pas encore gagnée, la coupe est un contour
   // (fond blanc) ; gagnée, elle est pleine.
-  assert.match(html, /\.fiche-state \.mp-trophees b \{ width: 6mm; height: 6mm; color: #6b7a87; filter: none; \}/);
+  // Lot « Une seule fiche » (planche 14) : 10 mm, et la coupe gagnée jaune
+  // doré au contour foncé (#7a5a00 plein la rendait presque noire).
+  assert.match(html, /\.fiche-state \.mp-trophees b \{ width: 10mm; height: 10mm; color: #6b7a87; filter: none; \}/);
   assert.match(html, /\.fiche-state \.mp-trophees b \.corps \{ fill: #fff; stroke: currentColor; stroke-width: 1\.3; stroke-linejoin: round; \}/);
-  assert.match(html, /\.fiche-state \.mp-trophees b\.is-gagne \{ color: #7a5a00; \}/);
-  assert.match(html, /\.fiche-state \.mp-trophees b\.is-gagne \.corps \{ fill: currentColor; \}/);
+  assert.match(html, /\.fiche-state \.mp-trophees b\.is-gagne \{ color: #8a6500; \}/);
+  assert.match(html, /\.fiche-state \.mp-trophees b\.is-gagne \.corps \{ fill: #f4c430; \}/);
   // tropheesDuMelange, EXÉCUTÉE avec un tout petit DOM : ce que la fiche montre.
   const noeud = tag => {
     const n = {tag, className: "", dataset: {}, attributs: {}, enfants: [], _texte: "",
@@ -165,7 +168,7 @@ test("la couronne est un dessin en currentColor, partout où une marche s'affich
   assert.match(html, /bloc\.className = "bloc";\s*\n\s*bloc\.append\(symboleMarche\(marche\)\);/, "l'escalier de l'accueil");
   assert.match(html, /texte: symboleMarche\(marche\),/, "les cases de Mon parcours");
   assert.match(html, /star\.append\(symboleMarche\(marche\)\);/, "la ligne des étoiles de la fiche");
-  assert.match(html, /\.fiche-stars \.couronne \{ width: 4\.6mm; height: 3\.8mm;/);
+  assert.match(html, /\.fiche-stars \.couronne \{ width: 6\.5mm; height: 5\.4mm;/, "lot « Une seule fiche » : la couronne à la taille des étoiles de 15 pt");
   // makeCell accepte un nœud pour « texte » (la couronne), pas seulement une chaîne.
   // Lot « retours de classe » : le cadenas (« lock ») est retiré, il ne servait plus.
   assert.match(html, /cell\.replaceChildren\(texte !== null \? texte : document\.createTextNode\(kind === "check" \? "✓" : "★"\)\);/);
@@ -209,7 +212,7 @@ test("les cartes : un PDF de 2 pages par table de 2 à 10, un PDF de 18 pages po
   const png = await stat(new URL(vignette, racine));
   const webp = await stat(new URL(vignette.replace(/\.png$/, ".webp"), racine));
   assert.ok(webp.size < png.size, "la webp est plus légère que la png");
-  assert.match(cataloguePage, /catalogue-refonte-data\.js\?v=defi-tables-melange-20261007-1/, "le cache-buster du catalogue suit");
+  assert.match(cataloguePage, /catalogue-refonte-data\.js\?v=defi-tables-fiche-20261008-1/, "le cache-buster du catalogue suit");
 });
 
 test("la feuille des tables (PDF) décrit le parcours réel et la révision du jour (A21)", async () => {
@@ -232,7 +235,11 @@ test("la feuille des tables (PDF) décrit le parcours réel et la révision du j
 });
 
 test("à l'écran, la ligne des étoiles et l'état du mélange ne chevauchent plus les titres de la fiche réduite", () => {
-  assert.match(html, /\.fiche-melange strong \{ padding-right: 58mm; \}\s*\n\s*\.fiche-expert strong \{ padding-right: 58mm; \}/);
+  // Lot « Une seule fiche » : plus de position absolue — les coupes et les
+  // étoiles sont SOUS le titre court, au centre de leur carte.
+  assert.doesNotMatch(html, /\.fiche-(melange|expert) strong \{ padding-right/);
+  assert.doesNotMatch(html, /\.fiche-(state|stars) \{ position: absolute/);
+  assert.match(html, /\.fiche-state, \.fiche-stars \{ display: inline-flex; align-items: center; justify-content: center; margin: 2mm auto 1mm;/);
   // Lot « un seul tableau » : la fiche tient sur une page, plus de trait de
   // « saut de page » à l'écran.
   assert.doesNotMatch(html, /fiche-page2/);

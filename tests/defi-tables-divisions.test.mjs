@@ -99,11 +99,15 @@ test("la page : mêmes types que le moteur, mêmes noms partout, la fiche et la 
   const types = new Function(`${html.match(/const TRAIN_TYPES = \{[^}]*\};/)[0]} return TRAIN_TYPES;`)();
   for (const [cle, liste] of Object.entries(types)) assert.deepEqual(P.configEntraine(7, cle).questionTypes, liste, cle);
   assert.match(html, /const NOMS_ENTRAINEMENTS = Object\.freeze\(\{desordre: "dans le désordre", trous: "nombres manquants et divisions", mixte: "résultats, nombres manquants et divisions"\}\);/);
-  assert.match(html, /<p><b>Passée ✓<\/b> : le test, 20 questions \(résultats, nombres manquants et divisions\) en 1 min 30, 2 erreurs au plus\.<\/p>/);
+  // Lot « Une seule fiche » (décision 4) : la ligne « Passée ✓ : le test… »
+  // quitte la fiche ; la légende dit « table passée », avec la pastille.
+  assert.doesNotMatch(html, /<b>Passée ✓<\/b> : le test/);
+  assert.match(html, /<span><i class="fiche-passee">✓3<\/i>table passée<\/span>/);
   assert.match(html, /dans le désordre, les nombres manquants et les divisions… jusqu’à/);
   // Ajout de Code (04/10) : les en-têtes de la fiche du professeur portent les noms des marches 6 et 7.
   const entetes = [...html.match(/<div id="fiche-prof"[\s\S]*?<thead>([\s\S]*?)<\/thead>/)[1].matchAll(/<th>([\s\S]*?)<\/th>/g)].map(m => m[1].replace(/<br>/g, " "));
-  assert.deepEqual(entetes.slice(-2), P.MARCHES.slice(5, 7).map(marche => marche.nom), "les en-têtes de la fiche du professeur");
+  assert.deepEqual(entetes.slice(-3, -1), P.MARCHES.slice(5, 7).map(marche => marche.nom), "les en-têtes de la fiche du professeur");
+  assert.equal(entetes.at(-1), "Passée", "lot « Une seule fiche » : puis la colonne « Passée »");
   assert.match(html, /suite\.textContent = `Étape \$\{seance\.faites\.length \+ 1\}\\u00a0: \$\{prochaine\.nom\}\\u00a0→`;/, "entre deux étapes, la flèche ne part pas seule à la ligne");
   assert.equal(core.configurationLabel(core.normalizeConfiguration(P.configEntraine(7, "trous"))), "Je m’entraîne · Table de 7 · nombres manquants et divisions · 10 questions · sans chrono");
 });

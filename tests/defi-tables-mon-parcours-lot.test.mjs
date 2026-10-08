@@ -177,7 +177,9 @@ test("2. ordinateur : deux colonnes — le tableau à gauche, ma table, Aujourd�
   assert.match(ordi, /\.parcours-suite \.mp-melange-droite \{ flex-wrap: nowrap; \}/);
   // Écran bas (1024 × 600) : le bloc de Mon mélange et ses trophées se resserrent.
   assert.match(html, /@media \(min-width: 1024px\) and \(max-height: 700px\) \{[^@]*?\.parcours-suite #parcours-melange \{ padding-top: 8px; padding-bottom: 8px; \}\s*\.parcours-suite \.mp-trophees b \{ width: 22px; height: 22px; \}\s*\}/);
-  assert.match(ordi, /\.calculs-grille \{ width: 398px; max-width: none; margin-top: 6px; grid-template-columns: 22px repeat\(8, 44px\); \}/, "cases de 44 px");
+  // Lot « Une seule fiche » : la colonne des numéros à 30 px (la pastille d'une
+  // table passée), les cases à 43 px — la largeur ne change pas.
+  assert.match(ordi, /\.calculs-grille \{ width: 398px; max-width: none; margin-top: 6px; grid-template-columns: 30px repeat\(8, 43px\); \}/, "cases de 43 px");
   assert.match(ordi, /\.calculs-dix \{ position: absolute; top: 13px; right: 14px; margin: 0; \}/, "« Table de 10 : acquise ✓ » en haut à droite du tableau");
   assert.match(ordi, /\.calculs-detail \{ position: absolute; z-index: 30; left: 0; right: 0; top: calc\(100% \+ 6px\);/, "sous les boîtes, posé sur le mélange et Expert : rien ne bouge");
   assert.match(ordi, /\.calculs-aide\.is-cache \{ display: block; visibility: hidden; \}/, "la ligne d’aide garde sa place");
@@ -542,7 +544,7 @@ function fiche(laSource, {parcoursAppareil = P.creerParcours(), modeFiche = fals
     const soude = texte => texte;
     ${source("coupe")}
     ${source("tropheesDuMelange")}
-    ${source("phraseProchaineSeance")}\n${source("renderFiche")}\nrenderFiche(ARG.source);`;
+    ${source("phraseProchaineSeance")}\n${source("dateCourte")}\n${source("renderFicheProf")}\n${source("renderFiche")}\nrenderFiche(ARG.source);`;
   new Function("ARG", code)({document, $, P, parcoursAppareil, source: laSource});
   const corps = $("fiche-calculs-corps");
   const td = (ligne, colonne) => corps.children[ligne - 1].children[colonne - 1];
@@ -563,7 +565,8 @@ test("3 et 15. la fiche : la croix de ma table case par case (bouts arrondis), �
   // Les morceaux débordent de plus de la moitié de l'espace entre deux cases (1,1 mm) : ils se touchent.
   assert.match(html, /\.fiche-carre td\.croix-l::before \{ inset: -1mm -\.8mm; \}/);
   assert.match(html, /\.fiche-carre td\.croix-c::after \{ inset: -\.8mm -1mm; \}/);
-  assert.match(html, /\.fiche-carre th\.is-acquise::before \{ content: "✓"; margin-right: \.4mm;/);
+  // Lot « Une seule fiche » : le ✓ en blanc, sur la pastille verte.
+  assert.match(html, /\.fiche-carre th\.is-acquise::before \{ content: "✓"; margin-right: \.3mm; color: #fff;/);
   assert.doesNotMatch(html, /\.fiche-carre th\.is-acquise::after|\.fiche-carre th\.is-ma-table \{ text-decoration/);
 });
 
@@ -582,7 +585,7 @@ test("15. la fiche vierge : la même fiche, vide — carte « Table de ___ · ma
   assert.equal(vierge.$("fiche-semaine").textContent, "");
   assert.equal(vierge.$("fiche-subtitle").textContent, "Dans l’application, cette fiche se remplit toute seule. Ici, à la main.");
   assert.equal(vierge.$("fiche-prof").hidden, true, "pas de cadre du professeur");
-  assert.equal(vierge.$("fiche-print").classList.contains("avec-prof"), false);
+  assert.equal(vierge.$("fiche-prof-rows").children.length, 0, "la page du professeur reste vide");
   // Le tableau : vide, sans croix (aucune table n'est « ma table »), même si l'appareil a un parcours.
   const tds = vierge.corps.children.slice(1).flatMap(tr => tr.children.slice(1));
   assert.equal(tds.length, 64);
