@@ -912,8 +912,9 @@ svg{display:block;max-width:100%;height:auto}
 /* La consigne prend la place du pavé quand la question n'en a pas besoin (QCM, manipulation) ou quand il est caché (ordinateur). */
 .zone-consigne{display:flex;align-items:center;justify-content:center;padding:6px 14px;border:1.5px dashed #c6d6e9;border-radius:16px;color:#42556b;font-size:1.02rem;font-weight:800;line-height:1.3;text-align:center;visibility:hidden}
 .answer-dock.sans-pave:not(.locked) .zone-consigne,.answer-dock.qcm-mode:not(.locked) .zone-consigne{visibility:visible}
-/* Lot T2 — question SANS pavé (QCM, manipulation) au téléphone et à la tablette : la zone de travail se réduit à la consigne ; Passer et Valider restent en bas, seule la zone question gagne de la hauteur. Après la réponse, la carte garde au moins la place de 3 lignes. */
+/* Lot T2 — question SANS pavé (QCM, manipulation) au téléphone et à la tablette : la zone de travail se réduit à la consigne ; Passer et Valider restent en bas, seule la zone question gagne de la hauteur. Après la réponse, la carte garde au moins la place de 3 lignes (titre et 2 lignes ; dans une série sans pavé, sans titre, la hauteur réduite du lot T). */
 .answer-dock.consigne-reduite.question-sans-pave{--carte-min:var(--carte-min-qcm)}
+.answer-dock.serie-sans-pave{--carte-min-qcm:var(--zone-reduite)}
 .answer-dock.consigne-reduite.question-sans-pave:not(.locked) .zone-travail{height:auto}
 .answer-dock.consigne-reduite.question-sans-pave:not(.locked) .pave{display:none}
 .answer-dock.consigne-reduite.question-sans-pave .zone-consigne{min-height:44px}
@@ -3281,9 +3282,8 @@ function renderCorrectionCard(current){
 // rétrécit un peu (jamais sous 18 px au téléphone, 15 px à l'ordinateur),
 // puis la carte défile, avec un fondu en bas qui montre qu'il y a une suite.
 // Lot T2 : avant de rétrécir le texte, la carte prend la hauteur de ses
-// lignes (voir correctionCardLimits) : d'abord dans la place libre sous la
-// question ; si c'est encore trop long au plus petit texte, elle recouvre
-// ce qui suit la réponse de l'élève (au texte normal) ; enfin, elle défile.
+// lignes, dans la place libre sous la question (voir correctionCardMax) ;
+// ensuite seulement le texte rétrécit, puis la carte défile.
 function fitCorrectionCard(){
  const card=document.getElementById('correctionCard');
  if(!card) return;
@@ -3296,38 +3296,30 @@ function fitCorrectionCard(){
  const minimum=interactiveMode&&zone?Math.round(parseFloat(getComputedStyle(zone).minHeight)||0):0;
  if(minimum>0){
    card.style.maxHeight=minimum+'px';
-   const limits=correctionCardLimits(minimum);
-   card.style.maxHeight=limits.libre+'px';
+   card.style.maxHeight=correctionCardMax(minimum)+'px';
    shrink();
-   if(card.scrollHeight>card.clientHeight+1&&limits.reponse>limits.libre){card.style.fontSize='';card.style.maxHeight=limits.reponse+'px';shrink();}
  }else shrink();
  updateCorrectionCardOverflow();
  updateStageOverflow();
 }
-/* Lot T2 — hauteurs maximales de la carte. Elle part de la place de la zone
-   de travail (le pavé ; 3 lignes pour une question sans pavé) et peut monter :
-   - pied sous la question (téléphone, ordinateur) : « libre » = la place
-     libre sous la question (rien n'est recouvert) ; « reponse » = jusqu'à la
-     réponse de l'élève (cases remplies, option choisie) et la bonne option,
-     jamais au-dessus : seules les options non choisies d'un QCM peuvent être
-     recouvertes. Sans réponse repérable (manipulation), rien n'est recouvert.
-     Jamais au-delà de 42 % de l'écran ;
+/* Lot T2 — hauteur maximale de la carte. Elle part de la place de la zone
+   de travail (le pavé ; 3 lignes pour une question sans pavé) et prend :
+   - pied sous la question (téléphone, ordinateur) : la place libre sous la
+     question. Rien n'est recouvert (ni la réponse de l'élève, ni la figure,
+     ni une option) et la zone question ne se met pas à défiler. Jamais
+     au-delà de 42 % de l'écran ;
    - pied à côté de la question (téléphone en largeur) : la place libre de
      la colonne.
    Le pied grandit vers le haut : Passer et Valider ne bougent pas. */
-function correctionCardLimits(minimum){
- const same=value=>({libre:value,reponse:value});
+function correctionCardMax(minimum){
  const dock=document.getElementById('answerDock'),stage=document.getElementById('stage'),slide=document.getElementById('slide'),feedback=document.getElementById('answerFeedback');
- if(!dock||!stage||!slide||!feedback) return same(minimum);
+ if(!dock||!stage||!slide||!feedback) return minimum;
  const dockRect=dock.getBoundingClientRect(),stageRect=stage.getBoundingClientRect();
- const free=Math.max(0,feedback.getBoundingClientRect().top-dockRect.top-(parseFloat(getComputedStyle(dock).paddingTop)||0));
- if(dockRect.top<stageRect.bottom-2) return same(Math.round(minimum+free));
+ const free=Math.max(0,Math.floor(feedback.getBoundingClientRect().top-dockRect.top-dock.clientTop-(parseFloat(getComputedStyle(dock).paddingTop)||0)));
+ if(dockRect.top<stageRect.bottom-2) return Math.round(minimum+free);
  const margin=(parseFloat(getComputedStyle(stage).paddingBottom)||0)+2;
- const limit=bottom=>Math.round(Math.max(minimum,Math.min(minimum+free+Math.max(0,dockRect.top-(bottom+margin)),window.innerHeight*.42)));
- const marks=[...slide.querySelectorAll('.answer-slot-filled,.reponse-eleve,.opt.selected,.opt.correct')].filter(element=>element.getClientRects().length);
- const contentBottom=slide.getBoundingClientRect().bottom;
- const answerBottom=marks.length?Math.max(...marks.map(element=>element.getBoundingClientRect().bottom)):contentBottom;
- return {libre:limit(contentBottom),reponse:limit(Math.min(answerBottom,contentBottom))};
+ const room=Math.max(0,dockRect.top-(slide.getBoundingClientRect().bottom+margin));
+ return Math.round(Math.max(minimum,Math.min(minimum+free+room,window.innerHeight*.42)));
 }
 function updateCorrectionCardOverflow(){
  const card=document.getElementById('correctionCard');
