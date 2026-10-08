@@ -3376,6 +3376,20 @@ function renderAide(){
  if(list){list.innerHTML=steps.slice(0,Math.max(1,aideStep)).map(step=>'<li>'+step+'</li>').join('');list.hidden=!steps.length;}
  if(more) more.hidden=!(aideStep<steps.length);
  if(drawing){drawing.innerHTML=current.aideHtml||'';drawing.hidden=!current.aideHtml;}
+ // Lot T2 : un dessin d'aide plus large que le panneau (dessin en HTML, à
+ // largeur fixe, dans le panneau étroit de l'ordinateur) est réduit pour
+ // tenir en entier ; c'est une image, pas un outil à manipuler.
+ if(drawing){
+   drawing.style.zoom='';
+   const sorties=()=>{const box=drawing.getBoundingClientRect();let left=box.left,right=box.right;drawing.querySelectorAll('*').forEach(element=>{const rect=element.getBoundingClientRect();if(rect.width>0){left=Math.min(left,rect.left);right=Math.max(right,rect.right);}});return {box,left,right};};
+   for(let essai=0;essai<4&&current.aideHtml&&!drawing.hidden;essai++){
+     const {box,left,right}=sorties();
+     if(left>=box.left-1&&right<=box.right+1) break;
+     const zoom=(parseFloat(drawing.style.zoom)||1)*box.width/(right-left+8);
+     if(zoom<.55){drawing.style.zoom='0.550';break;}
+     drawing.style.zoom=zoom.toFixed(3);
+   }
+ }
  fitSlideForAide();
 }
 /* Lot T2 — l'aide ouverte ne cache ni la case réponse ni la figure. À
