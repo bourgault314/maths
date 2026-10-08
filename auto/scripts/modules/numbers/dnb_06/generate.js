@@ -300,7 +300,7 @@
     const big=digits(randomInt(2,3),randomInt),tiny=digits(randomInt(1,2),randomInt),whole=digits(randomInt(2,3),randomInt);
     const kinds=[
       {text:dec(big,2)+' × '+pw(exponent()),feedback:dec(big,2)+' n’est pas entre 1 et 10.',hint:dec(big,2)+' est plus grand que 10.',kind:'plus-de-10'},
-      {text:dec(tiny,0)+' × '+pw(exponent()),feedback:dec(tiny,0)+' est plus petit que 1'+NB+': il faut un chiffre non nul avant la virgule.',hint:dec(tiny,0)+' est plus petit que 1.',kind:'moins-de-1'},
+      {text:dec(tiny,0)+' × '+pw(exponent()),feedback:dec(tiny,0)+' est plus petit que 1.',hint:dec(tiny,0)+' est plus petit que 1.',kind:'moins-de-1'},
       {text:whole+' × '+pw(exponent()),feedback:whole+' n’est pas entre 1 et 10.',hint:whole+' est plus grand que 10.',kind:'entier'},
       {text:'10 × '+pw(exponent()),feedback:'10 ne convient pas'+NB+': le nombre devant × 10 doit être plus petit que 10.',hint:'10 n’est pas plus petit que 10.',kind:'dix'}
     ];
