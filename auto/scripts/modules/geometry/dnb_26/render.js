@@ -11,10 +11,12 @@
     '.c26-footer{margin-top:2px!important;white-space:nowrap}',
     '.c26-seg{font-weight:400}',
     '.c26-options{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;width:min(100%,620px);margin:6px auto 0!important}',
-    '.c26-options.c26-list{grid-template-columns:1fr;width:min(100%,680px)}',
+    '.diapo .c26-options:not(.c26-list){grid-template-columns:repeat(2,minmax(0,1fr))!important}',
+    '.diapo .c26-options.c26-list{grid-template-columns:1fr!important;width:min(100%,680px)}',
     '.c26-options .opt{display:flex;align-items:center;justify-content:center;gap:.45em;min-height:54px;padding:6px 12px;font-size:clamp(1.15rem,1.9vw,1.65rem)!important;line-height:1.15;text-align:center}',
     '.c26-options.c26-list .opt{justify-content:flex-start;text-align:left;font-size:clamp(1.02rem,1.6vw,1.4rem)!important}',
     '.c26-options .opt strong:first-child{font-size:.8em;opacity:.8}',
+    '.c26-options:not(.c26-list) .opt>span{white-space:nowrap}',
     '.c26-options .frac{font-size:1.05em}',
     '.c26-hyp{color:#7a3db8}.c26-adj{color:#0a6fc2}.c26-opp{color:#b23a48}',
     '.c26-nw{white-space:nowrap}',
@@ -22,13 +24,30 @@
     '.c26-aide-figure svg{display:block;width:min(100%,330px);height:auto}',
     '.diapo.trigonometry-mode .c26-figure{--c26-h:min(40vh,330px)}',
     '@media(max-width:800px){',
-    '.diapo.trigonometry-mode .c26-figure{--c26-h:min(31vh,260px)}',
+    '.diapo.trigonometry-mode .c26-figure{--c26-h:min(33vh,280px)}',
+    // QCM à phrases (4 lignes de choix) : la figure laisse la place à la carte de correction.
+    '.diapo.trigonometry-mode .c26-choose-tool .c26-figure,.diapo.trigonometry-mode .c26-critical .c26-figure{--c26-h:min(26vh,220px)}',
     '.c26-prompt{font-size:clamp(1.12rem,4.9vw,1.4rem)!important;line-height:1.16!important}',
     '.c26-options{gap:6px 8px}',
     '.c26-options .opt{min-height:48px;padding:5px 8px;font-size:clamp(1.05rem,4.8vw,1.3rem)!important}',
     '.c26-options.c26-list .opt{font-size:clamp(.95rem,4.2vw,1.12rem)!important}',
     '}',
-    '@media(min-width:1600px){.diapo.trigonometry-mode .c26-figure{--c26-h:min(44vh,500px)}}'
+    // Écran large (ordinateur, projection) : la figure à gauche, la réponse à droite.
+    '@media(min-width:801px) and (min-aspect-ratio:5/4){',
+    '.c26-task{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);grid-template-areas:"prompt prompt" "figure answer";align-items:center;column-gap:clamp(16px,3vw,48px)}',
+    '.c26-prompt{grid-area:prompt}',
+    '.c26-figure{grid-area:figure}',
+    '.c26-task>.c26-footer,.c26-task>.c26-options{grid-area:answer;justify-self:center}',
+    '.c26-task>.c26-options{width:100%;margin:0!important}',
+    '.diapo.trigonometry-mode .c26-figure{--c26-h:min(48vh,390px)}',
+    '}',
+    // Petit écran (320 × 640) : figure plus petite, la carte de correction a de la place.
+    '@media(max-width:800px) and (max-height:700px){.diapo.trigonometry-mode .c26-figure{--c26-h:min(28vh,190px)}.diapo.trigonometry-mode .c26-choose-tool .c26-figure,.diapo.trigonometry-mode .c26-critical .c26-figure{--c26-h:min(23vh,160px)}}',
+    '@media(min-width:1600px){',
+    '.diapo.trigonometry-mode .c26-figure{--c26-h:min(52vh,560px)}',
+    '.c26-options .opt{min-height:76px;font-size:clamp(1.5rem,1.8vw,2.1rem)!important}',
+    '.c26-options.c26-list .opt{font-size:clamp(1.4rem,1.7vw,2.05rem)!important}',
+    '}'
   ].join('\n');
   function styleTag(){return '<style data-c26-style="1">'+STYLE_CSS+'</style>';}
 

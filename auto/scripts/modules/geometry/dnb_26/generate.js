@@ -43,6 +43,8 @@
   function cosOf(name){return 'cos('+hat(name)+')';}
   function frac(top,bottom){return '<span class="frac"><span class="frac-num">'+top+'</span><span class="frac-den">'+bottom+'</span></span>';}
   function seg(name){return '['+name+']';}
+  // Fraction écrite sur une ligne (phrases des pièges : la carte reste basse).
+  function slash(top,bottom){return '<span class="c26-nw">'+top+'/'+bottom+'</span>';}
   function hyp(text){return '<b class="c26-hyp">'+text+'</b>';}
   function adj(text){return '<b class="c26-adj">'+text+'</b>';}
   function opp(text){return '<b class="c26-opp">'+text+'</b>';}
@@ -264,9 +266,12 @@
 
   // --- textes communs -------------------------------------------------------
   const METHOD=nowrap('cos = '+frac(adj('adjacent'),hyp('hypoténuse')));
-  function rolesLine(t){
-    return 'Angle droit en '+t.R+NBSP+': hypoténuse '+hyp(seg(t.hyp))+'. Angle '+hat(t.angle)+NBSP+': adjacent '+adj(seg(t.adj))+'.';
+  // Correction en trois lignes : l'hypoténuse, le côté adjacent, puis le
+  // cosinus écrit avec les mots du cours et avec les noms des côtés.
+  function rolesSteps(t){
+    return ['Angle droit en '+t.R+NBSP+': hypoténuse '+hyp(seg(t.hyp))+'.','Angle '+hat(t.angle)+', sommet '+t.P+NBSP+': adjacent '+adj(seg(t.adj))+'.'];
   }
+  function cosineLine(t){return nowrap(cosOf(t.angle)+' = '+frac(adj('adjacent'),hyp('hypoténuse'))+' = '+frac(adj(t.adj),hyp(t.hyp)));}
   const AIDE_METHOD=METHOD+', par rapport à l’angle étudié.';
   function hypHint(t){return 'L’angle droit est en '+t.R+NBSP+': l’hypoténuse est '+hyp(seg(t.hyp))+', le côté en face.';}
 
@@ -314,7 +319,7 @@
       :'Le triangle '+t.name+' est rectangle en '+t.R+'. Quel est le côté adjacent à l’angle '+hat(t.angle)+' ?';
     const steps=askHyp
       ?['L’hypoténuse est le côté en face de l’angle droit.','L’angle droit est en '+t.R+NBSP+': le côté en face est '+hyp(seg(t.hyp))+'.','Hypoténuse = '+hyp(seg(t.hyp))]
-      :['Le côté adjacent touche le sommet de l’angle et n’est pas l’hypoténuse.','Angle droit en '+t.R+NBSP+': hypoténuse '+hyp(seg(t.hyp))+'. Le sommet de '+hat(t.angle)+' est '+t.P+'.','Côté adjacent = '+adj(seg(t.adj))];
+      :['Le côté adjacent touche le sommet de l’angle, sans être l’hypoténuse.','Hypoténuse'+NBSP+': '+hyp(seg(t.hyp))+'. Sommet de '+hat(t.angle)+NBSP+': '+t.P+'.','Côté adjacent = '+adj(seg(t.adj))];
     const aide=askHyp
       ?['L’hypoténuse est le côté en face de l’angle droit.','L’angle droit est codé par le petit carré.']
       :['Le côté adjacent touche le sommet de l’angle, et ce n’est pas l’hypoténuse.','Le sommet de l’angle '+hat(t.angle)+' est la lettre du milieu'+NBSP+': '+t.P+'.'];
@@ -322,7 +327,7 @@
       answers:[answer],choices:[sideChoices(answer)],
       prompt,figure,footer:'<span class="c26-seg">[</span>[[formula]]<span class="c26-seg">]</span>',footerBlank:['MM'],
       steps,aide,
-      note:askHyp?'':'Attention'+NBSP+': '+opp(seg(t.opp))+' est en face de l’angle'+NBSP+': c’est le côté opposé.',
+      note:askHyp?'':opp(seg(t.opp))+', en face de l’angle, est le côté opposé.',
       look:askHyp?{hyp:true}:{hyp:true,adj:true},
       aideFigure:askHyp?{right:true}:{hyp:true}
     });
@@ -339,7 +344,7 @@
       answers:[t.adj+'/'+t.hyp],choices:[sideChoices(t.adj),sideChoices(t.hyp)],
       footerAnswers:[t.adj,t.hyp],footerBlank:['MM','MM'],
       prompt,figure,footer:cosOf(t.angle)+' = [[formula_frac]]',
-      steps:[METHOD,rolesLine(t),nowrap(cosOf(t.angle)+' = '+frac(adj(t.adj),hyp(t.hyp)))],
+      steps:[...rolesSteps(t),cosineLine(t)],
       note:'L’hypoténuse, le plus long côté, est toujours en bas.',
       aide:[AIDE_METHOD,hypHint(t)],
       look:{hyp:true,adj:true},aideFigure:{hyp:true}
@@ -352,14 +357,14 @@
     const figure=rightFigure(t,legsFromRatio(.55+randomInt(0,14)/10),randomInt,{arc:true});
     const qcm=qcmFromOptions([
       {html:frac(t.adj,t.hyp),correct:true},
-      {html:frac(t.opp,t.hyp),code:'sinus',feedback:frac(t.opp,t.hyp)+' utilise '+seg(t.opp)+', le côté opposé'+NBSP+': c’est le sinus.'},
+      {html:frac(t.opp,t.hyp),code:'sinus',feedback:slash(t.opp,t.hyp)+' utilise '+seg(t.opp)+', le côté opposé'+NBSP+': c’est le sinus.'},
       {html:frac(t.hyp,t.adj),code:'inverse',feedback:'Rapport à l’envers'+NBSP+': l’hypoténuse va en bas.'},
       {html:frac(t.hyp,t.opp),code:'oppose-inverse',feedback:seg(t.opp)+' est le côté opposé, et l’hypoténuse va en bas.'}
     ],shuffle);
     return base(module,question,'choose-ratio',t,{
       answers:[qcm.correctIndex],prompt:'Le triangle '+t.name+' est rectangle en '+t.R+'. Le cosinus de l’angle '+hat(t.angle)+' est égal à'+NBSP+':',
       figure,qcm,
-      steps:[METHOD,rolesLine(t),nowrap(cosOf(t.angle)+' = '+frac(adj(t.adj),hyp(t.hyp)))+NBSP+': réponse '+qcm.letter+'.'],
+      steps:[...rolesSteps(t),cosineLine(t)+NBSP+': réponse '+qcm.letter+'.'],
       feedback:qcm.feedback,
       aide:[AIDE_METHOD,hypHint(t)],
       look:{hyp:true,adj:true},aideFigure:{hyp:true}
@@ -380,7 +385,7 @@
   function valueSteps(d){
     const {t,a,h,g}=d;
     const simplified=g>1?' = '+frac(a/g,h/g):'';
-    return [METHOD,'Hypoténuse '+hyp(t.hyp+' = '+cm(h))+'. Adjacent à '+hat(t.angle)+NBSP+': '+adj(t.adj+' = '+cm(a))+'.',
+    return ['Angle droit en '+t.R+NBSP+': hypoténuse '+hyp(t.hyp+' = '+cm(h))+'.','Angle '+hat(t.angle)+', sommet '+t.P+NBSP+': adjacent '+adj(t.adj+' = '+cm(a))+'.',
       nowrap(cosOf(t.angle)+' = '+frac(adj(t.adj),hyp(t.hyp))+' = '+frac(a,h)+simplified)];
   }
 
@@ -404,13 +409,12 @@
     const s=gcd(o,h),u=gcd(o,a);
     const qcm=qcmFromOptions([
       {html:frac(a/g,h/g),correct:true},
-      {html:frac(o/s,h/s),code:'sinus',feedback:frac(o/s,h/s)+' utilise le côté opposé '+seg(t.opp)+NBSP+': c’est le sinus.'},
-      {html:frac(h/g,a/g),code:'inverse',feedback:frac(h/g,a/g)+' est plus grand que 1'+NBSP+': un cosinus est toujours plus petit que 1.'},
-      {html:frac(o/u,a/u),code:'tangente',feedback:frac(o/u,a/u)+' n’utilise pas l’hypoténuse'+NBSP+': c’est la tangente.'}
+      {html:frac(o/s,h/s),code:'sinus',feedback:slash(o/s,h/s)+' utilise le côté opposé '+seg(t.opp)+NBSP+': c’est le sinus.'},
+      {html:frac(h/g,a/g),code:'inverse',feedback:slash(h/g,a/g)+' est plus grand que 1'+NBSP+': un cosinus est toujours plus petit que 1.'},
+      {html:frac(o/u,a/u),code:'tangente',feedback:slash(o/u,a/u)+' n’utilise pas l’hypoténuse'+NBSP+': c’est la tangente.'}
     ],shuffle);
     const steps=valueSteps(d);
-    steps[2]=nowrap(cosOf(t.angle)+' = '+frac(a,h)+(g>1?' = '+frac(a/g,h/g):''))+NBSP+': réponse '+qcm.letter+'.';
-    steps[1]='Hypoténuse '+hyp(t.hyp+' = '+cm(h))+'. Adjacent '+adj(t.adj+' = '+cm(a))+'.';
+    steps[2]+=NBSP+': réponse '+qcm.letter+'.';
     return base(module,question,'cosine-value-choice',t,{
       answers:[qcm.correctIndex],prompt:'Quelle fraction est égale à '+cosOf(t.angle)+' ?',figure:d.figure,qcm,
       steps,feedback:qcm.feedback,
@@ -447,7 +451,7 @@
     const d=lengthSetup(randomInt),{t}=d;
     return base(module,question,'length-calculation',t,{
       answers:[calcText(d.length,d.operator,d.degrees)],choices:[calcChoices(d.length,d.operator,d.degrees)],
-      footerAnswers:[calcText(d.length,d.operator,d.degrees)],footerBlank:['00 × cos00'],
+      footerAnswers:[calcText(d.length,d.operator,d.degrees)],footerBlank:['0 × cos0'],
       prompt:'Le triangle '+t.name+' est rectangle en '+t.R+'. Écris le calcul qui donne '+d.target+'.',
       figure:d.figure,footer:d.target+' = [[formula]]',
       steps:lengthSteps(d),note:lengthNote(d),
@@ -495,36 +499,36 @@
       const degrees=choose(ANGLES,randomInt),length=randomInt(3,15),multiply=randomInt(0,1)===0;
       figure=rightFigure(t,legsFromAngle(degrees),randomInt,{arc:true,angleText:deg(degrees),sides:multiply?{PQ:cm(length),PR:'?'}:{PR:cm(length),PQ:'?'}});
       target='la longueur '+(multiply?t.adj:t.hyp);answer='cos';
-      steps=['Triangle rectangle'+NBSP+': on connaît un angle aigu et un côté.','L’hypoténuse et le côté adjacent sont en jeu'+NBSP+': on utilise '+TOOLS.cos+'.'];
+      steps=['Triangle rectangle'+NBSP+': un angle aigu et un côté connus.','Adjacent et hypoténuse'+NBSP+': '+TOOLS.cos+'.'];
     }else if(situation==='cos-angle'){
       const triple=choose(TRIPLES.slice(0,4),randomInt),k=choose([1,2,3],randomInt);
       figure=rightFigure(t,{adj:triple.a,opp:triple.o},randomInt,{arc:true,angleText:'?',sides:{PR:cm(triple.a*k),PQ:cm(triple.h*k)}});
       target='la mesure de l’angle '+hat(t.angle);answer='cos';
-      steps=['Triangle rectangle'+NBSP+': on cherche un angle aigu.','On connaît l’adjacent et l’hypoténuse'+NBSP+': on utilise '+TOOLS.cos+'.'];
+      steps=['Triangle rectangle'+NBSP+': on cherche un angle aigu.','Adjacent et hypoténuse connus'+NBSP+': '+TOOLS.cos+'.'];
     }else if(situation==='pyth'){
       const triple=choose(TRIPLES.slice(0,6),randomInt),k=choose(triple.k,randomInt),hideHyp=randomInt(0,1)===0;
       const sides=hideHyp?{PR:cm(triple.a*k),QR:cm(triple.o*k),PQ:'?'}:{PQ:cm(triple.h*k),PR:cm(triple.a*k),QR:'?'};
       figure=rightFigure(t,{adj:triple.a,opp:triple.o},randomInt,{sides});
       target='la longueur '+(hideHyp?t.hyp:t.opp);answer='pyth';
-      steps=['Triangle rectangle'+NBSP+': on connaît deux côtés, on cherche le troisième.','Aucun angle n’est connu ni cherché'+NBSP+': on utilise '+TOOLS.pyth+'.'];
+      steps=['Triangle rectangle'+NBSP+': deux côtés connus, on cherche le troisième.','Aucun angle en jeu'+NBSP+': '+TOOLS.pyth+'.'];
     }else{
       const length=randomInt(4,12);
       figure=generalFigure(t,randomInt,{arc:true,sides:{PR:cm(length),PQ:'?'}});
       figure.angleText=deg(figure.angleP);
       target='la longueur '+t.hyp;answer='none';
-      steps=['Aucun angle droit n’est codé'+NBSP+': le triangle n’est pas rectangle.','Ni le cosinus ni Pythagore'+NBSP+': '+TOOLS.none+'.'];
+      steps=['Aucun angle droit codé'+NBSP+': le triangle n’est pas rectangle.','Ni cosinus ni Pythagore'+NBSP+': '+TOOLS.none+'.'];
     }
     const feedbackFor={
-      cos:answer==='pyth'?'Aucun angle n’est connu ni cherché'+NBSP+': le cosinus ne sert pas.':'Pas d’angle droit codé'+NBSP+': le cosinus ne s’utilise que dans un triangle rectangle.',
-      pyth:answer==='cos'?(situation==='cos-angle'?'On cherche un angle'+NBSP+': Pythagore ne donne que des longueurs.':'Pythagore relie trois côtés'+NBSP+': ici, on connaît un angle.'):'Pas d’angle droit codé'+NBSP+': Pythagore ne s’utilise que dans un triangle rectangle.',
-      thales:'Thalès demande deux droites parallèles'+NBSP+': il n’y en a pas ici.',
-      none:'Le triangle est rectangle (angle droit codé)'+NBSP+': un outil convient.'
+      cos:answer==='pyth'?'Aucun angle en jeu'+NBSP+': le cosinus ne sert pas.':'Pas d’angle droit codé'+NBSP+': pas de cosinus.',
+      pyth:answer==='cos'?(situation==='cos-angle'?'On cherche un angle'+NBSP+': Pythagore ne donne que des longueurs.':'Pythagore relie trois côtés'+NBSP+': ici, un angle est connu.'):'Pas d’angle droit codé'+NBSP+': pas de Pythagore.',
+      thales:'Thalès demande deux droites parallèles'+NBSP+': il n’y en a pas.',
+      none:'L’angle droit est codé'+NBSP+': le triangle est rectangle.'
     };
     const qcm=qcmFromOptions(['cos','pyth','thales','none'].map(key=>({html:TOOLS[key],correct:key===answer,code:key,feedback:key===answer?'':feedbackFor[key]})),shuffle);
     steps[steps.length-1]+=' Réponse '+qcm.letter+'.';
     aide=['Cherche d’abord le codage de l’angle droit.','Puis regarde ce qu’on connaît et ce qu’on cherche'+NBSP+': des côtés seulement, ou aussi un angle'+NBSP+'?'];
     return base(module,question,'choose-tool',t,{
-      answers:[qcm.correctIndex],prompt:'On cherche '+target+'. Quel outil faut-il utiliser ?',figure,qcm,
+      answers:[qcm.correctIndex],prompt:'On cherche '+target+'. '+nowrap('Que faut-il utiliser ?'),figure,qcm,
       steps,feedback:qcm.feedback,aide,optionsLayout:'list',
       look:answer==='cos'?{hyp:true,adj:true}:{},aideFigure:null,situation
     });
@@ -537,23 +541,23 @@
     if(situation==='ratio'){
       const triple=choose(TRIPLES,randomInt),k=choose(triple.k,randomInt),h=triple.h*k,a=triple.a*k;
       figure=rightFigure(t,{adj:triple.a,opp:triple.o},randomInt,{arc:true});
-      prompt='Un élève trouve '+nowrap(cosOf(t.angle)+' = '+frac(h,a))+'. Est-ce possible ?';
+      prompt='Un élève trouve '+nowrap(cosOf(t.angle)+' = '+frac(h,a))+'. '+nowrap('Est-ce possible ?');
       options=[
         {html:'Non'+NBSP+': un cosinus est toujours plus petit que 1.',correct:true},
-        {html:'Oui'+NBSP+': '+h+' et '+a+' peuvent être des longueurs du triangle.',feedback:frac(h,a)+' est plus grand que 1'+NBSP+': c’est impossible pour un cosinus.'},
-        {html:'Oui'+NBSP+': il suffit d’arrondir le résultat.',feedback:'Arrondir ne change pas le problème'+NBSP+': '+frac(h,a)+' est plus grand que 1.'}
+        {html:'Oui'+NBSP+': '+h+' et '+a+' peuvent être des longueurs du triangle.',feedback:slash(h,a)+' est plus grand que 1'+NBSP+': impossible pour un cosinus.'},
+        {html:'Oui'+NBSP+': il suffit d’arrondir le résultat.',feedback:'Arrondi ou non, '+slash(h,a)+' est plus grand que 1.'}
       ];
-      steps=['L’hypoténuse est le plus long côté'+NBSP+': adjacent ÷ hypoténuse est plus petit que 1.',nowrap(frac(h,a)+' > 1')+NBSP+': c’est impossible.'];
+      steps=['L’hypoténuse est le plus long côté'+NBSP+': un cosinus est plus petit que 1.',nowrap(frac(h,a)+' > 1')+NBSP+': impossible.'];
     }else if(situation==='longer'){
       const h=randomInt(6,15),found=h+randomInt(1,6)+(randomInt(0,2)===0?.5:0);
       figure=rightFigure(t,legsFromRatio(.6+randomInt(0,12)/10),randomInt,{sides:{PQ:cm(h),PR:'?'}});
-      prompt='L’hypoténuse '+t.hyp+' mesure '+cm(h)+'. Un élève trouve '+t.adj+' = '+cm(found)+'. Est-ce possible ?';
+      prompt='L’hypoténuse '+t.hyp+' mesure '+cm(h)+'. Un élève trouve '+t.adj+' = '+cm(found)+'. '+nowrap('Est-ce possible ?');
       options=[
         {html:'Non'+NBSP+': l’hypoténuse est le plus long côté.',correct:true},
         {html:'Oui'+NBSP+': c’est un arrondi.',feedback:'Même arrondi, '+t.adj+' ne peut pas dépasser l’hypoténuse.'},
         {html:'Oui'+NBSP+': un côté peut être plus long que l’hypoténuse.',feedback:'L’hypoténuse est toujours le plus long côté.'}
       ];
-      steps=['L’hypoténuse est le plus long côté du triangle rectangle.',cm(found)+' > '+cm(h)+NBSP+': c’est impossible.'];
+      steps=['L’hypoténuse est le plus long côté.',nowrap(cm(found)+' > '+cm(h))+NBSP+': impossible.'];
       look={hyp:true};
     }else if(situation==='not-right'){
       figure=generalFigure(t,randomInt,{arc:true});
@@ -563,7 +567,7 @@
         {html:'Oui'+NBSP+': '+seg(t.adj)+' touche le sommet '+t.P+'.',feedback:'Aucun angle droit n’est codé'+NBSP+': on ne peut pas utiliser le cosinus.'},
         {html:'Oui'+NBSP+': '+seg(t.hyp)+' est le plus long côté.',feedback:'Aucun angle droit n’est codé'+NBSP+': il n’y a pas d’hypoténuse.'}
       ];
-      steps=['Le cosinus s’utilise dans un triangle rectangle.','Aucun angle droit n’est codé'+NBSP+': on ne peut pas.'];
+      steps=['Le cosinus s’utilise dans un triangle rectangle.','Aucun angle droit codé'+NBSP+': on ne peut pas.'];
     }else{
       // L'angle étudié est l'angle droit lui-même.
       const rightAngle=randomInt(0,1)===0?t.P+t.R+t.Q:t.Q+t.R+t.P;
@@ -574,7 +578,7 @@
         {html:'Oui'+NBSP+': '+nowrap(cosOf(rightAngle)+' = '+frac(t.R+t.P,t.hyp))+'.',feedback:hat(rightAngle)+' est l’angle droit'+NBSP+': le cosinus se calcule pour un angle aigu.'},
         {html:'Oui'+NBSP+': '+nowrap(cosOf(rightAngle)+' = '+frac(t.R+t.Q,t.hyp))+'.',feedback:hat(rightAngle)+' est l’angle droit'+NBSP+': le cosinus se calcule pour un angle aigu.'}
       ];
-      steps=['Adjacent ÷ hypoténuse s’utilise pour un angle aigu.',hat(rightAngle)+' a pour sommet '+t.R+NBSP+': c’est l’angle droit.'];
+      steps=['Le cosinus se calcule pour un angle aigu.',hat(rightAngle)+' a pour sommet '+t.R+NBSP+': c’est l’angle droit.'];
       look={right:true};
     }
     const qcm=qcmFromOptions(options,shuffle);
