@@ -22,6 +22,30 @@
     return String(question?.options?.divisibility_kind||'select-divisors');
   }
 
+  // Deux questions de suite ne sont jamais de la même famille : on essaie
+  // quelques ordres tirés au hasard, puis, à défaut, on place d'abord la
+  // famille qui a le plus d'éléments restants.
+  function spread(items,shuffle,familyOf){
+    const arrange=greedy=>{
+      const pool=shuffle(items),order=[];
+      while(pool.length){
+        const last=order.length?familyOf(order[order.length-1]):null;
+        const left=family=>pool.filter(other=>familyOf(other)===family).length;
+        let index=-1;
+        pool.forEach((item,position)=>{
+          if(familyOf(item)===last) return;
+          if(index<0||(greedy&&left(familyOf(item))>left(familyOf(pool[index])))) index=position;
+        });
+        if(index<0){if(!greedy) return null;index=0;}
+        order.push(pool.splice(index,1)[0]);
+      }
+      return order;
+    };
+    let order=null;
+    for(let attempt=0;attempt<30&&!order;attempt++) order=arrange(false);
+    return order||arrange(true);
+  }
+
   function weightedCycle({module,questions,shuffle,drawOrder}){
     const byKind=new Map();
     questions.forEach(question=>{
@@ -33,27 +57,7 @@
     byKind.forEach((list,kind)=>{
       for(let index=0;index<(WEIGHTS[kind]||1);index++) tokens.push(kind);
     });
-    // Deux questions de suite ne sont jamais de la même famille : on essaie
-    // quelques ordres tirés au hasard, puis, à défaut, on place d'abord la
-    // famille qui a le plus de questions restantes.
-    const arrange=greedy=>{
-      const shuffled=shuffle(tokens),order=[];
-      while(shuffled.length){
-        const last=order.length?order[order.length-1]:null;
-        const left=kind=>shuffled.filter(other=>other===kind).length;
-        let index=-1;
-        shuffled.forEach((kind,position)=>{
-          if(kind===last) return;
-          if(index<0||(greedy&&left(kind)>left(shuffled[index]))) index=position;
-        });
-        if(index<0){if(!greedy) return null;index=0;}
-        order.push(shuffled.splice(index,1)[0]);
-      }
-      return order;
-    };
-    let order=null;
-    for(let attempt=0;attempt<30&&!order;attempt++) order=arrange(false);
-    if(!order) order=arrange(true);
+    const order=spread(tokens,shuffle,kind=>kind);
     const available=(byKind.get('select-divisors')||[]).map(question=>question.options.divisibility_profile);
     return order.map(kind=>{
       const list=byKind.get(kind);
@@ -65,7 +69,11 @@
 
   function selectQuestions({module,questions,count,shuffle,draw,drawOrder}){
     if(count<=0||!questions.length) return [];
-    return draw(module.id+':divisibility:v3',questions,count,()=>weightedCycle({module,questions,shuffle,drawOrder}));
+    const picked=draw(module.id+':divisibility:v3',questions,count,()=>weightedCycle({module,questions,shuffle,drawOrder}));
+    // Le paquet continue d'une série à l'autre : à la jonction de deux cycles,
+    // deux questions de la même famille pourraient se suivre ; on les écarte.
+    const family=familyForQuestion,adjacent=list=>list.some((question,index)=>index&&family(question)===family(list[index-1]));
+    return adjacent(picked)?spread(picked,shuffle,family):picked;
   }
 
   if(!global.MATHSGO_MODULE_RUNTIME) throw new Error('Le registre fonctionnel doit être chargé avant la sélection dnb_08.');

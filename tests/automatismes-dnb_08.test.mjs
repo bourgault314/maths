@@ -337,20 +337,40 @@ test('dnb_08 type 29 : les nombres de la liste qui divisent un petit nombre (DNB
 
 test('dnb_08 : série de 10 = 2 + 2 + 1 × 6 familles, jamais deux fois la même famille de suite, profils qui tournent',()=>{
   const selection=registry.get('dnb_08').selection;
-  const decks=new Map();
-  const drawOrder=(key,keys)=>{let deck=decks.get(key);if(!deck||!deck.length){deck=engine.shuffle(keys);decks.set(key,deck);}return deck.shift();};
+  // Même paquet que l'appli (04-app.js) : il continue d'une série à l'autre,
+  // et la jonction de deux cycles évite seulement de répéter le même numéro.
+  const decks=new Map(),orders=new Map();
+  const drawOrder=(key,keys)=>{let deck=orders.get(key);if(!deck||!deck.length){deck=engine.shuffle(keys);orders.set(key,deck);}return deck.shift();};
+  let queue=[],lastQuestion=null;
+  const draw=(key,pool,count,build)=>{
+    const out=[];
+    while(out.length<count){
+      if(!queue.length){
+        queue=build();
+        if(lastQuestion&&queue.length>1&&queue[0].n===lastQuestion.n){const swap=queue.findIndex(q=>q.n!==lastQuestion.n);[queue[0],queue[swap]]=[queue[swap],queue[0]];}
+      }
+      const question=queue.shift();out.push(question);lastQuestion=question;
+    }
+    return out;
+  };
   const profiles=new Set();
-  for(let seed=1;seed<=40;seed++){
-    engine.setSeed(seed*977);
-    const picked=selection.selectQuestions({module:mod,questions:mod.questions,count:10,shuffle:engine.shuffle,drawOrder,draw:(key,pool,count,build)=>build().slice(0,count)});
-    assert.equal(picked.length,10);
+  engine.setSeed(977);
+  for(let series=1;series<=60;series++){
+    const count=[10,5,20][series%3];
+    const picked=selection.selectQuestions({module:mod,questions:mod.questions,count,shuffle:engine.shuffle,drawOrder,draw});
+    assert.equal(picked.length,count);
     const kinds=picked.map(q=>q.options.divisibility_kind);
-    const tally=kinds.reduce((map,kind)=>({...map,[kind]:(map[kind]||0)+1}),{});
-    assert.deepEqual(tally,{'select-divisors':2,'give-divisor':2,'select-numbers':1,'sharing':1,'build-number':1,'two-numbers':1,'missing-digit':1,'list-divisors':1});
-    kinds.forEach((kind,index)=>{if(index) assert.notEqual(kind,kinds[index-1],'deux fois la même famille de suite');});
+    kinds.forEach((kind,index)=>{if(index) assert.notEqual(kind,kinds[index-1],`deux fois ${kind} de suite (série ${series})`);});
     picked.filter(q=>q.options.divisibility_kind==='select-divisors').forEach(q=>profiles.add(q.options.divisibility_profile));
   }
   assert.equal(profiles.size,12,'les 12 profils sortent');
+  // Un cycle de 10 : la composition exacte.
+  queue=[];lastQuestion=null;
+  for(let cycle=0;cycle<20;cycle++){
+    const picked=selection.selectQuestions({module:mod,questions:mod.questions,count:10,shuffle:engine.shuffle,drawOrder,draw:(key,pool,count,build)=>build().slice(0,count)});
+    const tally=picked.map(q=>q.options.divisibility_kind).reduce((map,kind)=>({...map,[kind]:(map[kind]||0)+1}),{});
+    assert.deepEqual(tally,{'select-divisors':2,'give-divisor':2,'select-numbers':1,'sharing':1,'build-number':1,'two-numbers':1,'missing-digit':1,'list-divisors':1});
+  }
 });
 
 test('dnb_08 : tous les types ouverts de la 5e au brevet, pavé sans rangée de contexte (nombres entiers)',()=>{
