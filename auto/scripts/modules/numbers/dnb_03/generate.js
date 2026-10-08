@@ -26,6 +26,7 @@
   const ONE_PART={2:'un demi',3:'un tiers',4:'un quart',5:'un cinquième',6:'un sixième',7:'un septième',8:'un huitième',9:'un neuvième',10:'un dixième',11:'un onzième',12:'un douzième'};
   const parts=den=>PARTS[den]||('parts de '+FM(1,den));
   const onePart=den=>ONE_PART[den]||FM(1,den);
+  const capital=text=>text.charAt(0).toUpperCase()+text.slice(1);
 
   function smallestPrimeFactor(n){
     for(let p=2;p*p<=n;p++) if(n%p===0) return p;
@@ -37,12 +38,27 @@
     while(rest>1){const p=smallestPrimeFactor(rest);out.push(p);rest/=p;}
     return out;
   }
-  function fractionWall(denominators){
-    const component=global.MATHSGO_VISUALS&&global.MATHSGO_VISUALS.get('arithmetic.fraction-wall');
-    if(!component) return '';
-    // labelMode « first » : une seule part écrite par ligne (1/4, 1/8…),
-    // aucune part coloriée : le dessin montre la taille des parts, pas la réponse.
-    return component.render({denominators,format:'fraction',labelMode:'first',colorMode:'soft'},true);
+  // Dessin d'aide : une bande-unité par dénominateur, toutes de même longueur,
+  // partagées en parts égales ; une seule part est grisée et nommée (1/4, 1/16)
+  // à gauche de la bande. Il montre la taille des parts, jamais la réponse.
+  function partsBands(denominators){
+    const rows=[...new Set(denominators)].sort((a,b)=>a-b);
+    const X=58,W=330,H=30,GAP=12,TOP=6;
+    const height=TOP+rows.length*(H+GAP)-GAP+6;
+    let body='';
+    rows.forEach((den,row)=>{
+      const y=TOP+row*(H+GAP),cell=W/den;
+      body+='<rect x="'+X+'" y="'+y+'" width="'+W+'" height="'+H+'" fill="#ffffff" stroke="#14739a" stroke-width="2"/>';
+      body+='<rect x="'+X+'" y="'+y+'" width="'+cell+'" height="'+H+'" fill="#bfe3f3"/>';
+      for(let k=1;k<den;k++) body+='<line x1="'+(X+k*cell)+'" y1="'+y+'" x2="'+(X+k*cell)+'" y2="'+(y+H)+'" stroke="#14739a" stroke-width="1.4"/>';
+      body+='<rect x="'+X+'" y="'+y+'" width="'+W+'" height="'+H+'" fill="none" stroke="#14739a" stroke-width="2"/>';
+      const cx=26,cy=y+H/2;
+      body+='<text x="'+cx+'" y="'+(cy-4)+'" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="15" font-weight="800" fill="#17384d">1</text>'
+        +'<line x1="'+(cx-12)+'" y1="'+cy+'" x2="'+(cx+12)+'" y2="'+cy+'" stroke="#17384d" stroke-width="1.8"/>'
+        +'<text x="'+cx+'" y="'+(cy+15)+'" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="15" font-weight="800" fill="#17384d">'+den+'</text>';
+    });
+    const names=rows.map(den=>'un '+(PARTS[den]||den+'e').replace(/s$/,'')).join(', ');
+    return '<svg class="fraction-ops-aide-bandes" viewBox="0 0 396 '+height+'" style="display:block;width:100%;max-width:440px;height:auto;margin:0 auto" role="img" aria-label="Taille d’une part : '+names+'">'+body+'</svg>';
   }
   function qcmFrom(options,shuffle){
     // options : [{html, correct, code, feedback}]
@@ -91,7 +107,7 @@
       primeFactors(factor).forEach(p=>{n/=p;d/=p;chain.push(F(n,d));});
       steps.push('On peut aussi diviser en plusieurs fois : '+M(chain.join(' = '))+'.');
       const s=smallestPrimeFactor(factor);
-      note='Si tu divises seulement par '+s+', tu trouves '+FM(big.num/s,big.den/s)+' : c’est égal, mais pas encore irréductible.';
+      note=FM(big.num/s,big.den/s)+' est égale, mais pas encore irréductible : on continue.';
     }
     const aide=harder
       ?['Cherche un nombre qui divise à la fois le numérateur et le dénominateur.','Tu peux simplifier en plusieurs fois : divise par 2, 3, 5 ou 7, puis recommence tant que c’est possible.']
@@ -134,20 +150,18 @@
     if(sameDen){
       const den=best.den,sorted=[...fractions].sort((a,b)=>b.num-a.num).map(f=>f.num);
       steps=[
-        'Même dénominateur '+den+' : toutes les parts ont la même taille (des '+parts(den)+').',
-        'On compare les numérateurs : '+sorted.join(' &gt; ')+'.',
-        'La plus grande est '+FM(best.num,best.den)+'.'
+        'Même dénominateur '+den+' : les parts ont la même taille, on compare les numérateurs.',
+        sorted.join(' &gt; ')+' : la plus grande est '+FM(best.num,best.den)+'.'
       ];
       aide=['Même dénominateur : les parts ont toutes la même taille.','Des '+parts(den)+' : quelle fraction en prend le plus ?'];
     }else{
       const num=best.num,minDen=best.den,maxDen=largestDen.den;
       steps=[
-        'Même numérateur '+num+' : on prend '+num+' parts à chaque fois.',
-        'Plus le dénominateur est petit, plus les parts sont grandes : '+onePart(minDen)+' est plus grand qu’'+onePart(maxDen)+'.',
-        'La plus grande est '+FM(best.num,best.den)+'.'
+        'Même numérateur '+num+' : plus le dénominateur est petit, plus les parts sont grandes.',
+        capital(onePart(minDen))+' est la plus grande part : la plus grande fraction est '+FM(best.num,best.den)+'.'
       ];
       aide=['Même numérateur : chaque fraction prend le même nombre de parts.','Compare la taille d’une part : '+onePart(minDen)+' ou '+onePart(maxDen)+', lequel est le plus grand ?'];
-      aideHtml=fractionWall(fractions.map(f=>f.den));
+      aideHtml=partsBands(fractions.map(f=>f.den));
     }
     return {kind:sameDen?'compare_same_den':'compare_same_num',prompt:'Quelle est la plus grande de ces fractions ?',qcm,steps,note:'',aide,aideHtml};
   }
@@ -183,7 +197,7 @@
       return {html:FM(f.num,f.den),latex:F(f.num,f.den),correct,code,feedback};
     });
     const qcm=qcmFrom(options,shuffle);
-    const conversions=fractions.map(f=>f.den===common?FM(f.num,f.den):M(F(f.num,f.den)+' = '+F(f.num*common/f.den,common))).join(' ; ');
+    const conversions=fractions.filter(f=>f.den!==common).map(f=>M(F(f.num,f.den)+' = '+F(f.num*common/f.den,common))).join(' ; ');
     const dens=fractions.map(f=>f.den);
     const first=fractions.find(f=>f.den!==common);
     const k=common/first.den;
@@ -191,11 +205,10 @@
       kind:'compare_common_den',
       prompt:'Quelle est la plus grande de ces fractions ?',qcm,
       steps:[
-        'On écrit les quatre fractions avec le même dénominateur '+common+' :',
-        conversions,
+        'Même dénominateur '+common+' : '+conversions+'.',
         'Le plus grand numérateur est '+(best.num*common/best.den)+' : la plus grande est '+FM(best.num,best.den)+'.'
       ],
-      note:'On ne compare pas les numérateurs seuls : les parts doivent avoir la même taille.',
+      note:'',
       aide:[
         'Cherche un nombre qui est dans les tables de '+dens.slice(0,-1).join(', ')+' et '+dens[dens.length-1]+' : ce sera le dénominateur commun.',
         'Par exemple : '+M(F(first.num,first.den)+' = '+F(first.num+' \\times '+k,first.den+' \\times '+k)+' = '+F(first.num*k,common))+'.'
@@ -276,7 +289,7 @@
         'Les parts ne sont pas de la même taille : écris '+FM(a,small)+' en '+parts(big)+'.',
         big+' = '+small+' × '+factor+' : multiplie le numérateur et le dénominateur de '+FM(a,small)+' par '+factor+'.'
       ],
-      aideHtml:fractionWall([small,big])
+      aideHtml:partsBands([small,big])
     };
   }
 
@@ -499,8 +512,8 @@
       listHtml:shuffle(items).map(item=>item.label).join(' ; '),
       qcm,
       steps:[
-        'On écrit chaque nombre en écriture décimale : '+FM(fraction.num,fraction.den)+' = '+fraction.decimal+' et '+M(unit+' + '+F(small,100))+' = '+byId.centiemes.decimal+'.',
-        'On compare : '+sortedDecimals+'.',
+        'En écriture décimale : '+FM(fraction.num,fraction.den)+' = '+fraction.decimal+' et '+M(unit+' + '+F(small,100))+' = '+byId.centiemes.decimal+'.',
+        sortedDecimals,
         'Donc '+html(correct)+'.'
       ],
       note:'Un nombre qui a plus de chiffres n’est pas forcément plus grand : '+shortLabel+' &gt; '+longLabel+'.',
