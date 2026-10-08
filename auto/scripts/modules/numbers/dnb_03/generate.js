@@ -161,7 +161,8 @@
         capital(onePart(minDen))+' est la plus grande part : la plus grande fraction est '+FM(best.num,best.den)+'.'
       ];
       aide=['Même numérateur : chaque fraction prend le même nombre de parts.','Compare la taille d’une part : '+onePart(minDen)+' ou '+onePart(maxDen)+', lequel est le plus grand ?'];
-      aideHtml=partsBands(fractions.map(f=>f.den));
+      // Les deux parts que l'indice 2 fait comparer (la plus grande et la plus petite).
+      aideHtml=partsBands([minDen,maxDen]);
     }
     return {kind:sameDen?'compare_same_den':'compare_same_num',prompt:'Quelle est la plus grande de ces fractions ?',qcm,steps,note:'',aide,aideHtml};
   }
