@@ -93,7 +93,8 @@ test("Système : le deuxième tour (25d à 28d) est le Bonus du monde 4, comme a
   assert.match(univers, /\}\)\.join\(''\)\+tour2ProfHtml\(m\)\+'<\/ol>';/);
   /* une clé de mémoire par Bonus ; celle du monde 3 ne change pas */
   assert.match(univers, /const CLE_BONUS_OUVERT="mathsgo-splat-bonus-ouvert";/);
-  assert.match(univers, /const cle=CLE_BONUS_OUVERT\+\(\(b&&b\.cle\)\|\|""\);/);
+  // (lot 6) sous un code, la clé de l'élève : cleMemoire(…) (tests/splat-suivi-memoire.test.mjs)
+  assert.match(univers, /const cle=cleMemoire\(CLE_BONUS_OUVERT\+\(\(b&&b\.cle\)\|\|""\)\); if\(!cle\) return;/);
   /* ?apres= : la fiche bonus suivante du même monde */
   assert.match(univers, /for\(const b of BONUS_MONDES\)\{\s*const kb=b\.fiches\.findIndex\(f=>b\.idp\+f\.code===apres\);/);
   /* le cannelle du monde 4 pour son Bonus */
@@ -155,14 +156,17 @@ test("accordéon : un monde ouvert à la fois, le monde en cours à l'arrivée, 
   /* ouvrirMonde replie tous les autres ; un clic sur le bandeau ouvert referme tout */
   /* (lot « splat-suivi-5 ») un monde fermé à la classe reste replié */
   assert.match(univers, /function ouvrirMonde\(mi\)\{\s*document\.querySelectorAll\("main>\.monde"\)\.forEach\(\(sec,i\)=>\{\s*const ouvert=i===mi&&!sec\.classList\.contains\("verrouille"\);\s*sec\.classList\.toggle\("replie",!ouvert\);/);
-  assert.match(univers, /const mi=sec\.classList\.contains\("replie"\)\?mondes\.indexOf\(sec\):-1;\s*ouvrirMonde\(mi\);\s*retenirMonde\(mi\);/);
+  /* (lot 6, 08/10/2026) refermer le monde ouvert retient « tout fermé » */
+  assert.match(univers, /const mi=sec\.classList\.contains\("replie"\)\?mondes\.indexOf\(sec\):-1;\s*ouvrirMonde\(mi\);\s*if\(mi>=0\) retenirMonde\(mi\); else retenirToutFerme\(\);/);
   /* relecture du monde 1 (25/09/2026) : le monde ouvert ou lancé est retenu sur l'appareil
      (une clé élève, une clé prof) et rouvert au retour, avant le monde en cours */
   assert.match(univers, /const CLE_MONDE_OUVERT="mathsgo-splat-monde-ouvert"\+\(PROF\?"-prof":""\);/);
-  assert.match(univers, /try\{ localStorage\.setItem\(CLE_MONDE_OUVERT,String\(mi\)\); \}catch\(e\)\{\}/);
+  /* (lot 6) sous un code, la clé de l'élève (cleMemoire → SUIVI.cleEleve), pas celle de l'appareil ;
+     le comportement est exécuté dans tests/splat-suivi-memoire.test.mjs */
+  assert.match(univers, /const cle=cleMemoire\(CLE_MONDE_OUVERT\); if\(!cle\) return;\s*try\{ localStorage\.setItem\(cle,String\(mi\)\); \}catch\(e\)\{\}/);
   /* (26/09/2026) un monde passé « en préparation » ne se rouvre pas tout seul */
   /* (08/10/2026, lot « splat-suivi-5 ») ni un monde fermé à la classe */
-  assert.match(univers, /const retenu=mondeRetenu\(\);\s*(?:\/\*[^\n]*\*\/\s*)?if\(retenu>=0&&!MONDES\[retenu\]\.cache&&!MONDES\[retenu\]\.verrouille\) return retenu;[^\n]*\s*if\(PROF\) return 0;/);
+  assert.match(univers, /const retenu=mondeRetenu\(\);\s*if\(retenu===TOUT_FERME\) return -1;[^\n]*\s*(?:\/\*[^\n]*\*\/\s*)?if\(retenu>=0&&!MONDES\[retenu\]\.cache&&!MONDES\[retenu\]\.verrouille\) return retenu;[^\n]*\s*if\(PROF\) return 0;/);
   assert.match(univers, /const sec=a\.closest\("main>\.monde"\);\s*if\(sec\) retenirMonde\(/);
   /* le monde en cours : celui de l'adresse (#monde-N ou un identifiant d'étape), sinon celui
      de la prochaine étoile, sinon le dernier monde jouable (26/09/2026 : pas un monde en

@@ -106,7 +106,8 @@ test("lot M4-4 : le Bonus du monde 4 — un menu « Deuxième tour », un livret
   // aucun nombre à sous-entendu dans ce que l'élève lit
   assert.doesNotMatch(h.replace(/href="[^"]*"/g, ""), /\b69\b/);
   // sa propre clé de mémoire (le monde 3 garde la sienne)
-  assert.match(univers, /function bonusRetenu\(b\)\{ try\{ return localStorage\.getItem\(CLE_BONUS_OUVERT\+\(\(b&&b\.cle\)\|\|""\)\)==="1"; \}catch\(e\)\{ return false; \} \}/);
+  // (lot 6) celle de l'élève sous un code (cleMemoire), exécutée dans tests/splat-suivi-memoire.test.mjs
+  assert.match(univers, /function bonusRetenu\(b\)\{\s*const cle=cleMemoire\(CLE_BONUS_OUVERT\+\(\(b&&b\.cle\)\|\|""\)\); if\(!cle\) return false;\s*try\{ return localStorage\.getItem\(cle\)==="1"; \}catch\(e\)\{ return false; \}\s*\}/);
 });
 
 test("le compteur du Bonus est à part : « ✨ x / 10 », hors du total et de « Continuer »", () => {

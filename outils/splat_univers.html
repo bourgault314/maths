@@ -80,9 +80,9 @@
 <!-- La liste des mondes « en préparation » et la clé de Gwenaël (?essai=1) : en tête de assets/js/splat-etapes.js -->
 <script src="../assets/js/splat-etapes.js?v=20261008-5"></script>
 <!-- Le parcours de l'élève (moteur partagé avec les trois outils et le serveur de suivi), et
-     l'habillage du suivi de classe (bandeau, garde) : lot 2 « outils + carte », 08/10/2026 -->
+     l'habillage du suivi de classe (bloc de suivi, pied, garde) : lots 2 et 6, 08/10/2026 -->
 <script src="../assets/js/splat-parcours.js?v=20261008-5"></script>
-<script src="../assets/js/splat-suivi.js?v=20261008-2"></script>
+<script src="../assets/js/splat-suivi.js?v=20261008-3"></script>
 <style>
 :root{
   --page:#f6f8fb; --paper:#ffffff; --ink:#10294a; --muted:#5c6c82; --line:#d9e2ec;
@@ -111,30 +111,16 @@ header .modeOpt{font-size:13px;font-weight:800;color:var(--muted);border-radius:
 header .modeOpt.actif{color:#fff;background:var(--blue)}
 header .modeOpt:not(.actif):hover{color:var(--ink)}
 
-/* ---------- suivi de classe (lot 2 « outils + carte », 08/10/2026) ----------
-   L'élève venu de son espace (suivi.mathsgo.re) : un bandeau sous l'en-tête, le même
-   dessin que Défi tables — vert d'eau quand le serveur a répondu, orange quand rien
-   n'est encore parti, gris quand le code ne vaut plus rien. Maquette validée par
-   Gwenaël (planche 1 du chantier SPLAT! ↔ suivi). Dessiné par assets/js/splat-suivi.js. */
-.suivi-repere{display:flex;align-items:center;justify-content:center;gap:4px 8px;flex-wrap:wrap;
-  min-height:40px;margin:0;padding:0 12px;background:#eef6f6;color:#0b5f5c;font-weight:800;font-size:.9rem;
-  box-shadow:inset 0 -1px 0 #d5e8e7;text-align:center} /* le filet du bas en ombre : 40 px tout rond */
-.suivi-repere[hidden]{display:none}
-.suivi-repere .puce{width:9px;height:9px;border-radius:50%;background:#08aaa5;flex:0 0 auto}
-.suivi-repere .liens{display:inline-flex;gap:8px;align-items:center;white-space:nowrap}
-.suivi-repere .sep{opacity:.55}
-.suivi-repere .espace{color:inherit;text-decoration:underline;opacity:.85}
-.suivi-repere .sortie{border:0;background:none;margin:0;padding:0 2px;font:inherit;color:inherit;
-  text-decoration:underline;cursor:pointer;opacity:.85;min-height:40px}
-.suivi-repere .espace:hover,.suivi-repere .espace:focus-visible,
-.suivi-repere .sortie:hover,.suivi-repere .sortie:focus-visible{opacity:1}
-.suivi-repere.hors-ligne{background:#fdf0e3;color:#8a4c0a;box-shadow:inset 0 -1px 0 #efd3b4}
-.suivi-repere.hors-ligne .puce{background:#d9822b}
-.suivi-repere.detache{background:#eceff3;color:#3d4a5a;box-shadow:inset 0 -1px 0 #d6dce4}
-.suivi-repere.detache .puce{display:none}
-@media(max-width:520px){.suivi-repere{font-size:.8rem;gap:0 6px;padding:2px 8px}}
-/* l'élève suivi n'a pas le choix « Élève | Professeur » (demande de Gwenaël, 08/10/2026) */
-html.suivi-eleve header .modeBar{display:none}
+/* ---------- l'élève à code (lot 6 « en-tête », 08/10/2026) ----------
+   Le modèle commun des applis suivies (AGENTS.md), Défi tables en référence. En haut, la
+   flèche (vers Mon espace) puis le bloc « Suivi par ton professeur », prénom, classe, avec
+   « Se déconnecter » dedans — dessiné et stylé par assets/js/splat-suivi.js (le bandeau
+   sous l'en-tête du lot 2 s'en va). Plus de logo en haut (il passe en petit dans le pied),
+   plus de lien « Mon espace » en texte, plus de choix « Élève | Professeur » : la vue prof
+   contient toutes les corrections (demande de Gwenaël, 08/10/2026). Classe posée dès le
+   <head> pour l'élève venu de son espace ; sans code, rien ne change. */
+html.suivi-eleve header .brand,html.suivi-eleve header .modeBar{display:none}
+header .suivi-repere{flex:1 1 auto;min-width:0;max-width:760px;margin:0 auto}
 
 /* ---------- bandeau titre ---------- */
 .hero{max-width:980px;margin:0 auto;padding:26px 16px 8px;text-align:center;position:relative}
@@ -558,12 +544,13 @@ body.prof .volet p{font-size:14.5px}
     <svg viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
   </a>
   <a class="brand" href="/" aria-label="Accueil maths&amp;go"><img src="/assets/img/mathsgo-logo-390.png" alt="maths&amp;go"></a>
+  <!-- le bloc de suivi de l'élève à code (lot 6), à côté de la flèche ; caché pour tous les autres -->
+  <p id="suivi-repere" class="suivi-repere" hidden></p>
   <nav class="modeBar" aria-label="Choix du mode">
     <a class="modeOpt actif" id="optEleve">🎮 Élève</a>
     <a class="modeOpt" id="optProf" href="?prof=1">Professeur</a>
   </nav>
 </header>
-<p id="suivi-repere" class="suivi-repere" hidden></p>
 
 
 <div class="hero">
@@ -1507,16 +1494,31 @@ function majAffichage(){
    jouait l'Enquête revenait sur Petit SPLAT! (le premier monde pas fini). On retient
    donc le monde qu'on ouvre ou dont on lance une étape (localStorage, une clé pour
    l'élève, une pour la vue prof ; si le stockage est refusé, on retombe sur le monde
-   en cours, comme avant). */
+   en cours, comme avant).
+   Lot 6 (08/10/2026, essai de Gwenaël sur iPhone) : pour l'élève à code, c'est la mémoire
+   de l'ÉLÈVE, pas de l'appareil — la clé porte l'empreinte de son code, comme sa case
+   (SUIVI.cleEleve, jamais le code en clair) : deux élèves sur une même tablette ne se la
+   passent pas. Et l'élève qui ferme tous les mondes retrouve tout fermé (« -1 » retenu),
+   avec ou sans code. */
 const CLE_MONDE_OUVERT="mathsgo-splat-monde-ouvert"+(PROF?"-prof":"");
+const TOUT_FERME=-2; /* mondeRetenu() : l'élève avait tout refermé */
+/* la clé de cette mémoire pour qui regarde la carte ; null pendant l'échange d'un billet */
+function cleMemoire(base){ return SUIVI?SUIVI.cleEleve(base):base; }
 function retenirMonde(mi){
   if(!(mi>=0)) return;
-  try{ localStorage.setItem(CLE_MONDE_OUVERT,String(mi)); }catch(e){}
+  const cle=cleMemoire(CLE_MONDE_OUVERT); if(!cle) return;
+  try{ localStorage.setItem(cle,String(mi)); }catch(e){}
+}
+function retenirToutFerme(){
+  const cle=cleMemoire(CLE_MONDE_OUVERT); if(!cle) return;
+  try{ localStorage.setItem(cle,"-1"); }catch(e){}
 }
 function mondeRetenu(){
+  const cle=cleMemoire(CLE_MONDE_OUVERT); if(!cle) return -1;
   try{
-    const v=localStorage.getItem(CLE_MONDE_OUVERT);
+    const v=localStorage.getItem(cle);
     const n=v===null?NaN:parseInt(v,10);
+    if(n===-1) return TOUT_FERME;
     return (n>=0&&n<MONDES.length)?n:-1;
   }catch(e){ return -1; }
 }
@@ -1534,6 +1536,7 @@ function mondeEnCours(prochaine){
     if(sec&&!sec.classList.contains("verrouille")) return [...document.querySelectorAll("main>.monde")].indexOf(sec);
   }
   const retenu=mondeRetenu();
+  if(retenu===TOUT_FERME) return -1; /* tout était refermé : tout reste fermé (lot 6) */
   /* un monde passé en préparation, ou fermé à la classe, ne se rouvre pas seul */
   if(retenu>=0&&!MONDES[retenu].cache&&!MONDES[retenu].verrouille) return retenu;
   if(PROF) return 0; /* vue prof : le monde 1, sauf adresse précise ou monde retenu */
@@ -1547,7 +1550,7 @@ document.addEventListener("click",ev=>{
   const sec=head.parentElement, mondes=[...document.querySelectorAll("main>.monde")];
   const mi=sec.classList.contains("replie")?mondes.indexOf(sec):-1;
   ouvrirMonde(mi);
-  retenirMonde(mi);
+  if(mi>=0) retenirMonde(mi); else retenirToutFerme(); /* refermer le monde ouvert : tout est fermé */
   /* 27/09/2026 (retour de Gwenaël) : le monde du dessus se replie, la page remonte, et on
      se retrouvait en bas du monde qu'on vient d'ouvrir. On ramène son bandeau en haut de
      l'écran, seulement s'il n'y est plus. */
@@ -1579,11 +1582,15 @@ function bonusDeSection(sec){
   const mi=[...document.querySelectorAll("main>.monde")].indexOf(sec);
   return mi>=0?bonusDe(MONDES[mi]):null;
 }
+/* lot 6 : celle de l'élève, comme le monde ouvert (cleMemoire) */
 function retenirBonus(o,b){
-  const cle=CLE_BONUS_OUVERT+((b&&b.cle)||"");
+  const cle=cleMemoire(CLE_BONUS_OUVERT+((b&&b.cle)||"")); if(!cle) return;
   try{ if(o) localStorage.setItem(cle,"1"); else localStorage.removeItem(cle); }catch(e){}
 }
-function bonusRetenu(b){ try{ return localStorage.getItem(CLE_BONUS_OUVERT+((b&&b.cle)||""))==="1"; }catch(e){ return false; } }
+function bonusRetenu(b){
+  const cle=cleMemoire(CLE_BONUS_OUVERT+((b&&b.cle)||"")); if(!cle) return false;
+  try{ return localStorage.getItem(cle)==="1"; }catch(e){ return false; }
+}
 function ouvrirPartie(volet,ouvert){
   volet.classList.toggle("ferme",!ouvert);
   volet.setAttribute("aria-expanded",ouvert?"true":"false");
@@ -1696,10 +1703,11 @@ window.addEventListener("focus",majAffichage);
 
 /* ============ suivi de classe (lot 2 « outils + carte », 08/10/2026) ============
    L'élève arrive de son espace (suivi.mathsgo.re) avec un billet, ou avec son code déjà dans
-   l'onglet (retour d'un outil) : le bandeau sous l'en-tête dit qu'il est suivi, la flèche et le
-   logo ramènent à son espace, les étoiles sont celles de sa case (le serveur fait foi, puis
-   « la meilleure série gagne »). Les outils, ouverts dans le même onglet, retrouvent le code
-   dans l'onglet : aucun paramètre dans les liens. Sans code, rien ne change. */
+   l'onglet (retour d'un outil) : le bloc de l'en-tête dit qu'il est suivi (lot 6), la flèche
+   ramène à son espace, le pied n'a plus que le logo et « Mon espace », les étoiles sont celles
+   de sa case (le serveur fait foi, puis « la meilleure série gagne »). Les outils, ouverts dans
+   le même onglet, retrouvent le code dans l'onglet : aucun paramètre dans les liens. Sans code,
+   rien ne change. */
 const RETOUR_SITE=(()=>{const b=document.querySelector("header .back"),l=document.querySelector("header .brand");
   return {back:b?b.getAttribute("href"):"",title:b?b.getAttribute("title"):"",brand:l?l.getAttribute("href"):"/",aria:l?l.getAttribute("aria-label"):""};})();
 function majLiensRetour(){
@@ -1715,7 +1723,11 @@ function majSuivi(){
   /* le choix « Élève | Professeur » disparaît pour l'élève venu de son espace : sous un code,
      pendant l'échange de son billet, ou quand son billet est refusé (posé dès le <head>) */
   document.documentElement.classList.toggle("suivi-eleve",!!(SUIVI&&(SUIVI.actif()||SUIVI.attente()||SUIVI.client.entreeRefusee)));
-  if(SUIVI) SUIVI.dessinerBandeau(document.getElementById("suivi-repere"));
+  if(SUIVI){
+    SUIVI.dessinerBloc(document.getElementById("suivi-repere"));
+    /* lot 6 : le pied de l'élève à code — le petit logo et « Mon espace », rien d'autre */
+    SUIVI.dessinerPied(document.querySelector("body>footer"));
+  }
 }
 /* la case de l'élève est arrivée (billet échangé, serveur lu) : les étoiles, et — tant que
    l'élève n'a encore rien touché — le monde et la partie en cours, comme à l'arrivée */

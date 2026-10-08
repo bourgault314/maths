@@ -57,6 +57,35 @@ Automatismes V2, lire dans cet ordre :
   comme une vérification visuelle. Actualiser la version de la feuille commune
   dans les pages concernées pour que la correction soit chargée sans vider le cache.
 
+## Applis suivies — modèle commun
+
+Toute appli branchée sur le serveur de suivi (Défi tables, SPLAT!, Défi calcul,
+puis les suivantes) suit ce modèle quand l'élève est connecté par son code.
+Défi tables est la référence.
+
+- En-tête : la flèche de retour à gauche (niveau parent dans l'appli ; depuis
+  l'accueil de l'appli, Mon espace), puis le bloc « Suivi par ton professeur »,
+  prénom, classe, avec « Se déconnecter » dans le bloc. Pas de logo en haut ;
+  pas de lien « Mon espace » en texte.
+- Écrans de jeu où la place manque (les étapes de SPLAT!) : la pastille
+  « ● prénom » au bout de la barre du jeu suffit. On ne déplace pas une mise en
+  page de jeu pour y loger le bloc ; « Se déconnecter » reste à une flèche, sur
+  l'accueil de l'appli.
+- Pied : le petit logo et « Mon espace » (marqué `data-mathsgo-confidentialite`),
+  rien d'autre — aucun lien vers mathsgo.re ni vers la licence, ni crédits, ni
+  « Sans cookie ni traceur · Confidentialité » (l'information est sur Mon
+  espace). Pendant le jeu, rien.
+- Mémoire de l'appli (monde ouvert, table choisie…) : celle de l'élève, pas
+  celle de l'appareil (clé portant l'empreinte du code, jamais le code en
+  clair) ; si l'élève ferme tout, il retrouve tout fermé.
+- Tuile dans Mon espace : rien tant qu'aucune réussite, puis une jauge et
+  « N … sur M », comptés sur ce que la classe a d'ouvert.
+- Réglage par classe : dans Ma classe, carte « Activités de la classe », sous la
+  case de l'appli ; propriétaire seulement ; tout ouvert par défaut.
+- Le cadre de l'appli tient entier dans l'écran avec le bloc de suivi, sur
+  téléphone comme sur ordinateur.
+- Sans code, rien ne change : en-tête, fil d'Ariane et pied du site.
+
 ## Automatismes V2
 
 - **Périmètre immédiat : exclusivement le DNB.** La liste officielle des
