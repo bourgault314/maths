@@ -222,7 +222,7 @@
     const checks=values.map(value=>`${fr(value)} → ${isUnitCriterion(divisor)?unitOf(value):digitSum(value)} ${verdict(value%divisor===0)}`);
     const method=isUnitCriterion(divisor)
       ?`Par ${divisor}, je regarde le chiffre des unités${NBSP}: ${unitList(divisor)}.`
-      :`Par ${divisor}, j’additionne les chiffres${NBSP}: la somme doit être ${tableWord(divisor)}.`;
+      :`Par ${divisor}${NBSP}: la somme des chiffres doit être ${tableWord(divisor)}.`;
     const kept=values.filter(value=>value%divisor===0).map(fr);
     const correctionSteps=[
       method,
@@ -436,7 +436,7 @@
     const letter=String.fromCharCode(64+answerIndex);
     const line=(name,value,ok)=>`${name}${NBSP}: ${sumText(value)} = ${digitSum(value)} ${verdict(ok)}`;
     const correctionSteps=[
-      `Par ${divisor}, j’additionne les chiffres${NBSP}: la somme doit être ${tableWord(divisor)}.`,
+      `Par ${divisor}${NBSP}: la somme des chiffres doit être ${tableWord(divisor)}.`,
       `${line('N',n,okN)} · ${line('P',p,okP)}`,
       `Réponse ${letter}${NBSP}: ${labels[answerIndex-1]}`
     ];
