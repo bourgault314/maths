@@ -213,6 +213,24 @@ test("une division ratée se corrige avec sa multiplication, dans ses trois écr
   assert.equal(feedback.textContent, `Pas de réponse. Bonne réponse${N}: 4, car 4${N}×${N}7${N}=${N}28.`, "28 ÷ ? = 7");
 });
 
+// Retouche demandée par Gwenaël sur la PR #957 (planche-pastilles-petits-telephones.png) :
+// sur téléphone, les cinq pastilles tombaient en 2 + 2 + 1 (jusqu'à 360 px, et jusqu'à
+// 390 px pour la table de 10) ou en 4 + 1 (table de 2). Désormais toujours 3 + 2 sous 768 px,
+// les cinq sur une ligne au-dessus. Mesuré au navigateur, tables 2, 7, 9 et 10, de 320 à
+// 1366 px (outils\mesure_rangs.py) ; ici, les règles et leur place APRÈS la règle de base.
+test("l'écran avant le test sur téléphone : toujours 3 + 2 (saut forcé sous 768 px, pastilles qui rapetissent sous 430 px), après la règle de base", () => {
+  const base = html.indexOf(".launch-exemple b { padding: 6px 11px;");
+  const saut = html.indexOf(`@media (max-width: 767px) {
+      .launch-exemple { row-gap: 4px; }
+      .launch-exemple::before { content: ""; flex-basis: 100%; order: 1; }
+      .launch-exemple b:nth-child(n + 4) { order: 2; }
+    }`);
+  const petits = html.indexOf("@media (max-width: 429px) { .launch-exemple { column-gap: 6px; } .launch-exemple b { padding: 5px 7px; font-size: clamp(.85rem, 4.3vw, 1.15rem); } }");
+  assert.ok(base > 0, "la règle de base des pastilles");
+  assert.ok(saut > base, "le saut de ligne après la 3e pastille, après la règle de base");
+  assert.ok(petits > base, "les pastilles plus petites sous 430 px, après la règle de base");
+});
+
 test("la page charge les moteurs du lot (leurs numéros montent) et le professeur a la même copie du moteur", async () => {
   assert.match(html, /<script src="\.\/defi_tables_core\.js\?v=20261009-1"><\/script>/);
   assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261009-1"><\/script>/);

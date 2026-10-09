@@ -729,6 +729,17 @@
     .launch-format b { font-weight: 900; white-space: nowrap; }
     .launch-exemple { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
     .launch-exemple b { padding: 6px 11px; border: 2px solid #c5d9e6; border-radius: 10px; background: #f4f8fb; font-size: 1.15rem; line-height: 1.2; }
+    /* Lot « trois divisions » (retouche demandée sur la PR #957) : sur téléphone et petite tablette,
+       toujours 3 + 2 — résultat, nombre manquant, division sur la 1re ligne, les deux autres écritures
+       sur la 2e (saut forcé : sans lui, 2 + 2 + 1 ou 4 + 1 selon la table et la largeur) ; sous 430 px,
+       des pastilles qui rapetissent avec l'écran pour que la 1re ligne tienne, table de 10 comprise.
+       À 768 px et plus, les cinq sur une ligne, comme avant. Après la règle de base. */
+    @media (max-width: 767px) {
+      .launch-exemple { row-gap: 4px; }
+      .launch-exemple::before { content: ""; flex-basis: 100%; order: 1; }
+      .launch-exemple b:nth-child(n + 4) { order: 2; }
+    }
+    @media (max-width: 429px) { .launch-exemple { column-gap: 6px; } .launch-exemple b { padding: 5px 7px; font-size: clamp(.85rem, 4.3vw, 1.15rem); } }
     .result-parcours {
       margin: 12px 0 0;
       padding: 11px 13px;
