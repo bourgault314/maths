@@ -677,7 +677,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "imprimer",
       "collections": [],
       "tags": ["calcul-mental", "tables", "multiplication", "suivi", "imprimable"],
-      "thumbnail": "assets/img/thumbnails/calcul-mental/fiche-parcours-tables.png?v=6",
+      "thumbnail": "assets/img/thumbnails/calcul-mental/fiche-parcours-tables.png?v=7",
       "cardDescription": "La fiche de suivi vide : carte des tables et grille des 36 calculs, à photocopier et à remplir à la main."
     },
     "outils/calcul_mental/cartes_tables.pdf": {
