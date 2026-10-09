@@ -6,14 +6,15 @@
 //   - marche 6 « Nombres manquants et divisions » : 5 + 5 ;
 //   - marche 7 « Résultats, nombres manquants et divisions » : 6 + 2 + 2 ;
 //   - validation, mélange, « Comme la validation » : 14 + 3 + 3 (au lieu de 14 + 6) ;
-//   - hors d'Expert, une seule forme (56 ÷ 7 = ?), dans les deux sens ;
+//   - hors d'Expert, une seule forme (56 ÷ 7 = ?), dans les deux sens —
+//     annulé le 09/10 par le lot « trois divisions » (les trois écritures
+//     partout, toujours dans les deux sens ; tests/defi-tables-trois-divisions.test.mjs) ;
 //   - une division compte pour son calcul (56 ÷ 7 = case 7 × 8) ;
 //   - une division ratée se corrige avec sa multiplication :
 //     « Bonne réponse : 4, car 7 × 4 = 28. »
 //
 // Sabotages attendus (chacun rend ce fichier rouge) :
 //   - remettre la validation à 14 + 6 ;
-//   - laisser les trois formes de division dans le parcours ;
 //   - ne diviser que par la table (un seul sens) ;
 //   - reconnaître encore l'ancien « nombres manquants » seul comme l'entraînement du parcours ;
 //   - oublier « car 7 × 4 = 28 » dans la correction d'une division.
@@ -51,14 +52,23 @@ test("les séries du parcours : 5 + 5, 6 + 2 + 2, 14 + 3 + 3 — à chaque tirag
   }
 });
 
-test("hors d'Expert, une seule forme de division, dans les deux sens ; Expert garde ses trois formes", () => {
+// Lot « trois divisions » (09/10/2026) : plus « une seule forme » — les trois
+// écritures partout, et toujours les deux sens dans le parcours.
+test("dans le parcours, les trois écritures de la division, dans les deux sens ; Expert garde ses trois formes", () => {
   const sens = {parTable: 0, parAutre: 0};
+  const ecritures = new Set();
   for (let tirage = 0; tirage < 40; tirage += 1) {
     for (const config of [P.configEntraine(7, "trous"), P.configEntraine(7, "mixte"), P.configValidation(7)]) {
       generer(config).filter(question => question.category === "division").forEach(question => {
-        assert.equal(question.type, "division-quotient");
-        assert.equal(question.prompt, `${question.product} ÷ ${question.first} = ?`);
-        assert.equal(question.answer, question.second);
+        ecritures.add(question.type);
+        const attendu = {
+          "division-quotient": [`${question.product} ÷ ${question.first} = ?`, question.second],
+          "division-dividend": [`? ÷ ${question.first} = ${question.second}`, question.product],
+          "division-divisor": [`${question.product} ÷ ? = ${question.second}`, question.first]
+        }[question.type];
+        assert.ok(attendu, question.type);
+        assert.equal(question.prompt, attendu[0]);
+        assert.equal(question.answer, attendu[1]);
         assert.ok(question.first === 7 || question.second === 7, "une division de SA table");
         if (question.first === 7 && question.second !== 7) sens.parTable += 1;
         if (question.second === 7 && question.first !== 7) sens.parAutre += 1;
@@ -66,6 +76,7 @@ test("hors d'Expert, une seule forme de division, dans les deux sens ; Expert ga
     }
   }
   assert.ok(sens.parTable > 0 && sens.parAutre > 0, "56 ÷ 7 = ? et 56 ÷ 8 = ?");
+  assert.equal(ecritures.size, 3, "56 ÷ 7 = ?, ? ÷ 7 = 8 et 56 ÷ ? = 8");
   assert.ok(Math.abs(sens.parTable - sens.parAutre) < (sens.parTable + sens.parAutre) / 3, "à parts à peu près égales");
   const formesExpert = new Set();
   for (let tirage = 0; tirage < 10; tirage += 1) generer(P.configEtoile(1)).forEach(question => formesExpert.add(question.type));

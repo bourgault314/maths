@@ -355,8 +355,8 @@ test("la fiche a des cases carrées — toutes les fiches, celle du professeur c
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie du serveur identique ; « Ajouter des élèves » propose 1 dans une classe qui a déjà des élèves", () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261007-1/);
-  assert.match(html, /defi_tables_core\.js\?v=20261005-1/, "le noyau n'a pas changé");
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261009-1/);
+  assert.match(html, /defi_tables_core\.js\?v=20261009-1/, "le noyau n'a pas changé");
   const copie = readFileSync(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url), "utf8");
   assert.equal(copie, readFileSync(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url), "utf8"));
   assert.match(prof, /\{nom: "nombre", libelle: "Nombre d’élèves", type: "number", valeur: eleves\.length \? "1" : "25", min: 1, max: 60\}/);

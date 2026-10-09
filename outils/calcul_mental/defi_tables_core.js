@@ -28,10 +28,15 @@
   // égales : « résultats, nombres manquants et divisions » (marche 7) pose
   // 6 résultats, 2 nombres manquants et 2 divisions sur 10 (lot « divisions »).
   const TRAIN_MIXES = Object.freeze({"direct+missing+division": Object.freeze({direct: 6, missing: 2, division: 2})});
-  // Dans le parcours (entraînements, validation, mélange), une division a une
-  // seule forme, dans les deux sens : 56 ÷ 7 = ? et 56 ÷ 8 = ?. Les formes
-  // « ? ÷ 7 = 8 » et « 56 ÷ ? = 8 » restent à Expert et aux réglages libres.
-  const MODES_QUOTIENT_SEUL = Object.freeze(["train", "validation"]);
+  // Lot « trois divisions » (09/10/2026, décision de Gwenaël, qui annule
+  // « une seule forme » du 04/10) : une division s'écrit de trois façons
+  // PARTOUT — 56 ÷ 7 = ?, ? ÷ 7 = 8 et 56 ÷ ? = 8 —, dans les entraînements,
+  // le test d'une table, le mélange, l'expert et les réglages libres. Le test
+  // et le mélange (3 divisions) en ont une de chaque. Dans le parcours
+  // (entraînements, test, mélange), chaque écriture se lit en plus dans les
+  // deux sens, à parts égales : ? ÷ 7 = 8 et ? ÷ 8 = 7, 56 ÷ ? = 8 et
+  // 56 ÷ ? = 7 — connaître sa table dans tous les sens.
+  const MODES_DEUX_SENS = Object.freeze(["train", "validation"]);
 
   function shuffle(items, random = Math.random) {
     const copy = items.slice();
@@ -222,16 +227,16 @@
     const tablePlan = balancedSequence(tables, total, random);
     const multiplierPlan = balancedSequence(ALL_TABLES, total, random);
     const directSides = balancedSequence(["focus-first", "focus-second"], total, random);
-    const quotientSeul = MODES_QUOTIENT_SEUL.includes(normalized.mode);
+    const deuxSens = MODES_DEUX_SENS.includes(normalized.mode);
     const mix = normalized.mode === "validation"
       ? PRESETS.validation.questionMix
       : normalized.mode === "train" ? TRAIN_MIXES[normalized.questionTypes.join("+")] || null : null;
-    const typePlan = questionTypePlan(normalized.questionTypes, total, random, mix, quotientSeul ? ["division-quotient"] : DIVISION_FORMS);
+    const typePlan = questionTypePlan(normalized.questionTypes, total, random, mix);
     // Dans le parcours, les divisions alternent les deux sens (56 ÷ 7 et
-    // 56 ÷ 8), à parts égales ; tirés seulement s'il y a des divisions, pour
-    // ne rien changer aux autres séries.
+    // 56 ÷ 8), à parts égales, quelle que soit leur écriture ; tirés
+    // seulement s'il y a des divisions, pour ne rien changer aux autres séries.
     const nbDivisions = typePlan.filter(type => DIVISION_FORMS.includes(type)).length;
-    const sensDivision = quotientSeul && nbDivisions ? balancedSequence(["table", "multiplicateur"], nbDivisions, random) : [];
+    const sensDivision = deuxSens && nbDivisions ? balancedSequence(["table", "multiplicateur"], nbDivisions, random) : [];
     let divisionIndex = 0;
 
     return tablePlan.map((focusTable, index) => {
@@ -240,8 +245,9 @@
       let first = focusTable;
       let second = multiplier;
       if (DIVISION_FORMS.includes(type)) {
-        // « table » : 56 ÷ 7 = 8 (on divise par la table) ; « multiplicateur » : 56 ÷ 8 = 7.
-        const parLeMultiplicateur = quotientSeul && sensDivision[divisionIndex++] === "multiplicateur";
+        // « table » : 56 ÷ 7 = 8, ? ÷ 7 = 8, 56 ÷ ? = 8 (la table de 7 est le
+        // diviseur) ; « multiplicateur » : 56 ÷ 8 = 7, ? ÷ 8 = 7, 56 ÷ ? = 7.
+        const parLeMultiplicateur = deuxSens && sensDivision[divisionIndex++] === "multiplicateur";
         return {...(parLeMultiplicateur ? tableQuestion(type, multiplier, focusTable) : tableQuestion(type, focusTable, multiplier)), focusTable, multiplier};
       }
       if (type === "direct" && directSides[index] === "focus-second") [first, second] = [multiplier, focusTable];

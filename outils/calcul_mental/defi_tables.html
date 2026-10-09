@@ -2949,8 +2949,8 @@
     <span data-mathsgo-confidentialite>Sans cookie ni traceur</span>
   </footer>
 
-  <script src="./defi_tables_core.js?v=20261005-1"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20261007-1"></script>
+  <script src="./defi_tables_core.js?v=20261009-1"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20261009-1"></script>
   <script>
     (() => {
       "use strict";
@@ -6239,8 +6239,11 @@
         let reussir = 0;
         let table = null;
         // Lot « divisions » (04/10/2026) : l'exemple montre les trois formes —
-        // résultat, nombre manquant, division (28 ÷ 7 = ?).
-        const formes = ["produit", "trou", "division"];
+        // résultat, nombre manquant, division (28 ÷ 7 = ?). Lot « trois
+        // divisions » (09/10/2026, version B choisie par Gwenaël) : plus les
+        // deux autres écritures de la division (? ÷ 7 = 4 · 28 ÷ ? = 4), que
+        // le test et le mélange posent désormais.
+        const formes = ["produit", "trou", "division", "dividende", "diviseur"];
         if (config.mode === "validation" && config.total === S.validation.total) {
           reussir = S.validation.total - S.validation.erreursMax;
           table = config.tables[0];
@@ -6257,7 +6260,9 @@
           const textes = {
             produit: `${table}\u00a0×\u00a04\u00a0=\u00a0?`,
             trou: `${table}\u00a0×\u00a0?\u00a0=\u00a0${table * 4}`,
-            division: `${table * 4}\u00a0÷\u00a0${table}\u00a0=\u00a0?`
+            division: `${table * 4}\u00a0÷\u00a0${table}\u00a0=\u00a0?`,
+            dividende: `?\u00a0÷\u00a0${table}\u00a0=\u00a04`,
+            diviseur: `${table * 4}\u00a0÷\u00a0?\u00a0=\u00a04`
           };
           const exemple = document.createElement("p");
           exemple.className = "launch-exemple";

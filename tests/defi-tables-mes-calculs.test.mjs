@@ -245,8 +245,13 @@ test("la révision = les calculs dus aujourd’hui des tables passées, boîtes 
   assert.ok(plans.every(plan7 => plan7.length === 5), "les cinq calculs dus de la table de 7");
   assert.ok(formes.every(item => item.cle === "4-7" || item.type === "direct"), "seul 4-7 peut être posé en trou");
   assert.ok(formes.some(item => item.cle === "4-7" && item.type !== "direct"), "et il l’est parfois");
-  assert.ok(formes.some(item => item.cle === "4-7" && item.type === "division-quotient"), "ni trou ni division sans l'entraînement : 4-7 seulement, et parfois en division");
-  assert.ok(formes.filter(item => item.type.startsWith("division")).every(item => item.type === "division-quotient"), "une seule forme de division : 28 ÷ 4 = ?");
+  assert.ok(formes.some(item => item.cle === "4-7" && item.type.startsWith("division")), "ni trou ni division sans l'entraînement : 4-7 seulement, et parfois en division");
+  // Lot « trois divisions » (09/10/2026) : les trois écritures, plus seulement 28 ÷ 4 = ?.
+  // (le tirage « tout au même nombre » de ce test ne les montre pas toutes : la
+  // répartition se mesure dans tests/defi-tables-trois-divisions.test.mjs).
+  const divisions = formes.filter(item => item.type.startsWith("division"));
+  assert.ok(divisions.every(item => ["division-quotient", "division-dividend", "division-divisor"].includes(item.type)));
+  assert.ok(divisions.some(item => item.type !== "division-quotient"), "plus seulement 28 ÷ 4 = ? : aussi ? ÷ 4 = 7 ou 28 ÷ ? = 7");
   // Une table passée ouvre les trous et les divisions (le test en contient).
   const acquise = acquerir(JSON.parse(JSON.stringify(etat)), 7);
   assert.deepEqual(parcours.formesPermises(acquise, "7-8"), ["direct", "missing", "division"]);
