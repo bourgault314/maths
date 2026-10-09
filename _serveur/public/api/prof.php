@@ -20,6 +20,7 @@ require_once __DIR__ . '/../lib/archives.php';
 require_once __DIR__ . '/../lib/versions.php';
 require_once __DIR__ . '/../lib/journal.php';
 require_once __DIR__ . '/../lib/applis.php';
+require_once __DIR__ . '/../lib/records.php';
 
 const MAX_ELEVES_PAR_LOT = 60;
 // L'ordre de cette liste est celui des activités dans la liste d'une classe
@@ -831,8 +832,10 @@ try {
             $pdo->beginTransaction();
             try {
                 $pdo->prepare('DELETE FROM progressions WHERE eleve_id = ?')->execute([(int)$eleve['id']]);
-                // Son historique des sept jours part avec lui (lot serveur A).
+                // Son historique des sept jours part avec lui (lot serveur A),
+                // et son record (lot « Les records »).
                 oublier_versions_de_l_eleve($pdo, (int)$eleve['id']);
+                oublier_record_de_l_eleve($pdo, (int)$eleve['id']);
                 $pdo->prepare('DELETE FROM eleves WHERE id = ?')->execute([(int)$eleve['id']]);
                 oublier_compteurs_du_code($pdo, (string)$eleve['code']);
                 oublier_billets_de_l_eleve($pdo, (int)$eleve['id']);
@@ -872,6 +875,18 @@ try {
                 if ($ligne['revision'] !== null) $revisions[(int)$ligne['id']] = (int)$ligne['revision'];
             }
             $versionsParEleve = versions_des_eleves($pdo, array_column($brutes, 'id'), $appli, $revisions);
+            // Lot « Les records » : le record de chaque Légende (Défi tables
+            // seulement), pour la ligne du tableau — meilleur temps, temps de
+            // la semaine, choix du nom. Rien tant que la table n'existe pas.
+            $recordsParEleve = [];
+            if ($appli === 'defi-tables' && records_disponibles($pdo) && $brutes !== []) {
+                $marques = implode(',', array_fill(0, count($brutes), '?'));
+                $lecture = $pdo->prepare("SELECT * FROM records WHERE eleve_id IN ($marques)");
+                $lecture->execute(array_map('intval', array_column($brutes, 'id')));
+                $lundi = lundi_courant();
+                foreach ($lecture->fetchAll() as $record) $recordsParEleve[(int)$record['eleve_id']] = record_affichable($record, $lundi);
+                $lecture->closeCursor();
+            }
             $lignes = [];
             foreach ($brutes as $ligne) {
                 $journees = [];
@@ -891,6 +906,7 @@ try {
                     // Une version précédente existe : « Revenir à… » a un sens.
                     'restaurable' => (int)$ligne['restaurable'] === 1,
                     'journees' => $journees,
+                    'record' => $recordsParEleve[(int)$ligne['id']] ?? null,
                 ];
             }
             repondre([
@@ -904,6 +920,20 @@ try {
                 ],
                 'eleves' => $lignes,
             ]);
+
+        // ------------------------------------------------------------------ records
+
+        case 'records.ligue':
+            // Lot « Les records » (09/10/2026) : la ligue du professeur
+            // connecté — ses propres classes, les mêmes deux tableaux que
+            // voient ses élèves (noms affichés et temps, rien d'autre), pour
+            // la carte de « Ma classe » et le plein écran au tableau. Elle ne
+            // porte sur aucune classe en particulier : pas de classe_id, pas
+            // de partage — un collègue en lecture ne voit que sa propre ligue.
+            if (!records_disponibles($pdo)) {
+                erreur("Le serveur doit être mis à niveau : ouvre migrer.php avec ton mot de passe d'installation.", 503);
+            }
+            repondre(['ok' => true] + ligue($pdo, $profId));
 
         default:
             erreur("Action inconnue.", 400);

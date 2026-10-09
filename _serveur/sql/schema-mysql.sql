@@ -88,6 +88,16 @@ CREATE TABLE IF NOT EXISTS versions (
   KEY versions_eleve (eleve_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS records (
+  eleve_id INTEGER NOT NULL PRIMARY KEY,
+  meilleur INTEGER NULL,
+  meilleur_le VARCHAR(32) NULL,
+  semaine INTEGER NULL,
+  semaine_lundi VARCHAR(10) NULL,
+  nom INTEGER NULL,
+  maj_le VARCHAR(25) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS journal (
   id INT AUTO_INCREMENT PRIMARY KEY,
   quand VARCHAR(25) NOT NULL,

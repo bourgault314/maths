@@ -16,6 +16,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/records.php';
+
 require_once __DIR__ . '/bd.php';
 require_once __DIR__ . '/limite.php';
 require_once __DIR__ . '/billets.php';
@@ -185,6 +187,7 @@ function supprimer_classe(PDO $pdo, int $classeId): void
                 // L'historique des sept jours part avec le reste : une classe
                 // supprimée ne doit rien laisser derrière elle (06/09/2026).
                 oublier_versions_de_l_eleve($pdo, (int)$eleve['id']);
+                oublier_record_de_l_eleve($pdo, (int)$eleve['id']);
                 oublier_compteurs_du_code($pdo, (string)$eleve['code']);
                 oublier_billets_de_l_eleve($pdo, (int)$eleve['id']);
             }

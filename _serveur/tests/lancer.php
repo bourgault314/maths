@@ -70,7 +70,7 @@ function bd_test(): PDO
     return $pdo;
 }
 if (getenv('SUIVI_TEST_DSN')) {
-    foreach (['journal', 'versions', 'billets', 'partages', 'sessions_prof', 'compteurs', 'progressions', 'eleves', 'classes', 'profs'] as $table) {
+    foreach (['records', 'journal', 'versions', 'billets', 'partages', 'sessions_prof', 'compteurs', 'progressions', 'eleves', 'classes', 'profs'] as $table) {
         bd_test()->exec("DROP TABLE IF EXISTS $table");
     }
     echo "Base de test : " . $bdTest['dsn'] . "\n";
@@ -576,8 +576,8 @@ verifier("le manifeste connaît la page Infos", function () {
     $manifeste = (string)file_get_contents(__DIR__ . '/../public/VERSION');
     vrai((bool)preg_match('/^[0-9a-f]{64}  infos\.php$/m', $manifeste),
         'infos.php doit figurer au manifeste : sans lui, verifier.php ne dirait pas si la page déposée est la bonne');
-    vrai((bool)preg_match('/^fichiers 29$/m', $manifeste),
-        'le serveur compte 28 fichiers depuis l’ajout de la page Infos, 29 depuis la copie du moteur SPLAT! (lot splat-suivi-3)');
+    vrai((bool)preg_match('/^fichiers 31$/m', $manifeste),
+        'le serveur compte 28 fichiers depuis l’ajout de la page Infos, 29 depuis la copie du moteur SPLAT! (lot splat-suivi-3), 31 depuis les records (api/records.php, lib/records.php)');
 });
 
 verifier("la page élève refuse un code inconnu ou mal formé", function () {
@@ -4164,6 +4164,285 @@ verifier("splat-suivi-5 — le nombre de mondes déclaré au catalogue est celui
     vrai((bool)preg_match('#const MONDES = Object\.freeze\(\[(.*?)\]\);#s', $moteur, $m), 'la liste des mondes du moteur');
     egal(preg_match_all('#Object\.freeze\(\[(\d), "#', $m[1]), CATALOGUE_APPLIS['splat']['reglages']['mondes'],
         'lib/applis.php déclare autant de mondes que la carte');
+});
+
+// ------------------------------------------------- 🏆 Les records (lot du 09/10/2026)
+//
+// Le défi d'après la couronne (lib/records.php, api/records.php) : une
+// Légende court les 25 questions, son meilleur temps entre dans la ligue de
+// son professeur. Ce que ces tests prouvent : seule une Légende est
+// acceptée ; 25 sur 25 et un temps humain, sinon refus net ; le meilleur
+// temps seul est gardé, celui de la semaine à part ; le nom affiché (prénom,
+// initiale pour les homonymes, Mystère, jamais la classe) ; les ex æquo ; le
+// cloisonnement par professeur ; la case par classe ; ce qui part avec
+// l'élève ; la fiche et le tableau du professeur ; la mise à niveau.
+
+$recClasse = null;
+$recEleves = [];
+$recJetonClaire = null;
+$recCodeClaire = null;
+
+// Une progression Défi tables qui porte la couronne : c'est la SEULE clé que
+// le serveur lit pour dire « Légende » (lib/records.php, est_legende).
+function progression_legende(bool $couronne): array
+{
+    return ['version' => 3, 'epoque' => 0, 'tables' => [], 'expert' => ['etoiles' => $couronne ? 5 : 4, 'dernier' => '2026-10-09', 'couronne' => $couronne ? '2026-10-09' : null], 'calculs' => []];
+}
+
+function records_api(string $code, array $corps): array
+{
+    return appel('/api/records.php', ['code' => $code] + $corps);
+}
+
+verifier("records — préparation : une classe de quatre élèves, deux Légendes, une classe d'un collègue", function () use (&$jetonS1, &$recClasse, &$recEleves, &$recJetonClaire, &$recCodeClaire) {
+    vider_compteurs();
+    $recClasse = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => '306', 'applis' => ['defi-tables']], ['jeton' => $jetonS1])['json']['id'];
+    $recEleves = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $recClasse, 'nombre' => 4], ['jeton' => $jetonS1])['json']['eleves'];
+    foreach ([['Toti', 'R'], ['Léa', 'B'], ['Léa', 'M'], ['', '']] as $i => [$prenom, $initiale]) {
+        appel('/api/prof.php', ['action' => 'eleves.nommer', 'eleve_id' => $recEleves[$i]['id'], 'prenom' => $prenom, 'initiale' => $initiale], ['jeton' => $jetonS1]);
+    }
+    // Toti, Léa B. et l'élève sans prénom sont Légendes ; Léa M. a quatre étoiles.
+    foreach ([0 => true, 1 => true, 2 => false, 3 => true] as $i => $couronne) {
+        $r = appel('/api/parcours.php', ['code' => $recEleves[$i]['code'], 'appli' => 'defi-tables', 'parcours' => progression_legende($couronne), 'base_revision' => 0]);
+        egal(200, $r['code'], "progression de l'élève $i");
+    }
+    // Un collègue tout neuf, avec sa propre classe et un élève Légende.
+    $temporaire = appel('/api/prof.php', ['action' => 'profs.ajouter', 'identifiant' => 'collegue-records'], ['jeton' => $jetonS1])['json']['motdepasse'] ?? '';
+    $r = appel('/api/prof.php', ['action' => 'connexion', 'identifiant' => 'collegue-records', 'motdepasse' => $temporaire]);
+    egal(200, $r['code'], 'le collègue se connecte');
+    $recJetonClaire = $r['json']['jeton'];
+    egal(200, appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => $temporaire, 'nouveau' => 'phrase-du-voisin-2026'], ['jeton' => $recJetonClaire])['code'], 'il choisit son mot de passe');
+    $classeClaire = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'CM2', 'applis' => ['defi-tables']], ['jeton' => $recJetonClaire])['json']['id'];
+    $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classeClaire, 'nombre' => 1], ['jeton' => $recJetonClaire])['json']['eleves'][0];
+    appel('/api/prof.php', ['action' => 'eleves.nommer', 'eleve_id' => $eleve['id'], 'prenom' => 'Jade', 'initiale' => ''], ['jeton' => $recJetonClaire]);
+    appel('/api/parcours.php', ['code' => $eleve['code'], 'appli' => 'defi-tables', 'parcours' => progression_legende(true), 'base_revision' => 0]);
+    $recCodeClaire = $eleve['code'];
+});
+
+verifier("records — la table existe sur une base neuve, et migrer.php la crée (et le dit) sur une base d'avant", function () {
+    require_once __DIR__ . '/../public/lib/records.php';
+    egal(true, table_existe(bd_test(), 'records'), 'installer.php a créé la table');
+    bd_test()->exec('DROP TABLE records');
+    $faits = migrer_schema(bd_test());
+    vrai(in_array('Table « records » créée (les meilleurs temps des Légendes des tables).', $faits, true), 'migrer.php la crée et le dit : ' . implode(' | ', $faits));
+    egal([], migrer_schema(bd_test()), 'relancer ne fait plus rien');
+    $v = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai((bool)preg_match('#class="etat oui">✓</span>\s*Les records \(Défi tables\)\s*<div class="detail">en place \(aucun temps enregistré pour le moment\)#u', $v['texte']), 'verifier.php : la ligne est verte, aucun temps');
+});
+
+verifier("records — pas de code, mauvais code, pas Légende : rien n'entre", function () use (&$recEleves) {
+    vider_compteurs();
+    egal(405, appel('/api/records.php', null, ['methode' => 'GET'])['code'], 'GET refusé');
+    egal(400, records_api('AB', ['lire' => true])['code'], 'code mal formé');
+    egal(404, records_api('ZZZZZZ', ['lire' => true])['code'], 'code inconnu');
+    // Léa M. (quatre étoiles) : elle lit la ligue (vide), mais sa course est refusée.
+    $r = records_api($recEleves[2]['code'], ['lire' => true]);
+    egal(200, $r['code']);
+    egal(false, $r['json']['legende'], 'pas Légende');
+    egal(null, $r['json']['record']['meilleur'], 'aucun record');
+    egal([], $r['json']['toujours'], 'ligue vide');
+    $r = records_api($recEleves[2]['code'], ['temps' => 498, 'justes' => 25]);
+    egal(409, $r['code'], 'pas encore Légende : 409, l’appli réessaiera');
+    egal(false, $r['json']['legende']);
+    egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM records')->fetchColumn(), 'rien n’est écrit');
+});
+
+verifier("records — une course refusée pour de bon : pas 25 sur 25, trop rapide, trop longue, illisible", function () use (&$recEleves) {
+    vider_compteurs();
+    $toti = $recEleves[0]['code'];
+    foreach ([
+        [['temps' => 498, 'justes' => 24], 'Le temps ne compte pas : il faut tout juste.', 'une erreur'],
+        [['temps' => 498, 'justes' => 26], 'Le temps ne compte pas : il faut tout juste.', 'plus de 25'],
+        [['temps' => 99, 'justes' => 25], 'Le temps ne compte pas.', 'sous le seuil de 10 s (robot)'],
+        [['temps' => 36001, 'justes' => 25], 'Le temps ne compte pas.', 'plus d’une heure'],
+        [['temps' => '498', 'justes' => 25], 'Temps illisible.', 'un texte'],
+        [['temps' => 49.8, 'justes' => 25], 'Temps illisible.', 'un nombre à virgule'],
+        [['temps' => 498], 'Temps illisible.', 'sans « justes »'],
+        [['nom' => 'oui'], 'Choix illisible.', 'un nom qui n’est pas un booléen'],
+        [['autre' => 1], 'Demande illisible.', 'rien de connu'],
+    ] as [$corps, $message, $quoi]) {
+        $r = records_api($toti, $corps);
+        egal(400, $r['code'], "$quoi : refusé");
+        egal($message, $r['json']['erreur'] ?? null, "$quoi : le message");
+    }
+    egal(100, SEUIL_COURSE_DIXIEMES, 'le seuil : 10 secondes (décision de Gwenaël, 09/10/2026)');
+    egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM records')->fetchColumn(), 'rien n’est écrit');
+});
+
+verifier("records — la première course d'une Légende : nouveau record, temps de la semaine, 1er, affiché « Mystère » tant que rien n'est choisi", function () use (&$recEleves) {
+    vider_compteurs();
+    $toti = $recEleves[0]['code'];
+    $r = records_api($toti, ['temps' => 498, 'justes' => 25]);
+    egal(200, $r['code'], 'code HTTP');
+    egal(true, $r['json']['nouveau'], 'nouveau record');
+    egal(null, $r['json']['avant'], 'aucun temps avant');
+    egal(498, $r['json']['record']['meilleur']);
+    egal(498, $r['json']['record']['semaine']);
+    egal(lundi_courant(), $r['json']['record']['lundi'], 'le lundi de la semaine en cours');
+    egal(null, $r['json']['record']['nom'], 'aucun choix de nom');
+    egal(1, $r['json']['rangSemaine']);
+    egal(1, $r['json']['rangToujours']);
+    egal([['rang' => 1, 'nom' => 'Mystère', 'temps' => 498, 'moi' => true]], $r['json']['toujours'], 'affiché Mystère : rien n’est révélé sans son choix');
+    egal($r['json']['toujours'], $r['json']['semaine'], 'les deux tableaux');
+    $ligne = bd_test()->query('SELECT * FROM records')->fetch();
+    egal('498', (string)$ligne['meilleur']);
+    vrai((bool)preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/', (string)$ligne['meilleur_le']), 'l’instant du record est gardé, à la microseconde (ex æquo)');
+    egal(null, $ligne['nom']);
+});
+
+verifier("records — le choix du nom : prénom ou Mystère, changeable ; les homonymes prennent l'initiale ; jamais la classe ; sans prénom, « Élève »", function () use (&$recEleves) {
+    vider_compteurs();
+    $toti = $recEleves[0]['code'];
+    $r = records_api($toti, ['nom' => true]);
+    egal(200, $r['code']);
+    egal(true, $r['json']['record']['nom']);
+    egal('Toti', $r['json']['toujours'][0]['nom'], 'le prénom, sans initiale (pas d’homonyme), sans classe');
+    // Les deux Léa : Léa B. (Légende) court ; Léa M. n'est pas Légende, donc
+    // pas d'homonyme dans la ligue → « Léa » seule.
+    records_api($recEleves[1]['code'], ['temps' => 520, 'justes' => 25]);
+    records_api($recEleves[1]['code'], ['nom' => true]);
+    $r = records_api($toti, ['lire' => true]);
+    egal(['Toti', 'Léa'], array_column($r['json']['toujours'], 'nom'), 'Léa seule : l’autre Léa n’est pas dans la ligue');
+    // Léa M. devient Légende et court : deux Léa affichées → « Léa B. » et « Léa M. ».
+    appel('/api/parcours.php', ['code' => $recEleves[2]['code'], 'appli' => 'defi-tables', 'parcours' => progression_legende(true), 'base_revision' => 1]);
+    records_api($recEleves[2]['code'], ['temps' => 613, 'justes' => 25]);
+    records_api($recEleves[2]['code'], ['nom' => true]);
+    $r = records_api($toti, ['lire' => true]);
+    egal(['Toti', 'Léa B.', 'Léa M.'], array_column($r['json']['toujours'], 'nom'), 'les homonymes prennent l’initiale');
+    // L'élève sans prénom : « Élève ».
+    records_api($recEleves[3]['code'], ['temps' => 700, 'justes' => 25]);
+    records_api($recEleves[3]['code'], ['nom' => true]);
+    $r = records_api($toti, ['lire' => true]);
+    egal('Élève', $r['json']['toujours'][3]['nom']);
+    // Mystère, à volonté.
+    $r = records_api($recEleves[1]['code'], ['nom' => false]);
+    egal(false, $r['json']['record']['nom']);
+    egal(['Toti', 'Mystère', 'Léa', 'Élève'], array_column($r['json']['toujours'], 'nom'), 'Léa M. redevient « Léa » : plus d’homonyme affiché');
+    egal(true, $r['json']['toujours'][1]['moi'], 'sa ligne reste la sienne');
+    vrai(!str_contains(json_encode($r['json'], JSON_UNESCAPED_UNICODE), '306'), 'la classe n’apparaît nulle part');
+    vrai(!str_contains($r['texte'], $toti), 'aucun code dans la réponse');
+});
+
+verifier("records — seul le MEILLEUR temps est gardé ; le temps de la semaine vit à part ; les ex æquo : le premier arrivé devant", function () use (&$recEleves) {
+    vider_compteurs();
+    $toti = $recEleves[0]['code'];
+    $r = records_api($toti, ['temps' => 531, 'justes' => 25]);
+    egal(false, $r['json']['nouveau'], 'moins bien : pas un record');
+    egal(498, $r['json']['avant']);
+    egal(498, $r['json']['record']['meilleur'], 'le record reste');
+    $r = records_api($toti, ['temps' => 450, 'justes' => 25]);
+    egal(true, $r['json']['nouveau'], 'mieux : record battu');
+    egal(498, $r['json']['avant'], 'l’ancien, pour « (avant : 49,8 s) »');
+    egal(450, $r['json']['record']['meilleur']);
+    egal(450, $r['json']['record']['semaine']);
+    // La semaine passée : le temps de la semaine ne compte plus, le record reste.
+    bd_test()->prepare('UPDATE records SET semaine = 300, semaine_lundi = ? WHERE eleve_id = ?')->execute(['2026-09-28', $recEleves[0]['id']]);
+    $r = records_api($toti, ['lire' => true]);
+    egal(null, $r['json']['record']['semaine'], 'pas de temps cette semaine');
+    egal(null, $r['json']['rangSemaine'], 'donc pas de rang de la semaine');
+    egal(1, $r['json']['rangToujours'], 'mais toujours premier de tous les temps');
+    vrai(!in_array(300, array_column($r['json']['semaine'], 'temps'), true), 'l’ancien temps de semaine n’est pas dans le tableau');
+    // Une course cette semaine : le temps de la semaine est remplacé, même moins bon que l'ancien.
+    $r = records_api($toti, ['temps' => 560, 'justes' => 25]);
+    egal(560, $r['json']['record']['semaine'], 'la nouvelle semaine repart de cette course');
+    egal(450, $r['json']['record']['meilleur'], 'le record ne bouge pas');
+    // Ex æquo : Léa B. (Mystère) fait 450 après Toti → Toti devant.
+    records_api($recEleves[1]['code'], ['temps' => 450, 'justes' => 25]);
+    $r = records_api($toti, ['lire' => true]);
+    egal(['Toti', 'Mystère'], array_slice(array_column($r['json']['toujours'], 'nom'), 0, 2), 'le premier arrivé devant');
+    egal([1, 2], array_slice(array_column($r['json']['toujours'], 'rang'), 0, 2));
+});
+
+verifier("records — cloisonnement : un élève ne voit que la ligue de SON professeur ; records.ligue rend celle du professeur connecté ; un collègue en lecture ne voit rien de plus", function () use (&$recEleves, &$jetonS1, &$recJetonClaire, &$recCodeClaire, &$recClasse) {
+    vider_compteurs();
+    records_api($recCodeClaire, ['temps' => 386, 'justes' => 25]);
+    records_api($recCodeClaire, ['nom' => true]);
+    $r = records_api($recCodeClaire, ['lire' => true]);
+    egal(['Jade'], array_column($r['json']['toujours'], 'nom'), 'Jade ne voit que la ligue de son professeur');
+    $r = records_api($recEleves[0]['code'], ['lire' => true]);
+    vrai(!in_array('Jade', array_column($r['json']['toujours'], 'nom'), true), 'Toti ne voit pas Jade');
+    $r = appel('/api/prof.php', ['action' => 'records.ligue'], ['jeton' => $jetonS1]);
+    egal(200, $r['code']);
+    vrai(!in_array('Jade', array_column($r['json']['toujours'], 'nom'), true), 'la ligue de gwenael : sans Jade');
+    vrai(in_array('Toti', array_column($r['json']['toujours'], 'nom'), true), 'avec Toti');
+    vrai(!isset($r['json']['record']) && !array_key_exists('rangToujours', $r['json']) || $r['json']['rangToujours'] === null, 'pas de « moi » pour le professeur');
+    $r = appel('/api/prof.php', ['action' => 'records.ligue'], ['jeton' => $recJetonClaire]);
+    egal(['Jade'], array_column($r['json']['toujours'], 'nom'), 'la ligue du collègue : Jade seule');
+    // La 306 partagée au collègue en lecture : sa ligue ne change pas.
+    $claireId = (int)bd_test()->query("SELECT id FROM profs WHERE identifiant = 'collegue-records'")->fetchColumn();
+    appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $recClasse, 'prof_id' => $claireId, 'droit' => 'lecture'], ['jeton' => $jetonS1]);
+    $r = appel('/api/prof.php', ['action' => 'records.ligue'], ['jeton' => $recJetonClaire]);
+    egal(['Jade'], array_column($r['json']['toujours'], 'nom'), 'une classe partagée n’entre pas dans la ligue du collègue');
+    egal(401, appel('/api/prof.php', ['action' => 'records.ligue'])['code'], 'sans jeton : rien');
+});
+
+verifier("records — le tableau du professeur porte le record de chaque Légende ; la fiche aussi", function () use (&$recEleves, &$jetonS1, &$recClasse) {
+    vider_compteurs();
+    $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $recClasse, 'appli' => 'defi-tables'], ['jeton' => $jetonS1]);
+    $parId = [];
+    foreach ($t['json']['eleves'] as $e) $parId[(int)$e['id']] = $e;
+    egal(450, $parId[$recEleves[0]['id']]['record']['meilleur'], 'Toti');
+    egal(true, $parId[$recEleves[0]['id']]['record']['nom']);
+    egal(450, $parId[$recEleves[1]['id']]['record']['meilleur'], 'Léa B.');
+    egal(false, $parId[$recEleves[1]['id']]['record']['nom'], 'son choix Mystère, pour que le professeur sache');
+    $billet = appel('/api/prof.php', ['action' => 'eleves.fiche', 'eleve_id' => $recEleves[0]['id']], ['jeton' => $jetonS1])['json']['billet'];
+    $f = appel('/api/eleve.php', ['billet' => $billet, 'appli' => 'defi-tables']);
+    egal('fiche', $f['json']['type']);
+    egal(450, $f['json']['record']['meilleur'], 'la fiche porte le record');
+    vrai(!str_contains($f['texte'], $recEleves[0]['code']), 'et jamais le code');
+});
+
+verifier("records — la case par classe : fermés, l'élève le sait, sa course est refusée, la classe sort de la ligue ; rouverts, tout revient", function () use (&$recEleves, &$jetonS1, &$recClasse) {
+    vider_compteurs();
+    $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $recClasse, 'reglages' => ['defi-tables' => ['records' => false]]], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'fermer');
+    egal(['defi-tables' => ['records' => false]], $r['json']['reglages']);
+    egal('{"defi-tables":{"records":false}}', classe_en_base($recClasse)['reglages'], 'en base : seul « false » s’écrit');
+    $e = identite($recEleves[0]['code']);
+    egal(['defi-tables' => ['records' => false]], $e['json']['reglages'], 'l’élève le reçoit avec son identité');
+    $r = records_api($recEleves[0]['code'], ['lire' => true]);
+    egal(false, $r['json']['ouvert'], 'lire : fermés');
+    vrai(!isset($r['json']['toujours']), 'et rien de la ligue');
+    $r = records_api($recEleves[0]['code'], ['temps' => 400, 'justes' => 25]);
+    egal(403, $r['code'], 'une course : refusée');
+    egal(403, records_api($recEleves[0]['code'], ['nom' => false])['code'], 'le nom aussi');
+    $r = appel('/api/prof.php', ['action' => 'records.ligue'], ['jeton' => $jetonS1]);
+    egal([], $r['json']['toujours'], 'la classe est sortie de la ligue du professeur');
+    foreach ([
+        [['defi-tables' => ['records' => 'non']], 'Réglage illisible.'],
+        [['defi-tables' => ['records' => 0]], 'Réglage illisible.'],
+        [['defi-tables' => ['mondes' => [1]]], 'Réglage inconnu.'],
+    ] as [$reglages, $message]) {
+        $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $recClasse, 'reglages' => $reglages], ['jeton' => $jetonS1]);
+        egal(400, $r['code']);
+        egal($message, $r['json']['erreur'] ?? null);
+    }
+    $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $recClasse, 'reglages' => ['defi-tables' => ['records' => true]]], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'rouvrir');
+    egal(null, classe_en_base($recClasse)['reglages'], 'le défaut : rien d’écrit');
+    $r = records_api($recEleves[0]['code'], ['lire' => true]);
+    egal(true, $r['json']['ouvert']);
+    egal(450, $r['json']['record']['meilleur'], 'rien n’a été effacé');
+});
+
+verifier("records — le record part avec l'élève supprimé, et avec la classe supprimée", function () use (&$recEleves, &$jetonS1, &$recJetonClaire, &$recCodeClaire) {
+    vider_compteurs();
+    $avant = (int)bd_test()->query('SELECT COUNT(*) FROM records')->fetchColumn();
+    egal(200, appel('/api/prof.php', ['action' => 'eleves.supprimer', 'eleve_id' => $recEleves[3]['id']], ['jeton' => $jetonS1])['code']);
+    egal($avant - 1, (int)bd_test()->query('SELECT COUNT(*) FROM records')->fetchColumn(), 'une ligne de moins');
+    $classeClaire = (int)bd_test()->query("SELECT classe_id FROM eleves WHERE code = '$recCodeClaire'")->fetchColumn();
+    egal(200, appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $classeClaire], ['jeton' => $recJetonClaire])['code']);
+    egal($avant - 2, (int)bd_test()->query('SELECT COUNT(*) FROM records')->fetchColumn(), 'Jade est partie avec sa classe');
+    egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM records r LEFT JOIN eleves e ON e.id = r.eleve_id WHERE e.id IS NULL')->fetchColumn(), 'aucune ligne orpheline');
+});
+
+verifier("records — les bornes du serveur sont celles du moteur (SEUILS.course)", function () use ($racine) {
+    $moteur = (string)file_get_contents($racine . '/public/prof/defi_tables_mon_parcours.js');
+    vrai((bool)preg_match('/course: Object\.freeze\(\{total: (\d+), erreursMax: (\d+), dixiemesMin: (\d+), dixiemesMax: (\d+)\}\)/', $moteur, $m), 'SEUILS.course dans le moteur');
+    egal((int)$m[1], COURSE_TOTAL, 'total');
+    egal(0, (int)$m[2], '25 sur 25 : aucune erreur (décision du 09/10/2026)');
+    egal((int)$m[3], SEUIL_COURSE_DIXIEMES, 'seuil');
+    egal((int)$m[4], COURSE_MAX_DIXIEMES, 'plafond');
 });
 
 // ---------------------------------------------------------------------- résultat

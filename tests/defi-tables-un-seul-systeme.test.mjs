@@ -534,7 +534,7 @@ test("la page : les mots, les coupes du mélange et les petits restes", () => {
   assert.match(html, /@media \(max-width: 359px\) \{ #question-count \.compteur-mot \{ display: none; \} \}/);
   // Les numéros de cache ont monté.
   assert.match(html, /defi_tables_core\.js\?v=20261009-1/);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261009-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261009-2/);
 });
 
 test("le serveur : la copie du moteur, « Tables passées », la tuile sans « Mon mélange à faire »", () => {

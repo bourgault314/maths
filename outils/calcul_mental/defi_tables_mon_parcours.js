@@ -205,6 +205,25 @@
   // son calcul, quelle que soit son écriture : rien de nouveau n'est
   // enregistré, pas de changement de version.
 
+  // Lot « 🏆 Les records » (09/10/2026 — idée d'un élève, décisions de
+  // Gwenaël) : le défi d'APRÈS la couronne. Une Légende des tables (couronne
+  // gagnée) court les 25 questions de la couronne avec un chrono qui MONTE ;
+  // le temps ne compte que si les 25 réponses sont justes (règle du 09/10,
+  // plus sévère que les 2 erreurs de l'escalier) et s'il n'est pas impossible
+  // (SEUILS.course.dixiemesMin : l'appli n'a aucun plancher, un robot fait
+  // les 25 questions en 0,06 s — seul l'humain en a un). Le classement vit
+  // sur le serveur de suivi (une ligue par professeur, « Cette semaine » et
+  // « De tous les temps ») : RIEN n'entre dans le parcours — ni temps, ni
+  // choix du nom. Le moteur ne fait ici que : dire ce qu'est une course
+  // (configCourse, classerSerie → « course »), juger un temps
+  // (courseCompte), l'écrire (formatTemps), et mettre la course à la place
+  // de l'étoile dans la séance d'une Légende quand la page le demande
+  // (etapeDeSeance, option « records »). La course de la couronne elle-même
+  // (25 sur 25 en 1 minute) donne le premier record : c'est la page qui
+  // envoie son temps. Et la couronne elle-même passe à 25 sur 25
+  // (erreursMaxCouronne) : la dernière marche se gagne sans faute, l'écran
+  // de lancement le dit. Pas de changement de version.
+
   // Version du parcours enregistré. 1 = jusqu'au lot 2 de Défi tables v2 ;
   // 2 = lot 3 (mélange obligatoire, escalier des étoiles, rang, jours) ;
   // 3 = lot mémoire (cinq boîtes et une échéance par calcul). Un parcours
@@ -245,7 +264,19 @@
     melange: Object.freeze({total: 20, dureeMax: 90, erreursMax: 2, tablesMin: 2, trophees: Object.freeze([3, 6, 9])}),
     // L'escalier des étoiles : 25 questions, toutes les tables, produits +
     // trous + divisions, 2 erreurs max ; une durée par marche, en secondes.
-    etoile: Object.freeze({total: 25, erreursMax: 2, durees: Object.freeze([120, 105, 90, 75, 60])}),
+    // « erreursMaxCouronne » (09/10/2026, décision de Gwenaël, lot « Les
+    // records ») : la dernière marche — la couronne, 1 minute — exige 25 sur
+    // 25, comme la course des records qu'elle ouvre. Les quatre étoiles
+    // gardent leurs 2 erreurs. Rien de rétroactif : une couronne gagnée
+    // avant reste gagnée.
+    etoile: Object.freeze({total: 25, erreursMax: 2, erreursMaxCouronne: 0, durees: Object.freeze([120, 105, 90, 75, 60])}),
+    // Les records (09/10/2026) : les 25 questions de la couronne, chrono qui
+    // monte, 25 sur 25 obligatoire (« erreursMax » 0, décision de Gwenaël),
+    // temps en dixièmes de seconde ; « dixiemesMin » : en dessous de 10 s
+    // (0,4 s par question), ce n'est pas un élève — le temps ne compte pas,
+    // ici et sur le serveur (lib/records.php, même valeur) ; « dixiemesMax » :
+    // une heure, au-delà c'est un onglet oublié.
+    course: Object.freeze({total: 25, erreursMax: 0, dixiemesMin: 100, dixiemesMax: 36000}),
     // La révision : 10 calculs à la fois ; cinq boîtes par calcul, et le
     // nombre de jours avant qu'un calcul revienne, par boîte (boîte 1 : le
     // jour même). « aRevoirMin » : dès 2 calculs rouges, une table acquise
@@ -772,6 +803,14 @@
         ? {type: "validation", table}
         : {type: "preparation", table, duree};
     }
+    if (config.mode === "test" && config.course === "records") {
+      // La course des records (lot « Les records ») : les 25 questions de la
+      // couronne, toutes les tables, sans limite de temps. Seule une Légende
+      // (couronne gagnée) court ; pour un autre, la série ne compte pas.
+      if (Number(config.total) !== SEUILS.course.total || entier(config.testLevel, 1, 3, 1) !== 3) return null;
+      if (!memesTables((config.tables || []).map(Number), TABLES) || !parcours.expert.couronne) return null;
+      return {type: "course"};
+    }
     if (config.mode === "test") {
       // Une marche de l'escalier : 25 questions, produits + trous + divisions
       // (niveau 3), les tables 2 à 10, et une des cinq durées. L'escalier doit
@@ -888,7 +927,7 @@
       }
       evenements.push({type: "melange", reussi, score: correct, total, tables: classement.tables, trophee});
     } else if (classement.type === "etoile") {
-      const reussi = erreurs <= SEUILS.etoile.erreursMax;
+      const reussi = erreurs <= erreursMaxEtoile(classement.etoile);
       const avant = copie.expert.etoiles;
       const evenement = {type: "etoile", etoile: classement.etoile, reussi, score: correct, total, etoilesAvant: avant, nouveau: false, couronne: false};
       evenements.push(evenement);
@@ -905,9 +944,60 @@
           evenement.couronne = true;
         }
       }
+    } else if (classement.type === "course") {
+      // La course des records ne change RIEN au parcours (le classement vit
+      // sur le serveur) : l'événement dit seulement si les 25 sont justes.
+      // Le temps, c'est la page qui l'a ; courseCompte() le juge.
+      evenements.push({type: "course", reussi: erreurs <= SEUILS.course.erreursMax, score: correct, total});
     }
     relancerRang(copie, evenements);
     return {parcours: copie, evenements, classement};
+  }
+
+  /* ---------- Les records (lot du 09/10/2026) ---------- */
+
+  // La course : les 25 questions de la couronne, sans limite de temps. La
+  // page marque la configuration (« course ») : le noyau n'en sait rien, et
+  // c'est la page qui remet « duration » à null après normalisation.
+  function configCourse() {
+    return {mode: "test", tables: [...TABLES], testLevel: 3, total: SEUILS.course.total, duration: null, course: "records"};
+  }
+
+  // Une Légende des tables peut courir : la couronne est gagnée. (Que les
+  // records soient ouverts à sa classe, et qu'elle soit suivie par un code,
+  // c'est la page qui le sait.)
+  function recordsPossibles(parcours) {
+    return Boolean(parcours && parcours.expert && parcours.expert.couronne);
+  }
+
+  // Un temps de course compte-t-il ? 25 sur 25, et un temps humain.
+  // Rend {compte, raison} ; raison : null, « erreurs », « rapide », « long ».
+  function courseCompte(correct, total, dixiemes) {
+    const justes = entier(correct, 0, 100);
+    const nombre = entier(total, 1, 100, SEUILS.course.total);
+    const temps = entier(dixiemes, 0, Number.MAX_SAFE_INTEGER, 0);
+    if (nombre !== SEUILS.course.total || nombre - justes > SEUILS.course.erreursMax) return {compte: false, raison: "erreurs"};
+    if (temps < SEUILS.course.dixiemesMin) return {compte: false, raison: "rapide"};
+    if (temps > SEUILS.course.dixiemesMax) return {compte: false, raison: "long"};
+    return {compte: true, raison: null};
+  }
+
+  // « 49,8 s », « 1 min 01,3 s » (décision de Gwenaël, 09/10/2026) : les
+  // dixièmes toujours, la minute écrite quand il y en a.
+  function formatTemps(dixiemes) {
+    const temps = entier(dixiemes, 0, Number.MAX_SAFE_INTEGER, 0);
+    const minutes = Math.floor(temps / 600);
+    const reste = temps - minutes * 600;
+    const secondes = `${Math.floor(reste / 10)},${reste % 10}\u00a0s`;
+    if (!minutes) return secondes;
+    return `${minutes}\u00a0min\u00a0${reste < 100 ? "0" : ""}${secondes}`;
+  }
+
+  // « 1er », « 2e », « 14e ».
+  function libelleRang(rang) {
+    const nombre = entier(rang, 1, 100000, 0);
+    if (!nombre) return "";
+    return nombre === 1 ? "1er" : `${nombre}e`;
   }
 
   // Configurations prêtes à donner à l'appli (à normaliser par le moteur de questions).
@@ -945,6 +1035,11 @@
     const passees = tablesAcquises(parcours).length;
     const reussi = parcours.melange.reussi || 0;
     return SEUILS.melange.trophees.map(tables => ({tables, gagne: reussi >= tables, aGagner: reussi < tables && passees >= tables}));
+  }
+
+  // Les erreurs permises sur une marche : 2, sauf la couronne (aucune).
+  function erreursMaxEtoile(etoile) {
+    return entier(etoile, 1, ETOILES_MAX, 1) === ETOILES_MAX ? SEUILS.etoile.erreursMaxCouronne : SEUILS.etoile.erreursMax;
   }
 
   // Une marche de l'escalier (1 à 5) : tout, de plus en plus vite.
@@ -1955,7 +2050,7 @@
       rang: seance.rang,
       file: seance.file.map(coderPrevue),
       faites: seance.faites.flatMap(faite => [
-        faite.type === "revision" ? CODE_REVISION : faite.type === "melange" ? CODE_MELANGE : faite.type === "etoile" ? CODE_ETOILE + faite.etoile : faite.marche,
+        faite.type === "revision" ? CODE_REVISION : faite.type === "melange" ? CODE_MELANGE : faite.type === "etoile" || faite.type === "course" ? CODE_ETOILE + faite.etoile : faite.marche,
         faite.juste,
         faite.total,
         (faite.rate ? ISSUE.rate : 0) + (faite.reussi === true ? ISSUE.reussi : faite.reussi === false ? ISSUE.pasReussi : 0)
@@ -2015,7 +2110,13 @@
   // réussie dans la séance (lot « retours de classe »), sinon la marche 7
   // refaite à sa place — et qu'une
   // étape devenue sans objet s'efface (plus rien de dû).
-  function etapeDeSeance(parcours, seance, aujourdhui = jourLocal()) {
+  // « options.records » (lot « Les records ») : la page dit si les records
+  // sont ouverts à cet élève — false, ou {meilleur: dixièmes ou null}. Alors
+  // l'étape « étoile » d'une Légende devient la course (« Ma première
+  // course », puis « Je bats mon record »). Sans l'option, rien ne change :
+  // la couronne se rejoue, comme avant.
+  function etapeDeSeance(parcours, seance, aujourdhui = jourLocal(), options = {}) {
+    const records = options && options.records && recordsPossibles(parcours) ? options.records : null;
     for (const prevue of seance.file) {
       if (prevue.type === "revision") {
         const serie = serieDuJour(parcours, {aujourdhui});
@@ -2037,6 +2138,15 @@
         // Pas avant les 9 tables passées ; la couronne gagnée, c'est elle
         // qui se rejoue (l'entretien).
         if (!escalierOuvert(parcours)) continue;
+        if (records) {
+          // La Légende court (lot « Les records ») : l'étape garde le code
+          // de la couronne dans la séance enregistrée (coderSeance) — une
+          // séance relue après rechargement la nomme « Tente 👑 » dans le
+          // bilan, c'est le seul écart, accepté.
+          const premiere = records.meilleur === null || records.meilleur === undefined;
+          return {type: "course", etoile: ETOILES_MAX, nom: premiere ? "Ma première course" : "Je bats mon record",
+            detail: `${SEUILS.course.total}\u00a0questions`, config: configCourse(), minutes: MINUTES_ETAPE.etoile, prevue};
+        }
         const etoile = Math.min(ETOILES_MAX, parcours.expert.etoiles + 1);
         return {type: "etoile", etoile, nom: `Tente ${symboleEtoile(etoile)}`, detail: libelleDuree(dureeEtoile(etoile)), config: configEtoile(etoile), minutes: MINUTES_ETAPE.etoile, prevue};
       }
@@ -2080,11 +2190,11 @@
   // Le programme d'une séance, pour l'annoncer : ses étapes telles qu'elles
   // se présentent maintenant (la marche 8 dite « si j'ai 9 sur 10 aux
   // entraînements » quand elle n'est pas encore sûre), et la durée.
-  function programmeDeSeance(parcours, seance, aujourdhui = jourLocal()) {
+  function programmeDeSeance(parcours, seance, aujourdhui = jourLocal(), options = {}) {
     const etapes = [];
     let reste = {...seance, file: seance.file.slice()};
     for (let garde = 0; garde < 12; garde += 1) {
-      const etape = etapeDeSeance(parcours, reste, aujourdhui);
+      const etape = etapeDeSeance(parcours, reste, aujourdhui, options);
       if (!etape) break;
       // Une validation qui dépend d'une étape encore à jouer (la marche 7)
       // est annoncée « si j'ai 9 sur 10 juste avant » (la marche 7). La
@@ -2220,7 +2330,9 @@
       if (faite.reussi) suite.file = [];
       // Une validation ratée ne se retente pas dans la séance : la marche 7, puis fin.
       else { faite.rate = true; descendre(MARCHE_VALIDATION, false); }
-    } else if (etape.type === "melange" || etape.type === "etoile") {
+    } else if (etape.type === "melange" || etape.type === "etoile" || etape.type === "course") {
+      // La course des records (lot « Les records ») se note comme l'étoile
+      // qu'elle remplace : réussie = 25 sur 25 (le temps, lui, va au serveur).
       faite.reussi = Boolean(resultat.reussi);
     } else if (etape.type === "revision") {
       // Mes calculs du jour est joué : la porte de la journée est ouverte,
@@ -2559,7 +2671,51 @@
     sync.dirty = Boolean(lu.dirty);
     sync.detache = Boolean(lu.detache);
     sync.maj = entier(lu.maj, 0, Number.MAX_SAFE_INTEGER);
+    // Lot « Les records » : deux cases de plus, seulement quand elles
+    // servent (une case sans records garde sa forme d'avant).
+    //  - « course » : un temps de course (25 sur 25) que le serveur n'a pas
+    //    encore accepté — serveur muet, ou couronne pas encore enregistrée
+    //    là-bas. Il part au prochain envoi ; deux courses en attente, on
+    //    garde la meilleure.
+    //  - « record » : ce que le serveur a dit en dernier du record de CET
+    //    élève (meilleur temps, celui de la semaine et son lundi, le choix du
+    //    nom), pour que l'accueil l'écrive même quand le serveur ne répond
+    //    pas. Jamais un classement : il vient du serveur à chaque fois.
+    const course = normaliserCourseEnAttente(lu.course);
+    if (course) sync.course = course;
+    const record = normaliserRecordConnu(lu.record);
+    if (record) sync.record = record;
     return sync;
+  }
+
+  function normaliserCourseEnAttente(brut) {
+    if (!brut || typeof brut !== "object") return null;
+    const temps = entier(brut.temps, SEUILS.course.dixiemesMin, SEUILS.course.dixiemesMax, 0);
+    if (!temps) return null;
+    return {temps, jour: dateOuNull(brut.jour)};
+  }
+
+  function normaliserRecordConnu(brut) {
+    if (!brut || typeof brut !== "object") return null;
+    const meilleur = entier(brut.meilleur, 1, SEUILS.course.dixiemesMax, null);
+    const semaine = entier(brut.semaine, 1, SEUILS.course.dixiemesMax, null);
+    return {
+      meilleur,
+      meilleurLe: meilleur === null ? null : dateOuNull(brut.meilleurLe),
+      semaine,
+      lundi: semaine === null ? null : dateOuNull(brut.lundi),
+      // true : prénom ; false : Mystère ; null : pas encore choisi.
+      nom: brut.nom === true ? true : brut.nom === false ? false : null
+    };
+  }
+
+  // La meilleure des deux courses en attente (la plus courte).
+  function garderMeilleureCourse(actuelle, nouvelle) {
+    const a = normaliserCourseEnAttente(actuelle);
+    const b = normaliserCourseEnAttente(nouvelle);
+    if (!a) return b;
+    if (!b) return a;
+    return b.temps < a.temps ? b : a;
   }
 
   function lireSyncBrut(stockage, cle) {
@@ -3030,6 +3186,14 @@
     coupeDesNeuf,
     configEtoile,
     dureeEtoile,
+    erreursMaxEtoile,
+    configCourse,
+    recordsPossibles,
+    courseCompte,
+    formatTemps,
+    libelleRang,
+    garderMeilleureCourse,
+    normaliserRecordConnu,
     symboleEtoile,
     libelleDuree,
     escalierOuvert,

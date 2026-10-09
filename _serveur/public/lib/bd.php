@@ -158,6 +158,27 @@ function schema(string $pilote): array
         . ($mysql ? ",\n  UNIQUE KEY versions_eleve_appli_jour (eleve_id, appli, jour),\n  KEY versions_eleve (eleve_id)" : "")
         . "\n)$fin",
 
+        // Lot « Les records » (09/10/2026) : le meilleur temps de chaque
+        // Légende des tables à la course des 25 questions (api/records.php,
+        // lib/records.php). UNE ligne par élève, et rien d'autre que des
+        // nombres et des instants : « meilleur » et « semaine » en dixièmes
+        // de seconde, « meilleur_le » l'instant du record (ex æquo : le
+        // premier arrivé devant — c'est le SEUL horaire que le serveur garde
+        // d'un élève, et il ne concerne que ce record), « semaine_lundi » le
+        // lundi (jour de La Réunion) du temps de la semaine, « nom » le choix
+        // d'affichage (1 prénom, 0 Mystère, NULL pas encore choisi : affiché
+        // Mystère). Pas d'historique : le temps de la semaine est remplacé à
+        // la première course d'une nouvelle semaine. Effacée avec l'élève.
+        "CREATE TABLE IF NOT EXISTS records (
+  eleve_id INTEGER NOT NULL PRIMARY KEY,
+  meilleur INTEGER NULL,
+  meilleur_le VARCHAR(32) NULL,
+  semaine INTEGER NULL,
+  semaine_lundi VARCHAR(10) NULL,
+  nom INTEGER NULL,
+  maj_le VARCHAR(25) NOT NULL
+)$fin",
+
         // Lot serveur A (06/09/2026) : le journal des actions du professeur.
         // Douze mois, purgés par menage.php. AUCUN prénom, AUCUN code, AUCUNE
         // adresse, aucun texte libre : des identifiants de lignes et des mots
@@ -281,6 +302,7 @@ function migrer_schema(?PDO $pdo = null): array
     $billetsAbsente = !table_existe($pdo, 'billets');
     $versionsAbsente = !table_existe($pdo, 'versions');
     $journalAbsent = !table_existe($pdo, 'journal');
+    $recordsAbsente = !table_existe($pdo, 'records');
     installer_tables($pdo);
     if ($billetsAbsente) {
         $faits[] = "Table « billets » créée (liens d'entrée à usage unique, lot 3).";
@@ -290,6 +312,9 @@ function migrer_schema(?PDO $pdo = null): array
     }
     if ($journalAbsent) {
         $faits[] = "Table « journal » créée (actions des professeurs, douze mois).";
+    }
+    if ($recordsAbsente) {
+        $faits[] = "Table « records » créée (les meilleurs temps des Légendes des tables).";
     }
 
     // Le premier compte créé devient administrateur et récupère les classes

@@ -2438,6 +2438,67 @@
       *::before,
       *::after { transition: none !important; animation: none !important; }
     }
+    /* Lot « 🏆 Les records » (09/10/2026, planches R1 à R6 validées par
+       Gwenaël). Le cadre jaune d'une Légende devient « Les records » : deux
+       chiffres (son rang de la semaine, de tous les temps), la séance, un
+       lien « Voir les records ». Puis deux écrans à part : le tableau (onglets
+       au téléphone, deux colonnes sur ordinateur) et le choix du nom. */
+    .expert-tenter .go { color: var(--blue); font-weight: 950; white-space: nowrap; }
+    .rec-chiffres { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 12px; }
+    .rec-chiffres div { border: 2px solid #f0dc8c; border-radius: 14px; background: #fff; padding: 8px 10px; text-align: center; }
+    .rec-chiffres small { display: block; color: #7a5a00; font-size: .74rem; font-weight: 900; }
+    .rec-chiffres b { display: block; color: var(--ink); font-size: 1.25rem; font-weight: 950; line-height: 1.2; }
+    .rec-voir { margin: 10px auto 0; display: block; min-height: 40px; border: 0; background: none; color: var(--blue); font: inherit; font-weight: 900; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+    .records-screen { max-width: 560px; margin: 0 auto; }
+    .rec-onglets { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 4px; border-radius: 14px; background: #e8eff4; margin: 10px 0 10px; }
+    .rec-onglets button { min-height: 42px; border: 0; border-radius: 11px; background: none; color: #3f5a6c; font: inherit; font-weight: 900; cursor: pointer; }
+    .rec-onglets button[aria-selected="true"] { background: #fff; color: var(--blue); box-shadow: 0 1px 3px rgba(0, 0, 0, .15); }
+    .rec-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; }
+    .rec-liste li { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 8px; min-height: 42px; padding: 4px 12px 4px 6px; border: 1px solid #d5e2ea; border-radius: 12px; background: #fff; font-weight: 850; }
+    .rec-liste .rg { text-align: center; font-weight: 950; color: #3f5a6c; font-size: 1rem; }
+    .rec-liste li:nth-child(-n+3) .rg { font-size: 1.35rem; }
+    .rec-liste .nom { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rec-liste .tps { font-weight: 950; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .rec-liste li.moi { border: 2px solid var(--blue); background: #eef5ff; }
+    .rec-liste .toi { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--blue); color: #fff; font-size: .72rem; font-weight: 900; vertical-align: 1px; }
+    .rec-vide { margin: 14px 0; text-align: center; color: var(--muted); font-weight: 800; }
+    .rec-moi { margin: 10px 0 0; text-align: center; font-weight: 900; color: var(--ink); }
+    .rec-bas { display: grid; gap: 8px; margin-top: 14px; justify-items: center; }
+    .rec-bas .primary { width: min(100%, 340px); }
+    .rec-bas .rec-voir { margin: 0; }
+    .rec-attente { margin: 10px 0 0; text-align: center; color: var(--muted); font-size: .9rem; font-weight: 800; }
+    .rec-choix { display: grid; gap: 10px; margin: 16px 0 10px; }
+    .rec-choix button { display: grid; grid-template-columns: 44px minmax(0, 1fr); align-items: center; gap: 10px; min-height: 72px; padding: 10px 14px; border: 2px solid #c5d9e6; border-radius: 16px; background: #fff; box-shadow: 0 3px 0 #c3d8e5; font: inherit; text-align: left; color: var(--ink); cursor: pointer; }
+    .rec-choix button .ic { font-size: 1.9rem; text-align: center; display: grid; place-items: center; }
+    .rec-choix button strong { display: block; font-size: 1.2rem; font-weight: 950; color: var(--blue); }
+    .rec-choix button small { display: block; color: #5b7286; font-weight: 800; font-size: .84rem; margin-top: 2px; }
+    .rec-titre { text-align: center; margin: 14px 0 2px; font-size: 1.5rem; line-height: 1.15; color: var(--ink); }
+    .rec-sous { text-align: center; margin: 6px 0 0; color: var(--ink); font-weight: 850; font-size: 1.05rem; }
+    .rec-note { text-align: center; color: #5b7286; font-weight: 800; font-size: .86rem; margin: 6px 0 0; }
+    .result.is-course .result-fete-rang { color: #7a5a00; font-weight: 900; }
+    .result.is-course.is-neutre .hero-icon { display: block; color: var(--ink); }
+    /* La fin d'une course hors séance : « Voir les records » et « Rejouer »,
+       chacun sur sa ligne au téléphone (planche R6, mesuré 12 px de chaque
+       côté — la règle « série ratée » d'en haut ne décale plus rien), côte à
+       côte et centrés sur ordinateur. */
+    .result.is-course .result-actions > #result-open-parcours, .result.is-course .result-actions > #result-entraine, .result.is-course .result-actions > #result-accueil { display: none; }
+    .result.is-course.is-fete .result-actions > #result-records { order: -1; }
+    .result.is-course:not(.is-fete) .result-actions > #retry { order: -1; }
+    @media (max-width: 620px) {
+      .result.is-course .result-actions > button { grid-column: 1 / -1; }
+    }
+    @media (min-width: 1024px) {
+      .records-screen { max-width: 900px; }
+      .rec-liste li { min-height: 38px; }
+      .rec-deux { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 12px; }
+      .rec-deux h2 { margin: 0 0 8px; font-size: 1.05rem; color: var(--blue); text-align: center; }
+      .rec-onglets { display: none; }
+    }
+    @media (max-width: 1023px) {
+      .rec-deux h2 { display: none; }
+      .rec-deux > div[hidden] { display: none; }
+    }
+
     /* Lot E2 (question E2 · 4, audit GPT) : la police était très grasse
        partout (800 à 950). Les textes secondaires — lignes grises, petits
        textes, liens, noms des étapes de la carte — passent en 700 ; les
@@ -2797,6 +2858,8 @@
           <p id="result-config" class="result-config"></p>
           <p id="result-detail"></p>
           <p id="result-rang" class="result-fete-rang" hidden></p>
+          <!-- Lot « Les records » : serveur muet à la fin d'une course. -->
+          <p id="result-course-attente" class="rec-attente" hidden></p>
           <ul id="seance-bilan" class="seance-bilan" hidden></ul>
         </div>
         <div id="result-parcours" class="result-parcours" hidden></div>
@@ -2807,6 +2870,10 @@
           <button id="result-accueil" class="primary" type="button">Ma table</button>
           <button id="retry" class="secondary" type="button">Rejouer</button>
           <button id="result-open-parcours" class="secondary" type="button">Voir mon parcours</button>
+          <!-- Lot « Les records » : après une course hors séance, « Voir les
+               records » remplace « Ma table » (le tableau a sa flèche de retour) ;
+               devant « Rejouer » quand le record est battu (ordre par CSS). -->
+          <button id="result-records" class="primary" type="button" hidden>Voir les records</button>
           <!-- Lot R3 (A20) : seulement pour une série lancée depuis « Réglages
                libres » ou « Évaluation CM1 » (les deux portes professeur). Un
                élève sous un code ne voit jamais ce bouton. -->
@@ -2828,6 +2895,44 @@
            ce que donnait la fiche papier des tables, réservée aux professeurs
            depuis ce lot. Les cartes recto verso de la table (un PDF) se
            prennent ici. -->
+      <!-- Lot « Les records » (09/10/2026) : le tableau des records de la
+           ligue du professeur — « Cette semaine » et « De tous les temps »,
+           onglets au téléphone, deux colonnes sur ordinateur (planche R2) ;
+           et le choix du nom, posé une fois, changeable (planche R4, A). -->
+      <div id="records" class="records-screen" hidden>
+        <div class="settings-toolbar">
+          <button id="records-back" class="settings-back" type="button" aria-label="Retour à Ma table"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="settings-back-label">Ma table</span></button>
+          <h1 id="records-title" class="settings-heading" tabindex="-1">🏆 Les records</h1>
+        </div>
+        <div id="records-onglets" class="rec-onglets" role="tablist" aria-label="Les deux tableaux">
+          <button id="records-onglet-semaine" type="button" role="tab" aria-selected="true" aria-controls="records-semaine">Cette semaine</button>
+          <button id="records-onglet-toujours" type="button" role="tab" aria-selected="false" aria-controls="records-toujours">De tous les temps</button>
+        </div>
+        <div class="rec-deux">
+          <div id="records-semaine" role="tabpanel" aria-labelledby="records-onglet-semaine"><h2>Cette semaine</h2><ol class="rec-liste"></ol><p class="rec-vide" hidden></p></div>
+          <div id="records-toujours" role="tabpanel" aria-labelledby="records-onglet-toujours" hidden><h2>De tous les temps</h2><ol class="rec-liste"></ol><p class="rec-vide" hidden></p></div>
+        </div>
+        <p id="records-moi" class="rec-moi" hidden></p>
+        <p id="records-attente" class="rec-attente" hidden></p>
+        <div class="rec-bas">
+          <button id="records-courir" class="primary" type="button">Je bats mon record&nbsp;→</button>
+          <button id="records-nom-changer" class="rec-voir" type="button">Changer mon nom</button>
+        </div>
+      </div>
+      <div id="records-nom" class="records-screen" hidden>
+        <div class="settings-toolbar">
+          <button id="records-nom-back" class="settings-back" type="button" aria-label="Retour à Ma table"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="settings-back-label">Ma table</span></button>
+          <h1 id="records-nom-title" class="settings-heading" tabindex="-1">🏆 Les records</h1>
+        </div>
+        <h2 id="records-nom-titre" class="rec-titre">Tu es une Légende des tables&nbsp;!</h2>
+        <p class="rec-sous">Comment veux-tu apparaître dans les records&nbsp;?</p>
+        <div class="rec-choix">
+          <button id="records-nom-prenom" type="button"><span class="ic"><svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true"><circle cx="12" cy="8" r="4.2" fill="#e7f8f5" stroke="#087a71" stroke-width="1.8"/><path d="M3.8 21a8.2 8.2 0 0 1 16.4 0z" fill="#e7f8f5" stroke="#087a71" stroke-width="1.8" stroke-linejoin="round"/></svg></span><span><strong id="records-nom-prenom-texte">Mon prénom</strong><small>Mon prénom</small></span></button>
+          <button id="records-nom-mystere" type="button"><span class="ic" aria-hidden="true">🕵️</span><span><strong>Mystère</strong><small>Personne ne sait que c’est moi</small></span></button>
+        </div>
+        <p class="rec-note">Tu peux changer quand tu veux.</p>
+      </div>
+
       <div id="lire" class="lire-screen" hidden>
         <div class="settings-toolbar">
           <button id="lire-back" class="settings-back" type="button" aria-label="Retour à Ma table"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="settings-back-label">Ma table</span></button>
@@ -2961,7 +3066,7 @@
   </footer>
 
   <script src="./defi_tables_core.js?v=20261009-1"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20261009-1"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20261009-2"></script>
   <script>
     (() => {
       "use strict";
@@ -3379,6 +3484,9 @@
           // démarrage) : maintenant que le serveur répond, on les demande.
           if (suiviIdentite === null) chargerIdentite(codeSuivi);
           if (renvoiDemande) envoyerMaintenant();
+          // Lot « Les records » : une course qui attendait (serveur muet, ou
+          // couronne pas encore enregistrée là-bas) part maintenant.
+          envoyerCourseEnAttente();
           return;
         }
         if (reponse.statut === 409 && donnees && donnees.parcours !== undefined) {
@@ -3488,6 +3596,7 @@
         if (reponse.statut === 200 && reponse.donnees && reponse.donnees.ok) {
           suiviIdentite = {prenom: reponse.donnees.prenom || "", classe: reponse.donnees.classe || ""};
           PARCOURS.sauverIdentiteOnglet(stockageSession(), code, suiviIdentite);
+          lireReglageRecords(reponse.donnees.reglages);
         } else if (reponse.statut === 404) {
           suiviIdentite = null;
         }
@@ -3609,6 +3718,7 @@
         fusionsSuccessives = 0;
         parcours = PARCOURS.charger(storage(), codeSuivi);
         sync = PARCOURS.chargerSync(storage(), codeSuivi);
+        oublierRecords();
         majLienRetour();
         renderRepere();
         renderParcours();
@@ -3644,6 +3754,7 @@
         // Le serveur vient de dire qui c'est : le repère le montre tout de
         // suite, demarrerSuivi le confirmera.
         suiviIdentite = {prenom: donnees.prenom || "", classe: donnees.classe || ""};
+        lireReglageRecords(donnees.reglages);
         PARCOURS.sauverIdentiteOnglet(stockageSession(), code, suiviIdentite);
         if (typeof ouvrir === "function") ouvrir();
         demarrerSuivi();
@@ -3673,6 +3784,7 @@
         PARCOURS.effacerCode(stockageSession());
         parcours = caseSansCode();
         sync = PARCOURS.chargerSync(storage(), "");
+        oublierRecords();
         state.parcoursOptionsOpen = false;
         majLienRetour();
         renderRepere();
@@ -3969,13 +4081,268 @@
           // on redessinera l'écran quand elle sera finie.
           renderRepere();
           if (!state.running) renderParcours();
+          // Lot « Les records » : une Légende lit sa ligue, et ce qui
+          // attendait part.
+          if (!suiviHorsLigne) { chargerRecords(); envoyerCourseEnAttente(); }
         });
       }
+      // ------------------------------------------------ 🏆 Les records (lot du 09/10/2026)
+      //
+      // Le défi d'après la couronne : la Légende court les 25 questions de
+      // la couronne, chrono qui monte, et son meilleur temps entre dans la
+      // ligue de son professeur. TOUT le classement vit sur le serveur
+      // (api/records.php) ; ici on ne garde que deux choses dans la case
+      // d'envoi (sync) : une course pas encore acceptée (« course ») et ce
+      // que le serveur a dit en dernier du record de cet élève (« record »),
+      // pour l'accueil hors ligne. Rien n'entre dans le parcours.
+      // Quatre conditions pour voir les records : un code, un code qui vaut
+      // encore, la couronne, et une classe où le professeur les a laissés
+      // ouverts (réglage de la classe, reçu avec l'identité).
+      // [records:debut]
+      let recordsEtat = null;
+      let recordsReglage = true;
+      let recordsEnVol = false;
+      let courseEnVol = false;
+      let recordsOnglet = "semaine";
+      let apresChoixDuNom = null;
+
+      function lireReglageRecords(reglages) {
+        const reglage = reglages && typeof reglages === "object" ? reglages["defi-tables"] : null;
+        const avant = recordsReglage;
+        recordsReglage = !(reglage && typeof reglage === "object" && reglage.records === false);
+        if (avant !== recordsReglage && !state.running) renderParcours();
+      }
+
+      function recordsOuverts() {
+        return suiviActif() && !sync.detache && recordsReglage && PARCOURS.recordsPossibles(parcours);
+      }
+
+      // Ce qu'on sait du record de l'élève : la dernière réponse du serveur,
+      // sinon ce que la case d'envoi en garde, sinon rien.
+      function recordConnu() {
+        const vide = {meilleur: null, meilleurLe: null, semaine: null, lundi: null, nom: null};
+        if (recordsEtat && recordsEtat.record) return Object.assign(vide, recordsEtat.record);
+        return Object.assign(vide, sync.record || {});
+      }
+
+      // Les options que la séance reçoit : pour une Légende aux records
+      // ouverts, l'étoile de sa séance devient la course.
+      function optionsSeance() {
+        return recordsOuverts() ? {records: {meilleur: recordConnu().meilleur}} : {};
+      }
+
+      function oublierRecords() {
+        recordsEtat = null;
+        recordsReglage = true;
+        apresChoixDuNom = null;
+      }
+
+      function appelRecords(corps) {
+        return appelSuivi("/api/records.php", {
+          method: "POST",
+          headers: {"Content-Type": "text/plain;charset=UTF-8"},
+          body: JSON.stringify(Object.assign({code: codeSuivi}, corps))
+        });
+      }
+
+      // Une réponse 200 du serveur des records : la ligue, sa place, son
+      // record — gardés en mémoire, et le record dans la case d'envoi.
+      function retenirRecords(donnees) {
+        if (donnees.ouvert === false) {
+          recordsReglage = false;
+          recordsEtat = null;
+          return;
+        }
+        recordsReglage = true;
+        recordsEtat = donnees;
+        const record = PARCOURS.normaliserRecordConnu(donnees.record);
+        if (record) sync.record = record; else delete sync.record;
+        sauverSync();
+      }
+
+      function chargerRecords() {
+        if (!recordsOuverts() || recordsEnVol) return;
+        recordsEnVol = true;
+        const code = codeSuivi;
+        appelRecords({lire: true}).then(reponse => {
+          recordsEnVol = false;
+          if (code !== codeSuivi) return;
+          if (reponse.statut === 200 && reponse.donnees && reponse.donnees.ok) retenirRecords(reponse.donnees);
+          if (!state.running) {
+            if (!$("records").hidden) renderRecords();
+            else if (!$("intro").hidden) renderAccueil();
+          }
+        });
+      }
+
+      // Une course finie à 25 sur 25 : son temps attend dans la case jusqu'à
+      // ce que le serveur l'accepte. Deux courses en attente : la meilleure.
+      function noterCourse(dixiemes) {
+        sync.course = PARCOURS.garderMeilleureCourse(sync.course, {temps: dixiemes, jour: PARCOURS.jourLocal()});
+        sauverSync();
+        envoyerCourseEnAttente();
+      }
+
+      // Chaque réponse a un sens, et un seul :
+      //  200  acceptée — la ligue revient avec, l'attente s'efface ;
+      //  400  refusée pour de bon (temps impossible) — effacée ;
+      //  403  les records sont fermés à sa classe — effacée, et on le sait ;
+      //  404  le code ne vaut plus rien — l'envoi du parcours s'en charge ;
+      //  409  « pas encore Légende » là-bas — on garde, ça repartira après
+      //       le prochain enregistrement du parcours (traiterReponseEnvoi) ;
+      //  autre (panne, coupure, 503 mise à niveau) — on garde, prochaine
+      //       ouverture ou prochain 200 du parcours.
+      function envoyerCourseEnAttente() {
+        if (!sync.course || !envoiPossible() || !recordsOuverts() || courseEnVol) return;
+        courseEnVol = true;
+        const code = codeSuivi;
+        const course = sync.course;
+        appelRecords({temps: course.temps, justes: PARCOURS.SEUILS.course.total}).then(reponse => {
+          courseEnVol = false;
+          if (code !== codeSuivi) return;
+          const donnees = reponse.donnees;
+          if (reponse.statut === 200 && donnees && donnees.ok) {
+            if (sync.course && sync.course.temps === course.temps) delete sync.course;
+            retenirRecords(donnees);
+            sauverSync();
+            rafraichirRecords(donnees);
+            if (sync.course) envoyerCourseEnAttente();
+            return;
+          }
+          if (reponse.statut === 400 || reponse.statut === 403) {
+            delete sync.course;
+            if (reponse.statut === 403) recordsReglage = false;
+            sauverSync();
+            rafraichirRecords(null);
+          }
+        });
+      }
+
+      // Le serveur vient de répondre sur une course : l'écran qui est là se
+      // met à jour — l'accueil (le record, les rangs), le tableau, ou le
+      // résultat de la course (le rang, la ligne d'attente).
+      function rafraichirRecords(donnees) {
+        if (state.running) return;
+        if (!$("records").hidden) renderRecords();
+        else if (!$("intro").hidden && !$("mode-screen").hidden) renderAccueil();
+        else renderCourseEnregistree(donnees);
+      }
+
+      // Le choix du nom (prénom ou Mystère), puis la suite (la course, ou le
+      // tableau). Serveur muet : on continue quand même, le choix sera
+      // redemandé à la prochaine ouverture du cadre.
+      function choisirNom(prenom) {
+        const code = codeSuivi;
+        const suite = apresChoixDuNom;
+        apresChoixDuNom = null;
+        appelRecords({nom: prenom}).then(reponse => {
+          if (code !== codeSuivi) return;
+          if (reponse.statut === 200 && reponse.donnees && reponse.donnees.ok) { retenirRecords(reponse.donnees); rafraichirRecords(null); }
+        });
+        if (typeof suite === "function") suite();
+        else show("records");
+      }
+
+      // Le chemin (décision 8 du 09/10) : couronne → le cadre « Les records »
+      // → au premier appui, l'écran du nom, une seule fois → la suite.
+      function avecLeNomChoisi(suite) {
+        if (recordConnu().nom === null && recordsOuverts()) {
+          apresChoixDuNom = suite;
+          show("records-nom");
+          return;
+        }
+        suite();
+      }
+
+      function ouvrirRecords() {
+        avecLeNomChoisi(() => show("records"));
+      }
+
+      function lancerCourse(origin = "menu") {
+        avecLeNomChoisi(() => launchFromParcours(PARCOURS.configCourse(), origin));
+      }
+
+      // [records:fin]
       // [suivi:fin]
+
+      // Les écrans des records (lot « Les records ») : ce que la page dessine.
+      function renderChoixDuNom() {
+        const prenom = prenomAffiche();
+        $("records-nom-prenom-texte").textContent = prenom || "Élève";
+        $("records-nom-titre").textContent = recordConnu().nom === null ? "Tu es une Légende des tables\u00a0!" : "Comment veux-tu apparaître\u00a0?";
+        $("records-nom-titre").nextElementSibling.hidden = recordConnu().nom !== null;
+      }
+
+      function ligneDeRecord(ligne) {
+        const item = document.createElement("li");
+        if (ligne.moi) item.className = "moi";
+        const rang = document.createElement("span");
+        rang.className = "rg";
+        rang.textContent = ["🥇", "🥈", "🥉"][ligne.rang - 1] || String(ligne.rang);
+        rang.setAttribute("aria-label", PARCOURS.libelleRang(ligne.rang));
+        const nom = document.createElement("span");
+        nom.className = "nom";
+        nom.textContent = ligne.nom;
+        if (ligne.moi) {
+          const toi = document.createElement("span");
+          toi.className = "toi";
+          toi.textContent = "Toi";
+          nom.append(toi);
+        }
+        const temps = document.createElement("span");
+        temps.className = "tps";
+        temps.textContent = PARCOURS.formatTemps(ligne.temps);
+        item.append(rang, nom, temps);
+        return item;
+      }
+
+      function renderRecords() {
+        const etat = recordsEtat;
+        const record = recordConnu();
+        [["semaine", "Personne cette semaine, pour l’instant."], ["toujours", "Personne pour l’instant."]].forEach(([cle, vide]) => {
+          const zone = $(`records-${cle}`);
+          const liste = zone.querySelector("ol");
+          const message = zone.querySelector(".rec-vide");
+          liste.replaceChildren();
+          const lignes = etat ? etat[cle] || [] : [];
+          lignes.forEach(ligne => liste.append(ligneDeRecord(ligne)));
+          message.hidden = lignes.length > 0;
+          message.textContent = etat ? vide : "Le serveur ne répond pas\u00a0: réessaie plus tard.";
+          // Au téléphone, un seul tableau à la fois (les onglets) ; sur
+          // ordinateur, les deux (le CSS ignore « hidden » sur ces panneaux).
+          zone.hidden = window.matchMedia("(min-width: 1024px)").matches ? false : cle !== recordsOnglet;
+        });
+        ["semaine", "toujours"].forEach(cle => $(`records-onglet-${cle}`).setAttribute("aria-selected", String(cle === recordsOnglet)));
+        // Hors des 10 : « Ton record : … » dessous, sans rang (décision 7).
+        const moi = $("records-moi");
+        const dansLeTableau = etat && [...(etat.semaine || []), ...(etat.toujours || [])].some(ligne => ligne.moi);
+        moi.hidden = !(record.meilleur !== null && !dansLeTableau);
+        moi.textContent = record.meilleur === null ? "" : `Ton record\u00a0: ${PARCOURS.formatTemps(record.meilleur)}`;
+        const attente = $("records-attente");
+        attente.hidden = !sync.course;
+        attente.textContent = sync.course ? "Temps gardé ici, pas encore envoyé." : "";
+        $("records-courir").textContent = record.meilleur === null ? "Ma première course\u00a0→" : "Je bats mon record\u00a0→";
+      }
+
+      // Après la course : le rang (« 4e cette semaine ») n'arrive qu'avec la
+      // réponse du serveur — on le pose quand elle est là, si l'écran est
+      // encore celui du résultat de cette course.
+      function renderCourseEnregistree(donnees) {
+        if (state.running || $("result").hidden || !$("result").classList.contains("is-course")) return;
+        const rang = $("result-rang");
+        const attente = $("result-course-attente");
+        if (attente) attente.hidden = !sync.course;
+        if (!donnees || !$("result").classList.contains("is-fete") || !donnees.rangSemaine) return;
+        rang.textContent = `${PARCOURS.libelleRang(donnees.rangSemaine)} cette semaine`;
+        rang.hidden = false;
+      }
+
 
       // Vue « fiche d'un élève », ouverte par le professeur depuis « Ma classe ».
       // Elle ne touche jamais au parcours de cet appareil.
+      let ficheRecord = null;
       function afficherFicheEleve({existe, parcours: brut, maj_le, prenom, classe}) {
+        const record = ficheRecord;
         const distant = existe ? PARCOURS.normaliserParcours(brut) : PARCOURS.creerParcours();
         if (!distant.prenom && prenom) distant.prenom = prenom;
         $("fiche-ecran-nom").textContent = distant.prenom || "Fiche de suivi";
@@ -3986,7 +4353,9 @@
           classe ? `Classe ${classe}` : "",
           maj_le
             ? `dernière activité le ${new Date(maj_le).toLocaleDateString("fr-FR")}`
-            : "aucune activité enregistrée"
+            : "aucune activité enregistrée",
+          // Lot « Les records » : le record de la Légende (planche R5).
+          record && Number.isInteger(record.meilleur) ? `record ${PARCOURS.formatTemps(record.meilleur)}` : ""
         ].filter(Boolean).join(" · ");
         renderFiche(distant);
         ajusterFiche();
@@ -4006,6 +4375,7 @@
             : "Le serveur n’a pas répondu. Réessaie dans un instant.";
           return;
         }
+        ficheRecord = donnees.record || null;
         afficherFicheEleve(donnees);
       }
 
@@ -4348,6 +4718,10 @@
 
       function show(name) {
         ["intro", "launch", "play", "result", "parcours", "lire", "fiche"].forEach(id => { $(id).hidden = id !== name; });
+        // Lot « Les records » : deux écrans de plus (absents de la vue fiche).
+        ["records", "records-nom"].forEach(id => { const ecran = $(id); if (ecran) ecran.hidden = id !== name; });
+        if (name === "records") renderRecords();
+        if (name === "records-nom") renderChoixDuNom();
         // Lot « Mon parcours » : le panneau un peu moins rembourré sur
         // ordinateur, pour que les deux colonnes tiennent dans l'écran.
         document.querySelector(".panel").classList.toggle("avec-parcours", name === "parcours");
@@ -4374,6 +4748,8 @@
         if (name === "parcours") $("parcours-title").focus?.({preventScroll: true});
         if (name === "fiche") $("fiche-title").focus?.({preventScroll: true});
         if (name === "lire") $("lire-title").focus?.({preventScroll: true});
+        if (name === "records") $("records-title").focus?.({preventScroll: true});
+        if (name === "records-nom") $("records-nom-titre").focus?.({preventScroll: true});
         suivreHistorique(name);
         ajusterEchelle();
       }
@@ -4417,10 +4793,26 @@
         configuration.total = preset.total;
         configuration.duration = preset.duration;
         configuration.testLevel = preset.testLevel || 1;
+        configuration.course = null;
         syncControls();
         suivreHistorique("intro");
         window.scrollTo({top: 0, behavior: "auto"});
         $("settings-title").focus?.({preventScroll: true});
+      }
+
+      // Lot « Les records » : quitter la course finie pour le tableau — la
+      // même sortie que « Ma table », vers un autre écran.
+      function allerAuxRecords() {
+        quitterSeance();
+        state.apresMesCalculs = null;
+        configuration.mode = null;
+        configuration.course = null;
+        configuration.tables = new Set();
+        state.origin = "menu";
+        state.running = false;
+        stopTimer();
+        show("records");
+        window.scrollTo({top: 0, behavior: "auto"});
       }
 
       function backToModes() {
@@ -5820,6 +6212,7 @@
           return;
         }
         $("retry").hidden = false;
+        $("retry").className = "secondary";
         $("result-accueil").classList.add("primary");
         $("result-accueil").classList.remove("secondary");
         const elapsed = Date.now() - state.startAt;
@@ -5832,9 +6225,10 @@
         renderVerdict(suivi, elapsed);
         renderResultParcours(suivi);
         renderEntraineConseille(suivi);
+        noterFinDeCourse(suivi, elapsed);
         $("result-message").textContent = scoreMessage(state.correct, state.configuration);
         $("result-message").hidden = Boolean(suivi.classement);
-        $("result-previous").hidden = state.configuration.mode === "learn" || previousScore === undefined;
+        $("result-previous").hidden = state.configuration.mode === "learn" || previousScore === undefined || state.configuration.course === "records";
         $("result-previous").textContent = previousScore === undefined ? "" : `Série précédente\u00a0: ${previousScore} sur ${TOTAL}.`;
         renderCorrections();
         $("result-reglages").hidden = state.origin !== "reglages";
@@ -5881,7 +6275,9 @@
       // des réglages passe dessous, en petit. J'apprends n'a ni score ni temps :
       // on s'entraîne, on ne se chronomètre pas (Gwenaël, 11/09, P3).
       function seuilDe(evenement) {
-        const regle = {entraine: "entrainement", validation: "validation", preparation: "validation", melange: "melange", etoile: "etoile"}[evenement.type];
+        // Lot « Les records » : la couronne exige 25 sur 25 (erreursMaxEtoile).
+        if (evenement.type === "etoile") return evenement.total - PARCOURS.erreursMaxEtoile(evenement.etoile);
+        const regle = {entraine: "entrainement", validation: "validation", preparation: "validation", melange: "melange"}[evenement.type];
         return regle ? evenement.total - PARCOURS.SEUILS[regle].erreursMax : null;
       }
 
@@ -5912,6 +6308,7 @@
         const principal = suivi.evenements.find(evenement => typeof evenement.reussi === "boolean");
         const verdict = {icone: "✓", titre: "", score: "", config: configurationLabel(config), detail: "", classe: "", champion: false, rang: null, coupe: null};
         const sur = (score, total) => `${score} sur ${total}`;
+        if (config.course === "records") return verdictCourse(suivi, elapsed, verdict);
         if (config.mode === "learn") {
           // Audit 1 (30/09/2026) : le titre dit l'activité qui vient de finir,
           // la ligne du dessous dit la table (plus de « N activités sur 5 »).
@@ -6053,10 +6450,68 @@
           .replace(/ ([!?:])/g, "\u00a0$1");
       }
 
+      // Lot « Les records » (planche R3) : les trois fins d'une course.
+      // Le verdict se juge ICI, avec ce que l'appareil sait du record (le
+      // serveur confirmera et apportera le rang) : « Nouveau record ! 49,8 s
+      // (avant : 52,4 s) » ; « 53,1 s — Ton record reste 52,4 s. » ;
+      // « 1 erreur — Le temps ne compte pas : il faut tout juste. »
+      function verdictCourse(suivi, elapsed, verdict) {
+        const dixiemes = Math.round(elapsed / 100);
+        const jugement = PARCOURS.courseCompte(state.correct, TOTAL, dixiemes);
+        verdict.config = "";
+        verdict.course = true;
+        if (!jugement.compte) {
+          const erreurs = TOTAL - state.correct;
+          verdict.classe = "is-rate";
+          verdict.icone = "✗";
+          verdict.titre = jugement.raison === "erreurs" ? pluriel(erreurs, "erreur") : PARCOURS.formatTemps(dixiemes);
+          verdict.score = jugement.raison === "erreurs" ? "Le temps ne compte pas\u00a0: il faut tout juste." : "Le temps ne compte pas.";
+          return verdict;
+        }
+        const record = recordConnu();
+        if (record.meilleur === null || dixiemes < record.meilleur) {
+          verdict.classe = "is-fete";
+          verdict.icone = "🏆";
+          verdict.titre = "Nouveau record\u00a0!";
+          verdict.score = record.meilleur === null ? PARCOURS.formatTemps(dixiemes) : `${PARCOURS.formatTemps(dixiemes)} (avant\u00a0: ${PARCOURS.formatTemps(record.meilleur)})`;
+          return verdict;
+        }
+        verdict.classe = "is-neutre";
+        verdict.icone = "⏱";
+        verdict.titre = PARCOURS.formatTemps(dixiemes);
+        verdict.score = `Ton record reste ${PARCOURS.formatTemps(record.meilleur)}.`;
+        return verdict;
+      }
+
+      // Après le verdict d'une course : le temps part vers la ligue (s'il
+      // compte), les boutons deviennent « Voir les records » et « Rejouer ».
+      // La course de la couronne (décision 6 du 09/10) : 25 sur 25 en
+      // 1 minute, son temps est le premier record — il part de la même façon,
+      // sans rien changer à l'écran de la couronne.
+      function noterFinDeCourse(suivi, elapsed) {
+        const course = state.configuration.course === "records";
+        const dixiemes = Math.round(elapsed / 100);
+        const result = $("result");
+        result.classList.toggle("is-course", course);
+        $("result-records").hidden = !course;
+        $("result-course-attente").hidden = true;
+        const couronne = suivi.evenements.find(evenement => evenement.type === "etoile" && evenement.couronne);
+        if (!course && !couronne) return;
+        if (!suiviActif() || !recordsReglage) return;
+        const jugement = PARCOURS.courseCompte(state.correct, TOTAL, dixiemes);
+        if (jugement.compte) noterCourse(dixiemes);
+        if (!course) return;
+        const fete = result.classList.contains("is-fete");
+        $("result-records").className = fete ? "primary" : "secondary";
+        $("retry").className = fete ? "secondary" : "primary";
+        $("result-course-attente").textContent = "Temps gardé ici, pas encore envoyé.";
+        $("result-course-attente").hidden = !(jugement.compte && sync.course);
+      }
+
       function renderVerdict(suivi, elapsed) {
         const verdict = verdictSerie(suivi, elapsed);
         const result = $("result");
-        result.classList.remove("is-fete", "is-rate", "is-temps", "is-neutre", "is-revision");
+        result.classList.remove("is-fete", "is-rate", "is-temps", "is-neutre", "is-revision", "is-course");
         if (verdict.classe) result.classList.add(verdict.classe);
         $("result-verdict").classList.toggle("is-champion", verdict.champion);
         $("result-icon").textContent = verdict.icone;
@@ -6081,7 +6536,12 @@
       }
 
       function updateTimer() {
-        if (!state.running || state.configuration?.duration === null) return;
+        if (!state.running) return;
+        if (state.configuration?.course === "records") {
+          $("time").textContent = formatTime(Math.floor((Date.now() - state.startAt) / 1000));
+          return;
+        }
+        if (state.configuration?.duration === null) return;
         // Mes calculs du jour : le chrono est arrêté tant qu'une correction
         // (ou « Bravo ! ») est à l'écran.
         if (state.pauseA) return;
@@ -6135,6 +6595,7 @@
           return `Mon mélange · ${lesquelles} · ${insecable("20 questions")} · ${dureeLancement(config.duration)}`;
         }
         if (config.mode === "validation") return `${tables} · ${insecable("20 questions")} · ${dureeLancement(config.duration)}`;
+        if (config.mode === "test" && config.course === "records") return `${tables} · produits, trous, divisions · ${insecable("25 questions")}`;
         if (config.mode === "test") return `${tables} · produits, trous, divisions · ${insecable("25 questions")} · ${dureeLancement(config.duration)}`;
         const questionLabels = {direct: "produits", missing: "trous", division: "divisions"};
         return `${tables} · ${config.questionTypes.map(type => questionLabels[type]).join(" + ")} · ${insecable(`${config.total} questions`)} · ${dureeLancement(config.duration)}`;
@@ -6148,10 +6609,13 @@
         state.endAt = DURATION === null ? 0 : state.startAt + DURATION * 1000;
         state.pauseA = null;
         $("time").classList.remove("en-pause");
-        $("time").textContent = DURATION === null ? "À ton rythme" : formatTime(DURATION);
-        $("time").classList.toggle("no-timer", DURATION === null);
+        // Lot « Les records » : pendant la course, le chrono MONTE, en
+        // secondes (« 0:16 ») ; les dixièmes ne s'écrivent qu'à la fin.
+        const course = state.configuration.course === "records";
+        $("time").textContent = course ? formatTime(0) : DURATION === null ? "À ton rythme" : formatTime(DURATION);
+        $("time").classList.toggle("no-timer", DURATION === null && !course);
         $("time").classList.remove("urgent");
-        $("time").setAttribute("aria-label", DURATION === null ? "Sans chrono" : "Temps restant");
+        $("time").setAttribute("aria-label", course ? "Temps écoulé" : DURATION === null ? "Sans chrono" : "Temps restant");
         $("timer-alert").textContent = "";
         renderFilSeance($("seance-fil"));
         majSortieJeu();
@@ -6160,7 +6624,7 @@
         // La première question est à l'écran : c'est elle qu'on mesure, une
         // fois pour toute la série (rien ne change de taille en cours de jeu).
         ajusterEchelle();
-        if (DURATION !== null) state.timer = window.setInterval(updateTimer, 200);
+        if (DURATION !== null || course) state.timer = window.setInterval(updateTimer, 200);
       }
 
       function start() {
@@ -6169,6 +6633,13 @@
         if (!config.mode || (config.mode !== "evaluation" && !config.tables.length)) {
           syncControls();
           return;
+        }
+        // Lot « Les records » : le noyau ne connaît pas la course (il remet
+        // une durée à tout test) — c'est ici qu'elle redevient sans limite,
+        // avec sa marque, que le moteur lit (classerSerie → « course »).
+        if (configuration.course === "records") {
+          config.duration = null;
+          config.course = "records";
         }
         TOTAL = config.total;
         DURATION = config.duration;
@@ -6255,17 +6726,39 @@
         // deux autres écritures de la division (? ÷ 7 = 4 · 28 ÷ ? = 4), que
         // le test et le mélange posent désormais.
         const formes = ["produit", "trou", "division", "dividende", "diviseur"];
+        // Lot « Les records » (planche R3) : « Le chrono monte. Tout juste,
+        // sinon le temps ne compte pas. » puis « Ton record : 52,4 s ».
+        if (config.course === "records") {
+          const ligne = document.createElement("p");
+          const gras = document.createElement("b");
+          gras.textContent = "Tout juste";
+          ligne.append(document.createTextNode("Le chrono monte. "), gras, document.createTextNode(", sinon le temps ne compte pas."));
+          zone.append(ligne);
+          const record = recordConnu();
+          if (record.meilleur !== null) {
+            const mien = document.createElement("p");
+            const temps = document.createElement("b");
+            temps.textContent = PARCOURS.formatTemps(record.meilleur);
+            mien.append(document.createTextNode("Ton record\u00a0: "), temps);
+            zone.append(mien);
+          }
+          zone.hidden = false;
+          return;
+        }
         if (config.mode === "validation" && config.total === S.validation.total) {
           reussir = S.validation.total - S.validation.erreursMax;
           table = config.tables[0];
         } else if (config.mode === "test" && config.total === S.etoile.total) {
-          reussir = S.etoile.total - S.etoile.erreursMax;
+          // La couronne (1 minute) : 25 sur 25 (lot « Les records »,
+          // décision de Gwenaël) — l'écran le dit avant l'épreuve.
+          const marche = S.etoile.durees.indexOf(Number(config.duration)) + 1;
+          reussir = S.etoile.total - PARCOURS.erreursMaxEtoile(marche);
         }
         if (!reussir) return;
         const ligne = document.createElement("p");
         const gras = document.createElement("b");
         gras.textContent = `${reussir}\u00a0bonnes réponses`;
-        ligne.append(gras, document.createTextNode(" pour réussir."));
+        ligne.append(gras, document.createTextNode(reussir === S.etoile.total && config.mode === "test" ? " pour réussir\u00a0: aucune erreur." : " pour réussir."));
         zone.append(ligne);
         if (table !== null) {
           const textes = {
@@ -7282,7 +7775,7 @@
         return `${sujet} rendez-vous ${quand}. C’est en les revoyant qu’ils rentrent : tu passeras le test après.`;
       }
 
-      function ligneEtape({classe, num, titre, sousTitre, points, conseille, aria, action, deplie = null, controle = null}) {
+      function ligneEtape({classe, num, titre, sousTitre, points, conseille, aria, action, deplie = null, controle = null, go = null}) {
         const bouton = document.createElement("button");
         bouton.type = "button";
         bouton.className = `etape ${classe}${conseille ? " is-next" : ""}`.trim();
@@ -7306,6 +7799,13 @@
           fermer.className = "fermer-choix";
           fermer.textContent = "✕";
           dots.append(fermer);
+        }
+        // Lot « Les records » : « Jouer → » au bout de la ligne (planche R1).
+        if (go) {
+          const mot = document.createElement("span");
+          mot.className = "go";
+          mot.textContent = go;
+          dots.append(mot);
         }
         bouton.append(numero, texte, dots);
         bouton.setAttribute("aria-label", `${aria}${conseille ? " Étape conseillée." : ""} ${deplie === null ? "Lancer." : deplie ? "Fermer le choix." : "Choisir l’activité."}`);
@@ -7452,8 +7952,15 @@
         zone.hidden = !toutes;
         if (!toutes) return;
         const expert = etat.expert;
+        zone.querySelector(".eyebrow").textContent = "Je deviens expert";
+        zone.classList.remove("is-records");
+        zone.querySelector(".rec-chiffres")?.remove();
+        zone.querySelector(".rec-voir")?.remove();
+        // Lot « Les records » : une Légende aux records ouverts a son propre cadre.
+        if (recordsOuverts()) { renderRecordsAccueil(etat, conseil); return; }
         $("acc-expert-titre").textContent = "Toutes les tables, de plus en plus vite";
         const escalier = $("acc-escalier");
+        escalier.hidden = false;
         escalier.replaceChildren();
         expert.marches.forEach(marche => {
           const item = document.createElement("div");
@@ -7495,6 +8002,69 @@
           aria: `Tente ${suivante.symbole} : 25 questions, produits, trous et divisions, toutes les tables, en ${suivante.libelleDuree}.`,
           action: () => launchFromParcours(suivante.config, "menu")
         }));
+      }
+
+      // Lot « Les records » (planche R1) : pour une Légende aux records
+      // ouverts, le cadre jaune devient « 🏆 Les records » — « Ton record :
+      // 52,4 s » (ou, la première fois, « Toutes les tables, le plus vite
+      // possible »), ses deux rangs, la séance du jour (Mes calculs du jour,
+      // puis « Je bats mon record »), « Voir les records ». La séance faite :
+      // un seul bouton pour rejouer. L'escalier des étoiles ne reste que
+      // dans Mon parcours.
+      function renderRecordsAccueil(etat, conseil) {
+        const zone = $("acc-expert");
+        const record = recordConnu();
+        zone.classList.add("is-records");
+        zone.querySelector(".eyebrow").textContent = "🏆 Les records";
+        $("acc-expert-titre").textContent = record.meilleur === null
+          ? "Toutes les tables, le plus vite possible"
+          : `Ton record\u00a0: ${PARCOURS.formatTemps(record.meilleur)}`;
+        const escalier = $("acc-escalier");
+        escalier.hidden = true;
+        escalier.replaceChildren();
+        if (record.meilleur !== null && recordsEtat) {
+          const chiffres = document.createElement("div");
+          chiffres.className = "rec-chiffres";
+          [["Cette semaine", recordsEtat.rangSemaine], ["De tous les temps", recordsEtat.rangToujours]].forEach(([titre, rang]) => {
+            const case_ = document.createElement("div");
+            const petit = document.createElement("small");
+            petit.textContent = titre;
+            const gros = document.createElement("b");
+            gros.textContent = rang ? PARCOURS.libelleRang(rang) : "—";
+            case_.append(petit, gros);
+            chiffres.append(case_);
+          });
+          escalier.after(chiffres);
+        }
+        const action = $("acc-expert-action");
+        action.replaceChildren();
+        const ouverte = PARCOURS.ouvrirSeance(parcours);
+        const programme = PARCOURS.programmeDeSeance(parcours, ouverte, PARCOURS.jourLocal(), optionsSeance());
+        const faite = PARCOURS.bilanSeances(parcours).aujourdhui > 0 && !ouverte.faites.length && !state.encoreOuverte;
+        if (programme.etapes.length && !faite) {
+          action.append(carteDeSeance(null));
+        } else {
+          // Séance du jour faite (planche R1, 4e écran) : un seul bouton.
+          const titre = record.meilleur === null ? "Ma première course" : "Je bats mon record";
+          action.append(ligneEtape({
+            classe: "expert-tenter",
+            num: "🏆",
+            titre,
+            sousTitre: `${PARCOURS.SEUILS.course.total}\u00a0questions · le chrono monte`,
+            points: [],
+            conseille: conseil === "expert",
+            aria: `${titre} : les 25 questions de la couronne, le chrono monte.`,
+            action: () => lancerCourse("menu"),
+            go: "Jouer\u00a0→"
+          }));
+        }
+        const voir = document.createElement("button");
+        voir.type = "button";
+        voir.className = "rec-voir";
+        voir.id = "acc-voir-records";
+        voir.textContent = "Voir les records";
+        voir.addEventListener("click", ouvrirRecords);
+        action.after(voir);
       }
 
       function renderAccueil() {
@@ -7784,12 +8354,15 @@
       }
 
       function lancerEtapeDeSeance() {
-        const etape = seance ? PARCOURS.etapeDeSeance(parcours, seance) : null;
+        const etape = seance ? PARCOURS.etapeDeSeance(parcours, seance, PARCOURS.jourLocal(), optionsSeance()) : null;
         if (!etape) {
           backToModes();
           return;
         }
         etapeEnCours = etape;
+        // Lot « Les records » : la course d'une séance passe aussi par le
+        // choix du nom, une seule fois (décision 8 du 09/10).
+        if (etape.type === "course") { avecLeNomChoisi(() => launchFromParcours(etape.config, "seance")); return; }
         launchFromParcours(etape.config, "seance");
       }
 
@@ -7831,12 +8404,12 @@
       // séance s'allonge (« On reprend un peu plus bas : 1 étape de plus. »).
       let etapesAjoutees = 0;
       function etapesPrevues(source, laSeance) {
-        return laSeance.faites.length + PARCOURS.programmeDeSeance(source, laSeance).etapes.length;
+        return laSeance.faites.length + PARCOURS.programmeDeSeance(source, laSeance, PARCOURS.jourLocal(), optionsSeance()).etapes.length;
       }
 
       function noterEtapeDeSeance(suivi) {
         const fete = suivi ? feteDuResultat(suivi.evenements) : {principal: null};
-        const chronometree = ["validation", "melange", "etoile"].includes(etapeEnCours.type);
+        const chronometree = ["validation", "melange", "etoile", "course"].includes(etapeEnCours.type);
         const avant = etapesPrevues(parcours, seance);
         const note = PARCOURS.noterEtape(parcours, seance, etapeEnCours, resultatDeLEtape(suivi));
         parcours = note.parcours;
@@ -7856,7 +8429,7 @@
         zone.hidden = !enSeance();
         if (zone.hidden) return;
         const faites = seance.faites.length;
-        const aVenir = PARCOURS.programmeDeSeance(parcours, seance).etapes;
+        const aVenir = PARCOURS.programmeDeSeance(parcours, seance, PARCOURS.jourLocal(), optionsSeance()).etapes;
         // Pendant une série, l'étape jouée est encore en tête de la file.
         const total = faites + aVenir.length;
         const titre = document.createElement("span");
@@ -7872,7 +8445,7 @@
         zone.append(titre, liste);
         // Le nom de l'étape telle qu'elle se joue (la marche 8 pas encore
         // prête se joue en entraînement : c'est lui qu'on nomme).
-        const courante = fini ? null : PARCOURS.etapeDeSeance(parcours, seance);
+        const courante = fini ? null : PARCOURS.etapeDeSeance(parcours, seance, PARCOURS.jourLocal(), optionsSeance());
         if (courante) {
           const nom = document.createElement("b");
           nom.textContent = courante.nom;
@@ -7975,9 +8548,20 @@
             ajusterEchelle();
           });
           zone.append(suite);
+          // Lot « Les records » (choix de Gwenaël, 09/10) : après la course
+          // d'une séance, « Mon bilan → » reste le premier bouton ; « Voir les
+          // records » dessous.
+          if (seance.faites[seance.faites.length - 1].type === "course") {
+            const voir = document.createElement("button");
+            voir.type = "button";
+            voir.className = "secondary";
+            voir.textContent = "Voir les records";
+            voir.addEventListener("click", () => { quitterSeance(); state.origin = "menu"; show("records"); });
+            zone.append(voir);
+          }
           return;
         }
-        const prochaine = PARCOURS.etapeDeSeance(parcours, seance);
+        const prochaine = PARCOURS.etapeDeSeance(parcours, seance, PARCOURS.jourLocal(), optionsSeance());
         // Entre deux étapes, le score seul (« 9 sur 10 ») : le compte des
         // entraînements réussis n'a pas sa place dans la séance.
         if (seance.faites[seance.faites.length - 1].type === "entraine") $("result-score").textContent = $("result-score").textContent.split(" · ")[0];
@@ -8172,7 +8756,7 @@
       // ses étapes faites cochées, « Reprendre ».
       function carteDeSeance(table) {
         const ouverte = PARCOURS.ouvrirSeance(parcours, {table});
-        const programme = PARCOURS.programmeDeSeance(parcours, ouverte);
+        const programme = PARCOURS.programmeDeSeance(parcours, ouverte, PARCOURS.jourLocal(), optionsSeance());
         const dejaFaites = ouverte.faites;
         const reprise = dejaFaites.length > 0;
         const nombre = dejaFaites.length + programme.etapes.length;
@@ -8239,6 +8823,7 @@
           nom.textContent = etape.nom;
           const detail = etape.type === "revision" ? soude(`${pluriel(etape.calculs, "calcul")} · ${dureeCourte(etape.duree)}`)
             : etape.type === "etoile" || etape.type === "melange" ? etape.detail
+            : etape.type === "course" ? etape.detail
             : etape.conditionnelle ? CONDITION_DU_TEST : "";
           if (detail) {
             const petit = document.createElement("small");
@@ -8607,7 +9192,7 @@
       // (qui lit le parcours d'un autre élève quand le professeur l'ouvre).
       function marchesDeTable(source, table) {
         const depart = source.tables[table].seance.depart;
-        const prochaines = PARCOURS.programmeDeSeance(source, PARCOURS.ouvrirSeance(source, {table}))
+        const prochaines = PARCOURS.programmeDeSeance(source, PARCOURS.ouvrirSeance(source, {table}), PARCOURS.jourLocal(), optionsSeance())
           .etapes.filter(etape => etape.marche).map(etape => etape.prevue.marche);
         const noms = PARCOURS.MARCHES.filter(item => prochaines.includes(item.marche)).map(item => item.nom);
         return {depart, prochaines, noms};
@@ -8720,6 +9305,7 @@
         configuration.total = config.total || CORE.PRESETS[config.mode].total;
         configuration.duration = config.duration === undefined ? CORE.PRESETS[config.mode].duration : config.duration;
         configuration.testLevel = config.testLevel || 1;
+        configuration.course = config.course === "records" ? "records" : null;
         state.origin = origin;
         start();
       }
@@ -8733,6 +9319,7 @@
         if (type === "validation") return NOM_DU_TEST;
         if (type === "melange") return "Mon mélange";
         if (type === "etoile") return `Tente ${PARCOURS.symboleEtoile(classement.etoile)}`;
+        if (type === "course") return recordConnu().meilleur === null ? "Ma première course" : "Je bats mon record";
         if (type === "preparation") return "Comme le test, en 2 min";
         if (type === "apprends") return majuscule(PARCOURS.LIBELLES_APPRENDS[classement.activite]);
         if (type === "entraine") return majuscule(NOMS_ENTRAINEMENTS[classement.entrainement]);
@@ -9393,6 +9980,15 @@
       $("lire-back").addEventListener("click", backToModes);
       $("fiche-back").addEventListener("click", openParcours);
       $("fiche-imprimer").addEventListener("click", printFiche);
+      // Lot « Les records » : les deux écrans et les boutons de la course.
+      $("records-back").addEventListener("click", backToModes);
+      $("records-nom-back").addEventListener("click", backToModes);
+      ["semaine", "toujours"].forEach(cle => $(`records-onglet-${cle}`).addEventListener("click", () => { recordsOnglet = cle; renderRecords(); }));
+      $("records-courir").addEventListener("click", () => lancerCourse("menu"));
+      $("records-nom-changer").addEventListener("click", () => { apresChoixDuNom = () => show("records"); show("records-nom"); });
+      $("records-nom-prenom").addEventListener("click", () => choisirNom(true));
+      $("records-nom-mystere").addEventListener("click", () => choisirNom(false));
+      $("result-records").addEventListener("click", allerAuxRecords);
       $("fiche-prenom-form").addEventListener("submit", event => {
         event.preventDefault();
         parcours = PARCOURS.definirPrenom(parcours, $("fiche-prenom-input").value);
@@ -9589,7 +10185,7 @@
       window.addEventListener("pageshow", () => {
         if (!state.running) return;
         updateTimer();
-        if (state.running && state.configuration?.duration !== null && state.timer === null) state.timer = window.setInterval(updateTimer, 200);
+        if (state.running && (state.configuration?.duration !== null || state.configuration?.course === "records") && state.timer === null) state.timer = window.setInterval(updateTimer, 200);
       });
       if (new URLSearchParams(window.location.search).has("test")) {
         Object.defineProperty(window, "__MATHSGO_DEFI_TABLES_TEST__", {
