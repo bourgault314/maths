@@ -24,7 +24,10 @@ test("la notice garde six phrases et prend le nom que l'appli donne au mélange"
   // Lot « Une seule fiche » (08/10/2026) : sur la fiche, le titre court
   // « Mon mélange », la règle dessous (« Mes tables passées, … »).
   assert.match(html, /<div class="fiche-block fiche-melange">\s*<strong>Mon mélange<\/strong>\s*<span id="fiche-melange-state" class="fiche-state"><\/span>\s*<p>Mes tables passées, 20 questions en 1 min 30\./);
-  assert.match(notice, /<b>Mon mélange\.<\/b> Dès 2&nbsp;tables passées, quand je veux&nbsp;: 20&nbsp;questions en 1&nbsp;min&nbsp;30\./);
+  // Lot « Mon mélange aux paliers » (09/10/2026, choix de Gwenaël) : la
+  // notice dit le passage avant le test, jusqu'à la coupe (deux coupes).
+  assert.match(notice, /<b>Mon mélange\.<\/b> Mes tables passées mélangées&nbsp;: 20&nbsp;questions en 1&nbsp;min&nbsp;30\. À 3, puis 6&nbsp;tables, il passe avant le test jusqu’à ce que je gagne la coupe\./);
+  assert.doesNotMatch(notice, /9&nbsp;tables\.<\/p>|3, 6, puis 9/, "plus de 3e coupe");
   assert.doesNotMatch(notice, /acquise|avant de valider/);
 });
 

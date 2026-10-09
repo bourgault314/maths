@@ -165,7 +165,7 @@ test("la notice « Comment ça marche ? » : les règles, écrites une fois, clo
   // trophées » : elle dit ce qu'il rapporte (une coupe avec 3, 6, puis 9 tables
   // — le mot « trophée » est parti au lot « Mon mélange sur l'accueil et l'expert »).
   // Lot « retours de classe » : le nombre et son mot ne se séparent plus (&nbsp;).
-  assert.match(texte, /<p><b>Mon mélange\.<\/b> Dès 2&nbsp;tables passées, quand je veux&nbsp;: 20&nbsp;questions en 1&nbsp;min&nbsp;30\. Une coupe avec 3, 6, puis 9&nbsp;tables\.<\/p>/);
+  assert.match(texte, /<p><b>Mon mélange\.<\/b> Mes tables passées mélangées&nbsp;: 20&nbsp;questions en 1&nbsp;min&nbsp;30\. À 3, puis 6&nbsp;tables, il passe avant le test jusqu’à ce que je gagne la coupe\.<\/p>/);
   assert.doesNotMatch(texte, /avant de valider|acquise/, "ni verrou ni « acquise » dans la notice");
   assert.doesNotMatch(texte, /je m’entraîne 3 fois|25 produits|Champion|★ produits/);
   assert.equal((html.match(/data-notice hidden/g) || []).length, 2, "accueil + parcours");
@@ -420,7 +420,7 @@ test("lot « un seul système » · plus de cadenas : « Je passe le test » lan
   assert.match(html, /lien\(NOM_DU_TEST, \(\) => launchFromParcours\(PARCOURS\.configValidation\(table\), "menu"\), "rond"\);/, "le lien de la carte de séance aussi");
   // La porte de Mes calculs du jour ne retient plus : elle le lance d'abord,
   // puis enchaîne sur le test (lot « Mes calculs du jour d'abord »).
-  assert.match(html, /if \(origin !== "seance" && PARCOURS\.mesCalculsAFaire\(parcours\)\) \{\s*if \(config\.mode !== "revision"\) state\.apresMesCalculs = \{config, origin, nom: nomDeLaSuite\(config\)\};\s*startRevision\(null, origin\);\s*return;\s*\}/);
+  assert.match(html, /if \(origin !== "seance" && PARCOURS\.mesCalculsAFaire\(parcours\)\) \{\s*if \(config\.mode !== "revision"\) state\.apresMesCalculs = \{config, origin, nom: nomDeLaSuite\(config\), puis\};\s*startRevision\(null, origin\);\s*return;\s*\}/);
   // Rien n'a été ajouté sur l'écran de l'élève : pas de phrase de plus.
   assert.doesNotMatch(html.replace(/<!--[\s\S]*?-->/g, ""), /Fais d’abord ton mélange pour/);
 });

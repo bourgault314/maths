@@ -37,6 +37,9 @@ function lea() {
     p.calculs[cle] = {boite: 2, cases: 0, vu: "2026-10-05", erreur: "", gagne: "2026-10-05", echeance: AUJ};
   }
   p.jours = ["2026-10-05"];
+  // La coupe des 3 déjà gagnée : pas de Mon mélange au palier avant le test
+  // (lot « Mon mélange aux paliers », testé dans defi-tables-melange-paliers).
+  p.melange = {...p.melange, reussi: 3};
   return P.normaliserParcours(p);
 }
 
@@ -64,7 +67,7 @@ test("Mes calculs du jour pas joué : « Je passe le test » lance d'abord Mes c
   const config = P.configValidation(4);
   l.launchFromParcours(config, "menu");
   assert.deepEqual(l.appels, [["revision", null, "menu"]], "Mes calculs du jour (table null : la série du jour), rien d'autre ; plus de renderAccueil qui ne lançait rien");
-  assert.deepEqual(l.state.apresMesCalculs, {config, origin: "menu", nom: "Je passe le test"});
+  assert.deepEqual(l.state.apresMesCalculs, {config, origin: "menu", nom: "Je passe le test", puis: null});
 });
 
 test("Mes calculs du jour joué (ou rien à revoir) : tout se lance directement, comme avant", () => {
@@ -130,7 +133,7 @@ test("à la fin de Mes calculs du jour (hors séance, avant le test) : la journ�
   let compteur = 0;
   const appels = [];
   const state = {apresMesCalculs: {config: P.configValidation(4), origin: "menu", nom: "Je passe le test"}};
-  const rendre = new Function("$", "document", "state", "effacerSuiteSeance", "launchFromParcours", `${source("renderSuiteMesCalculs")}\nreturn renderSuiteMesCalculs;`)(
+  const rendre = new Function("$", "document", "state", "effacerSuiteSeance", "launchFromParcours", `${source("renderSuiteMesCalculs")}\n${source("renderBoutonSuite")}\nreturn renderSuiteMesCalculs;`)(
     element, {createElement: () => element(`nouveau-${compteur += 1}`)}, state, () => appels.push("effacer"), (config, origin) => appels.push(["lancer", config.mode, origin]));
   rendre();
   const zone = element("seance-suite");
@@ -172,7 +175,7 @@ test("la journée ouverte : la porte s'ouvre, la séance n'est pas commencée et
 test("quitter efface la suite : retour à l'accueil, une séance qui commence, un nouveau lancement", () => {
   assert.match(html, /function backToModes\(\) \{\s*quitterSeance\(\);\s*state\.apresMesCalculs = null;/);
   assert.match(html, /function commencerSeance\(table\) \{\s*state\.encoreOuverte = false;\s*state\.apresMesCalculs = null;/);
-  assert.match(html, /function launchFromParcours\(config, origin = "parcours"\) \{\s*if \(!config\) return;\s*state\.apresMesCalculs = null;/);
+  assert.match(html, /function launchFromParcours\(config, origin = "parcours", \{puis\} = \{\}\) \{\s*if \(!config\) return;\s*state\.apresMesCalculs = null;\s*state\.apresMelange = null;/);
   assert.match(html, /apresMesCalculs: null,/, "nul au chargement");
 });
 
@@ -197,7 +200,7 @@ test("Mon parcours : Mon mélange et les étoiles ne sont plus grisés « après
 });
 
 test("rien d'autre ne change : le moteur, le serveur, la séance", () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261009-2/, "moteur inchangé");
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261009-3/, "moteur inchangé");
   assert.equal(lire("_serveur/public/prof/defi_tables_mon_parcours.js"), lire("outils/calcul_mental/defi_tables_mon_parcours.js"));
   assert.match(html, /function commencerSeance\(table\) \{[\s\S]*?seance = PARCOURS\.ouvrirSeance\(parcours, \{table\}\);\s*lancerEtapeDeSeance\(\);/);
   assert.match(html, /suite\.textContent = `Étape \$\{seance\.faites\.length \+ 1\}\\u00a0: \$\{prochaine\.nom\}\\u00a0→`;/, "dans la séance, toujours « Étape 2 : … → »");

@@ -729,6 +729,8 @@
     .launch-format b { font-weight: 900; white-space: nowrap; }
     .launch-exemple { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
     .launch-exemple b { padding: 6px 11px; border: 2px solid #c5d9e6; border-radius: 10px; background: #f4f8fb; font-size: 1.15rem; line-height: 1.2; }
+    /* Lot « Mon mélange aux paliers » : « Juste après : le test de la table de 4. » */
+    .launch-format .launch-puis { margin-top: 4px; color: var(--muted); font-weight: 700; }
     /* Lot « trois divisions » (retouche demandée sur la PR #957) : sur téléphone et petite tablette,
        toujours 3 + 2 — résultat, nombre manquant, division sur la 1re ligne, les deux autres écritures
        sur la 2e (saut forcé : sans lui, 2 + 2 + 1 ou 4 + 1 selon la table et la largeur) ; sous 430 px,
@@ -900,20 +902,11 @@
     .seance-liens { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 18px; margin: 12px 0 -4px; }
     .seance-liens button { min-height: 44px; padding: 0 2px; border: 0; background: none; color: var(--blue); font: inherit; font-size: 1rem; font-weight: 850; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
     .seance-liens button.rond { display: inline-flex; align-items: center; justify-content: center; padding: 9px 18px; border: 2px solid #c5d9e6; border-radius: 999px; background: #fff; font-size: .98rem; font-weight: 900; text-decoration: none; }
-    /* Lot « Mon mélange sur l'accueil et l'expert » (planche 1) : « Je passe
-       le test » et Mon mélange côte à côte, de la même largeur, à partir de
-       360 px ; à 320 px, l'un sous l'autre. « Choisir une activité » passe
-       dessous, en gris. */
+    /* « Choisir une activité » passe sous « Je passe le test », en gris.
+       (Lot « Mon mélange aux paliers » : le bouton Mon mélange qui se mettait
+       à côté du test est retiré, avec ses règles .deux et .melange.) */
     .seance-liens .saut { flex: 0 0 100%; height: 0; }
     .seance-liens button.gris { min-height: 40px; color: #5b7286; font-size: .92rem; font-weight: 800; }
-    .seance-liens.deux { gap: 4px 10px; }
-    .seance-liens.deux button.rond { flex: 1 1 0; min-width: 0; max-width: 190px; padding: 9px 6px; white-space: nowrap; }
-    @media (max-width: 359px) { .seance-liens.deux button.rond { flex: 0 0 100%; } }
-    .seance-liens button.melange { gap: 6px; }
-    .seance-liens button.melange .coupe-a-gagner { display: inline-flex; flex: none; width: 20px; height: 20px; color: #d49b00; }
-    .seance-liens button.melange .coupe-a-gagner svg { display: block; width: 100%; height: 100%; }
-    .seance-liens button.melange .coupe-a-gagner .corps { fill: #fff3c4; stroke: currentColor; stroke-width: 1.5; stroke-linejoin: round; }
-    .seance-liens button.melange .coupe-a-gagner .anses { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
     /* « Choisir une activité » ouvert : « ← Ma séance du jour » à gauche (la
        grammaire du « ← Ma table » d'une activité), puis un petit titre. */
     .retour-seance { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin: 0 0 4px; padding: 9px 18px; border: 2px solid #c5d9e6; border-radius: 999px; background: #fff; color: var(--blue); font: inherit; font-size: .98rem; font-weight: 900; cursor: pointer; justify-self: start; }
@@ -3011,7 +3004,7 @@
       <div class="fiche-block fiche-melange">
         <strong>Mon mélange</strong>
         <span id="fiche-melange-state" class="fiche-state"></span>
-        <p>Mes tables passées, 20 questions en 1 min 30. Une coupe avec 3, 6, puis 9 tables.</p>
+        <p>Mes tables passées, 20 questions en 1 min 30. Une coupe avec 3, puis 6 tables.</p>
       </div>
       <div class="fiche-block fiche-expert">
         <strong>Je deviens expert</strong>
@@ -3054,7 +3047,7 @@
     <p><b>Ma table.</b> De marche en marche&nbsp;: les perles, la bande, dans l’ordre, dans le désordre, les nombres manquants et les divisions… jusqu’à «&nbsp;Je passe le test&nbsp;»&nbsp;: 20&nbsp;questions en 1&nbsp;min&nbsp;30, 2&nbsp;erreurs au plus.</p>
     <p><b>Ma rangée.</b> En gris quand je l’ai construite, puis les couleurs de Mes calculs&nbsp;: rouge&nbsp;à&nbsp;revoir, bleu&nbsp;en&nbsp;route, vert&nbsp;su.</p>
     <p><b>Mes calculs du jour.</b> D’abord, chaque jour&nbsp;: 10&nbsp;calculs de mes tables passées, en 1&nbsp;minute. Réussi, un calcul revient plus tard. Raté, il revient demain.</p>
-    <p><b>Mon mélange.</b> Dès 2&nbsp;tables passées, quand je veux&nbsp;: 20&nbsp;questions en 1&nbsp;min&nbsp;30. Une coupe avec 3, 6, puis 9&nbsp;tables.</p>
+    <p><b>Mon mélange.</b> Mes tables passées mélangées&nbsp;: 20&nbsp;questions en 1&nbsp;min&nbsp;30. À 3, puis 6&nbsp;tables, il passe avant le test jusqu’à ce que je gagne la coupe.</p>
     <p><b>Les étoiles et mon rang.</b> Mes 9&nbsp;tables passées&nbsp;: toutes les tables, de plus en plus vite. Bronze… Légende&nbsp;: on ne redescend jamais.</p>
   </template>
   <footer class="site-footer">
@@ -3066,7 +3059,7 @@
   </footer>
 
   <script src="./defi_tables_core.js?v=20261009-1"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20261009-2"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20261009-3"></script>
   <script>
     (() => {
       "use strict";
@@ -4554,6 +4547,9 @@
         // touché avant d'avoir joué Mes calculs du jour — {config, origin, nom}
         // —, lancé juste après lui par UN bouton (« Je passe le test → »).
         apresMesCalculs: null,
+        // Lot « Mon mélange aux paliers » : le test qui suit Mon mélange
+        // lancé par « Je passe le test » ({config, origin, nom}), ou null.
+        apresMelange: null,
         revisionPremierScore: 0,
         revisionPremierTotal: 0,
         revisionMontes: 0,
@@ -4805,6 +4801,7 @@
       function allerAuxRecords() {
         quitterSeance();
         state.apresMesCalculs = null;
+        state.apresMelange = null;
         configuration.mode = null;
         configuration.course = null;
         configuration.tables = new Set();
@@ -4818,6 +4815,7 @@
       function backToModes() {
         quitterSeance();
         state.apresMesCalculs = null;
+        state.apresMelange = null;
         configuration.mode = null;
         configuration.tables = new Set();
         state.origin = "menu";
@@ -6233,6 +6231,7 @@
         renderCorrections();
         $("result-reglages").hidden = state.origin !== "reglages";
         if (enSeance()) noterEtapeDeSeance(suivi);
+        else if (state.apresMelange && suivi.classement && suivi.classement.type === "melange") renderSuiteApresMelange();
         if (state.origin === "decouverte") renderSuiteDecouverte(suivi);
         show("result");
       }
@@ -6306,7 +6305,7 @@
         const tempsEcoule = config.duration !== null && remaining > 0;
         const fete = feteDuResultat(suivi.evenements);
         const principal = suivi.evenements.find(evenement => typeof evenement.reussi === "boolean");
-        const verdict = {icone: "✓", titre: "", score: "", config: configurationLabel(config), detail: "", classe: "", champion: false, rang: null, coupe: null};
+        const verdict = {icone: "✓", titre: "", score: "", config: configurationLabel(config), detail: "", classe: "", champion: false, rang: null, coupes: []};
         const sur = (score, total) => `${score} sur ${total}`;
         if (config.course === "records") return verdictCourse(suivi, elapsed, verdict);
         if (config.mode === "learn") {
@@ -6353,8 +6352,8 @@
             verdict.icone = "🎉";
             verdict.titre = melange.tables.length === PARCOURS_TABLES.length ? "Mélange des 9 tables réussi !" : "Mélange réussi !";
             verdict.score = `${sur(score, total)} · ${formatElapsed(elapsed)}`;
-            // La coupe que ce mélange fait gagner (3, 6 ou 9), ou rien.
-            verdict.coupe = melange.trophee || null;
+            // Les coupes que ce mélange fait gagner (3, 6), ou aucune.
+            verdict.coupes = melange.coupes || (melange.trophee ? [melange.trophee] : []);
           } else if (rangMonte) {
             verdict.icone = "🏅";
             verdict.titre = "Nouveau rang !";
@@ -6523,14 +6522,16 @@
         rang.replaceChildren();
         rang.hidden = verdict.rang === null;
         if (verdict.rang !== null) rang.append(document.createTextNode("Tu passes "), badgeRang(PARCOURS.rang(verdict.rang)));
-        // La coupe gagnée : les trois coupes, la nouvelle dorée (elle se dore
+        // La coupe gagnée : les coupes, les nouvelles dorées (elles se dorent
         // à l'écran). Un mélange réussi qui ne gagne rien n'en montre aucune.
+        // Lot « Mon mélange aux paliers » : toutes les nouvelles — un mélange
+        // de 6 tables sans la coupe des 3 en gagne deux.
         const coupes = $("result-coupes");
         coupes.replaceChildren();
-        coupes.hidden = !verdict.coupe;
-        if (verdict.coupe) {
+        coupes.hidden = !verdict.coupes.length;
+        if (verdict.coupes.length) {
           const zone = tropheesDuMelange(PARCOURS.etatAffichage(parcours).melange.trophees);
-          zone.querySelector(`[data-tables="${verdict.coupe}"]`)?.classList.add("is-nouvelle");
+          verdict.coupes.forEach(tables => zone.querySelector(`[data-tables="${tables}"]`)?.classList.add("is-nouvelle"));
           coupes.append(zone);
         }
       }
@@ -6777,6 +6778,16 @@
           });
           zone.append(exemple);
         }
+        // Lot « Mon mélange aux paliers » : Mon mélange lancé par « Je passe
+        // le test » dit ce qui vient juste après.
+        const puis = state.apresMelange;
+        if (puis && config.mode === "validation" && config.tables.length > 1) {
+          const ligne = document.createElement("p");
+          ligne.className = "launch-puis";
+          ligne.id = "launch-puis";
+          ligne.textContent = soude(`Juste après\u00a0: le test de la table de ${puis.config.tables[0]}.`);
+          zone.append(ligne);
+        }
         zone.hidden = false;
       }
 
@@ -6793,6 +6804,8 @@
       // revient ; toutes les autres reviennent là d'où elles sont parties.
       function quitterSerie() {
         state.launchReady = false;
+        // Quitter Mon mélange de la chaîne : le test ne vient pas tout seul.
+        state.apresMelange = null;
         state.running = false;
         stopTimer();
         // Lot E2, correction de Claude Code : la démonstration des perles ne
@@ -7924,7 +7937,7 @@
         const gagnes = trophees.filter(trophee => trophee.gagne).map(trophee => trophee.tables);
         zone.setAttribute("role", "img");
         const liste = gagnes.length > 1 ? `${gagnes.slice(0, -1).join(", ")} et ${gagnes[gagnes.length - 1]}` : String(gagnes[0]);
-        zone.setAttribute("aria-label", `Coupes de Mon mélange (avec 3, 6 et 9 tables) : ${gagnes.length ? `${gagnes.length > 1 ? "gagnées" : "gagnée"} avec ${liste} tables` : "aucune pour l’instant"}`);
+        zone.setAttribute("aria-label", `Coupes de Mon mélange (avec ${trophees.map(trophee => trophee.tables).join(" et ")} tables) : ${gagnes.length ? `${gagnes.length > 1 ? "gagnées" : "gagnée"} avec ${liste} tables` : "aucune pour l’instant"}`);
         return zone;
       }
 
@@ -8349,6 +8362,7 @@
       function commencerSeance(table) {
         state.encoreOuverte = false;
         state.apresMesCalculs = null;
+        state.apresMelange = null;
         seance = PARCOURS.ouvrirSeance(parcours, {table});
         lancerEtapeDeSeance();
       }
@@ -8890,29 +8904,6 @@
         return carte;
       }
 
-      // Lot « Mon mélange sur l'accueil et l'expert » (07/10/2026, planche 1,
-      // décision de Gwenaël) : Mon mélange, à droite de « Je passe le test »,
-      // de la même forme et de la même largeur, avec une petite coupe en
-      // contour doré — seulement quand une coupe est à gagner. La porte
-      // fermée, il est là, grisé avec les autres. Il reste aussi dans Mon
-      // parcours et dans « Choisir une activité ». (Il remplace le bouton qui
-      // le proposait au bilan d'une table passée.)
-      function boutonMelangeAccueil(etat) {
-        if (!etat.melange.visible || !etat.melange.trophees.some(trophee => trophee.aGagner)) return null;
-        const bouton = document.createElement("button");
-        bouton.type = "button";
-        bouton.id = "acc-melange";
-        bouton.className = "rond melange";
-        bouton.textContent = "Mon mélange";
-        const pictogramme = document.createElement("b");
-        pictogramme.className = "coupe-a-gagner";
-        pictogramme.append(coupe());
-        bouton.append(pictogramme);
-        bouton.setAttribute("aria-label", `Mon mélange : mes ${etat.melange.tables.length} tables, une coupe à gagner`);
-        bouton.addEventListener("click", () => launchFromParcours(PARCOURS.configMelange(parcours), "menu"));
-        return bouton;
-      }
-
       // Lot « Mon mélange sur l'accueil et l'expert » (planche 2, proposition
       // A choisie par Gwenaël) : les trois coupes de Mon mélange dans la tuile
       // Mon parcours, en bas de l'accueil (aussi pour l'élève aux 9 tables) —
@@ -8971,12 +8962,10 @@
         if (!ligne.acquise) {
           lien(NOM_DU_TEST, () => launchFromParcours(PARCOURS.configValidation(table), "menu"), "rond");
         }
-        // Mon mélange, à droite de « Je passe le test », quand une coupe est à gagner.
-        const melange = boutonMelangeAccueil(etat);
-        if (melange) {
-          liens.append(melange);
-          liens.classList.add("deux");
-        }
+        // Lot « Mon mélange aux paliers » (09/10/2026, décision de Gwenaël) :
+        // plus de bouton « Mon mélange 🏆 » à droite de « Je passe le test » —
+        // Mon mélange est dans la carte (2e étape) et avant le test. Il reste
+        // libre dans Mon parcours et dans « Choisir une activité ».
         // « Choisir une activité », en gris, toujours sur sa ligne, dessous.
         const saut = document.createElement("span");
         saut.className = "saut";
@@ -9275,9 +9264,23 @@
         return prenom ? `Le parcours de ${prenom}` : "Mon parcours";
       }
 
-      function launchFromParcours(config, origin = "parcours") {
+      function launchFromParcours(config, origin = "parcours", {puis} = {}) {
         if (!config) return;
         state.apresMesCalculs = null;
+        state.apresMelange = null;
+        // Lot « Mon mélange aux paliers » (09/10/2026, décision de Gwenaël) :
+        // le test d'une table pas encore passée, touché hors de la séance,
+        // quand une coupe est à gagner (3, puis 6 tables passées) et que Mon
+        // mélange n'a pas encore été tenté aujourd'hui — Mon mélange d'abord,
+        // puis un seul bouton « Je passe le test → ». Raté, le test vient
+        // quand même. « puis » : la suite déjà décidée (null : aucune).
+        if (puis === undefined) {
+          puis = null;
+          if (origin !== "seance" && PARCOURS.melangeAvantLeTest(parcours, config)) {
+            puis = {config, origin, nom: nomDeLaSuite(config)};
+            config = PARCOURS.configMelange(parcours);
+          }
+        }
         // La porte. Lot « Mes calculs du jour d'abord » (08/10/2026, décision
         // de Gwenaël, planches 19 et 20) : elle ne bloque plus rien. Tant que
         // Mes calculs du jour n'est pas joué, ce que l'élève touche hors de la
@@ -9286,7 +9289,7 @@
         // un seul bouton mène à ce qu'il a touché. La séance du jour n'est pas
         // commencée : elle reste entière (sans Mes calculs du jour, joué).
         if (origin !== "seance" && PARCOURS.mesCalculsAFaire(parcours)) {
-          if (config.mode !== "revision") state.apresMesCalculs = {config, origin, nom: nomDeLaSuite(config)};
+          if (config.mode !== "revision") state.apresMesCalculs = {config, origin, nom: nomDeLaSuite(config), puis};
           startRevision(null, origin);
           return;
         }
@@ -9307,6 +9310,7 @@
         configuration.testLevel = config.testLevel || 1;
         configuration.course = config.course === "records" ? "records" : null;
         state.origin = origin;
+        state.apresMelange = puis;
         start();
       }
 
@@ -9338,7 +9342,17 @@
       // verdict, ses erreurs —, avec UN seul bouton vers ce que l'élève avait
       // touché (à la place de « Étape 2 : … → »). Aucun écran nouveau.
       function renderSuiteMesCalculs() {
-        const suite = state.apresMesCalculs;
+        renderBoutonSuite(state.apresMesCalculs, "apres-mes-calculs");
+      }
+
+      // Lot « Mon mélange aux paliers » : Mon mélange fini (réussi ou non),
+      // le même écran que dans la séance — le verdict, la coupe gagnée — et
+      // UN bouton : « Je passe le test → ».
+      function renderSuiteApresMelange() {
+        renderBoutonSuite(state.apresMelange, "apres-melange");
+      }
+
+      function renderBoutonSuite(suite, id) {
         const zone = $("seance-suite");
         $("result").classList.add("en-seance");
         zone.replaceChildren();
@@ -9346,12 +9360,13 @@
         const bouton = document.createElement("button");
         bouton.type = "button";
         bouton.className = "primary";
-        bouton.id = "apres-mes-calculs";
+        bouton.id = id;
         bouton.textContent = `${suite.nom}\u00a0→`;
         bouton.addEventListener("click", () => {
           state.apresMesCalculs = null;
+          state.apresMelange = null;
           effacerSuiteSeance();
-          launchFromParcours(suite.config, suite.origin);
+          launchFromParcours(suite.config, suite.origin, {puis: suite.puis || null});
         });
         zone.append(bouton);
       }
