@@ -49,7 +49,8 @@ test("le parcours couvre les tables 2 à 10 et conseille les faciles d’abord",
 
 test("les configurations du parcours sont acceptées par le moteur de questions", () => {
   // Lot « divisions » (04/10/2026) : les divisions prennent une partie de la
-  // place des nombres manquants ; une seule forme (56 ÷ 7 = ?), dans les deux sens.
+  // place des nombres manquants, dans les deux sens. Lot « trois divisions »
+  // (09/10/2026) : leurs trois écritures (56 ÷ 7 = ?, ? ÷ 7 = 8, 56 ÷ ? = 8).
   const compter = questions => ["direct", "missing", "division"].map(categorie => questions.filter(question => question.category === categorie).length);
   const entrainement = normaliser(parcours.configEntraine(7, "trous"));
   assert.equal(entrainement.mode, "train");
@@ -60,12 +61,13 @@ test("les configurations du parcours sont acceptées par le moteur de questions"
   const mixte = normaliser(parcours.configEntraine(7, "mixte"));
   assert.deepEqual(mixte.questionTypes, ["direct", "missing", "division"]);
   const sens = new Set();
+  const ecritures = new Set();
   for (let tirage = 0; tirage < 40; tirage += 1) {
     const trous = core.generateQuestions(entrainement);
     assert.deepEqual(compter(trous), [0, 5, 5], "marche 6 : 5 nombres manquants + 5 divisions");
     assert.deepEqual(compter(core.generateQuestions(mixte)), [6, 2, 2], "marche 7 : 6 résultats, 2 nombres manquants, 2 divisions");
     trous.filter(question => question.category === "division").forEach(question => {
-      assert.equal(question.type, "division-quotient", "hors d'Expert : 56 ÷ 7 = ? seulement");
+      ecritures.add(question.type);
       assert.equal(question.product, question.first * question.second);
       assert.ok([question.first, question.second].includes(7), "une division de la table de 7");
       assert.equal(question.factKey, `${Math.min(question.first, question.second)}-${Math.max(question.first, question.second)}`, "elle compte pour son calcul (56 ÷ 7 = case 7 × 8)");
@@ -73,6 +75,7 @@ test("les configurations du parcours sont acceptées par le moteur de questions"
     });
   }
   assert.equal(sens.size, 2, "les deux sens : 56 ÷ 7 et 56 ÷ 8");
+  assert.deepEqual([...ecritures].sort(), ["division-dividend", "division-divisor", "division-quotient"], "les trois écritures dans l'entraînement : 56 ÷ 7 = ?, ? ÷ 7 = 8, 56 ÷ ? = 8");
   const expert = core.generateQuestions(normaliser(parcours.configEtoile(1)));
   assert.ok(expert.some(question => question.type !== "division-quotient" && question.category === "division"), "Expert garde ses trois formes");
 
@@ -84,7 +87,8 @@ test("les configurations du parcours sont acceptées par le moteur de questions"
   const questions = core.generateQuestions(validation);
   assert.equal(questions.length, 20);
   assert.deepEqual(compter(questions), [14, 3, 3], "14 résultats, 3 nombres manquants, 3 divisions");
-  assert.ok(questions.filter(question => question.category === "division").every(question => question.type === "division-quotient"));
+  // Lot « trois divisions » (09/10/2026) : une division de chaque écriture dans le test.
+  assert.deepEqual(questions.filter(question => question.category === "division").map(question => question.type).sort(), ["division-dividend", "division-divisor", "division-quotient"]);
   assert.ok(questions.every(question => question.focusTable === 7));
   assert.equal(core.configurationLabel(validation), "Je passe le test · Table de 7 · 20 questions · 1 min 30");
   assert.equal(core.durationLabel(90), "1 min 30");

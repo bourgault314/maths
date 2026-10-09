@@ -629,7 +629,7 @@ test("« Cette semaine » : « 3 fois cette semaine », rien à zéro, plus de r
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie serveur identique, serveur qui accepte les nouvelles clés", () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261007-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261009-1/);
   const moteur = readFileSync(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = readFileSync(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie), "cp outils/calcul_mental/defi_tables_mon_parcours.js _serveur/public/prof/");
@@ -974,7 +974,7 @@ test("lot 2b : « résultats et nombres manquants » partout — noyau, fiche vi
   const noyau = lire("outils/calcul_mental/defi_tables_core.js");
   assert.match(noyau, /"direct\+missing\+division": "résultats, nombres manquants et divisions"/, "lot « divisions »");
   assert.doesNotMatch(noyau, /"les deux à la fois"/);
-  assert.match(html, /defi_tables_core\.js\?v=20261005-1/, "le noyau a changé : son numéro monte");
+  assert.match(html, /defi_tables_core\.js\?v=20261009-1/, "le noyau a changé : son numéro monte");
   // Lot « Mon parcours » (décision 15) : la fiche vierge n'est plus dessinée
   // à part — c'est la fiche de l'appli, en mode vierge, imprimée par Chromium.
   // Ses règles sont donc celles de la fiche : « résultats, nombres manquants et divisions ».

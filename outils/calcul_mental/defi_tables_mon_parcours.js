@@ -151,7 +151,8 @@
   //  - validation, mélange et « Comme la validation » : 14 résultats,
   //    3 nombres manquants, 3 divisions (au lieu de 14 + 6) ;
   //  - hors d'Expert, une seule forme de division, dans les deux sens
-  //    (56 ÷ 7 = ? et 56 ÷ 8 = ?) ;
+  //    (56 ÷ 7 = ? et 56 ÷ 8 = ?) — annulé le 09/10 par le lot « trois
+  //    divisions » : les trois écritures partout ;
   //  - Mes calculs du jour : nombres manquants et divisions dès que la table
   //    a réussi la marche 6 ou est acquise ; une question sur deux reste un
   //    résultat ;
@@ -194,6 +195,15 @@
   //  - Mes calculs du jour sans aucune réponse avant la fin du temps se note
   //    « pas réussi » (le bilan écrit « temps écoulé », pas « 0 sur 1 »).
   // Pas de changement de version.
+
+  // Lot « trois divisions » (09/10/2026 — décision de Gwenaël, qui annule
+  // « une seule forme » du lot « divisions ») : une division s'écrit de
+  // trois façons PARTOUT — 56 ÷ 7 = ?, ? ÷ 7 = 8 et 56 ÷ ? = 8 —, dans les
+  // entraînements, le test, Mon mélange (le moteur de questions s'en charge)
+  // et Mes calculs du jour (planRevision : les trois écritures à tour de
+  // rôle). Les dosages ne changent pas. Une division compte toujours pour
+  // son calcul, quelle que soit son écriture : rien de nouveau n'est
+  // enregistré, pas de changement de version.
 
   // Version du parcours enregistré. 1 = jusqu'au lot 2 de Défi tables v2 ;
   // 2 = lot 3 (mélange obligatoire, escalier des étoiles, rang, jours) ;
@@ -1341,20 +1351,29 @@
     // « nombres manquants et divisions » ou est acquise (la validation en
     // contient) ; division seule dès la première étoile. Les formes permises
     // alternent d'une question à l'autre.
+    // Lot « trois divisions » (09/10/2026) : les divisions de la série
+    // prennent les trois écritures à tour de rôle (56 ÷ 7 = ?, ? ÷ 7 = 8,
+    // 56 ÷ ? = 8), dans un ordre tiré à la première division — deux
+    // divisions dans la série, deux écritures différentes. Rien n'est tiré
+    // de plus dans une série sans division.
+    let ecritures = null;
+    let rangDivision = 0;
     return selection.map((cle, index) => {
       let [premier, second] = melanger(facteursFait(cle), random);
       const permises = formesPermises(parcours, cle);
       // Lot « divisions » : une question sur deux reste un résultat ; l'autre
-      // alterne nombre manquant et division (56 ÷ 7 = ? ou 56 ÷ 8 = ?, selon
+      // alterne nombre manquant et division (le sens, 56 ÷ 7 ou 56 ÷ 8, selon
       // l'ordre tiré des facteurs) — la part des questions « à l'envers » ne
       // change pas.
       const tour = permises.includes("missing") && permises.includes("division") ? ["direct", "missing", "direct", "division"] : permises;
       const categorie = tour[index % tour.length];
-      const type = categorie === "direct"
-        ? "direct"
-        : categorie === "division"
-          ? FORMES_DIVISION[0]
-          : FORMES_TROU[Math.floor(random() * FORMES_TROU.length)];
+      let type = "direct";
+      if (categorie === "division") {
+        if (!ecritures) ecritures = melanger(FORMES_DIVISION, random);
+        type = ecritures[rangDivision++ % ecritures.length];
+      } else if (categorie !== "direct") {
+        type = FORMES_TROU[Math.floor(random() * FORMES_TROU.length)];
+      }
       // Un nombre manquant se pose comme dans les entraînements de la table
       // que l'élève connaît : c'est ELLE qui est écrite, et l'autre nombre
       // qui manque (« 2 × ? = 16 », jamais « 16 = 8 × ? » pour qui n'a que
