@@ -1,0 +1,389 @@
+// Lot « Mon mélange aux paliers » (09/10/2026) — décisions de Gwenaël
+// (questions à choix du 09/10, planches 1 à 6) : ses élèves passaient les
+// tables une à une par « Je passe le test » sans jamais faire Mon mélange, et
+// à 9 tables le mélange des 9 (plus dur) venait avant la première étoile.
+//  - Dès 3 tables passées (puis 6), tant que la coupe n'est pas gagnée, Mon
+//    mélange (ses N tables, 1 min 30) passe AVANT : 2e étape de chaque séance
+//    (après Mes calculs du jour ; la séance garde 4 étapes, donc 2 marches ce
+//    jour-là), et avant chaque test d'une nouvelle table lancé par le bouton
+//    (Mes calculs du jour → Mon mélange → le test). Raté, la suite vient quand
+//    même ; il revient à la séance suivante et au test suivant, jusqu'à la
+//    coupe. Aucun verrou.
+//  - Deux coupes seulement : 3 et 6 tables. La 3e (les 9 tables) est retirée :
+//    elle était plus dure que la première étoile. À 9 tables, plus de mélange
+//    dans la séance : Mes calculs du jour → Tente ★. Mon mélange reste libre.
+//  - 6 tables sans la coupe des 3 : un seul mélange, sur ses 6 tables — réussi,
+//    il gagne les deux coupes, et les deux se dorent.
+//  - L'écran de Mon mélange lancé par le bouton : « Juste après : le test de
+//    la table de 3. » ; le bouton « Mon mélange 🏆 » de l'accueil est retiré ;
+//    la notice dit le passage avant le test.
+// Le moteur est joué ; les fonctions de la page sont EXTRAITES et EXÉCUTÉES
+// avec un faux DOM et le vrai moteur.
+import test from "node:test";
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import {createRequire} from "node:module";
+
+const require = createRequire(import.meta.url);
+const P = require("../outils/calcul_mental/defi_tables_mon_parcours.js");
+const lire = chemin => readFileSync(new URL(`../${chemin}`, import.meta.url), "utf8");
+const html = lire("outils/calcul_mental/defi_tables.html");
+
+const J1 = "2026-10-05"; // un lundi
+const jour = n => P.ajouterJours(J1, n - 1);
+
+function source(nom) {
+  const debut = html.indexOf(`      function ${nom}(`);
+  assert.notEqual(debut, -1, `${nom} doit exister dans la page`);
+  return html.slice(debut, html.indexOf("\n      }\n", debut) + "\n      }".length);
+}
+
+// Un élève dont les tables `passees` sont passées le jour 1, avec des calculs
+// vus ce jour-là (donc dus le lendemain) ; `reussi` : son meilleur mélange.
+function eleve(passees, {reussi = null, depart = 4} = {}) {
+  let p = P.creerParcours();
+  passees.forEach(table => { p.tables[table].acquise = jour(1); });
+  const suivante = P.ORDRE_CONSEIL.find(table => !passees.includes(table));
+  if (suivante !== undefined) p.tables[suivante].seance = {depart, n: 2, dernier: jour(1)};
+  p.melange = {...p.melange, reussi};
+  p = P.normaliserParcours(p);
+  passees.slice(0, 2).forEach(table => {
+    for (const m of [3, 4, 6]) p = P.appliquerReponse(p, `${table}-${m}`, {correcte: true, date: jour(1)}).parcours;
+  });
+  return p;
+}
+const types = (p, date, table = null) => P.ouvrirSeance(p, {aujourdhui: date, table}).file.map(prevue => (prevue.type === "marche" ? prevue.marche : prevue.type));
+
+// ------------------------------------------------------------- le moteur
+
+test("deux coupes, 3 et 6 tables ; la coupe des 9 n'existe plus", () => {
+  assert.deepEqual([...P.SEUILS.melange.trophees], [3, 6]);
+  assert.equal(P.coupeDesNeuf, undefined);
+  assert.deepEqual(P.tropheesMelange(eleve([...P.TABLES])).map(item => item.tables), [3, 6]);
+  // Le format du mélange ne change pas : 20 questions, 1 min 30, 2 erreurs.
+  assert.deepEqual([P.SEUILS.melange.total, P.SEUILS.melange.dureeMax, P.SEUILS.melange.erreursMax], [20, 90, 2]);
+});
+
+test("le palier : 3 tables (puis 6), la coupe pas gagnée — jamais à 2 tables, jamais à 9", () => {
+  assert.equal(P.melangeAuPalier(eleve([2, 10])), false, "2 tables : pas de coupe à gagner");
+  assert.equal(P.melangeAuPalier(eleve([2, 10, 5])), true, "3 tables, coupe des 3 à gagner");
+  assert.equal(P.melangeAuPalier(eleve([2, 10, 5], {reussi: 2})), true, "réussi avec 2 tables seulement : la coupe des 3 reste à gagner");
+  assert.equal(P.melangeAuPalier(eleve([2, 10, 5], {reussi: 3})), false, "la coupe des 3 gagnée");
+  assert.equal(P.melangeAuPalier(eleve([2, 10, 5, 3, 4], {reussi: 3})), false, "5 tables : la coupe des 6 pas encore à gagner");
+  assert.equal(P.melangeAuPalier(eleve([2, 10, 5, 3, 4, 6], {reussi: 3})), true, "6 tables : la coupe des 6 à gagner");
+  assert.equal(P.melangeAuPalier(eleve([2, 10, 5, 3, 4, 6], {reussi: 6})), false);
+  assert.equal(P.melangeAuPalier(eleve([2, 10, 5, 3, 4, 6, 7, 8])), true, "8 tables sans aucune coupe");
+  assert.equal(P.melangeAuPalier(eleve([...P.TABLES])), false, "9 tables : l'escalier, pas de palier");
+});
+
+test("la séance : Mon mélange en 2e étape, deux marches derrière — quatre étapes ; sans Mes calculs du jour, en 1re étape, trois marches", () => {
+  const p = eleve([2, 10, 5]);
+  assert.equal(P.ouvrirSeance(p, {aujourdhui: jour(2)}).table, 3);
+  assert.deepEqual(types(p, jour(2)), ["revision", "melange", 4, 5], "le lendemain : Mes calculs du jour, Mon mélange, deux marches");
+  assert.deepEqual(types(p, jour(1)), ["melange", 4, 5, 6], "rien de dû : Mon mélange, trois marches");
+  const programme = P.programmeDeSeance(p, P.ouvrirSeance(p, {aujourdhui: jour(2)}), jour(2));
+  assert.deepEqual(programme.etapes.map(etape => etape.nom), ["Mes calculs du jour", "Mon mélange", "Dans l’ordre", "Dans le désordre"]);
+  const melange = programme.etapes[1];
+  assert.equal(melange.detail, "mes 3 tables · 1 min 30", "la carte : « Mon mélange · mes 3 tables · 1 min 30 »");
+  assert.deepEqual(melange.config, P.configMelange(p));
+  assert.deepEqual([melange.config.tables, melange.config.total, melange.config.duration], [[2, 5, 10], 20, 90]);
+  assert.equal(programme.minutes, 5, "« 4 étapes · environ 5 min »");
+  // Au départ 6 : les marches 6 et 7 — et le test en 5e étape si la marche 7 a 9 sur 10.
+  const haut = eleve([2, 10, 5], {depart: 6});
+  assert.deepEqual(types(haut, jour(2)), ["revision", "melange", 6, 7]);
+  assert.equal(P.programmeDeSeance(haut, P.ouvrirSeance(haut, {aujourdhui: jour(2)}), jour(2)).raccourciEnFin, true, "« 4 ou 5 étapes »");
+  const sommet = jouerSeance(haut, jour(2), etape => (etape.marche === 7 ? 1 : 0));
+  assert.deepEqual(sommet.noms, ["revision", "melange", 6, 7, "validation"], "le test juste après 9 sur 10 à la marche 7");
+  // Une table déjà passée, choisie exprès : Mon mélange aussi, puis ses entraînements.
+  assert.deepEqual(types(p, jour(2), 5), ["revision", "melange", 5, 6]);
+  // La coupe gagnée : plus de mélange, trois marches derrière Mes calculs du jour.
+  assert.deepEqual(types(eleve([2, 10, 5], {reussi: 3}), jour(2)), ["revision", 4, 5, 6]);
+  // À 9 tables : Mes calculs du jour, puis l'étoile — jamais de mélange.
+  assert.deepEqual(types(eleve([...P.TABLES]), jour(2)), ["revision", "etoile"]);
+  assert.deepEqual(types(eleve([...P.TABLES]), jour(2), 7), ["revision", 5, 6, 7], "une table choisie exprès, à 9 tables : pas de mélange");
+});
+
+// Joue une séance entière avec le vrai moteur ; erreursPar(étape) donne le nombre d'erreurs.
+function jouerSeance(parcours, date, erreursPar = () => 0, table = null) {
+  let p = parcours;
+  let seance = P.ouvrirSeance(p, {aujourdhui: date, table});
+  const noms = [];
+  const evenements = [];
+  for (let garde = 0; garde < 12 && !seance.finie; garde += 1) {
+    const etape = P.etapeDeSeance(p, seance, date);
+    if (!etape) break;
+    noms.push(etape.type === "marche" || etape.type === "apprends" || etape.type === "entraine" ? etape.marche : etape.type);
+    const erreurs = erreursPar(etape);
+    let resultat;
+    if (etape.type === "revision") {
+      const plan = P.planRevision(p, {aujourdhui: date, random: () => 0.5});
+      plan.forEach((question, index) => { p = P.appliquerReponse(p, question.cle, {correcte: index >= erreurs, date}).parcours; });
+      resultat = {juste: plan.length - Math.min(erreurs, plan.length), total: plan.length};
+    } else if (etape.type === "apprends") {
+      const total = etape.cle === "gaps" ? 8 : 11;
+      p = P.appliquerSerie(P.demarrerSerie(p, etape.config), etape.config, {correct: total, total, date}).parcours;
+      resultat = {juste: total - (etape.cle === "beads" ? 0 : erreurs), total};
+    } else {
+      const total = etape.config.total;
+      const suivi = P.appliquerSerie(p, etape.config, {correct: total - erreurs, total, date});
+      p = suivi.parcours;
+      evenements.push(...suivi.evenements);
+      const principal = suivi.evenements.find(evenement => typeof evenement.reussi === "boolean");
+      resultat = {juste: total - erreurs, total, reussi: Boolean(principal && principal.reussi)};
+    }
+    ({parcours: p, seance} = P.noterEtape(p, seance, etape, resultat, date));
+  }
+  return {parcours: p, seance, noms, evenements};
+}
+
+test("Mon mélange raté : la séance continue (aucun verrou, rien ne redescend) — et il revient à la séance suivante, le jour même et le lendemain", () => {
+  const s = jouerSeance(eleve([2, 10, 5]), jour(2), etape => (etape.type === "melange" ? 5 : 0));
+  assert.deepEqual(s.noms, ["revision", "melange", 4, 5], "les marches viennent quand même");
+  assert.equal(s.seance.faites[1].reussi, false);
+  assert.equal(s.seance.faites[1].rate, false, "un mélange raté ne fait rien redescendre");
+  assert.equal(s.seance.finie, true);
+  assert.equal(s.parcours.tables[3].seance.depart, 6, "la table avance comme d'habitude (marches sans faute : +2) — le mélange raté n'y change rien");
+  assert.deepEqual(P.tropheesMelange(s.parcours).map(item => item.gagne), [false, false]);
+  // « Encore une séance » le même jour, puis le lendemain : Mon mélange revient.
+  assert.equal(types(s.parcours, jour(2))[0], "melange", "le jour même (Mes calculs du jour est fait)");
+  assert.deepEqual(types(s.parcours, jour(3)).slice(0, 2), ["revision", "melange"], "le lendemain");
+});
+
+test("Mon mélange réussi : la coupe des 3 dans l'événement, et plus de mélange jusqu'à 6 tables", () => {
+  const s = jouerSeance(eleve([2, 10, 5]), jour(2));
+  assert.deepEqual(s.noms, ["revision", "melange", 4, 5]);
+  const melange = s.evenements.find(evenement => evenement.type === "melange");
+  assert.deepEqual([melange.reussi, melange.trophee, melange.coupes], [true, 3, [3]]);
+  assert.equal(P.melangeAuPalier(s.parcours), false);
+  assert.ok(P.ouvrirSeance(s.parcours, {aujourdhui: jour(3)}).file.every(prevue => prevue.type !== "melange"));
+  // Gagnée ailleurs pendant la séance (Mon mélange libre, autre appareil) : l'étape s'efface.
+  const p = eleve([2, 10, 5]);
+  const seance = P.ouvrirSeance(p, {aujourdhui: jour(1)});
+  const gagne = P.appliquerSerie(p, P.configMelange(p), {correct: 20, total: 20, date: jour(1)}).parcours;
+  assert.equal(P.etapeDeSeance(gagne, seance, jour(1)).marche, 4);
+});
+
+test("6 tables sans la coupe des 3 : un seul mélange, sur les 6 — réussi, les deux coupes d'un coup", () => {
+  const p = eleve([2, 10, 5, 3, 4, 6]);
+  assert.deepEqual(P.tropheesMelange(p).map(item => [item.tables, item.aGagner]), [[3, true], [6, true]]);
+  assert.deepEqual(P.configMelange(p).tables, [2, 3, 4, 5, 6, 10], "un mélange sur ses 6 tables");
+  const suite = P.appliquerSerie(p, P.configMelange(p), {correct: 18, total: 20, date: jour(2)});
+  assert.deepEqual(suite.evenements[0], {type: "melange", reussi: true, score: 18, total: 20, tables: [2, 3, 4, 5, 6, 10], trophee: 6, coupes: [3, 6]});
+  assert.deepEqual(P.tropheesMelange(suite.parcours).map(item => item.gagne), [true, true]);
+  assert.equal(P.melangeAuPalier(suite.parcours), false);
+});
+
+test("la séance coupée se reprend avec Mon mélange à sa place (rangé 200), sur un autre appareil aussi", () => {
+  let p = eleve([2, 10, 5]);
+  let seance = P.ouvrirSeance(p, {aujourdhui: jour(2)});
+  const etape = P.etapeDeSeance(p, seance, jour(2));
+  const plan = P.planRevision(p, {aujourdhui: jour(2), random: () => 0.5});
+  plan.forEach(question => { p = P.appliquerReponse(p, question.cle, {correcte: true, date: jour(2)}).parcours; });
+  ({parcours: p, seance} = P.noterEtape(p, seance, etape, {juste: plan.length, total: plan.length}, jour(2)));
+  assert.equal(p.enCours.file[0], 200, "200 : le mélange");
+  const relu = P.normaliserParcours(JSON.parse(JSON.stringify(p)));
+  const reprise = P.seanceEnCours(relu, {aujourdhui: jour(2)});
+  assert.deepEqual(reprise, seance);
+  assert.equal(P.etapeDeSeance(relu, reprise, jour(2)).nom, "Mon mélange");
+});
+
+test("avant le test par le bouton : une table pas encore passée, une coupe à gagner — le test d'une table passée, l'entraînement « comme le test », le mélange lui-même : non", () => {
+  const p = eleve([2, 10, 5]);
+  assert.equal(P.melangeAvantLeTest(p, P.configValidation(3)), true);
+  assert.equal(P.melangeAvantLeTest(p, P.configValidation(7)), true, "n'importe quelle table pas encore passée");
+  assert.equal(P.melangeAvantLeTest(p, P.configValidation(5)), false, "une table passée, rejouée : pas de mélange avant");
+  assert.equal(P.melangeAvantLeTest(p, P.configValidation(3, 120)), false, "« Comme le test, en 2 min » : un entraînement");
+  assert.equal(P.melangeAvantLeTest(p, P.configMelange(p)), false);
+  assert.equal(P.melangeAvantLeTest(p, P.configEntraine(3, "mixte")), false);
+  assert.equal(P.melangeAvantLeTest(eleve([2, 10, 5], {reussi: 3}), P.configValidation(3)), false, "la coupe gagnée");
+  assert.equal(P.melangeAvantLeTest(eleve([2, 10]), P.configValidation(5)), false, "2 tables : rien à gagner");
+  // Raté AUJOURD'HUI (le vrai jour de l'appareil) : il revient avant le test
+  // suivant et dans la séance suivante — « à chaque fois », pas « une fois par
+  // jour » (décision de Gwenaël, 09/10).
+  const aujourdhui = P.jourLocal();
+  const rate = P.appliquerSerie(p, P.configMelange(p), {correct: 15, total: 20, date: aujourdhui}).parcours;
+  assert.equal(rate.melange.dernier, aujourdhui);
+  assert.equal(P.melangeAvantLeTest(rate, P.configValidation(3)), true, "à chaque fois, tant que la coupe manque");
+  assert.equal(P.melangeAuPalier(rate), true);
+  assert.ok(P.ouvrirSeance(rate, {aujourdhui}).file.some(prevue => prevue.type === "melange"), "« Encore une séance » le même jour : Mon mélange revient");
+});
+
+test("simulation : 300 élèves, 30 jours — le mélange seulement aux paliers, en 1re ou 2e étape, une fois par séance ; jamais plus de 5 étapes", () => {
+  let graine = 777;
+  const hasard = () => { graine = (graine * 1103515245 + 12345) % 2147483648; return graine / 2147483648; };
+  let melanges = 0;
+  let coupes = 0;
+  for (let numero = 0; numero < 300; numero += 1) {
+    let p = P.creerParcours();
+    const niveau = hasard();
+    for (let n = 1; n <= 30; n += 1) {
+      if (hasard() < 0.3) continue;
+      const avant = p;
+      const palier = P.melangeAuPalier(avant);
+      const s = jouerSeance(p, jour(n), etape => (etape.type === "revision" || etape.type === "apprends" ? 0 : hasard() < niveau ? Math.floor(hasard() * 4) : 0));
+      p = s.parcours;
+      assert.ok(s.noms.length <= 5, `${s.noms}`);
+      const ici = s.noms.filter(nom => nom === "melange").length;
+      assert.equal(ici, palier ? 1 : 0, `le mélange si et seulement si un palier (${s.noms})`);
+      if (ici) {
+        melanges += 1;
+        assert.ok(s.noms.indexOf("melange") <= 1, `en 1re ou 2e étape (${s.noms})`);
+        assert.ok(!P.toutesAcquises(avant));
+      }
+      coupes += s.evenements.filter(evenement => evenement.type === "melange" && evenement.trophee).length;
+    }
+  }
+  assert.ok(melanges > 100, `des mélanges aux paliers (${melanges})`);
+  assert.ok(coupes > 50, `des coupes gagnées (${coupes})`);
+});
+
+// --------------------------------------------------------------- la page
+
+function lanceur(parcours, {aujourdhui = jour(2)} = {}) {
+  const appels = [];
+  const state = {apresMesCalculs: "reste d'avant", apresMelange: "reste d'avant", origin: null};
+  const configuration = {};
+  const fabrique = new Function("state", "PARCOURS", "parcours", "configuration", "startRevision", "start", "TRAIN_TYPES", "CORE", "NOM_DU_TEST", "majuscule", "NOMS_ENTRAINEMENTS", "recordConnu",
+    `${source("nomDeLaSuite")}\n${source("launchFromParcours")}\nreturn launchFromParcours;`);
+  const launchFromParcours = fabrique(state, {...P, mesCalculsAFaire: q => P.mesCalculsAFaire(q, aujourdhui)}, parcours, configuration,
+    (table, origin) => appels.push(["revision", table, origin]), () => appels.push(["start", configuration.mode, [...configuration.tables].join(",")]),
+    {desordre: ["direct"]}, {PRESETS: {validation: {total: 20, duration: 90}, train: {total: 10, duration: null}, learn: {total: 11, duration: null}, test: {total: 25, duration: 120}}},
+    "Je passe le test", texte => texte.charAt(0).toUpperCase() + texte.slice(1),
+    {desordre: "dans le désordre", trous: "nombres manquants et divisions", mixte: "résultats, nombres manquants et divisions"},
+    () => ({meilleur: null}));
+  return {launchFromParcours, appels, state};
+}
+
+test("la page : « Je passe le test » le matin — Mes calculs du jour, et la suite retenue : Mon mélange, PUIS le test", () => {
+  const p = eleve([2, 10, 5]);
+  assert.equal(P.mesCalculsAFaire(p, jour(2)), true);
+  const l = lanceur(p);
+  const test = P.configValidation(3);
+  l.launchFromParcours(test, "menu");
+  assert.deepEqual(l.appels, [["revision", null, "menu"]]);
+  assert.deepEqual(l.state.apresMesCalculs, {config: P.configMelange(p), origin: "menu", nom: "Mon mélange", puis: {config: test, origin: "menu", nom: "Je passe le test"}},
+    "le bouton de la fin de Mes calculs du jour : « Mon mélange → » ; après lui, le test");
+  assert.equal(l.state.apresMelange, null);
+});
+
+test("la page : Mes calculs du jour déjà joué — Mon mélange se lance, le test attend derrière (state.apresMelange)", () => {
+  const p = {...eleve([2, 10, 5]), calculsDuJour: jour(2)};
+  const l = lanceur(p);
+  const test = P.configValidation(3);
+  l.launchFromParcours(test, "menu");
+  assert.deepEqual(l.appels, [["start", "validation", "2,5,10"]], "le mélange de ses 3 tables");
+  assert.deepEqual(l.state.apresMelange, {config: test, origin: "menu", nom: "Je passe le test"});
+  assert.equal(l.state.apresMesCalculs, null);
+  // Le bouton « Je passe le test → » relance avec puis: null : le test, directement.
+  const ensuite = lanceur(p);
+  ensuite.launchFromParcours(test, "menu", {puis: null});
+  assert.deepEqual(ensuite.appels, [["start", "validation", "3"]]);
+  assert.equal(ensuite.state.apresMelange, null);
+});
+
+test("la page : pas de mélange devant — coupe gagnée, table déjà passée, dans la séance, ou toute autre activité", () => {
+  const sans = (parcours, config, origin = "menu") => {
+    const l = lanceur({...parcours, calculsDuJour: jour(2)});
+    l.launchFromParcours(config, origin);
+    assert.equal(l.state.apresMelange, null);
+    return l.appels;
+  };
+  assert.deepEqual(sans(eleve([2, 10, 5], {reussi: 3}), P.configValidation(3)), [["start", "validation", "3"]], "la coupe gagnée");
+  assert.deepEqual(sans(eleve([2, 10, 5]), P.configValidation(5)), [["start", "validation", "5"]], "une table passée, rejouée");
+  assert.deepEqual(sans(eleve([2, 10, 5]), P.configValidation(3), "seance"), [["start", "validation", "3"]], "dans la séance, le mélange a déjà sa place");
+  assert.deepEqual(sans(eleve([2, 10, 5]), P.configEntraine(3, "desordre")), [["start", "train", "3"]]);
+  assert.deepEqual(sans(eleve([2, 10, 5]), P.configMelange(eleve([2, 10, 5]))), [["start", "validation", "2,5,10"]], "Mon mélange libre : lui seul");
+});
+
+function fauxElement(tag) {
+  const classes = new Set();
+  const el = {
+    tag, id: "", className: "", type: "", hidden: true, children: [], ecouteurs: {}, _texte: "",
+    classList: {add: c => classes.add(c), contains: c => classes.has(c)},
+    get textContent() { return el._texte + el.children.map(n => (typeof n === "string" ? n : n.textContent)).join(""); },
+    set textContent(v) { el.children = []; el._texte = String(v); },
+    replaceChildren: (...n) => { el.children = n; el._texte = ""; }, append: (...n) => el.children.push(...n),
+    addEventListener: (type, f) => { el.ecouteurs[type] = f; }
+  };
+  return el;
+}
+
+test("la page : Mon mélange fini (réussi ou raté), UN seul bouton « Je passe le test → » — qui lance le test sans repasser par le mélange", () => {
+  assert.match(html, /if \(enSeance\(\)\) noterEtapeDeSeance\(suivi\);\s*else if \(state\.apresMelange && suivi\.classement && suivi\.classement\.type === "melange"\) renderSuiteApresMelange\(\);/,
+    "dans finish : seulement après le mélange de la chaîne");
+  const elements = new Map();
+  const $ = id => { if (!elements.has(id)) elements.set(id, fauxElement("div")); return elements.get(id); };
+  const appels = [];
+  const test = P.configValidation(3);
+  const state = {apresMesCalculs: null, apresMelange: {config: test, origin: "menu", nom: "Je passe le test"}};
+  const rendre = new Function("$", "document", "state", "effacerSuiteSeance", "launchFromParcours", `${source("renderSuiteApresMelange")}\n${source("renderBoutonSuite")}\nreturn renderSuiteApresMelange;`)(
+    $, {createElement: fauxElement}, state, () => appels.push("effacer"), (config, origin, options) => appels.push(["lancer", config, origin, options]));
+  rendre();
+  const zone = $("seance-suite");
+  assert.equal(zone.hidden, false);
+  assert.equal(zone.children.length, 1, "un seul bouton");
+  const bouton = zone.children[0];
+  assert.equal(bouton.textContent, "Je passe le test →");
+  assert.equal(bouton.id, "apres-melange");
+  assert.equal(bouton.className, "primary");
+  assert.ok($("result").classList.contains("en-seance"), "Ma table et Rejouer cachés, comme dans la séance");
+  bouton.ecouteurs.click();
+  assert.equal(state.apresMelange, null);
+  assert.deepEqual(appels, ["effacer", ["lancer", test, "menu", {puis: null}]]);
+});
+
+test("la page : sortir efface la suite — quitter Mon mélange, revenir à l'accueil, commencer une séance, aller aux records", () => {
+  assert.match(source("quitterSerie"), /state\.launchReady = false;\s*\/\/[^\n]*\n\s*state\.apresMelange = null;/);
+  assert.match(source("backToModes"), /state\.apresMesCalculs = null;\s*state\.apresMelange = null;/);
+  assert.match(source("commencerSeance"), /state\.apresMesCalculs = null;\s*state\.apresMelange = null;/);
+  assert.match(source("allerAuxRecords"), /state\.apresMesCalculs = null;\s*state\.apresMelange = null;/);
+  assert.match(html, /apresMelange: null,/, "nul au chargement");
+});
+
+test("la page : l'écran de Mon mélange lancé par le bouton dit « Juste après : le test de la table de 3. » (version B, choix de Gwenaël)", () => {
+  const elements = new Map();
+  const $ = id => { if (!elements.has(id)) elements.set(id, fauxElement("div")); return elements.get(id); };
+  const state = {origin: "menu", apresMelange: {config: P.configValidation(3), origin: "menu", nom: "Je passe le test"}};
+  const rendre = new Function("$", "document", "state", "PARCOURS", "recordConnu", `${source("soude")}\n${source("renderFormatLancement")}\nreturn renderFormatLancement;`)(
+    $, {createElement: fauxElement, createTextNode: texte => texte}, state, P, () => ({meilleur: null}));
+  const p = eleve([2, 10, 5]);
+  rendre(P.configMelange(p));
+  const zone = $("launch-format");
+  assert.equal(zone.hidden, false);
+  const derniere = zone.children[zone.children.length - 1];
+  assert.equal(derniere.id, "launch-puis");
+  assert.equal(derniere.className, "launch-puis");
+  assert.equal(derniere.textContent, "Juste après : le test de la table de 3.");
+  assert.equal(zone.children.length, 3, "« 18 bonnes réponses pour réussir. », les cinq pastilles, puis la ligne");
+  // Mon mélange libre (rien après) : pas de ligne ; le test lui-même non plus.
+  state.apresMelange = null;
+  rendre(P.configMelange(p));
+  assert.equal(zone.children.length, 2);
+  state.apresMelange = {config: P.configValidation(3), origin: "menu", nom: "Je passe le test"};
+  rendre(P.configValidation(3));
+  assert.ok(zone.children.every(enfant => enfant.id !== "launch-puis"), "l'écran du test n'a pas la ligne");
+  assert.match(html, /\.launch-format \.launch-puis \{ margin-top: 4px; color: var\(--muted\); font-weight: 700; \}/, "en gris, sous les pastilles");
+});
+
+test("la page : plus de bouton « Mon mélange 🏆 » sur l'accueil — « Je passe le test », puis « Choisir une activité »", () => {
+  assert.doesNotMatch(html, /boutonMelangeAccueil|id = "acc-melange"|coupe-a-gagner|\.seance-liens\.deux/);
+  assert.match(source("renderSeanceAccueil"), /lien\(NOM_DU_TEST, \(\) => launchFromParcours\(PARCOURS\.configValidation\(table\), "menu"\), "rond"\);\s*\}\s*(\/\/[^\n]*\n\s*)*const saut = document\.createElement\("span"\);/);
+});
+
+test("la page : les textes — la notice dit le passage avant le test, la fiche « 3, puis 6 tables », l'étoile sans coupe", () => {
+  const notice = html.match(/<template id="notice-seance">([\s\S]*?)<\/template>/)[1];
+  assert.match(notice, /<p><b>Mon mélange\.<\/b> Mes tables passées mélangées&nbsp;: 20&nbsp;questions en 1&nbsp;min&nbsp;30\. À 3, puis 6&nbsp;tables, il passe avant le test jusqu’à ce que je gagne la coupe\.<\/p>/);
+  assert.match(html, /<p>Mes tables passées, 20 questions en 1 min 30\. Une coupe avec 3, puis 6 tables\.<\/p>/, "la fiche");
+  assert.doesNotMatch(html, /3, 6, puis 9|avec 3, 6 et 9 tables/);
+  // L'étoile ne donne aucune coupe : son verdict n'en montre pas.
+  assert.match(source("verdictSerie"), /\} else if \(etoile\) \{\s*verdict\.icone = "🌟";\s*verdict\.titre = `\$\{PARCOURS\.symboleEtoile\(etoile\.etoile\)\} obtenue !`;\s*verdict\.score = `\$\{sur\(score, total\)\} · \$\{formatElapsed\(elapsed\)\}`;\s*\}/);
+});
+
+test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; la fiche vierge et sa vignette refaites", () => {
+  assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261009-3"><\/script>/);
+  assert.match(html, /<script src="\.\/defi_tables_core\.js\?v=20261009-1"><\/script>/, "le noyau n'a pas bougé");
+  assert.equal(lire("_serveur/public/prof/defi_tables_mon_parcours.js"), lire("outils/calcul_mental/defi_tables_mon_parcours.js"));
+  assert.match(lire("_serveur/public/VERSION"), /^lot defi-tables-melange-paliers$/m);
+  assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=defi-tables-paliers-20261009-1/);
+});

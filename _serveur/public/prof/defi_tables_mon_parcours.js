@@ -259,9 +259,15 @@
     // Le mélange a le format du test d'une table : 20 questions en 1 min 30,
     // 2 erreurs max — dès 2 tables passées. Libre depuis le lot « un seul
     // système » : il ne verrouille rien.
-    // « trophees » : les trois trophées de Mon mélange — réussi avec au
-    // moins 3, 6, puis les 9 tables (les seuils des rangs Argent, Or, Platine).
-    melange: Object.freeze({total: 20, dureeMax: 90, erreursMax: 2, tablesMin: 2, trophees: Object.freeze([3, 6, 9])}),
+    // « trophees » : les coupes de Mon mélange — réussi avec au moins 3,
+    // puis 6 tables (les seuils des rangs Argent et Or). Lot « Mon mélange aux
+    // paliers » (09/10/2026, décision de Gwenaël) : il n'y en a plus que DEUX.
+    // La 3e (les 9 tables, 20 questions en 1 min 30, soit 4,5 s par question)
+    // était plus dure que la première étoile (25 questions en 2 min, 4,8 s) :
+    // le chemin monte maintenant sans à-coup — le test d'une table, la coupe
+    // des 3, la coupe des 6, puis l'escalier des étoiles. Mon mélange des 9
+    // tables reste libre, sans coupe.
+    melange: Object.freeze({total: 20, dureeMax: 90, erreursMax: 2, tablesMin: 2, trophees: Object.freeze([3, 6])}),
     // L'escalier des étoiles : 25 questions, toutes les tables, produits +
     // trous + divisions, 2 erreurs max ; une durée par marche, en secondes.
     // « erreursMaxCouronne » (09/10/2026, décision de Gwenaël, lot « Les
@@ -916,16 +922,18 @@
       copie.melange.dernier = date;
       copie.melange.score = Math.min(correct, SEUILS.melange.total);
       copie.melange.aRefaireAvec = null;
-      // « trophee » : le trophée gagné par ce mélange (3, 6 ou 9), ou null.
-      let trophee = null;
+      // « trophee » : la plus grande coupe gagnée par ce mélange (3 ou 6),
+      // ou null ; « coupes » (lot « Mon mélange aux paliers ») : toutes celles
+      // qu'il fait gagner — 6 tables sans la coupe des 3 : un seul mélange
+      // réussi gagne les deux (décision de Gwenaël, 09/10).
+      const avant = tropheesMelange(copie).filter(item => item.gagne).map(item => item.tables);
       if (reussi) {
-        const avant = tropheesMelange(copie).filter(item => item.gagne).length;
         copie.melange.aJour = true;
         copie.melange.reussi = Math.max(copie.melange.reussi || 0, classement.tables.length);
-        const gagnes = tropheesMelange(copie).filter(item => item.gagne);
-        if (gagnes.length > avant) trophee = gagnes[gagnes.length - 1].tables;
       }
-      evenements.push({type: "melange", reussi, score: correct, total, tables: classement.tables, trophee});
+      const coupes = tropheesMelange(copie).filter(item => item.gagne && !avant.includes(item.tables)).map(item => item.tables);
+      const trophee = coupes.length ? coupes[coupes.length - 1] : null;
+      evenements.push({type: "melange", reussi, score: correct, total, tables: classement.tables, trophee, coupes});
     } else if (classement.type === "etoile") {
       const reussi = erreurs <= erreursMaxEtoile(classement.etoile);
       const avant = copie.expert.etoiles;
@@ -1021,20 +1029,39 @@
     return {mode: "validation", tables: acquises, total: SEUILS.melange.total, duration: SEUILS.melange.dureeMax};
   }
 
-  // Les trois trophées de Mon mélange : « gagne » — il a été réussi avec au
-  // moins ce nombre de tables ; « aGagner » — pas encore gagné, et l'élève a
-  // assez de tables passées pour le tenter maintenant.
-  // La coupe des 9 tables : Mon mélange réussi avec les 9 tables (lot « Mon
-  // mélange sur l'accueil et l'expert ») — tant qu'elle manque, il entre dans
-  // la séance de l'élève aux 9 tables.
-  function coupeDesNeuf(parcours) {
-    return (parcours.melange.reussi || 0) >= TABLES.length;
-  }
-
+  // Les coupes de Mon mélange : « gagne » — il a été réussi avec au moins
+  // ce nombre de tables ; « aGagner » — pas encore gagnée, et l'élève a assez
+  // de tables passées pour la tenter maintenant. (Lot « Mon mélange aux
+  // paliers » : deux coupes, 3 et 6 tables — voir SEUILS.melange. La « coupe
+  // des 9 », et coupeDesNeuf qui la lisait, n'existent plus.)
   function tropheesMelange(parcours) {
     const passees = tablesAcquises(parcours).length;
     const reussi = parcours.melange.reussi || 0;
     return SEUILS.melange.trophees.map(tables => ({tables, gagne: reussi >= tables, aGagner: reussi < tables && passees >= tables}));
+  }
+
+  // Lot « Mon mélange aux paliers » (09/10/2026, décisions de Gwenaël) : ses
+  // élèves passaient les tables une à une par « Je passe le test » sans
+  // jamais faire Mon mélange. Dès 3 tables passées (puis 6), tant que la
+  // coupe n'est pas gagnée, Mon mélange — ses N tables passées, 1 min 30 —
+  // passe AVANT : 2e étape de chaque séance (après Mes calculs du jour), et
+  // avant chaque test d'une nouvelle table lancé par le bouton. Raté, la
+  // suite vient quand même : aucun verrou ; il revient à la séance suivante
+  // et au test suivant, jusqu'à la coupe. Pas à 9 tables : là, c'est
+  // l'escalier des étoiles.
+  function melangeAuPalier(parcours) {
+    if (toutesAcquises(parcours)) return false;
+    return tropheesMelange(parcours).some(trophee => trophee.aGagner);
+  }
+
+  // Le test d'une table pas encore passée, lancé hors de la séance : Mon
+  // mélange vient-il d'abord ? (La page l'enchaîne : Mes calculs du jour s'il
+  // n'est pas fait, Mon mélange, puis le test.)
+  function melangeAvantLeTest(parcours, config) {
+    const classement = classerSerie(parcours, config);
+    if (!classement || classement.type !== "validation") return false;
+    if (parcours.tables[classement.table].acquise) return false;
+    return melangeAuPalier(parcours);
   }
 
   // Les erreurs permises sur une marche : 2, sauf la couronne (aucune).
@@ -1844,16 +1871,18 @@
     let echelle = false;
     // Les 9 tables passées et aucune choisie (lot 2) : après Mes calculs du
     // jour, la marche suivante de l'escalier des étoiles. Lot « Mon mélange
-    // sur l'accueil et l'expert » (07/10/2026, décision de Gwenaël) : tant
-    // que la coupe des 9 tables n'est pas gagnée, Mon mélange des 9 tables
-    // vient avant l'étoile. Raté, l'étoile vient quand même, et il revient à
-    // la séance suivante ; gagnée, la séance repasse à Mes calculs du jour,
-    // puis l'étoile.
+    // aux paliers » (09/10/2026, décision de Gwenaël) : plus de Mon mélange
+    // des 9 tables avant l'étoile (lot « Mon mélange sur l'accueil et
+    // l'expert ») — il était plus dur que la première étoile.
     if (choisie === null && toutesAcquises(parcours)) {
-      if (!coupeDesNeuf(parcours)) file.push({type: "melange"});
       file.push({type: "etoile"});
     }
     if (choisie !== null) {
+      // Lot « Mon mélange aux paliers » : 3 (puis 6) tables passées et la
+      // coupe pas encore gagnée — Mon mélange en 2e étape. Le plafond garde
+      // la séance à quatre étapes : deux marches ce jour-là (décision de
+      // Gwenaël, 09/10).
+      if (melangeAuPalier(parcours)) file.push({type: "melange"});
       const ligne = parcours.tables[choisie];
       echelle = !ligne.acquise;
       depart = echelle ? bornerDepart(ligne.seance.depart) : MARCHE_TABLE_PASSEE;
@@ -1885,7 +1914,7 @@
   // de nombres (lib/progression.php : aucun texte, aucune liste d'objets) :
   // la séance est donc rangée en nombres.
   //  - « file » : un code par étape à venir — 100 Mes calculs du jour, 200 le
-  //    mélange (celui de l'élève aux 9 tables), 300 l'étoile, et pour une marche son numéro (1 à 8), + 10
+  //    mélange (aux paliers, lot du 09/10/2026), 300 l'étoile, et pour une marche son numéro (1 à 8), + 10
   //    pour la marche d'en dessous après un raté, + 20 pour la marche ratée
   //    refaite, + 30 pour la validation du raccourci ;
   //  - « faites » : quatre nombres par étape faite — son code (100, 200,
@@ -2124,15 +2153,15 @@
         if (!calculs) continue;
         return {type: "revision", nom: "Mes calculs du jour", calculs, duree: dureeMesCalculs(calculs), porte: !serie.faite, config: configRevision(), minutes: MINUTES_ETAPE.revision, prevue};
       }
-      // Mon mélange n'est une étape que dans la séance de l'élève aux 9
-      // tables (aucune table choisie), tant que la coupe des 9 n'est pas
-      // gagnée (lot « Mon mélange sur l'accueil et l'expert ») : gagné ailleurs
-      // entre-temps, il s'efface ; celui d'une séance d'avant le lot « un seul
-      // système » (sur une table) s'efface aussi.
+      // Mon mélange aux paliers (lot du 09/10/2026) : l'étape d'une séance
+      // sur une table, tant qu'une coupe est à gagner — gagnée ailleurs
+      // entre-temps, elle s'efface. Plus jamais à 9 tables : celle de l'élève
+      // aux 9 tables d'avant ce lot s'efface d'une séance reprise.
       if (prevue.type === "melange") {
-        if (seance.table !== null || !toutesAcquises(parcours) || coupeDesNeuf(parcours)) continue;
-        return {type: "melange", nom: "Mon mélange", detail: `mes ${TABLES.length}\u00a0tables · ${libelleDuree(SEUILS.melange.dureeMax).replace(/ /g, "\u00a0")}`,
-          config: configMelange(parcours), minutes: MINUTES_ETAPE.melange, prevue};
+        if (!melangeAuPalier(parcours)) continue;
+        const config = configMelange(parcours);
+        return {type: "melange", nom: "Mon mélange", detail: `mes ${config.tables.length}\u00a0tables · ${libelleDuree(SEUILS.melange.dureeMax).replace(/ /g, "\u00a0")}`,
+          config, minutes: MINUTES_ETAPE.melange, prevue};
       }
       if (prevue.type === "etoile") {
         // Pas avant les 9 tables passées ; la couronne gagnée, c'est elle
@@ -3183,7 +3212,8 @@
     configValidation,
     configMelange,
     tropheesMelange,
-    coupeDesNeuf,
+    melangeAuPalier,
+    melangeAvantLeTest,
     configEtoile,
     dureeEtoile,
     erreursMaxEtoile,

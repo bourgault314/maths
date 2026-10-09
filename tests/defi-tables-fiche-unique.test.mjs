@@ -166,10 +166,10 @@ test("1. une seule fiche : la page 1 ne se resserre plus pour le professeur — 
 });
 
 test("1. la vignette et le catalogue suivent la fiche vierge refaite", () => {
-  assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=7"/);
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=defi-tables-pied-20261008-1/);
+  assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=defi-tables-paliers-20261009-1/);
   // Le moteur n'a pas bougé : rien à déposer sur le serveur.
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261009-2/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261009-3/);
   assert.equal(lire("_serveur/public/prof/defi_tables_mon_parcours.js"), lire("outils/calcul_mental/defi_tables_mon_parcours.js"));
 });
 
@@ -189,7 +189,7 @@ test("2. la page du professeur : une page 2, après le pied de la page 1, avec s
   assert.doesNotMatch(html, /fiche-prof-vide|Aucune séance ni activité enregistrée/);
 });
 
-test("2. Toti : ses 9 tables passées le 8 oct. par le test direct, les 3 coupes, la couronne", () => {
+test("2. Toti : ses 9 tables passées le 8 oct. par le test direct, les 2 coupes (lot « Mon mélange aux paliers »), la couronne", () => {
   const t = pageProf(toti(), {prenom: "Toti", classe: "306"});
   assert.equal(t.ligne("fiche-prof-qui"), "Toti · 306 · 08/10/2026");
   assert.equal(t.lignes.length, 9, "toujours les 9 tables");
@@ -198,7 +198,7 @@ test("2. Toti : ses 9 tables passées le 8 oct. par le test direct, les 3 coupes
     assert.deepEqual(l.slice(1, 9), Array(8).fill("·"), "aucune séance, aucune activité");
     assert.equal(l[9], "8 oct. · test direct");
   });
-  assert.equal(t.ligne("fiche-prof-melange"), "les coupes des 3, 6 et 9 tables · dernier joué le 8 oct. : 19 sur 20.");
+  assert.equal(t.ligne("fiche-prof-melange"), "les coupes des 3 et 6 tables · dernier joué le 8 oct. : 19 sur 20.");
   assert.equal(t.ligne("fiche-prof-expert"), "la couronne, gagnée le 8 oct.", "un seul point après « oct. »");
   assert.equal(t.ligne("fiche-prof-calculs"), "boîte 1 : 5 · boîte 2 : 31 · boîte 3 : 0 · boîte 4 : 0 · boîte 5 : 0 · pas encore vus : 0.");
   assert.equal(t.ligne("fiche-prof-jours"), "8 oct. (1 séance).");
@@ -237,7 +237,7 @@ test("2. Lina : « test direct » pour les tables passées sans rien, la date se
 test("2. Maëlys : ses étoiles et le jour de sa dernière réussite ; un élève neuf : les 9 tables vides, rien d'autre", () => {
   const m = pageProf(maelys(), {prenom: "Maëlys", classe: "306"});
   assert.equal(m.ligne("fiche-prof-expert"), "★★ · dernière réussite le 7 oct.");
-  assert.equal(m.ligne("fiche-prof-melange"), "les coupes des 3, 6 et 9 tables · dernier joué le 5 oct. : 20 sur 20.");
+  assert.equal(m.ligne("fiche-prof-melange"), "les coupes des 3 et 6 tables · dernier joué le 5 oct. : 20 sur 20.");
   assert.equal(m.ligne("fiche-prof-calculs"), "boîte 1 : 0 · boîte 2 : 0 · boîte 3 : 0 · boîte 4 : 36 · boîte 5 : 0 · pas encore vus : 0.");
   const neuf = P.creerParcours();
   neuf.prenom = "Noé";
@@ -303,7 +303,7 @@ test("3. à l'écran, Mon parcours : la même pastille ; sur ordinateur, la colo
 
 test("4 et 5. plus de lignes de règles ; Mon mélange et Je deviens expert, deux cartes côte à côte", () => {
   assert.doesNotMatch(html, /fiche-rules|<b>Mes calculs<\/b> : les 5 carrés|<b>Passée ✓<\/b>/);
-  assert.match(fiche, /<div class="fiche-duo">\s*<div class="fiche-block fiche-melange">\s*<strong>Mon mélange<\/strong>\s*<span id="fiche-melange-state" class="fiche-state"><\/span>\s*<p>Mes tables passées, 20 questions en 1 min 30\. Une coupe avec 3, 6, puis 9 tables\.<\/p>\s*<\/div>\s*<div class="fiche-block fiche-expert">\s*<strong>Je deviens expert<\/strong>\s*<span id="fiche-stars" class="fiche-stars"><\/span>\s*<p>Mes 9 tables passées : 25 questions\. ★ 2 min · ★★ 1 min 45 · ★★★ 1 min 30 · ★★★★ 1 min 15 · 👑 1 min<\/p>\s*<\/div>\s*<\/div>/);
+  assert.match(fiche, /<div class="fiche-duo">\s*<div class="fiche-block fiche-melange">\s*<strong>Mon mélange<\/strong>\s*<span id="fiche-melange-state" class="fiche-state"><\/span>\s*<p>Mes tables passées, 20 questions en 1 min 30\. Une coupe avec 3, puis 6 tables\.<\/p>\s*<\/div>\s*<div class="fiche-block fiche-expert">\s*<strong>Je deviens expert<\/strong>\s*<span id="fiche-stars" class="fiche-stars"><\/span>\s*<p>Mes 9 tables passées : 25 questions\. ★ 2 min · ★★ 1 min 45 · ★★★ 1 min 30 · ★★★★ 1 min 15 · 👑 1 min<\/p>\s*<\/div>\s*<\/div>/);
   assert.match(html, /\.fiche-duo \{ display: grid; grid-template-columns: 1fr 1fr; gap: 3mm; margin-top: 3mm; \}/);
   assert.match(html, /\.fiche-block \{ margin: 0; padding: 3mm 4mm;[^}]*text-align: center; break-inside: avoid; \}/);
   assert.match(html, /\.fiche-block strong \{ display: block; font-size: 13pt; \}/);

@@ -49,9 +49,10 @@ function escalierOuvert(date = DATE) {
 
 // Les trois trophées de Mon mélange (3, 6, 9 tables) : ceux qui sont gagnés,
 // ceux qui sont à gagner maintenant.
-const trophees = (gagnes = [], aGagner = []) => [3, 6, 9].map(tables => ({tables, gagne: gagnes.includes(tables), aGagner: aGagner.includes(tables)}));
+// Lot « Mon mélange aux paliers » (09/10/2026) : deux coupes, 3 et 6 tables.
+const trophees = (gagnes = [], aGagner = []) => [3, 6].map(tables => ({tables, gagne: gagnes.includes(tables), aGagner: aGagner.includes(tables)}));
 
-test("le mélange est libre : proposé dès 2 tables passées, jamais dû ni « à refaire » ; il garde le dernier joué, son score et le plus grand nombre de tables réussi — jusqu’aux 9 — et ses trois trophées (3, 6, 9 tables)", () => {
+test("le mélange est libre : proposé dès 2 tables passées, jamais dû ni « à refaire » ; il garde le dernier joué, son score et le plus grand nombre de tables réussi — jusqu’aux 9 — et ses coupes (3, puis 6 tables)", () => {
   assert.equal(typeof P.melangeDu, "undefined", "« melangeDu » a quitté le moteur : le mélange n’est plus jamais dû");
   let etat = acquerir(P.creerParcours(), [2]);
   assert.equal(P.configMelange(etat), null, "une table : rien à mélanger");
@@ -67,14 +68,14 @@ test("le mélange est libre : proposé dès 2 tables passées, jamais dû ni « 
 
   // Raté : le parcours garde le jour et le score, rien d'autre ne bouge.
   const rate = jouer(etat, P.configMelange(etat), 17, 20);
-  assert.deepEqual(rate.evenements, [{type: "melange", reussi: false, score: 17, total: 20, tables: [2, 10], trophee: null}], "l’événement : réussi ou non, le score, les tables, le trophée gagné — plus de « escalierOuvert »");
+  assert.deepEqual(rate.evenements, [{type: "melange", reussi: false, score: 17, total: 20, tables: [2, 10], trophee: null, coupes: []}], "l’événement : réussi ou non, le score, les tables, le trophée gagné — plus de « escalierOuvert »");
   assert.deepEqual(rate.parcours.melange, {tables: [2, 10], aJour: false, aRefaireAvec: null, dernier: DATE, score: 17, reussi: null});
   assert.deepEqual(P.etatAffichage(rate.parcours).melange, {visible: true, tables: [2, 10], dernier: DATE, score: 17, reussi: null, trophees: trophees()}, "le moteur garde le score du dernier joué (la page ne l’affiche plus)");
 
   // Réussi le lendemain : « reussi » = le nombre de tables du mélange ; avec 2
   // tables, pas encore de trophée.
   const reussi = jouer(rate.parcours, P.configMelange(rate.parcours), 18, 20, "2026-09-09");
-  assert.deepEqual(reussi.evenements, [{type: "melange", reussi: true, score: 18, total: 20, tables: [2, 10], trophee: null}]);
+  assert.deepEqual(reussi.evenements, [{type: "melange", reussi: true, score: 18, total: 20, tables: [2, 10], trophee: null, coupes: []}]);
   assert.deepEqual(reussi.parcours.melange, {tables: [2, 10], aJour: true, aRefaireAvec: null, dernier: "2026-09-09", score: 18, reussi: 2});
 
   // Une table de plus : rien n'est remis « à refaire », « reussi » reste — et
@@ -98,9 +99,9 @@ test("le mélange est libre : proposé dès 2 tables passées, jamais dû ni « 
   assert.deepEqual(P.configMelange(etat), {mode: "validation", tables: [...P.TABLES], total: 20, duration: 90});
   assert.equal(affichage.expert.ouvert, true, "l’escalier est ouvert par les 9 tables, sans mélange");
   const neuf = jouer(etat, P.configMelange(etat), 20, 20, "2026-09-11");
-  assert.deepEqual(neuf.evenements, [{type: "melange", reussi: true, score: 20, total: 20, tables: [...P.TABLES], trophee: 9}], "le mélange des 9 tables réussi : ni rang, ni escalier — tout était déjà là ; il rapporte le plus grand trophée");
+  assert.deepEqual(neuf.evenements, [{type: "melange", reussi: true, score: 20, total: 20, tables: [...P.TABLES], trophee: 6, coupes: [3, 6]}], "le mélange des 9 tables réussi : ni rang, ni escalier — tout était déjà là ; il rapporte les coupes qui manquaient (deux depuis le lot « Mon mélange aux paliers »), « trophee » la plus grande");
   assert.equal(neuf.parcours.melange.reussi, 9);
-  assert.deepEqual(P.etatAffichage(neuf.parcours).melange.trophees, trophees([3, 6, 9]), "les trois trophées d’un coup");
+  assert.deepEqual(P.etatAffichage(neuf.parcours).melange.trophees, trophees([3, 6]), "les deux coupes d’un coup");
 });
 
 test("le format du mélange = celui du test d’une table : 20 questions, 14 produits + 3 nombres manquants + 3 divisions (lot « divisions »), tables passées seulement, 1 min 30, 2 erreurs max", () => {
@@ -536,7 +537,7 @@ test("le lancement : le mélange se joue en 1 min 30, comme la validation d’un
 
 test("les scripts modifiés ont un nouveau numéro de cache, et la copie serveur du moteur est identique", async () => {
   assert.match(html, /defi_tables_core\.js\?v=20261009-1/);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261009-2/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261009-3/);
   const moteur = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie), "_serveur/public/prof/defi_tables_mon_parcours.js doit être la copie octet pour octet du moteur");

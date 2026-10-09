@@ -1,10 +1,10 @@
 # Manifeste du serveur de suivi maths&go — produit par outils/generer-version.php.
 # Ne pas modifier à la main : un test du dépôt refait ce calcul à chaque passage.
 # verifier.php relit ce fichier en ligne et compare chaque empreinte.
-lot defi-tables-records
+lot defi-tables-melange-paliers
 genere_le 2026-10-09
 fichiers 31
-manifeste 64a6488fda768744c2030f5c6801551b0a89b68e6854f92023e67207544ce59c
+manifeste 060e19fc56ea0d19cc73cec51c29446240cbddba1f13519d630c356af8ab57ae
 61b230d36219b3c4515e56c1ff59afb1a85ffa12343956bd73b16ba04867cdca  .htaccess
 911229797978fa1f559c9a056368c70bd606a99b3efd16071a584b4de1c5f965  api/eleve.php
 a1b4a7c21d6d798982a8b9efc6c030f1755d16821a0eed4edff71edf27206130  api/parcours.php
@@ -32,7 +32,7 @@ a71c9980e7aa65eee108c8f26f84dca8812d4b246ec9f9e25958ca2417d6fbf5  lib/reponse.ph
 b476cc832c9b7497eed6194afecee863a686469e9162ad1832bd7e7732ccc304  mathsgo-logo-print.png
 2a442b4a4ae2452f649f77224a0aae91e6fe0ac83566253d65d1dc1807cdb6a2  mathsgo-logo.png
 4cc15b863e2b7d4afaa761685a411b7309fe133ecff7625420ff1dedfa365502  menage.php
-ce764656db4cc816e8dc9f29893e6e618ff07722c256218de43b0e1eba35adf1  prof/defi_tables_mon_parcours.js
+aa0a44164a2998644d0b62b6db81efaf3048020d849d4151572b11a02350e16c  prof/defi_tables_mon_parcours.js
 434cac8927b5f7329f491b448a1f08277ea64ce3295d1c14428c32d933f3098b  prof/index.php
 3d9c64552be2d027581f2c279f4dc03ac896463a619405b85f3e2f2fa6172c68  prof/splat-parcours.js
 aa82ed807ad3625597999daf5aeb956e7a6e24a740f5538ab5e711f5d6cd6f39  verifier.php

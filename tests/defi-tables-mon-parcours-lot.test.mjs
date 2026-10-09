@@ -454,7 +454,7 @@ test("11. Mon mélange compact : le triangle qui le lance, « Mon mélange » et
     assert.equal(zone.className, "mp-trophees");
     assert.equal(zone.attrs.role, "img");
     assert.equal(zone.textContent, "", "aucun mot, aucun nombre affiché");
-    assert.deepEqual(zone.children.map(b => [b.tag, b.dataset.tables]), [["b", "3"], ["b", "6"], ["b", "9"]]);
+    assert.deepEqual(zone.children.map(b => [b.tag, b.dataset.tables]), [["b", "3"], ["b", "6"]], "lot « Mon mélange aux paliers » : deux coupes");
     zone.children.forEach(b => {
       assert.equal(b.children.length, 1);
       assert.equal(b.children[0].tag, "svg", "une coupe dessinée");
@@ -465,11 +465,11 @@ test("11. Mon mélange compact : le triangle qui le lance, « Mon mélange » et
   };
   const avecMelange = (p, reussi) => P.normaliserParcours({...p, melange: {...p.melange, dernier: AUJ, score: 19, reussi}});
   // Léa : 3 tables passées, jamais joué.
-  assert.deepEqual(dessin(lea()), {gagnes: ["", "", ""], nom: "Coupes de Mon mélange (avec 3, 6 et 9 tables) : aucune pour l’instant"});
-  assert.deepEqual(dessin(avecMelange(lea(), 2)).gagnes, ["", "", ""], "réussi avec 2 tables : pas encore de trophée");
-  assert.deepEqual(dessin(avecMelange(lea(), 3)), {gagnes: ["is-gagne", "", ""], nom: "Coupes de Mon mélange (avec 3, 6 et 9 tables) : gagnée avec 3 tables"});
-  assert.deepEqual(dessin(avecMelange(lea(), 7)), {gagnes: ["is-gagne", "is-gagne", ""], nom: "Coupes de Mon mélange (avec 3, 6 et 9 tables) : gagnées avec 3 et 6 tables"});
-  assert.deepEqual(dessin(avecMelange(lea(), 9)).gagnes, ["is-gagne", "is-gagne", "is-gagne"]);
+  assert.deepEqual(dessin(lea()), {gagnes: ["", ""], nom: "Coupes de Mon mélange (avec 3 et 6 tables) : aucune pour l’instant"});
+  assert.deepEqual(dessin(avecMelange(lea(), 2)).gagnes, ["", ""], "réussi avec 2 tables : pas encore de trophée");
+  assert.deepEqual(dessin(avecMelange(lea(), 3)), {gagnes: ["is-gagne", ""], nom: "Coupes de Mon mélange (avec 3 et 6 tables) : gagnée avec 3 tables"});
+  assert.deepEqual(dessin(avecMelange(lea(), 7)), {gagnes: ["is-gagne", "is-gagne"], nom: "Coupes de Mon mélange (avec 3 et 6 tables) : gagnées avec 3 et 6 tables"});
+  assert.deepEqual(dessin(avecMelange(lea(), 9)).gagnes, ["is-gagne", "is-gagne"], "le mélange des 9 tables n'a plus de coupe à lui");
   assert.match(html, /\.mp-trophees \{ display: inline-flex; align-items: center; gap: 3px; flex: 0 0 auto; \}/);
   assert.match(html, /\.mp-trophees b \{ display: inline-flex; width: 26px; height: 26px; color: #c3ced8; \}/, "grises…");
   assert.match(html, /\.mp-trophees b\.is-gagne \{ color: #e0a800;/, "… puis dorées");
@@ -602,12 +602,12 @@ test("15. la fiche vierge : la même fiche, vide — carte « Table de ___ · ma
     assert.equal(etat.children[0].className, "mp-trophees");
     return etat.children[0].children.map(b => `${b.dataset.tables}${b.className === "is-gagne" ? "G" : b.className === "" ? "-" : "?"}`).join(" ");
   };
-  assert.equal(tropheesFiche(vierge), "3- 6- 9-");
-  assert.equal(tropheesFiche(fiche(lea())), "3- 6- 9-");
+  assert.equal(tropheesFiche(vierge), "3- 6-");
+  assert.equal(tropheesFiche(fiche(lea())), "3- 6-");
   const gagnante = P.normaliserParcours({...lea(), melange: {...lea().melange, dernier: AUJ, score: 19, reussi: 3}});
-  assert.equal(tropheesFiche(fiche(gagnante)), "3G 6- 9-");
+  assert.equal(tropheesFiche(fiche(gagnante)), "3G 6-");
   // La fiche vierge reste vide même si l'appareil a gagné des trophées.
-  assert.equal(tropheesFiche(fiche("vierge", {parcoursAppareil: gagnante, modeFiche: true})), "3- 6- 9-");
+  assert.equal(tropheesFiche(fiche("vierge", {parcoursAppareil: gagnante, modeFiche: true})), "3- 6-");
   // La fiche d'un élève, elle, n'a pas la ligne à remplir.
   assert.equal(parClasse(fiche(lea()).$("fiche-matable"), "fiche-blanc").length, 0);
 });

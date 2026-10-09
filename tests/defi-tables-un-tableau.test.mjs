@@ -199,15 +199,15 @@ test("plus d’« Encore 10 calculs » près du tableau, même quand rien ne rev
 // plus une étape de la séance. Ses tables s'écrivent toujours de la même
 // façon, là où il vit : la ligne ★ du menu et Mon parcours (qui abrège en
 // « mes N tables » au-delà de 3 tables, lot « trophées »).
-test("Mon mélange : « tables 2, 5 et 10 », « mes 9 tables » (« mes N tables » dès 4 dans Mon parcours), « et 10 » jamais seul à la ligne — et plus jamais une étape de la séance", () => {
+test("Mon mélange : « tables 2, 5 et 10 », « mes 9 tables » (« mes N tables » dès 4 dans Mon parcours), « et 10 » jamais seul à la ligne — et une étape de la séance seulement aux paliers", () => {
   const tablesDuMelange = new Function("PARCOURS_TABLES", `${source("listeTables")}\n${source("tablesDuMelange")}\nreturn tablesDuMelange;`)([...P.TABLES]);
   assert.equal(tablesDuMelange([2, 5, 10]), "tables 2, 5 et 10");
   assert.equal(tablesDuMelange([2, 10]), "tables 2 et 10");
   assert.equal(tablesDuMelange([2, 3, 4, 5, 6, 7, 8, 10]), "tables 2, 3, 4, 5, 6, 7, 8 et 10");
   assert.equal(tablesDuMelange([...P.TABLES]), "mes 9 tables");
-  // Lot « Mon mélange sur l'accueil et l'expert » : la carte de séance n'a
-  // d'étape « Mon mélange » que pour l'élève aux 9 tables (son détail :
-  // « mes 9 tables · 1 min 30 », comme l'étoile) — jamais sur une table.
+  // La carte de séance dit le détail de l'étape « Mon mélange » (« mes N
+  // tables · 1 min 30 », comme l'étoile) — aux paliers depuis le lot « Mon
+  // mélange aux paliers ».
   assert.match(html, /: etape\.type === "etoile" \|\| etape\.type === "melange" \? etape\.detail/);
   // Lot « trophées » : dans Mon parcours, à côté des trois coupes, la liste
   // jusqu'à 3 tables, puis « mes N tables » (court, sur une ligne).
@@ -217,10 +217,14 @@ test("Mon mélange : « tables 2, 5 et 10 », « mes 9 tables » (« mes N table
   const p = construire({acquises: [2, 5, 10]});
   p.melange = {...p.melange, aJour: false};
   assert.deepEqual(P.configMelange(p).tables, [2, 5, 10]);
-  // Le moteur n'en met plus dans la séance, même quand il n'a jamais été
-  // joué ; et il saute celui d'une vieille séance restée ouverte.
+  // Lot « Mon mélange aux paliers » (09/10/2026, décision de Gwenaël) : à
+  // 3 tables passées, tant que la coupe des 3 manque, Mon mélange est la 2e
+  // étape de la séance. La coupe gagnée, plus de mélange dans la séance, et
+  // celui d'une vieille séance restée ouverte est sauté.
+  assert.deepEqual(P.ouvrirSeance(p, {aujourdhui: AUJ}).file.filter(etape => etape.type !== "marche").map(etape => etape.type).slice(-1), ["melange"], "coupe des 3 à gagner : Mon mélange dans la séance");
+  p.melange = {...p.melange, reussi: 3};
   const seance = P.ouvrirSeance(p, {aujourdhui: AUJ});
-  assert.equal(seance.file.some(etape => etape.type === "melange"), false, "pas de mélange dans la séance");
+  assert.equal(seance.file.some(etape => etape.type === "melange"), false, "coupe gagnée : pas de mélange dans la séance");
   const vieille = {...seance, file: [{type: "melange"}, ...seance.file]};
   const suivante = P.etapeDeSeance(p, vieille, AUJ);
   assert.ok(suivante && suivante.type !== "melange", "un mélange venu d’une vieille séance est sauté");

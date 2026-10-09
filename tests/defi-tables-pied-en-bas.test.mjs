@@ -94,9 +94,9 @@ test("la fiche vierge PDF et sa vignette sont refaites, le catalogue suit", () =
   const pdf = octets("outils/calcul_mental/fiche_parcours_tables.pdf").toString("latin1");
   assert.match(pdf, /\/Count 1\b/, "toujours une seule page");
   assert.doesNotMatch(pdf, /\/Count [2-9]\b/);
-  assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=7"/);
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=defi-tables-pied-20261008-1/);
+  assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=defi-tables-paliers-20261009-1/);
   // Le moteur n'a pas bougé : rien à déposer sur le serveur.
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261009-2/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261009-3/);
   assert.equal(lire("_serveur/public/prof/defi_tables_mon_parcours.js"), lire("outils/calcul_mental/defi_tables_mon_parcours.js"));
 });
