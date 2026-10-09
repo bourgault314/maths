@@ -1205,7 +1205,7 @@ const LIVRET_TEXTE=[
 function ressourcesHtml(m,mi){
   const li=[];
   if(mi===0) li.push('<li><a href="/outils/splat_intro.html?suite='+encodeURIComponent('/outils/splat_univers.html?prof=1')+'">'+IC.diapo+
-    '<span><span class="rt">Présenter le principe</span><span class="rd">Le diaporama, avant la première fiche.</span></span></a></li>');
+    '<span><span class="rt">Présenter le principe</span><span class="rd">Le film, avant la première fiche.</span></span></a></li>');
   if(LIVRET_TEXTE[mi]) li.push('<li><a href="/outils/livrets_splat.html#monde-'+(mi+1)+'">'+IC.livret+
     '<span><span class="rt">Les livrets du monde '+(mi+1)+'</span><span class="rd">'+LIVRET_TEXTE[mi]+'</span></span></a></li>');
   if(!li.length) return '';
