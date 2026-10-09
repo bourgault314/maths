@@ -303,7 +303,7 @@ const film={
     const textes=[['#fde68a',ENCRE,'en tout'],[BLEU,'#ffffff','visibles'],['#cbd5e1',ENCRE,'invisibles']];
     o.tags=Y.tags.map((d,k)=>{
       const g=E('g',{},o.schema);const r=E('rect',{rx:12,fill:textes[k][0]},g);
-      const tx=E('text',{x:d.cx,y:d.cy+1,'text-anchor':'middle','dominant-baseline':'central','font-size':Y.tag,'font-weight':600,fill:textes[k][1]},g);
+      const tx=E('text',{x:d.cx,y:d.cy+Y.tag*.43,'text-anchor':'middle','font-size':Y.tag,'font-weight':600,fill:textes[k][1]},g);
       E('tspan',{},tx).textContent='Le nombre de jetons ';E('tspan',{'font-weight':900},tx).textContent=textes[k][2];
       const fl=E('g',{},o.schema);const fs=E('path',{fill:'none',stroke:'#334155','stroke-width':4,'stroke-linecap':'round'},fl);const fh=E('path',{fill:'#334155'},fl);
       return {g,r,tx,cx:d.cx,cy:d.cy,fs,fh,fl,queue:d.q,pointe:d.p};
