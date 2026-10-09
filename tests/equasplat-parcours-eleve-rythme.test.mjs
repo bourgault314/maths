@@ -46,7 +46,8 @@ test("la carte de fin attend un instant, puis garde son bouton Rejouer", () => {
   // la fin de série est différée (pause), puis le carton est posé par eleveFinDeSerie
   assert.match(celebrer, /window\.setTimeout\(eleveFinDeSerie, ELEVE_PAUSE_SOLUTION\)/);
   const fin = bloc("function eleveFinDeSerie(){", "\n  function ");
-  assert.match(fin, /document\.body\.appendChild\(voile\)/);
+  // posé sur <body>, ou dans la scène quand elle est en plein écran (eleveHote, 09/10/2026)
+  assert.match(fin, /eleveHote\(\)\.appendChild\(voile\)/);
   assert.match(fin, /id="eleveRejouer"/);
   assert.match(fin, /eleveIdx = 0; eleveResolues = 0;/);
   // des équations passées (rouges) : pas d'étoile, on propose de les rejouer

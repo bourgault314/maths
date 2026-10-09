@@ -182,6 +182,8 @@ function finEqua({ parcours, resultats, avecModule = true }) {
         eleveRejeu = null, eleveIdx = 0, eleveAttenteSuivante = false, eleveResolues = 0;
     const eleveEcrireEntree = () => {}, eleveMajBarre = () => {}, eleveEquationSuivante = () => {}, eleveChargerEquation = () => {},
           eleveSauverFinDeSerie = () => {};
+    /* hors plein écran, le carton se pose sur <body> (eleveHote, 09/10/2026) */
+    const eleveHote = () => document.body;
     ${source(equa, "eleveEtapeSuivante", "  ")}
     ${source(equa, "eleveLienMondesHtml", "  ")}
     ${source(equa, "eleveFinDeSerie", "  ")}
