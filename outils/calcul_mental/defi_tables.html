@@ -2075,8 +2075,9 @@
     .fiche-identity b { display: inline-block; min-width: 40mm; border-bottom: .3mm solid #cfe2ed; font-weight: 700; color: #0b57b7; }
     .fiche-subtitle { display: flex; justify-content: space-between; gap: 6mm; margin: 0 0 2.5mm; color: #3f5a6c; font-size: 9pt; }
     .fiche-subtitle b { color: #143451; font-size: 8.5pt; }
-    /* La fiche tient sur UNE page A4, pied compris : 273 mm utiles
-       (297 − 2 × 12 de marge). Lot « Une seule fiche » (08/10/2026) : la
+    /* La fiche tient sur UNE page A4 : 273 mm utiles (297 − 2 × 12 de
+       marge) ; sur le papier, le pied est posé tout en bas (voir @media
+       print). Lot « Une seule fiche » (08/10/2026) : la
        page 1 est la même partout (« Imprimer ma fiche » de l'élève, fiche
        ouverte depuis « Ma classe ») — la carte de ma table, le tableau de Mes
        calculs (8 lignes de 13,5 mm), sa légende, les deux cartes Mon mélange
@@ -2153,6 +2154,9 @@
     .fiche-stars .couronne { width: 6.5mm; height: 5.4mm; vertical-align: -.3mm; overflow: visible; }
     .fiche-stars .couronne path { stroke: #6b7a87; stroke-width: 1.3; stroke-linejoin: round; paint-order: stroke; }
     .fiche-stars b .couronne path { stroke: #8a6500; }
+    /* Le pied « mathsgo.re · CC BY-NC-SA 4.0 » : à l'écran, il suit la
+       feuille ; sur le papier, il est posé en bas de chaque feuille A4 (lot
+       « pied en bas », 08/10/2026, voir @media print). */
     .fiche-foot { margin-top: 6mm; color: #506b7d; font-size: 8pt; text-align: center; }
     /* Le tableau de Mes calculs, le même qu'à l'écran : le nombre en gros dès
        la première réponse, les cinq carrés de sa boîte, la moitié miroir en
@@ -2403,8 +2407,19 @@
         width: auto; max-width: none; margin: 0; padding: 0; border: 0; border-radius: 0;
       }
       /* Lot « Une seule fiche » : le cadre du professeur commence une
-         nouvelle feuille, APRÈS le pied de la page 1 ; il porte le sien. */
+         nouvelle feuille, après la page 1. */
       .fiche-page-prof { break-before: page; margin-top: 0; }
+      /* Lot « pied en bas » (08/10/2026, planche 21, choix de Gwenaël) : le
+         pied tout en bas de chaque feuille A4, à 12 mm du bord du papier —
+         la marge du haut. Il suivait le contenu : 24 à 51 mm du bas en
+         page 1, au milieu de la page 2. En « position: fixed », le navigateur
+         le pose en bas de la zone imprimable et le REPRODUIT sur chaque
+         feuille (Chrome, Edge, Firefox) : la page 2 de « Ma classe » a le
+         sien sans le second pied, masqué ici (à l'écran, il reste sous la
+         page 2). Sorti du flux, il ne pousse plus rien : il ne peut plus, à
+         lui seul, faire passer la page 1 sur une 2e feuille. */
+      .fiche-foot { position: fixed; left: 0; right: 0; bottom: 0; margin: 0; }
+      .fiche-page-prof .fiche-foot { display: none; }
     }
 
     @media (prefers-reduced-motion: reduce) {
