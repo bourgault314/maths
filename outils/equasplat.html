@@ -3480,6 +3480,20 @@
     display:flex;
   }
 
+  /* Lot 6 « en-tête » (08/10/2026) : l'élève venu de son espace (son code dans l'onglet ;
+     « suivi-eleve » posé par assets/js/splat-suivi.js) n'a pas cette mention, qui mène au
+     site — l'information est sur Mon espace, comme dans Défi tables. Sur ordinateur, elle est
+     sous le cadre du jeu : retirée, rien ne bouge, la page cesse seulement de défiler. Au
+     téléphone, elle est dans les commandes du bas : invisible et sans clic, mais sa place
+     reste (la retirer faisait descendre les boutons de 33 px). La pastille « ● Léa » reste au
+     bout de la barre du jeu. */
+  html.suivi-eleve .equasplatConsentFooter{
+    display:none !important;
+  }
+  html.suivi-eleve .mobileConsentLink{
+    visibility:hidden !important;
+  }
+
   .equasplatConsentLink{
     display:inline-flex;
     align-items:center;
@@ -4602,7 +4616,7 @@
 <!-- Le parcours de l'élève (moteur partagé avec la carte des mondes et le serveur de suivi), et
      l'habillage du suivi de classe (pastille, garde) : lot 2 « outils + carte », 08/10/2026 -->
 <script src="../assets/js/splat-parcours.js?v=20261008-5"></script>
-<script src="../assets/js/splat-suivi.js?v=20261008-2"></script>
+<script src="../assets/js/splat-suivi.js?v=20261008-3"></script>
 </head>
 <body>
 <main id="appMain" class="startMode">

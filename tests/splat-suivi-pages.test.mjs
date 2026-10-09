@@ -104,7 +104,10 @@ test("carte : le suivi démarre APRÈS le premier dessin, jamais quand ?apres= r
   assert.equal((f.match(/APRES_REDIRIGE=true;/g) || []).length, 2, "les deux départs de ?apres= (Bonus, étape)");
   // la flèche et le logo mènent à l'espace sous un code (ou après un billet refusé), au site sinon
   assert.match(f, /const espace=!!\(SUIVI&&\(SUIVI\.actif\(\)\|\|SUIVI\.client\.entreeRefusee\)\);/);
-  assert.match(f, /<\/header>\n<p id="suivi-repere" class="suivi-repere" hidden><\/p>/);
+  // lot 6 : le bloc de suivi est DANS l'en-tête, à côté de la flèche, caché pour tous les autres
+  const entete = f.slice(f.indexOf("<header>"), f.indexOf("</header>"));
+  assert.match(entete, /<a class="brand"[^\n]*\n\s*<!--[^\n]*-->\n\s*<p id="suivi-repere" class="suivi-repere" hidden><\/p>\n\s*<nav class="modeBar"/);
+  assert.doesNotMatch(f, /<\/header>\n<p id="suivi-repere"/, "plus de bandeau sous l'en-tête");
   assert.doesNotMatch(f, /mention-confidentialite\.js/, "la carte ne charge pas la mention (pas de pied à remplacer)");
 });
 
@@ -121,9 +124,14 @@ test("habillage : sans code, rien ne se voit et rien ne part ; la case sans code
   await s.lancer();
   await tic();
   assert.equal(s.pastilleHtml(), "");
-  const bandeau = o.document.createElement("p");
-  s.dessinerBandeau(bandeau);
-  assert.equal(bandeau.hidden, true);
+  const bloc = o.document.createElement("p");
+  s.dessinerBloc(bloc);
+  assert.equal(bloc.hidden, true);
+  const pied = o.document.createElement("footer");
+  pied.append("Jeu SPLAT! créé par Steve Wyborney…");
+  assert.equal(s.dessinerPied(pied), false, "sans code, le pied du site reste");
+  assert.equal(pied.texte, "Jeu SPLAT! créé par Steve Wyborney…");
+  assert.equal(o.document.documentElement.classList.contains("suivi-eleve"), false);
   assert.equal(s.attente(), false);
   assert.equal(s.lire().etapes.m1e1.fait, true, "l'ancien contenu se lit tel quel");
   s.ecrire((P, p) => P.enregistrerSerie(p, "m1e2", {fait: true, etoiles: 4, cartes: 4, vues: 1}));
@@ -135,7 +143,7 @@ test("habillage : sans code, rien ne se voit et rien ne part ; la case sans code
   assert.equal(o.document.getElementById("suivi-garde"), null, "pas de question de garde");
 });
 
-test("habillage : sous un code, la pastille « ● Léa » et le bandeau « Suivi par ton professeur · Léa · 405 · Mon espace · Se déconnecter »", async () => {
+test("habillage : sous un code, la pastille « ● Léa » (étapes) et le bloc « Suivi par ton professeur / Léa / 405 » avec « Se déconnecter » dedans (carte, lot 6)", async () => {
   const reseau = fauxReseau();
   const o = fauxOnglet({codeOnglet: A, identite: LEA, fetch: reseau.fetch});
   const s = o.fenetre.MathsGoSplatSuivi.creer({});
@@ -143,12 +151,18 @@ test("habillage : sous un code, la pastille « ● Léa » et le bandeau « Suiv
   await tic();
   assert.equal(s.pastilleHtml(), '<span class="suivi-pastille" title="Suivi par ton professeur · Léa · 405" aria-label="Suivi par ton professeur · Léa · 405"><i aria-hidden="true"></i><span class="nom">Léa</span></span>');
   assert.ok(o.document.getElementById("suivi-splat-style"), "le style de la pastille est posé une fois");
-  const bandeau = o.document.createElement("p");
-  s.dessinerBandeau(bandeau);
-  assert.equal(bandeau.hidden, false);
-  assert.equal(bandeau.texte, "Suivi par ton professeur · Léa · 405·Mon espace·Se déconnecter");
-  const [espace, sortie] = bandeau.descendants().filter(n => n.tagName === "A" || n.tagName === "BUTTON");
-  assert.equal(espace.href, "https://suivi.mathsgo.re/");
+  const bloc = o.document.createElement("p");
+  s.dessinerBloc(bloc);
+  assert.equal(bloc.hidden, false);
+  // le texte lu : « Suivi par ton professeur · Léa · 405 · Se déconnecter » ; au téléphone,
+  // trois lignes (prénom et classe chacun dans son morceau) et le bouton à droite
+  assert.equal(bloc.texte, "Suivi par ton professeur · Léa · 405· Se déconnecter");
+  const morceaux = bloc.descendants().map(n => n.className).filter(Boolean);
+  assert.deepEqual(morceaux, ["puce", "repere-texte", "repere-prenom", "repere-sep", "repere-classe", "repere-sep", "sortie-bloc", "sortie"]);
+  assert.equal(bloc.descendants().filter(n => n.tagName === "A").length, 0, "plus de lien « Mon espace » en texte : la flèche y mène");
+  const [sortie] = bloc.descendants().filter(n => n.tagName === "BUTTON");
+  assert.equal(sortie.textContent, "Se déconnecter");
+  assert.equal(o.document.documentElement.classList.contains("suivi-eleve"), true, "la page de l'élève venu de son espace est marquée");
   sortie.declencher("click");
   assert.deepEqual(o.fenetre.allees, ["https://suivi.mathsgo.re/?oublier=1"], "« Se déconnecter » : l'espace oublie aussi le code");
   assert.equal(PARCOURS.chargerCode(o.session), "", "l'onglet a oublié le code");
@@ -165,7 +179,7 @@ test("habillage : le prénom est écrit tel quel, jamais interprété", async ()
   assert.doesNotMatch(html, /<b>/);
 });
 
-test("habillage : hors ligne, la pastille et le bandeau passent à l'orange ; au retour du réseau le travail part", async () => {
+test("habillage : hors ligne, la pastille et le bloc passent à l'orange ; au retour du réseau le travail part", async () => {
   const temps = fauxTemps();
   const serveur = fauxServeur();
   serveur.mode = "coupe";
@@ -176,10 +190,10 @@ test("habillage : hors ligne, la pastille et le bandeau passent à l'orange ; au
   s.ecrire((P, p) => P.enregistrerSerie(p, "m1e1", {fait: true, etoiles: 12, cartes: 12, vues: 0}));
   await temps.avancer(800);
   assert.match(s.pastilleHtml(), /class="suivi-pastille hors-ligne" title="Suivi par ton professeur · travail gardé ici, pas encore envoyé"/);
-  const bandeau = o.document.createElement("p");
-  s.dessinerBandeau(bandeau);
-  assert.ok(bandeau.classList.contains("hors-ligne"));
-  assert.ok(bandeau.texte.startsWith("Suivi par ton professeur · travail gardé ici, pas encore envoyé"));
+  const bloc = o.document.createElement("p");
+  s.dessinerBloc(bloc);
+  assert.ok(bloc.classList.contains("hors-ligne"));
+  assert.equal(bloc.texte, "Suivi par ton professeur · travail gardé ici, pas encore envoyé· Se déconnecter");
   // la pastille déjà posée par la page se met à jour sur place
   const posee = o.document.poserPastille("<span class=\"suivi-pastille\">…</span>");
   s.majPastilles();
@@ -192,7 +206,7 @@ test("habillage : hors ligne, la pastille et le bandeau passent à l'orange ; au
   assert.equal(s.etat().etat, "ok");
 });
 
-test("habillage : un code qui ne vaut plus rien (404) — pastille et bandeau gris, plus rien ne part, rien n'est perdu", async () => {
+test("habillage : un code qui ne vaut plus rien (404) — pastille et bloc gris, plus rien ne part, rien n'est perdu", async () => {
   const serveur = fauxServeur();
   serveur.forcer = {statut: 404, donnees: {ok: false}};
   const o = fauxOnglet({codeOnglet: A, identite: LEA, fetch: serveur.fetch});
@@ -202,10 +216,10 @@ test("habillage : un code qui ne vaut plus rien (404) — pastille et bandeau gr
   await tic(20);
   assert.equal(s.etat().etat, "detache");
   assert.match(s.pastilleHtml(), /class="suivi-pastille detache" title="Ton code ne marche plus · demande le nouveau à ton professeur"/);
-  const bandeau = o.document.createElement("p");
-  s.dessinerBandeau(bandeau);
-  assert.ok(bandeau.classList.contains("detache"));
-  assert.ok(bandeau.texte.startsWith("Ton code ne marche plus"));
+  const bloc = o.document.createElement("p");
+  s.dessinerBloc(bloc);
+  assert.ok(bloc.classList.contains("detache"));
+  assert.equal(bloc.texte, "Ton code ne marche plus · demande le nouveau à ton professeur· Se déconnecter");
   const avant = o.envois().length;
   s.ecrire((P, p) => P.enregistrerSerie(p, "m2e4", {fait: true, etoiles: 6, cartes: 6, vues: 0}));
   await tic(20);
@@ -213,7 +227,7 @@ test("habillage : un code qui ne vaut plus rien (404) — pastille et bandeau gr
   assert.equal(o.caseDe(A).etapes.m2e4.fait, true, "mais le travail se range");
 });
 
-test("habillage : un billet — aucune étoile pendant l'échange, puis la case du code ; refusé, le bandeau le dit sans « Se déconnecter »", async () => {
+test("habillage : un billet — aucune étoile pendant l'échange, puis la case du code ; refusé, le bloc le dit sans « Se déconnecter »", async () => {
   const BILLET = "c".repeat(32);
   const reseau = fauxReseau({billets: {[BILLET]: A}});
   const o = fauxOnglet({entree: {billet: BILLET}, fetch: reseau.fetch,
@@ -232,10 +246,12 @@ test("habillage : un billet — aucune étoile pendant l'échange, puis la case 
   assert.equal(r.attente(), false);
   assert.equal(r.etat().etat, "refuse");
   assert.equal(r.pastilleHtml(), "", "pas de pastille sans code");
-  const bandeau = refuse.document.createElement("p");
-  r.dessinerBandeau(bandeau);
-  assert.equal(bandeau.texte, "Ce lien a expiré, repasse par ton espace·Mon espace");
-  assert.equal(bandeau.descendants().filter(n => n.tagName === "BUTTON").length, 0);
+  const bloc = refuse.document.createElement("p");
+  r.dessinerBloc(bloc);
+  // le seul geste utile : repasser par l'espace (comme Défi tables)
+  assert.equal(bloc.texte, "Ce lien a expiré, repasse par ton espace· Mon espace");
+  assert.equal(bloc.descendants().filter(n => n.tagName === "BUTTON").length, 0);
+  assert.equal(bloc.descendants().find(n => n.tagName === "A").href, "https://suivi.mathsgo.re/");
 });
 
 test("habillage : ecrire() repart de la case telle qu'elle est — ce qu'une autre page de l'onglet y a mis n'est pas perdu", async () => {
