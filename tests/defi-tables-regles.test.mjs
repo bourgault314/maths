@@ -186,7 +186,10 @@ test("l’escalier : 5 marches par la durée seule, tout dedans, 2 erreurs max ;
   assert.equal(deux.expert.etoiles, 2, "★★ réussie directement : ★ et ★★ acquises");
   assert.equal(P.etatAffichage(deux).expert.suivante.etoile, 3);
   assert.equal(jouer(deux, P.configEtoile(1), 25, 25).parcours.expert.etoiles, 2, "rejouer ★ ne retire rien");
-  const couronne = jouer(deux, P.configEtoile(5), 24, 25);
+  // Lot « Les records » (09/10/2026, décision de Gwenaël) : la couronne exige
+  // 25 sur 25 — 24 ne la donne plus.
+  assert.equal(jouer(deux, P.configEtoile(5), 24, 25).parcours.expert.couronne, null, "la couronne : aucune erreur permise");
+  const couronne = jouer(deux, P.configEtoile(5), 25, 25);
   assert.equal(couronne.parcours.expert.etoiles, 5);
   assert.equal(couronne.parcours.expert.couronne, DATE);
   assert.equal(couronne.evenements[0].couronne, true);
@@ -533,7 +536,7 @@ test("le lancement : le mélange se joue en 1 min 30, comme la validation d’un
 
 test("les scripts modifiés ont un nouveau numéro de cache, et la copie serveur du moteur est identique", async () => {
   assert.match(html, /defi_tables_core\.js\?v=20261009-1/);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261009-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261009-2/);
   const moteur = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie), "_serveur/public/prof/defi_tables_mon_parcours.js doit être la copie octet pour octet du moteur");

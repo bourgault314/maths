@@ -27,7 +27,7 @@ entetes_securite();
 // « versions » (historique de sept jours) et « journal » (actions des
 // professeurs, douze mois) sont arrivés le 06/09/2026 : une sauvegarde doit
 // rendre un serveur ENTIER, pas seulement les progressions du jour.
-const TABLES_SAUVEGARDEES = ['profs', 'classes', 'eleves', 'progressions', 'partages', 'versions', 'journal'];
+const TABLES_SAUVEGARDEES = ['profs', 'classes', 'eleves', 'progressions', 'partages', 'versions', 'journal', 'records'];
 // sessions_prof, compteurs et billets : leur STRUCTURE part dans la
 // sauvegarde, leur CONTENU non. Ils ne tiennent que des jetons à durée de vie
 // courte (sessions ouvertes, compteurs de cinq minutes, liens d'entrée de deux
@@ -75,7 +75,7 @@ function texte_de_la_sauvegarde_dans_l_instantane(PDO $pdo): string
     $sql .= $mysql ? "SET NAMES utf8mb4;\nSET FOREIGN_KEY_CHECKS = 0;\n" : "";
     $sql .= "\n";
 
-    foreach (array_merge(TABLES_SAUVEGARDEES, TABLES_STRUCTURE_SEULE) as $table) {
+    foreach (array_merge(tables_sauvegardees($pdo), TABLES_STRUCTURE_SEULE) as $table) {
         $avecContenu = in_array($table, TABLES_SAUVEGARDEES, true);
         $sql .= "-- ------------------------------------------------------------ $table\n";
         if (!$avecContenu) {
@@ -121,10 +121,18 @@ function chiffrer_comme_openssl(string $clair, string $phrase): string
     return "Salted__" . $sel . $chiffre;
 }
 
+// Les tables à sauvegarder qui EXISTENT : « records » (lot « Les records »)
+// n'arrive qu'avec migrer.php — une sauvegarde faite avant ne doit pas
+// tomber en panne dessus.
+function tables_sauvegardees(PDO $pdo): array
+{
+    return array_values(array_filter(TABLES_SAUVEGARDEES, fn(string $table): bool => table_existe($pdo, $table)));
+}
+
 function comptes_des_tables(PDO $pdo): array
 {
     $comptes = [];
-    foreach (TABLES_SAUVEGARDEES as $table) {
+    foreach (tables_sauvegardees($pdo) as $table) {
         $comptes[$table] = (int)$pdo->query("SELECT COUNT(*) FROM `$table`")->fetchColumn();
     }
     return $comptes;

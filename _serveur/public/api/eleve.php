@@ -19,6 +19,7 @@ require __DIR__ . '/../lib/codes.php';
 require __DIR__ . '/../lib/limite.php';
 require __DIR__ . '/../lib/applis.php';
 require_once __DIR__ . '/../lib/billets.php';
+require_once __DIR__ . '/../lib/records.php';
 
 cors();
 
@@ -102,6 +103,9 @@ try {
                 'parcours' => $ligne === false ? null : json_decode($ligne['donnees'], false),
                 'maj_le' => $ligne === false ? null : $ligne['maj_le'],
                 'revision' => $ligne === false ? 0 : (int)$ligne['revision'],
+                // Lot « Les records » : le record de la Légende, pour la
+                // ligne d'en-tête de sa fiche (null : aucun, ou pas Défi tables).
+                'record' => $appli === 'defi-tables' && records_disponibles($pdo) ? record_affichable(record_de($pdo, (int)$eleve['id'])) : null,
             ]);
         }
 

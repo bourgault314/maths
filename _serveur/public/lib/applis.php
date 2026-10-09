@@ -77,6 +77,12 @@ const CATALOGUE_APPLIS = [
         // renvoyer sept progressions entières par élève. Une appli qui ne
         // déclare rien n'est pas comptée.
         'compteur' => 'calculs',
+        // Lot « Les records » (09/10/2026) : ce qu'un professeur règle pour
+        // SA classe — « records » (booléen) : les Légendes des tables de la
+        // classe voient le concours de temps et y apparaissent. Par défaut
+        // oui : rien n'est écrit ; seul « false » est rangé
+        // ({"defi-tables": {"records": false}}). Voir reglages_recus().
+        'reglages' => ['records' => true],
     ],
     // Les entrées qui suivent, SPLAT! excepté, ne sont PAS ouvertes : l'appli
     // ne sait pas encore parler au serveur (« disponible » à false, « url » à
@@ -260,6 +266,11 @@ function reglages_lus(?string $json, ?array $applis = null): array
             $mondes = mondes_lus($reglageBrut['mondes'] ?? null, (int)$declares['mondes']);
             if ($mondes !== null) $reglage['mondes'] = $mondes;
         }
+        // Un réglage booléen (lot « Les records ») : seul « false » est gardé,
+        // « true » est le défaut et ne s'écrit pas.
+        foreach ($declares as $nom => $defaut) {
+            if ($defaut === true && ($reglageBrut[$nom] ?? null) === false) $reglage[$nom] = false;
+        }
         if ($reglage !== []) $sortie[$cle] = $reglage;
     }
     return $sortie;
@@ -314,6 +325,14 @@ function reglages_recus(mixed $recus, array $actuels): array
             ksort($mondes);
             if (count($mondes) === $nombre) unset($nouveau['mondes']);
             else $nouveau['mondes'] = array_values($mondes);
+        }
+        // Les réglages booléens (« records » de Défi tables) : vrai ou faux,
+        // rien d'autre ; vrai = le défaut, donc rien d'écrit.
+        foreach ($declares as $nom => $defaut) {
+            if ($defaut !== true || !array_key_exists($nom, $reglage)) continue;
+            if (!is_bool($reglage[$nom])) throw new InvalidArgumentException("Réglage illisible.");
+            if ($reglage[$nom]) unset($nouveau[$nom]);
+            else $nouveau[$nom] = false;
         }
         if ($nouveau === []) unset($sortie[$cle]);
         else $sortie[$cle] = $nouveau;

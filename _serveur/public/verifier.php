@@ -222,6 +222,17 @@ if ($autorise) {
             ? "en place (toutes les classes ont tous leurs mondes ouverts)"
             : "en place ($reglees classe(s) avec un choix de mondes)";
     });
+    // Lot « Les records » (09/10/2026) : la table des meilleurs temps des
+    // Légendes des tables, ajoutée par migrer.php. Sans elle, l'appli dit
+    // « mise à niveau » à chaque course et n'enregistre rien.
+    verif($lignes, "Les records (Défi tables)", function () {
+        $pdo = bd();
+        if (!table_existe($pdo, 'records')) {
+            throw new RuntimeException("manque la table « records » — ouvre migrer.php avec ton mot de passe d'installation.");
+        }
+        $legendes = (int)$pdo->query('SELECT COUNT(*) FROM records WHERE meilleur IS NOT NULL')->fetchColumn();
+        return $legendes === 0 ? "en place (aucun temps enregistré pour le moment)" : "en place ($legendes Légende(s) avec un temps)";
+    });
     // Le limiteur d'essais s'écrit avec une instruction propre à chaque moteur
     // (MySQL chez OVH, SQLite dans les tests) : on la joue ici, sur la vraie
     // base, pour voir qu'elle passe. Deux passages doivent compter 2.

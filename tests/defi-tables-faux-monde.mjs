@@ -224,20 +224,25 @@ export function demarrerAppli({entree = {}, local, session, reseau, running = fa
   };
   const navigator = {sendBeacon(url, blob) { balises.push({url, blob}); return true; }};
   const state = {parcoursOptionsOpen: false, nameSkipped: false, running};
+  // Lot « Les records » : le bloc des records vit dans le bloc suivi ; ce
+  // qu'il appelle de la page (les écrans) est remplacé par des repères.
   const api = new Function("window", "document", "navigator", "fetch", "PARCOURS", "storage", "stockageSession",
-    "state", "renderParcours", "Date", `${SOURCE_SUIVI}
+    "state", "renderParcours", "Date", "$", "renderRecords", "renderAccueil", "show", "launchFromParcours", "rafraichirRecords", `${SOURCE_SUIVI}
     return {
       get codeSuivi() { return codeSuivi; }, get parcours() { return parcours; }, set parcours(p) { parcours = p; },
       get suiviHorsLigne() { return suiviHorsLigne; },
       get suiviIdentite() { return suiviIdentite; }, get sync() { return sync; },
       get erreurDefinitive() { return erreurDefinitive; }, get entreeRefusee() { return entreeRefusee; },
       get gardeVisible() { return gardeVisible; },
+      get recordsEtat() { return recordsEtat; }, get recordsReglage() { return recordsReglage; },
       ENTREE, suiviActif, demarrerSuivi, quitterSuivi, sauverParcours, envoyerAvantDeFermer, envoyerMaintenant,
       renderRepere, majLienRetour, entrerParBillet, adopterCode, echangerBillet, prenomAffiche,
       verifierGarde, repondreGarde, GARDE_INACTIVITE_MS, GARDE_ESSAIS_MAX,
-      CLE_PRENOM_ONGLET, CLE_DERNIER_GESTE, lirePrenomOnglet
+      CLE_PRENOM_ONGLET, CLE_DERNIER_GESTE, lirePrenomOnglet,
+      recordsOuverts, recordConnu, optionsSeance, noterCourse, envoyerCourseEnAttente, chargerRecords, choisirNom, lancerCourse, ouvrirRecords, lireReglageRecords
     };`)(window, document, navigator, reseau.fetch, PARCOURS, () => local, () => session, state,
-    () => rendus.push("parcours"), horloge);
+    () => rendus.push("parcours"), horloge, id => document.getElementById(id), () => rendus.push("records"), () => rendus.push("accueil"),
+    nom => rendus.push("show:" + nom), config => rendus.push("lancer:" + (config && config.course || config && config.mode)), () => rendus.push("accueil"));
   return {api, local, session, reseau, window, document, state, rendus, balises, temps,
     declencher: type => (ecouteurs[type] || []).forEach(fn => fn()),
     repere: () => document.getElementById("suivi-repere"),

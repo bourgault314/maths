@@ -289,6 +289,37 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
   [hidden] { display: none !important; }
   /* Sous 700 px, le tableau devient une carte par élève : rien ne déborde,
      tout se lit d'un coup d'œil sur un téléphone. */
+  /* Lot « 🏆 Les records » (09/10/2026, planche R5 validée par Gwenaël) : le
+     temps d'une Légende à côté de sa couronne ; la carte sous le tableau (la
+     ligue du professeur, toutes ses classes, ce que voient les élèves) ; le
+     plein écran pour projeter ; la case par classe dans « Activités ». */
+  td .rec-temps { margin-left: 6px; color: #7a5a00; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .rec-carte { max-width: 820px; margin-top: 18px; border-left: 5px solid #e3a81a; }
+  .rec-tete { display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+  .rec-tete strong { display: block; color: var(--blue-dark); font-family: Georgia, serif; font-size: 1.05rem; }
+  .rec-tete p { margin: 2px 0 0; color: var(--muted); font-size: .88rem; }
+  .rec-tete button { margin-left: auto; }
+  .rec-deux { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 12px; }
+  .rec-deux h3 { margin: 0 0 8px; font-size: .95rem; color: var(--blue); text-align: center; text-transform: uppercase; letter-spacing: .04em; }
+  .rec-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; }
+  .rec-liste li { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; align-items: center; gap: 8px; min-height: 36px; padding: 3px 12px 3px 6px; border: 1px solid #d5e2ea; border-radius: 10px; background: #fff; font-weight: 700; }
+  .rec-liste .rg { text-align: center; font-weight: 800; color: #3f5a6c; }
+  .rec-liste li:nth-child(-n+3) .rg { font-size: 1.2rem; }
+  .rec-liste .nom { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rec-liste .tps { font-variant-numeric: tabular-nums; font-weight: 800; white-space: nowrap; }
+  .rec-vide { margin: 8px 0 0; color: var(--muted); font-size: .9rem; text-align: center; }
+  .rec-plein { position: fixed; inset: 0; z-index: 50; background: #fff; padding: 28px 48px; overflow: auto; }
+  .rec-plein h1 { margin: 0; text-align: center; font-size: 2.6rem; }
+  .rec-plein .fermer { position: absolute; top: 18px; right: 24px; }
+  .rec-plein .rec-deux { max-width: 1100px; margin: 26px auto 0; gap: 40px; }
+  .rec-plein .rec-deux h3 { font-size: 1.4rem; }
+  .rec-plein .rec-liste li { min-height: 52px; font-size: 1.45rem; padding: 4px 18px 4px 10px; grid-template-columns: 48px minmax(0, 1fr) auto; }
+  .rec-plein .rec-liste li:nth-child(-n+3) .rg { font-size: 1.9rem; }
+  .rec-reglage { margin: 6px 0 2px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .rec-reglage label { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin: 0; font-size: .95rem; cursor: pointer; }
+  .rec-reglage input { width: 20px; height: 20px; margin: 0; accent-color: var(--blue); }
+  .rec-reglage small { display: block; margin: -4px 0 0 28px; color: var(--muted); font-size: .84rem; }
+  @media (max-width: 700px) { .rec-deux { grid-template-columns: 1fr; } .rec-plein { padding: 16px; } }
   @media (max-width: 700px) {
     .tableau-enveloppe { overflow-x: visible; }
     #tableau, #tableau tbody, #tableau tr, #tableau td { display: block; width: 100%; }
@@ -314,7 +345,7 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
   }
   @media print {
     @page { margin: 12mm; }
-    .barre, header, footer, .barre-outils, .actions,
+    .barre, header, footer, .barre-outils, .actions, .rec-plein,
     #ecran-classe > *:not(.fiche):not(.bandelettes):not(.note-impression) { display: none !important; }
     body { background: #fff; }
     main { max-width: none; padding: 0; }
@@ -480,6 +511,21 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
     d’évaluation</strong> : la progression vient de l’appareil de l’élève, et quiconque connaît son code
     peut la modifier.</p>
 
+    <!-- Lot « Les records » (09/10/2026, planche R5) : la ligue du professeur
+         — toutes ses classes, exactement ce que voient les élèves (un
+         « Mystère » reste un Mystère). Propriétaire seulement, Défi tables
+         seulement, et seulement quand une Légende a un temps. -->
+    <div class="carte rec-carte" id="bloc-records" hidden>
+      <div class="rec-tete">
+        <div><strong>🏆 Les records</strong><p>Toutes tes classes · ce que voient les élèves</p></div>
+        <button type="button" class="secondaire petit" id="records-plein-ecran">Plein écran</button>
+      </div>
+      <div class="rec-deux">
+        <div><h3>Cette semaine</h3><ol class="rec-liste" id="records-semaine"></ol><p class="rec-vide" id="records-semaine-vide" hidden>Personne cette semaine, pour l’instant.</p></div>
+        <div><h3>De tous les temps</h3><ol class="rec-liste" id="records-toujours"></ol></div>
+      </div>
+    </div>
+
     <!-- Ce qu'on imprime pour la classe (lot R5 de Défi tables, 13/09/2026) :
          les papiers de l'élève vivent sur mathsgo.re, pas ici. La fiche vierge
          et la feuille des tables ne sont plus proposées dans l'appli élève
@@ -522,6 +568,13 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
             <label class="puce-monde" data-monde="5"><input type="checkbox" data-monde="5"><i aria-hidden="true">5</i>Équations</label>
             <label class="puce-monde" data-monde="6"><input type="checkbox" data-monde="6"><i aria-hidden="true">6</i>Relatifs</label>
           </div>
+        </div>
+        <!-- Lot « Les records » : la case par classe (ouverte par défaut) —
+             décochée, les Légendes de la classe gardent l'escalier, ne voient
+             pas les records et n'y apparaissent pas. -->
+        <div class="rec-reglage" id="rec-reglage" hidden>
+          <label><input type="checkbox" id="case-records"> 🏆 Les records</label>
+          <small>Le concours de temps des Légendes des tables. Décoché : cette classe ne le voit pas et n’y apparaît pas.</small>
         </div>
         <p class="message" id="message-activites" hidden></p>
       </div>
@@ -861,7 +914,7 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
   const CHAMPS_A_VIDER = ["identifiant", "motdepasse", "libelle",
     "mdp-ancien", "mdp-nouveau", "mdp-confirme"];
   const BLOCS_A_CACHER = ["fiche", "bandelettes", "objectif", "fragiles", "bloc-partage", "bloc-profs",
-    "bandeau-echues", "bloc-activites", "choix-appli"];
+    "bandeau-echues", "bloc-activites", "choix-appli", "bloc-records"];
 
   function viderZones() {
     ZONES_TEXTE.forEach(id => { const noeud = $(id); if (noeud) noeud.textContent = ""; });
@@ -1251,6 +1304,14 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
         if (enCours.type === "expert" && eleve.lu.couronne) texte.title = "Légende des tables";
       }
       cEnCours.append(texte);
+      // Lot « Les records » : le record de la Légende à côté de sa couronne.
+      if (eleve.record && Number.isInteger(eleve.record.meilleur) && PARCOURS.formatTemps) {
+        const temps = document.createElement("span");
+        temps.className = "rec-temps";
+        temps.textContent = PARCOURS.formatTemps(eleve.record.meilleur);
+        temps.title = "Son record aux 25 questions";
+        cEnCours.append(temps);
+      }
       if (eleve.lu.longue) {
         const alerte = document.createElement("span");
         alerte.className = "alerte";
@@ -2035,6 +2096,9 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
     if (splat) $("fragiles").hidden = true;
     poserTris();
     poserActivites();
+    // Lot « Les records » : la carte, Défi tables seulement (relue à chaque
+    // ouverture de la classe).
+    chargerRecords();
   }
 
   function poserTris() {
@@ -2091,8 +2155,118 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
 
   // ------------------------------------------------- activités de la classe (D7)
 
+  // ------------------------------------------------------ 🏆 Les records (lot du 09/10/2026)
+
+  // La ligue du professeur connecté (records.ligue) : ses classes, les deux
+  // top 10. Lue à l'ouverture d'une classe Défi tables dont il est propriétaire ;
+  // la carte ne se montre que s'il y a au moins un temps.
+  let ligueRecords = null;
+
+  function ligneDeRecord(ligne) {
+    const item = document.createElement("li");
+    const rang = document.createElement("span");
+    rang.className = "rg";
+    rang.textContent = ["🥇", "🥈", "🥉"][ligne.rang - 1] || String(ligne.rang);
+    const nom = document.createElement("span");
+    nom.className = "nom";
+    nom.textContent = ligne.nom;
+    const temps = document.createElement("span");
+    temps.className = "tps";
+    temps.textContent = PARCOURS && PARCOURS.formatTemps ? PARCOURS.formatTemps(ligne.temps) : `${(ligne.temps / 10).toFixed(1)} s`;
+    item.append(rang, nom, temps);
+    return item;
+  }
+
+  function dessinerRecords() {
+    const bloc = $("bloc-records");
+    const visible = Boolean(ligueRecords) && appliAffichee === "defi-tables" && droitClasse === "proprietaire"
+      && ((ligueRecords.toujours || []).length > 0);
+    bloc.hidden = !visible;
+    if (!visible) return;
+    ["semaine", "toujours"].forEach(cle => {
+      const liste = $(`records-${cle}`);
+      liste.textContent = "";
+      (ligueRecords[cle] || []).forEach(ligne => liste.append(ligneDeRecord(ligne)));
+    });
+    $("records-semaine-vide").hidden = (ligueRecords.semaine || []).length > 0;
+  }
+
+  async function chargerRecords() {
+    ligueRecords = null;
+    if (droitClasse !== "proprietaire" || appliAffichee !== "defi-tables") { dessinerRecords(); return; }
+    try {
+      ligueRecords = await api("records.ligue");
+    } catch (erreur) {
+      // Serveur pas encore mis à niveau (503) ou panne : pas de carte, sans bruit.
+      ligueRecords = null;
+    }
+    dessinerRecords();
+  }
+
+  // Le plein écran : le même tableau, en grand, pour le projeter (planche R5).
+  function ouvrirRecordsPleinEcran() {
+    if (!ligueRecords) return;
+    const plein = document.createElement("div");
+    plein.className = "rec-plein";
+    plein.id = "records-plein";
+    plein.setAttribute("role", "dialog");
+    plein.setAttribute("aria-label", "Les records");
+    const fermer = document.createElement("button");
+    fermer.type = "button";
+    fermer.className = "secondaire fermer";
+    fermer.textContent = "✕ Fermer";
+    const titre = document.createElement("h1");
+    titre.textContent = "🏆 Les records";
+    const deux = document.createElement("div");
+    deux.className = "rec-deux";
+    [["Cette semaine", "semaine"], ["De tous les temps", "toujours"]].forEach(([nom, cle]) => {
+      const colonne = document.createElement("div");
+      const h3 = document.createElement("h3");
+      h3.textContent = nom;
+      const liste = document.createElement("ol");
+      liste.className = "rec-liste";
+      (ligueRecords[cle] || []).forEach(ligne => liste.append(ligneDeRecord(ligne)));
+      colonne.append(h3, liste);
+      deux.append(colonne);
+    });
+    plein.append(fermer, titre, deux);
+    const quitter = () => { plein.remove(); document.removeEventListener("keydown", surEchap); $("records-plein-ecran").focus(); };
+    const surEchap = evenement => { if (evenement.key === "Escape") quitter(); };
+    fermer.addEventListener("click", quitter);
+    document.addEventListener("keydown", surEchap);
+    document.body.append(plein);
+    fermer.focus();
+  }
+
+  // La case « Les records » de la classe (réglage « defi-tables.records »,
+  // vrai par défaut) : décochée, les Légendes de la classe gardent l'escalier.
+  function recordsOuvertsPourLaClasse() {
+    const reglages = classe && classe.reglages;
+    return !(reglages && reglages["defi-tables"] && reglages["defi-tables"].records === false);
+  }
+
+  async function changerRecords(caseRecords) {
+    const ouvre = caseRecords.checked;
+    caseRecords.disabled = true;
+    try {
+      await api("classes.modifier", {classe_id: classe.id, reglages: {"defi-tables": {records: ouvre}}});
+      await ouvrirClasse(classe.id);
+      messager("message-activites", `Les records ${ouvre ? "ouverts" : "fermés"} pour la ${classe.libelle}.`, "ok");
+    } catch (erreur) {
+      caseRecords.checked = !ouvre;
+      surErreur(erreur, "message-activites");
+    } finally {
+      caseRecords.disabled = false;
+    }
+  }
+
   function poserActivites() {
     $("bloc-activites").hidden = droitClasse !== "proprietaire";
+    // Lot « Les records » : la case, seulement quand la classe a Défi tables.
+    const presentesRecords = (classe && classe.applis) || [];
+    $("rec-reglage").hidden = !presentesRecords.includes("defi-tables");
+    $("case-records").checked = recordsOuvertsPourLaClasse();
+    $("case-records").disabled = false;
     const presentes = (classe && classe.applis) || [];
     document.querySelectorAll("#liste-activites input[data-appli]").forEach(caseActivite => {
       caseActivite.checked = presentes.includes(caseActivite.dataset.appli);
@@ -2896,6 +3070,8 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
   document.querySelectorAll("#mondes-ouverts input[data-monde]").forEach(caseMonde => {
     caseMonde.addEventListener("change", () => changerMonde(caseMonde));
   });
+  $("case-records").addEventListener("change", () => changerRecords($("case-records")));
+  $("records-plein-ecran").addEventListener("click", ouvrirRecordsPleinEcran);
 
   document.querySelectorAll("th button[data-tri]").forEach(bouton => {
     bouton.addEventListener("click", () => {

@@ -13,7 +13,8 @@ test("le verdict dit réussi, pas encore ou temps écoulé — et ce qui manquai
   // Audit 1 (30/09/2026, Gwenaël) : sur un écran raté, plus de « 20 questions · 1 min 30 » sous le score.
   assert.match(html, /const rappelCourt = \(\) => \{\s*const parts = configurationLabel\(config\)\.split\(" · "\);\s*const melange = config\.mode === "validation" && config\.tables\.length > 1;\s*return parts\.slice\(0, melange \? 2 : 1\)\.join\(" · "\);/, "le rappel court garde l’épreuve, et les tables d’un mélange");
   assert.match(html, /verdict\.titre = "Temps écoulé";\s*verdict\.config = rappelCourt\(\);/, "le temps écoulé aussi");
-  assert.match(html, /const regle = \{entraine: "entrainement", validation: "validation", preparation: "validation", melange: "melange", etoile: "etoile"\}\[evenement\.type\];/, "le seuil vient des SEUILS du moteur, pas d’un nombre écrit en dur");
+  // Lot « Les records » : la couronne a son seuil à elle (erreursMaxEtoile) ; les autres viennent des SEUILS.
+  assert.match(html, /if \(evenement\.type === "etoile"\) return evenement\.total - PARCOURS\.erreursMaxEtoile\(evenement\.etoile\);\s*const regle = \{entraine: "entrainement", validation: "validation", preparation: "validation", melange: "melange"\}\[evenement\.type\];/, "le seuil vient des SEUILS du moteur, pas d’un nombre écrit en dur");
   assert.match(html, /const tempsEcoule = config\.duration !== null && remaining > 0;/);
   assert.match(html, /if \(principal && !principal\.reussi && tempsEcoule\) \{[\s\S]*?verdict\.classe = "is-temps";[\s\S]*?verdict\.titre = "Temps écoulé";/, "le temps écoulé est un verdict à part, en ambre");
   assert.match(html, /principal\.type === "entraine" \? "Entraînement réussi !"/);

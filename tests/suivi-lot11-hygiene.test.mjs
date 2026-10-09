@@ -52,7 +52,10 @@ function actionsAdminDuCode() {
 // la matrice. Toute NOUVELLE action devra être ajoutée ici en connaissance de
 // cause, ou entrer dans la matrice.
 const SANS_CLASSE = ["connexion", "deconnexion", "moi", "profs.motdepasse",
-  "profs.annuaire", "classes.liste", "classes.creer"];
+  "profs.annuaire", "classes.liste", "classes.creer",
+  // Lot « Les records » : la ligue du professeur connecté — ses classes à
+  // lui, aucune classe en particulier (lib/records.php, cloisonnement).
+  "records.ligue"];
 
 test("la matrice décrit exactement les droits décidés le 05/09/2026", () => {
   assert.deepEqual(matriceDuCode(), {
