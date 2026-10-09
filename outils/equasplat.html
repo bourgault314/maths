@@ -4589,6 +4589,17 @@
   /* la pastille « ● Léa » (lot 2 du suivi) suit le bouton « Passer ▶ » ou « Équation suivante ▶ »
      quand il est là, au lieu de partager avec lui la place libre */
   #eleveBarre #elevePasser + .suivi-pastille, #eleveBarre #eleveSuivante + .suivi-pastille{margin-left:0}
+  /* Plein écran (09/10/2026) : le bouton ⛶ ne met que la scène (#stage) en plein écran.
+     La barre du parcours y est rangée le temps du plein écran (eleveRangerPleinEcran) :
+     posée tout en haut, sur toute la largeur, comme hors plein écran ; la scène descend
+     d'autant (--eleve-barre-h, hauteur mesurée de la barre) et ses boutons ronds aussi.
+     Sélecteurs à #stage : ils passent devant toutes les mises en page plein écran
+     (« Au-dessus » en colonne, « À côté » en grille), sans toucher à leur rangement. */
+  body.eleveMode #stage:fullscreen{padding-top:calc(var(--eleve-barre-h, 52px) + 14px)}
+  /* min-height : la hauteur avec le bouton vert « Équation suivante ▶ » (36 + 2 × 8) — la barre ne
+     grandit plus à la résolution, donc le plateau ne rapetisse pas sous les yeux de l'élève */
+  body.eleveMode #stage:fullscreen > #eleveBarre{position:absolute;top:0;left:0;right:0;z-index:6;min-height:52px}
+  body.eleveMode #stage:fullscreen .stageQuickActions{top:calc(var(--eleve-barre-h, 52px) + 10px)}
   .eleveVoile{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
     background:rgba(16,41,74,.45)}
   .eleveCarton{background:#fff;border-radius:20px;padding:28px 36px;text-align:center;
@@ -9870,7 +9881,7 @@
     if(!barre){
       barre = document.createElement("div");
       barre.id = "eleveBarre";
-      document.body.prepend(barre);
+      eleveHote().prepend(barre);
       /* le bouton est reconstruit avec la barre : un seul écouteur, délégué */
       barre.addEventListener("click", ev => {
         if(!ev.target) return;
@@ -9884,10 +9895,52 @@
     }
     barre.innerHTML = eleveBarreHtml(message || "");
     barre.classList.toggle("avecSuivante", !!eleveAttenteSuivante);
+    eleveMesurerBarre(); /* le message ou le bouton a pu changer sa hauteur */
     if(eleveAttenteSuivante){
       const bouton = barre.querySelector("#eleveSuivante");
       if(bouton) bouton.focus(); /* Entr\u00e9e suffit pour encha\u00eener */
     }
+  }
+
+  /* Plein écran (09/10/2026). Le bouton ⛶ met la SCÈNE seule en plein écran (#stage) :
+     le navigateur n'affiche plus rien d'autre. Or la barre du parcours (pastilles,
+     « Passer ▶ », « Équation suivante ▶ »), le carton de fin de série et la question
+     « C'est toujours toi ? » du suivi (assets/js/splat-suivi.js) sont posés sur <body> :
+     ils existaient, mais invisibles — l'élève résolvait son équation et restait bloqué.
+     On les range donc DANS la scène le temps du plein écran, et on les remet sur <body>
+     à la sortie. La garde du suivi, construite à son premier besoin, peut naître en plein
+     écran : un observateur la rattrape. Le focus suit l'élément déplacé (Entrée suffit
+     toujours pour enchaîner). */
+  function eleveHote(){
+    return document.fullscreenElement && document.fullscreenElement === stageEl ? stageEl : document.body;
+  }
+  function eleveMesurerBarre(){
+    const barre = document.getElementById("eleveBarre");
+    if(barre && barre.parentNode === stageEl) stageEl.style.setProperty("--eleve-barre-h", barre.offsetHeight + "px");
+  }
+  function eleveRangerPleinEcran(){
+    if(!eleveMode) return;
+    const hote = eleveHote(), actif = document.activeElement;
+    const ranger = (el, enTete) => {
+      if(!el || el.parentNode === hote) return;
+      const avaitFocus = actif && el.contains(actif);
+      if(enTete) hote.prepend(el); else hote.appendChild(el);
+      if(avaitFocus && typeof actif.focus === "function") actif.focus();
+      /* garde du suivi née en plein écran : elle a voulu donner le focus à son champ alors
+         qu'elle était encore hors de la scène, le navigateur l'a refusé — on le redonne */
+      else if(el.matches("[data-suivi-garde]") && !el.hidden){
+        const champ = el.querySelector("input");
+        if(champ) champ.focus({ preventScroll: true });
+      }
+    };
+    ranger(document.getElementById("eleveBarre"), true);
+    document.querySelectorAll(".eleveVoile, [data-suivi-garde]").forEach(el => ranger(el, false));
+    eleveMesurerBarre();
+  }
+  document.addEventListener("fullscreenchange", eleveRangerPleinEcran);
+  if(typeof MutationObserver === "function"){
+    new MutationObserver(() => { if(eleveMode && eleveHote() === stageEl) eleveRangerPleinEcran(); })
+      .observe(document.body, { childList: true });
   }
 
   function eleveChargerEquation(){
@@ -10098,7 +10151,7 @@
       eleveEcrireEntree({});
       eleveChargerEquation();
     });
-    document.body.appendChild(voile);
+    eleveHote().appendChild(voile); /* en plein écran : dans la scène, sinon invisible */
     const bouton = voile.querySelector("button");
     if(bouton) bouton.focus();
     eleveMajBarre();
