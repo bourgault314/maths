@@ -248,7 +248,11 @@ const VISIBLES=[[71.1,35.0],[259.9,78.7],[23.9,155.0],[269.5,165.0],[33.3,62.6],
 const BLEU='#2563eb',BLEU_BORD='#1e40af',ENCRE='#111827',GRIS='#d4deea',VERT='#dcfce7',VERT_TXT='#15803d',BLEU_TXT='#1d4ed8';
 /* adresses des logos et de la suite : remplacées à la fabrication de la page */
 const LOGO_IREM='/assets/img/logos/irem/logo-print.png', LOGO_MG='/assets/img/logos/mathsgo/logo-print.png';
-const SUITE=(()=>{try{const d=new URLSearchParams(location.search).get('suite')||'';return /^\/[^\/]/.test(d)?d:'/outils/splat_univers.html';}catch(e){return '/outils/splat_univers.html';}})();
+/* ?suite= : seulement une page du site. L'adresse est résolue comme le navigateur le fera (il lit « /\ »
+   comme « // » et efface tabulations et retours à la ligne), puis on vérifie qu'elle reste chez nous. */
+const SUITE=(()=>{const repli='/outils/splat_univers.html';
+  try{const d=new URLSearchParams(location.search).get('suite')||'';if(!/^\/[^\/\\]/.test(d))return repli;
+    const u=new URL(d,location.href);return u.origin===location.origin?u.pathname+u.search+u.hash:repli;}catch(e){return repli;}})();
 
 const LAY={
   paysage:{W:1600,H:900,cap:{x:800,y:92,size:40,max:1520,gap:0},
