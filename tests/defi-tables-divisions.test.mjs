@@ -40,14 +40,18 @@ function source(nom) {
   return html.slice(debut, fin);
 }
 
-test("les séries du parcours : 5 + 5, 6 + 2 + 2, 14 + 3 + 3 — à chaque tirage", () => {
+// Lot « le tirage des questions » (10/10/2026, décision de Gwenaël) : le test
+// d'une table et « Comme la validation, en 2 min » passent à 10 + 5 + 5 (la
+// deuxième fois d'un calcul se pose toujours « à l'envers ») ; le mélange
+// garde 14 + 3 + 3.
+test("les séries du parcours : 5 + 5, 6 + 2 + 2, 10 + 5 + 5 au test, 14 + 3 + 3 au mélange — à chaque tirage", () => {
   const acquises = P.normaliserParcours({tables: {2: {acquise: "2026-10-01"}, 5: {acquise: "2026-10-01"}, 10: {acquise: "2026-10-01"}}});
   for (let tirage = 0; tirage < 60; tirage += 1) {
     assert.deepEqual(compter(generer(P.configEntraine(7, "desordre"))), [10, 0, 0], "marche 5 : que des résultats");
     assert.deepEqual(compter(generer(P.configEntraine(7, "trous"))), [0, 5, 5], "marche 6");
     assert.deepEqual(compter(generer(P.configEntraine(7, "mixte"))), [6, 2, 2], "marche 7");
-    assert.deepEqual(compter(generer(P.configValidation(7))), [14, 3, 3], "la validation");
-    assert.deepEqual(compter(generer(P.configValidation(7, 120))), [14, 3, 3], "« Comme la validation, en 2 min »");
+    assert.deepEqual(compter(generer(P.configValidation(7))), [10, 5, 5], "la validation");
+    assert.deepEqual(compter(generer(P.configValidation(7, 120))), [10, 5, 5], "« Comme la validation, en 2 min »");
     assert.deepEqual(compter(generer(P.configMelange(acquises))), [14, 3, 3], "le mélange");
   }
 });

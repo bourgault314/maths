@@ -193,7 +193,7 @@ test("la case d'envoi : une course en attente et le record connu, seulement quan
 test("le moteur copié sur le serveur est le même octet pour octet, et son numéro a monté", () => {
   assert.equal(moteurCopie, moteur);
   assert.match(html, /defi_tables_mon_parcours\.js\?v=20261009-3/);
-  assert.match(html, /defi_tables_core\.js\?v=20261009-1/, "le noyau est resté à celui du lot « trois divisions »");
+  assert.match(html, /defi_tables_core\.js\?v=20261010-1/, "le noyau est resté à celui du lot « trois divisions »");
 });
 
 // --------------------------------------------------------------------- la page

@@ -39,6 +39,29 @@ const SEUIL_COURSE_DIXIEMES = 100;
 const COURSE_MAX_DIXIEMES = 36000;
 const RECORDS_TOP = 10;
 
+// Lot « le tirage des questions » (09/10/2026, décision de Gwenaël) : les
+// séries de la course ont changé (25 calculs tous différents, ×1 et ×10 une
+// fois chacun au plus) — un peu plus dures, plus égales d'une course à
+// l'autre. Les records REPARTENT À ZÉRO, sans rien effacer : un temps fait
+// avant RECORDS_DEPUIS ne compte plus, ni dans la ligue ni comme record de
+// l'élève, et sa course suivante le remplace, quelle qu'elle soit. Même
+// écriture que meilleur_le (instant_precis) : les deux se comparent comme
+// des chaînes. config.php peut la remplacer (« records_depuis ») — seuls les
+// tests s'en servent, le serveur garde la constante.
+const RECORDS_DEPUIS = '2026-10-09T20:00:00.000000Z'; // le 10/10/2026 à 0 h, heure de La Réunion
+
+function records_depuis(): string
+{
+    $valeur = config()['records_depuis'] ?? null;
+    return is_string($valeur) ? $valeur : RECORDS_DEPUIS;
+}
+
+// Un temps de la saison en cours : fait depuis records_depuis().
+function temps_de_la_saison(?array $ligne): bool
+{
+    return $ligne !== null && $ligne['meilleur'] !== null && strcmp((string)$ligne['meilleur_le'], records_depuis()) >= 0;
+}
+
 // L'instant d'un record, à la microseconde : deux records à la même seconde
 // (deux élèves en salle informatique) doivent encore se départager — le
 // premier arrivé devant. C'est le seul usage de cet instant.
@@ -122,12 +145,14 @@ function record_de(PDO $pdo, int $eleveId): ?array
 }
 
 // Le record d'un élève tel que l'appli et la page prof le lisent : le temps
-// de la semaine n'est rendu que s'il est de la semaine EN COURS.
+// de la semaine n'est rendu que s'il est de la semaine EN COURS ; un temps
+// d'avant records_depuis() n'est pas rendu du tout (ni l'un ni l'autre).
 function record_affichable(?array $ligne, ?string $lundi = null): array
 {
     $lundi = $lundi ?? lundi_courant();
-    $meilleur = $ligne === null || $ligne['meilleur'] === null ? null : (int)$ligne['meilleur'];
-    $semaine = $ligne === null || $ligne['semaine'] === null || (string)$ligne['semaine_lundi'] !== $lundi ? null : (int)$ligne['semaine'];
+    $saison = temps_de_la_saison($ligne);
+    $meilleur = $saison ? (int)$ligne['meilleur'] : null;
+    $semaine = !$saison || $ligne['semaine'] === null || (string)$ligne['semaine_lundi'] !== $lundi ? null : (int)$ligne['semaine'];
     return [
         'meilleur' => $meilleur,
         // Le jour du record, pas l'instant : l'instant ne sert qu'au tri.
@@ -160,11 +185,14 @@ function enregistrer_course(PDO $pdo, int $eleveId, int $dixiemes): array
                 transaction_valider($pdo);
                 return ['nouveau' => true, 'avant' => null, 'record' => record_affichable(record_de($pdo, $eleveId), $lundi)];
             }
-            $avant = $ligne['meilleur'] === null ? null : (int)$ligne['meilleur'];
+            // Un temps d'avant records_depuis() ne compte plus : cette course
+            // le remplace, comme une première course.
+            $saison = temps_de_la_saison($ligne);
+            $avant = $saison ? (int)$ligne['meilleur'] : null;
             $nouveau = $avant === null || $dixiemes < $avant;
             $meilleur = $nouveau ? $dixiemes : $avant;
             $meilleurLe = $nouveau ? $instant : $ligne['meilleur_le'];
-            $semaineAvant = (string)$ligne['semaine_lundi'] === $lundi && $ligne['semaine'] !== null ? (int)$ligne['semaine'] : null;
+            $semaineAvant = $saison && (string)$ligne['semaine_lundi'] === $lundi && $ligne['semaine'] !== null ? (int)$ligne['semaine'] : null;
             $semaine = $semaineAvant === null || $dixiemes < $semaineAvant ? $dixiemes : $semaineAvant;
             $pdo->prepare('UPDATE records SET meilleur = ?, meilleur_le = ?, semaine = ?, semaine_lundi = ?, maj_le = ? WHERE eleve_id = ?')
                 ->execute([$meilleur, $meilleurLe, $semaine, $lundi, maintenant(), $eleveId]);
@@ -254,6 +282,9 @@ function ligue(PDO $pdo, int $profId, ?int $eleveId = null): array
         // Une classe aux records fermés n'apparaît pas (ses élèves ne les
         // voient pas non plus).
         if (!records_ouverts_a_la_classe(['reglages' => $ligne['reglages']])) continue;
+        // Un temps d'avant records_depuis() non plus (les records repartent
+        // à zéro avec le nouveau tirage, lot du 09/10/2026).
+        if (!temps_de_la_saison($ligne)) continue;
         $lignes[] = $ligne;
     }
     $noms = noms_affiches($lignes);

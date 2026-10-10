@@ -735,11 +735,14 @@
        toujours 3 + 2 — résultat, nombre manquant, division sur la 1re ligne, les deux autres écritures
        sur la 2e (saut forcé : sans lui, 2 + 2 + 1 ou 4 + 1 selon la table et la largeur) ; sous 430 px,
        des pastilles qui rapetissent avec l'écran pour que la 1re ligne tienne, table de 10 comprise.
-       À 768 px et plus, les cinq sur une ligne, comme avant. Après la règle de base. */
+       À 768 px et plus, les cinq sur une ligne, comme avant. Après la règle de base.
+       Lot « le tirage des questions » (10/10/2026, choix de Gwenaël) : avant le test d'une table,
+       quatre pastilles — 2 + 2, les deux multiplications puis les deux divisions (et plus 3 + 1). */
     @media (max-width: 767px) {
       .launch-exemple { row-gap: 4px; }
       .launch-exemple::before { content: ""; flex-basis: 100%; order: 1; }
       .launch-exemple b:nth-child(n + 4) { order: 2; }
+      .launch-exemple b:first-child:nth-last-child(4) ~ b:nth-child(3) { order: 2; }
     }
     @media (max-width: 429px) { .launch-exemple { column-gap: 6px; } .launch-exemple b { padding: 5px 7px; font-size: clamp(.85rem, 4.3vw, 1.15rem); } }
     .result-parcours {
@@ -3058,7 +3061,7 @@
     <span data-mathsgo-confidentialite>Sans cookie ni traceur</span>
   </footer>
 
-  <script src="./defi_tables_core.js?v=20261009-1"></script>
+  <script src="./defi_tables_core.js?v=20261010-1"></script>
   <script src="./defi_tables_mon_parcours.js?v=20261009-3"></script>
   <script>
     (() => {
@@ -6726,7 +6729,12 @@
         // divisions » (09/10/2026, version B choisie par Gwenaël) : plus les
         // deux autres écritures de la division (? ÷ 7 = 4 · 28 ÷ ? = 4), que
         // le test et le mélange posent désormais.
-        const formes = ["produit", "trou", "division", "dividende", "diviseur"];
+        // Lot « le tirage des questions » (10/10/2026, décision de Gwenaël) :
+        // le test d'une table ne pose plus « ? ÷ 7 = 4 » (c'est 7 × 4, un
+        // produit déguisé) — son écran montre quatre pastilles ; Mon mélange
+        // garde les cinq.
+        const testDUneTable = config.mode === "validation" && config.tables.length === 1;
+        const formes = testDUneTable ? ["produit", "trou", "division", "diviseur"] : ["produit", "trou", "division", "dividende", "diviseur"];
         // Lot « Les records » (planche R3) : « Le chrono monte. Tout juste,
         // sinon le temps ne compte pas. » puis « Ton record : 52,4 s ».
         if (config.course === "records") {
@@ -6767,7 +6775,9 @@
             trou: `${table}\u00a0×\u00a0?\u00a0=\u00a0${table * 4}`,
             division: `${table * 4}\u00a0÷\u00a0${table}\u00a0=\u00a0?`,
             dividende: `?\u00a0÷\u00a0${table}\u00a0=\u00a04`,
-            diviseur: `${table * 4}\u00a0÷\u00a0?\u00a0=\u00a04`
+            // Lot « le tirage » : au test d'une table, la réponse n'est
+            // jamais la table — « 28 ÷ ? = 7 » (on cherche 4), pas « 28 ÷ ? = 4 ».
+            diviseur: testDUneTable ? `${table * 4}\u00a0÷\u00a0?\u00a0=\u00a0${table}` : `${table * 4}\u00a0÷\u00a0?\u00a0=\u00a04`
           };
           const exemple = document.createElement("p");
           exemple.className = "launch-exemple";
