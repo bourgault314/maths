@@ -195,9 +195,10 @@ test("ce qui ne doit pas changer est tiré exactement comme avant : l'expert, le
   // (25 calculs tous différents, ×1 et ×10 une fois au plus, jamais deux fois
   // la même question, les tables mélangées : jamais deux questions de suite
   // sur la même table ; relecture du 10/10 : les formes réparties entre les
-  // tables, chaque calcul la même chance) — empreinte reprise après le lot
-  // (avant : dac37702dfbc35fa, puis 1568c68b3267ba06 avant la relecture).
-  for (let etoile = 1; etoile <= 5; etoile += 1) assert.equal(empreinte(series(P.configEtoile(etoile))), "e78e656dfcd34646", `Je deviens expert, marche ${etoile}`);
+  // tables, chaque calcul la même chance ; puis l'ordre par tours) — empreinte
+  // reprise après le lot (avant : dac37702dfbc35fa, puis 1568c68b3267ba06
+  // avant la relecture, puis e78e656dfcd34646 avant les tours).
+  for (let etoile = 1; etoile <= 5; etoile += 1) assert.equal(empreinte(series(P.configEtoile(etoile))), "e8d21bc98f5951fd", `Je deviens expert, marche ${etoile}`);
   assert.equal(empreinte(series({mode: "custom", tables: [7], total: 20, questionTypes: ["division"]})), "3279314c51ced59e", "réglages libres : divisions");
   assert.equal(empreinte(series({mode: "custom", tables: [3, 7, 9], total: 20, questionTypes: ["direct", "missing", "division"]})), "64297727b6c7e319", "réglages libres : tout");
   assert.equal(empreinte(series(P.configEntraine(7, "desordre"))), "0ad6a1f2e8d99584", "Dans le désordre");

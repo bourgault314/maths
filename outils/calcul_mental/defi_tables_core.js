@@ -352,6 +352,38 @@
     let meilleure = null;
     let meilleursDefauts = Infinity;
     for (let essai = 0; essai < 50 && meilleursDefauts > 0; essai += 1) {
+      // Dès 3 tables, par tours (décision de Gwenaël du 10/10/2026, après le
+      // compte rendu de Code sur la relecture) : à chaque tour, chaque table
+      // qui a encore des questions passe une fois, dans un ordre tiré au
+      // hasard, et un tour ne commence jamais par la table qui a fini le
+      // précédent. Sans les tours, « jamais deux fois de suite la même
+      // table » faisait aller et venir l'élève entre deux tables (mélange de
+      // 3 tables : 6 questions ou plus sur 2 tables dans 57 % des séries,
+      // jusqu'à 10) et oubliait une table jusqu'à 23 questions dans la
+      // Légende. Par tours : une table revient toujours avant 2 × N − 1
+      // questions (N tables), comme avant le lot, sans jamais être collée.
+      if (nbTables > 2) {
+        const parTable = new Map();
+        shuffle(items, random).forEach(item => {
+          const table = item.question.focusTable;
+          if (!parTable.has(table)) parTable.set(table, []);
+          parTable.get(table).push(item);
+        });
+        const suite = [];
+        let derniere = null;
+        while (suite.length < items.length) {
+          const tour = shuffle([...parTable.keys()].filter(table => parTable.get(table).length), random);
+          if (tour.length > 1 && tour[0] === derniere) {
+            const autre = 1 + Math.floor(random() * (tour.length - 1));
+            [tour[0], tour[autre]] = [tour[autre], tour[0]];
+          }
+          tour.forEach(table => suite.push(parTable.get(table).pop()));
+          derniere = tour[tour.length - 1];
+        }
+        const defauts = defautsDeSerie(suite, nbTables);
+        if (defauts < meilleursDefauts) [meilleure, meilleursDefauts] = [suite, defauts];
+        continue;
+      }
       const reste = shuffle(items, random);
       const suite = [];
       while (reste.length) {

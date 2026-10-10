@@ -44,6 +44,7 @@
 //   - remettre « ? ÷ 7 = 9 » au test d'une table (DIVISIONS_TEST = DIVISION_FORMS) ;
 //   - laisser la division cacher la table dans une série d'une seule table
 //     (parLeMultiplicateurUneTable qui rend le sens tiré) ;
+//   - ne plus ranger par tours (dès 3 tables, retour au rangement « jamais deux de suite » seul) ;
 //   - ne plus mélanger les tables (ordonnerSerie appelé sans le nombre de tables) ;
 //   - tirer les formes sans regarder les tables (repartirFormes qui rend le
 //     plan tel quel) ;
@@ -281,6 +282,52 @@ test("les tables bien mélangées : dès 3 tables (mélange, Légende), jamais d
     for (let tirage = 0; tirage < 150; tirage += 1) {
       const questions = generer(config(), graine(70000 + index * 1000 + tirage));
       assert.ok(plusLongueSuite(questions) <= permis, `série ${index + 1}, tirage ${tirage} : ${plusLongueSuite(questions)} questions de suite sur la même table`);
+    }
+  });
+});
+
+// Décision de Gwenaël du 10/10 au soir (point relevé par Code sur la PR #963) :
+// « jamais deux de suite » seul faisait aller et venir l'élève entre deux
+// tables (mélange de 3 tables : 6 questions ou plus sur 2 tables dans 57 % des
+// séries, jusqu'à 10 ; Légende : une table oubliée jusqu'à 23 questions). Dès
+// 3 tables, les questions sont rangées PAR TOURS : à chaque tour, chaque table
+// passe une fois, dans un ordre tiré au hasard. Une table revient donc
+// toujours avant 2 × N − 1 questions (N tables), et dès le premier tour.
+test("par tours, dès 3 tables : une table n'est jamais oubliée plus de 2 × N − 2 questions, et au mélange de 3 tables jamais plus de 4 questions sur 2 tables seulement", () => {
+  const plusLongueAbsence = questions => {
+    const tables = questions.map(question => question.focusTable);
+    return Math.max(...[...new Set(tables)].map(table => {
+      let derniere = -1;
+      let pire = 0;
+      tables.forEach((autre, index) => {
+        if (autre !== table) return;
+        pire = Math.max(pire, index - derniere - 1);
+        derniere = index;
+      });
+      return Math.max(pire, tables.length - 1 - derniere);
+    }));
+  };
+  const surDeuxTables = questions => {
+    const tables = questions.map(question => question.focusTable);
+    let pire = 0;
+    for (let debut = 0; debut < tables.length; debut += 1) {
+      const vues = new Set();
+      let fin = debut;
+      while (fin < tables.length && (vues.add(tables[fin]), vues.size <= 2)) fin += 1;
+      pire = Math.max(pire, fin - debut);
+    }
+    return pire;
+  };
+  const series = [
+    [() => P.configMelange(parcoursPasse([2, 5, 10])), 3], [() => P.configMelange(parcoursPasse([3, 4, 7])), 3],
+    [() => P.configMelange(parcoursPasse([3, 4, 6, 7, 8, 9])), 6], [() => P.configMelange(parcoursPasse([2, 3, 4, 5, 6, 7, 8, 9, 10])), 9],
+    [() => P.configEtoile(4), 9], [() => P.configCourse(), 9]
+  ];
+  series.forEach(([config, n], index) => {
+    for (let tirage = 0; tirage < 200; tirage += 1) {
+      const questions = generer(config(), graine(90000 + index * 1000 + tirage));
+      assert.ok(plusLongueAbsence(questions) <= 2 * n - 2, `série ${index + 1}, tirage ${tirage} : une table absente ${plusLongueAbsence(questions)} questions (au plus ${2 * n - 2})`);
+      if (n === 3) assert.ok(surDeuxTables(questions) <= 4, `série ${index + 1}, tirage ${tirage} : ${surDeuxTables(questions)} questions de suite sur 2 tables seulement`);
     }
   });
 });
