@@ -37,6 +37,26 @@
   // deux sens, à parts égales : ? ÷ 7 = 8 et ? ÷ 8 = 7, 56 ÷ ? = 8 et
   // 56 ÷ ? = 7 — connaître sa table dans tous les sens.
   const MODES_DEUX_SENS = Object.freeze(["train", "validation"]);
+  // Lot « le tirage des questions » (09/10/2026, décisions de Gwenaël) : au
+  // test d'une table, au mélange et à la Légende (étoiles, couronne,
+  // records), jamais deux fois la même question dans une série.
+  // « RARES » : ×1 et ×10, les calculs « cadeaux » — au mélange et à la
+  // Légende, une fois chacun au plus dans une série. « ECART_MIN » : deux fois
+  // le même calcul sont séparées par au moins 3 autres questions.
+  const RARES = Object.freeze([1, 10]);
+  // Le test d'une table (décisions de Gwenaël du 10/10/2026) : chaque calcul
+  // ×1 à ×10 deux fois, une fois en produit et une fois « à l'envers » —
+  // 10 produits, 5 nombres manquants, 5 divisions. Tous les élèves ont les
+  // mêmes 20 calculs, chacun vérifié dans les deux sens. Mon mélange garde
+  // PRESETS.validation.questionMix (14 / 3 / 3).
+  const MIX_TEST_TABLE = Object.freeze({direct: 10, missing: 5, division: 5});
+  // « À l'envers », c'est CHERCHER dans la table (décision du 10/10/2026) :
+  // 63 ÷ 7 = ? et 63 ÷ ? = 9 le demandent, « ? ÷ 7 = 9 » non — c'est 7 × 9,
+  // un produit déguisé. Au test d'une table, les divisions n'ont donc que ces
+  // deux écritures ; « ? ÷ 7 = 9 » reste dans les entraînements, Mon mélange
+  // et la Légende.
+  const DIVISIONS_TEST = Object.freeze(["division-quotient", "division-divisor"]);
+  const ECART_MIN = 4;
 
   function shuffle(items, random = Math.random) {
     const copy = items.slice();
@@ -220,7 +240,9 @@
     });
   }
 
-  function generatePracticeQuestions(config, random = Math.random) {
+  // Les séries libres (entraînements du parcours, réglages libres) : tirées
+  // comme avant le lot « le tirage des questions ».
+  function generateFreeQuestions(config, random = Math.random) {
     const normalized = normalizeConfiguration(config);
     const tables = normalized.tables.length ? normalized.tables : ALL_TABLES;
     const total = normalized.total;
@@ -254,6 +276,167 @@
       if (type === "left" || type === "reverse-left") [first, second] = [multiplier, focusTable];
       return {...tableQuestion(type, first, second), focusTable, multiplier};
     });
+  }
+
+  // ——— Lot « le tirage des questions » (09/10/2026) ———
+
+  function cleDuCalcul(first, second) {
+    return `${Math.min(first, second)}-${Math.max(first, second)}`;
+  }
+
+  // Une question d'une série, à partir de son calcul (la table, le
+  // multiplicateur) et de sa forme : le produit (dans le sens « cote »), un
+  // nombre manquant (la table toujours visible), une division (lue par la
+  // table, ou par le multiplicateur).
+  function questionDeSerie(focusTable, multiplier, type, cote, parLeMultiplicateur = false) {
+    if (DIVISION_FORMS.includes(type)) {
+      const question = parLeMultiplicateur ? tableQuestion(type, multiplier, focusTable) : tableQuestion(type, focusTable, multiplier);
+      return {...question, focusTable, multiplier};
+    }
+    let first = focusTable;
+    let second = multiplier;
+    if (type === "direct" && cote === "focus-second") [first, second] = [multiplier, focusTable];
+    if (type === "left" || type === "reverse-left") [first, second] = [multiplier, focusTable];
+    return {...tableQuestion(type, first, second), focusTable, multiplier};
+  }
+
+  // Les défauts d'une série rangée : deux fois le même calcul à moins de
+  // ECART_MIN places, et deux fois la même question.
+  function defautsDeSerie(suite) {
+    let defauts = 0;
+    const vues = new Set();
+    suite.forEach((item, index) => {
+      for (let recul = 1; recul < ECART_MIN && recul <= index; recul += 1) {
+        if (suite[index - recul].cle === item.cle) defauts += 1;
+      }
+      if (vues.has(item.question.prompt)) defauts += 1;
+      vues.add(item.question.prompt);
+    });
+    return defauts;
+  }
+
+  // Range une série au hasard, sans rapprocher deux fois le même calcul :
+  // plusieurs essais, on garde le premier sans défaut (ou le meilleur).
+  function ordonnerSerie(items, random) {
+    let meilleure = null;
+    let meilleursDefauts = Infinity;
+    for (let essai = 0; essai < 50 && meilleursDefauts > 0; essai += 1) {
+      const reste = shuffle(items, random);
+      const suite = [];
+      while (reste.length) {
+        const recents = suite.slice(-(ECART_MIN - 1)).map(item => item.cle);
+        const index = Math.max(0, reste.findIndex(item => !recents.includes(item.cle)));
+        suite.push(reste.splice(index, 1)[0]);
+      }
+      const defauts = defautsDeSerie(suite);
+      if (defauts < meilleursDefauts) [meilleure, meilleursDefauts] = [suite, defauts];
+    }
+    return {suite: meilleure, defauts: meilleursDefauts};
+  }
+
+  // Le test d'une table (« Je passe le test », « comme le test, en 2 min ») :
+  // chaque calcul ×1 à ×10 deux fois — une fois en produit (dans un sens ou
+  // dans l'autre, moitié-moitié), une fois « à l'envers » : un nombre
+  // manquant, ou une division où l'on cherche (63 ÷ 7 = ?, 63 ÷ ? = 9 — voir
+  // DIVISIONS_TEST). En tout MIX_TEST_TABLE : 10 produits, 5 nombres
+  // manquants, 5 divisions. Seuls l'ordre et les écritures changent d'un
+  // élève à l'autre.
+  function generateTableTest(normalized, random) {
+    const table = normalized.tables[0];
+    const mix = MIX_TEST_TABLE;
+    const envers = shuffle([...Array(mix.missing).fill("missing"), ...Array(mix.division).fill("division")], random);
+    const cotes = balancedSequence(["focus-first", "focus-second"], ALL_TABLES.length, random);
+    const trous = balancedSequence(MISSING_FORMS, mix.missing, random);
+    const divisions = balancedSequence(DIVISIONS_TEST, mix.division, random);
+    const sens = balancedSequence(["table", "multiplicateur"], mix.division, random);
+    let trou = 0;
+    let division = 0;
+    const items = ALL_TABLES.flatMap((multiplier, index) => {
+      const produit = {cle: multiplier, question: questionDeSerie(table, multiplier, "direct", cotes[index])};
+      if (envers[index] === "missing") return [produit, {cle: multiplier, question: questionDeSerie(table, multiplier, trous[trou++])}];
+      const parLeMultiplicateur = sens[division] === "multiplicateur";
+      return [produit, {cle: multiplier, question: questionDeSerie(table, multiplier, divisions[division++], null, parLeMultiplicateur)}];
+    });
+    return ordonnerSerie(items, random).suite.map(item => item.question);
+  }
+
+  // Les calculs d'une série sur plusieurs tables : les tables à parts égales,
+  // des calculs tous différents (4 × 7 et 7 × 4 sont le même), ×1 et ×10 une
+  // fois chacun au plus. Quand les tables n'ont pas assez de calculs (deux
+  // tables, ou une seule), un calcul revient — sous une autre forme, plus loin.
+  function choisirCalculs(tablePlan, random) {
+    const quotas = new Map();
+    tablePlan.forEach(table => quotas.set(table, (quotas.get(table) || 0) + 1));
+    let meilleur = null;
+    let meilleursRetours = Infinity;
+    for (let essai = 0; essai < 30 && meilleursRetours > 0; essai += 1) {
+      const pris = new Set();
+      const rares = new Set();
+      const choix = [];
+      let retours = 0;
+      shuffle([...quotas.keys()], random).forEach(table => {
+        const jeu = shuffle(ALL_TABLES, random);
+        let besoin = quotas.get(table);
+        for (const multiplier of jeu) {
+          if (!besoin) break;
+          const cle = cleDuCalcul(table, multiplier);
+          if (pris.has(cle) || rares.has(multiplier)) continue;
+          pris.add(cle);
+          if (RARES.includes(multiplier)) rares.add(multiplier);
+          choix.push({focusTable: table, multiplier});
+          besoin -= 1;
+        }
+        // Le carré (7 × 7) ne revient pas : il n'a pas d'autre sens.
+        const ordinaires = jeu.filter(multiplier => !RARES.includes(multiplier) && multiplier !== table);
+        for (let tour = 0; besoin > 0; tour += 1, besoin -= 1, retours += 1) {
+          choix.push({focusTable: table, multiplier: ordinaires[tour % ordinaires.length]});
+        }
+      });
+      if (retours < meilleursRetours) [meilleur, meilleursRetours] = [choix, retours];
+    }
+    return meilleur;
+  }
+
+  // Mon mélange (format du test, sur les tables passées) et Je deviens expert
+  // (étoiles, couronne, records : 25 questions, tables 2 à 10, un tiers de
+  // chaque forme) — les proportions et les formes ne changent pas.
+  function generateDistinctSeries(normalized, random) {
+    const tables = normalized.tables.length ? normalized.tables : ALL_TABLES;
+    const total = normalized.total;
+    const calculs = choisirCalculs(balancedSequence(tables, total, random), random);
+    const deuxSens = MODES_DEUX_SENS.includes(normalized.mode);
+    const mix = normalized.mode === "validation" ? PRESETS.validation.questionMix : null;
+    let meilleure = null;
+    let meilleursDefauts = Infinity;
+    for (let essai = 0; essai < 20 && meilleursDefauts > 0; essai += 1) {
+      const typePlan = questionTypePlan(normalized.questionTypes, total, random, mix);
+      const cotes = balancedSequence(["focus-first", "focus-second"], total, random);
+      const nbDivisions = typePlan.filter(type => DIVISION_FORMS.includes(type)).length;
+      const sens = deuxSens && nbDivisions ? balancedSequence(["table", "multiplicateur"], nbDivisions, random) : [];
+      let division = 0;
+      const posees = new Set();
+      const items = calculs.map((calcul, index) => {
+        const type = typePlan[index];
+        const parLeMultiplicateur = DIVISION_FORMS.includes(type) && deuxSens && sens[division++] === "multiplicateur";
+        let question = questionDeSerie(calcul.focusTable, calcul.multiplier, type, cotes[index], parLeMultiplicateur);
+        // Un produit qui revient se pose dans l'autre sens.
+        if (type === "direct" && posees.has(question.prompt)) {
+          question = questionDeSerie(calcul.focusTable, calcul.multiplier, type, cotes[index] === "focus-first" ? "focus-second" : "focus-first");
+        }
+        posees.add(question.prompt);
+        return {cle: question.factKey, question};
+      });
+      const {suite, defauts} = ordonnerSerie(items, random);
+      if (defauts < meilleursDefauts) [meilleure, meilleursDefauts] = [suite, defauts];
+    }
+    return meilleure.map(item => item.question);
+  }
+
+  function generatePracticeQuestions(config, random = Math.random) {
+    const normalized = normalizeConfiguration(config);
+    if (normalized.mode === "validation" && normalized.tables.length === 1) return generateTableTest(normalized, random);
+    if (normalized.mode === "validation" || normalized.mode === "test") return generateDistinctSeries(normalized, random);
+    return generateFreeQuestions(normalized, random);
   }
 
   function generateQuestions(config, random = Math.random) {

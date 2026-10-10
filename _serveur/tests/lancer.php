@@ -80,6 +80,10 @@ file_put_contents($travail . '/config.php', "<?php return " . var_export([
     'bd' => $bdTest,
     'origines' => ['https://mathsgo.re', 'https://suivi.mathsgo.re'],
     'jeton_installation' => 'JETON-DE-TEST',
+    // Les records repartent à zéro à RECORDS_DEPUIS (lib/records.php) : les
+    // tests prennent une date passée, pour que leurs courses comptent quel
+    // que soit le jour où ils tournent.
+    'records_depuis' => '2026-01-01T00:00:00.000000Z',
 ], true) . ";\n");
 
 $port = 8000 + random_int(0, 900);
@@ -4423,6 +4427,48 @@ verifier("records — la case par classe : fermés, l'élève le sait, sa course
     $r = records_api($recEleves[0]['code'], ['lire' => true]);
     egal(true, $r['json']['ouvert']);
     egal(450, $r['json']['record']['meilleur'], 'rien n’a été effacé');
+});
+
+verifier("records — repartent à zéro avec le nouveau tirage (09/10/2026) : un temps d'avant ne compte plus, rien n'est effacé, la course suivante le remplace", function () use (&$recEleves, &$jetonS1, &$recClasse) {
+    vider_compteurs();
+    // Toti a couru avant le changement de tirage : son 30,0 s date d'avant records_depuis.
+    $toti = $recEleves[0];
+    bd_test()->prepare('UPDATE records SET meilleur = 300, meilleur_le = ?, semaine = 300, semaine_lundi = ? WHERE eleve_id = ?')
+        ->execute(['2025-12-31T23:59:59.999999Z', lundi_courant(), $toti['id']]);
+    $r = records_api($toti['code'], ['lire' => true]);
+    egal(null, $r['json']['record']['meilleur'], 'plus de record pour lui');
+    egal(null, $r['json']['record']['semaine'], 'ni de temps de la semaine');
+    egal(true, $r['json']['record']['nom'], 'son choix de nom reste');
+    vrai(!in_array('Toti', array_column($r['json']['toujours'], 'nom'), true), 'il sort de « De tous les temps »');
+    vrai(!in_array('Toti', array_column($r['json']['semaine'], 'nom'), true), 'et de « Cette semaine »');
+    egal(null, $r['json']['rangToujours']);
+    egal(null, $r['json']['rangSemaine']);
+    $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $recClasse, 'appli' => 'defi-tables'], ['jeton' => $jetonS1]);
+    $vu = false;
+    foreach ($t['json']['eleves'] as $e) {
+        if ((int)$e['id'] !== (int)$toti['id']) continue;
+        $vu = true;
+        egal(null, $e['record']['meilleur'], 'le tableau du professeur non plus');
+    }
+    vrai($vu, 'Toti est dans le tableau du professeur');
+    $l = appel('/api/prof.php', ['action' => 'records.ligue'], ['jeton' => $jetonS1]);
+    vrai(!in_array('Toti', array_column($l['json']['toujours'], 'nom'), true), 'ni dans la ligue projetée');
+    egal('300', (string)bd_test()->query('SELECT meilleur FROM records WHERE eleve_id = ' . (int)$toti['id'])->fetchColumn(), 'rien n’est effacé en base');
+    // Sa course suivante, même moins bonne que l'ancien temps, devient son record.
+    $r = records_api($toti['code'], ['temps' => 700, 'justes' => 25]);
+    egal(200, $r['code']);
+    egal(true, $r['json']['nouveau'], 'un nouveau record');
+    egal(null, $r['json']['avant'], 'sans « avant » : l’ancien temps ne compte plus');
+    egal(700, $r['json']['record']['meilleur']);
+    egal(700, $r['json']['record']['semaine']);
+    vrai(in_array('Toti', array_column($r['json']['toujours'], 'nom'), true), 'il revient dans la ligue');
+    $r = records_api($toti['code'], ['temps' => 650, 'justes' => 25]);
+    egal(700, $r['json']['avant'], 'ensuite, tout redevient normal');
+    egal(650, $r['json']['record']['meilleur']);
+    // La date du changement : un minuit à La Réunion, écrit comme meilleur_le,
+    // pas avant le 10/10/2026 (le jour du nouveau tirage).
+    vrai((bool)preg_match('/^\d{4}-\d{2}-\d{2}T20:00:00\.000000Z$/', RECORDS_DEPUIS), 'RECORDS_DEPUIS : minuit à La Réunion, à la microseconde');
+    vrai(strcmp(RECORDS_DEPUIS, '2026-10-09T20:00:00.000000Z') >= 0, 'pas avant le 10/10/2026');
 });
 
 verifier("records — le record part avec l'élève supprimé, et avec la classe supprimée", function () use (&$recEleves, &$jetonS1, &$recJetonClaire, &$recCodeClaire) {

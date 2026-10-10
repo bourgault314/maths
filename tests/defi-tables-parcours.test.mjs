@@ -261,7 +261,7 @@ test("J’apprends garde la bande pour construire et la propose en aide temporai
   assert.match(html, /textContent = enabled \? "Valider" : "Suivant"/);
   assert.match(html, /completeReview = state\.configuration\.mode === "test"/);
   assert.match(html, /Mes \$\{wrongEntries\.length\} erreurs/, "lot R2 : les erreurs d’abord, sous leur titre");
-  assert.match(html, /defi_tables_core\.js\?v=20261009-1/);
+  assert.match(html, /defi_tables_core\.js\?v=20261010-1/);
   // Le moteur était le seul des deux scripts sans épingle, et le lot A2 est
   // passé au travers : il ajoutait chargerSync / sauverSync / casesDetachees au
   // moteur sans monter son numéro. Un navigateur qui avait déjà l'ancien moteur

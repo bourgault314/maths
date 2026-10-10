@@ -381,9 +381,9 @@ test("la page : les textes — la notice dit le passage avant le test, la fiche 
 
 test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; la fiche vierge et sa vignette refaites", () => {
   assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261009-3"><\/script>/);
-  assert.match(html, /<script src="\.\/defi_tables_core\.js\?v=20261009-1"><\/script>/, "le noyau n'a pas bougé");
+  assert.match(html, /<script src="\.\/defi_tables_core\.js\?v=20261010-1"><\/script>/, "le noyau n'a pas bougé");
   assert.equal(lire("_serveur/public/prof/defi_tables_mon_parcours.js"), lire("outils/calcul_mental/defi_tables_mon_parcours.js"));
-  assert.match(lire("_serveur/public/VERSION"), /^lot defi-tables-melange-paliers$/m);
+  assert.match(lire("_serveur/public/VERSION"), /^lot defi-tables-tirage$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=defi-tables-paliers-20261009-1/);
 });

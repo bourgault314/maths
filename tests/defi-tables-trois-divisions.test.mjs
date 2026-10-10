@@ -69,14 +69,21 @@ function parcoursPasse(tables, dus) {
   return P.normaliserParcours(p);
 }
 
-test("le test d'une table et Mon mélange : une division de chaque écriture, à chaque tirage, pour chaque table", () => {
+// Lot « le tirage des questions » (10/10/2026) : le test d'une table pose
+// 5 divisions, seulement celles où l'on cherche — 56 ÷ 7 = ? et 56 ÷ ? = 8
+// (3 + 2) ; « ? ÷ 7 = 8 », c'est 7 × 8, un produit déguisé : il n'est plus
+// posé au test (tests/defi-tables-tirage.test.mjs). Mon mélange garde ses
+// 3 divisions, une de chaque écriture.
+test("le test d'une table : 56 ÷ 7 = ? et 56 ÷ ? = 8, pas « ? ÷ 7 = 8 » ; Mon mélange : une division de chaque écriture — à chaque tirage, pour chaque table", () => {
   let n = 0;
   for (const table of P.TABLES) {
     for (let tirage = 0; tirage < 30; tirage += 1) {
       for (const config of [P.configValidation(table), P.configValidation(table, 120)]) {
         const questions = generer(config, graine(table * 1000 + tirage));
         assert.equal(questions.length, 20);
-        assert.deepEqual(divisions(questions).map(question => question.type).sort(), ECRITURES, `table de ${table} : 56 ÷ 7 = ?, ? ÷ 7 = 8, 56 ÷ ? = 8`);
+        const parEcriture = ECRITURES.map(type => divisions(questions).filter(question => question.type === type).length);
+        assert.equal(parEcriture[0], 0, `table de ${table} : pas de « ? ÷ 7 = 8 » au test`);
+        assert.deepEqual(parEcriture.slice(1).sort(), [2, 3], `table de ${table} : 56 ÷ 7 = ? et 56 ÷ ? = 8`);
         n += 1;
       }
     }
@@ -176,7 +183,10 @@ test("ce qui ne doit pas changer est tiré exactement comme avant : l'expert, le
   // Empreintes de 50 séries tirées avec une graine fixe, prises sur main
   // bbb1140 (#956), avant le lot.
   const series = config => Array.from({length: 50}, (_, index) => generer(config, graine(1000 + index)).map(question => question.prompt));
-  for (let etoile = 1; etoile <= 5; etoile += 1) assert.equal(empreinte(series(P.configEtoile(etoile))), "dac37702dfbc35fa", `Je deviens expert, marche ${etoile}`);
+  // Lot « le tirage des questions » (10/10/2026) : l'expert change exprès
+  // (25 calculs tous différents, ×1 et ×10 une fois au plus, jamais deux fois
+  // la même question) — empreinte reprise après le lot (avant : dac37702dfbc35fa).
+  for (let etoile = 1; etoile <= 5; etoile += 1) assert.equal(empreinte(series(P.configEtoile(etoile))), "377ccea2f0e0236d", `Je deviens expert, marche ${etoile}`);
   assert.equal(empreinte(series({mode: "custom", tables: [7], total: 20, questionTypes: ["division"]})), "3279314c51ced59e", "réglages libres : divisions");
   assert.equal(empreinte(series({mode: "custom", tables: [3, 7, 9], total: 20, questionTypes: ["direct", "missing", "division"]})), "64297727b6c7e319", "réglages libres : tout");
   assert.equal(empreinte(series(P.configEntraine(7, "desordre"))), "0ad6a1f2e8d99584", "Dans le désordre");
@@ -232,7 +242,7 @@ test("l'écran avant le test sur téléphone : toujours 3 + 2 (saut forcé sous 
 });
 
 test("la page charge les moteurs du lot (leurs numéros montent) et le professeur a la même copie du moteur", async () => {
-  assert.match(html, /<script src="\.\/defi_tables_core\.js\?v=20261009-1"><\/script>/);
+  assert.match(html, /<script src="\.\/defi_tables_core\.js\?v=20261010-1"><\/script>/);
   assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261009-3"><\/script>/);
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url), "utf8");
   const original = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url), "utf8");

@@ -86,9 +86,15 @@ test("les configurations du parcours sont acceptées par le moteur de questions"
   assert.deepEqual(validation.questionTypes, ["direct", "missing", "division"]);
   const questions = core.generateQuestions(validation);
   assert.equal(questions.length, 20);
-  assert.deepEqual(compter(questions), [14, 3, 3], "14 résultats, 3 nombres manquants, 3 divisions");
-  // Lot « trois divisions » (09/10/2026) : une division de chaque écriture dans le test.
-  assert.deepEqual(questions.filter(question => question.category === "division").map(question => question.type).sort(), ["division-dividend", "division-divisor", "division-quotient"]);
+  // Lot « le tirage des questions » (10/10/2026) : le test d'une table pose
+  // 10 résultats, 5 nombres manquants, 5 divisions (avant : 14 + 3 + 3).
+  assert.deepEqual(compter(questions), [10, 5, 5], "10 résultats, 5 nombres manquants, 5 divisions");
+  // Lot « trois divisions » (09/10/2026), revu au lot « le tirage » : au
+  // test, les divisions où l'on cherche (56 ÷ 7 = ?, 56 ÷ ? = 8), pas
+  // « ? ÷ 7 = 8 » (c'est 7 × 8).
+  const ecrituresDuTest = questions.filter(question => question.category === "division").map(question => question.type);
+  assert.equal(ecrituresDuTest.filter(type => type === "division-dividend").length, 0);
+  assert.deepEqual(["division-divisor", "division-quotient"].map(type => ecrituresDuTest.filter(ecriture => ecriture === type).length).sort(), [2, 3]);
   assert.ok(questions.every(question => question.focusTable === 7));
   assert.equal(core.configurationLabel(validation), "Je passe le test · Table de 7 · 20 questions · 1 min 30");
   assert.equal(core.durationLabel(90), "1 min 30");

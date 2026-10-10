@@ -3058,7 +3058,7 @@
     <span data-mathsgo-confidentialite>Sans cookie ni traceur</span>
   </footer>
 
-  <script src="./defi_tables_core.js?v=20261009-1"></script>
+  <script src="./defi_tables_core.js?v=20261010-1"></script>
   <script src="./defi_tables_mon_parcours.js?v=20261009-3"></script>
   <script>
     (() => {
@@ -6726,7 +6726,12 @@
         // divisions » (09/10/2026, version B choisie par Gwenaël) : plus les
         // deux autres écritures de la division (? ÷ 7 = 4 · 28 ÷ ? = 4), que
         // le test et le mélange posent désormais.
-        const formes = ["produit", "trou", "division", "dividende", "diviseur"];
+        // Lot « le tirage des questions » (10/10/2026, décision de Gwenaël) :
+        // le test d'une table ne pose plus « ? ÷ 7 = 4 » (c'est 7 × 4, un
+        // produit déguisé) — son écran montre quatre pastilles ; Mon mélange
+        // garde les cinq.
+        const testDUneTable = config.mode === "validation" && config.tables.length === 1;
+        const formes = testDUneTable ? ["produit", "trou", "division", "diviseur"] : ["produit", "trou", "division", "dividende", "diviseur"];
         // Lot « Les records » (planche R3) : « Le chrono monte. Tout juste,
         // sinon le temps ne compte pas. » puis « Ton record : 52,4 s ».
         if (config.course === "records") {

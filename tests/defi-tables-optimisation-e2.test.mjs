@@ -124,7 +124,10 @@ test("décision 5 (version A, « la barre », choisie le 03/10) : huit segments 
 // quand tu appuies… ».
 // Lot « trois divisions » (09/10/2026, version B de Gwenaël) : cinq pastilles —
 // les deux autres écritures de la division (? ÷ 7 = 4, 28 ÷ ? = 4) s'ajoutent.
-test("E2 · 1 (audit GPT, F ; lot « Mon parcours », version B ; lot « trois divisions ») : les bonnes réponses pour réussir, et l’exemple en cinq pastilles pris dans sa table", () => {
+// Lot « le tirage des questions » (10/10/2026, décision de Gwenaël) : le test
+// d'une table ne pose plus « ? ÷ 7 = 4 » (un produit déguisé) — quatre
+// pastilles avant le test ; Mon mélange garde les cinq.
+test("E2 · 1 (audit GPT, F ; lot « Mon parcours », version B ; lots « trois divisions » et « le tirage ») : les bonnes réponses pour réussir, et l’exemple pris dans sa table — quatre pastilles au test, cinq au mélange", () => {
   const zone = new Noeud("div");
   const lancer = (config, origine = "seance") => new Function("$", "state", "PARCOURS", "document", "soude", `${corps("renderFormatLancement")}; return renderFormatLancement;`)(
     () => zone, {origin: origine}, PARCOURS, document, soude)(config);
@@ -134,8 +137,10 @@ test("E2 · 1 (audit GPT, F ; lot « Mon parcours », version B ; lot « trois d
   const [ligne, exemple] = zone.tous("p");
   assert.equal(ligne.textContent, `18${N}bonnes réponses pour réussir.`);
   assert.equal(exemple.className, "launch-exemple");
-  assert.deepEqual(exemple.tous("b").map(b => b.textContent), [`7${N}×${N}4${N}=${N}?`, `7${N}×${N}?${N}=${N}28`, `28${N}÷${N}7${N}=${N}?`, `?${N}÷${N}7${N}=${N}4`, `28${N}÷${N}?${N}=${N}4`], "cinq pastilles : résultat, nombre manquant, puis les trois écritures de la division");
-  assert.equal(exemple.enfants.length, 5, "rien entre les pastilles : ni « ou », ni « · »");
+  assert.deepEqual(exemple.tous("b").map(b => b.textContent), [`7${N}×${N}4${N}=${N}?`, `7${N}×${N}?${N}=${N}28`, `28${N}÷${N}7${N}=${N}?`, `28${N}÷${N}?${N}=${N}4`], "quatre pastilles : résultat, nombre manquant, puis les deux divisions où l'on cherche");
+  assert.equal(exemple.enfants.length, 4, "rien entre les pastilles : ni « ou », ni « · »");
+  lancer(PARCOURS.configValidation(7, 120));
+  assert.equal(zone.tous("p")[1].tous("b").length, 4, "« comme le test, en 2 min » : le même tirage, le même écran");
   const parcours = PARCOURS.creerParcours();
   parcours.tables[2].acquise = "2026-10-01"; parcours.tables[5].acquise = "2026-10-01";
   lancer(PARCOURS.configMelange(PARCOURS.normaliserParcours(parcours)));
