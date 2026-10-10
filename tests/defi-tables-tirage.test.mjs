@@ -24,6 +24,12 @@
 //   - la Légende (étoiles, couronne, records : 25 questions, tables 2 à 10) :
 //     25 calculs tous différents, tables à parts égales, ×1 et ×10 une fois
 //     chacun au plus, un tiers de chaque forme (9 + 8 + 8) ;
+//   - relecture du 10/10 (Fable), Mon mélange et la Légende : les questions à
+//     l'envers sont réparties entre les tables à parts égales (les divisions
+//     d'abord, puis les nombres manquants, en tournant : une table qui en a
+//     deux a une division et un nombre manquant), chaque table garde un
+//     produit ; et chaque calcul a la même chance de sortir — 7 × 8 peut être
+//     tiré par deux tables, 7 × 7 par une seule : il compte double chez elle ;
 //   - inchangés, tirés EXACTEMENT comme avant (empreintes prises sur main
 //     c1a64e2, #960) : les entraînements, les réglages libres, l'évaluation
 //     CM1, J'apprends ;
@@ -38,7 +44,11 @@
 //   - remettre « ? ÷ 7 = 9 » au test d'une table (DIVISIONS_TEST = DIVISION_FORMS) ;
 //   - laisser la division cacher la table dans une série d'une seule table
 //     (parLeMultiplicateurUneTable qui rend le sens tiré) ;
-//   - ne plus mélanger les tables (ordonnerSerie appelé sans le nombre de tables).
+//   - ne plus mélanger les tables (ordonnerSerie appelé sans le nombre de tables) ;
+//   - tirer les formes sans regarder les tables (repartirFormes qui rend le
+//     plan tel quel) ;
+//   - retirer le double billet des calculs qu'une seule table peut tirer
+//     (billets = ALL_TABLES).
 
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -272,6 +282,107 @@ test("les tables bien mélangées : dès 3 tables (mélange, Légende), jamais d
       const questions = generer(config(), graine(70000 + index * 1000 + tirage));
       assert.ok(plusLongueSuite(questions) <= permis, `série ${index + 1}, tirage ${tirage} : ${plusLongueSuite(questions)} questions de suite sur la même table`);
     }
+  });
+});
+
+// ------------------------------------------- relecture du 10/10 : les formes
+
+// Les formes étaient tirées sans regarder les tables : dans un mélange de 3
+// tables, une fois sur six une table n'avait aucune question à l'envers, et
+// trois fois sur quatre une table avait 2 ou 3 divisions quand une autre n'en
+// avait pas (mesuré sur 10 000 séries). Désormais les questions à l'envers sont
+// réparties entre les tables à parts égales, divisions et nombres manquants
+// aussi ; chaque table garde au moins un produit.
+test("les formes réparties entre les tables (mélange de 2 à 9 tables, Légende) : questions à l'envers, divisions et nombres manquants à parts égales (à une près), un produit au moins par table tant que la série en a assez", () => {
+  const melanges = [[2, 5], [7, 8], [2, 5, 10], [3, 4, 7], [2, 4, 6, 8], [2, 3, 4, 5, 6], [3, 4, 6, 7, 8, 9], [2, 3, 4, 5, 6, 7, 8], [2, 3, 4, 5, 6, 7, 8, 9], [...P.TABLES]];
+  const configs = melanges.map(tables => [P.configMelange(parcoursPasse(tables)), tables]).concat([[P.configEtoile(1), P.TABLES], [P.configEtoile(5), P.TABLES], [P.configCourse(), P.TABLES]]);
+  const ecart = valeurs => Math.max(...valeurs) - Math.min(...valeurs);
+  configs.forEach(([config, tables], index) => {
+    for (let tirage = 0; tirage < 100; tirage += 1) {
+      const questions = generer(config, graine(80000 + index * 1000 + tirage));
+      const message = `${core.configurationLabel(config)}, tirage ${tirage}`;
+      const parTable = tables.map(table => questions.filter(question => question.focusTable === table));
+      const compte = categorie => parTable.map(serie => serie.filter(question => question.category === categorie).length);
+      const [produits, manquants, divisions] = ["direct", "missing", "division"].map(compte);
+      const envers = manquants.map((n, k) => n + divisions[k]);
+      assert.ok(ecart(envers) <= 1, `${message} : les questions à l'envers à parts égales (${envers.join(", ")})`);
+      assert.ok(ecart(divisions) <= 1, `${message} : les divisions à parts égales (${divisions.join(", ")})`);
+      assert.ok(ecart(manquants) <= 1, `${message} : les nombres manquants à parts égales (${manquants.join(", ")})`);
+      // Un produit au moins par table — sauf quand la série n'en a pas assez :
+      // la Légende en pose 8 ou 9 (9 + 8 + 8 tombe au hasard sur une forme),
+      // et à 8 produits pour 9 tables, une table en est privée, jamais deux.
+      const privees = Math.max(0, tables.length - produits.reduce((somme, n) => somme + n, 0));
+      assert.equal(produits.filter(n => n === 0).length, privees, `${message} : un produit au moins par table (${produits.join(", ")})`);
+      envers.forEach((n, k) => {
+        if (n === 2) assert.deepEqual([manquants[k], divisions[k]], [1, 1], `${message} : la table de ${tables[k]} a deux questions à l'envers — une division et un nombre manquant`);
+      });
+    }
+  });
+});
+
+test("les formes réparties, cas par cas : 3 tables — chaque table 1 division et 1 nombre manquant ; 6 tables — chaque table 1 question à l'envers ; 9 tables — jamais 2 sur la même ; Légende — une table à 3 questions les a sous les 3 formes ; 2 tables — 3 à l'envers chacune", () => {
+  const cas = [
+    [P.configMelange(parcoursPasse([2, 5, 10])), (envers, manquants, divisions) => envers.every(n => n === 2) && manquants.every(n => n === 1) && divisions.every(n => n === 1)],
+    [P.configMelange(parcoursPasse([3, 4, 6, 7, 8, 9])), envers => envers.every(n => n === 1)],
+    [P.configMelange(parcoursPasse([...P.TABLES])), envers => envers.every(n => n <= 1) && envers.filter(n => n === 1).length === 6],
+    [P.configMelange(parcoursPasse([7, 8])), envers => envers.every(n => n === 3)],
+    [P.configCourse(), (envers, manquants, divisions, produits) => produits.every((n, k) => n + envers[k] !== 3 || (n === 1 && manquants[k] === 1 && divisions[k] === 1))]
+  ];
+  cas.forEach(([config, regle], index) => {
+    const tables = core.normalizeConfiguration(config).tables;
+    for (let tirage = 0; tirage < 100; tirage += 1) {
+      const questions = generer(config, graine(90000 + index * 1000 + tirage));
+      const compte = categorie => tables.map(table => questions.filter(question => question.focusTable === table && question.category === categorie).length);
+      const [produits, manquants, divisions] = ["direct", "missing", "division"].map(compte);
+      const envers = manquants.map((n, k) => n + divisions[k]);
+      assert.ok(regle(envers, manquants, divisions, produits), `${core.configurationLabel(config)}, tirage ${tirage} : produits ${produits.join(",")} / manquants ${manquants.join(",")} / divisions ${divisions.join(",")}`);
+    }
+  });
+});
+
+// Dans une table, quelle forme va à quel calcul reste tiré au sort : ×1, ×10,
+// le carré et 7 × 8 sortent tantôt en produit, tantôt à l'envers.
+test("les formes réparties ne figent rien dans la table : un même calcul sort sous toutes les formes d'une série à l'autre", () => {
+  const formes = new Map();
+  for (let tirage = 0; tirage < 400; tirage += 1) {
+    generer(P.configCourse(), graine(95000 + tirage)).forEach(question => {
+      if (!formes.has(question.factKey)) formes.set(question.factKey, new Set());
+      formes.get(question.factKey).add(question.category);
+    });
+  }
+  ["7-7", "7-8", "2-3", "1-7", "7-10", "10-10"].forEach(cle => assert.deepEqual([...formes.get(cle)].sort(), ["direct", "division", "missing"], `${cle} sous les trois formes`));
+});
+
+// ----------------------------------- relecture du 10/10 : chaque calcul sa chance
+
+// 7 × 8 peut être tiré par la table de 7 ou par celle de 8 ; 7 × 7 seulement
+// par la table de 7. Sans correction, dans la Légende, les 8 carrés sortaient
+// dans 39 % des séries et les 28 autres calculs dans 62 % ; dans un mélange de
+// 3 tables, les calculs communs à deux tables (2 × 5) sortaient dans 95 % des
+// séries, les autres dans 80 %. Un calcul qu'une seule table peut tirer a deux
+// billets : tous les calculs ont alors la même chance (mesuré : 55 à 59 %).
+test("chaque calcul a la même chance de sortir : la Légende, le mélange de 6 tables et de 3 tables — les carrés comme les autres, les calculs communs à deux tables comme les autres", () => {
+  const cas = [
+    ["la Légende", P.configCourse(), 2000, 1.2],
+    ["mélange de 6 tables", P.configMelange(parcoursPasse([2, 3, 4, 5, 6, 7])), 2000, 1.2],
+    ["mélange de 3 tables", P.configMelange(parcoursPasse([2, 5, 10])), 2000, 1.1]
+  ];
+  cas.forEach(([nom, config, n, rapportMax], index) => {
+    const tables = core.normalizeConfiguration(config).tables;
+    const compte = new Map();
+    for (let tirage = 0; tirage < n; tirage += 1) generer(config, graine(100000 + index * 10000 + tirage)).forEach(question => compte.set(question.factKey, (compte.get(question.factKey) || 0) + 1));
+    // Les calculs de 2 × 2 à 9 × 9 des tables de la série (×1 et ×10 sont plafonnés à part).
+    const coeur = [];
+    tables.forEach(table => { for (let m = 2; m <= 9; m += 1) if (table <= 9 && (m >= table || !tables.includes(m))) coeur.push(`${Math.min(table, m)}-${Math.max(table, m)}`); });
+    const frequences = coeur.map(cle => [cle, (compte.get(cle) || 0) / n]);
+    const [[cleMin, min]] = frequences.slice().sort((a, b) => a[1] - b[1]);
+    const [[cleMax, max]] = frequences.slice().sort((a, b) => b[1] - a[1]);
+    assert.ok(max / min <= rapportMax, `${nom} : ${cleMax} sort dans ${(100 * max).toFixed(0)} % des séries, ${cleMin} dans ${(100 * min).toFixed(0)} %`);
+    const moyenne = liste => liste.reduce((somme, [, f]) => somme + f, 0) / liste.length;
+    const carres = frequences.filter(([cle]) => cle.split("-")[0] === cle.split("-")[1]);
+    const autres = frequences.filter(([cle]) => cle.split("-")[0] !== cle.split("-")[1]);
+    const rapport = moyenne(carres) / moyenne(autres);
+    assert.ok(rapport >= 0.9 && rapport <= 1.1, `${nom} : les carrés sortent dans ${(100 * moyenne(carres)).toFixed(0)} % des séries, les autres dans ${(100 * moyenne(autres)).toFixed(0)} %`);
   });
 });
 

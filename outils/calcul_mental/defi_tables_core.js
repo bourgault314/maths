@@ -399,6 +399,13 @@
   // des calculs tous différents (4 × 7 et 7 × 4 sont le même), ×1 et ×10 une
   // fois chacun au plus. Quand les tables n'ont pas assez de calculs (deux
   // tables, ou une seule), un calcul revient — sous une autre forme, plus loin.
+  // Chaque calcul a la même chance de sortir (lot « le tirage des questions »,
+  // relecture du 10/10/2026) : 7 × 8 peut être tiré par la table de 7 ou par
+  // celle de 8, mais 7 × 7 — ou 7 × 3 quand la table de 3 n'est pas dans la
+  // série — seulement par la table de 7. Un calcul qu'une seule table de la
+  // série peut tirer a donc deux billets dans son tirage. Avant, dans la
+  // Légende, les carrés sortaient dans 39 % des séries et les autres calculs
+  // dans 62 % ; après, tous entre 55 et 59 % (mesuré sur 5 000 séries).
   function choisirCalculs(tablePlan, random) {
     const quotas = new Map();
     tablePlan.forEach(table => quotas.set(table, (quotas.get(table) || 0) + 1));
@@ -410,7 +417,8 @@
       const choix = [];
       let retours = 0;
       shuffle([...quotas.keys()], random).forEach(table => {
-        const jeu = shuffle(ALL_TABLES, random);
+        const billets = ALL_TABLES.flatMap(multiplier => multiplier === table || !quotas.has(multiplier) ? [multiplier, multiplier] : [multiplier]);
+        const jeu = shuffle(billets, random);
         let besoin = quotas.get(table);
         for (const multiplier of jeu) {
           if (!besoin) break;
@@ -422,14 +430,57 @@
           besoin -= 1;
         }
         // Le carré (7 × 7) ne revient pas : il n'a pas d'autre sens.
-        const ordinaires = jeu.filter(multiplier => !RARES.includes(multiplier) && multiplier !== table);
-        for (let tour = 0; besoin > 0; tour += 1, besoin -= 1, retours += 1) {
-          choix.push({focusTable: table, multiplier: ordinaires[tour % ordinaires.length]});
+        if (besoin > 0) {
+          const ordinaires = shuffle(ALL_TABLES.filter(multiplier => !RARES.includes(multiplier) && multiplier !== table), random);
+          for (let tour = 0; besoin > 0; tour += 1, besoin -= 1, retours += 1) {
+            choix.push({focusTable: table, multiplier: ordinaires[tour % ordinaires.length]});
+          }
         }
       });
       if (retours < meilleursRetours) [meilleur, meilleursRetours] = [choix, retours];
     }
     return meilleur;
+  }
+
+  // Les formes d'une série sur plusieurs tables (lot « le tirage des
+  // questions », relecture du 10/10/2026) : les questions « à l'envers »
+  // (divisions, nombres manquants) sont réparties entre les tables à parts
+  // égales — les divisions d'abord, puis les nombres manquants, en tournant,
+  // si bien qu'une table qui en a deux a une division et un nombre manquant —
+  // et le reste de chaque table se pose en produits : chaque table en garde
+  // au moins un tant que la série en a assez (la Légende en pose 8 ou 9 pour
+  // 9 tables : à 8, une table n'en a pas). Dans une table, quelle forme va à
+  // quel calcul reste tiré au sort. Avant, les formes étaient tirées sans
+  // regarder les tables : dans un mélange de 3 tables, une fois sur six une
+  // table n'avait aucune question à l'envers, et trois fois sur quatre une
+  // table avait deux ou trois divisions quand une autre n'en avait pas. Les
+  // calculs tirés ne changent pas, seule leur forme est répartie.
+  function repartirFormes(calculs, plan, random) {
+    const quotas = new Map();
+    calculs.forEach(calcul => quotas.set(calcul.focusTable, (quotas.get(calcul.focusTable) || 0) + 1));
+    // Les tables les plus fournies d'abord (à chaque tour, elles reçoivent
+    // avant les autres : c'est ce qui laisse un produit à chacune) ; à
+    // égalité, au hasard.
+    const tables = shuffle([...quotas.keys()], random).sort((a, b) => quotas.get(b) - quotas.get(a));
+    const formes = new Map(tables.map(table => [table, []]));
+    const envers = plan.filter(type => type !== "direct");
+    let tour = 0;
+    [...envers.filter(type => DIVISION_FORMS.includes(type)), ...envers.filter(type => !DIVISION_FORMS.includes(type))].forEach(type => {
+      for (let k = 0; k < tables.length; k += 1) {
+        const table = tables[(tour + k) % tables.length];
+        if (formes.get(table).length < quotas.get(table)) {
+          formes.get(table).push(type);
+          tour = (tour + k + 1) % tables.length;
+          return;
+        }
+      }
+    });
+    tables.forEach(table => {
+      const liste = formes.get(table);
+      while (liste.length < quotas.get(table)) liste.push("direct");
+      formes.set(table, shuffle(liste, random));
+    });
+    return calculs.map(calcul => formes.get(calcul.focusTable).pop());
   }
 
   // Mon mélange (format du test, sur les tables passées) et Je deviens expert
@@ -444,7 +495,7 @@
     let meilleure = null;
     let meilleursDefauts = Infinity;
     for (let essai = 0; essai < 20 && meilleursDefauts > 0; essai += 1) {
-      const typePlan = questionTypePlan(normalized.questionTypes, total, random, mix);
+      const typePlan = repartirFormes(calculs, questionTypePlan(normalized.questionTypes, total, random, mix), random);
       const cotes = balancedSequence(["focus-first", "focus-second"], total, random);
       const nbDivisions = typePlan.filter(type => DIVISION_FORMS.includes(type)).length;
       const sens = deuxSens && nbDivisions ? balancedSequence(["table", "multiplicateur"], nbDivisions, random) : [];
