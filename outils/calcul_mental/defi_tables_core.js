@@ -56,6 +56,19 @@
   // deux écritures ; « ? ÷ 7 = 9 » reste dans les entraînements, Mon mélange
   // et la Légende.
   const DIVISIONS_TEST = Object.freeze(["division-quotient", "division-divisor"]);
+  // Dans une série d'UNE table (le test, « comme le test », les entraînements
+  // à divisions), la réponse n'est jamais le numéro de la table (décision de
+  // Gwenaël du 10/10/2026) : au test de la table de 3, « 12 ÷ ? = 4 » et
+  // « 12 ÷ 4 = ? » donnent toujours 3 — rien à chercher. La division cache
+  // donc l'autre nombre : « 12 ÷ 3 = ? » (lue par la table), « 12 ÷ ? = 3 »
+  // (lue par le multiplicateur). « ? ÷ 3 = 4 » (le produit) garde ses deux
+  // sens. Mon mélange et la Légende gardent les deux sens partout : on n'y
+  // sait pas de quelle table vient le calcul.
+  function parLeMultiplicateurUneTable(type, tire) {
+    if (type === "division-quotient") return false;
+    if (type === "division-divisor") return true;
+    return tire;
+  }
   const ECART_MIN = 4;
 
   function shuffle(items, random = Math.random) {
@@ -250,6 +263,7 @@
     const multiplierPlan = balancedSequence(ALL_TABLES, total, random);
     const directSides = balancedSequence(["focus-first", "focus-second"], total, random);
     const deuxSens = MODES_DEUX_SENS.includes(normalized.mode);
+    const uneTable = tables.length === 1;
     const mix = normalized.mode === "validation"
       ? PRESETS.validation.questionMix
       : normalized.mode === "train" ? TRAIN_MIXES[normalized.questionTypes.join("+")] || null : null;
@@ -269,7 +283,10 @@
       if (DIVISION_FORMS.includes(type)) {
         // « table » : 56 ÷ 7 = 8, ? ÷ 7 = 8, 56 ÷ ? = 8 (la table de 7 est le
         // diviseur) ; « multiplicateur » : 56 ÷ 8 = 7, ? ÷ 8 = 7, 56 ÷ ? = 7.
-        const parLeMultiplicateur = deuxSens && sensDivision[divisionIndex++] === "multiplicateur";
+        // Lot « le tirage » : sur une seule table, la réponse n'est jamais la
+        // table (le tirage du sens est gardé, pour ne rien décaler d'autre).
+        const tire = deuxSens && sensDivision[divisionIndex++] === "multiplicateur";
+        const parLeMultiplicateur = deuxSens && uneTable ? parLeMultiplicateurUneTable(type, tire) : tire;
         return {...(parLeMultiplicateur ? tableQuestion(type, multiplier, focusTable) : tableQuestion(type, focusTable, multiplier)), focusTable, multiplier};
       }
       if (type === "direct" && directSides[index] === "focus-second") [first, second] = [multiplier, focusTable];
@@ -340,7 +357,8 @@
   // manquant, ou une division où l'on cherche (63 ÷ 7 = ?, 63 ÷ ? = 9 — voir
   // DIVISIONS_TEST). En tout MIX_TEST_TABLE : 10 produits, 5 nombres
   // manquants, 5 divisions. Seuls l'ordre et les écritures changent d'un
-  // élève à l'autre.
+  // élève à l'autre. La réponse n'est jamais la table : la division cache
+  // l'autre nombre (voir parLeMultiplicateurUneTable).
   function generateTableTest(normalized, random) {
     const table = normalized.tables[0];
     const mix = MIX_TEST_TABLE;
@@ -348,14 +366,13 @@
     const cotes = balancedSequence(["focus-first", "focus-second"], ALL_TABLES.length, random);
     const trous = balancedSequence(MISSING_FORMS, mix.missing, random);
     const divisions = balancedSequence(DIVISIONS_TEST, mix.division, random);
-    const sens = balancedSequence(["table", "multiplicateur"], mix.division, random);
     let trou = 0;
     let division = 0;
     const items = ALL_TABLES.flatMap((multiplier, index) => {
       const produit = {cle: multiplier, question: questionDeSerie(table, multiplier, "direct", cotes[index])};
       if (envers[index] === "missing") return [produit, {cle: multiplier, question: questionDeSerie(table, multiplier, trous[trou++])}];
-      const parLeMultiplicateur = sens[division] === "multiplicateur";
-      return [produit, {cle: multiplier, question: questionDeSerie(table, multiplier, divisions[division++], null, parLeMultiplicateur)}];
+      const type = divisions[division++];
+      return [produit, {cle: multiplier, question: questionDeSerie(table, multiplier, type, null, parLeMultiplicateurUneTable(type, false))}];
     });
     return ordonnerSerie(items, random).suite.map(item => item.question);
   }

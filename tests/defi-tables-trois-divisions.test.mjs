@@ -112,22 +112,30 @@ test("les entraînements : les trois écritures dans « Nombres manquants et div
   assert.deepEqual(divisions(generer(P.configEntraine(7, "desordre"), graine(1))), [], "« Dans le désordre » : toujours que des résultats");
 });
 
-test("chaque écriture dans les deux sens, à parts à peu près égales : ? ÷ 7 = 8 et ? ÷ 8 = 7, 56 ÷ ? = 8 et 56 ÷ ? = 7", () => {
+// Lot « le tirage des questions » (10/10/2026, décision de Gwenaël) : dans une
+// série d'UNE table, la réponse n'est jamais le numéro de la table — 56 ÷ 7 = ?
+// (lue par la table) et 56 ÷ ? = 7 (lue par le multiplicateur), on cherche 8 ;
+// plus 56 ÷ 8 = ? ni 56 ÷ ? = 8, qui donnaient 7, la table qu'on passe.
+// « ? ÷ 7 = 8 » (réponse 56) garde ses deux sens, à parts à peu près égales.
+test("une seule table : 56 ÷ 7 = ? et 56 ÷ ? = 7 (on cherche 8, jamais la table) ; ? ÷ 7 = 8 et ? ÷ 8 = 7 à parts à peu près égales", () => {
   const sens = Object.fromEntries(ECRITURES.map(type => [type, {parLaTable: 0, parLAutre: 0}]));
   for (let tirage = 0; tirage < 300; tirage += 1) {
     for (const config of [P.configEntraine(7, "trous"), P.configEntraine(7, "mixte"), P.configValidation(7)]) {
       divisions(generer(config, graine(5000 + tirage))).forEach(question => {
         assert.ok(question.first === 7 || question.second === 7, "une division de SA table");
         if (question.first === question.second) return;
-        // « par la table » : la table de 7 est le diviseur (? ÷ 7 = 8, 56 ÷ ? = 8 → 7).
+        // « par la table » : la table de 7 est le premier nombre (? ÷ 7 = 8, 56 ÷ 7 = ?, 56 ÷ ? = 8).
         sens[question.type][question.first === 7 ? "parLaTable" : "parLAutre"] += 1;
       });
     }
   }
-  for (const [type, {parLaTable, parLAutre}] of Object.entries(sens)) {
-    assert.ok(parLaTable > 50 && parLAutre > 50, `${type} : les deux sens`);
-    assert.ok(Math.abs(parLaTable - parLAutre) < (parLaTable + parLAutre) / 4, `${type} : à parts à peu près égales (${parLaTable} / ${parLAutre})`);
-  }
+  const {parLaTable, parLAutre} = sens["division-dividend"];
+  assert.ok(parLaTable > 50 && parLAutre > 50, "? ÷ 7 = 8 et ? ÷ 8 = 7 : les deux sens");
+  assert.ok(Math.abs(parLaTable - parLAutre) < (parLaTable + parLAutre) / 4, `à parts à peu près égales (${parLaTable} / ${parLAutre})`);
+  assert.equal(sens["division-quotient"].parLAutre, 0, "jamais 56 ÷ 8 = ? (réponse 7, la table)");
+  assert.ok(sens["division-quotient"].parLaTable > 50, "56 ÷ 7 = ?");
+  assert.equal(sens["division-divisor"].parLaTable, 0, "jamais 56 ÷ ? = 8 (réponse 7, la table)");
+  assert.ok(sens["division-divisor"].parLAutre > 50, "56 ÷ ? = 7");
   // Exemples écrits en clair (table de 7, multiplicateur 8).
   assert.equal(core.tableQuestion("division-dividend", 7, 8).prompt, "? ÷ 7 = 8");
   assert.equal(core.tableQuestion("division-dividend", 8, 7).prompt, "? ÷ 8 = 7");
@@ -228,12 +236,16 @@ test("une division ratée se corrige avec sa multiplication, dans ses trois écr
 // 390 px pour la table de 10) ou en 4 + 1 (table de 2). Désormais toujours 3 + 2 sous 768 px,
 // les cinq sur une ligne au-dessus. Mesuré au navigateur, tables 2, 7, 9 et 10, de 320 à
 // 1366 px (outils\mesure_rangs.py) ; ici, les règles et leur place APRÈS la règle de base.
-test("l'écran avant le test sur téléphone : toujours 3 + 2 (saut forcé sous 768 px, pastilles qui rapetissent sous 430 px), après la règle de base", () => {
+// Lot « le tirage des questions » (10/10/2026, planche-pastilles-2plus2.png, choix de
+// Gwenaël) : avant le test d'une table, quatre pastilles — 2 + 2 sous 768 px (les deux
+// multiplications, puis les deux divisions) au lieu de 3 + 1 ; cinq au mélange : 3 + 2.
+test("l'écran avant le test sur téléphone : 3 + 2 au mélange, 2 + 2 au test d'une table (saut forcé sous 768 px, pastilles qui rapetissent sous 430 px), après la règle de base", () => {
   const base = html.indexOf(".launch-exemple b { padding: 6px 11px;");
   const saut = html.indexOf(`@media (max-width: 767px) {
       .launch-exemple { row-gap: 4px; }
       .launch-exemple::before { content: ""; flex-basis: 100%; order: 1; }
       .launch-exemple b:nth-child(n + 4) { order: 2; }
+      .launch-exemple b:first-child:nth-last-child(4) ~ b:nth-child(3) { order: 2; }
     }`);
   const petits = html.indexOf("@media (max-width: 429px) { .launch-exemple { column-gap: 6px; } .launch-exemple b { padding: 5px 7px; font-size: clamp(.85rem, 4.3vw, 1.15rem); } }");
   assert.ok(base > 0, "la règle de base des pastilles");

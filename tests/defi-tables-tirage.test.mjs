@@ -13,6 +13,9 @@
 //     les mêmes 20 calculs, chacun vérifié dans les deux sens (décisions du
 //     10/10 : la version « A », puis ×1 et ×10 à l'envers aussi plutôt que
 //     deux calculs ×6 à ×9 une 3e fois) ;
+//   - dans une série d'UNE table (le test et les deux entraînements à
+//     divisions), la division cache toujours l'autre nombre : la réponse
+//     n'est jamais le numéro de la table, sauf le carré (9 ÷ 3 = ?) ;
 //   - Mon mélange (20 questions) : 20 calculs tous différents (4 × 7 et 7 × 4
 //     comptent pour un), tables à parts égales, ×1 et ×10 une fois chacun au
 //     plus, 14 produits / 3 nombres manquants / 3 divisions (une de chaque
@@ -32,7 +35,9 @@
 //   - retirer le plafond de RARES (×1 et ×10 tirés comme les autres) ;
 //   - ×1 et ×10 posés une seule fois au test (sans leur fois à l'envers) ;
 //   - retirer la vérification « pas deux fois la même question » ;
-//   - remettre « ? ÷ 7 = 9 » au test d'une table (DIVISIONS_TEST = DIVISION_FORMS).
+//   - remettre « ? ÷ 7 = 9 » au test d'une table (DIVISIONS_TEST = DIVISION_FORMS) ;
+//   - laisser la division cacher la table dans une série d'une seule table
+//     (parLeMultiplicateurUneTable qui rend le sens tiré).
 
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -124,10 +129,11 @@ test("le test d'une table, tables 2 à 10 : chaque calcul ×1 à ×10 deux fois,
         assert.equal(questions.filter(question => question.type === "division-dividend").length, 0, `${message} : pas de « ? ÷ 7 = 9 » au test`);
         const divisions = ["division-quotient", "division-divisor"].map(type => questions.filter(question => question.type === type).length).sort();
         assert.deepEqual(divisions, [2, 3], `${message} : 63 ÷ 7 = ? et 63 ÷ ? = 9`);
-        // Et dans les deux sens : 56 ÷ 7 et 56 ÷ 8.
-        const parLaTable = questions.filter(question => question.category === "division" && question.first === table && question.second !== table).length;
-        const parLAutre = questions.filter(question => question.category === "division" && question.second === table && question.first !== table).length;
-        assert.ok(parLaTable >= 1 && parLAutre >= 1, `${message} : les divisions dans les deux sens`);
+        // À l'envers, la réponse n'est jamais le numéro de la table (sauf le
+        // carré, 49 ÷ 7 = ?) : 28 ÷ 7 = ? et 28 ÷ ? = 7, jamais 28 ÷ 4 = ? ni 28 ÷ ? = 4.
+        questions.filter(question => question.category !== "direct" && question.multiplier !== table).forEach(question => {
+          assert.notEqual(question.answer, table, `${message} : « ${question.prompt} » donne la table`);
+        });
         n += 1;
       }
     }
@@ -156,6 +162,42 @@ test("le test d'une table : chaque question est juste (le produit, le nombre cac
       assert.ok([question.first, question.second].includes(table), `${question.prompt} est de la table de ${table}`);
     });
   }
+});
+
+// Décision du 10/10 : dans une série d'UNE table, la division cache toujours
+// l'autre nombre — au test de la table de 3, « 12 ÷ 3 = ? » et « 12 ÷ ? = 3 »
+// (on cherche 4), jamais « 12 ÷ 4 = ? » ni « 12 ÷ ? = 4 » (c'est 3, la table
+// qu'on passe). Le carré (9 ÷ 3 = ?) reste : son autre nombre est aussi 3.
+// Mon mélange et la Légende gardent les deux sens.
+test("une seule table (le test, « comme le test », les deux entraînements à divisions) : la réponse n'est jamais le numéro de la table, sauf le carré", () => {
+  let divisions = 0;
+  for (const table of P.TABLES) {
+    for (let tirage = 0; tirage < 60; tirage += 1) {
+      for (const config of [P.configValidation(table), P.configValidation(table, 120), P.configEntraine(table, "trous"), P.configEntraine(table, "mixte")]) {
+        generer(config, graine(40000 + table * 100 + tirage)).forEach(question => {
+          // Les produits, et « ? ÷ 7 = 8 » dont la réponse est le produit (7 pour 7 × 1), ne sont pas concernés.
+          if (question.category === "direct" || question.type === "division-dividend") return;
+          if (question.category === "division") divisions += 1;
+          if (question.multiplier === table) assert.equal(question.answer, table, `le carré : ${question.prompt}`);
+          else assert.notEqual(question.answer, table, `table de ${table} : « ${question.prompt} » donne la table`);
+        });
+      }
+    }
+  }
+  assert.ok(divisions > 4000, `${divisions} divisions vérifiées`);
+  // Au test de la table de 3 : 3 ÷ 3 = ? et 3 ÷ ? = 3 (réponse 1) restent ; 3 ÷ 1 = ? et 3 ÷ ? = 1 partent.
+  const ecrits = new Set();
+  for (let tirage = 0; tirage < 400; tirage += 1) generer(P.configValidation(3), graine(50000 + tirage)).forEach(question => ecrits.add(question.prompt));
+  ["3 ÷ 3 = ?", "3 ÷ ? = 3", "9 ÷ 3 = ?", "9 ÷ ? = 3", "12 ÷ 3 = ?", "12 ÷ ? = 3"].forEach(prompt => assert.ok(ecrits.has(prompt), `${prompt} est posé`));
+  ["3 ÷ 1 = ?", "3 ÷ ? = 1", "12 ÷ 4 = ?", "12 ÷ ? = 4", "30 ÷ 10 = ?", "30 ÷ ? = 10"].forEach(prompt => assert.ok(!ecrits.has(prompt), `${prompt} n'est plus posé`));
+  // Mon mélange : les deux sens restent (on ne sait pas de quelle table vient le calcul).
+  const sens = new Set();
+  for (let tirage = 0; tirage < 200; tirage += 1) {
+    generer(P.configMelange(parcoursPasse([2, 5, 10])), graine(60000 + tirage))
+      .filter(question => question.type === "division-divisor" && question.first !== question.second)
+      .forEach(question => sens.add(question.answer === question.focusTable ? "la table" : "l'autre"));
+  }
+  assert.deepEqual([...sens].sort(), ["l'autre", "la table"]);
 });
 
 // ---------------------------------------------------------------- Mon mélange
@@ -241,16 +283,21 @@ test("une graine donne toujours la même série : le test, le mélange, la Lége
   });
 });
 
-test("ce qui ne change pas est tiré exactement comme avant : les entraînements, les réglages libres, l'évaluation CM1, J'apprends", () => {
+test("ce qui ne change pas est tiré exactement comme avant : les entraînements (sauf le sens de leurs divisions), les réglages libres, l'évaluation CM1, J'apprends", () => {
   // Empreintes de 50 séries tirées avec une graine fixe, prises sur main
-  // c1a64e2 (#960), avant le lot.
+  // c1a64e2 (#960), avant le lot. Les deux entraînements à divisions changent
+  // exprès (la réponse n'est plus la table) — et SEULEMENT là : vérifié sur
+  // 8 100 séries (outils-lot\orient.cjs), mêmes calculs et mêmes formes
+  // question par question, seuls les énoncés « 28 ÷ 4 = ? » / « 28 ÷ ? = 4 »
+  // deviennent « 28 ÷ 7 = ? » / « 28 ÷ ? = 7 ». Avant : e7c6525422855d1a,
+  // 19414b1b84c605d8, 7271114220ce9eec, b938a29cd5dca382.
   const series = config => Array.from({length: 50}, (_, index) => generer(config, graine(7000 + index)).map(question => question.prompt));
   const attendu = {
     "Dans le désordre (7)": [P.configEntraine(7, "desordre"), "38f1114c4a9d7efc"],
-    "Nombres manquants et divisions (7)": [P.configEntraine(7, "trous"), "e7c6525422855d1a"],
-    "Résultats, nombres manquants et divisions (7)": [P.configEntraine(7, "mixte"), "19414b1b84c605d8"],
-    "Nombres manquants et divisions (3)": [P.configEntraine(3, "trous"), "7271114220ce9eec"],
-    "Résultats, nombres manquants et divisions (9)": [P.configEntraine(9, "mixte"), "b938a29cd5dca382"],
+    "Nombres manquants et divisions (7)": [P.configEntraine(7, "trous"), "9a91e5a082f50056"],
+    "Résultats, nombres manquants et divisions (7)": [P.configEntraine(7, "mixte"), "f267846a3afba723"],
+    "Nombres manquants et divisions (3)": [P.configEntraine(3, "trous"), "04cb9a5d249123b4"],
+    "Résultats, nombres manquants et divisions (9)": [P.configEntraine(9, "mixte"), "5b16ece980ca0961"],
     "réglages libres : produits": [{mode: "custom", tables: [4, 6], total: 20, questionTypes: ["direct"]}, "2e1c67278f0243e2"],
     "réglages libres : tout": [{mode: "custom", tables: [2, 8], total: 30, questionTypes: ["direct", "missing", "division"]}, "ea172470bd7c22a3"],
     "réglages libres : entraînement": [{mode: "train", tables: [3, 5, 7], total: 15, questionTypes: ["direct", "missing"]}, "400cc8e5a454b343"],
