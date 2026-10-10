@@ -126,9 +126,11 @@ const F={
   op(el,v){el.setAttribute('opacity',v<=0.001?0:v>=0.999?1:v.toFixed(3));el.style.display=v<=0.001?'none':'';},
   /* un texte suivi d'un triangle ▶ DESSINÉ, l'ensemble centré sur (cx,cy). Pas le caractère ▶ : sa largeur et sa place
      changent avec la police de l'appareil (Windows, iPhone), et « Je joue ▶ » sortait du centre de son bouton
-     (relevé par Gwenaël le 10/10/2026). Le texte est mesuré, puis recalé quand les polices sont arrivées. */
+     (relevé par Gwenaël le 10/10/2026). Le texte est mesuré, puis recalé quand les polices sont arrivées.
+     En hauteur : ce sont les CAPITALES (0,7 em) et le triangle qui sont centrés sur cy, ligne de base à cy + 0,35 em.
+     « dominant-baseline:central » centrait la boîte de la police : avec Segoe UI, le texte tombait trop bas (10/10, soir). */
   etiquette(p,cx,cy,fs,texte,fill){const g=F.E('g',{},p);
-    const t=F.E('text',{x:cx,y:cy,'dominant-baseline':'central','font-size':fs,'font-weight':900,fill},g);t.textContent=texte;
+    const t=F.E('text',{x:cx,y:cy+fs*.35,'font-size':fs,'font-weight':900,fill},g);t.textContent=texte;
     const tri=F.E('path',{fill},g);
     const caler=()=>{let w=0;try{w=t.getComputedTextLength();}catch(e){}
       const h=fs*.7,l=h*.88,ecart=fs*.3,x0=cx-(w+ecart+l)/2,tx=x0+w+ecart;
@@ -364,7 +366,7 @@ const film={
     fi.lignes.forEach((l,k)=>{E('text',{x:fi.x,y:fi.sy+k*fi.ssize*1.35,'text-anchor':'middle','font-size':fi.ssize,'font-weight':600,fill:'#475569'},o.finSous).textContent=l;});
     o.jouer=E('a',{href:SUITE,class:'film-lien'},o.fin);
     E('rect',{x:fi.x-fi.jw/2,y:fi.jy-fi.jh/2,width:fi.jw,height:fi.jh,rx:18,fill:'#16a34a'},o.jouer);
-    F.etiquette(o.jouer,fi.x,fi.jy+2,fi.js,'Je joue','#ffffff');
+    F.etiquette(o.jouer,fi.x,fi.jy,fi.js,'Je joue','#ffffff');
     /* revoir : un clic sur le film relance depuis le début quand il est fini */
     o.revoir=E('text',{x:fi.x,y:fi.jy+fi.jh/2+fi.ssize*1.7,'text-anchor':'middle','font-size':fi.ssize,'font-weight':700,fill:'#2563eb',class:'film-lien'},o.fin);o.revoir.textContent='↺ Revoir le film';
   },
@@ -619,7 +621,8 @@ function piece(Y,p,v,r,vert){const g=E('g',{},p);
   let anV=null;if(v!=null){anV=E('circle',{cx:0,cy:0,r:r+Y.anG,fill:'none',stroke:C.anneauVert,'stroke-width':Y.anW,filter:'url(#fsHaloVert)'},g);op(anV,0);}
   if(v==null)E('circle',{cx:0,cy:0,r,fill:C.bille,'fill-opacity':.18,stroke:C.bille,'stroke-opacity':.58,'stroke-width':Y.bSW},g);
   else{const c=couleurJeton(v);E('circle',{cx:0,cy:0,r,fill:c.fill,stroke:c.stroke,'stroke-width':Y.bSW},g);
-    txt(g,0,r*.037,Y.jFs,{'text-anchor':'middle','font-weight':900,fill:C.encre}).textContent=String(v);}
+    /* le chiffre placé comme dans ÉquaSplat (.tokenText) : dominant-baseline « middle », 2 px plus bas pour 50 px de police */
+    txt(g,0,Y.jFs*.04,Y.jFs,{'dominant-baseline':'middle','text-anchor':'middle','font-weight':900,fill:C.encre}).textContent=String(v);}
   return {g,an,anV};}
 /* les groupes identiques (« touche-en un ») : une tache en face d'une part */
 function cartes(Y,p,K,lettre,dessinePart){return K.ys.map(y=>{const g=E('g',{},p);
@@ -660,7 +663,7 @@ function cartons(o,Y,svg,sousTitre){
   fi.lignes.forEach((l,k)=>{E('text',{x:fi.x,y:fi.sy+k*fi.ssize*1.35,'text-anchor':'middle','font-size':fi.ssize,'font-weight':600,fill:'#475569'},o.finSous).textContent=l;});
   o.jouer=E('a',{href:SUITE,class:'film-lien'},o.fin);
   E('rect',{x:fi.x-fi.jw/2,y:fi.jy-fi.jh/2,width:fi.jw,height:fi.jh,rx:18,fill:'#16a34a'},o.jouer);
-  F.etiquette(o.jouer,fi.x,fi.jy+2,fi.js,'Je joue','#ffffff');
+  F.etiquette(o.jouer,fi.x,fi.jy,fi.js,'Je joue','#ffffff');
   o.revoir=E('text',{x:fi.x,y:fi.jy+fi.jh/2+fi.ssize*1.7,'text-anchor':'middle','font-size':fi.ssize,'font-weight':700,fill:'#2563eb',class:'film-lien'},o.fin);o.revoir.textContent='↺ Revoir le film';
 }
 
@@ -1095,7 +1098,7 @@ const film={
     o.Bplie=E('g',{},S);Q.tache(Y,o.Bplie,B.plie.t,Y.tR,'𝑝');jeton(o.Bplie,7,B.plie.j).g.setAttribute('transform',`translate(${B.plie.j[0]},${B.plie.j[1]})`);
     const K=B.cartes,cc=Q.couleurJeton(7);
     o.cartes=Q.cartes(Y,S,K,'𝑝',(g,cy)=>{E('circle',{cx:K.jx,cy,r:K.jR,fill:cc.fill,stroke:cc.stroke,'stroke-width':Y.bSW},g);
-      Q.txt(g,K.jx,cy+K.jR*.037,K.jFs,{'text-anchor':'middle','font-weight':900,fill:C.encre}).textContent='7';});
+      Q.txt(g,K.jx,cy+K.jFs*.04,K.jFs,{'dominant-baseline':'middle','text-anchor':'middle','font-weight':900,fill:C.encre}).textContent='7';});
     /* les boutons : Décomposer / Regrouper / Partager, puis Enlever / Ajouter / Annuler / Recommencer */
     if(Y.boiteOutils){const b=Y.boiteOutils;E('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:14,fill:'#f0f6fc',stroke:'rgba(59,130,246,.18)','stroke-width':1},S);}
     if(Y.grille){const b=Y.grille;E('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:14,fill:'#e8f6f6',stroke:'rgba(22,163,74,.16)','stroke-width':1},S);}
