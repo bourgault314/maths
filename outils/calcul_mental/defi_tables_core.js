@@ -319,7 +319,16 @@
 
   // Les défauts d'une série rangée : deux fois le même calcul à moins de
   // ECART_MIN places, et deux fois la même question.
-  function defautsDeSerie(suite) {
+  // Sur plusieurs tables (Mon mélange, la Légende), les tables aussi sont
+  // mélangées (retouche du 10/10/2026, vérification demandée par Gwenaël) :
+  // jamais trois questions de suite sur la même table — c'est un défaut comme
+  // les autres — et, dès trois tables, le moins possible deux de suite
+  // (TABLE_COLLEE : ne compte qu'après les vrais défauts ; avec deux tables,
+  // deux de suite restent permis, sinon les tables alterneraient à coup sûr).
+  // Avant le lot, le tirage par tours de tables ne collait jamais trois
+  // questions d'une même table.
+  const TABLE_COLLEE = 1 / 1000;
+  function defautsDeSerie(suite, nbTables = 1) {
     let defauts = 0;
     const vues = new Set();
     suite.forEach((item, index) => {
@@ -328,13 +337,18 @@
       }
       if (vues.has(item.question.prompt)) defauts += 1;
       vues.add(item.question.prompt);
+      if (nbTables > 1 && index >= 1 && suite[index - 1].question.focusTable === item.question.focusTable) {
+        if (index >= 2 && suite[index - 2].question.focusTable === item.question.focusTable) defauts += 1;
+        else if (nbTables > 2) defauts += TABLE_COLLEE;
+      }
     });
     return defauts;
   }
 
-  // Range une série au hasard, sans rapprocher deux fois le même calcul :
-  // plusieurs essais, on garde le premier sans défaut (ou le meilleur).
-  function ordonnerSerie(items, random) {
+  // Range une série au hasard, sans rapprocher deux fois le même calcul (et,
+  // sur plusieurs tables, sans coller la même table) : plusieurs essais, on
+  // garde le premier sans défaut (ou le meilleur).
+  function ordonnerSerie(items, random, nbTables = 1) {
     let meilleure = null;
     let meilleursDefauts = Infinity;
     for (let essai = 0; essai < 50 && meilleursDefauts > 0; essai += 1) {
@@ -342,10 +356,14 @@
       const suite = [];
       while (reste.length) {
         const recents = suite.slice(-(ECART_MIN - 1)).map(item => item.cle);
-        const index = Math.max(0, reste.findIndex(item => !recents.includes(item.cle)));
+        const derniere = suite.length ? suite[suite.length - 1].question.focusTable : null;
+        const collee = suite.length >= 2 && suite[suite.length - 2].question.focusTable === derniere;
+        const eviter = nbTables > 2 || (nbTables === 2 && collee) ? derniere : null;
+        let index = eviter !== null ? reste.findIndex(item => !recents.includes(item.cle) && item.question.focusTable !== eviter) : -1;
+        if (index < 0) index = Math.max(0, reste.findIndex(item => !recents.includes(item.cle)));
         suite.push(reste.splice(index, 1)[0]);
       }
-      const defauts = defautsDeSerie(suite);
+      const defauts = defautsDeSerie(suite, nbTables);
       if (defauts < meilleursDefauts) [meilleure, meilleursDefauts] = [suite, defauts];
     }
     return {suite: meilleure, defauts: meilleursDefauts};
@@ -443,7 +461,7 @@
         posees.add(question.prompt);
         return {cle: question.factKey, question};
       });
-      const {suite, defauts} = ordonnerSerie(items, random);
+      const {suite, defauts} = ordonnerSerie(items, random, tables.length);
       if (defauts < meilleursDefauts) [meilleure, meilleursDefauts] = [suite, defauts];
     }
     return meilleure.map(item => item.question);

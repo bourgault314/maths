@@ -37,7 +37,8 @@
 //   - retirer la vérification « pas deux fois la même question » ;
 //   - remettre « ? ÷ 7 = 9 » au test d'une table (DIVISIONS_TEST = DIVISION_FORMS) ;
 //   - laisser la division cacher la table dans une série d'une seule table
-//     (parLeMultiplicateurUneTable qui rend le sens tiré).
+//     (parLeMultiplicateurUneTable qui rend le sens tiré) ;
+//   - ne plus mélanger les tables (ordonnerSerie appelé sans le nombre de tables).
 
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -249,6 +250,29 @@ test("poussé dans ses retranchements (25 questions sur 2 tables) : toujours jam
       verifierEcarts(questions, `25 questions sur les tables ${tables.join(" et ")}, tirage ${tirage}`);
     }
   }
+});
+
+// Retouche du 10/10 (« tu es sûr que ça mélange bien les tables ? ») : rangée
+// au hasard, une série collait souvent la même table — jusqu'à 7 questions de
+// suite sur 3 tables. Dès 3 tables, jamais deux questions de suite sur la même
+// table ; avec 2 tables, jamais trois. Avant le lot : jamais trois non plus.
+test("les tables bien mélangées : dès 3 tables (mélange, Légende), jamais deux questions de suite sur la même table ; avec 2 tables, jamais trois", () => {
+  const plusLongueSuite = questions => questions.reduce(([max, suite], question, index) => {
+    const n = index && question.focusTable === questions[index - 1].focusTable ? suite + 1 : 1;
+    return [Math.max(max, n), n];
+  }, [0, 0])[0];
+  const series = [
+    [() => P.configMelange(parcoursPasse([2, 5, 10])), 1], [() => P.configMelange(parcoursPasse([3, 4, 7])), 1],
+    [() => P.configMelange(parcoursPasse([3, 4, 6, 7, 8, 9])), 1], [() => P.configMelange(parcoursPasse([...P.TABLES])), 1],
+    [() => P.configEtoile(2), 1], [() => P.configCourse(), 1],
+    [() => P.configMelange(parcoursPasse([2, 5])), 2], [() => P.configMelange(parcoursPasse([7, 8])), 2]
+  ];
+  series.forEach(([config, permis], index) => {
+    for (let tirage = 0; tirage < 150; tirage += 1) {
+      const questions = generer(config(), graine(70000 + index * 1000 + tirage));
+      assert.ok(plusLongueSuite(questions) <= permis, `série ${index + 1}, tirage ${tirage} : ${plusLongueSuite(questions)} questions de suite sur la même table`);
+    }
+  });
 });
 
 // ----------------------------------------------------------------- la Légende

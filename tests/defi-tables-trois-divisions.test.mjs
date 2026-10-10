@@ -193,8 +193,9 @@ test("ce qui ne doit pas changer est tiré exactement comme avant : l'expert, le
   const series = config => Array.from({length: 50}, (_, index) => generer(config, graine(1000 + index)).map(question => question.prompt));
   // Lot « le tirage des questions » (10/10/2026) : l'expert change exprès
   // (25 calculs tous différents, ×1 et ×10 une fois au plus, jamais deux fois
-  // la même question) — empreinte reprise après le lot (avant : dac37702dfbc35fa).
-  for (let etoile = 1; etoile <= 5; etoile += 1) assert.equal(empreinte(series(P.configEtoile(etoile))), "377ccea2f0e0236d", `Je deviens expert, marche ${etoile}`);
+  // la même question, les tables mélangées : jamais deux questions de suite
+  // sur la même table) — empreinte reprise après le lot (avant : dac37702dfbc35fa).
+  for (let etoile = 1; etoile <= 5; etoile += 1) assert.equal(empreinte(series(P.configEtoile(etoile))), "1568c68b3267ba06", `Je deviens expert, marche ${etoile}`);
   assert.equal(empreinte(series({mode: "custom", tables: [7], total: 20, questionTypes: ["division"]})), "3279314c51ced59e", "réglages libres : divisions");
   assert.equal(empreinte(series({mode: "custom", tables: [3, 7, 9], total: 20, questionTypes: ["direct", "missing", "division"]})), "64297727b6c7e319", "réglages libres : tout");
   assert.equal(empreinte(series(P.configEntraine(7, "desordre"))), "0ad6a1f2e8d99584", "Dans le désordre");
