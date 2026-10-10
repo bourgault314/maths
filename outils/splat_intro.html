@@ -39,7 +39,7 @@ body{background:var(--page);color:var(--ink);font-family:var(--ui)}
 .stage svg{display:block;width:100%;height:100%;font-family:var(--ui)}
 .bigplay{position:absolute;right:3%;bottom:5%;width:88px;height:88px;border-radius:50%;border:none;
   background:rgba(37,99,235,.92);color:#fff;display:grid;place-items:center;cursor:pointer;box-shadow:0 10px 30px rgba(37,99,235,.35)}
-.bigplay svg{width:40px;height:40px;margin-left:6px}
+.bigplay svg{width:40px;height:40px}
 .bigplay:focus-visible{outline:4px solid #93c5fd;outline-offset:4px}
 /* sous le film, une seule ligne discrète : plein écran, crédit, passer l'intro */
 .pied{width:min(100%, calc((100dvh - var(--reserve,80px)) * 1.7778));min-width:min(100%,320px);max-width:100%;
@@ -70,7 +70,7 @@ body{background:var(--page);color:var(--ink);font-family:var(--ui)}
   /* téléphone : les deux liens sur une ligne, le crédit dessous (sur iPhone, sans plein écran, tout tient sur une ligne) */
   .pied:has(> #fs:not([hidden])) .credit{order:3;flex-basis:100%}
   .bigplay{width:56px;height:56px}
-  .bigplay svg{width:24px;height:24px;margin-left:4px}
+  .bigplay svg{width:24px;height:24px}
 }
 </style>
 </head>
