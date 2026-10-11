@@ -795,6 +795,7 @@ window.MATHSGO_CATALOGUE = {
       "cardDescription": "Tous les livrets SPLAT! à plier, du monde 1 au monde 6, avec leurs corrigés."
     },
     "outils/splat_intro.html": { "primaryNotion": "calcul-litteral", "primaryGroup": "classe", "collections": ["splat"], "tags": ["splat", "introduction", "film"] },
+    "outils/splat_diaporama.html": { "primaryNotion": "calcul-litteral", "primaryGroup": "classe", "collections": ["splat"], "tags": ["splat", "introduction", "diaporama"] },
     "outils/splat_comment_on_joue.mp4": { "primaryNotion": "calcul-litteral", "primaryGroup": "classe", "collections": ["splat"], "tags": ["splat", "introduction", "video"], "newTab": true },
     "outils/splat_comment_on_joue_diaporama.pdf": { "primaryNotion": "calcul-litteral", "primaryGroup": "classe", "collections": ["splat"], "tags": ["splat", "introduction", "diaporama"], "newTab": true },
     "outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html": {
@@ -1613,18 +1614,20 @@ window.MATHSGO_CATALOGUE = {
       "id": "splat-comment-on-joue",
       "title": "Comment on joue ?",
       "description": "Présenter SPLAT! à la classe : le film, la vidéo ou le diaporama.",
-      "cardDescription": "Le film à projeter, la vidéo et le diaporama à télécharger.",
+      "cardDescription": "Le film et le diaporama à projeter ou à télécharger.",
       "thumbnail": "assets/img/thumbnails/splat/comment-on-joue.png?v=1",
       "hideCount": true,
       "group": "classe",
       "rang": 7,
       "labels": {
         "outils/splat_intro.html": "Voir le film en ligne",
+        "outils/splat_diaporama.html": "Le diaporama en ligne",
         "outils/splat_comment_on_joue.mp4": "La vidéo (MP4)",
         "outils/splat_comment_on_joue_diaporama.pdf": "Le diaporama (PDF)"
       },
       "paths": [
         "outils/splat_intro.html",
+        "outils/splat_diaporama.html",
         "outils/splat_comment_on_joue.mp4",
         "outils/splat_comment_on_joue_diaporama.pdf"
       ]
@@ -6613,6 +6616,35 @@ window.MATHSGO_CATALOGUE = {
         "comment jouer",
         "règle du jeu",
         "film",
+        "présenter",
+        "introduction"
+      ],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": false
+    },
+    {
+      "id": "outils-splat-diaporama-html",
+      "title": "Comment on joue à SPLAT! — le diaporama en ligne",
+      "description": "Le diaporama qui présente SPLAT! à la classe, diapo par diapo : on avance au clic ou avec les flèches, pour s’arrêter, laisser chercher et expliquer.",
+      "path": "outils/splat_diaporama.html",
+      "domains": [
+        "algebre"
+      ],
+      "notions": [
+        "calcul-litteral",
+        "equations"
+      ],
+      "uses": [
+        "projeter"
+      ],
+      "types": [],
+      "filters": [],
+      "keywords": [
+        "splat",
+        "comment jouer",
+        "diaporama",
         "présenter",
         "introduction"
       ],

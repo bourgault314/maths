@@ -142,7 +142,29 @@ const F={
     const caler=()=>{let w=0;try{w=t.getComputedTextLength();}catch(e){}
       const h=fs*.7,l=h*.88,ecart=fs*.3,x0=cx-(w+ecart+l)/2,tx=x0+w+ecart;
       t.setAttribute('x',x0.toFixed(2));tri.setAttribute('d',`M${tx.toFixed(2)},${(cy-h/2).toFixed(2)}L${(tx+l).toFixed(2)},${cy}L${tx.toFixed(2)},${(cy+h/2).toFixed(2)}Z`);};
-    caler();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(caler);return g;}
+    caler();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(caler);return g;},
+  /* les boutons de l'écran de fin, communs aux films. Sur le chemin de l'élève (?suite=) : « Je joue ▶ », et dessous
+     « ↺ Revoir le film » (un clic sur le film fini le relance). Ouvert depuis la page Splat, sans ?suite= : c'est le
+     prof qui présente, le film ne mène pas au jeu — le gros bouton relance le film, le lien dessous ramène à la
+     page Splat (choix de Gwenaël, 11/10/2026). */
+  boutonsFin(o,fi){
+    if(!PRESENTATION){
+      o.jouer=F.E('a',{href:SUITE,class:'film-lien'},o.fin);
+      F.E('rect',{x:fi.x-fi.jw/2,y:fi.jy-fi.jh/2,width:fi.jw,height:fi.jh,rx:18,fill:'#16a34a'},o.jouer);
+      F.etiquette(o.jouer,fi.x,fi.jy,fi.js,'Je joue','#ffffff');
+      o.revoir=F.E('text',{x:fi.x,y:fi.jy+fi.jh/2+fi.ssize*1.7,'text-anchor':'middle','font-size':fi.ssize,'font-weight':700,fill:'#2563eb',class:'film-lien'},o.fin);o.revoir.textContent='↺ Revoir le film';
+      return;}
+    /* pas un lien : le clic tombe sur le film, qui repart du début quand il est fini */
+    o.jouer=F.E('g',{class:'film-lien'},o.fin);
+    const fond=F.E('rect',{y:fi.jy-fi.jh/2,height:fi.jh,rx:18,fill:'#16a34a'},o.jouer);
+    const t=F.E('text',{x:fi.x,y:fi.jy+fi.js*.35,'text-anchor':'middle','font-size':fi.js,'font-weight':900,fill:'#ffffff'},o.jouer);t.textContent='↺ Revoir le film';
+    /* le bouton prend la largeur du texte (mesurée, puis recalée quand les polices sont arrivées), jamais moins que « Je joue » */
+    const caler=()=>{let w=0;try{w=t.getComputedTextLength();}catch(e){}const l=Math.max(fi.jw,w+fi.js*1.6);
+      fond.setAttribute('x',(fi.x-l/2).toFixed(2));fond.setAttribute('width',l.toFixed(2));};
+    caler();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(caler);
+    o.revoir=F.E('a',{href:RETOUR_PAGE,class:'film-lien'},o.fin);
+    F.E('text',{x:fi.x,y:fi.jy+fi.jh/2+fi.ssize*1.7,'text-anchor':'middle','font-size':fi.ssize,'font-weight':700,fill:'#2563eb'},o.revoir).textContent='‹ Retour à la page Splat';
+  }
 };
 
 function lancerLecteur(film){
@@ -159,7 +181,7 @@ function lancerLecteur(film){
   if(film.aria)svg.setAttribute('aria-label',film.aria);
   if(film.titre)document.title=film.titre;
   construire();
-  if(film.passer){$('passer').href=film.passer;$('passer').hidden=false;if(film.passerTexte)$('passer').textContent=film.passerTexte;}
+  if(film.passer&&!PRESENTATION){$('passer').href=film.passer;$('passer').hidden=false;if(film.passerTexte)$('passer').textContent=film.passerTexte;}
   if(film.credit){$('credit').innerHTML=film.credit;$('credit').hidden=false;}
   const D=film.duration,C=film.chapters;
   let t=0,playing=false,last=null,fresh=true,enArret=false;
@@ -239,6 +261,11 @@ const LOGO_IREM='/assets/img/logos/irem/logo-print.png', LOGO_MG='/assets/img/lo
 const SUITE=(()=>{const repli='/outils/splat_univers.html';
   try{const d=new URLSearchParams(location.search).get('suite')||'';if(!/^\/[^\/\\]/.test(d))return repli;
     const u=new URL(d,location.href);return u.origin===location.origin?u.pathname+u.search+u.hash:repli;}catch(e){return repli;}})();
+/* Sans ?suite= — la page Splat du catalogue, un lien copié pour une collègue : c'est le prof qui présente le film.
+   Ni « Passer le film › » ni « Je joue » ; à la fin, « ↺ Revoir le film » et le retour à la page Splat (11/10/2026).
+   Tous les liens de la carte des mondes portent ?suite= : rien ne change pour l'élève. */
+const PRESENTATION=!new URLSearchParams(location.search).has('suite');
+const RETOUR_PAGE='/outils/?domain=algebre&collection=splat';
 
 const LAY={
   paysage:{W:1600,H:900,cap:{x:800,y:92,size:40,max:1520,gap:0},
@@ -371,11 +398,8 @@ const film={
     o.finMot=E('text',{x:fi.x,y:fi.my,'text-anchor':'middle','font-size':fi.size,'font-weight':900,fill:ENCRE},o.fin);o.finMot.textContent='À toi de jouer !';
     o.finSous=E('g',{},o.fin);
     fi.lignes.forEach((l,k)=>{E('text',{x:fi.x,y:fi.sy+k*fi.ssize*1.35,'text-anchor':'middle','font-size':fi.ssize,'font-weight':600,fill:'#475569'},o.finSous).textContent=l;});
-    o.jouer=E('a',{href:SUITE,class:'film-lien'},o.fin);
-    E('rect',{x:fi.x-fi.jw/2,y:fi.jy-fi.jh/2,width:fi.jw,height:fi.jh,rx:18,fill:'#16a34a'},o.jouer);
-    F.etiquette(o.jouer,fi.x,fi.jy,fi.js,'Je joue','#ffffff');
-    /* revoir : un clic sur le film relance depuis le début quand il est fini */
-    o.revoir=E('text',{x:fi.x,y:fi.jy+fi.jh/2+fi.ssize*1.7,'text-anchor':'middle','font-size':fi.ssize,'font-weight':700,fill:'#2563eb',class:'film-lien'},o.fin);o.revoir.textContent='↺ Revoir le film';
+    /* « Je joue ▶ » ou, présenté depuis la page Splat, « ↺ Revoir le film » : voir F.boutonsFin */
+    F.boutonsFin(o,fi);
   },
   /* sous-titre : une ligne, ou deux si la phrase est trop longue pour la largeur */
   legende(txt){
@@ -668,10 +692,7 @@ function cartons(o,Y,svg,sousTitre){
   o.finMot=E('text',{x:fi.x,y:fi.my,'text-anchor':'middle','font-size':fi.size,'font-weight':900,fill:'#111827'},o.fin);o.finMot.textContent='À toi de jouer !';
   o.finSous=E('g',{},o.fin);
   fi.lignes.forEach((l,k)=>{E('text',{x:fi.x,y:fi.sy+k*fi.ssize*1.35,'text-anchor':'middle','font-size':fi.ssize,'font-weight':600,fill:'#475569'},o.finSous).textContent=l;});
-  o.jouer=E('a',{href:SUITE,class:'film-lien'},o.fin);
-  E('rect',{x:fi.x-fi.jw/2,y:fi.jy-fi.jh/2,width:fi.jw,height:fi.jh,rx:18,fill:'#16a34a'},o.jouer);
-  F.etiquette(o.jouer,fi.x,fi.jy,fi.js,'Je joue','#ffffff');
-  o.revoir=E('text',{x:fi.x,y:fi.jy+fi.jh/2+fi.ssize*1.7,'text-anchor':'middle','font-size':fi.ssize,'font-weight':700,fill:'#2563eb',class:'film-lien'},o.fin);o.revoir.textContent='↺ Revoir le film';
+  F.boutonsFin(o,fi);
 }
 
 /* ---------- rendu ---------- */
@@ -1417,10 +1438,7 @@ function cartons(o,Y,svg,sousTitre,lignesFin){
   o.finMot=E('text',{x:fi.x,y:fi.my,'text-anchor':'middle','font-size':fi.size,'font-weight':900,fill:C.encre},o.fin);o.finMot.textContent='À toi de jouer !';
   o.finSous=E('g',{},o.fin);
   lignesFin.forEach((l,k)=>{E('text',{x:fi.x,y:fi.sy+k*fi.ssize*1.35,'text-anchor':'middle','font-size':fi.ssize,'font-weight':600,fill:'#475569'},o.finSous).textContent=l;});
-  o.jouer=E('a',{href:SUITE,class:'film-lien'},o.fin);
-  E('rect',{x:fi.x-fi.jw/2,y:fi.jy-fi.jh/2,width:fi.jw,height:fi.jh,rx:18,fill:'#16a34a'},o.jouer);
-  F.etiquette(o.jouer,fi.x,fi.jy,fi.js,'Je joue','#ffffff');
-  o.revoir=E('text',{x:fi.x,y:fi.jy+fi.jh/2+fi.ssize*1.7,'text-anchor':'middle','font-size':fi.ssize,'font-weight':700,fill:'#2563eb',class:'film-lien'},o.fin);o.revoir.textContent='↺ Revoir le film';}
+  F.boutonsFin(o,fi);}
 
 /* ---------- rendu ---------- */
 /* la case active : au téléphone, cadre bleu foncé et fond teinté (pavé) ; à l'ordinateur, cadre bleu clair (curseur) */

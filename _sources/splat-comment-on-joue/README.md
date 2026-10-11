@@ -1,12 +1,13 @@
 # « Comment on joue ? » — la vidéo et le diaporama de SPLAT! à télécharger
 
 La carte « Comment on joue ? » de la page Splat du catalogue (section « Pour la classe »,
-11/10/2026) propose trois façons de présenter le jeu à la classe. La vidéo et le PDF s'ouvrent dans un
+11/10/2026) propose quatre façons de présenter le jeu à la classe. La vidéo et le PDF s'ouvrent dans un
 nouvel onglet : on regarde, puis on télécharge avec le bouton du navigateur.
 
 | Variante | Fichier publié | Fabriqué par |
 |---|---|---|
 | Voir le film en ligne | `outils/splat_intro.html` (le film animé, en ligne depuis la PR #961) | — |
+| Le diaporama en ligne | `outils/splat_diaporama.html` (l'ancien diaporama, voir plus bas) | — |
 | La vidéo (MP4) | `outils/splat_comment_on_joue.mp4` | `render_video.py` |
 | Le diaporama (PDF) | `outils/splat_comment_on_joue_diaporama.pdf` | `render_diaporama.py` |
 
@@ -40,3 +41,16 @@ pas sous la licence du site, et le pied de chaque page le dit (décision de Gwen
 
 Police fixée à **Inter** (rendu dans le conteneur Linux), la plus proche de Segoe UI que montrait l'écran ;
 DejaVu Sans, celle des livrets, est trop large pour les bulles (« vois-/tu ? » se coupait).
+
+## Ouverts depuis la page Splat, ils ne mènent pas au jeu (11/10/2026)
+
+Choix de Gwenaël : depuis la carte « Comment on joue ? », c'est le prof qui présente. Le film ouvert **sans
+`?suite=`** n'affiche ni « Passer le film › » ni « Je joue » ; à la fin, « ↺ Revoir le film » et « ‹ Retour à
+la page Splat » (`F.boutonsFin` dans `splat_intro.html`). Tous les liens de la carte des mondes portent
+`?suite=` : pour l'élève, rien ne change.
+
+`outils/splat_diaporama.html` est `diaporama.html` (ci-dessus) remis en ligne pour s'ouvrir directement diapo
+par diapo, avec les mêmes différences : plus de « Passer l'intro » ni de « Je joue ▶ », mais « ↺ Revoir le
+diaporama » et « ‹ Retour à la page Splat » sur la dernière diapo ; crédit « hors licence du site » comme au
+pied du PDF ; plein écran au bouton ⛶ ou à la touche F (bouton caché sur iPhone, qui ne sait pas le faire).
+Le PDF, lui, n'a pas changé.

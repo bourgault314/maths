@@ -187,15 +187,19 @@ test("page Splat : les livrets puis « Comment on joue ? » ; ÉquaSplat, ÉquaB
   assert.equal(famille.group, "classe");
   assert.deepEqual(Array.from(famille.paths), [
     "outils/splat_intro.html",
+    "outils/splat_diaporama.html",
     "outils/splat_comment_on_joue.mp4",
     "outils/splat_comment_on_joue_diaporama.pdf"
   ]);
+  // le diaporama en ligne (l'ancien diaporama d'avant le film) s'ouvre directement diapo par diapo (11/10/2026)
+  assert.equal(famille.labels["outils/splat_diaporama.html"], "Le diaporama en ligne");
+  assert.ok(!classifications["outils/splat_diaporama.html"]?.newTab, "le diaporama en ligne s’ouvre dans l’onglet");
   const cartes = [
     { title: famille.title, rang: famille.rang },
     { title: "Les livrets SPLAT!", rang: collectionCardRank("splat", "outils/livrets_splat.html") }
   ].sort(compareCards);
   assert.deepEqual(cartes.map((c) => c.title), ["Les livrets SPLAT!", "Comment on joue ?"]);
-  // la carte ne dit pas « 3 versions · » (le film, la vidéo et le diaporama ne sont pas des versions d’un même outil),
+  // la carte ne dit pas « 4 versions · » (le film, les diaporamas et la vidéo ne sont pas des versions d’un même outil),
   // et la vidéo et le PDF s’ouvrent dans un nouvel onglet : on regarde, puis on télécharge (11/10/2026)
   assert.equal(famille.hideCount, true);
   assert.match(catalogueScript, /const versionLabel = family\.hideCount \? "" : /);
