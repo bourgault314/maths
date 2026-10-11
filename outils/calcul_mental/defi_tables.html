@@ -527,6 +527,21 @@
     .notice p { margin: 0; line-height: 1.45; }
     .notice p + p { margin-top: 8px; }
     .notice b { color: var(--teal); }
+    /* Lot « le cadre qui dépasse » (11/10/2026, planche 4, choix N1) : sur
+       ordinateur, la notice s'ouvre dans une fenêtre par-dessus l'écran
+       (hors de la colonne mise à l'échelle) ; ✕, Échap ou un clic à côté la
+       ferment. Dépliée sous l'accueil, elle poussait le cadre blanc jusqu'à
+       290 px sous l'écran (238 px dans Mon parcours). */
+    .notice-fenetre { width: min(600px, calc(100vw - 48px)); max-height: calc(100dvh - 48px); padding: 0; border: 0; border-radius: 20px;
+                      color: var(--ink); background: #fff; box-shadow: 0 24px 80px rgba(16, 48, 78, .35); }
+    .notice-fenetre::backdrop { background: rgba(16, 48, 78, .42); }
+    .notice-fenetre-carte { padding: 16px 18px 22px 22px; }
+    .notice-fenetre-tete { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 10px; }
+    .notice-fenetre-tete h2 { margin: 0; color: var(--blue); font-size: 1.25rem; }
+    .notice-fenetre-fermer { flex: 0 0 auto; width: 40px; height: 40px; display: grid; place-items: center; padding: 0; border: 1px solid #c5d9e6;
+                             border-radius: 50%; color: var(--ink); background: #fff; cursor: pointer; }
+    .notice-fenetre-fermer svg { display: block; }
+    .notice-fenetre .notice { margin: 0; padding: 0 4px 0 0; border: 0; border-radius: 0; background: none; font-size: .95rem; }
     @media (min-width: 621px) {
       .acc { max-width: 620px; }
       .etape { min-height: 60px; }
@@ -1773,6 +1788,32 @@
     .correction-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0; padding: 0; list-style: none; }
     .correction-chips li { padding: 6px 9px; border-radius: 9px; color: var(--green); background: var(--green-soft); font-size: .92rem; font-weight: 850; }
     .result-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 14px; }
+    /* Lot « le cadre qui dépasse » (11/10/2026, planches 1 à 3, choix A de
+       Gwenaël) : sur ordinateur, un résultat AVEC des erreurs se range sur
+       deux colonnes — à gauche le verdict, « Et maintenant » et les boutons,
+       toujours au même endroit ; à droite les erreurs (deux par ligne), puis
+       les réponses justes. Sur une seule colonne, ce résultat descendait
+       jusqu'à 968 px sous l'écran (20 erreurs en 1 024 × 600). Sans erreur,
+       au téléphone et sur tablette : rien ne change. La dernière ligne (1fr)
+       prend la hauteur de la colonne de droite, pour que celle de gauche
+       reste serrée. Les boutons : la grille du téléphone. */
+    @media (min-width: 1024px) {
+      .result.avec-erreurs { max-width: none; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: repeat(7, auto) 1fr; column-gap: 30px; align-items: start; margin-top: 14px; }
+      .result.avec-erreurs > * { grid-column: 1; }
+      .result.avec-erreurs > .corrections { grid-column: 2; grid-row: 1 / -1; margin: 0; }
+      .result.avec-erreurs .result-verdict { max-width: none; margin: 0 0 14px; }
+      .result.avec-erreurs .correction-list { grid-template-columns: 1fr 1fr; }
+      .result.avec-erreurs .correction-list li { padding: 7px 10px; }
+      .result.avec-erreurs .result-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+      .result.avec-erreurs .result-actions > button { padding-left: 10px; padding-right: 10px; }
+      .result.avec-erreurs .result-actions > .primary,
+      .result.avec-erreurs.is-rate .result-actions > #retry { grid-column: 1 / -1; }
+      .result.avec-erreurs.is-rate .result-actions > #result-accueil { grid-column: auto; }
+      .result.avec-erreurs.avec-entraine .result-actions > #retry { grid-column: auto; }
+      .result.avec-erreurs.avec-entraine .result-actions > #result-open-parcours { grid-column: 1 / -1; }
+      .result.avec-erreurs .result-actions > #retry[hidden] + #result-open-parcours { grid-column: 1 / -1; }
+      .result.avec-erreurs.is-course .result-actions > button { grid-column: 1 / -1; }
+    }
     .site-footer {
       width: min(100%, 960px);
       display: flex;
@@ -2967,6 +3008,20 @@
       </div>
     </section>
   </main>
+  <!-- Lot « le cadre qui dépasse » (11/10/2026, choix N1 de Gwenaël) : sur
+       ordinateur, « Comment ça marche ? » (accueil et Mon parcours) s'ouvre
+       ici, par-dessus l'écran. Au téléphone et sur tablette, la notice se
+       déplie toujours sous l'écran, comme avant. Hors de <main> : la colonne
+       mise à l'échelle (--echelle) ne la réduit pas. -->
+  <dialog id="notice-fenetre" class="notice-fenetre" aria-labelledby="notice-fenetre-titre">
+    <div class="notice-fenetre-carte">
+      <div class="notice-fenetre-tete">
+        <h2 id="notice-fenetre-titre">Comment ça marche&nbsp;?</h2>
+        <button id="notice-fenetre-fermer" class="notice-fenetre-fermer" type="button" aria-label="Fermer"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 6 18 18M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
+      </div>
+      <div class="notice" data-notice></div>
+    </div>
+  </dialog>
   <!-- Vue « fiche d'un élève » : ouverte par le professeur depuis « Ma classe »
        (…/defi_tables.html#fiche=CODE). Lecture seule, elle ne touche jamais au
        parcours de l'appareil, et elle réutilise le gabarit d'impression
@@ -4467,6 +4522,10 @@
         // du chemin (arrivée directe ou retour d'une activité).
         const accueil = !document.getElementById("intro").hidden && !document.getElementById("mode-screen").hidden;
         const parcoursOuvert = !document.getElementById("parcours").hidden;
+        // Lot « le cadre qui dépasse » (11/10/2026) : un résultat trop haut
+        // gardait ×1 (« page longue ») et débordait dès 4 erreurs ; il garde
+        // maintenant la plus petite échelle, comme l'accueil et Mon parcours.
+        const resultat = document.getElementById("result")?.hidden === false;
         const acc = document.querySelector(".acc");
         const ouvert = accueil && Boolean(acc?.classList.contains("etape-seule"));
         const avant = racine.style.getPropertyValue("--echelle");
@@ -4478,7 +4537,7 @@
         // Une série qui ne tient à aucune échelle garde la plus petite : moins
         // il reste à faire défiler, mieux c'est. Mon parcours aussi (lot « Mon
         // parcours », comme l'accueil : × 0,75 au plus petit).
-        let z = chercherEchelle(enJeu || accueil || parcoursOuvert ? {...bornes, longue: bornes.min} : bornes, tient);
+        let z = chercherEchelle(enJeu || accueil || parcoursOuvert || resultat ? {...bornes, longue: bornes.min} : bornes, tient);
         if (ouvert) {
           acc.classList.remove("mesure-replie");
           // Le choix ouvert tient d'habitude à la même taille (il remplace les
@@ -6108,6 +6167,9 @@
         const wrongEntries = entries.filter(entry => !entry.correct);
         const rightEntries = entries.filter(entry => entry.correct);
         zone.replaceChildren();
+        // Lot « le cadre qui dépasse » : avec des erreurs, deux colonnes sur
+        // ordinateur (la classe « avec-erreurs » du CSS).
+        $("result").classList.toggle("avec-erreurs", wrongEntries.length > 0);
         if (wrongEntries.length) {
           const title = document.createElement("h2");
           // Lot E2 (question E2 · 2, audit GPT point I) : un calcul passé n'est
@@ -6156,6 +6218,8 @@
           const details = document.createElement("details");
           details.className = "correction-details";
           details.open = window.matchMedia("(min-width: 1040px)").matches;
+          // Déplier ou replier change la hauteur : l'échelle est remesurée.
+          details.addEventListener("toggle", () => ajusterEchelle());
           const summary = document.createElement("summary");
           summary.textContent = wrongEntries.length
             ? (rightEntries.length > 1 ? `Mes ${rightEntries.length} réponses justes` : "Ma réponse juste")
@@ -8338,10 +8402,45 @@
         document.querySelectorAll("[data-notice]").forEach(zone => zone.append(modele.content.cloneNode(true)));
       }
 
+      // Lot « le cadre qui dépasse » : sur ordinateur (1 024 px et plus), la
+      // notice s'ouvre dans la fenêtre #notice-fenetre ; à la fermeture, le
+      // bouton qui l'a ouverte reprend la main (aria-expanded, focus).
+      let boutonDeLaNotice = null;
+      function noticeEnFenetre() {
+        const fenetre = $("notice-fenetre");
+        return Boolean(fenetre && typeof fenetre.showModal === "function") && window.matchMedia("(min-width: 1024px)").matches;
+      }
+      function ouvrirNoticeEnFenetre(bouton) {
+        const fenetre = $("notice-fenetre");
+        if (fenetre.open) return;
+        boutonDeLaNotice = bouton;
+        bouton.setAttribute("aria-expanded", "true");
+        fenetre.showModal();
+      }
+      function brancherNoticeEnFenetre() {
+        const fenetre = $("notice-fenetre");
+        if (!fenetre) return;
+        $("notice-fenetre-fermer").addEventListener("click", () => fenetre.close());
+        // Un clic sur le fond (hors de la carte) ferme ; Échap aussi (natif).
+        fenetre.addEventListener("click", evenement => { if (evenement.target === fenetre) fenetre.close(); });
+        fenetre.addEventListener("close", () => {
+          const bouton = boutonDeLaNotice;
+          boutonDeLaNotice = null;
+          if (!bouton) return;
+          bouton.setAttribute("aria-expanded", "false");
+          bouton.focus?.({preventScroll: true});
+        });
+      }
+
       function basculerNotice(idBouton, idZone, ouvrir) {
         const zone = $(idZone);
         const bouton = $(idBouton);
         const visible = ouvrir === undefined ? zone.hidden : ouvrir;
+        if (visible && noticeEnFenetre()) {
+          zone.hidden = true;
+          ouvrirNoticeEnFenetre(bouton);
+          return;
+        }
         zone.hidden = !visible;
         bouton.setAttribute("aria-expanded", String(visible));
         if (visible) zone.scrollIntoView?.({block: "nearest", behavior: "smooth"});
@@ -10040,6 +10139,7 @@
         renderAccueil();
         if (state.choixTableOuvert) $("acc-choix").querySelector("button")?.focus?.({preventScroll: true});
       });
+      brancherNoticeEnFenetre();
       $("acc-notice-bouton").addEventListener("click", () => basculerNotice("acc-notice-bouton", "acc-notice"));
       $("parcours-notice-bouton").addEventListener("click", () => basculerNotice("parcours-notice-bouton", "parcours-notice"));
       $("parcours-notice-option").addEventListener("click", () => {

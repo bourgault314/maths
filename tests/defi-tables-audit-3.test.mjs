@@ -58,7 +58,9 @@ test("la mesure : sans le pied de page, le repère compris ; la carte du jeu ne 
   assert.match(ajuster, /const pleinEcran = corps\.classList\.contains\("fullscreen-active"\);\s*const bornes = bornesEchelle\(window\.innerWidth, pleinEcran\);/);
   assert.match(ajuster, /if \(!fige && corps\.offsetHeight > limite\) return false;\s*return !\(enJeu && carte && carte\.scrollHeight > carte\.clientHeight \+ 1\);/);
   assert.match(ajuster, /corps\.classList\.add\("mesure-cadre"\);[\s\S]*corps\.classList\.remove\("mesure-cadre"\);/);
-  assert.match(ajuster, /chercherEchelle\(enJeu \|\| accueil \|\| parcoursOuvert \? \{\.\.\.bornes, longue: bornes\.min\} : bornes, tient\)/, "une série, l’accueil ou Mon parcours trop hauts gardent la plus petite échelle");
+  // Lot « le cadre qui dépasse » (11/10/2026) : le résultat aussi.
+  assert.match(ajuster, /chercherEchelle\(enJeu \|\| accueil \|\| parcoursOuvert \|\| resultat \? \{\.\.\.bornes, longue: bornes\.min\} : bornes, tient\)/, "une série, l’accueil, Mon parcours ou un résultat trop hauts gardent la plus petite échelle");
+  assert.match(ajuster, /const resultat = document\.getElementById\("result"\)\?\.hidden === false;/, "lot « le cadre qui dépasse »");
   assert.match(ajuster, /const parcoursOuvert = !document\.getElementById\("parcours"\)\.hidden;/, "lot « Mon parcours »");
   assert.match(ajuster, /classList\.contains\("mode-fiche"\) \|\| corps\.classList\.contains\("voir-fiche"\)/, "la fiche a sa propre échelle");
   assert.match(html, /body\.mesure-cadre \{ min-height: 0 !important; \}\s*body\.mesure-cadre \.site-footer \{ display: none !important; \}/);
