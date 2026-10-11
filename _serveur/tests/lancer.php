@@ -1075,6 +1075,32 @@ function chronometre(callable $appel, &$resultat): float
     return (hrtime(true) - $debut) / 1e9;
 }
 
+// Ce qui ne doit PAS attendre : le plus court de trois essais
+// ------------------------------------------------------------
+// Une borne BASSE (« au moins 1,4 s ») ne craint rien d'une machine partagée :
+// le ralentissement est un usleep(), et le bruit ne fait qu'allonger. Une
+// borne HAUTE (« moins d'une seconde ») craint tout : le 11/10/2026, sur la
+// PR 967, le 61e échec de parcours.php — qui n'est pas ralenti — a mis 1,07 s
+// sur le serveur de GitHub, sans qu'une ligne du serveur ait changé.
+//
+// Pour une borne haute, on rejoue donc l'essai trois fois, en remettant l'état
+// à l'identique avant chacun ($preparer), et on garde le PLUS COURT. Une
+// requête ralentie dort 1,5 s à chaque essai : les trois dépassent le seuil,
+// le test rougit à coup sûr. Une requête qui ne l'est pas passe dès qu'un
+// seul des trois tombe sur une machine tranquille. $resultats reçoit les
+// trois réponses : chacune doit être vérifiée, pas seulement la dernière.
+function plus_court_de_trois(callable $preparer, callable $appel, &$resultats): float
+{
+    $resultats = [];
+    $plus_court = INF;
+    for ($i = 0; $i < 3; $i++) {
+        $preparer();
+        $plus_court = min($plus_court, chronometre($appel, $r));
+        $resultats[] = $r;
+    }
+    return $plus_court;
+}
+
 // Mesurer un temps de réponse sur une machine partagée, en millisecondes
 // ----------------------------------------------------------------------
 // Le serveur de GitHub est une machine partagée : elle s'interrompt sans
@@ -1186,18 +1212,17 @@ verifier("soixante et un codes inventés passent en 404 sans attendre ; ensuite 
     $duree = chronometre(fn() => lire($codesS1[0]), $r);
     egal(200, $r['code'], "la même règle vaut pour parcours.php : quota partagé");
     vrai($duree >= 1.4, sprintf('et le même ralentissement (%.2f s)', $duree));
-    vider_compteurs();
-    $duree = chronometre(fn() => identite($codesS1[0]), $r);
-    egal(200, $r['code'], 'contrôle : après remise à zéro, le bon code passe');
-    vrai($duree < 1.0, sprintf('sans attendre (%.2f s)', $duree));
+    $duree = plus_court_de_trois(fn() => vider_compteurs(), fn() => identite($codesS1[0]), $rs);
+    egal([200, 200, 200], array_column($rs, 'code'), 'contrôle : après remise à zéro, le bon code passe');
+    vrai($duree < 1.0, sprintf('sans attendre (%.2f s, le plus court de trois essais)', $duree));
 });
 
 verifier("parcours.php : même ralentissement sur les codes inventés, et le 404 reste un 404", function () use (&$codesS1) {
-    vider_compteurs();
-    semer_echecs_adresse(60);
-    $duree = chronometre(fn() => lire(code_inconnu(0)), $r);
-    egal(404, $r['code'], 'le 61e échec');
-    vrai($duree < 1.0, sprintf('sans attendre (%.2f s)', $duree));
+    // Soixante échecs semés avant chaque essai : chacun est le 61e.
+    $duree = plus_court_de_trois(function () { vider_compteurs(); semer_echecs_adresse(60); },
+        fn() => lire(code_inconnu(0)), $rs);
+    egal([404, 404, 404], array_column($rs, 'code'), 'le 61e échec');
+    vrai($duree < 1.0, sprintf('sans attendre (%.2f s, le plus court de trois essais)', $duree));
     $duree = chronometre(fn() => lire(code_inconnu(1)), $r);
     egal(404, $r['code'], 'le 62e : toujours 404, pas 429');
     vrai($duree >= 1.4, sprintf('mais ralenti (%.2f s)', $duree));
@@ -1214,9 +1239,11 @@ verifier("six cents échecs : l'adresse est refusée (429) avec Retry-After, exp
         "Retry-After doit donner les secondes jusqu'à la fin de la fenêtre (obtenu " . json_encode($attente) . ")");
     egal('Retry-After', entete($r, 'Access-Control-Expose-Headers'), "sans cet en-tête, un script de mathsgo.re ne verrait jamais Retry-After");
     egal('https://mathsgo.re', entete($r, 'Access-Control-Allow-Origin'), 'réponse CORS ordinaire');
-    $duree = chronometre(fn() => identite($codesS1[0]), $r);
-    egal(429, $r['code'], "au-delà de 600, même un bon code est refusé : c'est une attaque, pas une classe");
-    vrai($duree < 1.0, sprintf("et le refus n'attend pas : pas de processus qui dort (%.2f s)", $duree));
+    // L'appel ci-dessus a compté le 601e échec : chaque essai repart de là.
+    $duree = plus_court_de_trois(function () { vider_compteurs(); semer_echecs_adresse(601); },
+        fn() => identite($codesS1[0]), $rs);
+    egal([429, 429, 429], array_column($rs, 'code'), "au-delà de 600, même un bon code est refusé : c'est une attaque, pas une classe");
+    vrai($duree < 1.0, sprintf("et le refus n'attend pas : pas de processus qui dort (%.2f s, le plus court de trois essais)", $duree));
     egal(429, lire($codesS1[0])['code'], 'parcours.php aussi');
     vider_compteurs();
     egal(200, identite($codesS1[0])['code'], 'contrôle : après remise à zéro, le bon code passe');
@@ -1263,11 +1290,10 @@ verifier("connexion prof : treize mauvais mots de passe sur un compte ralentisse
         'treize échecs venus de trois adresses ne ferment pas le compte');
     vrai((hrtime(true) - $debut) / 1e9 >= 1.4, 'ils le ralentissent seulement');
     // Un autre identifiant depuis la même adresse n'est pas concerné.
-    vider_compteurs();
-    semer_compteur('connexion-id:gwenael', 600, 13);
-    $debut = hrtime(true);
-    egal(401, connexion('personne', 'motdepasse-de-test-2026')['code'], 'un autre identifiant : refus ordinaire');
-    vrai((hrtime(true) - $debut) / 1e9 < 1.4, "et sans ralentissement : le compteur est bien par identifiant");
+    $duree = plus_court_de_trois(function () { vider_compteurs(); semer_compteur('connexion-id:gwenael', 600, 13); },
+        fn() => connexion('personne', 'motdepasse-de-test-2026'), $rs);
+    egal([401, 401, 401], array_column($rs, 'code'), 'un autre identifiant : refus ordinaire');
+    vrai($duree < 1.4, sprintf("et sans ralentissement : le compteur est bien par identifiant (%.2f s, le plus court de trois essais)", $duree));
     vider_compteurs();
 });
 
