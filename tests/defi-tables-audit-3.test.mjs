@@ -68,7 +68,11 @@ test("la mesure : sans le pied de page, le repère compris ; la carte du jeu ne 
 
 test("l’échelle est remesurée à chaque écran, à la première question, au plein écran et au redimensionnement", () => {
   assert.match(html, /suivreHistorique\(name\);\s*ajusterEchelle\(\);\s*\}/, "show()");
-  assert.match(html, /show\("play"\);\s*renderQuestion\(\);[\s\S]{0,260}ajusterEchelle\(\);/, "la première question");
+  // Lot « les règles des records » (11/10/2026) : la première question arrive
+  // dans partir(), tout de suite ou après le décompte 3, 2, 1 (mesuré aussi).
+  assert.match(html, /show\("play"\);\s*if \(avecDecompte\(state\.configuration\)\) \{\s*decompter\(3\);\s*return;\s*\}\s*partir\(\);/, "la première question");
+  assert.match(html, /function partir\(\) \{[\s\S]{0,300}renderQuestion\(\);[\s\S]{0,260}ajusterEchelle\(\);/, "la première question");
+  assert.match(html, /if \(n === 3\) \{[\s\S]{0,400}ajusterEchelle\(\);\s*\}/, "le décompte");
   assert.match(html, /label\.textContent = active \? "Quitter le plein écran" : "Plein écran";\s*ajusterEchelle\(\);/);
   assert.match(html, /window\.addEventListener\("resize", ajusterEchelle\);/);
   // Audit 4 : l’accueil se remesure aussi choix déplié (mesuré replié, voir defi-tables-audit-4).

@@ -19,7 +19,8 @@ test("une série lancée depuis l’accueil revient à l’accueil, jamais sur l
   assert.match(html, /if \(state\.origin === "reglages"\) \{\s*show\("intro"\);/, "seule une série partie des réglages y revient");
   assert.match(html, /const cible = homeScreen\(\);\s*if \(cible === "intro"\) \{\s*backToModes\(\);/, "sinon on repasse par backToModes, qui remet configuration.mode à zéro — c’est lui qui fait réapparaître l’accueil");
   assert.match(html, /function cancelLaunch\(\) \{\s*quitterSerie\(\);\s*\}/, "« Modifier » sort par le même chemin");
-  assert.match(html, /function returnToMenu\(\) \{\s*if \(!state\.running && !state\.launchReady\) return;\s*quitterSerie\(\);\s*\}/, "le bouton de l’écran de jeu aussi");
+  // Lot « les règles des records » : aussi pendant le décompte 3, 2, 1.
+  assert.match(html, /function returnToMenu\(\) \{\s*if \(!state\.running && !state\.launchReady && !state\.decompte\) return;\s*quitterSerie\(\);\s*\}/, "le bouton de l’écran de jeu aussi");
   assert.match(html, /\$\("start"\)\.addEventListener\("click", \(\) => \{\s*state\.origin = "reglages";/, "l’origine « reglages » ne se pose qu’au départ des réglages libres");
   assert.equal((html.match(/state\.origin = "reglages"/g) || []).length, 1, "une seule porte pose cette origine");
 });

@@ -222,7 +222,8 @@ test("la page : la course garde sa marque et perd sa durée après la normalisat
 });
 
 test("la page : le lancement et les trois fins de course, dans les mots des planches R3", () => {
-  assert.match(html, /gras\.textContent = "Tout juste";\s*ligne\.append\(document\.createTextNode\("Le chrono monte\. "\), gras, document\.createTextNode\(", sinon le temps ne compte pas\."\)\);/);
+  // Lot « les règles des records » (11/10/2026) : la question reste ; trois erreurs sur le même calcul, la course s'arrête.
+  assert.match(html, /gras\.textContent = "la question reste";\s*ligne\.append\(document\.createTextNode\("Le chrono monte\. Une erreur\\u00a0: "\), gras, document\.createTextNode\("\. Trois sur le même calcul\\u00a0: la course s’arrête\."\)\);/);
   assert.match(html, /verdict\.titre = "Nouveau record\\u00a0!";/);
   assert.match(html, /verdict\.score = `Ton record reste \$\{PARCOURS\.formatTemps\(record\.meilleur\)\}\.`;/);
   assert.match(html, /verdict\.score = jugement\.raison === "erreurs" \? "Le temps ne compte pas\\u00a0: il faut tout juste\." : "Le temps ne compte pas\.";/);

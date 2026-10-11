@@ -1524,6 +1524,25 @@
       font-weight: 950;
     }
 
+    /* Lot « les règles des records » : le décompte 3, 2, 1 avant la course et
+       les marches de l'escalier, à la place de la question. */
+    .expression .decompte {
+      color: var(--blue);
+      font-size: 1.35em;
+      line-height: 1;
+      animation: decompte-pop .8s ease-out both;
+    }
+
+    @keyframes decompte-pop {
+      0% { transform: scale(.55); opacity: 0; }
+      30% { transform: scale(1.08); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .expression .decompte { animation: none; }
+    }
+
     .inline-answer {
       min-width: 1.45em;
       min-height: 1.18em;
@@ -4598,6 +4617,7 @@
         learnStickHelpUsed: false,
         answer: "",
         launchReady: false,
+        decompte: null,
         origin: "menu",
         etapeOuverte: null,
         // Lot « Encore une séance » (08/10/2026, planche 13, choix A de
@@ -5095,7 +5115,9 @@
         const visible = state.configuration?.mode === "learn";
         const perles = visible && activitePerles(state.configuration);
         const stickOnly = visible && ["construct", "gaps"].includes(state.configuration.learnActivity);
-        $("question-card").classList.toggle("no-skip", visible);
+        // Lot « les règles des records » (11/10/2026) : pas de « Passer » dans
+        // la course — la question reste jusqu'à la bonne réponse.
+        $("question-card").classList.toggle("no-skip", visible || state.configuration?.course === "records");
         $("question-card").classList.toggle("stick-main", stickOnly);
         $("question-card").classList.toggle("stick-trace", visible && !stickOnly && !perles);
         $("question-card").classList.toggle("perles-main", perles);
@@ -5275,6 +5297,30 @@
         if (erreurs.get(cle)) return false;
         erreurs.set(cle, 1);
         return true;
+      }
+
+      // La course des records (lot « les règles des records », décisions de
+      // Gwenaël du 11/10/2026) : après une erreur, la case se vide et la même
+      // question reste — « Pas tout à fait, essaie encore. », la phrase de la
+      // bande. Une erreur, même deux, c'est un raté qu'on corrige ; trois sur
+      // le même calcul (ERREURS_AVANT_ARRET), c'est un calcul qu'on ne sait
+      // pas : la course s'arrête (arreterCourse), le temps ne compte pas, et
+      // le calcul s'affiche avec sa réponse. Une course finie compte donc
+      // toujours 25 justes.
+      const ERREURS_AVANT_ARRET = 3;
+
+      function essaieEncoreCourse() {
+        state.answer = "";
+        renderInlineAnswer();
+        const feedback = $("answer-feedback");
+        feedback.className = "answer-feedback is-wrong";
+        feedback.textContent = "Pas tout à fait, essaie encore.";
+        $("expression").focus?.({preventScroll: true});
+      }
+
+      function arreterCourse(question) {
+        state.courseArretee = CORE.solvedPrompt(question);
+        finish();
       }
 
       // « Pas tout à fait, essaie encore. » : la réponse s'efface, la case
@@ -6011,6 +6057,7 @@
 
       function renderQuestion() {
         const question = state.questions[state.index];
+        state.essaisCourse = 0;
         if (state.configuration.mode === "learn") {
           renderLearnProgress();
         } else if (state.configuration.mode === "revision") {
@@ -6107,6 +6154,8 @@
       function stopTimer() {
         if (state.timer !== null) window.clearInterval(state.timer);
         state.timer = null;
+        if (state.decompte) window.clearTimeout(state.decompte);
+        state.decompte = null;
         clearAutoAdvance();
         clearLearnStickHelpTimer();
       }
@@ -6520,12 +6569,24 @@
       // Le verdict se juge ICI, avec ce que l'appareil sait du record (le
       // serveur confirmera et apportera le rang) : « Nouveau record ! 49,8 s
       // (avant : 52,4 s) » ; « 53,1 s — Ton record reste 52,4 s. » ;
-      // « 1 erreur — Le temps ne compte pas : il faut tout juste. »
+      // « 1 erreur — Le temps ne compte pas : il faut tout juste. » (Depuis le
+      // lot « les règles des records », la question reste jusqu'à la bonne
+      // réponse : une course finit toujours à 25 justes ; ce verdict ne sert
+      // plus qu'en garde-fou.)
       function verdictCourse(suivi, elapsed, verdict) {
         const dixiemes = Math.round(elapsed / 100);
         const jugement = PARCOURS.courseCompte(state.correct, TOTAL, dixiemes);
         verdict.config = "";
         verdict.course = true;
+        // Lot « les règles des records » : trois erreurs sur le même calcul,
+        // la course s'est arrêtée — le calcul et sa réponse dans le verdict.
+        if (state.courseArretee) {
+          verdict.classe = "is-rate";
+          verdict.icone = "✗";
+          verdict.titre = "Course arrêtée";
+          verdict.score = `${ERREURS_AVANT_ARRET} erreurs sur ${state.courseArretee}`;
+          return verdict;
+        }
         if (!jugement.compte) {
           const erreurs = TOTAL - state.correct;
           verdict.classe = "is-rate";
@@ -6672,9 +6733,6 @@
       function beginRound() {
         if (!state.configuration || state.running || !state.launchReady) return;
         state.launchReady = false;
-        state.running = true;
-        state.startAt = Date.now();
-        state.endAt = DURATION === null ? 0 : state.startAt + DURATION * 1000;
         state.pauseA = null;
         $("time").classList.remove("en-pause");
         // Lot « Les records » : pendant la course, le chrono MONTE, en
@@ -6688,11 +6746,78 @@
         renderFilSeance($("seance-fil"));
         majSortieJeu();
         show("play");
+        if (avecDecompte(state.configuration)) {
+          decompter(3);
+          return;
+        }
+        partir();
+      }
+
+      // Le chrono part avec la première question.
+      function partir() {
+        state.decompte = null;
+        $("validate").disabled = false;
+        state.running = true;
+        state.startAt = Date.now();
+        state.endAt = DURATION === null ? 0 : state.startAt + DURATION * 1000;
+        const course = state.configuration.course === "records";
         renderQuestion();
         // La première question est à l'écran : c'est elle qu'on mesure, une
         // fois pour toute la série (rien ne change de taille en cours de jeu).
         ajusterEchelle();
         if (DURATION !== null || course) state.timer = window.setInterval(updateTimer, 200);
+      }
+
+      // Lot « les règles des records » (11/10/2026, idée de Gwenaël) : avant
+      // la course des records et les marches de l'escalier (étoiles et
+      // couronne — la couronne donne le premier record), un décompte 3, 2, 1.
+      // Le chrono ne part qu'avec la première question : l'élève a déjà la
+      // main sur le pavé. Pendant le décompte, la question reste cachée, le
+      // pavé ne répond pas (state.running est faux) et le chrono est arrêté.
+      const DECOMPTE_MS = 800;
+
+      function avecDecompte(config) {
+        const classement = PARCOURS.classerSerie(parcours, config);
+        return Boolean(classement) && (classement.type === "etoile" || classement.type === "course");
+      }
+
+      function decompter(n) {
+        $("question-count").textContent = `1 / ${TOTAL}`;
+        $("progress").style.width = "0%";
+        $("answer-feedback").textContent = "";
+        $("answer-feedback").className = "answer-feedback";
+        const chiffre = document.createElement("span");
+        chiffre.className = "decompte";
+        chiffre.textContent = String(n);
+        $("expression").replaceChildren(chiffre);
+        if (n === 3) {
+          // Le pavé grisé dit « pas encore » ; partir() le rallume.
+          document.querySelectorAll("[data-key]").forEach(button => { button.disabled = true; });
+          $("skip").disabled = true;
+          $("validate").disabled = true;
+          renderLearnSequence();
+          ajusterEchelle();
+        }
+        state.decompte = window.setTimeout(() => (n > 1 ? decompter(n - 1) : partir()), DECOMPTE_MS);
+      }
+
+      // Correction de Claude Code (lot « les règles des records ») : la page
+      // quittée pendant le décompte puis rendue par « Précédent » (pagehide a
+      // tout arrêté) reprend son décompte à 3 — sans quoi il restait figé, le
+      // pavé grisé, et « Ma table » ne répondait plus.
+      function noterDecompteCoupe() {
+        state.decompteCoupe = Boolean(state.decompte);
+      }
+
+      function reprendreAuRetour() {
+        if (state.decompteCoupe) {
+          state.decompteCoupe = false;
+          if (!state.running && !$("play").hidden) decompter(3);
+          return;
+        }
+        if (!state.running) return;
+        updateTimer();
+        if (state.running && (state.configuration?.duration !== null || state.configuration?.course === "records") && state.timer === null) state.timer = window.setInterval(updateTimer, 200);
       }
 
       function start() {
@@ -6724,6 +6849,7 @@
         state.index = 0;
         state.correct = 0;
         state.answered = 0;
+        state.courseArretee = null;
         state.running = false;
         state.tenSecondAlert = false;
         state.waitingForContinue = false;
@@ -6799,13 +6925,15 @@
         // garde les cinq.
         const testDUneTable = config.mode === "validation" && config.tables.length === 1;
         const formes = testDUneTable ? ["produit", "trou", "division", "diviseur"] : ["produit", "trou", "division", "dividende", "diviseur"];
-        // Lot « Les records » (planche R3) : « Le chrono monte. Tout juste,
-        // sinon le temps ne compte pas. » puis « Ton record : 52,4 s ».
+        // Lot « Les records » (planche R3) : la règle de la course, puis « Ton
+        // record : 52,4 s ». Lot « les règles des records » (11/10/2026,
+        // planche 1, puis 3 erreurs = arrêt) : « Le chrono monte. Une erreur :
+        // la question reste. Trois sur le même calcul : la course s'arrête. »
         if (config.course === "records") {
           const ligne = document.createElement("p");
           const gras = document.createElement("b");
-          gras.textContent = "Tout juste";
-          ligne.append(document.createTextNode("Le chrono monte. "), gras, document.createTextNode(", sinon le temps ne compte pas."));
+          gras.textContent = "la question reste";
+          ligne.append(document.createTextNode("Le chrono monte. Une erreur\u00a0: "), gras, document.createTextNode(". Trois sur le même calcul\u00a0: la course s’arrête."));
           zone.append(ligne);
           const record = recordConnu();
           if (record.meilleur !== null) {
@@ -6904,7 +7032,7 @@
       }
 
       function returnToMenu() {
-        if (!state.running && !state.launchReady) return;
+        if (!state.running && !state.launchReady && !state.decompte) return;
         quitterSerie();
       }
 
@@ -6972,11 +7100,19 @@
           return;
         }
         const question = state.questions[state.index];
+        // Lot « les règles des records » (11/10/2026, décision de Gwenaël) :
+        // dans la course, une erreur ne fait plus perdre la course — la
+        // question reste, en rouge, jusqu'à la bonne réponse, et le chrono
+        // continue. La PREMIÈRE réponse est celle qu'on garde (la liste « Mes
+        // erreurs » du résultat, la grille Mes calculs) ; la bonne réponse
+        // trouvée ensuite compte dans les 25 justes.
+        const course = state.configuration.course === "records";
+        const reessai = course && Boolean(state.responses[state.index]);
         let correct = false;
         if (!skip) {
-          state.answered += 1;
+          if (!reessai) state.answered += 1;
           correct = Number(value) === question.answer;
-          state.responses[state.index] = {value: Number(value), correct, skipped: false};
+          if (!reessai) state.responses[state.index] = {value: Number(value), correct, skipped: false};
           if (correct) state.correct += 1;
         } else {
           state.responses[state.index] = {value: null, correct: false, skipped: true};
@@ -6986,7 +7122,14 @@
         // un calcul qui revient après une erreur vient d'être corrigé sous les
         // yeux de l'élève. J'apprends n'alimente jamais la grille (le filtre est
         // dans serieAlimenteGrille).
-        if (!question.retry) alimenterMesCalculs(question, correct && !skip);
+        if (!question.retry && !reessai) alimenterMesCalculs(question, correct && !skip);
+
+        if (course && !skip && !correct) {
+          state.essaisCourse = (state.essaisCourse || 0) + 1;
+          if (state.essaisCourse >= ERREURS_AVANT_ARRET) arreterCourse(question);
+          else essaieEncoreCourse();
+          return;
+        }
 
         if (state.configuration.mode === "revision") {
           if (!question.retry) {
@@ -7579,6 +7722,7 @@
         state.index = 0;
         state.correct = 0;
         state.answered = 0;
+        state.courseArretee = null;
         state.running = false;
         state.tenSecondAlert = false;
         state.waitingForContinue = false;
@@ -10298,6 +10442,7 @@
         event.preventDefault();
       });
       document.addEventListener("visibilitychange", updateTimer);
+      window.addEventListener("pagehide", noterDecompteCoupe);
       window.addEventListener("pagehide", stopTimer);
       window.addEventListener("pagehide", envoyerAvantDeFermer);
       document.addEventListener("visibilitychange", () => {
@@ -10307,11 +10452,7 @@
         // du jour » compte les calculs d'aujourd'hui.
         else if (document.visibilityState === "visible" && !$("intro").hidden && !$("mode-screen").hidden) renderAccueil();
       });
-      window.addEventListener("pageshow", () => {
-        if (!state.running) return;
-        updateTimer();
-        if (state.running && (state.configuration?.duration !== null || state.configuration?.course === "records") && state.timer === null) state.timer = window.setInterval(updateTimer, 200);
-      });
+      window.addEventListener("pageshow", reprendreAuRetour);
       if (new URLSearchParams(window.location.search).has("test")) {
         Object.defineProperty(window, "__MATHSGO_DEFI_TABLES_TEST__", {
           configurable: true,
