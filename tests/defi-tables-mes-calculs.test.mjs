@@ -547,7 +547,9 @@ test("le détail d’une case écrit le calcul dans les deux sens et empile ses 
 });
 
 test("seule la première réponse compte pour la grille ; un raté ne revient qu’une fois — et plus du tout dans Mes calculs du jour, chronométré", () => {
-  assert.match(html, /if \(!question\.retry\) alimenterMesCalculs\(question, correct && !skip\);/, "les calculs qui reviennent n’alimentent pas la grille");
+  // Lot « les règles des records » : la question qui reste dans la course
+  // (reessai) n'alimente pas la grille non plus.
+  assert.match(html, /if \(!question\.retry && !reessai\) alimenterMesCalculs\(question, correct && !skip\);/, "les calculs qui reviennent n’alimentent pas la grille");
   assert.match(html, /const chrono = state\.configuration\.duration !== null;/);
   assert.match(html, /const willRetry = !correct && !question\.retry && !chrono;/, "un calcul raté revient une seule fois par série de révision ; avec le chrono de Mes calculs du jour, il ne revient pas (il reviendra demain)");
   assert.match(html, /if \(chrono\) \{\s*state\.pauseA = Date\.now\(\);/, "le chrono s’arrête le temps de lire la correction");
