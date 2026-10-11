@@ -1614,8 +1614,8 @@ window.MATHSGO_CATALOGUE = {
       "id": "splat-comment-on-joue",
       "title": "Comment on joue ?",
       "description": "Présenter SPLAT! à la classe : le film, la vidéo ou le diaporama.",
-      "cardDescription": "Le film et le diaporama à projeter ou à télécharger.",
-      "thumbnail": "assets/img/thumbnails/splat/comment-on-joue.png?v=1",
+      "cardDescription": "Le film et le diaporama : à voir en ligne ou à télécharger.",
+      "thumbnail": "assets/img/thumbnails/splat/comment-on-joue.png?v=2",
       "hideCount": true,
       "group": "classe",
       "rang": 7,
@@ -1625,6 +1625,10 @@ window.MATHSGO_CATALOGUE = {
         "outils/splat_comment_on_joue.mp4": "La vidéo (MP4)",
         "outils/splat_comment_on_joue_diaporama.pdf": "Le diaporama (PDF)"
       },
+      "lignes": [
+        { "titre": "Le film", "voir": "outils/splat_intro.html", "telecharger": "outils/splat_comment_on_joue.mp4" },
+        { "titre": "Le diaporama", "voir": "outils/splat_diaporama.html", "telecharger": "outils/splat_comment_on_joue_diaporama.pdf" }
+      ],
       "paths": [
         "outils/splat_intro.html",
         "outils/splat_diaporama.html",

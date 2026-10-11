@@ -150,7 +150,9 @@ test("le diaporama en ligne : diapo par diapo, « Revoir le diaporama » et reto
   assert.match(diapo, /<button class="revoir" id="revoir" type="button">↺ Revoir le diaporama<\/button><a class="retour" href="\/outils\/\?domain=algebre&amp;collection=splat">‹ Retour à la page Splat<\/a>/);
   assert.match(code, /document\.getElementById\('revoir'\)\.onclick = \(\) => montrer\(0\);/);
   // un clic sur le bouton « Revoir » ne fait pas aussi avancer d'une diapo
-  assert.match(code, /if \(ev\.target\.closest\('a,button'\)\) return; montrer\(i \+ 1\);/);
+  assert.match(code, /addEventListener\('click', ev => \{ if \(ev\.target\.closest\('a,button'\)\) return;/);
+  // en plein écran (barre cachée), toucher le quart gauche de la diapo recule ; ailleurs, on avance (11/10/2026)
+  assert.match(code, /if \(document\.fullscreenElement && ev\.clientX < r\.left \+ r\.width \/ 4\) \{ montrer\(i - 1\); return; \}\n\s*montrer\(i \+ 1\); \}\);/);
   // les images de Steve Wyborney ne sont pas sous la licence du site, comme au pied du PDF
   assert.match(diapo, /images extraites de ses diaporamas, hors licence du site/);
   // ◀ et ▶ suivis de U+FE0E (sinon l'iPhone les dessine en émoji)
@@ -161,4 +163,19 @@ test("le diaporama en ligne : diapo par diapo, « Revoir le diaporama » et reto
   // F marche aussi quand le focus est resté sur « Suivant » ou ⛶ : elle passe avant le retour sur les boutons
   const touches = code.slice(code.indexOf("addEventListener('keydown'"));
   assert.ok(touches.indexOf("pleinEcran(); return;") < touches.indexOf("closest('a,button')) return;"));
+});
+
+/* « Le nombre de jetons cachés », pas « invisibles » : les jetons sont sous la tache, et c'est le mot du jeu et des
+   livrets ; « Jeu SPLAT! » dans les crédits, comme le nom de l'univers (choix de Gwenaël, 11/10/2026) */
+test("film et diaporama : « jetons cachés » et « Jeu SPLAT! »", () => {
+  const diapo = lire("outils/splat_diaporama.html"), source = lire("_sources/splat-comment-on-joue/diaporama.html");
+  for (const [nom, t] of [["film", page], ["diaporama", diapo], ["source du PDF", source]]) {
+    assert.doesNotMatch(t, /jetons <b>invisibles|'invisibles'/, nom);
+  }
+  assert.match(page, /\['#cbd5e1',ENCRE,'cachés'\]/);
+  assert.equal((diapo.match(/Le nombre de jetons <b>cachés<\/b>/g) || []).length, 4);
+  assert.equal((source.match(/Le nombre de jetons <b>cachés<\/b>/g) || []).length, 4);
+  assert.equal((page.match(/credit:'Jeu SPLAT! créé par/g) || []).length, 4);
+  assert.doesNotMatch(page, /Jeu Splat!/);
+  assert.match(diapo, /Jeu SPLAT! créé par/);
 });

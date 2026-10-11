@@ -1,15 +1,13 @@
 # « Comment on joue ? » — la vidéo et le diaporama de SPLAT! à télécharger
 
 La carte « Comment on joue ? » de la page Splat du catalogue (section « Pour la classe »,
-11/10/2026) propose quatre façons de présenter le jeu à la classe. La vidéo et le PDF s'ouvrent dans un
-nouvel onglet : on regarde, puis on télécharge avec le bouton du navigateur.
+11/10/2026) présente le jeu à la classe de deux façons, le film et le diaporama, chacun à voir en ligne
+(« ▶ Voir ») ou à télécharger (« ⬇ Télécharger »).
 
-| Variante | Fichier publié | Fabriqué par |
+| Ligne de la carte | « Voir » | « Télécharger » (fabriqué par) |
 |---|---|---|
-| Voir le film en ligne | `outils/splat_intro.html` (le film animé, en ligne depuis la PR #961) | — |
-| Le diaporama en ligne | `outils/splat_diaporama.html` (l'ancien diaporama, voir plus bas) | — |
-| La vidéo (MP4) | `outils/splat_comment_on_joue.mp4` | `render_video.py` |
-| Le diaporama (PDF) | `outils/splat_comment_on_joue_diaporama.pdf` | `render_diaporama.py` |
+| Le film | `outils/splat_intro.html` (le film animé, en ligne depuis la PR #961) | `outils/splat_comment_on_joue.mp4` (`render_video.py`) |
+| Le diaporama | `outils/splat_diaporama.html` (l'ancien diaporama, voir plus bas) | `outils/splat_comment_on_joue_diaporama.pdf` (`render_diaporama.py`) |
 
 et la miniature de la carte, `assets/img/thumbnails/splat/comment-on-joue.png` / `.webp`, par `miniature.py`.
 
@@ -31,7 +29,8 @@ le prof met pause s'il veut laisser chercher plus longtemps. Sur l'écran de fin
 ## Le diaporama
 
 `diaporama.html` est le diaporama d'introduction tel qu'il était en ligne du 26/08 au 10/10/2026
-(`outils/splat_intro.html` juste avant la PR #961), gardé tel quel. Le PDF : 10 pages 4:3, ouverture en
+(`outils/splat_intro.html` juste avant la PR #961), gardé tel quel à un mot près : « jetons **cachés** » au lieu de
+« jetons invisibles » (11/10/2026, comme dans le film, le jeu et les livrets). Le PDF : 10 pages 4:3, ouverture en
 plein écran et fondu entre les pages (comme le PDF donné à Claire le 27/08/2026). Seules différences
 avec l'écran : la diapo « SPLAT ! » donne deux pages (le mot, puis la tache tombée), le bouton « Je joue ▶ »
 mène à l'univers SPLAT! en ligne, et chaque page porte en pied la ligne de crédit de la page, complétée.
@@ -52,5 +51,8 @@ la page Splat » (`F.boutonsFin` dans `splat_intro.html`). Tous les liens de la 
 `outils/splat_diaporama.html` est `diaporama.html` (ci-dessus) remis en ligne pour s'ouvrir directement diapo
 par diapo, avec les mêmes différences : plus de « Passer l'intro » ni de « Je joue ▶ », mais « ↺ Revoir le
 diaporama » et « ‹ Retour à la page Splat » sur la dernière diapo ; crédit « hors licence du site » comme au
-pied du PDF ; plein écran au bouton ⛶ ou à la touche F (bouton caché sur iPhone, qui ne sait pas le faire).
-Le PDF, lui, n'a pas changé.
+pied du PDF ; plein écran au bouton ⛶ ou à la touche F (bouton caché sur iPhone, qui ne sait pas le faire) ;
+en plein écran, toucher le quart gauche de la diapo revient en arrière.
+
+Sur la carte, une ligne par contenu (« lignes » de la famille dans le catalogue) : « Le film » et « Le diaporama »,
+chacun avec « ▶ Voir » (la page en ligne) et « ⬇ Télécharger » (le fichier, attribut `download`).

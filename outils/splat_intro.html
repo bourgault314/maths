@@ -313,7 +313,7 @@ const film={
   /* arrêts aux questions : le film s'arrête, les élèves cherchent, on relance */
   stops:[{t:T.arret1},{t:T.arret2},{t:T.arret3}],
   modes:{paysage:{w:1600,h:900},portrait:{w:900,h:1200}},
-  passer:SUITE, credit:'Jeu Splat! créé par <a href="https://stevewyborney.com" target="_blank" rel="noopener">Steve Wyborney</a>',
+  passer:SUITE, credit:'Jeu SPLAT! créé par <a href="https://stevewyborney.com" target="_blank" rel="noopener">Steve Wyborney</a>',
   chapters:[{t:0,name:'SPLAT!'},{t:3.3,name:'Compter les jetons'},{t:10.6,name:'La tache tombe'},{t:15.5,name:'Le schéma en barres'},
     {t:23.0,name:'Remplir le schéma'},{t:30.6,name:'Répondre'},{t:32.6,name:'Vérifier sous la tache'},{t:40.0,name:'À toi de jouer'}],
   build(svg,mode){
@@ -361,7 +361,8 @@ const film={
     o.v8=val((S.xd+S.x1)/2,(S.ym+S.y2)/2,ENCRE);o.v8.textContent='8';
 
     /* étiquettes et flèches (les mêmes mots que le diaporama d'introduction) */
-    const textes=[['#fde68a',ENCRE,'en tout'],[BLEU,'#ffffff','visibles'],['#cbd5e1',ENCRE,'invisibles']];
+    /* « cachés », pas « invisibles » : les jetons sont SOUS la tache, et c'est le mot du jeu et des livrets (choix de Gwenaël, 11/10/2026) */
+    const textes=[['#fde68a',ENCRE,'en tout'],[BLEU,'#ffffff','visibles'],['#cbd5e1',ENCRE,'cachés']];
     o.tags=Y.tags.map((d,k)=>{
       const g=E('g',{},o.schema);const r=E('rect',{rx:12,fill:textes[k][0]},g);
       const tx=E('text',{x:d.cx,y:d.cy+Y.tag*.43,'text-anchor':'middle','font-size':Y.tag,'font-weight':600,fill:textes[k][1]},g);
@@ -864,7 +865,7 @@ const posBille=(b,t)=>{if(!b.p1||t<=b.tg)return b.p0;const u=F.io(F.clamp((t-b.t
 const film={
   duration:35.4, poster:2.4, stops:[],
   modes:{paysage:{w:1600,h:900},portrait:{w:900,h:1600}},
-  passer:SUITE, passerTexte:'Passer le film ›', credit:'Jeu Splat! créé par <a href="https://stevewyborney.com" target="_blank" rel="noopener">Steve Wyborney</a>',
+  passer:SUITE, passerTexte:'Passer le film ›', credit:'Jeu SPLAT! créé par <a href="https://stevewyborney.com" target="_blank" rel="noopener">Steve Wyborney</a>',
   aria:'Film : comment on joue dans ÉquaSplat avec des billes, enlever la même quantité des deux côtés puis faire des paquets',
   titre:'Comment on joue ? ÉquaSplat — maths&go',
   chapters:[{t:0,name:'SPLAT! Équations'},{t:2.7,name:'Le plateau'},{t:4.7,name:'Ranger les jetons'},{t:9.9,name:'Enlever des deux côtés'},
@@ -1103,7 +1104,7 @@ function fenetre(Y,p,spec,port){
 const film={
   duration:38.9, poster:2.4, stops:[],
   modes:{paysage:{w:1600,h:900},portrait:{w:900,h:1600}},
-  passer:SUITE, passerTexte:'Passer le film ›', credit:'Jeu Splat! créé par <a href="https://stevewyborney.com" target="_blank" rel="noopener">Steve Wyborney</a>',
+  passer:SUITE, passerTexte:'Passer le film ›', credit:'Jeu SPLAT! créé par <a href="https://stevewyborney.com" target="_blank" rel="noopener">Steve Wyborney</a>',
   aria:'Film : comment on joue dans ÉquaSplat avec des jetons numérotés : regrouper (avec le bouton, ou en glissant un jeton sur un autre), décomposer, enlever des deux côtés et partager',
   titre:'Avec des jetons numérotés — ÉquaSplat — maths&go',
   chapters:[{t:0,name:'SPLAT! Équations'},{t:2.7,name:'Le plateau'},{t:4.6,name:'Regrouper'},{t:10.0,name:'Décomposer'},{t:14.8,name:'Enlever des deux côtés'},
@@ -1486,7 +1487,7 @@ const RETIRE=[[null,null,null,null,null,null,T.retire],[]];
 const film={
   duration:36.0, poster:2.4, stops:[],
   modes:{paysage:{w:1600,h:900},portrait:{w:900,h:1600}},
-  passer:SUITE, passerTexte:'Passer le film ›', credit:'Jeu Splat! créé par <a href="https://stevewyborney.com" target="_blank" rel="noopener">Steve Wyborney</a>',
+  passer:SUITE, passerTexte:'Passer le film ›', credit:'Jeu SPLAT! créé par <a href="https://stevewyborney.com" target="_blank" rel="noopener">Steve Wyborney</a>',
   aria:'Film : comment on joue à «\u00a0Dessine les jetons\u00a0» dans Petit SPLAT! : poser les jetons sur la carte, en retirer un, compléter le schéma, valider',
   titre:'Dessine les jetons — Petit SPLAT! — maths&go',
   chapters:[{t:0,name:'SPLAT!'},{t:2.7,name:'Le schéma est donné'},{t:5.0,name:'Poser les jetons'},{t:9.4,name:'Enlever un jeton'},

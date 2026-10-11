@@ -1286,10 +1286,29 @@
         <span class="resource-copy"><h3>${escapeHtml(family.title)}</h3>${thumbnail ? `<span class="resource-description">${escapeHtml(versionLabel ? `${versionLabel} · ${description}` : description)}</span>` : `<span class="resource-meta">${escapeHtml(versionLabel ? `${versionLabel} · ${description}` : description)}</span>`}${usages ? `<span class="resource-meta resource-uses">${escapeHtml(usages)}</span>` : ""}</span>
         <span class="resource-family-toggle" aria-hidden="true">⌄</span>
       </summary>
-      <div class="resource-variants" aria-label="${escapeHtml(`Versions de ${family.title}`)}">
+      ${family.lignes ? familyRows(family, variants) : `<div class="resource-variants" aria-label="${escapeHtml(`Versions de ${family.title}`)}">
         ${variants.map((resource) => `<a ${resourceLinkAttributes(resource)}><span>${escapeHtml(variantLabel(resource, family))}</span><span aria-hidden="true">→</span></a>`).join("")}
-      </div>
+      </div>`}
     </details>`;
+  }
+
+  // « lignes » : une ligne par contenu, avec « Voir » (la page en ligne) et « Télécharger » (le fichier), au lieu
+  // d'une liste de liens qui se ressemblent tous (« Comment on joue ? » : le film et le diaporama, 11/10/2026).
+  // « Télécharger » enregistre le fichier (attribut download) au lieu de l'ouvrir.
+  const ICONE_VOIR = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a.8.8 0 0 0 1.2.7l10.4-6.5a.8.8 0 0 0 0-1.4L9.2 4.8A.8.8 0 0 0 8 5.5z" fill="currentColor"/></svg>`;
+  const ICONE_TELECHARGER = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  function familyRows(family, variants) {
+    const parChemin = new Map(variants.map((resource) => [resource.path, resource]));
+    const lignes = family.lignes
+      .map((ligne) => ({ ligne, voir: parChemin.get(ligne.voir), fichier: parChemin.get(ligne.telecharger) }))
+      .filter(({ voir, fichier }) => voir || fichier);
+    return `<div class="resource-variants resource-variant-rows" aria-label="${escapeHtml(family.title)}">
+        ${lignes.map(({ ligne, voir, fichier }) => `<div class="resource-variant-row">
+          <span class="resource-variant-row-title">${escapeHtml(ligne.titre)}</span>
+          <span class="resource-variant-row-actions">${voir ? `<a class="resource-variant-action" ${resourceLinkAttributes(voir)} aria-label="${escapeHtml(`Voir ${ligne.titre.toLowerCase()}`)}">${ICONE_VOIR}<span>Voir</span></a>` : ""}
+          ${fichier ? `<a class="resource-variant-action" href="${escapeHtml(rootPrefix + fichier.path)}" download aria-label="${escapeHtml(`Télécharger ${ligne.titre.toLowerCase()}`)}">${ICONE_TELECHARGER}<span>Télécharger</span></a>` : ""}</span>
+        </div>`).join("")}
+      </div>`;
   }
 
   function collectionResourceCard(collection) {
@@ -1533,6 +1552,52 @@
 
   notionGrid.addEventListener("click", openNotionOrCollection);
   resourceGrid.addEventListener("click", openNotionOrCollection);
+
+  // Une famille dépliée grandit seule (11/10/2026). La grille étire chaque carte à la hauteur de la plus
+  // haute de sa rangée : déplier « Comment on joue ? » agrandissait aussi « Les livrets SPLAT! » à côté.
+  // Les cartes de la rangée gardent leur hauteur de carte fermée ; les autres rangées ne bougent pas.
+  function hauteurFermee(carte) {
+    const variantes = carte.open && carte.querySelector(".resource-variants");
+    if (!variantes) return carte.getBoundingClientRect().height;
+    variantes.style.display = "none";
+    const hauteur = carte.getBoundingClientRect().height;
+    variantes.style.display = "";
+    return hauteur;
+  }
+
+  function caleRangeesDesFamilles() {
+    resourceGrid.querySelectorAll(".resource-group-grid").forEach((grille) => {
+      const cartes = [...grille.children];
+      cartes.forEach((carte) => { carte.style.alignSelf = ""; carte.style.minHeight = ""; });
+      if (!grille.querySelector(":scope > .resource-family-card[open]")) return;
+      cartes.forEach((carte) => { carte.style.alignSelf = "start"; });
+      const rangees = new Map();
+      cartes.forEach((carte) => {
+        const haut = Math.round(carte.offsetTop);
+        if (!rangees.has(haut)) rangees.set(haut, []);
+        rangees.get(haut).push(carte);
+      });
+      rangees.forEach((rangee) => {
+        if (!rangee.some((carte) => carte.matches(".resource-family-card[open]"))) {
+          rangee.forEach((carte) => { carte.style.alignSelf = ""; });
+          return;
+        }
+        const hauteur = Math.max(...rangee.map(hauteurFermee));
+        rangee.forEach((carte) => { if (!carte.open) carte.style.minHeight = `${hauteur}px`; });
+      });
+    });
+  }
+
+  // « toggle » ne remonte pas : on l'écoute à la capture
+  resourceGrid.addEventListener("toggle", (event) => {
+    if (event.target.matches?.(".resource-family-card")) caleRangeesDesFamilles();
+  }, true);
+  let calageEnAttente = false;
+  window.addEventListener("resize", () => {
+    if (calageEnAttente) return;
+    calageEnAttente = true;
+    requestAnimationFrame(() => { calageEnAttente = false; caleRangeesDesFamilles(); });
+  });
 
   resourceGrid.addEventListener("click", (event) => {
     const link = event.target.closest("[data-short-game]");
