@@ -1486,7 +1486,7 @@ function majAffichage(){
   if(cont&&!PROF){
     cont.hidden=!prochaine||!!(SUIVI&&SUIVI.attente());
     if(prochaine){ const a=document.getElementById("continuerLien");
-      a.href=prochaine.e.j; a.dataset.monde=prochaine.mi; a.innerHTML="\u25b6 Continuer <small>\u00b7 \u00e9tape "+prochaine.n+", "+prochaine.e.t+"</small>"; }
+      a.href=versEtape(prochaine.e); a.dataset.monde=prochaine.mi; a.innerHTML="\u25b6 Continuer <small>\u00b7 \u00e9tape "+prochaine.n+", "+prochaine.e.t+"</small>"; }
   }
   return prochaine;
 }
@@ -1659,6 +1659,12 @@ if (PROF) {
    (« Étape suivante ▶ » = /outils/splat_univers.html?apres=m1e1), sans avoir à
    connaître l'adresse du jeu suivant. Dernière étape, ou parcours inconnu : la carte
    s'affiche normalement, ouverte sur le monde en cours. */
+/* Quand on SUIT le parcours (« Étape suivante ▶ » des outils, par ?apres= ci-dessous, et « Continuer »),
+   une étape qui a un film passe d'abord par son film (11/10/2026, choix de Gwenaël : un élève qui
+   enchaînait sur « Dessine les jetons » ne voyait même pas qu'il y avait un film). Le film s'ouvre sur
+   son image de titre, rien ne se lance tout seul ; « Passer le film › » et « Je joue ▶ » mènent au jeu.
+   Seul le premier film de l'étape est sur le chemin ; tous restent sous l'étape, sur la carte. */
+function versEtape(e){return e.films&&e.films.length?'/outils/splat_intro.html?film='+e.films[0][0]+'&suite='+encodeURIComponent(e.j):e.j;}
 let APRES_REDIRIGE=false; /* la carte part aussitôt : le suivi n'a pas à démarrer ici */
 (function(){
   const apres=new URLSearchParams(window.location.search).get("apres");
@@ -1685,7 +1691,7 @@ let APRES_REDIRIGE=false; /* la carte part aussitôt : le suivi n'a pas à déma
     /* au retour sur la carte, c'est le monde de l'étape suivante qui s'ouvrira */
     retenirMonde(MONDES.findIndex(m=>m.actif&&m.etapes.includes(suite[k+1])));
     APRES_REDIRIGE=true;
-    window.location.replace(suite[k+1].j);
+    window.location.replace(versEtape(suite[k+1]));
   }
 })();
 /* Les mondes fermés à la classe : la classe « verrouille » sur leur section, et — s'ils ont

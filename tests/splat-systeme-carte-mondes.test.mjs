@@ -189,7 +189,7 @@ test("Continuer : la première étoile à gagner, dans l'ordre de l'univers, abs
   assert.match(univers, /else if\(!prochaine&&e\.j&&!m\.verrouille\) prochaine=\{m,mi,e,n:li\.querySelector\("\.n"\)\.textContent\};/);
   /* lot 2 du suivi (08/10/2026) : caché aussi tant que le billet de l'élève n'est pas échangé */
   assert.match(univers, /if\(cont&&!PROF\)\{\s*cont\.hidden=!prochaine\|\|!!\(SUIVI&&SUIVI\.attente\(\)\);/);
-  assert.match(univers, /a\.href=prochaine\.e\.j; a\.dataset\.monde=prochaine\.mi; a\.innerHTML="\\u25b6 Continuer <small>\\u00b7 \\u00e9tape "\+prochaine\.n\+", "\+prochaine\.e\.t\+"<\/small>";/);
+  assert.match(univers, /a\.href=versEtape\(prochaine\.e\); a\.dataset\.monde=prochaine\.mi; a\.innerHTML="\\u25b6 Continuer <small>\\u00b7 \\u00e9tape "\+prochaine\.n\+", "\+prochaine\.e\.t\+"<\/small>";/);
   /* toutes les étapes actives ont un lien de jeu : « Continuer » ne saute jamais une étape */
   MONDES.filter((m) => m.actif).forEach((m) => m.etapes.forEach((e) => assert.ok(e.j, `${m.nom} : ${e.t}`)));
 });
@@ -199,7 +199,7 @@ test("?apres=<parcours> : la carte renvoie au jeu de l'étape suivante, sans rie
   assert.match(univers, /const apres=new URLSearchParams\(window\.location\.search\)\.get\("apres"\);\s*if\(!apres\|\|PROF\) return;/);
   /* (26/09/2026) sans la clé, les mondes en préparation sont sautés ; venu d'un QR dans l'un
      d'eux, on continue dans ce monde (tests/splat-mondes-en-preparation.test.mjs) */
-  assert.match(univers, /const suite=ici&&ici\.cache\?ici\.etapes:MONDES\.flatMap\(m=>jouable\(m\)\?m\.etapes:\[\]\);\s*const k=suite\.findIndex\(e=>e\.p===apres\);\s*if\(k>=0&&k\+1<suite\.length&&suite\[k\+1\]\.j\)\{[\s\S]{0,160}retenirMonde\(MONDES\.findIndex\(m=>m\.actif&&m\.etapes\.includes\(suite\[k\+1\]\)\)\);\s*APRES_REDIRIGE=true;\s*window\.location\.replace\(suite\[k\+1\]\.j\);/);
+  assert.match(univers, /const suite=ici&&ici\.cache\?ici\.etapes:MONDES\.flatMap\(m=>jouable\(m\)\?m\.etapes:\[\]\);\s*const k=suite\.findIndex\(e=>e\.p===apres\);\s*if\(k>=0&&k\+1<suite\.length&&suite\[k\+1\]\.j\)\{[\s\S]{0,160}retenirMonde\(MONDES\.findIndex\(m=>m\.actif&&m\.etapes\.includes\(suite\[k\+1\]\)\)\);\s*APRES_REDIRIGE=true;\s*window\.location\.replace\(versEtape\(suite\[k\+1\]\)\);/);
   /* on refait le calcul (avec la clé : tous les mondes) : après la dernière fiche de l'Enquête
      vient la première du Système */
   const suite = MONDES.flatMap((m) => (m.actif ? m.etapes : []));

@@ -63,6 +63,31 @@ test("« Dessine les jetons » : deux cartes hors des séries des étapes 1 à 3
   }
 });
 
+test("en suivant le parcours (« Étape suivante » par ?apres=, « Continuer »), une étape qui a un film passe d'abord par son film", () => {
+  const def = carte.match(/function versEtape\(e\)\{return [^\n]*\}/);
+  assert.ok(def, "versEtape doit exister sur la carte des mondes");
+  const versEtape = new Function(`${def[0]}; return versEtape;`)();
+  const jeu = "/outils/splat_tache_barre.html?support=eleve&parcours=m1e2";
+  assert.equal(versEtape({ j: jeu, films: [["dessine", "Comment on joue ?"]] }),
+    "/outils/splat_intro.html?film=dessine&suite=" + encodeURIComponent(jeu));
+  // le premier film seulement (étape 35 : les billes) ; sans film, le jeu
+  assert.match(versEtape({ j: "/outils/equasplat.html#data=x", films: [["equasplat", "a"], ["equasplat-jetons", "b"]] }), /\?film=equasplat&suite=%2Foutils%2Fequasplat\.html%23data%3Dx$/);
+  assert.equal(versEtape({ j: jeu }), jeu);
+  assert.equal(versEtape({ j: jeu, films: [] }), jeu);
+  // les deux portes du parcours s'en servent
+  assert.match(carte, /APRES_REDIRIGE=true;\s*window\.location\.replace\(versEtape\(suite\[k\+1\]\)\);/);
+  assert.match(carte, /a\.href=versEtape\(prochaine\.e\); a\.dataset\.monde=prochaine\.mi;/);
+  // le film d'une étape propose « Passer le film › », bien visible ; l'introduction garde « Passer l'intro › »
+  const blocs = page.split("<script>").slice(1).map((b) => b.split("</script>")[0]);
+  for (const nom of ["FILMS.equasplat=", "FILMS['equasplat-jetons']=", "FILMS.dessine="]) {
+    assert.ok(blocs.find((b) => b.includes(nom)).includes("passerTexte:'Passer le film ›'"), nom);
+  }
+  assert.ok(!blocs.find((b) => b.includes("FILMS.intro=film;")).includes("passerTexte"));
+  assert.match(page, /<a class="lien passer" id="passer" href="#" hidden>Passer l’intro ›<\/a>/);
+  assert.match(page, /if\(film\.passerTexte\)\$\('passer'\)\.textContent=film\.passerTexte;/);
+  assert.match(page, /\.passer\{color:var\(--accent\);background:var\(--accent-soft\);border-radius:999px;/);
+});
+
 test("le caractère ▶ est toujours suivi de U+FE0E (sinon l'iPhone le dessine en émoji)", () => {
   const texte = sansCommentaires(page);
   const mauvais = [...texte.matchAll(/▶(?!︎|&#xFE0E;)/g)].map((m) => texte.slice(m.index - 20, m.index + 5));

@@ -28,6 +28,8 @@
   --line:#c6d1df;
   --accent:#2563eb;
   --accent-ink:#ffffff;
+  --accent-soft:#dbeafe;
+  --accent-soft-hover:#bfdbfe;
   --rail:#cfd8e4;
   --paper:#ffffff;
   --ui:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
@@ -55,7 +57,10 @@ body{background:var(--page);color:var(--ink);font-family:var(--ui)}
 .lien svg{width:16px;height:16px}
 .lien:hover{color:var(--accent)}
 .lien:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
-.passer{color:var(--accent);font-weight:800;margin-left:auto}
+/* « Passer le film › » : une pastille, pas un lien gris — l'élève qui arrive par « Étape suivante »
+   doit voir qu'il peut aller jouer tout de suite (11/10/2026) */
+.passer{color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:9px 18px;font-size:16px;font-weight:800;margin-left:auto}
+.passer:hover{color:var(--accent);background:var(--accent-soft-hover)}
 .credit{flex:1 1 auto;font-size:12px;color:var(--muted);text-align:center}
 .credit a{color:var(--accent)}
 .player.fs{position:fixed;inset:0;z-index:10;max-width:none;background:var(--page);justify-content:center;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));box-sizing:border-box}
@@ -152,7 +157,7 @@ function lancerLecteur(film){
   if(film.aria)svg.setAttribute('aria-label',film.aria);
   if(film.titre)document.title=film.titre;
   construire();
-  if(film.passer){$('passer').href=film.passer;$('passer').hidden=false;}
+  if(film.passer){$('passer').href=film.passer;$('passer').hidden=false;if(film.passerTexte)$('passer').textContent=film.passerTexte;}
   if(film.credit){$('credit').innerHTML=film.credit;$('credit').hidden=false;}
   const D=film.duration,C=film.chapters;
   let t=0,playing=false,last=null,fresh=true,enArret=false;
@@ -836,7 +841,7 @@ const posBille=(b,t)=>{if(!b.p1||t<=b.tg)return b.p0;const u=F.io(F.clamp((t-b.t
 const film={
   duration:35.4, poster:2.4, stops:[],
   modes:{paysage:{w:1600,h:900},portrait:{w:900,h:1600}},
-  passer:SUITE, credit:'Jeu Splat! créé par <a href="https://stevewyborney.com" target="_blank" rel="noopener">Steve Wyborney</a>',
+  passer:SUITE, passerTexte:'Passer le film ›', credit:'Jeu Splat! créé par <a href="https://stevewyborney.com" target="_blank" rel="noopener">Steve Wyborney</a>',
   aria:'Film : comment on joue dans ÉquaSplat avec des billes, enlever la même quantité des deux côtés puis faire des paquets',
   titre:'Comment on joue ? ÉquaSplat — maths&go',
   chapters:[{t:0,name:'SPLAT! Équations'},{t:2.7,name:'Le plateau'},{t:4.7,name:'Ranger les jetons'},{t:9.9,name:'Enlever des deux côtés'},
@@ -1075,7 +1080,7 @@ function fenetre(Y,p,spec,port){
 const film={
   duration:38.9, poster:2.4, stops:[],
   modes:{paysage:{w:1600,h:900},portrait:{w:900,h:1600}},
-  passer:SUITE, credit:'Jeu Splat! créé par <a href="https://stevewyborney.com" target="_blank" rel="noopener">Steve Wyborney</a>',
+  passer:SUITE, passerTexte:'Passer le film ›', credit:'Jeu Splat! créé par <a href="https://stevewyborney.com" target="_blank" rel="noopener">Steve Wyborney</a>',
   aria:'Film : comment on joue dans ÉquaSplat avec des jetons numérotés : regrouper (avec le bouton, ou en glissant un jeton sur un autre), décomposer, enlever des deux côtés et partager',
   titre:'Avec des jetons numérotés — ÉquaSplat — maths&go',
   chapters:[{t:0,name:'SPLAT! Équations'},{t:2.7,name:'Le plateau'},{t:4.6,name:'Regrouper'},{t:10.0,name:'Décomposer'},{t:14.8,name:'Enlever des deux côtés'},
@@ -1461,7 +1466,7 @@ const RETIRE=[[null,null,null,null,null,null,T.retire],[]];
 const film={
   duration:36.0, poster:2.4, stops:[],
   modes:{paysage:{w:1600,h:900},portrait:{w:900,h:1600}},
-  passer:SUITE, credit:'Jeu Splat! créé par <a href="https://stevewyborney.com" target="_blank" rel="noopener">Steve Wyborney</a>',
+  passer:SUITE, passerTexte:'Passer le film ›', credit:'Jeu Splat! créé par <a href="https://stevewyborney.com" target="_blank" rel="noopener">Steve Wyborney</a>',
   aria:'Film : comment on joue à «\u00a0Dessine les jetons\u00a0» dans Petit SPLAT! : poser les jetons sur la carte, en retirer un, compléter le schéma, valider',
   titre:'Dessine les jetons — Petit SPLAT! — maths&go',
   chapters:[{t:0,name:'SPLAT!'},{t:2.7,name:'Le schéma est donné'},{t:5.0,name:'Poser les jetons'},{t:9.4,name:'Enlever un jeton'},
