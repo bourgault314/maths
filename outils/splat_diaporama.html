@@ -185,10 +185,11 @@
   document.addEventListener('keydown', ev => {
     if (ev.key === 'ArrowRight') { ev.preventDefault(); montrer(i + 1); return; }
     if (ev.key === 'ArrowLeft')  { ev.preventDefault(); montrer(i - 1); return; }
+    /* F seule, même juste après un clic sur « Suivant » ou ⛶ ; pas Ctrl+F (chercher dans la page) */
+    if ((ev.key === 'f' || ev.key === 'F') && !ev.ctrlKey && !ev.metaKey && !ev.altKey) { pleinEcran(); return; }
     /* sur un bouton ou un lien, Entrée et Espace appartiennent à ce bouton ou à ce lien */
     if (ev.target && ev.target.closest && ev.target.closest('a,button')) return;
-    if (ev.key === ' ' || ev.key === 'Enter') { ev.preventDefault(); montrer(i + 1); return; }
-    if (ev.key === 'f' || ev.key === 'F') pleinEcran();
+    if (ev.key === ' ' || ev.key === 'Enter') { ev.preventDefault(); montrer(i + 1); }
   });
   /* plein écran : bouton ⛶ ou touche F ; l'iPhone ne sait pas le faire, on n'y montre pas le bouton */
   function pleinEcran(){ const el = document.documentElement; if (document.fullscreenElement) document.exitFullscreen(); else if (el.requestFullscreen) el.requestFullscreen().catch(() => {}); }

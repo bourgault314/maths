@@ -157,5 +157,8 @@ test("le diaporama en ligne : diapo par diapo, « Revoir le diaporama » et reto
   assert.deepEqual([...code.matchAll(/[◀▶](?!︎|&#xFE0E;)/g)].map((m) => code.slice(m.index - 15, m.index + 3)), []);
   // plein écran au bouton ou à la touche F ; pas de bouton là où le navigateur ne sait pas (iPhone)
   assert.match(code, /if \(!document\.fullscreenEnabled\) document\.getElementById\('plein'\)\.hidden = true;/);
-  assert.match(code, /if \(ev\.key === 'f' \|\| ev\.key === 'F'\) pleinEcran\(\);/);
+  assert.match(code, /if \(\(ev\.key === 'f' \|\| ev\.key === 'F'\) && !ev\.ctrlKey && !ev\.metaKey && !ev\.altKey\) \{ pleinEcran\(\); return; \}/);
+  // F marche aussi quand le focus est resté sur « Suivant » ou ⛶ : elle passe avant le retour sur les boutons
+  const touches = code.slice(code.indexOf("addEventListener('keydown'"));
+  assert.ok(touches.indexOf("pleinEcran(); return;") < touches.indexOf("closest('a,button')) return;"));
 });
