@@ -383,7 +383,8 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261009-3"><\/script>/);
   assert.match(html, /<script src="\.\/defi_tables_core\.js\?v=20261010-1"><\/script>/, "le noyau n'a pas bougé");
   assert.equal(lire("_serveur/public/prof/defi_tables_mon_parcours.js"), lire("outils/calcul_mental/defi_tables_mon_parcours.js"));
-  assert.match(lire("_serveur/public/VERSION"), /^lot defi-tables-tirage$/m);
+  // Lot « records-depart » (11/10/2026) : lib/records.php et verifier.php changent (avant : defi-tables-tirage).
+  assert.match(lire("_serveur/public/VERSION"), /^lot defi-tables-records-depart$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=defi-tables-paliers-20261009-1/);
 });

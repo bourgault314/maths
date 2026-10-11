@@ -48,12 +48,37 @@ const RECORDS_TOP = 10;
 // écriture que meilleur_le (instant_precis) : les deux se comparent comme
 // des chaînes. config.php peut la remplacer (« records_depuis ») — seuls les
 // tests s'en servent, le serveur garde la constante.
-const RECORDS_DEPUIS = '2026-10-09T20:00:00.000000Z'; // le 10/10/2026 à 0 h, heure de La Réunion
+//
+// Correction du 11/10/2026 (lot « records-depart ») : la date était le
+// 10/10 à 0 h, mais le nouveau tirage n'est arrivé en ligne que le 10/10 au
+// soir (fusion à 19 h 23, puis quelques minutes de publication du site). Les
+// courses du samedi entre 0 h et 19 h 23, courues avec l'ANCIEN tirage,
+// comptaient donc encore. Le départ est maintenant le 10/10 à 20 h (heure de
+// La Réunion), juste après la mise en ligne. Comme avant, rien n'est effacé.
+const RECORDS_DEPUIS = '2026-10-10T16:00:00.000000Z'; // le 10/10/2026 à 20 h, heure de La Réunion
 
 function records_depuis(): string
 {
     $valeur = config()['records_depuis'] ?? null;
     return is_string($valeur) ? $valeur : RECORDS_DEPUIS;
+}
+
+// Les temps gardés en base, comptés : ceux de la saison en cours (faits
+// depuis records_depuis()) et les plus anciens, qui ne comptent plus mais ne
+// sont pas effacés. Pour verifier.php : sans ce partage, la ligne « Les
+// records » comptait les anciens temps avec les nouveaux, et on pouvait
+// croire que la remise à zéro n'avait pas marché.
+function compter_temps_par_saison(PDO $pdo): array
+{
+    $requete = $pdo->prepare('SELECT
+        SUM(CASE WHEN meilleur_le >= ? THEN 1 ELSE 0 END) AS saison,
+        SUM(CASE WHEN meilleur_le >= ? THEN 0 ELSE 1 END) AS anciens
+        FROM records WHERE meilleur IS NOT NULL');
+    $depuis = records_depuis();
+    $requete->execute([$depuis, $depuis]);
+    $ligne = $requete->fetch();
+    $requete->closeCursor();
+    return ['saison' => (int)($ligne['saison'] ?? 0), 'anciens' => (int)($ligne['anciens'] ?? 0)];
 }
 
 // Un temps de la saison en cours : fait depuis records_depuis().
