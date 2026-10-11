@@ -6787,6 +6787,25 @@
         state.decompte = window.setTimeout(() => (n > 1 ? decompter(n - 1) : partir()), DECOMPTE_MS);
       }
 
+      // Correction de Claude Code (lot « les règles des records ») : la page
+      // quittée pendant le décompte puis rendue par « Précédent » (pagehide a
+      // tout arrêté) reprend son décompte à 3 — sans quoi il restait figé, le
+      // pavé grisé, et « Ma table » ne répondait plus.
+      function noterDecompteCoupe() {
+        state.decompteCoupe = Boolean(state.decompte);
+      }
+
+      function reprendreAuRetour() {
+        if (state.decompteCoupe) {
+          state.decompteCoupe = false;
+          if (!state.running && !$("play").hidden) decompter(3);
+          return;
+        }
+        if (!state.running) return;
+        updateTimer();
+        if (state.running && (state.configuration?.duration !== null || state.configuration?.course === "records") && state.timer === null) state.timer = window.setInterval(updateTimer, 200);
+      }
+
       function start() {
         stopTimer();
         const config = captureConfiguration();
@@ -10405,6 +10424,7 @@
         event.preventDefault();
       });
       document.addEventListener("visibilitychange", updateTimer);
+      window.addEventListener("pagehide", noterDecompteCoupe);
       window.addEventListener("pagehide", stopTimer);
       window.addEventListener("pagehide", envoyerAvantDeFermer);
       document.addEventListener("visibilitychange", () => {
@@ -10414,11 +10434,7 @@
         // du jour » compte les calculs d'aujourd'hui.
         else if (document.visibilityState === "visible" && !$("intro").hidden && !$("mode-screen").hidden) renderAccueil();
       });
-      window.addEventListener("pageshow", () => {
-        if (!state.running) return;
-        updateTimer();
-        if (state.running && (state.configuration?.duration !== null || state.configuration?.course === "records") && state.timer === null) state.timer = window.setInterval(updateTimer, 200);
-      });
+      window.addEventListener("pageshow", reprendreAuRetour);
       if (new URLSearchParams(window.location.search).has("test")) {
         Object.defineProperty(window, "__MATHSGO_DEFI_TABLES_TEST__", {
           configurable: true,

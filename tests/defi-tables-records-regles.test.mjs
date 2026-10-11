@@ -200,7 +200,9 @@ function banc(parcours, configuration, duree) {
     ${source("decompter")}
     ${source("stopTimer")}
     ${source("returnToMenu")}
-    return {beginRound, returnToMenu};
+    ${source("noterDecompteCoupe")}
+    ${source("reprendreAuRetour")}
+    return {beginRound, returnToMenu, stopTimer, noterDecompteCoupe, reprendreAuRetour};
   `);
   const fonctions = fabrique(state, ecran.$, fenetre, document, {now: () => montre.maintenant}, P, parcours, duree, 25, journal);
   const avancer = ms => {
@@ -270,6 +272,40 @@ test("décompte : « Ma table » pendant le décompte arrête tout — la série
   assert.equal(b.state.decompte, null);
   b.avancer(5000);
   assert.equal(b.state.running, false, "aucune minuterie ne relance la série");
+  assert.ok(!b.journal.includes("question"));
+});
+
+// Correction de Claude Code : pagehide arrête tout (stopTimer). Une page
+// rendue par « Précédent » pendant le décompte restait figée sur « 2 », le
+// pavé grisé, et « Ma table » ne répondait plus (la série n'était ni lancée
+// ni en décompte).
+test("décompte : la page quittée pendant le décompte puis rendue (« Précédent ») le reprend à 3", () => {
+  assert.match(html, /window\.addEventListener\("pagehide", noterDecompteCoupe\);\s*window\.addEventListener\("pagehide", stopTimer\);/, "le décompte coupé se note AVANT que stopTimer l'efface");
+  assert.match(html, /window\.addEventListener\("pageshow", reprendreAuRetour\);/);
+  const b = banc(legende(), P.configCourse(), null);
+  b.beginRound();
+  b.avancer(900);
+  assert.equal(b.chiffre(), "2");
+  b.noterDecompteCoupe(); b.stopTimer();  // pagehide
+  b.avancer(5000);
+  assert.equal(b.state.running, false, "page cachée : rien ne part");
+  b.reprendreAuRetour();  // pageshow
+  assert.equal(b.chiffre(), "3", "le décompte reprend à 3");
+  assert.ok(b.touches.every(t => t.disabled), "le pavé toujours grisé");
+  b.avancer(2400);
+  assert.equal(b.state.running, true, "puis la série part");
+  assert.equal(b.journal.filter(e => e === "question").length, 1);
+});
+
+test("décompte : après « Ma table », quitter la page puis revenir ne relance rien", () => {
+  const b = banc(legende(), P.configCourse(), null);
+  b.beginRound();
+  b.avancer(900);
+  b.returnToMenu();
+  b.noterDecompteCoupe(); b.stopTimer();
+  b.reprendreAuRetour();
+  b.avancer(5000);
+  assert.equal(b.state.running, false);
   assert.ok(!b.journal.includes("question"));
 });
 
