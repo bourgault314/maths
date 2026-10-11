@@ -3,11 +3,12 @@
 //  1. dans la course des records, une erreur ne fait plus perdre la course :
 //     la question reste, en rouge (« Pas tout à fait, essaie encore. »), la
 //     case se vide, le chrono continue — la course finit toujours à 25 justes ;
-//  2. à la 3e erreur sur le même calcul, la réponse s'écrit dans la ligne
-//     rouge (« La réponse est 70 : tape-la. ») et l'élève la tape ;
+//  2. à la 3e erreur sur le même calcul, la course s'arrête (décision du
+//     11/10 après la PR #969, planches 8 à 10) : « Course arrêtée », « 3
+//     erreurs sur 10 × 7 = 70 », le temps ne compte pas ;
 //  3. plus de « Passer » dans la course ;
 //  4. la ligne de lancement : « Le chrono monte. Une erreur : la question
-//     reste jusqu'à la bonne réponse. » ;
+//     reste. Trois sur le même calcul : la course s'arrête. » ;
 //  5. la liste « Mes erreurs » du résultat garde les calculs ratés au premier
 //     essai (la première réponse est celle qu'on garde, la grille Mes calculs
 //     aussi) ;
@@ -57,10 +58,12 @@ function fauxEcran() {
 }
 function joueur(state) {
   const ecran = fauxEcran();
-  const appels = {grille: [], avance: 0, retenu: []};
+  const appels = {grille: [], avance: 0, retenu: [], fin: 0};
   const fabrique = new Function("state", "$", "appels", `
-    const ERREURS_AVANT_REPONSE = ${constante("ERREURS_AVANT_REPONSE")};
+    const ERREURS_AVANT_ARRET = ${constante("ERREURS_AVANT_ARRET")};
     const DELAI_LECTURE_CORRECTION_MS = 0;
+    const CORE = {solvedPrompt: question => question.prompt.replace("?", String(question.answer))};
+    const finish = () => { appels.fin += 1; state.running = false; };
     const showAnswerError = () => { appels.retenu.push("erreur de saisie"); };
     const alimenterMesCalculs = (question, correcte) => { appels.grille.push([question.factKey, correcte]); };
     const renderInlineAnswer = () => {};
@@ -69,6 +72,7 @@ function joueur(state) {
     // advanceAfterResponse → renderQuestion, qui remet le compte des essais à zéro.
     const advanceAfterResponse = () => { appels.avance += 1; state.index += 1; state.essaisCourse = 0; };
     ${source("essaieEncoreCourse")}
+    ${source("arreterCourse")}
     ${source("next")}
     return next;
   `);
@@ -95,24 +99,33 @@ test("course : une erreur — la même question reste, la case se vide, « Pas t
   assert.equal(state.correct, 0);
 });
 
-test("course : à la 3e erreur sur le même calcul, la réponse s'écrit ; l'élève la tape, la course continue", () => {
+test("course : à la 3e erreur sur le même calcul, la course s'arrête — le calcul et sa réponse sont gardés", () => {
+  assert.equal(constante("ERREURS_AVANT_ARRET"), 3);
   const state = etatCourse();
   const {taper, appels, retour} = joueur(state);
   taper(71);
   taper(72);
-  assert.equal(retour().textContent, "Pas tout à fait, essaie encore.", "2e erreur : toujours rien de montré");
+  assert.equal(retour().textContent, "Pas tout à fait, essaie encore.", "2e erreur : la question reste encore");
+  assert.equal(appels.fin, 0);
   taper(73);
-  assert.equal(retour().textContent, "La réponse est 70 : tape-la.");
-  assert.equal(state.index, 0);
-  taper(70);
-  assert.equal(state.index, 1, "trouvé : la question suivante");
-  assert.equal(appels.avance, 1);
-  assert.equal(state.correct, 1, "la bonne réponse trouvée compte dans les justes");
+  assert.equal(appels.fin, 1, "3e erreur : la course s'arrête (finish)");
+  assert.equal(appels.avance, 0, "on n'avance pas à la question suivante");
+  assert.equal(state.courseArretee, "10 × 7 = 70", "le calcul et sa réponse, pour le verdict");
+  assert.ok(state.correct < 25, "pas 25 justes : le temps ne compte pas");
   assert.deepEqual(state.responses[0], {value: 71, correct: false, skipped: false}, "« Mes erreurs » garde la première réponse (71)");
-  assert.equal(state.answered, 1, "une question répondue, pas quatre");
-  // La question suivante repart de zéro : sa 1re erreur ne donne pas la réponse.
-  taper(47);
-  assert.equal(retour().textContent, "Pas tout à fait, essaie encore.");
+  assert.equal(state.answered, 1, "une question répondue, pas trois");
+});
+
+test("course : deux erreurs sur un calcul, puis la bonne réponse — le compte repart à zéro à la question suivante", () => {
+  const state = etatCourse();
+  const {taper, appels} = joueur(state);
+  taper(71); taper(72); taper(70);
+  assert.equal(state.index, 1, "trouvé au 3e essai : la course continue");
+  assert.equal(state.correct, 1);
+  taper(47); taper(46);
+  assert.equal(appels.fin, 0, "deux erreurs sur 6 × 8 : pas d'arrêt (les deux de 10 × 7 ne comptent plus)");
+  taper(48);
+  assert.equal(state.index, 2);
 });
 
 test("course : la grille Mes calculs ne reçoit que la PREMIÈRE réponse de chaque calcul", () => {
@@ -130,7 +143,7 @@ test("course : 25 questions, des erreurs corrigées — 25 justes, le temps comp
   const {taper} = joueur(state);
   questions.forEach((question, i) => {
     if (i === 6 || i === 14) taper(question.answer + 1);
-    if (i === 20) { taper(question.answer + 1); taper(question.answer + 2); taper(question.answer + 3); }
+    if (i === 20) { taper(question.answer + 1); taper(question.answer + 2); }
     taper(question.answer);
   });
   assert.equal(state.index, 25);
@@ -157,8 +170,16 @@ test("la page : la course pose « no-skip » (plus de Passer) ; le compte des es
   assert.match(html, /\.question\.no-skip #skip \{ display: none; \}/);
 });
 
-test("la page : la ligne de lancement de la course (planche 1)", () => {
-  assert.match(html, /gras\.textContent = "la question reste";\s*ligne\.append\(document\.createTextNode\("Le chrono monte\. Une erreur\\u00a0: "\), gras, document\.createTextNode\(" jusqu’à la bonne réponse\."\)\);/);
+test("la page : la course arrêtée — « Course arrêtée », « 3 erreurs sur 10 × 7 = 70 », en rouge ; plus de réponse donnée", () => {
+  const verdict = source("verdictCourse");
+  assert.match(verdict, /if \(state\.courseArretee\) \{\s*verdict\.classe = "is-rate";\s*verdict\.icone = "✗";\s*verdict\.titre = "Course arrêtée";\s*verdict\.score = `\$\{ERREURS_AVANT_ARRET\} erreurs sur \$\{state\.courseArretee\}`;\s*return verdict;\s*\}/);
+  assert.ok(verdict.indexOf("state.courseArretee") < verdict.indexOf("if (!jugement.compte)"), "avant le verdict « le temps ne compte pas »");
+  assert.doesNotMatch(html, /tape-la/);
+  assert.equal(html.split("state.courseArretee = null;").length - 1, 2, "remis à zéro à chaque série (start et Mes calculs du jour)");
+});
+
+test("la page : la ligne de lancement de la course (planches 1 et 8)", () => {
+  assert.match(html, /gras\.textContent = "la question reste";\s*ligne\.append\(document\.createTextNode\("Le chrono monte\. Une erreur\\u00a0: "\), gras, document\.createTextNode\("\. Trois sur le même calcul\\u00a0: la course s’arrête\."\)\);/);
   assert.doesNotMatch(html, /gras\.textContent = "Tout juste";/);
 });
 

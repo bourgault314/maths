@@ -5302,20 +5302,25 @@
       // La course des records (lot « les règles des records », décisions de
       // Gwenaël du 11/10/2026) : après une erreur, la case se vide et la même
       // question reste — « Pas tout à fait, essaie encore. », la phrase de la
-      // bande. À la 3e erreur sur le même calcul (ERREURS_AVANT_REPONSE,
-      // comme dans la bande), la réponse s'écrit dans la ligne rouge et
-      // l'élève la tape : personne ne reste coincé, et la course finit
-      // toujours à 25 justes.
-      function essaieEncoreCourse(question) {
+      // bande. Une erreur, même deux, c'est un raté qu'on corrige ; trois sur
+      // le même calcul (ERREURS_AVANT_ARRET), c'est un calcul qu'on ne sait
+      // pas : la course s'arrête (arreterCourse), le temps ne compte pas, et
+      // le calcul s'affiche avec sa réponse. Une course finie compte donc
+      // toujours 25 justes.
+      const ERREURS_AVANT_ARRET = 3;
+
+      function essaieEncoreCourse() {
         state.answer = "";
-        state.essaisCourse = (state.essaisCourse || 0) + 1;
         renderInlineAnswer();
         const feedback = $("answer-feedback");
         feedback.className = "answer-feedback is-wrong";
-        feedback.textContent = state.essaisCourse >= ERREURS_AVANT_REPONSE
-          ? `La réponse est ${question.answer}\u00a0: tape-la.`
-          : "Pas tout à fait, essaie encore.";
+        feedback.textContent = "Pas tout à fait, essaie encore.";
         $("expression").focus?.({preventScroll: true});
+      }
+
+      function arreterCourse(question) {
+        state.courseArretee = CORE.solvedPrompt(question);
+        finish();
       }
 
       // « Pas tout à fait, essaie encore. » : la réponse s'efface, la case
@@ -6573,6 +6578,15 @@
         const jugement = PARCOURS.courseCompte(state.correct, TOTAL, dixiemes);
         verdict.config = "";
         verdict.course = true;
+        // Lot « les règles des records » : trois erreurs sur le même calcul,
+        // la course s'est arrêtée — le calcul et sa réponse dans le verdict.
+        if (state.courseArretee) {
+          verdict.classe = "is-rate";
+          verdict.icone = "✗";
+          verdict.titre = "Course arrêtée";
+          verdict.score = `${ERREURS_AVANT_ARRET} erreurs sur ${state.courseArretee}`;
+          return verdict;
+        }
         if (!jugement.compte) {
           const erreurs = TOTAL - state.correct;
           verdict.classe = "is-rate";
@@ -6835,6 +6849,7 @@
         state.index = 0;
         state.correct = 0;
         state.answered = 0;
+        state.courseArretee = null;
         state.running = false;
         state.tenSecondAlert = false;
         state.waitingForContinue = false;
@@ -6912,13 +6927,13 @@
         const formes = testDUneTable ? ["produit", "trou", "division", "diviseur"] : ["produit", "trou", "division", "dividende", "diviseur"];
         // Lot « Les records » (planche R3) : la règle de la course, puis « Ton
         // record : 52,4 s ». Lot « les règles des records » (11/10/2026,
-        // planche 1) : une erreur ne fait plus perdre la course — « Le chrono
-        // monte. Une erreur : la question reste jusqu'à la bonne réponse. »
+        // planche 1, puis 3 erreurs = arrêt) : « Le chrono monte. Une erreur :
+        // la question reste. Trois sur le même calcul : la course s'arrête. »
         if (config.course === "records") {
           const ligne = document.createElement("p");
           const gras = document.createElement("b");
           gras.textContent = "la question reste";
-          ligne.append(document.createTextNode("Le chrono monte. Une erreur\u00a0: "), gras, document.createTextNode(" jusqu’à la bonne réponse."));
+          ligne.append(document.createTextNode("Le chrono monte. Une erreur\u00a0: "), gras, document.createTextNode(". Trois sur le même calcul\u00a0: la course s’arrête."));
           zone.append(ligne);
           const record = recordConnu();
           if (record.meilleur !== null) {
@@ -7110,7 +7125,9 @@
         if (!question.retry && !reessai) alimenterMesCalculs(question, correct && !skip);
 
         if (course && !skip && !correct) {
-          essaieEncoreCourse(question);
+          state.essaisCourse = (state.essaisCourse || 0) + 1;
+          if (state.essaisCourse >= ERREURS_AVANT_ARRET) arreterCourse(question);
+          else essaieEncoreCourse();
           return;
         }
 
@@ -7705,6 +7722,7 @@
         state.index = 0;
         state.correct = 0;
         state.answered = 0;
+        state.courseArretee = null;
         state.running = false;
         state.tenSecondAlert = false;
         state.waitingForContinue = false;
