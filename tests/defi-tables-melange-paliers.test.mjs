@@ -386,5 +386,5 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // Lot « records-depart » (11/10/2026) : lib/records.php et verifier.php changent (avant : defi-tables-tirage).
   assert.match(lire("_serveur/public/VERSION"), /^lot defi-tables-records-depart$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-comment-on-joue-20261011-1/);
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-comment-on-joue-20261011-3/);
 });

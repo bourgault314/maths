@@ -1200,6 +1200,38 @@ select { cursor: pointer; }
   background: #f4f7fa;
 }
 
+/* une ligne par contenu : « Le film  ▶ Voir  ⬇ Télécharger » (« Comment on joue ? », 11/10/2026) */
+.resource-variant-rows { gap: 8px; }
+/* sur un écran étroit, les deux boutons passent ensemble sous le titre plutôt que de sortir de la carte */
+.resource-variant-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.resource-variant-row-actions {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+.resource-variant-row-title {
+  flex: 1 0 auto;
+  padding-left: 2px;
+  color: #1e3a5f;
+  font-size: .9rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.resource-variants a.resource-variant-action {
+  flex: 0 0 auto;
+  min-height: 42px;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 11px;
+  font-size: .82rem;
+}
+.resource-variant-action svg { width: 16px; height: 16px; flex: 0 0 auto; }
+
 .resource-type-icon {
   position: relative;
   z-index: 1;

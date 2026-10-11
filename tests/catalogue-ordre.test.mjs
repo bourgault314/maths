@@ -7,6 +7,7 @@ const catalogueSourceUrl = new URL("../assets/js/catalogue-refonte-data.js", imp
 const catalogueScriptUrl = new URL("../assets/js/catalogue-refonte.js", import.meta.url);
 
 const catalogueScript = readFileSync(catalogueScriptUrl, "utf8");
+const catalogueStyles = readFileSync(new URL("../assets/css/catalogue-refonte.css", import.meta.url), "utf8");
 
 // Le comparateur est extrait du fichier livré au navigateur puis exécuté tel quel :
 // le test ne réimplémente pas la règle, il fait tourner celle qui part en ligne.
@@ -187,15 +188,33 @@ test("page Splat : les livrets puis « Comment on joue ? » ; ÉquaSplat, ÉquaB
   assert.equal(famille.group, "classe");
   assert.deepEqual(Array.from(famille.paths), [
     "outils/splat_intro.html",
+    "outils/splat_diaporama.html",
     "outils/splat_comment_on_joue.mp4",
     "outils/splat_comment_on_joue_diaporama.pdf"
   ]);
+  // une ligne par contenu, « Voir » et « Télécharger » (11/10/2026) : plus quatre liens qui se ressemblent
+  assert.deepEqual(JSON.parse(JSON.stringify(famille.lignes)), [
+    { titre: "Le film", voir: "outils/splat_intro.html", telecharger: "outils/splat_comment_on_joue.mp4" },
+    { titre: "Le diaporama", voir: "outils/splat_diaporama.html", telecharger: "outils/splat_comment_on_joue_diaporama.pdf" }
+  ]);
+  for (const ligne of famille.lignes) for (const chemin of [ligne.voir, ligne.telecharger]) assert.ok(famille.paths.includes(chemin), chemin);
+  assert.equal(famille.cardDescription, "Le film et le diaporama : à voir en ligne ou à télécharger.");
+  assert.match(catalogueScript, /\$\{family\.lignes \? familyRows\(family, variants\) : /);
+  assert.match(catalogueScript, /href="\$\{escapeHtml\(rootPrefix \+ fichier\.path\)\}" download aria-label=/);
+  assert.match(catalogueScript, /<span>Voir<\/span><\/a>/);
+  assert.match(catalogueScript, /<span>Télécharger<\/span><\/a>/);
+  // sur un écran étroit, les deux boutons passent ensemble sous le titre
+  assert.match(catalogueStyles, /\.resource-variant-row \{\n  display: flex;\n  flex-wrap: wrap;/);
+  assert.match(catalogueStyles, /\.resource-variant-row-title \{\n  flex: 1 0 auto;/);
+  // le diaporama en ligne (l'ancien diaporama d'avant le film) s'ouvre directement diapo par diapo (11/10/2026)
+  assert.equal(famille.labels["outils/splat_diaporama.html"], "Le diaporama en ligne");
+  assert.ok(!classifications["outils/splat_diaporama.html"]?.newTab, "le diaporama en ligne s’ouvre dans l’onglet");
   const cartes = [
     { title: famille.title, rang: famille.rang },
     { title: "Les livrets SPLAT!", rang: collectionCardRank("splat", "outils/livrets_splat.html") }
   ].sort(compareCards);
   assert.deepEqual(cartes.map((c) => c.title), ["Les livrets SPLAT!", "Comment on joue ?"]);
-  // la carte ne dit pas « 3 versions · » (le film, la vidéo et le diaporama ne sont pas des versions d’un même outil),
+  // la carte ne dit pas « 4 versions · » (le film, les diaporamas et la vidéo ne sont pas des versions d’un même outil),
   // et la vidéo et le PDF s’ouvrent dans un nouvel onglet : on regarde, puis on télécharge (11/10/2026)
   assert.equal(famille.hideCount, true);
   assert.match(catalogueScript, /const versionLabel = family\.hideCount \? "" : /);
@@ -209,6 +228,19 @@ test("page Splat : les livrets puis « Comment on joue ? » ; ÉquaSplat, ÉquaB
   const manipuler = ["outils/equascribe.html", "outils/equabarre.html", "outils/equasplat.html"]
     .sort((a, b) => collectionCardRank("splat", a) - collectionCardRank("splat", b));
   assert.deepEqual(manipuler, ["outils/equasplat.html", "outils/equabarre.html", "outils/equascribe.html"]);
+});
+
+// Une famille dépliée grandit seule : les cartes de sa rangée gardent leur hauteur de carte fermée
+// (« Les livrets SPLAT! » grandissait avec « Comment on joue ? », relevé par Gwenaël le 11/10/2026).
+test("déplier une famille n’agrandit pas les autres cartes de sa rangée", () => {
+  assert.match(catalogueScript, /function caleRangeesDesFamilles\(\) \{/);
+  // recalé à chaque ouverture ou fermeture (« toggle » ne remonte pas : écouté à la capture) et au redimensionnement
+  assert.match(catalogueScript, /resourceGrid\.addEventListener\("toggle", \(event\) => \{\n\s*if \(event\.target\.matches\?\.\("\.resource-family-card"\)\) caleRangeesDesFamilles\(\);\n\s*\}, true\);/);
+  assert.match(catalogueScript, /window\.addEventListener\("resize", \(\) => \{[\s\S]{0,160}caleRangeesDesFamilles\(\);/);
+  // sans famille dépliée, rien n’est touché : toutes les cartes restent étirées comme avant
+  assert.match(catalogueScript, /cartes\.forEach\(\(carte\) => \{ carte\.style\.alignSelf = ""; carte\.style\.minHeight = ""; \}\);\n\s*if \(!grille\.querySelector\(":scope > \.resource-family-card\[open\]"\)\) return;/);
+  // dans la rangée de la famille dépliée, les autres cartes gardent la hauteur de la rangée fermée
+  assert.match(catalogueScript, /const hauteur = Math\.max\(\.\.\.rangee\.map\(hauteurFermee\)\);\n\s*rangee\.forEach\(\(carte\) => \{ if \(!carte\.open\) carte\.style\.minHeight = `\$\{hauteur\}px`; \}\);/);
 });
 
 test("ÉquaBarre s’affiche dans la page Splat sans quitter Schémas en barres", () => {
