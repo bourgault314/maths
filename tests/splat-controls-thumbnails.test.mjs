@@ -56,7 +56,7 @@ test("les cinq miniatures utilisent des vues fideles et adaptees aux outils", ()
   assert.match(catalogue, /assets\/img\/thumbnails\/splat\/splat\.png\?v=6/);
   assert.match(catalogue, /assets\/img\/thumbnails\/splat\/splat-equations\.png\?v=6/);
   assert.match(catalogue, /assets\/img\/thumbnails\/splat\/petit-splat\.png\?v=5/);
-  assert.match(cataloguePage, /catalogue-refonte-data\.js\?v=defi-tables-paliers-20261009-1/);
+  assert.match(cataloguePage, /catalogue-refonte-data\.js\?v=splat-comment-on-joue-20261011-1/);
   for(const thumbnail of [equasplatThumb, equascribeThumb, classicThumb, equationThumb, petitThumb]){
     assert.deepEqual(pngSize(thumbnail), {width:720, height:320});
   }
@@ -65,7 +65,7 @@ test("les cinq miniatures utilisent des vues fideles et adaptees aux outils", ()
 });
 
 test("la collection Splat suit l'ordre pedagogique valide", () => {
-  assert.match(catalogueScript, /path === "outils\/splat_tache_barre\.html"\) return 0;[\s\S]*path === "outils\/splat\.html"\) return 1;[\s\S]*path === "outils\/splat_equations\.html"\) return 2;[\s\S]*path === "outils\/equasplat\.html"\) return 3;[\s\S]*path === "outils\/equascribe\.html"\) return 4;/);
+  assert.match(catalogueScript, /path === "outils\/splat_tache_barre\.html"\) return 0;[\s\S]*path === "outils\/splat\.html"\) return 1;[\s\S]*path === "outils\/splat_equations\.html"\) return 2;[\s\S]*path === "outils\/equasplat\.html"\) return 3;[\s\S]*path === "outils\/equabarre\.html"\) return 4;[\s\S]*path === "outils\/equascribe\.html"\) return 5;/);
   assert.match(catalogueScript, /collectionCardRank\(state\.collection, item\.resource\.path\)/);
   assert.match(cataloguePage, /<script\s+defer\s+src="[^"]*catalogue-refonte\.js\?v=[^"\s#]+"><\/script>/);
 });

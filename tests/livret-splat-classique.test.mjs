@@ -218,7 +218,7 @@ test("le catalogue déclare UNE carte « Les livrets SPLAT! » dans la collectio
   // les deux anciennes cartes ont disparu du catalogue
   assert.ok(!catalogue.includes('"outils/livrets_petit_splat.html"'), "plus de carte monde 1");
   assert.ok(!catalogue.includes('"outils/livrets_splat_classique.html"'), "plus de carte monde 2");
-  assert.match(lire("assets/js/catalogue-refonte.js"), /path === "outils\/livrets_splat\.html"\) return 5;/);
+  assert.match(lire("assets/js/catalogue-refonte.js"), /path === "outils\/livrets_splat\.html"\) return 6;/); // 6 depuis l’arrivée d’ÉquaBarre (11/10/2026)
 });
 
 test("vue prof du monde 2 : un seul lien vers les livrets du monde 2, à côté des étapes 7, 8 et 9", () => {

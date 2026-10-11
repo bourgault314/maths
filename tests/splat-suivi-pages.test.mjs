@@ -101,7 +101,7 @@ test("carte : le suivi démarre APRÈS le premier dessin, jamais quand ?apres= r
   const dessin = f.indexOf("ouvrirMonde(mondeEnCours(majAffichage()));\nif(!PROF) ouvrirParties();");
   const lancement = f.indexOf("if(SUIVI&&!APRES_REDIRIGE){ majSuivi(); SUIVI.lancer(); }");
   assert.ok(dessin > 0 && lancement > dessin);
-  assert.equal((f.match(/APRES_REDIRIGE=true;/g) || []).length, 2, "les deux départs de ?apres= (Bonus, étape)");
+  assert.equal((f.match(/APRES_REDIRIGE=true;/g) || []).length, 3, "les trois départs aussitôt : ?apres= (Bonus, étape) et ?jouer= (la suite d’un film, 11/10/2026)");
   // la flèche et le logo mènent à l'espace sous un code (ou après un billet refusé), au site sinon
   assert.match(f, /const espace=!!\(SUIVI&&\(SUIVI\.actif\(\)\|\|SUIVI\.client\.entreeRefusee\)\);/);
   // lot 6 : le bloc de suivi est DANS l'en-tête, à côté de la flèche, caché pour tous les autres

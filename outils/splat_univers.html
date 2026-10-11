@@ -1424,7 +1424,8 @@ else MONDES.forEach((m,mi)=>{
            ? '<div class="actions">'+
              '<a class="jouer" href="'+e.j+'">🎮 Je joue</a>'+
              /* les films « Comment on joue ? » de l'étape (10/10/2026) : sur le lecteur du film d'introduction, ?film= ; rien ne se lance tout seul */
-             (e.films?e.films.map(f=>'<a class="filmLien" href="/outils/splat_intro.html?film='+f[0]+'&amp;suite='+encodeURIComponent(e.j)+'">\ud83c\udfac '+f[1]+'</a>').join(''):'')+
+             /* la suite du film passe par la carte (?jouer=, 11/10/2026) : le lien du jeu en entier recopiait toute la série dans l'adresse */
+             (e.films?e.films.map(f=>'<a class="filmLien" href="/outils/splat_intro.html?film='+f[0]+'&amp;suite='+encodeURIComponent(e.p?'/outils/splat_univers.html?jouer='+e.p:e.j)+'">\ud83c\udfac '+f[1]+'</a>').join(''):'')+
              (e.p ? '' : '<button class="faitBtn" type="button" data-id="'+ids[ei]+'">⭐ J\'ai réussi !</button>')+
              '</div>'
            : '<div class="actions"><span class="bientot">\ud83d\udea7 Le vrai jeu de ce monde est en construction — bient\u00f4t !</span></div>')+
@@ -1664,7 +1665,8 @@ if (PROF) {
    enchaînait sur « Dessine les jetons » ne voyait même pas qu'il y avait un film). Le film s'ouvre sur
    son image de titre, rien ne se lance tout seul ; « Passer le film › » et « Je joue ▶ » mènent au jeu.
    Seul le premier film de l'étape est sur le chemin ; tous restent sous l'étape, sur la carte. */
-function versEtape(e){return e.films&&e.films.length?'/outils/splat_intro.html?film='+e.films[0][0]+'&suite='+encodeURIComponent(e.j):e.j;}
+/* la suite du film : la carte avec ?jouer= (plus bas), pas le lien du jeu en entier — au monde 5, il porte toute la série (11/10/2026) */
+function versEtape(e){return e.films&&e.films.length?'/outils/splat_intro.html?film='+e.films[0][0]+'&suite='+encodeURIComponent(e.p?'/outils/splat_univers.html?jouer='+e.p:e.j):e.j;}
 let APRES_REDIRIGE=false; /* la carte part aussitôt : le suivi n'a pas à démarrer ici */
 (function(){
   const apres=new URLSearchParams(window.location.search).get("apres");
@@ -1693,6 +1695,21 @@ let APRES_REDIRIGE=false; /* la carte part aussitôt : le suivi n'a pas à déma
     APRES_REDIRIGE=true;
     window.location.replace(versEtape(suite[k+1]));
   }
+})();
+/* ?jouer=<parcours> (11/10/2026) : la carte renvoie AUSSITÔT au jeu de CETTE étape, sans rien afficher.
+   C'est la suite des films « Comment on joue ? » des étapes : avant, le film recevait dans ?suite= le
+   lien du jeu en entier, et au monde 5 ce lien porte toute la série (#data=…, plusieurs kilo-octets) —
+   l'adresse du film faisait « plus de 30 lignes » quand Gwenaël l'a copiée pour une collègue.
+   Parcours inconnu, monde en préparation ou fermé à la classe : la carte s'affiche normalement. */
+(function(){
+  if(APRES_REDIRIGE||PROF) return;
+  const jouer=new URLSearchParams(window.location.search).get("jouer");
+  if(!jouer) return;
+  const mi=MONDES.findIndex(m=>jouable(m)&&m.etapes.some(e=>e.p===jouer&&e.j)); /* pas un monde en préparation (sans la clé), ni fermé à la classe */
+  if(mi<0) return;
+  retenirMonde(mi);
+  APRES_REDIRIGE=true;
+  window.location.replace(MONDES[mi].etapes.find(e=>e.p===jouer).j);
 })();
 /* Les mondes fermés à la classe : la classe « verrouille » sur leur section, et — s'ils ont
    changé pendant que la carte était ouverte — le monde ouvert qui vient de se fermer se replie. */
