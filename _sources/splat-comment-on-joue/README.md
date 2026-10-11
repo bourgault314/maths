@@ -1,13 +1,14 @@
 # « Comment on joue ? » — la vidéo et le diaporama de SPLAT! à télécharger
 
 La carte « Comment on joue ? » de la page Splat du catalogue (section « Pour la classe »,
-11/10/2026) propose trois façons de présenter le jeu à la classe :
+11/10/2026) propose trois façons de présenter le jeu à la classe. La vidéo et le PDF s'ouvrent dans un
+nouvel onglet : on regarde, puis on télécharge avec le bouton du navigateur.
 
 | Variante | Fichier publié | Fabriqué par |
 |---|---|---|
 | Voir le film en ligne | `outils/splat_intro.html` (le film animé, en ligne depuis la PR #961) | — |
-| Télécharger la vidéo (MP4) | `outils/splat_comment_on_joue.mp4` | `render_video.py` |
-| Télécharger le diaporama (PDF) | `outils/splat_comment_on_joue_diaporama.pdf` | `render_diaporama.py` |
+| La vidéo (MP4) | `outils/splat_comment_on_joue.mp4` | `render_video.py` |
+| Le diaporama (PDF) | `outils/splat_comment_on_joue_diaporama.pdf` | `render_diaporama.py` |
 
 et la miniature de la carte, `assets/img/thumbnails/splat/comment-on-joue.png` / `.webp`, par `miniature.py`.
 
@@ -23,8 +24,8 @@ python3 miniature.py         # après les deux autres
 Calculée image par image à partir du film du site (`FILMS.intro.render(t)`), pas filmée à l'écran :
 1920 × 1080, 30 images/s, H.264, sans son, environ 1,4 Mo. Aux trois questions, le film en ligne
 s'arrête et attend ; la vidéo garde la question affichée **3 secondes** (choix de Gwenaël, 11/10/2026),
-le prof met pause s'il veut laisser chercher plus longtemps. Le lien « ↺ Revoir le film » de l'écran
-de fin est masqué (il ne mène nulle part dans une vidéo). **Si le film change, relancer `render_video.py`.**
+le prof met pause s'il veut laisser chercher plus longtemps. Sur l'écran de fin, les liens du lecteur
+(« Je joue ▶ » et « ↺ Revoir le film ») sont masqués : dans une vidéo, ils ne mènent nulle part. **Si le film change, relancer `render_video.py`.**
 
 ## Le diaporama
 

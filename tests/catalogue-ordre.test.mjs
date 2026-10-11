@@ -195,6 +195,17 @@ test("page Splat : les livrets puis « Comment on joue ? » ; ÉquaSplat, ÉquaB
     { title: "Les livrets SPLAT!", rang: collectionCardRank("splat", "outils/livrets_splat.html") }
   ].sort(compareCards);
   assert.deepEqual(cartes.map((c) => c.title), ["Les livrets SPLAT!", "Comment on joue ?"]);
+  // la carte ne dit pas « 3 versions · » (le film, la vidéo et le diaporama ne sont pas des versions d’un même outil),
+  // et la vidéo et le PDF s’ouvrent dans un nouvel onglet : on regarde, puis on télécharge (11/10/2026)
+  assert.equal(famille.hideCount, true);
+  assert.match(catalogueScript, /const versionLabel = family\.hideCount \? "" : /);
+  assert.equal(famille.labels["outils/splat_comment_on_joue.mp4"], "La vidéo (MP4)");
+  assert.equal(famille.labels["outils/splat_comment_on_joue_diaporama.pdf"], "Le diaporama (PDF)");
+  for (const path of ["outils/splat_comment_on_joue.mp4", "outils/splat_comment_on_joue_diaporama.pdf"]) {
+    assert.equal(classifications[path].newTab, true, path);
+  }
+  assert.ok(!classifications["outils/splat_intro.html"]?.newTab, "le film en ligne s’ouvre dans l’onglet");
+  assert.match(catalogueScript, /const newTabAttribute = resourceClassification\(resource\)\.newTab \? ` target="_blank" rel="noopener"` : "";/);
   const manipuler = ["outils/equascribe.html", "outils/equabarre.html", "outils/equasplat.html"]
     .sort((a, b) => collectionCardRank("splat", a) - collectionCardRank("splat", b));
   assert.deepEqual(manipuler, ["outils/equasplat.html", "outils/equabarre.html", "outils/equascribe.html"]);

@@ -1239,7 +1239,10 @@
     const game = resourceClassification(resource).shortGame;
     const openInCatalogue = game !== "carres-gloutons" || state.notion === "jeux-courts";
     const gameAttribute = openInCatalogue && shortGames && Object.hasOwn(shortGames.games, game) ? ` data-short-game="${escapeHtml(game)}"` : "";
-    return `href="${escapeHtml(rootPrefix + resource.path)}"${gameAttribute}`;
+    // Une vidéo ou un PDF à regarder avant de le garder (« Comment on joue ? », 11/10/2026) : un nouvel onglet,
+    // on regarde, puis on télécharge avec le bouton du navigateur ; la page Splat reste ouverte derrière.
+    const newTabAttribute = resourceClassification(resource).newTab ? ` target="_blank" rel="noopener"` : "";
+    return `href="${escapeHtml(rootPrefix + resource.path)}"${gameAttribute}${newTabAttribute}`;
   }
 
   function resourceCard(resource) {
@@ -1269,7 +1272,9 @@
   function resourceFamilyCard(family, variants) {
     const representative = variants[0];
     const domainId = resourceDisplayDomain(representative);
-    const versionLabel = `${variants.length} version${variants.length > 1 ? "s" : ""}`;
+    // « hideCount » : une famille dont les variantes ne sont pas des versions du même outil (le film, la vidéo
+    // et le diaporama de « Comment on joue ? ») n'affiche pas « 3 versions · » (11/10/2026).
+    const versionLabel = family.hideCount ? "" : `${variants.length} version${variants.length > 1 ? "s" : ""}`;
     const thumbnail = family.thumbnail;
     const description = family.cardDescription || family.description || "Choisir une version.";
     const usages = familyUsageMeta(family, variants);
@@ -1278,7 +1283,7 @@
         ${thumbnail
           ? `<span class="resource-thumbnail">${thumbnailMarkup(thumbnail)}</span>`
           : `<span class="resource-type-icon">${typeIcon(representative, family.group)}</span>`}
-        <span class="resource-copy"><h3>${escapeHtml(family.title)}</h3>${thumbnail ? `<span class="resource-description">${escapeHtml(`${versionLabel} · ${description}`)}</span>` : `<span class="resource-meta">${escapeHtml(`${versionLabel} · ${description}`)}</span>`}${usages ? `<span class="resource-meta resource-uses">${escapeHtml(usages)}</span>` : ""}</span>
+        <span class="resource-copy"><h3>${escapeHtml(family.title)}</h3>${thumbnail ? `<span class="resource-description">${escapeHtml(versionLabel ? `${versionLabel} · ${description}` : description)}</span>` : `<span class="resource-meta">${escapeHtml(versionLabel ? `${versionLabel} · ${description}` : description)}</span>`}${usages ? `<span class="resource-meta resource-uses">${escapeHtml(usages)}</span>` : ""}</span>
         <span class="resource-family-toggle" aria-hidden="true">⌄</span>
       </summary>
       <div class="resource-variants" aria-label="${escapeHtml(`Versions de ${family.title}`)}">

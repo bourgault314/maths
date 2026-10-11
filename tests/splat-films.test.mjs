@@ -104,6 +104,8 @@ test("carte des mondes : les films sous les étapes 2 et 35, qui reviennent au j
   assert.ok(carte.includes(`(e.films?e.films.map(f=>'<a class="filmLien" href="/outils/splat_intro.html?film='+f[0]+'&amp;suite='+encodeURIComponent(e.p?'/outils/splat_univers.html?jouer='+e.p:e.j)+'">\\ud83c\\udfac '+f[1]+'</a>').join(''):'')`));
   assert.match(carte, /const jouer=new URLSearchParams\(window\.location\.search\)\.get\("jouer"\);/);
   assert.match(carte, /window\.location\.replace\(MONDES\[mi\]\.etapes\.find\(e=>e\.p===jouer\)\.j\);/);
+  // ?jouer= n'ouvre que les mondes jouables : ni un monde en préparation sans la clé, ni un monde fermé à la classe
+  assert.match(carte, /const mi=MONDES\.findIndex\(m=>jouable\(m\)&&m\.etapes\.some\(e=>e\.p===jouer&&e\.j\)\);/);
   // les étapes qui ont un film : la 35 (deux films) et la 2 (« Dessine les jetons »)
   assert.match(carte, /p:"m1e2",dessin:true,\n\s*films:\[\["dessine","Comment on joue \?"\]\],/);
   assert.equal((carte.match(/\bfilms:\[\[/g) || []).length, 2);

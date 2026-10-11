@@ -76,9 +76,10 @@ def main():
         page.goto(adresse, wait_until="networkidle")
         page.evaluate("document.fonts.ready")
         page.add_style_tag(content=CSS_VIDEO)
-        # « ↺ Revoir le film » de l'écran de fin est un lien du lecteur : dans une vidéo, il ne mène nulle part.
-        page.evaluate("""() => document.querySelectorAll('#svg text').forEach(e => {
-          if (e.textContent.includes('Revoir le film')) e.setAttribute('visibility', 'hidden'); })""")
+        # L'écran de fin a deux liens du lecteur, « Je joue ▶ » et « ↺ Revoir le film » (classe film-lien) :
+        # dans une vidéo, ils ne mènent nulle part. On les cache ; restent « À toi de jouer ! » et la phrase
+        # (choix de Gwenaël, 11/10/2026). Le lecteur peut les redessiner : on les cache donc par une règle CSS.
+        page.add_style_tag(content="#svg .film-lien{visibility:hidden!important}")
         page.wait_for_timeout(300)
         duree, arrets = page.evaluate("[FILMS.intro.duration, (FILMS.intro.stops || []).map(s => s.t)]")
         liste = instants(duree, arrets)

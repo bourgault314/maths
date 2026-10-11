@@ -795,8 +795,8 @@ window.MATHSGO_CATALOGUE = {
       "cardDescription": "Tous les livrets SPLAT! à plier, du monde 1 au monde 6, avec leurs corrigés."
     },
     "outils/splat_intro.html": { "primaryNotion": "calcul-litteral", "primaryGroup": "classe", "collections": ["splat"], "tags": ["splat", "introduction", "film"] },
-    "outils/splat_comment_on_joue.mp4": { "primaryNotion": "calcul-litteral", "primaryGroup": "classe", "collections": ["splat"], "tags": ["splat", "introduction", "video"] },
-    "outils/splat_comment_on_joue_diaporama.pdf": { "primaryNotion": "calcul-litteral", "primaryGroup": "classe", "collections": ["splat"], "tags": ["splat", "introduction", "diaporama"] },
+    "outils/splat_comment_on_joue.mp4": { "primaryNotion": "calcul-litteral", "primaryGroup": "classe", "collections": ["splat"], "tags": ["splat", "introduction", "video"], "newTab": true },
+    "outils/splat_comment_on_joue_diaporama.pdf": { "primaryNotion": "calcul-litteral", "primaryGroup": "classe", "collections": ["splat"], "tags": ["splat", "introduction", "diaporama"], "newTab": true },
     "outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html": {
       "primaryNotion": "calcul-litteral",
       "primaryGroup": "generer",
@@ -1615,12 +1615,13 @@ window.MATHSGO_CATALOGUE = {
       "description": "Présenter SPLAT! à la classe : le film, la vidéo ou le diaporama.",
       "cardDescription": "Le film à projeter, la vidéo et le diaporama à télécharger.",
       "thumbnail": "assets/img/thumbnails/splat/comment-on-joue.png?v=1",
+      "hideCount": true,
       "group": "classe",
       "rang": 7,
       "labels": {
         "outils/splat_intro.html": "Voir le film en ligne",
-        "outils/splat_comment_on_joue.mp4": "Télécharger la vidéo (MP4)",
-        "outils/splat_comment_on_joue_diaporama.pdf": "Télécharger le diaporama (PDF)"
+        "outils/splat_comment_on_joue.mp4": "La vidéo (MP4)",
+        "outils/splat_comment_on_joue_diaporama.pdf": "Le diaporama (PDF)"
       },
       "paths": [
         "outils/splat_intro.html",

@@ -1700,12 +1700,12 @@ let APRES_REDIRIGE=false; /* la carte part aussitôt : le suivi n'a pas à déma
    C'est la suite des films « Comment on joue ? » des étapes : avant, le film recevait dans ?suite= le
    lien du jeu en entier, et au monde 5 ce lien porte toute la série (#data=…, plusieurs kilo-octets) —
    l'adresse du film faisait « plus de 30 lignes » quand Gwenaël l'a copiée pour une collègue.
-   Parcours inconnu, ou monde fermé à la classe : la carte s'affiche normalement. */
+   Parcours inconnu, monde en préparation ou fermé à la classe : la carte s'affiche normalement. */
 (function(){
   if(APRES_REDIRIGE||PROF) return;
   const jouer=new URLSearchParams(window.location.search).get("jouer");
   if(!jouer) return;
-  const mi=MONDES.findIndex(m=>m.actif&&!m.verrouille&&m.etapes.some(e=>e.p===jouer&&e.j));
+  const mi=MONDES.findIndex(m=>jouable(m)&&m.etapes.some(e=>e.p===jouer&&e.j)); /* pas un monde en préparation (sans la clé), ni fermé à la classe */
   if(mi<0) return;
   retenirMonde(mi);
   APRES_REDIRIGE=true;
