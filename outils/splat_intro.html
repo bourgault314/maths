@@ -1233,6 +1233,321 @@ return film;
 })();
 </script>
 <script>
+/* ===== L'écran de Petit Splat filmé — commun aux films du monde 1 (?film=dessine ; « Deux taches » viendra ici) =====
+   Redessiné d'après l'outil en mode élève (outils/splat_tache_barre.html, main du 11/10/2026), mesuré au navigateur
+   à 1440 × 900 (ordinateur) et à 390 × 844 (téléphone tactile, avec le pavé de chiffres) : boîtes, couleurs, tailles,
+   textes. Coordonnées en pixels de l'outil ; la carte est dessinée dans ses unités 300 × 200, comme dans l'outil.
+   Écarts voulus : pas de « Carte 1 / 12 » ni de pastilles dans la barre (les exemples ne sont pas des cartes de la
+   série) ; au téléphone, le vide entre la carte et le pavé est resserré ; ◀, ▶, ⌫ et ✓ sont dessinés, pas écrits
+   (leur glyphe change d'un appareil à l'autre, et l'iPhone fait de ◀ un émoji). */
+const ECRAN_PS=(function(){
+'use strict';
+const E=F.E,P=F.P,L=F.L,op=F.op,clamp=F.clamp;
+const C={page:'#e2e8f0',bordScene:'#e2e8f0',tete:'#1e40af',pilule:'#e0e7ff',consigne:'#334155',encre:'#111827',
+  jeton:'#2563eb',jetonBord:'#1e40af',donne:'#2563eb',tape:'#1d4ed8',gris:'#d4deea',badge:'#334155',
+  okFond:'#dcfce7',okTxt:'#15803d',valider:'#2563eb',suivant:'#16a34a',focus:'#60a5fa',actif:'#2563eb',or:'#f59e0b',
+  pave:'#e3ecf2',paveBord:'#b3c6d3',touche:'#ffffff',toucheTxt:'#143451',toucheAppui:'#d6e3ec',effacer:'#cbdae5',effacerTxt:'#2c4a63',
+  paveValider:'#0755b8',paveValiderOmbre:'#043f8c'};
+/* les cinq formes de tache du générateur (SPLAT_SHAPES de l'outil) */
+const FORMES=['M130,50 Q170,20 200,60 Q230,80 210,130 Q180,170 130,160 Q80,150 70,100 Q80,40 130,50 Z',
+  'M150,40 Q210,30 220,90 Q240,150 160,160 Q90,170 70,110 Q60,50 150,40 Z',
+  'M140,60 C180,20 230,50 220,100 C210,160 160,170 120,150 C70,130 80,70 140,60 Z',
+  'M120,40 C160,10 240,40 230,110 C220,180 140,170 100,160 C60,140 40,80 120,40 Z',
+  'M140,50 Q190,10 230,70 Q250,120 200,160 Q150,180 100,150 Q60,100 80,60 Q100,20 140,50 Z'];
+const POLICE_PAVE='Inter,ui-rounded,"Arial Rounded MT Bold","Segoe UI",sans-serif';
+/* un chiffre (ou un mot sans jambage) centré à l'encre sur (cx,cy) : la hauteur des capitales (0,7 em) est centrée */
+const chiffre=(p,cx,cy,fs,fill,a)=>{const e=E('text',Object.assign({x:cx,y:(cy+fs*.355).toFixed(2),'text-anchor':'middle','font-size':fs,'font-weight':900,fill},a||{}),p);return e;};
+
+/* mises en page : ordinateur (1440 × 900) et téléphone (390 × 844) */
+const BASE={
+  paysage:{W:1600,H:900,s:.9,ox:242,oy:100,x0:100,y0:0,w:1240,h:878,
+    cap:{x:800,y:68,size:38,max:1500,gap:0},
+    scene:{x:120,y:18,w:1200,h:843,r:18},
+    mondes:{x:145,y:35,w:174.6,h:29,fs:15,pad:11},
+    consigne:{x:720,ys:[86.5],fs:21,lignes:['Pose les jetons sur la carte (touche pour poser, retouche pour enlever), complète le schéma, puis Valider.']},
+    dessin:{x:383.6,y:111,k:2.25},
+    badge:{x:1038,y:111,w:72,h:72,fs:36,ring:3},
+    schema:{x:330,y:566,w:780,h:172,haut:85,fs:40,mini:[4,4,24,16],ring:3},
+    msg:{x:720,ys:[763],fs:16,lignes:['Bravo, du premier coup ! Regarde sous la tache…']},
+    valider:{x:655.8,y:787,w:128.5,h:51,fs:19},suivant:{y:787,w:222.9,h:51,fs:19},
+    compteur:{x:173,y:267,w:128,h:66,fs:40,sw:3,jr:18},
+    doigt:.82,pave:null,
+    titre:{tx:800,ty:310,tr:118,k:1.18,y:600,size:150,sy:680,ssize:42,logo:{h:110,y:28,xr:1564}},
+    fin:{x:800,ty:300,tr:62,k:.62,my:520,size:104,sy:600,ssize:36,jy:720,jw:330,jh:88,js:44}},
+  portrait:{W:900,H:1600,s:1.832,ox:93,oy:128,x0:0,y0:0,w:390,h:797,
+    cap:{x:450,y:62,size:36,max:840,gap:44},
+    scene:{x:12,y:10,w:366,h:586,hFin:650,r:18},
+    mondes:{x:25,y:21,w:26.6,h:22,fs:13,pad:7},
+    consigne:{x:195,ys:[58.5,77.5],fs:15,lignes:['Pose les jetons, complète le schéma,','puis Valider.']},
+    dessin:{x:25,y:149.67,k:1.1333},
+    badge:{x:312,y:98,w:48,h:44,fs:18,ring:3},
+    schema:{x:31.8,y:438,w:326.4,h:96,haut:47,fs:20,mini:[2,2,14,10],ring:4},
+    msg:{x:195,ys:[557,577],fs:16,lignes:['Bravo, du premier coup !','Regarde sous la tache…']},
+    valider:null,suivant:{y:599,w:181.1,h:48,fs:16},
+    compteur:{x:31,y:101,w:74,h:40,fs:22,sw:2,jr:9.07},
+    doigt:.42,pave:{y:610,h:187,gx:8,gy:617,gw:374,th:58,ecart:3},
+    titre:{tx:450,ty:470,tr:150,k:1.5,y:830,size:150,sy:930,ssize:44,logo:{h:120,y:30,xr:870}},
+    fin:{x:450,ty:520,tr:70,k:.7,my:770,size:84,sy:860,ssize:34,jy:1080,jw:360,jh:100,js:48}}
+};
+function mise(mode,ajout){const b=BASE[mode]||BASE.paysage,a=(ajout&&ajout[mode])||{},Y=Object.assign({},b,a);
+  for(const k of ['cap','fin','titre'])if(a[k])Y[k]=Object.assign({},b[k],a[k]);return Y;}
+
+/* ---------- construction ---------- */
+function defs(svg){const d=E('defs',{},svg);
+  const f=E('filter',{id:'psOmbre',x:'-10%',y:'-10%',width:'120%',height:'125%'},d);
+  E('feDropShadow',{dx:0,dy:10,stdDeviation:13,'flood-color':'#0f172a','flood-opacity':.08},f);
+  const g=E('linearGradient',{id:'psPaveOmbre',x1:0,y1:0,x2:0,y2:1},d);
+  E('stop',{offset:0,'stop-color':'#12324a','stop-opacity':0},g);E('stop',{offset:1,'stop-color':'#12324a','stop-opacity':.22},g);}
+/* un triangle ◀ ou ▶ dessiné : pointe à gauche (sens -1) ou à droite (sens 1), centré sur (cx,cy) */
+function triangle(p,cx,cy,h,sens,fill){const l=h*.88;
+  return E('path',{d:`M${(cx-sens*l/2).toFixed(2)},${(cy-h/2).toFixed(2)}L${(cx+sens*l/2).toFixed(2)},${cy}L${(cx-sens*l/2).toFixed(2)},${(cy+h/2).toFixed(2)}Z`,fill},p);}
+/* un texte précédé d'une icône dessinée (⌫ ou ✓ du pavé), l'ensemble centré sur (cx,cy), mesuré quand les polices sont là */
+function etiquetteIcone(p,cx,cy,fs,icone,texte,fill,fond,police){const g=E('g',{},p);
+  const t=E('text',{x:cx,y:cy+fs*.355,'font-size':fs,'font-weight':900,fill,'font-family':police},g);t.textContent=texte;
+  const ic=E('g',{},g);const h=fs*.72,iw=icone==='effacer'?fs*1.02:fs*.78,ecart=fs*.32;
+  if(icone==='effacer'){E('path',{d:`M${iw*.3},0H${iw}V${h}H${iw*.3}L0,${h/2}Z`,fill},ic);
+    const m=iw*.62,c=h/2,r=h*.2;E('path',{d:`M${m-r},${c-r}L${m+r},${c+r}M${m+r},${c-r}L${m-r},${c+r}`,stroke:fond,'stroke-width':fs*.12,'stroke-linecap':'round'},ic);}
+  else E('path',{d:`M${iw*.06},${h*.56}L${iw*.38},${h*.9}L${iw*.96},${h*.12}`,fill:'none',stroke:fill,'stroke-width':fs*.16,'stroke-linecap':'round','stroke-linejoin':'round'},ic);
+  const caler=()=>{let w=0;try{w=t.getComputedTextLength();}catch(e){}const x0=cx-(iw+ecart+w)/2;
+    ic.setAttribute('transform',`translate(${x0.toFixed(2)},${(cy-h/2).toFixed(2)})`);t.setAttribute('x',(x0+iw+ecart).toFixed(2));};
+  caler();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(caler);return g;}
+/* fond de page, carte blanche de l'élève, barre du haut (◀ Carte des mondes), consigne */
+function ecran(o,Y,svg,port){
+  o.ecran=E('g',{transform:`translate(${Y.ox},${Y.oy}) scale(${Y.s}) translate(${-Y.x0},${-Y.y0})`},svg);
+  /* l'écran a des coins arrondis : rien n'en dépasse (le pavé du téléphone touche le bas) */
+  const cl=E('clipPath',{id:'psEcran'},E('defs',{},svg));E('rect',{x:Y.x0,y:Y.y0,width:Y.w,height:Y.h,rx:port?22:14},cl);
+  const S=E('g',{'clip-path':'url(#psEcran)'},o.ecran);
+  E('rect',{x:Y.x0,y:Y.y0,width:Y.w,height:Y.h,fill:C.page},S);
+  const sc=Y.scene;o.scene=E('rect',{x:sc.x,y:sc.y,width:sc.w,height:sc.h,rx:sc.r,fill:'#ffffff',stroke:C.bordScene,'stroke-width':1,filter:'url(#psOmbre)'},S);
+  const m=Y.mondes;E('rect',{x:m.x,y:m.y,width:m.w,height:m.h,rx:m.h/2,fill:C.pilule},S);
+  const th=m.fs*.72;
+  if(port)triangle(S,m.x+m.w/2,m.y+m.h/2,th,-1,C.tete);
+  else{triangle(S,m.x+m.pad+th*.44,m.y+m.h/2,th,-1,C.tete);
+    E('text',{x:m.x+m.pad+th*.88+m.fs*.3,y:m.y+m.h/2+m.fs*.355,'font-size':m.fs,'font-weight':800,fill:C.tete},S).textContent='Carte des mondes';}
+  const cs=Y.consigne;cs.lignes.forEach((l,k)=>{ECRAN_EQ.txt(S,cs.x,cs.ys[k],cs.fs,{'text-anchor':'middle','font-weight':800,fill:C.consigne}).textContent=l;});
+  return S;}
+/* une case du schéma ou la petite case du total : fond, nombre (donné ou tapé), cadre de la case active */
+function caseOutil(p,b,o){const g=E('g',{},p);
+  const fond=E('rect',{x:b.x,y:b.y,width:b.w,height:b.h,fill:o.fond},g);
+  const tint=E('rect',{x:b.x,y:b.y,width:b.w,height:b.h,fill:'rgba(37,99,235,.08)'},g);op(tint,0);
+  if(o.mini){const [dx,dy,mw,mh]=o.mini,k=Math.min(mw/220,mh/180),ox=(mw-220*k)/2;
+    E('path',{d:FORMES[0],fill:'#111827',opacity:.8,transform:`translate(${(b.x+dx+ox).toFixed(2)},${b.y+dy}) scale(${k.toFixed(4)}) translate(-40,-10)`},g);}
+  const txt=chiffre(g,b.x+b.w/2,b.y+b.h/2,o.fs,o.couleur);if(o.texte!=null)txt.textContent=o.texte;
+  const rw=o.ring,cadre=E('rect',{x:b.x+rw/2,y:b.y+rw/2,width:b.w-rw,height:b.h-rw,fill:'none','stroke-width':rw},g);op(cadre,0);
+  return {g,fond,tint,txt,cadre,c:[b.x+b.w/2,b.y+b.h/2],b,fs:o.fs,donne:o.texte!=null,couleur:o.couleur,fondInit:o.fond};}
+/* une carte de Petit Splat : le dessin (tache, jetons cachés, jetons posés), la petite case du total, le schéma.
+   c = {total, visible, cache, n, donne:'visible'|'cache', forme, rot, caches:[[x,y]…]} */
+function carte(Y,S,c,port){const g=E('g',{},S),D=Y.dessin,k={g};
+  const ds=E('g',{transform:`translate(${D.x},${D.y}) scale(${D.k})`},g);k.dessin=ds;
+  for(const q of c.caches)E('circle',{cx:q[0],cy:q[1],r:8,fill:C.jeton,stroke:C.jetonBord,'stroke-width':.5},ds);
+  const n=c.n||1,places=c.places||[{x:135,y:110,s:.85}];
+  k.taches=places.map(pl=>{const tg=E('g',{transform:`translate(${pl.x},${pl.y}) scale(${pl.s}) rotate(${c.rot}) translate(-150,-100)`},ds);
+    return E('path',{d:FORMES[c.forme%5],fill:'#000000'},tg);});
+  k.poses=E('g',{},ds);
+  /* la petite case du total (vide : l'élève recopie le total) */
+  const B=Y.badge;E('rect',{x:B.x+1,y:B.y+1,width:B.w-2,height:B.h-2,fill:'none',stroke:C.badge,'stroke-width':2},g);
+  k.badge=caseOutil(g,{x:B.x+2,y:B.y+2,w:B.w-4,h:B.h-4},{fond:'#ffffff',fs:B.fs,couleur:C.encre,ring:B.ring});
+  /* le schéma en barres : le total en haut, les visibles en bleu, la case grise (petite tache) pour les cachés */
+  const H=Y.schema,ix=H.x+2,iy=H.y+2,iw=H.w-4,hb=H.h-4-H.haut;
+  E('rect',{x:ix,y:iy,width:iw,height:H.h-4,fill:'#ffffff'},g);
+  k.total=caseOutil(g,{x:ix,y:iy,w:iw,h:H.haut-2},{fond:'#ffffff',fs:H.fs,couleur:C.encre,texte:String(c.total),ring:H.ring});
+  const parts=[];if(c.visible>0)parts.push('vis');for(let i=0;i<n;i++)parts.push('gris');
+  const poids=parts.map(q=>q==='vis'?Math.max(c.visible,c.total*.05,1):Math.max(c.cache/n,c.total*.05,1)),somme=poids.reduce((a,b)=>a+b,0);
+  const libre=iw-2*(parts.length-1);let x=ix;k.parts=[];const seps=[];
+  parts.forEach((q,i)=>{const w=libre*poids[i]/somme,der=i===parts.length-1,b={x,y:iy+H.haut,w,h:hb};
+    const donne=q==='vis'?c.donne==='visible':c.donne==='cache';
+    const cs=caseOutil(g,b,{fond:q==='vis'?'#ffffff':C.gris,fs:H.fs,couleur:q==='vis'?(donne?C.donne:C.tape):C.encre,
+      texte:donne?String(q==='vis'?c.visible:c.cache/n):null,mini:q==='gris'?H.mini:null,ring:H.ring});
+    cs.genre=q;k.parts.push(cs);if(!der)seps.push(x+w+1);x+=w+(der?0:2);});
+  k.vis=k.parts.find(q=>q.genre==='vis');k.gris=k.parts.filter(q=>q.genre==='gris');
+  /* les traits par-dessus les fonds : cadre, ligne du milieu, séparations */
+  E('rect',{x:H.x+1,y:H.y+1,width:H.w-2,height:H.h-2,fill:'none',stroke:C.encre,'stroke-width':2},g);
+  E('line',{x1:ix,y1:iy+H.haut-1,x2:ix+iw,y2:iy+H.haut-1,stroke:C.encre,'stroke-width':2},g);
+  for(const sx of seps)E('line',{x1:sx,y1:iy+H.haut,x2:sx,y2:H.y+H.h-2,stroke:C.encre,'stroke-width':2},g);
+  k.c=c;return k;}
+/* page (x,y) de l'outil d'un point (u,v) de la carte 300 × 200 */
+const pt=(Y,q)=>[Y.dessin.x+q[0]*Y.dessin.k,Y.dessin.y+q[1]*Y.dessin.k];
+/* le compteur des jetons posés : un jeton et un nombre, dans un cadre doré (le doré du comptage) — jamais un chiffre sur un jeton */
+function compteur(Y,S){const K=Y.compteur,g=E('g',{},S);
+  E('rect',{x:K.x,y:K.y,width:K.w,height:K.h,rx:K.h/2,fill:'#ffffff',stroke:C.or,'stroke-width':K.sw},g);
+  const jx=K.x+K.h/2+K.sw;E('circle',{cx:jx,cy:K.y+K.h/2,r:K.jr,fill:C.jeton,stroke:C.jetonBord,'stroke-width':.5*Y.dessin.k},g);
+  const nx=(jx+K.jr+K.x+K.w)/2;const txt=chiffre(g,nx,K.y+K.h/2,K.fs,C.tape);
+  return {g,txt,c:[K.x+K.w/2,K.y+K.h/2]};}
+/* boutons de la carte : Valider (ordinateur) et « Carte suivante ▶ » */
+function boutons(Y,S){const r={};
+  if(Y.valider){const V=Y.valider,g=E('g',{},S);E('rect',{x:V.x,y:V.y,width:V.w,height:V.h,rx:12,fill:C.valider},g);
+    chiffre(g,V.x+V.w/2,V.y+V.h/2,V.fs,'#ffffff').textContent='Valider';r.valider={g,c:[V.x+V.w/2,V.y+V.h/2]};}
+  const N=Y.suivant,cx=Y.consigne.x,g=E('g',{},S);
+  E('rect',{x:cx-N.w/2,y:N.y,width:N.w,height:N.h,rx:12,fill:C.suivant},g);
+  F.etiquette(g,cx,N.y+N.h/2,N.fs,'Carte suivante','#ffffff');r.suivant={g,c:[cx,N.y+N.h/2]};
+  const M=Y.msg;r.msg=E('g',{},S);
+  M.lignes.forEach((l,k)=>{ECRAN_EQ.txt(r.msg,M.x,M.ys[k],M.fs,{'text-anchor':'middle','font-weight':900,fill:C.okTxt}).textContent=l;});
+  return r;}
+/* le pavé de chiffres du téléphone (assets/js/mathsgo-pave-chiffres.js) : 1-5, 6-0, Effacer, Valider */
+function pave(Y,S){const V=Y.pave;if(!V)return null;const g=E('g',{},S),res={g,cles:{},faces:{}};
+  E('rect',{x:Y.x0,y:V.y-9,width:Y.w,height:9,fill:'url(#psPaveOmbre)'},g);
+  E('rect',{x:Y.x0,y:V.y,width:Y.w,height:V.h,fill:C.pave},g);E('line',{x1:Y.x0,y1:V.y+.5,x2:Y.x0+Y.w,y2:V.y+.5,stroke:C.paveBord,'stroke-width':1},g);
+  const cw=V.gw/5,e=V.ecart;
+  const touche=(col,lig,span,fond,ombre,lab)=>{const x=V.gx+col*cw+e,y=V.gy+lig*V.th+e,w=cw*span-2*e,h=V.th-2*e;
+    E('rect',{x,y:y+ombre[1],width:w,height:h,rx:12,fill:ombre[0]},g);const f=E('rect',{x,y,width:w,height:h,rx:12,fill:fond},g);
+    return {f,c:[x+w/2,y+h/2],fond};};
+  '1234567890'.split('').forEach((ch,i)=>{const t=touche(i%5,Math.floor(i/5),1,C.touche,[C.paveBord,1]);
+    chiffre(g,t.c[0],t.c[1],24,C.toucheTxt,{'font-family':POLICE_PAVE}).textContent=ch;res.cles[ch]=t.c;res.faces[ch]=t;});
+  const ef=touche(0,2,2,C.effacer,[C.paveBord,1]);etiquetteIcone(g,ef.c[0],ef.c[1],16.8,'effacer','Effacer',C.effacerTxt,C.effacer,POLICE_PAVE);
+  const va=touche(2,2,3,C.paveValider,[C.paveValiderOmbre,3]);etiquetteIcone(g,va.c[0],va.c[1],18.4,'valider','Valider','#ffffff',C.paveValider,POLICE_PAVE);
+  res.valider=va.c;res.faces.valider=va;return res;}
+/* carton de titre (logo maths&go seul) et carton de fin, avec la tache du monde 1 (sans lettre) */
+function cartons(o,Y,svg,sousTitre,lignesFin){
+  o.st=E('text',{x:Y.cap.x,y:Y.cap.y,'text-anchor':'middle','font-size':Y.cap.size,'font-weight':800,fill:'#1e293b'},svg);o.stCle=null;
+  const ti=Y.titre,tache=(p,k)=>{E('path',{d:FORMES[3],fill:C.encre,transform:`scale(${k}) translate(-140,-97)`},p);};
+  o.titre=E('g',{},svg);E('rect',{x:0,y:0,width:Y.W,height:Y.H,fill:'#ffffff'},o.titre);
+  E('image',{href:LOGO_MG,x:ti.logo.xr-ti.logo.h*420/195,y:ti.logo.y,height:ti.logo.h,width:ti.logo.h*420/195},o.titre);
+  o.titreTache=E('g',{},o.titre);tache(o.titreTache,ti.k);
+  o.titreMot=E('g',{},o.titre);E('text',{x:ti.tx,y:ti.y,'text-anchor':'middle','font-size':ti.size,'font-weight':900,fill:C.encre,'letter-spacing':6},o.titreMot).textContent='SPLAT!';
+  o.titreSous=E('text',{x:ti.tx,y:ti.sy,'text-anchor':'middle','font-size':ti.ssize,'font-weight':700,fill:'#475569'},o.titre);o.titreSous.textContent=sousTitre;
+  const fi=Y.fin;o.fin=E('g',{},svg);E('rect',{x:0,y:0,width:Y.W,height:Y.H,fill:'#ffffff'},o.fin);
+  o.finTache=E('g',{},o.fin);tache(o.finTache,fi.k);
+  o.finMot=E('text',{x:fi.x,y:fi.my,'text-anchor':'middle','font-size':fi.size,'font-weight':900,fill:C.encre},o.fin);o.finMot.textContent='À toi de jouer !';
+  o.finSous=E('g',{},o.fin);
+  lignesFin.forEach((l,k)=>{E('text',{x:fi.x,y:fi.sy+k*fi.ssize*1.35,'text-anchor':'middle','font-size':fi.ssize,'font-weight':600,fill:'#475569'},o.finSous).textContent=l;});
+  o.jouer=E('a',{href:SUITE,class:'film-lien'},o.fin);
+  E('rect',{x:fi.x-fi.jw/2,y:fi.jy-fi.jh/2,width:fi.jw,height:fi.jh,rx:18,fill:'#16a34a'},o.jouer);
+  F.etiquette(o.jouer,fi.x,fi.jy,fi.js,'Je joue','#ffffff');
+  o.revoir=E('text',{x:fi.x,y:fi.jy+fi.jh/2+fi.ssize*1.7,'text-anchor':'middle','font-size':fi.ssize,'font-weight':700,fill:'#2563eb',class:'film-lien'},o.fin);o.revoir.textContent='↺ Revoir le film';}
+
+/* ---------- rendu ---------- */
+/* la case active : au téléphone, cadre bleu foncé et fond teinté (pavé) ; à l'ordinateur, cadre bleu clair (curseur) */
+function activer(cs,on,port){op(cs.cadre,on?1:0);cs.cadre.setAttribute('stroke',port?C.actif:C.focus);op(cs.tint,on&&port?1:0);}
+/* une case juste après Valider : fond vert, nombre vert */
+function juste(cs,on){cs.fond.setAttribute('fill',on?C.okFond:cs.fondInit);cs.txt.setAttribute('fill',on?C.okTxt:cs.couleur);}
+/* un petit rebond à t0 (nombre tapé, nombre lu) ; echelle() applique le produit de plusieurs rebonds */
+const rebond=(t,t0,amp)=>1+(amp||.18)*Math.sin(Math.PI*clamp((t-t0)/.25));
+function echelle(el,c,s){el.setAttribute('transform',Math.abs(s-1)>.0005?`translate(${c[0]},${c[1]}) scale(${s.toFixed(3)}) translate(${-c[0]},${-c[1]})`:'');}
+/* la touche du pavé enfoncée */
+function appuiTouche(face,t,tt){face.f.setAttribute('fill',t>=tt-.04&&t<tt+.18?(face.fond===C.paveValider?'#064a9f':face.fond===C.effacer?'#bacfdd':C.toucheAppui):face.fond);}
+return {C,FORMES,BASE,mise,defs,ecran,carte,pt,compteur,boutons,pave,cartons,activer,juste,rebond,echelle,appuiTouche,chiffre,triangle};
+})();
+</script>
+<script>
+/* ===== Film « Dessine les jetons » — Petit SPLAT!, étape 2 (?film=dessine) =====
+   Demandé le 10/10/2026, réglé le 11/10 : deux cartes HORS des séries des étapes 1 à 3 (on ne donne aucune
+   réponse) ; la première donne la case bleue (9 en tout, 6 visibles), la seconde la case grise (8 en tout, 3 sous
+   la tache), comme la moitié des cartes de l'étape chacune. Le doigt pose les jetons un par un ; chaque jeton posé
+   s'allume (anneau doré) et un compteur monte — jamais de chiffre sur un jeton. À la première carte, il en pose un
+   de trop et le retouche pour l'enlever (« touche pour poser, retouche pour enlever »). Il complète le schéma,
+   valide, la tache s'éclaircit. Pas d'arrêt : un toucher ou Espace met en pause. Écran : bloc ECRAN_PS. */
+FILMS.dessine=(function(){
+'use strict';
+const Z=ECRAN_PS,Q=ECRAN_EQ,E=F.E,P=F.P,L=F.L,op=F.op,clamp=F.clamp;
+const CARTES=[
+  {total:9,visible:6,cache:3,donne:'visible',forme:1,rot:160,caches:[[167.8,94.1],[101.4,91.5],[146.8,118.6]],
+   jetons:[[44,40],[26,104],[48,166],[232,36],[264,102],[242,166],[150,186]]},
+  {total:8,visible:5,cache:3,donne:'cache',forme:4,rot:250,caches:[[83.6,96],[114.8,122.4],[163,64.5]],
+   jetons:[[42,42],[28,106],[56,168],[238,46],[256,150]]}];
+const PAS1=.55,PAS2=.5;
+const T={ecran:2.7,lit:3.1,p9:3.7,p6:4.3,cpt1:5.2,pose1:5.7,trop:9.4,ilEnTrop:10.0,retire:10.9,egal:11.5,cptOut1:12.9,
+  caseG:13.6,tapeG:14.2,badge1:14.9,tapeB1:15.5,valide1:16.4,suivant:19.6,
+  b:19.9,grise:20.1,lit2:21.7,caseV:22.9,tapeV:23.5,pose5:24.0,cpt2:24.1,pose2:24.6,cptOut2:27.4,
+  badge2:27.9,tapeB2:28.5,valide2:29.4,fin:32.6};
+const SOUS_TITRES=[[3.1,'Le schéma : 9 en tout, 6 jetons visibles.'],[5.0,'Touche la carte pour poser un jeton.'],
+  [9.4,'7 jetons : un de trop !'],[10.0,'Retouche-le pour l’enlever.'],[11.4,'6 jetons, comme dans le schéma.'],
+  [13.1,'Écris ce qui manque : 3 sous la tache…'],[14.7,'… et le total, 9, dans la petite case.'],[15.9,'Valide.'],
+  [16.8,'La tache s’éclaircit : 3 jetons dessous !'],[19.9,'Ici, c’est la case grise qui est donnée.'],
+  [21.5,'8 en tout, 3 sous la tache : 5 visibles.'],[23.9,'Pose 5 jetons.'],[27.4,'Le total, 8, dans la petite case.'],
+  [28.9,'Valide.'],[29.8,'Bravo ! 3 jetons sous la tache.'],[32.6,'']];
+/* moments où chaque jeton est posé (et retiré) */
+const POSE=[CARTES[0].jetons.map((_,k)=>T.pose1+k*PAS1),CARTES[1].jetons.map((_,k)=>T.pose2+k*PAS2)];
+const RETIRE=[[null,null,null,null,null,null,T.retire],[]];
+const film={
+  duration:36.0, poster:2.4, stops:[],
+  modes:{paysage:{w:1600,h:900},portrait:{w:900,h:1600}},
+  passer:SUITE, credit:'Jeu Splat! créé par <a href="https://stevewyborney.com" target="_blank" rel="noopener">Steve Wyborney</a>',
+  aria:'Film : comment on joue à «\u00a0Dessine les jetons\u00a0» dans Petit SPLAT! : poser les jetons sur la carte, en retirer un, compléter le schéma, valider',
+  titre:'Dessine les jetons — Petit SPLAT! — maths&go',
+  chapters:[{t:0,name:'SPLAT!'},{t:2.7,name:'Le schéma est donné'},{t:5.0,name:'Poser les jetons'},{t:9.4,name:'Enlever un jeton'},
+    {t:13.1,name:'Compléter le schéma'},{t:15.9,name:'Valider'},{t:19.9,name:'Une autre carte'},{t:32.6,name:'À toi de jouer'}],
+  build(svg,mode){
+    const port=mode==='portrait',Y=this.Y=Z.mise(mode),o=this.o={port};
+    Z.defs(svg);
+    const S=Z.ecran(o,Y,svg,port);
+    o.cartes=CARTES.map((c,i)=>{const k=Z.carte(Y,S,c,port);
+      k.jetons=c.jetons.map((q,j)=>{const g=E('g',{},k.poses);
+        const an=E('circle',{cx:q[0],cy:q[1],r:11.5,fill:'none',stroke:Z.C.or,'stroke-width':3},g);
+        const jc=E('circle',{cx:q[0],cy:q[1],r:8,fill:Z.C.jeton,stroke:Z.C.jetonBord,'stroke-width':.5},g);
+        return {g,an,jc,q,tp:POSE[i][j],tr:RETIRE[i][j]||null};});
+      return k;});
+    o.cpt=Z.compteur(Y,S);
+    o.btn=Z.boutons(Y,S);
+    o.pave=Z.pave(Y,S);
+    /* ---- le doigt ---- */
+    const D=Q.evenements(port);o.ev=D.ev;const [k1,k2]=o.cartes,pt=q=>Z.pt(Y,q);
+    const tape=(tt,ch)=>{if(port)D.touche(tt,o.pave.cles[ch]);};
+    D.entre(T.pose1-.55,pt(k1.jetons[0].q));
+    k1.jetons.forEach(j=>D.touche(j.tp,pt(j.q)));
+    const p7=pt(k1.jetons[6].q),ecart=port?[26,20]:[70,50];D.va(T.pose1+6*PAS1+.6,[p7[0]+ecart[0],p7[1]+ecart[1]]);
+    D.touche(T.retire,pt(k1.jetons[6].q));
+    D.touche(T.caseG,k1.gris[0].c);tape(T.tapeG,'3');
+    D.touche(T.badge1,k1.badge.c);tape(T.tapeB1,'9');
+    D.touche(T.valide1,port?o.pave.valider:o.btn.valider.c);D.fin(T.valide1+.35);
+    D.entre(T.suivant-.7,o.btn.suivant.c);D.touche(T.suivant,o.btn.suivant.c);D.fin(T.suivant+.3);
+    D.entre(T.caseV-.7,k2.vis.c);D.touche(T.caseV,k2.vis.c);tape(T.tapeV,'5');
+    k2.jetons.forEach(j=>D.touche(j.tp,pt(j.q)));
+    D.touche(T.badge2,k2.badge.c);tape(T.tapeB2,'8');
+    D.touche(T.valide2,port?o.pave.valider:o.btn.valider.c);D.fin(T.valide2+.35);
+    Q.doigt(o,Y,o.ecran,port);
+    Z.cartons(o,Y,svg,'Dessine les jetons',port?['Pose les jetons, complète le schéma,','puis valide.']:['Pose les jetons, complète le schéma, puis valide.']);
+  },
+  render(t){
+    const o=this.o,Y=this.Y,port=o.port,enA=t<T.b;
+    Q.titre(o,Y,t,T.ecran);
+    /* les deux cartes : la seconde arrive quand on touche « Carte suivante » */
+    const vB=P(t,T.b,.25,F.lin);op(o.cartes[0].g,1-vB);op(o.cartes[1].g,vB);
+    const val=[T.valide1,T.valide2],cpt=[[T.cpt1,T.cptOut1],[T.cpt2,T.cptOut2]];
+    o.cartes.forEach((k,i)=>{
+      const tv=val[i],ok=t>=tv;
+      /* jetons posés : ils apparaissent au toucher, s'allument, s'éteignent quand le compteur s'en va */
+      for(const j of k.jetons){const vu=t>=j.tp&&(j.tr==null||t<j.tr+.15);op(j.g,vu?1:0);if(!vu)continue;
+        const u=clamp((t-j.tp)/.3),sr=j.tr!=null&&t>=j.tr?1-clamp((t-j.tr)/.15):1;
+        Z.echelle(j.g,j.q,Math.max(.001,F.back(u)*sr));
+        op(j.an,1-P(t,cpt[i][1],.4,F.lin));j.an.setAttribute('r',L(18,11.5,F.out(clamp((t-j.tp)/.35))).toFixed(2));}
+      /* la tache s'éclaircit à la validation (0,7 s, comme dans l'outil) */
+      for(const tc of k.taches)tc.setAttribute('opacity',ok?L(1,.15,P(t,tv,.7,F.io)).toFixed(3):1);
+      /* les nombres tapés (petit rebond à l'arrivée) ; le total et la case donnée rebondissent quand le sous-titre les lit */
+      const tapes=i===0?[[k.gris[0],T.tapeG,'3'],[k.badge,T.tapeB1,'9']]:[[k.vis,T.tapeV,'5'],[k.badge,T.tapeB2,'8']];
+      for(const [cs,tt,v] of tapes){cs.txt.textContent=t>=tt?v:'';Z.echelle(cs.txt,cs.c,Z.rebond(t,tt));Z.juste(cs,ok);}
+      if(i===0){Z.echelle(k.total.txt,k.total.c,Z.rebond(t,T.p9,.16));Z.echelle(k.vis.txt,k.vis.c,Z.rebond(t,T.p6)*Z.rebond(t,T.egal+.1));}
+      else{Z.echelle(k.total.txt,k.total.c,Z.rebond(t,T.lit2+.3,.16));Z.echelle(k.gris[0].txt,k.gris[0].c,Z.rebond(t,T.lit2+.9));}
+      /* la case active ; au téléphone, le cadre reste sur la dernière case après Valider (comme dans l'outil) ;
+         à l'ordinateur, le curseur part sur « Carte suivante » */
+      const actives=i===0?[[k.badge,-1],[k.gris[0],T.caseG],[k.badge,T.badge1]]:[[k.badge,-1],[k.vis,T.caseV],[k.badge,T.badge2]];
+      let act=null;for(const [cs,ta] of actives)if(t>=ta)act=cs;
+      for(const cs of [k.badge,...k.parts])Z.activer(cs,cs===act&&!(ok&&!port),port);
+    });
+    /* le compteur des jetons posés : il monte à chaque jeton, redescend quand on en retire un */
+    const kc=o.cartes[enA?0:1];let nCpt=0,dernier=-1;
+    for(const j of kc.jetons)if(t>=j.tp){dernier=Math.max(dernier,j.tp);if(j.tr==null||t<j.tr)nCpt++;else dernier=Math.max(dernier,j.tr);}
+    const ct=cpt[enA?0:1];op(o.cpt.g,F.W(t,ct[0],.3,ct[1],.4));o.cpt.txt.textContent=String(nCpt);
+    const s=L(.5,1,P(t,ct[0],.35,F.back))*(dernier>0?Z.rebond(t,dernier,.14):1)*(enA?Z.rebond(t,T.egal+.1,.12):1);
+    Z.echelle(o.cpt.g,o.cpt.c,s);
+    /* boutons, message, pavé */
+    const tv=enA?T.valide1:T.valide2,ok=t>=tv;
+    if(o.btn.valider){op(o.btn.valider.g,ok?0:1);Q.appui(o.btn.valider,t,tv);}
+    op(o.btn.suivant.g,ok&&(enA||t<T.fin)?P(t,tv,.12,F.lin):0);Q.appui(o.btn.suivant,t,T.suivant);
+    op(o.btn.msg,ok?P(t,tv,.15,F.lin):0);
+    /* le pavé s'efface à la validation (on laisse voir l'appui sur « Valider ») */
+    if(o.pave){op(o.pave.g,ok?1-P(t,tv+.12,.15,F.lin):1);
+      const appuis=[[T.tapeG,'3'],[T.tapeB1,'9'],[T.tapeV,'5'],[T.tapeB2,'8'],[T.valide1,'valider'],[T.valide2,'valider']];
+      for(const ch in o.pave.faces){const f=o.pave.faces[ch],tt=appuis.filter(a=>a[1]===ch).map(a=>a[0]).find(x=>t>=x-.04&&t<x+.18);Z.appuiTouche(f,t,tt==null?-9:tt);}
+      o.scene.setAttribute('height',ok?Y.scene.hFin:Y.scene.h);}
+    Q.rendreDoigt(o,t,port);
+    Q.sousTitres(o,Y,t,SOUS_TITRES);
+    Q.fin(o,Y,t,T.fin);
+  }
+};
+return film;
+})();
+</script>
+<script>
 /* lance le film demandé par ?film= (un nom inconnu, ou pas de nom : le film d'introduction) */
 (function(){let nom='';try{nom=new URLSearchParams(location.search).get('film')||'';}catch(e){}
   lancerLecteur(Object.prototype.hasOwnProperty.call(FILMS,nom)&&nom!=='intro'?FILMS[nom]:FILMS.intro);})();
