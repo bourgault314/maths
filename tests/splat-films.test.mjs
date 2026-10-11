@@ -15,6 +15,7 @@ test("le lecteur : chaque film s'inscrit, le film d'introduction reste celui par
   assert.match(page, /FILMS\.intro=film;/);
   assert.match(page, /FILMS\.equasplat=\(function\(\)\{/);
   assert.match(page, /FILMS\['equasplat-jetons'\]=\(function\(\)\{/);
+  assert.match(page, /FILMS\.dessine=\(function\(\)\{/);
   // un nom inconnu (ou « intro », ou rien) lance l'introduction ; jamais une propriété héritée d'Object
   assert.match(page, /lancerLecteur\(Object\.prototype\.hasOwnProperty\.call\(FILMS,nom\)&&nom!=='intro'\?FILMS\[nom\]:FILMS\.intro\);/);
   // il n'y a qu'un appel au lecteur : celui du dernier bloc
@@ -24,8 +25,9 @@ test("le lecteur : chaque film s'inscrit, le film d'introduction reste celui par
 test("les films des étapes : pas d'arrêt, format téléphone pris par le lecteur", () => {
   const blocs = page.split("<script>").slice(1).map((b) => b.split("</script>")[0]);
   const billes = blocs.find((b) => b.includes("FILMS.equasplat=")), jetons = blocs.find((b) => b.includes("FILMS['equasplat-jetons']="));
-  assert.ok(billes && jetons);
-  for (const b of [billes, jetons]) {
+  const dessine = blocs.find((b) => b.includes("FILMS.dessine="));
+  assert.ok(billes && jetons && dessine);
+  for (const b of [billes, jetons, dessine]) {
     assert.match(b, /stops:\[\]/);
     assert.match(b, /portrait:\{w:900,h:1600\}/);
   }
@@ -46,16 +48,32 @@ test("aucune équation de la série de l'étape 35 dans les films (on ne donne p
   assert.ok(films.includes("'𝑡 + 3'") && films.includes("'3𝑦'") && films.includes("'20 + 15'") && films.includes("'3𝑝'"));
 });
 
+test("« Dessine les jetons » : deux cartes hors des séries des étapes 1 à 3 du monde 1, une case bleue donnée puis une case grise", () => {
+  const bloc = page.slice(page.indexOf("FILMS.dessine=(function(){"));
+  const cartes = [...bloc.slice(0, bloc.indexOf("</script>")).matchAll(/\{total:(\d+),visible:(\d+),cache:(\d+),donne:'(visible|cache)'/g)]
+    .map((m) => ({ total: +m[1], visible: +m[2], cache: +m[3], donne: m[4] }));
+  assert.equal(cartes.length, 2);
+  assert.deepEqual(cartes.map((c) => c.donne), ["visible", "cache"]);
+  const serie = (p) => JSON.parse(carte.match(new RegExp(`p:"${p}"[^\\n]*\\n(?:\\s*films:[^\\n]*\\n)?\\s*eqs:(\\[[^\\]]*\\])`))[1]);
+  const toutes = ["m1e1", "m1e2", "m1e3"].flatMap(serie).map((e) => e.replace(" ✏️", ""));
+  assert.ok(toutes.length >= 36);
+  for (const c of cartes) {
+    assert.equal(c.visible + c.cache, c.total);
+    assert.ok(!toutes.includes(`𝑥 + ${c.visible} = ${c.total}`), `${c.total} = ${c.visible} + ${c.cache}`);
+  }
+});
+
 test("le caractère ▶ est toujours suivi de U+FE0E (sinon l'iPhone le dessine en émoji)", () => {
   const texte = sansCommentaires(page);
   const mauvais = [...texte.matchAll(/▶(?!︎|&#xFE0E;)/g)].map((m) => texte.slice(m.index - 20, m.index + 5));
   assert.deepEqual(mauvais, []);
 });
 
-test("carte des mondes : les deux films sous l'étape 35, qui reviennent au jeu de l'étape", () => {
+test("carte des mondes : les films sous les étapes 2 et 35, qui reviennent au jeu de l'étape", () => {
   assert.match(carte, /p:"m3e1",id:"e2-0",\n\s*films:\[\["equasplat","Comment on joue \?"\],\["equasplat-jetons","Avec des jetons numérotés"\]\],/);
   // le lien : le lecteur, le film, et ?suite= = le jeu de l'étape (encodé : il porte un #data=)
   assert.ok(carte.includes(`(e.films?e.films.map(f=>'<a class="filmLien" href="/outils/splat_intro.html?film='+f[0]+'&amp;suite='+encodeURIComponent(e.j)+'">\\ud83c\\udfac '+f[1]+'</a>').join(''):'')`));
-  // une seule étape a des films pour l'instant
-  assert.equal((carte.match(/\bfilms:\[\[/g) || []).length, 1);
+  // les étapes qui ont un film : la 35 (deux films) et la 2 (« Dessine les jetons »)
+  assert.match(carte, /p:"m1e2",dessin:true,\n\s*films:\[\["dessine","Comment on joue \?"\]\],/);
+  assert.equal((carte.match(/\bfilms:\[\[/g) || []).length, 2);
 });
