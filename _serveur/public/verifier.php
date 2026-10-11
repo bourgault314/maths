@@ -230,8 +230,15 @@ if ($autorise) {
         if (!table_existe($pdo, 'records')) {
             throw new RuntimeException("manque la table « records » — ouvre migrer.php avec ton mot de passe d'installation.");
         }
-        $legendes = (int)$pdo->query('SELECT COUNT(*) FROM records WHERE meilleur IS NOT NULL')->fetchColumn();
-        return $legendes === 0 ? "en place (aucun temps enregistré pour le moment)" : "en place ($legendes Légende(s) avec un temps)";
+        // Lot « records-depart » (11/10/2026) : les anciens temps sont gardés
+        // en base sans compter (remise à zéro du 10/10). La ligne les compte
+        // à part, sinon on croit que la remise à zéro n'a pas marché.
+        $temps = compter_temps_par_saison($pdo);
+        if ($temps['saison'] === 0 && $temps['anciens'] === 0) return "en place (aucun temps enregistré pour le moment)";
+        $depuis = instant_local_lisible(records_depuis());
+        $detail = "en place — depuis le $depuis (heure de La Réunion) : {$temps['saison']} Légende(s) avec un temps";
+        if ($temps['anciens'] > 0) $detail .= " ; {$temps['anciens']} temps plus ancien(s), gardé(s) en base, ne compte(nt) plus";
+        return $detail;
     });
     // Le limiteur d'essais s'écrit avec une instruction propre à chaque moteur
     // (MySQL chez OVH, SQLite dans les tests) : on la joue ici, sur la vraie

@@ -4465,10 +4465,40 @@ verifier("records — repartent à zéro avec le nouveau tirage (09/10/2026) : u
     $r = records_api($toti['code'], ['temps' => 650, 'justes' => 25]);
     egal(700, $r['json']['avant'], 'ensuite, tout redevient normal');
     egal(650, $r['json']['record']['meilleur']);
-    // La date du changement : un minuit à La Réunion, écrit comme meilleur_le,
-    // pas avant le 10/10/2026 (le jour du nouveau tirage).
-    vrai((bool)preg_match('/^\d{4}-\d{2}-\d{2}T20:00:00\.000000Z$/', RECORDS_DEPUIS), 'RECORDS_DEPUIS : minuit à La Réunion, à la microseconde');
-    vrai(strcmp(RECORDS_DEPUIS, '2026-10-09T20:00:00.000000Z') >= 0, 'pas avant le 10/10/2026');
+    // La date du changement, écrite comme meilleur_le (à la microseconde) :
+    // le 10/10/2026 à 20 h à La Réunion, juste après la mise en ligne du
+    // nouveau tirage (fusion à 19 h 23). Correction du 11/10 : c'était le
+    // 10/10 à 0 h, et les courses du samedi faites avec l'ancien tirage
+    // comptaient encore.
+    vrai((bool)preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/', RECORDS_DEPUIS), 'RECORDS_DEPUIS : écrit comme meilleur_le, à la microseconde');
+    egal('2026-10-10T16:00:00.000000Z', RECORDS_DEPUIS, 'le 10/10/2026 à 20 h, heure de La Réunion');
+    egal('10/10/2026 20:00', instant_local_lisible(RECORDS_DEPUIS), 'lu à La Réunion');
+    vrai(strcmp('2026-10-10T15:23:00.000000Z', RECORDS_DEPUIS) < 0, 'une course de samedi 19 h 23 (ancien tirage) ne compte plus');
+});
+
+verifier("records — verifier.php compte à part les temps de la saison et les anciens, gardés sans compter (11/10/2026)", function () use (&$recEleves) {
+    vider_compteurs();
+    $toti = $recEleves[0];
+    $avant = bd_test()->query('SELECT meilleur, meilleur_le FROM records WHERE eleve_id = ' . (int)$toti['id'])->fetch();
+    // Le serveur de test part du 01/01/2026 (config.php des tests) : on
+    // compte ici à la main, comme verifier.php doit le faire.
+    $compter = fn(): array => [
+        'saison' => (int)bd_test()->query("SELECT COUNT(*) FROM records WHERE meilleur IS NOT NULL AND meilleur_le >= '2026-01-01T00:00:00.000000Z'")->fetchColumn(),
+        'anciens' => (int)bd_test()->query("SELECT COUNT(*) FROM records WHERE meilleur IS NOT NULL AND meilleur_le < '2026-01-01T00:00:00.000000Z'")->fetchColumn(),
+    ];
+    $temps = $compter();
+    vrai($temps['saison'] >= 2, 'au moins deux Légendes ont couru cette saison');
+    egal(0, $temps['anciens'], 'aucun ancien temps pour commencer');
+    $v = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai((bool)preg_match('#class="etat oui">✓</span>\s*Les records \(Défi tables\)\s*<div class="detail">en place — depuis le 01/01/2026 04:00 \(heure de La Réunion\) : ' . $temps['saison'] . ' Légende\(s\) avec un temps</div>#u', $v['texte']),
+        'verifier.php : la date de départ et le nombre de temps de la saison, sans ligne d’anciens temps');
+    // Toti redevient un ancien temps : la ligne le compte à part.
+    bd_test()->prepare('UPDATE records SET meilleur_le = ? WHERE eleve_id = ?')->execute(['2025-12-31T23:59:59.999999Z', $toti['id']]);
+    $v = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai((bool)preg_match('#Les records \(Défi tables\)\s*<div class="detail">en place — depuis le 01/01/2026 04:00 \(heure de La Réunion\) : ' . ($temps['saison'] - 1) . ' Légende\(s\) avec un temps ; 1 temps plus ancien\(s\), gardé\(s\) en base, ne compte\(nt\) plus</div>#u', $v['texte']),
+        'verifier.php : l’ancien temps est compté à part');
+    egal(['saison' => $temps['saison'] - 1, 'anciens' => 1], $compter());
+    bd_test()->prepare('UPDATE records SET meilleur_le = ? WHERE eleve_id = ?')->execute([$avant['meilleur_le'], $toti['id']]);
 });
 
 verifier("records — le record part avec l'élève supprimé, et avec la classe supprimée", function () use (&$recEleves, &$jetonS1, &$recJetonClaire, &$recCodeClaire) {
