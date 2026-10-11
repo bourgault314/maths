@@ -13,7 +13,7 @@ vm.runInContext(source, context);
 
 const catalogue = context.window.MATHSGO_CATALOGUE;
 const errors = [];
-const validGroups = new Set(["manipuler", "entrainer", "generer", "imprimer", "activites", "cours", "jeux"]);
+const validGroups = new Set(["manipuler", "entrainer", "generer", "imprimer", "activites", "cours", "jeux", "classe"]);
 const domainIds = new Set(catalogue.domains.map(({ id }) => id));
 const notionById = new Map(catalogue.notions.map((notion) => [notion.id, notion]));
 const collectionIds = new Set((catalogue.collections || []).map(({ id }) => id));

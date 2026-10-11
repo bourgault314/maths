@@ -74,6 +74,9 @@ test("en suivant le parcours (« Étape suivante » par ?apres=, « Continuer »
   assert.match(versEtape({ j: "/outils/equasplat.html#data=x", films: [["equasplat", "a"], ["equasplat-jetons", "b"]] }), /\?film=equasplat&suite=%2Foutils%2Fequasplat\.html%23data%3Dx$/);
   assert.equal(versEtape({ j: jeu }), jeu);
   assert.equal(versEtape({ j: jeu, films: [] }), jeu);
+  // une étape du parcours (avec son code p) : la suite du film est la carte avec ?jouer=, une adresse courte (11/10/2026)
+  assert.equal(versEtape({ p: "m3e1", j: "/outils/equasplat.html?eleve=1&parcours=m3e1#data=" + "x".repeat(3000), films: [["equasplat", "a"]] }),
+    "/outils/splat_intro.html?film=equasplat&suite=" + encodeURIComponent("/outils/splat_univers.html?jouer=m3e1"));
   // les deux portes du parcours s'en servent
   assert.match(carte, /APRES_REDIRIGE=true;\s*window\.location\.replace\(versEtape\(suite\[k\+1\]\)\);/);
   assert.match(carte, /a\.href=versEtape\(prochaine\.e\); a\.dataset\.monde=prochaine\.mi;/);
@@ -96,8 +99,11 @@ test("le caractère ▶ est toujours suivi de U+FE0E (sinon l'iPhone le dessine 
 
 test("carte des mondes : les films sous les étapes 2 et 35, qui reviennent au jeu de l'étape", () => {
   assert.match(carte, /p:"m3e1",id:"e2-0",\n\s*films:\[\["equasplat","Comment on joue \?"\],\["equasplat-jetons","Avec des jetons numérotés"\]\],/);
-  // le lien : le lecteur, le film, et ?suite= = le jeu de l'étape (encodé : il porte un #data=)
-  assert.ok(carte.includes(`(e.films?e.films.map(f=>'<a class="filmLien" href="/outils/splat_intro.html?film='+f[0]+'&amp;suite='+encodeURIComponent(e.j)+'">\\ud83c\\udfac '+f[1]+'</a>').join(''):'')`));
+  // le lien : le lecteur, le film, et ?suite= = la carte avec ?jouer=<parcours>, qui renvoie aussitôt au jeu de
+  // l'étape (11/10/2026 : avant, ?suite= portait le lien du jeu en entier, #data= compris — une adresse de plusieurs Ko)
+  assert.ok(carte.includes(`(e.films?e.films.map(f=>'<a class="filmLien" href="/outils/splat_intro.html?film='+f[0]+'&amp;suite='+encodeURIComponent(e.p?'/outils/splat_univers.html?jouer='+e.p:e.j)+'">\\ud83c\\udfac '+f[1]+'</a>').join(''):'')`));
+  assert.match(carte, /const jouer=new URLSearchParams\(window\.location\.search\)\.get\("jouer"\);/);
+  assert.match(carte, /window\.location\.replace\(MONDES\[mi\]\.etapes\.find\(e=>e\.p===jouer\)\.j\);/);
   // les étapes qui ont un film : la 35 (deux films) et la 2 (« Dessine les jetons »)
   assert.match(carte, /p:"m1e2",dessin:true,\n\s*films:\[\["dessine","Comment on joue \?"\]\],/);
   assert.equal((carte.match(/\bfilms:\[\[/g) || []).length, 2);

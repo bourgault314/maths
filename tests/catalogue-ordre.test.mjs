@@ -155,6 +155,61 @@ test("dans la collection Splat, les livrets tiennent en une seule carte", () => 
   ], "Une seule carte « Les livrets SPLAT! » depuis le lot L : elle mène aux livrets de tous les mondes.");
 });
 
+// La page Splat (11/10/2026, idée de Claire, ordre choisi par Gwenaël) : les sections dans son ordre
+// à elle, extraites du fichier livré au navigateur et exécutées telles quelles.
+function loadSplatLayout() {
+  const groupes = catalogueScript.match(/const resourceGroups = \[[\s\S]*?\n {2}\];/);
+  const mises = catalogueScript.match(/const collectionLayouts = \{[\s\S]*?\n {2}\};/);
+  const ordre = catalogueScript.match(/function groupsForCollection\(collectionId\) \{[\s\S]*?\n {2}\}/);
+  assert.ok(groupes && mises && ordre, "resourceGroups, collectionLayouts et groupsForCollection doivent rester isolés.");
+  const sandbox = {};
+  vm.runInNewContext(`${groupes[0]}\n${mises[0]}\n${ordre[0]}\nthis.groupsForCollection = groupsForCollection;\nthis.collectionLayouts = collectionLayouts;`, sandbox);
+  return sandbox;
+}
+
+test("la page Splat : Pour la classe, l’univers, Créer, puis Manipuler ; ailleurs l’ordre ne change pas", () => {
+  const { groupsForCollection, collectionLayouts } = loadSplatLayout();
+  assert.deepEqual(Array.from(groupsForCollection("splat").slice(0, 4), (groupe) => groupe.label), [
+    "Pour la classe",
+    "Jeux et explorations",
+    "Créer et personnaliser",
+    "Manipuler et visualiser"
+  ]);
+  assert.equal(groupsForCollection("").map((groupe) => groupe.id).join(","), "manipuler,entrainer,generer,imprimer,activites,cours,jeux,classe");
+  assert.equal(groupsForCollection("rekenrek")[0].id, "manipuler", "une autre collection garde l’ordre général.");
+  assert.equal(collectionLayouts.splat.regroup["outils/livrets_splat.html"], "classe", "sur la page Splat, les livrets montent dans « Pour la classe ».");
+  assert.equal(classifications["outils/livrets_splat.html"].primaryGroup, "imprimer", "ailleurs (recherche), les livrets restent « Prêts à imprimer ».");
+});
+
+test("page Splat : les livrets puis « Comment on joue ? » ; ÉquaSplat, ÉquaBarre puis ÉquaScribe", () => {
+  const famille = families.find((f) => f.id === "splat-comment-on-joue");
+  assert.ok(famille, "la famille « Comment on joue ? » existe");
+  assert.equal(famille.group, "classe");
+  assert.deepEqual(Array.from(famille.paths), [
+    "outils/splat_intro.html",
+    "outils/splat_comment_on_joue.mp4",
+    "outils/splat_comment_on_joue_diaporama.pdf"
+  ]);
+  const cartes = [
+    { title: famille.title, rang: famille.rang },
+    { title: "Les livrets SPLAT!", rang: collectionCardRank("splat", "outils/livrets_splat.html") }
+  ].sort(compareCards);
+  assert.deepEqual(cartes.map((c) => c.title), ["Les livrets SPLAT!", "Comment on joue ?"]);
+  const manipuler = ["outils/equascribe.html", "outils/equabarre.html", "outils/equasplat.html"]
+    .sort((a, b) => collectionCardRank("splat", a) - collectionCardRank("splat", b));
+  assert.deepEqual(manipuler, ["outils/equasplat.html", "outils/equabarre.html", "outils/equascribe.html"]);
+});
+
+test("ÉquaBarre s’affiche dans la page Splat sans quitter Schémas en barres", () => {
+  const equabarre = classifications["outils/equabarre.html"];
+  assert.deepEqual(Array.from(equabarre.alsoInCollections), ["splat"]);
+  assert.ok(!(equabarre.collections || []).includes("splat"),
+    "membre de la collection Splat, ÉquaBarre serait replié dans sa carte et disparaîtrait de la notion Schémas en barres.");
+  assert.match(catalogueScript, /if \(state\.collection && !resourceShownInCollection\(resource, state\.collection\)\) return false;/);
+  assert.match(catalogueScript, /function resourceBelongsToCollapsedCollection\(resource\) \{\n {4}return resourceCollections\(resource\)/,
+    "le repli dans les notions ne regarde que les vraies collections, pas alsoInCollections.");
+});
+
 test("les niveaux numérotés se rangent dans l’ordre des nombres", () => {
   const cartes = [
     { title: "Générateur Rekenrek — doubles, niveau 10" },
@@ -249,7 +304,7 @@ test("le générateur de fiches rentre dans le rang avec ses frères", () => {
 // Deux cartes à égalité laisseraient leur ordre à l'ordre du fichier de données,
 // c'est-à-dire au hasard de la date d'ajout — précisément ce qu'on vient de corriger.
 test("aucune section du site ne laisse deux cartes à égalité", () => {
-  const groups = ["manipuler", "entrainer", "generer", "imprimer", "activites", "cours", "jeux"];
+  const groups = ["manipuler", "entrainer", "generer", "imprimer", "activites", "cours", "jeux", "classe"];
   const ex_aequo = [];
   for (const collection of catalogue.collections) {
     for (const group of groups) {

@@ -299,6 +299,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryNotion": "schemas-barres",
       "primaryGroup": "manipuler",
       "collections": [],
+      "alsoInCollections": ["splat"],
       "tags": ["schema-barres", "equation", "inconnue"],
       "thumbnail": "assets/img/thumbnails/splat/equabarre.png?v=4",
       "cardDescription": "Représenter une équation par deux schémas en barres et transformer les deux membres pas à pas."
@@ -793,6 +794,9 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/splat/livrets-splat.png?v=3",
       "cardDescription": "Tous les livrets SPLAT! à plier, du monde 1 au monde 6, avec leurs corrigés."
     },
+    "outils/splat_intro.html": { "primaryNotion": "calcul-litteral", "primaryGroup": "classe", "collections": ["splat"], "tags": ["splat", "introduction", "film"] },
+    "outils/splat_comment_on_joue.mp4": { "primaryNotion": "calcul-litteral", "primaryGroup": "classe", "collections": ["splat"], "tags": ["splat", "introduction", "video"] },
+    "outils/splat_comment_on_joue_diaporama.pdf": { "primaryNotion": "calcul-litteral", "primaryGroup": "classe", "collections": ["splat"], "tags": ["splat", "introduction", "diaporama"] },
     "outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html": {
       "primaryNotion": "calcul-litteral",
       "primaryGroup": "generer",
@@ -1605,6 +1609,25 @@ window.MATHSGO_CATALOGUE = {
     }
   },
   "resourceFamilies": [
+    {
+      "id": "splat-comment-on-joue",
+      "title": "Comment on joue ?",
+      "description": "Présenter SPLAT! à la classe : le film, la vidéo ou le diaporama.",
+      "cardDescription": "Le film à projeter, la vidéo et le diaporama à télécharger.",
+      "thumbnail": "assets/img/thumbnails/splat/comment-on-joue.png?v=1",
+      "group": "classe",
+      "rang": 7,
+      "labels": {
+        "outils/splat_intro.html": "Voir le film en ligne",
+        "outils/splat_comment_on_joue.mp4": "Télécharger la vidéo (MP4)",
+        "outils/splat_comment_on_joue_diaporama.pdf": "Télécharger le diaporama (PDF)"
+      },
+      "paths": [
+        "outils/splat_intro.html",
+        "outils/splat_comment_on_joue.mp4",
+        "outils/splat_comment_on_joue_diaporama.pdf"
+      ]
+    },
     {
       "id": "gerbert-multiplications",
       "title": "Abaque de Gerbert — Multiplications",
@@ -6563,6 +6586,96 @@ window.MATHSGO_CATALOGUE = {
         "à plier"
       ],
       "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": false
+    },
+    {
+      "id": "outils-splat-intro-html",
+      "title": "Comment on joue à SPLAT! — le film",
+      "description": "Le film qui présente SPLAT! : compter les jetons, la tache qui tombe, le schéma en barres, puis vérifier sous la tache. Il s’arrête à chaque question pour laisser chercher la classe.",
+      "path": "outils/splat_intro.html",
+      "domains": [
+        "algebre"
+      ],
+      "notions": [
+        "calcul-litteral",
+        "equations"
+      ],
+      "uses": [
+        "projeter"
+      ],
+      "types": [],
+      "filters": [],
+      "keywords": [
+        "splat",
+        "comment jouer",
+        "règle du jeu",
+        "film",
+        "présenter",
+        "introduction"
+      ],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": false
+    },
+    {
+      "id": "outils-splat-comment-on-joue-mp4",
+      "title": "Comment on joue à SPLAT! — la vidéo",
+      "description": "Le film de présentation de SPLAT! en vidéo MP4, à télécharger pour le passer sans connexion ou le déposer sur l’ENT.",
+      "path": "outils/splat_comment_on_joue.mp4",
+      "domains": [
+        "algebre"
+      ],
+      "notions": [
+        "calcul-litteral",
+        "equations"
+      ],
+      "uses": [
+        "projeter"
+      ],
+      "types": [],
+      "filters": [],
+      "keywords": [
+        "splat",
+        "comment jouer",
+        "vidéo",
+        "mp4",
+        "télécharger",
+        "introduction"
+      ],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": false
+    },
+    {
+      "id": "outils-splat-comment-on-joue-diaporama-pdf",
+      "title": "Comment on joue à SPLAT! — le diaporama",
+      "description": "Le diaporama de présentation de SPLAT! en PDF, à projeter diapo par diapo pour s’arrêter, laisser chercher et expliquer.",
+      "path": "outils/splat_comment_on_joue_diaporama.pdf",
+      "domains": [
+        "algebre"
+      ],
+      "notions": [
+        "calcul-litteral",
+        "equations"
+      ],
+      "uses": [
+        "projeter"
+      ],
+      "types": [],
+      "filters": [],
+      "keywords": [
+        "splat",
+        "comment jouer",
+        "diaporama",
+        "pdf",
+        "télécharger",
+        "introduction"
+      ],
+      "kind": "document",
       "status": "published",
       "featured": false,
       "recent": false

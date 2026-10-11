@@ -774,6 +774,14 @@
     return resourceCollections(resource).some((id) => collectionMap.get(id)?.collapseInNotion);
   }
 
+  // Une ressource peut aussi s'afficher dans la page d'une collection sans en faire partie
+  // (« alsoInCollections ») : ÉquaBarre dans la page Splat (11/10/2026). Elle ne se replie pas
+  // dans la collection, donc elle garde sa place dans sa notion (Schémas en barres).
+  function resourceShownInCollection(resource, collectionId) {
+    return resourceCollections(resource).includes(collectionId)
+      || (resourceClassification(resource).alsoInCollections || []).includes(collectionId);
+  }
+
   function resourceTags(resource) {
     return [...(resource.tags || []), ...(resourceClassification(resource).tags || [])];
   }
@@ -814,9 +822,11 @@
     if (path === "outils/splat.html") return 1;
     if (path === "outils/splat_equations.html") return 2;
     if (path === "outils/equasplat.html") return 3;
-    if (path === "outils/equascribe.html") return 4;
-    // Prêts à imprimer : la page des livrets, après les outils (lot L, 20/09/2026).
-    if (path === "outils/livrets_splat.html") return 5;
+    // ÉquaBarre, le jumeau en barres d'ÉquaSplat, juste après lui ; ÉquaScribe (en chantier) en dernier (11/10/2026).
+    if (path === "outils/equabarre.html") return 4;
+    if (path === "outils/equascribe.html") return 5;
+    // Pour la classe : les livrets d'abord, puis « Comment on joue ? » (famille de rang 7) — 11/10/2026.
+    if (path === "outils/livrets_splat.html") return 6;
     return Infinity;
   }
 
@@ -880,7 +890,7 @@
     if (children.length) {
       return uniqueResources(children.flatMap((child) => collectionResources(child.id)));
     }
-    return resourcesFromCards(displayItems(published.filter((resource) => resourceCollections(resource).includes(collectionId))));
+    return resourcesFromCards(displayItems(published.filter((resource) => resourceShownInCollection(resource, collectionId))));
   }
 
   function collectionResourceCount(collectionId) {
@@ -1049,7 +1059,7 @@
       if (state.domain && !resource.domains.includes(state.domain)) return false;
       if (state.notion && !resourceBelongsToNotion(resource, state.notion)) return false;
       if (state.notion && resourceBelongsToCollapsedCollection(resource)) return false;
-      if (state.collection && !resourceCollections(resource).includes(state.collection)) return false;
+      if (state.collection && !resourceShownInCollection(resource, state.collection)) return false;
       if (collectionTitleMatches.size && resourceCollections(resource).some((id) => collectionTitleMatches.has(collectionRootId(id)))) return false;
       if (state.query && !allWordsMatch(resourceHaystack(resource), state.query)) return false;
       return true;
@@ -1146,12 +1156,31 @@
     { id: "imprimer", label: "Prêts à imprimer" },
     { id: "activites", label: "Activités et séances" },
     { id: "cours", label: "Cours et progressions" },
-    { id: "jeux", label: "Jeux et explorations" }
+    { id: "jeux", label: "Jeux et explorations" },
+    { id: "classe", label: "Pour la classe" }
   ];
 
   const resourceGroupIds = new Set(resourceGroups.map((group) => group.id));
 
+  // Mise en page propre à une collection (page Splat, 11/10/2026, idée de Claire) : l'ordre de
+  // ses sections, et les cartes qu'on y range dans une autre section que d'habitude.
+  // Les sections non citées suivent dans l'ordre général. Ailleurs (notions, recherche), rien ne change.
+  const collectionLayouts = {
+    splat: {
+      groupOrder: ["classe", "jeux", "generer", "manipuler"],
+      regroup: { "outils/livrets_splat.html": "classe" }
+    }
+  };
+
+  function groupsForCollection(collectionId) {
+    const order = collectionLayouts[collectionId]?.groupOrder || [];
+    const first = order.map((id) => resourceGroups.find((group) => group.id === id)).filter(Boolean);
+    return [...first, ...resourceGroups.filter((group) => !order.includes(group.id))];
+  }
+
   function displayResourceGroup(item) {
+    const regroup = collectionLayouts[state.collection]?.regroup;
+    if (regroup && item.resource && resourceGroupIds.has(regroup[item.resource.path])) return regroup[item.resource.path];
     const familyGroup = item.family?.group;
     if (familyGroup && resourceGroupIds.has(familyGroup)) return familyGroup;
     const representative = item.resource || item.variants?.[0];
@@ -1301,15 +1330,16 @@
       </section>`
       : "";
 
-    const grouped = new Map(resourceGroups.map((group) => [group.id, []]));
-    const groupedCollections = new Map(resourceGroups.map((group) => [group.id, []]));
+    const groups = groupsForCollection(state.collection);
+    const grouped = new Map(groups.map((group) => [group.id, []]));
+    const groupedCollections = new Map(groups.map((group) => [group.id, []]));
     displayItems(resources).forEach((item) => {
       grouped.get(displayResourceGroup(item)).push(item);
     });
     inlineCollections.forEach((collection) => {
       groupedCollections.get(collectionDesign[collection.id]?.inlineGroup)?.push(collection);
     });
-    const groupedResources = resourceGroups.map((group) => {
+    const groupedResources = groups.map((group) => {
       const groupItems = sortCards(grouped.get(group.id));
       const groupCollections = groupedCollections.get(group.id).slice().sort(compareCards);
       const groupCount = resourceCount(resourcesFromCards(groupItems, groupCollections));
