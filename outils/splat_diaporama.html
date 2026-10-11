@@ -181,10 +181,14 @@
   document.getElementById('prec').onclick = () => montrer(i - 1);
   document.getElementById('suiv').onclick = () => montrer(i + 1);
   /* en plein écran, la barre ◀ ▶ est cachée : sur une tablette, toucher le quart gauche de la diapo revient en arrière,
-     le reste avance (choix de Gwenaël, 11/10/2026) ; hors plein écran, un clic avance comme avant */
+     le reste avance (choix de Gwenaël, 11/10/2026) ; hors plein écran, un clic avance comme avant.
+     Au doigt (ou au stylet) seulement : à la souris, un clic avance toujours — sur le PC de la classe, un clic dans
+     le quart gauche ne doit pas faire reculer par mégarde ; la flèche ← du clavier est là pour ça. */
+  let pointeur = 'mouse';
+  document.getElementById('cadre').addEventListener('pointerdown', ev => { pointeur = ev.pointerType || 'mouse'; });
   document.getElementById('cadre').addEventListener('click', ev => { if (ev.target.closest('a,button')) return;
     const r = ev.currentTarget.getBoundingClientRect();
-    if (document.fullscreenElement && ev.clientX < r.left + r.width / 4) { montrer(i - 1); return; }
+    if (document.fullscreenElement && pointeur !== 'mouse' && ev.clientX < r.left + r.width / 4) { montrer(i - 1); return; }
     montrer(i + 1); });
   document.getElementById('revoir').onclick = () => montrer(0);
   document.addEventListener('keydown', ev => {

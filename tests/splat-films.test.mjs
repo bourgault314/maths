@@ -152,7 +152,9 @@ test("le diaporama en ligne : diapo par diapo, « Revoir le diaporama » et reto
   // un clic sur le bouton « Revoir » ne fait pas aussi avancer d'une diapo
   assert.match(code, /addEventListener\('click', ev => \{ if \(ev\.target\.closest\('a,button'\)\) return;/);
   // en plein écran (barre cachée), toucher le quart gauche de la diapo recule ; ailleurs, on avance (11/10/2026)
-  assert.match(code, /if \(document\.fullscreenElement && ev\.clientX < r\.left \+ r\.width \/ 4\) \{ montrer\(i - 1\); return; \}\n\s*montrer\(i \+ 1\); \}\);/);
+  // au doigt ou au stylet seulement : à la souris, un clic avance toujours (PC de la classe)
+  assert.match(code, /addEventListener\('pointerdown', ev => \{ pointeur = ev\.pointerType \|\| 'mouse'; \}\);/);
+  assert.match(code, /if \(document\.fullscreenElement && pointeur !== 'mouse' && ev\.clientX < r\.left \+ r\.width \/ 4\) \{ montrer\(i - 1\); return; \}\n\s*montrer\(i \+ 1\); \}\);/);
   // les images de Steve Wyborney ne sont pas sous la licence du site, comme au pied du PDF
   assert.match(diapo, /images extraites de ses diaporamas, hors licence du site/);
   // ◀ et ▶ suivis de U+FE0E (sinon l'iPhone les dessine en émoji)
