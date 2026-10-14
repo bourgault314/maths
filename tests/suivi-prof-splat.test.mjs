@@ -128,13 +128,14 @@ const M2 = ["m2e1", "m2e4", "m2e5"];
 const ENQ = Array.from({length: 15}, (_, i) => `enq${i + 10}`);
 const SYS = ["sys25", "sys26", "sys27", "sys28"];
 const M5 = ["m3e1", "m3e2", "m3e4"];
+const ECH = ["ech1", "ech2", "ech3"];  // l'échauffement du monde 6, É1-É3 (14/10/2026)
 const M6 = ["m4e1", "m4e2", "m4e3", "m4e4", "m4e5", "m4e6"];
 const etape = (fait, vues = 0, idx = 0) => Object.assign({fait, etoiles: 3, cartes: 4, vues, essais: 1, date: "2026-10-05"}, idx ? {idx} : {});
 const faits = (liste, vues = []) => Object.fromEntries(liste.map(id => [id, etape(true, vues.includes(id) ? 1 : 0)]));
 const parcours = etapes => ({version: 1, epoque: 0, etapes});
 
 const LEA = parcours({...faits(M1), ...faits(M2), ...faits(ENQ.slice(0, 4), ["enq11"]), enq14: etape(false, 0, 3), enq11d: etape(true)});
-const MAELYS = parcours({...faits([...M1, ...M2, ...ENQ, ...SYS, ...M5, ...M6]), ...faits(SPLAT.CARTE.BONUS.map(b => b[0]))});
+const MAELYS = parcours({...faits([...M1, ...M2, ...ENQ, ...SYS, ...M5, ...ECH, ...M6]), ...faits(SPLAT.CARTE.BONUS.map(b => b[0]))});
 const TOM = parcours({m1e1: etape(false, 0, 5)});
 
 // ------------------------------------------------------------ la page, exécutée
@@ -177,7 +178,7 @@ const COULEUR = n => ({1: "#d9690c", 2: "#0b67b2", 3: "#be185d", 4: "#92400e", 5
 const pastilles = tr => tr.tous(n => n.tag === "svg");
 const etatPastille = svg => svg.className.replace("monde-p ", "");
 
-test("l'onglet SPLAT! : six pastilles, les étapes sur 37, ✨ pour les Bonus, « Détail » et « ⋯ » — plus de « Fiche »", () => {
+test("l'onglet SPLAT! : six pastilles, les étapes sur 40, ✨ pour les Bonus, « Détail » et « ⋯ » — plus de « Fiche »", () => {
   const {lignes} = ongletSplat(classe8());
   assert.equal(lignes.length, 4);
   lignes.forEach(tr => assert.equal(cellules(tr).length, 6, "Élève · Code · Mondes · Étapes réussies · Dernière activité · gestes"));
@@ -188,13 +189,13 @@ test("l'onglet SPLAT! : six pastilles, les étapes sur 37, ✨ pour les Bonus, �
   assert.deepEqual(pastilles(yanis).map(etatPastille), Array(6).fill("vide"), "rien fait : six mondes vides");
   const compte = tr => cellules(tr)[3].premier(n => aClasse(n, "pastille")).textContent;
   const bonus = tr => (cellules(tr)[3].premier(n => aClasse(n, "bonus-compte")) || {textContent: ""}).textContent;
-  assert.equal(compte(lea), "13 / 37");
+  assert.equal(compte(lea), "13 / 40");
   assert.equal(bonus(lea), "✨ 1", "les Bonus comptés à part (Q3)");
-  assert.equal(compte(maelys), "37 / 37");
+  assert.equal(compte(maelys), "40 / 40");
   assert.equal(bonus(maelys), "✨ 14");
-  assert.equal(compte(tom), "0 / 37");
+  assert.equal(compte(tom), "0 / 40");
   assert.equal(bonus(tom), "", "pas de ✨ 0");
-  assert.equal(compte(yanis), "0 / 37");
+  assert.equal(compte(yanis), "0 / 40");
   assert.ok(aClasse(cellules(lea)[3].children[0], "p-vert") && aClasse(cellules(yanis)[3].children[0], "p-gris"));
   assert.equal(cellules(yanis)[4].textContent, "rien fait");
   lignes.forEach(tr => {
@@ -202,7 +203,7 @@ test("l'onglet SPLAT! : six pastilles, les étapes sur 37, ✨ pour les Bonus, �
     assert.deepEqual(boutons, ["Détail ▾"], "« Détail » à la place de « Fiche »");
     assert.ok(cellules(tr)[5].premier(n => n.tag === "details"), "« ⋯ » garde Nouveau code / Supprimer");
   });
-  assert.equal(SPLAT.CARTE.ETAPES.length, 37, "le total vient du moteur, jamais écrit dans la page");
+  assert.equal(SPLAT.CARTE.ETAPES.length, 40, "le total vient du moteur, jamais écrit dans la page");
   assert.doesNotMatch(sectionSplat, /\b37\b|\b40\b/, "aucun total écrit en dur");
 });
 
@@ -211,7 +212,7 @@ test("la pastille : le dessin de l'espace élève, et « Monde 3 · SPLAT! Enqu�
   const titres = pastilles(lignes[0]).map(svg => svg.premier(n => n.tag === "title").textContent);
   assert.deepEqual(titres, ["Monde 1 · Petit SPLAT! : 6 / 6", "Monde 2 · SPLAT! Classique : 3 / 3",
     "Monde 3 · SPLAT! Enquête : 4 / 15", "Monde 4 · SPLAT! Système : 0 / 4", "Monde 5 · SPLAT! Équations : 0 / 3",
-    "Monde 6 · SPLAT! Relatifs : 0 / 6"]);
+    "Monde 6 · SPLAT! Relatifs : 0 / 9"]);
   // Le même dessin que la tuile de l'espace élève (homogénéité) : mêmes
   // couleurs, même rond, même moitié, même chiffre (centré au quart de pixel).
   const dessinEspace = blocDepuis(espace, espace.indexOf("function pastilleMonde("));
@@ -253,7 +254,9 @@ test("le Détail : une rangée par monde, les Bonus à part, la légende — et 
   assert.equal(m3["14"], "et cours", "en cours : pointillés");
   assert.equal(m3["15"], "et", "pas encore faite : blanc");
   assert.equal(Object.keys(cases(rangees[4])).join(","), "35,36,37");
-  assert.equal(Object.keys(cases(rangees[5])).join(","), "38,39,40,41,42,43");
+  // (dans l'ordre des cases : Object.keys rangerait « 38 » avant « É1 »)
+  assert.equal(rangees[5].children.slice(1).map(c => c.textContent).join(","), "É1,É2,É3,38,39,40,41,42,43",
+    "l'échauffement avant la 38, la 38 reste la 38");
   const b3 = cases(rangees[6]);
   assert.equal(b3["11d"], "et bonus ok", "un Bonus réussi : doré");
   assert.equal(b3["12d"], "et bonus");
@@ -266,6 +269,22 @@ test("le Détail : une rangée par monde, les Bonus à part, la légende — et 
   assert.equal(etat.detailsOuverts.size, 0);
 });
 
+// Échauffement du monde 6 (14/10/2026, décision de Gwenaël : « dans le total »).
+test("échauffement : É1-É3 comptent au monde 6 ; un élève qui l'avait fini passe à 6 / 9, à moitié", () => {
+  const ancien = parcours(faits(M6));
+  const echauffe = parcours({...faits(M6), ...faits(["ech1"])});
+  const {corps, lignes} = ongletSplat([{prenom: "Inès", parcours: ancien}, {prenom: "Noé", parcours: echauffe}]);
+  const compte = tr => cellules(tr)[3].premier(n => aClasse(n, "pastille")).textContent;
+  assert.deepEqual(lignes.map(compte), ["6 / 40", "7 / 40"]);
+  assert.deepEqual(lignes.map(tr => etatPastille(pastilles(tr)[5])), ["cours", "cours"]);
+  assert.deepEqual(lignes.map(tr => pastilles(tr)[5].premier(n => n.tag === "title").textContent),
+    ["Monde 6 · SPLAT! Relatifs : 6 / 9", "Monde 6 · SPLAT! Relatifs : 7 / 9"]);
+  cellules(lignes[1])[5].children[0].cliquer();
+  const m6 = corps.children[2].tous(n => aClasse(n, "detail-monde"))[5];
+  assert.deepEqual(m6.children.slice(1).map(c => [c.textContent, c.className]).slice(0, 4),
+    [["É1", "et ok"], ["É2", "et"], ["É3", "et"], ["38", "et ok"]]);
+});
+
 test("un Détail déplié le reste quand le tableau est redessiné (tri, saisie)", () => {
   const {corps} = ongletSplat(classe8(), {detailsOuverts: new Set([2])});
   const ordre = corps.children.map(tr => (aClasse(tr, "detail") ? "détail" : tr.children[0].children[0].value));
@@ -275,10 +294,10 @@ test("un Détail déplié le reste quand le tableau est redessiné (tri, saisie)
 test("la carte de classe SPLAT! : les étapes de tout le monde, les mondes finis — personne n'est nommé", () => {
   const {zones} = ongletSplat(classe8());
   assert.equal(zones.get("objectif").hidden, false);
-  assert.equal(zones.get("objectif-compte").textContent, "Ensemble : 50 étapes réussies sur 148", "13 + 37 + 0 + 0, sur 4 élèves × 37");
+  assert.equal(zones.get("objectif-compte").textContent, "Ensemble : 53 étapes réussies sur 160", "13 + 40 + 0 + 0, sur 4 élèves × 40");
   assert.equal(zones.get("objectif-lignes").textContent,
     "Monde 1 fini par 2 élèves · monde 2 par 2 · monde 3 par 1 · monde 4 par 1 · monde 5 par 1 · monde 6 par 1");
-  assert.equal(zones.get("objectif-barre").style.width, "34%");
+  assert.equal(zones.get("objectif-barre").style.width, "33%");
   const tout = [...zones.values()].map(z => z.textContent).join(" ");
   ["Léa", "Maëlys", "Tom", "Yanis", "CODE0"].forEach(interdit => assert.ok(!tout.includes(interdit), `« ${interdit} » dans la carte de classe`));
   assert.doesNotMatch(fonction("objectifSplat") + fonction("dessinerObjectifSplat"), /\bapi\(|fetch\(/, "rien de plus demandé au serveur");
@@ -292,7 +311,7 @@ test("la carte de classe se tait tant qu'aucune étape n'est réussie — série
   assert.equal(cachee([{prenom: "A", parcours: parcours({enq11d: etape(true)})}]), true, "un Bonus seul non plus (Q3)");
   const un = ongletSplat([{prenom: "A", parcours: parcours({m1e1: etape(true)})}, {prenom: "B", parcours: null}]);
   assert.equal(un.zones.get("objectif").hidden, false);
-  assert.equal(un.zones.get("objectif-compte").textContent, "Ensemble : 1 étape réussie sur 74", "au singulier");
+  assert.equal(un.zones.get("objectif-compte").textContent, "Ensemble : 1 étape réussie sur 80", "au singulier");
   assert.equal(un.zones.get("objectif-lignes").textContent, "", "aucun monde fini : pas de ligne");
   const seul = ongletSplat([{prenom: "A", parcours: parcours(faits(M2))}]);
   assert.equal(seul.zones.get("objectif-lignes").textContent, "Monde 2 fini par 1 élève", "le premier monde cité prend la majuscule, au singulier");
@@ -328,7 +347,7 @@ test("c'est le moteur qui lit le parcours : la page ne touche jamais aux étapes
   // Exécuté : un parcours vide, un parcours illisible, pas de moteur.
   const {f} = ongletSplat([]);
   const vide = f.lireSplat(null);
-  assert.deepEqual([vide.faits, vide.total, vide.bonus, vide.lisible, vide.mondes.length], [0, 37, 0, true, 6]);
+  assert.deepEqual([vide.faits, vide.total, vide.bonus, vide.lisible, vide.mondes.length], [0, 40, 0, true, 6]);
   assert.equal(f.lireSplat("n'importe quoi").faits, 0);
   assert.equal(f.lireSplat(LEA).etats.enq11, "aide");
 });
@@ -442,7 +461,7 @@ test("le tri « Étapes réussies » : les étapes, puis les Bonus, puis une sé
     {prenom: "Cours", code: "B", lu: {faits: 0, bonus: 0, cours: 1}},
     {prenom: "Treize", code: "C", lu: {faits: 13, bonus: 0, cours: 0}},
     {prenom: "TreizeBonus", code: "D", lu: {faits: 13, bonus: 2, cours: 0}},
-    {prenom: "Tout", code: "E", lu: {faits: 37, bonus: 14, cours: 0}},
+    {prenom: "Tout", code: "E", lu: {faits: 40, bonus: 14, cours: 0}},
   ];
   const trier = new Function("eleves", "tri", `${fonction("trierEleves")}\ntrierEleves();\nreturn eleves.map(e => e.prenom);`);
   assert.deepEqual(trier(eleves.slice(), {colonne: "etapes", sens: -1}), ["Tout", "TreizeBonus", "Treize", "Cours", "Rien"]);
@@ -673,9 +692,9 @@ test("mondes 1 et 2 ouverts : pastilles grises pour les autres, étapes comptée
   assert.equal(cercle.attributs.stroke, chiffre.attributs.fill);
   assert.equal(chiffre.attributs.y, "16.375");
   assert.equal(ferme.premier(n => n.tag === "path"), null);
-  // Les mondes 5 et 6 seulement : 3 + 6 = 9 étapes.
+  // Les mondes 5 et 6 seulement : 3 + 9 = 12 étapes (l'échauffement compris).
   const {lignes: l2} = ongletSplat(classe8(), {reglages: {splat: {mondes: [5, 6]}}});
-  assert.equal(cellules(l2[1])[3].premier(n => aClasse(n, "pastille")).textContent, "9 / 9", "Maëlys a tout fini");
+  assert.equal(cellules(l2[1])[3].premier(n => aClasse(n, "pastille")).textContent, "12 / 12", "Maëlys a tout fini");
   assert.deepEqual(pastilles(l2[1]).map(etatPastille), ["ferme", "ferme", "ferme", "ferme", "fini", "fini"]);
 });
 
@@ -702,7 +721,7 @@ test("mondes fermés : la carte de classe compte sur les mondes ouverts, et ne c
   assert.deepEqual(objectif.mondes.map(m => m.numero), [1, 2]);
   assert.deepEqual(objectif.mondes.map(m => m.finis), [2, 2]);
   const tous = ongletSplat(classe8()).f.objectifSplat();
-  assert.equal(tous.total, 4 * 37, "sans réglage : les 37 étapes");
+  assert.equal(tous.total, 4 * 40, "sans réglage : les 40 étapes");
   assert.equal(tous.mondes.length, 6);
 });
 

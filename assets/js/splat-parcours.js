@@ -95,6 +95,12 @@
   // du serveur change aussi (motif de lib/applis.php).
   // tests/splat-parcours.test.mjs compare ces lignes à splat-etapes.js et
   // affiche la liste à recopier au premier écart.
+  //
+  // Échauffement du monde 6 (14/10/2026) : trois étapes avant la 38, comptées
+  // comme les autres (« ⭐ 0 / 9 », « sur 40 »). Leur numéro est un code, « É1 »,
+  // comme « 11d » pour un Bonus : la 38 reste la 38. Le lot 2 « suivi » les met
+  // ici et dans le motif du serveur AVANT que la carte les ait (lot 3), pour
+  // qu'aucune étoile d'échauffement ne soit retirée par le serveur.
   const MONDES = Object.freeze([
     Object.freeze([1, "Petit SPLAT!"]),
     Object.freeze([2, "SPLAT! Classique"]),
@@ -103,7 +109,7 @@
     Object.freeze([5, "SPLAT! Équations"]),
     Object.freeze([6, "SPLAT! Relatifs"])
   ]);
-  // [parcours, numéro sur la carte, numéro du monde]
+  // [parcours, numéro sur la carte (ou code « É1 »), numéro du monde]
   const CARTE_ETAPES = Object.freeze([
     ["m1e1", 1, 1], ["m1e2", 2, 1], ["m1e3", 3, 1], ["m1e4", 4, 1], ["m1e5", 5, 1], ["m1e6", 6, 1],
     ["m2e1", 7, 2], ["m2e4", 8, 2], ["m2e5", 9, 2],
@@ -112,6 +118,7 @@
     ["enq20", 20, 3], ["enq21", 21, 3], ["enq22", 22, 3], ["enq23", 23, 3], ["enq24", 24, 3],
     ["sys25", 25, 4], ["sys26", 26, 4], ["sys27", 27, 4], ["sys28", 28, 4],
     ["m3e1", 35, 5], ["m3e2", 36, 5], ["m3e4", 37, 5],
+    ["ech1", "É1", 6], ["ech2", "É2", 6], ["ech3", "É3", 6],
     ["m4e1", 38, 6], ["m4e2", 39, 6], ["m4e3", 40, 6], ["m4e4", 41, 6], ["m4e5", 42, 6], ["m4e6", 43, 6]
   ].map(Object.freeze));
   // [parcours, code du Bonus, numéro du monde]

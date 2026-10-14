@@ -3871,9 +3871,9 @@ verifier("splat-suivi-3 — le parcours de référence de SPLAT! ressort identiq
     $attendu = json_encode(json_decode($texte, false), JSON_UNESCAPED_UNICODE);
     $obtenu = json_encode(filtrer_progression('splat', json_decode($texte, false)), JSON_UNESCAPED_UNICODE);
     egal($attendu, $obtenu, "le filtre du serveur jette un champ que le moteur SPLAT! produit : compléter 'cles'/'motifs' de « splat » dans lib/applis.php");
-    egal(51, count(get_object_vars(json_decode($texte, false)->etapes)), 'les 51 parcours de la carte (37 étapes, 14 Bonus)');
+    egal(54, count(get_object_vars(json_decode($texte, false)->etapes)), 'les 54 parcours de la carte (40 étapes, l’échauffement É1-É3 compris ; 14 Bonus)');
     vrai(strlen($attendu) > 3000, 'la référence est bien un parcours complet');
-    egal(51, compter_elements_declares('splat', $attendu), '« Revenir à… » compte les étapes');
+    egal(54, compter_elements_declares('splat', $attendu), '« Revenir à… » compte les étapes');
 });
 
 verifier("splat-suivi-3 — un texte, une clé étrangère ou un parcours inconnu sont retirés", function () {
@@ -3889,7 +3889,16 @@ verifier("splat-suivi-3 — un texte, une clé étrangère ou un parcours inconn
     $sale->etapes->m1e2->date = 'mardi';
     $sale->etapes->m9e9 = (object)['fait' => true, 'etoiles' => 4, 'cartes' => 4, 'vues' => 0, 'essais' => 1, 'date' => '2026-10-01'];
     $sale->etapes->perso42 = (object)['fait' => true];
+    // Échauffement du monde 6 (lot 2 « suivi », 14/10/2026) : ech1-ech3 passent
+    // (ils sont dans la référence), une clé voisine inventée saute.
+    foreach (['ech9', 'ech0', 'ech', 'ech1d', 'm4ech1'] as $faux) {
+        $sale->etapes->$faux = (object)['fait' => true, 'etoiles' => 12, 'cartes' => 12, 'vues' => 0, 'essais' => 1, 'date' => '2026-10-15'];
+    }
     $obtenu = filtrer_progression('splat', $sale);
+    foreach (['ech9', 'ech0', 'ech', 'ech1d', 'm4ech1'] as $faux) {
+        vrai(!isset($obtenu->etapes->$faux), "« $faux » n’est pas une étape de la carte : il saute");
+    }
+    vrai(isset($obtenu->etapes->ech1, $obtenu->etapes->ech2, $obtenu->etapes->ech3), 'les trois étapes d’échauffement passent');
     vrai(!isset($obtenu->prenom), 'le prénom reste sur l’appareil');
     vrai(!isset($obtenu->etapes->m1e1->sig) && !isset($obtenu->etapes->m1e1->res) && !isset($obtenu->etapes->m1e1->enCours),
         'ni la signature, ni les résultats carte par carte, ni la reprise en cours');
@@ -3926,7 +3935,7 @@ verifier("splat-suivi-3 — SPLAT! s'enregistre et se relit par l'API élève, �
     egal(false, lire($code)['json']['existe'], 'Défi tables du même élève n’a pas bougé');
     $ligne = bd_test()->prepare("SELECT calculs FROM versions WHERE eleve_id = ? AND appli = 'splat'");
     $ligne->execute([(int)$eleves[0]['id']]);
-    egal(51, (int)$ligne->fetchColumn(), 'la version du jour est comptée en étapes');
+    egal(54, (int)$ligne->fetchColumn(), 'la version du jour est comptée en étapes (les 54 parcours de la référence)');
     $r = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $classe, 'appli' => 'splat'], ['jeton' => $jetonS1]);
     egal(200, $r['code'], 'le tableau de la classe se demande pour SPLAT!');
     $lu = null;

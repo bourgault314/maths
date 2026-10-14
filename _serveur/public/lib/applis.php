@@ -125,6 +125,7 @@ const CATALOGUE_APPLIS = [
     // (assets/js/splat-etapes.js, recopiée dans assets/js/splat-parcours.js) :
     // le motif est celui que rend motifPhp() du moteur, un test le compare.
     // Tant qu'aucune classe n'a « splat » dans sa liste, personne ne le voit.
+    // Échauffement du monde 6 (14/10/2026) : ech1, ech2, ech3, avant m4e1.
     'splat' => [
         'nom' => 'SPLAT!',
         'description' => 'Six mondes de taches et de jetons, étape par étape.',
@@ -133,7 +134,7 @@ const CATALOGUE_APPLIS = [
         'disponible' => true,
         'cles' => ['version', 'epoque', 'etapes', 'fait', 'etoiles', 'cartes', 'vues', 'essais', 'date', 'idx'],
         'mots' => [],
-        'motifs' => ['/^(?:m1e1|m1e2|m1e3|m1e4|m1e5|m1e6|m2e1|m2e4|m2e5|enq10|enq11|enq12|enq13|enq14|enq15|enq16|enq17|enq18|enq19|enq20|enq21|enq22|enq23|enq24|sys25|sys26|sys27|sys28|m3e1|m3e2|m3e4|m4e1|m4e2|m4e3|m4e4|m4e5|m4e6|enq11d|enq12d|enq13d|enq16d|enq17d|enq18d|enq20d|enq22d|enq19d|enq24d|sys25d|sys26d|sys27d|sys28d)$/'],
+        'motifs' => ['/^(?:m1e1|m1e2|m1e3|m1e4|m1e5|m1e6|m2e1|m2e4|m2e5|enq10|enq11|enq12|enq13|enq14|enq15|enq16|enq17|enq18|enq19|enq20|enq21|enq22|enq23|enq24|sys25|sys26|sys27|sys28|m3e1|m3e2|m3e4|ech1|ech2|ech3|m4e1|m4e2|m4e3|m4e4|m4e5|m4e6|enq11d|enq12d|enq13d|enq16d|enq17d|enq18d|enq20d|enq22d|enq19d|enq24d|sys25d|sys26d|sys27d|sys28d)$/'],
         // « Revenir à… » nomme une version par ce compte : les étapes
         // commencées, Bonus compris (lib/versions.php).
         'compteur' => 'etapes',

@@ -1,10 +1,10 @@
 # Manifeste du serveur de suivi maths&go — produit par outils/generer-version.php.
 # Ne pas modifier à la main : un test du dépôt refait ce calcul à chaque passage.
 # verifier.php relit ce fichier en ligne et compare chaque empreinte.
-lot apres-audit-gpt
+lot splat-echauffement-suivi
 genere_le 2026-10-14
 fichiers 31
-manifeste b6c6467e7ec1ad354d87062a8e55f7fae94c1a849587c6ce63f60a6d09e76243
+manifeste af5a139530566c949b232e4dc00c9bb93158cccbf0a1ee51495b448539dd8d6c
 61b230d36219b3c4515e56c1ff59afb1a85ffa12343956bd73b16ba04867cdca  .htaccess
 911229797978fa1f559c9a056368c70bd606a99b3efd16071a584b4de1c5f965  api/eleve.php
 a1b4a7c21d6d798982a8b9efc6c030f1755d16821a0eed4edff71edf27206130  api/parcours.php
@@ -16,7 +16,7 @@ b901e292ec96dadfd1a9415bc315027c93b635d0f4254a6da8ff7afd92c6520e  favicon.svg
 0601e2cae4a67dc9b46c33aed044b9bba33f8d635e27fc6582bba62af39eb741  index.php
 014a992fe48e48144dcaa218601a11ec8745fe1fe7a7d30f3323ec9e213159d5  infos.php
 fa28d421a28ed9b6f4b997d5119c2b8adbacff6e2dd119a179b71230f9664934  lib/.htaccess
-d91d17733ff33e501bd7d405554e2a8a692eada39b3429193abd650a1e84672e  lib/applis.php
+c7875387a3af1e95fe9696a77fd65114fd721cedaecd48fba59c50db993009fb  lib/applis.php
 302d5e84f6a4c1b57b0755e0dc42981327bf491fa6609988c0cf63057db8cfcc  lib/archives.php
 817e5e7501933e4bf2ca5b6bce94ba921e652d056540b864fdcad427823f8ac8  lib/auth.php
 e7fa1aca2ea4ac1dc806257fe05d06a52108de2549cd419d8e6fbdbfe0763de2  lib/bd.php
@@ -34,5 +34,5 @@ b476cc832c9b7497eed6194afecee863a686469e9162ad1832bd7e7732ccc304  mathsgo-logo-p
 4cc15b863e2b7d4afaa761685a411b7309fe133ecff7625420ff1dedfa365502  menage.php
 d0abbfed68b03d73dbf617e101b2636bfb67ff1de54bcbf7252a6ddcffaed689  prof/defi_tables_mon_parcours.js
 10d1dd901af7d053b237757dc89b1d6d059006cd5540da826473f14b047291be  prof/index.php
-3d9c64552be2d027581f2c279f4dc03ac896463a619405b85f3e2f2fa6172c68  prof/splat-parcours.js
+4fd3ad293be6b8e84399167ed17bf8df47ee237119d33d4d2a1cf4764439e874  prof/splat-parcours.js
 20fa892fa1003114fd607e774004dd190a0a187ea9623ef9ca1234e9b0c481c6  verifier.php
