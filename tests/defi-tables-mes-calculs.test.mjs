@@ -358,7 +358,11 @@ function legende(etoile = 1) {
     etat = parcours.appliquerSerie(etat, normaliser(parcours.configValidation(table)), {correct: 20, total: 20, date: DATE}).parcours;
   });
   assert.equal(etat.melange.dernier, null, "le mélange n’a pas été joué : l’escalier est ouvert quand même");
-  return parcours.appliquerSerie(etat, normaliser(parcours.configEtoile(etoile)), {correct: 25, total: 25, date: DATE}).parcours;
+  // D5 (lot « après l'audit GPT ») : marche par marche, pas de saut.
+  for (let marche = 1; marche <= etoile; marche += 1) {
+    etat = parcours.appliquerSerie(etat, normaliser(parcours.configEtoile(marche)), {correct: 25, total: 25, date: DATE}).parcours;
+  }
+  return etat;
 }
 
 test("les divisions n’apparaissent en révision qu’à partir de la première étoile", () => {
@@ -552,7 +556,7 @@ test("seule la première réponse compte pour la grille ; un raté ne revient qu
   assert.match(html, /if \(!question\.retry && !reessai\) alimenterMesCalculs\(question, correct && !skip\);/, "les calculs qui reviennent n’alimentent pas la grille");
   assert.match(html, /const chrono = state\.configuration\.duration !== null;/);
   assert.match(html, /const willRetry = !correct && !question\.retry && !chrono;/, "un calcul raté revient une seule fois par série de révision ; avec le chrono de Mes calculs du jour, il ne revient pas (il reviendra demain)");
-  assert.match(html, /if \(chrono\) \{\s*state\.pauseA = Date\.now\(\);/, "le chrono s’arrête le temps de lire la correction");
+  assert.match(html, /if \(chrono\) \{\s*state\.pauseA = horlogeSerie\(\);/, "le chrono s’arrête le temps de lire la correction");
   assert.doesNotMatch(html, /repartira dans la prochaine révision/, "la règle n’est plus écrite sur l’écran de résultat (lot 2)");
   // Relecture du lot R2 : le temps de la révision est passé sur la ligne du
   // score ; la ligne du dessous reste vide (ni la règle, ni « Série terminée »).

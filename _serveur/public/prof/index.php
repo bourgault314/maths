@@ -307,6 +307,12 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
   .rec-liste li:nth-child(-n+3) .rg { font-size: 1.2rem; }
   .rec-liste .nom { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .rec-liste .tps { font-variant-numeric: tabular-nums; font-weight: 800; white-space: nowrap; }
+  /* Lot « après l'audit GPT » (D4, 14/10/2026) : « Retirer ce temps » au bout
+     de chaque ligne de la carte (pas du plein écran, qu'on projette). */
+  .rec-carte .rec-liste li { grid-template-columns: 30px minmax(0, 1fr) auto auto; }
+  .rec-retirer { min-height: 32px; margin: 0 -6px 0 2px; padding: 4px 8px; border: 0; border-radius: 8px; background: none;
+                 color: var(--muted); font: inherit; font-size: .8rem; font-weight: 600; cursor: pointer; }
+  .rec-retirer:hover, .rec-retirer:focus-visible { background: #fdecec; color: #a4161a; }
   .rec-vide { margin: 8px 0 0; color: var(--muted); font-size: .9rem; text-align: center; }
   .rec-plein { position: fixed; inset: 0; z-index: 50; background: #fff; padding: 28px 48px; overflow: auto; }
   .rec-plein h1 { margin: 0; text-align: center; font-size: 2.6rem; }
@@ -524,6 +530,7 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
         <div><h3>Cette semaine</h3><ol class="rec-liste" id="records-semaine"></ol><p class="rec-vide" id="records-semaine-vide" hidden>Personne cette semaine, pour l’instant.</p></div>
         <div><h3>De tous les temps</h3><ol class="rec-liste" id="records-toujours"></ol></div>
       </div>
+      <p class="message" id="message-records" hidden></p>
     </div>
 
     <!-- Ce qu'on imprime pour la classe (lot R5 de Défi tables, 13/09/2026) :
@@ -910,7 +917,7 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
     "boite-champs", "secret-texte", "secret-valeur", "echues-texte", "supprimer-echues"];
   const ZONES_MESSAGE = ["erreur-connexion", "message-classes", "message-classe",
     "message-profs", "message-partage", "message-compte", "bandeau-droit", "bandeau-annee",
-    "message-activites"];
+    "message-activites", "message-records"];
   const CHAMPS_A_VIDER = ["identifiant", "motdepasse", "libelle",
     "mdp-ancien", "mdp-nouveau", "mdp-confirme"];
   const BLOCS_A_CACHER = ["fiche", "bandelettes", "objectif", "fragiles", "bloc-partage", "bloc-profs",
@@ -2162,7 +2169,13 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
   // la carte ne se montre que s'il y a au moins un temps.
   let ligueRecords = null;
 
-  function ligneDeRecord(ligne) {
+  function formatTempsRecord(temps) {
+    return PARCOURS && PARCOURS.formatTemps ? PARCOURS.formatTemps(temps) : `${(temps / 10).toFixed(1)} s`;
+  }
+
+  // retirable (lot « après l'audit GPT », D4) : dans la carte, chaque ligne a
+  // son « Retirer » ; pas dans le plein écran, qui se projette.
+  function ligneDeRecord(ligne, retirable = false) {
     const item = document.createElement("li");
     const rang = document.createElement("span");
     rang.className = "rg";
@@ -2172,9 +2185,39 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
     nom.textContent = ligne.nom;
     const temps = document.createElement("span");
     temps.className = "tps";
-    temps.textContent = PARCOURS && PARCOURS.formatTemps ? PARCOURS.formatTemps(ligne.temps) : `${(ligne.temps / 10).toFixed(1)} s`;
+    temps.textContent = formatTempsRecord(ligne.temps);
     item.append(rang, nom, temps);
+    if (retirable && ligne.eleve) {
+      const retirer = document.createElement("button");
+      retirer.type = "button";
+      retirer.className = "rec-retirer";
+      retirer.textContent = "Retirer";
+      retirer.title = "Retirer ce temps";
+      retirer.setAttribute("aria-label", `Retirer ce temps : ${ligne.eleve.prenom}, ${ligne.eleve.classe}, ${temps.textContent}`);
+      retirer.addEventListener("click", () => retirerTemps(ligne));
+      item.append(retirer);
+    }
     return item;
+  }
+
+  // « Retirer ce temps » (décision de Gwenaël, 14/10/2026) : un temps qu'un
+  // élève n'a pas couru (requête forgée) s'efface d'ici — son record et son
+  // temps de la semaine ; son choix de nom reste, sa prochaine course compte.
+  // Le serveur n'accepte que le propriétaire de la classe de l'élève.
+  async function retirerTemps(ligne) {
+    const qui = `${ligne.eleve.prenom} · ${ligne.eleve.classe}`;
+    const reponse = await demander(`Retirer le temps de ${qui} (${formatTempsRecord(ligne.temps)}) ? Son record et son temps de la semaine s’effacent. Sa prochaine course compte à nouveau.`);
+    if (!reponse) return;
+    try {
+      const donnees = await api("records.retirer", {eleve_id: ligne.eleve.id});
+      ligueRecords = donnees;
+      dessinerRecords();
+      messager("message-records", `Le temps de ${qui} est retiré.`, "ok");
+      // Le tableau de la classe montre ce temps à côté de la couronne : relu.
+      if (classe) await ouvrirClasse(classe.id);
+    } catch (erreur) {
+      messager("message-records", erreur.message, "erreur");
+    }
   }
 
   function dessinerRecords() {
@@ -2186,7 +2229,7 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
     ["semaine", "toujours"].forEach(cle => {
       const liste = $(`records-${cle}`);
       liste.textContent = "";
-      (ligueRecords[cle] || []).forEach(ligne => liste.append(ligneDeRecord(ligne)));
+      (ligueRecords[cle] || []).forEach(ligne => liste.append(ligneDeRecord(ligne, true)));
     });
     $("records-semaine-vide").hidden = (ligueRecords.semaine || []).length > 0;
   }

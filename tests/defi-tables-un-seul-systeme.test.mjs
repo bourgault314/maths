@@ -454,7 +454,7 @@ test("la page : Mes calculs du jour chronométré, lancé par « C'est parti ! �
   assert.match(html, /DURATION = table === null \? PARCOURS\.dureeMesCalculs\(plan\.length\) : null;/);
   assert.match(html, /if \(DURATION === null\) \{\s+beginRound\(\);\s+return;\s+\}/);
   assert.match(html, /if \(state\.pauseA\) return;\s+const remaining/);
-  assert.match(html, /state\.endAt \+= Date\.now\(\) - state\.pauseA;/);
+  assert.match(html, /state\.endAt \+= horlogeSerie\(\) - state\.pauseA;/);
   assert.match(html, /const willRetry = !correct && !question\.retry && !chrono;/);
   assert.match(html, /soude\(pasFaits \? "Temps écoulé" : "Mes calculs du jour : fait"\)/);
   assert.match(html, /pasFaits > 1 \? "Ils reviendront\." : "Il reviendra\."/);
@@ -501,7 +501,7 @@ test("la page : les mots, les coupes du mélange et les petits restes", () => {
   assert.match(html, /@media \(max-width: 359px\) \{ #question-count \.compteur-mot \{ display: none; \} \}/);
   // Les numéros de cache ont monté.
   assert.match(html, /defi_tables_core\.js\?v=20261010-1/);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261009-3/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261014-1/);
 });
 
 test("le serveur : la copie du moteur, « Tables passées », la tuile sans « Mon mélange à faire »", () => {

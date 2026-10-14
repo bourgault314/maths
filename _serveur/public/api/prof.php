@@ -73,6 +73,9 @@ const DROIT_PAR_ACTION = [
     // Elle efface : propriétaire, comme « Supprimer la classe ».
     'classes.supprimer_echues' => 'proprietaire',
     'eleves.supprimer' => 'proprietaire',
+    // Lot « après l'audit GPT » (D4, 14/10/2026) : effacer le temps d'une
+    // Légende dans les records — ça efface : propriétaire.
+    'records.retirer' => 'proprietaire',
     'partages.ajouter' => 'proprietaire',
     'partages.supprimer' => 'proprietaire',
 ];
@@ -933,7 +936,22 @@ try {
             if (!records_disponibles($pdo)) {
                 erreur("Le serveur doit être mis à niveau : ouvre migrer.php avec ton mot de passe d'installation.", 503);
             }
-            repondre(['ok' => true] + ligue($pdo, $profId));
+            repondre(['ok' => true] + ligue($pdo, $profId, null, true));
+
+        case 'records.retirer':
+            // Lot « après l'audit GPT » (D4, 14/10/2026, décision de Gwenaël) :
+            // « Retirer ce temps », depuis une ligne des records de Ma classe.
+            // L'élève est remonté à SA classe (eleve_pour_action) : le
+            // propriétaire seulement, pour ses élèves seulement — un collègue
+            // ou un élève d'une autre classe reçoit « Introuvable » ou le refus,
+            // journalisé comme les autres. Le choix du nom reste.
+            if (!records_disponibles($pdo)) {
+                erreur("Le serveur doit être mis à niveau : ouvre migrer.php avec ton mot de passe d'installation.", 503);
+            }
+            $eleve = eleve_pour_action($pdo, $profId, $corps['eleve_id'] ?? 0, $action);
+            $retire = retirer_temps($pdo, (int)$eleve['id']);
+            journaliser($pdo, $profId, 'records.retirer', 'eleve', (int)$eleve['id']);
+            repondre(['ok' => true, 'retire' => $retire] + ligue($pdo, $profId, null, true));
 
         default:
             erreur("Action inconnue.", 400);

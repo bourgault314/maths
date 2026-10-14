@@ -336,13 +336,18 @@ test("l’escalier s’ouvre dès les 9 tables passées, sans mélange ; ★ à 
   assert.equal(resultat.evenements[0].nouveau, true);
   assert.equal(parcours.prochaineEtape(etat).etoile, 2);
 
+  // D5 (lot « après l'audit GPT », décision de Gwenaël du 14/10/2026) : pas
+  // de saut — ★★★ jouée à une étoile ne compte pas (la série ne classe rien).
   resultat = jouer(etat, parcours.configEtoile(3), 24, 25);
-  etat = resultat.parcours;
-  assert.equal(etat.expert.etoiles, 3, "réussir ★★★ directement valide ★ et ★★");
+  assert.deepEqual(resultat.evenements, [], "★★★ à une étoile : la série ne compte pas");
+  assert.equal(resultat.parcours.expert.etoiles, 1);
+  etat = jouer(etat, parcours.configEtoile(2), 24, 25).parcours;
+  etat = jouer(etat, parcours.configEtoile(3), 24, 25).parcours;
+  assert.equal(etat.expert.etoiles, 3, "★★ puis ★★★ : marche par marche");
   assert.equal(etat.rang, 4, "toujours Platine : Diamant attend ★★★★");
 
   const rejoue = jouer(etat, parcours.configEtoile(2), 25, 25);
-  assert.equal(rejoue.evenements[0].nouveau, false);
+  assert.deepEqual(rejoue.evenements, [], "rejouer ★★ (gagnée) ne compte pas non plus");
   assert.equal(rejoue.parcours.expert.etoiles, 3, "une marche inférieure ne retire rien");
 
   resultat = jouer(etat, parcours.configEtoile(4), 25, 25);
@@ -1059,7 +1064,7 @@ test("l’appli est branchée au suivi de classe sans jamais bloquer", () => {
   // Chaque enregistrement local part aussi au serveur, sans être attendu — et
   // dans la case du code actif.
   assert.match(html, /function sauverParcours\(\) \{\s*sauverCase\(\);/);
-  assert.match(html, /function sauverCase\(\) \{\s*if \(suiviActif\(\)\) \{\s*PARCOURS\.sauver\(storage\(\), parcours, codeSuivi\);/,
+  assert.match(html, /function sauverCase\(\) \{\s*if \(suiviActif\(\)\) \{\s*const local = PARCOURS\.charger\(storage\(\), codeSuivi\);\s*if \(local\) parcours = PARCOURS\.fusionner\(local, parcours\);\s*PARCOURS\.sauver\(storage\(\), parcours, codeSuivi\);/,
     "sous un code, la case du code ; sans code, la case sans code et sans prénom");
   assert.match(html, /sync\.dirty = true;[\s\S]{0,120}sauverSync\(\);\s*\}\s*envoyerParcours\(\);/, "chaque sauvegarde marque du travail à envoyer, puis envoie");
   assert.doesNotMatch(html, /await envoyerParcours\(\)/, "l'envoi ne doit jamais être attendu");

@@ -215,6 +215,7 @@ function banc(parcours, configuration, duree) {
     const touches = document.querySelectorAll();
     const quitterSerie = () => { journal.push("quitter"); state.running = false; stopTimer(); };
     ${source("beginRound")}
+    ${source("horlogeSerie")}
     ${source("partir")}
     const DECOMPTE_MS = ${constante("DECOMPTE_MS")};
     ${source("avecDecompte")}

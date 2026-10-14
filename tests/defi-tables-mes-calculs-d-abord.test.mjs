@@ -102,8 +102,9 @@ test("le bouton de la suite porte le nom de ce qui a été touché, avec les mot
   assert.equal(nom(P.configValidation(4, 120)), "Comme le test, en 2 min", "l'entraînement « comme le test » du menu");
   assert.equal(nom(P.configApprends(4, "beads")), "Je pousse les perles");
   assert.equal(nom(P.configEntraine(4, "trous")), "Nombres manquants et divisions");
-  // Une étoile (élève aux 9 tables) : « Tente ★★ », comme dans la séance.
-  const neuf = P.normaliserParcours({...lea(), tables: Object.fromEntries(P.TABLES.map(table => [table, {...P.creerParcours().tables[table], acquise: "2026-10-01"}]))});
+  // Une étoile (élève aux 9 tables, une étoile gagnée) : « Tente ★★ », comme
+  // dans la séance — la marche suivante (D5 : une autre ne compte pas).
+  const neuf = P.normaliserParcours({...lea(), expert: {etoiles: 1, dernier: "2026-10-01", couronne: null}, tables: Object.fromEntries(P.TABLES.map(table => [table, {...P.creerParcours().tables[table], acquise: "2026-10-01"}]))});
   const l = lanceur(neuf);
   l.launchFromParcours(P.configEtoile(2), "parcours");
   assert.equal(l.state.apresMesCalculs.nom, "Tente ★★");
@@ -204,11 +205,11 @@ test("Mon parcours : Mon mélange et les étoiles ne sont plus grisés « après
   assert.match(rendu, /label: "Mon mélange, mes tables passées \(20 questions en 1 min 30\)",\s*texte: triangleJouer\(\),\s*config: PARCOURS\.configMelange\(parcours\)\s*\}\), droite\);/);
   assert.match(rendu, /const expertOuvert = etat\.expert\.ouvert;\s*const expertAttend = "après mes 9 tables";/);
   // Avant les 9 tables, l'escalier reste fermé (il ne s'agit pas de la porte).
-  assert.match(rendu, /config: expertOuvert \? marche\.config : null,/);
+  assert.match(rendu, /config: jouable \? marche\.config : null,/);
 });
 
 test("rien d'autre ne change : le moteur, le serveur, la séance", () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261009-3/, "moteur inchangé");
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261014-1/, "moteur inchangé");
   assert.equal(lire("_serveur/public/prof/defi_tables_mon_parcours.js"), lire("outils/calcul_mental/defi_tables_mon_parcours.js"));
   assert.match(html, /function commencerSeance\(table\) \{[\s\S]*?seance = PARCOURS\.ouvrirSeance\(parcours, \{table\}\);\s*lancerEtapeDeSeance\(\);/);
   assert.match(html, /suite\.textContent = `Étape \$\{seance\.faites\.length \+ 1\}\\u00a0: \$\{prochaine\.nom\}\\u00a0→`;/, "dans la séance, toujours « Étape 2 : … → »");

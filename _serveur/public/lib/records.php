@@ -96,6 +96,40 @@ function instant_precis(): string
     return gmdate('Y-m-d\TH:i:s', (int)floor($maintenant)) . sprintf('.%06d', (int)round(($maintenant - floor($maintenant)) * 1000000) % 1000000) . 'Z';
 }
 
+// Le jour d'une course (lot « après l'audit GPT », D8, 14/10/2026) : l'appli
+// l'envoie avec le temps, pour qu'une course faite hors ligne (le dimanche
+// soir, envoyée le lundi) entre dans SA semaine. C'est une donnée venue du
+// téléphone : le serveur ne garde qu'un jour écrit « AAAA-MM-JJ », qui
+// existe, pas dans le futur, et d'au plus COURSE_JOURS_MAX jours en arrière
+// — sinon, le jour de réception, comme avant. Il ne sert qu'à classer la
+// course dans sa semaine (et à dater le record) : il ne fait entrer aucun
+// temps ailleurs, et n'efface rien.
+const COURSE_JOURS_MAX = 7;
+
+function jour_de_course(mixed $brut, ?string $aujourdhui = null): string
+{
+    $aujourdhui = $aujourdhui ?? jour_local();
+    if (!is_string($brut) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $brut) !== 1) return $aujourdhui;
+    $fuseau = new DateTimeZone(FUSEAU);
+    $date = DateTimeImmutable::createFromFormat('!Y-m-d', $brut, $fuseau);
+    if ($date === false || $date->format('Y-m-d') !== $brut) return $aujourdhui;
+    $limite = DateTimeImmutable::createFromFormat('!Y-m-d', $aujourdhui, $fuseau);
+    if ($limite === false) return $aujourdhui;
+    if ($date > $limite) return $aujourdhui;
+    if ($date < $limite->modify('-' . COURSE_JOURS_MAX . ' days')) return $aujourdhui;
+    return $brut;
+}
+
+// L'instant d'un record couru un autre jour que celui de la réception : le
+// jour de la course, à l'heure de réception — il se compare aux autres
+// records (ordre des ex æquo, saison) et se lit (meilleurLe) comme les
+// autres. Le jour de réception : l'instant précis, comme avant.
+function instant_de_course(string $jour, ?string $aujourdhui = null): string
+{
+    $instant = instant_precis();
+    return $jour === ($aujourdhui ?? jour_local()) ? $instant : $jour . substr($instant, 10);
+}
+
 // La table n'existe qu'après migrer.php (ou installer.php sur une base neuve).
 function records_disponibles(PDO $pdo): bool
 {
@@ -193,11 +227,18 @@ function record_affichable(?array $ligne, ?string $lundi = null): array
 // ['nouveau' => bool, 'avant' => dixièmes ou null, 'record' => …].
 // Tout ou rien, sous le verrou de la ligne (deux onglets, deux fins de
 // course à la même seconde : la seconde relit ce que la première a écrit).
-function enregistrer_course(PDO $pdo, int $eleveId, int $dixiemes): array
+// $jour (D8) : le jour de la course, déjà passé par jour_de_course() — la
+// course entre dans la semaine de CE jour. Une course d'une semaine passée
+// ne touche pas au temps de la semaine en cours ; une course d'une semaine
+// plus récente que celle gardée ouvre la nouvelle semaine, comme avant.
+function enregistrer_course(PDO $pdo, int $eleveId, int $dixiemes, ?string $jour = null): array
 {
-    return avec_reprise($pdo, function () use ($pdo, $eleveId, $dixiemes): array {
-        $lundi = lundi_courant();
-        $instant = instant_precis();
+    return avec_reprise($pdo, function () use ($pdo, $eleveId, $dixiemes, $jour): array {
+        $aujourdhui = jour_local();
+        $jour = $jour ?? $aujourdhui;
+        $lundiCourant = lundi_de($aujourdhui);
+        $lundi = lundi_de($jour);
+        $instant = instant_de_course($jour, $aujourdhui);
         transaction_ouvrir($pdo);
         try {
             $requete = $pdo->prepare('SELECT * FROM records WHERE eleve_id = ?' . pour_mise_a_jour($pdo));
@@ -208,7 +249,7 @@ function enregistrer_course(PDO $pdo, int $eleveId, int $dixiemes): array
                 $pdo->prepare('INSERT INTO records (eleve_id, meilleur, meilleur_le, semaine, semaine_lundi, nom, maj_le) VALUES (?, ?, ?, ?, ?, NULL, ?)')
                     ->execute([$eleveId, $dixiemes, $instant, $dixiemes, $lundi, maintenant()]);
                 transaction_valider($pdo);
-                return ['nouveau' => true, 'avant' => null, 'record' => record_affichable(record_de($pdo, $eleveId), $lundi)];
+                return ['nouveau' => true, 'avant' => null, 'record' => record_affichable(record_de($pdo, $eleveId), $lundiCourant)];
             }
             // Un temps d'avant records_depuis() ne compte plus : cette course
             // le remplace, comme une première course.
@@ -217,12 +258,20 @@ function enregistrer_course(PDO $pdo, int $eleveId, int $dixiemes): array
             $nouveau = $avant === null || $dixiemes < $avant;
             $meilleur = $nouveau ? $dixiemes : $avant;
             $meilleurLe = $nouveau ? $instant : $ligne['meilleur_le'];
-            $semaineAvant = $saison && (string)$ligne['semaine_lundi'] === $lundi && $ligne['semaine'] !== null ? (int)$ligne['semaine'] : null;
-            $semaine = $semaineAvant === null || $dixiemes < $semaineAvant ? $dixiemes : $semaineAvant;
+            $lundiGarde = $saison && $ligne['semaine'] !== null ? (string)$ligne['semaine_lundi'] : '';
+            if ($lundiGarde !== '' && strcmp($lundi, $lundiGarde) < 0) {
+                // Une course d'une semaine déjà passée : la semaine gardée reste.
+                $semaine = (int)$ligne['semaine'];
+                $semaineLundi = $lundiGarde;
+            } else {
+                $semaineAvant = $lundiGarde === $lundi ? (int)$ligne['semaine'] : null;
+                $semaine = $semaineAvant === null || $dixiemes < $semaineAvant ? $dixiemes : $semaineAvant;
+                $semaineLundi = $lundi;
+            }
             $pdo->prepare('UPDATE records SET meilleur = ?, meilleur_le = ?, semaine = ?, semaine_lundi = ?, maj_le = ? WHERE eleve_id = ?')
-                ->execute([$meilleur, $meilleurLe, $semaine, $lundi, maintenant(), $eleveId]);
+                ->execute([$meilleur, $meilleurLe, $semaine, $semaineLundi, maintenant(), $eleveId]);
             transaction_valider($pdo);
-            return ['nouveau' => $nouveau, 'avant' => $avant, 'record' => record_affichable(record_de($pdo, $eleveId), $lundi)];
+            return ['nouveau' => $nouveau, 'avant' => $avant, 'record' => record_affichable(record_de($pdo, $eleveId), $lundiCourant)];
         } catch (Throwable $e) {
             transaction_annuler($pdo);
             throw $e;
@@ -247,6 +296,22 @@ function choisir_nom(PDO $pdo, int $eleveId, bool $prenom): array
         }
     }
     return record_affichable(record_de($pdo, $eleveId));
+}
+
+// « Retirer ce temps » (lot « après l'audit GPT », D4 — décision de Gwenaël,
+// 14/10/2026) : le serveur fait confiance à l'appli pour le temps d'une
+// course ; un élève qui sait forger une requête peut s'inventer un record.
+// Plutôt qu'une refonte, le professeur propriétaire efface le temps depuis
+// Ma classe : le record et le temps de la semaine s'en vont, le CHOIX DU NOM
+// reste, et la ligne reste (sa prochaine course compte comme une première).
+// Rend vrai si un temps a été effacé.
+function retirer_temps(PDO $pdo, int $eleveId): bool
+{
+    if (!records_disponibles($pdo)) return false;
+    $requete = $pdo->prepare('UPDATE records SET meilleur = NULL, meilleur_le = NULL, semaine = NULL, semaine_lundi = NULL, maj_le = ?
+        WHERE eleve_id = ? AND meilleur IS NOT NULL');
+    $requete->execute([maintenant(), $eleveId]);
+    return $requete->rowCount() > 0;
 }
 
 function oublier_record_de_l_eleve(PDO $pdo, int $eleveId): void
@@ -288,14 +353,18 @@ function noms_affiches(array $lignes): array
 // Ex æquo : le premier arrivé devant (l'instant du record) ; pour la
 // semaine, le temps de la semaine n'a pas d'instant propre — à égalité, le
 // record le plus ancien d'abord, puis le prénom.
-function ligue(PDO $pdo, int $profId, ?int $eleveId = null): array
+// $pourProf (lot « après l'audit GPT », D4, 14/10/2026) : la ligue lue par
+// le PROFESSEUR porte, sur chaque ligne, l'élève derrière le nom affiché
+// (« eleve » : id, prénom saisi, classe) — pour « Retirer ce temps » et sa
+// confirmation. Jamais rendu à un élève : la ligue de l'appli reste nom + temps.
+function ligue(PDO $pdo, int $profId, ?int $eleveId = null, bool $pourProf = false): array
 {
     $lundi = lundi_courant();
     // La colonne des réglages n'existe qu'après migrer.php (lot
     // « splat-suivi-5 ») : sans elle, toutes les classes ont les records ouverts.
     $colonneReglages = reglages_disponibles($pdo) ? ', c.reglages' : ', NULL AS reglages';
     $requete = $pdo->prepare(
-        'SELECT r.eleve_id, r.meilleur, r.meilleur_le, r.semaine, r.semaine_lundi, r.nom, e.prenom, e.initiale' . $colonneReglages . '
+        'SELECT r.eleve_id, r.meilleur, r.meilleur_le, r.semaine, r.semaine_lundi, r.nom, e.prenom, e.initiale, c.libelle' . $colonneReglages . '
          FROM records r
          JOIN eleves e ON e.id = r.eleve_id
          JOIN classes c ON c.id = e.classe_id
@@ -319,14 +388,19 @@ function ligue(PDO $pdo, int $profId, ?int $eleveId = null): array
     $semaine = array_values(array_filter($lignes, fn(array $l): bool => $l['semaine'] !== null && (string)$l['semaine_lundi'] === $lundi));
     usort($semaine, fn(array $a, array $b): int => [(int)$a['semaine'], (string)$a['meilleur_le'], $noms[(int)$a['eleve_id']]]
         <=> [(int)$b['semaine'], (string)$b['meilleur_le'], $noms[(int)$b['eleve_id']]]);
-    $rendre = function (array $classees, string $champ) use ($noms, $eleveId): array {
+    $rendre = function (array $classees, string $champ) use ($noms, $eleveId, $pourProf): array {
         $sortie = ['lignes' => [], 'rang' => null, 'total' => count($classees)];
         foreach ($classees as $index => $ligne) {
             $id = (int)$ligne['eleve_id'];
             $moi = $eleveId !== null && $id === $eleveId;
             if ($moi) $sortie['rang'] = $index + 1;
             if ($index < RECORDS_TOP) {
-                $sortie['lignes'][] = ['rang' => $index + 1, 'nom' => $noms[$id], 'temps' => (int)$ligne[$champ], 'moi' => $moi];
+                $rendu = ['rang' => $index + 1, 'nom' => $noms[$id], 'temps' => (int)$ligne[$champ], 'moi' => $moi];
+                if ($pourProf) {
+                    $prenom = trim((string)$ligne['prenom']);
+                    $rendu['eleve'] = ['id' => $id, 'prenom' => $prenom === '' ? 'Élève' : $prenom, 'classe' => (string)$ligne['libelle']];
+                }
+                $sortie['lignes'][] = $rendu;
             }
         }
         return $sortie;

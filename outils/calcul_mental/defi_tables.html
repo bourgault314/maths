@@ -340,6 +340,18 @@
     .lire-note { margin: 10px 0 0; color: var(--muted); font-size: .85rem; text-align: center; }
     .lire-toutes { margin-top: 14px; }
     @media (max-width: 620px) { .lire-liste li { font-size: 1.25rem; padding: 6px 12px; } }
+    /* Lot « après l'audit GPT » (point 8, 14/10/2026) : sur ordinateur, les
+       onze lignes sur deux colonnes (0 à 5, puis 6 à 10) et les deux liens
+       côte à côte — avec le bloc de suivi, le cadre dépassait de 182 px en
+       1366 × 768 (règle : le cadre tient toujours entier). */
+    @media (min-width: 1024px) {
+      .lire-screen { max-width: 760px; }
+      .lire-liste { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(6, auto); grid-auto-flow: column; column-gap: 14px; }
+      .lire-liens { display: grid; grid-template-columns: auto auto; justify-content: center; align-items: start; gap: 8px 18px; margin-top: 16px; }
+      .lire-liens .lire-cartes { margin: 0; }
+      .lire-liens .lire-note { grid-column: 1; margin: 0; }
+      .lire-liens .lire-toutes { grid-column: 2; grid-row: 1; }
+    }
     .matable-changer { min-height: 44px; padding: 0 6px; border: 0; background: none; color: var(--blue); font-size: .84rem; font-weight: 850; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; cursor: pointer; }
     /* Lot « Mon mélange sur l'accueil et l'expert » (07/10/2026, planches 7
        et 11, décision de Gwenaël) : « Changer de table » reste à droite du
@@ -3016,6 +3028,7 @@
           <h1 id="lire-title" class="settings-heading" tabindex="-1">La table de 2</h1>
         </div>
         <ol id="lire-liste" class="lire-liste"></ol>
+        <div class="lire-liens">
         <a id="lire-cartes" class="lire-cartes" href="./cartes_table_2.pdf" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="3" y="5" width="13" height="16" rx="2" fill="#fff" stroke="currentColor" stroke-width="1.8"/><path d="M8 3h13v16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M6.5 11h6M6.5 15h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Cartes de la table de 2 à imprimer</span></a>
         <p class="lire-note">Onze cartes à découper : le calcul devant, la réponse derrière.</p>
         <!-- Lot « retours de classe » (06/10/2026, décision de Gwenaël) : la
@@ -3023,6 +3036,7 @@
              revient pour l'élève — ici, à côté de la table qu'il lit, pas sur
              l'accueil. -->
         <a id="lire-toutes" class="lire-cartes lire-toutes" href="./fiche_tables_multiplication.pdf" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2" fill="#fff" stroke="currentColor" stroke-width="1.8"/><path d="M8 8h8M8 12h8M8 16h8M12 6v12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span>Toutes les tables sur une page</span></a>
+        </div>
       </div>
 
       <div id="fiche" class="fiche-screen" hidden>
@@ -3157,7 +3171,7 @@
   </footer>
 
   <script src="./defi_tables_core.js?v=20261010-1"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20261009-3"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20261014-1"></script>
   <script>
     (() => {
       "use strict";
@@ -3637,8 +3651,14 @@
       // Ranger la case active sur l'appareil. Sous un code, le moteur retire le
       // prénom lui-même ; sans code, on le met de côté dans l'onglet et la case
       // durable part sans lui.
+      // Lot « après l'audit GPT » (D1) : sous un code, la case de l'appareil
+      // est FUSIONNÉE avec ce qu'on écrit — deux onglets du même code, tous
+      // les deux hors ligne, ne s'écrasent plus l'un l'autre (en ligne, le
+      // serveur fusionnait déjà). Le parcours en mémoire reprend la fusion.
       function sauverCase() {
         if (suiviActif()) {
+          const local = PARCOURS.charger(storage(), codeSuivi);
+          if (local) parcours = PARCOURS.fusionner(local, parcours);
           PARCOURS.sauver(storage(), parcours, codeSuivi);
           return;
         }
@@ -3673,8 +3693,12 @@
       // (pageshow avec « persisted ») : ce qui attendait part. Pas au premier
       // affichage : à ce moment-là c'est demarrerSuivi qui décide, après avoir
       // lu le serveur.
+      // Lot « après l'audit GPT » (D12) : la course en attente repart
+      // aussi — avant, seule la progression repartait, et le temps attendait
+      // le prochain 200 du parcours ou la prochaine ouverture.
       function reprendreLesEnvois() {
         if (envoiPossible() && sync.dirty) envoyerMaintenant();
+        envoyerCourseEnAttente();
       }
       try {
         window.addEventListener("online", reprendreLesEnvois);
@@ -4194,6 +4218,7 @@
       let recordsReglage = true;
       let recordsEnVol = false;
       let courseEnVol = false;
+      let courseARelancer = false;
       let recordsOnglet = "semaine";
       let apresChoixDuNom = null;
 
@@ -4284,11 +4309,20 @@
       //  autre (panne, coupure, 503 mise à niveau) — on garde, prochaine
       //       ouverture ou prochain 200 du parcours.
       function envoyerCourseEnAttente() {
-        if (!sync.course || !envoiPossible() || !recordsOuverts() || courseEnVol) return;
+        if (!sync.course || !envoiPossible() || !recordsOuverts()) return;
+        // D12 : un envoi encore en vol (le précédent, parti juste avant la
+        // coupure, attend ses 8 s) — on note qu'il faudra repartir dès qu'il
+        // retombe, au lieu de laisser la course attendre la prochaine ouverture.
+        if (courseEnVol) { courseARelancer = true; return; }
         courseEnVol = true;
+        courseARelancer = false;
         const code = codeSuivi;
         const course = sync.course;
-        appelRecords({temps: course.temps, justes: PARCOURS.SEUILS.course.total}).then(reponse => {
+        // Lot « après l'audit GPT » (D8) : le jour de la course part avec le
+        // temps — une course du dimanche soir envoyée le lundi reste dans SA
+        // semaine (le serveur n'accepte qu'un jour réel, pas dans le futur,
+        // de 7 jours au plus ; sinon le jour de réception).
+        appelRecords({temps: course.temps, justes: PARCOURS.SEUILS.course.total, jour: course.jour}).then(reponse => {
           courseEnVol = false;
           if (code !== codeSuivi) return;
           const donnees = reponse.donnees;
@@ -4305,7 +4339,11 @@
             if (reponse.statut === 403) recordsReglage = false;
             sauverSync();
             rafraichirRecords(null);
+            return;
           }
+          // Panne ou coupure, et le réseau est revenu entre-temps (D12) : on
+          // repart une fois, tout de suite.
+          if (courseARelancer) { courseARelancer = false; envoyerCourseEnAttente(); }
         });
       }
 
@@ -6373,7 +6411,7 @@
         $("retry").className = "secondary";
         $("result-accueil").classList.add("primary");
         $("result-accueil").classList.remove("secondary");
-        const elapsed = Date.now() - state.startAt;
+        const elapsed = horlogeSerie() - state.startAt;
         const scoreKey = configurationKey(state.configuration);
         const previousScore = sessionScores.get(scoreKey);
         if (state.configuration.mode !== "learn") sessionScores.set(scoreKey, state.correct);
@@ -6711,14 +6749,14 @@
       function updateTimer() {
         if (!state.running) return;
         if (state.configuration?.course === "records") {
-          $("time").textContent = formatTime(Math.floor((Date.now() - state.startAt) / 1000));
+          $("time").textContent = formatTime(Math.floor((horlogeSerie() - state.startAt) / 1000));
           return;
         }
         if (state.configuration?.duration === null) return;
         // Mes calculs du jour : le chrono est arrêté tant qu'une correction
         // (ou « Bravo ! ») est à l'écran.
         if (state.pauseA) return;
-        const remaining = Math.max(0, Math.ceil((state.endAt - Date.now()) / 1000));
+        const remaining = Math.max(0, Math.ceil((state.endAt - horlogeSerie()) / 1000));
         $("time").textContent = formatTime(remaining);
         $("time").classList.toggle("urgent", remaining <= 10);
         if (remaining > 0 && remaining <= 10 && !state.tenSecondAlert) {
@@ -6797,12 +6835,22 @@
         partir();
       }
 
+      // Lot « après l'audit GPT » (D7, 14/10/2026) : le chrono d'une série
+      // (la course des records, les étoiles, les séries à durée) lit une
+      // horloge qui ne dépend pas des réglages de l'appareil — reculer
+      // l'heure du téléphone pendant une course ne fabrique plus un record.
+      // Les instants gardés (sync.maj, derniers gestes) restent sur Date.now,
+      // qui, lui, se compare à d'autres appareils.
+      function horlogeSerie() {
+        return window.performance && typeof window.performance.now === "function" ? window.performance.now() : Date.now();
+      }
+
       // Le chrono part avec la première question.
       function partir() {
         state.decompte = null;
         $("validate").disabled = false;
         state.running = true;
-        state.startAt = Date.now();
+        state.startAt = horlogeSerie();
         state.endAt = DURATION === null ? 0 : state.startAt + DURATION * 1000;
         const course = state.configuration.course === "records";
         renderQuestion();
@@ -7105,7 +7153,7 @@
       function advanceAfterResponse() {
         clearAutoAdvance();
         if (state.pauseA) {
-          state.endAt += Date.now() - state.pauseA;
+          state.endAt += horlogeSerie() - state.pauseA;
           state.pauseA = null;
           $("time").classList.remove("en-pause");
         }
@@ -7186,7 +7234,7 @@
           // demain ; et le chrono s'arrête le temps de lire.
           const chrono = state.configuration.duration !== null;
           if (chrono) {
-            state.pauseA = Date.now();
+            state.pauseA = horlogeSerie();
             $("time").classList.add("en-pause");
           }
           const willRetry = !correct && !question.retry && !chrono;
@@ -7801,7 +7849,7 @@
       }
 
       function finishRevision() {
-        const elapsed = Date.now() - state.startAt;
+        const elapsed = horlogeSerie() - state.startAt;
         const table = state.configuration.revisionTable;
         const total = state.revisionPremierTotal;
         const score = state.revisionPremierScore;
@@ -8260,7 +8308,7 @@
         if (!expert.suivante) {
           const fin = document.createElement("p");
           fin.className = "launch-hint";
-          fin.textContent = "Légende des tables 👑 : l’escalier est terminé. Rejoue une marche quand tu veux depuis Mon parcours.";
+          fin.textContent = "Légende des tables 👑 : l’escalier est terminé. Rejoue la couronne quand tu veux depuis Mon parcours.";
           action.append(fin);
           return;
         }
@@ -9152,7 +9200,9 @@
           item.append(numero, nom);
           liste.append(item);
         });
-        if (enPlus) {
+        // D13 : le test déjà dans la liste (« si j'ai 9 sur 10 juste avant »)
+        // ne s'écrit pas deux fois ; seul le compte dit « 4 ou 5 étapes ».
+        if (enPlus && !programme.testDejaAnnonce) {
           const item = document.createElement("span");
           item.className = "en-plus";
           const numero = document.createElement("i");
@@ -9168,7 +9218,7 @@
         carte.append(tete, liste);
         carte.setAttribute("aria-label", reprise
           ? `${titre.textContent} : ${duree.textContent}. ${dejaFaites.map((passee, index) => `${index + 1}, ${passee.nom}, fait`).join(" ; ")} ; ${programme.etapes.map((etape, index) => `${dejaFaites.length + index + 1}, ${etape.nom}`).join(" ; ")}. Reprendre.`
-          : `${titre.textContent} : ${duree.textContent}. ${programme.etapes.map((etape, index) => `${index + 1}, ${etape.nom}`).join(" ; ")}${enPlus ? ` ; ${nombre + 1}, ${NOM_DU_TEST}, ${CONDITION_DU_TEST}` : ""}. Commencer.`);
+          : `${titre.textContent} : ${duree.textContent}. ${programme.etapes.map((etape, index) => `${index + 1}, ${etape.nom}`).join(" ; ")}${enPlus && !programme.testDejaAnnonce ? ` ; ${nombre + 1}, ${NOM_DU_TEST}, ${CONDITION_DU_TEST}` : ""}. Commencer.`);
         carte.addEventListener("click", () => commencerSeance(table));
         return carte;
       }
@@ -9807,8 +9857,8 @@
         }
 
         // « Je deviens expert » : l'escalier des cinq marches, ouvert dès que les
-        // 9 tables sont passées. Chaque marche est une case ; une marche
-        // réussie valide les précédentes. Lot « Mes calculs du jour d'abord » :
+        // 9 tables sont passées. Chaque marche est une case, marche par
+        // marche (D5). Lot « Mes calculs du jour d'abord » :
         // tant que Mes calculs du jour n'est pas joué, une étoile le lance d'abord.
         const expertOuvert = etat.expert.ouvert;
         const expertAttend = "après mes 9 tables";
@@ -9825,17 +9875,25 @@
         expertHead.append(expertTitle, expertBadge);
         const stars = document.createElement("div");
         stars.className = "parcours-extra-cells";
+        // Lot « après l'audit GPT » (D5, décision de Gwenaël du 14/10/2026) :
+        // seule la marche SUIVANTE se lance — plus de saut vers 👑 (à 0 étoile,
+        // 25 sur 25 en 1 min faisait une Légende d'un coup). Les marches
+        // gagnées ne se rejouent plus, sauf la couronne (l'entretien de la
+        // Légende) ; les marches plus loin attendent (« plus tard »). Le
+        // moteur refuse de son côté une étoile qui n'est pas la suivante.
         etat.expert.marches.forEach(marche => {
           const colonne = document.createElement("span");
           colonne.className = "marche-cell";
+          const jouable = expertOuvert && (marche.suivante || (marche.gagnee && marche.etoile === PARCOURS.ETOILES_MAX));
+          const suite = !expertOuvert ? ` — ${expertAttend}` : marche.gagnee ? "" : jouable ? "" : " — plus tard";
           colonne.append(makeCell({
             kind: "star",
             etat: marche.gagnee ? 2 : 0,
-            label: `${marche.symbole} : toutes les tables, produits, trous et divisions, 25 questions en ${marche.libelleDuree}${expertOuvert ? "" : ` — ${expertAttend}`}`,
-            config: expertOuvert ? marche.config : null,
-            extraClass: `n${marche.etoile}${expertOuvert ? "" : " is-fermee"}`,
+            label: `${marche.symbole} : toutes les tables, produits, trous et divisions, 25 questions en ${marche.libelleDuree}${suite}`,
+            config: jouable ? marche.config : null,
+            extraClass: `n${marche.etoile}${!expertOuvert || (!jouable && !marche.gagnee) ? " is-fermee" : ""}`,
             texte: symboleMarche(marche),
-            action: expertOuvert ? null : () => {}
+            action: jouable ? null : () => {}
           }));
           const duree = document.createElement("small");
           duree.textContent = marche.libelleDuree;
