@@ -9,7 +9,7 @@
 
    L'empreinte = les réglages de l'adresse qui déterminent les cartes : tous
    les noms de sharedNames SAUF eleve, parcours, print, duplex, layout, title,
-   imprimer, note — graine et « suite » (étape composée) compris ; clés triées,
+   imprimer, note, systeme, corrige — graine et « suite » (étape composée) compris ; clés triées,
    valeurs telles quelles, jointes par « | ». Ces tests exécutent le code de la
    page tel quel : fonctions, liste et bloc de reprise sont extraits du fichier.
    La reprise a aussi été jouée au navigateur, pour de vrai (voir la notice). */
@@ -92,12 +92,13 @@ test("ce qui ne change pas les cartes n'entre pas dans l'empreinte : élève, é
   assert.equal(empreinte(ETAPE7.replace(";", "%3B")), ref);
 });
 
-test("chaque réglage qui détermine les cartes change l'empreinte — tous ceux de sharedNames, sauf neuf", () => {
+test("chaque réglage qui détermine les cartes change l'empreinte — tous ceux de sharedNames, sauf dix", () => {
   const noms = JSON.parse(NOMS.slice(NOMS.indexOf("["), NOMS.lastIndexOf("]") + 1));
   const hors = JSON.parse(HORS.slice(HORS.indexOf("["), HORS.lastIndexOf("]") + 1));
   // « note » (lot E1, Enquête) : une consigne imprimée en plus, qui ne change pas les cartes ;
-  // « systeme » (lot M4-7, Système) : la ligne « Le système » de l'impression, pareil.
-  assert.deepEqual([...hors].sort(), ["duplex", "eleve", "imprimer", "layout", "note", "parcours", "print", "systeme", "title"]);
+  // « systeme » (lot M4-7, Système) : la ligne « Le système » de l'impression, pareil ;
+  // « corrige » (lot M4-8, Système) : le corrigé écrit en équations, pareil.
+  assert.deepEqual([...hors].sort(), ["corrige", "duplex", "eleve", "imprimer", "layout", "note", "parcours", "print", "systeme", "title"]);
   const ref = empreinte(ETAPE8);
   // l'adresse de l'étape 8, où le réglage « nom » prend une autre valeur (ou apparaît)
   const avec = (nom, valeur) => `?${ETAPE8.slice(1).split("&").filter((p) => !p.startsWith(`${nom}=`)).join("&")}&${nom}=${valeur}`;

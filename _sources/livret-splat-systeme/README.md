@@ -33,6 +33,7 @@ pixel contre le PDF page par page (notice du lot M4-4).
 | `systeme` — **SPLAT! Système** | 25 Je retire · 26 Je remplace · 27 J'additionne · 28 À toi de choisir | `outils/livret_splat_systeme.pdf` · `…_a_plier.pdf` |
 | `tour2` — **SPLAT! Système · cycle 4** | 25d Je recopie, puis je retire · 26d Deux fois ou trois fois ? · 27d Deux gestes à la suite · 28d À toi de choisir | `outils/livret_splat_systeme_tour2.pdf` · `…_a_plier.pdf` |
 | + deux corrigés chacun (pour tous) | les mêmes cartes | **avec les taches** : `…_correction.pdf` · `…_correction_a_plier.pdf` ; **en lettres** : `…_correction_lettre.pdf` · `…_correction_lettre_a_plier.pdf` |
+| + le livret 2 seulement, un 3e (lot M4-8) | les mêmes cartes | **en équations** : `…_tour2_correction_equations.pdf` · `…_tour2_correction_equations_a_plier.pdf` |
 
 Le PDF **page par page** (12 pages A4 en largeur, ordre de lecture) porte le logo de l'IREMI seul
 dans le bandeau de chaque fiche (un collègue qui imprime une seule fiche n'a pas le dos) ; le livret
@@ -91,7 +92,17 @@ plus petite valeur ≥ 3, aucune carte en double sur les deux livrets, les exemp
   « 3 noires + 4 rouges = 53 » / « 3 × N + 4 × R = 53 » (jamais « 3N ») — seulement s'il y a la
   place, et alors tout le système, en un seul corps. C'est l'outil qui l'écrit (`sysSystemeEcrit`,
   `drawSysSystemeEcrit` dans `outils/splat.html`), donc pareil en projection.
-- Les cartes sont vérifiées identiques entre l'élève et les deux corrigés (`render.py` s'arrête sinon).
+- **En équations** (livret 2 seulement, lot M4-8, 14/10/2026, idée de Gwenaël) : les équations
+  seules, étape par étape, sans les barres ni le dessin de la carte, « vers la seconde » : les
+  systèmes avec leur accolade ; « Je recopie 2 fois le plateau 58 » écrit 2 × (N + 3 × B) = 2 × 58,
+  puis le nouveau système ; « Je retrouve le plateau 46 dedans » écrit (2 × N + B) + 5 × B = 116,
+  puis 46 + 5 × B = 116 ; « J'additionne » écrit la somme des équations, puis la range
+  (5 × (Ve + O) = 160). C'est l'outil qui les écrit (`corrige=equations`, `sysEquationsMorceaux`,
+  `drawSysCorrectionEquations`), à partir du plan : rien n'est recalculé, et chaque réécriture est
+  vérifiée comme une égalité de polynômes (test `splat-systeme-m4-8-corrige-equations`). Une
+  colonne, corps 50 au plus, les deux cartes d'une page au même corps ; aucune carte réduite.
+  La page 2 montre l'exemple en équations ; la réponse encadrée reste en mots (« noire = 16 »).
+- Les cartes sont vérifiées identiques entre l'élève et les corrigés (`render.py` s'arrête sinon).
 
 ## Les QR codes passent par une page courte
 
@@ -116,7 +127,7 @@ haut de sa première page.
 
 ```bash
 cd _sources/livret-splat-systeme
-python3 render.py                 # les deux livrets, l'élève et les deux corrigés
+python3 render.py                 # les deux livrets, l'élève et les corrigés (3 pour le livret 2)
 python3 render.py systeme         # un seul livret (systeme | tour2)
 python3 render.py --eleve         # seulement l'élève
 python3 render.py --correction    # seulement les corrigés

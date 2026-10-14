@@ -31,6 +31,8 @@ Produit, à la racine du dépôt, pour chaque livret (ex. livret_splat_systeme) 
 et ses deux corrigés (pour tous : on peut les donner aux élèves), chacun avec son « à plier » :
     outils/livret_splat_systeme_correction.pdf           « avec les taches » (les mots des couleurs)
     outils/livret_splat_systeme_correction_lettre.pdf    en lettres (N, B…), comme l'appli
+et, pour le livret 2 seulement (lot M4-8), un troisième :
+    outils/livret_splat_systeme_tour2_correction_equations.pdf   en équations, étape par étape
 
 LES FICHES ne sont PAS redessinées ici : elles sont imprimées par l'outil du site
 (outils/splat.html, mode D, layout=2) avec les graines triées (lots M4-4 et M4-6), et le QR est ajouté
@@ -337,7 +339,8 @@ JS_FICHE = "() => {" + JS_TYPE + r"""
           ordres: cards.map(c => c._sys.ordre ? c._sys.ordre.filter(i => sysPlateauxMontres(c).includes(i)) : null),
           feuilles: document.querySelectorAll('.printArea .sheet').length, parPage: getPrintCardsPerPage(),
           ligneSysteme: document.querySelectorAll('.printArea #sysLigneSystemePrint').length,
-          echelles: [...document.querySelectorAll('#sysCorrectionPrint')].map(g => g.getAttribute('data-echelle'))};
+          echelles: [...document.querySelectorAll('#sysCorrectionPrint')].map(g => g.getAttribute('data-echelle')),
+          equations: [...document.querySelectorAll('#sysCorrectionPrint')].map(g => g.getAttribute('data-equations') === '1')};
 }"""
 
 # ---------------------------------------------------------------------------
@@ -349,6 +352,11 @@ CORRECTIONS = [
     # 25/09/2026 (demande de Gwenaël) : les mêmes corrigés « en lettres », comme l'appli les écrit
     # avec unknown=letter — l'initiale de chaque couleur (2 × N + 3 × B = 42 ; B = 12 ÷ 2 = 6).
     dict(suffixe="_correction_lettre", lettre=True, dit="en lettres"),
+    # lot M4-8 (14/10/2026, idée de Gwenaël, décidé sur planches) : le livret 2 seulement, un 3e
+    # corrigé « en équations » — l'outil avec corrige=equations : les équations seules, étape par
+    # étape, sans les barres ni le dessin de la carte, les systèmes avec leur accolade
+    # (2 × (N + 3 × B) = 2 × 58 ; (2 × N + B) + 5 × B = 116 ; 5 × B = 116 − 46 = 70)
+    dict(suffixe="_correction_equations", lettre=True, equations=True, dit="en équations", livrets=("tour2",)),
 ]
 PROF = dict(bandeau="Correction", ligne="Livret corrigé")
 CSS_PROF = """
@@ -417,9 +425,18 @@ JS_EXEMPLE = r"""(opts) => {
   const blocs = sysBlocs(etapes).map(b => Object.assign(dessine(b), {roles: b.map(e => e.role), titres: b.map(e => e.titre)}));
   if (verif) blocs.push(Object.assign(dessine([verif]), {roles: ['verification'], titres: [verif.titre]}));
   const tout = dessine(plan);
+  // le corrigé en équations (lot M4-8) : toutes les étapes, en une colonne, comme sur les fiches
+  let eq = null;
+  if (opts.equations) {
+    const sv = mk(1740, 8000), g = mkEl('g'); sv.appendChild(g);
+    drawSysCorrectionEquations(g, card, 0, 7900, ctx, {x: 0, xMax: 1740});
+    const e = g.querySelector('#sysCorrectionPrint');
+    eq = {svg: resout(sv.innerHTML), vb: boite(sv, 10), echelle: e.getAttribute('data-echelle'), colonnes: e.getAttribute('data-colonnes')};
+    sv.remove();
+  }
   if (inconnues.size) return {erreur: 'variables de couleur inconnues : ' + [...inconnues].join(', ')};
   const s = card._sys, mot = k => investigateColorWord(investigateColorByKey(k));
-  return {carte, carteSys, tout, blocs, lettre: ctx.lettres, geste: s.geste, total: card.total, visibles: card.visible,
+  return {carte, carteSys, tout, eq, blocs, lettre: ctx.lettres, geste: s.geste, total: card.total, visibles: card.visible,
           couleurs: s.colors.map(k => ({k, mot: mot(k), pluriel: SYS_COULEURS_PLURIEL[k], valeur: s.values[k]})),
           plateaux: s.boards.map(b => ({counts: s.colors.map(k => b.counts[k] || 0), total: b.total})),
           cle: [card.total, JSON.stringify(card.hidden.slice().sort((a, b) => a - b)),
@@ -668,6 +685,7 @@ async def rendre(niv, tmp, corr=None, page3="atoi"):
     qrweb = f"{BASE_WEB}/qr"
     cles = {}
     lettre = bool(corr and corr["lettre"])
+    equations = bool(corr and corr.get("equations"))
     async with async_playwright() as p:
         nav = await p.chromium.launch(channel="chromium")
 
@@ -683,12 +701,12 @@ async def rendre(niv, tmp, corr=None, page3="atoi"):
         ex_conf = niv["exemple"]
         sys_ = bool(niv.get("systeme"))
         pg = await page_outil(q_lettre(ex_conf["query"]) + "&layout=2&print=statement")
-        ex = await pg.evaluate(JS_EXEMPLE, {"vide": False, "systeme": sys_, "rempli": True})
+        ex = await pg.evaluate(JS_EXEMPLE, {"vide": False, "systeme": sys_, "rempli": True, "equations": equations})
         await pg.close()
         if "erreur" in ex:
             raise SystemExit(f"exemple du livret « {niv['sortie']} » : {ex['erreur']}")
         pg = await page_outil(q_lettre(ex_conf["atoi"]) + "&layout=2&print=statement")
-        ax = await pg.evaluate(JS_EXEMPLE, {"vide": not corr, "systeme": sys_, "rempli": bool(corr)})
+        ax = await pg.evaluate(JS_EXEMPLE, {"vide": not corr, "systeme": sys_, "rempli": bool(corr), "equations": equations})
         if not corr and ax["lettre"]:
             raise SystemExit("la carte « À toi » vide se dessine en « ? » (les lettres sont écrites en noir)")
         await pg.close()
@@ -696,7 +714,7 @@ async def rendre(niv, tmp, corr=None, page3="atoi"):
             raise SystemExit(f"carte « À toi » du livret « {niv['sortie']} » : {ax['erreur']}")
         if [b["roles"] for b in ax["blocs"]] != [b["roles"] for b in ex["blocs"]]:
             raise SystemExit(f"« À toi » ({niv['sortie']}) : pas le même schéma que l'exemple")
-        for b in ex["blocs"] + ax["blocs"] + [ex["tout"], ax["tout"]]:
+        for b in ex["blocs"] + ax["blocs"] + [ex["tout"], ax["tout"]] + ([ex["eq"], ax["eq"]] if equations else []):
             if b["echelle"] not in ("1", "?"):
                 raise SystemExit(f"exemple ({niv['sortie']}) : un dessin réduit ({b['echelle']})")
         textes = textes_exemple(ex, ex_conf["geste"])
@@ -721,7 +739,7 @@ async def rendre(niv, tmp, corr=None, page3="atoi"):
 
         async def pdf_fiche(f, sortie, iremi=False):
             titre = f"Fiche {f['code']} — {f['t']}"
-            q = q_lettre(f["q"] + SYS_COMMUN) + ("&systeme=1" if sys_ else "") + f"&layout=2&title={quote(titre)}&print={'correction' if corr else 'statement'}"
+            q = q_lettre(f["q"] + SYS_COMMUN) + ("&systeme=1" if sys_ else "") + f"&layout=2&title={quote(titre)}&print={'correction' if corr else 'statement'}" + ("&corrige=equations" if equations else "")
             pg = await page_outil(q)
             etat = await pg.evaluate(JS_FICHE)
             if etat["parPage"] != 2 or etat["feuilles"] != 2 or len(etat["cartes"]) != 4:
@@ -735,7 +753,10 @@ async def rendre(niv, tmp, corr=None, page3="atoi"):
             for a, b in JUMELLES.get(f["code"], []):
                 if etat["premiers"][a] != etat["premiers"][b]:
                     raise SystemExit(f"{titre} : les cartes {a + 1} et {b + 1} n'ont pas le même premier plateau")
-            permis = REDUITE_PERMISE.get(f["code"], {})
+            # le corrigé en équations (lot M4-8) : toutes les cartes en équations, aucune réduite
+            if equations and not all(etat["equations"]):
+                raise SystemExit(f"{titre} : une carte n'est pas en équations")
+            permis = {} if equations else REDUITE_PERMISE.get(f["code"], {})
             for i, e in enumerate(etat["echelles"]):
                 if e != "1" and not (i in permis and float(e) >= permis[i]):
                     raise SystemExit(f"{titre} : une carte réduite ({etat['echelles']})")
@@ -784,12 +805,15 @@ async def rendre(niv, tmp, corr=None, page3="atoi"):
         lg = "La carte et ses plateaux"
         if page3 == "atoi":
             cx, ca = ex["carteSys"] or ex["carte"], ax["carteSys"] or ax["carte"]
+            # le corrigé en équations (lot M4-8) : à droite, les équations à la place des barres
+            dx, da = (ex["eq"], ax["eq"]) if equations else (ex["tout"], ax["tout"])
             p2 = dict(sur="Un exemple résolu", h1="Le système pas à pas", carte=cx["svg"], vbCarte=cx["vb"], lgCarte=lg,
-                      texte=textes["texte"], dessin=dict(svg=ex["tout"]["svg"], vb=ex["tout"]["vb"]), elargir=ELARGIR_CARTE)
+                      texte=textes["texte"], dessin=dict(svg=dx["svg"], vb=dx["vb"]), elargir=ELARGIR_CARTE)
             p3 = dict(sur="À toi&nbsp;!", h1="La même sorte de carte" + (" — corrigée" if corr else ""),
                       carte=ca["svg"], vbCarte=ca["vb"], lgCarte="La carte et ses plateaux",
-                      texte=textes_atoi(ax) if not corr else textes_atoi(ax).replace("écris les totaux et les calculs dans le schéma, puis la réponse", "le schéma rempli"),
-                      dessin=dict(svg=ax["tout"]["svg"], vb=ax["tout"]["vb"]), elargir=ELARGIR_CARTE)
+                      texte=textes_atoi(ax) if not corr else textes_atoi(ax).replace("écris les totaux et les calculs dans le schéma, puis la réponse",
+                                                                                     "les équations, étape par étape" if equations else "le schéma rempli"),
+                      dessin=dict(svg=da["svg"], vb=da["vb"]), elargir=ELARGIR_CARTE)
         else:
             bl = ex["blocs"]
             coupe = (len(bl) + 1) // 2 if len(bl) > 3 else 2
@@ -811,7 +835,7 @@ async def rendre(niv, tmp, corr=None, page3="atoi"):
         d = niv["dos"]
         defi, cles_defi = [], []
         for dc in d["defi"]:
-            q = q_lettre(dc["q"] + f"&cards={dc['n']}&unknown=question") + ("&systeme=1" if sys_ else "") + f"&layout=2&print={'correction' if corr else 'statement'}"
+            q = q_lettre(dc["q"] + f"&cards={dc['n']}&unknown=question") + ("&systeme=1" if sys_ else "") + f"&layout=2&print={'correction' if corr else 'statement'}" + ("&corrige=equations" if equations else "")
             pg = await page_outil(q)
             r = await pg.evaluate(JS_DEFI, [dc["n"], bool(corr), 1450])
             await pg.close()
@@ -983,7 +1007,7 @@ def main():
             niv = LIVRETS[nom]
             print(f"— livret « {nom} »")
             reference = autres = None
-            for corr in versions:
+            for corr in [c for c in versions if c is None or nom in c.get("livrets", LIVRETS)]:
                 sortie = niv["sortie"] + (corr["suffixe"] if corr else "")
                 with tempfile.TemporaryDirectory() as d:
                     tmp = Path(d)

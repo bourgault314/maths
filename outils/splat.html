@@ -1698,6 +1698,13 @@ let printInstructionNote = "";
 /* « systeme=1 » (lot M4-7) : la ligne « Le système » sous les plateaux de l'énoncé 2 par page du
    Système (livret 2 du monde 4). Absente : rien ne change. Elle ne change pas les cartes. */
 let printSystemeLigne = false;
+/* « corrige=equations » (lot M4-8) : le corrigé du Système écrit en équations, étape par étape,
+   sans les barres (3e corrigé du livret 2 du monde 4). Absent : rien ne change. Il ne change pas
+   les cartes. */
+let printCorrigeEquations = false;
+/* le plus grand corps permis aux équations, le temps de redessiner les cartes d'une page à un
+   même corps (sysEquationsPage) ; null sinon */
+let sysEqCorpsPlafond = null, sysEqDeuxColonnes = false;
 function parseInvestigatePalette(raw){
   const parts = String(raw == null ? "" : raw).toLowerCase().split(/[\s,;+|]+/).filter(Boolean);
   const keys = [];
@@ -2380,7 +2387,7 @@ function lireRepetitionAdresse(raw){
 
 /* Les réglages qu'une adresse partagée peut porter. Liste commune : elle sert
    aussi à l'empreinte de la série élève (eleveSignatureSerie). */
-const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "geste", "gestes", "coefMax", "ecart", "fois", "indice", "sens", "forme", "grand", "sous", "noTotal", "repeat", "ordre", "vocab", "compose", "reunies", "pasapas", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "palette", "unknown", "print", "duplex", "layout", "title", "note", "systeme", "eleve", "parcours", "imprimer", "suite"];
+const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "geste", "gestes", "coefMax", "ecart", "fois", "indice", "sens", "forme", "grand", "sous", "noTotal", "repeat", "ordre", "vocab", "compose", "reunies", "pasapas", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "palette", "unknown", "print", "duplex", "layout", "title", "note", "systeme", "eleve", "parcours", "imprimer", "suite", "corrige"];
 
 function loadSharedConfiguration(){
   const params = new URLSearchParams(window.location.search);
@@ -2447,6 +2454,7 @@ function appliquerConfiguration(params){
      dessiner ton schéma. »). Absente : rien ne change. Elle ne change pas les cartes. */
   if(params.has("note")) printInstructionNote = String(params.get("note") || "").trim().slice(0, 200);
   printSystemeLigne = readBooleanFromShare(params, "systeme") === true;
+  printCorrigeEquations = String(params.get("corrige") || "").toLowerCase() === "equations";
   /* « palette= » (Enquête) : couleurs de taches autorisées ; absente = les six. */
   if(params.has("palette")) investigatePaletteKeys = parseInvestigatePalette(params.get("palette"));
   /* « noTotal=1 » (Enquête sans total) : absente = éteinte, y compris pour chaque partie
@@ -2568,6 +2576,7 @@ function buildShareUrl(){
   if(printTitle) params.set("title", printTitle.slice(0, 160));
   if(printInstructionNote) params.set("note", printInstructionNote);
   if(printSystemeLigne) params.set("systeme", "1");
+  if(printCorrigeEquations) params.set("corrige", "equations");
   if((act === "C" || act === "CD" || act === "D") && Array.isArray(investigatePaletteKeys) && investigatePaletteKeys.length) params.set("palette", investigatePaletteKeys.join(","));
   /* écrite seulement quand elle est cochée : les adresses de l'Enquête ne changent pas */
   if((act === "C" || act === "CD") && invNoTotalEl && invNoTotalEl.checked) params.set("noTotal", "1");
@@ -11025,6 +11034,293 @@ function drawSysLigneSysteme(target, card, dispo, ctx, rempli){
   target.appendChild(g);
   return yb;
 }
+/* ---------------------------------------------------------------------------------------
+   Le corrigé en équations (lot M4-8, 14/10/2026 ; idée de Gwenaël : « un corrigé que en mode
+   équation, sans les tableaux, très propre, pour que ce soit explicite » — décidé sur planche :
+   les équations seules, étape par étape, dans un 3e corrigé du livret 2 du monde 4 ; puis, sur la
+   planche 1 du lot, sans le dessin de la carte : la carte commence par le système ; puis, sur les
+   planches 5 et 6, « vers la seconde » : les systèmes avec leur accolade, voir sysEquationsMorceaux). Réglage
+   corrige=equations de l'impression du Système, 2 et 4 par page ; absent, rien ne change.
+   Une colonne si tout y tient, au corps 50 au plus ; sinon deux. Sur une page, toutes les cartes
+   au même corps (sysEquationsPage). Jamais de carte réduite aux réglages des livrets.
+   Chaque étape du plan garde son titre (en brun) et donne l'équation de chacune de ses barres,
+   écrite à partir de ses cases : rien n'est recalculé, tout nombre écrit est déjà dans le plan.
+   « Je vérifie » garde ses calculs, puis la réponse encadrée, comme les autres corrigés.
+--------------------------------------------------------------------------------------- */
+const SYS_EQ = { haut:80, fsEq:50, fsEqMin:36, titre:0.8, poidsTitre:800, poidsEq:700, pas:1.3, hTitre:1.4, ecartEtape:0.45, retrait:40, gouttiere:70,
+  accolade:1.05, ecartReponses:16, entreReponses:70, couleurTitre:"#7c2d12", encre:"#0f172a" };
+/* Le membre de gauche d'une barre : ses cases, dans l'ordre — les taches inconnues regroupées par
+   couleur (« 2 × N »), les taches trouvées par couleur avec leur valeur (« 3 × 14 »), chaque jeton
+   visible par son nombre, chaque plateau retrouvé par son total, ou, quand « bloc » le donne, par
+   son contenu entre parenthèses (« (2 × N + B) »). null : une case que l'équation ne sait pas
+   écrire. */
+function sysEquationGauche(cells, bloc){
+  const termes = [], parCle = new Map();
+  cells.forEach((c, i) => {
+    let cle, rendu;
+    if(c.kind === "unknown"){ cle = "u" + c.color; rendu = investigateColorInitial(investigateColorByKey(c.color)); }
+    else if(c.kind === "known"){ cle = "k" + c.color; rendu = String(c.value); }
+    else if(c.kind === "visible"){ cle = "n" + i; rendu = String(c.value); }
+    else if(c.kind === "block"){ cle = "n" + i; rendu = (bloc && bloc(c)) || String(c.value); }
+    else{ cle = "x" + i; rendu = null; }
+    if(!parCle.has(cle)){ const t = { rendu, n:0 }; parCle.set(cle, t); termes.push(t); }
+    parCle.get(cle).n++;
+  });
+  if(!termes.length || termes.some(t => t.rendu == null)) return null;
+  return termes.map(t => (t.n > 1 ? `${t.n} × ` : "") + t.rendu).join(" + ");
+}
+/* L'équation d'une barre : son membre de gauche, puis « = le calcul » s'il y en a un, puis « = le
+   total ». Un plateau sans total (« ? ») n'a pas d'équation (null). */
+function sysEquationBarre(b){
+  if(!b || String(b.top) === "?" || !b.cells.length) return null;
+  const gauche = sysEquationGauche(b.cells);
+  return gauche == null ? null : `${gauche}${b.calcul ? ` = ${b.calcul}` : ""} = ${b.top}`;
+}
+/* Le polynôme d'une barre sans plateau retrouvé : { "": les nombres, couleur: nombre de taches }
+   (null s'il y a un bloc). */
+function sysEqPoly(cells){
+  const p = { "": 0 };
+  for(const c of cells){
+    if(c.kind === "unknown") p[c.color] = (p[c.color] || 0) + 1;
+    else if(c.kind === "visible" || c.kind === "known") p[""] += Number(c.value);
+    else return null;
+  }
+  return p;
+}
+function sysEqMemes(a, b){
+  return !!a && !!b && [...new Set(Object.keys(a).concat(Object.keys(b)))].every(k => (a[k] || 0) === (b[k] || 0));
+}
+/* Une équation déjà écrite, de total v : la barre la plus récente des étapes d'avant qui a ce
+   total et n'est faite que de taches inconnues (et de jetons) — et, si « cible » est donnée, qui
+   a exactement ce polynôme (deux plateaux peuvent avoir le même total : on ne se fie jamais au
+   seul nombre). Son membre de gauche (« 2 × N + B ») et la barre ; null s'il n'y en a pas. */
+function sysEqContenu(avant, v, cible){
+  for(let i = avant.length - 1; i >= 0; i--) for(const b of avant[i].barres || []){
+    if(String(b.top) !== String(v) || !b.cells.length || !b.cells.every(c => c.kind === "unknown" || c.kind === "visible")) continue;
+    if(cible && !sysEqMemes(sysEqPoly(b.cells), cible)) continue;
+    return { gauche: sysEquationGauche(b.cells), b };
+  }
+  return null;
+}
+/* a − b, divisé par n (null si ça ne tombe pas juste) */
+function sysEqReste(a, b, n){
+  const r = {};
+  for(const k of new Set(Object.keys(a).concat(Object.keys(b)))){
+    const d = (a[k] || 0) - (b[k] || 0);
+    if(d % n) return null;
+    r[k] = d / n;
+  }
+  return r;
+}
+/* « Je range par paires » : des taches toutes en même nombre, rangées en paquets (« 5 × (Ve + O) ») ;
+   sinon le membre de gauche habituel. */
+function sysEqRange(cells){
+  const n = new Map();
+  if(!cells.every(c => c.kind === "unknown")) return sysEquationGauche(cells);
+  cells.forEach(c => n.set(c.color, (n.get(c.color) || 0) + 1));
+  const k = [...n.values()];
+  if(n.size < 2 || k.some(x => x !== k[0]) || k[0] < 2) return sysEquationGauche(cells);
+  return `${k[0]} × (${[...n.keys()].map(c => investigateColorInitial(investigateColorByKey(c))).join(" + ")})`;
+}
+/* Les morceaux du corrigé, étape par étape : le titre, les lignes, et les accolades (les lignes
+   qui forment un système). Version « vers la seconde » (choix de Gwenaël du 14/10 sur les planches
+   5 et 6 : l'entre-deux, avec la distributivité ; « Deux gestes à la suite » garde « Le grand
+   plateau » seul, puis le petit système) :
+     - les plateaux s'écrivent en système, avec l'accolade ;
+     - « Je recopie k fois » : k × (le plateau) = k × son total (distributivité), puis le nouveau
+       système ;
+     - un plateau retrouvé dedans s'écrit d'abord par son contenu, entre parenthèses
+       (« (2 × N + B) + 5 × B = 116 »), puis par son total (« 46 + 5 × B = 116 ») ;
+     - « J'additionne » : la somme des équations, puis rangée (« 5 × (Ve + O) = 160 ») ;
+     - le reste, une équation par barre.
+   « Je vérifie » garde ses calculs, et ses réponses en mots (comme la ligne réponse de l'énoncé). */
+function sysEquationsMorceaux(plan){
+  const etapes = plan.filter(e => e.role !== "verification");
+  // le début de chaque idée (les blocs du corrigé en barres) : c'est là qu'on change de colonne
+  const debuts = new Set(sysBlocs(etapes).map(b => b[0]));
+  return plan.map((e, i) => {
+    if(e.role === "verification")
+      return { titre: e.titre, lignes: (e.lignes || []).slice(), accolades: [], debut: true,
+        reponses: (e.reponses || []).map(r => `${investigateColorWord(investigateColorByKey(r.color))} = ${r.value}`) };
+    const avant = plan.slice(0, i), lignes = [], accolades = [];
+    const systeme = ls => { if(ls.length > 1) accolades.push([lignes.length, lignes.length + ls.length - 1]); lignes.push(...ls); };
+    const seule = e.barres.length === 1 ? e.barres[0] : null;
+    const fois = seule && /^(\d+) × (\d+)$/.exec(seule.calcul || "");
+    const somme = seule && e.role === "additionne" ? String(seule.calcul || "").split(" + ") : [];
+    // le plateau recopié : celui dont k fois les taches font la barre (pas seulement le même total)
+    const cibleFois = fois && sysEqPoly(seule.cells) ? sysEqReste(sysEqPoly(seule.cells), {}, Number(fois[1])) : null;
+    const src = cibleFois ? sysEqContenu(avant, fois[2], cibleFois) : null;
+    const parts = somme.map(t => sysEqContenu(avant, t));
+    // la somme des équations additionnées fait bien la barre
+    const total = parts.length && parts.every(Boolean) ? parts.reduce((acc, q) => {
+      const p = sysEqPoly(q.b.cells);
+      for(const k in p) acc[k] = (acc[k] || 0) + p[k];
+      return acc;
+    }, {}) : null;
+    if(e.role === "plateaux") systeme(e.barres.map(sysEquationBarre).filter(Boolean));
+    else if(src){
+      // je recopie k fois un plateau : k × (le plateau) = k × son total, puis le nouveau système
+      // (le plateau recopié, et les autres plateaux de son système)
+      const plat = avant.slice().reverse().find(x => x.role === "plateaux" && x.barres.includes(src.b));
+      const autres = plat ? plat.barres.filter(y => y !== src.b).map(sysEquationBarre).filter(Boolean) : [];
+      lignes.push(`${fois[1]} × (${src.gauche}) = ${fois[1]} × ${fois[2]}`);
+      systeme([`${sysEquationGauche(seule.cells)} = ${seule.top}`].concat(autres));
+    }else if(parts.length > 1 && total && new Set(parts.map(p => p.b)).size === parts.length && sysEqMemes(total, sysEqPoly(seule.cells))){
+      // j'additionne les équations, puis je range
+      lignes.push(`${parts.map(p => `(${p.gauche})`).join(" + ")} = ${seule.calcul}`);
+      lignes.push(`${sysEqRange(seule.cells)} = ${seule.top}`);
+    }else e.barres.forEach(b => {
+      // un plateau retrouvé : d'abord écrit par son contenu entre parenthèses (quand c'est une
+      // somme). L'équation réécrite : celle d'avant qui a le même total (le plateau, ou le plateau
+      // recopié) ; le contenu du bloc : ce qu'elle a de plus que le reste de la barre — cherché
+      // parmi les équations d'avant qui ont la valeur du bloc et exactement ce polynôme.
+      const blocs = b.cells.filter(c => c.kind === "block");
+      const valeurs = [...new Set(blocs.map(c => String(c.value)))];
+      const source = valeurs.length === 1 ? sysEqContenu(avant, b.top) : null;
+      const cible = source && sysEqPoly(b.cells.filter(c => c.kind !== "block")) &&
+        sysEqReste(sysEqPoly(source.b.cells), sysEqPoly(b.cells.filter(c => c.kind !== "block")), blocs.length);
+      const s = cible ? sysEqContenu(avant, valeurs[0], cible) : null;
+      if(s && s.gauche && s.gauche.includes(" + ")) lignes.push(`${sysEquationGauche(b.cells, () => `(${s.gauche})`)} = ${b.top}`);
+      const l = sysEquationBarre(b);
+      if(l) lignes.push(l);
+    });
+    return { titre: e.titre, lignes, accolades, debut: debuts.has(e) };
+  });
+}
+/* Un morceau au corps fs dans une colonne de largeur lc : son titre (au corps 0,8 fs, coupé en
+   deux lignes s'il dépasse la colonne), ses lignes, la réponse encadrée ; sa hauteur, sa
+   largeur (celle de sa plus longue ligne). */
+function sysEquationsMesure(m, fs, lc, dernier){
+  const E = SYS_EQ, ft = Math.round(fs * E.titre);
+  const titres = sysLargeurTexte(m.titre, ft, E.poidsTitre) > lc ? wrapTextToWidth(m.titre, ft, lc, E.poidsTitre) : [m.titre];
+  let h = ft * E.hTitre + (titres.length - 1) * ft * 1.15 + m.lignes.length * fs * E.pas;
+  let w = Math.max(...titres.map(t => sysLargeurTexte(t, ft, E.poidsTitre)));
+  const dansSysteme = k => (m.accolades || []).some(([a, z]) => k >= a && k <= z);
+  m.lignes.forEach((l, k) => { w = Math.max(w, E.retrait + (dansSysteme(k) ? E.accolade * fs : 0) + sysLargeurTexte(l, fs, E.poidsEq)); });
+  const rep = m.reponses ? sysEquationsReponses(m.reponses, lc, fs) : null;
+  if(rep){ h += E.ecartReponses + rep.h; w = Math.max(w, rep.w); }
+  return { h: Math.ceil(h + (dernier ? 0 : fs * E.ecartEtape)), w: Math.ceil(w), titres, ft, rep };
+}
+/* La réponse encadrée (« verte = 16   rouge = 15 »), dans la largeur lc, au corps des équations
+   (fs) : sur une ligne, serrée puis un peu plus petite s'il le faut (jusqu'à 34) ; sinon sur
+   deux lignes ou plus, au corps fs. */
+function sysEquationsReponses(reponses, lc, fs0){
+  const E = SYS_EQ, pad = 30, h1 = fs0 * 1.6, pas = fs0 * 1.3;
+  const larg = (ts, fs, entre) => ts.reduce((s, t) => s + sysLargeurTexte(t, fs, 900), 0) + entre * (ts.length - 1);
+  for(let fs = fs0; fs >= Math.min(fs0, 34); fs -= 2) for(let entre = E.entreReponses; entre >= 40; entre -= 10){
+    const w = larg(reponses, fs, entre);
+    if(w + 2 * pad <= lc) return { lignes: [reponses], fs, entre, w: Math.ceil(w + 2 * pad), h: h1, pas };
+  }
+  const lignes = [];
+  reponses.forEach(t => {
+    const l = lignes[lignes.length - 1];
+    if(l && larg(l.concat(t), fs0, 40) + 2 * pad <= lc) l.push(t); else lignes.push([t]);
+  });
+  const w = Math.max(...lignes.map(l => larg(l, fs0, 40)));
+  return { lignes, fs: fs0, entre: 40, w: Math.ceil(w + 2 * pad), h: h1 + (lignes.length - 1) * pas, pas };
+}
+/* La mise en page : une colonne si tout y tient, sinon deux (coupées entre deux étapes, la
+   première lue d'abord, les hauteurs les plus égales possible) ; au plus grand corps, de fsEq à
+   fsEqMin, qui tient. Sinon, deux colonnes au plus petit corps, réduites (filet, jamais aux
+   réglages des livrets : voir les tests). */
+function sysEquationsFlux(morceaux, largeur, hauteur){
+  const E = SYS_EQ, n = morceaux.length;
+  const colonne = (liste, fs, lc) => liste.map((m, i) => sysEquationsMesure(m, fs, lc, i === liste.length - 1))
+    .reduce((t, x) => ({ h: t.h + x.h, w: Math.max(t.w, x.w) }), { h: 0, w: 0 });
+  const lc2 = (largeur - E.gouttiere) / 2;
+  /* la coupure : de préférence au début d'une idée (après une tache trouvée, avant « Je
+     remplace »…), la plus basse qui tient ; sinon là où les colonnes sont le plus égales */
+  const deux = fs => {
+    let best = null, idee = null;
+    for(let k = 1; k < n; k++){
+      const g = colonne(morceaux.slice(0, k), fs, lc2), d = colonne(morceaux.slice(k), fs, lc2);
+      if(g.w > lc2 || d.w > lc2) continue;
+      const h = Math.max(g.h, d.h);
+      if(!best || h < best.h) best = { k, h };
+      if(morceaux[k].debut && h <= hauteur && (!idee || h < idee.h)) idee = { k, h };
+    }
+    const c = idee || best;
+    return c && { fs, colonnes: [morceaux.slice(0, c.k), morceaux.slice(c.k)], h: c.h, lc: lc2 };
+  };
+  for(let fs = Math.min(E.fsEq, sysEqCorpsPlafond || E.fsEq); fs >= E.fsEqMin; fs -= 2){
+    const un = colonne(morceaux, fs, largeur);
+    if(!(sysEqDeuxColonnes && n > 1) && un.h <= hauteur && un.w <= largeur) return { fs, colonnes: [morceaux], h: un.h, lc: largeur, k: 1 };
+    const d = n > 1 ? deux(fs) : null;
+    if(d && d.h <= hauteur) return Object.assign(d, { k: 1 });
+  }
+  const d = n > 1 ? deux(E.fsEqMin) : null;
+  if(d) return Object.assign(d, { k: Math.min(1, hauteur / d.h) });
+  const un = colonne(morceaux, E.fsEqMin, largeur);
+  return { fs: E.fsEqMin, colonnes: [morceaux], h: un.h, lc: largeur, k: Math.min(1, hauteur / un.h, largeur / un.w) };
+}
+/* Le corrigé en équations, seul sur la carte (Z : ses bords, ceux des étapes de SYS_CORR_IMPRIME ou
+   de SYS_CORR_IMPRIME_2P), de haut à bas. Renvoie le bas du dessin. */
+function drawSysCorrectionEquations(target, card, haut, bas, ctx, Z){
+  const E = SYS_EQ, { mkEl, mkText } = ctx;
+  const flux = sysEquationsFlux(sysEquationsMorceaux(card._sys.plan), Z.xMax - Z.x, bas - haut);
+  const k = flux.k, fs = flux.fs;
+  const g = mkEl("g", { id:"sysCorrectionPrint", "data-equations":"1", "data-echelle":String(Math.round(k * 1000) / 1000),
+    "data-colonnes":String(flux.colonnes.length), "data-corps":String(fs),
+    transform:k < 1 ? `translate(${Z.x} ${haut}) scale(${k.toFixed(4)}) translate(${-Z.x} ${-haut})` : "" });
+  target.appendChild(g);
+  flux.colonnes.forEach((liste, j) => {
+    const x = Z.x + j * (flux.lc + E.gouttiere);
+    let y = haut;
+    liste.forEach((m, i) => {
+      const t = sysEquationsMesure(m, fs, flux.lc, i === liste.length - 1);
+      const gm = mkEl("g", { class:"sysEquations" + (m.reponses ? " sysVerification" : "") });
+      t.titres.forEach((l, r) => gm.appendChild(mkText(x, y + t.ft * 0.95 + r * t.ft * 1.15, l, { "text-anchor":"start", "font-size":t.ft, "font-weight":E.poidsTitre, fill:E.couleurTitre })));
+      let yy = y + t.ft * E.hTitre + (t.titres.length - 1) * t.ft * 1.15;
+      const y0 = yy, acc = m.accolades || [];
+      m.lignes.forEach((l, k) => {
+        const dx = acc.some(([a, z]) => k >= a && k <= z) ? E.accolade * fs : 0;
+        gm.appendChild(mkText(x + E.retrait + dx, yy + fs * 0.85, l, { class:"sysEquation", "text-anchor":"start", "font-size":fs, "font-weight":E.poidsEq, fill:E.encre }));
+        yy += fs * E.pas;
+      });
+      // l'accolade d'un système, à gauche de ses lignes (le dessin de la ligne « Le système » de l'énoncé)
+      acc.forEach(([a, z]) => {
+        const d = 0.3 * fs, xb = x + E.retrait + 0.3 * fs;
+        const yh = y0 + a * fs * E.pas, yb = y0 + z * fs * E.pas + 1.15 * fs, ym = (yh + yb) / 2;
+        gm.appendChild(mkEl("path", { class:"sysAccolade", d:`M ${xb + d} ${yh} Q ${xb} ${yh} ${xb} ${yh + d} L ${xb} ${ym - d} Q ${xb} ${ym} ${xb - d * 0.8} ${ym} Q ${xb} ${ym} ${xb} ${ym + d} L ${xb} ${yb - d} Q ${xb} ${yb} ${xb + d} ${yb}`,
+          fill:"none", stroke:E.encre, "stroke-width":Math.max(3, fs * 0.08), "stroke-linecap":"round", "stroke-linejoin":"round" }));
+      });
+      if(t.rep){
+        // la réponse encadrée : au moins 700 de large (dans la colonne), les réponses centrées
+        const R = t.rep;
+        yy += E.ecartReponses;
+        const wb = Math.min(flux.lc, Math.max(R.w, 700));
+        gm.appendChild(mkEl("rect", { class:"sysReponses", x, y:yy, width:wb, height:R.h, rx:16, fill:"none", stroke:E.encre, "stroke-width":4 }));
+        R.lignes.forEach((l, q) => {
+          const tl = l.map(r => sysLargeurTexte(r, R.fs, 900));
+          let xx = x + (wb - tl.reduce((s, w) => s + w, 0) - R.entre * (l.length - 1)) / 2;
+          l.forEach((r, n) => {
+            gm.appendChild(mkText(xx, yy + R.h / 2 + (q - (R.lignes.length - 1) / 2) * R.pas, r, { "text-anchor":"start", "dominant-baseline":"middle", dy:"0.06em", "font-size":R.fs, "font-weight":900, fill:E.encre }));
+            xx += tl[n] + R.entre;
+          });
+        });
+      }
+      g.appendChild(gm);
+      y += t.h;
+    });
+  });
+  return haut + flux.h * k;
+}
+/* Les cartes d'une même page, au même corps : celui de la carte qui a le plus petit (rendus :
+   les cartes de la page, telles que printSheet les a dessinées). */
+function sysEquationsPage(rendus){
+  // le même corps, et deux colonnes partout dès qu'une carte de la page en a deux (deux tours au
+  // plus : une carte passée en deux colonnes peut demander un corps plus petit)
+  try{
+    for(let tour = 0; tour < 3; tour++){
+      const gs = rendus.map(r => r.sv.querySelector("#sysCorrectionPrint[data-equations]")).filter(Boolean);
+      const corps = gs.map(g => Number(g.getAttribute("data-corps"))), cols = gs.map(g => g.getAttribute("data-colonnes"));
+      if(gs.length < 2 || (Math.min(...corps) === Math.max(...corps) && new Set(cols).size === 1)) return;
+      sysEqCorpsPlafond = Math.min(...corps);
+      sysEqDeuxColonnes = cols.includes("2");
+      rendus.forEach(r => renderCardIntoSvg(r.sv, r.card, r.mode, r.opts));
+    }
+  }finally{ sysEqCorpsPlafond = null; sysEqDeuxColonnes = false; }
+}
 /* Écran : l'échelle des étapes d'une carte, la même pour toutes (la plus grande à laquelle
    chacune tient sous les plateaux, au plus SYS_CORR_ECRAN.max). */
 function sysCorrEcranEchelle(card, yEtape){
@@ -12774,6 +13070,12 @@ function renderCardIntoSvg(targetSvg, card, printMode, opts = {}){
     if(revealAnswers){
       // le corrigé : l'énoncé dévoilé en haut, puis les étapes en blocs encadrés
       const Z = SYS_ZONE_IMPRIME_CORRECTION_2P;
+      // corrige=equations (lot M4-8, choix de Gwenaël sur planche) : les équations seules, sans
+      // l'énoncé dévoilé — la première étape est le système que l'élève écrit sous sa carte
+      if(printCorrigeEquations && sysAPlan(card)){
+        drawSysCorrectionEquations(targetSvg, card, SYS_EQ.haut, SYS_CORR_IMPRIME_2P.bas, ctx, SYS_CORR_IMPRIME_2P);
+        return;
+      }
       const entete = drawSysPlateaux(targetSvg, card, Z, { mkEl:tEl, mkText:tText, isPrint:true, devoile:true, nomMin:Z.nomMin });
       const haut = Math.max(...entete.plateaux.map(P => P.y + P.h)) + SYS_CORR_IMPRIME_2P.ecartEnonce;
       if(sysAPlan(card)) drawSysCorrectionBlocs(targetSvg, card, haut, SYS_CORR_IMPRIME_2P.bas, ctx);
@@ -12790,6 +13092,11 @@ function renderCardIntoSvg(targetSvg, card, printMode, opts = {}){
   /* Système, la correction imprimée (lot S3 ; barres de taches du lot M4-2), 4 et 2 par page. */
   if(revealAnswers && sysAPlan(card) && !opts.sansCorrectionSys && String(targetSvg.getAttribute("viewBox") || "").trim() !== "0 0 1600 1000"){
     const ctx = { mkEl:tEl, mkText:tText, isPrint:true, lettres:!numberedQuestionMarkMode };
+    // corrige=equations (lot M4-8) : les équations seules, comme en 2 par page
+    if(printCorrigeEquations){
+      drawSysCorrectionEquations(targetSvg, card, SYS_EQ.haut, SYS_CORR_IMPRIME.basImprime, ctx, SYS_CORR_IMPRIME);
+      return;
+    }
     // l'énoncé en haut de la carte, taches dévoilées (décidé le 24/09), puis les cadres
     let haut;
     if(sysEnPlateaux(card)){
@@ -13717,6 +14024,7 @@ function printSheet(){
     if(mode !== "correction") sheet.appendChild(createClassicPrintInstruction(slotCards));
     const grid = document.createElement("div");
     grid.className = "grid";
+    const rendus = [];
 
     for(let i=0;i<perSheet;i++){
       const holder = document.createElement("div");
@@ -13741,6 +14049,8 @@ function printSheet(){
              aux modes A et B) — il lui faut son propre drapeau pour garder sa mise en page. */
           renderCardIntoSvg(sv, card, mode, { schemaVide:enqueteSchemaVide && mode === "statement" && perSheet !== 6 && card === cards[0],
             sixParPage:perSheet === 6, deuxParPage:deuxSys });
+          // corrige=equations (lot M4-8) : de quoi redessiner la carte (sysEquationsPage, corrigé seulement)
+          rendus.push({ sv, card, mode, opts:{ sixParPage:perSheet === 6, deuxParPage:deuxSys } });
         }
         holder.appendChild(sv);
       } else {
@@ -13748,6 +14058,8 @@ function printSheet(){
       }
       grid.appendChild(holder);
     }
+    // corrige=equations (lot M4-8) : un seul corps d'équations sur la page
+    if(printCorrigeEquations && mode === "correction") sysEquationsPage(rendus);
 
     sheet.appendChild(grid);
 
@@ -15531,12 +15843,14 @@ function eleveEtapeSuivante(){
   return { html: "\u00c9tape suivante \u25b6", href: `${ELEVE_URL_MONDES}?apres=${encodeURIComponent(parcoursId)}`, versCarte: false };
 }
 
-/* Lien vers la carte des mondes (seulement quand on vient du parcours). D'une fiche bonus du
-   monde 3 (04/10/2026), la carte s'ouvre sur son Bonus (#enq-bonus). */
+/* Lien vers la carte des mondes (seulement quand on vient du parcours). D'une fiche bonus, la
+   carte s'ouvre sur le Bonus de SON monde : #enq-bonus au monde 3 (04/10/2026), #sys-bonus au
+   monde 4 (lot M4-8 : le « ◀ Carte des mondes » de 25d-28d ramenait au Bonus de l'Enquête). */
 function eleveLienMondesHtml(classe, libelle){
   if(!parcoursId) return "";
-  const ancre = (window.MathsGoSplatEtapes && window.MathsGoSplatEtapes.estBonus &&
-    window.MathsGoSplatEtapes.estBonus(parcoursId)) ? "#enq-bonus" : "";
+  const E = window.MathsGoSplatEtapes;
+  const bonus = E && Array.isArray(E.BONUS) ? E.BONUS.find(b => b[0] === parcoursId) : null;
+  const ancre = bonus ? (bonus[4] === 4 ? "#sys-bonus" : "#enq-bonus") : "";
   return `<a class="${classe}" href="${ELEVE_URL_MONDES}${ancre}" title="Retour \u00e0 la carte des mondes">` +
     (libelle || '\u25c0 <span class="txt">Carte des mondes</span>') + `</a>`;
 }
@@ -15549,7 +15863,7 @@ function eleveLienMondesHtml(classe, libelle){
    reprise de l'un s'appliquait à l'autre et l'élève atterrissait au milieu
    d'une série jamais commencée (Petit Splat, PR #773). Ce qui ne change pas
    les cartes n'y entre pas : le mode élève, l'étape, l'impression, le titre. */
-const ELEVE_HORS_EMPREINTE = ["eleve", "parcours", "print", "duplex", "layout", "title", "imprimer", "note", "systeme"];
+const ELEVE_HORS_EMPREINTE = ["eleve", "parcours", "print", "duplex", "layout", "title", "imprimer", "corrige", "note", "systeme"];
 function eleveSignatureSerie(){
   const params = new URLSearchParams(window.location.search);
   return sharedNames.filter(nom => !ELEVE_HORS_EMPREINTE.includes(nom) && params.has(nom))

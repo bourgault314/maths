@@ -605,7 +605,7 @@ test("adresses : aller-retour buildShareUrl → appliquerConfiguration pour le m
     ${fn("investigateColorByKey")}
     ${fn("investigateColorWord")}
     ${CONSTANTES_SYS}
-    let investigatePaletteKeys = null, printInstructionNote = "", printSystemeLigne = false, numberedQuestionMarkMode = true, activeGenerationSeed = "4242";
+    let investigatePaletteKeys = null, printInstructionNote = "", printSystemeLigne = false, printCorrigeEquations = false, numberedQuestionMarkMode = true, activeGenerationSeed = "4242";
     const unitEquationTypeEl = null, numberedEquationTypeEl = null;
     function syncSettingsUI(){}
     function syncNumberedQuestionMarkButton(){}
