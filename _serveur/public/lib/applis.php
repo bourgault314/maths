@@ -133,9 +133,9 @@ const CATALOGUE_APPLIS = [
         'disponible' => true,
         'cles' => ['version', 'epoque', 'etapes', 'fait', 'etoiles', 'cartes', 'vues', 'essais', 'date', 'idx'],
         'mots' => [],
-        'motifs' => ['/^(?:m1e1|m1e2|m1e3|m1e4|m1e5|m1e6|m2e1|m2e4|m2e5|enq10|enq11|enq12|enq13|enq14|enq15|enq16|enq17|enq18|enq19|enq20|enq21|enq22|enq23|enq24|sys25|sys26|sys27|sys28|m3e1|m3e2|m3e4|m4e1|m4e2|m4e3|m4e4|m4e5|m4e6|enq11d|enq12d|enq13d|enq16d|enq17d|enq18d|enq20d|enq22d|enq19d|enq24d|sys25d|sys26d|sys27d|sys28d)$/'],
+        'motifs' => ['/^(?:m1e1|m1e2|m1e3|m1e4|m1e5|m1e6|m2e1|m2e4|m2e5|enq10|enq11|enq12|enq13|enq14|enq15|enq16|enq17|enq18|enq19|enq20|enq21|enq22|enq23|enq24|sys25|sys26|sys27|sys28|m3e1|m3e2|m3e4|m4e1|m4e2|m4e3|m4e4|m4e5|m4e6|enq11d|enq12d|enq13d|enq16d|enq17d|enq18d|enq20d|enq22d|enq19d|enq24d|sys25d|sys26d|sys27d|sys28d|m4ech1|m4ech2|m4ech3)$/'],
         // « Revenir à… » nomme une version par ce compte : les étapes
-        // commencées, Bonus compris (lib/versions.php).
+        // commencées, Bonus et échauffement compris (lib/versions.php).
         'compteur' => 'etapes',
         // Lot « splat-suivi-5 » (08/10/2026) : ce qu'un professeur peut régler
         // pour SA classe — les mondes ouverts (1 à 6, ceux de la carte des

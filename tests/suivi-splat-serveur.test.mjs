@@ -37,9 +37,9 @@ test("le motif des parcours de « splat » est exactement celui que rend motifPh
   assert.deepEqual(motifs, [PARCOURS.motifPhp()],
     "la carte a changé : recopier PARCOURS.motifPhp() dans 'motifs' de « splat » (lib/applis.php)");
   const regex = new RegExp(motifs[0].slice(1, -1));
-  assert.equal(PARCOURS.PARCOURS_VALIDES.length, 51);
+  assert.equal(PARCOURS.PARCOURS_VALIDES.length, 54, "37 étapes, 14 Bonus, 3 fiches d’échauffement (monde 6, 14/10/2026)");
   PARCOURS.PARCOURS_VALIDES.forEach(id => assert.ok(regex.test(id), id));
-  ["m9e9", "splat-equations", "enq10d", "prenom", "1", "3-7"].forEach(id => assert.equal(regex.test(id), false, id));
+  ["m9e9", "splat-equations", "enq10d", "prenom", "1", "3-7", "m4ech4", "m4ech"].forEach(id => assert.equal(regex.test(id), false, id));
 });
 
 test("les clés de « splat » sont exactement CLES_SERVEUR du moteur ; ni mots, ni texte", () => {

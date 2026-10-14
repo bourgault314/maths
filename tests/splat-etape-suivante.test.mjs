@@ -263,7 +263,7 @@ test("les trois outils chargent splat-etapes.js (sans defer, même version)", ()
   for (const [page, nom] of [[splat, "splat.html"], [petit, "splat_tache_barre.html"], [equa, "equasplat.html"]]) {
     const m = page.match(/<script src="\.\.\/assets\/js\/splat-etapes\.js\?v=([\w-]+)"><\/script>/);
     assert.ok(m, `${nom} ne charge pas splat-etapes.js`);
-    assert.equal(m[1], "20261014-1", `${nom} : ?v= de splat-etapes.js`);
+    assert.equal(m[1], "20261014-2", `${nom} : ?v= de splat-etapes.js`);
     // dans <head>, avant tout script de la page
     assert.ok(page.indexOf(m[0]) < page.indexOf("</head>"), `${nom} : le script doit être dans <head>`);
     // la petite ligne a son style
@@ -362,4 +362,73 @@ test("splat.html : « Nouvelles cartes ▶ » seulement sans graine, sans « sui
   // le bouton est branché
   const { d } = finSplat({ parcours: "", resultats: TOUT_VERT });
   assert.equal(typeof d.elements.eleveNouvelles.onclick, "function");
+});
+
+/* L'échauffement du monde 6 (lot 1, 14/10/2026) : trois fiches E1-E3 AVANT l'étape 38, chacune son
+   parcours (m4ech1…), hors des étapes comme le Bonus. Leur écran de fin : « Étape suivante ▶ » mène
+   à la fiche suivante (« E2 · Des taches en plus », choix de Gwenaël du 14/10), puis, après E3, à
+   l'étape 38 ; après l'étape 37, rien ne change. */
+test("Échauffement : la liste de splat-etapes.js est la copie de REL_ECHAUF de la carte (parcours, code, titre, monde)", () => {
+  const ctx = vm.createContext({ encodeURIComponent });
+  vm.runInContext(blocUnivers("const PS=", "const PROF =") + ";globalThis.E=REL_ECHAUF;", ctx);
+  const attendu = JSON.parse(JSON.stringify(ctx.E.map((f) => [f.p, f.code, f.t, "SPLAT! Relatifs", 6])));
+  assert.deepEqual(ETAPES_JS.ECHAUFFEMENT, attendu);
+  assert.deepEqual(ETAPES_JS.ECHAUFFEMENT, [
+    ["m4ech1", "E1", "Quand ça ne s'enlève pas", "SPLAT! Relatifs", 6],
+    ["m4ech2", "E2", "Des taches en plus", "SPLAT! Relatifs", 6],
+    ["m4ech3", "E3", "Les jetons numérotés", "SPLAT! Relatifs", 6]]);
+  // ni étape, ni Bonus ; le jeu de chaque fiche sur la carte porte son parcours
+  for (const f of ETAPES_JS.ECHAUFFEMENT) {
+    assert.ok(ETAPES_JS.estEchauffement(f[0]));
+    assert.ok(!ETAPES_JS.estBonus(f[0]));
+    assert.ok(!ETAPES_JS.ETAPES.some((e) => e[0] === f[0]), `${f[0]} n'est pas une étape`);
+  }
+  for (const e of ETAPES_JS.ETAPES) assert.ok(!ETAPES_JS.estEchauffement(e[0]));
+  ctx.E.forEach((f) => assert.equal(new URLSearchParams(f.j.split("?")[1].split("#")[0]).get("parcours"), f.p));
+});
+
+test("Échauffement : E1 → E2 → E3 → étape 38 ; après la 37, toujours le monde 6 (étape 38) ; monde fermé → la carte", () => {
+  for (const cle of [true, false]) {
+    assert.equal(ETAPES_JS.suivante("m4ech1", cle, null).parcours, "m4ech2");
+    assert.equal(ETAPES_JS.suivante("m4ech2", cle, null).parcours, "m4ech3");
+    assert.deepEqual(ETAPES_JS.suivante("m4ech3", cle, null),
+      { derniere: false, parcours: "m4e1", numero: 38, titre: "Les jetons rouges arrivent", monde: "SPLAT! Relatifs", nouveauMonde: false });
+    assert.equal(ETAPES_JS.sousTitre("m4ech1", cle, null), "E2 · Des taches en plus");
+    assert.equal(ETAPES_JS.sousTitre("m4ech2", cle, null), "E3 · Les jetons numérotés");
+    assert.equal(ETAPES_JS.sousTitre("m4ech3", cle, null), "Étape 38 · Les jetons rouges arrivent");
+    // après l'étape 37 : rien ne change, l'échauffement est facultatif
+    assert.deepEqual(ETAPES_JS.suivante("m3e4", cle, null),
+      { derniere: false, parcours: "m4e1", numero: 38, titre: "Les jetons rouges arrivent", monde: "SPLAT! Relatifs", nouveauMonde: true });
+  }
+  assert.deepEqual(ETAPES_JS.bouton("m4ech1", URL_CARTE, true, null), {
+    html: "Étape suivante ▶<span class=\"finSuiteOu\">E2 · Des taches en plus</span>",
+    href: "/outils/splat_univers.html?apres=m4ech1", versCarte: false });
+  // le monde 6 fermé à la classe : la carte, sans ancre, comme le Bonus
+  assert.deepEqual(ETAPES_JS.suivante("m4ech1", true, [1, 2]), { derniere: true });
+  assert.deepEqual(ETAPES_JS.bouton("m4ech3", URL_CARTE, true, [1, 2]), { html: "Voir la carte des mondes ▶", href: URL_CARTE, versCarte: true });
+});
+
+test("Échauffement : ?apres=m4ech1 ouvre le jeu de E2, ?apres=m4ech3 celui de la fiche 38 ; monde fermé, la carte", () => {
+  const f = blocUnivers("const ke=ECHAUF.fiches.findIndex(f=>f.p===apres);", "/* Mondes en préparation (26/09/2026)");
+  const ctx = vm.createContext({ encodeURIComponent });
+  vm.runInContext(blocUnivers("const PS=", "const PROF =") + ";globalThis.ECHAUF=ECHAUF;globalThis.MONDES=MONDES;", ctx);
+  const joue = (apres, verrouille = false) => {
+    const sortie = { cible: null, retenus: [] };
+    const c = vm.createContext({ ECHAUF: ctx.ECHAUF, MONDES: ctx.MONDES, APRES_REDIRIGE: false,
+      retenirMonde: (mi) => sortie.retenus.push(["monde", mi]), retenirBonus: (o) => sortie.retenus.push(["echauf", o]),
+      versEtape: (e) => e.j, window: { location: { replace: (u) => { sortie.cible = u; } } } });
+    ctx.ECHAUF.monde.verrouille = verrouille;
+    vm.runInContext("(function(apres){" + f + "})(" + JSON.stringify(apres) + ")", c);
+    ctx.ECHAUF.monde.verrouille = false;
+    return sortie;
+  };
+  const [e1, e2, e3] = ctx.ECHAUF.fiches;
+  assert.equal(joue("m4ech1").cible, e2.j);
+  assert.equal(joue("m4ech2").cible, e3.j);
+  assert.equal(joue("m4ech3").cible, ctx.ECHAUF.monde.etapes[0].j);
+  assert.equal(ctx.ECHAUF.monde.etapes[0].p, "m4e1");
+  assert.deepEqual(joue("m4ech1").retenus, [["monde", 5], ["echauf", true]]);
+  assert.deepEqual(joue("m4ech3").retenus, [["monde", 5], ["echauf", false]], "après E3, la carte rouvrira la partie en cours");
+  assert.deepEqual(joue("m4ech1", true), { cible: null, retenus: [] });
+  assert.equal(e1.p, "m4ech1");
 });

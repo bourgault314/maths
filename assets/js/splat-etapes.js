@@ -132,6 +132,23 @@
     return BONUS.some((b) => b[0] === parcours);
   }
 
+  /* L'échauffement du monde 6 (lot 1, 14/10/2026) : trois fiches AVANT l'étape 38, pour l'élève
+     qui découvre les négatifs. Comme le Bonus, ce ne sont pas des étapes : chacune a SON parcours
+     (m4ech1…), sa tache cochée ✔ et son compteur à part, hors des étoiles du haut de la carte.
+     C'EST UNE COPIE de REL_ECHAUF (outils/splat_univers.html) : tests/splat-etape-suivante.test.mjs
+     les compare. Leur écran de fin : « Étape suivante ▶ » mène à la fiche suivante (« E2 · … »),
+     et après E3 à l'étape 38 ; après l'étape 37, rien ne change (l'échauffement est facultatif :
+     on y entre par la carte ou par un QR). Chaque fiche : [parcours, code, titre, monde, numéro
+     du monde]. */
+  const ECHAUFFEMENT = [
+    ["m4ech1", "E1", "Quand ça ne s'enlève pas", "SPLAT! Relatifs", 6],
+    ["m4ech2", "E2", "Des taches en plus", "SPLAT! Relatifs", 6],
+    ["m4ech3", "E3", "Les jetons numérotés", "SPLAT! Relatifs", 6]
+  ];
+  function estEchauffement(parcours) {
+    return ECHAUFFEMENT.some((f) => f[0] === parcours);
+  }
+
   function echapper(texte) {
     return String(texte).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
@@ -184,6 +201,21 @@
       const [p, code, titre, monde] = BONUS[kb + 1];
       return { derniere: false, bonus: true, parcours: p, code, titre, monde, nouveauMonde: false };
     }
+    /* une fiche de l'échauffement : la fiche suivante, puis la première étape de son monde (38) ;
+       monde fermé à la classe : la carte, comme le Bonus */
+    const ke = ECHAUFFEMENT.findIndex((f) => f[0] === parcours);
+    if (ke >= 0) {
+      const ici = ECHAUFFEMENT[ke];
+      if (mondeFerme(ici[4], ouverts)) return { derniere: true };
+      if (ke + 1 < ECHAUFFEMENT.length) {
+        const [p, code, titre, monde] = ECHAUFFEMENT[ke + 1];
+        return { derniere: false, echauffement: true, parcours: p, code, titre, monde, nouveauMonde: false };
+      }
+      const premiere = ETAPES.find((e) => e[4] === ici[4]);
+      if (!premiere) return { derniere: true };
+      const [p, numero, titre, monde] = premiere;
+      return { derniere: false, parcours: p, numero, titre, monde, nouveauMonde: false };
+    }
     const k = ETAPES.findIndex((e) => e[0] === parcours);
     if (k < 0) return null;
     const ici = ETAPES[k];
@@ -201,6 +233,8 @@
     if (!s || s.derniere) return "";
     /* espaces insécables : « SPLAT! Classique » ne se coupe pas en deux sur téléphone */
     if (s.bonus) return `Bonus ${s.code} · ${s.titre}`;
+    /* l'échauffement du monde 6 (choix de Gwenaël du 14/10/2026) : « E2 · Des taches en plus » */
+    if (s.echauffement) return `${s.code} · ${s.titre}`;
     return s.nouveauMonde
       ? `🌍 Nouveau monde : ${s.monde.replace(/ /g, " ")}`
       : `Étape ${s.numero} · ${s.titre}`;
@@ -226,5 +260,5 @@
     };
   }
 
-  window.MathsGoSplatEtapes = { ETAPES, BONUS, MONDES_EN_PREPARATION, CLE_ESSAI, cle: CLE, mondeCache, mondesOuverts, mondeFerme, estBonus, suivante, sousTitre, bouton };
+  window.MathsGoSplatEtapes = { ETAPES, BONUS, ECHAUFFEMENT, MONDES_EN_PREPARATION, CLE_ESSAI, cle: CLE, mondeCache, mondesOuverts, mondeFerme, estBonus, estEchauffement, suivante, sousTitre, bouton };
 })();

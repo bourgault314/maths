@@ -120,6 +120,13 @@
     ["enq18d", "18d", 3], ["enq20d", "20d", 3], ["enq22d", "22d", 3], ["enq19d", "19d", 3], ["enq24d", "24d", 3],
     ["sys25d", "25d", 4], ["sys26d", "26d", 4], ["sys27d", "27d", 4], ["sys28d", "28d", 4]
   ].map(Object.freeze));
+  // [parcours, code de la fiche, numéro du monde] — l'échauffement du monde 6
+  // (lot 1, 14/10/2026 : ECHAUFFEMENT de splat-etapes.js). Ses cases sont
+  // gardées (elles suivent l'élève d'un appareil à l'autre) mais ne comptent
+  // nulle part : ni étapes, ni total, ni Bonus (resumeProf).
+  const CARTE_ECHAUFFEMENT = Object.freeze([
+    ["m4ech1", "E1", 6], ["m4ech2", "E2", 6], ["m4ech3", "E3", 6]
+  ].map(Object.freeze));
 
   // Les mêmes lignes au format de splat-etapes.js — [parcours, numéro, titre,
   // monde, numéro du monde] —, le titre vide : c'est ce que resumeProf lit
@@ -131,14 +138,16 @@
   const CARTE = Object.freeze({
     MONDES,
     ETAPES: Object.freeze(CARTE_ETAPES.map(e => Object.freeze([e[0], e[1], "", nomDuMonde(e[2]), e[2]]))),
-    BONUS: Object.freeze(CARTE_BONUS.map(b => Object.freeze([b[0], b[1], "", nomDuMonde(b[2]), b[2]])))
+    BONUS: Object.freeze(CARTE_BONUS.map(b => Object.freeze([b[0], b[1], "", nomDuMonde(b[2]), b[2]]))),
+    ECHAUFFEMENT: Object.freeze(CARTE_ECHAUFFEMENT.map(f => Object.freeze([f[0], f[1], "", nomDuMonde(f[2]), f[2]])))
   });
 
   // La liste fermée des parcours sous lesquels un outil SPLAT! enregistre une
-  // série : les étapes puis les Bonus de la carte ci-dessus, dans cet ordre.
-  // Le motif PHP du serveur (lib/applis.php) se recopie de motifPhp() ;
-  // tests/suivi-splat-serveur.test.mjs échoue si les deux diffèrent.
-  const PARCOURS_VALIDES = Object.freeze(CARTE_ETAPES.map(e => e[0]).concat(CARTE_BONUS.map(b => b[0])));
+  // série : les étapes, les Bonus puis l'échauffement de la carte ci-dessus,
+  // dans cet ordre. Le motif PHP du serveur (lib/applis.php) se recopie de
+  // motifPhp() ; tests/suivi-splat-serveur.test.mjs échoue si les deux diffèrent.
+  const PARCOURS_VALIDES = Object.freeze(CARTE_ETAPES.map(e => e[0])
+    .concat(CARTE_BONUS.map(b => b[0]), CARTE_ECHAUFFEMENT.map(f => f[0])));
   const ENSEMBLE_VALIDES = new Set(PARCOURS_VALIDES);
 
   // Les clés que le serveur devra déclarer pour « splat » (lib/applis.php) :
@@ -450,6 +459,10 @@
   // chaque parcours. `etapes` et `bonus` : ETAPES et BONUS de splat-etapes.js ;
   // sans eux (les pages du serveur de suivi, qui n'ont que ce moteur), la carte
   // réduite du moteur — mêmes parcours, mêmes numéros, mêmes mondes.
+  // L'échauffement du monde 6 (lot 1, 14/10/2026) n'entre dans AUCUN compte —
+  // ni faits, ni total, ni Bonus, ni l'état d'un monde : une case forgée ne
+  // fausse rien. Seul son état est rendu (etapes), pour les pastilles à part du
+  // Détail de « Ma classe ».
   function resumeProf(parcours, etapes, bonus) {
     if (etapes === undefined) etapes = CARTE.ETAPES;
     if (bonus === undefined) bonus = CARTE.BONUS;
@@ -489,6 +502,7 @@
       return {numero: monde.numero, nom: monde.nom, total: c.total, faits: c.faits, aides: c.aides, cours: c.cours,
         bonus: {total: cb.total, faits: cb.faits, aides: cb.aides, cours: cb.cours}, etat};
     });
+    CARTE_ECHAUFFEMENT.forEach(f => { etats[f[0]] = etatEtape(p, f[0]); });
     return {
       total: total.total, faits: total.faits, aides: total.aides, cours: total.cours,
       bonus: {total: totalBonus.total, faits: totalBonus.faits, aides: totalBonus.aides, cours: totalBonus.cours},

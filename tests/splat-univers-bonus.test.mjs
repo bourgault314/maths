@@ -126,9 +126,11 @@ test("le compteur du Bonus est à part : « ✨ x / 10 », hors du total et de �
 
 test("à l'arrivée, UNE partie ouverte par monde (05/10/2026) : celle que vise l'adresse, sinon le Bonus si l'élève y était, sinon la partie en cours", () => {
   const f = bloc("function ouvrirParties(){", "document.addEventListener(\"click\",ev=>{\n  const v=");
-  assert.match(f, /const premiere=sec\.querySelector\("\.etapes>li\.etape\[data-partie\]:not\(\.done\):not\(\.bonus\)"\);/);
+  /* lot 1 de l'échauffement du monde 6 (14/10/2026) : ses fiches ne sont jamais « la partie en
+     cours », et son menu s'ouvre comme le Bonus (l'adresse, ou l'élève y était) */
+  assert.match(f, /const premiere=sec\.querySelector\("\.etapes>li\.etape\[data-partie\]:not\(\.done\):not\(\.bonus\):not\(\.echauf\)"\);/);
   assert.match(f, /const vise=\[\.\.\.volets\]\.find\(v=>elCible&&\(elCible===v\|\|\(sec\.contains\(elCible\)&&elCible\.dataset\.partie===v\.dataset\.volet\)\)\);/);
-  assert.match(f, /const ouverte=vise\|\|\(bonus&&bonusRetenu\(bonusDeSection\(sec\)\)\?bonus:null\)\|\|\[\.\.\.volets\]\.find\(v=>v\.dataset\.volet===enCours\)\|\|null;/);
+  assert.match(f, /const ouverte=vise\|\|\(bonus&&bonusRetenu\(bonusDeSection\(sec\)\)\?bonus:null\)\|\|\(echauf&&bonusRetenu\(ECHAUF\)\?echauf:null\)\|\|\n\s*\[\.\.\.volets\]\.find\(v=>v\.dataset\.volet===enCours\)\|\|null;/);
   assert.match(f, /volets\.forEach\(v=>ouvrirPartie\(v,v===ouverte\)\);/, "une seule ouverte");
   assert.match(univers, /ouvrirMonde\(mondeEnCours\(majAffichage\(\)\)\);\nif\(!PROF\) ouvrirParties\(\);/);
   // ouvrir ou fermer le Bonus, ou y lancer une fiche, se retient sur l'appareil

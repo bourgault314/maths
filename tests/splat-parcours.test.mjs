@@ -11,18 +11,20 @@ import vm from "node:vm";
 import {readFile, readdir} from "node:fs/promises";
 import {PARCOURS, SOURCE_MOTEUR, ETAPES_CARTE, A, B, caseAncienne, parcoursAvecTravail, fauxStockage, chainesLibres} from "./splat-faux-monde.mjs";
 
-const {ETAPES, BONUS} = ETAPES_CARTE;
+const {ETAPES, BONUS, ECHAUFFEMENT} = ETAPES_CARTE;
 const serie = (fait, etoiles, cartes, vues) => ({fait, etoiles, cartes, vues});
 
 // ------------------------------------------------------------- la liste fermée
 
-test("PARCOURS_VALIDES est exactement ETAPES + BONUS de splat-etapes.js, dans cet ordre (37 étapes + 14 Bonus = 51)", () => {
-  const attendu = [...ETAPES.map(e => e[0]), ...BONUS.map(b => b[0])];
+// Lot 1 de l'échauffement du monde 6 (14/10/2026) : + ECHAUFFEMENT, à la fin (rien ne se décale).
+test("PARCOURS_VALIDES est exactement ETAPES + BONUS + ECHAUFFEMENT de splat-etapes.js, dans cet ordre (37 + 14 + 3 = 54)", () => {
+  const attendu = [...ETAPES.map(e => e[0]), ...BONUS.map(b => b[0]), ...ECHAUFFEMENT.map(f => f[0])];
   assert.deepEqual([...PARCOURS.PARCOURS_VALIDES], attendu,
-    "la carte a changé : recopier dans CARTE_ETAPES et CARTE_BONUS (assets/js/splat-parcours.js) les lignes que donne le test « la carte réduite du moteur… », puis le motif dans lib/applis.php :\n" + JSON.stringify(attendu));
+    "la carte a changé : recopier dans CARTE_ETAPES, CARTE_BONUS et CARTE_ECHAUFFEMENT (assets/js/splat-parcours.js) les lignes que donne le test « la carte réduite du moteur… », puis le motif dans lib/applis.php :\n" + JSON.stringify(attendu));
   assert.equal(ETAPES.length, 37, "la numérotation de la carte saute de 28 à 35 : 37 étapes, pas 40");
   assert.equal(BONUS.length, 14);
-  assert.equal(new Set(attendu).size, 51, "aucun doublon");
+  assert.deepEqual(ECHAUFFEMENT.map(f => f[0]), ["m4ech1", "m4ech2", "m4ech3"]);
+  assert.equal(new Set(attendu).size, 54, "aucun doublon");
 });
 
 // Lot 3 « serveur + tuile » (07/10/2026) : les pages du serveur de suivi n'ont
@@ -34,14 +36,17 @@ test("la carte réduite du moteur est ETAPES et BONUS de splat-etapes.js, sans l
   const attenduEtapes = ETAPES.map(sansTitre);
   const attenduBonus = BONUS.map(sansTitre);
   const aRecopier = "\nCARTE_ETAPES : " + JSON.stringify(ETAPES.map(e => [e[0], e[1], e[4]]))
-    + "\nCARTE_BONUS : " + JSON.stringify(BONUS.map(b => [b[0], b[1], b[4]]));
+    + "\nCARTE_BONUS : " + JSON.stringify(BONUS.map(b => [b[0], b[1], b[4]]))
+    + "\nCARTE_ECHAUFFEMENT : " + JSON.stringify(ECHAUFFEMENT.map(f => [f[0], f[1], f[4]]));
   assert.deepEqual(PARCOURS.CARTE.ETAPES.map(sansTitre), attenduEtapes,
     "la carte des mondes a changé (numéro, monde ou parcours d’une étape) : recopier dans assets/js/splat-parcours.js" + aRecopier);
   assert.deepEqual(PARCOURS.CARTE.BONUS.map(sansTitre), attenduBonus,
     "les Bonus ont changé : recopier dans assets/js/splat-parcours.js" + aRecopier);
+  assert.deepEqual(PARCOURS.CARTE.ECHAUFFEMENT.map(sansTitre), ECHAUFFEMENT.map(sansTitre),
+    "l’échauffement a changé : recopier dans assets/js/splat-parcours.js" + aRecopier);
   const mondes = [...new Map(ETAPES.map(e => [e[4], e[3]])).entries()];
   assert.deepEqual(PARCOURS.CARTE.MONDES.map(m => [m[0], m[1]]), mondes, "les six mondes, leur numéro et leur nom");
-  assert.ok([...PARCOURS.CARTE.ETAPES, ...PARCOURS.CARTE.BONUS].every(l => l[2] === ""),
+  assert.ok([...PARCOURS.CARTE.ETAPES, ...PARCOURS.CARTE.BONUS, ...PARCOURS.CARTE.ECHAUFFEMENT].every(l => l[2] === ""),
     "aucun titre : une retouche de titre ne doit demander aucun dépôt sur le serveur de suivi");
 });
 
@@ -58,12 +63,14 @@ test("resumeProf sans carte (pages du serveur de suivi) rend la même chose qu�
   assert.deepEqual(sansRien.mondes.map(m => m.etat), ["fini", "fini", "cours", "cours", "vide", "vide"]);
 });
 
-test("le motif PHP du serveur (lot 3) accepte les 51 parcours et rien d’autre", () => {
+test("le motif PHP du serveur (lot 3) accepte les 54 parcours et rien d’autre", () => {
   const motif = PARCOURS.motifPhp();
   assert.match(motif, /^\/\^\(\?:[a-z0-9|]+\)\$\/$/, "un motif PCRE délimité, tel que lib/applis.php l’attend");
   const regex = new RegExp(motif.slice(1, -1));
+  assert.equal(PARCOURS.PARCOURS_VALIDES.length, 54);
   PARCOURS.PARCOURS_VALIDES.forEach(id => assert.ok(regex.test(id), id));
-  ["m1e7", "enq", "enq10d", "fait", "prenom", "m1e1 ", "M1E1", ""].forEach(id => assert.equal(regex.test(id), false, id));
+  ["m1e7", "enq", "enq10d", "fait", "prenom", "m1e1 ", "M1E1", "", "m4ech", "m4ech4", "m4ech1 ", "m3ech1", "e1"]
+    .forEach(id => assert.equal(regex.test(id), false, id));
 });
 
 test("le moteur est un fichier de page : il s’analyse seul, s’exporte pour node et sous window.MathsGoSplatParcours", () => {
@@ -291,7 +298,7 @@ test("le parcours de référence est celui que le moteur produit, complet, sans 
   const fichier = JSON.parse(await readFile(CHEMIN, "utf8"));
   assert.deepEqual(fichier, reference,
     "le moteur a changé la forme du parcours : relance « node scripts/generer-parcours-reference-splat.mjs », puis complète 'cles'/'motifs' dans _serveur/public/lib/applis.php (le test PHP du lot 3 le vérifie)");
-  assert.deepEqual(Object.keys(reference.etapes), [...PARCOURS.PARCOURS_VALIDES], "les 51 parcours, dans l’ordre");
+  assert.deepEqual(Object.keys(reference.etapes), [...PARCOURS.PARCOURS_VALIDES], "les 54 parcours, dans l’ordre");
   assert.deepEqual(chainesLibres(reference), []);
   const enCours = Object.keys(reference.etapes).filter(id => !reference.etapes[id].fait);
   assert.deepEqual(enCours, [EN_COURS], "une seule étape en cours");
@@ -340,6 +347,44 @@ test("resumeProf : par monde faits/total/état, les Bonus à part, un monde fini
   const q = PARCOURS.enregistrerSerie(PARCOURS.creer(), "sys25d", serie(true, 4, 4, 0), "2026-10-03");
   assert.equal(PARCOURS.resumeProf(q, ETAPES, BONUS).mondes[3].etat, "cours");
   assert.deepEqual(PARCOURS.resumeProf(PARCOURS.creer(), ETAPES, BONUS).mondes.map(m => m.etat), ["vide", "vide", "vide", "vide", "vide", "vide"]);
+});
+
+// Lot 1 de l'échauffement du monde 6 (14/10/2026) — le garde-fou « Et un pirate ? » : une case
+// d'échauffement passe la liste fermée (elle suit l'élève d'un appareil à l'autre), mais elle ne
+// compte NULLE PART. Réussie, forgée ou pas, elle ne change ni les étapes réussies, ni le total, ni
+// les Bonus, ni l'état d'un monde (la tuile de l'espace élève, la colonne de « Ma classe », la
+// carte de classe) : seul son état est rendu, pour les pastilles à part du Détail.
+test("échauffement : m4ech1 réussi (et même les trois, avec aide ou en cours) ne change ni faits, ni total, ni bonus, ni les mondes", () => {
+  const sansEtats = r => { const c = JSON.parse(JSON.stringify(r)); delete c.etapes; return c; };
+  const bases = [PARCOURS.creer()];
+  let p = PARCOURS.creer();
+  ETAPES.filter(e => e[4] === 5).forEach(e => { p = PARCOURS.enregistrerSerie(p, e[0], serie(true, 12, 12, 0), "2026-10-10"); });
+  p = PARCOURS.enregistrerSerie(p, "m4e1", serie(true, 10, 12, 1), "2026-10-11");
+  p = PARCOURS.enregistrerEnCours(p, "m4e2", {idx: 3, etoiles: 2, cartes: 12}, "2026-10-12");
+  p = PARCOURS.enregistrerSerie(p, "sys26d", serie(true, 4, 4, 0), "2026-10-12");
+  bases.push(p);
+  for (const base of bases) {
+    const avant = PARCOURS.resumeProf(base);
+    const un = PARCOURS.enregistrerSerie(base, "m4ech1", serie(true, 12, 12, 0), "2026-10-14");
+    let tous = PARCOURS.enregistrerSerie(un, "m4ech2", serie(true, 9, 12, 2), "2026-10-14");
+    tous = PARCOURS.enregistrerEnCours(tous, "m4ech3", {idx: 5, etoiles: 4, cartes: 12}, "2026-10-14");
+    for (const apres of [PARCOURS.resumeProf(un), PARCOURS.resumeProf(tous), PARCOURS.resumeProf(tous, ETAPES, BONUS)]) {
+      assert.equal(apres.faits, avant.faits, "faits");
+      assert.equal(apres.total, avant.total, "total");
+      assert.deepEqual(apres.bonus, avant.bonus, "bonus");
+      assert.equal(apres.cours, avant.cours, "séries en cours");
+      assert.deepEqual(sansEtats(apres), sansEtats(avant), "rien d’autre ne bouge : ni les mondes, ni leur état");
+    }
+    // seul son état est rendu, pour les trois pastilles du Détail
+    assert.equal(PARCOURS.resumeProf(un).etapes.m4ech1, "reussie");
+    assert.deepEqual(["m4ech1", "m4ech2", "m4ech3"].map(id => PARCOURS.resumeProf(tous).etapes[id]), ["reussie", "aide", "cours"]);
+    assert.equal(avant.etapes.m4ech1, "vide");
+  }
+  // la case part bien au serveur (liste fermée), comme les 51 autres
+  assert.ok(PARCOURS.pourServeur(PARCOURS.enregistrerSerie(PARCOURS.creer(), "m4ech1", serie(true, 12, 12, 0), "2026-10-14")).etapes.m4ech1);
+  // un monde 6 où seul l'échauffement est fait reste « vide » (la tuile ne change pas)
+  const seul = PARCOURS.enregistrerSerie(PARCOURS.creer(), "m4ech3", serie(true, 12, 12, 0), "2026-10-14");
+  assert.equal(PARCOURS.resumeProf(seul).mondes[5].etat, "vide");
 });
 
 // ------------------------------------------------------------- les cases par code

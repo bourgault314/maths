@@ -22,7 +22,7 @@ const prepa = univers.match(/const PREPA_PHRASE=[^\n]*\n/)[0];
 const ctx = vm.createContext({ encodeURIComponent, decodeURIComponent, escape, unescape, atob, btoa });
 vm.runInContext(
   bloc("const PS=", "const PROF =") + prepa + bloc("const NOTES_MONDE", "const main=document") +
-  ";globalThis.X={MONDES,NOTES_MONDE,NOTES_PROF,LIVRET_TEXTE,ENQ_TOUR2,SYS_TOUR2};" +
+  ";globalThis.X={MONDES,NOTES_MONDE,NOTES_PROF,LIVRET_TEXTE,ENQ_TOUR2,SYS_TOUR2,REL_ECHAUF};" +
   "Object.assign(globalThis,{idEtape,eqSeuleLiens,eqBarreLiens,plagesFiches,mondeProfHtml,sommaireProfHtml,intentionHtml,ressourcesHtml,actionsHtml,cartesHtml,PREPA_PHRASE});",
   ctx, { filename: "splat_univers.html" }
 );
@@ -78,6 +78,12 @@ test("aucun lien ne change : exactement les liens des données, plus la page des
     if (m.idp === "enq") ctx.X.ENQ_TOUR2.forEach((f) => { for (const k of ["jp", "j", "f", "c"]) attendu.add(f[k]); });
     /* lot M4-4 : le deuxième tour du monde 4 (Bonus, 25d à 28d), avec ses deux corrigés */
     if (m.idp === "sys") ctx.X.SYS_TOUR2.forEach((f) => { for (const k of ["jp", "j", "f", "c", "cl"]) attendu.add(f[k]); });
+    /* lot 1 de l'échauffement (14/10/2026) : E1 à E3 avant les parties du monde 6, mêmes boutons,
+       et leurs 12 cartes chacune ouverte seule dans ÉquaSplat */
+    if (m.idp === "e3") ctx.X.REL_ECHAUF.forEach((f) => {
+      for (const k of ["jp", "j", "f", "c"]) attendu.add(f[k]);
+      ctx.eqSeuleLiens(f).forEach((u) => attendu.add(u));
+    });
     const vus = new Set(hrefs(html(mi)));
     assert.deepEqual([...vus].sort(), [...attendu].sort(), m.nom);
     total += vus.size;

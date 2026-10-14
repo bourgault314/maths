@@ -78,10 +78,10 @@
   })(window);
 </script>
 <!-- La liste des mondes « en préparation » et la clé de Gwenaël (?essai=1) : en tête de assets/js/splat-etapes.js -->
-<script src="../assets/js/splat-etapes.js?v=20261014-1"></script>
+<script src="../assets/js/splat-etapes.js?v=20261014-2"></script>
 <!-- Le parcours de l'élève (moteur partagé avec les trois outils et le serveur de suivi), et
      l'habillage du suivi de classe (bloc de suivi, pied, garde) : lots 2 et 6, 08/10/2026 -->
-<script src="../assets/js/splat-parcours.js?v=20261008-5"></script>
+<script src="../assets/js/splat-parcours.js?v=20261014-1"></script>
 <script src="../assets/js/splat-suivi.js?v=20261008-3"></script>
 <style>
 :root{
@@ -287,6 +287,18 @@ html.suivi-attente main#univers{visibility:hidden}
 .etape.bonus.done .badge .eclat{display:block}
 .etape.bonus h3{margin-bottom:8px}
 .menq .etape.bonus .actions a.jouer,.msys .etape.bonus .actions a.jouer{background:#fff;color:var(--c);border:2px solid var(--c)}
+/* l'échauffement du monde 6 (lot 1, 14/10/2026) : les règles du Bonus, dans le violet du monde et
+   AVANT la partie 1 ; ses fiches sont des taches blanches cerclées de violet, remplies de violet
+   clair et cochées ✔ une fois réussies, avec leur compteur à elles (hors des étoiles du haut) */
+.m4 .volet.echauf{background:#fff;border:1.5px dashed #c9a8e6}
+.m4 .volet.echauf .rang{background:#fff;color:var(--c);border:1.5px solid var(--c);padding:3.5px 8.5px}
+.m4 .etape.echauf .badge use.fond{fill:#fff;stroke:var(--c);stroke-width:5}
+.m4 .etape.echauf.done .badge use.fond{fill:#dcc8f0;stroke:var(--c);stroke-width:5}
+.etape.echauf .badge .n{font-size:16px;color:var(--c);transform:translateY(.2px)}
+.etape.echauf.done .badge .n{color:var(--c)}
+.etape.echauf .badge .eclat{position:absolute;right:-7px;bottom:-6px;font-size:19px;font-weight:900;line-height:1;color:var(--c);display:none}
+.etape.echauf.done .badge .eclat{display:block}
+.m4 .etape.echauf .actions a.jouer{background:#fff;color:var(--c);border:2px solid var(--c)}
 /* téléphone : la pastille « Partie N » et les étoiles sur une première ligne, le
    titre et la phrase en dessous sur toute la largeur (sinon la phrase est en colonne) ;
    une partie fermée tient sur une ligne : pastille, titre, étoiles, chevron */
@@ -1020,6 +1032,62 @@ MONDE_RELATIFS.etapes.forEach((e,k)=>{
   e.f=eq5Adresse(e,"equation")+FICHE+titre;
   e.c=eq5Adresse(e,"equation")+"&print=correction-equation&layout=6&imprimer=1&title="+titre;
 });
+/* Le livret d'échauffement du monde 6 (lot 1 « outil + carte + suivi », 14/10/2026, conception
+   de Fable, textes validés par Gwenaël) : trois fiches de 12 cartes, E1, E2, E3, AVANT la fiche
+   38, pour l'élève qui découvre les négatifs. Ce ne sont pas des étapes : comme le Bonus des
+   mondes 3 et 4, un menu à part (avant la partie 1), chaque fiche a SON parcours (m4ech1 …
+   m4ech3), sa tache cerclée de violet, remplie et cochée ✔ une fois réussie, et un compteur
+   « ✔ n / 3 » hors des étoiles (le « ⭐ 0 / 6 » du monde et le total du haut ne bougent pas) ;
+   assets/js/splat-etapes.js en garde la copie (ECHAUFFEMENT). Une carte = une partie (« cards=1 »,
+   sa graine à elle), enchaînées par « suite » comme les fiches 38 à 43 : réglages et graines de
+   _sources/livret-splat-relatifs/fiches-echauffement.json (la liste annotée de la conception),
+   « j » = ces 36 cartes tirées par l'outil et converties (carteDuJeuEquaSplat) par
+   _sources/livret-splat-relatifs/echauffement_cartes.py. tests/splat-relatifs-echauffement.test.mjs
+   compare les trois. Ne jamais changer une graine sans refaire les livrets. « n » : la note du
+   prof. */
+const ECH_REGLAGES={
+ e1:"mode=EQPMSTEP&opposites=off&beadMax=1&form=X_PLUS_B_EQ_C&visibleMin=1&visibleMax=6&totalMin=-6&totalMax=6",
+ e1z:"mode=EQPMSTEP&opposites=off&beadMax=1&form=X_PLUS_B_EQ_C&visibleMin=1&visibleMax=6&totalMin=-6&totalMax=6&zero=1",
+ e2a:"mode=EQPMSTEP&opposites=off&beadMax=1&form=AX_EQ_C&tasksMax=3&visibleMin=2&visibleMax=6&totalMin=-6&totalMax=6",
+ e2az:"mode=EQPMSTEP&opposites=off&beadMax=1&form=AX_EQ_C&tasksMax=3&visibleMin=2&visibleMax=6&totalMin=-6&totalMax=6&zero=1",
+ e2b:"mode=EQPMSTEP&opposites=off&beadMax=1&form=ONE_SIDE&tasksMax=3&visibleMin=1&visibleMax=6&totalMin=-6&totalMax=6",
+ e3a:"mode=EQPMSTEP&opposites=off&beadMax=5&visibleMin=1&visibleMax=1&totalMin=-9&totalMax=9&form=X_PLUS_B_EQ_C",
+ e3b:"mode=EQPMSTEP&opposites=off&beadMax=5&visibleMin=1&visibleMax=1&totalMin=-9&totalMax=9&form=AX_EQ_C&tasksMax=3",
+ e3c:"mode=EQPMSTEP&opposites=off&beadMax=5&visibleMin=1&visibleMax=1&totalMin=-9&totalMax=9&form=ONE_SIDE&tasksMax=3",
+ e3cz:"mode=EQPMSTEP&opposites=off&beadMax=5&visibleMin=1&visibleMax=1&totalMin=-9&totalMax=9&form=ONE_SIDE&tasksMax=3&zero=1"
+};
+const REL_ECHAUF=[
+ {code:"E1",t:"Quand ça ne s'enlève pas",p:"m4ech1",fo:"x + b = c",
+  o:"Des jetons verts et rouges\u00a0: on enlève, et quand ça coince, on ajoute des rouges.",
+  n:"x + b = c en jetons +1 et −1\u00a0: quand les verts ne s'enlèvent pas, ajouter des rouges des deux côtés. Carte 1\u00a0: un rappel qui s'enlève\u00a0; carte 12\u00a0: une solution nulle.",
+  cartes:[["e1",5529],["e1",2832],["e1",2479],["e1",62],["e1",4969],["e1",426],["e1",2843],["e1",4560],["e1",2788],["e1",810],["e1",1229],["e1z",411]],
+  eqs:["𝑡 + 1 + 1 = 1 + 1 + 1 + 1 + 1", "𝑎 + 1 + 1 + 1 + 1 + 1 = 1 + 1 + 1", "1 + 1 + 1 = 𝑡 + 1 + 1 + 1 + 1 + 1 + 1", "𝑎 − 1 − 1 − 1 = −1", "−1 − 1 − 1 − 1 − 1 = 𝑛 − 1", "−1 = 𝑥 − 1 − 1 − 1 − 1 − 1 − 1", "𝑏 + 1 + 1 = −1 − 1", "−1 − 1 = 𝑛 + 1 + 1 + 1", "𝑐 − 1 − 1 = 1 + 1 + 1", "1 + 1 + 1 + 1 = 𝑚 − 1 − 1", "𝑐 − 1 − 1 + 1 = 1 + 1", "−1 + 1 + 1 = 𝑚 + 1"],
+  j:"/outils/equasplat.html?eleve=1&parcours=m4ech1#data=eyJzb3VyY2UiOiJ1bml2ZXJzX3NwbGF0IiwicGFyY291cnMiOiJtNGVjaDEiLCJzZXJpZSI6W3sic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGhIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjozLCJsZWZ0IjpbIngiLDEsMV0sInJpZ2h0IjpbMSwxLDEsMSwxXX0seyJzb3VyY2UiOiJzcGxhdF9lcXVhdGlvbnMiLCJ2YXJpYWJsZSI6IvCdkY4iLCJ1bmtub3duRGlzcGxheSI6ImxldHRlciIsInVuaXZlcnNlIjoicmVsYXRpdmUiLCJudW1iZXJNb2RlIjoiZ3JvdXBlZCIsInNpZ25lZFdyaXRpbmdNb2RlIjoic2ltcGxpZmllZCIsIngiOi0yLCJsZWZ0IjpbIngiLDEsMSwxLDEsMV0sInJpZ2h0IjpbMSwxLDFdfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RoSIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJyZWxhdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6LTMsImxlZnQiOlsxLDEsMV0sInJpZ2h0IjpbIngiLDEsMSwxLDEsMSwxXX0seyJzb3VyY2UiOiJzcGxhdF9lcXVhdGlvbnMiLCJ2YXJpYWJsZSI6IvCdkY4iLCJ1bmtub3duRGlzcGxheSI6ImxldHRlciIsInVuaXZlcnNlIjoicmVsYXRpdmUiLCJudW1iZXJNb2RlIjoiZ3JvdXBlZCIsInNpZ25lZFdyaXRpbmdNb2RlIjoic2ltcGxpZmllZCIsIngiOjIsImxlZnQiOlsieCIsLTEsLTEsLTFdLCJyaWdodCI6Wy0xXX0seyJzb3VyY2UiOiJzcGxhdF9lcXVhdGlvbnMiLCJ2YXJpYWJsZSI6IvCdkZsiLCJ1bmtub3duRGlzcGxheSI6ImxldHRlciIsInVuaXZlcnNlIjoicmVsYXRpdmUiLCJudW1iZXJNb2RlIjoiZ3JvdXBlZCIsInNpZ25lZFdyaXRpbmdNb2RlIjoic2ltcGxpZmllZCIsIngiOi00LCJsZWZ0IjpbLTEsLTEsLTEsLTEsLTFdLCJyaWdodCI6WyJ4IiwtMV19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGlIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4Ijo1LCJsZWZ0IjpbLTFdLCJyaWdodCI6WyJ4IiwtMSwtMSwtMSwtMSwtMSwtMV19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGPIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjotNCwibGVmdCI6WyJ4IiwxLDFdLCJyaWdodCI6Wy0xLC0xXX0seyJzb3VyY2UiOiJzcGxhdF9lcXVhdGlvbnMiLCJ2YXJpYWJsZSI6IvCdkZsiLCJ1bmtub3duRGlzcGxheSI6ImxldHRlciIsInVuaXZlcnNlIjoicmVsYXRpdmUiLCJudW1iZXJNb2RlIjoiZ3JvdXBlZCIsInNpZ25lZFdyaXRpbmdNb2RlIjoic2ltcGxpZmllZCIsIngiOi01LCJsZWZ0IjpbLTEsLTFdLCJyaWdodCI6WyJ4IiwxLDEsMV19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGQIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4Ijo1LCJsZWZ0IjpbIngiLC0xLC0xXSwicmlnaHQiOlsxLDEsMV19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGaIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4Ijo2LCJsZWZ0IjpbMSwxLDEsMV0sInJpZ2h0IjpbIngiLC0xLC0xXX0seyJzb3VyY2UiOiJzcGxhdF9lcXVhdGlvbnMiLCJ2YXJpYWJsZSI6IvCdkZAiLCJ1bmtub3duRGlzcGxheSI6ImxldHRlciIsInVuaXZlcnNlIjoicmVsYXRpdmUiLCJudW1iZXJNb2RlIjoiZ3JvdXBlZCIsInNpZ25lZFdyaXRpbmdNb2RlIjoic2ltcGxpZmllZCIsIngiOjMsImxlZnQiOlsieCIsLTEsLTEsMV0sInJpZ2h0IjpbMSwxXX0seyJzb3VyY2UiOiJzcGxhdF9lcXVhdGlvbnMiLCJ2YXJpYWJsZSI6IvCdkZoiLCJ1bmtub3duRGlzcGxheSI6ImxldHRlciIsInVuaXZlcnNlIjoicmVsYXRpdmUiLCJudW1iZXJNb2RlIjoiZ3JvdXBlZCIsInNpZ25lZFdyaXRpbmdNb2RlIjoic2ltcGxpZmllZCIsIngiOjAsImxlZnQiOlstMSwxLDFdLCJyaWdodCI6WyJ4IiwxXX1dfQ"},
+ {code:"E2",t:"Des taches en plus",p:"m4ech2",fo:"a × x = c · a × x + b = c",
+  o:"Deux ou trois taches, toujours avec des jetons +1 et −1\u00a0: regroupe, puis partage.",
+  n:"a × x = c, puis a × x + b = c, en jetons +1 et −1\u00a0: regrouper, puis partager. Carte 5\u00a0: une solution nulle.",
+  cartes:[["e2a",2460],["e2a",2476],["e2a",690],["e2a",427],["e2az",1831],["e2a",1573],["e2b",5585],["e2b",6823],["e2b",6460],["e2b",7305],["e2b",5799],["e2b",844]],
+  eqs:["2𝑚 = 1 + 1 + 1 + 1", "1 + 1 + 1 + 1 + 1 + 1 = 2𝑐", "2𝑛 = −1 − 1 − 1 − 1 − 1 − 1", "−1 − 1 − 1 = 3𝑏", "2𝑚 = −1 + 1", "2𝑐 = −1 − 1 − 1 + 1 − 1 − 1", "2𝑏 + 1 + 1 = 1 + 1 + 1 + 1 + 1 + 1", "−1 − 1 − 1 = 2𝑥 + 1", "2𝑡 − 1 − 1 = 1 + 1 + 1 + 1", "1 + 1 = 3𝑎 + 1 + 1 + 1 + 1 + 1", "2𝑥 + 1 + 1 = −1 − 1 − 1 − 1", "3𝑎 − 1 + 1 = −1 + 1 + 1 + 1 + 1"],
+  j:"/outils/equasplat.html?eleve=1&parcours=m4ech2#data=eyJzb3VyY2UiOiJ1bml2ZXJzX3NwbGF0IiwicGFyY291cnMiOiJtNGVjaDIiLCJzZXJpZSI6W3sic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGaIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjoyLCJsZWZ0IjpbIngiLCJ4Il0sInJpZ2h0IjpbMSwxLDEsMV19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGQIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjozLCJsZWZ0IjpbMSwxLDEsMSwxLDFdLCJyaWdodCI6WyJ4IiwieCJdfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RmyIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJyZWxhdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6LTMsImxlZnQiOlsieCIsIngiXSwicmlnaHQiOlstMSwtMSwtMSwtMSwtMSwtMV19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGPIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjotMSwibGVmdCI6Wy0xLC0xLC0xXSwicmlnaHQiOlsieCIsIngiLCJ4Il19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGaIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjowLCJsZWZ0IjpbIngiLCJ4Il0sInJpZ2h0IjpbLTEsMV19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGQIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjotMiwibGVmdCI6WyJ4IiwieCJdLCJyaWdodCI6Wy0xLC0xLC0xLDEsLTEsLTFdfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RjyIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJyZWxhdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6MiwibGVmdCI6WyJ4IiwieCIsMSwxXSwicmlnaHQiOlsxLDEsMSwxLDEsMV19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGlIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjotMiwibGVmdCI6Wy0xLC0xLC0xXSwicmlnaHQiOlsieCIsIngiLDFdfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RoSIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJyZWxhdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6MywibGVmdCI6WyJ4IiwieCIsLTEsLTFdLCJyaWdodCI6WzEsMSwxLDFdfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RjiIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJyZWxhdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6LTEsImxlZnQiOlsxLDFdLCJyaWdodCI6WyJ4IiwieCIsIngiLDEsMSwxLDEsMV19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGlIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjotMywibGVmdCI6WyJ4IiwieCIsMSwxXSwicmlnaHQiOlstMSwtMSwtMSwtMV19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGOIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjoxLCJsZWZ0IjpbIngiLCJ4IiwieCIsLTEsMV0sInJpZ2h0IjpbLTEsMSwxLDEsMV19XX0"},
+ {code:"E3",t:"Les jetons numérotés",p:"m4ech3",fo:"x + b = c · a × x = c · a × x + b = c",
+  o:"Les mêmes équations avec un jeton par plateau\u00a0: prêt pour la fiche 38.",
+  n:"Les mêmes formes avec un jeton numéroté par plateau, de −5 à 5\u00a0: le pont vers la fiche 38. Carte 11\u00a0: une solution nulle.",
+  cartes:[["e3a",2281],["e3a",2819],["e3a",2147],["e3a",1325],["e3b",2906],["e3b",1103],["e3c",2457],["e3c",1513],["e3c",313],["e3c",47],["e3cz",1042],["e3c",1869]],
+  eqs:["𝑡 + 3 = −2", "−1 = 𝑎 + 2", "𝑏 − 4 = 1", "2 = 𝑎 − 2", "2𝑥 = −4", "4 = 2𝑏", "2𝑚 + 3 = −5", "−1 = 3𝑛 + 5", "2𝑚 − 3 = 5", "4 = 3𝑐 − 5", "2 = 2𝑛 + 2", "2𝑐 + 4 = −2"],
+  j:"/outils/equasplat.html?eleve=1&parcours=m4ech3#data=eyJzb3VyY2UiOiJ1bml2ZXJzX3NwbGF0IiwicGFyY291cnMiOiJtNGVjaDMiLCJzZXJpZSI6W3sic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGhIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjotNSwibGVmdCI6WyJ4IiwzXSwicmlnaHQiOlstMl19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGOIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjotMywibGVmdCI6Wy0xXSwicmlnaHQiOlsieCIsMl19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGPIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4Ijo1LCJsZWZ0IjpbIngiLC00XSwicmlnaHQiOlsxXX0seyJzb3VyY2UiOiJzcGxhdF9lcXVhdGlvbnMiLCJ2YXJpYWJsZSI6IvCdkY4iLCJ1bmtub3duRGlzcGxheSI6ImxldHRlciIsInVuaXZlcnNlIjoicmVsYXRpdmUiLCJudW1iZXJNb2RlIjoiZ3JvdXBlZCIsInNpZ25lZFdyaXRpbmdNb2RlIjoic2ltcGxpZmllZCIsIngiOjQsImxlZnQiOlsyXSwicmlnaHQiOlsieCIsLTJdfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RpSIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJyZWxhdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6LTIsImxlZnQiOlsieCIsIngiXSwicmlnaHQiOlstNF19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGPIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjoyLCJsZWZ0IjpbNF0sInJpZ2h0IjpbIngiLCJ4Il19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGaIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjotNCwibGVmdCI6WyJ4IiwieCIsM10sInJpZ2h0IjpbLTVdfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RmyIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJyZWxhdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6LTIsImxlZnQiOlstMV0sInJpZ2h0IjpbIngiLCJ4IiwieCIsNV19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGaIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4Ijo0LCJsZWZ0IjpbIngiLCJ4IiwtM10sInJpZ2h0IjpbNV19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGQIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjozLCJsZWZ0IjpbNF0sInJpZ2h0IjpbIngiLCJ4IiwieCIsLTVdfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RmyIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJyZWxhdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6MCwibGVmdCI6WzJdLCJyaWdodCI6WyJ4IiwieCIsMl19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGQIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjotMywibGVmdCI6WyJ4IiwieCIsNF0sInJpZ2h0IjpbLTJdfV19"}
+];
+/* les liens de la vue prof : Projeter (l'outil, la vue « l'équation », comme les fiches 38 à 43),
+   Fiche (6 par page, « Fiche E1 — … ») et Correction (la correction courte « l'équation ») */
+REL_ECHAUF.forEach(f=>{
+  const titre=encodeURIComponent("Fiche "+f.code+" — "+f.t);
+  const parties=f.cartes.map(([r,g])=>ECH_REGLAGES[r]+"&cards=1&seed="+g+"&unknown=letter");
+  f.q=parties[0]; f.suite=parties.slice(1);
+  f.jp=eq5Adresse(f,"equation");
+  f.f=eq5Adresse(f,"equation")+FICHE+titre;
+  f.c=eq5Adresse(f,"equation")+"&print=correction-equation&layout=6&imprimer=1&title="+titre;
+});
+/* l'échauffement sur la page : ses identifiants, et sa clé de mémoire (« menu ouvert », comme le Bonus) */
+const ECHAUF={monde:MONDE_RELATIFS,fiches:REL_ECHAUF,volet:"rel-echauf",li:"rel-ech-",stars:"starsEchauf",cle:"-ech"};
 /* Demande de Claire (23/09/2026) : en vue professeur, chaque équation de la liste 📋
    des mondes ÉquaSplat (5 et 6) ouvre CETTE équation seule dans ÉquaSplat, pour la
    résoudre avec la classe sans dérouler la série. Même chargement #data= que le jeu de
@@ -1282,7 +1350,7 @@ function mondeProfHtml(m,mi,plage){
       n++;
       const v=(m.volets||[]).find(x=>x.de===ei), vi=(m.volets||[]).indexOf(v);
       const id=idEtape(m,e,ei), cid='cartes-'+id;
-      return (v?voletProfHtml(m,v,vi,n):'')+'<li class="etape" id="'+id+'">'+
+      return (ei===0?echaufProfHtml(m):'')+(v?voletProfHtml(m,v,vi,n):'')+'<li class="etape" id="'+id+'">'+
         '<button class="badge" type="button" disabled>'+
           '<svg class="tache" viewBox="0 0 110 110"><use class="fond" href="#tacheEtoile" width="110" height="110"/></svg>'+
           '<span class="n">'+n+'</span></button>'+
@@ -1307,6 +1375,22 @@ function tour2ProfHtml(m){
     '<h4>'+nom+'<span class="fiches">fiches '+de+' à '+a+'</span></h4>'+
     '<p>Plus dur, en bonus\u00a0: ses étoiles sont à part.</p></li>';
   return b.prof.map(([rang,nom,de,a,i0,i1])=>tete(rang,nom,de,a)+b.fiches.slice(i0,i1).map(li).join('')).join('');
+}
+/* L'échauffement du monde 6 (lot 1, 14/10/2026), AVANT les parties : un intertitre, puis une ligne
+   par fiche, comme le deuxième tour (la note, Projeter, le jeu, la fiche, la correction), et ses
+   12 cartes, comme les fiches 38 à 43. */
+function echaufProfHtml(m){
+  if(m!==ECHAUF.monde) return '';
+  const li=(f)=>'<li class="etape t2 echauf" id="'+ECHAUF.li+f.code+'">'+
+    '<button class="badge" type="button" disabled>'+
+      '<svg class="tache" viewBox="0 0 110 110"><use class="fond" href="#tacheEtoile" width="110" height="110"/></svg>'+
+      '<span class="n">'+f.code+'</span></button>'+
+    '<div class="corps"><h3>'+f.t+'<span class="fo">'+f.fo+'</span></h3><p class="pNote">'+f.n+'</p>'+
+      actionsHtml(f,m,'cartes-'+ECHAUF.li+f.code)+cartesHtml(f,m,'cartes-'+ECHAUF.li+f.code)+'</div></li>';
+  return '<li class="volet" id="'+ECHAUF.volet+'"><span class="rang">Échauffement</span>'+
+    '<h4>Les jetons +1 et −1<span class="fiches">fiches E1 à E3</span></h4>'+
+    '<p>Pour un élève qui découvre les négatifs\u00a0; ses étoiles sont à part.</p></li>'+
+    ECHAUF.fiches.map(li).join('');
 }
 function sommaireProfHtml(plages){
   return MONDES.map((m,mi)=>'<a href="#monde-'+(mi+1)+'" class="'+m.cls+(m.cache?' cache':'')+'" data-mi="'+mi+'">'+
@@ -1366,6 +1450,22 @@ function bonusHtml(m){
           '<div class="actions"><a class="jouer" href="'+f.j+'">🎮 Je joue</a></div>'+
         '</div></li>').join('')).join('');
 }
+/* L'échauffement du monde 6 (lot 1, 14/10/2026) : son menu AVANT la partie 1, puis ses trois
+   fiches, comme une étape (titre, forme, phrase, « Je joue »), sans étoile : la tache se remplit
+   et se coche ✔ quand le parcours de la fiche (m4ech1…) est réussi. */
+function echaufHtml(m){
+  if(m!==ECHAUF.monde) return '';
+  return voletHtml(ECHAUF.volet,'echauf','Échauffement','Les jetons +1 et −1','fiches E1 à E3',
+      'Pour s\'habituer aux nombres négatifs avec de petits nombres. Ses étoiles sont à part.',ECHAUF.stars,' echauf')+
+    ECHAUF.fiches.map(f=>'<li class="etape echauf" id="'+ECHAUF.li+f.code+'" data-partie="echauf">'+
+      '<button class="badge" type="button" disabled>'+
+        '<svg class="tache" viewBox="0 0 110 110"><use class="fond" href="#tacheEtoile" width="110" height="110"/></svg>'+
+        '<span class="n">'+f.code+'</span><span class="eclat" aria-hidden="true">\u2714\ufe0e</span>'+
+      '</button>'+
+      '<div class="corps"><h3>'+f.t+'</h3><div class="forme">'+f.fo+'</div><p class="obj">'+f.o+'</p>'+
+        '<div class="actions"><a class="jouer" href="'+f.j+'">🎮 Je joue</a></div>'+
+      '</div></li>').join('');
+}
 
 const main=document.getElementById("univers");
 let compteur=0;
@@ -1401,7 +1501,7 @@ else MONDES.forEach((m,mi)=>{
    '</div>'+
    '<p class="desc">'+m.desc+'</p>'+
    (mi===0?'<p class="intro"><a class="introLien" href="/outils/splat_intro.html?suite='+encodeURIComponent(m.etapes[0].j)+'">\ud83c\udfac Comment on joue ?</a></p>':'')+
-   '<ol class="etapes">'+m.etapes.map((e,ei)=>{
+   '<ol class="etapes">'+echaufHtml(m)+m.etapes.map((e,ei)=>{
      compteur++;
      /* la partie qui commence à cette étape (lot « six mondes ») : un intertitre
         dans la liste, avec ses étoiles et sa phrase (ses livrets : en vue prof) ;
@@ -1481,6 +1581,17 @@ function majAffichage(){
     const sb=document.getElementById(b.stars);
     if(sb) sb.textContent="\u2728 "+fb+" / "+b.fiches.length;
   });
+  /* l'échauffement du monde 6 (lot 1) : ses taches cochées et son compteur, hors du total, comme le Bonus */
+  if(document.getElementById(ECHAUF.volet)){
+    let fe=0;
+    ECHAUF.fiches.forEach(f=>{
+      const li=document.getElementById(ECHAUF.li+f.code), ok=!!(parcours[f.p]&&parcours[f.p].fait);
+      if(li) li.classList.toggle("done",ok);
+      if(ok) fe++;
+    });
+    const se=document.getElementById(ECHAUF.stars);
+    if(se) se.textContent="\u2714\ufe0e "+fe+" / "+ECHAUF.fiches.length;
+  }
   document.getElementById("totalTxt").textContent=fait+" / "+total+" étoiles";
   document.getElementById("totalFill").style.width=(total?100*fait/total:0)+"%";
   /* « Continuer » : la première étoile qui reste à gagner, dans l'ordre de l'univers */
@@ -1573,6 +1684,7 @@ document.addEventListener("click",ev=>{
   const sec=a.closest("main>.monde");
   if(sec) retenirMonde([...document.querySelectorAll("main>.monde")].indexOf(sec));
   if(a.closest("li.etape.bonus")) retenirBonus(true,bonusDeSection(sec));
+  if(a.closest("li.etape.echauf")) retenirBonus(true,ECHAUF);
 });
 document.addEventListener("keydown",ev=>{
   if((ev.key==="Enter"||ev.key===" ")&&ev.target.matches("main>.monde>.head")){ ev.preventDefault(); ev.target.click(); }
@@ -1585,7 +1697,8 @@ document.addEventListener("keydown",ev=>{
    celle de la première étoile qui reste à gagner ; aucune quand tout est gagné. La vue prof n'a pas
    de menus (ses parties sont des intertitres) : rien n'y change. */
 const CLE_BONUS_OUVERT="mathsgo-splat-bonus-ouvert";
-/* une clé par Bonus (celle du monde 3 ne change pas ; le monde 4 : « …-sys ») */
+/* une clé par Bonus (celle du monde 3 ne change pas ; le monde 4 : « …-sys ») ; l'échauffement du
+   monde 6 a la sienne (« …-ech », ECHAUF), lue et écrite par les mêmes fonctions */
 function bonusDeSection(sec){
   const mi=[...document.querySelectorAll("main>.monde")].indexOf(sec);
   return mi>=0?bonusDe(MONDES[mi]):null;
@@ -1610,11 +1723,15 @@ function ouvrirParties(){
   document.querySelectorAll("main>.monde").forEach(sec=>{
     const volets=sec.querySelectorAll(".etapes>.volet[data-volet]");
     if(!volets.length) return;
-    const premiere=sec.querySelector(".etapes>li.etape[data-partie]:not(.done):not(.bonus)");
+    /* l'échauffement (monde 6) n'est jamais « la partie en cours » : il s'ouvre par l'adresse
+       (#rel-echauf) ou parce que l'élève y était la dernière fois, comme le Bonus */
+    const premiere=sec.querySelector(".etapes>li.etape[data-partie]:not(.done):not(.bonus):not(.echauf)");
     const enCours=premiere?premiere.dataset.partie:null;
     const vise=[...volets].find(v=>elCible&&(elCible===v||(sec.contains(elCible)&&elCible.dataset.partie===v.dataset.volet)));
     const bonus=[...volets].find(v=>v.dataset.volet==="bonus");
-    const ouverte=vise||(bonus&&bonusRetenu(bonusDeSection(sec))?bonus:null)||[...volets].find(v=>v.dataset.volet===enCours)||null;
+    const echauf=[...volets].find(v=>v.dataset.volet==="echauf");
+    const ouverte=vise||(bonus&&bonusRetenu(bonusDeSection(sec))?bonus:null)||(echauf&&bonusRetenu(ECHAUF)?echauf:null)||
+      [...volets].find(v=>v.dataset.volet===enCours)||null;
     volets.forEach(v=>ouvrirPartie(v,v===ouverte));
   });
 }
@@ -1628,9 +1745,11 @@ document.addEventListener("click",ev=>{
     if(w===v||w.classList.contains("ferme")) return;
     ouvrirPartie(w,false);
     if(w.dataset.volet==="bonus") retenirBonus(false,bonusDeSection(sec));
+    if(w.dataset.volet==="echauf") retenirBonus(false,ECHAUF);
   });
   ouvrirPartie(v,o);
   if(v.dataset.volet==="bonus") retenirBonus(o,bonusDeSection(sec));
+  if(v.dataset.volet==="echauf") retenirBonus(o,ECHAUF);
   /* la partie du dessus s'est refermée : la page a remonté sous la partie ouverte ; on ramène
      son en-tête en haut de l'écran, seulement s'il n'y est plus (comme pour les mondes, 27/09) */
   if(o){ const r=v.getBoundingClientRect(); if(r.top<0||r.top>innerHeight*0.6) window.scrollTo({top:scrollY+r.top-8,behavior:"smooth"}); }
@@ -1682,6 +1801,18 @@ let APRES_REDIRIGE=false; /* la carte part aussitôt : le suivi n'a pas à déma
     if(b.monde.verrouille) return; /* monde fermé à la classe (lot « splat-suivi-5 ») : la carte */
     retenirMonde(MONDES.indexOf(b.monde)); retenirBonus(true,b);
     if(kb+1<b.fiches.length){ APRES_REDIRIGE=true; window.location.replace(b.fiches[kb+1].j); }
+    return;
+  }
+  /* une fiche de l'échauffement du monde 6 (lot 1, 14/10/2026) : E1 → E2 → E3, puis la fiche 38 (la
+     première étape du monde 6) ; au retour sur la carte, le monde 6 est ouvert, sur l'échauffement
+     tant qu'il continue, sur la partie en cours après E3. Monde fermé à la classe : la carte. */
+  const ke=ECHAUF.fiches.findIndex(f=>f.p===apres);
+  if(ke>=0){
+    const m=ECHAUF.monde;
+    if(m.verrouille||m.cache) return;
+    retenirMonde(MONDES.indexOf(m)); retenirBonus(ke+1<ECHAUF.fiches.length,ECHAUF);
+    const cible=ke+1<ECHAUF.fiches.length?ECHAUF.fiches[ke+1].j:versEtape(m.etapes[0]);
+    APRES_REDIRIGE=true; window.location.replace(cible);
     return;
   }
   /* Mondes en préparation (26/09/2026), comme le bouton de assets/js/splat-etapes.js :

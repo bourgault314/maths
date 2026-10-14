@@ -1653,8 +1653,10 @@ function loadSharedConfiguration(){
      Sans ce paramètre, la page se comporte exactement comme avant. */
   serieSuite = [];
   if(params.has("suite")){
+    /* jusqu'à 11 parties après la première (l'échauffement du monde 6 : 12 cartes choisies
+       une à une, une graine chacune) ; les fiches d'avant en ont au plus 5 */
     serieSuite = String(params.get("suite") || "")
-      .split(";").map(part => part.trim()).filter(Boolean).slice(0, 5);
+      .split(";").map(part => part.trim()).filter(Boolean).slice(0, 11);
     reglagesOuverture = photographierReglages();
   }
   const sharedNames = ["mode", "seed", "cards", "form", "tasksMax", "visibleMin", "visibleMax", "totalMin", "totalMax", "beadMax", "opposites", "colors", "writing", "unknown", "view", "print", "duplex", "layout", "title", "imprimer", "suite", "jouer", "zero", "taches"];
@@ -3333,7 +3335,10 @@ function genEquationSigned(rng){
     const maxCoeff = Math.max(Math.abs(a), Math.abs(b), 1);
     const maxTotalAbs = Math.max(Math.abs(userMin), Math.abs(userMax));
     let xAbsMax = Math.floor((maxTotalAbs + Math.max(vCountL, vCountR) * maxAbs) / maxCoeff);
-    xAbsMax = clamp(xAbsMax, 1, maxAbs);
+    /* Billes ±1 (l'échauffement du monde 6) : avec « Jetons max » = 1, la solution ne dépassait
+       jamais 1. Les billes vont jusqu'à 6 par plateau : la solution aussi. Les séries à jetons
+       plus grands ne changent pas (le plafond reste « Jetons max »). */
+    xAbsMax = clamp(xAbsMax, 1, maxAbs === 1 ? 6 : maxAbs);
     const absX = rInt(rng, 1, xAbsMax);
     const x = solutionNulle ? (rng(), 0) : ((rng() < 0.5) ? -1 : 1) * absX;
 

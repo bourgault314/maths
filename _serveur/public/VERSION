@@ -1,10 +1,10 @@
 # Manifeste du serveur de suivi maths&go — produit par outils/generer-version.php.
 # Ne pas modifier à la main : un test du dépôt refait ce calcul à chaque passage.
 # verifier.php relit ce fichier en ligne et compare chaque empreinte.
-lot defi-tables-records-depart
-genere_le 2026-10-11
+lot splat-relatifs-echauffement
+genere_le 2026-10-14
 fichiers 31
-manifeste fb5e8ef1f34160db80088e5c862c484d005867286ea31f0e143e6082de5de383
+manifeste 363a8f0cd7adb97d18e32bd58bfc5487afc2c5fd3030db253407ee46acf5c869
 61b230d36219b3c4515e56c1ff59afb1a85ffa12343956bd73b16ba04867cdca  .htaccess
 911229797978fa1f559c9a056368c70bd606a99b3efd16071a584b4de1c5f965  api/eleve.php
 a1b4a7c21d6d798982a8b9efc6c030f1755d16821a0eed4edff71edf27206130  api/parcours.php
@@ -16,7 +16,7 @@ b901e292ec96dadfd1a9415bc315027c93b635d0f4254a6da8ff7afd92c6520e  favicon.svg
 0601e2cae4a67dc9b46c33aed044b9bba33f8d635e27fc6582bba62af39eb741  index.php
 014a992fe48e48144dcaa218601a11ec8745fe1fe7a7d30f3323ec9e213159d5  infos.php
 fa28d421a28ed9b6f4b997d5119c2b8adbacff6e2dd119a179b71230f9664934  lib/.htaccess
-d91d17733ff33e501bd7d405554e2a8a692eada39b3429193abd650a1e84672e  lib/applis.php
+76d5a1284347a4f890850f93e597dd90d7dc58aae0bbdb63cbb7638181f1e093  lib/applis.php
 302d5e84f6a4c1b57b0755e0dc42981327bf491fa6609988c0cf63057db8cfcc  lib/archives.php
 817e5e7501933e4bf2ca5b6bce94ba921e652d056540b864fdcad427823f8ac8  lib/auth.php
 e7fa1aca2ea4ac1dc806257fe05d06a52108de2549cd419d8e6fbdbfe0763de2  lib/bd.php
@@ -33,6 +33,6 @@ b476cc832c9b7497eed6194afecee863a686469e9162ad1832bd7e7732ccc304  mathsgo-logo-p
 2a442b4a4ae2452f649f77224a0aae91e6fe0ac83566253d65d1dc1807cdb6a2  mathsgo-logo.png
 4cc15b863e2b7d4afaa761685a411b7309fe133ecff7625420ff1dedfa365502  menage.php
 aa0a44164a2998644d0b62b6db81efaf3048020d849d4151572b11a02350e16c  prof/defi_tables_mon_parcours.js
-434cac8927b5f7329f491b448a1f08277ea64ce3295d1c14428c32d933f3098b  prof/index.php
-3d9c64552be2d027581f2c279f4dc03ac896463a619405b85f3e2f2fa6172c68  prof/splat-parcours.js
+7d8a4d35ce7d9f5b26ca6bdab6d6276ca58fe10bef2cfd3e19d790b85e558f8c  prof/index.php
+906594da492e5bca0092f1998654545444e5488bb89e3dac22caa68f079af9ab  prof/splat-parcours.js
 20fa892fa1003114fd607e774004dd190a0a187ea9623ef9ca1234e9b0c481c6  verifier.php

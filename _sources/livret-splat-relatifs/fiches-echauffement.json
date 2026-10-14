@@ -1,0 +1,254 @@
+{
+ "commun": "mode=EQPMSTEP&opposites=off",
+ "reglages": {
+  "e1": "mode=EQPMSTEP&opposites=off&beadMax=1&form=X_PLUS_B_EQ_C&visibleMin=1&visibleMax=6&totalMin=-6&totalMax=6",
+  "e1z": "mode=EQPMSTEP&opposites=off&beadMax=1&form=X_PLUS_B_EQ_C&visibleMin=1&visibleMax=6&totalMin=-6&totalMax=6&zero=1",
+  "e2a": "mode=EQPMSTEP&opposites=off&beadMax=1&form=AX_EQ_C&tasksMax=3&visibleMin=2&visibleMax=6&totalMin=-6&totalMax=6",
+  "e2az": "mode=EQPMSTEP&opposites=off&beadMax=1&form=AX_EQ_C&tasksMax=3&visibleMin=2&visibleMax=6&totalMin=-6&totalMax=6&zero=1",
+  "e2b": "mode=EQPMSTEP&opposites=off&beadMax=1&form=ONE_SIDE&tasksMax=3&visibleMin=1&visibleMax=6&totalMin=-6&totalMax=6",
+  "e3a": "mode=EQPMSTEP&opposites=off&beadMax=5&visibleMin=1&visibleMax=1&totalMin=-9&totalMax=9&form=X_PLUS_B_EQ_C",
+  "e3b": "mode=EQPMSTEP&opposites=off&beadMax=5&visibleMin=1&visibleMax=1&totalMin=-9&totalMax=9&form=AX_EQ_C&tasksMax=3",
+  "e3c": "mode=EQPMSTEP&opposites=off&beadMax=5&visibleMin=1&visibleMax=1&totalMin=-9&totalMax=9&form=ONE_SIDE&tasksMax=3",
+  "e3cz": "mode=EQPMSTEP&opposites=off&beadMax=5&visibleMin=1&visibleMax=1&totalMin=-9&totalMax=9&form=ONE_SIDE&tasksMax=3&zero=1"
+ },
+ "fiches": {
+  "E1": {
+   "titre": "Quand ça ne s'enlève pas",
+   "parcours": "m4ech1",
+   "cartes": [
+    {
+     "reglage": "e1",
+     "graine": 5529,
+     "equation": "𝑡 + 1 + 1 = 1 + 1 + 1 + 1 + 1",
+     "x": 3
+    },
+    {
+     "reglage": "e1",
+     "graine": 2832,
+     "equation": "𝑎 + 1 + 1 + 1 + 1 + 1 = 1 + 1 + 1",
+     "x": -2
+    },
+    {
+     "reglage": "e1",
+     "graine": 2479,
+     "equation": "1 + 1 + 1 = 𝑡 + 1 + 1 + 1 + 1 + 1 + 1",
+     "x": -3
+    },
+    {
+     "reglage": "e1",
+     "graine": 62,
+     "equation": "𝑎 − 1 − 1 − 1 = −1",
+     "x": 2
+    },
+    {
+     "reglage": "e1",
+     "graine": 4969,
+     "equation": "−1 − 1 − 1 − 1 − 1 = 𝑛 − 1",
+     "x": -4
+    },
+    {
+     "reglage": "e1",
+     "graine": 426,
+     "equation": "−1 = 𝑥 − 1 − 1 − 1 − 1 − 1 − 1",
+     "x": 5
+    },
+    {
+     "reglage": "e1",
+     "graine": 2843,
+     "equation": "𝑏 + 1 + 1 = −1 − 1",
+     "x": -4
+    },
+    {
+     "reglage": "e1",
+     "graine": 4560,
+     "equation": "−1 − 1 = 𝑛 + 1 + 1 + 1",
+     "x": -5
+    },
+    {
+     "reglage": "e1",
+     "graine": 2788,
+     "equation": "𝑐 − 1 − 1 = 1 + 1 + 1",
+     "x": 5
+    },
+    {
+     "reglage": "e1",
+     "graine": 810,
+     "equation": "1 + 1 + 1 + 1 = 𝑚 − 1 − 1",
+     "x": 6
+    },
+    {
+     "reglage": "e1",
+     "graine": 1229,
+     "equation": "𝑐 − 1 − 1 + 1 = 1 + 1",
+     "x": 3
+    },
+    {
+     "reglage": "e1z",
+     "graine": 411,
+     "equation": "−1 + 1 + 1 = 𝑚 + 1",
+     "x": 0
+    }
+   ]
+  },
+  "E2": {
+   "titre": "Des taches en plus",
+   "parcours": "m4ech2",
+   "cartes": [
+    {
+     "reglage": "e2a",
+     "graine": 2460,
+     "equation": "2𝑚 = 1 + 1 + 1 + 1",
+     "x": 2
+    },
+    {
+     "reglage": "e2a",
+     "graine": 2476,
+     "equation": "1 + 1 + 1 + 1 + 1 + 1 = 2𝑐",
+     "x": 3
+    },
+    {
+     "reglage": "e2a",
+     "graine": 690,
+     "equation": "2𝑛 = −1 − 1 − 1 − 1 − 1 − 1",
+     "x": -3
+    },
+    {
+     "reglage": "e2a",
+     "graine": 427,
+     "equation": "−1 − 1 − 1 = 3𝑏",
+     "x": -1
+    },
+    {
+     "reglage": "e2az",
+     "graine": 1831,
+     "equation": "2𝑚 = −1 + 1",
+     "x": 0
+    },
+    {
+     "reglage": "e2a",
+     "graine": 1573,
+     "equation": "2𝑐 = −1 − 1 − 1 + 1 − 1 − 1",
+     "x": -2
+    },
+    {
+     "reglage": "e2b",
+     "graine": 5585,
+     "equation": "2𝑏 + 1 + 1 = 1 + 1 + 1 + 1 + 1 + 1",
+     "x": 2
+    },
+    {
+     "reglage": "e2b",
+     "graine": 6823,
+     "equation": "−1 − 1 − 1 = 2𝑥 + 1",
+     "x": -2
+    },
+    {
+     "reglage": "e2b",
+     "graine": 6460,
+     "equation": "2𝑡 − 1 − 1 = 1 + 1 + 1 + 1",
+     "x": 3
+    },
+    {
+     "reglage": "e2b",
+     "graine": 7305,
+     "equation": "1 + 1 = 3𝑎 + 1 + 1 + 1 + 1 + 1",
+     "x": -1
+    },
+    {
+     "reglage": "e2b",
+     "graine": 5799,
+     "equation": "2𝑥 + 1 + 1 = −1 − 1 − 1 − 1",
+     "x": -3
+    },
+    {
+     "reglage": "e2b",
+     "graine": 844,
+     "equation": "3𝑎 − 1 + 1 = −1 + 1 + 1 + 1 + 1",
+     "x": 1
+    }
+   ]
+  },
+  "E3": {
+   "titre": "Les jetons numérotés",
+   "parcours": "m4ech3",
+   "cartes": [
+    {
+     "reglage": "e3a",
+     "graine": 2281,
+     "equation": "𝑡 + 3 = −2",
+     "x": -5
+    },
+    {
+     "reglage": "e3a",
+     "graine": 2819,
+     "equation": "−1 = 𝑎 + 2",
+     "x": -3
+    },
+    {
+     "reglage": "e3a",
+     "graine": 2147,
+     "equation": "𝑏 − 4 = 1",
+     "x": 5
+    },
+    {
+     "reglage": "e3a",
+     "graine": 1325,
+     "equation": "2 = 𝑎 − 2",
+     "x": 4
+    },
+    {
+     "reglage": "e3b",
+     "graine": 2906,
+     "equation": "2𝑥 = −4",
+     "x": -2
+    },
+    {
+     "reglage": "e3b",
+     "graine": 1103,
+     "equation": "4 = 2𝑏",
+     "x": 2
+    },
+    {
+     "reglage": "e3c",
+     "graine": 2457,
+     "equation": "2𝑚 + 3 = −5",
+     "x": -4
+    },
+    {
+     "reglage": "e3c",
+     "graine": 1513,
+     "equation": "−1 = 3𝑛 + 5",
+     "x": -2
+    },
+    {
+     "reglage": "e3c",
+     "graine": 313,
+     "equation": "2𝑚 − 3 = 5",
+     "x": 4
+    },
+    {
+     "reglage": "e3c",
+     "graine": 47,
+     "equation": "4 = 3𝑐 − 5",
+     "x": 3
+    },
+    {
+     "reglage": "e3cz",
+     "graine": 1042,
+     "equation": "2 = 2𝑛 + 2",
+     "x": 0
+    },
+    {
+     "reglage": "e3c",
+     "graine": 1869,
+     "equation": "2𝑐 + 4 = −2",
+     "x": -3
+    }
+   ]
+  }
+ },
+ "exemple_couverture": {
+  "reglage": "e1",
+  "graine": 749
+ }
+}

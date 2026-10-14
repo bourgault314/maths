@@ -133,7 +133,11 @@ const etape = (fait, vues = 0, idx = 0) => Object.assign({fait, etoiles: 3, cart
 const faits = (liste, vues = []) => Object.fromEntries(liste.map(id => [id, etape(true, vues.includes(id) ? 1 : 0)]));
 const parcours = etapes => ({version: 1, epoque: 0, etapes});
 
-const LEA = parcours({...faits(M1), ...faits(M2), ...faits(ENQ.slice(0, 4), ["enq11"]), enq14: etape(false, 0, 3), enq11d: etape(true)});
+// Léa a aussi réussi E1 et commencé E3 de l'échauffement du monde 6 (lot 1, 14/10/2026) : ses
+// pastilles du Détail le montrent, et AUCUN compte de la page n'en tient compte (tous les tests
+// ci-dessous gardent leurs nombres d'avant).
+const LEA = parcours({...faits(M1), ...faits(M2), ...faits(ENQ.slice(0, 4), ["enq11"]), enq14: etape(false, 0, 3), enq11d: etape(true),
+  m4ech1: etape(true), m4ech3: etape(false, 0, 5)});
 const MAELYS = parcours({...faits([...M1, ...M2, ...ENQ, ...SYS, ...M5, ...M6]), ...faits(SPLAT.CARTE.BONUS.map(b => b[0]))});
 const TOM = parcours({m1e1: etape(false, 0, 5)});
 
@@ -244,8 +248,11 @@ test("le Détail : une rangée par monde, les Bonus à part, la légende — et 
   const rangees = detail.tous(n => aClasse(n, "detail-monde"));
   assert.deepEqual(rangees.map(r => r.children[0].textContent), ["Monde 1 · Petit SPLAT!", "Monde 2 · SPLAT! Classique",
     "Monde 3 · SPLAT! Enquête", "Monde 4 · SPLAT! Système", "Monde 5 · SPLAT! Équations", "Monde 6 · SPLAT! Relatifs",
-    "✨ Bonus du monde 3", "✨ Bonus du monde 4"]);
+    "✔ Échauffement du monde 6", "✨ Bonus du monde 3", "✨ Bonus du monde 4"]);
   const cases = r => Object.fromEntries(r.children.slice(1).map(c => [c.textContent, c.className]));
+  /* l'échauffement du monde 6 (lot 1, 14/10/2026) : trois pastilles à part, juste sous le monde 6 */
+  const ech = cases(rangees.splice(6, 1)[0]);
+  assert.deepEqual(ech, {E1: "et ech ok", E2: "et ech", E3: "et ech cours"});
   const m3 = cases(rangees[2]);
   assert.equal(Object.keys(m3).join(","), "10,11,12,13,14,15,16,17,18,19,20,21,22,23,24", "les numéros de la carte");
   assert.equal(m3["10"], "et ok", "réussie : vert");
@@ -259,7 +266,7 @@ test("le Détail : une rangée par monde, les Bonus à part, la légende — et 
   assert.equal(b3["12d"], "et bonus");
   assert.equal(Object.keys(cases(rangees[7])).join(","), "25d,26d,27d,28d");
   assert.deepEqual(detail.premier(n => aClasse(n, "legende-detail")).children.map(s => s.textContent),
-    ["réussie", "réussie avec des réponses vues", "en cours", "pas encore faite", "bonus"]);
+    ["réussie", "réussie avec des réponses vues", "en cours", "pas encore faite", "bonus", "échauffement"]);
   bouton.cliquer();
   assert.equal(bouton.textContent, "Détail ▾");
   assert.ok(!corps.children.some(tr => aClasse(tr, "detail")), "replié : la rangée part");
@@ -687,8 +694,8 @@ test("mondes fermés : le Détail garde tout le travail, les rangées des mondes
   const noms = rangees.map(r => r.premier(n => n.tag === "b").textContent);
   assert.deepEqual(noms, ["Monde 1 · Petit SPLAT!", "Monde 2 · SPLAT! Classique", "🔒 Monde 3 · SPLAT! Enquête",
     "🔒 Monde 4 · SPLAT! Système", "🔒 Monde 5 · SPLAT! Équations", "🔒 Monde 6 · SPLAT! Relatifs",
-    "🔒 ✨ Bonus du monde 3", "🔒 ✨ Bonus du monde 4"]);
-  assert.deepEqual(rangees.map(r => aClasse(r, "ferme")), [false, false, true, true, true, true, true, true]);
+    "🔒 ✔ Échauffement du monde 6", "🔒 ✨ Bonus du monde 3", "🔒 ✨ Bonus du monde 4"]);
+  assert.deepEqual(rangees.map(r => aClasse(r, "ferme")), [false, false, true, true, true, true, true, true, true]);
   const cases = rangees[2].tous(n => aClasse(n, "et"));
   assert.ok(aClasse(cases[1], "aide"), "l'étape 11 de Léa, réussie avec des réponses vues, reste visible");
   assert.ok(aClasse(cases[0], "ok"));

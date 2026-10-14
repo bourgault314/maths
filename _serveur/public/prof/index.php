@@ -207,6 +207,8 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
   .et.aide { border-color: #c2570c; background: #c2570c; color: #fff; }
   .et.cours { border: 2px dashed #0b67b2; background: #eaf2fb; color: #0b67b2; }
   .et.bonus.ok { border-color: #f9bf3b; background: #f9bf3b; color: #4a3600; }
+  /* L'échauffement du monde 6 (lot 1, 14/10/2026) : le violet clair de sa tache sur la carte. */
+  .et.ech.ok { border-color: #7b42b4; background: #dcc8f0; color: #4b2475; }
   .legende-detail { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px;
                     margin-top: 10px; color: var(--muted); font-size: .8rem; }
   .legende-detail span { display: inline-flex; align-items: center; gap: 6px; }
@@ -1546,8 +1548,10 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
     return dessin;
   }
 
-  // Les cases du Détail : une rangée par monde (numéros de la carte), puis une
-  // rangée de Bonus par monde qui en a, puis la légende.
+  // Les cases du Détail : une rangée par monde (numéros de la carte), suivie de
+  // celle de son échauffement s'il en a (le monde 6, lot 1 du 14/10/2026 : trois
+  // pastilles E1-E3 à part, comptées nulle part), puis une rangée de Bonus par
+  // monde qui en a, puis la légende.
   function ligneDetailSplat(eleve, colonnes) {
     const ligne = document.createElement("tr");
     ligne.className = "detail";
@@ -1556,7 +1560,8 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
     cellule.dataset.libelle = "";
     const etats = eleve.lu.etats || {};
     const ouverts = mondesOuverts();
-    const rangee = (titre, etapes, bonus) => {
+    // classe : "" (les étapes), "bonus" ou "ech" (l'échauffement)
+    const rangee = (titre, etapes, classe) => {
       if (!etapes.length) return;
       const div = document.createElement("div");
       // un monde fermé à la classe : sa rangée reste (le travail est là), plus pâle
@@ -1568,21 +1573,24 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
       div.append(nom);
       etapes.forEach(etape => {
         const caseEtape = document.createElement("span");
-        caseEtape.className = ["et", bonus ? "bonus" : "", CASES_ETAPE[etats[etape[0]]] || ""].filter(Boolean).join(" ");
+        caseEtape.className = ["et", classe, CASES_ETAPE[etats[etape[0]]] || ""].filter(Boolean).join(" ");
         caseEtape.textContent = String(etape[1]);
         div.append(caseEtape);
       });
       cellule.append(div);
     };
     // CARTE : [parcours, numéro sur la carte, titre (vide), monde, numéro du monde].
-    SPLAT.CARTE.MONDES.forEach(([numero, nom]) =>
-      rangee(`Monde ${numero} · ${nom}`, SPLAT.CARTE.ETAPES.filter(etape => etape[4] === numero), false));
+    const echauffement = SPLAT.CARTE.ECHAUFFEMENT || [];
+    SPLAT.CARTE.MONDES.forEach(([numero, nom]) => {
+      rangee(`Monde ${numero} · ${nom}`, SPLAT.CARTE.ETAPES.filter(etape => etape[4] === numero), "");
+      rangee(`✔ Échauffement du monde ${numero}`, echauffement.filter(etape => etape[4] === numero), "ech");
+    });
     SPLAT.CARTE.MONDES.forEach(([numero]) =>
-      rangee(`✨ Bonus du monde ${numero}`, SPLAT.CARTE.BONUS.filter(etape => etape[4] === numero), true));
+      rangee(`✨ Bonus du monde ${numero}`, SPLAT.CARTE.BONUS.filter(etape => etape[4] === numero), "bonus"));
     const legende = document.createElement("div");
     legende.className = "legende-detail";
     [["et ok", "réussie"], ["et aide", "réussie avec des réponses vues"], ["et cours", "en cours"],
-     ["et", "pas encore faite"], ["et bonus ok", "bonus"]].forEach(([classe, texte]) => {
+     ["et", "pas encore faite"], ["et bonus ok", "bonus"], ["et ech ok", "échauffement"]].forEach(([classe, texte]) => {
       const morceau = document.createElement("span");
       const pastille = document.createElement("i");
       pastille.className = classe;

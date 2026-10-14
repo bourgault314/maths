@@ -21,7 +21,7 @@ const moduleEtapes = lire("assets/js/splat-etapes.js");
 const univers = lire("outils/splat_univers.html");
 const livrets = lire("outils/livrets_splat.html");
 const URL_CARTE = "/outils/splat_univers.html";
-const VERSION = "20261014-1";   // les titres du livret 1 du Système (lot M4-6, 14/10/2026)
+const VERSION = "20261014-2";   // l'échauffement du monde 6, E1-E3 (lot 1, 14/10/2026)
 
 // ---------- le module, exécuté avec une fausse fenêtre ----------
 function stockage(initial = {}) {
