@@ -456,29 +456,25 @@
     .expert { padding: 14px 14px 14px; border: 2px solid #f0dc8c; border-radius: 22px; background: linear-gradient(180deg, #fffdf3, #fff); }
     .expert .eyebrow { margin: 0; color: #7a5a00; font-size: .74rem; letter-spacing: .06em; }
     .expert h2 { margin: 2px 0 12px; font-size: 1.35rem; line-height: 1.15; color: var(--ink); }
-    .escalier { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; align-items: end; margin: 0 0 12px; }
+    .escalier { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; align-items: center; margin: 0 0 12px; }
     /* Lot 2a : à 360 px et moins, les cinq marches (★★★★, « 1 min 45 »)
        poussaient le bloc hors de l'écran (395 px de large pour 360) — défaut
        d'avant la séance, relevé en contrôlant l'accueil des 9 tables. */
     @media (max-width: 380px) {
-      .marche .bloc { font-size: .8rem; }
-      .marche:nth-child(3) .bloc { font-size: .72rem; }
-      .marche:nth-child(4) .bloc { font-size: .6rem; }
-      .marche:nth-child(5) .bloc { font-size: 1.05rem; }
       .marche small { font-size: .64rem; }
       .matable.is-toutes .matable-head { flex-wrap: wrap; row-gap: 2px; }
       .matable.is-toutes .matable-droite { margin-left: auto; }
     }
     .marche { display: grid; justify-items: center; gap: 4px; }
-    .marche .bloc { width: 100%; border-radius: 10px 10px 4px 4px; display: grid; place-items: end center; padding-bottom: 6px; font-size: 1.05rem; letter-spacing: -.06em; border: 2px solid #dfe6ec; background: #f1f4f7; color: #b0bcc7; line-height: 1; }
-    .marche:nth-child(1) .bloc { height: 40px; } .marche:nth-child(2) .bloc { height: 52px; } .marche:nth-child(3) .bloc { height: 64px; } .marche:nth-child(4) .bloc { height: 76px; } .marche:nth-child(5) .bloc { height: 88px; font-size: 1.3rem; letter-spacing: 0; }
-    .marche.is-gagnee .bloc { background: linear-gradient(180deg, #ffe89a, #f2c230); border-color: #d9a300; color: #7a5a00; }
-    .marche.is-suivante .bloc { background: #fff; border-color: var(--blue); color: var(--blue); box-shadow: 0 0 0 3px rgba(7, 85, 184, .16); }
+    /* Lot « boules de cristal » (14/10/2026) : les cinq marches sont des
+       boules de même taille (bouleMarche), plus des blocs de plus en plus
+       hauts — la même boule que dans Mon parcours. */
+    .marche .boule { display: block; width: 100%; max-width: 52px; height: auto; aspect-ratio: 1; }
     /* R5 (A18) : la couronne est un dessin en currentColor, pas l'emoji 👑 —
        elle se grise donc dans une marche non gagnée, exactement comme ★. */
     .couronne { width: 1.2em; height: 1em; vertical-align: -.08em; fill: currentColor; }
     .marche small { font-size: .72rem; font-weight: 900; color: #5b7286; white-space: nowrap; }
-    .marche.is-gagnee small { color: #7a5a00; } .marche.is-suivante small { color: var(--blue); }
+    .marche.is-gagnee small { color: #7a5a00; } .marche.is-suivante small { color: #a65a00; }
     .expert .etape { min-height: 60px; }
     .expert .etape.is-next .num { font-size: 1.15rem; }
     .expert .etape.is-next strong { color: var(--blue); }
@@ -559,7 +555,6 @@
       .etape { min-height: 60px; }
       .etape strong { font-size: 1.12rem; }
       .escalier { gap: 8px; }
-      .marche:nth-child(1) .bloc { height: 48px; } .marche:nth-child(2) .bloc { height: 62px; } .marche:nth-child(3) .bloc { height: 76px; } .marche:nth-child(4) .bloc { height: 90px; } .marche:nth-child(5) .bloc { height: 104px; }
     }
     /* Audit 4 (01/10/2026) : sur ordinateur, un choix déplié (J'apprends,
        Je m'entraîne) prend la place des autres étapes et des liens du bas,
@@ -730,12 +725,11 @@
     .cell.is-check.is-done { color: #fff; border-color: var(--green); background: var(--green); }
     .cell.is-star { color: #c9d6df; font-size: 1.4rem; }
     .cell.is-star.is-done { color: #b7791f; border-color: #e7c86a; background: #fff8e1; }
-    /* Lot 3 : les cinq marches de l'escalier, avec leur durée dessous. */
-    .cell.is-star.n2 { font-size: 1.05rem; letter-spacing: -.08em; }
-    .cell.is-star.n3 { font-size: .85rem; letter-spacing: -.08em; }
-    .cell.is-star.n4 { font-size: .68rem; letter-spacing: -.1em; }
-    .cell.is-star.n5 { font-size: 1.25rem; }
-    .cell.is-star.is-fermee { color: #d3dce4; background: #f6f8fa; border-style: dashed; }
+    /* Lot 3 : les cinq marches de l'escalier, avec leur durée dessous. Lot
+       « boules de cristal » : la case d'une marche n'a plus de cadre, c'est
+       la boule (bouleMarche) qui dit gagnée, à tenter ou plus tard. */
+    #parcours-expert .marche-cell .cell.is-star { width: 52px; min-width: 0; height: 52px; min-height: 0; padding: 0; border: 0; border-radius: 50%; background: none; }
+    #parcours-expert .cell .boule { display: block; width: 100%; height: 100%; }
     .marche-cell { display: grid; justify-items: center; gap: 2px; }
     .marche-cell small { font-size: .7rem; font-weight: 900; color: var(--muted); white-space: nowrap; }
     .cell:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
@@ -8288,12 +8282,11 @@
         expert.marches.forEach(marche => {
           const item = document.createElement("div");
           item.className = `marche${marche.gagnee ? " is-gagnee" : ""}${marche.suivante ? " is-suivante" : ""}`;
-          const bloc = document.createElement("div");
-          bloc.className = "bloc";
-          bloc.append(symboleMarche(marche));
+          // Lot « boules de cristal » : la même boule que dans Mon parcours.
+          const boule = bouleMarche(marche, marche.gagnee ? "gagnee" : marche.suivante ? "suivante" : "plustard");
           const duree = document.createElement("small");
           duree.textContent = marche.libelleDuree;
-          item.append(bloc, duree);
+          item.append(boule, duree);
           item.setAttribute("aria-label", `${marche.symbole} en ${marche.libelleDuree} : ${marche.gagnee ? "gagnée" : marche.suivante ? "à tenter" : "plus tard"}`);
           escalier.append(item);
         });
@@ -9761,6 +9754,93 @@
         return svg;
       }
 
+      // Lot « boules de cristal » (décision de Gwenaël du 14/10/2026, planche
+      // 5) : dans Mon parcours et sur l'accueil, chaque marche de l'escalier
+      // est une boule. Ses étoiles ont toutes la même taille (avant, les cinq
+      // étoiles de la 4e marche étaient minuscules à côté de la 1re), rangées
+      // comme sur les Dragon Balls : 1 au centre · 2 en diagonale · 3 en
+      // triangle · 4 en carré · 5 en quinconce. La 5e boule tient lieu de
+      // couronne. Gagnée : orange, étoiles rouges ; à tenter : blanche cerclée
+      // d'orange ; plus tard : grise en pointillés. La fiche (papier) garde
+      // ses étoiles. Chaque boule porte son propre dégradé (un identifiant à
+      // elle) : un dégradé pris dans un écran caché ne se dessinerait pas.
+      const BOULE_ETOILES = Object.freeze({
+        1: [[0, 0]],
+        2: [[-.34, -.34], [.34, .34]],
+        3: [[0, -.4], [-.36, .26], [.36, .26]],
+        4: [[-.36, -.36], [.36, -.36], [-.36, .36], [.36, .36]],
+        5: [[0, 0], [-.42, -.42], [.42, -.42], [-.42, .42], [.42, .42]]
+      });
+      const BOULE_COULEURS = Object.freeze({
+        gagnee: {degrade: [["0", "#ffd27a"], [".55", "#f6a623"], ["1", "#e3780c"]], bord: "#c9701a", etoile: "#c62828"},
+        suivante: {degrade: [["0", "#ffffff"], ["1", "#fff2dd"]], bord: "#e8961e", etoile: "#e8961e"},
+        plustard: {degrade: null, fond: "#f1f4f7", bord: "#cfd8e0", etoile: "#c3ccd5"}
+      });
+      let bouleNumero = 0;
+      function cheminEtoile(cx, cy, rayon) {
+        let d = "";
+        for (let i = 0; i < 10; i++) {
+          const angle = -Math.PI / 2 + i * Math.PI / 5;
+          const r = i % 2 ? rayon * .46 : rayon;
+          d += `${i ? "L" : "M"}${(cx + r * Math.cos(angle)).toFixed(2)},${(cy + r * Math.sin(angle)).toFixed(2)}`;
+        }
+        return `${d}Z`;
+      }
+      function bouleMarche(marche, etat) {
+        const NS = "http://www.w3.org/2000/svg";
+        const couleurs = BOULE_COULEURS[etat];
+        const R = 22, C = 26;
+        const svg = document.createElementNS(NS, "svg");
+        svg.setAttribute("class", `boule is-${etat}`);
+        svg.setAttribute("viewBox", "0 0 52 52");
+        svg.setAttribute("aria-hidden", "true");
+        const fond = document.createElementNS(NS, "circle");
+        fond.setAttribute("cx", C);
+        fond.setAttribute("cy", C);
+        fond.setAttribute("r", R);
+        fond.setAttribute("stroke", couleurs.bord);
+        fond.setAttribute("stroke-width", "2");
+        if (couleurs.degrade) {
+          const id = `boule-${++bouleNumero}`;
+          const defs = document.createElementNS(NS, "defs");
+          const degrade = document.createElementNS(NS, "radialGradient");
+          degrade.setAttribute("id", id);
+          degrade.setAttribute("cx", "38%");
+          degrade.setAttribute("cy", "32%");
+          degrade.setAttribute("r", "70%");
+          couleurs.degrade.forEach(([offset, couleur]) => {
+            const arret = document.createElementNS(NS, "stop");
+            arret.setAttribute("offset", offset);
+            arret.setAttribute("stop-color", couleur);
+            degrade.append(arret);
+          });
+          defs.append(degrade);
+          svg.append(defs);
+          fond.setAttribute("fill", `url(#${id})`);
+        } else {
+          fond.setAttribute("fill", couleurs.fond);
+          fond.setAttribute("stroke-dasharray", "4 3");
+        }
+        svg.append(fond);
+        // Le reflet d'une boule gagnée, en haut contre le bord : plus bas, il
+        // passait sous l'étoile du haut (3 étoiles) ou du coin (4 et 5).
+        if (etat === "gagnee") {
+          const reflet = document.createElementNS(NS, "ellipse");
+          reflet.setAttribute("cx", "20");
+          reflet.setAttribute("cy", "8.6");
+          reflet.setAttribute("rx", "6.5");
+          reflet.setAttribute("ry", "2.3");
+          reflet.setAttribute("fill", "#fff");
+          reflet.setAttribute("opacity", ".45");
+          svg.append(reflet);
+        }
+        const etoiles = document.createElementNS(NS, "path");
+        etoiles.setAttribute("d", BOULE_ETOILES[marche.etoile].map(([x, y]) => cheminEtoile(C + x * R, C + y * R, R * .27)).join(""));
+        etoiles.setAttribute("fill", couleurs.etoile);
+        svg.append(etoiles);
+        return svg;
+      }
+
       function makeCell({kind, etat, label, config, extraClass = "", texte = null, action = null}) {
         const cell = document.createElement("button");
         cell.type = "button";
@@ -9871,7 +9951,10 @@
         const expertBadge = document.createElement("span");
         const couronne = etat.expert.niveau === PARCOURS.ETOILES_MAX;
         expertBadge.className = `parcours-badge${couronne ? "" : " is-pending"}`;
-        expertBadge.textContent = couronne ? "👑 Légende des tables" : etat.expert.niveau ? PARCOURS.symboleEtoile(etat.expert.niveau) : expertOuvert ? "" : expertAttend;
+        // Lot « boules de cristal » : plus de badge de niveau (★★) au-dessus
+        // des boules, qui le disent déjà ; restent « 👑 Légende des tables »
+        // et, avant les 9 tables, « après mes 9 tables ».
+        expertBadge.textContent = couronne ? "👑 Légende des tables" : expertOuvert ? "" : expertAttend;
         expertHead.append(expertTitle, expertBadge);
         const stars = document.createElement("div");
         stars.className = "parcours-extra-cells";
@@ -9892,7 +9975,7 @@
             label: `${marche.symbole} : toutes les tables, produits, trous et divisions, 25 questions en ${marche.libelleDuree}${suite}`,
             config: jouable ? marche.config : null,
             extraClass: `n${marche.etoile}${!expertOuvert || (!jouable && !marche.gagnee) ? " is-fermee" : ""}`,
-            texte: symboleMarche(marche),
+            texte: bouleMarche(marche, marche.gagnee ? "gagnee" : jouable ? "suivante" : "plustard"),
             action: jouable ? null : () => {}
           }));
           const duree = document.createElement("small");

@@ -524,7 +524,10 @@ test("le parcours : « Mon mélange » en bouton (triangle dessiné) jusqu’aux
   assert.match(html, /const expertAttend = "après mes 9 tables";/, "lot « Mes calculs du jour d'abord » : l'escalier n'attend plus Mes calculs du jour");
   assert.doesNotMatch(html, /après le mélange des 9 tables/);
   assert.doesNotMatch(html, /\.cell\.is-lock|\.etape\.verrou|est-montree/, "lot « retours de classe » : le CSS du cadenas, qui ne servait plus, est retiré");
-  assert.match(html, /\.cell\.is-star\.n4 \{/);
+  // Lot « boules de cristal » (14/10/2026) : les étoiles ne rapetissent plus
+  // d'une marche à l'autre (n2 à n5) ; chaque marche est une boule.
+  assert.doesNotMatch(html, /\.cell\.is-star\.n4 \{/);
+  assert.match(html, /#parcours-expert \.marche-cell \.cell\.is-star \{ width: 52px;/);
 });
 
 test("le résultat et les fêtes : 🎉 table passée et mélange, 🌟 étoile, un écran de rang, 👑 au sommet — sobres, sans son ; un mélange jamais exigé", () => {
