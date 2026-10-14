@@ -1,9 +1,10 @@
 # Livrets du Système — « SPLAT! Système » et son « Deuxième tour » (monde 4), format « tablette »
 
 Le monde 4 de l'univers SPLAT! en deux livrets de 12 pages (lot M4-4, 04/10/2026, décisions de
-Gwenaël sur planches) : **un livret pour tous**, quatre fiches (25 à 28), une idée par fiche ; puis
-**le deuxième tour**, plus dur (25d à 28d) — le Bonus du monde 4 sur la carte des mondes, comme au
-monde 3. Les fiches 29 à 34 restent libres ; SPLAT! Équations garde 35.
+Gwenaël sur planches) : **un livret pour tous**, quatre fiches (25 à 28), une idée par fiche — refait
+au lot M4-6 (14/10/2026) d'après la conception des deux livrets du monde 4 ; puis **le deuxième
+tour**, plus dur (25d à 28d) — le Bonus du monde 4 sur la carte des mondes, comme au monde 3 (à
+refaire au lot M4-7). Les fiches 29 à 34 restent libres ; SPLAT! Équations garde 35.
 
 ## Le format « tablette »
 
@@ -18,7 +19,7 @@ le pli : on tourne les pages vers le haut.
 | 2 | **Un exemple résolu — « Le système pas à pas »** : la carte et toute sa correction en barres (les blocs de l'outil) |
 | 3 | **« À toi ! » — « La même sorte de carte »** : le même schéma, vide (pointillés), à compléter ; rempli dans les corrigés |
 | 4-5, 6-7, 8-9, 10-11 | **Les quatre fiches** : une fiche = 4 cartes sur la double page (2 cartes par page, l'impression 2 par page de l'outil) |
-| 12 | Le dos : « Encore des cartes ! » (trois séries), « La suite du voyage », **« Le défi ! »** (deux cartes plus dures, corrigées au dos des corrigés), crédits et logos |
+| 12 | Le dos : « Encore des cartes ! » (trois séries), « La suite du voyage », **« Le défi ! »** (deux cartes plus dures, corrigées au dos des corrigés ; livret 1 : avec le QR « D'autres défis en ligne »), crédits et logos |
 
 Imposition (haut, bas) de chaque face, de la feuille du dehors à celle du milieu :
 `(12, 1) (2, 11) (10, 3) (4, 9) (8, 5) (6, 7)`. Vérifiée par une simulation du pliage et pixel par
@@ -28,7 +29,7 @@ pixel contre le PDF page par page (notice du lot M4-4).
 
 | Livret | Fiches | PDF |
 |---|---|---|
-| `systeme` — **SPLAT! Système** | 25 Je retire · 26 Trois couleurs · 27 Je double · 28 J'additionne | `outils/livret_splat_systeme.pdf` · `…_a_plier.pdf` |
+| `systeme` — **SPLAT! Système** | 25 Je retire · 26 Je remplace · 27 J'additionne · 28 À toi de choisir | `outils/livret_splat_systeme.pdf` · `…_a_plier.pdf` |
 | `tour2` — **SPLAT! Système, deuxième tour** | 25d L'escalier · 26d Je triple · 27d Avec des jetons visibles · 28d Dans le désordre | `outils/livret_splat_systeme_tour2.pdf` · `…_a_plier.pdf` |
 | + deux corrigés chacun (pour tous) | les mêmes cartes | **avec les taches** : `…_correction.pdf` · `…_correction_a_plier.pdf` ; **en lettres** : `…_correction_lettre.pdf` · `…_correction_lettre_a_plier.pdf` |
 
@@ -37,7 +38,7 @@ dans le bandeau de chaque fiche (un collègue qui imprime une seule fiche n'a pa
 **à plier** n'a aucun logo sur ses fiches. Couverture et pages 2-3 : aucun logo. Au dos : IREMI +
 maths&go, puis l'Unité apprenante Michel Debré.
 
-## Les fiches : réglages et graines triées (lot M4-4)
+## Les fiches : réglages et graines triées (lots M4-4 et M4-6)
 
 `S25` … `S28D` (dans `render.py`) sont **aussi** les adresses de la carte des mondes (`SYS_FICHES`,
 `SYS_TOUR2`) et de la page courte des QR ; `tests/livret-splat-systeme.test.mjs` et
@@ -45,12 +46,12 @@ maths&go, puis l'Unité apprenante Michel Debré.
 carte ait son type, dans l'ordre de la fiche (`TYPES`, vérifié au rendu : `render.py` s'arrête si
 une graine a bougé) :
 
-| Fiche | Types (classification du monde 4) |
+| Fiche | Types (classification du monde 4, `sysTypeCarte`) |
 |---|---|
-| 25 Je retire | 1a partie connue · 1b une tache de plus · 1c je partage · 1c |
-| 26 Trois couleurs | 1d ×4 |
-| 27 Je double (`sens=MIX`, réglage ajouté au lot) | 2a ×3 · 2d le petit recopié dépasse |
-| 28 J'additionne | 3a en miroir ×3 · 3b trois paires |
+| 25 Je retire | 1b une tache de plus · 1a partie connue · 1c je partage · 2a le petit plateau tient deux fois |
+| 26 Je remplace (`sens=INDICE`) | 1d trois couleurs · 1e l'escalier · 1d · 2d le double dépasse |
+| 27 J'additionne (`forme=MIX`) | 3a miroir 1-2 · 3b trois paires · 3a miroir 2-3 · 3a+ miroir 1-3 |
+| 28 À toi de choisir | 1c · 3a+ (même premier plateau 1 + 3) · 2d · 3a (même premier plateau 2 + 3) : deux cartes qui se ressemblent par page, pas le même geste (`JUMELLES`, vérifié au rendu) |
 | 25d L'escalier | 1e ×4 |
 | 26d Je triple | 2b ×4 |
 | 27d Avec des jetons visibles | 1a · 1d · 2a · 3a, avec des jetons |
@@ -83,15 +84,16 @@ plus petite valeur ≥ 3, aucune carte en double sur les deux livrets, les exemp
 
 `https://mathsgo.re/splat/systeme/livret/?f=25` … `?f=28` et `?f=25d` … `?f=28d` ouvrent la série en
 ligne de la fiche (les mêmes cartes ; l'étoile `sys25`… ou la tache dorée `sys25d`…) ; `?s=7` …
-`?s=12` ouvrent une série du dos (sans graine, `&cards=4&unknown=question&eleve=1` — huit cartes jusqu'au 08/10/2026). Les séries 1 à 6
+`?s=13` ouvrent une série du dos (sans graine, `&cards=4&unknown=question&eleve=1` — huit cartes jusqu'au 08/10/2026). Les séries 1 à 6
 des livrets du 25/09 (jamais distribués) restent servies. Le QR est imprimé **une fois par fiche**, en
 haut de sa première page.
 
 | Série | Livret | Réglages |
 |---|---|---|
-| 7 Je retire | 1 | partie connue, une tache de plus, trois couleurs |
-| 8 Je double, j'additionne | 1 | doubler (les deux sens), miroir, trois paires |
-| 9 Tout mélangé | 1 | les six gestes |
+| 7 Je retire | 1 | comme la fiche 25 : partie connue, une tache de plus, je partage, le petit tient deux fois |
+| 8 Je remplace, j'additionne | 1 | comme les fiches 26 et 27 : trois couleurs, l'escalier, le double dépasse, miroirs, trois paires |
+| 9 Tout mélangé | 1 | tous les gestes du livret 1 |
+| 13 Le défi (QR du dos) | 1 | je recopie un plateau, 2 ou 3 fois (`geste=RECOPIE&fois=MIX`) |
 | 10 L'escalier | 2 | l'escalier |
 | 11 Je triple | 2 | doubler, 3 fois |
 | 12 Le grand défi | 2 | tous les gestes, escalier compris, des jetons, le désordre |
@@ -112,7 +114,10 @@ python3 render.py --page3-suite   # (non retenu) l'exemple résolu sur les pages
 Dépendances : `playwright` **1.56.0** (+ chromium), `pikepdf`, `qrcode[pil]` ; `qpdf` et `pdftoppm`
 s'ils sont présents. Le rendu utilise le **vrai Chromium** (`channel="chromium"`), jamais le
 « headless shell ». **Ne pas régénérer ces PDF sur un poste Windows** (Segoe UI au lieu de DejaVu Sans
-dans les fiches).
+dans les fiches). Sous Linux aussi, vérifier d'abord que `fc-match system-ui` répond **DejaVu Sans** :
+une machine où une autre police (Inter…) passe devant change toutes les largeurs de texte des fiches
+(lot M4-6 : un `fonts.conf` qui écarte cette police, passé par `FONTCONFIG_FILE`, rend les PDF de
+main au pixel près).
 
 ## Conventions
 

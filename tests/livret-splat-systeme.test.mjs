@@ -49,10 +49,11 @@ vm.runInContext(univers.slice(univers.indexOf("const PS="), univers.indexOf("con
 const { SYS_FICHES, SYS_TOUR2 } = JSON.parse(JSON.stringify(ctx.X));
 
 const LIVRETS = [
+  // livret 1 refait au lot M4-6 (14/10/2026) : vignette ?v=5 ; le deuxième tour attend le lot M4-7
   { nom: "systeme", sortie: "livret_splat_systeme", codes: ["25", "26", "27", "28"],
-    titres: ["Je retire", "Trois couleurs", "Je double", "J'additionne"], sur: "MON LIVRET · MONDE 4" },
+    titres: ["Je retire", "Je remplace", "J'additionne", "À toi de choisir"], sur: "MON LIVRET · MONDE 4", v: 5 },
   { nom: "tour2", sortie: "livret_splat_systeme_tour2", codes: ["25d", "26d", "27d", "28d"],
-    titres: ["L'escalier", "Je triple", "Avec des jetons visibles", "Dans le désordre"], sur: "MON LIVRET · MONDE 4 · DEUXIÈME TOUR" },
+    titres: ["L'escalier", "Je triple", "Avec des jetons visibles", "Dans le désordre"], sur: "MON LIVRET · MONDE 4 · DEUXIÈME TOUR", v: 4 },
 ];
 const VERSIONS = ["", "_correction", "_correction_lettre"];
 
@@ -67,10 +68,18 @@ test("Système : les huit fiches de render.py sont exactement celles de la carte
   const fiches = [...render.matchAll(/fiche\("(\d+d?)", "([^"]+)", (S\d\dD?), "[^"]+"\)/g)].map((m) => [m[1], m[2], m[3]]);
   assert.deepEqual(fiches, [...LIVRETS[0].codes, ...LIVRETS[1].codes].map((c, i) => [c, [...LIVRETS[0].titres, ...LIVRETS[1].titres][i], "S" + c.toUpperCase()]));
   // le type de chaque carte, vérifié au rendu (render.py s'arrête si une graine a bougé)
-  assert.match(render, /"25": \["1a", "1b", "1c", "1c"\], "26": \["1d"\] \* 4, "27": \["2a", "2a", "2a", "2d"\], "28": \["3a", "3a", "3a", "3b"\],/);
+  assert.match(render, /"25": \["1b", "1a", "1c", "2a"\], "26": \["1d", "1e", "1d", "2d"\], "27": \["3a", "3b", "3a", "3a\+"\], "28": \["1c", "3a\+", "2d", "3a"\],/);
   assert.match(render, /"25d": \["1e"\] \* 4, "26d": \["2b"\] \* 4, "27d": \["1a", "1d", "2a", "3a"\], "28d": \["1b", "1d", "2c", "3b"\],/);
-  // le réglage « sens=MIX » de la fiche 27 (lot M4-4) : chaque carte tire son sens
-  assert.match(S[2], /&geste=DOUBLE&sens=MIX&/);
+  // les réglages du livret 1 (lot M4-6) : 25 trois gestes ; 26 « le double dépasse » (sens=INDICE) ;
+  // 27 les trois miroirs (forme=MIX) ; 28 sans désordre ni jeton, deux cartes jumelles par page
+  assert.match(S[0], /&geste=MIX&gestes=PARTIELLE,COEF,DOUBLE&/);
+  assert.match(S[1], /&gestes=EMBOITE1,ESCALIER,DOUBLE&sens=INDICE&/);
+  assert.match(S[2], /&gestes=MIROIR,TROIS&forme=MIX&/);
+  assert.match(S[3], /&gestes=COEF,MIROIR,DOUBLE&forme=MIX&sens=INDICE&visibleMin=0&visibleMax=0&/);
+  for (const q of S) assert.doesNotMatch(q, /ordre=MELANGE/);
+  assert.match(render, /^JUMELLES = \{"28": \[\(0, 1\), \(2, 3\)\]\}$/m);
+  assert.match(render, /^DESORDRE = \{"28d"\}$/m);
+  assert.match(render, /if etat\["premiers"\]\[a\] != etat\["premiers"\]\[b\]:/);
   // les deux livrets et leurs couvertures
   assert.match(render, /"systeme": dict\(\s*sortie="livret_splat_systeme",\s*fiches=FICHES_1,/);
   assert.match(render, /"tour2": dict\(\s*sortie="livret_splat_systeme_tour2",\s*fiches=FICHES_2,/);
@@ -107,7 +116,7 @@ test("Système : les cartes rendues (cartes.json) — 16 par livret, aucune en d
   for (const k of toutes) for (const p of k[2]) assert.notEqual(p[1], 69);
 });
 
-test("Système : QR des fiches ?f=25…28, 25d…28d et des séries ?s=7…12 par la page courte /splat/systeme/livret/", () => {
+test("Système : QR des fiches ?f=25…28, 25d…28d et des séries ?s=7…13 par la page courte /splat/systeme/livret/", () => {
   assert.equal(py("COURTE"), "/splat/systeme/livret/");
   assert.match(render, /return f"\{SITE\}\{COURTE\}\?f=\{code\}"/);
   assert.match(render, /return f"\{SITE\}\{COURTE\}\?s=\{s\}"/);
@@ -117,7 +126,11 @@ test("Système : QR des fiches ?f=25…28, 25d…28d et des séries ?s=7…12 pa
   for (const s of [1, 2, 3, 4, 5, 6]) assert.ok(!existe(`${SRC}qr/serie-${s}.png`), `qr/serie-${s}.png`);
   const SERIES = Object.fromEntries([...render.matchAll(/^    (\d+): (.+),$/gm)]
     .map((m) => [m[1], m[2].split(" + ").map((x) => (x === "T" ? T : x === "V0" ? V0 : JSON.parse(x))).join("")]));
-  assert.deepEqual(Object.keys(SERIES), ["7", "8", "9", "10", "11", "12"]);
+  assert.deepEqual(Object.keys(SERIES), ["7", "8", "9", "10", "11", "12", "13"]);
+  // la série 13 : le défi du livret 1 (lot M4-6), les deux cartes du défi sont ses deux premières
+  assert.equal(SERIES["13"], "mode=D&geste=RECOPIE&fois=MIX" + V0 + T);
+  assert.match(render, /^DEFI_1 = \[dict\(q=SERIES\[13\] \+ "&seed=3", n=2, types=\["3c·2", "3c·3"\]\)\]$/m);
+  assert.match(render, /defi_qr=13\),/);
   for (const [s, q] of Object.entries(SERIES)) {
     assert.ok(existe(`${SRC}qr/serie-${s}.png`), `qr/serie-${s}.png`);
     const r = new URLSearchParams(q);
@@ -142,7 +155,7 @@ test("Système : QR des fiches ?f=25…28, 25d…28d et des séries ?s=7…12 pa
   }
   SYS_FICHES.forEach((f, i) => assert.equal(cible(`?f=${25 + i}`), `/splat/classique/?${f.q}&cards=4&unknown=question&eleve=1&parcours=sys${25 + i}`));
   SYS_TOUR2.forEach((f) => assert.equal(cible(`?f=${f.code}`), `/splat/classique/?${f.q}&cards=4&unknown=question&eleve=1&parcours=sys${f.code}`));
-  for (const x of ["?s=0", "?s=13", "?s=x", "?f=29", "?f=24d", "?f=", ""]) assert.equal(cible(x), "/outils/splat_univers.html#monde-4", x);
+  for (const x of ["?s=0", "?s=14", "?s=x", "?f=29", "?f=24d", "?f=", ""]) assert.equal(cible(x), "/outils/splat_univers.html#monde-4", x);
 });
 
 // ------------------------------------------------------------------- les PDF publiés
@@ -253,6 +266,9 @@ test("Système : dans les PDF — la couverture, l'exemple puis « À toi ! », 
     assert.match(t[11], /Et après/);
     assert.match(t[11], v ? /LE DÉFI ! — CORRIGÉ/ : /ENCORE DES CARTES/);
     if (!v) assert.match(t[11], /LE DÉFI !/);
+    // le QR du défi (lot M4-6) : au dos du livret 1 de l'élève seulement
+    if (L.nom === "systeme" && !v) assert.match(t[11], souple("autres défis en ligne"), `${f} : QR du défi`);
+    else assert.doesNotMatch(t[11], /autres défis/, `${f} : pas de QR du défi`);
     if (v) {
       assert.match(t[0], /Livret corrigé/);
       assert.match(t[0], v.endsWith("lettre") ? /en lettres/ : /avec les taches/);
@@ -282,6 +298,13 @@ test("Système : le système écrit à côté des barres des corrigés — en mo
   // le corrigé en lettres : l'inconnue en lettre, mêmes cartes (render.py s'arrête sinon)
   assert.match(render, /dict\(suffixe="_correction_lettre", lettre=True, dit="en lettres"\)/);
   assert.match(render, /return q\.replace\("unknown=question", "unknown=letter"\) if lettre else q/);
+});
+
+test("Système : le QR du défi au dos (lot M4-6) — une série du même type, retiré s'il n'y en a pas et dans les corrigés", () => {
+  assert.match(dos, /<div class="d-qr"><div class="lib">D'autres défis<em>en ligne<\/em><\/div><img src="" alt=""><\/div>/);
+  assert.match(render, /if \(d\.defiQr && !d\.corr\) dq\.querySelector\('img'\)\.setAttribute\('src', d\.defiQr\); else dq\.remove\(\);/);
+  assert.match(render, /defiQr=f"\{qrweb\}\/serie-\{d\['defi_qr'\]\}\.png" if d\.get\("defi_qr"\) else None/);
+  assert.ok(existe(`${SRC}qr/serie-13.png`));
 });
 
 // ------------------------------------------------------------ les règles des documents du collège
@@ -350,7 +373,7 @@ test("page des livrets : l'onglet du monde 4 — le livret et son deuxième tour
     assert.ok(taille(webp) < taille(png), `${nom} : la WebP est plus légère`);
     const b = readFileSync(new URL(`../${png}`, import.meta.url));
     assert.deepEqual([b.readUInt32BE(16), b.readUInt32BE(20)], [1404, 993], `${nom} : page 1 en largeur, rendue à 120 dpi`);
-    assert.ok(d.includes(`/assets/img/thumbnails/splat/${nom}.png?v=4"`), `${nom} : sur la page (?v=4 : couvertures du 08/10/2026, le nom des taches en noir pur)`);
+    assert.ok(d.includes(`/assets/img/thumbnails/splat/${nom}.png?v=${L.v}"`), `${nom} : sur la page (?v=4 : couvertures du 08/10/2026, le nom des taches en noir pur ; ?v=5 : le livret 1 du lot M4-6)`);
   });
   assert.match(page, /\[data-m="4"\]\{--c:#92400e;/);
   assert.match(page, /\.liv \.couv\.paysage\{max-width:280px\}/);

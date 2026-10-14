@@ -76,9 +76,9 @@ test("splat-etapes.js est la copie exacte de la carte des mondes (parcours, num�
 // comme avant les mondes en préparation. Sans la clé : tests/splat-mondes-en-preparation.test.mjs.
 test("le bouton dit où il mène : même monde, nouveau monde, dernière étape, parcours inconnu (avec la clé)", () => {
   const b = (p) => ETAPES_JS.bouton(p, URL_CARTE, true);
-  /* lot M4-4 (04/10/2026) : le monde 4 a quatre fiches, 25 à 28 */
+  /* lot M4-4 (04/10/2026) : le monde 4 a quatre fiches, 25 à 28 (titres du lot M4-6) */
   assert.deepEqual(b("sys27"), {
-    html: "\u00c9tape suivante \u25b6<span class=\"finSuiteOu\">\u00c9tape\u00a028\u00a0\u00b7 J'additionne</span>",
+    html: "\u00c9tape suivante \u25b6<span class=\"finSuiteOu\">\u00c9tape\u00a028\u00a0\u00b7 \u00c0 toi de choisir</span>",
     href: "/outils/splat_univers.html?apres=sys27", versCarte: false });
   assert.equal(ETAPES_JS.sousTitre("m1e1", true), "\u00c9tape\u00a02\u00a0\u00b7 Dessine les jetons");
   // changement de monde : le nom du monde, sans coupure au milieu
@@ -263,7 +263,7 @@ test("les trois outils chargent splat-etapes.js (sans defer, même version)", ()
   for (const [page, nom] of [[splat, "splat.html"], [petit, "splat_tache_barre.html"], [equa, "equasplat.html"]]) {
     const m = page.match(/<script src="\.\.\/assets\/js\/splat-etapes\.js\?v=([\w-]+)"><\/script>/);
     assert.ok(m, `${nom} ne charge pas splat-etapes.js`);
-    assert.equal(m[1], "20261008-5", `${nom} : ?v= de splat-etapes.js`);
+    assert.equal(m[1], "20261014-1", `${nom} : ?v= de splat-etapes.js`);
     // dans <head>, avant tout script de la page
     assert.ok(page.indexOf(m[0]) < page.indexOf("</head>"), `${nom} : le script doit être dans <head>`);
     // la petite ligne a son style

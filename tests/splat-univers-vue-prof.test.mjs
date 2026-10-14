@@ -122,7 +122,7 @@ test("la phrase écrite pour l'élève est retirée ; l'intention et la note du 
   /* monde 4 : le tableau de tous les systèmes du collège passe dans un « Repère » replié */
   const i4 = ctx.intentionHtml(3);
   assert.match(i4, /^<p class="txt">[^<]*(?:<b>[^<]*<\/b>[^<]*)*<\/p><details><summary>Repère : tous les systèmes du collège, et où ils sont dans SPLAT!<\/summary><table>/);
-  assert.equal((i4.match(/<tr>/g) || []).length, 11);
+  assert.equal((i4.match(/<tr>/g) || []).length, 10);   // lot M4-6 : neuf lignes (le Bonus au lot M4-7)
   assert.doesNotMatch(i4, /et où ils sont\s*:<\/p>/, "la phrase d'annonce du tableau est remplacée par le Repère");
   assert.ok(!ctx.intentionHtml(0).includes("<details>"));
 });
