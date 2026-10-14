@@ -509,6 +509,12 @@ body.prof .volet p{font-size:14.5px}
   .seg{font-size:13.5px}
   .seg>span{flex:0 0 auto;padding:0 8px}
   .seg>a{flex:1 1 0;justify-content:center;padding:0 6px}
+  /* trois choix (« Corrigé · taches | lettres | équations », lot M4-8) : le nom au-dessus, les
+     trois choix dessous, sinon le dernier sort du bouton */
+  .seg:has(>a:nth-of-type(3)){flex-wrap:wrap}
+  .seg:has(>a:nth-of-type(3))>span{flex:1 1 100%;justify-content:center;min-height:34px;border-bottom:1px solid #cdd7e3}
+  .seg:has(>a:nth-of-type(3))>a{min-height:38px}
+  .seg:has(>a:nth-of-type(3))>a:first-of-type{border-left:0}
   body.prof .volet .rang{order:0}
 }
 /* couleur de chaque monde, pour les boutons et les intertitres */
@@ -980,6 +986,8 @@ ENQ_TOUR2.forEach(f=>{
 });
 SYS_TOUR2.forEach(f=>{
   f.j=ficheJeu(f.q,"sys",f.code); f.f=ficheImprimer(f,f.code,"statement",2)+"&systeme=1"; f.c=ficheImprimer(f,f.code,"correction",2); f.cl=enLettres(f.c);
+  /* lot M4-8 : le corrigé en équations, comme le 3e corrigé du livret 2 (cycle 4 seulement) */
+  f.ce=f.cl+"&corrige=equations";
   f.jp=EQ+f.q+ENQ_COMMUN;
 });
 /* Les Bonus (monde 3 : 04/10/2026 ; monde 4 : lot M4-4) : par monde, ses fiches, leurs livrets,
@@ -1248,7 +1256,8 @@ function actionsHtml(e,m,cid){
   else if(m.actif) a.push(btnPlein(e.j,'jeu','Jeu de l’élève'));
   if(e.f&&e.fe) a.push(btnSeg('fiche','Fiche',[['tableau',e.f],['équation',e.fe]]));
   else if(e.f) a.push(btnTrait(e.f,'fiche','Fiche','Ouvre l’outil prêt à imprimer la fiche'));
-  if(e.c&&e.cl) a.push(btnSeg('corrige','Corrigé',[['taches',e.c],['lettres',e.cl]]));
+  if(e.c&&e.cl&&e.ce) a.push(btnSeg('corrige','Corrigé',[['taches',e.c],['lettres',e.cl],['équations',e.ce]]));
+  else if(e.c&&e.cl) a.push(btnSeg('corrige','Corrigé',[['taches',e.c],['lettres',e.cl]]));
   else if(e.c&&e.c2) a.push(btnSeg('corrige','Corrigé',[['4 par page',e.c],['2 par page',e.c2]]));
   else if(e.c) a.push(btnTrait(e.c,'corrige','Corrigé','Ouvre l’outil prêt à imprimer la correction'));
   return '<div class="pAct">'+a.join('')+btnCartes+'</div>';
