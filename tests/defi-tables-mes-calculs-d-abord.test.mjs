@@ -133,13 +133,21 @@ test("à la fin de Mes calculs du jour (hors séance, avant le test) : la journ�
   let compteur = 0;
   const appels = [];
   const state = {apresMesCalculs: {config: P.configValidation(4), origin: "menu", nom: "Je passe le test"}};
-  const rendre = new Function("$", "document", "state", "effacerSuiteSeance", "launchFromParcours", `${source("renderSuiteMesCalculs")}\n${source("renderBoutonSuite")}\nreturn renderSuiteMesCalculs;`)(
-    element, {createElement: () => element(`nouveau-${compteur += 1}`)}, state, () => appels.push("effacer"), (config, origin) => appels.push(["lancer", config.mode, origin]));
+  const rendre = new Function("$", "document", "state", "effacerSuiteSeance", "launchFromParcours", "sortieDeSerie", "quitterSerie", `${source("renderSuiteMesCalculs")}\n${source("renderBoutonSuite")}\nreturn renderSuiteMesCalculs;`)(
+    element, {createElement: () => element(`nouveau-${compteur += 1}`)}, state, () => appels.push("effacer"), (config, origin) => appels.push(["lancer", config.mode, origin]),
+    () => ({mot: "Ma table"}), () => appels.push("quitter"));
   rendre();
   const zone = element("seance-suite");
   assert.equal(zone.hidden, false);
-  assert.equal(zone.children.length, 1, "UN seul bouton (pas de « Arrêter la séance », pas de « Ma table »)");
-  const bouton = zone.children[0];
+  // Lot « la flèche de retour » (14/10/2026, choix de Gwenaël) : UN bouton bleu,
+  // puis un lien « Ma table » dessous — cet écran n'avait aucun retour.
+  assert.equal(zone.children.length, 1, "une rangée de deux boutons");
+  const ligne = zone.children[0];
+  assert.equal(ligne.className, "suite-boutons");
+  assert.equal(ligne.children.length, 2, "« ← Ma table » à gauche, la suite à droite");
+  assert.equal(ligne.children[0].className, "secondary retour-flechee");
+  assert.equal(ligne.children[0].textContent, "Ma table");
+  const bouton = ligne.children[1];
   assert.equal(bouton.textContent, "Je passe le test →", "la flèche ne part pas seule à la ligne");
   assert.equal(bouton.className, "primary");
   assert.equal(bouton.id, "apres-mes-calculs");

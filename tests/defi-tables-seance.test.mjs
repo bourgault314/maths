@@ -509,7 +509,9 @@ test("la page : la séance est l'accueil de tous — la clé ?seance=1 est retir
   // Entre deux étapes : UN bouton, « Arrêter la séance », pas de « Rejouer ».
   assert.match(html, /\.result\.en-seance \.result-actions,\s*\.result\.en-seance #result-parcours,\s*\.result\.en-seance #result-message,\s*\.result\.en-seance #result-previous,\s*\.result\.en-seance \.result-config \{ display: none !important; \}/);
   assert.match(html, /suite\.textContent = `Étape \$\{seance\.faites\.length \+ 1\}\\u00a0: \$\{prochaine\.nom\}\\u00a0→`;/, "lot « divisions » : la flèche reste avec son nom");
-  assert.match(html, /arreter\.textContent = "Arrêter la séance";\s*arreter\.addEventListener\("click", backToModes\);/);
+  // Lot « la flèche de retour » (14/10/2026, choix de Gwenaël) : « Arrêter la
+  // séance » devient « ← Ma table », à gauche du bouton de l'étape suivante.
+  assert.match(html, /arreter\.className = "secondary retour-flechee";\s*arreter\.id = "seance-arreter";\s*arreter\.textContent = "Ma table";\s*arreter\.addEventListener\("click", backToModes\);\s*const ligne = document\.createElement\("div"\);\s*ligne\.className = "suite-boutons";\s*ligne\.append\(arreter, suite\);\s*zone\.append\(ligne\);/);
   assert.match(html, /\$\("result-title"\)\.textContent = "Séance du jour faite";/);
   assert.match(html, /encore\.textContent = "Encore une séance";/);
   // La rangée : une case vide reste sans nombre. Lot « Mon parcours » (décision

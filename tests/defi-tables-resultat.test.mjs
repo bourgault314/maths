@@ -81,7 +81,7 @@ test("les corrections : les erreurs seules, les réponses justes repliées, jama
   // réponse à barrer — « Pas de réponse » reste lisible, sans trait.
   assert.match(html, /passe: Boolean\(response\.skipped\),/);
   assert.match(html, /if \(entry\.passe\) \{\s*given\.classList\.add\("is-passe"\);\s*given\.setAttribute\("aria-label", "Pas de réponse"\);/);
-  assert.match(html, /\.given-answer\.is-passe \{ text-decoration: none; \}/);
+  assert.match(html, /\.given-answer\.is-passe \{ padding: 0; background: none; \}/, "« Pas de réponse » n'est pas barré (trait en biais, lot « la flèche de retour »)");
 });
 
 test("téléphone : le bouton principal sur toute la largeur, Rejouer devant sur un échec, rien ne bouge dans le HTML", () => {

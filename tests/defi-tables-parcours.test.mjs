@@ -279,7 +279,10 @@ test("une erreur = une ligne : le calcul avec sa bonne réponse, la réponse don
   assert.match(html, /expression\.append\(document\.createTextNode\(avant\), expected, document\.createTextNode\(apres \?\? ""\)\);/);
   assert.match(html, /given\.setAttribute\("aria-label", `Ta réponse : \$\{entry\.given\}`\);/, "le sens reste dit aux lecteurs d’écran");
   assert.match(html, /item\.append\(questionLine, given\)/);
-  assert.match(html, /\.given-answer \{ color: var\(--red\); font-size: \.95rem; font-weight: 800; text-decoration: line-through; \}/);
+  // Lot « la flèche de retour » (14/10/2026, décision de Gwenaël) : barrée
+  // d'un trait en biais — le trait horizontal se perdait dans un chiffre seul.
+  assert.match(html, /\.given-answer \{ display: inline-block; padding: 0 \.3em; color: var\(--red\); font-size: \.95rem; font-weight: 800; line-height: 1\.25;\s*background: linear-gradient\(to top right, transparent calc\(50% - 1\.4px\), currentColor calc\(50% - 1\.4px\), currentColor calc\(50% \+ 1\.4px\), transparent calc\(50% \+ 1\.4px\)\); \}/);
+  assert.doesNotMatch(html, /\.given-answer \{[^}]*line-through/, "plus de trait horizontal");
   assert.doesNotMatch(html, /`Question \$\{entry\.number\}`/);
 });
 
