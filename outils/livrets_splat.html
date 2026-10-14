@@ -863,7 +863,15 @@ footer a{font-weight:700}
   <section class="panneau" data-m="6" id="monde-6" role="tabpanel" aria-labelledby="onglet-6" hidden>
     <h2 class="monde-nom">Monde 6 · SPLAT! Relatifs</h2>
     <p class="chapo">Les mêmes plateaux avec les nombres relatifs&nbsp;: des jetons rouges, la tache «&nbsp;opposé&nbsp;», puis des taches sur les deux plateaux. Deux livrets de 8 pages, trois fiches chacun, et leurs livrets «&nbsp;Le défi&nbsp;»&nbsp;; l’élève écrit l’équation sous chaque carte.</p>
-    <h3 class="partie">Livret 1 · les taches sur un seul plateau <span>la classe, puis «&nbsp;Le défi&nbsp;»</span></h3>
+    <!-- (14/10/2026) deux boutons, comme aux mondes 1, 2, 3 et 5 (demande de Gwenaël) : « Pour tous »
+         montre les livrets 1 et 2 côte à côte, « Le défi » les deux défis. Sans JavaScript, les deux
+         rangées restent l'une sous l'autre, avec leurs intertitres. -->
+    <div class="series-choix" role="group" aria-label="Choisir la série de livrets">
+      <button type="button" data-serie="tous" aria-pressed="true">Pour tous</button>
+      <button type="button" data-serie="defi" aria-pressed="false">Le défi</button>
+    </div>
+    <div class="serie" data-serie="tous">
+    <h3 class="partie">Pour tous <span>livret 1, puis livret 2</span></h3>
     <div class="grille n2">
 
       <article class="liv">
@@ -888,31 +896,6 @@ footer a{font-weight:700}
       </article>
 
       <article class="liv">
-        <a class="couv-lien" href="/outils/livret_splat_relatifs_defi_1.pdf" target="_blank" rel="noopener" title="Voir le livret Le défi 1 du monde 6 (PDF, 8 pages)">
-          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-relatifs-defi-1.png?v=1" alt="Couverture du livret SPLAT! Relatifs, Le défi du livret 1" loading="lazy">
-        </a>
-        <div class="corps">
-          <div class="titre"><h3>Le défi</h3><span class="plage">fiches 38, 39 et 40</span></div>
-          <div class="liens">
-            <a class="lien" href="/outils/livret_splat_relatifs_defi_1.pdf" target="_blank" rel="noopener">📙 PDF · 8 pages</a>
-            <a class="lien a3" href="/outils/livret_splat_relatifs_defi_1_a_plier.pdf" target="_blank" rel="noopener">🖨️ Livret à plier</a>
-            <details class="prof">
-              <summary>✅ Le corrigé</summary>
-              <div class="prof-corps">
-                <div class="prof-ligne"><span class="nom">Le livret corrigé <small>par l’équation</small></span>
-                  <a class="lien-prof" href="/outils/livret_splat_relatifs_defi_1_correction.pdf" target="_blank" rel="noopener" title="Livret corrigé Le défi 1 du monde 6 (PDF, 8 pages)">PDF</a>
-                  <a class="lien-prof" href="/outils/livret_splat_relatifs_defi_1_correction_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé Le défi 1 du monde 6, à plier">à plier</a></div>
-              </div>
-            </details>
-          </div>
-        </div>
-      </article>
-
-    </div>
-    <h3 class="partie">Livret 2 · les taches sur les deux plateaux <span>la classe, puis «&nbsp;Le défi&nbsp;»</span></h3>
-    <div class="grille n2">
-
-      <article class="liv">
         <a class="couv-lien" href="/outils/livret_splat_relatifs_2.pdf" target="_blank" rel="noopener" title="Voir le livret 2 du monde 6 (PDF, 8 pages)">
           <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-relatifs-2.png?v=4" alt="Couverture du livret 2 de SPLAT! Relatifs, les taches sur les deux plateaux" loading="lazy">
         </a>
@@ -933,12 +916,39 @@ footer a{font-weight:700}
         </div>
       </article>
 
+    </div>
+    </div>
+    <div class="serie" data-serie="defi">
+    <h3 class="partie">Le défi <span>les mêmes fiches, plus dures</span></h3>
+    <div class="grille n2">
+
+      <article class="liv">
+        <a class="couv-lien" href="/outils/livret_splat_relatifs_defi_1.pdf" target="_blank" rel="noopener" title="Voir le livret Le défi 1 du monde 6 (PDF, 8 pages)">
+          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-relatifs-defi-1.png?v=1" alt="Couverture du livret SPLAT! Relatifs, Le défi du livret 1" loading="lazy">
+        </a>
+        <div class="corps">
+          <div class="titre"><h3>Le défi 1</h3><span class="plage">fiches 38, 39 et 40</span></div>
+          <div class="liens">
+            <a class="lien" href="/outils/livret_splat_relatifs_defi_1.pdf" target="_blank" rel="noopener">📙 PDF · 8 pages</a>
+            <a class="lien a3" href="/outils/livret_splat_relatifs_defi_1_a_plier.pdf" target="_blank" rel="noopener">🖨️ Livret à plier</a>
+            <details class="prof">
+              <summary>✅ Le corrigé</summary>
+              <div class="prof-corps">
+                <div class="prof-ligne"><span class="nom">Le livret corrigé <small>par l’équation</small></span>
+                  <a class="lien-prof" href="/outils/livret_splat_relatifs_defi_1_correction.pdf" target="_blank" rel="noopener" title="Livret corrigé Le défi 1 du monde 6 (PDF, 8 pages)">PDF</a>
+                  <a class="lien-prof" href="/outils/livret_splat_relatifs_defi_1_correction_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé Le défi 1 du monde 6, à plier">à plier</a></div>
+              </div>
+            </details>
+          </div>
+        </div>
+      </article>
+
       <article class="liv">
         <a class="couv-lien" href="/outils/livret_splat_relatifs_defi_2.pdf" target="_blank" rel="noopener" title="Voir le livret Le défi 2 du monde 6 (PDF, 8 pages)">
           <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-relatifs-defi-2.png?v=1" alt="Couverture du livret SPLAT! Relatifs, Le défi du livret 2" loading="lazy">
         </a>
         <div class="corps">
-          <div class="titre"><h3>Le défi</h3><span class="plage">fiches 41, 42 et 43</span></div>
+          <div class="titre"><h3>Le défi 2</h3><span class="plage">fiches 41, 42 et 43</span></div>
           <div class="liens">
             <a class="lien" href="/outils/livret_splat_relatifs_defi_2.pdf" target="_blank" rel="noopener">📙 PDF · 8 pages</a>
             <a class="lien a3" href="/outils/livret_splat_relatifs_defi_2_a_plier.pdf" target="_blank" rel="noopener">🖨️ Livret à plier</a>
@@ -954,6 +964,7 @@ footer a{font-weight:700}
         </div>
       </article>
 
+    </div>
     </div>
     <p class="aparte">Les plateaux côte à côte, la place dessous pour écrire l’équation. Le QR code de chaque fiche rejoue les mêmes équations en ligne, dans ÉquaSplat. Les livrets «&nbsp;Le défi&nbsp;» reprennent les mêmes fiches, plus dures&nbsp;; leur QR code donne la même étoile.</p>
   </section>
@@ -973,9 +984,9 @@ footer a{font-weight:700}
 </footer>
 
 <script>
-/* Mondes 1, 2, 3 et 5 : les deux boutons montrent une série de livrets à la fois (choix B, 26/09/2026 au soir ;
+/* Mondes 1, 2, 3, 5 et 6 : les deux boutons montrent une série de livrets à la fois (choix B, 26/09/2026 au soir ;
    monde 2, « Avec ? » / « Avec une lettre », relecture du monde 2, 26/09/2026 ; monde 3, « Pour tous » /
-   « Deuxième tour », 05/10/2026) */
+   « Deuxième tour », 05/10/2026 ; monde 6, « Pour tous » / « Le défi », 14/10/2026) */
 (function(){
   Array.prototype.forEach.call(document.querySelectorAll(".series-choix"), function(groupe){
     var panneau = groupe.parentNode;
@@ -991,7 +1002,7 @@ footer a{font-weight:700}
       if(b) montre(b.dataset.serie);
     });
     // la série du premier bouton (monde 1 : « Je complète le schéma » ; monde 2 : « Avec ? » ;
-    // monde 3 : « Pour tous » ; monde 5 : « Le schéma en barres »)
+    // monde 3 et monde 6 : « Pour tous » ; monde 5 : « Le schéma en barres »)
     montre(groupe.querySelector("button[data-serie]").dataset.serie);
   });
 })();

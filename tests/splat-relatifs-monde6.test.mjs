@@ -542,10 +542,18 @@ test("défi : les huit PDF, les QR, les miniatures, la page des livrets et le ca
   }
   for (const q of ["38d", "39d", "40d", "41d", "42d", "43d"]) assert.ok(taille(`${SRC}qr/fiche${q}.png`) > 0);
   for (const s of ["d1", "d2", "d3", "d4"]) assert.ok(taille(`${SRC}qr/serie-${s}.png`) > 0);
-  // la page des livrets : livret de base puis son défi, partie par partie
+  // la page des livrets (14/10/2026) : deux boutons, comme aux mondes 1, 2, 3 et 5 — « Pour tous »
+  // (livrets 1 et 2 côte à côte) d'abord, puis « Le défi » (défis 1 et 2) ; sans JavaScript, les deux
+  // rangées restent l'une sous l'autre avec leurs intertitres
   const m6 = pageLivrets.slice(pageLivrets.indexOf('<section class="panneau" data-m="6"'), pageLivrets.indexOf("</section>", pageLivrets.indexOf('<section class="panneau" data-m="6"')));
-  const ordre = ["livret_splat_relatifs_1.pdf", "livret_splat_relatifs_defi_1.pdf", "livret_splat_relatifs_2.pdf", "livret_splat_relatifs_defi_2.pdf"].map((s) => m6.indexOf(`href="/outils/${s}"`));
-  assert.ok(ordre.every((v, i) => v > 0 && (i === 0 || v > ordre[i - 1])), "livret 1, défi 1, livret 2, défi 2");
+  assert.match(m6, /<div class="series-choix" role="group"[^>]*>\s*<button type="button" data-serie="tous" aria-pressed="true">Pour tous<\/button>\s*<button type="button" data-serie="defi" aria-pressed="false">Le défi<\/button>\s*<\/div>\s*<div class="serie" data-serie="tous">\s*<h3 class="partie">Pour tous/);
+  const iTous = m6.indexOf('<div class="serie" data-serie="tous">'), iDefi = m6.indexOf('<div class="serie" data-serie="defi">');
+  assert.ok(iTous > 0 && iDefi > iTous, "« Pour tous » puis « Le défi »");
+  const hrefs = (p) => [...p.matchAll(/<a class="lien" href="\/outils\/([^"]+)\.pdf"/g)].map((m) => m[1]);
+  assert.deepEqual(hrefs(m6.slice(iTous, iDefi)), ["livret_splat_relatifs_1", "livret_splat_relatifs_2"]);
+  assert.deepEqual(hrefs(m6.slice(iDefi)), ["livret_splat_relatifs_defi_1", "livret_splat_relatifs_defi_2"]);
+  assert.deepEqual([...m6.matchAll(/<div class="titre"><h3>([^<]+)<\/h3>/g)].map((m) => m[1]), ["Livret 1", "Livret 2", "Le défi 1", "Le défi 2"]);
+  assert.deepEqual([...m6.matchAll(/<h3 class="partie">([^<]+)</g)].map((m) => m[1].trim()), ["Pour tous", "Le défi"]);
   assert.equal((m6.match(/<div class="grille n2">/g) || []).length, 2);
   const catalogue = lire("assets/js/catalogue-refonte-data.js");
   // (01/10/2026) les textes du catalogue raccourcis : « du monde 1 au monde 6 »
