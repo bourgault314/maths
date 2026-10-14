@@ -35,7 +35,7 @@ function constante(nom){
 }
 
 const PALETTE = html.slice(html.indexOf("const INVESTIGATE_COLOR_PALETTE = ["), html.indexOf("];", html.indexOf("const INVESTIGATE_COLOR_PALETTE = [")) + 2);
-const CONSTANTES = ["SYS_GESTES", "SYS_GESTES_MIX_DEFAUT", "SYS_MAX_TACHES", "SYS_MAX_TACHES_AVANT", "SYS_ESSAIS", "SYS_NOMBRES_SOUS_ENTENDUS", "SYS_COULEURS_PLURIEL", "SYS_PLAGES",
+const CONSTANTES = ["SYS_GESTES", "SYS_GESTES_MIX_DEFAUT", "SYS_SOUS_GESTES", "SYS_MAX_TACHES", "SYS_MAX_TACHES_AVANT", "SYS_ESSAIS", "SYS_NOMBRES_SOUS_ENTENDUS", "SYS_COULEURS_PLURIEL", "SYS_PLAGES",
   "SYS_ZONE_ECRAN", "SYS_ZONE_IMPRIME", "SYS_ZONE_IMPRIME_6", "SYS_TACHE", "SYS_BARRES", "SYS_BARRES_SERRE", "SYS_BARRES_TAILLES", "SYS_CORR_IMPRIME", "SYS_CORR_ECRAN", "SYS_EQ_ECRIT",
   "SYS_ZONE_ECRAN_CORRECTION", "SYS_ZONE_IMPRIME_CORRECTION", "SYS_FIL", "SYS_TEL", "SYS_ZONE_TEL_CORRECTION", "ENQUETE_NOM_ECART", "NOM_PAPIER"].map(constante).join("\n");
 const GENERATEUR = ["sysNormaliserReglages", "genSystemCarte", "sysMelangerPlateaux", "sysFormes", "sysFormesDouble", "sysSomme", "sysNombreTaches", "sysPlateau",
@@ -114,7 +114,10 @@ const elements = (n, name, out = []) => { if(!n) return out; if(n.name === name)
 const TYPES = {
   "1a": { geste: "PARTIELLE" }, "1b": { geste: "COEF", ecart: "1" }, "1c": { geste: "COEF", ecart: "2" }, "1d": { geste: "EMBOITE1" },
   "1e": { geste: "ESCALIER" }, "2a": { geste: "DOUBLE" }, "2b": { geste: "DOUBLE", fois: 3 }, "2c": { geste: "DOUBLE", indice: "12" },
-  "2d": { geste: "DOUBLE", sens: "INDICE" }, "2d·3": { geste: "DOUBLE", sens: "INDICE", fois: 3 }, "3a": { geste: "MIROIR" }, "3b": { geste: "TROIS" }
+  "2d": { geste: "DOUBLE", sens: "INDICE" }, "2d·3": { geste: "DOUBLE", sens: "INDICE", fois: 3 }, "3a": { geste: "MIROIR" }, "3b": { geste: "TROIS" },
+  // lot M4-5 : le miroir 1-3, Je recopie (2, 3, 4 fois), Deux gestes à la suite
+  "3a+": { geste: "MIROIR", forme: "13" }, "3c·2": { geste: "RECOPIE" }, "3c·3": { geste: "RECOPIE", fois: 3 }, "3c·4": { geste: "RECOPIE", fois: 4 },
+  "4e": { geste: "ETAGES" }
 };
 /* les titres vus par les élèves : ceux des planches validées le 04/10/2026 */
 const TITRES = [
@@ -124,14 +127,19 @@ const TITRES = [
   "Je retrouve 2 fois le petit plateau", "Je retrouve 3 fois le petit plateau", "Je retrouve ce reste dans le petit plateau",
   "J’additionne : je range par paires", "J’additionne : je range en 2 grands plateaux",
   "Je retrouve 1 paire dans le plateau", "Je retrouve 2 paires dans le plateau",
-  "Je retire", "Je partage", "Je remplace", "Je vérifie"
+  "Je retire", "Je partage", "Je remplace", "Je vérifie",
+  // lot M4-5 (planches A et E de la conception du 14/10/2026)
+  "Les deux petits plateaux"
 ];
+/* les titres qui portent un nombre (lot M4-5) : les plateaux se nomment par leur total */
+const TITRES_NOMBRES = [/^Je recopie [234] fois le plateau \d+$/, /^Je retrouve le plateau \d+ dedans$/, /^Je remplace dans le plateau \d+$/];
 
 function evaluer(calcul){
   let m;
   if((m = calcul.match(/^(\d+) ÷ (\d+)$/))){ assert.equal(Number(m[1]) % Number(m[2]), 0, `division non exacte « ${calcul} »`); return Number(m[1]) / Number(m[2]); }
   if(/^\d+( − \d+)+$/.test(calcul)){ const n = calcul.split(" − ").map(Number); return n.slice(1).reduce((s, x) => s - x, n[0]); }
   if(/^\d+( \+ \d+)+$/.test(calcul)) return calcul.split(" + ").map(Number).reduce((s, x) => s + x, 0);
+  if((m = calcul.match(/^(\d+) × (\d+)$/))) return Number(m[1]) * Number(m[2]); // lot M4-5 : « 2 × 37 », je recopie
   assert.fail(`calcul illisible « ${calcul} »`);
 }
 function verifierLigne(l){
@@ -149,9 +157,11 @@ function verifierPlan(carte){
   const totaux = s.boards.map((b) => b.total).filter((t) => t !== null);
   const tops = [];
   const trouvees = new Set();
-  assert.ok(plan.length >= 5 && plan.length <= 9, `${s.geste} : ${plan.length} étapes`);
+  // lot M4-5 : 12 étapes au plus pour Deux gestes à la suite, 10 pour le miroir 1-3 avec des jetons visibles
+  const miroir13 = s.geste === "MIROIR" && Math.abs((s.boards[0].counts[s.colors[0]] || 0) - (s.boards[0].counts[s.colors[1]] || 0)) === 2;
+  assert.ok(plan.length >= 5 && plan.length <= (s.geste === "ETAGES" ? 12 : (miroir13 ? 10 : 9)), `${s.geste} : ${plan.length} étapes`);
   plan.forEach((e, n) => {
-    assert.ok(TITRES.includes(e.titre), `titre inconnu « ${e.titre} »`);
+    assert.ok(TITRES.includes(e.titre) || TITRES_NOMBRES.some((r) => r.test(e.titre)), `titre inconnu « ${e.titre} »`);
     assert.equal(e.titre === "Je vérifie", n === plan.length - 1, "« Je vérifie » en dernier, et seulement là");
     if(e.role === "verification") return;
     assert.ok(e.barres.length >= 1 && e.barres.length <= 3);
@@ -328,9 +338,12 @@ test("le générateur filtre toujours les nombres du plan d'avant (sysPlanS3) : 
   assert.match(gen, /if\(sysTexteASousEntendu\(JSON\.stringify\(sit\) \+ JSON\.stringify\(sysPlanS3\(sit\)\)\)\) continue;\n      return sysMelangerPlateaux\(sysAssemblerCarte\(sit, sysPlan\(sit\), o\.clues, false\), rng, o\);/);
   assert.match(fn("sysSituationSure"), /JSON\.stringify\(sysPlanS3\(sit\)\)/);
   assert.match(fn("sysPlanS3"), /calculs: lignes\(MOTS\), lettres: lignes\(LETTRES\)/, "le plan d'avant, tel quel");
-  /* l'empreinte de 8 400 cartes (14 réglages × 3 jetons × 2 totaux × 2 ordres × 5 graines × 10),
-     calculée sur main avant le lot M4-2 (7bbdc07) : valeurs, plateaux, ordre, total, taches */
-  const ORDRE = ["1a", "coef", "1b", "1c", "1d", "1e", "2a", "2b", "2c", "2d", "2d·3", "3a", "3b", "mix"];
+  /* l'empreinte de 7 800 cartes (13 réglages × 3 jetons × 2 totaux × 2 ordres × 5 graines × 10),
+     calculée sur main avant le lot M4-2 (7bbdc07) : valeurs, plateaux, ordre, total, taches.
+     Lot M4-5 : « 2d·3 » (3 fois, le petit recopié dépasse) sort de l'empreinte — ce sens n'existe
+     qu'avec 2 fois, ses cartes sont désormais celles de « 2b » (vérifié plus bas) ; l'empreinte des
+     13 autres réglages, recalculée sur main d86a02f, n'a pas bougé. */
+  const ORDRE = ["1a", "coef", "1b", "1c", "1d", "1e", "2a", "2b", "2c", "2d", "3a", "3b", "mix"];
   const parNom = { ...TYPES, coef: { geste: "COEF" }, mix: { geste: "MIX", gestes: ["EMBOITE1", "PARTIELLE", "COEF", "DOUBLE", "MIROIR", "TROIS", "ESCALIER"] } };
   const h = createHash("sha256");
   let n = 0;
@@ -341,8 +354,9 @@ test("le générateur filtre toujours les nombres du plan d'avant (sysPlanS3) : 
       n++;
     }
   }
-  assert.equal(n, 8400);
-  assert.equal(h.digest("hex"), "1f7297182b6e07b60938dc8216a216f35e770e51ddad6d4d4dbe4e6d6ad5d609");
+  assert.equal(n, 7800);
+  assert.equal(h.digest("hex"), "7359304265c3e5d857d1751a60c8f75e97d8000eb97baede16d59fa0896db23a");
+  for(const g of [1, 7, 11]) assert.equal(JSON.stringify(sys.serie(g, 10, TYPES["2d·3"])), JSON.stringify(sys.serie(g, 10, TYPES["2b"])), "3 fois : le grand plateau dépasse");
 });
 
 // --- le dessin imprimé ----------------------------------------------------------------------
@@ -357,6 +371,14 @@ test("impression : jamais réduite aux réglages des fiches, les cases à 118 pa
       for(const lettres of [false, true]){
         const { g: dessin, haut, bas } = sys.imprimee(c, lettres);
         n++;
+        /* lot M4-5 : en 4 par page, « Je recopie » (barres de 9 à 12 cases) et « Deux gestes à la
+           suite » (jusqu'à 12 étapes) se réduisent souvent (0,79 au plus petit, mesuré dans
+           Chromium) ; les livrets du monde 4 sont en 2 par page. Ici : pas trop, dans la carte. */
+        if(["3c·2", "3c·3", "3c·4", "4e"].includes(type) && dessin.attrs["data-echelle"] !== "1"){
+          assert.ok(Number(dessin.attrs["data-echelle"]) >= 0.75, `${type} : réduite à ${dessin.attrs["data-echelle"]}`);
+          assert.ok(bas <= sys.IMP.basImprime + 0.5, `${type} : le bas à ${bas}`);
+          continue;
+        }
         assert.equal(dessin.attrs["data-echelle"], "1", `${type} : carte réduite`);
         assert.equal(dessin.attrs.transform, "");
         assert.ok(bas <= sys.IMP.basImprime + 0.5, `${type} : le bas à ${bas}`);
@@ -514,7 +536,10 @@ test("lot M4-4 : le système écrit — en mots, en lettres « 3 × N », tout o
     for(const l of [false, true]){
       const { g } = sys.imprimee(c, l);
       const ecrits = textes(g).filter((t) => t.attrs.class === "sysSystemeEcrit");
-      assert.ok(ecrits.length === 0 || ecrits.length === attendues, `tout ou rien (${ecrits.length} sur ${attendues})`);
+      // lot M4-5 : Deux gestes à la suite a deux étapes de plateaux (les trois, puis les deux
+      // petits) : chacune tout ou rien (3, 2, les deux, ou aucune)
+      const permis = c._sys.geste === "ETAGES" ? [0, 2, 3, 5] : [0, attendues];
+      assert.ok(permis.includes(ecrits.length), `tout ou rien (${ecrits.length} sur ${attendues})`);
       if(!ecrits.length) continue;
       if(!l) avec++;
       assert.equal(new Set(ecrits.map((t) => t.attrs["font-size"])).size, 1, "un seul corps");

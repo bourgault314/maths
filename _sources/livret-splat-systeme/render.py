@@ -271,22 +271,11 @@ JS_PIED = """(texte) => {
 }"""
 
 # Le type d'une carte (la classification du monde 4, monde-4-audit-et-plan.md § 2), lu sur son
-# modèle : c'est ce que render.py vérifie fiche par fiche (TYPES).
-JS_TYPE = r"""const typeSys = c => {
-  const S = c._sys, b = S.boards, n = (B, k) => B.counts[k] || 0, [A, Bk] = S.colors;
-  if (S.geste === 'PARTIELLE') return '1a';
-  if (S.geste === 'COEF') return n(b[0], Bk) - n(b[1], Bk) === 1 ? '1b' : '1c';
-  if (S.geste === 'EMBOITE1') return '1d';
-  if (S.geste === 'ESCALIER') return '1e';
-  if (S.geste === 'MIROIR') return '3a';
-  if (S.geste === 'TROIS') return '3b';
-  if (S.geste === 'DOUBLE') {
-    const k = n(b[0], A) / n(b[1], A);
-    if (n(b[0], Bk) < k * n(b[1], Bk)) return k === 2 ? '2d' : '2b-';
-    return k === 3 ? '2b' : (n(b[1], Bk) === 2 ? '2c' : '2a');
-  }
-  return '?';
-};"""
+# modèle : c'est ce que render.py vérifie fiche par fiche (TYPES). Depuis le lot M4-5 (14/10/2026),
+# la fonction vit dans l'outil (sysTypeCarte, outils/splat.html), avec les codes nouveaux : « 3a+ »
+# le miroir 1-3, « 3c·2 », « 3c·3 », « 3c·4 » Je recopie (2, 3 ou 4 fois), « 4e·<type> » Deux
+# gestes à la suite (le type de ses deux petits plateaux : « 4e·1c », « 4e·3c·2 »…).
+JS_TYPE = r"""const typeSys = c => sysTypeCarte(c);"""
 
 # La feuille imprimée telle que l'outil la fabrique, et ses cartes : total, valeurs de chaque
 # couleur, plateaux (pour vérifier que l'élève et les deux corrigés ont les mêmes cartes).

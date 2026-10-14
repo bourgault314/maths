@@ -1375,7 +1375,7 @@
       <div class="row" style="align-items:flex-end">
         <div style="flex:1.7 1 0">
           <label>Geste</label>
-          <select id="sysGeste" title="1 : emboîtées, une tache par couleur · 2a : une partie connue · 2b : deux pesées, une couleur diffère · 3 : doubler l’indice puis comparer · 4a : deux plateaux en miroir, on additionne · 4b : trois sommes, sans total · Escalier : trois plateaux emboîtés, on retire deux fois · Mélange : les gestes cochés">
+          <select id="sysGeste" title="1 : emboîtées, une tache par couleur · 2a : une partie connue · 2b : deux pesées, une couleur diffère · 3 : doubler l’indice puis comparer · 4a : deux plateaux en miroir, on additionne · 4b : trois sommes, sans total · Escalier : trois plateaux emboîtés, on retire deux fois · Je recopie, puis je retire : aucun plateau ne tient dans l’autre, on recopie le premier · Deux gestes à la suite : deux petits plateaux, puis le grand · Mélange : les gestes cochés">
             <option value="EMBOITE1" selected>1 — Emboîtées</option>
             <option value="PARTIELLE">2a — Donnée partielle</option>
             <option value="COEF">2b — Deux pesées</option>
@@ -1383,6 +1383,8 @@
             <option value="MIROIR">4a — Miroir</option>
             <option value="TROIS">4b — Trois sommes</option>
             <option value="ESCALIER">Escalier</option>
+            <option value="RECOPIE">Je recopie, puis je retire</option>
+            <option value="ETAGES">Deux gestes à la suite</option>
             <option value="MIX">Mélange</option>
           </select>
         </div>
@@ -1401,6 +1403,8 @@
           <label class="checkInline" title="4a — Miroir : additionner"><input type="checkbox" id="sysMixMIROIR"> <span>4a</span></label>
           <label class="checkInline" title="4b — Trois sommes, sans total"><input type="checkbox" id="sysMixTROIS" checked> <span>4b</span></label>
           <label class="checkInline" title="Escalier : trois plateaux emboîtés"><input type="checkbox" id="sysMixESCALIER"> <span>Esc.</span></label>
+          <label class="checkInline" title="Je recopie, puis je retire"><input type="checkbox" id="sysMixRECOPIE"> <span>Rec.</span></label>
+          <label class="checkInline" title="Deux gestes à la suite"><input type="checkbox" id="sysMixETAGES"> <span>2 g.</span></label>
         </div>
       </div>
       <!-- lot M4-1 : un réglage par ligne ; « Écart » pour les deux pesées, « Recopier »,
@@ -1419,9 +1423,11 @@
       <div class="row" id="sysFoisRow" style="display:none; align-items:flex-end">
         <div style="flex:1">
           <label>Recopier</label>
-          <select id="sysFois" title="Doubler : on recopie le petit plateau 2 ou 3 fois">
+          <select id="sysFois" title="Doubler : on recopie le petit plateau 2 ou 3 fois · Je recopie : on recopie le premier plateau 2, 3 ou 4 fois">
             <option value="2" selected>2 fois</option>
             <option value="3">3 fois</option>
+            <option value="4">4 fois</option>
+            <option value="MIX">2 ou 3 fois, au hasard</option>
           </select>
         </div>
       </div>
@@ -1441,6 +1447,43 @@
             <option value="PLATEAU" selected>Le grand plateau</option>
             <option value="INDICE">Le petit recopié</option>
             <option value="MIX">Les deux, au hasard</option>
+          </select>
+        </div>
+      </div>
+      <!-- lot M4-5 : « Miroir » (forme des plateaux en miroir), « Grand plateau » et « Petits
+           plateaux » (Deux gestes à la suite) ; « 4 fois » et « au hasard » de Recopier ne
+           servent qu'à « Je recopie ». Éteints par défaut : mêmes cartes qu'avant. -->
+      <div class="row" id="sysFormeRow" style="display:none; align-items:flex-end">
+        <div style="flex:1">
+          <label>Miroir</label>
+          <select id="sysForme" title="Miroir : les taches de chaque couleur, d'un plateau à l'autre">
+            <option value="" selected>1-2 ou 2-3</option>
+            <option value="12">1-2</option>
+            <option value="23">2-3</option>
+            <option value="13">1-3</option>
+            <option value="MIX">1-2, 2-3 ou 1-3</option>
+          </select>
+        </div>
+      </div>
+      <div class="row" id="sysGrandRow" style="display:none; align-items:flex-end">
+        <div style="flex:1">
+          <label>Grand plateau</label>
+          <select id="sysGrand" title="Deux gestes à la suite : les taches du plateau à trois couleurs (1 + 1 + 2 : la 3e couleur en double, on partage à la fin)">
+            <option value="" selected>2 + 1 + 1 ou 1 + 1 + 2</option>
+            <option value="211">2 + 1 + 1</option>
+            <option value="112">1 + 1 + 2</option>
+          </select>
+        </div>
+      </div>
+      <div class="row" id="sysSousRow" style="display:none; align-items:flex-end">
+        <div style="flex:1">
+          <label>Petits plateaux</label>
+          <select id="sysSous" title="Deux gestes à la suite : le premier geste, sur les deux petits plateaux">
+            <option value="MIX" selected>Au hasard</option>
+            <option value="COEF">Je retire</option>
+            <option value="MIROIR">J’additionne (miroir)</option>
+            <option value="RECOPIE">Je recopie, puis je retire</option>
+            <option value="DOUBLE">Doubler</option>
           </select>
         </div>
       </div>
@@ -1697,8 +1740,13 @@ function enqueteNomCouleurCompte(card, idx, n){
    d'avant gardent leur borne de 6 (SYS_MAX_TACHES_AVANT) tant qu'aucun réglage nouveau
    n'est allumé — mêmes formes, même hasard consommé, mêmes cartes. Nouveau geste ESCALIER
    (trois plateaux emboîtés : aA ; aA + bB ; aA + bB + cC). */
-const SYS_GESTES = ["EMBOITE1", "PARTIELLE", "COEF", "DOUBLE", "MIROIR", "TROIS", "ESCALIER"];
+const SYS_GESTES = ["EMBOITE1", "PARTIELLE", "COEF", "DOUBLE", "MIROIR", "TROIS", "ESCALIER", "RECOPIE", "ETAGES"];
 const SYS_GESTES_MIX_DEFAUT = ["EMBOITE1", "PARTIELLE", "COEF", "TROIS"];
+/* Lot M4-5 (14/10/2026, conception des deux livrets du monde 4) : RECOPIE, le cas 3 — aucun
+   plateau ne tient dans l'autre, on recopie le premier 2, 3 ou 4 fois, on y retrouve l'autre,
+   on retire ; ETAGES, « deux gestes à la suite » — un plateau à trois couleurs et deux petits
+   plateaux à deux couleurs qui forment un système, résolu par l'un de ces gestes. */
+const SYS_SOUS_GESTES = ["COEF", "MIROIR", "RECOPIE", "DOUBLE"];
 const SYS_MAX_TACHES = 7;
 const SYS_MAX_TACHES_AVANT = 6;
 const SYS_ESSAIS = 5000;
@@ -1709,7 +1757,7 @@ const SYS_COULEURS_PLURIEL = { black:"noires", purple:"violettes", orange:"orang
    indices composés (« 3 de plus que le double »). */
 const ENQ_VOCABULAIRE = { MUL:{ 2:"le double", 3:"le triple", 4:"le quadruple" }, DIV:{ 2:"la moitié", 3:"le tiers", 4:"le quart" } };
 const ENQ_NOMBRES_LETTRES = { 2:"deux", 3:"trois", 4:"quatre", 5:"cinq", 6:"six" };
-const SYS_PLAGES = { EMBOITE1:{ vMin:5, vMax:30, sousMin:10, sousMax:60 }, PARTIELLE:{ vMin:3, vMax:15, sousMin:9, sousMax:45 }, COEF:{ vMin:3, vMax:12, sousMin:9, sousMax:50 }, DOUBLE:{ vMin:3, vMax:12, sousMin:8, sousMax:40 }, MIROIR:{ vMin:3, vMax:12, sousMin:20, sousMax:60 }, TROIS:{ vMin:3, vMax:15, sousMin:6, sousMax:30 }, ESCALIER:{ vMin:3, vMax:12, sousMin:3, sousMax:45 } };
+const SYS_PLAGES = { EMBOITE1:{ vMin:5, vMax:30, sousMin:10, sousMax:60 }, PARTIELLE:{ vMin:3, vMax:15, sousMin:9, sousMax:45 }, COEF:{ vMin:3, vMax:12, sousMin:9, sousMax:50 }, DOUBLE:{ vMin:3, vMax:12, sousMin:8, sousMax:40 }, MIROIR:{ vMin:3, vMax:12, sousMin:20, sousMax:60 }, TROIS:{ vMin:3, vMax:15, sousMin:6, sousMax:30 }, ESCALIER:{ vMin:3, vMax:12, sousMin:3, sousMax:45 }, RECOPIE:{ vMin:3, vMax:12, sousMin:9, sousMax:60 }, ETAGES:{ vMin:3, vMax:12, sousMin:9, sousMax:60 } };
 
 function pickVariableChar(rng){
   return variableChars[rInt(rng, 0, variableChars.length - 1)];
@@ -1851,6 +1899,10 @@ const sysFoisEl = document.getElementById("sysFois");
 const sysIndiceEl = document.getElementById("sysIndice");
 const sysSensEl = document.getElementById("sysSens");
 const sysOrdreEl = document.getElementById("sysOrdre");
+/* lot M4-5 : forme du miroir, grand plateau et petits plateaux de « Deux gestes à la suite » */
+const sysFormeEl = document.getElementById("sysForme");
+const sysGrandEl = document.getElementById("sysGrand");
+const sysSousEl = document.getElementById("sysSous");
 const sysPasAPasEl = document.getElementById("sysPasAPas");
 const sysVisibleMinEl = document.getElementById("sysVisibleMin");
 const sysVisibleMaxEl = document.getElementById("sysVisibleMax");
@@ -2325,7 +2377,7 @@ function lireRepetitionAdresse(raw){
 
 /* Les réglages qu'une adresse partagée peut porter. Liste commune : elle sert
    aussi à l'empreinte de la série élève (eleveSignatureSerie). */
-const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "geste", "gestes", "coefMax", "ecart", "fois", "indice", "sens", "noTotal", "repeat", "ordre", "vocab", "compose", "reunies", "pasapas", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "palette", "unknown", "print", "duplex", "layout", "title", "note", "eleve", "parcours", "imprimer", "suite"];
+const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "geste", "gestes", "coefMax", "ecart", "fois", "indice", "sens", "forme", "grand", "sous", "noTotal", "repeat", "ordre", "vocab", "compose", "reunies", "pasapas", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "palette", "unknown", "print", "duplex", "layout", "title", "note", "eleve", "parcours", "imprimer", "suite"];
 
 function loadSharedConfiguration(){
   const params = new URLSearchParams(window.location.search);
@@ -2449,23 +2501,36 @@ function sysLireReglagesM4(params){
   lire(sysIndiceEl, "indice", "11");
   lire(sysSensEl, "sens", "PLATEAU");
   lire(sysOrdreEl, "ordre", "");
+  /* lot M4-5 : « forme » (Miroir), « grand » et « sous » (Deux gestes à la suite) */
+  lire(sysFormeEl, "forme", "");
+  lire(sysGrandEl, "grand", "");
+  lire(sysSousEl, "sous", "MIX");
   /* lot M4-2 : « pasapas=0 » = la correction directe au tableau, comme l'Enquête */
   if(sysPasAPasEl) sysPasAPasEl.checked = params.get("pasapas") !== "0";
 }
 
-/* Les gestes que la page peut tirer : le geste choisi, ou les gestes cochés du mélange. */
+/* Les gestes que la page peut tirer : le geste choisi, ou les gestes cochés du mélange.
+   Lot M4-5 : « Deux gestes à la suite » tire aussi le geste de ses petits plateaux (« sous »,
+   les quatre au hasard par défaut) — leurs réglages comptent donc. */
 function sysGestesLus(){
   const geste = sysGesteEl ? sysGesteEl.value : "";
   const gestes = geste === "MIX" ? sysLireGestesMix() : [geste];
-  return { coef: gestes.includes("COEF"), double: gestes.includes("DOUBLE") };
+  const etages = gestes.includes("ETAGES");
+  const sous = !etages ? [] : (sysSousEl && sysSousEl.value !== "MIX" ? [sysSousEl.value] : SYS_SOUS_GESTES);
+  const lus = gestes.concat(sous);
+  return { coef: lus.includes("COEF"), double: lus.includes("DOUBLE"), recopie: lus.includes("RECOPIE"), miroir: lus.includes("MIROIR"), etages };
 }
 
 function sysEcrireReglagesM4(params){
-  const { coef, double } = sysGestesLus();
+  const { coef, double, recopie, miroir, etages } = sysGestesLus();
   if(coef && sysEcartEl && sysEcartEl.value) params.set("ecart", sysEcartEl.value);
-  if(double && sysFoisEl && sysFoisEl.value === "3") params.set("fois", "3");
+  /* « fois » : 3 pour Doubler ; 3, 4 ou MIX pour Je recopie (2 = éteint, rien n'est écrit) */
+  if(sysFoisEl && ((double && sysFoisEl.value === "3") || (recopie && sysFoisEl.value !== "2"))) params.set("fois", sysFoisEl.value);
   if(double && sysIndiceEl && sysIndiceEl.value === "12") params.set("indice", "12");
   if(double && sysSensEl && (sysSensEl.value === "INDICE" || sysSensEl.value === "MIX")) params.set("sens", sysSensEl.value);
+  if(miroir && sysFormeEl && sysFormeEl.value) params.set("forme", sysFormeEl.value);
+  if(etages && sysGrandEl && sysGrandEl.value) params.set("grand", sysGrandEl.value);
+  if(etages && sysSousEl && sysSousEl.value !== "MIX") params.set("sous", sysSousEl.value);
   if(sysOrdreEl && sysOrdreEl.value === "MELANGE") params.set("ordre", "MELANGE");
   if(sysPasAPasEl && !sysPasAPasEl.checked) params.set("pasapas", "0");
 }
@@ -3031,15 +3096,22 @@ if(sysGesteEl) sysGesteEl.addEventListener("change", ()=>{ syncSettingsUI(); });
 /* lot M4-1 : « Écart » avec les deux pesées, « Recopier », « Petit plateau » et « Qui
    dépasse » avec Doubler — en Mélange, seulement si le geste est coché. */
 function sysAfficherReglagesM4(){
-  const { coef, double } = sysGestesLus();
+  const { coef, double, recopie, miroir, etages } = sysGestesLus();
   const montrer = (id, oui) => { const el = document.getElementById(id); if(el) el.style.display = oui ? "flex" : "none"; };
   montrer("sysEcartRow", coef);
-  ["sysFoisRow", "sysIndiceRow", "sysSensRow"].forEach(id => montrer(id, double));
+  /* lot M4-5 : « Recopier » sert à Doubler et à Je recopie ; « 4 fois » et « au hasard »
+     seulement à Je recopie (Doubler les lit comme 2 fois) */
+  montrer("sysFoisRow", double || recopie);
+  ["sysIndiceRow", "sysSensRow"].forEach(id => montrer(id, double));
+  if(sysFoisEl) Array.from(sysFoisEl.options || []).forEach(o => { if(o.value === "4" || o.value === "MIX") o.hidden = !recopie; });
+  montrer("sysFormeRow", miroir);
+  ["sysGrandRow", "sysSousRow"].forEach(id => montrer(id, etages));
 }
 SYS_GESTES.forEach(g => {
   const box = document.getElementById("sysMix" + g);
   if(box) box.addEventListener("change", sysAfficherReglagesM4);
 });
+if(sysSousEl) sysSousEl.addEventListener("change", sysAfficherReglagesM4);
 [unitEquationTypeEl, numberedEquationTypeEl].forEach(el=>{
   if(!el) return;
   el.addEventListener("change", ()=>refocusMainSvgFromControl(el));
@@ -3055,6 +3127,7 @@ SYS_GESTES.forEach(g => {
   invTaskCountEl, invClueTypeEl, invStructure3El, invOpMulEl, invOpDivEl, invOpAddEl, invOpSubEl, invMaxAddEl, invVisibleMinEl, invVisibleMaxEl, invTotalMinEl, invTotalMaxEl, invNoTotalEl, invRepeatOnEl, invRepeatEl, invOrdreEl, invVocabEl, invComposeEl, invReuniesEl, invPasAPasEl, seedEEl,
   sysGesteEl, sysCoefMaxEl, sysClueTypeEl, sysVisibleMinEl, sysVisibleMaxEl, sysTotalMinEl, sysTotalMaxEl, seedSysEl,
   sysEcartEl, sysFoisEl, sysIndiceEl, sysSensEl, sysOrdreEl, sysPasAPasEl,
+  sysFormeEl, sysGrandEl, sysSousEl,
   ...SYS_GESTES.map(g => document.getElementById("sysMix" + g))
 ].forEach(el=>{
   if(!el) return;
@@ -4351,6 +4424,8 @@ function genInvestigate(rng){
      DOUBLE    on double l'indice, puis on compare au plateau
      MIROIR    deux plateaux en miroir : on les additionne
      TROIS     trois paires, sans total
+   puis ESCALIER (lot M4-1), RECOPIE et ETAGES (lot M4-5 : je recopie, puis je retire ; deux
+   gestes à la suite).
    genSystem lit les réglages de la page ; genSystemCarte, lui, ne dépend que du hasard, des
    réglages et de la palette : les tests tirent des milliers de cartes sans navigateur.
    La carte garde son modèle dans _sys (couleurs, valeurs, plateaux, et le plan de la
@@ -4376,7 +4451,10 @@ function lireReglagesSysteme(){
     fois: sysFoisEl ? sysFoisEl.value : 2,
     indice: sysIndiceEl ? sysIndiceEl.value : "11",
     sens: sysSensEl ? sysSensEl.value : "PLATEAU",
-    ordre: sysOrdreEl ? sysOrdreEl.value : ""
+    ordre: sysOrdreEl ? sysOrdreEl.value : "",
+    forme: sysFormeEl ? sysFormeEl.value : "",
+    grand: sysGrandEl ? sysGrandEl.value : "",
+    sous: sysSousEl ? sysSousEl.value : "MIX"
   });
 }
 
@@ -4429,9 +4507,26 @@ function sysNormaliserReglages(opts){
   /* lot M4-4 : « sens=MIX », chaque carte tire son sens (sysTirerSituation) ; l'indice est
      alors vérifié carte par carte, dans le sens tiré. */
   const sensBrut = String(r.sens == null ? "" : r.sens).toUpperCase();
-  const sens = sensBrut === "INDICE" || sensBrut === "MIX" ? sensBrut : "PLATEAU";
+  /* lot M4-5 : « le petit plateau recopié dépasse » n'existe qu'avec 2 fois (sysFormesDouble) ;
+     3 fois et ce sens (ou MIX) : le grand plateau dépasse, comme sans réglage */
+  const sens = fois === 3 ? "PLATEAU" : (sensBrut === "INDICE" || sensBrut === "MIX" ? sensBrut : "PLATEAU");
   let indice = String(r.indice == null ? "" : r.indice).trim() === "12" ? "12" : "11";
   if(sens !== "MIX" && !sysFormesDouble(fois, indice, sens).length) indice = indice === "12" ? "11" : "12";
+  /* lot M4-5. « fois » de Je recopie : 2, 3, 4 ou MIX (2 ou 3, tiré carte par carte) ; Doubler
+     garde le sien (2 ou 3, plus haut). « forme » de Miroir : 12, 23, 13 ou MIX (les trois) ;
+     absente : 1-2 ou 2-3, comme avant. « grand » de Deux gestes à la suite : 211 ou 112 (absent :
+     l'un ou l'autre) ; « sous » : le geste des petits plateaux (absent ou MIX : l'un des quatre). */
+  /* (des réglages déjà normalisés repassent ici — genSystem, puis genSystemCarte : on relit
+     alors foisRecopie, que « fois », ramené à 2 ou 3 pour Doubler, ne porte plus) */
+  const foisLu = r.foisRecopie != null ? r.foisRecopie : r.fois;
+  const foisBrut = String(foisLu == null ? "" : foisLu).trim().toUpperCase();
+  const foisRecopie = foisBrut === "MIX" ? "MIX" : ([3, 4].includes(entier(foisLu, 2)) ? entier(foisLu, 2) : 2);
+  const formeBrut = String(r.forme == null ? "" : r.forme).trim().toUpperCase();
+  const forme = ["12", "23", "13", "MIX"].includes(formeBrut) ? formeBrut : "";
+  const grandBrut = String(r.grand == null ? "" : r.grand).trim();
+  const grand = grandBrut === "211" || grandBrut === "112" ? grandBrut : "";
+  const sousBrut = String(r.sous == null ? "" : r.sous).trim().toUpperCase();
+  const sous = SYS_SOUS_GESTES.includes(sousBrut) ? sousBrut : "MIX";
   return {
     geste,
     gestes: gestes.length ? gestes : SYS_GESTES_MIX_DEFAUT.slice(),
@@ -4439,7 +4534,8 @@ function sysNormaliserReglages(opts){
     coefMax: clamp(entier(r.coefMax, 3), 1, 4),
     visMin, visMax, totalMin, totalMax,
     ecart, fois, indice, sens,
-    ordre: String(r.ordre == null ? "" : r.ordre).toUpperCase() === "MELANGE" ? "MELANGE" : ""
+    ordre: String(r.ordre == null ? "" : r.ordre).toUpperCase() === "MELANGE" ? "MELANGE" : "",
+    foisRecopie, forme, grand, sous
   };
 }
 
@@ -4523,7 +4619,32 @@ function sysFormes(geste, o){
   }else if(geste === "DOUBLE"){
     return sysFormesDouble(o.fois, o.indice, o.sens);
   }else if(geste === "MIROIR"){
-    out.push([1, 2], [2, 3]);
+    /* lot M4-5 : « forme=13 » (1 + 3 et 3 + 1 : après le partage, il reste 2 taches à
+       partager) ; absente, les deux formes d'avant, même hasard consommé */
+    const f = o.forme || "";
+    if(f === "12") out.push([1, 2]);
+    else if(f === "23") out.push([2, 3]);
+    else if(f === "13") out.push([1, 3]);
+    else if(f === "MIX") out.push([1, 2], [2, 3], [1, 3]);
+    else out.push([1, 2], [2, 3]);
+  }else if(geste === "RECOPIE"){
+    /* lot M4-5 (cas 3) : [a1, b1, a2, b2] — le premier plateau a1 A + b1 B, recopié k fois,
+       contient le second a2 A + b2 B (a2 = k × a1, b2 < b1 : aucun ne tient dans l'autre).
+       7 taches au plus par plateau, 5 au plus d'une même couleur (une rangée de 6 rapetisse
+       toutes les taches de la carte) ; le plateau recopié, 5 taches au plus, et sa barre
+       recopiée, k × (a1 + b1) cases, 12 au plus (la plus longue que les blocs de la correction
+       savent dessiner) : recopié 2 fois, un plateau de 6 taches (barre de 12 cases) donne un
+       corrigé toujours réduit à l'impression 2 par page (mesuré le 14/10 dans Chromium). Le
+       miroir (1 + 2 et 2 + 1, 1 + 3 et 3 + 1, 2 + 4 et 4 + 2) est écarté : on l'additionne, c'est
+       plus simple. MIX : 2 et 3 fois (sysTirerSituation tire d'abord le nombre de fois). */
+    const ks = o.foisRecopie === "MIX" ? [2, 3] : [o.foisRecopie || 2];
+    for(const k of ks) for(let a1 = 1; k * a1 <= 5; a1++) for(let b1 = 2; a1 + b1 <= 5; b1++){
+      if(k * (a1 + b1) > 12) continue;
+      for(let b2 = 1; b2 < b1 && k * a1 + b2 <= SYS_MAX_TACHES; b2++){
+        if(k * a1 === b1 && b2 === a1) continue;
+        out.push([a1, b1, k * a1, b2]);
+      }
+    }
   }else if(geste === "ESCALIER"){
     // a = 2 (décidé le 01/10) : le plus petit plateau demande de partager ; avec une seule
     // tache, il donnait la réponse tout de suite (même règle que la partie connue, 24/09)
@@ -4540,14 +4661,19 @@ function sysFormes(geste, o){
    défaut, les deux formes d'avant : 2 + 3 et 2 + 4) ; sens INDICE : c'est l'indice recopié
    qui a d taches de plus. 7 taches au plus. En sens INDICE, d = b est écarté : le grand
    plateau serait « l'indice recopié k − 1 fois, plus des taches de la 1re couleur », une
-   carte de la famille « je retire » (2 N + V et N + V : on retire une fois, il reste N). */
+   carte de la famille « je retire » (2 N + V et N + V : on retire une fois, il reste N).
+   Lot M4-5 (14/10/2026) : le sens INDICE n'existe qu'avec 2 fois. Son corrigé retire le petit
+   plateau UNE fois, puis retrouve ce qui reste dans le petit plateau ; avec 3 fois, ce qui reste
+   a toujours 2 fois les taches de la 1re couleur du petit plateau, il n'y tient jamais :
+   3 N + V et N + V, c'est un « je retire » qui laisse 2 N ; 3 N + 2 V et N + V (d = b), un
+   corrigé impossible. sysNormaliserReglages remet alors le sens PLATEAU. */
 function sysFormesDouble(k, indice, sens){
   const [a, b] = indice === "12" ? [1, 2] : [1, 1];
   const out = [];
   for(let d = 1; d <= 2; d++){
     const nB = sens === "INDICE" ? k * b - d : k * b + d;
     if(nB < 1 || k * a + nB > SYS_MAX_TACHES) continue;
-    if(sens === "INDICE" && d === b) continue;
+    if(sens === "INDICE" && (k !== 2 || d === b)) continue;
     out.push([a, b, d]);
   }
   return out;
@@ -4641,6 +4767,34 @@ function sysTirerSituation(rng, geste, couleurs, plage, o){
       sysPlateau({ [A]: b, [B]: a }, values)
     ] };
   }
+  if(geste === "RECOPIE"){
+    /* lot M4-5 : le premier plateau est celui qu'on recopie (boards[0]) ; « fois=MIX » tire
+       d'abord 2 ou 3 fois, puis la forme. Jamais de jeton visible (on recopierait les jetons). */
+    let k = o.foisRecopie;
+    if(k === "MIX") k = rInt(rng, 0, 1) === 1 ? 3 : 2;
+    const formes = sysFormes("RECOPIE", Object.assign({}, o, { foisRecopie: k }));
+    const [a1, b1, a2, b2] = formes[rInt(rng, 0, formes.length - 1)];
+    const values = { [A]: valeur(), [B]: valeur() };
+    return { geste, colors: [A, B], values, boards: [
+      sysPlateau({ [A]: a1, [B]: b1 }, values, []),
+      sysPlateau({ [A]: a2, [B]: b2 }, values)
+    ] };
+  }
+  if(geste === "ETAGES"){
+    /* lot M4-5 : deux gestes à la suite. Le geste des petits plateaux (« sous », ou l'un des
+       quatre), la forme du grand plateau (« grand » : 2 A + B + C ou A + B + 2 C), les deux
+       petits plateaux tirés comme une carte de ce geste (couleurs A et B, sans jeton visible),
+       puis la valeur de la 3e couleur. boards : le grand plateau, puis les deux petits. */
+    const sous = SYS_SOUS_GESTES.includes(o.sous) ? o.sous : SYS_SOUS_GESTES[rInt(rng, 0, SYS_SOUS_GESTES.length - 1)];
+    const grand = o.grand === "211" || o.grand === "112" ? o.grand : (rInt(rng, 0, 1) === 1 ? "112" : "211");
+    const petits = sysTirerSituation(rng, sous, couleurs, plage, Object.assign({}, o, { visMin: 0, visMax: 0 }));
+    const values = Object.assign({}, petits.values, { [C]: valeur() });
+    const [gA, gB, gC] = grand === "211" ? [2, 1, 1] : [1, 1, 2];
+    return { geste, sous, colors: [A, B, C], values, boards: [
+      sysPlateau({ [A]: gA, [B]: gB, [C]: gC }, values, []),
+      ...petits.boards.map(b => ({ counts: b.counts, total: b.total }))
+    ] };
+  }
   if(geste === "TROIS"){
     const values = { [A]: valeur(), [B]: valeur(), [C]: valeur() };
     return { geste, colors: [A, B, C], values, boards: [
@@ -4668,6 +4822,13 @@ function sysSituationValide(sit, plage, o){
   const principal = sit.boards[0];
   const total = principal.total == null ? sysSomme(principal.counts, sit.values) : principal.total;
   if(total < o.totalMin || total > o.totalMax) return false;
+  /* lot M4-5 : avec Je recopie et Deux gestes à la suite, un autre plateau peut avoir un plus
+     grand total que le premier : aucun ne dépasse le total maximum demandé */
+  if((sit.geste === "RECOPIE" || sit.geste === "ETAGES") && sit.boards.some(b => b.total > o.totalMax)) return false;
+  /* Deux gestes à la suite : 3 taches au plus d'une même couleur. Trois plateaux côte à côte,
+     4 taches sur une rangée : les taches tombent sous la taille de l'escalier (rayon 48 au lieu
+     de 61 à l'impression), le nom de la couleur n'y tient plus. */
+  if(sit.geste === "ETAGES" && sit.boards.some(b => Object.values(b.counts).some(n => n > 3))) return false;
   return sit.boards.slice(1).every(b => b.total >= plage.sousMin && b.total <= plage.sousMax);
 }
 
@@ -4729,6 +4890,8 @@ function sysAssemblerCarte(sit, plan, clues, secours){
     }),
     plan
   };
+  /* lot M4-5 : Deux gestes à la suite garde le geste de ses petits plateaux (sysTypeCarte) */
+  if(sit.sous) sys.sous = sit.sous;
   if(secours) sys.secours = true;
   return {
     family: "D",
@@ -4740,6 +4903,29 @@ function sysAssemblerCarte(sit, plan, clues, secours){
     _colorMap: colorMap,
     _sys: sys
   };
+}
+
+/* Le type d'une carte du Système (la classification du monde 4 : monde-4-audit-et-plan.md § 2,
+   puis la conception des deux livrets du 14/10/2026), lu sur son modèle — celui que les livrets
+   (render.py) vérifient fiche par fiche, et que les cartes jumelles suivront. Lot M4-5 :
+   « 3a+ » le miroir 1-3, « 3c·k » Je recopie (k = 2, 3 ou 4 fois), « 4e·t » Deux gestes à la
+   suite (t : le type de ses deux petits plateaux, « 4e·1c », « 4e·3c·2 »…). */
+function sysTypeCarte(card){
+  const S = card._sys, b = S.boards, n = (B, k) => B.counts[k] || 0, [A, Bk] = S.colors;
+  if(S.geste === "PARTIELLE") return "1a";
+  if(S.geste === "COEF") return n(b[0], Bk) - n(b[1], Bk) === 1 ? "1b" : "1c";
+  if(S.geste === "EMBOITE1") return "1d";
+  if(S.geste === "ESCALIER") return "1e";
+  if(S.geste === "MIROIR") return Math.abs(n(b[0], A) - n(b[0], Bk)) === 2 ? "3a+" : "3a";
+  if(S.geste === "TROIS") return "3b";
+  if(S.geste === "DOUBLE"){
+    const k = n(b[0], A) / n(b[1], A);
+    if(n(b[0], Bk) < k * n(b[1], Bk)) return k === 2 ? "2d" : "2b-";
+    return k === 3 ? "2b" : (n(b[1], Bk) === 2 ? "2c" : "2a");
+  }
+  if(S.geste === "RECOPIE") return "3c·" + n(b[1], A) / n(b[0], A);
+  if(S.geste === "ETAGES") return "4e·" + sysTypeCarte({ _sys: { geste: S.sous, colors: S.colors.slice(0, 2), boards: b.slice(1) } });
+  return "?";
 }
 
 function sysUneTacheParCouleur(sit){
@@ -4798,6 +4984,14 @@ function sysPhraseIndice(sit, board){
    L'étape « verification » porte aussi « reponses » : la valeur de chaque couleur.
    Aucune arithmétique n'est laissée au dessin : tout nombre écrit est déjà ici. */
 function sysPlanS3(sit){
+  /* lot M4-5 : les gestes nouveaux (Je recopie, Deux gestes à la suite) et le miroir 1-3 n'ont
+     pas de plan d'avant — le filtre lit le plan qui se dessine. Les cartes d'avant ne passent
+     jamais par ici : elles gardent leur filtre, leurs nombres, leurs cartes. */
+  if(sit.geste === "RECOPIE" || sit.geste === "ETAGES") return sysPlan(sit);
+  if(sit.geste === "MIROIR"){
+    const [A, B] = sit.colors;
+    if(Math.abs((sit.boards[0].counts[A] || 0) - (sit.boards[0].counts[B] || 0)) === 2) return sysPlan(sit);
+  }
   const v = sit.values;
   const C = sit.colors;
   const une = sysUneTacheParCouleur(sit);
@@ -5190,6 +5384,7 @@ function sysPlan(sit){
 
   if(sit.geste === "MIROIR"){
     // 2 N + 3 V = 31 ; 3 N + 2 V = 29 : j'additionne, je range par paires, je partage
+    // lot M4-5, miroir 1-3 (N + 3 V ; 3 N + V) : 1 paire retrouvée, il reste 2 V, je partage
     const [A, B] = C;
     const a = P.counts[A], b = P.counts[B];
     const O = sit.boards[1];
@@ -5199,6 +5394,7 @@ function sysPlan(sit){
     const m = Math.min(a, b);
     const E = a > b ? A : B;
     const F = E === A ? B : A;
+    const e = Math.abs(a - b);
     const T2 = T - V;
     const enPaires = (counts, plus) => {
       const p = Math.min(counts[A] || 0, counts[B] || 0);
@@ -5212,10 +5408,54 @@ function sysPlan(sit){
       ...(V ? [etape("retire", "Je retire", [barre(T2, pP2.cells, moins(T, visP), pP2.coupes)])] : []),
       etape("additionne", "J’additionne : je range par paires", [barre(T2 + S, tout.cells, `${T2} + ${S}`, tout.coupes)]),
       etape("partage", "Je partage", [barre(s, inc(A).concat(inc(B)), `${T2 + S} ÷ ${n}`)]),
-      etape("retrouve", `Je retrouve ${m} paire${m > 1 ? "s" : ""} dans le plateau`, [barre(T2, repeter(m, () => bloc(s, 2)).concat(inc(E)))]),
-      retire(v[E], moins(T2, repeter(m, () => s)), inc(E)),
+      etape("retrouve", `Je retrouve ${m} paire${m > 1 ? "s" : ""} dans le plateau`, [barre(T2, repeter(m, () => bloc(s, 2)).concat(inc(E, e)))]),
+      retire(e * v[E], moins(T2, repeter(m, () => s)), inc(E, e)),
+      ...(e > 1 ? [partage(E, e)] : []),
       remplaceConnue(s, E === A ? con(A).concat(inc(B)) : inc(A).concat(con(B))),
       retire(v[F], moins(s, [v[E]]), inc(F)),
+      verification()
+    ];
+  }
+
+  if(sit.geste === "RECOPIE"){
+    // lot M4-5, cas 3 — N + 3 B = 25 ; 2 N + B = 20 : je recopie 2 fois le plateau 25 (50), j'y
+    // retrouve le plateau 20, il reste 5 B (30) : je retire, je partage ; puis je remplace
+    const [A, B] = C;
+    const Q = sit.boards[1];
+    const S = Q.total;
+    const a = P.counts[A] || 0, b = P.counts[B] || 0;
+    const k = (Q.counts[A] || 0) / a;
+    const rB = k * b - (Q.counts[B] || 0);
+    const kfois = paquets(repeter(k, () => cases(P.counts)));
+    return [
+      etape("plateaux", "Les deux plateaux", [barre(T, cases(P.counts)), barre(S, cases(Q.counts))]),
+      etape("retrouve", `Je recopie ${k} fois le plateau ${T}`, [barre(k * T, kfois.cells, `${k} × ${T}`, kfois.coupes)]),
+      etape("retrouve-reste", `Je retrouve le plateau ${S} dedans`, [barre(k * T, [bloc(S, sysNombreTaches(Q))].concat(inc(B, rB)))]),
+      retire(rB * v[B], moins(k * T, [S]), inc(B, rB)),
+      ...(rB > 1 ? [partage(B, rB)] : []),
+      remplaceConnue(T, inc(A, a).concat(con(B, b))),
+      retire(a * v[A], moins(T, repeter(b, () => v[B])), inc(A, a)),
+      ...(a > 1 ? [partage(A, a)] : []),
+      verification()
+    ];
+  }
+
+  if(sit.geste === "ETAGES"){
+    // lot M4-5, deux gestes à la suite — 2 B + Ve + O = 54 ; 2 B + 3 Ve = 53 ; 2 B + Ve = 43 :
+    // les deux petits plateaux se résolvent d'abord (leur geste, sans leur vérification), puis
+    // je remplace dans le grand plateau, je retire, je partage si la 3e couleur est en double
+    const [A, B, D] = C;
+    const gA = P.counts[A] || 0, gB = P.counts[B] || 0, gD = P.counts[D] || 0;
+    const petits = sit.boards.slice(1);
+    const sous = sysPlan({ geste: sit.sous, colors: [A, B], values: { [A]: v[A], [B]: v[B] }, boards: petits })
+      .filter(e => e.role !== "verification");
+    sous[0] = Object.assign({}, sous[0], { titre: "Les deux petits plateaux" });
+    return [
+      etape("plateaux", "Les trois plateaux", [barre(T, cases(P.counts))].concat(petits.map(b => barre(b.total, cases(b.counts))))),
+      ...sous,
+      etape("remplace", `Je remplace dans le plateau ${T}`, [barre(T, con(A, gA).concat(con(B, gB), inc(D, gD)))]),
+      retire(gD * v[D], moins(T, repeter(gA, () => v[A]).concat(repeter(gB, () => v[B]))), inc(D, gD)),
+      ...(gD > 1 ? [partage(D, gD)] : []),
       verification()
     ];
   }
@@ -10697,7 +10937,10 @@ function drawSysSystemeEcrit(g, p, places, xi, yi, xDroit, M, ctx){
     places.forEach(q => {
       if(q === p) return;
       const qx = xi + q.x, qy0 = yi + q.y, qy1 = qy0 + q.h;
-      if(qx > x - 1 && qy0 < yBas && qy1 > yHaut) lim = Math.min(lim, qx - E.ecart * M.f);
+      /* lot M4-5 : une étape voisine qui commence un peu avant le texte (les deux étapes de
+         plateaux de « Deux gestes à la suite », côte à côte) compte aussi : sa largeur, pas
+         seulement son bord gauche */
+      if(qx + q.w > x - 1 && qy0 < yBas && qy1 > yHaut) lim = Math.min(lim, qx - E.ecart * M.f);
       if(q.fleche && yi + q.fleche.y > yHaut - 1 && yi + q.fleche.y < yBas + M.hCase) lim = Math.min(lim, xi + q.fleche.x1 - 10 * M.f);
     });
     let fs = E.fs * M.f;
