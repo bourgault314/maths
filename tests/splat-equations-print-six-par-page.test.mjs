@@ -483,7 +483,7 @@ test("contrôle des dispositions de jetons unité imprimées : nombre, chevauche
 
 test("« suite » : une fiche = plusieurs séries bout à bout, chacune comme ouverte seule ; les réglages affichés restent ceux de la première", () => {
   const load = functionSource("loadSharedConfiguration", "appliquerConfiguration");
-  assert.match(load, /serieSuite = String\(params\.get\("suite"\) \|\| ""\)\s*\.split\(";"\)\.map\(part => part\.trim\(\)\)\.filter\(Boolean\)\.slice\(0, 5\);\s*reglagesOuverture = photographierReglages\(\);/);
+  assert.match(load, /serieSuite = String\(params\.get\("suite"\) \|\| ""\)\s*\.split\(";"\)\.map\(part => part\.trim\(\)\)\.filter\(Boolean\)\.slice\(0, 11\);\s*reglagesOuverture = photographierReglages\(\);/);
   // la photo des réglages d'ouverture couvre l'état que les réglages gardent d'un mode à l'autre
   const photo = functionSource("photographierReglages", "restaurerReglages");
   for(const v of ["equationStepView", "lastActivityForSigned", "lastActivityForBounds", "_tasksUIKeyPrev",
