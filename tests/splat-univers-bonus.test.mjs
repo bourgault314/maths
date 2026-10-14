@@ -50,7 +50,8 @@ test("un menu de partie naît fermé : bouton au clavier, pastille, titre, fiche
 
 test("les mondes à parties : chaque étape porte sa partie (data-partie), les autres mondes ne changent pas", () => {
   // lot M4-4 : le monde 4 n'a plus de parties (un livret, quatre fiches)
-  assert.deepEqual(JSON.parse(JSON.stringify(MONDES.map((m) => (m.volets || []).length))), [0, 0, 3, 0, 0, 2]);
+  // lot 3 de l'échauffement (14/10/2026) : le monde 6 a trois parties, l'échauffement puis les parties 1 et 2
+  assert.deepEqual(JSON.parse(JSON.stringify(MONDES.map((m) => (m.volets || []).length))), [0, 0, 3, 0, 0, 3]);
   assert.match(univers, /const partie=\(m\.volets\|\|\[\]\)\.findIndex\(x=>ei>=x\.de&&ei<x\.a\);/);
   // le Bonus vient aux mondes 3 et 4, après leurs étapes ; ailleurs, rien
   assert.match(univers, /\}\)\.join\(""\)\+bonusHtml\(m\)\+'<\/ol>';/);
@@ -127,7 +128,7 @@ test("le compteur du Bonus est à part : « ✨ x / 10 », hors du total et de �
 
 test("à l'arrivée, UNE partie ouverte par monde (05/10/2026) : celle que vise l'adresse, sinon le Bonus si l'élève y était, sinon la partie en cours", () => {
   const f = bloc("function ouvrirParties(){", "document.addEventListener(\"click\",ev=>{\n  const v=");
-  assert.match(f, /const premiere=sec\.querySelector\("\.etapes>li\.etape\[data-partie\]:not\(\.done\):not\(\.bonus\)"\);/);
+  assert.match(f, /let premiere=sec\.querySelector\("\.etapes>li\.etape\[data-partie\]:not\(\.done\):not\(\.bonus\)"\);/);
   assert.match(f, /const vise=\[\.\.\.volets\]\.find\(v=>elCible&&\(elCible===v\|\|\(sec\.contains\(elCible\)&&elCible\.dataset\.partie===v\.dataset\.volet\)\)\);/);
   assert.match(f, /const ouverte=vise\|\|\(bonus&&bonusRetenu\(bonusDeSection\(sec\)\)\?bonus:null\)\|\|\[\.\.\.volets\]\.find\(v=>v\.dataset\.volet===enCours\)\|\|null;/);
   assert.match(f, /volets\.forEach\(v=>ouvrirPartie\(v,v===ouverte\)\);/, "une seule ouverte");

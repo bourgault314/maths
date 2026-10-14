@@ -49,15 +49,17 @@ const PARCOURS_ENQ_AVANT_E5 = ["enq10", "enq11", "enq12", "enq13", "enq14", "enq
 const IDS_SIX_MONDES = ["e0-0", "e0-1", "e0-2", "e0-3", "e0-4", "e0-5", "e1-0", "e1-1", "e1-2",
   "enq-0", "enq-1", "enq-2", "enq-3", "enq-4", "enq-5", "enq-6", "enq-7", "enq-8", "enq-9", "enq-10", "enq-11", "enq-12", "enq-13", "enq-14",
   "sys-0", "sys-1", "sys-2", "sys-3",
-  "e2-0", "e2-1", "e2-3", "e3-0", "e3-1", "e3-2", "e3-3", "e3-4", "e3-5"];
+  "e2-0", "e2-1", "e2-3", "e3-ech1", "e3-ech2", "e3-ech3", "e3-0", "e3-1", "e3-2", "e3-3", "e3-4", "e3-5"];
 /* lot R2 (26/09/2026) : le monde 6 passe de 7 étapes à 6 fiches (38 à 43) — e3-6 et m4e7
    disparaissent ; ce monde n'avait aucun élève (caché au public depuis le 26/09).
    lot M4-4 (04/10/2026) : le monde 4 passe de 10 étapes à 4 fiches (25 à 28) — sys-4 … sys-9 et
-   sys29 … sys34 disparaissent ; ce monde n'a jamais été ouvert aux élèves (en préparation). */
+   sys29 … sys34 disparaissent ; ce monde n'a jamais été ouvert aux élèves (en préparation).
+   lot 3 de l'échauffement (14/10/2026) : trois étapes à code avant la 38 (e3-ech1 … e3-ech3,
+   parcours ech1 … ech3) ; les étoiles e3-0 … e3-5 des fiches 38 à 43 ne bougent pas. */
 const PARCOURS_SIX_MONDES = ["m1e1", "m1e2", "m1e3", "m1e4", "m1e5", "m1e6", "m2e1", "m2e4", "m2e5",
   "enq10", "enq11", "enq12", "enq13", "enq14", "enq15", "enq16", "enq17", "enq18", "enq19", "enq20", "enq21", "enq22", "enq23", "enq24",
   "sys25", "sys26", "sys27", "sys28",
-  "m3e1", "m3e2", "m3e4", "m4e1", "m4e2", "m4e3", "m4e4", "m4e5", "m4e6"];
+  "m3e1", "m3e2", "m3e4", "ech1", "ech2", "ech3", "m4e1", "m4e2", "m4e3", "m4e4", "m4e5", "m4e6"];
 /* le gabarit calcule l'identifiant ainsi (idEtape) : on refait le même calcul */
 const idEtape = (m, e, ei) => e.id || (m.idp + "-" + ei);
 
@@ -189,7 +191,8 @@ test("le numéro affiché d'une étape est continu dans tout l'univers", () => {
   let compteur = 0;
   const rangs = new Map();
   /* lot Q2 : un monde peut réserver des numéros (« premier ») — le monde 5 commence à 35 */
-  MONDES.forEach((m) => { if (m.premier) compteur = Math.max(compteur, m.premier - 1); m.etapes.forEach((e) => rangs.set(e, ++compteur)); });
+  /* l'échauffement du monde 6 (lot 3, 14/10/2026) : une étape à code (« É1 ») n'avance pas le compteur */
+  MONDES.forEach((m) => { if (m.premier) compteur = Math.max(compteur, m.premier - 1); m.etapes.forEach((e) => rangs.set(e, e.code || ++compteur)); });
   assert.match(univers, /const depart=MONDES\.slice\(0,MONDES\.indexOf\(m\)\)/);
   assert.deepEqual(ENQUETE.etapes.map((e) => rangs.get(e)), [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]);
   assert.deepEqual(SYSTEME.etapes.map((e) => rangs.get(e)), [25, 26, 27, 28]);
@@ -281,9 +284,13 @@ test("six mondes : les parties sont des intertitres dans la liste, un par livret
   assert.match(univers, /const v=\(m\.volets\|\|\[\]\)\.find\(x=>x\.de===ei\), vi=\(m\.volets\|\|\[\]\)\.indexOf\(v\);/);
   /* depuis le 04/10/2026, chaque partie est un menu déroulant (voletHtml, vue élève) : même id,
      même pastille, mêmes fiches, mêmes étoiles ; ses étapes portent data-partie */
-  assert.match(univers, /const volet=!v\?'':voletHtml\(m\.idp\+'-partie-'\+\(vi\+1\),vi,'Partie '\+\(vi\+1\),v\.nom,\s*'fiches '\+compteur\+' à '\+\(compteur\+v\.a-v\.de-1\),v\.o,'stars'\+mi\+'-'\+vi,''\);/);
+  /* lot 3 de l'échauffement (14/10/2026) : l'id, la pastille et les fiches de la partie viennent de
+     partieId / partieRang / partieFiches — « Partie N » ne compte pas l'échauffement (monde 6) */
+  assert.match(univers, /const volet=!v\?'':voletHtml\(partieId\(m,v,vi\),partieCle\(v,vi\),partieRang\(m,v,vi\),v\.nom,\s*partieFiches\(m,v,compteur\),v\.o,'stars'\+mi\+'-'\+vi,v\.ech\?' ech':''\);/);
+  assert.match(univers, /function partieRang\(m,v,vi\)\{return v\.ech\?"Échauffement":"Partie "\+partieNum\(m,vi\);\}/);
+  assert.match(univers, /function partieId\(m,v,vi\)\{return m\.idp\+\(v\.ech\?"-echauffement":"-partie-"\+partieNum\(m,vi\)\);\}/);
   assert.match(univers, /'<span class="rang">'\+rang\+'<\/span>'/);
-  assert.match(univers, /return volet\+'<li class="etape" id="'\+ids\[ei\]\+'"'\+\(partie>=0\?' data-partie="'\+partie\+'"':''\)\+'>'/);
+  assert.match(univers, /return volet\+'<li class="etape'\+\(e\.code\?' code':''\)\+'" id="'\+ids\[ei\]\+'"'\+\(clePartie!==null\?' data-partie="'\+clePartie\+'"':''\)\+'>'/);
   /* les étoiles de la partie : comptées sur ses étapes (de ≤ ei < a), dans majAffichage */
   assert.match(univers, /'<span class="stars" id="'\+idStars\+'"><\/span>'\+CHEV_P/);
   assert.match(univers, /for\(let ei=v\.de;ei<v\.a;ei\+\+\)\{ if\(document\.getElementById\(idEtape\(m,m\.etapes\[ei\],ei\)\)\.classList\.contains\("done"\)\) fv\+\+; \}/);
@@ -329,7 +336,7 @@ test("la correction n'est offerte qu'en vue professeur", () => {
 
 test("les textes qui comptent les mondes suivent l'ajout", () => {
   const total = MONDES.reduce((n, m) => n + m.etapes.length, 0);
-  assert.equal(total, 37); // lot R2 : monde 6 à six fiches ; lot « six mondes » : + 5 (3e partie de l'Enquête) ; lot M4-4 : le Système à 4 fiches (le Bonus est hors du total)
+  assert.equal(total, 40); // l'échauffement du monde 6 (lot 3, 14/10/2026) : + 3, dans le total ; lot R2 : monde 6 à six fiches ; lot « six mondes » : + 5 (3e partie de l'Enquête) ; lot M4-4 : le Système à 4 fiches (le Bonus est hors du total)
   assert.match(univers, new RegExp(`id="totalTxt">0 / ${total} étoiles<`));
   assert.match(univers, /Traverse les six mondes/);
   /* le pied de la carte (relecture du monde 1, 25/09/2026) : les crédits de la page des
@@ -343,7 +350,7 @@ test("les textes qui comptent les mondes suivent l'ajout", () => {
   assert.match(univers, /content="Six mondes à jouer en ligne/);
   // les notes du professeur qui citent un numéro de monde suivent aussi
   assert.ok(NOTES_MONDE[5].endsWith("Après le monde 5."));
-  assert.equal(NOTES_PROF[5].length, 6);
+  assert.equal(NOTES_PROF[5].length, 9);   // l'échauffement É1-É3 (lot 3, 14/10/2026), puis les fiches 38 à 43
   // le catalogue et la page de toutes les ressources (lot E5)
   const catalogue = lire("assets/js/catalogue-refonte-data.js");
   assert.equal((catalogue.match(/[Ss]ix mondes \\u00e0 jouer en ligne/g) || []).length, 2);

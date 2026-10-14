@@ -119,7 +119,9 @@ const bloc = (t, a, b) => t.slice(t.indexOf(a), t.indexOf(b, t.indexOf(a)));
 const ctx = vm.createContext({ encodeURIComponent, decodeURIComponent, escape, unescape, atob, btoa });
 vm.runInContext(bloc(univers, "const PS=", "const PROF =") + ";globalThis.X={MONDES};", ctx);
 const { MONDES } = JSON.parse(JSON.stringify(ctx.X));
-const RELATIFS = MONDES.find((m) => m.idp === "e3");
+const RELATIFS_TOUT = MONDES.find((m) => m.idp === "e3");
+/* les fiches 38 à 43 (le lot 3 a mis l'échauffement É1-É3 devant elles, des étapes à code) */
+const RELATIFS = { ...RELATIFS_TOUT, etapes: RELATIFS_TOUT.etapes.filter((e) => !e.code) };
 const decode = (u) => JSON.parse(Buffer.from(u.slice(u.indexOf("#data=") + 6).replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8"));
 const defi = (form, opp, tmax, g) => `mode=EQPMSTEP&form=${form}&opposites=${opp}&tasksMax=${tmax}&visibleMin=2&visibleMax=3`
   + `&beadMax=60&totalMin=-99&totalMax=99&cards=2&seed=${g}&unknown=letter`;

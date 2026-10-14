@@ -46,7 +46,8 @@ function etapesDeLaCarte() {
   let c = 0; const out = [];
   MONDES.forEach((m, mi) => {
     if (m.premier) c = Math.max(c, m.premier - 1);
-    for (const e of m.etapes) { c++; if (m.actif) out.push([e.p, c, e.t, m.nom, mi + 1]); }
+    /* l'échauffement du monde 6 (lot 3, 14/10/2026) : une étape à code (« É1 ») n'avance pas le compteur */
+    for (const e of m.etapes) { if (!e.code) c++; if (m.actif) out.push([e.p, e.code || c, e.t, m.nom, mi + 1]); }
   });
   return out;
 }
@@ -263,7 +264,7 @@ test("les trois outils chargent splat-etapes.js (sans defer, même version)", ()
   for (const [page, nom] of [[splat, "splat.html"], [petit, "splat_tache_barre.html"], [equa, "equasplat.html"]]) {
     const m = page.match(/<script src="\.\.\/assets\/js\/splat-etapes\.js\?v=([\w-]+)"><\/script>/);
     assert.ok(m, `${nom} ne charge pas splat-etapes.js`);
-    assert.equal(m[1], "20261014-2", `${nom} : ?v= de splat-etapes.js`);
+    assert.equal(m[1], "20261014-3", `${nom} : ?v= de splat-etapes.js`);
     // dans <head>, avant tout script de la page
     assert.ok(page.indexOf(m[0]) < page.indexOf("</head>"), `${nom} : le script doit être dans <head>`);
     // la petite ligne a son style

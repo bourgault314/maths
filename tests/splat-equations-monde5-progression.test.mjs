@@ -236,14 +236,16 @@ test("Q2 : la carte saute jusqu'à la fiche 35 ; « premier » garde les numéro
   assert.equal(EQUATIONS.premier, 35);
   assert.match(univers, /if\(m\.premier\) compteur=Math\.max\(compteur,m\.premier-1\);/);
   /* le compteur du gabarit, refait ici */
-  const numeros = (mondes) => { let c = 0; return mondes.map((m) => { if (m.premier) c = Math.max(c, m.premier - 1); return m.etapes.map(() => ++c); }); };
+  /* l'échauffement du monde 6 (lot 3, 14/10/2026) : une étape à code (« É1 ») garde son code et
+     n'avance pas le compteur */
+  const numeros = (mondes) => { let c = 0; return mondes.map((m) => { if (m.premier) c = Math.max(c, m.premier - 1); return m.etapes.map((e) => e.code || ++c); }); };
   const n = numeros(MONDES);
   /* lot « six mondes » (24/09) : les quinze étapes étaient arrivées (Enquête 20-24, Système 25-34) ;
      lot M4-4 (04/10/2026) : le Système n'a plus que quatre fiches (25-28) — 29 à 34 redeviennent
      libres et « premier » resert : le monde 5 garde 35, 36, 37 (déjà imprimées) */
   assert.deepEqual(n[3].slice(-1), [28]);
   assert.deepEqual(n[4], [35, 36, 37]);
-  assert.deepEqual(n[5], [38, 39, 40, 41, 42, 43]);   // lot R2 : six fiches
+  assert.deepEqual(n[5], ["É1", "É2", "É3", 38, 39, 40, 41, 42, 43]);   // lot R2 : six fiches ; lot 3 de l'échauffement : É1-É3 devant
   EQUATIONS.etapes.forEach((e, k) => assert.equal(e.n, n[4][k], "le badge et la fiche disent le même numéro"));
   const sans = MONDES.map((m) => (m === EQUATIONS ? { ...m, premier: undefined } : m));
   assert.deepEqual(numeros(sans)[4], [29, 30, 31], "sans « premier », le monde 5 glisserait : « premier » est indispensable");
