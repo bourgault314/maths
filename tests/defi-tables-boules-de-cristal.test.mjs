@@ -1,11 +1,11 @@
 // Lot « boules de cristal » (décision de Gwenaël du 14/10/2026, planche 5) :
-// dans Mon parcours et sur l'accueil, les cinq marches de l'escalier sont des
-// boules de même taille ; leurs étoiles aussi ont toutes la même taille, rangées
+// dans Mon parcours, les cinq marches de l'escalier sont des boules de même
+// taille ; leurs étoiles aussi ont toutes la même taille, rangées
 // comme sur les Dragon Balls (1 au centre · 2 en diagonale · 3 en triangle ·
 // 4 en carré · 5 en quinconce). Gagnée : orange, étoiles rouges ; à tenter :
 // blanche cerclée d'orange ; plus tard : grise en pointillés. Le badge « ★★ »
-// au-dessus est retiré ; « 👑 Légende des tables » reste. La fiche (papier)
-// garde ses étoiles.
+// au-dessus est retiré ; « 👑 Légende des tables » reste. L'accueil garde son
+// escalier doré (choix du 14/10 au soir) et la fiche (papier) ses étoiles.
 
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -141,14 +141,13 @@ test("Mon parcours : chaque case de l'escalier est une boule ; plus de badge ★
   assert.deepEqual(etat.expert.marches.map(m => (m.gagnee ? "gagnee" : jouable(m) ? "suivante" : "plustard")), ["gagnee", "gagnee", "suivante", "plustard", "plustard"]);
 });
 
-test("l'accueil : les mêmes boules, à la même taille, plus des blocs de plus en plus hauts", () => {
+test("l'accueil garde son escalier doré, avec ses étoiles (choix de Gwenaël du 14/10 au soir)", () => {
   const zone = entre("        expert.marches.forEach(marche => {\n          const item = document.createElement(\"div\");", "          escalier.append(item);");
-  assert.match(zone, /const boule = bouleMarche\(marche, marche\.gagnee \? "gagnee" : marche\.suivante \? "suivante" : "plustard"\);/);
-  assert.match(zone, /item\.append\(boule, duree\);/);
-  assert.doesNotMatch(zone, /className = "bloc"/);
-  assert.doesNotMatch(html, /\.marche:nth-child\(\d\) \.bloc|\.marche \.bloc/, "plus de blocs d'escalier dans le CSS");
-  assert.match(html, /\.marche \.boule \{ display: block; width: 100%; max-width: 52px; height: auto; aspect-ratio: 1; \}/);
-  assert.match(html, /\.marche\.is-suivante small \{ color: #a65a00; \}/, "la durée de la marche à tenter en orange foncé, comme sa boule");
+  assert.match(zone, /bloc\.className = "bloc";\s*bloc\.append\(symboleMarche\(marche\)\);/);
+  assert.match(zone, /item\.append\(bloc, duree\);/);
+  assert.doesNotMatch(zone, /bouleMarche/, "pas de boules sur l'accueil");
+  assert.match(html, /\.marche:nth-child\(1\) \.bloc \{ height: 40px; \} \.marche:nth-child\(2\) \.bloc \{ height: 52px; \}/, "les marches de plus en plus hautes");
+  assert.match(html, /\.marche\.is-suivante small \{ color: var\(--blue\); \}/);
 });
 
 test("la fiche (papier) garde ses étoiles et sa couronne", () => {

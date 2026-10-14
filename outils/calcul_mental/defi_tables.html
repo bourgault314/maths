@@ -456,25 +456,29 @@
     .expert { padding: 14px 14px 14px; border: 2px solid #f0dc8c; border-radius: 22px; background: linear-gradient(180deg, #fffdf3, #fff); }
     .expert .eyebrow { margin: 0; color: #7a5a00; font-size: .74rem; letter-spacing: .06em; }
     .expert h2 { margin: 2px 0 12px; font-size: 1.35rem; line-height: 1.15; color: var(--ink); }
-    .escalier { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; align-items: center; margin: 0 0 12px; }
+    .escalier { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; align-items: end; margin: 0 0 12px; }
     /* Lot 2a : à 360 px et moins, les cinq marches (★★★★, « 1 min 45 »)
        poussaient le bloc hors de l'écran (395 px de large pour 360) — défaut
        d'avant la séance, relevé en contrôlant l'accueil des 9 tables. */
     @media (max-width: 380px) {
+      .marche .bloc { font-size: .8rem; }
+      .marche:nth-child(3) .bloc { font-size: .72rem; }
+      .marche:nth-child(4) .bloc { font-size: .6rem; }
+      .marche:nth-child(5) .bloc { font-size: 1.05rem; }
       .marche small { font-size: .64rem; }
       .matable.is-toutes .matable-head { flex-wrap: wrap; row-gap: 2px; }
       .matable.is-toutes .matable-droite { margin-left: auto; }
     }
     .marche { display: grid; justify-items: center; gap: 4px; }
-    /* Lot « boules de cristal » (14/10/2026) : les cinq marches sont des
-       boules de même taille (bouleMarche), plus des blocs de plus en plus
-       hauts — la même boule que dans Mon parcours. */
-    .marche .boule { display: block; width: 100%; max-width: 52px; height: auto; aspect-ratio: 1; }
+    .marche .bloc { width: 100%; border-radius: 10px 10px 4px 4px; display: grid; place-items: end center; padding-bottom: 6px; font-size: 1.05rem; letter-spacing: -.06em; border: 2px solid #dfe6ec; background: #f1f4f7; color: #b0bcc7; line-height: 1; }
+    .marche:nth-child(1) .bloc { height: 40px; } .marche:nth-child(2) .bloc { height: 52px; } .marche:nth-child(3) .bloc { height: 64px; } .marche:nth-child(4) .bloc { height: 76px; } .marche:nth-child(5) .bloc { height: 88px; font-size: 1.3rem; letter-spacing: 0; }
+    .marche.is-gagnee .bloc { background: linear-gradient(180deg, #ffe89a, #f2c230); border-color: #d9a300; color: #7a5a00; }
+    .marche.is-suivante .bloc { background: #fff; border-color: var(--blue); color: var(--blue); box-shadow: 0 0 0 3px rgba(7, 85, 184, .16); }
     /* R5 (A18) : la couronne est un dessin en currentColor, pas l'emoji 👑 —
        elle se grise donc dans une marche non gagnée, exactement comme ★. */
     .couronne { width: 1.2em; height: 1em; vertical-align: -.08em; fill: currentColor; }
     .marche small { font-size: .72rem; font-weight: 900; color: #5b7286; white-space: nowrap; }
-    .marche.is-gagnee small { color: #7a5a00; } .marche.is-suivante small { color: #a65a00; }
+    .marche.is-gagnee small { color: #7a5a00; } .marche.is-suivante small { color: var(--blue); }
     .expert .etape { min-height: 60px; }
     .expert .etape.is-next .num { font-size: 1.15rem; }
     .expert .etape.is-next strong { color: var(--blue); }
@@ -555,6 +559,7 @@
       .etape { min-height: 60px; }
       .etape strong { font-size: 1.12rem; }
       .escalier { gap: 8px; }
+      .marche:nth-child(1) .bloc { height: 48px; } .marche:nth-child(2) .bloc { height: 62px; } .marche:nth-child(3) .bloc { height: 76px; } .marche:nth-child(4) .bloc { height: 90px; } .marche:nth-child(5) .bloc { height: 104px; }
     }
     /* Audit 4 (01/10/2026) : sur ordinateur, un choix déplié (J'apprends,
        Je m'entraîne) prend la place des autres étapes et des liens du bas,
@@ -8282,11 +8287,12 @@
         expert.marches.forEach(marche => {
           const item = document.createElement("div");
           item.className = `marche${marche.gagnee ? " is-gagnee" : ""}${marche.suivante ? " is-suivante" : ""}`;
-          // Lot « boules de cristal » : la même boule que dans Mon parcours.
-          const boule = bouleMarche(marche, marche.gagnee ? "gagnee" : marche.suivante ? "suivante" : "plustard");
+          const bloc = document.createElement("div");
+          bloc.className = "bloc";
+          bloc.append(symboleMarche(marche));
           const duree = document.createElement("small");
           duree.textContent = marche.libelleDuree;
-          item.append(boule, duree);
+          item.append(bloc, duree);
           item.setAttribute("aria-label", `${marche.symbole} en ${marche.libelleDuree} : ${marche.gagnee ? "gagnée" : marche.suivante ? "à tenter" : "plus tard"}`);
           escalier.append(item);
         });
@@ -9755,15 +9761,16 @@
       }
 
       // Lot « boules de cristal » (décision de Gwenaël du 14/10/2026, planche
-      // 5) : dans Mon parcours et sur l'accueil, chaque marche de l'escalier
-      // est une boule. Ses étoiles ont toutes la même taille (avant, les cinq
-      // étoiles de la 4e marche étaient minuscules à côté de la 1re), rangées
-      // comme sur les Dragon Balls : 1 au centre · 2 en diagonale · 3 en
-      // triangle · 4 en carré · 5 en quinconce. La 5e boule tient lieu de
-      // couronne. Gagnée : orange, étoiles rouges ; à tenter : blanche cerclée
-      // d'orange ; plus tard : grise en pointillés. La fiche (papier) garde
-      // ses étoiles. Chaque boule porte son propre dégradé (un identifiant à
-      // elle) : un dégradé pris dans un écran caché ne se dessinerait pas.
+      // 5) : dans Mon parcours, chaque marche de l'escalier est une boule.
+      // Ses étoiles ont toutes la même taille (avant, les cinq étoiles de la
+      // 4e marche étaient minuscules à côté de la 1re), rangées comme sur les
+      // Dragon Balls : 1 au centre · 2 en diagonale · 3 en triangle · 4 en
+      // carré · 5 en quinconce. La 5e boule tient lieu de couronne. Gagnée :
+      // orange, étoiles rouges ; à tenter : blanche cerclée d'orange ; plus
+      // tard : grise en pointillés. L'accueil garde son escalier doré (choix
+      // du 14/10 au soir) et la fiche (papier) ses étoiles. Chaque boule porte
+      // son propre dégradé (un identifiant à elle) : un dégradé pris dans un
+      // écran caché ne se dessinerait pas.
       const BOULE_ETOILES = Object.freeze({
         1: [[0, 0]],
         2: [[-.34, -.34], [.34, .34]],

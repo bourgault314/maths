@@ -163,13 +163,13 @@ test("sur la fiche, Mon mélange n’est jamais « à faire » ni « à refaire 
   assert.equal(dessin(etat.melange), "3G 6-", "réussi avec 3 tables : le premier trophée est gagné");
 });
 
-test("la couronne est un dessin en currentColor, sur la fiche : elle se grise comme les étoiles (A18) — l'écran a ses boules de cristal", () => {
+test("la couronne est un dessin en currentColor, sur l'accueil et la fiche : elle se grise comme les étoiles (A18) — Mon parcours a ses boules de cristal", () => {
   assert.match(html, /function symboleMarche\(marche\) \{\s*\n\s*if \(marche\.symbole !== "👑"\) return document\.createTextNode\(marche\.symbole\);[\s\S]*svg\.setAttribute\("class", "couronne"\);[\s\S]*path\.setAttribute\("d", "M2 6\.5 7\.2 11 12 3l4\.8 8L22 6\.5 19\.6 17H4\.4Z M4\.4 18\.5h15\.2v1\.5H4\.4Z"\);/);
   assert.match(html, /\.couronne \{ width: 1\.2em; height: 1em; vertical-align: -\.08em; fill: currentColor; \}/);
-  // Lot « boules de cristal » (14/10/2026) : l'escalier de l'accueil et les
-  // cases de Mon parcours sont des boules (bouleMarche) ; la fiche, seule,
-  // garde ses étoiles et sa couronne dessinée.
-  assert.match(html, /const boule = bouleMarche\(marche, marche\.gagnee \? "gagnee" : marche\.suivante \? "suivante" : "plustard"\);/, "l'escalier de l'accueil");
+  assert.match(html, /bloc\.className = "bloc";\s*\n\s*bloc\.append\(symboleMarche\(marche\)\);/, "l'escalier de l'accueil");
+  // Lot « boules de cristal » (14/10/2026) : les cases de Mon parcours sont
+  // des boules (bouleMarche) ; l'accueil et la fiche gardent leurs étoiles et
+  // leur couronne dessinée.
   assert.match(html, /texte: bouleMarche\(marche, marche\.gagnee \? "gagnee" : jouable \? "suivante" : "plustard"\),/, "les cases de Mon parcours");
   assert.match(html, /star\.append\(symboleMarche\(marche\)\);/, "la ligne des étoiles de la fiche");
   assert.match(html, /\.fiche-stars \.couronne \{ width: 6\.5mm; height: 5\.4mm;/, "lot « Une seule fiche » : la couronne à la taille des étoiles de 15 pt");
