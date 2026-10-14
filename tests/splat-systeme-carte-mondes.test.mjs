@@ -28,18 +28,19 @@ vm.runInContext(
 const { MONDES, NOTES_MONDE, NOTES_PROF, SYS_FICHES, SYS_TOUR2, BONUS_MONDES } = JSON.parse(JSON.stringify(ctx.X));
 const SYSTEME = MONDES[3];
 
-/* Les adresses des fiches du lot M4-4 (04/10/2026) : réglages et graines TRIÉES (chaque carte a son
-   type, dans l'ordre de la fiche), les mêmes que _sources/livret-splat-systeme/render.py et que la
+/* Les adresses des fiches (livret 1 : lot M4-6, 14/10/2026 ; deuxième tour : lot M4-4) : réglages et
+   graines TRIÉES (chaque carte a son type, dans l'ordre de la fiche), les mêmes que
+   _sources/livret-splat-systeme/render.py et que la
    page courte des QR. Une graine ou un réglage qui bouge ici, ce sont les fiches, les PDF et les
    livrets du Système à refaire. */
 const BASE = "/splat/classique/?";
 const FIN = "&cards=4&unknown=question";
 const T = "&totalMin=20&totalMax=60", V0 = "&visibleMin=0&visibleMax=0";
 const FICHES = [
-  [25, "Je retire", "mode=D&geste=MIX&gestes=PARTIELLE,COEF" + V0 + T + "&seed=24"],
-  [26, "Trois couleurs", "mode=D&geste=EMBOITE1" + V0 + T + "&seed=22"],
-  [27, "Je double", "mode=D&geste=DOUBLE&sens=MIX" + V0 + T + "&seed=222"],
-  [28, "J'additionne", "mode=D&geste=MIX&gestes=MIROIR,TROIS" + V0 + T + "&seed=53"]
+  [25, "Je retire", "mode=D&geste=MIX&gestes=PARTIELLE,COEF,DOUBLE" + V0 + T + "&seed=1196"],
+  [26, "Je remplace", "mode=D&geste=MIX&gestes=EMBOITE1,ESCALIER,DOUBLE&sens=INDICE" + V0 + T + "&seed=29"],
+  [27, "J'additionne", "mode=D&geste=MIX&gestes=MIROIR,TROIS&forme=MIX" + V0 + T + "&seed=723"],
+  [28, "À toi de choisir", "mode=D&geste=MIX&gestes=COEF,MIROIR,DOUBLE&forme=MIX&sens=INDICE" + V0 + T + "&seed=117944"]
 ];
 const TOUR2 = [
   ["25d", "L'escalier", "mode=D&geste=ESCALIER" + V0 + T + "&seed=3046"],
@@ -49,7 +50,7 @@ const TOUR2 = [
 ];
 const titre = (n, t) => encodeURIComponent(`Fiche ${n} — ${t}`);
 
-test("Système : quatre étapes (fiches 25 à 28), les réglages et les graines du lot M4-4, rien d'autre", () => {
+test("Système : quatre étapes (fiches 25 à 28), les réglages et les graines du lot M4-6, rien d'autre", () => {
   assert.equal(SYSTEME.nom, "SPLAT! Système");
   assert.deepEqual(SYS_FICHES.map((f) => f.q), FICHES.map((f) => f[2]));
   assert.deepEqual(SYSTEME.etapes.map((e) => [e.n, e.t]), FICHES.map((f) => [f[0], f[1]]));
@@ -117,8 +118,12 @@ test("Système : la note du professeur porte le tableau de tous les systèmes du
   assert.match(note, /l'Enquête, c'est un indice qui compare deux taches/);
   assert.match(note, /le Système, c'est un indice qui donne un total partiel/);
   assert.match(note, /<table><tr><th>Ce que dit l'énoncé<\/th><th>Où dans SPLAT!<\/th><th>Programme<\/th><\/tr>/);
-  assert.equal((note.match(/<tr>/g) || []).length, 11, "l'en-tête et les dix lignes du tableau");
+  /* lot M4-6 : les lignes du Système suivent les 4 cas (je retire, j'additionne, je recopie ; recopier
+     les deux plateaux reste dehors) ; ce qui vise le Bonus s'écrira au lot M4-7 */
+  assert.equal((note.match(/<tr>/g) || []).length, 10, "l'en-tête et les neuf lignes du tableau");
   assert.match(note, /volontairement hors SPLAT!/);
+  for (const geste of ["je retire", "j'additionne", "je recopie l'un, puis je retire"]) assert.ok(note.includes("<b>" + geste + "</b>"), geste);
+  assert.match(note, /<td>recopier les deux plateaux \(2N \+ 3V ; 3N \+ 5V\)<\/td><td><b>volontairement hors SPLAT!<\/b><\/td><td>lycée<\/td>/);
   /* lot « vue prof » (27/09/2026) : le tableau passe dans un « Repère » replié (<details>), hors
      du <p> de l'intention (un <table> ferme un <p> et sortirait du texte) */
   assert.match(univers, /return '<p class="txt">'\+avant\+'<\/p><details><summary>Repère : tous les systèmes du collège, et où ils sont dans SPLAT!<\/summary>'\+t\.slice\(k\)\+'<\/details>';/);

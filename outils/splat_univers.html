@@ -78,7 +78,7 @@
   })(window);
 </script>
 <!-- La liste des mondes « en préparation » et la clé de Gwenaël (?essai=1) : en tête de assets/js/splat-etapes.js -->
-<script src="../assets/js/splat-etapes.js?v=20261008-5"></script>
+<script src="../assets/js/splat-etapes.js?v=20261014-1"></script>
 <!-- Le parcours de l'élève (moteur partagé avec les trois outils et le serveur de suivi), et
      l'habillage du suivi de classe (bloc de suivi, pied, garde) : lots 2 et 6, 08/10/2026 -->
 <script src="../assets/js/splat-parcours.js?v=20261008-5"></script>
@@ -742,27 +742,29 @@ const MONDE_ENQUETE={cls:"menq",idp:"enq",actif:true,nom:"SPLAT! Enquête",
   etapes:enqEtapes(0,15)};
 /* ---- SPLAT! Système, monde 4 : les livrets « tablette » du lot M4-4 (04/10/2026) ----
    Le mode D de l'outil : plusieurs plateaux, un total chacun, les mêmes couleurs partout.
-   Un livret pour tous, une idée par fiche (25 à 28), puis le deuxième tour, plus dur (25d à
+   Un livret pour tous, une idée par fiche (25 à 28, refait au lot M4-6 le 14/10/2026 : je
+   retire, je remplace, j'additionne, à toi de choisir), puis le deuxième tour, plus dur (25d à
    28d) : le Bonus du monde 4, comme au monde 3 (SYS_TOUR2, plus bas). Réglages et graines
-   TRIÉS au lot M4-4 (chaque carte a son type, dans l'ordre de la fiche) : ce sont exactement
+   TRIÉS (lots M4-4 et M4-6 : chaque carte a son type, dans l'ordre de la fiche) : ce sont exactement
    ceux des livrets (_sources/livret-splat-systeme/render.py) et de la page courte des QR
    (splat/systeme/livret/) — un test les compare. Ne jamais changer une graine sans refaire les
    PDF. Étoiles sys-0 … sys-3 (« id » en toutes lettres), parcours sys25 … sys28 : les
    anciennes fiches 25 à 34 (24/09) n'ont jamais été ouvertes aux élèves (monde en
-   préparation depuis le 26/09). */
+   préparation depuis le 26/09). Au lot M4-6, les fiches 25 à 28 changent de contenu sous les
+   mêmes étoiles : une étoile déjà gagnée le reste. */
 const SYS_FICHES=[
  {t:"Je retire",
   o:"Le petit plateau est dans le grand : retire-le, puis partage ce qui reste.",
-  q:"mode=D&geste=MIX&gestes=PARTIELLE,COEF&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=24"},
- {t:"Trois couleurs",
-  o:"Trois plateaux : retire, puis remplace ce que tu connais.",
-  q:"mode=D&geste=EMBOITE1&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=22"},
- {t:"Je double",
-  o:"Recopie le petit plateau deux fois, puis compare-le au grand.",
-  q:"mode=D&geste=DOUBLE&sens=MIX&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=222"},
+  q:"mode=D&geste=MIX&gestes=PARTIELLE,COEF,DOUBLE&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=1196"},
+ {t:"Je remplace",
+  o:"Remplace un petit plateau par son total, puis recommence.",
+  q:"mode=D&geste=MIX&gestes=EMBOITE1,ESCALIER,DOUBLE&sens=INDICE&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=29"},
  {t:"J'additionne",
   o:"Additionne les plateaux, puis partage.",
-  q:"mode=D&geste=MIX&gestes=MIROIR,TROIS&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=53"}
+  q:"mode=D&geste=MIX&gestes=MIROIR,TROIS&forme=MIX&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=723"},
+ {t:"À toi de choisir",
+  o:"Deux cartes qui se ressemblent… mais pas le même geste : à toi de choisir.",
+  q:"mode=D&geste=MIX&gestes=COEF,MIROIR,DOUBLE&forme=MIX&sens=INDICE&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=117944"}
 ];
 /* Le deuxième tour du monde 4 (lot M4-4) : le Bonus du monde 4, un menu sous les étapes, hors
    des étoiles du haut, comme au monde 3 ; chaque fiche a son parcours (sys25d…, sa tache
@@ -1093,13 +1095,12 @@ const NOTES_MONDE = [
  "<tr><td>A = B + d ou A = k × B, avec un total (partage inégal à 2 ou 3 taches)</td><td>Enquête, fiches 10 à 19</td><td>CM1-6e</td></tr>"+
  "<tr><td>pareil, plusieurs taches de chaque couleur</td><td>Enquête, fiches 20 et 21</td><td>6e</td></tr>"+
  "<tr><td>A = k × B <b>et</b> A = B + d, sans total</td><td>Enquête, fiches 22 et 23</td><td>CM2-6e</td></tr>"+
- "<tr><td>une partie connue (3 noires = 30) et le tout</td><td>Système, fiche 25</td><td>CM2-6e (la famille d'Inconnues en barres)</td></tr>"+
- "<tr><td>deux pesées, l'une contenue dans l'autre (2N + 1V = 25 ; 2N + 4V = 40)</td><td>Système, fiches 25, 26 et 25d</td><td>CM1-6e — l'exemple «\u00a0ciseaux et stylos\u00a0» du programme</td></tr>"+
- "<tr><td>il faut doubler (ou tripler) une pesée avant de comparer</td><td>Système, fiches 27, 26d et 28d</td><td>fin de cycle 3 («\u00a0lapins et poules\u00a0», Eduscol), cycle 4</td></tr>"+
- "<tr><td>deux pesées en miroir, on additionne</td><td>Système, fiche 28</td><td>cycle 4 (défi)</td></tr>"+
- "<tr><td>trois paires (N + V ; V + O ; N + O)</td><td>Système, fiches 28 et 28d (dernière carte)</td><td>cycle 3 défi / cycle 4</td></tr>"+
+ "<tr><td>une partie connue (3 noires = 30) et le tout</td><td>Système, fiche 25</td><td>CM2-6e</td></tr>"+
+ "<tr><td>un plateau dans l'autre (2N + V = 25 ; 2N + 4V = 40) : <b>je retire</b></td><td>Système, fiches 25, 26, 28</td><td>CM1-6e, «\u00a0ciseaux et stylos\u00a0»</td></tr>"+
+ "<tr><td>deux plateaux en miroir, trois paires : <b>j'additionne</b></td><td>Système, fiches 27, 28</td><td>fin cycle 3, cycle 4</td></tr>"+
+ "<tr><td>aucun plateau dans l'autre (N + 3V = 34 ; 2N + V = 28) : <b>je recopie l'un, puis je retire</b></td><td>Système, défi du livret 1</td><td>fin cycle 3 («\u00a0lapins et poules\u00a0»), cycle 4</td></tr>"+
  "<tr><td>l'inconnue dans les deux membres (2x + 4 = 3x + 3)</td><td>mondes 5 et 6</td><td>4e-3e</td></tr>"+
- "<tr><td>systèmes quelconques (2N + 3V ; 3N + 5V)</td><td><b>volontairement hors SPLAT!</b></td><td>lycée</td></tr></table>",
+ "<tr><td>recopier les deux plateaux (2N + 3V ; 3N + 5V)</td><td><b>volontairement hors SPLAT!</b></td><td>lycée</td></tr></table>",
  "Deux plateaux, la même quantité : l'élève dessine le schéma ou écrit l'équation. Une nouveauté à la fois, tout mélangé à la fin.",
  "Les relatifs : le jeton rouge est négatif, la tache «\u00a0opposé\u00a0» cache −𝑥. L'élève écrit l'équation. Après le monde 5."
 ];
@@ -1128,10 +1129,10 @@ const NOTES_PROF = [
   "Sans total : deux indices sur la même paire.",
   "Sans total, indices à retourner.",
   "Bilan de la partie 3."],
- ["Une partie connue, une tache de plus, puis on partage.",
-  "Trois plateaux : retirer, puis remplacer.",
-  "Doubler le petit plateau ; dernière carte : le doublé dépasse.",
-  "Deux plateaux en miroir : additionner ; dernière carte : trois paires."],
+ ["Retirer : une tache de plus, une partie connue, partager ; le petit tient deux fois.",
+  "Remplacer : trois couleurs, l'escalier ; dernière carte : le double dépasse.",
+  "Additionner : miroir 1-2, trois paires, miroir 2-3 ; dernière carte : miroir 1-3.",
+  "Par page, deux cartes au même premier plateau, pas le même geste : retirer ou additionner."],
  ["x + b = c, puis a × x = c : un par un, puis en paquets.",
   "Enlever, puis partager : 2 ou 3 taches, puis 4 à 6.",
   "Des taches sur les deux plateaux, puis le grand mélange."],
