@@ -167,7 +167,13 @@ test("8 sur 10 à la marche 7 : la marche 7 refaite à la place de la marche 8 ;
   const ouverte = P.programmeDeSeance(p, P.ouvrirSeance(p, {aujourdhui: jour(2), table: 3}), jour(2));
   assert.deepEqual(ouverte.etapes.map(etape => (etape.prevue.type === "marche" ? etape.prevue.marche : etape.type)), ["revision", 6, 7, 8]);
   assert.equal(ouverte.etapes[3].conditionnelle, true, "la carte : « Je passe le test · si j'ai 9 sur 10 juste avant »");
-  assert.equal(ouverte.raccourciEnFin, false, "la carte annonce 4 étapes");
+  // Lot « après l'audit GPT » (D13) : la carte dit « 4 ou 5 étapes » — la
+  // marche 7 refaite peut se glisser avant le test ; le test est déjà dans
+  // la liste (pas de 5e ligne), une minute de plus au plus.
+  assert.equal(ouverte.raccourciEnFin, true, "la carte annonce 4 ou 5 étapes");
+  assert.equal(ouverte.testDejaAnnonce, true, "le test est déjà la 4e ligne : pas de 5e ligne");
+  assert.equal(ouverte.minutesMax, ouverte.minutes + 1, "la marche 7 refaite : 1 min de plus");
+  assert.equal(ouverte.minutes, 1 + 1 + 1 + 2, "le test annoncé compte 2 min, pas la minute de la marche qu'il remplace");
   // 8 sur 10 à la marche 7, puis 9 sur 10 à la marche 7 refaite.
   let septs = 0;
   const s = jouerSeance(p, jour(2), etape => (etape.cle === "mixte" ? (septs++ === 0 ? 2 : 1) : 0), 3);

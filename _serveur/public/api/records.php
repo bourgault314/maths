@@ -4,9 +4,11 @@
 //
 //  - {code, lire: true}        → la ligue de SON professeur (deux top 10),
 //                                sa place, son record, son choix de nom ;
-//  - {code, temps, justes}     → une course finie : « temps » en dixièmes
+//  - {code, temps, justes, jour} → une course finie : « temps » en dixièmes
 //                                de seconde, « justes » les bonnes réponses
-//                                sur 25 ; le serveur juge (lib/records.php) ;
+//                                sur 25 ; « jour » (facultatif, D8) le jour
+//                                de la course « AAAA-MM-JJ », pour sa
+//                                semaine ; le serveur juge (lib/records.php) ;
 //  - {code, nom: true|false}   → prénom ou Mystère (changeable à volonté).
 //
 // Réponses hors 200 que l'appli distingue :
@@ -114,7 +116,8 @@ try {
         // sa progression. Rien n'est écrit.
         repondre(['ok' => false, 'legende' => false, 'erreur' => "Pas encore Légende des tables."], 409);
     }
-    $resultat = enregistrer_course($pdo, $eleveId, $temps);
+    // D8 : le jour de la course, s'il est plausible ; sinon aujourd'hui.
+    $resultat = enregistrer_course($pdo, $eleveId, $temps, jour_de_course($corps['jour'] ?? null));
     $reponse(['nouveau' => $resultat['nouveau'], 'avant' => $resultat['avant']]);
 } catch (Throwable $e) {
     error_log('records: ' . $e->getMessage());

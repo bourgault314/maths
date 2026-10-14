@@ -2966,6 +2966,8 @@ const MATRICE_ATTENDUE = [
     'classes.supprimer' => 'proprietaire',
     'classes.supprimer_echues' => 'proprietaire',
     'eleves.supprimer' => 'proprietaire',
+    // Lot « après l'audit GPT » (D4, 14/10/2026) : retirer un temps des records.
+    'records.retirer' => 'proprietaire',
     'partages.ajouter' => 'proprietaire',
     'partages.supprimer' => 'proprietaire',
 ];
@@ -3043,6 +3045,7 @@ function jouer_action_lot11(string $action, array $lot11, string $jeton): int
         case 'eleves.fiche':
         case 'eleves.regenerer':
         case 'eleves.supprimer':
+        case 'records.retirer': // l'élève du lot n'a pas de temps : rien n'est effacé, le droit seul est éprouvé
             $corps['eleve_id'] = $lot11['eleve']['id'];
             break;
         case 'eleves.nommer':
@@ -4525,6 +4528,137 @@ verifier("records — verifier.php compte à part les temps de la saison et les 
         'verifier.php : l’ancien temps est compté à part');
     egal(['saison' => $temps['saison'] - 1, 'anciens' => 1], $compter());
     bd_test()->prepare('UPDATE records SET meilleur_le = ? WHERE eleve_id = ?')->execute([$avant['meilleur_le'], $toti['id']]);
+});
+
+// Lot « après l'audit GPT » (14/10/2026) : D4 « Retirer ce temps », D8 le
+// jour de la course.
+
+verifier("records — D4 : « Retirer ce temps » — le propriétaire efface le record et la semaine, le nom reste, la ligne reste, la ligue du professeur porte l'élève derrière chaque nom ; journalisé", function () use (&$recEleves, &$jetonS1, &$recClasse) {
+    vider_compteurs();
+    $toti = $recEleves[0];
+    $lea = $recEleves[1];
+    // La ligue du professeur : chaque ligne dit QUI (id, prénom saisi, classe),
+    // même derrière « Mystère » — jamais dans la ligue que lit l'appli élève.
+    $r = appel('/api/prof.php', ['action' => 'records.ligue'], ['jeton' => $jetonS1]);
+    $lignes = array_column($r['json']['toujours'], null, 'nom');
+    egal(['id' => (int)$toti['id'], 'prenom' => 'Toti', 'classe' => '306'], $lignes['Toti']['eleve'], 'Toti : son élève');
+    egal(['id' => (int)$lea['id'], 'prenom' => 'Léa', 'classe' => '306'], $lignes['Mystère']['eleve'], 'Mystère : le professeur sait qui');
+    $e = records_api($toti['code'], ['lire' => true]);
+    foreach ($e['json']['toujours'] as $ligne) vrai(!array_key_exists('eleve', $ligne), 'l’appli élève ne reçoit aucun identifiant');
+    vrai(!str_contains($e['texte'], '"prenom"'), 'ni prénom saisi');
+    // Le retrait : Toti a un record (650 depuis le test de la saison) et un
+    // temps de la semaine, nom = prénom.
+    egal(650, $e['json']['record']['meilleur']);
+    egal(650, $e['json']['record']['semaine']);
+    $avant = (int)bd_test()->query('SELECT COUNT(*) FROM records')->fetchColumn();
+    $r = appel('/api/prof.php', ['action' => 'records.retirer', 'eleve_id' => $toti['id']], ['jeton' => $jetonS1]);
+    egal(200, $r['code']);
+    egal(true, $r['json']['retire']);
+    vrai(!in_array('Toti', array_column($r['json']['toujours'], 'nom'), true), 'la ligue rendue ne l’a plus');
+    egal($avant, (int)bd_test()->query('SELECT COUNT(*) FROM records')->fetchColumn(), 'la ligne reste');
+    $ligne = bd_test()->query('SELECT meilleur, meilleur_le, semaine, semaine_lundi, nom FROM records WHERE eleve_id = ' . (int)$toti['id'])->fetch(PDO::FETCH_ASSOC);
+    egal(['meilleur' => null, 'meilleur_le' => null, 'semaine' => null, 'semaine_lundi' => null, 'nom' => 1], $ligne, 'temps effacés, le choix du nom reste');
+    $e = records_api($toti['code'], ['lire' => true]);
+    egal(null, $e['json']['record']['meilleur'], 'l’élève n’a plus de record');
+    egal(true, $e['json']['record']['nom'], 'mais garde son choix');
+    egal(null, $e['json']['rangToujours']);
+    // Sa prochaine course compte comme une première.
+    $r = records_api($toti['code'], ['temps' => 601, 'justes' => 25]);
+    egal(true, $r['json']['nouveau']);
+    egal(null, $r['json']['avant']);
+    egal(601, $r['json']['record']['meilleur']);
+    // Rien à retirer (retiré une seconde fois, avant sa nouvelle course, ci-dessus) : 200, retire = false.
+    bd_test()->prepare('UPDATE records SET meilleur = NULL, meilleur_le = NULL, semaine = NULL, semaine_lundi = NULL WHERE eleve_id = ?')->execute([(int)$toti['id']]);
+    $r = appel('/api/prof.php', ['action' => 'records.retirer', 'eleve_id' => $toti['id']], ['jeton' => $jetonS1]);
+    egal(200, $r['code']);
+    egal(false, $r['json']['retire'], 'plus rien à retirer : pas une erreur');
+    // Journal : chaque demande du propriétaire = une ligne.
+    egal(2, (int)bd_test()->query("SELECT COUNT(*) FROM journal WHERE action = 'records.retirer' AND resultat = 'ok' AND cible_id = " . (int)$toti['id'])->fetchColumn(), 'journalisé');
+    // Toti rejoue (601) pour les tests suivants.
+    records_api($toti['code'], ['temps' => 601, 'justes' => 25]);
+});
+
+verifier("records — D4 : un collègue (classe partagée en lecture) est refusé et journalisé ; l'élève d'un autre professeur est introuvable ; sans jeton, rien", function () use (&$recEleves, &$jetonS1, &$recJetonClaire, &$recCodeClaire) {
+    vider_compteurs();
+    // La 306 est partagée au collègue en lecture (test du cloisonnement).
+    $r = appel('/api/prof.php', ['action' => 'records.retirer', 'eleve_id' => $recEleves[1]['id']], ['jeton' => $recJetonClaire]);
+    egal(403, $r['code'], 'le collègue : refusé');
+    egal(1, (int)bd_test()->query("SELECT COUNT(*) FROM journal WHERE action = 'records.retirer' AND resultat = 'refus'")->fetchColumn(), 'le refus est au journal');
+    $ligne = bd_test()->query('SELECT meilleur FROM records WHERE eleve_id = ' . (int)$recEleves[1]['id'])->fetch(PDO::FETCH_ASSOC);
+    egal(450, (int)$ligne['meilleur'], 'rien n’a bougé');
+    // Jade, l'élève du collègue : pour gwenael, elle n'existe pas.
+    $jade = (int)bd_test()->query("SELECT id FROM eleves WHERE code = '$recCodeClaire'")->fetchColumn();
+    egal(404, appel('/api/prof.php', ['action' => 'records.retirer', 'eleve_id' => $jade], ['jeton' => $jetonS1])['code'], 'introuvable, comme partout');
+    egal(386, (int)bd_test()->query("SELECT meilleur FROM records WHERE eleve_id = $jade")->fetchColumn(), 'son temps est intact');
+    egal(404, appel('/api/prof.php', ['action' => 'records.retirer', 'eleve_id' => 999999], ['jeton' => $jetonS1])['code'], 'un élève qui n’existe pas : le même message');
+    egal(401, appel('/api/prof.php', ['action' => 'records.retirer', 'eleve_id' => $recEleves[1]['id']])['code'], 'sans jeton');
+});
+
+verifier("records — D8 : le jour de la course — plausible, il classe la course dans SA semaine ; sinon le jour de réception ; une course d'une semaine passée ne touche pas à la semaine en cours", function () use (&$recEleves) {
+    vider_compteurs();
+    require_once __DIR__ . '/../public/lib/records.php';
+    // jour_de_course : format strict, date réelle, pas dans le futur, 7 jours au plus.
+    $auj = '2026-10-14';
+    egal('2026-10-14', jour_de_course('2026-10-14', $auj));
+    egal('2026-10-11', jour_de_course('2026-10-11', $auj), 'dimanche dernier');
+    egal('2026-10-07', jour_de_course('2026-10-07', $auj), 'il y a 7 jours : encore accepté');
+    egal($auj, jour_de_course('2026-10-06', $auj), '8 jours : trop vieux');
+    egal($auj, jour_de_course('2026-10-15', $auj), 'demain : dans le futur');
+    egal($auj, jour_de_course('2026-02-30', $auj), 'une date qui n’existe pas');
+    egal($auj, jour_de_course('14/10/2026', $auj), 'pas le bon format');
+    egal($auj, jour_de_course("2026-10-14\n", $auj), 'rien d’autre que le jour');
+    egal($auj, jour_de_course(20261014, $auj), 'pas une chaîne');
+    egal($auj, jour_de_course(null, $auj), 'absent : aujourd’hui');
+    egal($auj, jour_de_course(['2026-10-14'], $auj), 'une liste');
+    // lundi_de : la semaine d'un jour.
+    egal('2026-10-05', lundi_de('2026-10-11'), 'le dimanche 11 est dans la semaine du lundi 5');
+    egal('2026-10-12', lundi_de('2026-10-14'));
+    // En vrai, par l'API : Léa B. (élève 1) a 450 de record ; cette semaine, rien ou 450.
+    $lea = $recEleves[1]['code'];
+    $pdo = bd_test();
+    $id = (int)$recEleves[1]['id'];
+    $lundi = lundi_courant();
+    $dimanche = (new DateTimeImmutable($lundi, new DateTimeZone(FUSEAU)))->modify('-1 day')->format('Y-m-d');
+    $lundiPasse = lundi_de($dimanche);
+    // Un temps de la semaine en cours, posé exprès.
+    $pdo->prepare('UPDATE records SET semaine = 470, semaine_lundi = ? WHERE eleve_id = ?')->execute([$lundi, $id]);
+    // Une course du dimanche soir (semaine passée), envoyée aujourd'hui : elle
+    // ne touche pas à la semaine en cours (470 reste) ; 440 < 450, c'est quand
+    // même le record de tous les temps, daté du dimanche.
+    $r = records_api($lea, ['temps' => 440, 'justes' => 25, 'jour' => $dimanche]);
+    egal(200, $r['code']);
+    egal(true, $r['json']['nouveau'], 'meilleur que 450 : le record, quel que soit le jour');
+    egal(440, $r['json']['record']['meilleur']);
+    egal($dimanche, $r['json']['record']['meilleurLe'], 'daté du jour de la course');
+    egal(470, $r['json']['record']['semaine'], 'la semaine en cours n’a pas bougé');
+    $ligne = $pdo->query("SELECT semaine, semaine_lundi, meilleur_le FROM records WHERE eleve_id = $id")->fetch(PDO::FETCH_ASSOC);
+    egal(470, (int)$ligne['semaine']);
+    egal($lundi, $ligne['semaine_lundi'], 'la semaine gardée reste celle en cours');
+    egal($dimanche, substr((string)$ligne['meilleur_le'], 0, 10));
+    // Une course de la semaine passée, moins bonne : rien ne bouge nulle part.
+    $r = records_api($lea, ['temps' => 480, 'justes' => 25, 'jour' => $dimanche]);
+    egal(false, $r['json']['nouveau']);
+    egal(470, $r['json']['record']['semaine']);
+    // Un jour impossible : la course est d'aujourd'hui (semaine en cours : 460 < 470 la remplace).
+    $r = records_api($lea, ['temps' => 460, 'justes' => 25, 'jour' => '2030-01-01']);
+    egal(460, $r['json']['record']['semaine'], 'jour dans le futur : jour de réception, donc cette semaine');
+    egal($lundi, $r['json']['record']['lundi']);
+    // Sans jour : comme avant.
+    $r = records_api($lea, ['temps' => 455, 'justes' => 25]);
+    egal(455, $r['json']['record']['semaine']);
+    // Une ligne de la semaine PASSÉE en base (élève qui n'a pas joué cette
+    // semaine), et une course de cette semaine : la nouvelle semaine s'ouvre.
+    $pdo->prepare('UPDATE records SET semaine = 300, semaine_lundi = ? WHERE eleve_id = ?')->execute([$lundiPasse, $id]);
+    $r = records_api($lea, ['temps' => 500, 'justes' => 25, 'jour' => jour_local()]);
+    egal(500, $r['json']['record']['semaine'], 'la semaine repart de cette course');
+    egal($lundi, $r['json']['record']['lundi']);
+    // Et une course de la semaine passée sur une ligne de la semaine passée : le min.
+    $pdo->prepare('UPDATE records SET semaine = 300, semaine_lundi = ? WHERE eleve_id = ?')->execute([$lundiPasse, $id]);
+    records_api($lea, ['temps' => 290, 'justes' => 25, 'jour' => $dimanche]);
+    $ligne = $pdo->query("SELECT semaine, semaine_lundi FROM records WHERE eleve_id = $id")->fetch(PDO::FETCH_ASSOC);
+    egal([290, $lundiPasse], [(int)$ligne['semaine'], $ligne['semaine_lundi']], 'même semaine passée : le meilleur des deux');
+    // Remise en ordre pour les tests suivants : le record de Léa B. à 450, pas de temps de semaine.
+    $pdo->prepare('UPDATE records SET meilleur = 450, semaine = NULL, semaine_lundi = NULL WHERE eleve_id = ?')->execute([$id]);
 });
 
 verifier("records — le record part avec l'élève supprimé, et avec la classe supprimée", function () use (&$recEleves, &$jetonS1, &$recJetonClaire, &$recCodeClaire) {

@@ -192,7 +192,7 @@ test("la case d'envoi : une course en attente et le record connu, seulement quan
 
 test("le moteur copié sur le serveur est le même octet pour octet, et son numéro a monté", () => {
   assert.equal(moteurCopie, moteur);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261009-3/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261014-1/);
   assert.match(html, /defi_tables_core\.js\?v=20261010-1/, "le noyau est resté à celui du lot « trois divisions »");
 });
 
@@ -216,7 +216,7 @@ test("la page : les deux écrans (le tableau à onglets, le choix du nom avec la
 test("la page : la course garde sa marque et perd sa durée après la normalisation du noyau ; le chrono monte", () => {
   assert.match(html, /if \(configuration\.course === "records"\) \{\s*config\.duration = null;\s*config\.course = "records";\s*\}/);
   assert.match(html, /configuration\.course = config\.course === "records" \? "records" : null;/);
-  assert.match(html, /if \(state\.configuration\?\.course === "records"\) \{\s*\$\("time"\)\.textContent = formatTime\(Math\.floor\(\(Date\.now\(\) - state\.startAt\) \/ 1000\)\);\s*return;\s*\}/);
+  assert.match(html, /if \(state\.configuration\?\.course === "records"\) \{\s*\$\("time"\)\.textContent = formatTime\(Math\.floor\(\(horlogeSerie\(\) - state\.startAt\) \/ 1000\)\);\s*return;\s*\}/);
   assert.match(html, /if \(DURATION !== null \|\| course\) state\.timer = window\.setInterval\(updateTimer, 200\);/);
   assert.match(html, /course \? "Temps écoulé" : DURATION === null \? "Sans chrono" : "Temps restant"/);
 });
@@ -345,7 +345,8 @@ test("en marche : une course à 25 sur 25 part tout de suite ; le serveur répon
   await new Promise(r => setTimeout(r, 5));
   appli.api.noterCourse(450);
   await new Promise(r => setTimeout(r, 5));
-  assert.deepEqual(reseau.records().slice(-1), [{code: CODE, temps: 450, justes: 25}], "le temps en dixièmes, « justes » 25");
+  // Lot « après l'audit GPT » (D8) : le jour de la course part avec le temps.
+  assert.deepEqual(reseau.records().slice(-1), [{code: CODE, temps: 450, justes: 25, jour: P.jourLocal()}], "le temps en dixièmes, « justes » 25, et le jour de la course");
   assert.equal(appli.api.sync.course, undefined, "plus rien en attente");
   assert.equal(appli.api.recordConnu().meilleur, 450, "le record connu suit");
   assert.equal(appli.api.sync.record.meilleur, 450);
@@ -370,7 +371,7 @@ test("en marche : serveur muet — la course attend dans la case, et repart apr�
   const appli2 = demarrerAppli({reseau: revenu, codeOnglet: CODE, local});
   appli2.api.demarrerSuivi();
   await new Promise(r => setTimeout(r, 5));
-  assert.deepEqual(revenu.records().filter(c => c.temps), [{code: CODE, temps: 430, justes: 25}], "la course en attente est partie à l'ouverture");
+  assert.deepEqual(revenu.records().filter(c => c.temps), [{code: CODE, temps: 430, justes: 25, jour: P.jourLocal()}], "la course en attente est partie à l'ouverture");
   assert.equal(appli2.api.sync.course, undefined);
 });
 

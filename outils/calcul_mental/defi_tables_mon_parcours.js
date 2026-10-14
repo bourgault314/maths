@@ -22,9 +22,10 @@
   //    mélange réussi ouvrent l'escalier — 25 questions, produits + trous +
   //    divisions dès la première étoile, toutes les tables, 2 erreurs max, seule
   //    la durée change : ★ 2 min · ★★ 1 min 45 · ★★★ 1 min 30 · ★★★★ 1 min 15 ·
-  //    👑 1 min (Légende des tables). Une étoile réussie valide les précédentes.
-  //    L'ancien Expert « ouvert dès le début » et son raccourci « ★ valide les
-  //    9 tables » n'existent plus ;
+  //    👑 1 min (Légende des tables). Marche par marche : seule l'étoile
+  //    SUIVANTE compte (lot « après l'audit GPT », D5, 14/10/2026) — sauf la
+  //    couronne, que la Légende rejoue. L'ancien Expert « ouvert dès le
+  //    début » et son raccourci « ★ valide les 9 tables » n'existent plus ;
   //  - un RANG, qui ne redescend jamais : Bronze (1 table acquise) · Argent (3)
   //    · Or (6) · Platine (9 tables + dernier mélange) · Diamant (★★★★) ·
   //    Légende des tables (👑) ;
@@ -825,6 +826,12 @@
       const etoile = SEUILS.etoile.durees.indexOf(duree) + 1;
       if (Number(config.total) !== SEUILS.etoile.total || !etoile || entier(config.testLevel, 1, 3, 1) !== 3) return null;
       if (!memesTables((config.tables || []).map(Number), TABLES) || !escalierOuvert(parcours)) return null;
+      // D5 (décision de Gwenaël, 14/10/2026) : pas de saut d'étoiles — seule
+      // la marche suivante compte ; une autre ne compte pas (pas même en
+      // rejouant une marche gagnée), sauf la couronne rejouée par la Légende.
+      const suivante = parcours.expert.etoiles + 1;
+      const couronneRejouee = etoile === ETOILES_MAX && Boolean(parcours.expert.couronne);
+      if (etoile !== suivante && !couronneRejouee) return null;
       return {type: "etoile", etoile};
     }
     return null;
@@ -941,8 +948,8 @@
       evenements.push(evenement);
       if (reussi) {
         copie.expert.dernier = date;
-        // Une étoile réussie valide les précédentes ; une marche déjà gagnée
-        // ne retire rien.
+        // La marche suivante gagnée (classerSerie n'en laisse pas passer
+        // d'autre, D5) ; la couronne rejouée ne retire rien.
         if (classement.etoile > avant) {
           copie.expert.etoiles = classement.etoile;
           evenement.nouveau = true;
@@ -2236,9 +2243,28 @@
         : etape);
       reste = {...reste, file: reste.file.slice(reste.file.indexOf(etape.prevue) + 1)};
     }
-    const minutes = etapes.reduce((somme, etape) => somme + etape.minutes, 0);
+    // Le test annoncé « si j'ai 9 sur 10 juste avant » dure le temps d'un
+    // test, pas celui de la marche 7 refaite qu'il remplace.
+    const minutes = etapes.reduce((somme, etape) => somme + (etape.conditionnelle ? MINUTES_ETAPE.validation : etape.minutes), 0);
     const enFin = raccourciEnFin(parcours, seance, etapes);
-    return {etapes, minutes, raccourciEnFin: enFin, minutesMax: minutes + (enFin ? MINUTES_ETAPE.validation : 0)};
+    // Lot « après l'audit GPT » (D13, 14/10/2026) : le test annoncé en 4e
+    // étape « si j'ai 9 sur 10 juste avant » ; 8 sur 10 à la marche 7, elle
+    // est refaite À SA PLACE et, à 9 sur 10, le test suit en 5e étape — la
+    // carte disait « 4 étapes » et en jouait 5. Elle dit « 4 ou 5 », sans
+    // deuxième ligne de test (il est déjà dans la liste).
+    const repriseEnFin = repriseAvantLeTest(seance, etapes);
+    return {etapes, minutes, raccourciEnFin: enFin || repriseEnFin, testDejaAnnonce: repriseEnFin,
+      minutesMax: minutes + (enFin ? MINUTES_ETAPE.validation : repriseEnFin ? MINUTES_ETAPE[CLE_RACCOURCI_FIN] : 0)};
+  }
+
+  // D13 : la marche 7 refaite peut-elle se glisser avant le test annoncé
+  // (une 5e étape) ? Seulement si le test est la dernière étape annoncée,
+  // encore conditionnel, et qu'il reste une place sous les cinq étapes.
+  function repriseAvantLeTest(seance, etapes) {
+    if (!seance.echelle || !etapes.length || seance.table === null) return false;
+    if (seance.faites.length + etapes.length >= SEUILS.seance.etapesMax) return false;
+    const derniere = etapes[etapes.length - 1];
+    return Boolean(derniere.conditionnelle);
   }
 
   // Lot M2 : la validation du raccourci peut-elle s'ajouter EN PLUS des

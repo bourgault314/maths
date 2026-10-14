@@ -163,7 +163,7 @@ test("plus de verrou : un test réussi passe la table, toujours — même sans m
 
 // --------------------------------------------------------------- l'escalier
 
-test("l’escalier : 5 marches par la durée seule, tout dedans, 2 erreurs max ; une étoile réussie valide les précédentes", () => {
+test("l’escalier : 5 marches par la durée seule, tout dedans, 2 erreurs max ; marche par marche, pas de saut (D5)", () => {
   const etat = escalierOuvert();
   assert.ok(P.escalierOuvert(etat));
   const affichage = P.etatAffichage(etat);
@@ -180,21 +180,35 @@ test("l’escalier : 5 marches par la durée seule, tout dedans, 2 erreurs max ;
     const questions = core.generateQuestions(config);
     assert.equal(questions.length, 25);
     assert.ok(questions.some(question => question.category === "division"), "des divisions dès la première étoile");
-    assert.deepEqual(P.classerSerie(etat, config), {type: "etoile", etoile});
+    // Lot « après l'audit GPT » (D5, décision de Gwenaël du 14/10/2026) :
+    // à 0 étoile, seule ★ compte — ★★ à 👑 ne classent rien.
+    assert.deepEqual(P.classerSerie(etat, config), etoile === 1 ? {type: "etoile", etoile} : null);
   });
-  assert.equal(jouer(etat, P.configEtoile(2), 22, 25).parcours.expert.etoiles, 0, "3 erreurs : raté");
-  const deux = jouer(etat, P.configEtoile(2), 23, 25).parcours;
-  assert.equal(deux.expert.etoiles, 2, "★★ réussie directement : ★ et ★★ acquises");
+  assert.equal(jouer(etat, P.configEtoile(1), 22, 25).parcours.expert.etoiles, 0, "3 erreurs : raté");
+  assert.deepEqual(jouer(etat, P.configEtoile(2), 25, 25).evenements, [], "★★ sans ★ : la série ne compte pas");
+  assert.deepEqual(jouer(etat, P.configEtoile(5), 25, 25).parcours.expert, etat.expert, "👑 directement : rien ne change — plus de Légende d'un coup");
+  const une = jouer(etat, P.configEtoile(1), 23, 25).parcours;
+  assert.equal(une.expert.etoiles, 1, "2 erreurs : ★ gagnée");
+  const deux = jouer(une, P.configEtoile(2), 23, 25).parcours;
+  assert.equal(deux.expert.etoiles, 2, "puis ★★ : marche par marche");
   assert.equal(P.etatAffichage(deux).expert.suivante.etoile, 3);
-  assert.equal(jouer(deux, P.configEtoile(1), 25, 25).parcours.expert.etoiles, 2, "rejouer ★ ne retire rien");
+  assert.deepEqual(jouer(deux, P.configEtoile(1), 25, 25).evenements, [], "rejouer ★ (gagnée) ne compte pas");
+  assert.equal(jouer(deux, P.configEtoile(1), 25, 25).parcours.expert.etoiles, 2, "et ne retire rien");
+  const quatre = jouer(jouer(deux, P.configEtoile(3), 25, 25).parcours, P.configEtoile(4), 25, 25).parcours;
+  assert.equal(quatre.expert.etoiles, 4);
   // Lot « Les records » (09/10/2026, décision de Gwenaël) : la couronne exige
   // 25 sur 25 — 24 ne la donne plus.
-  assert.equal(jouer(deux, P.configEtoile(5), 24, 25).parcours.expert.couronne, null, "la couronne : aucune erreur permise");
-  const couronne = jouer(deux, P.configEtoile(5), 25, 25);
+  assert.equal(jouer(quatre, P.configEtoile(5), 24, 25).parcours.expert.couronne, null, "la couronne : aucune erreur permise");
+  const couronne = jouer(quatre, P.configEtoile(5), 25, 25);
   assert.equal(couronne.parcours.expert.etoiles, 5);
   assert.equal(couronne.parcours.expert.couronne, DATE);
   assert.equal(couronne.evenements[0].couronne, true);
   assert.equal(P.etatAffichage(couronne.parcours).expert.suivante, null, "plus rien à tenter");
+  // La Légende rejoue la couronne (l'entretien) : la série compte, rien ne change.
+  const rejouee = jouer(couronne.parcours, P.configEtoile(5), 25, 25);
+  assert.equal(rejouee.evenements[0].type, "etoile");
+  assert.equal(rejouee.evenements[0].nouveau, false);
+  assert.deepEqual(jouer(couronne.parcours, P.configEtoile(4), 25, 25).evenements, [], "★★★★ gagnée, rejouée : ne compte pas");
   assert.equal(P.symboleEtoile(5), "👑");
   assert.equal(P.symboleEtoile(4), "★★★★");
 });
@@ -236,7 +250,9 @@ test("le rang : Bronze à 1 table, Argent à 3, Or à 6, Platine à 9 tables pas
   assert.equal(platine.parcours.melange.dernier, null, "sans avoir jamais joué le mélange");
   assert.deepEqual(types(platine), ["validation", "toutes-acquises", "rang"]);
   assert.deepEqual(platine.evenements.find(evenement => evenement.type === "rang"), {type: "rang", rang: 4, nom: "Platine", cle: "platine"});
-  etat = jouer(platine.parcours, P.configEtoile(3), 25, 25).parcours;
+  // D5 : marche par marche.
+  etat = platine.parcours;
+  [1, 2, 3].forEach(marche => { etat = jouer(etat, P.configEtoile(marche), 25, 25).parcours; });
   assert.equal(P.etatAffichage(etat).rang.nom, "Platine", "★★★ ne suffit pas");
   etat = jouer(etat, P.configEtoile(4), 25, 25).parcours;
   assert.equal(P.etatAffichage(etat).rang.nom, "Diamant");
@@ -499,7 +515,12 @@ test("le parcours : « Mon mélange » en bouton (triangle dessiné) jusqu’aux
   assert.match(html, /expertTitle\.textContent = "Je deviens expert : toutes les tables, de plus en plus vite";/);
   assert.match(html, /etat\.expert\.marches\.forEach\(marche => \{/);
   assert.match(html, /const expertOuvert = etat\.expert\.ouvert;/);
-  assert.match(html, /config: expertOuvert \? marche\.config : null/, "fermé : les marches ne lancent rien");
+  // Lot « après l'audit GPT » (D5) : seule la marche suivante se lance (et la
+  // couronne gagnée, l'entretien de la Légende) ; fermé, rien ne se lance.
+  assert.match(html, /const jouable = expertOuvert && \(marche\.suivante \|\| \(marche\.gagnee && marche\.etoile === PARCOURS\.ETOILES_MAX\)\);/, "la marche suivante, ou la couronne gagnée");
+  assert.match(html, /config: jouable \? marche\.config : null/, "fermé ou pas la suivante : les marches ne lancent rien");
+  assert.match(html, /action: jouable \? null : \(\) => \{\}/);
+  assert.match(html, /marche\.gagnee \? "" : jouable \? "" : " — plus tard"/, "les marches plus loin : « plus tard »");
   assert.match(html, /const expertAttend = "après mes 9 tables";/, "lot « Mes calculs du jour d'abord » : l'escalier n'attend plus Mes calculs du jour");
   assert.doesNotMatch(html, /après le mélange des 9 tables/);
   assert.doesNotMatch(html, /\.cell\.is-lock|\.etape\.verrou|est-montree/, "lot « retours de classe » : le CSS du cadenas, qui ne servait plus, est retiré");
@@ -537,7 +558,7 @@ test("le lancement : le mélange se joue en 1 min 30, comme la validation d’un
 
 test("les scripts modifiés ont un nouveau numéro de cache, et la copie serveur du moteur est identique", async () => {
   assert.match(html, /defi_tables_core\.js\?v=20261010-1/);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261009-3/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261014-1/);
   const moteur = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie), "_serveur/public/prof/defi_tables_mon_parcours.js doit être la copie octet pour octet du moteur");
