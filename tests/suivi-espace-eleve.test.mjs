@@ -597,18 +597,18 @@ function parcoursSplat({mondesFinis = [], enMonde = null, faitsEnMonde = 0, aide
 // des réponses vues, une série en cours, 1 bonus — 13 étapes réussies.
 const LEA = () => parcoursSplat({mondesFinis: [1, 2], enMonde: 3, faitsEnMonde: 4, aide: true, enCours: "enq14", bonus: 1});
 
-test("SPLAT! : « N étape(s) réussie(s) sur 37 », le total de la carte, les Bonus à part", () => {
+test("SPLAT! : « N étape(s) réussie(s) sur 40 », le total de la carte, les Bonus à part", () => {
   const lire = lecteurDeJauge().splat;
   const lea = lire(SPLAT, LEA());
-  assert.equal(lea.compte, "13 étapes réussies sur 37", "une réussite avec des réponses vues est une étape réussie");
+  assert.equal(lea.compte, "13 étapes réussies sur 40", "une réussite avec des réponses vues est une étape réussie");
   assert.equal(lea.bonus, "✨ 1 bonus");
-  assert.equal(lea.total, 37, "37 étapes sur la carte (la numérotation saute de 28 à 35), pas 40");
+  assert.equal(lea.total, 40, "40 étapes : la numérotation saute de 28 à 35, et l'échauffement É1-É3 du monde 6 compte (14/10/2026)");
   const une = lire(SPLAT, parcoursSplat({enMonde: 1, faitsEnMonde: 1}));
-  assert.equal(une.compte, "1 étape réussie sur 37", "au singulier");
+  assert.equal(une.compte, "1 étape réussie sur 40", "au singulier");
   assert.equal(une.bonus, "", "pas de Bonus : rien");
   assert.equal(lire(SPLAT, parcoursSplat({mondesFinis: [1], bonus: 3})).bonus, "✨ 3 bonus");
   const tout = lire(SPLAT, parcoursSplat({mondesFinis: [1, 2, 3, 4, 5, 6], bonus: 14}));
-  assert.equal(tout.compte, "37 étapes réussies sur 37");
+  assert.equal(tout.compte, "40 étapes réussies sur 40");
   assert.equal(tout.bonus, "✨ 14 bonus");
   const jauges = page.slice(page.indexOf("  const JAUGES = {"), page.indexOf("\n  };", page.indexOf("  const JAUGES = {")));
   assert.doesNotMatch(jauges, /sur (37|40)\b/, "le total n'est jamais écrit dans la page : c'est la carte qui le donne");
@@ -676,7 +676,7 @@ test("parcours SPLAT! reçu : six pastilles numérotées, la moitié pour le mon
   assert.deepEqual([chiffreDe(mondes.enfants[2]).fill, chiffreDe(mondes.enfants[2]).stroke, chiffreDe(mondes.enfants[2])["paint-order"]],
     ["#fff", "#be185d", "stroke"], "à moitié : chiffre blanc cerné de la couleur, lisible des deux côtés");
   const [compte, bonus] = ligne.enfants;
-  assert.equal(compte.textContent, "13 étapes réussies sur 37");
+  assert.equal(compte.textContent, "13 étapes réussies sur 40");
   assert.equal(bonus.className, "bonus");
   assert.equal(bonus.textContent, "✨ 1 bonus");
 });
@@ -733,9 +733,9 @@ test("SPLAT!, mondes 1 et 2 ouverts : les autres en gris, les comptes sur les mo
   const ines = lire(SPLAT, parcoursSplat({mondesFinis: [1], enCours: "m2e1"}), MONDES_1_2);
   assert.equal(ines.compte, "6 étapes réussies sur 9");
   assert.deepEqual(ines.mondes.map(m => m.etat), ["fini", "cours", "ferme", "ferme", "ferme", "ferme"]);
-  // Les mondes 5 et 6 seulement (une 4e) : « sur 9 » aussi (3 + 6).
+  // Les mondes 5 et 6 seulement (une 4e) : « sur 12 » (3 + 9, l'échauffement du monde 6 compris).
   const quatrieme = lire(SPLAT, parcoursSplat({mondesFinis: [1, 2, 5]}), {splat: {mondes: [5, 6]}});
-  assert.equal(quatrieme.compte, "3 étapes réussies sur 9");
+  assert.equal(quatrieme.compte, "3 étapes réussies sur 12");
   assert.deepEqual(quatrieme.mondes.map(m => m.etat), ["ferme", "ferme", "ferme", "ferme", "fini", "vide"]);
 });
 
@@ -744,11 +744,11 @@ test("SPLAT! : du travail seulement dans des mondes fermés, pas de jauge ; tous
   assert.equal(lire(SPLAT, parcoursSplat({mondesFinis: [3]}), MONDES_1_2), null,
     "« 0 étape réussie sur 9 » serait le reproche qu'on refuse");
   for (const reglages of [undefined, {}, {splat: {mondes: [1, 2, 3, 4, 5, 6]}}, {splat: {mondes: "1,2"}}]) {
-    assert.equal(lire(SPLAT, LEA(), reglages).compte, "13 étapes réussies sur 37", JSON.stringify(reglages));
+    assert.equal(lire(SPLAT, LEA(), reglages).compte, "13 étapes réussies sur 40", JSON.stringify(reglages));
   }
   // Un moteur d'avant le lot sur le serveur (FTP incomplet) : tout ouvert, rien ne casse.
   const ancien = Object.assign({}, SPLAT, {mondesDeReglages: undefined});
-  assert.equal(lire(ancien, LEA(), MONDES_1_2).compte, "13 étapes réussies sur 37");
+  assert.equal(lire(ancien, LEA(), MONDES_1_2).compte, "13 étapes réussies sur 40");
 });
 
 test("SPLAT! : l'espace passe les réglages de la classe à la jauge, et la pastille d'un monde fermé est grise en pointillés", async () => {
