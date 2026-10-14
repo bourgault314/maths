@@ -76,7 +76,8 @@ test("aucun lien ne change : exactement les liens des données, plus la page des
     });
     /* (03/10/2026) le deuxième tour du monde 3 : dix lignes sous la partie 3, mêmes boutons */
     if (m.idp === "enq") ctx.X.ENQ_TOUR2.forEach((f) => { for (const k of ["jp", "j", "f", "c"]) attendu.add(f[k]); });
-    /* lot M4-4 : le deuxième tour du monde 4 (Bonus, 25d à 28d), avec ses deux corrigés */
+    /* lot M4-4 : le Bonus du monde 4 (25d à 28d, le livret cycle 4 depuis le lot M4-7), avec ses
+       deux corrigés ; sa fiche s'imprime avec « Le système » (systeme=1) */
     if (m.idp === "sys") ctx.X.SYS_TOUR2.forEach((f) => { for (const k of ["jp", "j", "f", "c", "cl"]) attendu.add(f[k]); });
     const vus = new Set(hrefs(html(mi)));
     assert.deepEqual([...vus].sort(), [...attendu].sort(), m.nom);
@@ -122,7 +123,7 @@ test("la phrase écrite pour l'élève est retirée ; l'intention et la note du 
   /* monde 4 : le tableau de tous les systèmes du collège passe dans un « Repère » replié */
   const i4 = ctx.intentionHtml(3);
   assert.match(i4, /^<p class="txt">[^<]*(?:<b>[^<]*<\/b>[^<]*)*<\/p><details><summary>Repère : tous les systèmes du collège, et où ils sont dans SPLAT!<\/summary><table>/);
-  assert.equal((i4.match(/<tr>/g) || []).length, 10);   // lot M4-6 : neuf lignes (le Bonus au lot M4-7)
+  assert.equal((i4.match(/<tr>/g) || []).length, 11);   // lot M4-7 : dix lignes (le Bonus compris)
   assert.doesNotMatch(i4, /et où ils sont\s*:<\/p>/, "la phrase d'annonce du tableau est remplacée par le Repère");
   assert.ok(!ctx.intentionHtml(0).includes("<details>"));
 });

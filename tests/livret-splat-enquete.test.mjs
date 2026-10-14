@@ -106,7 +106,9 @@ test("vue prof (03/10/2026) : « Projeter » sur les 25 fiches du monde 3, le de
   assert.match(univers, /\}\)\.join\(''\)\+tour2ProfHtml\(m\)\+'<\/ol>';/);
   assert.match(univers, /prof:\[\[1,"Les trois dessins","11d","17d",0,5\],\[2,"Vers le Système","18d","24d",5,10\]\]\}/);
   assert.match(univers, /\{monde:MONDE_ENQUETE,idp:"enq",fiches:ENQ_TOUR2,volet:"enq-bonus",li:"enq-t2-",/);
-  assert.match(univers, /const tete=\(rang,nom,de,a\)=>'<li class="volet" id="'\+b\.idp\+'-tour2-'\+\(rang\|\|1\)\+'"><span class="rang">Deuxième tour'\+\(rang\?' '\+rang:''\)\+'<\/span>'\+/);
+  // (lot M4-7 : le nom du Bonus vient de BONUS_MONDES — « Deuxième tour » pour le monde 3)
+  assert.match(univers, /const tete=\(rang,nom,de,a\)=>'<li class="volet" id="'\+b\.idp\+'-tour2-'\+\(rang\|\|1\)\+'"><span class="rang">'\+b\.nom\+\(rang\?' '\+rang:''\)\+'<\/span>'\+/);
+  assert.match(univers, /\{monde:MONDE_ENQUETE,idp:"enq",fiches:ENQ_TOUR2,volet:"enq-bonus",li:"enq-t2-",stars:"starsBonus",cle:"",\n  nom:"Deuxième tour",fichesTxt:"fiches 11d à 24d",/);
   assert.match(univers, /return b\.prof\.map\(\(\[rang,nom,de,a,i0,i1\]\)=>tete\(rang,nom,de,a\)\+b\.fiches\.slice\(i0,i1\)\.map\(li\)\.join\(''\)\)\.join\(''\);/);
 });
 

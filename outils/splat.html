@@ -981,7 +981,7 @@
      le pavé doit déjà exister à ce moment-là. -->
 <script src="../assets/js/mathsgo-pave-chiffres.js?v=20260918-1"></script>
 <!-- Le texte du bouton « Étape suivante ▶ » de l'écran de fin (lot A). -->
-<script src="../assets/js/splat-etapes.js?v=20261014-1"></script>
+<script src="../assets/js/splat-etapes.js?v=20261014-2"></script>
 <!-- Le parcours de l'élève (moteur partagé avec la carte des mondes et le serveur de suivi), et
      l'habillage du suivi de classe (pastille, garde) : lot 2 « outils + carte », 08/10/2026 -->
 <script src="../assets/js/splat-parcours.js?v=20261008-5"></script>
@@ -1695,6 +1695,9 @@ const INVESTIGATE_PRINT_LABEL_MODE = "word";
    les indices et la structure de chaque carte ne bougent pas, seules les couleurs changent. */
 let investigatePaletteKeys = null;
 let printInstructionNote = "";
+/* « systeme=1 » (lot M4-7) : la ligne « Le système » sous les plateaux de l'énoncé 2 par page du
+   Système (livret 2 du monde 4). Absente : rien ne change. Elle ne change pas les cartes. */
+let printSystemeLigne = false;
 function parseInvestigatePalette(raw){
   const parts = String(raw == null ? "" : raw).toLowerCase().split(/[\s,;+|]+/).filter(Boolean);
   const keys = [];
@@ -2377,7 +2380,7 @@ function lireRepetitionAdresse(raw){
 
 /* Les réglages qu'une adresse partagée peut porter. Liste commune : elle sert
    aussi à l'empreinte de la série élève (eleveSignatureSerie). */
-const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "geste", "gestes", "coefMax", "ecart", "fois", "indice", "sens", "forme", "grand", "sous", "noTotal", "repeat", "ordre", "vocab", "compose", "reunies", "pasapas", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "palette", "unknown", "print", "duplex", "layout", "title", "note", "eleve", "parcours", "imprimer", "suite"];
+const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "geste", "gestes", "coefMax", "ecart", "fois", "indice", "sens", "forme", "grand", "sous", "noTotal", "repeat", "ordre", "vocab", "compose", "reunies", "pasapas", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "palette", "unknown", "print", "duplex", "layout", "title", "note", "systeme", "eleve", "parcours", "imprimer", "suite"];
 
 function loadSharedConfiguration(){
   const params = new URLSearchParams(window.location.search);
@@ -2443,6 +2446,7 @@ function appliquerConfiguration(params){
      consigne imprimée (fiches 2 et 7 de l'Enquête : « Reformule l'indice avant de
      dessiner ton schéma. »). Absente : rien ne change. Elle ne change pas les cartes. */
   if(params.has("note")) printInstructionNote = String(params.get("note") || "").trim().slice(0, 200);
+  printSystemeLigne = readBooleanFromShare(params, "systeme") === true;
   /* « palette= » (Enquête) : couleurs de taches autorisées ; absente = les six. */
   if(params.has("palette")) investigatePaletteKeys = parseInvestigatePalette(params.get("palette"));
   /* « noTotal=1 » (Enquête sans total) : absente = éteinte, y compris pour chaque partie
@@ -2563,6 +2567,7 @@ function buildShareUrl(){
   const printTitle = printActivityTitleEl ? printActivityTitleEl.value.trim() : "";
   if(printTitle) params.set("title", printTitle.slice(0, 160));
   if(printInstructionNote) params.set("note", printInstructionNote);
+  if(printSystemeLigne) params.set("systeme", "1");
   if((act === "C" || act === "CD" || act === "D") && Array.isArray(investigatePaletteKeys) && investigatePaletteKeys.length) params.set("palette", investigatePaletteKeys.join(","));
   /* écrite seulement quand elle est cochée : les adresses de l'Enquête ne changent pas */
   if((act === "C" || act === "CD") && invNoTotalEl && invNoTotalEl.checked) params.set("noTotal", "1");
@@ -5443,7 +5448,11 @@ function sysPlan(sit){
   if(sit.geste === "ETAGES"){
     // lot M4-5, deux gestes à la suite — 2 B + Ve + O = 54 ; 2 B + 3 Ve = 53 ; 2 B + Ve = 43 :
     // les deux petits plateaux se résolvent d'abord (leur geste, sans leur vérification), puis
-    // je remplace dans le grand plateau, je retire, je partage si la 3e couleur est en double
+    // je remplace dans le grand plateau, je retire, je partage si la 3e couleur est en double.
+    // Lot M4-7 (14/10/2026, choix de Gwenaël sur planche avant/après) : chaque plateau dessiné
+    // UNE fois — « Le grand plateau » seul, puis « Les deux petits plateaux ». « Les trois
+    // plateaux » redessinait les deux petits : le corrigé 2 par page était toujours réduit
+    // (miroir 89-91 %, je recopie 79 %). Mêmes nombres dans le plan : mêmes cartes.
     const [A, B, D] = C;
     const gA = P.counts[A] || 0, gB = P.counts[B] || 0, gD = P.counts[D] || 0;
     const petits = sit.boards.slice(1);
@@ -5451,7 +5460,7 @@ function sysPlan(sit){
       .filter(e => e.role !== "verification");
     sous[0] = Object.assign({}, sous[0], { titre: "Les deux petits plateaux" });
     return [
-      etape("plateaux", "Les trois plateaux", [barre(T, cases(P.counts))].concat(petits.map(b => barre(b.total, cases(b.counts))))),
+      etape("plateaux", "Le grand plateau", [barre(T, cases(P.counts))]),
       ...sous,
       etape("remplace", `Je remplace dans le plateau ${T}`, [barre(T, con(A, gA).concat(con(B, gB), inc(D, gD)))]),
       retire(gD * v[D], moins(T, repeter(gA, () => v[A]).concat(repeter(gB, () => v[B]))), inc(D, gD)),
@@ -10344,8 +10353,8 @@ function drawSysPlateaux(target, card, zone, opts = {}){
    dans le grand. Dans chaque case, la tache dessinée avec son nom (sans le nom, rien ne se
    lit en noir et blanc) ; une tache trouvée garde sa forme, sa valeur dans un rond blanc ; un
    plateau retrouvé est un bloc gris portant son total ; un jeton visible, son jeton chiffré.
-   Version lettres (unknown=letter) : la case est teintée de la couleur, un liseré en haut,
-   la LETTRE de la couleur dedans (N, Vi, O…). « Je vérifie » : un calcul par plateau, puis la
+   Version lettres (unknown=letter) : la case est teintée de la couleur (sans bande en haut
+   depuis le lot M4-7), la LETTRE de la couleur dedans (N, Vi, O…). « Je vérifie » : un calcul par plateau, puis la
    réponse encadrée. Aucune arithmétique ici : tout nombre écrit vient du plan.
    Impression (4 par page et 2 par page, la même carte 1 600 × 2 200) : l'énoncé dévoilé en
    haut, un trait pointillé, puis les étapes côte à côte tant qu'elles tiennent, puis à la
@@ -10576,11 +10585,11 @@ function drawSysCaseBarre(g, x, y, c, M, ctx){
   const info = investigateColorByKey(c.color);
   const connue = c.kind === "known";
   if(lettres){
-    // version lettres : la case teintée de la couleur, un liseré en haut, la lettre (ou la valeur)
+    // version lettres : la case teintée de la couleur, la lettre (ou la valeur) au centre — plus
+    // de bande de couleur en haut de la case (lot M4-7, 14/10/2026 : « la lettre suffit »)
     g.appendChild(mkEl("rect", { x, y, width:u, height:h, fill:connue ? "#fff" : (isPrint ? info.printReveal : info.reveal), stroke:"#000", "stroke-width":2.5 * M.f }));
-    g.appendChild(mkEl("rect", { x, y, width:u, height:10 * M.f, fill:isPrint ? info.print : info.screen }));
     const t = connue ? String(c.value) : investigateColorInitial(info);
-    g.appendChild(mkText(cx, cy + 4 * M.f, t, Object.assign({ "font-size":sysCorrAjuster(t, M.fsBloc, u - 12 * M.f, 900, 8), fill:"#000" }, centre)));
+    g.appendChild(mkText(cx, cy, t, Object.assign({ "font-size":sysCorrAjuster(t, M.fsBloc, u - 12 * M.f, 900, 8), fill:"#000" }, centre)));
     return;
   }
   g.appendChild(mkEl("rect", { x, y, width:u, height:h, fill:"#fff", stroke:"#64748b", "stroke-width":2 * M.f }));
@@ -10976,6 +10985,46 @@ function drawSysLigneReponse(target, card, ctx){
   target.appendChild(g);
 }
 
+/* « Le système » (lot M4-7, 14/10/2026, version C choisie par Gwenaël sur planche) : sous les
+   plateaux de l'énoncé 2 par page (réglage systeme=1 : le livret 2 du monde 4, cycle 4), une ligne
+   par plateau montré, l'une sous l'autre, avec l'accolade — l'élève y écrit l'équation de chaque
+   plateau (« 2 × N + 3 × B = 58 », comme le corrigé en lettres), dans l'ordre où les plateaux
+   sont dessinés. Une équation a 760 de pointillés (≈ 56 mm imprimés), quel que soit le nombre de
+   plateaux. « rempli » : les équations écrites à la place des pointillés (la page 2 des livrets,
+   l'exemple résolu). dispo : ce que renvoie drawSysPlateaux. Renvoie le bas du dessin. */
+const SYS_LIGNE_SYSTEME = { ecart:110, pas:125, fs:40, fsRempli:44, egal:56, total:170, equation:760, accolade:24, encre:"#0f172a" };
+function sysEquationPlateau(card, b){
+  const S = card._sys;
+  const termes = S.colors.filter(k => b.counts[k]).map(k => (b.counts[k] > 1 ? `${b.counts[k]} × ` : "") + investigateColorInitial(investigateColorByKey(k)));
+  return `${termes.concat((b.visible || []).map(String)).join(" + ")} = ${b.total}`;
+}
+function drawSysLigneSysteme(target, card, dispo, ctx, rempli){
+  const L = SYS_LIGNE_SYSTEME, x0 = SYS_ZONE_IMPRIME_2P.x;
+  const P = dispo.plateaux.slice().sort((p, q) => p.y - q.y || p.x - q.x);
+  const n = P.length;
+  const y0 = Math.max(...P.map(p => p.y + p.h)) + L.ecart;
+  const g = ctx.mkEl("g", { id:"sysLigneSystemePrint", "data-rempli":rempli ? "1" : "0" });
+  const lab = "Le système :";
+  g.appendChild(ctx.mkText(x0, y0 + (n - 1) * L.pas / 2, lab, { "text-anchor":"start", "font-size":L.fs, "font-weight":900, fill:L.encre }));
+  // l'accolade, de la première ligne à la dernière
+  const xb = x0 + sysLargeurTexte(lab, L.fs, 900) + 34, d = L.accolade;
+  const yh = y0 - L.fs, yb = y0 + (n - 1) * L.pas + L.fs * 0.45, ym = (yh + yb) / 2;
+  g.appendChild(ctx.mkEl("path", { d:`M ${xb + d} ${yh} Q ${xb} ${yh} ${xb} ${yh + d} L ${xb} ${ym - d} Q ${xb} ${ym} ${xb - d * 0.8} ${ym} Q ${xb} ${ym} ${xb} ${ym + d} L ${xb} ${yb - d} Q ${xb} ${yb} ${xb + d} ${yb}`,
+    fill:"none", stroke:L.encre, "stroke-width":5, "stroke-linecap":"round", "stroke-linejoin":"round" }));
+  const pointilles = (x, y, l) => g.appendChild(ctx.mkEl("line", { x1:x, x2:x + l, y1:y + 4, y2:y + 4, stroke:"#475569", "stroke-width":6, "stroke-linecap":"round", "stroke-dasharray":"0.1 16" }));
+  P.forEach((p, k) => {
+    const x = xb + 46, y = y0 + k * L.pas;
+    if(rempli){
+      g.appendChild(ctx.mkText(x, y, sysEquationPlateau(card, card._sys.boards[p.indice]), { "text-anchor":"start", "font-size":L.fsRempli, "font-weight":800, fill:L.encre }));
+      return;
+    }
+    pointilles(x, y, L.equation);
+    g.appendChild(ctx.mkText(x + L.equation + L.egal / 2, y, "=", { "text-anchor":"middle", "font-size":L.fs, "font-weight":900, fill:L.encre }));
+    pointilles(x + L.equation + L.egal, y, L.total);
+  });
+  target.appendChild(g);
+  return yb;
+}
 /* Écran : l'échelle des étapes d'une carte, la même pour toutes (la plus grande à laquelle
    chacune tient sous les plateaux, au plus SYS_CORR_ECRAN.max). */
 function sysCorrEcranEchelle(card, yEtape){
@@ -12731,7 +12780,9 @@ function renderCardIntoSvg(targetSvg, card, printMode, opts = {}){
       return;
     }
     // l'énoncé : les plateaux en haut, la place pour chercher, la ligne réponse en bas
-    drawSysPlateaux(targetSvg, card, SYS_ZONE_IMPRIME_2P, { mkEl:tEl, mkText:tText, isPrint:true, devoile:false });
+    // (systeme=1, lot M4-7 : « Le système » sous les plateaux)
+    const dispo = drawSysPlateaux(targetSvg, card, SYS_ZONE_IMPRIME_2P, { mkEl:tEl, mkText:tText, isPrint:true, devoile:false });
+    if(printSystemeLigne) drawSysLigneSysteme(targetSvg, card, dispo, ctx, false);
     drawSysLigneReponse(targetSvg, card, ctx);
     return;
   }
@@ -15498,7 +15549,7 @@ function eleveLienMondesHtml(classe, libelle){
    reprise de l'un s'appliquait à l'autre et l'élève atterrissait au milieu
    d'une série jamais commencée (Petit Splat, PR #773). Ce qui ne change pas
    les cartes n'y entre pas : le mode élève, l'étape, l'impression, le titre. */
-const ELEVE_HORS_EMPREINTE = ["eleve", "parcours", "print", "duplex", "layout", "title", "imprimer", "note"];
+const ELEVE_HORS_EMPREINTE = ["eleve", "parcours", "print", "duplex", "layout", "title", "imprimer", "note", "systeme"];
 function eleveSignatureSerie(){
   const params = new URLSearchParams(window.location.search);
   return sharedNames.filter(nom => !ELEVE_HORS_EMPREINTE.includes(nom) && params.has(nom))

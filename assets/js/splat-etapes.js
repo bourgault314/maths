@@ -104,8 +104,8 @@
     ["m4e6", 43, "Le grand mélange", "SPLAT! Relatifs", 6]
   ];
 
-  /* Les Bonus (monde 3 : 04/10/2026, choix de Gwenaël sur maquettes ; monde 4 : lot M4-4) : les
-     fiches des livrets « Deuxième tour », dans l'ordre des livrets. Chacune a SON parcours
+  /* Les Bonus (monde 3 : 04/10/2026, choix de Gwenaël sur maquettes ; monde 4 : lot M4-4, refait
+     au lot M4-7, le livret cycle 4) : les fiches des livrets du Bonus, dans l'ordre des livrets. Chacune a SON parcours
      (enq11d…, sys25d…), sa tache dorée ✨ et son compteur à part, hors des étoiles du haut de la
      carte : elles ne sont pas des étapes. C'EST UNE COPIE de ENQ_TOUR2 et SYS_TOUR2
      (outils/splat_univers.html) : tests/splat-etape-suivante.test.mjs les compare. Leur écran de
@@ -123,10 +123,10 @@
     ["enq22d", "22d", "Les indices en symboles", "SPLAT! Enquête", 3],
     ["enq19d", "19d", "Le grand défi", "SPLAT! Enquête", 3],
     ["enq24d", "24d", "Unité commune : les petites parts", "SPLAT! Enquête", 3],
-    ["sys25d", "25d", "L'escalier", "SPLAT! Système", 4],
-    ["sys26d", "26d", "Je triple", "SPLAT! Système", 4],
-    ["sys27d", "27d", "Avec des jetons visibles", "SPLAT! Système", 4],
-    ["sys28d", "28d", "Dans le désordre", "SPLAT! Système", 4]
+    ["sys25d", "25d", "Je recopie, puis je retire", "SPLAT! Système", 4],
+    ["sys26d", "26d", "Deux fois ou trois fois\u00a0?", "SPLAT! Système", 4],
+    ["sys27d", "27d", "Deux gestes à la suite", "SPLAT! Système", 4],
+    ["sys28d", "28d", "À toi de choisir", "SPLAT! Système", 4]
   ];
   function estBonus(parcours) {
     return BONUS.some((b) => b[0] === parcours);
