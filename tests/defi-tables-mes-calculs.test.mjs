@@ -573,7 +573,8 @@ test("la révision : Mes calculs du jour chronométré (« fait » ou « Temps �
   assert.match(html, /encore\.textContent = "Continuer\u00a0→";/, "insécable : la flèche ne passe pas seule à la ligne");
   assert.match(html, /if \(restants\) \{\s*const encore = document\.createElement\("button"\);/, "« Continuer » seulement s’il en reste");
   // R4 bis : « Ma table » est fabriqué dans le cadre, principal seulement à zéro.
-  assert.match(html, /maTable\.className = restants \? "secondary" : "primary";/, "un seul bouton principal : Continuer tant qu’il en reste, Ma table ensuite");
+  // Lot « la flèche de retour » (14/10/2026) : « Ma table » porte la flèche (retour-flechee).
+  assert.match(html, /maTable\.className = restants \? "secondary retour-flechee" : "primary retour-flechee";/, "un seul bouton principal : Continuer tant qu’il en reste, Ma table ensuite");
   assert.match(html, /function phraseProchainRetour\(agenda\)/);
   assert.match(html, /return `Reviens \$\{quand\} : \$\{pluriel\(prochain\.calculs, "calcul"\)\} t’attendr\$\{prochain\.calculs > 1 \? "ont" : "a"\}\.`;/);
   assert.match(html, /mont\$\{montes > 1 \? "ent" : "e"\} d’une boîte/, "le bilan : ce qui monte, ce qui redescend");

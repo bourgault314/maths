@@ -955,6 +955,20 @@
     .seance-suite .primary { min-height: 48px; padding: 12px 18px 8px; }
     /* Lot M2 : après une marche ratée, une phrase au-dessus du bouton. */
     .seance-suite .plus-bas { margin: 0; color: var(--ink); font-size: .95rem; font-weight: 800; text-align: center; }
+    /* Lot « la flèche de retour » (14/10/2026, idée de Gwenaël) : après Mes
+       calculs du jour et après Mon mélange, deux boutons côte à côte —
+       « ← Ma table » à gauche, la suite à droite —, comme sur « C'est
+       parti ! ». La suite prend la place qui reste (un nom long passe sur
+       deux lignes). */
+    .seance-suite .suite-boutons { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; width: min(100%, 440px); }
+    .seance-suite .suite-boutons button { width: 100%; min-width: 0; }
+    .seance-suite .suite-boutons .secondary { border: 2px solid #c5d9e6; box-shadow: 0 5px 0 #c5d9e6; padding: 11px 16px 7px 12px; }
+    /* « Ma table » qui ramène à l'accueil porte la flèche du site : le même
+       dessin que les autres retours, en masque, pour qu'il prenne la couleur
+       du texte (blanc sur le bouton bleu, bleu sur le bouton blanc). */
+    .retour-flechee, #result-accueil { display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
+    .retour-flechee::before, #result-accueil::before { content: ""; flex: 0 0 auto; width: 20px; height: 20px; background-color: currentColor;
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M19 12H5M11 6l-6 6 6 6' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 20px no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M19 12H5M11 6l-6 6 6 6' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 20px no-repeat; }
     .seance-suite .arreter { min-height: 44px; margin-top: -8px; padding: 0 4px; border: 0; background: none; color: var(--blue); font: inherit; font-size: .88rem; font-weight: 850; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
     .seance-suite .cadre { width: 100%; padding: 11px 13px; border: 1px solid #cfe0f2; border-radius: 13px; background: #eef6ff; color: var(--ink); font-weight: 800; box-sizing: border-box; }
     .seance-suite .cadre .rangee { margin: 2px auto 8px; max-width: 440px; }
@@ -1796,9 +1810,14 @@
     .correction-number { flex: 0 0 auto; padding: 3px 7px; border-radius: 999px; color: #31566c; background: #eaf3f8; font-size: .72rem; font-weight: 950; }
     .correction-expression { color: var(--ink); font-size: 1.05rem; font-weight: 900; }
     .correction-expression .expected-answer { color: var(--green); font-weight: 950; }
-    .given-answer { color: var(--red); font-size: .95rem; font-weight: 800; text-decoration: line-through; }
+    /* Lot « la flèche de retour » (14/10/2026, décision de Gwenaël) : la
+       réponse donnée est barrée d'un trait en biais, comme à la main. Le
+       trait horizontal tombait au milieu d'un chiffre seul (« 3 », « 8 ») :
+       on ne voyait pas qu'il était barré. */
+    .given-answer { display: inline-block; padding: 0 .3em; color: var(--red); font-size: .95rem; font-weight: 800; line-height: 1.25;
+      background: linear-gradient(to top right, transparent calc(50% - 1.4px), currentColor calc(50% - 1.4px), currentColor calc(50% + 1.4px), transparent calc(50% + 1.4px)); }
     /* Un calcul passé n'a pas de réponse à barrer (relecture du lot R2). */
-    .given-answer.is-passe { text-decoration: none; }
+    .given-answer.is-passe { padding: 0; background: none; }
     .correction-details { margin: 8px 0 0; }
     .correction-details summary { padding: 11px 12px; border: 1px dashed #c5d9e6; border-radius: 12px; color: var(--blue); font-size: .95rem; font-weight: 850; cursor: pointer; list-style: none; }
     .correction-details summary::-webkit-details-marker { display: none; }
@@ -2786,8 +2805,10 @@
         <h1 id="launch-summary" class="launch-heading" tabindex="-1"></h1>
         <div id="launch-format" class="launch-format" hidden></div>
         <div class="launch-actions">
-          <button id="launch-start" class="primary" type="button">C’est parti&nbsp;!</button>
+          <!-- Lot « la flèche de retour » (14/10/2026, choix de Gwenaël) : le
+               retour à gauche, la suite à droite, comme partout. -->
           <button id="launch-back" class="secondary" type="button"><span id="launch-back-fleche" class="back-icon" aria-hidden="true" hidden><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span id="launch-back-label">Modifier</span></button>
+          <button id="launch-start" class="primary" type="button">C’est parti&nbsp;!</button>
         </div>
       </div>
 
@@ -4795,6 +4816,9 @@
       // [retour-navigateur:fin]
 
       function show(name) {
+        // Lot « la flèche de retour » : le choix du nom ramène là d'où on
+        // l'a ouvert (« Changer mon nom » → Les records).
+        if (name === "records-nom") majRetourNom(ecranCourant);
         ["intro", "launch", "play", "result", "parcours", "lire", "fiche"].forEach(id => { $(id).hidden = id !== name; });
         // Lot « Les records » : deux écrans de plus (absents de la vue fiche).
         ["records", "records-nom"].forEach(id => { const ecran = $(id); if (ecran) ecran.hidden = id !== name; });
@@ -4830,6 +4854,26 @@
         if (name === "records-nom") $("records-nom-titre").focus?.({preventScroll: true});
         suivreHistorique(name);
         ajusterEchelle();
+      }
+
+      // Lot « la flèche de retour » (14/10/2026, choix de Gwenaël) : le choix
+      // du nom, ouvert depuis Les records (« Changer mon nom »), y ramène ;
+      // ouvert ailleurs, il ramène à Ma table, comme avant.
+      let nomVientDeRecords = false;
+      function majRetourNom(precedent) {
+        nomVientDeRecords = precedent === "records";
+        const retour = $("records-nom-back");
+        retour.querySelector(".settings-back-label").textContent = nomVientDeRecords ? "Les records" : "Ma table";
+        retour.setAttribute("aria-label", nomVientDeRecords ? "Retour aux records" : "Retour à Ma table");
+      }
+
+      function retourDuNom() {
+        if (!nomVientDeRecords) {
+          backToModes();
+          return;
+        }
+        apresChoixDuNom = null;
+        show("records");
       }
 
       const MODE_COPY = Object.freeze({
@@ -7846,7 +7890,7 @@
         // (#result-accueil, #result-open-parcours) reste cachée par CSS.
         const maTable = document.createElement("button");
         maTable.type = "button";
-        maTable.className = restants ? "secondary" : "primary";
+        maTable.className = restants ? "secondary retour-flechee" : "primary retour-flechee";
         maTable.textContent = "Ma table";
         maTable.addEventListener("click", backToModes);
         if (restants) {
@@ -8844,12 +8888,20 @@
             : "On reprend un peu plus bas.";
           zone.append(phrase);
         }
+        // Lot « la flèche de retour » (14/10/2026, choix de Gwenaël) : deux
+        // boutons côte à côte, comme sur « C'est parti ! » — « ← Ma table » à
+        // gauche (la séance se reprendra), l'étape suivante à droite. Le petit
+        // lien « Arrêter la séance » s'en va.
         const arreter = document.createElement("button");
         arreter.type = "button";
-        arreter.className = "arreter";
-        arreter.textContent = "Arrêter la séance";
+        arreter.className = "secondary retour-flechee";
+        arreter.id = "seance-arreter";
+        arreter.textContent = "Ma table";
         arreter.addEventListener("click", backToModes);
-        zone.append(suite, arreter);
+        const ligne = document.createElement("div");
+        ligne.className = "suite-boutons";
+        ligne.append(arreter, suite);
+        zone.append(ligne);
       }
 
       function renderBilanSeance(zone) {
@@ -8916,7 +8968,7 @@
         boutons.className = "boutons";
         const maTable = document.createElement("button");
         maTable.type = "button";
-        maTable.className = "primary";
+        maTable.className = "primary retour-flechee";
         maTable.textContent = "Ma table";
         maTable.addEventListener("click", backToModes);
         boutons.append(maTable);
@@ -9621,7 +9673,26 @@
           effacerSuiteSeance();
           launchFromParcours(suite.config, suite.origin, {puis: suite.puis || null});
         });
-        zone.append(bouton);
+        // Lot « la flèche de retour » (14/10/2026, idée de Gwenaël) : ces
+        // écrans n'avaient aucun retour. Deux boutons côte à côte, comme sur
+        // « C'est parti ! » : « ← Ma table » à gauche (ou « ← Mon parcours »
+        // pour une série qui en vient), la suite à droite. Le retour fait ce
+        // que fait le bouton Retour du téléphone.
+        const retour = document.createElement("button");
+        retour.type = "button";
+        retour.className = "secondary retour-flechee";
+        retour.id = `${id}-retour`;
+        retour.textContent = sortieDeSerie().mot;
+        retour.addEventListener("click", () => {
+          state.apresMesCalculs = null;
+          state.apresMelange = null;
+          effacerSuiteSeance();
+          quitterSerie();
+        });
+        const ligne = document.createElement("div");
+        ligne.className = "suite-boutons";
+        ligne.append(retour, bouton);
+        zone.append(ligne);
       }
 
       // R5 (A18) : le symbole d'une marche prêt à poser dans la page — les
@@ -10250,7 +10321,7 @@
       $("fiche-imprimer").addEventListener("click", printFiche);
       // Lot « Les records » : les deux écrans et les boutons de la course.
       $("records-back").addEventListener("click", backToModes);
-      $("records-nom-back").addEventListener("click", backToModes);
+      $("records-nom-back").addEventListener("click", retourDuNom);
       ["semaine", "toujours"].forEach(cle => $(`records-onglet-${cle}`).addEventListener("click", () => { recordsOnglet = cle; renderRecords(); }));
       $("records-courir").addEventListener("click", () => lancerCourse("menu"));
       $("records-nom-changer").addEventListener("click", () => { apresChoixDuNom = () => show("records"); show("records-nom"); });

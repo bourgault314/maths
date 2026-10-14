@@ -316,13 +316,21 @@ test("la page : Mon mélange fini (réussi ou raté), UN seul bouton « Je passe
   const appels = [];
   const test = P.configValidation(3);
   const state = {apresMesCalculs: null, apresMelange: {config: test, origin: "menu", nom: "Je passe le test"}};
-  const rendre = new Function("$", "document", "state", "effacerSuiteSeance", "launchFromParcours", `${source("renderSuiteApresMelange")}\n${source("renderBoutonSuite")}\nreturn renderSuiteApresMelange;`)(
-    $, {createElement: fauxElement}, state, () => appels.push("effacer"), (config, origin, options) => appels.push(["lancer", config, origin, options]));
+  const rendre = new Function("$", "document", "state", "effacerSuiteSeance", "launchFromParcours", "sortieDeSerie", "quitterSerie", `${source("renderSuiteApresMelange")}\n${source("renderBoutonSuite")}\nreturn renderSuiteApresMelange;`)(
+    $, {createElement: fauxElement}, state, () => appels.push("effacer"), (config, origin, options) => appels.push(["lancer", config, origin, options]),
+    () => ({mot: "Ma table"}), () => appels.push("quitter"));
   rendre();
   const zone = $("seance-suite");
   assert.equal(zone.hidden, false);
-  assert.equal(zone.children.length, 1, "un seul bouton");
-  const bouton = zone.children[0];
+  // Lot « la flèche de retour » (14/10/2026, choix de Gwenaël) : sous le
+  // bouton, un lien pour revenir (cet écran n'avait aucun retour).
+  assert.equal(zone.children.length, 1, "une rangée de deux boutons");
+  const ligne = zone.children[0];
+  assert.equal(ligne.className, "suite-boutons");
+  assert.equal(ligne.children.length, 2, "« ← Ma table » à gauche, la suite à droite");
+  assert.equal(ligne.children[0].className, "secondary retour-flechee");
+  assert.equal(ligne.children[0].textContent, "Ma table");
+  const bouton = ligne.children[1];
   assert.equal(bouton.textContent, "Je passe le test →");
   assert.equal(bouton.id, "apres-melange");
   assert.equal(bouton.className, "primary");
