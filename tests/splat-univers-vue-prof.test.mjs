@@ -170,7 +170,8 @@ test("« Pour la classe » dit ce que la page des livrets propose, monde par mon
   for (let n = 1; n <= 6; n++) {
     const o = onglet(n), t = T[n - 1];
     assert.ok(o.length > 500, `onglet ${n} trouvé`);
-    const defi = /<h3>Le défi<\/h3>/.test(o);
+    // (14/10/2026) au monde 6, les cartes s'appellent « Le défi 1 » et « Le défi 2 »
+    const defi = /<h3>Le défi(?: \d)?<\/h3>/.test(o);
     assert.equal(/Le défi/.test(t), defi, `monde ${n} : « Le défi » ${defi ? "est" : "n'est pas"} sur la page des livrets`);
     assert.ok(/corrigés/.test(t), `monde ${n} : les corrigés`);
   }
