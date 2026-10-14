@@ -63,7 +63,10 @@
   }
   const CLE = lireCle();
 
-  /* Chaque étape : [parcours, numéro affiché, titre, monde, numéro du monde]. */
+  /* Chaque étape : [parcours, numéro affiché, titre, monde, numéro du monde].
+     L'échauffement du monde 6 (lot 3 de l'échauffement, 14/10/2026) : trois étapes avant la 38,
+     comptées dans les étoiles du monde, qui portent un CODE (« É1 ») à la place du numéro — la
+     38 reste la 38. « Étape suivante » : 37 → É1 → É2 → É3 → 38. */
   const ETAPES = [
     ["m1e1", 1, "Complète le schéma", "Petit SPLAT!", 1],
     ["m1e2", 2, "Dessine les jetons", "Petit SPLAT!", 1],
@@ -96,6 +99,9 @@
     ["m3e1", 35, "Premières équations", "SPLAT! Équations", 5],
     ["m3e2", 36, "Enlever, puis partager", "SPLAT! Équations", 5],
     ["m3e4", 37, "Des taches sur les deux plateaux", "SPLAT! Équations", 5],
+    ["ech1", "É1", "Des billes vertes et rouges", "SPLAT! Relatifs", 6],
+    ["ech2", "É2", "Je partage les billes", "SPLAT! Relatifs", 6],
+    ["ech3", "É3", "Un jeton, un nombre", "SPLAT! Relatifs", 6],
     ["m4e1", 38, "Les jetons rouges arrivent", "SPLAT! Relatifs", 6],
     ["m4e2", 39, "Des négatifs partout", "SPLAT! Relatifs", 6],
     ["m4e3", 40, "La tache opposée", "SPLAT! Relatifs", 6],

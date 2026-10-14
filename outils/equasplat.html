@@ -4623,7 +4623,7 @@
 </style>
 <script defer src="../assets/js/mention-confidentialite.js"></script>
 <!-- Le texte du bouton « Étape suivante ▶ » de l'écran de fin (lot A). -->
-<script src="../assets/js/splat-etapes.js?v=20261014-2"></script>
+<script src="../assets/js/splat-etapes.js?v=20261014-3"></script>
 <!-- Le parcours de l'élève (moteur partagé avec la carte des mondes et le serveur de suivi), et
      l'habillage du suivi de classe (pastille, garde) : lot 2 « outils + carte », 08/10/2026 -->
 <script src="../assets/js/splat-parcours.js?v=20261014-1"></script>
@@ -6421,13 +6421,20 @@
     }
     if(left.length === 0 || right.length === 0) return null;
     const allSameToken = arr => isAllTokens(arr) && arr.every(p => p.value === arr[0].value);
+    /* Billes 1 / −1 (l'échauffement du monde 6, É1 et É2 — décision de Gwenaël du 14/10/2026) :
+       pas de raccourci « 3 × (−1) = 3𝑏 » ni de bouton Conclure quand il y a autant de billes
+       que de taches, comme pour les billes bleues du monde 5. L'équation s'écrit comme le papier
+       (« −1 − 1 − 1 = 3𝑏 »), l'élève regroupe (« −3 = 3𝑏 »), puis partage : c'est ce geste qui
+       écrit « ÷ 3 ». Au départ comme en cours de route (É2-12 : « 3𝑎 = 1 + 1 + 1 », pas
+       « 3𝑎 = 3 × 1 »). Une seule tache (« 𝑡 = 3 ») n'est pas un raccourci : rien ne change. */
+    const raccourci = count => !(state && state.billes && count > 1);
 
     // Avec les taches opposées, on évite le raccourci magique −x = n → x = −n.
     // L'élève devra d'abord utiliser l'action "opposé des deux membres" dans une étape suivante.
-    if(allSameToken(left) && allSameXSign(right) && right.length === left.length && xSign(right[0]) > 0){
+    if(allSameToken(left) && allSameXSign(right) && right.length === left.length && xSign(right[0]) > 0 && raccourci(right.length)){
       return {value:left[0].value, count:right.length, xSide:"right", tokenSide:"left"};
     }
-    if(allSameToken(right) && allSameXSign(left) && left.length === right.length && xSign(left[0]) > 0){
+    if(allSameToken(right) && allSameXSign(left) && left.length === right.length && xSign(left[0]) > 0 && raccourci(left.length)){
       return {value:right[0].value, count:left.length, xSide:"left", tokenSide:"right"};
     }
     return null;
@@ -6458,7 +6465,10 @@
   function currentEquationString(){
     const info = getConclusionInfo();
     if(info && (info.count === 1 || (state && state.conclusionDone))) return finalEquationForConclusion(info);
-    if(info) return equationBeforeConclusion(info);
+    /* billes 1 / −1 (échauffement du monde 6) : « 2𝑚 = 0 » comme le papier, pas « 2𝑚 = 2 × 0 » —
+       c'est le seul cas où il reste une conclusion à plusieurs taches (rien à partager : Conclure
+       reste proposé et écrit « ÷ 2 ») */
+    if(info && !(state && state.billes)) return equationBeforeConclusion(info);
     return `${sideExpression("left")} = ${sideExpression("right")}`;
   }
 
@@ -9745,7 +9755,11 @@
       right:rightPieces,
       steps:[],
       stepOps:[],
-      conclusionDone:false
+      conclusionDone:false,
+      /* une carte de billes 1 / −1 (échauffement du monde 6) : en relatifs, tous les jetons
+         valent 1 ou −1 — getConclusionInfo n'y propose pas le raccourci « 3 × (−1) » */
+      billes:universe === "relative" && leftPieces.concat(rightPieces).some(p => p.type === "token") &&
+        leftPieces.concat(rightPieces).every(p => p.type !== "token" || Math.abs(Number(p.value)) === 1)
     };
 
     recordEquationStep();

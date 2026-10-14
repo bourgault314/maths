@@ -12,30 +12,14 @@ import {readFile, readdir} from "node:fs/promises";
 import {PARCOURS, SOURCE_MOTEUR, ETAPES_CARTE, A, B, caseAncienne, parcoursAvecTravail, fauxStockage, chainesLibres} from "./splat-faux-monde.mjs";
 
 const {BONUS} = ETAPES_CARTE;
+const {ETAPES} = ETAPES_CARTE;
 
-// Échauffement du monde 6 — EN ATTENTE DU LOT 3 (14/10/2026). Le lot 2 « suivi »
-// met É1-É3 dans le moteur et dans le motif du serveur ; la carte des mondes et
-// splat-etapes.js ne les reçoivent qu'au lot 3 (le serveur doit les connaître
-// AVANT, sinon il retirerait une étoile d'échauffement). D'ici là, la carte que
-// le moteur doit suivre = splat-etapes.js + ces trois lignes, avant la 38.
-// LE LOT 3 RETIRE CETTE LISTE : le premier test rougit tant qu'elle reste alors
-// que splat-etapes.js a déjà les trois étapes.
-const EN_ATTENTE_DU_LOT_3 = [
-  ["ech1", "É1", "", "SPLAT! Relatifs", 6],
-  ["ech2", "É2", "", "SPLAT! Relatifs", 6],
-  ["ech3", "É3", "", "SPLAT! Relatifs", 6]
-];
-const ETAPES = (() => {
-  const liste = ETAPES_CARTE.ETAPES.filter(e => !EN_ATTENTE_DU_LOT_3.some(a => a[0] === e[0]));
-  liste.splice(liste.findIndex(e => e[0] === "m4e1"), 0, ...EN_ATTENTE_DU_LOT_3);
-  return liste;
-})();
-
-test("échauffement : la liste « en attente du lot 3 » n'existe que tant que splat-etapes.js n'a pas É1-É3", () => {
-  const dejaSurLaCarte = ETAPES_CARTE.ETAPES.filter(e => EN_ATTENTE_DU_LOT_3.some(a => a[0] === e[0])).map(e => e[0]);
-  assert.deepEqual(dejaSurLaCarte, [],
-    "le lot 3 a mis l'échauffement dans splat-etapes.js : retirer EN_ATTENTE_DU_LOT_3 de tests/splat-parcours.test.mjs (ETAPES redevient celle de splat-etapes.js)");
+// Échauffement du monde 6 (lot 3, 14/10/2026) : splat-etapes.js a maintenant É1-É3, juste avant
+// la 38 — la liste « en attente du lot 3 » du lot 2 est retirée, le moteur suit splat-etapes.js.
+test("échauffement : É1-É3 sont dans splat-etapes.js, juste avant la 38, avec leurs titres", () => {
   assert.deepEqual(ETAPES.slice(31, 35).map(e => e[0]), ["ech1", "ech2", "ech3", "m4e1"], "les trois étapes juste avant la 38");
+  assert.deepEqual(ETAPES.slice(31, 34).map(e => [e[1], e[2]]),
+    [["É1", "Des billes vertes et rouges"], ["É2", "Je partage les billes"], ["É3", "Un jeton, un nombre"]]);
 });
 const serie = (fait, etoiles, cartes, vues) => ({fait, etoiles, cartes, vues});
 

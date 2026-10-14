@@ -33,9 +33,10 @@ const hrefs = (h) => [...h.matchAll(/href="([^"]*)"/g)].map((m) => m[1]).filter(
 const EMOJI = /\p{Extended_Pictographic}/u;
 /* les tableaux fabriqués dans le bac à sable n'ont pas le même Array : on les recopie */
 const J = (x) => JSON.parse(JSON.stringify(x));
-/* le bloc d'une étape : de son <li class="etape" id="…"> au suivant */
+/* le bloc d'une étape : de son <li class="etape" id="…"> au suivant (« etape code » : l'échauffement
+   du monde 6, lot 3, 14/10/2026) */
 function etapeHtml(h, id) {
-  const a = h.indexOf(`<li class="etape" id="${id}">`);
+  const a = Math.max(h.indexOf(`<li class="etape" id="${id}">`), h.indexOf(`<li class="etape code" id="${id}">`));
   assert.ok(a >= 0, `étape ${id} introuvable`);
   const b = h.indexOf('<li class="', a + 10);
   return h.slice(a, b < 0 ? undefined : b);
@@ -57,8 +58,11 @@ test("sommaire et bandeaux : les numéros de fiches des six mondes", () => {
 test("chaque étape garde son identifiant d'étoile et son numéro (.n), dans l'ordre de l'univers", () => {
   MONDES.forEach((m, mi) => {
     const h = html(mi);
-    const vus = [...h.matchAll(/<li class="etape" id="([^"]+)">[\s\S]*?<span class="n">(\d+)<\/span>/g)].map((x) => [x[1], Number(x[2])]);
-    const attendus = m.etapes.map((e, ei) => [ctx.idEtape(m, e, ei), PLAGES[mi][0] + ei]);
+    /* l'échauffement du monde 6 (lot 3, 14/10/2026) : son code (« É1 ») dans la tache, il ne prend
+       pas de numéro — la 38 reste la 38 */
+    const vus = [...h.matchAll(/<li class="etape(?: code)?" id="([^"]+)">[\s\S]*?<span class="n">([^<]+)<\/span>/g)].map((x) => [x[1], /^\d+$/.test(x[2]) ? Number(x[2]) : x[2]]);
+    let n = PLAGES[mi][0] - 1;
+    const attendus = m.etapes.map((e, ei) => [ctx.idEtape(m, e, ei), e.code || ++n]);
     assert.deepEqual(vus, J(attendus), m.nom);
   });
 });
@@ -139,7 +143,7 @@ test("« Pour la classe » : le diaporama au monde 1, la page des livrets aux mo
     assert.doesNotMatch(r[mi], /\.pdf"|bord court|recto-verso/, "ni PDF ni consigne d'impression : elles sont sur la page des livrets");
   }
   assert.ok(r[5].includes('href="/outils/livrets_splat.html#monde-6"'));
-  assert.ok(r[5].includes("Un livret par partie, chacun avec son livret Le défi, et leurs corrigés."));
+  assert.ok(r[5].includes("L'échauffement, un livret par partie avec son Le défi, et leurs corrigés."));
 });
 
 test("les parties des mondes 3 et 6 : un intertitre, sans ligne de PDF (comme aux autres mondes)", () => {
@@ -147,18 +151,24 @@ test("les parties des mondes 3 et 6 : un intertitre, sans ligne de PDF (comme au
      fiches et sa phrase — rien d'autre. Les livrets sont sur la page des livrets (« Pour la classe »). */
   for (const mi of [2, 5]) {   // (le monde 4 n'a plus de parties depuis le lot M4-4)
     const m = MONDES[mi], h = html(mi);
+    /* lot 3 de l'échauffement (14/10/2026) : au monde 6, l'échauffement est une partie à part
+       (« Échauffement », fiches É1 à É3), et la Partie 1 garde son nom, son ancre et ses fiches */
+    const ech = m.volets.filter((v) => v.ech).length;
     m.volets.forEach((v, vi) => {
-      const a = h.indexOf(`<li class="volet" id="${m.idp}-partie-${vi + 1}">`), b = h.indexOf("</li>", a);
-      assert.ok(a > 0, `${m.nom}, partie ${vi + 1}`);
-      const li = h.slice(a, b), n = PLAGES[mi][0] + v.de;
-      assert.ok(li.includes(`<h4>${v.nom}<span class="fiches">fiches ${n} à ${n + v.a - v.de - 1}</span></h4>`));
+      const id = v.ech ? `${m.idp}-echauffement` : `${m.idp}-partie-${vi + 1 - ech}`;
+      const a = h.indexOf(`<li class="volet${v.ech ? " ech" : ""}" id="${id}">`), b = h.indexOf("</li>", a);
+      assert.ok(a > 0, `${m.nom}, partie ${id}`);
+      const li = h.slice(a, b), n = PLAGES[mi][0] + v.de - ech * 3;
+      assert.ok(li.includes(`<span class="rang">${v.ech ? "Échauffement" : "Partie " + (vi + 1 - ech)}</span>`), id);
+      assert.ok(li.includes(v.ech ? `<h4>${v.nom}<span class="fiches">fiches É1 à É3</span></h4>`
+        : `<h4>${v.nom}<span class="fiches">fiches ${n} à ${n + v.a - v.de - 1}</span></h4>`), id);
       assert.ok(li.includes(`<p>${v.o}</p>`));
       assert.equal(hrefs(li).length, 0, `${m.nom}, partie ${vi + 1} : aucun lien`);
       assert.equal(v.livrets, undefined);
       assert.equal(v.note, undefined, "plus de note de partie (la consigne d'impression vit sur la page des livrets)");
     });
   }
-  assert.deepEqual(J(MONDES.map((m) => (m.volets || []).length)), [0, 0, 3, 0, 0, 2]);
+  assert.deepEqual(J(MONDES.map((m) => (m.volets || []).length)), [0, 0, 3, 0, 0, 3]);
   assert.doesNotMatch(univers, /livL|\.pdf"/, "aucun PDF en lien direct sur la carte des mondes");
 });
 
@@ -183,7 +193,7 @@ test("« Pour la classe » dit ce que la page des livrets propose, monde par mon
   assert.ok(onglet(2).includes("livret_splat_classique_lettre.pdf"));
   assert.match(T[4], /Schéma ou équation, chacun avec son livret Le défi/);
   assert.equal((onglet(5).match(/<h3>Le défi<\/h3>/g) || []).length, 2);
-  assert.match(T[5], /Un livret par partie/);
+  assert.match(T[5], /^L'échauffement, un livret par partie/);
   /* courts : une ligne chacun */
   T.forEach((t, i) => assert.ok(t.length <= 80, `monde ${i + 1} : ${t.length} caractères`));
 });
