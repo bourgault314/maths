@@ -129,7 +129,9 @@ const TITRES = [
   "Je retrouve 1 paire dans le plateau", "Je retrouve 2 paires dans le plateau",
   "Je retire", "Je partage", "Je remplace", "Je vérifie",
   // lot M4-5 (planches A et E de la conception du 14/10/2026)
-  "Les deux petits plateaux"
+  "Les deux petits plateaux",
+  // lot M4-7 (planche avant/après du 14/10/2026) : deux gestes à la suite, le grand plateau seul
+  "Le grand plateau"
 ];
 /* les titres qui portent un nombre (lot M4-5) : les plateaux se nomment par leur total */
 const TITRES_NOMBRES = [/^Je recopie [234] fois le plateau \d+$/, /^Je retrouve le plateau \d+ dedans$/, /^Je remplace dans le plateau \d+$/];

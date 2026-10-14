@@ -263,7 +263,7 @@ test("les trois outils chargent splat-etapes.js (sans defer, même version)", ()
   for (const [page, nom] of [[splat, "splat.html"], [petit, "splat_tache_barre.html"], [equa, "equasplat.html"]]) {
     const m = page.match(/<script src="\.\.\/assets\/js\/splat-etapes\.js\?v=([\w-]+)"><\/script>/);
     assert.ok(m, `${nom} ne charge pas splat-etapes.js`);
-    assert.equal(m[1], "20261014-1", `${nom} : ?v= de splat-etapes.js`);
+    assert.equal(m[1], "20261014-2", `${nom} : ?v= de splat-etapes.js`);
     // dans <head>, avant tout script de la page
     assert.ok(page.indexOf(m[0]) < page.indexOf("</head>"), `${nom} : le script doit être dans <head>`);
     // la petite ligne a son style
@@ -319,7 +319,7 @@ test("Bonus : « Étape suivante ▶ » mène à la fiche bonus suivante ; aprè
   assert.equal(ETAPES_JS.suivante("enq11", true).parcours, "enq12");
   // ni celles du monde 4 (avec la clé : il est encore en préparation)
   assert.equal(ETAPES_JS.suivante("sys28", true).parcours, "m3e1");
-  assert.equal(ETAPES_JS.sousTitre("sys25d", true), "Bonus\u00a026d\u00a0· Je triple");
+  assert.equal(ETAPES_JS.sousTitre("sys25d", true), "Bonus\u00a026d\u00a0· Deux fois ou trois fois\u00a0?");   // lot M4-7
 });
 
 test("Bonus : l'écran de fin de splat.html — ✨, « Ta tache bonus est dorée », la fiche suivante, retour sur le Bonus", () => {

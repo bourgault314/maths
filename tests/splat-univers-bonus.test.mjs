@@ -12,7 +12,8 @@ import vm from "node:vm";
      phrase ; des taches blanches cerclées de framboise, dorées ✨ une fois réussies ; un compteur
      « ✨ x / 10 » à part, hors des étoiles du haut ; pas de verrou ;
    - chaque fiche bonus a SON parcours (enq11d…), et n'allume plus l'étoile de sa fiche de base.
-   Lot M4-4 (04/10/2026) : le monde 4 a le même Bonus (« Deuxième tour », 25d → 28d, un livret),
+   Lot M4-4 (04/10/2026) : le monde 4 a le même Bonus (« Deuxième tour », 25d → 28d, un livret ;
+   « Cycle 4 » depuis le lot M4-7),
    aux couleurs du cannelle ; le code est commun (BONUS_MONDES), le monde 3 ne change pas (mêmes
    identifiants, mêmes textes, même clé de mémoire).
    On EXÉCUTE les fonctions de rendu de la page (voletHtml, bonusHtml) ; l'ouverture et la fermeture
@@ -90,12 +91,12 @@ test("le Bonus : taches blanches cerclées de la couleur du monde, dorées ✨ u
   assert.match(univers, /\.msys \.volet\.bonus\{background:#fff;border:1\.5px dashed #e3b994\}/);
 });
 
-test("lot M4-4 : le Bonus du monde 4 — un menu « Deuxième tour », un livret, 25d → 28d, chaque fiche son parcours", () => {
+test("lot M4-4 : le Bonus du monde 4 — un menu « Cycle 4 » (lot M4-7), un livret, 25d → 28d, chaque fiche son parcours", () => {
   const h = bonusHtml(MONDE_SYSTEME);
   assert.ok(h.startsWith('<li class="volet ferme bonus" id="sys-bonus" data-volet="bonus" role="button" tabindex="0" aria-expanded="false">' +
-    '<span class="rang">Bonus</span><div class="t"><h4>Deuxième tour<span class="fiches">fiches 25d à 28d</span></h4>'));
+    '<span class="rang">Bonus</span><div class="t"><h4>Cycle 4<span class="fiches">fiches 25d à 28d</span></h4>'));
   assert.ok(h.includes('<span class="stars" id="starsBonusSys"></span>'));
-  assert.deepEqual([...h.matchAll(/<li class="livretBonus" data-partie="bonus">([^<]+)<\/li>/g)].map((m) => m[1]), ["Le livret · Deuxième tour"]);
+  assert.deepEqual([...h.matchAll(/<li class="livretBonus" data-partie="bonus">([^<]+)<\/li>/g)].map((m) => m[1]), ["Le livret · Cycle 4"]);
   const fiches = [...h.matchAll(/<li class="etape bonus" id="sys-t2-(\w+)" data-partie="bonus">([\s\S]*?)<\/li>/g)];
   assert.deepEqual(fiches.map((m) => m[1]), ["25d", "26d", "27d", "28d"]);
   fiches.forEach((m, k) => {

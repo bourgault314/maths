@@ -13,10 +13,10 @@
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
   <script>
     /* Adresse courte des QR codes des livrets du Système — monde 4, livrets « tablette » (lot
-       M4-4, 04/10/2026) : « SPLAT! Système » (fiches 25 à 28) et « SPLAT! Système, deuxième
-       tour » (fiches 25d à 28d, le Bonus du monde 4 sur la carte des mondes) :
+       M4-4, 04/10/2026) : « SPLAT! Système » (fiches 25 à 28) et « SPLAT! Système · cycle 4 »
+       (fiches 25d à 28d, le Bonus du monde 4 sur la carte des mondes, refait au lot M4-7) :
        /splat/systeme/livret/?f=27   →  la série en ligne de la fiche 27 (ses 4 cartes) ;
-       /splat/systeme/livret/?f=26d  →  la fiche 26d du deuxième tour ;
+       /splat/systeme/livret/?f=26d  →  la fiche 26d du livret cycle 4 ;
        /splat/systeme/livret/?s=9    →  une série infinie du dos des livrets.
        Dans SPLAT!, le numéro de fiche EST le numéro d'étape. Chaque cible est EXACTEMENT le lien
        « Je joue » de la carte des mondes (outils/splat_univers.html, SYS_FICHES et SYS_TOUR2) :
@@ -35,17 +35,18 @@
       "mode=D&geste=MIX&gestes=COEF,MIROIR,DOUBLE&forme=MIX&sens=INDICE&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=117944"
     ];
     var SYS_TOUR2 = [
-      "mode=D&geste=ESCALIER&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=3046",
-      "mode=D&geste=DOUBLE&fois=3&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=1",
-      "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=1373",
-      "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS&indice=12&ordre=MELANGE&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=5673"
+      "mode=D&geste=RECOPIE&fois=2&ordre=MELANGE&visibleMin=0&visibleMax=0&totalMin=50&totalMax=100&seed=70569",
+      "mode=D&geste=RECOPIE&fois=MIX&ordre=MELANGE&visibleMin=0&visibleMax=0&totalMin=50&totalMax=100&seed=341052",
+      "mode=D&geste=ETAGES&fois=2&indice=12&sens=INDICE&visibleMin=0&visibleMax=0&totalMin=50&totalMax=100&seed=394968",
+      "mode=D&geste=MIX&gestes=EMBOITE1,TROIS,RECOPIE,ETAGES&fois=3&sous=MIROIR&ordre=MELANGE&visibleMin=1&visibleMax=3&totalMin=50&totalMax=100&seed=33590"
     ];
-    /* Les séries infinies du dos (?s=7…13, livrets tablette ; ?s=1…6 : celles des livrets du
+    /* Les séries infinies du dos (?s=7…14, livrets tablette ; ?s=1…6 : celles des livrets du
        25/09, gardées pour un livret déjà imprimé) : les réglages des fiches, sans graine — quatre
        cartes nouvelles à chaque ouverture (huit jusqu'au 08/10/2026), en mode élève sans étape (rien n'est enregistré). Les
-       séries 7 à 13 sont celles de _sources/livret-splat-systeme/render.py (SERIES) ; un test
+       séries 7 à 14 sont celles de _sources/livret-splat-systeme/render.py (SERIES) ; un test
        les épingle. Lot M4-6 (14/10/2026) : 7 à 9 suivent le livret 1 refait ; 13 = le QR du
-       défi du livret 1 (je recopie un plateau). */
+       défi du livret 1 (je recopie un plateau). Lot M4-7 : 10 à 12 suivent le livret 2 (cycle 4,
+       totaux 50 à 100) ; 14 = le QR du défi du livret 2. */
     var SYS_SERIES = {
       "1": "mode=D&geste=EMBOITE1&visibleMin=0&visibleMax=3&totalMin=20&totalMax=60",
       "2": "mode=D&geste=MIX&gestes=PARTIELLE,COEF&coefMax=3&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
@@ -56,10 +57,11 @@
       "7": "mode=D&geste=MIX&gestes=PARTIELLE,COEF,DOUBLE&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
       "8": "mode=D&geste=MIX&gestes=EMBOITE1,ESCALIER,DOUBLE,MIROIR,TROIS&sens=INDICE&forme=MIX&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
       "9": "mode=D&geste=MIX&gestes=PARTIELLE,COEF,DOUBLE,EMBOITE1,ESCALIER,MIROIR,TROIS&sens=MIX&forme=MIX&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
-      "10": "mode=D&geste=ESCALIER&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
-      "11": "mode=D&geste=DOUBLE&fois=3&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
-      "12": "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS,ESCALIER&sens=MIX&ordre=MELANGE&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60",
-      "13": "mode=D&geste=RECOPIE&fois=MIX&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60"
+      "10": "mode=D&geste=RECOPIE&fois=MIX&visibleMin=0&visibleMax=0&totalMin=50&totalMax=100",
+      "11": "mode=D&geste=ETAGES&visibleMin=0&visibleMax=0&totalMin=50&totalMax=100",
+      "12": "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS,ESCALIER,RECOPIE,ETAGES&sens=MIX&forme=MIX&fois=MIX&ordre=MELANGE&visibleMin=1&visibleMax=3&totalMin=50&totalMax=100",
+      "13": "mode=D&geste=RECOPIE&fois=MIX&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
+      "14": "mode=D&geste=MIX&gestes=RECOPIE,ETAGES&fois=4&sous=DOUBLE&indice=12&sens=INDICE&ordre=MELANGE&visibleMin=0&visibleMax=0&totalMin=50&totalMax=100"
     };
     var SYS_SERIE_CARTES = 4;
     var f = new URLSearchParams(window.location.search).get("f");
@@ -87,12 +89,12 @@
     <li><a href="/splat/classique/?mode=D&amp;geste=MIX&amp;gestes=MIROIR,TROIS&amp;forme=MIX&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;seed=723&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=sys27">Fiche 27 — J&#x27;additionne</a></li>
     <li><a href="/splat/classique/?mode=D&amp;geste=MIX&amp;gestes=COEF,MIROIR,DOUBLE&amp;forme=MIX&amp;sens=INDICE&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;seed=117944&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=sys28">Fiche 28 — À toi de choisir</a></li>
   </ul>
-  <p>Livret SPLAT! Système, deuxième tour&nbsp;:</p>
+  <p>Livret SPLAT! Système · cycle&nbsp;4&nbsp;:</p>
   <ul>
-    <li><a href="/splat/classique/?mode=D&amp;geste=ESCALIER&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;seed=3046&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=sys25d">Fiche 25d — L&#x27;escalier</a></li>
-    <li><a href="/splat/classique/?mode=D&amp;geste=DOUBLE&amp;fois=3&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;seed=1&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=sys26d">Fiche 26d — Je triple</a></li>
-    <li><a href="/splat/classique/?mode=D&amp;geste=MIX&amp;gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=20&amp;totalMax=60&amp;seed=1373&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=sys27d">Fiche 27d — Avec des jetons visibles</a></li>
-    <li><a href="/splat/classique/?mode=D&amp;geste=MIX&amp;gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS&amp;indice=12&amp;ordre=MELANGE&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;seed=5673&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=sys28d">Fiche 28d — Dans le désordre</a></li>
+    <li><a href="/splat/classique/?mode=D&amp;geste=RECOPIE&amp;fois=2&amp;ordre=MELANGE&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=50&amp;totalMax=100&amp;seed=70569&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=sys25d">Fiche 25d — Je recopie, puis je retire</a></li>
+    <li><a href="/splat/classique/?mode=D&amp;geste=RECOPIE&amp;fois=MIX&amp;ordre=MELANGE&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=50&amp;totalMax=100&amp;seed=341052&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=sys26d">Fiche 26d — Deux fois ou trois fois&nbsp;?</a></li>
+    <li><a href="/splat/classique/?mode=D&amp;geste=ETAGES&amp;fois=2&amp;indice=12&amp;sens=INDICE&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=50&amp;totalMax=100&amp;seed=394968&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=sys27d">Fiche 27d — Deux gestes à la suite</a></li>
+    <li><a href="/splat/classique/?mode=D&amp;geste=MIX&amp;gestes=EMBOITE1,TROIS,RECOPIE,ETAGES&amp;fois=3&amp;sous=MIROIR&amp;ordre=MELANGE&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=50&amp;totalMax=100&amp;seed=33590&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=sys28d">Fiche 28d — À toi de choisir</a></li>
     <li><a href="/outils/splat_univers.html#monde-4">La carte des mondes</a></li>
   </ul>
   <p>Encore des cartes — les séries du dos des livrets&nbsp;:</p>
@@ -100,10 +102,11 @@
     <li><a href="/splat/classique/?mode=D&amp;geste=MIX&amp;gestes=PARTIELLE,COEF,DOUBLE&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;cards=4&amp;unknown=question&amp;eleve=1">Série 7 — Je retire</a></li>
     <li><a href="/splat/classique/?mode=D&amp;geste=MIX&amp;gestes=EMBOITE1,ESCALIER,DOUBLE,MIROIR,TROIS&amp;sens=INDICE&amp;forme=MIX&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;cards=4&amp;unknown=question&amp;eleve=1">Série 8 — Je remplace, j&#x27;additionne</a></li>
     <li><a href="/splat/classique/?mode=D&amp;geste=MIX&amp;gestes=PARTIELLE,COEF,DOUBLE,EMBOITE1,ESCALIER,MIROIR,TROIS&amp;sens=MIX&amp;forme=MIX&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;cards=4&amp;unknown=question&amp;eleve=1">Série 9 — Tout mélangé</a></li>
-    <li><a href="/splat/classique/?mode=D&amp;geste=ESCALIER&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;cards=4&amp;unknown=question&amp;eleve=1">Série 10 — L&#x27;escalier</a></li>
-    <li><a href="/splat/classique/?mode=D&amp;geste=DOUBLE&amp;fois=3&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;cards=4&amp;unknown=question&amp;eleve=1">Série 11 — Je triple</a></li>
-    <li><a href="/splat/classique/?mode=D&amp;geste=MIX&amp;gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS,ESCALIER&amp;sens=MIX&amp;ordre=MELANGE&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=20&amp;totalMax=60&amp;cards=4&amp;unknown=question&amp;eleve=1">Série 12 — Le grand défi</a></li>
+    <li><a href="/splat/classique/?mode=D&amp;geste=RECOPIE&amp;fois=MIX&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=50&amp;totalMax=100&amp;cards=4&amp;unknown=question&amp;eleve=1">Série 10 — Je recopie</a></li>
+    <li><a href="/splat/classique/?mode=D&amp;geste=ETAGES&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=50&amp;totalMax=100&amp;cards=4&amp;unknown=question&amp;eleve=1">Série 11 — Deux gestes à la suite</a></li>
+    <li><a href="/splat/classique/?mode=D&amp;geste=MIX&amp;gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS,ESCALIER,RECOPIE,ETAGES&amp;sens=MIX&amp;forme=MIX&amp;fois=MIX&amp;ordre=MELANGE&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=50&amp;totalMax=100&amp;cards=4&amp;unknown=question&amp;eleve=1">Série 12 — Le grand défi</a></li>
     <li><a href="/splat/classique/?mode=D&amp;geste=RECOPIE&amp;fois=MIX&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;cards=4&amp;unknown=question&amp;eleve=1">Série 13 — Le défi</a></li>
+    <li><a href="/splat/classique/?mode=D&amp;geste=MIX&amp;gestes=RECOPIE,ETAGES&amp;fois=4&amp;sous=DOUBLE&amp;indice=12&amp;sens=INDICE&amp;ordre=MELANGE&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=50&amp;totalMax=100&amp;cards=4&amp;unknown=question&amp;eleve=1">Série 14 — Le défi du livret cycle&nbsp;4</a></li>
   </ul>
 </body>
 </html>

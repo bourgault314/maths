@@ -195,7 +195,8 @@ test("l'impression : la carte du Système en 2 par page seulement (plateaux), le
   assert.match(rendu, /const deuxParPage = !!opts\.deuxParPage && sysEnPlateaux\(card\);/);
   assert.match(rendu, /const W = deuxParPage \? \(revealAnswers \? SYS_2P\.wCorrection : SYS_2P\.w\) : 1600;/);
   assert.match(rendu, /drawSysCorrectionBlocs\(targetSvg, card, haut, SYS_CORR_IMPRIME_2P\.bas, ctx\)/);
-  assert.match(rendu, /drawSysPlateaux\(targetSvg, card, SYS_ZONE_IMPRIME_2P, \{ mkEl:tEl, mkText:tText, isPrint:true, devoile:false \}\);\n    drawSysLigneReponse\(targetSvg, card, ctx\);/);
+  // (lot M4-7 : « Le système » entre les plateaux et la ligne réponse, seulement avec systeme=1)
+  assert.match(rendu, /const dispo = drawSysPlateaux\(targetSvg, card, SYS_ZONE_IMPRIME_2P, \{ mkEl:tEl, mkText:tText, isPrint:true, devoile:false \}\);\n    if\(printSystemeLigne\) drawSysLigneSysteme\(targetSvg, card, dispo, ctx, false\);\n    drawSysLigneReponse\(targetSvg, card, ctx\);/);
   // le 4 par page garde sa correction sans cadres, à ses bords
   assert.match(rendu, /drawSysCorrectionImprimee\(targetSvg, card, haut, SYS_CORR_IMPRIME\.basImprime, ctx\);/);
 });

@@ -78,7 +78,7 @@
   })(window);
 </script>
 <!-- La liste des mondes « en préparation » et la clé de Gwenaël (?essai=1) : en tête de assets/js/splat-etapes.js -->
-<script src="../assets/js/splat-etapes.js?v=20261014-1"></script>
+<script src="../assets/js/splat-etapes.js?v=20261014-2"></script>
 <!-- Le parcours de l'élève (moteur partagé avec les trois outils et le serveur de suivi), et
      l'habillage du suivi de classe (bloc de suivi, pied, garde) : lots 2 et 6, 08/10/2026 -->
 <script src="../assets/js/splat-parcours.js?v=20261008-5"></script>
@@ -743,9 +743,9 @@ const MONDE_ENQUETE={cls:"menq",idp:"enq",actif:true,nom:"SPLAT! Enquête",
 /* ---- SPLAT! Système, monde 4 : les livrets « tablette » du lot M4-4 (04/10/2026) ----
    Le mode D de l'outil : plusieurs plateaux, un total chacun, les mêmes couleurs partout.
    Un livret pour tous, une idée par fiche (25 à 28, refait au lot M4-6 le 14/10/2026 : je
-   retire, je remplace, j'additionne, à toi de choisir), puis le deuxième tour, plus dur (25d à
-   28d) : le Bonus du monde 4, comme au monde 3 (SYS_TOUR2, plus bas). Réglages et graines
-   TRIÉS (lots M4-4 et M4-6 : chaque carte a son type, dans l'ordre de la fiche) : ce sont exactement
+   retire, je remplace, j'additionne, à toi de choisir), puis le livret cycle 4 (25d à 28d, refait
+   au lot M4-7) : le Bonus du monde 4, comme au monde 3 (SYS_TOUR2, plus bas). Réglages et graines
+   TRIÉS (lots M4-4, M4-6 et M4-7 : chaque carte a son type, dans l'ordre de la fiche) : ce sont exactement
    ceux des livrets (_sources/livret-splat-systeme/render.py) et de la page courte des QR
    (splat/systeme/livret/) — un test les compare. Ne jamais changer une graine sans refaire les
    PDF. Étoiles sys-0 … sys-3 (« id » en toutes lettres), parcours sys25 … sys28 : les
@@ -766,18 +766,20 @@ const SYS_FICHES=[
   o:"Deux cartes qui se ressemblent… mais pas le même geste : à toi de choisir.",
   q:"mode=D&geste=MIX&gestes=COEF,MIROIR,DOUBLE&forme=MIX&sens=INDICE&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=117944"}
 ];
-/* Le deuxième tour du monde 4 (lot M4-4) : le Bonus du monde 4, un menu sous les étapes, hors
-   des étoiles du haut, comme au monde 3 ; chaque fiche a son parcours (sys25d…, sa tache
-   dorée ; assets/js/splat-etapes.js en garde la copie, BONUS). « n » : la note du prof. */
+/* Le livret cycle 4 du monde 4 (lot M4-4 ; refait au lot M4-7, 14/10/2026) : le Bonus du monde 4,
+   un menu sous les étapes, hors des étoiles du haut, comme au monde 3 ; chaque fiche a son
+   parcours (sys25d…, sa tache dorée ; assets/js/splat-etapes.js en garde la copie, BONUS).
+   « n » : la note du prof. Ses fiches s'impriment avec « Le système » sous chaque carte
+   (systeme=1, comme le livret). */
 const SYS_TOUR2=[
- {code:"25d",t:"L'escalier",n:"Trois plateaux emboîtés : retirer deux fois.",
-  q:"mode=D&geste=ESCALIER&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=3046"},
- {code:"26d",t:"Je triple",n:"Recopier le petit plateau trois fois.",
-  q:"mode=D&geste=DOUBLE&fois=3&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=1"},
- {code:"27d",t:"Avec des jetons visibles",n:"Les gestes du livret 1, avec des jetons à retirer aussi.",
-  q:"mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=1373"},
- {code:"28d",t:"Dans le désordre",n:"Plateaux mélangés ; carte 3 : doubler un plateau plus gros.",
-  q:"mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS&indice=12&ordre=MELANGE&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=5673"}
+ {code:"25d",t:"Je recopie, puis je retire",n:"Aucun plateau dans l'autre : recopier l'un 2 fois, y retrouver l'autre, retirer.",
+  q:"mode=D&geste=RECOPIE&fois=2&ordre=MELANGE&visibleMin=0&visibleMax=0&totalMin=50&totalMax=100&seed=70569"},
+ {code:"26d",t:"Deux fois ou trois fois\u00a0?",n:"Recopier 2 ou 3 fois : l'élève choisit. Souvent deux chemins ; le corrigé en montre un.",
+  q:"mode=D&geste=RECOPIE&fois=MIX&ordre=MELANGE&visibleMin=0&visibleMax=0&totalMin=50&totalMax=100&seed=341052"},
+ {code:"27d",t:"Deux gestes à la suite",n:"Trois couleurs : résoudre les deux petits plateaux, puis remplacer dans le grand.",
+  q:"mode=D&geste=ETAGES&fois=2&indice=12&sens=INDICE&visibleMin=0&visibleMax=0&totalMin=50&totalMax=100&seed=394968"},
+ {code:"28d",t:"À toi de choisir",n:"Un geste par carte, plateaux mélangés ; carte 1 : des jetons visibles.",
+  q:"mode=D&geste=MIX&gestes=EMBOITE1,TROIS,RECOPIE,ETAGES&fois=3&sous=MIROIR&ordre=MELANGE&visibleMin=1&visibleMax=3&totalMin=50&totalMax=100&seed=33590"}
 ];
 const MONDE_SYSTEME={cls:"msys",idp:"sys",actif:true,nom:"SPLAT! Système",
   desc:"Plusieurs plateaux, un total pour chacun, et les mêmes couleurs partout : compare les plateaux pour trouver ce que cache chaque couleur.",
@@ -977,21 +979,22 @@ ENQ_TOUR2.forEach(f=>{
   f.jp=EQ+f.q+ENQ_COMMUN;
 });
 SYS_TOUR2.forEach(f=>{
-  f.j=ficheJeu(f.q,"sys",f.code); f.f=ficheImprimer(f,f.code,"statement",2); f.c=ficheImprimer(f,f.code,"correction",2); f.cl=enLettres(f.c);
+  f.j=ficheJeu(f.q,"sys",f.code); f.f=ficheImprimer(f,f.code,"statement",2)+"&systeme=1"; f.c=ficheImprimer(f,f.code,"correction",2); f.cl=enLettres(f.c);
   f.jp=EQ+f.q+ENQ_COMMUN;
 });
 /* Les Bonus (monde 3 : 04/10/2026 ; monde 4 : lot M4-4) : par monde, ses fiches, leurs livrets,
    et les identifiants de la page (ceux du monde 3 ne changent pas : enq-bonus, enq-t2-11d,
-   starsBonus, et sa clé de mémoire). */
+   starsBonus, et sa clé de mémoire). « nom » : le nom du Bonus (monde 3 « Deuxième tour » ;
+   monde 4 « Cycle 4 », lot M4-7). */
 const BONUS_MONDES=[
  {monde:MONDE_ENQUETE,idp:"enq",fiches:ENQ_TOUR2,volet:"enq-bonus",li:"enq-t2-",stars:"starsBonus",cle:"",
-  fichesTxt:"fiches 11d à 24d",phrase:"Pour aller plus loin\u00a0: tous les types de problèmes, mélangés.",
+  nom:"Deuxième tour",fichesTxt:"fiches 11d à 24d",phrase:"Pour aller plus loin\u00a0: tous les types de problèmes, mélangés.",
   livrets:[["Livret 1 · Les trois dessins",0,5],["Livret 2 · Vers le Système",5,10]],
   prof:[[1,"Les trois dessins","11d","17d",0,5],[2,"Vers le Système","18d","24d",5,10]]},
  {monde:MONDE_SYSTEME,idp:"sys",fiches:SYS_TOUR2,volet:"sys-bonus",li:"sys-t2-",stars:"starsBonusSys",cle:"-sys",
-  fichesTxt:"fiches 25d à 28d",phrase:"Pour aller plus loin\u00a0: l'escalier, je triple, des jetons, le désordre.",
-  livrets:[["Le livret · Deuxième tour",0,4]],
-  prof:[["","SPLAT! Système, deuxième tour","25d","28d",0,4]]}
+  nom:"Cycle 4",fichesTxt:"fiches 25d à 28d",phrase:"Pour aller plus loin\u00a0: je recopie un plateau, deux gestes à la suite.",
+  livrets:[["Le livret · Cycle 4",0,4]],
+  prof:[["","SPLAT! Système · cycle 4","25d","28d",0,4]]}
 ];
 function bonusDe(m){return BONUS_MONDES.find(b=>b.monde===m)||null;}
 /* Monde 5 : numéro de fiche et liens de chaque étape (lot Q2). « Projeter » ouvre la
@@ -1090,7 +1093,7 @@ const NOTES_MONDE = [
  "Le tout et les parties : lire, compléter, puis dessiner un schéma en barres.",
  "Le schéma en barres devient une équation.",
  "Un indice relie les taches : l'élève trace son schéma, puis déduit. Un monde en trois parties : «\u00a0de plus, de moins\u00a0», puis «\u00a0fois plus, fois moins\u00a0», puis l'enquête qui rebondit. Un deuxième tour (dix fiches « d », deux livrets, en bonus) donne tous les types de problèmes.",
- "Plusieurs plateaux, les mêmes couleurs\u00a0: on compare les plateaux. Pour s'y retrouver\u00a0: l'Enquête, c'est un indice qui compare deux taches\u00a0; le Système, c'est un indice qui donne un total partiel. Un livret pour tous (fiches 25 à 28, une idée par fiche), puis un deuxième tour plus dur, en bonus (25d à 28d). "+
+ "Plusieurs plateaux, les mêmes couleurs\u00a0: on compare les plateaux. Pour s'y retrouver\u00a0: l'Enquête, c'est un indice qui compare deux taches\u00a0; le Système, c'est un indice qui donne un total partiel. Un livret pour tous (fiches 25 à 28, une idée par fiche), puis un livret cycle 4, en bonus (25d à 28d). "+
  "<table><tr><th>Ce que dit l'énoncé</th><th>Où dans SPLAT!</th><th>Programme</th></tr>"+
  "<tr><td>A = B + d ou A = k × B, avec un total (partage inégal à 2 ou 3 taches)</td><td>Enquête, fiches 10 à 19</td><td>CM1-6e</td></tr>"+
  "<tr><td>pareil, plusieurs taches de chaque couleur</td><td>Enquête, fiches 20 et 21</td><td>6e</td></tr>"+
@@ -1098,7 +1101,8 @@ const NOTES_MONDE = [
  "<tr><td>une partie connue (3 noires = 30) et le tout</td><td>Système, fiche 25</td><td>CM2-6e</td></tr>"+
  "<tr><td>un plateau dans l'autre (2N + V = 25 ; 2N + 4V = 40) : <b>je retire</b></td><td>Système, fiches 25, 26, 28</td><td>CM1-6e, «\u00a0ciseaux et stylos\u00a0»</td></tr>"+
  "<tr><td>deux plateaux en miroir, trois paires : <b>j'additionne</b></td><td>Système, fiches 27, 28</td><td>fin cycle 3, cycle 4</td></tr>"+
- "<tr><td>aucun plateau dans l'autre (N + 3V = 34 ; 2N + V = 28) : <b>je recopie l'un, puis je retire</b></td><td>Système, défi du livret 1</td><td>fin cycle 3 («\u00a0lapins et poules\u00a0»), cycle 4</td></tr>"+
+ "<tr><td>aucun plateau dans l'autre (N + 3V = 34 ; 2N + V = 28) : <b>je recopie l'un, puis je retire</b></td><td>Système, défi du livret 1 ; Bonus 25d à 28d</td><td>fin cycle 3 («\u00a0lapins et poules\u00a0»), cycle 4</td></tr>"+
+ "<tr><td>deux gestes à la suite (trois couleurs)</td><td>Système, Bonus 27d et 28d</td><td>cycle 4</td></tr>"+
  "<tr><td>l'inconnue dans les deux membres (2x + 4 = 3x + 3)</td><td>mondes 5 et 6</td><td>4e-3e</td></tr>"+
  "<tr><td>recopier les deux plateaux (2N + 3V ; 3N + 5V)</td><td><b>volontairement hors SPLAT!</b></td><td>lycée</td></tr></table>",
  "Deux plateaux, la même quantité : l'élève dessine le schéma ou écrit l'équation. Une nouveauté à la fois, tout mélangé à la fin.",
@@ -1204,7 +1208,7 @@ const LIVRET_TEXTE=[
   "Deux séries de trois niveaux, et leurs corrigés.",
   "Les fiches 7 à 9 et Le défi, en «\u00a0?\u00a0» ou en lettre, et leurs corrigés.",
   "Un livret par partie, puis le deuxième tour, et leurs corrigés.",
-  "Le livret, puis le deuxième tour, et leurs corrigés.",
+  "Le livret pour tous, le livret cycle 4, et leurs corrigés.",
   "Schéma ou équation, chacun avec son livret Le défi, et leurs corrigés.",
   "Un livret par partie, chacun avec son livret Le défi, et leurs corrigés."];
 function ressourcesHtml(m,mi){
@@ -1303,7 +1307,7 @@ function tour2ProfHtml(m){
       '<svg class="tache" viewBox="0 0 110 110"><use class="fond" href="#tacheEtoile" width="110" height="110"/></svg>'+
       '<span class="n">'+f.code+'</span></button>'+
     '<div class="corps"><h3>'+f.t+'</h3><p class="pNote">'+f.n+'</p>'+actionsHtml(f,m,'')+'</div></li>';
-  const tete=(rang,nom,de,a)=>'<li class="volet" id="'+b.idp+'-tour2-'+(rang||1)+'"><span class="rang">Deuxième tour'+(rang?' '+rang:'')+'</span>'+
+  const tete=(rang,nom,de,a)=>'<li class="volet" id="'+b.idp+'-tour2-'+(rang||1)+'"><span class="rang">'+b.nom+(rang?' '+rang:'')+'</span>'+
     '<h4>'+nom+'<span class="fiches">fiches '+de+' à '+a+'</span></h4>'+
     '<p>Plus dur, en bonus\u00a0: ses étoiles sont à part.</p></li>';
   return b.prof.map(([rang,nom,de,a,i0,i1])=>tete(rang,nom,de,a)+b.fiches.slice(i0,i1).map(li).join('')).join('');
@@ -1355,7 +1359,7 @@ function voletHtml(id,cle,rang,nom,fiches,phrase,idStars,cls){
    parcours (enq11d…, sys25d…) : elle allume SA tache, dorée ✨. */
 function bonusHtml(m){
   const b=bonusDe(m); if(!b) return '';
-  return voletHtml(b.volet,'bonus','Bonus','Deuxième tour',b.fichesTxt,b.phrase,b.stars,' bonus')+
+  return voletHtml(b.volet,'bonus','Bonus',b.nom,b.fichesTxt,b.phrase,b.stars,' bonus')+
     b.livrets.map(([titre,de,a])=>'<li class="livretBonus" data-partie="bonus">'+titre+'</li>'+
       b.fiches.slice(de,a).map(f=>'<li class="etape bonus" id="'+b.li+f.code+'" data-partie="bonus">'+
         '<button class="badge" type="button" disabled>'+

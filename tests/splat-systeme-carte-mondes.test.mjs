@@ -6,7 +6,8 @@ import vm from "node:vm";
 /* Lot « six mondes » (24/09/2026) — SPLAT! Système entre dans la carte des mondes, la carte
    se replie en accordéon, et un bouton « Continuer » mène à la prochaine étoile. Lot M4-4
    (04/10/2026) : le monde 4 devient un livret pour tous (fiches 25 à 28, quatre étoiles) et un
-   deuxième tour en bonus (25d à 28d, taches dorées), comme le monde 3. Comme pour l'Enquête,
+   deuxième tour en bonus (25d à 28d, taches dorées), comme le monde 3 — le livret cycle 4 depuis
+   le lot M4-7 (14/10/2026). Comme pour l'Enquête,
    on EXÉCUTE les données de outils/splat_univers.html plutôt que d'y chercher du texte. */
 
 const lire = (p) => readFileSync(new URL("../" + p, import.meta.url), "utf8");
@@ -28,14 +29,14 @@ vm.runInContext(
 const { MONDES, NOTES_MONDE, NOTES_PROF, SYS_FICHES, SYS_TOUR2, BONUS_MONDES } = JSON.parse(JSON.stringify(ctx.X));
 const SYSTEME = MONDES[3];
 
-/* Les adresses des fiches (livret 1 : lot M4-6, 14/10/2026 ; deuxième tour : lot M4-4) : réglages et
+/* Les adresses des fiches (livret 1 : lot M4-6 ; livret cycle 4 : lot M4-7, 14/10/2026) : réglages et
    graines TRIÉES (chaque carte a son type, dans l'ordre de la fiche), les mêmes que
    _sources/livret-splat-systeme/render.py et que la
    page courte des QR. Une graine ou un réglage qui bouge ici, ce sont les fiches, les PDF et les
    livrets du Système à refaire. */
 const BASE = "/splat/classique/?";
 const FIN = "&cards=4&unknown=question";
-const T = "&totalMin=20&totalMax=60", V0 = "&visibleMin=0&visibleMax=0";
+const T = "&totalMin=20&totalMax=60", T2 = "&totalMin=50&totalMax=100", V0 = "&visibleMin=0&visibleMax=0";
 const FICHES = [
   [25, "Je retire", "mode=D&geste=MIX&gestes=PARTIELLE,COEF,DOUBLE" + V0 + T + "&seed=1196"],
   [26, "Je remplace", "mode=D&geste=MIX&gestes=EMBOITE1,ESCALIER,DOUBLE&sens=INDICE" + V0 + T + "&seed=29"],
@@ -43,10 +44,10 @@ const FICHES = [
   [28, "À toi de choisir", "mode=D&geste=MIX&gestes=COEF,MIROIR,DOUBLE&forme=MIX&sens=INDICE" + V0 + T + "&seed=117944"]
 ];
 const TOUR2 = [
-  ["25d", "L'escalier", "mode=D&geste=ESCALIER" + V0 + T + "&seed=3046"],
-  ["26d", "Je triple", "mode=D&geste=DOUBLE&fois=3" + V0 + T + "&seed=1"],
-  ["27d", "Avec des jetons visibles", "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR&visibleMin=1&visibleMax=3" + T + "&seed=1373"],
-  ["28d", "Dans le désordre", "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS&indice=12&ordre=MELANGE" + V0 + T + "&seed=5673"]
+  ["25d", "Je recopie, puis je retire", "mode=D&geste=RECOPIE&fois=2&ordre=MELANGE" + V0 + T2 + "&seed=70569"],
+  ["26d", "Deux fois ou trois fois\u00a0?", "mode=D&geste=RECOPIE&fois=MIX&ordre=MELANGE" + V0 + T2 + "&seed=341052"],
+  ["27d", "Deux gestes à la suite", "mode=D&geste=ETAGES&fois=2&indice=12&sens=INDICE" + V0 + T2 + "&seed=394968"],
+  ["28d", "À toi de choisir", "mode=D&geste=MIX&gestes=EMBOITE1,TROIS,RECOPIE,ETAGES&fois=3&sous=MIROIR&ordre=MELANGE&visibleMin=1&visibleMax=3" + T2 + "&seed=33590"]
 ];
 const titre = (n, t) => encodeURIComponent(`Fiche ${n} — ${t}`);
 
@@ -75,20 +76,27 @@ test("Système : quatre étapes (fiches 25 à 28), les réglages et les graines 
   assert.doesNotMatch(lu, /\b69\b/);
 });
 
-test("Système : le deuxième tour (25d à 28d) est le Bonus du monde 4, comme au monde 3", () => {
+test("Système : le livret cycle 4 (25d à 28d) est le Bonus du monde 4, comme au monde 3", () => {
   assert.deepEqual(SYS_TOUR2.map((f) => [f.code, f.t, f.q]), TOUR2);
   SYS_TOUR2.forEach((f) => {
     assert.equal(f.j, BASE + f.q + FIN + "&eleve=1&parcours=sys" + f.code, `jeu de la fiche ${f.code}`);
     assert.equal(f.jp, BASE + f.q + FIN);
-    assert.equal(f.f, BASE + f.q + FIN + "&layout=2&title=" + titre(f.code, f.t) + "&print=statement");
+    // la fiche s'imprime comme dans le livret : « Le système » sous chaque carte (lot M4-7)
+    assert.equal(f.f, BASE + f.q + FIN + "&layout=2&title=" + titre(f.code, f.t) + "&print=statement&systeme=1");
     assert.equal(f.c, BASE + f.q + FIN + "&layout=2&title=" + titre(f.code, f.t) + "&print=correction");
     assert.equal(f.cl, BASE + f.q + "&cards=4&unknown=letter&layout=2&title=" + titre(f.code, f.t) + "&print=correction");
-    assert.ok(f.n.length > 10, `note du prof de la fiche ${f.code}`);
+    assert.ok(f.n.length > 10 && f.n.length <= 90, `note du prof de la fiche ${f.code}`);
   });
   /* les deux Bonus : le monde 3 garde ses identifiants, le monde 4 a les siens */
   assert.deepEqual(BONUS_MONDES.map((b) => [b.monde, b.idp, b.volet, b.li, b.stars, b.cle, b.fiches.length]),
     [["SPLAT! Enquête", "enq", "enq-bonus", "enq-t2-", "starsBonus", "", 10], ["SPLAT! Système", "sys", "sys-bonus", "sys-t2-", "starsBonusSys", "-sys", 4]]);
-  assert.deepEqual(BONUS_MONDES[1].livrets, [["Le livret · Deuxième tour", 0, 4]]);
+  assert.deepEqual(BONUS_MONDES[1].livrets, [["Le livret · Cycle 4", 0, 4]]);
+  /* son nom (lot M4-7) : « Cycle 4 » au monde 4 ; le monde 3 garde « Deuxième tour » */
+  assert.deepEqual(BONUS_MONDES.map((b) => b.nom), ["Deuxième tour", "Cycle 4"]);
+  assert.deepEqual(BONUS_MONDES[1].prof, [["", "SPLAT! Système · cycle 4", "25d", "28d", 0, 4]]);
+  assert.match(univers, /return voletHtml\(b\.volet,'bonus','Bonus',b\.nom,b\.fichesTxt,b\.phrase,b\.stars,' bonus'\)\+/);
+  /* la remarque « deux chemins » de la fiche 26d (choix de Gwenaël du 14/10) */
+  assert.match(SYS_TOUR2[1].n, /deux chemins/);
   /* le Bonus s'écrit pour chaque monde qui en a un (vue élève et vue prof) */
   assert.match(univers, /\}\)\.join\(""\)\+bonusHtml\(m\)\+'<\/ol>';/);
   assert.match(univers, /\}\)\.join\(''\)\+tour2ProfHtml\(m\)\+'<\/ol>';/);
@@ -119,8 +127,11 @@ test("Système : la note du professeur porte le tableau de tous les systèmes du
   assert.match(note, /le Système, c'est un indice qui donne un total partiel/);
   assert.match(note, /<table><tr><th>Ce que dit l'énoncé<\/th><th>Où dans SPLAT!<\/th><th>Programme<\/th><\/tr>/);
   /* lot M4-6 : les lignes du Système suivent les 4 cas (je retire, j'additionne, je recopie ; recopier
-     les deux plateaux reste dehors) ; ce qui vise le Bonus s'écrira au lot M4-7 */
-  assert.equal((note.match(/<tr>/g) || []).length, 10, "l'en-tête et les neuf lignes du tableau");
+     les deux plateaux reste dehors) ; lot M4-7 : ce qui vise le Bonus (je recopie, deux gestes) */
+  assert.equal((note.match(/<tr>/g) || []).length, 11, "l'en-tête et les dix lignes du tableau");
+  assert.match(note, /<td>Système, défi du livret 1 ; Bonus 25d à 28d<\/td>/);
+  assert.match(note, /<tr><td>deux gestes à la suite \(trois couleurs\)<\/td><td>Système, Bonus 27d et 28d<\/td><td>cycle 4<\/td><\/tr>/);
+  assert.match(note, /puis un livret cycle 4, en bonus \(25d à 28d\)/);
   assert.match(note, /volontairement hors SPLAT!/);
   for (const geste of ["je retire", "j'additionne", "je recopie l'un, puis je retire"]) assert.ok(note.includes("<b>" + geste + "</b>"), geste);
   assert.match(note, /<td>recopier les deux plateaux \(2N \+ 3V ; 3N \+ 5V\)<\/td><td><b>volontairement hors SPLAT!<\/b><\/td><td>lycée<\/td>/);

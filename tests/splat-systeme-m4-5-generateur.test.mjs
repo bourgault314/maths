@@ -265,11 +265,13 @@ for(const sous of ["COEF", "MIROIR", "RECOPIE", "DOUBLE", "MIX"]) for(const r of
       grands.add(g);
       for(const b of [P1, P2]) assert.equal(compte(b, D), 0, "la 3e couleur n'est que dans le grand plateau");
       assert.ok(s.boards.every((b) => Object.values(b.counts).every((n) => n <= 3)), "3 taches au plus d'une même couleur");
-      // le plan : les trois plateaux, les étapes du petit système (sans sa vérification), puis le grand
+      // le plan : le grand plateau seul (lot M4-7 : chaque plateau dessiné une fois), les étapes
+      // du petit système (sans sa vérification), puis le grand
       const plan = s.plan;
       const sousPlan = sys.plan({ geste: s.sous, colors: [A, B], values: { [A]: s.values[A], [B]: s.values[B] }, boards: [P1, P2] }).filter((e) => e.role !== "verification");
-      assert.equal(plan[0].titre, "Les trois plateaux");
-      assert.deepEqual(plan[0].barres.map((b) => Number(b.top)), [G.total, P1.total, P2.total]);
+      assert.equal(plan[0].titre, "Le grand plateau");
+      assert.deepEqual(plan[0].barres.map((b) => Number(b.top)), [G.total]);
+      assert.deepEqual(plan[1].barres.map((b) => Number(b.top)), [P1.total, P2.total], "les deux petits plateaux, une seule fois");
       assert.equal(plan[1].titre, "Les deux petits plateaux");
       assert.deepEqual(plan.slice(2, 1 + sousPlan.length), sousPlan.slice(1));
       const fin = plan.slice(1 + sousPlan.length).map((e) => e.titre);
@@ -294,7 +296,7 @@ test("Deux gestes à la suite : grand=211 ou 112 tenu ; la carte 27d c1 de la pl
   const sit = { geste: "ETAGES", sous: "COEF", colors: ["blue", "green", "orange"], values: { blue: 19, green: 5, orange: 11 }, boards: [
     { counts: { blue: 2, green: 1, orange: 1 }, total: 54, visible: [] }, { counts: { blue: 2, green: 3 }, total: 53 }, { counts: { blue: 2, green: 1 }, total: 43 }] };
   const plan = sys.plan(sit);
-  assert.deepEqual(plan.map((e) => e.titre), ["Les trois plateaux", "Les deux petits plateaux", "Je remplace le petit plateau par son total", "Je retire", "Je partage",
+  assert.deepEqual(plan.map((e) => e.titre), ["Le grand plateau", "Les deux petits plateaux", "Je remplace le petit plateau par son total", "Je retire", "Je partage",
     "Je remplace", "Je retire", "Je partage", "Je remplace dans le plateau 54", "Je retire", "Je vérifie"]);
   assert.deepEqual(plan[8].barres.map((b) => b.cells.map((x) => (x.kind === "known" ? x.value : x.color))), [[19, 19, 5, "orange"]]);
   assert.deepEqual(plan[9].barres.map((b) => [b.top, b.calcul]), [["11", "54 − 19 − 19 − 5"]]);
