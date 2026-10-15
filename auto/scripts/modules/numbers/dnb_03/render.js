@@ -1,8 +1,9 @@
 /*
  * dnb_03 — rendu des questions (refonte d'octobre 2026).
- * La question ne contient plus de dessin d'aide : les bandes coloriées
- * donnaient la réponse. Le dessin utile (s'il existe) est dans inst.aideHtml,
- * affiché par la coque dans le panneau « Aide ». Les étapes de correction
+ * La question ne contient pas de dessin d'aide : les bandes de fractions
+ * (inst.aideHtml, composant partagé arithmetic.fraction-operations) sont
+ * affichées par la coque dans le panneau « Aide », corrigées pour ne pas
+ * donner la réponse (A0, 15/10/2026). Les étapes de correction
  * (inst.correctionSteps) sont affichées par la coque dans la carte de correction.
  */
 (function registerFractionOps03Renderer(global){

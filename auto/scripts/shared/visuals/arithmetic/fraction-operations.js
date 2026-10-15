@@ -17,16 +17,19 @@
   function bandSvg(num,den,options={}){
     const showWhole=options.showWhole===true,joinTop=options.joinTop===true;
     const width=330,height=showWhole?78:54,x=5,y=showWhole?20:3,bandW=320,bandH=48;
-    const [dark,light,stroke]=color(den),selected=Math.max(0,Math.min(num,den));
+    const [dark,light,stroke]=color(options.colorDen||den),selected=Math.max(0,Math.min(num,den));
     const removed=Math.max(0,Math.min(options.removed||0,selected)),removedStart=selected-removed;
-    const pattern='fraction-hatch-'+(++svgCounter),hidePartLabels=options.hidePartLabels===true;
+    const pattern='fraction-hatch-'+(++svgCounter),sansParts=options.sansParts===true,hidePartLabels=options.hidePartLabels===true||sansParts;
     let cells='';
-    for(let index=0;index<den;index++){
+    // Bande non partagée (aide de dnb_03) : deux rectangles seulement, sans
+    // trait ni couture entre les parts.
+    if(sansParts)cells='<rect x="'+x+'" y="'+y+'" width="'+bandW+'" height="'+bandH+'" fill="'+light+'"/>'+(selected?'<rect x="'+x+'" y="'+y+'" width="'+(bandW*selected/den)+'" height="'+bandH+'" fill="'+dark+'"/>':'');
+    for(let index=0;index<den&&!sansParts;index++){
       const cellX=x+index*bandW/den,cellWidth=bandW/den;
       let fill=index<selected?dark:light;
       if(index>=removedStart&&index<selected&&removed)fill='url(#'+pattern+')';
       cells+='<rect x="'+cellX+'" y="'+y+'" width="'+(cellWidth+.2)+'" height="'+bandH+'" fill="'+fill+'"/>';
-      if(index>0)cells+='<line x1="'+cellX+'" y1="'+y+'" x2="'+cellX+'" y2="'+(y+bandH)+'" stroke="'+stroke+'" stroke-width="1.4"/>';
+      if(index>0&&!sansParts)cells+='<line x1="'+cellX+'" y1="'+y+'" x2="'+cellX+'" y2="'+(y+bandH)+'" stroke="'+stroke+'" stroke-width="1.4"/>';
       if(index<selected&&den<=12&&!hidePartLabels){
         const center=cellX+cellWidth/2,fontSize=Math.max(7,Math.min(11,cellWidth*.31));
         const labelColor=index>=removedStart&&index<selected&&removed?'#ffffff':'#17283f';
@@ -45,7 +48,7 @@
     let remaining=num,html='<div class="fraction-ops-units units-'+Math.min(units,3)+'">';
     for(let index=0;index<units;index++){
       const selected=Math.min(den,remaining);remaining-=selected;
-      html+=bandSvg(selected,den,index===units-1?options:{});
+      html+=bandSvg(selected,den,index===units-1?options:{sansParts:options.sansParts,colorDen:options.colorDen});
     }
     return html+'</div>';
   }
@@ -85,8 +88,30 @@
       +'<div class="fraction-product-left-axis fraction-product-axis" tabindex="0" role="slider" aria-label="Partage vertical et lignes colorées"></div>'
       +'<div class="fraction-product-grid" role="img" aria-label="Grille manipulable du produit de deux fractions"></div></div></div>'+staticAreaSvg(a,den1,b,den2);
   }
+  // Aide du panneau (dnb_03, A0 du 15/10/2026) : une suite de bandes-unités
+  // de même longueur. items : [{num,den,label,sansParts,colorDen}] ;
+  // layout 'pile' (en colonne, flèche ↓ si fleche) ou 'operation' (côte à côte).
+  // Parts enlevées (hachurées) comptées depuis la fin, sur plusieurs unités
+  // si besoin (9/7 − 5/7 : 2 parts de la 2e unité et 3 de la 1re).
+  function bandCardRemoved(label,num,den,removed){
+    const units=Math.max(1,Math.ceil(num/den)),selected=[];
+    let remaining=num;
+    for(let index=0;index<units;index++){const value=Math.min(den,remaining);selected.push(value);remaining-=value;}
+    const removedByUnit=selected.map(()=>0);let left=removed;
+    for(let index=units-1;index>=0&&left>0;index--){removedByUnit[index]=Math.min(left,selected[index]);left-=removedByUnit[index];}
+    const hasLabel=String(label||'').trim().length>0;
+    return '<div class="fraction-ops-card'+(hasLabel?'':' is-unlabelled')+'">'+(hasLabel?'<div class="fraction-ops-label">'+math('$$'+label+'$$')+'</div>':'')
+      +'<div class="fraction-ops-units units-'+Math.min(units,3)+'">'+selected.map((value,index)=>bandSvg(value,den,{removed:removedByUnit[index]})).join('')+'</div></div>';
+  }
+  function bandes(data){
+    const items=(data.items||[]).map(item=>item.removed?bandCardRemoved(item.label||'',item.num,item.den,item.removed)
+      :bandCard(item.label||'',item.num,item.den,{sansParts:item.sansParts===true,colorDen:item.colorDen}));
+    if(data.layout==='operation')return '<div class="fraction-ops-operation">'+items.join('')+'</div>';
+    return '<div class="fraction-ops-stack'+(data.fleche?' fraction-ops-stack-simplify':'')+'">'+items.join(data.fleche?'<div class="fraction-ops-arrow">↓</div>':'')+'</div>';
+  }
   function render(data,correction=false){
     const kind=data.kind;
+    if(kind==='bandes')return bandes(data);
     if(kind==='simplify_simple'||kind==='simplify_harder'){
       const bottomLabel=correction?latex(data.result.num,data.result.den):'';
       return '<div class="fraction-ops-stack fraction-ops-stack-simplify">'+bandCard(latex(data.num,data.den),data.num,data.den)

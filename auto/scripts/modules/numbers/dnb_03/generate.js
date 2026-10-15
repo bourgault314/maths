@@ -38,28 +38,17 @@
     while(rest>1){const p=smallestPrimeFactor(rest);out.push(p);rest/=p;}
     return out;
   }
-  // Dessin d'aide : une bande-unité par dénominateur, toutes de même longueur,
-  // partagées en parts égales ; une seule part est grisée et nommée (1/4, 1/16)
-  // à gauche de la bande. Il montre la taille des parts, jamais la réponse.
-  function partsBands(denominators){
-    const rows=[...new Set(denominators)].sort((a,b)=>a-b);
-    const X=56,W=320,H=34,GAP=12,TOP=4;
-    const height=TOP+rows.length*(H+GAP)-GAP+8;
-    let body='';
-    rows.forEach((den,row)=>{
-      const y=TOP+row*(H+GAP),cell=W/den;
-      body+='<rect x="'+X+'" y="'+y+'" width="'+W+'" height="'+H+'" fill="#ffffff" stroke="#14739a" stroke-width="2"/>';
-      body+='<rect x="'+X+'" y="'+y+'" width="'+cell+'" height="'+H+'" fill="#bfe3f3"/>';
-      for(let k=1;k<den;k++) body+='<line x1="'+(X+k*cell)+'" y1="'+y+'" x2="'+(X+k*cell)+'" y2="'+(y+H)+'" stroke="#14739a" stroke-width="1.4"/>';
-      body+='<rect x="'+X+'" y="'+y+'" width="'+W+'" height="'+H+'" fill="none" stroke="#14739a" stroke-width="2"/>';
-      const cx=25,cy=y+H/2;
-      body+='<text x="'+cx+'" y="'+(cy-4)+'" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="19" font-weight="800" fill="#17384d">1</text>'
-        +'<line x1="'+(cx-14)+'" y1="'+cy+'" x2="'+(cx+14)+'" y2="'+cy+'" stroke="#17384d" stroke-width="2"/>'
-        +'<text x="'+cx+'" y="'+(cy+18)+'" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="19" font-weight="800" fill="#17384d">'+den+'</text>';
-    });
-    const names=rows.map(den=>'un '+(PARTS[den]||den+'e').replace(/s$/,'')).join(', ');
-    return '<svg class="fraction-ops-aide-bandes" viewBox="0 0 380 '+height+'" style="display:block;width:100%;max-width:440px;height:auto;margin:0 auto" role="img" aria-label="Taille d’une part : '+names+'">'+body+'</svg>';
+  // A0 (15/10/2026) : les bandes de fractions de Gwenaël (composant partagé
+  // arithmetic.fraction-operations) reviennent dans le panneau Aide, pour
+  // chaque type. Elles ne donnent jamais la réponse : pour simplifier, la
+  // bande du bas n'est pas partagée ; pour comparer, une seule part est
+  // coloriée (la taille des parts). Aucun tirage au hasard ici.
+  function bandesAide(items,layout,fleche){
+    const component=global.MATHSGO_VISUALS&&global.MATHSGO_VISUALS.get('arithmetic.fraction-operations');
+    if(!component||!items.length) return '';
+    return '<div class="fraction-ops-help fraction-ops-aide">'+component.render({kind:'bandes',items,layout:layout||'pile',fleche:!!fleche},false)+'</div>';
   }
+  const partsUnite=dens=>[...new Set(dens)].sort((a,b)=>a-b).map(den=>({num:1,den,label:den>12?F(1,den):''}));
   function qcmFrom(options,shuffle){
     // options : [{html, correct, code, feedback}]
     const shuffled=shuffle(options);
@@ -146,7 +135,7 @@
       return {html:FM(f.num,f.den),latex:F(f.num,f.den),correct,code,feedback};
     });
     const qcm=qcmFrom(options,shuffle);
-    let steps,aide,aideHtml='';
+    let steps,aide,aideHtml=bandesAide(partsUnite(fractions.map(f=>f.den)));
     if(sameDen){
       const den=best.den,sorted=[...fractions].sort((a,b)=>b.num-a.num).map(f=>f.num);
       steps=[
@@ -161,8 +150,6 @@
         capital(onePart(minDen))+' est la plus grande part : la plus grande fraction est '+FM(best.num,best.den)+'.'
       ];
       aide=['Même numérateur : chaque fraction prend le même nombre de parts.','Compare la taille d’une part : '+onePart(minDen)+' ou '+onePart(maxDen)+', lequel est le plus grand ?'];
-      // Les deux parts que l'indice 2 fait comparer (la plus grande et la plus petite).
-      aideHtml=partsBands([minDen,maxDen]);
     }
     return {kind:sameDen?'compare_same_den':'compare_same_num',prompt:'Quelle est la plus grande de ces fractions ?',qcm,steps,note:'',aide,aideHtml};
   }
@@ -214,7 +201,7 @@
         'Cherche un nombre qui est dans les tables de '+dens.slice(0,-1).join(', ')+' et '+dens[dens.length-1]+' : ce sera le dénominateur commun.',
         'Par exemple : '+M(F(first.num,first.den)+' = '+F(first.num+' \\times '+k,first.den+' \\times '+k)+' = '+F(first.num*k,common))+'.'
       ],
-      aideHtml:''
+      aideHtml:bandesAide(partsUnite(dens))
     };
   }
 
@@ -247,8 +234,9 @@
       :'Le dénominateur reste '+den+' : on ne calcule pas '+den+' '+MINUS+' '+den+'.';
     const aide=op==='+'
       ?['Le dénominateur donne la taille des parts : ici, des '+parts(den)+'.','Combien de '+parts(den)+' en tout ?']
-      :['Le dénominateur donne la taille des parts : ici, des '+parts(den)+'.','On enlève '+b+' '+parts(den)+' à '+a+' '+parts(den)+' : combien en reste-t-il ?'];
-    return {kind:op==='+'?'add_same_den':'subtract_same_den',prompt:op==='+'?'Calcule cette somme.':'Calcule cette différence.',expression,result,steps,note,aide,aideHtml:''};
+      :['Le dénominateur donne la taille des parts : ici, des '+parts(den)+'.','On enlève '+(b===1?onePart(den):b+' '+parts(den))+' à '+a+' '+parts(den)+' : combien en reste-t-il ?'];
+    const aideHtml=op==='+'?bandesAide([{num:a,den},{num:b,den}],'operation'):bandesAide([{num:a,den,removed:b}]);
+    return {kind:op==='+'?'add_same_den':'subtract_same_den',prompt:op==='+'?'Calcule cette somme.':'Calcule cette différence.',expression,result,steps,note,aide,aideHtml};
   }
 
   // ---------------------------------------------------------------------------
@@ -290,7 +278,7 @@
         'Les parts ne sont pas de la même taille : écris '+FM(a,small)+' en '+parts(big)+'.',
         big+' = '+small+' × '+factor+' : multiplie le numérateur et le dénominateur de '+FM(a,small)+' par '+factor+'.'
       ],
-      aideHtml:partsBands([small,big])
+      aideHtml:bandesAide(smallFirst?[{num:a,den:small},{num:b,den:big}]:[{num:b,den:big},{num:a,den:small}],'operation')
     };
   }
 
@@ -352,7 +340,7 @@
         :(op==='+'?'Calcule cette somme.':'Calcule cette différence.'),
       expression,result,
       steps:[first,conversion,M(last)],
-      note,aide,aideHtml:''
+      note,aide,aideHtml:bandesAide([{num:n1,den:d1},{num:n2,den:d2}],'operation')
     };
   }
 
@@ -419,7 +407,7 @@
           ?common+' est dans la table de '+smaller+'.'
           :'Cherche un nombre qui est dans la table de '+left.den+' et dans la table de '+right.den+'.'
       ],
-      aideHtml:''
+      aideHtml:bandesAide(partsUnite([left.den,right.den]))
     };
   }
 
@@ -462,7 +450,7 @@
       kind:'sum_qcm',prompt:'Le nombre '+M(expression)+' est égal à :',qcm,steps,
       note:'Le piège : additionner « en haut et en bas » ('+FM(n1+n2,a+b)+').',
       aide:['Pour additionner deux fractions, il faut le même dénominateur.','Écris '+FM(n1,a)+' et '+FM(n2,b)+' avec le dénominateur '+product+'.'],
-      aideHtml:''
+      aideHtml:bandesAide([{num:n1,den:a},{num:n2,den:b}],'operation')
     };
   }
 
@@ -531,7 +519,8 @@
     if(kind==='simplify_simple'||kind==='simplify_harder'){
       const harder=kind==='simplify_harder';
       const data=simplify(ctx,harder),content=simplifyContent(data,harder);
-      d={kind,prompt:'Écris cette fraction sous forme irréductible.',expression:F(data.big.num,data.big.den),result:data.base,steps:content.steps,note:content.note,aide:content.aide,aideHtml:''};
+      const aideHtml=bandesAide([{num:data.big.num,den:data.big.den,label:F(data.big.num,data.big.den)},{num:data.big.num,den:data.big.den,sansParts:true}],'pile',true);
+      d={kind,prompt:'Écris cette fraction sous forme irréductible.',expression:F(data.big.num,data.big.den),result:data.base,steps:content.steps,note:content.note,aide:content.aide,aideHtml};
     }
     else if(kind==='compare_same') d=compareSame(ctx);
     else if(kind==='compare_common_den') d=compareDifferent(ctx);

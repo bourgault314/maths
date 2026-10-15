@@ -981,6 +981,11 @@ svg{display:block;max-width:100%;height:auto}
 .aide-groupe-item{min-width:0;padding:6px 8px 8px;border:1.5px solid #d6e2f0;border-radius:12px;background:#fff}
 .aide-etiquette{display:flex;align-items:center;justify-content:center;gap:.4em;color:#0b2147;font-size:1.05rem;font-weight:800;line-height:1.2}
 .aide-groupe .relation-tile-help{min-height:0;margin-top:4px}
+.aide-dessin .fraction-ops-help{margin:2px auto 0}
+.aide-dessin .fraction-ops-operation{flex-direction:column;gap:4px}
+.aide-dessin .fraction-ops-operation>.fraction-ops-card,.aide-dessin .fraction-ops-stack>.fraction-ops-card{width:100%;flex:none}
+.aide-dessin .fraction-ops-label{min-height:0;font-size:1.15rem}
+.aide-dessin .fraction-ops-stack>.fraction-ops-arrow+.fraction-ops-card{margin-top:2px}
 .aide-back{flex:none;width:min(100%,560px);height:var(--aide-back-h,52px);margin:10px auto 0;border:1px solid #003b7a;border-radius:14px;background:#003b7a;color:#fff;font-size:1.12rem;font-weight:900;cursor:pointer;touch-action:manipulation}
 .aide-back:focus-visible{outline:3px solid #9cc0ea;outline-offset:2px}
 /* Quitter la série ? */
@@ -3420,6 +3425,17 @@ function renderAide(){
      const zoom=(parseFloat(drawing.style.zoom)||1)*box.width/(right-left+8);
      if(zoom<.55){drawing.style.zoom='0.550';break;}
      drawing.style.zoom=zoom.toFixed(3);
+   }
+   // A0 : un dessin qui ferait défiler le panneau (panneau de hauteur fixe à
+   // l'ordinateur) est réduit pour tenir, jamais sous 0,6 ; pas les outils
+   // à manipuler.
+   const defile=panel.querySelector('.aide-scroll');
+   for(let essai=0;essai<4&&defile&&current.aideHtml&&!drawing.hidden&&!drawing.querySelector(ZOOM_OUTILS_POINTEUR+',.place-value-tool')&&defile.scrollHeight>defile.clientHeight+1;essai++){
+     const zoom=parseFloat(drawing.style.zoom)||1,hauteur=drawing.getBoundingClientRect().height,exces=defile.scrollHeight-defile.clientHeight;
+     if(hauteur<=exces) break;
+     const suivant=Math.max(.6,zoom*(hauteur-exces)/hauteur);
+     if(suivant>=zoom-.005) break;
+     drawing.style.zoom=suivant.toFixed(3);
    }
  }
  fitSlideForAide();
