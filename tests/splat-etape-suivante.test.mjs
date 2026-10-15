@@ -135,7 +135,9 @@ function source(page, nom, retrait = "") {
 
 // ---------- splat.html (mondes 2, 3 et 4) ----------
 const splat = lire("outils/splat.html");
-function finSplat({ parcours, resultats, avecModule = true, graine = "", suite = [] }) {
+/* jumelles : chaque carte rouge a-t-elle sa jumelle (cartes jumelles, 14/10/2026) ? Par défaut non :
+   la phrase d'avant, « Rejoue-la et … » */
+function finSplat({ parcours, resultats, avecModule = true, graine = "", suite = [], jumelles = false }) {
   const d = fauxDocument(), w = fenetre(avecModule), panneau = d.noeud();
   const code = `
     const ELEVE_URL_MONDES = "${URL_CARTE}", ELEVE_STORE_KEY = "mathsgo-splat-parcours";
@@ -143,12 +145,13 @@ function finSplat({ parcours, resultats, avecModule = true, graine = "", suite =
         eleveEtoiles = 0, eleveEnqueteDevoile = true, eleveSchemaEtape = 1, eleveIndicesTel = true, eleveRejeu = null, eleveIdx = 0;
     const renderCard = () => {}, eleveCadrerScene = () => {}, eleveIndicesAfficher = () => {}, elevePastillesHtml = () => "",
           eleveEnregistrerReussite = () => {}, renderEleveSplat = () => {}, eleveCarteSuivante = () => {},
-          eleveSauverFinDeSerie = () => {}, eleveNouvellesCartes = () => {};
+          eleveSauverFinDeSerie = () => {}, eleveNouvellesCartes = () => {}, eleveJumellePreparer = () => (${jumelles} ? {} : null);
     let eleveSuite = ${JSON.stringify(suite)};
     const getSeedForCurrentMode = () => ${JSON.stringify(graine)};
     ${source(splat, "eleveEtapeSuivante")}
     ${source(splat, "eleveLienMondesHtml")}
     ${source(splat, "eleveNouvellesCartesPossible")}
+    ${source(splat, "eleveRejouePhrase")}
     ${source(splat, "renderEleveFinSplat")}
     renderEleveFinSplat(panneau);`;
   new Function("document", "window", "localStorage", "panneau", "resultats", code)(d.document, w, stockage(), panneau, resultats);
@@ -157,16 +160,17 @@ function finSplat({ parcours, resultats, avecModule = true, graine = "", suite =
 
 // ---------- splat_tache_barre.html (monde 1) ----------
 const petit = lire("outils/splat_tache_barre.html");
-function finPetit({ parcours, resultats, avecModule = true }) {
+function finPetit({ parcours, resultats, avecModule = true, jumelles = false }) {
   const d = fauxDocument(), w = fenetre(avecModule), main = d.noeud();
   const code = `
     const ELEVE_URL_MONDES = "${URL_CARTE}", ELEVE_STORE_KEY = "mathsgo-splat-parcours";
     let parcoursId = ${JSON.stringify(parcours)}, eleveSerie = resultats.map(() => ({})), eleveResultats = resultats,
         eleveEtoiles = 0, eleveRejeu = null, eleveIdx = 0;
     const elevePastillesHtml = () => "", eleveEnregistrerReussite = () => {}, renderEleve = () => {}, eleveCarteSuivante = () => {},
-          eleveSauverFinDeSerie = () => {};
+          eleveSauverFinDeSerie = () => {}, eleveJumellePreparer = () => (${jumelles} ? {} : null);
     ${source(petit, "eleveEtapeSuivante")}
     ${source(petit, "eleveLienMondesHtml")}
+    ${source(petit, "eleveRejouePhrase")}
     ${source(petit, "renderEleveFin")}
     renderEleveFin(main);`;
   new Function("document", "window", "localStorage", "main", "resultats", code)(d.document, w, stockage(), main, resultats);
@@ -256,6 +260,21 @@ for (const [nom, fin, parcours, , mot] of OUTILS) {
     assert.match(deux, new RegExp(`>Je rejoue mes 2 ${mot}s rouges \u25b6<`));
     assert.doesNotMatch(deux, /eleveEtapeSuivante/);
   });
+
+  /* Cartes jumelles (choix A de Gwenaël, 14/10/2026) : les mondes 1 à 4 le disent sur l'écran de fin,
+     seulement si chaque carte rouge a sa jumelle ; ÉquaSplat n'a pas de jumelles (05/10/2026). */
+  if (fin !== finEqua) {
+    test(`${nom} : cartes rouges qui reviennent en jumelles → « Rejoue-la, avec d'autres nombres, … »`, () => {
+      const une = fin({ parcours, resultats: UNE_ROUGE, jumelles: true }).html;
+      assert.match(une, /Rejoue-la, avec d'autres nombres, et ton \u00e9toile s'allume sur la carte des mondes\./);
+      const deux = fin({ parcours, resultats: DEUX_ROUGES, jumelles: true }).html;
+      assert.match(deux, /Rejoue-les, avec d'autres nombres, et ton \u00e9toile s'allume/);
+      const horsParcours = fin({ parcours: "", resultats: UNE_ROUGE, jumelles: true }).html;
+      assert.match(horsParcours, /Rejoue-la, avec d'autres nombres, pour finir la s\u00e9rie\./);
+      // une carte sans jumelle (elle revient telle quelle) : la phrase d'avant, sans promesse
+      assert.match(fin({ parcours, resultats: UNE_ROUGE }).html, /Rejoue-la et ton \u00e9toile s'allume/);
+    });
+  }
 }
 
 test("les trois outils chargent splat-etapes.js (sans defer, même version)", () => {

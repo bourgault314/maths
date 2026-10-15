@@ -875,6 +875,9 @@ let parcoursId = '';
 let eleveIdx = 0, eleveEtoiles = 0, eleveErreurs = 0, eleveSerie = [], eleveResultats = [], eleveCarteFautee = false;
 /* échecs sur la carte en cours (au 3e, on propose la réponse) et file des cartes rouges à rejouer */
 let eleveEchecs = 0, eleveRejeu = null;
+/* cartes jumelles : les cartes de la série telles que tirées, combien de fois chacune est revenue,
+   et la jumelle tirée d'avance (écran « Encore N cartes ! ») */
+let eleveOriginaux = [], eleveJumelleRang = [], eleveJumellesPretes = [];
 const ELEVE_ECHECS_MAX = 3, ELEVE_URL_MONDES = '/outils/splat_univers.html';
 let eleveJetonsPoses = [], eleveItemCourant = null, eleveRepriseFaite = false;
 /* cartes de la série dont la réponse a été montrée (3e erreur) : rejouées, elles deviennent
@@ -3227,6 +3230,7 @@ function renderEleve(main) {
         /* La série suit la fiche : toutes les cartes de la mise en page
            (12 en 3×4, 9 en 3×3…), dans le même ordre. */
         eleveSerie = state.slice();
+        eleveOriginaux = eleveSerie.slice(); eleveJumelleRang = []; eleveJumellesPretes = []; /* cartes jumelles : voir eleveJumelle */
         eleveEtoiles = 0; eleveResultats = []; eleveVues = 0; eleveSerieNotee = false;
         /* série interrompue la dernière fois ? on reprend où on en était */
         if (eleveSerie.length && !eleveRepriseFaite && parcoursId) {
@@ -3509,12 +3513,74 @@ function eleveEffacerEnCours() {
 /* Carte suivante : dans l'ordre, ou la prochaine carte rouge quand on les rejoue. */
 function eleveCarteSuivante(main) {
     if (eleveRejeu) {
-        if (eleveRejeu.length) { eleveIdx = eleveRejeu.shift(); }
+        /* une carte rouge revient en jumelle (05/10/2026) : même carte, d'autres nombres */
+        if (eleveRejeu.length) { eleveIdx = eleveRejeu.shift(); eleveJumellePoser(eleveIdx); }
         else { eleveRejeu = null; eleveIdx = eleveSerie.length; }
     } else {
         eleveIdx++;
     }
     renderEleve(main);
+}
+
+/* ===== Les cartes jumelles (décision de Gwenaël du 05/10/2026, mondes 1 à 4) =====
+   En fin de série, une carte rouge (réponse montrée à la 3e erreur) ne revient plus identique :
+   elle revient en JUMELLE — même exercice, autant de taches, même forme et même place des taches,
+   des jetons autour ou pas, comme elle ; d'autres nombres (ce que cache une tache change, donc
+   le total aussi). L'élève refait le raisonnement au lieu de recopier la réponse qu'il a vue.
+   Rien de nouveau n'est enregistré : la jumelle a SON hasard (graine : l'empreinte de la série,
+   la place de la carte, le nombre de fois qu'elle revient) — la même carte rouge redonne la même
+   jumelle, une 2e fois une autre ; la série, les fiches et la reprise ne bougent pas. Le tirage
+   est celui de createItem (mêmes bornes), avec la graine de la jumelle, puis la graine de la
+   série est remise. */
+/* La jumelle de la carte i pour sa prochaine venue, tirée une seule fois (l'écran « Encore N
+   cartes ! » la prépare, pour sa phrase ; le clic la pose). null : pas de jumelle. */
+function eleveJumellePreparer(i) {
+    const rang = (eleveJumelleRang[i] || 0) + 1;
+    const prete = eleveJumellesPretes[i];
+    if (prete && prete.rang === rang) return prete.carte;
+    let j = null;
+    try { j = eleveJumelle(eleveOriginaux[i], hashSeed(eleveSignatureSerie() + '|jumelle|' + i + '|' + rang)); }
+    catch (e) { j = null; } /* jamais de carte cassée : la carte d'origine revient */
+    eleveJumellesPretes[i] = { rang, carte: j };
+    return j;
+}
+function eleveJumellePoser(i) {
+    const o = eleveOriginaux[i];
+    if (!o) return;
+    const j = eleveJumellePreparer(i);
+    eleveJumelleRang[i] = (eleveJumelleRang[i] || 0) + 1;
+    eleveSerie[i] = j || o;
+}
+function eleveJumelle(item, graine) {
+    if (!item || item.kind || !(item.numSplats >= 1) || !(item.hiddenPerSplat >= 1)) return null;
+    const sauve = currentRand;
+    currentRand = mulberry32(graine);
+    try {
+        const cible = item.maxTargetContext, n = item.numSplats;
+        const maxH = Math.max(1, Math.floor(cible / n));
+        for (let essai = 0; essai < 500; essai++) {
+            const h = Math.floor(rand() * maxH) + 1;
+            const cache = h * n;
+            let maxV = Math.min(cible - cache, 20);
+            if (maxV < 0) maxV = 0;
+            const v = Math.floor(rand() * (maxV + 1));
+            if (h === item.hiddenPerSplat) continue;          /* la réponse change */
+            if (item.hiddenPerSplat >= 2 && h < 2) continue;  /* pas d'un coup un seul jeton par tache */
+            if ((v === 0) !== (item.visible === 0)) continue; /* des jetons autour, ou pas, comme elle */
+            if (v > 0 && v === item.visible) continue;         /* et pas les mêmes */
+            if (cache + v === item.total) continue;           /* le total change aussi */
+            const j = Object.assign({}, item, {
+                total: cache + v, visible: v, hidden: cache, hiddenPerSplat: h,
+                dots: generateDotPositions(v, cible, item.splatShape, item.splats),
+                hiddenDots: generateHiddenDots(item.splats, h, item.splatShape, cible)
+            });
+            delete j.dessinBande; /* le dessin « espace=1 » de la carte d'origine, gardé en cache */
+            return j;
+        }
+        return null;
+    } finally {
+        currentRand = sauve;
+    }
 }
 
 /* 3e erreur (05/10/2026) : les cases se remplissent en rouge, la pastille devient
@@ -3551,6 +3617,12 @@ function eleveMontrerReponse(main) {
     if (tete) tete.outerHTML = elevePastillesHtml();
 }
 
+/* « Rejoue-la » ; « Rejoue-la, avec d'autres nombres, » quand chaque carte rouge revient en
+   jumelle (choix A de Gwenaël, 14/10/2026 : dit une fois, sur l'écran de fin, avant de rejouer). */
+function eleveRejouePhrase(nbR, jumelles) {
+    return `Rejoue-l${nbR > 1 ? 'es' : 'a'}` + (jumelles ? `, avec d'autres nombres,` : ``);
+}
+
 function renderEleveFin(main) {
     const total = eleveSerie.length;
     const rouges = [];
@@ -3566,7 +3638,7 @@ function renderEleveFin(main) {
             (parcoursId ? `<div class="fin-etoile">\u2b50</div>` : ``) +
             `<h2>Encore ${nbR} carte${plR}\u00a0!</h2>` +
             `<div class="fin-pastilles">${elevePastillesHtml()}</div>` +
-            `<p class="fin-sous">Rejoue-l${nbR > 1 ? 'es' : 'a'} ` +
+            `<p class="fin-sous">${eleveRejouePhrase(nbR, rouges.every(i => !!eleveJumellePreparer(i)))} ` +
             (parcoursId ? `et ton \u00e9toile s'allume sur la carte des mondes.` : `pour finir la s\u00e9rie.`) + `</p>` +
             `<div class="fin-action"><button id="eleveRejouerRouges" type="button">Je rejoue ${nbR > 1 ? `mes ${nbR} cartes rouges` : `ma carte rouge`} \u25b6</button></div>` +
             `<div class="fin-sorties"><button id="eleveRejouer" type="button">Rejouer toute la s\u00e9rie</button>` +
