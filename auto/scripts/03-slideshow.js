@@ -976,6 +976,11 @@ svg{display:block;max-width:100%;height:auto}
 .aide-dessin[hidden]{display:none}
 .aide-figure{width:100%;min-width:0}
 .aide-dessin svg{display:block;width:min(100%,560px)!important;max-width:100%!important;height:auto!important;max-height:min(36vh,320px)!important;max-height:min(36dvh,320px)!important;margin:0 auto!important}
+.aide-dessin svg.aide-svg-petit{display:inline-block;width:auto!important;margin:0!important}
+.aide-groupe{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.aide-groupe-item{min-width:0;padding:6px 8px 8px;border:1.5px solid #d6e2f0;border-radius:12px;background:#fff}
+.aide-etiquette{display:flex;align-items:center;justify-content:center;gap:.4em;color:#0b2147;font-size:1.05rem;font-weight:800;line-height:1.2}
+.aide-groupe .relation-tile-help{min-height:0;margin-top:4px}
 .aide-back{flex:none;width:min(100%,560px);height:var(--aide-back-h,52px);margin:10px auto 0;border:1px solid #003b7a;border-radius:14px;background:#003b7a;color:#fff;font-size:1.12rem;font-weight:900;cursor:pointer;touch-action:manipulation}
 .aide-back:focus-visible{outline:3px solid #9cc0ea;outline-offset:2px}
 /* Quitter la série ? */
@@ -3391,14 +3396,25 @@ function renderAide(){
  const list=document.getElementById('aideSteps'),more=document.getElementById('aideMore'),drawing=document.getElementById('aideDessin');
  if(list){list.innerHTML=steps.slice(0,Math.max(1,aideStep)).map(step=>'<li>'+step+'</li>').join('');list.hidden=!steps.length;}
  if(more) more.hidden=!(aideStep<steps.length);
- if(drawing){drawing.innerHTML=current.aideHtml||'';drawing.hidden=!current.aideHtml;}
+ // A0 : le dessin n'est réécrit qu'au changement de question, pour qu'un
+ // outil à manipuler (tableau de numération, de conversion) garde son état
+ // quand on ferme puis rouvre l'aide ; ses gestes sont branchés ici.
+ if(drawing&&drawing.__aideDe!==current){
+   drawing.innerHTML=current.aideHtml||'';drawing.__aideDe=current;
+   if(current.aideHtml){
+     if(typeof setupPlaceValueTools==='function') setupPlaceValueTools(drawing);
+     if(typeof setupConversionTools==='function') setupConversionTools();
+     if(typeof setupFractionProductTools==='function') setupFractionProductTools();
+   }
+ }
+ if(drawing) drawing.hidden=!current.aideHtml;
  // Lot T2 : un dessin d'aide plus large que le panneau (dessin en HTML, à
  // largeur fixe, dans le panneau étroit de l'ordinateur) est réduit pour
  // tenir en entier ; c'est une image, pas un outil à manipuler.
  if(drawing){
    drawing.style.zoom='';
    const sorties=()=>{const box=drawing.getBoundingClientRect();let left=box.left,right=box.right;drawing.querySelectorAll('*').forEach(element=>{const rect=element.getBoundingClientRect();if(rect.width>0){left=Math.min(left,rect.left);right=Math.max(right,rect.right);}});return {box,left,right};};
-   for(let essai=0;essai<4&&current.aideHtml&&!drawing.hidden;essai++){
+   for(let essai=0;essai<4&&current.aideHtml&&!drawing.hidden&&!drawing.querySelector(ZOOM_OUTILS_POINTEUR+',.place-value-tool');essai++){
      const {box,left,right}=sorties();
      if(left>=box.left-1&&right<=box.right+1) break;
      const zoom=(parseFloat(drawing.style.zoom)||1)*box.width/(right-left+8);
@@ -4057,19 +4073,84 @@ function lotTDistractorFeedback(inst){
   });
   return Object.keys(out).length?out:null;
 }
-// Le dessin d'aide : les figures <svg> du rendu « avec aide » qui manquent au
-// rendu « sans aide » (les identifiants internes sont ignorés dans la
-// comparaison). Uniquement des dessins ; rien trouvé, pas de dessin.
+// Le dessin d'aide : ce que le rendu « avec aide » ajoute au rendu « sans
+// aide ». A0 (15/10) : on prend les BLOCS entiers (dessin, tableau, carte de
+// méthode, outil à manipuler), plus seulement les <svg> : le lot T perdait
+// toutes les aides écrites en HTML (tableau de numération de dnb_02b, carte
+// « Simplifie avant de multiplier » de dnb_03b, tableau de conversion de
+// dnb_19, équation de dnb_13…). Les identifiants internes sont ignorés dans
+// la comparaison. Les liens vers les outils du site restent hors du panneau
+// (décision 8 : toucher un lien ferait quitter la série). Rien trouvé, pas
+// de dessin.
 function lotTSvgBlocks(html){return String(html||'').match(/<svg[\s\S]*?<\/svg>/gi)||[];}
 function lotTSvgKey(svg){return svg.replace(/\s(?:id|aria-labelledby|aria-describedby)="[^"]*"/g,'').replace(/url\(#[^)]*\)/g,'url(#)').replace(/href="#[^"]*"/g,'href="#"').replace(/\s+/g,' ');}
+function lotTAideSemblables(a,b){
+  if(a.tagName!==b.tagName) return false;
+  const ca=[...a.classList],cb=[...b.classList];
+  return (!ca.length&&!cb.length)||ca.some(name=>cb.includes(name));
+}
+function lotTAideBlocsEnPlus(avec,sans){
+  const enPlus=[];
+  const comparer=(a,b)=>{
+    const ea=[...a.children],eb=[...b.children];
+    const ka=ea.map(element=>lotTSvgKey(element.outerHTML)),kb=eb.map(element=>lotTSvgKey(element.outerHTML));
+    const n=ea.length,m=eb.length,suite=Array.from({length:n+1},()=>new Array(m+1).fill(0));
+    for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)suite[i][j]=ka[i]===kb[j]?suite[i+1][j+1]+1:Math.max(suite[i+1][j],suite[i][j+1]);
+    let i=0,j=0;const trouA=[],trouB=[];
+    const apparier=()=>{
+      const pris=new Set();
+      trouA.forEach(x=>{const k=trouB.findIndex((y,rang)=>!pris.has(rang)&&lotTAideSemblables(x,y));if(k>=0){pris.add(k);comparer(x,trouB[k]);}else enPlus.push(x);});
+      trouA.length=0;trouB.length=0;
+    };
+    while(i<n||j<m){
+      if(i<n&&j<m&&ka[i]===kb[j]){apparier();i++;j++;}
+      else if(j<m&&(i>=n||suite[i][j+1]>=suite[i+1][j])){trouB.push(eb[j]);j++;}
+      else{trouA.push(ea[i]);i++;}
+    }
+    apparier();
+  };
+  comparer(avec,sans);
+  return enPlus;
+}
+const LOT_T_AIDE_HORS_PANNEAU='a[href],[class*="resolve-button-row"],[class*="resolve-btn"],.angle-bar-action-row,script';
 function lotTAideDrawing(inst,policy){
   if(inst&&inst.aideHtml) return lotTTypo(String(inst.aideHtml));
   if(policy!=='optional'&&policy!=='aid-only') return '';
   let withHtml='',withoutHtml='';
   try{withHtml=buildCleanSlideHtml(inst,false,'with');withoutHtml=buildCleanSlideHtml(inst,false,'without');}catch(error){return '';}
-  const present=new Set(lotTSvgBlocks(withoutHtml).map(lotTSvgKey));
-  const extra=lotTSvgBlocks(withHtml).filter(svg=>!present.has(lotTSvgKey(svg)));
-  return extra.length?lotTTypo(extra.map(svg=>'<div class="aide-figure">'+svg+'</div>').join('')):'';
+  if(typeof document==='undefined'||!document.createElement){
+    const present=new Set(lotTSvgBlocks(withoutHtml).map(lotTSvgKey));
+    const extra=lotTSvgBlocks(withHtml).filter(svg=>!present.has(lotTSvgKey(svg)));
+    return extra.length?lotTTypo(extra.map(svg=>'<div class="aide-figure">'+svg+'</div>').join('')):'';
+  }
+  const avec=document.createElement('div'),sans=document.createElement('div');
+  avec.innerHTML=withHtml;sans.innerHTML=withoutHtml;
+  const blocs=lotTAideBlocsEnPlus(avec,sans).filter(bloc=>!bloc.matches(LOT_T_AIDE_HORS_PANNEAU));
+  blocs.forEach(bloc=>bloc.querySelectorAll(LOT_T_AIDE_HORS_PANNEAU).forEach(node=>node.remove()));
+  const utiles=blocs.filter(bloc=>bloc.children.length||bloc.matches('svg,img,canvas')||(bloc.textContent||'').trim());
+  if(!utiles.length) return '';
+  // Un petit dessin (tuile, jeton) garde sa taille : il n'est pas étiré à la
+  // largeur du panneau.
+  utiles.forEach(bloc=>[bloc,...bloc.querySelectorAll('svg')].forEach(svg=>{if(svg.tagName&&svg.tagName.toLowerCase()==='svg'&&Number(svg.getAttribute('width'))>0&&Number(svg.getAttribute('width'))<200) svg.classList.add('aide-svg-petit');}));
+  // Un dessin par choix (QCM) ou par cadre : on le pose avec son étiquette
+  // (« A. n + 2 », « Double »), comme dans la question d'origine.
+  const etiquette=bloc=>{
+    const parent=bloc.parentElement;
+    if(!parent||parent===avec) return null;
+    const voisin=[...parent.children].find(enfant=>enfant!==bloc&&!utiles.includes(enfant)&&(enfant.textContent||'').trim());
+    if(!voisin) return null;
+    const copie=voisin.cloneNode(true);
+    copie.querySelectorAll('.answer-slot,.answer-dots,input,button').forEach(node=>node.remove());
+    copie.querySelectorAll('strong,span,b').forEach(node=>{if(/^[.…\s]*$/.test(node.textContent||'')&&!node.querySelector('svg')) node.remove();});
+    const texte=(copie.textContent||'').replace(/\s+/g,' ').trim();
+    return texte&&texte.length<=60?copie:null;
+  };
+  const parents=new Set(utiles.map(bloc=>bloc.parentElement));
+  const enGroupe=utiles.length>=2&&parents.size===utiles.length&&utiles.every(bloc=>etiquette(bloc));
+  if(enGroupe){
+    return lotTTypo('<div class="aide-figure"><div class="aide-groupe">'+utiles.map(bloc=>'<div class="aide-groupe-item"><div class="aide-etiquette">'+etiquette(bloc).innerHTML+'</div>'+bloc.outerHTML+'</div>').join('')+'</div></div>');
+  }
+  return lotTTypo(utiles.map(bloc=>'<div class="aide-figure">'+bloc.outerHTML+'</div>').join(''));
 }
 // La bonne réponse, écrite comme en maths (vrai signe moins, fraction
 // empilée, x², 17 %), pour la ligne de verdict, la carte et la fin de série.
