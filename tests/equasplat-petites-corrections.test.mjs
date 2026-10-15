@@ -23,12 +23,12 @@ function source(nom){
   return html.slice(debut, i + 1);
 }
 
-function consigne({initiale = false} = {}){
+function consigne({initiale = false, resolue = false} = {}){
   const zone = {innerHTML:""};
-  const setInstruction = Function("instructionZone", "initialEqualityInstructionVisible", "INITIAL_EQUALITY_INSTRUCTION", `
+  const setInstruction = Function("instructionZone", "initialEqualityInstructionVisible", "INITIAL_EQUALITY_INSTRUCTION", "eleveEquationResolue", `
     ${source("setInstruction")}
     return setInstruction;
-  `)(zone, initiale, "<strong>Il y a la même quantité à gauche qu’à droite.</strong>");
+  `)(zone, initiale, "<strong>Il y a la même quantité à gauche qu’à droite.</strong>", () => resolue);
   return {zone, setInstruction};
 }
 
@@ -41,6 +41,10 @@ test("toute la consigne va dans une seule boîte : les espaces autour du gras re
   const initiale = consigne({initiale:true});
   initiale.setInstruction("autre chose");
   assert.equal(initiale.zone.innerHTML, '<span class="instructionText"><strong>Il y a la même quantité à gauche qu’à droite.</strong></span>');
+  // 15/10/2026 : une fois l'équation résolue, la phrase du milieu s'efface
+  const finie = consigne({resolue:true});
+  finie.setInstruction("Jetons regroupés : <strong>7</strong>.");
+  assert.equal(finie.zone.innerHTML, "", "équation résolue : plus de vieille consigne");
 });
 
 test("les consignes des taches opposées écrivent la lettre de l'équation", () => {

@@ -280,15 +280,18 @@ test("ÉquaSplat : billes 1 / −1 — « −1 − 1 − 1 = 3𝑏 » comme le p
   assert.equal(r.eq, "𝑏 + 𝑏 = 0");
 });
 
-test("ÉquaSplat : rien ne change pour les autres jetons — « 3 × (−4) = 3𝑏 » et Conclure, comme avant", () => {
+test("ÉquaSplat : rien ne change pour les autres jetons — « 3 × (−4) = 3𝑏 » et Conclure, comme avant (sauf la solution nulle)", () => {
   let r = ESSAI.jouer({ left: [T(-4), T(-4), T(-4)], right: [X, X, X], conclusionDone: false });
   assert.equal(r.info.count, 3);
   assert.equal(r.eq, "3 × (−4) = 3𝑏");
   // les billes d'une carte d'un autre monde (pas « billes ») : comme avant
   r = ESSAI.jouer({ left: [T(-1), T(-1), T(-1)], right: [X, X, X], conclusionDone: false });
   assert.equal(r.eq, "3 × (−1) = 3𝑏");
+  // solution nulle (15/10/2026, choix de Gwenaël) : plus de « 2𝑏 = 2 × 0 », la ligne s'écrit comme
+  // le papier (« 0 = 4𝑥 ») ; Conclure reste proposé
   r = ESSAI.jouer({ left: [X, X], right: [], conclusionDone: false });
-  assert.equal(r.eq, "2𝑏 = 2 × 0");
+  assert.equal(r.info.value, 0);
+  assert.equal(r.eq, "𝑏 + 𝑏 = 0");
   // la marque « billes » : une carte en relatifs dont tous les jetons valent 1 ou −1
   assert.match(equasplat, /billes:universe === "relative" && leftPieces\.concat\(rightPieces\)\.some\(p => p\.type === "token"\) &&\s*leftPieces\.concat\(rightPieces\)\.every\(p => p\.type !== "token" \|\| Math\.abs\(Number\(p\.value\)\) === 1\)/);
 });

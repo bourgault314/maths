@@ -806,7 +806,7 @@ return {C,POLICE,ARIAL,blob,couleurJeton,txt,defs,bouton,ecran,equation,placerFl
    de la série) : 𝑡 + 3 = 7 (« Enlever des deux côtés »), puis 3𝑦 = 9 (« Faire des paquets »). Avant chaque geste, le
    doigt RANGE les jetons en face (un vrai geste de l'outil : on glisse les pièces) pour qu'on voie ce qui se correspond :
    3 jetons en face de 3, puis un paquet en face de chaque tache. Les jetons se posent à côté les uns des autres, jamais
-   dessus (dans l'outil, un jeton lâché sur un autre ouvre la fenêtre de fusion). Pas d'arrêt : le film déroule ; un
+   dessus (dans l'outil, un jeton lâché sur un autre ouvre la fenêtre Regrouper, comme le bouton — un seul mot depuis le 15/10/2026). Pas d'arrêt : le film déroule ; un
    toucher ou Espace le met en pause. L'écran est celui d'ÉquaSplat (bloc ECRAN_EQ, juste au-dessus). */
 FILMS.equasplat=(function(){
 'use strict';
@@ -1011,7 +1011,7 @@ const I0='Il y a la même quantité à gauche qu’à droite.';
 const CONSIGNES=[[0,I0],[T.modeG,'Sélectionne plusieurs jetons numériques d’un même côté.'],[T.g20,'Sélectionne au moins deux éléments compatibles.'],
   [T.g15,'2 jetons sélectionnés. Calcule leur somme pour les regrouper.'],[T.regroupe,'Jetons regroupés : 35.'],[T.modeD,'Décompose un jeton numérique.'],
   [T.modeE,'Sélectionne la même quantité des deux côtés.'],[T.e21g,'Sélectionne maintenant l’autre côté.'],[T.e21d,'Même quantité sélectionnée : 21.'],[T.valider,''],
-  [T.b,I0],[T.modeP,'Partage un jeton en parts égales.'],[T.groupes,'3 groupes identiques — touche-en un.',C.orangeC],[T.replie,'']];
+  [T.b,I0],[T.fusionne,'Jetons regroupés : 21.'],[T.modeP,'Partage un jeton en parts égales.'],[T.groupes,'3 groupes identiques — touche-en un.',C.orangeC],[T.replie,'']];
 /* ce que l'élève tape, touche après touche */
 const TAPE_G=['3','35'],TAPE_D=['2','21','21 +','21 + 1','21 + 14'],TAPE_F=['2','21'],TAPE_P=['7'];
 function exemples(port){
@@ -1052,8 +1052,8 @@ const DLG={
     P2:{w:620,h:447,r:24,el:[['titre','Partager équitablement',310,53.5,34],['texteB',['Partager le jeton ','21',' en ','3 parts',' égales.'],310,101,21],
       ['puce','3 parts',209,133,95,49,'choisie'],['puce','7 parts',316,133,95,49],['label','Chaque part vaut',310,210,16],
       ['champ',37,228,546,100,18,54,'P'],['btn','Partager',229,378,79,37,13.5,'bleu','ok'],['btn','Annuler',314,378,77,37,13.5,'blanc']]},
-    F:{w:640,h:392,r:24,el:[['texte','12 + 9 = ?',320,69.5,62,950,C.encre,-3.1],['label','Résultat',320,133.5,15],
-      ['champ',39,151,562,105,18,58,'F'],['btn','Fusionner',194,306,131,53,18,'bleu','ok'],['btn','Annuler',332,306,114,53,18,'blanc']]}},
+    F:{w:600,h:426,r:24,el:[['titre','Regrouper',300,62,44],['texte','12 + 9 = ?',300,123.5,34,900,C.encre],['label','Somme des deux jetons',300,172,16],
+      ['champ',39,190,522,100,18,54,'F'],['btn','Regrouper',172,340,135,53,18,'vert','ok'],['btn','Annuler',314,340,114,53,18,'blanc']]}},
   portrait:{
     G:{w:352,h:636,r:20,el:[['titre','Regrouper',176,53,30],['texte','20 + 15 = ?',176,99,23,900,C.encre],['label','Somme des jetons',176,141,16],['label','sélectionnés',176,161,16],
       ['champ',39,179,274,77,18,34,'G'],['pave',39,266,87,42,93,48,'Regrouper',false],['btn','Annuler',119,550,114,53,18,'blanc']]},
@@ -1064,8 +1064,8 @@ const DLG={
     P2:{w:352,h:719,r:20,el:[['titre','Partager',176,43,34],['titre','équitablement',176,84,34],['texteB',['Partager le jeton ','21',' en ','3 parts'],176,132,21],['texte','égales.',176,162,21,750,'#64748b'],
       ['puce','3 parts',75,194,95,49,'choisie'],['puce','7 parts',182,194,95,49],['label','Chaque part vaut',176,271,16],
       ['champ',19,289,314,77,18,34,'P'],['pave',19,376,101,42,106.5,48,'Partager',false],['btn','Annuler',137,660,77,37,13.5,'blanc']]},
-    F:{w:352,h:584,r:20,el:[['texte','12 + 9 = ?',176,57,38,950,C.encre,-1.9],['label','Résultat',176,108.5,15],
-      ['champ',39,126,274,78,18,34,'F'],['pave',39,214,87,42,93.5,48,'Fusionner',false],['btn','Annuler',119,498,114,53,18,'blanc']]}}
+    F:{w:352,h:616,r:20,el:[['titre','Regrouper',176,53,30],['texte','12 + 9 = ?',176,99,23,900,C.encre],['label','Somme des deux jetons',176,141,16],
+      ['champ',39,159,274,77,18,34,'F'],['pave',39,246,87,42,93,48,'Regrouper',false],['btn','Annuler',119,530,114,53,18,'blanc']]}}
 };
 /* construit une fenêtre ; rend {g, champ (texte tapé), ok (centre du bouton de validation), cles {chiffre: centre}, fondsCles} en pixels de l'outil */
 function fenetre(Y,p,spec,port){

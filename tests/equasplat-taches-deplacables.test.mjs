@@ -146,7 +146,8 @@ test("𝑥 posé sur −𝑥 : la petite fenêtre, puis la paire disparaît", ()
   assert.match(candidat, /!oppositeXEnabled\(\)/);
   assert.match(candidat, /xSign\(other\) === xSign\(dragged\)\) continue;/, "𝑥 sur 𝑥 : rien");
   const fenetre = source("openFusionDialog");
-  assert.match(fenetre, /title\.textContent = "Fusionner deux taches"/);
+  // 15/10/2026 : un seul mot, « Regrouper » (la fenêtre s'appelait « Fusionner deux taches »).
+  assert.match(fenetre, /title\.textContent = "Regrouper";\s*if\(fusionLabel\) fusionLabel\.textContent = "Somme des deux taches";/);
   assert.match(fenetre, /\$\{escapeHtml\(xPieceLabel\(positive\)\)\} \+ \(\$\{escapeHtml\(xPieceLabel\(negative\)\)\}\) = \?/);
   assert.match(fenetre, /kind:"x", expected:0/);
   assert.match(source("applyFusion"), /if\(pendingFusion\.kind === "x"\)\{\s*applySplatFusion\(\);/);

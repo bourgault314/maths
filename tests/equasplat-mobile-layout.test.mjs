@@ -132,8 +132,9 @@ test("les réponses passent par le pavé tactile d’ÉquaSplat, commun à tout 
 });
 
 test("la décomposition accepte naturellement une soustraction", () => {
-  assert.match(html, /if\(!\/\^\[\+-\]\?\\d\+\(\?:\[\+-\]\\d\+\)\*\$\/\.test\(raw\)\) return null;/);
-  assert.match(html, /raw\.match\(\/\[\+-\]\?\\d\+\/g\)/);
+  // 15/10/2026 : chaque terme peut porter son signe après + ou − (« −3 + −6 »), voir
+  // equasplat-fenetres-15-10.test.mjs qui exécute parseSum.
+  assert.match(html, /const term = \/\(\[\+-\]\?\)\(\\\(\?\)\(\[\+-\]\?\)\(\\d\+\)\(\\\)\?\)\/y;/);
   // …mais pas de nombre négatif en Splat positif.
   assert.match(html, /if\(!isRelativeUniverse\(\) && values\.some\(v => v < 0\)\)\{/);
 });
