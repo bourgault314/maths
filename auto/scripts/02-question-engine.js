@@ -1135,6 +1135,8 @@ function module01F2DAide(num,den){
   return ['Cherche une fraction égale avec 10 ou 100 au dénominateur.','Par combien multiplier '+den+' pour obtenir '+(den===2||den===5?'10':'100')+' ?'];
 }
 function module01AideVisual(data){
+  // A0 : plusieurs dessins à la suite (le plateau de Gwenaël, puis le tableau de numération).
+  if(Array.isArray(data)) return data.map(module01AideVisual).join('');
   // Dessin du panneau d'aide : jamais la réponse (aucun « 1 » écrit sur les unités).
   const component=globalThis.MATHSGO_VISUALS&&globalThis.MATHSGO_VISUALS.get('arithmetic.fraction-decimal-grid');
   if(!component||!data||(!data.kind&&(!data.visualKind||data.visualKind==='none'))) return '';
@@ -1237,7 +1239,9 @@ function makeModule01Instance(mod,q){
       feedback=truth?{'2':'Si : '+F+' vaut bien '+dec+'.'}:{'1':shownItem.feedback};
       extra.truth=truth; extra.shown=shown;
     }
-    visualData={num,den,reduced,visualKind,dec};
+    // A0 : pour /10 et /100, le plateau de Gwenaël (unité partagée, parts coloriées) revient
+    // dans l'aide, avant le tableau de numération vide.
+    visualData=visualKind==='place-empty'?[{num,den,reduced,visualKind:'grouped',dec},{num,den,reduced,visualKind,dec}]:{num,den,reduced,visualKind,dec};
     correctionVisualData=visualKind==='place-empty'?{kind:'place-value',value:dec}:(visualKind==='none'?null:{num,den,reduced,visualKind,showUnits:true});
   } else if(!special&&direction==='d2f'){
     fractionPolicy='equivalent';
@@ -1258,8 +1262,11 @@ function makeModule01Instance(mod,q){
       qcm=module01QcmFrom(correct,distractors); answers=[qcm.correctIndex]; feedback=qcm.feedback;
       if(kind==='place_d2f') steps=steps.slice(0,1);
     }
-    // Question : tableau vide (dans quel rang est chaque chiffre ?) ; correction : tableau rempli.
-    visualData={kind:'place-value',value:null};
+    // Question : le plateau de Gwenaël (A0) avec ses unités partagées en dixièmes ou en
+    // centièmes, sans rien colorier (colorier le nombre donnerait la réponse), puis le
+    // tableau vide (dans quel rang est chaque chiffre ?) ; correction : tableau rempli.
+    const plateau=(kind==='fixed_d2f'||kind==='benchmark_d2f')?(num>den&&den>1?'bar':(den===10?'grouped':'neutral')):(den===10?'grouped':'neutral');
+    visualData=[{num,den,reduced,visualKind:plateau,dec,vide:true},{kind:'place-value',value:null}];
     correctionVisualData={kind:'place-value',value:dec};
   } else if(kind==='compare'){
     // « Complète par <, = ou > » (sujet de référence n° 1, Q4 : comparer 7/4 et des décimaux).
@@ -1386,7 +1393,7 @@ function makeModule01Instance(mod,q){
   }
 
   // Le dessin du sens décimal → fraction est un tableau de numération rempli (lecture des rangs).
-  const aideHtml=visualData?module01AideVisual(visualData.kind?visualData:{...visualData}):'';
+  const aideHtml=visualData?module01AideVisual(Array.isArray(visualData)||visualData.kind?visualData:{...visualData}):'';
   const hasVisual=!!aideHtml;
   prompt=module01Tidy(prompt); display=module01Tidy(display); equality=module01Tidy(equality);
   if(qcm&&qcm.kind!=='signs') qcm.options=qcm.options.map(option=>['Vrai','Faux'].includes(option)?option:module01TidyLatex(option));
@@ -4521,6 +4528,7 @@ function module01VisualHtml(data,correction=false){
   const component=globalThis.MATHSGO_VISUALS&&globalThis.MATHSGO_VISUALS.get('arithmetic.fraction-decimal-grid');
   if(!component) throw new Error('Le composant arithmetic.fraction-decimal-grid doit être chargé avant dnb_01.');
   if(!data) return '';
+  if(Array.isArray(data)) return data.map(item=>component.render(item,correction)).join('');
   return component.render(data,correction);
 }
 function renderModule01(inst,correction=false,mode=null){

@@ -117,7 +117,7 @@
     if(showUnits&&selected>=sourceDen)output+=unitBadge(x0,y0,size);
     return output;
   }
-  function gridVisual(num,den,neutral=false,emphasisDen=null,orderingDen=null,showUnits=false){
+  function gridVisual(num,den,neutral=false,emphasisDen=null,orderingDen=null,showUnits=false,vide=false){
     const total=neutral?Math.round((num/den)*100):num,per=neutral?100:Math.max(1,den);
     if(neutral&&total%25===0&&total%100!==0)orderingDen=100;
     const boards=Math.max(1,Math.ceil(total/per)),cols=boards<=3?boards:Math.min(4,boards),rows=Math.ceil(boards/cols);
@@ -127,7 +127,7 @@
     for(let index=0;index<boards;index++){
       const col=index%cols,row=Math.floor(index/cols),x=pad+col*(size+gap),y=pad+row*(size+gap),filled=Math.min(per,remaining);
       remaining-=filled;
-      shapes+=boardPart(x,y,size,filled,per,false,emphasisDen,orderingDen,showUnits);
+      shapes+=boardPart(x,y,size,vide?0:filled,per,false,emphasisDen,orderingDen,showUnits);
     }
     return `<div class="module01-visual"><svg viewBox="0 0 ${width} ${height}" style="max-width:${Math.round(width*1.5)}px;max-height:30vh" role="img" aria-label="${boards===1?'Une unité partagée en '+per+' parts égales':boards+' unités, chacune partagée en '+per+' parts égales'}">${shapes}</svg></div>`;
   }
@@ -179,7 +179,9 @@
     if(data&&data.visualKind==='none') return '';
     const common=gcd(data.num,data.den),simplified=correction&&common>1&&data.reduced&&data.reduced.den<data.den;
     const showUnits=data.showUnits!==undefined?!!data.showUnits:!!correction;
-    return gridVisual(data.num,data.den,data.visualKind==='neutral',simplified?data.reduced.den:null,data.reduced?data.reduced.den:null,showUnits);
+    // vide : les unités partagées, sans rien colorier (aide d'un « décimal → fraction » :
+    // colorier le nombre donnerait la réponse ; A0, 15/10/2026).
+    return gridVisual(data.num,data.den,data.visualKind==='neutral',simplified?data.reduced.den:null,data.reduced?data.reduced.den:null,showUnits,data.vide===true&&!correction);
   }
 
   const supports=Object.freeze(['phone','computer','projection','print']);
