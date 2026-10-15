@@ -74,7 +74,7 @@ $versionKatexCss = $versionDe(__DIR__ . '/../vendor/katex-0.16.9/katex.min.css')
   main { flex: 1 1 auto; min-height: 0; width: 100%; max-width: 1180px; margin: 0 auto;
          padding: 14px 20px 8px; display: flex; flex-direction: column; align-items: center;
          justify-content: center; text-align: center; }
-  main.large { max-width: 1500px; padding: 12px 28px 4px; overflow: hidden; }
+  main.large { max-width: 1800px; padding: 12px 28px 4px; overflow: hidden; }
   h1 { margin: 0; font-family: Georgia, serif; color: var(--blue-dark);
        font-size: clamp(2rem, 5.2vw, 3.6rem); line-height: 1.1; }
   .sous { margin: 10px 0 0; color: var(--muted); font-size: clamp(1.05rem, 2vw, 1.4rem); }
@@ -119,54 +119,67 @@ $versionKatexCss = $versionDe(__DIR__ . '/../vendor/katex-0.16.9/katex.min.css')
      Une question du fichier : l'énoncé en haut, l'image éventuelle à gauche,
      les réponses en cartes. Au dévoilement, chaque carte se remplit de sa
      barre et porte son nombre ; la bonne passe au vert avec une coche.
-     --t réduit tout d'un même facteur quand la question ne tient pas dans
-     l'écran (ajuster()). */
+     CADRE FIXE (15/10/2026, choix de Gwenaël, « façon Kahoot ») : la bande
+     de l'énoncé a toujours la même hauteur, les réponses remplissent toujours
+     le reste, et le texte a la même taille à chaque question. La disposition,
+     elle, suit le contenu (figure à gauche, figures en réponses, 2 à 6
+     cartes). Seule une question qui ne tient pas rétrécit : --t réduit tout
+     d'un même facteur (ajuster()) ; rien ne grandit jamais. */
   .q { --t: 1; width: 100%; height: 100%; min-height: 0; display: flex; flex-direction: column;
        gap: calc(var(--t) * 14px); text-align: left; }
-  .q-haut { flex: 0 0 auto; display: flex; align-items: flex-start; gap: 20px; }
+  .q-haut { flex: 0 0 30%; min-height: 0; display: flex; align-items: center; gap: 20px; }
   .q-tete { flex: 1 1 auto; min-width: 0; }
   .q-num { font-weight: 800; color: var(--muted); letter-spacing: .03em; text-transform: uppercase;
            font-size: calc(var(--t) * clamp(.95rem, 1.4vw, 1.25rem)); }
   .q-enonce { margin: 2px 0 0; font-weight: 600; color: var(--blue-dark); line-height: 1.3;
-              font-size: calc(var(--t) * clamp(1.4rem, min(3vw, 5.4vh), 4.4rem)); overflow-wrap: anywhere; }
-  .q-corps { flex: 1 1 auto; min-height: 0; display: flex; align-items: center; gap: calc(var(--t) * 24px); }
-  .q-figure { flex: 0 0 auto; max-width: 42%; display: flex; align-items: center; justify-content: center; padding: 10px;
-              background: #fff; border: 1px solid var(--line); border-radius: 16px; }
-  .q-figure img { display: block; max-width: 100%; max-height: calc(var(--t) * 46vh); width: auto; height: auto; }
-  .q-reponses { flex: 1 1 auto; display: grid; grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr));
-                gap: calc(var(--t) * 14px); align-content: center; }
+              font-size: calc(var(--t) * clamp(1.5rem, min(3.9vw, 7vh), 5.4rem)); overflow-wrap: anywhere; }
+  .q-corps { flex: 1 1 0; min-height: 0; display: flex; align-items: stretch; gap: calc(var(--t) * 24px); }
+  .q-figure { flex: 0 0 36%; min-width: 0; min-height: 0; display: flex; align-items: center; justify-content: center;
+              padding: 12px; background: #fff; border: 1px solid var(--line); border-radius: 16px; }
+  .q-figure img { display: block; width: 100%; height: 100%; object-fit: contain; }
+  .q-reponses { flex: 1 1 auto; min-width: 0; min-height: 0; display: grid;
+                grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr);
+                gap: calc(var(--t) * 14px); }
   .rep { position: relative; display: flex; align-items: center; gap: calc(var(--t) * 18px);
-         min-height: calc(var(--t) * min(9vw, 15vh)); padding: calc(var(--t) * 12px) calc(var(--t) * 18px);
+         min-height: 0; padding: calc(var(--t) * 12px) calc(var(--t) * 22px);
          font: inherit; text-align: left; color: var(--ink); background: #fff; border: 2px solid var(--line);
          border-radius: 16px; overflow: hidden; }
   button.rep { cursor: pointer; }
   button.rep:hover { background: #fff; border-color: #9fb6cf; }
   .rep .fond { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: #dbe8f6; transition: width .6s ease; }
   .rep .l { position: relative; flex: 0 0 auto; display: grid; place-items: center;
-            width: calc(var(--t) * clamp(40px, min(4vw, 7vh), 96px)); height: calc(var(--t) * clamp(40px, min(4vw, 7vh), 96px));
+            width: calc(var(--t) * clamp(44px, min(5.4vw, 9.5vh), 112px)); height: calc(var(--t) * clamp(44px, min(5.4vw, 9.5vh), 112px));
             border-radius: 12px; background: var(--blue); color: #fff; font-weight: 800;
-            font-size: calc(var(--t) * clamp(1.3rem, min(2.4vw, 4.2vh), 3.2rem)); line-height: 1; }
+            font-size: calc(var(--t) * clamp(1.4rem, min(3vw, 5.4vh), 3.6rem)); line-height: 1; }
   .rep .t { position: relative; min-width: 0; display: flex; flex-direction: column; align-items: flex-start;
-            gap: 6px; font-size: calc(var(--t) * clamp(1.3rem, min(2.7vw, 4.8vh), 4rem)); line-height: 1.2;
+            gap: 6px; font-size: calc(var(--t) * clamp(1.4rem, min(3.8vw, 6.8vh), 5rem)); line-height: 1.2;
             overflow-wrap: anywhere; }
   .rep .t img { display: block; max-width: 100%; max-height: calc(var(--t) * 22vh); width: auto; height: auto; }
   .rep .coche { position: relative; flex: 0 0 auto; color: var(--vert); font-weight: 800;
-                font-size: calc(var(--t) * clamp(1.3rem, min(2.7vw, 4.8vh), 4rem)); }
+                font-size: calc(var(--t) * clamp(1.4rem, min(3.8vw, 6.8vh), 5rem)); }
+  /* Le nombre a sa place réservée dès la question : rien ne bouge au
+     dévoilement. La coche de la bonne réponse se pose SUR la lettre (elle ne
+     prend aucune place). */
+  .rep .reserve { visibility: hidden; }
+  .rep .t .court { white-space: nowrap; overflow-wrap: normal; }
+  .rep .l .coche { position: absolute; top: -.32em; right: -.32em; width: 1em; height: 1em; display: grid;
+                   place-items: center; border-radius: 50%; background: #fff; color: var(--vert);
+                   font-size: .62em; line-height: 1; box-shadow: 0 0 0 .12em var(--vert); }
   .rep .n { position: relative; flex: 0 0 auto; margin-left: auto; padding-left: 12px; font-weight: 800;
             color: var(--blue-dark); font-variant-numeric: tabular-nums;
-            font-size: calc(var(--t) * clamp(1.3rem, min(2.7vw, 4.8vh), 3rem)); }
+            font-size: calc(var(--t) * clamp(1.2rem, min(3.2vw, 5.6vh), 4.2rem)); }
   /* Une réponse qui est une FIGURE : la lettre (et au dévoilement le
      nombre) sur une ligne au-dessus, la figure en grand dessous, et la barre
      en bas de la carte — une figure à fond blanc ne la cache pas. */
   .rep.avec-image { flex-direction: column; align-items: stretch; gap: calc(var(--t) * 8px);
                     padding-bottom: calc(var(--t) * 20px); }
   .rep-haut { position: relative; display: flex; align-items: center; gap: calc(var(--t) * 12px); }
-  .rep.avec-image .t { align-items: center; text-align: center; }
-  .rep.avec-image .t img { width: 100%; max-height: calc(var(--t) * 30vh); object-fit: contain; }
+  .rep.avec-image .t { flex: 1 1 0; min-height: 0; width: 100%; align-items: center; text-align: center; }
+  .rep.avec-image .t img { flex: 1 1 0; min-height: calc(var(--t) * 10vh); width: 100%; max-height: none; object-fit: contain; }
   .rep.avec-image .fond { top: auto; height: calc(var(--t) * 12px); }
   .q.devoile .rep { border-color: #e3e9f0; }
   .q.devoile .rep .l { background: #3f6597; }
-  .rep.bonne, .q.devoile .rep.bonne { border-color: var(--vert); border-width: 3px; }
+  .rep.bonne, .q.devoile .rep.bonne { border-color: var(--vert); box-shadow: inset 0 0 0 1px var(--vert); }
   .rep.bonne .fond { background: #cdebd5; }
   .q .rep.bonne .l { background: var(--vert); }
   .rep.bonne .n { color: var(--vert); }
@@ -605,7 +618,12 @@ $versionKatexCss = $versionDe(__DIR__ . '/../vendor/katex-0.16.9/katex.min.css')
         if (choix.image) contenu.append(image(choix.image));
         if (choix.texte) {
           const texte = document.createElement("span");
-          ecrire(texte, choix.texte);
+          // Une réponse courte (un mot, un nombre et son unité) ne se coupe
+          // jamais : « 24 cm² » reste sur une ligne ; si elle ne tient pas,
+          // c'est la question qui rétrécit.
+          const courte = choix.texte.length <= 12 || (choix.texte.length <= 18 && /\d/.test(choix.texte));
+          if (courte) texte.className = "court";
+          ecrire(texte, choix.texte, courte);
           contenu.append(texte);
         }
         // Une figure : la lettre et le nombre sur une ligne au-dessus d'elle.
@@ -618,18 +636,18 @@ $versionKatexCss = $versionDe(__DIR__ . '/../vendor/katex-0.16.9/katex.min.css')
         } else {
           carte.append(badge, contenu);
         }
-        if (devoile) {
-          if (etat.bonne === lettre) {
-            const coche = document.createElement("span");
-            coche.className = "coche";
-            coche.textContent = "✓";
-            ligneHaut.append(coche);
-          }
-          const nombre = document.createElement("span");
-          nombre.className = "n";
-          nombre.textContent = String(Number((etat.repartition || {})[lettre]) || 0);
-          ligneHaut.append(nombre);
+        // La bonne réponse : une coche posée sur la lettre. Le nombre est là
+        // dès la question, invisible : la carte ne change pas au dévoilement.
+        if (devoile && etat.bonne === lettre) {
+          const coche = document.createElement("span");
+          coche.className = "coche";
+          coche.textContent = "✓";
+          badge.append(coche);
         }
+        const nombre = document.createElement("span");
+        nombre.className = "n" + (devoile ? "" : " reserve");
+        nombre.textContent = devoile ? String(Number((etat.repartition || {})[lettre]) || 0) : "00";
+        ligneHaut.append(nombre);
         return carte;
       },
       cellule(reponse) { return reponse || ""; }
@@ -640,9 +658,18 @@ $versionKatexCss = $versionDe(__DIR__ . '/../vendor/katex-0.16.9/katex.min.css')
   //
   // « texte $maths$ texte » : le texte par textContent, les formules par
   // KaTeX (sans « trust » : ni lien, ni HTML, ni style venus du fichier).
-  function ecrire(element, texte) {
+  // Typographie française : l'espace devant « ? ! : ; » et à l'intérieur des
+  // guillemets ne se coupe pas (jamais un « ? » seul en début de ligne).
+  function typographie(texte) {
+    return texte.replace(/ ([?!:;»])/g, "\u00a0$1").replace(/« /g, "«\u00a0");
+  }
+  function ecrire(element, texte, insecable) {
     QZ.decouper(texte).morceaux.forEach(morceau => {
-      if (morceau.maths === undefined) { element.append(morceau.texte); return; }
+      if (morceau.maths === undefined) {
+        const propre = typographie(morceau.texte);
+        element.append(insecable ? propre.replace(/ /g, "\u00a0") : propre);
+        return;
+      }
       const span = document.createElement("span");
       if (window.katex) window.katex.render("\\displaystyle " + morceau.maths, span, OPTIONS_KATEX);
       else span.textContent = morceau.maths;
@@ -764,8 +791,10 @@ $versionKatexCss = $versionDe(__DIR__ . '/../vendor/katex-0.16.9/katex.min.css')
     reponses.className = "q-reponses";
     const n = question.choix.length;
     const avecImages = question.choix.some(c => c.image);
-    let colonnes = n === 3 ? 3 : (n >= 5 ? 3 : 2);
-    if (question.image) colonnes = n > 4 ? 2 : (avecImages ? 2 : 1);
+    // Trois réponses de texte : trois bandes pleine largeur (des mots
+    // entiers y tiennent) ; trois figures : côte à côte.
+    let colonnes = n === 3 ? (avecImages ? 3 : 1) : (n >= 5 ? 3 : 2);
+    if (question.image) colonnes = n <= 3 && !avecImages ? 1 : 2;
     else if (avecImages && n === 4) colonnes = 4;
     reponses.style.setProperty("--cols", String(colonnes));
     question.choix.forEach((_, k) => reponses.append(RENDUS.choix.carte(question, k, etat)));
@@ -787,12 +816,13 @@ $versionKatexCss = $versionDe(__DIR__ . '/../vendor/katex-0.16.9/katex.min.css')
     if (!bloc) return;
     let t = 1;
     bloc.style.setProperty("--t", "1");
-    const corps = bloc.querySelector(".q-corps");
-    const hauteurDe = selecteur => { const boite = bloc.querySelector(selecteur); return boite ? boite.offsetHeight : 0; };
+    const haut = bloc.querySelector(".q-haut");
     const deborde = () => scene.scrollHeight > scene.clientHeight + 1
       || bloc.scrollHeight > bloc.clientHeight + 1
-      || Math.max(hauteurDe(".q-reponses"), hauteurDe(".q-figure")) > corps.clientHeight + 1
-      || [...bloc.querySelectorAll(".rep")].some(carte => carte.scrollWidth > carte.clientWidth + 1);
+      || haut.scrollHeight > haut.clientHeight + 1
+      || [...bloc.querySelectorAll(".rep")].some(carte => carte.scrollHeight > carte.clientHeight + 1
+        || carte.scrollWidth > carte.clientWidth + 1)
+      || [...bloc.querySelectorAll(".rep .t")].some(texte => texte.scrollWidth > texte.clientWidth + 1);
     while (deborde() && t > 0.42) {
       t = Math.round((t - 0.06) * 100) / 100;
       bloc.style.setProperty("--t", String(t));
