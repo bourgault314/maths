@@ -249,6 +249,7 @@
   .c-ops{display:grid;grid-template-columns:repeat(4, minmax(0, 1fr));gap:6px;margin-top:2px}
   .c-ops .checkInline{justify-content:center;height:38px;padding:0 6px;border-radius:10px;gap:6px;min-width:0;white-space:nowrap;margin:0}
   .c-ops .checkInline span{font-size:13px;font-weight:700}
+  .c-ops .checkInline.grise{opacity:.4;cursor:default}
   /* Enquête : la forme (quatre menus, deux par rangée) et les variantes (cases alignées à
      gauche, deux par rangée) — lot « projection », 30/09/2026 */
   .c-forme{display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:8px;margin-bottom:8px}
@@ -1139,11 +1140,37 @@
          graine et « Copier le lien » sont ceux de A / A± (rangée unitSeedShareRow). -->
     <div id="fractionSettings" style="display:none">
       <label for="fracNiveau">Niveau</label>
-      <select id="fracNiveau" title="1 : des demis · 2 : tiers et quarts, les parts dépassent l’unité · 3 : demis, tiers, quarts, plusieurs parts sur un disque · 4 : cinquièmes, sixièmes, huitièmes">
+      <select id="fracNiveau" title="1 : des demis · 2 : tiers et quarts, les parts dépassent l’unité · 3 : demis, tiers, quarts, plusieurs parts sur un disque · 4 : cinquièmes, sixièmes, huitièmes · Réglages avancés : les dénominateurs cochés">
         <option value="1" selected>1 — Demis</option>
         <option value="2">2 — Tiers et quarts</option>
         <option value="3">3 — Plusieurs parts sur un disque</option>
         <option value="4">4 — Cinquièmes à huitièmes</option>
+        <option value="avance">Réglages avancés</option>
+      </select>
+      <!-- lot F1b (15/10/2026) : « Réglages avancés » (les dénominateurs cochés, une part ou
+           plusieurs parts par disque) et l'écriture décimale (demis, quarts, cinquièmes seulement :
+           toutes les cartes d'une série s'écrivent de la même façon). Les quatre niveaux restent
+           des préréglages : mêmes cartes qu'au lot F1. -->
+      <div id="fracAvanceRows" style="display:none">
+        <label>Parts</label>
+        <div class="c-ops" style="grid-template-columns:repeat(6, minmax(0, 1fr))">
+          <label class="checkInline" title="Demis"><input type="checkbox" id="fracDen2" checked> <span>1/2</span></label>
+          <label class="checkInline" title="Tiers"><input type="checkbox" id="fracDen3"> <span>1/3</span></label>
+          <label class="checkInline" title="Quarts"><input type="checkbox" id="fracDen4"> <span>1/4</span></label>
+          <label class="checkInline" title="Cinquièmes"><input type="checkbox" id="fracDen5"> <span>1/5</span></label>
+          <label class="checkInline" title="Sixièmes"><input type="checkbox" id="fracDen6"> <span>1/6</span></label>
+          <label class="checkInline" title="Huitièmes"><input type="checkbox" id="fracDen8"> <span>1/8</span></label>
+        </div>
+        <label for="fracParts">Disques</label>
+        <select id="fracParts" title="Une part par disque : comme les Fraction Splats de Steve Wyborney (3/4 = trois disques d’un quart) · Plusieurs parts : un disque peut porter 2/3, 3/4…">
+          <option value="une" selected>Une part par disque</option>
+          <option value="plusieurs">Plusieurs parts par disque</option>
+        </select>
+      </div>
+      <label for="fracEcriture">Écriture</label>
+      <select id="fracEcriture" title="Fraction : 3 + 3/4 · Décimale : 3,75 — demis, quarts et cinquièmes seulement, toutes les cartes de la série s’écrivent avec une virgule">
+        <option value="fraction" selected>Fraction — 3 + 3/4</option>
+        <option value="decimale">Décimale — 3,75</option>
       </select>
       <div class="row" style="align-items:flex-end">
         <div style="flex:1 1 0">
@@ -2433,7 +2460,7 @@ function lireRepetitionAdresse(raw){
 
 /* Les réglages qu'une adresse partagée peut porter. Liste commune : elle sert
    aussi à l'empreinte de la série élève (eleveSignatureSerie). */
-const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "niveau", "splats", "clues", "structure", "geste", "gestes", "coefMax", "ecart", "fois", "indice", "sens", "forme", "grand", "sous", "noTotal", "repeat", "ordre", "vocab", "compose", "reunies", "pasapas", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "palette", "unknown", "print", "duplex", "layout", "title", "note", "systeme", "eleve", "parcours", "imprimer", "suite", "corrige"];
+const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "niveau", "ecriture", "dens", "parts", "splats", "clues", "structure", "geste", "gestes", "coefMax", "ecart", "fois", "indice", "sens", "forme", "grand", "sous", "noTotal", "repeat", "ordre", "vocab", "compose", "reunies", "pasapas", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "palette", "unknown", "print", "duplex", "layout", "title", "note", "systeme", "eleve", "parcours", "imprimer", "suite", "corrige"];
 
 function loadSharedConfiguration(){
   const params = new URLSearchParams(window.location.search);
@@ -2486,6 +2513,8 @@ function appliquerConfiguration(params){
      d'une étape composée */
   if(act === "UF") ufNiveauParDefaut();
   getClassicShareControls(act).forEach(([name, el]) => applyShareControl(params, name, el));
+  /* lot F1b : « ecriture », « dens », « parts » — absents de l'adresse = valeurs par défaut */
+  if(act === "UF") ufLireAdresse(params);
   /* « gestes=COEF,DOUBLE » (Système) : les cases du mélange. */
   if(act === "D" && params.has("gestes")) sysAppliquerGestesMix(params.get("gestes"));
   if(act === "D") sysLireReglagesM4(params);
@@ -2613,6 +2642,8 @@ function buildShareUrl(){
   if(act === "U") params.set("equation", String(unitEquationTypeEl.value));
   if(act === "N" || act === "NPM") params.set("equation", String(numberedEquationTypeEl.value));
   getClassicShareControls(act).forEach(([name, el]) => addShareControl(params, name, el));
+  /* lot F1b : écrits seulement hors de leur valeur par défaut (les adresses du lot F1 ne changent pas) */
+  if(act === "UF") ufEcrireAdresse(params);
   if(act === "D" && sysGesteEl && sysGesteEl.value === "MIX") params.set("gestes", sysLireGestesMix().join(","));
   if(act === "D") sysEcrireReglagesM4(params);
 
@@ -3040,7 +3071,7 @@ function syncSettingsUI(){
     syncUnitEquationUI();
     if(act === "UPM") syncUnitSignedTotalBounds(); else syncUnitTotalBounds();
   }
-  if(isFraction) ufSyncBornes();
+  if(isFraction){ ufSyncAvance(); ufSyncBornes(); }
   lastActivityForBounds = act;
   lastActivityForSigned = act;
 }
@@ -16350,6 +16381,17 @@ function frTexte(v, d){
   if(!entier) return `${reste}/${d}`;
   return `${entier} + ${reste}/${d}`;
 }
+/* L'écriture décimale exacte, virgule française (lot F1b) : 15/4 → « 3,75 », 7/5 → « 1,4 », 4/1 → « 4 ».
+   Calculée en entiers, chiffre par chiffre (jamais de flottant) ; null quand la fraction n'a pas
+   d'écriture décimale finie (1/3) — ce cas ne se présente pas : en écriture décimale la série ne
+   tire que des demis, des quarts et des cinquièmes. */
+function frDecimal(v){
+  const n = Math.abs(v.n), d = Math.abs(v.d);
+  let reste = n % d, chiffres = "";
+  while(reste && chiffres.length < 8){ reste *= 10; chiffres += String(Math.floor(reste / d)); reste %= d; }
+  if(reste) return null;
+  return (v.n < 0 ? "−" : "") + String(Math.floor(n / d)) + (chiffres ? "," + chiffres : "");
+}
 
 /* --- Les niveaux (tableau §4 de la conception F0) --- */
 function ufNiveau(n){
@@ -16361,6 +16403,27 @@ function ufNiveau(n){
   };
   return NIVEAUX[n] || NIVEAUX[1];
 }
+/* Lot F1b. Les dénominateurs du mode, et ceux qui ont une écriture décimale (2,5 · 3,75 · 1,4). */
+const UF_DENS = [2, 3, 4, 5, 6, 8];
+const UF_DENS_DECIMAUX = [2, 4, 5];
+/* Ce qu'une série tire : un préréglage (niveau 1 à 4, inchangé depuis le lot F1), ou les réglages
+   avancés — les dénominateurs cochés, une part ou plusieurs parts par disque, les parts peuvent
+   dépasser l'unité. En écriture décimale, seuls restent les demis, les quarts et les cinquièmes
+   (niveau 2 : des quarts ; niveau 4 : des cinquièmes) : toutes les cartes de la série s'écrivent
+   avec une virgule, jamais « 2,5 » à côté de « 2 + 3/8 ». */
+function ufNiveauDe(R){
+  let niv = R.niveau === "avance"
+    ? { dens:(R.dens || []).filter(d => UF_DENS.includes(d)), unitaires:R.parts !== "plusieurs", depasse:true }
+    : ufNiveau(R.niveau);
+  if(R.ecriture === "decimale") niv = { ...niv, dens:niv.dens.filter(d => UF_DENS_DECIMAUX.includes(d)) };
+  if(!niv.dens.length) niv = { ...niv, dens:[2] };
+  return niv;
+}
+/* Les noms des niveaux : en écriture décimale, les niveaux 2 et 4 disent ce qu'ils tirent. */
+const UF_NIVEAUX_NOMS = { 1:"1 — Demis", 2:"2 — Tiers et quarts", 3:"3 — Plusieurs parts sur un disque", 4:"4 — Cinquièmes à huitièmes" };
+const UF_NIVEAUX_NOMS_DECIMAUX = { 1:"1 — Demis", 2:"2 — Quarts", 3:"3 — Plusieurs parts sur un disque", 4:"4 — Cinquièmes" };
+const UF_NIVEAUX_AIDE = "1 : des demis · 2 : tiers et quarts, les parts dépassent l’unité · 3 : demis, tiers, quarts, plusieurs parts sur un disque · 4 : cinquièmes, sixièmes, huitièmes · Réglages avancés : les dénominateurs cochés";
+const UF_NIVEAUX_AIDE_DECIMALE = "1 : des demis (2,5) · 2 : des quarts, les parts dépassent l’unité (3,75) · 3 : demis et quarts, plusieurs parts sur un disque · 4 : des cinquièmes (1,4) · Réglages avancés : les dénominateurs cochés";
 /* La couleur des parts : [remplissage, contour]. Mêmes familles que les bandes et les disques de
    fractions du site (outils/fractions/), un ton plus soutenu (choix C du 15/10). */
 function ufCouleurs(d){
@@ -16379,6 +16442,66 @@ function ufReglagesAdresse(){
 function ufNiveauParDefaut(){
   const el = document.getElementById("fracNiveau");
   if(el) el.value = "1";
+  /* lot F1b : les réglages absents de l'adresse reprennent leur valeur par défaut */
+  const g = id => document.getElementById(id);
+  if(g("fracEcriture")) g("fracEcriture").value = "fraction";
+  if(g("fracParts")) g("fracParts").value = "une";
+  UF_DENS.forEach(d => { const b = g("fracDen" + d); if(b) b.checked = d === 2; });
+}
+/* Lot F1b : « ecriture=decimale », « dens=2,4 », « parts=plusieurs » — lus s'ils sont là, écrits
+   seulement hors de leur valeur par défaut : les adresses du lot F1 redonnent les mêmes cartes. */
+function ufLireDens(brut){
+  const voulus = String(brut || "").split(",").map(x => x.trim());
+  return UF_DENS.filter(d => voulus.includes(String(d)));
+}
+function ufLireAdresse(params){
+  const g = id => document.getElementById(id);
+  setSelectFromShare(params, "ecriture", g("fracEcriture"));
+  setSelectFromShare(params, "parts", g("fracParts"));
+  if(params.has("dens")){
+    const dens = ufLireDens(params.get("dens"));
+    if(dens.length) UF_DENS.forEach(d => { const b = g("fracDen" + d); if(b) b.checked = dens.includes(d); });
+  }
+  ufSyncAvance();
+}
+function ufEcrireAdresse(params){
+  const R = ufLireReglages();
+  if(R.ecriture === "decimale") params.set("ecriture", "decimale");
+  if(R.niveau === "avance"){
+    params.set("dens", R.dens.join(","));
+    if(R.parts === "plusieurs") params.set("parts", "plusieurs");
+  }
+}
+/* Les rangées « Parts » et « Disques » ne s'affichent qu'en « Réglages avancés » ; en écriture
+   décimale, les tiers, sixièmes et huitièmes sont grisés et les niveaux 2 et 4 changent de nom ;
+   au moins une case reste cochée (sinon : les demis). */
+function ufSyncAvance(){
+  const g = id => document.getElementById(id);
+  const niveau = g("fracNiveau"), ecriture = g("fracEcriture"), rows = g("fracAvanceRows");
+  if(!niveau || !ecriture) return;
+  const decimale = ecriture.value === "decimale", avance = niveau.value === "avance";
+  if(!avance) ufSyncAvance.dernier = niveau.value; /* le niveau quitté, pour ufPrepareAvance */
+  if(rows) rows.style.display = avance ? "" : "none";
+  UF_DENS.forEach(d => {
+    const b = g("fracDen" + d);
+    if(!b) return;
+    b.disabled = decimale && !UF_DENS_DECIMAUX.includes(d);
+    if(b.parentNode && b.parentNode.classList) b.parentNode.classList.toggle("grise", b.disabled);
+  });
+  if(!UF_DENS.some(d => { const b = g("fracDen" + d); return b && b.checked && !b.disabled; })){ const b = g("fracDen2"); if(b) b.checked = true; }
+  const noms = decimale ? UF_NIVEAUX_NOMS_DECIMAUX : UF_NIVEAUX_NOMS;
+  Array.from(niveau.options).forEach(o => { if(noms[o.value]) o.textContent = noms[o.value]; });
+  niveau.title = decimale ? UF_NIVEAUX_AIDE_DECIMALE : UF_NIVEAUX_AIDE;
+}
+/* Au passage d'un niveau à « Réglages avancés » (à la main), les cases partent du niveau quitté :
+   depuis le niveau 2, « 1/3 1/4, une part par disque ». */
+function ufPrepareAvance(precedent){
+  const g = id => document.getElementById(id);
+  const niveau = g("fracNiveau");
+  if(!niveau || niveau.value !== "avance" || precedent === "avance") return;
+  const niv = ufNiveau(Number(precedent));
+  UF_DENS.forEach(d => { const b = g("fracDen" + d); if(b) b.checked = niv.dens.includes(d); });
+  if(g("fracParts")) g("fracParts").value = niv.unitaires ? "une" : "plusieurs";
 }
 function ufTotalPlafond(visibleMax, hiddenMax){ return clamp(visibleMax + hiddenMax - 1, 1, 20); }
 function ufLireReglages(){
@@ -16388,13 +16511,19 @@ function ufLireReglages(){
     const v = brut === "" ? NaN : Number(brut);
     return clamp(Math.round(Number.isFinite(v) ? v : defaut), a, b);
   };
-  const niveau = lire("fracNiveau", 1, 1, 4);
+  const niveauEl = document.getElementById("fracNiveau");
+  const niveau = (niveauEl && niveauEl.value === "avance") ? "avance" : lire("fracNiveau", 1, 1, 4);
+  /* lot F1b */
+  const ecritureEl = document.getElementById("fracEcriture"), partsEl = document.getElementById("fracParts");
+  const ecriture = (ecritureEl && ecritureEl.value === "decimale") ? "decimale" : "fraction";
+  const parts = (partsEl && partsEl.value === "plusieurs") ? "plusieurs" : "une";
+  const dens = UF_DENS.filter(d => { const b = document.getElementById("fracDen" + d); return !!(b && b.checked && !b.disabled); });
   const visibleMax = lire("fracVisibleMax", 8, 1, 12);
   const hiddenMax = lire("fracHiddenMax", 6, 1, 10);
   let totalMin = lire("fracTotalMin", 3, 1, 20);
   let totalMax = lire("fracTotalMax", 10, 1, 20);
   if(totalMax < totalMin){ const t = totalMin; totalMin = totalMax; totalMax = t; }
-  return { niveau, visibleMax, hiddenMax, totalMin, totalMax };
+  return { niveau, ecriture, dens, parts, visibleMax, hiddenMax, totalMin, totalMax };
 }
 /* Comme les bornes du mode A : le total ne promet pas plus que les jetons et disques permis. */
 function ufSyncBornes(){
@@ -16464,17 +16593,19 @@ function ufComposer(rng, T, d, entier, niv, R){
   return ufCarte(T, d, visible, hidden, R, k === 0);
 }
 function ufCarte(T, d, visible, hidden, R, entier){
-  return {
-    family:"UF", total:T, den:d, visible, hidden,
-    _unit:{ tasks:1, visibleCount:visible.length, hiddenByTask:[hidden.slice()],
+  const u = { tasks:1, visibleCount:visible.length, hiddenByTask:[hidden.slice()],
       visibleValue:frSomme(visible), hiddenValue:frSomme(hidden), hiddenInteger:!!entier,
-      niveau:R.niveau, visibleMax:R.visibleMax, hiddenMax:R.hiddenMax, totalMin:R.totalMin, totalMax:R.totalMax }
-  };
+      niveau:R.niveau, visibleMax:R.visibleMax, hiddenMax:R.hiddenMax, totalMin:R.totalMin, totalMax:R.totalMax };
+  /* lot F1b : posés seulement hors de leur valeur par défaut — les cartes du lot F1 restent les mêmes, octet pour octet */
+  if(R.ecriture === "decimale") u.ecriture = "decimale";
+  if(R.niveau === "avance"){ u.dens = (R.dens || []).slice(); u.parts = R.parts === "plusieurs" ? "plusieurs" : "une"; }
+  return { family:"UF", total:T, den:d, visible, hidden, _unit:u };
 }
 /* Réglages donnés (testable sans page) : 500 essais comme genUnits, puis une carte de secours
    (total 1 : un demi, ou une part, de chaque côté) quand les réglages ne laissent rien. */
 function genUnitsFractionsAvec(rng, R){
-  const niv = ufNiveau(R.niveau);
+  /* un préréglage en écriture fraction passe par le chemin du lot F1, tel quel */
+  const niv = (R.niveau === "avance" || R.ecriture === "decimale") ? ufNiveauDe(R) : ufNiveau(R.niveau);
   const tMax = Math.max(1, Math.min(R.totalMax, ufTotalPlafond(R.visibleMax, R.hiddenMax)));
   const tMin = Math.max(1, Math.min(R.totalMin, tMax));
   for(let essai = 0; essai < 500; essai++){
@@ -16527,7 +16658,9 @@ function ufDessinerJeton(cible, mk, cx, cy, r, v){
 
 /* Écritures « 3 + 3/4 » en pièces : un nombre, une opération, une fraction en colonne. */
 const UF_POLICE = "SplatLettres, system-ui, -apple-system, \"Segoe UI\", Roboto, Arial";
-function ufPieces(v, d){
+function ufPieces(v, d, ecriture){
+  /* lot F1b : en écriture décimale, un seul nombre : « 3,75 » */
+  if(ecriture === "decimale"){ const t = frDecimal(v); if(t != null) return [{ t }]; }
   const { entier, reste } = frDecompose(v, d);
   if(!reste) return [{ t:String(entier) }];
   if(!entier) return [{ f:[reste, d] }];
@@ -16572,16 +16705,16 @@ function ufPoserPieces(g, mk, x, cy, pieces, fs, fsF, poids, couleur){
    reste se partage en proportion. Les largeurs se calculent sur l'écriture finale ET sur « ? » :
    le schéma ne bouge pas d'une étape à l'autre. Mêmes traits et mêmes hauteurs que le mode A. */
 const UF_BARRE = { hHaut:86, hBas:86, trait:4, gris:"rgba(0,0,0,0.10)", fsTotal:70, fsEntier:58, fsFrac:34, poids:900, marge:34 };
-function ufLargeurEcrit(e, d, B){
+function ufLargeurEcrit(e, d, B, ecriture){
   if(e == null) return 0;
   if(typeof e === "string") return ufLargeurTexte(e, e === "?" ? B.fsTotal : B.fsTotal * 1.2, e === "?" ? 900 : 400);
-  return ufLargeurPieces(ufPieces(e, d), B.fsEntier, B.fsFrac, B.poids);
+  return ufLargeurPieces(ufPieces(e, d, ecriture), B.fsEntier, B.fsFrac, B.poids);
 }
 function ufDessinerBarre(g, mk, o){
   const B = UF_BARRE;
   const valeurs = o.parts.map(p => Math.max(0, p.valeur.n / p.valeur.d));
   const somme = valeurs.reduce((a, b) => a + b, 0) || 1;
-  const minis = o.parts.map(p => Math.max(...p.mesures.map(e => ufLargeurEcrit(e, o.d, B))) + 2 * B.marge);
+  const minis = o.parts.map(p => Math.max(...p.mesures.map(e => ufLargeurEcrit(e, o.d, B, o.ecriture))) + 2 * B.marge);
   let unite = o.largeur / somme;
   valeurs.forEach((v, i) => { if(v > 0) unite = Math.max(unite, minis[i] / v); });
   let largeurs = valeurs.map(v => v * unite);
@@ -16612,7 +16745,7 @@ function ufDessinerBarre(g, mk, o){
             "font-family":"SplatLettres, 'Times New Roman', Times, serif", "font-style":"italic", "font-weight":"normal", fill:"var(--ink)" }
         : { "text-anchor":"middle", "dominant-baseline":"middle", "alignment-baseline":"middle", dy:"0.10em", "font-size":String(fs), "font-weight":"900", fill:"var(--ink)" }));
     }else if(p.ecrit){
-      const pieces = ufPieces(p.ecrit, o.d);
+      const pieces = ufPieces(p.ecrit, o.d, o.ecriture);
       const lp = ufLargeurPieces(pieces, B.fsEntier, B.fsFrac, B.poids);
       ufPoserPieces(g, mk, x + (lw - lp) / 2, cy, pieces, B.fsEntier, B.fsFrac, B.poids, "var(--ink)");
     }
@@ -16627,10 +16760,10 @@ function ufDessinerBarre(g, mk, o){
    seulement quand le visible s'écrit « entier + fraction ». */
 const UF_CALCUL = { fs:42, fsFrac:30, poids:700, ecart:30 };
 function ufPiecesCalcul(card){
-  const u = card._unit, d = card.den;
-  const vis = ufPieces(u.visibleValue, d);
+  const u = card._unit, d = card.den, ecriture = u.ecriture;
+  const vis = ufPieces(u.visibleValue, d, ecriture);
   const gauche = [{ t:String(card.total) }, { op:"−" }].concat(vis.length > 1 ? [{ t:"(" }].concat(vis, [{ t:")" }]) : vis);
-  return { gauche, droite:ufPieces(u.hiddenValue, d) };
+  return { gauche, droite:ufPieces(u.hiddenValue, d, ecriture) };
 }
 function ufDessinerCalcul(g, mk, card, centreX, cy){
   const C = UF_CALCUL;
@@ -16668,7 +16801,7 @@ function ufRendreCarte(card, revealState){
     const u = card._unit, inconnue = ufInconnue(card);
     const g = el("g", { id:"bottomBarModelAB" });
     const barre = ufDessinerBarre(g, mk, {
-      cx:1240, haut:260, minX:dx + k * (trayCfg.x + trayCfg.w) + 30, maxX:1570, largeur:520, d:card.den,
+      cx:1240, haut:260, minX:dx + k * (trayCfg.x + trayCfg.w) + 30, maxX:1570, largeur:520, d:card.den, ecriture:u.ecriture,
       total:revealState >= 2 ? String(card.total) : "",
       parts:[
         { valeur:u.visibleValue, cache:false, ecrit:revealState >= 2 ? u.visibleValue : null, mesures:[u.visibleValue] },
@@ -16717,12 +16850,22 @@ function ufRendreCarteImprimee(targetSvg, card, tEl, tText){
 }
 
 /* Les réglages relancent la série, comme ceux des autres modes. */
-["fracNiveau", "fracVisibleMax", "fracHiddenMax", "fracTotalMin", "fracTotalMax"].forEach(id => {
+["fracNiveau", "fracVisibleMax", "fracHiddenMax", "fracTotalMin", "fracTotalMax", "fracEcriture", "fracParts"]
+  .concat(UF_DENS.map(d => "fracDen" + d)).forEach(id => {
   const champ = document.getElementById(id);
   if(!champ) return;
   champ.addEventListener("input", scheduleAutoGenerate);
   champ.addEventListener("change", scheduleAutoGenerate);
 });
+/* lot F1b : les rangées avancées et les noms des niveaux suivent le menu sans attendre la série */
+(() => {
+  const niveau = document.getElementById("fracNiveau");
+  if(niveau) niveau.addEventListener("change", () => { ufPrepareAvance(ufSyncAvance.dernier || "1"); ufSyncAvance(); });
+  ["fracEcriture"].concat(UF_DENS.map(d => "fracDen" + d)).forEach(id => {
+    const champ = document.getElementById(id);
+    if(champ) champ.addEventListener("change", ufSyncAvance);
+  });
+})();
 
 if(!loadSharedConfiguration()){
   syncSettingsUI();
