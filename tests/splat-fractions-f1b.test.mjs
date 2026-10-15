@@ -105,10 +105,10 @@ test("en décimale, les niveaux sont filtrés : 1 demis · 2 quarts · 3 demis e
     assert.equal(niv.unitaires, ufNiveau(n).unitaires);
     assert.equal(niv.depasse, ufNiveau(n).depasse);
   }
-  assert.equal(UF_NIVEAUX_NOMS_DECIMAUX[2], "2 — Quarts");
-  assert.equal(UF_NIVEAUX_NOMS_DECIMAUX[4], "4 — Cinquièmes");
+  assert.equal(UF_NIVEAUX_NOMS_DECIMAUX[2], "2 — Quarts, on regroupe");
+  assert.equal(UF_NIVEAUX_NOMS_DECIMAUX[4], "4 — Cinquièmes, plusieurs parts");
   assert.equal(UF_NIVEAUX_NOMS_DECIMAUX[1], UF_NIVEAUX_NOMS[1]);
-  assert.equal(UF_NIVEAUX_NOMS_DECIMAUX[3], UF_NIVEAUX_NOMS[3]);
+  assert.equal(UF_NIVEAUX_NOMS_DECIMAUX[3], "3 — Demis et quarts, plusieurs parts");
   for(const n of [1, 2, 3, 4]) assert.ok(html.includes(`<option value="${n}"${n === 1 ? " selected" : ""}>${UF_NIVEAUX_NOMS[n]}</option>`), `le menu porte le nom du niveau ${n}`);
 });
 

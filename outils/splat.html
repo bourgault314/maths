@@ -796,6 +796,33 @@
      chiffres, eux, restent centrés. L'écran d'ordinateur garde sa taille,
      plus bas : ses cases de 66 px n'avaient pas ce défaut. */
   .eleveMiniTache{position:absolute;left:2px;top:2px;width:14px;height:10px;opacity:.8;pointer-events:none}
+  /* ===== A — Jetons et parts, mode élève (lot F2, 15/10/2026) =====
+     Une valeur = trois cases (entier + numérateur / dénominateur, la barre est tracée) ou, en écriture
+     décimale, une seule case. Toutes les cases d'une ligne ont la même largeur : des largeurs
+     proportionnelles donneraient la réponse. Au pavé, chaque petite case est une zone (.ufBoite). */
+  .ufCase{gap:6px;padding:4px 2px;flex-wrap:nowrap}
+  .ufSaisie{display:inline-flex;align-items:center;gap:5px}
+  .ufBoite{display:inline-flex;width:38px;height:36px;border:2px solid #334155;border-radius:7px;background:#fff;overflow:hidden}
+  .ufBoite.large{width:84px}
+  .ufBoite input.eleveChamp{font-size:22px;height:100%}
+  .ufFr{display:inline-flex;flex-direction:column;align-items:center;gap:2px}
+  .ufBarre{display:block;width:100%;height:3px;background:#000;border-radius:2px}
+  .ufPlus{font-size:22px;line-height:1;color:#111}
+  .ufCase:focus-within{box-shadow:none}
+  .ufCase.ko:focus-within{box-shadow:inset 0 0 0 999px #fee2e2}
+  .ufBoite:focus-within{box-shadow:0 0 0 3px #60a5fa;border-color:#2563eb}
+  .ufCase.ko .ufBoite{background:#fee2e2}
+  /* après une erreur, chaque petite case reste rose et rouge tant qu'on n'y a pas retapé (.ufFaux, voir ufValiderCase) :
+     corriger l'entier ne fait pas passer en blanc un numérateur encore faux */
+  .ufBoite.ufFaux{background:#fee2e2}
+  .ufBoite.ufFaux input.eleveChamp{background:transparent;color:#b91c1c}
+  body.eleve-pave .ufBoite.ufFaux.mg-pave-case-active{background:#fee2e2} /* rose aussi quand elle est active, comme une case rouge du mode A */
+  .ufCase.ok .ufBoite{background:#dcfce7;border-color:#15803d}
+  .ufCase.montre .ufBoite{border-color:#b91c1c}
+  @media (max-width:520px){.ufBoite{width:32px;height:38px}.ufBoite.large{width:68px}.ufBoite input.eleveChamp{font-size:19px}.ufPlus{font-size:19px}.ufCase{gap:3px}.ufSaisie{gap:3px}}
+  body.eleve-pave .ufBoite.mg-pave-case-active{box-shadow:0 0 0 3px #2563eb;border-color:#2563eb;background:#eff6ff}
+  body.eleve-pave .ufCase.ok .ufBoite.mg-pave-case-active, body.eleve-pave .ufCase.montre .ufBoite.mg-pave-case-active{box-shadow:none;border-color:#15803d;background:#dcfce7} /* carte finie : plus de case active */
+  body.eleve-pave .ufCase.montre .ufBoite.mg-pave-case-active{border-color:#b91c1c;background:#fff}
   /* ===== Enquête (lot E2) : une case par tache, de largeur égale =====
      Dans le coin haut-gauche de chaque case : la mini-tache À SA COULEUR et le nom de
      la couleur (à 14 px, noire, violette et bleue se ressemblent ; un élève daltonien
@@ -901,6 +928,7 @@
   /* Écran d'ordinateur : tableau aux proportions du téléphone (lignes hautes, gros chiffres), textes plus lisibles. Téléphone inchangé. */
   @media (min-width:1000px) and (min-height:700px){
     body.eleve-mode #svgWrap{height:min(46vh,520px)}
+    body.eleve-mode.eleve-uf-fr #svgWrap{height:min(42vh,520px)}
     body.eleve-mode .eleveCase{min-height:66px;font-size:32px}
     body.eleve-mode .eleveMiniTache{left:6px;top:5px;width:22px;height:16px}
     body.eleve-mode .eleveTacheNom{gap:4px;font-size:13px}
@@ -980,7 +1008,7 @@
 <script defer src="../assets/js/mention-confidentialite.js"></script>
 <!-- Sans « defer » : la page dessine sa première carte pendant le chargement,
      le pavé doit déjà exister à ce moment-là. -->
-<script src="../assets/js/mathsgo-pave-chiffres.js?v=20260918-1"></script>
+<script src="../assets/js/mathsgo-pave-chiffres.js?v=20261015-1"></script>
 <!-- Le texte du bouton « Étape suivante ▶ » de l'écran de fin (lot A). -->
 <script src="../assets/js/splat-etapes.js?v=20261014-3"></script>
 <!-- Le parcours de l'élève (moteur partagé avec la carte des mondes et le serveur de suivi), et
@@ -1053,7 +1081,7 @@
     <label>Type d’activité</label>
     <select id="activity">
       <option value="U">A — Jetons</option>
-      <option value="UF">A fraction — Jetons et parts</option>
+      <option value="UF">A — Jetons et parts</option>
       <option value="UPM">A± — Jetons relatifs</option>
       <option value="N">B — Paquets de jetons</option>
       <option value="NPM">B± — Paquets de jetons relatifs</option>
@@ -1140,11 +1168,12 @@
          graine et « Copier le lien » sont ceux de A / A± (rangée unitSeedShareRow). -->
     <div id="fractionSettings" style="display:none">
       <label for="fracNiveau">Niveau</label>
-      <select id="fracNiveau" title="1 : des demis · 2 : tiers et quarts, les parts dépassent l’unité · 3 : demis, tiers, quarts, plusieurs parts sur un disque · 4 : cinquièmes, sixièmes, huitièmes · Réglages avancés : les dénominateurs cochés">
-        <option value="1" selected>1 — Demis</option>
-        <option value="2">2 — Tiers et quarts</option>
-        <option value="3">3 — Plusieurs parts sur un disque</option>
-        <option value="4">4 — Cinquièmes à huitièmes</option>
+      <select id="fracNiveau" title="1 : des demis, une part par disque · 2 : tiers et quarts, les parts dépassent l’unité : on regroupe · 3 : demis, tiers, quarts, plusieurs parts sur un disque · 4 : cinquièmes à huitièmes, plusieurs parts · 5 : tous les dénominateurs mélangés · Réglages avancés : les dénominateurs cochés">
+        <option value="1" selected>1 — Demis, une part par disque</option>
+        <option value="2">2 — Tiers et quarts, on regroupe</option>
+        <option value="3">3 — Demis, tiers, quarts, plusieurs parts</option>
+        <option value="4">4 — Cinquièmes à huitièmes, plusieurs parts</option>
+        <option value="5">5 — Tout mélangé</option>
         <option value="avance">Réglages avancés</option>
       </select>
       <!-- lot F1b (15/10/2026) : « Réglages avancés » (les dénominateurs cochés, une part ou
@@ -2257,8 +2286,9 @@ function syncPrintModeUI(){
   const worksheetOpt = sel.querySelector('option[value="worksheet"]');
   const duplexWorksheetOpt = sel.querySelector('option[value="duplex-worksheet"]');
   // les corrections courtes 6/page : modes A et B seulement (schéma en barres + équation)
-  sel.querySelectorAll('option[value="correction-equation"], option[value="correction-schema"]').forEach(opt => { opt.disabled = kind !== "table"; });
-  if(kind !== "table" && sixCorrectionPart(sel.value)) sel.value = "correction";
+  const sixOk = kind === "table" || act === "UF"; /* lot F2 : A — Jetons et parts a aussi ses deux corrections 6/page */
+  sel.querySelectorAll('option[value="correction-equation"], option[value="correction-schema"]').forEach(opt => { opt.disabled = !sixOk; });
+  if(!sixOk && sixCorrectionPart(sel.value)) sel.value = "correction";
   if(worksheetOpt){
     worksheetOpt.textContent = kind === "aid" ? "Énoncé + aide" : "Énoncé + schéma à remplir";
     worksheetOpt.disabled = !kind;
@@ -2270,8 +2300,8 @@ function syncPrintModeUI(){
   // un choix devenu sans objet retombe sur le choix voisin
   if(!kind && sel.value === "worksheet") sel.value = "statement";
   if(!kind && sel.value === "duplex-worksheet") sel.value = "duplex-correction";
-  /* A fraction (lot F1) : l'énoncé seul, en 4, 2 ou 1 par page — les corrections et le
-     6/page viennent avec le lot F2 */
+  /* A fraction : l'énoncé seul (4, 2, 1 ou 6 par page) et, depuis le lot F2, les deux corrections
+     courtes 6/page (le schéma, l'équation) */
   ufSyncImpression(sel, act === "UF");
   sel.title = kind === "aid"
     ? "Choisir ce qui partira à l’imprimante : énoncé, aide ou correction"
@@ -13170,7 +13200,7 @@ function renderCardIntoSvg(targetSvg, card, printMode, opts = {}){
   targetSvg.appendChild(tEl("rect",{x:0,y:0,width:opts.sixColonne ? SIX_COLONNE.largeur : W,height:H,rx:26,fill:"#fff"}));
 
   /* A fraction (lot F1) : l'énoncé imprimé (ufRendreCarteImprimee), seul choix d'impression du lot */
-  if(card && card.family === "UF"){ ufRendreCarteImprimee(targetSvg, card, tEl, tText); return; }
+  if(card && card.family === "UF"){ ufRendreCarteImprimee(targetSvg, card, tEl, tText, { sixColonne:!!opts.sixColonne, corrige:revealAnswers }); return; }
 
   if(deuxParPage){
     const ctx = { mkEl:tEl, mkText:tText, isPrint:true, lettres:!numberedQuestionMarkMode };
@@ -14068,7 +14098,7 @@ const SIX_COLONNE = { largeur:2000, hauteur:730, plateauX:90, plateauY:40, plate
 const SIX_COLONNE_VIEWBOX = `0 0 ${SIX_COLONNE.largeur} ${SIX_COLONNE.hauteur}`;
 
 function sixColonneFamille(card){
-  return !!card && ["U", "UPM", "N", "NPM"].includes(card.family);
+  return !!card && ["U", "UPM", "N", "NPM", "UF"].includes(card.family);
 }
 
 /* La case réponse, sur UNE ligne : l'inconnue de la carte, « = », puis des pointillés (8 mm) où
@@ -14500,7 +14530,8 @@ function renderSixCorrectionIntoSvg(targetSvg, card, part){
   mk.text = (x, y, t, a = {}) => { const n = mk.el("text", {x, y, ...a}); n.textContent = t; return n; };
   const g = mk.el("g", { id: "sixCorrection", transform: `translate(${SIX_CORRECTION_DX} ${SIX_CORRECTION_DY})` });
   const varChar = getNumberedDisplayVarChar(card);
-  if(part === "equation") drawSixCorrectionEquation(g, card, varChar, mk);
+  if(card.family === "UF") ufSixCorrection(g, card, part, mk); /* A — Jetons et parts (lot F2) */
+  else if(part === "equation") drawSixCorrectionEquation(g, card, varChar, mk);
   else drawSixCorrectionSchema(g, card, varChar, mk);
   targetSvg.appendChild(g);
 }
@@ -14876,6 +14907,7 @@ function eleveCadrerScene(){
 }
 
 function eleveInfosCarte(card){
+  ufClasseCorpsEleve(card); /* A — Jetons et parts (lot F2) : la classe du corps suit la carte */
   if(!card) return null;
   if(card.family === "U" && card._unit){
     return { tasks: card._unit.tasks, H: card._unit.hiddenPerTask, visibleSum: card._unit.visibleCount };
@@ -14883,6 +14915,12 @@ function eleveInfosCarte(card){
   if(card.family === "N" && card._num){
     const visibleSum = (card.visible || []).reduce((s, v) => s + v, 0);
     return { tasks: card._num.tasks, H: card._num.H, visibleSum };
+  }
+  /* A — Jetons et parts (lot F2) : une tache, des valeurs rationnelles ; H et visibleSum en flottants
+     servent seulement à écarter une carte vide, jamais à comparer une réponse */
+  if(card.family === "UF" && card._unit && card._unit.hiddenValue){
+    const h = card._unit.hiddenValue, v = card._unit.visibleValue;
+    return { tasks: 1, uf: true, H: h.n / h.d, visibleSum: v.n / v.d };
   }
   return null;
 }
@@ -15171,11 +15209,13 @@ function elevePaveActiver(panneau){
   if(!champs.length) return null;
   document.body.classList.add("eleve-pave");
   pave.brancher(champs, {
-    zone: champ => champ.closest(".eleveCase"),
+    zone: champ => champ.closest(".ufBoite") || champ.closest(".eleveCase"), /* A — Jetons et parts : chaque petite case est une zone */
     /* case rouge (validation fausse) : le premier chiffre remplace le nombre
        faux ; la page retire le rouge à la saisie, la suite s'ajoute */
-    aRemplacer: champ => { const c = champ.closest(".eleveCase"); return !!(c && c.classList.contains("ko")); }
+    aRemplacer: champ => { const b = champ.closest(".ufBoite"); if(b) return b.classList.contains("ufFaux"); /* A — Jetons et parts : chaque petite case */
+      const c = champ.closest(".eleveCase"); return !!(c && c.classList.contains("ko")); }
   });
+  if(pave.touche && typeof ufToucheDuPave === "function") pave.touche(ufToucheDuPave(panneau)); /* « ▶ » en fraction, « , » en décimale, rien ailleurs */
   pave.afficher();
   elevePaveMesurer();
   document.body.classList.toggle("eleve-pave-serre", elevePaveSerre);
@@ -15292,6 +15332,8 @@ function renderEleveSplat(){
        une case par tache */
     haut = ((enquete.systeme && sysTotalCache(card)) || enqueteSansCase(card)) ? ""
       : eleveCaseDonneeHtml("haut blanche", "Total", card.total);
+  }else if(infos.uf){
+    const uf = ufCasesEleve(card); bas = uf.bas; haut = uf.haut; /* A — Jetons et parts (lot F2) */
   }else{
     const flexVis = Math.max(infos.visibleSum, card.total * 0.05, 1);
     const flexHid = Math.max(infos.H, card.total * 0.05, 1);
@@ -15344,7 +15386,8 @@ function eleveValiderSplat(){
     const inp = c.querySelector(".eleveChamp");
     if(!inp) return; /* case donnée (Enquête : total, jetons visibles) : rien à vérifier */
     const repondu = parseInt(String(inp.value).trim(), 10);
-    const juste = Number.isFinite(repondu) && repondu === attendu;
+    /* A — Jetons et parts (lot F2) : comparaison de fractions exactes, jamais de flottant */
+    const juste = c.classList.contains("ufCase") ? ufValiderCase(c) : (Number.isFinite(repondu) && repondu === attendu);
     c.classList.toggle("ko", !juste);
     c.classList.toggle("ok", juste);
     if(!juste) toutJuste = false;
@@ -15361,7 +15404,7 @@ function eleveValiderSplat(){
     bouton.hidden = true;
     msg.textContent = eleveMessageJuste(eleveCarteFautee);
     msg.className = "eleveMsg bravo";
-    casesE.forEach(c => { const i = c.querySelector(".eleveChamp"); if(i) i.readOnly = true; });
+    casesE.forEach(c => c.querySelectorAll(".eleveChamp").forEach(i => { i.readOnly = true; }));
     eleveSauverEnCours();
     eleveDevoilerTache();
     eleveProposerSchema(bouton); /* Enquête seulement : « Voir le schéma » avant « Carte suivante » */
@@ -15426,6 +15469,7 @@ function eleveDevoilerTache(){
   document.querySelectorAll("#mainSvg path").forEach(p => {
     if((p.getAttribute("fill") || "") === "var(--splat-cover)") p.classList.add("eleveDevoile");
   });
+  ufEtiquetteUniteEcran(eleveSerie[eleveIdx]); /* A — Jetons et parts : « 1 = 8/8 » (lot F2) ; sans effet ailleurs */
   /* Enquête : chaque tache a sa couleur (pas « --splat-cover ») et son nom doit
      monter au-dessus du jeton — c'est le dévoilement de la projection, redessiné
      avec le fondu de la couverture (voir eleveDevoileC dans renderCard). */
@@ -16098,6 +16142,11 @@ function jumelleCle(c, facteurLibre){
     const m = c._num || {};
     return JSON.stringify(["N", m.tasks, (c.visible || []).length]);
   }
+  /* A — Jetons et parts (lot F2) : même réglage de série, même dénominateur, même sorte de caché (entier ou non) */
+  if(c.family === "UF"){
+    const u = c._unit || {};
+    return JSON.stringify(["UF", u.niveau, u.ecriture || "", u.dens || [], u.parts || "", c.den, !!u.hiddenInteger]);
+  }
   if(c.family === "C"){
     const R = c._rel || {};
     return JSON.stringify(["C", c._colorMap, (c.visible || []).length, R.structure, !!R.sansTotal,
@@ -16118,6 +16167,8 @@ function jumelleReponses(c){
   if(c.family === "D"){ const S = c._sys; return S.colors.filter(k => S.boards.some(b => b.counts[k])).map(k => S.values[k]); }
   /* jetons unité : « hidden » compte les jetons un par un, la réponse est ce que cache une tache */
   if(c.family === "U") return ((c._unit && c._unit.hiddenByTask) || []).map(v => Array.isArray(v) ? v.length : Number(v) || 0);
+  /* A — Jetons et parts : la valeur cachée, en flottant (comparaison de « changée » seulement : la validation est exacte) */
+  if(c.family === "UF") return c._unit && c._unit.hiddenValue ? [c._unit.hiddenValue.n / c._unit.hiddenValue.d] : [];
   return (c.hidden || []).slice();
 }
 /* Tous les nombres changent : ceux à trouver, les totaux, les jetons visibles, les écarts des
@@ -16132,7 +16183,8 @@ function jumelleNombresChanges(o, t){
   else if(!(o._rel && o._rel.sansTotal) && o.total === t.total) return false;
   /* les jetons visibles aussi, quand il y en a */
   const vus = c => c.family === "D" ? c._sys.boards.map(B => (B.visible || []).reduce((s, x) => s + x, 0)).join("|")
-    : (c.family === "U" ? (c.visible || []).length : (c.visible || []).reduce((s, x) => s + x, 0));
+    : (c.family === "UF" ? c._unit.visibleValue.n + "/" + c._unit.visibleValue.d
+      : (c.family === "U" ? (c.visible || []).length : (c.visible || []).reduce((s, x) => s + x, 0)));
   if((o.visible || []).length && vus(o) === vus(t)) return false;
   if(o.family === "D" && o._sys.boards.some(B => (B.visible || []).length) && vus(o) === vus(t)) return false;
   if(o.family !== "C") return true;
@@ -16165,6 +16217,7 @@ function jumelleResserrer(o){
 function jumelleTirer(o, rng, essai){
   if(o.family === "U") return isUnitEquationPresetActive() ? genUnitsEquationPreset(rng) : genUnits(rng);
   if(o.family === "N") return isNumberedEquationPresetActive() ? genNumberedEquationPreset(rng) : genNumbered(rng);
+  if(o.family === "UF") return genUnitsFractions(rng); /* lot F2 : les réglages de la page (niveau, écriture, dénominateurs) */
   if(o.family === "C"){
     /* taches répétées : la couleur de chaque tache dépend aussi de l'ordre des couleurs tirées */
     const ordres = jumellePermutations([...new Set(o._colorMap)]);
@@ -16234,7 +16287,8 @@ function eleveMontrerReponse(){
   document.querySelectorAll("#elevePanel .eleveCase").forEach(c => {
     const inp = c.querySelector(".eleveChamp");
     if(!inp) return; /* case donnée (Enquête) */
-    inp.value = c.getAttribute("data-attendu"); inp.readOnly = true;
+    if(c.classList.contains("ufCase")) ufRemplirReponse(c, eleveSerie[eleveIdx]);
+    else{ inp.value = c.getAttribute("data-attendu"); inp.readOnly = true; }
     c.classList.remove("ko", "ok");
     c.classList.add("montre");
   });
@@ -16399,7 +16453,8 @@ function ufNiveau(n){
     1: { dens:[2], unitaires:true, depasse:false },     /* demis ; les parts visibles ne dépassent pas l'unité */
     2: { dens:[3, 4], unitaires:true, depasse:true },   /* tiers et quarts ; 5 quarts : il faut regrouper */
     3: { dens:[2, 3, 4], unitaires:false, depasse:true }, /* plusieurs parts sur un disque (2/3, 3/4…) */
-    4: { dens:[5, 6, 8], unitaires:false, depasse:true }  /* cinquièmes, sixièmes, huitièmes */
+    4: { dens:[5, 6, 8], unitaires:false, depasse:true }, /* cinquièmes, sixièmes, huitièmes */
+    5: { dens:[2, 3, 4, 5, 6, 8], unitaires:false, depasse:true } /* lot F2 : tout mélangé — le tirage des réglages avancés, tout coché, plusieurs parts */
   };
   return NIVEAUX[n] || NIVEAUX[1];
 }
@@ -16420,10 +16475,10 @@ function ufNiveauDe(R){
   return niv;
 }
 /* Les noms des niveaux : en écriture décimale, les niveaux 2 et 4 disent ce qu'ils tirent. */
-const UF_NIVEAUX_NOMS = { 1:"1 — Demis", 2:"2 — Tiers et quarts", 3:"3 — Plusieurs parts sur un disque", 4:"4 — Cinquièmes à huitièmes" };
-const UF_NIVEAUX_NOMS_DECIMAUX = { 1:"1 — Demis", 2:"2 — Quarts", 3:"3 — Plusieurs parts sur un disque", 4:"4 — Cinquièmes" };
-const UF_NIVEAUX_AIDE = "1 : des demis · 2 : tiers et quarts, les parts dépassent l’unité · 3 : demis, tiers, quarts, plusieurs parts sur un disque · 4 : cinquièmes, sixièmes, huitièmes · Réglages avancés : les dénominateurs cochés";
-const UF_NIVEAUX_AIDE_DECIMALE = "1 : des demis (2,5) · 2 : des quarts, les parts dépassent l’unité (3,75) · 3 : demis et quarts, plusieurs parts sur un disque · 4 : des cinquièmes (1,4) · Réglages avancés : les dénominateurs cochés";
+const UF_NIVEAUX_NOMS = { 1:"1 — Demis, une part par disque", 2:"2 — Tiers et quarts, on regroupe", 3:"3 — Demis, tiers, quarts, plusieurs parts", 4:"4 — Cinquièmes à huitièmes, plusieurs parts", 5:"5 — Tout mélangé" };
+const UF_NIVEAUX_NOMS_DECIMAUX = { 1:"1 — Demis, une part par disque", 2:"2 — Quarts, on regroupe", 3:"3 — Demis et quarts, plusieurs parts", 4:"4 — Cinquièmes, plusieurs parts", 5:"5 — Tout mélangé" };
+const UF_NIVEAUX_AIDE = "1 : des demis, une part par disque · 2 : tiers et quarts, les parts dépassent l’unité : on regroupe · 3 : demis, tiers, quarts, plusieurs parts sur un disque · 4 : cinquièmes à huitièmes, plusieurs parts · 5 : tous les dénominateurs mélangés · Réglages avancés : les dénominateurs cochés";
+const UF_NIVEAUX_AIDE_DECIMALE = "1 : des demis (2,5) · 2 : des quarts, les parts dépassent l’unité : on regroupe (3,75) · 3 : demis et quarts, plusieurs parts sur un disque · 4 : des cinquièmes, plusieurs parts (1,4) · 5 : demis, quarts et cinquièmes mélangés · Réglages avancés : les dénominateurs cochés";
 /* La couleur des parts : [remplissage, contour]. Mêmes familles que les bandes et les disques de
    fractions du site (outils/fractions/), un ton plus soutenu (choix C du 15/10). */
 function ufCouleurs(d){
@@ -16512,7 +16567,7 @@ function ufLireReglages(){
     return clamp(Math.round(Number.isFinite(v) ? v : defaut), a, b);
   };
   const niveauEl = document.getElementById("fracNiveau");
-  const niveau = (niveauEl && niveauEl.value === "avance") ? "avance" : lire("fracNiveau", 1, 1, 4);
+  const niveau = (niveauEl && niveauEl.value === "avance") ? "avance" : lire("fracNiveau", 1, 1, 5);
   /* lot F1b */
   const ecritureEl = document.getElementById("fracEcriture"), partsEl = document.getElementById("fracParts");
   const ecriture = (ecritureEl && ecritureEl.value === "decimale") ? "decimale" : "fraction";
@@ -16535,22 +16590,17 @@ function ufSyncBornes(){
   aEl.value = String(Math.min(R.totalMin, plafond));
   bEl.value = String(Math.min(R.totalMax, plafond));
 }
-/* L'impression du lot F1 : l'énoncé seul, en 4, 2 ou 1 par page. Les autres choix sont grisés en
-   A fraction et reviennent tels quels dans les autres modes. */
+/* L'impression en A fraction : l'énoncé et les deux corrections courtes (schéma, équation), en 6, 4,
+   2 ou 1 par page. Les autres choix sont grisés et reviennent tels quels dans les autres modes. */
 function ufSyncImpression(sel, actif){
   if(!sel) return;
   sel.querySelectorAll('option[value="correction"], option[value="duplex-correction"]').forEach(opt => { opt.disabled = actif; });
   if(actif){
-    sel.querySelectorAll('option[value="worksheet"], option[value="duplex-worksheet"], option[value="correction-equation"], option[value="correction-schema"]')
-      .forEach(opt => { opt.disabled = true; });
-    if(sel.value !== "statement") sel.value = "statement";
+    sel.querySelectorAll('option[value="worksheet"], option[value="duplex-worksheet"]').forEach(opt => { opt.disabled = true; });
+    sel.querySelectorAll('option[value="correction-equation"], option[value="correction-schema"]').forEach(opt => { opt.disabled = false; });
+    if(!["statement", "correction-equation", "correction-schema"].includes(sel.value)) sel.value = "statement";
   }
-  const pages = document.getElementById("printCardsPerPage");
-  const six = pages ? pages.querySelector('option[value="6"]') : null;
-  if(six) six.disabled = actif;
-  if(actif && pages && pages.value === "6") pages.value = "4";
 }
-
 /* --- Le générateur --- */
 /* P parts de d-ièmes réparties sur des disques de 1 à d − 1 parts (jamais un disque plein : un
    disque plein est un jeton entier). Le moins de disques possible, ou un de plus : les disques
@@ -16820,33 +16870,291 @@ function ufRendreCarte(card, revealState){
     if(devoile) layer.appendChild(el("path", { d:blobPath(s.cx, s.cy, s.r), fill:"var(--splat-cover)", stroke:"none", "class":"anim-fade-out" }));
   }
   card.visible.forEach((v, i) => ufDessinerJeton(layer, mk, card._posV?.[i]?.cx ?? (450 + i * 40), card._posV?.[i]?.cy ?? 360, beadR, v));
+  if(devoile) ufEtiquetteUniteEcran(card); /* lot F2 : « 1 = 8/8 » */
 }
 
-/* L'énoncé imprimé (1, 2 ou 4 par page) : le TOTAL et le plateau du mode A imprimé
+/* L'énoncé imprimé (1, 2, 4 ou 6 par page) : le TOTAL et le plateau du mode A imprimé
    (renderCardIntoSvg), à la même place ; les jetons entiers en bleu franc, les parts dans leur
-   couleur, contour foncé : lisible en noir et blanc. */
-function ufRendreCarteImprimee(targetSvg, card, tEl, tText){
+   couleur, contour foncé : lisible en noir et blanc.
+   Lot F2 (15/10/2026) :
+   - opts.sixColonne : le 6/page des modes A et B — le plateau remonte, le TOTAL passe dans la colonne de
+     droite, la case réponse « ? = ……… » en bas de la colonne (voir SIX_COLONNE) ;
+   - opts.corrige : le plateau de la correction — la tache levée (on voit ce qu'elle cachait), la valeur
+     dans la case réponse, et « 1 = 8/8 » près d'un jeton entier. L'énoncé, lui, ne change pas d'un trait. */
+function ufRendreCarteImprimee(targetSvg, card, tEl, tText, opts){
+  opts = opts || {};
   const mk = { el:tEl, text:tText };
   const printTray = getPrintTrayConfig(card.family);
+  const six = !!opts.sixColonne;
+  const racine = targetSvg;
+  if(six){
+    targetSvg = tEl("g", { id:"plateauSixPrint", transform:`translate(${SIX_COLONNE.plateauX - printTray.x} ${SIX_COLONNE.plateauY - printTray.y})` });
+    racine.appendChild(targetSvg);
+  }
   targetSvg.appendChild(tEl("rect", { x:printTray.x, y:printTray.y, width:printTray.w, height:printTray.h,
     rx:30, fill:"#fff", stroke:"#334155", "stroke-width":"8" }));
-  const tx = 800, ty = 92;
+  const tx = six ? SIX_COLONNE.colonneX + SIX_COLONNE.colonneW / 2 : 800, ty = six ? SIX_COLONNE.plateauY + 70 : 92;
+  const boxW = six ? SIX_COLONNE.colonneW : 280;
+  const hoteTotal = six ? racine : targetSvg;
   const g = tEl("g", { id:"totalGroupPrint" });
   g.appendChild(tText(tx, ty, "TOTAL", { "text-anchor":"middle", "font-size":"42", fill:"rgba(0,0,0,0.92)", "font-weight":"900", "letter-spacing":"2" }));
   g.appendChild(tText(tx, ty + 83, String(card.total), { "text-anchor":"middle", "font-size":"96", fill:"#000", "font-weight":"900" }));
-  targetSvg.appendChild(g);
-  targetSvg.insertBefore(tEl("rect", { x:tx - 140, y:ty - 70, width:280, height:210, rx:22,
+  hoteTotal.appendChild(g);
+  hoteTotal.insertBefore(tEl("rect", { x:tx - boxW / 2, y:ty - 70, width:boxW, height:210, rx:22,
     fill:"rgba(0,0,0,0.02)", stroke:"rgba(0,0,0,0.22)", "stroke-width":"4" }), g);
   const beadR = card._beadR ?? 56;
+  const poses = [];
   const poser = (p, v) => {
     const { cx, cy } = fitPrintTokenToTray(p.cx, p.cy + printTray.offsetY, beadR, printTray, 4);
     ufDessinerJeton(targetSvg, mk, cx, cy, beadR, v);
+    poses.push({ v, cx, cy });
   };
+  const nV = card.visible.length;
   card.hidden.forEach((v, i) => poser(card._posH?.[i] || { cx:820, cy:610 }, v));
   for(const s of (card._splats || [{ cx:820, cy:610, r:220 }])){
-    targetSvg.appendChild(tEl("path", { d:blobPath(s.cx, s.cy + printTray.offsetY, s.r), fill:"rgb(0,0,0)", stroke:"rgba(0,0,0,0.18)", "stroke-width":"5" }));
+    targetSvg.appendChild(tEl("path", { d:blobPath(s.cx, s.cy + printTray.offsetY, s.r), fill:opts.corrige ? "rgba(210,210,210,0.35)" : "rgb(0,0,0)",
+      stroke:"rgba(0,0,0,0.18)", "stroke-width":"5" }));
   }
   card.visible.forEach((v, i) => poser(card._posV?.[i] || { cx:450 + i * 40, cy:360 }, v));
+  if(opts.corrige){
+    /* l'ordre de la liste : les jetons visibles d'abord, puis les cachés */
+    const jetons = poses.slice(card.hidden.length).concat(poses.slice(0, card.hidden.length));
+    ufDessinerEtiquetteUnite(targetSvg, mk, card, jetons, beadR, { x:printTray.x, y:printTray.y, w:printTray.w, h:printTray.h }, "#0f172a");
+  }
+  if(six) ufDessinerReponseSix(racine, card, tEl, tText, !!opts.corrige);
+}
+/* La case réponse du 6/page, en bas de la colonne : l'inconnue, « = », des pointillés où l'élève écrit
+   (la valeur en correction, à la taille que la place permet : « 4 + 5/6 » tient dans la colonne). */
+function ufDessinerReponseSix(hote, card, tEl, tText, corrige){
+  const C = SIX_COLONNE;
+  const x = C.colonneX, y = C.plateauY + C.plateauH - C.reponseH, milieu = y + C.reponseH / 2;
+  const g = tEl("g", { id:"reponseGroupPrint" });
+  g.appendChild(tEl("rect", { x, y, width:C.colonneW, height:C.reponseH, rx:22, fill:"#fff", stroke:"rgba(0,0,0,0.22)", "stroke-width":"4" }));
+  const x0 = x + 30, inconnue = ufInconnue(card), lettre = inconnue !== "?";
+  const police = lettre ? "SplatLettres, 'Times New Roman', Times, serif" : null;
+  g.appendChild(tText(x0 + 30, milieu + (lettre ? 20 : 26), inconnue, lettre
+    ? { "text-anchor":"middle", "font-size":"96", "font-weight":"normal", "font-style":"italic", fill:"#000", "font-family":police, style:`font-family:${police}` }
+    : { "text-anchor":"middle", "font-size":"76", "font-weight":"900", fill:"#000" }));
+  g.appendChild(tText(x0 + 88, milieu + 20, "=", { "text-anchor":"middle", "font-size":"56", "font-weight":"900", fill:"#000" }));
+  const xv = x0 + 128, dispo = x + C.colonneW - 30 - xv;
+  if(corrige){
+    const pieces = ufPieces(card._unit.hiddenValue, card.den, card._unit.ecriture);
+    let fs = 84;
+    while(fs > 40 && ufLargeurPieces(pieces, fs, Math.round(fs * 0.6), 900) > dispo) fs -= 4;
+    ufPoserPieces(g, { el:tEl, text:tText }, xv, milieu + 4, pieces, fs, Math.round(fs * 0.6), 900, "#000");
+  }else{
+    g.appendChild(tEl("line", { x1:xv, x2:xv + dispo, y1:milieu + 44, y2:milieu + 44,
+      stroke:"#475569", "stroke-width":"7", "stroke-linecap":"round", "stroke-dasharray":"0.1 18" }));
+  }
+  hote.appendChild(g);
+}
+/* Les corrections courtes 6/page : le schéma en barres rempli (« Correction : le schéma »), ou le calcul
+   écrit (« Correction : l'équation »), sous le plateau de la correction, en gros ; dans le repère de la
+   correction (voir SIX_CORRECTION_DX), centrés sur 800. */
+function ufSixCorrection(g, card, part, mk){
+  const u = card._unit, d = card.den, ecriture = u.ecriture;
+  const tray = getPrintTrayConfig(card.family);
+  const haut = tray.y + tray.h + 4 + 90;
+  if(part === "schema"){
+    const S = 2, large = 1700;
+    const gg = mk.el("g", { id:"ufSchemaSix", transform:`translate(800 ${haut}) scale(${S})` });
+    ufDessinerBarre(gg, mk, { cx:0, haut:0, minX:-large / 2 / S, maxX:large / 2 / S, largeur:1560 / S, d, ecriture, total:String(card.total),
+      parts:[
+        { valeur:u.visibleValue, cache:false, ecrit:u.visibleValue, mesures:[u.visibleValue] },
+        { valeur:u.hiddenValue, cache:true, ecrit:u.hiddenValue, mesures:[u.hiddenValue] }
+      ] });
+    g.appendChild(gg);
+    return;
+  }
+  const C = UF_CALCUL, { gauche, droite } = ufPiecesCalcul(card);
+  const lg = ufLargeurPieces(gauche, C.fs, C.fsFrac, C.poids), ld = ufLargeurPieces(droite, C.fs, C.fsFrac, C.poids);
+  const S = Math.min(3, 1700 / (lg + ld + 2 * C.ecart + 20));
+  const gg = mk.el("g", { id:"ufCalculSix", transform:`translate(800 ${haut + 170}) scale(${Math.round(S * 100) / 100})` });
+  ufDessinerCalcul(gg, mk, card, 0, 0);
+  g.appendChild(gg);
+}
+
+/* ===== A — Jetons et parts : le mode élève (lot F2, 15/10/2026) =====
+   Le schéma en barres se remplit comme en mode A : le TOTAL (un entier, une case), les jetons visibles et
+   ce que cache la tache. Une valeur s'écrit en trois cases — entier, numérateur, dénominateur ; la barre
+   de fraction est tracée — ou, en écriture décimale, dans UNE case (« 3,75 », virgule ou point). L'entier
+   peut rester vide (« 15/4 » vaut « 3 + 3/4 »), toute écriture de même valeur est juste : comparaison de
+   fractions exactes (frEq), jamais de flottant. Une case incomplète (numérateur sans dénominateur, dénominateur
+   0) est fausse, comme une case vide au mode A : aucun message nouveau. Le résultat envoyé au suivi garde sa
+   forme (réussie, ou non, par carte) : aucune valeur saisie ne part au serveur.
+   Et un pirate ? Les cases n'acceptent que des chiffres (la virgule en décimale), à longueur bornée
+   (maxlength 2, 3, 2 ; 6 en décimale) ; la valeur est relue par expression régulière, jamais par eval ;
+   data-attendu est écrit par le code à partir de deux entiers de la carte, jamais d'une saisie. */
+function ufChiffres(texte, longueurMax){
+  const t = String(texte == null ? "" : texte).trim();
+  if(t === "") return "";
+  return (/^\d+$/.test(t) && t.length <= longueurMax) ? parseInt(t, 10) : NaN;
+}
+/* Les trois cases → une fraction exacte, ou null (vide, incomplète, dénominateur 0, caractère étranger). */
+function ufFractionSaisie(e, n, d){
+  const E = ufChiffres(e, 2), N = ufChiffres(n, 3), D = ufChiffres(d, 2);
+  if([E, N, D].some(x => x !== "" && Number.isNaN(x))) return null;
+  if(E === "" && N === "" && D === "") return null;
+  if(N === "" && D === "") return fr(E, 1);          /* un entier seul : la tache cache un entier */
+  if(N === "" || D === "" || D < 1) return null;      /* une fraction veut ses deux nombres, jamais 0 en bas */
+  return frAdd(fr(E === "" ? 0 : E, 1), fr(N, D));
+}
+/* « 3,75 » ou « 3.75 » → 15/4, par entiers (jamais parseFloat) ; null si la saisie n'est pas un décimal. */
+function ufDecimalSaisi(texte){
+  const m = /^(\d{1,3})(?:[.,](\d{1,3}))?$/.exec(String(texte == null ? "" : texte).trim());
+  if(!m) return null;
+  const f = m[2] || "";
+  return frNorm({ n: parseInt(m[1] + f, 10), d: Math.pow(10, f.length) });
+}
+function ufAttenduDe(c){
+  const m = /^(\d+)\/(\d+)$/.exec(c.getAttribute("data-attendu") || "");
+  return (m && Number(m[2]) > 0) ? fr(Number(m[1]), Number(m[2])) : null;
+}
+function ufCaseJuste(c){
+  const attendu = ufAttenduDe(c);
+  const champs = Array.from(c.querySelectorAll(".eleveChamp"));
+  if(!attendu || !champs.length) return false;
+  const v = c.getAttribute("data-uf") === "decimale" ? ufDecimalSaisi(champs[0].value)
+    : ufFractionSaisie(champs[0].value, champs[1] && champs[1].value, champs[2] && champs[2].value);
+  return !!v && frEq(v, attendu);
+}
+/* À la validation : une case fausse marque chacune de ses petites cases (.ufFaux). Au pavé, le premier chiffre
+   tapé dans une petite case marquée remplace ce qu'elle contenait (comme une case rouge du mode A), puis la
+   marque s'en va — case par case : corriger l'entier ne fait pas s'ajouter le numérateur à l'ancien (« 45 »). */
+function ufValiderCase(c){
+  const juste = ufCaseJuste(c);
+  c.querySelectorAll(".ufBoite").forEach(b => b.classList.toggle("ufFaux", !juste));
+  return juste;
+}
+/* Après « Voir la réponse » : la valeur s'écrit dans les cases, avec le dénominateur de la carte (4 + 5/6). */
+function ufRemplirReponse(c, card){
+  const v = ufAttenduDe(c);
+  const champs = Array.from(c.querySelectorAll(".eleveChamp"));
+  if(!v || !champs.length) return;
+  if(c.getAttribute("data-uf") === "decimale"){
+    champs[0].value = frDecimal(v) || "";
+  }else{
+    const { entier, reste } = frDecompose(v, card.den);
+    champs[0].value = (entier || !reste) ? String(entier) : "";
+    champs[1].value = reste ? String(reste) : "";
+    champs[2].value = reste ? String(card.den) : "";
+  }
+  champs.forEach(i => { i.readOnly = true; });
+  c.querySelectorAll(".ufBoite").forEach(b => b.classList.remove("ufFaux"));
+}
+function ufCaseHtml(classe, v, card, avecTache){
+  const decimale = card._unit.ecriture === "decimale";
+  const boite = (cls, max, mode, nom, large, ph) =>
+    `<span class="ufBoite${large ? " large" : ""}"><input class="eleveChamp ${cls}" type="text" inputmode="${mode}" maxlength="${max}" ` +
+    `autocomplete="off" aria-label="${nom}"${ph ? ' placeholder="?"' : ""}></span>`;
+  const saisie = decimale
+    ? boite("ufDec", 6, "decimal", "valeur décimale", true, avecTache)
+    : `<span class="ufSaisie">${boite("ufE", 2, "numeric", "entier", false, false)}<b class="ufPlus">+</b>` +
+      `<span class="ufFr">${boite("ufN", 3, "numeric", "numérateur", false, false)}<i class="ufBarre"></i>` +
+      `${boite("ufD", 2, "numeric", "dénominateur", false, false)}</span></span>`;
+  return `<div class="eleveCase ufCase ${classe}" style="flex:1 1 0" data-uf="${decimale ? "decimale" : "fraction"}" ` +
+    `data-attendu="${v.n}/${v.d}">${avecTache ? ELEVE_TACHE_MINI : ""}${saisie}</div>`;
+}
+function ufClasseCorpsEleve(card){
+  document.body.classList.toggle("eleve-uf-fr", !!card && card.family === "UF" && !!card._unit && card._unit.ecriture !== "decimale");
+}
+function ufCasesEleve(card){
+  return {
+    bas: ufCaseHtml("blanche", card._unit.visibleValue, card, false) + ufCaseHtml("grise", card._unit.hiddenValue, card, true),
+    haut: eleveCaseHtml("haut blanche", card.total, 1, false)
+  };
+}
+/* Les champs des cases UF : chiffres seulement (virgule en décimale), « + » et « / » passent à la case suivante.
+   Une seule écoute sur le document, pour que renderEleveSplat n'ait rien à brancher champ par champ. */
+function ufNettoyerSaisie(champ){
+  let v = String(champ.value);
+  if(champ.classList.contains("ufDec")){
+    v = v.replace(/[^0-9.,]/g, "").replace(/\./g, ",");
+    const i = v.indexOf(",");
+    if(i >= 0) v = v.slice(0, i + 1) + v.slice(i + 1).replace(/,/g, "");
+  }else{
+    v = v.replace(/\D/g, "");
+  }
+  if(v !== champ.value) champ.value = v;
+}
+function ufSauterCase(champ, touche){
+  const saute = (touche === "+" && champ.classList.contains("ufE")) || (touche === "/" && champ.classList.contains("ufN"));
+  if(!saute) return false;
+  const champs = Array.from(champ.closest(".ufCase").querySelectorAll(".eleveChamp"));
+  const suivant = champs[champs.indexOf(champ) + 1];
+  if(suivant) suivant.focus();
+  return true;
+}
+document.addEventListener("input", ev => {
+  const c = ev.target;
+  if(!(c && c.classList && c.classList.contains("eleveChamp") && c.closest(".ufCase"))) return;
+  ufNettoyerSaisie(c);
+  const b = c.closest(".ufBoite");
+  if(b) b.classList.remove("ufFaux"); /* la petite case est corrigée : les chiffres suivants s'ajoutent */
+});
+document.addEventListener("keydown", ev => {
+  const c = ev.target;
+  if(c && c.classList && c.classList.contains("eleveChamp") && c.closest(".ufCase") && ufSauterCase(c, ev.key)) ev.preventDefault();
+});
+/* La touche du pavé : « ▶ » (case suivante) en écriture fraction, « , » en décimale. */
+function ufToucheDuPave(panneau){
+  const c = panneau && panneau.querySelector(".ufCase");
+  if(!c) return null;
+  return c.getAttribute("data-uf") === "decimale" ? "virgule" : "suivante";
+}
+
+/* « 1 = 8/8 » : au dévoilement et dans la correction (écran et papier), une étiquette près d'UN jeton entier
+   (décidé le 15/10 sur planche, choix A) — le premier jeton entier visible, sinon le premier caché, à la place
+   libre : dessous, sinon dessus, sans toucher un autre jeton ni sortir du plateau. jetons : [{ cx, cy, v }]
+   dans l'ordre visibles puis cachés ; renvoie { cx, y (ligne de base), i } ou null (aucun jeton entier). */
+const UF_UNITE = { corps:52, largeur:232, hauteur:58 };
+function ufPlaceEtiquetteUnite(jetons, r, bornes){
+  const U = UF_UNITE, L = U.largeur, Ht = U.hauteur, m = 6;
+  const entiers = jetons.map((j, i) => [j, i]).filter(([j]) => j.v.n >= j.v.d);
+  if(!entiers.length) return null;
+  const xMin = bornes.x + m, xMax = bornes.x + bornes.w - m, yMin = bornes.y + m, yMax = bornes.y + bornes.h - m;
+  const serrer = (v, a, b) => Math.max(a, Math.min(b, v));
+  /* combien de jetons le cadre de l'étiquette touche */
+  const touches = (x0, y0) => jetons.filter(j => { const px = Math.max(x0, Math.min(j.cx, x0 + L)), py = Math.max(y0, Math.min(j.cy, y0 + Ht));
+    return (px - j.cx) ** 2 + (py - j.cy) ** 2 <= (r + 4) ** 2; }).length;
+  let repli = null;
+  for(const [j, i] of entiers){
+    /* dessous, dessus (glissée pour rester dans le plateau), à droite, à gauche, puis dessous et dessus décalées d'un côté */
+    const xc = serrer(j.cx - L / 2, Math.max(xMin, j.cx - L), Math.min(xMax - L, j.cx));
+    const bas = j.cy + r + m, haut = j.cy - r - m - Ht;
+    const places = [[xc, bas], [xc, haut], [j.cx + r + m, j.cy - Ht / 2], [j.cx - r - m - L, j.cy - Ht / 2],
+      [j.cx - r, bas], [j.cx + r - L, bas], [j.cx - r, haut], [j.cx + r - L, haut]];
+    for(const [x0, y0] of places){
+      const dedans = x0 >= xMin && x0 + L <= xMax && y0 >= yMin && y0 + Ht <= yMax;
+      if(!dedans) continue;
+      const n = touches(x0, y0);
+      if(n === 0) return { cx:x0 + L / 2, y:y0 + Ht * 0.78, i };
+      if(!repli || n < repli.n) repli = { n, cx:x0 + L / 2, y:y0 + Ht * 0.78, i };
+    }
+  }
+  /* rien de libre : la place qui touche le moins de jetons, toujours dans le plateau */
+  if(repli) return { cx:repli.cx, y:repli.y, i:repli.i };
+  const [j, i] = entiers[0];
+  const x0 = serrer(j.cx - L / 2, xMin, xMax - L), y0 = serrer(j.cy + r + m, yMin, yMax - Ht);
+  return { cx:x0 + L / 2, y:y0 + Ht * 0.78, i };
+}
+function ufTexteUnite(card){ return `1 = ${card.den}/${card.den}`; }
+function ufDessinerEtiquetteUnite(cible, mk, card, jetons, r, bornes, couleur){
+  const pl = ufPlaceEtiquetteUnite(jetons, r, bornes);
+  if(!pl) return null;
+  const t = mk.text(pl.cx, pl.y, ufTexteUnite(card), { "text-anchor":"middle", "font-size":String(UF_UNITE.corps), "font-weight":"900",
+    fill:couleur || "#1d4ed8", stroke:"#fff", "stroke-width":"7", "paint-order":"stroke", "stroke-linejoin":"round", "class":"ufUnite" });
+  cible.appendChild(t);
+  return t;
+}
+/* À l'écran (projection et mode élève) : les positions du plateau, dans le groupe du plateau. */
+function ufEtiquetteUniteEcran(card){
+  const layer = document.getElementById("introTrayShift");
+  if(!layer || !card || card.family !== "UF" || layer.querySelector(".ufUnite")) return;
+  const cfg = getTrayConfig(card.family), r = card._beadR ?? 56;
+  const jetons = card.visible.map((v, i) => ({ v, cx:card._posV?.[i]?.cx ?? (450 + i * 40), cy:card._posV?.[i]?.cy ?? 360 }))
+    .concat(card.hidden.map((v, i) => ({ v, cx:card._posH?.[i]?.cx ?? 820, cy:card._posH?.[i]?.cy ?? 610 })));
+  ufDessinerEtiquetteUnite(layer, { el, text }, card, jetons, r, { x:cfg.x, y:cfg.y, w:cfg.w, h:cfg.h });
 }
 
 /* Les réglages relancent la série, comme ceux des autres modes. */

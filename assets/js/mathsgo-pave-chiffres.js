@@ -92,6 +92,12 @@
     ".mg-pave button.mg-pave__valider{grid-column:span 3;color:#fff;font-size:1.15rem}",
     ".mg-pave button.mg-pave__valider::before{background:#0755b8;box-shadow:0 3px 0 #043f8c}",
     ".mg-pave button.mg-pave__valider:active::before,.mg-pave button.mg-pave__valider.est-appuyee::before{background:#064a9f;box-shadow:none}",
+    /* Touche facultative (lot F2 de SPLAT!, 15/10/2026) : « ▶ case suivante » ou « , », posée par la
+       page avec pave.touche(...) ; sans cet appel le pavé reste celui de toujours (12 touches).
+       Effacer garde 2/5, la touche prend 1/5, Valider passe à 2/5. */
+    ".mg-pave button.mg-pave__valider.mg-pave__valider--deux{grid-column:span 2}",
+    ".mg-pave button.mg-pave__touche{grid-column:span 1;color:#143451;font-size:1.3rem}",
+    ".mg-pave button.mg-pave__touche[hidden]{display:none}",
     "@media print{.mg-pave{display:none !important}}"
   ].join("");
 
@@ -182,13 +188,38 @@
     ajouterTouche("✓ " + (reglages.libelleValider || "Valider"), "valider", null,
       "mg-pave__valider", null);
 
+    /* La touche facultative n'existe qu'après le premier appel à touche() : par défaut le pavé a ses
+       12 touches, comme avant. */
+    let boutonTouche = null, boutonValider = null;
+    function touche(sorte) {
+      if (!boutonTouche) {
+        if (!sorte) return objet;
+        boutonValider = grille.lastChild;
+        boutonTouche = ajouterTouche("", "suivante", null, "mg-pave__touche", null);
+        grille.insertBefore(boutonTouche, boutonValider);
+      }
+      const active = sorte === "suivante" || sorte === "virgule";
+      boutonTouche.hidden = !active;
+      pave.classList.toggle("mg-pave--touche", active);
+      boutonValider.classList.toggle("mg-pave__valider--deux", active);
+      if (active) {
+        boutonTouche.dataset.sorte = sorte;
+        boutonTouche.textContent = sorte === "virgule" ? "," : "▶";
+        boutonTouche.setAttribute("aria-label", sorte === "virgule" ? "Virgule" : "Case suivante");
+      }
+      return objet;
+    }
+
     /* iOS n'applique :active qu'aux éléments qui écoutent le toucher. */
     pave.addEventListener("touchstart", function () {}, { passive: true });
 
     function appuyer(sorte, valeur) {
       if (detruit) return;
+      if (sorte === "suivante" || sorte === "virgule") sorte = boutonTouche && boutonTouche.dataset.sorte || sorte;
       if (sorte === "chiffre") ecrire(valeur);
       else if (sorte === "effacer") effacerDernier();
+      else if (sorte === "virgule") ecrireVirgule();
+      else if (sorte === "suivante") caseSuivante();
       else if (sorte === "valider" && typeof reglages.surValider === "function") reglages.surValider();
     }
 
@@ -236,6 +267,26 @@
       if (valeur.length >= longueurMax(champ)) return;
       champ.value = valeur + chiffre;
       signaler(champ);
+    }
+
+    /* La virgule d'une case décimale : une seule par case ; elle ne s'écrit pas en tête (« ,5 »). */
+    function ecrireVirgule() {
+      const champ = saisissable(champActif) ? champActif : premierVide();
+      if (!champ) return;
+      if (champ !== champActif) activer(champ);
+      const valeur = aRemplacer(champ) ? "" : valeurDe(champ);
+      if (!valeur || /[,.]/.test(valeur) || valeur.length >= longueurMax(champ)) return;
+      champ.value = valeur + ",";
+      signaler(champ);
+    }
+
+    /* La case saisissable suivante dans l'ordre du brancher() ; après la dernière, la première. */
+    function caseSuivante() {
+      const libres = branches.filter(function (lien) { return saisissable(lien.champ); });
+      if (!libres.length) return null;
+      let i = -1;
+      for (let k = 0; k < libres.length; k++) if (libres[k].champ === champActif) i = k;
+      return activer(libres[(i + 1) % libres.length].champ);
     }
 
     function effacerDernier() {
@@ -325,6 +376,8 @@
       if (!ev || ev.defaultPrevented || ev.ctrlKey || ev.metaKey || ev.altKey) return;
       if (estChampDeSaisie(doc.activeElement)) return;
       if (/^[0-9]$/.test(ev.key)) ecrire(ev.key);
+      else if ((ev.key === "," || ev.key === ".") && boutonTouche && boutonTouche.dataset.sorte === "virgule" && !boutonTouche.hidden) ecrireVirgule();
+      else if ((ev.key === "+" || ev.key === "/") && boutonTouche && boutonTouche.dataset.sorte === "suivante" && !boutonTouche.hidden) caseSuivante();
       else if (ev.key === "Backspace" || ev.key === "Delete") effacerDernier();
       else if (ev.key === "Enter") {
         if (typeof reglages.surValider === "function") reglages.surValider();
@@ -342,6 +395,8 @@
       detacher: detacher,
       activer: activer,
       activerPremierVide: function () { return activer(premierVide()); },
+      touche: touche,
+      caseSuivante: caseSuivante,
       champActif: function () { return champActif; },
       afficher: function () { pave.hidden = false; return objet; },
       masquer: function () { pave.hidden = true; return objet; },
