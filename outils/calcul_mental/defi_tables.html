@@ -4447,6 +4447,10 @@
       const RYTHME_EVALUATION_MIN = 3000;
       const RYTHME_EVALUATION_MAX = 60000;
       const CLE_EVALUATION_ONGLET = "mathsgo-defi-tables-evaluation";
+      // Le serveur range une réponse de 3 chiffres au plus (api/direct.php,
+      // type « entier », chiffres 3) : le pavé n'en laisse pas taper plus,
+      // sinon le refus (400) bloquerait la question pour de bon.
+      const CHIFFRES_EVALUATION = 3;
       let evalEtat = null;        // le dernier état reçu (clé « evaluation » de api/direct.php), ou null
       let evalMinuteur = null;    // la prochaine lecture programmée
       let evalProchaine = 0;      // l'instant de cette lecture (une minuterie en avance ne lit pas)
@@ -4766,7 +4770,10 @@
         if (!state.running || !evalSerie) return;
         const chrono = evalSerie.modele.chrono;
         if (chrono === "question") {
-          if (evalSerie.envoi) return;
+          // Pendant l'envoi, et tant qu'une réponse attend d'être renvoyée
+          // (panne), l'anneau ne fait plus rien : à zéro, il enverrait une
+          // réponse vide à la place de celle de l'élève.
+          if (evalSerie.envoi || evalSerie.aRenvoyer) return;
           const total = evalSerie.modele.secondes * 1000;
           const restant = Math.max(0, total - (horlogeSerie() - evalSerie.debutQuestion));
           const secondes = Math.ceil(restant / 1000);
@@ -4796,7 +4803,7 @@
         if (!evalSerie || evalSerie.envoi) return;
         if (evalSerie.aRenvoyer) { envoyerReponseEvaluation(evalSerie.aRenvoyer); return; }
         const value = state.answer;
-        if (!skip && !/^\d+$/.test(value)) { showAnswerError(); return; }
+        if (!skip && (!/^\d+$/.test(value) || String(Number(value)).length > CHIFFRES_EVALUATION)) { showAnswerError(); return; }
         repondreEvaluation(skip ? null : value);
       }
 
@@ -7870,7 +7877,7 @@
       }
 
       function enterDigit(digit) {
-        if (!state.running || state.waitingForContinue || state.answer.length >= 6) return;
+        if (!state.running || state.waitingForContinue || state.answer.length >= (enEvaluation() ? CHIFFRES_EVALUATION : 6)) return;
         state.answer += digit;
         renderInlineAnswer();
         clearAnswerError();

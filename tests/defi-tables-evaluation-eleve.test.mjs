@@ -338,3 +338,40 @@ test("en marche : le serveur muet sur une réponse — la question reste, « Val
   assert.equal(a2.api.enEvaluation(), false);
   assert.equal(a2.api.evalEtat.etat, "fermee");
 });
+
+// Correctif de relecture (15/10/2026), deux défauts vus au banc :
+//  - une réponse de 4 chiffres partait, le serveur la refusait (400, 3 chiffres
+//    au plus) et la question restait bloquée pour de bon — « Valider » et
+//    « Passer » renvoyaient le même paquet refusé, sans retour possible ;
+//  - par question, une panne pendant l'envoi : l'anneau, arrivé à zéro,
+//    envoyait une réponse VIDE à la place de celle qui attendait d'être renvoyée.
+test("en marche : une réponse de plus de 3 chiffres ne part pas ; par question, l'anneau n'écrase pas une réponse en attente de renvoi", async () => {
+  const {serveur, appli} = await appliEnEvaluation({modele: {...MODELE, chrono: "question", secondes: 8}});
+  await appli.api.commencerEvaluation();
+  await new Promise(r => setTimeout(r, 5));
+  assert.match(html, /state\.answer\.length >= \(enEvaluation\(\) \? CHIFFRES_EVALUATION : 6\)/, "le pavé s'arrête à 3 chiffres pendant l'évaluation");
+  assert.match(BLOC, /const CHIFFRES_EVALUATION = 3;/);
+  appli.state.answer = "1234";
+  appli.api.nextEvaluation(false);
+  await new Promise(r => setTimeout(r, 5));
+  assert.ok(appli.rendus.includes("erreur de saisie"), "4 chiffres : erreur de saisie, l'élève corrige");
+  assert.equal(serveur.direct().filter(c => c.numero === 1).length, 0, "rien n'est parti");
+  assert.equal(appli.api.evalSerie.aRenvoyer, null, "et rien n'attend d'être renvoyé");
+  const q1 = appli.state.questions[0];
+  serveur.etat.forcer = {statut: 0};
+  appli.api.repondreEvaluation(String(q1.answer));
+  await new Promise(r => setTimeout(r, 20));
+  assert.ok(appli.api.evalSerie.aRenvoyer, "la panne : la réponse attend");
+  const envoisAvant = serveur.direct().filter(c => c.numero === 1).length;
+  // Le temps de la question est passé pendant les essais.
+  appli.api.evalSerie.debutQuestion -= 60000;
+  appli.api.updateTimerEvaluation();
+  await new Promise(r => setTimeout(r, 5));
+  assert.equal(serveur.direct().filter(c => c.numero === 1).length, envoisAvant, "l'anneau n'envoie rien");
+  assert.equal(appli.api.evalSerie.aRenvoyer.reponse, String(q1.answer), "la réponse de l'élève attend toujours");
+  serveur.etat.forcer = null;
+  appli.api.nextEvaluation(false);
+  await new Promise(r => setTimeout(r, 5));
+  assert.equal(serveur.etat.reponses["1"].split("|")[0], String(q1.answer), "c'est SA réponse qui est rangée");
+  assert.equal(appli.state.index, 1);
+});
