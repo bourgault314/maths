@@ -944,6 +944,26 @@
     .titre-menu { margin: 6px 0 2px; color: var(--muted); font-size: .8rem; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; }
     .semaine { margin: -2px 0; color: var(--muted); font-size: .86rem; font-weight: 800; text-align: center; }
     .semaine b { color: var(--ink); font-weight: 900; }
+    /* ---- 📝 L'évaluation en classe (lot E2, 15/10/2026) ----
+       La carte orange en tête de l'accueil, seulement quand le professeur a
+       ouvert une évaluation pour la classe (api/direct.php, clé « evaluation ») ;
+       puis la ligne « envoyée ✓ · score » jusqu'à la fermeture. Tout vient du
+       serveur et se pose par textContent. */
+    .evalc { order: -3; padding: 14px 14px 14px; border: 2px solid #f0c08a; border-radius: 22px; background: linear-gradient(180deg, #fff6ea, #fff 70%); }
+    .evalc .eyebrow { margin: 0 0 4px; color: #9a4b00; font-size: .74rem; letter-spacing: .06em; }
+    .evalc h2 { margin: 0 0 6px; font-size: 1.35rem; line-height: 1.15; font-weight: 900; color: var(--ink); }
+    .evalc > p { margin: 0 0 12px; color: var(--muted); font-weight: 700; font-size: .95rem; line-height: 1.4; }
+    .evalc .primary { width: 100%; min-height: 50px; font-size: 1.15rem; }
+    .evalc .secondary { width: 100%; }
+    .evalc-actions { display: grid; gap: 8px; }
+    .evalc-message { margin: 10px 0 0; color: var(--red); font-weight: 850; font-size: .92rem; text-align: center; }
+    /* La ligne après : « 📝 Évaluation envoyée ✓ · 17 / 20 ». */
+    .evalc-ligne { order: -3; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 8px 14px; border: 2px solid #b8dfc8; border-radius: 999px; background: var(--green-soft); color: var(--green); font-weight: 900; font-size: 1.02rem; text-align: center; }
+    .evalc-ligne.is-close { border-color: #cfe2ed; background: #f1f6fa; color: #31566c; }
+    /* Pendant : le chrono par question est un anneau qui se vide. */
+    #play .status strong.anneau { min-width: 0; width: 46px; height: 46px; margin: 0; padding: 0; display: grid; place-items: center; border-radius: 50%; color: var(--green); font-size: 1.2rem; line-height: 1; background: radial-gradient(closest-side, #fff 78%, transparent 80%), conic-gradient(var(--green) calc(var(--reste, 1) * 360deg), #dfebf3 0); }
+    #play .status strong.anneau.urgent { color: var(--red); background: radial-gradient(closest-side, #fff 78%, transparent 80%), conic-gradient(var(--red) calc(var(--reste, 1) * 360deg), #ffd9d9 0); }
+    #question-count.evalc-compte { color: #9a4b00; }
     .seance-fil { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; color: var(--muted); font-size: .9rem; font-weight: 850; }
     .seance-fil ol { display: flex; align-items: center; gap: 0; margin: 0; padding: 0; list-style: none; }
     .seance-fil li { display: inline-grid; place-items: center; width: 24px; height: 24px; border: 2px solid #b9cbd8; border-radius: 50%; background: #fff; color: #6b8192; font-size: .78rem; font-weight: 950; line-height: 1; box-sizing: border-box; }
@@ -1015,7 +1035,7 @@
     /* Le bas de l'accueil reste : « Comment ça marche ? », et, sans code,
        les deux portes des professeurs (Réglages libres, Évaluation CM1). */
     .acc.en-decouverte #acc-changer, .acc.en-decouverte #acc-lire,
-    .acc.en-decouverte > :not(.matable):not(.acc-bas):not(#acc-notice) { display: none; }
+    .acc.en-decouverte > :not(.matable):not(.acc-bas):not(#acc-notice):not(.evalc):not(.evalc-ligne) { display: none; }
     .acc.en-attente > * { visibility: hidden; }
     /* Lot « retours de classe » (06/10/2026, retour de Gwenaël : « il y a une
        latence, comme si quelque chose chargeait ») : tant que la page n'a pas
@@ -3171,7 +3191,7 @@
   </footer>
 
   <script src="./defi_tables_core.js?v=20261015-1"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20261014-1"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20261015-1"></script>
   <script>
     (() => {
       "use strict";
@@ -4152,6 +4172,9 @@
         renderRepere();
         if (sync.detache) { finAttente(); return; }
         chargerIdentite(codeSuivi);
+        // Lot E2 : l'évaluation de la classe, lue tout de suite puis de temps
+        // en temps (api/direct.php).
+        veillerEvaluation();
         const code = codeSuivi;
         // Appareil neuf (case vide) : l'accueil attend la lecture du parcours.
         if (PARCOURS.estVide(parcours)) {
@@ -4390,6 +4413,526 @@
       function lancerCourse(origin = "menu") {
         avecLeNomChoisi(() => launchFromParcours(PARCOURS.configCourse(), origin));
       }
+
+      // ------------------------------------------------ 📝 L'évaluation en classe (lot E2, 15/10/2026)
+      //
+      // Le professeur a ouvert une évaluation pour la classe (lot E1 : Ma
+      // classe, api/direct.php). Ici, pour l'élève à code : la carte orange en
+      // tête de l'accueil (« Ton professeur a ouvert une évaluation » →
+      // « Je commence »), la série dans l'écran de question habituel — sans
+      // correction, sans retour, chaque réponse envoyée AVANT la suivante —,
+      // puis la ligne « 📝 Évaluation envoyée ✓ · 17 / 20 » jusqu'à la
+      // fermeture. Décisions de Gwenaël (15/10) :
+      //  - le serveur ne connaît ni les questions ni la correction : il
+      //    distribue deux graines, l'appli tire la série avec le moteur
+      //    (genererEvaluationDeClasse) — exactement comme Ma classe la refait
+      //    pour corriger ; jamais un autre tirage ;
+      //  - chaque réponse agit sur le parcours comme Mon mélange
+      //    (appliquerReponse : une boîte de moins si faux, monte si le calcul
+      //    était dû ; rien sur les tables ; les ratés dans « À retenir » ; le
+      //    jour compte) — pas de appliquerSerie, ce n'est pas une série du
+      //    parcours ;
+      //  - le chrono suit le modèle : par question (l'anneau, pas de
+      //    « Passer » : à zéro, une réponse vide part), en tout (le chrono de
+      //    la série, « Passer » gardé), ou sans (« À ton rythme », « Passer »
+      //    gardé) ; la fenêtre vraie est tenue par le serveur ;
+      //  - onglet fermé : on reprend à la question que le serveur dit
+      //    (« suivant »), les réponses déjà envoyées restent, le chrono en
+      //    tout reprend là où il en était (« ecoule ») ;
+      //  - l'élève voit son score (recalculé ici sur ses réponses relues du
+      //    serveur), jamais la note ni ses erreurs ; fermée : plus rien ;
+      //  - sans code : rien de tout cela (modèle commun des applis suivies).
+      // Tout ce qui vient du serveur est posé par textContent.
+      // [evaluation:debut]
+      const RYTHME_EVALUATION_MIN = 3000;
+      const RYTHME_EVALUATION_MAX = 60000;
+      const CLE_EVALUATION_ONGLET = "mathsgo-defi-tables-evaluation";
+      // Le serveur range une réponse de 3 chiffres au plus (api/direct.php,
+      // type « entier », chiffres 3) : le pavé n'en laisse pas taper plus,
+      // sinon le refus (400) bloquerait la question pour de bon.
+      const CHIFFRES_EVALUATION = 3;
+      let evalEtat = null;        // le dernier état reçu (clé « evaluation » de api/direct.php), ou null
+      let evalMinuteur = null;    // la prochaine lecture programmée
+      let evalProchaine = 0;      // l'instant de cette lecture (une minuterie en avance ne lit pas)
+      let evalEnVol = false;
+      let evalSerie = null;       // pendant : {graines, modele, debutQuestion, envoi, aRenvoyer, appliques}
+
+      function enEvaluation() {
+        return Boolean(state.configuration) && state.configuration.mode === "evalclasse";
+      }
+
+      function evaluationPossible() {
+        return suiviActif() && !sync.detache;
+      }
+
+      function appelEvaluation(corps) {
+        return appelSuivi("/api/direct.php", {
+          method: "POST",
+          headers: {"Content-Type": "text/plain;charset=UTF-8"},
+          body: JSON.stringify(Object.assign({code: codeSuivi}, corps))
+        });
+      }
+
+      function arreterVeilleEvaluation() {
+        if (evalMinuteur !== null) window.clearTimeout(evalMinuteur);
+        evalMinuteur = null;
+      }
+
+      // Lire l'état tout de suite, puis au rythme que dit le serveur, tant
+      // que l'accueil est affiché et l'onglet visible. Pendant une série,
+      // rien n'est demandé : c'est l'envoi des réponses qui rapporte l'état.
+      function veillerEvaluation() {
+        arreterVeilleEvaluation();
+        if (!evaluationPossible()) return;
+        lireEvaluation();
+      }
+
+      function programmerLectureEvaluation(delai) {
+        arreterVeilleEvaluation();
+        if (!evaluationPossible()) return;
+        const attente = Math.max(RYTHME_EVALUATION_MIN, Math.min(RYTHME_EVALUATION_MAX, delai || 6000));
+        evalProchaine = Date.now() + attente;
+        evalMinuteur = window.setTimeout(() => {
+          evalMinuteur = null;
+          if (document.visibilityState === "hidden" || state.running) return;
+          // Jamais plus vite que le rythme, quoi que fasse la minuterie.
+          if (Date.now() < evalProchaine - 50) return;
+          lireEvaluation();
+        }, attente);
+      }
+
+      async function lireEvaluation() {
+        if (!evaluationPossible() || evalEnVol) return;
+        evalEnVol = true;
+        const code = codeSuivi;
+        const reponse = await appelEvaluation({});
+        evalEnVol = false;
+        if (code !== codeSuivi) return;
+        let delai = 15000;
+        if (reponse.statut === 200 && reponse.donnees && reponse.donnees.ok) {
+          retenirEtatEvaluation(reponse.donnees.evaluation);
+          delai = Number(reponse.donnees.rythme) || 6000;
+        } else if (reponse.statut === 404) {
+          // Le code ne vaut plus rien : le parcours s'en apercevra à son
+          // prochain envoi (detacher) ; ici on cesse simplement de demander.
+          retenirEtatEvaluation(null);
+          return;
+        } else if (reponse.statut === 429) {
+          delai = (reponse.reessai || 60) * 1000;
+        }
+        if (!state.running) programmerLectureEvaluation(delai);
+      }
+
+      // L'état reçu : vérifié dans sa forme avant d'être gardé. Un serveur
+      // d'avant E1 ne renvoie pas la clé : rien ne s'affiche.
+      function retenirEtatEvaluation(brut) {
+        const avant = evalEtat;
+        evalEtat = lireEtatEvaluation(brut);
+        if (JSON.stringify(avant) !== JSON.stringify(evalEtat) && !state.running && !$("intro").hidden) renderAccueil();
+      }
+
+      function lireEtatEvaluation(brut) {
+        if (!brut || typeof brut !== "object") return null;
+        const modele = CORE.normaliserReglageEvaluation(brut.modele);
+        if (!modele || !["ouverte", "fermee"].includes(brut.etat)) return null;
+        const graines = brut.graines && typeof brut.graines === "object"
+          && Number.isInteger(brut.graines.seance) && Number.isInteger(brut.graines.eleve)
+          ? {seance: brut.graines.seance, eleve: brut.graines.eleve} : null;
+        const reponses = {};
+        if (brut.reponses && typeof brut.reponses === "object") {
+          Object.keys(brut.reponses).forEach(numero => {
+            if (/^\d{1,2}$/.test(numero) && typeof brut.reponses[numero] === "string") reponses[numero] = brut.reponses[numero];
+          });
+        }
+        return {
+          etat: brut.etat,
+          nom: typeof brut.nom === "string" ? brut.nom.slice(0, 40) : "",
+          modele,
+          commence: Boolean(brut.commence) && graines !== null,
+          fini: Boolean(brut.fini),
+          close: Boolean(brut.close),
+          suivant: Number.isInteger(brut.suivant) ? Math.max(1, Math.min(modele.n, brut.suivant)) : 1,
+          graines,
+          reponses,
+          ecoule: Number.isInteger(brut.ecoule) ? Math.max(0, brut.ecoule) : 0
+        };
+      }
+
+      // La série de l'élève, refaite avec SES deux graines — le même tirage
+      // que Ma classe refera pour corriger. Jamais un tirage au hasard ici.
+      function questionsDeLEvaluation(etat) {
+        return CORE.genererEvaluationDeClasse(etat.modele, etat.graines);
+      }
+
+      // Son score, sur ses propres réponses relues du serveur.
+      function scoreDeLEvaluation(etat) {
+        if (!etat || !etat.graines) return null;
+        const copie = CORE.corrigerEvaluationDeClasse(questionsDeLEvaluation(etat), etat.reponses);
+        return {score: copie.score, total: copie.total};
+      }
+
+      // ---- la carte de l'accueil
+
+      function renderCarteEvaluation() {
+        const acc = document.querySelector(".acc");
+        if (!acc) return;
+        acc.querySelectorAll(".evalc, .evalc-ligne").forEach(noeud => noeud.remove());
+        // L'accueil affiché et rien de programmé (retour d'une série, par
+        // exemple) : la veille reprend.
+        if (evaluationPossible() && evalMinuteur === null && !evalEnVol && !state.running) programmerLectureEvaluation(6000);
+        const etat = evalEtat;
+        if (!etat || !evaluationPossible() || etat.etat !== "ouverte") return;
+        const el = (balise, classe, texte) => {
+          const noeud = document.createElement(balise);
+          if (classe) noeud.className = classe;
+          if (texte !== undefined) noeud.textContent = texte;
+          return noeud;
+        };
+        // Après : la ligne, jusqu'à la fermeture.
+        if (etat.commence && (etat.fini || etat.close)) {
+          const score = scoreDeLEvaluation(etat);
+          const ligne = el("div", "evalc-ligne" + (etat.fini ? "" : " is-close"));
+          ligne.setAttribute("role", "status");
+          ligne.append(el("span", "", `📝 Évaluation ${etat.fini ? "envoyée ✓" : "terminée"} · ${score ? `${score.score} / ${score.total}` : ""}`.trim()));
+          acc.prepend(ligne);
+          return;
+        }
+        const carte = el("section", "evalc");
+        carte.setAttribute("aria-labelledby", "evalc-titre");
+        carte.append(el("p", "eyebrow", "📝 Évaluation"));
+        const titre = el("h2", "", etat.commence ? "Ton évaluation est commencée" : "Ton professeur a ouvert une évaluation");
+        titre.id = "evalc-titre";
+        carte.append(titre);
+        if (etat.commence) {
+          const chrono = etat.modele.chrono === "sans" ? "" : " Le chrono continue.";
+          carte.append(el("p", "", `Tu en es à la question ${etat.suivant} sur ${etat.modele.n}.${chrono}`));
+        } else {
+          carte.append(el("p", "", CORE.descriptionEvaluation(etat.modele)));
+        }
+        const actions = el("div", "evalc-actions");
+        const bouton = el("button", "primary", etat.commence ? "Je continue" : "Je commence");
+        bouton.type = "button";
+        bouton.id = "evalc-commencer";
+        bouton.addEventListener("click", commencerEvaluation);
+        actions.append(bouton);
+        const message = el("p", "evalc-message");
+        message.id = "evalc-message";
+        message.hidden = true;
+        message.setAttribute("role", "status");
+        carte.append(actions, message);
+        acc.prepend(carte);
+      }
+
+      function messageCarteEvaluation(texte) {
+        const message = $("evalc-message");
+        if (!message) return;
+        message.textContent = texte;
+        message.hidden = !texte;
+      }
+
+      // « Je commence » / « Je continue » : le serveur tire la graine de
+      // l'élève (une fois) et pose son début ; l'appli repart de l'état qu'il
+      // rend. Fermée entre-temps (409) : la carte le dit et s'efface.
+      let evalDepartEnVol = false;
+      async function commencerEvaluation() {
+        if (!evaluationPossible() || !evalEtat || evalDepartEnVol) return;
+        evalDepartEnVol = true;
+        messageCarteEvaluation("");
+        arreterVeilleEvaluation();
+        const code = codeSuivi;
+        const reponse = await appelEvaluation(evalEtat.commence ? {} : {commencer: true});
+        evalDepartEnVol = false;
+        if (code !== codeSuivi) return;
+        if (reponse.statut === 200 && reponse.donnees && reponse.donnees.ok) {
+          retenirEtatEvaluation(reponse.donnees.evaluation);
+          if (evalEtat && evalEtat.etat === "ouverte" && evalEtat.commence && !evalEtat.fini && !evalEtat.close) {
+            lancerEvaluation(evalEtat);
+            return;
+          }
+          if (!state.running) renderAccueil();
+          programmerLectureEvaluation(6000);
+          return;
+        }
+        if (reponse.statut === 409) {
+          lireEvaluation();
+          return;
+        }
+        messageCarteEvaluation(reponse.statut === 429
+          ? "Trop de demandes en même temps : attends un instant, puis réessaie."
+          : "Le serveur ne répond pas. Vérifie le réseau, puis réessaie.");
+        programmerLectureEvaluation(reponse.statut === 429 ? (reponse.reessai || 60) * 1000 : 15000);
+      }
+
+      // ---- la mémoire de l'onglet : les réponses déjà appliquées aux boîtes
+      // (une réponse part après avoir été appliquée ; si l'envoi échoue et
+      // qu'on la rejoue, les boîtes ne bougent pas deux fois). Sous le code
+      // de l'onglet, jamais en clair ailleurs ; des numéros, rien d'autre.
+      function lireAppliques(graines) {
+        try {
+          const onglet = stockageSession();
+          const lu = onglet ? JSON.parse(onglet.getItem(CLE_EVALUATION_ONGLET) || "null") : null;
+          if (!lu || lu.code !== codeSuivi || lu.seance !== graines.seance || lu.eleve !== graines.eleve) return new Set();
+          return new Set((Array.isArray(lu.appliques) ? lu.appliques : []).filter(Number.isInteger));
+        } catch (_) { return new Set(); }
+      }
+
+      function ecrireAppliques(graines, appliques) {
+        try {
+          const onglet = stockageSession();
+          if (onglet) onglet.setItem(CLE_EVALUATION_ONGLET, JSON.stringify({code: codeSuivi, seance: graines.seance, eleve: graines.eleve, appliques: [...appliques]}));
+        } catch (_) {}
+      }
+
+      // ---- la série
+
+      function lancerEvaluation(etat) {
+        stopTimer();
+        state.encoreOuverte = false;
+        state.apresMesCalculs = null;
+        state.apresMelange = null;
+        quitterSeance();
+        const modele = etat.modele;
+        const config = {
+          mode: "evalclasse",
+          tables: modele.tables.slice(),
+          questionTypes: modele.types.slice(),
+          total: modele.n,
+          // Le chrono de la série ne sert qu'au chrono « en tout » ; par
+          // question, c'est l'anneau (updateTimerEvaluation).
+          duration: modele.chrono === "global" ? modele.secondes : null,
+          chrono: modele.chrono,
+          secondes: modele.secondes
+        };
+        TOTAL = modele.n;
+        DURATION = config.duration;
+        const questions = questionsDeLEvaluation(etat);
+        state.questions = questions;
+        // Les réponses déjà envoyées (reprise) : gardées telles quelles.
+        state.responses = questions.map(question => {
+          const brute = etat.reponses[String(question.numero)];
+          if (brute === undefined) return undefined;
+          const lue = CORE.lireReponseEvaluation(brute);
+          return lue.valeur === null ? {value: null, correct: false, skipped: true} : {value: lue.valeur, correct: lue.valeur === question.answer, skipped: false};
+        });
+        state.signature = "";
+        state.configuration = config;
+        state.index = Math.min(questions.length - 1, Math.max(0, etat.suivant - 1));
+        state.correct = state.responses.filter(reponse => reponse && reponse.correct).length;
+        state.answered = state.responses.filter(Boolean).length;
+        state.courseArretee = null;
+        state.running = false;
+        state.tenSecondAlert = false;
+        state.waitingForContinue = false;
+        state.pauseA = null;
+        state.answer = "";
+        state.launchReady = false;
+        state.origin = "evalclasse";
+        evalSerie = {graines: etat.graines, modele, debutQuestion: 0, envoi: false, aRenvoyer: null, appliques: lireAppliques(etat.graines)};
+        // L'écran de question, comme beginRound — sans décompte, sans écran
+        // de lancement, sans retour.
+        $("time").classList.remove("en-pause", "urgent", "no-timer", "anneau");
+        $("time").style.removeProperty("--reste");
+        $("timer-alert").textContent = "";
+        renderFilSeance($("seance-fil"));
+        majSortieJeu();
+        $("skip").hidden = modele.chrono === "question";
+        $("question-card").classList.toggle("no-skip", modele.chrono === "question");
+        show("play");
+        $("validate").disabled = false;
+        state.running = true;
+        state.startAt = horlogeSerie();
+        // Chrono en tout : ce qui reste, d'après le temps écoulé que dit le
+        // serveur (reprise après un onglet fermé).
+        state.endAt = DURATION === null ? 0 : state.startAt + Math.max(0, DURATION - etat.ecoule) * 1000;
+        if (modele.chrono === "sans") {
+          $("time").textContent = "À ton rythme";
+          $("time").classList.add("no-timer");
+          $("time").setAttribute("aria-label", "Sans chrono");
+        } else if (modele.chrono === "question") {
+          $("time").classList.add("anneau");
+          $("time").setAttribute("aria-label", "Temps restant pour cette question");
+        } else {
+          $("time").setAttribute("aria-label", "Temps restant");
+        }
+        renderQuestionEvaluation();
+        ajusterEchelle();
+        if (modele.chrono !== "sans") state.timer = window.setInterval(updateTimer, 200);
+        window.scrollTo({top: 0, behavior: "auto"});
+      }
+
+      function renderQuestionEvaluation() {
+        renderQuestion();
+        evalSerie.debutQuestion = horlogeSerie();
+        if (evalSerie.modele.chrono === "question") updateTimerEvaluation();
+      }
+
+      function updateTimerEvaluation() {
+        if (!state.running || !evalSerie) return;
+        const chrono = evalSerie.modele.chrono;
+        if (chrono === "question") {
+          // Pendant l'envoi, et tant qu'une réponse attend d'être renvoyée
+          // (panne), l'anneau ne fait plus rien : à zéro, il enverrait une
+          // réponse vide à la place de celle de l'élève.
+          if (evalSerie.envoi || evalSerie.aRenvoyer) return;
+          const total = evalSerie.modele.secondes * 1000;
+          const restant = Math.max(0, total - (horlogeSerie() - evalSerie.debutQuestion));
+          const secondes = Math.ceil(restant / 1000);
+          const time = $("time");
+          time.textContent = String(secondes);
+          time.style.setProperty("--reste", String(restant / total));
+          time.classList.toggle("urgent", secondes <= 3);
+          // Le temps est passé : une réponse vide part, la suivante vient.
+          if (!restant) repondreEvaluation(null);
+          return;
+        }
+        if (chrono === "global") {
+          const remaining = Math.max(0, Math.ceil((state.endAt - horlogeSerie()) / 1000));
+          $("time").textContent = formatTime(remaining);
+          $("time").classList.toggle("urgent", remaining <= 10);
+          if (remaining > 0 && remaining <= 10 && !state.tenSecondAlert) {
+            state.tenSecondAlert = true;
+            $("timer-alert").textContent = `Plus que ${remaining} secondes.`;
+          }
+          // Le temps en tout est passé : la série s'arrête là (le serveur
+          // n'accepterait plus rien non plus) ; ce qui est envoyé reste.
+          if (!remaining && !evalSerie.envoi) terminerEvaluation();
+        }
+      }
+
+      function nextEvaluation(skip) {
+        if (!evalSerie || evalSerie.envoi) return;
+        if (evalSerie.aRenvoyer) { envoyerReponseEvaluation(evalSerie.aRenvoyer); return; }
+        const value = state.answer;
+        if (!skip && (!/^\d+$/.test(value) || String(Number(value)).length > CHIFFRES_EVALUATION)) { showAnswerError(); return; }
+        repondreEvaluation(skip ? null : value);
+      }
+
+      // Une réponse (ou rien) à la question affichée : appliquée au parcours
+      // comme Mon mélange, puis envoyée — la question suivante n'arrive
+      // qu'avec la réponse du serveur.
+      function repondreEvaluation(valeur) {
+        if (!state.running || !evalSerie || evalSerie.envoi) return;
+        const question = state.questions[state.index];
+        if (!question) return;
+        const dixiemes = Math.max(0, Math.min(999999, Math.round((horlogeSerie() - evalSerie.debutQuestion) / 100)));
+        const correct = valeur !== null && Number(valeur) === question.answer;
+        state.responses[state.index] = valeur === null ? {value: null, correct: false, skipped: true} : {value: Number(valeur), correct, skipped: false};
+        if (valeur !== null) state.answered += 1;
+        if (correct) state.correct += 1;
+        appliquerReponseEvaluation(question, correct);
+        envoyerReponseEvaluation({numero: question.numero, reponse: valeur === null ? "" : String(Number(valeur)), dixiemes});
+      }
+
+      // L'effet sur le parcours (décision du 15/10) : comme Mon mélange —
+      // appliquerReponse (boîtes, jour travaillé), et les ratés dans
+      // « À retenir ». Une fois par numéro, même si l'envoi est rejoué.
+      function appliquerReponseEvaluation(question, correcte) {
+        if (evalSerie.appliques.has(question.numero)) return;
+        evalSerie.appliques.add(question.numero);
+        ecrireAppliques(evalSerie.graines, evalSerie.appliques);
+        const resultat = PARCOURS.appliquerReponse(parcours, question.factKey, {correcte});
+        parcours = resultat.parcours;
+        if (!correcte) {
+          const premier = Number(question.first);
+          const second = Number(question.second);
+          if (Number.isInteger(premier) && Number.isInteger(second)) parcours = PARCOURS.retenirErreurs(parcours, [[premier, second]]);
+        }
+        sauverParcours();
+      }
+
+      function envoyerReponseEvaluation(paquet) {
+        if (!evalSerie || evalSerie.envoi) return;
+        evalSerie.envoi = true;
+        evalSerie.aRenvoyer = null;
+        // Le pavé se tait le temps de l'envoi (waitingForContinue le bloque),
+        // sans montrer « Suivant » ni une correction.
+        state.waitingForContinue = true;
+        clearAnswerError();
+        $("validate").disabled = true;
+        $("time").classList.remove("urgent");
+        const code = codeSuivi;
+        envoyerAvecReprises(paquet, 0).then(reponse => {
+          if (code !== codeSuivi || !evalSerie) return;
+          evalSerie.envoi = false;
+          state.waitingForContinue = false;
+          $("validate").disabled = false;
+          traiterReponseEvaluation(paquet, reponse);
+        });
+      }
+
+      // Jusqu'à quatre essais rapprochés sur une panne (statut 0, 5xx) ; au
+      // bout, la question reste à l'écran avec un mot, et « Valider » renvoie.
+      async function envoyerAvecReprises(paquet, essai) {
+        const reponse = await appelEvaluation(paquet);
+        if ((reponse.statut === 0 || reponse.statut >= 500) && essai < 3) {
+          await new Promise(resolve => window.setTimeout(resolve, 1500));
+          if (!evalSerie) return reponse;
+          return envoyerAvecReprises(paquet, essai + 1);
+        }
+        return reponse;
+      }
+
+      function traiterReponseEvaluation(paquet, reponse) {
+        const donnees = reponse.donnees;
+        if (reponse.statut === 200 && donnees && donnees.ok) {
+          retenirEtatEvaluation(donnees.evaluation);
+          const etat = evalEtat;
+          // Plus d'évaluation, fermée, fenêtre passée, finie, ou la réponse
+          // refusée (déjà rangée par un autre onglet, ou hors fenêtre) :
+          // l'accueil dira ce qu'il en est.
+          if (!etat || etat.etat !== "ouverte" || !etat.commence || etat.fini || etat.close || donnees.enregistree === false) {
+            terminerEvaluation();
+            return;
+          }
+          // La suivante, celle que le serveur attend.
+          state.index = Math.min(state.questions.length - 1, etat.suivant - 1);
+          state.answer = "";
+          renderQuestionEvaluation();
+          return;
+        }
+        if (reponse.statut === 409 || reponse.statut === 404) {
+          // « Commence d'abord » : son passage a été effacé (le professeur l'a
+          // fait repasser) ; ou le code ne vaut plus rien. Retour à l'accueil.
+          terminerEvaluation();
+          return;
+        }
+        // Panne, 429, 400 : la question reste, l'élève renvoie d'un « Valider ».
+        evalSerie.aRenvoyer = paquet;
+        const feedback = $("answer-feedback");
+        feedback.className = "answer-feedback is-wrong";
+        feedback.textContent = reponse.statut === 429
+          ? "Trop de demandes en même temps. Attends un instant, puis touche « Valider » pour renvoyer ta réponse."
+          : "Le serveur ne répond pas. Vérifie le réseau, puis touche « Valider » pour renvoyer ta réponse.";
+        $("validate").focus?.({preventScroll: true});
+      }
+
+      // La fin, quelle qu'elle soit : retour à l'accueil, dont la carte
+      // (ou la ligne) dit l'état vrai, relu du serveur.
+      function terminerEvaluation() {
+        state.running = false;
+        stopTimer();
+        evalSerie = null;
+        state.waitingForContinue = false;
+        $("validate").disabled = false;
+        $("skip").hidden = false;
+        $("question-card").classList.remove("no-skip");
+        $("question-count").classList.remove("evalc-compte");
+        $("time").classList.remove("anneau", "urgent");
+        $("time").style.removeProperty("--reste");
+        $("answer-feedback").textContent = "";
+        $("answer-feedback").className = "answer-feedback";
+        $("game-menu").hidden = false;
+        backToModes();
+        state.configuration = null;
+        renderAccueil();
+        veillerEvaluation();
+      }
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible" && !state.running && !$("intro").hidden) veillerEvaluation();
+        else if (document.visibilityState === "hidden") arreterVeilleEvaluation();
+      });
+      // [evaluation:fin]
 
       // [records:fin]
       // [suivi:fin]
@@ -6146,10 +6689,14 @@
           const faits = Math.min(state.revisionPremierTotal + 1, TOTAL);
           $("question-count").textContent = `${faits} / ${TOTAL}${question.retry ? " · il revient" : ""}`;
           $("progress").style.width = `${state.revisionPremierTotal / TOTAL * 100}%`;
+        } else if (enEvaluation()) {
+          $("question-count").textContent = `📝 Évaluation · ${state.index + 1} / ${TOTAL}`;
+          $("progress").style.width = `${state.index / TOTAL * 100}%`;
         } else {
           $("question-count").textContent = `${state.index + 1} / ${TOTAL}`;
           $("progress").style.width = `${state.index / TOTAL * 100}%`;
         }
+        $("question-count").classList.toggle("evalc-compte", enEvaluation());
         state.answer = "";
         state.lastRevealedLearnMultiplier = null;
         clearLearnStickHelpTimer();
@@ -6748,6 +7295,7 @@
 
       function updateTimer() {
         if (!state.running) return;
+        if (enEvaluation()) { updateTimerEvaluation(); return; }
         if (state.configuration?.course === "records") {
           $("time").textContent = formatTime(Math.floor((horlogeSerie() - state.startAt) / 1000));
           return;
@@ -6909,6 +7457,7 @@
         }
         if (!state.running) return;
         updateTimer();
+        if (state.running && enEvaluation() && state.timer === null) { state.timer = window.setInterval(updateTimer, 200); return; }
         if (state.running && (state.configuration?.duration !== null || state.configuration?.course === "records") && state.timer === null) state.timer = window.setInterval(updateTimer, 200);
       }
 
@@ -7146,6 +7695,8 @@
       function majSortieJeu() {
         const sortie = sortieDeSerie();
         const bouton = $("game-menu");
+        // Lot E2 : pas de retour à l'accueil pendant l'évaluation.
+        bouton.hidden = enEvaluation();
         bouton.querySelector(".game-menu-label").textContent = sortie.mot;
         bouton.setAttribute("aria-label", `Arrêter la série et revenir ${sortie.ou}`);
       }
@@ -7181,6 +7732,9 @@
 
       function next(skip) {
         if (!state.running) return;
+        // Lot E2 : pendant l'évaluation, chaque réponse part au serveur avant
+        // la question suivante — et rien n'est corrigé à l'écran.
+        if (enEvaluation()) { nextEvaluation(skip); return; }
         if (state.waitingForContinue) {
           if (state.correctionAfficheeA && Date.now() - state.correctionAfficheeA < DELAI_LECTURE_CORRECTION_MS) return;
           advanceAfterResponse();
@@ -7323,7 +7877,7 @@
       }
 
       function enterDigit(digit) {
-        if (!state.running || state.waitingForContinue || state.answer.length >= 6) return;
+        if (!state.running || state.waitingForContinue || state.answer.length >= (enEvaluation() ? CHIFFRES_EVALUATION : 6)) return;
         state.answer += digit;
         renderInlineAnswer();
         clearAnswerError();
@@ -8603,6 +9157,9 @@
         // ordinateur seulement) — seulement s'il est vraiment affiché (les 9
         // tables acquises replient le bloc : pas d'étapes, rien à cacher).
         document.querySelector(".acc").classList.toggle("etape-seule", Boolean(etapes.querySelector(".etape-choix")));
+        // Lot E2 : la carte « 📝 Évaluation » en tête, quand le professeur en a
+        // ouvert une pour la classe (voir renderCarteEvaluation).
+        renderCarteEvaluation();
         // Le bloc du jour ou le rang peuvent arriver après coup (parcours
         // revenu du serveur). L'échelle se mesure sur l'accueil FERMÉ, choix
         // déplié ou non : elle ne change pas quand on ouvre un choix, et elle

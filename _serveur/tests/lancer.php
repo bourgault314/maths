@@ -3011,6 +3011,10 @@ const MATRICE_ATTENDUE = [
     // fichier, terminer. Les modèles n'ont pas de classe : hors matrice.
     'evaluation.ouvrir' => 'ecriture',
     'evaluation.etat' => 'ecriture',
+    // Lot E2 : « Faire repasser » un élève — joué tant que l'évaluation est
+    // ouverte (avant « fermer »), sur l'élève de la classe (rien à effacer :
+    // le droit seul est éprouvé, le serveur répond 200 avec efface: false).
+    'evaluation.repasser' => 'ecriture',
     'evaluation.fermer' => 'ecriture',
     'evaluation.fichier' => 'ecriture',
     'evaluation.terminer' => 'ecriture',
@@ -3084,6 +3088,10 @@ function jouer_action_lot11(string $action, array $lot11, string $jeton): int
         case 'evaluation.fichier':
         case 'evaluation.terminer':
             $corps['classe_id'] = $lot11['classe'];
+            break;
+        case 'evaluation.repasser':
+            $corps['classe_id'] = $lot11['classe'];
+            $corps['eleve_id'] = $lot11['eleve']['id'];
             break;
         case 'evaluation.ouvrir':
             // Avec un modèle du professeur qui joue : chacun ouvre avec les siens.
@@ -5558,9 +5566,70 @@ verifier("évaluations — la fenêtre de l'élève est tenue par le serveur ; v
     $etat = ev_prof('evaluation.etat', $ev)['json']['evaluation'];
     egal(2, $etat['commences']);
     egal(2, $etat['finis']);
-    foreach (['Léa', 'Noah', $code, 'prenom', 'eleve_id', 'graine'] as $interdit) {
+    // Lot E2 : la liste « qui a commencé, qui a fini », par élève — les
+    // prénoms vont au professeur en écriture (comme le fichier) ; jamais un
+    // code, une graine, une réponse.
+    egal(6, count($etat['eleves']), 'les six élèves de la classe');
+    egal(['Inès', 'Léa', 'Noah', 'Sami', 'Tom', 'Zoé'], array_column($etat['eleves'], 'prenom'), 'dans l’ordre du tableau de classe');
+    $parPrenom = [];
+    foreach ($etat['eleves'] as $eleve) $parPrenom[$eleve['prenom']] = $eleve;
+    egal(['id' => (int)$ev['eleves'][0]['id'], 'prenom' => 'Léa', 'initiale' => 'E', 'etat' => 'fini', 'question' => 20], $parPrenom['Léa'], 'Léa a fini');
+    egal('fini', $parPrenom['Noah']['etat'], 'Noah a fini à la main');
+    egal(['etat' => 'rien', 'question' => null], ['etat' => $parPrenom['Inès']['etat'], 'question' => $parPrenom['Inès']['question']], 'Inès n’a pas commencé');
+    foreach ([$code, $code2, 'graine', '56|43', 'reponses'] as $interdit) {
         vrai(!str_contains(json_encode($etat), $interdit), "Ma classe ne reçoit pas « $interdit » en boucle");
     }
+});
+
+verifier("évaluations — « Faire repasser » (lot E2) : le passage effacé, un nouveau tirage, pour l'écriture, tant que c'est ouvert, journalisé sur l'élève", function () use (&$ev) {
+    $code2 = $ev['eleves'][1]['code'];
+    $noah = (int)$ev['eleves'][1]['id'];
+    $avant = ev_eleve($code2)['json']['evaluation'];
+    egal(true, $avant['fini']);
+    $graineAvant = $avant['graines']['eleve'];
+    $revisionAvant = (int)ev_prof('evaluation.etat', $ev)['json']['evaluation']['revision'];
+    // Les refus : un élève inconnu, l'élève d'une autre classe, la lecture seule.
+    egal(404, ev_prof('evaluation.repasser', $ev, ['eleve_id' => 999999])['code'], 'élève inconnu');
+    egal(404, ev_prof('evaluation.repasser', $ev, ['eleve_id' => (int)$ev['autreEleve']['id']])['code'], 'l’élève d’une autre classe : inconnu ici');
+    egal(404, ev_prof('evaluation.repasser', $ev, ['eleve_id' => 'noah'])['code'], 'un identifiant qui n’est pas un nombre : inconnu');
+    appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $ev['classe'], 'prof_id' => $ev['collegue'], 'droit' => 'lecture'], ['jeton' => $ev['jeton']]);
+    egal(403, ev_prof('evaluation.repasser', $ev, ['eleve_id' => $noah], $ev['jetonCollegue'])['code'], 'en lecture seule : non');
+    appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $ev['classe'], 'prof_id' => $ev['collegue'], 'droit' => 'ecriture'], ['jeton' => $ev['jeton']]);
+    egal(2, ev_en_base()['presences'], 'rien n’a bougé');
+    egal(21, ev_en_base()['reponses']);
+    // Le collègue en écriture fait repasser Noah.
+    $r = ev_prof('evaluation.repasser', $ev, ['eleve_id' => $noah], $ev['jetonCollegue']);
+    egal(200, $r['code'], json_encode($r['json']));
+    egal(true, $r['json']['efface']);
+    egal(1, ev_en_base()['presences'], 'sa présence est partie');
+    egal(20, ev_en_base()['reponses'], 'sa réponse aussi ; celles de Léa restent');
+    egal(1, $r['json']['evaluation']['commences']);
+    egal(1, $r['json']['evaluation']['finis']);
+    $parPrenom = [];
+    foreach ($r['json']['evaluation']['eleves'] as $eleve) $parPrenom[$eleve['prenom']] = $eleve;
+    egal('rien', $parPrenom['Noah']['etat'], 'pour Ma classe, Noah n’a pas commencé');
+    egal($revisionAvant + 1, (int)$r['json']['evaluation']['revision'], 'la révision monte : l’appli de Noah saura que son état a changé');
+    $e = ev_eleve($code2)['json']['evaluation'];
+    egal(false, $e['commence'], 'pour l’appli de Noah : il n’a pas commencé');
+    vrai($e['graines'] === null && $e['suivant'] === null, 'plus de graine, plus de suivant');
+    egal(false, $e['fini']);
+    $ligne = bd_test()->query("SELECT action, cible_type, cible_id, prof_id FROM journal WHERE action = 'evaluation.repasser' ORDER BY id DESC LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+    egal(['evaluation.repasser', 'eleve', $noah, $ev['collegue']], [$ligne['action'], $ligne['cible_type'], (int)$ligne['cible_id'], (int)$ligne['prof_id']], 'journalisé sur l’élève, par le collègue');
+    vrai(!str_contains(json_encode($ligne), 'Noah'), 'sans prénom');
+    // Repasser un élève qui n'a pas commencé : rien à effacer, pas une erreur, pas de journal.
+    $r = ev_prof('evaluation.repasser', $ev, ['eleve_id' => $noah]);
+    egal(200, $r['code']);
+    egal(false, $r['json']['efface']);
+    egal(1, (int)bd_test()->query("SELECT COUNT(*) FROM journal WHERE action = 'evaluation.repasser' AND resultat = 'ok'")->fetchColumn(), 'une seule ligne de journal (la ligne « refus » de la lecture seule est à part)');
+    // Noah recommence : une AUTRE graine (un nouveau tirage), et il peut répondre.
+    $deux = ev_eleve($code2, ['commencer' => true])['json']['evaluation'];
+    egal(true, $deux['commence']);
+    vrai($deux['graines']['eleve'] !== $graineAvant, 'une nouvelle graine : pas la copie du premier passage');
+    egal($avant['graines']['seance'], $deux['graines']['seance'], 'la graine de l’évaluation, elle, ne change pas');
+    egal(1, $deux['suivant']);
+    egal(true, ev_eleve($code2, ['numero' => 1, 'reponse' => '9', 'dixiemes' => 30])['json']['enregistree'], 'il répond de nouveau à la question 1');
+    egal(true, ev_eleve($code2, ['finir' => true])['json']['evaluation']['fini']);
+    egal(['seances' => 1, 'presences' => 2, 'reponses' => 21], ev_en_base(), 'le fichier ne gardera que ce dernier passage');
 });
 
 verifier("évaluations — le fichier : graines, débuts et réponses élève par élève, pour l'écriture seulement, journalisé ; le serveur ne corrige rien", function () use (&$ev) {
@@ -5604,6 +5673,8 @@ verifier("évaluations — fermer : plus rien n'entre, personne ne commence, les
     egal(200, ev_prof('evaluation.fermer', $ev)['code'], 'fermer deux fois ne casse rien');
     egal(1, (int)bd_test()->query("SELECT COUNT(*) FROM journal WHERE action = 'evaluation.fermer' AND cible_id = " . (int)$ev['classe'])->fetchColumn(), 'et ne journalise qu’une fois');
     egal(409, ev_eleve($ev['eleves'][2]['code'], ['commencer' => true])['code'], 'fermée : on ne commence plus');
+    egal(409, ev_prof('evaluation.repasser', $ev, ['eleve_id' => (int)$ev['eleves'][1]['id']])['code'], 'fermée : on ne fait plus repasser (lot E2)');
+    egal(2, ev_en_base()['presences'], 'et rien n’a été effacé');
     $code3 = $ev['eleves'][2]['code'];
     egal('fermee', ev_eleve($code3)['json']['evaluation']['etat'], 'l’élève voit « fermée »');
     egal(false, ev_eleve($ev['eleves'][1]['code'], ['numero' => 2, 'reponse' => '1', 'dixiemes' => 1])['json']['enregistree'], 'plus aucune réponse');

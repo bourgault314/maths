@@ -100,6 +100,11 @@ const DROIT_PAR_ACTION = [
     'evaluation.fermer' => 'ecriture',
     'evaluation.fichier' => 'ecriture',
     'evaluation.terminer' => 'ecriture',
+    // Lot E2 (15/10/2026) : « Faire repasser » un élève de l'évaluation
+    // ouverte — ça efface SON passage, pour qu'il recommence : écriture,
+    // comme le reste de l'évaluation (c'est un dépannage en classe, pas une
+    // suppression de données de la classe).
+    'evaluation.repasser' => 'ecriture',
 ];
 
 // Les actions réservées au compte administrateur (gestion des comptes prof).
@@ -1201,6 +1206,23 @@ try {
                 'classe' => ['id' => (int)$classe['id'], 'libelle' => $classe['libelle']],
                 'jour' => jour_local(),
                 'etat' => evaluation_fermee($evaluation) ? 'fermee' : 'ouverte'] + contenu_evaluation($pdo, $evaluation));
+
+        case 'evaluation.repasser':
+            // Lot E2 : l'élève repart de zéro (présence, réponses, « fini »
+            // effacés ; nouvelle graine à son prochain « Je commence »).
+            // Seulement un élève de CETTE classe, seulement tant que
+            // l'évaluation est ouverte ; journalisé sur l'élève, sans prénom.
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
+            $evaluation = evaluation_de_la_classe($pdo, (int)$classe['id']);
+            if ($evaluation === null) erreur("Il n'y a pas d'évaluation ouverte pour cette classe.", 409);
+            if (evaluation_fermee($evaluation)) erreur("L'évaluation est fermée : on ne fait plus repasser personne.", 409);
+            $eleveId = eleve_de_la_classe($pdo, (int)$classe['id'], is_int($corps['eleve_id'] ?? null) ? $corps['eleve_id'] : 0);
+            if ($eleveId === null) erreur("Élève inconnu.", 404);
+            $efface = faire_repasser_evaluation($pdo, $evaluation, $eleveId);
+            if ($efface) journaliser($pdo, $profId, 'evaluation.repasser', 'eleve', $eleveId);
+            $evaluation = evaluation_de_la_classe($pdo, (int)$classe['id']) ?? $evaluation;
+            repondre(['ok' => true, 'efface' => $efface, 'evaluation' => etat_evaluation_pour_la_classe($pdo, $evaluation), 'eclair' => false,
+                'rythme' => RYTHME_EVALUATION_CLASSE]);
 
         case 'evaluation.terminer':
             // Tout est effacé, tout de suite : la séance, les présences, les

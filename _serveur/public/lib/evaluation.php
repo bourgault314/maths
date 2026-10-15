@@ -375,6 +375,38 @@ function finir_evaluation(PDO $pdo, array $evaluation, int $eleveId, array $pres
         ->execute([$presence['graine'] . '|' . $presence['debut'] . '|1', (int)$evaluation['id'], NUMERO_PRESENCE_DIRECT, $eleveId]);
 }
 
+// « Faire repasser » (lot E2, 15/10/2026, décision de Gwenaël) : un élève
+// bloqué — un camarade a passé l'évaluation avec son code, ou « J'ai fini »
+// cliqué trop tôt — repart de zéro. Son passage est effacé (présence,
+// réponses, drapeau « fini ») ; à son prochain « Je commence », le serveur
+// lui tire une AUTRE graine : un nouveau tirage, pas la copie de celui qui a
+// vu la première. Refusé une fois l'évaluation fermée (le fichier doit rester
+// ce que la classe a rendu). La révision de la séance monte : l'appli de
+// l'élève, qui relit l'état, revient d'elle-même à la carte « Je commence ».
+// Renvoie vrai si un passage a bien été effacé.
+function faire_repasser_evaluation(PDO $pdo, array $evaluation, int $eleveId): bool
+{
+    if (evaluation_fermee($evaluation)) return false;
+    $requete = $pdo->prepare('DELETE FROM directs_reponses WHERE direct_id = ? AND eleve_id = ?');
+    $requete->execute([(int)$evaluation['id'], $eleveId]);
+    $efface = $requete->rowCount() > 0;
+    if ($efface) {
+        $pdo->prepare('UPDATE directs SET revision = revision + 1 WHERE id = ?')->execute([(int)$evaluation['id']]);
+    }
+    return $efface;
+}
+
+// Un élève de CETTE classe, ou null : « Faire repasser » ne touche jamais un
+// élève d'une autre classe, même avec un identifiant deviné.
+function eleve_de_la_classe(PDO $pdo, int $classeId, int $eleveId): ?int
+{
+    $requete = $pdo->prepare('SELECT id FROM eleves WHERE id = ? AND classe_id = ?');
+    $requete->execute([$eleveId, $classeId]);
+    $id = $requete->fetchColumn();
+    $requete->closeCursor();
+    return $id === false ? null : (int)$id;
+}
+
 // Le modèle tel que l'appli et Ma classe le reçoivent (sans la fin ni la
 // durée : ce sont des affaires de serveur).
 function modele_de_l_evaluation(array $evaluation): array
@@ -414,14 +446,19 @@ function etat_evaluation_pour_l_eleve(PDO $pdo, array $evaluation, int $eleveId)
     ];
 }
 
-// Ce que MA CLASSE reçoit en boucle : les compteurs, sans aucun nom.
+// Ce que MA CLASSE reçoit en boucle : les compteurs, et — lot E2 — la liste
+// des élèves avec où en est chacun (« rien », « en-cours » avec la question
+// où il en est, « fini », « close » : sa fenêtre est passée), pour la liste
+// « qui a commencé, qui a fini » et le bouton « Faire repasser ». Les
+// prénoms vont au professeur en écriture, comme le fichier ; jamais un code,
+// jamais une graine, jamais une réponse.
 function etat_evaluation_pour_la_classe(PDO $pdo, array $evaluation): array
 {
     $directId = (int)$evaluation['id'];
     $n = (int)($evaluation['reglage']['n'] ?? 0);
-    $requete = $pdo->prepare('SELECT COUNT(*) FROM eleves WHERE classe_id = ?');
+    $requete = $pdo->prepare("SELECT id, prenom, initiale FROM eleves WHERE classe_id = ? ORDER BY prenom = '', prenom, code");
     $requete->execute([(int)$evaluation['classe_id']]);
-    $inscrits = (int)$requete->fetchColumn();
+    $inscrits = $requete->fetchAll();
     $requete->closeCursor();
     $requete = $pdo->prepare('SELECT eleve_id, reponse FROM directs_reponses WHERE direct_id = ? AND numero = ?');
     $requete->execute([$directId, NUMERO_PRESENCE_DIRECT]);
@@ -434,21 +471,37 @@ function etat_evaluation_pour_la_classe(PDO $pdo, array $evaluation): array
     $parEleve = [];
     foreach ($requete->fetchAll() as $ligne) $parEleve[(int)$ligne['eleve_id']] = (int)$ligne['combien'];
     $requete->closeCursor();
-    foreach ($presences as $eleveId => $presence) {
-        if (($presence['fini'] ?? false) || ($parEleve[$eleveId] ?? 0) >= $n) $finis += 1;
+    $fermee = evaluation_fermee($evaluation);
+    $eleves = [];
+    foreach ($inscrits as $ligne) {
+        $eleveId = (int)$ligne['id'];
+        $presence = $presences[$eleveId] ?? null;
+        $repondues = $parEleve[$eleveId] ?? 0;
+        $fini = $presence !== null && (($presence['fini'] ?? false) || $repondues >= $n);
+        if ($fini) $finis += 1;
+        $etat = $presence === null ? 'rien'
+            : ($fini ? 'fini' : (($fermee || fenetre_evaluation_close($evaluation, $presence)) ? 'close' : 'en-cours'));
+        $eleves[] = [
+            'id' => $eleveId,
+            'prenom' => (string)$ligne['prenom'],
+            'initiale' => (string)$ligne['initiale'],
+            'etat' => $etat,
+            'question' => $presence === null ? null : min($n, $repondues + 1),
+        ];
     }
     $fin = (int)($evaluation['reglage']['fin'] ?? 0);
     return [
-        'etat' => evaluation_fermee($evaluation) ? 'fermee' : 'ouverte',
+        'etat' => $fermee ? 'fermee' : 'ouverte',
         'nom' => (string)($evaluation['reglage']['nom'] ?? ''),
         'modele' => modele_de_l_evaluation($evaluation),
         'revision' => (int)$evaluation['revision'],
         'ouvert_le' => (int)$evaluation['ouvert_le'],
         'fin' => $fin,
         'expire_le' => (int)$evaluation['expire_le'],
-        'inscrits' => $inscrits,
+        'inscrits' => count($inscrits),
         'commences' => count($presences),
         'finis' => $finis,
+        'eleves' => $eleves,
     ];
 }
 

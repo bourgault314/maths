@@ -10,6 +10,7 @@ import {createRequire} from "node:module";
 
 const require = createRequire(import.meta.url);
 export const PARCOURS = require("../outils/calcul_mental/defi_tables_mon_parcours.js");
+export const CORE = require("../outils/calcul_mental/defi_tables_core.js");
 export const html = await readFile(new URL("../outils/calcul_mental/defi_tables.html", import.meta.url), "utf8");
 
 // ------------------------------------------------------------ les morceaux de page
@@ -44,21 +45,31 @@ export function fauxStockage(initial = {}) {
 
 export function fauxElement(id) {
   const el = {
-    id, hidden: false, textContent: "", value: "", href: "", enfants: [], classes: new Set(), attributs: {}, ecouteurs: {},
+    id, hidden: false, disabled: false, textContent: "", value: "", href: "", enfants: [], classes: new Set(), attributs: {}, ecouteurs: {},
+    // Lot E2 : ce que la carte de l'évaluation touche en plus (style, prepend, remove…).
+    style: {proprietes: {}, setProperty(n, v) { el.style.proprietes[n] = v; }, removeProperty(n) { delete el.style.proprietes[n]; }},
     append(...noeuds) { noeuds.forEach(n => el.enfants.push(n)); },
+    prepend(...noeuds) { el.enfants.unshift(...noeuds); },
     replaceChildren(...noeuds) { el.enfants = [...noeuds]; },
+    remove() { el.retire = true; },
+    focus() {},
     setAttribute(n, v) { el.attributs[n] = v; },
     addEventListener(t, f) { el.ecouteurs[t] = f; },
     querySelector() { return fauxElement("sous"); },
+    querySelectorAll() { return el.enfants.filter(n => n && n.classes); },
     classList: {
       toggle(c, on) { on ? el.classes.add(c) : el.classes.delete(c); },
-      add(c) { el.classes.add(c); },
+      add(...cs) { cs.forEach(c => el.classes.add(c)); },
+      remove(...cs) { cs.forEach(c => el.classes.delete(c)); },
       contains(c) { return el.classes.has(c); }
     },
     get texte() {
       const lire = n => typeof n === "string" ? n : (n.enfants && n.enfants.length ? n.texte : (n.textContent || ""));
       return el.enfants.map(lire).join("");
-    }
+    },
+    // Lot E2 : « className » écrit et lit les classes, comme un vrai élément.
+    get className() { return [...el.classes].join(" "); },
+    set className(valeur) { el.classes = new Set(String(valeur).split(/\s+/).filter(Boolean)); }
   };
   return el;
 }
@@ -106,7 +117,10 @@ export function fauxReseau({mode = "ok", delai = 0, progression = null, existe =
     if (mode === "muet") return new Promise(() => {});
     if (mode === "coupe") return Promise.reject(new TypeError("Failed to fetch"));
     let r;
-    if (url.endsWith("/api/eleve.php") && corps.billet) {
+    // Lot E2 : l'appli demande aussi l'évaluation de la classe (api/direct.php) ;
+    // ici, il n'y en a jamais.
+    if (url.endsWith("/api/direct.php")) r = reponseHttp(200, {ok: true, direct: null, evaluation: null, rythme: 6000});
+    else if (url.endsWith("/api/eleve.php") && corps.billet) {
       const vaut = billets[corps.billet];
       if (vaut === undefined || consommes.has(corps.billet)) r = reponseHttp(404, {ok: false, erreur: "Ce lien a expiré."});
       else {
@@ -140,7 +154,9 @@ export function fauxServeur({identite = {prenom: "Léa", classe: "405"}} = {}) {
       if (serveur.mode === "muet") return new Promise(() => {});
       if (serveur.mode === "coupe") return Promise.reject(new TypeError("Failed to fetch"));
       let r;
-      if (url.endsWith("/api/eleve.php")) {
+      if (url.endsWith("/api/direct.php")) {
+        r = reponseHttp(200, {ok: true, direct: null, evaluation: null, rythme: 6000});
+      } else if (url.endsWith("/api/eleve.php")) {
         r = reponseHttp(200, {ok: true, ...identite});
       } else if (corps.lire) {
         const e = cases.get(corps.code);
@@ -220,15 +236,28 @@ export function demarrerAppli({entree = {}, local, session, reseau, running = fa
     allees: [],
     setTimeout: temps ? (fn, ms) => temps.setTimeout(fn, ms) : (fn) => { fn(); return 1; },
     clearTimeout: temps ? id => temps.clearTimeout(id) : () => {},
+    // Lot E2 : le chrono de l'évaluation (un intervalle qui ne bat pas ici) et le défilement.
+    setInterval: () => 2,
+    clearInterval: () => {},
+    scrollTo: () => {},
     addEventListener(type, fn) { (ecouteurs[type] = ecouteurs[type] || []).push(fn); }
   };
   const navigator = {sendBeacon(url, blob) { balises.push({url, blob}); return true; }};
   const state = {parcoursOptionsOpen: false, nameSkipped: false, running};
   // Lot « Les records » : le bloc des records vit dans le bloc suivi ; ce
   // qu'il appelle de la page (les écrans) est remplacé par des repères.
+  // Lot E2 : le bloc de l'évaluation en classe vit aussi dans le bloc suivi ;
+  // ce qu'il appelle de l'écran de question est remplacé par des repères.
+  let TOTAL = 0;
+  let DURATION = null;
   const api = new Function("window", "document", "navigator", "fetch", "PARCOURS", "storage", "stockageSession",
-    "state", "renderParcours", "Date", "$", "renderRecords", "renderAccueil", "show", "launchFromParcours", "rafraichirRecords", `${SOURCE_SUIVI}
+    "state", "renderParcours", "Date", "$", "renderRecords", "renderAccueil", "show", "launchFromParcours", "rafraichirRecords",
+    "CORE", "stopTimer", "quitterSeance", "renderFilSeance", "majSortieJeu", "renderQuestion", "ajusterEchelle", "backToModes",
+    "clearAnswerError", "showAnswerError", "horlogeSerie", "formatTime", "TOTAL", "DURATION", "updateTimer", `${SOURCE_SUIVI}
     return {
+      get evalEtat() { return evalEtat; }, get evalSerie() { return evalSerie; }, get TOTAL() { return TOTAL; }, get DURATION() { return DURATION; },
+      lireEvaluation, veillerEvaluation, retenirEtatEvaluation, lireEtatEvaluation, scoreDeLEvaluation, renderCarteEvaluation,
+      commencerEvaluation, lancerEvaluation, repondreEvaluation, nextEvaluation, terminerEvaluation, enEvaluation, updateTimerEvaluation,
       get codeSuivi() { return codeSuivi; }, get parcours() { return parcours; }, set parcours(p) { parcours = p; },
       get suiviHorsLigne() { return suiviHorsLigne; },
       get suiviIdentite() { return suiviIdentite; }, get sync() { return sync; },
@@ -242,7 +271,9 @@ export function demarrerAppli({entree = {}, local, session, reseau, running = fa
       recordsOuverts, recordConnu, optionsSeance, noterCourse, envoyerCourseEnAttente, chargerRecords, choisirNom, lancerCourse, ouvrirRecords, lireReglageRecords
     };`)(window, document, navigator, reseau.fetch, PARCOURS, () => local, () => session, state,
     () => rendus.push("parcours"), horloge, id => document.getElementById(id), () => rendus.push("records"), () => rendus.push("accueil"),
-    nom => rendus.push("show:" + nom), config => rendus.push("lancer:" + (config && config.course || config && config.mode)), () => rendus.push("accueil"));
+    nom => rendus.push("show:" + nom), config => rendus.push("lancer:" + (config && config.course || config && config.mode)), () => rendus.push("accueil"),
+    CORE, () => rendus.push("stopTimer"), () => {}, () => {}, () => {}, () => rendus.push("question:" + (state.index + 1)), () => {}, () => { state.running = false; rendus.push("show:intro"); },
+    () => {}, () => rendus.push("erreur de saisie"), () => horloge.now(), s => String(s), TOTAL, DURATION, () => {});
   return {api, local, session, reseau, window, document, state, rendus, balises, temps,
     declencher: type => (ecouteurs[type] || []).forEach(fn => fn()),
     repere: () => document.getElementById("suivi-repere"),
