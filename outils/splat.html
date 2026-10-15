@@ -8753,7 +8753,16 @@ function enqueteTexteCase(card, cell, w, P, modele){
    une case « nombre » ou « ajout » garde au moins cellMin (le « 1 » reste lisible), une case
    « tache » jamais élargie. */
 function enqueteLargeursCases(cells, s, P){
-  return cells.map(c => (c.kind === "tache" || c.kind === "part") ? c.v * s : Math.max(P.cellMin, c.v * s));
+  const ws = cells.map(c => (c.kind === "tache" || c.kind === "part") ? c.v * s : Math.max(P.cellMin, c.v * s));
+  /* « Je complète » (15/10/2026, vu par Gwenaël : « Tom + 4 » dépassait Lila) : une case AJOUTÉE
+     élargie pour que son nombre se lise reprend ce surplus sur la tache qu'elle complète (la case
+     juste avant) — la barre complétée finit pile au bout de la référence, comme dans l'histoire. */
+  cells.forEach((c, i) => {
+    const trop = ws[i] - c.v * s;
+    if(c.kind !== "ajout" || trop <= 0 || i === 0 || cells[i - 1].kind !== "tache") return;
+    ws[i - 1] = Math.max(ws[i - 1] - trop, Math.min(ws[i - 1], P.cellMin));
+  });
+  return ws;
 }
 /* L'échelle qui fait tenir la plus longue barre dans barW. */
 function enqueteEchelle(barres, barW, P){
