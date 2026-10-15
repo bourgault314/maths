@@ -102,7 +102,7 @@ test("l'élève ne reçoit ni la répartition ni la bonne réponse", () => {
 // suit son contenu. Aucun autre.
 for (const [nom, page, externes] of [
   ["direct.php (élève)", pageEleve, []],
-  ["prof/direct.php (tableau)", pageTableau, ["../vendor/katex-0.16.9/katex.min.js", "questionnaire.js"]],
+  ["prof/direct.php (tableau)", pageTableau, ["../vendor/katex-0.16.47/katex.min.js", "questionnaire.js"]],
 ]) {
   test(`${nom} : nonce, aucun script d'ailleurs, rien du serveur en HTML`, () => {
     const balises = [...page.matchAll(/<script\b((?:\?>|[^>])*?)>/g)];

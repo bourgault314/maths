@@ -36,7 +36,7 @@ que les polices que la page utilise vraiment. Fredoka s'arrête au poids 700
 | Dossier | Version | Origine |
 |---|---|---|
 | `gsap-3.12.2/` | 3.12.2 | npm `gsap@3.12.2`, `dist/gsap.min.js` |
-| `katex-0.16.9/` | 0.16.9 | npm `katex@0.16.9`, `dist/` (js, css, et les polices `.woff2` seulement) |
+| `katex-0.16.47/` | 0.16.47 | npm `katex@0.16.47` (empreinte du paquet contrôlée : `sha512-Eeo8Ys1doU1z+x8AZsPpQu+p/QcZBI5PeOo7QGQdy2x2m0MU/hYagBbGOmXwr5KVbEfVuWv9LpnQWeehogurjg==`), `dist/` (js, css, et les polices `.woff2` seulement) ; copie octet pour octet dans `_serveur/public/vendor/katex-0.16.47/` pour le tableau de la séance en direct. Remplace 0.16.9 le 15/10/2026 : une formule fabriquée exprès pouvait y figer l'onglet (avis GHSA-64fm-8hw2-v72w et GHSA-cvr6-37gx-v8wc) ; les 20 polices sont identiques d'une version à l'autre |
 | `pdfjs-3.4.120/` | 3.4.120 | npm `pdfjs-dist@3.4.120`, `build/pdf.min.js` et `build/pdf.worker.min.js` |
 | `three-0.128.0/` | r128 | npm `three@0.128.0`, `build/three.min.js` et `examples/js/controls/OrbitControls.js` |
 | `tailwind/` | construit ici | voir ci-dessous |

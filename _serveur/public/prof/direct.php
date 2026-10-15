@@ -25,8 +25,8 @@ $versionDe = static function (string $chemin): string {
     return is_file($chemin) ? substr(md5_file($chemin), 0, 10) : '0';
 };
 $versionQuestionnaire = $versionDe(__DIR__ . '/questionnaire.js');
-$versionKatex = $versionDe(__DIR__ . '/../vendor/katex-0.16.9/katex.min.js');
-$versionKatexCss = $versionDe(__DIR__ . '/../vendor/katex-0.16.9/katex.min.css');
+$versionKatex = $versionDe(__DIR__ . '/../vendor/katex-0.16.47/katex.min.js');
+$versionKatexCss = $versionDe(__DIR__ . '/../vendor/katex-0.16.47/katex.min.css');
 ?>
 <!doctype html>
 <html lang="fr">
@@ -37,7 +37,7 @@ $versionKatexCss = $versionDe(__DIR__ . '/../vendor/katex-0.16.9/katex.min.css')
 <link rel="icon" href="../favicon.ico" sizes="48x48">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
-<link rel="stylesheet" href="../vendor/katex-0.16.9/katex.min.css?v=<?= htmlspecialchars($versionKatexCss, ENT_QUOTES) ?>">
+<link rel="stylesheet" href="../vendor/katex-0.16.47/katex.min.css?v=<?= htmlspecialchars($versionKatexCss, ENT_QUOTES) ?>">
 <title>Séance en direct | maths&amp;go</title>
 <style>
   :root {
@@ -298,7 +298,7 @@ $versionKatexCss = $versionDe(__DIR__ . '/../vendor/katex-0.16.9/katex.min.css')
   <div class="apercu-liste" id="apercu-liste"></div>
 </dialog>
 
-<script src="../vendor/katex-0.16.9/katex.min.js?v=<?= htmlspecialchars($versionKatex, ENT_QUOTES) ?>"></script>
+<script src="../vendor/katex-0.16.47/katex.min.js?v=<?= htmlspecialchars($versionKatex, ENT_QUOTES) ?>"></script>
 <script src="questionnaire.js?v=<?= htmlspecialchars($versionQuestionnaire, ENT_QUOTES) ?>"></script>
 <script nonce="<?= htmlspecialchars($nonce, ENT_QUOTES) ?>">
 (() => {
