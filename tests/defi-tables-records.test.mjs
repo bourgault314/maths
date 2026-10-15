@@ -193,7 +193,7 @@ test("la case d'envoi : une course en attente et le record connu, seulement quan
 test("le moteur copié sur le serveur est le même octet pour octet, et son numéro a monté", () => {
   assert.equal(moteurCopie, moteur);
   assert.match(html, /defi_tables_mon_parcours\.js\?v=20261014-1/);
-  assert.match(html, /defi_tables_core\.js\?v=20261010-1/, "le noyau est resté à celui du lot « trois divisions »");
+  assert.match(html, /defi_tables_core\.js\?v=20261015-1/, "le noyau est resté à celui du lot « trois divisions »");
 });
 
 // --------------------------------------------------------------------- la page
@@ -448,7 +448,7 @@ test("le serveur : la table « records », son API, le réglage par classe, ce q
   assert.match(apiProf, /oublier_record_de_l_eleve\(\$pdo, \(int\)\$eleve\['id'\]\);/, "eleves.supprimer");
   assert.match(archives, /oublier_record_de_l_eleve\(\$pdo, \(int\)\$eleve\['id'\]\);/, "supprimer_classe");
   assert.match(apiEleve, /'record' => \$appli === 'defi-tables' && records_disponibles\(\$pdo\) \? record_affichable\(record_de\(\$pdo, \(int\)\$eleve\['id'\]\)\) : null,/, "la fiche");
-  assert.match(sauvegarde, /'journal', 'records'\]/);
+  assert.match(sauvegarde, /'journal', 'records', 'modeles_evaluation'\]/);
   assert.match(verifier, /verif\(\$lignes, "Les records \(Défi tables\)", function \(\) \{/);
 });
 
@@ -470,7 +470,7 @@ test("la page prof : le temps à côté de la couronne, la carte des records ave
   assert.match(pageProf, /await api\("classes\.modifier", \{classe_id: classe\.id, reglages: \{"defi-tables": \{records: ouvre\}\}\}\);/);
   assert.match(pageProf, /const visible = Boolean\(ligueRecords\) && appliAffichee === "defi-tables" && droitClasse === "proprietaire"/, "propriétaire, Défi tables");
   assert.match(pageProf, /fermer\.textContent = "✕ Fermer";/);
-  assert.match(pageProf, /"bandeau-echues", "bloc-activites", "choix-appli", "bloc-records"\];/);
+  assert.match(pageProf, /"bandeau-echues", "bloc-activites", "choix-appli", "bloc-records", "bloc-evaluations"\];/);
   // Le plein écran (posé sur <body>) ne s'imprime pas avec les bandelettes ; la carte est dans #ecran-classe, déjà cachée à l'impression.
   assert.match(pageProf, /\.barre, header, footer, \.barre-outils, \.actions, \.rec-plein,\s*#ecran-classe > \*:not\(\.fiche\)/);
 });

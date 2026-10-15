@@ -227,7 +227,7 @@ test("la page : le bloc du jour en tête et conseillé, l’unique rond bleu, le
   // tableau : à zéro, « Ma table » principal et « Voir mes calculs ».
   assert.match(html, /\} else \{\s*actions\.append\(maTable\);[\s\S]{0,260}const voir = document\.createElement\("button"\);/, "sur le résultat, quand plus rien n’est dû");
   assert.doesNotMatch(html, /calculs-encore|libelleEncoreLibre|Rien ne monte : ces calculs n’étaient pas encore à revoir/);
-  assert.match(html, /defi_tables_core\.js\?v=20261010-1/);
+  assert.match(html, /defi_tables_core\.js\?v=20261015-1/);
   assert.match(html, /defi_tables_mon_parcours\.js\?v=20261014-1/);
 });
 

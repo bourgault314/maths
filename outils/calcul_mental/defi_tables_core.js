@@ -564,6 +564,288 @@
     return generatePracticeQuestions(normalized, random);
   }
 
+  // ——— Lot E1 « les évaluations en classe » (15/10/2026) ———
+  //
+  // Une évaluation des tables : le professeur prépare un MODÈLE dans Ma classe
+  // (tables, types de questions, nombre, chrono, calculs exclus ou imposés,
+  // tirage), l'ouvre pour une classe, et chaque élève la fait dans Défi tables,
+  // une seule fois. Le serveur de suivi ne connaît NI les questions NI la
+  // correction : il distribue des GRAINES (une par évaluation, une par élève),
+  // l'appli tire la série, et Ma classe refait exactement le même tirage pour
+  // corriger dans le navigateur du professeur. Tout ici est donc DÉTERMINISTE :
+  // même réglage + mêmes graines → même série, dans l'appli (ce fichier) et
+  // dans sa copie servie par suivi.mathsgo.re (prof/defi_tables_core.js, copie
+  // octet pour octet vérifiée par un test).
+  //
+  // Les trois tirages (décision de Gwenaël du 15/10/2026) :
+  //  - « memes » (par défaut) : les mêmes calculs pour tous (graine de
+  //    l'évaluation), l'ordre et les écritures propres à chaque élève (graine
+  //    de l'élève) — équitable, et le voisin n'a pas la même question au même
+  //    moment ;
+  //  - « identique » : tout le monde la même série, dans le même ordre ;
+  //  - « differents » : tout tiré par la graine de l'élève.
+  const TYPES_EVALUATION = Object.freeze(["direct", "missing", "division"]);
+  const TIRAGES_EVALUATION = Object.freeze(["memes", "identique", "differents"]);
+  const CHRONOS_EVALUATION = Object.freeze(["question", "global", "sans"]);
+  // Les bornes sont les mêmes que celles du serveur (lib/evaluation.php) ; un
+  // test les compare.
+  const BORNES_EVALUATION = Object.freeze({
+    questions: Object.freeze([5, 50]),
+    secondesParQuestion: Object.freeze([3, 60]),
+    secondesEnTout: Object.freeze([30, 1800]),
+    nom: 40
+  });
+
+  // mulberry32 : un générateur de nombres pseudo-aléatoires à graine, court et
+  // identique partout où tourne du JavaScript. Il rend des réels dans [0, 1[
+  // comme Math.random, et sert de « random » au tirage de l'évaluation.
+  function aleatoireDeGraine(graine) {
+    let etat = Number(graine) >>> 0;
+    return () => {
+      etat = (etat + 0x6D2B79F5) >>> 0;
+      let t = Math.imul(etat ^ (etat >>> 15), 1 | etat);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  // Un calcul s'écrit « a-b » (a ≤ b, de 1 à 10), comme factKey : 7 × 8 et
+  // 8 × 7 sont le même calcul.
+  function cleEvaluation(texte) {
+    const parts = String(texte || "").split("-").map(Number);
+    if (parts.length !== 2 || !parts.every(n => Number.isInteger(n) && n >= 1 && n <= 10)) return null;
+    return cleDuCalcul(parts[0], parts[1]);
+  }
+
+  // Tous les calculs que des tables peuvent poser, chacun une fois, dans
+  // l'ordre de la grille de Ma classe (table par table, ×1 à ×10).
+  function calculsDisponiblesEvaluation(tables) {
+    const vus = new Set();
+    const liste = [];
+    normalizedTables(tables).forEach(table => {
+      ALL_TABLES.forEach(multiplier => {
+        const cle = cleDuCalcul(table, multiplier);
+        if (vus.has(cle)) return;
+        vus.add(cle);
+        liste.push(cle);
+      });
+    });
+    return liste;
+  }
+
+  // Le réglage d'un modèle, remis au propre : la même forme que celle que le
+  // serveur range (lib/evaluation.php). Renvoie {reglage} ou {erreur}, en
+  // français, pour que Ma classe dise ce qui ne va pas.
+  function verifierReglageEvaluation(brut) {
+    const b = brut && typeof brut === "object" ? brut : {};
+    const tables = normalizedTables(b.tables);
+    if (!tables.length) return {erreur: "Choisis au moins une table."};
+    const types = TYPES_EVALUATION.filter(type => Array.isArray(b.types) && b.types.includes(type));
+    if (!types.length) return {erreur: "Choisis au moins un type de question."};
+    // Un entier, pas un texte : la même règle que le serveur.
+    const n = b.n;
+    if (!Number.isInteger(n) || n < BORNES_EVALUATION.questions[0] || n > BORNES_EVALUATION.questions[1]) {
+      return {erreur: `Le nombre de questions va de ${BORNES_EVALUATION.questions[0]} à ${BORNES_EVALUATION.questions[1]}.`};
+    }
+    const chrono = CHRONOS_EVALUATION.includes(b.chrono) ? b.chrono : null;
+    if (!chrono) return {erreur: "Le chrono est « par question », « en tout » ou « sans »."};
+    let secondes = null;
+    if (chrono !== "sans") {
+      const bornes = chrono === "question" ? BORNES_EVALUATION.secondesParQuestion : BORNES_EVALUATION.secondesEnTout;
+      secondes = b.secondes;
+      if (!Number.isInteger(secondes) || secondes < bornes[0] || secondes > bornes[1]) {
+        return {erreur: chrono === "question"
+          ? `Le temps par question va de ${bornes[0]} à ${bornes[1]} secondes.`
+          : `Le temps en tout va de ${bornes[0] / 60} à ${bornes[1] / 60} minutes.`};
+      }
+    }
+    const tirage = TIRAGES_EVALUATION.includes(b.tirage) ? b.tirage : "memes";
+    const disponibles = calculsDisponiblesEvaluation(tables);
+    const lire = (liste, quoi) => {
+      const cles = [];
+      for (const texte of Array.isArray(liste) ? liste : []) {
+        const cle = cleEvaluation(texte);
+        if (cle === null || !disponibles.includes(cle)) return {erreur: `Un calcul ${quoi} n'est pas dans les tables choisies : ${texte}.`};
+        if (!cles.includes(cle)) cles.push(cle);
+      }
+      return {cles};
+    };
+    const exclus = lire(b.exclus, "exclu");
+    if (exclus.erreur) return exclus;
+    const imposes = lire(b.imposes, "imposé");
+    if (imposes.erreur) return imposes;
+    if (imposes.cles.some(cle => exclus.cles.includes(cle))) return {erreur: "Un calcul ne peut pas être à la fois exclu et imposé."};
+    if (imposes.cles.length > n) return {erreur: `${imposes.cles.length} calculs imposés pour ${n} questions : trop.`};
+    if (disponibles.length - exclus.cles.length < 1) return {erreur: "Tous les calculs sont exclus."};
+    return {reglage: {tables, types, n, chrono, secondes, tirage, exclus: exclus.cles, imposes: imposes.cles}};
+  }
+
+  function normaliserReglageEvaluation(brut) {
+    return verifierReglageEvaluation(brut).reglage || null;
+  }
+
+  // Les calculs d'une évaluation : les imposés d'abord (une fois chacun), puis
+  // le reste tiré comme Mon mélange (choisirCalculs : tables à parts égales,
+  // tous différents, ×1 et ×10 une fois au plus) — sans jamais un calcul
+  // exclu, ni un imposé une seconde fois. Une table dont tous les calculs sont
+  // exclus ne tire rien.
+  function choisirCalculsEvaluation(reglage, random) {
+    const {tables, n, exclus, imposes} = reglage;
+    const interdits = new Set([...exclus, ...imposes]);
+    const calculs = imposes.map(cle => {
+      const [a, b] = cle.split("-").map(Number);
+      const focusTable = tables.includes(a) ? a : b;
+      return {focusTable, multiplier: focusTable === a ? b : a};
+    });
+    const utilisables = tables.filter(table => ALL_TABLES.some(multiplier => !exclus.includes(cleDuCalcul(table, multiplier))));
+    const reste = n - calculs.length;
+    if (reste <= 0 || !utilisables.length) return calculs;
+    const quotas = new Map();
+    balancedSequence(utilisables, reste, random).forEach(table => quotas.set(table, (quotas.get(table) || 0) + 1));
+    let meilleur = null;
+    let meilleursRetours = Infinity;
+    for (let essai = 0; essai < 30 && meilleursRetours > 0; essai += 1) {
+      const pris = new Set(interdits);
+      const rares = new Set();
+      const choix = [];
+      let retours = 0;
+      shuffle([...quotas.keys()], random).forEach(table => {
+        const billets = ALL_TABLES.flatMap(multiplier => multiplier === table || !quotas.has(multiplier) ? [multiplier, multiplier] : [multiplier]);
+        let besoin = quotas.get(table);
+        for (const multiplier of shuffle(billets, random)) {
+          if (!besoin) break;
+          const cle = cleDuCalcul(table, multiplier);
+          if (pris.has(cle) || rares.has(multiplier)) continue;
+          pris.add(cle);
+          if (RARES.includes(multiplier)) rares.add(multiplier);
+          choix.push({focusTable: table, multiplier});
+          besoin -= 1;
+        }
+        // Plus assez de calculs neufs : un calcul revient (jamais un exclu,
+        // jamais le carré, les ×1 et ×10 en dernier recours seulement).
+        if (besoin > 0) {
+          const permis = ALL_TABLES.filter(multiplier => !exclus.includes(cleDuCalcul(table, multiplier)));
+          const ordinaires = shuffle(permis.filter(multiplier => !RARES.includes(multiplier) && multiplier !== table), random);
+          const secours = ordinaires.length ? ordinaires : shuffle(permis, random);
+          for (let tour = 0; besoin > 0; tour += 1, besoin -= 1, retours += 1) {
+            choix.push({focusTable: table, multiplier: secours[tour % secours.length]});
+          }
+        }
+      });
+      if (retours < meilleursRetours) [meilleur, meilleursRetours] = [choix, retours];
+    }
+    return [...calculs, ...meilleur];
+  }
+
+  // La série d'un élève : {reglage du modèle, graines {seance, eleve}} → les
+  // questions numérotées de 1 à n (prompt, answer, factKey…, comme partout).
+  function genererEvaluationDeClasse(reglageBrut, graines) {
+    const reglage = normaliserReglageEvaluation(reglageBrut);
+    if (!reglage) throw new Error("Réglage d'évaluation invalide.");
+    const seance = Number((graines || {}).seance) >>> 0;
+    const eleve = Number((graines || {}).eleve) >>> 0;
+    const graineCalculs = reglage.tirage === "differents" ? eleve : seance;
+    const graineFormes = reglage.tirage === "identique" ? seance : eleve;
+    const rngCalculs = aleatoireDeGraine(graineCalculs);
+    // Un second flux, décalé : en « identique », les deux graines sont la
+    // même, et deux flux identiques tireraient les formes comme les calculs.
+    const rngFormes = aleatoireDeGraine((graineFormes ^ 0x9E3779B9) >>> 0);
+    const calculs = choisirCalculsEvaluation(reglage, rngCalculs);
+    const total = calculs.length;
+    const uneTable = reglage.tables.length === 1;
+    let meilleure = null;
+    let meilleursDefauts = Infinity;
+    for (let essai = 0; essai < 20 && meilleursDefauts > 0; essai += 1) {
+      const typePlan = repartirFormes(calculs, questionTypePlan(reglage.types, total, rngFormes), rngFormes);
+      const cotes = balancedSequence(["focus-first", "focus-second"], total, rngFormes);
+      const nbDivisions = typePlan.filter(type => DIVISION_FORMS.includes(type)).length;
+      const sens = nbDivisions ? balancedSequence(["table", "multiplicateur"], nbDivisions, rngFormes) : [];
+      let division = 0;
+      const posees = new Set();
+      const items = calculs.map((calcul, index) => {
+        const type = typePlan[index];
+        const tire = DIVISION_FORMS.includes(type) && sens[division++] === "multiplicateur";
+        const parLeMultiplicateur = DIVISION_FORMS.includes(type) && (uneTable ? parLeMultiplicateurUneTable(type, tire) : tire);
+        let question = questionDeSerie(calcul.focusTable, calcul.multiplier, type, cotes[index], parLeMultiplicateur);
+        if (type === "direct" && posees.has(question.prompt)) {
+          question = questionDeSerie(calcul.focusTable, calcul.multiplier, type, cotes[index] === "focus-first" ? "focus-second" : "focus-first");
+        }
+        posees.add(question.prompt);
+        return {cle: question.factKey, question};
+      });
+      const {suite, defauts} = ordonnerSerie(items, rngFormes, reglage.tables.length);
+      if (defauts < meilleursDefauts) [meilleure, meilleursDefauts] = [suite, defauts];
+    }
+    return meilleure.map((item, index) => ({...item.question, numero: index + 1}));
+  }
+
+  // Une réponse telle que le serveur la range : « 56|43 » — la valeur tapée
+  // (vide : pas de réponse) et les dixièmes de seconde écoulés.
+  function lireReponseEvaluation(texte) {
+    const [valeur, dixiemes] = String(texte === null || texte === undefined ? "" : texte).split("|");
+    return {
+      valeur: /^\d{1,3}$/.test(valeur || "") ? Number(valeur) : null,
+      dixiemes: /^\d{1,6}$/.test(dixiemes || "") ? Number(dixiemes) : 0
+    };
+  }
+
+  // La note sur 20, proportionnelle, au demi-point (décision du 15/10/2026 :
+  // une question = un point, le temps ne compte pas).
+  function noteSur20(score, total) {
+    if (!total) return 0;
+    return Math.round(score / total * 40) / 2;
+  }
+
+  // La copie d'un élève : ses questions (genererEvaluationDeClasse) et ses
+  // réponses {numero: « 56|43 »} → le score, la note, le temps, et le détail
+  // des ratés — une réponse fausse (donnee) comme une absence de réponse
+  // (donnee: null) ; une question jamais atteinte (évaluation fermée avant la
+  // fin) compte zéro et figure aussi, « atteinte: false ».
+  function corrigerEvaluationDeClasse(questions, reponses) {
+    const donnees = reponses && typeof reponses === "object" ? reponses : {};
+    let score = 0;
+    let dixiemes = 0;
+    let repondues = 0;
+    const rates = [];
+    questions.forEach(question => {
+      const brute = donnees[String(question.numero)];
+      if (brute === undefined || brute === null) {
+        rates.push({numero: question.numero, prompt: question.prompt, answer: question.answer, donnee: null, atteinte: false});
+        return;
+      }
+      const reponse = lireReponseEvaluation(brute);
+      repondues += 1;
+      dixiemes += reponse.dixiemes;
+      if (reponse.valeur === question.answer) score += 1;
+      else rates.push({numero: question.numero, prompt: question.prompt, answer: question.answer, donnee: reponse.valeur, atteinte: true});
+    });
+    return {score, total: questions.length, repondues, dixiemes, rates, note: noteSur20(score, questions.length)};
+  }
+
+  // Ce que Ma classe écrit sous le nom d'un modèle, et ce que l'appli dit à
+  // l'élève : « Tables de 2 à 9 · produits, nombres manquants, divisions ·
+  // 20 questions · 8 s par question · mêmes calculs, ordre différent ».
+  function descriptionEvaluation(reglageBrut) {
+    const reglage = normaliserReglageEvaluation(reglageBrut);
+    if (!reglage) return "";
+    const noms = {direct: "produits", missing: "nombres manquants", division: "divisions"};
+    const chrono = reglage.chrono === "sans" ? "sans chrono"
+      : reglage.chrono === "question" ? `${reglage.secondes} s par question`
+        : `${durationLabel(reglage.secondes).replace(/^(\d+) minutes?$/, "$1 min")} en tout`;
+    const tirages = {memes: "mêmes calculs, ordre différent", identique: "identique pour tous", differents: "tous différents"};
+    const lisible = cle => cle.split("-").join(" × ");
+    // « Tables de 2 à 9 » quand elles se suivent, sinon la liste.
+    const suivies = reglage.tables.every((table, index) => index === 0 || table === reglage.tables[index - 1] + 1);
+    const tables = reglage.tables.length > 2 && suivies
+      ? `Tables de ${reglage.tables[0]} à ${reglage.tables[reglage.tables.length - 1]}`
+      : tablesLabel(reglage.tables);
+    const details = [tables, reglage.types.map(type => noms[type]).join(", "),
+      `${reglage.n} questions`, chrono, tirages[reglage.tirage]];
+    if (reglage.imposes.length) details.push(`${joinFrench(reglage.imposes.map(lisible))} imposé${reglage.imposes.length > 1 ? "s" : ""}`);
+    if (reglage.exclus.length) details.push(`${joinFrench(reglage.exclus.map(lisible))} exclu${reglage.exclus.length > 1 ? "s" : ""}`);
+    return details.join(" · ");
+  }
+
   function joinFrench(values) {
     if (values.length < 2) return String(values[0] ?? "");
     if (values.length === 2) return `${values[0]} et ${values[1]}`;
@@ -661,6 +943,20 @@
     configurationLabel,
     configurationKey,
     durationLabel,
-    solvedPrompt
+    solvedPrompt,
+    // Lot E1 « les évaluations en classe » (15/10/2026).
+    TYPES_EVALUATION,
+    TIRAGES_EVALUATION,
+    CHRONOS_EVALUATION,
+    BORNES_EVALUATION,
+    aleatoireDeGraine,
+    calculsDisponiblesEvaluation,
+    verifierReglageEvaluation,
+    normaliserReglageEvaluation,
+    genererEvaluationDeClasse,
+    lireReponseEvaluation,
+    corrigerEvaluationDeClasse,
+    noteSur20,
+    descriptionEvaluation
   });
 });

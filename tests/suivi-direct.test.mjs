@@ -52,8 +52,9 @@ test("les trois tables ne peuvent porter ni nom, ni énoncé, ni note", () => {
 });
 
 test("types et modes sont des listes fermées, et une réponse passe toujours par son type", () => {
-  assert.match(lib, /const TYPES_DIRECT = \['choix'\];/, "les types de réponse");
-  assert.match(lib, /const MODES_DIRECT = \['eclair'\];/, "les modes de séance");
+  // Lot E1 (15/10/2026) : « entier » (un nombre tapé) et le mode « evaluation ».
+  assert.match(lib, /const TYPES_DIRECT = \['choix', 'entier'\];/, "les types de réponse");
+  assert.match(lib, /const MODES_DIRECT = \['eclair', 'evaluation'\];/, "les modes de séance");
   assert.match(apiProf, /if \(!in_array\(\$type, TYPES_DIRECT, true\)\) erreur\(/, "un type hors liste est refusé");
   assert.match(apiEleve, /\$reponse = reponse_direct\(\$direct\['type'\], \$direct\['reglage'\], \$corps\['reponse'\]\);/,
     "la réponse de l'élève est remise au propre par son type avant d'être rangée");
@@ -84,7 +85,13 @@ test("une classe, un compte ou un élève supprimé emporte la séance et les r�
 });
 
 test("interroger ne compte rien : seules les réponses passent par le limiteur", () => {
-  const avantReponse = apiEleve.slice(apiEleve.indexOf("try {"), apiEleve.indexOf("if (array_key_exists('reponse', $corps))"));
+  // Lot E1 : la branche « évaluation » est à part (tests/suivi-evaluations.test.mjs) ;
+  // elle aussi ne compte que les gestes.
+  const debutEval = apiEleve.indexOf("if ($direct['mode'] === 'evaluation') {");
+  const finEval = apiEleve.indexOf("// L'élève a rejoint la séance");
+  assert.ok(debutEval > 0 && finEval > debutEval, "la branche évaluation est délimitée");
+  const avantReponse = apiEleve.slice(apiEleve.indexOf("try {"), debutEval)
+    + apiEleve.slice(finEval, apiEleve.indexOf("if (array_key_exists('reponse', $corps))"));
   assert.ok(!/\blimiter\(/.test(avantReponse), "aucun compteur incrémenté sur une simple interrogation");
   assert.match(apiEleve, /limiter\('direct:' \. \$code, 120, 300\);/, "120 réponses par code et par cinq minutes");
   assert.match(apiEleve, /compter_echec_adresse\(\$adresse\);/, "un code inconnu compte comme un échec, comme ailleurs");

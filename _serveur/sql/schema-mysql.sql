@@ -119,7 +119,18 @@ CREATE TABLE IF NOT EXISTS directs (
   revision INTEGER NOT NULL DEFAULT 0,
   ouvert_le INTEGER NOT NULL,
   expire_le INTEGER NOT NULL,
+  reglage TEXT NULL,
   UNIQUE KEY directs_classe (classe_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS modeles_evaluation (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  prof_id INTEGER NOT NULL,
+  nom VARCHAR(40) NOT NULL DEFAULT '',
+  reglage VARCHAR(600) NOT NULL DEFAULT '{}',
+  cree_le INTEGER NOT NULL,
+  modifie_le INTEGER NOT NULL,
+  KEY modeles_evaluation_prof (prof_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS directs_questions (

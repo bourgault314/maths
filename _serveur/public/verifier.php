@@ -150,7 +150,7 @@ if ($autorise) {
         $pdo = bd();
         $manquantes = [];
         foreach (['classes', 'eleves', 'progressions', 'profs', 'partages', 'sessions_prof', 'compteurs', 'billets', 'versions', 'journal',
-                  'directs', 'directs_questions', 'directs_reponses'] as $table) {
+                  'directs', 'directs_questions', 'directs_reponses', 'modeles_evaluation'] as $table) {
             try { $pdo->query("SELECT 1 FROM $table LIMIT 1"); }
             catch (Throwable $e) { $manquantes[] = $table; }
         }
@@ -179,6 +179,23 @@ if ($autorise) {
         if ($seances === 0) return "aucune en cours, 0 réponse en base";
         return ($seances === 1 ? "1 en cours" : "$seances en cours") . ", $reponses réponse" . ($reponses > 1 ? "s" : "")
             . " en base (effacées à la fin de la séance)";
+    });
+    // Lot E1 « les évaluations en classe » (15/10/2026) : une évaluation est
+    // une séance en direct au mode « evaluation » (comptée ci-dessus aussi) ;
+    // cette ligne dit ce qu'il en reste, et que la colonne « reglage » et la
+    // table des modèles sont bien là — sans elles, « Ouvrir » répond 503.
+    verif($lignes, "Évaluations (Défi tables)", function () {
+        $pdo = bd();
+        if (!table_existe($pdo, 'modeles_evaluation') || !colonne_existe($pdo, 'directs', 'reglage')) {
+            throw new RuntimeException("manque la table « modeles_evaluation » ou la colonne « reglage » des séances — ouvre migrer.php avec ton mot de passe d'installation.");
+        }
+        $ouvertes = (int)$pdo->query("SELECT COUNT(*) FROM directs WHERE mode = 'evaluation'")->fetchColumn();
+        $reponses = (int)$pdo->query("SELECT COUNT(*) FROM directs_reponses WHERE numero >= 1 AND direct_id IN (SELECT id FROM directs WHERE mode = 'evaluation')")->fetchColumn();
+        $modeles = (int)$pdo->query('SELECT COUNT(*) FROM modeles_evaluation')->fetchColumn();
+        $detail = $modeles . " modèle" . ($modeles > 1 ? "s" : "");
+        if ($ouvertes === 0) return "aucune en cours, 0 réponse en base, $detail";
+        return ($ouvertes === 1 ? "1 en cours ou en attente du fichier" : "$ouvertes en cours ou en attente du fichier") . ", $reponses réponse" . ($reponses > 1 ? "s" : "")
+            . " en base (effacées à « Terminer », au plus tard vingt heures après la fermeture), $detail";
     });
     // Ce que la mise à niveau du 30/08/2026 devait ajouter. Une table présente
     // ne suffit pas : il faut aussi les colonnes, sinon l'API tombe en panne.

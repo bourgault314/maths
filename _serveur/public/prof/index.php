@@ -14,6 +14,11 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
 // déposée au lot 3), chargé seulement quand on ouvre l'onglet SPLAT! d'une classe.
 $moteurSplat = __DIR__ . '/splat-parcours.js';
 $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : '0';
+// Lot E1 « les évaluations en classe » (15/10/2026) : le NOYAU de Défi tables
+// (copie de outils/calcul_mental/defi_tables_core.js, identité vérifiée par un
+// test), pour refaire le tirage d'une évaluation et la corriger ici.
+$moteurCore = __DIR__ . '/defi_tables_core.js';
+$versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0';
 ?>
 <!doctype html>
 <html lang="fr">
@@ -327,6 +332,67 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
   .rec-reglage label { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin: 0; font-size: .95rem; cursor: pointer; }
   .rec-reglage input { width: 20px; height: 20px; margin: 0; accent-color: var(--blue); }
   .rec-reglage small { display: block; margin: -4px 0 0 28px; color: var(--muted); font-size: .84rem; }
+  /* Lot E1 « les évaluations en classe » (15/10/2026, planches 2 et 3
+     validées par Gwenaël) : la carte « 📝 Évaluations » de l'onglet Défi
+     tables — la liste des modèles, le compteur pendant, la répartition sans
+     nom après ; les deux boîtes (modèle, ouvrir) ; le plein écran. */
+  .eval-carte { max-width: 820px; margin-top: 14px; border-left: 5px solid var(--blue); }
+  .eval-tete { display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+  .eval-tete strong { display: block; color: var(--blue-dark); font-family: Georgia, serif; font-size: 1.05rem; }
+  .eval-tete p { margin: 2px 0 0; color: var(--muted); font-size: .88rem; }
+  .eval-tete .fin { margin-left: auto; display: flex; gap: 8px; }
+  .eval-modeles { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 6px; }
+  .eval-modeles li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 10px;
+                     min-height: 44px; padding: 6px 8px 6px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fbfcfe; }
+  .eval-modeles b { display: block; color: var(--ink); }
+  .eval-modeles span { display: block; color: var(--muted); font-size: .84rem; }
+  .eval-modeles li.vide { display: block; color: var(--muted); font-style: italic; border-style: dashed; padding: 10px 12px; }
+  .eval-cours { margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: #eef3f9; }
+  .eval-cours .etat { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .eval-cours .etat .pastille { font-size: .84rem; }
+  .eval-cours .modele { font-weight: 700; color: var(--blue-dark); }
+  .eval-cours .quand { color: var(--muted); font-size: .88rem; }
+  .eval-compte { display: flex; align-items: baseline; gap: 18px; flex-wrap: wrap; margin-top: 10px; }
+  .eval-compte .gros { font-size: 2rem; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .eval-compte .gros small { font-size: 1rem; font-weight: 600; color: var(--muted); margin-left: 4px; }
+  .eval-repartition { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
+  .eval-repartition div { padding: 10px 8px; border-radius: 10px; background: #fff; border: 1px solid var(--line); text-align: center; }
+  .eval-repartition .n { display: block; font-size: 1.7rem; font-weight: 800; color: var(--blue-dark); line-height: 1.1; }
+  .eval-repartition .l { display: block; margin-top: 2px; font-size: .8rem; color: var(--muted); font-weight: 700; }
+  .eval-repartition div:first-child .n { color: var(--vert); }
+  .eval-garde { margin: 10px 0 0; color: var(--muted); font-size: .86rem; }
+  .eval-dialog { max-width: 640px; }
+  .eval-dialog h2 { margin: 0 0 4px; }
+  .eval-dialog .deux { display: grid; grid-template-columns: 1fr 1fr; gap: 0 18px; }
+  .cases { display: flex; flex-wrap: wrap; gap: 6px; }
+  .cases button { min-width: 44px; min-height: 40px; padding: 0 10px; border: 2px solid var(--line); border-radius: 10px;
+                  background: #fff; color: var(--ink); font-size: .95rem; font-weight: 700; }
+  .cases button:hover { border-color: var(--blue); background: #f3f8fc; }
+  .cases button[aria-pressed="true"] { border-color: var(--blue); background: #eaf2fb; color: var(--blue-dark); }
+  .radios label { display: flex; align-items: center; gap: 8px; min-height: 40px; margin: 0; font-weight: 600; font-size: .93rem; }
+  .radios input[type=radio] { width: 18px; height: 18px; margin: 0; accent-color: var(--blue); }
+  .radios input[type=number] { width: 76px; min-height: 36px; padding: 4px 8px; }
+  .eval-calculs summary { cursor: pointer; margin: 12px 0 6px; font-weight: 700; font-size: .93rem; color: var(--blue); }
+  .eval-calculs p { margin: 0 0 6px; color: var(--muted); font-size: .84rem; }
+  .eval-calculs .table { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin: 3px 0; }
+  .eval-calculs .table b { flex: 0 0 26px; color: var(--muted); font-size: .8rem; }
+  .eval-calculs .table button { min-height: 30px; min-width: 50px; padding: 0 6px; font-size: .82rem; font-weight: 700; color: var(--ink);
+                                background: #fff; border: 1.5px solid var(--line); border-radius: 7px; }
+  .eval-calculs .table button.exclu { color: #9aa9bb; border-style: dashed; text-decoration: line-through; background: #f6f8fa; }
+  .eval-calculs .table button.impose { color: #7a3e00; border-color: var(--orange); background: #fdf0e3; }
+  .eval-plein { position: fixed; inset: 0; z-index: 50; background: #fff; padding: 28px 48px; overflow: auto; }
+  .eval-plein h1 { margin: 0; text-align: center; font-size: 2.4rem; }
+  .eval-plein .fermer { position: absolute; top: 18px; right: 24px; }
+  .eval-plein .eval-repartition { max-width: 1000px; margin: 40px auto 0; gap: 24px; }
+  .eval-plein .eval-repartition .n { font-size: 4.5rem; }
+  .eval-plein .eval-repartition .l { font-size: 1.3rem; }
+  .eval-plein p { text-align: center; font-size: 1.6rem; font-weight: 700; color: var(--blue-dark); margin-top: 30px; }
+  @media (max-width: 700px) {
+    .eval-modeles li { grid-template-columns: 1fr; }
+    .eval-repartition { grid-template-columns: 1fr 1fr; }
+    .eval-dialog .deux { grid-template-columns: 1fr; }
+    .eval-plein { padding: 16px; }
+  }
   @media (max-width: 700px) { .rec-deux { grid-template-columns: 1fr; } .rec-plein { padding: 16px; } }
   @media (max-width: 700px) {
     .tableau-enveloppe { overflow-x: visible; }
@@ -492,6 +558,24 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
       <strong>Les calculs qui coincent dans cette classe</strong>
       <p id="fragiles-sous"></p>
       <ul id="fragiles-liste"></ul>
+    </div>
+
+    <!-- Lot E1 « les évaluations en classe » (15/10/2026, planches 2 et 3) :
+         la carte « 📝 Évaluations », onglet Défi tables, propriétaire et
+         collègues en écriture. Les modèles sont ceux du professeur connecté ;
+         l'évaluation ouverte est celle de la classe. La correction se fait
+         ici, avec le moteur servi par ce serveur : le serveur n'a que des
+         graines et des réponses, jamais une note. -->
+    <div class="carte eval-carte" id="bloc-evaluations" hidden>
+      <div class="eval-tete">
+        <div><strong>📝 Évaluations</strong><p>En classe · un passage par élève · rien n’est gardé sur le serveur</p></div>
+        <div class="fin">
+          <button type="button" class="secondaire petit" id="evaluations-plein-ecran" hidden>Plein écran</button>
+          <button type="button" class="secondaire petit" id="nouveau-modele">Nouveau modèle</button>
+        </div>
+      </div>
+      <div id="evaluations-zone"></div>
+      <p class="message" id="message-evaluations" hidden></p>
     </div>
 
     <div class="tableau-enveloppe">
@@ -721,16 +805,72 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
   </form>
 </dialog>
 
+<!-- Lot E1 : la boîte d'un modèle d'évaluation (nouveau, ou à modifier). -->
+<dialog id="eval-modele" class="eval-dialog">
+  <h2 id="em-titre">Nouveau modèle</h2>
+  <label for="em-nom">Nom</label>
+  <input type="text" id="em-nom" maxlength="40" autocomplete="off">
+  <label>Tables</label>
+  <div class="cases" id="em-tables" role="group" aria-label="Tables"></div>
+  <label>Questions</label>
+  <div class="cases" id="em-types" role="group" aria-label="Types de question"></div>
+  <div class="deux">
+    <div>
+      <label for="em-n">Nombre de questions</label>
+      <select id="em-n"><option>10</option><option>15</option><option selected>20</option><option>25</option><option>30</option></select>
+      <label>Chrono</label>
+      <div class="radios">
+        <label><input type="radio" name="em-chrono" value="question" checked> par question : <input type="number" id="em-secondes" min="3" max="60" value="8"> s</label>
+        <label><input type="radio" name="em-chrono" value="global"> en tout : <input type="number" id="em-minutes" min="1" max="30" value="3"> min</label>
+        <label><input type="radio" name="em-chrono" value="sans"> sans chrono</label>
+      </div>
+    </div>
+    <div>
+      <label>Tirage</label>
+      <div class="radios">
+        <label><input type="radio" name="em-tirage" value="memes" checked> mêmes calculs, ordre différent par élève</label>
+        <label><input type="radio" name="em-tirage" value="identique"> identique pour tous</label>
+        <label><input type="radio" name="em-tirage" value="differents"> tous différents</label>
+      </div>
+    </div>
+  </div>
+  <details class="eval-calculs" id="em-calculs">
+    <summary>Calculs à exclure ou imposer</summary>
+    <p>Un clic : <b>exclu</b> (ne sort jamais) · deux clics : <b>imposé</b> (sort une fois) · trois : normal.</p>
+    <div id="em-grille"></div>
+  </details>
+  <p class="message erreur" id="em-message" hidden></p>
+  <div class="actions">
+    <button type="button" id="em-enregistrer">Enregistrer</button>
+    <button type="button" class="secondaire" id="em-annuler">Annuler</button>
+    <button type="button" class="danger" id="em-supprimer" style="margin-left:auto" hidden>Supprimer ce modèle</button>
+  </div>
+</dialog>
+
+<!-- Lot E1 : « Ouvrir pour la classe » — la durée, et c'est tout. -->
+<dialog id="eval-ouvrir">
+  <h2 id="eo-titre" style="margin:0 0 6px"></h2>
+  <p class="sous" id="eo-texte" style="margin:0 0 6px"></p>
+  <div class="cases" id="eo-durees" role="group" aria-label="Durée d’ouverture"></div>
+  <div class="actions">
+    <button type="button" id="eo-ouvrir">Ouvrir</button>
+    <button type="button" class="secondaire" id="eo-annuler">Annuler</button>
+  </div>
+</dialog>
+
 <!-- Le moteur de « Mon parcours » du site, servi d'ICI (copie octet pour octet de
      outils/calcul_mental/defi_tables_mon_parcours.js, gardée identique par un test du
      dépôt) : un script chargé d'un autre domaine s'exécuterait avec les droits de la
      session du professeur, la politique de contenu ne l'autorise plus. -->
+<script src="defi_tables_core.js?v=<?= htmlspecialchars($versionCore, ENT_QUOTES) ?>"></script>
 <script src="defi_tables_mon_parcours.js?v=<?= htmlspecialchars($versionMoteur, ENT_QUOTES) ?>"></script>
 <script nonce="<?= htmlspecialchars($nonce, ENT_QUOTES) ?>">
 (() => {
   "use strict";
   const $ = id => document.getElementById(id);
   const PARCOURS = window.MATHSGO_DEFI_TABLES_MON_PARCOURS || null;
+  // Lot E1 : le noyau de Défi tables, pour le tirage et la correction des évaluations.
+  const CORE = window.MATHSGO_DEFI_TABLES_CORE || null;
   const CLE_JETON = "mathsgo-suivi-jeton";
   // Un mot à dire après le rechargement de la page : la déconnexion recharge,
   // et un message écrit avant serait emporté. Il vit le temps d'un onglet.
@@ -758,6 +898,15 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
   let identifiant = "";
   let droitClasse = "proprietaire";
   let annuaire = [];
+  // Lot E1 « les évaluations en classe » : l'état de la carte « Évaluations ».
+  let modeles = null;        // les modèles du professeur connecté, lus une fois
+  let evaluation = null;     // l'état de l'évaluation de la classe ouverte, ou null
+  let evalEclair = false;    // une question éclair occupe la classe
+  let evalMinuteur = 0;
+  let evalContenu = null;    // {cle, contenu, copies} : l'évaluation fermée, corrigée (une lecture par fermeture)
+  let evalModele = null;     // le modèle dans la boîte : {id, nom, exclus: Set, imposes: Set}
+  let evalDuree = 3600;
+  let evalAOuvrir = null;
   // Les classes de l'année écoulée que le serveur propose de supprimer.
   let echues = [];
 
@@ -903,6 +1052,8 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
 
   function montrer(ecran) {
     ["ecran-connexion", "ecran-classes", "ecran-classe", "ecran-compte"].forEach(id => { $(id).hidden = id !== ecran; });
+    // Lot E1 : hors de la classe, plus de lecture en boucle de l'évaluation.
+    if (ecran !== "ecran-classe") arreterVeilleEvaluation();
     const connecte = ecran !== "ecran-connexion";
     $("deconnexion").hidden = !connecte;
     $("qui").hidden = !connecte;
@@ -922,27 +1073,36 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
     "bandelettes-titre", "liste-classes", "liste-profs", "liste-partages", "fragiles-liste",
     "fragiles-sous", "titre-classe", "resume-classe", "objectif-compte", "objectif-lignes",
     "qui", "compte-qui", "boite-texte",
-    "boite-champs", "secret-texte", "secret-valeur", "echues-texte", "supprimer-echues"];
+    "boite-champs", "secret-texte", "secret-valeur", "echues-texte", "supprimer-echues",
+    // Lot E1 : la carte « Évaluations » et ses deux boîtes.
+    "evaluations-zone", "em-titre", "em-tables", "em-types", "em-grille", "eo-titre", "eo-texte", "eo-durees"];
   const ZONES_MESSAGE = ["erreur-connexion", "message-classes", "message-classe",
     "message-profs", "message-partage", "message-compte", "bandeau-droit", "bandeau-annee",
-    "message-activites", "message-records"];
+    "message-activites", "message-records", "message-evaluations", "em-message"];
   const CHAMPS_A_VIDER = ["identifiant", "motdepasse", "libelle",
-    "mdp-ancien", "mdp-nouveau", "mdp-confirme"];
+    "mdp-ancien", "mdp-nouveau", "mdp-confirme", "em-nom"];
   const BLOCS_A_CACHER = ["fiche", "bandelettes", "objectif", "fragiles", "bloc-partage", "bloc-profs",
-    "bandeau-echues", "bloc-activites", "choix-appli", "bloc-records"];
+    "bandeau-echues", "bloc-activites", "choix-appli", "bloc-records", "bloc-evaluations"];
 
   function viderZones() {
     ZONES_TEXTE.forEach(id => { const noeud = $(id); if (noeud) noeud.textContent = ""; });
     ZONES_MESSAGE.forEach(id => { const noeud = $(id); if (noeud) { noeud.textContent = ""; noeud.hidden = true; } });
     CHAMPS_A_VIDER.forEach(id => { const noeud = $(id); if (noeud) noeud.value = ""; });
     BLOCS_A_CACHER.forEach(id => { const noeud = $(id); if (noeud) noeud.hidden = true; });
-    ["boite", "secret"].forEach(id => {
+    ["boite", "secret", "eval-modele", "eval-ouvrir"].forEach(id => {
       const boite = $(id);
       if (boite && boite.open) { try { boite.close(); } catch (_) {} }
     });
+    // Lot E1 : le plein écran de la répartition, s'il est ouvert.
+    const plein = $("evaluation-plein");
+    if (plein && plein.parentNode) plein.parentNode.removeChild(plein);
   }
 
   function oublierEtat() {
+    modeles = null;
+    evaluation = null;
+    evalContenu = null;
+    arreterVeilleEvaluation();
     jeton = "";
     classes = [];
     classe = null;
@@ -2114,6 +2274,8 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
     // Lot « Les records » : la carte, Défi tables seulement (relue à chaque
     // ouverture de la classe).
     chargerRecords();
+    // Lot E1 : la carte « Évaluations », Défi tables seulement, en écriture.
+    poserEvaluations();
   }
 
   function poserTris() {
@@ -2169,6 +2331,465 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
   }
 
   // ------------------------------------------------- activités de la classe (D7)
+
+  // ------------------------------------------------ 📝 Les évaluations (lot E1, 15/10/2026)
+  //
+  // La carte « Évaluations » de l'onglet Défi tables, pour le propriétaire et
+  // les collègues en écriture (mêmes droits que la question éclair). Trois
+  // états : rien d'ouvert (la liste des modèles du professeur connecté),
+  // ouverte (le compteur, « Fermer »), fermée (la répartition sans nom, le
+  // fichier, « Terminer »). La CORRECTION se fait ici, avec le moteur de Défi
+  // tables servi par ce serveur (defi_tables_core.js, copie octet pour octet
+  // de celui de l'appli) : le serveur n'a que des graines et des réponses,
+  // jamais une question ni une note. Tout ce qui vient du serveur est posé
+  // par textContent, jamais comme du HTML.
+  const DUREES_OUVERTURE = [[1800, "30 min"], [3600, "1 h"], [7200, "2 h"]];
+  const TYPES_EVAL = [["direct", "7 × 8 = ?"], ["missing", "7 × ? = 56"], ["division", "56 ÷ 8 = ?"]];
+
+  function el(balise, classe, texte) {
+    const noeud = document.createElement(balise);
+    if (classe) noeud.className = classe;
+    if (texte !== undefined) noeud.textContent = texte;
+    return noeud;
+  }
+
+  function heureLisible(epoch) {
+    const date = new Date(epoch * 1000);
+    return `${date.getHours()} h ${String(date.getMinutes()).padStart(2, "0")}`;
+  }
+
+  // « demain 6 h 03 », « aujourd'hui 22 h 10 », ou la date.
+  function instantLisible(epoch) {
+    const date = new Date(epoch * 1000);
+    const jour = new Date();
+    const memeJour = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    const demain = new Date(jour.getFullYear(), jour.getMonth(), jour.getDate() + 1);
+    const quand = memeJour(date, jour) ? "aujourd’hui" : memeJour(date, demain) ? "demain" : date.toLocaleDateString("fr-FR");
+    return `${quand} ${heureLisible(epoch)}`;
+  }
+
+  function evalVisible() {
+    return Boolean(classe) && appliAffichee === "defi-tables" && droitClasse !== "lecture" && Boolean(CORE);
+  }
+
+  function arreterVeilleEvaluation() {
+    window.clearTimeout(evalMinuteur);
+    evalMinuteur = 0;
+  }
+
+  async function poserEvaluations() {
+    arreterVeilleEvaluation();
+    const bloc = $("bloc-evaluations");
+    bloc.hidden = !evalVisible();
+    if (bloc.hidden) return;
+    messager("message-evaluations", "", "");
+    try {
+      if (modeles === null) modeles = (await api("evaluation.modeles")).modeles || [];
+      await lireEvaluation();
+    } catch (erreur) {
+      if (erreur.statut === 503) modeles = modeles || [];
+      surErreur(erreur, "message-evaluations");
+    }
+  }
+
+  async function lireEvaluation() {
+    const classeId = classe.id;
+    const donnees = await api("evaluation.etat", {classe_id: classeId});
+    if (!classe || classe.id !== classeId || !evalVisible()) return;
+    recevoirEvaluation(donnees);
+  }
+
+  // L'état reçu (evaluation.etat, .ouvrir, .fermer) : dessiné, et relu
+  // toutes les quelques secondes tant que l'évaluation est ouverte.
+  function recevoirEvaluation(donnees) {
+    evaluation = donnees.evaluation || null;
+    evalEclair = Boolean(donnees.eclair);
+    const cle = evaluation ? `${evaluation.ouvert_le}:${evaluation.fin}` : "";
+    if (!evaluation || !evalContenu || evalContenu.cle !== cle) evalContenu = null;
+    dessinerEvaluations();
+    arreterVeilleEvaluation();
+    if (evaluation && evaluation.etat === "ouverte") {
+      evalMinuteur = window.setTimeout(() => lireEvaluation().catch(() => {}), donnees.rythme || 3000);
+    }
+  }
+
+  function dessinerEvaluations() {
+    const zone = $("evaluations-zone");
+    zone.textContent = "";
+    $("evaluations-plein-ecran").hidden = !(evaluation && evaluation.etat === "fermee");
+    $("nouveau-modele").hidden = Boolean(evaluation);
+    if (!evaluation) { dessinerModeles(zone); return; }
+    const cours = el("div", "eval-cours");
+    const ouverte = evaluation.etat === "ouverte";
+    const etat = el("div", "etat");
+    etat.append(el("span", "pastille " + (ouverte ? "p-vert" : "p-gris"), ouverte ? "● Ouverte" : "■ Fermée"),
+      el("span", "modele", evaluation.nom || "Évaluation"),
+      el("span", "quand", ouverte
+        ? `ouverte à ${heureLisible(evaluation.ouvert_le)} · se ferme à ${heureLisible(evaluation.fin)}`
+        : `${heureLisible(evaluation.ouvert_le)} → ${heureLisible(evaluation.fin)} · ${evaluation.commences} élève${evaluation.commences > 1 ? "s" : ""} sur ${evaluation.inscrits} l’${evaluation.commences > 1 ? "ont" : "a"} faite`));
+    cours.appendChild(etat);
+    if (ouverte) {
+      const compte = el("div", "eval-compte");
+      const commences = el("span", "gros", String(evaluation.commences));
+      commences.appendChild(el("small", "", `/ ${evaluation.inscrits} ont commencé`));
+      const finis = el("span", "gros", String(evaluation.finis));
+      finis.appendChild(el("small", "", "ont fini"));
+      compte.append(commences, finis);
+      const actions = el("div", "actions");
+      const fermer = el("button", "danger", "Fermer l’évaluation");
+      fermer.type = "button";
+      fermer.addEventListener("click", fermerEvaluation);
+      actions.appendChild(fermer);
+      cours.append(compte, actions);
+    } else {
+      cours.appendChild(dessinerRepartition(false));
+      const actions = el("div", "actions");
+      const telecharger = el("button", "", "Télécharger le fichier");
+      telecharger.type = "button";
+      telecharger.addEventListener("click", telechargerEvaluation);
+      const terminer = el("button", "danger", "Terminer");
+      terminer.type = "button";
+      terminer.addEventListener("click", terminerEvaluation);
+      actions.append(telecharger, terminer);
+      cours.append(actions, el("p", "eval-garde",
+        `Le fichier : une ligne par élève — note sur 20, score, temps, heure de début, calculs ratés. Les réponses restent sur le serveur jusqu’à ${instantLisible(evaluation.expire_le)}, puis sont effacées ; « Terminer » les efface tout de suite.`));
+      if (!evalContenu) chargerContenuEvaluation().catch(erreur => surErreur(erreur, "message-evaluations"));
+    }
+    zone.appendChild(cours);
+  }
+
+  function dessinerModeles(zone) {
+    const liste = el("ul", "eval-modeles");
+    if (evalEclair) {
+      zone.appendChild(el("p", "message info", "Une question éclair est en cours pour cette classe : termine la séance en direct avant d’ouvrir une évaluation."));
+    }
+    if (!modeles || !modeles.length) {
+      liste.appendChild(el("li", "vide", "Aucun modèle pour l’instant. Un modèle, c’est les tables, les types de questions, le nombre et le chrono : tu le prépares une fois, tu l’ouvres quand tu veux."));
+    }
+    (modeles || []).forEach(modele => {
+      const ligne = el("li");
+      const texte = el("div");
+      texte.append(el("b", "", modele.nom), el("span", "", CORE.descriptionEvaluation(modele.reglage) || "modèle à revoir"));
+      const modifier = el("button", "secondaire petit", "Modifier");
+      modifier.type = "button";
+      modifier.addEventListener("click", () => ouvrirBoiteModele(modele));
+      const ouvrir = el("button", "petit", `Ouvrir pour la ${classe.libelle}`);
+      ouvrir.type = "button";
+      ouvrir.disabled = evalEclair;
+      ouvrir.addEventListener("click", () => ouvrirBoiteOuvrir(modele));
+      ligne.append(texte, modifier, ouvrir);
+      liste.appendChild(ligne);
+    });
+    zone.appendChild(liste);
+  }
+
+  // ---- la correction, dans le navigateur
+
+  async function chargerContenuEvaluation() {
+    if (!evaluation) return null;
+    const cle = `${evaluation.ouvert_le}:${evaluation.fin}`;
+    if (evalContenu && evalContenu.cle === cle) return evalContenu;
+    const contenu = await api("evaluation.fichier", {classe_id: classe.id});
+    if (!evaluation || `${evaluation.ouvert_le}:${evaluation.fin}` !== cle) return null;
+    evalContenu = {cle, contenu, copies: copiesEvaluation(contenu)};
+    dessinerEvaluations();
+    return evalContenu;
+  }
+
+  // Chaque élève : sa série refaite avec SES graines, corrigée avec SES
+  // réponses. Sans graine, il n'a pas fait l'évaluation (copie: null).
+  function copiesEvaluation(contenu) {
+    return (contenu.eleves || []).map(eleve => {
+      if (eleve.graine === null || eleve.graine === undefined) return {eleve, copie: null};
+      const questions = CORE.genererEvaluationDeClasse(contenu.modele, {seance: contenu.graine, eleve: eleve.graine});
+      return {eleve, copie: CORE.corrigerEvaluationDeClasse(questions, eleve.reponses || {})};
+    });
+  }
+
+  // Les quatre cases : à 20 · de 16 à 19,5 · de 10 à 15,5 · en dessous de 10.
+  function repartitionEvaluation(copies) {
+    const cases = [0, 0, 0, 0];
+    copies.forEach(({copie}) => {
+      if (!copie) return;
+      if (copie.note >= 20) cases[0] += 1;
+      else if (copie.note >= 16) cases[1] += 1;
+      else if (copie.note >= 10) cases[2] += 1;
+      else cases[3] += 1;
+    });
+    return cases;
+  }
+
+  function dessinerRepartition(plein) {
+    const bloc = el("div", "eval-repartition");
+    const cases = evalContenu ? repartitionEvaluation(evalContenu.copies) : null;
+    [["à 20"], ["de 16 à 19,5"], ["de 10 à 15,5"], ["en dessous de 10"]].forEach(([libelle], index) => {
+      const boite = el("div");
+      boite.append(el("span", "n", cases ? String(cases[index]) : "…"), el("span", "l", libelle));
+      bloc.appendChild(boite);
+    });
+    if (!plein) return bloc;
+    return bloc;
+  }
+
+  // ---- le fichier
+
+  // Une cellule de tableur. Un prénom qui commencerait par « = », « + », « - »
+  // ou « @ » serait pris pour une formule par Excel : on le neutralise.
+  function celluleCsv(valeur) {
+    let texte = String(valeur === null || valeur === undefined ? "" : valeur);
+    if (/^[=+\-@\t\r]/.test(texte)) texte = "'" + texte;
+    return /[";\r\n]/.test(texte) ? `"${texte.replace(/"/g, '""')}"` : texte;
+  }
+
+  function tempsLisible(dixiemes) {
+    const secondes = Math.round(dixiemes / 10);
+    return `${Math.floor(secondes / 60)} min ${String(secondes % 60).padStart(2, "0")} s`;
+  }
+
+  // Une ligne par élève : prénom, note sur 20, score, temps total, heure de
+  // début, le détail des ratés (« 7 × 8 = ? → 54 », « → — » sans réponse).
+  // Point-virgule et marque d'ordre des octets : un Excel français l'ouvre
+  // sans rien demander.
+  function fabriquerFichierEvaluation(copies) {
+    const lignes = [["Élève", "Note sur 20", "Score", "Temps", "Début", "Calculs ratés"]];
+    copies.forEach(({eleve, copie}) => {
+      const nom = eleve.prenom ? eleve.prenom + (eleve.initiale ? ` ${eleve.initiale}.` : "") : "(sans prénom)";
+      if (!copie) { lignes.push([nom, "", "n’a pas fait l’évaluation", "", "", ""]); return; }
+      const score = `${copie.score} / ${copie.total}` + (copie.repondues < copie.total ? ` (${copie.repondues} répondue${copie.repondues > 1 ? "s" : ""})` : "");
+      const rates = copie.rates.map(rate => `${rate.prompt} → ${rate.donnee === null ? "—" : rate.donnee}`).join(" · ");
+      lignes.push([nom, String(copie.note).replace(".", ","), score, tempsLisible(copie.dixiemes), heureLisible(eleve.debut), rates]);
+    });
+    return "﻿" + lignes.map(ligne => ligne.map(celluleCsv).join(";")).join("\r\n") + "\r\n";
+  }
+
+  function nomDuFichierEvaluation(contenu) {
+    const propre = texte => String(texte || "")
+      .normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^A-Za-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    const libelle = propre(contenu.classe && contenu.classe.libelle) || "classe";
+    const jour = /^\d{4}-\d{2}-\d{2}$/.test(contenu.jour || "") ? contenu.jour : "";
+    const sujet = propre(contenu.nom).slice(0, 40).replace(/-+$/g, "");
+    return `evaluation-tables-${libelle}${jour ? "-" + jour : ""}${sujet ? "-" + sujet : ""}.csv`;
+  }
+
+  function telechargerTexte(nom, texte) {
+    const blob = new Blob([texte], {type: "text/csv;charset=utf-8"});
+    const adresse = URL.createObjectURL(blob);
+    const lien = document.createElement("a");
+    lien.href = adresse;
+    lien.download = nom;
+    document.body.append(lien);
+    lien.click();
+    lien.remove();
+    window.setTimeout(() => URL.revokeObjectURL(adresse), 10000);
+  }
+
+  async function telechargerEvaluation() {
+    try {
+      const charge = await chargerContenuEvaluation();
+      if (!charge) return;
+      telechargerTexte(nomDuFichierEvaluation(charge.contenu), fabriquerFichierEvaluation(charge.copies));
+      messager("message-evaluations", "Fichier téléchargé. Pense à « Terminer » quand tu l’as bien reçu.", "ok");
+    } catch (erreur) { surErreur(erreur, "message-evaluations"); }
+  }
+
+  // ---- les gestes
+
+  async function fermerEvaluation() {
+    if (!await demander("Fermer l’évaluation maintenant ? Les élèves qui n’ont pas fini s’arrêtent là.")) return;
+    try {
+      recevoirEvaluation(await api("evaluation.fermer", {classe_id: classe.id}));
+      messager("message-evaluations", "Évaluation fermée : plus aucune réponse n’entre.", "ok");
+    } catch (erreur) { surErreur(erreur, "message-evaluations"); }
+  }
+
+  async function terminerEvaluation() {
+    if (!await demander("Terminer ? Les réponses de l’évaluation sont effacées du serveur. Le fichier est le seul endroit où elles restent.")) return;
+    try {
+      await api("evaluation.terminer", {classe_id: classe.id});
+      evaluation = null;
+      evalContenu = null;
+      arreterVeilleEvaluation();
+      dessinerEvaluations();
+      messager("message-evaluations", "Évaluation terminée : il n’en reste rien sur le serveur.", "ok");
+    } catch (erreur) { surErreur(erreur, "message-evaluations"); }
+  }
+
+  function ouvrirBoiteOuvrir(modele) {
+    evalAOuvrir = modele;
+    evalDuree = 3600;
+    $("eo-titre").textContent = `Ouvrir « ${modele.nom} » pour la ${classe.libelle} ?`;
+    $("eo-texte").textContent = `Les élèves de la ${classe.libelle} verront « 📝 Évaluation » dans Défi tables. Elle se ferme toute seule au bout de :`;
+    dessinerDurees();
+    $("eval-ouvrir").showModal();
+  }
+
+  function dessinerDurees() {
+    const zone = $("eo-durees");
+    zone.textContent = "";
+    DUREES_OUVERTURE.forEach(([secondes, libelle]) => {
+      const bouton = el("button", "", libelle);
+      bouton.type = "button";
+      bouton.setAttribute("aria-pressed", String(secondes === evalDuree));
+      bouton.addEventListener("click", () => { evalDuree = secondes; dessinerDurees(); });
+      zone.appendChild(bouton);
+    });
+  }
+
+  $("eo-annuler").addEventListener("click", () => $("eval-ouvrir").close());
+  $("eo-ouvrir").addEventListener("click", async () => {
+    const modele = evalAOuvrir;
+    $("eval-ouvrir").close();
+    if (!modele || !classe) return;
+    try {
+      recevoirEvaluation(await api("evaluation.ouvrir", {classe_id: classe.id, modele_id: modele.id, duree: evalDuree}));
+      messager("message-evaluations", `Évaluation ouverte pour la ${classe.libelle}.`, "ok");
+    } catch (erreur) { surErreur(erreur, "message-evaluations"); }
+  });
+
+  // ---- la boîte d'un modèle
+
+  function ouvrirBoiteModele(modele) {
+    const reglage = modele ? CORE.normaliserReglageEvaluation(modele.reglage) || {} : {};
+    evalModele = {id: modele ? modele.id : null, exclus: new Set(reglage.exclus || []), imposes: new Set(reglage.imposes || [])};
+    $("em-titre").textContent = modele ? "Modifier le modèle" : "Nouveau modèle";
+    $("em-nom").value = modele ? modele.nom : "";
+    $("em-supprimer").hidden = !modele;
+    messager("em-message", "", "erreur");
+    dessinerCases("em-tables", CORE.ALL_TABLES.map(table => [table, String(table)]), reglage.tables || [2, 3, 4, 5, 6, 7, 8, 9], dessinerGrille);
+    dessinerCases("em-types", TYPES_EVAL, reglage.types || ["direct", "missing", "division"], null);
+    $("em-n").value = String(reglage.n || 20);
+    if (![...$("em-n").options].some(option => option.value === $("em-n").value)) $("em-n").value = "20";
+    const chrono = reglage.chrono || "question";
+    document.querySelector(`input[name="em-chrono"][value="${chrono}"]`).checked = true;
+    $("em-secondes").value = String(chrono === "question" && reglage.secondes ? reglage.secondes : 8);
+    $("em-minutes").value = String(chrono === "global" && reglage.secondes ? Math.round(reglage.secondes / 60) : 3);
+    document.querySelector(`input[name="em-tirage"][value="${reglage.tirage || "memes"}"]`).checked = true;
+    $("em-calculs").open = evalModele.exclus.size > 0 || evalModele.imposes.size > 0;
+    dessinerGrille();
+    $("eval-modele").showModal();
+  }
+
+  // Une rangée de cases (tables, types) : des boutons enfoncés ou non.
+  function dessinerCases(id, valeurs, cochees, apresClic) {
+    const zone = $(id);
+    zone.textContent = "";
+    valeurs.forEach(([valeur, libelle]) => {
+      const bouton = el("button", "", libelle);
+      bouton.type = "button";
+      bouton.dataset.valeur = String(valeur);
+      bouton.setAttribute("aria-pressed", String(cochees.map(String).includes(String(valeur))));
+      bouton.addEventListener("click", () => {
+        bouton.setAttribute("aria-pressed", String(bouton.getAttribute("aria-pressed") !== "true"));
+        if (apresClic) apresClic();
+      });
+      zone.appendChild(bouton);
+    });
+  }
+
+  function casesCochees(id) {
+    return [...$(id).querySelectorAll('button[aria-pressed="true"]')].map(bouton => bouton.dataset.valeur);
+  }
+
+  // La grille des calculs des tables cochées : une ligne par table, ×1 à ×10,
+  // chaque calcul une fois (7 × 8 est sur la ligne ×7). Un clic : exclu ;
+  // deux : imposé ; trois : normal.
+  function dessinerGrille() {
+    const zone = $("em-grille");
+    zone.textContent = "";
+    const tables = casesCochees("em-tables").map(Number);
+    const vus = new Set();
+    tables.forEach(table => {
+      const ligne = el("div", "table");
+      ligne.appendChild(el("b", "", `×${table}`));
+      CORE.ALL_TABLES.forEach(multiplier => {
+        const cle = `${Math.min(table, multiplier)}-${Math.max(table, multiplier)}`;
+        if (vus.has(cle)) return;
+        vus.add(cle);
+        const bouton = el("button", evalModele.exclus.has(cle) ? "exclu" : evalModele.imposes.has(cle) ? "impose" : "", `${table}×${multiplier}`);
+        bouton.type = "button";
+        bouton.addEventListener("click", () => {
+          if (evalModele.exclus.has(cle)) { evalModele.exclus.delete(cle); evalModele.imposes.add(cle); }
+          else if (evalModele.imposes.has(cle)) { evalModele.imposes.delete(cle); }
+          else { evalModele.exclus.add(cle); }
+          bouton.className = evalModele.exclus.has(cle) ? "exclu" : evalModele.imposes.has(cle) ? "impose" : "";
+        });
+        ligne.appendChild(bouton);
+      });
+      zone.appendChild(ligne);
+    });
+    // Un calcul d'une table décochée ne compte plus.
+    [...evalModele.exclus, ...evalModele.imposes].forEach(cle => {
+      if (!vus.has(cle)) { evalModele.exclus.delete(cle); evalModele.imposes.delete(cle); }
+    });
+  }
+
+  function lireBoiteModele() {
+    const chrono = document.querySelector('input[name="em-chrono"]:checked').value;
+    const secondes = chrono === "question" ? Number($("em-secondes").value)
+      : chrono === "global" ? Math.round(Number($("em-minutes").value) * 60) : null;
+    return {
+      nom: $("em-nom").value.trim(),
+      reglage: {
+        tables: casesCochees("em-tables").map(Number),
+        types: casesCochees("em-types"),
+        n: Number($("em-n").value),
+        chrono,
+        secondes,
+        tirage: document.querySelector('input[name="em-tirage"]:checked').value,
+        exclus: [...evalModele.exclus],
+        imposes: [...evalModele.imposes]
+      }
+    };
+  }
+
+  $("nouveau-modele").addEventListener("click", () => ouvrirBoiteModele(null));
+  $("em-annuler").addEventListener("click", () => $("eval-modele").close());
+  $("em-enregistrer").addEventListener("click", async () => {
+    const lu = lireBoiteModele();
+    const verifie = CORE.verifierReglageEvaluation(lu.reglage);
+    if (!lu.nom) { messager("em-message", "Donne un nom au modèle.", "erreur"); return; }
+    if (verifie.erreur) { messager("em-message", verifie.erreur, "erreur"); return; }
+    try {
+      const donnees = await api("evaluation.enregistrer_modele", {id: evalModele.id, nom: lu.nom, reglage: verifie.reglage});
+      modeles = donnees.modeles || [];
+      $("eval-modele").close();
+      dessinerEvaluations();
+      messager("message-evaluations", "Modèle enregistré.", "ok");
+    } catch (erreur) { messager("em-message", erreur.message, "erreur"); }
+  });
+  $("em-supprimer").addEventListener("click", async () => {
+    if (!evalModele || evalModele.id === null) return;
+    $("eval-modele").close();
+    if (!await demander(`Supprimer le modèle « ${$("em-nom").value.trim() || "sans nom"} » ?`)) return;
+    try {
+      modeles = (await api("evaluation.supprimer_modele", {id: evalModele.id})).modeles || [];
+      dessinerEvaluations();
+      messager("message-evaluations", "Modèle supprimé.", "ok");
+    } catch (erreur) { surErreur(erreur, "message-evaluations"); }
+  });
+
+  // ---- le plein écran, à projeter : la répartition, et personne de nommé
+
+  function ouvrirEvaluationPleinEcran() {
+    if (!evaluation || !evalContenu) return;
+    const plein = el("div", "eval-plein");
+    plein.id = "evaluation-plein";
+    plein.setAttribute("role", "dialog");
+    plein.setAttribute("aria-label", "Répartition de l’évaluation");
+    const fermer = el("button", "secondaire fermer", "Fermer");
+    fermer.type = "button";
+    const titre = el("h1", "", `📝 ${evaluation.nom || "Évaluation"} — ${classe.libelle}`);
+    const cases = repartitionEvaluation(evalContenu.copies);
+    plein.append(fermer, titre, dessinerRepartition(true),
+      el("p", "", cases[0] > 0 ? `${cases[0]} élève${cases[0] > 1 ? "s ont" : " a"} tout juste 👏` : ""));
+    const surEchap = event => { if (event.key === "Escape") quitter(); };
+    const quitter = () => { plein.remove(); document.removeEventListener("keydown", surEchap); $("evaluations-plein-ecran").focus(); };
+    fermer.addEventListener("click", quitter);
+    document.addEventListener("keydown", surEchap);
+    document.body.appendChild(plein);
+    fermer.focus();
+  }
+  $("evaluations-plein-ecran").addEventListener("click", ouvrirEvaluationPleinEcran);
 
   // ------------------------------------------------------ 🏆 Les records (lot du 09/10/2026)
 
