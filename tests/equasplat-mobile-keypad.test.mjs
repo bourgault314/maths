@@ -201,7 +201,8 @@ test("la consigne du partage ne dit jamais en combien de parts", () => {
   // Elle annonçait « Partage 14 en 2 parts égales » : c'était la réponse. C'est à
   // l'élève de choisir entre 2 parts de 7 et 7 parts de 2 ; la fenêtre de partage
   // propose tous les diviseurs, sans en mettre un en avant.
-  assert.match(html, /if\(actionMode === "share"\)\{[\s\S]{0,600}?setInstruction\("Partage un jeton en parts égales\."\);/);
+  // 15/10/2026 : phrase d'élève de 6e, « Touche le jeton à partager. » (choix de Gwenaël)
+  assert.match(html, /if\(actionMode === "share"\)\{[\s\S]{0,600}?setInstruction\("Touche le jeton à partager\."\);/);
   assert.doesNotMatch(html, /Partage&nbsp;<strong>\$\{formatSignedNumber/);
 });
 
