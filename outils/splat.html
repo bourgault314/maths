@@ -1052,6 +1052,7 @@
     <label>Type d’activité</label>
     <select id="activity">
       <option value="U">A — Jetons</option>
+      <option value="UF">A fraction — Jetons et parts</option>
       <option value="UPM">A± — Jetons relatifs</option>
       <option value="N">B — Paquets de jetons</option>
       <option value="NPM">B± — Paquets de jetons relatifs</option>
@@ -1130,6 +1131,40 @@
             <input id="count" type="number" min="1" max="300" value="10" />
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- A fraction (lot F1, 15/10/2026) : des jetons et des disques partagés en parts égales,
+         un dénominateur par carte, une tache, un total entier. Niveau : voir UF_NIVEAUX. La
+         graine et « Copier le lien » sont ceux de A / A± (rangée unitSeedShareRow). -->
+    <div id="fractionSettings" style="display:none">
+      <label for="fracNiveau">Niveau</label>
+      <select id="fracNiveau" title="1 : des demis · 2 : tiers et quarts, les parts dépassent l’unité · 3 : demis, tiers, quarts, plusieurs parts sur un disque · 4 : cinquièmes, sixièmes, huitièmes">
+        <option value="1" selected>1 — Demis</option>
+        <option value="2">2 — Tiers et quarts</option>
+        <option value="3">3 — Plusieurs parts sur un disque</option>
+        <option value="4">4 — Cinquièmes à huitièmes</option>
+      </select>
+      <div class="row" style="align-items:flex-end">
+        <div style="flex:1 1 0">
+          <label for="fracVisibleMax">Visibles</label>
+          <div class="lePair"><span class="leSign" aria-hidden="true">≤</span><input id="fracVisibleMax" type="number" min="1" max="12" value="8" title="Jetons et disques visibles, au plus" /></div>
+        </div>
+        <div style="flex:1 1 0">
+          <label for="fracHiddenMax">Cachées</label>
+          <div class="lePair"><span class="leSign" aria-hidden="true">≤</span><input id="fracHiddenMax" type="number" min="1" max="10" value="6" title="Jetons et disques cachés, au plus" /></div>
+        </div>
+      </div>
+      <div class="row" style="align-items:flex-end">
+        <div style="flex:1">
+          <label for="fracTotalMin">Total (min)</label>
+          <input id="fracTotalMin" type="number" min="1" max="20" value="3" />
+        </div>
+        <div style="flex:1">
+          <label for="fracTotalMax">Total (max)</label>
+          <input id="fracTotalMax" type="number" min="1" max="20" value="10" />
+        </div>
+        <div class="countSlot" style="flex:1"></div>
       </div>
     </div>
 
@@ -2026,7 +2061,7 @@ let numberedQuestionMarkMode = activityEl && activityEl.value === "U";
 
 function applyDefaultUnknownDisplayForActivity(){
   if(!activityEl) return;
-  if(activityEl.value === "U" || activityEl.value === "UPM" || activityEl.value === "D") numberedQuestionMarkMode = true;
+  if(activityEl.value === "U" || activityEl.value === "UF" || activityEl.value === "UPM" || activityEl.value === "D") numberedQuestionMarkMode = true;
   else if(activityEl.value === "N" || activityEl.value === "C" || activityEl.value === "CD") numberedQuestionMarkMode = false;
 }
 
@@ -2049,7 +2084,7 @@ function formatCoeffUnknownTerm(coeff, varChar){
 
 function syncNumberedQuestionMarkButton(){
   if(!numberedUnknownChoiceEl || !activityEl) return;
-  const show = activityEl.value === "U" || activityEl.value === "UPM" || activityEl.value === "N" || activityEl.value === "C" || activityEl.value === "CD" || activityEl.value === "D";
+  const show = activityEl.value === "U" || activityEl.value === "UF" || activityEl.value === "UPM" || activityEl.value === "N" || activityEl.value === "C" || activityEl.value === "CD" || activityEl.value === "D";
   numberedUnknownChoiceEl.classList.toggle("is-visible", show);
   numberedUnknownChoiceEl.setAttribute("aria-hidden", show ? "false" : "true");
   if(btnNumberedLetterEl){
@@ -2208,6 +2243,9 @@ function syncPrintModeUI(){
   // un choix devenu sans objet retombe sur le choix voisin
   if(!kind && sel.value === "worksheet") sel.value = "statement";
   if(!kind && sel.value === "duplex-worksheet") sel.value = "duplex-correction";
+  /* A fraction (lot F1) : l'énoncé seul, en 4, 2 ou 1 par page — les corrections et le
+     6/page viennent avec le lot F2 */
+  ufSyncImpression(sel, act === "UF");
   sel.title = kind === "aid"
     ? "Choisir ce qui partira à l’imprimante : énoncé, aide ou correction"
     : "Choisir ce qui partira à l’imprimante";
@@ -2268,7 +2306,7 @@ function syncPrintSummary(){
 
 function getSeedForCurrentMode(){
   const act = activityEl.value;
-  if(act === "U" || act === "UPM") return (seedUEl.value||"").trim() ? Number(seedUEl.value) : "";
+  if(act === "U" || act === "UPM" || act === "UF") return (seedUEl.value||"").trim() ? Number(seedUEl.value) : "";
   if(act === "N" || act === "NPM") return (seedNEl.value||"").trim() ? Number(seedNEl.value) : "";
   if(act === "C" || act === "CD") return (seedEEl.value||"").trim() ? Number(seedEEl.value) : "";
   if(act === "D") return (seedSysEl.value||"").trim() ? Number(seedSysEl.value) : "";
@@ -2282,7 +2320,7 @@ let shareFeedbackTimer = null;
 
 function getSeedElementForCurrentMode(){
   const act = activityEl.value;
-  if(act === "U" || act === "UPM") return seedUEl;
+  if(act === "U" || act === "UPM" || act === "UF") return seedUEl;
   if(act === "N" || act === "NPM") return seedNEl;
   if(act === "C" || act === "CD") return seedEEl;
   if(act === "D") return seedSysEl;
@@ -2344,6 +2382,8 @@ function getClassicShareControls(act){
     ["visibleMax", unitVisibleMaxEl], ["hiddenMax", unitHiddenMaxEl],
     ["totalMin", unitTotalMinEl], ["totalMax", unitTotalMaxEl]
   ];
+  /* A fraction (lot F1) : « niveau » n'est écrit et lu qu'ici */
+  if(act === "UF") return ufReglagesAdresse();
   if(act === "N") return [
     ["tasksMin", numTasksMinEl], ["tasksMax", numTasksEl],
     ["visibleMin", numVisibleMinEl], ["visibleMax", numVisibleMaxEl],
@@ -2393,7 +2433,7 @@ function lireRepetitionAdresse(raw){
 
 /* Les réglages qu'une adresse partagée peut porter. Liste commune : elle sert
    aussi à l'empreinte de la série élève (eleveSignatureSerie). */
-const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "geste", "gestes", "coefMax", "ecart", "fois", "indice", "sens", "forme", "grand", "sous", "noTotal", "repeat", "ordre", "vocab", "compose", "reunies", "pasapas", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "palette", "unknown", "print", "duplex", "layout", "title", "note", "systeme", "eleve", "parcours", "imprimer", "suite", "corrige"];
+const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "niveau", "splats", "clues", "structure", "geste", "gestes", "coefMax", "ecart", "fois", "indice", "sens", "forme", "grand", "sous", "noTotal", "repeat", "ordre", "vocab", "compose", "reunies", "pasapas", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "palette", "unknown", "print", "duplex", "layout", "title", "note", "systeme", "eleve", "parcours", "imprimer", "suite", "corrige"];
 
 function loadSharedConfiguration(){
   const params = new URLSearchParams(window.location.search);
@@ -2442,6 +2482,9 @@ function appliquerConfiguration(params){
   if(act === "N" || act === "NPM") setSelectFromShare(params, "equation", numberedEquationTypeEl);
   syncSettingsUI();
 
+  /* A fraction (lot F1) : niveau absent ou illisible = niveau 1, y compris pour chaque partie
+     d'une étape composée */
+  if(act === "UF") ufNiveauParDefaut();
   getClassicShareControls(act).forEach(([name, el]) => applyShareControl(params, name, el));
   /* « gestes=COEF,DOUBLE » (Système) : les cases du mélange. */
   if(act === "D" && params.has("gestes")) sysAppliquerGestesMix(params.get("gestes"));
@@ -2573,7 +2616,7 @@ function buildShareUrl(){
   if(act === "D" && sysGesteEl && sysGesteEl.value === "MIX") params.set("gestes", sysLireGestesMix().join(","));
   if(act === "D") sysEcrireReglagesM4(params);
 
-  if(act === "U" || act === "UPM" || act === "N" || act === "C" || act === "CD" || act === "D"){
+  if(act === "U" || act === "UF" || act === "UPM" || act === "N" || act === "C" || act === "CD" || act === "D"){
     params.set("unknown", numberedQuestionMarkMode ? "question" : "letter");
   }
   addShareControl(params, "print", printModeSelectEl);
@@ -2823,7 +2866,8 @@ function placeCardCountField(act){
     : act === "C9" ? "nineSettings"
     : act === "C8" ? "eightSettings"
     : (act === "C" || act === "CD") ? "investigateSettings"
-    : act === "D" ? "systemSettings" : "";
+    : act === "D" ? "systemSettings"
+    : act === "UF" ? "fractionSettings" : "";
   const block = blockId ? document.getElementById(blockId) : null;
   const slot = block ? block.querySelector(".countSlot") : null;
   if(slot && countWrapEl.parentNode !== slot) slot.appendChild(countWrapEl);
@@ -2834,7 +2878,7 @@ function placeCardCountField(act){
    des autres modes, où le champ de graine propre à chaque mode s'affiche à tour
    de rôle — le code de génération lit toujours les mêmes champs. */
 function syncSeedShareRows(act){
-  if(unitSeedShareRowEl) unitSeedShareRowEl.hidden = !(act === "U" || act === "UPM");
+  if(unitSeedShareRowEl) unitSeedShareRowEl.hidden = !(act === "U" || act === "UPM" || act === "UF");
   if(numberedSeedShareRowEl) numberedSeedShareRowEl.hidden = !(act === "N" || act === "NPM");
   const sharedSeedIds = { C9:"seedC", C8:"seedD", C:"seedE", CD:"seedE", D:"seedSys" };
   const wanted = sharedSeedIds[act] || "seedE";
@@ -2849,7 +2893,7 @@ function syncSeedShareRows(act){
 function syncSettingsUI(){
   const act = activityEl.value;
   const shareRowEl = document.getElementById("shareRow");
-  if(shareRowEl) shareRowEl.hidden = act === "U" || act === "UPM" || act === "N" || act === "NPM";
+  if(shareRowEl) shareRowEl.hidden = act === "U" || act === "UPM" || act === "N" || act === "NPM" || act === "UF";
   const prevAct = syncSettingsUI._lastAct || "";
   if(prevAct !== act && act === "UPM"){
     if(unitTotalMinEl && unitTotalMaxEl){
@@ -2938,7 +2982,8 @@ function syncSettingsUI(){
   const isEight = act === "C8";
   const isInvestigate = (act === "C" || act === "CD");
   const isSystem = act === "D";
-  const isClassic = !(isUnit || isNumbered || isNine || isEight || isInvestigate || isSystem);
+  const isFraction = act === "UF";
+  const isClassic = !(isUnit || isNumbered || isNine || isEight || isInvestigate || isSystem || isFraction);
 
   if(numHiddenCountWrapEl) numHiddenCountWrapEl.style.display = "block";
 
@@ -2954,6 +2999,8 @@ function syncSettingsUI(){
   eightSettingsEl.style.display = isEight ? "block" : "none";
   investigateSettingsEl.style.display = isInvestigate ? "block" : "none";
   systemSettingsEl.style.display = isSystem ? "block" : "none";
+  const fractionSettingsEl = document.getElementById("fractionSettings");
+  if(fractionSettingsEl) fractionSettingsEl.style.display = isFraction ? "block" : "none";
   if(sysMixRowEl) sysMixRowEl.style.display = (isSystem && sysGesteEl && sysGesteEl.value === "MIX") ? "block" : "none";
   sysAfficherReglagesM4();
   placeCardCountField(act);
@@ -2993,6 +3040,7 @@ function syncSettingsUI(){
     syncUnitEquationUI();
     if(act === "UPM") syncUnitSignedTotalBounds(); else syncUnitTotalBounds();
   }
+  if(isFraction) ufSyncBornes();
   lastActivityForBounds = act;
   lastActivityForSigned = act;
 }
@@ -3089,6 +3137,7 @@ function scheduleAutoGenerate(){
       if(activityEl.value === "UPM") syncUnitSignedTotalBounds(); else syncUnitTotalBounds();
     }
     if(activityEl.value === "N") syncNumberedEquationUI();
+    if(activityEl.value === "UF") ufSyncBornes();
     sanitizeNumberedTotalBoundsForMode();
     if(activityEl.value === "NPM") sanitizeBeadAbsMaxForBPM();
     generate();
@@ -3206,7 +3255,7 @@ function blobPath(cx, cy, r){
   Les autres modes gardent le plateau historique.
 */
 function getTrayConfig(mode){
-  if(mode === "U" || mode === "UPM" || mode === "N" || mode === "NPM"){
+  if(mode === "U" || mode === "UPM" || mode === "N" || mode === "NPM" || mode === "UF"){
     return { x:120, y:210, w:1360, h:660, isHigh: true };
   }
   return { x:120, y:270, w:1360, h:550, isHigh: false };
@@ -3660,7 +3709,7 @@ function relocateNumberedTokensToFinalSplats(card, tray, margin, splatsFinal, hi
 }
 
 function assignPositions(card, rng){
-  if(card.family === "U" || card.family === "UPM"){
+  if(card.family === "U" || card.family === "UPM" || card.family === "UF"){
     assignPositionsUnits(card, rng);
   }else if(card.family === "N" || card.family === "NPM" || card.family === "C9" || card.family === "C8" || card.family === "C" || card.family === "D"){
     assignPositionsNumbered(card, rng);
@@ -6064,6 +6113,11 @@ function assignPositionsUnits(card, rng){
   const margin = 8;
   const tasks = card._unit?.tasks ?? 1;
   const isSignedUnitMode = (card.family === "UPM");
+  /* A fraction (lot F1) : les disques partagés doivent se lire, huitièmes compris, sur le papier
+     en 4 par page (6,4 mm) — rayon 56 quand la tache cache 4 objets ou moins, un peu moins au-delà
+     (124 / √cachés), jamais sous 24 sauf secours (choix B de Gwenaël sur planche, 15/10/2026) ;
+     le mode A garde exactement ses rayons et ses essais */
+  const isFractionMode = (card.family === "UF");
   const hiddenByTaskRaw = card._unit?.hiddenByTask ?? Array.from({length: tasks}, ()=>0);
   const hiddenByTask = hiddenByTaskRaw.map(v => Array.isArray(v) ? v.length : Number(v) || 0);
   /* Tirage au sort avec la table de tirage (voir getUnitSplatsLegacy) ; la table de dessin
@@ -6093,9 +6147,9 @@ function assignPositionsUnits(card, rng){
     // Patch 10 : en A±, les jetons +1 / −1 portent l'information.
     // Ils doivent donc être nettement plus lisibles que les billes vides du A.
     // On augmente seulement le plafond du mode A± et on garde A inchangé.
-    beadR = isSignedUnitMode ? clamp(calc, 18, 42) : clamp(calc, 14, 32);
+    beadR = isSignedUnitMode ? clamp(calc, 18, 42) : (isFractionMode ? clamp(Math.floor(124 / Math.sqrt(maxHidden)), 24, 56) : clamp(calc, 14, 32));
   } else {
-    beadR = isSignedUnitMode ? 40 : 32;
+    beadR = isSignedUnitMode ? 40 : (isFractionMode ? 56 : 32);
   }
   const totalBeads = (card._unit?.visibleCount ?? card.visible.length) + hiddenByTask.reduce((a,b)=>a+b,0);
   if(isSignedUnitMode){
@@ -6105,7 +6159,7 @@ function assignPositionsUnits(card, rng){
     else if(totalBeads >= 45) beadR = Math.min(beadR, 25);
     else if(totalBeads >= 35) beadR = Math.min(beadR, 29);
     else if(totalBeads >= 25) beadR = Math.min(beadR, 34);
-  }else{
+  }else if(!isFractionMode){
     if(totalBeads >= 55) beadR = Math.min(beadR, 17);
     else if(totalBeads >= 45) beadR = Math.min(beadR, 19);
     else if(totalBeads >= 35) beadR = Math.min(beadR, 22);
@@ -6138,6 +6192,16 @@ function assignPositionsUnits(card, rng){
   }
   function beadFullyInSplat(o, x, y){
     if(!pointInSplat(o, x, y)) return false;
+    /* A fraction (lot F1) : les disques sont grands et le jeton entier est bleu plein — à 8 points
+       du bord, un disque débordait d'un creux de la tache et se voyait sous la tache noire. Ici
+       24 points, 4 unités au-delà du bord. Le mode A garde ses 8 points. */
+    if(isFractionMode && canPath2D && o.path){
+      for(let i = 0; i < 24; i++){
+        const a = Math.PI * i / 12;
+        if(!ctx.isPointInPath(o.path, x + (beadR + 4) * Math.cos(a), y + (beadR + 4) * Math.sin(a))) return false;
+      }
+      return true;
+    }
     if(canPath2D && o.path){
       return (function(){
         const r = beadR;
@@ -6208,9 +6272,9 @@ function assignPositionsUnits(card, rng){
   let placedRes = null;
   // En A±, le rayon de départ est plus ambitieux : on teste davantage de tailles
   // pour garder la plus grande taille possible sans tomber brutalement à 12.
-  const maxAttempts = isSignedUnitMode ? 30 : 8;
+  const maxAttempts = isSignedUnitMode ? 30 : (isFractionMode ? 10 : 8);
   for(let attempt=0; attempt<maxAttempts && !placedRes; attempt++){
-    const R = Math.max(12, beadR - attempt);
+    const R = Math.max(isFractionMode ? 24 : 12, beadR - attempt);
     placedRes = tryPlaceWithRadius(R);
   }
   if(!placedRes){
@@ -11495,6 +11559,9 @@ function renderCard(card, revealState, opts = {}){
     return;
   }
 
+  /* A fraction (lot F1) : son propre dessin (ufRendreCarte), le mode A n'y passe pas */
+  if(card && card.family === "UF"){ ufRendreCarte(card, revealState); return; }
+
   const actEl = document.getElementById("activity");
   const act = actEl ? actEl.value : "";
   const colorModeEl = document.getElementById("numColorMode");
@@ -13071,6 +13138,9 @@ function renderCardIntoSvg(targetSvg, card, printMode, opts = {}){
 
   targetSvg.appendChild(tEl("rect",{x:0,y:0,width:opts.sixColonne ? SIX_COLONNE.largeur : W,height:H,rx:26,fill:"#fff"}));
 
+  /* A fraction (lot F1) : l'énoncé imprimé (ufRendreCarteImprimee), seul choix d'impression du lot */
+  if(card && card.family === "UF"){ ufRendreCarteImprimee(targetSvg, card, tEl, tText); return; }
+
   if(deuxParPage){
     const ctx = { mkEl:tEl, mkText:tText, isPrint:true, lettres:!numberedQuestionMarkMode };
     if(revealAnswers){
@@ -13815,6 +13885,8 @@ function getClassicPrintInstruction(slotCards){
       note:hasSeveralTasks ? "Lorsque plusieurs taches apparaissent, elles cachent le même nombre de jetons." : ""
     };
   }
+  /* A fraction (lot F1) */
+  if(act === "UF") return { main:UF_CONSIGNE_IMPRIMEE, note:"" };
   if(act === "UPM" || act === "NPM"){
     return {
       main:"Trouve la valeur cachée sous chaque tache en modélisant la situation par une équation, puis en la résolvant.",
@@ -14502,11 +14574,11 @@ const counterEl = document.getElementById("counter");
 const fsHost = document.getElementById("fsHost");
 
 function isRevealSequenceCard(card){
-  return !!card && (card.family === "U" || card.family === "UPM" || card.family === "N" || card.family === "NPM" || card.family === "C" || sysAPlan(card));
+  return !!card && (card.family === "U" || card.family === "UF" || card.family === "UPM" || card.family === "N" || card.family === "NPM" || card.family === "C" || sysAPlan(card));
 }
 function getMaxRevealState(card){
   if(!card) return 0;
-  if(card.family === "U" || card.family === "N") return 3;
+  if(card.family === "U" || card.family === "N" || card.family === "UF") return 3;
   if(card.family === "UPM" || card.family === "NPM") return 2;
   if(card.family === "C" && card._directSubstitution) return 3;
   if(card.family === "C") return enqueteDerniereEtape(card);
@@ -14555,6 +14627,8 @@ function generate(){
     let c;
     if(act==="U"){
       c = isUnitEquationPresetActive() ? genUnitsEquationPreset(rng) : genUnits(rng);
+    }else if(act==="UF"){
+      c = genUnitsFractions(rng);
     }else if(act==="UPM"){
       c = genUnitsSigned(rng);
     }else if(act==="N"){
@@ -16229,6 +16303,426 @@ function eleveNouvellesCartes(){
   eleveIdx = 0; eleveEtoiles = 0; eleveSerie = []; eleveResultats = []; eleveVues = 0; eleveRejeu = null;
   generate(); /* updateUI() redessine la série élève sur les nouvelles cartes */
 }
+
+/* ===== A fraction — Jetons et parts (lot F1, 15/10/2026) =====
+   Un type d'activité à côté du mode A (« A — Jetons ») : des jetons entiers et des disques
+   partagés en parts égales, d'après les Fraction Splats de Steve Wyborney (niveaux 11 et 12).
+   Une tache, un seul dénominateur par carte, un TOTAL toujours entier ; la tache cache parfois
+   un nombre entier (une carte sur quatre environ). Ce qu'elle cache s'écrit « 3 + 3/4 »
+   (écriture A, décidée sur planche le 15/10), avec le dénominateur de la carte : deux quarts
+   s'écrivent « 2/4 », pas « 1/2 » (question à choix du 15/10 : c'est ce que l'élève compte sur
+   les disques). Les parts ont la couleur de leur famille, celle des bandes et des disques de
+   fractions du site, un ton plus soutenu pour rester lisibles au vidéoprojecteur et imprimées
+   en noir et blanc (planche 0 du lot, choix C du 15/10) ; les jetons entiers sont bleu plein,
+   comme le jeton imprimé du mode A, à l'écran aussi (15/10 : pâles, ils se lisaient comme des
+   disques vides). Les disques font 6,4 mm sur l'énoncé 4 par page (rayon 56, choix B du 15/10).
+   Le mode A (U) ne passe par aucune de ces fonctions : mêmes cartes, mêmes places, même dessin
+   (preuve au pixel dans la notice du lot). Les valeurs sont des fractions {n, d}, jamais des
+   nombres à virgule (1/3 + 1/3 + 1/3 doit faire 1) ; les flottants ne servent qu'aux largeurs.
+   Ces fonctions sont placées ici, à la fin du script : des tests découpent le code entre deux
+   fonctions qui se suivent, rien ne doit s'intercaler entre elles. */
+
+/* --- Fractions {n, d} --- */
+function frPgcd(a, b){
+  a = Math.abs(a); b = Math.abs(b);
+  while(b){ const t = a % b; a = b; b = t; }
+  return a || 1;
+}
+function fr(n, d = 1){ return { n, d }; }
+function frNorm(v){
+  const g = frPgcd(v.n, v.d), s = v.d < 0 ? -1 : 1;
+  return { n: s * v.n / g, d: s * v.d / g };
+}
+function frAdd(a, b){ return frNorm({ n: a.n * b.d + b.n * a.d, d: a.d * b.d }); }
+function frSub(a, b){ return frNorm({ n: a.n * b.d - b.n * a.d, d: a.d * b.d }); }
+function frEq(a, b){ return a.n * b.d === b.n * a.d; }
+function frSomme(liste){ return (liste || []).reduce((s, v) => frAdd(s, v), fr(0, 1)); }
+/* La valeur écrite avec le dénominateur d (sans simplifier) : 13/4 → { entier:3, reste:1, d:4 }.
+   Valeurs positives seulement (le mode n'en a pas d'autres). */
+function frDecompose(v, d){
+  const n = Math.round(v.n * d / v.d);
+  return { entier: Math.floor(n / d), reste: n % d, d };
+}
+/* L'écriture A en texte : « 3 + 3/4 », « 3/4 », « 4 ». */
+function frTexte(v, d){
+  const { entier, reste } = frDecompose(v, d);
+  if(!reste) return String(entier);
+  if(!entier) return `${reste}/${d}`;
+  return `${entier} + ${reste}/${d}`;
+}
+
+/* --- Les niveaux (tableau §4 de la conception F0) --- */
+function ufNiveau(n){
+  const NIVEAUX = {
+    1: { dens:[2], unitaires:true, depasse:false },     /* demis ; les parts visibles ne dépassent pas l'unité */
+    2: { dens:[3, 4], unitaires:true, depasse:true },   /* tiers et quarts ; 5 quarts : il faut regrouper */
+    3: { dens:[2, 3, 4], unitaires:false, depasse:true }, /* plusieurs parts sur un disque (2/3, 3/4…) */
+    4: { dens:[5, 6, 8], unitaires:false, depasse:true }  /* cinquièmes, sixièmes, huitièmes */
+  };
+  return NIVEAUX[n] || NIVEAUX[1];
+}
+/* La couleur des parts : [remplissage, contour]. Mêmes familles que les bandes et les disques de
+   fractions du site (outils/fractions/), un ton plus soutenu (choix C du 15/10). */
+function ufCouleurs(d){
+  const C = { 2:["#eab308", "#854d0e"], 3:["#a855f7", "#6b21a8"], 4:["#65a30d", "#365314"],
+    5:["#0ea5e9", "#075985"], 6:["#f97316", "#9a3412"], 8:["#ec4899", "#9d174d"] };
+  return C[d] || ["#2563eb", "#1e3a8a"];
+}
+const UF_CONSIGNE_IMPRIMEE = "Trouve ce qui est caché sous la tache : des jetons et des parts de jeton. Tu peux t’aider d’un schéma en barres.";
+
+/* --- Les réglages (bloc #fractionSettings) --- */
+function ufReglagesAdresse(){
+  const g = id => document.getElementById(id);
+  return [["niveau", g("fracNiveau")], ["visibleMax", g("fracVisibleMax")], ["hiddenMax", g("fracHiddenMax")],
+    ["totalMin", g("fracTotalMin")], ["totalMax", g("fracTotalMax")]];
+}
+function ufNiveauParDefaut(){
+  const el = document.getElementById("fracNiveau");
+  if(el) el.value = "1";
+}
+function ufTotalPlafond(visibleMax, hiddenMax){ return clamp(visibleMax + hiddenMax - 1, 1, 20); }
+function ufLireReglages(){
+  const lire = (id, defaut, a, b) => {
+    const champ = document.getElementById(id);
+    const brut = champ ? String(champ.value).trim() : "";
+    const v = brut === "" ? NaN : Number(brut);
+    return clamp(Math.round(Number.isFinite(v) ? v : defaut), a, b);
+  };
+  const niveau = lire("fracNiveau", 1, 1, 4);
+  const visibleMax = lire("fracVisibleMax", 8, 1, 12);
+  const hiddenMax = lire("fracHiddenMax", 6, 1, 10);
+  let totalMin = lire("fracTotalMin", 3, 1, 20);
+  let totalMax = lire("fracTotalMax", 10, 1, 20);
+  if(totalMax < totalMin){ const t = totalMin; totalMin = totalMax; totalMax = t; }
+  return { niveau, visibleMax, hiddenMax, totalMin, totalMax };
+}
+/* Comme les bornes du mode A : le total ne promet pas plus que les jetons et disques permis. */
+function ufSyncBornes(){
+  const aEl = document.getElementById("fracTotalMin"), bEl = document.getElementById("fracTotalMax");
+  if(!aEl || !bEl) return;
+  const R = ufLireReglages();
+  const plafond = ufTotalPlafond(R.visibleMax, R.hiddenMax);
+  aEl.max = String(plafond); bEl.max = String(plafond);
+  aEl.value = String(Math.min(R.totalMin, plafond));
+  bEl.value = String(Math.min(R.totalMax, plafond));
+}
+/* L'impression du lot F1 : l'énoncé seul, en 4, 2 ou 1 par page. Les autres choix sont grisés en
+   A fraction et reviennent tels quels dans les autres modes. */
+function ufSyncImpression(sel, actif){
+  if(!sel) return;
+  sel.querySelectorAll('option[value="correction"], option[value="duplex-correction"]').forEach(opt => { opt.disabled = actif; });
+  if(actif){
+    sel.querySelectorAll('option[value="worksheet"], option[value="duplex-worksheet"], option[value="correction-equation"], option[value="correction-schema"]')
+      .forEach(opt => { opt.disabled = true; });
+    if(sel.value !== "statement") sel.value = "statement";
+  }
+  const pages = document.getElementById("printCardsPerPage");
+  const six = pages ? pages.querySelector('option[value="6"]') : null;
+  if(six) six.disabled = actif;
+  if(actif && pages && pages.value === "6") pages.value = "4";
+}
+
+/* --- Le générateur --- */
+/* P parts de d-ièmes réparties sur des disques de 1 à d − 1 parts (jamais un disque plein : un
+   disque plein est un jeton entier). Le moins de disques possible, ou un de plus : les disques
+   portent souvent plusieurs parts (niveaux 3 et 4, « 2/3 », « 3/4 »). */
+function ufDecouper(rng, P, d){
+  if(d < 2 || P < 1) return [];
+  const cMin = Math.ceil(P / (d - 1));
+  const c = rInt(rng, cMin, Math.min(P, cMin + 1));
+  const parts = Array.from({ length:c }, () => 1);
+  for(let reste = P - c; reste > 0; reste--){
+    const libres = [];
+    parts.forEach((x, i) => { if(x < d - 1) libres.push(i); });
+    parts[libres[rInt(rng, 0, libres.length - 1)]]++;
+  }
+  return parts;
+}
+/* Une carte de total T et de dénominateur d, ou null si elle ne tient pas dans les réglages.
+   Caché = a jetons + k parts (k = 0 : la tache cache un entier) ; visible = W jetons + P parts,
+   avec P = (d − k) + m × d : les parts qui complètent le caché à l'unité, plus parfois une
+   unité entière en parts (m = 1, « 5 quarts » : il faut regrouper). */
+function ufComposer(rng, T, d, entier, niv, R){
+  if(entier && T < 2) return null;
+  const a = rInt(rng, entier ? 1 : 0, T - 1);
+  const k = entier ? 0 : rInt(rng, 1, d - 1);
+  /* caché entier : au moins une unité visible en parts, sinon la carte n'a plus de fraction */
+  const m = entier ? 1 : (niv.depasse ? rInt(rng, 0, 1) : 0);
+  const P = (entier ? 0 : d - k) + m * d;
+  const W = T - a - (entier ? 0 : 1) - m;
+  if(W < 0) return null;
+  const partsVisibles = niv.unitaires ? Array.from({ length:P }, () => 1) : ufDecouper(rng, P, d);
+  /* le caché : en parts d'un d-ième (niveaux 1 et 2), en un seul disque de k parts (3 et 4) */
+  const partsCachees = k === 0 ? [] : (niv.unitaires ? Array.from({ length:k }, () => 1) : [k]);
+  const nVisibles = W + partsVisibles.length, nCaches = a + partsCachees.length;
+  if(nVisibles < 1 || nVisibles > R.visibleMax || nCaches < 1 || nCaches > R.hiddenMax) return null;
+  const visible = [], hidden = [];
+  for(let i = 0; i < W; i++) visible.push(fr(1, 1));
+  partsVisibles.forEach(p => visible.push(fr(p, d)));
+  for(let i = 0; i < a; i++) hidden.push(fr(1, 1));
+  partsCachees.forEach(p => hidden.push(fr(p, d)));
+  return ufCarte(T, d, visible, hidden, R, k === 0);
+}
+function ufCarte(T, d, visible, hidden, R, entier){
+  return {
+    family:"UF", total:T, den:d, visible, hidden,
+    _unit:{ tasks:1, visibleCount:visible.length, hiddenByTask:[hidden.slice()],
+      visibleValue:frSomme(visible), hiddenValue:frSomme(hidden), hiddenInteger:!!entier,
+      niveau:R.niveau, visibleMax:R.visibleMax, hiddenMax:R.hiddenMax, totalMin:R.totalMin, totalMax:R.totalMax }
+  };
+}
+/* Réglages donnés (testable sans page) : 500 essais comme genUnits, puis une carte de secours
+   (total 1 : un demi, ou une part, de chaque côté) quand les réglages ne laissent rien. */
+function genUnitsFractionsAvec(rng, R){
+  const niv = ufNiveau(R.niveau);
+  const tMax = Math.max(1, Math.min(R.totalMax, ufTotalPlafond(R.visibleMax, R.hiddenMax)));
+  const tMin = Math.max(1, Math.min(R.totalMin, tMax));
+  for(let essai = 0; essai < 500; essai++){
+    const d = niv.dens[rInt(rng, 0, niv.dens.length - 1)];
+    const entier = rng() < 0.25;
+    const T = rInt(rng, tMin, tMax);
+    const carte = ufComposer(rng, T, d, entier, niv, R);
+    if(carte) return carte;
+  }
+  const d = niv.dens[0];
+  return ufCarte(1, d, [fr(d - 1, d)], [fr(1, d)], R, false);
+}
+function genUnitsFractions(rng){ return genUnitsFractionsAvec(rng, ufLireReglages()); }
+
+/* --- Le dessin --- */
+/* L'inconnue : « ? », ou la lettre (bouton 𝑥 / ?), comme en mode A. */
+function ufInconnue(card){ return numberedQuestionMarkMode ? "?" : getCardVarChar(card); }
+/* Les k premières parts d'un disque en d parts, depuis midi, dans le sens des aiguilles d'une
+   montre (comme Wyborney, et comme un camembert). */
+function ufSecteur(cx, cy, r, k, d){
+  const a1 = 2 * Math.PI * k / d;
+  const x0 = cx, y0 = cy - r;
+  const x1 = cx + r * Math.sin(a1), y1 = cy - r * Math.cos(a1);
+  const r2 = x => Math.round(x * 100) / 100;
+  return `M ${r2(cx)} ${r2(cy)} L ${r2(x0)} ${r2(y0)} A ${r} ${r} 0 ${k * 2 > d ? 1 : 0} 1 ${r2(x1)} ${r2(y1)} Z`;
+}
+/* Un jeton (v = 1) ou un disque partagé (v = k/d), le même à l'écran et sur le papier. Jamais de
+   remplissage var(--splat-cover) : le mode élève rend transparents les chemins de cette couleur
+   (eleveDevoilerTache). */
+function ufDessinerJeton(cible, mk, cx, cy, r, v){
+  /* le jeton entier : bleu plein, à l'écran comme sur le papier, visible comme caché (décidé le
+     15/10 : pâle, il se lisait comme un disque vide, zéro part, à côté des parts coloriées) */
+  if(v.n >= v.d){
+    cible.appendChild(mk.el("circle", { cx, cy, r, fill:"#2563eb", stroke:"#1e40af", "stroke-width":"3" }));
+    return;
+  }
+  const [plein, bord] = ufCouleurs(v.d);
+  const g = mk.el("g", { class:"ufDisque", "data-parts":`${v.n}/${v.d}` });
+  g.appendChild(mk.el("circle", { cx, cy, r, fill:"#ffffff" }));
+  g.appendChild(mk.el("path", { d:ufSecteur(cx, cy, r, v.n, v.d), fill:plein }));
+  const rayon = String(Math.round(Math.max(2, r * 0.06) * 10) / 10);
+  for(let i = 0; i < v.d; i++){
+    const a = 2 * Math.PI * i / v.d;
+    g.appendChild(mk.el("line", { x1:cx, y1:cy, x2:Math.round((cx + r * Math.sin(a)) * 100) / 100, y2:Math.round((cy - r * Math.cos(a)) * 100) / 100,
+      stroke:bord, "stroke-width":rayon, "stroke-linecap":"round" }));
+  }
+  g.appendChild(mk.el("circle", { cx, cy, r, fill:"none", stroke:bord, "stroke-width":String(Math.round(Math.max(3, r * 0.085) * 10) / 10) }));
+  cible.appendChild(g);
+}
+
+/* Écritures « 3 + 3/4 » en pièces : un nombre, une opération, une fraction en colonne. */
+const UF_POLICE = "SplatLettres, system-ui, -apple-system, \"Segoe UI\", Roboto, Arial";
+function ufPieces(v, d){
+  const { entier, reste } = frDecompose(v, d);
+  if(!reste) return [{ t:String(entier) }];
+  if(!entier) return [{ f:[reste, d] }];
+  return [{ t:String(entier) }, { op:"+" }, { f:[reste, d] }];
+}
+function ufLargeurTexte(t, fs, poids){
+  const w = measureTextWidth(t, `${poids} ${fs}px ${UF_POLICE}`);
+  return (Number.isFinite(w) && w > 0) ? w : String(t).length * fs * 0.56;
+}
+function ufLargeurPiece(p, fs, fsF, poids){
+  if(p.t != null) return ufLargeurTexte(p.t, fs, poids);
+  if(p.op != null) return ufLargeurTexte(p.op, fs, poids) + 2 * Math.round(fs * 0.2);
+  return Math.max(ufLargeurTexte(String(p.f[0]), fsF, poids), ufLargeurTexte(String(p.f[1]), fsF, poids)) + 2 * Math.round(fsF * 0.16);
+}
+function ufLargeurPieces(pieces, fs, fsF, poids){
+  return pieces.reduce((s, p) => s + ufLargeurPiece(p, fs, fsF, poids), 0);
+}
+/* Pose les pièces à partir de x, centrées en hauteur sur cy (chiffres : ligne de base à
+   cy + 0,36 corps, comme les nombres des barres du mode A ; fraction : barre sur cy). */
+function ufPoserPieces(g, mk, x, cy, pieces, fs, fsF, poids, couleur){
+  const attrs = (taille) => ({ "font-size":String(taille), "font-weight":String(poids), fill:couleur });
+  for(const p of pieces){
+    const w = ufLargeurPiece(p, fs, fsF, poids);
+    if(p.t != null){
+      g.appendChild(mk.text(x, cy + fs * 0.36, p.t, { "text-anchor":"start", ...attrs(fs) }));
+    }else if(p.op != null){
+      g.appendChild(mk.text(x + w / 2, cy + fs * 0.36, p.op, { "text-anchor":"middle", ...attrs(fs) }));
+    }else{
+      const xm = x + w / 2, ep = Math.max(2.5, Math.round(fsF * 0.09 * 10) / 10);
+      g.appendChild(mk.text(xm, cy - fsF * 0.2, String(p.f[0]), { "text-anchor":"middle", ...attrs(fsF) }));
+      g.appendChild(mk.el("line", { x1:x + 2, y1:cy, x2:x + w - 2, y2:cy, stroke:couleur, "stroke-width":String(ep), "stroke-linecap":"round" }));
+      g.appendChild(mk.text(xm, cy + fsF * 0.92, String(p.f[1]), { "text-anchor":"middle", ...attrs(fsF) }));
+    }
+    x += w;
+  }
+  return x;
+}
+
+/* Le schéma en barres : le TOTAL en haut, en bas le visible (blanc) et le caché (gris).
+   Proportionnel (un jeton = une unité de barre, un quart = un quart d'unité) tant que les
+   écritures tiennent dans leurs cases ; sinon chaque case garde la place de son écriture et le
+   reste se partage en proportion. Les largeurs se calculent sur l'écriture finale ET sur « ? » :
+   le schéma ne bouge pas d'une étape à l'autre. Mêmes traits et mêmes hauteurs que le mode A. */
+const UF_BARRE = { hHaut:86, hBas:86, trait:4, gris:"rgba(0,0,0,0.10)", fsTotal:70, fsEntier:58, fsFrac:34, poids:900, marge:34 };
+function ufLargeurEcrit(e, d, B){
+  if(e == null) return 0;
+  if(typeof e === "string") return ufLargeurTexte(e, e === "?" ? B.fsTotal : B.fsTotal * 1.2, e === "?" ? 900 : 400);
+  return ufLargeurPieces(ufPieces(e, d), B.fsEntier, B.fsFrac, B.poids);
+}
+function ufDessinerBarre(g, mk, o){
+  const B = UF_BARRE;
+  const valeurs = o.parts.map(p => Math.max(0, p.valeur.n / p.valeur.d));
+  const somme = valeurs.reduce((a, b) => a + b, 0) || 1;
+  const minis = o.parts.map(p => Math.max(...p.mesures.map(e => ufLargeurEcrit(e, o.d, B))) + 2 * B.marge);
+  let unite = o.largeur / somme;
+  valeurs.forEach((v, i) => { if(v > 0) unite = Math.max(unite, minis[i] / v); });
+  let largeurs = valeurs.map(v => v * unite);
+  const dispo = o.maxX - o.minX;
+  if(largeurs.reduce((a, b) => a + b, 0) > dispo){
+    const plancher = minis.reduce((a, b) => a + b, 0);
+    largeurs = minis.map((m, i) => m + Math.max(0, dispo - plancher) * valeurs[i] / somme);
+  }
+  const w = largeurs.reduce((a, b) => a + b, 0);
+  let x0 = o.cx - w / 2;
+  if(x0 < o.minX) x0 = o.minX;
+  if(x0 + w > o.maxX) x0 = Math.max(o.minX, o.maxX - w);
+  const y0 = o.haut, yS = y0 + B.hHaut;
+  g.appendChild(mk.el("rect", { x:x0, y:y0, width:w, height:B.hHaut + B.hBas, rx:0, fill:"none", stroke:"#000", "stroke-width":B.trait }));
+  g.appendChild(mk.el("line", { x1:x0, y1:yS, x2:x0 + w, y2:yS, stroke:"#000", "stroke-width":B.trait }));
+  if(o.total) g.appendChild(mk.text(x0 + w / 2, y0 + B.hHaut / 2 + B.fsTotal * 0.36, o.total, {
+    "text-anchor":"middle", "font-size":String(B.fsTotal), "font-weight":"900", fill:"var(--ink)" }));
+  let x = x0;
+  o.parts.forEach((p, i) => {
+    const lw = largeurs[i];
+    g.appendChild(mk.el("rect", { x, y:yS, width:lw, height:B.hBas, fill:p.cache ? B.gris : "rgba(255,255,255,0)" }));
+    const cy = yS + B.hBas / 2;
+    if(typeof p.ecrit === "string"){
+      const lettre = p.ecrit !== "?";
+      const fs = lettre ? Math.min(B.fsTotal * 1.2, Math.max(18, lw * 0.72)) : B.fsTotal;
+      g.appendChild(mk.text(x + lw / 2, cy, p.ecrit, lettre
+        ? { "text-anchor":"middle", "dominant-baseline":"middle", "alignment-baseline":"middle", dy:"-0.02em", "font-size":String(fs),
+            "font-family":"SplatLettres, 'Times New Roman', Times, serif", "font-style":"italic", "font-weight":"normal", fill:"var(--ink)" }
+        : { "text-anchor":"middle", "dominant-baseline":"middle", "alignment-baseline":"middle", dy:"0.10em", "font-size":String(fs), "font-weight":"900", fill:"var(--ink)" }));
+    }else if(p.ecrit){
+      const pieces = ufPieces(p.ecrit, o.d);
+      const lp = ufLargeurPieces(pieces, B.fsEntier, B.fsFrac, B.poids);
+      ufPoserPieces(g, mk, x + (lw - lp) / 2, cy, pieces, B.fsEntier, B.fsFrac, B.poids, "var(--ink)");
+    }
+    if(i < o.parts.length - 1) g.appendChild(mk.el("line", { x1:x + lw, y1:yS, x2:x + lw, y2:yS + B.hBas, stroke:"#000", "stroke-width":B.trait }));
+    x += lw;
+  });
+  return { x:x0, largeur:w, centreX:x0 + w / 2 };
+}
+
+/* Le calcul, sous le schéma, à la dernière étape : « 7 − (3 + 1/4) = 3 + 3/4 » — comme
+   « 7 − 4 = 3 » en mode A (même place, même corps, le « = » au même endroit). Les parenthèses
+   seulement quand le visible s'écrit « entier + fraction ». */
+const UF_CALCUL = { fs:42, fsFrac:30, poids:700, ecart:30 };
+function ufPiecesCalcul(card){
+  const u = card._unit, d = card.den;
+  const vis = ufPieces(u.visibleValue, d);
+  const gauche = [{ t:String(card.total) }, { op:"−" }].concat(vis.length > 1 ? [{ t:"(" }].concat(vis, [{ t:")" }]) : vis);
+  return { gauche, droite:ufPieces(u.hiddenValue, d) };
+}
+function ufDessinerCalcul(g, mk, card, centreX, cy){
+  const C = UF_CALCUL;
+  const { gauche, droite } = ufPiecesCalcul(card);
+  const lg = ufLargeurPieces(gauche, C.fs, C.fsFrac, C.poids);
+  ufPoserPieces(g, mk, centreX - C.ecart - lg, cy, gauche, C.fs, C.fsFrac, C.poids, "var(--ink)");
+  g.appendChild(mk.text(centreX, cy + C.fs * 0.36, "=", { "text-anchor":"middle", "font-size":String(C.fs), "font-weight":String(C.poids), fill:"var(--ink)" }));
+  ufPoserPieces(g, mk, centreX + C.ecart, cy, droite, C.fs, C.fsFrac, C.poids, "var(--ink)");
+}
+
+/* La carte à l'écran : la mise en page en deux colonnes du mode A (renderCard), mêmes nombres —
+   le plateau à gauche sous son TOTAL, le schéma et le calcul à droite. Quatre étapes, comme le
+   mode A : 0 l'énoncé ; 1 le schéma vide ; 2 le schéma rempli, « ? » (ou 𝑥) dans la case grise ;
+   3 la valeur cachée, le calcul, la tache dévoilée. Pas de bouton « Résoudre » (ÉquaBarre
+   suppose une inconnue entière). */
+function ufRendreCarte(card, revealState){
+  const mk = { el, text };
+  const trayCfg = getTrayConfig(card.family);
+  const k = 0.70, dx = -80, dy = 100;
+  const centreGauche = dx + k * (120 + 1360 / 2);
+  const layer = el("g", { id:"introTrayShift", transform:`translate(${dx} ${dy}) scale(${k})` });
+  svg.appendChild(layer);
+  layer.appendChild(el("rect", { x:trayCfg.x, y:trayCfg.y, width:trayCfg.w, height:trayCfg.h,
+    rx:30, fill:"rgba(0,0,0,0.03)", stroke:"rgba(0,0,0,0.15)", "stroke-width":"6" }));
+
+  const gTotal = el("g", { id:"totalGroup" });
+  gTotal.appendChild(text(centreGauche, 86, "TOTAL", { "text-anchor":"middle", "font-size":"38", fill:"var(--total-label)", "font-weight":"800", "letter-spacing":"2" }));
+  gTotal.appendChild(text(centreGauche, 86 + 74, String(card.total), { "text-anchor":"middle", "font-size":"84", fill:"var(--ink)", "font-weight":"900" }));
+  svg.appendChild(gTotal);
+  const bb = gTotal.getBBox();
+  svg.insertBefore(el("rect", { x:bb.x - 30, y:bb.y - 18, width:bb.width + 60, height:bb.height + 36,
+    rx:18, fill:"var(--totalbox-fill)", stroke:"#000", "stroke-width":"4" }), gTotal);
+
+  if(revealState >= 1){
+    const u = card._unit, inconnue = ufInconnue(card);
+    const g = el("g", { id:"bottomBarModelAB" });
+    const barre = ufDessinerBarre(g, mk, {
+      cx:1240, haut:260, minX:dx + k * (trayCfg.x + trayCfg.w) + 30, maxX:1570, largeur:520, d:card.den,
+      total:revealState >= 2 ? String(card.total) : "",
+      parts:[
+        { valeur:u.visibleValue, cache:false, ecrit:revealState >= 2 ? u.visibleValue : null, mesures:[u.visibleValue] },
+        { valeur:u.hiddenValue, cache:true, ecrit:revealState >= 3 ? u.hiddenValue : (revealState === 2 ? inconnue : null), mesures:[u.hiddenValue, inconnue] }
+      ]
+    });
+    if(revealState >= 3) ufDessinerCalcul(g, mk, card, 1300 + (barre.centreX - 1240), 525);
+    svg.appendChild(g);
+  }
+
+  const beadR = card._beadR ?? 56;
+  const devoile = revealState >= 3;
+  card.hidden.forEach((v, i) => ufDessinerJeton(layer, mk, card._posH?.[i]?.cx ?? 820, card._posH?.[i]?.cy ?? 610, beadR, v));
+  for(const s of (card._splats || [{ cx:820, cy:610, r:220 }])){
+    layer.appendChild(el("path", { d:blobPath(s.cx, s.cy, s.r), fill:devoile ? "var(--splat-reveal)" : "var(--splat-cover)", stroke:"var(--splat-stroke)", "stroke-width":"5" }));
+    if(devoile) layer.appendChild(el("path", { d:blobPath(s.cx, s.cy, s.r), fill:"var(--splat-cover)", stroke:"none", "class":"anim-fade-out" }));
+  }
+  card.visible.forEach((v, i) => ufDessinerJeton(layer, mk, card._posV?.[i]?.cx ?? (450 + i * 40), card._posV?.[i]?.cy ?? 360, beadR, v));
+}
+
+/* L'énoncé imprimé (1, 2 ou 4 par page) : le TOTAL et le plateau du mode A imprimé
+   (renderCardIntoSvg), à la même place ; les jetons entiers en bleu franc, les parts dans leur
+   couleur, contour foncé : lisible en noir et blanc. */
+function ufRendreCarteImprimee(targetSvg, card, tEl, tText){
+  const mk = { el:tEl, text:tText };
+  const printTray = getPrintTrayConfig(card.family);
+  targetSvg.appendChild(tEl("rect", { x:printTray.x, y:printTray.y, width:printTray.w, height:printTray.h,
+    rx:30, fill:"#fff", stroke:"#334155", "stroke-width":"8" }));
+  const tx = 800, ty = 92;
+  const g = tEl("g", { id:"totalGroupPrint" });
+  g.appendChild(tText(tx, ty, "TOTAL", { "text-anchor":"middle", "font-size":"42", fill:"rgba(0,0,0,0.92)", "font-weight":"900", "letter-spacing":"2" }));
+  g.appendChild(tText(tx, ty + 83, String(card.total), { "text-anchor":"middle", "font-size":"96", fill:"#000", "font-weight":"900" }));
+  targetSvg.appendChild(g);
+  targetSvg.insertBefore(tEl("rect", { x:tx - 140, y:ty - 70, width:280, height:210, rx:22,
+    fill:"rgba(0,0,0,0.02)", stroke:"rgba(0,0,0,0.22)", "stroke-width":"4" }), g);
+  const beadR = card._beadR ?? 56;
+  const poser = (p, v) => {
+    const { cx, cy } = fitPrintTokenToTray(p.cx, p.cy + printTray.offsetY, beadR, printTray, 4);
+    ufDessinerJeton(targetSvg, mk, cx, cy, beadR, v);
+  };
+  card.hidden.forEach((v, i) => poser(card._posH?.[i] || { cx:820, cy:610 }, v));
+  for(const s of (card._splats || [{ cx:820, cy:610, r:220 }])){
+    targetSvg.appendChild(tEl("path", { d:blobPath(s.cx, s.cy + printTray.offsetY, s.r), fill:"rgb(0,0,0)", stroke:"rgba(0,0,0,0.18)", "stroke-width":"5" }));
+  }
+  card.visible.forEach((v, i) => poser(card._posV?.[i] || { cx:450 + i * 40, cy:360 }, v));
+}
+
+/* Les réglages relancent la série, comme ceux des autres modes. */
+["fracNiveau", "fracVisibleMax", "fracHiddenMax", "fracTotalMin", "fracTotalMax"].forEach(id => {
+  const champ = document.getElementById(id);
+  if(!champ) return;
+  champ.addEventListener("input", scheduleAutoGenerate);
+  champ.addEventListener("change", scheduleAutoGenerate);
+});
 
 if(!loadSharedConfiguration()){
   syncSettingsUI();
