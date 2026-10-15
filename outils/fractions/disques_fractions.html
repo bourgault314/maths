@@ -1584,6 +1584,29 @@
       };
     }
 
+    // Audit « données reçues » (15/10/2026) : une séance relue de l'appareil ou
+    // d'un fichier importé n'est pas un objet de confiance. Chaque disque ne
+    // garde qu'un dénominateur de la palette, un type et une face connus, des
+    // nombres : le dénominateur s'écrit dans le SVG de l'étiquette, il ne doit
+    // jamais être un texte.
+    _sanitizeSessionTokens(tokens){
+      const denoms = new Set(FRACTIONS.map(f => f.denom));
+      const nombre = (v, d) => (typeof v === 'number' && Number.isFinite(v)) ? v : d;
+      if(!Array.isArray(tokens)) return [];
+      return tokens
+        .filter(t => t && typeof t === 'object' && denoms.has(t.denom) && Number.isInteger(t.id) && t.id >= 0)
+        .map(t => ({
+          ...t,
+          kind: t.kind === 'disk' ? 'disk' : 'piece',
+          side: t.side === 'back' ? 'back' : 'front',
+          x: nombre(t.x, 0), y: nombre(t.y, 0),
+          z: (typeof t.z === 'number' && Number.isFinite(t.z)) ? t.z : null,
+          rot: nombre(t.rot, 0),
+          slot: (typeof t.slot === 'number' && Number.isFinite(t.slot)) ? t.slot : null,
+          hideLabel: t.hideLabel === true
+        }));
+    }
+
     applySession(data, opts={}){
       const withHistory = (opts.withHistory !== false);
       if(!data || !Array.isArray(data.tokens)) return false;
@@ -1593,7 +1616,7 @@
       // Ne touche pas au moteur de bordures / rendu : on remonte les tokens via mountToken()
       this.clearAllTokens(false);
 
-      this.tokens = data.tokens.map(t => ({...t}));
+      this.tokens = this._sanitizeSessionTokens(data.tokens);
       // nextId : fallback si absent
       const maxId = Math.max(0, ...this.tokens.map(t => Number(t.id)||0));
       this.nextId = Number(data.nextId) || (maxId + 1);

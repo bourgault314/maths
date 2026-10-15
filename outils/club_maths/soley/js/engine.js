@@ -594,10 +594,16 @@ function persist(){
   try{localStorage.setItem('soley-save-v5',JSON.stringify(save));}catch(e){memStore=save;}
 }
 let save=loadSave();
-if(!save.done)save.done={};
-if(!save.fruits)save.fruits={};
-if(!save.pieces)save.pieces={}; /* meilleur nombre de pièces par niveau (champ additif, anciennes sauvegardes intactes) */
-if(!save.cours)save.cours={}; /* points de cours vus (chantier « Comprendre ») — champ additif, même patron : anciennes sauvegardes intactes */
+if(!save||typeof save!=='object')save={};
+if(!save.done||typeof save.done!=='object')save.done={};
+if(!save.fruits||typeof save.fruits!=='object')save.fruits={};
+if(!save.pieces||typeof save.pieces!=='object')save.pieces={}; /* meilleur nombre de pièces par niveau (champ additif, anciennes sauvegardes intactes) */
+if(!save.cours||typeof save.cours!=='object')save.cours={}; /* points de cours vus (chantier « Comprendre ») — champ additif, même patron : anciennes sauvegardes intactes */
+/* Audit « données reçues » (15/10/2026) : la sauvegarde relue de l'appareil n'est pas un objet de
+   confiance. Les comptes (fruits, pièces) redeviennent des nombres avant d'entrer dans la page :
+   un texte à leur place s'écrivait tel quel dans le HTML de l'accueil (gotF, gf). */
+const compteSauve=v=>{const n=Number(v);return Number.isFinite(n)&&n>=0?Math.floor(n):null;};
+for(const o of [save.fruits,save.pieces])for(const k of Object.keys(o)){const n=compteSauve(o[k]);if(n===null)delete o[k];else o[k]=n;}
 
 /* ===== Progression : mondes verrouillés, étoiles, mode classe =====
    1 petit soleil = niveau réussi · 2 = + tous les fruits · 3 = + défi de maîtrise (au plus

@@ -304,11 +304,13 @@
   }
 
   function renderOrder(question, saved) {
-    const chosen = saved ? saved.value.slice() : [];
+    // La réponse relue de l'appareil n'est pas un objet de confiance : seules
+    // les étiquettes de la question reviennent, et elles s'écrivent en texte.
+    const chosen = saved && Array.isArray(saved.value) ? saved.value.filter(token => question.tokens.includes(token)) : [];
     const used = new Set(chosen.map(token => question.tokens.indexOf(token)));
     const zone = $("answer-zone");
     const draw = () => {
-      zone.innerHTML = `<div class="order-task"><div class="token-tray">${question.tokens.map((token,index) => `<button class="token${used.has(index) ? " used" : ""}" type="button" data-token="${index}" ${saved ? "disabled" : ""}>${token}</button>`).join("")}</div><div class="placed-tray">${chosen.map((token,index) => `<button class="placed-token" type="button" data-placed="${index}" ${saved ? "disabled" : ""}>${token}</button>`).join("") || "<span>Touche les étiquettes dans l’ordre.</span>"}</div>${saved ? `<div class="order-correction">Ordre attendu : ${question.answer.join(" ")}</div>` : `<div class="task-actions"><button class="validate-button" type="button">Valider</button><button class="secondary clear-order" type="button">Tout retirer</button></div>`}</div>`;
+      zone.innerHTML = `<div class="order-task"><div class="token-tray">${question.tokens.map((token,index) => `<button class="token${used.has(index) ? " used" : ""}" type="button" data-token="${index}" ${saved ? "disabled" : ""}>${escapeHtml(token)}</button>`).join("")}</div><div class="placed-tray">${chosen.map((token,index) => `<button class="placed-token" type="button" data-placed="${index}" ${saved ? "disabled" : ""}>${escapeHtml(token)}</button>`).join("") || "<span>Touche les étiquettes dans l’ordre.</span>"}</div>${saved ? `<div class="order-correction">Ordre attendu : ${question.answer.join(" ")}</div>` : `<div class="task-actions"><button class="validate-button" type="button">Valider</button><button class="secondary clear-order" type="button">Tout retirer</button></div>`}</div>`;
       if (!saved) {
         zone.querySelectorAll("[data-token]").forEach(button => button.addEventListener("click", () => {
           const index = Number(button.dataset.token);

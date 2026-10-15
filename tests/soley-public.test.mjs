@@ -664,7 +664,7 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
   /* le cours ne se déroule plus au chronomètre : plus de bouton « Revoir » dans le panneau
      (la relecture passe par « Revoir le cours » sur la carte du niveau) */
   assert.ok(!/id="coursrevoir"/.test(html));
-  assert.match(js.engine, /if\(!save\.cours\)save\.cours=\{\};/);
+  assert.match(js.engine, /if\(!save\.cours\|\|typeof save\.cours!=='object'\)save\.cours=\{\};/);
   /* LOT B (16/08) : le déclencheur lit `dec` OU `cours`. Les deux lignes qui suivent
      sont le cœur de la séparation et doivent être lues ensemble — celle du haut
      ENSEIGNE (elle accepte les deux champs), celle du bas VERROUILLE (elle ne connaît

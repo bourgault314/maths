@@ -950,6 +950,28 @@
       ? tokens.map(t => ({...t, labelMode: normalizeLabelMode(t?.labelMode, fallback)}))
       : [];
   }
+
+  // Audit « données reçues » (15/10/2026) : une scène relue de l'appareil ou
+  // d'un fichier importé n'est pas un objet de confiance. Chaque pièce ne garde
+  // qu'un dénominateur de la palette, un type et une face connus, des nombres :
+  // le dénominateur s'écrit dans le HTML de l'étiquette, il ne doit jamais
+  // être un texte.
+  const TOKEN_KINDS = new Set(['band', 'piece']);
+  const TOKEN_SIDES = new Set(['front', 'back']);
+  function sanitizeSnapshotTokens(tokens, denoms){
+    const allowed = new Set(Array.isArray(denoms) ? denoms : []);
+    const nombre = (v, d) => (typeof v === 'number' && Number.isFinite(v)) ? v : d;
+    if(!Array.isArray(tokens)) return [];
+    return tokens
+      .filter(t => t && typeof t === 'object' && allowed.has(t.denom) && Number.isInteger(t.id) && t.id >= 0)
+      .map(t => ({
+        ...t,
+        kind: TOKEN_KINDS.has(t.kind) ? t.kind : 'piece',
+        side: TOKEN_SIDES.has(t.side) ? t.side : 'front',
+        x: nombre(t.x, 0), y: nombre(t.y, 0), z: nombre(t.z, 0),
+        hidden: t.hidden === true
+      }));
+  }
   /* BANDES_FRACTIONS_PURE_END */
 
   const SCENES_KEY = 'fractionstrips_scenes_v1';
@@ -1156,7 +1178,7 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
     if(!snap || !Array.isArray(snap.tokens)) throw new Error('Snapshot invalide');
     if(pushUndo) app.saveState();
     app.clearAllTokens(false);
-    app.tokens = normalizeTokenLabelModes(snap.tokens, snap.labelMode || 'numeric');
+    app.tokens = normalizeTokenLabelModes(sanitizeSnapshotTokens(snap.tokens, FRACTIONS.map(f => f.denom)), snap.labelMode || 'numeric');
     app.nextId = snap.nextId || (Math.max(0, ...app.tokens.map(t=>t.id)) + 1);
     app.topZ = snap.topZ || 200;
     app.selectedId = snap.selectedId ?? null;
