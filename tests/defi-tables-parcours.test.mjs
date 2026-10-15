@@ -261,7 +261,7 @@ test("J’apprends garde la bande pour construire et la propose en aide temporai
   assert.match(html, /textContent = enabled \? "Valider" : "Suivant"/);
   assert.match(html, /completeReview = state\.configuration\.mode === "test"/);
   assert.match(html, /Mes \$\{wrongEntries\.length\} erreurs/, "lot R2 : les erreurs d’abord, sous leur titre");
-  assert.match(html, /defi_tables_core\.js\?v=20261005-1/);
+  assert.match(html, /defi_tables_core\.js\?v=20261010-1/);
   // Le moteur était le seul des deux scripts sans épingle, et le lot A2 est
   // passé au travers : il ajoutait chargerSync / sauverSync / casesDetachees au
   // moteur sans monter son numéro. Un navigateur qui avait déjà l'ancien moteur
@@ -269,7 +269,7 @@ test("J’apprends garde la bande pour construire et la propose en aide temporai
   // « PARCOURS.chargerSync is not a function », plus de repère de suivi, plus
   // rien envoyé au professeur, et une page d'accueil d'apparence normale.
   // Changer ce numéro à chaque modification du moteur ; ce test le rappelle.
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261007-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261014-1/);
 });
 
 test("une erreur = une ligne : le calcul avec sa bonne réponse, la réponse donnée barrée à côté", () => {
@@ -279,7 +279,10 @@ test("une erreur = une ligne : le calcul avec sa bonne réponse, la réponse don
   assert.match(html, /expression\.append\(document\.createTextNode\(avant\), expected, document\.createTextNode\(apres \?\? ""\)\);/);
   assert.match(html, /given\.setAttribute\("aria-label", `Ta réponse : \$\{entry\.given\}`\);/, "le sens reste dit aux lecteurs d’écran");
   assert.match(html, /item\.append\(questionLine, given\)/);
-  assert.match(html, /\.given-answer \{ color: var\(--red\); font-size: \.95rem; font-weight: 800; text-decoration: line-through; \}/);
+  // Lot « la flèche de retour » (14/10/2026, décision de Gwenaël) : barrée
+  // d'un trait en biais — le trait horizontal se perdait dans un chiffre seul.
+  assert.match(html, /\.given-answer \{ display: inline-block; padding: 0 \.3em; color: var\(--red\); font-size: \.95rem; font-weight: 800; line-height: 1\.25;\s*background: linear-gradient\(to top right, transparent calc\(50% - 1\.4px\), currentColor calc\(50% - 1\.4px\), currentColor calc\(50% \+ 1\.4px\), transparent calc\(50% \+ 1\.4px\)\); \}/);
+  assert.doesNotMatch(html, /\.given-answer \{[^}]*line-through/, "plus de trait horizontal");
   assert.doesNotMatch(html, /`Question \$\{entry\.number\}`/);
 });
 

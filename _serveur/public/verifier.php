@@ -149,7 +149,8 @@ if ($autorise) {
     verif($lignes, "Tables du suivi", function () {
         $pdo = bd();
         $manquantes = [];
-        foreach (['classes', 'eleves', 'progressions', 'profs', 'partages', 'sessions_prof', 'compteurs', 'billets', 'versions', 'journal'] as $table) {
+        foreach (['classes', 'eleves', 'progressions', 'profs', 'partages', 'sessions_prof', 'compteurs', 'billets', 'versions', 'journal',
+                  'directs', 'directs_questions', 'directs_reponses'] as $table) {
             try { $pdo->query("SELECT 1 FROM $table LIMIT 1"); }
             catch (Throwable $e) { $manquantes[] = $table; }
         }
@@ -207,6 +208,38 @@ if ($autorise) {
         $actions = (int)$pdo->query('SELECT COUNT(*) FROM journal')->fetchColumn();
         return "$versions version(s) sur $journees journée(s) gardée(s) (sept au plus), "
             . "$actions ligne(s) de journal (douze mois, effacées par la tâche planifiée)";
+    });
+    // Lot « splat-suivi-5 » (08/10/2026) : les mondes de SPLAT! ouverts à
+    // chaque classe vivent dans classes.reglages, ajoutée par migrer.php. Sans
+    // elle, rien ne tombe en panne (tout se lit « tous les mondes ouverts »),
+    // mais le choix des mondes dans « Ma classe » répond « mise à niveau ».
+    verif($lignes, "Mondes ouverts par classe", function () {
+        $pdo = bd();
+        if (!colonne_existe($pdo, 'classes', 'reglages')) {
+            throw new RuntimeException("manque la colonne « classes.reglages » — ouvre migrer.php avec ton mot de passe d'installation.");
+        }
+        $reglees = (int)$pdo->query("SELECT COUNT(*) FROM classes WHERE reglages IS NOT NULL AND reglages <> ''")->fetchColumn();
+        return $reglees === 0
+            ? "en place (toutes les classes ont tous leurs mondes ouverts)"
+            : "en place ($reglees classe(s) avec un choix de mondes)";
+    });
+    // Lot « Les records » (09/10/2026) : la table des meilleurs temps des
+    // Légendes des tables, ajoutée par migrer.php. Sans elle, l'appli dit
+    // « mise à niveau » à chaque course et n'enregistre rien.
+    verif($lignes, "Les records (Défi tables)", function () {
+        $pdo = bd();
+        if (!table_existe($pdo, 'records')) {
+            throw new RuntimeException("manque la table « records » — ouvre migrer.php avec ton mot de passe d'installation.");
+        }
+        // Lot « records-depart » (11/10/2026) : les anciens temps sont gardés
+        // en base sans compter (remise à zéro du 10/10). La ligne les compte
+        // à part, sinon on croit que la remise à zéro n'a pas marché.
+        $temps = compter_temps_par_saison($pdo);
+        if ($temps['saison'] === 0 && $temps['anciens'] === 0) return "en place (aucun temps enregistré pour le moment)";
+        $depuis = instant_local_lisible(records_depuis());
+        $detail = "en place — depuis le $depuis (heure de La Réunion) : {$temps['saison']} Légende(s) avec un temps";
+        if ($temps['anciens'] > 0) $detail .= " ; {$temps['anciens']} temps plus ancien(s), gardé(s) en base, ne compte(nt) plus";
+        return $detail;
     });
     // Le limiteur d'essais s'écrit avec une instruction propre à chaque moteur
     // (MySQL chez OVH, SQLite dans les tests) : on la joue ici, sur la vraie

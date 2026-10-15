@@ -353,7 +353,7 @@ function majEtat(sim){
     const nm = D.targets.length > 1 ? 'Case ' + noms[x.i] : 'La case';
     if (x.st === 'none') return nm + ' n’a pas encore de rayon.';
     if (x.st === 'multi') return nm + ' reçoit plusieurs rayons — un seul par case !';
-    return nm + ' reçoit ' + fstr(x.got) + ' au lieu de ' + (t.disp || fstr(t.need)) + '.';
+    return nm + ' reçoit ' + fstr(x.got) + ' au lieu de ' + echapper(t.disp || fstr(t.need)) + '.';
   });
   e.innerHTML = '<span class="bad">' + dits.join(' ') + '</span>' + fruits;
 }
@@ -623,11 +623,21 @@ function rouvrirFiche(){
 
 /* ===================== Brouillons ===================== */
 
+/* Audit « données reçues » (15/10/2026) : le dépôt relu de l'appareil n'est pas un
+   objet de confiance. Un brouillon n'est gardé que si son identifiant a la forme
+   que nouvelId() fabrique (il s'écrit dans les attributs data-br de la liste) ;
+   le nom, la date et le niveau restent ce qu'ils sont, et la liste les échappe. */
+function idBrouillonValide(id){
+  return typeof id === 'string' && /^br[0-9a-z]{1,24}$/.test(id);
+}
 function lireDepot(){
   try {
     const brut = localStorage.getItem(CLE_BROUILLONS);
     const d = brut ? JSON.parse(brut) : null;
-    if (d && d.liste) return d;
+    if (d && Array.isArray(d.liste)){
+      d.liste = d.liste.filter(function(e){ return e && typeof e === 'object' && idBrouillonValide(e.id); });
+      return d;
+    }
   } catch (e) {}
   return { v: 1, courant: null, liste: [] };
 }
@@ -677,9 +687,9 @@ function listeBrouillons(){
   }
   const html = '<ul class="atliste">' + d.liste.map(function(e){
     const n = e.niveau || {};
-    const quand = String(e.maj || '').slice(0, 10);
+    const quand = echapper(String(e.maj || '').slice(0, 10));
     return '<li><button type="button" class="nom" data-br="' + e.id + '">' +
-      echapper(e.nom) + '<small>' + (n.cols || '?') + '×' + (n.rows || '?') + ' · ' + quand +
+      echapper(e.nom) + '<small>' + echapper(n.cols || '?') + '×' + echapper(n.rows || '?') + ' · ' + quand +
       (e.id === brouillonId ? ' · en cours' : '') + '</small></button>' +
       '<button type="button" class="atbtn mini" data-brdup="' + e.id + '">Dupliquer</button>' +
       '<button type="button" class="atbtn mini danger" data-brdel="' + e.id + '">Supprimer</button></li>';
@@ -715,34 +725,52 @@ function chargerNiveauDuJeu(i){
   message('« ' + echapper(D.name) + ' » chargé. À l\u2019export, l\u2019atelier signalera qu\u2019il s\u2019agit d\u2019une retouche.', 'ok');
 }
 
+/* Un niveau relu (brouillon de l'appareil, texte collé) n'est pas un objet de
+   confiance (audit « données reçues », 15/10/2026) : chaque champ reprend son
+   type — entiers, fractions [n, d], textes — avant d'entrer dans le dessin du
+   plateau et les messages, qui les écrivent en HTML. */
+function entierOu(v, defaut){ return Number.isInteger(v) ? v : (Number.isInteger(Number(v)) ? Number(v) : defaut); }
+function texteOu(v, defaut){ return typeof v === 'string' ? v : (v == null ? defaut : String(v)); }
+function fracOu(f, defaut){
+  return Array.isArray(f) && Number.isInteger(entierOu(f[0], null)) && Number.isInteger(entierOu(f[1], null)) && entierOu(f[1], 0) > 0
+    ? [entierOu(f[0], 0), entierOu(f[1], 1)] : defaut;
+}
+function liste(v){ return Array.isArray(v) ? v : []; }
 function normaliser(n){
+  n = n && typeof n === 'object' ? n : {};
   const v = niveauVide();
-  v.w = n.w || 'lagon';
-  v.name = n.name || '';
-  v.sub = n.sub || '';
-  v.hint = n.hint || '';
-  v.cols = Math.min(COLS_MAX, Math.max(COLS_MIN, n.cols || 9));
-  v.rows = Math.min(ROWS_MAX, Math.max(ROWS_MIN, n.rows || 6));
-  v.suns = (n.suns || []).map(function(s){
-    const o = { x: s.x, y: s.y, dir: s.dir };
-    if (s.val) o.val = s.val;
+  v.w = WORLDS.some(function(w){ return w.id === n.w; }) ? n.w : 'lagon';
+  v.name = texteOu(n.name, '');
+  v.sub = texteOu(n.sub, '');
+  v.hint = texteOu(n.hint, '');
+  v.cols = Math.min(COLS_MAX, Math.max(COLS_MIN, entierOu(n.cols, 9)));
+  v.rows = Math.min(ROWS_MAX, Math.max(ROWS_MIN, entierOu(n.rows, 6)));
+  v.suns = liste(n.suns).filter(function(s){ return s && typeof s === 'object'; }).map(function(s){
+    const o = { x: entierOu(s.x, 0), y: entierOu(s.y, 0), dir: entierOu(s.dir, 0) };
+    const val = fracOu(s.val, null);
+    if (val) o.val = val;
     return o;
   });
-  v.targets = (n.targets || []).map(function(t){
-    const o = { x: t.x, y: t.y, need: t.need };
-    if (t.disp) o.disp = t.disp;
-    if (t.porte !== undefined) o.porte = t.porte;
+  v.targets = liste(n.targets).filter(function(t){ return t && typeof t === 'object'; }).map(function(t){
+    const o = { x: entierOu(t.x, 0), y: entierOu(t.y, 0), need: fracOu(t.need, [1, 1]) };
+    if (t.disp) o.disp = texteOu(t.disp, '');
+    if (t.porte !== undefined) o.porte = entierOu(t.porte, 0);
     return o;
   });
-  v.rocks = (n.rocks || []).map(function(r){ return [r[0], r[1]]; });
-  v.fruits = (n.fruits || []).map(function(f){ return f.length > 2 ? [f[0], f[1], f[2]] : [f[0], f[1]]; });
-  v.gates = (n.gates || []).map(function(g){ return { x: g.x, y: g.y, max: g.max }; });
-  v.fixed = (n.fixed || []).map(function(f){ return [f[0], f[1], f[2]]; });
-  v.tools = (n.tools || []).slice();
-  v.sol = n.sol || [];
-  v.solMin = n.solMin || null;
-  v.solB = n.solB || null;
-  if (n.dec) v.dec = n.dec;
+  v.rocks = liste(n.rocks).filter(Array.isArray).map(function(r){ return [entierOu(r[0], 0), entierOu(r[1], 0)]; });
+  v.fruits = liste(n.fruits).filter(Array.isArray).map(function(f){
+    return f.length > 2 ? [entierOu(f[0], 0), entierOu(f[1], 0), fracOu(f[2], [1, 1])] : [entierOu(f[0], 0), entierOu(f[1], 0)];
+  });
+  v.gates = liste(n.gates).filter(function(g){ return g && typeof g === 'object'; }).map(function(g){
+    return { x: entierOu(g.x, 0), y: entierOu(g.y, 0), max: fracOu(g.max, [1, 1]) };
+  });
+  v.fixed = liste(n.fixed).filter(function(f){ return Array.isArray(f) && f[0] && typeof f[0] === 'object'; })
+    .map(function(f){ return [f[0], entierOu(f[1], 0), entierOu(f[2], 0)]; });
+  v.tools = liste(n.tools).filter(function(d){ return d && typeof d === 'object'; });
+  v.sol = liste(n.sol);
+  v.solMin = Array.isArray(n.solMin) ? n.solMin : null;
+  v.solB = Array.isArray(n.solB) ? n.solB : null;
+  if (typeof n.dec === 'string' && /^[a-z0-9_-]{1,40}$/i.test(n.dec)) v.dec = n.dec;
   return v;
 }
 

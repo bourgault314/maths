@@ -23,7 +23,7 @@ function ligne(prefix){
 }
 
 const PALETTE = html.slice(html.indexOf("const INVESTIGATE_COLOR_PALETTE = ["), html.indexOf("];", html.indexOf("const INVESTIGATE_COLOR_PALETTE = [")) + 2);
-const CONSTANTES_SYS = ["SYS_GESTES", "SYS_GESTES_MIX_DEFAUT", "SYS_MAX_TACHES", "SYS_MAX_TACHES_AVANT", "SYS_ESSAIS", "SYS_NOMBRES_SOUS_ENTENDUS", "SYS_COULEURS_PLURIEL", "SYS_PLAGES"]
+const CONSTANTES_SYS = ["SYS_GESTES", "SYS_GESTES_MIX_DEFAUT", "SYS_SOUS_GESTES", "SYS_MAX_TACHES", "SYS_MAX_TACHES_AVANT", "SYS_ESSAIS", "SYS_NOMBRES_SOUS_ENTENDUS", "SYS_COULEURS_PLURIEL", "SYS_PLAGES"]
   .map((nom) => ligne(`const ${nom} = `)).join("\n");
 const FONCTIONS_SYS = ["sysNormaliserReglages", "genSystemCarte", "sysMelangerPlateaux", "sysFormes", "sysFormesDouble", "sysSomme", "sysNombreTaches", "sysPlateau",
   "sysTirerSituation", "sysSituationValide", "sysNombreSousEntendu", "sysTexteASousEntendu", "sysSituationSure",
@@ -71,7 +71,10 @@ const sys = new Function(`
   };
 `)();
 
-const GESTES = sys.SYS_GESTES;
+/* Les gestes de ce test : ceux qui ont un plan d'avant (sysPlanS3, en mots et en lettres) et 6
+   taches au plus. Ceux du lot M4-5 (Je recopie, Deux gestes à la suite : 7 taches, jamais de jeton
+   visible, seulement le plan dessiné) ont le leur : splat-systeme-m4-5-generateur.test.mjs. */
+const GESTES = sys.SYS_GESTES.filter((g) => !["RECOPIE", "ETAGES"].includes(g));
 const sousEntendu = (n) => ["69", "88", "420", "666", "1488"].some((x) => String(n).includes(x));
 /* graines fixes, sans nombre à sous-entendu elles non plus */
 function graines(n, depart = 1){
@@ -351,7 +354,8 @@ test("MIX : seulement les gestes cochés ; par défaut les quatre du cycle 3", (
 
 test("réglages : coefficient max, visibles, totaux, indices, valeurs par défaut", () => {
   assert.deepEqual(sys.normaliser({}), { geste: "EMBOITE1", gestes: ["EMBOITE1", "PARTIELLE", "COEF", "TROIS"], clues: "BOARD", coefMax: 3, visMin: 0, visMax: 3, totalMin: 20, totalMax: 60,
-    ecart: "", fois: 2, indice: "11", sens: "PLATEAU", ordre: "" }); // lot M4-1 : les réglages nouveaux, éteints
+    ecart: "", fois: 2, indice: "11", sens: "PLATEAU", ordre: "", // lot M4-1 : les réglages nouveaux, éteints
+    foisRecopie: 2, forme: "", grand: "", sous: "MIX" }); // lot M4-5, éteints eux aussi
   assert.equal(sys.normaliser({ clues: "SENTENCE" }).clues, "SENTENCE");
   assert.equal(sys.normaliser({ clues: "n'importe quoi" }).clues, "BOARD");
   assert.equal(sys.normaliser({ coefMax: 9 }).coefMax, 4);
@@ -574,10 +578,13 @@ test("adresses : aller-retour buildShareUrl → appliquerConfiguration pour le m
   const page = () => {
     const els = {
       activityEl: liste("D", ["U", "UPM", "N", "NPM", "C", "D", "C9", "C8"]),
-      sysGesteEl: liste("EMBOITE1", ["EMBOITE1", "PARTIELLE", "COEF", "DOUBLE", "MIROIR", "TROIS", "ESCALIER", "MIX"]),
+      sysGesteEl: liste("EMBOITE1", ["EMBOITE1", "PARTIELLE", "COEF", "DOUBLE", "MIROIR", "TROIS", "ESCALIER", "RECOPIE", "ETAGES", "MIX"]),
       // lot M4-1
-      sysEcartEl: liste("", ["", "1", "2"]), sysFoisEl: liste("2", ["2", "3"]), sysIndiceEl: liste("11", ["11", "12"]),
+      sysEcartEl: liste("", ["", "1", "2"]), sysFoisEl: liste("2", ["2", "3", "4", "MIX"]), sysIndiceEl: liste("11", ["11", "12"]),
       sysSensEl: liste("PLATEAU", ["PLATEAU", "INDICE"]), sysOrdreEl: liste("", ["", "MELANGE"]),
+      // lot M4-5
+      sysFormeEl: liste("", ["", "12", "23", "13", "MIX"]), sysGrandEl: liste("", ["", "211", "112"]),
+      sysSousEl: liste("MIX", ["MIX", "COEF", "MIROIR", "RECOPIE", "DOUBLE"]),
       // lot M4-2 : « Pas à pas » (correction au tableau)
       sysPasAPasEl: coche(true),
       sysCoefMaxEl: champ(3, { min: "1", max: "4" }),
@@ -598,7 +605,7 @@ test("adresses : aller-retour buildShareUrl → appliquerConfiguration pour le m
     ${fn("investigateColorByKey")}
     ${fn("investigateColorWord")}
     ${CONSTANTES_SYS}
-    let investigatePaletteKeys = null, printInstructionNote = "", numberedQuestionMarkMode = true, activeGenerationSeed = "4242";
+    let investigatePaletteKeys = null, printInstructionNote = "", printSystemeLigne = false, printCorrigeEquations = false, numberedQuestionMarkMode = true, activeGenerationSeed = "4242";
     const unitEquationTypeEl = null, numberedEquationTypeEl = null;
     function syncSettingsUI(){}
     function syncNumberedQuestionMarkButton(){}

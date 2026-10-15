@@ -58,7 +58,9 @@ test("la mesure : sans le pied de page, le repère compris ; la carte du jeu ne 
   assert.match(ajuster, /const pleinEcran = corps\.classList\.contains\("fullscreen-active"\);\s*const bornes = bornesEchelle\(window\.innerWidth, pleinEcran\);/);
   assert.match(ajuster, /if \(!fige && corps\.offsetHeight > limite\) return false;\s*return !\(enJeu && carte && carte\.scrollHeight > carte\.clientHeight \+ 1\);/);
   assert.match(ajuster, /corps\.classList\.add\("mesure-cadre"\);[\s\S]*corps\.classList\.remove\("mesure-cadre"\);/);
-  assert.match(ajuster, /chercherEchelle\(enJeu \|\| accueil \|\| parcoursOuvert \? \{\.\.\.bornes, longue: bornes\.min\} : bornes, tient\)/, "une série, l’accueil ou Mon parcours trop hauts gardent la plus petite échelle");
+  // Lot « le cadre qui dépasse » (11/10/2026) : le résultat aussi.
+  assert.match(ajuster, /chercherEchelle\(enJeu \|\| accueil \|\| parcoursOuvert \|\| resultat \? \{\.\.\.bornes, longue: bornes\.min\} : bornes, tient\)/, "une série, l’accueil, Mon parcours ou un résultat trop hauts gardent la plus petite échelle");
+  assert.match(ajuster, /const resultat = document\.getElementById\("result"\)\?\.hidden === false;/, "lot « le cadre qui dépasse »");
   assert.match(ajuster, /const parcoursOuvert = !document\.getElementById\("parcours"\)\.hidden;/, "lot « Mon parcours »");
   assert.match(ajuster, /classList\.contains\("mode-fiche"\) \|\| corps\.classList\.contains\("voir-fiche"\)/, "la fiche a sa propre échelle");
   assert.match(html, /body\.mesure-cadre \{ min-height: 0 !important; \}\s*body\.mesure-cadre \.site-footer \{ display: none !important; \}/);
@@ -66,7 +68,11 @@ test("la mesure : sans le pied de page, le repère compris ; la carte du jeu ne 
 
 test("l’échelle est remesurée à chaque écran, à la première question, au plein écran et au redimensionnement", () => {
   assert.match(html, /suivreHistorique\(name\);\s*ajusterEchelle\(\);\s*\}/, "show()");
-  assert.match(html, /show\("play"\);\s*renderQuestion\(\);[\s\S]{0,260}ajusterEchelle\(\);/, "la première question");
+  // Lot « les règles des records » (11/10/2026) : la première question arrive
+  // dans partir(), tout de suite ou après le décompte 3, 2, 1 (mesuré aussi).
+  assert.match(html, /show\("play"\);\s*if \(avecDecompte\(state\.configuration\)\) \{\s*decompter\(3\);\s*return;\s*\}\s*partir\(\);/, "la première question");
+  assert.match(html, /function partir\(\) \{[\s\S]{0,300}renderQuestion\(\);[\s\S]{0,260}ajusterEchelle\(\);/, "la première question");
+  assert.match(html, /if \(n === 3\) \{[\s\S]{0,400}ajusterEchelle\(\);\s*\}/, "le décompte");
   assert.match(html, /label\.textContent = active \? "Quitter le plein écran" : "Plein écran";\s*ajusterEchelle\(\);/);
   assert.match(html, /window\.addEventListener\("resize", ajusterEchelle\);/);
   // Audit 4 : l’accueil se remesure aussi choix déplié (mesuré replié, voir defi-tables-audit-4).

@@ -97,15 +97,15 @@ test("fin de révision (sans chrono) : le cadre porte les boutons — Continuer 
       const soude = t => t; const pluriel = (n, m) => n + " " + m + (n > 1 ? "s" : ""); const formatElapsed = () => "17 s";
       const phraseProchainRetour = () => "Reviens demain : 3 calculs t’attendront.";
       const startRevision = () => {}; const backToModes = () => {}; const openCalculs = () => {};
-      const renderCorrections = () => {}; const show = () => {};`;
+      const renderCorrections = () => {}; const show = () => {}; const horlogeSerie = () => 17000;`;
     const finishRevision = new Function("ARG", `${avant}\n${source("finishRevision")}\nreturn finishRevision;`)({document, $});
     finishRevision();
     const actions = $("result-parcours").children.find(c => c.className === "result-parcours-actions");
     cas.push({restants, revision: $("result").classes.has("is-revision"), boutons: actions.children.map(b => `${b.textContent} [${b.className}]`)});
   }
   assert.deepEqual(cas, [
-    {restants: 11, revision: true, boutons: ["Continuer →", "Ma table [secondary]"].map((t, i) => i === 0 ? "Continuer → [primary]" : t)},
-    {restants: 0, revision: true, boutons: ["Ma table [primary]", "Voir mes calculs [secondary]"]}
+    {restants: 11, revision: true, boutons: ["Continuer →", "Ma table [secondary retour-flechee]"].map((t, i) => i === 0 ? "Continuer → [primary]" : t)},
+    {restants: 0, revision: true, boutons: ["Ma table [primary retour-flechee]", "Voir mes calculs [secondary]"]}
   ], "deux boutons tant qu'il en reste, deux à zéro (plus d’« Encore 10 calculs ») — et « Voir mon parcours » n'est plus là");
 });
 
@@ -121,7 +121,7 @@ test("fin de Mes calculs du jour (chronométré) : « Mes calculs du jour : fait
       const state = {startAt: 0, configuration: {revisionTable: null, duration: 60}, revisionPremierTotal: ${faits}, revisionPremierScore: ${score}, revisionMontes: 0, revisionDescendus: 0, origin: "seance"};
       const parcours = {}; const PARCOURS = {};
       const soude = t => t; const pluriel = (n, m) => n + " " + m + (n > 1 ? "s" : ""); const formatElapsed = () => "17 s";
-      const renderCorrections = () => {}; const show = () => {}; const enSeance = () => true;`;
+      const renderCorrections = () => {}; const show = () => {}; const enSeance = () => true; const horlogeSerie = () => 17000;`;
     new Function("ARG", `${avant}\n${source("finishRevision")}\nfinishRevision();`)({document, $});
     return {icone: $("result-icon").textContent, titre: $("result-title").textContent, score: $("result-score").textContent, detail: $("result-detail").textContent,
       zoneCachee: $("result-parcours").hidden, boutons: $("result-parcours").children.length, rejouer: !$("retry").hidden};

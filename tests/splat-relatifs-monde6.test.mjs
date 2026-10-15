@@ -35,7 +35,10 @@ function bloc(texte, debut, fin) {
 const ctx = vm.createContext({ encodeURIComponent, decodeURIComponent, escape, unescape, atob, btoa });
 vm.runInContext(bloc(univers, "const PS=", "const PROF =") + ";globalThis.X={MONDES};", ctx, { filename: "splat_univers.html" });
 const { MONDES } = JSON.parse(JSON.stringify(ctx.X));
-const RELATIFS = MONDES.find((m) => m.idp === "e3");
+const MONDE6 = MONDES.find((m) => m.idp === "e3");
+/* les fiches 38 à 43 ; l'échauffement É1-É3 (lot 3, 14/10/2026), des étapes à code placées devant,
+   a son propre test (tests/splat-relatifs-echauffement.test.mjs) */
+const RELATIFS = { ...MONDE6, etapes: MONDE6.etapes.filter((e) => !e.code) };
 const decode = (b64) => JSON.parse(Buffer.from(b64.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8"));
 const donnees = (url) => decode(url.slice(url.indexOf("#data=") + 6));
 
@@ -49,10 +52,11 @@ test("R2 : le monde 6 a six étapes, deux parties, fiches 38 à 43, parcours m4e
   assert.deepEqual(RELATIFS.etapes.map((e) => e.p), ["m4e1", "m4e2", "m4e3", "m4e4", "m4e5", "m4e6"]);
   assert.deepEqual(RELATIFS.etapes.map((e) => e.t), ["Les jetons rouges arrivent", "Des négatifs partout", "La tache opposée",
     "Des taches sur les deux plateaux", "Des taches opposées sur un plateau", "Le grand mélange"]);
-  assert.deepEqual(RELATIFS.volets.map((v) => [v.de, v.a]), [[0, 3], [3, 6]]);
-  assert.deepEqual(RELATIFS.volets.map((v) => v.nom), ["Les taches sur un seul plateau", "Les taches sur les deux plateaux"]);
-  // aucun identifiant en toutes lettres : e3-0 … e3-5
-  RELATIFS.etapes.forEach((e) => assert.equal(e.id, undefined));
+  // l'échauffement passe devant (lot 3) : ses deux parties sont les 2e et 3e « volets » du monde
+  assert.deepEqual(MONDE6.volets.map((v) => [v.de, v.a]), [[0, 3], [3, 6], [6, 9]]);
+  assert.deepEqual(MONDE6.volets.slice(1).map((v) => v.nom), ["Les taches sur un seul plateau", "Les taches sur les deux plateaux"]);
+  // leurs étoiles ne bougent pas : e3-0 … e3-5, écrits en toutes lettres depuis le lot 3
+  RELATIFS.etapes.forEach((e, k) => assert.equal(e.id, "e3-" + k));
   // la liste de assets/js/splat-etapes.js suit la carte (le test de l'étape suivante le vérifie aussi)
   for (const [k, e] of RELATIFS.etapes.entries()) {
     assert.ok(etapes.includes(`["${e.p}", ${38 + k}, "${e.t}", "SPLAT! Relatifs", 6]`), e.p);
@@ -118,8 +122,8 @@ test("R2 : les liens de la vue prof — Projeter, Fiche (6/page) et Correction (
   // un seul lien vers la page des livrets, comme au monde 5 (lot « vue prof », 27/09/2026 : il est
   // dans le cadre « Pour la classe », rendu par ressourcesHtml() depuis LIVRET_TEXTE)
   const texte6 = univers.match(/const LIVRET_TEXTE=\[\n(?:[^\n]*\n){5}([^\n]*)\n/)[1];
-  // (28/09/2026) chaque livret a son « Le défi »
-  assert.match(texte6, /^  "Un livret par partie, chacun avec son livret Le défi, et leurs corrigés\."\];$/);
+  // (28/09/2026) chaque livret a son « Le défi » ; (14/10/2026) l'échauffement d'abord
+  assert.match(texte6, /^  "L'échauffement, un livret par partie avec son Le défi, et leurs corrigés\."\];$/);
   assert.ok(univers.includes("'<li><a href=\"/outils/livrets_splat.html#monde-'+(mi+1)+'\">'"));
 });
 
@@ -542,11 +546,21 @@ test("défi : les huit PDF, les QR, les miniatures, la page des livrets et le ca
   }
   for (const q of ["38d", "39d", "40d", "41d", "42d", "43d"]) assert.ok(taille(`${SRC}qr/fiche${q}.png`) > 0);
   for (const s of ["d1", "d2", "d3", "d4"]) assert.ok(taille(`${SRC}qr/serie-${s}.png`) > 0);
-  // la page des livrets : livret de base puis son défi, partie par partie
+  // la page des livrets (14/10/2026) : deux boutons, comme aux mondes 1, 2, 3 et 5 — « Pour tous »
+  // (livrets 1 et 2 côte à côte) d'abord, puis « Le défi » (défis 1 et 2) ; sans JavaScript, les deux
+  // rangées restent l'une sous l'autre avec leurs intertitres
   const m6 = pageLivrets.slice(pageLivrets.indexOf('<section class="panneau" data-m="6"'), pageLivrets.indexOf("</section>", pageLivrets.indexOf('<section class="panneau" data-m="6"')));
-  const ordre = ["livret_splat_relatifs_1.pdf", "livret_splat_relatifs_defi_1.pdf", "livret_splat_relatifs_2.pdf", "livret_splat_relatifs_defi_2.pdf"].map((s) => m6.indexOf(`href="/outils/${s}"`));
-  assert.ok(ordre.every((v, i) => v > 0 && (i === 0 || v > ordre[i - 1])), "livret 1, défi 1, livret 2, défi 2");
-  assert.equal((m6.match(/<div class="grille n2">/g) || []).length, 2);
+  assert.match(m6, /<div class="series-choix" role="group"[^>]*>\s*<button type="button" data-serie="tous" aria-pressed="true">Pour tous<\/button>\s*<button type="button" data-serie="defi" aria-pressed="false">Le défi<\/button>\s*<\/div>\s*<div class="serie" data-serie="tous">\s*<h3 class="partie">Pour tous/);
+  const iTous = m6.indexOf('<div class="serie" data-serie="tous">'), iDefi = m6.indexOf('<div class="serie" data-serie="defi">');
+  assert.ok(iTous > 0 && iDefi > iTous, "« Pour tous » puis « Le défi »");
+  const hrefs = (p) => [...p.matchAll(/<a class="lien" href="\/outils\/([^"]+)\.pdf"/g)].map((m) => m[1]);
+  // (14/10/2026, lot 3 de l'échauffement) l'échauffement en première carte de « Pour tous »
+  assert.deepEqual(hrefs(m6.slice(iTous, iDefi)), ["livret_splat_relatifs_echauffement", "livret_splat_relatifs_1", "livret_splat_relatifs_2"]);
+  assert.deepEqual(hrefs(m6.slice(iDefi)), ["livret_splat_relatifs_defi_1", "livret_splat_relatifs_defi_2"]);
+  assert.deepEqual([...m6.matchAll(/<div class="titre"><h3>([^<]+)<\/h3>/g)].map((m) => m[1]), ["Échauffement", "Livret 1", "Livret 2", "Le défi 1", "Le défi 2"]);
+  assert.deepEqual([...m6.matchAll(/<h3 class="partie">([^<]+)</g)].map((m) => m[1].trim()), ["Pour tous", "Le défi"]);
+  assert.equal((m6.match(/<div class="grille n2">/g) || []).length, 1, "les deux défis");
+  assert.equal((m6.match(/<div class="grille">/g) || []).length, 1, "« Pour tous » : trois cartes sur la ligne");
   const catalogue = lire("assets/js/catalogue-refonte-data.js");
   // (01/10/2026) les textes du catalogue raccourcis : « du monde 1 au monde 6 »
   assert.match(catalogue, /"description": "Les livrets de l’univers SPLAT!, du monde 1 au monde 6, sur une seule page\./);

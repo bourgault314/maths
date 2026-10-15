@@ -245,8 +245,13 @@ test("la révision = les calculs dus aujourd’hui des tables passées, boîtes 
   assert.ok(plans.every(plan7 => plan7.length === 5), "les cinq calculs dus de la table de 7");
   assert.ok(formes.every(item => item.cle === "4-7" || item.type === "direct"), "seul 4-7 peut être posé en trou");
   assert.ok(formes.some(item => item.cle === "4-7" && item.type !== "direct"), "et il l’est parfois");
-  assert.ok(formes.some(item => item.cle === "4-7" && item.type === "division-quotient"), "ni trou ni division sans l'entraînement : 4-7 seulement, et parfois en division");
-  assert.ok(formes.filter(item => item.type.startsWith("division")).every(item => item.type === "division-quotient"), "une seule forme de division : 28 ÷ 4 = ?");
+  assert.ok(formes.some(item => item.cle === "4-7" && item.type.startsWith("division")), "ni trou ni division sans l'entraînement : 4-7 seulement, et parfois en division");
+  // Lot « trois divisions » (09/10/2026) : les trois écritures, plus seulement 28 ÷ 4 = ?.
+  // (le tirage « tout au même nombre » de ce test ne les montre pas toutes : la
+  // répartition se mesure dans tests/defi-tables-trois-divisions.test.mjs).
+  const divisions = formes.filter(item => item.type.startsWith("division"));
+  assert.ok(divisions.every(item => ["division-quotient", "division-dividend", "division-divisor"].includes(item.type)));
+  assert.ok(divisions.some(item => item.type !== "division-quotient"), "plus seulement 28 ÷ 4 = ? : aussi ? ÷ 4 = 7 ou 28 ÷ ? = 7");
   // Une table passée ouvre les trous et les divisions (le test en contient).
   const acquise = acquerir(JSON.parse(JSON.stringify(etat)), 7);
   assert.deepEqual(parcours.formesPermises(acquise, "7-8"), ["direct", "missing", "division"]);
@@ -353,7 +358,11 @@ function legende(etoile = 1) {
     etat = parcours.appliquerSerie(etat, normaliser(parcours.configValidation(table)), {correct: 20, total: 20, date: DATE}).parcours;
   });
   assert.equal(etat.melange.dernier, null, "le mélange n’a pas été joué : l’escalier est ouvert quand même");
-  return parcours.appliquerSerie(etat, normaliser(parcours.configEtoile(etoile)), {correct: 25, total: 25, date: DATE}).parcours;
+  // D5 (lot « après l'audit GPT ») : marche par marche, pas de saut.
+  for (let marche = 1; marche <= etoile; marche += 1) {
+    etat = parcours.appliquerSerie(etat, normaliser(parcours.configEtoile(marche)), {correct: 25, total: 25, date: DATE}).parcours;
+  }
+  return etat;
 }
 
 test("les divisions n’apparaissent en révision qu’à partir de la première étoile", () => {
@@ -542,10 +551,12 @@ test("le détail d’une case écrit le calcul dans les deux sens et empile ses 
 });
 
 test("seule la première réponse compte pour la grille ; un raté ne revient qu’une fois — et plus du tout dans Mes calculs du jour, chronométré", () => {
-  assert.match(html, /if \(!question\.retry\) alimenterMesCalculs\(question, correct && !skip\);/, "les calculs qui reviennent n’alimentent pas la grille");
+  // Lot « les règles des records » : la question qui reste dans la course
+  // (reessai) n'alimente pas la grille non plus.
+  assert.match(html, /if \(!question\.retry && !reessai\) alimenterMesCalculs\(question, correct && !skip\);/, "les calculs qui reviennent n’alimentent pas la grille");
   assert.match(html, /const chrono = state\.configuration\.duration !== null;/);
   assert.match(html, /const willRetry = !correct && !question\.retry && !chrono;/, "un calcul raté revient une seule fois par série de révision ; avec le chrono de Mes calculs du jour, il ne revient pas (il reviendra demain)");
-  assert.match(html, /if \(chrono\) \{\s*state\.pauseA = Date\.now\(\);/, "le chrono s’arrête le temps de lire la correction");
+  assert.match(html, /if \(chrono\) \{\s*state\.pauseA = horlogeSerie\(\);/, "le chrono s’arrête le temps de lire la correction");
   assert.doesNotMatch(html, /repartira dans la prochaine révision/, "la règle n’est plus écrite sur l’écran de résultat (lot 2)");
   // Relecture du lot R2 : le temps de la révision est passé sur la ligne du
   // score ; la ligne du dessous reste vide (ni la règle, ni « Série terminée »).
@@ -566,7 +577,8 @@ test("la révision : Mes calculs du jour chronométré (« fait » ou « Temps �
   assert.match(html, /encore\.textContent = "Continuer\u00a0→";/, "insécable : la flèche ne passe pas seule à la ligne");
   assert.match(html, /if \(restants\) \{\s*const encore = document\.createElement\("button"\);/, "« Continuer » seulement s’il en reste");
   // R4 bis : « Ma table » est fabriqué dans le cadre, principal seulement à zéro.
-  assert.match(html, /maTable\.className = restants \? "secondary" : "primary";/, "un seul bouton principal : Continuer tant qu’il en reste, Ma table ensuite");
+  // Lot « la flèche de retour » (14/10/2026) : « Ma table » porte la flèche (retour-flechee).
+  assert.match(html, /maTable\.className = restants \? "secondary retour-flechee" : "primary retour-flechee";/, "un seul bouton principal : Continuer tant qu’il en reste, Ma table ensuite");
   assert.match(html, /function phraseProchainRetour\(agenda\)/);
   assert.match(html, /return `Reviens \$\{quand\} : \$\{pluriel\(prochain\.calculs, "calcul"\)\} t’attendr\$\{prochain\.calculs > 1 \? "ont" : "a"\}\.`;/);
   assert.match(html, /mont\$\{montes > 1 \? "ent" : "e"\} d’une boîte/, "le bilan : ce qui monte, ce qui redescend");

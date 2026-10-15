@@ -26,7 +26,7 @@ function ligne(prefix){
 }
 
 const PALETTE = html.slice(html.indexOf("const INVESTIGATE_COLOR_PALETTE = ["), html.indexOf("];", html.indexOf("const INVESTIGATE_COLOR_PALETTE = [")) + 2);
-const CONSTANTES = ["SYS_GESTES", "SYS_GESTES_MIX_DEFAUT", "SYS_MAX_TACHES", "SYS_MAX_TACHES_AVANT", "SYS_ESSAIS", "SYS_NOMBRES_SOUS_ENTENDUS", "SYS_COULEURS_PLURIEL", "SYS_PLAGES",
+const CONSTANTES = ["SYS_GESTES", "SYS_GESTES_MIX_DEFAUT", "SYS_SOUS_GESTES", "SYS_MAX_TACHES", "SYS_MAX_TACHES_AVANT", "SYS_ESSAIS", "SYS_NOMBRES_SOUS_ENTENDUS", "SYS_COULEURS_PLURIEL", "SYS_PLAGES",
   "SYS_ZONE_ECRAN", "SYS_ZONE_IMPRIME", "SYS_ZONE_IMPRIME_6", "SYS_TACHE"].map((nom) => ligne(`const ${nom} = `)).join("\n");
 const GENERATEUR = ["sysNormaliserReglages", "genSystemCarte", "sysMelangerPlateaux", "sysFormes", "sysFormesDouble", "sysSomme", "sysNombreTaches", "sysPlateau",
   "sysTirerSituation", "sysSituationValide", "sysNombreSousEntendu", "sysTexteASousEntendu", "sysSituationSure",
@@ -129,7 +129,7 @@ test("la grille : une tache a la même place sur tous les plateaux où elle appa
 });
 
 test("tout tient : taches dans leur plateau sans se toucher, visibles à part, TOTAL au-dessus avec un espace, même rayon partout", () => {
-  let rMin = Infinity, rEscalier = Infinity;
+  let rMin = Infinity, rEscalier = Infinity, rRecopie = Infinity, rEtages = Infinity;
   for(const { c, geste, defaut } of CARTES){
     for(const [nom, Z] of Object.entries(sys.ZONES)){
       const d = sys.disposition(c, Z);
@@ -138,8 +138,12 @@ test("tout tient : taches dans leur plateau sans se toucher, visibles à part, T
       assert.equal(d.plateaux.length, c._sys.boards.length - (geste === "TROIS" ? 1 : 0));
       assert.deepEqual(d.plateaux.map((P) => P.indice), sys.montres(c));
       // lot M4-1 : l'escalier (trois rangées de taches, plateaux sur une rangée) à part
-      if(defaut && geste !== "ESCALIER") rMin = Math.min(rMin, d.r);
+      // lot M4-5 : Je recopie (jusqu'à 5 taches d'une couleur) et Deux gestes à la suite (trois
+      // plateaux sur une rangée) à part, comme l'escalier
+      if(defaut && !["ESCALIER", "RECOPIE", "ETAGES"].includes(geste)) rMin = Math.min(rMin, d.r);
       if(geste === "ESCALIER") rEscalier = Math.min(rEscalier, d.r);
+      if(geste === "RECOPIE") rRecopie = Math.min(rRecopie, d.r);
+      if(geste === "ETAGES") rEtages = Math.min(rEtages, d.r);
       d.plateaux.forEach((P, i) => {
         // plateau dans la scène, sous sa boîte TOTAL (au moins 14 unités de blanc entre les deux)
         assert.ok(P.x >= Z.x - 0.5 && P.x + P.w <= Z.x + Z.w + 0.5 && P.y + P.h <= bas, `${nom} : plateau hors de la carte`);
@@ -176,6 +180,10 @@ test("tout tient : taches dans leur plateau sans se toucher, visibles à part, T
   assert.ok(rMin >= 66, `rayon minimal ${rMin}`);
   // l'escalier : 61 en 4 et 6 par page, 67 à l'écran (sur deux rangées de plateaux : 31 et 34)
   assert.ok(rEscalier >= 55, `escalier : rayon minimal ${rEscalier}`);
+  // lot M4-5 : Je recopie, 61 avec 5 taches d'une couleur (Doubler 2 + 5 : 55) ; Deux gestes à la
+  // suite, 61 comme l'escalier (3 taches au plus d'une couleur)
+  assert.ok(rRecopie >= 61, `Je recopie : rayon minimal ${rRecopie}`);
+  assert.ok(rEtages >= 61, `Deux gestes à la suite : rayon minimal ${rEtages}`);
 });
 
 test("deux taches voisines ne se touchent pas (0,25 r de blanc sur une rangée, 0,36 r d'une rangée à l'autre)", () => {
@@ -268,8 +276,10 @@ test("écran et impression passent par drawSysPlateaux ; aucun tirage au sort da
   // le nom de la couleur sur chaque tache, par la fonction de l'Enquête, à 0,36 r
   const dessin = fn("drawSysPlateaux");
   // lot S3 : les petits plateaux de la correction abaissent le plancher (opts.nomMin) ; l'énoncé garde 26
-  assert.match(dessin, /drawInvestigateSplatName\(gp, s, 0, nomCarte, devoile, \{ mkEl, mkText, fs: clamp\(Math\.round\(s\.r \* SYS_TACHE\.nom\), opts\.nomMin \|\| 26, 60\) \}\);/);
-  assert.match(fn("drawInvestigateSplatName"), /const fs = Number\(api\.fs\) > 0 \? Number\(api\.fs\) : clamp\(Math\.round\(s\.r \* 0\.30\), 26, 60\);/);
+  assert.match(dessin, /drawInvestigateSplatName\(gp, s, 0, nomCarte, devoile, \{ mkEl, mkText, isPrint, fs: clamp\(Math\.round\(s\.r \* SYS_TACHE\.nom\), opts\.nomMin \|\| 26, 60\) \}\);/);
+  assert.match(fn("drawInvestigateSplatName"), /const fs0 = Number\(api\.fs\) > 0 \? Number\(api\.fs\) : clamp\(Math\.round\(s\.r \* 0\.30\), 26, 60\);/);
+  // sur le papier, la version « C » (lot du 08/10/2026, tests/splat-nom-taches-papier.test.mjs)
+  assert.match(fn("drawInvestigateSplatName"), /const fs = papier \? nomPapierCorps\(word, fs0, s\.r\) : fs0;/);
   // dévoilé : les couleurs pâles de l'Enquête et le jeton gris (contraste mesuré ≥ 10 : 1 à l'écran)
   assert.match(dessin, /fill: devoile \? \(isPrint \? info\.printReveal : info\.reveal\) : \(isPrint \? info\.print : info\.screen\)/);
   assert.match(dessin, /fill: isPrint \? "rgba\(0,0,0,0\.06\)" : "var\(--beadH-fill\)"/);

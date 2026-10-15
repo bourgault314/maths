@@ -19,6 +19,9 @@ require_once __DIR__ . '/../lib/billets.php';
 require_once __DIR__ . '/../lib/archives.php';
 require_once __DIR__ . '/../lib/versions.php';
 require_once __DIR__ . '/../lib/journal.php';
+require_once __DIR__ . '/../lib/applis.php';
+require_once __DIR__ . '/../lib/records.php';
+require_once __DIR__ . '/../lib/direct.php';
 
 const MAX_ELEVES_PAR_LOT = 60;
 // L'ordre de cette liste est celui des activités dans la liste d'une classe
@@ -71,8 +74,21 @@ const DROIT_PAR_ACTION = [
     // Elle efface : propriétaire, comme « Supprimer la classe ».
     'classes.supprimer_echues' => 'proprietaire',
     'eleves.supprimer' => 'proprietaire',
+    // Lot « après l'audit GPT » (D4, 14/10/2026) : effacer le temps d'une
+    // Légende dans les records — ça efface : propriétaire.
+    'records.retirer' => 'proprietaire',
     'partages.ajouter' => 'proprietaire',
     'partages.supprimer' => 'proprietaire',
+    // Séance en direct (07/10/2026). Mener une séance, c'est faire répondre
+    // les élèves et recevoir leurs réponses avec leurs prénoms : écriture. Un
+    // collègue en lecture seule ne voit ni la séance ni son fichier.
+    'direct.etat' => 'ecriture',
+    'direct.ouvrir' => 'ecriture',
+    'direct.question' => 'ecriture',
+    'direct.devoiler' => 'ecriture',
+    'direct.bonne' => 'ecriture',
+    'direct.fichier' => 'ecriture',
+    'direct.terminer' => 'ecriture',
 ];
 
 // Les actions réservées au compte administrateur (gestion des comptes prof).
@@ -506,8 +522,15 @@ try {
             // La suppression automatique reste, mais chez menage.php seul — la
             // tâche planifiée d'OVH, qui tient la promesse du 1er août.
             $echues = classes_a_proposer($pdo, $profId);
+            // Une séance en direct oubliée ouverte ne survit pas à l'ouverture
+            // de « Mes classes » (lib/direct.php : une heure et demie après le
+            // dernier geste). Sans objet tant que migrer.php n'a pas créé la table.
+            if (table_existe($pdo, 'directs')) purger_directs($pdo);
             $requete = $pdo->prepare(
-                'SELECT c.id, c.libelle, c.applis, c.cree_le, c.prof_id,
+                // c.* plutôt que la liste des colonnes : « reglages » n'existe
+                // qu'après migrer.php (lot « splat-suivi-5 ») — avant, la classe
+                // se lit « tous les mondes ouverts » au lieu de tomber en panne.
+                'SELECT c.*,
                         (SELECT COUNT(*) FROM eleves e WHERE e.classe_id = c.id) AS eleves,
                         (SELECT p.identifiant FROM profs p WHERE p.id = c.prof_id) AS proprietaire,
                         (SELECT g.droit FROM partages g WHERE g.classe_id = c.id AND g.prof_id = ?) AS partage
@@ -524,6 +547,7 @@ try {
                     'id' => (int)$ligne['id'],
                     'libelle' => $ligne['libelle'],
                     'applis' => explode(',', (string)$ligne['applis']),
+                    'reglages' => reglages_json(reglages_de_classe($ligne)),
                     'cree_le' => $ligne['cree_le'],
                     'annee' => annee_scolaire((string)$ligne['cree_le']),
                     'eleves' => (int)$ligne['eleves'],
@@ -570,10 +594,33 @@ try {
             if ($libelle === '') erreur("Donne un nom à la classe.", 400);
             $applis = array_values(array_intersect(APPLIS_PROPOSABLES, (array)($corps['applis'] ?? explode(',', $classe['applis']))));
             if ($applis === []) $applis = ['defi-tables'];
-            $pdo->prepare('UPDATE classes SET libelle = ?, applis = ? WHERE id = ?')
-                ->execute([$libelle, implode(',', $applis), (int)$classe['id']]);
+            // Lot « splat-suivi-5 » : les réglages de la classe (aujourd'hui les
+            // mondes de SPLAT! ouverts), seulement s'ils sont envoyés. Lus
+            // STRICTEMENT (lib/applis.php) : une valeur fausse est refusée, rien
+            // n'est arrangé en silence. Ceux des autres activités restent tels
+            // quels, et décocher une activité garde ses réglages (la recocher
+            // les retrouve).
+            $reglages = null;
+            if (array_key_exists('reglages', $corps)) {
+                if (!reglages_disponibles($pdo)) {
+                    erreur("Le serveur doit être mis à niveau : ouvre migrer.php avec ton mot de passe d'installation.", 503);
+                }
+                try {
+                    $reglages = reglages_recus($corps['reglages'], reglages_de_classe($classe));
+                } catch (InvalidArgumentException $e) {
+                    erreur($e->getMessage(), 400);
+                }
+            }
+            if ($reglages === null) {
+                $pdo->prepare('UPDATE classes SET libelle = ?, applis = ? WHERE id = ?')
+                    ->execute([$libelle, implode(',', $applis), (int)$classe['id']]);
+            } else {
+                $pdo->prepare('UPDATE classes SET libelle = ?, applis = ?, reglages = ? WHERE id = ?')
+                    ->execute([$libelle, implode(',', $applis),
+                        $reglages === [] ? null : json_encode($reglages, JSON_UNESCAPED_UNICODE), (int)$classe['id']]);
+            }
             journaliser($pdo, $profId, 'classes.modifier', 'classe', (int)$classe['id']);
-            repondre(['ok' => true]);
+            repondre(['ok' => true] + ($reglages === null ? [] : ['reglages' => reglages_json($reglages)]));
 
         case 'classes.supprimer':
             // Supprimer une classe efface des progressions : réservé au
@@ -803,11 +850,15 @@ try {
             $pdo->beginTransaction();
             try {
                 $pdo->prepare('DELETE FROM progressions WHERE eleve_id = ?')->execute([(int)$eleve['id']]);
-                // Son historique des sept jours part avec lui (lot serveur A).
+                // Son historique des sept jours part avec lui (lot serveur A),
+                // et son record (lot « Les records »).
                 oublier_versions_de_l_eleve($pdo, (int)$eleve['id']);
+                oublier_record_de_l_eleve($pdo, (int)$eleve['id']);
                 $pdo->prepare('DELETE FROM eleves WHERE id = ?')->execute([(int)$eleve['id']]);
                 oublier_compteurs_du_code($pdo, (string)$eleve['code']);
                 oublier_billets_de_l_eleve($pdo, (int)$eleve['id']);
+                // Ses réponses à la séance en direct du moment, s'il y en a une.
+                oublier_reponses_direct_de_l_eleve($pdo, (int)$eleve['id']);
                 $pdo->commit();
             } catch (Throwable $e) {
                 $pdo->rollBack();
@@ -844,6 +895,18 @@ try {
                 if ($ligne['revision'] !== null) $revisions[(int)$ligne['id']] = (int)$ligne['revision'];
             }
             $versionsParEleve = versions_des_eleves($pdo, array_column($brutes, 'id'), $appli, $revisions);
+            // Lot « Les records » : le record de chaque Légende (Défi tables
+            // seulement), pour la ligne du tableau — meilleur temps, temps de
+            // la semaine, choix du nom. Rien tant que la table n'existe pas.
+            $recordsParEleve = [];
+            if ($appli === 'defi-tables' && records_disponibles($pdo) && $brutes !== []) {
+                $marques = implode(',', array_fill(0, count($brutes), '?'));
+                $lecture = $pdo->prepare("SELECT * FROM records WHERE eleve_id IN ($marques)");
+                $lecture->execute(array_map('intval', array_column($brutes, 'id')));
+                $lundi = lundi_courant();
+                foreach ($lecture->fetchAll() as $record) $recordsParEleve[(int)$record['eleve_id']] = record_affichable($record, $lundi);
+                $lecture->closeCursor();
+            }
             $lignes = [];
             foreach ($brutes as $ligne) {
                 $journees = [];
@@ -863,6 +926,7 @@ try {
                     // Une version précédente existe : « Revenir à… » a un sens.
                     'restaurable' => (int)$ligne['restaurable'] === 1,
                     'journees' => $journees,
+                    'record' => $recordsParEleve[(int)$ligne['id']] ?? null,
                 ];
             }
             repondre([
@@ -871,10 +935,140 @@ try {
                     'id' => (int)$classe['id'],
                     'libelle' => $classe['libelle'],
                     'applis' => explode(',', (string)$classe['applis']),
+                    'reglages' => reglages_json(reglages_de_classe($classe)),
                     'droit' => $classe['droit'],
                 ],
                 'eleves' => $lignes,
             ]);
+
+        // ------------------------------------------------------------------ records
+
+        case 'records.ligue':
+            // Lot « Les records » (09/10/2026) : la ligue du professeur
+            // connecté — ses propres classes, les mêmes deux tableaux que
+            // voient ses élèves (noms affichés et temps, rien d'autre), pour
+            // la carte de « Ma classe » et le plein écran au tableau. Elle ne
+            // porte sur aucune classe en particulier : pas de classe_id, pas
+            // de partage — un collègue en lecture ne voit que sa propre ligue.
+            if (!records_disponibles($pdo)) {
+                erreur("Le serveur doit être mis à niveau : ouvre migrer.php avec ton mot de passe d'installation.", 503);
+            }
+            repondre(['ok' => true] + ligue($pdo, $profId, null, true));
+
+        case 'records.retirer':
+            // Lot « après l'audit GPT » (D4, 14/10/2026, décision de Gwenaël) :
+            // « Retirer ce temps », depuis une ligne des records de Ma classe.
+            // L'élève est remonté à SA classe (eleve_pour_action) : le
+            // propriétaire seulement, pour ses élèves seulement — un collègue
+            // ou un élève d'une autre classe reçoit « Introuvable » ou le refus,
+            // journalisé comme les autres. Le choix du nom reste.
+            if (!records_disponibles($pdo)) {
+                erreur("Le serveur doit être mis à niveau : ouvre migrer.php avec ton mot de passe d'installation.", 503);
+            }
+            $eleve = eleve_pour_action($pdo, $profId, $corps['eleve_id'] ?? 0, $action);
+            $retire = retirer_temps($pdo, (int)$eleve['id']);
+            journaliser($pdo, $profId, 'records.retirer', 'eleve', (int)$eleve['id']);
+            repondre(['ok' => true, 'retire' => $retire] + ligue($pdo, $profId, null, true));
+        // ---------------------------------------------------------- séance en direct
+        //
+        // Lot 1 « question éclair » (07/10/2026) — lib/direct.php. Le tableau
+        // interroge « direct.etat » toutes les secondes et demie : c'est la
+        // seule action de ce fichier appelée en boucle, elle ne journalise
+        // rien et ne prolonge pas la séance. Les gestes (ouvrir, poser une
+        // question, dévoiler, désigner la bonne réponse) repoussent sa fin.
+
+        case 'direct.etat':
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
+            purger_directs($pdo);
+            $direct = direct_de_la_classe($pdo, (int)$classe['id']);
+            repondre([
+                'ok' => true,
+                'classe' => ['id' => (int)$classe['id'], 'libelle' => $classe['libelle']],
+                'direct' => $direct === null ? null : etat_du_direct_pour_le_tableau($pdo, $direct),
+                'rythme' => RYTHME_DIRECT_TABLEAU,
+            ]);
+
+        case 'direct.ouvrir':
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
+            $dejaOuverte = direct_de_la_classe($pdo, (int)$classe['id']) !== null;
+            $direct = ouvrir_direct($pdo, (int)$classe['id'], $profId);
+            if (!$dejaOuverte) journaliser($pdo, $profId, 'direct.ouvrir', 'classe', (int)$classe['id']);
+            repondre([
+                'ok' => true,
+                'classe' => ['id' => (int)$classe['id'], 'libelle' => $classe['libelle']],
+                'direct' => etat_du_direct_pour_le_tableau($pdo, $direct),
+                'rythme' => RYTHME_DIRECT_TABLEAU,
+            ]);
+
+        case 'direct.question':
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
+            $direct = direct_de_la_classe($pdo, (int)$classe['id']);
+            if ($direct === null) erreur("La séance est terminée : ouvre-la de nouveau.", 409);
+            $type = is_string($corps['type'] ?? null) ? $corps['type'] : 'choix';
+            if (!in_array($type, TYPES_DIRECT, true)) erreur("Type de question inconnu.", 400);
+            $reglage = reglage_direct($type, $corps['reglage'] ?? null);
+            if ($reglage === null) erreur("Réglage de la question invalide.", 400);
+            if (!poser_question_direct($pdo, $direct, $type, $reglage)) {
+                erreur("Cette séance a atteint " . MAX_QUESTIONS_DIRECT . " questions : termine-la et ouvres-en une autre.", 409);
+            }
+            repondre(['ok' => true,
+                'direct' => etat_du_direct_pour_le_tableau($pdo, direct_de_la_classe($pdo, (int)$classe['id']) ?? $direct)]);
+
+        case 'direct.devoiler':
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
+            $direct = direct_de_la_classe($pdo, (int)$classe['id']);
+            if ($direct === null) erreur("La séance est terminée : ouvre-la de nouveau.", 409);
+            // Déjà dévoilée (double clic, deuxième onglet) : même réponse.
+            devoiler_direct($pdo, $direct);
+            repondre(['ok' => true,
+                'direct' => etat_du_direct_pour_le_tableau($pdo, direct_de_la_classe($pdo, (int)$classe['id']) ?? $direct)]);
+
+        case 'direct.bonne':
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
+            $direct = direct_de_la_classe($pdo, (int)$classe['id']);
+            if ($direct === null) erreur("La séance est terminée : ouvre-la de nouveau.", 409);
+            $question = question_du_direct($pdo, $direct);
+            if ($question === null || $direct['etat'] !== 'devoile') {
+                erreur("Dévoile d'abord les réponses.", 409);
+            }
+            $bonne = null;
+            if (($corps['bonne'] ?? null) !== null) {
+                $bonne = reponse_direct($question['type'], $question['reglage'], $corps['bonne']);
+                if ($bonne === null) erreur("Cette réponse n'existe pas pour cette question.", 400);
+            }
+            designer_bonne_reponse_direct($pdo, $direct, $bonne);
+            repondre(['ok' => true,
+                'direct' => etat_du_direct_pour_le_tableau($pdo, direct_de_la_classe($pdo, (int)$classe['id']) ?? $direct)]);
+
+        case 'direct.fichier':
+            // Les réponses élève par élève : c'est avec elles que la page du
+            // professeur fabrique le fichier, dans son navigateur. Le serveur
+            // n'en garde aucune copie ; l'action est journalisée.
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
+            $direct = direct_de_la_classe($pdo, (int)$classe['id']);
+            if ($direct === null) erreur("La séance est terminée : il n'y a plus rien à télécharger.", 409);
+            journaliser($pdo, $profId, 'direct.fichier', 'classe', (int)$classe['id']);
+            repondre(['ok' => true,
+                'classe' => ['id' => (int)$classe['id'], 'libelle' => $classe['libelle']],
+                'jour' => jour_local()] + contenu_du_direct($pdo, $direct));
+
+        case 'direct.terminer':
+            // Tout est effacé, tout de suite : la séance, ses questions, ses
+            // réponses. Terminer une séance déjà terminée n'est pas une erreur.
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
+            $existait = direct_de_la_classe($pdo, (int)$classe['id']) !== null;
+            avec_reprise($pdo, function () use ($pdo, $classe): void {
+                transaction_ouvrir($pdo);
+                try {
+                    oublier_direct_de_la_classe($pdo, (int)$classe['id']);
+                    transaction_valider($pdo);
+                } catch (Throwable $e) {
+                    transaction_annuler($pdo);
+                    throw $e;
+                }
+            });
+            if ($existait) journaliser($pdo, $profId, 'direct.terminer', 'classe', (int)$classe['id']);
+            repondre(['ok' => true]);
 
         default:
             erreur("Action inconnue.", 400);

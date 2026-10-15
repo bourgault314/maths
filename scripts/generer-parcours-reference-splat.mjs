@@ -1,7 +1,8 @@
 // Le parcours de référence de SPLAT! : un parcours COMPLET tel que
-// assets/js/splat-parcours.js l'ENVOIE au serveur (pourServeur) — les 51
-// parcours de la liste fermée (37 étapes + 14 Bonus : la numérotation de la
-// carte saute de 28 à 35), tous faits sauf un en
+// assets/js/splat-parcours.js l'ENVOIE au serveur (pourServeur) — les 54
+// parcours de la liste fermée (40 étapes + 14 Bonus : la numérotation de la
+// carte saute de 28 à 35, et l'échauffement É1-É3 du monde 6 s'ajoute avant
+// la 38, 14/10/2026), tous faits sauf un en
 // cours, des réponses vues, des étapes rejouées, des dates. Il sert de
 // garde-fou entre l'appli et le serveur : le serveur ne garde que ce qu'il
 // connaît (lib/progression.php), et ce fichier doit ressortir identique de son

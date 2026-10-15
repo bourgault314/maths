@@ -34,7 +34,10 @@ la logique de « Mon parcours » reste dans
 6 caractères, prénom, initiale) · `progressions` (JSON, date) · `profs` (identifiant, mot de passe
 haché, administrateur, compte actif, mot de passe temporaire) · `partages`
 (classe, professeur, droit) · `sessions_prof` · `compteurs` (limitation de
-débit) · `billets` (liens d'entrée à usage unique).
+débit) · `billets` (liens d'entrée à usage unique) · `directs`,
+`directs_questions`, `directs_reponses` (séance en direct : **temporaires**,
+vidées quand le professeur termine la séance et au plus tard une heure et
+demie après son dernier geste — voir « La séance en direct »).
 
 **Combien de temps ?** Les prénoms, les codes et les progressions d'une année
 scolaire sont **supprimés au plus tard le 1er août** qui suit — après la fin des
@@ -57,7 +60,11 @@ _serveur/
     prof/splat-parcours.js  COPIE du moteur de SPLAT! (voir « Le moteur »)
     api/parcours.php   API élève : lire/écrire la progression par code
     api/eleve.php      API élève : prénom, classe et applis à partir du code
-    api/prof.php       API prof : connexion, classes, élèves, tableau
+    api/prof.php       API prof : connexion, classes, élèves, tableau, séance en direct
+    direct.php         séance en direct, écran de l'élève
+    prof/direct.php    séance en direct, écran du tableau (à projeter)
+    api/direct.php     API élève de la séance en direct : l'état, et sa réponse
+    lib/direct.php     séance en direct : types de réponse, purge, lectures, gestes
     lib/               bd, réponses/CORS, en-têtes de sécurité, codes, limitation,
                        sessions, catalogue d'applis, filtre des progressions
     lib/archives.php   fin d'année : année scolaire, suppression d'une classe
@@ -103,6 +110,77 @@ toute la base). `verifier.php` devient rouge tant que l'un d'eux traîne, et
   créer une classe, générer N codes, saisir prénom + initiale, voir le tableau
   (tables acquises, mélange, Expert, dernière activité), trier, régénérer un code,
   supprimer, imprimer la liste code ↔ élève.
+  Depuis le lot « splat-suivi-4 » (08/10/2026), une classe peut avoir plusieurs
+  activités : le bloc **« Activités de la classe »** (propriétaire seulement)
+  coche celles que les élèves trouvent dans leur espace (`classes.modifier` ;
+  décocher retire la tuile et n'efface aucune progression). Avec deux
+  activités, un choix **« Défi tables | SPLAT! »** apparaît sous le nom de la
+  classe (retenu le temps de l'onglet) ; chaque activité a son tableau (un
+  appel `tableau` par activité). L'onglet SPLAT! : six pastilles de monde,
+  étapes réussies (✨ pour les Bonus, à part), dernière activité, un
+  « Détail » qui déplie les étapes monde par monde (réussie, réussie avec des
+  réponses vues, en cours), et sa carte « Notre classe, ensemble ».
+  Depuis le lot « splat-suivi-5 » (08/10/2026), sous SPLAT!, le propriétaire
+  choisit les **mondes ouverts à la classe** (un bouton par monde ; tous par
+  défaut). Rangés dans `classes.reglages` (JSON, `{"splat":{"mondes":[1,2]}}` =
+  les mondes OUVERTS ; rien d'écrit quand ils le sont tous), écrits par
+  `classes.modifier` (lecture stricte, `lib/applis.php`), rendus à « Ma classe »
+  (`classes.liste`, `tableau`) et à l'élève (`api/eleve.php`, par son code et à
+  l'échange du billet). Un monde fermé reste sur la carte de l'élève, grisé
+  avec un cadenas ; les comptes de la tuile et de « Ma classe » ne portent que
+  sur les mondes ouverts. Ça guide la classe, ça ne verrouille rien : sans code
+  (mathsgo.re, QR des livrets), tout reste ouvert. La colonne arrive par
+  `migrer.php` ; tant qu'elle manque, tout se lit « tous ouverts » et seul le
+  choix des mondes répond « mise à niveau » (ligne « Mondes ouverts par
+  classe » de `verifier.php`).
+
+### La séance en direct (lot 1 « question éclair », 07/10/2026)
+
+Le professeur ouvre une séance pour **une** classe depuis « Ma classe » (bouton
+« Séance en direct » → `prof/direct.php`, la page à projeter). Il pose sa
+question à l'oral ou au tableau ; les élèves, entrés dans leur espace avec leur
+code, voient apparaître la tuile « Séance en direct » et répondent A, B, C… sur
+`direct.php`. Au tableau : pendant la question, **un compteur** (« 24 / 27 ont
+répondu ») ; après « Dévoiler », **des barres, sans aucun nom**. Le professeur
+peut cliquer sur une barre pour désigner la bonne réponse. À la fin,
+« Terminer la séance » propose de télécharger le fichier (une ligne par élève,
+une colonne par question, CSV lisible par Excel) — fabriqué dans son
+navigateur — puis efface tout.
+
+**Ce que le serveur garde, et combien de temps.** Trois tables temporaires :
+la séance, ses questions (un type et un réglage pris dans une liste fermée —
+jamais d'énoncé), et une réponse courte par élève et par question, dont la
+forme est vérifiée par son type. Tout part à « Terminer », et de toute façon
+**une heure et demie après le dernier geste du professeur** (`DUREE_DIRECT`) :
+la purge est jouée par chaque interrogation d'un élève, par chaque appel du
+tableau, par l'ouverture de « Mes classes » et par `menage.php`. Ces tables
+n'entrent dans la sauvegarde qu'**en structure**. Supprimer la classe, le
+compte ou l'élève emporte la séance et les réponses.
+
+**Qui reçoit quoi.** L'élève : l'état de la séance, le type de question, sa
+propre réponse — jamais la répartition ni la bonne réponse. Le tableau : un
+compteur, puis la répartition — jamais un nom. Le fichier (prénoms + réponses) :
+le professeur qui a la classe **en écriture**, et l'action est journalisée. Un
+collègue en lecture seule ne voit ni le bouton ni la séance.
+
+**Le rythme.** Les deux pages interrogent le serveur en boucle (2,5 s pour un
+élève, 1,5 s pour le tableau ; 6 s pour l'espace élève qui guette l'ouverture
+d'une séance). Ces durées sont **dites par le serveur** dans chaque réponse
+(`rythme`, constantes `RYTHME_DIRECT_*` de `lib/direct.php`) : elles se règlent
+sans redéposer les pages. Une interrogation ne fait que lire — aucun compteur
+n'est écrit ; seules les réponses passent par le limiteur (120 par code et par
+cinq minutes).
+
+**Pour faire évoluer** (c'est écrit pour ça) :
+
+- un nouveau **type de réponse** (un entier pour les tables, une fraction en
+  deux cases, vrai/faux) = une entrée dans `TYPES_DIRECT` avec ses deux
+  contrôles (`reglage_direct()`, `reponse_direct()`), et son dessin dans la
+  table `RENDUS` des deux pages. Ni le schéma ni l'API ne changent : `reponse`
+  est déjà un texte court, `reglage` un petit JSON ;
+- un nouveau **mode de séance** (évaluation où chacun avance à son rythme, QCM
+  préparé à l'avance) = une valeur de plus dans `MODES_DIRECT` ; la colonne
+  `directs.mode` existe déjà.
 
 ### Le moteur
 
@@ -128,8 +206,8 @@ cache.
 Même règle, depuis le lot « splat-suivi-3 » (07/10/2026), pour le moteur de
 SPLAT! : `_serveur/public/prof/splat-parcours.js` est la copie octet pour octet
 de `assets/js/splat-parcours.js` (même test). La tuile SPLAT! de l'espace élève
-le charge pour dessiner les mondes ; « Ma classe » le chargera pour son
-tableau. **Tout lot qui touche `assets/js/splat-parcours.js` recopie le fichier
+le charge pour dessiner les mondes ; « Ma classe » le charge à la première
+ouverture de l'onglet SPLAT! d'une classe (lot « splat-suivi-4 »). **Tout lot qui touche `assets/js/splat-parcours.js` recopie le fichier
 (`cp assets/js/splat-parcours.js _serveur/public/prof/`) et le met dans son
 dossier à déposer.** Le moteur porte la carte des mondes réduite (numéro et
 monde de chaque étape, sans les titres) : retoucher un titre dans
@@ -234,6 +312,8 @@ codes, ni aux progressions, et peut être relancée sans risque.
 | POST | `/api/parcours.php` `{code, appli, lire: true}` | lit la progression, avec sa `revision` |
 | POST | `/api/parcours.php` `{code, appli, parcours, base_revision}` | l'enregistre si `base_revision` est la révision en base ; sinon **409** avec l'état actuel, que l'appli fusionne avant de renvoyer. Le serveur ne garde que ce que `lib/applis.php` déclare (`lib/progression.php`) : jamais un prénom ni un texte libre. La version précédente est conservée (`donnees_avant`), et l'état de fin de journée est rangé dans `versions` (une ligne par jour, sept jours) |
 | POST | `/api/eleve.php` `{code}` | prénom, classe et applis de l'élève (page d'accueil) |
+| POST | `/api/direct.php` `{code}` | la séance en direct de la classe de l'élève, ou `direct: null` ; avec `{code, numero, reponse}`, range sa réponse tant que la question est ouverte (`enregistree: true/false`) |
+| POST | `/api/prof.php` `{action: "direct.…", classe_id}` | `direct.etat` (interrogé en boucle par le tableau), `direct.ouvrir`, `direct.question` `{type, reglage}`, `direct.devoiler`, `direct.bonne` `{bonne}`, `direct.fichier` (questions + réponses élève par élève), `direct.terminer` (efface tout) — toutes au droit **écriture** |
 | POST | `/api/prof.php` `{action, …}` | `connexion` (répond aussi `mdp_temporaire`), `deconnexion`, `moi`, `profs.motdepasse` `{ancien, nouveau}`, `profs.annuaire`, `profs.liste/ajouter/reinitialiser/desactiver/reactiver/supprimer` (administrateur ; `ajouter` et `reinitialiser` renvoient le temporaire ; `supprimer` veut `avec_classes: true` si le compte possède des classes), `classes.liste/creer/modifier/supprimer/supprimer_echues`, `partages.liste/ajouter/supprimer`, `eleves.ajouter/nommer/regenerer/restaurer/supprimer` (`restaurer` accepte `jour: "AAAA-MM-JJ"` pour revenir à la fin d'une journée gardée), `tableau` |
 
 `classes.liste` **ne supprime rien** (changé le 06/09/2026 : ouvrir « Ma
@@ -497,7 +577,19 @@ inattendu ; les freins en `/64` ; 73 octets refusés et 72 acceptés (36 lettres
 accentuées) ; `menage.php` sans `X-Powered-By` ; le `.htaccess` et les actions
 GitHub épinglées par SHA.
 
-**188 tests, 0 échec au 07/09/2026**, rejoués sur SQLite **et** sur MySQL 8
+Séance en direct (07/10/2026) : une séance par classe même à dix ouvertures
+simultanées ; l'élève ne reçoit ni répartition ni bonne réponse ; le tableau ne
+reçoit qu'un compteur avant « Dévoiler », et jamais un nom ; forme des
+réponses, changement d'avis sans doublon (vingt envois simultanés), réponse
+refusée après « Dévoiler » — par l'API **et** par l'instruction SQL elle-même ;
+cloisonnement entre classes ; fichier de fin de séance et sa ligne de journal ;
+aucune écriture par interrogation, 121ᵉ réponse freinée ; « Terminer »,
+l'échéance et les suppressions qui ne laissent rien ; les deux pages sous la
+politique de contenu ; `verifier.php` et `migrer.php` ; et les sept actions
+`direct.*` dans la matrice des droits.
+
+**208 tests, 0 échec au 07/10/2026**, rejoués sur SQLite **et** sur MariaDB 10.11
+(188 au 07/09/2026, alors rejoués sur MySQL 8)
 (le limiteur emploie une instruction différente sur chaque moteur) :
 
 ```

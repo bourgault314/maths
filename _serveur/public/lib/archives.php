@@ -16,10 +16,13 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/records.php';
+
 require_once __DIR__ . '/bd.php';
 require_once __DIR__ . '/limite.php';
 require_once __DIR__ . '/billets.php';
 require_once __DIR__ . '/versions.php';
+require_once __DIR__ . '/direct.php';
 
 // Une classe encore utilisée n'est JAMAIS effacée par surprise : la
 // suppression automatique attend trois semaines sans un seul enregistrement.
@@ -185,9 +188,13 @@ function supprimer_classe(PDO $pdo, int $classeId): void
                 // L'historique des sept jours part avec le reste : une classe
                 // supprimée ne doit rien laisser derrière elle (06/09/2026).
                 oublier_versions_de_l_eleve($pdo, (int)$eleve['id']);
+                oublier_record_de_l_eleve($pdo, (int)$eleve['id']);
                 oublier_compteurs_du_code($pdo, (string)$eleve['code']);
                 oublier_billets_de_l_eleve($pdo, (int)$eleve['id']);
             }
+            // La séance en direct de la classe, s'il y en a une d'ouverte :
+            // questions et réponses partent avec elle (07/10/2026).
+            oublier_direct_de_la_classe($pdo, $classeId);
             $pdo->prepare('DELETE FROM eleves WHERE classe_id = ?')->execute([$classeId]);
             $pdo->prepare('DELETE FROM partages WHERE classe_id = ?')->execute([$classeId]);
             $pdo->prepare('DELETE FROM classes WHERE id = ?')->execute([$classeId]);

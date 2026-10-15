@@ -12,7 +12,8 @@ import vm from "node:vm";
      phrase ; des taches blanches cerclées de framboise, dorées ✨ une fois réussies ; un compteur
      « ✨ x / 10 » à part, hors des étoiles du haut ; pas de verrou ;
    - chaque fiche bonus a SON parcours (enq11d…), et n'allume plus l'étoile de sa fiche de base.
-   Lot M4-4 (04/10/2026) : le monde 4 a le même Bonus (« Deuxième tour », 25d → 28d, un livret),
+   Lot M4-4 (04/10/2026) : le monde 4 a le même Bonus (« Deuxième tour », 25d → 28d, un livret ;
+   « Cycle 4 » depuis le lot M4-7),
    aux couleurs du cannelle ; le code est commun (BONUS_MONDES), le monde 3 ne change pas (mêmes
    identifiants, mêmes textes, même clé de mémoire).
    On EXÉCUTE les fonctions de rendu de la page (voletHtml, bonusHtml) ; l'ouverture et la fermeture
@@ -49,7 +50,8 @@ test("un menu de partie naît fermé : bouton au clavier, pastille, titre, fiche
 
 test("les mondes à parties : chaque étape porte sa partie (data-partie), les autres mondes ne changent pas", () => {
   // lot M4-4 : le monde 4 n'a plus de parties (un livret, quatre fiches)
-  assert.deepEqual(JSON.parse(JSON.stringify(MONDES.map((m) => (m.volets || []).length))), [0, 0, 3, 0, 0, 2]);
+  // lot 3 de l'échauffement (14/10/2026) : le monde 6 a trois parties, l'échauffement puis les parties 1 et 2
+  assert.deepEqual(JSON.parse(JSON.stringify(MONDES.map((m) => (m.volets || []).length))), [0, 0, 3, 0, 0, 3]);
   assert.match(univers, /const partie=\(m\.volets\|\|\[\]\)\.findIndex\(x=>ei>=x\.de&&ei<x\.a\);/);
   // le Bonus vient aux mondes 3 et 4, après leurs étapes ; ailleurs, rien
   assert.match(univers, /\}\)\.join\(""\)\+bonusHtml\(m\)\+'<\/ol>';/);
@@ -90,12 +92,12 @@ test("le Bonus : taches blanches cerclées de la couleur du monde, dorées ✨ u
   assert.match(univers, /\.msys \.volet\.bonus\{background:#fff;border:1\.5px dashed #e3b994\}/);
 });
 
-test("lot M4-4 : le Bonus du monde 4 — un menu « Deuxième tour », un livret, 25d → 28d, chaque fiche son parcours", () => {
+test("lot M4-4 : le Bonus du monde 4 — un menu « Cycle 4 » (lot M4-7), un livret, 25d → 28d, chaque fiche son parcours", () => {
   const h = bonusHtml(MONDE_SYSTEME);
   assert.ok(h.startsWith('<li class="volet ferme bonus" id="sys-bonus" data-volet="bonus" role="button" tabindex="0" aria-expanded="false">' +
-    '<span class="rang">Bonus</span><div class="t"><h4>Deuxième tour<span class="fiches">fiches 25d à 28d</span></h4>'));
+    '<span class="rang">Bonus</span><div class="t"><h4>Cycle 4<span class="fiches">fiches 25d à 28d</span></h4>'));
   assert.ok(h.includes('<span class="stars" id="starsBonusSys"></span>'));
-  assert.deepEqual([...h.matchAll(/<li class="livretBonus" data-partie="bonus">([^<]+)<\/li>/g)].map((m) => m[1]), ["Le livret · Deuxième tour"]);
+  assert.deepEqual([...h.matchAll(/<li class="livretBonus" data-partie="bonus">([^<]+)<\/li>/g)].map((m) => m[1]), ["Le livret · Cycle 4"]);
   const fiches = [...h.matchAll(/<li class="etape bonus" id="sys-t2-(\w+)" data-partie="bonus">([\s\S]*?)<\/li>/g)];
   assert.deepEqual(fiches.map((m) => m[1]), ["25d", "26d", "27d", "28d"]);
   fiches.forEach((m, k) => {
@@ -106,7 +108,8 @@ test("lot M4-4 : le Bonus du monde 4 — un menu « Deuxième tour », un livret
   // aucun nombre à sous-entendu dans ce que l'élève lit
   assert.doesNotMatch(h.replace(/href="[^"]*"/g, ""), /\b69\b/);
   // sa propre clé de mémoire (le monde 3 garde la sienne)
-  assert.match(univers, /function bonusRetenu\(b\)\{ try\{ return localStorage\.getItem\(CLE_BONUS_OUVERT\+\(\(b&&b\.cle\)\|\|""\)\)==="1"; \}catch\(e\)\{ return false; \} \}/);
+  // (lot 6) celle de l'élève sous un code (cleMemoire), exécutée dans tests/splat-suivi-memoire.test.mjs
+  assert.match(univers, /function bonusRetenu\(b\)\{\s*const cle=cleMemoire\(CLE_BONUS_OUVERT\+\(\(b&&b\.cle\)\|\|""\)\); if\(!cle\) return false;\s*try\{ return localStorage\.getItem\(cle\)==="1"; \}catch\(e\)\{ return false; \}\s*\}/);
 });
 
 test("le compteur du Bonus est à part : « ✨ x / 10 », hors du total et de « Continuer »", () => {
@@ -125,7 +128,7 @@ test("le compteur du Bonus est à part : « ✨ x / 10 », hors du total et de �
 
 test("à l'arrivée, UNE partie ouverte par monde (05/10/2026) : celle que vise l'adresse, sinon le Bonus si l'élève y était, sinon la partie en cours", () => {
   const f = bloc("function ouvrirParties(){", "document.addEventListener(\"click\",ev=>{\n  const v=");
-  assert.match(f, /const premiere=sec\.querySelector\("\.etapes>li\.etape\[data-partie\]:not\(\.done\):not\(\.bonus\)"\);/);
+  assert.match(f, /let premiere=sec\.querySelector\("\.etapes>li\.etape\[data-partie\]:not\(\.done\):not\(\.bonus\)"\);/);
   assert.match(f, /const vise=\[\.\.\.volets\]\.find\(v=>elCible&&\(elCible===v\|\|\(sec\.contains\(elCible\)&&elCible\.dataset\.partie===v\.dataset\.volet\)\)\);/);
   assert.match(f, /const ouverte=vise\|\|\(bonus&&bonusRetenu\(bonusDeSection\(sec\)\)\?bonus:null\)\|\|\[\.\.\.volets\]\.find\(v=>v\.dataset\.volet===enCours\)\|\|null;/);
   assert.match(f, /volets\.forEach\(v=>ouvrirPartie\(v,v===ouverte\)\);/, "une seule ouverte");
@@ -148,7 +151,8 @@ test("une partie à la fois (05/10/2026) : en ouvrir une referme les autres du m
 test("?apres=enq11d (ou sys25d) : la fiche bonus suivante du même monde ; jamais une étape", () => {
   const f = bloc("const apres=new URLSearchParams(window.location.search).get(\"apres\");", "ouvrirMonde(mondeEnCours(");
   assert.match(f, /for\(const b of BONUS_MONDES\)\{\s*const kb=b\.fiches\.findIndex\(f=>b\.idp\+f\.code===apres\);/);
-  assert.match(f, /if\(kb\+1<b\.fiches\.length\) window\.location\.replace\(b\.fiches\[kb\+1\]\.j\);\n    return;/);
+  /* APRES_REDIRIGE (lot 2 du suivi, 08/10/2026) : la carte repart, le suivi n'y démarre pas */
+  assert.match(f, /if\(kb\+1<b\.fiches\.length\)\{ APRES_REDIRIGE=true; window\.location\.replace\(b\.fiches\[kb\+1\]\.j\); \}\n    return;/);
   assert.ok(f.indexOf("const kb=") < f.indexOf("const ici="), "le Bonus est traité avant les étapes");
 });
 

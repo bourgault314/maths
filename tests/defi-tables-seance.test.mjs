@@ -140,7 +140,7 @@ test("le parcours : des clés en plus, sans changer de version ; une clé absent
   assert.equal(P.estVide(P.appliquerReponse(neuf, "1-3", {correcte: true}).parcours), false, "un bout réussi est déjà du travail");
 });
 
-test("la séance : Mes calculs du jour seulement s'il y a des calculs des tables passées, jamais de mélange, puis les marches qui se suivent — quatre étapes (lot M2)", () => {
+test("la séance : Mes calculs du jour seulement s'il y a des calculs des tables passées, Mon mélange seulement aux paliers, puis les marches qui se suivent — quatre étapes (lot M2)", () => {
   let p = P.creerParcours();
   assert.deepEqual(P.MARCHES.map(m => m.nom), ["Les perles", "Je construis la bande", "La bande à trous", "Dans l’ordre", "Dans le désordre", "Nombres manquants et divisions", "Résultats, nombres manquants et divisions", "Je passe le test"]);
   assert.deepEqual(nomsDe(p, jour(1)), ["Les perles", "Je construis la bande", "La bande à trous", "Dans l’ordre"], "jour 1 : marches 1 à 4 de la table de 2 (lot M2 : toujours 4 étapes)");
@@ -170,17 +170,23 @@ test("la séance : Mes calculs du jour seulement s'il y a des calculs des tables
   assert.deepEqual(nomsDe(p, jour(2), 2), ["Mes calculs du jour", "Dans le désordre", "Nombres manquants et divisions", "Résultats, nombres manquants et divisions"]);
   const acquise = jouerSeance(p, jour(2), () => 0, 2);
   assert.deepEqual(departN(acquise.parcours.tables[2].seance), {depart: 3, n: 2}, "le départ d'une table passée ne bouge pas");
+  // Lot « Mon mélange aux paliers » (09/10/2026, décision de Gwenaël) : une
+  // 3e table passée, la coupe des 3 pas gagnée — Mon mélange en 2e étape,
+  // deux marches derrière (quatre étapes en tout).
+  p.tables[5].acquise = jour(1);
+  p = P.normaliserParcours(p);
+  assert.deepEqual(nomsDe(p, jour(2)), ["Mes calculs du jour", "Mon mélange", "Les perles", "Je construis la bande"], "3 tables passées : Mon mélange, puis deux marches");
+  p.melange.reussi = 3;
+  p = P.normaliserParcours(p);
+  assert.ok(P.ouvrirSeance(p, {aujourdhui: jour(2)}).file.every(prevue => prevue.type !== "melange"), "la coupe des 3 gagnée : plus de mélange avant 6 tables");
   // Les 9 tables passées : plus de marches — Mes calculs du jour, puis
-  // l'étoile (l'escalier s'ouvre sans mélange). Lot « Mon mélange sur
-  // l'accueil et l'expert » : tant que la coupe des 9 tables n'est pas
-  // gagnée, Mon mélange des 9 tables vient avant l'étoile.
+  // l'étoile (l'escalier s'ouvre sans mélange). Lot « Mon mélange aux
+  // paliers » : plus de Mon mélange des 9 tables avant l'étoile (lot « Mon
+  // mélange sur l'accueil et l'expert ») — il était plus dur qu'elle.
   P.TABLES.forEach(table => { p.tables[table].acquise = jour(1); });
   p = P.normaliserParcours(p);
   assert.equal(P.tableDeSeance(p), null);
-  assert.deepEqual(nomsDe(p, jour(2)), ["Mes calculs du jour", "Mon mélange", "Tente ★"]);
-  p.melange.reussi = 9;
-  p = P.normaliserParcours(p);
-  assert.deepEqual(nomsDe(p, jour(2)), ["Mes calculs du jour", "Tente ★"], "la coupe des 9 gagnée : Mes calculs du jour, puis l'étoile");
+  assert.deepEqual(nomsDe(p, jour(2)), ["Mes calculs du jour", "Tente ★"], "Mes calculs du jour, puis l'étoile — même sans la coupe des 6");
 });
 
 test("l’échelle à décalage : +1 par séance finie, +2 quand les marches sont sans faute, jamais plus loin que le départ 6 (5-6-7-8 au sommet, lot M2)", () => {
@@ -306,7 +312,10 @@ test("la marche 8 : la validation si la table est prête, sinon la marche 7 refa
   assert.equal(s.seance.finie, true);
   assert.equal(s.parcours.tables[3].acquise, jour(3), "le test réussi passe la table, sans mélange");
   assert.equal(s.parcours.melange.dernier, null, "le mélange n'a pas été joué");
-  assert.ok(P.ouvrirSeance(s.parcours, {aujourdhui: jour(4)}).file.every(prevue => prevue.type !== "melange"), "… et il n'ouvre pas la séance suivante");
+  // Lot « Mon mélange aux paliers » (09/10/2026) : la table de 3 passée, ça
+  // fait 3 tables — la coupe des 3 est à gagner, Mon mélange vient en 2e
+  // étape de la séance suivante (aucun verrou pour autant).
+  assert.equal(P.ouvrirSeance(s.parcours, {aujourdhui: jour(4)}).file.filter(prevue => prevue.type !== "revision")[0].type, "melange", "… et il vient en tête de la séance suivante (après Mes calculs du jour s'il y en a), au palier des 3 tables");
 });
 
 test("seule la marche 7 compte : une erreur aux entraînements d'avant n'empêche pas le test (lot « retours de classe »)", () => {
@@ -486,7 +495,9 @@ test("la page : la séance est l'accueil de tous — la clé ?seance=1 est retir
   assert.match(html, /if \(decouverte\) renderDecouverte\(etapes, etat\);\s*else if \(avecSeance\) renderSeanceAccueil\(etapes, etat, table, ligne\);\s*if \(!replie && !carteSeance\) \{/);
   assert.match(html, /\n        renderSemaine\(etat\);/);
   assert.match(html, /function enSeance\(\) \{\s*return Boolean\(seance\) && state\.origin === "seance";/, "une série hors séance garde son bilan d'avant");
-  assert.match(html, /if \(enSeance\(\)\) noterEtapeDeSeance\(suivi\);\s*if \(state\.origin === "decouverte"\) renderSuiteDecouverte\(suivi\);\s*show\("result"\);/);
+  // Lot « Mon mélange aux paliers » : hors séance, Mon mélange lancé par
+  // « Je passe le test » a son bouton vers le test.
+  assert.match(html, /if \(enSeance\(\)\) noterEtapeDeSeance\(suivi\);\s*else if \(state\.apresMelange && suivi\.classement && suivi\.classement\.type === "melange"\) renderSuiteApresMelange\(\);\s*if \(state\.origin === "decouverte"\) renderSuiteDecouverte\(suivi\);\s*show\("result"\);/);
   assert.match(html, /function backToModes\(\) \{\s*quitterSeance\(\);/, "revenir à Ma table quitte la séance");
   assert.match(html, /mixte: "résultats, nombres manquants et divisions"\}\);/);
   assert.match(html, /function configurationLabel\(config\) \{\s*return CORE\.configurationLabel\(config\);/, "le noyau porte le nom lui-même");
@@ -498,7 +509,9 @@ test("la page : la séance est l'accueil de tous — la clé ?seance=1 est retir
   // Entre deux étapes : UN bouton, « Arrêter la séance », pas de « Rejouer ».
   assert.match(html, /\.result\.en-seance \.result-actions,\s*\.result\.en-seance #result-parcours,\s*\.result\.en-seance #result-message,\s*\.result\.en-seance #result-previous,\s*\.result\.en-seance \.result-config \{ display: none !important; \}/);
   assert.match(html, /suite\.textContent = `Étape \$\{seance\.faites\.length \+ 1\}\\u00a0: \$\{prochaine\.nom\}\\u00a0→`;/, "lot « divisions » : la flèche reste avec son nom");
-  assert.match(html, /arreter\.textContent = "Arrêter la séance";\s*arreter\.addEventListener\("click", backToModes\);/);
+  // Lot « la flèche de retour » (14/10/2026, choix de Gwenaël) : « Arrêter la
+  // séance » devient « ← Ma table », à gauche du bouton de l'étape suivante.
+  assert.match(html, /arreter\.className = "secondary retour-flechee";\s*arreter\.id = "seance-arreter";\s*arreter\.textContent = "Ma table";\s*arreter\.addEventListener\("click", backToModes\);\s*const ligne = document\.createElement\("div"\);\s*ligne\.className = "suite-boutons";\s*ligne\.append\(arreter, suite\);\s*zone\.append\(ligne\);/);
   assert.match(html, /\$\("result-title"\)\.textContent = "Séance du jour faite";/);
   assert.match(html, /encore\.textContent = "Encore une séance";/);
   // La rangée : une case vide reste sans nombre. Lot « Mon parcours » (décision
@@ -629,7 +642,7 @@ test("« Cette semaine » : « 3 fois cette semaine », rien à zéro, plus de r
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie serveur identique, serveur qui accepte les nouvelles clés", () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261007-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261014-1/);
   const moteur = readFileSync(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = readFileSync(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie), "cp outils/calcul_mental/defi_tables_mon_parcours.js _serveur/public/prof/");
@@ -690,8 +703,9 @@ test("lot 2a : « Tu connais déjà des tables ? » — validations d'affilée, 
   assert.equal(sansDecouverte.tables[5].acquise, J1, "hors du premier écran aussi : un test réussi passe la table, toujours");
   p = valider(p, 5, 0, true);
   assert.equal(p.tables[5].acquise, J1, "sur le premier écran, il valide d'affilée ce qu'il sait");
-  // La première séance ne contient pas de mélange.
-  assert.ok(P.ouvrirSeance(p, {aujourdhui: jour(2)}).file.every(prevue => prevue.type !== "melange"));
+  // Lot « Mon mélange aux paliers » (09/10/2026) : 3 tables passées, la
+  // coupe des 3 à gagner — la première séance a Mon mélange (aucun verrou).
+  assert.equal(P.ouvrirSeance(p, {aujourdhui: jour(2)}).file.filter(prevue => prevue.type !== "revision")[0].type, "melange");
   // Table de 3 ratée : sa séance part de « Dans le désordre ».
   p = valider(p, 3, 5, true);
   assert.equal(p.tables[3].acquise, null);
@@ -700,24 +714,25 @@ test("lot 2a : « Tu connais déjà des tables ? » — validations d'affilée, 
   assert.equal(parti.tables[3].seance.depart, 5);
   assert.equal(parti.tables[3].seance.dernier, J1);
   assert.equal(P.tableDeSeance(parti), 3, "et c'est elle, ma table, les jours suivants");
-  // Le jour même : les tables viennent d'être passées, rien pour Mes calculs du jour — quatre marches.
-  assert.deepEqual(P.ouvrirSeance(parti, {aujourdhui: J1}).file.map(prevue => prevue.type === "marche" ? prevue.marche : prevue.type), [5, 6, 7, 8]);
-  // Le lendemain : Mes calculs du jour (les calculs des tables passées la veille), puis trois marches.
-  assert.deepEqual(P.ouvrirSeance(parti, {aujourdhui: jour(2)}).file.map(prevue => prevue.type === "marche" ? prevue.marche : prevue.type), ["revision", 5, 6, 7], "avec révision : trois marches, quatre étapes, sans mélange");
+  // Le jour même : les tables viennent d'être passées, rien pour Mes calculs
+  // du jour — Mon mélange (palier des 3 tables), puis trois marches.
+  assert.deepEqual(P.ouvrirSeance(parti, {aujourdhui: J1}).file.map(prevue => prevue.type === "marche" ? prevue.marche : prevue.type), ["melange", 5, 6, 7]);
+  // Le lendemain : Mes calculs du jour (les calculs des tables passées la veille), Mon mélange, puis deux marches.
+  assert.deepEqual(P.ouvrirSeance(parti, {aujourdhui: jour(2)}).file.map(prevue => prevue.type === "marche" ? prevue.marche : prevue.type), ["revision", "melange", 5, 6], "avec révision et Mon mélange : deux marches, quatre étapes");
+  // La coupe des 3 gagnée : plus de mélange, trois marches derrière Mes calculs du jour.
+  const coupe = P.normaliserParcours({...parti, melange: {...parti.melange, reussi: 4}});
+  assert.deepEqual(P.ouvrirSeance(coupe, {aujourdhui: jour(2)}).file.map(prevue => prevue.type === "marche" ? prevue.marche : prevue.type), ["revision", 5, 6, 7]);
   assert.equal(P.commencerApresDecouverte(parti, 2), parti, "une table passée ne bouge pas");
   assert.equal(p.tables[3].seance.depart, 1, "le parcours d'origine n'est pas modifié");
 });
 
-test("lot 2a : les 9 tables passées ont leur séance — Mes calculs du jour s'il y en a, puis l'étoile suivante (Mon mélange avant, tant que la coupe des 9 manque)", () => {
+test("lot 2a : les 9 tables passées ont leur séance — Mes calculs du jour s'il y en a, puis l'étoile suivante (plus de Mon mélange avant, lot « Mon mélange aux paliers »)", () => {
   let p = P.creerParcours();
   P.TABLES.forEach(table => { p.tables[table].acquise = "2026-10-01"; });
   p = P.normaliserParcours(p);
-  // Lot « Mon mélange sur l'accueil et l'expert » : la coupe des 9 tables pas
-  // encore gagnée, Mon mélange des 9 tables vient avant l'étoile.
-  assert.deepEqual(P.programmeDeSeance(p, P.ouvrirSeance(p, {aujourdhui: J1}), J1).etapes.map(etape => etape.type), ["melange", "etoile"]);
-  // La suite de ce test : la coupe gagnée.
-  p.melange.reussi = 9;
-  p = P.normaliserParcours(p);
+  // Lot « Mon mélange aux paliers » (09/10/2026) : plus de Mon mélange des 9
+  // tables avant l'étoile, même sans aucune coupe.
+  assert.deepEqual(P.programmeDeSeance(p, P.ouvrirSeance(p, {aujourdhui: J1}), J1).etapes.map(etape => etape.type), ["etoile"]);
   // Mélange des 9 jamais joué : l'escalier est ouvert quand même (9 tables passées), la séance est l'étoile.
   let seance = P.ouvrirSeance(p, {aujourdhui: J1});
   assert.equal(seance.table, null);
@@ -856,11 +871,16 @@ test("la fiche — la carte de ma table, le tableau de Mes calculs, « Cette sem
   assert.doesNotMatch(fiche, /J’apprends|Je m’entraîne|fiche-table|Colorie les ronds/, "les ronds ont quitté l'appli au lot 2a");
   assert.match(fiche, /<div id="fiche-matable" class="fiche-rangee is-ma-table fiche-matable" hidden><\/div>\s*<table id="fiche-calculs" class="fiche-carre"><tbody><\/tbody><\/table>\s*<p class="fiche-carre-legende" aria-hidden="true">/);
   assert.match(fiche, /<\/i>pas encore vu<\/span>[\s\S]*?<\/i>à revoir<\/span>[\s\S]*?<\/i>en route<\/span>[\s\S]*?<\/i>su<\/span>[\s\S]*?<\/i>même calcul<\/span>/, "la légende de l’écran");
-  assert.match(fiche, /<p id="fiche-dix" class="fiche-dix" hidden><b>Table de 10<\/b>&nbsp;: passée ✓<\/p>/);
+  // Lot « Une seule fiche » : la table de 10 passée prend la pastille.
+  assert.match(fiche, /<p id="fiche-dix" class="fiche-dix" hidden><i class="fiche-passee">✓10<\/i>Table de 10&nbsp;: passée<\/p>/);
   // Un seul logo, en haut à droite ; le QR à gauche ; la signature seule en pied.
   assert.match(fiche, /<header class="fiche-head">\s*<div class="fiche-qr">[\s\S]*?<\/div>\s*<h1>Mon parcours<br>des tables<\/h1>\s*<img class="fiche-logo" src="\.\.\/\.\.\/assets\/img\/mathsgo-logo-print\.png"/);
   assert.equal((fiche.match(/mathsgo-logo/g) || []).length, 1, "un seul logo");
-  assert.equal((fiche.match(/<footer class="fiche-foot">mathsgo\.re · CC BY-NC-SA 4\.0<\/footer>/g) || []).length, 1, "une seule signature : une seule page");
+  // Lot « Une seule fiche » : la page 1 a sa signature (une seule page pour
+  // l'élève) ; la page du professeur, la sienne.
+  const page1 = fiche.slice(0, fiche.indexOf('<div id="fiche-prof"'));
+  assert.equal((page1.match(/<footer class="fiche-foot">mathsgo\.re · CC BY-NC-SA 4\.0<\/footer>/g) || []).length, 1, "une seule signature : une seule page");
+  assert.equal((fiche.match(/<footer class="fiche-foot">mathsgo\.re · CC BY-NC-SA 4\.0<\/footer>/g) || []).length, 2);
   // Le remplissage : le parcours de LA FICHE (celui d'un autre élève chez le professeur).
   assert.match(html, /const fait = fiche\.calculs\[cle\] \|\| null;\s*const td = document\.createElement\("td"\);\s*td\.className = colonne < ligne \? `miroir\$\{fait \? " vu" : ""\}` : PARCOURS\.etatFait\(fait\);/, "la moitié miroir grise seulement pour un calcul déjà vu");
   assert.match(html, /nombre\.textContent = fait \? String\(ligne \* colonne\) : "";/, "comme à l'écran : une case jamais vue ne donne pas le résultat");
@@ -878,22 +898,28 @@ test("la fiche — la carte de ma table, le tableau de Mes calculs, « Cette sem
   assert.match(html, /const marches = marchesDeTable\(fiche, maTable\);/);
   assert.match(html, /function echelleDeTable\(table\) \{\s*const \{depart, prochaines, noms\} = marchesDeTable\(parcours, table\);/, "Mon parcours et la fiche lisent l'échelle de la même façon");
   assert.match(html, /const semaine = PARCOURS\.bilanSeances\(fiche\);/);
-  // Le cadre du professeur (10 lignes) : la fiche se resserre pour rester sur une page.
-  assert.match(html, /\$\("fiche-print"\)\.classList\.toggle\("avec-prof", Boolean\(source\)\);/);
-  assert.match(html, /\.fiche-print\.avec-prof \.fiche-carre td \{ height: 9mm; \}/);
+  // Lot « Une seule fiche » (08/10/2026) : la page 1 ne se resserre plus
+  // (elle se resserrait pour faire tenir le cadre du professeur) ; le cadre
+  // est une page 2, seulement depuis « Ma classe ».
+  assert.doesNotMatch(html, /avec-prof/);
+  assert.match(html, /\$\("fiche-prof"\)\.hidden = !source;\s*renderFicheProf\(source \? fiche : null, etat\);/);
+  assert.match(html, /\.fiche-page-prof \{ break-before: page; margin-top: 0; \}/);
   assert.doesNotMatch(html, /\.fiche-page2 \{ break-before: page/);
 });
 
 test("lot 2b : les compteurs « fois » sont pour le professeur — le cadre n'existe que dans la fiche ouverte depuis « Ma classe »", () => {
-  assert.match(html, /<div id="fiche-prof" class="fiche-prof" hidden>\s*<strong>Pour le professeur <small>— combien de fois chaque activité a été faite<\/small><\/strong>/);
-  const rendu = html.slice(html.indexOf("      function renderFiche(source) {"), html.indexOf("      function printFiche() {"));
-  assert.match(rendu, /lignesProf\.replaceChildren\(\);\s*if \(source\) \{/, "sans source (la fiche de l'élève sur son appareil), aucune ligne");
-  // Toujours là pour le professeur ; sans rien à compter, une phrase le dit.
-  assert.match(rendu, /cadre\.hidden = !source;\s*cadre\.querySelector\("table"\)\.hidden = !lignesProf\.children\.length;\s*\$\("fiche-prof-vide"\)\.hidden = Boolean\(lignesProf\.children\.length\);/);
-  assert.match(html, /<p id="fiche-prof-vide" hidden>Aucune séance ni activité enregistrée\.<\/p>/);
+  // Lot « Une seule fiche » (08/10/2026, planche 16) : une page 2, titrée.
+  assert.match(html, /<div id="fiche-prof" class="fiche-page-prof" hidden>\s*<div class="fiche-prof">\s*<h2 class="fiche-prof-titre">Pour le professeur <span id="fiche-prof-qui"><\/span><\/h2>\s*<p class="fiche-prof-sous">Combien de fois chaque activité a été faite, table par table\.<\/p>/);
+  const rendu = html.slice(html.indexOf("      function renderFicheProf(fiche, etat) {"), html.indexOf("      function printFiche() {"));
+  assert.match(rendu, /lignesProf\.replaceChildren\(\);[\s\S]*?if \(!fiche\) return;/, "sans source (la fiche de l'élève sur son appareil), aucune ligne");
+  assert.match(rendu, /\$\("fiche-prof"\)\.hidden = !source;\s*renderFicheProf\(source \? fiche : null, etat\);/);
+  // Toujours les 9 tables : plus de phrase « aucune séance » (Toti avait
+  // passé ses 9 tables par le test, la fiche disait « Aucune séance ni
+  // activité enregistrée ») — la colonne « Passée » dit « test direct ».
+  assert.doesNotMatch(html, /fiche-prof-vide|Aucune séance ni activité enregistrée/);
   // Le nom proposé à l'enregistrement du PDF : le titre de la page.
   assert.match(html, /document\.title = `Fiche Défi tables\$\{distant\.prenom \? ` - \$\{distant\.prenom\}` : ""\}\$\{classe \? ` - \$\{classe\}` : ""\}`;/);
-  assert.match(rendu, /const nombres = \[ligne\.seance\.n, fois\.beads, fois\.construct, fois\.gaps, fois\.ordered,\s*fois\.random \+ fois\.desordre, fois\.trous, fois\.mixte\];\s*if \(!nombres\.some\(Boolean\)\) return;/, "une ligne par table où quelque chose a été fait");
+  assert.match(rendu, /const nombres = \[ligne\.seance\.n, fois\.beads, fois\.construct, fois\.gaps, fois\.ordered,\s*fois\.random \+ fois\.desordre, fois\.trous, fois\.mixte\];\s*const tr = document\.createElement\("tr"\);/, "une ligne par table, les 9, toujours");
   assert.equal((html.match(/<th>Séances<\/th><th>Perles<\/th>/g) || []).length, 1);
   // Le professeur passe toujours une source ; l'élève, jamais.
   assert.match(html, /renderFiche\(distant\);/);
@@ -963,7 +989,7 @@ test("lot 2b : « résultats et nombres manquants » partout — noyau, fiche vi
   const noyau = lire("outils/calcul_mental/defi_tables_core.js");
   assert.match(noyau, /"direct\+missing\+division": "résultats, nombres manquants et divisions"/, "lot « divisions »");
   assert.doesNotMatch(noyau, /"les deux à la fois"/);
-  assert.match(html, /defi_tables_core\.js\?v=20261005-1/, "le noyau a changé : son numéro monte");
+  assert.match(html, /defi_tables_core\.js\?v=20261010-1/, "le noyau a changé : son numéro monte");
   // Lot « Mon parcours » (décision 15) : la fiche vierge n'est plus dessinée
   // à part — c'est la fiche de l'appli, en mode vierge, imprimée par Chromium.
   // Ses règles sont donc celles de la fiche : « résultats, nombres manquants et divisions ».
@@ -971,7 +997,10 @@ test("lot 2b : « résultats et nombres manquants » partout — noyau, fiche vi
   assert.match(vierge, /await page\.goto\(PAGE\.as_uri\(\) \+ "\?vierge"\)/);
   assert.match(vierge, /pw\.chromium\.launch\(channel="chromium"\)/, "le vrai Chromium, pas le headless shell (largeur du texte)");
   assert.doesNotMatch(vierge, /APPRENDS|ENTRAINE|les deux|LEGENDE = |j’entoure|je colorie/, "plus de rangées à entourer ni à colorier");
-  assert.match(html, /<p><b>Passée ✓<\/b> : le test, 20 questions \(résultats, nombres manquants et divisions\) en 1 min 30, 2 erreurs au plus\.<\/p>/);
+  // Lot « Une seule fiche » : la ligne « Passée ✓ : le test… » quitte la
+  // fiche ; le nom reste dans l'en-tête du cadre du professeur.
+  assert.doesNotMatch(html, /<b>Passée ✓<\/b> : le test/);
+  assert.match(html, /<th>Résultats, nombres<br>manquants et divisions<\/th><th>Passée<\/th>/);
   const publication = lire(".github/workflows/publier.yml");
   assert.match(publication, /python -m pip install --disable-pip-version-check reportlab\n/);
   assert.doesNotMatch(publication, /PyMuPDF|pypdf/);

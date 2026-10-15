@@ -346,15 +346,17 @@ test("le premier chargement ne montre plus l'accueil écrit dans le HTML : des p
   assert.match(html, /\.panel \{\s*position: relative;/);
 });
 
-test("la fiche de l'élève a des cases carrées ; celle du professeur garde les siennes (une page)", () => {
-  assert.match(html, /\.fiche-print:not\(\.avec-prof\) \.fiche-carre \{ width: auto; margin-left: auto; margin-right: auto; \}/);
-  assert.match(html, /\.fiche-print:not\(\.avec-prof\) \.fiche-carre td \{ width: 13\.5mm; height: 13\.5mm; \}/);
-  assert.match(html, /\.fiche-print\.avec-prof \.fiche-carre td \{ height: 9mm; \}/);
+// Lot « Une seule fiche » (08/10/2026) : les cases carrées valent pour TOUTES
+// les fiches — celle qu'on ouvre depuis « Ma classe » ne se resserre plus.
+test("la fiche a des cases carrées — toutes les fiches, celle du professeur comprise", () => {
+  assert.match(html, /\.fiche-carre \{ width: auto; margin-left: auto; margin-right: auto; \}/);
+  assert.match(html, /\.fiche-carre td \{ width: 13\.5mm; height: 13\.5mm; \}/);
+  assert.doesNotMatch(html, /avec-prof/);
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie du serveur identique ; « Ajouter des élèves » propose 1 dans une classe qui a déjà des élèves", () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261007-1/);
-  assert.match(html, /defi_tables_core\.js\?v=20261005-1/, "le noyau n'a pas changé");
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261014-1/);
+  assert.match(html, /defi_tables_core\.js\?v=20261010-1/, "le noyau n'a pas changé");
   const copie = readFileSync(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url), "utf8");
   assert.equal(copie, readFileSync(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url), "utf8"));
   assert.match(prof, /\{nom: "nombre", libelle: "Nombre d’élèves", type: "number", valeur: eleves\.length \? "1" : "25", min: 1, max: 60\}/);

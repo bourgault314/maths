@@ -63,11 +63,11 @@ test("l’accueil : Ma table et ses trois étapes, Réviser, Mon parcours, Mes c
 
 test("l’appli ne choisit rien : les trois étapes restent des boutons, elle surligne seulement la conseillée", () => {
   assert.match(html, /bouton\.className = `etape \$\{classe\}\$\{conseille \? " is-next" : ""\}`/);
-  // Lot « un seul système » : plus de cadenas. Le seul endroit où des boutons
-  // sont désactivés est la porte de Mes calculs du jour — et elle le dit
-  // (« Après Mes calculs du jour ») : rien n'est désactivé en silence.
-  assert.equal((html.match(/bouton\.disabled = /g) || []).length, 1, "un seul endroit désactive des boutons : la porte");
-  assert.match(html, /if \(etat\.porte\) \{\s*liens\.classList\.add\("est-fermee"\);\s*liens\.querySelectorAll\("button"\)\.forEach\(bouton => \{ bouton\.disabled = true; \}\);\s*const mot = document\.createElement\("p"\);\s*mot\.className = "porte-mot";\s*mot\.textContent = "Après Mes calculs du jour";/, "la porte fermée dit pourquoi");
+  // Lot « un seul système » : plus de cadenas. Lot « Mes calculs du jour
+  // d'abord » (08/10/2026) : la porte de Mes calculs du jour ne désactive
+  // plus rien non plus — ce qu'on touche le lance d'abord, puis enchaîne.
+  assert.equal((html.match(/bouton\.disabled = /g) || []).length, 0, "plus aucun bouton désactivé");
+  assert.doesNotMatch(html, /est-fermee|porte-mot|Après Mes calculs du jour"/, "plus de liens grisés « Après Mes calculs du jour »");
   assert.doesNotMatch(html, /classe: "valide verrou"|ligneVerrou|cadenas\.textContent/, "la ligne du test n’est plus jamais cadenassée");
   assert.match(html, /const conseil = prochaine\.type === "revision" \? "reviser"/, "le conseil suit prochaineEtape du moteur");
   assert.match(html, /\.etape\.is-next \{ border-color: var\(--blue\)/);
@@ -165,7 +165,7 @@ test("la notice « Comment ça marche ? » : les règles, écrites une fois, clo
   // trophées » : elle dit ce qu'il rapporte (une coupe avec 3, 6, puis 9 tables
   // — le mot « trophée » est parti au lot « Mon mélange sur l'accueil et l'expert »).
   // Lot « retours de classe » : le nombre et son mot ne se séparent plus (&nbsp;).
-  assert.match(texte, /<p><b>Mon mélange\.<\/b> Dès 2&nbsp;tables passées, quand je veux&nbsp;: 20&nbsp;questions en 1&nbsp;min&nbsp;30\. Une coupe avec 3, 6, puis 9&nbsp;tables\.<\/p>/);
+  assert.match(texte, /<p><b>Mon mélange\.<\/b> Mes tables passées mélangées&nbsp;: 20&nbsp;questions en 1&nbsp;min&nbsp;30\. À 3, puis 6&nbsp;tables, il passe avant le test jusqu’à ce que je gagne la coupe\.<\/p>/);
   assert.doesNotMatch(texte, /avant de valider|acquise/, "ni verrou ni « acquise » dans la notice");
   assert.doesNotMatch(texte, /je m’entraîne 3 fois|25 produits|Champion|★ produits/);
   assert.equal((html.match(/data-notice hidden/g) || []).length, 2, "accueil + parcours");
@@ -418,8 +418,9 @@ test("lot « un seul système » · plus de cadenas : « Je passe le test » lan
   assert.doesNotMatch(html, /PARCOURS\.melangeDu/, "melangeDu a quitté le moteur");
   assert.match(html, /titre: ligne\.acquise \? "Ma table est passée" : NOM_DU_TEST,[\s\S]{0,700}?action: \(\) => launchFromParcours\(PARCOURS\.configValidation\(table\), "menu"\)/, "la ligne 3 lance le test, sans condition");
   assert.match(html, /lien\(NOM_DU_TEST, \(\) => launchFromParcours\(PARCOURS\.configValidation\(table\), "menu"\), "rond"\);/, "le lien de la carte de séance aussi");
-  // La seule chose qui retient : la porte de Mes calculs du jour.
-  assert.match(html, /if \(origin !== "seance" && PARCOURS\.mesCalculsAFaire\(parcours\)\) \{\s*renderAccueil\(\);\s*return;\s*\}/);
+  // La porte de Mes calculs du jour ne retient plus : elle le lance d'abord,
+  // puis enchaîne sur le test (lot « Mes calculs du jour d'abord »).
+  assert.match(html, /if \(origin !== "seance" && PARCOURS\.mesCalculsAFaire\(parcours\)\) \{\s*if \(config\.mode !== "revision"\) state\.apresMesCalculs = \{config, origin, nom: nomDeLaSuite\(config\), puis\};\s*startRevision\(null, origin\);\s*return;\s*\}/);
   // Rien n'a été ajouté sur l'écran de l'élève : pas de phrase de plus.
   assert.doesNotMatch(html.replace(/<!--[\s\S]*?-->/g, ""), /Fais d’abord ton mélange pour/);
 });

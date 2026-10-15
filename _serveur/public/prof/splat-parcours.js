@@ -50,6 +50,15 @@
   //     déconnecter » → ?oublier=1, garde d'inactivité 10 min. Une seule
   //     implémentation, que chaque page habille (bandeau, pastille).
   //
+  //  4. LES MONDES OUVERTS À LA CLASSE (lot « splat-suivi-5 », 08/10/2026) :
+  //     le professeur peut n'ouvrir que certains mondes à une classe. Le
+  //     serveur les rend avec l'identité (api/eleve.php, « reglages.splat.
+  //     mondes ») ; le client les range dans l'ONGLET, liés au code
+  //     (mathsgo-splat-mondes), à chaque lecture de l'identité, et les oublie
+  //     avec le code. La carte grise les mondes fermés ; « Étape suivante »
+  //     (assets/js/splat-etapes.js, qui relit la même clé) ne les propose
+  //     plus. Sans code : tout reste ouvert.
+  //
   // Logique pure : ni DOM ni réseau en dehors de creerClient, qui reçoit tout
   // (window, document, navigator, fetch, stockages, horloge) en paramètre —
   // c'est ainsi que les tests l'exécutent dans node avec un faux monde.
@@ -64,6 +73,10 @@
   // Les clés d'onglet de Défi tables, volontairement les mêmes.
   const CLE_CODE = "mathsgo-suivi-code";
   const CLE_IDENTITE = "mathsgo-suivi-identite";
+  // Lot « splat-suivi-5 » : les mondes ouverts à la classe de l'élève, dans
+  // l'onglet, liés à son code : {code, mondes: [1, 2]} — « mondes: null » ou
+  // pas de clé = tous ouverts. assets/js/splat-etapes.js la lit aussi.
+  const CLE_MONDES = "mathsgo-splat-mondes";
   const CLE_DERNIER_GESTE = "mathsgo-suivi-dernier-geste";
 
   // LA CARTE DES MONDES, RÉDUITE à ce que le suivi doit en savoir : pour
@@ -82,6 +95,12 @@
   // du serveur change aussi (motif de lib/applis.php).
   // tests/splat-parcours.test.mjs compare ces lignes à splat-etapes.js et
   // affiche la liste à recopier au premier écart.
+  //
+  // Échauffement du monde 6 (14/10/2026) : trois étapes avant la 38, comptées
+  // comme les autres (« ⭐ 0 / 9 », « sur 40 »). Leur numéro est un code, « É1 »,
+  // comme « 11d » pour un Bonus : la 38 reste la 38. Le lot 2 « suivi » les met
+  // ici et dans le motif du serveur AVANT que la carte les ait (lot 3), pour
+  // qu'aucune étoile d'échauffement ne soit retirée par le serveur.
   const MONDES = Object.freeze([
     Object.freeze([1, "Petit SPLAT!"]),
     Object.freeze([2, "SPLAT! Classique"]),
@@ -90,7 +109,7 @@
     Object.freeze([5, "SPLAT! Équations"]),
     Object.freeze([6, "SPLAT! Relatifs"])
   ]);
-  // [parcours, numéro sur la carte, numéro du monde]
+  // [parcours, numéro sur la carte (ou code « É1 »), numéro du monde]
   const CARTE_ETAPES = Object.freeze([
     ["m1e1", 1, 1], ["m1e2", 2, 1], ["m1e3", 3, 1], ["m1e4", 4, 1], ["m1e5", 5, 1], ["m1e6", 6, 1],
     ["m2e1", 7, 2], ["m2e4", 8, 2], ["m2e5", 9, 2],
@@ -99,6 +118,7 @@
     ["enq20", 20, 3], ["enq21", 21, 3], ["enq22", 22, 3], ["enq23", 23, 3], ["enq24", 24, 3],
     ["sys25", 25, 4], ["sys26", 26, 4], ["sys27", 27, 4], ["sys28", 28, 4],
     ["m3e1", 35, 5], ["m3e2", 36, 5], ["m3e4", 37, 5],
+    ["ech1", "É1", 6], ["ech2", "É2", 6], ["ech3", "É3", 6],
     ["m4e1", 38, 6], ["m4e2", 39, 6], ["m4e3", 40, 6], ["m4e4", 41, 6], ["m4e5", 42, 6], ["m4e6", 43, 6]
   ].map(Object.freeze));
   // [parcours, code du Bonus, numéro du monde]
@@ -653,6 +673,7 @@
       if (stockage) {
         stockage.removeItem(CLE_CODE);
         stockage.removeItem(CLE_IDENTITE);
+        stockage.removeItem(CLE_MONDES);
       }
       return true;
     } catch (_) {
@@ -689,6 +710,56 @@
         prenom: nettoyerPrenom(identite.prenom),
         classe: typeof identite.classe === "string" ? identite.classe.slice(0, 40) : ""
       }));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // ------------------------------------------- les mondes ouverts à la classe
+  //
+  // Ce que le serveur rend (reglages.splat.mondes) → la liste des mondes
+  // OUVERTS, triée, sans doublon, de 1 au nombre de mondes de la carte ; null
+  // quand ils le sont tous — ou quand la réponse ne dit rien de lisible : dans
+  // le doute, on ouvre (un monde ouvert à tort se joue, un monde fermé à tort
+  // bloque un élève).
+  function mondesDeReglages(reglages) {
+    const liste = reglages && typeof reglages === "object" && reglages.splat && typeof reglages.splat === "object"
+      ? reglages.splat.mondes : null;
+    if (!Array.isArray(liste)) return null;
+    const nombre = MONDES.length;
+    const vus = [];
+    liste.forEach(monde => {
+      if (Number.isInteger(monde) && monde >= 1 && monde <= nombre && vus.indexOf(monde) < 0) vus.push(monde);
+    });
+    if (!vus.length || vus.length === nombre) return null;
+    return vus.sort((a, b) => a - b);
+  }
+
+  // Un monde (numéro de la carte) est-il ouvert ? mondes = null : tous.
+  function mondeOuvert(mondes, numero) {
+    return !Array.isArray(mondes) || mondes.indexOf(numero) >= 0;
+  }
+
+  function chargerMondesOnglet(stockage, code) {
+    try {
+      const propre = normaliserCode(code || "");
+      const brut = stockage && codeValide(propre) ? stockage.getItem(CLE_MONDES) : null;
+      if (!brut) return null;
+      const lu = JSON.parse(brut);
+      if (!lu || typeof lu !== "object" || lu.code !== propre) return null;
+      return mondesDeReglages({splat: {mondes: lu.mondes}});
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function sauverMondesOnglet(stockage, code, mondes) {
+    try {
+      const propre = normaliserCode(code || "");
+      if (!stockage || !codeValide(propre)) return false;
+      if (!Array.isArray(mondes)) stockage.removeItem(CLE_MONDES);
+      else stockage.setItem(CLE_MONDES, JSON.stringify({code: propre, mondes}));
       return true;
     } catch (_) {
       return false;
@@ -908,6 +979,9 @@
     let parcours = charger(stockage(), codeSuivi);
     let sync = chargerSync(stockage(), codeSuivi);
     let suiviIdentite = chargerIdentiteOnglet(stockageSession(), codeSuivi);
+    // Les mondes ouverts à la classe : ceux que l'onglet a gardés, en attendant
+    // la relecture de l'identité (à chaque ouverture de page).
+    let mondesOuverts = chargerMondesOnglet(stockageSession(), codeSuivi);
     let suiviHorsLigne = false;
     let envoiEnAttente = null;
     // Vrai tant qu'un envoi groupé est programmé et n'est pas encore parti.
@@ -1161,6 +1235,8 @@
       sync.detache = true;
       ecrireSync();
       suiviIdentite = null;
+      // Un élève détaché n'est plus suivi : plus de mondes fermés pour lui.
+      if (codeSuivi) noterMondes(codeSuivi, null);
       suiviHorsLigne = false;
       if (relance !== null) { annuler(relance); relance = null; }
       rendre.repere();
@@ -1170,14 +1246,28 @@
       if (envoiPossible() && sync.dirty) envoyerMaintenant();
     }
 
+    // Les mondes ouverts à la classe, tels que le serveur vient de les rendre :
+    // rangés dans l'onglet (pour « Étape suivante » et le retour sur la carte).
+    // Vrai s'ils ont changé.
+    function noterMondes(code, reglages) {
+      const avant = JSON.stringify(mondesOuverts);
+      // Un code détaché n'est plus suivi : plus de mondes fermés, même si une
+      // identité relue arrive après (elle partait avant le 404).
+      mondesOuverts = sync.detache ? null : mondesDeReglages(reglages);
+      sauverMondesOnglet(stockageSession(), code, mondesOuverts);
+      return JSON.stringify(mondesOuverts) !== avant;
+    }
+
     async function chargerIdentite(code) {
       const reponse = await lireIdentiteDuServeur(code);
       if (code !== codeSuivi) return;
       if (reponse.statut === 200 && reponse.donnees && reponse.donnees.ok) {
         suiviIdentite = {prenom: reponse.donnees.prenom || "", classe: reponse.donnees.classe || ""};
         sauverIdentiteOnglet(stockageSession(), code, suiviIdentite);
+        noterMondes(code, reponse.donnees.reglages);
       } else if (reponse.statut === 404) {
         suiviIdentite = null;
+        noterMondes(code, null);
       }
       rendre.repere();
       if (!enSerie()) rendre.parcours();
@@ -1212,6 +1302,7 @@
       fusionsSuccessives = 0;
       parcours = charger(stockage(), codeSuivi);
       sync = chargerSync(stockage(), codeSuivi);
+      mondesOuverts = chargerMondesOnglet(stockageSession(), codeSuivi);
       rendre.repere();
       rendre.parcours();
     }
@@ -1231,6 +1322,9 @@
         if (!enSerie()) rendre.parcours();
         return false;
       }
+      // Les mondes ouverts à la classe d'abord : adopterCode() redessine la
+      // carte, elle doit les connaître (sinon elle s'ouvre puis se grise).
+      sauverMondesOnglet(stockageSession(), code, mondesDeReglages(donnees.reglages));
       adopterCode(code);
       suiviIdentite = {prenom: donnees.prenom || "", classe: donnees.classe || ""};
       sauverIdentiteOnglet(stockageSession(), code, suiviIdentite);
@@ -1257,6 +1351,7 @@
       gardeEssais = 0;
       noterDernierGeste(maintenant());
       effacerCode(stockageSession());
+      mondesOuverts = null;
       parcours = charger(stockage(), "");
       sync = chargerSync(stockage(), "");
       rendre.repere();
@@ -1459,6 +1554,9 @@
       get erreurDefinitive() { return erreurDefinitive; },
       get entreeRefusee() { return entreeRefusee; },
       get billetEnCours() { return billetEnCours; },
+      // null = tous les mondes ouverts ; sinon la liste des mondes ouverts à
+      // la classe. Remise à null sans code, à la déconnexion et au détachement.
+      get mondesOuverts() { return mondesOuverts; },
       get gardeVisible() { return gardeVisible; },
       get gardeErreur() { return gardeErreur; },
       ENTREE, TEXTES, GARDE_INACTIVITE_MS, GARDE_ESSAIS_MAX,
@@ -1480,6 +1578,7 @@
     CLE_SEL,
     CLE_CODE,
     CLE_IDENTITE,
+    CLE_MONDES,
     CLE_DERNIER_GESTE,
     PARCOURS_VALIDES,
     CARTE,
@@ -1529,6 +1628,10 @@
     nettoyerPrenom,
     chargerIdentiteOnglet,
     sauverIdentiteOnglet,
+    mondesDeReglages,
+    mondeOuvert,
+    chargerMondesOnglet,
+    sauverMondesOnglet,
     lireEntree,
     creerClient
   });

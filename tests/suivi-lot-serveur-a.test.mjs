@@ -174,7 +174,7 @@ test("la sauvegarde lit tout dans un instantané, et emporte les deux tables neu
   const dedans = sauvegarde.slice(sauvegarde.indexOf("function texte_de_la_sauvegarde_dans_l_instantane"));
   assert.ok(dedans.indexOf("$comptes = comptes_des_tables($pdo);") >= 0,
     "sinon l'en-tête annonce un nombre que le corps ne contient pas");
-  assert.match(sauvegarde, /'partages', 'versions', 'journal'\]/, "les deux tables neuves sont sauvegardées");
+  assert.match(sauvegarde, /'partages', 'versions', 'journal', 'records'\]/, "les deux tables neuves sont sauvegardées (et « records », lot « Les records »)");
 });
 
 test("« nouveau code » est une seule transaction", () => {

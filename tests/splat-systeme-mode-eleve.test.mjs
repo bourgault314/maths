@@ -30,7 +30,7 @@ function constante(nom){
 }
 
 const PALETTE = html.slice(html.indexOf("const INVESTIGATE_COLOR_PALETTE = ["), html.indexOf("];", html.indexOf("const INVESTIGATE_COLOR_PALETTE = [")) + 2);
-const CONSTANTES = ["SYS_GESTES", "SYS_GESTES_MIX_DEFAUT", "SYS_MAX_TACHES", "SYS_MAX_TACHES_AVANT", "SYS_ESSAIS", "SYS_NOMBRES_SOUS_ENTENDUS", "SYS_COULEURS_PLURIEL", "SYS_PLAGES",
+const CONSTANTES = ["SYS_GESTES", "SYS_GESTES_MIX_DEFAUT", "SYS_SOUS_GESTES", "SYS_MAX_TACHES", "SYS_MAX_TACHES_AVANT", "SYS_ESSAIS", "SYS_NOMBRES_SOUS_ENTENDUS", "SYS_COULEURS_PLURIEL", "SYS_PLAGES",
   "SYS_ZONE_ECRAN", "SYS_ZONE_IMPRIME", "SYS_ZONE_IMPRIME_6", "SYS_TACHE", "SYS_BARRES", "SYS_BARRES_SERRE", "SYS_BARRES_TAILLES", "SYS_CORR_IMPRIME", "SYS_CORR_ECRAN", "SYS_EQ_ECRIT",
   "SYS_ZONE_ECRAN_CORRECTION", "SYS_ZONE_IMPRIME_CORRECTION", "SYS_ZONE_TEL_ENONCE",
   "SYS_FIL", "SYS_UNIQUE_ECRAN", "SYS_UNIQUE_IMPRIME", "SYS_TEL", "SYS_ZONE_TEL_CORRECTION", "ENQUETE_NOM_ECART"].map(constante).join("\n");
@@ -192,10 +192,9 @@ test("renderEleveSplat : le Système passe (classe « systeme »), le TOTAL donn
   assert.match(rendu, /const enquete = infos \? null : eleveInfosTableau\(card\);/);
   assert.match(rendu, /if\(!infos && !enquete\)\{\n    tete\.style\.display = "none";\n    panneau\.innerHTML = `<p class="eleveConsigne">Le parcours élève n'existe pas encore pour ce mode\.<\/p>`;/);
   assert.match(rendu, /panneau\.classList\.toggle\("systeme", !!\(enquete && enquete\.systeme\)\);/);
-  // « ? » gris ardoise : l'Enquête sans total seulement
-  assert.match(rendu, /panneau\.classList\.toggle\("sansTotal", !!\(enquete && card\._rel && card\._rel\.sansTotal\)\);/);
-  // Trois paires : pas de ligne du TOTAL (son plateau des trois couleurs n'est plus montré)
-  assert.match(rendu, /haut = \(enquete\.systeme && sysTotalCache\(card\)\) \? ""\n      : \(enquetePasDeTotal\(card\) \? eleveCaseDonneeHtml\("haut blanche pasDe", "Pas de", "Total"\)\n      : eleveCaseDonneeHtml\("haut blanche", "Total", \(card\._rel && card\._rel\.sansTotal\) \? "\?" : card\.total\)\);/);
+  // Trois paires : pas de ligne du TOTAL (son plateau des trois couleurs n'est plus montré) ; l'Enquête
+  // sans total non plus (08/10/2026)
+  assert.match(rendu, /haut = \(\(enquete\.systeme && sysTotalCache\(card\)\) \|\| enqueteSansCase\(card\)\) \? ""\n      : eleveCaseDonneeHtml\("haut blanche", "Total", card\.total\);/);
   assert.match(rendu, /`<div class="eleveDiag">\$\{haut \? `<div class="ligneHaut">\$\{haut\}<\/div>` : ""\}` \+\n    `<div class="ligneBas">\$\{bas\}<\/div><\/div>` \+/);
   assert.doesNotMatch(rendu, /sysTotalCache\(card\)\) \? "\?"/, "plus jamais « TOTAL ? » pour le Système");
 });
@@ -242,9 +241,13 @@ test("le dévoilement : sysDevoileEleve lit le drapeau, les plateaux se dessinen
 test("le nombre d'étapes du schéma : un cadre par étape du plan ; l'Enquête a les siennes (quatre, lot G1)", () => {
   for(const c of CARTES) assert.equal(sys.etapes(c), c._sys.plan.length);
   assert.equal(sys.etapes({ family: "C", _rel: {} }), 4);
-  // lot M4-2 : de 5 (une partie connue, une tache par couleur) à 9 étapes (l'escalier, le miroir)
-  const longueurs = new Set(CARTES.map((c) => c._sys.plan.length));
+  // lot M4-2 : de 5 (une partie connue, une tache par couleur) à 9 étapes (l'escalier, le miroir) ;
+  // lot M4-5 : jusqu'à 12 pour « Deux gestes à la suite » (les étapes des deux petits plateaux, puis
+  // le grand), 9 pour « Je recopie, puis je retire »
+  const longueurs = new Set(CARTES.filter((c) => c._sys.geste !== "ETAGES").map((c) => c._sys.plan.length));
   assert.ok([...longueurs].every((n) => n >= 5 && n <= 9) && longueurs.size >= 4, [...longueurs].join(", "));
+  const etages = new Set(CARTES.filter((c) => c._sys.geste === "ETAGES").map((c) => c._sys.plan.length));
+  assert.ok(etages.size >= 2 && [...etages].every((n) => n >= 8 && n <= 12), [...etages].join(", "));
 });
 
 test("eleveVoirSchema : un appui par cadre, le bouton s'efface au dernier cadre du plan (4 pour Trois paires)", () => {

@@ -83,17 +83,20 @@ test("sur la fiche, Mon mélange n’est jamais « à faire » ni « à refaire 
   assert.match(html, /\$\("fiche-melange-state"\)\.replaceChildren\(tropheesDuMelange\(etat\.melange\.trophees\)\);/);
   // Le même dessin que dans Mon parcours.
   assert.match(html, /droite\.append\(textes, tropheesDuMelange\(etat\.melange\.trophees\)\);/);
-  assert.match(html, /<span id="fiche-melange-state" class="fiche-state"><\/span>\s*<p>Dès 2 tables passées, quand je veux : 20 questions en 1 min 30\. Une coupe avec 3, 6, puis 9 tables\.<\/p>/);
+  // Lot « Une seule fiche » (proposition A) : la règle en petit, sous les coupes.
+  assert.match(html, /<span id="fiche-melange-state" class="fiche-state"><\/span>\s*<p>Mes tables passées, 20 questions en 1 min 30\. Une coupe avec 3, puis 6 tables\.<\/p>/);
   assert.doesNotMatch(html.replace(/\/\/[^\n]*/g, ""), /"À jour ✓"|"À refaire"|"À faire"|À refaire avec la table de/, "plus aucun état « à faire » du mélange (hors commentaires)");
   assert.doesNotMatch(html, /etat\.verrou|melange\.aRefaireAvec|melange\.aJour/, "la page ne lit plus le verrou ni ses restes");
   assert.doesNotMatch(html, /dernierMelange|Dernier : |réussi avec \$\{/, "plus de dernier score ni de « réussi avec N tables ✓ »");
   // Lisibles à l'impression : gris pour un trophée à gagner, plus foncé une fois gagné, sans ombre.
   // Lisible en noir et blanc : pas encore gagnée, la coupe est un contour
   // (fond blanc) ; gagnée, elle est pleine.
-  assert.match(html, /\.fiche-state \.mp-trophees b \{ width: 6mm; height: 6mm; color: #6b7a87; filter: none; \}/);
+  // Lot « Une seule fiche » (planche 14) : 10 mm, et la coupe gagnée jaune
+  // doré au contour foncé (#7a5a00 plein la rendait presque noire).
+  assert.match(html, /\.fiche-state \.mp-trophees b \{ width: 10mm; height: 10mm; color: #6b7a87; filter: none; \}/);
   assert.match(html, /\.fiche-state \.mp-trophees b \.corps \{ fill: #fff; stroke: currentColor; stroke-width: 1\.3; stroke-linejoin: round; \}/);
-  assert.match(html, /\.fiche-state \.mp-trophees b\.is-gagne \{ color: #7a5a00; \}/);
-  assert.match(html, /\.fiche-state \.mp-trophees b\.is-gagne \.corps \{ fill: currentColor; \}/);
+  assert.match(html, /\.fiche-state \.mp-trophees b\.is-gagne \{ color: #8a6500; \}/);
+  assert.match(html, /\.fiche-state \.mp-trophees b\.is-gagne \.corps \{ fill: #f4c430; \}/);
   // tropheesDuMelange, EXÉCUTÉE avec un tout petit DOM : ce que la fiche montre.
   const noeud = tag => {
     const n = {tag, className: "", dataset: {}, attributs: {}, enfants: [], _texte: "",
@@ -104,13 +107,14 @@ test("sur la fiche, Mon mélange n’est jamais « à faire » ni « à refaire 
   const fonction = nom => html.match(new RegExp(`function ${nom}\\([^)]*\\) \\{[\\s\\S]*?\\n      \\}`))[0];
   const tropheesDuMelange = new Function("document", `${fonction("coupe")}\n${fonction("tropheesDuMelange")}; return tropheesDuMelange;`)(
     {createElement: noeud, createElementNS: (_, tag) => noeud(tag)});
-  // Ce que la fiche dessine : "3- 6- 9-" (aucun), "3G 6- 9-" (celui des 3 tables)…
+  // Ce que la fiche dessine : "3- 6-" (aucune), "3G 6-" (celle des 3 tables)…
   const dessin = melange => {
     const zone = tropheesDuMelange(melange.trophees);
     assert.equal(zone.className, "mp-trophees");
     assert.equal(zone.attributs.role, "img");
-    assert.equal(zone.textContent, "", "aucun mot, aucun nombre : trois coupes");
-    assert.equal(zone.enfants.length, 3);
+    assert.equal(zone.textContent, "", "aucun mot, aucun nombre : deux coupes");
+    // Lot « Mon mélange aux paliers » (09/10/2026, décision de Gwenaël) : deux coupes, 3 et 6 tables.
+    assert.equal(zone.enfants.length, 2);
     assert.ok(zone.enfants.every(b => b.tag === "b" && b.enfants.length === 1 && b.enfants[0].tag === "svg"), "une coupe dessinée par trophée");
     return zone.enfants.map(b => `${b.dataset.tables}${b.className === "is-gagne" ? "G" : b.className === "" ? "-" : "?"}`).join(" ");
   };
@@ -125,7 +129,7 @@ test("sur la fiche, Mon mélange n’est jamais « à faire » ni « à refaire 
     return PARCOURS.appliquerSerie(p, config, {correct: liste.length, total: liste.length, date}).parcours;
   };
   // La fiche vierge (un parcours neuf) : trois coupes vides, à colorier.
-  assert.equal(dessin(PARCOURS.etatAffichage(PARCOURS.creerParcours()).melange), "3- 6- 9-", "fiche vierge : trois trophées vides");
+  assert.equal(dessin(PARCOURS.etatAffichage(PARCOURS.creerParcours()).melange), "3- 6-", "fiche vierge : deux coupes vides");
   let p = PARCOURS.creerParcours();
   p = jouer(p, PARCOURS.configValidation(2), vingt(faits(2)), "2026-09-10");
   p = jouer(p, PARCOURS.configValidation(10), vingt(faits(10)), "2026-09-10");
@@ -133,30 +137,30 @@ test("sur la fiche, Mon mélange n’est jamais « à faire » ni « à refaire 
   assert.equal(etat.melange.visible, true);
   assert.equal("verrou" in etat, false, "l’état n’a plus de verrou");
   assert.deepEqual(Object.keys(etat.melange).sort(), ["dernier", "reussi", "score", "tables", "trophees", "visible"]);
-  assert.equal(dessin(etat.melange), "3- 6- 9-", "jamais joué → trois coupes grises");
+  assert.equal(dessin(etat.melange), "3- 6-", "jamais joué → deux coupes grises");
   // Raté : 17 sur 20.
   p = PARCOURS.appliquerSerie(p, PARCOURS.configMelange(p), {correct: 17, total: 20, date: "2026-09-10"}).parcours;
   etat = PARCOURS.etatAffichage(p);
   assert.equal(etat.melange.reussi, null);
   assert.equal(etat.melange.score, 17);
-  assert.equal(dessin(etat.melange), "3- 6- 9-", "raté → rien de gagné, et plus de score affiché");
+  assert.equal(dessin(etat.melange), "3- 6-", "raté → rien de gagné, et plus de score affiché");
   // Raté, et pourtant la table de 5 passe : plus de verrou.
   let sansMelange = jouer(p, PARCOURS.configValidation(5), vingt(faits(5)), "2026-09-11");
   assert.equal(sansMelange.tables[5].acquise, "2026-09-11", "plus de verrou : la table est passée même sans mélange réussi");
   p = jouer(p, PARCOURS.configMelange(p), vingt(faits(2)), "2026-09-10");
   etat = PARCOURS.etatAffichage(p);
   assert.equal(etat.melange.reussi, 2);
-  assert.equal(dessin(etat.melange), "3- 6- 9-", "réussi avec 2 tables : pas encore de trophée");
+  assert.equal(dessin(etat.melange), "3- 6-", "réussi avec 2 tables : pas encore de trophée");
   p = jouer(p, PARCOURS.configValidation(5), vingt(faits(5)), "2026-09-11");
   etat = PARCOURS.etatAffichage(p);
   assert.equal(p.tables[5].acquise, "2026-09-11");
   assert.equal(p.melange.aRefaireAvec, null, "jamais « à refaire »");
-  assert.equal(dessin(etat.melange), "3- 6- 9-", "une table de plus depuis : le trophée des 3 tables reste à gagner, sans rien fermer");
+  assert.equal(dessin(etat.melange), "3- 6-", "une table de plus depuis : le trophée des 3 tables reste à gagner, sans rien fermer");
   assert.deepEqual(etat.melange.trophees[0], {tables: 3, gagne: false, aGagner: true});
   p = jouer(p, PARCOURS.configMelange(p), vingt(faits(5)), "2026-09-11");
   etat = PARCOURS.etatAffichage(p);
   assert.equal(etat.melange.reussi, 3);
-  assert.equal(dessin(etat.melange), "3G 6- 9-", "réussi avec 3 tables : le premier trophée est gagné");
+  assert.equal(dessin(etat.melange), "3G 6-", "réussi avec 3 tables : le premier trophée est gagné");
 });
 
 test("la couronne est un dessin en currentColor, partout où une marche s'affiche : elle se grise comme les étoiles (A18)", () => {
@@ -165,7 +169,7 @@ test("la couronne est un dessin en currentColor, partout où une marche s'affich
   assert.match(html, /bloc\.className = "bloc";\s*\n\s*bloc\.append\(symboleMarche\(marche\)\);/, "l'escalier de l'accueil");
   assert.match(html, /texte: symboleMarche\(marche\),/, "les cases de Mon parcours");
   assert.match(html, /star\.append\(symboleMarche\(marche\)\);/, "la ligne des étoiles de la fiche");
-  assert.match(html, /\.fiche-stars \.couronne \{ width: 4\.6mm; height: 3\.8mm;/);
+  assert.match(html, /\.fiche-stars \.couronne \{ width: 6\.5mm; height: 5\.4mm;/, "lot « Une seule fiche » : la couronne à la taille des étoiles de 15 pt");
   // makeCell accepte un nœud pour « texte » (la couronne), pas seulement une chaîne.
   // Lot « retours de classe » : le cadenas (« lock ») est retiré, il ne servait plus.
   assert.match(html, /cell\.replaceChildren\(texte !== null \? texte : document\.createTextNode\(kind === "check" \? "✓" : "★"\)\);/);
@@ -209,7 +213,7 @@ test("les cartes : un PDF de 2 pages par table de 2 à 10, un PDF de 18 pages po
   const png = await stat(new URL(vignette, racine));
   const webp = await stat(new URL(vignette.replace(/\.png$/, ".webp"), racine));
   assert.ok(webp.size < png.size, "la webp est plus légère que la png");
-  assert.match(cataloguePage, /catalogue-refonte-data\.js\?v=defi-tables-melange-20261007-1/, "le cache-buster du catalogue suit");
+  assert.match(cataloguePage, /catalogue-refonte-data\.js\?v=splat-comment-on-joue-20261011-3/, "le cache-buster du catalogue suit");
 });
 
 test("la feuille des tables (PDF) décrit le parcours réel et la révision du jour (A21)", async () => {
@@ -232,7 +236,11 @@ test("la feuille des tables (PDF) décrit le parcours réel et la révision du j
 });
 
 test("à l'écran, la ligne des étoiles et l'état du mélange ne chevauchent plus les titres de la fiche réduite", () => {
-  assert.match(html, /\.fiche-melange strong \{ padding-right: 58mm; \}\s*\n\s*\.fiche-expert strong \{ padding-right: 58mm; \}/);
+  // Lot « Une seule fiche » : plus de position absolue — les coupes et les
+  // étoiles sont SOUS le titre court, au centre de leur carte.
+  assert.doesNotMatch(html, /\.fiche-(melange|expert) strong \{ padding-right/);
+  assert.doesNotMatch(html, /\.fiche-(state|stars) \{ position: absolute/);
+  assert.match(html, /\.fiche-state, \.fiche-stars \{ display: inline-flex; align-items: center; justify-content: center; margin: 2mm auto 1mm;/);
   // Lot « un seul tableau » : la fiche tient sur une page, plus de trait de
   // « saut de page » à l'écran.
   assert.doesNotMatch(html, /fiche-page2/);

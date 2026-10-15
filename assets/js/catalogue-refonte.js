@@ -774,6 +774,14 @@
     return resourceCollections(resource).some((id) => collectionMap.get(id)?.collapseInNotion);
   }
 
+  // Une ressource peut aussi s'afficher dans la page d'une collection sans en faire partie
+  // (« alsoInCollections ») : ÉquaBarre dans la page Splat (11/10/2026). Elle ne se replie pas
+  // dans la collection, donc elle garde sa place dans sa notion (Schémas en barres).
+  function resourceShownInCollection(resource, collectionId) {
+    return resourceCollections(resource).includes(collectionId)
+      || (resourceClassification(resource).alsoInCollections || []).includes(collectionId);
+  }
+
   function resourceTags(resource) {
     return [...(resource.tags || []), ...(resourceClassification(resource).tags || [])];
   }
@@ -814,9 +822,11 @@
     if (path === "outils/splat.html") return 1;
     if (path === "outils/splat_equations.html") return 2;
     if (path === "outils/equasplat.html") return 3;
-    if (path === "outils/equascribe.html") return 4;
-    // Prêts à imprimer : la page des livrets, après les outils (lot L, 20/09/2026).
-    if (path === "outils/livrets_splat.html") return 5;
+    // ÉquaBarre, le jumeau en barres d'ÉquaSplat, juste après lui ; ÉquaScribe (en chantier) en dernier (11/10/2026).
+    if (path === "outils/equabarre.html") return 4;
+    if (path === "outils/equascribe.html") return 5;
+    // Pour la classe : les livrets d'abord, puis « Comment on joue ? » (famille de rang 7) — 11/10/2026.
+    if (path === "outils/livrets_splat.html") return 6;
     return Infinity;
   }
 
@@ -880,7 +890,7 @@
     if (children.length) {
       return uniqueResources(children.flatMap((child) => collectionResources(child.id)));
     }
-    return resourcesFromCards(displayItems(published.filter((resource) => resourceCollections(resource).includes(collectionId))));
+    return resourcesFromCards(displayItems(published.filter((resource) => resourceShownInCollection(resource, collectionId))));
   }
 
   function collectionResourceCount(collectionId) {
@@ -1049,7 +1059,7 @@
       if (state.domain && !resource.domains.includes(state.domain)) return false;
       if (state.notion && !resourceBelongsToNotion(resource, state.notion)) return false;
       if (state.notion && resourceBelongsToCollapsedCollection(resource)) return false;
-      if (state.collection && !resourceCollections(resource).includes(state.collection)) return false;
+      if (state.collection && !resourceShownInCollection(resource, state.collection)) return false;
       if (collectionTitleMatches.size && resourceCollections(resource).some((id) => collectionTitleMatches.has(collectionRootId(id)))) return false;
       if (state.query && !allWordsMatch(resourceHaystack(resource), state.query)) return false;
       return true;
@@ -1146,12 +1156,31 @@
     { id: "imprimer", label: "Prêts à imprimer" },
     { id: "activites", label: "Activités et séances" },
     { id: "cours", label: "Cours et progressions" },
-    { id: "jeux", label: "Jeux et explorations" }
+    { id: "jeux", label: "Jeux et explorations" },
+    { id: "classe", label: "Pour la classe" }
   ];
 
   const resourceGroupIds = new Set(resourceGroups.map((group) => group.id));
 
+  // Mise en page propre à une collection (page Splat, 11/10/2026, idée de Claire) : l'ordre de
+  // ses sections, et les cartes qu'on y range dans une autre section que d'habitude.
+  // Les sections non citées suivent dans l'ordre général. Ailleurs (notions, recherche), rien ne change.
+  const collectionLayouts = {
+    splat: {
+      groupOrder: ["classe", "jeux", "generer", "manipuler"],
+      regroup: { "outils/livrets_splat.html": "classe" }
+    }
+  };
+
+  function groupsForCollection(collectionId) {
+    const order = collectionLayouts[collectionId]?.groupOrder || [];
+    const first = order.map((id) => resourceGroups.find((group) => group.id === id)).filter(Boolean);
+    return [...first, ...resourceGroups.filter((group) => !order.includes(group.id))];
+  }
+
   function displayResourceGroup(item) {
+    const regroup = collectionLayouts[state.collection]?.regroup;
+    if (regroup && item.resource && resourceGroupIds.has(regroup[item.resource.path])) return regroup[item.resource.path];
     const familyGroup = item.family?.group;
     if (familyGroup && resourceGroupIds.has(familyGroup)) return familyGroup;
     const representative = item.resource || item.variants?.[0];
@@ -1210,7 +1239,10 @@
     const game = resourceClassification(resource).shortGame;
     const openInCatalogue = game !== "carres-gloutons" || state.notion === "jeux-courts";
     const gameAttribute = openInCatalogue && shortGames && Object.hasOwn(shortGames.games, game) ? ` data-short-game="${escapeHtml(game)}"` : "";
-    return `href="${escapeHtml(rootPrefix + resource.path)}"${gameAttribute}`;
+    // Une vidéo ou un PDF à regarder avant de le garder (« Comment on joue ? », 11/10/2026) : un nouvel onglet,
+    // on regarde, puis on télécharge avec le bouton du navigateur ; la page Splat reste ouverte derrière.
+    const newTabAttribute = resourceClassification(resource).newTab ? ` target="_blank" rel="noopener"` : "";
+    return `href="${escapeHtml(rootPrefix + resource.path)}"${gameAttribute}${newTabAttribute}`;
   }
 
   function resourceCard(resource) {
@@ -1240,7 +1272,9 @@
   function resourceFamilyCard(family, variants) {
     const representative = variants[0];
     const domainId = resourceDisplayDomain(representative);
-    const versionLabel = `${variants.length} version${variants.length > 1 ? "s" : ""}`;
+    // « hideCount » : une famille dont les variantes ne sont pas des versions du même outil (le film, la vidéo
+    // et le diaporama de « Comment on joue ? ») n'affiche pas « 3 versions · » (11/10/2026).
+    const versionLabel = family.hideCount ? "" : `${variants.length} version${variants.length > 1 ? "s" : ""}`;
     const thumbnail = family.thumbnail;
     const description = family.cardDescription || family.description || "Choisir une version.";
     const usages = familyUsageMeta(family, variants);
@@ -1249,13 +1283,32 @@
         ${thumbnail
           ? `<span class="resource-thumbnail">${thumbnailMarkup(thumbnail)}</span>`
           : `<span class="resource-type-icon">${typeIcon(representative, family.group)}</span>`}
-        <span class="resource-copy"><h3>${escapeHtml(family.title)}</h3>${thumbnail ? `<span class="resource-description">${escapeHtml(`${versionLabel} · ${description}`)}</span>` : `<span class="resource-meta">${escapeHtml(`${versionLabel} · ${description}`)}</span>`}${usages ? `<span class="resource-meta resource-uses">${escapeHtml(usages)}</span>` : ""}</span>
+        <span class="resource-copy"><h3>${escapeHtml(family.title)}</h3>${thumbnail ? `<span class="resource-description">${escapeHtml(versionLabel ? `${versionLabel} · ${description}` : description)}</span>` : `<span class="resource-meta">${escapeHtml(versionLabel ? `${versionLabel} · ${description}` : description)}</span>`}${usages ? `<span class="resource-meta resource-uses">${escapeHtml(usages)}</span>` : ""}</span>
         <span class="resource-family-toggle" aria-hidden="true">⌄</span>
       </summary>
-      <div class="resource-variants" aria-label="${escapeHtml(`Versions de ${family.title}`)}">
+      ${family.lignes ? familyRows(family, variants) : `<div class="resource-variants" aria-label="${escapeHtml(`Versions de ${family.title}`)}">
         ${variants.map((resource) => `<a ${resourceLinkAttributes(resource)}><span>${escapeHtml(variantLabel(resource, family))}</span><span aria-hidden="true">→</span></a>`).join("")}
-      </div>
+      </div>`}
     </details>`;
+  }
+
+  // « lignes » : une ligne par contenu, avec « Voir » (la page en ligne) et « Télécharger » (le fichier), au lieu
+  // d'une liste de liens qui se ressemblent tous (« Comment on joue ? » : le film et le diaporama, 11/10/2026).
+  // « Télécharger » enregistre le fichier (attribut download) au lieu de l'ouvrir.
+  const ICONE_VOIR = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a.8.8 0 0 0 1.2.7l10.4-6.5a.8.8 0 0 0 0-1.4L9.2 4.8A.8.8 0 0 0 8 5.5z" fill="currentColor"/></svg>`;
+  const ICONE_TELECHARGER = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  function familyRows(family, variants) {
+    const parChemin = new Map(variants.map((resource) => [resource.path, resource]));
+    const lignes = family.lignes
+      .map((ligne) => ({ ligne, voir: parChemin.get(ligne.voir), fichier: parChemin.get(ligne.telecharger) }))
+      .filter(({ voir, fichier }) => voir || fichier);
+    return `<div class="resource-variants resource-variant-rows" aria-label="${escapeHtml(family.title)}">
+        ${lignes.map(({ ligne, voir, fichier }) => `<div class="resource-variant-row">
+          <span class="resource-variant-row-title">${escapeHtml(ligne.titre)}</span>
+          <span class="resource-variant-row-actions">${voir ? `<a class="resource-variant-action" ${resourceLinkAttributes(voir)} aria-label="${escapeHtml(`Voir ${ligne.titre.toLowerCase()}`)}">${ICONE_VOIR}<span>Voir</span></a>` : ""}
+          ${fichier ? `<a class="resource-variant-action" href="${escapeHtml(rootPrefix + fichier.path)}" download aria-label="${escapeHtml(`Télécharger ${ligne.titre.toLowerCase()}`)}">${ICONE_TELECHARGER}<span>Télécharger</span></a>` : ""}</span>
+        </div>`).join("")}
+      </div>`;
   }
 
   function collectionResourceCard(collection) {
@@ -1301,15 +1354,16 @@
       </section>`
       : "";
 
-    const grouped = new Map(resourceGroups.map((group) => [group.id, []]));
-    const groupedCollections = new Map(resourceGroups.map((group) => [group.id, []]));
+    const groups = groupsForCollection(state.collection);
+    const grouped = new Map(groups.map((group) => [group.id, []]));
+    const groupedCollections = new Map(groups.map((group) => [group.id, []]));
     displayItems(resources).forEach((item) => {
       grouped.get(displayResourceGroup(item)).push(item);
     });
     inlineCollections.forEach((collection) => {
       groupedCollections.get(collectionDesign[collection.id]?.inlineGroup)?.push(collection);
     });
-    const groupedResources = resourceGroups.map((group) => {
+    const groupedResources = groups.map((group) => {
       const groupItems = sortCards(grouped.get(group.id));
       const groupCollections = groupedCollections.get(group.id).slice().sort(compareCards);
       const groupCount = resourceCount(resourcesFromCards(groupItems, groupCollections));
@@ -1498,6 +1552,52 @@
 
   notionGrid.addEventListener("click", openNotionOrCollection);
   resourceGrid.addEventListener("click", openNotionOrCollection);
+
+  // Une famille dépliée grandit seule (11/10/2026). La grille étire chaque carte à la hauteur de la plus
+  // haute de sa rangée : déplier « Comment on joue ? » agrandissait aussi « Les livrets SPLAT! » à côté.
+  // Les cartes de la rangée gardent leur hauteur de carte fermée ; les autres rangées ne bougent pas.
+  function hauteurFermee(carte) {
+    const variantes = carte.open && carte.querySelector(".resource-variants");
+    if (!variantes) return carte.getBoundingClientRect().height;
+    variantes.style.display = "none";
+    const hauteur = carte.getBoundingClientRect().height;
+    variantes.style.display = "";
+    return hauteur;
+  }
+
+  function caleRangeesDesFamilles() {
+    resourceGrid.querySelectorAll(".resource-group-grid").forEach((grille) => {
+      const cartes = [...grille.children];
+      cartes.forEach((carte) => { carte.style.alignSelf = ""; carte.style.minHeight = ""; });
+      if (!grille.querySelector(":scope > .resource-family-card[open]")) return;
+      cartes.forEach((carte) => { carte.style.alignSelf = "start"; });
+      const rangees = new Map();
+      cartes.forEach((carte) => {
+        const haut = Math.round(carte.offsetTop);
+        if (!rangees.has(haut)) rangees.set(haut, []);
+        rangees.get(haut).push(carte);
+      });
+      rangees.forEach((rangee) => {
+        if (!rangee.some((carte) => carte.matches(".resource-family-card[open]"))) {
+          rangee.forEach((carte) => { carte.style.alignSelf = ""; });
+          return;
+        }
+        const hauteur = Math.max(...rangee.map(hauteurFermee));
+        rangee.forEach((carte) => { if (!carte.open) carte.style.minHeight = `${hauteur}px`; });
+      });
+    });
+  }
+
+  // « toggle » ne remonte pas : on l'écoute à la capture
+  resourceGrid.addEventListener("toggle", (event) => {
+    if (event.target.matches?.(".resource-family-card")) caleRangeesDesFamilles();
+  }, true);
+  let calageEnAttente = false;
+  window.addEventListener("resize", () => {
+    if (calageEnAttente) return;
+    calageEnAttente = true;
+    requestAnimationFrame(() => { calageEnAttente = false; caleRangeesDesFamilles(); });
+  });
 
   resourceGrid.addEventListener("click", (event) => {
     const link = event.target.closest("[data-short-game]");

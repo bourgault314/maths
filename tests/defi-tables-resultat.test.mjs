@@ -13,7 +13,8 @@ test("le verdict dit réussi, pas encore ou temps écoulé — et ce qui manquai
   // Audit 1 (30/09/2026, Gwenaël) : sur un écran raté, plus de « 20 questions · 1 min 30 » sous le score.
   assert.match(html, /const rappelCourt = \(\) => \{\s*const parts = configurationLabel\(config\)\.split\(" · "\);\s*const melange = config\.mode === "validation" && config\.tables\.length > 1;\s*return parts\.slice\(0, melange \? 2 : 1\)\.join\(" · "\);/, "le rappel court garde l’épreuve, et les tables d’un mélange");
   assert.match(html, /verdict\.titre = "Temps écoulé";\s*verdict\.config = rappelCourt\(\);/, "le temps écoulé aussi");
-  assert.match(html, /const regle = \{entraine: "entrainement", validation: "validation", preparation: "validation", melange: "melange", etoile: "etoile"\}\[evenement\.type\];/, "le seuil vient des SEUILS du moteur, pas d’un nombre écrit en dur");
+  // Lot « Les records » : la couronne a son seuil à elle (erreursMaxEtoile) ; les autres viennent des SEUILS.
+  assert.match(html, /if \(evenement\.type === "etoile"\) return evenement\.total - PARCOURS\.erreursMaxEtoile\(evenement\.etoile\);\s*const regle = \{entraine: "entrainement", validation: "validation", preparation: "validation", melange: "melange"\}\[evenement\.type\];/, "le seuil vient des SEUILS du moteur, pas d’un nombre écrit en dur");
   assert.match(html, /const tempsEcoule = config\.duration !== null && remaining > 0;/);
   assert.match(html, /if \(principal && !principal\.reussi && tempsEcoule\) \{[\s\S]*?verdict\.classe = "is-temps";[\s\S]*?verdict\.titre = "Temps écoulé";/, "le temps écoulé est un verdict à part, en ambre");
   assert.match(html, /principal\.type === "entraine" \? "Entraînement réussi !"/);
@@ -80,7 +81,7 @@ test("les corrections : les erreurs seules, les réponses justes repliées, jama
   // réponse à barrer — « Pas de réponse » reste lisible, sans trait.
   assert.match(html, /passe: Boolean\(response\.skipped\),/);
   assert.match(html, /if \(entry\.passe\) \{\s*given\.classList\.add\("is-passe"\);\s*given\.setAttribute\("aria-label", "Pas de réponse"\);/);
-  assert.match(html, /\.given-answer\.is-passe \{ text-decoration: none; \}/);
+  assert.match(html, /\.given-answer\.is-passe \{ padding: 0; background: none; \}/, "« Pas de réponse » n'est pas barré (trait en biais, lot « la flèche de retour »)");
 });
 
 test("téléphone : le bouton principal sur toute la largeur, Rejouer devant sur un échec, rien ne bouge dans le HTML", () => {

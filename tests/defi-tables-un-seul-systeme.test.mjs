@@ -64,7 +64,8 @@ function eleve(passees, jours, datePassage = jours[jours.length - 1]) {
 const repondre = (p, cle, correcte, date) => P.appliquerReponse(p, cle, {correcte, date}).parcours;
 
 // Les trois trophées de Mon mélange, tels que le moteur les rend.
-const trophees = (gagnes = [], aGagner = []) => [3, 6, 9].map(tables => ({tables, gagne: gagnes.includes(tables), aGagner: aGagner.includes(tables)}));
+// Lot « Mon mélange aux paliers » (09/10/2026) : deux coupes, 3 et 6 tables.
+const trophees = (gagnes = [], aGagner = []) => [3, 6].map(tables => ({tables, gagne: gagnes.includes(tables), aGagner: aGagner.includes(tables)}));
 // Un mélange joué avec les tables passées du parcours.
 const melanger = (p, correct, date) => P.appliquerSerie(p, P.configMelange(p), {correct, total: 20, date});
 const passer = (p, tables, date) => {
@@ -162,7 +163,10 @@ test("le complément : seulement des calculs vus avant aujourd'hui, pas ratés a
 
 test("point 4 : une fois Mes calculs du jour joué, les séances suivantes prennent les dus qui restent, sans complément ; puis plus rien", () => {
   // Trois tables passées mi-septembre, plus revues depuis : 21 calculs dus.
+  // La coupe des 3 gagnée : pas de Mon mélange au palier dans ces séances
+  // (lot « Mon mélange aux paliers », testé à part).
   let p = eleve([2, 3, 5], ["2026-09-14", "2026-09-15"]);
+  p = P.normaliserParcours({...p, melange: {...p.melange, reussi: 3}});
   const total = P.dusDuJour(p, MARDI).length;
   assert.equal(total, 21);
   let serie = P.serieDuJour(p, {aujourdhui: MARDI});
@@ -257,7 +261,7 @@ test("le mélange est libre : aucun verrou, jamais « à refaire », des trophé
   p = suite.parcours;
   // Un mélange raté : le score est gardé, rien ne se ferme.
   suite = P.appliquerSerie(p, P.configMelange(p), {correct: 15, total: 20, date: MARDI});
-  assert.deepEqual(suite.evenements, [{type: "melange", reussi: false, score: 15, total: 20, tables: [2, 3, 5], trophee: null}]);
+  assert.deepEqual(suite.evenements, [{type: "melange", reussi: false, score: 15, total: 20, tables: [2, 3, 5], trophee: null, coupes: []}]);
   assert.deepEqual([suite.parcours.melange.dernier, suite.parcours.melange.score, suite.parcours.melange.reussi], [MARDI, 15, null]);
   // Réussi avec 3 tables ; une table de plus : « reussi » reste à 3, le
   // trophée des 3 tables est gagné (celui des 6 attend 6 tables passées).
@@ -268,7 +272,8 @@ test("le mélange est libre : aucun verrou, jamais « à refaire », des trophé
   assert.deepEqual(etat.melange, {visible: true, tables: [2, 3, 5, 10], dernier: MERCREDI, score: 18, reussi: 3, trophees: trophees([3])});
   assert.ok(!("verrou" in etat));
   assert.equal(p.melange.aRefaireAvec, null);
-  // La séance n'a jamais d'étape « mélange ».
+  // La coupe des 3 gagnée, 4 tables : pas d'étape « mélange » dans la séance
+  // (lot « Mon mélange aux paliers » : elle n'y entre qu'aux paliers).
   assert.ok(!P.ouvrirSeance(p, {aujourdhui: "2026-10-08"}).file.some(etape => etape.type === "melange"));
   assert.notEqual(P.prochaineEtape(p, "2026-10-08").type, "melange");
   // Fusion : le plus grand trophée, le dernier joué.
@@ -277,10 +282,12 @@ test("le mélange est libre : aucun verrou, jamais « à refaire », des trophé
 });
 
 // ------------------------------------------------ les trophées de Mon mélange
-// (05/10/2026, idée de Gwenaël) : le réussir avec au moins 3, 6, puis 9 tables.
+// (05/10/2026, idée de Gwenaël) : le réussir avec au moins 3, 6, puis 9 tables
+// — deux coupes seulement depuis le lot « Mon mélange aux paliers » (09/10/2026) :
+// 3, puis 6 tables.
 
 test("trophées, moteur : rien à gagner avec 2 tables ; avec 3 tables passées, le trophée 3 est « aGagner »", () => {
-  assert.deepEqual([...P.SEUILS.melange.trophees], [3, 6, 9]);
+  assert.deepEqual([...P.SEUILS.melange.trophees], [3, 6]);
   let p = eleve([2, 5], [LUNDI]);
   assert.deepEqual(P.tropheesMelange(p), trophees(), "2 tables : ni gagné, ni à gagner");
   // Même réussi, le mélange de 2 tables ne rapporte pas de trophée.
@@ -295,10 +302,10 @@ test("trophées, moteur : rien à gagner avec 2 tables ; avec 3 tables passées,
   assert.deepEqual(P.tropheesMelange(P.creerParcours()), trophees(), "un parcours neuf");
 });
 
-test("trophées, moteur : gagné une seule fois — 3 (avec 5 tables), puis 6, puis 9 ; l'événement dit le trophée gagné PAR cette série", () => {
+test("trophées, moteur : gagné une seule fois — 3 (avec 5 tables), puis 6 ; l'événement dit le trophée gagné PAR cette série", () => {
   let p = eleve([2, 3, 4, 5, 10], [LUNDI]);
   let suite = melanger(p, 18, MARDI);
-  assert.deepEqual(suite.evenements, [{type: "melange", reussi: true, score: 18, total: 20, tables: [2, 3, 4, 5, 10], trophee: 3}]);
+  assert.deepEqual(suite.evenements, [{type: "melange", reussi: true, score: 18, total: 20, tables: [2, 3, 4, 5, 10], trophee: 3, coupes: [3]}]);
   assert.deepEqual(P.tropheesMelange(suite.parcours), trophees([3]), "5 tables : le trophée des 6 n'est pas encore à gagner");
   // Rejoué et réussi avec les mêmes tables : pas gagné deux fois.
   suite = melanger(suite.parcours, 20, MERCREDI);
@@ -311,26 +318,24 @@ test("trophées, moteur : gagné une seule fois — 3 (avec 5 tables), puis 6, p
   suite = melanger(p, 18, "2026-10-08");
   assert.equal(suite.evenements[0].trophee, 6);
   assert.deepEqual(P.tropheesMelange(suite.parcours), trophees([3, 6]));
-  // 8 tables : réussi, mais rien de neuf (le troisième demande les 9).
+  // 8 tables, puis les 9 : réussi, mais rien de neuf — il n'y a plus de 3e
+  // coupe (lot « Mon mélange aux paliers »).
   p = passer(suite.parcours, [7, 8], "2026-10-08");
   suite = melanger(p, 19, "2026-10-09");
   assert.equal(suite.evenements[0].trophee, null);
   assert.deepEqual(P.tropheesMelange(suite.parcours), trophees([3, 6]));
-  // Les 9 tables.
   p = passer(suite.parcours, [9], "2026-10-09");
-  assert.deepEqual(P.tropheesMelange(p), trophees([3, 6], [9]));
-  suite = melanger(p, 18, "2026-10-12");
-  assert.equal(suite.evenements[0].trophee, 9);
-  assert.deepEqual(P.tropheesMelange(suite.parcours), trophees([3, 6, 9]), "tout est gagné, plus rien à gagner");
-  assert.equal(melanger(suite.parcours, 20, "2026-10-13").evenements[0].trophee, null);
+  assert.deepEqual(P.tropheesMelange(p), trophees([3, 6]), "tout est gagné, plus rien à gagner");
+  assert.equal(melanger(p, 20, "2026-10-13").evenements[0].trophee, null);
 });
 
-test("trophées, moteur : réussi d'un coup avec 9 tables, les trois sont gagnés et l'événement dit le plus grand", () => {
+test("trophées, moteur : réussi d'un coup avec 9 tables, les deux sont gagnés et l'événement dit le plus grand (et les deux)", () => {
   const p = eleve([...P.TABLES], [LUNDI]);
-  assert.deepEqual(P.tropheesMelange(p), trophees([], [3, 6, 9]));
+  assert.deepEqual(P.tropheesMelange(p), trophees([], [3, 6]));
   const suite = melanger(p, 18, MARDI);
-  assert.equal(suite.evenements[0].trophee, 9);
-  assert.deepEqual(P.tropheesMelange(suite.parcours), trophees([3, 6, 9]));
+  assert.equal(suite.evenements[0].trophee, 6);
+  assert.deepEqual(suite.evenements[0].coupes, [3, 6]);
+  assert.deepEqual(P.tropheesMelange(suite.parcours), trophees([3, 6]));
 });
 
 test("trophées, moteur : un mélange raté ne gagne rien, et un trophée gagné ne se perd jamais (raté ensuite, fusion de deux appareils)", () => {
@@ -361,16 +366,16 @@ test("trophées, moteur : un mélange raté ne gagne rien, et un trophée gagné
   assert.deepEqual(P.tropheesMelange(P.fusionner(petit, gagne)), trophees([3, 6]));
 });
 
-test("trophées, page : trois coupes, sans un mot ni un nombre — grises, dorées quand elles sont gagnées, lisibles par un lecteur d'écran", () => {
+test("trophées, page : deux coupes (lot « Mon mélange aux paliers »), sans un mot ni un nombre — grises, dorées quand elles sont gagnées, lisibles par un lecteur d'écran", () => {
   const tropheesDuMelange = new Function("document", `${source("coupe")}\n${source("tropheesDuMelange")}\nreturn tropheesDuMelange;`)(fauxDocument);
-  const p = melanger(eleve([2, 3, 4, 5, 6, 10], [LUNDI]), 20, MARDI).parcours;
-  const zone = tropheesDuMelange(P.tropheesMelange(passer(p, [7, 8, 9], MARDI)));
+  const p = melanger(eleve([2, 3, 4, 5, 10], [LUNDI]), 20, MARDI).parcours;
+  const zone = tropheesDuMelange(P.tropheesMelange(passer(p, [6, 7, 8, 9], MARDI)));
   assert.equal(zone.tag, "span");
   assert.equal(zone.className, "mp-trophees");
-  assert.equal(zone.children.length, 3, "trois trophées");
-  assert.deepEqual(zone.children.map(b => b.tag), ["b", "b", "b"]);
-  assert.deepEqual(zone.children.map(b => b.className), ["is-gagne", "is-gagne", ""], "3 et 6 dorés, 9 gris");
-  assert.deepEqual(zone.children.map(b => b.dataset.tables), ["3", "6", "9"]);
+  assert.equal(zone.children.length, 2, "deux coupes");
+  assert.deepEqual(zone.children.map(b => b.tag), ["b", "b"]);
+  assert.deepEqual(zone.children.map(b => b.className), ["is-gagne", ""], "3 dorée, 6 grise");
+  assert.deepEqual(zone.children.map(b => b.dataset.tables), ["3", "6"]);
   zone.children.forEach(b => {
     assert.equal(b.children.length, 1);
     assert.equal(b.children[0].tag, "svg", "une coupe dessinée");
@@ -381,10 +386,10 @@ test("trophées, page : trois coupes, sans un mot ni un nombre — grises, doré
   assert.equal(zone.textContent, "");
   // Le dessin se dit à qui ne le voit pas.
   assert.equal(zone.attrs.role, "img");
-  assert.equal(zone.attrs["aria-label"], "Coupes de Mon mélange (avec 3, 6 et 9 tables) : gagnées avec 3 et 6 tables", "lot « Mon mélange sur l'accueil et l'expert » : « coupe », plus « trophée »");
+  assert.equal(zone.attrs["aria-label"], "Coupes de Mon mélange (avec 3 et 6 tables) : gagnée avec 3 tables", "lot « Mon mélange sur l'accueil et l'expert » : « coupe », plus « trophée »");
   const vide = tropheesDuMelange(trophees());
-  assert.deepEqual(vide.children.map(b => b.className), ["", "", ""], "trois coupes grises");
-  assert.equal(vide.attrs["aria-label"], "Coupes de Mon mélange (avec 3, 6 et 9 tables) : aucune pour l’instant");
+  assert.deepEqual(vide.children.map(b => b.className), ["", ""], "deux coupes grises");
+  assert.equal(vide.attrs["aria-label"], "Coupes de Mon mélange (avec 3 et 6 tables) : aucune pour l’instant");
   // La source : aucun texte posé dans ces deux fonctions, aucun « Trophées » affiché ailleurs.
   assert.doesNotMatch(source("coupe") + source("tropheesDuMelange"), /textContent|createTextNode|innerHTML/);
   assert.doesNotMatch(html, /textContent = [`"'][^;\n]*Troph/, "le mot « Trophées » n'est écrit nulle part à l'écran");
@@ -395,51 +400,14 @@ test("trophées, page : trois coupes, sans un mot ni un nombre — grises, doré
 });
 
 // Lot « Mon mélange sur l'accueil et l'expert » (07/10/2026, planche 1) : le
-// bouton « Je me teste sur mes N tables » du bilan est remplacé par Mon
-// mélange, sur l'accueil, à droite de « Je passe le test ». Même règle : le
-// mélange visible ET une coupe à gagner. La porte fermée, il est là, grisé
-// avec les autres liens (renderSeanceAccueil les désactive tous).
-test("coupes, page : Mon mélange sur l'accueil seulement si le mélange est visible ET une coupe à gagner", () => {
-  const bouton = (parcours, jour) => {
-    const lances = [];
-    const PARCOURS = {...P, etatAffichage: p => P.etatAffichage(p, jour)};
-    const fabrique = new Function("document", "PARCOURS", "parcours", "launchFromParcours", `${source("coupe")}\n${source("boutonMelangeAccueil")}\nreturn etat => boutonMelangeAccueil(etat);`);
-    const rendu = fabrique(fauxDocument, PARCOURS, parcours, (config, origine) => lances.push([config, origine]))(PARCOURS.etatAffichage(parcours));
-    return {rendu, lances};
-  };
+// bouton « Je me teste sur mes N tables » du bilan était devenu Mon mélange,
+// sur l'accueil. Lot « Mon mélange aux paliers » (09/10/2026, choix de
+// Gwenaël, planche 4) : ce bouton est retiré à son tour — Mon mélange est dans
+// la carte (2e étape) et avant le test.
+test("coupes, page : plus de bouton Mon mélange, ni au bilan ni sur l'accueil", () => {
   assert.equal(html.indexOf("function boutonMelange("), -1, "l'ancien bouton du bilan est retiré");
-  // Une seule table : pas de mélange du tout.
-  assert.equal(bouton(eleve([2], [LUNDI]), LUNDI).rendu, null, "le mélange n'est pas visible");
-  // Deux tables : le mélange existe, mais aucun trophée à gagner.
-  let p = eleve([2, 5], [LUNDI]);
-  assert.equal(P.etatAffichage(p, LUNDI).melange.visible, true);
-  assert.equal(bouton(p, LUNDI).rendu, null, "2 tables : pas de trophée à gagner, pas de bouton");
-  // Trois tables, porte ouverte (passées aujourd'hui) : le bouton.
-  p = eleve([2, 3, 5], [LUNDI]);
-  assert.equal(P.etatAffichage(p, LUNDI).porte, false);
-  const {rendu, lances} = bouton(p, LUNDI);
-  assert.ok(rendu, "3 tables : une coupe à gagner");
-  assert.equal(rendu.tag, "button");
-  assert.equal(rendu.id, "acc-melange");
-  assert.equal(rendu.className, "rond melange", "la forme de « Je passe le test »");
-  assert.equal(rendu._texte, "Mon mélange");
-  assert.equal(rendu.children.length, 1);
-  assert.equal(rendu.children[0].className, "coupe-a-gagner", "une petite coupe dans le bouton");
-  assert.equal(rendu.children[0].children[0].tag, "svg");
-  assert.equal(rendu.attrs["aria-label"], "Mon mélange : mes 3 tables, une coupe à gagner");
-  rendu.ecouteurs.click();
-  assert.deepEqual(lances, [[P.configMelange(p), "menu"]], "il lance le mélange des tables passées");
-  // Le lendemain, la porte est fermée : le bouton est là (la page le grise avec les autres).
-  assert.equal(P.etatAffichage(p, MARDI).porte, true);
-  assert.ok(bouton(p, MARDI).rendu, "porte fermée : le bouton reste, grisé par la page");
-  // Coupe gagnée, pas de table de plus : plus de bouton ; une 6e table : il revient.
-  p = melanger(eleve([2, 3, 4, 5, 10], [LUNDI]), 20, LUNDI).parcours;
-  assert.equal(bouton(p, LUNDI).rendu, null, "la coupe des 3 tables est gagnée, celle des 6 pas encore à gagner");
-  p = passer(p, [6], LUNDI);
-  assert.equal(bouton(p, LUNDI).rendu.attrs["aria-label"], "Mon mélange : mes 6 tables, une coupe à gagner");
-  // Tout gagné : plus jamais.
-  p = melanger(eleve([...P.TABLES], [LUNDI]), 20, LUNDI).parcours;
-  assert.equal(bouton(p, LUNDI).rendu, null);
+  assert.equal(html.indexOf("boutonMelangeAccueil"), -1, "celui de l'accueil aussi");
+  assert.doesNotMatch(html, /id = "acc-melange"|coupe-a-gagner/);
 });
 
 test("coupes, page : « Tu gagnes la coupe des N tables ! » après un mélange qui en gagne une, rien sinon", () => {
@@ -449,7 +417,7 @@ test("coupes, page : « Tu gagnes la coupe des N tables ! » après un mélange 
   const gagne = melanger(p, 18, MARDI);
   assert.equal(phrase(gagne), "Tu gagnes la coupe des 3 tables\u00a0!");
   assert.equal(phrase(melanger(gagne.parcours, 20, MERCREDI)), "", "rejoué et réussi : rien de neuf, le verdict suffit");
-  assert.equal(phrase(melanger(eleve([...P.TABLES], [LUNDI]), 19, MARDI)), "Tu gagnes la coupe des 9 tables\u00a0!", "d'un coup avec 9 tables : la plus grande");
+  assert.equal(phrase(melanger(eleve([...P.TABLES], [LUNDI]), 19, MARDI)), "Tu gagnes la coupe des 6 tables\u00a0!", "d'un coup avec 9 tables : la plus grande (deux coupes depuis le lot « Mon mélange aux paliers »)");
   // La page ne fête (fete.melange) qu'un mélange réussi.
   assert.match(html, /if \(fete\.melange\) return fete\.melange\.trophee \? `Tu gagnes la coupe des \$\{fete\.melange\.trophee\} tables\\u00a0!` : "";/);
 });
@@ -475,10 +443,10 @@ test("« Je passe le test », l'escalier et Platine dès 9 tables passées", () 
   assert.equal(P.escalierOuvert(p), true);
   assert.equal(P.rangDeLEtat(p), 4, "Platine");
   assert.equal(P.classerSerie(p, P.configEtoile(1)).type, "etoile");
-  // Lot « Mon mélange sur l'accueil et l'expert » : la coupe des 9 tables pas
-  // encore gagnée, Mon mélange des 9 tables vient avant l'étoile.
-  assert.deepEqual(P.ouvrirSeance(p, {aujourdhui: LUNDI}).file.map(etape => etape.type), ["melange", "etoile"], "le premier jour, rien n'est fermé");
-  assert.deepEqual(P.ouvrirSeance(p, {aujourdhui: MARDI}).file.map(etape => etape.type), ["revision", "melange", "etoile"]);
+  // Lot « Mon mélange aux paliers » (09/10/2026) : plus de Mon mélange des
+  // 9 tables avant l'étoile.
+  assert.deepEqual(P.ouvrirSeance(p, {aujourdhui: LUNDI}).file.map(etape => etape.type), ["etoile"], "le premier jour, rien n'est fermé");
+  assert.deepEqual(P.ouvrirSeance(p, {aujourdhui: MARDI}).file.map(etape => etape.type), ["revision", "etoile"]);
   assert.equal(P.resumeProf(p, MARDI).enCours.type, "expert");
 });
 
@@ -486,7 +454,7 @@ test("la page : Mes calculs du jour chronométré, lancé par « C'est parti ! �
   assert.match(html, /DURATION = table === null \? PARCOURS\.dureeMesCalculs\(plan\.length\) : null;/);
   assert.match(html, /if \(DURATION === null\) \{\s+beginRound\(\);\s+return;\s+\}/);
   assert.match(html, /if \(state\.pauseA\) return;\s+const remaining/);
-  assert.match(html, /state\.endAt \+= Date\.now\(\) - state\.pauseA;/);
+  assert.match(html, /state\.endAt \+= horlogeSerie\(\) - state\.pauseA;/);
   assert.match(html, /const willRetry = !correct && !question\.retry && !chrono;/);
   assert.match(html, /soude\(pasFaits \? "Temps écoulé" : "Mes calculs du jour : fait"\)/);
   assert.match(html, /pasFaits > 1 \? "Ils reviendront\." : "Il reviendra\."/);
@@ -494,13 +462,15 @@ test("la page : Mes calculs du jour chronométré, lancé par « C'est parti ! �
   assert.match(html, /\$\{pluriel\(etape\.calculs, "calcul"\)\} · \$\{dureeCourte\(etape\.duree\)\}/);
 });
 
-test("la page : la porte de l'accueil, et rien ne se lance à côté", () => {
-  assert.match(html, /if \(etat\.porte\) \{\s+liens\.classList\.add\("est-fermee"\);\s+liens\.querySelectorAll\("button"\)\.forEach\(bouton => \{ bouton\.disabled = true; \}\);/);
-  assert.match(html, /mot\.textContent = "Après Mes calculs du jour";/);
-  assert.match(html, /if \(origin !== "seance" && PARCOURS\.mesCalculsAFaire\(parcours\)\) \{\s+renderAccueil\(\);\s+return;\s+\}/);
-  assert.match(html, /if \(etat\.porte\) state\.choisirActivite = false;/);
-  assert.match(html, /config: porte \? null : PARCOURS\.configMelange\(parcours\)/);
-  assert.match(html, /const expertOuvert = etat\.expert\.ouvert && !porte;/);
+// Lot « Mes calculs du jour d'abord » (08/10/2026, décision de Gwenaël,
+// planches 19 et 20) : la porte ne grise plus rien ; rien ne se lance à côté
+// pour autant — Mes calculs du jour d'abord, puis ce qui a été touché.
+test("la page : la porte de l'accueil enchaîne, et rien ne se lance à côté", () => {
+  assert.doesNotMatch(html, /est-fermee|porte-mot|bouton\.disabled = true/);
+  assert.match(html, /if \(origin !== "seance" && PARCOURS\.mesCalculsAFaire\(parcours\)\) \{\s*if \(config\.mode !== "revision"\) state\.apresMesCalculs = \{config, origin, nom: nomDeLaSuite\(config\), puis\};\s*startRevision\(null, origin\);\s*return;\s*\}/);
+  assert.doesNotMatch(html, /if \(etat\.porte\) state\.choisirActivite = false;/);
+  assert.match(html, /config: PARCOURS\.configMelange\(parcours\)\s*\}\), droite\);/);
+  assert.match(html, /const expertOuvert = etat\.expert\.ouvert;/);
 });
 
 test("la page : les mots, les coupes du mélange et les petits restes", () => {
@@ -509,9 +479,8 @@ test("la page : les mots, les coupes du mélange et les petits restes", () => {
   assert.ok(html.indexOf("const NOM_DU_TEST") < html.indexOf("function renderAccueil("), "défini avant le premier dessin de l'accueil");
   assert.doesNotMatch(html, /Je valide ma table"|acquise !`|Réussis d’abord ton mélange|montrerMelange|etat\.verrou|melangeDu/);
   // Lot « Mon mélange sur l'accueil et l'expert » : le bouton du bilan est
-  // retiré ; Mon mélange est sur l'accueil (boutonMelangeAccueil).
-  assert.doesNotMatch(html, /Je me teste sur mes|function boutonMelange\(/);
-  assert.match(html, /if \(!etat\.melange\.visible \|\| !etat\.melange\.trophees\.some\(trophee => trophee\.aGagner\)\) return null;/);
+  // retiré ; lot « Mon mélange aux paliers » : celui de l'accueil aussi.
+  assert.doesNotMatch(html, /Je me teste sur mes|function boutonMelange\(|boutonMelangeAccueil/);
   // Lot « trophées » : plus de « Dernier : 17 sur 20 » ni de « réussi avec N
   // tables ✓ » — trois coupes ; le bouton seulement s'il y a un trophée à gagner.
   assert.doesNotMatch(html, /dernierMelange|réussi avec \$\{|Dernier : \$\{melange\.score\}/);
@@ -519,8 +488,8 @@ test("la page : les mots, les coupes du mélange et les petits restes", () => {
   assert.match(html, /droite\.append\(textes, tropheesDuMelange\(etat\.melange\.trophees\)\);/);
   assert.match(html, /\$\("fiche-melange-state"\)\.replaceChildren\(tropheesDuMelange\(etat\.melange\.trophees\)\);/, "la fiche imprimée aussi");
   // Lot « retours de classe » : la notice soude ses nombres (&nbsp;), la fiche imprimée garde ses espaces.
-  assert.equal(html.match(/20 questions en 1 min 30\. Une coupe avec 3, 6, puis 9 tables\.<\/p>/g).length, 1, "la fiche dit la règle");
-  assert.equal(html.match(/20&nbsp;questions en 1&nbsp;min&nbsp;30\. Une coupe avec 3, 6, puis 9&nbsp;tables\.<\/p>/g).length, 1, "la notice aussi");
+  assert.equal(html.match(/20 questions en 1 min 30\. Une coupe avec 3, puis 6 tables\.<\/p>/g).length, 1, "la fiche dit la règle");
+  assert.equal(html.match(/20&nbsp;questions en 1&nbsp;min&nbsp;30\. À 3, puis 6&nbsp;tables, il passe avant le test jusqu’à ce que je gagne la coupe\.<\/p>/g).length, 1, "la notice aussi (lot « Mon mélange aux paliers »)");
   assert.match(html, /if \(validation && !validation\.reussi && !validation\.dejaAcquise\) return phraseTestRate\(\);/);
   // « Tu as choisi » : seulement depuis les réglages.
   assert.match(html, /\$\("launch-eyebrow"\)\.hidden = state\.origin !== "reglages";/);
@@ -531,8 +500,8 @@ test("la page : les mots, les coupes du mélange et les petits restes", () => {
   // « 10 / 11 » sur une ligne à 320 px.
   assert.match(html, /@media \(max-width: 359px\) \{ #question-count \.compteur-mot \{ display: none; \} \}/);
   // Les numéros de cache ont monté.
-  assert.match(html, /defi_tables_core\.js\?v=20261005-1/);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261007-1/);
+  assert.match(html, /defi_tables_core\.js\?v=20261010-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261014-1/);
 });
 
 test("le serveur : la copie du moteur, « Tables passées », la tuile sans « Mon mélange à faire »", () => {

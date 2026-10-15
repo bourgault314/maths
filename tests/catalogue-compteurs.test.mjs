@@ -13,7 +13,7 @@ const published = catalogue.resources.filter((resource) => resource.status === "
 // vraies données ; aucun second algorithme de comptage dans le test.
 const functionNames = [
   "domainResourceCount", "resourceClassification", "resourceBelongsToNotion",
-  "resourceCollections", "resourceBelongsToCollapsedCollection", "displayItems",
+  "resourceCollections", "resourceBelongsToCollapsedCollection", "resourceShownInCollection", "displayItems",
   "uniqueResources", "resourceCount", "resourceCountLabel", "resourcesFromCards",
   "childNotions", "notionResources", "notionResourceCount", "collectionResources",
   "collectionResourceCount", "matchingNotionCollections"
@@ -58,7 +58,7 @@ test("chaque domaine annonce seulement ses ressources atteignables", () => {
   const expected = {
     "nombres-calculs": 95,
     "proportionnalite-mesures": 18,
-    algebre: 26,
+    algebre: 30, // + « Comment on joue ? » de la page Splat : le film, la vidéo, le diaporama (11/10/2026), puis le diaporama en ligne
     geometrie: 20,
     donnees: 2,
     informatique: 0,
@@ -69,7 +69,7 @@ test("chaque domaine annonce seulement ses ressources atteignables", () => {
     assert.equal(context.domainResourceCount(domain), count, domain);
   }
   assert.equal(context.notionResourceCount("calcul-mental", "nombres-calculs"), 7);
-  assert.equal(context.resourceCount(published), 177, "Automatismes reste compté une fois dans le total du catalogue.");
+  assert.equal(context.resourceCount(published), 181, "Automatismes reste compté une fois dans le total du catalogue.");
 });
 
 test("Triangles compte ses descendants et les rubriques vides restent à zéro", () => {

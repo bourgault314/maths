@@ -70,7 +70,7 @@ function bd_test(): PDO
     return $pdo;
 }
 if (getenv('SUIVI_TEST_DSN')) {
-    foreach (['journal', 'versions', 'billets', 'partages', 'sessions_prof', 'compteurs', 'progressions', 'eleves', 'classes', 'profs'] as $table) {
+    foreach (['directs_reponses', 'directs_questions', 'directs', 'records', 'journal', 'versions', 'billets', 'partages', 'sessions_prof', 'compteurs', 'progressions', 'eleves', 'classes', 'profs'] as $table) {
         bd_test()->exec("DROP TABLE IF EXISTS $table");
     }
     echo "Base de test : " . $bdTest['dsn'] . "\n";
@@ -80,6 +80,10 @@ file_put_contents($travail . '/config.php', "<?php return " . var_export([
     'bd' => $bdTest,
     'origines' => ['https://mathsgo.re', 'https://suivi.mathsgo.re'],
     'jeton_installation' => 'JETON-DE-TEST',
+    // Les records repartent à zéro à RECORDS_DEPUIS (lib/records.php) : les
+    // tests prennent une date passée, pour que leurs courses comptent quel
+    // que soit le jour où ils tournent.
+    'records_depuis' => '2026-01-01T00:00:00.000000Z',
 ], true) . ";\n");
 
 $port = 8000 + random_int(0, 900);
@@ -576,8 +580,16 @@ verifier("le manifeste connaît la page Infos", function () {
     $manifeste = (string)file_get_contents(__DIR__ . '/../public/VERSION');
     vrai((bool)preg_match('/^[0-9a-f]{64}  infos\.php$/m', $manifeste),
         'infos.php doit figurer au manifeste : sans lui, verifier.php ne dirait pas si la page déposée est la bonne');
-    vrai((bool)preg_match('/^fichiers 29$/m', $manifeste),
-        'le serveur compte 28 fichiers depuis l’ajout de la page Infos, 29 depuis la copie du moteur SPLAT! (lot splat-suivi-3)');
+    // 28 depuis la page Infos ; 29 depuis la copie du moteur SPLAT! (lot
+    // splat-suivi-3) ; 31 depuis les records (api/records.php, lib/records.php) ;
+    // 35 depuis la séance en direct (07/10/2026) : direct.php, prof/direct.php,
+    // api/direct.php, lib/direct.php.
+    vrai((bool)preg_match('/^fichiers 35$/m', $manifeste),
+        'le serveur compte 35 fichiers depuis la séance en direct');
+    foreach (['direct.php', 'prof/direct.php', 'api/direct.php', 'lib/direct.php'] as $fichier) {
+        vrai((bool)preg_match('/^[0-9a-f]{64}  ' . preg_quote($fichier, '/') . '$/m', $manifeste),
+            "$fichier doit figurer au manifeste");
+    }
 });
 
 verifier("la page élève refuse un code inconnu ou mal formé", function () {
@@ -1071,6 +1083,32 @@ function chronometre(callable $appel, &$resultat): float
     return (hrtime(true) - $debut) / 1e9;
 }
 
+// Ce qui ne doit PAS attendre : le plus court de trois essais
+// ------------------------------------------------------------
+// Une borne BASSE (« au moins 1,4 s ») ne craint rien d'une machine partagée :
+// le ralentissement est un usleep(), et le bruit ne fait qu'allonger. Une
+// borne HAUTE (« moins d'une seconde ») craint tout : le 11/10/2026, sur la
+// PR 967, le 61e échec de parcours.php — qui n'est pas ralenti — a mis 1,07 s
+// sur le serveur de GitHub, sans qu'une ligne du serveur ait changé.
+//
+// Pour une borne haute, on rejoue donc l'essai trois fois, en remettant l'état
+// à l'identique avant chacun ($preparer), et on garde le PLUS COURT. Une
+// requête ralentie dort 1,5 s à chaque essai : les trois dépassent le seuil,
+// le test rougit à coup sûr. Une requête qui ne l'est pas passe dès qu'un
+// seul des trois tombe sur une machine tranquille. $resultats reçoit les
+// trois réponses : chacune doit être vérifiée, pas seulement la dernière.
+function plus_court_de_trois(callable $preparer, callable $appel, &$resultats): float
+{
+    $resultats = [];
+    $plus_court = INF;
+    for ($i = 0; $i < 3; $i++) {
+        $preparer();
+        $plus_court = min($plus_court, chronometre($appel, $r));
+        $resultats[] = $r;
+    }
+    return $plus_court;
+}
+
 // Mesurer un temps de réponse sur une machine partagée, en millisecondes
 // ----------------------------------------------------------------------
 // Le serveur de GitHub est une machine partagée : elle s'interrompt sans
@@ -1182,18 +1220,17 @@ verifier("soixante et un codes inventés passent en 404 sans attendre ; ensuite 
     $duree = chronometre(fn() => lire($codesS1[0]), $r);
     egal(200, $r['code'], "la même règle vaut pour parcours.php : quota partagé");
     vrai($duree >= 1.4, sprintf('et le même ralentissement (%.2f s)', $duree));
-    vider_compteurs();
-    $duree = chronometre(fn() => identite($codesS1[0]), $r);
-    egal(200, $r['code'], 'contrôle : après remise à zéro, le bon code passe');
-    vrai($duree < 1.0, sprintf('sans attendre (%.2f s)', $duree));
+    $duree = plus_court_de_trois(fn() => vider_compteurs(), fn() => identite($codesS1[0]), $rs);
+    egal([200, 200, 200], array_column($rs, 'code'), 'contrôle : après remise à zéro, le bon code passe');
+    vrai($duree < 1.0, sprintf('sans attendre (%.2f s, le plus court de trois essais)', $duree));
 });
 
 verifier("parcours.php : même ralentissement sur les codes inventés, et le 404 reste un 404", function () use (&$codesS1) {
-    vider_compteurs();
-    semer_echecs_adresse(60);
-    $duree = chronometre(fn() => lire(code_inconnu(0)), $r);
-    egal(404, $r['code'], 'le 61e échec');
-    vrai($duree < 1.0, sprintf('sans attendre (%.2f s)', $duree));
+    // Soixante échecs semés avant chaque essai : chacun est le 61e.
+    $duree = plus_court_de_trois(function () { vider_compteurs(); semer_echecs_adresse(60); },
+        fn() => lire(code_inconnu(0)), $rs);
+    egal([404, 404, 404], array_column($rs, 'code'), 'le 61e échec');
+    vrai($duree < 1.0, sprintf('sans attendre (%.2f s, le plus court de trois essais)', $duree));
     $duree = chronometre(fn() => lire(code_inconnu(1)), $r);
     egal(404, $r['code'], 'le 62e : toujours 404, pas 429');
     vrai($duree >= 1.4, sprintf('mais ralenti (%.2f s)', $duree));
@@ -1210,9 +1247,11 @@ verifier("six cents échecs : l'adresse est refusée (429) avec Retry-After, exp
         "Retry-After doit donner les secondes jusqu'à la fin de la fenêtre (obtenu " . json_encode($attente) . ")");
     egal('Retry-After', entete($r, 'Access-Control-Expose-Headers'), "sans cet en-tête, un script de mathsgo.re ne verrait jamais Retry-After");
     egal('https://mathsgo.re', entete($r, 'Access-Control-Allow-Origin'), 'réponse CORS ordinaire');
-    $duree = chronometre(fn() => identite($codesS1[0]), $r);
-    egal(429, $r['code'], "au-delà de 600, même un bon code est refusé : c'est une attaque, pas une classe");
-    vrai($duree < 1.0, sprintf("et le refus n'attend pas : pas de processus qui dort (%.2f s)", $duree));
+    // L'appel ci-dessus a compté le 601e échec : chaque essai repart de là.
+    $duree = plus_court_de_trois(function () { vider_compteurs(); semer_echecs_adresse(601); },
+        fn() => identite($codesS1[0]), $rs);
+    egal([429, 429, 429], array_column($rs, 'code'), "au-delà de 600, même un bon code est refusé : c'est une attaque, pas une classe");
+    vrai($duree < 1.0, sprintf("et le refus n'attend pas : pas de processus qui dort (%.2f s, le plus court de trois essais)", $duree));
     egal(429, lire($codesS1[0])['code'], 'parcours.php aussi');
     vider_compteurs();
     egal(200, identite($codesS1[0])['code'], 'contrôle : après remise à zéro, le bon code passe');
@@ -1259,11 +1298,10 @@ verifier("connexion prof : treize mauvais mots de passe sur un compte ralentisse
         'treize échecs venus de trois adresses ne ferment pas le compte');
     vrai((hrtime(true) - $debut) / 1e9 >= 1.4, 'ils le ralentissent seulement');
     // Un autre identifiant depuis la même adresse n'est pas concerné.
-    vider_compteurs();
-    semer_compteur('connexion-id:gwenael', 600, 13);
-    $debut = hrtime(true);
-    egal(401, connexion('personne', 'motdepasse-de-test-2026')['code'], 'un autre identifiant : refus ordinaire');
-    vrai((hrtime(true) - $debut) / 1e9 < 1.4, "et sans ralentissement : le compteur est bien par identifiant");
+    $duree = plus_court_de_trois(function () { vider_compteurs(); semer_compteur('connexion-id:gwenael', 600, 13); },
+        fn() => connexion('personne', 'motdepasse-de-test-2026'), $rs);
+    egal([401, 401, 401], array_column($rs, 'code'), 'un autre identifiant : refus ordinaire');
+    vrai($duree < 1.4, sprintf("et sans ralentissement : le compteur est bien par identifiant (%.2f s, le plus court de trois essais)", $duree));
     vider_compteurs();
 });
 
@@ -2899,7 +2937,7 @@ verifier("sauvegarde.php rend un fichier chiffré qui se déchiffre par openssl 
     // trois tables rendait une base restaurée INUTILISABLE — la première
     // connexion d'un professeur répondait 500. Leur structure part donc dans
     // la sauvegarde, leur contenu non (jetons de courte durée).
-    foreach (['sessions_prof', 'compteurs', 'billets'] as $table) {
+    foreach (['sessions_prof', 'compteurs', 'billets', 'directs', 'directs_questions', 'directs_reponses'] as $table) {
         vrai(str_contains($clair, "CREATE TABLE `$table`") || str_contains($clair, "EXISTS $table ("),
             "la structure de $table doit être dans la sauvegarde : sans elle, le serveur restauré répond 500");
         vrai(!str_contains($clair, "INSERT INTO `$table`"), "mais pas son contenu : $table ne tient que des jetons périmés");
@@ -2936,8 +2974,20 @@ const MATRICE_ATTENDUE = [
     'classes.supprimer' => 'proprietaire',
     'classes.supprimer_echues' => 'proprietaire',
     'eleves.supprimer' => 'proprietaire',
+    // Lot « après l'audit GPT » (D4, 14/10/2026) : retirer un temps des records.
+    'records.retirer' => 'proprietaire',
     'partages.ajouter' => 'proprietaire',
     'partages.supprimer' => 'proprietaire',
+    // Séance en direct (07/10/2026). L'ORDRE compte : la matrice les joue à la
+    // suite — ouvrir, poser une question, dévoiler, désigner, prendre le
+    // fichier, terminer —, chacune a donc ce qu'il lui faut pour répondre 200.
+    'direct.etat' => 'ecriture',
+    'direct.ouvrir' => 'ecriture',
+    'direct.question' => 'ecriture',
+    'direct.devoiler' => 'ecriture',
+    'direct.bonne' => 'ecriture',
+    'direct.fichier' => 'ecriture',
+    'direct.terminer' => 'ecriture',
 ];
 
 // Les actions qui EFFACENT ne sont pas jouées dans les boucles de la matrice :
@@ -2991,7 +3041,17 @@ function jouer_action_lot11(string $action, array $lot11, string $jeton): int
         case 'tableau':
         case 'partages.liste':
         case 'classes.supprimer':
+        case 'direct.etat':
+        case 'direct.ouvrir':
+        case 'direct.devoiler':
+        case 'direct.bonne':
+        case 'direct.fichier':
+        case 'direct.terminer':
             $corps['classe_id'] = $lot11['classe'];
+            break;
+        case 'direct.question':
+            $corps['classe_id'] = $lot11['classe'];
+            $corps['type'] = 'choix';
             break;
         case 'classes.modifier':
             $corps['classe_id'] = $lot11['classe'];
@@ -3013,6 +3073,7 @@ function jouer_action_lot11(string $action, array $lot11, string $jeton): int
         case 'eleves.fiche':
         case 'eleves.regenerer':
         case 'eleves.supprimer':
+        case 'records.retirer': // l'élève du lot n'a pas de temps : rien n'est effacé, le droit seul est éprouvé
             $corps['eleve_id'] = $lot11['eleve']['id'];
             break;
         case 'eleves.nommer':
@@ -3838,9 +3899,9 @@ verifier("splat-suivi-3 — le parcours de référence de SPLAT! ressort identiq
     $attendu = json_encode(json_decode($texte, false), JSON_UNESCAPED_UNICODE);
     $obtenu = json_encode(filtrer_progression('splat', json_decode($texte, false)), JSON_UNESCAPED_UNICODE);
     egal($attendu, $obtenu, "le filtre du serveur jette un champ que le moteur SPLAT! produit : compléter 'cles'/'motifs' de « splat » dans lib/applis.php");
-    egal(51, count(get_object_vars(json_decode($texte, false)->etapes)), 'les 51 parcours de la carte (37 étapes, 14 Bonus)');
+    egal(54, count(get_object_vars(json_decode($texte, false)->etapes)), 'les 54 parcours de la carte (40 étapes, l’échauffement É1-É3 compris ; 14 Bonus)');
     vrai(strlen($attendu) > 3000, 'la référence est bien un parcours complet');
-    egal(51, compter_elements_declares('splat', $attendu), '« Revenir à… » compte les étapes');
+    egal(54, compter_elements_declares('splat', $attendu), '« Revenir à… » compte les étapes');
 });
 
 verifier("splat-suivi-3 — un texte, une clé étrangère ou un parcours inconnu sont retirés", function () {
@@ -3856,7 +3917,16 @@ verifier("splat-suivi-3 — un texte, une clé étrangère ou un parcours inconn
     $sale->etapes->m1e2->date = 'mardi';
     $sale->etapes->m9e9 = (object)['fait' => true, 'etoiles' => 4, 'cartes' => 4, 'vues' => 0, 'essais' => 1, 'date' => '2026-10-01'];
     $sale->etapes->perso42 = (object)['fait' => true];
+    // Échauffement du monde 6 (lot 2 « suivi », 14/10/2026) : ech1-ech3 passent
+    // (ils sont dans la référence), une clé voisine inventée saute.
+    foreach (['ech9', 'ech0', 'ech', 'ech1d', 'm4ech1'] as $faux) {
+        $sale->etapes->$faux = (object)['fait' => true, 'etoiles' => 12, 'cartes' => 12, 'vues' => 0, 'essais' => 1, 'date' => '2026-10-15'];
+    }
     $obtenu = filtrer_progression('splat', $sale);
+    foreach (['ech9', 'ech0', 'ech', 'ech1d', 'm4ech1'] as $faux) {
+        vrai(!isset($obtenu->etapes->$faux), "« $faux » n’est pas une étape de la carte : il saute");
+    }
+    vrai(isset($obtenu->etapes->ech1, $obtenu->etapes->ech2, $obtenu->etapes->ech3), 'les trois étapes d’échauffement passent');
     vrai(!isset($obtenu->prenom), 'le prénom reste sur l’appareil');
     vrai(!isset($obtenu->etapes->m1e1->sig) && !isset($obtenu->etapes->m1e1->res) && !isset($obtenu->etapes->m1e1->enCours),
         'ni la signature, ni les résultats carte par carte, ni la reprise en cours');
@@ -3893,7 +3963,7 @@ verifier("splat-suivi-3 — SPLAT! s'enregistre et se relit par l'API élève, �
     egal(false, lire($code)['json']['existe'], 'Défi tables du même élève n’a pas bougé');
     $ligne = bd_test()->prepare("SELECT calculs FROM versions WHERE eleve_id = ? AND appli = 'splat'");
     $ligne->execute([(int)$eleves[0]['id']]);
-    egal(51, (int)$ligne->fetchColumn(), 'la version du jour est comptée en étapes');
+    egal(54, (int)$ligne->fetchColumn(), 'la version du jour est comptée en étapes (les 54 parcours de la référence)');
     $r = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $classe, 'appli' => 'splat'], ['jeton' => $jetonS1]);
     egal(200, $r['code'], 'le tableau de la classe se demande pour SPLAT!');
     $lu = null;
@@ -3952,6 +4022,1028 @@ verifier("splat-suivi-3 — verifier.php contrôle le moteur SPLAT!", function (
     $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
     vrai((bool)preg_match('#class="etat oui">✓</span>\s*Moteur SPLAT! servi localement\s*<div class="detail">en place \(#u', $r['texte']),
         'la ligne existe, et elle est verte');
+});
+
+verifier("splat-suivi-4 — « Ma classe » charge le moteur SPLAT! d'ici, à la demande, à l'empreinte du fichier servi", function () {
+    $r = page('/prof/');
+    egal(200, $r['code'], 'la page « Ma classe » répond');
+    vrai((bool)preg_match('#const MOTEUR_SPLAT = "splat-parcours\.js\?v=([0-9a-f]{10})";#', $r['texte'], $m),
+        'l’adresse du moteur, relative (même origine : la politique de contenu l’autorise), avec une version');
+    vrai(!str_contains($r['texte'], '<script src="splat-parcours.js'), 'pas chargé d’office : seulement à l’ouverture de l’onglet SPLAT!');
+    $moteur = page('/prof/splat-parcours.js');
+    egal(substr(md5($moteur['texte']), 0, 10), $m[1], 'la version dans l’adresse est l’empreinte du fichier servi');
+    vrai(str_contains($r['texte'], 'id="bloc-activites" hidden'), '« Activités de la classe » : caché tant qu’aucune classe n’est ouverte');
+});
+
+// ------------------------------------------- lot « splat-suivi-5 » (08/10/2026)
+//
+// Les mondes de SPLAT! ouverts, classe par classe : classes.reglages (JSON,
+// vide par défaut), {"splat": {"mondes": [1, 2]}} = les mondes OUVERTS ; tous
+// ouverts = rien d'écrit. Écrits par classes.modifier (propriétaire, lecture
+// STRICTE), rendus à « Ma classe » (classes.liste, tableau) et à l'élève
+// (api/eleve.php, par son code et à l'échange du billet).
+
+$classe5 = null;
+
+// Lecture directe de la ligne d'une classe. Le curseur est FERMÉ aussitôt : un
+// curseur SQLite resté ouvert dans ce processus garde un verrou sur la base, et
+// le serveur de test, bloqué à sa prochaine écriture, ne répond plus.
+function classe_en_base(int $id): array
+{
+    $ligne = bd_test()->prepare('SELECT libelle, applis, reglages FROM classes WHERE id = ?');
+    $ligne->execute([$id]);
+    $classe = $ligne->fetch();
+    $ligne->closeCursor();
+    return $classe;
+}
+
+verifier("splat-suivi-5 — par défaut, une classe a tous ses mondes ouverts : rien n'est écrit, « {} » partout", function () use (&$jetonS1, &$classe5) {
+    vider_compteurs();
+    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'test-mondes', 'applis' => ['defi-tables', 'splat']], ['jeton' => $jetonS1])['json']['id'];
+    $eleves = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 2], ['jeton' => $jetonS1])['json']['eleves'];
+    $classe5 = ['id' => $id, 'eleves' => $eleves];
+    egal(null, classe_en_base($id)['reglages'], 'la colonne reste vide');
+    $liste = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1]);
+    $trouvee = null;
+    foreach ($liste['json']['classes'] as $c) if ((int)$c['id'] === $id) $trouvee = $c;
+    egal([], $trouvee['reglages'], 'classes.liste : aucun réglage');
+    vrai(str_contains($liste['texte'], '"reglages":{}'), 'un objet JSON « {} », pas une liste « [] »');
+    $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $id, 'appli' => 'splat'], ['jeton' => $jetonS1]);
+    egal([], $t['json']['classe']['reglages'], 'tableau : aucun réglage');
+    $e = identite($eleves[0]['code']);
+    egal(200, $e['code']);
+    vrai(str_contains($e['texte'], '"reglages":{}'), 'l’élève reçoit « {} » : tous les mondes ouverts');
+});
+
+verifier("splat-suivi-5 — classes.modifier range les mondes ouverts, triés, sans doublon ; tous cochés = rien d'écrit", function () use (&$jetonS1, &$classe5) {
+    vider_compteurs();
+    $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classe5['id'], 'reglages' => ['splat' => ['mondes' => [2, 1, 2]]]], ['jeton' => $jetonS1]);
+    egal(200, $r['code']);
+    egal(['splat' => ['mondes' => [1, 2]]], $r['json']['reglages'], 'la réponse rend la nouvelle valeur');
+    $classe = classe_en_base($classe5['id']);
+    egal('{"splat":{"mondes":[1,2]}}', $classe['reglages'], 'en base : la liste propre');
+    egal('test-mondes', $classe['libelle'], 'le nom ne bouge pas');
+    egal('defi-tables,splat', $classe['applis'], 'les activités ne bougent pas');
+    $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $classe5['id'], 'appli' => 'splat'], ['jeton' => $jetonS1]);
+    egal(['splat' => ['mondes' => [1, 2]]], $t['json']['classe']['reglages'], 'tableau');
+    // Tout recocher : on revient à « rien d'écrit ».
+    $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classe5['id'], 'reglages' => ['splat' => ['mondes' => [1, 2, 3, 4, 5, 6]]]], ['jeton' => $jetonS1]);
+    egal(200, $r['code']);
+    vrai(str_contains($r['texte'], '"reglages":{}'), 'réponse « {} »');
+    egal(null, classe_en_base($classe5['id'])['reglages'], 'en base : NULL, comme une classe où personne n’a rien choisi');
+    // Renommer sans « reglages » ne touche pas aux mondes.
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classe5['id'], 'reglages' => ['splat' => ['mondes' => [1, 2]]]], ['jeton' => $jetonS1]);
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classe5['id'], 'libelle' => 'test-mondes-2'], ['jeton' => $jetonS1]);
+    $classe = classe_en_base($classe5['id']);
+    egal('test-mondes-2', $classe['libelle']);
+    egal('{"splat":{"mondes":[1,2]}}', $classe['reglages'], 'renommer garde les mondes');
+});
+
+verifier("splat-suivi-5 — une valeur fausse est refusée avec un message, et rien n'est écrit", function () use (&$jetonS1, &$classe5) {
+    vider_compteurs();
+    $avant = classe_en_base($classe5['id'])['reglages'];
+    foreach ([
+        [[], 'Une classe garde au moins un monde ouvert.', 'aucun monde'],
+        [[7], 'Monde inconnu.', 'un monde qui n’existe pas'],
+        [[0, 1], 'Monde inconnu.', 'le monde 0'],
+        [['1'], 'Monde inconnu.', 'un texte'],
+        [[1.5], 'Monde inconnu.', 'un nombre à virgule'],
+        [[true], 'Monde inconnu.', 'un booléen'],
+        ['1,2', 'Liste de mondes illisible.', 'une chaîne'],
+        [['a' => 1], 'Liste de mondes illisible.', 'un objet'],
+    ] as [$mondes, $message, $quoi]) {
+        $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classe5['id'], 'reglages' => ['splat' => ['mondes' => $mondes]]], ['jeton' => $jetonS1]);
+        egal(400, $r['code'], "$quoi : refusé");
+        egal($message, $r['json']['erreur'] ?? null, "$quoi : le message");
+    }
+    foreach ([
+        [['defi-tables' => ['mondes' => [1]]], 'Réglage inconnu.', 'une activité sans réglage'],
+        [['soley' => ['mondes' => [1]]], 'Réglage inconnu.', 'une activité fermée'],
+        [['inconnue' => ['mondes' => [1]]], 'Réglage inconnu.', 'une activité inconnue'],
+        [['splat' => ['tables' => [1]]], 'Réglage inconnu.', 'un réglage non déclaré'],
+        [['splat' => 'mondes'], 'Réglage inconnu.', 'un réglage illisible'],
+        ['tout', 'Réglages illisibles.', 'une chaîne'],
+        [[1, 2], 'Réglages illisibles.', 'une liste'],
+    ] as [$reglages, $message, $quoi]) {
+        $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classe5['id'], 'reglages' => $reglages], ['jeton' => $jetonS1]);
+        egal(400, $r['code'], "$quoi : refusé");
+        egal($message, $r['json']['erreur'] ?? null, "$quoi : le message");
+    }
+    egal($avant, classe_en_base($classe5['id'])['reglages'], 'la classe n’a pas bougé');
+});
+
+verifier("splat-suivi-5 — seul le propriétaire choisit les mondes ; un collègue les voit", function () use (&$jetonS1, &$classe5) {
+    vider_compteurs();
+    $tmp = appel('/api/prof.php', ['action' => 'profs.ajouter', 'identifiant' => 'collegue-mondes'], ['jeton' => $jetonS1])['json']['motdepasse'];
+    $jc = connexion('collegue-mondes', $tmp)['json']['jeton'];
+    appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => $tmp, 'nouveau' => 'mondes-collegue-2026'], ['jeton' => $jc]);
+    $idc = null;
+    foreach (appel('/api/prof.php', ['action' => 'profs.liste'], ['jeton' => $jetonS1])['json']['profs'] as $pr) {
+        if ($pr['identifiant'] === 'collegue-mondes') $idc = $pr['id'];
+    }
+    foreach (['lecture', 'ecriture'] as $droit) {
+        appel('/api/prof.php', ['action' => 'partages.supprimer', 'classe_id' => $classe5['id'], 'prof_id' => $idc], ['jeton' => $jetonS1]);
+        egal(200, appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $classe5['id'], 'prof_id' => $idc, 'droit' => $droit], ['jeton' => $jetonS1])['code'], "partage en $droit");
+        $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classe5['id'], 'reglages' => ['splat' => ['mondes' => [1]]]], ['jeton' => $jc]);
+        egal(403, $r['code'], "un collègue en $droit ne choisit pas les mondes");
+        $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $classe5['id'], 'appli' => 'splat'], ['jeton' => $jc]);
+        egal(['splat' => ['mondes' => [1, 2]]], $t['json']['classe']['reglages'], "un collègue en $droit voit les mondes ouverts (pastilles grises)");
+    }
+    egal('{"splat":{"mondes":[1,2]}}', classe_en_base($classe5['id'])['reglages'], 'rien n’a bougé');
+});
+
+verifier("splat-suivi-5 — l'élève reçoit les mondes ouverts par son code et à l'échange du billet, tant que SPLAT! est dans sa liste", function () use (&$jetonS1, &$classe5) {
+    vider_compteurs();
+    $code = $classe5['eleves'][0]['code'];
+    $e = identite($code);
+    egal(['splat' => ['mondes' => [1, 2]]], $e['json']['reglages'], 'par le code (espace élève, et chaque page qui relit l’identité)');
+    $billet = appel('/api/eleve.php', ['code' => $code, 'billet' => true])['json']['billet'];
+    $r = echanger($billet, ['appli' => 'splat']);
+    egal(200, $r['code']);
+    egal('entree', $r['json']['type']);
+    egal(['splat' => ['mondes' => [1, 2]]], $r['json']['reglages'], 'à l’échange du billet (la carte des mondes)');
+    // SPLAT! décoché : l'élève ne reçoit plus rien de SPLAT! ; recoché : ses mondes reviennent.
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classe5['id'], 'applis' => ['defi-tables']], ['jeton' => $jetonS1]);
+    vrai(str_contains(identite($code)['texte'], '"reglages":{}'), 'SPLAT! décoché : rien de SPLAT! pour l’élève');
+    egal('{"splat":{"mondes":[1,2]}}', classe_en_base($classe5['id'])['reglages'],
+        'mais le choix reste gardé');
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classe5['id'], 'applis' => ['defi-tables', 'splat']], ['jeton' => $jetonS1]);
+    egal(['splat' => ['mondes' => [1, 2]]], identite($code)['json']['reglages'], 'SPLAT! recoché : les mêmes mondes');
+});
+
+verifier("splat-suivi-5 — en base, une valeur abîmée se lit « tous ouverts » ou ce qui reste lisible, jamais une panne", function () use (&$jetonS1, &$classe5) {
+    vider_compteurs();
+    $code = $classe5['eleves'][0]['code'];
+    $maj = bd_test()->prepare('UPDATE classes SET reglages = ? WHERE id = ?');
+    // (une écriture ne laisse pas de curseur ouvert : pas de verrou qui traîne)
+    foreach ([
+        ['pas du json', '{}'], ['[1,2]', '{}'], ['{"splat":{"mondes":"1"}}', '{}'], ['{"splat":{"mondes":[]}}', '{}'],
+        ['{"splat":{"mondes":[1,2,3,4,5,6]}}', '{}'], ['{"inconnue":{"mondes":[1]}}', '{}'],
+        ['{"splat":{"mondes":[9,"2",2,1,1]}}', '{"splat":{"mondes":[1,2]}}'],
+    ] as [$brut, $attendu]) {
+        $maj->execute([$brut, $classe5['id']]);
+        $r = identite($code);
+        egal(200, $r['code'], "« $brut » : l’élève entre");
+        vrai(str_contains($r['texte'], '"reglages":' . $attendu), "« $brut » → $attendu");
+        egal(200, appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1])['code'], "« $brut » : Ma classe s’ouvre");
+    }
+    $maj->execute(['{"splat":{"mondes":[1,2]}}', $classe5['id']]);
+});
+
+verifier("splat-suivi-5 — avant migrer.php (colonne absente) : tout se lit « tous ouverts », seul le choix des mondes demande la mise à niveau", function () use (&$jetonS1, &$classe5) {
+    vider_compteurs();
+    // La base d'avant migrer.php : la colonne retirée le temps de l'essai (SQLite
+    // comme MySQL savent le faire), remise par migrer_schema() dans le finally.
+    bd_test()->exec('ALTER TABLE classes DROP COLUMN reglages');
+    try {
+        egal(false, colonne_existe(bd_test(), 'classes', 'reglages'), 'la colonne est retirée pour l’essai');
+        $code = $classe5['eleves'][0]['code'];
+        $e = identite($code);
+        egal(200, $e['code'], 'l’élève entre');
+        vrai(str_contains($e['texte'], '"reglages":{}'), 'et tous ses mondes sont ouverts');
+        $billet = appel('/api/eleve.php', ['code' => $code, 'billet' => true])['json']['billet'];
+        egal(200, echanger($billet, ['appli' => 'splat'])['code'], 'le billet s’échange');
+        $l = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1]);
+        egal(200, $l['code'], 'Ma classe s’ouvre');
+        egal(200, appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $classe5['id'], 'appli' => 'splat'], ['jeton' => $jetonS1])['code']);
+        egal(200, appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classe5['id'], 'libelle' => 'test-mondes-3'], ['jeton' => $jetonS1])['code'],
+            'renommer marche encore');
+        $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classe5['id'], 'reglages' => ['splat' => ['mondes' => [1]]]], ['jeton' => $jetonS1]);
+        egal(503, $r['code'], 'choisir les mondes : mise à niveau à faire');
+        vrai(str_contains($r['json']['erreur'] ?? '', 'migrer.php'), 'le message dit quoi faire : ' . ($r['json']['erreur'] ?? ''));
+        $v = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+        vrai((bool)preg_match('#class="etat non">✗</span>\s*Mondes ouverts par classe\s*<div class="detail">manque la colonne « classes\.reglages » — ouvre migrer\.php#u', $v['texte']),
+            'verifier.php le dit, en rouge');
+    } finally {
+        $faits = migrer_schema(bd_test());
+    }
+    vrai(in_array('Colonne « réglages » ajoutée aux classes (les mondes de SPLAT! ouverts à chaque classe).', $faits, true),
+        'migrer.php ajoute la colonne et le dit : ' . implode(' | ', $faits));
+    egal([], migrer_schema(bd_test()), 'relancer ne fait plus rien');
+    egal(true, colonne_existe(bd_test(), 'classes', 'reglages'));
+    $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classe5['id'], 'reglages' => ['splat' => ['mondes' => [1, 2]]]], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'après la mise à niveau, le choix des mondes marche');
+    $v = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai((bool)preg_match('#class="etat oui">✓</span>\s*Mondes ouverts par classe\s*<div class="detail">en place \(\d+ classe\(s\) avec un choix de mondes\)#u', $v['texte']),
+        'verifier.php : la ligne est verte');
+});
+
+verifier("splat-suivi-5 — le nombre de mondes déclaré au catalogue est celui de la carte du moteur", function () use ($racine) {
+    require_once __DIR__ . '/../public/lib/applis.php';
+    $moteur = (string)file_get_contents($racine . '/public/prof/splat-parcours.js');
+    vrai((bool)preg_match('#const MONDES = Object\.freeze\(\[(.*?)\]\);#s', $moteur, $m), 'la liste des mondes du moteur');
+    egal(preg_match_all('#Object\.freeze\(\[(\d), "#', $m[1]), CATALOGUE_APPLIS['splat']['reglages']['mondes'],
+        'lib/applis.php déclare autant de mondes que la carte');
+});
+
+// ------------------------------------------------- 🏆 Les records (lot du 09/10/2026)
+//
+// Le défi d'après la couronne (lib/records.php, api/records.php) : une
+// Légende court les 25 questions, son meilleur temps entre dans la ligue de
+// son professeur. Ce que ces tests prouvent : seule une Légende est
+// acceptée ; 25 sur 25 et un temps humain, sinon refus net ; le meilleur
+// temps seul est gardé, celui de la semaine à part ; le nom affiché (prénom,
+// initiale pour les homonymes, Mystère, jamais la classe) ; les ex æquo ; le
+// cloisonnement par professeur ; la case par classe ; ce qui part avec
+// l'élève ; la fiche et le tableau du professeur ; la mise à niveau.
+
+$recClasse = null;
+$recEleves = [];
+$recJetonClaire = null;
+$recCodeClaire = null;
+
+// Une progression Défi tables qui porte la couronne : c'est la SEULE clé que
+// le serveur lit pour dire « Légende » (lib/records.php, est_legende).
+function progression_legende(bool $couronne): array
+{
+    return ['version' => 3, 'epoque' => 0, 'tables' => [], 'expert' => ['etoiles' => $couronne ? 5 : 4, 'dernier' => '2026-10-09', 'couronne' => $couronne ? '2026-10-09' : null], 'calculs' => []];
+}
+
+function records_api(string $code, array $corps): array
+{
+    return appel('/api/records.php', ['code' => $code] + $corps);
+}
+
+verifier("records — préparation : une classe de quatre élèves, deux Légendes, une classe d'un collègue", function () use (&$jetonS1, &$recClasse, &$recEleves, &$recJetonClaire, &$recCodeClaire) {
+    vider_compteurs();
+    $recClasse = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => '306', 'applis' => ['defi-tables']], ['jeton' => $jetonS1])['json']['id'];
+    $recEleves = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $recClasse, 'nombre' => 4], ['jeton' => $jetonS1])['json']['eleves'];
+    foreach ([['Toti', 'R'], ['Léa', 'B'], ['Léa', 'M'], ['', '']] as $i => [$prenom, $initiale]) {
+        appel('/api/prof.php', ['action' => 'eleves.nommer', 'eleve_id' => $recEleves[$i]['id'], 'prenom' => $prenom, 'initiale' => $initiale], ['jeton' => $jetonS1]);
+    }
+    // Toti, Léa B. et l'élève sans prénom sont Légendes ; Léa M. a quatre étoiles.
+    foreach ([0 => true, 1 => true, 2 => false, 3 => true] as $i => $couronne) {
+        $r = appel('/api/parcours.php', ['code' => $recEleves[$i]['code'], 'appli' => 'defi-tables', 'parcours' => progression_legende($couronne), 'base_revision' => 0]);
+        egal(200, $r['code'], "progression de l'élève $i");
+    }
+    // Un collègue tout neuf, avec sa propre classe et un élève Légende.
+    $temporaire = appel('/api/prof.php', ['action' => 'profs.ajouter', 'identifiant' => 'collegue-records'], ['jeton' => $jetonS1])['json']['motdepasse'] ?? '';
+    $r = appel('/api/prof.php', ['action' => 'connexion', 'identifiant' => 'collegue-records', 'motdepasse' => $temporaire]);
+    egal(200, $r['code'], 'le collègue se connecte');
+    $recJetonClaire = $r['json']['jeton'];
+    egal(200, appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => $temporaire, 'nouveau' => 'phrase-du-voisin-2026'], ['jeton' => $recJetonClaire])['code'], 'il choisit son mot de passe');
+    $classeClaire = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'CM2', 'applis' => ['defi-tables']], ['jeton' => $recJetonClaire])['json']['id'];
+    $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classeClaire, 'nombre' => 1], ['jeton' => $recJetonClaire])['json']['eleves'][0];
+    appel('/api/prof.php', ['action' => 'eleves.nommer', 'eleve_id' => $eleve['id'], 'prenom' => 'Jade', 'initiale' => ''], ['jeton' => $recJetonClaire]);
+    appel('/api/parcours.php', ['code' => $eleve['code'], 'appli' => 'defi-tables', 'parcours' => progression_legende(true), 'base_revision' => 0]);
+    $recCodeClaire = $eleve['code'];
+});
+
+verifier("records — la table existe sur une base neuve, et migrer.php la crée (et le dit) sur une base d'avant", function () {
+    require_once __DIR__ . '/../public/lib/records.php';
+    egal(true, table_existe(bd_test(), 'records'), 'installer.php a créé la table');
+    bd_test()->exec('DROP TABLE records');
+    $faits = migrer_schema(bd_test());
+    vrai(in_array('Table « records » créée (les meilleurs temps des Légendes des tables).', $faits, true), 'migrer.php la crée et le dit : ' . implode(' | ', $faits));
+    egal([], migrer_schema(bd_test()), 'relancer ne fait plus rien');
+    $v = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai((bool)preg_match('#class="etat oui">✓</span>\s*Les records \(Défi tables\)\s*<div class="detail">en place \(aucun temps enregistré pour le moment\)#u', $v['texte']), 'verifier.php : la ligne est verte, aucun temps');
+});
+
+verifier("records — pas de code, mauvais code, pas Légende : rien n'entre", function () use (&$recEleves) {
+    vider_compteurs();
+    egal(405, appel('/api/records.php', null, ['methode' => 'GET'])['code'], 'GET refusé');
+    egal(400, records_api('AB', ['lire' => true])['code'], 'code mal formé');
+    egal(404, records_api('ZZZZZZ', ['lire' => true])['code'], 'code inconnu');
+    // Léa M. (quatre étoiles) : elle lit la ligue (vide), mais sa course est refusée.
+    $r = records_api($recEleves[2]['code'], ['lire' => true]);
+    egal(200, $r['code']);
+    egal(false, $r['json']['legende'], 'pas Légende');
+    egal(null, $r['json']['record']['meilleur'], 'aucun record');
+    egal([], $r['json']['toujours'], 'ligue vide');
+    $r = records_api($recEleves[2]['code'], ['temps' => 498, 'justes' => 25]);
+    egal(409, $r['code'], 'pas encore Légende : 409, l’appli réessaiera');
+    egal(false, $r['json']['legende']);
+    egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM records')->fetchColumn(), 'rien n’est écrit');
+});
+
+verifier("records — une course refusée pour de bon : pas 25 sur 25, trop rapide, trop longue, illisible", function () use (&$recEleves) {
+    vider_compteurs();
+    $toti = $recEleves[0]['code'];
+    foreach ([
+        [['temps' => 498, 'justes' => 24], 'Le temps ne compte pas : il faut tout juste.', 'une erreur'],
+        [['temps' => 498, 'justes' => 26], 'Le temps ne compte pas : il faut tout juste.', 'plus de 25'],
+        [['temps' => 99, 'justes' => 25], 'Le temps ne compte pas.', 'sous le seuil de 10 s (robot)'],
+        [['temps' => 36001, 'justes' => 25], 'Le temps ne compte pas.', 'plus d’une heure'],
+        [['temps' => '498', 'justes' => 25], 'Temps illisible.', 'un texte'],
+        [['temps' => 49.8, 'justes' => 25], 'Temps illisible.', 'un nombre à virgule'],
+        [['temps' => 498], 'Temps illisible.', 'sans « justes »'],
+        [['nom' => 'oui'], 'Choix illisible.', 'un nom qui n’est pas un booléen'],
+        [['autre' => 1], 'Demande illisible.', 'rien de connu'],
+    ] as [$corps, $message, $quoi]) {
+        $r = records_api($toti, $corps);
+        egal(400, $r['code'], "$quoi : refusé");
+        egal($message, $r['json']['erreur'] ?? null, "$quoi : le message");
+    }
+    egal(100, SEUIL_COURSE_DIXIEMES, 'le seuil : 10 secondes (décision de Gwenaël, 09/10/2026)');
+    egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM records')->fetchColumn(), 'rien n’est écrit');
+});
+
+verifier("records — la première course d'une Légende : nouveau record, temps de la semaine, 1er, affiché « Mystère » tant que rien n'est choisi", function () use (&$recEleves) {
+    vider_compteurs();
+    $toti = $recEleves[0]['code'];
+    $r = records_api($toti, ['temps' => 498, 'justes' => 25]);
+    egal(200, $r['code'], 'code HTTP');
+    egal(true, $r['json']['nouveau'], 'nouveau record');
+    egal(null, $r['json']['avant'], 'aucun temps avant');
+    egal(498, $r['json']['record']['meilleur']);
+    egal(498, $r['json']['record']['semaine']);
+    egal(lundi_courant(), $r['json']['record']['lundi'], 'le lundi de la semaine en cours');
+    egal(null, $r['json']['record']['nom'], 'aucun choix de nom');
+    egal(1, $r['json']['rangSemaine']);
+    egal(1, $r['json']['rangToujours']);
+    egal([['rang' => 1, 'nom' => 'Mystère', 'temps' => 498, 'moi' => true]], $r['json']['toujours'], 'affiché Mystère : rien n’est révélé sans son choix');
+    egal($r['json']['toujours'], $r['json']['semaine'], 'les deux tableaux');
+    $ligne = bd_test()->query('SELECT * FROM records')->fetch();
+    egal('498', (string)$ligne['meilleur']);
+    vrai((bool)preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/', (string)$ligne['meilleur_le']), 'l’instant du record est gardé, à la microseconde (ex æquo)');
+    egal(null, $ligne['nom']);
+});
+
+verifier("records — le choix du nom : prénom ou Mystère, changeable ; les homonymes prennent l'initiale ; jamais la classe ; sans prénom, « Élève »", function () use (&$recEleves) {
+    vider_compteurs();
+    $toti = $recEleves[0]['code'];
+    $r = records_api($toti, ['nom' => true]);
+    egal(200, $r['code']);
+    egal(true, $r['json']['record']['nom']);
+    egal('Toti', $r['json']['toujours'][0]['nom'], 'le prénom, sans initiale (pas d’homonyme), sans classe');
+    // Les deux Léa : Léa B. (Légende) court ; Léa M. n'est pas Légende, donc
+    // pas d'homonyme dans la ligue → « Léa » seule.
+    records_api($recEleves[1]['code'], ['temps' => 520, 'justes' => 25]);
+    records_api($recEleves[1]['code'], ['nom' => true]);
+    $r = records_api($toti, ['lire' => true]);
+    egal(['Toti', 'Léa'], array_column($r['json']['toujours'], 'nom'), 'Léa seule : l’autre Léa n’est pas dans la ligue');
+    // Léa M. devient Légende et court : deux Léa affichées → « Léa B. » et « Léa M. ».
+    appel('/api/parcours.php', ['code' => $recEleves[2]['code'], 'appli' => 'defi-tables', 'parcours' => progression_legende(true), 'base_revision' => 1]);
+    records_api($recEleves[2]['code'], ['temps' => 613, 'justes' => 25]);
+    records_api($recEleves[2]['code'], ['nom' => true]);
+    $r = records_api($toti, ['lire' => true]);
+    egal(['Toti', 'Léa B.', 'Léa M.'], array_column($r['json']['toujours'], 'nom'), 'les homonymes prennent l’initiale');
+    // L'élève sans prénom : « Élève ».
+    records_api($recEleves[3]['code'], ['temps' => 700, 'justes' => 25]);
+    records_api($recEleves[3]['code'], ['nom' => true]);
+    $r = records_api($toti, ['lire' => true]);
+    egal('Élève', $r['json']['toujours'][3]['nom']);
+    // Mystère, à volonté.
+    $r = records_api($recEleves[1]['code'], ['nom' => false]);
+    egal(false, $r['json']['record']['nom']);
+    egal(['Toti', 'Mystère', 'Léa', 'Élève'], array_column($r['json']['toujours'], 'nom'), 'Léa M. redevient « Léa » : plus d’homonyme affiché');
+    egal(true, $r['json']['toujours'][1]['moi'], 'sa ligne reste la sienne');
+    vrai(!str_contains(json_encode($r['json'], JSON_UNESCAPED_UNICODE), '306'), 'la classe n’apparaît nulle part');
+    vrai(!str_contains($r['texte'], $toti), 'aucun code dans la réponse');
+});
+
+verifier("records — seul le MEILLEUR temps est gardé ; le temps de la semaine vit à part ; les ex æquo : le premier arrivé devant", function () use (&$recEleves) {
+    vider_compteurs();
+    $toti = $recEleves[0]['code'];
+    $r = records_api($toti, ['temps' => 531, 'justes' => 25]);
+    egal(false, $r['json']['nouveau'], 'moins bien : pas un record');
+    egal(498, $r['json']['avant']);
+    egal(498, $r['json']['record']['meilleur'], 'le record reste');
+    $r = records_api($toti, ['temps' => 450, 'justes' => 25]);
+    egal(true, $r['json']['nouveau'], 'mieux : record battu');
+    egal(498, $r['json']['avant'], 'l’ancien, pour « (avant : 49,8 s) »');
+    egal(450, $r['json']['record']['meilleur']);
+    egal(450, $r['json']['record']['semaine']);
+    // La semaine passée : le temps de la semaine ne compte plus, le record reste.
+    bd_test()->prepare('UPDATE records SET semaine = 300, semaine_lundi = ? WHERE eleve_id = ?')->execute(['2026-09-28', $recEleves[0]['id']]);
+    $r = records_api($toti, ['lire' => true]);
+    egal(null, $r['json']['record']['semaine'], 'pas de temps cette semaine');
+    egal(null, $r['json']['rangSemaine'], 'donc pas de rang de la semaine');
+    egal(1, $r['json']['rangToujours'], 'mais toujours premier de tous les temps');
+    vrai(!in_array(300, array_column($r['json']['semaine'], 'temps'), true), 'l’ancien temps de semaine n’est pas dans le tableau');
+    // Une course cette semaine : le temps de la semaine est remplacé, même moins bon que l'ancien.
+    $r = records_api($toti, ['temps' => 560, 'justes' => 25]);
+    egal(560, $r['json']['record']['semaine'], 'la nouvelle semaine repart de cette course');
+    egal(450, $r['json']['record']['meilleur'], 'le record ne bouge pas');
+    // Ex æquo : Léa B. (Mystère) fait 450 après Toti → Toti devant.
+    records_api($recEleves[1]['code'], ['temps' => 450, 'justes' => 25]);
+    $r = records_api($toti, ['lire' => true]);
+    egal(['Toti', 'Mystère'], array_slice(array_column($r['json']['toujours'], 'nom'), 0, 2), 'le premier arrivé devant');
+    egal([1, 2], array_slice(array_column($r['json']['toujours'], 'rang'), 0, 2));
+});
+
+verifier("records — cloisonnement : un élève ne voit que la ligue de SON professeur ; records.ligue rend celle du professeur connecté ; un collègue en lecture ne voit rien de plus", function () use (&$recEleves, &$jetonS1, &$recJetonClaire, &$recCodeClaire, &$recClasse) {
+    vider_compteurs();
+    records_api($recCodeClaire, ['temps' => 386, 'justes' => 25]);
+    records_api($recCodeClaire, ['nom' => true]);
+    $r = records_api($recCodeClaire, ['lire' => true]);
+    egal(['Jade'], array_column($r['json']['toujours'], 'nom'), 'Jade ne voit que la ligue de son professeur');
+    $r = records_api($recEleves[0]['code'], ['lire' => true]);
+    vrai(!in_array('Jade', array_column($r['json']['toujours'], 'nom'), true), 'Toti ne voit pas Jade');
+    $r = appel('/api/prof.php', ['action' => 'records.ligue'], ['jeton' => $jetonS1]);
+    egal(200, $r['code']);
+    vrai(!in_array('Jade', array_column($r['json']['toujours'], 'nom'), true), 'la ligue de gwenael : sans Jade');
+    vrai(in_array('Toti', array_column($r['json']['toujours'], 'nom'), true), 'avec Toti');
+    vrai(!isset($r['json']['record']) && !array_key_exists('rangToujours', $r['json']) || $r['json']['rangToujours'] === null, 'pas de « moi » pour le professeur');
+    $r = appel('/api/prof.php', ['action' => 'records.ligue'], ['jeton' => $recJetonClaire]);
+    egal(['Jade'], array_column($r['json']['toujours'], 'nom'), 'la ligue du collègue : Jade seule');
+    // La 306 partagée au collègue en lecture : sa ligue ne change pas.
+    $claireId = (int)bd_test()->query("SELECT id FROM profs WHERE identifiant = 'collegue-records'")->fetchColumn();
+    appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $recClasse, 'prof_id' => $claireId, 'droit' => 'lecture'], ['jeton' => $jetonS1]);
+    $r = appel('/api/prof.php', ['action' => 'records.ligue'], ['jeton' => $recJetonClaire]);
+    egal(['Jade'], array_column($r['json']['toujours'], 'nom'), 'une classe partagée n’entre pas dans la ligue du collègue');
+    egal(401, appel('/api/prof.php', ['action' => 'records.ligue'])['code'], 'sans jeton : rien');
+});
+
+verifier("records — le tableau du professeur porte le record de chaque Légende ; la fiche aussi", function () use (&$recEleves, &$jetonS1, &$recClasse) {
+    vider_compteurs();
+    $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $recClasse, 'appli' => 'defi-tables'], ['jeton' => $jetonS1]);
+    $parId = [];
+    foreach ($t['json']['eleves'] as $e) $parId[(int)$e['id']] = $e;
+    egal(450, $parId[$recEleves[0]['id']]['record']['meilleur'], 'Toti');
+    egal(true, $parId[$recEleves[0]['id']]['record']['nom']);
+    egal(450, $parId[$recEleves[1]['id']]['record']['meilleur'], 'Léa B.');
+    egal(false, $parId[$recEleves[1]['id']]['record']['nom'], 'son choix Mystère, pour que le professeur sache');
+    $billet = appel('/api/prof.php', ['action' => 'eleves.fiche', 'eleve_id' => $recEleves[0]['id']], ['jeton' => $jetonS1])['json']['billet'];
+    $f = appel('/api/eleve.php', ['billet' => $billet, 'appli' => 'defi-tables']);
+    egal('fiche', $f['json']['type']);
+    egal(450, $f['json']['record']['meilleur'], 'la fiche porte le record');
+    vrai(!str_contains($f['texte'], $recEleves[0]['code']), 'et jamais le code');
+});
+
+verifier("records — la case par classe : fermés, l'élève le sait, sa course est refusée, la classe sort de la ligue ; rouverts, tout revient", function () use (&$recEleves, &$jetonS1, &$recClasse) {
+    vider_compteurs();
+    $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $recClasse, 'reglages' => ['defi-tables' => ['records' => false]]], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'fermer');
+    egal(['defi-tables' => ['records' => false]], $r['json']['reglages']);
+    egal('{"defi-tables":{"records":false}}', classe_en_base($recClasse)['reglages'], 'en base : seul « false » s’écrit');
+    $e = identite($recEleves[0]['code']);
+    egal(['defi-tables' => ['records' => false]], $e['json']['reglages'], 'l’élève le reçoit avec son identité');
+    $r = records_api($recEleves[0]['code'], ['lire' => true]);
+    egal(false, $r['json']['ouvert'], 'lire : fermés');
+    vrai(!isset($r['json']['toujours']), 'et rien de la ligue');
+    $r = records_api($recEleves[0]['code'], ['temps' => 400, 'justes' => 25]);
+    egal(403, $r['code'], 'une course : refusée');
+    egal(403, records_api($recEleves[0]['code'], ['nom' => false])['code'], 'le nom aussi');
+    $r = appel('/api/prof.php', ['action' => 'records.ligue'], ['jeton' => $jetonS1]);
+    egal([], $r['json']['toujours'], 'la classe est sortie de la ligue du professeur');
+    foreach ([
+        [['defi-tables' => ['records' => 'non']], 'Réglage illisible.'],
+        [['defi-tables' => ['records' => 0]], 'Réglage illisible.'],
+        [['defi-tables' => ['mondes' => [1]]], 'Réglage inconnu.'],
+    ] as [$reglages, $message]) {
+        $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $recClasse, 'reglages' => $reglages], ['jeton' => $jetonS1]);
+        egal(400, $r['code']);
+        egal($message, $r['json']['erreur'] ?? null);
+    }
+    $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $recClasse, 'reglages' => ['defi-tables' => ['records' => true]]], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'rouvrir');
+    egal(null, classe_en_base($recClasse)['reglages'], 'le défaut : rien d’écrit');
+    $r = records_api($recEleves[0]['code'], ['lire' => true]);
+    egal(true, $r['json']['ouvert']);
+    egal(450, $r['json']['record']['meilleur'], 'rien n’a été effacé');
+});
+
+verifier("records — repartent à zéro avec le nouveau tirage (09/10/2026) : un temps d'avant ne compte plus, rien n'est effacé, la course suivante le remplace", function () use (&$recEleves, &$jetonS1, &$recClasse) {
+    vider_compteurs();
+    // Toti a couru avant le changement de tirage : son 30,0 s date d'avant records_depuis.
+    $toti = $recEleves[0];
+    bd_test()->prepare('UPDATE records SET meilleur = 300, meilleur_le = ?, semaine = 300, semaine_lundi = ? WHERE eleve_id = ?')
+        ->execute(['2025-12-31T23:59:59.999999Z', lundi_courant(), $toti['id']]);
+    $r = records_api($toti['code'], ['lire' => true]);
+    egal(null, $r['json']['record']['meilleur'], 'plus de record pour lui');
+    egal(null, $r['json']['record']['semaine'], 'ni de temps de la semaine');
+    egal(true, $r['json']['record']['nom'], 'son choix de nom reste');
+    vrai(!in_array('Toti', array_column($r['json']['toujours'], 'nom'), true), 'il sort de « De tous les temps »');
+    vrai(!in_array('Toti', array_column($r['json']['semaine'], 'nom'), true), 'et de « Cette semaine »');
+    egal(null, $r['json']['rangToujours']);
+    egal(null, $r['json']['rangSemaine']);
+    $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $recClasse, 'appli' => 'defi-tables'], ['jeton' => $jetonS1]);
+    $vu = false;
+    foreach ($t['json']['eleves'] as $e) {
+        if ((int)$e['id'] !== (int)$toti['id']) continue;
+        $vu = true;
+        egal(null, $e['record']['meilleur'], 'le tableau du professeur non plus');
+    }
+    vrai($vu, 'Toti est dans le tableau du professeur');
+    $l = appel('/api/prof.php', ['action' => 'records.ligue'], ['jeton' => $jetonS1]);
+    vrai(!in_array('Toti', array_column($l['json']['toujours'], 'nom'), true), 'ni dans la ligue projetée');
+    egal('300', (string)bd_test()->query('SELECT meilleur FROM records WHERE eleve_id = ' . (int)$toti['id'])->fetchColumn(), 'rien n’est effacé en base');
+    // Sa course suivante, même moins bonne que l'ancien temps, devient son record.
+    $r = records_api($toti['code'], ['temps' => 700, 'justes' => 25]);
+    egal(200, $r['code']);
+    egal(true, $r['json']['nouveau'], 'un nouveau record');
+    egal(null, $r['json']['avant'], 'sans « avant » : l’ancien temps ne compte plus');
+    egal(700, $r['json']['record']['meilleur']);
+    egal(700, $r['json']['record']['semaine']);
+    vrai(in_array('Toti', array_column($r['json']['toujours'], 'nom'), true), 'il revient dans la ligue');
+    $r = records_api($toti['code'], ['temps' => 650, 'justes' => 25]);
+    egal(700, $r['json']['avant'], 'ensuite, tout redevient normal');
+    egal(650, $r['json']['record']['meilleur']);
+    // La date du changement, écrite comme meilleur_le (à la microseconde) :
+    // le 10/10/2026 à 20 h à La Réunion, juste après la mise en ligne du
+    // nouveau tirage (fusion à 19 h 23). Correction du 11/10 : c'était le
+    // 10/10 à 0 h, et les courses du samedi faites avec l'ancien tirage
+    // comptaient encore.
+    vrai((bool)preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/', RECORDS_DEPUIS), 'RECORDS_DEPUIS : écrit comme meilleur_le, à la microseconde');
+    egal('2026-10-10T16:00:00.000000Z', RECORDS_DEPUIS, 'le 10/10/2026 à 20 h, heure de La Réunion');
+    egal('10/10/2026 20:00', instant_local_lisible(RECORDS_DEPUIS), 'lu à La Réunion');
+    vrai(strcmp('2026-10-10T15:23:00.000000Z', RECORDS_DEPUIS) < 0, 'une course de samedi 19 h 23 (ancien tirage) ne compte plus');
+});
+
+verifier("records — verifier.php compte à part les temps de la saison et les anciens, gardés sans compter (11/10/2026)", function () use (&$recEleves) {
+    vider_compteurs();
+    $toti = $recEleves[0];
+    $avant = bd_test()->query('SELECT meilleur, meilleur_le FROM records WHERE eleve_id = ' . (int)$toti['id'])->fetch();
+    // Le serveur de test part du 01/01/2026 (config.php des tests) : on
+    // compte ici à la main, comme verifier.php doit le faire.
+    $compter = fn(): array => [
+        'saison' => (int)bd_test()->query("SELECT COUNT(*) FROM records WHERE meilleur IS NOT NULL AND meilleur_le >= '2026-01-01T00:00:00.000000Z'")->fetchColumn(),
+        'anciens' => (int)bd_test()->query("SELECT COUNT(*) FROM records WHERE meilleur IS NOT NULL AND meilleur_le < '2026-01-01T00:00:00.000000Z'")->fetchColumn(),
+    ];
+    $temps = $compter();
+    vrai($temps['saison'] >= 2, 'au moins deux Légendes ont couru cette saison');
+    egal(0, $temps['anciens'], 'aucun ancien temps pour commencer');
+    $v = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai((bool)preg_match('#class="etat oui">✓</span>\s*Les records \(Défi tables\)\s*<div class="detail">en place — depuis le 01/01/2026 04:00 \(heure de La Réunion\) : ' . $temps['saison'] . ' Légende\(s\) avec un temps</div>#u', $v['texte']),
+        'verifier.php : la date de départ et le nombre de temps de la saison, sans ligne d’anciens temps');
+    // Toti redevient un ancien temps : la ligne le compte à part.
+    bd_test()->prepare('UPDATE records SET meilleur_le = ? WHERE eleve_id = ?')->execute(['2025-12-31T23:59:59.999999Z', $toti['id']]);
+    $v = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai((bool)preg_match('#Les records \(Défi tables\)\s*<div class="detail">en place — depuis le 01/01/2026 04:00 \(heure de La Réunion\) : ' . ($temps['saison'] - 1) . ' Légende\(s\) avec un temps ; 1 temps plus ancien\(s\), gardé\(s\) en base, ne compte\(nt\) plus</div>#u', $v['texte']),
+        'verifier.php : l’ancien temps est compté à part');
+    egal(['saison' => $temps['saison'] - 1, 'anciens' => 1], $compter());
+    bd_test()->prepare('UPDATE records SET meilleur_le = ? WHERE eleve_id = ?')->execute([$avant['meilleur_le'], $toti['id']]);
+});
+
+// Lot « après l'audit GPT » (14/10/2026) : D4 « Retirer ce temps », D8 le
+// jour de la course.
+
+verifier("records — D4 : « Retirer ce temps » — le propriétaire efface le record et la semaine, le nom reste, la ligne reste, la ligue du professeur porte l'élève derrière chaque nom ; journalisé", function () use (&$recEleves, &$jetonS1, &$recClasse) {
+    vider_compteurs();
+    $toti = $recEleves[0];
+    $lea = $recEleves[1];
+    // La ligue du professeur : chaque ligne dit QUI (id, prénom saisi, classe),
+    // même derrière « Mystère » — jamais dans la ligue que lit l'appli élève.
+    $r = appel('/api/prof.php', ['action' => 'records.ligue'], ['jeton' => $jetonS1]);
+    $lignes = array_column($r['json']['toujours'], null, 'nom');
+    egal(['id' => (int)$toti['id'], 'prenom' => 'Toti', 'classe' => '306'], $lignes['Toti']['eleve'], 'Toti : son élève');
+    egal(['id' => (int)$lea['id'], 'prenom' => 'Léa', 'classe' => '306'], $lignes['Mystère']['eleve'], 'Mystère : le professeur sait qui');
+    $e = records_api($toti['code'], ['lire' => true]);
+    foreach ($e['json']['toujours'] as $ligne) vrai(!array_key_exists('eleve', $ligne), 'l’appli élève ne reçoit aucun identifiant');
+    vrai(!str_contains($e['texte'], '"prenom"'), 'ni prénom saisi');
+    // Le retrait : Toti a un record (650 depuis le test de la saison) et un
+    // temps de la semaine, nom = prénom.
+    egal(650, $e['json']['record']['meilleur']);
+    egal(650, $e['json']['record']['semaine']);
+    $avant = (int)bd_test()->query('SELECT COUNT(*) FROM records')->fetchColumn();
+    $r = appel('/api/prof.php', ['action' => 'records.retirer', 'eleve_id' => $toti['id']], ['jeton' => $jetonS1]);
+    egal(200, $r['code']);
+    egal(true, $r['json']['retire']);
+    vrai(!in_array('Toti', array_column($r['json']['toujours'], 'nom'), true), 'la ligue rendue ne l’a plus');
+    egal($avant, (int)bd_test()->query('SELECT COUNT(*) FROM records')->fetchColumn(), 'la ligne reste');
+    $ligne = bd_test()->query('SELECT meilleur, meilleur_le, semaine, semaine_lundi, nom FROM records WHERE eleve_id = ' . (int)$toti['id'])->fetch(PDO::FETCH_ASSOC);
+    egal(['meilleur' => null, 'meilleur_le' => null, 'semaine' => null, 'semaine_lundi' => null, 'nom' => 1], $ligne, 'temps effacés, le choix du nom reste');
+    $e = records_api($toti['code'], ['lire' => true]);
+    egal(null, $e['json']['record']['meilleur'], 'l’élève n’a plus de record');
+    egal(true, $e['json']['record']['nom'], 'mais garde son choix');
+    egal(null, $e['json']['rangToujours']);
+    // Sa prochaine course compte comme une première.
+    $r = records_api($toti['code'], ['temps' => 601, 'justes' => 25]);
+    egal(true, $r['json']['nouveau']);
+    egal(null, $r['json']['avant']);
+    egal(601, $r['json']['record']['meilleur']);
+    // Rien à retirer (retiré une seconde fois, avant sa nouvelle course, ci-dessus) : 200, retire = false.
+    bd_test()->prepare('UPDATE records SET meilleur = NULL, meilleur_le = NULL, semaine = NULL, semaine_lundi = NULL WHERE eleve_id = ?')->execute([(int)$toti['id']]);
+    $r = appel('/api/prof.php', ['action' => 'records.retirer', 'eleve_id' => $toti['id']], ['jeton' => $jetonS1]);
+    egal(200, $r['code']);
+    egal(false, $r['json']['retire'], 'plus rien à retirer : pas une erreur');
+    // Journal : chaque demande du propriétaire = une ligne.
+    egal(2, (int)bd_test()->query("SELECT COUNT(*) FROM journal WHERE action = 'records.retirer' AND resultat = 'ok' AND cible_id = " . (int)$toti['id'])->fetchColumn(), 'journalisé');
+    // Toti rejoue (601) pour les tests suivants.
+    records_api($toti['code'], ['temps' => 601, 'justes' => 25]);
+});
+
+verifier("records — D4 : un collègue (classe partagée en lecture) est refusé et journalisé ; l'élève d'un autre professeur est introuvable ; sans jeton, rien", function () use (&$recEleves, &$jetonS1, &$recJetonClaire, &$recCodeClaire) {
+    vider_compteurs();
+    // La 306 est partagée au collègue en lecture (test du cloisonnement).
+    $r = appel('/api/prof.php', ['action' => 'records.retirer', 'eleve_id' => $recEleves[1]['id']], ['jeton' => $recJetonClaire]);
+    egal(403, $r['code'], 'le collègue : refusé');
+    egal(1, (int)bd_test()->query("SELECT COUNT(*) FROM journal WHERE action = 'records.retirer' AND resultat = 'refus'")->fetchColumn(), 'le refus est au journal');
+    $ligne = bd_test()->query('SELECT meilleur FROM records WHERE eleve_id = ' . (int)$recEleves[1]['id'])->fetch(PDO::FETCH_ASSOC);
+    egal(450, (int)$ligne['meilleur'], 'rien n’a bougé');
+    // Jade, l'élève du collègue : pour gwenael, elle n'existe pas.
+    $jade = (int)bd_test()->query("SELECT id FROM eleves WHERE code = '$recCodeClaire'")->fetchColumn();
+    egal(404, appel('/api/prof.php', ['action' => 'records.retirer', 'eleve_id' => $jade], ['jeton' => $jetonS1])['code'], 'introuvable, comme partout');
+    egal(386, (int)bd_test()->query("SELECT meilleur FROM records WHERE eleve_id = $jade")->fetchColumn(), 'son temps est intact');
+    egal(404, appel('/api/prof.php', ['action' => 'records.retirer', 'eleve_id' => 999999], ['jeton' => $jetonS1])['code'], 'un élève qui n’existe pas : le même message');
+    egal(401, appel('/api/prof.php', ['action' => 'records.retirer', 'eleve_id' => $recEleves[1]['id']])['code'], 'sans jeton');
+});
+
+verifier("records — D8 : le jour de la course — plausible, il classe la course dans SA semaine ; sinon le jour de réception ; une course d'une semaine passée ne touche pas à la semaine en cours", function () use (&$recEleves) {
+    vider_compteurs();
+    require_once __DIR__ . '/../public/lib/records.php';
+    // jour_de_course : format strict, date réelle, pas dans le futur, 7 jours au plus.
+    $auj = '2026-10-14';
+    egal('2026-10-14', jour_de_course('2026-10-14', $auj));
+    egal('2026-10-11', jour_de_course('2026-10-11', $auj), 'dimanche dernier');
+    egal('2026-10-07', jour_de_course('2026-10-07', $auj), 'il y a 7 jours : encore accepté');
+    egal($auj, jour_de_course('2026-10-06', $auj), '8 jours : trop vieux');
+    egal($auj, jour_de_course('2026-10-15', $auj), 'demain : dans le futur');
+    egal($auj, jour_de_course('2026-02-30', $auj), 'une date qui n’existe pas');
+    egal($auj, jour_de_course('14/10/2026', $auj), 'pas le bon format');
+    egal($auj, jour_de_course("2026-10-14\n", $auj), 'rien d’autre que le jour');
+    egal($auj, jour_de_course(20261014, $auj), 'pas une chaîne');
+    egal($auj, jour_de_course(null, $auj), 'absent : aujourd’hui');
+    egal($auj, jour_de_course(['2026-10-14'], $auj), 'une liste');
+    // lundi_de : la semaine d'un jour.
+    egal('2026-10-05', lundi_de('2026-10-11'), 'le dimanche 11 est dans la semaine du lundi 5');
+    egal('2026-10-12', lundi_de('2026-10-14'));
+    // En vrai, par l'API : Léa B. (élève 1) a 450 de record ; cette semaine, rien ou 450.
+    $lea = $recEleves[1]['code'];
+    $pdo = bd_test();
+    $id = (int)$recEleves[1]['id'];
+    $lundi = lundi_courant();
+    $dimanche = (new DateTimeImmutable($lundi, new DateTimeZone(FUSEAU)))->modify('-1 day')->format('Y-m-d');
+    $lundiPasse = lundi_de($dimanche);
+    // Un temps de la semaine en cours, posé exprès.
+    $pdo->prepare('UPDATE records SET semaine = 470, semaine_lundi = ? WHERE eleve_id = ?')->execute([$lundi, $id]);
+    // Une course du dimanche soir (semaine passée), envoyée aujourd'hui : elle
+    // ne touche pas à la semaine en cours (470 reste) ; 440 < 450, c'est quand
+    // même le record de tous les temps, daté du dimanche.
+    $r = records_api($lea, ['temps' => 440, 'justes' => 25, 'jour' => $dimanche]);
+    egal(200, $r['code']);
+    egal(true, $r['json']['nouveau'], 'meilleur que 450 : le record, quel que soit le jour');
+    egal(440, $r['json']['record']['meilleur']);
+    egal($dimanche, $r['json']['record']['meilleurLe'], 'daté du jour de la course');
+    egal(470, $r['json']['record']['semaine'], 'la semaine en cours n’a pas bougé');
+    $ligne = $pdo->query("SELECT semaine, semaine_lundi, meilleur_le FROM records WHERE eleve_id = $id")->fetch(PDO::FETCH_ASSOC);
+    egal(470, (int)$ligne['semaine']);
+    egal($lundi, $ligne['semaine_lundi'], 'la semaine gardée reste celle en cours');
+    egal($dimanche, substr((string)$ligne['meilleur_le'], 0, 10));
+    // Une course de la semaine passée, moins bonne : rien ne bouge nulle part.
+    $r = records_api($lea, ['temps' => 480, 'justes' => 25, 'jour' => $dimanche]);
+    egal(false, $r['json']['nouveau']);
+    egal(470, $r['json']['record']['semaine']);
+    // Un jour impossible : la course est d'aujourd'hui (semaine en cours : 460 < 470 la remplace).
+    $r = records_api($lea, ['temps' => 460, 'justes' => 25, 'jour' => '2030-01-01']);
+    egal(460, $r['json']['record']['semaine'], 'jour dans le futur : jour de réception, donc cette semaine');
+    egal($lundi, $r['json']['record']['lundi']);
+    // Sans jour : comme avant.
+    $r = records_api($lea, ['temps' => 455, 'justes' => 25]);
+    egal(455, $r['json']['record']['semaine']);
+    // Une ligne de la semaine PASSÉE en base (élève qui n'a pas joué cette
+    // semaine), et une course de cette semaine : la nouvelle semaine s'ouvre.
+    $pdo->prepare('UPDATE records SET semaine = 300, semaine_lundi = ? WHERE eleve_id = ?')->execute([$lundiPasse, $id]);
+    $r = records_api($lea, ['temps' => 500, 'justes' => 25, 'jour' => jour_local()]);
+    egal(500, $r['json']['record']['semaine'], 'la semaine repart de cette course');
+    egal($lundi, $r['json']['record']['lundi']);
+    // Et une course de la semaine passée sur une ligne de la semaine passée : le min.
+    $pdo->prepare('UPDATE records SET semaine = 300, semaine_lundi = ? WHERE eleve_id = ?')->execute([$lundiPasse, $id]);
+    records_api($lea, ['temps' => 290, 'justes' => 25, 'jour' => $dimanche]);
+    $ligne = $pdo->query("SELECT semaine, semaine_lundi FROM records WHERE eleve_id = $id")->fetch(PDO::FETCH_ASSOC);
+    egal([290, $lundiPasse], [(int)$ligne['semaine'], $ligne['semaine_lundi']], 'même semaine passée : le meilleur des deux');
+    // Remise en ordre pour les tests suivants : le record de Léa B. à 450, pas de temps de semaine.
+    $pdo->prepare('UPDATE records SET meilleur = 450, semaine = NULL, semaine_lundi = NULL WHERE eleve_id = ?')->execute([$id]);
+});
+
+verifier("records — le record part avec l'élève supprimé, et avec la classe supprimée", function () use (&$recEleves, &$jetonS1, &$recJetonClaire, &$recCodeClaire) {
+    vider_compteurs();
+    $avant = (int)bd_test()->query('SELECT COUNT(*) FROM records')->fetchColumn();
+    egal(200, appel('/api/prof.php', ['action' => 'eleves.supprimer', 'eleve_id' => $recEleves[3]['id']], ['jeton' => $jetonS1])['code']);
+    egal($avant - 1, (int)bd_test()->query('SELECT COUNT(*) FROM records')->fetchColumn(), 'une ligne de moins');
+    $classeClaire = (int)bd_test()->query("SELECT classe_id FROM eleves WHERE code = '$recCodeClaire'")->fetchColumn();
+    egal(200, appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $classeClaire], ['jeton' => $recJetonClaire])['code']);
+    egal($avant - 2, (int)bd_test()->query('SELECT COUNT(*) FROM records')->fetchColumn(), 'Jade est partie avec sa classe');
+    egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM records r LEFT JOIN eleves e ON e.id = r.eleve_id WHERE e.id IS NULL')->fetchColumn(), 'aucune ligne orpheline');
+});
+
+verifier("records — les bornes du serveur sont celles du moteur (SEUILS.course)", function () use ($racine) {
+    $moteur = (string)file_get_contents($racine . '/public/prof/defi_tables_mon_parcours.js');
+    vrai((bool)preg_match('/course: Object\.freeze\(\{total: (\d+), erreursMax: (\d+), dixiemesMin: (\d+), dixiemesMax: (\d+)\}\)/', $moteur, $m), 'SEUILS.course dans le moteur');
+    egal((int)$m[1], COURSE_TOTAL, 'total');
+    egal(0, (int)$m[2], '25 sur 25 : aucune erreur (décision du 09/10/2026)');
+    egal((int)$m[3], SEUIL_COURSE_DIXIEMES, 'seuil');
+    egal((int)$m[4], COURSE_MAX_DIXIEMES, 'plafond');
+});
+
+// ================================================= SÉANCE EN DIRECT (07/10/2026)
+//
+// Lot 1 « question éclair » — lib/direct.php, api/direct.php, direct.* dans
+// api/prof.php. Ce que ce bloc tient :
+//  - l'élève ne reçoit ni la répartition ni la bonne réponse ; le tableau ne
+//    reçoit la répartition qu'après « Dévoiler », et jamais un nom ;
+//  - une réponse n'entre que si la question est ouverte, et sa forme est
+//    vérifiée par son type ; changer d'avis remplace, sans doublon ;
+//  - une classe ne voit pas la séance d'une autre ;
+//  - RIEN ne reste : « Terminer », l'échéance (une heure et demie après le
+//    dernier geste du professeur), la classe ou l'élève supprimés ;
+//  - interroger ne compte rien (aucune écriture par passage).
+//
+// Sabotages attendus (chacun rend un test rouge) :
+//  a) retirer « AND d.etat = 'question' » de repondre_au_direct()
+//  b) envoyer « repartition » pendant la question (etat_du_direct_pour_le_tableau)
+//  c) ajouter « bonne » à etat_du_direct_pour_l_eleve()
+//  d) oublier oublier_direct_de_la_classe() dans supprimer_classe()
+//  e) retirer purger_directs() de api/direct.php
+//  f) compter chaque interrogation (limiter() avant le test « reponse »)
+//  g) accepter n'importe quelle lettre dans reponse_direct()
+
+$direct = ['jeton' => null, 'classe' => null, 'eleves' => [], 'autreClasse' => null, 'autreEleve' => null];
+
+function direct_prof(string $action, array $direct, array $corps = []): array
+{
+    return appel('/api/prof.php', ['action' => $action, 'classe_id' => $direct['classe']] + $corps,
+        ['jeton' => $direct['jeton']]);
+}
+
+function direct_eleve(string $code, array $corps = []): array
+{
+    return appel('/api/direct.php', ['code' => $code] + $corps);
+}
+
+function directs_en_base(): array
+{
+    $combien = [];
+    foreach (['directs', 'directs_questions', 'directs_reponses'] as $table) {
+        $combien[$table] = (int)bd_test()->query("SELECT COUNT(*) FROM $table")->fetchColumn();
+    }
+    return $combien;
+}
+
+verifier("direct — mise en place : une classe de cinq élèves nommés, et une autre classe", function () use (&$direct) {
+    vider_compteurs();
+    foreach (['phrase-de-secours-2026', 'motdepasse-de-test-2026'] as $essai) {
+        $r = connexion('gwenael', $essai);
+        if (($r['json']['jeton'] ?? null) !== null) { $direct['jeton'] = $r['json']['jeton']; break; }
+    }
+    vrai(is_string($direct['jeton']), 'la session du professeur est ouverte');
+    $direct['classe'] = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'direct-405'], ['jeton' => $direct['jeton']])['json']['id'];
+    $direct['eleves'] = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $direct['classe'], 'nombre' => 5], ['jeton' => $direct['jeton']])['json']['eleves'];
+    egal(5, count($direct['eleves']), 'cinq élèves');
+    foreach (['Léa', 'Noah', 'Inès', 'Tom', 'Zoé'] as $i => $prenom) {
+        appel('/api/prof.php', ['action' => 'eleves.nommer', 'eleve_id' => $direct['eleves'][$i]['id'], 'prenom' => $prenom, 'initiale' => 'D'], ['jeton' => $direct['jeton']]);
+    }
+    $direct['autreClasse'] = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'direct-306'], ['jeton' => $direct['jeton']])['json']['id'];
+    $direct['autreEleve'] = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $direct['autreClasse'], 'nombre' => 1], ['jeton' => $direct['jeton']])['json']['eleves'][0];
+    bd_test()->exec('DELETE FROM directs_reponses');
+    bd_test()->exec('DELETE FROM directs_questions');
+    bd_test()->exec('DELETE FROM directs');
+});
+
+verifier("direct — sans séance : l'élève l'apprend, en POST seulement, et un code inconnu est un échec", function () use (&$direct) {
+    $r = direct_eleve($direct['eleves'][0]['code']);
+    egal(200, $r['code']);
+    vrai(array_key_exists('direct', $r['json']) && $r['json']['direct'] === null, 'aucune séance');
+    egal(6000, $r['json']['rythme'], 'sans séance, la page espace ses questions');
+    egal('no-store', entete($r, 'Cache-Control'), 'jamais en cache');
+    egal(405, appel('/api/direct.php', null)['code'], 'GET refusé');
+    egal(405, appel('/api/direct.php?code=' . $direct['eleves'][0]['code'], null)['code'], 'le code dans l’adresse ne vaut rien');
+    egal(400, direct_eleve('!!')['code'], 'code mal formé');
+    vider_compteurs();
+    egal(404, direct_eleve(code_inconnu(7))['code'], 'code inconnu');
+    egal(1, count(compteurs()), 'et l’échec est compté pour l’adresse');
+    vider_compteurs();
+    $r = direct_prof('direct.etat', $direct);
+    egal(200, $r['code']);
+    vrai($r['json']['direct'] === null, 'le tableau aussi : aucune séance');
+    egal('direct-405', $r['json']['classe']['libelle'], 'il sait le nom de la classe');
+    egal(409, direct_prof('direct.question', $direct, ['type' => 'choix'])['code'], 'pas de question sans séance');
+    egal(409, direct_prof('direct.fichier', $direct)['code'], 'pas de fichier sans séance');
+});
+
+verifier("direct — ouvrir : une séance par classe, même à dix en même temps", function () use (&$direct) {
+    $codes = appels_paralleles('/api/prof.php', ['action' => 'direct.ouvrir', 'classe_id' => $direct['classe'], 'jeton' => $direct['jeton']], 10);
+    egal([200], array_values(array_unique($codes)), 'dix ouvertures simultanées, toutes servies');
+    egal(1, directs_en_base()['directs'], 'une seule séance en base');
+    $r = direct_prof('direct.ouvrir', $direct);
+    egal('attente', $r['json']['direct']['etat']);
+    egal(0, $r['json']['direct']['numero']);
+    egal(5, $r['json']['direct']['inscrits'], 'cinq élèves attendus');
+    egal(1, directs_en_base()['directs'], 'rouvrir ne crée rien');
+    $etat = direct_eleve($direct['eleves'][0]['code'])['json'];
+    egal('attente', $etat['direct']['etat'], 'l’élève voit la séance, en attente');
+    egal(2500, $etat['rythme'], 'et interroge plus souvent');
+    vrai($etat['direct']['type'] === null && $etat['direct']['reponse'] === null, 'sans question, rien à répondre');
+    $r = direct_eleve($direct['eleves'][0]['code'], ['numero' => 1, 'reponse' => 'A']);
+    egal(false, $r['json']['enregistree'], 'répondre avant la question n’écrit rien');
+    egal(0, directs_en_base()['directs_reponses']);
+    vrai(direct_eleve($direct['autreEleve']['code'])['json']['direct'] === null, 'l’élève d’une autre classe ne voit pas cette séance');
+});
+
+verifier("direct — question : le réglage est une liste fermée, l'élève ne reçoit ni répartition ni bonne réponse", function () use (&$direct) {
+    egal(400, direct_prof('direct.question', $direct, ['type' => 'texte'])['code'], 'type inconnu');
+    egal(400, direct_prof('direct.question', $direct, ['type' => 'choix', 'reglage' => ['choix' => 7]])['code'], 'sept réponses : refusé');
+    egal(400, direct_prof('direct.question', $direct, ['type' => 'choix', 'reglage' => ['choix' => '4']])['code'], 'un texte à la place d’un nombre : refusé');
+    egal(0, directs_en_base()['directs_questions'], 'rien n’a été posé');
+    $r = direct_prof('direct.question', $direct, ['type' => 'choix', 'reglage' => ['choix' => 4, 'enonce' => '<b>2+2</b>']]);
+    egal(200, $r['code']);
+    egal('question', $r['json']['direct']['etat']);
+    egal(1, $r['json']['direct']['numero']);
+    egal('{"choix":4}', (string)bd_test()->query('SELECT reglage FROM directs_questions')->fetchColumn(), 'le réglage rangé ne garde que ce que le type connaît : aucun énoncé');
+    $etat = direct_eleve($direct['eleves'][0]['code'])['json']['direct'];
+    egal('question', $etat['etat']);
+    egal('choix', $etat['type']);
+    egal(['choix' => 4], $etat['reglage']);
+    foreach (['bonne', 'repartition', 'repondu', 'inscrits'] as $cle) {
+        vrai(!array_key_exists($cle, $etat), "l'élève ne reçoit pas « $cle »");
+    }
+});
+
+verifier("direct — réponses : forme vérifiée, changer d'avis remplace, pas de doublon à vingt en même temps", function () use (&$direct) {
+    $e = $direct['eleves'];
+    foreach ([0 => 'A', 1 => 'B', 2 => 'b', 3 => 'C'] as $i => $lettre) {
+        $r = direct_eleve($e[$i]['code'], ['numero' => 1, 'reponse' => $lettre]);
+        egal(200, $r['code']);
+        egal(true, $r['json']['enregistree'], "réponse $lettre rangée");
+        egal(strtoupper($lettre), $r['json']['direct']['reponse'], 'et rendue à l’élève');
+    }
+    foreach (['E', 'AB', '', '<b>', 'Z'] as $mauvaise) {
+        egal(400, direct_eleve($e[4]['code'], ['numero' => 1, 'reponse' => $mauvaise])['code'], "« $mauvaise » n'est pas une réponse");
+    }
+    egal(400, direct_eleve($e[4]['code'], ['numero' => 1, 'reponse' => ['A']])['code'], 'un tableau non plus');
+    egal(4, directs_en_base()['directs_reponses'], 'quatre réponses, pas une de plus');
+    // Un numéro qui n'est pas celui de la question en cours : rien d'écrit.
+    egal(false, direct_eleve($e[4]['code'], ['numero' => 2, 'reponse' => 'A'])['json']['enregistree'], 'question n° 2 : elle n’existe pas');
+    // L'élève d'une autre classe ne peut pas répondre à cette séance.
+    $r = direct_eleve($direct['autreEleve']['code'], ['numero' => 1, 'reponse' => 'A']);
+    vrai($r['json']['direct'] === null, 'autre classe : aucune séance, donc aucune réponse');
+    egal(4, directs_en_base()['directs_reponses']);
+    // Changer d'avis.
+    egal('D', direct_eleve($e[0]['code'], ['numero' => 1, 'reponse' => 'D'])['json']['direct']['reponse'], 'A devient D');
+    egal(4, directs_en_base()['directs_reponses'], 'remplacée, pas ajoutée');
+    // Vingt fois la même réponse au même instant (double clic, réseau qui rejoue).
+    $codes = appels_paralleles('/api/direct.php', ['code' => $e[0]['code'], 'numero' => 1, 'reponse' => 'A'], 20);
+    vrai(!in_array(500, $codes, true), 'aucune erreur serveur : ' . json_encode(array_count_values($codes)));
+    egal(4, directs_en_base()['directs_reponses'], 'toujours une ligne par élève');
+    egal('A', direct_eleve($e[0]['code'])['json']['direct']['reponse']);
+});
+
+verifier("direct — pendant la question, le tableau ne reçoit qu'un compteur", function () use (&$direct) {
+    $r = direct_prof('direct.etat', $direct);
+    $etat = $r['json']['direct'];
+    egal(4, $etat['repondu'], 'quatre ont répondu');
+    egal(5, $etat['inscrits'], 'sur cinq');
+    vrai($etat['repartition'] === null, 'la répartition n’est même pas envoyée');
+    vrai($etat['bonne'] === null, 'ni la bonne réponse');
+    egal(1500, $r['json']['rythme']);
+    egal(409, direct_prof('direct.bonne', $direct, ['bonne' => 'B'])['code'], 'on ne désigne pas la bonne réponse avant de dévoiler');
+});
+
+verifier("direct — dévoiler : la répartition, sans aucun nom ; plus aucune réponse n'entre", function () use (&$direct) {
+    $r = direct_prof('direct.devoiler', $direct);
+    egal(200, $r['code']);
+    egal('devoile', $r['json']['direct']['etat']);
+    egal(['A' => 1, 'B' => 2, 'C' => 1], $r['json']['direct']['repartition'], 'la répartition');
+    foreach (['Léa', 'Noah', 'Inès', $direct['eleves'][0]['code'], 'prenom', 'eleve_id'] as $interdit) {
+        vrai(!str_contains($r['texte'], $interdit), "le tableau ne reçoit pas « $interdit »");
+    }
+    egal(200, direct_prof('direct.devoiler', $direct)['code'], 'dévoiler deux fois ne casse rien');
+    $tardive = direct_eleve($direct['eleves'][4]['code'], ['numero' => 1, 'reponse' => 'A']);
+    egal(false, $tardive['json']['enregistree'], 'une réponse arrivée après n’est pas rangée');
+    egal('devoile', $tardive['json']['direct']['etat'], 'et l’élève apprend que c’est dévoilé');
+    egal(false, direct_eleve($direct['eleves'][0]['code'], ['numero' => 1, 'reponse' => 'C'])['json']['enregistree'], 'on ne change plus d’avis');
+    egal(4, directs_en_base()['directs_reponses']);
+    egal('A', direct_eleve($direct['eleves'][0]['code'])['json']['direct']['reponse'], 'sa réponse est restée');
+    // La deuxième ceinture, éprouvée sans passer par l'API : une réponse partie
+    // à l'instant où le professeur dévoile a déjà franchi le contrôle de
+    // api/direct.php. C'est l'INSTRUCTION SQL elle-même qui doit la refuser.
+    $seance = (int)bd_test()->query('SELECT id FROM directs WHERE classe_id = ' . (int)$direct['classe'])->fetchColumn();
+    repondre_au_direct(bd_test(), $seance, 1, (int)$direct['eleves'][4]['id'], 'A');
+    repondre_au_direct(bd_test(), $seance, 1, (int)$direct['eleves'][0]['id'], 'C');
+    egal(4, directs_en_base()['directs_reponses'], 'l’écriture elle-même refuse une question dévoilée');
+    egal('A', (string)bd_test()->query('SELECT reponse FROM directs_reponses WHERE eleve_id = ' . (int)$direct['eleves'][0]['id'])->fetchColumn(),
+        'et ne remplace rien');
+    vrai(!str_contains(direct_eleve($direct['eleves'][0]['code'])['texte'], 'repartition'), 'l’élève ne reçoit toujours pas la répartition');
+});
+
+verifier("direct — la bonne réponse : désignée, changée, retirée ; jamais envoyée à l'élève", function () use (&$direct) {
+    egal(400, direct_prof('direct.bonne', $direct, ['bonne' => 'Z'])['code'], 'Z n’existe pas');
+    egal('B', direct_prof('direct.bonne', $direct, ['bonne' => 'B'])['json']['direct']['bonne']);
+    vrai(!str_contains(direct_eleve($direct['eleves'][0]['code'])['texte'], 'bonne'), 'l’élève ne la reçoit pas');
+    vrai(direct_prof('direct.bonne', $direct, ['bonne' => null])['json']['direct']['bonne'] === null, 'retirée');
+    egal('B', direct_prof('direct.bonne', $direct, ['bonne' => 'b'])['json']['direct']['bonne'], 'remise');
+});
+
+verifier("direct — le fichier : questions et réponses élève par élève, pour le professeur seulement, journalisé", function () use (&$direct) {
+    // Une deuxième question, à deux réponses, que personne ne corrige.
+    egal(2, direct_prof('direct.question', $direct, ['type' => 'choix', 'reglage' => ['choix' => 2]])['json']['direct']['numero']);
+    egal(400, direct_eleve($direct['eleves'][1]['code'], ['numero' => 2, 'reponse' => 'C'])['code'], 'C n’existe plus : deux réponses seulement');
+    egal(true, direct_eleve($direct['eleves'][1]['code'], ['numero' => 2, 'reponse' => 'B'])['json']['enregistree']);
+    egal(false, direct_eleve($direct['eleves'][2]['code'], ['numero' => 1, 'reponse' => 'A'])['json']['enregistree'], 'la question 1 est passée');
+    $r = direct_prof('direct.fichier', $direct);
+    egal(200, $r['code']);
+    egal([['numero' => 1, 'type' => 'choix', 'reglage' => ['choix' => 4], 'bonne' => 'B'],
+          ['numero' => 2, 'type' => 'choix', 'reglage' => ['choix' => 2], 'bonne' => null]], $r['json']['questions']);
+    $parPrenom = [];
+    foreach ($r['json']['eleves'] as $eleve) $parPrenom[$eleve['prenom']] = $eleve['reponses'];
+    egal(['1' => 'A'], $parPrenom['Léa']);
+    egal(['1' => 'B', '2' => 'B'], $parPrenom['Noah']);
+    egal([], $parPrenom['Zoé'], 'Zoé n’a répondu à rien : elle figure quand même');
+    egal(['Inès', 'Léa', 'Noah', 'Tom', 'Zoé'], array_column($r['json']['eleves'], 'prenom'), 'dans l’ordre du tableau de classe');
+    vrai(!str_contains($r['texte'], $direct['eleves'][0]['code']), 'aucun code élève dans le fichier');
+    egal(1, preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$r['json']['jour']), 'le jour, pour le nom du fichier');
+    $ligne = bd_test()->query("SELECT action, cible_type, cible_id, resultat FROM journal WHERE action = 'direct.fichier' ORDER BY id DESC LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+    egal(['action' => 'direct.fichier', 'cible_type' => 'classe', 'cible_id' => $direct['classe'], 'resultat' => 'ok'],
+        ['action' => $ligne['action'], 'cible_type' => $ligne['cible_type'], 'cible_id' => (int)$ligne['cible_id'], 'resultat' => $ligne['resultat']],
+        'prendre le fichier laisse une ligne au journal');
+});
+
+verifier("direct — interroger ne compte rien ; seules les réponses sont comptées, et freinées", function () use (&$direct) {
+    vider_compteurs();
+    for ($i = 0; $i < 40; $i++) direct_eleve($direct['eleves'][3]['code']);
+    for ($i = 0; $i < 10; $i++) direct_prof('direct.etat', $direct);
+    egal(0, count(compteurs()), 'cinquante interrogations, aucun compteur écrit');
+    egal(200, direct_eleve($direct['eleves'][3]['code'], ['numero' => 2, 'reponse' => 'A'])['code']);
+    egal(1, count(compteurs()), 'une réponse : un compteur');
+    semer_compteur('direct:' . $direct['eleves'][3]['code'], 300, 120);
+    $r = direct_eleve($direct['eleves'][3]['code'], ['numero' => 2, 'reponse' => 'B']);
+    egal(429, $r['code'], 'la 121e réponse en cinq minutes est refusée');
+    vrai(entete($r, 'Retry-After') !== null, 'avec le délai');
+    egal(200, direct_eleve($direct['eleves'][3]['code'])['code'], 'mais il voit toujours la séance');
+    egal('A', direct_eleve($direct['eleves'][3]['code'])['json']['direct']['reponse']);
+    vider_compteurs();
+});
+
+verifier("direct — un geste du professeur repousse la fin, pas les interrogations ; le plafond de questions tient", function () use (&$direct) {
+    $lireFin = fn() => (int)bd_test()->query('SELECT expire_le FROM directs WHERE classe_id = ' . (int)$direct['classe'])->fetchColumn();
+    bd_test()->exec('UPDATE directs SET expire_le = ' . (time() + 100) . ' WHERE classe_id = ' . (int)$direct['classe']);
+    direct_eleve($direct['eleves'][0]['code']);
+    direct_prof('direct.etat', $direct);
+    vrai($lireFin() <= time() + 100, 'interroger ne prolonge rien');
+    direct_prof('direct.devoiler', $direct);
+    vrai($lireFin() >= time() + 5390, 'dévoiler repousse la fin d’une heure et demie');
+    $numero = (int)bd_test()->query('SELECT numero FROM directs WHERE classe_id = ' . (int)$direct['classe'])->fetchColumn();
+    bd_test()->exec('UPDATE directs SET numero = 80 WHERE classe_id = ' . (int)$direct['classe']);
+    egal(409, direct_prof('direct.question', $direct, ['type' => 'choix'])['code'], 'quatre-vingts questions : la suivante est refusée');
+    bd_test()->exec('UPDATE directs SET numero = ' . $numero . ' WHERE classe_id = ' . (int)$direct['classe']);
+});
+
+verifier("direct — terminer efface tout, tout de suite", function () use (&$direct) {
+    vrai(directs_en_base()['directs_reponses'] > 0 && directs_en_base()['directs_questions'] === 2, 'il y avait de quoi effacer');
+    egal(200, direct_prof('direct.terminer', $direct)['code']);
+    egal(['directs' => 0, 'directs_questions' => 0, 'directs_reponses' => 0], directs_en_base(), 'les trois tables sont vides');
+    vrai(direct_eleve($direct['eleves'][0]['code'])['json']['direct'] === null, 'l’élève : plus de séance');
+    vrai(direct_prof('direct.etat', $direct)['json']['direct'] === null, 'le tableau : plus de séance');
+    egal(200, direct_prof('direct.terminer', $direct)['code'], 'terminer deux fois n’est pas une erreur');
+    egal(409, direct_prof('direct.fichier', $direct)['code'], 'après, il n’y a plus de fichier');
+    $r = direct_eleve($direct['eleves'][0]['code'], ['numero' => 1, 'reponse' => 'A']);
+    vrai($r['code'] === 200 && $r['json']['direct'] === null, 'répondre à une séance terminée : « plus de séance », pas une panne');
+});
+
+verifier("direct — une séance oubliée disparaît toute seule, au premier passage de n'importe qui", function () use (&$direct) {
+    direct_prof('direct.ouvrir', $direct);
+    direct_prof('direct.question', $direct, ['type' => 'choix']);
+    direct_eleve($direct['eleves'][0]['code'], ['numero' => 1, 'reponse' => 'A']);
+    egal(['directs' => 1, 'directs_questions' => 1, 'directs_reponses' => 1], directs_en_base());
+    bd_test()->exec('UPDATE directs SET expire_le = ' . (time() - 1));
+    // Un élève d'une AUTRE classe passe : c'est lui qui déclenche la purge.
+    vrai(direct_eleve($direct['autreEleve']['code'])['json']['direct'] === null, 'lui n’a pas de séance');
+    egal(['directs' => 0, 'directs_questions' => 0, 'directs_reponses' => 0], directs_en_base(), 'tout est parti');
+    // Et l'ouverture de « Mes classes » purge aussi.
+    direct_prof('direct.ouvrir', $direct);
+    bd_test()->exec('UPDATE directs SET expire_le = ' . (time() - 1));
+    appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $direct['jeton']]);
+    egal(0, directs_en_base()['directs'], '« Mes classes » emporte une séance périmée');
+    // Une séance périmée pas encore purgée n'empêche pas d'en ouvrir une neuve.
+    direct_prof('direct.ouvrir', $direct);
+    bd_test()->exec('UPDATE directs SET expire_le = ' . (time() - 1));
+    $r = direct_prof('direct.ouvrir', $direct);
+    egal(200, $r['code']);
+    egal(0, $r['json']['direct']['numero'], 'une séance neuve, pas l’ancienne');
+    egal(1, directs_en_base()['directs']);
+    direct_prof('direct.terminer', $direct);
+});
+
+verifier("direct — l'élève supprimé emporte ses réponses, la classe supprimée emporte sa séance", function () use (&$direct) {
+    direct_prof('direct.ouvrir', $direct);
+    direct_prof('direct.question', $direct, ['type' => 'choix']);
+    direct_eleve($direct['eleves'][0]['code'], ['numero' => 1, 'reponse' => 'A']);
+    direct_eleve($direct['eleves'][1]['code'], ['numero' => 1, 'reponse' => 'B']);
+    egal(200, appel('/api/prof.php', ['action' => 'eleves.supprimer', 'eleve_id' => $direct['eleves'][0]['id']], ['jeton' => $direct['jeton']])['code']);
+    egal(1, directs_en_base()['directs_reponses'], 'ses réponses sont parties avec lui');
+    egal(4, direct_prof('direct.etat', $direct)['json']['direct']['inscrits'], 'et la classe compte un élève de moins');
+    egal(200, appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $direct['classe']], ['jeton' => $direct['jeton']])['code']);
+    egal(['directs' => 0, 'directs_questions' => 0, 'directs_reponses' => 0], directs_en_base(), 'il ne reste rien de la séance');
+});
+
+verifier("direct — les deux pages : servies, sous la politique de contenu, jamais en cache", function () {
+    foreach (['/direct.php' => 'api/direct.php', '/prof/direct.php' => '../api/prof.php'] as $chemin => $api) {
+        $r = page($chemin);
+        egal(200, $r['code'], $chemin);
+        vrai(str_contains($r['texte'], 'Séance en direct'), "$chemin : la page");
+        vrai(str_contains($r['texte'], $api), "$chemin interroge $api");
+        egal(1, preg_match("/script-src 'self' 'nonce-([^']+)'/", (string)entete($r, 'Content-Security-Policy'), $m), "$chemin : politique de contenu");
+        vrai(str_contains($r['texte'], 'nonce="' . htmlspecialchars($m[1], ENT_QUOTES) . '"'), "$chemin : le script porte le nonce");
+        egal('no-store', entete($r, 'Cache-Control'), "$chemin : pas de cache");
+        egal('DENY', entete($r, 'X-Frame-Options'), "$chemin : pas dans un cadre");
+    }
+    vrai(str_contains(page('/')['texte'], 'id="direct-lien"'), 'l’espace élève porte la tuile « Séance en direct »');
+    vrai(str_contains(page('/prof/')['texte'], 'id="seance-direct"'), '« Ma classe » porte le bouton');
+});
+
+verifier("direct — verifier.php et migrer.php connaissent les trois tables", function () {
+    $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], 'toutes présentes'), 'toutes les tables présentes');
+    foreach (['directs_reponses', 'directs_questions', 'directs'] as $table) bd_test()->exec("DROP TABLE $table");
+    $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], 'manquantes : directs, directs_questions, directs_reponses'), 'sans elles, verifier.php les nomme');
+    $r = formulaire('/migrer.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], 'directs'), 'migrer.php annonce les tables créées');
+    egal(['directs' => 0, 'directs_questions' => 0, 'directs_reponses' => 0], directs_en_base(), 'recréées, vides');
+    $r = formulaire('/migrer.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(!str_contains($r['texte'], 'Tables « directs »'), 'un second passage n’annonce plus rien');
 });
 
 // ---------------------------------------------------------------------- résultat

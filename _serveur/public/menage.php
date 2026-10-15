@@ -56,6 +56,9 @@ try {
     }
     $noms = array_map(fn(array $classe): string => (string)$classe['libelle'], $supprimees);
     $lignesJournal = purger_journal($pdo);
+    // Une séance en direct oubliée ouverte est déjà effacée par le premier
+    // appel venu ; la tâche planifiée repasse derrière, pour le principe.
+    $directs = table_existe($pdo, 'directs') ? purger_directs($pdo) : 0;
     $restantes = count($attente) - count($supprimees);
     echo gmdate('Y-m-d\TH:i:s\Z') . " — ménage de fin d'année\n";
     echo "  année scolaire en cours : " . annee_scolaire_courante() . "\n";
@@ -68,6 +71,9 @@ try {
     echo $lignesJournal > 0
         ? "  journal : $lignesJournal ligne(s) de plus de douze mois effacée(s).\n"
         : "  journal : rien à effacer (douze mois de conservation).\n";
+    if ($directs > 0) {
+        echo "  séances en direct : $directs séance(s) oubliée(s) effacée(s).\n";
+    }
     exit(0);
 } catch (Throwable $e) {
     error_log('menage: ' . $e->getMessage());

@@ -52,7 +52,10 @@ function actionsAdminDuCode() {
 // la matrice. Toute NOUVELLE action devra être ajoutée ici en connaissance de
 // cause, ou entrer dans la matrice.
 const SANS_CLASSE = ["connexion", "deconnexion", "moi", "profs.motdepasse",
-  "profs.annuaire", "classes.liste", "classes.creer"];
+  "profs.annuaire", "classes.liste", "classes.creer",
+  // Lot « Les records » : la ligue du professeur connecté — ses classes à
+  // lui, aucune classe en particulier (lib/records.php, cloisonnement).
+  "records.ligue"];
 
 test("la matrice décrit exactement les droits décidés le 05/09/2026", () => {
   assert.deepEqual(matriceDuCode(), {
@@ -69,8 +72,20 @@ test("la matrice décrit exactement les droits décidés le 05/09/2026", () => {
     // à la demande du professeur. Elle efface : propriétaire.
     "classes.supprimer_echues": "proprietaire",
     "eleves.supprimer": "proprietaire",
+    // Lot « après l'audit GPT » (D4, 14/10/2026) : retirer un temps des
+    // records efface : propriétaire.
+    "records.retirer": "proprietaire",
     "partages.ajouter": "proprietaire",
     "partages.supprimer": "proprietaire",
+    // Séance en direct (07/10/2026) : mener une séance, c'est recevoir les
+    // réponses des élèves avec leurs prénoms. Écriture, jamais lecture seule.
+    "direct.etat": "ecriture",
+    "direct.ouvrir": "ecriture",
+    "direct.question": "ecriture",
+    "direct.devoiler": "ecriture",
+    "direct.bonne": "ecriture",
+    "direct.fichier": "ecriture",
+    "direct.terminer": "ecriture",
   });
 });
 

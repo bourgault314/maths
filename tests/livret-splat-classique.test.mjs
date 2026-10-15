@@ -218,7 +218,7 @@ test("le catalogue déclare UNE carte « Les livrets SPLAT! » dans la collectio
   // les deux anciennes cartes ont disparu du catalogue
   assert.ok(!catalogue.includes('"outils/livrets_petit_splat.html"'), "plus de carte monde 1");
   assert.ok(!catalogue.includes('"outils/livrets_splat_classique.html"'), "plus de carte monde 2");
-  assert.match(lire("assets/js/catalogue-refonte.js"), /path === "outils\/livrets_splat\.html"\) return 5;/);
+  assert.match(lire("assets/js/catalogue-refonte.js"), /path === "outils\/livrets_splat\.html"\) return 6;/); // 6 depuis l’arrivée d’ÉquaBarre (11/10/2026)
 });
 
 test("vue prof du monde 2 : un seul lien vers les livrets du monde 2, à côté des étapes 7, 8 et 9", () => {
@@ -871,8 +871,9 @@ test("L : un onglet et un panneau par monde, le prof replié partout, la note un
   // Monde 2 et Le défi, avec « ? » et avec une lettre, 26/09/2026) + 5 (monde 3 : deux livrets et
   // leurs défis, puis la partie 3 ; cinq depuis le 03/10/2026 : trois parties et deux livrets « deuxième tour ») + 2 (monde 4, le Système, 25/09/2026) + 3 (monde 5 : corrigés du
   // lot Q4, et le défi du lot Q5) + 2 (monde 6, les Relatifs, lot R2) ; + 1 : le défi du monde 5 en
-  // schéma en barres (relecture du monde 5, 27/09/2026) ; + 2 : les deux défis du monde 6 (28/09/2026)
-  assert.equal((page.match(/<details class="prof">/g) || []).length, 25, "les vingt-cinq cartes replient leurs corrigés");
+  // schéma en barres (relecture du monde 5, 27/09/2026) ; + 2 : les deux défis du monde 6 (28/09/2026) ;
+  // + 1 : l'échauffement du monde 6 (14/10/2026)
+  assert.equal((page.match(/<details class="prof">/g) || []).length, 26, "les vingt-six cartes replient leurs corrigés");
   // la note d'impression, réécrite par Gwenaël le 27/09/2026 : pas de « meilleur rendu », le A3 n'est pas un conseil
   assert.match(page, /Livret à plier<\/strong>&nbsp;: en A3 pour un grand livret, ou en A4 pour un petit livret\. Recto-verso, <strong>bord court<\/strong>\.<\/p>/);
   assert.doesNotMatch(page, /meilleur rendu/);

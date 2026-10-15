@@ -59,16 +59,17 @@ test("décision 6 : Mes calculs, une pastille par calcul, plus de « · » entre
   assert.match(html, /\.mc-detail-jours span \{ display: inline-block; padding: 7px 9px; border: 1\.5px solid currentColor; border-radius: 999px; background: #fff;[^}]*white-space: nowrap;[^}]*\}/, "une pastille ne se coupe jamais");
 });
 
-test("décision 8 : « Commencer » sans flèche, « Je passe le test » en bouton rond, « Choisir une activité » en lien de 16 px ; la porte les ferme", () => {
+test("décision 8 : « Commencer » sans flèche, « Je passe le test » en bouton rond, « Choisir une activité » en lien de 16 px ; la porte ne les ferme plus", () => {
   const carte = corps("carteDeSeance");
   assert.match(carte, /go\.textContent = reprise \? "Reprendre" : "Commencer";/);
   assert.doesNotMatch(html, /Commencer\\u00a0→/);
   const accueil = corps("renderSeanceAccueil");
   assert.match(html, /const NOM_DU_TEST = "Je passe le test";/);
   assert.match(accueil, /lien\(NOM_DU_TEST, \(\) => launchFromParcours\(PARCOURS\.configValidation\(table\), "menu"\), "rond"\);/);
-  // Lot « un seul système » : tant que Mes calculs du jour n'est pas joué, les deux liens sont fermés.
-  assert.match(accueil, /if \(etat\.porte\) \{\s*liens\.classList\.add\("est-fermee"\);\s*liens\.querySelectorAll\("button"\)\.forEach\(bouton => \{ bouton\.disabled = true; \}\);/);
-  assert.match(accueil, /mot\.className = "porte-mot";\s*mot\.textContent = "Après Mes calculs du jour";/);
+  // Lot « un seul système » : tant que Mes calculs du jour n'était pas joué,
+  // les liens étaient fermés. Lot « Mes calculs du jour d'abord » (08/10/2026) :
+  // ils restent ouverts et le lancent d'abord.
+  assert.doesNotMatch(accueil, /etat\.porte|est-fermee|porte-mot/);
   assert.match(accueil, /lien\("Choisir une activité", \(\) => \{/);
   assert.match(html, /\.seance-liens button \{ min-height: 44px;[^}]*font-size: 1rem;[^}]*text-decoration: underline;/, "le lien : 16 px, souligné");
   assert.match(html, /\.seance-liens button\.rond \{[^}]*border: 2px solid #c5d9e6; border-radius: 999px; background: #fff;[^}]*text-decoration: none; \}/);
@@ -138,6 +139,6 @@ test("en plus : le fil « Ma séance » sur une ligne au téléphone", () => {
 });
 
 test("des écrans seulement : les moteurs ne changent pas, leurs numéros de cache non plus", () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261007-1/);
-  assert.match(html, /defi_tables_core\.js\?v=20261005-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261014-1/);
+  assert.match(html, /defi_tables_core\.js\?v=20261010-1/);
 });

@@ -214,7 +214,7 @@ test("Q2 : liens Projeter, Fiche tableau et Fiche équation — mêmes réglages
   [p35, p36, p37].forEach((p) => assert.deepEqual(champ(p, "cards"), Array(6).fill("2")));
 });
 
-test("Q2 : une fiche = 2 feuilles de 6 dans l'outil (6/page pour l'énoncé seul, « suite » lue jusqu'à 5 parties)", () => {
+test("Q2 : une fiche = 2 feuilles de 6 dans l'outil (6/page pour l'énoncé seul, « suite » lue jusqu'à 11 parties)", () => {
   /* getPrintCardsPerPage exécutée pour de vrai (même recette que le test du lot Q1) */
   const start = outil.indexOf("function getPrintCardsPerPage("), end = outil.indexOf("function isEquationSchemaPrintCard(");
   const planA = outil.indexOf("function getPrintPlan("), planB = outil.indexOf("function syncPrintSummary(");
@@ -226,24 +226,26 @@ test("Q2 : une fiche = 2 feuilles de 6 dans l'outil (6/page pour l'énoncé seul
     const parPage = fn({ getElementById() { return null; } }, { value: p.get("layout") }, { value: p.get("print") });
     assert.equal(parPage, 6);
     const parties = 1 + (p.get("suite") ? p.get("suite").split(";").length : 0);
-    assert.ok(parties <= 6, "l'outil lit au plus 5 parties dans « suite »");
+    assert.ok(parties <= 12, "l'outil lit au plus 11 parties dans « suite » (échauffement du monde 6 : 12 cartes, une graine chacune)");
     assert.equal(Math.ceil(12 / parPage), 2);
   }));
-  assert.match(outil, /\.split\(";"\)\.map\(part => part\.trim\(\)\)\.filter\(Boolean\)\.slice\(0, 5\)/);
+  assert.match(outil, /\.split\(";"\)\.map\(part => part\.trim\(\)\)\.filter\(Boolean\)\.slice\(0, 11\)/);
 });
 
 test("Q2 : la carte saute jusqu'à la fiche 35 ; « premier » garde les numéros du monde 5 (29 à 34 libres depuis le lot M4-4)", () => {
   assert.equal(EQUATIONS.premier, 35);
   assert.match(univers, /if\(m\.premier\) compteur=Math\.max\(compteur,m\.premier-1\);/);
   /* le compteur du gabarit, refait ici */
-  const numeros = (mondes) => { let c = 0; return mondes.map((m) => { if (m.premier) c = Math.max(c, m.premier - 1); return m.etapes.map(() => ++c); }); };
+  /* l'échauffement du monde 6 (lot 3, 14/10/2026) : une étape à code (« É1 ») garde son code et
+     n'avance pas le compteur */
+  const numeros = (mondes) => { let c = 0; return mondes.map((m) => { if (m.premier) c = Math.max(c, m.premier - 1); return m.etapes.map((e) => e.code || ++c); }); };
   const n = numeros(MONDES);
   /* lot « six mondes » (24/09) : les quinze étapes étaient arrivées (Enquête 20-24, Système 25-34) ;
      lot M4-4 (04/10/2026) : le Système n'a plus que quatre fiches (25-28) — 29 à 34 redeviennent
      libres et « premier » resert : le monde 5 garde 35, 36, 37 (déjà imprimées) */
   assert.deepEqual(n[3].slice(-1), [28]);
   assert.deepEqual(n[4], [35, 36, 37]);
-  assert.deepEqual(n[5], [38, 39, 40, 41, 42, 43]);   // lot R2 : six fiches
+  assert.deepEqual(n[5], ["É1", "É2", "É3", 38, 39, 40, 41, 42, 43]);   // lot R2 : six fiches ; lot 3 de l'échauffement : É1-É3 devant
   EQUATIONS.etapes.forEach((e, k) => assert.equal(e.n, n[4][k], "le badge et la fiche disent le même numéro"));
   const sans = MONDES.map((m) => (m === EQUATIONS ? { ...m, premier: undefined } : m));
   assert.deepEqual(numeros(sans)[4], [29, 30, 31], "sans « premier », le monde 5 glisserait : « premier » est indispensable");

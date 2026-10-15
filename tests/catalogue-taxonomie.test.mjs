@@ -29,7 +29,8 @@ const allowedGroups = new Set([
   "imprimer",
   "activites",
   "cours",
-  "jeux"
+  "jeux",
+  "classe" // « Pour la classe », la section de tête de la page Splat (11/10/2026)
 ]);
 
 const expectedGroupCounts = {
@@ -39,7 +40,8 @@ const expectedGroupCounts = {
   imprimer: 29,
   activites: 14,
   cours: 14, // la progression SPLAT! cycle 3 (Digipad) masquée le 25/09/2026 : « ça on enlève »
-  jeux: 13
+  jeux: 13,
+  classe: 4 // « Comment on joue ? » de la page Splat : le film, la vidéo, le diaporama PDF, puis le diaporama en ligne (11/10/2026)
 };
 
 const expectedVisibleCardCounts = {
@@ -49,7 +51,8 @@ const expectedVisibleCardCounts = {
   imprimer: 26,
   activites: 12,
   cours: 8,
-  jeux: 13
+  jeux: 13,
+  classe: 1
 };
 
 function resolvedPrimaryGroup(resource) {
@@ -64,10 +67,10 @@ function assertPathsInGroup(group, paths) {
   }
 }
 
-test("le catalogue conserve 186 entrées dont 177 publiées", () => {
+test("le catalogue conserve 190 entrées dont 181 publiées", () => {
   assert.equal(catalogue.schemaVersion, 5);
-  assert.equal(resources.length, 186);
-  assert.equal(published.length, 177);
+  assert.equal(resources.length, 190);
+  assert.equal(published.length, 181);
   assert.equal(new Set(resources.map((resource) => resource.path)).size, resources.length, "Chaque chemin doit être unique.");
 });
 
@@ -102,7 +105,7 @@ test("la recherche gabarit trouve les fiches Thalès mais pas le générateur de
   );
 });
 
-test("chaque ressource a un groupe principal déterministe parmi les sept groupes autorisés", () => {
+test("chaque ressource a un groupe principal déterministe parmi les huit groupes autorisés", () => {
   const missing = resources
     .filter((resource) => !resolvedPrimaryGroup(resource))
     .map((resource) => resource.path);
@@ -116,7 +119,7 @@ test("chaque ressource a un groupe principal déterministe parmi les sept groupe
   assert.deepEqual(
     [...new Set(published.map(resolvedPrimaryGroup))].sort(),
     [...allowedGroups].sort(),
-    "Les sept groupes doivent être représentés."
+    "Les huit groupes doivent être représentés."
   );
 
   const inconsistentNotions = published
@@ -143,7 +146,7 @@ test("aucune carte publiée ne conserve la description générique", () => {
   assert.deepEqual(offenders, []);
 });
 
-test("la répartition arbitrée des 177 ressources reste stable", () => {
+test("la répartition arbitrée des 181 ressources reste stable", () => {
   const actual = Object.fromEntries([...allowedGroups].map((group) => [group, 0]));
   for (const resource of published) actual[resolvedPrimaryGroup(resource)] += 1;
   assert.deepEqual(actual, expectedGroupCounts);
@@ -427,6 +430,6 @@ test("les familles regroupent toutes leurs variantes sans perte ni chevauchement
   for (const family of families) visibleCardsByGroup[family.group] += 1;
 
   assert.equal(representedResourceCount, published.length, "Aucune variante publiée ne doit disparaître du catalogue.");
-  assert.equal(visibleCardCount, 160, "Les 177 ressources doivent être représentées par 160 cartes après regroupement.");
+  assert.equal(visibleCardCount, 161, "Les 181 ressources doivent être représentées par 161 cartes après regroupement.");
   assert.deepEqual(visibleCardsByGroup, expectedVisibleCardCounts);
 });

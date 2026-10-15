@@ -29,7 +29,7 @@ function ligne(prefix){
 }
 
 const PALETTE = html.slice(html.indexOf("const INVESTIGATE_COLOR_PALETTE = ["), html.indexOf("];", html.indexOf("const INVESTIGATE_COLOR_PALETTE = [")) + 2);
-const CONSTANTES_SYS = ["SYS_GESTES", "SYS_GESTES_MIX_DEFAUT", "SYS_MAX_TACHES", "SYS_MAX_TACHES_AVANT", "SYS_ESSAIS", "SYS_NOMBRES_SOUS_ENTENDUS", "SYS_COULEURS_PLURIEL", "SYS_PLAGES"]
+const CONSTANTES_SYS = ["SYS_GESTES", "SYS_GESTES_MIX_DEFAUT", "SYS_SOUS_GESTES", "SYS_MAX_TACHES", "SYS_MAX_TACHES_AVANT", "SYS_ESSAIS", "SYS_NOMBRES_SOUS_ENTENDUS", "SYS_COULEURS_PLURIEL", "SYS_PLAGES"]
   .map((nom) => ligne(`const ${nom} = `)).join("\n");
 const FONCTIONS_SYS = ["sysNormaliserReglages", "genSystemCarte", "sysMelangerPlateaux", "sysFormes", "sysFormesDouble", "sysSomme", "sysNombreTaches", "sysPlateau",
   "sysTirerSituation", "sysSituationValide", "sysNombreSousEntendu", "sysTexteASousEntendu", "sysSituationSure",
@@ -66,6 +66,7 @@ const sys = new Function(`
     pluriel: (k) => SYS_COULEURS_PLURIEL[k],
     normaliser: sysNormaliserReglages,
     formes: (geste, r) => sysFormes(geste, sysNormaliserReglages(r)),
+    formesDouble: sysFormesDouble,
     /* le plan de S3, que le générateur filtre toujours (lot M4-2) */
     plan: sysPlanS3,
     grille: sysGrille,
@@ -276,7 +277,13 @@ test("les formes de chaque type nouveau (plan § 2 et décisions du 01/10)", () 
   // les autres combinaisons de DOUBLE (7 taches au plus)
   const d = (r) => sys.formes("DOUBLE", r);
   assert.deepEqual(d({}), [[1, 1, 1], [1, 1, 2]], "par défaut : les deux formes d'avant (2 + 3 et 2 + 4)");
-  assert.deepEqual(d({ fois: 3, sens: "INDICE" }), [[1, 1, 2]], "3 fois, sens INDICE : 3 N + V et N + V");
+  // lot M4-5 : le petit recopié ne dépasse qu'avec 2 fois ; 3 fois et ce sens, c'est le grand
+  // plateau qui dépasse (3 N + V et N + V, la forme d'avant, était un « je retire » : il reste 2 N)
+  assert.deepEqual(sys.formesDouble(3, "11", "INDICE"), []);
+  assert.deepEqual(sys.formesDouble(3, "12", "INDICE"), []);
+  assert.equal(sys.normaliser({ fois: 3, sens: "INDICE" }).sens, "PLATEAU");
+  assert.equal(sys.normaliser({ fois: 3, sens: "MIX" }).sens, "PLATEAU");
+  assert.deepEqual(d({ fois: 3, sens: "INDICE" }), [[1, 1, 1]], "3 fois : 3 N + 4 V et N + V");
   // une combinaison impossible prend l'autre indice, sans carte « Erreur »
   assert.equal(sys.normaliser({ fois: 3, indice: "12" }).indice, "11");
   assert.equal(sys.normaliser({ sens: "INDICE" }).indice, "12");
@@ -462,7 +469,7 @@ test("dessin : 5 taches d'une couleur sur une rangée ; rien ne se touche, dans 
 /* Le panneau et les adresses. */
 test("le panneau : Escalier, Écart, Recopier, Petit plateau, Qui dépasse, Plateaux ; éteints par défaut", () => {
   const panneau = html.slice(html.indexOf('<div id="systemSettings"'), html.indexOf("<!-- Réglages d'affichage"));
-  assert.match(panneau, /<option value="ESCALIER">Escalier<\/option>\s*<option value="MIX">/);
+  assert.match(panneau, /<option value="ESCALIER">Escalier<\/option>\s*<option value="RECOPIE">Je recopie, puis je retire<\/option>\s*<option value="ETAGES">Deux gestes à la suite<\/option>\s*<option value="MIX">/);
   assert.match(panneau, /id="sysMixESCALIER">/);
   assert.match(panneau, /<select id="sysEcart"[^>]*>\s*<option value="" selected>Les deux<\/option>\s*<option value="1">1 tache de plus<\/option>\s*<option value="2">Plusieurs : on partage<\/option>/);
   assert.match(panneau, /<select id="sysFois"[^>]*>\s*<option value="2" selected>2 fois<\/option>\s*<option value="3">3 fois<\/option>/);
@@ -479,6 +486,9 @@ test("adresses : les réglages nouveaux, écrits seulement quand ils sont allum�
     sysGesteEl: liste(geste, ["EMBOITE1", "PARTIELLE", "COEF", "DOUBLE", "MIROIR", "TROIS", "ESCALIER", "MIX"]),
     sysEcartEl: liste("", ["", "1", "2"]), sysFoisEl: liste("2", ["2", "3"]), sysIndiceEl: liste("11", ["11", "12"]),
     sysSensEl: liste("PLATEAU", ["PLATEAU", "INDICE"]), sysOrdreEl: liste("", ["", "MELANGE"]),
+    // lot M4-5 : forme du miroir, grand plateau et petits plateaux (éteints)
+    sysFormeEl: liste("", ["", "12", "23", "13", "MIX"]), sysGrandEl: liste("", ["", "211", "112"]),
+    sysSousEl: liste("MIX", ["MIX", "COEF", "MIROIR", "RECOPIE", "DOUBLE"]),
     sysPasAPasEl: { checked: true }, // lot M4-2 : coché par défaut, rien n'est écrit
     document: { getElementById: (id) => (id.startsWith("sysMix") ? { checked: coches.includes(id.slice(6)) } : null) }
   });
@@ -507,10 +517,11 @@ test("adresses : les réglages nouveaux, écrits seulement quand ils sont allum�
   const m = page("MIX");
   m.sysEcartEl.value = "1"; m.sysFoisEl.value = "3"; m.sysIndiceEl.value = "12"; m.sysSensEl.value = "INDICE";
   assert.equal(ecrire(m), "ecart=1");
-  assert.deepEqual(monter(m).lus(), { coef: true, double: false });
-  assert.deepEqual(monter(page("MIX", ["EMBOITE1", "TROIS"])).lus(), { coef: false, double: false });
-  assert.deepEqual(monter(page("DOUBLE")).lus(), { coef: false, double: true });
-  assert.match(fn("sysAfficherReglagesM4"), /const \{ coef, double \} = sysGestesLus\(\);/);
+  const rien = { coef: false, double: false, recopie: false, miroir: false, etages: false };
+  assert.deepEqual(monter(m).lus(), { ...rien, coef: true });
+  assert.deepEqual(monter(page("MIX", ["EMBOITE1", "TROIS"])).lus(), rien);
+  assert.deepEqual(monter(page("DOUBLE")).lus(), { ...rien, double: true });
+  assert.match(fn("sysAfficherReglagesM4"), /const \{ coef, double, recopie, miroir, etages \} = sysGestesLus\(\);/);
   // relecture : une page neuve retrouve les mêmes réglages ; absents = remis à zéro
   const b = page("MIX", ["COEF", "DOUBLE"]);
   b.sysEcartEl.value = "1"; b.sysOrdreEl.value = "MELANGE";
@@ -537,15 +548,19 @@ test("lot M4-4 : sens=MIX — chaque carte de Doubler tire son sens, les deux so
     const [P, I] = c._sys.boards;
     return fois * I.total > P.total - (P.visible || []).reduce((a, x) => a + x, 0);
   };
-  for(const fois of [2, 3]){
-    const r = { geste: "DOUBLE", sens: "MIX", ...(fois === 3 ? { fois: 3 } : {}) };
+  {
+    const r = { geste: "DOUBLE", sens: "MIX" };
     const cartes = tirer(r, 60);
     cartes.forEach((c) => verifierCarte(c, r));
-    const n = cartes.filter((c) => depasse(c, fois)).length;
-    assert.ok(n > 0.2 * cartes.length && n < 0.8 * cartes.length, `${fois} fois : les deux sens sortent (${n} / ${cartes.length})`);
+    const n = cartes.filter((c) => depasse(c, 2)).length;
+    assert.ok(n > 0.2 * cartes.length && n < 0.8 * cartes.length, `2 fois : les deux sens sortent (${n} / ${cartes.length})`);
     // déterministe : la même graine, les mêmes cartes
     assert.equal(JSON.stringify(sys.serie(222, 4, r)), JSON.stringify(sys.serie(222, 4, r)));
   }
+  // lot M4-5 : 3 fois, le petit recopié ne dépasse jamais (sysFormesDouble) — sens=MIX donne les
+  // cartes de « Je triple » (le grand plateau dépasse), carte pour carte
+  assert.equal(JSON.stringify(sys.serie(222, 8, { geste: "DOUBLE", fois: 3, sens: "MIX" })), JSON.stringify(sys.serie(222, 8, { geste: "DOUBLE", fois: 3 })));
+  assert.ok(tirer({ geste: "DOUBLE", fois: 3, sens: "MIX" }, 30).every((c) => !depasse(c, 3)));
   // un seul sens demandé : il est tenu, carte par carte
   assert.ok(tirer({ geste: "DOUBLE", sens: "INDICE" }, 30).every((c) => depasse(c, 2)));
   assert.ok(tirer({ geste: "DOUBLE" }, 30).every((c) => !depasse(c, 2)));

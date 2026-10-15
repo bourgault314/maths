@@ -177,7 +177,9 @@ test("2. ordinateur : deux colonnes — le tableau à gauche, ma table, Aujourd�
   assert.match(ordi, /\.parcours-suite \.mp-melange-droite \{ flex-wrap: nowrap; \}/);
   // Écran bas (1024 × 600) : le bloc de Mon mélange et ses trophées se resserrent.
   assert.match(html, /@media \(min-width: 1024px\) and \(max-height: 700px\) \{[^@]*?\.parcours-suite #parcours-melange \{ padding-top: 8px; padding-bottom: 8px; \}\s*\.parcours-suite \.mp-trophees b \{ width: 22px; height: 22px; \}\s*\}/);
-  assert.match(ordi, /\.calculs-grille \{ width: 398px; max-width: none; margin-top: 6px; grid-template-columns: 22px repeat\(8, 44px\); \}/, "cases de 44 px");
+  // Lot « Une seule fiche » : la colonne des numéros à 30 px (la pastille d'une
+  // table passée), les cases à 43 px — la largeur ne change pas.
+  assert.match(ordi, /\.calculs-grille \{ width: 398px; max-width: none; margin-top: 6px; grid-template-columns: 30px repeat\(8, 43px\); \}/, "cases de 43 px");
   assert.match(ordi, /\.calculs-dix \{ position: absolute; top: 13px; right: 14px; margin: 0; \}/, "« Table de 10 : acquise ✓ » en haut à droite du tableau");
   assert.match(ordi, /\.calculs-detail \{ position: absolute; z-index: 30; left: 0; right: 0; top: calc\(100% \+ 6px\);/, "sous les boîtes, posé sur le mélange et Expert : rien ne bouge");
   assert.match(ordi, /\.calculs-aide\.is-cache \{ display: block; visibility: hidden; \}/, "la ligne d’aide garde sa place");
@@ -433,12 +435,13 @@ test("11. Mon mélange compact : le triangle qui le lance, « Mon mélange » et
   // Lot « un seul système » (05/10/2026) : Mon mélange est libre. La case est
   // un bouton « jouer » (plus une coche « à faire »). Lot « les trophées » : à
   // droite, plus de badge ni de dernier score — les trois trophées (toujours
-  // là, gris tant qu'ils ne sont pas gagnés). La porte fermée, il attend Mes
-  // calculs du jour : c'est le sous-titre qui le dit.
-  assert.match(rendu, /textes\.append\(title, tables\);\s*if \(porte\) tables\.textContent = "après Mes calculs du jour";\s*droite\.append\(textes, tropheesDuMelange\(etat\.melange\.trophees\)\);\s*ligneMelange\.append\(makeCell\(\{\s*kind: "star",\s*etat: 0,[\s\S]*?config: porte \? null : PARCOURS\.configMelange\(parcours\),\s*extraClass: porte \? "is-fermee" : "",\s*texte: triangleJouer\(\),\s*action: porte \? \(\) => \{\} : null\s*\}\), droite\);/);
+  // là, gris tant qu'ils ne sont pas gagnés). Lot « Mes calculs du jour
+  // d'abord » : jamais grisé — tant que Mes calculs du jour n'est pas joué,
+  // la case le lance d'abord (launchFromParcours).
+  assert.match(rendu, /textes\.append\(title, tables\);\s*droite\.append\(textes, tropheesDuMelange\(etat\.melange\.trophees\)\);\s*ligneMelange\.append\(makeCell\(\{\s*kind: "star",\s*etat: 0,[\s\S]*?texte: triangleJouer\(\),\s*config: PARCOURS\.configMelange\(parcours\)\s*\}\), droite\);/);
   assert.doesNotMatch(rendu, /"À jour ✓"|"À faire"|aRefaireAvec|melange\.aJour|etat\.verrou/, "plus d’état « à faire » / « à refaire » ni de verrou");
   assert.doesNotMatch(rendu, /après le mélange des 9 tables/, "l’escalier n’attend plus le mélange");
-  assert.match(rendu, /const expertOuvert = etat\.expert\.ouvert && !porte;/);
+  assert.match(rendu, /const expertOuvert = etat\.expert\.ouvert;/);
   assert.doesNotMatch(html, /function dernierMelange\(|Dernier : \$\{|réussi avec \$\{/, "plus de dernier score ni de « réussi avec N tables ✓ »");
   assert.doesNotMatch(rendu, /"▶"/, "le caractère ▶ penchait à gauche : un dessin centré à la place");
   // Les trois trophées, EXÉCUTÉS : trois coupes (un dessin chacune), grises
@@ -451,7 +454,7 @@ test("11. Mon mélange compact : le triangle qui le lance, « Mon mélange » et
     assert.equal(zone.className, "mp-trophees");
     assert.equal(zone.attrs.role, "img");
     assert.equal(zone.textContent, "", "aucun mot, aucun nombre affiché");
-    assert.deepEqual(zone.children.map(b => [b.tag, b.dataset.tables]), [["b", "3"], ["b", "6"], ["b", "9"]]);
+    assert.deepEqual(zone.children.map(b => [b.tag, b.dataset.tables]), [["b", "3"], ["b", "6"]], "lot « Mon mélange aux paliers » : deux coupes");
     zone.children.forEach(b => {
       assert.equal(b.children.length, 1);
       assert.equal(b.children[0].tag, "svg", "une coupe dessinée");
@@ -462,11 +465,11 @@ test("11. Mon mélange compact : le triangle qui le lance, « Mon mélange » et
   };
   const avecMelange = (p, reussi) => P.normaliserParcours({...p, melange: {...p.melange, dernier: AUJ, score: 19, reussi}});
   // Léa : 3 tables passées, jamais joué.
-  assert.deepEqual(dessin(lea()), {gagnes: ["", "", ""], nom: "Coupes de Mon mélange (avec 3, 6 et 9 tables) : aucune pour l’instant"});
-  assert.deepEqual(dessin(avecMelange(lea(), 2)).gagnes, ["", "", ""], "réussi avec 2 tables : pas encore de trophée");
-  assert.deepEqual(dessin(avecMelange(lea(), 3)), {gagnes: ["is-gagne", "", ""], nom: "Coupes de Mon mélange (avec 3, 6 et 9 tables) : gagnée avec 3 tables"});
-  assert.deepEqual(dessin(avecMelange(lea(), 7)), {gagnes: ["is-gagne", "is-gagne", ""], nom: "Coupes de Mon mélange (avec 3, 6 et 9 tables) : gagnées avec 3 et 6 tables"});
-  assert.deepEqual(dessin(avecMelange(lea(), 9)).gagnes, ["is-gagne", "is-gagne", "is-gagne"]);
+  assert.deepEqual(dessin(lea()), {gagnes: ["", ""], nom: "Coupes de Mon mélange (avec 3 et 6 tables) : aucune pour l’instant"});
+  assert.deepEqual(dessin(avecMelange(lea(), 2)).gagnes, ["", ""], "réussi avec 2 tables : pas encore de trophée");
+  assert.deepEqual(dessin(avecMelange(lea(), 3)), {gagnes: ["is-gagne", ""], nom: "Coupes de Mon mélange (avec 3 et 6 tables) : gagnée avec 3 tables"});
+  assert.deepEqual(dessin(avecMelange(lea(), 7)), {gagnes: ["is-gagne", "is-gagne"], nom: "Coupes de Mon mélange (avec 3 et 6 tables) : gagnées avec 3 et 6 tables"});
+  assert.deepEqual(dessin(avecMelange(lea(), 9)).gagnes, ["is-gagne", "is-gagne"], "le mélange des 9 tables n'a plus de coupe à lui");
   assert.match(html, /\.mp-trophees \{ display: inline-flex; align-items: center; gap: 3px; flex: 0 0 auto; \}/);
   assert.match(html, /\.mp-trophees b \{ display: inline-flex; width: 26px; height: 26px; color: #c3ced8; \}/, "grises…");
   assert.match(html, /\.mp-trophees b\.is-gagne \{ color: #e0a800;/, "… puis dorées");
@@ -542,7 +545,7 @@ function fiche(laSource, {parcoursAppareil = P.creerParcours(), modeFiche = fals
     const soude = texte => texte;
     ${source("coupe")}
     ${source("tropheesDuMelange")}
-    ${source("phraseProchaineSeance")}\n${source("renderFiche")}\nrenderFiche(ARG.source);`;
+    ${source("phraseProchaineSeance")}\n${source("dateCourte")}\n${source("renderFicheProf")}\n${source("renderFiche")}\nrenderFiche(ARG.source);`;
   new Function("ARG", code)({document, $, P, parcoursAppareil, source: laSource});
   const corps = $("fiche-calculs-corps");
   const td = (ligne, colonne) => corps.children[ligne - 1].children[colonne - 1];
@@ -563,7 +566,8 @@ test("3 et 15. la fiche : la croix de ma table case par case (bouts arrondis), �
   // Les morceaux débordent de plus de la moitié de l'espace entre deux cases (1,1 mm) : ils se touchent.
   assert.match(html, /\.fiche-carre td\.croix-l::before \{ inset: -1mm -\.8mm; \}/);
   assert.match(html, /\.fiche-carre td\.croix-c::after \{ inset: -\.8mm -1mm; \}/);
-  assert.match(html, /\.fiche-carre th\.is-acquise::before \{ content: "✓"; margin-right: \.4mm;/);
+  // Lot « Une seule fiche » : le ✓ en blanc, sur la pastille verte.
+  assert.match(html, /\.fiche-carre th\.is-acquise::before \{ content: "✓"; margin-right: \.3mm; color: #fff;/);
   assert.doesNotMatch(html, /\.fiche-carre th\.is-acquise::after|\.fiche-carre th\.is-ma-table \{ text-decoration/);
 });
 
@@ -582,7 +586,7 @@ test("15. la fiche vierge : la même fiche, vide — carte « Table de ___ · ma
   assert.equal(vierge.$("fiche-semaine").textContent, "");
   assert.equal(vierge.$("fiche-subtitle").textContent, "Dans l’application, cette fiche se remplit toute seule. Ici, à la main.");
   assert.equal(vierge.$("fiche-prof").hidden, true, "pas de cadre du professeur");
-  assert.equal(vierge.$("fiche-print").classList.contains("avec-prof"), false);
+  assert.equal(vierge.$("fiche-prof-rows").children.length, 0, "la page du professeur reste vide");
   // Le tableau : vide, sans croix (aucune table n'est « ma table »), même si l'appareil a un parcours.
   const tds = vierge.corps.children.slice(1).flatMap(tr => tr.children.slice(1));
   assert.equal(tds.length, 64);
@@ -598,12 +602,12 @@ test("15. la fiche vierge : la même fiche, vide — carte « Table de ___ · ma
     assert.equal(etat.children[0].className, "mp-trophees");
     return etat.children[0].children.map(b => `${b.dataset.tables}${b.className === "is-gagne" ? "G" : b.className === "" ? "-" : "?"}`).join(" ");
   };
-  assert.equal(tropheesFiche(vierge), "3- 6- 9-");
-  assert.equal(tropheesFiche(fiche(lea())), "3- 6- 9-");
+  assert.equal(tropheesFiche(vierge), "3- 6-");
+  assert.equal(tropheesFiche(fiche(lea())), "3- 6-");
   const gagnante = P.normaliserParcours({...lea(), melange: {...lea().melange, dernier: AUJ, score: 19, reussi: 3}});
-  assert.equal(tropheesFiche(fiche(gagnante)), "3G 6- 9-");
+  assert.equal(tropheesFiche(fiche(gagnante)), "3G 6-");
   // La fiche vierge reste vide même si l'appareil a gagné des trophées.
-  assert.equal(tropheesFiche(fiche("vierge", {parcoursAppareil: gagnante, modeFiche: true})), "3- 6- 9-");
+  assert.equal(tropheesFiche(fiche("vierge", {parcoursAppareil: gagnante, modeFiche: true})), "3- 6-");
   // La fiche d'un élève, elle, n'a pas la ligne à remplir.
   assert.equal(parClasse(fiche(lea()).$("fiche-matable"), "fiche-blanc").length, 0);
 });

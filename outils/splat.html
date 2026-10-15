@@ -249,6 +249,7 @@
   .c-ops{display:grid;grid-template-columns:repeat(4, minmax(0, 1fr));gap:6px;margin-top:2px}
   .c-ops .checkInline{justify-content:center;height:38px;padding:0 6px;border-radius:10px;gap:6px;min-width:0;white-space:nowrap;margin:0}
   .c-ops .checkInline span{font-size:13px;font-weight:700}
+  .c-ops .checkInline.grise{opacity:.4;cursor:default}
   /* Enquête : la forme (quatre menus, deux par rangée) et les variantes (cases alignées à
      gauche, deux par rangée) — lot « projection », 30/09/2026 */
   .c-forme{display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:8px;margin-bottom:8px}
@@ -856,19 +857,19 @@
   #eleveRappel .eleveRappelTotal{flex:0 0 auto;border:2.5px solid #000;border-radius:10px;background:var(--totalbox-fill);padding:4px 10px 5px;text-align:center;line-height:1}
   #eleveRappel .eleveRappelTotal span{display:block;font-size:10px;font-weight:800;letter-spacing:1.5px;color:var(--total-label)}
   #eleveRappel .eleveRappelTotal b{display:block;font-size:24px;font-weight:900;margin-top:2px}
-  /* Enquête sans total : le « ? » du TOTAL en gris ardoise, comme sur le plateau et à l'impression */
-  #eleveRappel .eleveRappelTotal b.inconnu, #elevePanel.sansTotal .eleveCase.haut.donnee .eleveDonneeVal{color:#64748b}
   #eleveRappel .eleveRappelIndices{flex:1 1 auto;min-width:0}
   #eleveRappel .eleveRappelIndices p{margin:0;font-size:13.5px;font-weight:700;line-height:1.28;color:var(--ink)}
   #eleveRappel .eleveRappelIndices p+p{margin-top:4px}
   /* Petit plateau pendant les étapes (02/10/2026) : le même ordre que la question — les phrases
-     en haut, puis le plateau et le TOTAL à sa droite, jamais collés (12 px) */
+     en haut, puis le plateau et le TOTAL à sa droite, jamais collés (12 px) ; sans total (08/10/2026),
+     pas de case : le plateau seul, centré */
   #eleveRappel.avecPlateau{flex-wrap:wrap;justify-content:center;row-gap:6px}
   #eleveRappel.avecPlateau .eleveRappelIndices{order:-1;flex:1 1 100%}
   #eleveRappelPlateau{order:0;flex:0 1 auto;display:block;height:78px;min-width:0;max-width:calc(100% - 96px)}
   #eleveRappel.avecPlateau .eleveRappelTotal{order:1}
   /* Téléphone, question de l'Enquête (lot E7) : les phrases d'indice en HTML, en haut, sur
-     toute la largeur ; le TOTAL à droite du plateau (2e colonne de #svgWrap), à 10 px */
+     toute la largeur ; le TOTAL à droite du plateau (2e colonne de #svgWrap), à 10 px ; sans total
+     (08/10/2026), pas de case : le plateau garde sa taille, centré (eleveIndicesHauteurPlateau) */
   #eleveIndices{margin:4px 6px 8px}
   #eleveIndices p{margin:0;font-size:14px;font-weight:700;line-height:1.3;color:var(--ink)}
   #eleveIndices p+p{margin-top:5px}
@@ -877,11 +878,6 @@
   #eleveTotalTel{border:2.5px solid #000;border-radius:10px;background:var(--totalbox-fill);padding:4px 10px 5px;text-align:center;line-height:1;margin-right:2px}
   #eleveTotalTel span{display:block;font-size:10px;font-weight:800;letter-spacing:1.5px;color:var(--total-label)}
   #eleveTotalTel b{display:block;font-size:24px;font-weight:900;margin-top:2px}
-  #eleveTotalTel b.inconnu{color:#64748b}
-  /* « PAS DE TOTAL » (Enquête sans total, 07/10/2026) : « TOTAL » à la taille de « PAS DE », en gras, sur
-     la hauteur de ligne du nombre (la case garde sa taille) */
-  #eleveRappel .eleveRappelTotal b.pasDe, #eleveTotalTel b.pasDe{font-size:10px;letter-spacing:1.5px;line-height:24px;height:24px;color:var(--total-label)}
-  .eleveCase.haut.donnee.pasDe .eleveDonneeVal{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:900;color:#475569}
   body.eleve-mode #svgWrap.eleveSchemaTel #eleveTotalTel{display:none}
   /* petit téléphone : la question tient sur une ligne (la ligne gagnée va au plateau) */
   @media (max-width:379px){ #elevePanel.enquete .eleveConsigne{font-size:14px} }
@@ -986,7 +982,11 @@
      le pavé doit déjà exister à ce moment-là. -->
 <script src="../assets/js/mathsgo-pave-chiffres.js?v=20260918-1"></script>
 <!-- Le texte du bouton « Étape suivante ▶ » de l'écran de fin (lot A). -->
-<script src="../assets/js/splat-etapes.js?v=20261005-1"></script>
+<script src="../assets/js/splat-etapes.js?v=20261014-3"></script>
+<!-- Le parcours de l'élève (moteur partagé avec la carte des mondes et le serveur de suivi), et
+     l'habillage du suivi de classe (pastille, garde) : lot 2 « outils + carte », 08/10/2026 -->
+<script src="../assets/js/splat-parcours.js?v=20261014-1"></script>
+<script src="../assets/js/splat-suivi.js?v=20261008-3"></script>
 </head>
 
 <body class="light">
@@ -1053,6 +1053,7 @@
     <label>Type d’activité</label>
     <select id="activity">
       <option value="U">A — Jetons</option>
+      <option value="UF">A fraction — Jetons et parts</option>
       <option value="UPM">A± — Jetons relatifs</option>
       <option value="N">B — Paquets de jetons</option>
       <option value="NPM">B± — Paquets de jetons relatifs</option>
@@ -1131,6 +1132,66 @@
             <input id="count" type="number" min="1" max="300" value="10" />
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- A fraction (lot F1, 15/10/2026) : des jetons et des disques partagés en parts égales,
+         un dénominateur par carte, une tache, un total entier. Niveau : voir UF_NIVEAUX. La
+         graine et « Copier le lien » sont ceux de A / A± (rangée unitSeedShareRow). -->
+    <div id="fractionSettings" style="display:none">
+      <label for="fracNiveau">Niveau</label>
+      <select id="fracNiveau" title="1 : des demis · 2 : tiers et quarts, les parts dépassent l’unité · 3 : demis, tiers, quarts, plusieurs parts sur un disque · 4 : cinquièmes, sixièmes, huitièmes · Réglages avancés : les dénominateurs cochés">
+        <option value="1" selected>1 — Demis</option>
+        <option value="2">2 — Tiers et quarts</option>
+        <option value="3">3 — Plusieurs parts sur un disque</option>
+        <option value="4">4 — Cinquièmes à huitièmes</option>
+        <option value="avance">Réglages avancés</option>
+      </select>
+      <!-- lot F1b (15/10/2026) : « Réglages avancés » (les dénominateurs cochés, une part ou
+           plusieurs parts par disque) et l'écriture décimale (demis, quarts, cinquièmes seulement :
+           toutes les cartes d'une série s'écrivent de la même façon). Les quatre niveaux restent
+           des préréglages : mêmes cartes qu'au lot F1. -->
+      <div id="fracAvanceRows" style="display:none">
+        <label>Parts</label>
+        <div class="c-ops" style="grid-template-columns:repeat(6, minmax(0, 1fr))">
+          <label class="checkInline" title="Demis"><input type="checkbox" id="fracDen2" checked> <span>1/2</span></label>
+          <label class="checkInline" title="Tiers"><input type="checkbox" id="fracDen3"> <span>1/3</span></label>
+          <label class="checkInline" title="Quarts"><input type="checkbox" id="fracDen4"> <span>1/4</span></label>
+          <label class="checkInline" title="Cinquièmes"><input type="checkbox" id="fracDen5"> <span>1/5</span></label>
+          <label class="checkInline" title="Sixièmes"><input type="checkbox" id="fracDen6"> <span>1/6</span></label>
+          <label class="checkInline" title="Huitièmes"><input type="checkbox" id="fracDen8"> <span>1/8</span></label>
+        </div>
+        <label for="fracParts">Disques</label>
+        <select id="fracParts" title="Une part par disque : comme les Fraction Splats de Steve Wyborney (3/4 = trois disques d’un quart) · Plusieurs parts : un disque peut porter 2/3, 3/4…">
+          <option value="une" selected>Une part par disque</option>
+          <option value="plusieurs">Plusieurs parts par disque</option>
+        </select>
+      </div>
+      <label for="fracEcriture">Écriture</label>
+      <select id="fracEcriture" title="Fraction : 3 + 3/4 · Décimale : 3,75 — demis, quarts et cinquièmes seulement, toutes les cartes de la série s’écrivent avec une virgule">
+        <option value="fraction" selected>Fraction — 3 + 3/4</option>
+        <option value="decimale">Décimale — 3,75</option>
+      </select>
+      <div class="row" style="align-items:flex-end">
+        <div style="flex:1 1 0">
+          <label for="fracVisibleMax">Visibles</label>
+          <div class="lePair"><span class="leSign" aria-hidden="true">≤</span><input id="fracVisibleMax" type="number" min="1" max="12" value="8" title="Jetons et disques visibles, au plus" /></div>
+        </div>
+        <div style="flex:1 1 0">
+          <label for="fracHiddenMax">Cachées</label>
+          <div class="lePair"><span class="leSign" aria-hidden="true">≤</span><input id="fracHiddenMax" type="number" min="1" max="10" value="6" title="Jetons et disques cachés, au plus" /></div>
+        </div>
+      </div>
+      <div class="row" style="align-items:flex-end">
+        <div style="flex:1">
+          <label for="fracTotalMin">Total (min)</label>
+          <input id="fracTotalMin" type="number" min="1" max="20" value="3" />
+        </div>
+        <div style="flex:1">
+          <label for="fracTotalMax">Total (max)</label>
+          <input id="fracTotalMax" type="number" min="1" max="20" value="10" />
+        </div>
+        <div class="countSlot" style="flex:1"></div>
       </div>
     </div>
 
@@ -1376,7 +1437,7 @@
       <div class="row" style="align-items:flex-end">
         <div style="flex:1.7 1 0">
           <label>Geste</label>
-          <select id="sysGeste" title="1 : emboîtées, une tache par couleur · 2a : une partie connue · 2b : deux pesées, une couleur diffère · 3 : doubler l’indice puis comparer · 4a : deux plateaux en miroir, on additionne · 4b : trois sommes, sans total · Escalier : trois plateaux emboîtés, on retire deux fois · Mélange : les gestes cochés">
+          <select id="sysGeste" title="1 : emboîtées, une tache par couleur · 2a : une partie connue · 2b : deux pesées, une couleur diffère · 3 : doubler l’indice puis comparer · 4a : deux plateaux en miroir, on additionne · 4b : trois sommes, sans total · Escalier : trois plateaux emboîtés, on retire deux fois · Je recopie, puis je retire : aucun plateau ne tient dans l’autre, on recopie le premier · Deux gestes à la suite : deux petits plateaux, puis le grand · Mélange : les gestes cochés">
             <option value="EMBOITE1" selected>1 — Emboîtées</option>
             <option value="PARTIELLE">2a — Donnée partielle</option>
             <option value="COEF">2b — Deux pesées</option>
@@ -1384,6 +1445,8 @@
             <option value="MIROIR">4a — Miroir</option>
             <option value="TROIS">4b — Trois sommes</option>
             <option value="ESCALIER">Escalier</option>
+            <option value="RECOPIE">Je recopie, puis je retire</option>
+            <option value="ETAGES">Deux gestes à la suite</option>
             <option value="MIX">Mélange</option>
           </select>
         </div>
@@ -1402,6 +1465,8 @@
           <label class="checkInline" title="4a — Miroir : additionner"><input type="checkbox" id="sysMixMIROIR"> <span>4a</span></label>
           <label class="checkInline" title="4b — Trois sommes, sans total"><input type="checkbox" id="sysMixTROIS" checked> <span>4b</span></label>
           <label class="checkInline" title="Escalier : trois plateaux emboîtés"><input type="checkbox" id="sysMixESCALIER"> <span>Esc.</span></label>
+          <label class="checkInline" title="Je recopie, puis je retire"><input type="checkbox" id="sysMixRECOPIE"> <span>Rec.</span></label>
+          <label class="checkInline" title="Deux gestes à la suite"><input type="checkbox" id="sysMixETAGES"> <span>2 g.</span></label>
         </div>
       </div>
       <!-- lot M4-1 : un réglage par ligne ; « Écart » pour les deux pesées, « Recopier »,
@@ -1420,9 +1485,11 @@
       <div class="row" id="sysFoisRow" style="display:none; align-items:flex-end">
         <div style="flex:1">
           <label>Recopier</label>
-          <select id="sysFois" title="Doubler : on recopie le petit plateau 2 ou 3 fois">
+          <select id="sysFois" title="Doubler : on recopie le petit plateau 2 ou 3 fois · Je recopie : on recopie le premier plateau 2, 3 ou 4 fois">
             <option value="2" selected>2 fois</option>
             <option value="3">3 fois</option>
+            <option value="4">4 fois</option>
+            <option value="MIX">2 ou 3 fois, au hasard</option>
           </select>
         </div>
       </div>
@@ -1442,6 +1509,43 @@
             <option value="PLATEAU" selected>Le grand plateau</option>
             <option value="INDICE">Le petit recopié</option>
             <option value="MIX">Les deux, au hasard</option>
+          </select>
+        </div>
+      </div>
+      <!-- lot M4-5 : « Miroir » (forme des plateaux en miroir), « Grand plateau » et « Petits
+           plateaux » (Deux gestes à la suite) ; « 4 fois » et « au hasard » de Recopier ne
+           servent qu'à « Je recopie ». Éteints par défaut : mêmes cartes qu'avant. -->
+      <div class="row" id="sysFormeRow" style="display:none; align-items:flex-end">
+        <div style="flex:1">
+          <label>Miroir</label>
+          <select id="sysForme" title="Miroir : les taches de chaque couleur, d'un plateau à l'autre">
+            <option value="" selected>1-2 ou 2-3</option>
+            <option value="12">1-2</option>
+            <option value="23">2-3</option>
+            <option value="13">1-3</option>
+            <option value="MIX">1-2, 2-3 ou 1-3</option>
+          </select>
+        </div>
+      </div>
+      <div class="row" id="sysGrandRow" style="display:none; align-items:flex-end">
+        <div style="flex:1">
+          <label>Grand plateau</label>
+          <select id="sysGrand" title="Deux gestes à la suite : les taches du plateau à trois couleurs (1 + 1 + 2 : la 3e couleur en double, on partage à la fin)">
+            <option value="" selected>2 + 1 + 1 ou 1 + 1 + 2</option>
+            <option value="211">2 + 1 + 1</option>
+            <option value="112">1 + 1 + 2</option>
+          </select>
+        </div>
+      </div>
+      <div class="row" id="sysSousRow" style="display:none; align-items:flex-end">
+        <div style="flex:1">
+          <label>Petits plateaux</label>
+          <select id="sysSous" title="Deux gestes à la suite : le premier geste, sur les deux petits plateaux">
+            <option value="MIX" selected>Au hasard</option>
+            <option value="COEF">Je retire</option>
+            <option value="MIROIR">J’additionne (miroir)</option>
+            <option value="RECOPIE">Je recopie, puis je retire</option>
+            <option value="DOUBLE">Doubler</option>
           </select>
         </div>
       </div>
@@ -1653,6 +1757,16 @@ const INVESTIGATE_PRINT_LABEL_MODE = "word";
    les indices et la structure de chaque carte ne bougent pas, seules les couleurs changent. */
 let investigatePaletteKeys = null;
 let printInstructionNote = "";
+/* « systeme=1 » (lot M4-7) : la ligne « Le système » sous les plateaux de l'énoncé 2 par page du
+   Système (livret 2 du monde 4). Absente : rien ne change. Elle ne change pas les cartes. */
+let printSystemeLigne = false;
+/* « corrige=equations » (lot M4-8) : le corrigé du Système écrit en équations, étape par étape,
+   sans les barres (3e corrigé du livret 2 du monde 4). Absent : rien ne change. Il ne change pas
+   les cartes. */
+let printCorrigeEquations = false;
+/* le plus grand corps permis aux équations, le temps de redessiner les cartes d'une page à un
+   même corps (sysEquationsPage) ; null sinon */
+let sysEqCorpsPlafond = null, sysEqDeuxColonnes = false;
 function parseInvestigatePalette(raw){
   const parts = String(raw == null ? "" : raw).toLowerCase().split(/[\s,;+|]+/).filter(Boolean);
   const keys = [];
@@ -1662,8 +1776,14 @@ function parseInvestigatePalette(raw){
   });
   return keys.length ? keys : null;
 }
+/* Cartes jumelles (voir carteJumelle) : le temps d'un tirage, les couleurs de la carte d'origine,
+   données sans rien tirer. null : le tirage habituel, rien ne change. */
+let jumelleCouleurs = null;
 function buildInvestigateColorMap(rng, taskCount, varied){
   const n = Math.max(1, Math.min(3, Number(taskCount) || 1));
+  if(typeof jumelleCouleurs !== "undefined" && jumelleCouleurs){
+    return jumelleCouleurs.concat(INVESTIGATE_COLOR_PALETTE.map(c => c.key).filter(k => !jumelleCouleurs.includes(k))).slice(0, n);
+  }
   if(!varied){
     return INVESTIGATE_CLASSIC_COLOR_KEYS.slice(0, n);
   }
@@ -1698,8 +1818,13 @@ function enqueteNomCouleurCompte(card, idx, n){
    d'avant gardent leur borne de 6 (SYS_MAX_TACHES_AVANT) tant qu'aucun réglage nouveau
    n'est allumé — mêmes formes, même hasard consommé, mêmes cartes. Nouveau geste ESCALIER
    (trois plateaux emboîtés : aA ; aA + bB ; aA + bB + cC). */
-const SYS_GESTES = ["EMBOITE1", "PARTIELLE", "COEF", "DOUBLE", "MIROIR", "TROIS", "ESCALIER"];
+const SYS_GESTES = ["EMBOITE1", "PARTIELLE", "COEF", "DOUBLE", "MIROIR", "TROIS", "ESCALIER", "RECOPIE", "ETAGES"];
 const SYS_GESTES_MIX_DEFAUT = ["EMBOITE1", "PARTIELLE", "COEF", "TROIS"];
+/* Lot M4-5 (14/10/2026, conception des deux livrets du monde 4) : RECOPIE, le cas 3 — aucun
+   plateau ne tient dans l'autre, on recopie le premier 2, 3 ou 4 fois, on y retrouve l'autre,
+   on retire ; ETAGES, « deux gestes à la suite » — un plateau à trois couleurs et deux petits
+   plateaux à deux couleurs qui forment un système, résolu par l'un de ces gestes. */
+const SYS_SOUS_GESTES = ["COEF", "MIROIR", "RECOPIE", "DOUBLE"];
 const SYS_MAX_TACHES = 7;
 const SYS_MAX_TACHES_AVANT = 6;
 const SYS_ESSAIS = 5000;
@@ -1710,7 +1835,7 @@ const SYS_COULEURS_PLURIEL = { black:"noires", purple:"violettes", orange:"orang
    indices composés (« 3 de plus que le double »). */
 const ENQ_VOCABULAIRE = { MUL:{ 2:"le double", 3:"le triple", 4:"le quadruple" }, DIV:{ 2:"la moitié", 3:"le tiers", 4:"le quart" } };
 const ENQ_NOMBRES_LETTRES = { 2:"deux", 3:"trois", 4:"quatre", 5:"cinq", 6:"six" };
-const SYS_PLAGES = { EMBOITE1:{ vMin:5, vMax:30, sousMin:10, sousMax:60 }, PARTIELLE:{ vMin:3, vMax:15, sousMin:9, sousMax:45 }, COEF:{ vMin:3, vMax:12, sousMin:9, sousMax:50 }, DOUBLE:{ vMin:3, vMax:12, sousMin:8, sousMax:40 }, MIROIR:{ vMin:3, vMax:12, sousMin:20, sousMax:60 }, TROIS:{ vMin:3, vMax:15, sousMin:6, sousMax:30 }, ESCALIER:{ vMin:3, vMax:12, sousMin:3, sousMax:45 } };
+const SYS_PLAGES = { EMBOITE1:{ vMin:5, vMax:30, sousMin:10, sousMax:60 }, PARTIELLE:{ vMin:3, vMax:15, sousMin:9, sousMax:45 }, COEF:{ vMin:3, vMax:12, sousMin:9, sousMax:50 }, DOUBLE:{ vMin:3, vMax:12, sousMin:8, sousMax:40 }, MIROIR:{ vMin:3, vMax:12, sousMin:20, sousMax:60 }, TROIS:{ vMin:3, vMax:15, sousMin:6, sousMax:30 }, ESCALIER:{ vMin:3, vMax:12, sousMin:3, sousMax:45 }, RECOPIE:{ vMin:3, vMax:12, sousMin:9, sousMax:60 }, ETAGES:{ vMin:3, vMax:12, sousMin:9, sousMax:60 } };
 
 function pickVariableChar(rng){
   return variableChars[rInt(rng, 0, variableChars.length - 1)];
@@ -1852,6 +1977,10 @@ const sysFoisEl = document.getElementById("sysFois");
 const sysIndiceEl = document.getElementById("sysIndice");
 const sysSensEl = document.getElementById("sysSens");
 const sysOrdreEl = document.getElementById("sysOrdre");
+/* lot M4-5 : forme du miroir, grand plateau et petits plateaux de « Deux gestes à la suite » */
+const sysFormeEl = document.getElementById("sysForme");
+const sysGrandEl = document.getElementById("sysGrand");
+const sysSousEl = document.getElementById("sysSous");
 const sysPasAPasEl = document.getElementById("sysPasAPas");
 const sysVisibleMinEl = document.getElementById("sysVisibleMin");
 const sysVisibleMaxEl = document.getElementById("sysVisibleMax");
@@ -1959,7 +2088,7 @@ let numberedQuestionMarkMode = activityEl && activityEl.value === "U";
 
 function applyDefaultUnknownDisplayForActivity(){
   if(!activityEl) return;
-  if(activityEl.value === "U" || activityEl.value === "UPM" || activityEl.value === "D") numberedQuestionMarkMode = true;
+  if(activityEl.value === "U" || activityEl.value === "UF" || activityEl.value === "UPM" || activityEl.value === "D") numberedQuestionMarkMode = true;
   else if(activityEl.value === "N" || activityEl.value === "C" || activityEl.value === "CD") numberedQuestionMarkMode = false;
 }
 
@@ -1982,7 +2111,7 @@ function formatCoeffUnknownTerm(coeff, varChar){
 
 function syncNumberedQuestionMarkButton(){
   if(!numberedUnknownChoiceEl || !activityEl) return;
-  const show = activityEl.value === "U" || activityEl.value === "UPM" || activityEl.value === "N" || activityEl.value === "C" || activityEl.value === "CD" || activityEl.value === "D";
+  const show = activityEl.value === "U" || activityEl.value === "UF" || activityEl.value === "UPM" || activityEl.value === "N" || activityEl.value === "C" || activityEl.value === "CD" || activityEl.value === "D";
   numberedUnknownChoiceEl.classList.toggle("is-visible", show);
   numberedUnknownChoiceEl.setAttribute("aria-hidden", show ? "false" : "true");
   if(btnNumberedLetterEl){
@@ -2141,6 +2270,9 @@ function syncPrintModeUI(){
   // un choix devenu sans objet retombe sur le choix voisin
   if(!kind && sel.value === "worksheet") sel.value = "statement";
   if(!kind && sel.value === "duplex-worksheet") sel.value = "duplex-correction";
+  /* A fraction (lot F1) : l'énoncé seul, en 4, 2 ou 1 par page — les corrections et le
+     6/page viennent avec le lot F2 */
+  ufSyncImpression(sel, act === "UF");
   sel.title = kind === "aid"
     ? "Choisir ce qui partira à l’imprimante : énoncé, aide ou correction"
     : "Choisir ce qui partira à l’imprimante";
@@ -2201,7 +2333,7 @@ function syncPrintSummary(){
 
 function getSeedForCurrentMode(){
   const act = activityEl.value;
-  if(act === "U" || act === "UPM") return (seedUEl.value||"").trim() ? Number(seedUEl.value) : "";
+  if(act === "U" || act === "UPM" || act === "UF") return (seedUEl.value||"").trim() ? Number(seedUEl.value) : "";
   if(act === "N" || act === "NPM") return (seedNEl.value||"").trim() ? Number(seedNEl.value) : "";
   if(act === "C" || act === "CD") return (seedEEl.value||"").trim() ? Number(seedEEl.value) : "";
   if(act === "D") return (seedSysEl.value||"").trim() ? Number(seedSysEl.value) : "";
@@ -2215,7 +2347,7 @@ let shareFeedbackTimer = null;
 
 function getSeedElementForCurrentMode(){
   const act = activityEl.value;
-  if(act === "U" || act === "UPM") return seedUEl;
+  if(act === "U" || act === "UPM" || act === "UF") return seedUEl;
   if(act === "N" || act === "NPM") return seedNEl;
   if(act === "C" || act === "CD") return seedEEl;
   if(act === "D") return seedSysEl;
@@ -2277,6 +2409,8 @@ function getClassicShareControls(act){
     ["visibleMax", unitVisibleMaxEl], ["hiddenMax", unitHiddenMaxEl],
     ["totalMin", unitTotalMinEl], ["totalMax", unitTotalMaxEl]
   ];
+  /* A fraction (lot F1) : « niveau » n'est écrit et lu qu'ici */
+  if(act === "UF") return ufReglagesAdresse();
   if(act === "N") return [
     ["tasksMin", numTasksMinEl], ["tasksMax", numTasksEl],
     ["visibleMin", numVisibleMinEl], ["visibleMax", numVisibleMaxEl],
@@ -2326,7 +2460,7 @@ function lireRepetitionAdresse(raw){
 
 /* Les réglages qu'une adresse partagée peut porter. Liste commune : elle sert
    aussi à l'empreinte de la série élève (eleveSignatureSerie). */
-const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "geste", "gestes", "coefMax", "ecart", "fois", "indice", "sens", "noTotal", "repeat", "ordre", "vocab", "compose", "reunies", "pasapas", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "palette", "unknown", "print", "duplex", "layout", "title", "note", "eleve", "parcours", "imprimer", "suite"];
+const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "niveau", "ecriture", "dens", "parts", "splats", "clues", "structure", "geste", "gestes", "coefMax", "ecart", "fois", "indice", "sens", "forme", "grand", "sous", "noTotal", "repeat", "ordre", "vocab", "compose", "reunies", "pasapas", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "palette", "unknown", "print", "duplex", "layout", "title", "note", "systeme", "eleve", "parcours", "imprimer", "suite", "corrige"];
 
 function loadSharedConfiguration(){
   const params = new URLSearchParams(window.location.search);
@@ -2375,7 +2509,12 @@ function appliquerConfiguration(params){
   if(act === "N" || act === "NPM") setSelectFromShare(params, "equation", numberedEquationTypeEl);
   syncSettingsUI();
 
+  /* A fraction (lot F1) : niveau absent ou illisible = niveau 1, y compris pour chaque partie
+     d'une étape composée */
+  if(act === "UF") ufNiveauParDefaut();
   getClassicShareControls(act).forEach(([name, el]) => applyShareControl(params, name, el));
+  /* lot F1b : « ecriture », « dens », « parts » — absents de l'adresse = valeurs par défaut */
+  if(act === "UF") ufLireAdresse(params);
   /* « gestes=COEF,DOUBLE » (Système) : les cases du mélange. */
   if(act === "D" && params.has("gestes")) sysAppliquerGestesMix(params.get("gestes"));
   if(act === "D") sysLireReglagesM4(params);
@@ -2392,6 +2531,8 @@ function appliquerConfiguration(params){
      consigne imprimée (fiches 2 et 7 de l'Enquête : « Reformule l'indice avant de
      dessiner ton schéma. »). Absente : rien ne change. Elle ne change pas les cartes. */
   if(params.has("note")) printInstructionNote = String(params.get("note") || "").trim().slice(0, 200);
+  printSystemeLigne = readBooleanFromShare(params, "systeme") === true;
+  printCorrigeEquations = String(params.get("corrige") || "").toLowerCase() === "equations";
   /* « palette= » (Enquête) : couleurs de taches autorisées ; absente = les six. */
   if(params.has("palette")) investigatePaletteKeys = parseInvestigatePalette(params.get("palette"));
   /* « noTotal=1 » (Enquête sans total) : absente = éteinte, y compris pour chaque partie
@@ -2450,23 +2591,36 @@ function sysLireReglagesM4(params){
   lire(sysIndiceEl, "indice", "11");
   lire(sysSensEl, "sens", "PLATEAU");
   lire(sysOrdreEl, "ordre", "");
+  /* lot M4-5 : « forme » (Miroir), « grand » et « sous » (Deux gestes à la suite) */
+  lire(sysFormeEl, "forme", "");
+  lire(sysGrandEl, "grand", "");
+  lire(sysSousEl, "sous", "MIX");
   /* lot M4-2 : « pasapas=0 » = la correction directe au tableau, comme l'Enquête */
   if(sysPasAPasEl) sysPasAPasEl.checked = params.get("pasapas") !== "0";
 }
 
-/* Les gestes que la page peut tirer : le geste choisi, ou les gestes cochés du mélange. */
+/* Les gestes que la page peut tirer : le geste choisi, ou les gestes cochés du mélange.
+   Lot M4-5 : « Deux gestes à la suite » tire aussi le geste de ses petits plateaux (« sous »,
+   les quatre au hasard par défaut) — leurs réglages comptent donc. */
 function sysGestesLus(){
   const geste = sysGesteEl ? sysGesteEl.value : "";
   const gestes = geste === "MIX" ? sysLireGestesMix() : [geste];
-  return { coef: gestes.includes("COEF"), double: gestes.includes("DOUBLE") };
+  const etages = gestes.includes("ETAGES");
+  const sous = !etages ? [] : (sysSousEl && sysSousEl.value !== "MIX" ? [sysSousEl.value] : SYS_SOUS_GESTES);
+  const lus = gestes.concat(sous);
+  return { coef: lus.includes("COEF"), double: lus.includes("DOUBLE"), recopie: lus.includes("RECOPIE"), miroir: lus.includes("MIROIR"), etages };
 }
 
 function sysEcrireReglagesM4(params){
-  const { coef, double } = sysGestesLus();
+  const { coef, double, recopie, miroir, etages } = sysGestesLus();
   if(coef && sysEcartEl && sysEcartEl.value) params.set("ecart", sysEcartEl.value);
-  if(double && sysFoisEl && sysFoisEl.value === "3") params.set("fois", "3");
+  /* « fois » : 3 pour Doubler ; 3, 4 ou MIX pour Je recopie (2 = éteint, rien n'est écrit) */
+  if(sysFoisEl && ((double && sysFoisEl.value === "3") || (recopie && sysFoisEl.value !== "2"))) params.set("fois", sysFoisEl.value);
   if(double && sysIndiceEl && sysIndiceEl.value === "12") params.set("indice", "12");
   if(double && sysSensEl && (sysSensEl.value === "INDICE" || sysSensEl.value === "MIX")) params.set("sens", sysSensEl.value);
+  if(miroir && sysFormeEl && sysFormeEl.value) params.set("forme", sysFormeEl.value);
+  if(etages && sysGrandEl && sysGrandEl.value) params.set("grand", sysGrandEl.value);
+  if(etages && sysSousEl && sysSousEl.value !== "MIX") params.set("sous", sysSousEl.value);
   if(sysOrdreEl && sysOrdreEl.value === "MELANGE") params.set("ordre", "MELANGE");
   if(sysPasAPasEl && !sysPasAPasEl.checked) params.set("pasapas", "0");
 }
@@ -2488,10 +2642,12 @@ function buildShareUrl(){
   if(act === "U") params.set("equation", String(unitEquationTypeEl.value));
   if(act === "N" || act === "NPM") params.set("equation", String(numberedEquationTypeEl.value));
   getClassicShareControls(act).forEach(([name, el]) => addShareControl(params, name, el));
+  /* lot F1b : écrits seulement hors de leur valeur par défaut (les adresses du lot F1 ne changent pas) */
+  if(act === "UF") ufEcrireAdresse(params);
   if(act === "D" && sysGesteEl && sysGesteEl.value === "MIX") params.set("gestes", sysLireGestesMix().join(","));
   if(act === "D") sysEcrireReglagesM4(params);
 
-  if(act === "U" || act === "UPM" || act === "N" || act === "C" || act === "CD" || act === "D"){
+  if(act === "U" || act === "UF" || act === "UPM" || act === "N" || act === "C" || act === "CD" || act === "D"){
     params.set("unknown", numberedQuestionMarkMode ? "question" : "letter");
   }
   addShareControl(params, "print", printModeSelectEl);
@@ -2499,6 +2655,8 @@ function buildShareUrl(){
   const printTitle = printActivityTitleEl ? printActivityTitleEl.value.trim() : "";
   if(printTitle) params.set("title", printTitle.slice(0, 160));
   if(printInstructionNote) params.set("note", printInstructionNote);
+  if(printSystemeLigne) params.set("systeme", "1");
+  if(printCorrigeEquations) params.set("corrige", "equations");
   if((act === "C" || act === "CD" || act === "D") && Array.isArray(investigatePaletteKeys) && investigatePaletteKeys.length) params.set("palette", investigatePaletteKeys.join(","));
   /* écrite seulement quand elle est cochée : les adresses de l'Enquête ne changent pas */
   if((act === "C" || act === "CD") && invNoTotalEl && invNoTotalEl.checked) params.set("noTotal", "1");
@@ -2739,7 +2897,8 @@ function placeCardCountField(act){
     : act === "C9" ? "nineSettings"
     : act === "C8" ? "eightSettings"
     : (act === "C" || act === "CD") ? "investigateSettings"
-    : act === "D" ? "systemSettings" : "";
+    : act === "D" ? "systemSettings"
+    : act === "UF" ? "fractionSettings" : "";
   const block = blockId ? document.getElementById(blockId) : null;
   const slot = block ? block.querySelector(".countSlot") : null;
   if(slot && countWrapEl.parentNode !== slot) slot.appendChild(countWrapEl);
@@ -2750,7 +2909,7 @@ function placeCardCountField(act){
    des autres modes, où le champ de graine propre à chaque mode s'affiche à tour
    de rôle — le code de génération lit toujours les mêmes champs. */
 function syncSeedShareRows(act){
-  if(unitSeedShareRowEl) unitSeedShareRowEl.hidden = !(act === "U" || act === "UPM");
+  if(unitSeedShareRowEl) unitSeedShareRowEl.hidden = !(act === "U" || act === "UPM" || act === "UF");
   if(numberedSeedShareRowEl) numberedSeedShareRowEl.hidden = !(act === "N" || act === "NPM");
   const sharedSeedIds = { C9:"seedC", C8:"seedD", C:"seedE", CD:"seedE", D:"seedSys" };
   const wanted = sharedSeedIds[act] || "seedE";
@@ -2765,7 +2924,7 @@ function syncSeedShareRows(act){
 function syncSettingsUI(){
   const act = activityEl.value;
   const shareRowEl = document.getElementById("shareRow");
-  if(shareRowEl) shareRowEl.hidden = act === "U" || act === "UPM" || act === "N" || act === "NPM";
+  if(shareRowEl) shareRowEl.hidden = act === "U" || act === "UPM" || act === "N" || act === "NPM" || act === "UF";
   const prevAct = syncSettingsUI._lastAct || "";
   if(prevAct !== act && act === "UPM"){
     if(unitTotalMinEl && unitTotalMaxEl){
@@ -2854,7 +3013,8 @@ function syncSettingsUI(){
   const isEight = act === "C8";
   const isInvestigate = (act === "C" || act === "CD");
   const isSystem = act === "D";
-  const isClassic = !(isUnit || isNumbered || isNine || isEight || isInvestigate || isSystem);
+  const isFraction = act === "UF";
+  const isClassic = !(isUnit || isNumbered || isNine || isEight || isInvestigate || isSystem || isFraction);
 
   if(numHiddenCountWrapEl) numHiddenCountWrapEl.style.display = "block";
 
@@ -2870,6 +3030,8 @@ function syncSettingsUI(){
   eightSettingsEl.style.display = isEight ? "block" : "none";
   investigateSettingsEl.style.display = isInvestigate ? "block" : "none";
   systemSettingsEl.style.display = isSystem ? "block" : "none";
+  const fractionSettingsEl = document.getElementById("fractionSettings");
+  if(fractionSettingsEl) fractionSettingsEl.style.display = isFraction ? "block" : "none";
   if(sysMixRowEl) sysMixRowEl.style.display = (isSystem && sysGesteEl && sysGesteEl.value === "MIX") ? "block" : "none";
   sysAfficherReglagesM4();
   placeCardCountField(act);
@@ -2909,6 +3071,7 @@ function syncSettingsUI(){
     syncUnitEquationUI();
     if(act === "UPM") syncUnitSignedTotalBounds(); else syncUnitTotalBounds();
   }
+  if(isFraction){ ufSyncAvance(); ufSyncBornes(); }
   lastActivityForBounds = act;
   lastActivityForSigned = act;
 }
@@ -3005,6 +3168,7 @@ function scheduleAutoGenerate(){
       if(activityEl.value === "UPM") syncUnitSignedTotalBounds(); else syncUnitTotalBounds();
     }
     if(activityEl.value === "N") syncNumberedEquationUI();
+    if(activityEl.value === "UF") ufSyncBornes();
     sanitizeNumberedTotalBoundsForMode();
     if(activityEl.value === "NPM") sanitizeBeadAbsMaxForBPM();
     generate();
@@ -3032,15 +3196,22 @@ if(sysGesteEl) sysGesteEl.addEventListener("change", ()=>{ syncSettingsUI(); });
 /* lot M4-1 : « Écart » avec les deux pesées, « Recopier », « Petit plateau » et « Qui
    dépasse » avec Doubler — en Mélange, seulement si le geste est coché. */
 function sysAfficherReglagesM4(){
-  const { coef, double } = sysGestesLus();
+  const { coef, double, recopie, miroir, etages } = sysGestesLus();
   const montrer = (id, oui) => { const el = document.getElementById(id); if(el) el.style.display = oui ? "flex" : "none"; };
   montrer("sysEcartRow", coef);
-  ["sysFoisRow", "sysIndiceRow", "sysSensRow"].forEach(id => montrer(id, double));
+  /* lot M4-5 : « Recopier » sert à Doubler et à Je recopie ; « 4 fois » et « au hasard »
+     seulement à Je recopie (Doubler les lit comme 2 fois) */
+  montrer("sysFoisRow", double || recopie);
+  ["sysIndiceRow", "sysSensRow"].forEach(id => montrer(id, double));
+  if(sysFoisEl) Array.from(sysFoisEl.options || []).forEach(o => { if(o.value === "4" || o.value === "MIX") o.hidden = !recopie; });
+  montrer("sysFormeRow", miroir);
+  ["sysGrandRow", "sysSousRow"].forEach(id => montrer(id, etages));
 }
 SYS_GESTES.forEach(g => {
   const box = document.getElementById("sysMix" + g);
   if(box) box.addEventListener("change", sysAfficherReglagesM4);
 });
+if(sysSousEl) sysSousEl.addEventListener("change", sysAfficherReglagesM4);
 [unitEquationTypeEl, numberedEquationTypeEl].forEach(el=>{
   if(!el) return;
   el.addEventListener("change", ()=>refocusMainSvgFromControl(el));
@@ -3056,6 +3227,7 @@ SYS_GESTES.forEach(g => {
   invTaskCountEl, invClueTypeEl, invStructure3El, invOpMulEl, invOpDivEl, invOpAddEl, invOpSubEl, invMaxAddEl, invVisibleMinEl, invVisibleMaxEl, invTotalMinEl, invTotalMaxEl, invNoTotalEl, invRepeatOnEl, invRepeatEl, invOrdreEl, invVocabEl, invComposeEl, invReuniesEl, invPasAPasEl, seedEEl,
   sysGesteEl, sysCoefMaxEl, sysClueTypeEl, sysVisibleMinEl, sysVisibleMaxEl, sysTotalMinEl, sysTotalMaxEl, seedSysEl,
   sysEcartEl, sysFoisEl, sysIndiceEl, sysSensEl, sysOrdreEl, sysPasAPasEl,
+  sysFormeEl, sysGrandEl, sysSousEl,
   ...SYS_GESTES.map(g => document.getElementById("sysMix" + g))
 ].forEach(el=>{
   if(!el) return;
@@ -3114,7 +3286,7 @@ function blobPath(cx, cy, r){
   Les autres modes gardent le plateau historique.
 */
 function getTrayConfig(mode){
-  if(mode === "U" || mode === "UPM" || mode === "N" || mode === "NPM"){
+  if(mode === "U" || mode === "UPM" || mode === "N" || mode === "NPM" || mode === "UF"){
     return { x:120, y:210, w:1360, h:660, isHigh: true };
   }
   return { x:120, y:270, w:1360, h:550, isHigh: false };
@@ -3568,7 +3740,7 @@ function relocateNumberedTokensToFinalSplats(card, tray, margin, splatsFinal, hi
 }
 
 function assignPositions(card, rng){
-  if(card.family === "U" || card.family === "UPM"){
+  if(card.family === "U" || card.family === "UPM" || card.family === "UF"){
     assignPositionsUnits(card, rng);
   }else if(card.family === "N" || card.family === "NPM" || card.family === "C9" || card.family === "C8" || card.family === "C" || card.family === "D"){
     assignPositionsNumbered(card, rng);
@@ -4352,6 +4524,8 @@ function genInvestigate(rng){
      DOUBLE    on double l'indice, puis on compare au plateau
      MIROIR    deux plateaux en miroir : on les additionne
      TROIS     trois paires, sans total
+   puis ESCALIER (lot M4-1), RECOPIE et ETAGES (lot M4-5 : je recopie, puis je retire ; deux
+   gestes à la suite).
    genSystem lit les réglages de la page ; genSystemCarte, lui, ne dépend que du hasard, des
    réglages et de la palette : les tests tirent des milliers de cartes sans navigateur.
    La carte garde son modèle dans _sys (couleurs, valeurs, plateaux, et le plan de la
@@ -4377,7 +4551,10 @@ function lireReglagesSysteme(){
     fois: sysFoisEl ? sysFoisEl.value : 2,
     indice: sysIndiceEl ? sysIndiceEl.value : "11",
     sens: sysSensEl ? sysSensEl.value : "PLATEAU",
-    ordre: sysOrdreEl ? sysOrdreEl.value : ""
+    ordre: sysOrdreEl ? sysOrdreEl.value : "",
+    forme: sysFormeEl ? sysFormeEl.value : "",
+    grand: sysGrandEl ? sysGrandEl.value : "",
+    sous: sysSousEl ? sysSousEl.value : "MIX"
   });
 }
 
@@ -4430,9 +4607,26 @@ function sysNormaliserReglages(opts){
   /* lot M4-4 : « sens=MIX », chaque carte tire son sens (sysTirerSituation) ; l'indice est
      alors vérifié carte par carte, dans le sens tiré. */
   const sensBrut = String(r.sens == null ? "" : r.sens).toUpperCase();
-  const sens = sensBrut === "INDICE" || sensBrut === "MIX" ? sensBrut : "PLATEAU";
+  /* lot M4-5 : « le petit plateau recopié dépasse » n'existe qu'avec 2 fois (sysFormesDouble) ;
+     3 fois et ce sens (ou MIX) : le grand plateau dépasse, comme sans réglage */
+  const sens = fois === 3 ? "PLATEAU" : (sensBrut === "INDICE" || sensBrut === "MIX" ? sensBrut : "PLATEAU");
   let indice = String(r.indice == null ? "" : r.indice).trim() === "12" ? "12" : "11";
   if(sens !== "MIX" && !sysFormesDouble(fois, indice, sens).length) indice = indice === "12" ? "11" : "12";
+  /* lot M4-5. « fois » de Je recopie : 2, 3, 4 ou MIX (2 ou 3, tiré carte par carte) ; Doubler
+     garde le sien (2 ou 3, plus haut). « forme » de Miroir : 12, 23, 13 ou MIX (les trois) ;
+     absente : 1-2 ou 2-3, comme avant. « grand » de Deux gestes à la suite : 211 ou 112 (absent :
+     l'un ou l'autre) ; « sous » : le geste des petits plateaux (absent ou MIX : l'un des quatre). */
+  /* (des réglages déjà normalisés repassent ici — genSystem, puis genSystemCarte : on relit
+     alors foisRecopie, que « fois », ramené à 2 ou 3 pour Doubler, ne porte plus) */
+  const foisLu = r.foisRecopie != null ? r.foisRecopie : r.fois;
+  const foisBrut = String(foisLu == null ? "" : foisLu).trim().toUpperCase();
+  const foisRecopie = foisBrut === "MIX" ? "MIX" : ([3, 4].includes(entier(foisLu, 2)) ? entier(foisLu, 2) : 2);
+  const formeBrut = String(r.forme == null ? "" : r.forme).trim().toUpperCase();
+  const forme = ["12", "23", "13", "MIX"].includes(formeBrut) ? formeBrut : "";
+  const grandBrut = String(r.grand == null ? "" : r.grand).trim();
+  const grand = grandBrut === "211" || grandBrut === "112" ? grandBrut : "";
+  const sousBrut = String(r.sous == null ? "" : r.sous).trim().toUpperCase();
+  const sous = SYS_SOUS_GESTES.includes(sousBrut) ? sousBrut : "MIX";
   return {
     geste,
     gestes: gestes.length ? gestes : SYS_GESTES_MIX_DEFAUT.slice(),
@@ -4440,7 +4634,8 @@ function sysNormaliserReglages(opts){
     coefMax: clamp(entier(r.coefMax, 3), 1, 4),
     visMin, visMax, totalMin, totalMax,
     ecart, fois, indice, sens,
-    ordre: String(r.ordre == null ? "" : r.ordre).toUpperCase() === "MELANGE" ? "MELANGE" : ""
+    ordre: String(r.ordre == null ? "" : r.ordre).toUpperCase() === "MELANGE" ? "MELANGE" : "",
+    foisRecopie, forme, grand, sous
   };
 }
 
@@ -4524,7 +4719,32 @@ function sysFormes(geste, o){
   }else if(geste === "DOUBLE"){
     return sysFormesDouble(o.fois, o.indice, o.sens);
   }else if(geste === "MIROIR"){
-    out.push([1, 2], [2, 3]);
+    /* lot M4-5 : « forme=13 » (1 + 3 et 3 + 1 : après le partage, il reste 2 taches à
+       partager) ; absente, les deux formes d'avant, même hasard consommé */
+    const f = o.forme || "";
+    if(f === "12") out.push([1, 2]);
+    else if(f === "23") out.push([2, 3]);
+    else if(f === "13") out.push([1, 3]);
+    else if(f === "MIX") out.push([1, 2], [2, 3], [1, 3]);
+    else out.push([1, 2], [2, 3]);
+  }else if(geste === "RECOPIE"){
+    /* lot M4-5 (cas 3) : [a1, b1, a2, b2] — le premier plateau a1 A + b1 B, recopié k fois,
+       contient le second a2 A + b2 B (a2 = k × a1, b2 < b1 : aucun ne tient dans l'autre).
+       7 taches au plus par plateau, 5 au plus d'une même couleur (une rangée de 6 rapetisse
+       toutes les taches de la carte) ; le plateau recopié, 5 taches au plus, et sa barre
+       recopiée, k × (a1 + b1) cases, 12 au plus (la plus longue que les blocs de la correction
+       savent dessiner) : recopié 2 fois, un plateau de 6 taches (barre de 12 cases) donne un
+       corrigé toujours réduit à l'impression 2 par page (mesuré le 14/10 dans Chromium). Le
+       miroir (1 + 2 et 2 + 1, 1 + 3 et 3 + 1, 2 + 4 et 4 + 2) est écarté : on l'additionne, c'est
+       plus simple. MIX : 2 et 3 fois (sysTirerSituation tire d'abord le nombre de fois). */
+    const ks = o.foisRecopie === "MIX" ? [2, 3] : [o.foisRecopie || 2];
+    for(const k of ks) for(let a1 = 1; k * a1 <= 5; a1++) for(let b1 = 2; a1 + b1 <= 5; b1++){
+      if(k * (a1 + b1) > 12) continue;
+      for(let b2 = 1; b2 < b1 && k * a1 + b2 <= SYS_MAX_TACHES; b2++){
+        if(k * a1 === b1 && b2 === a1) continue;
+        out.push([a1, b1, k * a1, b2]);
+      }
+    }
   }else if(geste === "ESCALIER"){
     // a = 2 (décidé le 01/10) : le plus petit plateau demande de partager ; avec une seule
     // tache, il donnait la réponse tout de suite (même règle que la partie connue, 24/09)
@@ -4541,14 +4761,19 @@ function sysFormes(geste, o){
    défaut, les deux formes d'avant : 2 + 3 et 2 + 4) ; sens INDICE : c'est l'indice recopié
    qui a d taches de plus. 7 taches au plus. En sens INDICE, d = b est écarté : le grand
    plateau serait « l'indice recopié k − 1 fois, plus des taches de la 1re couleur », une
-   carte de la famille « je retire » (2 N + V et N + V : on retire une fois, il reste N). */
+   carte de la famille « je retire » (2 N + V et N + V : on retire une fois, il reste N).
+   Lot M4-5 (14/10/2026) : le sens INDICE n'existe qu'avec 2 fois. Son corrigé retire le petit
+   plateau UNE fois, puis retrouve ce qui reste dans le petit plateau ; avec 3 fois, ce qui reste
+   a toujours 2 fois les taches de la 1re couleur du petit plateau, il n'y tient jamais :
+   3 N + V et N + V, c'est un « je retire » qui laisse 2 N ; 3 N + 2 V et N + V (d = b), un
+   corrigé impossible. sysNormaliserReglages remet alors le sens PLATEAU. */
 function sysFormesDouble(k, indice, sens){
   const [a, b] = indice === "12" ? [1, 2] : [1, 1];
   const out = [];
   for(let d = 1; d <= 2; d++){
     const nB = sens === "INDICE" ? k * b - d : k * b + d;
     if(nB < 1 || k * a + nB > SYS_MAX_TACHES) continue;
-    if(sens === "INDICE" && d === b) continue;
+    if(sens === "INDICE" && (k !== 2 || d === b)) continue;
     out.push([a, b, d]);
   }
   return out;
@@ -4642,6 +4867,34 @@ function sysTirerSituation(rng, geste, couleurs, plage, o){
       sysPlateau({ [A]: b, [B]: a }, values)
     ] };
   }
+  if(geste === "RECOPIE"){
+    /* lot M4-5 : le premier plateau est celui qu'on recopie (boards[0]) ; « fois=MIX » tire
+       d'abord 2 ou 3 fois, puis la forme. Jamais de jeton visible (on recopierait les jetons). */
+    let k = o.foisRecopie;
+    if(k === "MIX") k = rInt(rng, 0, 1) === 1 ? 3 : 2;
+    const formes = sysFormes("RECOPIE", Object.assign({}, o, { foisRecopie: k }));
+    const [a1, b1, a2, b2] = formes[rInt(rng, 0, formes.length - 1)];
+    const values = { [A]: valeur(), [B]: valeur() };
+    return { geste, colors: [A, B], values, boards: [
+      sysPlateau({ [A]: a1, [B]: b1 }, values, []),
+      sysPlateau({ [A]: a2, [B]: b2 }, values)
+    ] };
+  }
+  if(geste === "ETAGES"){
+    /* lot M4-5 : deux gestes à la suite. Le geste des petits plateaux (« sous », ou l'un des
+       quatre), la forme du grand plateau (« grand » : 2 A + B + C ou A + B + 2 C), les deux
+       petits plateaux tirés comme une carte de ce geste (couleurs A et B, sans jeton visible),
+       puis la valeur de la 3e couleur. boards : le grand plateau, puis les deux petits. */
+    const sous = SYS_SOUS_GESTES.includes(o.sous) ? o.sous : SYS_SOUS_GESTES[rInt(rng, 0, SYS_SOUS_GESTES.length - 1)];
+    const grand = o.grand === "211" || o.grand === "112" ? o.grand : (rInt(rng, 0, 1) === 1 ? "112" : "211");
+    const petits = sysTirerSituation(rng, sous, couleurs, plage, Object.assign({}, o, { visMin: 0, visMax: 0 }));
+    const values = Object.assign({}, petits.values, { [C]: valeur() });
+    const [gA, gB, gC] = grand === "211" ? [2, 1, 1] : [1, 1, 2];
+    return { geste, sous, colors: [A, B, C], values, boards: [
+      sysPlateau({ [A]: gA, [B]: gB, [C]: gC }, values, []),
+      ...petits.boards.map(b => ({ counts: b.counts, total: b.total }))
+    ] };
+  }
   if(geste === "TROIS"){
     const values = { [A]: valeur(), [B]: valeur(), [C]: valeur() };
     return { geste, colors: [A, B, C], values, boards: [
@@ -4669,6 +4922,13 @@ function sysSituationValide(sit, plage, o){
   const principal = sit.boards[0];
   const total = principal.total == null ? sysSomme(principal.counts, sit.values) : principal.total;
   if(total < o.totalMin || total > o.totalMax) return false;
+  /* lot M4-5 : avec Je recopie et Deux gestes à la suite, un autre plateau peut avoir un plus
+     grand total que le premier : aucun ne dépasse le total maximum demandé */
+  if((sit.geste === "RECOPIE" || sit.geste === "ETAGES") && sit.boards.some(b => b.total > o.totalMax)) return false;
+  /* Deux gestes à la suite : 3 taches au plus d'une même couleur. Trois plateaux côte à côte,
+     4 taches sur une rangée : les taches tombent sous la taille de l'escalier (rayon 48 au lieu
+     de 61 à l'impression), le nom de la couleur n'y tient plus. */
+  if(sit.geste === "ETAGES" && sit.boards.some(b => Object.values(b.counts).some(n => n > 3))) return false;
   return sit.boards.slice(1).every(b => b.total >= plage.sousMin && b.total <= plage.sousMax);
 }
 
@@ -4730,6 +4990,8 @@ function sysAssemblerCarte(sit, plan, clues, secours){
     }),
     plan
   };
+  /* lot M4-5 : Deux gestes à la suite garde le geste de ses petits plateaux (sysTypeCarte) */
+  if(sit.sous) sys.sous = sit.sous;
   if(secours) sys.secours = true;
   return {
     family: "D",
@@ -4741,6 +5003,29 @@ function sysAssemblerCarte(sit, plan, clues, secours){
     _colorMap: colorMap,
     _sys: sys
   };
+}
+
+/* Le type d'une carte du Système (la classification du monde 4 : monde-4-audit-et-plan.md § 2,
+   puis la conception des deux livrets du 14/10/2026), lu sur son modèle — celui que les livrets
+   (render.py) vérifient fiche par fiche, et que les cartes jumelles suivront. Lot M4-5 :
+   « 3a+ » le miroir 1-3, « 3c·k » Je recopie (k = 2, 3 ou 4 fois), « 4e·t » Deux gestes à la
+   suite (t : le type de ses deux petits plateaux, « 4e·1c », « 4e·3c·2 »…). */
+function sysTypeCarte(card){
+  const S = card._sys, b = S.boards, n = (B, k) => B.counts[k] || 0, [A, Bk] = S.colors;
+  if(S.geste === "PARTIELLE") return "1a";
+  if(S.geste === "COEF") return n(b[0], Bk) - n(b[1], Bk) === 1 ? "1b" : "1c";
+  if(S.geste === "EMBOITE1") return "1d";
+  if(S.geste === "ESCALIER") return "1e";
+  if(S.geste === "MIROIR") return Math.abs(n(b[0], A) - n(b[0], Bk)) === 2 ? "3a+" : "3a";
+  if(S.geste === "TROIS") return "3b";
+  if(S.geste === "DOUBLE"){
+    const k = n(b[0], A) / n(b[1], A);
+    if(n(b[0], Bk) < k * n(b[1], Bk)) return k === 2 ? "2d" : "2b-";
+    return k === 3 ? "2b" : (n(b[1], Bk) === 2 ? "2c" : "2a");
+  }
+  if(S.geste === "RECOPIE") return "3c·" + n(b[1], A) / n(b[0], A);
+  if(S.geste === "ETAGES") return "4e·" + sysTypeCarte({ _sys: { geste: S.sous, colors: S.colors.slice(0, 2), boards: b.slice(1) } });
+  return "?";
 }
 
 function sysUneTacheParCouleur(sit){
@@ -4799,6 +5084,14 @@ function sysPhraseIndice(sit, board){
    L'étape « verification » porte aussi « reponses » : la valeur de chaque couleur.
    Aucune arithmétique n'est laissée au dessin : tout nombre écrit est déjà ici. */
 function sysPlanS3(sit){
+  /* lot M4-5 : les gestes nouveaux (Je recopie, Deux gestes à la suite) et le miroir 1-3 n'ont
+     pas de plan d'avant — le filtre lit le plan qui se dessine. Les cartes d'avant ne passent
+     jamais par ici : elles gardent leur filtre, leurs nombres, leurs cartes. */
+  if(sit.geste === "RECOPIE" || sit.geste === "ETAGES") return sysPlan(sit);
+  if(sit.geste === "MIROIR"){
+    const [A, B] = sit.colors;
+    if(Math.abs((sit.boards[0].counts[A] || 0) - (sit.boards[0].counts[B] || 0)) === 2) return sysPlan(sit);
+  }
   const v = sit.values;
   const C = sit.colors;
   const une = sysUneTacheParCouleur(sit);
@@ -5191,6 +5484,7 @@ function sysPlan(sit){
 
   if(sit.geste === "MIROIR"){
     // 2 N + 3 V = 31 ; 3 N + 2 V = 29 : j'additionne, je range par paires, je partage
+    // lot M4-5, miroir 1-3 (N + 3 V ; 3 N + V) : 1 paire retrouvée, il reste 2 V, je partage
     const [A, B] = C;
     const a = P.counts[A], b = P.counts[B];
     const O = sit.boards[1];
@@ -5200,6 +5494,7 @@ function sysPlan(sit){
     const m = Math.min(a, b);
     const E = a > b ? A : B;
     const F = E === A ? B : A;
+    const e = Math.abs(a - b);
     const T2 = T - V;
     const enPaires = (counts, plus) => {
       const p = Math.min(counts[A] || 0, counts[B] || 0);
@@ -5213,10 +5508,58 @@ function sysPlan(sit){
       ...(V ? [etape("retire", "Je retire", [barre(T2, pP2.cells, moins(T, visP), pP2.coupes)])] : []),
       etape("additionne", "J’additionne : je range par paires", [barre(T2 + S, tout.cells, `${T2} + ${S}`, tout.coupes)]),
       etape("partage", "Je partage", [barre(s, inc(A).concat(inc(B)), `${T2 + S} ÷ ${n}`)]),
-      etape("retrouve", `Je retrouve ${m} paire${m > 1 ? "s" : ""} dans le plateau`, [barre(T2, repeter(m, () => bloc(s, 2)).concat(inc(E)))]),
-      retire(v[E], moins(T2, repeter(m, () => s)), inc(E)),
+      etape("retrouve", `Je retrouve ${m} paire${m > 1 ? "s" : ""} dans le plateau`, [barre(T2, repeter(m, () => bloc(s, 2)).concat(inc(E, e)))]),
+      retire(e * v[E], moins(T2, repeter(m, () => s)), inc(E, e)),
+      ...(e > 1 ? [partage(E, e)] : []),
       remplaceConnue(s, E === A ? con(A).concat(inc(B)) : inc(A).concat(con(B))),
       retire(v[F], moins(s, [v[E]]), inc(F)),
+      verification()
+    ];
+  }
+
+  if(sit.geste === "RECOPIE"){
+    // lot M4-5, cas 3 — N + 3 B = 25 ; 2 N + B = 20 : je recopie 2 fois le plateau 25 (50), j'y
+    // retrouve le plateau 20, il reste 5 B (30) : je retire, je partage ; puis je remplace
+    const [A, B] = C;
+    const Q = sit.boards[1];
+    const S = Q.total;
+    const a = P.counts[A] || 0, b = P.counts[B] || 0;
+    const k = (Q.counts[A] || 0) / a;
+    const rB = k * b - (Q.counts[B] || 0);
+    const kfois = paquets(repeter(k, () => cases(P.counts)));
+    return [
+      etape("plateaux", "Les deux plateaux", [barre(T, cases(P.counts)), barre(S, cases(Q.counts))]),
+      etape("retrouve", `Je recopie ${k} fois le plateau ${T}`, [barre(k * T, kfois.cells, `${k} × ${T}`, kfois.coupes)]),
+      etape("retrouve-reste", `Je retrouve le plateau ${S} dedans`, [barre(k * T, [bloc(S, sysNombreTaches(Q))].concat(inc(B, rB)))]),
+      retire(rB * v[B], moins(k * T, [S]), inc(B, rB)),
+      ...(rB > 1 ? [partage(B, rB)] : []),
+      remplaceConnue(T, inc(A, a).concat(con(B, b))),
+      retire(a * v[A], moins(T, repeter(b, () => v[B])), inc(A, a)),
+      ...(a > 1 ? [partage(A, a)] : []),
+      verification()
+    ];
+  }
+
+  if(sit.geste === "ETAGES"){
+    // lot M4-5, deux gestes à la suite — 2 B + Ve + O = 54 ; 2 B + 3 Ve = 53 ; 2 B + Ve = 43 :
+    // les deux petits plateaux se résolvent d'abord (leur geste, sans leur vérification), puis
+    // je remplace dans le grand plateau, je retire, je partage si la 3e couleur est en double.
+    // Lot M4-7 (14/10/2026, choix de Gwenaël sur planche avant/après) : chaque plateau dessiné
+    // UNE fois — « Le grand plateau » seul, puis « Les deux petits plateaux ». « Les trois
+    // plateaux » redessinait les deux petits : le corrigé 2 par page était toujours réduit
+    // (miroir 89-91 %, je recopie 79 %). Mêmes nombres dans le plan : mêmes cartes.
+    const [A, B, D] = C;
+    const gA = P.counts[A] || 0, gB = P.counts[B] || 0, gD = P.counts[D] || 0;
+    const petits = sit.boards.slice(1);
+    const sous = sysPlan({ geste: sit.sous, colors: [A, B], values: { [A]: v[A], [B]: v[B] }, boards: petits })
+      .filter(e => e.role !== "verification");
+    sous[0] = Object.assign({}, sous[0], { titre: "Les deux petits plateaux" });
+    return [
+      etape("plateaux", "Le grand plateau", [barre(T, cases(P.counts))]),
+      ...sous,
+      etape("remplace", `Je remplace dans le plateau ${T}`, [barre(T, con(A, gA).concat(con(B, gB), inc(D, gD)))]),
+      retire(gD * v[D], moins(T, repeter(gA, () => v[A]).concat(repeter(gB, () => v[B]))), inc(D, gD)),
+      ...(gD > 1 ? [partage(D, gD)] : []),
       verification()
     ];
   }
@@ -5801,6 +6144,11 @@ function assignPositionsUnits(card, rng){
   const margin = 8;
   const tasks = card._unit?.tasks ?? 1;
   const isSignedUnitMode = (card.family === "UPM");
+  /* A fraction (lot F1) : les disques partagés doivent se lire, huitièmes compris, sur le papier
+     en 4 par page (6,4 mm) — rayon 56 quand la tache cache 4 objets ou moins, un peu moins au-delà
+     (124 / √cachés), jamais sous 24 sauf secours (choix B de Gwenaël sur planche, 15/10/2026) ;
+     le mode A garde exactement ses rayons et ses essais */
+  const isFractionMode = (card.family === "UF");
   const hiddenByTaskRaw = card._unit?.hiddenByTask ?? Array.from({length: tasks}, ()=>0);
   const hiddenByTask = hiddenByTaskRaw.map(v => Array.isArray(v) ? v.length : Number(v) || 0);
   /* Tirage au sort avec la table de tirage (voir getUnitSplatsLegacy) ; la table de dessin
@@ -5830,9 +6178,9 @@ function assignPositionsUnits(card, rng){
     // Patch 10 : en A±, les jetons +1 / −1 portent l'information.
     // Ils doivent donc être nettement plus lisibles que les billes vides du A.
     // On augmente seulement le plafond du mode A± et on garde A inchangé.
-    beadR = isSignedUnitMode ? clamp(calc, 18, 42) : clamp(calc, 14, 32);
+    beadR = isSignedUnitMode ? clamp(calc, 18, 42) : (isFractionMode ? clamp(Math.floor(124 / Math.sqrt(maxHidden)), 24, 56) : clamp(calc, 14, 32));
   } else {
-    beadR = isSignedUnitMode ? 40 : 32;
+    beadR = isSignedUnitMode ? 40 : (isFractionMode ? 56 : 32);
   }
   const totalBeads = (card._unit?.visibleCount ?? card.visible.length) + hiddenByTask.reduce((a,b)=>a+b,0);
   if(isSignedUnitMode){
@@ -5842,7 +6190,7 @@ function assignPositionsUnits(card, rng){
     else if(totalBeads >= 45) beadR = Math.min(beadR, 25);
     else if(totalBeads >= 35) beadR = Math.min(beadR, 29);
     else if(totalBeads >= 25) beadR = Math.min(beadR, 34);
-  }else{
+  }else if(!isFractionMode){
     if(totalBeads >= 55) beadR = Math.min(beadR, 17);
     else if(totalBeads >= 45) beadR = Math.min(beadR, 19);
     else if(totalBeads >= 35) beadR = Math.min(beadR, 22);
@@ -5875,6 +6223,16 @@ function assignPositionsUnits(card, rng){
   }
   function beadFullyInSplat(o, x, y){
     if(!pointInSplat(o, x, y)) return false;
+    /* A fraction (lot F1) : les disques sont grands et le jeton entier est bleu plein — à 8 points
+       du bord, un disque débordait d'un creux de la tache et se voyait sous la tache noire. Ici
+       24 points, 4 unités au-delà du bord. Le mode A garde ses 8 points. */
+    if(isFractionMode && canPath2D && o.path){
+      for(let i = 0; i < 24; i++){
+        const a = Math.PI * i / 12;
+        if(!ctx.isPointInPath(o.path, x + (beadR + 4) * Math.cos(a), y + (beadR + 4) * Math.sin(a))) return false;
+      }
+      return true;
+    }
     if(canPath2D && o.path){
       return (function(){
         const r = beadR;
@@ -5945,9 +6303,9 @@ function assignPositionsUnits(card, rng){
   let placedRes = null;
   // En A±, le rayon de départ est plus ambitieux : on teste davantage de tailles
   // pour garder la plus grande taille possible sans tomber brutalement à 12.
-  const maxAttempts = isSignedUnitMode ? 30 : 8;
+  const maxAttempts = isSignedUnitMode ? 30 : (isFractionMode ? 10 : 8);
   for(let attempt=0; attempt<maxAttempts && !placedRes; attempt++){
-    const R = Math.max(12, beadR - attempt);
+    const R = Math.max(isFractionMode ? 24 : 12, beadR - attempt);
     placedRes = tryPlaceWithRadius(R);
   }
   if(!placedRes){
@@ -6370,19 +6728,38 @@ function formatRelationNumber(n){
    pas la place à 3 taches). Blanc à fin liseré noir sur la tache couverte, comme
    « opposé » en B± ; une fois la tache dévoilée, le mot monte en haut de la tache et
    passe en noir, le nombre restant au centre. Dessin seulement : aucun tirage. */
+/* Sur le PAPIER (lot livrets Enquête + Système, 08/10/2026, version « C » de la feuille
+   d'essai) : l'imprimante tramait le liseré noir à 80 % par-dessus la trame de la couleur
+   (orange, verte, violette illisibles ; la noire parfaite). Le noir PUR est le seul ton posé
+   en plein, en couleur comme en noir et blanc : liseré #000000 épais (22 % du corps, joints
+   ronds), mot 15 % plus gros — mais jamais plus large que sa tache (1,62 rayon, liseré
+   compris, la règle des cases des barres) : « violette » garde alors sa taille d'avant.
+   L'écran, la projection et le mode élève ne changent pas. */
+const NOM_PAPIER = { agrandi:1.15, contour:0.22, largeur:1.62 };
+function nomPapierCorps(mot, fs, r){
+  let f = fs * NOM_PAPIER.agrandi;
+  const largeur = r * NOM_PAPIER.largeur;
+  while(f > 6 && sysLargeurTexte(mot, f, 900) + f * NOM_PAPIER.contour > largeur) f -= 0.5;
+  return Math.round(f * 10) / 10;
+}
+function nomPapierAttrs(fs){
+  return { fill:"#ffffff", stroke:"#000000", "stroke-width":String(Math.round(fs * NOM_PAPIER.contour * 10) / 10), "stroke-linejoin":"round" };
+}
 function drawInvestigateSplatName(target, s, idx, card, revealed, api = {}){
   const mkEl = api.mkEl || el;
   const mkText = api.mkText || text;
   const word = investigateColorWord(investigateColorInfo(card, idx));
   // api.fs : taille imposée (le Système, dont les taches sont plus petites, lot S2)
-  const fs = Number(api.fs) > 0 ? Number(api.fs) : clamp(Math.round(s.r * 0.30), 26, 60);
+  const fs0 = Number(api.fs) > 0 ? Number(api.fs) : clamp(Math.round(s.r * 0.30), 26, 60);
+  const papier = !!api.isPrint && !revealed;
+  const fs = papier ? nomPapierCorps(word, fs0, s.r) : fs0;
   // Tache dévoilée : le mot se pose juste au-dessus du jeton du centre, à
   // ENQUETE_NOM_ECART du bord du jeton (retouche du 22/09 : à la hauteur du mot
   // « opposé » de B±, il flottait trop haut dans la tache). Écran et impression
   // passent ici : le même écart partout.
   const beadR = Number(card && card._beadR) || 58;
   const y = revealed ? (s.cy - beadR - ENQUETE_NOM_ECART - fs * 0.34) : s.cy;
-  target.appendChild(mkText(s.cx, y, word, {
+  target.appendChild(mkText(s.cx, y, word, Object.assign({
     "text-anchor":"middle",
     "dominant-baseline":"middle",
     "font-size":String(fs),
@@ -6392,7 +6769,7 @@ function drawInvestigateSplatName(target, s, idx, card, revealed, api = {}){
     "stroke-width":(revealed ? "5" : String(Math.max(2, Math.round(fs * 0.09)))),
     "paint-order":"stroke fill",
     "aria-hidden":"true"
-  }));
+  }, papier ? nomPapierAttrs(fs) : {})));
 }
 function taskShortName(idx, card){
   if(card && (card.family === "C" || (card.family === "D" && card._sys))) return investigateColorInfo(card, idx).short;
@@ -6447,15 +6824,19 @@ function drawRelationGraphicClues(targetGroup, card, opts = {}){
   const isPrint = !!opts.isPrint;
   const mkEl = opts.mkEl || el;
   const mkText = opts.mkText || text;
-  const cx = opts.cx ?? 1155;
+  /* Enquête sans total (08/10/2026, question à choix de Gwenaël) : pas de case à côté, les indices
+     se centrent au-dessus du plateau (x 800), à l'écran comme sur le papier */
+  const sansCase = enqueteSansCase(card);
+  const cx = opts.cx ?? (sansCase ? 800 : 1155);
   const cy = opts.cy ?? (rels.length > 1 ? 72 : 96);
   const lineH = opts.lineH ?? 58;
 
   const g = mkEl("g", { id:"relationGraphicClues" });
   // Correction imprimée : le nom de chaque couleur accompagne sa pastille ; la ligne
   // reste entre la case TOTAL (bord droit 940) et le bord de la carte (1580), réduite
-  // d'un même facteur si elle est trop large. L'écran ne change pas.
-  const clueOpts = isPrint ? { labels:true, left:964, maxW:1580 - 964 } : {};
+  // d'un même facteur si elle est trop large ; sans case, toute la largeur de la carte.
+  // L'écran ne change pas.
+  const clueOpts = isPrint ? (sansCase ? { labels:true, left:40, maxW:1520 } : { labels:true, left:964, maxW:1580 - 964 }) : {};
   rels.forEach((rel, i) => {
     const seq = relationGraphicClueParts(rel);
     if(seq.length){
@@ -7949,33 +8330,15 @@ function enqueteNomUnites(card, i, n, lettres){
    le Système ne change pas) : dans la correction et le pas à pas, la barre de référence s'écrit
    « ? » (« 𝑥 » dans le corrigé en lettre), les calculs « 2 × ? + 8 = 26 », « ? = 18 ÷ 2 = 9 », puis
    « La tache noire cache donc 9 jetons » ; les autres taches gardent leur nom. */
-/* « PAS DE TOTAL » (07/10/2026, question à choix de Gwenaël, planche « sans total ») : avec le « ? »
-   de la référence, « TOTAL ? » ferait deux « ? » de sens différents. Enquête seulement (le Système
-   garde son « TOTAL ? ») : « PAS DE » à la place du mot TOTAL, « TOTAL » en gras dessous, centrés,
-   la case garde sa taille. */
-function enquetePasDeTotal(card){
+/* Carte sans total de l'Enquête : PAS DE CASE du total (08/10/2026, questions à choix de Gwenaël ;
+   le « PAS DE TOTAL » du 07/10 était un malentendu). Ni « TOTAL ? », ni « PAS DE TOTAL », ni boîte
+   vide — sur le papier, à l'écran, en mode élève. Le plateau ne bouge pas (à l'écran, un rect
+   invisible de la taille de la case garde les cadrages). Sur le papier, les phrases se centrent
+   au-dessus du plateau (enqueteBlocPhrasesX) ; au corrigé et au dernier appui, les indices en
+   symboles aussi (drawRelationGraphicClues). Enquête seulement : le Système garde son « TOTAL ? »
+   (sysTotalCache). */
+function enqueteSansCase(card){
   return !!(card && card.family === "C" && card._rel && card._rel.sansTotal);
-}
-/* Remplace « TOTAL » / « ? » d'une case du total en SVG par « PAS DE » / « TOTAL », centrés dans la
-   place des deux lignes d'avant (rectangle invisible de cette taille : la case ne change pas).
-   place : la boîte où centrer, quand on la connaît (l'impression : la case elle-même) ; sinon
-   mesurée (getBBox, à l'écran) ; et si la mesure est vide (dessin encore caché), estimée d'après
-   les deux lignes (hampes et jambages d'une police courante). */
-function enquetePasDeTotalSvg(g, tLabel, tNum, tx, fs, poids, couleur, mk, place){
-  let bb = place || null;
-  if(!bb){ try{ bb = g.getBBox(); }catch(_e){ bb = null; } }
-  if(!bb || !(bb.width > 0) || !(bb.height > 0)){
-    const y0 = Number(tLabel.getAttribute("y")), f0 = Number(tLabel.getAttribute("font-size")) || fs;
-    const y1 = Number(tNum.getAttribute("y")), f1 = Number(tNum.getAttribute("font-size")) || fs;
-    const haut = y0 - 0.93 * f0, bas = y1 + 0.24 * f1, l = 3.6 * fs;
-    bb = { x:tx - l / 2, y:haut, width:l, height:bas - haut };
-  }
-  tLabel.remove(); tNum.remove();
-  g.appendChild(mk("rect", { x:bb.x, y:bb.y, width:bb.width, height:bb.height, fill:"none", stroke:"none", class:"pasDeTotalPlace" }));
-  const cy = bb.y + bb.height / 2, attrs = { "text-anchor":"middle", "font-size":String(fs), fill:couleur, "letter-spacing":"2" };
-  const t1 = mk("text", { ...attrs, x:tx, y:cy - 0.24 * fs, "font-weight":String(poids) }); t1.textContent = "PAS DE";
-  const t2 = mk("text", { ...attrs, x:tx, y:cy + 1.0 * fs, "font-weight":"900" }); t2.textContent = "TOTAL";
-  g.appendChild(t1); g.appendChild(t2);
 }
 /* Le symbole de l'inconnue : « ? », ou 𝑥 dans le corrigé en lettre — 𝑥 sur toutes les cartes
    (07/10/2026, question à choix de Gwenaël : pas de lettres variées). Toujours avec le « × » :
@@ -9445,15 +9808,21 @@ function enqueteG3Bandeau(card){
   if(symboles) symboles.remove();
   /* la boîte du TOTAL est le rect que renderCard glisse juste avant #totalGroup */
   const boite = tg.previousElementSibling && tg.previousElementSibling.tagName === "rect" ? tg.previousElementSibling : null;
+  /* Enquête sans total (08/10/2026) : pas de case — sa place invisible part aussi, le plateau est
+     seul, centré */
+  const sansCase = enqueteSansCase(card);
   const wT = el("g", { id:"enqueteG3Total" }), wP = el("g", { id:"enqueteG3Plateau" });
   svg.insertBefore(wT, tray); svg.insertBefore(wP, tray);
-  if(boite) wT.appendChild(boite);
-  wT.appendChild(tg);
+  if(sansCase){ if(boite) boite.remove(); tg.remove(); wT.remove(); }
+  else{
+    if(boite) wT.appendChild(boite);
+    wT.appendChild(tg);
+  }
   wP.appendChild(tray);
-  const bt = wT.getBBox(), bp = wP.getBBox();
-  const H = ENQ_G3_BANDEAU_H, k = H / bp.height, gap = ENQ_G3_BANDEAU_ECART, top = ENQ_G3_BANDEAU_HAUT;
+  const bt = sansCase ? { x:0, y:0, width:0, height:0 } : wT.getBBox(), bp = wP.getBBox();
+  const H = ENQ_G3_BANDEAU_H, k = H / bp.height, gap = sansCase ? 0 : ENQ_G3_BANDEAU_ECART, top = ENQ_G3_BANDEAU_HAUT;
   const largeur = bt.width + gap + bp.width * k, x0 = 800 - largeur / 2;
-  wT.setAttribute("transform", `translate(${Math.round(x0 - bt.x)} ${Math.round(top + (H - bt.height) / 2 - bt.y)})`);
+  if(!sansCase) wT.setAttribute("transform", `translate(${Math.round(x0 - bt.x)} ${Math.round(top + (H - bt.height) / 2 - bt.y)})`);
   wP.setAttribute("transform", `translate(${Math.round(x0 + bt.width + gap)} ${top}) scale(${Math.round(1000 * k) / 1000}) translate(${-bp.x} ${-bp.y})`);
   const indices = card._inv && Array.isArray(card._inv.indices) ? card._inv.indices : [];
   const g = el("g", { id:"enqueteG3Phrases" });
@@ -9689,6 +10058,16 @@ function layoutEnqueteClueBand(sentences, band){
     if(total <= band.height || fs === 30) return { fontSize: fs, lineH, gap, blocks, total };
   }
   return null;
+}
+/* Énoncé imprimé d'une carte de l'Enquête sans total : pas de case à gauche, le bloc de phrases
+   (même plan, même taille, lignes alignées à gauche) se centre au-dessus du plateau — choisi par
+   Gwenaël le 08/10/2026 (variante C de la planche « phrases centrées »). Renvoie le x de son bord
+   gauche ; la largeur se mesure comme pour couper les phrases (wrapTextToWidth). */
+function enqueteBlocPhrasesX(plan, cx){
+  const font = `700 ${plan.fontSize}px SplatLettres, system-ui, -apple-system, "Segoe UI", Roboto, Arial`;
+  const largeur = (t) => { const w = measureTextWidth(t, font); return (Number.isFinite(w) && w > 0) ? w : t.length * plan.fontSize * 0.56; };
+  const lmax = Math.max(0, ...plan.blocks.flat().map(largeur));
+  return Math.round(cx - lmax / 2);
 }
 function renderMixedClue(targetGroup, cx, cy, seq, mkEl, mkText, isPrint, revealed, card=null, opts={}) {
   // opts.labels (impression, Enquête) : chaque pastille porte le nom de sa couleur
@@ -10047,7 +10426,7 @@ function drawSysPlateaux(target, card, zone, opts = {}){
         fill: devoile ? (isPrint ? info.printReveal : info.reveal) : (isPrint ? info.print : info.screen),
         stroke: isPrint ? "rgba(0,0,0,0.18)" : "var(--splat-stroke)", "stroke-width": "5"
       }));
-      drawInvestigateSplatName(gp, s, 0, nomCarte, devoile, { mkEl, mkText, fs: clamp(Math.round(s.r * SYS_TACHE.nom), opts.nomMin || 26, 60) });
+      drawInvestigateSplatName(gp, s, 0, nomCarte, devoile, { mkEl, mkText, isPrint, fs: clamp(Math.round(s.r * SYS_TACHE.nom), opts.nomMin || 26, 60) });
       if(fondu){
         gp.appendChild(mkEl("path", { d: blobPath(s.cx, s.cy, s.r), fill: info.screen, stroke: "none", class: "anim-fade-out" }));
       }
@@ -10084,8 +10463,8 @@ function drawSysPlateaux(target, card, zone, opts = {}){
    dans le grand. Dans chaque case, la tache dessinée avec son nom (sans le nom, rien ne se
    lit en noir et blanc) ; une tache trouvée garde sa forme, sa valeur dans un rond blanc ; un
    plateau retrouvé est un bloc gris portant son total ; un jeton visible, son jeton chiffré.
-   Version lettres (unknown=letter) : la case est teintée de la couleur, un liseré en haut,
-   la LETTRE de la couleur dedans (N, Vi, O…). « Je vérifie » : un calcul par plateau, puis la
+   Version lettres (unknown=letter) : la case est teintée de la couleur (sans bande en haut
+   depuis le lot M4-7), la LETTRE de la couleur dedans (N, Vi, O…). « Je vérifie » : un calcul par plateau, puis la
    réponse encadrée. Aucune arithmétique ici : tout nombre écrit vient du plan.
    Impression (4 par page et 2 par page, la même carte 1 600 × 2 200) : l'énoncé dévoilé en
    haut, un trait pointillé, puis les étapes côte à côte tant qu'elles tiennent, puis à la
@@ -10316,11 +10695,11 @@ function drawSysCaseBarre(g, x, y, c, M, ctx){
   const info = investigateColorByKey(c.color);
   const connue = c.kind === "known";
   if(lettres){
-    // version lettres : la case teintée de la couleur, un liseré en haut, la lettre (ou la valeur)
+    // version lettres : la case teintée de la couleur, la lettre (ou la valeur) au centre — plus
+    // de bande de couleur en haut de la case (lot M4-7, 14/10/2026 : « la lettre suffit »)
     g.appendChild(mkEl("rect", { x, y, width:u, height:h, fill:connue ? "#fff" : (isPrint ? info.printReveal : info.reveal), stroke:"#000", "stroke-width":2.5 * M.f }));
-    g.appendChild(mkEl("rect", { x, y, width:u, height:10 * M.f, fill:isPrint ? info.print : info.screen }));
     const t = connue ? String(c.value) : investigateColorInitial(info);
-    g.appendChild(mkText(cx, cy + 4 * M.f, t, Object.assign({ "font-size":sysCorrAjuster(t, M.fsBloc, u - 12 * M.f, 900, 8), fill:"#000" }, centre)));
+    g.appendChild(mkText(cx, cy, t, Object.assign({ "font-size":sysCorrAjuster(t, M.fsBloc, u - 12 * M.f, 900, 8), fill:"#000" }, centre)));
     return;
   }
   g.appendChild(mkEl("rect", { x, y, width:u, height:h, fill:"#fff", stroke:"#64748b", "stroke-width":2 * M.f }));
@@ -10332,9 +10711,11 @@ function drawSysCaseBarre(g, x, y, c, M, ctx){
     g.appendChild(mkText(cx, cy, String(c.value), Object.assign({ "font-size":sysCorrAjuster(String(c.value), rj * 1.15, rj * 1.8, 900, 8), fill:"#000" }, centre)));
   }else{
     const mot = investigateColorWord(info);
-    const fs = sysCorrAjuster(mot, r * 0.44, 1.62 * r, 900, 6);
-    g.appendChild(mkText(cx, cy, mot, { "text-anchor":"middle", "dominant-baseline":"middle", "font-size":fs, "font-weight":900,
-      fill:"#fff", stroke:"rgba(0,0,0,0.8)", "stroke-width":Math.max(2 * M.f, fs * 0.12), "paint-order":"stroke fill" }));
+    // sur le papier, le nom des taches de l'énoncé (NOM_PAPIER, lot du 08/10/2026)
+    const fs0 = sysCorrAjuster(mot, r * 0.44, 1.62 * r, 900, 6);
+    const fs = isPrint ? nomPapierCorps(mot, fs0, r) : fs0;
+    g.appendChild(mkText(cx, cy, mot, Object.assign({ "text-anchor":"middle", "dominant-baseline":"middle", "font-size":fs, "font-weight":900,
+      fill:"#fff", stroke:"rgba(0,0,0,0.8)", "stroke-width":Math.max(2 * M.f, fs * 0.12), "paint-order":"stroke fill" }, isPrint ? nomPapierAttrs(fs) : {})));
   }
 }
 /* Une barre : la case du total (le nombre seul ; « ? » en gris), le calcul gris à sa droite,
@@ -10675,7 +11056,10 @@ function drawSysSystemeEcrit(g, p, places, xi, yi, xDroit, M, ctx){
     places.forEach(q => {
       if(q === p) return;
       const qx = xi + q.x, qy0 = yi + q.y, qy1 = qy0 + q.h;
-      if(qx > x - 1 && qy0 < yBas && qy1 > yHaut) lim = Math.min(lim, qx - E.ecart * M.f);
+      /* lot M4-5 : une étape voisine qui commence un peu avant le texte (les deux étapes de
+         plateaux de « Deux gestes à la suite », côte à côte) compte aussi : sa largeur, pas
+         seulement son bord gauche */
+      if(qx + q.w > x - 1 && qy0 < yBas && qy1 > yHaut) lim = Math.min(lim, qx - E.ecart * M.f);
       if(q.fleche && yi + q.fleche.y > yHaut - 1 && yi + q.fleche.y < yBas + M.hCase) lim = Math.min(lim, xi + q.fleche.x1 - 10 * M.f);
     });
     let fs = E.fs * M.f;
@@ -10711,6 +11095,333 @@ function drawSysLigneReponse(target, card, ctx){
   target.appendChild(g);
 }
 
+/* « Le système » (lot M4-7, 14/10/2026, version C choisie par Gwenaël sur planche) : sous les
+   plateaux de l'énoncé 2 par page (réglage systeme=1 : le livret 2 du monde 4, cycle 4), une ligne
+   par plateau montré, l'une sous l'autre, avec l'accolade — l'élève y écrit l'équation de chaque
+   plateau (« 2 × N + 3 × B = 58 », comme le corrigé en lettres), dans l'ordre où les plateaux
+   sont dessinés. Une équation a 760 de pointillés (≈ 56 mm imprimés), quel que soit le nombre de
+   plateaux. « rempli » : les équations écrites à la place des pointillés (la page 2 des livrets,
+   l'exemple résolu). dispo : ce que renvoie drawSysPlateaux. Renvoie le bas du dessin. */
+const SYS_LIGNE_SYSTEME = { ecart:110, pas:125, fs:40, fsRempli:44, egal:56, total:170, equation:760, accolade:24, encre:"#0f172a" };
+function sysEquationPlateau(card, b){
+  const S = card._sys;
+  const termes = S.colors.filter(k => b.counts[k]).map(k => (b.counts[k] > 1 ? `${b.counts[k]} × ` : "") + investigateColorInitial(investigateColorByKey(k)));
+  return `${termes.concat((b.visible || []).map(String)).join(" + ")} = ${b.total}`;
+}
+function drawSysLigneSysteme(target, card, dispo, ctx, rempli){
+  const L = SYS_LIGNE_SYSTEME, x0 = SYS_ZONE_IMPRIME_2P.x;
+  const P = dispo.plateaux.slice().sort((p, q) => p.y - q.y || p.x - q.x);
+  const n = P.length;
+  const y0 = Math.max(...P.map(p => p.y + p.h)) + L.ecart;
+  const g = ctx.mkEl("g", { id:"sysLigneSystemePrint", "data-rempli":rempli ? "1" : "0" });
+  const lab = "Le système :";
+  g.appendChild(ctx.mkText(x0, y0 + (n - 1) * L.pas / 2, lab, { "text-anchor":"start", "font-size":L.fs, "font-weight":900, fill:L.encre }));
+  // l'accolade, de la première ligne à la dernière
+  const xb = x0 + sysLargeurTexte(lab, L.fs, 900) + 34, d = L.accolade;
+  const yh = y0 - L.fs, yb = y0 + (n - 1) * L.pas + L.fs * 0.45, ym = (yh + yb) / 2;
+  g.appendChild(ctx.mkEl("path", { d:`M ${xb + d} ${yh} Q ${xb} ${yh} ${xb} ${yh + d} L ${xb} ${ym - d} Q ${xb} ${ym} ${xb - d * 0.8} ${ym} Q ${xb} ${ym} ${xb} ${ym + d} L ${xb} ${yb - d} Q ${xb} ${yb} ${xb + d} ${yb}`,
+    fill:"none", stroke:L.encre, "stroke-width":5, "stroke-linecap":"round", "stroke-linejoin":"round" }));
+  const pointilles = (x, y, l) => g.appendChild(ctx.mkEl("line", { x1:x, x2:x + l, y1:y + 4, y2:y + 4, stroke:"#475569", "stroke-width":6, "stroke-linecap":"round", "stroke-dasharray":"0.1 16" }));
+  P.forEach((p, k) => {
+    const x = xb + 46, y = y0 + k * L.pas;
+    if(rempli){
+      g.appendChild(ctx.mkText(x, y, sysEquationPlateau(card, card._sys.boards[p.indice]), { "text-anchor":"start", "font-size":L.fsRempli, "font-weight":800, fill:L.encre }));
+      return;
+    }
+    pointilles(x, y, L.equation);
+    g.appendChild(ctx.mkText(x + L.equation + L.egal / 2, y, "=", { "text-anchor":"middle", "font-size":L.fs, "font-weight":900, fill:L.encre }));
+    pointilles(x + L.equation + L.egal, y, L.total);
+  });
+  target.appendChild(g);
+  return yb;
+}
+/* ---------------------------------------------------------------------------------------
+   Le corrigé en équations (lot M4-8, 14/10/2026 ; idée de Gwenaël : « un corrigé que en mode
+   équation, sans les tableaux, très propre, pour que ce soit explicite » — décidé sur planche :
+   les équations seules, étape par étape, dans un 3e corrigé du livret 2 du monde 4 ; puis, sur la
+   planche 1 du lot, sans le dessin de la carte : la carte commence par le système ; puis, sur les
+   planches 5 et 6, « vers la seconde » : les systèmes avec leur accolade, voir sysEquationsMorceaux). Réglage
+   corrige=equations de l'impression du Système, 2 et 4 par page ; absent, rien ne change.
+   Une colonne si tout y tient, au corps 50 au plus ; sinon deux. Sur une page, toutes les cartes
+   au même corps (sysEquationsPage). Jamais de carte réduite aux réglages des livrets.
+   Chaque étape du plan garde son titre (en brun) et donne l'équation de chacune de ses barres,
+   écrite à partir de ses cases : rien n'est recalculé, tout nombre écrit est déjà dans le plan.
+   « Je vérifie » garde ses calculs, puis la réponse encadrée, comme les autres corrigés.
+--------------------------------------------------------------------------------------- */
+const SYS_EQ = { haut:80, fsEq:50, fsEqMin:36, titre:0.8, poidsTitre:800, poidsEq:700, pas:1.3, hTitre:1.4, ecartEtape:0.45, retrait:40, gouttiere:70,
+  accolade:1.05, ecartReponses:16, entreReponses:70, couleurTitre:"#7c2d12", encre:"#0f172a" };
+/* Le membre de gauche d'une barre : ses cases, dans l'ordre — les taches inconnues regroupées par
+   couleur (« 2 × N »), les taches trouvées par couleur avec leur valeur (« 3 × 14 »), chaque jeton
+   visible par son nombre, chaque plateau retrouvé par son total, ou, quand « bloc » le donne, par
+   son contenu entre parenthèses (« (2 × N + B) »). null : une case que l'équation ne sait pas
+   écrire. */
+function sysEquationGauche(cells, bloc){
+  const termes = [], parCle = new Map();
+  cells.forEach((c, i) => {
+    let cle, rendu;
+    if(c.kind === "unknown"){ cle = "u" + c.color; rendu = investigateColorInitial(investigateColorByKey(c.color)); }
+    else if(c.kind === "known"){ cle = "k" + c.color; rendu = String(c.value); }
+    else if(c.kind === "visible"){ cle = "n" + i; rendu = String(c.value); }
+    else if(c.kind === "block"){ cle = "n" + i; rendu = (bloc && bloc(c)) || String(c.value); }
+    else{ cle = "x" + i; rendu = null; }
+    if(!parCle.has(cle)){ const t = { rendu, n:0 }; parCle.set(cle, t); termes.push(t); }
+    parCle.get(cle).n++;
+  });
+  if(!termes.length || termes.some(t => t.rendu == null)) return null;
+  return termes.map(t => (t.n > 1 ? `${t.n} × ` : "") + t.rendu).join(" + ");
+}
+/* L'équation d'une barre : son membre de gauche, puis « = le calcul » s'il y en a un, puis « = le
+   total ». Un plateau sans total (« ? ») n'a pas d'équation (null). */
+function sysEquationBarre(b){
+  if(!b || String(b.top) === "?" || !b.cells.length) return null;
+  const gauche = sysEquationGauche(b.cells);
+  return gauche == null ? null : `${gauche}${b.calcul ? ` = ${b.calcul}` : ""} = ${b.top}`;
+}
+/* Le polynôme d'une barre sans plateau retrouvé : { "": les nombres, couleur: nombre de taches }
+   (null s'il y a un bloc). */
+function sysEqPoly(cells){
+  const p = { "": 0 };
+  for(const c of cells){
+    if(c.kind === "unknown") p[c.color] = (p[c.color] || 0) + 1;
+    else if(c.kind === "visible" || c.kind === "known") p[""] += Number(c.value);
+    else return null;
+  }
+  return p;
+}
+function sysEqMemes(a, b){
+  return !!a && !!b && [...new Set(Object.keys(a).concat(Object.keys(b)))].every(k => (a[k] || 0) === (b[k] || 0));
+}
+/* Une équation déjà écrite, de total v : la barre la plus récente des étapes d'avant qui a ce
+   total et n'est faite que de taches inconnues (et de jetons) — et, si « cible » est donnée, qui
+   a exactement ce polynôme (deux plateaux peuvent avoir le même total : on ne se fie jamais au
+   seul nombre). Son membre de gauche (« 2 × N + B ») et la barre ; null s'il n'y en a pas. */
+function sysEqContenu(avant, v, cible){
+  for(let i = avant.length - 1; i >= 0; i--) for(const b of avant[i].barres || []){
+    if(String(b.top) !== String(v) || !b.cells.length || !b.cells.every(c => c.kind === "unknown" || c.kind === "visible")) continue;
+    if(cible && !sysEqMemes(sysEqPoly(b.cells), cible)) continue;
+    return { gauche: sysEquationGauche(b.cells), b };
+  }
+  return null;
+}
+/* a − b, divisé par n (null si ça ne tombe pas juste) */
+function sysEqReste(a, b, n){
+  const r = {};
+  for(const k of new Set(Object.keys(a).concat(Object.keys(b)))){
+    const d = (a[k] || 0) - (b[k] || 0);
+    if(d % n) return null;
+    r[k] = d / n;
+  }
+  return r;
+}
+/* « Je range par paires » : des taches toutes en même nombre, rangées en paquets (« 5 × (Ve + O) ») ;
+   sinon le membre de gauche habituel. */
+function sysEqRange(cells){
+  const n = new Map();
+  if(!cells.every(c => c.kind === "unknown")) return sysEquationGauche(cells);
+  cells.forEach(c => n.set(c.color, (n.get(c.color) || 0) + 1));
+  const k = [...n.values()];
+  if(n.size < 2 || k.some(x => x !== k[0]) || k[0] < 2) return sysEquationGauche(cells);
+  return `${k[0]} × (${[...n.keys()].map(c => investigateColorInitial(investigateColorByKey(c))).join(" + ")})`;
+}
+/* Les morceaux du corrigé, étape par étape : le titre, les lignes, et les accolades (les lignes
+   qui forment un système). Version « vers la seconde » (choix de Gwenaël du 14/10 sur les planches
+   5 et 6 : l'entre-deux, avec la distributivité ; « Deux gestes à la suite » garde « Le grand
+   plateau » seul, puis le petit système) :
+     - les plateaux s'écrivent en système, avec l'accolade ;
+     - « Je recopie k fois » : k × (le plateau) = k × son total (distributivité), puis le nouveau
+       système ;
+     - un plateau retrouvé dedans s'écrit d'abord par son contenu, entre parenthèses
+       (« (2 × N + B) + 5 × B = 116 »), puis par son total (« 46 + 5 × B = 116 ») ;
+     - « J'additionne » : la somme des équations, puis rangée (« 5 × (Ve + O) = 160 ») ;
+     - le reste, une équation par barre.
+   « Je vérifie » garde ses calculs, et ses réponses en mots (comme la ligne réponse de l'énoncé). */
+function sysEquationsMorceaux(plan){
+  const etapes = plan.filter(e => e.role !== "verification");
+  // le début de chaque idée (les blocs du corrigé en barres) : c'est là qu'on change de colonne
+  const debuts = new Set(sysBlocs(etapes).map(b => b[0]));
+  return plan.map((e, i) => {
+    if(e.role === "verification")
+      return { titre: e.titre, lignes: (e.lignes || []).slice(), accolades: [], debut: true,
+        reponses: (e.reponses || []).map(r => `${investigateColorWord(investigateColorByKey(r.color))} = ${r.value}`) };
+    const avant = plan.slice(0, i), lignes = [], accolades = [];
+    const systeme = ls => { if(ls.length > 1) accolades.push([lignes.length, lignes.length + ls.length - 1]); lignes.push(...ls); };
+    const seule = e.barres.length === 1 ? e.barres[0] : null;
+    const fois = seule && /^(\d+) × (\d+)$/.exec(seule.calcul || "");
+    const somme = seule && e.role === "additionne" ? String(seule.calcul || "").split(" + ") : [];
+    // le plateau recopié : celui dont k fois les taches font la barre (pas seulement le même total)
+    const cibleFois = fois && sysEqPoly(seule.cells) ? sysEqReste(sysEqPoly(seule.cells), {}, Number(fois[1])) : null;
+    const src = cibleFois ? sysEqContenu(avant, fois[2], cibleFois) : null;
+    const parts = somme.map(t => sysEqContenu(avant, t));
+    // la somme des équations additionnées fait bien la barre
+    const total = parts.length && parts.every(Boolean) ? parts.reduce((acc, q) => {
+      const p = sysEqPoly(q.b.cells);
+      for(const k in p) acc[k] = (acc[k] || 0) + p[k];
+      return acc;
+    }, {}) : null;
+    if(e.role === "plateaux") systeme(e.barres.map(sysEquationBarre).filter(Boolean));
+    else if(src){
+      // je recopie k fois un plateau : k × (le plateau) = k × son total, puis le nouveau système
+      // (le plateau recopié, et les autres plateaux de son système)
+      const plat = avant.slice().reverse().find(x => x.role === "plateaux" && x.barres.includes(src.b));
+      const autres = plat ? plat.barres.filter(y => y !== src.b).map(sysEquationBarre).filter(Boolean) : [];
+      lignes.push(`${fois[1]} × (${src.gauche}) = ${fois[1]} × ${fois[2]}`);
+      systeme([`${sysEquationGauche(seule.cells)} = ${seule.top}`].concat(autres));
+    }else if(parts.length > 1 && total && new Set(parts.map(p => p.b)).size === parts.length && sysEqMemes(total, sysEqPoly(seule.cells))){
+      // j'additionne les équations, puis je range
+      lignes.push(`${parts.map(p => `(${p.gauche})`).join(" + ")} = ${seule.calcul}`);
+      lignes.push(`${sysEqRange(seule.cells)} = ${seule.top}`);
+    }else e.barres.forEach(b => {
+      // un plateau retrouvé : d'abord écrit par son contenu entre parenthèses (quand c'est une
+      // somme). L'équation réécrite : celle d'avant qui a le même total (le plateau, ou le plateau
+      // recopié) ; le contenu du bloc : ce qu'elle a de plus que le reste de la barre — cherché
+      // parmi les équations d'avant qui ont la valeur du bloc et exactement ce polynôme.
+      const blocs = b.cells.filter(c => c.kind === "block");
+      const valeurs = [...new Set(blocs.map(c => String(c.value)))];
+      const source = valeurs.length === 1 ? sysEqContenu(avant, b.top) : null;
+      const cible = source && sysEqPoly(b.cells.filter(c => c.kind !== "block")) &&
+        sysEqReste(sysEqPoly(source.b.cells), sysEqPoly(b.cells.filter(c => c.kind !== "block")), blocs.length);
+      const s = cible ? sysEqContenu(avant, valeurs[0], cible) : null;
+      if(s && s.gauche && s.gauche.includes(" + ")) lignes.push(`${sysEquationGauche(b.cells, () => `(${s.gauche})`)} = ${b.top}`);
+      const l = sysEquationBarre(b);
+      if(l) lignes.push(l);
+    });
+    return { titre: e.titre, lignes, accolades, debut: debuts.has(e) };
+  });
+}
+/* Un morceau au corps fs dans une colonne de largeur lc : son titre (au corps 0,8 fs, coupé en
+   deux lignes s'il dépasse la colonne), ses lignes, la réponse encadrée ; sa hauteur, sa
+   largeur (celle de sa plus longue ligne). */
+function sysEquationsMesure(m, fs, lc, dernier){
+  const E = SYS_EQ, ft = Math.round(fs * E.titre);
+  const titres = sysLargeurTexte(m.titre, ft, E.poidsTitre) > lc ? wrapTextToWidth(m.titre, ft, lc, E.poidsTitre) : [m.titre];
+  let h = ft * E.hTitre + (titres.length - 1) * ft * 1.15 + m.lignes.length * fs * E.pas;
+  let w = Math.max(...titres.map(t => sysLargeurTexte(t, ft, E.poidsTitre)));
+  const dansSysteme = k => (m.accolades || []).some(([a, z]) => k >= a && k <= z);
+  m.lignes.forEach((l, k) => { w = Math.max(w, E.retrait + (dansSysteme(k) ? E.accolade * fs : 0) + sysLargeurTexte(l, fs, E.poidsEq)); });
+  const rep = m.reponses ? sysEquationsReponses(m.reponses, lc, fs) : null;
+  if(rep){ h += E.ecartReponses + rep.h; w = Math.max(w, rep.w); }
+  return { h: Math.ceil(h + (dernier ? 0 : fs * E.ecartEtape)), w: Math.ceil(w), titres, ft, rep };
+}
+/* La réponse encadrée (« verte = 16   rouge = 15 »), dans la largeur lc, au corps des équations
+   (fs) : sur une ligne, serrée puis un peu plus petite s'il le faut (jusqu'à 34) ; sinon sur
+   deux lignes ou plus, au corps fs. */
+function sysEquationsReponses(reponses, lc, fs0){
+  const E = SYS_EQ, pad = 30, h1 = fs0 * 1.6, pas = fs0 * 1.3;
+  const larg = (ts, fs, entre) => ts.reduce((s, t) => s + sysLargeurTexte(t, fs, 900), 0) + entre * (ts.length - 1);
+  for(let fs = fs0; fs >= Math.min(fs0, 34); fs -= 2) for(let entre = E.entreReponses; entre >= 40; entre -= 10){
+    const w = larg(reponses, fs, entre);
+    if(w + 2 * pad <= lc) return { lignes: [reponses], fs, entre, w: Math.ceil(w + 2 * pad), h: h1, pas };
+  }
+  const lignes = [];
+  reponses.forEach(t => {
+    const l = lignes[lignes.length - 1];
+    if(l && larg(l.concat(t), fs0, 40) + 2 * pad <= lc) l.push(t); else lignes.push([t]);
+  });
+  const w = Math.max(...lignes.map(l => larg(l, fs0, 40)));
+  return { lignes, fs: fs0, entre: 40, w: Math.ceil(w + 2 * pad), h: h1 + (lignes.length - 1) * pas, pas };
+}
+/* La mise en page : une colonne si tout y tient, sinon deux (coupées entre deux étapes, la
+   première lue d'abord, les hauteurs les plus égales possible) ; au plus grand corps, de fsEq à
+   fsEqMin, qui tient. Sinon, deux colonnes au plus petit corps, réduites (filet, jamais aux
+   réglages des livrets : voir les tests). */
+function sysEquationsFlux(morceaux, largeur, hauteur){
+  const E = SYS_EQ, n = morceaux.length;
+  const colonne = (liste, fs, lc) => liste.map((m, i) => sysEquationsMesure(m, fs, lc, i === liste.length - 1))
+    .reduce((t, x) => ({ h: t.h + x.h, w: Math.max(t.w, x.w) }), { h: 0, w: 0 });
+  const lc2 = (largeur - E.gouttiere) / 2;
+  /* la coupure : de préférence au début d'une idée (après une tache trouvée, avant « Je
+     remplace »…), la plus basse qui tient ; sinon là où les colonnes sont le plus égales */
+  const deux = fs => {
+    let best = null, idee = null;
+    for(let k = 1; k < n; k++){
+      const g = colonne(morceaux.slice(0, k), fs, lc2), d = colonne(morceaux.slice(k), fs, lc2);
+      if(g.w > lc2 || d.w > lc2) continue;
+      const h = Math.max(g.h, d.h);
+      if(!best || h < best.h) best = { k, h };
+      if(morceaux[k].debut && h <= hauteur && (!idee || h < idee.h)) idee = { k, h };
+    }
+    const c = idee || best;
+    return c && { fs, colonnes: [morceaux.slice(0, c.k), morceaux.slice(c.k)], h: c.h, lc: lc2 };
+  };
+  for(let fs = Math.min(E.fsEq, sysEqCorpsPlafond || E.fsEq); fs >= E.fsEqMin; fs -= 2){
+    const un = colonne(morceaux, fs, largeur);
+    if(!(sysEqDeuxColonnes && n > 1) && un.h <= hauteur && un.w <= largeur) return { fs, colonnes: [morceaux], h: un.h, lc: largeur, k: 1 };
+    const d = n > 1 ? deux(fs) : null;
+    if(d && d.h <= hauteur) return Object.assign(d, { k: 1 });
+  }
+  const d = n > 1 ? deux(E.fsEqMin) : null;
+  if(d) return Object.assign(d, { k: Math.min(1, hauteur / d.h) });
+  const un = colonne(morceaux, E.fsEqMin, largeur);
+  return { fs: E.fsEqMin, colonnes: [morceaux], h: un.h, lc: largeur, k: Math.min(1, hauteur / un.h, largeur / un.w) };
+}
+/* Le corrigé en équations, seul sur la carte (Z : ses bords, ceux des étapes de SYS_CORR_IMPRIME ou
+   de SYS_CORR_IMPRIME_2P), de haut à bas. Renvoie le bas du dessin. */
+function drawSysCorrectionEquations(target, card, haut, bas, ctx, Z){
+  const E = SYS_EQ, { mkEl, mkText } = ctx;
+  const flux = sysEquationsFlux(sysEquationsMorceaux(card._sys.plan), Z.xMax - Z.x, bas - haut);
+  const k = flux.k, fs = flux.fs;
+  const g = mkEl("g", { id:"sysCorrectionPrint", "data-equations":"1", "data-echelle":String(Math.round(k * 1000) / 1000),
+    "data-colonnes":String(flux.colonnes.length), "data-corps":String(fs),
+    transform:k < 1 ? `translate(${Z.x} ${haut}) scale(${k.toFixed(4)}) translate(${-Z.x} ${-haut})` : "" });
+  target.appendChild(g);
+  flux.colonnes.forEach((liste, j) => {
+    const x = Z.x + j * (flux.lc + E.gouttiere);
+    let y = haut;
+    liste.forEach((m, i) => {
+      const t = sysEquationsMesure(m, fs, flux.lc, i === liste.length - 1);
+      const gm = mkEl("g", { class:"sysEquations" + (m.reponses ? " sysVerification" : "") });
+      t.titres.forEach((l, r) => gm.appendChild(mkText(x, y + t.ft * 0.95 + r * t.ft * 1.15, l, { "text-anchor":"start", "font-size":t.ft, "font-weight":E.poidsTitre, fill:E.couleurTitre })));
+      let yy = y + t.ft * E.hTitre + (t.titres.length - 1) * t.ft * 1.15;
+      const y0 = yy, acc = m.accolades || [];
+      m.lignes.forEach((l, k) => {
+        const dx = acc.some(([a, z]) => k >= a && k <= z) ? E.accolade * fs : 0;
+        gm.appendChild(mkText(x + E.retrait + dx, yy + fs * 0.85, l, { class:"sysEquation", "text-anchor":"start", "font-size":fs, "font-weight":E.poidsEq, fill:E.encre }));
+        yy += fs * E.pas;
+      });
+      // l'accolade d'un système, à gauche de ses lignes (le dessin de la ligne « Le système » de l'énoncé)
+      acc.forEach(([a, z]) => {
+        const d = 0.3 * fs, xb = x + E.retrait + 0.3 * fs;
+        const yh = y0 + a * fs * E.pas, yb = y0 + z * fs * E.pas + 1.15 * fs, ym = (yh + yb) / 2;
+        gm.appendChild(mkEl("path", { class:"sysAccolade", d:`M ${xb + d} ${yh} Q ${xb} ${yh} ${xb} ${yh + d} L ${xb} ${ym - d} Q ${xb} ${ym} ${xb - d * 0.8} ${ym} Q ${xb} ${ym} ${xb} ${ym + d} L ${xb} ${yb - d} Q ${xb} ${yb} ${xb + d} ${yb}`,
+          fill:"none", stroke:E.encre, "stroke-width":Math.max(3, fs * 0.08), "stroke-linecap":"round", "stroke-linejoin":"round" }));
+      });
+      if(t.rep){
+        // la réponse encadrée : au moins 700 de large (dans la colonne), les réponses centrées
+        const R = t.rep;
+        yy += E.ecartReponses;
+        const wb = Math.min(flux.lc, Math.max(R.w, 700));
+        gm.appendChild(mkEl("rect", { class:"sysReponses", x, y:yy, width:wb, height:R.h, rx:16, fill:"none", stroke:E.encre, "stroke-width":4 }));
+        R.lignes.forEach((l, q) => {
+          const tl = l.map(r => sysLargeurTexte(r, R.fs, 900));
+          let xx = x + (wb - tl.reduce((s, w) => s + w, 0) - R.entre * (l.length - 1)) / 2;
+          l.forEach((r, n) => {
+            gm.appendChild(mkText(xx, yy + R.h / 2 + (q - (R.lignes.length - 1) / 2) * R.pas, r, { "text-anchor":"start", "dominant-baseline":"middle", dy:"0.06em", "font-size":R.fs, "font-weight":900, fill:E.encre }));
+            xx += tl[n] + R.entre;
+          });
+        });
+      }
+      g.appendChild(gm);
+      y += t.h;
+    });
+  });
+  return haut + flux.h * k;
+}
+/* Les cartes d'une même page, au même corps : celui de la carte qui a le plus petit (rendus :
+   les cartes de la page, telles que printSheet les a dessinées). */
+function sysEquationsPage(rendus){
+  // le même corps, et deux colonnes partout dès qu'une carte de la page en a deux (deux tours au
+  // plus : une carte passée en deux colonnes peut demander un corps plus petit)
+  try{
+    for(let tour = 0; tour < 3; tour++){
+      const gs = rendus.map(r => r.sv.querySelector("#sysCorrectionPrint[data-equations]")).filter(Boolean);
+      const corps = gs.map(g => Number(g.getAttribute("data-corps"))), cols = gs.map(g => g.getAttribute("data-colonnes"));
+      if(gs.length < 2 || (Math.min(...corps) === Math.max(...corps) && new Set(cols).size === 1)) return;
+      sysEqCorpsPlafond = Math.min(...corps);
+      sysEqDeuxColonnes = cols.includes("2");
+      rendus.forEach(r => renderCardIntoSvg(r.sv, r.card, r.mode, r.opts));
+    }
+  }finally{ sysEqCorpsPlafond = null; sysEqDeuxColonnes = false; }
+}
 /* Écran : l'échelle des étapes d'une carte, la même pour toutes (la plus grande à laquelle
    chacune tient sous les plateaux, au plus SYS_CORR_ECRAN.max). */
 function sysCorrEcranEchelle(card, yEtape){
@@ -10878,6 +11589,9 @@ function renderCard(card, revealState, opts = {}){
     drawSysPlateaux(svg, card, zone, { devoile: revealState >= 2 || sysDevoileEleve(card) });
     return;
   }
+
+  /* A fraction (lot F1) : son propre dessin (ufRendreCarte), le mode A n'y passe pas */
+  if(card && card.family === "UF"){ ufRendreCarte(card, revealState); return; }
 
   const actEl = document.getElementById("activity");
   const act = actEl ? actEl.value : "";
@@ -11139,7 +11853,8 @@ function renderCard(card, revealState, opts = {}){
       "text-anchor":"middle","font-size": totalLabelFs,
       "fill":totalLabelColor,"font-weight":"800","letter-spacing":"2"
     });
-    // Enquête sans total : « TOTAL ? », le point d'interrogation en gris ardoise
+    // total caché : « TOTAL ? », le point d'interrogation en gris ardoise (le Système ; l'Enquête
+    // sans total n'a pas de case : « TOTAL ? » n'y sert qu'à mesurer sa place, voir plus bas)
     const sansTotalAffiche = (card.family === "C" && card._rel && card._rel.sansTotal) || sysTotalCache(card);
     const tNum = text(tx, ty + totalNumDy, sansTotalAffiche ? "?" : String(card.total), {
       "text-anchor":"middle","font-size": totalNumFs,
@@ -11147,15 +11862,16 @@ function renderCard(card, revealState, opts = {}){
     });
     gTotal.appendChild(tLabel);
     gTotal.appendChild(tNum);
-    if(enquetePasDeTotal(card)){
-      svg.appendChild(gTotal);
-      enquetePasDeTotalSvg(gTotal, tLabel, tNum, tx, Number(totalLabelFs), 800, totalLabelColor, (n, a) => el(n, a));
-    }
   }
   svg.appendChild(gTotal);
 
   const bbTotal = gTotal.getBBox();
   const padX = relationTotalCompact ? 24 : (introTotalCompact ? 30 : 40), padY = relationTotalCompact ? 14 : (introTotalCompact ? 18 : 26);
+  /* Enquête sans total : pas de case (08/10/2026). Elle est mesurée comme « TOTAL ? » puis vidée ;
+     à sa place, un rect invisible de sa taille : le plateau, les phrases, le bandeau du pas à pas
+     (enqueteG3Bandeau) et le cadrage du mode élève (eleveCadrerScene) ne bougent pas. */
+  const sansCase = enqueteSansCase(card);
+  if(sansCase) while(gTotal.firstChild) gTotal.removeChild(gTotal.firstChild);
   
   if(!isBarModelTotal){
     let boxX = bbTotal.x - padX;
@@ -11165,9 +11881,10 @@ function renderCard(card, revealState, opts = {}){
       width: bbTotal.width + padX*2,
       height: bbTotal.height + padY*2,
         rx: relationTotalCompact ? 16 : (introTotalCompact ? 18 : 22),
-      fill: totalBoxFill,
-      stroke: totalBoxStroke,
-      "stroke-width":"4"
+      fill: sansCase ? "none" : totalBoxFill,
+      stroke: sansCase ? "none" : totalBoxStroke,
+      "stroke-width":"4",
+      ...(sansCase ? { class:"totalPlace" } : {})
     }), gTotal);
   }
 
@@ -12452,18 +13169,29 @@ function renderCardIntoSvg(targetSvg, card, printMode, opts = {}){
 
   targetSvg.appendChild(tEl("rect",{x:0,y:0,width:opts.sixColonne ? SIX_COLONNE.largeur : W,height:H,rx:26,fill:"#fff"}));
 
+  /* A fraction (lot F1) : l'énoncé imprimé (ufRendreCarteImprimee), seul choix d'impression du lot */
+  if(card && card.family === "UF"){ ufRendreCarteImprimee(targetSvg, card, tEl, tText); return; }
+
   if(deuxParPage){
     const ctx = { mkEl:tEl, mkText:tText, isPrint:true, lettres:!numberedQuestionMarkMode };
     if(revealAnswers){
       // le corrigé : l'énoncé dévoilé en haut, puis les étapes en blocs encadrés
       const Z = SYS_ZONE_IMPRIME_CORRECTION_2P;
+      // corrige=equations (lot M4-8, choix de Gwenaël sur planche) : les équations seules, sans
+      // l'énoncé dévoilé — la première étape est le système que l'élève écrit sous sa carte
+      if(printCorrigeEquations && sysAPlan(card)){
+        drawSysCorrectionEquations(targetSvg, card, SYS_EQ.haut, SYS_CORR_IMPRIME_2P.bas, ctx, SYS_CORR_IMPRIME_2P);
+        return;
+      }
       const entete = drawSysPlateaux(targetSvg, card, Z, { mkEl:tEl, mkText:tText, isPrint:true, devoile:true, nomMin:Z.nomMin });
       const haut = Math.max(...entete.plateaux.map(P => P.y + P.h)) + SYS_CORR_IMPRIME_2P.ecartEnonce;
       if(sysAPlan(card)) drawSysCorrectionBlocs(targetSvg, card, haut, SYS_CORR_IMPRIME_2P.bas, ctx);
       return;
     }
     // l'énoncé : les plateaux en haut, la place pour chercher, la ligne réponse en bas
-    drawSysPlateaux(targetSvg, card, SYS_ZONE_IMPRIME_2P, { mkEl:tEl, mkText:tText, isPrint:true, devoile:false });
+    // (systeme=1, lot M4-7 : « Le système » sous les plateaux)
+    const dispo = drawSysPlateaux(targetSvg, card, SYS_ZONE_IMPRIME_2P, { mkEl:tEl, mkText:tText, isPrint:true, devoile:false });
+    if(printSystemeLigne) drawSysLigneSysteme(targetSvg, card, dispo, ctx, false);
     drawSysLigneReponse(targetSvg, card, ctx);
     return;
   }
@@ -12471,6 +13199,11 @@ function renderCardIntoSvg(targetSvg, card, printMode, opts = {}){
   /* Système, la correction imprimée (lot S3 ; barres de taches du lot M4-2), 4 et 2 par page. */
   if(revealAnswers && sysAPlan(card) && !opts.sansCorrectionSys && String(targetSvg.getAttribute("viewBox") || "").trim() !== "0 0 1600 1000"){
     const ctx = { mkEl:tEl, mkText:tText, isPrint:true, lettres:!numberedQuestionMarkMode };
+    // corrige=equations (lot M4-8) : les équations seules, comme en 2 par page
+    if(printCorrigeEquations){
+      drawSysCorrectionEquations(targetSvg, card, SYS_EQ.haut, SYS_CORR_IMPRIME.basImprime, ctx, SYS_CORR_IMPRIME);
+      return;
+    }
     // l'énoncé en haut de la carte, taches dévoilées (décidé le 24/09), puis les cadres
     let haut;
     if(sysEnPlateaux(card)){
@@ -12588,23 +13321,21 @@ function renderCardIntoSvg(targetSvg, card, printMode, opts = {}){
   const lbl = tText(tx, ty, "TOTAL", {"text-anchor":"middle","font-size":String(totalLabelSize),"fill":totalLabelColor,"font-weight":"900","letter-spacing":"2"});
   const sansTotalImprime = (card.family === "C" && card._rel && card._rel.sansTotal) || sysTotalCache(card);
   const num = tText(tx, ty+totalNumberDy, sansTotalImprime ? "?" : String(card.total), {"text-anchor":"middle","font-size":String(totalNumberSize),"fill":sansTotalImprime ? "#64748b" : totalColor,"font-weight":"900"});
-  g.appendChild(lbl); g.appendChild(num);
-  const hoteTotal = opts.sixColonne ? racine : targetSvg;
-  hoteTotal.appendChild(g);
-
   const boxH = 210;
   const boxY = ty - 70;
   let boxW = opts.sixColonne ? SIX_COLONNE.colonneW : 280;
   let boxX = tx - boxW/2;
-  /* « PAS DE TOTAL » centré dans la case : la place est DONNÉE (la case), car la feuille
-     d'impression est encore cachée quand on la dessine — getBBox y rend une boîte vide et le
-     texte partait hors de la carte (vu au rendu des livrets, 07/10/2026) */
-  if(enquetePasDeTotal(card)) enquetePasDeTotalSvg(g, lbl, num, tx, totalLabelSize, 900, totalLabelColor, (n, a) => tEl(n, a), { x:boxX, y:boxY, width:boxW, height:boxH });
-
-  hoteTotal.insertBefore(tEl("rect",{
-    x:Math.round(boxX), y:Math.round(boxY), width:Math.round(boxW), height:Math.round(boxH), rx:22,
-    fill:boxFill, stroke:boxStroke, "stroke-width":"4"
-  }), g);
+  /* Enquête sans total : pas de case (08/10/2026) — ni le groupe ni la boîte ; leur place reste
+     blanche, les phrases d'indice (layoutEnqueteClueBand, à band.x) ne bougent pas. */
+  if(!enqueteSansCase(card)){
+    g.appendChild(lbl); g.appendChild(num);
+    const hoteTotal = opts.sixColonne ? racine : targetSvg;
+    hoteTotal.appendChild(g);
+    hoteTotal.insertBefore(tEl("rect",{
+      x:Math.round(boxX), y:Math.round(boxY), width:Math.round(boxW), height:Math.round(boxH), rx:22,
+      fill:boxFill, stroke:boxStroke, "stroke-width":"4"
+    }), g);
+  }
 
   // lot P : en bas de la colonne, la case réponse « ? = ……… » (la valeur en correction)
   if(opts.sixColonne) drawSixReponseCase(racine, revealAnswers ? sixCorrectionData(card).h : null, tEl, tText, sixReponseInconnue(card));
@@ -12617,11 +13348,13 @@ function renderCardIntoSvg(targetSvg, card, printMode, opts = {}){
   if(enqueteClueBand && (printRevealState === 0 || card.family === "D")){
     const band = ENQUETE_PRINT_CLUES_BAND;
     const plan = layoutEnqueteClueBand(card._inv.indices, band);
+    /* sans case (08/10/2026) : le même bloc, centré au-dessus du plateau */
+    const xPhrases = enqueteSansCase(card) ? enqueteBlocPhrasesX(plan, printTray.x + printTray.w / 2) : band.x;
     // bloc centré verticalement dans le bandeau, texte aligné à gauche
     let y = band.top + Math.max(0, (band.height - plan.total) / 2) + Math.round(plan.fontSize * 0.85);
     plan.blocks.forEach((lines, i) => {
       lines.forEach(line => {
-        targetSvg.appendChild(tText(band.x, y, line, {"text-anchor":"start","font-size":String(plan.fontSize),"fill":"#000","font-weight":"700"}));
+        targetSvg.appendChild(tText(xPhrases, y, line, {"text-anchor":"start","font-size":String(plan.fontSize),"fill":"#000","font-weight":"700"}));
         y += plan.lineH;
       });
       y += plan.gap;
@@ -13183,6 +13916,8 @@ function getClassicPrintInstruction(slotCards){
       note:hasSeveralTasks ? "Lorsque plusieurs taches apparaissent, elles cachent le même nombre de jetons." : ""
     };
   }
+  /* A fraction (lot F1) */
+  if(act === "UF") return { main:UF_CONSIGNE_IMPRIMEE, note:"" };
   if(act === "UPM" || act === "NPM"){
     return {
       main:"Trouve la valeur cachée sous chaque tache en modélisant la situation par une équation, puis en la résolvant.",
@@ -13398,6 +14133,7 @@ function printSheet(){
     if(mode !== "correction") sheet.appendChild(createClassicPrintInstruction(slotCards));
     const grid = document.createElement("div");
     grid.className = "grid";
+    const rendus = [];
 
     for(let i=0;i<perSheet;i++){
       const holder = document.createElement("div");
@@ -13422,6 +14158,8 @@ function printSheet(){
              aux modes A et B) — il lui faut son propre drapeau pour garder sa mise en page. */
           renderCardIntoSvg(sv, card, mode, { schemaVide:enqueteSchemaVide && mode === "statement" && perSheet !== 6 && card === cards[0],
             sixParPage:perSheet === 6, deuxParPage:deuxSys });
+          // corrige=equations (lot M4-8) : de quoi redessiner la carte (sysEquationsPage, corrigé seulement)
+          rendus.push({ sv, card, mode, opts:{ sixParPage:perSheet === 6, deuxParPage:deuxSys } });
         }
         holder.appendChild(sv);
       } else {
@@ -13429,6 +14167,8 @@ function printSheet(){
       }
       grid.appendChild(holder);
     }
+    // corrige=equations (lot M4-8) : un seul corps d'équations sur la page
+    if(printCorrigeEquations && mode === "correction") sysEquationsPage(rendus);
 
     sheet.appendChild(grid);
 
@@ -13808,23 +14548,68 @@ let eleveIndicesTel = false;
    sur ces écrans : le dessin n'est plus réduit pour faire tenir des phrases de 1 550
    unités) ; la réserve sous la carte et l'écart TOTAL / plateau, voir elevePaveCalerCarte */
 const ELEVE_PLATEAU_MIN_ENQ = 100, ELEVE_RESERVE_ENQ_TEL = 22, ELEVE_TOTAL_TEL_ECART = 10;
+/* la place de la case TOTAL à droite du plateau au téléphone (case + écart, 80 px mesurés le
+   08/10/2026) : une carte de l'Enquête sans total n'a plus de case mais garde ce plateau */
+const ELEVE_TOTAL_TEL_PLACE = 80;
 const ELEVE_SCHEMA_ETAPES = 3; /* lots G1-G2 : les barres, le schéma regroupé, je calcule (2 sans total) */
 let eleveIdx = 0, eleveEtoiles = 0, eleveSerie = [], eleveResultats = [], eleveCarteFautee = false, eleveRepriseFaite = false;
+/* cartes de la série dont la réponse a été montrée (3e erreur) : rejouées, elles deviennent
+   orange comme une carte réussie après une erreur — on les compte donc à part (lot 2 du suivi) */
+let eleveVues = 0;
+/* la série en cours est-elle déjà notée ? Sa fin s'enregistre dès la dernière carte jouée, puis
+   l'écran de fin la redemande : la seconde fois ne compte pas une série de plus */
+let eleveSerieNotee = false;
 /* parties supplémentaires d'une étape composée (voir « suite » dans l'adresse) */
 let eleveSuite = [];
 /* échecs sur la carte en cours (au 3e, la réponse s'écrit dans les cases) et file des cartes rouges à rejouer */
 let eleveEchecs = 0, eleveRejeu = null;
+/* cartes jumelles (voir carteJumelle) : les cartes de la série telles que tirées, combien de fois
+   chacune est revenue, la jumelle tirée d'avance (écran « Encore N cartes ! »), et pour une étape
+   composée, les réglages de la partie de chaque carte */
+let eleveOriginaux = [], eleveJumelleRang = [], eleveJumellesPretes = [];
+const jumelleParties = new WeakMap();
+let jumelleDernierePartie = null;
+const JUMELLE_ESSAIS = 8000;
 const ELEVE_ECHECS_MAX = 3, ELEVE_URL_MONDES = "/outils/splat_univers.html";
-const ELEVE_STORE_KEY = "mathsgo-splat-parcours";
+/* Le parcours de l'élève (lot 2 « outils + carte » du suivi, 08/10/2026) : il s'écrit par le
+   moteur partagé (assets/js/splat-parcours.js), au format que garde le serveur, dans la case
+   de l'élève à code (son code est dans l'onglet, jamais dans l'adresse) ou dans la case sans
+   code d'aujourd'hui ; « la meilleure série gagne ». assets/js/splat-suivi.js crée le client
+   au premier besoin, met la pastille « ● Léa » dans la barre du haut et pose la garde. Sans ces
+   fichiers, le jeu reste jouable : rien n'est enregistré. */
+let eleveSuiviObjet;
+function eleveSuivi(){
+  if(eleveSuiviObjet === undefined){
+    eleveSuiviObjet = null;
+    if(parcoursId && window.MathsGoSplatSuivi){
+      eleveSuiviObjet = window.MathsGoSplatSuivi.creer({ surRepere: () => eleveSuiviObjet && eleveSuiviObjet.majPastilles() });
+      if(eleveSuiviObjet) eleveSuiviObjet.lancer();
+    }
+  }
+  return eleveSuiviObjet;
+}
+function eleveSuiviPastilleHtml(){ const s = eleveSuivi(); return s ? s.pastilleHtml() : ""; }
+/* l'étape telle que la case la garde À CET INSTANT ({fait, etoiles, cartes, vues, essais, date,
+   idx?, enCours?}), ou null */
+function eleveEtapeLue(){
+  const s = eleveSuivi(), p = s ? s.lire() : null;
+  return p && p.etapes[parcoursId] ? p.etapes[parcoursId] : null;
+}
+/* à la reprise : les réponses montrées de la série en cours — celles encore rouges, ou ce que
+   la case en a gardé (une étape pas encore étoilée garde le compte, rouges rejouées comprises) */
+function eleveVuesReprise(etape, res){
+  const rouges = res.filter(r => r === "ko").length;
+  return etape && !etape.fait ? Math.max(rouges, Number(etape.vues) || 0) : rouges;
+}
 const counterEl = document.getElementById("counter");
 const fsHost = document.getElementById("fsHost");
 
 function isRevealSequenceCard(card){
-  return !!card && (card.family === "U" || card.family === "UPM" || card.family === "N" || card.family === "NPM" || card.family === "C" || sysAPlan(card));
+  return !!card && (card.family === "U" || card.family === "UF" || card.family === "UPM" || card.family === "N" || card.family === "NPM" || card.family === "C" || sysAPlan(card));
 }
 function getMaxRevealState(card){
   if(!card) return 0;
-  if(card.family === "U" || card.family === "N") return 3;
+  if(card.family === "U" || card.family === "N" || card.family === "UF") return 3;
   if(card.family === "UPM" || card.family === "NPM") return 2;
   if(card.family === "C" && card._directSubstitution) return 3;
   if(card.family === "C") return enqueteDerniereEtape(card);
@@ -13873,6 +14658,8 @@ function generate(){
     let c;
     if(act==="U"){
       c = isUnitEquationPresetActive() ? genUnitsEquationPreset(rng) : genUnits(rng);
+    }else if(act==="UF"){
+      c = genUnitsFractions(rng);
     }else if(act==="UPM"){
       c = genUnitsSigned(rng);
     }else if(act==="N"){
@@ -13910,11 +14697,16 @@ function generate(){
 function genererSerieComposee(){
   generate();
   const toutes = cards.slice();
+  /* les cartes jumelles se tirent avec les réglages de LEUR partie (voir carteJumelle) */
+  const principale = window.location.search.slice(1);
+  for(const c of cards) jumelleParties.set(c, principale);
+  jumelleDernierePartie = principale;
   for(const partie of eleveSuite){
     try{
       appliquerConfiguration(new URLSearchParams(partie));
+      jumelleDernierePartie = partie;
       generate();
-      for(const c of cards) toutes.push(c);
+      for(const c of cards){ toutes.push(c); jumelleParties.set(c, partie); }
     }catch(e){ /* partie ignorée */ }
   }
   cards = toutes;
@@ -13922,7 +14714,7 @@ function genererSerieComposee(){
   revealState = 0;
   /* la première génération avait déjà construit une série partielle : on la
      reconstruit sur l'ensemble des cartes (reprise comprise). */
-  eleveSerie = []; eleveIdx = 0; eleveEtoiles = 0; eleveResultats = [];
+  eleveSerie = []; eleveIdx = 0; eleveEtoiles = 0; eleveResultats = []; eleveVues = 0;
   eleveRejeu = null; eleveRepriseFaite = false;
   updateUI();
 }
@@ -14202,12 +14994,12 @@ function eleveCopiesSynchroniser(){
 }
 
 function eleveEnregistrerReussite(sansFaute, total){
-  if(!parcoursId) return;
-  try{
-    const tout = JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || "{}");
-    tout[parcoursId] = { fait: true, etoiles: sansFaute, cartes: total, date: new Date().toISOString().slice(0, 10) }; /* remplace l\u2019entr\u00e9e : le suivi \u00ab en cours \u00bb dispara\u00eet */
-    localStorage.setItem(ELEVE_STORE_KEY, JSON.stringify(tout));
-  }catch(_e){ /* stockage indisponible : le jeu reste jouable */ }
+  if(!parcoursId || eleveSerieNotee) return;
+  eleveSerieNotee = true;
+  const s = eleveSuivi();
+  /* l'étoile ; la sauvegarde « en cours » disparaît. Une série moins bonne que celle déjà
+     gardée (plus de réponses vues, moins de cartes du premier coup) ne la remplace pas. */
+  if(s) s.ecrire((P, p) => P.enregistrerSerie(p, parcoursId, { fait: true, etoiles: sansFaute, cartes: total, vues: eleveVues }));
 }
 
 /* Le total et les jetons visibles se remplissent dans une case VIDE, comme sur
@@ -14427,12 +15219,13 @@ function renderEleveSplat(){
     /* La série suit la fiche : toutes les cartes de la mise en page, dans le
        même ordre. Seules les cartes « tache vide » ci-dessus sont écartées. */
     eleveSerie = (jouables.length ? jouables : cards).slice();
-    eleveIdx = 0; eleveEtoiles = 0; eleveResultats = [];
+    eleveOriginaux = eleveSerie.slice(); eleveJumelleRang = []; eleveJumellesPretes = []; /* cartes jumelles : voir carteJumelle */
+    eleveIdx = 0; eleveEtoiles = 0; eleveResultats = []; eleveVues = 0; eleveSerieNotee = false;
     /* série interrompue la dernière fois ? on reprend où on en était */
     if(!eleveRepriseFaite && parcoursId){
       eleveRepriseFaite = true;
       try{
-        const entree = (JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || "{}"))[parcoursId];
+        const entree = eleveEtapeLue(); /* la case de l'élève, par le moteur (lot 2 du suivi) */
         /* la reprise ne vaut que pour la série qui l'a écrite : même adresse
            ?parcours=, mais des cartes différentes d'un livret à l'autre ; une
            sauvegarde d'avant l'empreinte n'est pas reprise (l'étoile, elle, reste) */
@@ -14447,6 +15240,7 @@ function renderEleveSplat(){
           /* reprise : le détail par carte est mémorisé, sinon pastilles grises */
           const res = Array.isArray(entree.enCours.res) ? entree.enCours.res : [];
           eleveResultats = Array.from({ length: eleveIdx }, (_, i) => (res[i] === true || res[i] === false || res[i] === "ko") ? res[i] : null);
+          eleveVues = eleveVuesReprise(entree, eleveResultats);
         }
       }catch(_e){ /* stockage indisponible */ }
     }
@@ -14482,24 +15276,22 @@ function renderEleveSplat(){
   }
   tete.style.display = "";
   tete.innerHTML = eleveLienMondesHtml("eleveMondes") + `<span>Carte ${eleveIdx + 1} / ${eleveSerie.length}</span>` +
-    elevePastillesHtml();
+    elevePastillesHtml() + eleveSuiviPastilleHtml(); /* « ● Léa » au bout de la barre, sous un code (lot 2 du suivi) */
   eleveCarteFautee = false;
   eleveEchecs = 0;
   panneau.classList.toggle("enquete", !!enquete); /* avant la consigne, qui le lit */
   panneau.classList.toggle("systeme", !!(enquete && enquete.systeme)); /* le Système : mêmes règles que l'Enquête, plus les siennes */
-  /* « ? » gris ardoise, comme sur le plateau : Enquête sans total */
-  panneau.classList.toggle("sansTotal", !!(enquete && card._rel && card._rel.sansTotal));
 
   let bas = "", haut;
   if(enquete){
     /* Enquête : total donné, une case par tache (largeurs égales), voir eleveCasesEnqueteHtml */
     bas = eleveCasesEnqueteHtml(card, enquete);
-    /* sans total : la case reste, avec « ? », donnée comme sur le plateau (choix du 23/09) ;
-       Système : le TOTAL du plateau principal ; « Trois paires » n'a pas de ligne du TOTAL (lot
-       M4-4b : son plateau des trois couleurs n'est plus montré), seulement ses trois cases */
-    haut = (enquete.systeme && sysTotalCache(card)) ? ""
-      : (enquetePasDeTotal(card) ? eleveCaseDonneeHtml("haut blanche pasDe", "Pas de", "Total")
-      : eleveCaseDonneeHtml("haut blanche", "Total", (card._rel && card._rel.sansTotal) ? "?" : card.total));
+    /* Système : le TOTAL du plateau principal ; « Trois paires » n'a pas de ligne du TOTAL (lot
+       M4-4b : son plateau des trois couleurs n'est plus montré), seulement ses trois cases ;
+       Enquête sans total : pas de ligne du TOTAL non plus (08/10/2026, pas de case), seulement
+       une case par tache */
+    haut = ((enquete.systeme && sysTotalCache(card)) || enqueteSansCase(card)) ? ""
+      : eleveCaseDonneeHtml("haut blanche", "Total", card.total);
   }else{
     const flexVis = Math.max(infos.visibleSum, card.total * 0.05, 1);
     const flexHid = Math.max(infos.H, card.total * 0.05, 1);
@@ -15017,11 +15809,11 @@ function eleveRappelHtml(card){
   const indices = (card && card._inv && Array.isArray(card._inv.indices) ? card._inv.indices : [])
     .filter(t => typeof t === "string");
   const esc = t => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;");
-  /* une carte « sans total » (lot E-sans-total) garde son « ? » */
-  const sansTotal = !!(card && card._rel && card._rel.sansTotal);
-  if(enquetePasDeTotal(card)) return `<div class="eleveRappelTotal"><span>PAS DE</span><b class="pasDe">TOTAL</b></div>` +
-    `<div class="eleveRappelIndices">${indices.map(t => `<p>${esc(t)}</p>`).join("")}</div>`;
-  return `<div class="eleveRappelTotal"><span>TOTAL</span><b${sansTotal ? ' class="inconnu"' : ""}>${sansTotal ? "?" : esc(card.total)}</b></div>` +
+  /* une carte sans total (lot E-sans-total) n'a pas de case (08/10/2026) : le petit plateau seul,
+     centré (#eleveRappel.avecPlateau) */
+  const caseTotal = enqueteSansCase(card) ? ""
+    : `<div class="eleveRappelTotal"><span>TOTAL</span><b>${esc(card.total)}</b></div>`;
+  return caseTotal +
     `<div class="eleveRappelIndices">${indices.map(t => `<p>${esc(t)}</p>`).join("")}</div>`;
 }
 function eleveRappelAfficher(card){
@@ -15103,18 +15895,18 @@ function eleveIndicesAfficher(card){
   if(vieux) vieux.remove();
   const vieuxT = document.getElementById("eleveTotalTel");
   if(vieuxT) vieuxT.remove();
-  if(plateau) plateau.classList.remove("avecTotalTel");
+  if(plateau) plateau.classList.remove("avecTotalTel", "sansCaseTel");
   if(!eleveIndicesTel || !plateau || !plateau.parentNode) return;
   const bloc = document.createElement("div");
   bloc.id = "eleveIndices";
   bloc.innerHTML = eleveIndicesHtml(card);
   plateau.parentNode.insertBefore(bloc, plateau);
-  /* une carte « sans total » garde son « ? », gris ardoise comme sur le plateau */
-  const sansTotal = !!(card._rel && card._rel.sansTotal);
+  /* Enquête sans total : pas de case (08/10/2026) ; le plateau garde la taille qu'il avait à côté
+     d'elle (eleveIndicesHauteurPlateau), centré */
+  if(enqueteSansCase(card)){ plateau.classList.add("sansCaseTel"); return; }
   const tot = document.createElement("div");
   tot.id = "eleveTotalTel";
-  tot.innerHTML = enquetePasDeTotal(card) ? `<span>PAS DE</span><b class="pasDe">TOTAL</b>`
-    : `<span>TOTAL</span><b${sansTotal ? ' class="inconnu"' : ""}>${sansTotal ? "?" : String(Number(card.total))}</b>`;
+  tot.innerHTML = `<span>TOTAL</span><b>${String(Number(card.total))}</b>`;
   plateau.appendChild(tot);
   plateau.classList.add("avecTotalTel");
 }
@@ -15128,6 +15920,9 @@ function eleveIndicesHauteurPlateau(){
     let largeur = plateau.getBoundingClientRect().width;
     const tot = document.getElementById("eleveTotalTel");
     if(tot) largeur -= tot.getBoundingClientRect().width + ELEVE_TOTAL_TEL_ECART; /* la colonne du dessin */
+    /* Enquête sans total (08/10/2026) : la case n'est plus là, sa place est retirée quand même —
+       le plateau ne grandit pas ; à la hauteur ainsi calculée, le dessin se centre (viewBox) */
+    else if(plateau.classList.contains("sansCaseTel")) largeur -= ELEVE_TOTAL_TEL_PLACE;
     if(!(vb && vb.width > 0 && largeur > 0)) return;
     const h = Math.round(largeur * vb.height / vb.width);
     plateau.style.height = h + "px";
@@ -15172,12 +15967,14 @@ function eleveEtapeSuivante(){
   return { html: "\u00c9tape suivante \u25b6", href: `${ELEVE_URL_MONDES}?apres=${encodeURIComponent(parcoursId)}`, versCarte: false };
 }
 
-/* Lien vers la carte des mondes (seulement quand on vient du parcours). D'une fiche bonus du
-   monde 3 (04/10/2026), la carte s'ouvre sur son Bonus (#enq-bonus). */
+/* Lien vers la carte des mondes (seulement quand on vient du parcours). D'une fiche bonus, la
+   carte s'ouvre sur le Bonus de SON monde : #enq-bonus au monde 3 (04/10/2026), #sys-bonus au
+   monde 4 (lot M4-8 : le « ◀ Carte des mondes » de 25d-28d ramenait au Bonus de l'Enquête). */
 function eleveLienMondesHtml(classe, libelle){
   if(!parcoursId) return "";
-  const ancre = (window.MathsGoSplatEtapes && window.MathsGoSplatEtapes.estBonus &&
-    window.MathsGoSplatEtapes.estBonus(parcoursId)) ? "#enq-bonus" : "";
+  const E = window.MathsGoSplatEtapes;
+  const bonus = E && Array.isArray(E.BONUS) ? E.BONUS.find(b => b[0] === parcoursId) : null;
+  const ancre = bonus ? (bonus[4] === 4 ? "#sys-bonus" : "#enq-bonus") : "";
   return `<a class="${classe}" href="${ELEVE_URL_MONDES}${ancre}" title="Retour \u00e0 la carte des mondes">` +
     (libelle || '\u25c0 <span class="txt">Carte des mondes</span>') + `</a>`;
 }
@@ -15190,7 +15987,7 @@ function eleveLienMondesHtml(classe, libelle){
    reprise de l'un s'appliquait à l'autre et l'élève atterrissait au milieu
    d'une série jamais commencée (Petit Splat, PR #773). Ce qui ne change pas
    les cartes n'y entre pas : le mode élève, l'étape, l'impression, le titre. */
-const ELEVE_HORS_EMPREINTE = ["eleve", "parcours", "print", "duplex", "layout", "title", "imprimer", "note"];
+const ELEVE_HORS_EMPREINTE = ["eleve", "parcours", "print", "duplex", "layout", "title", "imprimer", "corrige", "note", "systeme"];
 function eleveSignatureSerie(){
   const params = new URLSearchParams(window.location.search);
   return sharedNames.filter(nom => !ELEVE_HORS_EMPREINTE.includes(nom) && params.has(nom))
@@ -15203,11 +16000,11 @@ function eleveSauverEnCours(){
   if(!parcoursId) return;
   /* dernière carte jouée, ou carte rouge rejouée : la série est finie */
   if(eleveRejeu || eleveIdx + 1 >= eleveSerie.length){ eleveSauverFinDeSerie(); return; }
-  try{
-    const tout = JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || "{}");
-    tout[parcoursId] = Object.assign({}, tout[parcoursId] || {}, { enCours: { sig: eleveSignatureSerie(), idx: eleveIdx + 1, etoiles: eleveEtoiles, res: eleveResultats.slice(0, eleveIdx + 1) } });
-    localStorage.setItem(ELEVE_STORE_KEY, JSON.stringify(tout));
-  }catch(_e){ /* stockage indisponible */ }
+  /* l'étoile déjà gagnée ne bouge pas ; la reprise (empreinte, pastilles) reste sur l'appareil,
+     le serveur ne reçoit que la carte atteinte et les comptes */
+  const s = eleveSuivi();
+  if(s) s.ecrire((P, p) => P.enregistrerEnCours(p, parcoursId, { sig: eleveSignatureSerie(), idx: eleveIdx + 1, etoiles: eleveEtoiles,
+    res: eleveResultats.slice(0, eleveIdx + 1), vues: eleveVues, cartes: eleveSerie.length }));
 }
 
 /* Série finie (dernière carte jouée, ou carte rouge rejouée), enregistrée tout de
@@ -15220,11 +16017,9 @@ function eleveSauverFinDeSerie(){
   const res = Array.from({ length: total }, (_, i) => eleveResultats[i] === undefined ? null : eleveResultats[i]);
   const vertes = res.filter(r => r === true).length;
   if(!res.includes("ko")){ eleveEnregistrerReussite(vertes, total); return; }
-  try{
-    const tout = JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || "{}");
-    tout[parcoursId] = Object.assign({}, tout[parcoursId] || {}, { enCours: { sig: eleveSignatureSerie(), idx: total, etoiles: vertes, res: res } });
-    localStorage.setItem(ELEVE_STORE_KEY, JSON.stringify(tout));
-  }catch(_e){ /* stockage indisponible */ }
+  const s = eleveSuivi();
+  if(s) s.ecrire((P, p) => P.enregistrerEnCours(p, parcoursId, { sig: eleveSignatureSerie(), idx: total, etoiles: vertes, res: res,
+    vues: eleveVues, cartes: total }));
 }
 
 /* « Rejouer toute la série » : l'élève repart de zéro, la sauvegarde « en cours »
@@ -15232,21 +16027,197 @@ function eleveSauverFinDeSerie(){
    revient sur la carte 1, comme dans ÉquaSplat (décision de Gwenaël, 03/10/2026). */
 function eleveEffacerEnCours(){
   if(!parcoursId) return;
-  try{
-    const tout = JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || "{}");
-    if(tout[parcoursId] && tout[parcoursId].enCours){ delete tout[parcoursId].enCours; localStorage.setItem(ELEVE_STORE_KEY, JSON.stringify(tout)); }
-  }catch(_e){ /* stockage indisponible */ }
+  const e = eleveEtapeLue();
+  if(!e || (!e.enCours && !e.idx)) return; /* rien en cours : rien à écrire ni à envoyer */
+  eleveSuivi().ecrire((P, p) => P.effacerEnCours(p, parcoursId));
 }
 
 /* Carte suivante : dans l'ordre, ou la prochaine carte rouge quand on les rejoue. */
 function eleveCarteSuivante(){
   if(eleveRejeu){
-    if(eleveRejeu.length){ eleveIdx = eleveRejeu.shift(); }
+    /* une carte rouge revient en jumelle (05/10/2026) : même type, même dessin, d'autres nombres */
+    if(eleveRejeu.length){ eleveIdx = eleveRejeu.shift(); eleveJumellePoser(eleveIdx); }
     else { eleveRejeu = null; eleveIdx = eleveSerie.length; }
   }else{
     eleveIdx++;
   }
   renderEleveSplat();
+}
+
+/* ===== Les cartes jumelles (mondes 2 à 4 ; décision de Gwenaël du 05/10/2026) =====
+   En fin de série, une carte rouge (réponse montrée à la 3e erreur) ne revient plus identique :
+   elle revient en JUMELLE — même type, même dessin (mêmes couleurs, mêmes taches, mêmes
+   plateaux à la même place, autant de jetons ou de paquets visibles), d'autres nombres. L'élève
+   refait le raisonnement au lieu de recopier la réponse qu'il vient de voir.
+   - Rien de nouveau n'est enregistré : la jumelle a SON hasard, une graine faite de l'empreinte
+     de la série, de la place de la carte et du nombre de fois qu'elle revient. La même carte
+     rouge redonne la même jumelle (après un rechargement aussi) ; si elle revient encore, une
+     autre. Les cartes de la série, les fiches imprimées, l'empreinte et la reprise ne bougent pas.
+   - Les générateurs servent tels quels (cartes toujours justes, mêmes filtres) : on tire jusqu'à
+     une carte du même type dont TOUS les nombres changent (voir jumelleNombresChanges).
+   - Enquête : le temps du tirage, les réglages sont resserrés sur la carte (ses opérations, ses
+     jetons visibles, sa sorte) ; si aucune carte ne garde le même facteur (« 4 fois plus » puis
+     « 4 fois plus » entre 20 et 60 : une seule carte possible), un autre facteur est accepté ;
+     sinon, la carte revient telle quelle, comme avant.
+   - Pas de jumelle dans ÉquaSplat (mondes 5 et 6, décidé le 05/10) : l'élève refait les gestes. */
+/* La jumelle de la carte i pour sa prochaine venue, tirée une seule fois (l'écran « Encore N
+   cartes ! » la prépare, pour sa phrase ; le clic la pose). null : pas de jumelle. */
+function eleveJumellePreparer(i){
+  const rang = (eleveJumelleRang[i] || 0) + 1;
+  const prete = eleveJumellesPretes[i];
+  if(prete && prete.rang === rang) return prete.carte;
+  let j = null;
+  try{ j = carteJumelle(eleveOriginaux[i], jumelleGraine(eleveSignatureSerie() + "|" + activeGenerationSeed + "|jumelle|" + i + "|" + rang)); }
+  catch(_e){ j = null; } /* jamais de carte cassée : la carte d'origine revient */
+  eleveJumellesPretes[i] = { rang, carte: j };
+  return j;
+}
+function eleveJumellePoser(i){
+  const o = eleveOriginaux[i];
+  if(!o) return;
+  const j = eleveJumellePreparer(i);
+  eleveJumelleRang[i] = (eleveJumelleRang[i] || 0) + 1;
+  eleveSerie[i] = j || o;
+}
+
+function jumelleGraine(texte){
+  let h = 2166136261 >>> 0;
+  for(let i = 0; i < texte.length; i++){ h ^= texte.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+
+/* Le type et le dessin d'une carte, sans ses nombres. facteurLibre (Enquête, 2e passage) : le
+   facteur d'un « fois plus / fois moins » peut changer. */
+function jumelleCle(c, facteurLibre){
+  if(!c) return null;
+  if(c.family === "U"){
+    const u = c._unit || {};
+    return JSON.stringify(["U", u.equationType || "", u.tasks, (c.visible || []).length > 0]);
+  }
+  if(c.family === "N"){
+    const m = c._num || {};
+    return JSON.stringify(["N", m.tasks, (c.visible || []).length]);
+  }
+  if(c.family === "C"){
+    const R = c._rel || {};
+    return JSON.stringify(["C", c._colorMap, (c.visible || []).length, R.structure, !!R.sansTotal,
+      (R.relations || []).map(r => [r.op, r.source, r.target, r.source2 == null ? -1 : r.source2, !!r.vocab,
+        (!facteurLibre && (r.op === "MUL" || r.op === "DIV" || r.op === "COMPOSE")) ? r.k : "",
+        r.op === "COMPOSE" ? Math.sign(r.d) : 0])]);
+  }
+  if(c.family === "D" && c._sys){
+    const S = c._sys;
+    return JSON.stringify(["D", sysTypeCarte(c), S.sous || "", S.colors,
+      S.boards.map(b => [S.colors.map(k => b.counts[k] || 0), (b.visible || []).length])]);
+  }
+  return null;
+}
+
+/* Les nombres que l'élève doit trouver (une valeur par tache, ou par couleur). */
+function jumelleReponses(c){
+  if(c.family === "D"){ const S = c._sys; return S.colors.filter(k => S.boards.some(b => b.counts[k])).map(k => S.values[k]); }
+  /* jetons unité : « hidden » compte les jetons un par un, la réponse est ce que cache une tache */
+  if(c.family === "U") return ((c._unit && c._unit.hiddenByTask) || []).map(v => Array.isArray(v) ? v.length : Number(v) || 0);
+  return (c.hidden || []).slice();
+}
+/* Tous les nombres changent : ceux à trouver, les totaux, les jetons visibles, les écarts des
+   indices de l'Enquête (« 14 jetons de moins ») ; jamais de tache vide, et une tache qui cachait
+   plusieurs jetons n'en cache pas un seul dans sa jumelle (la carte ne devient pas plus facile d'un
+   coup). */
+function jumelleNombresChanges(o, t){
+  const a = jumelleReponses(o), b = jumelleReponses(t);
+  if(!(a.length > 0 && a.length === b.length && a.every((x, i) => x !== b[i] && b[i] > 0 && (x < 2 || b[i] >= 2)))) return false;
+  /* les totaux aussi (chaque plateau du Système) */
+  if(o.family === "D"){ if(o._sys.boards.some((B, i) => !t._sys.boards[i] || (B.total != null && B.total === t._sys.boards[i].total))) return false; }
+  else if(!(o._rel && o._rel.sansTotal) && o.total === t.total) return false;
+  /* les jetons visibles aussi, quand il y en a */
+  const vus = c => c.family === "D" ? c._sys.boards.map(B => (B.visible || []).reduce((s, x) => s + x, 0)).join("|")
+    : (c.family === "U" ? (c.visible || []).length : (c.visible || []).reduce((s, x) => s + x, 0));
+  if((o.visible || []).length && vus(o) === vus(t)) return false;
+  if(o.family === "D" && o._sys.boards.some(B => (B.visible || []).length) && vus(o) === vus(t)) return false;
+  if(o.family !== "C") return true;
+  const ro = (o._rel && o._rel.relations) || [], rt = (t._rel && t._rel.relations) || [];
+  return ro.every((r, i) => !rt[i] || ((r.op !== "ADD" && r.op !== "SUB") || r.k !== rt[i].k) && (r.op !== "COMPOSE" || r.d !== rt[i].d));
+}
+
+/* Enquête : les réglages resserrés sur la carte le temps du tirage ; rend de quoi les remettre. */
+function jumelleResserrer(o){
+  if(o.family !== "C") return () => {};
+  const R = o._rel || {}, ops = new Set((R.relations || []).map(r => r.op));
+  const els = [invOpAddEl, invOpSubEl, invOpMulEl, invOpDivEl, invVisibleMinEl, invVisibleMaxEl,
+    (typeof invNoTotalEl !== "undefined" ? invNoTotalEl : null), (typeof invRepeatOnEl !== "undefined" ? invRepeatOnEl : null)];
+  const avant = els.map(e => e ? (e.type === "checkbox" ? e.checked : e.value) : null);
+  /* indices composés, taches réunies : leur tirage mêle les opérations, on n'y touche pas */
+  if(![...ops].some(op => op === "COMPOSE" || op === "SUM")){
+    invOpAddEl.checked = ops.has("ADD"); invOpSubEl.checked = ops.has("SUB");
+    invOpMulEl.checked = ops.has("MUL"); invOpDivEl.checked = ops.has("DIV");
+  }
+  const nv = String((o.visible || []).length);
+  invVisibleMinEl.value = nv; invVisibleMaxEl.value = nv;
+  /* fiche 24 (les deux cases) : la sorte de la carte */
+  const [noTotal, repeat] = els.slice(6);
+  if(noTotal && repeat && noTotal.checked && repeat.checked){
+    if(R.sansTotal) repeat.checked = false; else noTotal.checked = false;
+  }
+  return () => els.forEach((e, i) => { if(!e) return; if(e.type === "checkbox") e.checked = avant[i]; else e.value = avant[i]; });
+}
+
+function jumelleTirer(o, rng, essai){
+  if(o.family === "U") return isUnitEquationPresetActive() ? genUnitsEquationPreset(rng) : genUnits(rng);
+  if(o.family === "N") return isNumberedEquationPresetActive() ? genNumberedEquationPreset(rng) : genNumbered(rng);
+  if(o.family === "C"){
+    /* taches répétées : la couleur de chaque tache dépend aussi de l'ordre des couleurs tirées */
+    const ordres = jumellePermutations([...new Set(o._colorMap)]);
+    jumelleCouleurs = ordres[essai % ordres.length];
+    try{ return genInvestigate(rng); }finally{ jumelleCouleurs = null; }
+  }
+  if(o.family === "D"){
+    const S = o._sys, opts = lireReglagesSysteme(), b = S.boards, A = S.colors[0];
+    opts.geste = S.geste;
+    if(S.sous) opts.sous = S.sous;
+    if(S.geste === "RECOPIE") opts.foisRecopie = (b[1].counts[A] || 0) / (b[0].counts[A] || 1);
+    if(S.geste === "DOUBLE") opts.fois = (b[0].counts[A] || 0) / (b[1].counts[A] || 1);
+    jumelleCouleurs = S.colors;
+    try{ return genSystemCarte(rng, opts); }finally{ jumelleCouleurs = null; }
+  }
+  return null;
+}
+function jumellePermutations(a){
+  if(a.length <= 1) return [a.slice()];
+  const out = [];
+  a.forEach((x, i) => jumellePermutations(a.slice(0, i).concat(a.slice(i + 1))).forEach(p => out.push([x].concat(p))));
+  return out;
+}
+
+/* La jumelle de la carte o (null : pas de jumelle, la carte revient telle quelle). */
+function carteJumelle(o, graine){
+  if(!jumelleCle(o)) return null;
+  const rng = mulberry32(graine | 0);
+  /* étape composée (monde 2) : les réglages de la partie de la carte, puis ceux d'avant */
+  const partie = eleveSuite.length ? jumelleParties.get(o) : undefined;
+  if(partie !== undefined) appliquerConfiguration(new URLSearchParams(partie));
+  const remettre = jumelleResserrer(o);
+  try{
+    for(const facteurLibre of (o.family === "C" ? [false, true] : [false])){
+      const cle = jumelleCle(o, facteurLibre);
+      for(let essai = 0; essai < JUMELLE_ESSAIS; essai++){
+        const t = jumelleTirer(o, rng, essai);
+        if(!t || jumelleCle(t, facteurLibre) !== cle || !jumelleNombresChanges(o, t)) continue;
+        if(t.family === "D"){
+          if(t._sys.secours) continue;
+          if(o._sys.ordre) t._sys.ordre = o._sys.ordre.slice(); else delete t._sys.ordre; /* les plateaux à la même place */
+        }
+        if(o.varChar) t.varChar = o.varChar;
+        if(o._directSubstitution){ t._directSubstitution = true; t._directSubstitutionLabel = o._directSubstitutionLabel; }
+        assignPositions(t, rng);
+        return t;
+      }
+    }
+    return null;
+  }finally{
+    remettre();
+    if(partie !== undefined && jumelleDernierePartie !== null) appliquerConfiguration(new URLSearchParams(jumelleDernierePartie));
+  }
 }
 
 /* Enquête et Système : la carte a une correction pas à pas (« Voir la correction »). */
@@ -15270,6 +16241,7 @@ function eleveMontrerReponse(){
   eleveCopiesSynchroniser();
   msg.textContent = "Voil\u00e0 la r\u00e9ponse. Tu rejoueras cette carte \u00e0 la fin.";
   msg.className = "eleveMsg rate";
+  if(eleveResultats[eleveIdx] !== "ko") eleveVues++; /* une rouge rejouée ne compte pas deux fois */
   eleveResultats[eleveIdx] = "ko";
   eleveSauverEnCours();
   eleveDevoilerTache();
@@ -15285,6 +16257,12 @@ function eleveMontrerReponse(){
   suivant.focus();
   const pastilles = document.querySelector("#eleveTeteHaut .elevePastilles");
   if(pastilles) pastilles.outerHTML = elevePastillesHtml();
+}
+
+/* « Rejoue-la » ; « Rejoue-la, avec d'autres nombres, » quand chaque carte rouge revient en
+   jumelle (choix A de Gwenaël, 14/10/2026 : dit une fois, sur l'écran de fin, avant de rejouer). */
+function eleveRejouePhrase(nbR, jumelles){
+  return `Rejoue-l${nbR > 1 ? "es" : "a"}` + (jumelles ? `, avec d'autres nombres,` : ``);
 }
 
 function renderEleveFinSplat(panneau){
@@ -15311,7 +16289,7 @@ function renderEleveFinSplat(panneau){
       (parcoursId ? `<div class="finEtoile">${icone}</div>` : ``) +
       `<h2>Encore ${nbR} carte${plR}\u00a0!</h2>` +
       `<div class="finPastilles">${elevePastillesHtml()}</div>` +
-      `<p class="finSous">Rejoue-l${nbR > 1 ? "es" : "a"} ` +
+      `<p class="finSous">${eleveRejouePhrase(nbR, rouges.every(i => !!eleveJumellePreparer(i)))} ` +
       (parcoursId ? (bonus ? `et ta tache bonus devient dor\u00e9e sur la carte des mondes.` : `et ton \u00e9toile s'allume sur la carte des mondes.`) : `pour finir la s\u00e9rie.`) + `</p>` +
       `<div class="finAction"><button id="eleveRejouerRouges" type="button">Je rejoue ${nbR > 1 ? `mes ${nbR} cartes rouges` : `ma carte rouge`} \u25b6</button></div>` +
       `<div class="finSorties"><button id="eleveRejouer" type="button">Rejouer toute la s\u00e9rie</button>` +
@@ -15332,12 +16310,562 @@ function renderEleveFinSplat(panneau){
         ? `<div class="finAction"><button id="eleveEtapeSuivante" type="button">${suite.html}</button></div>` +
           `<div class="finSorties"><button id="eleveRejouer" type="button">Rejouer la s\u00e9rie</button>` +
           `${suite.versCarte ? "" : eleveLienMondesHtml("finLien", "Retour \u00e0 la carte des mondes")}</div></div>`
-        : `<div class="eleveActions"><button id="eleveRejouer" type="button">Rejouer la s\u00e9rie</button>${eleveLienMondesHtml("eleveLien")}</div></div>`);
+        : `<div class="eleveActions">${eleveNouvellesCartesPossible()
+            ? `<button id="eleveNouvelles" type="button">Nouvelles cartes \u25b6</button>`
+            : `<button id="eleveRejouer" type="button">Rejouer la s\u00e9rie</button>`}${eleveLienMondesHtml("eleveLien")}</div></div>`);
+    const nouvelles = document.getElementById("eleveNouvelles");
+    if(nouvelles) nouvelles.onclick = eleveNouvellesCartes;
     const suivante = document.getElementById("eleveEtapeSuivante");
     if(suivante) suivante.onclick = () => { window.location.href = suite.href; };
   }
-  document.getElementById("eleveRejouer").onclick = () => { eleveEffacerEnCours(); eleveIdx = 0; eleveEtoiles = 0; eleveSerie = []; eleveResultats = []; eleveRejeu = null; renderEleveSplat(); };
+  const rejouer = document.getElementById("eleveRejouer");
+  if(rejouer) rejouer.onclick = () => { eleveEffacerEnCours(); eleveIdx = 0; eleveEtoiles = 0; eleveSerie = []; eleveResultats = []; eleveVues = 0; eleveRejeu = null; renderEleveSplat(); };
 }
+/* Fin d'une série du dos des livrets (lot du 08/10/2026) : hors parcours, sans graine imposée et
+   sans « suite », « Nouvelles cartes ▶ » remplace « Rejouer la série » (qui rejouait les MÊMES
+   cartes) : le jeu tire d'autres cartes du même réglage — generate() prend une graine neuve —,
+   sans rescanner le QR. Avec une graine dans l'adresse, les cartes seraient les mêmes : le
+   bouton reste « Rejouer la série ». */
+function eleveNouvellesCartesPossible(){
+  return !parcoursId && !eleveSuite.length && getSeedForCurrentMode() === "";
+}
+function eleveNouvellesCartes(){
+  eleveEffacerEnCours();
+  eleveIdx = 0; eleveEtoiles = 0; eleveSerie = []; eleveResultats = []; eleveVues = 0; eleveRejeu = null;
+  generate(); /* updateUI() redessine la série élève sur les nouvelles cartes */
+}
+
+/* ===== A fraction — Jetons et parts (lot F1, 15/10/2026) =====
+   Un type d'activité à côté du mode A (« A — Jetons ») : des jetons entiers et des disques
+   partagés en parts égales, d'après les Fraction Splats de Steve Wyborney (niveaux 11 et 12).
+   Une tache, un seul dénominateur par carte, un TOTAL toujours entier ; la tache cache parfois
+   un nombre entier (une carte sur quatre environ). Ce qu'elle cache s'écrit « 3 + 3/4 »
+   (écriture A, décidée sur planche le 15/10), avec le dénominateur de la carte : deux quarts
+   s'écrivent « 2/4 », pas « 1/2 » (question à choix du 15/10 : c'est ce que l'élève compte sur
+   les disques). Les parts ont la couleur de leur famille, celle des bandes et des disques de
+   fractions du site, un ton plus soutenu pour rester lisibles au vidéoprojecteur et imprimées
+   en noir et blanc (planche 0 du lot, choix C du 15/10) ; les jetons entiers sont bleu plein,
+   comme le jeton imprimé du mode A, à l'écran aussi (15/10 : pâles, ils se lisaient comme des
+   disques vides). Les disques font 6,4 mm sur l'énoncé 4 par page (rayon 56, choix B du 15/10).
+   Le mode A (U) ne passe par aucune de ces fonctions : mêmes cartes, mêmes places, même dessin
+   (preuve au pixel dans la notice du lot). Les valeurs sont des fractions {n, d}, jamais des
+   nombres à virgule (1/3 + 1/3 + 1/3 doit faire 1) ; les flottants ne servent qu'aux largeurs.
+   Ces fonctions sont placées ici, à la fin du script : des tests découpent le code entre deux
+   fonctions qui se suivent, rien ne doit s'intercaler entre elles. */
+
+/* --- Fractions {n, d} --- */
+function frPgcd(a, b){
+  a = Math.abs(a); b = Math.abs(b);
+  while(b){ const t = a % b; a = b; b = t; }
+  return a || 1;
+}
+function fr(n, d = 1){ return { n, d }; }
+function frNorm(v){
+  const g = frPgcd(v.n, v.d), s = v.d < 0 ? -1 : 1;
+  return { n: s * v.n / g, d: s * v.d / g };
+}
+function frAdd(a, b){ return frNorm({ n: a.n * b.d + b.n * a.d, d: a.d * b.d }); }
+function frSub(a, b){ return frNorm({ n: a.n * b.d - b.n * a.d, d: a.d * b.d }); }
+function frEq(a, b){ return a.n * b.d === b.n * a.d; }
+function frSomme(liste){ return (liste || []).reduce((s, v) => frAdd(s, v), fr(0, 1)); }
+/* La valeur écrite avec le dénominateur d (sans simplifier) : 13/4 → { entier:3, reste:1, d:4 }.
+   Valeurs positives seulement (le mode n'en a pas d'autres). */
+function frDecompose(v, d){
+  const n = Math.round(v.n * d / v.d);
+  return { entier: Math.floor(n / d), reste: n % d, d };
+}
+/* L'écriture A en texte : « 3 + 3/4 », « 3/4 », « 4 ». */
+function frTexte(v, d){
+  const { entier, reste } = frDecompose(v, d);
+  if(!reste) return String(entier);
+  if(!entier) return `${reste}/${d}`;
+  return `${entier} + ${reste}/${d}`;
+}
+/* L'écriture décimale exacte, virgule française (lot F1b) : 15/4 → « 3,75 », 7/5 → « 1,4 », 4/1 → « 4 ».
+   Calculée en entiers, chiffre par chiffre (jamais de flottant) ; null quand la fraction n'a pas
+   d'écriture décimale finie (1/3) — ce cas ne se présente pas : en écriture décimale la série ne
+   tire que des demis, des quarts et des cinquièmes. */
+function frDecimal(v){
+  const n = Math.abs(v.n), d = Math.abs(v.d);
+  let reste = n % d, chiffres = "";
+  while(reste && chiffres.length < 8){ reste *= 10; chiffres += String(Math.floor(reste / d)); reste %= d; }
+  if(reste) return null;
+  return (v.n < 0 ? "−" : "") + String(Math.floor(n / d)) + (chiffres ? "," + chiffres : "");
+}
+
+/* --- Les niveaux (tableau §4 de la conception F0) --- */
+function ufNiveau(n){
+  const NIVEAUX = {
+    1: { dens:[2], unitaires:true, depasse:false },     /* demis ; les parts visibles ne dépassent pas l'unité */
+    2: { dens:[3, 4], unitaires:true, depasse:true },   /* tiers et quarts ; 5 quarts : il faut regrouper */
+    3: { dens:[2, 3, 4], unitaires:false, depasse:true }, /* plusieurs parts sur un disque (2/3, 3/4…) */
+    4: { dens:[5, 6, 8], unitaires:false, depasse:true }  /* cinquièmes, sixièmes, huitièmes */
+  };
+  return NIVEAUX[n] || NIVEAUX[1];
+}
+/* Lot F1b. Les dénominateurs du mode, et ceux qui ont une écriture décimale (2,5 · 3,75 · 1,4). */
+const UF_DENS = [2, 3, 4, 5, 6, 8];
+const UF_DENS_DECIMAUX = [2, 4, 5];
+/* Ce qu'une série tire : un préréglage (niveau 1 à 4, inchangé depuis le lot F1), ou les réglages
+   avancés — les dénominateurs cochés, une part ou plusieurs parts par disque, les parts peuvent
+   dépasser l'unité. En écriture décimale, seuls restent les demis, les quarts et les cinquièmes
+   (niveau 2 : des quarts ; niveau 4 : des cinquièmes) : toutes les cartes de la série s'écrivent
+   avec une virgule, jamais « 2,5 » à côté de « 2 + 3/8 ». */
+function ufNiveauDe(R){
+  let niv = R.niveau === "avance"
+    ? { dens:(R.dens || []).filter(d => UF_DENS.includes(d)), unitaires:R.parts !== "plusieurs", depasse:true }
+    : ufNiveau(R.niveau);
+  if(R.ecriture === "decimale") niv = { ...niv, dens:niv.dens.filter(d => UF_DENS_DECIMAUX.includes(d)) };
+  if(!niv.dens.length) niv = { ...niv, dens:[2] };
+  return niv;
+}
+/* Les noms des niveaux : en écriture décimale, les niveaux 2 et 4 disent ce qu'ils tirent. */
+const UF_NIVEAUX_NOMS = { 1:"1 — Demis", 2:"2 — Tiers et quarts", 3:"3 — Plusieurs parts sur un disque", 4:"4 — Cinquièmes à huitièmes" };
+const UF_NIVEAUX_NOMS_DECIMAUX = { 1:"1 — Demis", 2:"2 — Quarts", 3:"3 — Plusieurs parts sur un disque", 4:"4 — Cinquièmes" };
+const UF_NIVEAUX_AIDE = "1 : des demis · 2 : tiers et quarts, les parts dépassent l’unité · 3 : demis, tiers, quarts, plusieurs parts sur un disque · 4 : cinquièmes, sixièmes, huitièmes · Réglages avancés : les dénominateurs cochés";
+const UF_NIVEAUX_AIDE_DECIMALE = "1 : des demis (2,5) · 2 : des quarts, les parts dépassent l’unité (3,75) · 3 : demis et quarts, plusieurs parts sur un disque · 4 : des cinquièmes (1,4) · Réglages avancés : les dénominateurs cochés";
+/* La couleur des parts : [remplissage, contour]. Mêmes familles que les bandes et les disques de
+   fractions du site (outils/fractions/), un ton plus soutenu (choix C du 15/10). */
+function ufCouleurs(d){
+  const C = { 2:["#eab308", "#854d0e"], 3:["#a855f7", "#6b21a8"], 4:["#65a30d", "#365314"],
+    5:["#0ea5e9", "#075985"], 6:["#f97316", "#9a3412"], 8:["#ec4899", "#9d174d"] };
+  return C[d] || ["#2563eb", "#1e3a8a"];
+}
+const UF_CONSIGNE_IMPRIMEE = "Trouve ce qui est caché sous la tache : des jetons et des parts de jeton. Tu peux t’aider d’un schéma en barres.";
+
+/* --- Les réglages (bloc #fractionSettings) --- */
+function ufReglagesAdresse(){
+  const g = id => document.getElementById(id);
+  return [["niveau", g("fracNiveau")], ["visibleMax", g("fracVisibleMax")], ["hiddenMax", g("fracHiddenMax")],
+    ["totalMin", g("fracTotalMin")], ["totalMax", g("fracTotalMax")]];
+}
+function ufNiveauParDefaut(){
+  const el = document.getElementById("fracNiveau");
+  if(el) el.value = "1";
+  /* lot F1b : les réglages absents de l'adresse reprennent leur valeur par défaut */
+  const g = id => document.getElementById(id);
+  if(g("fracEcriture")) g("fracEcriture").value = "fraction";
+  if(g("fracParts")) g("fracParts").value = "une";
+  UF_DENS.forEach(d => { const b = g("fracDen" + d); if(b) b.checked = d === 2; });
+}
+/* Lot F1b : « ecriture=decimale », « dens=2,4 », « parts=plusieurs » — lus s'ils sont là, écrits
+   seulement hors de leur valeur par défaut : les adresses du lot F1 redonnent les mêmes cartes. */
+function ufLireDens(brut){
+  const voulus = String(brut || "").split(",").map(x => x.trim());
+  return UF_DENS.filter(d => voulus.includes(String(d)));
+}
+function ufLireAdresse(params){
+  const g = id => document.getElementById(id);
+  setSelectFromShare(params, "ecriture", g("fracEcriture"));
+  setSelectFromShare(params, "parts", g("fracParts"));
+  if(params.has("dens")){
+    const dens = ufLireDens(params.get("dens"));
+    if(dens.length) UF_DENS.forEach(d => { const b = g("fracDen" + d); if(b) b.checked = dens.includes(d); });
+  }
+  ufSyncAvance();
+}
+function ufEcrireAdresse(params){
+  const R = ufLireReglages();
+  if(R.ecriture === "decimale") params.set("ecriture", "decimale");
+  if(R.niveau === "avance"){
+    params.set("dens", R.dens.join(","));
+    if(R.parts === "plusieurs") params.set("parts", "plusieurs");
+  }
+}
+/* Les rangées « Parts » et « Disques » ne s'affichent qu'en « Réglages avancés » ; en écriture
+   décimale, les tiers, sixièmes et huitièmes sont grisés et les niveaux 2 et 4 changent de nom ;
+   au moins une case reste cochée (sinon : les demis). */
+function ufSyncAvance(){
+  const g = id => document.getElementById(id);
+  const niveau = g("fracNiveau"), ecriture = g("fracEcriture"), rows = g("fracAvanceRows");
+  if(!niveau || !ecriture) return;
+  const decimale = ecriture.value === "decimale", avance = niveau.value === "avance";
+  if(!avance) ufSyncAvance.dernier = niveau.value; /* le niveau quitté, pour ufPrepareAvance */
+  if(rows) rows.style.display = avance ? "" : "none";
+  UF_DENS.forEach(d => {
+    const b = g("fracDen" + d);
+    if(!b) return;
+    b.disabled = decimale && !UF_DENS_DECIMAUX.includes(d);
+    if(b.parentNode && b.parentNode.classList) b.parentNode.classList.toggle("grise", b.disabled);
+  });
+  if(!UF_DENS.some(d => { const b = g("fracDen" + d); return b && b.checked && !b.disabled; })){ const b = g("fracDen2"); if(b) b.checked = true; }
+  const noms = decimale ? UF_NIVEAUX_NOMS_DECIMAUX : UF_NIVEAUX_NOMS;
+  Array.from(niveau.options).forEach(o => { if(noms[o.value]) o.textContent = noms[o.value]; });
+  niveau.title = decimale ? UF_NIVEAUX_AIDE_DECIMALE : UF_NIVEAUX_AIDE;
+}
+/* Au passage d'un niveau à « Réglages avancés » (à la main), les cases partent du niveau quitté :
+   depuis le niveau 2, « 1/3 1/4, une part par disque ». */
+function ufPrepareAvance(precedent){
+  const g = id => document.getElementById(id);
+  const niveau = g("fracNiveau");
+  if(!niveau || niveau.value !== "avance" || precedent === "avance") return;
+  const niv = ufNiveau(Number(precedent));
+  UF_DENS.forEach(d => { const b = g("fracDen" + d); if(b) b.checked = niv.dens.includes(d); });
+  if(g("fracParts")) g("fracParts").value = niv.unitaires ? "une" : "plusieurs";
+}
+function ufTotalPlafond(visibleMax, hiddenMax){ return clamp(visibleMax + hiddenMax - 1, 1, 20); }
+function ufLireReglages(){
+  const lire = (id, defaut, a, b) => {
+    const champ = document.getElementById(id);
+    const brut = champ ? String(champ.value).trim() : "";
+    const v = brut === "" ? NaN : Number(brut);
+    return clamp(Math.round(Number.isFinite(v) ? v : defaut), a, b);
+  };
+  const niveauEl = document.getElementById("fracNiveau");
+  const niveau = (niveauEl && niveauEl.value === "avance") ? "avance" : lire("fracNiveau", 1, 1, 4);
+  /* lot F1b */
+  const ecritureEl = document.getElementById("fracEcriture"), partsEl = document.getElementById("fracParts");
+  const ecriture = (ecritureEl && ecritureEl.value === "decimale") ? "decimale" : "fraction";
+  const parts = (partsEl && partsEl.value === "plusieurs") ? "plusieurs" : "une";
+  const dens = UF_DENS.filter(d => { const b = document.getElementById("fracDen" + d); return !!(b && b.checked && !b.disabled); });
+  const visibleMax = lire("fracVisibleMax", 8, 1, 12);
+  const hiddenMax = lire("fracHiddenMax", 6, 1, 10);
+  let totalMin = lire("fracTotalMin", 3, 1, 20);
+  let totalMax = lire("fracTotalMax", 10, 1, 20);
+  if(totalMax < totalMin){ const t = totalMin; totalMin = totalMax; totalMax = t; }
+  return { niveau, ecriture, dens, parts, visibleMax, hiddenMax, totalMin, totalMax };
+}
+/* Comme les bornes du mode A : le total ne promet pas plus que les jetons et disques permis. */
+function ufSyncBornes(){
+  const aEl = document.getElementById("fracTotalMin"), bEl = document.getElementById("fracTotalMax");
+  if(!aEl || !bEl) return;
+  const R = ufLireReglages();
+  const plafond = ufTotalPlafond(R.visibleMax, R.hiddenMax);
+  aEl.max = String(plafond); bEl.max = String(plafond);
+  aEl.value = String(Math.min(R.totalMin, plafond));
+  bEl.value = String(Math.min(R.totalMax, plafond));
+}
+/* L'impression du lot F1 : l'énoncé seul, en 4, 2 ou 1 par page. Les autres choix sont grisés en
+   A fraction et reviennent tels quels dans les autres modes. */
+function ufSyncImpression(sel, actif){
+  if(!sel) return;
+  sel.querySelectorAll('option[value="correction"], option[value="duplex-correction"]').forEach(opt => { opt.disabled = actif; });
+  if(actif){
+    sel.querySelectorAll('option[value="worksheet"], option[value="duplex-worksheet"], option[value="correction-equation"], option[value="correction-schema"]')
+      .forEach(opt => { opt.disabled = true; });
+    if(sel.value !== "statement") sel.value = "statement";
+  }
+  const pages = document.getElementById("printCardsPerPage");
+  const six = pages ? pages.querySelector('option[value="6"]') : null;
+  if(six) six.disabled = actif;
+  if(actif && pages && pages.value === "6") pages.value = "4";
+}
+
+/* --- Le générateur --- */
+/* P parts de d-ièmes réparties sur des disques de 1 à d − 1 parts (jamais un disque plein : un
+   disque plein est un jeton entier). Le moins de disques possible, ou un de plus : les disques
+   portent souvent plusieurs parts (niveaux 3 et 4, « 2/3 », « 3/4 »). */
+function ufDecouper(rng, P, d){
+  if(d < 2 || P < 1) return [];
+  const cMin = Math.ceil(P / (d - 1));
+  const c = rInt(rng, cMin, Math.min(P, cMin + 1));
+  const parts = Array.from({ length:c }, () => 1);
+  for(let reste = P - c; reste > 0; reste--){
+    const libres = [];
+    parts.forEach((x, i) => { if(x < d - 1) libres.push(i); });
+    parts[libres[rInt(rng, 0, libres.length - 1)]]++;
+  }
+  return parts;
+}
+/* Une carte de total T et de dénominateur d, ou null si elle ne tient pas dans les réglages.
+   Caché = a jetons + k parts (k = 0 : la tache cache un entier) ; visible = W jetons + P parts,
+   avec P = (d − k) + m × d : les parts qui complètent le caché à l'unité, plus parfois une
+   unité entière en parts (m = 1, « 5 quarts » : il faut regrouper). */
+function ufComposer(rng, T, d, entier, niv, R){
+  if(entier && T < 2) return null;
+  const a = rInt(rng, entier ? 1 : 0, T - 1);
+  const k = entier ? 0 : rInt(rng, 1, d - 1);
+  /* caché entier : au moins une unité visible en parts, sinon la carte n'a plus de fraction */
+  const m = entier ? 1 : (niv.depasse ? rInt(rng, 0, 1) : 0);
+  const P = (entier ? 0 : d - k) + m * d;
+  const W = T - a - (entier ? 0 : 1) - m;
+  if(W < 0) return null;
+  const partsVisibles = niv.unitaires ? Array.from({ length:P }, () => 1) : ufDecouper(rng, P, d);
+  /* le caché : en parts d'un d-ième (niveaux 1 et 2), en un seul disque de k parts (3 et 4) */
+  const partsCachees = k === 0 ? [] : (niv.unitaires ? Array.from({ length:k }, () => 1) : [k]);
+  const nVisibles = W + partsVisibles.length, nCaches = a + partsCachees.length;
+  if(nVisibles < 1 || nVisibles > R.visibleMax || nCaches < 1 || nCaches > R.hiddenMax) return null;
+  const visible = [], hidden = [];
+  for(let i = 0; i < W; i++) visible.push(fr(1, 1));
+  partsVisibles.forEach(p => visible.push(fr(p, d)));
+  for(let i = 0; i < a; i++) hidden.push(fr(1, 1));
+  partsCachees.forEach(p => hidden.push(fr(p, d)));
+  return ufCarte(T, d, visible, hidden, R, k === 0);
+}
+function ufCarte(T, d, visible, hidden, R, entier){
+  const u = { tasks:1, visibleCount:visible.length, hiddenByTask:[hidden.slice()],
+      visibleValue:frSomme(visible), hiddenValue:frSomme(hidden), hiddenInteger:!!entier,
+      niveau:R.niveau, visibleMax:R.visibleMax, hiddenMax:R.hiddenMax, totalMin:R.totalMin, totalMax:R.totalMax };
+  /* lot F1b : posés seulement hors de leur valeur par défaut — les cartes du lot F1 restent les mêmes, octet pour octet */
+  if(R.ecriture === "decimale") u.ecriture = "decimale";
+  if(R.niveau === "avance"){ u.dens = (R.dens || []).slice(); u.parts = R.parts === "plusieurs" ? "plusieurs" : "une"; }
+  return { family:"UF", total:T, den:d, visible, hidden, _unit:u };
+}
+/* Réglages donnés (testable sans page) : 500 essais comme genUnits, puis une carte de secours
+   (total 1 : un demi, ou une part, de chaque côté) quand les réglages ne laissent rien. */
+function genUnitsFractionsAvec(rng, R){
+  /* un préréglage en écriture fraction passe par le chemin du lot F1, tel quel */
+  const niv = (R.niveau === "avance" || R.ecriture === "decimale") ? ufNiveauDe(R) : ufNiveau(R.niveau);
+  const tMax = Math.max(1, Math.min(R.totalMax, ufTotalPlafond(R.visibleMax, R.hiddenMax)));
+  const tMin = Math.max(1, Math.min(R.totalMin, tMax));
+  for(let essai = 0; essai < 500; essai++){
+    const d = niv.dens[rInt(rng, 0, niv.dens.length - 1)];
+    const entier = rng() < 0.25;
+    const T = rInt(rng, tMin, tMax);
+    const carte = ufComposer(rng, T, d, entier, niv, R);
+    if(carte) return carte;
+  }
+  const d = niv.dens[0];
+  return ufCarte(1, d, [fr(d - 1, d)], [fr(1, d)], R, false);
+}
+function genUnitsFractions(rng){ return genUnitsFractionsAvec(rng, ufLireReglages()); }
+
+/* --- Le dessin --- */
+/* L'inconnue : « ? », ou la lettre (bouton 𝑥 / ?), comme en mode A. */
+function ufInconnue(card){ return numberedQuestionMarkMode ? "?" : getCardVarChar(card); }
+/* Les k premières parts d'un disque en d parts, depuis midi, dans le sens des aiguilles d'une
+   montre (comme Wyborney, et comme un camembert). */
+function ufSecteur(cx, cy, r, k, d){
+  const a1 = 2 * Math.PI * k / d;
+  const x0 = cx, y0 = cy - r;
+  const x1 = cx + r * Math.sin(a1), y1 = cy - r * Math.cos(a1);
+  const r2 = x => Math.round(x * 100) / 100;
+  return `M ${r2(cx)} ${r2(cy)} L ${r2(x0)} ${r2(y0)} A ${r} ${r} 0 ${k * 2 > d ? 1 : 0} 1 ${r2(x1)} ${r2(y1)} Z`;
+}
+/* Un jeton (v = 1) ou un disque partagé (v = k/d), le même à l'écran et sur le papier. Jamais de
+   remplissage var(--splat-cover) : le mode élève rend transparents les chemins de cette couleur
+   (eleveDevoilerTache). */
+function ufDessinerJeton(cible, mk, cx, cy, r, v){
+  /* le jeton entier : bleu plein, à l'écran comme sur le papier, visible comme caché (décidé le
+     15/10 : pâle, il se lisait comme un disque vide, zéro part, à côté des parts coloriées) */
+  if(v.n >= v.d){
+    cible.appendChild(mk.el("circle", { cx, cy, r, fill:"#2563eb", stroke:"#1e40af", "stroke-width":"3" }));
+    return;
+  }
+  const [plein, bord] = ufCouleurs(v.d);
+  const g = mk.el("g", { class:"ufDisque", "data-parts":`${v.n}/${v.d}` });
+  g.appendChild(mk.el("circle", { cx, cy, r, fill:"#ffffff" }));
+  g.appendChild(mk.el("path", { d:ufSecteur(cx, cy, r, v.n, v.d), fill:plein }));
+  const rayon = String(Math.round(Math.max(2, r * 0.06) * 10) / 10);
+  for(let i = 0; i < v.d; i++){
+    const a = 2 * Math.PI * i / v.d;
+    g.appendChild(mk.el("line", { x1:cx, y1:cy, x2:Math.round((cx + r * Math.sin(a)) * 100) / 100, y2:Math.round((cy - r * Math.cos(a)) * 100) / 100,
+      stroke:bord, "stroke-width":rayon, "stroke-linecap":"round" }));
+  }
+  g.appendChild(mk.el("circle", { cx, cy, r, fill:"none", stroke:bord, "stroke-width":String(Math.round(Math.max(3, r * 0.085) * 10) / 10) }));
+  cible.appendChild(g);
+}
+
+/* Écritures « 3 + 3/4 » en pièces : un nombre, une opération, une fraction en colonne. */
+const UF_POLICE = "SplatLettres, system-ui, -apple-system, \"Segoe UI\", Roboto, Arial";
+function ufPieces(v, d, ecriture){
+  /* lot F1b : en écriture décimale, un seul nombre : « 3,75 » */
+  if(ecriture === "decimale"){ const t = frDecimal(v); if(t != null) return [{ t }]; }
+  const { entier, reste } = frDecompose(v, d);
+  if(!reste) return [{ t:String(entier) }];
+  if(!entier) return [{ f:[reste, d] }];
+  return [{ t:String(entier) }, { op:"+" }, { f:[reste, d] }];
+}
+function ufLargeurTexte(t, fs, poids){
+  const w = measureTextWidth(t, `${poids} ${fs}px ${UF_POLICE}`);
+  return (Number.isFinite(w) && w > 0) ? w : String(t).length * fs * 0.56;
+}
+function ufLargeurPiece(p, fs, fsF, poids){
+  if(p.t != null) return ufLargeurTexte(p.t, fs, poids);
+  if(p.op != null) return ufLargeurTexte(p.op, fs, poids) + 2 * Math.round(fs * 0.2);
+  return Math.max(ufLargeurTexte(String(p.f[0]), fsF, poids), ufLargeurTexte(String(p.f[1]), fsF, poids)) + 2 * Math.round(fsF * 0.16);
+}
+function ufLargeurPieces(pieces, fs, fsF, poids){
+  return pieces.reduce((s, p) => s + ufLargeurPiece(p, fs, fsF, poids), 0);
+}
+/* Pose les pièces à partir de x, centrées en hauteur sur cy (chiffres : ligne de base à
+   cy + 0,36 corps, comme les nombres des barres du mode A ; fraction : barre sur cy). */
+function ufPoserPieces(g, mk, x, cy, pieces, fs, fsF, poids, couleur){
+  const attrs = (taille) => ({ "font-size":String(taille), "font-weight":String(poids), fill:couleur });
+  for(const p of pieces){
+    const w = ufLargeurPiece(p, fs, fsF, poids);
+    if(p.t != null){
+      g.appendChild(mk.text(x, cy + fs * 0.36, p.t, { "text-anchor":"start", ...attrs(fs) }));
+    }else if(p.op != null){
+      g.appendChild(mk.text(x + w / 2, cy + fs * 0.36, p.op, { "text-anchor":"middle", ...attrs(fs) }));
+    }else{
+      const xm = x + w / 2, ep = Math.max(2.5, Math.round(fsF * 0.09 * 10) / 10);
+      g.appendChild(mk.text(xm, cy - fsF * 0.2, String(p.f[0]), { "text-anchor":"middle", ...attrs(fsF) }));
+      g.appendChild(mk.el("line", { x1:x + 2, y1:cy, x2:x + w - 2, y2:cy, stroke:couleur, "stroke-width":String(ep), "stroke-linecap":"round" }));
+      g.appendChild(mk.text(xm, cy + fsF * 0.92, String(p.f[1]), { "text-anchor":"middle", ...attrs(fsF) }));
+    }
+    x += w;
+  }
+  return x;
+}
+
+/* Le schéma en barres : le TOTAL en haut, en bas le visible (blanc) et le caché (gris).
+   Proportionnel (un jeton = une unité de barre, un quart = un quart d'unité) tant que les
+   écritures tiennent dans leurs cases ; sinon chaque case garde la place de son écriture et le
+   reste se partage en proportion. Les largeurs se calculent sur l'écriture finale ET sur « ? » :
+   le schéma ne bouge pas d'une étape à l'autre. Mêmes traits et mêmes hauteurs que le mode A. */
+const UF_BARRE = { hHaut:86, hBas:86, trait:4, gris:"rgba(0,0,0,0.10)", fsTotal:70, fsEntier:58, fsFrac:34, poids:900, marge:34 };
+function ufLargeurEcrit(e, d, B, ecriture){
+  if(e == null) return 0;
+  if(typeof e === "string") return ufLargeurTexte(e, e === "?" ? B.fsTotal : B.fsTotal * 1.2, e === "?" ? 900 : 400);
+  return ufLargeurPieces(ufPieces(e, d, ecriture), B.fsEntier, B.fsFrac, B.poids);
+}
+function ufDessinerBarre(g, mk, o){
+  const B = UF_BARRE;
+  const valeurs = o.parts.map(p => Math.max(0, p.valeur.n / p.valeur.d));
+  const somme = valeurs.reduce((a, b) => a + b, 0) || 1;
+  const minis = o.parts.map(p => Math.max(...p.mesures.map(e => ufLargeurEcrit(e, o.d, B, o.ecriture))) + 2 * B.marge);
+  let unite = o.largeur / somme;
+  valeurs.forEach((v, i) => { if(v > 0) unite = Math.max(unite, minis[i] / v); });
+  let largeurs = valeurs.map(v => v * unite);
+  const dispo = o.maxX - o.minX;
+  if(largeurs.reduce((a, b) => a + b, 0) > dispo){
+    const plancher = minis.reduce((a, b) => a + b, 0);
+    largeurs = minis.map((m, i) => m + Math.max(0, dispo - plancher) * valeurs[i] / somme);
+  }
+  const w = largeurs.reduce((a, b) => a + b, 0);
+  let x0 = o.cx - w / 2;
+  if(x0 < o.minX) x0 = o.minX;
+  if(x0 + w > o.maxX) x0 = Math.max(o.minX, o.maxX - w);
+  const y0 = o.haut, yS = y0 + B.hHaut;
+  g.appendChild(mk.el("rect", { x:x0, y:y0, width:w, height:B.hHaut + B.hBas, rx:0, fill:"none", stroke:"#000", "stroke-width":B.trait }));
+  g.appendChild(mk.el("line", { x1:x0, y1:yS, x2:x0 + w, y2:yS, stroke:"#000", "stroke-width":B.trait }));
+  if(o.total) g.appendChild(mk.text(x0 + w / 2, y0 + B.hHaut / 2 + B.fsTotal * 0.36, o.total, {
+    "text-anchor":"middle", "font-size":String(B.fsTotal), "font-weight":"900", fill:"var(--ink)" }));
+  let x = x0;
+  o.parts.forEach((p, i) => {
+    const lw = largeurs[i];
+    g.appendChild(mk.el("rect", { x, y:yS, width:lw, height:B.hBas, fill:p.cache ? B.gris : "rgba(255,255,255,0)" }));
+    const cy = yS + B.hBas / 2;
+    if(typeof p.ecrit === "string"){
+      const lettre = p.ecrit !== "?";
+      const fs = lettre ? Math.min(B.fsTotal * 1.2, Math.max(18, lw * 0.72)) : B.fsTotal;
+      g.appendChild(mk.text(x + lw / 2, cy, p.ecrit, lettre
+        ? { "text-anchor":"middle", "dominant-baseline":"middle", "alignment-baseline":"middle", dy:"-0.02em", "font-size":String(fs),
+            "font-family":"SplatLettres, 'Times New Roman', Times, serif", "font-style":"italic", "font-weight":"normal", fill:"var(--ink)" }
+        : { "text-anchor":"middle", "dominant-baseline":"middle", "alignment-baseline":"middle", dy:"0.10em", "font-size":String(fs), "font-weight":"900", fill:"var(--ink)" }));
+    }else if(p.ecrit){
+      const pieces = ufPieces(p.ecrit, o.d, o.ecriture);
+      const lp = ufLargeurPieces(pieces, B.fsEntier, B.fsFrac, B.poids);
+      ufPoserPieces(g, mk, x + (lw - lp) / 2, cy, pieces, B.fsEntier, B.fsFrac, B.poids, "var(--ink)");
+    }
+    if(i < o.parts.length - 1) g.appendChild(mk.el("line", { x1:x + lw, y1:yS, x2:x + lw, y2:yS + B.hBas, stroke:"#000", "stroke-width":B.trait }));
+    x += lw;
+  });
+  return { x:x0, largeur:w, centreX:x0 + w / 2 };
+}
+
+/* Le calcul, sous le schéma, à la dernière étape : « 7 − (3 + 1/4) = 3 + 3/4 » — comme
+   « 7 − 4 = 3 » en mode A (même place, même corps, le « = » au même endroit). Les parenthèses
+   seulement quand le visible s'écrit « entier + fraction ». */
+const UF_CALCUL = { fs:42, fsFrac:30, poids:700, ecart:30 };
+function ufPiecesCalcul(card){
+  const u = card._unit, d = card.den, ecriture = u.ecriture;
+  const vis = ufPieces(u.visibleValue, d, ecriture);
+  const gauche = [{ t:String(card.total) }, { op:"−" }].concat(vis.length > 1 ? [{ t:"(" }].concat(vis, [{ t:")" }]) : vis);
+  return { gauche, droite:ufPieces(u.hiddenValue, d, ecriture) };
+}
+function ufDessinerCalcul(g, mk, card, centreX, cy){
+  const C = UF_CALCUL;
+  const { gauche, droite } = ufPiecesCalcul(card);
+  const lg = ufLargeurPieces(gauche, C.fs, C.fsFrac, C.poids);
+  ufPoserPieces(g, mk, centreX - C.ecart - lg, cy, gauche, C.fs, C.fsFrac, C.poids, "var(--ink)");
+  g.appendChild(mk.text(centreX, cy + C.fs * 0.36, "=", { "text-anchor":"middle", "font-size":String(C.fs), "font-weight":String(C.poids), fill:"var(--ink)" }));
+  ufPoserPieces(g, mk, centreX + C.ecart, cy, droite, C.fs, C.fsFrac, C.poids, "var(--ink)");
+}
+
+/* La carte à l'écran : la mise en page en deux colonnes du mode A (renderCard), mêmes nombres —
+   le plateau à gauche sous son TOTAL, le schéma et le calcul à droite. Quatre étapes, comme le
+   mode A : 0 l'énoncé ; 1 le schéma vide ; 2 le schéma rempli, « ? » (ou 𝑥) dans la case grise ;
+   3 la valeur cachée, le calcul, la tache dévoilée. Pas de bouton « Résoudre » (ÉquaBarre
+   suppose une inconnue entière). */
+function ufRendreCarte(card, revealState){
+  const mk = { el, text };
+  const trayCfg = getTrayConfig(card.family);
+  const k = 0.70, dx = -80, dy = 100;
+  const centreGauche = dx + k * (120 + 1360 / 2);
+  const layer = el("g", { id:"introTrayShift", transform:`translate(${dx} ${dy}) scale(${k})` });
+  svg.appendChild(layer);
+  layer.appendChild(el("rect", { x:trayCfg.x, y:trayCfg.y, width:trayCfg.w, height:trayCfg.h,
+    rx:30, fill:"rgba(0,0,0,0.03)", stroke:"rgba(0,0,0,0.15)", "stroke-width":"6" }));
+
+  const gTotal = el("g", { id:"totalGroup" });
+  gTotal.appendChild(text(centreGauche, 86, "TOTAL", { "text-anchor":"middle", "font-size":"38", fill:"var(--total-label)", "font-weight":"800", "letter-spacing":"2" }));
+  gTotal.appendChild(text(centreGauche, 86 + 74, String(card.total), { "text-anchor":"middle", "font-size":"84", fill:"var(--ink)", "font-weight":"900" }));
+  svg.appendChild(gTotal);
+  const bb = gTotal.getBBox();
+  svg.insertBefore(el("rect", { x:bb.x - 30, y:bb.y - 18, width:bb.width + 60, height:bb.height + 36,
+    rx:18, fill:"var(--totalbox-fill)", stroke:"#000", "stroke-width":"4" }), gTotal);
+
+  if(revealState >= 1){
+    const u = card._unit, inconnue = ufInconnue(card);
+    const g = el("g", { id:"bottomBarModelAB" });
+    const barre = ufDessinerBarre(g, mk, {
+      cx:1240, haut:260, minX:dx + k * (trayCfg.x + trayCfg.w) + 30, maxX:1570, largeur:520, d:card.den, ecriture:u.ecriture,
+      total:revealState >= 2 ? String(card.total) : "",
+      parts:[
+        { valeur:u.visibleValue, cache:false, ecrit:revealState >= 2 ? u.visibleValue : null, mesures:[u.visibleValue] },
+        { valeur:u.hiddenValue, cache:true, ecrit:revealState >= 3 ? u.hiddenValue : (revealState === 2 ? inconnue : null), mesures:[u.hiddenValue, inconnue] }
+      ]
+    });
+    if(revealState >= 3) ufDessinerCalcul(g, mk, card, 1300 + (barre.centreX - 1240), 525);
+    svg.appendChild(g);
+  }
+
+  const beadR = card._beadR ?? 56;
+  const devoile = revealState >= 3;
+  card.hidden.forEach((v, i) => ufDessinerJeton(layer, mk, card._posH?.[i]?.cx ?? 820, card._posH?.[i]?.cy ?? 610, beadR, v));
+  for(const s of (card._splats || [{ cx:820, cy:610, r:220 }])){
+    layer.appendChild(el("path", { d:blobPath(s.cx, s.cy, s.r), fill:devoile ? "var(--splat-reveal)" : "var(--splat-cover)", stroke:"var(--splat-stroke)", "stroke-width":"5" }));
+    if(devoile) layer.appendChild(el("path", { d:blobPath(s.cx, s.cy, s.r), fill:"var(--splat-cover)", stroke:"none", "class":"anim-fade-out" }));
+  }
+  card.visible.forEach((v, i) => ufDessinerJeton(layer, mk, card._posV?.[i]?.cx ?? (450 + i * 40), card._posV?.[i]?.cy ?? 360, beadR, v));
+}
+
+/* L'énoncé imprimé (1, 2 ou 4 par page) : le TOTAL et le plateau du mode A imprimé
+   (renderCardIntoSvg), à la même place ; les jetons entiers en bleu franc, les parts dans leur
+   couleur, contour foncé : lisible en noir et blanc. */
+function ufRendreCarteImprimee(targetSvg, card, tEl, tText){
+  const mk = { el:tEl, text:tText };
+  const printTray = getPrintTrayConfig(card.family);
+  targetSvg.appendChild(tEl("rect", { x:printTray.x, y:printTray.y, width:printTray.w, height:printTray.h,
+    rx:30, fill:"#fff", stroke:"#334155", "stroke-width":"8" }));
+  const tx = 800, ty = 92;
+  const g = tEl("g", { id:"totalGroupPrint" });
+  g.appendChild(tText(tx, ty, "TOTAL", { "text-anchor":"middle", "font-size":"42", fill:"rgba(0,0,0,0.92)", "font-weight":"900", "letter-spacing":"2" }));
+  g.appendChild(tText(tx, ty + 83, String(card.total), { "text-anchor":"middle", "font-size":"96", fill:"#000", "font-weight":"900" }));
+  targetSvg.appendChild(g);
+  targetSvg.insertBefore(tEl("rect", { x:tx - 140, y:ty - 70, width:280, height:210, rx:22,
+    fill:"rgba(0,0,0,0.02)", stroke:"rgba(0,0,0,0.22)", "stroke-width":"4" }), g);
+  const beadR = card._beadR ?? 56;
+  const poser = (p, v) => {
+    const { cx, cy } = fitPrintTokenToTray(p.cx, p.cy + printTray.offsetY, beadR, printTray, 4);
+    ufDessinerJeton(targetSvg, mk, cx, cy, beadR, v);
+  };
+  card.hidden.forEach((v, i) => poser(card._posH?.[i] || { cx:820, cy:610 }, v));
+  for(const s of (card._splats || [{ cx:820, cy:610, r:220 }])){
+    targetSvg.appendChild(tEl("path", { d:blobPath(s.cx, s.cy + printTray.offsetY, s.r), fill:"rgb(0,0,0)", stroke:"rgba(0,0,0,0.18)", "stroke-width":"5" }));
+  }
+  card.visible.forEach((v, i) => poser(card._posV?.[i] || { cx:450 + i * 40, cy:360 }, v));
+}
+
+/* Les réglages relancent la série, comme ceux des autres modes. */
+["fracNiveau", "fracVisibleMax", "fracHiddenMax", "fracTotalMin", "fracTotalMax", "fracEcriture", "fracParts"]
+  .concat(UF_DENS.map(d => "fracDen" + d)).forEach(id => {
+  const champ = document.getElementById(id);
+  if(!champ) return;
+  champ.addEventListener("input", scheduleAutoGenerate);
+  champ.addEventListener("change", scheduleAutoGenerate);
+});
+/* lot F1b : les rangées avancées et les noms des niveaux suivent le menu sans attendre la série */
+(() => {
+  const niveau = document.getElementById("fracNiveau");
+  if(niveau) niveau.addEventListener("change", () => { ufPrepareAvance(ufSyncAvance.dernier || "1"); ufSyncAvance(); });
+  ["fracEcriture"].concat(UF_DENS.map(d => "fracDen" + d)).forEach(id => {
+    const champ = document.getElementById(id);
+    if(champ) champ.addEventListener("change", ufSyncAvance);
+  });
+})();
 
 if(!loadSharedConfiguration()){
   syncSettingsUI();

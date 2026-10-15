@@ -38,10 +38,10 @@ function constante(nom){
 }
 
 const PALETTE = html.slice(html.indexOf("const INVESTIGATE_COLOR_PALETTE = ["), html.indexOf("];", html.indexOf("const INVESTIGATE_COLOR_PALETTE = [")) + 2);
-const CONSTANTES = ["SYS_GESTES", "SYS_GESTES_MIX_DEFAUT", "SYS_MAX_TACHES", "SYS_MAX_TACHES_AVANT", "SYS_ESSAIS", "SYS_NOMBRES_SOUS_ENTENDUS", "SYS_COULEURS_PLURIEL", "SYS_PLAGES",
+const CONSTANTES = ["SYS_GESTES", "SYS_GESTES_MIX_DEFAUT", "SYS_SOUS_GESTES", "SYS_MAX_TACHES", "SYS_MAX_TACHES_AVANT", "SYS_ESSAIS", "SYS_NOMBRES_SOUS_ENTENDUS", "SYS_COULEURS_PLURIEL", "SYS_PLAGES",
   "SYS_ZONE_IMPRIME", "SYS_TACHE", "SYS_BARRES", "SYS_BARRES_SERRE", "SYS_BARRES_TAILLES", "SYS_CORR_IMPRIME", "SYS_ZONE_IMPRIME_CORRECTION",
   "SYS_2P", "SYS_2P_VIEWBOX", "SYS_2P_VIEWBOX_CORRECTION", "SYS_ZONE_IMPRIME_2P", "SYS_ZONE_IMPRIME_CORRECTION_2P", "SYS_CORR_IMPRIME_2P", "SYS_REPONSE_2P",
-  "SYS_BLOC", "SYS_BLOC_SERRE", "SYS_BLOC_FLECHE", "SYS_EQ_ECRIT", "ENQUETE_NOM_ECART"].map(constante).join("\n");
+  "SYS_BLOC", "SYS_BLOC_SERRE", "SYS_BLOC_FLECHE", "SYS_EQ_ECRIT", "ENQUETE_NOM_ECART", "NOM_PAPIER"].map(constante).join("\n");
 const GENERATEUR = ["sysNormaliserReglages", "genSystemCarte", "sysMelangerPlateaux", "sysFormes", "sysFormesDouble", "sysSomme", "sysNombreTaches", "sysPlateau",
   "sysTirerSituation", "sysSituationValide", "sysNombreSousEntendu", "sysTexteASousEntendu", "sysSituationSure",
   "sysAssemblerCarte", "sysUneTacheParCouleur", "sysIndice", "sysPhraseIndice", "sysPlanS3", "sysPlan"].map(fn).join("\n");
@@ -49,7 +49,7 @@ const DESSIN = ["sysEnPlateaux", "sysTotalCache", "sysPlateauxMontres", "sysRayo
   "sysAPlan", "sysBarresMetriques", "sysLargeurTexte", "sysCorrAjuster", "sysBarreCases", "sysBarreLargeur", "sysEtapeTaille", "sysVerifHauteur",
   "sysVerifLargeur", "sysEtapesFlux", "sysJetonCouleurs", "drawSysCaseBarre", "drawSysBarre", "drawSysEtape", "drawSysVerification", "sysSystemeEcrit", "drawSysSystemeEcrit", "drawSysCorrectionImprimee",
   "sysBlocs", "sysBlocMesure", "sysBlocPartageAligne", "sysBlocsFlux", "drawSysCorrectionBlocs", "drawSysLigneReponse",
-  "blobPath", "wrapTextToWidth", "beadColorForValue", "drawInvestigateSplatName", "investigateColorInfo"].map(fn).join("\n");
+  "blobPath", "wrapTextToWidth", "beadColorForValue", "drawInvestigateSplatName", "nomPapierCorps", "nomPapierAttrs", "investigateColorInfo"].map(fn).join("\n");
 
 const sys = new Function(`
   ${PALETTE}
@@ -129,9 +129,15 @@ const disjoints = (a, b) => a.x1 <= b.x0 + 1 || b.x1 <= a.x0 + 1 || a.y1 <= b.y0
 const TYPES = {
   "1a": { geste: "PARTIELLE" }, "1b": { geste: "COEF", ecart: "1" }, "1c": { geste: "COEF", ecart: "2" }, "1d": { geste: "EMBOITE1" },
   "1e": { geste: "ESCALIER" }, "2a": { geste: "DOUBLE" }, "2b": { geste: "DOUBLE", fois: 3 }, "2c": { geste: "DOUBLE", indice: "12" },
-  "2d": { geste: "DOUBLE", sens: "INDICE" }, "2d·3": { geste: "DOUBLE", sens: "INDICE", fois: 3 }, "3a": { geste: "MIROIR" }, "3b": { geste: "TROIS" }
+  "2d": { geste: "DOUBLE", sens: "INDICE" }, "2d·3": { geste: "DOUBLE", sens: "INDICE", fois: 3 }, "3a": { geste: "MIROIR" }, "3b": { geste: "TROIS" },
+  // lot M4-5 : le miroir 1-3, Je recopie (2, 3, 4 fois), Deux gestes à la suite
+  "3a+": { geste: "MIROIR", forme: "13" }, "3c·2": { geste: "RECOPIE" }, "3c·3": { geste: "RECOPIE", fois: 3 }, "3c·4": { geste: "RECOPIE", fois: 4 },
+  "4e": { geste: "ETAGES" }
 };
 const REGLAGES_FICHES = { totalMin: 20, totalMax: 60 };
+/* lot M4-5 : les types nouveaux, dont le corrigé 2 par page est souvent sans cadres (leur part n'entre
+   pas dans la « minorité » des types d'avant) */
+const NOUVEAUX_M4_5 = ["3a+", "3c·2", "3c·3", "3c·4", "4e"];
 const PLATEAUX_4P = 1480; // largeur des plateaux du 4 par page
 
 test("la carte remplit sa case de la page paysage : 1 830 × 2 200 (énoncé), 1 740 × 2 200 (corrigé), à la même échelle qu'avant", () => {
@@ -189,7 +195,8 @@ test("l'impression : la carte du Système en 2 par page seulement (plateaux), le
   assert.match(rendu, /const deuxParPage = !!opts\.deuxParPage && sysEnPlateaux\(card\);/);
   assert.match(rendu, /const W = deuxParPage \? \(revealAnswers \? SYS_2P\.wCorrection : SYS_2P\.w\) : 1600;/);
   assert.match(rendu, /drawSysCorrectionBlocs\(targetSvg, card, haut, SYS_CORR_IMPRIME_2P\.bas, ctx\)/);
-  assert.match(rendu, /drawSysPlateaux\(targetSvg, card, SYS_ZONE_IMPRIME_2P, \{ mkEl:tEl, mkText:tText, isPrint:true, devoile:false \}\);\n    drawSysLigneReponse\(targetSvg, card, ctx\);/);
+  // (lot M4-7 : « Le système » entre les plateaux et la ligne réponse, seulement avec systeme=1)
+  assert.match(rendu, /const dispo = drawSysPlateaux\(targetSvg, card, SYS_ZONE_IMPRIME_2P, \{ mkEl:tEl, mkText:tText, isPrint:true, devoile:false \}\);\n    if\(printSystemeLigne\) drawSysLigneSysteme\(targetSvg, card, dispo, ctx, false\);\n    drawSysLigneReponse\(targetSvg, card, ctx\);/);
   // le 4 par page garde sa correction sans cadres, à ses bords
   assert.match(rendu, /drawSysCorrectionImprimee\(targetSvg, card, haut, SYS_CORR_IMPRIME\.basImprime, ctx\);/);
 });
@@ -270,6 +277,14 @@ test("le corrigé : jamais réduit, une idée par cadre (sans cadres seulement s
       for(const lettres of [false, true]){
         const { g: dessin, haut, bas } = sys.corrige(c, lettres);
         n++;
+        /* lot M4-5 : « Je recopie » 2 fois (barres de 10 cases) et « Deux gestes à la suite »
+           (jusqu'à 12 étapes) se réduisent parfois ; les livrets (render.py) ne gardent que les
+           cartes jamais réduites. Ici : pas trop (0,75 au moins), le bas dans la carte. */
+        if(["3c·2", "4e"].includes(type) && dessin.attrs["data-echelle"] !== "1"){
+          assert.ok(Number(dessin.attrs["data-echelle"]) >= 0.75, `${type} : réduite à ${dessin.attrs["data-echelle"]}`);
+          assert.ok(bas <= sys.IMP.bas + 0.5, `${type} : le bas à ${bas}`);
+          continue;
+        }
         assert.equal(dessin.attrs["data-echelle"], "1", `${type} : carte réduite`);
         assert.equal(dessin.attrs.transform, "");
         assert.ok(bas <= sys.IMP.bas + 0.5, `${type} : le bas à ${bas}`);
@@ -284,7 +299,8 @@ test("le corrigé : jamais réduit, une idée par cadre (sans cadres seulement s
         const cadres = elements(dessin, "rect").filter((x) => x.attrs.class === "sysBloc");
         if(dessin.attrs["data-blocs"] === undefined){
           // sans cadres : le dessin du 4 par page, aux bords de cette carte
-          sansCadres++; typesSansCadres.add(`${type}${vis.visMax ? " jetons" : ""}`);
+          if(!NOUVEAUX_M4_5.includes(type)) sansCadres++;
+          typesSansCadres.add(`${type}${vis.visMax ? " jetons" : ""}`);
           assert.equal(cadres.length, 0);
           for(const e of dessinees){ const b = boiteEtape(e); assert.ok(b.x0 >= sys.IMP.x - 12 && b.x1 <= sys.IMP.xMax + 0.5, `${type} : déborde`); }
           continue;
@@ -313,8 +329,10 @@ test("le corrigé : jamais réduit, une idée par cadre (sans cadres seulement s
   }
   assert.ok(n >= 2800, `${n} cartes`);
   // sans cadres : seulement des cartes longues à jetons visibles (escalier, miroir), et une minorité
-  for(const t of typesSansCadres) assert.ok(["1e jetons", "3a jetons"].includes(t), `sans cadres : ${t}`);
-  assert.ok(sansCadres <= n * 0.06, `${sansCadres} cartes sans cadres sur ${n}`);
+  // lot M4-5 : aussi le miroir 1-3 à jetons, et les gestes nouveaux (longues barres, jusqu'à 12 étapes)
+  for(const t of typesSansCadres) assert.ok(["1e jetons", "3a jetons", "3a+ jetons"].includes(t) || /^(3c·\d|4e)( jetons)?$/.test(t), `sans cadres : ${t}`);
+  const nAnciens = n * Object.keys(TYPES).filter((t) => !NOUVEAUX_M4_5.includes(t)).length / Object.keys(TYPES).length;
+  assert.ok(sansCadres <= nAnciens * 0.06, `${sansCadres} cartes sans cadres sur ${nAnciens}`);
 });
 
 test("le corrigé n'est jamais réduit même avec une police 25 % plus large (Windows), sur les cartes les plus longues", () => {

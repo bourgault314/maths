@@ -251,7 +251,7 @@
       "essais": 1,
       "date": "2026-09-03"
     },
-    "m4e1": {
+    "ech1": {
       "fait": true,
       "etoiles": 7,
       "cartes": 8,
@@ -259,7 +259,7 @@
       "essais": 1,
       "date": "2026-09-04"
     },
-    "m4e2": {
+    "ech2": {
       "fait": true,
       "etoiles": 7,
       "cartes": 9,
@@ -267,7 +267,7 @@
       "essais": 2,
       "date": "2026-09-05"
     },
-    "m4e3": {
+    "ech3": {
       "fait": true,
       "etoiles": 10,
       "cartes": 10,
@@ -275,7 +275,7 @@
       "essais": 1,
       "date": "2026-09-06"
     },
-    "m4e4": {
+    "m4e1": {
       "fait": true,
       "etoiles": 10,
       "cartes": 11,
@@ -283,7 +283,7 @@
       "essais": 1,
       "date": "2026-09-07"
     },
-    "m4e5": {
+    "m4e2": {
       "fait": true,
       "etoiles": 10,
       "cartes": 12,
@@ -291,7 +291,7 @@
       "essais": 1,
       "date": "2026-09-08"
     },
-    "m4e6": {
+    "m4e3": {
       "fait": true,
       "etoiles": 4,
       "cartes": 4,
@@ -299,7 +299,7 @@
       "essais": 2,
       "date": "2026-09-09"
     },
-    "enq11d": {
+    "m4e4": {
       "fait": true,
       "etoiles": 4,
       "cartes": 5,
@@ -307,7 +307,7 @@
       "essais": 1,
       "date": "2026-09-10"
     },
-    "enq12d": {
+    "m4e5": {
       "fait": true,
       "etoiles": 4,
       "cartes": 6,
@@ -315,7 +315,7 @@
       "essais": 1,
       "date": "2026-09-11"
     },
-    "enq13d": {
+    "m4e6": {
       "fait": true,
       "etoiles": 7,
       "cartes": 7,
@@ -323,7 +323,7 @@
       "essais": 1,
       "date": "2026-09-12"
     },
-    "enq16d": {
+    "enq11d": {
       "fait": true,
       "etoiles": 7,
       "cartes": 8,
@@ -331,7 +331,7 @@
       "essais": 2,
       "date": "2026-09-13"
     },
-    "enq17d": {
+    "enq12d": {
       "fait": true,
       "etoiles": 7,
       "cartes": 9,
@@ -339,7 +339,7 @@
       "essais": 1,
       "date": "2026-09-14"
     },
-    "enq18d": {
+    "enq13d": {
       "fait": true,
       "etoiles": 10,
       "cartes": 10,
@@ -347,7 +347,7 @@
       "essais": 1,
       "date": "2026-09-15"
     },
-    "enq20d": {
+    "enq16d": {
       "fait": true,
       "etoiles": 10,
       "cartes": 11,
@@ -355,7 +355,7 @@
       "essais": 1,
       "date": "2026-09-16"
     },
-    "enq22d": {
+    "enq17d": {
       "fait": true,
       "etoiles": 10,
       "cartes": 12,
@@ -363,7 +363,7 @@
       "essais": 2,
       "date": "2026-09-17"
     },
-    "enq19d": {
+    "enq18d": {
       "fait": true,
       "etoiles": 4,
       "cartes": 4,
@@ -371,7 +371,7 @@
       "essais": 1,
       "date": "2026-09-18"
     },
-    "enq24d": {
+    "enq20d": {
       "fait": true,
       "etoiles": 4,
       "cartes": 5,
@@ -379,7 +379,7 @@
       "essais": 1,
       "date": "2026-09-19"
     },
-    "sys25d": {
+    "enq22d": {
       "fait": true,
       "etoiles": 4,
       "cartes": 6,
@@ -387,7 +387,7 @@
       "essais": 1,
       "date": "2026-09-20"
     },
-    "sys26d": {
+    "enq19d": {
       "fait": true,
       "etoiles": 7,
       "cartes": 7,
@@ -395,7 +395,7 @@
       "essais": 2,
       "date": "2026-09-21"
     },
-    "sys27d": {
+    "enq24d": {
       "fait": true,
       "etoiles": 7,
       "cartes": 8,
@@ -403,13 +403,37 @@
       "essais": 1,
       "date": "2026-09-22"
     },
-    "sys28d": {
+    "sys25d": {
       "fait": true,
       "etoiles": 7,
       "cartes": 9,
       "vues": 1,
       "essais": 1,
       "date": "2026-09-23"
+    },
+    "sys26d": {
+      "fait": true,
+      "etoiles": 10,
+      "cartes": 10,
+      "vues": 0,
+      "essais": 1,
+      "date": "2026-09-24"
+    },
+    "sys27d": {
+      "fait": true,
+      "etoiles": 10,
+      "cartes": 11,
+      "vues": 0,
+      "essais": 2,
+      "date": "2026-09-25"
+    },
+    "sys28d": {
+      "fait": true,
+      "etoiles": 10,
+      "cartes": 12,
+      "vues": 0,
+      "essais": 1,
+      "date": "2026-09-26"
     }
   }
 }

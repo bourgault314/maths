@@ -675,6 +675,7 @@
     .varChoice{height:36px}
     .varChoiceBtn{width:30px;height:30px;font-size:19px}
     #numColorModeWrap,
+    #numUnitesSeulesWrap,
     #signedWritingModeWrap,
     #signedWritingMode{height:36px !important}
     #signedWritingMode{padding:5px 6px !important}
@@ -711,6 +712,7 @@
     .varChoice{height:32px}
     .varChoiceBtn{width:27px;height:27px;font-size:17px}
     #numColorModeWrap,
+    #numUnitesSeulesWrap,
     #signedWritingModeWrap,
     #signedWritingMode{height:32px !important}
     #signedWritingMode{padding:3px 6px !important}
@@ -763,6 +765,12 @@
         <li><strong>→</strong> : avancer (révéler, étape suivante, carte suivante)</li>
         <li><strong>←</strong> : revenir en arrière</li>
         <li><strong>F</strong> : plein écran — <strong>Échap</strong> pour en sortir</li>
+      </ul>
+
+      <p><strong>Entiers relatifs.</strong></p>
+      <ul>
+        <li><strong>Solution max</strong> (|𝑥|) : la solution ne dépasse pas ce nombre. Vide : comme «&nbsp;Jetons max&nbsp;». Avec des jetons de 1, mettez par exemple 6.</li>
+        <li><strong>Un seul signe par plateau</strong> : des jetons 1 ou −1, tous du même signe sur un plateau.</li>
       </ul>
 
       <p><strong>Graine.</strong> Vide : une série nouvelle à chaque clic sur Générer. Remplie : toujours la même série — «&nbsp;Copier le lien&nbsp;» la partage avec tous les réglages.</p>
@@ -853,6 +861,10 @@
           <label>Jetons max (|v|)</label>
           <input id="numBeadAbsMax" type="number" min="1" max="99" value="30" />
         </div>
+        <div id="numSolutionMaxWrap" style="flex:1; min-width:0; display:none" title="Solution max (|𝑥|) : la solution ne dépasse pas ce nombre (vide : comme Jetons max)">
+          <label>Solution max</label>
+          <input id="numSolutionMax" type="number" min="0" max="99" value="" placeholder="= jetons" />
+        </div>
         <div id="numHiddenCountWrap" style="flex:1; min-width:0;">
           <label>Cachées / tache</label>
           <select id="numHiddenCount" style="width:100%; padding:9px 6px; font-size:14px;">
@@ -871,6 +883,15 @@
         </select>
         </div>
 
+      </div>
+
+      <!-- Entiers relatifs, échauffement du monde 6 (14/10/2026) : des billes 1 / −1 d'un seul
+           signe par plateau (la « Solution max » est à côté de « Jetons max »). -->
+      <div class="row" id="numUnitesSeulesRow" style="margin-top:0; display:none">
+        <label class="checkInline" id="numUnitesSeulesWrap" title="Des jetons 1 ou −1, tous du même signe sur un plateau" style="flex:0 1 auto; min-width:0; height:42px; padding:0 8px; overflow:hidden;">
+          <input type="checkbox" id="numUnitesSeules" style="flex:0 0 auto; margin:0;">
+          <span style="font-weight:600; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Un seul signe par plateau</span>
+        </label>
       </div>
 
       <div class="row" style="margin-top:0">
@@ -1287,6 +1308,10 @@ const numTotalMaxWrapEl = document.getElementById("numTotalMaxWrap");
 const seedNEl = document.getElementById("seedN");
 const numBeadAbsMaxWrapEl = document.getElementById("numBeadAbsMaxWrap");
 const numBeadAbsMaxEl = document.getElementById("numBeadAbsMax");
+const numSolutionMaxWrapEl = document.getElementById("numSolutionMaxWrap");
+const numUnitesSeulesRowEl = document.getElementById("numUnitesSeulesRow");
+const numSolutionMaxEl = document.getElementById("numSolutionMax");
+const numUnitesSeulesEl = document.getElementById("numUnitesSeules");
 const numOpposeModeWrapEl = document.getElementById("numOpposeModeWrap");
 const numOpposeModeEl = document.getElementById("numOpposeMode");
 const numColorModeWrapEl = document.getElementById("numColorModeWrap");
@@ -1619,8 +1644,8 @@ function getEquationShareControls(act){
   }
   if(isSignedEquationModeValue(act)){
     controls.push(
-      ["beadMax", numBeadAbsMaxEl], ["opposites", numOpposeModeEl],
-      ["colors", numColorModeEl], ["writing", signedWritingModeEl]
+      ["beadMax", numBeadAbsMaxEl], ["xMax", numSolutionMaxEl], ["unites", numUnitesSeulesEl],
+      ["opposites", numOpposeModeEl], ["colors", numColorModeEl], ["writing", signedWritingModeEl]
     );
   }
   return controls;
@@ -1650,14 +1675,16 @@ function loadSharedConfiguration(){
   /* Fiche composée : « suite » porte les réglages des séries SUIVANTES, mises bout à
      bout après celle de l'adresse (la fiche 35 du livret : trois graines de 4 cartes).
      Chaque partie est une adresse encodée, séparée par « ; », comme dans splat.html.
-     Sans ce paramètre, la page se comporte exactement comme avant. */
+     Sans ce paramètre, la page se comporte exactement comme avant. Jusqu'à 11 parties après
+     la première (l'échauffement du monde 6, 14/10/2026 : 12 cartes choisies une à une, une
+     graine chacune) ; les fiches d'avant en ont au plus 5. */
   serieSuite = [];
   if(params.has("suite")){
     serieSuite = String(params.get("suite") || "")
-      .split(";").map(part => part.trim()).filter(Boolean).slice(0, 5);
+      .split(";").map(part => part.trim()).filter(Boolean).slice(0, 11);
     reglagesOuverture = photographierReglages();
   }
-  const sharedNames = ["mode", "seed", "cards", "form", "tasksMax", "visibleMin", "visibleMax", "totalMin", "totalMax", "beadMax", "opposites", "colors", "writing", "unknown", "view", "print", "duplex", "layout", "title", "imprimer", "suite", "jouer", "zero", "taches"];
+  const sharedNames = ["mode", "seed", "cards", "form", "tasksMax", "visibleMin", "visibleMax", "totalMin", "totalMax", "beadMax", "xMax", "unites", "opposites", "colors", "writing", "unknown", "view", "print", "duplex", "layout", "title", "imprimer", "suite", "jouer", "zero", "taches"];
   if(!sharedNames.some(name => params.has(name))) return false;
   appliquerConfiguration(params);
   return true;
@@ -1714,7 +1741,13 @@ function buildShareUrl(){
   params.set("mode", act);
   params.set("seed", activeGenerationSeed);
   params.set("cards", String(countEl.value));
-  getEquationShareControls(act).forEach(([name, el]) => addShareControl(params, name, el));
+  getEquationShareControls(act).forEach(([name, el]) => {
+    /* « xMax » et « unites » ne s'écrivent que s'ils servent : le lien d'une série qui ne
+       s'en sert pas reste exactement celui d'avant. */
+    if(name === "xMax" && !(Number(el.value) > 0)) return;
+    if(name === "unites" && !el.checked) return;
+    addShareControl(params, name, el);
+  });
 
   if(!isSignedEquationModeValue(act)){
     params.set("unknown", shouldDisplayUnknownAsQuestion() ? "question" : "letter");
@@ -2304,6 +2337,8 @@ function syncSettingsUI(){
     }
   }
   if(numBeadAbsMaxWrapEl) numBeadAbsMaxWrapEl.style.display = isSignedEquationModeValue(act) ? "block" : "none";
+  if(numSolutionMaxWrapEl) numSolutionMaxWrapEl.style.display = isSignedEquationModeValue(act) ? "block" : "none";
+  if(numUnitesSeulesRowEl) numUnitesSeulesRowEl.style.display = isSignedEquationModeValue(act) ? "flex" : "none";
   if(numOpposeModeWrapEl) numOpposeModeWrapEl.style.display = isSignedEquationModeValue(act) ? "block" : "none";
   if(numColorModeWrapEl) numColorModeWrapEl.style.display = isSignedEquationModeValue(act) ? "flex" : "none";
   if(signedWritingModeWrapEl) signedWritingModeWrapEl.style.display = isSignedEquationModeValue(act) ? "block" : "none";
@@ -2350,7 +2385,7 @@ if(invTaskCountEl) invTaskCountEl.addEventListener("change", ()=>{ syncSettingsU
 [
   countEl,
   numTasksEl, numVisibleMinEl, numVisibleMaxEl, numUnitVisibleMaxEl, numTotalMinEl, numTotalMaxEl,
-  numBeadAbsMaxEl, numOpposeModeEl, numColorModeEl, eqUnknownModeEl, seedNEl
+  numBeadAbsMaxEl, numSolutionMaxEl, numUnitesSeulesEl, numOpposeModeEl, numColorModeEl, eqUnknownModeEl, seedNEl
 ].forEach(el=>{
   if(!el) return;
   el.addEventListener("input", scheduleAutoGenerate);
@@ -3208,6 +3243,17 @@ function genEquationSigned(rng){
   if(userMax < userMin) [userMin, userMax] = [userMax, userMin];
 
   const maxAbs = clamp(numberOr(numBeadAbsMaxEl?.value, 30), 1, 99);
+  /* Échauffement du monde 6 (14/10/2026). « Solution max » (xMax) : la solution ne dépasse pas
+     ce nombre — avec des billes 1 / −1, elle n'était jamais plus grande que 1. Vide ou 0 : la
+     borne reste « Jetons max », comme avant. « Un seul signe par plateau » (unites) : les jetons
+     visibles d'un plateau sont des billes, toutes 1 ou toutes −1 (autant que la valeur du
+     plateau). Ni l'un ni l'autre ne tire au sort : sans eux, chaque graine donne les mêmes
+     cartes qu'avant. */
+  const xMaxUser = clamp(Math.round(numberOr(numSolutionMaxEl?.value, 0)), 0, 99);
+  const unitesSeules = !!(numUnitesSeulesEl && numUnitesSeulesEl.checked);
+  const composerPlateau = (somme, n) => unitesSeules
+    ? (Math.abs(somme) === n ? new Array(n).fill(somme < 0 ? -1 : 1) : null)
+    : randomSignedCompositionNonZero(rng, somme, n, maxAbs);
   const opposeSetting = (numOpposeModeEl && numOpposeModeEl.value) ? String(numOpposeModeEl.value).toLowerCase() : "off";
   const autoPick = (opposeSetting === "auto") ? "auto" : null;
   const unknownModeSetting = eqUnknownModeEl ? eqUnknownModeEl.value : "MIX";
@@ -3333,7 +3379,7 @@ function genEquationSigned(rng){
     const maxCoeff = Math.max(Math.abs(a), Math.abs(b), 1);
     const maxTotalAbs = Math.max(Math.abs(userMin), Math.abs(userMax));
     let xAbsMax = Math.floor((maxTotalAbs + Math.max(vCountL, vCountR) * maxAbs) / maxCoeff);
-    xAbsMax = clamp(xAbsMax, 1, maxAbs);
+    xAbsMax = clamp(xAbsMax, 1, xMaxUser > 0 ? xMaxUser : maxAbs);
     const absX = rInt(rng, 1, xAbsMax);
     const x = solutionNulle ? (rng(), 0) : ((rng() < 0.5) ? -1 : 1) * absX;
 
@@ -3365,8 +3411,8 @@ function genEquationSigned(rng){
     const VL = total - a*x;
     const VR = total - b*x;
 
-    const leftVisible  = (vCountL === 0) ? [] : randomSignedCompositionNonZero(rng, VL, vCountL, maxAbs);
-    const rightVisible = (vCountR === 0) ? [] : randomSignedCompositionNonZero(rng, VR, vCountR, maxAbs);
+    const leftVisible  = (vCountL === 0) ? [] : composerPlateau(VL, vCountL);
+    const rightVisible = (vCountR === 0) ? [] : composerPlateau(VR, vCountR);
     if(leftVisible === null || rightVisible === null) continue;
 
     const leftHiddenByTask  = Array.from({length:tasksL}, ()=>[x]);
@@ -7668,15 +7714,94 @@ function eqPrintBeadSlide(visibles, pts, splats, R){
   return pts;
 }
 
-/* rend {R, pts} : le rayon des jetons visibles et leurs places dessinées */
-function eqPrintBeadLayout(visibles, splats, baseR, capR, scale = EQ_PRINT_BEAD_SCALE){
+/* ===== Deux rangées de jetons, en 6 par page (plateaux gauche/droite), 14/10/2026 =====
+   L'échauffement du monde 6 met jusqu'à six billes 1 / −1 sur un plateau : en une rangée, elles
+   ne pouvaient pas grossir (3,5 mm sur la feuille au lieu de 6). À partir de
+   EQ_PRINT_RANGEES_MIN jetons sur un plateau, ils se posent en deux rangées : la plus longue en
+   bas (3 + 2, 3 + 3), l'autre au-dessus, centrée sur elle (en quinconce quand elle est plus
+   courte) ; ordre de lecture : la rangée du haut, puis celle du bas, de gauche à droite. Le
+   bloc est posé en bas du plateau (une seule rangée de taches au-dessus monte en haut du
+   plateau, voir eqPrintGrandesTaches), au milieu, ses jetons espacés comme en une rangée (la largeur
+   des jetons du plateau partagée en parts égales), resserrés au besoin ; s'il gêne une tache, il
+   glisse de côté jusqu'à la place libre la plus proche du milieu. Mêmes règles qu'en une
+   rangée : un seul rayon pour la carte, jamais plus gros que ce qu'une tache peut cacher,
+   jamais hors du plateau ni près de la barre, EQ_PRINT_BEAD_GAP entre deux jetons,
+   EQ_PRINT_BEAD_SPLAT_GAP jusqu'à une tache. Rien n'est tiré au sort. La carte garde la
+   disposition qui donne les plus gros jetons (les deux rangées à égalité). Moins de
+   EQ_PRINT_RANGEES_MIN jetons sur chaque plateau, 4 par page, haut/bas, écran : rien ne change.
+   (EQ_PRINT_RANGEES_MIN est écrite avec les constantes des grandes taches, plus bas.) */
+
+/* les places des jetons d'UN plateau (indices idx dans visibles) en deux rangées, au rayon R,
+   ou null si rien ne tient */
+function eqPrintBeadRangeesPlateau(visibles, idx, splats, R){
+  const box = eqPrintBeadBox(visibles[idx[0]]);
+  const n = idx.length, bas = Math.ceil(n / 2), haut = n - bas;
+  const D = 2 * R + EQ_PRINT_BEAD_GAP;
+  const m = R + EQ_PRINT_BEAD_EDGE;
+  const yBas = Math.floor(box.y + box.h - m);
+  const milieu = Math.round(box.x + box.w / 2);
+  // l'écart d'une rangée : celui de la rangée d'origine (la largeur des jetons, 140 de marge, en
+  // parts égales), resserré de 4 en 4 jusqu'au plus petit permis
+  const large = Math.max(D, Math.floor((box.w - 140) / bas));
+  const pas = [];
+  for(let P = large; P > D; P -= 4) pas.push(P);
+  pas.push(D);
+  const sous = idx.map(i => visibles[i]);
+  for(let dc = 0; dc <= box.w / 2; dc += 2){
+    for(const c of (dc ? [milieu - dc, milieu + dc] : [milieu])){
+      for(const P of pas){
+        if((bas - 1) * P > box.w - 2 * m) continue;
+        // rangées alignées (3 + 3) : un écart entier ; en quinconce (3 + 2) : décalées d'un demi-écart
+        const dyMin = Math.ceil(haut === bas ? D : Math.sqrt(Math.max(0, D * D - (P / 2) * (P / 2))));
+        for(const dy of (P > dyMin ? [P, dyMin] : [dyMin])){
+          const pts = [];
+          for(let j=0;j<haut;j++) pts.push({cx:Math.round(c + (j - (haut - 1) / 2) * P), cy:yBas - dy});
+          for(let j=0;j<bas;j++) pts.push({cx:Math.round(c + (j - (bas - 1) / 2) * P), cy:yBas});
+          if(eqPrintBeadsFit(sous, pts, splats, R)) return pts;
+        }
+      }
+    }
+  }
+  return null;
+}
+
+/* rend {R, pts} en deux rangées pour les plateaux d'au moins EQ_PRINT_RANGEES_MIN jetons (les
+   autres comme en une rangée), au plus grand rayon qui tient ; null si aucun plateau n'en a
+   autant, ou si rien ne tient au-dessus du rayon de base */
+function eqPrintBeadDeuxRangees(visibles, splats, baseR, top){
+  const boites = new Map();
+  visibles.forEach((it, i) => {
+    if(it.cell || !it.tray) return;
+    if(!boites.has(it.tray)) boites.set(it.tray, []);
+    boites.get(it.tray).push(i);
+  });
+  const grandes = [...boites.values()].filter(idx => idx.length >= EQ_PRINT_RANGEES_MIN);
+  if(!grandes.length) return null;
+  for(let R = Math.floor(top); R > baseR; R--){
+    const rangees = grandes.map(idx => eqPrintBeadRangeesPlateau(visibles, idx, splats, R));
+    if(rangees.some(r => !r)) continue;
+    const poser = (pts) => { grandes.forEach((idx, k) => idx.forEach((i, j) => { pts[i] = rangees[k][j]; })); return pts; };
+    let pts = poser(visibles.map(it => eqPrintBeadPlace(it, R)));
+    if(!eqPrintBeadsFit(visibles, pts, splats, R)) pts = poser(eqPrintBeadSlide(visibles, pts, splats, R));
+    if(eqPrintBeadsFit(visibles, pts, splats, R)) return {R, pts};
+  }
+  return null;
+}
+
+/* rend {R, pts} : le rayon des jetons visibles et leurs places dessinées ; « rangees » (6 par
+   page, plateaux gauche/droite) : deux rangées à partir de EQ_PRINT_RANGEES_MIN jetons sur un
+   plateau, si elles donnent des jetons au moins aussi gros (voir eqPrintBeadDeuxRangees) */
+function eqPrintBeadLayout(visibles, splats, baseR, capR, scale = EQ_PRINT_BEAD_SCALE, rangees = false){
   let top = Math.round(baseR * scale);
   if(Number.isFinite(capR)) top = Math.min(top, capR);
+  const deux = rangees ? eqPrintBeadDeuxRangees(visibles, splats, baseR, top) : null;
   for(let R = Math.floor(top); R > baseR; R--){
+    if(deux && R <= deux.R) return deux;
     let pts = visibles.map(it => eqPrintBeadPlace(it, R));
     if(!eqPrintBeadsFit(visibles, pts, splats, R)) pts = eqPrintBeadSlide(visibles, pts, splats, R);
     if(eqPrintBeadsFit(visibles, pts, splats, R)) return {R, pts};
   }
+  if(deux) return deux;
   return {R:baseR, pts:visibles.map(it => it.p)};
 }
 
@@ -7716,6 +7841,9 @@ function eqPrintGrandHiddenBeadRadius(R, splat, sousMot){
   return Math.min(R, Math.floor(r * (sousMot ? EQ_PRINT_GRAND_HIDDEN_SOUS_MOT : EQ_PRINT_GRAND_HIDDEN)));
 }
 
+// à partir de ce nombre de jetons sur un plateau, deux rangées (voir eqPrintBeadDeuxRangees)
+const EQ_PRINT_RANGEES_MIN = 5;
+
 /* rend un nouveau « pos » (posH et splats refaits), ou celui reçu s'il ne peut pas grossir */
 function eqPrintGrandesTaches(trays, pos){
   if(!trays || !pos || trays.vertical || !trays.left || !trays.right) return pos;
@@ -7743,7 +7871,11 @@ function eqPrintGrandesTaches(trays, pos){
     const marge = 1.1 * R + 30;
     let ys;
     if(rs.length === 1){
-      const cy = Number(sp[rs[0][0]].cy);
+      /* (14/10/2026) au moins EQ_PRINT_RANGEES_MIN jetons sur le plateau : ils vont en deux
+         rangées (eqPrintBeadDeuxRangees) ; la rangée de taches monte en haut du plateau pour
+         leur laisser la place, sans changer de taille. Moins de jetons : rien ne change. */
+      const monte = (pos[c].posV || []).length >= EQ_PRINT_RANGEES_MIN;
+      const cy = monte ? tray.y + EQ_PRINT_GRAND_EDGE + 1.1 * R : Number(sp[rs[0][0]].cy);
       if(cy - 1.1 * R < tray.y + EQ_PRINT_GRAND_EDGE || cy + 1.1 * R > tray.y + EQ_PRINT_GRAND_BOTTOM) return null;
       ys = [cy];
     }else{
@@ -7830,7 +7962,7 @@ function createEqPrintBeadTable(targetGroup, mk, mkText, opts = {}){
       const visibles = items.filter(it => !it.hidden);
       // pas plus gros que ce que la plus petite tache de la carte peut cacher
       const creux = splats.length ? Math.floor(Math.min(...splats.map(s => s.r)) * sousTache) : Infinity;
-      const {R, pts} = eqPrintBeadLayout(visibles, splats, baseR, Math.min(cap, creux), scale);
+      const {R, pts} = eqPrintBeadLayout(visibles, splats, baseR, Math.min(cap, creux), scale, grand);
       visibles.forEach((it, i) => { it.p = pts[i]; });
       items.forEach(it => drawEqPrintNumberedBead(it, it.hidden
         ? (grand ? eqPrintGrandHiddenBeadRadius(R, it.splat, it.sousMot) : eqPrintHiddenBeadRadius(R, it.baseR, it.splat))

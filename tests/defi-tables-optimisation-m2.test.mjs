@@ -142,8 +142,14 @@ test("la 5e étape du test est annoncée : « raccourciEnFin » quand la marche 
   ({parcours: reprise, seance} = jouerEtape(reprise, seance, P.etapeDeSeance(reprise, seance, jour(1)), jour(1), 4));
   assert.deepEqual(seance.file.map(prevue => prevue.marche), [3, 4, 5, 6]);
   assert.equal(P.programmeDeSeance(reprise, seance, jour(1)).raccourciEnFin, false);
-  // La marche 8 dans la fenêtre, une table passée choisie exprès : jamais.
-  assert.equal(programme(avecDepart(5)).raccourciEnFin, false);
+  // La marche 8 dans la fenêtre (départ 5 : 5-6-7-test « si 9 sur 10 ») :
+  // lot « après l'audit GPT » (D13), « 4 ou 5 étapes » — la marche 7 refaite
+  // peut se glisser avant le test, qui est déjà la 4e ligne.
+  const cinq = programme(avecDepart(5));
+  assert.equal(cinq.raccourciEnFin, true);
+  assert.equal(cinq.testDejaAnnonce, true, "pas de 5e ligne de test");
+  assert.equal(cinq.minutesMax, cinq.minutes + 1, "la marche 7 refaite : 1 min");
+  // Une table passée choisie exprès : jamais.
   const passee = avecDepart(4);
   passee.tables[3].acquise = jour(1);
   assert.equal(programme(P.normaliserParcours(passee), jour(2)).raccourciEnFin, false);

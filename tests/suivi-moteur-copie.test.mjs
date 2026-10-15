@@ -67,7 +67,8 @@ test("la page prof charge le moteur d'ici, jamais depuis mathsgo.re", () => {
 });
 
 test("chaque script en ligne des pages du serveur porte le nonce de la politique de contenu", () => {
-  for (const chemin of ["_serveur/public/index.php", "_serveur/public/prof/index.php"]) {
+  for (const chemin of ["_serveur/public/index.php", "_serveur/public/prof/index.php",
+    "_serveur/public/direct.php", "_serveur/public/prof/direct.php"]) {
     const page = readFileSync(join(racine, chemin), "utf8");
     // Les attributs jusqu'au « > » de la balise — sans s'arrêter au « ?> » de PHP.
     const balises = [...page.matchAll(/<script\b((?:\?>|[^>])*?)>/g)];

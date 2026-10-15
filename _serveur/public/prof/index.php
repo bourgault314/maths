@@ -10,6 +10,10 @@ $nonce = entetes_page();
 // contenu : un nouveau fichier déposé n'est jamais masqué par le cache.
 $moteur = __DIR__ . '/defi_tables_mon_parcours.js';
 $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
+// Lot « splat-suivi-4 » : le moteur de SPLAT! (copie de assets/js/splat-parcours.js,
+// déposée au lot 3), chargé seulement quand on ouvre l'onglet SPLAT! d'une classe.
+$moteurSplat = __DIR__ . '/splat-parcours.js';
+$versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : '0';
 ?>
 <!doctype html>
 <html lang="fr">
@@ -151,6 +155,8 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   .profs li.vide { color: var(--muted); font-style: italic; border-style: dashed; }
   .profs .role { color: var(--muted); font-size: .86rem; }
   .retour-icone { display: inline-flex; align-items: center; gap: 6px; }
+  .ligne-retour { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+  .ligne-retour #seance-direct { margin-left: auto; }
   .retour-icone svg { display: block; }
   .note-tableau { margin: 10px 0 0; font-size: .88rem; }
   /* L'objectif de la classe : UN nombre, celui de tout le monde. Jamais un
@@ -168,6 +174,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   .objectif .lignes { list-style: none; display: flex; flex-wrap: wrap; gap: 8px 18px;
                       margin: 10px 0 0; padding: 0; color: var(--muted); font-size: .9rem; }
   .objectif .lignes b { color: var(--ink); }
+  .objectif .lignes .insecable { white-space: nowrap; }
   .fragiles { margin-top: 14px; border-left: 5px solid var(--orange); }
   .fragiles strong { display: block; color: var(--blue-dark); font-family: Georgia, serif; font-size: 1.05rem; }
   .fragiles p { margin: 4px 0 10px; color: var(--muted); font-size: .88rem; }
@@ -177,6 +184,61 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   .fragiles li span { font-size: .82rem; font-weight: 600; color: #a15c11; }
   .barre-outils { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
   .barre-outils .espace { margin-left: auto; }
+  /* Lot « splat-suivi-4 » (08/10/2026) — SPLAT! dans « Ma classe ».
+     Le choix de l'activité, sous le nom de la classe : seulement quand la
+     classe en a plus d'une. */
+  .choix-appli { display: inline-flex; gap: 4px; margin: -6px 0 14px; padding: 4px;
+                 border-radius: 999px; background: #e6ecf3; }
+  .choix-appli button { min-height: 40px; padding: 0 18px; border-radius: 999px;
+                        color: #3d4a5a; background: none; font-weight: 800; }
+  .choix-appli button:hover { background: rgba(255,255,255,.6); }
+  .choix-appli button[aria-pressed="true"] { color: var(--blue-dark); background: #fff;
+                                             box-shadow: 0 1px 3px rgba(16,41,74,.16); }
+  /* Les six mondes : le dessin des pastilles de l'espace élève (index.php). */
+  .mondes { display: inline-flex; gap: 5px; vertical-align: middle; }
+  .mondes svg { display: block; }
+  .bonus-compte { margin-left: 8px; color: #8a5a00; font-size: .84rem; font-weight: 800; white-space: nowrap; }
+  /* Le « Détail » d'un élève : une rangée de cases par monde, puis les Bonus. */
+  #tableau tr.detail td { padding: 10px 14px 14px; background: #f7f9fc; white-space: normal; }
+  .detail-monde { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 4px 0; }
+  .detail-monde b { flex: 0 0 210px; color: var(--ink); font-size: .84rem; }
+  .et { display: inline-grid; place-items: center; min-width: 28px; height: 26px; padding: 0 3px;
+        border: 1.5px solid #c9d3e0; border-radius: 7px; background: #fff;
+        color: var(--muted); font-size: .72rem; font-weight: 800; }
+  .et.ok { border-color: var(--vert); background: var(--vert); color: #fff; }
+  .et.aide { border-color: #c2570c; background: #c2570c; color: #fff; }
+  .et.cours { border: 2px dashed #0b67b2; background: #eaf2fb; color: #0b67b2; }
+  .et.bonus.ok { border-color: #f9bf3b; background: #f9bf3b; color: #4a3600; }
+  .legende-detail { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px;
+                    margin-top: 10px; color: var(--muted); font-size: .8rem; }
+  .legende-detail span { display: inline-flex; align-items: center; gap: 6px; }
+  .legende-detail .et { min-width: 18px; width: 18px; height: 18px; padding: 0; border-radius: 5px; }
+  /* « Activités de la classe » : les cases à cocher, propriétaire seulement. */
+  .activites { display: flex; flex-wrap: wrap; gap: 4px 22px; }
+  .activites label { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin: 0;
+                     font-size: .95rem; cursor: pointer; }
+  .activites input { width: 20px; height: 20px; margin: 0; accent-color: var(--blue); }
+  /* Lot « splat-suivi-5 » (choix de Gwenaël sur maquettes, 08/10/2026) : sous SPLAT!,
+     les mondes ouverts à la classe, monde par monde. Ouvert : bordure et rond de la
+     couleur du monde (celle de la carte) ; fermé : pointillés gris. */
+  .mondes-ouverts { margin: 6px 0 2px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .mondes-ouverts p { margin: 0 0 8px; font-size: .88rem; font-weight: 700; color: var(--ink); }
+  .puces-mondes { display: flex; flex-wrap: wrap; gap: 8px; }
+  .puce-monde { position: relative; display: inline-flex; align-items: center; gap: 7px; min-height: 44px; margin: 0;
+                padding: 0 12px 0 8px; border: 2px solid var(--c); border-radius: 999px; background: #fff;
+                color: var(--ink); font-size: .86rem; font-weight: 700; cursor: pointer; }
+  .puce-monde i { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
+                  background: var(--c); color: #fff; font-style: normal; font-size: .78rem; font-weight: 800; }
+  .puce-monde input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+  .puce-monde.ferme { border-style: dashed; border-color: #b9c1cb; background: #f6f8fa; color: #6b7685; }
+  .puce-monde.ferme i { background: #fff; color: #6b7685; border: 2px dashed #b9c1cb; width: 18px; height: 18px; }
+  .puce-monde:focus-within { outline: 3px solid #7fb3e0; outline-offset: 2px; }
+  .puces-mondes[aria-busy="true"] .puce-monde { opacity: .6; cursor: progress; }
+  .puce-monde[data-monde="1"] { --c: #d9690c; } .puce-monde[data-monde="2"] { --c: #0b67b2; }
+  .puce-monde[data-monde="3"] { --c: #be185d; } .puce-monde[data-monde="4"] { --c: #92400e; }
+  .puce-monde[data-monde="5"] { --c: #08857f; } .puce-monde[data-monde="6"] { --c: #7b42b4; }
+  /* dans le Détail : la rangée d'un monde fermé à la classe, plus pâle, avec un cadenas */
+  .detail-monde.ferme { opacity: .5; }
   /* Le papier (lot 7). Deux impressions distinctes, jamais ensemble : les
      BANDELETTES à distribuer (adresse, code, consigne — aucun prénom du côté
      donné à l'élève) et la FEUILLE prénom ↔ code, que le professeur garde.
@@ -229,6 +291,43 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   [hidden] { display: none !important; }
   /* Sous 700 px, le tableau devient une carte par élève : rien ne déborde,
      tout se lit d'un coup d'œil sur un téléphone. */
+  /* Lot « 🏆 Les records » (09/10/2026, planche R5 validée par Gwenaël) : le
+     temps d'une Légende à côté de sa couronne ; la carte sous le tableau (la
+     ligue du professeur, toutes ses classes, ce que voient les élèves) ; le
+     plein écran pour projeter ; la case par classe dans « Activités ». */
+  td .rec-temps { margin-left: 6px; color: #7a5a00; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .rec-carte { max-width: 820px; margin-top: 18px; border-left: 5px solid #e3a81a; }
+  .rec-tete { display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+  .rec-tete strong { display: block; color: var(--blue-dark); font-family: Georgia, serif; font-size: 1.05rem; }
+  .rec-tete p { margin: 2px 0 0; color: var(--muted); font-size: .88rem; }
+  .rec-tete button { margin-left: auto; }
+  .rec-deux { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 12px; }
+  .rec-deux h3 { margin: 0 0 8px; font-size: .95rem; color: var(--blue); text-align: center; text-transform: uppercase; letter-spacing: .04em; }
+  .rec-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; }
+  .rec-liste li { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; align-items: center; gap: 8px; min-height: 36px; padding: 3px 12px 3px 6px; border: 1px solid #d5e2ea; border-radius: 10px; background: #fff; font-weight: 700; }
+  .rec-liste .rg { text-align: center; font-weight: 800; color: #3f5a6c; }
+  .rec-liste li:nth-child(-n+3) .rg { font-size: 1.2rem; }
+  .rec-liste .nom { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rec-liste .tps { font-variant-numeric: tabular-nums; font-weight: 800; white-space: nowrap; }
+  /* Lot « après l'audit GPT » (D4, 14/10/2026) : « Retirer ce temps » au bout
+     de chaque ligne de la carte (pas du plein écran, qu'on projette). */
+  .rec-carte .rec-liste li { grid-template-columns: 30px minmax(0, 1fr) auto auto; }
+  .rec-retirer { min-height: 32px; margin: 0 -6px 0 2px; padding: 4px 8px; border: 0; border-radius: 8px; background: none;
+                 color: var(--muted); font: inherit; font-size: .8rem; font-weight: 600; cursor: pointer; }
+  .rec-retirer:hover, .rec-retirer:focus-visible { background: #fdecec; color: #a4161a; }
+  .rec-vide { margin: 8px 0 0; color: var(--muted); font-size: .9rem; text-align: center; }
+  .rec-plein { position: fixed; inset: 0; z-index: 50; background: #fff; padding: 28px 48px; overflow: auto; }
+  .rec-plein h1 { margin: 0; text-align: center; font-size: 2.6rem; }
+  .rec-plein .fermer { position: absolute; top: 18px; right: 24px; }
+  .rec-plein .rec-deux { max-width: 1100px; margin: 26px auto 0; gap: 40px; }
+  .rec-plein .rec-deux h3 { font-size: 1.4rem; }
+  .rec-plein .rec-liste li { min-height: 52px; font-size: 1.45rem; padding: 4px 18px 4px 10px; grid-template-columns: 48px minmax(0, 1fr) auto; }
+  .rec-plein .rec-liste li:nth-child(-n+3) .rg { font-size: 1.9rem; }
+  .rec-reglage { margin: 6px 0 2px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .rec-reglage label { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin: 0; font-size: .95rem; cursor: pointer; }
+  .rec-reglage input { width: 20px; height: 20px; margin: 0; accent-color: var(--blue); }
+  .rec-reglage small { display: block; margin: -4px 0 0 28px; color: var(--muted); font-size: .84rem; }
+  @media (max-width: 700px) { .rec-deux { grid-template-columns: 1fr; } .rec-plein { padding: 16px; } }
   @media (max-width: 700px) {
     .tableau-enveloppe { overflow-x: visible; }
     #tableau, #tableau tbody, #tableau tr, #tableau td { display: block; width: 100%; }
@@ -246,10 +345,15 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     #tableau td.actions-eleve > button { flex: 1 1 auto; margin-left: 0 !important; }
     #tableau td { flex-wrap: wrap; }
     .alerte { margin-left: 0; }
+    /* Le Détail : la carte de l'élève se prolonge, le nom du monde au-dessus
+       de ses cases. */
+    #tableau tr.detail { margin-top: -10px; border-top-left-radius: 0; border-top-right-radius: 0; }
+    #tableau tr.detail td { display: block; padding: 6px 10px; background: none; }
+    .detail-monde b { flex-basis: 100%; }
   }
   @media print {
     @page { margin: 12mm; }
-    .barre, header, footer, .barre-outils, .actions,
+    .barre, header, footer, .barre-outils, .actions, .rec-plein,
     #ecran-classe > *:not(.fiche):not(.bandelettes):not(.note-impression) { display: none !important; }
     body { background: #fff; }
     main { max-width: none; padding: 0; }
@@ -339,9 +443,21 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
 
   <!-- Une classe -->
   <section id="ecran-classe" hidden>
-    <button type="button" class="secondaire petit retour-icone" id="retour"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Toutes mes classes</button>
+    <!-- Séance en direct (07/10/2026) : le bouton ouvre l'écran du tableau
+         (prof/direct.php) pour cette classe, dans le même onglet. Il est sur
+         la ligne du retour, à droite : la barre d'outils est déjà pleine. -->
+    <div class="ligne-retour">
+      <button type="button" class="secondaire petit retour-icone" id="retour"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Toutes mes classes</button>
+      <button type="button" id="seance-direct">Séance en direct</button>
+    </div>
     <h1 id="titre-classe"></h1>
     <p class="sous" id="resume-classe"></p>
+    <!-- Lot « splat-suivi-4 » : l'activité dont on voit le tableau, quand la
+         classe en a plus d'une. Le dernier choix est retenu dans l'onglet. -->
+    <div class="choix-appli" id="choix-appli" role="group" aria-label="Activité affichée" hidden>
+      <button type="button" data-appli="defi-tables" aria-pressed="true">Défi tables</button>
+      <button type="button" data-appli="splat" aria-pressed="false">SPLAT!</button>
+    </div>
     <p class="message" id="bandeau-droit" hidden></p>
 
     <div class="barre-outils">
@@ -381,13 +497,22 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     <div class="tableau-enveloppe">
       <table id="tableau">
         <thead>
-          <tr>
+          <tr id="entete-defi-tables">
             <th><button type="button" data-tri="prenom">Élève</button></th>
             <th>Code</th>
             <th><button type="button" data-tri="acquises">Tables passées</button></th>
             <th><button type="button" data-tri="encours">En cours</button></th>
             <th><button type="button" data-tri="semaine">Cette semaine</button></th>
             <th><button type="button" data-tri="retard">En retard</button></th>
+            <th><button type="button" data-tri="date">Dernière activité</button></th>
+            <th></th>
+          </tr>
+          <!-- L'onglet SPLAT! (lot « splat-suivi-4 ») : ses colonnes à lui. -->
+          <tr id="entete-splat" hidden>
+            <th><button type="button" data-tri="prenom">Élève</button></th>
+            <th>Code</th>
+            <th>Mondes</th>
+            <th><button type="button" data-tri="etapes">Étapes réussies</button></th>
             <th><button type="button" data-tri="date">Dernière activité</button></th>
             <th></th>
           </tr>
@@ -399,6 +524,22 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     <p class="sous note-tableau">Ce tableau est un <strong>indicateur pédagogique, pas une preuve
     d’évaluation</strong> : la progression vient de l’appareil de l’élève, et quiconque connaît son code
     peut la modifier.</p>
+
+    <!-- Lot « Les records » (09/10/2026, planche R5) : la ligue du professeur
+         — toutes ses classes, exactement ce que voient les élèves (un
+         « Mystère » reste un Mystère). Propriétaire seulement, Défi tables
+         seulement, et seulement quand une Légende a un temps. -->
+    <div class="carte rec-carte" id="bloc-records" hidden>
+      <div class="rec-tete">
+        <div><strong>🏆 Les records</strong><p>Toutes tes classes · ce que voient les élèves</p></div>
+        <button type="button" class="secondaire petit" id="records-plein-ecran">Plein écran</button>
+      </div>
+      <div class="rec-deux">
+        <div><h3>Cette semaine</h3><ol class="rec-liste" id="records-semaine"></ol><p class="rec-vide" id="records-semaine-vide" hidden>Personne cette semaine, pour l’instant.</p></div>
+        <div><h3>De tous les temps</h3><ol class="rec-liste" id="records-toujours"></ol></div>
+      </div>
+      <p class="message" id="message-records" hidden></p>
+    </div>
 
     <!-- Ce qu'on imprime pour la classe (lot R5 de Défi tables, 13/09/2026) :
          les papiers de l'élève vivent sur mathsgo.re, pas ici. La fiche vierge
@@ -414,6 +555,44 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
         <li>Cartes recto verso à découper, une table par PDF :
           <span class="cartes-tables"><?php foreach (range(2, 10) as $table): ?><a href="https://mathsgo.re/outils/calcul_mental/cartes_table_<?= $table ?>.pdf" target="_blank" rel="noopener">table de <?= $table ?></a><?php endforeach; ?><a href="https://mathsgo.re/outils/calcul_mental/cartes_tables.pdf" target="_blank" rel="noopener">toutes les tables</a></span></li>
       </ul>
+    </div>
+
+    <!-- Lot « splat-suivi-4 » (conception D7, place choisie par Gwenaël le
+         08/10/2026) : ce que les élèves trouvent dans leur espace. Propriétaire
+         seulement. Décocher retire la tuile et n'efface rien : le serveur garde
+         les progressions (classes.modifier ne change que la liste). -->
+    <div id="bloc-activites" hidden>
+      <h2>Activités de la classe</h2>
+      <div class="carte" style="max-width:560px">
+        <p class="sous" style="margin-bottom:8px">Ce que tes élèves trouvent dans leur espace.</p>
+        <div class="activites" id="liste-activites">
+          <label><input type="checkbox" data-appli="defi-tables"> Défi tables</label>
+          <label><input type="checkbox" data-appli="splat"> SPLAT!</label>
+        </div>
+        <!-- Lot « splat-suivi-5 » : les mondes de SPLAT! ouverts à la classe (tous par
+             défaut). Un monde fermé reste sur la carte de l'élève, grisé, avec un
+             cadenas ; rien n'est effacé. Les six mondes de la carte, dans l'ordre
+             (un test les compare au moteur). -->
+        <div class="mondes-ouverts" id="mondes-ouverts" hidden>
+          <p id="titre-mondes-ouverts">Mondes de SPLAT! ouverts à la classe</p>
+          <div class="puces-mondes" id="puces-mondes" role="group" aria-labelledby="titre-mondes-ouverts">
+            <label class="puce-monde" data-monde="1"><input type="checkbox" data-monde="1"><i aria-hidden="true">1</i>Petit</label>
+            <label class="puce-monde" data-monde="2"><input type="checkbox" data-monde="2"><i aria-hidden="true">2</i>Classique</label>
+            <label class="puce-monde" data-monde="3"><input type="checkbox" data-monde="3"><i aria-hidden="true">3</i>Enquête</label>
+            <label class="puce-monde" data-monde="4"><input type="checkbox" data-monde="4"><i aria-hidden="true">4</i>Système</label>
+            <label class="puce-monde" data-monde="5"><input type="checkbox" data-monde="5"><i aria-hidden="true">5</i>Équations</label>
+            <label class="puce-monde" data-monde="6"><input type="checkbox" data-monde="6"><i aria-hidden="true">6</i>Relatifs</label>
+          </div>
+        </div>
+        <!-- Lot « Les records » : la case par classe (ouverte par défaut) —
+             décochée, les Légendes de la classe gardent l'escalier, ne voient
+             pas les records et n'y apparaissent pas. -->
+        <div class="rec-reglage" id="rec-reglage" hidden>
+          <label><input type="checkbox" id="case-records"> 🏆 Les records</label>
+          <small>Le concours de temps des Légendes des tables. Décoché : cette classe ne le voit pas et n’y apparaît pas.</small>
+        </div>
+        <p class="message" id="message-activites" hidden></p>
+      </div>
     </div>
 
     <!-- Partage : visible seulement pour le propriétaire de la classe. -->
@@ -582,6 +761,36 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   // Les classes de l'année écoulée que le serveur propose de supprimer.
   let echues = [];
 
+  // Lot « splat-suivi-4 » (08/10/2026) — « Ma classe » montre une activité à
+  // la fois. Les activités que la page sait montrer, dans l'ordre du catalogue
+  // (lib/applis.php) ; un test vérifie que chacune y est disponible et que
+  // l'API la propose. `unite` : ce que compte « Revenir à… » (le compteur de
+  // l'activité au catalogue).
+  const APPLIS = [
+    {cle: "defi-tables", nom: "Défi tables", unite: ["calcul", "calculs"]},
+    {cle: "splat", nom: "SPLAT!", unite: ["étape", "étapes"]}
+  ];
+  // Le dernier choix, retenu le temps de l'onglet.
+  const CLE_APPLI = "mathsgo-suivi-prof-appli";
+  // Le moteur de SPLAT!, servi d'ici (copie du dépôt, lot 3), chargé à la
+  // première ouverture de l'onglet SPLAT! : 60 ko qu'une classe sans SPLAT!
+  // n'a pas à télécharger. Sa version dans l'adresse suit son contenu.
+  const MOTEUR_SPLAT = "splat-parcours.js?v=<?= htmlspecialchars($versionSplat, ENT_QUOTES) ?>";
+  // Les tris de chaque activité : ceux de Défi tables sont lus dans la page.
+  const TRIS = {
+    "defi-tables": [...document.getElementById("tri").options].map(option => [option.value, option.textContent]),
+    "splat": [["prenom", "Prénom"], ["etapes", "Étapes réussies"], ["date", "Dernière activité"]]
+  };
+  let SPLAT = window.MathsGoSplatParcours || null;
+  let chargementSplat = null;
+  let appliAffichee = "defi-tables";
+  // Les élèves déjà lus de la classe ouverte, par activité (un appel
+  // « tableau » par activité, refait seulement quand la classe change).
+  let tableaux = {};
+  // Les élèves dont le Détail SPLAT! est déplié.
+  const detailsOuverts = new Set();
+  let demandeAppli = 0;
+
   try { jeton = sessionStorage.getItem(CLE_JETON) || ""; } catch (_) {}
 
   // ------------------------------------------------------- verrou d'inactivité
@@ -715,11 +924,12 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     "qui", "compte-qui", "boite-texte",
     "boite-champs", "secret-texte", "secret-valeur", "echues-texte", "supprimer-echues"];
   const ZONES_MESSAGE = ["erreur-connexion", "message-classes", "message-classe",
-    "message-profs", "message-partage", "message-compte", "bandeau-droit", "bandeau-annee"];
+    "message-profs", "message-partage", "message-compte", "bandeau-droit", "bandeau-annee",
+    "message-activites", "message-records"];
   const CHAMPS_A_VIDER = ["identifiant", "motdepasse", "libelle",
     "mdp-ancien", "mdp-nouveau", "mdp-confirme"];
   const BLOCS_A_CACHER = ["fiche", "bandelettes", "objectif", "fragiles", "bloc-partage", "bloc-profs",
-    "bandeau-echues"];
+    "bandeau-echues", "bloc-activites", "choix-appli", "bloc-records"];
 
   function viderZones() {
     ZONES_TEXTE.forEach(id => { const noeud = $(id); if (noeud) noeud.textContent = ""; });
@@ -744,6 +954,9 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     annuaire = [];
     echues = [];
     tri = {colonne: "prenom", sens: 1};
+    appliAffichee = "defi-tables";
+    tableaux = {};
+    detailsOuverts.clear();
     veille.arreter();
   }
 
@@ -785,7 +998,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     const jetonAFermer = jeton;
     oublierEtat();
     viderZones();
-    try { sessionStorage.removeItem(CLE_JETON); } catch (_) {}
+    try { sessionStorage.removeItem(CLE_JETON); sessionStorage.removeItem(CLE_APPLI); } catch (_) {}
     if (opt.avis) poserAvis(opt.avis);
     montrer("ecran-connexion");
     if (opt.message) messager("erreur-connexion", opt.message, "erreur");
@@ -848,6 +1061,53 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     } catch (_) { return vide; }
   }
 
+  // Lot « splat-suivi-4 » : la ligne SPLAT! d'un élève, lue par le moteur
+  // (prof/splat-parcours.js) et par lui seul — la page ne touche jamais aux
+  // étapes du parcours (un test y veille). Un élève sans parcours a ses six
+  // mondes vides et « 0 / 37 » : resumeProf part d'un parcours vierge. Le total
+  // est celui de la carte du moteur, jamais écrit ici.
+  //
+  // Lot « splat-suivi-5 » : quand la classe n'a pas tous ses mondes ouverts, les
+  // comptes (étapes réussies, Bonus, séries en cours, carte de classe) ne portent
+  // que sur les mondes ouverts — « 9 / 9 » quand les mondes 1 et 2 sont finis —
+  // et les pastilles des mondes fermés sont grises. Le Détail, lui, garde tout le
+  // travail de l'élève (les états de TOUTES les étapes).
+  function lireSplat(brut) {
+    const vide = {faits: 0, total: 0, bonus: 0, cours: 0, mondes: [], etats: {}, lisible: false};
+    if (!SPLAT) return vide;
+    try {
+      const ouverts = mondesOuverts();
+      const ouvert = numero => !ouverts || ouverts.includes(numero);
+      const tout = SPLAT.resumeProf(brut || null);
+      const resume = ouverts
+        ? SPLAT.resumeProf(brut || null, SPLAT.CARTE.ETAPES.filter(etape => ouvert(etape[4])),
+            SPLAT.CARTE.BONUS.filter(etape => ouvert(etape[4])))
+        : tout;
+      return {faits: resume.faits, total: resume.total, bonus: resume.bonus.faits,
+              cours: resume.cours + resume.bonus.cours,
+              mondes: tout.mondes.map(monde => (ouvert(monde.numero) ? monde : Object.assign({}, monde, {etat: "ferme"}))),
+              etats: tout.etapes, lisible: true};
+    } catch (_) { return vide; }
+  }
+
+  // Les mondes de SPLAT! ouverts à la classe ouverte (classe.reglages, lot
+  // « splat-suivi-5 ») : null quand ils le sont tous — le cas de toute classe où
+  // personne n'a rien choisi. NOMBRE_MONDES : les mondes de la carte (un test le
+  // compare au moteur, et aux six cases de « Activités de la classe »).
+  const NOMBRE_MONDES = 6;
+  function mondesOuverts() {
+    const reglages = classe && classe.reglages;
+    const liste = reglages && reglages.splat && reglages.splat.mondes;
+    if (!Array.isArray(liste)) return null;
+    const ouverts = liste.filter(numero => Number.isInteger(numero) && numero >= 1 && numero <= NOMBRE_MONDES);
+    return ouverts.length && ouverts.length < NOMBRE_MONDES ? ouverts : null;
+  }
+
+  function elevesLus(cle, liste) {
+    const lire = cle === "splat" ? lireSplat : lireProgression;
+    return (liste || []).map(eleve => Object.assign({}, eleve, {lu: lire(eleve.parcours)}));
+  }
+
   // « ven. 02/10 » : le jour de la semaine dit plus vite qu'une année si
   // l'élève est venu cette semaine (lot 2b) ; à l'heure de La Réunion, comme
   // les journées du serveur.
@@ -890,6 +1150,9 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
 
   function trierEleves() {
     const clef = eleve => {
+      // SPLAT! : les étapes réussies, puis les Bonus, puis une série en
+      // cours, pour départager.
+      if (tri.colonne === "etapes") return (eleve.lu.faits || 0) * 10000 + (eleve.lu.bonus || 0) * 10 + (eleve.lu.cours ? 1 : 0);
       if (tri.colonne === "acquises") return eleve.lu.acquises.length;
       if (tri.colonne === "encours") return eleve.lu.enCours.ordre;
       if (tri.colonne === "semaine") return eleve.lu.seances;
@@ -923,30 +1186,101 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     });
   }
 
+  // Les cellules communes aux deux tableaux (lot « splat-suivi-4 ») : le
+  // prénom, qu'on saisit dans la ligne, et le code.
+  function celluleNom(eleve, ecriture) {
+    const cNom = document.createElement("td");
+    const champ = document.createElement("input");
+    champ.type = "text";
+    champ.value = nomAffiche(eleve);
+    champ.placeholder = ecriture ? "Prénom et initiale" : "—";
+    champ.maxLength = 44;
+    champ.style.minWidth = "132px";
+    if (ecriture) champ.addEventListener("change", () => nommer(eleve, champ));
+    else { champ.readOnly = true; champ.tabIndex = -1; }
+    cNom.appendChild(champ);
+    return cNom;
+  }
+
+  function celluleCode(eleve) {
+    const cCode = document.createElement("td");
+    cCode.className = "code";
+    cCode.textContent = eleve.code || "";
+    return cCode;
+  }
+
+  function celluleDate(eleve) {
+    const cDate = document.createElement("td");
+    const quand = dateLisible(eleve.maj_le);
+    cDate.textContent = quand || "rien fait";
+    if (!quand) cDate.className = "sans";
+    return cDate;
+  }
+
+  // Les gestes rares d'une ligne, derrière « ⋯ » (lot 2b) — les mêmes dans
+  // les deux tableaux ; « Revenir à… » revient dans l'activité affichée.
+  function poserGestes(eleve, ecriture, cActions) {
+    const plus = document.createElement("details");
+    plus.className = "plus";
+    const poignee = document.createElement("summary");
+    poignee.textContent = "⋯";
+    poignee.setAttribute("aria-label", "Autres actions");
+    poignee.title = "Autres actions";
+    const menu = document.createElement("div");
+    plus.append(poignee, menu);
+    if (ecriture && (eleve.restaurable || (eleve.journees || []).length)) {
+      // Le serveur garde la version d'avant le dernier enregistrement ET la
+      // fin de chacune des sept dernières journées : un écrasement (par
+      // quelqu'un qui avait le code, ou un « Recommencer à zéro »
+      // malheureux) se répare même si on ne s'en aperçoit que le lendemain.
+      const revenir = document.createElement("button");
+      revenir.type = "button";
+      revenir.className = "secondaire petit";
+      revenir.textContent = "Revenir à…";
+      revenir.title = "Revenir à une version précédente de sa progression";
+      revenir.addEventListener("click", () => revenirA(eleve));
+      menu.append(revenir);
+    }
+    if (ecriture) {
+      const regen = document.createElement("button");
+      regen.type = "button";
+      regen.className = "secondaire petit";
+      regen.textContent = "Nouveau code";
+      regen.addEventListener("click", () => regenerer(eleve));
+      menu.append(regen);
+    }
+    // Supprimer un élève efface sa progression pour de bon : depuis le lot 11,
+    // c'est au propriétaire de la classe, comme la supprimer. Un collègue en
+    // écriture prépare et dépanne, il n'efface pas.
+    if (droitClasse === "proprietaire") {
+      const sup = document.createElement("button");
+      sup.type = "button";
+      sup.className = "danger petit";
+      sup.textContent = "Supprimer";
+      sup.addEventListener("click", () => supprimerEleve(eleve));
+      menu.append(sup);
+    }
+    if (menu.children.length) {
+      menu.addEventListener("click", () => { plus.open = false; });
+      plus.addEventListener("toggle", () => placerMenu(plus, poignee, menu));
+      cActions.append(plus);
+    }
+  }
+
   function dessinerTableau() {
     trierEleves();
     const ecriture = droitClasse !== "lecture";
     $("tableau").classList.toggle("sans-codes", !ecriture);
     const corps = $("corps");
     corps.textContent = "";
+    // Lot « splat-suivi-4 » : l'onglet SPLAT! a ses colonnes et sa carte.
+    if (appliAffichee === "splat") { dessinerTableauSplat(corps, ecriture); return; }
 
     eleves.forEach(eleve => {
       const ligne = document.createElement("tr");
 
-      const cNom = document.createElement("td");
-      const champ = document.createElement("input");
-      champ.type = "text";
-      champ.value = nomAffiche(eleve);
-      champ.placeholder = ecriture ? "Prénom et initiale" : "—";
-      champ.maxLength = 44;
-      champ.style.minWidth = "132px";
-      if (ecriture) champ.addEventListener("change", () => nommer(eleve, champ));
-      else { champ.readOnly = true; champ.tabIndex = -1; }
-      cNom.appendChild(champ);
-
-      const cCode = document.createElement("td");
-      cCode.className = "code";
-      cCode.textContent = eleve.code || "";
+      const cNom = celluleNom(eleve, ecriture);
+      const cCode = celluleCode(eleve);
 
       const cAcquises = document.createElement("td");
       const nombre = eleve.lu.acquises.length;
@@ -985,6 +1319,14 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
         if (enCours.type === "expert" && eleve.lu.couronne) texte.title = "Légende des tables";
       }
       cEnCours.append(texte);
+      // Lot « Les records » : le record de la Légende à côté de sa couronne.
+      if (eleve.record && Number.isInteger(eleve.record.meilleur) && PARCOURS.formatTemps) {
+        const temps = document.createElement("span");
+        temps.className = "rec-temps";
+        temps.textContent = PARCOURS.formatTemps(eleve.record.meilleur);
+        temps.title = "Son record aux 25 questions";
+        cEnCours.append(temps);
+      }
       if (eleve.lu.longue) {
         const alerte = document.createElement("span");
         alerte.className = "alerte";
@@ -1015,10 +1357,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
         if (retard) cRetard.title = eleve.lu.retard.map(cle => PARCOURS.libelleFait(cle)).join(" · ");
       }
 
-      const cDate = document.createElement("td");
-      const quand = dateLisible(eleve.maj_le);
-      cDate.textContent = quand || "rien fait";
-      if (!quand) cDate.className = "sans";
+      const cDate = celluleDate(eleve);
 
       const cActions = document.createElement("td");
       // La fiche vit dans l'appli du site : un seul gabarit, une seule vérité.
@@ -1033,51 +1372,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
       fiche.addEventListener("click", () => voirFiche(eleve, fiche));
       cActions.append(fiche);
       // Les gestes rares, derrière « ⋯ » (lot 2b).
-      const plus = document.createElement("details");
-      plus.className = "plus";
-      const poignee = document.createElement("summary");
-      poignee.textContent = "⋯";
-      poignee.setAttribute("aria-label", "Autres actions");
-      poignee.title = "Autres actions";
-      const menu = document.createElement("div");
-      plus.append(poignee, menu);
-      if (ecriture && (eleve.restaurable || (eleve.journees || []).length)) {
-        // Le serveur garde la version d'avant le dernier enregistrement ET la
-        // fin de chacune des sept dernières journées : un écrasement (par
-        // quelqu'un qui avait le code, ou un « Recommencer à zéro »
-        // malheureux) se répare même si on ne s'en aperçoit que le lendemain.
-        const revenir = document.createElement("button");
-        revenir.type = "button";
-        revenir.className = "secondaire petit";
-        revenir.textContent = "Revenir à…";
-        revenir.title = "Revenir à une version précédente de sa progression";
-        revenir.addEventListener("click", () => revenirA(eleve));
-        menu.append(revenir);
-      }
-      if (ecriture) {
-        const regen = document.createElement("button");
-        regen.type = "button";
-        regen.className = "secondaire petit";
-        regen.textContent = "Nouveau code";
-        regen.addEventListener("click", () => regenerer(eleve));
-        menu.append(regen);
-      }
-      // Supprimer un élève efface sa progression pour de bon : depuis le lot 11,
-      // c'est au propriétaire de la classe, comme la supprimer. Un collègue en
-      // écriture prépare et dépanne, il n'efface pas.
-      if (droitClasse === "proprietaire") {
-        const sup = document.createElement("button");
-        sup.type = "button";
-        sup.className = "danger petit";
-        sup.textContent = "Supprimer";
-        sup.addEventListener("click", () => supprimerEleve(eleve));
-        menu.append(sup);
-      }
-      if (menu.children.length) {
-        menu.addEventListener("click", () => { plus.open = false; });
-        plus.addEventListener("toggle", () => placerMenu(plus, poignee, menu));
-        cActions.append(plus);
-      }
+      poserGestes(eleve, ecriture, cActions);
 
       cNom.dataset.libelle = "";
       cCode.dataset.libelle = "Code";
@@ -1200,6 +1495,260 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
       li.append(nom, combien);
       liste.appendChild(li);
     });
+    bloc.hidden = false;
+  }
+
+  // ---------------------------------------------------------------- l'onglet SPLAT!
+  //
+  // Lot « splat-suivi-4 » (08/10/2026, conception D8, planche 4 validée) : une
+  // ligne par élève — les six mondes en pastilles, les étapes réussies (« ✨ N »
+  // pour les Bonus, comptés à part : choix Q3), la dernière activité —, et un
+  // « Détail » qui déplie ses étapes, monde par monde. Tout est construit par
+  // createElement et textContent : rien de ce que renvoie le serveur ne
+  // devient du HTML. C'est le moteur qui lit le parcours (lireSplat).
+
+  // Les couleurs des six mondes, celles de la carte des mondes et de la tuile
+  // de l'espace élève (index.php) — le même dessin partout.
+  const COULEURS_MONDES = {1: "#d9690c", 2: "#0b67b2", 3: "#be185d", 4: "#92400e", 5: "#08857f", 6: "#7b42b4"};
+  const ETATS_MONDE = {vide: "pas commencé", cours: "en cours", fini: "fini", ferme: "fermé pour la classe"};
+  // Un monde fermé à la classe (lot « splat-suivi-5 ») : anneau gris en pointillés,
+  // chiffre gris, quel que soit le travail fait — le Détail le montre.
+  const GRIS_FERME = "#949eaa";
+  // L'état d'une étape (moteur) → la case du Détail.
+  const CASES_ETAPE = {reussie: "ok", aide: "aide", cours: "cours", vide: ""};
+  const SVG = "http://www.w3.org/2000/svg";
+
+  function elementSvg(nom, attributs) {
+    const element = document.createElementNS(SVG, nom);
+    Object.keys(attributs).forEach(cle => element.setAttribute(cle, attributs[cle]));
+    return element;
+  }
+
+  // La pastille d'un monde, dessinée comme dans l'espace élève (index.php,
+  // pastilleMonde) : un rond de 24 px — vide, à moitié (en cours), plein
+  // (fini) —, le numéro au centre (pied 0,35 em sous le centre), blanc cerné
+  // de la couleur sur la moitié. Au survol : « Monde 3 · SPLAT! Enquête : 4 / 15 ».
+  function pastilleMonde(monde) {
+    const etat = Object.prototype.hasOwnProperty.call(ETATS_MONDE, monde.etat) ? monde.etat : "vide";
+    const couleur = COULEURS_MONDES[monde.numero] || "#063f86";
+    const dessin = elementSvg("svg", {class: `monde-p ${etat}`, width: "24", height: "24", viewBox: "0 0 24 24",
+      focusable: "false"});
+    const titre = elementSvg("title", {});
+    titre.textContent = `Monde ${monde.numero} · ${monde.nom} : ${etat === "ferme" ? ETATS_MONDE.ferme : `${monde.faits} / ${monde.total}`}`;
+    dessin.append(titre);
+    if (etat === "ferme") {
+      dessin.append(elementSvg("circle", {cx: "12", cy: "12", r: "11", fill: "#fff", stroke: GRIS_FERME,
+        "stroke-width": "2", "stroke-dasharray": "3.2 2.4"}));
+      const chiffreFerme = elementSvg("text", {x: "12", y: "16.375", "text-anchor": "middle", "font-size": "12.5",
+        "font-weight": "800", fill: GRIS_FERME});
+      chiffreFerme.textContent = String(monde.numero);
+      dessin.append(chiffreFerme);
+      return dessin;
+    }
+    dessin.append(elementSvg("circle", {cx: "12", cy: "12", r: "11", fill: etat === "fini" ? couleur : "#fff",
+      stroke: couleur, "stroke-width": "2"}));
+    if (etat === "cours") dessin.append(elementSvg("path", {d: "M12 1A11 11 0 0 0 12 23Z", fill: couleur}));
+    const chiffre = elementSvg("text", {x: "12", y: "16.375", "text-anchor": "middle", "font-size": "12.5",
+      "font-weight": "800", fill: etat === "vide" ? couleur : "#fff"});
+    if (etat === "cours") {
+      chiffre.setAttribute("stroke", couleur);
+      chiffre.setAttribute("stroke-width", "3");
+      chiffre.setAttribute("stroke-linejoin", "round");
+      chiffre.setAttribute("paint-order", "stroke");
+    }
+    chiffre.textContent = String(monde.numero);
+    dessin.append(chiffre);
+    return dessin;
+  }
+
+  // Les cases du Détail : une rangée par monde (numéros de la carte), puis une
+  // rangée de Bonus par monde qui en a, puis la légende.
+  function ligneDetailSplat(eleve, colonnes) {
+    const ligne = document.createElement("tr");
+    ligne.className = "detail";
+    const cellule = document.createElement("td");
+    cellule.colSpan = colonnes;
+    cellule.dataset.libelle = "";
+    const etats = eleve.lu.etats || {};
+    const ouverts = mondesOuverts();
+    const rangee = (titre, etapes, bonus) => {
+      if (!etapes.length) return;
+      const div = document.createElement("div");
+      // un monde fermé à la classe : sa rangée reste (le travail est là), plus pâle
+      const ferme = Boolean(ouverts) && !ouverts.includes(etapes[0][4]);
+      div.className = ferme ? "detail-monde ferme" : "detail-monde";
+      const nom = document.createElement("b");
+      nom.textContent = ferme ? `🔒 ${titre}` : titre;
+      if (ferme) nom.title = "Monde fermé pour la classe";
+      div.append(nom);
+      etapes.forEach(etape => {
+        const caseEtape = document.createElement("span");
+        caseEtape.className = ["et", bonus ? "bonus" : "", CASES_ETAPE[etats[etape[0]]] || ""].filter(Boolean).join(" ");
+        caseEtape.textContent = String(etape[1]);
+        div.append(caseEtape);
+      });
+      cellule.append(div);
+    };
+    // CARTE : [parcours, numéro sur la carte, titre (vide), monde, numéro du monde].
+    SPLAT.CARTE.MONDES.forEach(([numero, nom]) =>
+      rangee(`Monde ${numero} · ${nom}`, SPLAT.CARTE.ETAPES.filter(etape => etape[4] === numero), false));
+    SPLAT.CARTE.MONDES.forEach(([numero]) =>
+      rangee(`✨ Bonus du monde ${numero}`, SPLAT.CARTE.BONUS.filter(etape => etape[4] === numero), true));
+    const legende = document.createElement("div");
+    legende.className = "legende-detail";
+    [["et ok", "réussie"], ["et aide", "réussie avec des réponses vues"], ["et cours", "en cours"],
+     ["et", "pas encore faite"], ["et bonus ok", "bonus"]].forEach(([classe, texte]) => {
+      const morceau = document.createElement("span");
+      const pastille = document.createElement("i");
+      pastille.className = classe;
+      morceau.append(pastille, document.createTextNode(texte));
+      legende.append(morceau);
+    });
+    cellule.append(legende);
+    ligne.append(cellule);
+    return ligne;
+  }
+
+  function dessinerTableauSplat(corps, ecriture) {
+    $("fragiles").hidden = true;
+    eleves.forEach(eleve => {
+      const ligne = document.createElement("tr");
+      const cNom = celluleNom(eleve, ecriture);
+      const cCode = celluleCode(eleve);
+
+      const cMondes = document.createElement("td");
+      const mondes = document.createElement("span");
+      mondes.className = "mondes";
+      mondes.setAttribute("role", "img");
+      mondes.setAttribute("aria-label", eleve.lu.mondes
+        .map(monde => `Monde ${monde.numero} : ${ETATS_MONDE[monde.etat] || ETATS_MONDE.vide}`).join(", "));
+      eleve.lu.mondes.forEach(monde => mondes.append(pastilleMonde(monde)));
+      cMondes.append(mondes);
+
+      const cEtapes = document.createElement("td");
+      const compte = document.createElement("span");
+      compte.className = `pastille ${eleve.lu.faits ? "p-vert" : "p-gris"}`;
+      compte.textContent = eleve.lu.lisible ? `${eleve.lu.faits} / ${eleve.lu.total}` : "—";
+      cEtapes.append(compte);
+      if (eleve.lu.bonus) {
+        const bonus = document.createElement("span");
+        bonus.className = "bonus-compte";
+        bonus.textContent = `✨ ${eleve.lu.bonus}`;
+        cEtapes.append(bonus);
+      }
+
+      const cDate = celluleDate(eleve);
+
+      const cActions = document.createElement("td");
+      if (eleve.lu.lisible) {
+        // Le Détail se déplie sous la ligne, sans redessiner le tableau ; il
+        // reste déplié quand on trie.
+        const detail = document.createElement("button");
+        detail.type = "button";
+        detail.className = "secondaire petit";
+        let ligneDetail = null;
+        const poser = () => {
+          const ouvert = detailsOuverts.has(eleve.id);
+          detail.textContent = ouvert ? "Replier ▴" : "Détail ▾";
+          detail.setAttribute("aria-expanded", String(ouvert));
+          if (ouvert) {
+            if (!ligneDetail) ligneDetail = ligneDetailSplat(eleve, ligne.children.length);
+            ligne.after(ligneDetail);
+          } else if (ligneDetail) ligneDetail.remove();
+        };
+        detail.addEventListener("click", () => {
+          if (detailsOuverts.has(eleve.id)) detailsOuverts.delete(eleve.id);
+          else detailsOuverts.add(eleve.id);
+          poser();
+        });
+        cActions.append(detail);
+        // Le libellé tout de suite ; la rangée du Détail une fois la ligne
+        // posée dans le tableau (plus bas).
+        poser();
+        ligne.poserDetail = poser;
+      }
+      poserGestes(eleve, ecriture, cActions);
+
+      cNom.dataset.libelle = "";
+      cCode.dataset.libelle = "Code";
+      cMondes.dataset.libelle = "Mondes";
+      cEtapes.dataset.libelle = "Réussies";
+      cDate.dataset.libelle = "Activité";
+      cActions.dataset.libelle = "";
+      cActions.className = "actions-eleve";
+
+      ligne.append(cNom, cCode, cMondes, cEtapes, cDate, cActions);
+      corps.appendChild(ligne);
+      if (ligne.poserDetail && detailsOuverts.has(eleve.id)) ligne.poserDetail();
+    });
+
+    dessinerObjectifSplat();
+
+    $("resume-classe").textContent = resumeDeLaClasse(eleves);
+    if (!SPLAT) {
+      messager("message-classe",
+        "La progression SPLAT! ne peut pas être détaillée : le moteur (prof/splat-parcours.js) n’a pas pu être chargé — vérifie qu’il est bien déposé sur le serveur.",
+        "erreur");
+    }
+    dessinerPapier();
+  }
+
+  // « Notre classe, ensemble », version SPLAT! : les étapes réussies de tout
+  // le monde, et combien d'élèves ont fini chaque monde. Comme pour Défi
+  // tables : calculée sur ce qui est déjà chargé, aucun nom, aucun chiffre par
+  // élève, et CACHÉE tant qu'aucune étape n'est réussie dans la classe (une
+  // barre vide n'est pas un objectif). Les Bonus n'y entrent pas : ils sont
+  // comptés à part (Q3).
+  function objectifSplat() {
+    if (!SPLAT || !eleves.length) return null;
+    const lus = eleves.map(eleve => eleve.lu).filter(lu => lu.lisible);
+    // Lot « splat-suivi-5 » : seulement les mondes ouverts à la classe.
+    const ouverts = mondesOuverts();
+    const ouvert = numero => !ouverts || ouverts.includes(numero);
+    return {
+      fait: lus.reduce((somme, lu) => somme + lu.faits, 0),
+      total: eleves.length * SPLAT.CARTE.ETAPES.filter(etape => ouvert(etape[4])).length,
+      mondes: SPLAT.CARTE.MONDES.filter(([numero]) => ouvert(numero)).map(([numero]) => ({
+        numero,
+        finis: lus.filter(lu => lu.mondes.some(monde => monde.numero === numero && monde.etat === "fini")).length
+      }))
+    };
+  }
+
+  function dessinerObjectifSplat() {
+    const bloc = $("objectif");
+    const objectif = objectifSplat();
+    const lignes = $("objectif-lignes");
+    lignes.textContent = "";
+    if (!objectif || !objectif.total || !objectif.fait) { bloc.hidden = true; return; }
+    const part = Math.max(0, Math.min(1, objectif.fait / objectif.total));
+    $("objectif-barre").style.width = `${Math.round(part * 100)}%`;
+    const pluriel = objectif.fait > 1 ? "s" : "";
+    $("objectif-compte").textContent =
+      `Ensemble : ${objectif.fait} étape${pluriel} réussie${pluriel} sur ${objectif.total}`;
+    // « Monde 1 fini par 6 élèves · monde 2 par 4 · … » — les mondes que
+    // personne n'a finis ne sont pas cités.
+    const finis = objectif.mondes.filter(monde => monde.finis > 0);
+    if (finis.length) {
+      const li = document.createElement("li");
+      finis.forEach((monde, rang) => {
+        // Un morceau par monde, qui ne se coupe pas en fin de ligne.
+        const morceau = document.createElement("span");
+        morceau.className = "insecable";
+        const b = document.createElement("b");
+        if (rang === 0) {
+          morceau.append(document.createTextNode(`Monde ${monde.numero} fini par `));
+          b.textContent = `${monde.finis} élève${monde.finis > 1 ? "s" : ""}`;
+        } else {
+          li.append(document.createTextNode(" · "));
+          morceau.append(document.createTextNode(`monde ${monde.numero} par `));
+          b.textContent = String(monde.finis);
+        }
+        morceau.append(b);
+        li.append(morceau);
+      });
+      lignes.appendChild(li);
+    }
     bloc.hidden = false;
   }
 
@@ -1465,18 +2014,397 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     } catch (erreur) { surErreur(erreur, "message-classes"); }
   }
 
+  // Ouvrir une classe — ou la relire, après un ajout d'élèves, un collage, une
+  // restauration, un changement d'activités. Lot « splat-suivi-4 » : on lit le
+  // tableau de l'activité à montrer (celle déjà affichée si c'est la même
+  // classe, sinon le dernier choix de l'onglet, sinon la première de la
+  // classe), et les listes des autres activités sont oubliées : elles seront
+  // relues quand on les choisira.
   async function ouvrirClasse(id) {
     try {
-      const donnees = await api("tableau", {classe_id: id, appli: "defi-tables"});
+      // Un changement d'onglet encore en route ne vaut plus : on relit tout.
+      demandeAppli += 1;
+      const memeClasse = Boolean(classe) && classe.id === id;
+      const connue = classes.find(uneClasse => uneClasse.id === id);
+      const voulue = appliAMontrer(lesApplisConnues(connue ? connue.applis : ["defi-tables"]),
+        memeClasse ? appliAffichee : lireChoixAppli());
+      const [donnees] = await Promise.all([api("tableau", {classe_id: id, appli: voulue}),
+        voulue === "splat" ? chargerMoteurSplat() : null]);
       classe = donnees.classe;
       droitClasse = classe.droit || "proprietaire";
-      eleves = (donnees.eleves || []).map(eleve => Object.assign({}, eleve, {lu: lireProgression(eleve.parcours)}));
+      if (connue) connue.applis = classe.applis;
+      if (!memeClasse) detailsOuverts.clear();
+      appliAffichee = voulue;
+      eleves = elevesLus(voulue, donnees.eleves);
+      tableaux = {[voulue]: eleves};
       $("titre-classe").textContent = classe.libelle;
       messager("message-classe", "", "");
+      messager("message-activites", "", "");
       montrer("ecran-classe");
       appliquerDroits();
+      // La liste des classes était en retard (activités changées ailleurs) :
+      // on passe à une activité que la classe a vraiment.
+      const presentes = applisDeLaClasse();
+      if (presentes.length && !presentes.includes(voulue)) { poserAppli(); await afficherAppli(presentes[0]); return; }
+      poserAppli();
       dessinerTableau();
     } catch (erreur) { surErreur(erreur, "message-classes"); }
+  }
+
+  // ------------------------------------------- l'activité affichée (lot « splat-suivi-4 »)
+
+  function lesApplisConnues(liste) {
+    return APPLIS.filter(appli => (liste || []).includes(appli.cle)).map(appli => appli.cle);
+  }
+
+  // Les activités de la classe ouverte que la page sait montrer.
+  function applisDeLaClasse() {
+    return lesApplisConnues(classe && classe.applis);
+  }
+
+  // L'activité à montrer : celle qu'on voulait si la classe l'a, sinon la
+  // première de la classe.
+  function appliAMontrer(liste, voulue) {
+    if (voulue && liste.includes(voulue)) return voulue;
+    return liste[0] || "defi-tables";
+  }
+
+  function lireChoixAppli() {
+    try { return sessionStorage.getItem(CLE_APPLI) || ""; } catch (_) { return ""; }
+  }
+
+  function retenirChoixAppli(cle) {
+    try { sessionStorage.setItem(CLE_APPLI, cle); } catch (_) {}
+  }
+
+  // Le moteur de SPLAT!, chargé une fois, à la première ouverture de
+  // l'onglet. Introuvable : null, et l'onglet le dit (dessinerTableauSplat).
+  function chargerMoteurSplat() {
+    if (!SPLAT && window.MathsGoSplatParcours) SPLAT = window.MathsGoSplatParcours;
+    if (SPLAT) return Promise.resolve(SPLAT);
+    if (!chargementSplat) {
+      chargementSplat = new Promise(resolve => {
+        const script = document.createElement("script");
+        script.src = MOTEUR_SPLAT;
+        script.addEventListener("load", () => { SPLAT = window.MathsGoSplatParcours || null; resolve(SPLAT); });
+        script.addEventListener("error", () => { chargementSplat = null; resolve(null); });
+        document.head.appendChild(script);
+      });
+    }
+    return chargementSplat;
+  }
+
+  // Ce qui change avec l'activité affichée : le choix sous le nom de la classe
+  // (seulement s'il y a le choix), l'en-tête du tableau, les tris, et ce qui
+  // est propre à Défi tables (« Les calculs qui coincent », « À imprimer »).
+  function poserAppli() {
+    const presentes = applisDeLaClasse();
+    $("choix-appli").hidden = presentes.length < 2;
+    document.querySelectorAll("#choix-appli button[data-appli]").forEach(bouton => {
+      bouton.hidden = !presentes.includes(bouton.dataset.appli);
+      bouton.setAttribute("aria-pressed", String(bouton.dataset.appli === appliAffichee));
+    });
+    const splat = appliAffichee === "splat";
+    $("entete-defi-tables").hidden = splat;
+    $("entete-splat").hidden = !splat;
+    $("bloc-imprimer").hidden = splat;
+    if (splat) $("fragiles").hidden = true;
+    poserTris();
+    poserActivites();
+    // Lot « Les records » : la carte, Défi tables seulement (relue à chaque
+    // ouverture de la classe).
+    chargerRecords();
+  }
+
+  function poserTris() {
+    const options = TRIS[appliAffichee] || TRIS["defi-tables"];
+    if (!options.some(option => option[0] === tri.colonne)) tri = {colonne: "prenom", sens: 1};
+    const choix = $("tri");
+    choix.textContent = "";
+    options.forEach(([valeur, libelle]) => {
+      const option = document.createElement("option");
+      option.value = valeur;
+      option.textContent = libelle;
+      choix.appendChild(option);
+    });
+    choix.value = tri.colonne;
+  }
+
+  // Passer d'une activité à l'autre. La liste d'une activité déjà lue pour
+  // cette classe est reprise telle quelle ; sinon un appel « tableau ». Deux
+  // clics rapprochés : c'est le dernier qui gagne.
+  async function afficherAppli(cle) {
+    if (!classe || !applisDeLaClasse().includes(cle)) return;
+    const numero = ++demandeAppli;
+    try {
+      if (cle === "splat") await chargerMoteurSplat();
+      const liste = tableaux[cle]
+        || elevesLus(cle, (await api("tableau", {classe_id: classe.id, appli: cle})).eleves);
+      if (numero !== demandeAppli) return;
+      tableaux[cle] = liste;
+      appliAffichee = cle;
+      eleves = liste;
+      retenirChoixAppli(cle);
+      messager("message-classe", "", "");
+      poserAppli();
+      redessin.demander();
+    } catch (erreur) {
+      if (numero === demandeAppli) surErreur(erreur, "message-classe");
+    }
+  }
+
+  // Un élève est le même dans toutes les activités : un prénom, un code
+  // changés — ou un élève supprimé — valent pour les listes déjà lues.
+  function reporterEleve(eleve, supprime) {
+    Object.keys(tableaux).forEach(cle => {
+      if (supprime) { tableaux[cle] = tableaux[cle].filter(autre => autre.id !== eleve.id); return; }
+      tableaux[cle].forEach(autre => {
+        if (autre.id !== eleve.id || autre === eleve) return;
+        autre.prenom = eleve.prenom;
+        autre.initiale = eleve.initiale;
+        autre.code = eleve.code;
+      });
+    });
+    if (supprime) tableaux[appliAffichee] = eleves;
+  }
+
+  // ------------------------------------------------- activités de la classe (D7)
+
+  // ------------------------------------------------------ 🏆 Les records (lot du 09/10/2026)
+
+  // La ligue du professeur connecté (records.ligue) : ses classes, les deux
+  // top 10. Lue à l'ouverture d'une classe Défi tables dont il est propriétaire ;
+  // la carte ne se montre que s'il y a au moins un temps.
+  let ligueRecords = null;
+
+  function formatTempsRecord(temps) {
+    return PARCOURS && PARCOURS.formatTemps ? PARCOURS.formatTemps(temps) : `${(temps / 10).toFixed(1)} s`;
+  }
+
+  // retirable (lot « après l'audit GPT », D4) : dans la carte, chaque ligne a
+  // son « Retirer » ; pas dans le plein écran, qui se projette.
+  function ligneDeRecord(ligne, retirable = false) {
+    const item = document.createElement("li");
+    const rang = document.createElement("span");
+    rang.className = "rg";
+    rang.textContent = ["🥇", "🥈", "🥉"][ligne.rang - 1] || String(ligne.rang);
+    const nom = document.createElement("span");
+    nom.className = "nom";
+    nom.textContent = ligne.nom;
+    const temps = document.createElement("span");
+    temps.className = "tps";
+    temps.textContent = formatTempsRecord(ligne.temps);
+    item.append(rang, nom, temps);
+    if (retirable && ligne.eleve) {
+      const retirer = document.createElement("button");
+      retirer.type = "button";
+      retirer.className = "rec-retirer";
+      retirer.textContent = "Retirer";
+      retirer.title = "Retirer ce temps";
+      retirer.setAttribute("aria-label", `Retirer ce temps : ${ligne.eleve.prenom}, ${ligne.eleve.classe}, ${temps.textContent}`);
+      retirer.addEventListener("click", () => retirerTemps(ligne));
+      item.append(retirer);
+    }
+    return item;
+  }
+
+  // « Retirer ce temps » (décision de Gwenaël, 14/10/2026) : un temps qu'un
+  // élève n'a pas couru (requête forgée) s'efface d'ici — son record et son
+  // temps de la semaine ; son choix de nom reste, sa prochaine course compte.
+  // Le serveur n'accepte que le propriétaire de la classe de l'élève.
+  async function retirerTemps(ligne) {
+    const qui = `${ligne.eleve.prenom} · ${ligne.eleve.classe}`;
+    const reponse = await demander(`Retirer le temps de ${qui} (${formatTempsRecord(ligne.temps)}) ? Son record et son temps de la semaine s’effacent. Sa prochaine course compte à nouveau.`);
+    if (!reponse) return;
+    try {
+      const donnees = await api("records.retirer", {eleve_id: ligne.eleve.id});
+      ligueRecords = donnees;
+      dessinerRecords();
+      messager("message-records", `Le temps de ${qui} est retiré.`, "ok");
+      // Le tableau de la classe montre ce temps à côté de la couronne : relu.
+      if (classe) await ouvrirClasse(classe.id);
+    } catch (erreur) {
+      messager("message-records", erreur.message, "erreur");
+    }
+  }
+
+  function dessinerRecords() {
+    const bloc = $("bloc-records");
+    const visible = Boolean(ligueRecords) && appliAffichee === "defi-tables" && droitClasse === "proprietaire"
+      && ((ligueRecords.toujours || []).length > 0);
+    bloc.hidden = !visible;
+    if (!visible) return;
+    ["semaine", "toujours"].forEach(cle => {
+      const liste = $(`records-${cle}`);
+      liste.textContent = "";
+      (ligueRecords[cle] || []).forEach(ligne => liste.append(ligneDeRecord(ligne, true)));
+    });
+    $("records-semaine-vide").hidden = (ligueRecords.semaine || []).length > 0;
+  }
+
+  async function chargerRecords() {
+    ligueRecords = null;
+    if (droitClasse !== "proprietaire" || appliAffichee !== "defi-tables") { dessinerRecords(); return; }
+    try {
+      ligueRecords = await api("records.ligue");
+    } catch (erreur) {
+      // Serveur pas encore mis à niveau (503) ou panne : pas de carte, sans bruit.
+      ligueRecords = null;
+    }
+    dessinerRecords();
+  }
+
+  // Le plein écran : le même tableau, en grand, pour le projeter (planche R5).
+  function ouvrirRecordsPleinEcran() {
+    if (!ligueRecords) return;
+    const plein = document.createElement("div");
+    plein.className = "rec-plein";
+    plein.id = "records-plein";
+    plein.setAttribute("role", "dialog");
+    plein.setAttribute("aria-label", "Les records");
+    const fermer = document.createElement("button");
+    fermer.type = "button";
+    fermer.className = "secondaire fermer";
+    fermer.textContent = "✕ Fermer";
+    const titre = document.createElement("h1");
+    titre.textContent = "🏆 Les records";
+    const deux = document.createElement("div");
+    deux.className = "rec-deux";
+    [["Cette semaine", "semaine"], ["De tous les temps", "toujours"]].forEach(([nom, cle]) => {
+      const colonne = document.createElement("div");
+      const h3 = document.createElement("h3");
+      h3.textContent = nom;
+      const liste = document.createElement("ol");
+      liste.className = "rec-liste";
+      (ligueRecords[cle] || []).forEach(ligne => liste.append(ligneDeRecord(ligne)));
+      colonne.append(h3, liste);
+      deux.append(colonne);
+    });
+    plein.append(fermer, titre, deux);
+    const quitter = () => { plein.remove(); document.removeEventListener("keydown", surEchap); $("records-plein-ecran").focus(); };
+    const surEchap = evenement => { if (evenement.key === "Escape") quitter(); };
+    fermer.addEventListener("click", quitter);
+    document.addEventListener("keydown", surEchap);
+    document.body.append(plein);
+    fermer.focus();
+  }
+
+  // La case « Les records » de la classe (réglage « defi-tables.records »,
+  // vrai par défaut) : décochée, les Légendes de la classe gardent l'escalier.
+  function recordsOuvertsPourLaClasse() {
+    const reglages = classe && classe.reglages;
+    return !(reglages && reglages["defi-tables"] && reglages["defi-tables"].records === false);
+  }
+
+  async function changerRecords(caseRecords) {
+    const ouvre = caseRecords.checked;
+    caseRecords.disabled = true;
+    try {
+      await api("classes.modifier", {classe_id: classe.id, reglages: {"defi-tables": {records: ouvre}}});
+      await ouvrirClasse(classe.id);
+      messager("message-activites", `Les records ${ouvre ? "ouverts" : "fermés"} pour la ${classe.libelle}.`, "ok");
+    } catch (erreur) {
+      caseRecords.checked = !ouvre;
+      surErreur(erreur, "message-activites");
+    } finally {
+      caseRecords.disabled = false;
+    }
+  }
+
+  function poserActivites() {
+    $("bloc-activites").hidden = droitClasse !== "proprietaire";
+    // Lot « Les records » : la case, seulement quand la classe a Défi tables.
+    const presentesRecords = (classe && classe.applis) || [];
+    $("rec-reglage").hidden = !presentesRecords.includes("defi-tables");
+    $("case-records").checked = recordsOuvertsPourLaClasse();
+    $("case-records").disabled = false;
+    const presentes = (classe && classe.applis) || [];
+    document.querySelectorAll("#liste-activites input[data-appli]").forEach(caseActivite => {
+      caseActivite.checked = presentes.includes(caseActivite.dataset.appli);
+      caseActivite.disabled = false;
+    });
+    // Lot « splat-suivi-5 » : les mondes ouverts, seulement quand la classe a SPLAT!.
+    $("mondes-ouverts").hidden = !presentes.includes("splat");
+    const ouverts = mondesOuverts();
+    document.querySelectorAll("#mondes-ouverts input[data-monde]").forEach(caseMonde => {
+      caseMonde.checked = !ouverts || ouverts.includes(Number(caseMonde.dataset.monde));
+      caseMonde.disabled = false;
+      poserPuce(caseMonde);
+    });
+  }
+
+  // Le dessin d'une case de monde suit la case (pointillés gris quand il est fermé).
+  function poserPuce(caseMonde) {
+    caseMonde.closest(".puce-monde").classList.toggle("ferme", !caseMonde.checked);
+  }
+
+  // Ouvrir ou fermer un monde de SPLAT! pour la classe (lot « splat-suivi-5 »,
+  // choix de Gwenaël : monde par monde). Pas de question : rien n'est effacé et
+  // un clic le rouvre. Un monde reste toujours ouvert (pour retirer SPLAT!, on
+  // décoche SPLAT!). L'élève le voit à la prochaine page qu'il ouvre.
+  async function changerMonde(caseMonde) {
+    const numero = Number(caseMonde.dataset.monde);
+    const ouvre = caseMonde.checked;
+    const cases = [...document.querySelectorAll("#mondes-ouverts input[data-monde]")];
+    const voulus = cases.filter(uneCase => uneCase.checked).map(uneCase => Number(uneCase.dataset.monde));
+    if (!voulus.length) {
+      caseMonde.checked = true;
+      messager("message-activites", "Une classe garde au moins un monde ouvert.", "erreur");
+      return;
+    }
+    poserPuce(caseMonde);
+    cases.forEach(uneCase => { uneCase.disabled = true; });
+    $("puces-mondes").setAttribute("aria-busy", "true");
+    try {
+      await api("classes.modifier", {classe_id: classe.id, reglages: {splat: {mondes: voulus}}});
+      await ouvrirClasse(classe.id);
+      messager("message-activites",
+        `Monde ${numero} ${ouvre ? "ouvert" : "fermé"} pour la ${classe.libelle}.`, "ok");
+    } catch (erreur) {
+      caseMonde.checked = !ouvre;
+      poserPuce(caseMonde);
+      surErreur(erreur, "message-activites");
+    } finally {
+      cases.forEach(uneCase => { uneCase.disabled = false; });
+      $("puces-mondes").setAttribute("aria-busy", "false");
+    }
+  }
+
+  // Cocher : la tuile apparaît dans l'espace des élèves. Décocher : elle
+  // disparaît, après confirmation, et RIEN n'est effacé — classes.modifier ne
+  // change que la liste de la classe, les progressions restent en base. Une
+  // classe garde au moins une activité (le serveur remettrait Défi tables).
+  async function changerActivite(caseActivite) {
+    const cle = caseActivite.dataset.appli;
+    const nom = (APPLIS.find(appli => appli.cle === cle) || {nom: cle}).nom;
+    const ajout = caseActivite.checked;
+    const autres = ((classe && classe.applis) || []).filter(autre => autre !== cle);
+    const voulues = ajout ? autres.concat([cle]) : autres;
+    if (!lesApplisConnues(voulues).length) {
+      caseActivite.checked = true;
+      messager("message-activites", "Une classe garde au moins une activité.", "erreur");
+      return;
+    }
+    if (!ajout && !await demander(
+      `Retirer ${nom} de la classe ${classe.libelle} ? La tuile disparaît de l’espace des élèves. `
+      + `Leur travail reste enregistré : rien n’est effacé.`)) {
+      caseActivite.checked = true;
+      return;
+    }
+    const cases = document.querySelectorAll("#liste-activites input[data-appli]");
+    cases.forEach(uneCase => { uneCase.disabled = true; });
+    try {
+      await api("classes.modifier", {classe_id: classe.id, applis: voulues});
+      await ouvrirClasse(classe.id);
+      messager("message-activites", ajout
+        ? `${nom} ajouté : la tuile apparaît dans l’espace des élèves.`
+        : `${nom} retiré de l’espace des élèves. Rien n’est effacé.`, "ok");
+    } catch (erreur) {
+      caseActivite.checked = !ajout;
+      surErreur(erreur, "message-activites");
+    } finally {
+      cases.forEach(uneCase => { uneCase.disabled = false; });
+    }
   }
 
   // ------------------------------------------------- droits sur la classe ouverte
@@ -1484,6 +2412,9 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   function appliquerDroits() {
     const proprietaire = droitClasse === "proprietaire";
     const ecriture = droitClasse !== "lecture";
+    // Mener une séance en direct, c'est recevoir les réponses avec les
+    // prénoms : pas en lecture seule (même règle que le serveur).
+    $("seance-direct").hidden = !ecriture;
     $("ajouter").hidden = !ecriture;
     $("coller-prenoms").hidden = !ecriture;
     $("imprimer-bandelettes").hidden = !ecriture;
@@ -1755,6 +2686,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     redessin.debut();
     try {
       await api("eleves.nommer", {eleve_id: eleve.id, prenom, initiale});
+      reporterEleve(eleve);
       dessinerPapier();
       messager("message-classe", "", "");
     } catch (erreur) {
@@ -2026,6 +2958,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     try {
       const donnees = await api("eleves.regenerer", {eleve_id: eleve.id});
       eleve.code = donnees.code;
+      reporterEleve(eleve);
       redessin.demander();
       // Les élèves sans prénom sont rangés par code : un seul code nouveau peut
       // décaler les numéros de toute la feuille. On le dit, au lieu de laisser
@@ -2047,10 +2980,13 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
       options.push({valeur: "avant",
         libelle: "avant le dernier enregistrement" + (quand ? ` (du ${quand})` : "")});
     }
+    // Le compteur de l'activité affichée : « 12 calculs » pour Défi tables,
+    // « 13 étapes » pour SPLAT! (le serveur compte ce que lib/applis.php lui dit).
+    const unite = (APPLIS.find(appli => appli.cle === appliAffichee) || APPLIS[0]).unite;
     (eleve.journees || []).forEach(journee => {
       options.push({valeur: journee.jour,
-        libelle: `fin de journée du ${jourLisible(journee.jour)} — ${journee.calculs} calcul`
-          + (journee.calculs > 1 ? "s" : "")});
+        libelle: `fin de journée du ${jourLisible(journee.jour)} — ${journee.calculs} `
+          + (journee.calculs > 1 ? unite[1] : unite[0])});
     });
     return options;
   }
@@ -2072,7 +3008,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
       + `La version actuelle devient la « précédente » : tu pourras refaire l’inverse.`);
     if (!reponse) return;
     try {
-      const corps = {eleve_id: eleve.id, appli: "defi-tables"};
+      const corps = {eleve_id: eleve.id, appli: appliAffichee};
       if (choix.version !== "avant") corps.jour = choix.version;
       await api("eleves.restaurer", corps);
       await ouvrirClasse(classe.id);
@@ -2093,6 +3029,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     try {
       await api("eleves.supprimer", {eleve_id: eleve.id});
       eleves = eleves.filter(autre => autre.id !== eleve.id);
+      reporterEleve(eleve, true);
       redessin.demander();
       messager("message-classe", "Élève supprimé.", "ok");
     } catch (erreur) { surErreur(erreur, "message-classe"); }
@@ -2103,9 +3040,10 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   // déjà chargé pour le tableau : le serveur, lui, n'ouvre jamais une
   // progression. Rien de ce bilan ne survit à la suppression ; c'est pour ça
   // que la confirmation dit de le noter maintenant si on y tient.
-  function combienAuBoutDesTables() {
+  function combienAuBoutDesTables(liste) {
     if (!PARCOURS || !PARCOURS.TABLES) return null;
-    return eleves.filter(eleve => eleve.lu.lisible && eleve.lu.acquises.length === PARCOURS.TABLES.length).length;
+    if (!liste) return null;
+    return liste.filter(eleve => eleve.lu.lisible && eleve.lu.acquises.length === PARCOURS.TABLES.length).length;
   }
 
   // Combien de prénoms sont RÉELLEMENT saisis — pas combien il y a d'élèves.
@@ -2117,21 +3055,43 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     return eleves.filter(eleve => (eleve.prenom || "").trim() !== "").length;
   }
 
-  function texteBilanDeLaClasse() {
-    const auBout = combienAuBoutDesTables();
-    const actifs = eleves.filter(eleve => eleve.maj_le).length;
+  // Lot « splat-suivi-4 » : le bilan parle des tables, quel que soit l'onglet
+  // ouvert. `tables` : les élèves lus pour Défi tables (listeDefiTables) ; null
+  // pour une classe sans Défi tables — le bilan dit alors seulement combien
+  // d'élèves, et combien se sont entraînés.
+  function texteBilanDeLaClasse(tables) {
+    const auBout = combienAuBoutDesTables(tables);
+    const actifs = (tables || eleves).filter(eleve => eleve.maj_le).length;
     return `${eleves.length} élève${eleves.length > 1 ? "s" : ""}, `
       + `${actifs} entraîné${actifs > 1 ? "s" : ""}`
       + (auBout === null ? "" : `, ${auBout} au bout des tables`);
+  }
+
+  // Les élèves de la classe lus pour Défi tables : ceux déjà lus, sinon un
+  // appel « tableau » (depuis l'onglet SPLAT!). Classe sans Défi tables, ou
+  // serveur qui ne répond pas : null, et le bilan se contente des élèves.
+  async function listeDefiTables() {
+    if (!applisDeLaClasse().includes("defi-tables")) return null;
+    if (tableaux["defi-tables"]) return tableaux["defi-tables"];
+    try {
+      const donnees = await api("tableau", {classe_id: classe.id, appli: "defi-tables"});
+      tableaux["defi-tables"] = elevesLus("defi-tables", donnees.eleves);
+      return tableaux["defi-tables"];
+    } catch (_) { return null; }
   }
 
   $("supprimer-classe").addEventListener("click", async () => {
     const bouton = $("supprimer-classe");
     if (bouton.disabled) return;
     const nommes = combienDePrenoms();
+    // Depuis l'onglet SPLAT!, la liste de Défi tables peut demander un appel :
+    // un second clic pendant ce temps n'ouvre pas une seconde question.
+    bouton.disabled = true;
+    const tables = await listeDefiTables();
+    bouton.disabled = false;
     const reponse = await demander(
       `Supprimer la classe ${classe.libelle} ?\n\n`
-      + `Bilan de l’année : ${texteBilanDeLaClasse()}. Note ces chiffres maintenant si tu veux les `
+      + `Bilan de l’année : ${texteBilanDeLaClasse(tables)}. Note ces chiffres maintenant si tu veux les `
       + `garder : rien n’en sera conservé.\n\n`
       + (nommes === 0 ? "Aucun prénom n’a été saisi. " : (nommes === 1 ? "Le prénom saisi, " : `Les ${nommes} prénoms saisis, `))
       + `${nommes === 0 ? "Les" : "les"} ${eleves.length} code${eleves.length > 1 ? "s" : ""} et toutes les progressions seront `
@@ -2155,6 +3115,17 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   $("imprimer-bandelettes").addEventListener("click", () => imprimer("bandelettes"));
   $("imprimer-recap").addEventListener("click", () => imprimer("recap"));
   $("retour").addEventListener("click", () => { chargerClasses(); });
+  document.querySelectorAll("#choix-appli button[data-appli]").forEach(bouton => {
+    bouton.addEventListener("click", () => afficherAppli(bouton.dataset.appli));
+  });
+  document.querySelectorAll("#liste-activites input[data-appli]").forEach(caseActivite => {
+    caseActivite.addEventListener("change", () => changerActivite(caseActivite));
+  });
+  document.querySelectorAll("#mondes-ouverts input[data-monde]").forEach(caseMonde => {
+    caseMonde.addEventListener("change", () => changerMonde(caseMonde));
+  });
+  $("case-records").addEventListener("change", () => changerRecords($("case-records")));
+  $("records-plein-ecran").addEventListener("click", ouvrirRecordsPleinEcran);
 
   document.querySelectorAll("th button[data-tri]").forEach(bouton => {
     bouton.addEventListener("click", () => {
@@ -2223,6 +3194,14 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   // Le rechargement est la seule façon d'être sûr que RIEN n'est resté dans le
   // document — une zone oubliée dans viderZones() ne survit pas à un reload.
   $("deconnexion").addEventListener("click", () => deconnecter({recharger: true}));
+
+  // L'écran du tableau est une autre page : la session et l'instant du dernier
+  // geste la suivent (sessionStorage de l'onglet), la classe est dite dans
+  // l'ancre — un numéro de classe n'est pas un secret, et le serveur revérifie
+  // le droit à chaque appel.
+  $("seance-direct").addEventListener("click", () => {
+    if (classe) window.location.assign("direct.php#classe=" + encodeURIComponent(classe.id));
+  });
 
   // ---------------------------------------------------------- veille du poste
   ["pointerdown", "keydown", "wheel", "touchstart"].forEach(evenement => {

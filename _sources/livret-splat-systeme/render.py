@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Régénère les deux livrets « tablette » du monde 4, SPLAT! Système (lot M4-4, 04/10/2026), à
-partir du site lui-même :
-    « SPLAT! Système »               le livret de base, pour tous : fiches 25 à 28
-    « SPLAT! Système, deuxième tour » le livret plus dur : fiches 25d à 28d (le Bonus du monde 4
-                                     sur la carte des mondes, comme le monde 3)
+Régénère les deux livrets « tablette » du monde 4, SPLAT! Système (lot M4-4, 04/10/2026 ; refaits
+aux lots M4-6 et M4-7, 14/10/2026, d'après la conception des deux livrets), à partir du site :
+    « SPLAT! Système »            le livret 1, cycle 3, pour tous : fiches 25 à 28
+    « SPLAT! Système · cycle 4 »  le livret 2 : fiches 25d à 28d (le Bonus du monde 4 sur la
+                                  carte des mondes ; ses fichiers gardent leur nom « tour2 »)
 
     python3 render.py                    (les deux livrets, l'élève et les deux corrigés)
     python3 render.py systeme            (un seul livret : systeme | tour2)
@@ -31,9 +31,11 @@ Produit, à la racine du dépôt, pour chaque livret (ex. livret_splat_systeme) 
 et ses deux corrigés (pour tous : on peut les donner aux élèves), chacun avec son « à plier » :
     outils/livret_splat_systeme_correction.pdf           « avec les taches » (les mots des couleurs)
     outils/livret_splat_systeme_correction_lettre.pdf    en lettres (N, B…), comme l'appli
+et, pour le livret 2 seulement (lot M4-8), un troisième :
+    outils/livret_splat_systeme_tour2_correction_equations.pdf   en équations, étape par étape
 
 LES FICHES ne sont PAS redessinées ici : elles sont imprimées par l'outil du site
-(outils/splat.html, mode D, layout=2) avec les graines triées du lot M4-4, et le QR est ajouté
+(outils/splat.html, mode D, layout=2) avec les graines triées (lots M4-4 et M4-6), et le QR est ajouté
 dans le bandeau juste avant l'impression. L'EXEMPLE non plus : la carte et les blocs de sa
 correction sont ceux de l'outil (drawSysPlateaux, drawSysCorrectionBlocs), sur une carte qui
 n'est PAS dans le livret ; les textes qui citent des nombres sont écrits À PARTIR DE LA CARTE
@@ -56,95 +58,138 @@ SITE = "https://mathsgo.re"
 COURTE = "/splat/systeme/livret/"               # la page courte des QR (?f=fiche, ?s=série)
 
 # ---------------------------------------------------------------------------
-# LES HUIT FICHES (lot M4-4, 04/10/2026). Une fiche = un réglage + une graine ; les graines
-# sont TRIÉES (hors dépôt : le vrai générateur rejoué dans Chromium, carte par carte) pour que
-# chaque carte ait son type imposé, dans l'ordre de la fiche :
-#   25 Je retire       une partie connue, une tache de plus, puis deux cartes « je partage »
-#   26 Trois couleurs  trois plateaux : je retire, puis je remplace
-#   27 Je double       trois cartes « je double », la dernière : le petit plateau doublé dépasse
-#                      (sens=MIX, réglage ajouté au lot M4-4 : chaque carte tire son sens)
-#   28 J'additionne    trois cartes en miroir (les deux formes), la dernière : trois paires
-#   25d L'escalier     les quatre formes de l'escalier, de la plus petite à la plus grande
-#   26d Je triple      le petit plateau recopié trois fois
-#   27d Avec des jetons visibles   je retire, trois couleurs, je double, en miroir — des jetons
-#   28d Dans le désordre           je retire, trois couleurs, je double un plateau plus gros
-#                                  (2c, lot M4-4b : à la place du « je double » simple), trois
-#                                  paires — les plateaux mélangés (aucun à sa place habituelle ;
-#                                  « trois paires » : parmi les trois paires montrées)
+# LES HUIT FICHES. Une fiche = un réglage + une graine ; les graines sont TRIÉES (hors dépôt :
+# le vrai générateur rejoué dans Chromium, carte par carte) pour que chaque carte ait son type
+# imposé, dans l'ordre de la fiche.
+# LIVRET 1, cycle 3 (lot M4-6, 14/10/2026 : la conception des deux livrets du monde 4, § 3) —
+# une idée par fiche, 4 cartes qui diffèrent par ce que l'élève réfléchit :
+#   25 Je retire         une tache de plus (1b, une seule tache de la 1re couleur : c'est trouvé) ·
+#                        le petit plateau d'une seule couleur (1a, 2 taches de l'autre couleur au
+#                        moins : je partage deux fois) · je partage (1c, pas la forme de l'exemple,
+#                        2 + 3 contre 2 + 1) · le petit plateau tient deux fois dans le grand (2a)
+#   26 Je remplace       trois couleurs (1d) · l'escalier (1e) · trois couleurs (1d) · le double
+#                        dépasse (2d : sens=INDICE, le petit plateau 1 + 2)
+#   27 J'additionne      miroir 1-2 (3a) · trois paires (3b) · miroir 2-3 (3a) · miroir 1-3 (3a+,
+#                        forme=MIX, lot M4-5)
+#   28 À toi de choisir  deux cartes qui se ressemblent par page, pas le même geste (choix de
+#                        Gwenaël du 14/10, à la place du désordre et des jetons de la conception) :
+#                        p. 10, le même plateau 1 + 3 — contre 1 + 1 je retire (1c), contre 3 + 1
+#                        j'additionne (miroir 1-3, 3a+) ; p. 11, le même plateau 2 + 3 — contre
+#                        1 + 2 le double dépasse (2d), contre 3 + 2 j'additionne (miroir 2-3, 3a)
+# LIVRET 2, cycle 4, le Bonus du monde 4 (lot M4-7, 14/10/2026 : la conception, § 4) — totaux
+# 50 à 100, « Le système » sous chaque carte (systeme=1), ce que le cycle 3 n'a pas vu :
+#   25d Je recopie, puis je retire   le cas 3 recopié 2 fois : le plateau à recopier à gauche
+#                       (1 tache de la 1re couleur), à droite, à gauche, à droite avec 2 taches
+#   26d Deux fois ou trois fois ?    3 fois, 2 fois, 3 fois (il reste 7 taches), 2 fois : l'élève
+#                       choisit combien de fois recopier ; plateau à recopier à droite en 2 et 4
+#   27d Deux gestes à la suite       les deux petits plateaux d'abord — je retire (4e·1c),
+#                       j'additionne (4e·3a), je recopie (4e·3c·2, son corrigé à 89 % : choix de
+#                       Gwenaël du 14/10, REDUITE_PERMISE), le double dépasse (4e·2d) —, puis
+#                       je remplace dans le grand
+#   28d À toi de choisir             trois couleurs et un jeton visible (1d), trois paires (3b),
+#                       je recopie 3 fois (3c·3), deux gestes en miroir (4e·3a) — plateaux mélangés
 # Et partout : totaux tous différents dans une fiche (ceux des petits plateaux compris), deux
-# cartes jamais de la même paire de couleurs, plus petite valeur ≥ 3, jamais de carte de secours,
-# aucune carte en double sur les deux livrets, les exemples et les défis (controle_global).
+# cartes jamais des mêmes couleurs, plus petite valeur ≥ 3 (livret 2 : ≥ 5, et tous les totaux de
+# 30 à 100), jamais de carte de secours, aucune carte en double sur les deux livrets, les exemples
+# et les défis (controle_global).
 # Ces adresses sont AUSSI celles de la carte des mondes (SYS_FICHES, SYS_TOUR2) et de la page
 # courte des QR : un test les compare. Ne jamais changer une graine sans refaire les PDF.
 SYS_COMMUN = "&cards=4&unknown=question"
 T = "&totalMin=20&totalMax=60"
 V0 = "&visibleMin=0&visibleMax=0"
-S25 = "mode=D&geste=MIX&gestes=PARTIELLE,COEF" + V0 + T + "&seed=24"
-S26 = "mode=D&geste=EMBOITE1" + V0 + T + "&seed=22"
-S27 = "mode=D&geste=DOUBLE&sens=MIX" + V0 + T + "&seed=222"
-S28 = "mode=D&geste=MIX&gestes=MIROIR,TROIS" + V0 + T + "&seed=53"
-S25D = "mode=D&geste=ESCALIER" + V0 + T + "&seed=3046"
-S26D = "mode=D&geste=DOUBLE&fois=3" + V0 + T + "&seed=1"
-S27D = "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR&visibleMin=1&visibleMax=3" + T + "&seed=1373"
-S28D = "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS&indice=12&ordre=MELANGE" + V0 + T + "&seed=5673"
+S25 = "mode=D&geste=MIX&gestes=PARTIELLE,COEF,DOUBLE" + V0 + T + "&seed=1196"
+S26 = "mode=D&geste=MIX&gestes=EMBOITE1,ESCALIER,DOUBLE&sens=INDICE" + V0 + T + "&seed=29"
+S27 = "mode=D&geste=MIX&gestes=MIROIR,TROIS&forme=MIX" + V0 + T + "&seed=723"
+S28 = "mode=D&geste=MIX&gestes=COEF,MIROIR,DOUBLE&forme=MIX&sens=INDICE" + V0 + T + "&seed=117944"
+T2 = "&totalMin=50&totalMax=100"
+S25D = "mode=D&geste=RECOPIE&fois=2&ordre=MELANGE" + V0 + T2 + "&seed=70569"
+S26D = "mode=D&geste=RECOPIE&fois=MIX&ordre=MELANGE" + V0 + T2 + "&seed=341052"
+S27D = "mode=D&geste=ETAGES&fois=2&indice=12&sens=INDICE" + V0 + T2 + "&seed=394968"
+S28D = "mode=D&geste=MIX&gestes=EMBOITE1,TROIS,RECOPIE,ETAGES&fois=3&sous=MIROIR&ordre=MELANGE&visibleMin=1&visibleMax=3" + T2 + "&seed=33590"
 
 # Le type attendu de chaque carte (vérifié au rendu : render.py s'arrête si une graine a bougé).
 TYPES = {
-    "25": ["1a", "1b", "1c", "1c"], "26": ["1d"] * 4, "27": ["2a", "2a", "2a", "2d"], "28": ["3a", "3a", "3a", "3b"],
-    "25d": ["1e"] * 4, "26d": ["2b"] * 4, "27d": ["1a", "1d", "2a", "3a"], "28d": ["1b", "1d", "2c", "3b"],
+    "25": ["1b", "1a", "1c", "2a"], "26": ["1d", "1e", "1d", "2d"], "27": ["3a", "3b", "3a", "3a+"], "28": ["1c", "3a+", "2d", "3a"],
+    "25d": ["3c·2"] * 4, "26d": ["3c·3", "3c·2", "3c·3", "3c·2"], "27d": ["4e·1c", "4e·3a", "4e·3c·2", "4e·2d"],
+    "28d": ["1d", "3b", "3c·3", "4e·3a"],
 }
+# Livret 2 (lot M4-7) : le plateau à recopier est dessiné à droite sur les cartes 2 et 4 (ordre
+# des plateaux mélangé), à gauche sur les cartes 1 et 3 — vérifié au rendu.
+A_DROITE = {"25d": [False, True, False, True], "26d": [False, True, False, True]}
+# Les cartes qui ont des jetons visibles (les autres n'en ont pas) — vérifié au rendu.
+JETONS = {"28d": [True, False, False, False]}
+# Une seule carte réduite permise, et pas en dessous de ce seuil (choix de Gwenaël du 14/10 :
+# « deux gestes, je recopie » ne tient qu'à 89 % en 2 par page) : {fiche: {rang: échelle mini}}.
+REDUITE_PERMISE = {"27d": {2: 0.88}}
 
 def fiche(code, t, q, resume):
     return dict(code=code, t=t, q=q, resume=resume)
 
 FICHES_1 = [
     fiche("25", "Je retire", S25, "Le petit plateau est dans le grand&nbsp;: retire-le."),
-    fiche("26", "Trois couleurs", S26, "Je retire, puis je remplace."),
-    fiche("27", "Je double", S27, "Je recopie le petit plateau deux fois."),
-    fiche("28", "J'additionne", S28, "J'additionne les plateaux, puis je partage."),
+    fiche("26", "Je remplace", S26, "Je remplace un plateau par son total."),
+    fiche("27", "J'additionne", S27, "J'additionne les plateaux, puis je partage."),
+    fiche("28", "À toi de choisir", S28, "Deux cartes se ressemblent&nbsp;:<br>je choisis le geste."),
 ]
+# Fiche 28 (lot M4-6) : les deux cartes d'une page ont le même premier plateau (même nombre de
+# taches de chaque couleur, couleurs différentes) — vérifié au rendu.
+JUMELLES = {"28": [(0, 1), (2, 3)]}
+# Les fiches dont aucun plateau n'est à sa place habituelle (ordre=MELANGE).
+DESORDRE = {"28d"}
 FICHES_2 = [
-    fiche("25d", "L'escalier", S25D, "Trois plateaux&nbsp;: je retire deux fois."),
-    fiche("26d", "Je triple", S26D, "Je recopie le petit plateau trois fois."),
-    fiche("27d", "Avec des jetons visibles", S27D, "Je retire aussi les jetons."),
-    fiche("28d", "Dans le désordre", S28D, "Je cherche d'abord le grand plateau."),
+    fiche("25d", "Je recopie, puis je retire", S25D, "Je recopie un plateau, j'y retrouve l'autre."),
+    fiche("26d", "Deux fois ou trois fois\u00a0?", S26D, "Je choisis combien de fois recopier."),
+    fiche("27d", "Deux gestes à la suite", S27D, "Les petits plateaux d'abord, puis le grand."),
+    fiche("28d", "À toi de choisir", S28D, "Tous les gestes, plateaux mélangés."),
 ]
 
-# Les séries infinies du dos : pas de graine, huit cartes nouvelles à chaque ouverture, en mode
+# Les séries infinies du dos : pas de graine, quatre cartes nouvelles à chaque ouverture (huit
+# jusqu'au 08/10/2026, Enquête et Système ; « Je révise » compris), en mode
 # élève sans étape (rien n'est enregistré). Leurs QR passent par la page courte (?s=7…12 ; les
 # séries 1 à 6 des livrets du 25/09 restent servies pour un livret déjà imprimé).
+# Lot M4-6 (14/10/2026) : les séries 7 à 9 suivent le livret 1 refait — 7 comme la fiche 25,
+# 8 comme les fiches 26 et 27, 9 tous les gestes du livret ;
+# 13 : la série du défi du livret 1 (je recopie un plateau, 2 ou 3 fois), son QR est au dos.
+# Lot M4-7 : les séries 10 à 12 suivent le livret 2 (totaux 50 à 100) — 10 comme les fiches 25d et
+# 26d, 11 comme la fiche 27d, 12 tous les gestes des deux livrets, des jetons, le désordre ;
+# 14 : la série du défi du livret 2 (je recopie 4 fois ; deux gestes, le double dépasse — en
+# désordre), son QR est au dos, et les deux cartes du défi en sont une graine.
 SERIES = {
-    7: "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF" + V0 + T,
-    8: "mode=D&geste=MIX&gestes=DOUBLE,MIROIR,TROIS&sens=MIX" + V0 + T,
-    9: "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS&sens=MIX" + V0 + T,
-    10: "mode=D&geste=ESCALIER" + V0 + T,
-    11: "mode=D&geste=DOUBLE&fois=3" + V0 + T,
-    12: "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS,ESCALIER&sens=MIX&ordre=MELANGE&visibleMin=1&visibleMax=3" + T,
+    7: "mode=D&geste=MIX&gestes=PARTIELLE,COEF,DOUBLE" + V0 + T,
+    8: "mode=D&geste=MIX&gestes=EMBOITE1,ESCALIER,DOUBLE,MIROIR,TROIS&sens=INDICE&forme=MIX" + V0 + T,
+    9: "mode=D&geste=MIX&gestes=PARTIELLE,COEF,DOUBLE,EMBOITE1,ESCALIER,MIROIR,TROIS&sens=MIX&forme=MIX" + V0 + T,
+    10: "mode=D&geste=RECOPIE&fois=MIX" + V0 + T2,
+    11: "mode=D&geste=ETAGES" + V0 + T2,
+    12: "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS,ESCALIER,RECOPIE,ETAGES&sens=MIX&forme=MIX&fois=MIX&ordre=MELANGE&visibleMin=1&visibleMax=3" + T2,
+    13: "mode=D&geste=RECOPIE&fois=MIX" + V0 + T,
+    14: "mode=D&geste=MIX&gestes=RECOPIE,ETAGES&fois=4&sous=DOUBLE&indice=12&sens=INDICE&ordre=MELANGE" + V0 + T2,
 }
-SERIE_CARTES = 8
+SERIE_CARTES = 4
 
 # Les exemples (couverture et pages 2-3) : le geste de la première fiche du livret, une carte
 # HORS des fiches, la tache noire et la tache bleue (comme les exemples de l'Enquête).
 #   livret 1 (COEF, je partage, graine 82) : 2 noires + 3 bleues = 42 ; 2 noires + 1 bleue = 30
 #     → 2 bleues = 12, bleue = 6 ; 2 noires = 24, noire = 12 ;
-#   deuxième tour (ESCALIER, graine 180) : 2 noires + 2 bleues + 1 violette = 45 ;
-#     2 noires + 2 bleues = 38 ; 2 noires = 18 → noire = 9, bleue = 10, violette = 7.
+#   livret 2 (RECOPIE, je recopie 2 fois, graine 116, lot M4-7) : 1 noire + 3 bleues = 58 ;
+#     2 noires + 1 bleue = 46 → 2 × 58 = 116, 116 − 46 = 70 = 5 bleues, bleue = 14 ; noire = 16.
 # Et la carte « À toi ! » de la page 3 : la même forme, d'autres couleurs, d'autres nombres.
 EX_1 = "mode=D&geste=COEF&ecart=2" + V0 + T + "&cards=1&unknown=question&seed=82"
 ATOI_1 = "mode=D&geste=COEF&ecart=2" + V0 + T + "&cards=1&unknown=question&seed=5"
-EX_2 = "mode=D&geste=ESCALIER" + V0 + T + "&cards=1&unknown=question&seed=180"
-ATOI_2 = "mode=D&geste=ESCALIER" + V0 + T + "&cards=1&unknown=question&seed=6"
+EX_2 = "mode=D&geste=RECOPIE&fois=2" + V0 + T2 + "&cards=1&unknown=question&seed=116"
+ATOI_2 = "mode=D&geste=RECOPIE&fois=2" + V0 + T2 + "&cards=1&unknown=question&seed=846"
 
 # « Le défi ! » au dos (04/10/2026, demande de Gwenaël : « des trucs qu'on n'aurait pas osé
 # mettre ») : deux cartes du livret, plus difficiles — l'énoncé et sa place pour chercher dans le
 # livret de l'élève, la correction à la même place dans les corrigés.
-#   livret 1 : deux cartes qui se ressemblent (2 + 3 taches sur le grand plateau) mais pas le
-#     même geste — je double, puis je retire : le titre ne le dit plus, c'est l'élève qui choisit ;
-#   deuxième tour : « je double un plateau plus gros » (une autre carte que celle de la fiche 28d,
-#     qui l'a aussi depuis le lot M4-4b), puis un escalier dans le désordre avec des jetons visibles.
-DEFI_1 = [dict(q="mode=D&geste=MIX&gestes=COEF,DOUBLE" + V0 + T + "&seed=187", n=2)]
-DEFI_2 = [dict(q="mode=D&geste=DOUBLE&indice=12" + V0 + T + "&seed=2", n=1),
-          dict(q="mode=D&geste=ESCALIER&ordre=MELANGE&visibleMin=1&visibleMax=3" + T + "&seed=1", n=1)]
+#   livret 1 (lot M4-6) : le cas 3, que le livret n'a pas montré — aucun plateau ne tient dans
+#     l'autre : on en recopie un 2 fois (carte 1), puis 3 fois (carte 2), on y retrouve l'autre,
+#     on retire. Les deux cartes : la série 13 (geste=RECOPIE&fois=MIX), dont le QR « D'autres
+#     défis en ligne » est au dos (pas dans les corrigés) ;
+#   livret 2 (lot M4-7, choix de Gwenaël du 14/10) : je recopie 4 fois, puis deux gestes « le
+#     double dépasse », plateaux mélangés — une graine de la série 14, dont le QR est au dos (le
+#     défi de la conception, deux gestes recopiés 3 fois, ne tient qu'à 89 %).
+DEFI_1 = [dict(q=SERIES[13] + "&seed=3", n=2, types=["3c·2", "3c·3"])]
+DEFI_2 = [dict(q=SERIES[14] + "&seed=21", n=2, types=["3c·4", "4e·2d"])]
 
 LIVRETS = {
     "systeme": dict(
@@ -154,24 +199,30 @@ LIVRETS = {
         couv=dict(sur="Mon livret · Monde 4", titre="Système",
                   accroche="Plusieurs plateaux…<br>compare-les pour tout trouver&nbsp;!"),
         dos=dict(
-            series=[("Je retire", "Comme les fiches&nbsp;25 et&nbsp;26.", 7),
-                    ("Je double, j'additionne", "Comme les fiches&nbsp;27 et&nbsp;28.", 8),
+            series=[("Je retire", "Comme la fiche&nbsp;25.", 7),
+                    ("Je remplace, j'additionne", "Comme les fiches&nbsp;26 et&nbsp;27.", 8),
                     ("Tout mélangé", "À toi de choisir le geste&nbsp;!", 9)],
-            suite="Continue avec le <b>deuxième tour</b>&nbsp;: l'escalier, je triple… ou va voir le monde&nbsp;5, <b>SPLAT! Équations</b>.",
-            defi=DEFI_1, defi_dit="Deux cartes qui se ressemblent… mais pas le même geste. À toi de choisir&nbsp;!"),
+            suite="Pour aller plus loin&nbsp;: le <b>Bonus</b> du monde&nbsp;4… ou le monde&nbsp;5, <b>SPLAT! Équations</b>.",
+            defi=DEFI_1, defi_dit="Aucun plateau ne tient dans l'autre… Et si tu en recopiais un&nbsp;?",
+            defi_qr=13),
     ),
+    # le livret 2, cycle 4 (lot M4-7) : ses fichiers gardent le nom « tour2 » ; « systeme » : la
+    # ligne « Le système » sous chaque carte (fiches, défi, pages 2 et 3)
     "tour2": dict(
         sortie="livret_splat_systeme_tour2",
         fiches=FICHES_2,
-        exemple=dict(query=EX_2, atoi=ATOI_2, geste="ESCALIER"),
-        couv=dict(sur="Mon livret · Monde 4 · Deuxième tour", titre="Système",
-                  accroche="Plus de plateaux, plus de taches…<br>pour aller plus loin&nbsp;!"),
+        systeme=True,
+        exemple=dict(query=EX_2, atoi=ATOI_2, geste="RECOPIE"),
+        couv=dict(sur="Mon livret · Monde 4 · Bonus", titre="Système · cycle&nbsp;4",
+                  accroche="Aucun plateau ne tient dans l'autre&nbsp;?<br>Recopie-en un&nbsp;!",
+                  consigne="Sur les fiches, la place sous chaque carte est pour toi&nbsp;: <b>écris le système, dessine le schéma</b>, puis trouve ce que cache chaque couleur — comme l'exemple des pages&nbsp;2 et&nbsp;3."),
         dos=dict(
-            series=[("L'escalier", "Comme la fiche&nbsp;25d.", 10),
-                    ("Je triple", "Comme la fiche&nbsp;26d.", 11),
+            series=[("Je recopie", "Comme les fiches&nbsp;25d et&nbsp;26d.", 10),
+                    ("Deux gestes à la suite", "Comme la fiche&nbsp;27d.", 11),
                     ("Le grand défi", "Tous les gestes, des jetons, le désordre.", 12)],
             suite="Va voir le monde&nbsp;5, <b>SPLAT! Équations</b>&nbsp;: des taches des deux côtés, et on écrit l'équation&nbsp;!",
-            defi=DEFI_2, defi_dit="Deux cartes encore plus difficiles&nbsp;: un plateau plus gros à doubler, puis un escalier en désordre."),
+            defi=DEFI_2, defi_dit="Recopier 4 fois… puis deux gestes, dans le désordre&nbsp;!",
+            defi_qr=14),
     ),
 }
 
@@ -270,22 +321,11 @@ JS_PIED = """(texte) => {
 }"""
 
 # Le type d'une carte (la classification du monde 4, monde-4-audit-et-plan.md § 2), lu sur son
-# modèle : c'est ce que render.py vérifie fiche par fiche (TYPES).
-JS_TYPE = r"""const typeSys = c => {
-  const S = c._sys, b = S.boards, n = (B, k) => B.counts[k] || 0, [A, Bk] = S.colors;
-  if (S.geste === 'PARTIELLE') return '1a';
-  if (S.geste === 'COEF') return n(b[0], Bk) - n(b[1], Bk) === 1 ? '1b' : '1c';
-  if (S.geste === 'EMBOITE1') return '1d';
-  if (S.geste === 'ESCALIER') return '1e';
-  if (S.geste === 'MIROIR') return '3a';
-  if (S.geste === 'TROIS') return '3b';
-  if (S.geste === 'DOUBLE') {
-    const k = n(b[0], A) / n(b[1], A);
-    if (n(b[0], Bk) < k * n(b[1], Bk)) return k === 2 ? '2d' : '2b-';
-    return k === 3 ? '2b' : (n(b[1], Bk) === 2 ? '2c' : '2a');
-  }
-  return '?';
-};"""
+# modèle : c'est ce que render.py vérifie fiche par fiche (TYPES). Depuis le lot M4-5 (14/10/2026),
+# la fonction vit dans l'outil (sysTypeCarte, outils/splat.html), avec les codes nouveaux : « 3a+ »
+# le miroir 1-3, « 3c·2 », « 3c·3 », « 3c·4 » Je recopie (2, 3 ou 4 fois), « 4e·<type> » Deux
+# gestes à la suite (le type de ses deux petits plateaux : « 4e·1c », « 4e·3c·2 »…).
+JS_TYPE = r"""const typeSys = c => sysTypeCarte(c);"""
 
 # La feuille imprimée telle que l'outil la fabrique, et ses cartes : total, valeurs de chaque
 # couleur, plateaux (pour vérifier que l'élève et les deux corrigés ont les mêmes cartes).
@@ -294,10 +334,13 @@ JS_FICHE = "() => {" + JS_TYPE + r"""
   return {cartes: cards.map(c => [c.total, JSON.stringify(c.hidden.slice().sort((a, b) => a - b)),
                                   JSON.stringify(c._sys.boards.map(b => [c._sys.colors.map(k => b.counts[k] || 0), b.total, b.visible || []]))]),
           types: cards.map(typeSys), secours: cards.some(c => !!c._sys.secours),
+          premiers: cards.map(c => JSON.stringify(c._sys.colors.map(k => c._sys.boards[0].counts[k] || 0))),
           // l'ordre des plateaux MONTRÉS (« trois paires » ne montre pas son plateau sans total)
           ordres: cards.map(c => c._sys.ordre ? c._sys.ordre.filter(i => sysPlateauxMontres(c).includes(i)) : null),
           feuilles: document.querySelectorAll('.printArea .sheet').length, parPage: getPrintCardsPerPage(),
-          echelles: [...document.querySelectorAll('#sysCorrectionPrint')].map(g => g.getAttribute('data-echelle'))};
+          ligneSysteme: document.querySelectorAll('.printArea #sysLigneSystemePrint').length,
+          echelles: [...document.querySelectorAll('#sysCorrectionPrint')].map(g => g.getAttribute('data-echelle')),
+          equations: [...document.querySelectorAll('#sysCorrectionPrint')].map(g => g.getAttribute('data-equations') === '1')};
 }"""
 
 # ---------------------------------------------------------------------------
@@ -309,6 +352,11 @@ CORRECTIONS = [
     # 25/09/2026 (demande de Gwenaël) : les mêmes corrigés « en lettres », comme l'appli les écrit
     # avec unknown=letter — l'initiale de chaque couleur (2 × N + 3 × B = 42 ; B = 12 ÷ 2 = 6).
     dict(suffixe="_correction_lettre", lettre=True, dit="en lettres"),
+    # lot M4-8 (14/10/2026, idée de Gwenaël, décidé sur planches) : le livret 2 seulement, un 3e
+    # corrigé « en équations » — l'outil avec corrige=equations : les équations seules, étape par
+    # étape, sans les barres ni le dessin de la carte, les systèmes avec leur accolade
+    # (2 × (N + 3 × B) = 2 × 58 ; (2 × N + B) + 5 × B = 116 ; 5 × B = 116 − 46 = 70)
+    dict(suffixe="_correction_equations", lettre=True, equations=True, dit="en équations", livrets=("tour2",)),
 ]
 PROF = dict(bandeau="Correction", ligne="Livret corrigé")
 CSS_PROF = """
@@ -337,8 +385,16 @@ JS_EXEMPLE = r"""(opts) => {
   const resout = s => s.replace(/var\((--[\w-]+)\)/g, (m, n) => { const v = cs.getPropertyValue(n).trim(); if (!v) inconnues.add(n); return v || m; });
   // la carte : ses plateaux seulement (le 2 par page de l'énoncé, sans la ligne réponse)
   const sc = mk(1830, 2200);
-  drawSysPlateaux(sc, card, SYS_ZONE_IMPRIME_2P, {mkEl, mkText, isPrint: true, devoile: false});
-  const carte = {svg: resout(sc.innerHTML), vb: boite(sc, 16)}; sc.remove();
+  const dispo = drawSysPlateaux(sc, card, SYS_ZONE_IMPRIME_2P, {mkEl, mkText, isPrint: true, devoile: false});
+  const carte = {svg: resout(sc.innerHTML), vb: boite(sc, 16)};
+  // livret 2 (lot M4-7) : la même carte, « Le système » dessous — rempli (l'exemple, et la carte
+  // « À toi » des corrigés) ou à remplir (« À toi » de l'élève) ; la couverture garde la carte seule
+  let carteSys = null;
+  if (opts.systeme) {
+    drawSysLigneSysteme(sc, card, dispo, {mkEl, mkText}, !!opts.rempli);
+    carteSys = {svg: resout(sc.innerHTML), vb: boite(sc, 16)};
+  }
+  sc.remove();
   // les blocs de la correction
   const ctx = {mkEl, mkText, isPrint: true, lettres: !numberedQuestionMarkMode};
   const plan = card._sys.plan;
@@ -359,6 +415,9 @@ JS_EXEMPLE = r"""(opts) => {
     // les nombres : en noir dans les barres (totaux, valeurs trouvées, blocs), en gris à côté
     // (calculs) ; les noms des taches sont en blanc, les titres en encre (#0f172a) : ils restent
     if (opts.vide) g.querySelectorAll('text[fill="#000"], text[fill="#475569"]').forEach(t => t.remove());
+    // le système écrit à côté des barres (« 1 orange + 3 noires = 53 ») : c'est à l'élève de
+    // l'écrire (lot M4-7 : la ligne « Le système » de la carte « À toi ! »)
+    if (opts.vide) g.querySelectorAll('text.sysSystemeEcrit').forEach(t => t.remove());
     const r = {svg: resout(sv.innerHTML), vb: boite(sv, 6), echelle: (g.querySelector('#sysCorrectionPrint') || {getAttribute: () => '?'}).getAttribute('data-echelle')};
     sv.remove(); return r;
   };
@@ -366,9 +425,18 @@ JS_EXEMPLE = r"""(opts) => {
   const blocs = sysBlocs(etapes).map(b => Object.assign(dessine(b), {roles: b.map(e => e.role), titres: b.map(e => e.titre)}));
   if (verif) blocs.push(Object.assign(dessine([verif]), {roles: ['verification'], titres: [verif.titre]}));
   const tout = dessine(plan);
+  // le corrigé en équations (lot M4-8) : toutes les étapes, en une colonne, comme sur les fiches
+  let eq = null;
+  if (opts.equations) {
+    const sv = mk(1740, 8000), g = mkEl('g'); sv.appendChild(g);
+    drawSysCorrectionEquations(g, card, 0, 7900, ctx, {x: 0, xMax: 1740});
+    const e = g.querySelector('#sysCorrectionPrint');
+    eq = {svg: resout(sv.innerHTML), vb: boite(sv, 10), echelle: e.getAttribute('data-echelle'), colonnes: e.getAttribute('data-colonnes')};
+    sv.remove();
+  }
   if (inconnues.size) return {erreur: 'variables de couleur inconnues : ' + [...inconnues].join(', ')};
   const s = card._sys, mot = k => investigateColorWord(investigateColorByKey(k));
-  return {carte, tout, blocs, lettre: ctx.lettres, geste: s.geste, total: card.total, visibles: card.visible,
+  return {carte, carteSys, tout, eq, blocs, lettre: ctx.lettres, geste: s.geste, total: card.total, visibles: card.visible,
           couleurs: s.colors.map(k => ({k, mot: mot(k), pluriel: SYS_COULEURS_PLURIEL[k], valeur: s.values[k]})),
           plateaux: s.boards.map(b => ({counts: s.colors.map(k => b.counts[k] || 0), total: b.total})),
           cle: [card.total, JSON.stringify(card.hidden.slice().sort((a, b) => a - b)),
@@ -408,6 +476,7 @@ JS_DEFI = r"""([n, corr, haut]) => {
   if (out.some(x => !x)) return {erreur: 'pas de ligne réponse'};
   if (inconnues.size) return {erreur: 'variables de couleur inconnues : ' + [...inconnues].join(', ')};
   return {svgs: out, echelles: [...document.querySelectorAll('#sysCorrectionPrint')].map(g => g.getAttribute('data-echelle')),
+          types: cards.slice(0, n).map(c => sysTypeCarte(c)), secours: cards.slice(0, n).some(c => !!c._sys.secours),
           cles: cards.slice(0, n).map(c => [c.total, JSON.stringify(c.hidden.slice().sort((a, b) => a - b)),
             JSON.stringify(c._sys.boards.map(b => [c._sys.colors.map(k => b.counts[k] || 0), b.total, b.visible || []]))])};
 }"""
@@ -417,6 +486,7 @@ JS_COUV = """(d) => {
   e.innerHTML = d.carte; e.setAttribute('viewBox', d.vbCarte);
   const txt = (sel, html) => { const x = document.querySelector(sel); if (!x) return false; x.innerHTML = html; return true; };
   if (!txt('.tete .sur', d.sur) || !txt('.tete h1 span', d.titre) || !txt('.tete .accroche', d.accroche) || !txt('.expl .intro', d.intro)) return 'textes de couverture';
+  if (d.consigne && !txt('.atoi .t', d.consigne)) return 'pas de consigne en bas de la couverture';
   const h1 = document.querySelector('.tete h1').getBoundingClientRect(), hero = document.querySelector('.tete .hero').getBoundingClientRect();
   if (h1.height > 70) return 'titre sur deux lignes : ' + d.titre;
   const mots = document.createRange(); mots.selectNodeContents(document.querySelector('.tete h1'));
@@ -446,6 +516,10 @@ JS_COUV = """(d) => {
 
 # Pages 2 et 3 : la carte et son texte à gauche ; à droite soit un grand dessin (toute la
 # correction, ou le schéma à compléter), soit des étapes (pastille, titre, légende, dessin).
+# La colonne de la petite carte (pages 2-3) s'élargit d'au plus ELARGIR_CARTE mm dans le blanc
+# laissé par le dessin de droite (lot du 08/10/2026) ; 0 la laisse à 76 mm.
+ELARGIR_CARTE = 34
+
 JS_PAGE = """(d) => {
   const txt = (sel, html) => { const x = document.querySelector(sel); if (!x) return false; x.innerHTML = html; return true; };
   if (!txt('.tete .sur', d.sur) || !txt('.tete h1', d.h1)) return 'bandeau';
@@ -462,6 +536,19 @@ JS_PAGE = """(d) => {
       '<li class="et"><span class="badge"><svg viewBox="2 5 106 105" fill="#7c2d12"><use href="#tacheBadge"/></svg><b>' + et.n + '</b></span>' +
       '<div class="txt"><h3>' + et.h3 + '</h3><p class="leg">' + et.leg + '</p></div>' +
       '<svg class="outil" xmlns="http://www.w3.org/2000/svg" viewBox="' + et.vb + '">' + et.svg + '</svg></li>').join('') + '</ol>' + (d.apres || '');
+  }
+  // La petite carte grandit dans le blanc que laisse le dessin de droite (lot du 08/10/2026 : au
+  // deuxième tour, ses taches faisaient 5 mm) : la colonne de gauche s'élargit d'au plus
+  // d.elargir mm, tant que le dessin de droite garde exactement sa taille.
+  const gauche = document.querySelector('.gauche'), dessin = document.querySelector('.droite .dessin svg');
+  if (d.elargir && gauche && dessin && document.querySelector('.carte')) {
+    const mm = 96 / 25.4, avant = dessin.getBoundingClientRect().width;
+    const libre = document.querySelector('.droite').getBoundingClientRect().width - avant;
+    const plus = Math.min(d.elargir * mm, libre - 2 * mm);
+    if (plus > 2 * mm) {
+      gauche.style.flex = '0 0 ' + (gauche.getBoundingClientRect().width + plus).toFixed(1) + 'px';
+      if (Math.abs(dessin.getBoundingClientRect().width - avant) > 0.5) gauche.style.flex = '';
+    }
   }
   const pied = document.querySelector('.pied').getBoundingClientRect();
   for (const s of ['.gauche', '.droite']) {
@@ -482,6 +569,11 @@ JS_DOS = """(d) => {
   const s = document.querySelector('.suite p.t'); if (!s) return 'pas de texte « suite »'; s.innerHTML = d.suite;
   const df = document.querySelector('.defi'); if (!df) return 'pas de bloc défi';
   df.querySelector('.d-dit').innerHTML = d.defiDit;
+  // le QR du défi (lot M4-6) : une série en ligne du même type, sans étoile ; pas dans les
+  // corrigés (comme les autres QR du dos : un corrigé ne sert pas à rejouer)
+  const dq = df.querySelector('.d-qr');
+  if (!dq) return 'pas de place pour le QR du défi';
+  if (d.defiQr && !d.corr) dq.querySelector('img').setAttribute('src', d.defiQr); else dq.remove();
   if (d.corr) df.querySelector('.chip').innerHTML = 'Le défi&nbsp;! — corrigé';
   df.querySelector('.d-cartes').innerHTML = d.defi.map(c => '<div class="d-carte">' + c + '</div>').join('');
   if (d.corr) document.body.classList.add('dos-corrige');
@@ -593,6 +685,7 @@ async def rendre(niv, tmp, corr=None, page3="atoi"):
     qrweb = f"{BASE_WEB}/qr"
     cles = {}
     lettre = bool(corr and corr["lettre"])
+    equations = bool(corr and corr.get("equations"))
     async with async_playwright() as p:
         nav = await p.chromium.launch(channel="chromium")
 
@@ -606,13 +699,14 @@ async def rendre(niv, tmp, corr=None, page3="atoi"):
             return q.replace("unknown=question", "unknown=letter") if lettre else q
 
         ex_conf = niv["exemple"]
+        sys_ = bool(niv.get("systeme"))
         pg = await page_outil(q_lettre(ex_conf["query"]) + "&layout=2&print=statement")
-        ex = await pg.evaluate(JS_EXEMPLE, {"vide": False})
+        ex = await pg.evaluate(JS_EXEMPLE, {"vide": False, "systeme": sys_, "rempli": True, "equations": equations})
         await pg.close()
         if "erreur" in ex:
             raise SystemExit(f"exemple du livret « {niv['sortie']} » : {ex['erreur']}")
         pg = await page_outil(q_lettre(ex_conf["atoi"]) + "&layout=2&print=statement")
-        ax = await pg.evaluate(JS_EXEMPLE, {"vide": not corr})
+        ax = await pg.evaluate(JS_EXEMPLE, {"vide": not corr, "systeme": sys_, "rempli": bool(corr), "equations": equations})
         if not corr and ax["lettre"]:
             raise SystemExit("la carte « À toi » vide se dessine en « ? » (les lettres sont écrites en noir)")
         await pg.close()
@@ -620,7 +714,7 @@ async def rendre(niv, tmp, corr=None, page3="atoi"):
             raise SystemExit(f"carte « À toi » du livret « {niv['sortie']} » : {ax['erreur']}")
         if [b["roles"] for b in ax["blocs"]] != [b["roles"] for b in ex["blocs"]]:
             raise SystemExit(f"« À toi » ({niv['sortie']}) : pas le même schéma que l'exemple")
-        for b in ex["blocs"] + ax["blocs"] + [ex["tout"], ax["tout"]]:
+        for b in ex["blocs"] + ax["blocs"] + [ex["tout"], ax["tout"]] + ([ex["eq"], ax["eq"]] if equations else []):
             if b["echelle"] not in ("1", "?"):
                 raise SystemExit(f"exemple ({niv['sortie']}) : un dessin réduit ({b['echelle']})")
         textes = textes_exemple(ex, ex_conf["geste"])
@@ -645,7 +739,7 @@ async def rendre(niv, tmp, corr=None, page3="atoi"):
 
         async def pdf_fiche(f, sortie, iremi=False):
             titre = f"Fiche {f['code']} — {f['t']}"
-            q = q_lettre(f["q"] + SYS_COMMUN) + f"&layout=2&title={quote(titre)}&print={'correction' if corr else 'statement'}"
+            q = q_lettre(f["q"] + SYS_COMMUN) + ("&systeme=1" if sys_ else "") + f"&layout=2&title={quote(titre)}&print={'correction' if corr else 'statement'}" + ("&corrige=equations" if equations else "")
             pg = await page_outil(q)
             etat = await pg.evaluate(JS_FICHE)
             if etat["parPage"] != 2 or etat["feuilles"] != 2 or len(etat["cartes"]) != 4:
@@ -654,10 +748,27 @@ async def rendre(niv, tmp, corr=None, page3="atoi"):
                 raise SystemExit(f"{titre} : une carte de secours")
             if etat["types"] != TYPES[f["code"]]:
                 raise SystemExit(f"{titre} : types {etat['types']} au lieu de {TYPES[f['code']]}")
-            if f["code"] == "28d" and any(o is None or o == sorted(o) for o in etat["ordres"]):
+            if f["code"] in DESORDRE and any(o is None or o == sorted(o) for o in etat["ordres"]):
                 raise SystemExit(f"{titre} : un plateau est à sa place habituelle")
-            if any(e != "1" for e in etat["echelles"]):
-                raise SystemExit(f"{titre} : une carte réduite ({etat['echelles']})")
+            for a, b in JUMELLES.get(f["code"], []):
+                if etat["premiers"][a] != etat["premiers"][b]:
+                    raise SystemExit(f"{titre} : les cartes {a + 1} et {b + 1} n'ont pas le même premier plateau")
+            # le corrigé en équations (lot M4-8) : toutes les cartes en équations, aucune réduite
+            if equations and not all(etat["equations"]):
+                raise SystemExit(f"{titre} : une carte n'est pas en équations")
+            permis = {} if equations else REDUITE_PERMISE.get(f["code"], {})
+            for i, e in enumerate(etat["echelles"]):
+                if e != "1" and not (i in permis and float(e) >= permis[i]):
+                    raise SystemExit(f"{titre} : une carte réduite ({etat['echelles']})")
+            for i, droite in enumerate(A_DROITE.get(f["code"], [])):
+                o = etat["ordres"][i]
+                if (o is not None and o[0] != 0) != droite:
+                    raise SystemExit(f"{titre} : carte {i + 1}, le plateau à recopier n'est pas {'à droite' if droite else 'à gauche'}")
+            for i, avec in enumerate(JETONS.get(f["code"], [])):
+                if bool(json.loads(etat["cartes"][i][2])[0][2]) != avec:
+                    raise SystemExit(f"{titre} : carte {i + 1}, {'pas de jeton visible' if avec else 'des jetons visibles'}")
+            if sys_ and etat["ligneSysteme"] != (0 if corr else 4):
+                raise SystemExit(f"{titre} : « Le système » sous {etat['ligneSysteme']} cartes")
             cles[f["code"]] = etat["cartes"]
             await pg.add_style_tag(content=CSS_QR)
             r = await pg.evaluate(JS_QR, [f"{qrweb}/fiche{f['code']}.png", QR_CORR if corr else QR_ELEVE])
@@ -685,6 +796,7 @@ async def rendre(niv, tmp, corr=None, page3="atoi"):
         # 1. la couverture
         couv = dict(carte=ex["carte"]["svg"], vbCarte=ex["carte"]["vb"],
                     sur=niv["couv"]["sur"], titre=niv["couv"]["titre"], accroche=niv["couv"]["accroche"], intro=textes["intro"],
+                    consigne=niv["couv"].get("consigne"),
                     sommaire=[[f["code"], f["t"], f["resume"]] for f in niv["fiches"]],
                     prof=dict(PROF, dit=corr["dit"]) if corr else None)
         await pdf_html(f"{base}{BASE_WEB}/couverture.html", tmp / "p01.pdf", JS_COUV, couv, css=[CSS_PROF if corr else None])
@@ -692,12 +804,16 @@ async def rendre(niv, tmp, corr=None, page3="atoi"):
         # 2-3. l'exemple
         lg = "La carte et ses plateaux"
         if page3 == "atoi":
-            p2 = dict(sur="Un exemple résolu", h1="Le système pas à pas", carte=ex["carte"]["svg"], vbCarte=ex["carte"]["vb"], lgCarte=lg,
-                      texte=textes["texte"], dessin=dict(svg=ex["tout"]["svg"], vb=ex["tout"]["vb"]))
+            cx, ca = ex["carteSys"] or ex["carte"], ax["carteSys"] or ax["carte"]
+            # le corrigé en équations (lot M4-8) : à droite, les équations à la place des barres
+            dx, da = (ex["eq"], ax["eq"]) if equations else (ex["tout"], ax["tout"])
+            p2 = dict(sur="Un exemple résolu", h1="Le système pas à pas", carte=cx["svg"], vbCarte=cx["vb"], lgCarte=lg,
+                      texte=textes["texte"], dessin=dict(svg=dx["svg"], vb=dx["vb"]), elargir=ELARGIR_CARTE)
             p3 = dict(sur="À toi&nbsp;!", h1="La même sorte de carte" + (" — corrigée" if corr else ""),
-                      carte=ax["carte"]["svg"], vbCarte=ax["carte"]["vb"], lgCarte="La carte et ses plateaux",
-                      texte=textes_atoi(ax) if not corr else textes_atoi(ax).replace("écris les totaux et les calculs dans le schéma, puis la réponse", "le schéma rempli"),
-                      dessin=dict(svg=ax["tout"]["svg"], vb=ax["tout"]["vb"]))
+                      carte=ca["svg"], vbCarte=ca["vb"], lgCarte="La carte et ses plateaux",
+                      texte=textes_atoi(ax) if not corr else textes_atoi(ax).replace("écris les totaux et les calculs dans le schéma, puis la réponse",
+                                                                                     "les équations, étape par étape" if equations else "le schéma rempli"),
+                      dessin=dict(svg=da["svg"], vb=da["vb"]), elargir=ELARGIR_CARTE)
         else:
             bl = ex["blocs"]
             coupe = (len(bl) + 1) // 2 if len(bl) > 3 else 2
@@ -719,7 +835,7 @@ async def rendre(niv, tmp, corr=None, page3="atoi"):
         d = niv["dos"]
         defi, cles_defi = [], []
         for dc in d["defi"]:
-            q = q_lettre(dc["q"] + f"&cards={dc['n']}&unknown=question") + f"&layout=2&print={'correction' if corr else 'statement'}"
+            q = q_lettre(dc["q"] + f"&cards={dc['n']}&unknown=question") + ("&systeme=1" if sys_ else "") + f"&layout=2&print={'correction' if corr else 'statement'}" + ("&corrige=equations" if equations else "")
             pg = await page_outil(q)
             r = await pg.evaluate(JS_DEFI, [dc["n"], bool(corr), 1450])
             await pg.close()
@@ -727,9 +843,12 @@ async def rendre(niv, tmp, corr=None, page3="atoi"):
                 raise SystemExit(f"défi du livret « {niv['sortie']} » : {r['erreur']}")
             if any(e != "1" for e in r["echelles"]):
                 raise SystemExit(f"défi du livret « {niv['sortie']} » : une carte réduite")
+            if r["secours"] or ("types" in dc and r["types"] != dc["types"]):
+                raise SystemExit(f"défi du livret « {niv['sortie']} » : types {r['types']} au lieu de {dc.get('types')}")
             defi += r["svgs"]; cles_defi += r["cles"]
         dos = dict(niveaux=[[nom, desc, f"{qrweb}/serie-{s}.png"] for nom, desc, s in d["series"]],
-                   univers=f"{qrweb}/univers.png", suite=d["suite"], defi=defi, defiDit=d["defi_dit"], corr=bool(corr))
+                   univers=f"{qrweb}/univers.png", suite=d["suite"], defi=defi, defiDit=d["defi_dit"], corr=bool(corr),
+                   defiQr=f"{qrweb}/serie-{d['defi_qr']}.png" if d.get("defi_qr") else None)
         await pdf_html(f"{base}{BASE_WEB}/dos.html", tmp / "p12.pdf", JS_DOS, dos)
         await nav.close()
     return dict(ex=ex["cle"], atoi=ax["cle"], defi=cles_defi), cles
@@ -888,7 +1007,7 @@ def main():
             niv = LIVRETS[nom]
             print(f"— livret « {nom} »")
             reference = autres = None
-            for corr in versions:
+            for corr in [c for c in versions if c is None or nom in c.get("livrets", LIVRETS)]:
                 sortie = niv["sortie"] + (corr["suffixe"] if corr else "")
                 with tempfile.TemporaryDirectory() as d:
                     tmp = Path(d)

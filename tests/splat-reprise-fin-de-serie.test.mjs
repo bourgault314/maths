@@ -9,6 +9,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { PARCOURS, fauxStockage, fauxOnglet } from "./splat-suivi-monde.mjs";
 
 const lire = (f) => readFileSync(new URL(`../${f}`, import.meta.url), "utf8");
 const CLE = "mathsgo-splat-parcours";
@@ -19,10 +20,15 @@ function source(page, nom, retrait = "") {
   const fin = page.indexOf(`\n${retrait}}\n`, debut + 1);
   return page.slice(debut + 1, fin + retrait.length + 3);
 }
+// La clé sans code, pré-remplie de son contenu d'avant le lot 2 du suivi (à plat, lu tel quel
+// par le moteur) ; lire() rend les étapes telles que le moteur les range depuis le lot 2.
 function stockage(contenu = {}) {
-  const m = new Map([[CLE, JSON.stringify(contenu)]]);
-  return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), lire: () => JSON.parse(m.get(CLE) || "{}") };
+  const local = fauxStockage({ [CLE]: JSON.stringify(contenu) });
+  local.lire = () => PARCOURS.charger(local, "").etapes;
+  return local;
 }
+// Les fonctions du parcours qui lisent et écrivent par le moteur (lot 2 du suivi).
+const moteurPage = (page) => ["eleveSuivi", "eleveEtapeLue", "eleveVuesReprise"].map((n) => source(page, n)).join("\n");
 
 /* ---------- splat.html et splat_tache_barre.html : même logique ---------- */
 for (const [nom, fichier] of [["splat.html", "outils/splat.html"], ["splat_tache_barre.html", "outils/splat_tache_barre.html"]]) {
@@ -30,14 +36,16 @@ for (const [nom, fichier] of [["splat.html", "outils/splat.html"], ["splat_tache
   // joue eleveSauverEnCours() dans l'état donné, renvoie l'entrée enregistrée
   function sauver({ idx, resultats, rejeu = null, avant = {} }) {
     const store = stockage({ p: avant });
-    new Function("localStorage", "resultats", "rejeu", "idx", `
-      const ELEVE_STORE_KEY = "${CLE}", parcoursId = "p";
+    new Function("window", "resultats", "rejeu", "idx", `
+      const parcoursId = "p";
       let eleveSerie = new Array(4).fill({}), eleveResultats = resultats, eleveRejeu = rejeu, eleveIdx = idx, eleveEtoiles = 0;
+      let eleveSuiviObjet, eleveVues = 0, eleveSerieNotee = false;
       const eleveSignatureSerie = () => "SIG";
+      ${moteurPage(page)}
       ${source(page, "eleveEnregistrerReussite")}
       ${source(page, "eleveSauverFinDeSerie")}
       ${source(page, "eleveSauverEnCours")}
-      eleveSauverEnCours();`)(store, resultats, rejeu, idx);
+      eleveSauverEnCours();`)(fauxOnglet({ local: store }).fenetre, resultats, rejeu, idx);
     return store.lire().p;
   }
 
@@ -79,12 +87,14 @@ function ouvrir(enCours) {
   const finTexte = "} catch (e) { /* stockage indisponible */ }";
   const fin = petit.indexOf(finTexte, debut);
   assert.ok(debut > 0 && fin > debut, "bloc de reprise introuvable");
-  return new Function("localStorage", `
-    const ELEVE_STORE_KEY = "${CLE}", parcoursId = "p", eleveSignatureSerie = () => "SIG";
+  return new Function("window", `
+    const parcoursId = "p", eleveSignatureSerie = () => "SIG";
     let eleveSerie = new Array(4).fill({}), eleveRepriseFaite = false, eleveIdx = 0, eleveEtoiles = 0, eleveResultats = [];
+    let eleveSuiviObjet, eleveVues = 0;
+    ${moteurPage(petit)}
     ${petit.slice(debut, fin + finTexte.length)}
     }
-    return { eleveIdx, eleveResultats };`)(stockage({ p: { enCours } }));
+    return { eleveIdx, eleveResultats };`)(fauxOnglet({ local: stockage({ p: { enCours } }) }).fenetre);
 }
 test("reprise : idx = nombre de cartes avec des rouges → l'élève arrive sur l'écran de fin, pastilles comprises", () => {
   assert.deepEqual(ouvrir({ sig: "SIG", idx: 4, etoiles: 2, res: [true, false, true, "ko"] }), { eleveIdx: 4, eleveResultats: [true, false, true, "ko"] });
@@ -124,12 +134,17 @@ for (const [nom, fichier, fin] of [["splat.html", "outils/splat.html", "renderEl
   const page = lire(fichier);
   test(`${nom} : « Rejouer toute la série » efface la sauvegarde « en cours », l'étoile reste`, () => {
     const store = stockage({ p: { fait: true, etoiles: 4, cartes: 4, enCours: { sig: "SIG", idx: 4, etoiles: 2, res: [true, "ko", true, "ko"] } } });
-    new Function("localStorage", `
-      const ELEVE_STORE_KEY = "${CLE}", parcoursId = "p";
+    new Function("window", `
+      const parcoursId = "p";
+      let eleveSuiviObjet;
+      ${moteurPage(page)}
       ${source(page, "eleveEffacerEnCours")}
-      eleveEffacerEnCours();`)(store);
-    assert.deepEqual(store.lire().p, { fait: true, etoiles: 4, cartes: 4 });
-    assert.match(source(page, fin), /getElementById\(["']eleveRejouer["']\)\.onclick = \(\) => \{ eleveEffacerEnCours\(\);/);
+      eleveEffacerEnCours();`)(fauxOnglet({ local: store }).fenetre);
+    const p = store.lire().p;
+    assert.equal(p.enCours, undefined, "la reprise s'efface");
+    assert.deepEqual([p.fait, p.etoiles, p.cartes], [true, 4, 4], "l'étoile reste");
+    // (08/10/2026) splat.html : le bouton peut être « Nouvelles cartes ▶ » à la place (série du dos)
+    assert.match(source(page, fin), /getElementById\(["']eleveRejouer["']\)(\.onclick|;\s*if\(rejouer\) rejouer\.onclick) = \(\) => \{ eleveEffacerEnCours\(\);/);
   });
 }
 test("equasplat.html : « Rejouer toute la série » efface déjà la sauvegarde (référence des deux autres)", () => {

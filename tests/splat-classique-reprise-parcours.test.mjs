@@ -9,13 +9,14 @@
 
    L'empreinte = les réglages de l'adresse qui déterminent les cartes : tous
    les noms de sharedNames SAUF eleve, parcours, print, duplex, layout, title,
-   imprimer, note — graine et « suite » (étape composée) compris ; clés triées,
+   imprimer, note, systeme, corrige — graine et « suite » (étape composée) compris ; clés triées,
    valeurs telles quelles, jointes par « | ». Ces tests exécutent le code de la
    page tel quel : fonctions, liste et bloc de reprise sont extraits du fichier.
    La reprise a aussi été jouée au navigateur, pour de vrai (voir la notice). */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { PARCOURS, fauxStockage, fauxOnglet } from "./splat-suivi-monde.mjs";
 
 const page = readFileSync(new URL("../outils/splat.html", import.meta.url), "utf8");
 const univers = readFileSync(new URL("../outils/splat_univers.html", import.meta.url), "utf8");
@@ -46,11 +47,16 @@ const [M2A1, M2A2, M2A3] = ["M2A1", "M2A2", "M2A3"].map(constante);
 const ETAPE7 = `?${M2A1}&eleve=1&parcours=m2e1&suite=${encodeURIComponent(M2A2)};${encodeURIComponent(M2A3)}`;
 const ETAPE8 = "?mode=N&equation=X_PLUS_A_EQ_B&cards=12&seed=347&unknown=question&eleve=1&parcours=m2e4";
 
-// Un faux localStorage, pré-rempli.
+// Un faux localStorage, pré-rempli (la clé sans code : son contenu d'avant le lot 2
+// du suivi, à plat, se lit tel quel par le moteur). lire() rend les étapes telles
+// que le moteur les range depuis le lot 2 (assets/js/splat-parcours.js).
 function stockage(contenu) {
-  const m = new Map([[CLE, JSON.stringify(contenu)]]);
-  return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), lire: () => JSON.parse(m.get(CLE) || "{}") };
+  const local = fauxStockage({ [CLE]: JSON.stringify(contenu) });
+  local.lire = () => PARCOURS.charger(local, "").etapes;
+  return local;
 }
+// Les fonctions du parcours qui lisent et écrivent par le moteur (lot 2 du suivi).
+const MOTEUR_PAGE = ["eleveSuivi", "eleveEtapeLue", "eleveVuesReprise"].map(source).join("\n");
 
 // Le bloc de reprise de renderEleveSplat, exécuté tel quel à l'ouverture d'une série de 12 cartes.
 function ouvrir(store, serieAffichee, parcoursId = "m2e1") {
@@ -60,11 +66,12 @@ function ouvrir(store, serieAffichee, parcoursId = "m2e1") {
   const fin = page.indexOf(finTexte, debut);
   assert.ok(fin > debut, "fin du bloc de reprise introuvable");
   const bloc = page.slice(debut, fin + finTexte.length) + "\n}";
-  return new Function("localStorage", "ELEVE_STORE_KEY", "parcoursId", "eleveSignatureSerie", `
-    let eleveSerie = new Array(12).fill({}), eleveRepriseFaite = false;
-    let eleveIdx = 0, eleveEtoiles = 0, eleveResultats = [];
+  return new Function("window", "parcoursId", "eleveSignatureSerie", `
+    let eleveSerie = new Array(12).fill({}), eleveRepriseFaite = false, eleveSuiviObjet;
+    let eleveIdx = 0, eleveEtoiles = 0, eleveResultats = [], eleveVues = 0;
+    ${MOTEUR_PAGE}
     ${bloc}
-    return { eleveIdx, eleveEtoiles, eleveResultats };`)(store, CLE, parcoursId, () => serieAffichee);
+    return { eleveIdx, eleveEtoiles, eleveResultats, eleveVues };`)(fauxOnglet({ local: store }).fenetre, parcoursId, () => serieAffichee);
 }
 
 test("l'empreinte de l'étape 7 : les réglages des cartes, graine et « suite » compris, clés triées", () => {
@@ -85,11 +92,13 @@ test("ce qui ne change pas les cartes n'entre pas dans l'empreinte : élève, é
   assert.equal(empreinte(ETAPE7.replace(";", "%3B")), ref);
 });
 
-test("chaque réglage qui détermine les cartes change l'empreinte — tous ceux de sharedNames, sauf huit", () => {
+test("chaque réglage qui détermine les cartes change l'empreinte — tous ceux de sharedNames, sauf dix", () => {
   const noms = JSON.parse(NOMS.slice(NOMS.indexOf("["), NOMS.lastIndexOf("]") + 1));
   const hors = JSON.parse(HORS.slice(HORS.indexOf("["), HORS.lastIndexOf("]") + 1));
-  // « note » (lot E1, Enquête) : une consigne imprimée en plus, qui ne change pas les cartes.
-  assert.deepEqual([...hors].sort(), ["duplex", "eleve", "imprimer", "layout", "note", "parcours", "print", "title"]);
+  // « note » (lot E1, Enquête) : une consigne imprimée en plus, qui ne change pas les cartes ;
+  // « systeme » (lot M4-7, Système) : la ligne « Le système » de l'impression, pareil ;
+  // « corrige » (lot M4-8, Système) : le corrigé écrit en équations, pareil.
+  assert.deepEqual([...hors].sort(), ["corrige", "duplex", "eleve", "imprimer", "layout", "note", "parcours", "print", "systeme", "title"]);
   const ref = empreinte(ETAPE8);
   // l'adresse de l'étape 8, où le réglage « nom » prend une autre valeur (ou apparaît)
   const avec = (nom, valeur) => `?${ETAPE8.slice(1).split("&").filter((p) => !p.startsWith(`${nom}=`)).join("&")}&${nom}=${valeur}`;
@@ -104,10 +113,10 @@ test("chaque réglage qui détermine les cartes change l'empreinte — tous ceux
 
 test("la sauvegarde « en cours » porte l'empreinte de la série qui l'écrit, sans toucher l'étoile", () => {
   const store = stockage({ m2e1: { fait: true, etoiles: 12, cartes: 12, date: "2026-09-17" } });
-  new Function("localStorage", "ELEVE_STORE_KEY", "parcoursId", "eleveRejeu", "eleveIdx", "eleveSerie",
+  new Function("window", "parcoursId", "eleveRejeu", "eleveIdx", "eleveSerie",
     "eleveEtoiles", "eleveResultats", "eleveSignatureSerie",
-    `${source("eleveSauverEnCours")}\neleveSauverEnCours();`)(
-    store, CLE, "m2e1", null, 2, new Array(12).fill({}), 3, [true, true, true], () => empreinte(ETAPE7));
+    `let eleveSuiviObjet, eleveVues = 0;\n${MOTEUR_PAGE}\n${source("eleveSauverEnCours")}\neleveSauverEnCours();`)(
+    fauxOnglet({ local: store }).fenetre, "m2e1", null, 2, new Array(12).fill({}), 3, [true, true, true], () => empreinte(ETAPE7));
   const entree = store.lire().m2e1;
   assert.deepEqual(entree.enCours, { sig: empreinte(ETAPE7), idx: 3, etoiles: 3, res: [true, true, true] });
   assert.equal(entree.fait, true, "l'étoile déjà gagnée reste allumée");

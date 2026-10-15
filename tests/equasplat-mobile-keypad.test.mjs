@@ -60,7 +60,8 @@ test("les dialogues tactiles neutralisent le clavier natif et figent l’arrièr
 test("le signe moins du pavé n’est créé que lorsque le mode relatif l’autorise", () => {
   assert.match(html, /options\.allowMinus \? \["−","−"\] : null/);
   assert.match(html, /allowMinus:isRelativeUniverse\(\)/);
-  assert.match(html, /bindTouchKeypadInput\(addBothXCount[\s\S]*allowMinus:false/);
+  // 15/10/2026 : le nombre de taches ne se tape plus (− / +), il n'a plus de pavé à lui.
+  assert.doesNotMatch(html, /addBothXCount/);
 });
 
 test("toutes les saisies d’action passent par le dialogue stable", () => {

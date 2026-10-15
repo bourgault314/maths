@@ -175,6 +175,23 @@ test("les mesures de temps du serveur ne tournent que sur demande, et une seule 
   const enMs = [...lancer.matchAll(/\(hrtime\(true\) - \$debut\) \/ 1e6/g)];
   assert.equal(enMs.length, 1,
     `une seule mesure en millisecondes doit exister, celle de mediane_ms() (trouvé : ${enMs.length})`);
+  // Une borne HAUTE (« moins de… ») sur un chronomètre qui tourne à chaque pull
+  // request doit passer par plus_court_de_trois() : une mesure isolée y rougit
+  // au hasard (1,07 s pour le 61e échec de parcours.php, PR 967, 11/10/2026).
+  // Une borne basse, elle, peut rester sur un seul essai : le bruit n'abrège
+  // jamais un usleep().
+  assert.match(lancer, /function plus_court_de_trois\(callable \$preparer, callable \$appel, &\$resultats\): float/,
+    "lancer.php doit offrir plus_court_de_trois() pour les bornes hautes");
+  assert.equal([...lancer.matchAll(/\/ 1e9 </g)].length, 0,
+    "aucune borne haute directement sur hrtime() : passer par plus_court_de_trois()");
+  const bornesHautes = [...lancer.matchAll(/vrai\(\$duree </g)];
+  assert.ok(bornesHautes.length >= 4, `les bornes hautes doivent être repérées (trouvé : ${bornesHautes.length})`);
+  for (const borne of bornesHautes) {
+    const avant = lancer.slice(0, borne.index);
+    const mesure = avant.slice(avant.lastIndexOf("$duree = "));
+    assert.ok(mesure.startsWith("$duree = plus_court_de_trois("),
+      `borne haute sur une mesure isolée : « ${mesure.split("\n")[0]} » — passer par plus_court_de_trois()`);
+  }
   // Le workflow ne la pose que hors pull request.
   const workflow = lire(".github/workflows/verifications.yml");
   const poses = [...workflow.matchAll(/SUIVI_TESTS_TEMPS: (.+)/g)].map(([, v]) => v.trim());

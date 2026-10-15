@@ -106,7 +106,9 @@ test("vue prof (03/10/2026) : « Projeter » sur les 25 fiches du monde 3, le de
   assert.match(univers, /\}\)\.join\(''\)\+tour2ProfHtml\(m\)\+'<\/ol>';/);
   assert.match(univers, /prof:\[\[1,"Les trois dessins","11d","17d",0,5\],\[2,"Vers le Système","18d","24d",5,10\]\]\}/);
   assert.match(univers, /\{monde:MONDE_ENQUETE,idp:"enq",fiches:ENQ_TOUR2,volet:"enq-bonus",li:"enq-t2-",/);
-  assert.match(univers, /const tete=\(rang,nom,de,a\)=>'<li class="volet" id="'\+b\.idp\+'-tour2-'\+\(rang\|\|1\)\+'"><span class="rang">Deuxième tour'\+\(rang\?' '\+rang:''\)\+'<\/span>'\+/);
+  // (lot M4-7 : le nom du Bonus vient de BONUS_MONDES — « Deuxième tour » pour le monde 3)
+  assert.match(univers, /const tete=\(rang,nom,de,a\)=>'<li class="volet" id="'\+b\.idp\+'-tour2-'\+\(rang\|\|1\)\+'"><span class="rang">'\+b\.nom\+\(rang\?' '\+rang:''\)\+'<\/span>'\+/);
+  assert.match(univers, /\{monde:MONDE_ENQUETE,idp:"enq",fiches:ENQ_TOUR2,volet:"enq-bonus",li:"enq-t2-",stars:"starsBonus",cle:"",\n  nom:"Deuxième tour",fichesTxt:"fiches 11d à 24d",/);
   assert.match(univers, /return b\.prof\.map\(\(\[rang,nom,de,a,i0,i1\]\)=>tete\(rang,nom,de,a\)\+b\.fiches\.slice\(i0,i1\)\.map\(li\)\.join\(''\)\)\.join\(''\);/);
 });
 
@@ -153,13 +155,13 @@ test("deuxième tour : ?f=11d … ?f=24d ouvre la fiche, avec SON parcours (le B
   assert.doesNotMatch(courte, /ENQ_DEFI/);
 });
 
-test("les séries du dos : huit cartes sans graine, en mode élève sans étape ; les anciennes restent servies", () => {
+test("les séries du dos : quatre cartes sans graine, en mode élève sans étape ; les anciennes restent servies", () => {
   const SERIES = Object.fromEntries([...render.matchAll(/^    (\d+): "(mode=[CN][^"]+)",$/gm)].map((m) => [m[1], m[2]]));
   assert.deepEqual(Object.keys(SERIES), ["16", "17", "19", "20", "22", "23", "24", "25", "26", "28", "29", "30", "32", "33", "34", "35", "36", "37"]);
-  assert.match(render, /^SERIE_CARTES = 8$/m);
+  assert.match(render, /^SERIE_CARTES = 4$/m);
   for (const [s, q] of Object.entries(SERIES)) {
     const cible = cibleCourte(`?s=${s}`);
-    assert.equal(cible, `/splat/classique/?${q}&cards=8&unknown=question&eleve=1`, `?s=${s}`);
+    assert.equal(cible, `/splat/classique/?${q}&cards=4&unknown=question&eleve=1`, `?s=${s}`);
     const r = new URLSearchParams(cible.split("?")[1]);
     for (const k of ["seed", "parcours", "modele"]) assert.equal(r.get(k), null, `série ${s} : pas de « ${k} »`);
     assert.ok(existe(`${SRC}qr/serie-${s}.png`), `qr/serie-${s}.png`);
@@ -394,7 +396,7 @@ test("dans les PDF — couverture, exemple en page 2, les cinq fiches dans l'ord
         if (v) assert.match(p, /Correction/, `${s}, page ${3 + k}`);
       });
       assert.match(pages[7], /Et après/);
-      assert.match(pages[7], /huit nouvelles/);
+      assert.match(pages[7], /quatre nouvelles/);
       if (nom === "tour2_systeme") {
         // (lot « petite part », 01/10/2026) l'unité commune par les petites parts, plus « je double tout »
         assert.match(pages[7], new RegExp(souple("Un exemple résolu : les petites parts").source, "i"));
@@ -428,7 +430,7 @@ test("dans les PDF — couverture, exemple en page 2, les cinq fiches dans l'ord
   });
 });
 
-test("les corrigés : « ? » pour la référence, puis « La tache … cache donc … » ; « Je vérifie » : le total seulement, sans total l'indice de l'écart ; « PAS DE TOTAL » (07/10/2026)", () => {
+test("les corrigés : « ? » pour la référence, puis « La tache … cache donc … » ; « Je vérifie » : le total seulement, sans total l'indice de l'écart ; sans total, pas de case (08/10/2026)", () => {
   const p = (s, k) => norm(texteDesPages(`outils/${s}.pdf`)[k]);
   const f10 = p("livret_splat_enquete_additif_correction", 2);
   for (const t of ["2 × ? + 6 = 20", "2 × ? = 20 − 6 = 14", "? = 14 ÷ 2 = 7", "La tache orange cache donc 7 jetons", "La tache bleue cache donc 7 + 6 = 13 jetons", "Je vérifie : 7 + 13 = 20 ✓"])
@@ -439,17 +441,29 @@ test("les corrigés : « ? » pour la référence, puis « La tache … cache do
   assert.doesNotMatch(p("livret_splat_enquete_additif", 2), /✓/);
   // taches répétées : « Chaque tache noire cache donc … »
   assert.match(p("livret_splat_enquete_rebondit_correction", 2), souple("Chaque tache noire cache donc 7 + 4 = 11 jetons"));
-  // sans total : « PAS DE TOTAL », et seul l'indice de l'écart se vérifie
+  // sans total : pas de case (08/10/2026 — ni « TOTAL ? », ni « PAS DE TOTAL », le malentendu du
+  // 07/10), et seul l'indice de l'écart se vérifie
   for (const s of ["livret_splat_enquete_rebondit", "livret_splat_enquete_rebondit_correction", "livret_splat_enquete_rebondit_correction_lettre"]) {
-    const f22 = p(s, 4);
-    assert.ok((f22.match(/PAS DE ?TOTAL/g) || []).length === 4, `${s}, fiche 22 : « PAS DE TOTAL » sur les quatre cartes`);
-    assert.doesNotMatch(f22, /TOTAL ?\?/, `${s}, fiche 22 : plus de « TOTAL ? »`);
+    const f22 = p(s, 4), f23 = p(s, 5);
+    for (const [n, f] of [[22, f22], [23, f23]]) {
+      assert.doesNotMatch(f, /TOTAL/, `${s}, fiche ${n} : aucune case du total`);
+      assert.doesNotMatch(f, /PAS DE/, `${s}, fiche ${n} : plus de « PAS DE TOTAL »`);
+    }
+    /* les quatre cartes sont bien là : deux phrases chacune sur l'énoncé, un « Je vérifie » sur le corrigé */
+    if (s.includes("correction")) assert.equal((f22.match(/Je vérifie/g) || []).length, 4, `${s}, fiche 22 : quatre cartes`);
+    else assert.equal((f22.match(/Sous la tache/g) || []).length, 8, `${s}, fiche 22 : quatre cartes`);
+    /* fiche 24 : ses cartes avec total (taches répétées) gardent leur case */
+    assert.equal((p(s, 6).match(/TOTAL/g) || []).length, 2, `${s}, fiche 24 : les deux cartes avec total gardent leur case`);
   }
   const f22 = p("livret_splat_enquete_rebondit_correction", 4);
   assert.match(f22, souple("Je vérifie : orange = bleue + 12 : 24 = 12 + 12 ✓"));
   assert.doesNotMatch(f22, souple("orange = 2 × bleue :"), "le rapport ne se vérifie plus");
-  // le dos de la partie 3 : l'exemple corrigé et la carte « À toi ! » sont des cartes sans total
-  assert.equal((p("livret_splat_enquete_rebondit", 7).match(/PAS DE ?TOTAL/g) || []).length, 2, "dos : « PAS DE TOTAL » sur les deux cartes");
+  // le dos de la partie 3 : l'exemple corrigé et la carte « À toi ! » sont des cartes sans total, sans case
+  for (const s of ["livret_splat_enquete_rebondit", "livret_splat_enquete_rebondit_correction"]) {
+    const d = p(s, 7);
+    assert.match(d, /Un exemple corrigé/); assert.match(d, /À toi/);
+    assert.doesNotMatch(d, /TOTAL|PAS DE/, `${s}, dos : pas de case sur les deux cartes`);
+  }
 });
 
 test("la suite du voyage : partie 1 → 2 → 3 → monde 4, et le deuxième tour de même", () => {
@@ -587,7 +601,7 @@ test("page des livrets : l'onglet du monde 3 — les trois livrets pour tous, «
     assert.ok(taille(webp) < taille(png), `${nom} : la WebP est plus légère`);
     const b = readFileSync(new URL(`../${png}`, import.meta.url));
     assert.deepEqual([b.readUInt32BE(16), b.readUInt32BE(20)], [993, 1404], `${nom} : page 1 rendue à 120 dpi`);
-    assert.ok(d.includes(`src="/assets/img/thumbnails/splat/${nom}.png?v=5"`), `${nom} : sur la page (?v=5 : couvertures du 07/10/2026, le « ? »)`);
+    assert.ok(d.includes(`src="/assets/img/thumbnails/splat/${nom}.png?v=6"`), `${nom} : sur la page (?v=6 : couvertures du 08/10/2026, le nom des taches en noir pur)`);
   });
   ["fiches 10 à 14", "fiches 15 à 19", "fiches 20 à 24", "fiches 11d à 17d", "fiches 18d à 24d"]
     .forEach((plage, i) => assert.ok(art[i].includes(`<span class="plage">${plage}</span>`), plage));
