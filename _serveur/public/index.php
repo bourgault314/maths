@@ -201,6 +201,11 @@ $versionSplat = version_moteur('splat-parcours.js');
   .appli .jauge-ligne .bonus { padding: 2px 9px; border-radius: 999px; border: 1px solid #f0dc8c;
                                background: #fff4cc; color: #7a5a00; font-size: .78rem; font-weight: 800;
                                white-space: nowrap; }
+  /* La séance en direct (07/10/2026) : une tuile de plus, AU-DESSUS des
+     activités, qui n'existe que pendant que le professeur mène une séance
+     avec la classe. Même dessin qu'une activité, liseré orange. */
+  .appli.direct-lien { height: auto; margin-top: 18px; border-left-color: var(--orange); }
+  .appli.direct-lien + ul { margin-top: 12px; }
   .aide { margin-top: 20px; color: var(--muted); font-size: .9rem; }
   footer { padding: 16px; border-top: 1px solid var(--line); background: var(--paper);
            color: var(--muted); font-size: .82rem; text-align: center; }
@@ -247,6 +252,11 @@ $versionSplat = version_moteur('splat-parcours.js');
   <section id="ecran-espace" hidden>
     <h1 id="titre">Mon espace</h1>
     <p class="sous-titre">Choisis une activité. Ton travail est enregistré tout seul.</p>
+    <a class="appli direct-lien" id="direct-lien" href="direct.php" hidden>
+      <svg class="icone" width="40" height="40" viewBox="0 0 46 46" aria-hidden="true" focusable="false"><rect width="46" height="46" rx="12" fill="#fdf0e3"/><rect x="9" y="11" width="28" height="19" rx="3" fill="#fff" stroke="#063f86" stroke-width="2.4"/><path d="M19 36h8M23 30v6" stroke="#063f86" stroke-width="2.4" stroke-linecap="round"/><g fill="#f58220"><rect x="14" y="21" width="4" height="5" rx="1"/><rect x="21" y="16" width="4" height="10" rx="1"/><rect x="28" y="19" width="4" height="7" rx="1"/></g></svg>
+      <div class="texte"><strong>Séance en direct</strong><span>Ton professeur a lancé une séance : rejoins la classe.</span></div>
+      <svg class="fleche" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </a>
     <ul id="applis"></ul>
   </section>
 </main>
@@ -702,6 +712,68 @@ $versionSplat = version_moteur('splat-parcours.js');
     }
   }
 
+  // ------------------------------------------------------- la séance en direct
+  //
+  // Tant que l'élève est sur son espace, la page demande de temps en temps au
+  // serveur si le professeur mène une séance avec sa classe (api/direct.php,
+  // le code dans le corps). Si oui, la tuile « Séance en direct » apparaît
+  // au-dessus des activités ; sinon elle n'existe pas. Trois règles :
+  //  - c'est une lecture, sans rien à l'écran quand elle échoue : un serveur
+  //    muet ne doit ni afficher d'erreur ni empêcher d'ouvrir une activité ;
+  //  - onglet caché, on ne demande rien ;
+  //  - le rythme est dit par le serveur (quelques secondes), borné ici.
+  let directCode = "";
+  let directMinuteur = 0;
+
+  function arreterDirect() {
+    directCode = "";
+    window.clearTimeout(directMinuteur);
+    $("direct-lien").hidden = true;
+  }
+
+  async function demanderDirect(code) {
+    let attente = 6000;
+    try {
+      const reponse = await fetch("api/direct.php", {
+        method: "POST",
+        headers: {"Content-Type": "text/plain;charset=UTF-8"},
+        body: JSON.stringify({code}),
+        cache: "no-store"
+      });
+      const donnees = await reponse.json().catch(() => null);
+      // Entre-temps, l'élève s'est peut-être déconnecté : on ne touche à rien.
+      if (directCode !== code) return 0;
+      if (reponse.ok && donnees && donnees.ok) {
+        $("direct-lien").hidden = !donnees.direct;
+        const propose = Number(donnees.rythme);
+        if (propose >= 2000 && propose <= 60000) attente = propose;
+      } else if (reponse.status === 404) {
+        return 0;
+      }
+    } catch (_) {
+      attente = 15000;
+    }
+    return attente;
+  }
+
+  function surveillerDirect(code) {
+    arreterDirect();
+    directCode = code;
+    const tour = async () => {
+      if (directCode !== code) return;
+      if (document.visibilityState === "hidden") return;
+      const attente = await demanderDirect(code);
+      if (directCode !== code || !attente) return;
+      directMinuteur = window.setTimeout(tour, attente);
+    };
+    tour();
+  }
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && directCode) surveillerDirect(directCode);
+    else window.clearTimeout(directMinuteur);
+  });
+
   function afficherEspace(donnees, code) {
     $("titre").textContent = donnees.prenom ? `Bonjour ${donnees.prenom}` : "Mon espace";
     $("classe").textContent = donnees.classe || "";
@@ -755,6 +827,7 @@ $versionSplat = version_moteur('splat-parcours.js');
     // La grille est à l'écran, entière : ce qui suit ne peut plus l'empêcher
     // d'exister. Volontairement sans await — rien n'attend la jauge.
     habillerJauges(donnees, code);
+    surveillerDirect(code);
   }
 
   async function ouvrir(code, silencieux) {
@@ -834,6 +907,7 @@ $versionSplat = version_moteur('splat-parcours.js');
   // jour où l'un des deux oublie une ligne.
   function revenirAuCode() {
     ecrireCode("");
+    arreterDirect();
     $("code").value = "";
     $("titre").textContent = "Mon espace";
     $("classe").textContent = "";

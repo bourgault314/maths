@@ -77,6 +77,15 @@ test("la matrice décrit exactement les droits décidés le 05/09/2026", () => {
     "records.retirer": "proprietaire",
     "partages.ajouter": "proprietaire",
     "partages.supprimer": "proprietaire",
+    // Séance en direct (07/10/2026) : mener une séance, c'est recevoir les
+    // réponses des élèves avec leurs prénoms. Écriture, jamais lecture seule.
+    "direct.etat": "ecriture",
+    "direct.ouvrir": "ecriture",
+    "direct.question": "ecriture",
+    "direct.devoiler": "ecriture",
+    "direct.bonne": "ecriture",
+    "direct.fichier": "ecriture",
+    "direct.terminer": "ecriture",
   });
 });
 

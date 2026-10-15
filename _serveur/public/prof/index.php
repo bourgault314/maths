@@ -155,6 +155,8 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
   .profs li.vide { color: var(--muted); font-style: italic; border-style: dashed; }
   .profs .role { color: var(--muted); font-size: .86rem; }
   .retour-icone { display: inline-flex; align-items: center; gap: 6px; }
+  .ligne-retour { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+  .ligne-retour #seance-direct { margin-left: auto; }
   .retour-icone svg { display: block; }
   .note-tableau { margin: 10px 0 0; font-size: .88rem; }
   /* L'objectif de la classe : UN nombre, celui de tout le monde. Jamais un
@@ -441,7 +443,13 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
 
   <!-- Une classe -->
   <section id="ecran-classe" hidden>
-    <button type="button" class="secondaire petit retour-icone" id="retour"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Toutes mes classes</button>
+    <!-- Séance en direct (07/10/2026) : le bouton ouvre l'écran du tableau
+         (prof/direct.php) pour cette classe, dans le même onglet. Il est sur
+         la ligne du retour, à droite : la barre d'outils est déjà pleine. -->
+    <div class="ligne-retour">
+      <button type="button" class="secondaire petit retour-icone" id="retour"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Toutes mes classes</button>
+      <button type="button" id="seance-direct">Séance en direct</button>
+    </div>
     <h1 id="titre-classe"></h1>
     <p class="sous" id="resume-classe"></p>
     <!-- Lot « splat-suivi-4 » : l'activité dont on voit le tableau, quand la
@@ -2404,6 +2412,9 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
   function appliquerDroits() {
     const proprietaire = droitClasse === "proprietaire";
     const ecriture = droitClasse !== "lecture";
+    // Mener une séance en direct, c'est recevoir les réponses avec les
+    // prénoms : pas en lecture seule (même règle que le serveur).
+    $("seance-direct").hidden = !ecriture;
     $("ajouter").hidden = !ecriture;
     $("coller-prenoms").hidden = !ecriture;
     $("imprimer-bandelettes").hidden = !ecriture;
@@ -3183,6 +3194,14 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
   // Le rechargement est la seule façon d'être sûr que RIEN n'est resté dans le
   // document — une zone oubliée dans viderZones() ne survit pas à un reload.
   $("deconnexion").addEventListener("click", () => deconnecter({recharger: true}));
+
+  // L'écran du tableau est une autre page : la session et l'instant du dernier
+  // geste la suivent (sessionStorage de l'onglet), la classe est dite dans
+  // l'ancre — un numéro de classe n'est pas un secret, et le serveur revérifie
+  // le droit à chaque appel.
+  $("seance-direct").addEventListener("click", () => {
+    if (classe) window.location.assign("direct.php#classe=" + encodeURIComponent(classe.id));
+  });
 
   // ---------------------------------------------------------- veille du poste
   ["pointerdown", "keydown", "wheel", "touchstart"].forEach(evenement => {

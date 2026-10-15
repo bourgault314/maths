@@ -181,21 +181,26 @@ function executerPageshow({persisted, codeEnMemoire}) {
     add: c => classesCorps.add(c), remove: c => classesCorps.delete(c)
   }}};
   const dessins = {n: 0};
+  // Séance en direct (07/10/2026) : le ménage arrête aussi la surveillance de
+  // la séance et retire sa tuile — sinon la tuile « Séance en direct » de la
+  // classe du précédent élève resterait posée sur l'écran du code.
+  const directs = {arrets: 0};
   new Function("$", "window", "ecrireCode", "lireCode", "nettoyer", "afficherErreur",
-               "dessinerCases", "document", source)(
+               "dessinerCases", "document", "arreterDirect", source)(
     $, fenetre, () => {}, () => codeEnMemoire, nettoyer, () => {},
-    () => { dessins.n += 1; }, documentFactice);
+    () => { dessins.n += 1; }, documentFactice, () => { directs.arrets += 1; });
   assert.ok(gestionnaire, "le gestionnaire de « pageshow » doit être posé");
   gestionnaire({persisted});
-  return {$, elements, classesCorps, dessins};
+  return {$, elements, classesCorps, dessins, directs};
 }
 
 // Le bouton et le retour de cache doivent faire EXACTEMENT le même ménage :
 // c'est la raison d'être de la fonction commune. Ce test exécute l'autre
 // chemin, celui du bouton, sur le même écran de départ.
 test("« Se déconnecter » fait le même ménage que le retour de cache", () => {
-  const {$, classesCorps, dessins} = executerPageshow({persisted: false, codeEnMemoire: "ABC123"});
+  const {$, classesCorps, dessins, directs} = executerPageshow({persisted: false, codeEnMemoire: "ABC123"});
   $("changer").ecouteurs.click();
+  assert.equal(directs.arrets, 1, "la surveillance de la séance en direct s'arrête, sa tuile part");
   assert.ok(classesCorps.has("sur-code"), "l'écran du code retrouve sa mise en page (sans en-tête)");
   assert.equal(dessins.n, 1, "les six cases sont redessinées : vides");
   assert.equal($("ecran-code").hidden, false);
@@ -208,7 +213,8 @@ test("« Se déconnecter » fait le même ménage que le retour de cache", () =>
 });
 
 test("après « Se déconnecter », le bouton « précédent » ne rouvre pas l'espace", () => {
-  const {$, classesCorps, dessins} = executerPageshow({persisted: true, codeEnMemoire: ""});
+  const {$, classesCorps, dessins, directs} = executerPageshow({persisted: true, codeEnMemoire: ""});
+  assert.equal(directs.arrets, 1, "la tuile « Séance en direct » du précédent élève part avec le reste");
   assert.ok(classesCorps.has("sur-code"), "l'en-tête du précédent élève est caché");
   assert.equal(dessins.n, 1, "ses cases ne gardent pas son code");
   assert.equal($("ecran-code").hidden, false, "l'écran du code revient");

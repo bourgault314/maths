@@ -38,7 +38,11 @@ const TABLES_SAUVEGARDEES = ['profs', 'classes', 'eleves', 'progressions', 'part
 // n'existaient pas, et la première connexion d'un professeur répondait 500
 // (l'écriture de sa session n'avait nulle part où aller). Une sauvegarde doit
 // rendre un serveur qui MARCHE, pas seulement des données.
-const TABLES_STRUCTURE_SEULE = ['sessions_prof', 'compteurs', 'billets'];
+// Séance en direct (07/10/2026) : ses trois tables suivent la même règle, pour
+// une raison de plus — les réponses d'une séance ne doivent survivre nulle
+// part, et surtout pas dans un fichier de sauvegarde gardé des mois.
+const TABLES_STRUCTURE_SEULE = ['sessions_prof', 'compteurs', 'billets',
+    'directs', 'directs_questions', 'directs_reponses'];
 const ITERATIONS_PBKDF2 = 200000;
 
 // Le fichier SQL, en clair, tel qu'on le rendrait à phpMyAdmin.
