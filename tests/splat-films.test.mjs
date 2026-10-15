@@ -44,6 +44,27 @@ test("les films des étapes : pas d'arrêt, format téléphone pris par le lecte
   assert.match(page, /\.player\.portrait \.stage\{aspect-ratio:var\(--k,\.75\)\}/);
 });
 
+/* 15/10/2026, remarque de Gwenaël : « on ne voit pas que tu cliques sur Enlever des deux côtés ». Avec des billes,
+   l'outil ouvre déjà dans ce mode et le doigt touchait les jetons tout de suite. Dans les deux films de l'étape 35,
+   le doigt touche maintenant le bouton, une phrase le nomme, et il y reste assez longtemps pour qu'on le voie (il ne
+   repart que 0,55 s avant le geste suivant). */
+test("films de l'étape 35 : le doigt touche « Enlever des deux côtés », et on a le temps de le voir", () => {
+  const blocs = page.split("<script>").slice(1).map((b) => b.split("</script>")[0]);
+  const billes = blocs.find((b) => b.includes("FILMS.equasplat=")), jetons = blocs.find((b) => b.includes("FILMS['equasplat-jetons']="));
+  const temps = (b) => new Function(`return ${b.match(/const T=(\{[\s\S]*?\});/)[1]};`)();
+  for (const [nom, b, suivant] of [["billes", billes, "toucheA"], ["jetons", jetons, "e21g"]]) {
+    assert.match(b, /D\.touche\(T\.modeE,o\.rangs\.enl\.c\)/, nom);
+    assert.match(b, /Q\.appui\(o\.rangs\.enl,t,T\.modeE\)/, nom);
+    assert.ok(b.includes("'Touche «\\u00a0Enlever des deux côtés\\u00a0».'"), nom);
+    const T = temps(b);
+    assert.ok(T[suivant] - .55 - T.modeE >= .7, `${nom} : le doigt reste au moins 0,7 s sur le bouton`);
+  }
+  // billes : le doigt range d'abord les jetons, puis touche le bouton, puis les jetons
+  const ordre = ["for(const b of sA){D.va(b.tg,b.p0);D.glisse(b.tg+.45,b.p1);}", "D.touche(T.modeE,o.rangs.enl.c);", "o.selA.forEach((b,k)=>D.touche(TA[k],b.p1||b.p0));"]
+    .map((s) => billes.indexOf(s));
+  assert.ok(ordre.every((i) => i > 0) && ordre[0] < ordre[1] && ordre[1] < ordre[2], ordre.join(", "));
+});
+
 test("aucune équation de la série de l'étape 35 dans les films (on ne donne pas les réponses)", () => {
   const serie = ["𝑚 + 2", "7 = 𝑥 + 4", "28", "𝑏 + 6", "26 + 16", "𝑎 + 16", "2𝑏", "3𝑥", "2𝑛", "4𝑚", "14 + 11", "3𝑐"];
   const films = sansCommentaires(page.slice(page.indexOf("const ECRAN_EQ=")));
