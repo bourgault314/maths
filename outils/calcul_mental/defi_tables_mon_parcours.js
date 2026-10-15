@@ -2035,6 +2035,17 @@
     return normaliserRetenir({jour, erreurs: [...avant, ...codes]});
   }
 
+  // Lot E2 « les évaluations en classe » (15/10/2026, décision de Gwenaël) :
+  // les calculs ratés à l'évaluation vont aussi dans « À retenir », comme
+  // ceux d'une séance — l'évaluation agit sur le parcours comme Mon mélange.
+  // Une copie du parcours, la liste du jour complétée ; rien d'autre ne bouge.
+  function retenirErreurs(parcours, paires, date) {
+    const jour = dateOuNull(date) || jourLocal();
+    const copie = cloner(parcours);
+    copie.retenir = ajouterARetenir(copie.retenir, jour, paires);
+    return copie;
+  }
+
   // La liste du jour, en paires [4, 7] — vide un autre jour.
   function aRetenir(parcours, aujourdhui = jourLocal()) {
     const retenir = parcours && parcours.retenir;
@@ -3309,6 +3320,7 @@
     marcheRatee,
     noterEtape,
     aRetenir,
+    retenirErreurs,
     bilanSeances,
     resumeProf,
     commencerApresDecouverte,

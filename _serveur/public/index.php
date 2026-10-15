@@ -206,6 +206,12 @@ $versionSplat = version_moteur('splat-parcours.js');
      avec la classe. Même dessin qu'une activité, liseré orange. */
   .appli.direct-lien { height: auto; margin-top: 18px; border-left-color: var(--orange); }
   .appli.direct-lien + ul { margin-top: 12px; }
+  /* Lot E2 (15/10/2026, planche 6) : la pastille « 📝 Évaluation ouverte » sur
+     la tuile Défi tables, tant que le professeur a une évaluation ouverte que
+     l'élève n'a pas encore faite. Mon espace annonce, l'appli fait. */
+  .appli.a-evaluation { border-left-color: var(--orange); }
+  .appli .pastille-evaluation { display: inline-block; margin-top: 4px; padding: 2px 9px; border-radius: 999px; border: 1px solid #f3cfa3;
+                                background: #fdf0e3; color: #9a4b00; font-size: .8rem; font-weight: 800; white-space: nowrap; }
   .aide { margin-top: 20px; color: var(--muted); font-size: .9rem; }
   footer { padding: 16px; border-top: 1px solid var(--line); background: var(--paper);
            color: var(--muted); font-size: .82rem; text-align: center; }
@@ -729,6 +735,25 @@ $versionSplat = version_moteur('splat-parcours.js');
     directCode = "";
     window.clearTimeout(directMinuteur);
     $("direct-lien").hidden = true;
+    poserPastilleEvaluation(null);
+  }
+
+  // Lot E2 : la tuile Défi tables porte « 📝 Évaluation ouverte » tant que
+  // l'évaluation de la classe est ouverte et que l'élève ne l'a pas finie
+  // (ni été arrêté par sa fenêtre). Rien de plus : c'est dans l'appli que
+  // ça se passe. Construit par createElement, jamais par innerHTML.
+  function poserPastilleEvaluation(etat) {
+    const tuile = $("applis").querySelector('.appli[data-cle="defi-tables"]');
+    if (!tuile) return;
+    const ouverte = Boolean(etat && etat.etat === "ouverte" && !etat.fini && !etat.close);
+    tuile.classList.toggle("a-evaluation", ouverte);
+    let pastille = tuile.querySelector(".pastille-evaluation");
+    if (!ouverte) { if (pastille) pastille.remove(); return; }
+    if (pastille) return;
+    pastille = document.createElement("span");
+    pastille.className = "pastille-evaluation";
+    pastille.textContent = "📝 Évaluation ouverte";
+    tuile.querySelector(".texte").append(pastille);
   }
 
   async function demanderDirect(code) {
@@ -745,6 +770,7 @@ $versionSplat = version_moteur('splat-parcours.js');
       if (directCode !== code) return 0;
       if (reponse.ok && donnees && donnees.ok) {
         $("direct-lien").hidden = !donnees.direct;
+        poserPastilleEvaluation(donnees.evaluation);
         const propose = Number(donnees.rythme);
         if (propose >= 2000 && propose <= 60000) attente = propose;
       } else if (reponse.status === 404) {

@@ -208,3 +208,47 @@ test("tempsLisible : minutes et secondes", () => {
   assert.equal(tempsLisible(955), "1 min 36 s");
   assert.equal(tempsLisible(3600 * 10), "60 min 00 s");
 });
+
+// ------------------------------------------------------------ lot E2 (15/10/2026)
+//
+// « Faire repasser » (Ma classe), la liste des élèves de l'évaluation ouverte,
+// la pastille de Mon espace. Sabotages attendus : retirer evaluation_fermee()
+// de faire_repasser_evaluation ; ne plus monter la révision ; retirer
+// eleve_de_la_classe() de l'action ; retirer l'action du journal ou de la
+// matrice ; journaliser avec un prénom.
+
+test("E2 — « Faire repasser » : au droit écriture, un élève de la classe, tant que c'est ouvert, journalisé sur l'élève ; la révision monte", () => {
+  assert.match(apiProf, /'evaluation\.repasser' => 'ecriture',/, "dans la matrice, en écriture");
+  assert.match(apiProf, /case 'evaluation\.repasser':\s*(\/\/[^\n]*\n\s*)*\$classe = acces_classe\(/, "vérifie l'accès à la classe");
+  assert.match(apiProf, /if \(evaluation_fermee\(\$evaluation\)\) erreur\("L'évaluation est fermée : on ne fait plus repasser personne\.", 409\);/);
+  assert.match(apiProf, /\$eleveId = eleve_de_la_classe\(\$pdo, \(int\)\$classe\['id'\], is_int\(\$corps\['eleve_id'\] \?\? null\) \? \$corps\['eleve_id'\] : 0\);\s*if \(\$eleveId === null\) erreur\("Élève inconnu\.", 404\);/, "jamais un élève d'une autre classe");
+  assert.match(apiProf, /if \(\$efface\) journaliser\(\$pdo, \$profId, 'evaluation\.repasser', 'eleve', \$eleveId\);/, "journalisé sur l'élève, par son identifiant, seulement si quelque chose a été effacé");
+  assert.match(journal, /'evaluation\.repasser',/, "l'action est dans la liste fermée du journal");
+  assert.match(lib, /function faire_repasser_evaluation\(PDO \$pdo, array \$evaluation, int \$eleveId\): bool\s*\{\s*if \(evaluation_fermee\(\$evaluation\)\) return false;\s*\$requete = \$pdo->prepare\('DELETE FROM directs_reponses WHERE direct_id = \? AND eleve_id = \?'\);/, "efface présence et réponses de cet élève, de cette séance");
+  assert.match(lib, /UPDATE directs SET revision = revision \+ 1 WHERE id = \?/, "la révision monte : l'appli de l'élève voit que son état a changé");
+  assert.match(lib, /function eleve_de_la_classe\(PDO \$pdo, int \$classeId, int \$eleveId\): \?int/);
+});
+
+test("E2 — la liste des élèves pour Ma classe (prénoms, état, question), jamais pour l'élève ; ni code, ni graine, ni réponse", () => {
+  const classe = lib.slice(lib.indexOf("function etat_evaluation_pour_la_classe"), lib.indexOf("function contenu_evaluation"));
+  assert.match(classe, /'eleves' => \$eleves,/);
+  assert.match(classe, /'etat' => \$etat,\s*'question' => \$presence === null \? null : min\(\$n, \$repondues \+ 1\),/);
+  assert.match(classe, /\$etat = \$presence === null \? 'rien'\s*: \(\$fini \? 'fini' : \(\(\$fermee \|\| fenetre_evaluation_close\(\$evaluation, \$presence\)\) \? 'close' : 'en-cours'\)\);/);
+  for (const interdit of ["'code'", "'graine'", "'reponses'", "'debut'"]) assert.ok(!classe.includes(interdit), `la liste ne porte pas ${interdit}`);
+  const eleve = lib.slice(lib.indexOf("function etat_evaluation_pour_l_eleve"), lib.indexOf("function etat_evaluation_pour_la_classe"));
+  assert.ok(!eleve.includes("eleves"), "l'élève ne reçoit jamais la liste");
+});
+
+test("E2 — Ma classe : la liste dépliée, « Faire repasser » avec confirmation, par textContent ; Mon espace : la pastille par createElement", () => {
+  assert.match(page, /function dessinerListeEleves\(\) \{\s*const bloc = el\("details", "eval-liste"\);\s*bloc\.open = !evalListeRepliee;/, "dépliée par défaut (choix de Gwenaël), le pli gardé d'un redessin à l'autre");
+  assert.match(page, /cours\.append\(compte, dessinerListeEleves\(\), actions\);/, "dans la carte ouverte, entre le compteur et « Fermer »");
+  assert.match(page, /if \(eleve\.etat !== "rien"\) \{\s*const repasser = el\("button", "secondaire", "↺ Faire repasser"\);/, "pas de bouton pour qui n'a pas commencé");
+  assert.match(page, /if \(!await demander\(`Faire repasser \$\{nom\} \? Ses réponses sont effacées, l’évaluation lui est proposée de nouveau, avec d’autres calculs\.`\)\) return;/);
+  assert.match(page, /recevoirEvaluation\(await api\("evaluation\.repasser", \{classe_id: classe\.id, eleve_id: eleve\.id\}\)\);/);
+  const script = page.slice(page.indexOf("Les évaluations (lot E1"), page.indexOf("Les records (lot du 09/10/2026)"));
+  assert.ok(!script.includes("innerHTML"), "rien par innerHTML dans la carte");
+  const espace = lire("_serveur/public/index.php");
+  assert.match(espace, /function poserPastilleEvaluation\(etat\) \{[\s\S]*?const ouverte = Boolean\(etat && etat\.etat === "ouverte" && !etat\.fini && !etat\.close\);[\s\S]*?pastille\.textContent = "📝 Évaluation ouverte";/);
+  assert.match(espace, /poserPastilleEvaluation\(donnees\.evaluation\);/, "posée à chaque lecture de api/direct.php");
+  assert.match(espace, /\.appli\.a-evaluation \{ border-left-color: var\(--orange\); \}/);
+});

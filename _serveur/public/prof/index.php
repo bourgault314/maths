@@ -361,6 +361,19 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   .eval-repartition .l { display: block; margin-top: 2px; font-size: .8rem; color: var(--muted); font-weight: 700; }
   .eval-repartition div:first-child .n { color: var(--vert); }
   .eval-garde { margin: 10px 0 0; color: var(--muted); font-size: .86rem; }
+  /* Lot E2 (15/10/2026, planche 7) : pendant, la liste « qui a commencé, qui a
+     fini », dépliée, avec « Faire repasser » par élève. */
+  .eval-liste { margin-top: 12px; }
+  .eval-liste summary { cursor: pointer; color: var(--blue); font-weight: 700; font-size: .93rem; }
+  .eval-eleves { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 4px 10px; }
+  .eval-eleves li { display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 32px; padding: 3px 6px 3px 8px; border-radius: 8px; background: #fff; border: 1px solid var(--line); font-size: .92rem; }
+  .eval-eleves li b { font-weight: 700; color: var(--ink); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .eval-eleves li .e { margin-left: auto; font-size: .8rem; font-weight: 700; white-space: nowrap; }
+  .eval-eleves li.fini .e { color: var(--vert); }
+  .eval-eleves li.en-cours .e { color: #a15c11; }
+  .eval-eleves li.close .e { color: var(--muted); }
+  .eval-eleves li.rien .e { color: var(--muted); font-weight: 600; }
+  .eval-eleves li button { flex: 0 0 auto; min-height: 26px; padding: 2px 8px; font-size: .78rem; white-space: nowrap; }
   .eval-dialog { max-width: 640px; }
   .eval-dialog h2 { margin: 0 0 4px; }
   .eval-dialog .deux { display: grid; grid-template-columns: 1fr 1fr; gap: 0 18px; }
@@ -390,6 +403,10 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   @media (max-width: 700px) {
     .eval-modeles li { grid-template-columns: 1fr; }
     .eval-repartition { grid-template-columns: 1fr 1fr; }
+    .eval-eleves { grid-template-columns: minmax(0, 1fr); }
+    /* Téléphone : le bouton passe sous le prénom, rien ne déborde. */
+    .eval-eleves li { flex-wrap: wrap; }
+    .eval-eleves li button { margin-left: auto; }
     .eval-dialog .deux { grid-template-columns: 1fr; }
     .eval-plein { padding: 16px; }
   }
@@ -2440,7 +2457,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       fermer.type = "button";
       fermer.addEventListener("click", fermerEvaluation);
       actions.appendChild(fermer);
-      cours.append(compte, actions);
+      cours.append(compte, dessinerListeEleves(), actions);
     } else {
       cours.appendChild(dessinerRepartition(false));
       const actions = el("div", "actions");
@@ -2456,6 +2473,47 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       if (!evalContenu) chargerContenuEvaluation().catch(erreur => surErreur(erreur, "message-evaluations"));
     }
     zone.appendChild(cours);
+  }
+
+  // Lot E2 (planche 7) : la liste des élèves de l'évaluation ouverte — qui n'a
+  // pas commencé, qui en est où, qui a fini — et « Faire repasser » pour ceux
+  // qui ont commencé : le passage est effacé, l'élève recommence avec un
+  // autre tirage (un camarade a pris son code, « J'ai fini » cliqué trop
+  // tôt). Dépliée par défaut (choix de Gwenaël) ; l'état du pli est gardé
+  // d'un redessin à l'autre.
+  let evalListeRepliee = false;
+  function dessinerListeEleves() {
+    const bloc = el("details", "eval-liste");
+    bloc.open = !evalListeRepliee;
+    bloc.addEventListener("toggle", () => { evalListeRepliee = !bloc.open; });
+    bloc.appendChild(el("summary", "", "Qui a commencé, qui a fini"));
+    const liste = el("ul", "eval-eleves");
+    const n = evaluation.modele && evaluation.modele.n ? evaluation.modele.n : 0;
+    (evaluation.eleves || []).forEach(eleve => {
+      const ligne = el("li", eleve.etat);
+      const nom = eleve.prenom ? eleve.prenom + (eleve.initiale ? ` ${eleve.initiale}.` : "") : "(sans prénom)";
+      ligne.appendChild(el("b", "", nom));
+      ligne.appendChild(el("span", "e", eleve.etat === "fini" ? "a fini ✓"
+        : eleve.etat === "en-cours" ? `question ${eleve.question} / ${n}`
+        : eleve.etat === "close" ? `temps écoulé · ${eleve.question} / ${n}` : "pas commencé"));
+      if (eleve.etat !== "rien") {
+        const repasser = el("button", "secondaire", "↺ Faire repasser");
+        repasser.type = "button";
+        repasser.addEventListener("click", () => faireRepasser(eleve, nom));
+        ligne.appendChild(repasser);
+      }
+      liste.appendChild(ligne);
+    });
+    bloc.appendChild(liste);
+    return bloc;
+  }
+
+  async function faireRepasser(eleve, nom) {
+    if (!await demander(`Faire repasser ${nom} ? Ses réponses sont effacées, l’évaluation lui est proposée de nouveau, avec d’autres calculs.`)) return;
+    try {
+      recevoirEvaluation(await api("evaluation.repasser", {classe_id: classe.id, eleve_id: eleve.id}));
+      messager("message-evaluations", `${nom} peut repasser l’évaluation.`, "ok");
+    } catch (erreur) { surErreur(erreur, "message-evaluations"); }
   }
 
   function dessinerModeles(zone) {

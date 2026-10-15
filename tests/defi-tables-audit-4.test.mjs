@@ -101,7 +101,7 @@ test("si le choix ouvert est plus haut que l’accueil fermé, il prend la plus 
 
 test("la page : l’accueil se remesure choix ouvert compris, et marque le choix ouvert", () => {
   const rendu = source("renderAccueil");
-  assert.match(rendu, /document\.querySelector\("\.acc"\)\.classList\.toggle\("etape-seule", Boolean\(etapes\.querySelector\("\.etape-choix"\)\)\);\s*(\/\/[^\n]*\s*)*if \(!\$\("intro"\)\.hidden\) ajusterEchelle\(\);\s*\}$/);
+  assert.match(rendu, /document\.querySelector\("\.acc"\)\.classList\.toggle\("etape-seule", Boolean\(etapes\.querySelector\("\.etape-choix"\)\)\);\s*(\/\/[^\n]*\s*)*(renderCarteEvaluation\(\);\s*)?(\/\/[^\n]*\s*)*if \(!\$\("intro"\)\.hidden\) ajusterEchelle\(\);\s*\}$/);
   assert.doesNotMatch(html, /state\.etapeOuverte && !\$\("intro"\)/, "plus d’exception « choix déplié »");
   const ajuster = source("ajusterEchelle");
   assert.match(ajuster, /if \(ouvert\) acc\.classList\.add\("mesure-replie"\);\s*(\/\/[^\n]*\s*)*let z = chercherEchelle\(/);

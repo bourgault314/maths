@@ -95,6 +95,8 @@ test("la matrice décrit exactement les droits décidés le 05/09/2026", () => {
     "evaluation.fermer": "ecriture",
     "evaluation.fichier": "ecriture",
     "evaluation.terminer": "ecriture",
+    // Lot E2 (15/10/2026) : « Faire repasser » un élève de l'évaluation ouverte.
+    "evaluation.repasser": "ecriture",
   });
 });
 
