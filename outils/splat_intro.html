@@ -812,17 +812,22 @@ FILMS.equasplat=(function(){
 'use strict';
 const Q=ECRAN_EQ,E=F.E,P=F.P,L=F.L,op=F.op,C=Q.C;
 const PAS_RANGE=.8,PAS_TOUCHE=.45;
-const T={ecran:2.7,rangeA:5.2,toucheA:10.4,valider:13.6,ecrit:13.8,resolu:15.2,suivant:17.6,
-  b:17.9,rangeB:20.1,fp:24.7,choix:25.7,groupes:25.85,carte:28.0,replie:28.5,resoluB:29.2,fin:32.0};
+/* modeE (15/10/2026, remarque de Gwenaël : « on ne voit pas que tu cliques sur Enlever des deux côtés ») : avec des
+   billes, l'outil ouvre déjà en mode « Enlever des deux côtés » (bouton bleu), et le doigt touchait les jetons tout de
+   suite. Il touche maintenant le bouton d'abord (on peut le faire dans l'outil : le mode reste le même), une phrase le
+   dit, puis il touche les jetons. Tout ce qui suit est décalé de 1,5 s. */
+const T={ecran:2.7,rangeA:5.2,modeE:10.6,toucheA:11.9,valider:15.1,ecrit:15.3,resolu:16.7,suivant:19.1,
+  b:19.4,rangeB:21.6,fp:26.2,choix:27.2,groupes:27.35,carte:29.5,replie:30.0,resoluB:30.7,fin:33.5};
 const SOUS_TITRES=[[3.2,'Trouve ce que cache la tache 𝑡.'],[4.7,'Range les jetons : 3 en face de 3.'],
-  [9.9,'Touche les 3 jetons de chaque côté…'],[13.0,'Valide.'],[14.6,'Une ligne s’écrit : 𝑡 = 4.'],
-  [16.4,'La tache est seule : c’est résolu !'],[18.2,'Ici, 3 taches et 9 jetons.'],
-  [19.6,'Range les jetons : un paquet en face de chaque tache.'],[24.1,'Puis «\u00a0Faire des paquets\u00a0» : 3 paquets de 3.'],
-  [26.9,'Touche un des groupes.'],[29.3,'Une tache cache 3 jetons : 𝑦 = 3.'],[32.0,'']];
+  [9.9,'Touche «\u00a0Enlever des deux côtés\u00a0».'],[11.4,'Puis touche les 3 jetons de chaque côté…'],[14.5,'Valide.'],[16.1,'Une ligne s’écrit : 𝑡 = 4.'],
+  [17.9,'La tache est seule : c’est résolu !'],[19.7,'Ici, 3 taches et 9 jetons.'],
+  [21.1,'Range les jetons : un paquet en face de chaque tache.'],[25.6,'Puis «\u00a0Faire des paquets\u00a0» : 3 paquets de 3.'],
+  [28.4,'Touche un des groupes.'],[30.8,'Une tache cache 3 jetons : 𝑦 = 3.'],[33.5,'']];
 /* sélection de l'exemple A : les 3 jetons rangés à gauche, puis les 3 rangés à droite */
 const TA=[0,1,2,3,4,5].map(k=>T.toucheA+k*PAS_TOUCHE);
 const I0='Il y a la même quantité à gauche qu’à droite.';
-const CONSIGNES=[[0,I0],[TA[0],'Sélectionne maintenant l’autre côté.'],[TA[3],'Les jetons sélectionnés ne font pas la même somme.'],
+/* après le bouton : la consigne de l'outil en mode « Enlever » sans sélection (equasplat.html, renderActions) */
+const CONSIGNES=[[0,I0],[T.modeE,'Sélectionne la même quantité des deux côtés.'],[TA[0],'Sélectionne maintenant l’autre côté.'],[TA[3],'Les jetons sélectionnés ne font pas la même somme.'],
   [TA[5],'Même quantité sélectionnée : 3.'],[T.valider,'Sélectionne la même quantité des deux côtés.'],
   [T.b,I0],[T.fp,'Choisis comment ranger les 9 jetons en paquets.'],[T.groupes,'3 groupes identiques — touche-en un.',C.orangeC],[T.replie,'']];
 /* trois jetons en paquet autour d'un point (assez écartés : aucun n'est posé sur un autre) */
@@ -863,13 +868,13 @@ const BOUTONS={enl:'Enlever des deux côtés',ajo:'Ajouter des deux côtés',ann
 const posBille=(b,t)=>{if(!b.p1||t<=b.tg)return b.p0;const u=F.io(F.clamp((t-b.tg)/.45));return [L(b.p0[0],b.p1[0],u),L(b.p0[1],b.p1[1],u)];};
 
 const film={
-  duration:35.4, poster:2.4, stops:[],
+  duration:36.9, poster:2.4, stops:[],
   modes:{paysage:{w:1600,h:900},portrait:{w:900,h:1600}},
   passer:SUITE, passerTexte:'Passer le film ›', credit:'Jeu SPLAT! créé par <a href="https://stevewyborney.com" target="_blank" rel="noopener">Steve Wyborney</a>',
   aria:'Film : comment on joue dans ÉquaSplat avec des billes, enlever la même quantité des deux côtés puis faire des paquets',
   titre:'Comment on joue ? ÉquaSplat — maths&go',
   chapters:[{t:0,name:'SPLAT! Équations'},{t:2.7,name:'Le plateau'},{t:4.7,name:'Ranger les jetons'},{t:9.9,name:'Enlever des deux côtés'},
-    {t:13.8,name:'La ligne s’écrit'},{t:17.9,name:'Ranger en paquets'},{t:24.1,name:'Faire des paquets'},{t:32.0,name:'À toi de jouer'}],
+    {t:15.3,name:'La ligne s’écrit'},{t:19.4,name:'Ranger en paquets'},{t:25.6,name:'Faire des paquets'},{t:33.5,name:'À toi de jouer'}],
   build(svg,mode){
     const port=mode==='portrait',Y=this.Y=Q.mise(mode,AJOUT),o=this.o={port},X=this.X=exemples(port);
     svg.style.fontFamily=Q.POLICE;
@@ -923,6 +928,7 @@ const film={
     const sA=o.glisses.filter(b=>b.tg<T.b),sB=o.glisses.filter(b=>b.tg>T.b);
     D.entre(T.rangeA-.55,sA[0].p0);
     for(const b of sA){D.va(b.tg,b.p0);D.glisse(b.tg+.45,b.p1);}
+    D.touche(T.modeE,o.rangs.enl.c);   /* le bouton d'abord (15/10/2026) */
     o.selA.forEach((b,k)=>D.touche(TA[k],b.p1||b.p0));
     D.touche(T.valider,o.act.valider.c);D.fin(T.valider+.4);
     D.entre(T.suivant-.8,o.cSuivant);D.touche(T.suivant,o.cSuivant);D.fin(T.suivant+.3);
@@ -969,7 +975,7 @@ const film={
     for(const id of ['enl','ajo'])o.rangs[id].g.setAttribute('opacity',grise?.45:1);
     o.fp.g.setAttribute('opacity',grise?.45:1);
     o.fp.r.setAttribute('fill',t>=T.fp&&t<T.groupes?'#e8eef6':(port?'#f8fbff':'#ffffff'));
-    Q.appui(o.fp,t,T.fp);
+    Q.appui(o.fp,t,T.fp);Q.appui(o.rangs.enl,t,T.modeE);
     const entre=(a,b)=>t>=a&&t<b?1:0,ac=o.act;
     if(port){const vv=entre(TA[5],T.valider+.15),ch=entre(T.fp,T.groupes);
       op(ac.attente.g,(!vv&&!ch)?1:0);op(ac.valider.g,vv);ac.choix.forEach(b=>op(b.g,ch));
@@ -998,15 +1004,17 @@ return film;
 FILMS['equasplat-jetons']=(function(){
 'use strict';
 const Q=ECRAN_EQ,E=F.E,P=F.P,L=F.L,op=F.op,C=Q.C;
+/* 15/10/2026 (remarque de Gwenaël sur le clic « Enlever des deux côtés ») : le doigt reste presque une seconde sur
+   le bouton (0,7 s avant) et une phrase le nomme, comme dans le film des billes. Tout ce qui suit est décalé de 0,8 s. */
 const T={ecran:2.7,modeG:5.3,g20:6.0,g15:6.6,btnG:7.4,dlgG:7.5,cleG:[8.1,8.5],okG:9.2,regroupe:9.3,
   modeD:10.7,t35:11.4,dlgD:11.5,cleD:[12.0,12.35,12.7,13.05,13.4],okD:14.0,decompose:14.1,
-  modeE:15.5,e21g:16.2,e21d:16.8,valider:17.6,ecrit:17.8,resolu:19.0,suivant:20.6,
-  b:20.9,va9:22.9,lache:23.5,dlgF:23.6,cleF:[24.2,24.55],okF:25.2,fusionne:25.3,
-  modeP:26.5,t21:27.2,dlgP:27.3,chip:28.1,cleP:[28.8],okP:29.5,groupes:29.65,carte:31.5,replie:32.0,resoluB:32.7,fin:35.5};
+  modeE:15.5,e21g:17.0,e21d:17.6,valider:18.4,ecrit:18.6,resolu:19.8,suivant:21.4,
+  b:21.7,va9:23.7,lache:24.3,dlgF:24.4,cleF:[25.0,25.35],okF:26.0,fusionne:26.1,
+  modeP:27.3,t21:28.0,dlgP:28.1,chip:28.9,cleP:[29.6],okP:30.3,groupes:30.45,carte:32.3,replie:32.8,resoluB:33.5,fin:36.3};
 const SOUS_TITRES=[[3.2,'Trouve ce que cache la tache 𝑘.'],[4.6,'D’abord, regroupe 20 et 15.'],[10.0,'Décompose 35 pour faire apparaître 21.'],
-  [14.8,'Enlève 21 des deux côtés.'],[19.2,'La tache est seule : 𝑘 = 14.'],[21.2,'Ici, 3 taches et les jetons 12 et 9.'],
-  [22.3,'Autre façon de regrouper : glisse 9 sur 12.'],[25.9,'Partage 21 en 3 parts égales.'],[30.4,'Touche un des groupes.'],
-  [32.8,'Une tache cache 7 : 𝑝 = 7.'],[35.5,'']];
+  [14.8,'Touche «\u00a0Enlever des deux côtés\u00a0».'],[16.5,'Puis touche 21 de chaque côté, et valide.'],[20.0,'La tache est seule : 𝑘 = 14.'],[22.0,'Ici, 3 taches et les jetons 12 et 9.'],
+  [23.1,'Autre façon de regrouper : glisse 9 sur 12.'],[26.7,'Partage 21 en 3 parts égales.'],[31.2,'Touche un des groupes.'],
+  [33.6,'Une tache cache 7 : 𝑝 = 7.'],[36.3,'']];
 const I0='Il y a la même quantité à gauche qu’à droite.';
 const CONSIGNES=[[0,I0],[T.modeG,'Sélectionne plusieurs jetons numériques d’un même côté.'],[T.g20,'Sélectionne au moins deux éléments compatibles.'],
   [T.g15,'2 jetons sélectionnés. Calcule leur somme pour les regrouper.'],[T.regroupe,'Jetons regroupés : 35.'],[T.modeD,'Décompose un jeton numérique.'],
@@ -1102,13 +1110,13 @@ function fenetre(Y,p,spec,port){
 }
 
 const film={
-  duration:38.9, poster:2.4, stops:[],
+  duration:39.7, poster:2.4, stops:[],
   modes:{paysage:{w:1600,h:900},portrait:{w:900,h:1600}},
   passer:SUITE, passerTexte:'Passer le film ›', credit:'Jeu SPLAT! créé par <a href="https://stevewyborney.com" target="_blank" rel="noopener">Steve Wyborney</a>',
   aria:'Film : comment on joue dans ÉquaSplat avec des jetons numérotés : regrouper (avec le bouton, ou en glissant un jeton sur un autre), décomposer, enlever des deux côtés et partager',
   titre:'Avec des jetons numérotés — ÉquaSplat — maths&go',
   chapters:[{t:0,name:'SPLAT! Équations'},{t:2.7,name:'Le plateau'},{t:4.6,name:'Regrouper'},{t:10.0,name:'Décomposer'},{t:14.8,name:'Enlever des deux côtés'},
-    {t:20.9,name:'Glisser un jeton sur un autre'},{t:25.9,name:'Partager équitablement'},{t:30.4,name:'Les groupes'},{t:35.5,name:'À toi de jouer'}],
+    {t:21.7,name:'Glisser un jeton sur un autre'},{t:26.7,name:'Partager équitablement'},{t:31.2,name:'Les groupes'},{t:36.3,name:'À toi de jouer'}],
   build(svg,mode){
     const port=mode==='portrait',Y=this.Y=Q.mise(mode,AJOUT),o=this.o={port},X=this.X=exemples(port);
     svg.style.fontFamily=Q.POLICE;
