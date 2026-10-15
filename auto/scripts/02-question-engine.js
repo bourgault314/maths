@@ -3113,7 +3113,7 @@ function makeEvolutionInstance(mod,q){
   bar.kind=kind;
   const evolution=bar;
   const cells=evolution.baseCells+(up?evolution.deltaCells:0);
-  const aideHtml=cells<=24?evolutionBarSvg(evolution,false):'';
+  const aideHtml=cells<=24?evolutionBarSvg(evolution,false):(evolution.normalized?evolutionBarSimpleSvg(evolution):'');
   const inst={module:mod,q,scope:{p,initial},answers,rawStatement,rawFooter,hasSvg:false,evolution,
     correctionSteps:steps,aideSteps:aide,aideHtml};
   if(note) inst.correctionNote=note;
@@ -4149,6 +4149,31 @@ function evolutionBraceSvg(x1,x2,y,color,label,W){
   return `<path d="M ${x1} ${y} Q ${x1} ${y+13} ${x1+inset} ${y+13} L ${mid-gap} ${y+13} Q ${mid-4} ${y+13} ${mid} ${y+22} Q ${mid+4} ${y+13} ${mid+gap} ${y+13} L ${x2-inset} ${y+13} Q ${x2} ${y+13} ${x2} ${y}" fill="none" stroke="${color}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><text x="${labelX}" y="${y+49}" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="28" font-weight="850" fill="${color}">${escapeHtml(label)}</text>`;
 }
 
+// A0 (15/10/2026) : quand le pourcentage demande plus de 24 cases (2 %, 3 %),
+// la barre de Gwenaël est dessinée sans ses cases : le haut vaut 100 %, le bas
+// garde 100 % et ajoute (ou hachure) la part du pourcentage, à l'échelle. Le
+// résultat (102 %) n'est jamais écrit.
+function evolutionBarSimpleSvg(data){
+  const increase=data.direction==='increase',border='#18223d',p=Number(data.percent)||0;
+  const W=660,x=30,available=600,barH=84,topY=10,bottomY=topY+barH,H=bottomY+barH+42;
+  const baseW=increase?available*100/(100+p):available,deltaW=available*p/(increase?100+p:100);
+  const text=(cx,cy,value,size=30)=>`<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle" font-family="Arial,Helvetica,sans-serif" font-size="${size}" font-weight="850" fill="${border}">${escapeHtml(value)}</text>`;
+  // Le pourcentage s'écrit sous la barre, aligné sur la part ajoutée ou hachurée.
+  const label=value=>`<text x="${x+available}" y="${bottomY+barH+26}" text-anchor="end" dominant-baseline="middle" font-family="Arial,Helvetica,sans-serif" font-size="27" font-weight="850" fill="${border}">${escapeHtml(value)}</text>`;
+  let body='<defs><pattern id="evolution-hatch-simple" patternUnits="userSpaceOnUse" width="18" height="18" patternTransform="rotate(45)"><rect width="18" height="18" fill="#fff8fa"/><line x1="0" y1="0" x2="0" y2="18" stroke="#ffb8c6" stroke-width="4"/></pattern></defs>';
+  body+=`<rect x="${x}" y="${topY}" width="${baseW}" height="${barH}" fill="#eef8fe" stroke="${border}" stroke-width="2.6"/>`+text(x+baseW/2,topY+barH/2,'100 %',36);
+  if(increase){
+    body+=`<rect x="${x}" y="${bottomY}" width="${baseW}" height="${barH}" fill="#9ed6f4"/><rect x="${x+baseW}" y="${bottomY}" width="${deltaW}" height="${barH}" fill="#fffdf3"/>`;
+    body+=`<rect x="${x}" y="${bottomY}" width="${available}" height="${barH}" fill="none" stroke="${border}" stroke-width="2.6"/><line x1="${x+baseW}" y1="${bottomY}" x2="${x+baseW}" y2="${bottomY+barH}" stroke="${border}" stroke-width="2.6"/>`;
+    body+=text(x+baseW/2,bottomY+barH/2,'100 %',30)+label('+ '+fmt(p)+' %');
+  }else{
+    const keep=available-deltaW;
+    body+=`<rect x="${x}" y="${bottomY}" width="${keep}" height="${barH}" fill="#9ed6f4"/><rect x="${x+keep}" y="${bottomY}" width="${deltaW}" height="${barH}" fill="url(#evolution-hatch-simple)"/>`;
+    body+=`<rect x="${x}" y="${bottomY}" width="${available}" height="${barH}" fill="none" stroke="${border}" stroke-width="2.6"/><line x1="${x+keep}" y1="${bottomY}" x2="${x+keep}" y2="${bottomY+barH}" stroke="${border}" stroke-width="2.6"/>`;
+    body+=label('− '+fmt(p)+' %');
+  }
+  return `<div class="evolution-help evolution-help-compact"><svg class="evolution-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Schéma en barres : 100 % ${increase?'plus':'moins'} ${escapeHtml(fmt(p))} %">${body}</svg></div>`;
+}
 function evolutionBarSvg(data,correction=false){
   const increase=data.direction==='increase';
   const totalCells=increase?data.baseCells+data.deltaCells:data.baseCells;
