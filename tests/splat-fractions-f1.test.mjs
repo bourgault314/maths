@@ -182,7 +182,7 @@ test("pas de « Résoudre » (ÉquaBarre) ni de tache vide en A fraction", () =>
 
 // --- la page ----------------------------------------------------------------------------------
 test("le menu, le bloc de réglages, l'adresse : mode=UF, niveau= écrit seulement en A fraction", () => {
-  assert.match(html, /<option value="U">A — Jetons<\/option>\n\s*<option value="UF">A fraction — Jetons et parts<\/option>/);
+  assert.match(html, /<option value="U">A — Jetons<\/option>\n\s*<option value="UF">A — Jetons et parts<\/option>/);
   assert.match(html, /<div id="fractionSettings" style="display:none">/);
   for(const id of ["fracNiveau", "fracVisibleMax", "fracHiddenMax", "fracTotalMin", "fracTotalMax"]) assert.match(html, new RegExp(`id="${id}"`));
   const noms = JSON.parse(ligne("const sharedNames = ").replace(/^.*= /, "").replace(/;$/, ""));
@@ -199,7 +199,7 @@ test("le menu, le bloc de réglages, l'adresse : mode=UF, niveau= écrit seuleme
 test("le mode A garde son dessin et son tirage : A fraction a ses propres fonctions, rangées à la fin du script", () => {
   // les seules lignes A fraction de renderCard et renderCardIntoSvg : un aiguillage vers ses fonctions
   assert.match(fn("renderCard"), /if\(card && card\.family === "UF"\)\{ ufRendreCarte\(card, revealState\); return; \}/);
-  assert.match(fn("renderCardIntoSvg"), /if\(card && card\.family === "UF"\)\{ ufRendreCarteImprimee\(targetSvg, card, tEl, tText\); return; \}/);
+  assert.match(fn("renderCardIntoSvg"), /if\(card && card\.family === "UF"\)\{ ufRendreCarteImprimee\(targetSvg, card, tEl, tText, \{ sixColonne:!!opts\.sixColonne, corrige:revealAnswers \}\); return; \}/);
   // assignPositionsUnits : les rayons du mode A sont les mêmes qu'avant
   const places = fn("assignPositionsUnits");
   assert.match(places, /beadR = isSignedUnitMode \? clamp\(calc, 18, 42\) : \(isFractionMode \? clamp\(Math\.floor\(124 \/ Math\.sqrt\(maxHidden\)\), 24, 56\) : clamp\(calc, 14, 32\)\);/);
@@ -216,21 +216,19 @@ test("le mode A garde son dessin et son tirage : A fraction a ses propres foncti
   assert.ok(html.indexOf("\nfunction frPgcd(") < html.indexOf("\nif(!loadSharedConfiguration()){"), "avant le lancement de la page");
 });
 
-test("impression du lot F1 : l'énoncé seul, en 4, 2 ou 1 par page ; le reste revient dans les autres modes", () => {
+test("impression en A fraction (F1 puis F2) : énoncé et corrections courtes, 6/page permis ; le reste revient dans les autres modes", () => {
   assert.match(fn("syncPrintModeUI"), /ufSyncImpression\(sel, act === "UF"\);/);
   const sync = new Function("document", `${fn("ufSyncImpression")} return ufSyncImpression;`);
   const option = (v) => ({ value:v, disabled:false });
   const opts = ["statement", "worksheet", "correction", "correction-equation", "correction-schema", "duplex-worksheet", "duplex-correction"].map(option);
   const sel = { value:"correction", querySelectorAll:(q) => opts.filter((o) => q.includes(`"${o.value}"`)) };
-  const six = option("6"), pages = { value:"6", querySelector:() => six };
-  const f = sync({ getElementById:() => pages });
+  const f = sync({});
   f(sel, true);
   assert.equal(sel.value, "statement");
-  assert.deepEqual(opts.filter((o) => o.disabled).map((o) => o.value), ["worksheet", "correction", "correction-equation", "correction-schema", "duplex-worksheet", "duplex-correction"]);
-  assert.equal(pages.value, "4");
-  assert.equal(six.disabled, true);
+  assert.deepEqual(opts.filter((o) => o.disabled).map((o) => o.value), ["worksheet", "correction", "duplex-worksheet", "duplex-correction"]);
+  sel.value = "correction-schema"; f(sel, true);
+  assert.equal(sel.value, "correction-schema", "les corrections courtes restent choisies");
   f(sel, false);
-  assert.equal(six.disabled, false, "6/page revient");
   assert.deepEqual(opts.filter((o) => ["correction", "duplex-correction"].includes(o.value)).map((o) => o.disabled), [false, false], "les corrections reviennent (les autres suivent syncPrintModeUI, comme avant)");
   assert.match(fn("getClassicPrintInstruction"), /if\(act === "UF"\) return \{ main:UF_CONSIGNE_IMPRIMEE, note:"" \};/);
 });
