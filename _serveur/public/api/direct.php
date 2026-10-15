@@ -1,5 +1,6 @@
 <?php
-// API élève de la séance en direct — lot 1 « question éclair » (07/10/2026).
+// API élève de la séance en direct — lot 1 « question éclair » (07/10/2026),
+// lot 2 « questionnaire au tableau » (15/10/2026).
 //
 // Deux entrées, toujours en POST, le code dans le CORPS (jamais dans
 // l'adresse, comme le reste du serveur) :
@@ -18,6 +19,12 @@
 // secondes et demie, ce serait douze écritures par seconde pour rien. Seules
 // les RÉPONSES sont comptées (120 par code et par cinq minutes), et un code
 // inconnu compte comme un échec pour l'adresse, comme partout ailleurs.
+//
+// Lot 2 : la PRÉSENCE. La première fois qu'un élève interroge une séance
+// ouverte, une ligne le note (une seule écriture par élève et par séance, pas
+// une par passage) : le tableau compte « 18 / 24 » sur ceux qui ont rejoint.
+// Et le CHRONO : une question dont la fin est passée est fermée pour l'élève
+// (il voit « Regarde le tableau »), même si le tableau n'a pas encore dévoilé.
 
 declare(strict_types=1);
 
@@ -33,13 +40,17 @@ cors();
 function etat_du_direct_pour_l_eleve(PDO $pdo, array $direct, int $eleveId): array
 {
     $enQuestion = $direct['numero'] >= 1 && $direct['type'] !== null;
+    $etat = $enQuestion ? $direct['etat'] : 'attente';
+    // Chrono écoulé : pour l'élève, la question est close (il ne reçoit ni la
+    // durée ni la fin : il n'a que ses boutons).
+    if ($etat === 'question' && chrono_ecoule_direct($direct['reglage'])) $etat = 'devoile';
     return [
         'mode' => $direct['mode'],
-        'etat' => $enQuestion ? $direct['etat'] : 'attente',
+        'etat' => $etat,
         'numero' => $direct['numero'],
         'revision' => $direct['revision'],
         'type' => $enQuestion ? $direct['type'] : null,
-        'reglage' => $enQuestion ? (object)$direct['reglage'] : null,
+        'reglage' => $enQuestion ? (object)reglage_pour_l_eleve_direct($direct['reglage']) : null,
         'reponse' => $enQuestion
             ? reponse_de_l_eleve_au_direct($pdo, $direct['id'], $direct['numero'], $eleveId)
             : null,
@@ -79,10 +90,14 @@ try {
         repondre(['ok' => true, 'direct' => null, 'rythme' => RYTHME_DIRECT_ELEVE_SANS_SEANCE]);
     }
 
+    // L'élève a rejoint la séance : noté une fois, la première fois.
+    if (!$direct['present']) noter_presence_direct($pdo, $direct['id'], $eleveId);
+
     if (array_key_exists('reponse', $corps)) {
         limiter('direct:' . $code, 120, 300);
         $numero = is_int($corps['numero'] ?? null) ? $corps['numero'] : 0;
-        $ouverte = $direct['etat'] === 'question' && $direct['type'] !== null && $numero === $direct['numero'];
+        $ouverte = $direct['etat'] === 'question' && $direct['type'] !== null && $numero === $direct['numero']
+            && !chrono_ecoule_direct($direct['reglage']);
         if ($ouverte) {
             $reponse = reponse_direct($direct['type'], $direct['reglage'], $corps['reponse']);
             if ($reponse === null) {
@@ -96,8 +111,9 @@ try {
                 repondre(['ok' => true, 'direct' => null, 'rythme' => RYTHME_DIRECT_ELEVE_SANS_SEANCE]);
             }
         }
-        // Question déjà dévoilée, ou numéro d'une question passée : rien n'est
-        // écrit, et l'état rendu le dit (« enregistree: false »).
+        // Question déjà dévoilée, chrono écoulé, ou numéro d'une question
+        // passée : rien n'est écrit, et l'état rendu le dit (« enregistree:
+        // false »).
         repondre([
             'ok' => true,
             'enregistree' => $ouverte,

@@ -396,8 +396,9 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // Puis le lot 2 « suivi » de l'échauffement SPLAT! (14/10/2026) : lib/applis.php et
   // prof/splat-parcours.js (avant : apres-audit-gpt). Puis la séance en direct,
   // lot 1 « question éclair » (15/10/2026) : quatre fichiers de plus, 35 au manifeste
-  // (avant : splat-echauffement-suivi).
-  assert.match(lire("_serveur/public/VERSION"), /^lot seance-en-direct-eclair$/m);
+  // (avant : splat-echauffement-suivi). Puis le lot 2 « questionnaire au tableau »
+  // (15/10/2026) : questionnaire.js et KaTeX, 58 au manifeste (avant : seance-en-direct-eclair).
+  assert.match(lire("_serveur/public/VERSION"), /^lot seance-en-direct-questionnaire$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-comment-on-joue-20261011-3/);
 });

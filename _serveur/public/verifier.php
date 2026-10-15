@@ -159,6 +159,27 @@ if ($autorise) {
         }
         return "toutes présentes";
     });
+    // Séance en direct (lot 2, 15/10/2026) : la promesse « rien ne reste après
+    // la séance », constatée d'un coup d'œil. Une séance oubliée est d'abord
+    // emportée (comme le fait n'importe quel appel) ; une réponse qui
+    // survivrait à sa séance est une panne, et la ligne passe au rouge.
+    verif($lignes, "Séances en direct", function () {
+        $pdo = bd();
+        if (!table_existe($pdo, 'directs')) {
+            throw new RuntimeException("tables absentes — ouvre migrer.php avec ton mot de passe d'installation.");
+        }
+        purger_directs($pdo);
+        $seances = (int)$pdo->query('SELECT COUNT(*) FROM directs')->fetchColumn();
+        $reponses = (int)$pdo->query('SELECT COUNT(*) FROM directs_reponses WHERE numero >= 1')->fetchColumn();
+        $orphelines = (int)$pdo->query('SELECT COUNT(*) FROM directs_reponses WHERE direct_id NOT IN (SELECT id FROM directs)')->fetchColumn()
+            + (int)$pdo->query('SELECT COUNT(*) FROM directs_questions WHERE direct_id NOT IN (SELECT id FROM directs)')->fetchColumn();
+        if ($orphelines > 0) {
+            throw new RuntimeException("$orphelines ligne(s) restent sans leur séance — signale-le.");
+        }
+        if ($seances === 0) return "aucune en cours, 0 réponse en base";
+        return ($seances === 1 ? "1 en cours" : "$seances en cours") . ", $reponses réponse" . ($reponses > 1 ? "s" : "")
+            . " en base (effacées à la fin de la séance)";
+    });
     // Ce que la mise à niveau du 30/08/2026 devait ajouter. Une table présente
     // ne suffit pas : il faut aussi les colonnes, sinon l'API tombe en panne.
     verif($lignes, "Cloisonnement des classes", function () {
