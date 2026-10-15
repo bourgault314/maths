@@ -74,8 +74,12 @@ const DUREE_DIRECT_MAX = 600;
 // question porte toujours un numéro à partir de 1.
 const NUMERO_PRESENCE_DIRECT = 0;
 
-const MODES_DIRECT = ['eclair'];
+// Lot E1 « les évaluations en classe » (15/10/2026) : le mode « evaluation »
+// — chacun à son rythme, depuis Défi tables, une seule fois ; lib/evaluation.php.
+const MODES_DIRECT = ['eclair', 'evaluation'];
 const ETATS_DIRECT = ['attente', 'question', 'devoile'];
+// Les états d'une évaluation (lib/evaluation.php).
+const ETATS_EVALUATION = ['ouverte', 'fermee'];
 const LETTRES_DIRECT = ['A', 'B', 'C', 'D', 'E', 'F'];
 
 // ------------------------------------------------------------------ les types
@@ -84,7 +88,11 @@ const LETTRES_DIRECT = ['A', 'B', 'C', 'D', 'E', 'F'];
 // lui : quel RÉGLAGE est acceptable (remis au propre, ou null), et quelle
 // RÉPONSE est acceptable pour ce réglage (remise au propre, ou null). La
 // réponse rangée fait 40 caractères au plus et n'est JAMAIS un texte libre.
-const TYPES_DIRECT = ['choix'];
+// « entier » (lot E1, 15/10/2026) : un nombre tapé sur le pavé — la valeur
+// d'une évaluation des tables, et demain les réponses tapées au tableau.
+const TYPES_DIRECT = ['choix', 'entier'];
+// Un entier tapé : de 1 à 6 chiffres au plus (3 par défaut : les tables).
+const CHIFFRES_DIRECT_MAX = 6;
 
 // Le réglage d'une question, remis au propre ; null s'il ne convient pas.
 function reglage_direct(string $type, mixed $brut): ?array
@@ -99,6 +107,17 @@ function reglage_direct(string $type, mixed $brut): ?array
             $reglage = ['choix' => $choix];
             // Lot 2 : un chrono facultatif, en secondes entières. Absent ou
             // null : pas de chrono (c'est le réglage par défaut).
+            $duree = $brut['duree'] ?? null;
+            if ($duree !== null) {
+                if (!is_int($duree) || $duree < DUREE_DIRECT_MIN || $duree > DUREE_DIRECT_MAX) return null;
+                $reglage['duree'] = $duree;
+            }
+            return $reglage;
+        case 'entier':
+            // Combien de chiffres au plus ; et le même chrono facultatif.
+            $chiffres = $brut['chiffres'] ?? 3;
+            if (!is_int($chiffres) || $chiffres < 1 || $chiffres > CHIFFRES_DIRECT_MAX) return null;
+            $reglage = ['chiffres' => $chiffres];
             $duree = $brut['duree'] ?? null;
             if ($duree !== null) {
                 if (!is_int($duree) || $duree < DUREE_DIRECT_MIN || $duree > DUREE_DIRECT_MAX) return null;
@@ -120,6 +139,12 @@ function reponse_direct(string $type, array $reglage, mixed $brute): ?string
             $lettre = strtoupper(trim($brute));
             $permises = array_slice(LETTRES_DIRECT, 0, (int)($reglage['choix'] ?? 0));
             return in_array($lettre, $permises, true) ? $lettre : null;
+        case 'entier':
+            // Des chiffres, rien d'autre : ni signe, ni espace, ni virgule.
+            $texte = trim($brute);
+            $chiffres = (int)($reglage['chiffres'] ?? 3);
+            if ($chiffres < 1 || $chiffres > CHIFFRES_DIRECT_MAX) $chiffres = 3;
+            return preg_match('/^\d{1,' . $chiffres . '}$/', $texte) === 1 ? (string)(int)$texte : null;
         default:
             return null;
     }
@@ -438,8 +463,8 @@ function contenu_du_direct(PDO $pdo, array $direct): array
 function direct_de_l_eleve(PDO $pdo, string $code): ?array
 {
     $requete = $pdo->prepare(
-        'SELECT e.id AS eleve_id, d.id AS direct_id, d.numero, d.etat, d.revision, d.mode, d.expire_le,
-                q.type, q.reglage, p.id AS presence_id
+        'SELECT e.id AS eleve_id, e.classe_id, d.id AS direct_id, d.numero, d.etat, d.revision, d.mode, d.expire_le,
+                d.ouvert_le, d.reglage AS reglage_seance, q.type, q.reglage, p.id AS presence_id
          FROM eleves e
          LEFT JOIN directs d ON d.classe_id = e.classe_id
          LEFT JOIN directs_questions q ON q.direct_id = d.id AND q.numero = d.numero
@@ -456,8 +481,14 @@ function direct_de_l_eleve(PDO $pdo, string $code): ?array
     }
     return ['eleve_id' => $eleveId, 'direct' => [
         'id' => (int)$ligne['direct_id'],
+        'classe_id' => (int)$ligne['classe_id'],
         'numero' => (int)$ligne['numero'],
-        'etat' => in_array($ligne['etat'], ETATS_DIRECT, true) ? (string)$ligne['etat'] : 'attente',
+        'ouvert_le' => (int)$ligne['ouvert_le'],
+        'expire_le' => (int)$ligne['expire_le'],
+        // Le réglage de la SÉANCE (lot E1 : le modèle figé d'une évaluation),
+        // tel quel ; celui de la question en cours reste « reglage ».
+        'reglage_seance' => $ligne['reglage_seance'],
+        'etat' => in_array($ligne['etat'], array_merge(ETATS_DIRECT, ETATS_EVALUATION), true) ? (string)$ligne['etat'] : 'attente',
         'revision' => (int)$ligne['revision'],
         'mode' => (string)$ligne['mode'],
         'type' => $ligne['type'] === null ? null : (string)$ligne['type'],

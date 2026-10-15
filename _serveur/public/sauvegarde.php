@@ -27,7 +27,9 @@ entetes_securite();
 // « versions » (historique de sept jours) et « journal » (actions des
 // professeurs, douze mois) sont arrivés le 06/09/2026 : une sauvegarde doit
 // rendre un serveur ENTIER, pas seulement les progressions du jour.
-const TABLES_SAUVEGARDEES = ['profs', 'classes', 'eleves', 'progressions', 'partages', 'versions', 'journal', 'records'];
+// Lot E1 (15/10/2026) : « modeles_evaluation », les modèles d'évaluation des
+// tables de chaque professeur — des réglages, pas une donnée d'élève.
+const TABLES_SAUVEGARDEES = ['profs', 'classes', 'eleves', 'progressions', 'partages', 'versions', 'journal', 'records', 'modeles_evaluation'];
 // sessions_prof, compteurs et billets : leur STRUCTURE part dans la
 // sauvegarde, leur CONTENU non. Ils ne tiennent que des jetons à durée de vie
 // courte (sessions ouvertes, compteurs de cinq minutes, liens d'entrée de deux

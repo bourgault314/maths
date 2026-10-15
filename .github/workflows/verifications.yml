@@ -131,6 +131,7 @@ jobs:
           motif='^_serveur/'
           motif="$motif"'|^\.github/workflows/'
           motif="$motif"'|^outils/calcul_mental/defi_tables_mon_parcours\.js$'
+          motif="$motif"'|^outils/calcul_mental/defi_tables_core\.js$'
           motif="$motif"'|^assets/js/splat-parcours\.js$'
           motif="$motif"'|^assets/img/mathsgo-logo-390\.png$'
           motif="$motif"'|^assets/img/mathsgo-logo-print\.png$'
