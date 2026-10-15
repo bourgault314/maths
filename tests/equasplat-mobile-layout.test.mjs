@@ -216,8 +216,8 @@ test("les taches restantes conservent leur case après une suppression", () => {
 test("l’import commence par expliquer l’égalité des deux quantités", () => {
   assert.match(html, /Il y a la même quantité à gauche qu’à droite\./);
   assert.match(html, /function showInitialEqualityInstruction\(\)/);
-  assert.match(html, /setActionMode\(unitMode \? "delete" : "decompose"\);\s*showInitialEqualityInstruction\(\);/);
-  assert.match(html, /setActionMode\(isImportedUnitMode\(\) \? "delete" : "decompose"\);\s*showInitialEqualityInstruction\(\);/);
+  // 15/10/2026 (choix de Gwenaël) : aucun bouton allumé au départ, billes comprises
+  assert.match(html, /setActionMode\(null\);\s*showInitialEqualityInstruction\(\);/);
   assert.match(html, /dismissInitialEqualityInstruction\(\);\s*setActionMode\("decompose"\)/);
 });
 

@@ -840,7 +840,10 @@ const PAS_RANGE=.8,PAS_TOUCHE=.45;
 /* modeE (15/10/2026, remarque de Gwenaël : « on ne voit pas que tu cliques sur Enlever des deux côtés ») : avec des
    billes, l'outil ouvre déjà en mode « Enlever des deux côtés » (bouton bleu), et le doigt touchait les jetons tout de
    suite. Il touche maintenant le bouton d'abord (on peut le faire dans l'outil : le mode reste le même), une phrase le
-   dit, puis il touche les jetons. Tout ce qui suit est décalé de 1,5 s. */
+   dit, puis il touche les jetons. Tout ce qui suit est décalé de 1,5 s.
+   Rien d'allumé au départ (lot « tout revoir » du 15/10/2026, choix de Gwenaël) : l'outil n'allume plus « Enlever »
+   tout seul ; le bouton devient bleu quand le doigt le touche (modeE), jusqu'à l'équation suivante. « Faire des
+   paquets » touché s'allume à son tour, le temps de choisir les paquets. */
 const T={ecran:2.7,rangeA:5.2,modeE:10.6,toucheA:11.9,valider:15.1,ecrit:15.3,resolu:16.7,suivant:19.1,
   b:19.4,rangeB:21.6,fp:26.2,choix:27.2,groupes:27.35,carte:29.5,replie:30.0,resoluB:30.7,fin:33.5};
 const SOUS_TITRES=[[3.2,'Trouve ce que cache la tache 𝑡.'],[4.7,'Range les jetons : 3 en face de 3.'],
@@ -926,7 +929,8 @@ const film={
     if(Y.fp.boite){const b=Y.fp.boite;E('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:14,fill:'#f0f6fc',stroke:'rgba(59,130,246,.18)','stroke-width':1},S);}
     if(Y.grille){const b=Y.grille;E('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:14,fill:'#e8f6f6',stroke:'rgba(22,163,74,.16)','stroke-width':1},S);}
     o.fp=Q.bouton(Y,S,Y.fp,'Faire des paquets',port?{fond:'#f8fbff',bord:'rgba(59,130,246,.18)',encre:'#1e3a5f'}:{fond:'#ffffff',bord:'rgba(15,23,42,.11)',encre:'#334155'});
-    const st={enl:port?{fond:'#fff7ed',bord:'rgba(249,115,22,.25)',encre:'#9a3412'}:{fond:'url(#fsBleu)',bord:'rgba(37,99,235,.38)',encre:'#ffffff'},
+    /* Enlever n'est plus allumé au départ : sa couleur de repos (blanc à l'ordinateur, orange au téléphone) */
+    const st={enl:port?{fond:'#fff7ed',bord:'rgba(249,115,22,.25)',encre:'#9a3412'}:{fond:'#ffffff',bord:'rgba(15,23,42,.11)',encre:'#334155'},
       ajo:{fond:'#f6fef9',bord:'rgba(22,163,74,.18)',encre:'#166534'},ann:{fond:'#fffaf4',bord:'rgba(249,115,22,.2)',encre:'#9a3412'},
       rec:{fond:'#eef2ff',bord:'rgba(99,102,241,.22)',encre:'#3730a3'}};
     o.rangs={};for(const b of Y.rangs)o.rangs[b.id]=Q.bouton(Y,S,b,BOUTONS[b.id],st[b.id]);
@@ -997,9 +1001,12 @@ const film={
       c.r.setAttribute('stroke-width',ok?this.X.B.cartes.swOk:this.X.B.cartes.sw);});
     /* boutons */
     const grise=t>=T.groupes&&t<T.replie;
+    /* le bouton touché est bleu, comme dans l'outil : Enlever de modeE à l'équation suivante, Faire des paquets
+       le temps de choisir (le choix fait, l'outil revient à « aucun bouton ») */
+    const allume=(b,on)=>{const r=b.st;b.r.setAttribute('fill',on?'url(#fsBleu)':r.fond);b.r.setAttribute('stroke',on?'rgba(37,99,235,.38)':r.bord);b.t[0].setAttribute('fill',on?'#ffffff':r.encre);};
+    allume(o.rangs.enl,t>=T.modeE&&t<T.b);allume(o.fp,t>=T.fp&&t<T.groupes);
     for(const id of ['enl','ajo'])o.rangs[id].g.setAttribute('opacity',grise?.45:1);
     o.fp.g.setAttribute('opacity',grise?.45:1);
-    o.fp.r.setAttribute('fill',t>=T.fp&&t<T.groupes?'#e8eef6':(port?'#f8fbff':'#ffffff'));
     Q.appui(o.fp,t,T.fp);Q.appui(o.rangs.enl,t,T.modeE);
     const entre=(a,b)=>t>=a&&t<b?1:0,ac=o.act;
     if(port){const vv=entre(TA[5],T.valider+.15),ch=entre(T.fp,T.groupes);
@@ -1041,10 +1048,10 @@ const SOUS_TITRES=[[3.2,'Trouve ce que cache la tache 𝑘.'],[4.6,'D’abord, r
   [23.1,'Autre façon de regrouper : glisse 9 sur 12.'],[26.7,'Partage 21 en 3 parts égales.'],[31.2,'Touche un des groupes.'],
   [33.6,'Une tache cache 7 : 𝑝 = 7.'],[36.3,'']];
 const I0='Il y a la même quantité à gauche qu’à droite.';
-const CONSIGNES=[[0,I0],[T.modeG,'Sélectionne plusieurs jetons numériques d’un même côté.'],[T.g20,'Sélectionne au moins deux éléments compatibles.'],
-  [T.g15,'2 jetons sélectionnés. Calcule leur somme pour les regrouper.'],[T.regroupe,'Jetons regroupés : 35.'],[T.modeD,'Décompose un jeton numérique.'],
+const CONSIGNES=[[0,I0],[T.modeG,'Touche les jetons à regrouper, du même côté.'],[T.g20,'Touche un autre jeton du même côté.'],
+  [T.g15,'2 jetons sélectionnés. Calcule leur somme pour les regrouper.'],[T.regroupe,'Jetons regroupés : 35.'],[T.modeD,'Touche le jeton à décomposer.'],
   [T.modeE,'Sélectionne la même quantité des deux côtés.'],[T.e21g,'Sélectionne maintenant l’autre côté.'],[T.e21d,'Même quantité sélectionnée : 21.'],[T.valider,''],
-  [T.b,I0],[T.fusionne,'Jetons regroupés : 21.'],[T.modeP,'Partage un jeton en parts égales.'],[T.groupes,'3 groupes identiques — touche-en un.',C.orangeC],[T.replie,'']];
+  [T.b,I0],[T.fusionne,'Jetons regroupés : 21.'],[T.modeP,'Touche le jeton à partager.'],[T.groupes,'3 groupes identiques — touche-en un.',C.orangeC],[T.replie,'']];
 /* ce que l'élève tape, touche après touche */
 const TAPE_G=['3','35'],TAPE_D=['2','21','21 +','21 + 1','21 + 14'],TAPE_F=['2','21'],TAPE_P=['7'];
 function exemples(port){
@@ -1255,11 +1262,12 @@ const film={
       const ok=k===1&&t>=T.carte;
       c.r.setAttribute('fill',ok?'#dcfce7':'#f8fafc');c.r.setAttribute('stroke',ok?'#16a34a':'rgba(59,130,246,.42)');
       c.r.setAttribute('stroke-width',ok?X.B.cartes.swOk:X.B.cartes.sw);});
-    /* ---- boutons : celui de l'outil choisi est bleu ---- */
-    const actif=t<T.modeG?'dec':t<T.modeD?'gro':t<T.modeE?'dec':t<T.b?'enl':t<T.modeP?'dec':'par';
+    /* ---- boutons : celui de l'outil choisi est bleu ; aucun au départ d'une équation (15/10/2026) ---- */
+    const actif=t<T.modeG?null:t<T.modeD?'gro':t<T.modeE?'dec':t<T.b?'enl':t<T.modeP?null:'par';
     for(const id of ['dec','gro','par']){const b=o.outils[id],on=actif===id;
       b.r.setAttribute('fill',on?'url(#fsBleu)':o.repos.fond);b.r.setAttribute('stroke',on?'rgba(37,99,235,.38)':o.repos.bord);b.t[0].setAttribute('fill',on?'#ffffff':o.repos.encre);}
-    if(!port){const b=o.rangs.enl,on=actif==='enl';b.r.setAttribute('fill',on?'url(#fsBleu)':o.repos.fond);b.r.setAttribute('stroke',on?'rgba(37,99,235,.38)':o.repos.bord);b.t[0].setAttribute('fill',on?'#ffffff':o.repos.encre);}
+    /* Enlever choisi s'allume aussi au téléphone (15/10/2026) ; sinon, sa couleur de repos (orange au téléphone) */
+    {const b=o.rangs.enl,on=actif==='enl',r=b.st;b.r.setAttribute('fill',on?'url(#fsBleu)':r.fond);b.r.setAttribute('stroke',on?'rgba(37,99,235,.38)':r.bord);b.t[0].setAttribute('fill',on?'#ffffff':r.encre);}
     const grise=t>=T.groupes&&t<T.replie;
     for(const id of ['dec','gro','par'])o.outils[id].g.setAttribute('opacity',grise?.45:1);
     for(const id of ['enl','ajo'])o.rangs[id].g.setAttribute('opacity',grise?.45:1);
