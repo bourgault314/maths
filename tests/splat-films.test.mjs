@@ -224,7 +224,11 @@ test("« Avec des paquets de jetons » : l'exemple de Gwenaël, hors des séries
   assert.ok(T.comptes[0] < T.fonds[0] && T.fonds[0] < T.comptes[1] && T.comptes[1] < T.fonds[1] && T.fonds[1] < T.comptes[2]);
   assert.ok(Math.floor((T.coupe - T.comptes[2]) / T.comptePas) + 1 < 22, "le compteur du troisième paquet n'arrive pas à 22");
   assert.ok(T.coupe < T.fonds[2] && T.fonds[2] < T.impact && T.impact < T.stop);
-  assert.match(code, /op\(jj\.g,t<\(i<2\?T\.fonds\[i\]\+\.4:T\.impact\)\?0:1\);/);
+  // le 22 arrive juste APRÈS l'impact : à l'impact même, la tache a encore son rayon de vol et l'anneau du jeton
+  // dépassait entre ses lobes (une image, mesurée le 15/10/2026) ; il faut qu'elle ait commencé à s'étaler
+  const retard = code.match(/op\(jj\.g,t<\(i<2\?T\.fonds\[i\]\+\.4:T\.impact\+(\.\d+)\)\?0:1\);/);
+  assert.ok(retard, "le 22 apparaît à T.impact + un petit retard");
+  assert.ok(+retard[1] >= 0.03 && T.impact + +retard[1] < T.question, `retard du 22 : ${retard[1]} s`);
   assert.match(code, /u\.compte=g<2\|\|tc<T\.coupe\?tc:null;/);
   // ses petits jetons sont encore là quand la tache se pose, et disparaissent dessous
   assert.match(code, /op\(u\.el,t<u\.pop\?0:\(u\.g<2\?1-P\(t,T\.fonds\[u\.g\]\+\.35,\.2,F\.lin\):\(t<T\.impact\?1:0\)\)\);/);

@@ -1829,11 +1829,13 @@ const film={
       const bc=n?1+.12*Math.sin(Math.PI*clamp((t-der)/.25)):1;
       K.g.setAttribute('transform',`translate(${K.c[0]},${K.c[1]}) scale(${bc.toFixed(3)}) translate(${-K.c[0]},${-K.c[1]})`);});
     /* les jetons numérotés : chacun naît de son paquet ; à la fin, ils s'allument l'un après l'autre (18 + 20 + 22) */
-    /* le 22 n'apparaît jamais à découvert : il est là, sous la tache, dès qu'elle se pose (on le voit à la vérification) */
+    /* le 22 n'apparaît jamais à découvert : il est là, sous la tache, dès qu'elle se pose (on le voit à la vérification).
+       Il arrive 0,05 s après l'impact : à l'impact même, la tache n'a encore que son rayon de vol (90), et l'anneau du
+       jeton (68, trait compris 70,5) dépassait entre ses lobes (rayon 0,72 × 90 ≈ 65) ; 0,05 s plus tard elle fait 133. */
     JET.forEach((j,i)=>{const jj=o.jetons[j.v],b=i<2?P(t,T.fonds[i]+.4,.45,F.back):1,
       pulse=1+.14*Math.sin(Math.PI*clamp((t-(T.total+.35*i))/.35));
       jj.g.setAttribute('transform',`translate(${j.p[0]},${j.p[1]}) scale(${(L(.2,1,b)*pulse).toFixed(3)})`);
-      op(jj.g,t<(i<2?T.fonds[i]+.4:T.impact)?0:1);});
+      op(jj.g,t<(i<2?T.fonds[i]+.4:T.impact+.05)?0:1);});
     /* la case TOTAL : elle bat avec la question, puis avec la vérification du total */
     const tp=1+.08*Math.sin(Math.PI*clamp((t-T.question)/.4))+.08*Math.sin(Math.PI*clamp((t-(T.total+1.1))/.4));
     o.total.setAttribute('transform',`translate(480,114) scale(${tp.toFixed(3)}) translate(-480,-114)`);
