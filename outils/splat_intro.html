@@ -83,7 +83,7 @@ body{background:var(--page);color:var(--ink);font-family:var(--ui)}
 .player.portrait .pill br{display:none}
 @media (max-width:640px){
   /* téléphone : les deux liens sur une ligne, le crédit dessous (sur iPhone, sans plein écran, tout tient sur une ligne) */
-  .pied:has(> #fs:not([hidden])) .credit{order:3;flex-basis:100%}
+  .pied:has(> #fs:not([hidden])) .credit,.pied:has(> #son:not([hidden])) .credit{order:3;flex-basis:100%}
   .bigplay{width:56px;height:56px}
   .bigplay svg{width:24px;height:24px}
 }
@@ -99,6 +99,7 @@ body{background:var(--page);color:var(--ink);font-family:var(--ui)}
     </div>
     <div class="pied" id="pied">
       <button class="lien" id="fs" type="button" title="Plein écran (F)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><span id="fsTxt">Plein écran</span></button>
+      <button class="lien" id="son" type="button" hidden aria-pressed="true" title="Couper le son"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h4l5 4v-13l-5 4z"/><path class="on" d="M16.5 9a4 4 0 0 1 0 6M19.5 6.5a7.5 7.5 0 0 1 0 11"/><path class="off" d="M17 9.5l5 5M22 9.5l-5 5" style="display:none"/></svg><span id="sonTxt">Son</span></button>
       <div class="credit" id="credit" hidden></div>
       <a class="lien passer" id="passer" href="#" hidden>Passer l’intro ›</a>
     </div>
@@ -167,6 +168,24 @@ const F={
   }
 };
 
+/* Le son des films (15/10/2026 : film « Avec des paquets de jetons », avec les bruitages courts et doux de la vidéo de
+   Gwenaël). Un bruitage sonne quand le film passe son instant en lecture normale, jamais quand on saute d'une étape à
+   l'autre. Le navigateur ne laisse sonner qu'après un geste : l'appui sur ▶ (ou sur le film) prépare le son. Un bouton
+   « Son » sous le film le coupe ; le choix est gardé sur l'appareil. Un film sans « sons » ne montre pas le bouton. */
+const SON=(function(){
+  let ctx=null,charge=null,coupe=false;const tampons={};
+  try{coupe=localStorage.getItem('mathsgo-films-son')==='0';}catch(e){}
+  function preparer(fichiers){
+    const A=window.AudioContext||window.webkitAudioContext;if(!A||!fichiers)return;
+    if(!ctx){try{ctx=new A();}catch(e){return;}}
+    if(ctx.state==='suspended')ctx.resume().catch(()=>{});
+    if(!charge)charge=Promise.all(Object.keys(fichiers).map(nom=>fetch(fichiers[nom]).then(r=>r.arrayBuffer())
+      .then(b=>new Promise((ok,ko)=>ctx.decodeAudioData(b,ok,ko))).then(buf=>{tampons[nom]=buf;}).catch(()=>{})));}
+  function jouer(nom,gain){if(coupe||!ctx||ctx.state!=='running'||!tampons[nom])return;
+    const src=ctx.createBufferSource(),g=ctx.createGain();src.buffer=tampons[nom];g.gain.value=gain;src.connect(g);g.connect(ctx.destination);src.start();}
+  return {preparer,jouer,get coupe(){return coupe;},couper(v){coupe=v;try{localStorage.setItem('mathsgo-films-son',v?'0':'1');}catch(e){}}};
+})();
+
 function lancerLecteur(film){
   const $=id=>document.getElementById(id);
   const svg=$('svg'),stage=$('stage'),big=$('bigplay'),pill=$('pill'),player=$('player'),fsBtn=$('fs');
@@ -200,11 +219,17 @@ function lancerLecteur(film){
     if(!playing)return;
     if(last==null)last=ts;
     const dt=Math.min(.1,(ts-last)/1000);last=ts;let nt=t+dt;
-    const ns=stops.find(x=>x>t+1e-6);if(ns!=null&&nt>=ns){setT(ns);enArret=true;pause();return;}
-    if(nt>=D){setT(D);pause();return;}
+    const ns=stops.find(x=>x>t+1e-6);if(ns!=null&&nt>=ns){sonner(t,ns);setT(ns);enArret=true;pause();return;}
+    if(nt>=D){sonner(t,D);setT(D);pause();return;}
+    sonner(t,nt);
     setT(nt);requestAnimationFrame(loop);
   }
-  function play(){enArret=false;if(fresh){fresh=false;setT(0);}else if(t>=D-1e-3)setT(0);playing=true;last=null;ui();requestAnimationFrame(loop);}
+  /* les bruitages dont l'instant tombe entre deux images */
+  function sonner(a,b){if(film.sons)for(const e of film.sons)if(e.t>a&&e.t<=b)SON.jouer(e.f,e.g);}
+  if(film.sons){const b=$('son'),maj=()=>{const c=SON.coupe;b.setAttribute('aria-pressed',String(!c));$('sonTxt').textContent=c?'Son coupé':'Son';
+      b.title=c?'Remettre le son':'Couper le son';b.querySelector('.on').style.display=c?'none':'';b.querySelector('.off').style.display=c?'':'none';};
+    b.hidden=false;maj();b.addEventListener('click',()=>{SON.couper(!SON.coupe);if(!SON.coupe)SON.preparer(film.fichiersSons);maj();});}
+  function play(){if(film.sons&&!SON.coupe)SON.preparer(film.fichiersSons);enArret=false;if(fresh){fresh=false;setT(0);}else if(t>=D-1e-3)setT(0);playing=true;last=null;ui();requestAnimationFrame(loop);}
   function pause(){playing=false;last=null;ui();}
   function toggle(){playing?pause():play();}
   /* flèches du clavier (pour le prof) : étape précédente / suivante */
@@ -1309,7 +1334,7 @@ const BASE={
     valider:{x:655.8,y:787,w:128.5,h:51,fs:19},suivant:{y:787,w:222.9,h:51,fs:19},
     compteur:{x:173,y:267,w:128,h:66,fs:40,sw:3,jr:18},
     doigt:.82,pave:null,
-    titre:{tx:800,ty:310,tr:118,k:1.18,y:600,size:150,sy:680,ssize:42,logo:{h:110,y:28,xr:1564}},
+    titre:{tx:800,ty:310,tr:118,k:1.18,y:600,size:150,sy:680,ssize:42,logo:{h:110,y:28,xl:36,xr:1564}},
     fin:{x:800,ty:300,tr:62,k:.62,my:520,size:104,sy:600,ssize:36,jy:720,jw:330,jh:88,js:44}},
   portrait:{W:900,H:1600,s:1.832,ox:93,oy:128,x0:0,y0:0,w:390,h:797,
     cap:{x:450,y:62,size:36,max:840,gap:44},
@@ -1323,7 +1348,7 @@ const BASE={
     valider:null,suivant:{y:599,w:181.1,h:48,fs:16},
     compteur:{x:31,y:101,w:74,h:40,fs:22,sw:2,jr:9.07},
     doigt:.42,pave:{y:610,h:187,gx:8,gy:617,gw:374,th:58,ecart:3},
-    titre:{tx:450,ty:470,tr:150,k:1.5,y:830,size:150,sy:930,ssize:44,logo:{h:120,y:30,xr:870}},
+    titre:{tx:450,ty:470,tr:150,k:1.5,y:830,size:150,sy:930,ssize:44,logo:{h:120,y:30,xl:30,xr:870}},
     fin:{x:450,ty:520,tr:70,k:.7,my:770,size:84,sy:860,ssize:34,jy:1080,jw:360,jh:100,js:48}}
 };
 function mise(mode,ajout){const b=BASE[mode]||BASE.paysage,a=(ajout&&ajout[mode])||{},Y=Object.assign({},b,a);
@@ -1438,6 +1463,9 @@ function cartons(o,Y,svg,sousTitre,lignesFin){
   o.st=E('text',{x:Y.cap.x,y:Y.cap.y,'text-anchor':'middle','font-size':Y.cap.size,'font-weight':800,fill:'#1e293b'},svg);o.stCle=null;
   const ti=Y.titre,tache=(p,k)=>{E('path',{d:FORMES[3],fill:C.encre,transform:`scale(${k}) translate(-140,-97)`},p);};
   o.titre=E('g',{},svg);E('rect',{x:0,y:0,width:Y.W,height:Y.H,fill:'#ffffff'},o.titre);
+  /* films du monde 1 : les deux logos des livrets Petit SPLAT! (IREMI et maths&go), comme le film d'introduction
+     (15/10/2026, Gwenaël : « on uniformise ») ; les films d'ÉquaSplat (monde 5) gardent maths&go seul */
+  E('image',{href:LOGO_IREM,x:ti.logo.xl,y:ti.logo.y,height:ti.logo.h,width:ti.logo.h*360/293},o.titre);
   E('image',{href:LOGO_MG,x:ti.logo.xr-ti.logo.h*420/195,y:ti.logo.y,height:ti.logo.h,width:ti.logo.h*420/195},o.titre);
   o.titreTache=E('g',{},o.titre);tache(o.titreTache,ti.k);
   o.titreMot=E('g',{},o.titre);E('text',{x:ti.tx,y:ti.y,'text-anchor':'middle','font-size':ti.size,'font-weight':900,fill:C.encre,'letter-spacing':6},o.titreMot).textContent='SPLAT!';
@@ -1578,6 +1606,359 @@ const film={
     Q.fin(o,Y,t,T.fin);
   }
 };
+return film;
+})();
+</script>
+<script>
+/* ===== Film « Avec des paquets de jetons » — SPLAT! classique, monde 2 (?film=paquets) =====
+   Le film de Gwenaël (son animation v6 du 14/10/2026 : 18, 20 et un seul jeton 22 sous la tache, la tache qui
+   saute dessus, la résolution en barres, la vérification sur le plateau), redessiné le 15/10/2026 comme le jeu
+   (outils/splat.html, mode élève) : case TOTAL, plateau, jetons numérotés de la couleur de leur valeur, tache de
+   l'outil (40 points, cinq lobes, sans ombre, dans le plateau), schéma aux traits noirs, case grise avec la petite
+   tache, retrait hachuré comme dans le pas à pas du jeu, tache qui s'éclaircit à la vérification.
+   En ouverture (demandée par Gwenaël) : les jetons de l'étape d'avant se rangent en paquets, et chaque paquet
+   devient UN jeton numéroté, qui vaut tout le paquet. Pour compter, les jetons s'allument et un compteur monte :
+   jamais de chiffre sur un jeton qui compte (un chiffre sur un jeton dit sa valeur). On compte le paquet de 18,
+   puis celui de 20 ; le troisième, on commence à le compter, mais la tache arrive et se pose dessus juste au
+   moment où il devient un jeton : on ne voit jamais le 22 avant la vérification (choix de Gwenaël, 15/10/2026).
+   Un arrêt à la question, comme dans sa vidéo. Coordonnées du plateau : celles de l'outil (plateau 1360 × 660,
+   jetons r = 68, petits jetons r = 32), posé comme dans l'outil (translate(-80 100) scale(0.7)), puis mis à
+   l'échelle de l'écran (J). */
+FILMS.paquets=(function(){
+'use strict';
+const Q=ECRAN_EQ,E=F.E,P=F.P,L=F.L,op=F.op,clamp=F.clamp;
+/* couleurs de l'outil en mode élève (body.light de splat.html) */
+const C={encre:'#0b1220',bleuTxt:'#1d4ed8',gris:'#d4deea',vertFond:'#dcfce7',vertTxt:'#15803d',or:'#f59e0b',
+  plateauFond:'rgba(0,0,0,0.03)',plateauBord:'rgba(0,0,0,0.15)',totalFond:'rgba(0,0,0,0.04)',totalLabel:'rgba(0,0,0,0.92)',
+  unitFond:'rgba(27,102,255,0.14)',unitBord:'rgba(27,102,255,0.50)',tacheBord:'rgba(0,0,0,0.18)',revele:'rgba(220,220,220,0.40)'};
+/* beadColorForValue de l'outil (mode élève, jetons numérotés) */
+const couleur=v=>{const h=(v*37)%360;return {fill:`hsla(${h}, 78%, 54%, 0.18)`,stroke:`hsla(${h}, 78%, 48%, 0.55)`};};
+function melange(a,b,u){const A=parseInt(a.slice(1),16),B=parseInt(b.slice(1),16);
+  const c=s=>Math.round(L((A>>s)&255,(B>>s)&255,u));return `rgb(${c(16)},${c(8)},${c(0)})`;}
+/* la tache de l'outil (blobPath : 40 points, cinq lobes, Catmull-Rom 1/6) ; flex : le petit tremblement en vol */
+function chemin(pts){const n=pts.length,f=v=>v.toFixed(1);let d=`M${f(pts[0][0])},${f(pts[0][1])}`;
+  for(let i=0;i<n;i++){const p0=pts[(i-1+n)%n],p1=pts[i],p2=pts[(i+1)%n],p3=pts[(i+2)%n];
+    d+=`C${f(p1[0]+(p2[0]-p0[0])/6)},${f(p1[1]+(p2[1]-p0[1])/6)} ${f(p2[0]-(p3[0]-p1[0])/6)},${f(p2[1]-(p3[1]-p1[1])/6)} ${f(p2[0])},${f(p2[1])}`;}
+  return d+'Z';}
+const lobe=(a,flex,t)=>.9+.16*Math.sin(5*a)+.04*Math.sin(10*a)+(flex?flex*Math.sin(3*a-t*5):0);
+function tache(cx,cy,r,flex,t){const pts=[];for(let i=0;i<40;i++){const a=2*Math.PI*i/40,k=lobe(a,flex,t);pts.push([cx+Math.cos(a)*r*k,cy+Math.sin(a)*r*k]);}return chemin(pts);}
+/* la tache qui devient la case grise du schéma (chaque point glisse vers le bord du rectangle, dans sa direction) */
+function tacheVersCase(c,r,R,u){const pts=[],rx=R.x+R.w/2,ry=R.y+R.h/2;
+  for(let i=0;i<40;i++){const a=2*Math.PI*i/40,co=Math.cos(a),si=Math.sin(a),k=lobe(a);
+    const bord=Math.min(R.w/2/Math.max(1e-5,Math.abs(co)),R.h/2/Math.max(1e-5,Math.abs(si)));
+    pts.push([L(c[0]+r*k*co,rx+bord*co,u),L(c[1]+r*k*si,ry+bord*si,u)]);}
+  return chemin(pts);}
+/* un petit générateur au hasard, toujours le même (les mêmes jetons à chaque lecture) */
+function hasard(g){return ()=>{g|=0;g=g+0x6D2B79F5|0;let t=Math.imul(g^g>>>15,1|g);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296;};}
+
+/* l'exemple : 18 + 20 + un jeton 22 caché = 60 (celui de Gwenaël) ; places dans le plateau de l'outil (120…1480 × 210…870) */
+const JET=[{v:18,p:[350,410]},{v:20,p:[720,660]},{v:22,p:[1180,500]}],RJ=68,RU=32,RT=210,RVOL=90;
+/* le saut de la tache : son départ à gauche du plateau, ses petits bonds, l'élan, puis le saut sur le 22 */
+const DEPART=[-40,720],ELAN=[190,720];
+
+/* comptes[g] : le premier jeton du paquet g s'allume ; fonds[g] : le paquet se resserre en un jeton. Le troisième
+   paquet s'allume jusqu'à coupe (la tache est déjà en l'air), puis se resserre juste avant l'impact : la tache se
+   pose au moment où le jeton naîtrait. */
+/* 15/10/2026, après son visionnage : la tache prend le temps de marcher (2 s de petits bonds), la fusion 18 + 20 et
+   chaque étape des barres sont plus lentes. */
+const T={ecran:2.7,pop:3.0,popPas:.02,range:5.2,comptes:[6.9,9.5,13.0],comptePas:.075,fonds:[8.5,11.1,14.55],coupe:14.2,
+  impact:15.4,question:16.1,stop:17.4,barres:17.5,regroupe:20.9,split:24.6,hachure:27.8,retire:29.8,solve:32.2,
+  retour:35.0,revele:37.2,total:39.8,fin:43.6};
+const VOL=2;                   /* la marche : petits bonds ; puis l'élan (0,65 s) et le saut (1,4 s) */
+/* durées des transformations des barres */
+const DUR={morph:2.4,fusion:2.4,split:2.0,hachure:.6,retire:1.8,solve:1.0};
+T.hop=T.impact-VOL-2.05;
+const SOUS_TITRES=[[3.0,'Le total de tous les jetons est 60.'],[5.0,'On range les jetons en paquets.'],
+  [6.8,'Un paquet de 18 jetons…'],[8.5,'…devient un seul jeton, qui vaut 18.'],
+  [9.4,'Un paquet de 20 jetons…'],[11.1,'…devient un seul jeton, qui vaut 20.'],
+  [12.6,'Et le dernier paquet…'],[14.0,'La tache arrive !'],[16.1,'Que cache la tache ?'],
+  [17.5,'La même situation, en barres.'],[20.9,'18 + 20 = 38'],[24.6,'60 = 38 + 22'],
+  [27.8,'On hachure les deux morceaux de 38.'],[29.8,'On retire les deux morceaux de 38.'],
+  [32.2,'La tache cache 22 : 60 − 38 = 22.'],[35.0,'Vérifions sur le plateau.'],[37.2,'Sous la tache : le jeton 22.'],
+  [39.8,'18 + 20 + 22 = 60'],[41.5,'La tache cachait bien 22.'],[43.6,'']];
+
+/* mises en page : ordinateur (16:9) et téléphone tenu droit (3:4, comme le film d'introduction) */
+const LAY={
+  paysage:{W:1600,H:900,cap:{x:800,y:76,size:38,max:1500,gap:0},
+    J:{x:296,y:112,s:1.05},
+    S:{x0:300,x1:1300,y1:320,ym:470,y2:620,val:64,acc:54},
+    titre:{tx:800,ty:300,tr:118,y:600,size:150,sy:680,ssize:42,logo:{h:110,y:28,xl:36,xr:1564}},
+    fin:{x:800,ty:300,tr:62,my:520,size:104,sy:600,ssize:36,jy:720,jw:330,jh:88,js:44,
+      lignes:['Additionne les jetons, remplis le schéma, puis vérifie sous la tache.']}},
+  portrait:{W:900,H:1200,cap:{x:450,y:70,size:36,max:840,gap:44},
+    J:{x:26.6,y:231.8,s:.882},
+    S:{x0:60,x1:840,y1:520,ym:650,y2:780,val:54,acc:48},
+    titre:{tx:450,ty:400,tr:140,y:720,size:150,sy:810,ssize:40,logo:{h:120,y:30,xl:30,xr:870}},
+    fin:{x:450,ty:360,tr:62,my:600,size:84,sy:690,ssize:34,jy:880,jw:340,jh:96,js:46,
+      lignes:['Additionne les jetons, remplis le schéma,','puis vérifie sous la tache.']}}
+};
+
+const film={
+  duration:47.1, poster:2.4,
+  /* l'arrêt de sa vidéo : la question, avant la résolution (« À toi de chercher… puis ▶ ») */
+  stops:[{t:T.stop}],
+  /* ses bruitages (evenements-sonores.json de sa vidéo v6, mêmes fichiers et mêmes volumes), calés sur ce film : un pop
+     quand un paquet devient un jeton, le saut, le SPLAT, le « ? », 38, la coupe du 60, puis la confirmation (22 trouvé,
+     total vérifié). Le choc du SPLAT vient de son fichier Runway, les autres sont synthétiques. */
+  fichiersSons:{saut:'/assets/sons/splat/saut.mp3',splat:'/assets/sons/splat/splat.mp3',pop:'/assets/sons/splat/pop.mp3',confirmation:'/assets/sons/splat/confirmation.mp3'},
+  sons:[{t:T.fonds[0]+.4,f:'pop',g:.5},{t:T.fonds[1]+.4,f:'pop',g:.5},{t:T.impact-1.4,f:'saut',g:.85},{t:T.impact,f:'splat',g:1},
+    {t:T.impact+.6,f:'pop',g:.6},{t:T.regroupe+DUR.fusion*.5+.1,f:'pop',g:.7},{t:T.split+.55,f:'pop',g:.5},
+    {t:T.solve+.1,f:'confirmation',g:.8},{t:T.total+.1,f:'confirmation',g:.8}],
+  modes:{paysage:{w:1600,h:900},portrait:{w:900,h:1200}},
+  passer:SUITE, passerTexte:'Passer le film ›', credit:'Jeu SPLAT! créé par <a href="https://stevewyborney.com" target="_blank" rel="noopener">Steve Wyborney</a>',
+  aria:'Film : des jetons rangés en paquets deviennent des jetons numérotés, la tache en cache un, on cherche ce qu’elle cache avec un schéma en barres, puis on vérifie sur le plateau',
+  titre:'Avec des paquets de jetons — SPLAT! — maths&go',
+  chapters:[{t:0,name:'SPLAT!'},{t:2.7,name:'Les paquets de jetons'},{t:12.6,name:'La tache arrive'},{t:17.5,name:'Le schéma en barres'},
+    {t:27.8,name:'On retire 38'},{t:35.0,name:'Vérifier sur le plateau'},{t:43.6,name:'À toi de jouer'}],
+  build(svg,mode){
+    const port=mode==='portrait',Y=this.Y=LAY[mode]||LAY.paysage,o=this.o={port},J=Y.J,S=Y.S,ks=J.s*.7;
+    svg.style.fontFamily=Q.POLICE;
+    const ecr=p=>[J.x+J.s*(-80+.7*p[0]),J.y+J.s*(100+.7*p[1])];this.ecr=ecr;this.ks=ks;
+    /* les hachures du retrait : celles du pas à pas du jeu (enqG3Retire) */
+    const defs=E('defs',{},svg),pat=E('pattern',{id:'paqHachures',patternUnits:'userSpaceOnUse',width:20,height:20,patternTransform:'rotate(135)'},defs);
+    E('rect',{width:20,height:20,fill:'#e5e7eb'},pat);E('rect',{width:10,height:20,fill:'rgba(15,23,42,0.30)'},pat);
+    o.ecran=E('g',{},svg);
+
+    /* ---------- le plateau du jeu ---------- */
+    o.jeu=E('g',{transform:`translate(${J.x},${J.y}) scale(${J.s})`},o.ecran);
+    o.plateau=E('g',{transform:'translate(-80 100) scale(0.7)'},o.jeu);
+    o.fondPlateau=E('rect',{x:120,y:210,width:1360,height:660,rx:30,fill:C.plateauFond,stroke:C.plateauBord,'stroke-width':6},o.plateau);
+    /* les 60 petits jetons de l'étape d'avant, posés au hasard (toujours les mêmes), puis rangés en trois paquets */
+    const alea=hasard(2026),unites=[];
+    for(let essai=0;unites.length<60&&essai<50000;essai++){const p=[175+alea()*1250,265+alea()*550],dmin=essai<30000?80:70;
+      if(unites.every(u=>Math.hypot(u.p0[0]-p[0],u.p0[1]-p[1])>=dmin))unites.push({p0:p});}
+    unites.sort((a,b)=>a.p0[0]-b.p0[0]);
+    const nids=(c,n)=>{const s=[],d=70;for(let j=-5;j<=5;j++)for(let i=-5;i<=5;i++)s.push([c[0]+(i+(j&1)/2)*d,c[1]+j*d*Math.sqrt(3)/2]);
+      return s.sort((a,b)=>(Math.hypot(a[0]-c[0],a[1]-c[1])-Math.hypot(b[0]-c[0],b[1]-c[1]))||(a[1]-b[1])||(a[0]-b[0])).slice(0,n);};
+    let k0=0;o.paquets=JET.map((j,g)=>{const lot=unites.slice(k0,k0+j.v);k0+=j.v;const places=nids(j.p,j.v);
+      lot.sort((a,b)=>Math.hypot(b.p0[0]-j.p[0],b.p0[1]-j.p[1])-Math.hypot(a.p0[0]-j.p[0],a.p0[1]-j.p[1]));
+      for(const u of lot){let m=0,dm=1e9;places.forEach((p,i)=>{const d=Math.hypot(p[0]-u.p0[0],p[1]-u.p0[1]);if(d<dm){dm=d;m=i;}});u.p1=places.splice(m,1)[0];u.g=g;}
+      /* l'ordre du comptage : en tournant autour du paquet */
+      const ang=p=>(Math.atan2(p[1]-j.p[1],p[0]-j.p[0])+Math.PI*2.5)%(Math.PI*2);
+      lot.slice().sort((a,b)=>ang(a.p1)-ang(b.p1)||Math.hypot(a.p1[0]-j.p[0],a.p1[1]-j.p[1])-Math.hypot(b.p1[0]-j.p[0],b.p1[1]-j.p[1])).forEach((u,i)=>{
+        const tc=T.comptes[g]+i*T.comptePas;u.compte=g<2||tc<T.coupe?tc:null;});
+      return {v:j.v,c:j.p,lot};});
+    unites.forEach((u,i)=>{u.pop=T.pop+i*T.popPas;u.tg=T.range+.04*u.g+.25*alea();
+      u.el=E('circle',{cx:u.p0[0],cy:u.p0[1],r:RU,fill:C.unitFond,stroke:C.unitBord,'stroke-width':3},o.plateau);
+      u.anneau=E('circle',{cx:0,cy:0,r:RU+8,fill:'none',stroke:C.or,'stroke-width':6},o.plateau);});
+    o.unites=unites;
+    /* les jetons numérotés (le 22 d'abord : la tache se pose dessus) */
+    o.jetons={};
+    for(const j of [JET[2],JET[0],JET[1]]){const g=E('g',{},o.plateau),c=couleur(j.v);
+      E('circle',{cx:0,cy:0,r:RJ,fill:c.fill,stroke:c.stroke,'stroke-width':5},g);
+      E('text',{x:0,y:0,'text-anchor':'middle','dominant-baseline':'middle',dy:'0.06em','font-size':64,'font-weight':900,fill:C.encre},g).textContent=String(j.v);
+      o.jetons[j.v]={g,p:j.p};}
+    /* la tache, les gouttes, le « ? » */
+    o.gouttes=[];for(let i=0;i<7;i++)o.gouttes.push(E('ellipse',{rx:12,ry:6,fill:C.encre},o.plateau));
+    o.tache=E('g',{},o.plateau);
+    o.tacheP=E('path',{fill:C.encre,stroke:C.tacheBord,'stroke-width':5},o.tache);
+    o.tacheQ=E('text',{x:0,y:0,'text-anchor':'middle','dominant-baseline':'central','font-size':RT*.45,'font-weight':800,fill:'#ffffff'},o.tache);o.tacheQ.textContent='?';
+    o.mot=E('text',{x:0,y:0,'text-anchor':'middle','dominant-baseline':'central','font-size':96,'font-weight':900,fill:C.encre,stroke:'#ffffff','stroke-width':14,'paint-order':'stroke','stroke-linejoin':'round','letter-spacing':3},o.plateau);
+    o.mot.textContent='SPLAT!';
+    /* la case TOTAL de l'outil */
+    o.total=E('g',{},o.jeu);
+    E('rect',{x:382.2,y:31.8,width:195.5,height:165.6,rx:18,fill:C.totalFond,stroke:'#000',"stroke-width":4},o.total);
+    o.totalLab=E('text',{x:480,y:86,'text-anchor':'middle','font-size':38,'font-weight':800,'letter-spacing':2,fill:C.totalLabel},o.total);o.totalLab.textContent='TOTAL';
+    o.totalNb=E('text',{x:480,y:160,'text-anchor':'middle','font-size':84,'font-weight':900,fill:C.encre},o.total);o.totalNb.textContent='60';
+    /* les compteurs des jetons qui s'allument, un par paquet : une pastille dorée à côté du paquet (le premier
+       au-dessus du plateau, les deux autres dessous) */
+    o.cpts=[[350,150],[400,780],[1180,800]].map(c=>{const g=E('g',{},o.plateau),[x,y]=c;
+      E('rect',{x:x-88,y:y-36,width:176,height:72,rx:36,fill:'#ffffff',stroke:C.or,'stroke-width':6},g);
+      E('circle',{cx:x-48,cy:y,r:17,fill:C.unitFond,stroke:C.unitBord,'stroke-width':3},g);
+      const txt=E('text',{x:x+20,y:y+1,'text-anchor':'middle','dominant-baseline':'central','font-size':48,'font-weight':900,fill:C.bleuTxt},g);
+      return {g,txt,c};});
+
+    /* ---------- le passage du plateau aux barres (en coordonnées de l'écran) ---------- */
+    const k=(S.x1-S.x0)/60,h=S.ym-S.y1;o.k=k;
+    o.cases={b18:{x:S.x0,y:S.ym,w:18*k,h},b20:{x:S.x0+18*k,y:S.ym,w:20*k,h},b38:{x:S.x0,y:S.ym,w:38*k,h},bQ:{x:S.x0+38*k,y:S.ym,w:22*k,h},
+      haut:{x:S.x0,y:S.y1,w:60*k,h},h38:{x:S.x0,y:S.y1,w:38*k,h},h22:{x:S.x0+38*k,y:S.y1,w:22*k,h}};
+    o.morph=E('g',{},o.ecran);
+    const tb=[J.x+J.s*382.2,J.y+J.s*31.8,J.s*195.5,J.s*165.6];o.totalEcr=tb;
+    o.mTotal=E('rect',{fill:'#ffffff',stroke:C.encre,'stroke-width':3},o.morph);
+    o.mTotalNb=E('text',{'text-anchor':'middle','dominant-baseline':'central','font-weight':900,fill:C.encre},o.morph);o.mTotalNb.textContent='60';
+    o.mJ=[18,20].map(v=>{const c=couleur(v),g=E('g',{},o.morph);
+      return {v,g,a:E('rect',{fill:c.fill,stroke:c.stroke},g),b:E('rect',{fill:'#ffffff',stroke:C.encre,'stroke-width':3},g),
+        t:E('text',{'text-anchor':'middle','dominant-baseline':'central','font-weight':900},g)};});
+    o.mJ.forEach(m=>{m.t.textContent=String(m.v);});
+    o.mTache=E('path',{stroke:C.encre,'stroke-width':3},o.morph);
+    o.mQ=E('text',{'text-anchor':'middle','dominant-baseline':'central','font-weight':800},o.morph);o.mQ.textContent='?';
+
+    /* ---------- le schéma en barres (dessin du jeu : traits noirs, visibles en bleu, case grise et petite tache) ---------- */
+    o.schema=E('g',{},o.ecran);
+    const cse=(R,fond,txt,coul)=>{const g=E('g',{},o.schema);const r=E('rect',{x:R.x,y:R.y,width:R.w,height:R.h,fill:fond,stroke:C.encre,'stroke-width':3},g);
+      const t=E('text',{x:R.x+R.w/2,y:R.y+R.h/2+2,'text-anchor':'middle','dominant-baseline':'central','font-size':S.val,'font-weight':900,fill:coul},g);t.textContent=txt;return {g,r,t,R};};
+    o.sHaut=cse(o.cases.haut,'#ffffff','60',C.encre);
+    o.sH38=cse(o.cases.h38,'#ffffff','38',C.encre);o.sH22=cse(o.cases.h22,'#ffffff','22',C.encre);
+    o.sB38=cse(o.cases.b38,'#ffffff','',C.bleuTxt);
+    o.sB18=E('text',{x:S.x0+9*k,y:S.ym+h/2+2,'text-anchor':'middle','dominant-baseline':'central','font-size':S.val,'font-weight':900,fill:C.bleuTxt},o.sB38.g);o.sB18.textContent='18';
+    o.sB20=E('text',{x:S.x0+28*k,y:S.ym+h/2+2,'text-anchor':'middle','dominant-baseline':'central','font-size':S.val,'font-weight':900,fill:C.bleuTxt},o.sB38.g);o.sB20.textContent='20';
+    o.sSep=E('path',{d:`M${S.x0+18*k},${S.ym}V${S.y2}`,stroke:C.encre,'stroke-width':3},o.sB38.g);
+    o.sB38.t.textContent='38';
+    o.sQ=cse(o.cases.bQ,C.gris,'?',C.encre);
+    const mr=h*.13;o.sMini=E('path',{d:tache(o.cases.bQ.x+mr*1.5+6,S.ym+mr*1.5+6,mr),fill:C.encre,opacity:.8},o.sQ.g);
+    o.s22=E('text',{x:o.cases.bQ.x+o.cases.bQ.w/2,y:S.ym+h/2+2,'text-anchor':'middle','dominant-baseline':'central','font-size':S.val,'font-weight':900,fill:C.vertTxt},o.sQ.g);o.s22.textContent='22';
+    /* l'accolade du total, quand le haut se coupe en 38 et 22 */
+    o.acc=E('g',{},o.schema);
+    E('path',{d:`M${S.x0},${S.y1-12}V${S.y1-24}H${S.x1}V${S.y1-12}`,fill:'none',stroke:'#475569','stroke-width':3},o.acc);
+    o.accNb=E('text',{x:(S.x0+S.x1)/2,y:S.y1-24-S.acc*.62,'text-anchor':'middle','dominant-baseline':'central','font-size':S.acc,'font-weight':900,fill:C.encre},o.acc);o.accNb.textContent='60';
+    /* les deux morceaux de 38 hachurés, comme dans le pas à pas du jeu (estompés, le nombre posé dessus) */
+    o.hach=[o.cases.h38,o.cases.b38].map(R=>{const g=E('g',{},o.schema);
+      E('rect',{x:R.x,y:R.y,width:R.w,height:R.h,fill:'url(#paqHachures)',stroke:'#111827','stroke-width':3.5},g);
+      E('text',{x:R.x+R.w/2,y:R.y+R.h/2+2,'text-anchor':'middle','dominant-baseline':'central','font-size':S.val,'font-weight':800,fill:'#111827'},g).textContent='38';return g;});
+
+    Z_cartons(o,Y,svg);
+  },
+  render(t){
+    const o=this.o,Y=this.Y,S=Y.S,J=Y.J,ecr=this.ecr,ks=this.ks,k=o.k;
+    Q.titre(o,Y,t,T.ecran);
+    /* ---------- les phases ---------- */
+    const morph=P(t,T.barres,DUR.morph,F.io);           /* plateau → barres */
+    const sOut=P(t,T.retour,.7,F.lin),pIn=P(t,T.retour+.5,1.0,F.io);   /* barres → plateau : le schéma s'en va, puis le plateau revient */
+    /* le plateau : visible jusqu'aux barres (il se transforme), puis de nouveau au retour */
+    op(o.jeu,t<T.barres||morph<1?1:pIn);
+    /* les petits jetons : ils apparaissent, se rangent, s'allument (paquet de 18), puis chaque paquet se resserre en un jeton */
+    const dureeFond=g=>g<2?.55:T.impact-T.fonds[2];
+    for(const u of o.unites){
+      const a=clamp((t-u.pop)/.3),m=P(t,u.tg,.8,F.io),f=(u.g<2?1:.6)*P(t,T.fonds[u.g],dureeFond(u.g),F.io),c=o.paquets[u.g].c;
+      const x=L(L(u.p0[0],u.p1[0],m),c[0],f),y=L(L(u.p0[1],u.p1[1],m),c[1],f);
+      u.el.setAttribute('cx',x.toFixed(1));u.el.setAttribute('cy',y.toFixed(1));u.el.setAttribute('r',(RU*F.back(a)*(1-.6*f)).toFixed(1));
+      /* le troisième paquet commence à se resserrer, et la tache s'étale dessus avant qu'il devienne un jeton : on ne le
+         voit jamais devenir le 22 (il disparaît sous la tache à l'impact) */
+      op(u.el,t<u.pop?0:(u.g<2?1-P(t,T.fonds[u.g]+.35,.2,F.lin):(t<T.impact?1:0)));
+      const lu=u.compte!=null&&t>=u.compte?1-F.clamp((t-T.fonds[u.g])/.2):0;
+      op(u.anneau,lu);if(lu>0){u.anneau.setAttribute('cx',x.toFixed(1));u.anneau.setAttribute('cy',y.toFixed(1));
+        u.anneau.setAttribute('r',L(RU+18,RU+8,F.out(clamp((t-u.compte)/.3))).toFixed(1));}
+    }
+    /* chaque compteur monte avec les jetons allumés de son paquet ; celui du troisième s'efface quand la tache saute */
+    o.cpts.forEach((K,g)=>{let n=0,der=-9;for(const u of o.paquets[g].lot)if(u.compte!=null&&t>=u.compte){n++;der=Math.max(der,u.compte);}
+      K.txt.textContent=n?String(n):'';
+      const fin=g<2?1-P(t,T.fonds[g]+.35,.3,F.lin):1-P(t,T.coupe+.1,.3,F.lin);
+      op(K.g,t<T.comptes[g]-.05?0:Math.min(P(t,T.comptes[g]-.05,.2,F.lin),fin));
+      const bc=n?1+.12*Math.sin(Math.PI*clamp((t-der)/.25)):1;
+      K.g.setAttribute('transform',`translate(${K.c[0]},${K.c[1]}) scale(${bc.toFixed(3)}) translate(${-K.c[0]},${-K.c[1]})`);});
+    /* les jetons numérotés : chacun naît de son paquet ; à la fin, ils s'allument l'un après l'autre (18 + 20 + 22) */
+    /* le 22 n'apparaît jamais à découvert : il est là, sous la tache, dès qu'elle se pose (on le voit à la vérification).
+       Il arrive 0,05 s après l'impact : à l'impact même, la tache n'a encore que son rayon de vol (90), et l'anneau du
+       jeton (68, trait compris 70,5) dépassait entre ses lobes (rayon 0,72 × 90 ≈ 65) ; 0,05 s plus tard elle fait 133. */
+    JET.forEach((j,i)=>{const jj=o.jetons[j.v],b=i<2?P(t,T.fonds[i]+.4,.45,F.back):1,
+      pulse=1+.14*Math.sin(Math.PI*clamp((t-(T.total+.35*i))/.35));
+      jj.g.setAttribute('transform',`translate(${j.p[0]},${j.p[1]}) scale(${(L(.2,1,b)*pulse).toFixed(3)})`);
+      op(jj.g,t<(i<2?T.fonds[i]+.4:T.impact+.05)?0:1);});
+    /* la case TOTAL : elle bat avec la question, puis avec la vérification du total */
+    const tp=1+.08*Math.sin(Math.PI*clamp((t-T.question)/.4))+.08*Math.sin(Math.PI*clamp((t-(T.total+1.1))/.4));
+    o.total.setAttribute('transform',`translate(480,114) scale(${tp.toFixed(3)}) translate(-480,-114)`);
+    /* ---------- la tache : petits bonds, élan, saut, SPLAT ---------- */
+    const d=t-T.hop;let x=DEPART[0],y=DEPART[1],r=RVOL,sx=1,sy=1,rot=0,flex=.025;
+    const sc=RVOL/61,V=VOL;
+    if(d<V){const u=F.io(clamp(d/V));x=L(DEPART[0],ELAN[0],u);y=DEPART[1]-12*sc*Math.abs(Math.sin(u*Math.PI*3));sx=1+.08*Math.sin(u*Math.PI*6);sy=1/sx;rot=.09*Math.sin(u*Math.PI*4);}
+    else if(d<V+.65){const u=F.io(clamp((d-V)/.65));x=ELAN[0];y=L(ELAN[1],ELAN[1]+24*sc,u);sx=L(1,1.24,u);sy=L(1,.6,u);rot=-.08;}
+    else if(d<V+2.05){const u=clamp((d-V-.65)/1.4);x=L(ELAN[0],JET[2].p[0],u);y=L(ELAN[1],JET[2].p[1],u)-226*sc*Math.sin(Math.PI*u);sx=.86;sy=1.2;rot=L(-.2,.17,u);flex=.018;}
+    else{const e=d-V-2.05,u=F.out(clamp(e/.36));x=JET[2].p[0];y=JET[2].p[1];r=L(RVOL,RT,u);
+      const wob=e<1.1?.13*Math.sin(e*18)*Math.exp(-e*3.7):0;sx=1+wob;sy=1-wob;flex=e<.9?.017*Math.exp(-e*4):0;}
+    o.tacheP.setAttribute('d',tache(0,0,r,flex,t));
+    o.tache.setAttribute('transform',`translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${(rot*180/Math.PI).toFixed(2)}) scale(${sx.toFixed(3)},${sy.toFixed(3)})`);
+    op(o.tache,t<T.hop?0:1);
+    /* noire, puis elle s'éclaircit à la vérification (comme dans le jeu) : on voit le 22 dessous */
+    const ec=P(t,T.revele,1.6,F.io);
+    o.tacheP.setAttribute('fill',ec<=0?C.encre:`rgba(${Math.round(L(0,220,ec))},${Math.round(L(0,220,ec))},${Math.round(L(0,220,ec))},${L(1,.40,ec).toFixed(3)})`);
+    /* le « ? » sur la tache : après le SPLAT, jusqu'aux barres ; plus aucune inscription au retour sur le plateau */
+    const qa=P(t,T.impact+.6,.65,F.out);
+    op(o.tacheQ,t>=T.retour?0:qa);o.tacheQ.setAttribute('transform',`scale(${L(.65,1,qa).toFixed(3)})`);
+    /* les gouttes et le mot SPLAT! */
+    const gu=clamp((t-T.impact)/.8);
+    o.gouttes.forEach((g,i)=>{const a=-Math.PI+.4+i*.48,dd=L(106,262,F.out(gu));
+      g.setAttribute('transform',`translate(${(JET[2].p[0]+Math.cos(a)*dd).toFixed(1)},${(JET[2].p[1]+Math.sin(a)*dd).toFixed(1)}) rotate(${(a*180/Math.PI).toFixed(1)})`);
+      g.setAttribute('rx',(12*(1-gu)+4).toFixed(1));g.setAttribute('ry',(6*(1-gu)+3).toFixed(1));
+      op(g,t<T.impact||gu>=1?0:1-F.io(clamp((gu-.35)/.65)));});
+    const mp=P(t,T.impact+.05,.3,F.back);
+    op(o.mot,t<T.impact+.05?0:1-P(t,T.impact+.55,.35,F.lin));
+    o.mot.setAttribute('transform',`translate(${JET[2].p[0]+60},${JET[2].p[1]-250}) rotate(-6) scale(${L(.4,1,mp).toFixed(3)})`);
+
+    /* ---------- plateau → barres ---------- */
+    const enMorph=t>=T.barres&&morph<1;
+    op(o.morph,enMorph?1:0);
+    if(enMorph){
+      op(o.plateau,1);
+      /* le plateau s'efface, la case TOTAL devient la barre du haut */
+      o.fondPlateau.setAttribute('opacity',(1-morph).toFixed(3));
+      const tb=o.totalEcr,H=o.cases.haut;
+      o.mTotal.setAttribute('x',L(tb[0],H.x,morph));o.mTotal.setAttribute('y',L(tb[1],H.y,morph));
+      o.mTotal.setAttribute('width',L(tb[2],H.w,morph));o.mTotal.setAttribute('height',L(tb[3],H.h,morph));o.mTotal.setAttribute('rx',L(18*J.s,0,morph));
+      const nc=[J.x+J.s*480,J.y+J.s*130.6];
+      o.mTotalNb.setAttribute('x',L(nc[0],H.x+H.w/2,morph));o.mTotalNb.setAttribute('y',L(nc[1],H.y+H.h/2+2,morph));o.mTotalNb.setAttribute('font-size',L(84*J.s,S.val,morph));
+      /* 18 et 20 deviennent les deux cases bleues du bas */
+      o.mJ.forEach((m,i)=>{const R=i?o.cases.b20:o.cases.b18,c=ecr(JET[i].p),rr=RJ*ks;
+        for(const el of [m.a,m.b]){el.setAttribute('x',L(c[0]-rr,R.x,morph));el.setAttribute('y',L(c[1]-rr,R.y,morph));
+          el.setAttribute('width',L(2*rr,R.w,morph));el.setAttribute('height',L(2*rr,R.h,morph));el.setAttribute('rx',L(rr,0,morph));}
+        m.a.setAttribute('stroke-width',5*ks);op(m.a,1-morph);op(m.b,morph);
+        m.t.setAttribute('x',L(c[0],R.x+R.w/2,morph));m.t.setAttribute('y',L(c[1],R.y+R.h/2+2,morph));
+        m.t.setAttribute('font-size',L(64*ks,S.val,morph));m.t.setAttribute('fill',melange(C.encre,C.bleuTxt,morph));});
+      /* la tache devient la case grise */
+      const ct=ecr(JET[2].p);
+      o.mTache.setAttribute('d',tacheVersCase(ct,RT*ks,o.cases.bQ,morph));o.mTache.setAttribute('fill',melange('#000000',C.gris,morph));o.mTache.setAttribute('stroke-opacity',morph.toFixed(3));
+      o.mQ.setAttribute('x',L(ct[0],o.cases.bQ.x+o.cases.bQ.w/2,morph));o.mQ.setAttribute('y',L(ct[1],S.ym+(S.ym-S.y1)/2+2,morph));
+      o.mQ.setAttribute('font-size',L(RT*.45*ks,S.val,morph));o.mQ.setAttribute('fill',melange('#ffffff',C.encre,morph));
+      /* sur le plateau, on ne garde que ce qui se transforme */
+      op(o.total,0);op(o.tache,0);for(const v of [18,20,22])op(o.jetons[v].g,0);
+    }else{
+      o.fondPlateau.setAttribute('opacity','1');op(o.total,1);
+    }
+    /* ---------- le schéma ---------- */
+    const vuSchema=t>=T.barres&&morph>=1?1-sOut:0;
+    op(o.schema,vuSchema);
+    if(vuSchema>0){
+      const fu=P(t,T.regroupe,DUR.fusion,F.io),sp=P(t,T.split,DUR.split,F.io),hc=P(t,T.hachure,DUR.hachure,F.io),rm=P(t,T.retire,DUR.retire,F.io),sv=P(t,T.solve,DUR.solve,F.io);
+      /* 18 + 20 = 38 : la séparation s'efface, les deux nombres se rejoignent, 38 apparaît */
+      const b=o.cases.b38;
+      const fd=DUR.fusion;
+      op(o.sSep,1-P(t,T.regroupe,fd*.45,F.lin));
+      /* 18 et 20 se rapprochent en s'effaçant, sans jamais se toucher (pas de « 1820 » au milieu), puis 38 apparaît */
+      const fv=.4*F.io(clamp((t-T.regroupe)/(fd*.45)));
+      o.sB18.setAttribute('x',L(b.x+9*k,b.x+b.w/2,fv));o.sB20.setAttribute('x',L(b.x+28*k,b.x+b.w/2,fv));
+      op(o.sB18,1-P(t,T.regroupe,fd*.45,F.lin));op(o.sB20,1-P(t,T.regroupe,fd*.45,F.lin));
+      op(o.sB38.t,P(t,T.regroupe+fd*.5,fd*.4,F.lin));
+      /* 60 = 38 + 22 : la barre du haut se coupe, le 60 monte au-dessus (accolade) */
+      op(o.sHaut.r,1-sp);o.sHaut.t.setAttribute('y',L(S.y1+(S.ym-S.y1)/2+2,S.y1-24-S.acc*.62,sp));
+      o.sHaut.t.setAttribute('font-size',L(S.val,S.acc,sp));op(o.sHaut.t,sp>=1?0:1);
+      op(o.acc,sp>=1?1-rm:0);op(o.sH38.g,sp);op(o.sH22.g,sp);
+      /* les deux 38 hachurés (estompés comme dans le jeu), puis retirés vers la gauche */
+      const dx=-1.2*b.w*rm,vu38=1-rm;
+      o.hach.forEach(g=>{op(g,.4*hc*vu38);g.setAttribute('transform',`translate(${dx.toFixed(1)},0)`);});
+      for(const g of [o.sH38.g,o.sB38.g]){g.setAttribute('transform',`translate(${dx.toFixed(1)},0)`);}
+      op(o.sH38.g,sp*(1-hc)*vu38);op(o.sB38.g,(1-hc)*vu38);
+      /* la colonne du 22 vient au milieu ; le « ? » devient 22 (vert, comme une case juste dans le jeu) */
+      const dc=(S.x0+S.x1)/2-(o.cases.bQ.x+o.cases.bQ.w/2),cdx=(dc*rm).toFixed(1);
+      o.sQ.g.setAttribute('transform',`translate(${cdx},0)`);
+      o.sH22.g.setAttribute('transform',`translate(${cdx},${(-55*sv).toFixed(1)})`);op(o.sH22.g,sp*(1-sv));
+      o.sQ.r.setAttribute('fill',melange(C.gris,C.vertFond,sv));
+      op(o.sQ.t,1-P(t,T.solve,.35,F.lin));op(o.sMini,P(t,T.barres+DUR.morph,.4,F.lin)*(1-sv));
+      const s2=P(t,T.solve+.25,.4,F.back);op(o.s22,t<T.solve+.25?0:1);
+      const c2=[o.cases.bQ.x+o.cases.bQ.w/2,S.ym+(S.ym-S.y1)/2];
+      o.s22.setAttribute('transform',`translate(${c2[0]},${c2[1]}) scale(${L(.4,1,s2).toFixed(3)}) translate(${-c2[0]},${-c2[1]})`);
+    }
+    /* au retour sur le plateau : la tache noire, sans inscription ; le 22 dessous */
+    if(t>=T.retour){op(o.tache,1);for(const v of [18,20,22])op(o.jetons[v].g,1);}
+    Q.sousTitres(o,Y,t,SOUS_TITRES);
+    Q.fin(o,Y,t,T.fin);
+  }
+};
+/* titre (tache de l'outil + SPLAT! + le nom de l'étape, logo maths&go seul) et carton de fin, comme les autres films d'étape */
+function Z_cartons(o,Y,svg){
+  o.st=E('text',{x:Y.cap.x,y:Y.cap.y,'text-anchor':'middle','font-size':Y.cap.size,'font-weight':800,fill:'#1e293b'},svg);o.stCle=null;
+  const ti=Y.titre;
+  o.titre=E('g',{},svg);E('rect',{x:0,y:0,width:Y.W,height:Y.H,fill:'#ffffff'},o.titre);
+  /* les deux logos des livrets du monde 2 (IREMI et maths&go), comme le film d'introduction ; ils partent avec le titre */
+  E('image',{href:LOGO_IREM,x:ti.logo.xl,y:ti.logo.y,height:ti.logo.h,width:ti.logo.h*360/293},o.titre);
+  E('image',{href:LOGO_MG,x:ti.logo.xr-ti.logo.h*420/195,y:ti.logo.y,height:ti.logo.h,width:ti.logo.h*420/195},o.titre);
+  o.titreTache=E('g',{},o.titre);E('path',{d:tache(0,0,ti.tr),fill:C.encre,stroke:C.tacheBord,'stroke-width':4},o.titreTache);
+  o.titreMot=E('g',{},o.titre);E('text',{x:ti.tx,y:ti.y,'text-anchor':'middle','font-size':ti.size,'font-weight':900,fill:'#111827','letter-spacing':6},o.titreMot).textContent='SPLAT!';
+  o.titreSous=E('text',{x:ti.tx,y:ti.sy,'text-anchor':'middle','font-size':ti.ssize,'font-weight':700,fill:'#475569'},o.titre);o.titreSous.textContent='Avec des paquets de jetons';
+  const fi=Y.fin;o.fin=E('g',{},svg);E('rect',{x:0,y:0,width:Y.W,height:Y.H,fill:'#ffffff'},o.fin);
+  o.finTache=E('g',{},o.fin);E('path',{d:tache(0,0,fi.tr),fill:C.encre,stroke:C.tacheBord,'stroke-width':3},o.finTache);
+  o.finMot=E('text',{x:fi.x,y:fi.my,'text-anchor':'middle','font-size':fi.size,'font-weight':900,fill:'#111827'},o.fin);o.finMot.textContent='À toi de jouer !';
+  o.finSous=E('g',{},o.fin);
+  fi.lignes.forEach((l,i)=>{E('text',{x:fi.x,y:fi.sy+i*fi.ssize*1.35,'text-anchor':'middle','font-size':fi.ssize,'font-weight':600,fill:'#475569'},o.finSous).textContent=l;});
+  F.boutonsFin(o,fi);}
 return film;
 })();
 </script>
