@@ -2278,6 +2278,16 @@ function getInstructionHtml() {
     return html;
 }
 
+/* Le titre imprimé vient du champ « Titre imprimé » — ou du lien (?title=) : on
+   l'écrit dans la page comme du texte, jamais comme du HTML. */
+function echapperHtml(texte) {
+    return String(texte == null ? '' : texte)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
 function getPrintedActivityLabel(isCorrectionPage) {
     const input = document.getElementById('activityLabel');
     const label = input ? input.value.trim() : '';
@@ -2549,7 +2559,7 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
         header.innerHTML = `
             <div class="activity-title-block">
                 <div class="activity-title">Petit Splat!</div>
-                ${printedActivityLabel ? `<div class="activity-subtitle">${printedActivityLabel}</div>` : ''}
+                ${printedActivityLabel ? `<div class="activity-subtitle">${echapperHtml(printedActivityLabel)}</div>` : ''}
             </div>
             <div class="activity-logos">
                 <img class="activity-logo-irem" src="${PRINT_IREM_LOGO_SRC}" alt="IREMI La Réunion">

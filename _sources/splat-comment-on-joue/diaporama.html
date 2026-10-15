@@ -171,7 +171,8 @@
   const params = new URLSearchParams(location.search);
   /* ?suite= vient de l'adresse : on n'accepte qu'un chemin interne (« /outils/… ») */
   const demande = params.get('suite') || '';
-  const suite = /^\/[^\/]/.test(demande) ? demande : '/outils/splat_univers.html';
+  /* « /\ » se lit « // » dans un navigateur : on l'écarte aussi, comme splat_intro.html */
+  const suite = /^\/[^\/\\]/.test(demande) ? demande : '/outils/splat_univers.html';
   document.getElementById('jouer').href = suite; document.getElementById('passer').href = suite;
   let minuteur = null;
   function montrer(n){ i = Math.max(0, Math.min(diapos.length - 1, n)); diapos.forEach((d, k) => { d.classList.toggle('active', k === i); d.classList.remove('tombe'); });

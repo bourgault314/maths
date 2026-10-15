@@ -4641,7 +4641,7 @@
       }
 
       const isSplatUnknown = piece.type === "x" && unknownDisplayKind() === "splat";
-      const value = piece.type === "x" ? displayedUnknown() : String(piece.value);
+      const value = escapeHtml(piece.type === "x" ? displayedUnknown() : String(piece.value));
       el.innerHTML = `
         <div class="pieceContent">
           <div class="pieceValue${isSplatUnknown ? ' splatValue' : ''}">${isSplatUnknown ? splatSvg() : value}</div>
@@ -4705,7 +4705,7 @@
       // elle est déjà visible dans la dernière ligne d'équation et dans le tableau.
       solutionEl.textContent = "";
       setStatus("Résolution terminée", true);
-      setInstruction(`Bravo :&nbsp;<strong>${displayedUnknown()}</strong>&nbsp;est trouvé.`);
+      setInstruction(`Bravo :&nbsp;<strong>${escapeHtml(displayedUnknown())}</strong>&nbsp;est trouvé.`);
       actionZone.innerHTML = "";
       return;
     }
@@ -5704,6 +5704,8 @@
     buildError.classList.toggle("show", Boolean(text));
   }
 
+  // « u » : ces lettres font deux unités de code ; sans lui, le remplacement les
+  // découpait et ne reconnaissait aucune lettre mathématique (corrigé le 15/10/2026).
   function normalizeMathLetters(str){
     const map = {
       "𝑎":"a", "𝑏":"b", "𝑐":"c", "𝑑":"d", "𝑒":"e", "𝑓":"f", "𝑔":"g", "ℎ":"h", "𝑖":"i", "𝑗":"j", "𝑘":"k", "𝑙":"l", "𝑚":"m",
@@ -5711,7 +5713,7 @@
       "𝐴":"a", "𝐵":"b", "𝐶":"c", "𝐷":"d", "𝐸":"e", "𝐹":"f", "𝐺":"g", "𝐻":"h", "𝐼":"i", "𝐽":"j", "𝐾":"k", "𝐿":"l", "𝑀":"m",
       "𝑁":"n", "𝑂":"o", "𝑃":"p", "𝑄":"q", "𝑅":"r", "𝑆":"s", "𝑇":"t", "𝑈":"u", "𝑉":"v", "𝑊":"w", "𝑋":"x", "𝑌":"y", "𝑍":"z"
     };
-    return String(str || "").replace(/[𝑎𝑏𝑐𝑑𝑒𝑓𝑔ℎ𝑖𝑗𝑘𝑙𝑚𝑛𝑜𝑝𝑞𝑟𝑠𝑡𝑢𝑣𝑤𝑥𝑦𝑧𝐴𝐵𝐶𝐷𝐸𝐹𝐺𝐻𝐼𝐽𝐾𝐿𝑀𝑁𝑂𝑃𝑄𝑅𝑆𝑇𝑈𝑉𝑊𝑋𝑌𝑍]/g, ch => map[ch] || ch);
+    return String(str || "").replace(/[𝑎𝑏𝑐𝑑𝑒𝑓𝑔ℎ𝑖𝑗𝑘𝑙𝑚𝑛𝑜𝑝𝑞𝑟𝑠𝑡𝑢𝑣𝑤𝑥𝑦𝑧𝐴𝐵𝐶𝐷𝐸𝐹𝐺𝐻𝐼𝐽𝐾𝐿𝑀𝑁𝑂𝑃𝑄𝑅𝑆𝑇𝑈𝑉𝑊𝑋𝑌𝑍]/gu, ch => map[ch] || ch);
   }
 
   function toMathItalicLetter(letter){
@@ -6386,9 +6388,11 @@
   function createImportedEquationState(payload){
     if(!payload || typeof payload !== "object") return false;
 
-    const rawWantedVar = typeof payload.variable === "string" && payload.variable.trim() ? payload.variable.trim() : "𝑥";
+    // La lettre de l'inconnue vient du lien (#data=) : une seule lettre, sinon 𝑥.
+    // Avant, n'importe quel texte passait et finissait dans la page tel quel.
+    const rawWantedVar = typeof payload.variable === "string" ? payload.variable.trim() : "";
     const normalizedWantedVar = normalizeMathLetters(rawWantedVar);
-    const wantedVar = /^[a-zA-Z]$/.test(normalizedWantedVar) ? toMathItalicLetter(normalizedWantedVar) : rawWantedVar;
+    const wantedVar = /^[a-zA-Z]$/.test(normalizedWantedVar) ? toMathItalicLetter(normalizedWantedVar) : "𝑥";
     const rawDisplay = String(payload.unknownDisplay || payload.display || "letter").toLowerCase();
     const wantedDisplay = (rawDisplay === "question" || rawDisplay === "?" || rawDisplay === "interrogation")
       ? "question"
