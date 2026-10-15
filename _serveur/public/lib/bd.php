@@ -194,6 +194,46 @@ function schema(string $pilote): array
   resultat VARCHAR(10) NOT NULL DEFAULT 'ok'"
         . ($mysql ? ",\n  KEY journal_quand (quand)" : "")
         . "\n)$fin",
+
+        // Séance en direct, lot 1 (07/10/2026) — lib/direct.php. Trois tables
+        // TEMPORAIRES : elles se vident quand le professeur termine la séance,
+        // et au plus tard une heure et demie après son dernier geste
+        // (expire_le, un instant epoch comme billets.expire_le). Aucun énoncé,
+        // aucun texte libre, aucune note : un type et un réglage de question
+        // pris dans une liste fermée, et une réponse courte dont la forme est
+        // vérifiée par ce type. « mode » existe déjà pour les séances à venir
+        // (évaluation au rythme de chacun) sans avoir à modifier la table.
+        "CREATE TABLE IF NOT EXISTS directs (
+  id $id,
+  classe_id INTEGER NOT NULL,
+  prof_id INTEGER NOT NULL,
+  mode VARCHAR(12) NOT NULL DEFAULT 'eclair',
+  etat VARCHAR(10) NOT NULL DEFAULT 'attente',
+  numero INTEGER NOT NULL DEFAULT 0,
+  revision INTEGER NOT NULL DEFAULT 0,
+  ouvert_le INTEGER NOT NULL,
+  expire_le INTEGER NOT NULL"
+        . ($mysql ? ",\n  UNIQUE KEY directs_classe (classe_id)" : "")
+        . "\n)$fin",
+
+        "CREATE TABLE IF NOT EXISTS directs_questions (
+  id $id,
+  direct_id INTEGER NOT NULL,
+  numero INTEGER NOT NULL,
+  type VARCHAR(12) NOT NULL,
+  reglage VARCHAR(255) NOT NULL DEFAULT '{}',
+  bonne VARCHAR(40) NULL"
+        . ($mysql ? ",\n  UNIQUE KEY directs_questions_numero (direct_id, numero)" : "")
+        . "\n)$fin",
+
+        "CREATE TABLE IF NOT EXISTS directs_reponses (
+  id $id,
+  direct_id INTEGER NOT NULL,
+  numero INTEGER NOT NULL,
+  eleve_id INTEGER NOT NULL,
+  reponse VARCHAR(40) NOT NULL"
+        . ($mysql ? ",\n  UNIQUE KEY directs_reponses_eleve (direct_id, numero, eleve_id),\n  KEY directs_reponses_par_eleve (eleve_id)" : "")
+        . "\n)$fin",
     ];
 
     if ($mysql) return $tables;
@@ -210,6 +250,10 @@ function schema(string $pilote): array
         'CREATE UNIQUE INDEX IF NOT EXISTS versions_eleve_appli_jour ON versions (eleve_id, appli, jour)',
         'CREATE INDEX IF NOT EXISTS versions_eleve ON versions (eleve_id)',
         'CREATE INDEX IF NOT EXISTS journal_quand ON journal (quand)',
+        'CREATE UNIQUE INDEX IF NOT EXISTS directs_classe ON directs (classe_id)',
+        'CREATE UNIQUE INDEX IF NOT EXISTS directs_questions_numero ON directs_questions (direct_id, numero)',
+        'CREATE UNIQUE INDEX IF NOT EXISTS directs_reponses_eleve ON directs_reponses (direct_id, numero, eleve_id)',
+        'CREATE INDEX IF NOT EXISTS directs_reponses_par_eleve ON directs_reponses (eleve_id)',
     ]);
 }
 
@@ -303,6 +347,8 @@ function migrer_schema(?PDO $pdo = null): array
     $versionsAbsente = !table_existe($pdo, 'versions');
     $journalAbsent = !table_existe($pdo, 'journal');
     $recordsAbsente = !table_existe($pdo, 'records');
+    // Séance en direct (07/10/2026) : ses trois tables arrivent par ici aussi.
+    $directsAbsente = !table_existe($pdo, 'directs');
     installer_tables($pdo);
     if ($billetsAbsente) {
         $faits[] = "Table « billets » créée (liens d'entrée à usage unique, lot 3).";
@@ -315,6 +361,9 @@ function migrer_schema(?PDO $pdo = null): array
     }
     if ($recordsAbsente) {
         $faits[] = "Table « records » créée (les meilleurs temps des Légendes des tables).";
+    }
+    if ($directsAbsente) {
+        $faits[] = "Tables « directs » créées (séance en direct : rien n'y reste après la séance).";
     }
 
     // Le premier compte créé devient administrateur et récupère les classes

@@ -21,6 +21,7 @@ require_once __DIR__ . '/../lib/versions.php';
 require_once __DIR__ . '/../lib/journal.php';
 require_once __DIR__ . '/../lib/applis.php';
 require_once __DIR__ . '/../lib/records.php';
+require_once __DIR__ . '/../lib/direct.php';
 
 const MAX_ELEVES_PAR_LOT = 60;
 // L'ordre de cette liste est celui des activités dans la liste d'une classe
@@ -78,6 +79,16 @@ const DROIT_PAR_ACTION = [
     'records.retirer' => 'proprietaire',
     'partages.ajouter' => 'proprietaire',
     'partages.supprimer' => 'proprietaire',
+    // Séance en direct (07/10/2026). Mener une séance, c'est faire répondre
+    // les élèves et recevoir leurs réponses avec leurs prénoms : écriture. Un
+    // collègue en lecture seule ne voit ni la séance ni son fichier.
+    'direct.etat' => 'ecriture',
+    'direct.ouvrir' => 'ecriture',
+    'direct.question' => 'ecriture',
+    'direct.devoiler' => 'ecriture',
+    'direct.bonne' => 'ecriture',
+    'direct.fichier' => 'ecriture',
+    'direct.terminer' => 'ecriture',
 ];
 
 // Les actions réservées au compte administrateur (gestion des comptes prof).
@@ -511,6 +522,10 @@ try {
             // La suppression automatique reste, mais chez menage.php seul — la
             // tâche planifiée d'OVH, qui tient la promesse du 1er août.
             $echues = classes_a_proposer($pdo, $profId);
+            // Une séance en direct oubliée ouverte ne survit pas à l'ouverture
+            // de « Mes classes » (lib/direct.php : une heure et demie après le
+            // dernier geste). Sans objet tant que migrer.php n'a pas créé la table.
+            if (table_existe($pdo, 'directs')) purger_directs($pdo);
             $requete = $pdo->prepare(
                 // c.* plutôt que la liste des colonnes : « reglages » n'existe
                 // qu'après migrer.php (lot « splat-suivi-5 ») — avant, la classe
@@ -842,6 +857,8 @@ try {
                 $pdo->prepare('DELETE FROM eleves WHERE id = ?')->execute([(int)$eleve['id']]);
                 oublier_compteurs_du_code($pdo, (string)$eleve['code']);
                 oublier_billets_de_l_eleve($pdo, (int)$eleve['id']);
+                // Ses réponses à la séance en direct du moment, s'il y en a une.
+                oublier_reponses_direct_de_l_eleve($pdo, (int)$eleve['id']);
                 $pdo->commit();
             } catch (Throwable $e) {
                 $pdo->rollBack();
@@ -952,6 +969,106 @@ try {
             $retire = retirer_temps($pdo, (int)$eleve['id']);
             journaliser($pdo, $profId, 'records.retirer', 'eleve', (int)$eleve['id']);
             repondre(['ok' => true, 'retire' => $retire] + ligue($pdo, $profId, null, true));
+        // ---------------------------------------------------------- séance en direct
+        //
+        // Lot 1 « question éclair » (07/10/2026) — lib/direct.php. Le tableau
+        // interroge « direct.etat » toutes les secondes et demie : c'est la
+        // seule action de ce fichier appelée en boucle, elle ne journalise
+        // rien et ne prolonge pas la séance. Les gestes (ouvrir, poser une
+        // question, dévoiler, désigner la bonne réponse) repoussent sa fin.
+
+        case 'direct.etat':
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
+            purger_directs($pdo);
+            $direct = direct_de_la_classe($pdo, (int)$classe['id']);
+            repondre([
+                'ok' => true,
+                'classe' => ['id' => (int)$classe['id'], 'libelle' => $classe['libelle']],
+                'direct' => $direct === null ? null : etat_du_direct_pour_le_tableau($pdo, $direct),
+                'rythme' => RYTHME_DIRECT_TABLEAU,
+            ]);
+
+        case 'direct.ouvrir':
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
+            $dejaOuverte = direct_de_la_classe($pdo, (int)$classe['id']) !== null;
+            $direct = ouvrir_direct($pdo, (int)$classe['id'], $profId);
+            if (!$dejaOuverte) journaliser($pdo, $profId, 'direct.ouvrir', 'classe', (int)$classe['id']);
+            repondre([
+                'ok' => true,
+                'classe' => ['id' => (int)$classe['id'], 'libelle' => $classe['libelle']],
+                'direct' => etat_du_direct_pour_le_tableau($pdo, $direct),
+                'rythme' => RYTHME_DIRECT_TABLEAU,
+            ]);
+
+        case 'direct.question':
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
+            $direct = direct_de_la_classe($pdo, (int)$classe['id']);
+            if ($direct === null) erreur("La séance est terminée : ouvre-la de nouveau.", 409);
+            $type = is_string($corps['type'] ?? null) ? $corps['type'] : 'choix';
+            if (!in_array($type, TYPES_DIRECT, true)) erreur("Type de question inconnu.", 400);
+            $reglage = reglage_direct($type, $corps['reglage'] ?? null);
+            if ($reglage === null) erreur("Réglage de la question invalide.", 400);
+            if (!poser_question_direct($pdo, $direct, $type, $reglage)) {
+                erreur("Cette séance a atteint " . MAX_QUESTIONS_DIRECT . " questions : termine-la et ouvres-en une autre.", 409);
+            }
+            repondre(['ok' => true,
+                'direct' => etat_du_direct_pour_le_tableau($pdo, direct_de_la_classe($pdo, (int)$classe['id']) ?? $direct)]);
+
+        case 'direct.devoiler':
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
+            $direct = direct_de_la_classe($pdo, (int)$classe['id']);
+            if ($direct === null) erreur("La séance est terminée : ouvre-la de nouveau.", 409);
+            // Déjà dévoilée (double clic, deuxième onglet) : même réponse.
+            devoiler_direct($pdo, $direct);
+            repondre(['ok' => true,
+                'direct' => etat_du_direct_pour_le_tableau($pdo, direct_de_la_classe($pdo, (int)$classe['id']) ?? $direct)]);
+
+        case 'direct.bonne':
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
+            $direct = direct_de_la_classe($pdo, (int)$classe['id']);
+            if ($direct === null) erreur("La séance est terminée : ouvre-la de nouveau.", 409);
+            $question = question_du_direct($pdo, $direct);
+            if ($question === null || $direct['etat'] !== 'devoile') {
+                erreur("Dévoile d'abord les réponses.", 409);
+            }
+            $bonne = null;
+            if (($corps['bonne'] ?? null) !== null) {
+                $bonne = reponse_direct($question['type'], $question['reglage'], $corps['bonne']);
+                if ($bonne === null) erreur("Cette réponse n'existe pas pour cette question.", 400);
+            }
+            designer_bonne_reponse_direct($pdo, $direct, $bonne);
+            repondre(['ok' => true,
+                'direct' => etat_du_direct_pour_le_tableau($pdo, direct_de_la_classe($pdo, (int)$classe['id']) ?? $direct)]);
+
+        case 'direct.fichier':
+            // Les réponses élève par élève : c'est avec elles que la page du
+            // professeur fabrique le fichier, dans son navigateur. Le serveur
+            // n'en garde aucune copie ; l'action est journalisée.
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
+            $direct = direct_de_la_classe($pdo, (int)$classe['id']);
+            if ($direct === null) erreur("La séance est terminée : il n'y a plus rien à télécharger.", 409);
+            journaliser($pdo, $profId, 'direct.fichier', 'classe', (int)$classe['id']);
+            repondre(['ok' => true,
+                'classe' => ['id' => (int)$classe['id'], 'libelle' => $classe['libelle']],
+                'jour' => jour_local()] + contenu_du_direct($pdo, $direct));
+
+        case 'direct.terminer':
+            // Tout est effacé, tout de suite : la séance, ses questions, ses
+            // réponses. Terminer une séance déjà terminée n'est pas une erreur.
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
+            $existait = direct_de_la_classe($pdo, (int)$classe['id']) !== null;
+            avec_reprise($pdo, function () use ($pdo, $classe): void {
+                transaction_ouvrir($pdo);
+                try {
+                    oublier_direct_de_la_classe($pdo, (int)$classe['id']);
+                    transaction_valider($pdo);
+                } catch (Throwable $e) {
+                    transaction_annuler($pdo);
+                    throw $e;
+                }
+            });
+            if ($existait) journaliser($pdo, $profId, 'direct.terminer', 'classe', (int)$classe['id']);
+            repondre(['ok' => true]);
 
         default:
             erreur("Action inconnue.", 400);

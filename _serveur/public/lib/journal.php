@@ -42,6 +42,9 @@ const ACTIONS_JOURNAL = [
     // Lot « après l'audit GPT » (D4, 14/10/2026) : un temps retiré des records.
     'records.retirer',
     'profs.ajouter', 'profs.supprimer', 'profs.reinitialiser', 'profs.desactiver', 'profs.reactiver',
+    // Séance en direct (07/10/2026) : qui a ouvert une séance, qui a pris le
+    // fichier des réponses, qui l'a terminée. Pas une ligne par question.
+    'direct.ouvrir', 'direct.fichier', 'direct.terminer',
 ];
 
 const CIBLES_JOURNAL = ['classe', 'eleve', 'partage', 'compte', 'session'];

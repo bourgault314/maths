@@ -394,8 +394,10 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // Lot « après l'audit GPT » (14/10/2026) : lib/records.php, api/records.php,
   // api/prof.php, lib/journal.php et la page prof changent (avant : records-depart).
   // Puis le lot 2 « suivi » de l'échauffement SPLAT! (14/10/2026) : lib/applis.php et
-  // prof/splat-parcours.js (avant : apres-audit-gpt).
-  assert.match(lire("_serveur/public/VERSION"), /^lot splat-echauffement-suivi$/m);
+  // prof/splat-parcours.js (avant : apres-audit-gpt). Puis la séance en direct,
+  // lot 1 « question éclair » (15/10/2026) : quatre fichiers de plus, 35 au manifeste
+  // (avant : splat-echauffement-suivi).
+  assert.match(lire("_serveur/public/VERSION"), /^lot seance-en-direct-eclair$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-comment-on-joue-20261011-3/);
 });

@@ -70,7 +70,7 @@ function bd_test(): PDO
     return $pdo;
 }
 if (getenv('SUIVI_TEST_DSN')) {
-    foreach (['records', 'journal', 'versions', 'billets', 'partages', 'sessions_prof', 'compteurs', 'progressions', 'eleves', 'classes', 'profs'] as $table) {
+    foreach (['directs_reponses', 'directs_questions', 'directs', 'records', 'journal', 'versions', 'billets', 'partages', 'sessions_prof', 'compteurs', 'progressions', 'eleves', 'classes', 'profs'] as $table) {
         bd_test()->exec("DROP TABLE IF EXISTS $table");
     }
     echo "Base de test : " . $bdTest['dsn'] . "\n";
@@ -580,8 +580,16 @@ verifier("le manifeste connaît la page Infos", function () {
     $manifeste = (string)file_get_contents(__DIR__ . '/../public/VERSION');
     vrai((bool)preg_match('/^[0-9a-f]{64}  infos\.php$/m', $manifeste),
         'infos.php doit figurer au manifeste : sans lui, verifier.php ne dirait pas si la page déposée est la bonne');
-    vrai((bool)preg_match('/^fichiers 31$/m', $manifeste),
-        'le serveur compte 28 fichiers depuis l’ajout de la page Infos, 29 depuis la copie du moteur SPLAT! (lot splat-suivi-3), 31 depuis les records (api/records.php, lib/records.php)');
+    // 28 depuis la page Infos ; 29 depuis la copie du moteur SPLAT! (lot
+    // splat-suivi-3) ; 31 depuis les records (api/records.php, lib/records.php) ;
+    // 35 depuis la séance en direct (07/10/2026) : direct.php, prof/direct.php,
+    // api/direct.php, lib/direct.php.
+    vrai((bool)preg_match('/^fichiers 35$/m', $manifeste),
+        'le serveur compte 35 fichiers depuis la séance en direct');
+    foreach (['direct.php', 'prof/direct.php', 'api/direct.php', 'lib/direct.php'] as $fichier) {
+        vrai((bool)preg_match('/^[0-9a-f]{64}  ' . preg_quote($fichier, '/') . '$/m', $manifeste),
+            "$fichier doit figurer au manifeste");
+    }
 });
 
 verifier("la page élève refuse un code inconnu ou mal formé", function () {
@@ -2929,7 +2937,7 @@ verifier("sauvegarde.php rend un fichier chiffré qui se déchiffre par openssl 
     // trois tables rendait une base restaurée INUTILISABLE — la première
     // connexion d'un professeur répondait 500. Leur structure part donc dans
     // la sauvegarde, leur contenu non (jetons de courte durée).
-    foreach (['sessions_prof', 'compteurs', 'billets'] as $table) {
+    foreach (['sessions_prof', 'compteurs', 'billets', 'directs', 'directs_questions', 'directs_reponses'] as $table) {
         vrai(str_contains($clair, "CREATE TABLE `$table`") || str_contains($clair, "EXISTS $table ("),
             "la structure de $table doit être dans la sauvegarde : sans elle, le serveur restauré répond 500");
         vrai(!str_contains($clair, "INSERT INTO `$table`"), "mais pas son contenu : $table ne tient que des jetons périmés");
@@ -2970,6 +2978,16 @@ const MATRICE_ATTENDUE = [
     'records.retirer' => 'proprietaire',
     'partages.ajouter' => 'proprietaire',
     'partages.supprimer' => 'proprietaire',
+    // Séance en direct (07/10/2026). L'ORDRE compte : la matrice les joue à la
+    // suite — ouvrir, poser une question, dévoiler, désigner, prendre le
+    // fichier, terminer —, chacune a donc ce qu'il lui faut pour répondre 200.
+    'direct.etat' => 'ecriture',
+    'direct.ouvrir' => 'ecriture',
+    'direct.question' => 'ecriture',
+    'direct.devoiler' => 'ecriture',
+    'direct.bonne' => 'ecriture',
+    'direct.fichier' => 'ecriture',
+    'direct.terminer' => 'ecriture',
 ];
 
 // Les actions qui EFFACENT ne sont pas jouées dans les boucles de la matrice :
@@ -3023,7 +3041,17 @@ function jouer_action_lot11(string $action, array $lot11, string $jeton): int
         case 'tableau':
         case 'partages.liste':
         case 'classes.supprimer':
+        case 'direct.etat':
+        case 'direct.ouvrir':
+        case 'direct.devoiler':
+        case 'direct.bonne':
+        case 'direct.fichier':
+        case 'direct.terminer':
             $corps['classe_id'] = $lot11['classe'];
+            break;
+        case 'direct.question':
+            $corps['classe_id'] = $lot11['classe'];
+            $corps['type'] = 'choix';
             break;
         case 'classes.modifier':
             $corps['classe_id'] = $lot11['classe'];
@@ -4688,6 +4716,334 @@ verifier("records — les bornes du serveur sont celles du moteur (SEUILS.course
     egal(0, (int)$m[2], '25 sur 25 : aucune erreur (décision du 09/10/2026)');
     egal((int)$m[3], SEUIL_COURSE_DIXIEMES, 'seuil');
     egal((int)$m[4], COURSE_MAX_DIXIEMES, 'plafond');
+});
+
+// ================================================= SÉANCE EN DIRECT (07/10/2026)
+//
+// Lot 1 « question éclair » — lib/direct.php, api/direct.php, direct.* dans
+// api/prof.php. Ce que ce bloc tient :
+//  - l'élève ne reçoit ni la répartition ni la bonne réponse ; le tableau ne
+//    reçoit la répartition qu'après « Dévoiler », et jamais un nom ;
+//  - une réponse n'entre que si la question est ouverte, et sa forme est
+//    vérifiée par son type ; changer d'avis remplace, sans doublon ;
+//  - une classe ne voit pas la séance d'une autre ;
+//  - RIEN ne reste : « Terminer », l'échéance (une heure et demie après le
+//    dernier geste du professeur), la classe ou l'élève supprimés ;
+//  - interroger ne compte rien (aucune écriture par passage).
+//
+// Sabotages attendus (chacun rend un test rouge) :
+//  a) retirer « AND d.etat = 'question' » de repondre_au_direct()
+//  b) envoyer « repartition » pendant la question (etat_du_direct_pour_le_tableau)
+//  c) ajouter « bonne » à etat_du_direct_pour_l_eleve()
+//  d) oublier oublier_direct_de_la_classe() dans supprimer_classe()
+//  e) retirer purger_directs() de api/direct.php
+//  f) compter chaque interrogation (limiter() avant le test « reponse »)
+//  g) accepter n'importe quelle lettre dans reponse_direct()
+
+$direct = ['jeton' => null, 'classe' => null, 'eleves' => [], 'autreClasse' => null, 'autreEleve' => null];
+
+function direct_prof(string $action, array $direct, array $corps = []): array
+{
+    return appel('/api/prof.php', ['action' => $action, 'classe_id' => $direct['classe']] + $corps,
+        ['jeton' => $direct['jeton']]);
+}
+
+function direct_eleve(string $code, array $corps = []): array
+{
+    return appel('/api/direct.php', ['code' => $code] + $corps);
+}
+
+function directs_en_base(): array
+{
+    $combien = [];
+    foreach (['directs', 'directs_questions', 'directs_reponses'] as $table) {
+        $combien[$table] = (int)bd_test()->query("SELECT COUNT(*) FROM $table")->fetchColumn();
+    }
+    return $combien;
+}
+
+verifier("direct — mise en place : une classe de cinq élèves nommés, et une autre classe", function () use (&$direct) {
+    vider_compteurs();
+    foreach (['phrase-de-secours-2026', 'motdepasse-de-test-2026'] as $essai) {
+        $r = connexion('gwenael', $essai);
+        if (($r['json']['jeton'] ?? null) !== null) { $direct['jeton'] = $r['json']['jeton']; break; }
+    }
+    vrai(is_string($direct['jeton']), 'la session du professeur est ouverte');
+    $direct['classe'] = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'direct-405'], ['jeton' => $direct['jeton']])['json']['id'];
+    $direct['eleves'] = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $direct['classe'], 'nombre' => 5], ['jeton' => $direct['jeton']])['json']['eleves'];
+    egal(5, count($direct['eleves']), 'cinq élèves');
+    foreach (['Léa', 'Noah', 'Inès', 'Tom', 'Zoé'] as $i => $prenom) {
+        appel('/api/prof.php', ['action' => 'eleves.nommer', 'eleve_id' => $direct['eleves'][$i]['id'], 'prenom' => $prenom, 'initiale' => 'D'], ['jeton' => $direct['jeton']]);
+    }
+    $direct['autreClasse'] = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'direct-306'], ['jeton' => $direct['jeton']])['json']['id'];
+    $direct['autreEleve'] = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $direct['autreClasse'], 'nombre' => 1], ['jeton' => $direct['jeton']])['json']['eleves'][0];
+    bd_test()->exec('DELETE FROM directs_reponses');
+    bd_test()->exec('DELETE FROM directs_questions');
+    bd_test()->exec('DELETE FROM directs');
+});
+
+verifier("direct — sans séance : l'élève l'apprend, en POST seulement, et un code inconnu est un échec", function () use (&$direct) {
+    $r = direct_eleve($direct['eleves'][0]['code']);
+    egal(200, $r['code']);
+    vrai(array_key_exists('direct', $r['json']) && $r['json']['direct'] === null, 'aucune séance');
+    egal(6000, $r['json']['rythme'], 'sans séance, la page espace ses questions');
+    egal('no-store', entete($r, 'Cache-Control'), 'jamais en cache');
+    egal(405, appel('/api/direct.php', null)['code'], 'GET refusé');
+    egal(405, appel('/api/direct.php?code=' . $direct['eleves'][0]['code'], null)['code'], 'le code dans l’adresse ne vaut rien');
+    egal(400, direct_eleve('!!')['code'], 'code mal formé');
+    vider_compteurs();
+    egal(404, direct_eleve(code_inconnu(7))['code'], 'code inconnu');
+    egal(1, count(compteurs()), 'et l’échec est compté pour l’adresse');
+    vider_compteurs();
+    $r = direct_prof('direct.etat', $direct);
+    egal(200, $r['code']);
+    vrai($r['json']['direct'] === null, 'le tableau aussi : aucune séance');
+    egal('direct-405', $r['json']['classe']['libelle'], 'il sait le nom de la classe');
+    egal(409, direct_prof('direct.question', $direct, ['type' => 'choix'])['code'], 'pas de question sans séance');
+    egal(409, direct_prof('direct.fichier', $direct)['code'], 'pas de fichier sans séance');
+});
+
+verifier("direct — ouvrir : une séance par classe, même à dix en même temps", function () use (&$direct) {
+    $codes = appels_paralleles('/api/prof.php', ['action' => 'direct.ouvrir', 'classe_id' => $direct['classe'], 'jeton' => $direct['jeton']], 10);
+    egal([200], array_values(array_unique($codes)), 'dix ouvertures simultanées, toutes servies');
+    egal(1, directs_en_base()['directs'], 'une seule séance en base');
+    $r = direct_prof('direct.ouvrir', $direct);
+    egal('attente', $r['json']['direct']['etat']);
+    egal(0, $r['json']['direct']['numero']);
+    egal(5, $r['json']['direct']['inscrits'], 'cinq élèves attendus');
+    egal(1, directs_en_base()['directs'], 'rouvrir ne crée rien');
+    $etat = direct_eleve($direct['eleves'][0]['code'])['json'];
+    egal('attente', $etat['direct']['etat'], 'l’élève voit la séance, en attente');
+    egal(2500, $etat['rythme'], 'et interroge plus souvent');
+    vrai($etat['direct']['type'] === null && $etat['direct']['reponse'] === null, 'sans question, rien à répondre');
+    $r = direct_eleve($direct['eleves'][0]['code'], ['numero' => 1, 'reponse' => 'A']);
+    egal(false, $r['json']['enregistree'], 'répondre avant la question n’écrit rien');
+    egal(0, directs_en_base()['directs_reponses']);
+    vrai(direct_eleve($direct['autreEleve']['code'])['json']['direct'] === null, 'l’élève d’une autre classe ne voit pas cette séance');
+});
+
+verifier("direct — question : le réglage est une liste fermée, l'élève ne reçoit ni répartition ni bonne réponse", function () use (&$direct) {
+    egal(400, direct_prof('direct.question', $direct, ['type' => 'texte'])['code'], 'type inconnu');
+    egal(400, direct_prof('direct.question', $direct, ['type' => 'choix', 'reglage' => ['choix' => 7]])['code'], 'sept réponses : refusé');
+    egal(400, direct_prof('direct.question', $direct, ['type' => 'choix', 'reglage' => ['choix' => '4']])['code'], 'un texte à la place d’un nombre : refusé');
+    egal(0, directs_en_base()['directs_questions'], 'rien n’a été posé');
+    $r = direct_prof('direct.question', $direct, ['type' => 'choix', 'reglage' => ['choix' => 4, 'enonce' => '<b>2+2</b>']]);
+    egal(200, $r['code']);
+    egal('question', $r['json']['direct']['etat']);
+    egal(1, $r['json']['direct']['numero']);
+    egal('{"choix":4}', (string)bd_test()->query('SELECT reglage FROM directs_questions')->fetchColumn(), 'le réglage rangé ne garde que ce que le type connaît : aucun énoncé');
+    $etat = direct_eleve($direct['eleves'][0]['code'])['json']['direct'];
+    egal('question', $etat['etat']);
+    egal('choix', $etat['type']);
+    egal(['choix' => 4], $etat['reglage']);
+    foreach (['bonne', 'repartition', 'repondu', 'inscrits'] as $cle) {
+        vrai(!array_key_exists($cle, $etat), "l'élève ne reçoit pas « $cle »");
+    }
+});
+
+verifier("direct — réponses : forme vérifiée, changer d'avis remplace, pas de doublon à vingt en même temps", function () use (&$direct) {
+    $e = $direct['eleves'];
+    foreach ([0 => 'A', 1 => 'B', 2 => 'b', 3 => 'C'] as $i => $lettre) {
+        $r = direct_eleve($e[$i]['code'], ['numero' => 1, 'reponse' => $lettre]);
+        egal(200, $r['code']);
+        egal(true, $r['json']['enregistree'], "réponse $lettre rangée");
+        egal(strtoupper($lettre), $r['json']['direct']['reponse'], 'et rendue à l’élève');
+    }
+    foreach (['E', 'AB', '', '<b>', 'Z'] as $mauvaise) {
+        egal(400, direct_eleve($e[4]['code'], ['numero' => 1, 'reponse' => $mauvaise])['code'], "« $mauvaise » n'est pas une réponse");
+    }
+    egal(400, direct_eleve($e[4]['code'], ['numero' => 1, 'reponse' => ['A']])['code'], 'un tableau non plus');
+    egal(4, directs_en_base()['directs_reponses'], 'quatre réponses, pas une de plus');
+    // Un numéro qui n'est pas celui de la question en cours : rien d'écrit.
+    egal(false, direct_eleve($e[4]['code'], ['numero' => 2, 'reponse' => 'A'])['json']['enregistree'], 'question n° 2 : elle n’existe pas');
+    // L'élève d'une autre classe ne peut pas répondre à cette séance.
+    $r = direct_eleve($direct['autreEleve']['code'], ['numero' => 1, 'reponse' => 'A']);
+    vrai($r['json']['direct'] === null, 'autre classe : aucune séance, donc aucune réponse');
+    egal(4, directs_en_base()['directs_reponses']);
+    // Changer d'avis.
+    egal('D', direct_eleve($e[0]['code'], ['numero' => 1, 'reponse' => 'D'])['json']['direct']['reponse'], 'A devient D');
+    egal(4, directs_en_base()['directs_reponses'], 'remplacée, pas ajoutée');
+    // Vingt fois la même réponse au même instant (double clic, réseau qui rejoue).
+    $codes = appels_paralleles('/api/direct.php', ['code' => $e[0]['code'], 'numero' => 1, 'reponse' => 'A'], 20);
+    vrai(!in_array(500, $codes, true), 'aucune erreur serveur : ' . json_encode(array_count_values($codes)));
+    egal(4, directs_en_base()['directs_reponses'], 'toujours une ligne par élève');
+    egal('A', direct_eleve($e[0]['code'])['json']['direct']['reponse']);
+});
+
+verifier("direct — pendant la question, le tableau ne reçoit qu'un compteur", function () use (&$direct) {
+    $r = direct_prof('direct.etat', $direct);
+    $etat = $r['json']['direct'];
+    egal(4, $etat['repondu'], 'quatre ont répondu');
+    egal(5, $etat['inscrits'], 'sur cinq');
+    vrai($etat['repartition'] === null, 'la répartition n’est même pas envoyée');
+    vrai($etat['bonne'] === null, 'ni la bonne réponse');
+    egal(1500, $r['json']['rythme']);
+    egal(409, direct_prof('direct.bonne', $direct, ['bonne' => 'B'])['code'], 'on ne désigne pas la bonne réponse avant de dévoiler');
+});
+
+verifier("direct — dévoiler : la répartition, sans aucun nom ; plus aucune réponse n'entre", function () use (&$direct) {
+    $r = direct_prof('direct.devoiler', $direct);
+    egal(200, $r['code']);
+    egal('devoile', $r['json']['direct']['etat']);
+    egal(['A' => 1, 'B' => 2, 'C' => 1], $r['json']['direct']['repartition'], 'la répartition');
+    foreach (['Léa', 'Noah', 'Inès', $direct['eleves'][0]['code'], 'prenom', 'eleve_id'] as $interdit) {
+        vrai(!str_contains($r['texte'], $interdit), "le tableau ne reçoit pas « $interdit »");
+    }
+    egal(200, direct_prof('direct.devoiler', $direct)['code'], 'dévoiler deux fois ne casse rien');
+    $tardive = direct_eleve($direct['eleves'][4]['code'], ['numero' => 1, 'reponse' => 'A']);
+    egal(false, $tardive['json']['enregistree'], 'une réponse arrivée après n’est pas rangée');
+    egal('devoile', $tardive['json']['direct']['etat'], 'et l’élève apprend que c’est dévoilé');
+    egal(false, direct_eleve($direct['eleves'][0]['code'], ['numero' => 1, 'reponse' => 'C'])['json']['enregistree'], 'on ne change plus d’avis');
+    egal(4, directs_en_base()['directs_reponses']);
+    egal('A', direct_eleve($direct['eleves'][0]['code'])['json']['direct']['reponse'], 'sa réponse est restée');
+    // La deuxième ceinture, éprouvée sans passer par l'API : une réponse partie
+    // à l'instant où le professeur dévoile a déjà franchi le contrôle de
+    // api/direct.php. C'est l'INSTRUCTION SQL elle-même qui doit la refuser.
+    $seance = (int)bd_test()->query('SELECT id FROM directs WHERE classe_id = ' . (int)$direct['classe'])->fetchColumn();
+    repondre_au_direct(bd_test(), $seance, 1, (int)$direct['eleves'][4]['id'], 'A');
+    repondre_au_direct(bd_test(), $seance, 1, (int)$direct['eleves'][0]['id'], 'C');
+    egal(4, directs_en_base()['directs_reponses'], 'l’écriture elle-même refuse une question dévoilée');
+    egal('A', (string)bd_test()->query('SELECT reponse FROM directs_reponses WHERE eleve_id = ' . (int)$direct['eleves'][0]['id'])->fetchColumn(),
+        'et ne remplace rien');
+    vrai(!str_contains(direct_eleve($direct['eleves'][0]['code'])['texte'], 'repartition'), 'l’élève ne reçoit toujours pas la répartition');
+});
+
+verifier("direct — la bonne réponse : désignée, changée, retirée ; jamais envoyée à l'élève", function () use (&$direct) {
+    egal(400, direct_prof('direct.bonne', $direct, ['bonne' => 'Z'])['code'], 'Z n’existe pas');
+    egal('B', direct_prof('direct.bonne', $direct, ['bonne' => 'B'])['json']['direct']['bonne']);
+    vrai(!str_contains(direct_eleve($direct['eleves'][0]['code'])['texte'], 'bonne'), 'l’élève ne la reçoit pas');
+    vrai(direct_prof('direct.bonne', $direct, ['bonne' => null])['json']['direct']['bonne'] === null, 'retirée');
+    egal('B', direct_prof('direct.bonne', $direct, ['bonne' => 'b'])['json']['direct']['bonne'], 'remise');
+});
+
+verifier("direct — le fichier : questions et réponses élève par élève, pour le professeur seulement, journalisé", function () use (&$direct) {
+    // Une deuxième question, à deux réponses, que personne ne corrige.
+    egal(2, direct_prof('direct.question', $direct, ['type' => 'choix', 'reglage' => ['choix' => 2]])['json']['direct']['numero']);
+    egal(400, direct_eleve($direct['eleves'][1]['code'], ['numero' => 2, 'reponse' => 'C'])['code'], 'C n’existe plus : deux réponses seulement');
+    egal(true, direct_eleve($direct['eleves'][1]['code'], ['numero' => 2, 'reponse' => 'B'])['json']['enregistree']);
+    egal(false, direct_eleve($direct['eleves'][2]['code'], ['numero' => 1, 'reponse' => 'A'])['json']['enregistree'], 'la question 1 est passée');
+    $r = direct_prof('direct.fichier', $direct);
+    egal(200, $r['code']);
+    egal([['numero' => 1, 'type' => 'choix', 'reglage' => ['choix' => 4], 'bonne' => 'B'],
+          ['numero' => 2, 'type' => 'choix', 'reglage' => ['choix' => 2], 'bonne' => null]], $r['json']['questions']);
+    $parPrenom = [];
+    foreach ($r['json']['eleves'] as $eleve) $parPrenom[$eleve['prenom']] = $eleve['reponses'];
+    egal(['1' => 'A'], $parPrenom['Léa']);
+    egal(['1' => 'B', '2' => 'B'], $parPrenom['Noah']);
+    egal([], $parPrenom['Zoé'], 'Zoé n’a répondu à rien : elle figure quand même');
+    egal(['Inès', 'Léa', 'Noah', 'Tom', 'Zoé'], array_column($r['json']['eleves'], 'prenom'), 'dans l’ordre du tableau de classe');
+    vrai(!str_contains($r['texte'], $direct['eleves'][0]['code']), 'aucun code élève dans le fichier');
+    egal(1, preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$r['json']['jour']), 'le jour, pour le nom du fichier');
+    $ligne = bd_test()->query("SELECT action, cible_type, cible_id, resultat FROM journal WHERE action = 'direct.fichier' ORDER BY id DESC LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+    egal(['action' => 'direct.fichier', 'cible_type' => 'classe', 'cible_id' => $direct['classe'], 'resultat' => 'ok'],
+        ['action' => $ligne['action'], 'cible_type' => $ligne['cible_type'], 'cible_id' => (int)$ligne['cible_id'], 'resultat' => $ligne['resultat']],
+        'prendre le fichier laisse une ligne au journal');
+});
+
+verifier("direct — interroger ne compte rien ; seules les réponses sont comptées, et freinées", function () use (&$direct) {
+    vider_compteurs();
+    for ($i = 0; $i < 40; $i++) direct_eleve($direct['eleves'][3]['code']);
+    for ($i = 0; $i < 10; $i++) direct_prof('direct.etat', $direct);
+    egal(0, count(compteurs()), 'cinquante interrogations, aucun compteur écrit');
+    egal(200, direct_eleve($direct['eleves'][3]['code'], ['numero' => 2, 'reponse' => 'A'])['code']);
+    egal(1, count(compteurs()), 'une réponse : un compteur');
+    semer_compteur('direct:' . $direct['eleves'][3]['code'], 300, 120);
+    $r = direct_eleve($direct['eleves'][3]['code'], ['numero' => 2, 'reponse' => 'B']);
+    egal(429, $r['code'], 'la 121e réponse en cinq minutes est refusée');
+    vrai(entete($r, 'Retry-After') !== null, 'avec le délai');
+    egal(200, direct_eleve($direct['eleves'][3]['code'])['code'], 'mais il voit toujours la séance');
+    egal('A', direct_eleve($direct['eleves'][3]['code'])['json']['direct']['reponse']);
+    vider_compteurs();
+});
+
+verifier("direct — un geste du professeur repousse la fin, pas les interrogations ; le plafond de questions tient", function () use (&$direct) {
+    $lireFin = fn() => (int)bd_test()->query('SELECT expire_le FROM directs WHERE classe_id = ' . (int)$direct['classe'])->fetchColumn();
+    bd_test()->exec('UPDATE directs SET expire_le = ' . (time() + 100) . ' WHERE classe_id = ' . (int)$direct['classe']);
+    direct_eleve($direct['eleves'][0]['code']);
+    direct_prof('direct.etat', $direct);
+    vrai($lireFin() <= time() + 100, 'interroger ne prolonge rien');
+    direct_prof('direct.devoiler', $direct);
+    vrai($lireFin() >= time() + 5390, 'dévoiler repousse la fin d’une heure et demie');
+    $numero = (int)bd_test()->query('SELECT numero FROM directs WHERE classe_id = ' . (int)$direct['classe'])->fetchColumn();
+    bd_test()->exec('UPDATE directs SET numero = 80 WHERE classe_id = ' . (int)$direct['classe']);
+    egal(409, direct_prof('direct.question', $direct, ['type' => 'choix'])['code'], 'quatre-vingts questions : la suivante est refusée');
+    bd_test()->exec('UPDATE directs SET numero = ' . $numero . ' WHERE classe_id = ' . (int)$direct['classe']);
+});
+
+verifier("direct — terminer efface tout, tout de suite", function () use (&$direct) {
+    vrai(directs_en_base()['directs_reponses'] > 0 && directs_en_base()['directs_questions'] === 2, 'il y avait de quoi effacer');
+    egal(200, direct_prof('direct.terminer', $direct)['code']);
+    egal(['directs' => 0, 'directs_questions' => 0, 'directs_reponses' => 0], directs_en_base(), 'les trois tables sont vides');
+    vrai(direct_eleve($direct['eleves'][0]['code'])['json']['direct'] === null, 'l’élève : plus de séance');
+    vrai(direct_prof('direct.etat', $direct)['json']['direct'] === null, 'le tableau : plus de séance');
+    egal(200, direct_prof('direct.terminer', $direct)['code'], 'terminer deux fois n’est pas une erreur');
+    egal(409, direct_prof('direct.fichier', $direct)['code'], 'après, il n’y a plus de fichier');
+    $r = direct_eleve($direct['eleves'][0]['code'], ['numero' => 1, 'reponse' => 'A']);
+    vrai($r['code'] === 200 && $r['json']['direct'] === null, 'répondre à une séance terminée : « plus de séance », pas une panne');
+});
+
+verifier("direct — une séance oubliée disparaît toute seule, au premier passage de n'importe qui", function () use (&$direct) {
+    direct_prof('direct.ouvrir', $direct);
+    direct_prof('direct.question', $direct, ['type' => 'choix']);
+    direct_eleve($direct['eleves'][0]['code'], ['numero' => 1, 'reponse' => 'A']);
+    egal(['directs' => 1, 'directs_questions' => 1, 'directs_reponses' => 1], directs_en_base());
+    bd_test()->exec('UPDATE directs SET expire_le = ' . (time() - 1));
+    // Un élève d'une AUTRE classe passe : c'est lui qui déclenche la purge.
+    vrai(direct_eleve($direct['autreEleve']['code'])['json']['direct'] === null, 'lui n’a pas de séance');
+    egal(['directs' => 0, 'directs_questions' => 0, 'directs_reponses' => 0], directs_en_base(), 'tout est parti');
+    // Et l'ouverture de « Mes classes » purge aussi.
+    direct_prof('direct.ouvrir', $direct);
+    bd_test()->exec('UPDATE directs SET expire_le = ' . (time() - 1));
+    appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $direct['jeton']]);
+    egal(0, directs_en_base()['directs'], '« Mes classes » emporte une séance périmée');
+    // Une séance périmée pas encore purgée n'empêche pas d'en ouvrir une neuve.
+    direct_prof('direct.ouvrir', $direct);
+    bd_test()->exec('UPDATE directs SET expire_le = ' . (time() - 1));
+    $r = direct_prof('direct.ouvrir', $direct);
+    egal(200, $r['code']);
+    egal(0, $r['json']['direct']['numero'], 'une séance neuve, pas l’ancienne');
+    egal(1, directs_en_base()['directs']);
+    direct_prof('direct.terminer', $direct);
+});
+
+verifier("direct — l'élève supprimé emporte ses réponses, la classe supprimée emporte sa séance", function () use (&$direct) {
+    direct_prof('direct.ouvrir', $direct);
+    direct_prof('direct.question', $direct, ['type' => 'choix']);
+    direct_eleve($direct['eleves'][0]['code'], ['numero' => 1, 'reponse' => 'A']);
+    direct_eleve($direct['eleves'][1]['code'], ['numero' => 1, 'reponse' => 'B']);
+    egal(200, appel('/api/prof.php', ['action' => 'eleves.supprimer', 'eleve_id' => $direct['eleves'][0]['id']], ['jeton' => $direct['jeton']])['code']);
+    egal(1, directs_en_base()['directs_reponses'], 'ses réponses sont parties avec lui');
+    egal(4, direct_prof('direct.etat', $direct)['json']['direct']['inscrits'], 'et la classe compte un élève de moins');
+    egal(200, appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $direct['classe']], ['jeton' => $direct['jeton']])['code']);
+    egal(['directs' => 0, 'directs_questions' => 0, 'directs_reponses' => 0], directs_en_base(), 'il ne reste rien de la séance');
+});
+
+verifier("direct — les deux pages : servies, sous la politique de contenu, jamais en cache", function () {
+    foreach (['/direct.php' => 'api/direct.php', '/prof/direct.php' => '../api/prof.php'] as $chemin => $api) {
+        $r = page($chemin);
+        egal(200, $r['code'], $chemin);
+        vrai(str_contains($r['texte'], 'Séance en direct'), "$chemin : la page");
+        vrai(str_contains($r['texte'], $api), "$chemin interroge $api");
+        egal(1, preg_match("/script-src 'self' 'nonce-([^']+)'/", (string)entete($r, 'Content-Security-Policy'), $m), "$chemin : politique de contenu");
+        vrai(str_contains($r['texte'], 'nonce="' . htmlspecialchars($m[1], ENT_QUOTES) . '"'), "$chemin : le script porte le nonce");
+        egal('no-store', entete($r, 'Cache-Control'), "$chemin : pas de cache");
+        egal('DENY', entete($r, 'X-Frame-Options'), "$chemin : pas dans un cadre");
+    }
+    vrai(str_contains(page('/')['texte'], 'id="direct-lien"'), 'l’espace élève porte la tuile « Séance en direct »');
+    vrai(str_contains(page('/prof/')['texte'], 'id="seance-direct"'), '« Ma classe » porte le bouton');
+});
+
+verifier("direct — verifier.php et migrer.php connaissent les trois tables", function () {
+    $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], 'toutes présentes'), 'toutes les tables présentes');
+    foreach (['directs_reponses', 'directs_questions', 'directs'] as $table) bd_test()->exec("DROP TABLE $table");
+    $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], 'manquantes : directs, directs_questions, directs_reponses'), 'sans elles, verifier.php les nomme');
+    $r = formulaire('/migrer.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], 'directs'), 'migrer.php annonce les tables créées');
+    egal(['directs' => 0, 'directs_questions' => 0, 'directs_reponses' => 0], directs_en_base(), 'recréées, vides');
+    $r = formulaire('/migrer.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(!str_contains($r['texte'], 'Tables « directs »'), 'un second passage n’annonce plus rien');
 });
 
 // ---------------------------------------------------------------------- résultat

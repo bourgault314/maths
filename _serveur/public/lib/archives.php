@@ -22,6 +22,7 @@ require_once __DIR__ . '/bd.php';
 require_once __DIR__ . '/limite.php';
 require_once __DIR__ . '/billets.php';
 require_once __DIR__ . '/versions.php';
+require_once __DIR__ . '/direct.php';
 
 // Une classe encore utilisée n'est JAMAIS effacée par surprise : la
 // suppression automatique attend trois semaines sans un seul enregistrement.
@@ -191,6 +192,9 @@ function supprimer_classe(PDO $pdo, int $classeId): void
                 oublier_compteurs_du_code($pdo, (string)$eleve['code']);
                 oublier_billets_de_l_eleve($pdo, (int)$eleve['id']);
             }
+            // La séance en direct de la classe, s'il y en a une d'ouverte :
+            // questions et réponses partent avec elle (07/10/2026).
+            oublier_direct_de_la_classe($pdo, $classeId);
             $pdo->prepare('DELETE FROM eleves WHERE classe_id = ?')->execute([$classeId]);
             $pdo->prepare('DELETE FROM partages WHERE classe_id = ?')->execute([$classeId]);
             $pdo->prepare('DELETE FROM classes WHERE id = ?')->execute([$classeId]);
