@@ -185,7 +185,6 @@ button{font:inherit;-webkit-appearance:none;appearance:none;-webkit-tap-highligh
 .divisibility-grid-numbers{grid-template-columns:repeat(4,minmax(0,1fr))}.diapo.divisibility-mode .divisibility-grid-numbers{width:min(100%,900px)}.divisibility-option-none{grid-column:2/span 2}
 .divisibility-grid-list{grid-template-columns:repeat(9,minmax(0,1fr))}.diapo.divisibility-mode .divisibility-grid-list{width:min(100%,1120px);gap:10px}.diapo.divisibility-mode .divisibility-grid-list .opt{padding:10px 4px}
 .divisibility-grid-yes-no{grid-template-columns:repeat(2,minmax(0,1fr))}.diapo.divisibility-mode .divisibility-grid-yes-no{width:min(100%,560px)}
-.divisibility-aide{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:100%;max-width:520px;margin:0 auto}.divisibility-aide.is-single{grid-template-columns:minmax(0,1fr);max-width:300px}
 .divisibility-step{padding:8px 8px 9px;border:2px solid #c9dced;border-radius:12px;background:#f8fbff;color:#17384d;text-align:center}
 .divisibility-step strong{display:block;font-size:1rem;line-height:1.15}
 .divisibility-step small{display:block;margin-top:6px;color:#3d4f68;font-size:.86rem;font-weight:750;line-height:1.3}
@@ -982,6 +981,13 @@ svg{display:block;max-width:100%;height:auto}
 .aide-etiquette{display:flex;align-items:center;justify-content:center;gap:.4em;color:#0b2147;font-size:1.05rem;font-weight:800;line-height:1.2}
 .aide-groupe .relation-tile-help{min-height:0;margin-top:4px}
 .aide-dessin .fraction-ops-help{margin:2px auto 0}
+.divisibility-inspector{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;width:100%;max-width:520px;margin:0 auto}
+.divisibility-inspector .divisibility-step{display:grid;grid-template-columns:32px minmax(0,1fr);gap:9px;align-items:start;padding:8px 10px;text-align:left}
+.divisibility-step-number{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#0b6fc2;color:#fff;font-size:1rem;font-weight:950}
+.divisibility-inspector .divisibility-step small{margin-top:3px;font-size:.84rem}
+.divisibility-inspector .divisibility-digits{margin:6px auto 2px}
+.divisibility-inspector .divisibility-sum{margin:8px auto 3px;font:900 1.3rem/1.1 "Cambria Math","Times New Roman",serif}
+.aide-dessin .equal-sharing-help{height:auto;margin:0 auto 4px}
 .aide-dessin .fraction-ops-operation{flex-direction:column;gap:4px}
 .aide-dessin .fraction-ops-operation>.fraction-ops-card,.aide-dessin .fraction-ops-stack>.fraction-ops-card{width:100%;flex:none}
 .aide-dessin .fraction-ops-label{min-height:0;font-size:1.15rem}

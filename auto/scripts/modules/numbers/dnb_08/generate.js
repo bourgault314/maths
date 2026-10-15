@@ -99,15 +99,23 @@
     return [...values].sort((a,b)=>a-b);
   }
 
-  /* ---------- Dessin d'aide commun : le nombre chiffre par chiffre ---------- */
-  // Le chiffre des unités est encadré ; la somme reste à calculer (□) :
-  // le dessin rappelle les critères et ne donne jamais la réponse.
-  function aideCard(value,{showUnits=true,showSum=true}={}){
+  /* ---------- Dessin d'aide : le pas à pas de Gwenaël (A0, 15/10/2026) ---------- */
+  // Repris de sa version (rendu « Avec aide ») : 1. Observe le chiffre des
+  // unités (encadré), 2. Additionne les chiffres (« = □ ») ; il ne donne
+  // jamais la réponse. Affiché dans le panneau Aide.
+  function pasAPas(value,{showUnits=true,showSum=true}={}){
     const digits=digitsOf(value);
     const cards=digits.map((digit,index)=>`<span class="divisibility-digit${index===digits.length-1?' is-unit':''}">${digit}</span>`).join('');
-    const unitRow=showUnits?`<section class="divisibility-step"><strong>Chiffre des unités</strong><div class="divisibility-digits">${cards}</div><small>par 2${NBSP}: 0, 2, 4, 6, 8<br>par 5${NBSP}: 0 ou 5<br>par 10${NBSP}: 0</small></section>`:'';
-    const sumRow=showSum?`<section class="divisibility-step"><strong>Somme des chiffres</strong><div class="divisibility-sum">${digits.join(' + ')} = □</div><small>par 3${NBSP}: table de 3<br>par 9${NBSP}: table de 9</small></section>`:'';
-    return `<div class="divisibility-aide${showUnits&&showSum?'':' is-single'}" aria-label="Aide : chiffre des unités et somme des chiffres">${unitRow}${sumRow}</div>`;
+    let rang=0;
+    const unitRow=showUnits?`<section class="divisibility-step"><span class="divisibility-step-number">${++rang}</span><div><strong>Observe le chiffre des unités</strong><div class="divisibility-digits">${cards}</div><small>Il décide pour 2, 5 et 10.</small></div></section>`:'';
+    const sumRow=showSum?`<section class="divisibility-step"><span class="divisibility-step-number">${++rang}</span><div><strong>Additionne les chiffres</strong><div class="divisibility-sum">${digits.join(' + ')} = □</div><small>La somme décide pour 3 et 9.</small></div></section>`:'';
+    return `<div class="divisibility-inspector" aria-label="Aide pour tester les critères de divisibilité">${unitRow}${sumRow}</div>`;
+  }
+  // Type 24 : le gabarit de partage de sa version (quantité connue, parts « … »).
+  function partage(value,divisor){
+    const component=globalThis.MATHSGO_VISUALS&&globalThis.MATHSGO_VISUALS.get('arithmetic.equal-sharing-board');
+    if(!component||divisor>5) return '';
+    return component.render({shares:divisor,total:value,share:value/divisor,showTotal:true},false);
   }
 
   /* ---------- Types 11 à 22 : « Par quels nombres N est-il divisible ? » ---------- */
@@ -175,7 +183,7 @@
         `Pour 2, 5 et 10${NBSP}: le chiffre des unités. Pour 3 et 9${NBSP}: la somme des chiffres.`,
         `Chiffre des unités${NBSP}: ${unit}. Somme des chiffres${NBSP}: ${sumText(value)} = …`
       ],
-      aideHtml:aideCard(value)
+      aideHtml:pasAPas(value)
     };
   }
 
@@ -307,7 +315,7 @@
         `Partager sans reste en ${divisor} parts égales, c’est la même chose qu’être divisible par ${divisor}.`,
         isUnitCriterion(divisor)?`Regarde le chiffre des unités de ${N}.`:`Additionne les chiffres${NBSP}: ${sumText(value)} = …`
       ],
-      aideHtml:aideCard(value,{showUnits:isUnitCriterion(divisor),showSum:!isUnitCriterion(divisor)})
+      aideHtml:partage(value,divisor)+pasAPas(value,{showUnits:isUnitCriterion(divisor),showSum:!isUnitCriterion(divisor)})
     };
   }
 
@@ -348,7 +356,7 @@
         `Teste les critères${NBSP}: 2, 5 et 10 avec le chiffre des unités, 3 et 9 avec la somme des chiffres.`,
         `Chiffre des unités${NBSP}: ${unitOf(value)}. Somme des chiffres${NBSP}: ${sumText(value)} = …`
       ],
-      aideHtml:aideCard(value)
+      aideHtml:pasAPas(value)
     };
   }
 
