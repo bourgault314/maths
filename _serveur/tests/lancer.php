@@ -584,13 +584,14 @@ verifier("le manifeste connaît la page Infos", function () {
     // splat-suivi-3) ; 31 depuis les records (api/records.php, lib/records.php) ;
     // 35 depuis la séance en direct (07/10/2026) : direct.php, prof/direct.php,
     // api/direct.php, lib/direct.php ; 58 depuis le questionnaire au tableau
-    // (lot 2, 15/10/2026) : prof/questionnaire.js et KaTeX (vendor/katex-0.16.9 :
+    // (lot 2, 15/10/2026) : prof/questionnaire.js et KaTeX (vendor/katex-0.16.9,
+    // devenu vendor/katex-0.16.47 au lot katex-a-jour, même nombre de fichiers :
     // le script, la feuille et ses 20 polices).
     vrai((bool)preg_match('/^fichiers 58$/m', $manifeste),
         'le serveur compte 58 fichiers depuis le questionnaire au tableau');
     foreach (['direct.php', 'prof/direct.php', 'api/direct.php', 'lib/direct.php', 'prof/questionnaire.js',
-              'vendor/katex-0.16.9/katex.min.js', 'vendor/katex-0.16.9/katex.min.css',
-              'vendor/katex-0.16.9/fonts/KaTeX_Main-Regular.woff2'] as $fichier) {
+              'vendor/katex-0.16.47/katex.min.js', 'vendor/katex-0.16.47/katex.min.css',
+              'vendor/katex-0.16.47/fonts/KaTeX_Main-Regular.woff2'] as $fichier) {
         vrai((bool)preg_match('/^[0-9a-f]{64}  ' . preg_quote($fichier, '/') . '$/m', $manifeste),
             "$fichier doit figurer au manifeste");
     }

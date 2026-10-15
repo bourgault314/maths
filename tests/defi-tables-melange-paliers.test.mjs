@@ -398,7 +398,8 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // lot 1 « question éclair » (15/10/2026) : quatre fichiers de plus, 35 au manifeste
   // (avant : splat-echauffement-suivi). Puis le lot 2 « questionnaire au tableau »
   // (15/10/2026) : questionnaire.js et KaTeX, 58 au manifeste (avant : seance-en-direct-eclair).
-  assert.match(lire("_serveur/public/VERSION"), /^lot seance-en-direct-questionnaire$/m);
+  // Puis KaTeX 0.16.9 → 0.16.47, même nombre de fichiers (avant : seance-en-direct-questionnaire).
+  assert.match(lire("_serveur/public/VERSION"), /^lot katex-a-jour$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-comment-on-joue-20261011-3/);
 });
