@@ -783,9 +783,12 @@
   }
 
 
-  /* PATCH 1.2.1 — fenêtre de fusion plus lisible / tablette */
+  /* PATCH 1.2.1 — fenêtre de fusion plus lisible / tablette.
+     15/10/2026 (choix de Gwenaël) : un seul mot, « Regrouper ». Glisser un jeton sur un autre
+     ouvre une fenêtre qui a le même titre, la même écriture et le même bouton que celle du
+     bouton Regrouper (avant : pas de titre, « Résultat », bouton « Fusionner »). */
   #fusionDialog{
-    width:min(640px, calc(100vw - 28px));
+    width:min(600px, calc(100vw - 28px));
   }
 
   #fusionDialog .dialogInner{
@@ -793,20 +796,20 @@
   }
 
   #fusionDialog .dialogTitle{
-    display:none;
+    font-size:clamp(30px,4vw,44px);
+    margin-bottom:14px;
   }
 
   #fusionDialog .dialogText{
-    margin:2px 0 22px;
+    font-size:clamp(23px,3vw,34px);
+    font-weight:900;
+    line-height:1.22;
+    margin-bottom:18px;
     color:#0f172a;
-    font-size:clamp(38px,5vw,62px);
-    font-weight:950;
-    line-height:1.05;
-    letter-spacing:-.05em;
   }
 
   #fusionDialog label{
-    font-size:15px;
+    font-size:16px;
     font-weight:900;
     color:#64748b;
     letter-spacing:.04em;
@@ -816,11 +819,11 @@
 
   #fusionInput{
     text-align:center;
-    font-size:clamp(34px,4.8vw,58px);
+    font-size:clamp(34px,4.6vw,54px);
     font-weight:950;
     padding:18px 16px;
     border-radius:18px;
-    min-height:78px;
+    min-height:76px;
   }
 
   #fusionDialog .fusionFeedback{
@@ -892,10 +895,24 @@
   }
 
 
+  /* FENÊTRE « AJOUTER DES DEUX CÔTÉS » (15/10/2026, retours de Gwenaël sur sa Surface).
+     Deux parties : « Un jeton » (case + pavé) et « Ou des taches ». Sur un écran large elles
+     sont côte à côte (la partie taches ne passe plus sous le bord de l'écran) ; au téléphone,
+     l'une sous l'autre. Le nombre de taches ne se tape plus : − et + ajoutent ou retirent une
+     tache dessinée (la case « 1 » donnait « 12 » quand on tapait 2). */
+  .addBothParts{
+    display:block;
+  }
+
+  .addBothTokenRow{
+    justify-content:center;
+    margin-top:2px;
+  }
+
   .addBothXChoices{
     display:none;
-    margin:10px 0 2px;
-    padding-top:10px;
+    margin:12px 0 2px;
+    padding-top:12px;
     border-top:1px solid rgba(15,23,42,.08);
   }
 
@@ -904,69 +921,95 @@
   }
 
   .addBothXTitle{
-    margin-bottom:8px;
+    margin-bottom:10px;
     color:#64748b;
-    font-size:17px;
-    font-weight:950;
+    font-size:16px;
+    font-weight:900;
     text-transform:uppercase;
     letter-spacing:.04em;
   }
 
-  .addBothXCountRow{
-    width:min(260px,100%);
-    margin:0 auto 12px;
-  }
-
-  .addBothXCountRow label{
-    margin:0 0 6px;
-    text-align:center;
-    font-size:13px;
-  }
-
-  #addBothXCount{
-    text-align:center;
-    font-size:26px;
-    font-weight:950;
-    padding:12px 14px;
-    min-height:56px;
-  }
-
-  .addBothXButtons{
+  .addBothXKinds{
     display:flex;
     justify-content:center;
-    gap:12px;
-    flex-wrap:wrap;
+    gap:14px;
+    margin-bottom:12px;
   }
 
-  .addBothXBtn{
-    min-width:170px;
-    min-height:70px;
+  .addBothXKind{
+    width:92px;
+    height:80px;
+    padding:0;
     display:inline-flex;
     align-items:center;
     justify-content:center;
-    gap:10px;
-    background:#f5f3ff;
-    border:1px solid rgba(91,33,182,.18);
-    color:#3b0764;
+    background:#fff;
+    border:2px solid rgba(15,23,42,.12);
+    border-radius:18px;
+    box-shadow:none;
   }
 
-  .addBothXBtn.positiveX{
+  .addBothXKind[aria-checked="true"]{
+    border-color:#2563eb;
     background:#eff6ff;
-    border-color:rgba(59,130,246,.20);
-    color:#1d4ed8;
+    box-shadow:0 0 0 4px rgba(37,99,235,.14);
   }
 
-  .addBothXBtn.oppositeX{
-    background:#f5f3ff;
-    border-color:rgba(91,33,182,.22);
-    color:#3b0764;
-  }
-
-  .miniSplatWrap{
-    display:inline-flex;
+  .addBothXStepper{
+    display:flex;
     align-items:center;
-    gap:10px;
+    justify-content:center;
+    gap:12px;
+    margin:0 auto 6px;
+  }
+
+  .addBothXStep{
+    width:52px;
+    height:52px;
+    flex:0 0 52px;
+    padding:0;
+    border-radius:50%;
+    font-size:30px;
     font-weight:950;
+    line-height:1;
+    background:#f8fafc;
+    border:1px solid rgba(15,23,42,.14);
+    color:#0f172a;
+  }
+
+  .addBothXStep:disabled{
+    opacity:.35;
+  }
+
+  .addBothXPreview{
+    width:184px;
+    min-height:90px;
+    display:flex;
+    flex-wrap:wrap;
+    align-content:center;
+    justify-content:center;
+    gap:4px;
+  }
+
+  .addBothXPreview .miniSplatSvg{
+    width:42px;
+    height:42px;
+    flex:0 0 42px;
+  }
+
+  .addBothXKind .miniSplatSvg{
+    width:64px;
+    height:64px;
+    flex:0 0 64px;
+  }
+
+  .addBothXApply{
+    display:block;
+    margin:4px auto 0;
+    min-width:190px;
+    font-size:18px;
+    padding:14px 22px;
+    border-radius:18px;
   }
 
   .miniSplatSvg{
@@ -974,17 +1017,131 @@
     height:50px;
     flex:0 0 50px;
     display:block;
-    filter:drop-shadow(0 5px 9px rgba(15,23,42,.18));
+    filter:drop-shadow(0 3px 6px rgba(15,23,42,.18));
   }
 
   .miniSplatSvg text{
     font-family:SplatLettres,Georgia,'Times New Roman',serif;
     font-style:italic;
-    font-size:24px;
+    font-size:46px;
     font-weight:950;
     fill:#fff;
     text-anchor:middle;
-    dominant-baseline:middle;
+    dominant-baseline:central;
+  }
+
+  .miniSplatSvg text.opposee{
+    font-size:38px;
+  }
+
+  /* Téléphone (écran étroit) : une partie à la fois, deux onglets en haut — empilées,
+     elles demandaient de faire défiler la fenêtre. */
+  .addBothTabs{
+    display:none;
+  }
+
+  @media (max-width:859px){
+    #addBothDialog.deuxParties .addBothTabs{
+      display:flex;
+      gap:6px;
+      padding:4px;
+      margin:0 auto 14px;
+      width:min(320px,100%);
+      background:#f1f5f9;
+      border-radius:16px;
+    }
+    .addBothTab{
+      flex:1 1 0;
+      min-height:44px;
+      padding:8px 10px;
+      border-radius:12px;
+      border:0;
+      background:transparent;
+      color:#475569;
+      font-size:17px;
+      font-weight:900;
+      box-shadow:none;
+    }
+    .addBothTab[aria-selected="true"]{
+      background:#fff;
+      color:#0f172a;
+      box-shadow:0 2px 8px rgba(15,23,42,.12);
+    }
+    #addBothDialog.deuxParties[data-onglet="jeton"] .addBothXChoices,
+    #addBothDialog.deuxParties[data-onglet="taches"] .addBothTokenPart{
+      display:none;
+    }
+    #addBothDialog.deuxParties .addBothXChoices{
+      margin-top:0;
+      padding-top:0;
+      border-top:0;
+    }
+    #addBothDialog.deuxParties .addBothTokenPart > label,
+    #addBothDialog.deuxParties .addBothXTitle{
+      display:none;
+    }
+  }
+
+  /* Écran large : les deux parties côte à côte. */
+  @media screen and (min-width:860px){
+    #addBothDialog.deuxParties{
+      width:min(900px, calc(100vw - 40px));
+    }
+    #addBothDialog.deuxParties .addBothParts{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+      column-gap:30px;
+      align-items:start;
+    }
+    #addBothDialog.deuxParties .addBothXChoices{
+      margin:0;
+      padding:0 0 0 30px;
+      border-top:0;
+      border-left:1px solid rgba(15,23,42,.08);
+      align-self:stretch;
+    }
+    #addBothDialog.deuxParties .addBothTokenPart > label,
+    #addBothDialog.deuxParties .addBothXTitle{
+      font-size:16px;
+      margin:0 0 10px;
+    }
+    #addBothDialog.deuxParties .dialogInner{
+      padding:26px 34px 22px;
+    }
+    #addBothDialog.deuxParties .dialogTitle{
+      margin-bottom:8px;
+    }
+    #addBothDialog.deuxParties .dialogText{
+      margin-bottom:14px;
+    }
+    #addBothDialog.deuxParties.touchKeypadActive #addBothInput{
+      min-height:60px;
+      padding:10px 16px;
+    }
+    #addBothDialog.deuxParties .fusionFeedback{
+      min-height:0;
+      margin-top:6px;
+    }
+    #addBothDialog.deuxParties .fusionFeedback:empty{
+      display:none;
+    }
+    #addBothDialog.touchKeypadActive .addBothTokenRow{
+      display:none;
+    }
+    #addBothDialog.deuxParties > .dialogInner > .btnrow{
+      margin-top:14px;
+    }
+  }
+  @media screen and (min-width:860px) and (max-height:720px){
+    #addBothDialog.deuxParties .dialogTitle{
+      font-size:32px;
+    }
+    #addBothDialog.deuxParties .dialogText{
+      font-size:20px;
+    }
+    #addBothDialog.deuxParties .touchKeypadKey{
+      min-height:40px;
+    }
   }
 
   /* PATCH 1.3C — outil Regrouper : dialogue lisible / sélection verte */
@@ -2541,6 +2698,32 @@
   dialog.touchKeypadActive .btnrow > .primary,
   dialog.touchKeypadActive .btnrow > .green{
     display:none;
+  }
+
+  /* ÉCRAN TACTILE LARGE (ordinateur tactile, tablette à l'horizontale — 15/10/2026, la Surface
+     de Gwenaël) : le pavé passe à droite de la case au lieu d'en dessous. Empilé, il poussait
+     le titre ou le bouton Annuler hors de l'écran (fenêtres de 630 à 920 px de haut pour un
+     écran de 650). La fenêtre Ajouter a sa propre mise en page (deux parties). */
+  @media screen and (min-width:860px){
+    dialog.touchKeypadActive:not(#addBothDialog){
+      width:min(840px, calc(100vw - 40px));
+    }
+    dialog.touchKeypadActive:not(#addBothDialog) .dialogInner{
+      position:relative;
+      padding-right:calc(300px + 70px);
+      min-height:340px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+    }
+    dialog.touchKeypadActive:not(#addBothDialog) .touchKeypad.open{
+      position:absolute;
+      right:38px;
+      top:50%;
+      transform:translateY(-50%);
+      width:300px;
+      margin:0;
+    }
   }
 
   input.touchKeypadTarget{
@@ -4849,22 +5032,35 @@
   <div class="dialogInner">
     <h2 class="dialogTitle">Ajouter des deux côtés</h2>
     <div class="dialogText" id="addBothDialogText">Ajoute le même jeton numérique de chaque côté.</div>
-    <label>Valeur du jeton</label>
-    <input id="addBothInput" type="number" min="-99" max="99" inputmode="numeric" autocomplete="off" />
-    <div class="fusionFeedback" id="addBothFeedback"></div>
-    <div class="addBothXChoices" id="addBothXChoices">
-      <div class="addBothXTitle">Ou ajouter une tache</div>
-      <div class="addBothXCountRow">
-        <label>Nombre de taches</label>
-        <input id="addBothXCount" type="number" min="1" max="8" value="1" inputmode="numeric" />
-      </div>
-      <div class="addBothXButtons">
-        <button class="addBothXBtn positiveX" id="btnAddBothPositiveX" type="button">Ajouter x</button>
-        <button class="addBothXBtn oppositeX" id="btnAddBothNegativeX" type="button">Ajouter −x</button>
-      </div>
+    <div class="addBothTabs" role="tablist" aria-label="Ajouter">
+      <button class="addBothTab" id="btnAddBothTabToken" type="button" role="tab" aria-selected="true">Un jeton</button>
+      <button class="addBothTab" id="btnAddBothTabX" type="button" role="tab" aria-selected="false">Des taches</button>
+    </div>
+    <div class="addBothParts" id="addBothParts">
+      <section class="addBothTokenPart">
+        <label for="addBothInput">Un jeton</label>
+        <input id="addBothInput" type="number" min="-99" max="99" inputmode="numeric" autocomplete="off" />
+        <div class="fusionFeedback" id="addBothFeedback"></div>
+        <div class="btnrow addBothTokenRow">
+          <button class="primary" id="btnApplyAddBoth" type="button">Ajouter</button>
+        </div>
+      </section>
+      <section class="addBothXChoices" id="addBothXChoices">
+        <div class="addBothXTitle">Ou des taches</div>
+        <div class="addBothXKinds" role="radiogroup" aria-label="Quelle tache ?">
+          <button class="addBothXKind" id="btnAddBothPositiveX" type="button" role="radio" aria-checked="true"></button>
+          <button class="addBothXKind" id="btnAddBothNegativeX" type="button" role="radio" aria-checked="false"></button>
+        </div>
+        <div class="addBothXStepper">
+          <button class="addBothXStep" id="btnAddBothXLess" type="button" aria-label="Une tache de moins">−</button>
+          <div class="addBothXPreview" id="addBothXPreview" aria-live="polite"></div>
+          <button class="addBothXStep" id="btnAddBothXMore" type="button" aria-label="Une tache de plus">+</button>
+        </div>
+        <div class="fusionFeedback" id="addBothXFeedback"></div>
+        <button class="primary addBothXApply" id="btnApplyAddBothX" type="button">Ajouter</button>
+      </section>
     </div>
     <div class="btnrow">
-      <button class="primary" id="btnApplyAddBoth" type="button">Ajouter</button>
       <button class="ghost" id="btnCancelAddBoth" type="button">Annuler</button>
     </div>
   </div>
@@ -4872,13 +5068,13 @@
 
 <dialog id="fusionDialog">
   <div class="dialogInner">
-    <h2 class="dialogTitle">Fusionner deux jetons</h2>
+    <h2 class="dialogTitle">Regrouper</h2>
     <div class="dialogText" id="fusionDialogText"></div>
-    <label>Résultat</label>
+    <label id="fusionLabel" for="fusionInput">Somme des deux jetons</label>
     <input id="fusionInput" type="number" inputmode="numeric" autocomplete="off" />
     <div class="fusionFeedback" id="fusionFeedback"></div>
     <div class="btnrow">
-      <button class="primary" id="btnApplyFusion" type="button">Fusionner</button>
+      <button class="green" id="btnApplyFusion" type="button">Regrouper</button>
       <button class="ghost" id="btnCancelFusion" type="button">Annuler</button>
     </div>
   </div>
@@ -4959,9 +5155,16 @@
   const addBothXChoices = document.getElementById("addBothXChoices");
   const btnAddBothPositiveX = document.getElementById("btnAddBothPositiveX");
   const btnAddBothNegativeX = document.getElementById("btnAddBothNegativeX");
-  const addBothXCount = document.getElementById("addBothXCount");
+  const addBothXPreview = document.getElementById("addBothXPreview");
+  const addBothXFeedback = document.getElementById("addBothXFeedback");
+  const btnAddBothXLess = document.getElementById("btnAddBothXLess");
+  const btnAddBothXMore = document.getElementById("btnAddBothXMore");
+  const btnApplyAddBothX = document.getElementById("btnApplyAddBothX");
+  const btnAddBothTabToken = document.getElementById("btnAddBothTabToken");
+  const btnAddBothTabX = document.getElementById("btnAddBothTabX");
   const fusionDialog = document.getElementById("fusionDialog");
   const fusionDialogText = document.getElementById("fusionDialogText");
+  const fusionLabel = document.getElementById("fusionLabel");
   const fusionInput = document.getElementById("fusionInput");
   const fusionFeedback = document.getElementById("fusionFeedback");
 
@@ -5151,14 +5354,9 @@
     submitLabel:"Ajouter",
     onSubmit:applyAddBoth
   }));
-  bindTouchKeypadInput(addBothXCount, addBothDialog, () => ({
-    allowMinus:false,
-    submitLabel:"OK",
-    onSubmit:() => touchKeypad.classList.remove("open")
-  }));
   bindTouchKeypadInput(fusionInput, fusionDialog, () => ({
     allowMinus:isRelativeUniverse(),
-    submitLabel:"Fusionner",
+    submitLabel:"Regrouper",
     onSubmit:applyFusion
   }));
 
@@ -5455,6 +5653,14 @@
       fill:`hsla(${hue}, 78%, 54%, .20)`,
       stroke:`hsla(${hue}, 78%, 45%, .62)`
     };
+  }
+
+  /* Une somme de jetons écrite comme en classe (15/10/2026, Gwenaël : « 9 + −7 = ? », il
+     manque les parenthèses) : le premier terme tel quel, les suivants entre parenthèses
+     quand ils sont négatifs — « −13 + 13 », « 9 + (−7) ». Regrouper et le glisser d'un
+     jeton sur un autre écrivent leur calcul de la même façon. */
+  function formatSumOfTerms(values){
+    return values.map((value, index) => index === 0 ? formatSignedNumber(value) : formatFusionTerm(value)).join(" + ");
   }
 
   function formatFusionTerm(n){
@@ -6440,6 +6646,17 @@
     return null;
   }
 
+  // Au moins deux taches −𝑥 seules d'un côté, autant de jetons égaux de l'autre (après un partage).
+  function oppositeTachesFacingEqualTokens(){
+    if(!state || !oppositeXEnabled()) return false;
+    const left = activePieces("left").filter(p => !(p.type === "token" && Number(p.value) === 0));
+    const right = activePieces("right").filter(p => !(p.type === "token" && Number(p.value) === 0));
+    const onlyOpposite = arr => arr.length >= 2 && arr.every(p => p.type === "x" && xSign(p) < 0);
+    const equalTokens = arr => arr.length >= 2 && arr.every(p => p.type === "token" && Number(p.value) === Number(arr[0].value));
+    return (onlyOpposite(left) && equalTokens(right) && left.length === right.length)
+      || (onlyOpposite(right) && equalTokens(left) && left.length === right.length);
+  }
+
   function getSolvedValue(){
     const info = getConclusionInfo();
     return info ? info.value : null;
@@ -6468,7 +6685,10 @@
     /* billes 1 / −1 (échauffement du monde 6) : « 2𝑚 = 0 » comme le papier, pas « 2𝑚 = 2 × 0 » —
        c'est le seul cas où il reste une conclusion à plusieurs taches (rien à partager : Conclure
        reste proposé et écrit « ÷ 2 ») */
-    if(info && !(state && state.billes)) return equationBeforeConclusion(info);
+    /* Solution nulle (15/10/2026, choix de Gwenaël) : « 0 = 4𝑥 » comme le papier et comme les
+       billes, plus « 4 × 0 = 4𝑥 » — il n'y a aucun jeton à écrire en produit. Conclure écrit
+       ensuite « ÷ 4 » et « 0 = 𝑥 ». */
+    if(info && !(state && state.billes) && Number(info.value) !== 0) return equationBeforeConclusion(info);
     return `${sideExpression("left")} = ${sideExpression("right")}`;
   }
 
@@ -6943,10 +7163,13 @@
      texte et chaque <strong> devenaient des boîtes séparées et l'espace entre deux
      disparaissait (« Jetons regroupés :0. »). Toute la consigne va maintenant dans une
      seule boîte, où les espaces comptent normalement (29/09/2026). */
+  /* ÉQUATION RÉSOLUE (15/10/2026, choix de Gwenaël) : la phrase du milieu s'efface. Elle gardait
+     la dernière consigne (« Sélectionne la même quantité des deux côtés. », « Jetons regroupés :
+     7. ») alors que le bandeau dit déjà « ✅ Résolue ! ». Elle revient dès que l'élève défait. */
   function setInstruction(html){
     const content = initialEqualityInstructionVisible
       ? INITIAL_EQUALITY_INSTRUCTION
-      : (html || "");
+      : (eleveEquationResolue() ? "" : (html || ""));
     instructionZone.innerHTML = content ? `<span class="instructionText">${content}</span>` : "";
   }
   function dismissInitialEqualityInstruction(){
@@ -7114,8 +7337,7 @@
   function openGroupDialog(){
     const info = groupSelectionInfo();
     if(!info.ok || info.kind !== "tokens") return;
-    const values = info.selected.map(x => formatSignedNumber(x.piece.value));
-    groupDialogText.innerHTML = `${values.join(" + ")} = ?`;
+    groupDialogText.innerHTML = `${formatSumOfTerms(info.selected.map(x => x.piece.value))} = ?`;
     groupInput.value = "";
     groupFeedback.textContent = "";
     openAppDialog(groupDialog, groupInput, {
@@ -7346,13 +7568,32 @@
     render();
   }
 
+  /* Somme tapée dans Décomposer. Repris de la page import : une soustraction s'écrit
+     naturellement, « 30 − 2 » vaut 30 + (−2). 15/10/2026 (Gwenaël) : « −3 + −6 » était refusé
+     avec un message faux (« au moins deux termes »), alors que c'est ce que le pavé permet
+     d'écrire pour deux jetons négatifs. Chaque terme peut porter son signe après + ou −,
+     avec ou sans parenthèses (clavier) : « −3 + −6 », « −3 − 6 », « −3 + (−6) ». */
   function parseSum(text){
-    // Repris de la page import : une soustraction s'écrit naturellement,
-    // « 30 − 2 » vaut 30 + (−2) (utile en Splat relatif).
-    const raw = String(text || "").replace(/−/g,"-").replace(/\s+/g,"");
+    const raw = String(text || "").replace(/[−–]/g,"-").replace(/\s+/g,"");
     if(!raw) return null;
-    if(!/^[+-]?\d+(?:[+-]\d+)*$/.test(raw)) return null;
-    return (raw.match(/[+-]?\d+/g) || []).map(Number).filter(Number.isFinite);
+    const term = /([+-]?)(\(?)([+-]?)(\d+)(\)?)/y;
+    const values = [];
+    let i = 0;
+    while(i < raw.length){
+      term.lastIndex = i;
+      const m = term.exec(raw);
+      if(!m || !m[0]) return null;
+      const [all, op, open, sign, digits, close] = m;
+      if(values.length && !op) return null;
+      if(!values.length && op && sign) return null;
+      if(!!open !== !!close) return null;
+      let value = Number(digits);
+      if(sign === "-") value = -value;
+      if(op === "-") value = -value;
+      values.push(value);
+      i += all.length;
+    }
+    return values;
   }
 
   function openDecomposeDialog(side, id){
@@ -7380,12 +7621,21 @@
     if(!piece) return;
     const values = parseSum(decomposeInput.value);
     if(!values || values.length < 2){
-      dialogText.innerHTML = `Écris une somme avec au moins deux termes, par exemple <strong>${Math.floor(piece.value/2)} + ${piece.value - Math.floor(piece.value/2)}</strong>.`;
+      // L'exemple s'écrit comme Regrouper (« −5 + (−4) ») ; il proposait « -5 + -4 », que
+      // l'outil refusait lui-même.
+      const half = Math.trunc(piece.value/2);
+      const exemple = half !== 0 ? [half, piece.value - half] : [2 * piece.value, -piece.value];
+      dialogText.innerHTML = `Écris une somme avec au moins deux termes, par exemple <strong>${formatSumOfTerms(exemple)}</strong>.`;
+      return;
+    }
+    // « −9 + 0 » posait un jeton 0 qui restait sur le plateau.
+    if(values.some(v => v === 0)){
+      dialogText.innerHTML = "Pas de jeton <strong>0</strong> : écris des nombres différents de 0.";
       return;
     }
     const sum = values.reduce((a,b)=>a+b,0);
     if(sum !== piece.value){
-      dialogText.innerHTML = `La somme doit faire <strong>${piece.value}</strong>. Ici, elle fait <strong>${sum}</strong>.`;
+      dialogText.innerHTML = `La somme doit faire <strong>${formatSignedNumber(piece.value)}</strong>. Ici, elle fait <strong>${formatSignedNumber(sum)}</strong>.`;
       return;
     }
     if(!isRelativeUniverse() && values.some(v => v < 0)){
@@ -7399,7 +7649,7 @@
   /* PARTAGER (29/09/2026, choix de Gwenaël). Les boutons disaient « 3 parts de 8 » : face à
      3 taches, la solution était écrite sur le bouton avant tout calcul. Ils disent maintenant
      « 3 parts » (c'est l'élève qui choisit le nombre de parts, parmi les partages entiers), puis
-     il tape ce que vaut une part, comme il tape la somme dans Regrouper et Fusionner. */
+     il tape ce que vaut une part, comme il tape la somme dans Regrouper. */
   let pendingShare = null;
 
   function openShareDialog(side, id){
@@ -8202,13 +8452,14 @@
       const positive = xSign(source) > 0 ? source : target;
       const negative = positive === source ? target : source;
       pendingFusion = {side, sourceId, targetId, kind:"x", expected:0};
-      if(title) title.textContent = "Fusionner deux taches";
+      if(title) title.textContent = "Regrouper";
+      if(fusionLabel) fusionLabel.textContent = "Somme des deux taches";
       fusionDialogText.innerHTML = `${escapeHtml(xPieceLabel(positive))} + (${escapeHtml(xPieceLabel(negative))}) = ?`;
       fusionInput.value = "";
       fusionFeedback.textContent = "";
       openAppDialog(fusionDialog, fusionInput, {
         allowMinus:isRelativeUniverse(),
-        submitLabel:"Fusionner",
+        submitLabel:"Regrouper",
         onSubmit:applyFusion
       });
       return;
@@ -8220,13 +8471,14 @@
     if(!isRelativeUniverse() && (a < 0 || b < 0)) return;
     const expected = a + b;
     pendingFusion = {side, sourceId, targetId, a, b, expected};
-    if(title) title.textContent = "Fusionner deux jetons";
-    fusionDialogText.innerHTML = `${formatFusionTerm(a)} + ${formatFusionTerm(b)} = ?`;
+    if(title) title.textContent = "Regrouper";
+    if(fusionLabel) fusionLabel.textContent = "Somme des deux jetons";
+    fusionDialogText.innerHTML = `${formatSumOfTerms([a, b])} = ?`;
     fusionInput.value = "";
     fusionFeedback.textContent = "";
     openAppDialog(fusionDialog, fusionInput, {
       allowMinus:isRelativeUniverse(),
-      submitLabel:"Fusionner",
+      submitLabel:"Regrouper",
       onSubmit:applyFusion
     });
   }
@@ -8290,7 +8542,7 @@
       setInstruction("Paire nulle : <strong>0</strong> apparaît, puis disparaît.");
       setTimeout(() => removeTransientZero(side, merged.id), 950);
     }else{
-      setInstruction(`Jetons fusionnés : <strong>${formatSignedNumber(expected)}</strong>.`);
+      setInstruction(`Jetons regroupés : <strong>${formatSignedNumber(expected)}</strong>.`);
     }
   }
 
@@ -8806,11 +9058,36 @@
   }
 
 
-  function miniSplatButtonHtml(sign){
+  /* Une petite tache dessinée comme celles du plateau : même forme, même lettre, même
+     centrage (splatLettreDecalage) — la lettre était minuscule et décentrée dans l'ancien bouton. */
+  function miniSplatSvgHtml(sign){
     const v = currentVar();
     const label = sign < 0 ? `−${v}` : v;
     const fill = sign < 0 ? "#4c1d95" : "#111827";
-    return `<span class="miniSplatWrap"><span>Ajouter</span><svg class="miniSplatSvg" viewBox="0 0 120 120" aria-hidden="true" focusable="false"><path d="${blobPath(60, 60, 43)}" fill="${fill}" stroke="rgba(0,0,0,.22)" stroke-width="3"></path><text x="60" y="64">${label}</text></svg></span>`;
+    const r = 46;
+    const [dx, dy] = splatLettreDecalage(label);
+    const size = (r * SPLAT_LETTRE_K).toFixed(1);
+    return `<svg class="miniSplatSvg" viewBox="11 14 100 100" aria-hidden="true" focusable="false"><path d="${blobPath(60, 60, r)}" fill="${fill}" stroke="rgba(0,0,0,.22)" stroke-width="3"></path><text x="60" y="60" dx="${dx.toFixed(3)}em" dy="${dy.toFixed(3)}em" style="font-size:${size}px;dominant-baseline:alphabetic">${escapeHtml(label)}</text></svg>`;
+  }
+
+  const ADD_BOTH_X_MAX = 8;
+  let addBothX = {sign:1, count:1};
+
+  function showAddBothTab(onglet){
+    addBothDialog.dataset.onglet = onglet;
+    if(btnAddBothTabToken) btnAddBothTabToken.setAttribute("aria-selected", onglet === "jeton" ? "true" : "false");
+    if(btnAddBothTabX) btnAddBothTabX.setAttribute("aria-selected", onglet === "taches" ? "true" : "false");
+  }
+
+  function renderAddBothX(){
+    if(!addBothXChoices) return;
+    if(btnAddBothPositiveX) btnAddBothPositiveX.setAttribute("aria-checked", addBothX.sign > 0 ? "true" : "false");
+    if(btnAddBothNegativeX) btnAddBothNegativeX.setAttribute("aria-checked", addBothX.sign < 0 ? "true" : "false");
+    if(addBothXPreview) addBothXPreview.innerHTML = Array.from({length:addBothX.count}, () => miniSplatSvgHtml(addBothX.sign)).join("");
+    if(btnAddBothXLess) btnAddBothXLess.disabled = addBothX.count <= 1;
+    if(btnAddBothXMore) btnAddBothXMore.disabled = addBothX.count >= ADD_BOTH_X_MAX;
+    if(btnApplyAddBothX) btnApplyAddBothX.textContent = addBothX.count > 1 ? `Ajouter ${addBothX.count} taches` : "Ajouter 1 tache";
+    if(addBothXFeedback) addBothXFeedback.textContent = "";
   }
 
   function openAddBothDialog(){
@@ -8831,15 +9108,17 @@
     }
     addBothInput.max = "99";
     if(addBothXChoices) addBothXChoices.classList.toggle("open", canAddX);
-    if(addBothXCount) addBothXCount.value = "1";
-    if(btnAddBothPositiveX) btnAddBothPositiveX.innerHTML = miniSplatButtonHtml(1);
-    if(btnAddBothNegativeX) btnAddBothNegativeX.innerHTML = miniSplatButtonHtml(-1);
+    addBothDialog.classList.toggle("deuxParties", canAddX);
+    addBothX = {sign:1, count:1};
+    showAddBothTab("jeton");
+    if(btnAddBothPositiveX) btnAddBothPositiveX.innerHTML = miniSplatSvgHtml(1);
+    if(btnAddBothNegativeX) btnAddBothNegativeX.innerHTML = miniSplatSvgHtml(-1);
+    renderAddBothX();
     openAppDialog(addBothDialog, addBothInput, {
       allowMinus:isRelativeUniverse(),
       submitLabel:"Ajouter",
       onSubmit:applyAddBoth
     });
-    if(usesTouchKeypad() && addBothXCount) prepareTouchInput(addBothXCount);
   }
 
   function finishAddBothAction(operation=null){
@@ -8872,15 +9151,11 @@
     finishAddBothAction(makeBothSidesOperation(formatSignedOperationNumber(value)));
   }
 
-  function applyAddBothX(sign){
+  function applyAddBothX(){
     if(!state || !oppositeXEnabled()) return;
-    const rawCount = addBothXCount ? Number(addBothXCount.value) : 1;
-    const count = Math.round(rawCount);
-    if(!Number.isFinite(rawCount) || count < 1 || count > 8){
-      addBothFeedback.textContent = "Choisis un nombre de taches entre 1 et 8.";
-      if(addBothXCount) addBothXCount.select();
-      return;
-    }
+    const sign = addBothX.sign < 0 ? -1 : 1;
+    const count = Math.round(addBothX.count);
+    if(!Number.isFinite(count) || count < 1 || count > ADD_BOTH_X_MAX) return;
     pushHistory();
     for(let i=0; i<count; i++){
       state.left.push(makeX(sign));
@@ -9063,6 +9338,16 @@
       }else if(actionMode !== "delete"){
         setInstruction("Avec les petites billes, utilise surtout&nbsp;<strong>Enlever des deux côtés</strong>, puis&nbsp;<strong>Faire des paquets</strong>&nbsp;quand il ne reste que des taches d’un côté.");
       }
+    }
+
+    /* −2𝑥 = −16 PARTAGÉ AVANT L'OPPOSÉ (15/10/2026, choix de Gwenaël). Partager −16 en 2 face à
+       deux taches −𝑥 laisse « −𝑥 −𝑥 = −8 −8 » : rien ne s'écrit (une tache −𝑥 n'est pas 𝑥, pas de
+       conclusion magique), et l'élève ne savait plus quoi faire. Une phrase l'oriente ; l'outil
+       ne calcule rien à sa place. Tant qu'il ne sélectionne rien (sinon ses boutons d'action). */
+    if(oppositeTachesFacingEqualTokens() && !deleteSelection.length && !groupSelection.length){
+      const v = displayedUnknown();
+      setInstruction(`Prends l’opposé pour trouver ${v === "?" ? "la valeur cachée" : escapeHtml(v)}.`);
+      return;
     }
 
     const conclusionInfo = getConclusionInfo();
@@ -9509,8 +9794,13 @@
   });
   document.getElementById("btnApplyAddBoth").addEventListener("click", applyAddBoth);
   document.getElementById("btnCancelAddBoth").addEventListener("click", () => addBothDialog.close());
-  if(btnAddBothPositiveX) btnAddBothPositiveX.addEventListener("click", () => applyAddBothX(1));
-  if(btnAddBothNegativeX) btnAddBothNegativeX.addEventListener("click", () => applyAddBothX(-1));
+  if(btnAddBothPositiveX) btnAddBothPositiveX.addEventListener("click", () => { addBothX.sign = 1; renderAddBothX(); });
+  if(btnAddBothNegativeX) btnAddBothNegativeX.addEventListener("click", () => { addBothX.sign = -1; renderAddBothX(); });
+  if(btnAddBothXLess) btnAddBothXLess.addEventListener("click", () => { addBothX.count = Math.max(1, addBothX.count - 1); renderAddBothX(); });
+  if(btnAddBothXMore) btnAddBothXMore.addEventListener("click", () => { addBothX.count = Math.min(ADD_BOTH_X_MAX, addBothX.count + 1); renderAddBothX(); });
+  if(btnApplyAddBothX) btnApplyAddBothX.addEventListener("click", applyAddBothX);
+  if(btnAddBothTabToken) btnAddBothTabToken.addEventListener("click", () => showAddBothTab("jeton"));
+  if(btnAddBothTabX) btnAddBothTabX.addEventListener("click", () => showAddBothTab("taches"));
   addBothInput.addEventListener("keydown", (e) => {
     if(e.key === "Enter"){ e.preventDefault(); applyAddBoth(); }
   });
@@ -9707,7 +9997,11 @@
   function createImportedEquationState(payload){
     if(!payload || typeof payload !== "object") return false;
 
-    const wantedVar = typeof payload.variable === "string" && payload.variable.trim() ? payload.variable.trim() : "𝑥";
+    /* Et un pirate ? (15/10/2026) La lettre arrive par le lien (#data=) : une seule lettre, sinon 𝑥.
+       Un lien fabriqué glissait du code dans la page par la fenêtre Ajouter (la lettre y était
+       écrite sans précaution), et ce code aurait pu lire le code élève du suivi. */
+    const rawVar = typeof payload.variable === "string" ? payload.variable.trim() : "";
+    const wantedVar = /^\p{L}$/u.test(rawVar) ? rawVar : "𝑥";
     const rawDisplay = String(payload.unknownDisplay || payload.display || "letter").toLowerCase();
     const wantedDisplay = (rawDisplay === "question" || rawDisplay === "?" || rawDisplay === "interrogation") ? "question" : "letter";
 

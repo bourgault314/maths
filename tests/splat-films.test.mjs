@@ -34,7 +34,10 @@ test("les films des étapes : pas d'arrêt, format téléphone pris par le lecte
   // les deux façons de regrouper (10/10 au soir) : le bouton « Regrouper » au premier exemple, puis on glisse 9 sur 12
   assert.match(jetons, /\['btn','Regrouper',/);
   assert.match(jetons, /D\.glisse\(T\.lache,B\.lache\)/);
-  assert.match(jetons, /\['btn','Fusionner',/);
+  // 15/10/2026 : glisser ouvre la même fenêtre « Regrouper » que le bouton (plus de « Fusionner »)
+  assert.match(jetons, /F:\{w:600,h:426,r:24,el:\[\['titre','Regrouper',/);
+  assert.match(jetons, /F:\{w:352,h:616,r:20,el:\[\['titre','Regrouper',/);
+  assert.doesNotMatch(jetons, /Fusionner/);
   assert.ok(jetons.includes("{g:'3𝑝',d:'12 + 9'},{g:'3𝑝',d:'21',t:T.fusionne+.05}"));
   // le lecteur règle le rapport largeur / hauteur du portrait d'après le film (3:4 pour l'introduction)
   assert.match(page, /player\.style\.setProperty\('--k',\(dim\.w\/dim\.h\)\.toFixed\(4\)\)/);
