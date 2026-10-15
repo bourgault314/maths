@@ -1172,8 +1172,11 @@ function persist(){
   try{localStorage.setItem('soley-save-v5',JSON.stringify(save));}catch(e){memStore=save;}
 }
 let save=loadSave();
-if(!save.done)save.done={};
-if(!save.fruits)save.fruits={};
+if(!save||typeof save!=='object')save={};
+if(!save.done||typeof save.done!=='object')save.done={};
+if(!save.fruits||typeof save.fruits!=='object')save.fruits={};
+/* Audit « données reçues » (15/10/2026) : les comptes de fruits relus de l'appareil redeviennent des nombres. */
+for(const k of Object.keys(save.fruits)){const n=Number(save.fruits[k]);if(Number.isFinite(n)&&n>=0)save.fruits[k]=Math.floor(n);else delete save.fruits[k];}
 
 /* ===== État ===== */
 const CS=100;
