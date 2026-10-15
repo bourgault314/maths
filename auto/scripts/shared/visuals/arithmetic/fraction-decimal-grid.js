@@ -131,7 +131,22 @@
     }
     return `<div class="module01-visual"><svg viewBox="0 0 ${width} ${height}" style="max-width:${Math.round(width*1.5)}px;max-height:30vh" role="img" aria-label="${boards===1?'Une unité partagée en '+per+' parts égales':boards+' unités, chacune partagée en '+per+' parts égales'}">${shapes}</svg></div>`;
   }
+  // A0 (15/10/2026) : aide de « … + … = 1 » sans cases blanches à compter. La
+  // part connue (0,83 = 8,3 dixièmes) est coloriée et découpée en dixièmes ; ce
+  // qui manque reste un seul bloc blanc, sans traits.
+  function decimalComplementBlock(data){
+    const filled=Math.max(0,Math.min(10,Number(data.filledA)||0)),full=Math.floor(filled+1e-9);
+    const cellW=56,x0=22,y=35,height=58,stroke='#18324f';
+    let cells=`<rect x="${x0}" y="${y}" width="${10*cellW}" height="${height}" fill="#f8fafc"/>`;
+    cells+=`<rect class="decimal-complement-cell decimal-complement-first" x="${x0}" y="${y}" width="${filled*cellW}" height="${height}" fill="#39b8aa"/>`;
+    for(let index=1;index<=full&&index<10;index++) cells+=`<line x1="${x0+index*cellW}" y1="${y}" x2="${x0+index*cellW}" y2="${y+height}" stroke="${stroke}" stroke-width="1.7"/>`;
+    if(filled>full+1e-9) cells+=`<line x1="${x0+filled*cellW}" y1="${y}" x2="${x0+filled*cellW}" y2="${y+height}" stroke="${stroke}" stroke-width="1.7"/>`;
+    cells+=`<rect x="${x0}" y="${y}" width="${10*cellW}" height="${height}" fill="none" stroke="${stroke}" stroke-width="1.7"/>`;
+    const unitLabel=`<text x="${x0+5*cellW}" y="21" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="22" font-weight="900" fill="#111111">1</text>`;
+    return `<div class="decimal-complement-visual"><svg viewBox="0 0 604 102" role="img" aria-label="La partie blanche est à compléter.">${unitLabel}${cells}</svg></div>`;
+  }
   function decimalComplementVisual(data,correction=false){
+    if(data.resteBloc&&!correction) return decimalComplementBlock(data);
     const first=Math.max(0,Math.min(10,Math.round(Number(data.filledA)||0)));
     const second=Math.max(0,Math.min(10-first,Math.round(Number(data.filledB)||0)));
     const showSecond=!!data.showSecond||correction;

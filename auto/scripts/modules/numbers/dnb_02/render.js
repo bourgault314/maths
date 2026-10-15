@@ -97,15 +97,15 @@
   // Dessin du panneau « Aide » (contrat de la refonte, §1.2) : il pose le
   // calcul sans jamais écrire le résultat.
   // A0 (15/10/2026) : « … pour obtenir une unité » retrouve la bande de dixièmes
-  // de Gwenaël (la partie blanche est à compléter). Quand le nombre a des
-  // centièmes, c'est sa grille de cent cases (une unité) qui la remplace.
+  // de Gwenaël. Elle est corrigée : sa version laissait des cases blanches à
+  // compter (la réponse) ; la part connue est coloriée et découpée en
+  // dixièmes, ce qui manque reste un seul bloc blanc.
   function complementAide(instance){
     const component=global.MATHSGO_VISUALS&&global.MATHSGO_VISUALS.get('arithmetic.fraction-decimal-grid');
     const a=Number(instance&&instance.scope&&instance.scope.a);
     if(!component||!Number.isFinite(a)) return '';
     const whole=Math.floor(a+1e-9),hundredths=Math.round((a-whole)*100);
-    if(hundredths%10===0) return component.render({kind:'decimal-complement',filledA:hundredths/10,filledB:0,showSecond:false},false);
-    return component.render({num:hundredths,den:100,visualKind:'grouped'},false);
+    return component.render({kind:'decimal-complement',filledA:hundredths/10,filledB:0,showSecond:false,resteBloc:true},false);
   }
 
   function aideHtml(instance){
