@@ -94,6 +94,11 @@ main{max-width:980px;margin:0 auto;padding:18px 14px 40px}
 [data-m="5"]{--c:#08aaa5;--c-plein:#0f766e;--c-fonce:#115e59;--c-clair:#e6f7f6;--c-bord:#9fdcd9;--c-clair2:#cdeeed}
 /* monde 6, les Relatifs (lot R2) : le violet de la carte des mondes ; la carte choisie en violet foncé */
 [data-m="6"]{--c:#7b42b4;--c-plein:#6b21a8;--c-fonce:#4c1d95;--c-clair:#f3ebfa;--c-bord:#d6bfee;--c-clair2:#e9dcf6}
+/* Les histoires de SPLAT! (15/10/2026) : le vert de leurs livrets ; leur carte, une tache
+   « ? » sans numéro de monde, prend toute la largeur sous les six mondes, son contenu centré
+   (marges égales à gauche et à droite : les autres cartes ont 2 px de plus à droite) */
+[data-m="h"]{--c:#15803d;--c-plein:#15803d;--c-fonce:#14532d;--c-clair:#e4f4e9;--c-bord:#9fd3ae;--c-clair2:#cdebd6}
+.onglets a[data-m="h"]{grid-column:1/-1;justify-content:center;padding-left:14px;padding-right:14px}
 
 /* Sans JavaScript, tous les mondes restent visibles à la suite : la première règle
    annule le masquage que le navigateur applique d'office à l'attribut « hidden »,
@@ -258,6 +263,7 @@ footer a{font-weight:700}
     <a href="#monde-4" data-m="4" id="onglet-4" role="tab" aria-controls="monde-4" aria-selected="false"><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>4</b></span><span class="txt"><span class="sr">Monde 4 · </span><span class="etiq">SPLAT! Système</span><span class="fiches">fiches 25 à 28</span></span></a>
     <a href="#monde-5" data-m="5" id="onglet-5" role="tab" aria-controls="monde-5" aria-selected="false"><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>5</b></span><span class="txt"><span class="sr">Monde 5 · </span><span class="etiq">SPLAT! Équations</span><span class="fiches">fiches 35 à 37</span></span></a>
     <a href="#monde-6" data-m="6" id="onglet-6" role="tab" aria-controls="monde-6" aria-selected="false"><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>6</b></span><span class="txt"><span class="sr">Monde 6 · </span><span class="etiq">SPLAT! Relatifs</span><span class="fiches">fiches 38 à 43</span></span></a>
+    <a href="#histoires" data-m="h" id="onglet-h" role="tab" aria-controls="histoires" aria-selected="false" data-prepa><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>?</b></span><span class="txt"><span class="etiq">Les histoires de SPLAT!</span><span class="fiches">les mêmes problèmes, en histoires</span></span></a>
   </nav>
   <p class="prepaPhrase" id="prepaPhrase" hidden></p>
 
@@ -995,6 +1001,100 @@ footer a{font-weight:700}
     <p class="aparte">Les plateaux côte à côte, la place dessous pour écrire l’équation. Le QR code de chaque fiche rejoue les mêmes équations en ligne, dans ÉquaSplat. Les livrets «&nbsp;Le défi&nbsp;» reprennent les mêmes fiches, plus dures&nbsp;; leur QR code donne la même étoile.</p>
   </section>
 
+  <!-- ===================================================== Les histoires de SPLAT! (15/10/2026)
+       Les problèmes de SPLAT! écrits en histoires, en trois livrets (fiches H1 à H15) ; sources :
+       _sources/livret-splat-histoires/. EN ESSAI : l'onglet et ce panneau portent « data-prepa »
+       écrit dans la page — cachés à tous, avec ou sans JavaScript ; la clé ?essai=1 (celle des
+       mondes en préparation) les montre. Pour les ouvrir à tous : retirer ces deux « data-prepa ». -->
+  <section class="panneau" data-m="h" id="histoires" data-prepa role="tabpanel" aria-labelledby="onglet-h" hidden>
+    <h2 class="monde-nom">Les histoires de SPLAT!</h2>
+    <p class="chapo">Les problèmes de SPLAT!, écrits en histoires. L’élève dessine le schéma en barres ou écrit l’équation, puis répond par une phrase.</p>
+    <div class="grille">
+
+      <article class="liv">
+        <a class="couv-lien" href="/outils/livret_splat_histoires_1.pdf" target="_blank" rel="noopener" title="Voir Les histoires de SPLAT!, partie 1 (PDF, 8 pages)">
+          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-histoires-1.png?v=1" alt="Couverture du livret Les histoires de SPLAT!, partie 1" loading="lazy">
+        </a>
+        <div class="corps">
+          <div class="titre"><h3>Partie 1</h3><span class="plage">fiches H1 à H5</span></div>
+          <div class="liens">
+            <a class="lien" href="/outils/livret_splat_histoires_1.pdf" target="_blank" rel="noopener">📕 PDF · 8 pages</a>
+            <a class="lien a3" href="/outils/livret_splat_histoires_1_a_plier.pdf" target="_blank" rel="noopener">🖨️ Livret à plier</a>
+            <details class="prof">
+              <summary>✅ Les 3 corrigés</summary>
+              <div class="prof-corps">
+                <div class="prof-ligne"><span class="nom">Schéma <small>avec «&nbsp;?&nbsp;»</small></span>
+                  <a class="lien-prof" href="/outils/livret_splat_histoires_1_correction.pdf" target="_blank" rel="noopener" title="Livret corrigé des histoires de SPLAT!, partie 1, schéma avec «&nbsp;?&nbsp;» (PDF, 8 pages)">PDF</a>
+                  <a class="lien-prof" href="/outils/livret_splat_histoires_1_correction_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé des histoires de SPLAT!, partie 1, schéma avec «&nbsp;?&nbsp;», à plier">à plier</a></div>
+                <div class="prof-ligne"><span class="nom">Schéma <small>avec une lettre</small></span>
+                  <a class="lien-prof" href="/outils/livret_splat_histoires_1_correction_lettre.pdf" target="_blank" rel="noopener" title="Livret corrigé des histoires de SPLAT!, partie 1, schéma avec une lettre (PDF, 8 pages)">PDF</a>
+                  <a class="lien-prof" href="/outils/livret_splat_histoires_1_correction_lettre_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé des histoires de SPLAT!, partie 1, schéma avec une lettre, à plier">à plier</a></div>
+                <div class="prof-ligne"><span class="nom">En équations</span>
+                  <a class="lien-prof" href="/outils/livret_splat_histoires_1_correction_equations.pdf" target="_blank" rel="noopener" title="Livret corrigé des histoires de SPLAT!, partie 1, en équations (PDF, 8 pages)">PDF</a>
+                  <a class="lien-prof" href="/outils/livret_splat_histoires_1_correction_equations_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé des histoires de SPLAT!, partie 1, en équations, à plier">à plier</a></div>
+              </div>
+            </details>
+          </div>
+        </div>
+      </article>
+
+      <article class="liv">
+        <a class="couv-lien" href="/outils/livret_splat_histoires_2.pdf" target="_blank" rel="noopener" title="Voir Les histoires de SPLAT!, partie 2 (PDF, 8 pages)">
+          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-histoires-2.png?v=1" alt="Couverture du livret Les histoires de SPLAT!, partie 2" loading="lazy">
+        </a>
+        <div class="corps">
+          <div class="titre"><h3>Partie 2</h3><span class="plage">fiches H6 à H10</span></div>
+          <div class="liens">
+            <a class="lien" href="/outils/livret_splat_histoires_2.pdf" target="_blank" rel="noopener">📗 PDF · 8 pages</a>
+            <a class="lien a3" href="/outils/livret_splat_histoires_2_a_plier.pdf" target="_blank" rel="noopener">🖨️ Livret à plier</a>
+            <details class="prof">
+              <summary>✅ Les 3 corrigés</summary>
+              <div class="prof-corps">
+                <div class="prof-ligne"><span class="nom">Schéma <small>avec «&nbsp;?&nbsp;»</small></span>
+                  <a class="lien-prof" href="/outils/livret_splat_histoires_2_correction.pdf" target="_blank" rel="noopener" title="Livret corrigé des histoires de SPLAT!, partie 2, schéma avec «&nbsp;?&nbsp;» (PDF, 8 pages)">PDF</a>
+                  <a class="lien-prof" href="/outils/livret_splat_histoires_2_correction_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé des histoires de SPLAT!, partie 2, schéma avec «&nbsp;?&nbsp;», à plier">à plier</a></div>
+                <div class="prof-ligne"><span class="nom">Schéma <small>avec une lettre</small></span>
+                  <a class="lien-prof" href="/outils/livret_splat_histoires_2_correction_lettre.pdf" target="_blank" rel="noopener" title="Livret corrigé des histoires de SPLAT!, partie 2, schéma avec une lettre (PDF, 8 pages)">PDF</a>
+                  <a class="lien-prof" href="/outils/livret_splat_histoires_2_correction_lettre_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé des histoires de SPLAT!, partie 2, schéma avec une lettre, à plier">à plier</a></div>
+                <div class="prof-ligne"><span class="nom">En équations</span>
+                  <a class="lien-prof" href="/outils/livret_splat_histoires_2_correction_equations.pdf" target="_blank" rel="noopener" title="Livret corrigé des histoires de SPLAT!, partie 2, en équations (PDF, 8 pages)">PDF</a>
+                  <a class="lien-prof" href="/outils/livret_splat_histoires_2_correction_equations_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé des histoires de SPLAT!, partie 2, en équations, à plier">à plier</a></div>
+              </div>
+            </details>
+          </div>
+        </div>
+      </article>
+
+      <article class="liv">
+        <a class="couv-lien" href="/outils/livret_splat_histoires_3.pdf" target="_blank" rel="noopener" title="Voir Les histoires de SPLAT!, partie 3 (PDF, 12 pages)">
+          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-histoires-3.png?v=1" alt="Couverture du livret Les histoires de SPLAT!, partie 3" loading="lazy">
+        </a>
+        <div class="corps">
+          <div class="titre"><h3>Partie 3</h3><span class="plage">fiches H11 à H15</span></div>
+          <div class="liens">
+            <a class="lien" href="/outils/livret_splat_histoires_3.pdf" target="_blank" rel="noopener">📘 PDF · 12 pages</a>
+            <a class="lien a3" href="/outils/livret_splat_histoires_3_a_plier.pdf" target="_blank" rel="noopener">🖨️ Livret à plier</a>
+            <details class="prof">
+              <summary>✅ Les 3 corrigés</summary>
+              <div class="prof-corps">
+                <div class="prof-ligne"><span class="nom">Schéma <small>avec «&nbsp;?&nbsp;»</small></span>
+                  <a class="lien-prof" href="/outils/livret_splat_histoires_3_correction.pdf" target="_blank" rel="noopener" title="Livret corrigé des histoires de SPLAT!, partie 3, schéma avec «&nbsp;?&nbsp;» (PDF, 12 pages)">PDF</a>
+                  <a class="lien-prof" href="/outils/livret_splat_histoires_3_correction_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé des histoires de SPLAT!, partie 3, schéma avec «&nbsp;?&nbsp;», à plier">à plier</a></div>
+                <div class="prof-ligne"><span class="nom">Schéma <small>avec une lettre</small></span>
+                  <a class="lien-prof" href="/outils/livret_splat_histoires_3_correction_lettre.pdf" target="_blank" rel="noopener" title="Livret corrigé des histoires de SPLAT!, partie 3, schéma avec une lettre (PDF, 12 pages)">PDF</a>
+                  <a class="lien-prof" href="/outils/livret_splat_histoires_3_correction_lettre_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé des histoires de SPLAT!, partie 3, schéma avec une lettre, à plier">à plier</a></div>
+                <div class="prof-ligne"><span class="nom">En équations</span>
+                  <a class="lien-prof" href="/outils/livret_splat_histoires_3_correction_equations.pdf" target="_blank" rel="noopener" title="Livret corrigé des histoires de SPLAT!, partie 3, en équations (PDF, 12 pages)">PDF</a>
+                  <a class="lien-prof" href="/outils/livret_splat_histoires_3_correction_equations_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé des histoires de SPLAT!, partie 3, en équations, à plier">à plier</a></div>
+              </div>
+            </details>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
   <section class="note" aria-label="Pour imprimer">
     <p><strong>🖨️ Livret à plier</strong>&nbsp;: en A3 pour un grand livret, ou en A4 pour un petit livret. Recto-verso, <strong>bord court</strong>.</p>
     <p><strong>📕 PDF</strong>&nbsp;: les pages dans l'ordre, pour l'écran ou pour le mode «&nbsp;Livret&nbsp;» d'un photocopieur.</p>
@@ -1035,6 +1135,14 @@ footer a{font-weight:700}
 </script>
 <script>
 (function(){
+  /* Les histoires de SPLAT! (15/10/2026), en essai : leur onglet et leur panneau portent
+     « data-prepa » écrit dans la page (cachés à tous) ; seule la clé ?essai=1 le retire.
+     Pour les ouvrir à tous : retirer ces deux « data-prepa » de la page. */
+  if(window.MathsGoSplatEtapes && window.MathsGoSplatEtapes.cle === true){
+    Array.prototype.forEach.call(document.querySelectorAll('#onglet-h[data-prepa], #histoires[data-prepa]'), function(el){
+      el.removeAttribute("data-prepa");
+    });
+  }
   /* Mondes « en préparation » (26/09/2026) : d'après la liste de assets/js/splat-etapes.js
      (et la clé ?essai=1), on pose ou on retire « data-prepa » sur la carte et les livrets de
      chaque monde, puis une phrase dit quels livrets arrivent. Sans le fichier, on garde ce
@@ -1044,6 +1152,7 @@ footer a{font-weight:700}
     var caches = [];
     Array.prototype.forEach.call(document.querySelectorAll("#onglets a[data-m], .panneau[data-m]"), function(el){
       var n = parseInt(el.dataset.m, 10);
+      if(isNaN(n)) return; // les histoires (data-m="h") : réglées juste au-dessus
       if(etapes.mondeCache(n)){
         el.setAttribute("data-prepa", "");
         if(el.classList.contains("panneau") && caches.indexOf(n) < 0) caches.push(n);
@@ -1061,16 +1170,18 @@ footer a{font-weight:700}
   var onglets = Array.prototype.slice.call(document.querySelectorAll("#onglets a:not([data-prepa])"));
   var panneaux = Array.prototype.slice.call(document.querySelectorAll(".panneau"));
   var barre = document.getElementById("onglets");
-  if(barre) barre.setAttribute("data-n", String(onglets.length));
+  // data-n compte les mondes seulement : la carte des histoires a sa propre ligne
+  if(barre) barre.setAttribute("data-n", String(onglets.filter(function(a){ return a.dataset.m !== "h"; }).length));
   function montrer(m, pousser){
     if(!onglets.some(function(a){ return a.dataset.m === m; })) return;
     onglets.forEach(function(a){ a.setAttribute("aria-selected", String(a.dataset.m === m)); });
     panneaux.forEach(function(p){ p.hidden = (p.dataset.m !== m); });
-    if(pousser && history.replaceState) history.replaceState(null, "", "#monde-" + m);
+    if(pousser && history.replaceState) history.replaceState(null, "", m === "h" ? "#histoires" : "#monde-" + m);
   }
   function depuisAdresse(){
     var m = (location.hash || "").match(/^#monde-(\d+)$/);
     if(m) montrer(m[1], false);
+    else if(location.hash === "#histoires") montrer("h", false);
   }
   onglets.forEach(function(a, i){
     a.addEventListener("click", function(e){ e.preventDefault(); montrer(a.dataset.m, true); });
