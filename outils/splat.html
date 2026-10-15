@@ -1714,8 +1714,14 @@ function parseInvestigatePalette(raw){
   });
   return keys.length ? keys : null;
 }
+/* Cartes jumelles (voir carteJumelle) : le temps d'un tirage, les couleurs de la carte d'origine,
+   données sans rien tirer. null : le tirage habituel, rien ne change. */
+let jumelleCouleurs = null;
 function buildInvestigateColorMap(rng, taskCount, varied){
   const n = Math.max(1, Math.min(3, Number(taskCount) || 1));
+  if(typeof jumelleCouleurs !== "undefined" && jumelleCouleurs){
+    return jumelleCouleurs.concat(INVESTIGATE_COLOR_PALETTE.map(c => c.key).filter(k => !jumelleCouleurs.includes(k))).slice(0, n);
+  }
   if(!varied){
     return INVESTIGATE_CLASSIC_COLOR_KEYS.slice(0, n);
   }
@@ -14454,6 +14460,13 @@ let eleveSerieNotee = false;
 let eleveSuite = [];
 /* échecs sur la carte en cours (au 3e, la réponse s'écrit dans les cases) et file des cartes rouges à rejouer */
 let eleveEchecs = 0, eleveRejeu = null;
+/* cartes jumelles (voir carteJumelle) : les cartes de la série telles que tirées, combien de fois
+   chacune est revenue, la jumelle tirée d'avance (écran « Encore N cartes ! »), et pour une étape
+   composée, les réglages de la partie de chaque carte */
+let eleveOriginaux = [], eleveJumelleRang = [], eleveJumellesPretes = [];
+const jumelleParties = new WeakMap();
+let jumelleDernierePartie = null;
+const JUMELLE_ESSAIS = 8000;
 const ELEVE_ECHECS_MAX = 3, ELEVE_URL_MONDES = "/outils/splat_univers.html";
 /* Le parcours de l'élève (lot 2 « outils + carte » du suivi, 08/10/2026) : il s'écrit par le
    moteur partagé (assets/js/splat-parcours.js), au format que garde le serveur, dans la case
@@ -14579,11 +14592,16 @@ function generate(){
 function genererSerieComposee(){
   generate();
   const toutes = cards.slice();
+  /* les cartes jumelles se tirent avec les réglages de LEUR partie (voir carteJumelle) */
+  const principale = window.location.search.slice(1);
+  for(const c of cards) jumelleParties.set(c, principale);
+  jumelleDernierePartie = principale;
   for(const partie of eleveSuite){
     try{
       appliquerConfiguration(new URLSearchParams(partie));
+      jumelleDernierePartie = partie;
       generate();
-      for(const c of cards) toutes.push(c);
+      for(const c of cards){ toutes.push(c); jumelleParties.set(c, partie); }
     }catch(e){ /* partie ignorée */ }
   }
   cards = toutes;
@@ -15096,6 +15114,7 @@ function renderEleveSplat(){
     /* La série suit la fiche : toutes les cartes de la mise en page, dans le
        même ordre. Seules les cartes « tache vide » ci-dessus sont écartées. */
     eleveSerie = (jouables.length ? jouables : cards).slice();
+    eleveOriginaux = eleveSerie.slice(); eleveJumelleRang = []; eleveJumellesPretes = []; /* cartes jumelles : voir carteJumelle */
     eleveIdx = 0; eleveEtoiles = 0; eleveResultats = []; eleveVues = 0; eleveSerieNotee = false;
     /* série interrompue la dernière fois ? on reprend où on en était */
     if(!eleveRepriseFaite && parcoursId){
@@ -15911,12 +15930,189 @@ function eleveEffacerEnCours(){
 /* Carte suivante : dans l'ordre, ou la prochaine carte rouge quand on les rejoue. */
 function eleveCarteSuivante(){
   if(eleveRejeu){
-    if(eleveRejeu.length){ eleveIdx = eleveRejeu.shift(); }
+    /* une carte rouge revient en jumelle (05/10/2026) : même type, même dessin, d'autres nombres */
+    if(eleveRejeu.length){ eleveIdx = eleveRejeu.shift(); eleveJumellePoser(eleveIdx); }
     else { eleveRejeu = null; eleveIdx = eleveSerie.length; }
   }else{
     eleveIdx++;
   }
   renderEleveSplat();
+}
+
+/* ===== Les cartes jumelles (mondes 2 à 4 ; décision de Gwenaël du 05/10/2026) =====
+   En fin de série, une carte rouge (réponse montrée à la 3e erreur) ne revient plus identique :
+   elle revient en JUMELLE — même type, même dessin (mêmes couleurs, mêmes taches, mêmes
+   plateaux à la même place, autant de jetons ou de paquets visibles), d'autres nombres. L'élève
+   refait le raisonnement au lieu de recopier la réponse qu'il vient de voir.
+   - Rien de nouveau n'est enregistré : la jumelle a SON hasard, une graine faite de l'empreinte
+     de la série, de la place de la carte et du nombre de fois qu'elle revient. La même carte
+     rouge redonne la même jumelle (après un rechargement aussi) ; si elle revient encore, une
+     autre. Les cartes de la série, les fiches imprimées, l'empreinte et la reprise ne bougent pas.
+   - Les générateurs servent tels quels (cartes toujours justes, mêmes filtres) : on tire jusqu'à
+     une carte du même type dont TOUS les nombres changent (voir jumelleNombresChanges).
+   - Enquête : le temps du tirage, les réglages sont resserrés sur la carte (ses opérations, ses
+     jetons visibles, sa sorte) ; si aucune carte ne garde le même facteur (« 4 fois plus » puis
+     « 4 fois plus » entre 20 et 60 : une seule carte possible), un autre facteur est accepté ;
+     sinon, la carte revient telle quelle, comme avant.
+   - Pas de jumelle dans ÉquaSplat (mondes 5 et 6, décidé le 05/10) : l'élève refait les gestes. */
+/* La jumelle de la carte i pour sa prochaine venue, tirée une seule fois (l'écran « Encore N
+   cartes ! » la prépare, pour sa phrase ; le clic la pose). null : pas de jumelle. */
+function eleveJumellePreparer(i){
+  const rang = (eleveJumelleRang[i] || 0) + 1;
+  const prete = eleveJumellesPretes[i];
+  if(prete && prete.rang === rang) return prete.carte;
+  let j = null;
+  try{ j = carteJumelle(eleveOriginaux[i], jumelleGraine(eleveSignatureSerie() + "|" + activeGenerationSeed + "|jumelle|" + i + "|" + rang)); }
+  catch(_e){ j = null; } /* jamais de carte cassée : la carte d'origine revient */
+  eleveJumellesPretes[i] = { rang, carte: j };
+  return j;
+}
+function eleveJumellePoser(i){
+  const o = eleveOriginaux[i];
+  if(!o) return;
+  const j = eleveJumellePreparer(i);
+  eleveJumelleRang[i] = (eleveJumelleRang[i] || 0) + 1;
+  eleveSerie[i] = j || o;
+}
+
+function jumelleGraine(texte){
+  let h = 2166136261 >>> 0;
+  for(let i = 0; i < texte.length; i++){ h ^= texte.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+
+/* Le type et le dessin d'une carte, sans ses nombres. facteurLibre (Enquête, 2e passage) : le
+   facteur d'un « fois plus / fois moins » peut changer. */
+function jumelleCle(c, facteurLibre){
+  if(!c) return null;
+  if(c.family === "U"){
+    const u = c._unit || {};
+    return JSON.stringify(["U", u.equationType || "", u.tasks, (c.visible || []).length > 0]);
+  }
+  if(c.family === "N"){
+    const m = c._num || {};
+    return JSON.stringify(["N", m.tasks, (c.visible || []).length]);
+  }
+  if(c.family === "C"){
+    const R = c._rel || {};
+    return JSON.stringify(["C", c._colorMap, (c.visible || []).length, R.structure, !!R.sansTotal,
+      (R.relations || []).map(r => [r.op, r.source, r.target, r.source2 == null ? -1 : r.source2, !!r.vocab,
+        (!facteurLibre && (r.op === "MUL" || r.op === "DIV" || r.op === "COMPOSE")) ? r.k : "",
+        r.op === "COMPOSE" ? Math.sign(r.d) : 0])]);
+  }
+  if(c.family === "D" && c._sys){
+    const S = c._sys;
+    return JSON.stringify(["D", sysTypeCarte(c), S.sous || "", S.colors,
+      S.boards.map(b => [S.colors.map(k => b.counts[k] || 0), (b.visible || []).length])]);
+  }
+  return null;
+}
+
+/* Les nombres que l'élève doit trouver (une valeur par tache, ou par couleur). */
+function jumelleReponses(c){
+  if(c.family === "D"){ const S = c._sys; return S.colors.filter(k => S.boards.some(b => b.counts[k])).map(k => S.values[k]); }
+  /* jetons unité : « hidden » compte les jetons un par un, la réponse est ce que cache une tache */
+  if(c.family === "U") return ((c._unit && c._unit.hiddenByTask) || []).map(v => Array.isArray(v) ? v.length : Number(v) || 0);
+  return (c.hidden || []).slice();
+}
+/* Tous les nombres changent : ceux à trouver, les totaux, les jetons visibles, les écarts des
+   indices de l'Enquête (« 14 jetons de moins ») ; jamais de tache vide, et une tache qui cachait
+   plusieurs jetons n'en cache pas un seul dans sa jumelle (la carte ne devient pas plus facile d'un
+   coup). */
+function jumelleNombresChanges(o, t){
+  const a = jumelleReponses(o), b = jumelleReponses(t);
+  if(!(a.length > 0 && a.length === b.length && a.every((x, i) => x !== b[i] && b[i] > 0 && (x < 2 || b[i] >= 2)))) return false;
+  /* les totaux aussi (chaque plateau du Système) */
+  if(o.family === "D"){ if(o._sys.boards.some((B, i) => !t._sys.boards[i] || (B.total != null && B.total === t._sys.boards[i].total))) return false; }
+  else if(!(o._rel && o._rel.sansTotal) && o.total === t.total) return false;
+  /* les jetons visibles aussi, quand il y en a */
+  const vus = c => c.family === "D" ? c._sys.boards.map(B => (B.visible || []).reduce((s, x) => s + x, 0)).join("|")
+    : (c.family === "U" ? (c.visible || []).length : (c.visible || []).reduce((s, x) => s + x, 0));
+  if((o.visible || []).length && vus(o) === vus(t)) return false;
+  if(o.family === "D" && o._sys.boards.some(B => (B.visible || []).length) && vus(o) === vus(t)) return false;
+  if(o.family !== "C") return true;
+  const ro = (o._rel && o._rel.relations) || [], rt = (t._rel && t._rel.relations) || [];
+  return ro.every((r, i) => !rt[i] || ((r.op !== "ADD" && r.op !== "SUB") || r.k !== rt[i].k) && (r.op !== "COMPOSE" || r.d !== rt[i].d));
+}
+
+/* Enquête : les réglages resserrés sur la carte le temps du tirage ; rend de quoi les remettre. */
+function jumelleResserrer(o){
+  if(o.family !== "C") return () => {};
+  const R = o._rel || {}, ops = new Set((R.relations || []).map(r => r.op));
+  const els = [invOpAddEl, invOpSubEl, invOpMulEl, invOpDivEl, invVisibleMinEl, invVisibleMaxEl,
+    (typeof invNoTotalEl !== "undefined" ? invNoTotalEl : null), (typeof invRepeatOnEl !== "undefined" ? invRepeatOnEl : null)];
+  const avant = els.map(e => e ? (e.type === "checkbox" ? e.checked : e.value) : null);
+  /* indices composés, taches réunies : leur tirage mêle les opérations, on n'y touche pas */
+  if(![...ops].some(op => op === "COMPOSE" || op === "SUM")){
+    invOpAddEl.checked = ops.has("ADD"); invOpSubEl.checked = ops.has("SUB");
+    invOpMulEl.checked = ops.has("MUL"); invOpDivEl.checked = ops.has("DIV");
+  }
+  const nv = String((o.visible || []).length);
+  invVisibleMinEl.value = nv; invVisibleMaxEl.value = nv;
+  /* fiche 24 (les deux cases) : la sorte de la carte */
+  const [noTotal, repeat] = els.slice(6);
+  if(noTotal && repeat && noTotal.checked && repeat.checked){
+    if(R.sansTotal) repeat.checked = false; else noTotal.checked = false;
+  }
+  return () => els.forEach((e, i) => { if(!e) return; if(e.type === "checkbox") e.checked = avant[i]; else e.value = avant[i]; });
+}
+
+function jumelleTirer(o, rng, essai){
+  if(o.family === "U") return isUnitEquationPresetActive() ? genUnitsEquationPreset(rng) : genUnits(rng);
+  if(o.family === "N") return isNumberedEquationPresetActive() ? genNumberedEquationPreset(rng) : genNumbered(rng);
+  if(o.family === "C"){
+    /* taches répétées : la couleur de chaque tache dépend aussi de l'ordre des couleurs tirées */
+    const ordres = jumellePermutations([...new Set(o._colorMap)]);
+    jumelleCouleurs = ordres[essai % ordres.length];
+    try{ return genInvestigate(rng); }finally{ jumelleCouleurs = null; }
+  }
+  if(o.family === "D"){
+    const S = o._sys, opts = lireReglagesSysteme(), b = S.boards, A = S.colors[0];
+    opts.geste = S.geste;
+    if(S.sous) opts.sous = S.sous;
+    if(S.geste === "RECOPIE") opts.foisRecopie = (b[1].counts[A] || 0) / (b[0].counts[A] || 1);
+    if(S.geste === "DOUBLE") opts.fois = (b[0].counts[A] || 0) / (b[1].counts[A] || 1);
+    jumelleCouleurs = S.colors;
+    try{ return genSystemCarte(rng, opts); }finally{ jumelleCouleurs = null; }
+  }
+  return null;
+}
+function jumellePermutations(a){
+  if(a.length <= 1) return [a.slice()];
+  const out = [];
+  a.forEach((x, i) => jumellePermutations(a.slice(0, i).concat(a.slice(i + 1))).forEach(p => out.push([x].concat(p))));
+  return out;
+}
+
+/* La jumelle de la carte o (null : pas de jumelle, la carte revient telle quelle). */
+function carteJumelle(o, graine){
+  if(!jumelleCle(o)) return null;
+  const rng = mulberry32(graine | 0);
+  /* étape composée (monde 2) : les réglages de la partie de la carte, puis ceux d'avant */
+  const partie = eleveSuite.length ? jumelleParties.get(o) : undefined;
+  if(partie !== undefined) appliquerConfiguration(new URLSearchParams(partie));
+  const remettre = jumelleResserrer(o);
+  try{
+    for(const facteurLibre of (o.family === "C" ? [false, true] : [false])){
+      const cle = jumelleCle(o, facteurLibre);
+      for(let essai = 0; essai < JUMELLE_ESSAIS; essai++){
+        const t = jumelleTirer(o, rng, essai);
+        if(!t || jumelleCle(t, facteurLibre) !== cle || !jumelleNombresChanges(o, t)) continue;
+        if(t.family === "D"){
+          if(t._sys.secours) continue;
+          if(o._sys.ordre) t._sys.ordre = o._sys.ordre.slice(); else delete t._sys.ordre; /* les plateaux à la même place */
+        }
+        if(o.varChar) t.varChar = o.varChar;
+        if(o._directSubstitution){ t._directSubstitution = true; t._directSubstitutionLabel = o._directSubstitutionLabel; }
+        assignPositions(t, rng);
+        return t;
+      }
+    }
+    return null;
+  }finally{
+    remettre();
+    if(partie !== undefined && jumelleDernierePartie !== null) appliquerConfiguration(new URLSearchParams(jumelleDernierePartie));
+  }
 }
 
 /* Enquête et Système : la carte a une correction pas à pas (« Voir la correction »). */
@@ -15958,6 +16154,12 @@ function eleveMontrerReponse(){
   if(pastilles) pastilles.outerHTML = elevePastillesHtml();
 }
 
+/* « Rejoue-la » ; « Rejoue-la, avec d'autres nombres, » quand chaque carte rouge revient en
+   jumelle (choix A de Gwenaël, 14/10/2026 : dit une fois, sur l'écran de fin, avant de rejouer). */
+function eleveRejouePhrase(nbR, jumelles){
+  return `Rejoue-l${nbR > 1 ? "es" : "a"}` + (jumelles ? `, avec d'autres nombres,` : ``);
+}
+
 function renderEleveFinSplat(panneau){
   const tete = document.getElementById("eleveTeteHaut");
   if(tete) tete.style.display = "none";
@@ -15982,7 +16184,7 @@ function renderEleveFinSplat(panneau){
       (parcoursId ? `<div class="finEtoile">${icone}</div>` : ``) +
       `<h2>Encore ${nbR} carte${plR}\u00a0!</h2>` +
       `<div class="finPastilles">${elevePastillesHtml()}</div>` +
-      `<p class="finSous">Rejoue-l${nbR > 1 ? "es" : "a"} ` +
+      `<p class="finSous">${eleveRejouePhrase(nbR, rouges.every(i => !!eleveJumellePreparer(i)))} ` +
       (parcoursId ? (bonus ? `et ta tache bonus devient dor\u00e9e sur la carte des mondes.` : `et ton \u00e9toile s'allume sur la carte des mondes.`) : `pour finir la s\u00e9rie.`) + `</p>` +
       `<div class="finAction"><button id="eleveRejouerRouges" type="button">Je rejoue ${nbR > 1 ? `mes ${nbR} cartes rouges` : `ma carte rouge`} \u25b6</button></div>` +
       `<div class="finSorties"><button id="eleveRejouer" type="button">Rejouer toute la s\u00e9rie</button>` +
