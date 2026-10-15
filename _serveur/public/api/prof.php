@@ -1164,12 +1164,12 @@ try {
             if ($modele['reglage'] === null) erreur("Ce modèle n'est plus valable : ouvre-le et enregistre-le de nouveau.", 409);
             $duree = is_int($corps['duree'] ?? null) ? $corps['duree'] : 3600;
             if (!in_array($duree, DUREES_OUVERTURE_EVALUATION, true)) erreur("Durée d'ouverture inconnue.", 400);
-            $dejaOuverte = evaluation_de_la_classe($pdo, (int)$classe['id']) !== null;
             $evaluation = ouvrir_evaluation($pdo, (int)$classe['id'], $profId, $modele, $duree);
             if ($evaluation === 'eclair') {
                 erreur("Une question éclair est en cours pour cette classe : termine la séance en direct d'abord.", 409);
             }
-            if (!$dejaOuverte) journaliser($pdo, $profId, 'evaluation.ouvrir', 'classe', (int)$classe['id']);
+            // Une ligne au journal pour l'appel qui a ÉCRIT la séance, et lui seul.
+            if ($evaluation['creee']) journaliser($pdo, $profId, 'evaluation.ouvrir', 'classe', (int)$classe['id']);
             repondre([
                 'ok' => true,
                 'classe' => ['id' => (int)$classe['id'], 'libelle' => $classe['libelle']],

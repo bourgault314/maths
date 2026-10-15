@@ -105,7 +105,8 @@ test("la matrice des droits : les actions de classe en écriture, les modèles a
   assert.match(apiProf, /journaliser\(\$pdo, \$profId, 'evaluation\.fichier', 'classe', \(int\)\$classe\['id'\]\);/, "prendre le fichier est journalisé");
   // Une seule séance par classe, dans les deux sens.
   assert.match(apiProf, /if \(evaluation_de_la_classe\(\$pdo, \(int\)\$classe\['id'\]\) !== null\) \{\s*erreur\("Une évaluation est ouverte/, "pas de question éclair pendant une évaluation");
-  assert.match(lib, /return \(\$existant\['mode'\] \?\? 'eclair'\) === 'evaluation' \? lire_evaluation\(\$existant\) : 'eclair';/, "pas d'évaluation pendant une question éclair");
+  assert.match(lib, /return \(\$existant\['mode'\] \?\? 'eclair'\) === 'evaluation' \? lire_evaluation\(\$existant\) \+ \['creee' => false\] : 'eclair';/, "pas d'évaluation pendant une question éclair");
+  assert.match(apiProf, /if \(\$evaluation\['creee'\]\) journaliser\(\$pdo, \$profId, 'evaluation\.ouvrir'/, "seul l'appel qui a créé la séance journalise (course trouvée par la CI)");
 });
 
 test("Ma classe : la carte, ses boîtes, le noyau chargé d'ici, rien par innerHTML", () => {

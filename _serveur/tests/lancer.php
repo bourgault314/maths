@@ -5418,6 +5418,17 @@ verifier("évaluations — ouvrir : un modèle à soi, une durée de la liste, l
     $ligne = bd_test()->query("SELECT action, cible_id FROM journal WHERE action = 'evaluation.ouvrir' ORDER BY id DESC LIMIT 1")->fetch(PDO::FETCH_ASSOC);
     egal(['evaluation.ouvrir', $ev['classe']], [$ligne['action'], (int)$ligne['cible_id']], 'une ligne au journal');
     egal(1, (int)bd_test()->query("SELECT COUNT(*) FROM journal WHERE action = 'evaluation.ouvrir' AND cible_id = " . (int)$ev['classe'])->fetchColumn(), 'une seule, pas une par clic');
+    // La course, rejouée : seule la demande qui a ÉCRIT la séance journalise
+    // (sur les machines de la CI, deux demandes voyaient « rien » avant que la
+    // première n'ait écrit — trouvé sur la PR #996).
+    for ($tour = 1; $tour <= 3; $tour++) {
+        ev_prof('evaluation.terminer', $ev);
+        appels_paralleles('/api/prof.php', ['action' => 'evaluation.ouvrir', 'classe_id' => $ev['classe'], 'modele_id' => $ev['modele'], 'duree' => 3600, 'jeton' => $ev['jeton']], 10);
+        egal(1, ev_en_base()['seances'], "tour $tour : une séance");
+        egal(1 + $tour, (int)bd_test()->query("SELECT COUNT(*) FROM journal WHERE action = 'evaluation.ouvrir' AND cible_id = " . (int)$ev['classe'])->fetchColumn(), "tour $tour : une ligne de journal de plus, pas dix");
+    }
+    $r = ev_prof('evaluation.ouvrir', $ev, ['modele_id' => $ev['modele'], 'duree' => 1800]);
+    $e = $r['json']['evaluation'];
     // Pendant : pas de question éclair, et le tableau ne voit pas de séance.
     egal(409, ev_prof('direct.ouvrir', $ev)['code'], 'pas de question éclair pendant une évaluation');
     vrai(ev_prof('direct.etat', $ev)['json']['direct'] === null, 'pour le tableau, aucune séance');

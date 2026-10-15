@@ -241,12 +241,16 @@ function evaluation_fermee(array $evaluation, ?int $maintenant = null): bool
 
 // Ouvre une évaluation pour la classe. Renvoie la ligne ; ou 'eclair' si une
 // question éclair occupe la classe (une séance par classe) ; ou la ligne déjà
-// ouverte (deux clics, deux collègues : une seule évaluation).
+// ouverte (deux clics, deux collègues : une seule évaluation). La ligne porte
+// « creee » : vrai pour le SEUL appel qui a écrit la séance — c'est lui qui
+// journalise, même quand dix clics arrivent au même instant (la clé unique
+// sur la classe départage ; regarder « avant » ne suffit pas, deux appels
+// peuvent voir « rien » avant que le premier n'ait écrit — trouvé par la CI).
 function ouvrir_evaluation(PDO $pdo, int $classeId, int $profId, array $modele, int $duree): array|string
 {
     $existant = direct_de_la_classe($pdo, $classeId);
     if ($existant !== null) {
-        return ($existant['mode'] ?? 'eclair') === 'evaluation' ? lire_evaluation($existant) : 'eclair';
+        return ($existant['mode'] ?? 'eclair') === 'evaluation' ? lire_evaluation($existant) + ['creee' => false] : 'eclair';
     }
     purger_directs($pdo);
     $reglage = $modele['reglage'] + [
@@ -256,16 +260,18 @@ function ouvrir_evaluation(PDO $pdo, int $classeId, int $profId, array $modele, 
         'duree' => $duree,
         'fin' => time() + $duree,
     ];
+    $creee = true;
     try {
         $pdo->prepare('INSERT INTO directs (classe_id, prof_id, mode, etat, numero, revision, ouvert_le, expire_le, reglage) VALUES (?, ?, ?, ?, ?, 1, ?, ?, ?)')
             ->execute([$classeId, $profId, 'evaluation', 'ouverte', (int)$modele['reglage']['n'], time(),
                 $reglage['fin'] + GARDE_APRES_FERMETURE_EVALUATION, json_encode($reglage)]);
     } catch (PDOException $e) {
         if (!doublon($e)) throw $e;
+        $creee = false;
     }
     $direct = direct_de_la_classe($pdo, $classeId);
     if ($direct === null) throw new RuntimeException("l'évaluation n'a pas pu être ouverte");
-    return ($direct['mode'] ?? '') === 'evaluation' ? lire_evaluation($direct) : 'eclair';
+    return ($direct['mode'] ?? '') === 'evaluation' ? lire_evaluation($direct) + ['creee' => $creee] : 'eclair';
 }
 
 // Ferme l'évaluation maintenant : plus rien n'entre, les réponses attendent
