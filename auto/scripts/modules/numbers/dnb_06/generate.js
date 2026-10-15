@@ -82,6 +82,22 @@
     return '<div style="display:flex;justify-content:center;padding:.15em .6em 1.15em;font:800 clamp(1.9rem,8vw,2.6rem)/1.1 Cambria Math,STIX Two Math,Times New Roman,serif;color:#17384d">'
       +'<span role="img" aria-label="'+text.replace(new RegExp(FINE,'g'),' ')+' : le premier chiffre non nul est encadré">'+html+'</span></div>';
   }
+  // A0 (15/10/2026) : la ligne de Gwenaël sous le nombre, « 400 = 4 × 10^… »
+  // (valeur du premier chiffre non nul, ce chiffre encadré ; l'exposant reste
+  // à trouver).
+  function placeLine(D,e){
+    let html='',done=false;
+    for(const ch of value(D[0],e)){
+      if(!done&&/[1-9]/.test(ch)){done=true;html+='<span class="scientific-digit-marker">'+ch+'</span>';}
+      else html+=ch;
+    }
+    return '<div class="scientific-help scientific-place-help" role="img" aria-label="Valeur de position du premier chiffre non nul"><div class="scientific-place-equation">'
+      +html+' = '+D[0]+' × 10<sup>…</sup></div></div>';
+  }
+  // A0 : le rappel de Gwenaël pour reconnaître une notation scientifique.
+  function conditionDrawing(){
+    return '<div class="scientific-help scientific-condition-help"><div class="scientific-condition">1 ≤ <span class="scientific-coefficient">partie entière</span> &lt; 10</div></div>';
+  }
   // Tableau de glissement (sens inverse) : ligne du haut, les chiffres de a ;
   // ligne du bas vide (c'est l'élève qui fait glisser les chiffres).
   // Seules les colonnes utiles sont dessinées : le tableau reste lisible au
@@ -91,7 +107,9 @@
     const highPower=Math.max(0,e);
     const powers=[];
     for(let p=highPower;p>=lowPower;p--) powers.push(p);
-    const cellW=46,x0=6,headH=30,rowH=44,y0=4;
+    // A0 : en haut, comme dans la version de Gwenaël, « N rangs vers la
+    // gauche / droite » et la flèche de la colonne des unités à celle de 10^e.
+    const cellW=46,x0=6,headH=30,rowH=44,y0=48;
     const W=x0*2+cellW*powers.length,H=y0+headH+rowH*2+6;
     const colX=p=>x0+(powers.indexOf(p)+.5)*cellW;
     let body='';
@@ -103,6 +121,10 @@
       body+='<rect x="'+x+'" y="'+(y0+headH)+'" width="'+cellW+'" height="'+rowH+'" fill="#eaf3ff" stroke="#1f5f99" stroke-width="1.5"/>';
       body+='<rect x="'+x+'" y="'+(y0+headH+rowH)+'" width="'+cellW+'" height="'+rowH+'" fill="#fbfdff" stroke="#9fb3cf" stroke-width="1.5" stroke-dasharray="5 4"/>';
     });
+    const rangs=Math.abs(e),sens=e>0?'gauche':'droite';
+    body+='<defs><marker id="dnb06-fleche-'+e+'-'+D+'" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#111827"/></marker></defs>';
+    body+='<text x="'+(W/2)+'" y="17" font-family="Arial, sans-serif" font-size="17" font-weight="800" text-anchor="middle" fill="#17384d">'+rangs+' rang'+(rangs>1?'s':'')+' vers la '+sens+'</text>';
+    body+='<line x1="'+colX(0)+'" y1="34" x2="'+colX(e)+'" y2="34" stroke="#111827" stroke-width="3.5" stroke-linecap="round" marker-end="url(#dnb06-fleche-'+e+'-'+D+')"/>';
     // La virgule, entre la colonne des unités et celle des dixièmes, sur les deux lignes.
     const commaX=x0+(powers.indexOf(0)+1)*cellW;
     [y0+headH,y0+headH+rowH].forEach(rowY=>{
@@ -169,7 +191,7 @@
         'Place la virgule juste après le premier chiffre non nul'+NB+': le nombre devant × 10 doit être entre 1 et 10.',
         'Le '+D[0]+' est le chiffre des '+PLACES[String(e)]+NB+': '+value(D[0],e)+' = '+D[0]+' × '+unit(e)+'.'
       ],
-      aideHtml:firstDigitDrawing(D,e)
+      aideHtml:firstDigitDrawing(D,e)+placeLine(D,e)
     };
   }
   function toScientific(module,question,randomInt){
@@ -287,7 +309,7 @@
         'Élimine les écritures dont le nombre devant × 10 n’est pas entre 1 et 10.',
         small?N+' est entre 0 et 1'+NB+': l’exposant est négatif.':N+' est plus grand que 10'+NB+': l’exposant est positif.'
       ],
-      aideHtml:firstDigitDrawing(D,e)
+      aideHtml:firstDigitDrawing(D,e)+placeLine(D,e)
     });
   }
 
@@ -324,7 +346,8 @@
       aide:[
         'Regarde seulement le nombre devant × 10'+NB+': il doit être entre 1 et 10 (10 exclu).',
         firstTrap.text+' ne convient pas'+NB+': '+firstTrap.hint
-      ]
+      ],
+      aideHtml:conditionDrawing()
     });
   }
 

@@ -988,6 +988,10 @@ svg{display:block;max-width:100%;height:auto}
 .divisibility-inspector .divisibility-digits{margin:6px auto 2px}
 .divisibility-inspector .divisibility-sum{margin:8px auto 3px;font:900 1.3rem/1.1 "Cambria Math","Times New Roman",serif}
 .aide-dessin .equal-sharing-help{height:auto;margin:0 auto 4px}
+.aide-dessin .scientific-place-help{min-height:0;margin-top:2px}
+.aide-dessin .scientific-place-equation{font-size:1.75rem}
+.aide-dessin .scientific-condition-help{min-height:0;margin-top:4px}
+.aide-dessin .scientific-condition{font-size:1.9rem}
 .aide-dessin .fraction-ops-operation{flex-direction:column;gap:4px}
 .aide-dessin .fraction-ops-operation>.fraction-ops-card,.aide-dessin .fraction-ops-stack>.fraction-ops-card{width:100%;flex:none}
 .aide-dessin .fraction-ops-label{min-height:0;font-size:1.15rem}
