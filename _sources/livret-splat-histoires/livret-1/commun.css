@@ -1,0 +1,17 @@
+/* Les histoires de SPLAT! — ce que partagent les pages du livret (couverture, page 2, fiches, dos).
+   Charte : le vert du livret (#15803d → #3a9d5d → #e4f4e9, la seule couleur de monde encore
+   libre) ; tout texte coloré est foncé (#14532d) : lisible imprimé en noir et blanc. */
+@font-face{font-family:Poppins;src:url('/assets/fonts/Poppins-Regular.woff2') format('woff2');font-weight:400;font-style:normal}
+@font-face{font-family:Poppins;src:url('/assets/fonts/Poppins-Bold.woff2') format('woff2');font-weight:700;font-style:normal}
+/* la lettre ronde de l'outil (𝑥, 𝑡, 𝑏…) : les mêmes @font-face que outils/splat.html */
+@font-face{font-family:SplatLettres;src:url('/assets/fonts/SplatLettres-Italic.woff2') format('woff2');font-style:normal;font-weight:100 900;font-display:block;unicode-range:U+1D434-1D467,U+210E}
+@font-face{font-family:SplatLettres;src:url('/assets/fonts/SplatLettres-Italic.woff2') format('woff2');font-style:italic;font-weight:100 900;font-display:block;unicode-range:U+1D434-1D467,U+210E}
+@page{size:A4;margin:0}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{width:210mm;height:297mm;overflow:hidden;font-family:Poppins,'Segoe UI',system-ui,sans-serif;color:#0f172a;position:relative;display:flex;flex-direction:column}
+.corps{flex:1 1 auto;padding:0 14mm;display:flex;flex-direction:column}
+.pied{flex:0 0 auto;text-align:center;font-size:10px;font-weight:700;color:#64748b;padding-bottom:6mm}
+.chip{display:inline-block;font-size:12px;font-weight:700;color:#14532d;background:#e4f4e9;border:1px solid #9fd3ae;border-radius:999px;padding:1.4mm 4mm;text-transform:uppercase;letter-spacing:1.4px}
+/* les dessins de l'outil (carte de l'exemple, schémas, corrigés) gardent la police de l'outil */
+svg.ex-carte,.etapes svg,.corr-svg svg{font-family:SplatLettres,system-ui,-apple-system,"Segoe UI",Roboto,Arial}

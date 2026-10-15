@@ -1,5 +1,6 @@
 <?php
-// Séance en direct — lot 1 « question éclair » (07/10/2026).
+// Séance en direct — lot 1 « question éclair » (07/10/2026), lot 2
+// « questionnaire au tableau » (15/10/2026).
 //
 // Ce que c'est. Le professeur ouvre une séance pour UNE classe, pose une
 // question (à l'oral, au tableau, comme il veut), les élèves répondent sur
@@ -11,7 +12,10 @@
 //  - directs            : une ligne par séance ouverte (une par classe au plus) ;
 //  - directs_questions  : une ligne par question posée (son type, son réglage,
 //                         la bonne réponse si le professeur l'a désignée) ;
-//  - directs_reponses   : une ligne par élève et par question.
+//  - directs_reponses   : une ligne par élève et par question — et, au numéro
+//                         0, une ligne par élève qui a REJOINT la séance (lot 2 :
+//                         le tableau compte « 18 / 24 » sur les élèves présents,
+//                         pas sur la classe entière avec ses absents).
 // Tout part quand le professeur termine la séance, et de toute façon
 // DUREE_DIRECT secondes après son dernier geste (purger_directs(), jouée par
 // chaque appel du professeur, chaque interrogation d'un élève et le ménage).
@@ -22,6 +26,15 @@
 // note. Une réponse est une valeur courte dont la FORME est vérifiée par son
 // type (une lettre pour un choix). Le fichier de fin de séance est fabriqué
 // dans le navigateur du professeur ; le serveur ne le range nulle part.
+//
+// Lot 2 (15/10/2026) : le QUESTIONNAIRE préparé à l'avance (un fichier JSON
+// chez le professeur, prof/questionnaire.js) ne vient JAMAIS ici. Le tableau
+// pose chaque question comme une question éclair (type et réglage), avec en
+// plus, si le fichier le dit, une DURÉE : c'est le serveur qui tient la fin du
+// chrono (réglage « fin »), pas la page — une réponse arrivée après est
+// refusée même si l'écran du tableau a été réduit. La bonne réponse, connue du
+// fichier, n'arrive qu'avec « Dévoiler » : tant que la question est ouverte,
+// le serveur ne la connaît pas.
 //
 // POUR FAIRE ÉVOLUER (décision du 07/10/2026 : « il ne faut pas faire un truc
 // bloqué que je dois tout changer après ») :
@@ -53,6 +66,14 @@ const RYTHME_DIRECT_ELEVE = 2500;
 const RYTHME_DIRECT_ELEVE_SANS_SEANCE = 6000;
 const RYTHME_DIRECT_TABLEAU = 1500;
 
+// Chrono d'une question (lot 2), en secondes : assez pour lire, pas plus
+// qu'une activité entière.
+const DUREE_DIRECT_MIN = 5;
+const DUREE_DIRECT_MAX = 600;
+// Le numéro 0 de directs_reponses : « cet élève a rejoint la séance ». Une
+// question porte toujours un numéro à partir de 1.
+const NUMERO_PRESENCE_DIRECT = 0;
+
 const MODES_DIRECT = ['eclair'];
 const ETATS_DIRECT = ['attente', 'question', 'devoile'];
 const LETTRES_DIRECT = ['A', 'B', 'C', 'D', 'E', 'F'];
@@ -75,7 +96,15 @@ function reglage_direct(string $type, mixed $brut): ?array
             // défaut. Rien d'autre : pas d'énoncé, pas de libellé.
             $choix = $brut['choix'] ?? 4;
             if (!is_int($choix) || $choix < 2 || $choix > count(LETTRES_DIRECT)) return null;
-            return ['choix' => $choix];
+            $reglage = ['choix' => $choix];
+            // Lot 2 : un chrono facultatif, en secondes entières. Absent ou
+            // null : pas de chrono (c'est le réglage par défaut).
+            $duree = $brut['duree'] ?? null;
+            if ($duree !== null) {
+                if (!is_int($duree) || $duree < DUREE_DIRECT_MIN || $duree > DUREE_DIRECT_MAX) return null;
+                $reglage['duree'] = $duree;
+            }
+            return $reglage;
         default:
             return null;
     }
@@ -101,6 +130,29 @@ function lire_reglage_direct(?string $json): array
 {
     $reglage = is_string($json) ? json_decode($json, true) : null;
     return is_array($reglage) ? $reglage : [];
+}
+
+// Le chrono de la question est-il écoulé ? La fin (« fin », instant epoch) est
+// posée par le SERVEUR au moment où la question est posée ; sans chrono, il ne
+// s'écoule jamais.
+function chrono_ecoule_direct(array $reglage, ?int $maintenant = null): bool
+{
+    return isset($reglage['fin']) && is_int($reglage['fin']) && ($maintenant ?? time()) > $reglage['fin'];
+}
+
+// Les secondes qui restent au chrono (0 s'il est écoulé), ou null sans chrono.
+function chrono_reste_direct(array $reglage, ?int $maintenant = null): ?int
+{
+    if (!isset($reglage['fin']) || !is_int($reglage['fin'])) return null;
+    return max(0, $reglage['fin'] - ($maintenant ?? time()));
+}
+
+// Le réglage que l'ÉLÈVE reçoit : ce qu'il faut pour dessiner ses boutons, et
+// rien du chrono (il n'a que les boutons A-D, décision du 15/10/2026).
+function reglage_pour_l_eleve_direct(array $reglage): array
+{
+    unset($reglage['duree'], $reglage['fin']);
+    return $reglage;
 }
 
 // -------------------------------------------------------------------- la purge
@@ -194,6 +246,13 @@ function etat_du_direct_pour_le_tableau(PDO $pdo, array $direct): array
     $inscrits = (int)$requete->fetchColumn();
     $requete->closeCursor();
 
+    // Les élèves qui ont rejoint la séance (lot 2). Un élève qui répond est
+    // forcément passé par là ; max() garde le compte juste quand même.
+    $requete = $pdo->prepare('SELECT COUNT(*) FROM directs_reponses WHERE direct_id = ? AND numero = ?');
+    $requete->execute([$directId, NUMERO_PRESENCE_DIRECT]);
+    $connectes = (int)$requete->fetchColumn();
+    $requete->closeCursor();
+
     $repondu = 0;
     $repartition = null;
     if ($question !== null) {
@@ -221,8 +280,14 @@ function etat_du_direct_pour_le_tableau(PDO $pdo, array $direct): array
         // La bonne réponse n'est connue du tableau qu'une fois dévoilé.
         'bonne' => $etat === 'devoile' ? ($question['bonne'] ?? null) : null,
         'inscrits' => $inscrits,
+        'connectes' => max($connectes, $repondu),
         'repondu' => $repondu,
         'repartition' => $repartition,
+        // Le chrono (lot 2) : sa durée, et ce qui reste tant que la question
+        // est ouverte. À zéro, le tableau dévoile ; le serveur, lui, refuse
+        // déjà toute réponse (api/direct.php).
+        'duree' => $question === null ? null : ($question['reglage']['duree'] ?? null),
+        'reste' => ($etat === 'question' && $question !== null) ? chrono_reste_direct($question['reglage']) : null,
         'expire_dans' => max(0, (int)$direct['expire_le'] - time()),
     ];
 }
@@ -263,6 +328,9 @@ function poser_question_direct(PDO $pdo, array $direct, string $type, array $reg
                 return false;
             }
             $suivant = (int)$numero + 1;
+            // Le chrono part MAINTENANT, et c'est le serveur qui en tient la
+            // fin : la page du tableau n'en est que l'affichage.
+            if (isset($reglage['duree'])) $reglage['fin'] = time() + (int)$reglage['duree'];
             $pdo->prepare('INSERT INTO directs_questions (direct_id, numero, type, reglage, bonne) VALUES (?, ?, ?, ?, NULL)')
                 ->execute([(int)$direct['id'], $suivant, $type, json_encode($reglage)]);
             $pdo->prepare('UPDATE directs SET numero = ?, etat = ?, revision = revision + 1, expire_le = ? WHERE id = ?')
@@ -278,11 +346,31 @@ function poser_question_direct(PDO $pdo, array $direct, string $type, array $reg
 
 // Dévoile la question en cours : plus aucune réponse n'entre (voir
 // repondre_au_direct), et le tableau reçoit la répartition.
-function devoiler_direct(PDO $pdo, array $direct): bool
+//
+// Lot 2 : le tableau qui pose un questionnaire envoie la bonne réponse AVEC
+// « Dévoiler » — c'est le premier instant où le serveur la connaît. Elle n'est
+// rangée que si CE geste a dévoilé la question : un second « Dévoiler » (fin du
+// chrono et dernier élève au même moment, double clic) ne défait pas une bonne
+// réponse que le professeur aurait corrigée entre-temps en cliquant une barre.
+function devoiler_direct(PDO $pdo, array $direct, ?string $bonne = null): bool
 {
-    $requete = $pdo->prepare('UPDATE directs SET etat = ?, revision = revision + 1, expire_le = ? WHERE id = ? AND etat = ?');
-    $requete->execute(['devoile', time() + DUREE_DIRECT, (int)$direct['id'], 'question']);
-    return $requete->rowCount() === 1;
+    return avec_reprise($pdo, function () use ($pdo, $direct, $bonne): bool {
+        transaction_ouvrir($pdo);
+        try {
+            $requete = $pdo->prepare('UPDATE directs SET etat = ?, revision = revision + 1, expire_le = ? WHERE id = ? AND etat = ?');
+            $requete->execute(['devoile', time() + DUREE_DIRECT, (int)$direct['id'], 'question']);
+            $devoile = $requete->rowCount() === 1;
+            if ($devoile && $bonne !== null) {
+                $pdo->prepare('UPDATE directs_questions SET bonne = ? WHERE direct_id = ? AND numero = ?')
+                    ->execute([$bonne, (int)$direct['id'], (int)$direct['numero']]);
+            }
+            transaction_valider($pdo);
+            return $devoile;
+        } catch (Throwable $e) {
+            transaction_annuler($pdo);
+            throw $e;
+        }
+    });
 }
 
 // Désigne (ou retire, avec null) la bonne réponse de la question dévoilée.
@@ -316,7 +404,9 @@ function contenu_du_direct(PDO $pdo, array $direct): array
     }
     $requete->closeCursor();
 
-    $requete = $pdo->prepare('SELECT eleve_id, numero, reponse FROM directs_reponses WHERE direct_id = ?');
+    // Les réponses aux QUESTIONS seulement : la ligne de présence (numéro 0)
+    // n'a rien à faire dans le fichier.
+    $requete = $pdo->prepare('SELECT eleve_id, numero, reponse FROM directs_reponses WHERE direct_id = ? AND numero >= 1');
     $requete->execute([$directId]);
     $parEleve = [];
     foreach ($requete->fetchAll() as $ligne) {
@@ -342,15 +432,18 @@ function contenu_du_direct(PDO $pdo, array $direct): array
 
 // La séance de la classe de CET élève, avec la question en cours, en une
 // lecture. Renvoie null si le code n'existe pas ; ['eleve_id' => …, 'direct'
-// => null] s'il existe sans séance.
+// => null] s'il existe sans séance. « present » dit si l'élève a déjà été
+// compté parmi ceux qui ont rejoint (lot 2) : la même lecture le dit, pour
+// n'écrire sa présence qu'UNE fois par séance, jamais à chaque passage.
 function direct_de_l_eleve(PDO $pdo, string $code): ?array
 {
     $requete = $pdo->prepare(
         'SELECT e.id AS eleve_id, d.id AS direct_id, d.numero, d.etat, d.revision, d.mode, d.expire_le,
-                q.type, q.reglage
+                q.type, q.reglage, p.id AS presence_id
          FROM eleves e
          LEFT JOIN directs d ON d.classe_id = e.classe_id
          LEFT JOIN directs_questions q ON q.direct_id = d.id AND q.numero = d.numero
+         LEFT JOIN directs_reponses p ON p.direct_id = d.id AND p.numero = ' . NUMERO_PRESENCE_DIRECT . ' AND p.eleve_id = e.id
          WHERE e.code = ?'
     );
     $requete->execute([$code]);
@@ -369,7 +462,23 @@ function direct_de_l_eleve(PDO $pdo, string $code): ?array
         'mode' => (string)$ligne['mode'],
         'type' => $ligne['type'] === null ? null : (string)$ligne['type'],
         'reglage' => lire_reglage_direct($ligne['reglage']),
+        'present' => $ligne['presence_id'] !== null,
     ]];
+}
+
+// Note que l'élève a rejoint la séance (lot 2). Une ligne au plus par élève et
+// par séance (clé unique séance × numéro × élève) ; le second appel ne change
+// rien. Effacée avec la séance, comme ses réponses.
+function noter_presence_direct(PDO $pdo, int $directId, int $eleveId): void
+{
+    if (pilote($pdo) === 'mysql') {
+        $sql = 'INSERT INTO directs_reponses (direct_id, numero, eleve_id, reponse) VALUES (?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE reponse = reponse';
+    } else {
+        $sql = 'INSERT INTO directs_reponses (direct_id, numero, eleve_id, reponse) VALUES (?, ?, ?, ?)
+                ON CONFLICT(direct_id, numero, eleve_id) DO NOTHING';
+    }
+    $pdo->prepare($sql)->execute([$directId, NUMERO_PRESENCE_DIRECT, $eleveId, '']);
 }
 
 // La réponse déjà donnée par l'élève à cette question, ou null.

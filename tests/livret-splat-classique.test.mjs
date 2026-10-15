@@ -864,16 +864,17 @@ test("K1-bis : la phrase est sur la couverture des six PDF du monde 1 (élève e
    (20/09/2026) : un onglet par monde, les corrections du professeur repliées partout,
    la note « Pour imprimer » une seule fois en bas. */
 test("L : un onglet et un panneau par monde, le prof replié partout, la note une seule fois", () => {
-  assert.equal((page.match(/role="tab"/g) || []).length, 6, "six onglets (mondes 1 à 6 ; le 6, lot R2)");
-  assert.equal((page.match(/role="tabpanel"/g) || []).length, 6, "six panneaux");
+  // + 1 : les histoires de SPLAT!, sous les six mondes (15/10/2026, tests/livret-splat-histoires.test.mjs)
+  assert.equal((page.match(/role="tab"/g) || []).length, 7, "sept onglets (mondes 1 à 6 ; le 6, lot R2 ; puis les histoires)");
+  assert.equal((page.match(/role="tabpanel"/g) || []).length, 7, "sept panneaux");
   assert.equal((page.match(/<section class="note"/g) || []).length, 1, "une seule note « Pour imprimer »");
   // vingt-deux cartes : 6 (monde 1, dont les trois « Je dessine le schéma » du 26/09/2026) + 4 (monde 2 :
   // Monde 2 et Le défi, avec « ? » et avec une lettre, 26/09/2026) + 5 (monde 3 : deux livrets et
   // leurs défis, puis la partie 3 ; cinq depuis le 03/10/2026 : trois parties et deux livrets « deuxième tour ») + 2 (monde 4, le Système, 25/09/2026) + 3 (monde 5 : corrigés du
   // lot Q4, et le défi du lot Q5) + 2 (monde 6, les Relatifs, lot R2) ; + 1 : le défi du monde 5 en
   // schéma en barres (relecture du monde 5, 27/09/2026) ; + 2 : les deux défis du monde 6 (28/09/2026) ;
-  // + 1 : l'échauffement du monde 6 (14/10/2026)
-  assert.equal((page.match(/<details class="prof">/g) || []).length, 26, "les vingt-six cartes replient leurs corrigés");
+  // + 1 : l'échauffement du monde 6 (14/10/2026) ; + 3 : les trois livrets des histoires (15/10/2026)
+  assert.equal((page.match(/<details class="prof">/g) || []).length, 29, "les vingt-neuf cartes replient leurs corrigés");
   // la note d'impression, réécrite par Gwenaël le 27/09/2026 : pas de « meilleur rendu », le A3 n'est pas un conseil
   assert.match(page, /Livret à plier<\/strong>&nbsp;: en A3 pour un grand livret, ou en A4 pour un petit livret\. Recto-verso, <strong>bord court<\/strong>\.<\/p>/);
   assert.doesNotMatch(page, /meilleur rendu/);
@@ -912,7 +913,10 @@ const CARTES_MONDES = [
 ];
 test("cartes des mondes : numéro, nom et fiches, dans l'ordre, toujours des onglets, sans couverture", () => {
   const nav = page.slice(page.indexOf('<nav class="onglets"'), page.indexOf("</nav>"));
-  const cartes = nav.split("<a ").slice(1);
+  // les cartes des mondes ; la carte des histoires (15/10/2026), sous les mondes, a son test :
+  // tests/livret-splat-histoires.test.mjs
+  const cartes = nav.split("<a ").slice(1).filter((c) => c.startsWith('href="#monde-'));
+  assert.equal(nav.split("<a ").length - 1, cartes.length + 1, "les mondes, puis la carte des histoires, rien d'autre");
   assert.equal(cartes.length, CARTES_MONDES.length);
   // data-n = le nombre de cartes : c'est lui qui passe la barre en deux lignes de 3 à 5 ou 6 mondes
   assert.match(nav, new RegExp(`<nav class="onglets" id="onglets" data-n="${cartes.length}" role="tablist"`));
@@ -953,7 +957,7 @@ test("cartes des mondes : numéro, nom et fiches, dans l'ordre, toujours des ong
   // (26/09/2026) sans les onglets des mondes en préparation : tests/splat-mondes-en-preparation.test.mjs
   assert.match(page, /querySelectorAll\("#onglets a:not\(\[data-prepa\]\)"\)/);
   assert.match(page, /e\.key === "ArrowRight" \? 1 : e\.key === "ArrowLeft" \? -1 : 0/);
-  assert.match(page, /history\.replaceState\(null, "", "#monde-" \+ m\)/);
+  assert.match(page, /history\.replaceState\(null, "", m === "h" \? "#histoires" : "#monde-" \+ m\)/);
 });
 
 test("corrigés pour tous, sur la page : plus de « prof » ni de « professeur » dans les boutons et les titres", () => {
