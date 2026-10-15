@@ -97,6 +97,10 @@ test("case rouge au pavé : chaque petite case garde sa marque jusqu'à ce qu'on
   // le pavé remplace dans une petite case marquée ; la saisie retire la marque de CETTE petite case seulement
   assert.match(fn("elevePaveActiver"), /aRemplacer: champ => \{ const b = champ\.closest\("\.ufBoite"\); if\(b\) return b\.classList\.contains\("ufFaux"\);/);
   assert.match(html, /const b = c\.closest\("\.ufBoite"\);\n\s*if\(b\) b\.classList\.remove\("ufFaux"\);/);
+  // et la marque se VOIT : une petite case pas encore retouchée reste rose, chiffres rouges, même active au pavé
+  assert.match(html, /\n\s*\.ufBoite\.ufFaux\{background:#fee2e2\}/);
+  assert.match(html, /\n\s*\.ufBoite\.ufFaux input\.eleveChamp\{background:transparent;color:#b91c1c\}/);
+  assert.match(html, /body\.eleve-pave \.ufBoite\.ufFaux\.mg-pave-case-active\{background:#fee2e2\}/);
 });
 
 // --- le pavé : la touche facultative ----------------------------------------------------------------
