@@ -1,9 +1,17 @@
 <?php
-// Séance en direct, écran du TABLEAU — lot 1 « question éclair » (07/10/2026).
+// Séance en direct, écran du TABLEAU — lot 1 « question éclair » (07/10/2026),
+// lot 2 « questionnaire au tableau » (15/10/2026).
 // Page du professeur, faite pour être projetée : elle ne contient AUCUN nom
 // d'élève. Pendant la question, un compteur ; après « Dévoiler », des barres.
 // Les réponses élève par élève n'entrent jamais dans le document : elles ne
 // passent que dans le fichier téléchargé à la fin, fabriqué en mémoire.
+//
+// Lot 2 : le professeur peut ouvrir ici un QUESTIONNAIRE préparé (un fichier
+// JSON chez lui, lu par questionnaire.js). Il reste dans ce navigateur : le
+// serveur ne reçoit, question par question, que le nombre de réponses et la
+// durée du chrono — et la bonne réponse au moment de « Dévoiler ». Les
+// formules sont dessinées par KaTeX, copié ici (vendor/) parce que la
+// politique de contenu n'accepte aucun script d'un autre domaine.
 //
 // On y arrive depuis « Ma classe » (bouton « Séance en direct »), dans le même
 // onglet : la session du professeur est celle de l'onglet (sessionStorage),
@@ -11,6 +19,14 @@
 require_once __DIR__ . '/../lib/entetes.php';
 header('Content-Type: text/html; charset=utf-8');
 $nonce = entetes_page();
+// La version dans l'adresse est l'empreinte du fichier déposé : un nouveau
+// dépôt n'est jamais masqué par le cache du navigateur.
+$versionDe = static function (string $chemin): string {
+    return is_file($chemin) ? substr(md5_file($chemin), 0, 10) : '0';
+};
+$versionQuestionnaire = $versionDe(__DIR__ . '/questionnaire.js');
+$versionKatex = $versionDe(__DIR__ . '/../vendor/katex-0.16.9/katex.min.js');
+$versionKatexCss = $versionDe(__DIR__ . '/../vendor/katex-0.16.9/katex.min.css');
 ?>
 <!doctype html>
 <html lang="fr">
@@ -21,6 +37,7 @@ $nonce = entetes_page();
 <link rel="icon" href="../favicon.ico" sizes="48x48">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="stylesheet" href="../vendor/katex-0.16.9/katex.min.css?v=<?= htmlspecialchars($versionKatexCss, ENT_QUOTES) ?>">
 <title>Séance en direct | maths&amp;go</title>
 <style>
   :root {
@@ -40,6 +57,8 @@ $nonce = entetes_page();
   header .titre { font-family: Georgia, serif; font-size: 1.15rem; color: var(--blue-dark); }
   header .classe { padding: 3px 12px; border-radius: 999px; background: #e6f6f5; color: #06716e;
                    font-size: .9rem; font-weight: 800; }
+  header .qz-titre { color: var(--muted); font-size: .95rem; font-weight: 600; max-width: 40vw;
+                     overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   header .droite { margin-left: auto; display: flex; align-items: center; gap: 10px; }
   button { min-height: 44px; padding: 0 16px; font: inherit; font-weight: 700;
            color: #fff; background: var(--blue); border: 0; border-radius: 10px; cursor: pointer; }
@@ -55,6 +74,7 @@ $nonce = entetes_page();
   main { flex: 1 1 auto; min-height: 0; width: 100%; max-width: 1180px; margin: 0 auto;
          padding: 14px 20px 8px; display: flex; flex-direction: column; align-items: center;
          justify-content: center; text-align: center; }
+  main.large { max-width: 1500px; padding: 12px 28px 4px; overflow: hidden; }
   h1 { margin: 0; font-family: Georgia, serif; color: var(--blue-dark);
        font-size: clamp(2rem, 5.2vw, 3.6rem); line-height: 1.1; }
   .sous { margin: 10px 0 0; color: var(--muted); font-size: clamp(1.05rem, 2vw, 1.4rem); }
@@ -62,6 +82,9 @@ $nonce = entetes_page();
              letter-spacing: .01em; color: var(--blue); }
   .etapes { margin: 12px 0 0; font-size: clamp(1.15rem, 2.4vw, 1.7rem); color: var(--ink); }
   .etapes b { color: var(--blue-dark); }
+  .presents { margin: 18px 0 0; font-size: clamp(1.1rem, 2.2vw, 1.6rem); font-weight: 700; color: var(--muted);
+              font-variant-numeric: tabular-nums; }
+  .presents b { color: var(--blue-dark); font-size: 1.25em; }
   /* Pendant la question : un seul nombre, celui de toute la classe. */
   .compteur { margin: 8px 0 0; font-size: clamp(4.5rem, 17vw, 12rem); font-weight: 800; line-height: 1;
               color: var(--blue-dark); font-variant-numeric: tabular-nums; }
@@ -91,10 +114,88 @@ $nonce = entetes_page();
   .barres button.bonne .lettre, .barres button.bonne .combien { color: var(--vert); }
   .barres button.bonne .lettre::after { content: " ✓"; }
   .bilan { margin: 8px 0 0; color: var(--muted); font-size: clamp(1rem, 1.8vw, 1.25rem); }
+
+  /* ------------------------------------------------ lot 2 : le questionnaire
+     Une question du fichier : l'énoncé en haut, l'image éventuelle à gauche,
+     les réponses en cartes. Au dévoilement, chaque carte se remplit de sa
+     barre et porte son nombre ; la bonne passe au vert avec une coche.
+     --t réduit tout d'un même facteur quand la question ne tient pas dans
+     l'écran (ajuster()). */
+  .q { --t: 1; width: 100%; height: 100%; min-height: 0; display: flex; flex-direction: column;
+       gap: calc(var(--t) * 14px); text-align: left; }
+  .q-haut { flex: 0 0 auto; display: flex; align-items: flex-start; gap: 20px; }
+  .q-tete { flex: 1 1 auto; min-width: 0; }
+  .q-num { font-weight: 800; color: var(--muted); letter-spacing: .03em; text-transform: uppercase;
+           font-size: calc(var(--t) * clamp(.95rem, 1.4vw, 1.25rem)); }
+  .q-enonce { margin: 2px 0 0; font-weight: 600; color: var(--blue-dark); line-height: 1.3;
+              font-size: calc(var(--t) * clamp(1.4rem, min(3vw, 5.4vh), 4.4rem)); overflow-wrap: anywhere; }
+  .q-corps { flex: 1 1 auto; min-height: 0; display: flex; align-items: center; gap: calc(var(--t) * 24px); }
+  .q-figure { flex: 0 0 auto; max-width: 42%; display: flex; align-items: center; justify-content: center; padding: 10px;
+              background: #fff; border: 1px solid var(--line); border-radius: 16px; }
+  .q-figure img { display: block; max-width: 100%; max-height: calc(var(--t) * 46vh); width: auto; height: auto; }
+  .q-reponses { flex: 1 1 auto; display: grid; grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr));
+                gap: calc(var(--t) * 14px); align-content: center; }
+  .rep { position: relative; display: flex; align-items: center; gap: calc(var(--t) * 18px);
+         min-height: calc(var(--t) * min(9vw, 15vh)); padding: calc(var(--t) * 12px) calc(var(--t) * 18px);
+         font: inherit; text-align: left; color: var(--ink); background: #fff; border: 2px solid var(--line);
+         border-radius: 16px; overflow: hidden; }
+  button.rep { cursor: pointer; }
+  button.rep:hover { background: #fff; border-color: #9fb6cf; }
+  .rep .fond { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: #dbe8f6; transition: width .6s ease; }
+  .rep .l { position: relative; flex: 0 0 auto; display: grid; place-items: center;
+            width: calc(var(--t) * clamp(40px, min(4vw, 7vh), 96px)); height: calc(var(--t) * clamp(40px, min(4vw, 7vh), 96px));
+            border-radius: 12px; background: var(--blue); color: #fff; font-weight: 800;
+            font-size: calc(var(--t) * clamp(1.3rem, min(2.4vw, 4.2vh), 3.2rem)); line-height: 1; }
+  .rep .t { position: relative; min-width: 0; display: flex; flex-direction: column; align-items: flex-start;
+            gap: 6px; font-size: calc(var(--t) * clamp(1.3rem, min(2.7vw, 4.8vh), 4rem)); line-height: 1.2;
+            overflow-wrap: anywhere; }
+  .rep .t img { display: block; max-width: 100%; max-height: calc(var(--t) * 22vh); width: auto; height: auto; }
+  .rep .coche { position: relative; flex: 0 0 auto; color: var(--vert); font-weight: 800;
+                font-size: calc(var(--t) * clamp(1.3rem, min(2.7vw, 4.8vh), 4rem)); }
+  .rep .n { position: relative; flex: 0 0 auto; margin-left: auto; padding-left: 12px; font-weight: 800;
+            color: var(--blue-dark); font-variant-numeric: tabular-nums;
+            font-size: calc(var(--t) * clamp(1.3rem, min(2.7vw, 4.8vh), 3rem)); }
+  /* Une réponse qui est une FIGURE : la lettre (et au dévoilement le
+     nombre) sur une ligne au-dessus, la figure en grand dessous, et la barre
+     en bas de la carte — une figure à fond blanc ne la cache pas. */
+  .rep.avec-image { flex-direction: column; align-items: stretch; gap: calc(var(--t) * 8px);
+                    padding-bottom: calc(var(--t) * 20px); }
+  .rep-haut { position: relative; display: flex; align-items: center; gap: calc(var(--t) * 12px); }
+  .rep.avec-image .t { align-items: center; text-align: center; }
+  .rep.avec-image .t img { width: 100%; max-height: calc(var(--t) * 30vh); object-fit: contain; }
+  .rep.avec-image .fond { top: auto; height: calc(var(--t) * 12px); }
+  .q.devoile .rep { border-color: #e3e9f0; }
+  .q.devoile .rep .l { background: #3f6597; }
+  .rep.bonne, .q.devoile .rep.bonne { border-color: var(--vert); border-width: 3px; }
+  .rep.bonne .fond { background: #cdebd5; }
+  .q .rep.bonne .l { background: var(--vert); }
+  .rep.bonne .n { color: var(--vert); }
+  .q-chrono { flex: 0 0 auto; --p: 100%; display: grid; place-items: center; position: relative; border-radius: 50%;
+              width: clamp(80px, min(8vw, 13vh), 140px); height: clamp(80px, min(8vw, 13vh), 140px);
+              background: conic-gradient(var(--orange) var(--p), #e6ecf3 0); }
+  .q-chrono::before { content: ""; position: absolute; inset: 9px; border-radius: 50%; background: var(--page); }
+  .q-chrono b { position: relative; font-size: clamp(1.8rem, min(3.2vw, 5.4vh), 3.2rem); font-variant-numeric: tabular-nums; }
+  .q-chrono.fini { background: #e6ecf3; }
+  .katex { font-size: 1.08em; }
+  /* Le dépôt du questionnaire, avant d'ouvrir la séance. */
+  .depot { margin: 26px auto 0; width: min(640px, 100%); padding: 18px 20px; border: 2px dashed #b8c6d6;
+           border-radius: 16px; background: #fff; }
+  .depot.charge { border-style: solid; border-color: var(--line); text-align: left; }
+  .depot.survol { border-color: var(--teal); background: #eefaf9; }
+  .depot p { margin: 8px 0 0; color: var(--muted); }
+  .depot .nom { margin: 0; font-weight: 800; color: var(--blue-dark); font-size: 1.15rem; }
+  .depot .gestes { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+  .depot ul { margin: 10px 0 0; padding-left: 20px; text-align: left; color: var(--rouge); font-weight: 600; }
+  .depot.erreur { border-color: #f3d3d0; }
   .commandes { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: 14px;
                flex-wrap: wrap; padding: 12px 16px 18px; }
   .commandes label { display: inline-flex; align-items: center; gap: 8px; color: var(--muted);
                      font-size: .95rem; font-weight: 600; }
+  .commandes .case input { width: 20px; height: 20px; margin: 0; accent-color: var(--blue); }
+  .compte { display: inline-flex; align-items: center; gap: 10px; color: var(--muted); font-weight: 700;
+            font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+  .compte b { font-size: 1.9rem; color: var(--blue-dark); }
+  .compte .jauge { width: 170px; height: 12px; margin: 0; }
   select { min-height: 44px; padding: 6px 10px; font: inherit; color: var(--ink);
            border: 2px solid var(--line); border-radius: 10px; background: #fff; }
   .message { margin: 0; padding: 8px 14px; border-radius: 10px; font-weight: 600;
@@ -105,6 +206,30 @@ $nonce = entetes_page();
   dialog h2 { margin: 0 0 8px; font-family: Georgia, serif; font-size: 1.3rem; color: var(--blue-dark); }
   dialog p { margin: 0 0 14px; color: var(--muted); }
   dialog .choix { display: grid; gap: 10px; }
+  /* L'aperçu : toutes les questions, bonnes réponses comprises — jamais
+     pendant une séance (l'écran est projeté). */
+  dialog.apercu { max-width: 1100px; width: calc(100% - 32px); height: calc(100% - 32px); max-height: none;
+                  padding: 0; display: none; flex-direction: column; }
+  dialog.apercu[open] { display: flex; }
+  .apercu-haut { flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 16px 20px;
+                 border-bottom: 1px solid var(--line); }
+  .apercu-haut h2 { margin: 0; flex: 1 1 auto; }
+  .apercu-liste { flex: 1 1 auto; overflow: auto; padding: 8px 20px 24px; }
+  .apercu-q { padding: 16px 0; border-bottom: 1px solid var(--line); }
+  .apercu-q h3 { margin: 0; font-size: .95rem; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
+  .apercu-q .enonce { margin: 4px 0 10px; font-size: 1.35rem; font-weight: 600; color: var(--blue-dark); }
+  .apercu-q .figure img { display: block; max-width: 100%; max-height: 260px; margin: 0 0 10px; }
+  .apercu-q ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px;
+                 grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+  .apercu-q li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 2px solid var(--line);
+                 border-radius: 10px; font-size: 1.15rem; }
+  .apercu-q li img { display: block; max-width: 100%; max-height: 120px; }
+  .apercu-q li .l { flex: 0 0 auto; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px;
+                    background: var(--blue); color: #fff; font-weight: 800; line-height: 1; }
+  .apercu-q li.bonne { border-color: var(--vert); background: #effaf2; }
+  .apercu-q li.bonne .l { background: var(--vert); }
+  .apercu-q .pastille { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px;
+                        background: #fff3e6; color: #8a4500; font-size: .85rem; text-transform: none; letter-spacing: 0; }
   [hidden] { display: none !important; }
 </style>
 </head>
@@ -114,6 +239,7 @@ $nonce = entetes_page();
   <img src="../mathsgo-logo.png" alt="maths&go">
   <span class="titre">Séance en direct</span>
   <span class="classe" id="classe" hidden></span>
+  <span class="qz-titre" id="qz-titre" hidden></span>
   <span class="droite">
     <button type="button" class="secondaire" id="retour">Ma classe</button>
     <button type="button" class="danger" id="terminer" hidden>Terminer la séance</button>
@@ -123,7 +249,10 @@ $nonce = entetes_page();
 <main id="scene" aria-live="polite"></main>
 
 <div class="commandes" id="commandes">
+  <label class="case" id="case-tous" hidden><input type="checkbox" id="tous"> Dévoiler quand tous ont répondu</label>
+  <span class="compte" id="compte" hidden></span>
   <p class="message" id="message" hidden></p>
+  <button type="button" class="secondaire" id="ouvrir-qz" hidden>📂 Questionnaire</button>
   <label id="reglage-choix" hidden>Réponses possibles
     <select id="choix">
       <option value="2">A et B</option>
@@ -136,6 +265,8 @@ $nonce = entetes_page();
   <button type="button" class="grand" id="action" hidden></button>
 </div>
 
+<input type="file" id="fichier" accept=".json,application/json" hidden>
+
 <dialog id="fin">
   <h2>Terminer la séance ?</h2>
   <p id="fin-texte"></p>
@@ -146,6 +277,16 @@ $nonce = entetes_page();
   </div>
 </dialog>
 
+<dialog id="apercu" class="apercu">
+  <div class="apercu-haut">
+    <h2 id="apercu-titre">Aperçu</h2>
+    <button type="button" class="secondaire" id="apercu-fermer">Fermer</button>
+  </div>
+  <div class="apercu-liste" id="apercu-liste"></div>
+</dialog>
+
+<script src="../vendor/katex-0.16.9/katex.min.js?v=<?= htmlspecialchars($versionKatex, ENT_QUOTES) ?>"></script>
+<script src="questionnaire.js?v=<?= htmlspecialchars($versionQuestionnaire, ENT_QUOTES) ?>"></script>
 <script nonce="<?= htmlspecialchars($nonce, ENT_QUOTES) ?>">
 (() => {
   "use strict";
@@ -228,7 +369,7 @@ $nonce = entetes_page();
   // retenue : une interrogation partie AVANT un clic ne doit pas ramener
   // l'écran en arrière quand elle arrive après lui.
   function retenir(numeroAppel, donnees) {
-    if (numeroAppel < dernierAppel) return;
+    if (numeroAppel < dernierAppel) return false;
     dernierAppel = numeroAppel;
     connu = true;
     if ("direct" in donnees) direct = donnees.direct || null;
@@ -238,7 +379,154 @@ $nonce = entetes_page();
     }
     const propose = Number(donnees.rythme);
     if (propose >= 1000 && propose <= 30000) rythme = propose;
+    return true;
   }
+
+  // --------------------------------------------- lot 2 : le questionnaire chargé
+  //
+  // Il vit dans CE navigateur, et nulle part ailleurs. Ce qui le relie à la
+  // séance du serveur : « liens », numéro de question du serveur → rang de la
+  // question dans le fichier. Gardé dans l'onglet (sessionStorage) avec le
+  // texte du fichier : une page rechargée par mégarde reprend où elle en était.
+  // Sans le lecteur (fichier oublié au dépôt), la question éclair marche
+  // toujours ; seul le questionnaire est refusé, en le disant.
+  const QZ = window.MATHSGO_QUESTIONNAIRE || null;
+  const SANS_LECTEUR = "Le lecteur de questionnaire manque sur le serveur : redépose prof/questionnaire.js.";
+  const CLE_QZ = "mathsgo-direct-questionnaire-" + classeId;
+  const CLE_TOUS = "mathsgo-direct-devoiler-tous";
+  let qz = null;            // le questionnaire lu (questionnaire.js), ou null
+  let qzEmpreinte = "";
+  let qzTexte = "";
+  let qzErreurs = [];       // ce que la dernière lecture a refusé
+  let qzAttendu = null;     // {titre, empreinte} : à rouvrir après un rechargement
+  let liens = {};           // numéro du serveur → rang dans qz.questions
+  let prochaine = 0;        // rang de la prochaine question à lancer
+  let devoilementDemande = 0;
+  let finChrono = 0;        // instant (horloge locale) où le chrono du tableau atteint zéro
+  let chronoDe = 0;         // numéro de la question à laquelle finChrono appartient
+
+  // Une empreinte du texte (FNV-1a) : de quoi reconnaître le même fichier
+  // rouvert, rien de plus — ce n'est pas un secret.
+  function empreinteDe(texte) {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < texte.length; i += 1) {
+      h ^= texte.charCodeAt(i);
+      h = Math.imul(h, 0x01000193) >>> 0;
+    }
+    return texte.length + "-" + h.toString(16);
+  }
+
+  function sauverQz() {
+    try {
+      if (!qz) { sessionStorage.removeItem(CLE_QZ); return; }
+      const base = {empreinte: qzEmpreinte, titre: qz.titre, liens, prochaine};
+      try {
+        sessionStorage.setItem(CLE_QZ, JSON.stringify(Object.assign({texte: qzTexte}, base)));
+      } catch (_) {
+        // Trop lourd pour l'onglet (images) : on garde de quoi le reconnaître.
+        sessionStorage.setItem(CLE_QZ, JSON.stringify(base));
+      }
+    } catch (_) {}
+  }
+
+  function verifierFormule(source) {
+    if (!window.katex) return null;
+    try {
+      window.katex.renderToString("\\displaystyle " + source, OPTIONS_KATEX_STRICTES);
+      return null;
+    } catch (_) {
+      return "à corriger";
+    }
+  }
+  const OPTIONS_KATEX = {throwOnError: false, trust: false, strict: "ignore", maxSize: 20, maxExpand: 500};
+  const OPTIONS_KATEX_STRICTES = Object.assign({}, OPTIONS_KATEX, {throwOnError: true});
+
+  // Lit le texte d'un fichier. Rend true s'il est devenu LE questionnaire.
+  function chargerTexte(texte) {
+    const lu = QZ ? QZ.lire(texte, {verifierFormule}) : {ok: false, erreurs: [SANS_LECTEUR]};
+    if (!lu.ok) {
+      qzErreurs = lu.erreurs;
+      if (direct) messager(lu.erreurs[0] + (lu.erreurs.length > 1 ? ` (et ${lu.erreurs.length - 1} autre${lu.erreurs.length > 2 ? "s" : ""})` : ""));
+      return false;
+    }
+    const empreinte = empreinteDe(texte);
+    qzErreurs = [];
+    messager("");
+    // Le même fichier que celui de la séance en cours : on reprend où on en était.
+    const reprise = qzAttendu && qzAttendu.empreinte === empreinte;
+    if (!reprise) { liens = {}; prochaine = 0; }
+    qzAttendu = null;
+    qz = lu.questionnaire;
+    qzTexte = texte;
+    qzEmpreinte = empreinte;
+    sauverQz();
+    return true;
+  }
+
+  async function chargerFichier(fichier) {
+    if (!fichier) return;
+    if (fichier.size > QZ.MAX_OCTETS_FICHIER) {
+      qzErreurs = ["Le fichier est trop lourd (20 Mo au plus) : allège les images."];
+      if (direct) messager(qzErreurs[0]);
+      dessiner();
+      return;
+    }
+    let texte = "";
+    try { texte = await fichier.text(); }
+    catch (_) {
+      qzErreurs = ["Ce fichier ne s'ouvre pas. Glisse le fichier .json lui-même, pas son dossier."];
+      if (direct) messager(qzErreurs[0]);
+      dessiner();
+      return;
+    }
+    chargerTexte(texte);
+    dessiner();
+  }
+
+  function fermerQz() {
+    qz = null; qzTexte = ""; qzEmpreinte = ""; qzErreurs = []; qzAttendu = null;
+    liens = {}; prochaine = 0;
+    sauverQz();
+    dessiner();
+  }
+
+  // Au chargement de la page : un questionnaire était-il ouvert dans cet onglet ?
+  (function reprendreQz() {
+    let garde = null;
+    try { garde = JSON.parse(sessionStorage.getItem(CLE_QZ) || "null"); } catch (_) {}
+    if (!garde || typeof garde !== "object" || !QZ) return;
+    const liensGardes = (garde.liens && typeof garde.liens === "object") ? garde.liens : {};
+    const prochaineGardee = Number.isInteger(garde.prochaine) ? garde.prochaine : 0;
+    if (typeof garde.texte === "string" && garde.texte) {
+      const lu = QZ.lire(garde.texte);
+      if (lu.ok) {
+        qz = lu.questionnaire; qzTexte = garde.texte; qzEmpreinte = empreinteDe(garde.texte);
+        liens = liensGardes; prochaine = prochaineGardee;
+        return;
+      }
+    }
+    if (typeof garde.empreinte === "string" && garde.empreinte) {
+      qzAttendu = {titre: String(garde.titre || "ton questionnaire"), empreinte: garde.empreinte};
+      liens = liensGardes; prochaine = prochaineGardee;
+    }
+  })();
+
+  // La question du FICHIER posée sous ce numéro du serveur, ou null (question
+  // posée à l'oral, ou questionnaire pas encore rouvert).
+  function questionDuNumero(numero) {
+    if (!qz || !Object.prototype.hasOwnProperty.call(liens, String(numero))) return null;
+    return qz.questions[Number(liens[String(numero)])] || null;
+  }
+  function qzEnCours() { return Boolean(qz) && prochaine < qz.questions.length; }
+
+  let devoilerQuandTous = true;
+  try { devoilerQuandTous = localStorage.getItem(CLE_TOUS) !== "0"; } catch (_) {}
+  $("tous").checked = devoilerQuandTous;
+  $("tous").addEventListener("change", () => {
+    devoilerQuandTous = $("tous").checked;
+    try { localStorage.setItem(CLE_TOUS, devoilerQuandTous ? "1" : "0"); } catch (_) {}
+    verifierDevoilementAuto();
+  });
 
   // ------------------------------------------------------------------ les rendus
   //
@@ -283,9 +571,92 @@ $nonce = entetes_page();
         });
         scene.append(barres);
       },
+      // Lot 2 : la même question, quand elle vient du questionnaire. Les cartes
+      // portent le contenu de chaque réponse ; au dévoilement, leur barre.
+      carte(question, k, etat) {
+        const lettre = LETTRES[k];
+        const devoile = etat.etat === "devoile";
+        const carte = document.createElement(devoile ? "button" : "div");
+        carte.className = "rep";
+        if (devoile) {
+          carte.type = "button";
+          const repartition = etat.repartition || {};
+          const maximum = Math.max(1, ...question.choix.map((_, i) => Number(repartition[LETTRES[i]]) || 0));
+          const nombre = Number(repartition[lettre]) || 0;
+          const fond = document.createElement("i");
+          fond.className = "fond";
+          carte.append(fond);
+          // La barre pousse APRÈS le premier dessin : on la voit monter.
+          window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+            fond.style.width = `${Math.round(nombre / maximum * 100)}%`;
+          }));
+          const estBonne = etat.bonne === lettre;
+          carte.classList.toggle("bonne", estBonne);
+          carte.setAttribute("aria-pressed", estBonne ? "true" : "false");
+          carte.setAttribute("aria-label", `Réponse ${lettre} : ${nombre}. Désigner comme bonne réponse.`);
+          carte.addEventListener("click", () => agir("direct.bonne", {bonne: estBonne ? null : lettre}));
+        }
+        const badge = document.createElement("span");
+        badge.className = "l";
+        badge.textContent = lettre;
+        const contenu = document.createElement("span");
+        contenu.className = "t";
+        const choix = question.choix[k];
+        if (choix.image) contenu.append(image(choix.image));
+        if (choix.texte) {
+          const texte = document.createElement("span");
+          ecrire(texte, choix.texte);
+          contenu.append(texte);
+        }
+        // Une figure : la lettre et le nombre sur une ligne au-dessus d'elle.
+        const ligneHaut = choix.image ? document.createElement("span") : carte;
+        if (choix.image) {
+          carte.classList.add("avec-image");
+          ligneHaut.className = "rep-haut";
+          carte.append(ligneHaut, contenu);
+          ligneHaut.append(badge);
+        } else {
+          carte.append(badge, contenu);
+        }
+        if (devoile) {
+          if (etat.bonne === lettre) {
+            const coche = document.createElement("span");
+            coche.className = "coche";
+            coche.textContent = "✓";
+            ligneHaut.append(coche);
+          }
+          const nombre = document.createElement("span");
+          nombre.className = "n";
+          nombre.textContent = String(Number((etat.repartition || {})[lettre]) || 0);
+          ligneHaut.append(nombre);
+        }
+        return carte;
+      },
       cellule(reponse) { return reponse || ""; }
     }
   };
+
+  // ------------------------------------------------------- textes et formules
+  //
+  // « texte $maths$ texte » : le texte par textContent, les formules par
+  // KaTeX (sans « trust » : ni lien, ni HTML, ni style venus du fichier).
+  function ecrire(element, texte) {
+    QZ.decouper(texte).morceaux.forEach(morceau => {
+      if (morceau.maths === undefined) { element.append(morceau.texte); return; }
+      const span = document.createElement("span");
+      if (window.katex) window.katex.render("\\displaystyle " + morceau.maths, span, OPTIONS_KATEX);
+      else span.textContent = morceau.maths;
+      element.append(span);
+    });
+  }
+  function image(adresse) {
+    const img = document.createElement("img");
+    img.alt = "";
+    img.decoding = "async";
+    img.addEventListener("load", ajusterBientot);
+    img.src = adresse;
+    return img;
+  }
 
   // --------------------------------------------------------------------- dessin
 
@@ -300,28 +671,204 @@ $nonce = entetes_page();
     p.textContent = texte;
     return p;
   }
+  function bouton(texte, classe, quandClic) {
+    const b = document.createElement("button");
+    b.type = "button";
+    if (classe) b.className = classe;
+    b.textContent = texte;
+    b.addEventListener("click", quandClic);
+    return b;
+  }
 
-  let derniereSignature = "";
+  // Le cadre du questionnaire, avant d'ouvrir la séance : l'ouvrir, le
+  // vérifier (aperçu), le changer. Rien de son contenu n'est montré ici.
+  function cadreQuestionnaire() {
+    const cadre = document.createElement("div");
+    cadre.className = "depot" + (qz ? " charge" : "") + (qzErreurs.length ? " erreur" : "");
+    cadre.id = "depot";
+    if (qz) {
+      const nom = document.createElement("p");
+      nom.className = "nom";
+      nom.textContent = "📋 " + qz.titre;
+      const n = qz.questions.length;
+      const avecChrono = qz.questions.filter(q => q.chrono).length;
+      cadre.append(nom, ligne("", `${n} question${n > 1 ? "s" : ""}`
+        + (avecChrono ? (avecChrono === n ? " · toutes avec chrono" : ` · ${avecChrono} avec chrono`) : " · sans chrono")));
+      const gestes = document.createElement("div");
+      gestes.className = "gestes";
+      gestes.append(bouton("Aperçu (avec les réponses)", "secondaire", ouvrirApercu),
+        bouton("Changer", "secondaire", () => $("fichier").click()),
+        bouton("Retirer", "secondaire", fermerQz));
+      cadre.append(gestes);
+    } else {
+      if (qzAttendu) cadre.append(ligne("", `Rouvre « ${qzAttendu.titre} » pour reprendre là où tu en étais.`));
+      const gestes = document.createElement("div");
+      gestes.className = "gestes";
+      gestes.style.justifyContent = "center";
+      gestes.append(bouton("📂 Ouvrir un questionnaire", "secondaire", () => $("fichier").click()));
+      cadre.append(gestes, ligne("", "ou glisse le fichier ici"));
+    }
+    if (qzErreurs.length) {
+      const liste = document.createElement("ul");
+      qzErreurs.slice(0, 6).forEach(texte => {
+        const li = document.createElement("li");
+        li.textContent = texte;
+        liste.append(li);
+      });
+      if (qzErreurs.length > 6) {
+        const li = document.createElement("li");
+        li.textContent = `… et ${qzErreurs.length - 6} autre(s).`;
+        liste.append(li);
+      }
+      cadre.append(liste);
+    }
+    return cadre;
+  }
+
+  // Une question du questionnaire, pendant qu'elle est ouverte ou dévoilée.
+  function dessinerQuestion(scene, question, etat) {
+    const bloc = document.createElement("div");
+    bloc.className = "q" + (etat.etat === "devoile" ? " devoile" : "");
+    const haut = document.createElement("div");
+    haut.className = "q-haut";
+    const tete = document.createElement("div");
+    tete.className = "q-tete";
+    const num = document.createElement("div");
+    num.className = "q-num";
+    num.textContent = `Question ${question.numero} / ${qz.questions.length}`;
+    tete.append(num);
+    if (question.enonce) {
+      const enonce = document.createElement("p");
+      enonce.className = "q-enonce";
+      ecrire(enonce, question.enonce);
+      tete.append(enonce);
+    }
+    haut.append(tete);
+    if (etat.etat === "question" && etat.reste !== null && etat.reste !== undefined) {
+      const chrono = document.createElement("div");
+      chrono.className = "q-chrono";
+      chrono.id = "chrono";
+      chrono.setAttribute("role", "timer");
+      chrono.append(document.createElement("b"));
+      haut.append(chrono);
+    }
+    const corps = document.createElement("div");
+    corps.className = "q-corps";
+    if (question.image) {
+      const figure = document.createElement("div");
+      figure.className = "q-figure";
+      figure.append(image(question.image));
+      corps.append(figure);
+    }
+    const reponses = document.createElement("div");
+    reponses.className = "q-reponses";
+    const n = question.choix.length;
+    const avecImages = question.choix.some(c => c.image);
+    let colonnes = n === 3 ? 3 : (n >= 5 ? 3 : 2);
+    if (question.image) colonnes = n > 4 ? 2 : (avecImages ? 2 : 1);
+    else if (avecImages && n === 4) colonnes = 4;
+    reponses.style.setProperty("--cols", String(colonnes));
+    question.choix.forEach((_, k) => reponses.append(RENDUS.choix.carte(question, k, etat)));
+    corps.append(reponses);
+    bloc.append(haut, corps);
+    scene.append(bloc);
+  }
+
+  // La question tient-elle dans l'écran ? Sinon, tout rétrécit d'un même
+  // facteur, par petits pas, jusqu'à tenir (jamais de défilement au tableau).
+  let ajustement = 0;
+  function ajusterBientot() {
+    window.cancelAnimationFrame(ajustement);
+    ajustement = window.requestAnimationFrame(ajuster);
+  }
+  function ajuster() {
+    const scene = $("scene");
+    const bloc = scene.querySelector(".q");
+    if (!bloc) return;
+    let t = 1;
+    bloc.style.setProperty("--t", "1");
+    const corps = bloc.querySelector(".q-corps");
+    const hauteurDe = selecteur => { const boite = bloc.querySelector(selecteur); return boite ? boite.offsetHeight : 0; };
+    const deborde = () => scene.scrollHeight > scene.clientHeight + 1
+      || bloc.scrollHeight > bloc.clientHeight + 1
+      || Math.max(hauteurDe(".q-reponses"), hauteurDe(".q-figure")) > corps.clientHeight + 1
+      || [...bloc.querySelectorAll(".rep")].some(carte => carte.scrollWidth > carte.clientWidth + 1);
+    while (deborde() && t > 0.42) {
+      t = Math.round((t - 0.06) * 100) / 100;
+      bloc.style.setProperty("--t", String(t));
+    }
+  }
+  window.addEventListener("resize", ajusterBientot);
+
+  // Le chrono du tableau : un anneau qui se vide. C'est le SERVEUR qui tient la
+  // fin (il refuse les réponses après) ; ici, l'affichage, et à zéro le
+  // dévoilement.
+  function majChrono() {
+    if (!direct || direct.etat !== "question" || chronoDe !== direct.numero) return;
+    const reste = Math.max(0, finChrono - Date.now());
+    if (reste <= 0) devoilerMaintenant(false);
+    const anneau = $("chrono");
+    if (!anneau) return;
+    const secondes = Math.ceil(reste / 1000);
+    anneau.querySelector("b").textContent = String(secondes);
+    const duree = Number(direct.duree) || 1;
+    anneau.style.setProperty("--p", `${Math.min(100, reste / (duree * 1000) * 100)}%`);
+    anneau.classList.toggle("fini", reste <= 0);
+    anneau.setAttribute("aria-label", `${secondes} secondes`);
+  }
+  setInterval(majChrono, 200);
+
+  function caleChrono() {
+    if (!direct || direct.etat !== "question" || direct.reste === null || direct.reste === undefined) {
+      chronoDe = 0;
+      return;
+    }
+    // Le serveur compte en secondes entières : on ne recale l'horloge locale
+    // que pour une nouvelle question, ou si elle s'écarte de plus d'une seconde
+    // et demie (page restée cachée).
+    const proposee = Date.now() + Number(direct.reste) * 1000 + 500;
+    if (chronoDe !== direct.numero || Math.abs(proposee - finChrono) > 1500 || Number(direct.reste) === 0) {
+      finChrono = Number(direct.reste) === 0 ? Date.now() : proposee;
+      chronoDe = direct.numero;
+    }
+  }
+
+  // Ce qui change le DESSIN de la scène. Le compteur et le chrono, eux, se
+  // mettent à jour sans tout redessiner (les images ne clignotent pas).
+  function cleScene() {
+    const question = direct ? questionDuNumero(direct.numero) : null;
+    if (direct && question) {
+      return JSON.stringify(["qz", direct.etat, direct.numero, direct.bonne, direct.repartition, direct.reste !== null,
+        qzEmpreinte, liens[String(direct.numero)]]);
+    }
+    const vue = direct ? Object.assign({}, direct, {reste: null, expire_dans: null}) : null;
+    return JSON.stringify([connu, vue, qzEmpreinte, Boolean(qzAttendu), qzErreurs, prochaine]);
+  }
+
+  let derniereCle = "";
   function dessiner() {
-    const signature = JSON.stringify([connu, direct, enAction]);
-    if (signature === derniereSignature) return;
-    derniereSignature = signature;
+    const cle = cleScene();
+    if (cle !== derniereCle) {
+      derniereCle = cle;
+      dessinerScene();
+    }
+    dessinerCommandes();
+    majChrono();
+  }
 
+  function dessinerScene() {
     const scene = $("scene");
     scene.textContent = "";
-    const action = $("action");
-    action.hidden = true;
-    action.disabled = enAction;
-    $("reglage-choix").hidden = true;
+    scene.classList.remove("large");
     $("terminer").hidden = !direct;
+    $("qz-titre").hidden = !(qz && direct);
+    $("qz-titre").textContent = qz ? "· " + qz.titre : "";
     if (!connu) return;
 
     if (!direct) {
-      scene.append(titre("Séance en direct"),
-        ligne("sous", "Tu poses ta question à l’oral ou au tableau ; les élèves répondent sur leur écran."));
-      action.textContent = "Ouvrir la séance";
-      action.dataset.geste = "direct.ouvrir";
-      action.hidden = false;
+      scene.append(titre("Séance en direct"));
+      if (!qz) scene.append(ligne("sous", "Tu poses ta question à l’oral ou au tableau ; les élèves répondent sur leur écran."));
+      scene.append(cadreQuestionnaire());
       return;
     }
     if (direct.etat === "attente" || !direct.type) {
@@ -332,75 +879,290 @@ $nonce = entetes_page();
       gras.textContent = "Séance en direct";
       etapes.append(gras, ".");
       scene.append(titre("Rejoins la séance"), ligne("adresse", "suivi.mathsgo.re"), etapes);
-      $("reglage-choix").hidden = false;
-      action.textContent = "Lancer la question 1";
-      action.dataset.geste = "direct.question";
-      action.hidden = false;
+      const presents = document.createElement("p");
+      presents.className = "presents";
+      const nombre = document.createElement("b");
+      nombre.textContent = String(direct.connectes || 0);
+      presents.append(nombre, ` connecté${(direct.connectes || 0) > 1 ? "s" : ""} sur ${direct.inscrits}`);
+      scene.append(presents);
+      if (qzAttendu && !qz) scene.append(cadreQuestionnaire());
+      return;
+    }
+    const question = questionDuNumero(direct.numero);
+    if (question) {
+      scene.classList.add("large");
+      dessinerQuestion(scene, question, direct);
+      ajusterBientot();
       return;
     }
     const rendu = RENDUS[direct.type] || null;
     scene.append(titre("Question " + direct.numero));
+    const sur = Math.max(direct.connectes || 0, direct.repondu || 0);
     if (direct.etat === "question") {
       const compteur = document.createElement("p");
       compteur.className = "compteur";
       compteur.append(String(direct.repondu));
-      const sur = document.createElement("small");
-      sur.textContent = " / " + direct.inscrits;
-      compteur.append(sur);
+      const petit = document.createElement("small");
+      petit.textContent = " / " + sur;
+      compteur.append(petit);
       const jauge = document.createElement("div");
       jauge.className = "jauge";
       const plein = document.createElement("i");
-      plein.style.width = direct.inscrits > 0
-        ? `${Math.min(100, Math.round(direct.repondu / direct.inscrits * 100))}%` : "0";
+      plein.style.width = sur > 0 ? `${Math.min(100, Math.round(direct.repondu / sur * 100))}%` : "0";
       jauge.append(plein);
       scene.append(compteur, ligne("sous", direct.repondu > 1 ? "ont répondu" : "a répondu"), jauge);
+      return;
+    }
+    // Dévoilée.
+    if (rendu) rendu.resultats(scene, direct);
+    const sans = Math.max(0, sur - direct.repondu);
+    scene.append(ligne("bilan",
+      `${direct.repondu} réponse${direct.repondu > 1 ? "s" : ""}`
+      + (sans > 0 ? ` · ${sans} sans réponse` : "")
+      + (direct.bonne ? "" : " · clique sur une barre pour désigner la bonne réponse")));
+  }
+
+  // La barre du bas : le compteur (questionnaire), la case « tous ont
+  // répondu », le bouton du prochain geste.
+  function dessinerCommandes() {
+    const action = $("action");
+    action.hidden = true;
+    action.disabled = enAction;
+    $("reglage-choix").hidden = true;
+    $("compte").hidden = true;
+    $("ouvrir-qz").hidden = true;
+    $("case-tous").hidden = !direct;
+    if (!connu) return;
+
+    if (!direct) {
+      action.textContent = "Ouvrir la séance";
+      action.dataset.geste = "direct.ouvrir";
+      action.hidden = false;
+      return;
+    }
+    const question = direct.type ? questionDuNumero(direct.numero) : null;
+    if (direct.etat === "question") {
+      // Page rechargée en pleine question, questionnaire trop lourd pour
+      // l'onglet : de quoi le rouvrir sans attendre le dévoilement.
+      if (qzAttendu && !qz) {
+        $("ouvrir-qz").textContent = `📂 Rouvrir « ${qzAttendu.titre} »`;
+        $("ouvrir-qz").hidden = false;
+      }
+      if (question) {
+        const sur = Math.max(direct.connectes || 0, direct.repondu || 0);
+        const compte = $("compte");
+        compte.textContent = "";
+        const nombre = document.createElement("b");
+        nombre.textContent = String(direct.repondu);
+        const jauge = document.createElement("span");
+        jauge.className = "jauge";
+        const plein = document.createElement("i");
+        plein.style.width = sur > 0 ? `${Math.min(100, Math.round(direct.repondu / sur * 100))}%` : "0";
+        jauge.append(plein);
+        compte.append(nombre, ` / ${sur} ont répondu `, jauge);
+        compte.hidden = false;
+      }
       action.textContent = "Dévoiler les réponses";
       action.dataset.geste = "direct.devoiler";
       action.hidden = false;
       return;
     }
-    // Dévoilée.
-    if (rendu) rendu.resultats(scene, direct);
-    const sans = Math.max(0, direct.inscrits - direct.repondu);
-    scene.append(ligne("bilan",
-      `${direct.repondu} réponse${direct.repondu > 1 ? "s" : ""}`
-      + (sans > 0 ? ` · ${sans} sans réponse` : "")
-      + (direct.bonne ? "" : " · clique sur une barre pour désigner la bonne réponse")));
+    // En attente, ou question dévoilée : la suite.
+    if (qzEnCours()) {
+      action.textContent = `Question ${prochaine + 1} / ${qz.questions.length}  ▸`;
+      action.dataset.geste = "qz.suivante";
+      action.hidden = false;
+      if (direct.etat === "devoile" && question) {
+        const sur = Math.max(direct.connectes || 0, direct.repondu || 0);
+        const sans = Math.max(0, sur - direct.repondu);
+        messagerBilan(`${direct.repondu} réponse${direct.repondu > 1 ? "s" : ""}` + (sans > 0 ? ` · ${sans} sans réponse` : ""));
+      }
+      return;
+    }
+    if (direct.etat === "devoile" && question) {
+      const sur = Math.max(direct.connectes || 0, direct.repondu || 0);
+      const sans = Math.max(0, sur - direct.repondu);
+      messagerBilan(`${direct.repondu} réponse${direct.repondu > 1 ? "s" : ""}` + (sans > 0 ? ` · ${sans} sans réponse` : "")
+        + " · questionnaire terminé ✓");
+    }
+    // Sans questionnaire (ou après sa dernière question) : la question éclair
+    // du lot 1, et de quoi ouvrir un questionnaire.
+    $("ouvrir-qz").textContent = qzAttendu && !qz ? `📂 Rouvrir « ${qzAttendu.titre} »` : "📂 Questionnaire";
+    $("ouvrir-qz").hidden = false;
     $("reglage-choix").hidden = false;
     action.textContent = "Lancer la question " + (direct.numero + 1);
     action.dataset.geste = "direct.question";
     action.hidden = false;
   }
+  function messagerBilan(texte) {
+    const compte = $("compte");
+    compte.textContent = texte;
+    compte.hidden = false;
+  }
 
   // ------------------------------------------------------------------- gestes
 
-  async function agir(geste, corps) {
-    if (enAction) return;
+  async function agir(geste, corps, apres) {
+    if (enAction) return false;
     enAction = true;
     messager("");
     dessiner();
     const numeroAppel = ++compteurAppels;
+    let reussi = false;
     try {
-      retenir(numeroAppel, await api(geste, corps || {}));
+      const donnees = await api(geste, corps || {});
+      if (retenir(numeroAppel, donnees) && apres) apres(donnees);
+      reussi = true;
     } catch (erreur) {
       surErreur(erreur);
     } finally {
       enAction = false;
+      caleChrono();
       dessiner();
     }
+    return reussi;
+  }
+
+  // Dévoiler : au clic, à la fin du chrono, ou quand tous ont répondu. Avec la
+  // bonne réponse du fichier s'il y en a une — c'est le premier instant où le
+  // serveur la reçoit. Une seule demande par question.
+  function devoilerMaintenant(auClic) {
+    if (!direct || direct.etat !== "question") return;
+    if (!auClic && devoilementDemande === direct.numero) return;
+    if (enAction) { if (!auClic) window.setTimeout(() => devoilerMaintenant(false), 300); return; }
+    const numero = direct.numero;
+    devoilementDemande = numero;
+    const question = questionDuNumero(numero);
+    agir("direct.devoiler", question && question.bonne ? {bonne: question.bonne} : {}).then(reussi => {
+      if (!reussi && devoilementDemande === numero) devoilementDemande = 0;
+    });
+  }
+  function verifierDevoilementAuto() {
+    if (!devoilerQuandTous || !direct || direct.etat !== "question") return;
+    const connectes = Number(direct.connectes) || 0;
+    if (connectes > 0 && Number(direct.repondu) >= connectes) devoilerMaintenant(false);
+  }
+
+  function lancerQuestionDuFichier() {
+    if (!qzEnCours()) return;
+    const rang = prochaine;
+    const question = qz.questions[rang];
+    const reglage = {choix: question.choix.length};
+    if (question.chrono) reglage.duree = question.chrono;
+    agir("direct.question", {type: question.type, reglage}, donnees => {
+      if (donnees.direct && donnees.direct.numero) {
+        liens[String(donnees.direct.numero)] = rang;
+        prochaine = rang + 1;
+        sauverQz();
+      }
+    });
   }
 
   $("action").addEventListener("click", () => {
     const geste = $("action").dataset.geste;
-    if (geste === "direct.question") {
+    if (geste === "qz.suivante") {
+      lancerQuestionDuFichier();
+    } else if (geste === "direct.question") {
       const rendu = RENDUS.choix;
       agir(geste, {type: "choix", reglage: rendu.reglage()});
+    } else if (geste === "direct.devoiler") {
+      devoilerMaintenant(true);
+    } else if (geste === "direct.ouvrir") {
+      // Une séance neuve repart de la première question du questionnaire.
+      agir(geste, {}, donnees => {
+        if (donnees.direct && donnees.direct.numero === 0) { liens = {}; prochaine = 0; sauverQz(); }
+      });
     } else if (geste) {
       agir(geste);
     }
   });
 
   $("retour").addEventListener("click", versMaClasse);
+  $("ouvrir-qz").addEventListener("click", () => $("fichier").click());
+  $("fichier").addEventListener("change", () => {
+    const fichier = $("fichier").files && $("fichier").files[0];
+    $("fichier").value = "";
+    chargerFichier(fichier);
+  });
+
+  // Glisser le fichier sur la page — sauf pendant une question ouverte.
+  function depotPermis() { return !direct || direct.etat !== "question" || Boolean(qzAttendu && !qz); }
+  document.addEventListener("dragover", evenement => {
+    if (!depotPermis()) return;
+    evenement.preventDefault();
+    const cadre = $("depot");
+    if (cadre) cadre.classList.add("survol");
+  });
+  document.addEventListener("dragleave", () => {
+    const cadre = $("depot");
+    if (cadre) cadre.classList.remove("survol");
+  });
+  document.addEventListener("drop", evenement => {
+    evenement.preventDefault();
+    const cadre = $("depot");
+    if (cadre) cadre.classList.remove("survol");
+    if (!depotPermis()) return;
+    const fichier = evenement.dataTransfer && evenement.dataTransfer.files && evenement.dataTransfer.files[0];
+    chargerFichier(fichier);
+  });
+
+  // --------------------------------------------------------------------- aperçu
+  //
+  // Toutes les questions, bonnes réponses comprises : pour vérifier le fichier
+  // la veille. Seulement quand aucune séance n'est ouverte — l'écran est
+  // peut-être déjà projeté.
+  function ouvrirApercu() {
+    if (!qz || direct) return;
+    $("apercu-titre").textContent = "Aperçu — " + qz.titre;
+    const liste = $("apercu-liste");
+    liste.textContent = "";
+    qz.questions.forEach(question => {
+      const bloc = document.createElement("section");
+      bloc.className = "apercu-q";
+      const h3 = document.createElement("h3");
+      h3.textContent = `Question ${question.numero}`;
+      if (question.chrono) {
+        const pastille = document.createElement("span");
+        pastille.className = "pastille";
+        pastille.textContent = `⏱ ${question.chrono} s`;
+        h3.append(pastille);
+      }
+      bloc.append(h3);
+      if (question.enonce) {
+        const enonce = document.createElement("p");
+        enonce.className = "enonce";
+        ecrire(enonce, question.enonce);
+        bloc.append(enonce);
+      }
+      if (question.image) {
+        const figure = document.createElement("div");
+        figure.className = "figure";
+        figure.append(image(question.image));
+        bloc.append(figure);
+      }
+      const ol = document.createElement("ol");
+      question.choix.forEach((choix, k) => {
+        const li = document.createElement("li");
+        if (question.bonne === LETTRES[k]) li.className = "bonne";
+        const badge = document.createElement("span");
+        badge.className = "l";
+        badge.textContent = LETTRES[k];
+        li.append(badge);
+        if (choix.image) li.append(image(choix.image));
+        if (choix.texte) {
+          const texte = document.createElement("span");
+          ecrire(texte, choix.texte);
+          li.append(texte);
+        }
+        if (question.bonne === LETTRES[k]) li.append(" ✓");
+        ol.append(li);
+      });
+      bloc.append(ol);
+      liste.append(bloc);
+    });
+    $("apercu").showModal();
+  }
+  $("apercu-fermer").addEventListener("click", () => $("apercu").close());
 
   // ------------------------------------------------------------ interrogation
 
@@ -415,7 +1177,9 @@ $nonce = entetes_page();
       pannes += 1;
       if (pannes >= 2) messager("Connexion perdue. Nouvel essai…");
     }
+    caleChrono();
     dessiner();
+    verifierDevoilementAuto();
   }
 
   function planifier() {
@@ -473,11 +1237,15 @@ $nonce = entetes_page();
     return "﻿" + lignes.map(l => l.map(cellule).join(";")).join("\r\n") + "\r\n";
   }
 
+  // Le nom du fichier : la classe, le jour, et (lot 2) le titre du
+  // questionnaire s'il y en avait un — rien qui gêne Windows.
   function nomDuFichier(contenu) {
-    const classe = String((contenu.classe && contenu.classe.libelle) || "classe")
-      .normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^A-Za-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "classe";
+    const propre = texte => String(texte || "")
+      .normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^A-Za-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    const classe = propre((contenu.classe && contenu.classe.libelle) || "classe") || "classe";
     const jour = /^\d{4}-\d{2}-\d{2}$/.test(contenu.jour || "") ? contenu.jour : "";
-    return `seance-en-direct-${classe}${jour ? "-" + jour : ""}.csv`;
+    const sujet = propre(contenu.titre).slice(0, 40).replace(/-+$/g, "");
+    return `seance-en-direct-${classe}${jour ? "-" + jour : ""}${sujet ? "-" + sujet : ""}.csv`;
   }
 
   function telecharger(nom, texte) {
@@ -512,11 +1280,15 @@ $nonce = entetes_page();
         // Le fichier D'ABORD, l'effacement ensuite : si le téléchargement
         // échoue, la séance est encore là et l'on peut recommencer.
         const contenu = await api("direct.fichier");
+        if (qz) contenu.titre = qz.titre;
         telecharger(nomDuFichier(contenu), fabriquerFichier(contenu));
       }
       const numeroAppel = ++compteurAppels;
       await api("direct.terminer");
       retenir(numeroAppel, {direct: null});
+      // Le questionnaire reste ouvert, prêt pour une autre séance, depuis le début.
+      liens = {}; prochaine = 0; devoilementDemande = 0;
+      sauverQz();
       $("fin").close();
       messager("");
     } catch (erreur) {

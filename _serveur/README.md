@@ -63,6 +63,8 @@ _serveur/
     api/prof.php       API prof : connexion, classes, élèves, tableau, séance en direct
     direct.php         séance en direct, écran de l'élève
     prof/direct.php    séance en direct, écran du tableau (à projeter)
+    prof/questionnaire.js  lecteur du questionnaire JSON du professeur (lot 2) — LE CONTRAT
+    vendor/katex-0.16.9/  COPIE de assets/vendor/katex-0.16.9 (formules du tableau)
     api/direct.php     API élève de la séance en direct : l'état, et sa réponse
     lib/direct.php     séance en direct : types de réponse, purge, lectures, gestes
     lib/               bd, réponses/CORS, en-têtes de sécurité, codes, limitation,
@@ -181,6 +183,41 @@ cinq minutes).
 - un nouveau **mode de séance** (évaluation où chacun avance à son rythme, QCM
   préparé à l'avance) = une valeur de plus dans `MODES_DIRECT` ; la colonne
   `directs.mode` existe déjà.
+
+### Le questionnaire au tableau (lot 2, 15/10/2026)
+
+Le professeur prépare un **questionnaire** : un fichier JSON chez lui (format
+décrit dans `_serveur/QUESTIONNAIRE.md`, exemple dans
+`_serveur/questionnaires/exemple-questionnaire.json`). Il l'ouvre dans l'écran du
+tableau (bouton ou glisser-déposer), le vérifie avec « Aperçu » quand aucune
+séance n'est ouverte, puis le projette question par question : un clic affiche
+l'énoncé (formules KaTeX, figure éventuelle) ET ouvre les réponses ; au
+dévoilement, chaque carte-réponse se remplit de sa barre et la bonne passe au
+vert toute seule. L'élève n'a que ses boutons A-F.
+
+**Le questionnaire ne va jamais au serveur.** Pour chaque question, le tableau
+envoie ce qu'une question éclair envoie déjà (type, nombre de réponses) et,
+s'il y en a un, la durée du **chrono** ; la **bonne réponse** n'arrive qu'avec
+« Dévoiler » (`direct.devoiler` accepte `bonne`), jamais avant. Le lien
+« numéro du serveur → question du fichier » vit dans l'onglet
+(sessionStorage), avec le texte du fichier : une page rechargée reprend où
+elle en était.
+
+**Le chrono est tenu par le serveur.** `reglage.duree` (5 à 600 s) ; le serveur
+pose lui-même `reglage.fin` quand il pose la question, refuse toute réponse
+après, et la montre close à l'élève (« Regarde le tableau »). Le tableau
+affiche l'anneau et dévoile à zéro.
+
+**La présence.** La première fois qu'un élève interroge une séance ouverte, une
+ligne le note dans `directs_reponses` au **numéro 0** (une écriture par élève et
+par séance, jamais une par passage). Le tableau compte « répondu / connectés »
+et peut dévoiler tout seul quand tous les connectés ont répondu (case au
+tableau, gardée dans le navigateur du professeur). Le numéro 0 n'entre ni dans
+le fichier de fin ni dans les comptes de réponses.
+
+**Ce qui se branchera dessus** : Défi tables (lot 3) et Automatismes produiront
+des questionnaires de la même forme (identifiant stable, type de réponse, bonne
+réponse, réglage) ; `prof/questionnaire.js` est le seul endroit qui les lit.
 
 ### Le moteur
 

@@ -97,11 +97,21 @@ test("l'élève ne reçoit ni la répartition ni la bonne réponse", () => {
   }
 });
 
-for (const [nom, page] of [["direct.php (élève)", pageEleve], ["prof/direct.php (tableau)", pageTableau]]) {
+// Lot 2 : la page du tableau charge en plus deux fichiers D'ICI (KaTeX, copié
+// dans vendor/, et le lecteur de questionnaire), chacun avec une version qui
+// suit son contenu. Aucun autre.
+for (const [nom, page, externes] of [
+  ["direct.php (élève)", pageEleve, []],
+  ["prof/direct.php (tableau)", pageTableau, ["../vendor/katex-0.16.9/katex.min.js", "questionnaire.js"]],
+]) {
   test(`${nom} : nonce, aucun script d'ailleurs, rien du serveur en HTML`, () => {
     const balises = [...page.matchAll(/<script\b((?:\?>|[^>])*?)>/g)];
-    assert.equal(balises.length, 1, "un seul script");
-    assert.match(balises[0][1], /nonce="<\?= htmlspecialchars\(\$nonce, ENT_QUOTES\) \?>"/, "il porte le nonce");
+    const enLigne = balises.filter((balise) => !/\bsrc=/.test(balise[1]));
+    assert.equal(enLigne.length, 1, "un seul script écrit dans la page");
+    assert.match(enLigne[0][1], /nonce="<\?= htmlspecialchars\(\$nonce, ENT_QUOTES\) \?>"/, "il porte le nonce");
+    const sources = balises.filter((balise) => /\bsrc=/.test(balise[1])).map((balise) => /src="([^"?]+)\?v=<\?= htmlspecialchars\(\$version[A-Za-z]+, ENT_QUOTES\) \?>"/.exec(balise[1]));
+    assert.ok(sources.every(Boolean), "chaque script chargé porte une version qui suit son contenu");
+    assert.deepEqual(sources.map((trouve) => trouve[1]), externes, "aucun autre script que ceux d'ici");
     assert.doesNotMatch(page, /\son[a-z]+="/i, "pas d'attribut on…=");
     assert.doesNotMatch(page, /https?:\/\//, "aucune adresse d'un autre domaine");
     const script = scriptDe(page);

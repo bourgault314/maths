@@ -1018,8 +1018,18 @@ try {
             $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
             $direct = direct_de_la_classe($pdo, (int)$classe['id']);
             if ($direct === null) erreur("La séance est terminée : ouvre-la de nouveau.", 409);
-            // Déjà dévoilée (double clic, deuxième onglet) : même réponse.
-            devoiler_direct($pdo, $direct);
+            // Lot 2 : la bonne réponse d'un questionnaire arrive AVEC le geste
+            // qui dévoile, vérifiée par le type de la question — jamais avant.
+            $bonne = null;
+            if (($corps['bonne'] ?? null) !== null) {
+                $question = question_du_direct($pdo, $direct);
+                if ($question === null) erreur("Aucune question en cours.", 409);
+                $bonne = reponse_direct($question['type'], $question['reglage'], $corps['bonne']);
+                if ($bonne === null) erreur("Cette réponse n'existe pas pour cette question.", 400);
+            }
+            // Déjà dévoilée (double clic, deuxième onglet, fin du chrono et
+            // dernier élève au même instant) : même réponse, rien ne change.
+            devoiler_direct($pdo, $direct, $bonne);
             repondre(['ok' => true,
                 'direct' => etat_du_direct_pour_le_tableau($pdo, direct_de_la_classe($pdo, (int)$classe['id']) ?? $direct)]);
 
