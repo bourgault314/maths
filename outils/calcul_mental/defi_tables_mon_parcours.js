@@ -864,7 +864,24 @@
     evenements.push({type: "rang", rang: nouveau, nom: RANGS[nouveau].nom, cle: RANGS[nouveau].cle});
   }
 
-  // Applique une série TERMINÉE au parcours. resultat = {correct, total, date}.
+  // Le premier calcul raté deux fois dans une série (« 7-8 »), ou null.
+  // « rates » : la clé de chaque question pas réussie (fausse, passée, ou
+  // pas atteinte avant la fin du temps), dans l'ordre de la série. Sans liste
+  // (un appel d'avant ce lot), rien n'est raté deux fois : l'ancienne règle.
+  function calculRateDeuxFois(rates) {
+    if (!Array.isArray(rates)) return null;
+    const vus = new Set();
+    for (const cle of rates.slice(0, 100)) {
+      const texte = String(cle);
+      if (!/^(10|[1-9])-(10|[1-9])$/.test(texte)) continue;
+      if (vus.has(texte)) return texte;
+      vus.add(texte);
+    }
+    return null;
+  }
+
+  // Applique une série TERMINÉE au parcours. resultat = {correct, total, date,
+  // rates} — « rates » seulement pour le test et « comme le test ».
   function appliquerSerie(parcours, config, resultat) {
     const evenements = [];
     const classement = classerSerie(parcours, config);
@@ -912,16 +929,26 @@
         validation: validationTable(copie, classement.table, date)
       });
     } else if (classement.type === "validation") {
-      const reussi = erreurs <= SEUILS.validation.erreursMax;
+      // Lot « test : pas deux fois le même calcul » (16/10/2026, décision de
+      // Gwenaël) : 2 erreurs au plus, et jamais les deux sur le même calcul —
+      // au test, chaque calcul sort deux fois ; les rater toutes les deux,
+      // c'est ne pas le savoir.
+      const deuxFois = calculRateDeuxFois(resultat && resultat.rates);
+      const reussi = erreurs <= SEUILS.validation.erreursMax && !deuxFois;
       const dejaAcquise = Boolean(copie.tables[classement.table].acquise);
       // Plus aucun verrou (lot « un seul système ») : le test réussi, la
       // table est passée. Une table déjà passée se rejoue librement.
       const evenement = {type: "validation", table: classement.table, reussi, score: correct, total, dejaAcquise, nouvelle: false};
+      if (deuxFois) evenement.rateDeuxFois = deuxFois;
       evenements.push(evenement);
       if (reussi) evenement.nouvelle = acquerir(copie, classement.table, date, evenements);
     } else if (classement.type === "preparation") {
-      const reussi = erreurs <= SEUILS.validation.erreursMax;
-      evenements.push({type: "preparation", table: classement.table, reussi, score: correct, total, duree: classement.duree});
+      // « Comme le test » (2 ou 3 minutes) : la même règle que le test.
+      const deuxFois = calculRateDeuxFois(resultat && resultat.rates);
+      const reussi = erreurs <= SEUILS.validation.erreursMax && !deuxFois;
+      const evenement = {type: "preparation", table: classement.table, reussi, score: correct, total, duree: classement.duree};
+      if (deuxFois) evenement.rateDeuxFois = deuxFois;
+      evenements.push(evenement);
     } else if (classement.type === "melange") {
       // Mon mélange, libre : il ne ferme ni n'ouvre rien. Le parcours garde
       // le jour et le score du dernier joué.
@@ -3244,6 +3271,7 @@
     classerSerie,
     demarrerSerie,
     appliquerSerie,
+    calculRateDeuxFois,
     configApprends,
     configEntraine,
     configValidation,

@@ -3194,7 +3194,7 @@
   </footer>
 
   <script src="./defi_tables_core.js?v=20261015-1"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20261015-1"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20261016-1"></script>
   <script>
     (() => {
       "use strict";
@@ -7001,7 +7001,11 @@
         const scoreKey = configurationKey(state.configuration);
         const previousScore = sessionScores.get(scoreKey);
         if (state.configuration.mode !== "learn") sessionScores.set(scoreKey, state.correct);
-        const suivi = PARCOURS.appliquerSerie(parcours, state.configuration, {correct: state.correct, total: TOTAL, decouverte: state.origin === "decouverte"});
+        const resultatSerie = {correct: state.correct, total: TOTAL, decouverte: state.origin === "decouverte"};
+        // Le test et « comme le test » : les calculs ratés, pour la règle
+        // « pas deux fois le même calcul » (lot du 16/10/2026).
+        if (state.configuration.mode === "validation") resultatSerie.rates = calculsRatesDeLaSerie();
+        const suivi = PARCOURS.appliquerSerie(parcours, state.configuration, resultatSerie);
         parcours = suivi.parcours;
         sauverParcours();
         renderVerdict(suivi, elapsed);
@@ -7081,6 +7085,25 @@
       // Les calculs passés (« Passer ») de la série : ni justes, ni faux.
       function calculsPasses() {
         return state.responses.filter(reponse => reponse && reponse.skipped).length;
+      }
+
+      // Lot « test : pas deux fois le même calcul » (16/10/2026) : la clé de
+      // chaque question pas réussie — fausse, passée, ou pas atteinte quand
+      // le temps est écoulé. Le moteur en tire le calcul raté deux fois.
+      function calculsRatesDeLaSerie() {
+        return state.questions.flatMap((question, index) => {
+          const reponse = state.responses[index];
+          return question && question.factKey && !(reponse && reponse.correct) ? [question.factKey] : [];
+        });
+      }
+
+      // « 7 × 8 » pour la clé « 7-8 », la table du test d'abord (« 8 × 7 »
+      // au test de la table de 8).
+      function libelleRateDeuxFois(evenement) {
+        const [a, b] = String(evenement.rateDeuxFois).split("-").map(Number);
+        const premier = b === evenement.table && a !== b ? b : a;
+        const second = premier === a ? b : a;
+        return `${premier} × ${second}`;
       }
 
       function verdictSerie(suivi, elapsed) {
@@ -7169,7 +7192,10 @@
           // Audit 1 (30/09/2026) : le seuil compte des réponses JUSTES — le
           // score aussi (avant : « 15 réponses sur 20 … il en faut 18 », avec
           // les réponses données). Le détail compte aussi les calculs passés.
-          verdict.score = `${pluriel(state.correct, "juste")} sur ${TOTAL} en ${CORE.durationLabel(config.duration)} — il en faut ${seuilDe(principal)}`;
+          // Assez de justes, mais un calcul raté deux fois (lot du 16/10) :
+          // « il en faut 18 » sous « 18 justes » se contredirait.
+          const assez = principal.rateDeuxFois && state.correct >= seuilDe(principal);
+          verdict.score = `${pluriel(state.correct, "juste")} sur ${TOTAL} en ${CORE.durationLabel(config.duration)} — ${assez ? `mais ${libelleRateDeuxFois(principal)} raté\u00a0deux\u00a0fois` : `il en faut ${seuilDe(principal)}`}`;
           const fausses = state.answered - state.correct;
           const passees = calculsPasses();
           verdict.detail = [
@@ -7187,7 +7213,12 @@
           verdict.icone = "✗";
           verdict.titre = "Pas encore";
           verdict.config = rappelCourt();
-          verdict.score = `${sur(principal.score, principal.total)} — il en faut ${seuilDe(principal)}`;
+          // Lot « test : pas deux fois le même calcul » (16/10/2026, choix de
+          // Gwenaël) : « 18 sur 20 — mais 7 × 8 raté deux fois ».
+          const assez = principal.rateDeuxFois && principal.score >= seuilDe(principal);
+          verdict.score = assez
+            ? `${sur(principal.score, principal.total)} — mais ${libelleRateDeuxFois(principal)} raté\u00a0deux\u00a0fois`
+            : `${sur(principal.score, principal.total)} — il en faut ${seuilDe(principal)}`;
           return verdict;
         }
         if (principal) {
