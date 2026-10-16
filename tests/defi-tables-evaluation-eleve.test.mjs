@@ -26,6 +26,22 @@
 //  j) l'accueil pas redessiné après la première réponse (« À retenir »
 //     resterait caché) ;
 //  k) l'ancien libellé « À revoir ».
+//
+// Lot E4 (16/10/2026, choix de Gwenaël : « tant qu'il est sur le test, il ne
+// quitte pas le test ») — sabotages attendus :
+//  l) le verrou retiré (l'accueil entier pendant un passage commencé) ;
+//  m) le verrou qui tient encore après la fin (ou avant « Je commence ») ;
+//  n) un autre écran qui s'ouvre pendant le passage (show sans garde) ;
+//  o) « Précédent » qui quitte la série de l'évaluation ;
+//  p) la page rouverte sur un autre écran qui y reste ;
+//  q) « Je continue » qui redonne tout son temps à la question laissée ;
+//  r) l'instant gardé sous le code (au lieu des graines).
+//
+// Lot E4, correctif 1 (relevé par Code sur la PR #1006 : Ctrl+P imprimait la
+// fiche, produits compris, en pleine évaluation) — sabotages attendus :
+//  s) la règle d'impression retirée ;
+//  t) la classe jamais posée à l'état reçu ;
+//  u) rien de revérifié au moment d'imprimer (beforeprint).
 
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -590,4 +606,181 @@ test("lot E3b : la première lecture — sans évaluation, « À retenir » s'af
   const sansCode = demarrerAppli({reseau: serveurAvecEvaluation(), local: fauxStockage()});
   sansCode.api.parcours = matin;
   assert.deepEqual(sansCode.api.aRetenirAffiche(), [[2, 7]], "sans code : rien à attendre, rien de caché");
+});
+
+// ------------------------------------------------- lot E4 : le verrou du passage
+
+test("lot E4 · la page : la règle CSS, la garde de show(), « Précédent » pendant la série, le retour à l'accueil, la carte qui pose la classe", () => {
+  assert.match(html, /\.acc\.en-passage > :not\(\.evalc\) \{ display: none; \}/, "l) l'accueil réduit à la carte");
+  assert.match(BLOC, /const passageEnCours = etat => Boolean\(etat && etat\.etat === "ouverte" && etat\.commence && !etat\.fini && !etat\.close\);/, "m) commencé, pas fini, ouverte");
+  assert.match(BLOC, /function verrouPassage\(\) \{\s*return evaluationPossible\(\) && passageEnCours\(evalEtat\);\s*\}/);
+  assert.match(source("renderCarteEvaluation"), /acc\.classList\.toggle\("en-passage", verrouPassage\(\)\);/, "l) la classe posée à chaque dessin de l'accueil");
+  assert.match(source("show"), /^function show\(name\) \{\s*(\/\/[^\n]*\s*)*if \(name !== "intro" && verrouPassage\(\) && !\(name === "play" && enEvaluation\(\)\)\) name = "intro";/, "n) la garde, en tête de show()");
+  assert.match(source("retourNavigateur"), /if \(gardeVisible\) \{ suivreHistorique\(ecranCourant\); return; \}\s*(\/\/[^\n]*\s*)*if \(state\.running && enEvaluation\(\)\) \{ suivreHistorique\(ecranCourant\); return; \}\s*if \(\["launch", "play", "result"\]\.includes\(ecranCourant\)\) quitterSerie\(\);/, "o) « Précédent » reste sur la question");
+  assert.match(source("retenirEtatEvaluation"), /if \(verrouPassage\(\) && !state\.running && \$\("intro"\)\.hidden\) \{ backToModes\(\); return; \}/, "p) retour à l'accueil");
+});
+
+test("lot E4 · en marche : le verrou — rien avant « Je commence », l'accueil réduit à la carte pendant le passage, tout de nouveau après la fin ; fermée ou temps écoulé : plus de verrou ; sans code : jamais", async () => {
+  const {serveur, appli} = await appliEnEvaluation();
+  const acc = appli.document.getElementById(".acc");
+  appli.api.renderCarteEvaluation();
+  assert.equal(appli.api.verrouPassage(), false, "m) pas avant « Je commence »");
+  assert.equal(acc.classes.has("en-passage"), false);
+  await appli.api.commencerEvaluation();
+  await tic();
+  assert.equal(appli.api.verrouPassage(), true, "commencé, pas fini");
+  appli.api.renderCarteEvaluation();
+  assert.equal(acc.classes.has("en-passage"), true, "l) l'accueil n'a plus que la carte");
+  // Il répond à tout : fini, l'appli entière revient.
+  for (let i = 0; i < 20; i++) {
+    appli.api.repondreEvaluation(String(appli.state.questions[appli.state.index].answer));
+    await tic();
+  }
+  assert.equal(serveur.etat.fini, true);
+  assert.equal(appli.api.verrouPassage(), false, "m) plus rien une fois fini");
+  appli.api.renderCarteEvaluation();
+  assert.equal(acc.classes.has("en-passage"), false);
+  // Commencé puis temps écoulé (close), ou évaluation fermée : plus de verrou.
+  const brut = {etat: "ouverte", nom: "", modele: MODELE, commence: true, fini: false, close: false, suivant: 3, graines: {seance: 1, eleve: 2}, reponses: {}, ecoule: 10};
+  appli.api.retenirEtatEvaluation(brut);
+  assert.equal(appli.api.verrouPassage(), true);
+  appli.api.retenirEtatEvaluation({...brut, close: true});
+  assert.equal(appli.api.verrouPassage(), false, "temps écoulé : fini pour lui");
+  appli.api.retenirEtatEvaluation({...brut, etat: "fermee"});
+  assert.equal(appli.api.verrouPassage(), false, "fermée");
+  appli.api.retenirEtatEvaluation({...brut, commence: false, graines: null});
+  assert.equal(appli.api.verrouPassage(), false, "« Faire repasser » : de nouveau « Je commence », l'appli entière");
+  // Sans code : jamais.
+  const sansCode = demarrerAppli({reseau: serveurAvecEvaluation(), local: fauxStockage()});
+  sansCode.api.retenirEtatEvaluation(brut);
+  assert.equal(sansCode.api.verrouPassage(), false);
+});
+
+test("lot E4 · en marche : la page rouverte sur un autre écran (Mon parcours, Lire la table…) pendant un passage revient à l'accueil ; pas avant « Je commence », pas pendant une série", async () => {
+  const brut = {etat: "ouverte", nom: "", modele: MODELE, commence: true, fini: false, close: false, suivant: 3, graines: {seance: 1, eleve: 2}, reponses: {}, ecoule: 10};
+  const {appli} = await appliEnEvaluation();
+  appli.document.getElementById("intro").hidden = true;
+  let avant = appli.rendus.length;
+  appli.api.retenirEtatEvaluation({...brut, commence: false, graines: null});
+  assert.ok(!appli.rendus.slice(avant).includes("show:intro"), "pas commencé : il reste où il est");
+  avant = appli.rendus.length;
+  appli.state.running = true;
+  appli.api.retenirEtatEvaluation(brut);
+  assert.ok(!appli.rendus.slice(avant).includes("show:intro"), "une série en cours n'est pas coupée");
+  appli.state.running = false;
+  appli.api.retenirEtatEvaluation({...brut, suivant: 4});
+  assert.ok(appli.rendus.slice(avant).includes("show:intro"), "p) passage en cours : retour à l'accueil");
+});
+
+// ------------------------------------------- lot E4 : le temps qui continue
+
+const avecQuestion = (secondes = 8) => ({...MODELE, chrono: "question", secondes});
+
+async function appliAvecStockage(local, modele, etat = {}) {
+  const serveur = serveurAvecEvaluation({modele});
+  Object.assign(serveur.etat, etat);
+  const appli = demarrerAppli({reseau: serveur, codeOnglet: CODE, local});
+  appli.api.demarrerSuivi();
+  await tic();
+  return {serveur, appli};
+}
+
+test("lot E4 · en marche : chrono par question — l'instant où la question s'affiche est gardé sous les graines (jamais le code) ; la page rouverte, « Je continue » ne redonne pas le temps déjà passé", async () => {
+  const local = fauxStockage();
+  const {serveur, appli} = await appliAvecStockage(local, avecQuestion(8));
+  await appli.api.commencerEvaluation();
+  await tic();
+  const cle = appli.api.CLE_EVALUATION_QUESTION;
+  const garde = JSON.parse(local.getItem(cle));
+  assert.deepEqual(Object.keys(garde).sort(), ["affichee", "eleve", "numero", "seance"], "r) des nombres, rien d'autre");
+  assert.deepEqual([garde.seance, garde.eleve, garde.numero], [123456, 654321, 1]);
+  assert.ok(!local.getItem(cle).includes(CODE), "r) jamais le code");
+  // Il répond à la 1 : l'instant de la 2 remplace celui de la 1.
+  appli.api.repondreEvaluation(String(appli.state.questions[0].answer));
+  await tic();
+  assert.equal(JSON.parse(local.getItem(cle)).numero, 2);
+  // Il quitte la page sur la question 2, 5 secondes après qu'elle s'est
+  // affichée ; il rouvre (même appareil), « Je continue ».
+  local.setItem(cle, JSON.stringify({...JSON.parse(local.getItem(cle)), affichee: Date.now() - 5000}));
+  const etat = {commence: true, graines: {...serveur.etat.graines}, reponses: {...serveur.etat.reponses}};
+  const b = await appliAvecStockage(local, avecQuestion(8), etat);
+  await b.appli.api.commencerEvaluation();
+  await tic();
+  assert.equal(b.appli.state.index, 1, "la question 2");
+  const passe = Date.now() - b.appli.api.evalSerie.debutQuestion;
+  assert.ok(passe >= 4900 && passe < 6500, `q) les 5 s déjà passées comptent (${passe} ms)`);
+  assert.equal(b.serveur.direct().filter(c => c.numero === 2).length, 0, "il lui reste 3 s : rien n'est parti");
+});
+
+test("lot E4 · en marche : le temps de la question laissée est écoulé → elle part vide à la reprise, la suivante a tout son temps ; autre évaluation (graines), ou pas de stockage : tout le temps", async () => {
+  const local = fauxStockage();
+  const graines = {seance: 123456, eleve: 654321};
+  local.setItem("mathsgo-defi-tables-evaluation-question", JSON.stringify({...graines, numero: 1, affichee: Date.now() - 9000}));
+  const {serveur, appli} = await appliAvecStockage(local, avecQuestion(8), {commence: true, graines: {...graines}});
+  await appli.api.commencerEvaluation();
+  await tic();
+  const envoi = serveur.direct().find(c => c.numero === 1);
+  assert.ok(envoi, "q) la question 1 est partie toute seule");
+  assert.equal(envoi.reponse, "", "vide : le temps était passé");
+  assert.ok(envoi.dixiemes >= 89, `le temps noté compte l'absence (${envoi.dixiemes} dixièmes)`);
+  assert.equal(appli.state.index, 1, "la 2 arrive");
+  assert.ok(Date.now() - appli.api.evalSerie.debutQuestion < 1000, "avec tout son temps");
+  // Une autre évaluation (graines différentes) : l'instant gardé ne vaut rien.
+  local.setItem("mathsgo-defi-tables-evaluation-question", JSON.stringify({seance: 1, eleve: 2, numero: 1, affichee: Date.now() - 9000}));
+  const autre = await appliAvecStockage(local, avecQuestion(8), {commence: true, graines: {...graines}});
+  await autre.appli.api.commencerEvaluation();
+  await tic();
+  assert.equal(autre.serveur.direct().filter(c => c.numero === 1).length, 0);
+  assert.ok(Date.now() - autre.appli.api.evalSerie.debutQuestion < 1000);
+  // Pas de stockage (navigation privée bloquée) : la question part de zéro, sans erreur.
+  const bloque = fauxStockage();
+  const c = await appliAvecStockage(bloque, avecQuestion(8));
+  bloque.getItem = () => { throw new Error("bloqué"); };
+  bloque.setItem = () => { throw new Error("bloqué"); };
+  const debut = Date.now();
+  assert.ok(c.appli.api.debutDeLaQuestion({seance: 5, eleve: 6}, 1) >= debut, "maintenant, sans erreur");
+  await c.appli.api.commencerEvaluation();
+  await tic();
+  assert.equal(c.appli.api.enEvaluation(), true, "la série part quand même");
+  assert.ok(Date.now() - c.appli.api.evalSerie.debutQuestion < 1000);
+});
+
+// ------------------------------------- lot E4, correctif 1 : pas de fiche imprimée
+
+test("lot E4 · correctif 1 · la page : à l'impression, pendant un passage, la fiche cède la place à une ligne", () => {
+  const impression = html.slice(html.indexOf("@media print {"), html.indexOf("@media print {") + 1800);
+  assert.match(impression, /body\.impression-bloquee #fiche-print \{ display: none !important; \}/, "s) la fiche ne sort pas");
+  assert.match(impression, /body\.impression-bloquee::after \{ content: "Pas d’impression pendant l’évaluation\.";/, "une ligne à la place");
+  assert.match(BLOC, /function majImpressionEvaluation\(\) \{\s*const bloquee = verrouPassage\(\);\s*document\.body\.classList\.toggle\("impression-bloquee", bloquee\);/);
+  assert.match(source("retenirEtatEvaluation"), /evalEtat = lireEtatEvaluation\(brut\);\s*majImpressionEvaluation\(\);/, "t) à chaque état reçu");
+  assert.match(BLOC, /window\.addEventListener\("beforeprint", \(\) => \{ majImpressionEvaluation\(\); \}\);/, "u) revérifié au moment d'imprimer");
+  assert.match(html, /window\.addEventListener\("beforeprint", \(\) => renderFiche\(ficheAffichee\)\);/, "hors passage, Ctrl+P remplit la fiche comme avant");
+});
+
+test("lot E4 · correctif 1 · en marche : la classe d'impression suit le passage — posée à « Je commence », retirée à la fin ; revérifiée au moment d'imprimer ; jamais sans code", async () => {
+  const {serveur, appli} = await appliEnEvaluation();
+  const corps = appli.document.body;
+  assert.equal(corps.classes.has("impression-bloquee"), false, "pas commencé : la fiche s'imprime");
+  await appli.api.commencerEvaluation();
+  await tic();
+  assert.equal(corps.classes.has("impression-bloquee"), true, "t) passage commencé : pas de fiche");
+  for (let i = 0; i < 20; i++) {
+    appli.api.repondreEvaluation(String(appli.state.questions[appli.state.index].answer));
+    await tic();
+  }
+  assert.equal(serveur.etat.fini, true);
+  assert.equal(corps.classes.has("impression-bloquee"), false, "fini : la fiche s'imprime de nouveau");
+  // Au moment d'imprimer, l'état est relu : une classe restée par erreur part, une classe manquante revient.
+  corps.classList.add("impression-bloquee");
+  appli.declencher("beforeprint");
+  assert.equal(corps.classes.has("impression-bloquee"), false, "u) revérifié au moment d'imprimer");
+  const brut = {etat: "ouverte", nom: "", modele: MODELE, commence: true, fini: false, close: false, suivant: 3, graines: {seance: 1, eleve: 2}, reponses: {}, ecoule: 10};
+  appli.api.retenirEtatEvaluation(brut);
+  corps.classList.remove("impression-bloquee");
+  appli.declencher("beforeprint");
+  assert.equal(corps.classes.has("impression-bloquee"), true, "u) passage en cours : bloquée au moment d'imprimer");
+  // Sans code : jamais.
+  const sansCode = demarrerAppli({reseau: serveurAvecEvaluation(), local: fauxStockage()});
+  sansCode.api.retenirEtatEvaluation(brut);
+  assert.equal(sansCode.document.body.classes.has("impression-bloquee"), false);
 });

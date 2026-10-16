@@ -949,6 +949,8 @@
        ouvert une évaluation pour la classe (api/direct.php, clé « evaluation ») ;
        puis la ligne « envoyée ✓ · score » jusqu'à la fermeture. Tout vient du
        serveur et se pose par textContent. */
+    /* Lot E4 : passage d'évaluation commencé, pas fini : la carte seule. */
+    .acc.en-passage > :not(.evalc) { display: none; }
     .evalc { order: -3; padding: 14px 14px 14px; border: 2px solid #f0c08a; border-radius: 22px; background: linear-gradient(180deg, #fff6ea, #fff 70%); }
     .evalc .eyebrow { margin: 0 0 4px; color: #9a4b00; font-size: .74rem; letter-spacing: .06em; }
     .evalc h2 { margin: 0 0 6px; font-size: 1.35rem; line-height: 1.15; font-weight: 900; color: var(--ink); }
@@ -2518,6 +2520,12 @@
       html, body { margin: 0; background: #fff !important; color: #143451; }
       body > *:not(#fiche-print) { display: none !important; }
       #fiche-print { display: block !important; }
+      /* Lot E4, correctif 1 (relevé par Code sur la PR #1006) : pendant un
+         passage d'évaluation, Ctrl+P n'imprime pas la fiche — elle porte les
+         produits de ses tables. Une ligne à la place. */
+      body.impression-bloquee { min-height: 0 !important; }
+      body.impression-bloquee #fiche-print { display: none !important; }
+      body.impression-bloquee::after { content: "Pas d’impression pendant l’évaluation."; display: block; margin-top: 30mm; text-align: center; font: 700 14pt Arial, Helvetica, sans-serif; color: #143451; }
       /* Le cadre de la feuille à l'écran (« Voir ma fiche » de l'élève, fiche
          d'un élève chez le professeur) ne va pas sur le papier. Sa bordure, ses
          18 px de marge intérieure et sa largeur réduite faisaient dépasser la
@@ -4546,6 +4554,11 @@
         const premiere = !evalLue;
         evalLue = true;
         evalEtat = lireEtatEvaluation(brut);
+        majImpressionEvaluation();
+        // Lot E4 : passage en cours (commencé dans un autre onglet, ou page
+        // rouverte par un lien sur un autre écran) : retour à l'accueil, qui
+        // n'a plus que la carte.
+        if (verrouPassage() && !state.running && $("intro").hidden) { backToModes(); return; }
         if ((premiere || JSON.stringify(avant) !== JSON.stringify(evalEtat)) && !state.running && !$("intro").hidden) renderAccueil();
       }
 
@@ -4651,6 +4664,31 @@
       // que la ligne « 📝 Évaluation envoyée ✓ » de l'accueil.
       const passageFini = etat => Boolean(etat && etat.commence && (etat.fini || etat.close));
 
+      // Lot E4 (16/10/2026, choix de Gwenaël : « tant qu'il est sur le test,
+      // il ne quitte pas le test ») : son passage est commencé, pas fini, et
+      // l'évaluation ouverte. Tant que c'est vrai, Défi tables ne montre que
+      // l'évaluation — l'accueil réduit à la carte « Je continue »
+      // (.acc.en-passage), aucun autre écran (show), « Précédent » sans effet
+      // pendant la série (retourNavigateur). Avant « Je commence » et après la
+      // fin : toute l'appli, comme d'habitude (un rattrapage pour un petit
+      // groupe laisse les autres s'entraîner).
+      const passageEnCours = etat => Boolean(etat && etat.etat === "ouverte" && etat.commence && !etat.fini && !etat.close);
+      function verrouPassage() {
+        return evaluationPossible() && passageEnCours(evalEtat);
+      }
+
+      // Lot E4, correctif 1 (relevé par Code sur la PR #1006) : la fiche que
+      // sort Ctrl+P (ou le menu du navigateur) porte les produits de ses
+      // tables — une antisèche à deux touches, sur ordinateur. Pendant le
+      // passage, le papier ne la montre pas (@media print,
+      // body.impression-bloquee). La classe suit chaque état reçu, et se
+      // revérifie au moment d'imprimer.
+      function majImpressionEvaluation() {
+        const bloquee = verrouPassage();
+        document.body.classList.toggle("impression-bloquee", bloquee);
+        return bloquee;
+      }
+
       // « À retenir » tel qu'il s'affiche : la liste du jour (PARCOURS.aRetenir) ;
       // évaluation ouverte : rien tant que son passage n'est pas fini, puis la
       // liste sans les erreurs de l'évaluation. Avec un code, la page qui
@@ -4674,6 +4712,8 @@
         const acc = document.querySelector(".acc");
         if (!acc) return;
         acc.querySelectorAll(".evalc, .evalc-ligne").forEach(noeud => noeud.remove());
+        // Lot E4 : passage en cours → l'accueil n'a plus que la carte.
+        acc.classList.toggle("en-passage", verrouPassage());
         // L'accueil affiché et rien de programmé (retour d'une série, par
         // exemple) : la veille reprend.
         if (evaluationPossible() && evalMinuteur === null && !evalEnVol && !state.running) programmerLectureEvaluation(6000);
@@ -4866,8 +4906,36 @@
 
       function renderQuestionEvaluation() {
         renderQuestion();
-        evalSerie.debutQuestion = horlogeSerie();
+        // Lot E4 : le temps déjà passé sur cette question (page quittée puis
+        // rouverte) est retiré ; sinon, elle part de zéro.
+        const question = state.questions[state.index];
+        const affichee = debutDeLaQuestion(evalSerie.graines, question.numero);
+        evalSerie.debutQuestion = horlogeSerie() - Math.max(0, Date.now() - affichee);
         if (evalSerie.modele.chrono === "question") updateTimerEvaluation();
+      }
+
+      // Lot E4 (16/10/2026) : le temps d'une question continue de tourner
+      // quand l'élève quitte la page (onglet fermé, page rechargée, retour à
+      // Mon espace) — avant, « Je continue » lui redonnait tout son temps. À son
+      // retour, la question laissée reprend avec ce qui lui reste, ou part vide
+      // s'il ne reste rien (chrono par question) ; le temps noté pour elle
+      // dans le fichier compte l'absence. L'instant où elle s'est affichée est
+      // gardé sur l'appareil sous les graines de l'évaluation — des nombres
+      // tirés au hasard, jamais le code. Date.now, pas l'horloge de la série :
+      // celle-là repart de zéro avec la page.
+      const CLE_EVALUATION_QUESTION = "mathsgo-defi-tables-evaluation-question";
+      function debutDeLaQuestion(graines, numero) {
+        const maintenant = Date.now();
+        try {
+          const local = storage();
+          if (!local) return maintenant;
+          const lu = JSON.parse(local.getItem(CLE_EVALUATION_QUESTION) || "null");
+          if (lu && lu.seance === graines.seance && lu.eleve === graines.eleve && lu.numero === numero && Number.isFinite(lu.affichee)) {
+            return Math.min(maintenant, lu.affichee);
+          }
+          local.setItem(CLE_EVALUATION_QUESTION, JSON.stringify({seance: graines.seance, eleve: graines.eleve, numero, affichee: maintenant}));
+        } catch (_) {}
+        return maintenant;
       }
 
       function updateTimerEvaluation() {
@@ -5036,6 +5104,7 @@
         if (document.visibilityState === "visible" && !state.running && !$("intro").hidden) veillerEvaluation();
         else if (document.visibilityState === "hidden") arreterVeilleEvaluation();
       });
+      window.addEventListener("beforeprint", () => { majImpressionEvaluation(); });
       // [evaluation:fin]
 
       // [records:fin]
@@ -5487,6 +5556,9 @@
         if (surEntreeInterne() || !ecranEstInterne(ecranCourant)) return;
         // « C'est toujours toi ? » ouvert : on y reste, rien ne part.
         if (gardeVisible) { suivreHistorique(ecranCourant); return; }
+        // Lot E4 : pendant la série de l'évaluation, « Précédent » (bouton du
+        // navigateur, geste du téléphone) ne quitte pas : on y reste.
+        if (state.running && enEvaluation()) { suivreHistorique(ecranCourant); return; }
         if (["launch", "play", "result"].includes(ecranCourant)) quitterSerie();
         else backToModes();
       }
@@ -5501,6 +5573,9 @@
       // [retour-navigateur:fin]
 
       function show(name) {
+        // Lot E4 : passage d'évaluation en cours → seuls l'accueil (réduit à
+        // la carte) et la série de l'évaluation s'ouvrent.
+        if (name !== "intro" && verrouPassage() && !(name === "play" && enEvaluation())) name = "intro";
         // Lot « la flèche de retour » : le choix du nom ramène là d'où on
         // l'a ouvert (« Changer mon nom » → Les records).
         if (name === "records-nom") majRetourNom(ecranCourant);

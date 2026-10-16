@@ -43,7 +43,7 @@ test("2. écran de jeu sur téléphone (A) : le calcul au-dessus du pavé, sans 
 
 // --------------------------------------------------- retour du navigateur
 
-function monde({ecranDeDepart = "intro", mode = null, garde = false, etatInitial = null} = {}) {
+function monde({ecranDeDepart = "intro", mode = null, garde = false, etatInitial = null, evaluation = false} = {}) {
   const pile = [{etat: etatInitial}];
   let position = 0;
   const ecouteurs = {};
@@ -58,10 +58,12 @@ function monde({ecranDeDepart = "intro", mode = null, garde = false, etatInitial
   const window = {history, addEventListener: (nom, f) => { ecouteurs[nom] = f; }};
   const configuration = {mode};
   const vue = {ecran: ecranDeDepart};
-  const api = new Function("window", "configuration", "gardeVisible", "quitterSerie", "backToModes",
+  // Lot E4 : la série d'une évaluation en cours (state.running et enEvaluation()).
+  const state = {running: evaluation};
+  const api = new Function("window", "configuration", "gardeVisible", "state", "enEvaluation", "quitterSerie", "backToModes",
     `${entre("// [retour-navigateur:debut]", "// [retour-navigateur:fin]")}
      return {suivreHistorique, retourNavigateur};`)(
-    window, configuration, garde,
+    window, configuration, garde, state, () => evaluation,
     () => { appels.push("quitterSerie"); },
     () => { appels.push("backToModes"); configuration.mode = null; api.suivreHistorique("intro"); });
   const monde = {
@@ -131,6 +133,16 @@ test("D. « C’est toujours toi ? » ouvert : Retour ne quitte rien et remet l�
   m.retour();
   assert.ok(!m.appels.includes("quitterSerie"));
   assert.deepEqual(m.pile(), [false, true]);
+});
+
+test("E4 (16/10/2026) : pendant la série d'une évaluation, Retour ne quitte rien et remet l’entrée — autant de fois qu'il le faut", () => {
+  const m = monde({evaluation: true});
+  m.ouvrir("play");
+  for (let i = 0; i < 3; i++) {
+    m.retour();
+    assert.ok(!m.appels.includes("quitterSerie") && !m.appels.includes("backToModes"), "o) il reste sur la question");
+    assert.deepEqual(m.pile(), [false, true], "l'entrée est remise");
+  }
 });
 
 test("D. depuis l’accueil, Retour n’est pas intercepté ; une page rechargée sur l’entrée la retire", () => {
