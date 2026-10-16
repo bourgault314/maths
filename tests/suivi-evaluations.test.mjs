@@ -245,7 +245,7 @@ test("E2 — la liste des élèves pour Ma classe (prénoms, état, question), j
   assert.ok(!eleve.includes("eleves"), "l'élève ne reçoit jamais la liste");
 });
 
-test("E2 — Ma classe : la liste dépliée, « Faire repasser » avec confirmation, par textContent ; Mon espace : la pastille par createElement", () => {
+test("E2 — Ma classe : la liste dépliée, « Faire repasser » avec confirmation, par textContent ; Mon espace (lot E4) : la tuile « Évaluation de tables » au-dessus des activités, plus de pastille", () => {
   assert.match(page, /function dessinerListeEleves\(\) \{\s*const bloc = el\("details", "eval-liste"\);\s*bloc\.open = !evalListeRepliee;/, "dépliée par défaut (choix de Gwenaël), le pli gardé d'un redessin à l'autre");
   assert.match(page, /cours\.append\(compte, dessinerListeEleves\(\), actions\);/, "dans la carte ouverte, entre le compteur et « Fermer »");
   assert.match(page, /if \(eleve\.etat !== "rien"\) \{\s*const repasser = el\("button", "secondaire", "↺ Faire repasser"\);/, "pas de bouton pour qui n'a pas commencé");
@@ -253,8 +253,44 @@ test("E2 — Ma classe : la liste dépliée, « Faire repasser » avec confirmat
   assert.match(page, /recevoirEvaluation\(await api\("evaluation\.repasser", \{classe_id: classe\.id, eleve_id: eleve\.id\}\)\);/);
   const script = page.slice(page.indexOf("Les évaluations (lot E1"), page.indexOf("Les records (lot du 09/10/2026)"));
   assert.ok(!script.includes("innerHTML"), "rien par innerHTML dans la carte");
+  // Lot E4 (16/10/2026, choix de Gwenaël) : la pastille sur la tuile Défi
+  // tables faisait doublon ; l'évaluation s'annonce comme la séance en direct.
   const espace = lire("_serveur/public/index.php");
-  assert.match(espace, /function poserPastilleEvaluation\(etat\) \{[\s\S]*?const ouverte = Boolean\(etat && etat\.etat === "ouverte" && !etat\.fini && !etat\.close\);[\s\S]*?pastille\.textContent = "📝 Évaluation ouverte";/);
-  assert.match(espace, /poserPastilleEvaluation\(donnees\.evaluation\);/, "posée à chaque lecture de api/direct.php");
-  assert.match(espace, /\.appli\.a-evaluation \{ border-left-color: var\(--orange\); \}/);
+  assert.ok(!espace.includes("pastille-evaluation") && !espace.includes("poserPastilleEvaluation") && !espace.includes("a-evaluation"), "plus de pastille");
+  assert.match(espace, /<a class="appli direct-lien" id="direct-lien" href="direct\.php" hidden>[\s\S]*?<\/a>\s*<a class="appli direct-lien" id="evaluation-lien" href="#" hidden>/, "juste sous la tuile de la séance en direct, même dessin, cachée par défaut");
+  assert.match(espace, /<strong>Évaluation de tables<\/strong><span id="evaluation-lien-texte">Clique pour commencer\.<\/span>/);
+  assert.match(espace, /function poserTuileEvaluation\(etat\) \{\s*const ouverte = Boolean\(appliEvaluation && etat && etat\.etat === "ouverte" && !etat\.fini && !etat\.close\);\s*\$\("evaluation-lien"\)\.hidden = !ouverte;\s*if \(ouverte\) \$\("evaluation-lien-texte"\)\.textContent = etat\.commence \? "Clique pour continuer\." : "Clique pour commencer\.";/, "ouverte et pas finie ; « continuer » s'il a commencé ; textContent");
+  assert.match(espace, /poserTuileEvaluation\(donnees\.evaluation\);/, "posée à chaque lecture de api/direct.php");
+  assert.match(espace, /function arreterDirect\(\) \{[\s\S]*?poserTuileEvaluation\(null\);/, "partie avec l'élève (Se déconnecter, précédent)");
+  // Elle mène à Défi tables comme sa tuile : même adresse, billet frais au clic.
+  assert.match(espace, /appliEvaluation = disponibles\.find\(appli => appli\.cle === "defi-tables"\) \|\| null;/);
+  assert.match(espace, /tuileEvaluation\.href = appliEvaluation \? adresseAppli\(appliEvaluation, donnees\.billet \|\| ""\) : "#";/);
+  assert.match(espace, /tuileEvaluation\.onclick = appliEvaluation\s*\? event => ouvrirAppli\(event, tuileEvaluation, appliEvaluation, code, donnees\.billet \|\| ""\)/);
+  assert.match(espace, /lien\.addEventListener\("click", event => ouvrirAppli\(event, lien, appli, code, donnees\.billet \|\| ""\)\);/, "les tuiles des activités passent par la même fonction");
+});
+
+test("E4 — Mon espace : la tuile « Évaluation de tables », jouée — ouverte et pas finie seulement, « continuer » s'il a commencé, jamais sans Défi tables", () => {
+  const espace = lire("_serveur/public/index.php");
+  const bloc = espace.slice(espace.indexOf("let appliEvaluation = null;"), espace.indexOf("async function demanderDirect"));
+  assert.ok(bloc.includes("function poserTuileEvaluation"), "le bloc de la tuile");
+  const elements = {"evaluation-lien": {hidden: true}, "evaluation-lien-texte": {textContent: "Clique pour commencer."}};
+  const tuile = new Function("$", `${bloc}; return {poser: poserTuileEvaluation, set appli(a) { appliEvaluation = a; }};`)(id => elements[id]);
+  const ouverte = {etat: "ouverte", commence: false, fini: false, close: false};
+  tuile.poser(ouverte);
+  assert.equal(elements["evaluation-lien"].hidden, true, "sans Défi tables ouvert à la classe : pas de tuile");
+  tuile.appli = {cle: "defi-tables", url: "https://mathsgo.re/outils/calcul_mental/defi_tables.html"};
+  tuile.poser(ouverte);
+  assert.equal(elements["evaluation-lien"].hidden, false);
+  assert.equal(elements["evaluation-lien-texte"].textContent, "Clique pour commencer.");
+  tuile.poser({...ouverte, commence: true});
+  assert.equal(elements["evaluation-lien"].hidden, false);
+  assert.equal(elements["evaluation-lien-texte"].textContent, "Clique pour continuer.");
+  for (const fin of [{fini: true}, {close: true}, {etat: "fermee"}]) {
+    tuile.poser(ouverte);
+    tuile.poser({...ouverte, commence: true, ...fin});
+    assert.equal(elements["evaluation-lien"].hidden, true, `${JSON.stringify(fin)} : plus de tuile`);
+  }
+  tuile.poser(ouverte);
+  tuile.poser(null);
+  assert.equal(elements["evaluation-lien"].hidden, true, "plus d'évaluation (ou l'élève parti) : plus de tuile");
 });

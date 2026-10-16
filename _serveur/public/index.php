@@ -206,12 +206,11 @@ $versionSplat = version_moteur('splat-parcours.js');
      avec la classe. Même dessin qu'une activité, liseré orange. */
   .appli.direct-lien { height: auto; margin-top: 18px; border-left-color: var(--orange); }
   .appli.direct-lien + ul { margin-top: 12px; }
-  /* Lot E2 (15/10/2026, planche 6) : la pastille « 📝 Évaluation ouverte » sur
-     la tuile Défi tables, tant que le professeur a une évaluation ouverte que
-     l'élève n'a pas encore faite. Mon espace annonce, l'appli fait. */
-  .appli.a-evaluation { border-left-color: var(--orange); }
-  .appli .pastille-evaluation { display: inline-block; margin-top: 4px; padding: 2px 9px; border-radius: 999px; border: 1px solid #f3cfa3;
-                                background: #fdf0e3; color: #9a4b00; font-size: .8rem; font-weight: 800; white-space: nowrap; }
+  /* Lot E4 (16/10/2026, choix de Gwenaël) : l'évaluation de Défi tables
+     s'annonce à la même place et du même dessin que la séance en direct — une
+     tuile au-dessus des activités (une seule séance par classe : jamais les
+     deux). Elle remplace la pastille « 📝 Évaluation ouverte » du lot E2,
+     qui faisait doublon. */
   .aide { margin-top: 20px; color: var(--muted); font-size: .9rem; }
   footer { padding: 16px; border-top: 1px solid var(--line); background: var(--paper);
            color: var(--muted); font-size: .82rem; text-align: center; }
@@ -261,6 +260,11 @@ $versionSplat = version_moteur('splat-parcours.js');
     <a class="appli direct-lien" id="direct-lien" href="direct.php" hidden>
       <svg class="icone" width="40" height="40" viewBox="0 0 46 46" aria-hidden="true" focusable="false"><rect width="46" height="46" rx="12" fill="#fdf0e3"/><rect x="9" y="11" width="28" height="19" rx="3" fill="#fff" stroke="#063f86" stroke-width="2.4"/><path d="M19 36h8M23 30v6" stroke="#063f86" stroke-width="2.4" stroke-linecap="round"/><g fill="#f58220"><rect x="14" y="21" width="4" height="5" rx="1"/><rect x="21" y="16" width="4" height="10" rx="1"/><rect x="28" y="19" width="4" height="7" rx="1"/></g></svg>
       <div class="texte"><strong>Séance en direct</strong><span>Ton professeur a lancé une séance : rejoins la classe.</span></div>
+      <svg class="fleche" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </a>
+    <a class="appli direct-lien" id="evaluation-lien" href="#" hidden>
+      <svg class="icone" width="40" height="40" viewBox="0 0 46 46" aria-hidden="true" focusable="false"><rect width="46" height="46" rx="12" fill="#fdf0e3"/><rect x="11" y="8" width="21" height="29" rx="3" fill="#fff" stroke="#063f86" stroke-width="2.4"/><path d="M16 16h11M16 22h11M16 28h6" stroke="#063f86" stroke-width="2.2" stroke-linecap="round"/><path d="M27.5 35.5l1.2-5.2 9.4-9.4 4 4-9.4 9.4z" fill="#f58220" stroke="#9a4b00" stroke-width="1.6" stroke-linejoin="round"/></svg>
+      <div class="texte"><strong>Évaluation de tables</strong><span id="evaluation-lien-texte">Clique pour commencer.</span></div>
       <svg class="fleche" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
     </a>
     <ul id="applis"></ul>
@@ -434,6 +438,19 @@ $versionSplat = version_moteur('splat-parcours.js');
   function adresseAppli(appli, billet) {
     return `${appli.url}#b=${encodeURIComponent(billet)}`
       + (appli.ancre ? `&ouvrir=${encodeURIComponent(appli.ancre)}` : "");
+  }
+
+  // Un clic ordinaire sur une tuile : un billet frais, puis l'appli. Le clic
+  // du milieu ou « ouvrir dans un nouvel onglet » prennent l'adresse de la
+  // tuile, avec le billet de l'entrée.
+  async function ouvrirAppli(event, lien, appli, code, billetEntree) {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    if (lien.dataset.enCours) return;
+    lien.dataset.enCours = "1";
+    const billet = await billetFrais(code);
+    window.location.assign(adresseAppli(appli, billet || billetEntree));
+    window.setTimeout(() => { delete lien.dataset.enCours; }, 2000);
   }
 
   // Un billet neuf au moment du clic : celui reçu à l'entrée peut avoir
@@ -735,25 +752,21 @@ $versionSplat = version_moteur('splat-parcours.js');
     directCode = "";
     window.clearTimeout(directMinuteur);
     $("direct-lien").hidden = true;
-    poserPastilleEvaluation(null);
+    poserTuileEvaluation(null);
   }
 
-  // Lot E2 : la tuile Défi tables porte « 📝 Évaluation ouverte » tant que
-  // l'évaluation de la classe est ouverte et que l'élève ne l'a pas finie
-  // (ni été arrêté par sa fenêtre). Rien de plus : c'est dans l'appli que
-  // ça se passe. Construit par createElement, jamais par innerHTML.
-  function poserPastilleEvaluation(etat) {
-    const tuile = $("applis").querySelector('.appli[data-cle="defi-tables"]');
-    if (!tuile) return;
-    const ouverte = Boolean(etat && etat.etat === "ouverte" && !etat.fini && !etat.close);
-    tuile.classList.toggle("a-evaluation", ouverte);
-    let pastille = tuile.querySelector(".pastille-evaluation");
-    if (!ouverte) { if (pastille) pastille.remove(); return; }
-    if (pastille) return;
-    pastille = document.createElement("span");
-    pastille.className = "pastille-evaluation";
-    pastille.textContent = "📝 Évaluation ouverte";
-    tuile.querySelector(".texte").append(pastille);
+  // Lot E4 (16/10/2026, choix de Gwenaël) : tant que l'évaluation de Défi
+  // tables est ouverte et que l'élève ne l'a pas finie (ni été arrêté par sa
+  // fenêtre), la tuile « Évaluation de tables » apparaît AU-DESSUS des
+  // activités, à la place de la séance en direct, et mène droit à Défi
+  // tables (la carte « Je commence » y est en tête). Sans Défi tables ouvert
+  // à la classe, pas de tuile. Rien d'autre ne vient du serveur que l'état ;
+  // le texte est écrit ici, par textContent.
+  let appliEvaluation = null;   // l'entrée « defi-tables » de la liste du serveur
+  function poserTuileEvaluation(etat) {
+    const ouverte = Boolean(appliEvaluation && etat && etat.etat === "ouverte" && !etat.fini && !etat.close);
+    $("evaluation-lien").hidden = !ouverte;
+    if (ouverte) $("evaluation-lien-texte").textContent = etat.commence ? "Clique pour continuer." : "Clique pour commencer.";
   }
 
   async function demanderDirect(code) {
@@ -770,7 +783,7 @@ $versionSplat = version_moteur('splat-parcours.js');
       if (directCode !== code) return 0;
       if (reponse.ok && donnees && donnees.ok) {
         $("direct-lien").hidden = !donnees.direct;
-        poserPastilleEvaluation(donnees.evaluation);
+        poserTuileEvaluation(donnees.evaluation);
         const propose = Number(donnees.rythme);
         if (propose >= 2000 && propose <= 60000) attente = propose;
       } else if (reponse.status === 404) {
@@ -823,21 +836,23 @@ $versionSplat = version_moteur('splat-parcours.js');
       // Le billet de l'entrée sert de secours (clic du milieu, « ouvrir dans un
       // nouvel onglet ») ; un clic ordinaire en demande un frais.
       lien.href = adresseAppli(appli, donnees.billet || "");
-      lien.addEventListener("click", async event => {
-        if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-        event.preventDefault();
-        if (lien.dataset.enCours) return;
-        lien.dataset.enCours = "1";
-        const billet = await billetFrais(code);
-        window.location.assign(adresseAppli(appli, billet || donnees.billet || ""));
-        window.setTimeout(() => { delete lien.dataset.enCours; }, 2000);
-      });
+      lien.addEventListener("click", event => ouvrirAppli(event, lien, appli, code, donnees.billet || ""));
       lien.innerHTML = `${icone(appli.cle)}<div class="texte"><strong></strong><span></span></div>${FLECHE}`;
       lien.querySelector("strong").textContent = appli.nom;
       lien.querySelector("span").textContent = appli.description;
       li.appendChild(lien);
       liste.appendChild(li);
     });
+
+    // Lot E4 : la tuile de l'évaluation mène à Défi tables, comme sa tuile —
+    // même adresse, même billet. Cachée jusqu'à la première lecture.
+    appliEvaluation = disponibles.find(appli => appli.cle === "defi-tables") || null;
+    const tuileEvaluation = $("evaluation-lien");
+    tuileEvaluation.hidden = true;
+    tuileEvaluation.href = appliEvaluation ? adresseAppli(appliEvaluation, donnees.billet || "") : "#";
+    tuileEvaluation.onclick = appliEvaluation
+      ? event => ouvrirAppli(event, tuileEvaluation, appliEvaluation, code, donnees.billet || "")
+      : event => event.preventDefault();
 
     if (!liste.children.length) {
       const li = document.createElement("li");
