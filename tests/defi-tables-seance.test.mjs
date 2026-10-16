@@ -557,14 +557,15 @@ test("le bilan de séance : pas de rangée tant qu'elle est entièrement vide, l
   const bilan = parcours => {
     const ids = {};
     const $ = id => (ids[id] ||= element());
-    const fabrique = new Function("$", "PARCOURS", "parcours", "seance", "document", "pluriel", "soude", "backToModes", "tableDeLaSeance", "commencerSeance",
+    // Lot E3b : le bilan lit « À retenir » tel qu'il s'affiche (aRetenirAffiche).
+    const fabrique = new Function("$", "PARCOURS", "parcours", "seance", "document", "pluriel", "soude", "backToModes", "tableDeLaSeance", "commencerSeance", "aRetenirAffiche",
       `${code}\nreturn renderBilanSeance;`);
     const renderBilanSeance = fabrique(
       $, P, parcours,
       {table: 2, faites: [{nom: "Les perles", juste: 11, total: 11, rate: false, reussi: null}]},
       {createElement: balise => element(balise), createTextNode: texte => ({textContent: texte})},
       (nombre, mot) => `${nombre} ${mot}${nombre > 1 ? "s" : ""}`,
-      texte => texte, () => {}, () => undefined, () => {}
+      texte => texte, () => {}, () => undefined, () => {}, () => P.aRetenir(parcours)
     );
     const zone = element();
     renderBilanSeance(zone);
