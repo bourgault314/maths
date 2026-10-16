@@ -36,6 +36,12 @@
 //  p) la page rouverte sur un autre écran qui y reste ;
 //  q) « Je continue » qui redonne tout son temps à la question laissée ;
 //  r) l'instant gardé sous le code (au lieu des graines).
+//
+// Lot E4, correctif 1 (relevé par Code sur la PR #1006 : Ctrl+P imprimait la
+// fiche, produits compris, en pleine évaluation) — sabotages attendus :
+//  s) la règle d'impression retirée ;
+//  t) la classe jamais posée à l'état reçu ;
+//  u) rien de revérifié au moment d'imprimer (beforeprint).
 
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -737,4 +743,44 @@ test("lot E4 · en marche : le temps de la question laissée est écoulé → el
   await tic();
   assert.equal(c.appli.api.enEvaluation(), true, "la série part quand même");
   assert.ok(Date.now() - c.appli.api.evalSerie.debutQuestion < 1000);
+});
+
+// ------------------------------------- lot E4, correctif 1 : pas de fiche imprimée
+
+test("lot E4 · correctif 1 · la page : à l'impression, pendant un passage, la fiche cède la place à une ligne", () => {
+  const impression = html.slice(html.indexOf("@media print {"), html.indexOf("@media print {") + 1800);
+  assert.match(impression, /body\.impression-bloquee #fiche-print \{ display: none !important; \}/, "s) la fiche ne sort pas");
+  assert.match(impression, /body\.impression-bloquee::after \{ content: "Pas d’impression pendant l’évaluation\.";/, "une ligne à la place");
+  assert.match(BLOC, /function majImpressionEvaluation\(\) \{\s*const bloquee = verrouPassage\(\);\s*document\.body\.classList\.toggle\("impression-bloquee", bloquee\);/);
+  assert.match(source("retenirEtatEvaluation"), /evalEtat = lireEtatEvaluation\(brut\);\s*majImpressionEvaluation\(\);/, "t) à chaque état reçu");
+  assert.match(BLOC, /window\.addEventListener\("beforeprint", \(\) => \{ majImpressionEvaluation\(\); \}\);/, "u) revérifié au moment d'imprimer");
+  assert.match(html, /window\.addEventListener\("beforeprint", \(\) => renderFiche\(ficheAffichee\)\);/, "hors passage, Ctrl+P remplit la fiche comme avant");
+});
+
+test("lot E4 · correctif 1 · en marche : la classe d'impression suit le passage — posée à « Je commence », retirée à la fin ; revérifiée au moment d'imprimer ; jamais sans code", async () => {
+  const {serveur, appli} = await appliEnEvaluation();
+  const corps = appli.document.body;
+  assert.equal(corps.classes.has("impression-bloquee"), false, "pas commencé : la fiche s'imprime");
+  await appli.api.commencerEvaluation();
+  await tic();
+  assert.equal(corps.classes.has("impression-bloquee"), true, "t) passage commencé : pas de fiche");
+  for (let i = 0; i < 20; i++) {
+    appli.api.repondreEvaluation(String(appli.state.questions[appli.state.index].answer));
+    await tic();
+  }
+  assert.equal(serveur.etat.fini, true);
+  assert.equal(corps.classes.has("impression-bloquee"), false, "fini : la fiche s'imprime de nouveau");
+  // Au moment d'imprimer, l'état est relu : une classe restée par erreur part, une classe manquante revient.
+  corps.classList.add("impression-bloquee");
+  appli.declencher("beforeprint");
+  assert.equal(corps.classes.has("impression-bloquee"), false, "u) revérifié au moment d'imprimer");
+  const brut = {etat: "ouverte", nom: "", modele: MODELE, commence: true, fini: false, close: false, suivant: 3, graines: {seance: 1, eleve: 2}, reponses: {}, ecoule: 10};
+  appli.api.retenirEtatEvaluation(brut);
+  corps.classList.remove("impression-bloquee");
+  appli.declencher("beforeprint");
+  assert.equal(corps.classes.has("impression-bloquee"), true, "u) passage en cours : bloquée au moment d'imprimer");
+  // Sans code : jamais.
+  const sansCode = demarrerAppli({reseau: serveurAvecEvaluation(), local: fauxStockage()});
+  sansCode.api.retenirEtatEvaluation(brut);
+  assert.equal(sansCode.document.body.classes.has("impression-bloquee"), false);
 });

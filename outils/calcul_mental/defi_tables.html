@@ -2520,6 +2520,12 @@
       html, body { margin: 0; background: #fff !important; color: #143451; }
       body > *:not(#fiche-print) { display: none !important; }
       #fiche-print { display: block !important; }
+      /* Lot E4, correctif 1 (relevé par Code sur la PR #1006) : pendant un
+         passage d'évaluation, Ctrl+P n'imprime pas la fiche — elle porte les
+         produits de ses tables. Une ligne à la place. */
+      body.impression-bloquee { min-height: 0 !important; }
+      body.impression-bloquee #fiche-print { display: none !important; }
+      body.impression-bloquee::after { content: "Pas d’impression pendant l’évaluation."; display: block; margin-top: 30mm; text-align: center; font: 700 14pt Arial, Helvetica, sans-serif; color: #143451; }
       /* Le cadre de la feuille à l'écran (« Voir ma fiche » de l'élève, fiche
          d'un élève chez le professeur) ne va pas sur le papier. Sa bordure, ses
          18 px de marge intérieure et sa largeur réduite faisaient dépasser la
@@ -4548,6 +4554,7 @@
         const premiere = !evalLue;
         evalLue = true;
         evalEtat = lireEtatEvaluation(brut);
+        majImpressionEvaluation();
         // Lot E4 : passage en cours (commencé dans un autre onglet, ou page
         // rouverte par un lien sur un autre écran) : retour à l'accueil, qui
         // n'a plus que la carte.
@@ -4668,6 +4675,18 @@
       const passageEnCours = etat => Boolean(etat && etat.etat === "ouverte" && etat.commence && !etat.fini && !etat.close);
       function verrouPassage() {
         return evaluationPossible() && passageEnCours(evalEtat);
+      }
+
+      // Lot E4, correctif 1 (relevé par Code sur la PR #1006) : la fiche que
+      // sort Ctrl+P (ou le menu du navigateur) porte les produits de ses
+      // tables — une antisèche à deux touches, sur ordinateur. Pendant le
+      // passage, le papier ne la montre pas (@media print,
+      // body.impression-bloquee). La classe suit chaque état reçu, et se
+      // revérifie au moment d'imprimer.
+      function majImpressionEvaluation() {
+        const bloquee = verrouPassage();
+        document.body.classList.toggle("impression-bloquee", bloquee);
+        return bloquee;
       }
 
       // « À retenir » tel qu'il s'affiche : la liste du jour (PARCOURS.aRetenir) ;
@@ -5085,6 +5104,7 @@
         if (document.visibilityState === "visible" && !state.running && !$("intro").hidden) veillerEvaluation();
         else if (document.visibilityState === "hidden") arreterVeilleEvaluation();
       });
+      window.addEventListener("beforeprint", () => { majImpressionEvaluation(); });
       // [evaluation:fin]
 
       // [records:fin]
