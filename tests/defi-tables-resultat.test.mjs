@@ -9,7 +9,7 @@ const html = await readFile(new URL("../outils/calcul_mental/defi_tables.html", 
 
 test("le verdict dit réussi, pas encore ou temps écoulé — et ce qui manquait", () => {
   assert.match(html, /function verdictSerie\(suivi, elapsed\) \{/);
-  assert.match(html, /verdict\.titre = "Pas encore";\s*verdict\.config = rappelCourt\(\);\s*verdict\.score = `\$\{sur\(principal\.score, principal\.total\)\} — il en faut \$\{seuilDe\(principal\)\}`;/, "le score dit le seuil");
+  assert.match(html, /verdict\.titre = "Pas encore";\s*verdict\.config = rappelCourt\(\);[\s\S]{0,700}?: `\$\{sur\(principal\.score, principal\.total\)\} — il en faut \$\{seuilDe\(principal\)\}`;/, "le score dit le seuil");
   // Audit 1 (30/09/2026, Gwenaël) : sur un écran raté, plus de « 20 questions · 1 min 30 » sous le score.
   assert.match(html, /const rappelCourt = \(\) => \{\s*const parts = configurationLabel\(config\)\.split\(" · "\);\s*const melange = config\.mode === "validation" && config\.tables\.length > 1;\s*return parts\.slice\(0, melange \? 2 : 1\)\.join\(" · "\);/, "le rappel court garde l’épreuve, et les tables d’un mélange");
   assert.match(html, /verdict\.titre = "Temps écoulé";\s*verdict\.config = rappelCourt\(\);/, "le temps écoulé aussi");
