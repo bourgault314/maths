@@ -4459,9 +4459,12 @@
       let evalProchaine = 0;      // l'instant de cette lecture (une minuterie en avance ne lit pas)
       let evalEnVol = false;
       let evalSerie = null;       // pendant : {graines, modele, debutQuestion, envoi, aRenvoyer, appliques}
-      // Lot E3b : le serveur a-t-il déjà répondu (ou échoué) une fois ? Tant
-      // que non, « À retenir » attend : la page qui s'ouvre ne sait pas encore
-      // si une évaluation est ouverte (voir aRetenirAffiche).
+      // Lot E3b : le serveur a-t-il déjà répondu une fois ? Tant que non,
+      // « À retenir » attend : la page qui s'ouvre ne sait pas encore si une
+      // évaluation est ouverte (voir aRetenirAffiche). Correctif 1 (relevé
+      // par Code sur la PR #1004, choix de Gwenaël) : une panne, une lenteur
+      // ou un « trop de demandes » ne comptent PAS comme une réponse — sinon
+      // une panne en classe montrait les réponses pendant l'évaluation.
       let evalLue = false;
 
       function enEvaluation() {
@@ -4524,15 +4527,13 @@
           // prochain envoi (detacher) ; ici on cesse simplement de demander.
           retenirEtatEvaluation(null);
           return;
-        } else {
-          if (reponse.statut === 429) delai = (reponse.reessai || 60) * 1000;
-          // Lot E3b : pas de réponse (réseau coupé, panne) — « À retenir » ne
-          // reste pas caché pour autant (l'élève à la maison).
-          if (!evalLue) {
-            evalLue = true;
-            if (!state.running && !$("intro").hidden) renderAccueil();
-          }
+        } else if (reponse.statut === 429) {
+          delai = (reponse.reessai || 60) * 1000;
         }
+        // Lot E3b, correctif 1 : une panne, un réseau coupé ou un 429 ne
+        // comptent pas comme une réponse (evalLue ne bouge pas) — « À retenir »
+        // reste caché, la veille réessaie (15 s, ou ce que dit le serveur), et
+        // la première vraie réponse redessine l'accueil (retenirEtatEvaluation).
         if (!state.running) programmerLectureEvaluation(delai);
       }
 
@@ -4653,8 +4654,9 @@
       // « À retenir » tel qu'il s'affiche : la liste du jour (PARCOURS.aRetenir) ;
       // évaluation ouverte : rien tant que son passage n'est pas fini, puis la
       // liste sans les erreurs de l'évaluation. Avec un code, la page qui
-      // s'ouvre attend la première réponse du serveur : un instant sans
-      // « À retenir » plutôt que ses réponses avant de savoir.
+      // s'ouvre attend la première réponse du serveur — un instant, ou toute
+      // la panne si le serveur ne répond pas : pas d'« À retenir » plutôt que
+      // ses réponses avant de savoir.
       function aRetenirAffiche() {
         const liste = PARCOURS.aRetenir(parcours);
         if (!liste.length || !evaluationPossible()) return liste;

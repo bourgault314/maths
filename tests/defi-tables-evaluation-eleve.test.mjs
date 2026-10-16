@@ -440,11 +440,15 @@ const cleDe = (a, b) => `${Math.min(a, b)}-${Math.max(a, b)}`;
 
 // Le serveur garde ses réponses sur api/direct.php jusqu'à ce qu'on ouvre la
 // porte : la page qui s'ouvre ne sait pas encore s'il y a une évaluation.
+// « coupe » : le réseau tombe sur api/direct.php (statut 0 pour l'appli).
 function retarderDirect(serveur) {
   let ouvrir;
   const porte = new Promise(r => { ouvrir = r; });
-  return {...serveur, ouvrir: () => ouvrir(),
-    fetch: (url, options) => (url.endsWith("/api/direct.php") ? porte.then(() => serveur.fetch(url, options)) : serveur.fetch(url, options))};
+  const reseau = {...serveur, coupe: false, ouvrir: () => ouvrir(),
+    fetch: (url, options) => (url.endsWith("/api/direct.php")
+      ? porte.then(() => (reseau.coupe ? Promise.reject(new TypeError("Failed to fetch")) : serveur.fetch(url, options)))
+      : serveur.fetch(url, options))};
+  return reseau;
 }
 
 test("lot E3b, en marche : « À retenir » attend la première réponse du serveur ; ouverte : rien tant que son passage n'est pas fini, puis la liste sans les erreurs de l'évaluation (un calcul raté aussi ce matin compris) ; « Fermer », « Terminer » : tout ; « Faire repasser » : rien", async () => {
@@ -538,24 +542,50 @@ test("lot E3b : ce qui est caché — les ratés ATTEINTS de son passage (faux o
   assert.deepEqual(appli.api.aRetenirAffiche(), tout);
 });
 
-test("lot E3b : la première lecture sans évaluation, ou en panne — l'accueil se redessine et « À retenir » s'affiche (l'élève à la maison) ; sans code, la liste telle quelle", async () => {
+test("lot E3b : la première lecture — sans évaluation, « À retenir » s'affiche et l'accueil se redessine ; en panne, lent ou « trop de demandes » (correctif 1), il reste caché jusqu'à la première vraie réponse ; sans code, la liste telle quelle", async () => {
   const matin = PARCOURS.retenirErreurs(sansPrenom(parcoursAvecTravail("", 3)), [[2, 7]]);
-  for (const cas of ["sans évaluation", "panne"]) {
-    const serveur = serveurAvecEvaluation({progression: matin, ouverte: cas === "panne"});
-    if (cas === "sans évaluation") serveur.etat.ouverte = null;
-    else serveur.etat.forcer = {statut: 503};
+  const demarrer = async serveur => {
     const reseau = retarderDirect(serveur);
     const appli = demarrerAppli({reseau, codeOnglet: CODE, local: fauxStockage()});
     appli.api.demarrerSuivi();
     await tic();
-    assert.deepEqual(appli.api.aRetenirAffiche(), [], `${cas} : rien avant la réponse`);
-    const avant = appli.rendus.length;
-    reseau.ouvrir();
+    assert.deepEqual(appli.api.aRetenirAffiche(), [], "rien avant la réponse");
+    return {reseau, appli};
+  };
+  // Sans évaluation : la première réponse redessine l'accueil, le cadre s'affiche.
+  const sans = serveurAvecEvaluation({progression: matin});
+  sans.etat.ouverte = null;
+  const a = await demarrer(sans);
+  const avant = a.appli.rendus.length;
+  a.reseau.ouvrir();
+  await tic();
+  assert.equal(a.appli.api.evalEtat, null);
+  assert.equal(a.appli.api.evalLue, true);
+  assert.ok(a.appli.rendus.slice(avant).includes("accueil"), "j) l'accueil est redessiné (sinon « À retenir » resterait caché)");
+  assert.deepEqual(a.appli.api.aRetenirAffiche(), [[2, 7]]);
+  // Panne (500, 503), « trop de demandes » (429), réseau coupé ou trop lent
+  // (statut 0) — pendant une évaluation ouverte, la page rechargée : rien.
+  for (const panne of [{statut: 500}, {statut: 503}, {statut: 429}, {statut: 0}]) {
+    const serveur = serveurAvecEvaluation({progression: matin});
+    Object.assign(serveur.etat, {commence: true, graines: {seance: 123456, eleve: 654321}});
+    const b = await demarrer(serveur);
+    if (panne.statut) serveur.etat.forcer = {statut: panne.statut};
+    else b.reseau.coupe = true;
+    b.reseau.ouvrir();
     await tic();
-    assert.equal(appli.api.evalEtat, null);
-    assert.equal(appli.api.evalLue, true);
-    assert.ok(appli.rendus.slice(avant).includes("accueil"), `j) ${cas} : l'accueil est redessiné (sinon « À retenir » resterait caché)`);
-    assert.deepEqual(appli.api.aRetenirAffiche(), [[2, 7]], `${cas} : « À retenir » s'affiche`);
+    assert.equal(b.appli.api.evalLue, false, `j') ${panne.statut || "réseau coupé"} : ce n'est pas une réponse`);
+    assert.deepEqual(b.appli.api.aRetenirAffiche(), [], `j') ${panne.statut || "réseau coupé"} : « À retenir » reste caché (ses réponses ne s'affichent pas)`);
+    // Le serveur répond de nouveau : le cadre suit l'état vrai (commencée, pas finie : rien ; finie : sans ses ratés).
+    serveur.etat.forcer = null;
+    b.reseau.coupe = false;
+    const rendus = b.appli.rendus.length;
+    await b.appli.api.lireEvaluation();
+    assert.equal(b.appli.api.evalLue, true);
+    assert.ok(b.appli.rendus.slice(rendus).includes("accueil"), "la première vraie réponse redessine l'accueil");
+    assert.deepEqual(b.appli.api.aRetenirAffiche(), [], "commencée, pas finie : rien");
+    serveur.etat.ouverte = false;
+    await b.appli.api.lireEvaluation();
+    assert.deepEqual(b.appli.api.aRetenirAffiche(), [[2, 7]], "fermée : tout");
   }
   const sansCode = demarrerAppli({reseau: serveurAvecEvaluation(), local: fauxStockage()});
   sansCode.api.parcours = matin;
