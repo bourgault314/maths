@@ -259,12 +259,18 @@ test("en marche : vingt réponses — fini, le score affiché est celui de ses r
   // avec les réponses d'un autre passage, il change.
   const q1 = appli.state.questions[0];
   assert.deepEqual(appli.api.scoreDeLEvaluation({...appli.api.evalEtat, reponses: {"1": `${q1.answer}|10`}}), {score: 1, total: 20});
-  // La carte : la ligne « envoyée ✓ · 15 / 20 ».
+  // La carte : la ligne « envoyée ✓ · 15 / 20 », et dessous (lot E3) les
+  // cinq calculs ratés, sans leur résultat.
   appli.api.renderCarteEvaluation();
   const acc = appli.document.getElementById(".acc");
   const ligne = acc.enfants[0];
   assert.ok(ligne.classes.has("evalc-ligne") && !ligne.classes.has("is-close"));
-  assert.equal(ligne.texte, "📝 Évaluation envoyée ✓ · 15 / 20");
+  assert.equal(ligne.enfants[0].textContent, "📝 Évaluation envoyée ✓ · 15 / 20");
+  const rates = appli.state.questions.filter((q, i) => i % 4 === 0);
+  assert.ok(ligne.classes.has("a-revoir"));
+  assert.ok(ligne.enfants[1].classes.has("evalc-revoir"));
+  assert.equal(ligne.enfants[1].textContent, "À revoir\u00a0: " + rates.map(q => `${q.first}\u00a0×\u00a0${q.second}`).join(" · "));
+  assert.ok(!/[=?÷]/.test(ligne.enfants[1].textContent), "des calculs « a × b », jamais un résultat ni une question");
   // Fermée : plus rien.
   serveur.etat.ouverte = false;
   await appli.api.lireEvaluation();
@@ -374,4 +380,37 @@ test("en marche : une réponse de plus de 3 chiffres ne part pas ; par question,
   await new Promise(r => setTimeout(r, 5));
   assert.equal(serveur.etat.reponses["1"].split("|")[0], String(q1.answer), "c'est SA réponse qui est rangée");
   assert.equal(appli.state.index, 1);
+});
+
+test("lot E3 : « À revoir » — les ratés et les vides atteints, chaque calcul une fois, jamais une question pas atteinte, huit au plus, rien à 20 / 20", async () => {
+  const {appli} = await appliEnEvaluation();
+  const graines = {seance: 123456, eleve: 654321};
+  const questions = CORE.genererEvaluationDeClasse(MODELE, graines);
+  const etat = reponses => ({...appli.api.evalEtat, etat: "ouverte", commence: true, fini: true, modele: MODELE, graines, reponses});
+  const justes = n => Object.fromEntries(questions.slice(0, n).map(q => [String(q.numero), `${q.answer}|20`]));
+  // Tout juste : rien à revoir, la ligne reste sur un étage.
+  assert.deepEqual(appli.api.calculsARevoir(etat(justes(20))), []);
+  // Un faux, un vide, et la fin jamais atteinte (copie arrêtée à 6 réponses).
+  const r = justes(6);
+  r[String(questions[1].numero)] = `${questions[1].answer + 1}|20`;
+  r[String(questions[3].numero)] = "|80";
+  assert.deepEqual(appli.api.calculsARevoir(etat(r)), [[questions[1].first, questions[1].second], [questions[3].first, questions[3].second]],
+    "le faux et le vide, dans l'ordre des questions ; les 14 jamais atteintes ne comptent pas");
+  // Un même calcul raté sous deux formes (3 × 8 et 24 ÷ 3) : une fois. Une
+  // seule table et 20 questions : chaque calcul revient sous deux formes.
+  const UNE_TABLE = {...MODELE, tables: [3]};
+  const q3 = CORE.genererEvaluationDeClasse(UNE_TABLE, graines);
+  assert.equal(new Set(q3.map(q => q.factKey)).size, 10, "le tirage repasse bien deux fois par chaque calcul");
+  const tout = Object.fromEntries(q3.map(q => [String(q.numero), "0|20"]));
+  const calculs = appli.api.calculsARevoir({...etat(tout), modele: UNE_TABLE});
+  const cles = calculs.map(([a, b]) => `${Math.min(a, b)}-${Math.max(a, b)}`);
+  assert.equal(cles.length, 10, "dix calculs, pas vingt");
+  assert.equal(new Set(cles).size, cles.length, "chaque calcul une fois");
+  // Plus de huit : les huit premiers, puis « et N autres ».
+  const huit = [[2, 3], [4, 5], [6, 7], [8, 9], [3, 4], [5, 6], [7, 8], [9, 2], [3, 3], [4, 4]];
+  assert.equal(appli.api.texteARevoir(huit), "À revoir\u00a0: " + huit.slice(0, 8).map(([a, b]) => `${a}\u00a0×\u00a0${b}`).join(" · ") + " · et 2 autres");
+  assert.equal(appli.api.texteARevoir(huit.slice(0, 9)).endsWith(" · et 1 autre"), true);
+  // Sans graines (serveur d'avant, état bizarre) : rien.
+  assert.deepEqual(appli.api.calculsARevoir({...etat(r), graines: null}), []);
+  assert.deepEqual(appli.api.calculsARevoir(null), []);
 });

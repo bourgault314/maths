@@ -164,7 +164,7 @@ function copies() {
   ];
 }
 
-test("le fichier : une ligne par élève — note sur 20, score, temps, début, le détail des ratés", () => {
+test("le fichier : une ligne par élève — note sur 20, score (« 8 sur 10 », jamais une date dans Excel), temps, début, le détail des ratés", () => {
   const f = fabrique();
   const liste = copies();
   const texte = f.fabriquerFichierEvaluation(liste);
@@ -172,15 +172,21 @@ test("le fichier : une ligne par élève — note sur 20, score, temps, début, 
   const lignes = texte.slice(1).split("\r\n");
   assert.equal(lignes[0], "Élève;Note sur 20;Score;Temps;Début;Calculs ratés");
   const heure = f.celluleCsv(new Date(liste[0].eleve.debut * 1000).getHours() + " h 12");
-  assert.equal(lignes[1], `Léa B.;20;10 / 10;0 min 25 s;${heure};`, "tout juste : note 20, aucun raté");
+  assert.equal(lignes[1], `Léa B.;20;10 sur 10;0 min 25 s;${heure};`, "tout juste : note 20, aucun raté");
   const noah = liste[1];
   const rate = noah.copie.rates;
   assert.equal(rate.length, 2);
-  assert.equal(lignes[2], `Noah;16;8 / 10;0 min 25 s;${heure};${rate[0].prompt} → ${rate[0].donnee} · ${rate[1].prompt} → —`,
+  assert.equal(lignes[2], `Noah;16;8 sur 10;0 min 25 s;${heure};${rate[0].prompt} → ${rate[0].donnee} · ${rate[1].prompt} → —`,
     "une réponse fausse montre ce qui a été tapé, une absence de réponse un tiret");
-  assert.match(lignes[3], /^'=1\+1 X\.;8;4 \/ 10 \(4 répondues\);0 min 09 s;/, "un prénom qui ressemble à une formule est neutralisé ; une copie inachevée le dit");
+  assert.match(lignes[3], /^'=1\+1 X\.;8;4 sur 10 \(4 répondues\);0 min 09 s;/, "un prénom qui ressemble à une formule est neutralisé ; une copie inachevée le dit");
   assert.equal(lignes[4], "Zoé T.;;n’a pas fait l’évaluation;;;", "sans graine : il n'a pas fait l'évaluation");
-  assert.match(lignes[5], /^"Jean;""Luc"" P\.";2;1 \/ 10;/, "point-virgule et guillemets protégés ; 1/10 → 2");
+  assert.match(lignes[5], /^"Jean;""Luc"" P\.";2;1 sur 10;/, "point-virgule et guillemets protégés ; 1/10 → 2");
+  // Lot E3 (16/10/2026, vu par Gwenaël dans Excel) : « 7 / 10 » devenait le
+  // 7 octobre. Plus aucun score écrit « nombre / nombre » dans la colonne Score.
+  for (const ligne of lignes.slice(1, -1)) {
+    const score = ligne.replace(/^"(?:[^"]|"")*"/, "X").split(";")[2];
+    assert.doesNotMatch(score, /^\d+\s*\/\s*\d+/, `Excel prendrait « ${score} » pour une date`);
+  }
   assert.equal(lignes[6], "", "le fichier finit par un retour à la ligne");
 });
 
@@ -192,7 +198,7 @@ test("la note dans le fichier est au demi-point, avec la virgule française", ()
   const copie = C.corrigerEvaluationDeClasse(questions, reponses);
   assert.equal(copie.note, 17.5);
   const texte = f.fabriquerFichierEvaluation([{eleve: {prenom: "Tom", initiale: "", graine: 1, debut: 0, fini: true, reponses}, copie}]);
-  assert.match(texte.split("\r\n")[1], /^Tom;17,5;13 \/ 15;/);
+  assert.match(texte.split("\r\n")[1], /^Tom;17,5;13 sur 15;/);
 });
 
 test("le nom du fichier : la classe, le jour, le modèle, rien qui gêne Windows", () => {

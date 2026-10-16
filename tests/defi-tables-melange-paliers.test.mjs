@@ -400,7 +400,8 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // (15/10/2026) : questionnaire.js et KaTeX, 58 au manifeste (avant : seance-en-direct-eclair).
   // Puis KaTeX 0.16.9 → 0.16.47, même nombre de fichiers (avant : seance-en-direct-questionnaire).
   // Lot E1 « les évaluations en classe » (15/10/2026) : le manifeste suit.
-  assert.match(lire("_serveur/public/VERSION"), /^lot evaluations-E2$/m);
+  // Lot E3 (16/10/2026) : la page prof change (le score du fichier), le manifeste suit.
+  assert.match(lire("_serveur/public/VERSION"), /^lot evaluations-E3$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-comment-on-joue-20261011-3/);
 });

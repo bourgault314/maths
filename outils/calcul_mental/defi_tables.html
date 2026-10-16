@@ -960,6 +960,9 @@
     /* La ligne après : « 📝 Évaluation envoyée ✓ · 17 / 20 ». */
     .evalc-ligne { order: -3; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 8px 14px; border: 2px solid #b8dfc8; border-radius: 999px; background: var(--green-soft); color: var(--green); font-weight: 900; font-size: 1.02rem; text-align: center; }
     .evalc-ligne.is-close { border-color: #cfe2ed; background: #f1f6fa; color: #31566c; }
+    /* Lot E3 : la ligne sur deux étages quand il y a des calculs à revoir. */
+    .evalc-ligne.a-revoir { flex-direction: column; gap: 3px; border-radius: 24px; padding: 10px 16px; }
+    .evalc-revoir { font-weight: 700; font-size: .92rem; line-height: 1.4; }
     /* Pendant : le chrono par question est un anneau qui se vide. */
     #play .status strong.anneau { min-width: 0; width: 46px; height: 46px; margin: 0; padding: 0; display: grid; place-items: center; border-radius: 50%; color: var(--green); font-size: 1.2rem; line-height: 1; background: radial-gradient(closest-side, #fff 78%, transparent 80%), conic-gradient(var(--green) calc(var(--reste, 1) * 360deg), #dfebf3 0); }
     #play .status strong.anneau.urgent { color: var(--red); background: radial-gradient(closest-side, #fff 78%, transparent 80%), conic-gradient(var(--red) calc(var(--reste, 1) * 360deg), #ffd9d9 0); }
@@ -4571,6 +4574,35 @@
         return {score: copie.score, total: copie.total};
       }
 
+      // Lot E3 (16/10/2026, choix de Gwenaël) : sous le score, les calculs à
+      // revoir, SANS leur résultat. Les questions atteintes qu'il a ratées ou
+      // laissées vides (une question jamais atteinte ne compte pas) ; chaque
+      // calcul une fois (9 × 4 et 36 ÷ 4 sont le même), écrit dans l'ordre où
+      // « À retenir » le range. Huit au plus, puis « et N autres ».
+      const REVOIR_MAX = 8;
+      function calculsARevoir(etat) {
+        if (!etat || !etat.graines) return [];
+        const questions = questionsDeLEvaluation(etat);
+        const parNumero = new Map(questions.map(question => [question.numero, question]));
+        const copie = CORE.corrigerEvaluationDeClasse(questions, etat.reponses);
+        const vus = new Set();
+        const calculs = [];
+        copie.rates.forEach(rate => {
+          if (!rate.atteinte) return;
+          const question = parNumero.get(rate.numero);
+          if (!question || vus.has(question.factKey)) return;
+          vus.add(question.factKey);
+          calculs.push([Number(question.first), Number(question.second)]);
+        });
+        return calculs;
+      }
+
+      function texteARevoir(calculs) {
+        const ecrits = calculs.slice(0, REVOIR_MAX).map(([a, b]) => `${a}\u00a0×\u00a0${b}`);
+        const reste = calculs.length - REVOIR_MAX;
+        return `À revoir\u00a0: ${ecrits.join(" · ")}${reste > 0 ? ` · et ${reste} autre${reste > 1 ? "s" : ""}` : ""}`;
+      }
+
       // ---- la carte de l'accueil
 
       function renderCarteEvaluation() {
@@ -4594,6 +4626,12 @@
           const ligne = el("div", "evalc-ligne" + (etat.fini ? "" : " is-close"));
           ligne.setAttribute("role", "status");
           ligne.append(el("span", "", `📝 Évaluation ${etat.fini ? "envoyée ✓" : "terminée"} · ${score ? `${score.score} / ${score.total}` : ""}`.trim()));
+          // Lot E3 : les calculs à revoir, en dessous (rien à 20 / 20).
+          const revoir = calculsARevoir(etat);
+          if (revoir.length) {
+            ligne.classList.add("a-revoir");
+            ligne.append(el("span", "evalc-revoir", texteARevoir(revoir)));
+          }
           acc.prepend(ligne);
           return;
         }
