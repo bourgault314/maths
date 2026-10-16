@@ -4574,32 +4574,33 @@
         return {score: copie.score, total: copie.total};
       }
 
-      // Lot E3 (16/10/2026, choix de Gwenaël) : sous le score, les calculs à
-      // revoir, SANS leur résultat. Les questions atteintes qu'il a ratées ou
-      // laissées vides (une question jamais atteinte ne compte pas) ; chaque
-      // calcul une fois (9 × 4 et 36 ÷ 4 sont le même), écrit dans l'ordre où
-      // « À retenir » le range. Huit au plus, puis « et N autres ».
-      const REVOIR_MAX = 8;
-      function calculsARevoir(etat) {
+      // Lot E3 (16/10/2026, choix de Gwenaël) : sous le score, ce qu'il a
+      // raté, SANS le résultat. Correctif 1 (relevé par Code sur la PR #1002) :
+      // la question TELLE QU'ELLE A ÉTÉ POSÉE (« 7 × ? = 21 »), jamais le
+      // calcul « 7 × 3 » — pour un nombre manquant ou une division, l'un des
+      // deux facteurs EST la réponse. Les questions atteintes qu'il a ratées ou
+      // laissées vides (une question jamais atteinte ne compte pas), dans
+      // l'ordre de la série. Six au plus, puis « et N autres ».
+      const REVOIR_MAX = 6;
+      function questionsARevoir(etat) {
         if (!etat || !etat.graines) return [];
         const questions = questionsDeLEvaluation(etat);
         const parNumero = new Map(questions.map(question => [question.numero, question]));
         const copie = CORE.corrigerEvaluationDeClasse(questions, etat.reponses);
-        const vus = new Set();
-        const calculs = [];
+        const liste = [];
         copie.rates.forEach(rate => {
           if (!rate.atteinte) return;
           const question = parNumero.get(rate.numero);
-          if (!question || vus.has(question.factKey)) return;
-          vus.add(question.factKey);
-          calculs.push([Number(question.first), Number(question.second)]);
+          if (question && typeof question.prompt === "string") liste.push(question.prompt);
         });
-        return calculs;
+        return liste;
       }
 
-      function texteARevoir(calculs) {
-        const ecrits = calculs.slice(0, REVOIR_MAX).map(([a, b]) => `${a}\u00a0×\u00a0${b}`);
-        const reste = calculs.length - REVOIR_MAX;
+      // Chaque question d'un seul tenant (espaces insécables) : la ligne ne se
+      // coupe qu'entre deux questions.
+      function texteARevoir(questions) {
+        const ecrits = questions.slice(0, REVOIR_MAX).map(question => question.replace(/ /g, "\u00a0"));
+        const reste = questions.length - REVOIR_MAX;
         return `À revoir\u00a0: ${ecrits.join(" · ")}${reste > 0 ? ` · et ${reste} autre${reste > 1 ? "s" : ""}` : ""}`;
       }
 
@@ -4627,7 +4628,7 @@
           ligne.setAttribute("role", "status");
           ligne.append(el("span", "", `📝 Évaluation ${etat.fini ? "envoyée ✓" : "terminée"} · ${score ? `${score.score} / ${score.total}` : ""}`.trim()));
           // Lot E3 : les calculs à revoir, en dessous (rien à 20 / 20).
-          const revoir = calculsARevoir(etat);
+          const revoir = questionsARevoir(etat);
           if (revoir.length) {
             ligne.classList.add("a-revoir");
             ligne.append(el("span", "evalc-revoir", texteARevoir(revoir)));
