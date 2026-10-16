@@ -15,6 +15,17 @@
 //  c) avancer à la question suivante sans attendre la réponse du serveur ;
 //  d) appeler appliquerSerie à la fin ;
 //  e) ne plus bumper le ?v= de mon_parcours.js.
+//
+// Lot E3b (16/10/2026, décisions de Gwenaël) — « À retenir » pendant
+// l'évaluation. Sabotages attendus :
+//  f) le filtre retiré (les réponses des ratés de l'évaluation affichées
+//     pendant qu'elle est ouverte) ;
+//  g) le filtre qui ne retombe pas à la fermeture ;
+//  h) « À retenir » montré avant qu'il ait fini son passage ;
+//  i) « À retenir » montré avant la première réponse du serveur ;
+//  j) l'accueil pas redessiné après la première réponse (« À retenir »
+//     resterait caché) ;
+//  k) l'ancien libellé « À revoir ».
 
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -261,7 +272,8 @@ test("en marche : vingt réponses — fini, le score affiché est celui de ses r
   assert.deepEqual(appli.api.scoreDeLEvaluation({...appli.api.evalEtat, reponses: {"1": `${q1.answer}|10`}}), {score: 1, total: 20});
   // La carte : la ligne « envoyée ✓ · 15 / 20 », et dessous (lot E3) les
   // cinq questions ratées, telles qu'elles ont été posées (correctif 1 :
-  // jamais « a × b », qui montre la réponse d'un nombre manquant ou d'une division).
+  // jamais « a × b », qui montre la réponse d'un nombre manquant ou d'une
+  // division) ; « Tes erreurs » depuis le lot E3b.
   appli.api.renderCarteEvaluation();
   const acc = appli.document.getElementById(".acc");
   const ligne = acc.enfants[0];
@@ -270,8 +282,8 @@ test("en marche : vingt réponses — fini, le score affiché est celui de ses r
   const rates = appli.state.questions.filter((q, i) => i % 4 === 0);
   assert.ok(ligne.classes.has("a-revoir"));
   assert.ok(ligne.enfants[1].classes.has("evalc-revoir"));
-  assert.equal(ligne.enfants[1].textContent, "À revoir\u00a0: " + rates.map(q => q.prompt.replace(/ /g, "\u00a0")).join(" · "));
-  const items = ligne.enfants[1].textContent.replace(/^À revoir\u00a0: /, "").split(" · ");
+  assert.equal(ligne.enfants[1].textContent, "Tes erreurs\u00a0: " + rates.map(q => q.prompt.replace(/ /g, "\u00a0")).join(" · "), "k) « Tes erreurs », plus « À revoir »");
+  const items = ligne.enfants[1].textContent.replace(/^Tes erreurs\u00a0: /, "").split(" · ");
   assert.equal(items.length, 5);
   for (const item of items) assert.equal((item.match(/\?/g) || []).length, 1, `« ${item} » garde son « ? » à la place de la réponse`);
   // Fermée : plus rien.
@@ -385,7 +397,7 @@ test("en marche : une réponse de plus de 3 chiffres ne part pas ; par question,
   assert.equal(appli.state.index, 1);
 });
 
-test("lot E3 : « À revoir » — la question telle qu'elle a été posée, jamais sa réponse ; les ratés et les vides atteints, jamais une question pas atteinte ; six au plus ; rien à 20 / 20", async () => {
+test("lot E3 : « Tes erreurs » (« À revoir » avant E3b) — la question telle qu'elle a été posée, jamais sa réponse ; les ratés et les vides atteints, jamais une question pas atteinte ; six au plus ; rien à 20 / 20", async () => {
   const {appli} = await appliEnEvaluation();
   const graines = {seance: 123456, eleve: 654321};
   const questions = CORE.genererEvaluationDeClasse(MODELE, graines);
@@ -411,11 +423,141 @@ test("lot E3 : « À revoir » — la question telle qu'elle a été posée, jam
     assert.ok(!liste.includes(`${question.first} × ${question.second}`), "jamais les deux facteurs, dont l'un est la réponse");
   }
   // Plus de six : les six premières, puis « et N autres ».
-  const texte = appli.api.texteARevoir(liste);
-  assert.equal(texte, "À revoir\u00a0: " + liste.slice(0, 6).map(p => p.replace(/ /g, "\u00a0")).join(" · ") + ` · et ${liste.length - 6} autres`);
-  assert.ok(appli.api.texteARevoir(liste.slice(0, 7)).endsWith(" · et 1 autre"));
-  for (const item of texte.replace(/^À revoir\u00a0: /, "").split(" · ").slice(0, 6)) assert.equal((item.match(/\?/g) || []).length, 1);
+  const texte = appli.api.texteTesErreurs(liste);
+  assert.equal(texte, "Tes erreurs\u00a0: " + liste.slice(0, 6).map(p => p.replace(/ /g, "\u00a0")).join(" · ") + ` · et ${liste.length - 6} autres`);
+  assert.ok(appli.api.texteTesErreurs(liste.slice(0, 7)).endsWith(" · et 1 autre"));
+  for (const item of texte.replace(/^Tes erreurs\u00a0: /, "").split(" · ").slice(0, 6)) assert.equal((item.match(/\?/g) || []).length, 1);
+  assert.doesNotMatch(BLOC, /[`"']À revoir/, "k) l'ancien libellé n'est plus écrit nulle part (seulement nommé dans un commentaire)");
   // Sans graines (serveur d'avant, état bizarre) : rien.
   assert.deepEqual(appli.api.questionsARevoir({...etat(r), graines: null}), []);
   assert.deepEqual(appli.api.questionsARevoir(null), []);
+});
+
+// ------------------------------------------- lot E3b : « À retenir » pendant
+
+const tic = () => new Promise(r => setTimeout(r, 5));
+const cleDe = (a, b) => `${Math.min(a, b)}-${Math.max(a, b)}`;
+
+// Le serveur garde ses réponses sur api/direct.php jusqu'à ce qu'on ouvre la
+// porte : la page qui s'ouvre ne sait pas encore s'il y a une évaluation.
+function retarderDirect(serveur) {
+  let ouvrir;
+  const porte = new Promise(r => { ouvrir = r; });
+  return {...serveur, ouvrir: () => ouvrir(),
+    fetch: (url, options) => (url.endsWith("/api/direct.php") ? porte.then(() => serveur.fetch(url, options)) : serveur.fetch(url, options))};
+}
+
+test("lot E3b, en marche : « À retenir » attend la première réponse du serveur ; ouverte : rien tant que son passage n'est pas fini, puis la liste sans les erreurs de l'évaluation (un calcul raté aussi ce matin compris) ; « Fermer », « Terminer » : tout ; « Faire repasser » : rien", async () => {
+  // Ce matin, en séance : 2 × 7 raté.
+  const matin = PARCOURS.retenirErreurs(sansPrenom(parcoursAvecTravail("", 3)), [[2, 7]]);
+  const serveur = serveurAvecEvaluation({progression: matin});
+  const reseau = retarderDirect(serveur);
+  const appli = demarrerAppli({reseau, codeOnglet: CODE, local: fauxStockage()});
+  appli.api.demarrerSuivi();
+  await tic();
+  assert.deepEqual(PARCOURS.aRetenir(appli.api.parcours), [[2, 7]], "le parcours du serveur est là");
+  assert.equal(appli.api.evalLue, false);
+  assert.deepEqual(appli.api.aRetenirAffiche(), [], "i) pas encore de réponse sur l'évaluation : rien, un instant — pas ses réponses avant de savoir");
+  const avant = appli.rendus.length;
+  reseau.ouvrir();
+  await tic();
+  assert.equal(appli.api.evalLue, true);
+  assert.ok(appli.rendus.slice(avant).includes("accueil"), "la réponse redessine l'accueil");
+  assert.equal(appli.api.evalEtat.etat, "ouverte");
+  assert.deepEqual(appli.api.aRetenirAffiche(), [], "h) ouverte, pas commencée : pas d'« À retenir » (pas de réponses à l'écran avant l'évaluation)");
+  await appli.api.commencerEvaluation();
+  await tic();
+  const qs = appli.state.questions;
+  // La 5 est aussi un calcul raté ce matin, écrit dans l'autre sens.
+  appli.api.parcours = PARCOURS.retenirErreurs(appli.api.parcours, [[qs[4].second, qs[4].first]]);
+  const fautes = new Set([0, 4]);
+  for (let i = 0; i < 20; i++) {
+    const q = appli.state.questions[appli.state.index];
+    appli.api.repondreEvaluation(String(fautes.has(i) ? q.answer + 1 : q.answer));
+    await tic();
+    if (i === 2) assert.deepEqual(appli.api.aRetenirAffiche(), [], "h) commencée, pas finie : rien");
+  }
+  assert.equal(serveur.etat.fini, true);
+  const tout = PARCOURS.aRetenir(appli.api.parcours);
+  const caches = new Set([cleDe(qs[0].first, qs[0].second), cleDe(qs[4].first, qs[4].second)]);
+  assert.ok(tout.some(([a, b]) => cleDe(a, b) === cleDe(qs[0].first, qs[0].second)), "rien ne change dans les données : le raté de l'évaluation est dans le parcours");
+  assert.ok(!caches.has(cleDe(2, 7)));
+  assert.deepEqual(appli.api.aRetenirAffiche(), [[2, 7]], "f) fini, encore ouverte : seulement 2 × 7 — ses ratés de l'évaluation cachés, et le calcul raté aussi ce matin avec eux");
+  // « Fermer » : tout, avec les réponses.
+  serveur.etat.ouverte = false;
+  await appli.api.lireEvaluation();
+  assert.equal(appli.api.evalEtat.etat, "fermee");
+  assert.deepEqual(appli.api.aRetenirAffiche(), tout, "g) fermée : toutes les erreurs du jour");
+  // « Terminer » : l'état disparaît, tout reste affiché.
+  serveur.etat.ouverte = null;
+  await appli.api.lireEvaluation();
+  assert.equal(appli.api.evalEtat, null);
+  assert.deepEqual(appli.api.aRetenirAffiche(), tout);
+  // Rouverte, et son passage effacé (« Faire repasser ») : plus rien ne
+  // reconnaît les ratés du premier passage — rien jusqu'à ce qu'il ait repassé.
+  Object.assign(serveur.etat, {ouverte: true, commence: false, fini: false, close: false, graines: null, reponses: {}});
+  await appli.api.lireEvaluation();
+  assert.equal(appli.api.evalEtat.commence, false);
+  assert.deepEqual(appli.api.aRetenirAffiche(), [], "h) effacé : pas les réponses du premier passage avant qu'il repasse");
+});
+
+test("lot E3b : ce qui est caché — les ratés ATTEINTS de son passage (faux ou vides), 7 × 4 comme 4 × 7, jamais une question pas atteinte ; temps écoulé : pareil ; fermée, ou plus d'état : rien de caché", async () => {
+  const {appli} = await appliEnEvaluation();
+  const graines = {seance: 123456, eleve: 654321};
+  const questions = CORE.genererEvaluationDeClasse(MODELE, graines);
+  const r = Object.fromEntries(questions.slice(0, 6).map(q => [String(q.numero), `${q.answer}|20`]));
+  r[String(questions[1].numero)] = `${questions[1].answer + 1}|20`;
+  r[String(questions[3].numero)] = "|80";
+  const visees = new Set([cleDe(questions[1].first, questions[1].second), cleDe(questions[3].first, questions[3].second)]);
+  const jamais = questions.slice(6).find(q => !visees.has(cleDe(q.first, q.second)));
+  assert.ok(jamais, "une question jamais atteinte, d'un autre calcul");
+  // Le temps de l'évaluation est passé après six réponses : son passage est fini.
+  const brut = {etat: "ouverte", nom: "Tables 3, 4 et 6", modele: MODELE, commence: true, fini: false, close: true, suivant: 7, graines, reponses: r, ecoule: 0};
+  appli.api.retenirEtatEvaluation(brut);
+  assert.deepEqual([...appli.api.calculsCachesDeLEvaluation(appli.api.evalEtat)].sort(), [...visees].sort(), "le faux et le vide, rien d'autre");
+  appli.api.parcours = PARCOURS.retenirErreurs(appli.api.parcours,
+    [[questions[1].second, questions[1].first], [questions[3].first, questions[3].second], [jamais.first, jamais.second], [2, 7]]);
+  const tout = PARCOURS.aRetenir(appli.api.parcours);
+  const reste = tout.filter(([a, b]) => !visees.has(cleDe(a, b)));
+  assert.deepEqual(appli.api.aRetenirAffiche(), reste);
+  assert.ok(reste.some(([a, b]) => cleDe(a, b) === cleDe(jamais.first, jamais.second)), "une question jamais atteinte ne cache rien");
+  assert.ok(reste.some(([a, b]) => a === 2 && b === 7));
+  assert.equal(reste.length, tout.length - 2, "le faux, écrit à l'envers dans la liste, est caché quand même");
+  // Envoyée (fini) : pareil.
+  appli.api.retenirEtatEvaluation({...brut, fini: true, close: false});
+  assert.deepEqual(appli.api.aRetenirAffiche(), reste);
+  // Pas finie : rien du tout.
+  appli.api.retenirEtatEvaluation({...brut, close: false});
+  assert.deepEqual(appli.api.aRetenirAffiche(), []);
+  // Fermée : tout.
+  appli.api.retenirEtatEvaluation({...brut, etat: "fermee"});
+  assert.deepEqual(appli.api.aRetenirAffiche(), tout);
+  assert.equal(appli.api.calculsCachesDeLEvaluation(appli.api.evalEtat).size, 0);
+  // Plus d'évaluation : tout.
+  appli.api.retenirEtatEvaluation(null);
+  assert.deepEqual(appli.api.aRetenirAffiche(), tout);
+});
+
+test("lot E3b : la première lecture sans évaluation, ou en panne — l'accueil se redessine et « À retenir » s'affiche (l'élève à la maison) ; sans code, la liste telle quelle", async () => {
+  const matin = PARCOURS.retenirErreurs(sansPrenom(parcoursAvecTravail("", 3)), [[2, 7]]);
+  for (const cas of ["sans évaluation", "panne"]) {
+    const serveur = serveurAvecEvaluation({progression: matin, ouverte: cas === "panne"});
+    if (cas === "sans évaluation") serveur.etat.ouverte = null;
+    else serveur.etat.forcer = {statut: 503};
+    const reseau = retarderDirect(serveur);
+    const appli = demarrerAppli({reseau, codeOnglet: CODE, local: fauxStockage()});
+    appli.api.demarrerSuivi();
+    await tic();
+    assert.deepEqual(appli.api.aRetenirAffiche(), [], `${cas} : rien avant la réponse`);
+    const avant = appli.rendus.length;
+    reseau.ouvrir();
+    await tic();
+    assert.equal(appli.api.evalEtat, null);
+    assert.equal(appli.api.evalLue, true);
+    assert.ok(appli.rendus.slice(avant).includes("accueil"), `j) ${cas} : l'accueil est redessiné (sinon « À retenir » resterait caché)`);
+    assert.deepEqual(appli.api.aRetenirAffiche(), [[2, 7]], `${cas} : « À retenir » s'affiche`);
+  }
+  const sansCode = demarrerAppli({reseau: serveurAvecEvaluation(), local: fauxStockage()});
+  sansCode.api.parcours = matin;
+  assert.deepEqual(sansCode.api.aRetenirAffiche(), [[2, 7]], "sans code : rien à attendre, rien de caché");
 });

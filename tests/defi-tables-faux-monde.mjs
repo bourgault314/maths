@@ -257,7 +257,8 @@ export function demarrerAppli({entree = {}, local, session, reseau, running = fa
     return {
       get evalEtat() { return evalEtat; }, get evalSerie() { return evalSerie; }, get TOTAL() { return TOTAL; }, get DURATION() { return DURATION; },
       lireEvaluation, veillerEvaluation, retenirEtatEvaluation, lireEtatEvaluation, scoreDeLEvaluation, renderCarteEvaluation,
-      questionsARevoir, texteARevoir, // Lot E3 : la ligne « À revoir »
+      questionsARevoir, texteTesErreurs, // Lot E3 : la ligne sous la note (« Tes erreurs » depuis E3b)
+      aRetenirAffiche, calculsCachesDeLEvaluation, get evalLue() { return evalLue; }, // Lot E3b : « À retenir » pendant l'évaluation
       commencerEvaluation, lancerEvaluation, repondreEvaluation, nextEvaluation, terminerEvaluation, enEvaluation, updateTimerEvaluation,
       get codeSuivi() { return codeSuivi; }, get parcours() { return parcours; }, set parcours(p) { parcours = p; },
       get suiviHorsLigne() { return suiviHorsLigne; },

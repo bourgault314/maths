@@ -502,10 +502,11 @@ test("12. le bilan : « Demain : N calculs t’attendent » dans le cadre bleu, 
   // Lot « retouches après Mon parcours » : la liste du JOUR, gardée dans le
   // parcours (3 × 8 et 8 × 3 sont le même calcul : une seule pastille).
   const p = {...lea(), retenir: {jour: AUJ, erreurs: [308, 803, 103]}};
-  const renderBilanSeance = new Function("$", "PARCOURS", "parcours", "seance", "document", "pluriel", "soude", "backToModes", "tableDeLaSeance", "commencerSeance", "listeTables",
+  // Lot E3b : le bilan lit la liste telle qu'elle s'affiche (aRetenirAffiche) — ici, pas d'évaluation.
+  const renderBilanSeance = new Function("$", "PARCOURS", "parcours", "seance", "document", "pluriel", "soude", "backToModes", "tableDeLaSeance", "commencerSeance", "listeTables", "aRetenirAffiche",
     `${code}\nreturn renderBilanSeance;`)($, {...P, agendaCalculs: q => P.agendaCalculs(q, AUJ), aRetenir: q => P.aRetenir(q, AUJ)}, P.normaliserParcours(p),
     {table: 3, faites: [{nom: "Mes calculs du jour", juste: 7, total: 8, rate: false, reussi: null}], erreurs: [[3, 8], [8, 3], [1, 3]]},
-    document, (n, m) => `${n} ${m}${n > 1 ? "s" : ""}`, t => t, () => {}, () => 3, () => {}, t => t.join(", "));
+    document, (n, m) => `${n} ${m}${n > 1 ? "s" : ""}`, t => t, () => {}, () => 3, () => {}, t => t.join(", "), () => P.aRetenir(P.normaliserParcours(p), AUJ));
   const zone = element();
   renderBilanSeance(zone);
   const cadre = parClasse(zone, "cadre")[0];

@@ -1011,13 +1011,13 @@
     .seance-suite .cadre p b { color: var(--blue); }
     /* Lot E2 (décision 3) : « À retenir pour demain », toutes les erreurs de
        la séance écrites justes ; il remplace la liste de la dernière étape. */
-    .seance-suite .retenir, .carte-seance .retenir { width: 100%; padding: 11px 13px; border: 1px solid #efd28a; border-radius: 13px; background: #fff8e6; text-align: left; box-sizing: border-box; }
-    .seance-suite .retenir h2, .carte-seance .retenir h2 { margin: 0 0 7px; color: #8a4c00; font-size: 1rem; font-weight: 950; }
-    .seance-suite .retenir ul, .carte-seance .retenir ul { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 7px; padding: 0; list-style: none; }
-    .seance-suite .retenir li, .carte-seance .retenir li { display: inline-flex; padding: 4px 10px; border: 1.5px solid var(--ink); border-radius: 999px; background: #fff; color: var(--ink); font-size: .95rem; font-weight: 900; white-space: nowrap; }
-    .seance-suite .retenir li b, .carte-seance .retenir li b { margin-left: .25em; color: var(--green); }
+    .seance-suite .retenir, .carte-seance .retenir, .acc-retenir { width: 100%; padding: 11px 13px; border: 1px solid #efd28a; border-radius: 13px; background: #fff8e6; text-align: left; box-sizing: border-box; }
+    .seance-suite .retenir h2, .carte-seance .retenir h2, .acc-retenir h2 { margin: 0 0 7px; color: #8a4c00; font-size: 1rem; font-weight: 950; }
+    .seance-suite .retenir ul, .carte-seance .retenir ul, .acc-retenir ul { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 7px; padding: 0; list-style: none; }
+    .seance-suite .retenir li, .carte-seance .retenir li, .acc-retenir li { display: inline-flex; padding: 4px 10px; border: 1.5px solid var(--ink); border-radius: 999px; background: #fff; color: var(--ink); font-size: .95rem; font-weight: 900; white-space: nowrap; }
+    .seance-suite .retenir li b, .carte-seance .retenir li b, .acc-retenir li b { margin-left: .25em; color: var(--green); }
     /* Lot « Mon parcours » : plus de phrase sous les pastilles, la liste ferme le cadre. */
-    .seance-suite .retenir ul:last-child, .carte-seance .retenir ul:last-child { margin-bottom: 0; }
+    .seance-suite .retenir ul:last-child, .carte-seance .retenir ul:last-child, .acc-retenir ul:last-child { margin-bottom: 0; }
     /* Lot « retouches après Mon parcours » (décision 7) : la carte de
        l'accueil une fois la séance du jour faite. */
     .carte-seance.est-faite { display: grid; gap: 12px; justify-items: center; cursor: default; }
@@ -4459,6 +4459,10 @@
       let evalProchaine = 0;      // l'instant de cette lecture (une minuterie en avance ne lit pas)
       let evalEnVol = false;
       let evalSerie = null;       // pendant : {graines, modele, debutQuestion, envoi, aRenvoyer, appliques}
+      // Lot E3b : le serveur a-t-il déjà répondu (ou échoué) une fois ? Tant
+      // que non, « À retenir » attend : la page qui s'ouvre ne sait pas encore
+      // si une évaluation est ouverte (voir aRetenirAffiche).
+      let evalLue = false;
 
       function enEvaluation() {
         return Boolean(state.configuration) && state.configuration.mode === "evalclasse";
@@ -4520,18 +4524,28 @@
           // prochain envoi (detacher) ; ici on cesse simplement de demander.
           retenirEtatEvaluation(null);
           return;
-        } else if (reponse.statut === 429) {
-          delai = (reponse.reessai || 60) * 1000;
+        } else {
+          if (reponse.statut === 429) delai = (reponse.reessai || 60) * 1000;
+          // Lot E3b : pas de réponse (réseau coupé, panne) — « À retenir » ne
+          // reste pas caché pour autant (l'élève à la maison).
+          if (!evalLue) {
+            evalLue = true;
+            if (!state.running && !$("intro").hidden) renderAccueil();
+          }
         }
         if (!state.running) programmerLectureEvaluation(delai);
       }
 
       // L'état reçu : vérifié dans sa forme avant d'être gardé. Un serveur
-      // d'avant E1 ne renvoie pas la clé : rien ne s'affiche.
+      // d'avant E1 ne renvoie pas la clé : rien ne s'affiche. La première
+      // réponse redessine toujours l'accueil (lot E3b : « À retenir »
+      // attendait de savoir).
       function retenirEtatEvaluation(brut) {
         const avant = evalEtat;
+        const premiere = !evalLue;
+        evalLue = true;
         evalEtat = lireEtatEvaluation(brut);
-        if (JSON.stringify(avant) !== JSON.stringify(evalEtat) && !state.running && !$("intro").hidden) renderAccueil();
+        if ((premiere || JSON.stringify(avant) !== JSON.stringify(evalEtat)) && !state.running && !$("intro").hidden) renderAccueil();
       }
 
       function lireEtatEvaluation(brut) {
@@ -4582,26 +4596,74 @@
       // laissées vides (une question jamais atteinte ne compte pas), dans
       // l'ordre de la série. Six au plus, puis « et N autres ».
       const REVOIR_MAX = 6;
-      function questionsARevoir(etat) {
+      // Les questions atteintes qu'il a ratées ou laissées vides, dans l'ordre.
+      function questionsRateesDeLEvaluation(etat) {
         if (!etat || !etat.graines) return [];
         const questions = questionsDeLEvaluation(etat);
         const parNumero = new Map(questions.map(question => [question.numero, question]));
         const copie = CORE.corrigerEvaluationDeClasse(questions, etat.reponses);
-        const liste = [];
-        copie.rates.forEach(rate => {
-          if (!rate.atteinte) return;
-          const question = parNumero.get(rate.numero);
-          if (question && typeof question.prompt === "string") liste.push(question.prompt);
-        });
-        return liste;
+        return copie.rates.filter(rate => rate.atteinte).map(rate => parNumero.get(rate.numero)).filter(Boolean);
       }
 
+      function questionsARevoir(etat) {
+        return questionsRateesDeLEvaluation(etat).map(question => question.prompt).filter(prompt => typeof prompt === "string");
+      }
+
+      // Lot E3b (16/10/2026, choix de Gwenaël) : « À revoir » devient « Tes
+      // erreurs » — trop proche de « À retenir », qui, lui, donne les réponses.
       // Chaque question d'un seul tenant (espaces insécables) : la ligne ne se
       // coupe qu'entre deux questions.
-      function texteARevoir(questions) {
+      function texteTesErreurs(questions) {
         const ecrits = questions.slice(0, REVOIR_MAX).map(question => question.replace(/ /g, "\u00a0"));
         const reste = questions.length - REVOIR_MAX;
-        return `À revoir\u00a0: ${ecrits.join(" · ")}${reste > 0 ? ` · et ${reste} autre${reste > 1 ? "s" : ""}` : ""}`;
+        return `Tes erreurs\u00a0: ${ecrits.join(" · ")}${reste > 0 ? ` · et ${reste} autre${reste > 1 ? "s" : ""}` : ""}`;
+      }
+
+      // Lot E3b (16/10/2026, décisions de Gwenaël) : tant que l'évaluation est
+      // ouverte, « À retenir » — sur l'accueil, au bilan d'une séance, sur
+      // « ✓ Séance du jour faite » — ne montre pas les erreurs de
+      // l'évaluation ; après « Fermer », elles apparaissent avec les autres
+      // (« Terminer » : l'état disparaît, rien n'est plus caché). Et tant que
+      // l'élève n'a pas fini son passage (« Je commence », « Je continue »,
+      // ou effacé par « Faire repasser »), pas d'« À retenir » du tout : pas
+      // de réponses à l'écran avant l'évaluation, et les ratés d'un premier
+      // passage effacé (que plus rien ne reconnaît) ne se montrent pas avant
+      // qu'il repasse.
+      // Rien ne change dans le parcours : les ratés y entrent toujours au
+      // moment de la réponse (appliquerReponseEvaluation) ; c'est l'AFFICHAGE
+      // qui les écarte. Le parcours ne sait pas d'où vient une erreur : un
+      // calcul raté aussi en séance le même jour est caché avec elles jusqu'à
+      // la fermeture. 4 × 7 et 7 × 4 : le même calcul, comme dans le moteur.
+      const cleDuCalcul = (a, b) => `${Math.min(a, b)}-${Math.max(a, b)}`;
+      function calculsCachesDeLEvaluation(etat) {
+        const caches = new Set();
+        if (!etat || etat.etat !== "ouverte" || !etat.commence) return caches;
+        questionsRateesDeLEvaluation(etat).forEach(question => {
+          const premier = Number(question.first);
+          const second = Number(question.second);
+          if (Number.isInteger(premier) && Number.isInteger(second)) caches.add(cleDuCalcul(premier, second));
+        });
+        return caches;
+      }
+
+      // Son passage est-il fini (envoyé, ou le temps écoulé) ? La même règle
+      // que la ligne « 📝 Évaluation envoyée ✓ » de l'accueil.
+      const passageFini = etat => Boolean(etat && etat.commence && (etat.fini || etat.close));
+
+      // « À retenir » tel qu'il s'affiche : la liste du jour (PARCOURS.aRetenir) ;
+      // évaluation ouverte : rien tant que son passage n'est pas fini, puis la
+      // liste sans les erreurs de l'évaluation. Avec un code, la page qui
+      // s'ouvre attend la première réponse du serveur : un instant sans
+      // « À retenir » plutôt que ses réponses avant de savoir.
+      function aRetenirAffiche() {
+        const liste = PARCOURS.aRetenir(parcours);
+        if (!liste.length || !evaluationPossible()) return liste;
+        if (!evalLue) return [];
+        const etat = evalEtat;
+        if (!etat || etat.etat !== "ouverte") return liste;
+        if (!passageFini(etat)) return [];
+        const caches = calculsCachesDeLEvaluation(etat);
+        return caches.size ? liste.filter(([a, b]) => !caches.has(cleDuCalcul(a, b))) : liste;
       }
 
       // ---- la carte de l'accueil
@@ -4627,11 +4689,12 @@
           const ligne = el("div", "evalc-ligne" + (etat.fini ? "" : " is-close"));
           ligne.setAttribute("role", "status");
           ligne.append(el("span", "", `📝 Évaluation ${etat.fini ? "envoyée ✓" : "terminée"} · ${score ? `${score.score} / ${score.total}` : ""}`.trim()));
-          // Lot E3 : les calculs à revoir, en dessous (rien à 20 / 20).
+          // Lot E3 : ses erreurs, en dessous (rien à 20 / 20) ; « Tes erreurs »
+          // depuis le lot E3b.
           const revoir = questionsARevoir(etat);
           if (revoir.length) {
             ligne.classList.add("a-revoir");
-            ligne.append(el("span", "evalc-revoir", texteARevoir(revoir)));
+            ligne.append(el("span", "evalc-revoir", texteTesErreurs(revoir)));
           }
           acc.prepend(ligne);
           return;
@@ -7007,6 +7070,15 @@
         if (state.configuration.mode === "validation") resultatSerie.rates = calculsRatesDeLaSerie();
         const suivi = PARCOURS.appliquerSerie(parcours, state.configuration, resultatSerie);
         parcours = suivi.parcours;
+        // Lot E3b (16/10/2026, décision de Gwenaël) : le test de la table passé
+        // HORS séance (« Je passe le test », « Ma table est passée ») met ses
+        // erreurs dans « À retenir », comme le test de la séance (noterEtape) —
+        // les mêmes paires (erreursDeLEtape). Pas « Comme le test, en 2 min »
+        // (une préparation), ni le test de bienvenue « Tu connais déjà des
+        // tables ? », ni Mon mélange, ni les entraînements.
+        if (!enSeance() && state.origin !== "decouverte" && suivi.classement && suivi.classement.type === "validation") {
+          parcours = PARCOURS.retenirErreurs(parcours, erreursDeLEtape());
+        }
         sauverParcours();
         renderVerdict(suivi, elapsed);
         renderResultParcours(suivi);
@@ -9227,6 +9299,8 @@
         // ordinateur seulement) — seulement s'il est vraiment affiché (les 9
         // tables acquises replient le bloc : pas d'étapes, rien à cacher).
         document.querySelector(".acc").classList.toggle("etape-seule", Boolean(etapes.querySelector(".etape-choix")));
+        // Lot E3b : « À retenir » sous la carte de la séance, dès qu'il y en a.
+        renderARetenirAccueil();
         // Lot E2 : la carte « 📝 Évaluation » en tête, quand le professeur en a
         // ouvert une pour la classe (voir renderCarteEvaluation).
         renderCarteEvaluation();
@@ -9636,7 +9710,8 @@
         // Lot « retouches après Mon parcours » (décision 7) : la liste du JOUR
         // — les ratés de toutes les séances d'aujourd'hui, pas seulement de
         // celle qui finit (le moteur la garde dans le parcours).
-        const retenir = cadreARetenir(PARCOURS.aRetenir(parcours));
+        // Lot E3b : sans les erreurs d'une évaluation encore ouverte.
+        const retenir = cadreARetenir(aRetenirAffiche());
         if (retenir) zone.append(retenir);
         $("corrections").replaceChildren();
         const boutons = document.createElement("div");
@@ -9673,7 +9748,10 @@
       // Plus de phrase dessous (lot « Mon parcours ») : elle disait « revient
       // dans Mes calculs du jour », faux pour × 1 et × 10, qui ne sont dans
       // aucune boîte.
-      function cadreARetenir(erreurs) {
+      // Lot E3b (choix de Gwenaël) : sur l'accueil, sous « Reprendre ma
+      // séance », le titre est « À retenir » tout court — la séance en cours
+      // n'est pas « la prochaine ».
+      function cadreARetenir(erreurs, titreDuCadre = "À retenir pour la prochaine séance") {
         const vus = new Set();
         const calculs = [];
         erreurs.forEach(([a, b]) => {
@@ -9686,7 +9764,7 @@
         const cadre = document.createElement("section");
         cadre.className = "retenir";
         const titre = document.createElement("h2");
-        titre.textContent = "À retenir pour la prochaine séance";
+        titre.textContent = titreDuCadre;
         const liste = document.createElement("ul");
         calculs.forEach(([a, b]) => {
           const item = document.createElement("li");
@@ -9770,6 +9848,9 @@
         const carte = document.createElement("button");
         carte.type = "button";
         carte.className = "carte-seance";
+        // Lot E3b : la carte d'une séance commencée (« Reprendre ma séance ») —
+        // « À retenir », dessous, y prend son titre court.
+        if (reprise) carte.classList.add("est-reprise");
         carte.id = "acc-seance";
         const tete = document.createElement("span");
         tete.className = "tete";
@@ -9850,6 +9931,29 @@
         return carte;
       }
 
+      // Lot E3b (16/10/2026, décision de Gwenaël) : « À retenir » — toutes les
+      // erreurs du jour, avec les réponses — sur l'accueil DÈS qu'il y en a,
+      // jusqu'à minuit, séance finie ou non : sous la carte de la séance,
+      // quelle qu'elle soit (« Ma séance du jour », « Reprendre ma séance »,
+      // « Encore une séance ») — et, pour une Légende aux records dont la
+      // séance est faite, sous « Je bats mon record ». Une seule fois :
+      // « ✓ Séance du jour faite » l'a déjà dans sa carte. Rien quand le menu
+      // « Choisir une activité » est ouvert (pas de carte de séance). Sous
+      // « Reprendre ma séance », son titre est « À retenir ». Évaluation
+      // ouverte : voir aRetenirAffiche.
+      function renderARetenirAccueil() {
+        const acc = document.querySelector(".acc");
+        if (!acc) return;
+        acc.querySelectorAll(".acc-retenir").forEach(noeud => noeud.remove());
+        if (acc.querySelector(".carte-seance.est-faite")) return;
+        const ancre = acc.querySelector(".carte-seance") || acc.querySelector("#acc-expert.is-records:not([hidden]) #acc-expert-action > .expert-tenter");
+        if (!ancre) return;
+        const cadre = cadreARetenir(aRetenirAffiche(), ancre.classList.contains("est-reprise") ? "À retenir" : undefined);
+        if (!cadre) return;
+        cadre.classList.add("acc-retenir");
+        ancre.after(cadre);
+      }
+
       // Lot « retouches après Mon parcours » (décision 7, choix de Gwenaël) :
       // une fois la séance du jour faite, l'accueil ne passait plus qu'à
       // « Encore une séance » et aux étapes de la séance SUIVANTE — plus rien
@@ -9870,7 +9974,8 @@
         coche.textContent = "✓";
         titre.append(coche, "Séance du jour faite");
         carte.append(titre);
-        const retenir = cadreARetenir(PARCOURS.aRetenir(parcours));
+        // Lot E3b : sans les erreurs d'une évaluation encore ouverte.
+        const retenir = cadreARetenir(aRetenirAffiche());
         if (retenir) carte.append(retenir);
         const encore = document.createElement("button");
         encore.type = "button";
