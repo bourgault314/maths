@@ -259,12 +259,21 @@ test("en marche : vingt réponses — fini, le score affiché est celui de ses r
   // avec les réponses d'un autre passage, il change.
   const q1 = appli.state.questions[0];
   assert.deepEqual(appli.api.scoreDeLEvaluation({...appli.api.evalEtat, reponses: {"1": `${q1.answer}|10`}}), {score: 1, total: 20});
-  // La carte : la ligne « envoyée ✓ · 15 / 20 ».
+  // La carte : la ligne « envoyée ✓ · 15 / 20 », et dessous (lot E3) les
+  // cinq questions ratées, telles qu'elles ont été posées (correctif 1 :
+  // jamais « a × b », qui montre la réponse d'un nombre manquant ou d'une division).
   appli.api.renderCarteEvaluation();
   const acc = appli.document.getElementById(".acc");
   const ligne = acc.enfants[0];
   assert.ok(ligne.classes.has("evalc-ligne") && !ligne.classes.has("is-close"));
-  assert.equal(ligne.texte, "📝 Évaluation envoyée ✓ · 15 / 20");
+  assert.equal(ligne.enfants[0].textContent, "📝 Évaluation envoyée ✓ · 15 / 20");
+  const rates = appli.state.questions.filter((q, i) => i % 4 === 0);
+  assert.ok(ligne.classes.has("a-revoir"));
+  assert.ok(ligne.enfants[1].classes.has("evalc-revoir"));
+  assert.equal(ligne.enfants[1].textContent, "À revoir\u00a0: " + rates.map(q => q.prompt.replace(/ /g, "\u00a0")).join(" · "));
+  const items = ligne.enfants[1].textContent.replace(/^À revoir\u00a0: /, "").split(" · ");
+  assert.equal(items.length, 5);
+  for (const item of items) assert.equal((item.match(/\?/g) || []).length, 1, `« ${item} » garde son « ? » à la place de la réponse`);
   // Fermée : plus rien.
   serveur.etat.ouverte = false;
   await appli.api.lireEvaluation();
@@ -374,4 +383,39 @@ test("en marche : une réponse de plus de 3 chiffres ne part pas ; par question,
   await new Promise(r => setTimeout(r, 5));
   assert.equal(serveur.etat.reponses["1"].split("|")[0], String(q1.answer), "c'est SA réponse qui est rangée");
   assert.equal(appli.state.index, 1);
+});
+
+test("lot E3 : « À revoir » — la question telle qu'elle a été posée, jamais sa réponse ; les ratés et les vides atteints, jamais une question pas atteinte ; six au plus ; rien à 20 / 20", async () => {
+  const {appli} = await appliEnEvaluation();
+  const graines = {seance: 123456, eleve: 654321};
+  const questions = CORE.genererEvaluationDeClasse(MODELE, graines);
+  const etat = reponses => ({...appli.api.evalEtat, etat: "ouverte", commence: true, fini: true, modele: MODELE, graines, reponses});
+  const justes = n => Object.fromEntries(questions.slice(0, n).map(q => [String(q.numero), `${q.answer}|20`]));
+  // Tout juste : rien à revoir, la ligne reste sur un étage.
+  assert.deepEqual(appli.api.questionsARevoir(etat(justes(20))), []);
+  // Un faux, un vide, et la fin jamais atteinte (copie arrêtée à 6 réponses).
+  const r = justes(6);
+  r[String(questions[1].numero)] = `${questions[1].answer + 1}|20`;
+  r[String(questions[3].numero)] = "|80";
+  assert.deepEqual(appli.api.questionsARevoir(etat(r)), [questions[1].prompt, questions[3].prompt],
+    "le faux et le vide, dans l'ordre des questions ; les 14 jamais atteintes ne comptent pas");
+  // Tout faux : les vingt questions, chacune telle qu'elle a été posée — les
+  // nombres manquants et les divisions gardent leur « ? » (correctif 1, relevé
+  // par Code sur la PR #1002 : « 7 × 3 » montrait la réponse de « 7 × ? = 21 »).
+  const tout = Object.fromEntries(questions.map(q => [String(q.numero), "0|20"]));
+  const liste = appli.api.questionsARevoir(etat(tout));
+  assert.deepEqual(liste, questions.filter(q => q.answer !== 0).map(q => q.prompt));
+  assert.ok(new Set(questions.map(q => q.category)).size === 3, "le tirage mélange produits, nombres manquants et divisions");
+  for (const question of questions.filter(q => q.category !== "direct")) {
+    assert.ok(liste.includes(question.prompt), `« ${question.prompt} » écrit tel quel`);
+    assert.ok(!liste.includes(`${question.first} × ${question.second}`), "jamais les deux facteurs, dont l'un est la réponse");
+  }
+  // Plus de six : les six premières, puis « et N autres ».
+  const texte = appli.api.texteARevoir(liste);
+  assert.equal(texte, "À revoir\u00a0: " + liste.slice(0, 6).map(p => p.replace(/ /g, "\u00a0")).join(" · ") + ` · et ${liste.length - 6} autres`);
+  assert.ok(appli.api.texteARevoir(liste.slice(0, 7)).endsWith(" · et 1 autre"));
+  for (const item of texte.replace(/^À revoir\u00a0: /, "").split(" · ").slice(0, 6)) assert.equal((item.match(/\?/g) || []).length, 1);
+  // Sans graines (serveur d'avant, état bizarre) : rien.
+  assert.deepEqual(appli.api.questionsARevoir({...etat(r), graines: null}), []);
+  assert.deepEqual(appli.api.questionsARevoir(null), []);
 });
