@@ -70,7 +70,7 @@ function bd_test(): PDO
     return $pdo;
 }
 if (getenv('SUIVI_TEST_DSN')) {
-    foreach (['directs_reponses', 'directs_questions', 'directs', 'records', 'journal', 'versions', 'billets', 'partages', 'sessions_prof', 'compteurs', 'progressions', 'eleves', 'classes', 'profs'] as $table) {
+    foreach (['modeles_evaluation', 'directs_reponses', 'directs_questions', 'directs', 'records', 'journal', 'versions', 'billets', 'partages', 'sessions_prof', 'compteurs', 'progressions', 'eleves', 'classes', 'profs'] as $table) {
         bd_test()->exec("DROP TABLE IF EXISTS $table");
     }
     echo "Base de test : " . $bdTest['dsn'] . "\n";
@@ -584,13 +584,17 @@ verifier("le manifeste connaît la page Infos", function () {
     // splat-suivi-3) ; 31 depuis les records (api/records.php, lib/records.php) ;
     // 35 depuis la séance en direct (07/10/2026) : direct.php, prof/direct.php,
     // api/direct.php, lib/direct.php ; 58 depuis le questionnaire au tableau
-    // (lot 2, 15/10/2026) : prof/questionnaire.js et KaTeX (vendor/katex-0.16.9 :
+    // (lot 2, 15/10/2026) : prof/questionnaire.js et KaTeX (vendor/katex-0.16.9,
+    // devenu vendor/katex-0.16.47 au lot katex-a-jour, même nombre de fichiers :
     // le script, la feuille et ses 20 polices).
-    vrai((bool)preg_match('/^fichiers 58$/m', $manifeste),
-        'le serveur compte 58 fichiers depuis le questionnaire au tableau');
+    // 60 depuis les évaluations en classe (lot E1, 15/10/2026) : lib/evaluation.php
+    // et la copie du noyau de Défi tables, prof/defi_tables_core.js.
+    vrai((bool)preg_match('/^fichiers 60$/m', $manifeste),
+        'le serveur compte 60 fichiers depuis les évaluations en classe');
     foreach (['direct.php', 'prof/direct.php', 'api/direct.php', 'lib/direct.php', 'prof/questionnaire.js',
-              'vendor/katex-0.16.9/katex.min.js', 'vendor/katex-0.16.9/katex.min.css',
-              'vendor/katex-0.16.9/fonts/KaTeX_Main-Regular.woff2'] as $fichier) {
+              'lib/evaluation.php', 'prof/defi_tables_core.js',
+              'vendor/katex-0.16.47/katex.min.js', 'vendor/katex-0.16.47/katex.min.css',
+              'vendor/katex-0.16.47/fonts/KaTeX_Main-Regular.woff2'] as $fichier) {
         vrai((bool)preg_match('/^[0-9a-f]{64}  ' . preg_quote($fichier, '/') . '$/m', $manifeste),
             "$fichier doit figurer au manifeste");
     }
@@ -1929,6 +1933,16 @@ verifier("Ma classe charge le moteur de Défi tables d'ici, identique à celui d
         egal(md5_file($original), md5($moteur['texte']), 'octet pour octet le fichier de l’appli (sinon : cp outils/calcul_mental/defi_tables_mon_parcours.js _serveur/public/prof/)');
     }
     vrai(str_contains($r['texte'], 'indicateur pédagogique, pas une preuve'), 'la ligne sous le tableau est là');
+    // Lot E1 (15/10/2026) : le NOYAU aussi, pour refaire le tirage d'une évaluation.
+    vrai((bool)preg_match('/<script src="defi_tables_core\.js\?v=([0-9a-f]{10})"><\/script>/', $r['texte'], $c), 'le noyau est relatif, avec une version');
+    $noyau = page('/prof/defi_tables_core.js');
+    egal(200, $noyau['code'], 'le noyau est servi');
+    vrai(str_contains($noyau['texte'], 'genererEvaluationDeClasse'), "c'est bien le noyau, avec le générateur d'évaluation");
+    egal(substr(md5($noyau['texte']), 0, 10), $c[1], 'la version du noyau est l’empreinte du fichier servi');
+    $originalNoyau = dirname($racine) . '/outils/calcul_mental/defi_tables_core.js';
+    if (is_file($originalNoyau)) {
+        egal(md5_file($originalNoyau), md5($noyau['texte']), 'octet pour octet le noyau de l’appli (sinon : cp outils/calcul_mental/defi_tables_core.js _serveur/public/prof/)');
+    }
 });
 
 verifier("verifier.php contrôle le moteur local et compte les comptes désactivés", function () {
@@ -2992,6 +3006,18 @@ const MATRICE_ATTENDUE = [
     'direct.bonne' => 'ecriture',
     'direct.fichier' => 'ecriture',
     'direct.terminer' => 'ecriture',
+    // Lot E1 « les évaluations en classe » (15/10/2026). Même ordre que les
+    // gestes : ouvrir (avec un modèle à soi), lire, fermer, prendre le
+    // fichier, terminer. Les modèles n'ont pas de classe : hors matrice.
+    'evaluation.ouvrir' => 'ecriture',
+    'evaluation.etat' => 'ecriture',
+    // Lot E2 : « Faire repasser » un élève — joué tant que l'évaluation est
+    // ouverte (avant « fermer »), sur l'élève de la classe (rien à effacer :
+    // le droit seul est éprouvé, le serveur répond 200 avec efface: false).
+    'evaluation.repasser' => 'ecriture',
+    'evaluation.fermer' => 'ecriture',
+    'evaluation.fichier' => 'ecriture',
+    'evaluation.terminer' => 'ecriture',
 ];
 
 // Les actions qui EFFACENT ne sont pas jouées dans les boucles de la matrice :
@@ -3056,6 +3082,24 @@ function jouer_action_lot11(string $action, array $lot11, string $jeton): int
         case 'direct.question':
             $corps['classe_id'] = $lot11['classe'];
             $corps['type'] = 'choix';
+            break;
+        case 'evaluation.etat':
+        case 'evaluation.fermer':
+        case 'evaluation.fichier':
+        case 'evaluation.terminer':
+            $corps['classe_id'] = $lot11['classe'];
+            break;
+        case 'evaluation.repasser':
+            $corps['classe_id'] = $lot11['classe'];
+            $corps['eleve_id'] = $lot11['eleve']['id'];
+            break;
+        case 'evaluation.ouvrir':
+            // Avec un modèle du professeur qui joue : chacun ouvre avec les siens.
+            $modele = appel('/api/prof.php', ['action' => 'evaluation.enregistrer_modele', 'id' => null, 'nom' => 'lot 11',
+                'reglage' => ['tables' => [7], 'types' => ['direct'], 'n' => 10, 'chrono' => 'sans', 'tirage' => 'memes']], ['jeton' => $jeton])['json']['id'] ?? 0;
+            $corps['classe_id'] = $lot11['classe'];
+            $corps['modele_id'] = $modele;
+            $corps['duree'] = 1800;
             break;
         case 'classes.modifier':
             $corps['classe_id'] = $lot11['classe'];
@@ -5209,6 +5253,538 @@ verifier("direct, lot 2 — verifier.php dit ce qui reste en base, et rougit sur
     vrai(str_contains($r['texte'], 'restent sans leur séance'), 'une ligne orpheline est signalée');
     bd_test()->exec('DELETE FROM directs_reponses WHERE direct_id = 999999');
     egal(0, lignes_directs());
+});
+
+// ===================================== LES ÉVALUATIONS EN CLASSE, LOT E1 (15/10/2026)
+//
+// lib/evaluation.php, la branche « evaluation » de api/direct.php, les
+// actions evaluation.* de api/prof.php. Ce que ce bloc tient :
+//  - les MODÈLES : un réglage de liste fermée, à soi (un collègue ne voit ni
+//    ne touche les miens), un quota, un nom propre ;
+//  - OUVRIR : une évaluation par classe, pas pendant une question éclair (et
+//    pas de question éclair pendant une évaluation), la graine tirée par le
+//    serveur, la fin posée par lui, dix ouvertures = une séance ;
+//  - l'ÉLÈVE : rien avant « Je commence » ; une graine, une fois ; une
+//    réponse par numéro, la suivante seulement, la première arrivée reste ;
+//    la forme vérifiée ; rien après sa fenêtre, après la fermeture, après la
+//    fin ; il ne reçoit jamais un compteur ni la copie d'un autre ;
+//  - MA CLASSE : des compteurs sans nom ; le fichier (graines, réponses,
+//    débuts) au droit écriture, journalisé ; le serveur ne corrige jamais ;
+//  - RIEN NE RESTE : « Terminer », la purge vingt heures après la fermeture,
+//    la classe ou l'élève supprimés, le compte supprimé (ses modèles).
+//
+// Sabotages attendus (chacun rend un test rouge) :
+//  n) ne plus tirer la graine de l'élève au serveur (commencer_evaluation qui
+//     prend $corps['graine'])
+//  o) retirer « count($deja) + 1 !== $numero » de repondre_evaluation()
+//  p) DO NOTHING → DO UPDATE SET reponse = excluded.reponse (la dernière gagne)
+//  q) retirer fenetre_evaluation_close() de api/direct.php
+//  r) envoyer « commences » à l'élève (etat_evaluation_pour_l_eleve)
+//  s) direct.ouvrir sans la garde « evaluation_de_la_classe »
+//  t) retirer oublier_modeles_du_prof() de supprimer_prof()
+//  u) expire_le = fin (plus de garde de vingt heures)
+
+require_once dirname(__DIR__) . '/public/lib/evaluation.php';
+
+$ev = ['jeton' => null, 'classe' => null, 'eleves' => [], 'autreEleve' => null, 'modele' => null, 'collegue' => null, 'jetonCollegue' => null];
+const REGLAGE_EV = ['tables' => [2, 3, 4, 5, 6, 7, 8, 9], 'types' => ['direct', 'missing', 'division'], 'n' => 20,
+    'chrono' => 'question', 'secondes' => 8, 'tirage' => 'memes', 'exclus' => ['2-1', '2-10'], 'imposes' => ['7-8', '6-9']];
+
+function ev_prof(string $action, array $ev, array $corps = [], ?string $jeton = null): array
+{
+    return appel('/api/prof.php', ['action' => $action, 'classe_id' => $ev['classe']] + $corps, ['jeton' => $jeton ?? $ev['jeton']]);
+}
+
+function ev_eleve(string $code, array $corps = []): array
+{
+    return appel('/api/direct.php', ['code' => $code] + $corps);
+}
+
+function ev_en_base(): array
+{
+    $id = bd_test()->query("SELECT id FROM directs WHERE mode = 'evaluation'")->fetchColumn();
+    if ($id === false) return ['seances' => 0, 'presences' => 0, 'reponses' => 0];
+    return [
+        'seances' => 1,
+        'presences' => (int)bd_test()->query("SELECT COUNT(*) FROM directs_reponses WHERE direct_id = $id AND numero = 0")->fetchColumn(),
+        'reponses' => (int)bd_test()->query("SELECT COUNT(*) FROM directs_reponses WHERE direct_id = $id AND numero >= 1")->fetchColumn(),
+    ];
+}
+
+function ev_reglage_en_base(array $ev): array
+{
+    $json = bd_test()->query('SELECT reglage FROM directs WHERE classe_id = ' . (int)$ev['classe'])->fetchColumn();
+    return is_string($json) ? (json_decode($json, true) ?? []) : [];
+}
+
+verifier("évaluations — mise en place : une classe de six élèves nommés, un collègue en écriture, les tables vides", function () use (&$direct, &$ev) {
+    vider_compteurs();
+    $ev['jeton'] = $direct['jeton'];
+    $ev['classe'] = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'eval-405'], ['jeton' => $ev['jeton']])['json']['id'];
+    $ev['eleves'] = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $ev['classe'], 'nombre' => 6], ['jeton' => $ev['jeton']])['json']['eleves'];
+    egal(6, count($ev['eleves']), 'six élèves');
+    foreach (['Léa', 'Noah', 'Inès', 'Tom', 'Zoé', 'Sami'] as $i => $prenom) {
+        appel('/api/prof.php', ['action' => 'eleves.nommer', 'eleve_id' => $ev['eleves'][$i]['id'], 'prenom' => $prenom, 'initiale' => 'E'], ['jeton' => $ev['jeton']]);
+    }
+    $ev['autreEleve'] = $direct['autreEleve'];
+    $cree = appel('/api/prof.php', ['action' => 'profs.ajouter', 'identifiant' => 'eval-collegue'], ['jeton' => $ev['jeton']])['json'];
+    $ev['collegue'] = (int)$cree['id'];
+    $jetonNeuf = connexion('eval-collegue', $cree['motdepasse'])['json']['jeton'];
+    appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => $cree['motdepasse'], 'nouveau' => 'une phrase pour le collegue 2026'], ['jeton' => $jetonNeuf]);
+    $ev['jetonCollegue'] = $jetonNeuf;
+    appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $ev['classe'], 'prof_id' => $ev['collegue'], 'droit' => 'ecriture'], ['jeton' => $ev['jeton']]);
+    bd_test()->exec('DELETE FROM directs_reponses');
+    bd_test()->exec('DELETE FROM directs_questions');
+    bd_test()->exec('DELETE FROM directs');
+    bd_test()->exec('DELETE FROM modeles_evaluation');
+    egal(0, lignes_directs());
+});
+
+verifier("évaluations — les modèles : liste fermée, à soi, nom propre, quota", function () use (&$ev) {
+    egal([], ev_prof('evaluation.modeles', $ev)['json']['modeles'], 'aucun modèle au départ');
+    foreach ([
+        [REGLAGE_EV, '', 'sans nom'],
+        [['n' => '20'] + REGLAGE_EV, 'x', 'un texte à la place du nombre'],
+        [['n' => 4] + REGLAGE_EV, 'x', 'quatre questions'],
+        [['n' => 51] + REGLAGE_EV, 'x', 'cinquante et une questions'],
+        [['tables' => []] + REGLAGE_EV, 'x', 'sans table'],
+        [['tables' => [11]] + REGLAGE_EV, 'x', 'table de 11'],
+        [['types' => ['texte']] + REGLAGE_EV, 'x', 'type inconnu'],
+        [['chrono' => 'minute'] + REGLAGE_EV, 'x', 'chrono inconnu'],
+        [['secondes' => 2] + REGLAGE_EV, 'x', 'deux secondes par question'],
+        [['chrono' => 'global', 'secondes' => 10] + REGLAGE_EV, 'x', 'dix secondes en tout'],
+        [['exclus' => ['7×8']] + REGLAGE_EV, 'x', 'un calcul mal écrit'],
+        [['imposes' => ['1-1']] + REGLAGE_EV, 'x', 'un calcul hors des tables'],
+        [['imposes' => ['7-8', '2-1']] + REGLAGE_EV, 'x', 'exclu et imposé'],
+        [['n' => 5, 'imposes' => ['7-8', '6-9', '3-3', '4-4', '5-5', '2-2']] + REGLAGE_EV, 'x', 'plus d’imposés que de questions'],
+        ['pas un tableau', 'x', 'pas un réglage'],
+    ] as [$reglage, $nom, $quoi]) {
+        egal(400, ev_prof('evaluation.enregistrer_modele', $ev, ['id' => null, 'nom' => $nom, 'reglage' => $reglage])['code'], "refusé : $quoi");
+    }
+    egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM modeles_evaluation')->fetchColumn(), 'rien n’est rangé');
+    $r = ev_prof('evaluation.enregistrer_modele', $ev, ['id' => null, 'nom' => "  Tables\u{200B} 2 à 9  —  rapide \x07", 'reglage' => ['tirage' => 'n’importe', 'exclus' => ['1-2', '2-1']] + REGLAGE_EV]);
+    egal(200, $r['code'], json_encode($r['json']));
+    $ev['modele'] = (int)$r['json']['id'];
+    egal(1, count($r['json']['modeles']));
+    egal('Tables 2 à 9 — rapide', $r['json']['modeles'][0]['nom'], 'le nom est nettoyé (espaces, caractères invisibles)');
+    egal(['tables' => [2, 3, 4, 5, 6, 7, 8, 9], 'types' => ['direct', 'missing', 'division'], 'n' => 20, 'chrono' => 'question', 'secondes' => 8,
+          'tirage' => 'memes', 'exclus' => ['1-2'], 'imposes' => ['7-8', '6-9']], $r['json']['modeles'][0]['reglage'],
+        'le réglage rangé est remis au propre : tirage par défaut, exclus sans doublon');
+    $json = (string)bd_test()->query('SELECT reglage FROM modeles_evaluation')->fetchColumn();
+    vrai(!str_contains($json, 'n’importe') && strlen($json) < 600, 'en base : le réglage propre, et court');
+    // Modifier le sien ; pas celui d'un autre.
+    $r = ev_prof('evaluation.enregistrer_modele', $ev, ['id' => $ev['modele'], 'nom' => str_repeat('a', 50), 'reglage' => ['chrono' => 'sans'] + REGLAGE_EV]);
+    egal(200, $r['code']);
+    egal(str_repeat('a', 40), $r['json']['modeles'][0]['nom'], 'quarante caractères au plus');
+    egal('sans', $r['json']['modeles'][0]['reglage']['chrono']);
+    vrai($r['json']['modeles'][0]['reglage']['secondes'] === null, 'sans chrono : pas de secondes');
+    egal([], ev_prof('evaluation.modeles', $ev, [], $ev['jetonCollegue'])['json']['modeles'], 'le collègue ne voit pas mes modèles');
+    egal(404, ev_prof('evaluation.enregistrer_modele', $ev, ['id' => $ev['modele'], 'nom' => 'volé', 'reglage' => REGLAGE_EV], $ev['jetonCollegue'])['code'], 'ni ne les modifie');
+    egal(404, ev_prof('evaluation.supprimer_modele', $ev, ['id' => $ev['modele']], $ev['jetonCollegue'])['code'], 'ni ne les supprime');
+    egal(404, ev_prof('evaluation.enregistrer_modele', $ev, ['id' => 999999, 'nom' => 'x', 'reglage' => REGLAGE_EV])['code'], 'un id inconnu');
+    egal(1, (int)bd_test()->query('SELECT COUNT(*) FROM modeles_evaluation')->fetchColumn());
+    // Le quota.
+    for ($i = 0; $i < 29; $i++) {
+        bd_test()->prepare('INSERT INTO modeles_evaluation (prof_id, nom, reglage, cree_le, modifie_le) VALUES (?, ?, ?, ?, ?)')
+            ->execute([(int)bd_test()->query("SELECT id FROM profs WHERE identifiant = 'gwenael'")->fetchColumn(), "quota $i", '{}', time(), time()]);
+    }
+    egal(409, ev_prof('evaluation.enregistrer_modele', $ev, ['id' => null, 'nom' => 'le 31e', 'reglage' => REGLAGE_EV])['code'], 'trente modèles : le suivant est refusé');
+    bd_test()->exec("DELETE FROM modeles_evaluation WHERE nom LIKE 'quota %'");
+    // Remis au propre pour la suite.
+    egal(200, ev_prof('evaluation.enregistrer_modele', $ev, ['id' => $ev['modele'], 'nom' => 'Tables 2 à 9 — rapide', 'reglage' => REGLAGE_EV])['code']);
+});
+
+verifier("évaluations — ouvrir : un modèle à soi, une durée de la liste, la graine et la fin posées par le serveur, une séance par classe", function () use (&$ev) {
+    egal(404, ev_prof('evaluation.ouvrir', $ev, ['modele_id' => 999999, 'duree' => 3600])['code'], 'modèle inconnu');
+    egal(404, ev_prof('evaluation.ouvrir', $ev, ['modele_id' => $ev['modele'], 'duree' => 3600], $ev['jetonCollegue'])['code'], 'le modèle d’un autre : inconnu pour lui');
+    egal(400, ev_prof('evaluation.ouvrir', $ev, ['modele_id' => $ev['modele'], 'duree' => 999])['code'], 'durée hors liste');
+    egal(0, ev_en_base()['seances'], 'rien n’est ouvert');
+    // Pas pendant une question éclair.
+    ev_prof('direct.ouvrir', $ev);
+    egal(409, ev_prof('evaluation.ouvrir', $ev, ['modele_id' => $ev['modele'], 'duree' => 3600])['code'], 'une question éclair occupe la classe');
+    ev_prof('direct.terminer', $ev);
+    vrai(ev_prof('evaluation.etat', $ev)['json']['evaluation'] === null, 'avant : aucune évaluation');
+    $avant = time();
+    $codes = appels_paralleles('/api/prof.php', ['action' => 'evaluation.ouvrir', 'classe_id' => $ev['classe'], 'modele_id' => $ev['modele'], 'duree' => 3600, 'jeton' => $ev['jeton']], 10);
+    egal([200], array_values(array_unique($codes)), 'dix ouvertures simultanées, toutes servies');
+    egal(1, ev_en_base()['seances'], 'une seule séance en base');
+    $r = ev_prof('evaluation.ouvrir', $ev, ['modele_id' => $ev['modele'], 'duree' => 1800]);
+    $e = $r['json']['evaluation'];
+    egal('ouverte', $e['etat']);
+    egal('Tables 2 à 9 — rapide', $e['nom']);
+    egal(6, $e['inscrits']);
+    egal(0, $e['commences']);
+    egal(0, $e['finis']);
+    vrai($e['fin'] - $e['ouvert_le'] === 3600, 'rouvrir ne change pas la durée : toujours 1 h, celle de la première ouverture');
+    vrai(abs($e['fin'] - ($avant + 3600)) <= 3, 'la fin est posée par le serveur');
+    egal($e['fin'] + 72000, $e['expire_le'], 'les réponses attendent le fichier vingt heures après la fin');
+    egal(['tables', 'types', 'n', 'chrono', 'secondes', 'tirage', 'exclus', 'imposes'], array_keys($e['modele']), 'le modèle figé, sans la graine');
+    $base = ev_reglage_en_base($ev);
+    vrai(is_int($base['graine']) && $base['graine'] >= 0, 'la graine de l’évaluation est en base');
+    egal(20, (int)bd_test()->query('SELECT numero FROM directs WHERE classe_id = ' . (int)$ev['classe'])->fetchColumn(), 'numero = le nombre de questions');
+    egal('evaluation', (string)bd_test()->query('SELECT mode FROM directs WHERE classe_id = ' . (int)$ev['classe'])->fetchColumn());
+    $ligne = bd_test()->query("SELECT action, cible_id FROM journal WHERE action = 'evaluation.ouvrir' ORDER BY id DESC LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+    egal(['evaluation.ouvrir', $ev['classe']], [$ligne['action'], (int)$ligne['cible_id']], 'une ligne au journal');
+    egal(1, (int)bd_test()->query("SELECT COUNT(*) FROM journal WHERE action = 'evaluation.ouvrir' AND cible_id = " . (int)$ev['classe'])->fetchColumn(), 'une seule, pas une par clic');
+    // La course, rejouée : seule la demande qui a ÉCRIT la séance journalise
+    // (sur les machines de la CI, deux demandes voyaient « rien » avant que la
+    // première n'ait écrit — trouvé sur la PR #996).
+    for ($tour = 1; $tour <= 3; $tour++) {
+        ev_prof('evaluation.terminer', $ev);
+        appels_paralleles('/api/prof.php', ['action' => 'evaluation.ouvrir', 'classe_id' => $ev['classe'], 'modele_id' => $ev['modele'], 'duree' => 3600, 'jeton' => $ev['jeton']], 10);
+        egal(1, ev_en_base()['seances'], "tour $tour : une séance");
+        egal(1 + $tour, (int)bd_test()->query("SELECT COUNT(*) FROM journal WHERE action = 'evaluation.ouvrir' AND cible_id = " . (int)$ev['classe'])->fetchColumn(), "tour $tour : une ligne de journal de plus, pas dix");
+    }
+    $r = ev_prof('evaluation.ouvrir', $ev, ['modele_id' => $ev['modele'], 'duree' => 1800]);
+    $e = $r['json']['evaluation'];
+    // Pendant : pas de question éclair, et le tableau ne voit pas de séance.
+    egal(409, ev_prof('direct.ouvrir', $ev)['code'], 'pas de question éclair pendant une évaluation');
+    vrai(ev_prof('direct.etat', $ev)['json']['direct'] === null, 'pour le tableau, aucune séance');
+    egal(409, ev_prof('direct.question', $ev, ['type' => 'choix'])['code']);
+    egal(200, ev_prof('direct.terminer', $ev)['code'], 'direct.terminer ne casse rien…');
+    egal(1, ev_en_base()['seances'], '… et n’emporte pas l’évaluation');
+    // Le collègue en écriture la voit ; en lecture, non.
+    egal('ouverte', ev_prof('evaluation.etat', $ev, [], $ev['jetonCollegue'])['json']['evaluation']['etat'], 'le collègue en écriture voit l’évaluation');
+});
+
+verifier("évaluations — l'élève avant « Je commence » : l'état et le modèle, pas de graine, pas de compteur ; une autre classe ne voit rien", function () use (&$ev) {
+    $r = ev_eleve($ev['eleves'][0]['code']);
+    egal(200, $r['code']);
+    vrai($r['json']['direct'] === null, 'pour la page de la question éclair : aucune séance');
+    $e = $r['json']['evaluation'];
+    egal('ouverte', $e['etat']);
+    egal(false, $e['commence']);
+    vrai($e['graines'] === null && $e['suivant'] === null && $e['ecoule'] === null, 'rien avant « Je commence »');
+    egal(false, $e['fini']);
+    egal(20, $e['modele']['n']);
+    egal(['7-8', '6-9'], $e['modele']['imposes'], 'le modèle complet : l’appli en a besoin pour tirer');
+    foreach (['commences', 'finis', 'inscrits', 'graine', 'eleves', 'fin', 'expire_le'] as $cle) {
+        vrai(!array_key_exists($cle, $e), "l'élève ne reçoit pas « $cle »");
+    }
+    egal(6000, $r['json']['rythme'], 'le rythme lent : l’appli n’a rien à suivre en boucle');
+    egal(0, ev_en_base()['presences'], 'interroger n’écrit pas de présence');
+    vrai(ev_eleve($ev['autreEleve']['code'])['json']['evaluation'] === null, 'l’élève d’une autre classe : aucune évaluation');
+    egal(409, ev_eleve($ev['eleves'][0]['code'], ['numero' => 1, 'reponse' => '5', 'dixiemes' => 10])['code'], 'répondre sans avoir commencé');
+    egal(409, ev_eleve($ev['eleves'][0]['code'], ['finir' => true])['code'], 'finir sans avoir commencé');
+});
+
+verifier("évaluations — « Je commence » : la graine tirée par le serveur, une fois, même à vingt en même temps", function () use (&$ev) {
+    $code = $ev['eleves'][0]['code'];
+    $r = ev_eleve($code, ['commencer' => true, 'graine' => 42]);
+    egal(200, $r['code']);
+    $e = $r['json']['evaluation'];
+    egal(true, $e['commence']);
+    vrai(is_int($e['graines']['seance']) && is_int($e['graines']['eleve']), 'deux graines');
+    egal(ev_reglage_en_base($ev)['graine'], $e['graines']['seance'], 'celle de l’évaluation');
+    vrai($e['graines']['eleve'] !== 42, 'la graine envoyée par la page ne compte pas');
+    egal(1, $e['suivant']);
+    egal([], (array)$e['reponses']);
+    vrai(is_int($e['ecoule']) && $e['ecoule'] <= 2, 'le temps écoulé part de zéro');
+    $deux = ev_eleve($code, ['commencer' => true])['json']['evaluation'];
+    egal($e['graines'], $deux['graines'], 'un second « Je commence » : la même graine');
+    egal(1, ev_en_base()['presences'], 'une seule ligne de présence');
+    $codes = appels_paralleles('/api/direct.php', ['code' => $ev['eleves'][1]['code'], 'commencer' => true], 20);
+    vrai(!in_array(500, $codes, true), 'vingt « Je commence » au même instant : aucune panne');
+    egal(2, ev_en_base()['presences'], 'et une seule ligne pour lui aussi');
+    $graines = [];
+    for ($i = 0; $i < 20; $i++) $graines[] = ev_eleve($ev['eleves'][1]['code'])['json']['evaluation']['graines']['eleve'];
+    egal(1, count(array_unique($graines)), 'toujours la même');
+    vrai($graines[0] !== $e['graines']['eleve'], 'deux élèves, deux graines');
+    egal(['graine', 'debut', 'fini'], array_keys(lire_presence_evaluation((string)bd_test()->query('SELECT reponse FROM directs_reponses WHERE numero = 0 AND eleve_id = ' . (int)$ev['eleves'][0]['id'])->fetchColumn())), 'la présence : graine, début, fini');
+    $etat = ev_prof('evaluation.etat', $ev)['json']['evaluation'];
+    egal(2, $etat['commences']);
+    egal(0, $etat['finis']);
+});
+
+verifier("évaluations — répondre : la suivante seulement, une seule fois, la première arrivée reste, la forme vérifiée", function () use (&$ev) {
+    $code = $ev['eleves'][0]['code'];
+    foreach (['a', '-5', '1234', '5.5', ' 5 6', ['5']] as $mauvaise) {
+        egal(400, ev_eleve($code, ['numero' => 1, 'reponse' => $mauvaise, 'dixiemes' => 10])['code'], 'refusée : ' . json_encode($mauvaise));
+    }
+    egal(0, ev_en_base()['reponses']);
+    egal(false, ev_eleve($code, ['numero' => 2, 'reponse' => '5', 'dixiemes' => 10])['json']['enregistree'], 'la question 2 avant la 1 : rien');
+    egal(false, ev_eleve($code, ['numero' => 0, 'reponse' => '5', 'dixiemes' => 10])['json']['enregistree'], 'le numéro 0 est la présence, pas une question');
+    egal(false, ev_eleve($code, ['numero' => 21, 'reponse' => '5', 'dixiemes' => 10])['json']['enregistree'], 'au-delà de n');
+    $r = ev_eleve($code, ['numero' => 1, 'reponse' => '56', 'dixiemes' => 43]);
+    egal(200, $r['code']);
+    egal(true, $r['json']['enregistree']);
+    egal(2, $r['json']['evaluation']['suivant']);
+    egal(['1' => '56|43'], (array)$r['json']['evaluation']['reponses'], 'sa réponse, telle que rangée');
+    egal('56|43', (string)bd_test()->query('SELECT reponse FROM directs_reponses WHERE numero = 1 AND eleve_id = ' . (int)$ev['eleves'][0]['id'])->fetchColumn());
+    egal(false, ev_eleve($code, ['numero' => 1, 'reponse' => '57', 'dixiemes' => 50])['json']['enregistree'], 'une seconde réponse à la même question : refusée');
+    egal('56|43', (string)bd_test()->query('SELECT reponse FROM directs_reponses WHERE numero = 1 AND eleve_id = ' . (int)$ev['eleves'][0]['id'])->fetchColumn(), 'et la première reste');
+    // Vide = pas de réponse ; dixièmes bornés.
+    $r = ev_eleve($code, ['numero' => 2, 'reponse' => '', 'dixiemes' => 9999999]);
+    egal(true, $r['json']['enregistree']);
+    egal('|999999', (string)bd_test()->query('SELECT reponse FROM directs_reponses WHERE numero = 2 AND eleve_id = ' . (int)$ev['eleves'][0]['id'])->fetchColumn(), 'sans réponse : valeur vide, dixièmes bornés');
+    ev_eleve($code, ['numero' => 3, 'reponse' => '7', 'dixiemes' => -5]);
+    egal('7|0', (string)bd_test()->query('SELECT reponse FROM directs_reponses WHERE numero = 3 AND eleve_id = ' . (int)$ev['eleves'][0]['id'])->fetchColumn(), 'des dixièmes négatifs valent zéro');
+    // Vingt fois la même question au même instant (double clic, réseau qui rejoue).
+    $codes = appels_paralleles('/api/direct.php', ['code' => $code, 'numero' => 4, 'reponse' => '8', 'dixiemes' => 12], 20);
+    vrai(!in_array(500, $codes, true), 'aucune erreur serveur : ' . json_encode(array_count_values($codes)));
+    egal(4, ev_en_base()['reponses'], 'une ligne par numéro');
+    // L'élève d'une autre classe, ou un collègue de classe : rien.
+    vrai(ev_eleve($ev['autreEleve']['code'], ['numero' => 1, 'reponse' => '5', 'dixiemes' => 1])['json']['evaluation'] === null, 'une autre classe : aucune évaluation, donc aucune réponse');
+    // Le limiteur : 120 gestes par code et par cinq minutes.
+    vider_compteurs();
+    semer_compteur('direct:' . $code, 300, 120);
+    $r = ev_eleve($code, ['numero' => 5, 'reponse' => '5', 'dixiemes' => 10]);
+    egal(429, $r['code'], 'le 121e geste en cinq minutes est refusé');
+    egal(200, ev_eleve($code)['code'], 'mais il voit toujours l’évaluation');
+    vider_compteurs();
+});
+
+verifier("évaluations — la fenêtre de l'élève est tenue par le serveur ; vingt réponses, et c'est fini", function () use (&$ev) {
+    $code = $ev['eleves'][0]['code'];
+    $eleveId = (int)$ev['eleves'][0]['id'];
+    $seance = (int)bd_test()->query("SELECT id FROM directs WHERE mode = 'evaluation'")->fetchColumn();
+    // 20 questions × 8 s + 10 s de marge = 170 s : on recule son début de 171 s.
+    $presence = (string)bd_test()->query("SELECT reponse FROM directs_reponses WHERE direct_id = $seance AND numero = 0 AND eleve_id = $eleveId")->fetchColumn();
+    [$graine, $debut] = explode('|', $presence);
+    bd_test()->prepare("UPDATE directs_reponses SET reponse = ? WHERE direct_id = $seance AND numero = 0 AND eleve_id = $eleveId")->execute([$graine . '|' . ($debut - 171)]);
+    $r = ev_eleve($code, ['numero' => 5, 'reponse' => '5', 'dixiemes' => 10]);
+    egal(false, $r['json']['enregistree'], 'après sa fenêtre : refusée');
+    egal(true, $r['json']['evaluation']['close'], 'et l’élève apprend que c’est terminé pour lui');
+    egal(4, ev_en_base()['reponses']);
+    bd_test()->prepare("UPDATE directs_reponses SET reponse = ? WHERE direct_id = $seance AND numero = 0 AND eleve_id = $eleveId")->execute([$graine . '|' . ($debut - 100)]);
+    egal(true, ev_eleve($code, ['numero' => 5, 'reponse' => '5', 'dixiemes' => 10])['json']['enregistree'], 'dans la fenêtre : rangée');
+    for ($numero = 6; $numero <= 20; $numero++) {
+        egal(true, ev_eleve($code, ['numero' => $numero, 'reponse' => (string)$numero, 'dixiemes' => 20])['json']['enregistree'], "réponse $numero");
+    }
+    $e = ev_eleve($code)['json']['evaluation'];
+    egal(true, $e['fini'], 'vingt réponses : fini tout seul');
+    egal(false, $e['close']);
+    egal(20, $e['suivant']);
+    egal(20, count((array)$e['reponses']), 'il relit ses vingt réponses (pour recalculer son score après un rechargement)');
+    vrai(str_ends_with((string)bd_test()->query("SELECT reponse FROM directs_reponses WHERE direct_id = $seance AND numero = 0 AND eleve_id = $eleveId")->fetchColumn(), '|1'), 'le drapeau « fini » sur sa présence');
+    egal(false, ev_eleve($code, ['numero' => 21, 'reponse' => '1', 'dixiemes' => 1])['json']['enregistree'], 'rien après la fin');
+    // Le second élève finit à la main, à mi-parcours.
+    $code2 = $ev['eleves'][1]['code'];
+    ev_eleve($code2, ['numero' => 1, 'reponse' => '9', 'dixiemes' => 30]);
+    egal(true, ev_eleve($code2, ['finir' => true])['json']['evaluation']['fini']);
+    egal(false, ev_eleve($code2, ['numero' => 2, 'reponse' => '9', 'dixiemes' => 30])['json']['enregistree'], 'fini : plus rien n’entre');
+    $etat = ev_prof('evaluation.etat', $ev)['json']['evaluation'];
+    egal(2, $etat['commences']);
+    egal(2, $etat['finis']);
+    // Lot E2 : la liste « qui a commencé, qui a fini », par élève — les
+    // prénoms vont au professeur en écriture (comme le fichier) ; jamais un
+    // code, une graine, une réponse.
+    egal(6, count($etat['eleves']), 'les six élèves de la classe');
+    egal(['Inès', 'Léa', 'Noah', 'Sami', 'Tom', 'Zoé'], array_column($etat['eleves'], 'prenom'), 'dans l’ordre du tableau de classe');
+    $parPrenom = [];
+    foreach ($etat['eleves'] as $eleve) $parPrenom[$eleve['prenom']] = $eleve;
+    egal(['id' => (int)$ev['eleves'][0]['id'], 'prenom' => 'Léa', 'initiale' => 'E', 'etat' => 'fini', 'question' => 20], $parPrenom['Léa'], 'Léa a fini');
+    egal('fini', $parPrenom['Noah']['etat'], 'Noah a fini à la main');
+    egal(['etat' => 'rien', 'question' => null], ['etat' => $parPrenom['Inès']['etat'], 'question' => $parPrenom['Inès']['question']], 'Inès n’a pas commencé');
+    foreach ([$code, $code2, 'graine', '56|43', 'reponses'] as $interdit) {
+        vrai(!str_contains(json_encode($etat), $interdit), "Ma classe ne reçoit pas « $interdit » en boucle");
+    }
+});
+
+verifier("évaluations — « Faire repasser » (lot E2) : le passage effacé, un nouveau tirage, pour l'écriture, tant que c'est ouvert, journalisé sur l'élève", function () use (&$ev) {
+    $code2 = $ev['eleves'][1]['code'];
+    $noah = (int)$ev['eleves'][1]['id'];
+    $avant = ev_eleve($code2)['json']['evaluation'];
+    egal(true, $avant['fini']);
+    $graineAvant = $avant['graines']['eleve'];
+    $revisionAvant = (int)ev_prof('evaluation.etat', $ev)['json']['evaluation']['revision'];
+    // Les refus : un élève inconnu, l'élève d'une autre classe, la lecture seule.
+    egal(404, ev_prof('evaluation.repasser', $ev, ['eleve_id' => 999999])['code'], 'élève inconnu');
+    egal(404, ev_prof('evaluation.repasser', $ev, ['eleve_id' => (int)$ev['autreEleve']['id']])['code'], 'l’élève d’une autre classe : inconnu ici');
+    egal(404, ev_prof('evaluation.repasser', $ev, ['eleve_id' => 'noah'])['code'], 'un identifiant qui n’est pas un nombre : inconnu');
+    appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $ev['classe'], 'prof_id' => $ev['collegue'], 'droit' => 'lecture'], ['jeton' => $ev['jeton']]);
+    egal(403, ev_prof('evaluation.repasser', $ev, ['eleve_id' => $noah], $ev['jetonCollegue'])['code'], 'en lecture seule : non');
+    appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $ev['classe'], 'prof_id' => $ev['collegue'], 'droit' => 'ecriture'], ['jeton' => $ev['jeton']]);
+    egal(2, ev_en_base()['presences'], 'rien n’a bougé');
+    egal(21, ev_en_base()['reponses']);
+    // Le collègue en écriture fait repasser Noah.
+    $r = ev_prof('evaluation.repasser', $ev, ['eleve_id' => $noah], $ev['jetonCollegue']);
+    egal(200, $r['code'], json_encode($r['json']));
+    egal(true, $r['json']['efface']);
+    egal(1, ev_en_base()['presences'], 'sa présence est partie');
+    egal(20, ev_en_base()['reponses'], 'sa réponse aussi ; celles de Léa restent');
+    egal(1, $r['json']['evaluation']['commences']);
+    egal(1, $r['json']['evaluation']['finis']);
+    $parPrenom = [];
+    foreach ($r['json']['evaluation']['eleves'] as $eleve) $parPrenom[$eleve['prenom']] = $eleve;
+    egal('rien', $parPrenom['Noah']['etat'], 'pour Ma classe, Noah n’a pas commencé');
+    egal($revisionAvant + 1, (int)$r['json']['evaluation']['revision'], 'la révision monte : l’appli de Noah saura que son état a changé');
+    $e = ev_eleve($code2)['json']['evaluation'];
+    egal(false, $e['commence'], 'pour l’appli de Noah : il n’a pas commencé');
+    vrai($e['graines'] === null && $e['suivant'] === null, 'plus de graine, plus de suivant');
+    egal(false, $e['fini']);
+    $ligne = bd_test()->query("SELECT action, cible_type, cible_id, prof_id FROM journal WHERE action = 'evaluation.repasser' ORDER BY id DESC LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+    egal(['evaluation.repasser', 'eleve', $noah, $ev['collegue']], [$ligne['action'], $ligne['cible_type'], (int)$ligne['cible_id'], (int)$ligne['prof_id']], 'journalisé sur l’élève, par le collègue');
+    vrai(!str_contains(json_encode($ligne), 'Noah'), 'sans prénom');
+    // Repasser un élève qui n'a pas commencé : rien à effacer, pas une erreur, pas de journal.
+    $r = ev_prof('evaluation.repasser', $ev, ['eleve_id' => $noah]);
+    egal(200, $r['code']);
+    egal(false, $r['json']['efface']);
+    egal(1, (int)bd_test()->query("SELECT COUNT(*) FROM journal WHERE action = 'evaluation.repasser' AND resultat = 'ok'")->fetchColumn(), 'une seule ligne de journal (la ligne « refus » de la lecture seule est à part)');
+    // Noah recommence : une AUTRE graine (un nouveau tirage), et il peut répondre.
+    $deux = ev_eleve($code2, ['commencer' => true])['json']['evaluation'];
+    egal(true, $deux['commence']);
+    vrai($deux['graines']['eleve'] !== $graineAvant, 'une nouvelle graine : pas la copie du premier passage');
+    egal($avant['graines']['seance'], $deux['graines']['seance'], 'la graine de l’évaluation, elle, ne change pas');
+    egal(1, $deux['suivant']);
+    egal(true, ev_eleve($code2, ['numero' => 1, 'reponse' => '9', 'dixiemes' => 30])['json']['enregistree'], 'il répond de nouveau à la question 1');
+    egal(true, ev_eleve($code2, ['finir' => true])['json']['evaluation']['fini']);
+    egal(['seances' => 1, 'presences' => 2, 'reponses' => 21], ev_en_base(), 'le fichier ne gardera que ce dernier passage');
+});
+
+verifier("évaluations — le fichier : graines, débuts et réponses élève par élève, pour l'écriture seulement, journalisé ; le serveur ne corrige rien", function () use (&$ev) {
+    $r = ev_prof('evaluation.fichier', $ev);
+    egal(200, $r['code']);
+    $f = $r['json'];
+    egal('ouverte', $f['etat'], 'avant la fermeture aussi (pour la répartition en direct, un jour)');
+    egal(ev_reglage_en_base($ev)['graine'], $f['graine'], 'la graine de l’évaluation');
+    egal(20, $f['modele']['n']);
+    egal(6, count($f['eleves']), 'les six élèves, présents ou non');
+    $parPrenom = [];
+    foreach ($f['eleves'] as $eleve) $parPrenom[$eleve['prenom']] = $eleve;
+    vrai(is_int($parPrenom['Léa']['graine']) && is_int($parPrenom['Léa']['debut']), 'Léa : sa graine et son début');
+    egal(true, $parPrenom['Léa']['fini']);
+    egal(20, count((array)$parPrenom['Léa']['reponses']));
+    egal('56|43', ((array)$parPrenom['Léa']['reponses'])['1']);
+    vrai($parPrenom['Inès']['graine'] === null && $parPrenom['Inès']['debut'] === null, 'Inès n’a pas commencé : pas de graine');
+    egal([], (array)$parPrenom['Inès']['reponses']);
+    egal(['Inès', 'Léa', 'Noah', 'Sami', 'Tom', 'Zoé'], array_column($f['eleves'], 'prenom'), 'dans l’ordre du tableau de classe');
+    foreach ([$ev['eleves'][0]['code'], 'note', 'score', 'bonne', 'answer', 'prompt'] as $interdit) {
+        vrai(!str_contains($r['texte'], $interdit), "le fichier ne porte pas « $interdit » : ni code, ni note, ni correction");
+    }
+    egal(1, preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$f['jour']), 'le jour, pour le nom du fichier');
+    $ligne = bd_test()->query("SELECT action, cible_id FROM journal WHERE action = 'evaluation.fichier' ORDER BY id DESC LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+    egal(['evaluation.fichier', $ev['classe']], [$ligne['action'], (int)$ligne['cible_id']], 'prendre le fichier laisse une ligne au journal');
+    egal(200, ev_prof('evaluation.fichier', $ev, [], $ev['jetonCollegue'])['code'], 'le collègue en écriture le reçoit aussi');
+    appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $ev['classe'], 'prof_id' => $ev['collegue'], 'droit' => 'lecture'], ['jeton' => $ev['jeton']]);
+    egal(403, ev_prof('evaluation.fichier', $ev, [], $ev['jetonCollegue'])['code'], 'en lecture seule : non');
+    egal(403, ev_prof('evaluation.etat', $ev, [], $ev['jetonCollegue'])['code'], 'ni l’état');
+    appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $ev['classe'], 'prof_id' => $ev['collegue'], 'droit' => 'ecriture'], ['jeton' => $ev['jeton']]);
+});
+
+verifier("évaluations — fermer : plus rien n'entre, personne ne commence, les réponses attendent le fichier vingt heures", function () use (&$ev) {
+    $r = ev_prof('evaluation.fermer', $ev);
+    egal(200, $r['code']);
+    $e = $r['json']['evaluation'];
+    egal('fermee', $e['etat']);
+    vrai($e['fin'] <= time(), 'la fin est maintenant');
+    egal($e['fin'] + 72000, $e['expire_le'], 'vingt heures de garde');
+    egal(1, (int)bd_test()->query("SELECT COUNT(*) FROM journal WHERE action = 'evaluation.fermer' AND cible_id = " . (int)$ev['classe'])->fetchColumn());
+    egal(200, ev_prof('evaluation.fermer', $ev)['code'], 'fermer deux fois ne casse rien');
+    egal(1, (int)bd_test()->query("SELECT COUNT(*) FROM journal WHERE action = 'evaluation.fermer' AND cible_id = " . (int)$ev['classe'])->fetchColumn(), 'et ne journalise qu’une fois');
+    egal(409, ev_eleve($ev['eleves'][2]['code'], ['commencer' => true])['code'], 'fermée : on ne commence plus');
+    egal(409, ev_prof('evaluation.repasser', $ev, ['eleve_id' => (int)$ev['eleves'][1]['id']])['code'], 'fermée : on ne fait plus repasser (lot E2)');
+    egal(2, ev_en_base()['presences'], 'et rien n’a été effacé');
+    $code3 = $ev['eleves'][2]['code'];
+    egal('fermee', ev_eleve($code3)['json']['evaluation']['etat'], 'l’élève voit « fermée »');
+    egal(false, ev_eleve($ev['eleves'][1]['code'], ['numero' => 2, 'reponse' => '1', 'dixiemes' => 1])['json']['enregistree'], 'plus aucune réponse');
+    egal(2, ev_en_base()['presences']);
+    egal(21, ev_en_base()['reponses'], 'les réponses sont toujours là, pour le fichier');
+    egal(200, ev_prof('evaluation.fichier', $ev)['code'], 'le fichier se prend après la fermeture');
+    egal('fermee', ev_prof('evaluation.fichier', $ev)['json']['etat']);
+    $r = ev_prof('evaluation.ouvrir', $ev, ['modele_id' => $ev['modele'], 'duree' => 3600]);
+    egal(200, $r['code']);
+    egal('fermee', $r['json']['evaluation']['etat'], 'rouvrir pendant la garde rend la même séance, fermée — pas une neuve');
+    egal(1, ev_en_base()['seances']);
+    egal(409, ev_prof('direct.ouvrir', $ev)['code'], 'pas de question éclair non plus tant qu’elle n’est pas terminée');
+});
+
+verifier("évaluations — la fermeture automatique à l'échéance, et la purge vingt heures après", function () use (&$ev) {
+    ev_prof('evaluation.terminer', $ev);
+    ev_prof('evaluation.ouvrir', $ev, ['modele_id' => $ev['modele'], 'duree' => 1800]);
+    $code = $ev['eleves'][3]['code'];
+    ev_eleve($code, ['commencer' => true]);
+    egal(true, ev_eleve($code, ['numero' => 1, 'reponse' => '4', 'dixiemes' => 10])['json']['enregistree']);
+    // L'échéance passe (on recule la fin dans le réglage de la séance).
+    $reglage = ev_reglage_en_base($ev);
+    $reglage['fin'] = time() - 1;
+    bd_test()->prepare('UPDATE directs SET reglage = ? WHERE classe_id = ?')->execute([json_encode($reglage), (int)$ev['classe']]);
+    egal('fermee', ev_prof('evaluation.etat', $ev)['json']['evaluation']['etat'], 'fermée toute seule, sans geste du professeur');
+    egal(false, ev_eleve($code, ['numero' => 2, 'reponse' => '4', 'dixiemes' => 10])['json']['enregistree'], 'une réponse arrivée après ne prolonge rien');
+    egal('fermee', ev_eleve($code)['json']['evaluation']['etat']);
+    egal(409, ev_eleve($ev['eleves'][4]['code'], ['commencer' => true])['code']);
+    egal(1, ev_en_base()['reponses'], 'la réponse d’avant est gardée');
+    // Vingt heures plus tard : la purge de la séance en direct emporte tout,
+    // au premier passage de n'importe qui.
+    bd_test()->exec('UPDATE directs SET expire_le = ' . (time() - 1) . ' WHERE classe_id = ' . (int)$ev['classe']);
+    vrai(ev_eleve($ev['autreEleve']['code'])['json']['evaluation'] === null, 'un élève d’une autre classe passe');
+    egal(['seances' => 0, 'presences' => 0, 'reponses' => 0], ev_en_base(), 'tout est parti');
+    egal(0, lignes_directs());
+    vrai(ev_prof('evaluation.etat', $ev)['json']['evaluation'] === null, 'pour Ma classe : plus rien');
+    egal(409, ev_prof('evaluation.fichier', $ev)['code'], 'plus de fichier');
+});
+
+verifier("évaluations — terminer efface tout ; l'élève, la classe ou le compte supprimés emportent ce qui est à eux", function () use (&$ev) {
+    ev_prof('evaluation.ouvrir', $ev, ['modele_id' => $ev['modele'], 'duree' => 3600]);
+    ev_eleve($ev['eleves'][0]['code'], ['commencer' => true]);
+    ev_eleve($ev['eleves'][0]['code'], ['numero' => 1, 'reponse' => '4', 'dixiemes' => 10]);
+    ev_eleve($ev['eleves'][1]['code'], ['commencer' => true]);
+    egal(['seances' => 1, 'presences' => 2, 'reponses' => 1], ev_en_base());
+    $journalAvant = (int)bd_test()->query("SELECT COUNT(*) FROM journal WHERE action = 'evaluation.terminer' AND cible_id = " . (int)$ev['classe'])->fetchColumn();
+    egal(200, ev_prof('evaluation.terminer', $ev)['code']);
+    egal(['seances' => 0, 'presences' => 0, 'reponses' => 0], ev_en_base(), 'les trois tables sont vides');
+    egal(0, lignes_directs());
+    egal(200, ev_prof('evaluation.terminer', $ev)['code'], 'terminer deux fois n’est pas une erreur');
+    egal($journalAvant + 1, (int)bd_test()->query("SELECT COUNT(*) FROM journal WHERE action = 'evaluation.terminer' AND cible_id = " . (int)$ev['classe'])->fetchColumn(), 'journalisé une fois');
+    vrai(ev_eleve($ev['eleves'][0]['code'])['json']['evaluation'] === null, 'l’élève : plus d’évaluation');
+    // L'élève supprimé.
+    ev_prof('evaluation.ouvrir', $ev, ['modele_id' => $ev['modele'], 'duree' => 3600]);
+    ev_eleve($ev['eleves'][5]['code'], ['commencer' => true]);
+    ev_eleve($ev['eleves'][5]['code'], ['numero' => 1, 'reponse' => '4', 'dixiemes' => 10]);
+    ev_eleve($ev['eleves'][4]['code'], ['commencer' => true]);
+    egal(200, appel('/api/prof.php', ['action' => 'eleves.supprimer', 'eleve_id' => $ev['eleves'][5]['id']], ['jeton' => $ev['jeton']])['code']);
+    egal(['seances' => 1, 'presences' => 1, 'reponses' => 0], ev_en_base(), 'sa présence et ses réponses sont parties avec lui');
+    egal(5, ev_prof('evaluation.etat', $ev)['json']['evaluation']['inscrits']);
+    // La classe supprimée.
+    egal(200, appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $ev['classe']], ['jeton' => $ev['jeton']])['code']);
+    egal(['seances' => 0, 'presences' => 0, 'reponses' => 0], ev_en_base(), 'il ne reste rien de l’évaluation');
+    egal(0, lignes_directs());
+    // Le compte supprimé emporte ses modèles (le collègue en fait un, puis part).
+    egal(200, appel('/api/prof.php', ['action' => 'evaluation.enregistrer_modele', 'id' => null, 'nom' => 'du collègue', 'reglage' => REGLAGE_EV], ['jeton' => $ev['jetonCollegue']])['code']);
+    egal(1, (int)bd_test()->query('SELECT COUNT(*) FROM modeles_evaluation WHERE prof_id = ' . (int)$ev['collegue'])->fetchColumn());
+    egal(200, appel('/api/prof.php', ['action' => 'profs.supprimer', 'prof_id' => $ev['collegue']], ['jeton' => $ev['jeton']])['code']);
+    egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM modeles_evaluation WHERE prof_id = ' . (int)$ev['collegue'])->fetchColumn(), 'ses modèles sont partis avec lui');
+    egal(1, (int)bd_test()->query('SELECT COUNT(*) FROM modeles_evaluation')->fetchColumn(), 'les miens restent');
+});
+
+verifier("évaluations — sauvegarde, verifier.php, migrer.php : les modèles sauvegardés, les réponses jamais, la table et la colonne connues", function () use (&$ev) {
+    // La sauvegarde : les modèles (des réglages du professeur) y sont ; les
+    // directs restent en structure seule.
+    $phrase = 'phrase-de-sauvegarde-2026';
+    $r = formulaire('/sauvegarde.php', ['jeton' => 'JETON-DE-TEST', 'etape' => 'telecharger', 'phrase' => $phrase, 'repete' => $phrase]);
+    egal(200, $r['code']);
+    $brut = $r['texte'];
+    $sel = substr($brut, 8, 8);
+    $matiere = hash_pbkdf2('sha256', $phrase, $sel, 200000, 48, true);
+    $clair = (string)openssl_decrypt(substr($brut, 16), 'aes-256-cbc', substr($matiere, 0, 32), OPENSSL_RAW_DATA, substr($matiere, 32, 16));
+    vrai(str_contains($clair, 'maths&go'), 'le fichier se déchiffre');
+    vrai(str_contains($clair, 'INSERT INTO `modeles_evaluation`'), 'les modèles sont dans la sauvegarde');
+    vrai(!str_contains($clair, 'INSERT INTO `directs`'), 'les séances, non');
+    $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], 'Évaluations (Défi tables)'), 'la ligne existe');
+    vrai(str_contains($r['texte'], 'aucune en cours, 0 réponse en base, 1 modèle'), 'rien en cours, un modèle');
+    bd_test()->exec('DROP TABLE modeles_evaluation');
+    $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], 'manquantes : modeles_evaluation'), 'sans la table, verifier.php la nomme');
+    $r = formulaire('/migrer.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], 'modeles_evaluation'), 'migrer.php annonce la table créée');
+    egal(true, table_existe(bd_test(), 'modeles_evaluation'));
+    $r = formulaire('/migrer.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(!str_contains($r['texte'], 'modeles_evaluation'), 'un second passage n’annonce plus rien');
+    vrai(colonne_existe(bd_test(), 'directs', 'reglage'), 'la colonne « reglage » des séances est là');
+});
+
+verifier("évaluations — Ma classe porte la carte, ses deux boîtes, et charge le noyau ; aucun innerHTML", function () {
+    $r = page('/prof/');
+    foreach (['id="bloc-evaluations"', 'id="eval-modele"', 'id="eval-ouvrir"', 'id="nouveau-modele"', 'evaluation.fichier', 'genererEvaluationDeClasse', 'corrigerEvaluationDeClasse'] as $attendu) {
+        vrai(str_contains($r['texte'], $attendu), "Ma classe contient $attendu");
+    }
+    // Le script de la carte (de son titre à celui des records) ne pose rien
+    // par innerHTML : tout ce qui vient du serveur passe par textContent.
+    $debut = strpos($r['texte'], 'Les évaluations (lot E1');
+    $fin = strpos($r['texte'], 'Les records (lot du 09/10/2026)');
+    vrai($debut !== false && $fin !== false && $fin > $debut, 'le script de la carte est là');
+    vrai(!str_contains(substr($r['texte'], $debut, $fin - $debut), 'innerHTML'), 'rien n’est écrit par innerHTML dans la carte');
 });
 
 // ---------------------------------------------------------------------- résultat

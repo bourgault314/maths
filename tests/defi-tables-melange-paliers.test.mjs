@@ -388,8 +388,8 @@ test("la page : les textes — la notice dit le passage avant le test, la fiche 
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; la fiche vierge et sa vignette refaites", () => {
-  assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261014-1"><\/script>/);
-  assert.match(html, /<script src="\.\/defi_tables_core\.js\?v=20261010-1"><\/script>/, "le noyau n'a pas bougé");
+  assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261016-1"><\/script>/);
+  assert.match(html, /<script src="\.\/defi_tables_core\.js\?v=20261015-1"><\/script>/, "le noyau n'a pas bougé");
   assert.equal(lire("_serveur/public/prof/defi_tables_mon_parcours.js"), lire("outils/calcul_mental/defi_tables_mon_parcours.js"));
   // Lot « après l'audit GPT » (14/10/2026) : lib/records.php, api/records.php,
   // api/prof.php, lib/journal.php et la page prof changent (avant : records-depart).
@@ -398,7 +398,12 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // lot 1 « question éclair » (15/10/2026) : quatre fichiers de plus, 35 au manifeste
   // (avant : splat-echauffement-suivi). Puis le lot 2 « questionnaire au tableau »
   // (15/10/2026) : questionnaire.js et KaTeX, 58 au manifeste (avant : seance-en-direct-eclair).
-  assert.match(lire("_serveur/public/VERSION"), /^lot seance-en-direct-questionnaire$/m);
+  // Puis KaTeX 0.16.9 → 0.16.47, même nombre de fichiers (avant : seance-en-direct-questionnaire).
+  // Lot E1 « les évaluations en classe » (15/10/2026) : le manifeste suit.
+  // Lot E3 (16/10/2026) : la page prof change (le score du fichier), le manifeste suit.
+  // Puis le lot « test : pas deux fois le même calcul » (16/10/2026) : le
+  // moteur copié pour Ma classe change (avant : evaluations-E3).
+  assert.match(lire("_serveur/public/VERSION"), /^lot defi-tables-test-meme-calcul$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-comment-on-joue-20261011-3/);
 });

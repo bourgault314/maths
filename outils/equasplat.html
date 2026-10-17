@@ -3947,7 +3947,9 @@
       color:#1e3a5f;
     }
 
-    body.importMode .stage:not(:fullscreen) #toolDelete{
+    /* Choisi, « Enlever des deux côtés » s'allume comme les autres boutons (15/10/2026) : sa couleur
+       orange de téléphone passait par-dessus, et l'élève ne voyait pas qu'il l'avait choisi. */
+    body.importMode .stage:not(:fullscreen) #toolDelete:not(.active){
       background:#fff7ed;
       border-color:rgba(249,115,22,.25);
       color:#9a3412;
@@ -4803,6 +4805,24 @@
   .eleveCarton .finAction button:has(.finSuiteOu){padding:10px 26px}
   .eleveCarton .finSorties{display:flex;justify-content:center;gap:22px;flex-wrap:wrap}
   .eleveCarton .finSorties button, .eleveCarton .finSorties a{font:inherit;font-weight:700;font-size:14px;color:#5c6c82;background:none;border:none;border-radius:0;padding:6px 4px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+
+  /* PAS DE PETITES FLÈCHES ▲▼ DANS LES CASES DE L'ÉLÈVE (15/10/2026, choix de Gwenaël). Sur
+     ordinateur, les quatre cases où l'élève tape sa réponse (Regrouper, Partager, Ajouter, le
+     glisser) montraient ▲▼ : un clic ou la molette changeait le nombre, et ↓ dans une case vide
+     écrivait −1 — une réponse que l'élève n'avait pas calculée. Les flèches disparaissent ; le
+     clavier (↑↓) et la molette n'y touchent plus (script, bloquerFlechesNombre). Les cases du
+     menu du professeur gardent les leurs. */
+  #groupInput, #sharePartInput, #fusionInput, #addBothInput{-moz-appearance:textfield;appearance:textfield}
+  #groupInput::-webkit-outer-spin-button, #groupInput::-webkit-inner-spin-button,
+  #sharePartInput::-webkit-outer-spin-button, #sharePartInput::-webkit-inner-spin-button,
+  #fusionInput::-webkit-outer-spin-button, #fusionInput::-webkit-inner-spin-button,
+  #addBothInput::-webkit-outer-spin-button, #addBothInput::-webkit-inner-spin-button{-webkit-appearance:none;appearance:none;margin:0}
+
+  /* « FAIRE DES PAQUETS » NE FAIT PLUS RÉTRÉCIR LE PLATEAU (15/10/2026, relevé par Gwenaël sur sa Surface).
+     La rangée des choix (« 2 paquets de 3 »…) est une .btnrow : sa marge du haut (10 px) grandissait la
+     zone des boutons, et le plateau rapetissait d'autant, d'un coup, au toucher du bouton. Les choix
+     prennent maintenant la place d'une rangée de boutons ordinaire. */
+  .actionZone > .btnrow{margin-top:0}
 </style>
 <script defer src="../assets/js/mention-confidentialite.js"></script>
 <!-- Le texte du bouton « Étape suivante ▶ » de l'écran de fin (lot A). -->
@@ -4958,7 +4978,7 @@
     <div class="mobileBottomControls" id="mobileBottomControls">
       <div class="toolBar" id="toolBar" aria-label="Choix de l’action">
         <div class="toolRow toolRowObjects" aria-label="Actions sur les objets">
-          <button class="toolBtn active" id="toolDecompose" type="button">Décomposer</button>
+          <button class="toolBtn" id="toolDecompose" type="button">Décomposer</button>
           <button class="toolBtn" id="toolGroup" type="button">Regrouper</button>
           <button class="toolBtn" id="toolShare" type="button"><span class="desktopLabel">Partager équitablement</span><span class="mobileLabel">Partager</span></button>
           <button class="toolBtn unitShareToolBtn" id="toolShareUnits" type="button">Faire des paquets</button>
@@ -5337,6 +5357,18 @@
     });
   }
 
+  /* ↑ ↓ et la molette ne changent plus le nombre tapé (voir le style « PAS DE PETITES FLÈCHES »). */
+  function bloquerFlechesNombre(input){
+    if(!input) return;
+    input.addEventListener("keydown", event => {
+      if(event.key === "ArrowUp" || event.key === "ArrowDown") event.preventDefault();
+    });
+    input.addEventListener("wheel", event => {
+      if(document.activeElement === input) event.preventDefault();
+    }, {passive:false});
+  }
+  [groupInput, sharePartInput, fusionInput, addBothInput].forEach(bloquerFlechesNombre);
+
   bindTouchKeypadInput(decomposeInput, decomposeDialog, () => ({
     expression:true,
     allowMinus:isRelativeUniverse(),
@@ -5447,7 +5479,9 @@
   let history = [];
   let appLayoutMode = "start";
   let viewMode = "redaction";
-  let actionMode = "decompose";
+  /* Aucun bouton allumé au départ (15/10/2026, décision de Gwenaël) : c'est l'élève qui choisit
+     son premier geste. « Décomposer » était allumé, et le premier jeton touché ouvrait sa fenêtre. */
+  let actionMode = null;
   let selectedPieceRef = null;
   let deleteSelection = [];
   let groupSelection = [];
@@ -5557,7 +5591,8 @@
     deleteSelection = [];
     groupSelection = [];
     pendingFusion = null;
-    setActionMode("decompose");
+    setActionMode(null);
+    showInitialEqualityInstruction();
     openStage();
   }
 
@@ -5580,7 +5615,15 @@
   function clone(obj){ return JSON.parse(JSON.stringify(obj)); }
   function numberOr(value, fallback){ const n = Number(value); return Number.isFinite(n) ? n : fallback; }
   function clamp(n,a,b){ return Math.max(a, Math.min(b,n)); }
-  function pushHistory(){ if(state) history.push(clone(state)); if(history.length > 80) history.shift(); }
+  /* LE PREMIER GESTE EFFACE LA PHRASE DE DÉPART (15/10/2026). Tout geste qui change le plateau
+     passe par ici. Les boutons effaçaient « Il y a la même quantité à gauche qu'à droite. »,
+     mais pas un jeton glissé sur un autre (12 sur 9, 13 sur −13, 𝑥 sur −𝑥), ni « Prendre
+     l'opposé » : faits en premier, la ligne s'écrivait et la phrase restait, jusque sur
+     l'équation résolue (elle devait s'effacer). */
+  function pushHistory(){
+    if(state){ history.push(clone(state)); dismissInitialEqualityInstruction(); }
+    if(history.length > 80) history.shift();
+  }
   function currentVar(){ return state && state.original && state.original.varChar ? state.original.varChar : "𝑥"; }
   function displayedUnknown(){ return unknownDisplayModeEl && unknownDisplayModeEl.value === "question" ? "?" : currentVar(); }
   function shouldKeepRemovedPieces(){ return !removedDisplayModeEl || removedDisplayModeEl.value !== "hide"; }
@@ -6007,10 +6050,10 @@
     if(numerator % denominator !== 0){
       throw new Error("Équation refusée : la solution n’est pas un nombre entier.");
     }
+    /* La solution 0 est acceptée (15/10/2026, choix de Gwenaël) : sur le plateau, des taches face à un
+       côté vide se concluent depuis le monde 6 (« 4𝑥 = 13 − 13 »). Pas dans ÉquaBarre : une barre de
+       taille 0 n'a pas de sens. */
     const x = numerator / denominator;
-    if(x === 0){
-      throw new Error("Équation refusée : la solution 0 n’est pas prise en charge dans cette version.");
-    }
     if(!relative && x < 0){
       throw new Error("En Splat positif, la solution doit être positive. Passe en Splat relatif pour une solution négative.");
     }
@@ -6074,7 +6117,8 @@
       groupSelection = [];
       pendingFusion = null;
       initialState = clone(state);
-      setActionMode("decompose");
+      setActionMode(null);
+    showInitialEqualityInstruction();
       clearTeacherInfo();
       return true;
     }catch(err){
@@ -6341,10 +6385,7 @@
       return {ok:false, message:"Équation refusée : la solution n’est pas un nombre entier."};
     }
 
-    const x = numerator / denominator;
-    if(x === 0){
-      return {ok:false, message:"Équation refusée : la solution 0 n’est pas prise en charge dans cette version."};
-    }
+    const x = numerator / denominator;   // 0 accepté (voir parseEquationInputToModel)
     if(!relative && x < 0){
       return {ok:false, message:"Équation refusée : en Splat positif, la solution doit être positive."};
     }
@@ -6439,7 +6480,8 @@
     groupSelection = [];
     pendingFusion = null;
     initialState = clone(state);
-    setActionMode("decompose");
+    setActionMode(null);
+    showInitialEqualityInstruction();
     return true;
   }
 
@@ -6512,7 +6554,8 @@
     groupSelection = [];
     pendingFusion = null;
     initialState = clone(state);
-    setActionMode("decompose");
+    setActionMode(null);
+    showInitialEqualityInstruction();
     return true;
   }
 
@@ -7334,6 +7377,21 @@
     render();
   }
 
+  /* CE QU'IL RESTE À TOUCHER POUR REGROUPER (15/10/2026, choix de Gwenaël : des phrases d'élève de
+     6e, selon ce qui est déjà touché, à la place de « Sélectionne au moins deux éléments
+     compatibles. »). La sélection ne garde qu'un côté et qu'une sorte de pièce (selectForGrouping
+     repart de zéro sinon) : il reste un jeton seul, ou des taches qui ne s'annulent pas encore. */
+  function groupHint(selected){
+    const pieces = selected.map(x => x.piece);
+    if(pieces.length && pieces.every(p => p.type === "x")){
+      const coef = pieces.reduce((total, p) => total + xSign(p), 0);
+      return coef > 0
+        ? `Touche une tache −${unknownHtml()} du même côté.`
+        : `Touche une tache ${unknownHtml()} du même côté.`;
+    }
+    return "Touche un autre jeton du même côté.";
+  }
+
   function openGroupDialog(){
     const info = groupSelectionInfo();
     if(!info.ok || info.kind !== "tokens") return;
@@ -7403,7 +7461,7 @@
   function applyGroup(){
     const info = groupSelectionInfo();
     if(!info.ok){
-      if(groupFeedback) groupFeedback.textContent = "Sélectionne au moins deux jetons du même côté.";
+      if(groupFeedback) groupFeedback.textContent = "Touche au moins deux jetons du même côté.";
       return;
     }
 
@@ -7663,8 +7721,14 @@
     btnApplyShare.hidden = true;
     sharePartInput.value = "";
     shareFeedback.textContent = "";
+    /* 9, 10 OU 11 TACHES (15/10/2026, relevé en jouant les défis du monde 6) : les parts allaient de
+       2 à 8. Face à 11 taches et au jeton 99, seul « 3 parts » était proposé : pour finir, l'élève
+       devait décomposer 99 en onze 9. On propose maintenant jusqu'au nombre de taches du plateau
+       quand il dépasse 8 — tous les partages entiers, sans mettre le bon en avant. */
+    const tachesDuPlateau = activePieces("left").concat(activePieces("right")).filter(p => p.type === "x").length;
+    const maxParts = Math.max(8, tachesDuPlateau);
     const counts = [];
-    for(let n=2;n<=8;n++){
+    for(let n=2;n<=maxParts;n++){
       if(value % n === 0) counts.push(n);
     }
     if(!counts.length){
@@ -8414,17 +8478,17 @@
     const dragged = state[side].find(p => p.id === draggedId);
     if(!dragged || dragged.removed || dragged.type !== "token") return null;
 
-    const tray = getTrayForSide(side);
-    const items = renderPiecesForSide(side);
-    const positions = layoutItems(tray, items);
+    /* On mesure jusqu'au jeton TEL QU'IL EST DESSINÉ (sa place, gardée à chaque dessin), sans
+       refaire la mise en place du plateau : elle écartait le jeton lâché de celui qu'il couvrait,
+       ou le sortait de sous une tache, AVANT la mesure — près des taches, la fenêtre Regrouper ne
+       s'ouvrait presque jamais (0 fois sur 20 à l'ordinateur, mesuré le 15/10/2026). */
     let best = null;
     let bestDist = Infinity;
 
     for(const other of activePieces(side)){
       if(other.id === draggedId || other.type !== "token" || other.removed) continue;
-      const pos = positions.get(other.id);
-      if(!pos) continue;
-      const dist = Math.hypot(cx - pos.cx, cy - pos.cy);
+      if(!Number.isFinite(other.x) || !Number.isFinite(other.y)) continue;
+      const dist = Math.hypot(cx - other.x, cy - other.y);
       // Fusion seulement si on dépose vraiment le jeton sur l'autre :
       // seuil assoupli : il faut déposer franchement sur l’autre jeton,
       // mais sans devoir viser parfaitement le centre.
@@ -8490,7 +8554,8 @@
     state[side].splice(idx, 1);
     updateCurrentEquationStep();
     render();
-    setInstruction("La paire nulle vaut 0 : elle disparaît du plateau.");
+    // Une conclusion possible (« 0 = 4𝑥 ») garde la phrase posée par renderActions.
+    if(!getConclusionInfo()) setInstruction("La paire nulle vaut 0 : elle disparaît du plateau.");
   }
 
   function applyFusion(){
@@ -8630,10 +8695,17 @@
       }
       let fusionTarget = null;
       if(piece){
-        const safe = clampTokenPosition(getTrayForSide(ds.side), ds.cx, ds.cy, tokenRadius(piece), true, ds.side);
+        const tray = getTrayForSide(ds.side);
+        const safe = clampTokenPosition(tray, ds.cx, ds.cy, tokenRadius(piece), true, ds.side);
+        /* LE JETON VISÉ, LÀ OÙ L'ÉLÈVE L'A LÂCHÉ (15/10/2026, trouvé en jouant les séries). Le jeton
+           lâché est repoussé hors des taches (avoidSplatsOnDrop) ; la fusion se cherchait APRÈS ce
+           recul : lâché sur un jeton posé près d'une tache — c'est souvent le cas, les jetons sont
+           dessinés par-dessus les taches —, il sautait de côté et la fenêtre Regrouper ne s'ouvrait
+           pas. On cherche le jeton visé à l'endroit du lâcher ; le jeton, lui, se pose à l'abri. */
+        const lache = clampTokenPosition(tray, ds.cx, ds.cy, tokenRadius(piece), false);
         piece.x = safe.cx;
         piece.y = safe.cy;
-        fusionTarget = findFusionCandidate(ds.side, ds.id, safe.cx, safe.cy);
+        fusionTarget = findFusionCandidate(ds.side, ds.id, lache.cx, lache.cy);
       }
       suppressClickAfterDrag(ds.id);
       render();
@@ -8773,21 +8845,25 @@
       }
       if(item.removed) return;
       dismissInitialEqualityInstruction();
+      /* Aucun bouton choisi (rien n'est allumé au départ, 15/10/2026) : le toucher ne fait rien,
+         une phrase le dit. Glisser un jeton sur un autre, lui, marche sans bouton. */
+      if(!actionMode){
+        setInstruction("Choisis d’abord un bouton.");
+        return;
+      }
       if(actionMode === "decompose"){
         if(item.type === "token") openDecomposeDialog(side, item.id);
-        else setInstruction("En mode Décomposer, clique sur un jeton numérique.");
+        else setInstruction("Une tache ne se décompose pas : touche un jeton.");
         return;
       }
       if(actionMode === "group"){
         if(item.type === "token" || (item.type === "x" && oppositeXEnabled())) selectForGrouping(side, item.id);
-        else setInstruction(oppositeXEnabled()
-          ? "En mode Regrouper, clique sur des jetons numériques ou des taches opposées."
-          : "En mode Regrouper, clique sur des jetons numériques.");
+        else setInstruction("Les taches ne se regroupent pas : touche un jeton.");
         return;
       }
     if(actionMode === "share"){
         if(item.type === "token") openShareDialog(side, item.id);
-        else setInstruction("En mode Partager, clique sur un jeton numérique.");
+        else setInstruction("Une tache ne se partage pas : touche un jeton.");
         return;
       }
       if(actionMode === "delete") selectForDeletion(side, item.id);
@@ -9293,8 +9369,9 @@
     groupSelection = [];
     selectedPieceRef = null;
     pendingFusion = null;
-    actionMode = "delete";
-    render();
+    /* Le choix fait, on revient au mode de départ, comme avant ; ce mode est maintenant « aucun bouton »
+       (15/10/2026) : « Enlever », que l'élève n'a pas touché, ne s'allume plus tout seul ici. */
+    setActionMode(null);
     if(!(state && state.pendingShareConclusion)) setInstruction("");
   }
 
@@ -9305,8 +9382,8 @@
       setInstruction("On peut faire des paquets quand il ne reste que plusieurs taches d’un côté et des jetons unitaires de l’autre.");
       return;
     }
-    actionMode = "unitShare";
-    render();
+    /* le bouton touché s'allume, comme les autres (Enlever restait allumé pendant le choix des paquets) */
+    setActionMode("unitShare");
   }
 
   function renderActions(){
@@ -9356,7 +9433,11 @@
         setInstruction("");
         return;
       }
-      setInstruction("On voit maintenant la valeur d’une tache. On peut conclure.");
+      /* « 0 = 4𝑥 » (15/10/2026, choix de Gwenaël) : rien en face des taches, il n'y a rien à
+         partager — la phrase le dit, au lieu de garder « La paire nulle vaut 0… ». */
+      setInstruction(Number(conclusionInfo.value) === 0
+        ? "De l’autre côté, il ne reste rien. On peut conclure."
+        : "On voit maintenant la valeur d’une tache. On peut conclure.");
       const btn = document.createElement("button");
       btn.className = "green";
       btn.textContent = "Conclure";
@@ -9386,7 +9467,7 @@
     }
 
     if(actionMode === "decompose"){
-      setInstruction("Décompose un jeton numérique.");
+      setInstruction("Touche le jeton à décomposer.");
       return;
     }
 
@@ -9395,8 +9476,8 @@
       const selected = selectedGroupPieces();
       if(selected.length === 0){
         setInstruction(oppositeXEnabled()
-          ? "Sélectionne plusieurs jetons numériques d’un même côté, ou une paire de taches opposées."
-          : "Sélectionne plusieurs jetons numériques d’un même côté.");
+          ? `Touche les jetons à regrouper, ou une tache ${unknownHtml()} et une tache −${unknownHtml()}, du même côté.`
+          : "Touche les jetons à regrouper, du même côté.");
         return;
       }
 
@@ -9415,12 +9496,7 @@
       clear.addEventListener("click", () => { groupSelection = []; render(); });
 
       if(!info.ok){
-        let message = "Sélectionne au moins deux éléments compatibles.";
-        if(info.reason === "differentSides") message = "Regroupe seulement des éléments du même côté.";
-        else if(info.reason === "mixedTypes") message = "Ne mélange pas jetons numériques et taches.";
-        else if(info.reason === "notZeroX") message = "Pour regrouper des taches, sélectionne autant de taches positives que de taches opposées.";
-        else if(info.reason === "oppositeDisabled") message = `Les taches opposées doivent être activées pour regrouper ${unknownHtml()} et −${unknownHtml()}.`;
-        setInstruction(message);
+        setInstruction(groupHint(selected));
         actionZone.appendChild(clear);
         return;
       }
@@ -9444,7 +9520,7 @@
       // annonçait « Partage 14 en 2 parts égales », c'est-à-dire la réponse.
       // La fenêtre de partage, elle, propose tous les partages entiers dans
       // l'ordre des diviseurs, sans en mettre un en avant.
-      setInstruction("Partage un jeton en parts égales.");
+      setInstruction("Touche le jeton à partager.");
       return;
     }
 
@@ -9942,11 +10018,19 @@
     return null;
   }
 
+  /* Et un pirate ? (15/10/2026) Un lien fabriqué avec 3 000 jetons, ou 300 jetons de 80 en billes
+     (24 000 billes), figeait la page plus de 30 secondes. Une équation reçue par lien garde la
+     limite du menu du professeur (parseEquationInputToModel) : 80 objets sur le plateau au plus,
+     billes comprises — les liens du site en ont 17 au plus. Une série garde 100 équations au plus
+     (12 sur le site) : 20 000 équations faisaient 20 000 pastilles dans la barre. */
+  const IMPORT_MAX_OBJETS = 80, IMPORT_MAX_SERIE = 100;
+
   function normalizeImportedSide(arr, opts = {}){
-    if(!Array.isArray(arr)) return [];
+    if(!Array.isArray(arr) || arr.length > IMPORT_MAX_OBJETS) return [];
     const useUnits = !!opts.unitMode;
     const out = [];
     arr.forEach(raw => {
+      if(out.length > IMPORT_MAX_OBJETS) return;
       const piece = normalizeImportedPiece(raw);
       if(!piece) return;
       if(piece.type === "token" && Number(piece.value) === 0) return;
@@ -9990,7 +10074,7 @@
     deleteSelection = [];
     groupSelection = [];
     pendingFusion = null;
-    setActionMode(isImportedUnitMode() ? "delete" : "decompose");
+    setActionMode(null);
     showInitialEqualityInstruction();
   }
 
@@ -10013,6 +10097,7 @@
     const leftPieces = normalizeImportedSide(payload.left || payload.top || payload.haut || [], {unitMode});
     const rightPieces = normalizeImportedSide(payload.right || payload.bottom || payload.bas || [], {unitMode});
     if(!leftPieces.length || !rightPieces.length) return false;
+    if(leftPieces.length + rightPieces.length > IMPORT_MAX_OBJETS) return false;
 
     const containsRelative = leftPieces.concat(rightPieces).some(p =>
       (p.type === "token" && Number(p.value) < 0) || (p.type === "x" && xSign(p) < 0)
@@ -10071,7 +10156,7 @@
     // avant la fusion) ; la vue Rédaction reste à un clic dans la barre du haut.
     setViewMode("classic");
     document.body.classList.toggle("importUnitMode", unitMode);
-    setActionMode(unitMode ? "delete" : "decompose");
+    setActionMode(null);
     showInitialEqualityInstruction();
     return true;
   }
@@ -10469,7 +10554,7 @@
     const payload = parseImportedPayload();
     if(!payload) return false;
     const searchEleve = new URLSearchParams(window.location.search || "");
-    if(Array.isArray(payload.serie) && payload.serie.length){
+    if(Array.isArray(payload.serie) && payload.serie.length && payload.serie.length <= IMPORT_MAX_SERIE){
       eleveParcours = String(payload.parcours || searchEleve.get("parcours") || "").slice(0, 64);
       return eleveDemarrerSerie(payload);
     }

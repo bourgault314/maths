@@ -69,7 +69,8 @@ test("étapes 8 et 9 : deux séries de 6 cartes (une par page de fiche), 12 cart
   for (const c of [M2E4A, M2E4B, M2E5A, M2E5B]) assert.equal(q(c).get("cards"), "6", c);
   for (const [p, a, b] of [["m2e4", "M2E4A", "M2E4B"], ["m2e5", "M2E5A", "M2E5B"]]) {
     assert.match(univers, new RegExp(`j:SC\\+"\\?"\\+${a}\\+"&eleve=1&parcours=${p}&suite="\\+encodeURIComponent\\(${b}\\)`));
-    const etape = univers.match(new RegExp(`\\{t:"[^"]+",fo:"[^"]+",o:"[^"]+",\\s*p:"${p}",\\s*eqs:\\[([^\\]]+)\\]`));
+    // la ligne « films: » (15/10/2026 : le film « Avec des paquets de jetons » sous l'étape 8) peut précéder la liste
+    const etape = univers.match(new RegExp(`\\{t:"[^"]+",fo:"[^"]+",o:"[^"]+",\\s*p:"${p}",\\s*(?:films:\\[\\[[^\\n]*\\]\\],\\s*)?eqs:\\[([^\\]]+)\\]`));
     assert.ok(etape, `étape ${p} introuvable`);
     assert.equal(etape[1].split(",").length, 12, `12 équations listées pour ${p}`);
     // Projeter et Fiche, pour chaque série

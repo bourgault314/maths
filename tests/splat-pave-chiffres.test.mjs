@@ -49,7 +49,10 @@ function fauxElement(doc, balise) {
     },
     setAttribute(n, v) { el.attributs[n] = String(v); if (n === "id") doc.parId.set(String(v), el); },
     getAttribute(n) { return Object.prototype.hasOwnProperty.call(el.attributs, n) ? el.attributs[n] : null; },
-    appendChild(enfant) { enfant.parentNode = el; el.enfants.push(enfant); return enfant; },
+    appendChild(enfant) { if (enfant.parentNode) enfant.remove(); enfant.parentNode = el; el.enfants.push(enfant); return enfant; },
+    insertBefore(enfant, avant) { if (enfant.parentNode) enfant.remove(); enfant.parentNode = el; const i = el.enfants.indexOf(avant); el.enfants.splice(i < 0 ? el.enfants.length : i, 0, enfant); return enfant; },
+    get lastChild() { return el.enfants[el.enfants.length - 1] || null; },
+    dataset: {},
     addEventListener(type, fn) { if (!ecouteurs.has(type)) ecouteurs.set(type, []); ecouteurs.get(type).push(fn); },
     removeEventListener(type, fn) { const l = ecouteurs.get(type) || []; const i = l.indexOf(fn); if (i >= 0) l.splice(i, 1); },
     dispatchEvent(ev) { (ecouteurs.get(ev.type) || []).forEach((fn) => fn(ev)); return true; },
@@ -455,4 +458,52 @@ test("la génération, la correction et les étoiles ne sont pas touchées", () 
   assert.match(petit, /P\.enregistrerSerie\(p, parcoursId, \{ fait: true, etoiles: sansFaute, cartes: total, vues: eleveVues \}\)/);
   assert.match(petit, /function eleveDevoilerTache\(\) \{\s*const part = document\.querySelector\('\.eleve-scene \.part-splat'\);/);
   assert.match(petit, /<a data-mathsgo-confidentialite href="\.\.\/confidentialite\.html">Sans cookie ni traceur · Confidentialité<\/a>/);
+});
+
+// ---------------------------------------------------------------------------
+// La touche facultative (lot F2 de SPLAT!, « A — Jetons et parts », 15/10/2026)
+// ---------------------------------------------------------------------------
+test("touche facultative : absente par défaut et après touche(null) — le pavé garde ses 12 touches", () => {
+  const b = monter();
+  assert.equal(b.pave.element.enfants[0].enfants.length, 12);
+  b.pave.touche(null);
+  assert.equal(b.pave.element.enfants[0].enfants.length, 12, "touche(null) ne crée rien");
+});
+
+test("touche « ▶ » : entre Effacer et Valider, elle passe à la case suivante (et revient à la première)", () => {
+  const b = monter();
+  b.pave.touche("suivante");
+  const t = b.pave.element.enfants[0].enfants;
+  assert.equal(t.length, 13);
+  assert.equal(t[11].className, "mg-pave__touche");
+  assert.equal(t[11].textContent, "▶");
+  assert.ok(t[12].classList.contains("mg-pave__valider--deux"), "Valider passe à 2/5");
+  b.pave.activerPremierVide();
+  assert.equal(b.pave.champActif(), b.cases[0].champ);
+  t[11].dispatchEvent({ type: "click", preventDefault() {} });
+  assert.equal(b.pave.champActif(), b.cases[1].champ);
+  b.clavier("+");
+  assert.equal(b.pave.champActif(), b.cases[2].champ, "« + » au clavier physique fait pareil");
+  t[11].dispatchEvent({ type: "click", preventDefault() {} });
+  assert.equal(b.pave.champActif(), b.cases[0].champ);
+  b.pave.touche(null);
+  assert.equal(t[11].hidden, true, "touche(null) la cache");
+  assert.ok(!t[12].classList.contains("mg-pave__valider--deux"), "Valider reprend sa largeur");
+});
+
+test("touche « , » : une virgule après un chiffre, jamais en tête, jamais deux", () => {
+  const b = monter();
+  b.cases.forEach((c) => { c.champ.maxLength = 6; });
+  b.pave.touche("virgule");
+  const virgule = b.pave.element.enfants[0].enfants[11];
+  assert.equal(virgule.textContent, ",");
+  b.pave.activerPremierVide();
+  virgule.dispatchEvent({ type: "click", preventDefault() {} });
+  assert.equal(b.cases[0].champ.value, "", "pas de virgule en tête");
+  b.touche("3");
+  virgule.dispatchEvent({ type: "click", preventDefault() {} });
+  b.clavier(",");
+  b.touche("7");
+  b.touche("5");
+  assert.equal(b.cases[0].champ.value, "3,75");
 });

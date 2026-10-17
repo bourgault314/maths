@@ -96,8 +96,8 @@ test("le menu propose les deux corrections courtes, juste après « Correction �
 
 test("modes A et B seulement ; « Pages » passe à 6/page et se grise, puis revient à sa valeur", () => {
   const ui = extraire("syncPrintModeUI");
-  assert.match(ui, /option\[value="correction-equation"\], option\[value="correction-schema"\]'\)\.forEach\(opt => \{ opt\.disabled = kind !== "table"; \}\)/);
-  assert.match(ui, /if\(kind !== "table" && sixCorrectionPart\(sel\.value\)\) sel\.value = "correction";/);
+  assert.match(ui, /option\[value="correction-equation"\], option\[value="correction-schema"\]'\)\.forEach\(opt => \{ opt\.disabled = !sixOk; \}\)/);
+  assert.match(ui, /if\(!sixOk && sixCorrectionPart\(sel\.value\)\) sel\.value = "correction";/);
   const plan = extraire("getPrintPlan");
   assert.match(plan, /\["statement","worksheet","correction","correction-equation","correction-schema"\]\.includes\(v\)/);
   // on exécute la vraie synchronisation avec un faux sélecteur « Pages »

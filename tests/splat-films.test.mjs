@@ -3,7 +3,7 @@
 // les étapes de la carte des mondes (vue élève).
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
 
 const lire = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 const page = lire("outils/splat_intro.html");
@@ -16,8 +16,10 @@ test("le lecteur : chaque film s'inscrit, le film d'introduction reste celui par
   assert.match(page, /FILMS\.equasplat=\(function\(\)\{/);
   assert.match(page, /FILMS\['equasplat-jetons'\]=\(function\(\)\{/);
   assert.match(page, /FILMS\.dessine=\(function\(\)\{/);
+  assert.match(page, /FILMS\.paquets=\(function\(\)\{/);
   // un nom inconnu (ou « intro », ou rien) lance l'introduction ; jamais une propriété héritée d'Object
-  assert.match(page, /lancerLecteur\(Object\.prototype\.hasOwnProperty\.call\(FILMS,nom\)&&nom!=='intro'\?FILMS\[nom\]:FILMS\.intro\);/);
+  assert.match(page, /const film=Object\.prototype\.hasOwnProperty\.call\(FILMS,nom\)&&nom!=='intro'\?FILMS\[nom\]:FILMS\.intro;/);
+  assert.match(page, /lancerLecteur\(aToi\?film\.aToi:film,autre\);/);
   // il n'y a qu'un appel au lecteur : celui du dernier bloc
   assert.equal((sansCommentaires(page).match(/lancerLecteur\(/g) || []).length, 2); // la définition + l'appel
 });
@@ -44,11 +46,34 @@ test("les films des étapes : pas d'arrêt, format téléphone pris par le lecte
   assert.match(page, /\.player\.portrait \.stage\{aspect-ratio:var\(--k,\.75\)\}/);
 });
 
+/* 15/10/2026, remarque de Gwenaël : « on ne voit pas que tu cliques sur Enlever des deux côtés ». Avec des billes,
+   l'outil ouvre déjà dans ce mode et le doigt touchait les jetons tout de suite. Dans les deux films de l'étape 35,
+   le doigt touche maintenant le bouton, une phrase le nomme, et il y reste assez longtemps pour qu'on le voie (il ne
+   repart que 0,55 s avant le geste suivant). */
+test("films de l'étape 35 : le doigt touche « Enlever des deux côtés », et on a le temps de le voir", () => {
+  const blocs = page.split("<script>").slice(1).map((b) => b.split("</script>")[0]);
+  const billes = blocs.find((b) => b.includes("FILMS.equasplat=")), jetons = blocs.find((b) => b.includes("FILMS['equasplat-jetons']="));
+  const temps = (b) => new Function(`return ${b.match(/const T=(\{[\s\S]*?\});/)[1]};`)();
+  for (const [nom, b, suivant] of [["billes", billes, "toucheA"], ["jetons", jetons, "e21g"]]) {
+    assert.match(b, /D\.touche\(T\.modeE,o\.rangs\.enl\.c\)/, nom);
+    assert.match(b, /Q\.appui\(o\.rangs\.enl,t,T\.modeE\)/, nom);
+    assert.ok(b.includes("'Touche «\\u00a0Enlever des deux côtés\\u00a0».'"), nom);
+    const T = temps(b);
+    assert.ok(T[suivant] - .55 - T.modeE >= .7, `${nom} : le doigt reste au moins 0,7 s sur le bouton`);
+  }
+  // billes : le doigt range d'abord les jetons, puis touche le bouton, puis les jetons
+  const ordre = ["for(const b of sA){D.va(b.tg,b.p0);D.glisse(b.tg+.45,b.p1);}", "D.touche(T.modeE,o.rangs.enl.c);", "o.selA.forEach((b,k)=>D.touche(TA[k],b.p1||b.p0));"]
+    .map((s) => billes.indexOf(s));
+  assert.ok(ordre.every((i) => i > 0) && ordre[0] < ordre[1] && ordre[1] < ordre[2], ordre.join(", "));
+});
+
 test("aucune équation de la série de l'étape 35 dans les films (on ne donne pas les réponses)", () => {
   const serie = ["𝑚 + 2", "7 = 𝑥 + 4", "28", "𝑏 + 6", "26 + 16", "𝑎 + 16", "2𝑏", "3𝑥", "2𝑛", "4𝑚", "14 + 11", "3𝑐"];
   const films = sansCommentaires(page.slice(page.indexOf("const ECRAN_EQ=")));
   for (const s of serie) assert.ok(!films.includes(`'${s}'`), s);
   assert.ok(films.includes("'𝑡 + 3'") && films.includes("'3𝑦'") && films.includes("'20 + 15'") && films.includes("'3𝑝'"));
+  // « À toi de faire » (16/10/2026) : 𝑡 + 2 = 5, hors de la série elle aussi
+  assert.ok(films.includes("{g:'𝑡 + 2',d:'5'}"));
 });
 
 test("« Dessine les jetons » : deux cartes hors des séries des étapes 1 à 3 du monde 1, une case bleue donnée puis une case grise", () => {
@@ -85,7 +110,7 @@ test("en suivant le parcours (« Étape suivante » par ?apres=, « Continuer »
   assert.match(carte, /a\.href=versEtape\(prochaine\.e\); a\.dataset\.monde=prochaine\.mi;/);
   // le film d'une étape propose « Passer le film › », bien visible ; l'introduction garde « Passer l'intro › »
   const blocs = page.split("<script>").slice(1).map((b) => b.split("</script>")[0]);
-  for (const nom of ["FILMS.equasplat=", "FILMS['equasplat-jetons']=", "FILMS.dessine="]) {
+  for (const nom of ["FILMS.equasplat=", "FILMS['equasplat-jetons']=", "FILMS.dessine=", "FILMS.paquets="]) {
     assert.ok(blocs.find((b) => b.includes(nom)).includes("passerTexte:'Passer le film ›'"), nom);
   }
   assert.ok(!blocs.find((b) => b.includes("FILMS.intro=film;")).includes("passerTexte"));
@@ -109,9 +134,10 @@ test("carte des mondes : les films sous les étapes 2 et 35, qui reviennent au j
   assert.match(carte, /window\.location\.replace\(MONDES\[mi\]\.etapes\.find\(e=>e\.p===jouer\)\.j\);/);
   // ?jouer= n'ouvre que les mondes jouables : ni un monde en préparation sans la clé, ni un monde fermé à la classe
   assert.match(carte, /const mi=MONDES\.findIndex\(m=>jouable\(m\)&&m\.etapes\.some\(e=>e\.p===jouer&&e\.j\)\);/);
-  // les étapes qui ont un film : la 35 (deux films) et la 2 (« Dessine les jetons »)
+  // les étapes qui ont un film : la 35 (deux films), la 2 (« Dessine les jetons ») et, au monde 2, « Avec des paquets de jetons »
   assert.match(carte, /p:"m1e2",dessin:true,\n\s*films:\[\["dessine","Comment on joue \?"\]\],/);
-  assert.equal((carte.match(/\bfilms:\[\[/g) || []).length, 2);
+  assert.match(carte, /p:"m2e4",\n\s*films:\[\["paquets","Comment on joue \?"\]\],/);
+  assert.equal((carte.match(/\bfilms:\[\[/g) || []).length, 3);
 });
 
 /* Ouvert depuis la page Splat du catalogue (sans ?suite=), le film est présenté par le prof : il ne mène pas
@@ -122,19 +148,21 @@ test("film ouvert depuis la page Splat : « Revoir le film » et retour à la pa
   assert.match(code, /const PRESENTATION=!new URLSearchParams\(location\.search\)\.has\('suite'\);/);
   assert.match(code, /const RETOUR_PAGE='\/outils\/\?domain=algebre&collection=splat';/);
   assert.match(code, /if\(film\.passer&&!PRESENTATION\)\{\$\('passer'\)\.href=film\.passer;/);
-  // les trois écrans de fin (introduction, films d'ÉquaSplat, « Dessine les jetons ») passent par le même assemblage
-  assert.equal((code.match(/F\.boutonsFin\(o,fi\);/g) || []).length, 3);
+  // les quatre écrans de fin (introduction, films d'ÉquaSplat, « Dessine les jetons », « Avec des paquets de jetons ») passent par le même assemblage
+  assert.equal((code.match(/F\.boutonsFin\(o,fi\);/g) || []).length, 4);
   // « Je joue » n'existe plus que dans F.boutonsFin, sur le chemin de l'élève
   assert.equal((code.match(/'Je joue'/g) || []).length, 1);
   assert.equal((code.match(/href:SUITE/g) || []).length, 1);
   const bf = code.slice(code.indexOf("boutonsFin(o,fi){"), code.indexOf("\n};", code.indexOf("boutonsFin(o,fi){")));
   assert.match(bf, /if\(!PRESENTATION\)\{\s*o\.jouer=F\.E\('a',\{href:SUITE,class:'film-lien'\},o\.fin\);/);
-  assert.match(bf, /t\.textContent='↺ Revoir le film';/);
+  assert.match(bf, /t\.textContent=fi\.revoir\|\|'↺ Revoir le film';/);
   assert.match(bf, /o\.revoir=F\.E\('a',\{href:RETOUR_PAGE,class:'film-lien'\},o\.fin\);/);
   assert.match(bf, /\.textContent='‹ Retour à la page Splat';/);
   // le gros bouton n'est pas un lien : le clic tombe sur le film, qui repart du début quand il est fini
-  assert.match(code, /stage\.addEventListener\('click',e=>\{if\(e\.target\.closest&&e\.target\.closest\('a'\)\)return;toggle\(\);\}\);/);
-  assert.match(code, /function play\(\)\{enArret=false;if\(fresh\)\{fresh=false;setT\(0\);\}else if\(t>=D-1e-3\)setT\(0\);/);
+  // (16/10/2026 : « À toi de faire » regarde où l'élève a touché, au lieu de mettre en pause)
+  assert.match(code, /stage\.addEventListener\('click',e=>\{if\(e\.target\.closest&&e\.target\.closest\('a'\)\)return;if\(film\.attentes\)\{toucher\(e\);return;\}toggle\(\);\}\);/);
+  // (15/10/2026 : play() prépare d'abord le son des films qui en ont)
+  assert.match(code, /function play\(\)\{if\(film\.sons&&!SON\.coupe\)SON\.preparer\(film\.fichiersSons\);enArret=false;if\(fresh\)\{fresh=false;setT\(0\);\}else if\(t>=D-1e-3\)setT\(0\);/);
 });
 
 test("la carte des mondes envoie toujours ses films avec ?suite= : rien ne change pour l'élève", () => {
@@ -180,7 +208,249 @@ test("film et diaporama : « jetons cachés » et « Jeu SPLAT! »", () => {
   assert.match(page, /\['#cbd5e1',ENCRE,'cachés'\]/);
   assert.equal((diapo.match(/Le nombre de jetons <b>cachés<\/b>/g) || []).length, 4);
   assert.equal((source.match(/Le nombre de jetons <b>cachés<\/b>/g) || []).length, 4);
-  assert.equal((page.match(/credit:'Jeu SPLAT! créé par/g) || []).length, 4);
+  assert.equal((page.match(/credit:'Jeu SPLAT! créé par/g) || []).length, 5);
   assert.doesNotMatch(page, /Jeu Splat!/);
   assert.match(diapo, /Jeu SPLAT! créé par/);
+});
+
+/* « Avec des paquets de jetons » (monde 2, 15/10/2026) : le film de Gwenaël (son animation v6 : 18 + 20 + un jeton 22
+   caché = 60, la résolution en barres, la vérification sur le plateau), redessiné comme le jeu, avec son ouverture :
+   des petits jetons rangés en paquets, chaque paquet devient un jeton numéroté. */
+test("« Avec des paquets de jetons » : l'exemple de Gwenaël, hors des séries du monde 2, dessiné comme le jeu", () => {
+  const bloc = page.slice(page.indexOf("FILMS.paquets=(function(){"));
+  const code = sansCommentaires(bloc.slice(0, bloc.indexOf("</script>")));
+  // l'exemple : 18, 20 et un seul jeton 22 sous la tache, total 60 — pas dans les séries des étapes du monde 2
+  assert.match(code, /const JET=\[\{v:18,p:\[[\d,]+\]\},\{v:20,p:\[[\d,]+\]\},\{v:22,p:\[[\d,]+\]\}\]/);
+  const serie = (p) => JSON.parse(carte.match(new RegExp(`p:"${p}"[^\\n]*\\n(?:\\s*films:[^\\n]*\\n)?\\s*eqs:(\\[[^\\]]*\\])`))[1]);
+  const toutes = ["m2e1", "m2e4", "m2e5"].flatMap(serie);
+  assert.ok(toutes.length >= 30);
+  assert.ok(!toutes.includes("𝑥 + 38 = 60") && !toutes.some((e) => / = 60$/.test(e)));
+  // le jeu : les couleurs des jetons numérotés (beadColorForValue), les petits jetons de l'étape 1, la tache de l'outil (40 points)
+  assert.ok(code.includes("const couleur=v=>{const h=(v*37)%360;return {fill:`hsla(${h}, 78%, 54%, 0.18)`,stroke:`hsla(${h}, 78%, 48%, 0.55)`};};"));
+  assert.match(code, /unitFond:'rgba\(27,102,255,0\.14\)',unitBord:'rgba\(27,102,255,0\.50\)'/);
+  assert.match(code, /for\(let i=0;i<40;i\+\+\)\{const a=2\*Math\.PI\*i\/40/);
+  // pas d'ombre sous la tache (Gwenaël ne les aime pas), et la tache reste dans le plateau
+  assert.doesNotMatch(code, /drop-shadow|feDropShadow|shadow/i);
+  const jet = Object.fromEntries([...code.matchAll(/\{v:(\d+),p:\[(\d+),(\d+)\]\}/g)].map((m) => [m[1], [+m[2], +m[3]]]));
+  const rt = +code.match(/RT=(\d+)/)[1];
+  assert.ok(jet[22][0] - rt * 1.1 >= 120 && jet[22][0] + rt * 1.1 <= 1480 && jet[22][1] - rt * 1.1 >= 210 && jet[22][1] + rt * 1.1 <= 870);
+  // jamais de chiffre sur un jeton qui compte : les petits jetons sont des cercles seuls ; on compte avec un compteur
+  assert.match(code, /u\.el=E\('circle',\{cx:u\.p0\[0\],cy:u\.p0\[1\],r:RU,fill:C\.unitFond,stroke:C\.unitBord,'stroke-width':3\},o\.plateau\);/);
+  assert.match(code, /K\.txt\.textContent=n\?String\(n\):'';/);
+  // le mot du jeu : « la tache »
+  assert.doesNotMatch(code, /Splat arrive/);
+  // son arrêt à la question, comme dans sa vidéo ; le format téléphone en 3:4, comme le film d'introduction
+  assert.match(code, /stops:\[\{t:T\.stop\}\]/);
+  assert.match(code, /\[16\.1,'Que cache la tache \?'\]/);
+  assert.match(code, /question:16\.1,stop:17\.4,/);
+  // on compte 18, puis 20 ; le troisième paquet, on commence à le compter, mais la tache se pose dessus au moment où il
+  // deviendrait un jeton : le 22 n'est jamais visible avant la vérification, et son compteur s'arrête bien avant 22
+  const T = new Function(`const T=${code.match(/const T=(\{[\s\S]*?\});/)[1]};return T;`)();
+  assert.ok(T.comptes[0] < T.fonds[0] && T.fonds[0] < T.comptes[1] && T.comptes[1] < T.fonds[1] && T.fonds[1] < T.comptes[2]);
+  assert.ok(Math.floor((T.coupe - T.comptes[2]) / T.comptePas) + 1 < 22, "le compteur du troisième paquet n'arrive pas à 22");
+  assert.ok(T.coupe < T.fonds[2] && T.fonds[2] < T.impact && T.impact < T.stop);
+  // le 22 arrive juste APRÈS l'impact : à l'impact même, la tache a encore son rayon de vol et l'anneau du jeton
+  // dépassait entre ses lobes (une image, mesurée le 15/10/2026) ; il faut qu'elle ait commencé à s'étaler
+  const retard = code.match(/op\(jj\.g,t<\(i<2\?T\.fonds\[i\]\+\.4:T\.impact\+(\.\d+)\)\?0:1\);/);
+  assert.ok(retard, "le 22 apparaît à T.impact + un petit retard");
+  assert.ok(+retard[1] >= 0.03 && T.impact + +retard[1] < T.question, `retard du 22 : ${retard[1]} s`);
+  assert.match(code, /u\.compte=g<2\|\|tc<T\.coupe\?tc:null;/);
+  // ses petits jetons sont encore là quand la tache se pose, et disparaissent dessous
+  assert.match(code, /op\(u\.el,t<u\.pop\?0:\(u\.g<2\?1-P\(t,T\.fonds\[u\.g\]\+\.35,\.2,F\.lin\):\(t<T\.impact\?1:0\)\)\);/);
+  assert.match(code, /modes:\{paysage:\{w:1600,h:900\},portrait:\{w:900,h:1200\}\}/);
+});
+
+/* Les logos du titre (15/10/2026, Gwenaël : « on uniformise ») : chaque film porte ceux des livrets de son monde. Monde 1
+   (introduction, « Dessine les jetons », « Deux taches » à venir) et monde 2 (« Avec des paquets de jetons ») : IREMI et
+   maths&go ; monde 5 (les deux films d'ÉquaSplat) : maths&go seul (SPLAT! Équations est son travail seul). */
+test("les logos du titre : IREMI et maths&go aux mondes 1 et 2, maths&go seul pour ÉquaSplat", () => {
+  const blocs = page.split("<script>").slice(1).map((b) => b.split("</script>")[0]);
+  const bloc = (marque) => sansCommentaires(blocs.find((b) => b.includes(marque)));
+  const irem = (b) => (b.match(/href:LOGO_IREM/g) || []).length, mg = (b) => (b.match(/href:LOGO_MG/g) || []).length;
+  for (const m of ["FILMS.intro=film;", "const ECRAN_PS=(function(){", "FILMS.paquets=(function(){"]) {
+    assert.equal(irem(bloc(m)), 1, m);
+    assert.equal(mg(bloc(m)), 1, m);
+  }
+  const eq = bloc("const ECRAN_EQ=(function(){");
+  assert.equal(irem(eq), 0);
+  assert.equal(mg(eq), 1);
+});
+
+/* Le son (15/10/2026, choix de Gwenaël : « Oui, avec un bouton ») : seul le film « Avec des paquets de jetons » a des
+   bruitages, ceux de sa vidéo v6 (fichiers dans assets/sons/splat/). Ils sonnent quand le film passe leur instant en
+   lecture, jamais quand on saute d'étape ; le bouton « Son » sous le film les coupe, et n'apparaît que pour un film
+   qui a des sons. */
+test("le son : les bruitages du film du monde 2, un bouton pour les couper, rien sur les autres films", () => {
+  const code = sansCommentaires(page);
+  assert.match(page, /<button class="lien" id="son" type="button" hidden aria-pressed="true" title="Couper le son">/);
+  // les sons ne partent que dans la boucle de lecture (avant chaque image, à l'arrêt et à la fin), jamais dans jump()
+  assert.match(code, /function sonner\(a,b\)\{if\(film\.sons\)for\(const e of film\.sons\)if\(e\.t>a&&e\.t<=b\)SON\.jouer\(e\.f,e\.g\);\}/);
+  assert.equal((code.match(/sonner\(/g) || []).length, 4); // la définition + trois appels dans loop()
+  assert.doesNotMatch(code.slice(code.indexOf("function jump("), code.indexOf("function next(")), /sonner/);
+  // le son ne se prépare que sur un geste (play, ou le bouton) ; le choix « coupé » est gardé sur l'appareil
+  assert.match(code, /function play\(\)\{if\(film\.sons&&!SON\.coupe\)SON\.preparer\(film\.fichiersSons\);/);
+  assert.match(code, /localStorage\.setItem\('mathsgo-films-son',v\?'0':'1'\)/);
+  // seul le film du monde 2 a des sons ; ses fichiers existent et restent légers
+  const blocs = page.split("<script>").slice(1).map((b) => b.split("</script>")[0]);
+  for (const m of ["FILMS.intro=film;", "FILMS.equasplat=(function(){", "FILMS['equasplat-jetons']=(function(){", "FILMS.dessine=(function(){"]) {
+    assert.doesNotMatch(sansCommentaires(blocs.find((b) => b.includes(m))), /\bsons:\[/, m);
+  }
+  const paquets = sansCommentaires(blocs.find((b) => b.includes("FILMS.paquets=(function(){")));
+  const fichiers = [...paquets.matchAll(/'(\/assets\/sons\/splat\/[a-z]+\.mp3)'/g)].map((m) => m[1]);
+  assert.equal(fichiers.length, 4);
+  for (const f of fichiers) {
+    const taille = statSync(new URL(`..${f}`, import.meta.url)).size;
+    assert.ok(taille > 1000 && taille < 20000, `${f} : ${taille} octets`);
+  }
+  // les bruitages : deux pops (les jetons 18 et 20), le saut, le SPLAT, le « ? », 38, la coupe du 60, deux confirmations
+  assert.equal((paquets.match(/\{t:[^}]*,f:'(pop|saut|splat|confirmation)',g:[.\d]+\}/g) || []).length, 9);
+});
+
+/* « À toi de faire » (16/10/2026, choix de Gwenaël) : le tutoriel de l'étape 35, dans le lecteur des films, sur l'écran du
+   film des billes. Comme le tutoriel d'un jeu vidéo : huit consignes, une à la fois ; le bon geste est validé (✓) et le
+   tutoriel continue ; un toucher ailleurs ne change rien (le doigt montre où toucher). Sur le chemin de l'élève, il s'ouvre
+   à la place du film ; depuis la page Splat, c'est le film. On ne touche pas à equasplat.html. */
+const blocBilles = () => {
+  const blocs = page.split("<script>").slice(1).map((b) => b.split("</script>")[0]);
+  return blocs.find((b) => b.includes("FILMS.equasplat="));
+};
+const tempsTuto = (b) => new Function(`return ${b.match(/const TT=(\(\(\)=>\{[\s\S]*?\}\)\(\));/)[1]};`)();
+
+test("« À toi de faire » : huit consignes, une attente par toucher, chaque consigne affichée avant ses attentes", () => {
+  const b = blocBilles();
+  assert.match(b, /film\.aToi=aToi;/);
+  const TT = tempsTuto(b);
+  const ATT = new Function("TT", `return ${b.match(/const ATT=(\[[^\]]*\]);/)[1]};`)(TT);
+  // Enlever, 2 jetons à gauche, 2 jetons à droite, Valider, Équation suivante, Faire des paquets, « 3 paquets de 3 », un groupe
+  assert.equal(ATT.length, 10);
+  for (let k = 1; k < ATT.length; k++) assert.ok(ATT[k] - ATT[k - 1] >= .5, `attentes ${k} et ${k + 1} : ${ATT[k - 1]} → ${ATT[k]}`);
+  assert.ok(ATT[0] > TT.ecran && ATT[ATT.length - 1] < TT.fin);
+  const GUIDE = new Function("TT", `return ${b.match(/const GUIDE=(\[[\s\S]*?\]\]);/)[1]};`)(TT);
+  const consignes = GUIDE.filter((g) => g[2] != null);
+  assert.deepEqual(consignes.map((g) => g[1]), ["Touche « Enlever des deux côtés ».", "Touche les 2 jetons à gauche.", "Touche 2 jetons à droite.",
+    "Touche « Valider la suppression ».", "Touche « Équation suivante ».", "Touche « Faire des paquets ».",
+    "Choisis « 3 paquets de 3 ».", "Touche un des groupes."]);
+  // le ✓ vient après le dernier toucher de la consigne (le 2e jeton) ; chaque attente est sous sa consigne, affichée 0,25 s avant
+  assert.deepEqual(consignes.map((g) => g[2]), [TT.a1, TT.a2b, TT.a3b, TT.a4, TT.a5, TT.a6, TT.a7, TT.a8]);
+  for (const a of ATT) {
+    const g = GUIDE.filter((x) => x[0] <= a).pop();
+    assert.ok(g[2] != null && g[2] >= a && a - g[0] >= .25, `attente ${a} : « ${g[1]} »`);
+  }
+  for (let k = 1; k < GUIDE.length; k++) assert.ok(GUIDE[k][0] > GUIDE[k - 1][0], GUIDE[k][1]);
+  for (const g of consignes) {
+    const suivante = GUIDE[GUIDE.indexOf(g) + 1];
+    assert.ok(suivante[0] - g[2] >= .5, `${g[1]} : ✓ visible ${(suivante[0] - g[2]).toFixed(2)} s`);
+  }
+  assert.match(b, /Q\.legende\(o,Y,\(fait\?'✓\\u00a0':''\)\+cur\[1\]\);o\.st\.setAttribute\('fill',fait\?'#15803d':'#1e293b'\);/);
+  // le rond bleu d'un geste (0,45 s) est fini avant l'attente suivante
+  for (let k = 1; k < ATT.length; k++) assert.ok(ATT[k] - ATT[k - 1] > .45);
+  // la phrase sous l'équation change juste APRÈS le geste : pendant l'attente, on lit encore celle d'avant
+  const CONS = new Function("TT", "I0", "C", `return ${b.match(/const CONS_T=(\[[\s\S]*?\]\]);/)[1]};`)(TT, "I0", { orangeC: "o" });
+  for (const a of ATT) assert.ok(!CONS.some((c) => c[0] === a), `une phrase change pile à l'attente ${a}`);
+  // « 3 paquets de 3 » (demande de Gwenaël, 16/10) : chaque tache va sur sa ligne, l'une sous l'autre, en face de trois
+  // jetons, à la place et à la taille de son groupe ; puis deux traits coupent les deux plateaux en trois ; puis les
+  // groupes prennent la place des bandes, sans bouger (taches et jetons restent pleins pendant le fondu)
+  assert.ok(b.includes("o.Bt=X.B.t.map((c,k)=>{const g=E('g',{},o.B);Q.tache(Y,g,[0,0],Y.tRB,'𝑦');return {g,c,c1:[KB.tx,ligne(k)],s1:KB.tR/Y.tRB};});"));
+  assert.ok(b.includes("o.Bd=X.B.d.map((q,i)=>Object.assign(Q.piece(Y,o.B,null,Y.bR),{c:q[0],c1:[KB.bx[i%3],ligne(Math.floor(i/3))],s1:KB.bR/Y.bR}));"));
+  assert.ok(b.includes("o.Bt.forEach(e=>place(e,P(t,TT.range,.8,F.io)));") && b.includes("o.Bd.forEach((e,i)=>place(e,P(t,TT.range+i*.04,.8,F.io)));"));
+  assert.ok(b.includes("op(o.B,t<TT.b?0:(t<TT.groupes+.3?vB:0));"));
+  assert.match(b, /o\.cartes\.forEach\(\(c,k\)=>\{let v=t<TT\.groupes\?0:P\(t,TT\.groupes,\.3,F\.lin\);/);
+  assert.equal((b.match(/o\.coupe=KB\.ys\.slice\(1\)/g) || []).length, 1);
+  // l'ordre : tout est en place avant que les traits coupent, et les traits sont tracés avant les groupes
+  const e = 1e-9;   // (des temps calculés : 16,6 + 0,65 donne 17,250000000000004)
+  assert.ok(TT.range > TT.a7 && TT.coupe >= TT.range + 8 * .04 + .8 - e && TT.groupes >= TT.coupe + .1 + .35 + .2 - e && TT.a8 >= TT.groupes + .6 - e);
+});
+
+test("« À toi de faire » : les phrases sous l'équation et les boutons sont ceux d'ÉquaSplat, mot pour mot", () => {
+  const b = blocBilles(), outil = lire("outils/equasplat.html");
+  const texteOutil = outil.replace(/<\/?strong>/g, "").replace(/&nbsp;/g, " ");
+  const CONS = [...b.slice(b.indexOf("const CONS_T=")).split("];")[0].matchAll(/,'([^']+)'/g)].map((m) => m[1]);
+  assert.ok(CONS.length >= 5);
+  for (const p of CONS) {
+    const reste = p.replace(/\s*:\s*\d+\.$/, "").replace(/^\d+ /, "").replace(/ \d+ jetons en paquets\.$/, "");
+    assert.ok(texteOutil.includes(reste), `« ${p} » est une phrase de l'outil`);
+  }
+  assert.ok(texteOutil.includes("Il y a la même quantité à gauche qu’à droite."));
+  // après « Valider la suppression », la tache est seule : l'outil n'écrit plus rien (relevé le 16/10/2026)
+  // après 2 jetons à gauche et 1 à droite, l'outil écrit « … ne font pas la même somme. » ; après 2 et 2, « … : 2. »
+  assert.match(b, /\[TT\.a3\+\.001,'Les jetons sélectionnés ne font pas la même somme\.'\],\[TT\.a3b\+\.001,'Même quantité sélectionnée : 2\.'\],\[TT\.a4\+\.001,''\]/);
+  for (const nom of ["Enlever des deux côtés", "Faire des paquets", "Valider la suppression", "Équation suivante", "3 paquets de 3"]) {
+    assert.ok(nom === "3 paquets de 3" ? outil.includes("paquet${choice.packetCount > 1 ? \"s\" : \"\"} de ${choice.each}") : outil.includes(nom), nom);
+  }
+  // on ne touche pas à ÉquaSplat : le tutoriel vit dans le lecteur des films
+  assert.doesNotMatch(outil, /aToi|À toi de faire/);
+});
+
+test("« À toi de faire » : un seul bon geste par attente, des zones assez grandes pour le doigt, pas de rangement", () => {
+  const b = blocBilles(), code = sansCommentaires(b.slice(b.indexOf("const aToi={")));
+  // zones : un rectangle d'au moins 44 px à l'écran, un rond d'au moins 22 px de rayon autour d'un jeton
+  assert.match(code, /const pv=Math\.max\(4\/px,\(44\/px-h\)\/2\),ph=Math\.max\(4\/px,\(44\/px-w\)\/2\);/);
+  assert.match(code, /const R=Math\.max\(Y\.bR\+Y\.anG,22\/px\);/);
+  // les cibles, dans l'ordre : Enlever, les deux jetons de gauche, deux des jetons de droite (un jeton déjà touché ne compte
+  // plus), Valider, Équation suivante, Faire des paquets, « 3 paquets de 3 », un des groupes
+  assert.ok(code.includes("const libres=(liste,pris,ta)=>liste.map((b,i)=>pris.some(x=>x.i===i)?null:rond(b.c,()=>{pris.push({i,t:ta});})).filter(Boolean);"));
+  assert.ok(code.includes("case 0:return [bt(o.rangs.enl)];\n      case 1:case 2:return libres(o.Ag,ch.g,a);\n      case 3:case 4:return libres(o.Ad,ch.d,a);\n      case 5:return [bt(o.act.valider)];\n      case 6:return [rect(B.x,B.y,B.w,B.h)];\n      case 7:return [bt(o.fp)];\n      case 8:return [bt(o.act.choix[1])];\n      case 9:return K.ys.map("));
+  // un toucher ailleurs : rien ne change, le doigt montre la cible la plus proche (il appuie sans rien faire)
+  assert.match(code, /if\(bon\)\{this\.indice=null;if\(bon\.faire\)bon\.faire\(\);this\.choix\.touches\[k\]=\{t:ATT\[k\],p:q\};return true;\}/);
+  assert.match(code, /if\(pres\)this\.indice=\{r0:performance\.now\(\),c:pres\.c\};\s*return false;/);
+  // 𝑡 + 2 = 5 (après l'essai de Gwenaël) : deux jetons à gauche ; à droite, EN MIROIR, trois jetons à la place de la tache
+  // et deux en face des deux de gauche ; les jetons ne bougent pas (pas de glisser)
+  const XT = new Function(`return ${b.match(/const XT=(\{[\s\S]*?\]\]\}\});/)[1]};`)();
+  for (const [m, W] of [["paysage", 1440], ["portrait", 390]]) {
+    const x = XT[m];
+    assert.equal(x.g.length, 2, m); assert.equal(x.d.length, 5, m);
+    const sous = x.d.slice(0, 3), cx = sous.reduce((a, c) => a + c[0], 0) / 3, cy = sous.reduce((a, c) => a + c[1], 0) / 3;
+    assert.ok(Math.abs(cx - (W - x.t[0])) <= 2 && Math.abs(cy - x.t[1]) <= 6, `${m} : trois jetons en face de la tache`);
+    for (const [i, c] of x.g.entries()) assert.ok(x.d.slice(3).some((e) => Math.abs(e[0] - (W - c[0])) <= 1 && e[1] === c[1]), `${m} : jeton ${i + 1} en miroir`);
+  }
+  assert.doesNotMatch(code, /glisse|posBille|PAS_RANGE/);
+  // on recommence : le choix de l'élève s'efface quand le tutoriel repart du début
+  assert.match(code, /if\(t<TT\.a1-1e-6\)\{ch\.g=\[\];ch\.d=\[\];ch\.groupe=null;ch\.touches=\{\};this\.indice=null;\}/);
+});
+
+test("« À toi de faire » dans le lecteur : il attend le bon toucher, ni pause ni saut au clavier", () => {
+  const code = sansCommentaires(page);
+  assert.match(code, /const stops=\(film\.stops\|\|\[\]\)\.concat\(film\.attentes\|\|\[\]\)\.map\(s=>s\.t\)\.sort\(\(a,b\)=>a-b\);/);
+  assert.match(code, /pill\.hidden=!enArret\|\|!!film\.attentes;/);
+  assert.match(code, /function toucher\(e\)\{if\(playing\)return;if\(fresh\|\|t>=D-1e-3\)\{play\(\);return;\}if\(!enArret\)return;/);
+  assert.match(code, /if\(film\.toucher\(t,\[q\.x,q\.y\]\)\)play\(\);else film\.render\(t\);/);
+  assert.match(code, /if\(film\.attentes&&\(e\.key===' '\|\|e\.key==='k'\|\|e\.key==='ArrowRight'\|\|e\.key==='ArrowLeft'\)\)return;/);
+  // la fin du tutoriel : « ↺ Recommencer » (pas « Revoir le film »)
+  assert.match(blocBilles(), /Y\.fin=Object\.assign\(\{\},Y\.fin,\{revoir:'↺ Recommencer'\}\);/);
+});
+
+/* 16/10/2026 : le lecteur sautait un arrêt quand une image tombait à moins d'un millionième avant lui. Deux arrêts séparés
+   d'un nombre rond d'images (13,8 s → 15,1 s : 78 images à 60 par seconde) le provoquent presque à coup sûr ; mesuré dans
+   le tutoriel : une attente sur quatre manquée. On s'arrête maintenant au premier arrêt strictement après t. */
+test("le lecteur ne saute plus un arrêt quand une image tombe juste avant lui", () => {
+  assert.match(sansCommentaires(page), /const ns=stops\.find\(x=>x>t\);if\(ns!=null&&nt>=ns\)\{/);
+  // une image tombe 0,5 millionième de seconde avant l'arrêt 13,8 + 1,3 (c'est ce que le navigateur a fait, image après image)
+  const stops = [12.8, 13.8, 13.8 + 1.3], t = 13.8 + 1.3 - 5e-7, nt = t + 1 / 60;
+  const arret = (predicat) => { const ns = stops.find((x) => predicat(x, t)); return ns != null && nt >= ns ? ns : null; };
+  assert.equal(arret((x, t) => x > t), 13.8 + 1.3);
+  assert.equal(arret((x, t) => x > t + 1e-6), null, "l'ancienne règle sautait cet arrêt");
+  // et on repart toujours d'un arrêt sans s'y arrêter de nouveau : t vaut alors l'arrêt, exactement
+  assert.equal(stops.find((x) => x > 13.8), 13.8 + 1.3);
+});
+
+test("« À toi de faire » ou le film : le chemin de l'élève ouvre le tutoriel, la page Splat le film ; un lien passe de l'un à l'autre", () => {
+  const code = sansCommentaires(page);
+  assert.match(page, /<a class="lien" id="autre" href="#" hidden><\/a>\n\s*<a class="lien passer" id="passer"/);
+  assert.match(code, /const aToi=!!film\.aToi&&\(voir==='atoi'\|\|\(voir!=='film'&&!PRESENTATION\)\);/);
+  assert.match(code, /u\.searchParams\.set\('voir',aToi\?'film':'atoi'\);/);
+  assert.match(code, /autre=\{href:u\.pathname\+u\.search,txt:aToi\?'🎬 Voir le film':'✋ À toi de faire'\};/);
+  assert.match(code, /if\(autre\)\{const a=\$\('autre'\);a\.href=autre\.href;a\.textContent=autre\.txt;a\.hidden=false;\}/);
+  // seul le film des billes a son tutoriel pour l'instant (les jetons numérotés viendront après)
+  assert.equal((code.match(/film\.aToi=aToi;/g) || []).length, 1);
+  assert.match(blocBilles(), /passer:SUITE, passerTexte:'Passer ›', credit:film\.credit,/);
+  // aucune page de la carte des mondes ne change : le lien sous l'étape 35 reste ?film=equasplat&suite=…
+  assert.match(carte, /films:\[\["equasplat","Comment on joue \?"\],\["equasplat-jetons","Avec des jetons numérotés"\]\]/);
+});
+
+test("le film des billes range toujours les jetons, mais ne le dit plus", () => {
+  const b = blocBilles(), film = b.slice(0, b.indexOf("const TT="));
+  assert.doesNotMatch(sansCommentaires(b), /Range les jetons/);
+  assert.match(film, /\[25\.6,'Touche «\\u00a0Faire des paquets\\u00a0» : 3 paquets de 3\.'\]/);
+  assert.match(film, /for\(const b of sA\)\{D\.va\(b\.tg,b\.p0\);D\.glisse\(b\.tg\+\.45,b\.p1\);\}/);
+  assert.match(film, /for\(const b of sB\)\{D\.va\(b\.tg,b\.p0\);D\.glisse\(b\.tg\+\.45,b\.p1\);\}/);
 });

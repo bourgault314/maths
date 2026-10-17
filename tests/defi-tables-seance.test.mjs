@@ -557,14 +557,15 @@ test("le bilan de séance : pas de rangée tant qu'elle est entièrement vide, l
   const bilan = parcours => {
     const ids = {};
     const $ = id => (ids[id] ||= element());
-    const fabrique = new Function("$", "PARCOURS", "parcours", "seance", "document", "pluriel", "soude", "backToModes", "tableDeLaSeance", "commencerSeance",
+    // Lot E3b : le bilan lit « À retenir » tel qu'il s'affiche (aRetenirAffiche).
+    const fabrique = new Function("$", "PARCOURS", "parcours", "seance", "document", "pluriel", "soude", "backToModes", "tableDeLaSeance", "commencerSeance", "aRetenirAffiche",
       `${code}\nreturn renderBilanSeance;`);
     const renderBilanSeance = fabrique(
       $, P, parcours,
       {table: 2, faites: [{nom: "Les perles", juste: 11, total: 11, rate: false, reussi: null}]},
       {createElement: balise => element(balise), createTextNode: texte => ({textContent: texte})},
       (nombre, mot) => `${nombre} ${mot}${nombre > 1 ? "s" : ""}`,
-      texte => texte, () => {}, () => undefined, () => {}
+      texte => texte, () => {}, () => undefined, () => {}, () => P.aRetenir(parcours)
     );
     const zone = element();
     renderBilanSeance(zone);
@@ -642,7 +643,7 @@ test("« Cette semaine » : « 3 fois cette semaine », rien à zéro, plus de r
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie serveur identique, serveur qui accepte les nouvelles clés", () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261014-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261016-1/);
   const moteur = readFileSync(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = readFileSync(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie), "cp outils/calcul_mental/defi_tables_mon_parcours.js _serveur/public/prof/");
@@ -989,7 +990,7 @@ test("lot 2b : « résultats et nombres manquants » partout — noyau, fiche vi
   const noyau = lire("outils/calcul_mental/defi_tables_core.js");
   assert.match(noyau, /"direct\+missing\+division": "résultats, nombres manquants et divisions"/, "lot « divisions »");
   assert.doesNotMatch(noyau, /"les deux à la fois"/);
-  assert.match(html, /defi_tables_core\.js\?v=20261010-1/, "le noyau a changé : son numéro monte");
+  assert.match(html, /defi_tables_core\.js\?v=20261015-1/, "le noyau a changé : son numéro monte");
   // Lot « Mon parcours » (décision 15) : la fiche vierge n'est plus dessinée
   // à part — c'est la fiche de l'appli, en mode vierge, imprimée par Chromium.
   // Ses règles sont donc celles de la fiche : « résultats, nombres manquants et divisions ».

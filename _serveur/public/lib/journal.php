@@ -45,6 +45,12 @@ const ACTIONS_JOURNAL = [
     // Séance en direct (07/10/2026) : qui a ouvert une séance, qui a pris le
     // fichier des réponses, qui l'a terminée. Pas une ligne par question.
     'direct.ouvrir', 'direct.fichier', 'direct.terminer',
+    // Lot E1 « les évaluations en classe » (15/10/2026) : qui a ouvert une
+    // évaluation, qui l'a fermée, qui a pris le fichier, qui l'a terminée.
+    'evaluation.ouvrir', 'evaluation.fermer', 'evaluation.fichier', 'evaluation.terminer',
+    // Lot E2 (15/10/2026) : qui a fait repasser quel élève (la cible est
+    // l'élève, par son identifiant — jamais un prénom dans le journal).
+    'evaluation.repasser',
 ];
 
 const CIBLES_JOURNAL = ['classe', 'eleve', 'partage', 'compte', 'session'];

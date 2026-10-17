@@ -450,8 +450,8 @@ test("au pavé, le doigt touche la case, jamais le champ", () => {
   assert.match(page, /body\.eleve-pave input\.eleveChamp\{pointer-events:none\}/);
   assert.match(page, /body\.eleve-pave \.eleveCase\.mg-pave-case-active\{box-shadow:inset 0 0 0 4px #2563eb, inset 0 0 0 999px rgba\(37,99,235,\.08\)\}/, "la case active se voit, comme dans Petit Splat, par un cadre dans la case (centré entre les traits)");
   assert.match(page, /if\(!pave && premier\) premier\.focus\(\);/);
-  assert.match(source("elevePaveActiver"), /zone: champ => champ\.closest\("\.eleveCase"\)/);
-  assert.match(source("elevePaveActiver"), /aRemplacer: champ => \{ const c = champ\.closest\("\.eleveCase"\); return !!\(c && c\.classList\.contains\("ko"\)\); \}/);
+  assert.match(source("elevePaveActiver"), /zone: champ => champ\.closest\("\.ufBoite"\) \|\| champ\.closest\("\.eleveCase"\)/);
+  assert.match(source("elevePaveActiver"), /aRemplacer: champ => \{ const b = champ\.closest\("\.ufBoite"\); if\(b\) return b\.classList\.contains\("ufFaux"\);[^\n]*\n\s*const c = champ\.closest\("\.eleveCase"\); return !!\(c && c\.classList\.contains\("ko"\)\); \}/);
 });
 
 test("rien de tout cela ne s'applique sur ordinateur : chaque règle neuve est sous body.eleve-pave", () => {

@@ -54,9 +54,10 @@ test("décision 3 : « À retenir pour demain » — chaque calcul une fois, éc
   assert.equal(cadreARetenir([[1, 3]]).tous("p").length, 0);
   const bilan = corps("renderBilanSeance");
   // Lot « retouches après Mon parcours » : la liste du JOUR, gardée par le moteur.
-  assert.match(bilan, /const retenir = cadreARetenir\(PARCOURS\.aRetenir\(parcours\)\);\s*if \(retenir\) zone\.append\(retenir\);\s*\$\("corrections"\)\.replaceChildren\(\);/);
+  // Lot E3b : la liste telle qu'elle s'affiche (aRetenirAffiche : sans les erreurs d'une évaluation ouverte).
+  assert.match(bilan, /const retenir = cadreARetenir\(aRetenirAffiche\(\)\);\s*if \(retenir\) zone\.append\(retenir\);\s*\$\("corrections"\)\.replaceChildren\(\);/);
   assert.ok(bilan.indexOf("cadreARetenir") < bilan.indexOf("boutons.className"), "au-dessus des boutons");
-  assert.match(html, /\.seance-suite \.retenir, \.carte-seance \.retenir \{ width: 100%;/, "le même cadre au bilan et sur la carte de l’accueil");
+  assert.match(html, /\.seance-suite \.retenir, \.carte-seance \.retenir, \.acc-retenir \{ width: 100%;/, "le même cadre au bilan, sur la carte de l’accueil et dessous (lot E3b)");
 });
 
 test("décision 12 (réponse B) : « Table de 3 passée ✓ » à la place de la rangée, une seule phrase pour demain (sans mélange), et plus de bouton « Je me teste sur mes N tables »", () => {

@@ -426,7 +426,7 @@ function poserAppliRejoue(applis, appliAffichee, droit = "proprietaire", triAvan
     "splat": [["prenom", "Prénom"], ["etapes", "Étapes réussies"], ["date", "Dernière activité"]]};
   const etat = new Function("document", "$", "classe", "appliAffichee", "droitClasse", "TRIS", "APPLIS", "triInitial",
     `let tri = triInitial;\n${constante("NOMBRE_MONDES")}\n${["lesApplisConnues", "applisDeLaClasse", "poserAppli", "poserTris", "poserActivites",
-      "mondesOuverts", "poserPuce", "recordsOuvertsPourLaClasse"].map(fonction).join("\n")}\nfunction chargerRecords() {}\nposerAppli();\nreturn {tri};`)(
+      "mondesOuverts", "poserPuce", "recordsOuvertsPourLaClasse"].map(fonction).join("\n")}\nfunction chargerRecords() {}\nfunction poserEvaluations() {}\nposerAppli();\nreturn {tri};`)(
     doc, $, {applis, reglages}, appliAffichee, droit, TRIS, [{cle: "defi-tables"}, {cle: "splat"}], triAvant);
   return {$, boutons, cases, mondes, tri: etat.tri};
 }

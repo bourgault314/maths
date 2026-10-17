@@ -260,8 +260,8 @@ test("aucun domaine tiers ne sert de feuille de style au site", () => {
 // ---------------------------------------------------------------------------
 const EMPREINTES = [
   ["gsap-3.12.2/gsap.min.js", "efc85c7eb141819717cda0033484a84b1c890d13b02e355a2fec79d424b20e7a"],
-  ["katex-0.16.9/katex.min.css", "505d5f829022bb7b4f24dfee0aa1141cd7bba67afe411d1240335f820960b5c3"],
-  ["katex-0.16.9/katex.min.js", "dc84b296ec3e884de093158f760fd9d45b6c7abe58b5381557f4e138f46a58ae"],
+  ["katex-0.16.47/katex.min.css", "0289a02cf451a44dd73add683a09644252363871ac11713a647b732cee8b1ee3"],
+  ["katex-0.16.47/katex.min.js", "a29d2961d3146de5949d78ac7c1a9d93ae54955bad22a6db4fbe836e88e8bf48"],
   ["pdfjs-3.4.120/pdf.min.js", "519415484a0c6c9f36ff7b858ede2660e4d55472089ad929eeedcbe8b307ebf6"],
   ["pdfjs-3.4.120/pdf.worker.min.js", "e6a7f30b71ca739ee2738c2ada7e120390b3c6faa3f3d4aa172bb6ece586eab1"],
   ["polices/caveat-latin-ext-wght-normal.woff2", "f626b95c1efa95cf6b7c9b043d3bbe8862b6abbe5f55a082102f33f7de2fd4f9"],
@@ -321,11 +321,11 @@ test("les pages qui utilisent une police du site la prennent dans assets/vendor/
 });
 
 test("les polices de KaTeX accompagnent sa feuille de style", () => {
-  const polices = readdirSync(join(racine, "assets", "vendor", "katex-0.16.9", "fonts"));
-  assert.ok(polices.length >= 20, `${polices.length} polices seulement dans katex-0.16.9/fonts/`);
+  const polices = readdirSync(join(racine, "assets", "vendor", "katex-0.16.47", "fonts"));
+  assert.ok(polices.length >= 20, `${polices.length} polices seulement dans katex-0.16.47/fonts/`);
   assert.ok(polices.every((n) => n.endsWith(".woff2")),
     "seules les polices .woff2 sont servies (tous les navigateurs depuis 2015 les lisent)");
-  const css = readFileSync(join(racine, "assets", "vendor", "katex-0.16.9", "katex.min.css"), "utf8");
+  const css = readFileSync(join(racine, "assets", "vendor", "katex-0.16.47", "katex.min.css"), "utf8");
   assert.match(css, /fonts\/KaTeX_Main-Regular\.woff2/,
     "la feuille de KaTeX doit chercher ses polices dans son propre dossier fonts/");
 });

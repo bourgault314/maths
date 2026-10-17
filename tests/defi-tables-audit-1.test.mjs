@@ -71,7 +71,9 @@ test("B. Entrée gardée enfoncée ne saute pas la correction, et Suivant attend
 });
 
 test("C. Temps écoulé : le score compte les réponses justes, le détail compte aussi les calculs passés", () => {
-  assert.match(html, /verdict\.score = `\$\{pluriel\(state\.correct, "juste"\)\} sur \$\{TOTAL\} en \$\{CORE\.durationLabel\(config\.duration\)\} — il en faut \$\{seuilDe\(principal\)\}`;/);
+  // Lot « test : pas deux fois le même calcul » (16/10/2026) : assez de justes
+  // mais un calcul raté deux fois → « mais 7 × 8 raté deux fois » au lieu du seuil.
+  assert.match(html, /verdict\.score = `\$\{pluriel\(state\.correct, "juste"\)\} sur \$\{TOTAL\} en \$\{CORE\.durationLabel\(config\.duration\)\} — \$\{assez \? `mais \$\{libelleRateDeuxFois\(principal\)\} raté\\u00a0deux\\u00a0fois` : `il en faut \$\{seuilDe\(principal\)\}`\}`;/);
   assert.doesNotMatch(html, /pluriel\(state\.answered, "réponse"\)/);
   assert.match(html, /state\.correct \? pluriel\(state\.correct, "juste"\) : "",\s*fausses \? pluriel\(fausses, "erreur"\) : "",\s*passees \? pluriel\(passees, "passée"\) : ""\s*\]\.filter\(Boolean\)\.join\(", "\)/);
   const calculsPasses = new Function("state", `${fonction("calculsPasses")}; return calculsPasses();`);

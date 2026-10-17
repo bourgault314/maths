@@ -37,7 +37,9 @@ haché, administrateur, compte actif, mot de passe temporaire) · `partages`
 débit) · `billets` (liens d'entrée à usage unique) · `directs`,
 `directs_questions`, `directs_reponses` (séance en direct : **temporaires**,
 vidées quand le professeur termine la séance et au plus tard une heure et
-demie après son dernier geste — voir « La séance en direct »).
+demie après son dernier geste — voir « La séance en direct ») ·
+`modeles_evaluation` (les modèles d'évaluation des tables de chaque professeur :
+des réglages, aucune donnée d'élève — voir « Les évaluations en classe »).
 
 **Combien de temps ?** Les prénoms, les codes et les progressions d'une année
 scolaire sont **supprimés au plus tard le 1er août** qui suit — après la fin des
@@ -64,9 +66,14 @@ _serveur/
     direct.php         séance en direct, écran de l'élève
     prof/direct.php    séance en direct, écran du tableau (à projeter)
     prof/questionnaire.js  lecteur du questionnaire JSON du professeur (lot 2) — LE CONTRAT
-    vendor/katex-0.16.9/  COPIE de assets/vendor/katex-0.16.9 (formules du tableau)
-    api/direct.php     API élève de la séance en direct : l'état, et sa réponse
+    vendor/katex-0.16.47/  COPIE de assets/vendor/katex-0.16.47 (formules du tableau)
+    api/direct.php     API élève de la séance en direct : l'état, et sa réponse ;
+                       et de l'évaluation en classe (clé « evaluation »)
     lib/direct.php     séance en direct : types de réponse, purge, lectures, gestes
+    lib/evaluation.php les évaluations en classe : modèles, ouverture, présences,
+                       réponses, fenêtre, fermeture (lot E1, 15/10/2026)
+    prof/defi_tables_core.js  COPIE du noyau de Défi tables : Ma classe refait le
+                       tirage d'une évaluation et la corrige dans le navigateur
     lib/               bd, réponses/CORS, en-têtes de sécurité, codes, limitation,
                        sessions, catalogue d'applis, filtre des progressions
     lib/archives.php   fin d'année : année scolaire, suppression d'une classe
@@ -219,6 +226,62 @@ le fichier de fin ni dans les comptes de réponses.
 des questionnaires de la même forme (identifiant stable, type de réponse, bonne
 réponse, réglage) ; `prof/questionnaire.js` est le seul endroit qui les lit.
 
+### Les évaluations en classe (lot E1, 15/10/2026)
+
+Une évaluation des tables, **en classe seulement**, faite par chaque élève dans
+Défi tables, à son rythme, **une seule fois**. Le professeur prépare des
+**modèles** dans « Ma classe » (carte « 📝 Évaluations » : tables, types de
+question — produit, nombre manquant, division —, nombre de questions, chrono
+par question / en tout / sans, calculs exclus ou imposés, tirage), attachés à
+son compte (`modeles_evaluation`, 30 au plus, sauvegardés). Il en **ouvre** un
+pour une classe pour 30 min, 1 h ou 2 h ; à l'échéance elle se ferme toute
+seule (les réponses ne prolongent rien), ou il la **ferme** avant.
+
+**La plomberie est celle de la séance en direct** : une évaluation ouverte est
+une ligne de `directs` au mode `evaluation` (donc une seule séance par classe :
+pas de question éclair pendant une évaluation, ni l'inverse), son réglage figé
+dans `directs.reglage` (le modèle, le nom, la **graine de l'évaluation**, la
+durée, la fin) ; la présence d'un élève au numéro 0 de `directs_reponses`
+(« graine|début|fini »), ses réponses une ligne par question (« 56|43 » : la
+valeur tapée, vide pour « pas de réponse », et les dixièmes de seconde).
+
+**Le serveur ne connaît ni les questions ni la correction.** Il tire les
+graines (une par évaluation, une par élève à « Je commence », jamais reçues
+d'une page), l'appli tire la série avec `genererEvaluationDeClasse` du noyau de
+Défi tables, et « Ma classe » refait exactement le même tirage avec
+`prof/defi_tables_core.js` (copie octet pour octet, vérifiée par un test) pour
+corriger **dans le navigateur du professeur**. Aucune note n'entre jamais en
+base. Le fichier (CSV : note sur 20 au demi-point, score, temps total, heure de
+début, détail des ratés) est fabriqué dans la page, le serveur n'en garde rien.
+
+**Ce que le serveur tient** : une graine par élève, une fois ; une réponse par
+numéro, la suivante seulement, la première arrivée reste (clé unique) ; la
+forme (type `entier`, trois chiffres) ; la **fenêtre** de l'élève (début +
+N × temps par question, ou + temps global, + 10 s) ; plus rien après la
+fermeture ni après « fini » (vingt réponses, ou « J'ai fini ») ; 120 gestes
+par code et par cinq minutes. Après la fermeture, les réponses attendent le
+fichier **vingt heures** (`expire_le` = fin + 20 h), puis la purge de la séance
+en direct les emporte ; « Terminer » efface tout de suite. L'élève supprimé,
+la classe supprimée, le compte supprimé (ses modèles) emportent ce qui est à
+eux.
+
+**Qui.** Propriétaire et collègues en **écriture** ouvrent, ferment, reçoivent
+le fichier (des prénoms à côté de réponses) ; chacun ouvre avec **ses**
+modèles. L'élève ne reçoit jamais un compteur ni la copie d'un autre ; « Ma
+classe » reçoit en boucle (`evaluation.etat`, toutes les 3 s) les compteurs et
+— lot E2 — la liste des élèves avec où en est chacun (pas commencé, question
+n, fini, arrêté), sans code, graine ni réponse ; après la fermeture, la
+**répartition** à 20 / 16–19,5 / 10–15,5 / moins de 10, projetable (« Plein
+écran », sans prénom).
+
+**Faire repasser** (lot E2, 15/10/2026). Un élève bloqué — un camarade a passé
+l'évaluation avec son code, « J'ai fini » cliqué trop tôt — repart de zéro :
+`evaluation.repasser {eleve_id}` (écriture, évaluation ouverte seulement,
+élève de la classe seulement) efface sa présence, ses réponses et son drapeau
+« fini », monte la révision de la séance, et journalise sur l'élève. À son
+prochain « Je commence », le serveur lui tire une autre graine : un nouveau
+tirage, pas la copie de celui que le camarade a vu.
+
 ### Le moteur
 
 Le résumé de progression du tableau est calculé **dans le navigateur** avec
@@ -350,6 +413,8 @@ codes, ni aux progressions, et peut être relancée sans risque.
 | POST | `/api/parcours.php` `{code, appli, parcours, base_revision}` | l'enregistre si `base_revision` est la révision en base ; sinon **409** avec l'état actuel, que l'appli fusionne avant de renvoyer. Le serveur ne garde que ce que `lib/applis.php` déclare (`lib/progression.php`) : jamais un prénom ni un texte libre. La version précédente est conservée (`donnees_avant`), et l'état de fin de journée est rangé dans `versions` (une ligne par jour, sept jours) |
 | POST | `/api/eleve.php` `{code}` | prénom, classe et applis de l'élève (page d'accueil) |
 | POST | `/api/direct.php` `{code}` | la séance en direct de la classe de l'élève, ou `direct: null` ; avec `{code, numero, reponse}`, range sa réponse tant que la question est ouverte (`enregistree: true/false`) |
+| POST | `/api/direct.php` `{code}` (évaluation en classe) | si une évaluation est ouverte pour sa classe, `direct: null` et `evaluation: {etat, nom, modele, commence, fini, close, suivant, graines, reponses, ecoule}` ; `{code, commencer: true}` tire sa graine et pose son début (une fois) ; `{code, numero, reponse, dixiemes}` range sa réponse à la question suivante (`enregistree`) ; `{code, finir: true}` |
+| POST | `/api/prof.php` `{action: "evaluation.…"}` | `evaluation.modeles`, `evaluation.enregistrer_modele` `{id, nom, reglage}`, `evaluation.supprimer_modele` `{id}` (les modèles du compte) ; avec `classe_id`, au droit **écriture** : `evaluation.ouvrir` `{modele_id, duree}`, `evaluation.etat` (en boucle), `evaluation.fermer`, `evaluation.fichier` (graines, débuts et réponses élève par élève), `evaluation.repasser` `{eleve_id}` (lot E2 : efface le passage d'un élève de l'évaluation ouverte, nouveau tirage à son prochain « Je commence » ; journalisé sur l'élève), `evaluation.terminer` (efface tout) |
 | POST | `/api/prof.php` `{action: "direct.…", classe_id}` | `direct.etat` (interrogé en boucle par le tableau), `direct.ouvrir`, `direct.question` `{type, reglage}`, `direct.devoiler`, `direct.bonne` `{bonne}`, `direct.fichier` (questions + réponses élève par élève), `direct.terminer` (efface tout) — toutes au droit **écriture** |
 | POST | `/api/prof.php` `{action, …}` | `connexion` (répond aussi `mdp_temporaire`), `deconnexion`, `moi`, `profs.motdepasse` `{ancien, nouveau}`, `profs.annuaire`, `profs.liste/ajouter/reinitialiser/desactiver/reactiver/supprimer` (administrateur ; `ajouter` et `reinitialiser` renvoient le temporaire ; `supprimer` veut `avec_classes: true` si le compte possède des classes), `classes.liste/creer/modifier/supprimer/supprimer_echues`, `partages.liste/ajouter/supprimer`, `eleves.ajouter/nommer/regenerer/restaurer/supprimer` (`restaurer` accepte `jour: "AAAA-MM-JJ"` pour revenir à la fin d'une journée gardée), `tableau` |
 

@@ -62,8 +62,12 @@ test("dans la carte, seules les cases des taches reçoivent le « ? »", () => {
   const rendu = page.slice(debut, page.indexOf("\n}\n", debut));
   const appels = [...rendu.matchAll(/eleveCaseHtml\(("[^"]+"), [^,]+, [^,]+, (true|false)\)/g)].map((m) => `${m[1]} ${m[2]}`);
   assert.deepEqual(appels, ['"blanche" false', '"grise" true', '"haut blanche" false'], "jetons visibles, taches, total");
-  // un seul « ? » dans toute la page élève : celui des taches (les autres placeholders sont ceux de l'usage libre)
-  assert.equal(page.match(/placeholder="\?"/g).length, 1);
+  // deux « ? » dans la page élève, tous deux sur la case de la tache : celle d'eleveCaseHtml, et la case décimale
+  // de A — Jetons et parts (ufCaseHtml, lot F2) ; les autres placeholders sont ceux de l'usage libre
+  assert.equal(page.match(/placeholder="\?"/g).length, 2);
+  const uf = page.slice(page.indexOf("\nfunction ufCaseHtml("), page.indexOf("\n}\n", page.indexOf("\nfunction ufCaseHtml(")));
+  assert.match(uf, /ph \? ' placeholder="\?"' : ""/);
+  assert.match(uf, /boite\("ufDec", 6, "decimal", "valeur décimale", true, avecTache\)/);
   assert.deepEqual([...page.matchAll(/placeholder="([^"]*)"/g)].map((m) => m[1]).filter((v) => v !== "au hasard" && v !== "?"),
     ["Titre imprimé (ex. Atelier de recherche)"]);
 });

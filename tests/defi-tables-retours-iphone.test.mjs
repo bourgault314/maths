@@ -215,13 +215,40 @@ test("« ← Calcul mental » seulement sur l’accueil : body.ecran-interne par
   const {document, $} = fauxDocument(["intro", "launch", "play", "result", "parcours", "calculs", "lire", "fiche", "settings-title", "acc-table-titre", "launch-summary", "result-title", "parcours-title", "calculs-title"]);
   const avant = `const document = ARG.document; const $ = ARG.$; const window = {scrollTo: () => {}};
     const renderAccueil = () => {}; const renderParcours = () => {}; const renderCalculs = () => {}; const syncControls = () => {};
-    const configuration = {mode: null}; const suivreHistorique = () => {}; const ajusterEchelle = () => {};`;
+    const configuration = {mode: null}; const suivreHistorique = () => {}; const ajusterEchelle = () => {};
+    const verrouPassage = () => false; const enEvaluation = () => false;`;
   const show = new Function("ARG", `${avant}\n${source("show")}\nreturn show;`)({document, $});
   const vus = {};
   const panneau = {};
   ["calculs", "parcours", "play", "result", "intro"].forEach(nom => { show(nom); vus[nom] = document.body.classes.has("ecran-interne"); panneau[nom] = document.querySelector(".panel").classList.contains("avec-parcours"); });
   assert.deepEqual(vus, {calculs: true, parcours: true, play: true, result: true, intro: false});
   assert.deepEqual(panneau, {calculs: false, parcours: true, play: false, result: false, intro: false}, "lot « Mon parcours » : le panneau de Mon parcours, et lui seul");
+});
+
+// Lot E4 (16/10/2026) : passage d'évaluation commencé, pas fini → seuls
+// l'accueil et la série de l'évaluation s'ouvrent.
+test("E4 : pendant un passage, show() ne mène qu'à l'accueil — sauf la série de l'évaluation ; hors passage, rien ne change", () => {
+  const ids = ["intro", "launch", "play", "result", "parcours", "lire", "fiche", "settings-title", "acc-table-titre", "launch-summary", "result-title", "parcours-title", "lire-title", "fiche-title", "fiche-print"];
+  const fabriquer = (verrou, evaluation) => {
+    const {document, $} = fauxDocument(ids);
+    const avant = `const document = ARG.document; const $ = ARG.$; const window = {scrollTo: () => {}};
+      const renderAccueil = () => {}; const renderParcours = () => {}; const syncControls = () => {}; const renderFiche = () => {}; const ajusterFiche = () => {}; const prenomAffiche = () => "";
+      const configuration = {mode: null}; const suivreHistorique = () => {}; const ajusterEchelle = () => {};
+      const verrouPassage = () => ${verrou}; const enEvaluation = () => ${evaluation};`;
+    return {show: new Function("ARG", `${avant}\n${source("show")}\nreturn show;`)({document, $}), $};
+  };
+  const visible = $ => ["intro", "launch", "play", "result", "parcours", "lire", "fiche"].find(id => !$(id).hidden);
+  for (const nom of ["parcours", "lire", "fiche", "launch", "result", "play"]) {
+    const verrouille = fabriquer(true, false);
+    verrouille.show(nom);
+    assert.equal(visible(verrouille.$), "intro", `n) passage en cours : « ${nom} » ne s'ouvre pas`);
+    const libre = fabriquer(false, false);
+    libre.show(nom);
+    assert.equal(visible(libre.$), nom, `hors passage : « ${nom} » s'ouvre`);
+  }
+  const serie = fabriquer(true, true);
+  serie.show("play");
+  assert.equal(visible(serie.$), "play", "la série de l'évaluation, elle, s'ouvre");
 });
 
 // ------------------------------------------------------ 6. « 10×10 »

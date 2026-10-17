@@ -307,7 +307,8 @@ test("réponse tardive de Léa après « Ce n’est pas moi » : rien ne bouge",
   a.api.demarrerSuivi();          // lecture et identité en vol (30 ms)
   travailler(a, 2);
   await a.temps.avancer(700);     // l'envoi part (base 0 → 409 attendu), en vol lui aussi
-  assert.equal(serveur.appels.length, 3, "trois demandes en vol sous le code de Léa");
+  // Lot E2 : la lecture de l'évaluation (api/direct.php) part aussi ; elle ne compte pas ici.
+  assert.equal(serveur.appels.filter(x => !x.url.endsWith("/api/direct.php")).length, 3, "trois demandes en vol sous le code de Léa");
   a.api.quitterSuivi();           // Sam prend l'appareil
   assert.equal(a.api.codeSuivi, "");
   await tic(80);                  // les trois réponses arrivent, trop tard
@@ -357,10 +358,12 @@ test("une série notée pendant un envoi en vol reste « à envoyer » après le
   await tic(50); // le 200 arrive
   assert.equal(a.api.sync.revision, 1, "le premier envoi est arrivé");
   assert.equal(a.api.sync.dirty, true, "mais la table 4, notée pendant le vol, est encore à envoyer");
-  assert.deepEqual(a.temps.enAttente(), [700], "l’envoi groupé est toujours programmé");
+  // Lot E2 : la veille de l'évaluation a sa propre minuterie (6 s) ; l'envoi groupé, lui, est à 700 ms.
+  assert.ok(a.temps.enAttente().includes(700), "l’envoi groupé est toujours programmé");
   a.api.envoyerAvantDeFermer();
   const paquet = JSON.parse(await a.balises.at(-1).blob.text());
   assert.equal(paquet.parcours.tables["4"].acquise, "2026-09-04", "la fermeture emporte la table 4");
   assert.equal(paquet.base_revision, 1);
-  assert.deepEqual(a.temps.enAttente(), [], "l’envoi groupé est annulé : la balise a pris sa place");
+  // (la veille de l'évaluation du lot E2, à quelques secondes, n'est pas un envoi)
+  assert.deepEqual(a.temps.enAttente().filter(d => d < 3000), [], "l’envoi groupé est annulé : la balise a pris sa place");
 });

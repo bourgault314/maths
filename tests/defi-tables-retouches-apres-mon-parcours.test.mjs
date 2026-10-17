@@ -163,9 +163,11 @@ test("7. l’accueil, séance du jour faite : « ✓ Séance du jour faite », l
   let lancee = null;
   let rendus = 0;
   const state = {encoreOuverte: false};
-  const fabrique = parcours => new Function("document", "PARCOURS", "parcours", "commencerSeance", "cadreARetenir", "state", "renderAccueil", "$",
+  // Lot E3b : la carte lit la liste telle qu'elle s'affiche (aRetenirAffiche,
+  // sans les erreurs d'une évaluation encore ouverte) — ici, pas d'évaluation.
+  const fabrique = parcours => new Function("document", "PARCOURS", "parcours", "commencerSeance", "cadreARetenir", "state", "renderAccueil", "$", "aRetenirAffiche",
     `${source("carteSeanceFaite")}; return carteSeanceFaite;`)(document, {...P, aRetenir: q => P.aRetenir(q, AUJ)}, parcours, table => { lancee = table; }, cadreARetenir(document),
-    state, () => { rendus += 1; }, () => null);
+    state, () => { rendus += 1; }, () => null, () => P.aRetenir(parcours, AUJ));
   const avec = fabrique(P.normaliserParcours({...P.creerParcours(), retenir: {jour: AUJ, erreurs: [308, 309, 310, 703]}}))(3);
   assert.equal(avec.tag, "div", "la carte n’est plus un bouton (le bouton est dedans)");
   assert.equal(parClasse(avec, "fait")[0].textContent, "✓Séance du jour faite");
@@ -190,7 +192,8 @@ test("7. l’accueil, séance du jour faite : « ✓ Séance du jour faite », l
 });
 
 test("7. le bilan de chaque séance montre la liste du jour", () => {
-  assert.match(source("renderBilanSeance"), /const retenir = cadreARetenir\(PARCOURS\.aRetenir\(parcours\)\);/);
+  // Lot E3b : la liste telle qu'elle s'affiche (sans les erreurs d'une évaluation encore ouverte).
+  assert.match(source("renderBilanSeance"), /const retenir = cadreARetenir\(aRetenirAffiche\(\)\);/);
   assert.doesNotMatch(source("renderBilanSeance"), /seance\.erreurs/);
 });
 
@@ -426,7 +429,7 @@ test("1. Mon parcours s’ouvre en haut", () => {
 // ------------------------------------------------- le moteur a changé
 
 test("le moteur a changé : numéro de cache, copie du serveur, « fois » dans bilanSeances", async () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261014-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261016-1/);
   const moteur = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie));

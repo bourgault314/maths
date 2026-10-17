@@ -64,6 +64,8 @@ function joueur(state) {
     const DELAI_LECTURE_CORRECTION_MS = 0;
     const CORE = {solvedPrompt: question => question.prompt.replace("?", String(question.answer))};
     const finish = () => { appels.fin += 1; state.running = false; };
+    // Lot E2 : la série de l'évaluation en classe passe ailleurs (nextEvaluation).
+    const enEvaluation = () => false;
     const showAnswerError = () => { appels.retenu.push("erreur de saisie"); };
     const alimenterMesCalculs = (question, correcte) => { appels.grille.push([question.factKey, correcte]); };
     const renderInlineAnswer = () => {};
@@ -175,7 +177,7 @@ test("la page : la course arrêtée — « Course arrêtée », « 3 erreurs sur
   assert.match(verdict, /if \(state\.courseArretee\) \{\s*verdict\.classe = "is-rate";\s*verdict\.icone = "✗";\s*verdict\.titre = "Course arrêtée";\s*verdict\.score = `\$\{ERREURS_AVANT_ARRET\} erreurs sur \$\{state\.courseArretee\}`;\s*return verdict;\s*\}/);
   assert.ok(verdict.indexOf("state.courseArretee") < verdict.indexOf("if (!jugement.compte)"), "avant le verdict « le temps ne compte pas »");
   assert.doesNotMatch(html, /tape-la/);
-  assert.equal(html.split("state.courseArretee = null;").length - 1, 2, "remis à zéro à chaque série (start et Mes calculs du jour)");
+  assert.equal(html.split("state.courseArretee = null;").length - 1, 3, "remis à zéro à chaque série (start, Mes calculs du jour, et l'évaluation en classe du lot E2)");
 });
 
 test("la page : la ligne de lancement de la course (planches 1 et 8)", () => {

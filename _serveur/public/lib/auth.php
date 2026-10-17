@@ -10,6 +10,8 @@ require_once __DIR__ . '/billets.php';
 require_once __DIR__ . '/versions.php';
 // Pour oublier_direct_de_la_classe() : une séance en direct part avec sa classe.
 require_once __DIR__ . '/direct.php';
+// Pour oublier_modeles_du_prof() : les modèles d'évaluation partent avec le compte.
+require_once __DIR__ . '/evaluation.php';
 
 // Lot 7 : quatre heures, pas douze. Douze couvraient une journée entière de
 // collège ; quatre couvrent une demi-journée, et la page se déconnecte d'elle-même
@@ -223,6 +225,7 @@ function supprimer_prof(PDO $pdo, int $profId): void
         }
         $pdo->prepare('DELETE FROM partages WHERE prof_id = ?')->execute([$profId]);
         $pdo->prepare('DELETE FROM sessions_prof WHERE prof_id = ?')->execute([$profId]);
+        oublier_modeles_du_prof($pdo, $profId);
         $pdo->prepare('DELETE FROM profs WHERE id = ?')->execute([$profId]);
         $pdo->commit();
     } catch (Throwable $e) {

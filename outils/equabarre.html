@@ -3781,7 +3781,7 @@
 
     <div class="toolBar" id="toolBar" aria-label="Choix de l’action">
       <div class="toolBarRow toolBarRowMain">
-        <button class="toolBtn active" id="toolDecompose" type="button">Décomposer</button>
+        <button class="toolBtn" id="toolDecompose" type="button">Décomposer</button>
         <button class="toolBtn" id="toolAdd" type="button">Regrouper</button>
         <button class="toolBtn" id="toolShare" type="button"><span class="desktopLabel">Partager équitablement</span><span class="mobileLabel">Partager</span></button>
         <button class="toolBtn" id="toolMove" type="button">Déplacer</button>
@@ -3976,7 +3976,9 @@
   let deleteSelection = [];
   let addSelection = [];
   let moveSelection = null;
-  let actionMode = "decompose"; // decompose | add | share | delete | move
+  /* Aucun bouton allumé au départ (15/10/2026, décision de Gwenaël, même règle qu'ÉquaSplat) :
+     c'est l'élève qui choisit son premier geste. */
+  let actionMode = null; // null (rien de choisi) | decompose | add | share | delete | move
   let equationViewMode = "detailed"; // classic | detailed
 
   function setActionMode(mode){
@@ -4650,6 +4652,13 @@
 
       el.addEventListener("click", () => {
         if(piece.removed) return;
+
+        /* Aucun bouton choisi (rien n'est allumé au départ, 15/10/2026) : la phrase du milieu le dit
+           (la ligne d'état, elle, est cachée quand le tableau arrive par un lien). */
+        if(!actionMode){
+          setInstruction("Choisis d’abord un bouton.");
+          return;
+        }
 
         if(actionMode === "decompose"){
           if(piece.type === "number"){
@@ -5661,9 +5670,8 @@
     deleteSelection = [];
     addSelection = [];
     moveSelection = null;
-    actionMode = "decompose";
+    actionMode = null;   // rien d'allumé (15/10/2026)
     [toolDecompose, toolAdd, toolShare, toolMove, toolDelete].forEach(btn => btn && btn.classList.remove("active"));
-    if(toolDecompose) toolDecompose.classList.add("active");
     render();
     setInstruction("");
     setStatus("Tableau recommencé", true);
@@ -6184,7 +6192,7 @@
     deleteSelection = [];
     addSelection = [];
     moveSelection = null;
-    actionMode = "decompose";
+    actionMode = null;   // rien d'allumé (15/10/2026)
     setBuilderLayout("start");
     if(stageEl) stageEl.classList.add("emptyState");
     if(equationHistory) equationHistory.innerHTML = "";
@@ -6464,8 +6472,8 @@
     deleteSelection = [];
     addSelection = [];
     moveSelection = null;
-    actionMode = "decompose";
-    if(toolDecompose) toolDecompose.classList.add("active");
+    actionMode = null;   // rien d'allumé au départ (15/10/2026, décision de Gwenaël)
+    if(toolDecompose) toolDecompose.classList.remove("active");
     if(toolAdd) toolAdd.classList.remove("active");
     if(toolShare) toolShare.classList.remove("active");
     if(toolMove) toolMove.classList.remove("active");

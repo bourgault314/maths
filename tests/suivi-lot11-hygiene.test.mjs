@@ -55,7 +55,10 @@ const SANS_CLASSE = ["connexion", "deconnexion", "moi", "profs.motdepasse",
   "profs.annuaire", "classes.liste", "classes.creer",
   // Lot « Les records » : la ligue du professeur connecté — ses classes à
   // lui, aucune classe en particulier (lib/records.php, cloisonnement).
-  "records.ligue"];
+  "records.ligue",
+  // Lot E1 « les évaluations en classe » (15/10/2026) : les modèles sont au
+  // compte du professeur connecté, aucune classe en particulier.
+  "evaluation.modeles", "evaluation.enregistrer_modele", "evaluation.supprimer_modele"];
 
 test("la matrice décrit exactement les droits décidés le 05/09/2026", () => {
   assert.deepEqual(matriceDuCode(), {
@@ -86,6 +89,14 @@ test("la matrice décrit exactement les droits décidés le 05/09/2026", () => {
     "direct.bonne": "ecriture",
     "direct.fichier": "ecriture",
     "direct.terminer": "ecriture",
+    // Lot E1 (15/10/2026) : mêmes droits que la question éclair.
+    "evaluation.etat": "ecriture",
+    "evaluation.ouvrir": "ecriture",
+    "evaluation.fermer": "ecriture",
+    "evaluation.fichier": "ecriture",
+    "evaluation.terminer": "ecriture",
+    // Lot E2 (15/10/2026) : « Faire repasser » un élève de l'évaluation ouverte.
+    "evaluation.repasser": "ecriture",
   });
 });
 

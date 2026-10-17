@@ -22,6 +22,7 @@ require_once __DIR__ . '/../lib/journal.php';
 require_once __DIR__ . '/../lib/applis.php';
 require_once __DIR__ . '/../lib/records.php';
 require_once __DIR__ . '/../lib/direct.php';
+require_once __DIR__ . '/../lib/evaluation.php';
 
 const MAX_ELEVES_PAR_LOT = 60;
 // L'ordre de cette liste est celui des activités dans la liste d'une classe
@@ -89,6 +90,21 @@ const DROIT_PAR_ACTION = [
     'direct.bonne' => 'ecriture',
     'direct.fichier' => 'ecriture',
     'direct.terminer' => 'ecriture',
+    // Lot E1 « les évaluations en classe » (15/10/2026) : mêmes droits que la
+    // question éclair — propriétaire et collègues en écriture ouvrent, ferment
+    // et reçoivent le fichier (des prénoms à côté de réponses). Les MODÈLES,
+    // eux, n'ont pas de classe : ils appartiennent au compte (evaluation.modeles,
+    // evaluation.enregistrer_modele, evaluation.supprimer_modele).
+    'evaluation.etat' => 'ecriture',
+    'evaluation.ouvrir' => 'ecriture',
+    'evaluation.fermer' => 'ecriture',
+    'evaluation.fichier' => 'ecriture',
+    'evaluation.terminer' => 'ecriture',
+    // Lot E2 (15/10/2026) : « Faire repasser » un élève de l'évaluation
+    // ouverte — ça efface SON passage, pour qu'il recommence : écriture,
+    // comme le reste de l'évaluation (c'est un dépannage en classe, pas une
+    // suppression de données de la classe).
+    'evaluation.repasser' => 'ecriture',
 ];
 
 // Les actions réservées au compte administrateur (gestion des comptes prof).
@@ -980,7 +996,8 @@ try {
         case 'direct.etat':
             $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
             purger_directs($pdo);
-            $direct = direct_de_la_classe($pdo, (int)$classe['id']);
+            // Lot E1 : une évaluation ouverte n'est pas une séance pour le tableau.
+            $direct = direct_eclair_de_la_classe($pdo, (int)$classe['id']);
             repondre([
                 'ok' => true,
                 'classe' => ['id' => (int)$classe['id'], 'libelle' => $classe['libelle']],
@@ -990,6 +1007,11 @@ try {
 
         case 'direct.ouvrir':
             $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
+            // Lot E1 : une seule séance par classe — pas de question éclair
+            // pendant une évaluation (ni après, tant qu'elle n'est pas terminée).
+            if (evaluation_de_la_classe($pdo, (int)$classe['id']) !== null) {
+                erreur("Une évaluation est ouverte pour cette classe : ferme-la et termine-la d'abord, dans « Ma classe ».", 409);
+            }
             $dejaOuverte = direct_de_la_classe($pdo, (int)$classe['id']) !== null;
             $direct = ouvrir_direct($pdo, (int)$classe['id'], $profId);
             if (!$dejaOuverte) journaliser($pdo, $profId, 'direct.ouvrir', 'classe', (int)$classe['id']);
@@ -1002,7 +1024,7 @@ try {
 
         case 'direct.question':
             $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
-            $direct = direct_de_la_classe($pdo, (int)$classe['id']);
+            $direct = direct_eclair_de_la_classe($pdo, (int)$classe['id']);
             if ($direct === null) erreur("La séance est terminée : ouvre-la de nouveau.", 409);
             $type = is_string($corps['type'] ?? null) ? $corps['type'] : 'choix';
             if (!in_array($type, TYPES_DIRECT, true)) erreur("Type de question inconnu.", 400);
@@ -1016,7 +1038,7 @@ try {
 
         case 'direct.devoiler':
             $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
-            $direct = direct_de_la_classe($pdo, (int)$classe['id']);
+            $direct = direct_eclair_de_la_classe($pdo, (int)$classe['id']);
             if ($direct === null) erreur("La séance est terminée : ouvre-la de nouveau.", 409);
             // Lot 2 : la bonne réponse d'un questionnaire arrive AVEC le geste
             // qui dévoile, vérifiée par le type de la question — jamais avant.
@@ -1035,7 +1057,7 @@ try {
 
         case 'direct.bonne':
             $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
-            $direct = direct_de_la_classe($pdo, (int)$classe['id']);
+            $direct = direct_eclair_de_la_classe($pdo, (int)$classe['id']);
             if ($direct === null) erreur("La séance est terminée : ouvre-la de nouveau.", 409);
             $question = question_du_direct($pdo, $direct);
             if ($question === null || $direct['etat'] !== 'devoile') {
@@ -1055,7 +1077,7 @@ try {
             // professeur fabrique le fichier, dans son navigateur. Le serveur
             // n'en garde aucune copie ; l'action est journalisée.
             $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
-            $direct = direct_de_la_classe($pdo, (int)$classe['id']);
+            $direct = direct_eclair_de_la_classe($pdo, (int)$classe['id']);
             if ($direct === null) erreur("La séance est terminée : il n'y a plus rien à télécharger.", 409);
             journaliser($pdo, $profId, 'direct.fichier', 'classe', (int)$classe['id']);
             repondre(['ok' => true,
@@ -1065,8 +1087,10 @@ try {
         case 'direct.terminer':
             // Tout est effacé, tout de suite : la séance, ses questions, ses
             // réponses. Terminer une séance déjà terminée n'est pas une erreur.
+            // Lot E1 : une évaluation ne se termine pas d'ici (evaluation.terminer).
             $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
-            $existait = direct_de_la_classe($pdo, (int)$classe['id']) !== null;
+            $existait = direct_eclair_de_la_classe($pdo, (int)$classe['id']) !== null;
+            if (!$existait) repondre(['ok' => true]);
             avec_reprise($pdo, function () use ($pdo, $classe): void {
                 transaction_ouvrir($pdo);
                 try {
@@ -1078,6 +1102,146 @@ try {
                 }
             });
             if ($existait) journaliser($pdo, $profId, 'direct.terminer', 'classe', (int)$classe['id']);
+            repondre(['ok' => true]);
+
+        // ---------------------------------------------------------- évaluations en classe
+        //
+        // Lot E1 (15/10/2026) — lib/evaluation.php. Les modèles appartiennent
+        // au compte ; l'évaluation ouverte est une séance de la classe (mêmes
+        // droits que la question éclair). « evaluation.etat » est interrogée
+        // en boucle par Ma classe : elle ne journalise rien.
+
+        case 'evaluation.modeles':
+            if (!table_existe($pdo, 'modeles_evaluation')) {
+                erreur("Le serveur doit être mis à niveau : ouvre migrer.php avec ton mot de passe d'installation.", 503);
+            }
+            repondre(['ok' => true, 'modeles' => modeles_du_prof($pdo, $profId)]);
+
+        case 'evaluation.enregistrer_modele':
+            if (!table_existe($pdo, 'modeles_evaluation')) {
+                erreur("Le serveur doit être mis à niveau : ouvre migrer.php avec ton mot de passe d'installation.", 503);
+            }
+            $reglage = reglage_evaluation($corps['reglage'] ?? null);
+            if ($reglage === null) erreur("Réglage du modèle invalide.", 400);
+            $nom = nom_modele_evaluation($corps['nom'] ?? '');
+            if ($nom === '') erreur("Donne un nom au modèle.", 400);
+            $id = ($corps['id'] ?? null) === null ? null : (is_int($corps['id']) ? $corps['id'] : 0);
+            if ($id === 0) erreur("Modèle inconnu.", 404);
+            $enregistre = enregistrer_modele_evaluation($pdo, $profId, $id, $nom, $reglage);
+            if ($enregistre === null) {
+                if ($id !== null) erreur("Modèle inconnu.", 404);
+                erreur("Tu as déjà " . MAX_MODELES_PAR_PROF . " modèles : supprimes-en un.", 409);
+            }
+            repondre(['ok' => true, 'id' => $enregistre, 'modeles' => modeles_du_prof($pdo, $profId)]);
+
+        case 'evaluation.supprimer_modele':
+            if (!table_existe($pdo, 'modeles_evaluation')) {
+                erreur("Le serveur doit être mis à niveau : ouvre migrer.php avec ton mot de passe d'installation.", 503);
+            }
+            $id = is_int($corps['id'] ?? null) ? $corps['id'] : 0;
+            if (!supprimer_modele_evaluation($pdo, $profId, $id)) erreur("Modèle inconnu.", 404);
+            repondre(['ok' => true, 'modeles' => modeles_du_prof($pdo, $profId)]);
+
+        case 'evaluation.etat':
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
+            purger_directs($pdo);
+            $evaluation = evaluation_de_la_classe($pdo, (int)$classe['id']);
+            repondre([
+                'ok' => true,
+                'classe' => ['id' => (int)$classe['id'], 'libelle' => $classe['libelle']],
+                'evaluation' => $evaluation === null ? null : etat_evaluation_pour_la_classe($pdo, $evaluation),
+                // Une question éclair en cours, pour que la carte le dise.
+                'eclair' => direct_eclair_de_la_classe($pdo, (int)$classe['id']) !== null,
+                'rythme' => RYTHME_EVALUATION_CLASSE,
+            ]);
+
+        case 'evaluation.ouvrir':
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
+            if (!table_existe($pdo, 'modeles_evaluation') || !colonne_existe($pdo, 'directs', 'reglage')) {
+                erreur("Le serveur doit être mis à niveau : ouvre migrer.php avec ton mot de passe d'installation.", 503);
+            }
+            // Le modèle est celui du professeur CONNECTÉ (un collègue ouvre
+            // avec les siens), relu et revérifié : un modèle rangé avant un
+            // changement de règles ne passe pas.
+            $modele = modele_du_prof($pdo, $profId, is_int($corps['modele_id'] ?? null) ? $corps['modele_id'] : 0);
+            if ($modele === null) erreur("Modèle inconnu.", 404);
+            $modele['reglage'] = reglage_evaluation($modele['reglage']);
+            if ($modele['reglage'] === null) erreur("Ce modèle n'est plus valable : ouvre-le et enregistre-le de nouveau.", 409);
+            $duree = is_int($corps['duree'] ?? null) ? $corps['duree'] : 3600;
+            if (!in_array($duree, DUREES_OUVERTURE_EVALUATION, true)) erreur("Durée d'ouverture inconnue.", 400);
+            $evaluation = ouvrir_evaluation($pdo, (int)$classe['id'], $profId, $modele, $duree);
+            if ($evaluation === 'eclair') {
+                erreur("Une question éclair est en cours pour cette classe : termine la séance en direct d'abord.", 409);
+            }
+            // Une ligne au journal pour l'appel qui a ÉCRIT la séance, et lui seul.
+            if ($evaluation['creee']) journaliser($pdo, $profId, 'evaluation.ouvrir', 'classe', (int)$classe['id']);
+            repondre([
+                'ok' => true,
+                'classe' => ['id' => (int)$classe['id'], 'libelle' => $classe['libelle']],
+                'evaluation' => etat_evaluation_pour_la_classe($pdo, $evaluation),
+                'eclair' => false,
+                'rythme' => RYTHME_EVALUATION_CLASSE,
+            ]);
+
+        case 'evaluation.fermer':
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
+            $evaluation = evaluation_de_la_classe($pdo, (int)$classe['id']);
+            if ($evaluation === null) erreur("Il n'y a pas d'évaluation ouverte pour cette classe.", 409);
+            $etaitOuverte = !evaluation_fermee($evaluation);
+            fermer_evaluation($pdo, $evaluation);
+            if ($etaitOuverte) journaliser($pdo, $profId, 'evaluation.fermer', 'classe', (int)$classe['id']);
+            $evaluation = evaluation_de_la_classe($pdo, (int)$classe['id']) ?? $evaluation;
+            repondre(['ok' => true, 'evaluation' => etat_evaluation_pour_la_classe($pdo, $evaluation), 'eclair' => false,
+                'rythme' => RYTHME_EVALUATION_CLASSE]);
+
+        case 'evaluation.fichier':
+            // Les graines et les réponses élève par élève : c'est avec elles
+            // que Ma classe corrige et fabrique le fichier, dans le navigateur
+            // du professeur. Le serveur n'en garde aucune copie ; journalisé.
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
+            $evaluation = evaluation_de_la_classe($pdo, (int)$classe['id']);
+            if ($evaluation === null) erreur("Il n'y a plus d'évaluation pour cette classe : rien à télécharger.", 409);
+            journaliser($pdo, $profId, 'evaluation.fichier', 'classe', (int)$classe['id']);
+            repondre(['ok' => true,
+                'classe' => ['id' => (int)$classe['id'], 'libelle' => $classe['libelle']],
+                'jour' => jour_local(),
+                'etat' => evaluation_fermee($evaluation) ? 'fermee' : 'ouverte'] + contenu_evaluation($pdo, $evaluation));
+
+        case 'evaluation.repasser':
+            // Lot E2 : l'élève repart de zéro (présence, réponses, « fini »
+            // effacés ; nouvelle graine à son prochain « Je commence »).
+            // Seulement un élève de CETTE classe, seulement tant que
+            // l'évaluation est ouverte ; journalisé sur l'élève, sans prénom.
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
+            $evaluation = evaluation_de_la_classe($pdo, (int)$classe['id']);
+            if ($evaluation === null) erreur("Il n'y a pas d'évaluation ouverte pour cette classe.", 409);
+            if (evaluation_fermee($evaluation)) erreur("L'évaluation est fermée : on ne fait plus repasser personne.", 409);
+            $eleveId = eleve_de_la_classe($pdo, (int)$classe['id'], is_int($corps['eleve_id'] ?? null) ? $corps['eleve_id'] : 0);
+            if ($eleveId === null) erreur("Élève inconnu.", 404);
+            $efface = faire_repasser_evaluation($pdo, $evaluation, $eleveId);
+            if ($efface) journaliser($pdo, $profId, 'evaluation.repasser', 'eleve', $eleveId);
+            $evaluation = evaluation_de_la_classe($pdo, (int)$classe['id']) ?? $evaluation;
+            repondre(['ok' => true, 'efface' => $efface, 'evaluation' => etat_evaluation_pour_la_classe($pdo, $evaluation), 'eclair' => false,
+                'rythme' => RYTHME_EVALUATION_CLASSE]);
+
+        case 'evaluation.terminer':
+            // Tout est effacé, tout de suite : la séance, les présences, les
+            // réponses. Terminer deux fois n'est pas une erreur.
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
+            $evaluation = evaluation_de_la_classe($pdo, (int)$classe['id']);
+            if ($evaluation !== null) {
+                avec_reprise($pdo, function () use ($pdo, $evaluation): void {
+                    transaction_ouvrir($pdo);
+                    try {
+                        effacer_direct($pdo, (int)$evaluation['id']);
+                        transaction_valider($pdo);
+                    } catch (Throwable $e) {
+                        transaction_annuler($pdo);
+                        throw $e;
+                    }
+                });
+                journaliser($pdo, $profId, 'evaluation.terminer', 'classe', (int)$classe['id']);
+            }
             repondre(['ok' => true]);
 
         default:

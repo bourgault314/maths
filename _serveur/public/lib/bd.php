@@ -212,8 +212,26 @@ function schema(string $pilote): array
   numero INTEGER NOT NULL DEFAULT 0,
   revision INTEGER NOT NULL DEFAULT 0,
   ouvert_le INTEGER NOT NULL,
-  expire_le INTEGER NOT NULL"
+  expire_le INTEGER NOT NULL,
+  reglage TEXT NULL"
         . ($mysql ? ",\n  UNIQUE KEY directs_classe (classe_id)" : "")
+        . "\n)$fin",
+
+        // Lot E1 « les évaluations en classe » (15/10/2026) — lib/evaluation.php.
+        // Les MODÈLES d'évaluation d'un professeur : dix réglages (tables,
+        // types, nombre, chrono, calculs exclus ou imposés, tirage) dans un
+        // petit JSON, un nom court. Durables, sauvegardés, attachés au compte.
+        // Aucune donnée d'élève, aucune question, aucune note : une évaluation
+        // OUVERTE vit dans « directs » (mode « evaluation », réglage figé dans
+        // directs.reglage) et part avec elle.
+        "CREATE TABLE IF NOT EXISTS modeles_evaluation (
+  id $id,
+  prof_id INTEGER NOT NULL,
+  nom VARCHAR(40) NOT NULL DEFAULT '',
+  reglage VARCHAR(600) NOT NULL DEFAULT '{}',
+  cree_le INTEGER NOT NULL,
+  modifie_le INTEGER NOT NULL"
+        . ($mysql ? ",\n  KEY modeles_evaluation_prof (prof_id)" : "")
         . "\n)$fin",
 
         "CREATE TABLE IF NOT EXISTS directs_questions (
@@ -254,6 +272,7 @@ function schema(string $pilote): array
         'CREATE UNIQUE INDEX IF NOT EXISTS directs_questions_numero ON directs_questions (direct_id, numero)',
         'CREATE UNIQUE INDEX IF NOT EXISTS directs_reponses_eleve ON directs_reponses (direct_id, numero, eleve_id)',
         'CREATE INDEX IF NOT EXISTS directs_reponses_par_eleve ON directs_reponses (eleve_id)',
+        'CREATE INDEX IF NOT EXISTS modeles_evaluation_prof ON modeles_evaluation (prof_id)',
     ]);
 }
 
@@ -335,6 +354,13 @@ function migrer_schema(?PDO $pdo = null): array
         $pdo->exec('ALTER TABLE classes ADD COLUMN reglages TEXT NULL');
         $faits[] = "Colonne « réglages » ajoutée aux classes (les mondes de SPLAT! ouverts à chaque classe).";
     }
+    // Lot E1 « les évaluations en classe » (15/10/2026) : le réglage figé
+    // d'une évaluation ouverte (le modèle, la graine, la fin) sur sa ligne de
+    // séance. Vide pour une question éclair.
+    if (table_existe($pdo, 'directs') && !colonne_existe($pdo, 'directs', 'reglage')) {
+        $pdo->exec('ALTER TABLE directs ADD COLUMN reglage TEXT NULL');
+        $faits[] = "Colonne « réglage » ajoutée aux séances en direct (le modèle d'une évaluation ouverte).";
+    }
 
     // Puis les tables et index absents (dont « partages »), sans toucher au reste.
     // Lot 3 (03/09/2026) : la table des billets d'entrée arrive par ici ; on
@@ -349,6 +375,8 @@ function migrer_schema(?PDO $pdo = null): array
     $recordsAbsente = !table_existe($pdo, 'records');
     // Séance en direct (07/10/2026) : ses trois tables arrivent par ici aussi.
     $directsAbsente = !table_existe($pdo, 'directs');
+    // Lot E1 (15/10/2026) : les modèles d'évaluation.
+    $modelesAbsente = !table_existe($pdo, 'modeles_evaluation');
     installer_tables($pdo);
     if ($billetsAbsente) {
         $faits[] = "Table « billets » créée (liens d'entrée à usage unique, lot 3).";
@@ -364,6 +392,9 @@ function migrer_schema(?PDO $pdo = null): array
     }
     if ($directsAbsente) {
         $faits[] = "Tables « directs » créées (séance en direct : rien n'y reste après la séance).";
+    }
+    if ($modelesAbsente) {
+        $faits[] = "Table « modeles_evaluation » créée (les modèles d'évaluation des tables de chaque professeur).";
     }
 
     // Le premier compte créé devient administrateur et récupère les classes
