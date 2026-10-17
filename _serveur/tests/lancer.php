@@ -4080,7 +4080,38 @@ verifier("splat-suivi-4 — « Ma classe » charge le moteur SPLAT! d'ici, à la
     vrai(!str_contains($r['texte'], '<script src="splat-parcours.js'), 'pas chargé d’office : seulement à l’ouverture de l’onglet SPLAT!');
     $moteur = page('/prof/splat-parcours.js');
     egal(substr(md5($moteur['texte']), 0, 10), $m[1], 'la version dans l’adresse est l’empreinte du fichier servi');
-    vrai(str_contains($r['texte'], 'id="bloc-activites" hidden'), '« Activités de la classe » : caché tant qu’aucune classe n’est ouverte');
+    // Lot « Ma classe : réglages » (17/10/2026) : les activités, le partage, le
+    // nom et la suppression sont dans la vue « Réglages », cachée tant
+    // qu'aucune classe n'est ouverte, avec son onglet.
+    vrai(str_contains($r['texte'], '<div class="reglages" id="vue-reglages" hidden>'), 'la vue « Réglages » : cachée tant qu’aucune classe n’est ouverte');
+    vrai(str_contains($r['texte'], 'id="onglet-reglages" aria-pressed="false" hidden>'), 'son onglet aussi');
+    $vue = substr($r['texte'], strpos($r['texte'], 'id="vue-reglages"'));
+    $vue = substr($vue, 0, strpos($vue, "<!-- Ce qui sort de l'imprimante"));
+    foreach (['bloc-activites', 'bloc-partage', 'form-nom-classe', 'supprimer-classe'] as $id) {
+        vrai(str_contains($vue, 'id="' . $id . '"'), "« $id » est dans la vue Réglages");
+    }
+});
+
+verifier("ma-classe-reglages — renommer la classe : seul le nom change, nettoyé comme à la création", function () use (&$jetonS1) {
+    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'reglages-avant', 'applis' => ['defi-tables', 'splat']], ['jeton' => $jetonS1])['json']['id'];
+    egal(200, appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id,
+        'reglages' => ['splat' => ['mondes' => [1, 2]], 'defi-tables' => ['records' => false]]], ['jeton' => $jetonS1])['code'], 'des réglages posés');
+    $avant = classe_en_base($id);
+    // Ce que la page envoie : le nom seul.
+    $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'libelle' => "  4e\u{0007}  B\u{200B} bis  "], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'renommée');
+    $apres = classe_en_base($id);
+    egal('4e B bis', $apres['libelle'], 'espaces resserrés, caractères de commande et invisibles retirés');
+    egal($avant['applis'], $apres['applis'], 'les activités ne bougent pas');
+    egal($avant['reglages'], $apres['reglages'], 'les réglages (mondes, records) ne bougent pas');
+    $tableau = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $id, 'appli' => 'defi-tables'], ['jeton' => $jetonS1]);
+    egal('4e B bis', $tableau['json']['classe']['libelle'], 'le tableau rend le nouveau nom');
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'libelle' => str_repeat('x', 60)], ['jeton' => $jetonS1]);
+    egal(40, mb_strlen(classe_en_base($id)['libelle']), '40 caractères au plus');
+    $vide = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'libelle' => "  \u{200B} "], ['jeton' => $jetonS1]);
+    egal(400, $vide['code'], 'un nom vide est refusé');
+    egal(str_repeat('x', 40), classe_en_base($id)['libelle'], 'et rien n’est écrit');
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
 });
 
 // ------------------------------------------- lot « splat-suivi-5 » (08/10/2026)

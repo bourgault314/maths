@@ -194,16 +194,49 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   .fragiles li span { font-size: .82rem; font-weight: 600; color: #a15c11; }
   .barre-outils { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
   .barre-outils .espace { margin-left: auto; }
-  /* Lot « splat-suivi-4 » (08/10/2026) — SPLAT! dans « Ma classe ».
-     Le choix de l'activité, sous le nom de la classe : seulement quand la
-     classe en a plus d'une. */
-  .choix-appli { display: inline-flex; gap: 4px; margin: -6px 0 14px; padding: 4px;
-                 border-radius: 999px; background: #e6ecf3; }
-  .choix-appli button { min-height: 40px; padding: 0 18px; border-radius: 999px;
-                        color: #3d4a5a; background: none; font-weight: 800; }
-  .choix-appli button:hover { background: rgba(255,255,255,.6); }
-  .choix-appli button[aria-pressed="true"] { color: var(--blue-dark); background: #fff;
-                                             box-shadow: 0 1px 3px rgba(16,41,74,.16); }
+  /* Lot « Ma classe : réglages » (17/10/2026, planches 1 à 5 validées par
+     Gwenaël) : sous le nom de la classe, une rangée d'onglets TOUJOURS
+     visible — les activités de la classe à gauche, « Réglages » au bout à
+     droite (propriétaire seulement). Avant, le choix de l'activité n'existait
+     qu'à partir de deux activités, et rien ne disait « Défi tables » à
+     l'écran. Les boutons des élèves sont juste au-dessus du tableau, « Trier
+     par » à droite. */
+  #vue-appli > .barre-outils { margin-top: 16px; }
+  .onglets { display: flex; align-items: flex-end; gap: 4px; margin: 2px 0 18px;
+             border-bottom: 2px solid var(--line); }
+  #bandeau-droit + .onglets { margin-top: 14px; }
+  .choix-appli { display: flex; gap: 4px; flex-wrap: wrap; }
+  .onglets button { min-height: 44px; margin-bottom: -2px; padding: 0 16px; border-radius: 10px 10px 0 0;
+                    border-bottom: 3px solid transparent; color: var(--muted); background: none; font-weight: 800; }
+  .onglets button:hover { color: var(--blue-dark); background: #eaf0f7; }
+  .onglets button[aria-pressed="true"] { color: var(--blue-dark); border-bottom-color: var(--blue); background: none; }
+  .onglets .onglet-reglages { margin-left: auto; display: inline-flex; align-items: center; gap: 7px; }
+  .onglet-reglages svg { display: block; }
+  .ligne-tri { display: flex; align-items: center; gap: 10px; }
+  .ligne-tri label { margin: 0; font-size: .88rem; color: var(--muted); font-weight: 600; }
+  .ligne-tri select { width: auto; min-width: 170px; }
+  /* La vue « Réglages » : une colonne de cartes, la plus utile en haut —
+     Activités (chaque appli, ses réglages en retrait dessous), Partager, Nom
+     de la classe, Supprimer la classe. */
+  .reglages { max-width: 780px; }
+  #bloc-activites > h2 { margin-top: 4px; }
+  .reglages .sous { margin: -4px 0 10px; }
+  .activite + .activite { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+  .activite-tete { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; margin: 0;
+                   font-size: 1rem; cursor: pointer; }
+  .activite-tete input, .sous-reglage > label > input { width: 20px; height: 20px; margin: 0; accent-color: var(--blue); }
+  .sous-reglage { margin: 4px 0 6px 9px; padding: 4px 0 4px 20px; border-left: 3px solid #e6ecf3; }
+  .sous-reglage > label { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; margin: 0;
+                          font-size: .93rem; cursor: pointer; }
+  .sous-reglage small { display: block; margin: -4px 0 0 28px; color: var(--muted); font-size: .84rem; line-height: 1.4; }
+  .sous-reglage .titre-sous { margin: 4px 0 8px; font-size: .88rem; font-weight: 700; color: var(--ink); }
+  .legende-partage { margin: 0 0 12px; padding: 0; list-style: none; color: var(--muted); font-size: .9rem; line-height: 1.45; }
+  .legende-partage li + li { margin-top: 4px; }
+  .legende-partage b { color: var(--ink); }
+  .ligne-nom { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .ligne-nom input { flex: 1 1 160px; max-width: 260px; }
+  .carte.danger-zone { border-left: 5px solid var(--rouge); }
+  .carte.danger-zone p { margin: 0 0 12px; color: var(--ink); font-size: .92rem; }
   /* Les six mondes : le dessin des pastilles de l'espace élève (index.php). */
   .mondes { display: inline-flex; gap: 5px; vertical-align: middle; }
   .mondes svg { display: block; }
@@ -223,16 +256,9 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
                     margin-top: 10px; color: var(--muted); font-size: .8rem; }
   .legende-detail span { display: inline-flex; align-items: center; gap: 6px; }
   .legende-detail .et { min-width: 18px; width: 18px; height: 18px; padding: 0; border-radius: 5px; }
-  /* « Activités de la classe » : les cases à cocher, propriétaire seulement. */
-  .activites { display: flex; flex-wrap: wrap; gap: 4px 22px; }
-  .activites label { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin: 0;
-                     font-size: .95rem; cursor: pointer; }
-  .activites input { width: 20px; height: 20px; margin: 0; accent-color: var(--blue); }
   /* Lot « splat-suivi-5 » (choix de Gwenaël sur maquettes, 08/10/2026) : sous SPLAT!,
      les mondes ouverts à la classe, monde par monde. Ouvert : bordure et rond de la
      couleur du monde (celle de la carte) ; fermé : pointillés gris. */
-  .mondes-ouverts { margin: 6px 0 2px; padding-top: 12px; border-top: 1px solid var(--line); }
-  .mondes-ouverts p { margin: 0 0 8px; font-size: .88rem; font-weight: 700; color: var(--ink); }
   .puces-mondes { display: flex; flex-wrap: wrap; gap: 8px; }
   .puce-monde { position: relative; display: inline-flex; align-items: center; gap: 7px; min-height: 44px; margin: 0;
                 padding: 0 12px 0 8px; border: 2px solid var(--c); border-radius: 999px; background: #fff;
@@ -304,7 +330,8 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   /* Lot « 🏆 Les records » (09/10/2026, planche R5 validée par Gwenaël) : le
      temps d'une Légende à côté de sa couronne ; la carte sous le tableau (la
      ligue du professeur, toutes ses classes, ce que voient les élèves) ; le
-     plein écran pour projeter ; la case par classe dans « Activités ». */
+     plein écran pour projeter ; la case par classe dans « Réglages », sous
+     Défi tables (lot « Ma classe : réglages »). */
   td .rec-temps { margin-left: 6px; color: #7a5a00; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .rec-carte { max-width: 820px; margin-top: 18px; border-left: 5px solid #e3a81a; }
   .rec-tete { display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
@@ -333,10 +360,6 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   .rec-plein .rec-deux h3 { font-size: 1.4rem; }
   .rec-plein .rec-liste li { min-height: 52px; font-size: 1.45rem; padding: 4px 18px 4px 10px; grid-template-columns: 48px minmax(0, 1fr) auto; }
   .rec-plein .rec-liste li:nth-child(-n+3) .rg { font-size: 1.9rem; }
-  .rec-reglage { margin: 6px 0 2px; padding-top: 12px; border-top: 1px solid var(--line); }
-  .rec-reglage label { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin: 0; font-size: .95rem; cursor: pointer; }
-  .rec-reglage input { width: 20px; height: 20px; margin: 0; accent-color: var(--blue); }
-  .rec-reglage small { display: block; margin: -4px 0 0 28px; color: var(--muted); font-size: .84rem; }
   /* Lot E1 « les évaluations en classe » (15/10/2026, planches 2 et 3
      validées par Gwenaël) : la carte « 📝 Évaluations » de l'onglet Défi
      tables — la liste des modèles, le compteur pendant, la répartition sans
@@ -540,30 +563,25 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     </div>
     <h1 id="titre-classe"></h1>
     <p class="sous" id="resume-classe"></p>
-    <!-- Lot « splat-suivi-4 » : l'activité dont on voit le tableau, quand la
-         classe en a plus d'une. Le dernier choix est retenu dans l'onglet. -->
-    <div class="choix-appli" id="choix-appli" role="group" aria-label="Activité affichée" hidden>
-      <button type="button" data-appli="defi-tables" aria-pressed="true">Défi tables</button>
-      <button type="button" data-appli="splat" aria-pressed="false">SPLAT!</button>
-    </div>
     <p class="message" id="bandeau-droit" hidden></p>
-
-    <div class="barre-outils">
-      <button type="button" class="secondaire" id="ajouter">Ajouter des élèves</button>
-      <button type="button" class="secondaire" id="coller-prenoms">Coller la liste des prénoms</button>
-      <button type="button" class="secondaire" id="imprimer-bandelettes">Imprimer les bandelettes</button>
-      <button type="button" class="secondaire" id="imprimer-recap">Imprimer la feuille prénom&nbsp;↔&nbsp;code</button>
-      <label for="tri" style="margin:0;font-size:.88rem;color:var(--muted);font-weight:600">Trier&nbsp;par</label>
-      <select id="tri" style="width:auto;min-width:170px">
-        <option value="prenom">Prénom</option>
-        <option value="acquises">Tables passées</option>
-        <option value="encours">En cours</option>
-        <option value="semaine">Séances cette semaine</option>
-        <option value="retard">Calculs en retard</option>
-        <option value="date">Dernière activité</option>
-      </select>
-      <button type="button" class="danger espace" id="supprimer-classe">Supprimer la classe</button>
+    <!-- Lot « Ma classe : réglages » (17/10/2026) : les onglets, toujours là.
+         À gauche, les activités de la classe (un bouton caché pour celle
+         qu'elle n'a pas) : on voit toujours de quelle appli est le tableau.
+         Au bout à droite, « Réglages » : propriétaire seulement, il remplace
+         la vue de l'activité par celle des réglages de la classe. Le dernier
+         choix d'activité est retenu dans l'onglet du navigateur ; « Réglages »
+         ne l'est pas (une classe s'ouvre toujours sur son tableau). Le rouage
+         est le dessin « settings » de Feather Icons (licence MIT). -->
+    <div class="onglets" id="onglets">
+      <div class="choix-appli" id="choix-appli" role="group" aria-label="Activité affichée">
+        <button type="button" data-appli="defi-tables" aria-pressed="true">Défi tables</button>
+        <button type="button" data-appli="splat" aria-pressed="false">SPLAT!</button>
+      </div>
+      <button type="button" class="onglet-reglages" id="onglet-reglages" aria-pressed="false" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Réglages</button>
     </div>
+
+    <!-- La vue de l'activité : ce qu'on regarde et ce qu'on fait avec l'appli. -->
+    <div id="vue-appli">
 
     <!-- L'objectif commun de la classe. Aucun nom, aucun chiffre par élève :
          c'est ce qu'on peut montrer au tableau sans désigner personne. -->
@@ -600,6 +618,26 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       <p class="message" id="message-evaluations" hidden></p>
     </div>
 
+    <div class="barre-outils">
+      <button type="button" class="secondaire" id="ajouter">Ajouter des élèves</button>
+      <button type="button" class="secondaire" id="coller-prenoms">Coller la liste des prénoms</button>
+      <button type="button" class="secondaire" id="imprimer-bandelettes" title="À découper et à distribuer : une par élève, son code sans son prénom">Imprimer les bandelettes</button>
+      <button type="button" class="secondaire" id="imprimer-recap" title="À garder : le seul papier qui relie chaque prénom à son code">Imprimer la feuille prénom&nbsp;↔&nbsp;code</button>
+      <div class="ligne-tri espace">
+        <label for="tri">Trier&nbsp;par</label>
+        <select id="tri">
+          <option value="prenom">Prénom</option>
+          <option value="acquises">Tables passées</option>
+          <option value="encours">En cours</option>
+          <option value="semaine">Séances cette semaine</option>
+          <option value="retard">Calculs en retard</option>
+          <option value="date">Dernière activité</option>
+        </select>
+      </div>
+    </div>
+    <!-- Le message des boutons ci-dessus (ajout, collage, impression) : juste
+         sous eux, pas sous un tableau de trente lignes. -->
+    <p class="message" id="message-classe" hidden></p>
     <div class="tableau-enveloppe">
       <table id="tableau">
         <thead>
@@ -626,7 +664,6 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
         <tbody id="corps"></tbody>
       </table>
     </div>
-    <p class="message" id="message-classe" hidden></p>
     <p class="sous note-tableau">Ce tableau est un <strong>indicateur pédagogique, pas une preuve
     d’évaluation</strong> : la progression vient de l’appareil de l’élève, et quiconque connaît son code
     peut la modifier.</p>
@@ -663,59 +700,91 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       </ul>
     </div>
 
-    <!-- Lot « splat-suivi-4 » (conception D7, place choisie par Gwenaël le
-         08/10/2026) : ce que les élèves trouvent dans leur espace. Propriétaire
-         seulement. Décocher retire la tuile et n'efface rien : le serveur garde
-         les progressions (classes.modifier ne change que la liste). -->
-    <div id="bloc-activites" hidden>
-      <h2>Activités de la classe</h2>
-      <div class="carte" style="max-width:560px">
-        <p class="sous" style="margin-bottom:8px">Ce que tes élèves trouvent dans leur espace.</p>
-        <div class="activites" id="liste-activites">
-          <label><input type="checkbox" data-appli="defi-tables"> Défi tables</label>
-          <label><input type="checkbox" data-appli="splat"> SPLAT!</label>
-        </div>
-        <!-- Lot « splat-suivi-5 » : les mondes de SPLAT! ouverts à la classe (tous par
-             défaut). Un monde fermé reste sur la carte de l'élève, grisé, avec un
-             cadenas ; rien n'est effacé. Les six mondes de la carte, dans l'ordre
-             (un test les compare au moteur). -->
-        <div class="mondes-ouverts" id="mondes-ouverts" hidden>
-          <p id="titre-mondes-ouverts">Mondes de SPLAT! ouverts à la classe</p>
-          <div class="puces-mondes" id="puces-mondes" role="group" aria-labelledby="titre-mondes-ouverts">
-            <label class="puce-monde" data-monde="1"><input type="checkbox" data-monde="1"><i aria-hidden="true">1</i>Petit</label>
-            <label class="puce-monde" data-monde="2"><input type="checkbox" data-monde="2"><i aria-hidden="true">2</i>Classique</label>
-            <label class="puce-monde" data-monde="3"><input type="checkbox" data-monde="3"><i aria-hidden="true">3</i>Enquête</label>
-            <label class="puce-monde" data-monde="4"><input type="checkbox" data-monde="4"><i aria-hidden="true">4</i>Système</label>
-            <label class="puce-monde" data-monde="5"><input type="checkbox" data-monde="5"><i aria-hidden="true">5</i>Équations</label>
-            <label class="puce-monde" data-monde="6"><input type="checkbox" data-monde="6"><i aria-hidden="true">6</i>Relatifs</label>
-          </div>
-        </div>
-        <!-- Lot « Les records » : la case par classe (ouverte par défaut) —
-             décochée, les Légendes de la classe gardent l'escalier, ne voient
-             pas les records et n'y apparaissent pas. -->
-        <div class="rec-reglage" id="rec-reglage" hidden>
-          <label><input type="checkbox" id="case-records"> 🏆 Les records</label>
-          <small>Le concours de temps des Légendes des tables. Décoché : cette classe ne le voit pas et n’y apparaît pas.</small>
-        </div>
-        <p class="message" id="message-activites" hidden></p>
-      </div>
-    </div>
+    </div><!-- /vue-appli -->
 
-    <!-- Partage : visible seulement pour le propriétaire de la classe. -->
-    <div id="bloc-partage" hidden>
-      <h2>Partager cette classe</h2>
-      <div class="carte" style="max-width:560px">
-        <p class="sous" style="margin-bottom:12px">Un collègue en <strong>lecture</strong> voit le tableau,
-        sans les codes des élèves et sans rien pouvoir changer. En <strong>écriture</strong>, il voit les
-        codes — avec un code, on ouvre l'appli comme l'élève et on peut modifier sa progression —,
-        il peut ajouter des élèves, saisir les prénoms, donner un nouveau code et restaurer la version
-        précédente d'une progression. Toi seul peux supprimer un élève, renommer la classe et
-        supprimer la classe.</p>
-        <ul class="profs" id="liste-partages"></ul>
-        <div class="actions">
-          <button type="button" class="secondaire" id="ajouter-partage">Partager avec un collègue</button>
+    <!-- Lot « Ma classe : réglages » (17/10/2026) : tout ce qui règle la
+         classe elle-même, au même endroit — propriétaire seulement (le
+         serveur exige le propriétaire pour classes.modifier, partages.* et
+         classes.supprimer). Avant, ces blocs étaient en bas de chaque onglet,
+         sous le tableau. -->
+    <div class="reglages" id="vue-reglages" hidden>
+      <!-- Ce que les élèves trouvent dans leur espace (lot « splat-suivi-4 »,
+           conception D7) : une appli par ligne, ses réglages en retrait
+           dessous. Décocher retire la tuile et n'efface rien : le serveur
+           garde les progressions (classes.modifier ne change que la liste). -->
+      <div id="bloc-activites">
+        <h2>Activités</h2>
+        <p class="sous">Ce que tes élèves trouvent dans leur espace.</p>
+        <div class="carte" id="liste-activites">
+          <div class="activite">
+            <label class="activite-tete"><input type="checkbox" data-appli="defi-tables"> <strong>Défi tables</strong></label>
+            <!-- Lot « Les records » : la case par classe (ouverte par défaut) —
+                 décochée, les Légendes de la classe gardent l'escalier, ne
+                 voient pas les records et n'y apparaissent pas. -->
+            <div class="sous-reglage" id="rec-reglage" hidden>
+              <label><input type="checkbox" id="case-records"> 🏆 Les records</label>
+              <small>Le concours de temps des Légendes des tables. Décoché : cette classe ne le voit pas et n’y apparaît pas.</small>
+            </div>
+          </div>
+          <div class="activite">
+            <label class="activite-tete"><input type="checkbox" data-appli="splat"> <strong>SPLAT!</strong></label>
+            <!-- Lot « splat-suivi-5 » : les mondes ouverts à la classe (tous par
+                 défaut). Un monde fermé reste sur la carte de l'élève, grisé,
+                 avec un cadenas ; rien n'est effacé. Les six mondes de la
+                 carte, dans l'ordre (un test les compare au moteur). -->
+            <div class="sous-reglage" id="mondes-ouverts" hidden>
+              <p class="titre-sous" id="titre-mondes-ouverts">Mondes ouverts</p>
+              <div class="puces-mondes" id="puces-mondes" role="group" aria-labelledby="titre-mondes-ouverts">
+                <label class="puce-monde" data-monde="1"><input type="checkbox" data-monde="1"><i aria-hidden="true">1</i>Petit</label>
+                <label class="puce-monde" data-monde="2"><input type="checkbox" data-monde="2"><i aria-hidden="true">2</i>Classique</label>
+                <label class="puce-monde" data-monde="3"><input type="checkbox" data-monde="3"><i aria-hidden="true">3</i>Enquête</label>
+                <label class="puce-monde" data-monde="4"><input type="checkbox" data-monde="4"><i aria-hidden="true">4</i>Système</label>
+                <label class="puce-monde" data-monde="5"><input type="checkbox" data-monde="5"><i aria-hidden="true">5</i>Équations</label>
+                <label class="puce-monde" data-monde="6"><input type="checkbox" data-monde="6"><i aria-hidden="true">6</i>Relatifs</label>
+              </div>
+            </div>
+          </div>
+          <p class="message" id="message-activites" hidden></p>
         </div>
-        <p class="message" id="message-partage" hidden></p>
+      </div>
+
+      <!-- Partage : trois lignes, avec les mots des boutons (« Voir seulement »,
+           « Voir et modifier »). La question posée avant de passer un collègue
+           en écriture dit le reste (texteConfirmationPartage). -->
+      <div id="bloc-partage">
+        <h2>Partager cette classe</h2>
+        <div class="carte">
+          <ul class="legende-partage">
+            <li><b>Voir seulement</b> : le tableau, sans les codes des élèves.</li>
+            <li><b>Voir et modifier</b> : aussi les codes — avec un code, on entre dans l’appli comme l’élève et on peut changer sa progression. Il gère les élèves (ajout, prénoms, nouveau code, version précédente) et lance séances et évaluations.</li>
+            <li><b>Toi seul</b> : supprimer un élève, renommer ou supprimer la classe.</li>
+          </ul>
+          <ul class="profs" id="liste-partages"></ul>
+          <div class="actions">
+            <button type="button" class="secondaire" id="ajouter-partage">Partager avec un collègue</button>
+          </div>
+          <p class="message" id="message-partage" hidden></p>
+        </div>
+      </div>
+
+      <!-- Renommer la classe : le serveur le permettait (classes.modifier,
+           propriétaire, 40 caractères), la page n'avait pas de bouton. -->
+      <h2>Nom de la classe</h2>
+      <div class="carte">
+        <form class="ligne-nom" id="form-nom-classe">
+          <input id="nom-classe" type="text" maxlength="40" aria-label="Nom de la classe" required>
+          <button type="submit" class="secondaire" id="renommer-classe">Renommer</button>
+        </form>
+        <p class="message" id="message-nom" hidden></p>
+      </div>
+
+      <!-- Supprimer la classe : hors de la barre de tous les jours. La
+           question, avec le bilan de l'année, ne change pas. -->
+      <h2>Supprimer la classe</h2>
+      <div class="carte danger-zone">
+        <p>Les élèves, leurs codes et tout leur travail sont effacés. On ne peut pas revenir en arrière.</p>
+        <button type="button" class="danger" id="supprimer-classe">Supprimer la classe</button>
+        <p class="message" id="message-supprimer" hidden></p>
       </div>
     </div>
 
@@ -955,6 +1024,9 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   let SPLAT = window.MathsGoSplatParcours || null;
   let chargementSplat = null;
   let appliAffichee = "defi-tables";
+  // Lot « Ma classe : réglages » (17/10/2026) : vrai quand la vue des
+  // Réglages remplace celle de l'activité (propriétaire seulement).
+  let vueReglages = false;
   // Les élèves déjà lus de la classe ouverte, par activité (un appel
   // « tableau » par activité, refait seulement quand la classe change).
   let tableaux = {};
@@ -1100,11 +1172,11 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     "evaluations-zone", "em-titre", "em-tables", "em-types", "em-grille", "eo-titre", "eo-texte", "eo-durees"];
   const ZONES_MESSAGE = ["erreur-connexion", "message-classes", "message-classe",
     "message-profs", "message-partage", "message-compte", "bandeau-droit", "bandeau-annee",
-    "message-activites", "message-records", "message-evaluations", "em-message"];
+    "message-activites", "message-records", "message-evaluations", "em-message", "message-nom", "message-supprimer"];
   const CHAMPS_A_VIDER = ["identifiant", "motdepasse", "libelle",
     "mdp-ancien", "mdp-nouveau", "mdp-confirme", "em-nom"];
-  const BLOCS_A_CACHER = ["fiche", "bandelettes", "objectif", "fragiles", "bloc-partage", "bloc-profs",
-    "bandeau-echues", "bloc-activites", "choix-appli", "bloc-records", "bloc-evaluations"];
+  const BLOCS_A_CACHER = ["fiche", "bandelettes", "objectif", "fragiles", "bloc-profs",
+    "bandeau-echues", "bloc-records", "bloc-evaluations", "vue-reglages", "onglet-reglages"];
 
   function viderZones() {
     ZONES_TEXTE.forEach(id => { const noeud = $(id); if (noeud) noeud.textContent = ""; });
@@ -1137,6 +1209,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     echues = [];
     tri = {colonne: "prenom", sens: 1};
     appliAffichee = "defi-tables";
+    vueReglages = false;
     tableaux = {};
     detailsOuverts.clear();
     veille.arreter();
@@ -1667,7 +1740,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     const fragiles = PARCOURS.fragilesDeLaClasse(parcoursDeLaClasse, {max: 6});
     if (!fragiles.length) { bloc.hidden = true; return; }
     $("fragiles-sous").textContent =
-      `Sur ${parcoursDeLaClasse.length} élève${parcoursDeLaClasse.length > 1 ? "s" : ""} qui ont commencé.`;
+      parcoursDeLaClasse.length > 1 ? `Sur ${parcoursDeLaClasse.length} élèves qui ont commencé.` : "Sur 1 élève qui a commencé.";
     fragiles.forEach(fragile => {
       const li = document.createElement("li");
       const nom = document.createElement("b");
@@ -2229,13 +2302,16 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       classe = donnees.classe;
       droitClasse = classe.droit || "proprietaire";
       if (connue) connue.applis = classe.applis;
-      if (!memeClasse) detailsOuverts.clear();
+      // Une autre classe s'ouvre toujours sur son tableau, jamais sur ses Réglages.
+      if (!memeClasse) { detailsOuverts.clear(); vueReglages = false; }
       appliAffichee = voulue;
       eleves = elevesLus(voulue, donnees.eleves);
       tableaux = {[voulue]: eleves};
       $("titre-classe").textContent = classe.libelle;
       messager("message-classe", "", "");
       messager("message-activites", "", "");
+      messager("message-nom", "", "");
+      messager("message-supprimer", "", "");
       montrer("ecran-classe");
       appliquerDroits();
       // La liste des classes était en retard (activités changées ailleurs) :
@@ -2290,15 +2366,17 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     return chargementSplat;
   }
 
-  // Ce qui change avec l'activité affichée : le choix sous le nom de la classe
-  // (seulement s'il y a le choix), l'en-tête du tableau, les tris, et ce qui
-  // est propre à Défi tables (« Les calculs qui coincent », « À imprimer »).
+  // Ce qui change avec l'activité affichée : les onglets (un par activité de
+  // la classe, TOUJOURS là depuis le lot « Ma classe : réglages » ; celui
+  // qu'on regarde est souligné, aucun dans les Réglages), l'en-tête du
+  // tableau, les tris, et ce qui est propre à Défi tables (« Les calculs qui
+  // coincent », « À imprimer »).
   function poserAppli() {
+    poserVue();
     const presentes = applisDeLaClasse();
-    $("choix-appli").hidden = presentes.length < 2;
     document.querySelectorAll("#choix-appli button[data-appli]").forEach(bouton => {
       bouton.hidden = !presentes.includes(bouton.dataset.appli);
-      bouton.setAttribute("aria-pressed", String(bouton.dataset.appli === appliAffichee));
+      bouton.setAttribute("aria-pressed", String(!vueReglages && bouton.dataset.appli === appliAffichee));
     });
     const splat = appliAffichee === "splat";
     $("entete-defi-tables").hidden = splat;
@@ -2308,10 +2386,30 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     poserTris();
     poserActivites();
     // Lot « Les records » : la carte, Défi tables seulement (relue à chaque
-    // ouverture de la classe).
+    // ouverture de la classe). Pas dans les Réglages : elle n'y est pas.
     chargerRecords();
     // Lot E1 : la carte « Évaluations », Défi tables seulement, en écriture.
+    // Dans les Réglages, ni lecture ni veille (evalVisible).
     poserEvaluations();
+  }
+
+  // La vue sous les onglets : l'activité, ou les Réglages (lot « Ma classe :
+  // réglages »). Un collègue n'a pas l'onglet Réglages : pour lui, toujours
+  // l'activité.
+  function poserVue() {
+    if (droitClasse !== "proprietaire") vueReglages = false;
+    $("vue-appli").hidden = vueReglages;
+    $("vue-reglages").hidden = !vueReglages;
+    $("onglet-reglages").setAttribute("aria-pressed", String(vueReglages));
+  }
+
+  function ouvrirReglages() {
+    if (!classe || droitClasse !== "proprietaire") return;
+    vueReglages = true;
+    $("nom-classe").value = classe.libelle;
+    messager("message-nom", "", "");
+    messager("message-supprimer", "", "");
+    poserAppli();
   }
 
   function poserTris() {
@@ -2330,7 +2428,9 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
 
   // Passer d'une activité à l'autre. La liste d'une activité déjà lue pour
   // cette classe est reprise telle quelle ; sinon un appel « tableau ». Deux
-  // clics rapprochés : c'est le dernier qui gagne.
+  // clics rapprochés : c'est le dernier qui gagne. Ne touche pas à la vue :
+  // après un changement d'activités dans les Réglages, on y reste ; c'est le
+  // clic sur un onglet d'activité qui en sort.
   async function afficherAppli(cle) {
     if (!classe || !applisDeLaClasse().includes(cle)) return;
     const numero = ++demandeAppli;
@@ -2404,8 +2504,10 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     return `${quand} ${heureLisible(epoch)}`;
   }
 
+  // Lot « Ma classe : réglages » : ni dans les Réglages, ni dans une classe
+  // sans élève (elle commence par « Ajouter des élèves », juste dessous).
   function evalVisible() {
-    return Boolean(classe) && appliAffichee === "defi-tables" && droitClasse !== "lecture" && Boolean(CORE);
+    return Boolean(classe) && !vueReglages && eleves.length > 0 && appliAffichee === "defi-tables" && droitClasse !== "lecture" && Boolean(CORE);
   }
 
   function arreterVeilleEvaluation() {
@@ -2944,7 +3046,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
 
   async function chargerRecords() {
     ligueRecords = null;
-    if (droitClasse !== "proprietaire" || appliAffichee !== "defi-tables") { dessinerRecords(); return; }
+    if (droitClasse !== "proprietaire" || appliAffichee !== "defi-tables" || vueReglages) { dessinerRecords(); return; }
     try {
       ligueRecords = await api("records.ligue");
     } catch (erreur) {
@@ -3011,8 +3113,10 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     }
   }
 
+  // Les cases des Réglages (propriétaire seulement : la vue n'existe que pour
+  // lui). Chaque appli a sa ligne ; ses réglages, dessous, ne se montrent que
+  // si la classe a l'appli (décochée, ils sont gardés pour la recocher).
   function poserActivites() {
-    $("bloc-activites").hidden = droitClasse !== "proprietaire";
     // Lot « Les records » : la case, seulement quand la classe a Défi tables.
     const presentesRecords = (classe && classe.applis) || [];
     $("rec-reglage").hidden = !presentesRecords.includes("defi-tables");
@@ -3129,16 +3233,21 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     $("coller-prenoms").hidden = !ecriture;
     $("imprimer-bandelettes").hidden = !ecriture;
     $("imprimer-recap").hidden = !ecriture;
-    $("supprimer-classe").hidden = !proprietaire;
-    $("bloc-partage").hidden = !proprietaire;
+    $("onglet-reglages").hidden = !proprietaire;
     messager("message-partage", "", "");
     if (proprietaire) {
       messager("bandeau-droit", "", "");
       chargerPartages();
     } else {
+      // Lot « Ma classe : réglages » (« j'ai pas trop compris », Gwenaël) : à
+      // qui est la classe, avec les mots du partage (« voir et modifier »,
+      // « voir seulement »), ce que le collègue peut faire et ce qui reste au
+      // propriétaire. La page ne montre que les boutons auxquels il a droit.
+      const connue = classes.find(uneClasse => uneClasse.id === (classe && classe.id));
+      const qui = (connue && connue.proprietaire) || "un collègue";
       messager("bandeau-droit", ecriture
-        ? "Classe partagée avec toi : tu peux ajouter des élèves, saisir les prénoms, donner un nouveau code et restaurer une version précédente. Supprimer un élève ou la classe reste au propriétaire."
-        : "Classe partagée avec toi en lecture seule : tu vois la progression, sans les codes des élèves, et tu ne modifies rien.", "info");
+        ? `Classe de ${qui}, partagée avec toi (voir et modifier) : tu ajoutes des élèves, saisis les prénoms, donnes un nouveau code et reviens à une version précédente. Supprimer un élève ou la classe reste à ${qui}.`
+        : `Classe de ${qui}, partagée avec toi (voir seulement) : tu vois la progression, sans les codes des élèves, et tu ne modifies rien.`, "info");
     }
   }
 
@@ -3586,10 +3695,10 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       ({numero: index + 1, code: sansNom[index].code, texte: prenom}));
     if (prenoms.length > sansNom.length) {
       const trop = prenoms.length - sansNom.length;
-      lignes.push({texte: `${trop} prénom(s) en trop (${prenoms.slice(sansNom.length).join(", ")}) : ajoute des élèves ou enlève-les.`, classe: "alerte"});
+      lignes.push({texte: `${trop > 1 ? `${trop} prénoms` : "1 prénom"} en trop (${prenoms.slice(sansNom.length).join(", ")}) : ajoute des élèves ou enlève-les.`, classe: "alerte"});
     } else if (prenoms.length < sansNom.length) {
       const reste = sansNom.length - prenoms.length;
-      lignes.push({texte: `${reste} code(s) restent sans prénom.`, classe: "vide"});
+      lignes.push({texte: `${reste > 1 ? `${reste} codes restent` : "1 code reste"} sans prénom.`, classe: "vide"});
     }
     return lignes;
   }
@@ -3610,7 +3719,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
         return;
       }
       const reponse = await demander(
-        `Colle les prénoms, un par ligne, dans l’ordre de la feuille imprimée (numéros 1, 2, 3…). Ils iront aux ${sansNom.length} élève(s) qui n’ont pas encore de nom. Vérifie l’aperçu avant de confirmer.`,
+        `Colle les prénoms, un par ligne, dans l’ordre de la feuille imprimée (numéros 1, 2, 3…). Ils iront ${sansNom.length > 1 ? `aux ${sansNom.length} élèves qui n’ont` : "à l’élève qui n’a"} pas encore de nom. Vérifie l’aperçu avant de confirmer.`,
         [{nom: "liste", libelle: "Un prénom par ligne (tu peux ajouter l’initiale : « Léa B »)", multiligne: true}],
         {apercu: valeurs => apercuCollage(decouperPrenoms(valeurs.liste), sansNom)});
       if (!reponse) return;
@@ -3621,7 +3730,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       }
       if (prenoms.length > sansNom.length) {
         messager("message-classe",
-          `Tu as collé ${prenoms.length} prénoms pour ${sansNom.length} élève(s) sans nom. Ajoute d’abord des élèves, ou enlève les prénoms en trop.`,
+          `Tu as collé ${prenoms.length} prénoms pour ${sansNom.length} élève${sansNom.length > 1 ? "s" : ""} sans nom. Ajoute d’abord des élèves, ou enlève les prénoms en trop.`,
           "erreur");
         return;
       }
@@ -3633,7 +3742,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       }
       await ouvrirClasse(classe.id);
       messager("message-classe",
-        `${prenoms.length} prénom(s) enregistré(s). Vérifie l’ordre dans le tableau, puis imprime la liste des codes.`,
+        `${prenoms.length > 1 ? `${prenoms.length} prénoms enregistrés` : "1 prénom enregistré"}. Vérifie-les dans le tableau, puis imprime les bandelettes (à distribuer) et la feuille prénom ↔ code (à garder).`,
         "ok");
     } catch (erreur) { surErreur(erreur, "message-classe"); }
     finally { bouton.disabled = false; }
@@ -3812,7 +3921,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       await api("classes.supprimer", {classe_id: classe.id});
       await chargerClasses();
       messager("message-classes", `Classe ${classe.libelle} supprimée : il n’en reste rien.`, "ok");
-    } catch (erreur) { surErreur(erreur, "message-classe"); }
+    } catch (erreur) { surErreur(erreur, "message-supprimer"); }
     finally { bouton.disabled = false; }
   });
 
@@ -3825,8 +3934,31 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   $("imprimer-bandelettes").addEventListener("click", () => imprimer("bandelettes"));
   $("imprimer-recap").addEventListener("click", () => imprimer("recap"));
   $("retour").addEventListener("click", () => { chargerClasses(); });
+  $("onglet-reglages").addEventListener("click", ouvrirReglages);
+  // Renommer la classe (lot « Ma classe : réglages ») : classes.modifier avec
+  // le seul nom — les activités et leurs réglages ne bougent pas. Le serveur
+  // nettoie le nom (espaces, caractères de commande, 40 au plus) ; on affiche
+  // celui qu'il a gardé, relu avec la classe.
+  $("form-nom-classe").addEventListener("submit", async evenement => {
+    evenement.preventDefault();
+    if (!classe) return;
+    const libelle = $("nom-classe").value.trim();
+    if (!libelle) { messager("message-nom", "Donne un nom à la classe.", "erreur"); return; }
+    if (libelle === classe.libelle) { messager("message-nom", "", ""); return; }
+    const bouton = $("renommer-classe");
+    if (bouton.disabled) return;
+    bouton.disabled = true;
+    try {
+      await api("classes.modifier", {classe_id: classe.id, libelle});
+      await ouvrirClasse(classe.id);
+      $("nom-classe").value = classe.libelle;
+      messager("message-nom", `La classe s’appelle maintenant ${classe.libelle}.`, "ok");
+    } catch (erreur) { surErreur(erreur, "message-nom"); }
+    finally { bouton.disabled = false; }
+  });
   document.querySelectorAll("#choix-appli button[data-appli]").forEach(bouton => {
-    bouton.addEventListener("click", () => afficherAppli(bouton.dataset.appli));
+    // Un onglet d'activité sort des Réglages (lot « Ma classe : réglages »).
+    bouton.addEventListener("click", () => { vueReglages = false; afficherAppli(bouton.dataset.appli); });
   });
   document.querySelectorAll("#liste-activites input[data-appli]").forEach(caseActivite => {
     caseActivite.addEventListener("change", () => changerActivite(caseActivite));
