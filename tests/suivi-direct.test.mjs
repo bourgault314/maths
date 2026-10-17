@@ -274,6 +274,9 @@ test("« Ma classe » ramène dans la classe ; pendant une séance, on demande a
   assert.match(scriptTableau, /function versLaClasse\(\) \{ window\.location\.replace\("\.\/#classe=" \+ encodeURIComponent\(classeId\)\); \}/);
   assert.match(scriptTableau, /if \(!direct\) \{ versLaClasse\(\); return; \}\n    \$\("quitter"\)\.showModal\(\);/);
   assert.match(pageTableau, /<dialog id="quitter">/);
+  // Correctif 1 (PR #1010) : Échap sur « Terminer la séance ? » oublie aussi le départ.
+  assert.match(scriptTableau, /\$\("fin"\)\.addEventListener\("cancel", \(\) => \{ partirApresFin = false; \}\);/,
+    "Échap ne laisse pas un départ en attente");
   assert.match(maClasse, /return chargerClasses\(\)\.then\(rouvrirClasseDemandee\);/, "Ma classe lit l'ancre au démarrage");
   assert.match(maClasse, /history\.replaceState\(null, "", window\.location\.pathname \+ window\.location\.search\)/, "puis l'efface");
   assert.match(maClasse, /if \(demandee && classes\.some\(uneClasse => uneClasse\.id === demandee\)\) return ouvrirClasse\(demandee\);/,

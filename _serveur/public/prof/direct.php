@@ -1485,6 +1485,9 @@ Vérifie que le JSON est valide avant de répondre.</textarea>
     $("fin").showModal();
   });
   $("fin-non").addEventListener("click", () => { partirApresFin = false; $("fin").close(); });
+  // Échap ferme la fenêtre sans passer par « Annuler » (relevé par Code sur la
+  // PR #1010) : sans cette ligne, le prochain « Terminer » ramenait dans la classe.
+  $("fin").addEventListener("cancel", () => { partirApresFin = false; });
 
   async function terminer(avecFichier) {
     if (enAction) return;
