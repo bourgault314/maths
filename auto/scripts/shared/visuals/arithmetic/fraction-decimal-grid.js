@@ -195,6 +195,8 @@
     const value=k/den;
     if(Math.abs(value-Math.round(value))<1e-9) return String(Math.round(value));
     if(den===3) return '';
+    // Quarts : toujours deux chiffres après la virgule (0,25 ; 0,50 ; 0,75), on lit des centièmes.
+    if(den===4) return value.toFixed(2).replace('.',',');
     return value.toFixed(2).replace(/0+$/,'').replace(/\.$/,'').replace('.',',');
   }
   function railVisual(data,correction=false){
@@ -227,12 +229,15 @@
       const x=left+k*partW,major=k%den===0,h=major?8:5;
       out+=`<line x1="${x.toFixed(2)}" y1="${yAxis-h}" x2="${x.toFixed(2)}" y2="${yAxis+h}" stroke="#18324f" stroke-width="${major?2:1.4}"/>`;
       let label='',color=ink,weight=700,size=15;
-      if(k===num){ label=correction?answer:'?'; color=correction?'#0b7c67':'#1d4ed8'; weight=900; size=correction?17:20; }
-      else if(k<num||major) label=railLabel(k,den);
+      // donne : sens décimal → fraction, le nombre donné est au bout (on compte les bandes).
+      if(k===num){ label=(correction||data.donne)?answer:'?'; color=data.donne?ink:(correction?'#0b7c67':'#1d4ed8'); weight=900; size=(correction||data.donne)?17:20; }
+      // Graduations écrites : 0, les entiers, et seulement la première (la valeur d'une bande) :
+      // écrire toutes celles qu'on franchit ferait deviner la réponse (0,1 ; 0,2 … 0,6 ; ? → 0,7).
+      else if(major||(k<num&&k<=(data.reperes||1))) label=railLabel(k,den);
       if(label) out+=`<text x="${x.toFixed(2)}" y="${yLabel}" text-anchor="middle" font-family="${font}" font-size="${size}" font-weight="${weight}" fill="${color}">${label}</text>`;
     }
     const names={1:['unité','unités'],2:['demi','demis'],3:['tiers','tiers'],4:['quart','quarts']}[den]||['part','parts'];
-    const aria=num+' '+(num>1?names[1]:names[0])+' posé'+(num>1?'s':'')+' bout à bout sur une droite graduée'+(correction?' : ils arrivent à '+answer+'.':' ; l’arrivée est à trouver.');
+    const aria=num+' '+(num>1?names[1]:names[0])+' posé'+(num>1?'s':'')+' bout à bout sur une droite graduée'+(correction||data.donne?' : ils arrivent à '+answer+'.':' ; l’arrivée est à trouver.');
     return `<div class="module01-visual module01-rail"><svg viewBox="0 0 ${W} ${H}" style="max-width:${Math.round(W*1.5)}px;max-height:30vh" role="img" aria-label="${aria}">${out}</svg></div>`;
   }
   function render(data,correction=false){

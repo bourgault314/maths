@@ -25,7 +25,7 @@ test('au diaporama « Avec aide », le dessin d’aide est sous la question',()=
 
 test('dnb_01 : au diaporama, la droite graduée de la correction porte la réponse',()=>{
   const moteur=fs.readFileSync('auto/scripts/02-question-engine.js','utf8');
-  assert.match(moteur,/const aideCorrectionHtml=visualData&&visualData\.kind==='rail'&&correctionVisualData\?module01AideVisual\(correctionVisualData,true\):'';/);
+  assert.match(moteur,/const aideCorrectionHtml=visualData&&visualData\.kind==='rail'&&!visualData\.donne&&correctionVisualData\?module01AideVisual\(correctionVisualData,true\):'';/);
   assert.match(moteur,/aideHtml,\n    aideCorrectionHtml,/);
 });
 
