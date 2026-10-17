@@ -63,7 +63,11 @@ test("types et modes sont des listes fermées, et une réponse passe toujours pa
 });
 
 test("rien ne reste : durée bornée, purge à chaque passage, jamais dans la sauvegarde", () => {
-  assert.match(lib, /const DUREE_DIRECT = 5400;/, "une heure et demie après le dernier geste du professeur");
+  // 17/10/2026 : la veille remplace « une heure et demie après le dernier geste ».
+  assert.match(lib, /const VEILLE_DIRECT = 1200;/, "vingt minutes sans l'écran du tableau");
+  assert.match(lib, /const PLAFOND_DIRECT = 10800;/, "trois heures après l'ouverture, quoi qu'il arrive");
+  assert.match(lib, /return min\(\$maintenant \+ VEILLE_DIRECT, \$ouvertLe \+ PLAFOND_DIRECT\);/, "la fin : la plus proche des deux");
+  assert.ok(!/time\(\) \+ DUREE_DIRECT|const DUREE_DIRECT = /.test(lib), "plus aucune fin fixe d'une heure et demie");
   assert.match(apiEleve, /purger_directs\(\$pdo\);/, "chaque interrogation d'élève purge les séances périmées");
   assert.ok(apiProf.includes("case 'direct.etat':") && /case 'direct\.etat':[\s\S]{0,300}purger_directs\(\$pdo\);/.test(apiProf),
     "chaque interrogation du tableau aussi");
@@ -220,4 +224,69 @@ test("le tableau partage le verrou d'inactivité de « Ma classe »", () => {
   assert.match(script, /if \(veilleDepassee\(\)\) \{ versMaClasse\(\); return; \}/, "contrôlé avant d'afficher quoi que ce soit");
   assert.match(maClasse, /window\.location\.assign\("direct\.php#classe=" \+ encodeURIComponent\(classe\.id\)\)/,
     "« Ma classe » y mène, la classe dans l'ancre");
+});
+
+// ------------------------------------------------ 17/10/2026 : veille, pastille, aide
+//
+// Sabotages attendus (chacun rend un test rouge) :
+//  s) retirer garder_direct_en_vie() de « direct.etat »
+//  t) laisser le tableau s'arrêter d'interroger quand l'onglet est caché
+//  u) laisser « garder_direct_en_vie » toucher une évaluation (retirer le mode)
+//  v) envoyer la pastille à un collègue en lecture seule
+//  w) proposer l'aide (exemple, texte collé) pendant une séance
+
+const scriptTableau = pageTableau.slice(pageTableau.indexOf(">", pageTableau.indexOf("<script nonce=")) + 1, pageTableau.lastIndexOf("</script>"));
+const maClasse = lire("_serveur/public/prof/index.php");
+
+test("la veille : c'est le TABLEAU qui garde la séance en vie, jamais un élève, jamais une évaluation", () => {
+  const etat = apiProf.slice(apiProf.indexOf("case 'direct.etat':"), apiProf.indexOf("case 'direct.ouvrir':"));
+  assert.match(etat, /if \(\$direct !== null\) garder_direct_en_vie\(\$pdo, \$direct\);/, "l'interrogation du tableau repousse la fin");
+  assert.ok(!apiEleve.includes("garder_direct_en_vie"), "celle d'un élève, jamais");
+  const garder = lib.slice(lib.indexOf("function garder_direct_en_vie("), lib.indexOf("function purger_directs("));
+  assert.match(garder, /if \(\(\$direct\['mode'\] \?\? 'eclair'\) !== 'eclair'\) return;/, "une évaluation garde sa propre fin");
+  assert.match(garder, /AND mode = 'eclair' AND expire_le < \?/, "et l'écriture elle-même ne vise qu'une séance éclair");
+  assert.match(garder, /< PAS_VEILLE_DIRECT\) return;/, "une écriture toutes les trente secondes au plus");
+  assert.ok(!/revision/.test(garder), "ni l'état ni la révision ne bougent : les élèves n'en voient rien");
+});
+
+test("le tableau caché continue d'appeler une fois par minute, sinon la veille couperait une séance en cours", () => {
+  assert.match(scriptTableau, /const RYTHME_CACHE = 60000;/);
+  const planifier = scriptTableau.slice(scriptTableau.indexOf("  function planifier() {"), scriptTableau.indexOf("  // --------------------------------------------------- terminer"));
+  assert.match(planifier, /document\.visibilityState === "hidden" \? RYTHME_CACHE/, "caché : une minute");
+  assert.ok(!/visibilityState === "hidden"\) return;/.test(planifier), "et jamais d'arrêt complet");
+  assert.match(planifier, /if \(document\.visibilityState !== "visible"\) \{ planifier\(\); return; \}/, "en se cachant, il replanifie au lieu de s'arrêter");
+});
+
+test("la pastille : le mode de la séance, rien d'autre, et pas pour un collègue en lecture seule", () => {
+  const liste = apiProf.slice(apiProf.indexOf("case 'classes.liste':"), apiProf.indexOf("case 'classes.creer':"));
+  assert.match(liste, /'direct' => \$droit === 'lecture' \? null : \(\$modesDirects\[\(int\)\$ligne\['id'\]\] \?\? null\),/);
+  const tableau = apiProf.slice(apiProf.indexOf("case 'tableau':"), apiProf.indexOf("case 'records.ligue':"));
+  assert.match(tableau, /'direct' => \$avecCodes && table_existe\(\$pdo, 'directs'\)/, "dans la classe aussi, à qui peut la mener");
+  const modes = lib.slice(lib.indexOf("function modes_des_directs_ouverts("), lib.indexOf("function question_du_direct("));
+  assert.match(modes, /SELECT classe_id, mode FROM directs WHERE expire_le >= \?/, "une séance périmée n'a pas de pastille");
+  assert.match(maClasse, /const LIBELLES_DIRECT = \{eclair: "● En direct", evaluation: "📝 Évaluation"\};/);
+  assert.match(maClasse, /const pastille = document\.createElement\("em"\);/, "un <em> : le <span> de la carte reste celui du nombre d'élèves");
+  assert.match(maClasse, /\$\("seance-direct"\)\.append\(point, "Reprendre la séance en direct"\);/, "dans la classe, « Reprendre »");
+});
+
+test("« Ma classe » ramène dans la classe ; pendant une séance, on demande avant de partir", () => {
+  assert.match(pageTableau, /id="retour">Ma classe<\/button>/);
+  assert.match(scriptTableau, /function versLaClasse\(\) \{ window\.location\.replace\("\.\/#classe=" \+ encodeURIComponent\(classeId\)\); \}/);
+  assert.match(scriptTableau, /if \(!direct\) \{ versLaClasse\(\); return; \}\n    \$\("quitter"\)\.showModal\(\);/);
+  assert.match(pageTableau, /<dialog id="quitter">/);
+  assert.match(maClasse, /return chargerClasses\(\)\.then\(rouvrirClasseDemandee\);/, "Ma classe lit l'ancre au démarrage");
+  assert.match(maClasse, /history\.replaceState\(null, "", window\.location\.pathname \+ window\.location\.search\)/, "puis l'efface");
+  assert.match(maClasse, /if \(demandee && classes\.some\(uneClasse => uneClasse\.id === demandee\)\) return ouvrirClasse\(demandee\);/,
+    "seulement une classe de SA liste");
+});
+
+test("l'aide (exemple, texte pour l'IA, texte collé) : avant la séance seulement, et rien ne part au serveur", () => {
+  assert.match(scriptTableau, /if \(!direct && !qzAttendu\) \{\n        const aide = document\.createElement\("div"\);/, "la ligne d'aide, avant la séance");
+  assert.match(scriptTableau, /function essayerExemple\(\) \{\n    if \(!QZ \|\| direct\) return;/, "l'exemple, jamais pendant");
+  assert.match(scriptTableau, /function ouvrirPreparer\(\) \{\n    if \(direct\) return;/, "la fenêtre, jamais pendant");
+  const coller = scriptTableau.slice(scriptTableau.indexOf('$("ouvrir-colle").addEventListener'), scriptTableau.indexOf("// --------------------------------------------------------------------- aperçu"));
+  assert.match(coller, /if \(direct\) \{ \$\("preparer"\)\.close\(\); return; \}/, "le texte collé, jamais pendant");
+  assert.match(coller, /if \(chargerTexte\(texte\)\) \{/, "il passe par le même chemin qu'un fichier");
+  assert.ok(!/api\(|agir\(|fetch\(/.test(coller), "et rien ne part au serveur");
+  assert.match(pageTableau, /accept="\.json,\.txt,application\/json,text\/plain"/, "un .txt s'ouvre aussi");
 });

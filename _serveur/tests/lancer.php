@@ -5023,18 +5023,89 @@ verifier("direct — interroger ne compte rien ; seules les réponses sont compt
     vider_compteurs();
 });
 
-verifier("direct — un geste du professeur repousse la fin, pas les interrogations ; le plafond de questions tient", function () use (&$direct) {
-    $lireFin = fn() => (int)bd_test()->query('SELECT expire_le FROM directs WHERE classe_id = ' . (int)$direct['classe'])->fetchColumn();
-    bd_test()->exec('UPDATE directs SET expire_le = ' . (time() + 100) . ' WHERE classe_id = ' . (int)$direct['classe']);
+verifier("direct — la veille : le TABLEAU repousse la fin de vingt minutes, pas les élèves ; le plafond de questions tient", function () use (&$direct) {
+    // 17/10/2026 (« c'est généralement un prof qui oublie ») : la séance vit
+    // tant que le tableau appelle — son interrogation et ses gestes —, vingt
+    // minutes au plus sans lui (VEILLE_DIRECT), trois heures au plus en tout
+    // (PLAFOND_DIRECT). Remplace « une heure et demie après le dernier geste ».
+    $classeId = (int)$direct['classe'];
+    $lireFin = fn() => (int)bd_test()->query('SELECT expire_le FROM directs WHERE classe_id = ' . $classeId)->fetchColumn();
+    $poserFin = fn(int $fin) => bd_test()->exec('UPDATE directs SET expire_le = ' . $fin . ' WHERE classe_id = ' . $classeId);
+    $poserFin(time() + 100);
     direct_eleve($direct['eleves'][0]['code']);
+    vrai($lireFin() <= time() + 100, 'l’interrogation d’un élève ne prolonge rien');
     direct_prof('direct.etat', $direct);
-    vrai($lireFin() <= time() + 100, 'interroger ne prolonge rien');
+    vrai($lireFin() >= time() + 1190 && $lireFin() <= time() + 1201, 'l’interrogation du tableau repousse la fin de vingt minutes');
+    // Pas une écriture à chaque interrogation : moins de trente secondes à gagner, rien ne s'écrit.
+    $poserFin(time() + 1180);
+    $avant = $lireFin();
+    direct_prof('direct.etat', $direct);
+    egal($avant, $lireFin(), 'à moins de trente secondes près, le tableau n’écrit rien');
+    $poserFin(time() + 100);
     direct_prof('direct.devoiler', $direct);
-    vrai($lireFin() >= time() + 5390, 'dévoiler repousse la fin d’une heure et demie');
-    $numero = (int)bd_test()->query('SELECT numero FROM directs WHERE classe_id = ' . (int)$direct['classe'])->fetchColumn();
-    bd_test()->exec('UPDATE directs SET numero = 80 WHERE classe_id = ' . (int)$direct['classe']);
+    vrai($lireFin() >= time() + 1190, 'un geste aussi repousse la fin');
+    // Le plafond : trois heures après l'ouverture, quoi que fasse le tableau.
+    $ouvert = (int)bd_test()->query('SELECT ouvert_le FROM directs WHERE classe_id = ' . $classeId)->fetchColumn();
+    bd_test()->exec('UPDATE directs SET ouvert_le = ' . (time() - 10800 + 60) . ' WHERE classe_id = ' . $classeId);
+    $poserFin(time() + 10);
+    direct_prof('direct.etat', $direct);
+    vrai($lireFin() <= time() + 61, 'le tableau ne repousse jamais au-delà de trois heures après l’ouverture');
+    direct_prof('direct.bonne', $direct, ['bonne' => 'A']);
+    vrai($lireFin() <= time() + 61, 'un geste non plus');
+    bd_test()->exec('UPDATE directs SET ouvert_le = ' . $ouvert . ' WHERE classe_id = ' . $classeId);
+    direct_prof('direct.etat', $direct);
+    $numero = (int)bd_test()->query('SELECT numero FROM directs WHERE classe_id = ' . $classeId)->fetchColumn();
+    bd_test()->exec('UPDATE directs SET numero = 80 WHERE classe_id = ' . $classeId);
     egal(409, direct_prof('direct.question', $direct, ['type' => 'choix'])['code'], 'quatre-vingts questions : la suivante est refusée');
-    bd_test()->exec('UPDATE directs SET numero = ' . $numero . ' WHERE classe_id = ' . (int)$direct['classe']);
+    bd_test()->exec('UPDATE directs SET numero = ' . $numero . ' WHERE classe_id = ' . $classeId);
+});
+
+verifier("direct — la veille ne touche jamais une évaluation, et ne réveille pas une séance périmée", function () use (&$direct) {
+    $classeId = (int)$direct['classe'];
+    // Une ligne d'évaluation : l'interrogation du tableau ne la voit pas, ne la prolonge pas.
+    $ligne = bd_test()->query('SELECT mode, expire_le FROM directs WHERE classe_id = ' . $classeId)->fetch();
+    bd_test()->exec("UPDATE directs SET mode = 'evaluation', expire_le = " . (time() + 50) . ' WHERE classe_id = ' . $classeId);
+    $r = direct_prof('direct.etat', $direct);
+    vrai($r['json']['direct'] === null, 'pour le tableau, une évaluation n’est pas une séance');
+    vrai((int)bd_test()->query('SELECT expire_le FROM directs WHERE classe_id = ' . $classeId)->fetchColumn() <= time() + 50, 'et sa fin ne bouge pas');
+    bd_test()->exec("UPDATE directs SET mode = 'eclair', expire_le = " . (int)$ligne['expire_le'] . ' WHERE classe_id = ' . $classeId);
+    egal('eclair', (string)$ligne['mode'], 'c’était bien une séance éclair');
+});
+
+verifier("direct — la pastille : « Mes classes » et la classe disent qu'une séance est ouverte, le mode seulement, jamais en lecture seule", function () use (&$direct) {
+    $jeton = $direct['jeton'];
+    $modeDans = function (array $liste, int $id) {
+        foreach ($liste as $classe) if ((int)$classe['id'] === $id) return array_key_exists('direct', $classe) ? $classe['direct'] : 'absent';
+        return 'classe absente';
+    };
+    $liste = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jeton])['json']['classes'];
+    egal('eclair', $modeDans($liste, (int)$direct['classe']), 'la classe en séance porte « eclair »');
+    egal(null, $modeDans($liste, (int)$direct['autreClasse']), 'l’autre classe, rien');
+    $tableau = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $direct['classe'], 'appli' => 'defi-tables'], ['jeton' => $jeton])['json'];
+    egal('eclair', $tableau['classe']['direct'] ?? 'absent', 'le tableau de la classe le dit aussi (« Reprendre »)');
+    foreach ($liste as $classe) {
+        foreach (array_keys($classe) as $cle) {
+            vrai(in_array($cle, ['id', 'libelle', 'applis', 'reglages', 'cree_le', 'annee', 'eleves', 'droit', 'proprietaire', 'direct'], true), "rien d’autre ne sort dans la liste ($cle)");
+        }
+    }
+    // Un collègue : en lecture seule, rien ; en écriture, la pastille.
+    vider_compteurs();
+    $nouveau = appel('/api/prof.php', ['action' => 'profs.ajouter', 'identifiant' => 'collegue-veille'], ['jeton' => $jeton])['json'];
+    vrai(isset($nouveau['id'], $nouveau['motdepasse']), 'le collègue est créé');
+    $jetonCollegue = connexion('collegue-veille', $nouveau['motdepasse'])['json']['jeton'];
+    egal(200, appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => $nouveau['motdepasse'], 'nouveau' => 'pastille-ou-pas-de-pastille'], ['jeton' => $jetonCollegue])['code'],
+        'il remplace son mot de passe temporaire');
+    $jetonCollegue = connexion('collegue-veille', 'pastille-ou-pas-de-pastille')['json']['jeton'];
+    appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $direct['classe'], 'prof_id' => $nouveau['id'], 'droit' => 'lecture'], ['jeton' => $jeton]);
+    $liste = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonCollegue])['json']['classes'];
+    egal(null, $modeDans($liste, (int)$direct['classe']), 'en lecture seule : pas de pastille');
+    $tableau = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $direct['classe'], 'appli' => 'defi-tables'], ['jeton' => $jetonCollegue])['json'];
+    vrai(array_key_exists('direct', $tableau['classe']) && $tableau['classe']['direct'] === null, 'ni dans la classe');
+    appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $direct['classe'], 'prof_id' => $nouveau['id'], 'droit' => 'ecriture'], ['jeton' => $jeton]);
+    $liste = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonCollegue])['json']['classes'];
+    egal('eclair', $modeDans($liste, (int)$direct['classe']), 'en écriture : la pastille, il peut la reprendre');
+    appel('/api/prof.php', ['action' => 'profs.supprimer', 'prof_id' => $nouveau['id']], ['jeton' => $jeton]);
+    vider_compteurs();
 });
 
 verifier("direct — terminer efface tout, tout de suite", function () use (&$direct) {
@@ -5050,6 +5121,28 @@ verifier("direct — terminer efface tout, tout de suite", function () use (&$di
     vrai($r['code'] === 200 && $r['json']['direct'] === null, 'répondre à une séance terminée : « plus de séance », pas une panne');
 });
 
+verifier("direct — le rang : le téléphone dit le numéro du tableau (« Question 1 / 8 »), un nombre et rien d'autre", function () use (&$direct) {
+    // 17/10/2026 : une question éclair puis un questionnaire, et le téléphone
+    // disait « Question 2 » quand le tableau disait « Question 1 / 8 ».
+    egal(200, direct_prof('direct.ouvrir', $direct)['code']);
+    egal(200, direct_prof('direct.question', $direct, ['type' => 'choix'])['code'], 'une question éclair');
+    $etat = direct_eleve($direct['eleves'][0]['code'])['json']['direct'];
+    egal(1, $etat['numero']);
+    egal(['choix' => 4], $etat['reglage'], 'sans rang : le téléphone affiche le numéro de la séance');
+    direct_prof('direct.devoiler', $direct);
+    foreach ([0, 81, '1', 1.5, true, -3, [1]] as $mauvais) {
+        egal(400, direct_prof('direct.question', $direct, ['type' => 'choix', 'reglage' => ['choix' => 4, 'rang' => $mauvais]])['code'],
+            'rang ' . json_encode($mauvais) . ' refusé');
+    }
+    $r = direct_prof('direct.question', $direct, ['type' => 'choix', 'reglage' => ['choix' => 3, 'rang' => 1]]);
+    egal(200, $r['code']);
+    egal(2, $r['json']['direct']['numero'], 'pour le serveur, c’est la question 2 de la séance');
+    $etat = direct_eleve($direct['eleves'][0]['code'])['json']['direct'];
+    egal(['choix' => 3, 'rang' => 1], $etat['reglage'], 'le téléphone reçoit le rang du tableau : « Question 1 »');
+    egal(200, direct_prof('direct.terminer', $direct)['code']);
+    egal(0, lignes_directs(), 'rien ne reste');
+});
+
 verifier("direct — une séance oubliée disparaît toute seule, au premier passage de n'importe qui", function () use (&$direct) {
     direct_prof('direct.ouvrir', $direct);
     direct_prof('direct.question', $direct, ['type' => 'choix']);
@@ -5063,8 +5156,9 @@ verifier("direct — une séance oubliée disparaît toute seule, au premier pas
     // Et l'ouverture de « Mes classes » purge aussi.
     direct_prof('direct.ouvrir', $direct);
     bd_test()->exec('UPDATE directs SET expire_le = ' . (time() - 1));
-    appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $direct['jeton']]);
+    $liste = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $direct['jeton']])['json']['classes'];
     egal(0, directs_en_base()['directs'], '« Mes classes » emporte une séance périmée');
+    foreach ($liste as $classe) egal(null, $classe['direct'], 'et aucune carte ne porte de pastille');
     // Une séance périmée pas encore purgée n'empêche pas d'en ouvrir une neuve.
     direct_prof('direct.ouvrir', $direct);
     bd_test()->exec('UPDATE directs SET expire_le = ' . (time() - 1));

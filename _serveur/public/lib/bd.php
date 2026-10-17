@@ -197,7 +197,8 @@ function schema(string $pilote): array
 
         // Séance en direct, lot 1 (07/10/2026) — lib/direct.php. Trois tables
         // TEMPORAIRES : elles se vident quand le professeur termine la séance,
-        // et au plus tard une heure et demie après son dernier geste
+        // et au plus tard vingt minutes après que l'écran du tableau a été
+        // quitté — trois heures après l'ouverture au plus (17/10/2026)
         // (expire_le, un instant epoch comme billets.expire_le). Aucun énoncé,
         // aucun texte libre, aucune note : un type et un réglage de question
         // pris dans une liste fermée, et une réponse courte dont la forme est

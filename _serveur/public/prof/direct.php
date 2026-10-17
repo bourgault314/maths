@@ -200,6 +200,22 @@ $versionKatexCss = $versionDe(__DIR__ . '/../vendor/katex-0.16.47/katex.min.css'
   .depot .gestes { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
   .depot ul { margin: 10px 0 0; padding-left: 20px; text-align: left; color: var(--rouge); font-weight: 600; }
   .depot.erreur { border-color: #f3d3d0; }
+  /* 17/10/2026 : pour qui découvre la page — l'exemple, et comment en faire un. */
+  .depot .aide { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 18px; margin-top: 12px;
+                 padding-top: 10px; border-top: 1px solid var(--line); }
+  .depot .aide button { min-height: 36px; padding: 0 4px; color: var(--blue); background: none;
+                        font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+  .depot .aide button:hover { color: var(--blue-dark); background: none; }
+  dialog.preparer { max-width: 760px; padding: 0; }
+  .prep { margin: 0; padding: 14px 20px 20px 44px; display: grid; gap: 16px; }
+  .prep li::marker { font-weight: 800; color: var(--blue-dark); }
+  .prep p { margin: 0 0 8px; color: var(--ink); }
+  .prep textarea { display: block; width: 100%; margin: 0 0 8px; padding: 8px 10px; resize: vertical;
+                   font: .85rem/1.45 ui-monospace, Consolas, monospace; color: var(--ink);
+                   border: 2px solid var(--line); border-radius: 10px; background: #fbfcfe; }
+  .prep textarea:focus { outline: none; border-color: var(--blue); }
+  .prep .insecable { white-space: nowrap; }
+  .prep .erreurs { margin: 8px 0 0; padding-left: 20px; color: var(--rouge); font-weight: 600; }
   .commandes { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: 14px;
                flex-wrap: wrap; padding: 12px 16px 18px; }
   .commandes label { display: inline-flex; align-items: center; gap: 8px; color: var(--muted);
@@ -278,7 +294,7 @@ $versionKatexCss = $versionDe(__DIR__ . '/../vendor/katex-0.16.47/katex.min.css'
   <button type="button" class="grand" id="action" hidden></button>
 </div>
 
-<input type="file" id="fichier" accept=".json,application/json" hidden>
+<input type="file" id="fichier" accept=".json,.txt,application/json,text/plain" hidden>
 
 <dialog id="fin">
   <h2>Terminer la séance ?</h2>
@@ -298,6 +314,73 @@ $versionKatexCss = $versionDe(__DIR__ . '/../vendor/katex-0.16.47/katex.min.css'
   <div class="apercu-liste" id="apercu-liste"></div>
 </dialog>
 
+<!-- 17/10/2026 : quitter le tableau pendant une séance. Elle reste ouverte
+     (« ● Reprendre » dans la classe, pastille dans Mes classes) ; sans le tableau, elle
+     s'arrête seule au bout de vingt minutes (lib/direct.php, VEILLE_DIRECT). -->
+<dialog id="quitter">
+  <h2>Quitter le tableau ?</h2>
+  <p>La séance reste ouverte : tu la reprends depuis la classe. Sans le tableau, elle s’arrête seule au bout de 20 minutes.</p>
+  <div class="choix">
+    <button type="button" id="quitter-oui">Quitter, la séance reste ouverte</button>
+    <button type="button" class="danger" id="quitter-terminer">Terminer la séance</button>
+    <button type="button" class="secondaire" id="quitter-non">Annuler</button>
+  </div>
+</dialog>
+
+<!-- 17/10/2026 : préparer un questionnaire avec une IA, pour un professeur
+     qui découvre la page. Seulement avant d'ouvrir la séance : le texte collé
+     contient les bonnes réponses, et l'écran est peut-être projeté. -->
+<dialog id="preparer" class="preparer">
+  <div class="apercu-haut">
+    <h2>Préparer un questionnaire</h2>
+    <button type="button" class="secondaire" id="preparer-fermer">Fermer</button>
+  </div>
+  <ol class="prep">
+    <li>
+      <p><b>Demande-le à ton IA</b> (ChatGPT, Claude, Le Chat…) : copie ce texte, colle-le dans ton IA et complète les crochets.</p>
+      <textarea id="prompt-ia" readonly rows="6" spellcheck="false">Prépare-moi un questionnaire à choix multiples pour la « séance en direct » de suivi.mathsgo.re.
+
+Sujet : [par exemple : les fractions]
+Classe : [par exemple : 4e]
+Nombre de questions : [par exemple : 10]
+Chrono par question : [par exemple : 30 secondes, ou aucun]
+
+Réponds UNIQUEMENT par un bloc de code JSON, sans rien avant ni après, de cette forme :
+
+{
+  "format": "mathsgo-questionnaire",
+  "version": 1,
+  "titre": "Fractions — 4e",
+  "chrono": 30,
+  "questions": [
+    {
+      "enonce": "Combien vaut $\\frac{3}{4}+\\frac{1}{8}$ ?",
+      "choix": ["$\\frac{4}{12}$", "$\\frac{7}{8}$", "$\\frac{4}{8}$", "$1$"],
+      "bonne": "B"
+    }
+  ]
+}
+
+Règles :
+- de 2 à 6 réponses par question ; « bonne » est la lettre de la bonne réponse (A pour la première, B pour la deuxième…) ;
+- des réponses fausses plausibles : les erreurs que font vraiment les élèves ;
+- les formules entre deux $, en LaTeX ; dans le JSON, chaque \ s'écrit \\ (par exemple "$\\frac{1}{2}$") ;
+- la virgule décimale s'écrit 2,5 ou $2{,}5$ ;
+- « chrono » en secondes, de 5 à 600 ; enlève la ligne « chrono » s'il n'en faut pas ;
+- pas d'image, sauf si tu sais exécuter du code : alors une figure SVG en base64, "image": "data:image/svg+xml;base64,…" (jamais un lien vers un site).
+Vérifie que le JSON est valide avant de répondre.</textarea>
+      <button type="button" class="secondaire" id="copier-prompt">Copier le texte</button>
+    </li>
+    <li>
+      <p><b>Colle ici sa réponse</b>, ou enregistre son fichier et ouvre-le avec <span class="insecable">« 📂 Ouvrir un questionnaire »</span>.</p>
+      <textarea id="colle" rows="5" spellcheck="false" placeholder="{ &quot;format&quot;: &quot;mathsgo-questionnaire&quot;, … }"></textarea>
+      <button type="button" id="ouvrir-colle">Ouvrir ce questionnaire</button>
+      <ul class="erreurs" id="colle-erreurs" hidden></ul>
+    </li>
+    <li><p><b>Vérifie</b> avec « Aperçu (avec les réponses) », puis ouvre la séance.</p></li>
+  </ol>
+</dialog>
+
 <script src="../vendor/katex-0.16.47/katex.min.js?v=<?= htmlspecialchars($versionKatex, ENT_QUOTES) ?>"></script>
 <script src="questionnaire.js?v=<?= htmlspecialchars($versionQuestionnaire, ENT_QUOTES) ?>"></script>
 <script nonce="<?= htmlspecialchars($nonce, ENT_QUOTES) ?>">
@@ -315,6 +398,9 @@ $versionKatexCss = $versionDe(__DIR__ . '/../vendor/katex-0.16.47/katex.min.css'
   const classeId = Number((/(?:^|[#&])classe=(\d+)/.exec(window.location.hash) || [])[1]) || 0;
 
   function versMaClasse() { window.location.replace("./"); }
+  // Le bouton « Ma classe » (17/10/2026) : retour dans CETTE classe, pas dans
+  // la liste. Ma classe lit l'ancre au démarrage, puis l'efface.
+  function versLaClasse() { window.location.replace("./#classe=" + encodeURIComponent(classeId)); }
   // Pas de session dans cet onglet, ou pas de classe désignée : c'est à
   // « Ma classe » de s'en occuper (elle demande le mot de passe).
   if (!jeton || !classeId) { versMaClasse(); return; }
@@ -734,6 +820,16 @@ $versionKatexCss = $versionDe(__DIR__ . '/../vendor/katex-0.16.47/katex.min.css'
       gestes.style.justifyContent = "center";
       gestes.append(bouton("📂 Ouvrir un questionnaire", "secondaire", () => $("fichier").click()));
       cadre.append(gestes, ligne("", "ou glisse le fichier ici"));
+      // 17/10/2026 : pour qui découvre la page. Avant la séance seulement :
+      // l'exemple s'ouvre en aperçu (bonnes réponses comprises) et le texte
+      // collé les contient aussi — jamais sur un écran déjà projeté.
+      if (!direct && !qzAttendu) {
+        const aide = document.createElement("div");
+        aide.className = "aide";
+        aide.append(bouton("▶ Essayer avec l’exemple", "", essayerExemple),
+          bouton("Comment préparer un questionnaire ?", "", ouvrirPreparer));
+        cadre.append(aide);
+      }
     }
     if (qzErreurs.length) {
       const liste = document.createElement("ul");
@@ -1077,7 +1173,8 @@ $versionKatexCss = $versionDe(__DIR__ . '/../vendor/katex-0.16.47/katex.min.css'
     if (!qzEnCours()) return;
     const rang = prochaine;
     const question = qz.questions[rang];
-    const reglage = {choix: question.choix.length};
+    // Le rang (17/10/2026) : le numéro affiché ici, pour que le téléphone dise le même.
+    const reglage = {choix: question.choix.length, rang: question.numero};
     if (question.chrono) reglage.duree = question.chrono;
     agir("direct.question", {type: question.type, reglage}, donnees => {
       if (donnees.direct && donnees.direct.numero) {
@@ -1107,7 +1204,22 @@ $versionKatexCss = $versionDe(__DIR__ . '/../vendor/katex-0.16.47/katex.min.css'
     }
   });
 
-  $("retour").addEventListener("click", versMaClasse);
+  // « Ma classe » (17/10/2026) : sans séance, on retourne dans la classe ;
+  // pendant une séance, on demande — elle reste ouverte (« ● Reprendre » dans
+  // la classe) et s'arrête seule vingt minutes après, ou on la termine ici,
+  // fichier compris.
+  let partirApresFin = false;
+  $("retour").addEventListener("click", () => {
+    if (!direct) { versLaClasse(); return; }
+    $("quitter").showModal();
+  });
+  $("quitter-oui").addEventListener("click", versLaClasse);
+  $("quitter-non").addEventListener("click", () => $("quitter").close());
+  $("quitter-terminer").addEventListener("click", () => {
+    $("quitter").close();
+    partirApresFin = true;
+    $("terminer").click();
+  });
   $("ouvrir-qz").addEventListener("click", () => $("fichier").click());
   $("fichier").addEventListener("change", () => {
     const fichier = $("fichier").files && $("fichier").files[0];
@@ -1134,6 +1246,74 @@ $versionKatexCss = $versionDe(__DIR__ . '/../vendor/katex-0.16.47/katex.min.css'
     if (!depotPermis()) return;
     const fichier = evenement.dataTransfer && evenement.dataTransfer.files && evenement.dataTransfer.files[0];
     chargerFichier(fichier);
+  });
+
+  // -------------------------------------- 17/10/2026 : l'exemple, et en préparer un
+  //
+  // L'exemple est dans questionnaire.js (QZ.exemple()) : rien à aller chercher.
+  // Le texte collé passe par le MÊME chemin qu'un fichier (chargerTexte) : il
+  // reste dans ce navigateur, rien ne part au serveur.
+  function essayerExemple() {
+    if (!QZ || direct) return;
+    if (chargerTexte(QZ.exemple())) { dessiner(); ouvrirApercu(); }
+    else dessiner();
+  }
+
+  function ouvrirPreparer() {
+    if (direct) return;
+    $("colle-erreurs").hidden = true;
+    $("colle-erreurs").textContent = "";
+    $("preparer").showModal();
+  }
+  $("preparer-fermer").addEventListener("click", () => $("preparer").close());
+
+  $("copier-prompt").addEventListener("click", async () => {
+    const texte = $("prompt-ia").value;
+    let copie = false;
+    try { await navigator.clipboard.writeText(texte); copie = true; } catch (_) {}
+    if (!copie) {
+      // Sans presse-papiers (ancien navigateur) : le texte sélectionné, Ctrl+C.
+      $("prompt-ia").focus();
+      $("prompt-ia").select();
+      try { copie = document.execCommand("copy"); } catch (_) {}
+    }
+    $("copier-prompt").textContent = copie ? "Copié ✓" : "Sélectionné : fais Ctrl+C";
+    window.setTimeout(() => { $("copier-prompt").textContent = "Copier le texte"; }, 2500);
+  });
+
+  $("ouvrir-colle").addEventListener("click", () => {
+    if (direct) { $("preparer").close(); return; }
+    const texte = $("colle").value;
+    const liste = $("colle-erreurs");
+    liste.textContent = "";
+    if (!texte.trim()) {
+      const li = document.createElement("li");
+      li.textContent = "Colle d’abord la réponse de ton IA dans le cadre.";
+      liste.append(li);
+      liste.hidden = false;
+      return;
+    }
+    if (chargerTexte(texte)) {
+      $("colle").value = "";
+      liste.hidden = true;
+      $("preparer").close();
+      dessiner();
+      return;
+    }
+    // Les erreurs se lisent ici, à côté du texte ; le cadre derrière reste propre.
+    qzErreurs.slice(0, 6).forEach(erreur => {
+      const li = document.createElement("li");
+      li.textContent = erreur;
+      liste.append(li);
+    });
+    if (qzErreurs.length > 6) {
+      const li = document.createElement("li");
+      li.textContent = `… et ${qzErreurs.length - 6} autre(s).`;
+      liste.append(li);
+    }
+    liste.hidden = false;
+    qzErreurs = [];
+    dessiner();
   });
 
   // --------------------------------------------------------------------- aperçu
@@ -1212,14 +1392,19 @@ $versionKatexCss = $versionDe(__DIR__ . '/../vendor/katex-0.16.47/katex.min.css'
     verifierDevoilementAuto();
   }
 
+  // Onglet caché (17/10/2026) : une interrogation par minute au lieu de
+  // s'arrêter. C'est ce qui dit au serveur « le tableau est toujours là » :
+  // sans elle, une séance menée pendant qu'on projette autre chose
+  // s'arrêterait au bout de vingt minutes (lib/direct.php, VEILLE_DIRECT).
+  const RYTHME_CACHE = 60000;
   function planifier() {
     window.clearTimeout(minuteur);
-    if (document.visibilityState === "hidden") return;
-    minuteur = window.setTimeout(async () => { await interroger(); planifier(); },
-      pannes >= 2 ? Math.min(rythme * 3, 10000) : rythme);
+    const attente = document.visibilityState === "hidden" ? RYTHME_CACHE
+      : (pannes >= 2 ? Math.min(rythme * 3, 10000) : rythme);
+    minuteur = window.setTimeout(async () => { await interroger(); planifier(); }, attente);
   }
   document.addEventListener("visibilitychange", async () => {
-    if (document.visibilityState !== "visible") { window.clearTimeout(minuteur); return; }
+    if (document.visibilityState !== "visible") { planifier(); return; }
     if (veilleDepassee()) { versMaClasse(); return; }
     await interroger();
     planifier();
@@ -1299,7 +1484,7 @@ $versionKatexCss = $versionDe(__DIR__ . '/../vendor/katex-0.16.47/katex.min.css'
     $("fin-sans").textContent = posees > 0 ? "Terminer sans fichier" : "Terminer la séance";
     $("fin").showModal();
   });
-  $("fin-non").addEventListener("click", () => $("fin").close());
+  $("fin-non").addEventListener("click", () => { partirApresFin = false; $("fin").close(); });
 
   async function terminer(avecFichier) {
     if (enAction) return;
@@ -1321,10 +1506,12 @@ $versionKatexCss = $versionDe(__DIR__ . '/../vendor/katex-0.16.47/katex.min.css'
       sauverQz();
       $("fin").close();
       messager("");
+      if (partirApresFin) { versLaClasse(); return; }
     } catch (erreur) {
       $("fin").close();
       surErreur(erreur);
     } finally {
+      partirApresFin = false;
       enAction = false;
       ["fin-fichier", "fin-sans", "fin-non"].forEach(id => { $(id).disabled = false; });
       dessiner();

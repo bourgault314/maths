@@ -403,7 +403,9 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // Lot E3 (16/10/2026) : la page prof change (le score du fichier), le manifeste suit.
   // Puis le lot « test : pas deux fois le même calcul » (16/10/2026) : le
   // moteur copié pour Ma classe change (avant : evaluations-E3).
-  assert.match(lire("_serveur/public/VERSION"), /^lot defi-tables-test-meme-calcul$/m);
+  // Puis la séance en direct « aide et veille » (17/10/2026) : le tableau, Ma
+  // classe, l'API et lib/direct.php changent (avant : defi-tables-test-meme-calcul).
+  assert.match(lire("_serveur/public/VERSION"), /^lot seance-en-direct-aide-et-veille$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-comment-on-joue-20261011-3/);
 });
