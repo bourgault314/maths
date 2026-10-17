@@ -8,8 +8,13 @@
       15:['#e67dab','#fbe6ef','#8a335b'],16:['#b98ae8','#f0e5fb','#654187'],20:['#62c5c0','#e1f6f4','#276d69'],
       25:['#ef9b55','#fcebdc','#8a4b18'],50:['#759ccf','#e7eff9','#355c8a'],100:['#f2ca3f','#fff5bf','#4a3b00']
     };
+    // Demis, tiers, quarts, sixièmes, huitièmes, douzièmes : les couleurs des bandes de fractions
+    // de Gwenaël (17/10/2026), cases vides dans une teinte pâle de la même couleur, traits noirs.
+    if(BANDES_GRILLE[den]) return BANDES_GRILLE[den];
     return palettes[den]||['#60bfa8','#e3f5f0','#296a5b'];
   }
+  const pale=(hex,t)=>'#'+[1,3,5].map(i=>Math.round(parseInt(hex.slice(i,i+2),16)*(1-t)+255*t).toString(16).padStart(2,'0')).join('');
+  const BANDES_GRILLE=Object.fromEntries([[2,'#facc15'],[3,'#e9d5ff'],[4,'#84cc16'],[6,'#f97316'],[8,'#f472b6'],[12,'#7dd3fc']].map(([d,c])=>[d,[c,pale(c,d===3?.55:.78),'#1f2937']]));
   function layout(den){
     if(den===4)return {cols:2,rows:2};
     if(den===6)return {cols:3,rows:2};
@@ -287,7 +292,7 @@
 
   if(!global.MATHSGO_VISUALS)throw new Error('Le registre MATHSGO_VISUALS doit être chargé avant fraction-decimal-grid.js.');
   global.MATHSGO_VISUALS.register('arithmetic.fraction-decimal-grid',{
-    version:'1.5.0',
+    version:'1.6.0',
     label:'Plateau fraction–décimal',
     family:'Arithmétique',
     description:'Construit les unités partagées, grilles de cent cases (remplies par quarts), unités complètes repérées en correction et tableau de numération figé, pour passer d’une fraction à un décimal.',

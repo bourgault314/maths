@@ -5,7 +5,9 @@
 //   l'unité entière au trait épais, partagée en cases, une seule case coloriée, sans étiquette ;
 // - 0,25 et 0,75 ne sortent plus en types 16 et 17, ni 0,5 en types 15 et 16 : ils viennent
 //   avec la droite des quarts ou des demis (le même dessin pour le même nombre) ;
-// - 0,01 : l'aide ne dit plus « Un centième s'écrit 1/100 ».
+// - 0,01 : l'aide ne dit plus « Un centième s'écrit 1/100 » ;
+// - types 9, 10, 11 : 5/2 et 7/4 sur la droite, comme au type 1 ;
+// - les grilles (type 13) aux couleurs des bandes : quart vert, huitième rose, douzième bleu clair.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import test from 'node:test';
@@ -21,6 +23,15 @@ test('les bandes prennent les couleurs de l’univers de Gwenaël',()=>{
   assert.equal(compte(droite({num:3,den:4,dec:'0,75'}),/fill="#84cc16"/g),3);
   assert.equal(compte(droite({num:7,den:10,dec:'0,7'}),/fill="#fab464"/g),7);
   assert.doesNotMatch(droite({num:3,den:4,dec:'0,75'}),/#b98ae8/);
+});
+
+test('les grilles (type 13 : simplifier) prennent aussi les couleurs des bandes',()=>{
+  const grille=(num,den)=>g.fractionDecimalGrid({num,den,reduced:{num,den},visualKind:'bar'});
+  assert.match(grille(2,4),/fill="#84cc16"/);
+  assert.match(grille(4,8),/fill="#f472b6"/);
+  assert.match(grille(9,12),/fill="#7dd3fc"/);
+  assert.match(grille(3,6),/fill="#f97316"/);
+  for(const [n,d] of [[2,4],[4,8],[9,12],[3,6]]) assert.doesNotMatch(grille(n,d),/#b98ae8|#6eafea/);
 });
 
 test('une seule bande donnée : l’unité partagée, une case coloriée, aucune étiquette',()=>{
@@ -50,6 +61,9 @@ test('dnb_01 : aide d’une seule bande, et plus de 0,25 ni 0,75 en types 16 et 
   // 0,5 vient toujours avec la droite des demis : plus de 0,5 en types 15 et 16.
   assert.match(moteur,/kind==='tenths_d2f'\)\{\n[^\n]*\n    num=RD\(1,9,\[5\]\); den=10;/);
   assert.match(moteur,/if\(r<1\/3\)\{ num=RD\(1,9,\[5\]\); den=10; \}/);
+  // Types 9, 10 et 11 (5/2, 7/4…) : la même droite que 5/2 = ? au type 1 ; 2,7 garde les unités découpées.
+  assert.match(moteur,/num=e\.n; den=e\.d; visualKind='rail';/);
+  assert.match(moteur,/visualKind=den===10\?'bar':'rail';/);
   // 0,01 : l'aide ne donne plus « Un centième s'écrit 1/100 ».
   assert.match(moteur,/if\(parts\.num===1\) return \[where,'Combien de cases a la grille \? Combien sont coloriées \?'\];/);
 });

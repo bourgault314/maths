@@ -1207,12 +1207,15 @@ function makeModule01Instance(mod,q){
     if(rnd()<1/3) num=RD(1,9); else do{num=RD(11,99);}while(num%10===0);
     den=100; visualKind='place-empty';
   } else if(kind==='benchmark_improper_f2d'){
+    // 17/10/2026 (Gwenaël, « le même dessin pour le même nombre ») : demis et quarts sur la
+    // droite graduée, comme 5/2 = ? au type 1.
     const e=pick([{n:3,d:2},{n:5,d:2},{n:7,d:2},{n:5,d:4},{n:7,d:4},{n:9,d:4}]);
-    num=e.n; den=e.d; visualKind='bar';
+    num=e.n; den=e.d; visualKind='rail';
   } else if(kind==='improper_f2d'){
     den=pick([2,4,4,10]);
     do{num=RD(den+1,3*den-1);}while(num%den===0||(den===4&&num%2===0));
-    visualKind='bar';
+    // Demis et quarts : la droite graduée. Dixièmes (2,7) : les unités découpées, comme 2,7 → fraction.
+    visualKind=den===10?'bar':'rail';
   } else if(kind==='reducible_f2d'){
     // Il faut simplifier pour retrouver un repère (1/2, 1/4, 3/4, 3/2, 5/2) ; 50/100 ou 75/100 se lisent
     // directement en centièmes (type 6), ils ne sont plus ici.
