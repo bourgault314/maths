@@ -4,6 +4,8 @@ livret 1, voir ../livret-1/habillage.py) : les noms du problème à la place des
 ses phrases à la place de « La tache … cache donc … jetons », la phrase de « Je réponds ».
 Clés nouvelles du livret 2 :
   equation  [lignes]   Classique : « J'écris l'équation » dans l'ordre de l'énoncé, puis regroupée (H9)
+  tout      {…}        « on cherche le tout » (6.2, 17/10/2026) : pas de carte, le modèle du corrigé
+                       (../tout.js) et le corrigé en équations (equation, x) — voir ../livret-1/habillage.py
 """
 
 H = {
@@ -18,16 +20,24 @@ H = {
    phrases={"1er": "Le 1er morceau mesure donc {d} m", "2e": "Le 2e morceau mesure donc {d} m", "3e": "Le 3e morceau mesure donc {d} m"},
    retourne="Je retourne : le 3e morceau mesure 12 m de plus que le 1er, et 6 m de plus que le 2e.",
    reponse="Le 1er morceau mesure {1er} m, le 2e {2e} m, le 3e {3e} m."),
- "6.2": dict(inconnue="la durée de la danse, en min", noms={15: "danse", 24: "théâtre", 36: "chorale"},
-   articles={"danse": "la danse", "théâtre": "le théâtre", "chorale": "la chorale"},
-   phrases={"danse": "La danse dure donc {d} min", "théâtre": "Le théâtre dure donc {d} min", "chorale": "La chorale dure donc {d} min"},
-   reponse="La danse dure {danse} min, le théâtre {théâtre} min, la chorale {chorale} min."),
+ # 6.2 « on cherche le tout » (17/10/2026) : pas de carte, le corrigé est dessiné sur ce modèle (../tout.js)
+ "6.2": dict(noms={75: "tout"}, reponse="Le spectacle dure {tout} min.",
+   verifs=["théâtre = danse + 9 : 24 = 15 + 9 ✓", "chorale = théâtre + 12 : 36 = 24 + 12 ✓"],
+   tout=dict(titre1="Schéma de comparaison — je pars de la danse",
+     rows=[dict(label="danse", cells=[dict(v=15)]), dict(label="théâtre", cells=[dict(v=15), dict(v=9, blanc=1)]),
+           dict(label="chorale", cells=[dict(v=15), dict(v=9, blanc=1), dict(v=12, blanc=1)], sous=[dict(de=0, a=1, label="théâtre")])],
+     ligne=[dict(label="danse", cells=[dict(v=15)]), dict(label="théâtre", cells=[dict(v=15), dict(v=9, blanc=1)]),
+            dict(label="chorale", cells=[dict(v=15), dict(v=9, blanc=1), dict(v=12, blanc=1)])],
+     calculs=["Le théâtre dure 15 + 9 = 24 min", "La chorale dure 24 + 12 = 36 min", "? = 15 + 24 + 36 = 75"],
+     equation=[["Je choisis l’inconnue", ["𝑥 : la durée du spectacle, en min"]],
+               ["J’écris l’équation", ["𝑥 = 15 + (15 + 9) + (15 + 9 + 12)"]],
+               ["Je résous", ["𝑥 = 15 + 24 + 36 = 75"]]], x=75)),
  "6.3": dict(inconnue="le nombre de points des Tigres", noms={20: "Tigres", 33: "Lions", 41: "Requins"},
    articles={"Tigres": "les Tigres", "Lions": "les Lions", "Requins": "les Requins"},
    retourne="Je retourne : les Requins ont 8 de plus que les Lions.",
    phrases={"Tigres": "Les Tigres ont donc {d} points", "Lions": "Les Lions ont donc {d} points", "Requins": "Les Requins ont donc {d} points"},
    reponse="Les Tigres ont marqué {Tigres} points, les Lions {Lions} et les Requins {Requins}."),
- "6.4": dict(inconnue="la contenance de la gourde de Sami, en cL", noms={60: "Sami", 42: "Lou", 48: "Nour"},
+ "6.4": dict(inconnue="la quantité d’eau dans la gourde de Sami, en cL", noms={60: "Sami", 42: "Lou", 48: "Nour"},
    articles={"Sami": "Sami", "Lou": "Lou", "Nour": "Nour"},
    retourne="Je retourne : Sami a 12 cL de plus que Nour.",
    phrases={"Sami": "Sami a donc {d} cL", "Lou": "Lou a donc {d} cL", "Nour": "Nour a donc {d} cL"},
@@ -57,7 +67,7 @@ H = {
  "8.2": dict(inconnue="l’aire de la terrasse, en m²", noms={24: "terrasse", 68: "pelouse"}, articles={"terrasse": "la terrasse", "pelouse": "la pelouse"},
    phrases={"terrasse": "La terrasse a donc {d} m²", "pelouse": "La pelouse a donc {d} m²"},
    reponse="La terrasse a {terrasse} m², la pelouse {pelouse} m²."),
- "8.3": dict(inconnue="la contenance du bidon jaune, en L", noms={15: "jaune", 21: "vert", 36: "noir"},
+ "8.3": dict(inconnue="la quantité d’eau dans le bidon jaune, en L", noms={15: "jaune", 21: "vert", 36: "noir"},
    articles={"jaune": "le bidon jaune", "vert": "le bidon vert", "noir": "le bidon noir"},
    phrases={"jaune": "Le bidon jaune contient donc {d} L", "vert": "Le bidon vert contient donc {d} L", "noir": "Le bidon noir contient donc {d} L"},
    reponse="Le bidon jaune contient {jaune} L, le vert {vert} L, le noir {noir} L."),
@@ -77,12 +87,12 @@ H = {
    phrases={"long": "Un exercice long dure donc {d} min", "court": "Un exercice court dure donc {d} min"},
    remplacer=[("une barre par tache", "une barre par exercice")],
    reponse="Un exercice court dure {court} min, un exercice long {long} min."),
- "9.4": dict(inconnue="la contenance d’une petite bouteille, en cL", noms={50: "petite", 100: "grande"}, articles={"petite": "une petite bouteille", "grande": "une grande bouteille"},
+ "9.4": dict(inconnue="la quantité d’eau dans une petite bouteille, en cL", noms={50: "petite", 100: "grande"}, articles={"petite": "une petite bouteille", "grande": "une grande bouteille"},
    retourne="Je retourne : une grande bouteille contient 2 fois plus qu’une petite.",
    phrases={"petite": "Une petite bouteille contient donc {d} cL", "grande": "Une grande bouteille contient donc {d} cL"},
    remplacer=[("une barre par tache", "une barre par bouteille")],
    reponse="Une petite bouteille contient {petite} cL, une grande {grande} cL."),
- # ---------------------------------------------------------------- fiche H10 : deux achats, niveau 2
+ # ---------------------------------------------------------------- fiche H10 : plusieurs situations à comparer
  "10.1": dict(noms={9: "menu", 3: "glace"}, lettres={"menu": "M", "glace": "G"}, pluriels={"menu": "menus", "glace": "glaces"},
    legende={"menu": "un menu", "glace": "une glace"},
    titres={"Les deux plateaux": "Les deux achats", "Je remplace le petit plateau par son total": "Je remplace le petit achat par son prix"},

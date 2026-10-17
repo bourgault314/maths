@@ -36,10 +36,9 @@ SPECS = {
  # fiche H13 : les petites parts et le désordre (et la page 5)
  "ExU": ("C", C + "&splats=3&structure=UNITE&mul=1&div=0&add=0&sub=0&deltaMax=15&totalMin=55&totalMax=55",
           dict(vals=[10, 15, 30], total=55, indices=[r"2 fois plus", r"3 fois plus"])),
- "13.1": ("C", C + "&splats=3&structure=UNITE&mul=1&div=0&add=0&sub=0&deltaMax=15&totalMin=110&totalMax=110",
-          dict(vals=[20, 30, 60], total=110, indices=[r"2 fois plus", r"3 fois plus"])),
- "13.2": ("C", C + "&splats=3&structure=UNITE&mul=1&div=1&add=0&sub=0&deltaMax=15&totalMin=57&totalMax=57",
-          dict(vals=[9, 12, 36], total=57, indices=[r"3 fois plus", r"4 fois moins"])),
+ # 13.1 (17/10/2026) : un « fois plus » et un « fois moins » ; 13.2 (« on cherche le tout ») n'a plus de carte
+ "13.1": ("C", C + "&splats=3&structure=UNITE&mul=1&div=1&add=0&sub=0&deltaMax=15&totalMin=110&totalMax=110",
+          dict(vals=[20, 30, 60], total=110, indices=[r"2 fois plus", r"3 fois moins"])),
  "13.3": ("C", C + "&splats=3&structure=CHAINE&ordre=DESORDRE&mul=0&div=0&add=0&sub=1&deltaMax=12&totalMin=35&totalMax=35",
           dict(vals=[8, 11, 16], total=35, indices=[r"5 jetons de moins", r"3 jetons de moins"])),
  "13.4": ("C", C + "&splats=3&structure=CHAINE&ordre=DESORDRE&mul=1&div=1&add=0&sub=0&deltaMax=12&totalMin=54&totalMax=54",

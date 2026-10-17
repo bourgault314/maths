@@ -4,10 +4,11 @@ Les problèmes de SPLAT! écrits en histoires : trois livrets (parties 1 à 3, f
 chacun avec trois corrigés (schéma avec « ? », schéma avec une lettre, en équations). Sur le site :
 `outils/livrets_splat.html`, la 7e entrée, sous les six mondes (`#histoires`).
 
-**En essai depuis le 15/10/2026** : l'onglet (`#onglet-h`) et le panneau (`#histoires`) portent
-`data-prepa` dans la page, donc cachés au public, avec ou sans JavaScript ; la clé `?essai=1`
-(celle des mondes en préparation, `assets/js/splat-etapes.js`) les montre. Pour les ouvrir à
-tous : retirer ces deux `data-prepa` (et suivre ce que dit `tests/livret-splat-histoires.test.mjs`).
+**Ouvertes à tous depuis le 17/10/2026** (lot A, après l'audit). Du 15 au 17/10, elles étaient en
+essai : l'onglet (`#onglet-h`) et le panneau (`#histoires`) portaient `data-prepa` dans la page, et
+seule la clé `?essai=1` (celle des mondes en préparation, `assets/js/splat-etapes.js`) les montrait.
+Pour les recacher un jour : remettre ces deux `data-prepa`, et `EN_ESSAI = true` dans
+`tests/livret-splat-histoires.test.mjs`.
 
 | Dossier | Sur le site | Fiches | Pages |
 |---|---|---|---|
@@ -17,7 +18,12 @@ tous : retirer ces deux `data-prepa` (et suivre ce que dit `tests/livret-splat-h
 
 Chaque dossier a son README (ce qui est propre au livret) ; la fabrication commune (la carte
 cachée de chaque problème, l'habillage, les contrôles du rendu, `fonts.conf`) est décrite dans
-`livret-1/README.md`.
+`livret-1/README.md`. `tout.js`, commun aux trois : le dessin du corrigé des problèmes « on cherche le
+tout » (4.2, 6.2, 13.2 — 17/10/2026), qui n'ont pas de carte.
+
+**Lot A (17/10/2026, après l'audit du 17/10)** : textes précisés (« même valeur », 9.2 la frise, H5 en
+masses et en longueurs…), un problème « on cherche le tout » par livret, « Je vérifie » qui vérifie aussi
+chaque indice, plus aucune écriture de corrigé sous 4,5 pt.
 
 ## Refaire un livret (un texte, un nombre ou une graine changés)
 
@@ -38,4 +44,5 @@ cachée de chaque problème, l'habillage, les contrôles du rendu, `fonts.conf`)
 | `…-corrige-equations.pdf` | `livret_splat_histoires_N_correction_equations.pdf` |
 
 (et chacun son `…_a_plier.pdf`). Les trois livrets ont été rendus le 15/10/2026 sur main 980fed5
-(#991) : identiques, page à page, aux PDF relus.
+(#991) : identiques, page à page, aux PDF relus. Rendus à nouveau le 17/10/2026 sur main acc576b (#1007)
+pour le lot A : comparés page à page à ceux du site, seules les pages touchées ont changé.

@@ -6,7 +6,7 @@ cherche_graines.py : le générateur rejoué dans Chromium).
   B    : outils/splat_equations.html (la balance, monde 5 fiche 37) — genEquationStep(makeRng(String(graine))) ;
          4e élément : les deux côtés dans l'ordre de l'énoncé, 𝑥, et « inverser » quand le 1er côté de
          l'énoncé est à droite sur la carte (11.2).
-D5 et D6 (le dos) n'ont pas de carte : schémas dessinés à part (render.py)."""
+D5 et D6 (le dos) et 13.2 (« on cherche le tout », 17/10/2026) n'ont pas de carte : schémas dessinés à part."""
 CARTES = {
  "ExB": ("B", "mode=EQSTEP&form=BOTH&cards=1&tasksMax=3&visibleMin=1&visibleMax=1&totalMin=28&totalMax=28", 2, dict(cotes=[[3, [4]], [1, [20]]], x=8, inverser=False)),
  "11.1": ("B", "mode=EQSTEP&form=BOTH&cards=1&tasksMax=5&visibleMin=0&visibleMax=1&totalMin=125&totalMax=125", 182, dict(cotes=[[5, []], [3, [50]]], x=25, inverser=False)),
@@ -18,8 +18,9 @@ CARTES = {
  "12.3": ("C", "mode=C&clues=SENTENCE&visibleMin=0&visibleMax=0&cards=1&splats=3&structure=REF&ordre=DESSIN&mul=0&div=1&add=0&sub=1&deltaMax=12&totalMin=49&totalMax=49", 14),
  "12.4": ("C", "mode=C&clues=SENTENCE&visibleMin=0&visibleMax=0&cards=1&splats=3&structure=COMPLETE&ordre=DESSIN&mul=1&div=0&add=0&sub=1&deltaMax=12&totalMin=45&totalMax=45", 14),
  "ExU": ("C", "mode=C&clues=SENTENCE&visibleMin=0&visibleMax=0&cards=1&splats=3&structure=UNITE&mul=1&div=0&add=0&sub=0&deltaMax=15&totalMin=55&totalMax=55", 2),
- "13.1": ("C", "mode=C&clues=SENTENCE&visibleMin=0&visibleMax=0&cards=1&splats=3&structure=UNITE&mul=1&div=0&add=0&sub=0&deltaMax=15&totalMin=110&totalMax=110", 3),
- "13.2": ("C", "mode=C&clues=SENTENCE&visibleMin=0&visibleMax=0&cards=1&splats=3&structure=UNITE&mul=1&div=1&add=0&sub=0&deltaMax=15&totalMin=57&totalMax=57", 4),
+ # 13.1 (17/10/2026) : un « fois plus » et un « fois moins » (div=1) — graine cherchée sur main acc576b (#1007)
+ "13.1": ("C", "mode=C&clues=SENTENCE&visibleMin=0&visibleMax=0&cards=1&splats=3&structure=UNITE&mul=1&div=1&add=0&sub=0&deltaMax=15&totalMin=110&totalMax=110", 3),
+ # 13.2 (17/10/2026) : « on cherche le tout », pas de carte (le total y est toujours donné) — habillage.py, clé « tout »
  "13.3": ("C", "mode=C&clues=SENTENCE&visibleMin=0&visibleMax=0&cards=1&splats=3&structure=CHAINE&ordre=DESORDRE&mul=0&div=0&add=0&sub=1&deltaMax=12&totalMin=35&totalMax=35", 34),
  "13.4": ("C", "mode=C&clues=SENTENCE&visibleMin=0&visibleMax=0&cards=1&splats=3&structure=CHAINE&ordre=DESORDRE&mul=1&div=1&add=0&sub=0&deltaMax=12&totalMin=54&totalMax=54", 2),
  "14.1": ("D", "mode=D&geste=DOUBLE&fois=2&sens=INDICE&indice=12&totalMin=32&totalMax=32&visibleMin=0&visibleMax=0&cards=1", 2),

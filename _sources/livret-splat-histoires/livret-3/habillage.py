@@ -15,6 +15,9 @@ La balance (famille B, dessinée par l'outil des Équations) :
   equation  [lignes]      ② l'équation, dans l'ordre de l'énoncé ; ③ « Je résous » est écrit par
                           render.py (balance_resous), sur les mêmes étapes que les schémas
   apres     [lignes]      ce qu'on calcule après 𝑥 (11.2 : le prix)
+« On cherche le tout » (13.2, 17/10/2026) :
+  tout      {…}           pas de carte : le modèle du corrigé (../tout.js) et le corrigé en équations
+                          (equation, x) — voir ../livret-1/habillage.py
 """
 
 H = {
@@ -73,15 +76,24 @@ H = {
    retourne="Je retourne : le ruban doré mesure 4 m de plus que le rouge.",
    reponse="Le ruban argenté mesure {argenté} m, le doré {doré} m, le rouge {rouge} m."),
  # ---------------------------------------------------------------- fiche H13 : les petites parts et le désordre
+ # 13.1 (17/10/2026) : « la petite contient 3 fois moins que la grande » (le mélange de l'ancien 13.2), d'où « Je retourne »
  "13.1": dict(inconnue="une petite part, en cL", ordre=["grande", "moyenne", "petite"], noms={20: "petite", 30: "moyenne", 60: "grande"},
    articles={"petite": "la petite", "moyenne": "la moyenne", "grande": "la grande"},
    phrases={"petite": "La petite contient donc {d} cL", "moyenne": "La moyenne contient donc {d} cL", "grande": "La grande contient donc {d} cL"},
+   retourne="Je retourne : la grande contient 3 fois plus que la petite.",
    reponse="La petite bouteille contient {petite} cL, la moyenne {moyenne} cL, la grande {grande} cL."),
- "13.2": dict(inconnue="une petite part, en min", ordre=["natation", "vélo", "course"], remplacer=[("de le vélo", "du vélo")], noms={9: "natation", 36: "vélo", 12: "course"},
-   articles={"natation": "la natation", "vélo": "le vélo", "course": "la course"},
-   phrases={"natation": "La natation dure donc {d} min", "vélo": "Le vélo dure donc {d} min", "course": "La course dure donc {d} min"},
-   retourne="Je retourne : le vélo dure 4 fois plus longtemps que la natation.",
-   reponse="La natation dure {natation} min, le vélo {vélo} min, la course {course} min."),
+ # 13.2 « on cherche le tout » (17/10/2026) : pas de carte, le corrigé est dessiné sur ce modèle (../tout.js) ;
+ # la course (18 min) vaut 2 natations : toutes les barres s'écrivent en natations
+ "13.2": dict(noms={63: "tout"}, reponse="Léa a mis {tout} min en tout.",
+   verifs=["vélo = 4 × natation : 36 = 4 × 9 ✓", "vélo = 2 × course : 36 = 2 × 18 ✓"],
+   tout=dict(titre1="Schéma de comparaison — je pars de la natation",
+     rows=[dict(label="natation", cells=[dict(v=9)]), dict(label="course", cells=[dict(v=9)] * 2),
+           dict(label="vélo", cells=[dict(v=9)] * 4, sous=[dict(de=0, a=1, label="course"), dict(de=2, a=3, label="course")])],
+     ligne=[dict(label="natation", cells=[dict(v=9)]), dict(label="course", cells=[dict(v=9)] * 2), dict(label="vélo", cells=[dict(v=9)] * 4)],
+     calculs=["Le vélo dure 4 × 9 = 36 min", "La course dure 36 ÷ 2 = 18 min", "? = 9 + 18 + 36 = 63"],
+     equation=[["Je choisis l’inconnue", ["𝑥 : le temps de Léa en tout, en min"]],
+               ["J’écris l’équation", ["𝑥 = 9 + (4 × 9) ÷ 2 + 4 × 9"]],
+               ["Je résous", ["𝑥 = 9 + 36 ÷ 2 + 36", "𝑥 = 9 + 18 + 36 = 63"]]], x=63)),
  "13.3": dict(inconnue="la masse du panier de litchis, en kg", noms={8: "litchis", 11: "mangues", 16: "ananas"},
    articles={"litchis": "le panier de litchis", "mangues": "le panier de mangues", "ananas": "le panier d’ananas"},
    phrases={"litchis": "Le panier de litchis pèse donc {d} kg", "mangues": "Le panier de mangues pèse donc {d} kg", "ananas": "Le panier d’ananas pèse donc {d} kg"},

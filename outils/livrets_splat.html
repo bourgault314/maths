@@ -263,7 +263,7 @@ footer a{font-weight:700}
     <a href="#monde-4" data-m="4" id="onglet-4" role="tab" aria-controls="monde-4" aria-selected="false"><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>4</b></span><span class="txt"><span class="sr">Monde 4 · </span><span class="etiq">SPLAT! Système</span><span class="fiches">fiches 25 à 28</span></span></a>
     <a href="#monde-5" data-m="5" id="onglet-5" role="tab" aria-controls="monde-5" aria-selected="false"><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>5</b></span><span class="txt"><span class="sr">Monde 5 · </span><span class="etiq">SPLAT! Équations</span><span class="fiches">fiches 35 à 37</span></span></a>
     <a href="#monde-6" data-m="6" id="onglet-6" role="tab" aria-controls="monde-6" aria-selected="false"><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>6</b></span><span class="txt"><span class="sr">Monde 6 · </span><span class="etiq">SPLAT! Relatifs</span><span class="fiches">fiches 38 à 43</span></span></a>
-    <a href="#histoires" data-m="h" id="onglet-h" role="tab" aria-controls="histoires" aria-selected="false" data-prepa><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>?</b></span><span class="txt"><span class="etiq">Les histoires de SPLAT!</span><span class="fiches">les mêmes problèmes, en histoires</span></span></a>
+    <a href="#histoires" data-m="h" id="onglet-h" role="tab" aria-controls="histoires" aria-selected="false"><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>?</b></span><span class="txt"><span class="etiq">Les histoires de SPLAT!</span><span class="fiches">les mêmes problèmes, en histoires</span></span></a>
   </nav>
   <p class="prepaPhrase" id="prepaPhrase" hidden></p>
 
@@ -1003,17 +1003,16 @@ footer a{font-weight:700}
 
   <!-- ===================================================== Les histoires de SPLAT! (15/10/2026)
        Les problèmes de SPLAT! écrits en histoires, en trois livrets (fiches H1 à H15) ; sources :
-       _sources/livret-splat-histoires/. EN ESSAI : l'onglet et ce panneau portent « data-prepa »
-       écrit dans la page — cachés à tous, avec ou sans JavaScript ; la clé ?essai=1 (celle des
-       mondes en préparation) les montre. Pour les ouvrir à tous : retirer ces deux « data-prepa ». -->
-  <section class="panneau" data-m="h" id="histoires" data-prepa role="tabpanel" aria-labelledby="onglet-h" hidden>
+       _sources/livret-splat-histoires/. Ouvertes à tous le 17/10/2026 (lot A ; en essai derrière la
+       clé ?essai=1 du 15 au 17/10). Pour les recacher : remettre « data-prepa » sur l'onglet et ce panneau. -->
+  <section class="panneau" data-m="h" id="histoires" role="tabpanel" aria-labelledby="onglet-h" hidden>
     <h2 class="monde-nom">Les histoires de SPLAT!</h2>
     <p class="chapo">Les problèmes de SPLAT!, écrits en histoires. L’élève dessine le schéma en barres ou écrit l’équation, puis répond par une phrase.</p>
     <div class="grille">
 
       <article class="liv">
         <a class="couv-lien" href="/outils/livret_splat_histoires_1.pdf" target="_blank" rel="noopener" title="Voir Les histoires de SPLAT!, partie 1 (PDF, 8 pages)">
-          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-histoires-1.png?v=1" alt="Couverture du livret Les histoires de SPLAT!, partie 1" loading="lazy">
+          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-histoires-1.png?v=2" alt="Couverture du livret Les histoires de SPLAT!, partie 1" loading="lazy">
         </a>
         <div class="corps">
           <div class="titre"><h3>Partie 1</h3><span class="plage">fiches H1 à H5</span></div>
@@ -1040,7 +1039,7 @@ footer a{font-weight:700}
 
       <article class="liv">
         <a class="couv-lien" href="/outils/livret_splat_histoires_2.pdf" target="_blank" rel="noopener" title="Voir Les histoires de SPLAT!, partie 2 (PDF, 8 pages)">
-          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-histoires-2.png?v=1" alt="Couverture du livret Les histoires de SPLAT!, partie 2" loading="lazy">
+          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-histoires-2.png?v=2" alt="Couverture du livret Les histoires de SPLAT!, partie 2" loading="lazy">
         </a>
         <div class="corps">
           <div class="titre"><h3>Partie 2</h3><span class="plage">fiches H6 à H10</span></div>
@@ -1135,9 +1134,9 @@ footer a{font-weight:700}
 </script>
 <script>
 (function(){
-  /* Les histoires de SPLAT! (15/10/2026), en essai : leur onglet et leur panneau portent
-     « data-prepa » écrit dans la page (cachés à tous) ; seule la clé ?essai=1 le retire.
-     Pour les ouvrir à tous : retirer ces deux « data-prepa » de la page. */
+  /* Les histoires de SPLAT! (15/10/2026), ouvertes à tous le 17/10/2026 : leur onglet et leur panneau
+     n'ont plus « data-prepa ». Si on les recache un jour (remettre « data-prepa » dans la page), seule
+     la clé ?essai=1 le retire. */
   if(window.MathsGoSplatEtapes && window.MathsGoSplatEtapes.cle === true){
     Array.prototype.forEach.call(document.querySelectorAll('#onglet-h[data-prepa], #histoires[data-prepa]'), function(el){
       el.removeAttribute("data-prepa");

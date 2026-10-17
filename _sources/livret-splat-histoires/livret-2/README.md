@@ -26,7 +26,11 @@ Ce qui est propre au livret 2 (15/10/2026) :
   (« Je remplace un petit plateau par son total ») sont habillés (`titres`).
 - **10.1** : l'énoncé donne le petit achat d'abord → `INVERSER` (comme 5.1 du livret 1). 10.3 (l'escalier)
   est écrit dans l'ordre de l'outil, le grand achat d'abord.
-- Seule exception aux 4,5 pt : **10.3** (sept étapes dans un quart de page), 4,2 pt admis (`ECRITURE_MIN`).
+- **10.3** (sept étapes dans un quart de page) écrivait ses petits calculs à 4,2 pt : depuis le 17/10/2026,
+  `PLANCHER` les remonte à 4,5 pt au moins (plus aucune exception). **9.3** : `SERRE` (son énoncé a pris une
+  ligne, « tous de même durée »).
+- **6.2** (17/10/2026) : « on cherche le tout » — pas de carte, corrigé dessiné sur un modèle (`habillage.py`,
+  clé `tout` ; voir `../livret-1/README.md`).
 - `cherche_graines.py` : la recherche des graines (le générateur rejoué dans Chromium, 20 000 graines
   par lot) ; `essai.py` : un corrigé seul, pour voir les erreurs d'habillage avant le rendu complet.
 
@@ -38,5 +42,5 @@ MATHS_RACINE=/chemin/du/clone/maths HISTOIRES_SORTIE=/chemin/des/pdf python3 ren
 
 Sous Linux, Playwright 1.56.0 et le vrai Chromium, `fonts.conf` avec DejaVu Sans (voir le livret 1).
 Le rendu s'arrête si une carte n'a plus les nombres de son énoncé, s'il reste un mot de l'outil,
-si une page déborde, si une écriture passe sous 4,5 pt (10.3 : 4,2), si une police inattendue entre
-dans un PDF, ou si une ligne du corrigé en équations est fausse (111 lignes vérifiées le 15/10/2026).
+si une page déborde, si une écriture passe sous 4,5 pt, si une police inattendue entre
+dans un PDF, ou si une ligne du corrigé en équations est fausse (111 lignes vérifiées le 15/10/2026, 109 le 17/10/2026).

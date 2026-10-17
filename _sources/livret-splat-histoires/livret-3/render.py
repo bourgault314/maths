@@ -170,6 +170,15 @@ def balance_blocs(code):
     h = H[code]
     return [["Je choisis l’inconnue", [f"𝑥 : {h['inconnue']}"]], ["J’écris l’équation", h["equation"]], ["Je résous", balance_resous(code)]]
 
+# (17/10/2026) Les corrigés serrés : « Je vérifie » vérifie aussi chaque indice, et quelques énoncés ont
+# grandi d'une ligne. SERRE : les blancs entre ①, ② et ③ tombent à 0 (corrigés de l'Enquête). PLANCHER : la
+# plus petite écriture du dessin, en unités de l'outil, pour qu'elle fasse au moins 4,5 pt sur le papier à
+# l'échelle de sa carte (lue dans rapport-mise-en-page.json) — le contrôle du rendu (4,5 pt) reste juge.
+SERRE = set()
+PLANCHER = {"13.1": dict(schema=37), "13.3": dict(schema=38)}     # avant : 3,4 pt (sous une accolade courte) et 4,3 pt
+def serrage(code, quoi):
+    return dict(serre=code in SERRE, plancher=PLANCHER.get(code, {}).get(quoi))
+
 # ------------------------------------------------------------------------------------------
 def serveur():
     class Gestion(http.server.SimpleHTTPRequestHandler):
@@ -223,7 +232,7 @@ class Outil:
     def __init__(self, nav):
         self.nav = nav
         self.js = (ICI / "habit.js").read_text(encoding="utf-8") + "\n;0"
-        self.js2 = (ICI / "corrige.js").read_text(encoding="utf-8") + "\n;0"
+        self.js2 = (ICI / "corrige.js").read_text(encoding="utf-8") + "\n;0\n" + (ICI.parent / "tout.js").read_text(encoding="utf-8") + "\n;0"
         self.jsb = (ICI / "balance.js").read_text(encoding="utf-8") + "\n;0"
     async def ouvrir(self, q, lettre, page="splat.html"):
         await self.pg.goto(f"http://127.0.0.1:{PORT}/outils/{page}?{q}&unknown={'letter' if lettre else 'question'}", wait_until="networkidle")
@@ -263,6 +272,9 @@ async def dessins_outil(nav, lettres, equations=False):
     for f in FICHES:
         for p in f[3]:
             code = p["code"]
+            if "tout" in H[code]:
+                await dessins_tout(o, code, lettres, equations, corr)
+                continue
             fam, q, graine = CARTES[code][:3]
             for lettre in ([False, True] if lettres else [False]):
                 if fam == "B":
@@ -275,7 +287,7 @@ async def dessins_outil(nav, lettres, equations=False):
                 controle_carte(code, fam, c)
                 meilleur = None
                 for L in (LARGEURS_ESSAYEES if deux_par_page(code) else [None]):
-                    spec = dict(famille=fam, graine=graine, lettre=lettre, habit=habit_js(code), valeurs=sorted(c["v"]), largeur=L, **spec_ordre(code))
+                    spec = dict(famille=fam, graine=graine, lettre=lettre, habit=habit_js(code), valeurs=sorted(c["v"]), largeur=L, **spec_ordre(code), **serrage(code, "schema"))
                     r = await o.pg.evaluate("(s) => window.__corrige(s)", spec)
                     if r.get("erreur"):
                         raise SystemExit(f"{code} : {r['erreur']}")
@@ -298,7 +310,7 @@ async def dessins_outil(nav, lettres, equations=False):
                     essais = ([(L, k) for L in LARGEURS_ESSAYEES for k in (1, 2)] if DISPOSITION_2P == "pile" else [(L, 1) for L in LARGEURS_ESSAYEES]) if deux_par_page(code) else [(None, 1)]
                     for L, k in essais:
                         r = await o.pg.evaluate("(s) => window.__equation(s)", dict(famille=fam, graine=graine, valeurs=sorted(c["v"]),
-                                                habit=habit_js(code), largeur=L, colonnes=k, **spec_ordre(code)))
+                                                habit=habit_js(code), largeur=L, colonnes=k, **spec_ordre(code), **serrage(code, "equations")))
                         if r.get("erreur"):
                             break
                         r["largeur"] = L
@@ -373,6 +385,33 @@ async def dessins_outil(nav, lettres, equations=False):
             defis[lettre][code] = r
     await o.pg.close()
     return corr, ex, defis
+
+async def dessins_tout(o, code, lettres, equations, corr):
+    """« On cherche le tout » (17/10/2026) : pas de carte. Le corrigé est dessiné par les fonctions de
+    l'Enquête sur le modèle de habillage.py (../tout.js) ; en équations, les blocs écrits dans habillage.py,
+    vérifiés comme ceux des défis du dos."""
+    t = H[code]["tout"]
+    hab = dict(H[code], noms={str(k): v for k, v in H[code]["noms"].items()}, teinte=TEINTE)
+    hab.pop("tout")
+    for lettre in ([False, True] if lettres else [False]):
+        await o.ouvrir(CARTES["12.1"][1], lettre)
+        spec = {k: t[k] for k in ("titre1", "rows", "ligne", "calculs")}
+        r = await o.pg.evaluate("(s) => window.__tout(s)", dict(spec, habit=hab, teinte=TEINTE, lettre=lettre))
+        if r.get("erreur"):
+            raise SystemExit(f"{code} : {r['erreur']}")
+        if r["reste"]:
+            raise SystemExit(f"{code} : mots de l'outil restés dans le dessin : {r['reste']}")
+        r["famille"] = "C"
+        corr[lettre][code] = r
+    if equations:
+        await o.ouvrir(CARTES["12.1"][1], True)
+        r = await o.pg.evaluate("(s) => window.__equation(s)", dict(famille="X", blocs=t["equation"], habit=hab, x=t["x"]))
+        if r.get("erreur"):
+            raise SystemExit(f"{code} (équations) : {r['erreur']}")
+        if r["controles"] < 2:
+            raise SystemExit(f"{code} (équations) : trop peu de lignes contrôlées ({r['controles']})")
+        r["famille"] = "E"
+        corr["eq"][code] = r
 
 def controle_carte(code, fam, c):
     """La carte cachée a EXACTEMENT les nombres de l'énoncé (problemes.py, ses contrôles)."""
@@ -732,7 +771,7 @@ CSS_DOS = """
 # Exceptions (15/10/2026) : les petites parts, l'étiquette que l'outil écrit en petit sous une accolade
 # courte (« la moitié de la grande » 3,4 pt, « le tiers du vélo » 3,7 pt ; le reste du dessin ≥ 4,5 pt) ;
 # 13.3, le dessin le plus haut de H13 (4,3 pt, comme 10.3 au livret 2)
-ECRITURE_MIN = {"13.1": 3.4, "13.2": 3.7, "13.3": 4.3}
+ECRITURE_MIN = {}      # (17/10/2026) plus d’exception : 13.1 et 13.3 écrivent à 4,5 pt au moins (PLANCHER)
 JS_VERIFIE = r"""(genre) => {
   const minPar = """ + json.dumps(ECRITURE_MIN) + r""";
   const mm = px => +(px / 3.7795).toFixed(1);
