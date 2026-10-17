@@ -1133,6 +1133,12 @@ svg{display:block;max-width:100%;height:auto}
 .diapo.interactive-mode .aide-dessin svg{max-height:min(30vh,300px)!important;max-height:min(30dvh,300px)!important}
 .diapo.interactive-mode .aide-back{width:100%;height:48px}
 }
+/* 17/10 : au diaporama « Avec aide », le dessin d'aide sous la question. */
+.diapo-aide{display:flex;flex-direction:row;flex-wrap:wrap;justify-content:center;align-items:center;gap:12px 28px;width:min(100%,1100px);margin:clamp(10px,2vh,22px) auto 0}
+.diapo-aide>*{flex:1 1 360px;min-width:0;max-width:100%}
+.diapo-aide svg{display:block;width:auto!important;min-width:min(100%,360px);max-width:min(100%,640px)!important;height:auto!important;max-height:min(34vh,360px)!important;margin:0 auto}
+.diapo-aide .divisibility-inspector{max-width:760px;zoom:1.35}
+.diapo-aide svg.aide-svg-petit{display:inline-block;width:auto!important;max-height:none!important}
 /* Projection (diaporama) : la correction en grand. */
 @media(min-width:1600px){.diapo:not(.interactive-mode){--opt-taille:1.6rem}}
 @media print{.diapo{--stage-top:20px;--stage-x:20px;--stage-bottom:20px;height:auto;min-height:100vh;overflow:visible}.top{display:none}.stage{min-height:auto;overflow:visible;padding:var(--stage-top) var(--stage-x) var(--stage-bottom)}}
@@ -4248,6 +4254,7 @@ function lotTShortPrompt(questionHtml){
   }catch(error){return '';}
 }
 
+const DIAPO_SANS_DESSIN_AIDE=new Set(['dnb_15','dnb_26','dnb_28']);
 function slidesDataForQuiz(sourceQuiz,mode,context={}){
   fractionOpsSvgCounter=0;
   return sourceQuiz.map((inst,index) => {
@@ -4255,9 +4262,21 @@ function slidesDataForQuiz(sourceQuiz,mode,context={}){
     const readDataAid=mode==='without'&&inst.module.id==='dnb_32';
     // Lot T : les dessins d'aide (optional, aid-only) ne sont plus dans la
     // question, dans aucun mode ; ils passent dans le panneau Aide.
-    const renderMode=readDataAid?'without-essential':slideModeForVisualPolicy(mode,visualPolicy);
-    const questionHtml=lotTTypo(buildCleanSlideHtml(inst,false,renderMode));
-    const correctionHtml=lotTTypo(buildCleanSlideHtml(inst,true,renderMode));
+    let renderMode=readDataAid?'without-essential':slideModeForVisualPolicy(mode,visualPolicy);
+    // 17/10 (Gwenaël) : au diaporama, « Avec aide », le dessin d'aide est
+    // projeté sous la question, comme avant la refonte (il n'y a pas de bouton
+    // Aide au diaporama). Automatisme refait : son dessin d'aide (le même que
+    // dans le panneau de la série). Sinon : le rendu « avec aide » d'origine,
+    // dessin à sa place et complété à la correction.
+    let dessinDiapo='';
+    if(context.experienceMode==='presentation'&&mode==='with'&&!readDataAid){
+      // dnb_15, 26 et 28 : ta version n'avait pas de dessin d'aide au diaporama
+      // (la figure de la question suffit) ; leur dessin reste dans l'Aide de la série.
+      if(inst.aideHtml){if(!DIAPO_SANS_DESSIN_AIDE.has(inst.module.id)) dessinDiapo='<div class="diapo-aide">'+lotTAideDrawing(inst,visualPolicy)+'</div>';}
+      else if(visualPolicy==='optional'||visualPolicy==='aid-only') renderMode='with';
+    }
+    const questionHtml=lotTTypo(buildCleanSlideHtml(inst,false,renderMode))+dessinDiapo;
+    const correctionHtml=lotTTypo(buildCleanSlideHtml(inst,true,renderMode))+dessinDiapo;
     const interactiveSpec=interactiveSpecForInstance(inst,correctionHtml);
     const questionInstance=context.seriesId?createQuestionInstanceContract(inst,interactiveSpec,{
       seriesId:context.seriesId,
@@ -4307,7 +4326,7 @@ function openDiapoWindow(definition=null,{sameTab=false,targetWindow=null}={}){
     const mods=modulesForSeriesDefinition(normalized);
     while(seriesQuizzes.length<normalized.seriesCount) seriesQuizzes.push(buildBalancedQuiz(mods,normalized.questionCount));
   }
-  const seriesData=seriesQuizzes.map((seriesQuiz,index)=>slidesDataForQuiz(seriesQuiz,mode,{seriesId,seriesOrdinal:index+1,level:normalized.level}));
+  const seriesData=seriesQuizzes.map((seriesQuiz,index)=>slidesDataForQuiz(seriesQuiz,mode,{seriesId,seriesOrdinal:index+1,level:normalized.level,experienceMode}));
   const menuUrl=new URL(location.href);menuUrl.hash='';
   const html=makeDiapoWindowHtml(seriesData,experienceMode,menuUrl.href);
   if(sameTab){
