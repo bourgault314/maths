@@ -1136,10 +1136,15 @@ function module01D2FSteps(dec,reduced){
 function module01D2FAide(dec){
   const parts=module01DecimalParts(dec);
   const where=parts.places===1?'Le chiffre après la virgule est au rang des dixièmes.':'Le deuxième chiffre après la virgule est au rang des centièmes.';
+  // 0,01 : « Un centième s'écrit 1/100 » serait la réponse (règle du 17/10/2026) : on compte les cases.
+  if(parts.num===1) return [where,'Combien de cases a la grille ? Combien sont coloriées ?'];
   return [where, '$$'+dec+'$$ se lit en '+module01PlaceName(parts.places)+'. Un '+module01PlaceName(parts.places,1)+' s’écrit $$'+module01FracLatex(1,parts.den)+'$$.'];
 }
 // Aides de la droite graduée : le texte dit ce que montre le dessin (même chemin dans les deux sens).
-function module01RailAideD2F(den,dec){
+function module01RailAideD2F(den,dec,num){
+  // Une seule bande (0,5 ; 0,25 ; 0,1) : « Chaque bande vaut un quart » donnerait la réponse
+  // (décision de Gwenaël, 17/10/2026). L'unité est partagée sur le dessin : on compte les bandes.
+  if(num===1) return ['En combien de bandes égales l’unité est-elle partagée ?','Une de ces bandes arrive à $$'+dec+'$$.'];
   return ['Chaque bande vaut un '+module01PlaceWord(den,1)+'.','Combien de '+module01PlaceWord(den)+' faut-il pour arriver à $$'+dec+'$$ ?'];
 }
 function module01RailAideF2D(num,den){
@@ -1214,14 +1219,17 @@ function makeModule01Instance(mod,q){
     const e=pick([{n:2,d:4},{n:3,d:6},{n:4,d:8},{n:2,d:8},{n:3,d:12},{n:5,d:20},{n:6,d:8},{n:9,d:12},{n:15,d:20},{n:6,d:4},{n:10,d:4}]);
     num=e.n; den=e.d; visualKind=den===20?'neutral':'bar';
   } else if(kind==='tenths_d2f'){
-    num=RD(1,9); den=10; direction='d2f';
+    // Pas de 0,5 en types 15 et 16 : il vient toujours avec la droite des demis (types 3, 4).
+    num=RD(1,9,[5]); den=10; direction='d2f';
   } else if(kind==='place_d2f'){
+    // 17/10/2026 (Gwenaël) : plus de 0,25 ni de 0,75 en types 16 et 17. Ils viennent toujours
+    // avec la droite des quarts (types 3, 4, 19) ; ici, les vrais centièmes (0,57 ; 0,08).
     const r=rnd(); direction='d2f';
-    if(r<1/3){ num=RD(1,9); den=10; }
+    if(r<1/3){ num=RD(1,9,[5]); den=10; }
     else if(r<2/3){ num=RD(1,9); den=100; }
-    else { do{num=RD(11,99);}while(num%10===0); den=100; }
+    else { do{num=RD(11,99);}while(num%10===0||num===25||num===75); den=100; }
   } else if(kind==='hundredths_d2f'){
-    if(rnd()<0.3) num=RD(1,9); else do{num=RD(11,99);}while(num%10===0);
+    if(rnd()<0.3) num=RD(1,9); else do{num=RD(11,99);}while(num%10===0||num===25||num===75);
     den=100; direction='d2f';
   } else if(kind==='improper_d2f'){
     const whole=RD(1,3), part=pick([{n:1,d:2},{n:1,d:4},{n:3,d:4},{n:RD(1,9,[5]),d:10}]);
@@ -1309,11 +1317,11 @@ function makeModule01Instance(mod,q){
     const lecture=module01DecimalParts(dec);
     if(['fixed_d2f','benchmark_d2f','improper_d2f'].includes(kind)&&(reduced.den===2||reduced.den===4)){
       visualData={kind:'rail',num:reduced.num,den:reduced.den,dec,donne:true};
-      aide=module01RailAideD2F(reduced.den,dec);
+      aide=module01RailAideD2F(reduced.den,dec,reduced.num);
     } else if(lecture.places===1&&lecture.intPart===0){
       // Dixièmes plus petits que 1 (0,4 ; 0,2 ; 0,1) : la droite des dixièmes. Centièmes et 2,7 : le plateau.
       visualData={kind:'rail',num:lecture.num,den:10,dec,donne:true};
-      aide=module01RailAideD2F(10,dec);
+      aide=module01RailAideD2F(10,dec,lecture.num);
     }
   } else if(kind==='compare'){
     // « Complète par <, = ou > » (sujet de référence n° 1, Q4 : comparer 7/4 et des décimaux).

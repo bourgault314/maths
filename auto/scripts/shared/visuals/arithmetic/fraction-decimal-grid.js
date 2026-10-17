@@ -199,19 +199,33 @@
     if(den===4) return value.toFixed(2).replace('.',',');
     return value.toFixed(2).replace(/0+$/,'').replace(/\.$/,'').replace('.',',');
   }
+  const BANDES_FRACTIONS={1:'#fff7e6',2:'#facc15',3:'#e9d5ff',4:'#84cc16',5:'#0ea5e9',6:'#f97316',8:'#f472b6',10:'#fab464',12:'#7dd3fc'};
   function railVisual(data,correction=false){
     const num=Math.max(1,Math.round(Number(data.num)||1)),den=Math.max(1,Math.round(Number(data.den)||1));
     const maxRail=Math.max(1,Math.ceil(num/den)),parts=maxRail*den;
     const W=360,left=22,right=34,unitW=(W-left-right)/maxRail,partW=unitW/den;
     const yBand=12,hBand=46,yAxis=104,yLabel=131,H=142;
-    const [dark,,stroke]=palette(den),ink='#111827',font='Arial,Helvetica,sans-serif';
+    // Couleurs de l'univers de Gwenaël (décision du 17/10/2026) : demi jaune, tiers lavande,
+    // quart vert, contour noir, comme ses bandes de fractions (outils/fractions/bandes_fractions.html) ;
+    // dixième orange, le 10 % de sa palette officielle des pourcentages (packages/charte :
+    // COULEURS_POURCENTAGES.c10), qui a aussi le demi jaune (50 %) et le quart vert (25 %).
+    const dark=BANDES_FRACTIONS[den]||palette(den)[0],stroke='#000000',ink='#111827',font='Arial,Helvetica,sans-serif';
     const target=left+num*partW,answer=String(data.dec||railLabel(num,den));
+    // Une seule bande donnée (0,5 ; 0,25 ; 0,1) : son étiquette « 1/4 » serait la réponse.
+    // Décision de Gwenaël (17/10/2026) : l'unité entière en trait plein et épais, partagée
+    // en cases, une seule case coloriée et sans étiquette : le tout, c'est 1.
+    const seule=!!data.donne&&num===1&&den>1;
     let out='';
+    if(seule) for(let index=1;index<den;index++){
+      const x=left+index*partW;
+      out+=`<rect x="${x.toFixed(2)}" y="${yBand}" width="${partW.toFixed(2)}" height="${hBand}" fill="#ffffff" stroke="${stroke}" stroke-width="1.2"/>`;
+    }
     for(let index=0;index<num;index++){
       const x=left+index*partW;
-      out+=`<rect x="${x.toFixed(2)}" y="${yBand}" width="${partW.toFixed(2)}" height="${hBand}" fill="${dark}" stroke="${stroke}" stroke-width="1.6"/>`;
+      out+=`<rect x="${x.toFixed(2)}" y="${yBand}" width="${partW.toFixed(2)}" height="${hBand}" fill="${dark}" stroke="${stroke}" stroke-width="1.2"/>`;
       const cx=x+partW/2;
-      if(den===1) out+=`<text x="${cx.toFixed(2)}" y="${yBand+hBand/2+6}" text-anchor="middle" font-family="${font}" font-size="17" font-weight="800" fill="${ink}">1</text>`;
+      if(seule){ /* pas d'étiquette : ce serait la réponse */ }
+      else if(den===1) out+=`<text x="${cx.toFixed(2)}" y="${yBand+hBand/2+6}" text-anchor="middle" font-family="${font}" font-size="17" font-weight="800" fill="${ink}">1</text>`;
       else if(partW>=20){
         const fs=partW>=34?14:12,half=Math.min(9,partW*.28);
         out+=`<text x="${cx.toFixed(2)}" y="${yBand+hBand/2-4}" text-anchor="middle" font-family="${font}" font-size="${fs}" font-weight="800" fill="${ink}">1</text>`;
@@ -219,6 +233,7 @@
         out+=`<text x="${cx.toFixed(2)}" y="${yBand+hBand/2+fs+1}" text-anchor="middle" font-family="${font}" font-size="${fs}" font-weight="800" fill="${ink}">${den}</text>`;
       }
     }
+    if(seule) out+=`<rect x="${left}" y="${yBand}" width="${(den*partW).toFixed(2)}" height="${hBand}" fill="none" stroke="${ink}" stroke-width="3.2"/>`;
     // Repères pointillés du départ et de l'arrivée.
     [left,target].forEach(x=>{out+=`<line x1="${x.toFixed(2)}" y1="${yBand+hBand+3}" x2="${x.toFixed(2)}" y2="${yAxis-2}" stroke="#1e3a8a" stroke-width="1.6" stroke-dasharray="3 3"/>`;});
     // L'axe et sa flèche.
@@ -236,8 +251,10 @@
       else if(major||(k<num&&k<=(data.reperes||1))) label=railLabel(k,den);
       if(label) out+=`<text x="${x.toFixed(2)}" y="${yLabel}" text-anchor="middle" font-family="${font}" font-size="${size}" font-weight="${weight}" fill="${color}">${label}</text>`;
     }
-    const names={1:['unité','unités'],2:['demi','demis'],3:['tiers','tiers'],4:['quart','quarts']}[den]||['part','parts'];
-    const aria=num+' '+(num>1?names[1]:names[0])+' posé'+(num>1?'s':'')+' bout à bout sur une droite graduée'+(correction||data.donne?' : ils arrivent à '+answer+'.':' ; l’arrivée est à trouver.');
+    // Texte lu par les lecteurs d'écran : « 7 bandes d'un dixième posées… », « 3 unités posées… ».
+    const word={2:'demi',3:'tiers',4:'quart',10:'dixième'}[den];
+    const objet=den===1?(num>1?'unités':'unité'):(num>1?'bandes':'bande')+(seule?'':(word?' d’un '+word:''));
+    const aria=num+' '+objet+' posée'+(num>1?'s':'')+' bout à bout sur une droite graduée'+(seule?', l’unité est partagée en bandes égales':'')+(correction||data.donne?' : '+(num>1?'elles arrivent':'elle arrive')+' à '+answer+'.':' ; l’arrivée est à trouver.');
     return `<div class="module01-visual module01-rail"><svg viewBox="0 0 ${W} ${H}" style="max-width:${Math.round(W*1.5)}px;max-height:30vh" role="img" aria-label="${aria}">${out}</svg></div>`;
   }
   function render(data,correction=false){
@@ -270,7 +287,7 @@
 
   if(!global.MATHSGO_VISUALS)throw new Error('Le registre MATHSGO_VISUALS doit être chargé avant fraction-decimal-grid.js.');
   global.MATHSGO_VISUALS.register('arithmetic.fraction-decimal-grid',{
-    version:'1.4.0',
+    version:'1.5.0',
     label:'Plateau fraction–décimal',
     family:'Arithmétique',
     description:'Construit les unités partagées, grilles de cent cases (remplies par quarts), unités complètes repérées en correction et tableau de numération figé, pour passer d’une fraction à un décimal.',
