@@ -4275,8 +4275,10 @@ function slidesDataForQuiz(sourceQuiz,mode,context={}){
       if(inst.aideHtml){if(!DIAPO_SANS_DESSIN_AIDE.has(inst.module.id)) dessinDiapo='<div class="diapo-aide">'+lotTAideDrawing(inst,visualPolicy)+'</div>';}
       else if(visualPolicy==='optional'||visualPolicy==='aid-only') renderMode='with';
     }
+    // Un dessin d'aide peut avoir sa version corrigée (dnb_01 : la droite graduée porte la réponse au bout).
+    const dessinDiapoCorrection=dessinDiapo&&inst.aideCorrectionHtml?'<div class="diapo-aide">'+lotTTypo(String(inst.aideCorrectionHtml))+'</div>':dessinDiapo;
     const questionHtml=lotTTypo(buildCleanSlideHtml(inst,false,renderMode))+dessinDiapo;
-    const correctionHtml=lotTTypo(buildCleanSlideHtml(inst,true,renderMode))+dessinDiapo;
+    const correctionHtml=lotTTypo(buildCleanSlideHtml(inst,true,renderMode))+dessinDiapoCorrection;
     const interactiveSpec=interactiveSpecForInstance(inst,correctionHtml);
     const questionInstance=context.seriesId?createQuestionInstanceContract(inst,interactiveSpec,{
       seriesId:context.seriesId,

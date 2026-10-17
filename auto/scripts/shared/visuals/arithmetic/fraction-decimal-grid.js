@@ -8,8 +8,13 @@
       15:['#e67dab','#fbe6ef','#8a335b'],16:['#b98ae8','#f0e5fb','#654187'],20:['#62c5c0','#e1f6f4','#276d69'],
       25:['#ef9b55','#fcebdc','#8a4b18'],50:['#759ccf','#e7eff9','#355c8a'],100:['#f2ca3f','#fff5bf','#4a3b00']
     };
+    // Demis, tiers, quarts, sixièmes, huitièmes, douzièmes : les couleurs des bandes de fractions
+    // de Gwenaël (17/10/2026), cases vides dans une teinte pâle de la même couleur, traits noirs.
+    if(BANDES_GRILLE[den]) return BANDES_GRILLE[den];
     return palettes[den]||['#60bfa8','#e3f5f0','#296a5b'];
   }
+  const pale=(hex,t)=>'#'+[1,3,5].map(i=>Math.round(parseInt(hex.slice(i,i+2),16)*(1-t)+255*t).toString(16).padStart(2,'0')).join('');
+  const BANDES_GRILLE=Object.fromEntries([[2,'#facc15'],[3,'#e9d5ff'],[4,'#84cc16'],[6,'#f97316'],[8,'#f472b6'],[12,'#7dd3fc']].map(([d,c])=>[d,[c,pale(c,d===3?.55:.78),'#1f2937']]));
   function layout(den){
     if(den===4)return {cols:2,rows:2};
     if(den===6)return {cols:3,rows:2};
@@ -187,7 +192,78 @@
     const label=digits.some(Boolean)?'Tableau de numération : '+String(value):'Tableau de numération vide : unités, dixièmes, centièmes';
     return `<div class="module01-visual module01-place-value"><svg viewBox="0 0 ${width} ${height}" style="max-width:${Math.round(width*1.35)}px;max-height:24vh" role="img" aria-label="${label}">${out}</svg></div>`;
   }
+  // Droite graduée de bandes (reprise de la V2 de Gwenaël, 17/10/2026) : des bandes
+  // de 1/2, 1/4, 1/3 ou 1 posées bout à bout sur une droite graduée. Règle de l'aide :
+  // on peut compter, mais la réponse n'est jamais écrite. Les graduations franchies
+  // sont nommées, l'arrivée reste « ? » ; en correction, l'arrivée porte la réponse.
+  function railLabel(k,den){
+    const value=k/den;
+    if(Math.abs(value-Math.round(value))<1e-9) return String(Math.round(value));
+    if(den===3) return '';
+    // Quarts : toujours deux chiffres après la virgule (0,25 ; 0,50 ; 0,75), on lit des centièmes.
+    if(den===4) return value.toFixed(2).replace('.',',');
+    return value.toFixed(2).replace(/0+$/,'').replace(/\.$/,'').replace('.',',');
+  }
+  const BANDES_FRACTIONS={1:'#fff7e6',2:'#facc15',3:'#e9d5ff',4:'#84cc16',5:'#0ea5e9',6:'#f97316',8:'#f472b6',10:'#fab464',12:'#7dd3fc'};
+  function railVisual(data,correction=false){
+    const num=Math.max(1,Math.round(Number(data.num)||1)),den=Math.max(1,Math.round(Number(data.den)||1));
+    const maxRail=Math.max(1,Math.ceil(num/den)),parts=maxRail*den;
+    const W=360,left=22,right=34,unitW=(W-left-right)/maxRail,partW=unitW/den;
+    const yBand=12,hBand=46,yAxis=104,yLabel=131,H=142;
+    // Couleurs de l'univers de Gwenaël (décision du 17/10/2026) : demi jaune, tiers lavande,
+    // quart vert, contour noir, comme ses bandes de fractions (outils/fractions/bandes_fractions.html) ;
+    // dixième orange, le 10 % de sa palette officielle des pourcentages (packages/charte :
+    // COULEURS_POURCENTAGES.c10), qui a aussi le demi jaune (50 %) et le quart vert (25 %).
+    const dark=BANDES_FRACTIONS[den]||palette(den)[0],stroke='#000000',ink='#111827',font='Arial,Helvetica,sans-serif';
+    const target=left+num*partW,answer=String(data.dec||railLabel(num,den));
+    // Une seule bande donnée (0,5 ; 0,25 ; 0,1) : son étiquette « 1/4 » serait la réponse.
+    // Décision de Gwenaël (17/10/2026) : l'unité entière en trait plein et épais, partagée
+    // en cases, une seule case coloriée et sans étiquette : le tout, c'est 1.
+    const seule=!!data.donne&&num===1&&den>1;
+    let out='';
+    if(seule) for(let index=1;index<den;index++){
+      const x=left+index*partW;
+      out+=`<rect x="${x.toFixed(2)}" y="${yBand}" width="${partW.toFixed(2)}" height="${hBand}" fill="#ffffff" stroke="${stroke}" stroke-width="1.2"/>`;
+    }
+    for(let index=0;index<num;index++){
+      const x=left+index*partW;
+      out+=`<rect x="${x.toFixed(2)}" y="${yBand}" width="${partW.toFixed(2)}" height="${hBand}" fill="${dark}" stroke="${stroke}" stroke-width="1.2"/>`;
+      const cx=x+partW/2;
+      if(seule){ /* pas d'étiquette : ce serait la réponse */ }
+      else if(den===1) out+=`<text x="${cx.toFixed(2)}" y="${yBand+hBand/2+6}" text-anchor="middle" font-family="${font}" font-size="17" font-weight="800" fill="${ink}">1</text>`;
+      else if(partW>=20){
+        const fs=partW>=34?14:12,half=Math.min(9,partW*.28);
+        out+=`<text x="${cx.toFixed(2)}" y="${yBand+hBand/2-4}" text-anchor="middle" font-family="${font}" font-size="${fs}" font-weight="800" fill="${ink}">1</text>`;
+        out+=`<line x1="${(cx-half).toFixed(2)}" y1="${yBand+hBand/2}" x2="${(cx+half).toFixed(2)}" y2="${yBand+hBand/2}" stroke="${ink}" stroke-width="1.4"/>`;
+        out+=`<text x="${cx.toFixed(2)}" y="${yBand+hBand/2+fs+1}" text-anchor="middle" font-family="${font}" font-size="${fs}" font-weight="800" fill="${ink}">${den}</text>`;
+      }
+    }
+    if(seule) out+=`<rect x="${left}" y="${yBand}" width="${(den*partW).toFixed(2)}" height="${hBand}" fill="none" stroke="${ink}" stroke-width="3.2"/>`;
+    // Repères pointillés du départ et de l'arrivée.
+    [left,target].forEach(x=>{out+=`<line x1="${x.toFixed(2)}" y1="${yBand+hBand+3}" x2="${x.toFixed(2)}" y2="${yAxis-2}" stroke="#1e3a8a" stroke-width="1.6" stroke-dasharray="3 3"/>`;});
+    // L'axe et sa flèche.
+    const end=W-right+20;
+    out+=`<line x1="${left-6}" y1="${yAxis}" x2="${end}" y2="${yAxis}" stroke="#18324f" stroke-width="2"/>`;
+    out+=`<path d="M${end-9} ${yAxis-6} L${end} ${yAxis} L${end-9} ${yAxis+6}" fill="none" stroke="#18324f" stroke-width="2"/>`;
+    for(let k=0;k<=parts;k++){
+      const x=left+k*partW,major=k%den===0,h=major?8:5;
+      out+=`<line x1="${x.toFixed(2)}" y1="${yAxis-h}" x2="${x.toFixed(2)}" y2="${yAxis+h}" stroke="#18324f" stroke-width="${major?2:1.4}"/>`;
+      let label='',color=ink,weight=700,size=15;
+      // donne : sens décimal → fraction, le nombre donné est au bout (on compte les bandes).
+      if(k===num){ label=(correction||data.donne)?answer:'?'; color=data.donne?ink:(correction?'#0b7c67':'#1d4ed8'); weight=900; size=(correction||data.donne)?17:20; }
+      // Graduations écrites : 0, les entiers, et seulement la première (la valeur d'une bande) :
+      // écrire toutes celles qu'on franchit ferait deviner la réponse (0,1 ; 0,2 … 0,6 ; ? → 0,7).
+      else if(major||(k<num&&k<=(data.reperes||1))) label=railLabel(k,den);
+      if(label) out+=`<text x="${x.toFixed(2)}" y="${yLabel}" text-anchor="middle" font-family="${font}" font-size="${size}" font-weight="${weight}" fill="${color}">${label}</text>`;
+    }
+    // Texte lu par les lecteurs d'écran : « 7 bandes d'un dixième posées… », « 3 unités posées… ».
+    const word={2:'demi',3:'tiers',4:'quart',10:'dixième'}[den];
+    const objet=den===1?(num>1?'unités':'unité'):(num>1?'bandes':'bande')+(seule?'':(word?' d’un '+word:''));
+    const aria=num+' '+objet+' posée'+(num>1?'s':'')+' bout à bout sur une droite graduée'+(seule?', l’unité est partagée en bandes égales':'')+(correction||data.donne?' : '+(num>1?'elles arrivent':'elle arrive')+' à '+answer+'.':' ; l’arrivée est à trouver.');
+    return `<div class="module01-visual module01-rail"><svg viewBox="0 0 ${W} ${H}" style="max-width:${Math.round(W*1.5)}px;max-height:30vh" role="img" aria-label="${aria}">${out}</svg></div>`;
+  }
   function render(data,correction=false){
+    if(data&&data.kind==='rail') return railVisual(data,correction);
     if(data&&data.kind==='decimal-complement') return decimalComplementVisual(data,correction);
     if(data&&data.kind==='place-value') return placeValueVisual(data.value);
     if(data&&data.visualKind==='place-empty') return placeValueVisual(null);
@@ -216,7 +292,7 @@
 
   if(!global.MATHSGO_VISUALS)throw new Error('Le registre MATHSGO_VISUALS doit être chargé avant fraction-decimal-grid.js.');
   global.MATHSGO_VISUALS.register('arithmetic.fraction-decimal-grid',{
-    version:'1.3.0',
+    version:'1.6.0',
     label:'Plateau fraction–décimal',
     family:'Arithmétique',
     description:'Construit les unités partagées, grilles de cent cases (remplies par quarts), unités complètes repérées en correction et tableau de numération figé, pour passer d’une fraction à un décimal.',

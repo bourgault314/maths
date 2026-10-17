@@ -857,7 +857,8 @@ function makeSumOrProductQcm(d){
 // Cible DNB (liste officielle NC1) : 1/2 ; 1/4 ; 3/4 ; 3/2 ; 4/2 ; 5/2 ; 1/10 ;
 // 100/100 ; 7/1, et la question réelle du DNB 2026 « Donner une écriture du
 // nombre 0,75 sous la forme d'une fraction » (toute fraction égale est juste).
-// Les numéros des types retirés (7, 8, 12, 14, 18, 20) ne sont pas réutilisés.
+// Les numéros des types retirés (12, 14, 18, 20) ne sont pas réutilisés. Les tiers
+// (types 7 et 8 : 3/3, 6/3, 9/3) sont revenus le 17/10/2026, à la demande de Gwenaël.
 const MODULE01_OFFICIAL_F2D=[
   {num:1,den:2},{num:1,den:4},{num:3,den:4},{num:3,den:2},{num:4,den:2},{num:5,den:2},
   {num:1,den:10},{num:1,den:100},{num:100,den:100},{num:7,den:1}
@@ -878,6 +879,8 @@ const MODULE01_TEMPLATES=[
   {n:4,options:{module01_kind:'benchmark_d2f',module01_format:'qcm'}},
   {n:5,options:{module01_kind:'tenths_f2d',module01_format:'open'}},
   {n:6,options:{module01_kind:'hundredths_f2d',module01_format:'open'}},
+  {n:7,options:{module01_kind:'integer_thirds_f2d',module01_format:'open'}},
+  {n:8,options:{module01_kind:'integer_thirds_f2d',module01_format:'qcm'}},
   {n:9,options:{module01_kind:'benchmark_improper_f2d',module01_format:'qcm'}},
   {n:10,options:{module01_kind:'improper_f2d',module01_format:'open'}},
   {n:11,options:{module01_kind:'benchmark_improper_f2d',module01_format:'truefalse'}},
@@ -897,7 +900,8 @@ function module01Family(q){
   const n=Number(q&&q.n);
   if([1,2].includes(n)) return 'reperes';
   if([5,6].includes(n)) return 'dixiemes-centiemes';
-  if([9,10,11].includes(n)) return 'plus-grand-que-1';
+  // Les tiers (7, 8 : 6/3 = 2) tournent avec les fractions plus grandes que 1.
+  if([7,8,9,10,11].includes(n)) return 'plus-grand-que-1';
   if(n===13) return 'simplifier';
   // Les QCM décimal → fraction (4, 16) tournent avec les réponses à écrire : brevet 2027 sans QCM.
   if([21,23].includes(n)) return 'comparer';
@@ -1023,6 +1027,17 @@ function module01ImproperDecimalDistractors(num,den,dec){
   ];
   return module01PickDistinct(candidates,item=>item.value===dec);
 }
+// Distracteurs des tiers (type 8 : 6/3 = 2) : chacun correspond à une erreur nommée.
+function module01ThirdsDistractors(num,den,dec){
+  const F=module01Frac(num,den);
+  const candidates=[
+    {value:num+','+den,code:'E1',feedback:'La barre de fraction n’est pas une virgule : '+F+' n’est pas '+num+','+den+'.'},
+    {value:String(num-den),code:'E-sous',feedback:F+', c’est '+num+' divisé par '+den+', pas '+num+' − '+den+'.'},
+    {value:String(num),code:'E-num',feedback:F+', ce sont '+num+' tiers, pas '+num+' unités : il faut 3 tiers pour faire 1 unité.'},
+    {value:den+','+num,code:'E1b',feedback:'La barre de fraction n’est pas une virgule.'}
+  ];
+  return module01PickDistinct(candidates,item=>item.value===dec);
+}
 // Distracteurs « décimal → fraction » (QCM de type 4).
 function module01FractionDistractors(num,den){
   const dec=module01Decimal(num,den), parts=module01DecimalParts(dec), D='$$'+dec+'$$';
@@ -1100,7 +1115,7 @@ function module01F2DSteps(num,den,dec){
 }
 function module01PlaceWord(den,count=2){
   const plural=count>1;
-  const words={1:['unité','unités'],2:['demi','demis'],4:['quart','quarts'],5:['cinquième','cinquièmes'],10:['dixième','dixièmes'],100:['centième','centièmes']};
+  const words={1:['unité','unités'],2:['demi','demis'],3:['tiers','tiers'],4:['quart','quarts'],5:['cinquième','cinquièmes'],10:['dixième','dixièmes'],100:['centième','centièmes']};
   const word=words[den]||[den+'e',den+'es'];
   return plural?word[1]:word[0];
 }
@@ -1121,7 +1136,19 @@ function module01D2FSteps(dec,reduced){
 function module01D2FAide(dec){
   const parts=module01DecimalParts(dec);
   const where=parts.places===1?'Le chiffre après la virgule est au rang des dixièmes.':'Le deuxième chiffre après la virgule est au rang des centièmes.';
+  // 0,01 : « Un centième s'écrit 1/100 » serait la réponse (règle du 17/10/2026) : on compte les cases.
+  if(parts.num===1) return [where,'Combien de cases a la grille ? Combien sont coloriées ?'];
   return [where, '$$'+dec+'$$ se lit en '+module01PlaceName(parts.places)+'. Un '+module01PlaceName(parts.places,1)+' s’écrit $$'+module01FracLatex(1,parts.den)+'$$.'];
+}
+// Aides de la droite graduée : le texte dit ce que montre le dessin (même chemin dans les deux sens).
+function module01RailAideD2F(den,dec,num){
+  // Une seule bande (0,5 ; 0,25 ; 0,1) : « Chaque bande vaut un quart » donnerait la réponse
+  // (décision de Gwenaël, 17/10/2026). L'unité est partagée sur le dessin : on compte les bandes.
+  if(num===1) return ['En combien de bandes égales l’unité est-elle partagée ?','Une de ces bandes arrive à $$'+dec+'$$.'];
+  return ['Chaque bande vaut un '+module01PlaceWord(den,1)+'.','Combien de '+module01PlaceWord(den)+' faut-il pour arriver à $$'+dec+'$$ ?'];
+}
+function module01RailAideF2D(num,den){
+  return ['Chaque bande vaut un '+module01PlaceWord(den,1)+' : on en pose '+num+'.','Lis la graduation où arrive la dernière bande.'];
 }
 function module01F2DAide(num,den){
   const F=module01Frac(num,den);
@@ -1131,18 +1158,20 @@ function module01F2DAide(num,den){
     const places=den===10?1:2;
     return ['Le dénominateur '+den+' indique des '+module01PlaceName(places)+' : '+F+' = '+num+' '+module01PlaceName(places,num)+'.', places===1?'Les dixièmes s’écrivent au 1<sup>er</sup> rang après la virgule.':'Les centièmes s’écrivent au 2<sup>e</sup> rang après la virgule.'];
   }
+  // 4/2, 6/3 : il ne reste rien après les unités entières.
+  if(num>den&&num%den===0) return ['Combien de '+module01PlaceWord(den)+' font une unité ?','Combien d’unités entières peux-tu former ?'];
   if(num>den) return ['Combien de '+module01PlaceWord(den)+' font une unité ?','Écris '+F+' comme une somme : des unités entières + ce qui reste.'];
   return ['Cherche une fraction égale avec 10 ou 100 au dénominateur.','Par combien multiplier '+den+' pour obtenir '+(den===2||den===5?'10':'100')+' ?'];
 }
-function module01AideVisual(data){
+function module01AideVisual(data,correction=false){
   // A0 : plusieurs dessins à la suite (le plateau de Gwenaël, puis le tableau de numération).
-  if(Array.isArray(data)) return data.map(module01AideVisual).join('');
+  if(Array.isArray(data)) return data.map(item=>module01AideVisual(item,correction)).join('');
   // Dessin du panneau d'aide : jamais la réponse (aucun « 1 » écrit sur les unités).
   const component=globalThis.MATHSGO_VISUALS&&globalThis.MATHSGO_VISUALS.get('arithmetic.fraction-decimal-grid');
   if(!component||!data||(!data.kind&&(!data.visualKind||data.visualKind==='none'))) return '';
   // Au plus 180 px de haut dans le panneau (22 % de la hauteur sur un petit écran) : le dessin
   // et les indices tiennent ensemble à l'écran.
-  const html=component.render(data,false), box=html.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/);
+  const html=component.render(data,correction), box=html.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/);
   const ratio=box?Number(box[1])/Number(box[2]):2;
   const maxWidth='min('+Math.round(180*ratio)+'px,'+(22*ratio).toFixed(1)+'vh)';
   return html.replace(/^<div class="module01-visual([^"]*)"/,'<div class="module01-visual$1" style="max-width:'+maxWidth+';width:100%;margin:0 auto"');
@@ -1158,39 +1187,52 @@ function makeModule01Instance(mod,q){
     const e=module01DistinctFrom('fixedF2D',MODULE01_OFFICIAL_F2D);
     num=e.num; den=e.den;
     if(den===1) num=pick([2,3,5,6,7,8,9]);
-    // Pas de dessin quand la fraction vaut un entier (n/1, 4/2, 100/100) : compter les unités donnerait la réponse.
-    visualKind=num%den===0?'none':((den===10||den===100)?'place-empty':'grouped');
+    // Règle du 17/10/2026 : on peut compter sur le dessin, la réponse n'y est jamais écrite.
+    // Demis et quarts : la droite graduée de la V2 (bandes posées, arrivée « ? »), à la place
+    // du rectangle. n/1 et 100/100 : les unités de Gwenaël, sans le « 1 » sur chaque unité.
+    visualKind=(den===2||den===4||den===10)?'rail':(den===1||num===den?'grouped':'place-empty');
+  } else if(kind==='integer_thirds_f2d'){
+    // Les tiers qui font un entier (3/3, 6/3, 9/3), sur la droite des tiers.
+    const e=module01DistinctFrom('thirds',[{num:3},{num:6},{num:9}]);
+    num=e.num; den=3; visualKind='rail';
   } else if(kind==='fixed_d2f'){
     const e=module01DistinctFrom('fixedD2F',MODULE01_OFFICIAL_D2F); num=e.num; den=e.den; direction='d2f';
   } else if(kind==='benchmark_d2f'){
     const e=module01DistinctFrom('qcmD2F',MODULE01_QCM_D2F); num=e.num; den=e.den; direction='d2f';
   } else if(kind==='tenths_f2d'){
-    num=RD(1,9); den=10; visualKind='place-empty';
+    // 17/10/2026 (Gwenaël) : les dixièmes aussi sur la droite graduée, sans tableau.
+    num=RD(1,9); den=10; visualKind='rail';
   } else if(kind==='hundredths_f2d'){
     // Un tirage sur trois travaille le zéro de position (9/100 = 0,09).
     if(rnd()<1/3) num=RD(1,9); else do{num=RD(11,99);}while(num%10===0);
     den=100; visualKind='place-empty';
   } else if(kind==='benchmark_improper_f2d'){
+    // 17/10/2026 (Gwenaël, « le même dessin pour le même nombre ») : demis et quarts sur la
+    // droite graduée, comme 5/2 = ? au type 1.
     const e=pick([{n:3,d:2},{n:5,d:2},{n:7,d:2},{n:5,d:4},{n:7,d:4},{n:9,d:4}]);
-    num=e.n; den=e.d; visualKind='bar';
+    num=e.n; den=e.d; visualKind='rail';
   } else if(kind==='improper_f2d'){
     den=pick([2,4,4,10]);
     do{num=RD(den+1,3*den-1);}while(num%den===0||(den===4&&num%2===0));
-    visualKind='bar';
+    // Demis et quarts : la droite graduée. Dixièmes (2,7) : les unités découpées, comme 2,7 → fraction.
+    visualKind=den===10?'bar':'rail';
   } else if(kind==='reducible_f2d'){
     // Il faut simplifier pour retrouver un repère (1/2, 1/4, 3/4, 3/2, 5/2) ; 50/100 ou 75/100 se lisent
     // directement en centièmes (type 6), ils ne sont plus ici.
     const e=pick([{n:2,d:4},{n:3,d:6},{n:4,d:8},{n:2,d:8},{n:3,d:12},{n:5,d:20},{n:6,d:8},{n:9,d:12},{n:15,d:20},{n:6,d:4},{n:10,d:4}]);
     num=e.n; den=e.d; visualKind=den===20?'neutral':'bar';
   } else if(kind==='tenths_d2f'){
-    num=RD(1,9); den=10; direction='d2f';
+    // Pas de 0,5 en types 15 et 16 : il vient toujours avec la droite des demis (types 3, 4).
+    num=RD(1,9,[5]); den=10; direction='d2f';
   } else if(kind==='place_d2f'){
+    // 17/10/2026 (Gwenaël) : plus de 0,25 ni de 0,75 en types 16 et 17. Ils viennent toujours
+    // avec la droite des quarts (types 3, 4, 19) ; ici, les vrais centièmes (0,57 ; 0,08).
     const r=rnd(); direction='d2f';
-    if(r<1/3){ num=RD(1,9); den=10; }
+    if(r<1/3){ num=RD(1,9,[5]); den=10; }
     else if(r<2/3){ num=RD(1,9); den=100; }
-    else { do{num=RD(11,99);}while(num%10===0); den=100; }
+    else { do{num=RD(11,99);}while(num%10===0||num===25||num===75); den=100; }
   } else if(kind==='hundredths_d2f'){
-    if(rnd()<0.3) num=RD(1,9); else do{num=RD(11,99);}while(num%10===0);
+    if(rnd()<0.3) num=RD(1,9); else do{num=RD(11,99);}while(num%10===0||num===25||num===75);
     den=100; direction='d2f';
   } else if(kind==='improper_d2f'){
     const whole=RD(1,3), part=pick([{n:1,d:2},{n:1,d:4},{n:3,d:4},{n:RD(1,9,[5]),d:10}]);
@@ -1205,7 +1247,7 @@ function makeModule01Instance(mod,q){
   const special=['compare','sum_f2d','extreme'].includes(kind);
   if(!special&&direction==='f2d'){
     steps=module01F2DSteps(num,den,dec);
-    aide=module01F2DAide(num,den);
+    aide=visualKind==='rail'&&num<den?module01RailAideF2D(num,den):module01F2DAide(num,den);
     // Notes en texte seul (sans fraction empilée) : elles tiennent sur une ligne dans la carte.
     if(num>den&&den>1&&den<10) note='Attention : la barre de fraction n’est pas une virgule, ce n’est pas '+num+','+den+'.';
     else if(den===100&&num<10) note='Attention : le '+num+' s’écrit au rang des centièmes. 0,'+num+' vaut '+num+' '+module01PlaceName(1,num)+'.';
@@ -1223,7 +1265,7 @@ function makeModule01Instance(mod,q){
     } else if(format==='qcm'){
       prompt='Quelle est l’écriture décimale de '+F+'&nbsp;?';
       display='';
-      const distractors=kind==='fixed_f2d'?module01OfficialDecimalDistractors(num,den,dec):module01ImproperDecimalDistractors(num,den,dec);
+      const distractors=kind==='fixed_f2d'?module01OfficialDecimalDistractors(num,den,dec):(kind==='integer_thirds_f2d'?module01ThirdsDistractors(num,den,dec):module01ImproperDecimalDistractors(num,den,dec));
       qcm=module01QcmFrom(dec,distractors); answers=[qcm.correctIndex]; feedback=qcm.feedback;
     } else {
       const wrong=module01ImproperDecimalDistractors(num,den,dec);
@@ -1240,9 +1282,14 @@ function makeModule01Instance(mod,q){
       extra.truth=truth; extra.shown=shown;
     }
     // A0 : pour /10 et /100, le plateau de Gwenaël (unité partagée, parts coloriées) revient
-    // dans l'aide, avant le tableau de numération vide.
-    visualData=visualKind==='place-empty'?[{num,den,reduced,visualKind:'grouped',dec},{num,den,reduced,visualKind,dec}]:{num,den,reduced,visualKind,dec};
-    correctionVisualData=visualKind==='place-empty'?{kind:'place-value',value:dec}:(visualKind==='none'?null:{num,den,reduced,visualKind,showUnits:true});
+    // dans l'aide, avant le tableau de numération vide. Droite graduée : la même en correction,
+    // l'arrivée porte alors la réponse.
+    if(visualKind==='rail'){
+      visualData={kind:'rail',num,den,dec}; correctionVisualData={kind:'rail',num,den,dec};
+    } else {
+      visualData=visualKind==='place-empty'?[{num,den,reduced,visualKind:'grouped',dec},{num,den,reduced,visualKind,dec}]:{num,den,reduced,visualKind,dec};
+      correctionVisualData=visualKind==='place-empty'?{kind:'place-value',value:dec}:(visualKind==='none'?null:{num,den,reduced,visualKind,showUnits:true});
+    }
   } else if(!special&&direction==='d2f'){
     fractionPolicy='equivalent';
     steps=module01D2FSteps(dec,reduced);
@@ -1262,12 +1309,23 @@ function makeModule01Instance(mod,q){
       qcm=module01QcmFrom(correct,distractors); answers=[qcm.correctIndex]; feedback=qcm.feedback;
       if(kind==='place_d2f') steps=steps.slice(0,1);
     }
-    // Question : le plateau de Gwenaël (A0) avec ses unités partagées en dixièmes ou en
-    // centièmes, sans rien colorier (colorier le nombre donnerait la réponse), puis le
-    // tableau vide (dans quel rang est chaque chiffre ?) ; correction : tableau rempli.
+    // Aide : le plateau de Gwenaël, le nombre colorié comme dans sa version (règle du
+    // 17/10/2026 : on compte 75 centièmes, la réponse n'est pas écrite). Plus de tableau
+    // de numération vide : le panneau était trop chargé. Correction : le tableau rempli.
     const plateau=(kind==='fixed_d2f'||kind==='benchmark_d2f')?(num>den&&den>1?'bar':(den===10?'grouped':'neutral')):(den===10?'grouped':'neutral');
-    visualData=[{num,den,reduced,visualKind:plateau,dec,vide:true},{kind:'place-value',value:null}];
+    visualData={num,den,reduced,visualKind:plateau,dec};
     correctionVisualData={kind:'place-value',value:dec};
+    // 17/10/2026 (Gwenaël) : demis et quarts, le même chemin que 3/4 = ? : la droite graduée,
+    // le nombre donné (0,75) au bout ; on compte les bandes. Dixièmes et centièmes : le plateau colorié.
+    const lecture=module01DecimalParts(dec);
+    if(['fixed_d2f','benchmark_d2f','improper_d2f'].includes(kind)&&(reduced.den===2||reduced.den===4)){
+      visualData={kind:'rail',num:reduced.num,den:reduced.den,dec,donne:true};
+      aide=module01RailAideD2F(reduced.den,dec,reduced.num);
+    } else if(lecture.places===1&&lecture.intPart===0){
+      // Dixièmes plus petits que 1 (0,4 ; 0,2 ; 0,1) : la droite des dixièmes. Centièmes et 2,7 : le plateau.
+      visualData={kind:'rail',num:lecture.num,den:10,dec,donne:true};
+      aide=module01RailAideD2F(10,dec,lecture.num);
+    }
   } else if(kind==='compare'){
     // « Complète par <, = ou > » (sujet de référence n° 1, Q4 : comparer 7/4 et des décimaux).
     const e=pick([{n:1,d:2},{n:1,d:4},{n:3,d:4},{n:3,d:2},{n:5,d:2},{n:5,d:4},{n:7,d:4},{n:1,d:10}]);
@@ -1392,8 +1450,9 @@ function makeModule01Instance(mod,q){
     visualData=null; correctionVisualData=null; visualKind='none'; direction='extreme';
   }
 
-  // Le dessin du sens décimal → fraction est un tableau de numération rempli (lecture des rangs).
   const aideHtml=visualData?module01AideVisual(Array.isArray(visualData)||visualData.kind?visualData:{...visualData}):'';
+  // Diaporama « Avec aide » : à la correction, la droite graduée porte la réponse au bout (au lieu du « ? »).
+  const aideCorrectionHtml=visualData&&visualData.kind==='rail'&&!visualData.donne&&correctionVisualData?module01AideVisual(correctionVisualData,true):'';
   const hasVisual=!!aideHtml;
   prompt=module01Tidy(prompt); display=module01Tidy(display); equality=module01Tidy(equality);
   if(qcm&&qcm.kind!=='signs') qcm.options=qcm.options.map(option=>['Vrai','Faux'].includes(option)?option:module01TidyLatex(option));
@@ -1405,6 +1464,7 @@ function makeModule01Instance(mod,q){
     distractorFeedback:feedback||null,
     aideSteps:aide.slice(0,2).map(module01Tidy),
     aideHtml,
+    aideCorrectionHtml,
     module01:{kind,format,direction,num,den,dec,reduced,visualKind,visualData,correctionVisualData,qcm,prompt,display,equality,fractionPolicy,extra}
   };
 }
@@ -5109,8 +5169,8 @@ const LEVEL_4E_QUESTIONS={
 // Le filtre DNB reste volontairement classique : calculs directs et QCM
 // courts sur la distributivité simple, sans manipulation ni identité remarquable.
 const LEVEL_DNB_QUESTIONS={
-  // dnb_01 : le vrai/faux (type 11) n'est pas une forme du DNB général.
-  dnb_01:[1,2,3,4,5,6,9,10,13,15,16,17,19,21,22,23],
+  // dnb_01 : tous les types, le vrai/faux (11) et les tiers (7, 8) compris (Gwenaël, 17/10/2026).
+  dnb_01:'all',
   // dnb_02 : l'encadrement entre deux entiers (type 4) reste en 5e-4e.
   dnb_02:[1,3,7,8,9,10,11,13,14,15,16,17,18],
   // dnb_03 : les types 3, 5 et 6 (même dénominateur ou même numérateur)
