@@ -6,9 +6,9 @@ une page 2 (l'exemple résolu pas à pas) et un dos (« Le défi ! », deux prob
 la lettre de chaque quantité, 𝑡, 𝑏…), avec le schéma ; et **en équations**, sans schéma (08/10/2026) :
 ① je choisis l'inconnue, ② j'écris l'équation, ③ je résous, puis « Je réponds » et « Je vérifie ».
 
-**Pas encore sur le site** (décision du 08/10/2026) : les PDF servent d'abord à l'essai en classe.
-Quand ils seront publiés, ce dossier devient `_sources/livret-splat-histoires/` (le script trouve
-le dépôt deux dossiers plus haut) et les PDF iront dans `outils/` (variable `HISTOIRES_SORTIE`).
+**Sur le site** : `outils/livrets_splat.html`, la 7ᵉ entrée (en essai derrière la clé `?essai=1` le
+15/10/2026, ouverte à tous le 17/10/2026). Le script trouve le dépôt deux dossiers plus haut ; les PDF
+vont dans `outils/` par `../publier.py` (variable `HISTOIRES_SORTIE` pour le dossier du rendu).
 
 ## Le principe
 

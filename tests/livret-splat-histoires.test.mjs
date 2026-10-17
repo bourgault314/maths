@@ -12,9 +12,9 @@ import { readFileSync, statSync, existsSync } from "node:fs";
 import { inflateSync } from "node:zlib";
 import vm from "node:vm";
 
-/* ══ LE JOUR DE L'OUVERTURE À TOUS : passer EN_ESSAI à false, et retirer de la page les deux
-   « data-prepa » (l'onglet #onglet-h et le panneau #histoires). ══ */
-const EN_ESSAI = true;
+/* ══ OUVERTES À TOUS le 17/10/2026 (lot A) : EN_ESSAI à false, les deux « data-prepa » retirés de la page
+   (l'onglet #onglet-h et le panneau #histoires). Pour les recacher : EN_ESSAI à true et les remettre. ══ */
+const EN_ESSAI = false;
 
 const lire = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 const taille = (p) => statSync(new URL(`../${p}`, import.meta.url)).size;

@@ -4,10 +4,11 @@ Les problèmes de SPLAT! écrits en histoires : trois livrets (parties 1 à 3, f
 chacun avec trois corrigés (schéma avec « ? », schéma avec une lettre, en équations). Sur le site :
 `outils/livrets_splat.html`, la 7e entrée, sous les six mondes (`#histoires`).
 
-**En essai depuis le 15/10/2026** : l'onglet (`#onglet-h`) et le panneau (`#histoires`) portent
-`data-prepa` dans la page, donc cachés au public, avec ou sans JavaScript ; la clé `?essai=1`
-(celle des mondes en préparation, `assets/js/splat-etapes.js`) les montre. Pour les ouvrir à
-tous : retirer ces deux `data-prepa` (et suivre ce que dit `tests/livret-splat-histoires.test.mjs`).
+**Ouvertes à tous depuis le 17/10/2026** (lot A, après l'audit). Du 15 au 17/10, elles étaient en
+essai : l'onglet (`#onglet-h`) et le panneau (`#histoires`) portaient `data-prepa` dans la page, et
+seule la clé `?essai=1` (celle des mondes en préparation, `assets/js/splat-etapes.js`) les montrait.
+Pour les recacher un jour : remettre ces deux `data-prepa`, et `EN_ESSAI = true` dans
+`tests/livret-splat-histoires.test.mjs`.
 
 | Dossier | Sur le site | Fiches | Pages |
 |---|---|---|---|
