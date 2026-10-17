@@ -5912,12 +5912,14 @@
   }
 
 
+  /* Drapeau u (17/10/2026) : sans lui, 𝑥 (deux moitiés en JavaScript) ne se convertissait jamais
+     et « 2𝑥 + 4 = 18 » collé dans le champ tombait sur « Caractère non reconnu ». */
   function normalizeMathLetters(str){
     const map = {
       "𝑎":"a","𝑏":"b","𝑐":"c","𝑑":"d","𝑒":"e","𝑓":"f","𝑔":"g","ℎ":"h","𝑖":"i","𝑗":"j","𝑘":"k","𝑙":"l","𝑚":"m","𝑛":"n","𝑜":"o","𝑝":"p","𝑞":"q","𝑟":"r","𝑠":"s","𝑡":"t","𝑢":"u","𝑣":"v","𝑤":"w","𝑥":"x","𝑦":"y","𝑧":"z",
       "𝐴":"A","𝐵":"B","𝐶":"C","𝐷":"D","𝐸":"E","𝐹":"F","𝐺":"G","𝐻":"H","𝐼":"I","𝐽":"J","𝐾":"K","𝐿":"L","𝑀":"M","𝑁":"N","𝑂":"O","𝑃":"P","𝑄":"Q","𝑅":"R","𝑆":"S","𝑇":"T","𝑈":"U","𝑉":"V","𝑊":"W","𝑋":"X","𝑌":"Y","𝑍":"Z"
     };
-    return String(str || "").replace(/[𝑎𝑏𝑐𝑑𝑒𝑓𝑔ℎ𝑖𝑗𝑘𝑙𝑚𝑛𝑜𝑝𝑞𝑟𝑠𝑡𝑢𝑣𝑤𝑥𝑦𝑧𝐴𝐵𝐶𝐷𝐸𝐹𝐺𝐻𝐼𝐽𝐾𝐿𝑀𝑁𝑂𝑃𝑄𝑅𝑆𝑇𝑈𝑉𝑊𝑋𝑌𝑍]/g, ch => map[ch] || ch);
+    return String(str || "").replace(/[𝑎𝑏𝑐𝑑𝑒𝑓𝑔ℎ𝑖𝑗𝑘𝑙𝑚𝑛𝑜𝑝𝑞𝑟𝑠𝑡𝑢𝑣𝑤𝑥𝑦𝑧𝐴𝐵𝐶𝐷𝐸𝐹𝐺𝐻𝐼𝐽𝐾𝐿𝑀𝑁𝑂𝑃𝑄𝑅𝑆𝑇𝑈𝑉𝑊𝑋𝑌𝑍]/gu, ch => map[ch] || ch);
   }
 
   function toMathItalicLetter(letter){
@@ -5925,6 +5927,11 @@
     const map = {a:"𝑎",b:"𝑏",c:"𝑐",d:"𝑑",e:"𝑒",f:"𝑓",g:"𝑔",h:"ℎ",i:"𝑖",j:"𝑗",k:"𝑘",l:"𝑙",m:"𝑚",n:"𝑛",o:"𝑜",p:"𝑝",q:"𝑞",r:"𝑟",s:"𝑠",t:"𝑡",u:"𝑢",v:"𝑣",w:"𝑤",x:"𝑥",y:"𝑦",z:"𝑧"};
     return map[lower] || "𝑥";
   }
+
+  /* Les deux refus de la saisie « Créer une équation », mots choisis par Gwenaël (17/10/2026). */
+  /* espace insécable : au téléphone, « lettre. » ne reste pas seul sur sa ligne */
+  const SAISIE_UN_NOMBRE = "Simplifie ton écriture : un seul nombre devant la\u00a0lettre.";
+  const SAISIE_ENTIERS = "On n’accepte que les entiers.";
 
   function parseEquationSideForSplat(rawSide, sideName, ctx){
     let compact = normalizeMathLetters(rawSide)
@@ -5935,11 +5942,13 @@
     if(!compact){
       throw new Error(`Le côté ${sideName} est vide.`);
     }
+    /* « 2,5x » était refusé avec « sommes simples » (la virgule passait pour un séparateur) :
+       un nombre à virgule ou à point a son message, choisi par Gwenaël le 17/10/2026. */
+    if(/[.]/.test(compact) || /\d,|,\d/.test(compact)){
+      throw new Error(SAISIE_ENTIERS);
+    }
     if(/[(),;]/.test(compact) || /[\/]/.test(compact)){
       throw new Error("Utilise seulement des sommes simples : par exemple 2x + 4 = 18.");
-    }
-    if(/[.]/.test(compact)){
-      throw new Error("Les décimaux ne sont pas acceptés ici : utilise seulement des entiers.");
     }
     if(!/^[0-9a-zA-Z+*\-]+$/.test(compact)){
       throw new Error("Caractère non reconnu. Utilise des entiers, une lettre, +, − et ×.");
@@ -5972,12 +5981,15 @@
           throw new Error("Utilise une seule lettre inconnue dans toute l’équation.");
         }
         ctx.variable = variable;
-        let rawCoef = term.replace(/[a-zA-Z]/g, "");
-        rawCoef = rawCoef.replace(/\*/g, "");
-        const n = rawCoef === "" ? 1 : Number(rawCoef);
-        if(!Number.isInteger(n)){
-          throw new Error(`Coefficient non reconnu du côté ${sideName}.`);
+        /* Un seul nombre devant la lettre : « 2x », « 2 × x », « x », « x × 2 ». Les chiffres
+           étaient recollés avant (« 1 × 2x » devenait 12x, « 0 × 2x » 2x, « 2 × 3x » 23x et
+           « x2 » 2x en silence) : tout le reste est refusé, l'outil ne calcule pas à la place
+           (17/10/2026, choix de Gwenaël). */
+        const forme = term.match(/^(?:(\d+)\*?)?[a-zA-Z]$/) || term.match(/^[a-zA-Z]\*(\d+)$/);
+        if(!forme){
+          throw new Error(SAISIE_UN_NOMBRE);
         }
+        const n = forme[1] === undefined ? 1 : Number(forme[1]);
         const signedCoef = sign * n;
         coef += signedCoef;
         if(signedCoef !== 0) pieces.push({type:"x", coef:signedCoef});
@@ -6027,18 +6039,13 @@
       throw new Error("Il faut une inconnue : par exemple x, n ou a.");
     }
 
-    const relative = isRelativeUniverse();
-    const allowOppositeX = oppositeXEnabled();
-    if(!relative && (left.constant < 0 || right.constant < 0)){
-      throw new Error("En Splat positif, les constantes doivent rester positives. Passe en Splat relatif pour utiliser des nombres négatifs.");
-    }
-    if(!allowOppositeX && (left.coef < 0 || right.coef < 0)){
-      throw new Error("Pour construire une équation avec −x, choisis Splat relatif puis active les taches opposées.");
-    }
-    if(Math.abs(left.coef) + Math.abs(right.coef) > 16){
+    /* On compte les taches posées, pas le total : « 10x − 9x » en pose 19, pas 1. */
+    const pieces = left.pieces.concat(right.pieces);
+    const taches = pieces.reduce((n, p) => n + (p.type === "x" ? Math.abs(p.coef) : 0), 0);
+    if(taches > 16){
       throw new Error("Cette équation crée trop de taches pour rester lisible.");
     }
-    if(left.pieces.length + right.pieces.length > 80){
+    if(pieces.length > 80){
       throw new Error("Cette équation crée trop d’objets pour rester lisible.");
     }
 
@@ -6054,17 +6061,42 @@
        côté vide se concluent depuis le monde 6 (« 4𝑥 = 13 − 13 »). Pas dans ÉquaBarre : une barre de
        taille 0 n'a pas de sens. */
     const x = numerator / denominator;
-    if(!relative && x < 0){
-      throw new Error("En Splat positif, la solution doit être positive. Passe en Splat relatif pour une solution négative.");
-    }
+
+    /* L'équation dit elle-même son monde (17/10/2026, choix de Gwenaël). Un jeton −2, une tache −x
+       ou une solution négative n'existent pas en Splat positif : avant, seuls les TOTAUX étaient
+       contrôlés, et « x − 2 + 3 = 5 » posait un jeton −2 sur un plateau resté « positif ». On ne
+       refuse plus : buildFromEquationInput passe en Splat relatif (et allume les taches opposées
+       pour −x), comme le fait déjà un lien #data=. Cette fonction ne lit plus les menus. */
+    const opposees = pieces.some(p => p.type === "x" && p.coef < 0);
+    const relatif = opposees || pieces.some(p => p.type === "token" && p.value < 0) || x < 0;
 
     return {
       left,
       right,
       x,
       variable:toMathItalicLetter(ctx.variable),
-      mode:inferModeFromParsedEquation(left, right)
+      mode:inferModeFromParsedEquation(left, right),
+      besoin:{relatif, opposees}
     };
+  }
+
+  function passerAuMondeDeLEquation(besoin){
+    let change = false;
+    if(besoin && besoin.relatif && workUniverseEl && workUniverseEl.value !== "relative"){
+      workUniverseEl.value = "relative";
+      change = true;
+    }
+    if(besoin && besoin.opposees && oppositeXModeEl && oppositeXModeEl.value !== "on"){
+      oppositeXModeEl.value = "on";
+      change = true;
+    }
+    /* Poser une valeur par programme ne déclenche pas « change » : le champ garde l'équation tapée
+       (rebuildFromCurrentSettings la remplacerait). On remet seulement le menu d'accord. */
+    if(change){
+      syncUniverseUI({validate:false});
+      renderEquationExamples();
+    }
+    return change;
   }
 
   function piecesFromParsedSide(parsedSide, options={}){
@@ -6090,6 +6122,7 @@
     initialState = null;
     try{
       const model = parseEquationInputToModel(equationInput ? equationInput.value : "");
+      passerAuMondeDeLEquation(model.besoin);
       if(modeEl && modeEl.value !== "mix") modeEl.value = model.mode;
       syncTeacherControls({validate:false});
       state = {
@@ -6122,7 +6155,10 @@
       clearTeacherInfo();
       return true;
     }catch(err){
-      setTeacherInfo(false, err && err.message ? err.message : "Équation impossible à construire.");
+      /* Et un pirate ? (17/10/2026) Les refus sont des phrases fixes, sans morceau de la saisie : rien
+         de ce qu'on tape ne s'écrit en HTML. Échappé quand même, au cas où une phrase future reprendrait
+         la saisie. */
+      setTeacherInfo(false, escapeHtml(err && err.message ? err.message : "Équation impossible à construire."));
       return false;
     }
   }
