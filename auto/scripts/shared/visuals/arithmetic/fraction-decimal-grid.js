@@ -32,6 +32,14 @@
       });
       return result;
     }
+    if(den===100&&orderingDen===100){
+      // Quarts : carré en haut à gauche, en haut à droite, en bas à gauche, en bas à droite.
+      const result=[];
+      [[0,0],[5,0],[0,5],[5,5]].forEach(([x0,y0])=>{
+        for(let row=0;row<5;row++)for(let col=0;col<5;col++)result.push((y0+row)*cols+x0+col);
+      });
+      return result;
+    }
     if(den===15||den===25||den===50||(den===20&&orderingDen===5)){
       const result=[];
       for(let col=0;col<cols;col++)for(let row=0;row<rows;row++)result.push(row*cols+col);
@@ -57,7 +65,13 @@
     if(den===100){vertical(.5,1.9);horizontal(.5,1.9);}
     return output;
   }
-  function hundredGridPart(x0,y0,size,filled,den){
+  // Pastille « 1 » d'une unité complète (correction seulement) : texte sombre sur blanc,
+// lisible sur toutes les couleurs et en noir et blanc.
+  function unitBadge(x0,y0,size){
+    const r=Math.max(14,Math.min(24,size*.12)),cx=x0+size/2,cy=y0+size/2;
+    return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#ffffff" stroke="#18324f" stroke-width="2.4"/><text x="${cx}" y="${cy+r*.36}" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="${Math.round(r*1.05)}" font-weight="900" fill="#18324f">1</text>`;
+  }
+  function hundredGridPart(x0,y0,size,filled,den,showUnits=false){
     const [dark,light,stroke]=palette(den),cell=size/10,selectedParts=Math.max(0,Math.min(den,filled));
     let output='';
     for(let row=0;row<10;row++)for(let col=0;col<10;col++){
@@ -77,12 +91,12 @@
       }
     }
     output+=`<rect x="${x0}" y="${y0}" width="${size}" height="${size}" fill="none" stroke="${stroke}" stroke-width="3.2"/>`;
-    if(selectedParts>=den)output+=`<text x="${x0+size/2}" y="${y0+size/2+12}" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="34" font-weight="850" fill="#b33838">1</text>`;
+    if(showUnits&&selectedParts>=den)output+=unitBadge(x0,y0,size);
     return output;
   }
-  function boardPart(x0,y0,size,filled,den,neutral=false,emphasisDen=null,orderingDen=null){
+  function boardPart(x0,y0,size,filled,den,neutral=false,emphasisDen=null,orderingDen=null,showUnits=false){
     const sourceDen=neutral?100:Math.max(1,den);
-    if(!neutral&&(sourceDen===5||sourceDen===20))return hundredGridPart(x0,y0,size,filled,sourceDen);
+    if(!neutral&&(sourceDen===5||sourceDen===20))return hundredGridPart(x0,y0,size,filled,sourceDen,showUnits);
     const {cols,rows}=layout(sourceDen),[dark,light,stroke]=palette(sourceDen);
     const cellW=size/cols,cellH=size/rows,selected=Math.max(0,Math.min(sourceDen,filled));
     const selectedCells=new Set(order(sourceDen,cols,rows,orderingDen).slice(0,selected));
@@ -100,11 +114,12 @@
       }
     }
     output+=`<rect x="${x0}" y="${y0}" width="${size}" height="${size}" fill="none" stroke="${stroke}" stroke-width="3.2"/>`;
-    if(selected>=sourceDen)output+=`<text x="${x0+size/2}" y="${y0+size/2+12}" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="34" font-weight="850" fill="#b33838">1</text>`;
+    if(showUnits&&selected>=sourceDen)output+=unitBadge(x0,y0,size);
     return output;
   }
-  function gridVisual(num,den,neutral=false,emphasisDen=null,orderingDen=null){
+  function gridVisual(num,den,neutral=false,emphasisDen=null,orderingDen=null,showUnits=false,vide=false){
     const total=neutral?Math.round((num/den)*100):num,per=neutral?100:Math.max(1,den);
+    if(neutral&&total%25===0&&total%100!==0)orderingDen=100;
     const boards=Math.max(1,Math.ceil(total/per)),cols=boards<=3?boards:Math.min(4,boards),rows=Math.ceil(boards/cols);
     const size=boards===1?205:(boards<=3?176:(boards<=4?142:104)),gap=boards<=4?18:13,pad=6;
     const width=pad*2+cols*size+(cols-1)*gap,height=pad*2+rows*size+(rows-1)*gap;
@@ -112,11 +127,26 @@
     for(let index=0;index<boards;index++){
       const col=index%cols,row=Math.floor(index/cols),x=pad+col*(size+gap),y=pad+row*(size+gap),filled=Math.min(per,remaining);
       remaining-=filled;
-      shapes+=boardPart(x,y,size,filled,per,false,emphasisDen,orderingDen);
+      shapes+=boardPart(x,y,size,vide?0:filled,per,false,emphasisDen,orderingDen,showUnits);
     }
-    return `<div class="module01-visual"><svg viewBox="0 0 ${width} ${height}" style="max-width:${width}px" role="img" aria-label="${boards===1?'Une unité partagée en '+per+' parts égales':boards+' unités, chacune partagée en '+per+' parts égales'}">${shapes}</svg></div>`;
+    return `<div class="module01-visual"><svg viewBox="0 0 ${width} ${height}" style="max-width:${Math.round(width*1.5)}px;max-height:30vh" role="img" aria-label="${boards===1?'Une unité partagée en '+per+' parts égales':boards+' unités, chacune partagée en '+per+' parts égales'}">${shapes}</svg></div>`;
+  }
+  // A0 (15/10/2026) : aide de « … + … = 1 » sans cases blanches à compter. La
+  // part connue (0,83 = 8,3 dixièmes) est coloriée et découpée en dixièmes ; ce
+  // qui manque reste un seul bloc blanc, sans traits.
+  function decimalComplementBlock(data){
+    const filled=Math.max(0,Math.min(10,Number(data.filledA)||0)),full=Math.floor(filled+1e-9);
+    const cellW=56,x0=22,y=35,height=58,stroke='#18324f';
+    let cells=`<rect x="${x0}" y="${y}" width="${10*cellW}" height="${height}" fill="#f8fafc"/>`;
+    cells+=`<rect class="decimal-complement-cell decimal-complement-first" x="${x0}" y="${y}" width="${filled*cellW}" height="${height}" fill="#39b8aa"/>`;
+    for(let index=1;index<=full&&index<10;index++) cells+=`<line x1="${x0+index*cellW}" y1="${y}" x2="${x0+index*cellW}" y2="${y+height}" stroke="${stroke}" stroke-width="1.7"/>`;
+    if(filled>full+1e-9) cells+=`<line x1="${x0+filled*cellW}" y1="${y}" x2="${x0+filled*cellW}" y2="${y+height}" stroke="${stroke}" stroke-width="1.7"/>`;
+    cells+=`<rect x="${x0}" y="${y}" width="${10*cellW}" height="${height}" fill="none" stroke="${stroke}" stroke-width="1.7"/>`;
+    const unitLabel=`<text x="${x0+5*cellW}" y="21" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="22" font-weight="900" fill="#111111">1</text>`;
+    return `<div class="decimal-complement-visual"><svg viewBox="0 0 604 102" role="img" aria-label="La partie blanche est à compléter.">${unitLabel}${cells}</svg></div>`;
   }
   function decimalComplementVisual(data,correction=false){
+    if(data.resteBloc&&!correction) return decimalComplementBlock(data);
     const first=Math.max(0,Math.min(10,Math.round(Number(data.filledA)||0)));
     const second=Math.max(0,Math.min(10-first,Math.round(Number(data.filledB)||0)));
     const showSecond=!!data.showSecond||correction;
@@ -133,10 +163,40 @@
     const label=showSecond?'Les deux couleurs complètent la bande.':'La partie blanche est à compléter.';
     return `<div class="decimal-complement-visual"><svg viewBox="0 0 604 132" role="img" aria-label="${label}">${unitLabel}${cells}${outline}</svg></div>`;
   }
+  // Tableau de numération figé : unités | dixièmes | centièmes. Sans valeur, seules les
+  // colonnes sont dessinées (aide « dans quel rang écris-tu le chiffre ? »).
+  function placeValueVisual(value){
+    const labels=['unités','dixièmes','centièmes'],colW=112,headH=40,cellH=66,x0=8,y0=8;
+    const digits=['','',''];
+    if(value!==null&&value!==undefined&&value!==''){
+      const [intPart,decPart='']=String(value).split(',');
+      digits[0]=intPart; digits[1]=decPart[0]||''; digits[2]=decPart[1]||'';
+    }
+    const width=x0*2+colW*3,height=y0*2+headH+cellH;
+    let out='';
+    labels.forEach((label,index)=>{
+      const x=x0+index*colW;
+      out+=`<rect x="${x}" y="${y0}" width="${colW}" height="${headH}" fill="${index===0?'#e8eef5':'#f4f7fb'}" stroke="#18324f" stroke-width="2"/>`;
+      out+=`<text x="${x+colW/2}" y="${y0+headH/2+7}" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="19" font-weight="800" fill="#18324f">${label}</text>`;
+      out+=`<rect x="${x}" y="${y0+headH}" width="${colW}" height="${cellH}" fill="#ffffff" stroke="#18324f" stroke-width="2"/>`;
+      if(digits[index]!=='')out+=`<text x="${x+colW/2}" y="${y0+headH+cellH/2+15}" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="42" font-weight="900" fill="#111111">${digits[index]}</text>`;
+    });
+    // La virgule, à droite du chiffre des unités.
+    out+=`<text x="${x0+colW-4}" y="${y0+headH+cellH-8}" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="48" font-weight="900" fill="#c2410c">,</text>`;
+    out+=`<rect x="${x0}" y="${y0}" width="${colW*3}" height="${headH+cellH}" fill="none" stroke="#18324f" stroke-width="3"/>`;
+    const label=digits.some(Boolean)?'Tableau de numération : '+String(value):'Tableau de numération vide : unités, dixièmes, centièmes';
+    return `<div class="module01-visual module01-place-value"><svg viewBox="0 0 ${width} ${height}" style="max-width:${Math.round(width*1.35)}px;max-height:24vh" role="img" aria-label="${label}">${out}</svg></div>`;
+  }
   function render(data,correction=false){
     if(data&&data.kind==='decimal-complement') return decimalComplementVisual(data,correction);
+    if(data&&data.kind==='place-value') return placeValueVisual(data.value);
+    if(data&&data.visualKind==='place-empty') return placeValueVisual(null);
+    if(data&&data.visualKind==='none') return '';
     const common=gcd(data.num,data.den),simplified=correction&&common>1&&data.reduced&&data.reduced.den<data.den;
-    return gridVisual(data.num,data.den,data.visualKind==='neutral',simplified?data.reduced.den:null,data.reduced?data.reduced.den:null);
+    const showUnits=data.showUnits!==undefined?!!data.showUnits:!!correction;
+    // vide : les unités partagées, sans rien colorier (aide d'un « décimal → fraction » :
+    // colorier le nombre donnerait la réponse ; A0, 15/10/2026).
+    return gridVisual(data.num,data.den,data.visualKind==='neutral',simplified?data.reduced.den:null,data.reduced?data.reduced.den:null,showUnits,data.vide===true&&!correction);
   }
 
   const supports=Object.freeze(['phone','computer','projection','print']);
@@ -150,15 +210,16 @@
     preset('sept-cinquiemes','Sept cinquièmes et unités complètes',{num:7,den:5,reduced:{num:7,den:5}}),
     preset('ecriture-decimale','Écriture décimale sur cent cases',{num:3,den:4,visualKind:'neutral',reduced:{num:3,den:4}}),
     preset('simplification','Simplifier six huitièmes en trois quarts',{num:6,den:8,reduced:{num:3,den:4}}),
-    preset('complement-dixièmes','Compléter une unité en dixièmes',{kind:'decimal-complement',filledA:7,filledB:3,showSecond:true})
+    preset('complement-dixièmes','Compléter une unité en dixièmes',{kind:'decimal-complement',filledA:7,filledB:3,showSecond:true}),
+    preset('tableau-numeration','Tableau de numération : 0,09',{kind:'place-value',value:'0,09'})
   ]);
 
   if(!global.MATHSGO_VISUALS)throw new Error('Le registre MATHSGO_VISUALS doit être chargé avant fraction-decimal-grid.js.');
   global.MATHSGO_VISUALS.register('arithmetic.fraction-decimal-grid',{
-    version:'1.2.0',
+    version:'1.3.0',
     label:'Plateau fraction–décimal',
     family:'Arithmétique',
-    description:'Construit les unités partagées, grilles de cent cases, unités complètes et regroupements utilisés pour passer d’une fraction à un décimal.',
+    description:'Construit les unités partagées, grilles de cent cases (remplies par quarts), unités complètes repérées en correction et tableau de numération figé, pour passer d’une fraction à un décimal.',
     presets,
     render
   });

@@ -12,7 +12,7 @@ const MODULE_DNB_10 = {
   "questions": [
     {
       "n": 1,
-      "statement": "Réduis l’expression :",
+      "statement": "Réduis l’expression :",
       "answer": "[]",
       "options": {
         "reduction_kind": "one_no_cancel"
@@ -21,7 +21,7 @@ const MODULE_DNB_10 = {
     },
     {
       "n": 2,
-      "statement": "Réduis l’expression :",
+      "statement": "Réduis l’expression :",
       "answer": "[]",
       "options": {
         "reduction_kind": "one_cancel"
@@ -30,7 +30,7 @@ const MODULE_DNB_10 = {
     },
     {
       "n": 3,
-      "statement": "Réduis l’expression :",
+      "statement": "Réduis l’expression :",
       "answer": "[]",
       "options": {
         "reduction_kind": "multi_no_cancel"
@@ -39,7 +39,7 @@ const MODULE_DNB_10 = {
     },
     {
       "n": 4,
-      "statement": "Réduis l’expression :",
+      "statement": "Réduis l’expression :",
       "answer": "[]",
       "options": {
         "reduction_kind": "multi_cancel"
@@ -47,22 +47,63 @@ const MODULE_DNB_10 = {
       "footer": ""
     },
     {
-      "n": 5,
-      "statement": "Écris l’expression réduite représentée par ces tuiles :",
-      "answer": "[]",
-      "options": {
-        "reduction_kind": "read_tiles"
-      },
-      "footer": ""
-    },
-    {
       "n": 6,
-      "statement": "Réduis l’expression :",
+      "statement": "Quelle est la forme réduite de cette expression ?",
       "answer": "[]",
       "options": {
         "reduction_kind": "already_reduced"
       },
       "footer": ""
+    },
+    {
+      "n": 7,
+      "statement": "Réduis l’expression :",
+      "answer": "[]",
+      "options": {
+        "reduction_kind": "paren_factor"
+      },
+      "footer": ""
+    },
+    {
+      "n": 8,
+      "statement": "Réduis l’expression :",
+      "answer": "[]",
+      "options": {
+        "reduction_kind": "opposite_paren"
+      },
+      "footer": ""
+    },
+    {
+      "n": 9,
+      "statement": "Quelle est la forme réduite de ce produit ?",
+      "answer": "[]",
+      "options": {
+        "reduction_kind": "product"
+      },
+      "footer": ""
+    },
+    {
+      "n": 10,
+      "statement": "Quelle est la forme réduite de cette expression ?",
+      "answer": "[]",
+      "options": {
+        "reduction_kind": "sum_or_product"
+      },
+      "footer": ""
+    },
+    {
+      "n": 11,
+      "statement": "Quelle est la forme réduite de cette expression ?",
+      "answer": "[]",
+      "options": {
+        "reduction_kind": "paren_factor_qcm"
+      },
+      "footer": ""
     }
-  ]
+  ],
+  "keypad": {
+    "context": [
+      "−"
+    ]
+  }
 };

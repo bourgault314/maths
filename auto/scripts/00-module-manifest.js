@@ -10,11 +10,11 @@ const MATHSGO_MODULE_MANIFEST=Object.freeze([
   {id:'dnb_01',title:'Écriture décimale des fractions simples',level_tags:['4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_01',file:'scripts/modules/numbers/dnb_01.js'},
   {id:'dnb_02',title:'Comparer et calculer avec des nombres décimaux',level_tags:['5e','4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_02',file:'scripts/modules/numbers/dnb_02.js',runtimeFiles:['scripts/modules/numbers/dnb_02/generate.js','scripts/modules/numbers/dnb_02/selection.js','scripts/modules/numbers/dnb_02/render.js']},
   {id:'dnb_02b',title:'Multiplier et diviser par 10, 100 et 1 000',level_tags:['5e','4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_02B',file:'scripts/modules/numbers/dnb_02b.js',runtimeFiles:['scripts/modules/numbers/dnb_02b/generate.js','scripts/modules/numbers/dnb_02b/selection.js','scripts/modules/numbers/dnb_02b/render.js']},
-  {id:'dnb_03',title:'Fractions : simplifier, comparer, additionner',level_tags:['4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_03',file:'scripts/modules/numbers/dnb_03.js'},
+  {id:'dnb_03',title:'Fractions : simplifier, comparer, additionner',level_tags:['4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_03',file:'scripts/modules/numbers/dnb_03.js',runtimeFiles:['scripts/modules/numbers/dnb_03/generate.js','scripts/modules/numbers/dnb_03/render.js']},
   {id:'dnb_03b',title:'Fractions : multiplier et diviser',level_tags:['4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_03B',file:'scripts/modules/numbers/dnb_03b.js'},
   {id:'dnb_04',title:'Fractions d’une quantité et pourcentages repères',level_tags:['4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_04',file:'scripts/modules/numbers/dnb_04.js'},
   {id:'dnb_05',title:'Un même nombre sous plusieurs formes',level_tags:['4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_05',file:'scripts/modules/numbers/dnb_05.js'},
-  {id:'dnb_06',title:'Notation scientifique',level_tags:['4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_06',file:'scripts/modules/numbers/dnb_06.js'},
+  {id:'dnb_06',title:'Notation scientifique',level_tags:['4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_06',file:'scripts/modules/numbers/dnb_06.js',runtimeFiles:['scripts/modules/numbers/dnb_06/generate.js','scripts/modules/numbers/dnb_06/selection.js','scripts/modules/numbers/dnb_06/render.js']},
   {id:'dnb_07',title:'Carrés des entiers de 1 à 12',level_tags:['4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_07',file:'scripts/modules/numbers/dnb_07.js'},
   {id:'dnb_08',title:'Critères de divisibilité par 2, 3, 5, 9 et 10',level_tags:['4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_08',file:'scripts/modules/numbers/dnb_08.js',runtimeFiles:['scripts/modules/numbers/dnb_08/generate.js','scripts/modules/numbers/dnb_08/selection.js','scripts/modules/numbers/dnb_08/render.js']},
   {id:'dnb_09',title:'Double, triple, moitié, prédécesseur, successeur et carré',level_tags:['4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_09',file:'scripts/modules/numbers/dnb_09.js'},
@@ -37,13 +37,15 @@ const MATHSGO_MODULE_MANIFEST=Object.freeze([
   {id:'dnb_24',title:'Théorème de Pythagore : égalité et situations',level_tags:['4e','3e','DNB'],domain:'geometry',globalName:'MODULE_DNB_24',file:'scripts/modules/geometry/dnb_24.js'},
   {id:'dnb_24b',title:'Pythagore — manipuler sur téléphone',level_tags:['4e','3e','DNB'],domain:'geometry',globalName:'MODULE_DNB_24_TACTILE',file:'scripts/modules/geometry/dnb_24b.js',interactive_only:true},
   {id:'dnb_25',title:'Théorème de Thalès : triangles emboîtés',level_tags:['3e','DNB'],domain:'geometry',globalName:'MODULE_DNB_25',file:'scripts/modules/geometry/dnb_25.js'},
-  {id:'dnb_26',title:'Trigonométrie sans calculatrice',level_tags:['3e','DNB'],domain:'geometry',globalName:'MODULE_DNB_26',file:'scripts/modules/geometry/dnb_26.js'},
-  {id:'dnb_26b',title:'Trigonométrie avec calculatrice',level_tags:['3e'],domain:'geometry',globalName:'MODULE_DNB_26B',file:'scripts/modules/geometry/dnb_26b.js'},
+  {id:'dnb_26',title:'Trigonométrie sans calculatrice',level_tags:['4e','3e','DNB'],domain:'geometry',globalName:'MODULE_DNB_26',file:'scripts/modules/geometry/dnb_26.js',runtimeFiles:['scripts/modules/geometry/dnb_26/generate.js','scripts/modules/geometry/dnb_26/selection.js','scripts/modules/geometry/dnb_26/render.js']},
+  // dnb_26b (trigonométrie avec calculatrice) est sorti des séries le 08/10/2026 :
+  // la partie 1 du brevet se fait sans calculatrice. Ses fichiers restent dans le
+  // dépôt ; ses figures servent au type 14 de dnb_26 (« quel calcul donne AB ? »).
   {id:'dnb_27',title:'Symétries axiale, centrale et translation',level_tags:['4e','3e','DNB'],domain:'geometry',globalName:'MODULE_DNB_27',file:'scripts/modules/geometry/dnb_27.js'},
-  {id:'dnb_28',title:'Probabilités — équiprobabilité',level_tags:['4e','3e','DNB'],domain:'data',globalName:'MODULE_DNB_28',file:'scripts/modules/data/dnb_28.js'},
+  {id:'dnb_28',title:'Probabilités — équiprobabilité',level_tags:['4e','3e','DNB'],domain:'data',globalName:'MODULE_DNB_28',file:'scripts/modules/data/dnb_28.js',runtimeFiles:['scripts/modules/data/dnb_28/generate.js','scripts/modules/data/dnb_28/selection.js','scripts/modules/data/dnb_28/render.js']},
   {id:'dnb_29',title:'Fréquences simples',level_tags:['4e','3e','DNB'],domain:'data',globalName:'MODULE_DNB_29',file:'scripts/modules/data/dnb_29.js'},
   {id:'dnb_30',title:'Moyennes',level_tags:['4e','3e','DNB'],domain:'data',globalName:'MODULE_DNB_30',file:'scripts/modules/data/dnb_30.js'},
-  {id:'dnb_31',title:'Médiane et étendue',level_tags:['4e','3e','DNB'],domain:'data',globalName:'MODULE_DNB_31',file:'scripts/modules/data/dnb_31.js'},
+  {id:'dnb_31',title:'Médiane et étendue',level_tags:['4e','3e','DNB'],domain:'data',globalName:'MODULE_DNB_31',file:'scripts/modules/data/dnb_31.js',runtimeFiles:['scripts/modules/data/dnb_31/generate.js','scripts/modules/data/dnb_31/selection.js','scripts/modules/data/dnb_31/render.js']},
   {id:'dnb_32',title:'Lire des tableaux, diagrammes et graphiques',level_tags:['4e','3e','DNB'],domain:'data',globalName:'MODULE_DNB_32',file:'scripts/modules/data/dnb_32.js',runtimeFiles:['scripts/modules/data/dnb_32/render.js']},
   {id:'dnb_33',title:'Reconnaître une situation de proportionnalité',level_tags:['4e','3e','DNB'],domain:'data',globalName:'MODULE_DNB_33',file:'scripts/modules/data/dnb_33.js'},
   {id:'dnb_34',title:'Résoudre un problème de proportionnalité',level_tags:['4e','3e','DNB'],domain:'data',globalName:'MODULE_DNB_34',file:'scripts/modules/data/dnb_34.js'},
@@ -63,7 +65,7 @@ function loadModuleScript(src){
   if(MATHSGO_LOADED_MODULE_SCRIPTS.has(src)) return MATHSGO_LOADED_MODULE_SCRIPTS.get(src);
   const promise=new Promise((resolve,reject)=>{
     const script=document.createElement('script');
-    script.src=src+'?v=20260719-5';
+    script.src=src+'?v=20261015-1';
     script.onload=resolve;
     script.onerror=()=>reject(new Error('Impossible de charger un module d’automatismes.'));
     document.head.appendChild(script);

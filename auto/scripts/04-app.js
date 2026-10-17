@@ -219,7 +219,9 @@ function balancedFormatsForCount(count){
 }
 
 function assignReductionFormats(entries){
-  const simpleKinds=['one_no_cancel','one_cancel','already_reduced'];
+  // Types 1 et 2 : une fois sur deux en QCM. Les autres types de dnb_10
+  // ont un format fixe, décidé dans makeReductionInstance.
+  const simpleKinds=['one_no_cancel','one_cancel'];
   const formatsByKind={};
 
   simpleKinds.forEach(kind=>{
@@ -231,7 +233,7 @@ function assignReductionFormats(entries){
     formatsByKind[kind]=balancedFormatsForCount(count);
   });
 
-  const positions={one_no_cancel:0,one_cancel:0,already_reduced:0};
+  const positions={one_no_cancel:0,one_cancel:0};
 
   return entries.map(e=>{
     if(e.m.id!=='dnb_10' || !e.q.options) return e;
@@ -254,12 +256,12 @@ function assignReductionFormats(entries){
 function visualPolicyForQuestion(m,q){
   /*
    * Règle à conserver pour les futurs visuels :
-   * - "optional" : le dessin est une aide facultative. En mode sans schéma,
-   *   la question reste disponible et l'élève peut révéler cette seule aide.
+   * - "optional" et "aid-only" : le dessin est une aide. Depuis le lot T, il
+   *   n'est plus dessiné dans la question : en mode « Avec aide », il s'ouvre
+   *   dans le panneau Aide (slide.aideHtml) ; en mode « Sans aide », il n'est
+   *   pas proposé.
    * - "essential" : le dessin contient les données nécessaires (droite,
    *   graphique, figure à lire...). La question n'est jamais affichée sans lui.
-   * - "aid-only" : le dessin est une aide d'étayage. Il est affiché en mode
-   *   « Avec aide » et totalement absent en mode « Sans aide ».
    * Tout nouveau visuel doit être classé selon son rôle pédagogique, pas
    * seulement selon la présence d'une balise SVG.
    */
@@ -277,9 +279,8 @@ function visualPolicyForQuestion(m,q){
   if(m.id==='dnb_06') return 'optional';
   if(m.id==='dnb_07') return Number(q.n)===7?'none':'optional';
   if(m.id==='dnb_09') return [1,2,3,4,5,6,8,9,10,11,12,13,14,15,16,17,18,19].includes(Number(q.n))?'optional':'none';
-  if(m.id==='dnb_10'){
-    return q.options&&q.options.reduction_kind==='read_tiles'?'essential':'optional';
-  }
+  // dnb_10 : les tuiles ne sont qu’une aide (panneau Aide), jamais dans la question.
+  if(m.id==='dnb_10') return 'aid-only';
   if(m.id==='dnb_11') return Number(q.n)===7?'none':'optional';
   if(m.id==='dnb_13') return 'optional';
   if(m.id==='dnb_18') return [2,3,4,5,6,7,8,9,10].includes(Number(q.n))?'optional':'none';
@@ -307,11 +308,14 @@ function questionEligibleForVisualMode(m,q,mode){
 }
 
 function slideModeForVisualPolicy(mode,policy){
-  if(mode!=='without') return mode;
+  // Lot T (coque commune) : un dessin d'aide (« optional » ou « aid-only »)
+  // n'est plus jamais dessiné dans la question, ni avec ni sans aide. En mode
+  // « Avec aide », il passe dans le panneau Aide (bouton fixe de l'en-tête) ;
+  // le bouton « Afficher l'aide » posé dans l'énoncé a disparu. Un visuel
+  // « essential » porte les données : il reste toujours dans la question.
   if(policy==='essential') return 'with';
-  if(policy==='optional') return 'without-reveal';
-  if(policy==='aid-only') return 'without';
-  return 'without';
+  if(policy==='optional'||policy==='aid-only') return 'without';
+  return mode==='with'?'with':'without';
 }
 
 function eligibleQuestionsForModule(m){
@@ -450,7 +454,9 @@ function buildBalancedQuiz(mods,count){
 
   const selections=allocateModuleCounts(usable,count).map(item=>{
     const moduleCount=item.moduleCount;
-    let chosen=item.m.id==='dnb_03b'
+    let chosen=item.m.id==='dnb_01'
+      ? drawFromQuestionDeck(item.m.id+':coverage',item.questions,moduleCount,()=>module01CoverageCycle(item.questions))
+      : item.m.id==='dnb_03b'
       ? chooseFractionMulDivQuestions(item.m.id,item.questions,moduleCount)
       : item.m.id==='dnb_04'
       ? chooseFractionPercentQuestions(item.m.id,item.questions,moduleCount)
@@ -460,7 +466,7 @@ function buildBalancedQuiz(mods,count){
         ? chooseAreaQuestions(item.m.id,item.questions,moduleCount)
         : item.m.id==='dnb_14'
           ? drawRuntimeModuleQuestions(item.m,item.questions,moduleCount)
-        : ['dnb_26','dnb_26b'].includes(item.m.id)
+        : item.m.id==='dnb_26b'
           ? chooseTrigQuestions(item.m.id,item.questions,moduleCount)
         : drawRuntimeModuleQuestions(item.m,item.questions,moduleCount);
     return {m:item.m,questions:chosen};

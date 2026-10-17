@@ -8,6 +8,9 @@ const MODULE_DNB_01 = {
     "DNB"
   ],
   "source": "import_dnb_zip",
+  "keypad": {
+    "context": [","]
+  },
   "has_svg": false,
   "questions": [
     {
