@@ -18,7 +18,15 @@ test('au diaporama « Avec aide », le dessin d’aide est sous la question',()=
   assert.match(source,/context\.experienceMode==='presentation'&&mode==='with'/);
   assert.match(source,/else if\(visualPolicy==='optional'\|\|visualPolicy==='aid-only'\) renderMode='with';/);
   assert.match(source,/const questionHtml=lotTTypo\(buildCleanSlideHtml\(inst,false,renderMode\)\)\+dessinDiapo;/);
-  assert.match(source,/const correctionHtml=lotTTypo\(buildCleanSlideHtml\(inst,true,renderMode\)\)\+dessinDiapo;/);
+  // À la correction : le même dessin, ou sa version corrigée quand l'automatisme en fournit une.
+  assert.match(source,/const dessinDiapoCorrection=dessinDiapo&&inst\.aideCorrectionHtml\?'<div class="diapo-aide">'\+lotTTypo\(String\(inst\.aideCorrectionHtml\)\)\+'<\/div>':dessinDiapo;/);
+  assert.match(source,/const correctionHtml=lotTTypo\(buildCleanSlideHtml\(inst,true,renderMode\)\)\+dessinDiapoCorrection;/);
+});
+
+test('dnb_01 : au diaporama, la droite graduée de la correction porte la réponse',()=>{
+  const moteur=fs.readFileSync('auto/scripts/02-question-engine.js','utf8');
+  assert.match(moteur,/const aideCorrectionHtml=visualData&&visualData\.kind==='rail'&&correctionVisualData\?module01AideVisual\(correctionVisualData,true\):'';/);
+  assert.match(moteur,/aideHtml,\n    aideCorrectionHtml,/);
 });
 
 test('dnb_15, 26 et 28 n’avaient pas de dessin d’aide au diaporama',()=>{

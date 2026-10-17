@@ -1151,15 +1151,15 @@ function module01F2DAide(num,den){
   if(num>den) return ['Combien de '+module01PlaceWord(den)+' font une unité ?','Écris '+F+' comme une somme : des unités entières + ce qui reste.'];
   return ['Cherche une fraction égale avec 10 ou 100 au dénominateur.','Par combien multiplier '+den+' pour obtenir '+(den===2||den===5?'10':'100')+' ?'];
 }
-function module01AideVisual(data){
+function module01AideVisual(data,correction=false){
   // A0 : plusieurs dessins à la suite (le plateau de Gwenaël, puis le tableau de numération).
-  if(Array.isArray(data)) return data.map(module01AideVisual).join('');
+  if(Array.isArray(data)) return data.map(item=>module01AideVisual(item,correction)).join('');
   // Dessin du panneau d'aide : jamais la réponse (aucun « 1 » écrit sur les unités).
   const component=globalThis.MATHSGO_VISUALS&&globalThis.MATHSGO_VISUALS.get('arithmetic.fraction-decimal-grid');
   if(!component||!data||(!data.kind&&(!data.visualKind||data.visualKind==='none'))) return '';
   // Au plus 180 px de haut dans le panneau (22 % de la hauteur sur un petit écran) : le dessin
   // et les indices tiennent ensemble à l'écran.
-  const html=component.render(data,false), box=html.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/);
+  const html=component.render(data,correction), box=html.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/);
   const ratio=box?Number(box[1])/Number(box[2]):2;
   const maxWidth='min('+Math.round(180*ratio)+'px,'+(22*ratio).toFixed(1)+'vh)';
   return html.replace(/^<div class="module01-visual([^"]*)"/,'<div class="module01-visual$1" style="max-width:'+maxWidth+';width:100%;margin:0 auto"');
@@ -1421,6 +1421,8 @@ function makeModule01Instance(mod,q){
   }
 
   const aideHtml=visualData?module01AideVisual(Array.isArray(visualData)||visualData.kind?visualData:{...visualData}):'';
+  // Diaporama « Avec aide » : à la correction, la droite graduée porte la réponse au bout (au lieu du « ? »).
+  const aideCorrectionHtml=visualData&&visualData.kind==='rail'&&correctionVisualData?module01AideVisual(correctionVisualData,true):'';
   const hasVisual=!!aideHtml;
   prompt=module01Tidy(prompt); display=module01Tidy(display); equality=module01Tidy(equality);
   if(qcm&&qcm.kind!=='signs') qcm.options=qcm.options.map(option=>['Vrai','Faux'].includes(option)?option:module01TidyLatex(option));
@@ -1432,6 +1434,7 @@ function makeModule01Instance(mod,q){
     distractorFeedback:feedback||null,
     aideSteps:aide.slice(0,2).map(module01Tidy),
     aideHtml,
+    aideCorrectionHtml,
     module01:{kind,format,direction,num,den,dec,reduced,visualKind,visualData,correctionVisualData,qcm,prompt,display,equality,fractionPolicy,extra}
   };
 }
