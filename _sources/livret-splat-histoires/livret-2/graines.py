@@ -6,7 +6,8 @@ Contrôle : genInvestigate / genNumbered / genSystem(makeRng(String(graine))) ap
 l'adresse ; valeurs, total et indices comparés à problemes.py.
 H9 (9.1, 9.2) : la carte cachée est une carte du monde 2 (3 et 5 taches, deux paquets de jetons) ;
 le dessin du corrigé est le schéma du monde 2, l'équation s'écrit dans l'ordre de l'énoncé puis
-regroupée (habillage.py, clé equation). D3 et D4 (le dos) n'ont pas de carte : schémas dessinés à part."""
+regroupée (habillage.py, clé equation). D3 et D4 (le dos) et 6.2 (« on cherche le tout », 17/10/2026) n'ont pas de
+carte : schémas dessinés à part."""
 C = "mode=C&clues=SENTENCE&visibleMin=0&visibleMax=0&cards=1"
 D = "&visibleMin=0&visibleMax=0&cards=1"
 CARTES = {
@@ -14,7 +15,7 @@ CARTES = {
  "Ex":  ("C", C + "&splats=3&structure=COMPLETE&ordre=DESSIN&mul=0&div=0&add=1&sub=0&deltaMax=12&totalMin=64&totalMax=64", 28),
  # fiche H6 : qui sert de référence ?
  "6.1": ("C", C + "&splats=3&structure=COMPLETE&ordre=DESSIN&mul=0&div=0&add=0&sub=1&deltaMax=12&totalMin=90&totalMax=90", 37),
- "6.2": ("C", C + "&splats=3&structure=CHAINE&ordre=DESSIN&mul=0&div=0&add=1&sub=0&deltaMax=12&totalMin=75&totalMax=75", 1),
+ # 6.2 (17/10/2026) : « on cherche le tout », pas de carte (le total y est toujours donné) — habillage.py, clé « tout »
  "6.3": ("C", C + "&splats=3&structure=CHAINE&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=13&totalMin=94&totalMax=94", 15),
  "6.4": ("C", C + "&splats=3&structure=COMPLETE&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=18&totalMin=150&totalMax=150", 81),
  # fiche H7 : les rapports

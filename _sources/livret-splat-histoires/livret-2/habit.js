@@ -41,6 +41,10 @@
   window.enqueteBarresModele = function(card){
     const m = oModele(card); const h = H();
     if(!m || !h || h.card !== card) return m;
+    /* « Je vérifie » des corrigés des histoires (17/10/2026, choix de Gwenaël après l'audit) : le total ET
+       chaque indice, en mots (« filles = garçons + 5 : 26 = 21 + 5 ✓ ») ; sans total, les deux indices.
+       L'outil et les livrets de l'Enquête gardent « le total seulement » (07/10/2026). */
+    if(h.famille === 'C' && !h.verifTotalSeul){ m.sansIndices = false; m.filtreIndices = null; }
     const manque = [];
     if(m.reformulation){ if(h.retourne) m.reformulation = h.retourne; else manque.push('retourne'); }
     (m.calculs || []).forEach(c => {
@@ -57,6 +61,39 @@
     });
     return m;
   };
+  /* ---- « Je vérifie » resserré (17/10/2026) : le corrigé des histoires vérifie aussi chaque indice ; quand ses
+     lignes passent à la ligne, on essaie une écriture un peu plus petite (42 → 36, jamais sous le chiffre des
+     titres d'étape, 36) qui en fait tenir plus par ligne. Rend la hauteur gagnée. */
+  window.__verifsSerrees = function(sv){
+    const items = [...sv.querySelectorAll('text[data-verif]')];
+    if(items.length < 2 || items[0].getAttribute('data-verif') !== 'titre') return 0;
+    const P = ENQ_PROFIL_IMPRIME, x0 = P.boxX + P.marge, largeur = P.boxW - 2 * P.marge;
+    const f0 = parseFloat(items[0].getAttribute('font-size'));
+    const yTop = parseFloat(items[0].getAttribute('y')) - (f0 * 0.7 + pastilleTextDy(f0));
+    const poids = it => it.getAttribute('data-verif') === 'titre' ? 800 : 700;
+    const ranger = vf => {
+      let x = x0, ligne = 0; const places = [];
+      items.forEach((it, k) => {
+        const w = enqueteTexteLargeur(it.textContent, vf, poids(it));
+        if(k && x + w > x0 + largeur){ x = x0; ligne++; }
+        places.push([x, ligne]); x += w + Math.round(vf * 1.1);
+      });
+      return { lignes:ligne + 1, places };
+    };
+    const avant = ranger(f0);
+    for(let vf = f0 - 2; vf >= 36; vf -= 2){
+      const r = ranger(vf);
+      if(r.lignes >= avant.lignes) continue;
+      items.forEach((it, k) => {
+        const [x, l] = r.places[k];
+        it.setAttribute('font-size', vf); it.setAttribute('x', x);
+        it.setAttribute('y', yTop + l * Math.round(vf * 1.25) + vf * 0.7 + pastilleTextDy(vf));
+      });
+      return avant.lignes * Math.round(f0 * 1.25) - r.lignes * Math.round(vf * 1.25);
+    }
+    return 0;
+  };
+
   /* ---- « Je réponds » : la phrase du problème, les nombres en gras */
   const segmentsReponse = () => {
     const h = H();

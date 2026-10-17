@@ -14,6 +14,9 @@ Clés des noms : la VALEUR cachée (elle est unique dans chaque carte, vérifié
   paquets   [62, 45]              Classique : les paquets de jetons visibles, dans l'ordre de l'énoncé
   lettres   {nom: "𝑡"}            Système : la lettre de chaque quantité (corrigé en lettre)
   titres    {titre de l'outil: titre du livret}   Système
+  legendeLettre {nom: "masse d’un sac…, en kg"}  Système : la légende des lettres quand ce n'est pas un prix
+  tout      {…}                   « on cherche le tout » (17/10/2026) : pas de carte, le modèle du corrigé
+                                  (../tout.js) et le corrigé en équations (equation, x)
 """
 
 H = {
@@ -36,8 +39,10 @@ H = {
    reponse="Le français lui prend {français} min, les maths {maths} min."),
  "2.3": dict(inconnue="l’aire de la parcelle de salades, en m²", noms={33: "salades", 45: "tomates", 42: "fraises"},
    articles={"salades": "la parcelle de salades", "tomates": "la parcelle de tomates", "fraises": "la parcelle de fraises"},
-   phrases={"salades": "Les salades ont donc {d} m²", "tomates": "Les tomates ont donc {d} m²", "fraises": "Les fraises ont donc {d} m²"},
-   reponse="Les salades ont {salades} m², les tomates {tomates} m², les fraises {fraises} m²."),
+   # (17/10/2026, audit) la parcelle a une aire, pas les salades
+   phrases={"salades": "La parcelle de salades a donc une aire de {d} m²", "tomates": "La parcelle de tomates a donc une aire de {d} m²",
+            "fraises": "La parcelle de fraises a donc une aire de {d} m²"},
+   reponse="La parcelle de salades a une aire de {salades} m², celle de tomates {tomates} m², celle de fraises {fraises} m²."),
  "2.4": dict(inconnue="la longueur du 1er morceau, en cm", noms={20: "1er", 27: "2e", 33: "3e"},
    articles={"1er": "le 1er morceau", "2e": "le 2e morceau", "3e": "le 3e morceau"},
    retourne="Je retourne : le 2e morceau mesure 7 cm de plus que le 1er.",
@@ -63,11 +68,17 @@ H = {
    phrases={"enfant": "Une place enfant coûte donc {d} €", "adulte": "Une place adulte coûte donc {d} €"},
    remplacer=[("une barre par tache", "une barre par place")],
    reponse="Une place enfant coûte {enfant} €, une place adulte {adulte} €."),
+ # 4.2 « on cherche le tout » (17/10/2026) : pas de carte, le corrigé est dessiné sur ce modèle (../tout.js)
  # (« petit sac » ne tenait pas sous les cinq cases du schéma regroupé : « petit », « grand »)
- "4.2": dict(inconnue="la masse d’un petit sac, en kg", noms={5: "petit", 10: "grand"}, articles={"petit": "un petit sac", "grand": "un grand sac"},
-   phrases={"petit": "Un petit sac pèse donc {d} kg", "grand": "Un grand sac pèse donc {d} kg"},
-   remplacer=[("une barre par tache", "une barre par sac")],
-   reponse="Un petit sac pèse {petit} kg, un grand sac {grand} kg."),
+ "4.2": dict(noms={35: "tout"}, reponse="Les sacs pèsent {tout} kg en tout.",
+   verifs=["grand = 2 × petit : 10 = 2 × 5 ✓"],
+   tout=dict(titre1="Schéma de comparaison — une barre par sac",
+     rows=[dict(label="petit", cells=[dict(v=5)])] * 3 + [dict(label="grand", cells=[dict(v=5), dict(v=5)])] * 2,
+     ligne=[dict(label="petit", cells=[dict(v=5)])] * 3 + [dict(label="grand", cells=[dict(v=5), dict(v=5)])] * 2,
+     calculs=["Un grand sac pèse 2 × 5 = 10 kg", "? = 5 + 5 + 5 + 10 + 10 = 35"],
+     equation=[["Je choisis l’inconnue", ["𝑥 : la masse de tous les sacs, en kg"]],
+               ["J’écris l’équation", ["𝑥 = 3 × 5 + 2 × (2 × 5)"]],
+               ["Je résous", ["𝑥 = 15 + 2 × 10", "𝑥 = 15 + 20 = 35"]]], x=35)),
  "4.3": dict(inconnue="l’âge de Yanis", noms={13: "Yanis", 39: "père"}, articles={"Yanis": "Yanis", "père": "le père"},
    phrases={"Yanis": "Yanis a donc {d} ans", "père": "Son père a donc {d} ans"},
    reponse="Yanis a {Yanis} ans, son père {père} ans."),
@@ -80,14 +91,19 @@ H = {
    legende={"tour": "un tour de manège", "barbe à papa": "une barbe à papa"},
    titres={"Les deux plateaux": "Les deux achats", "Je remplace le petit plateau par son total": "Je remplace le petit achat par son prix"},
    reponse="Un tour de manège coûte {tour} €, une barbe à papa {barbe à papa} €."),
- "5.2": dict(noms={4: "sandwich", 3: "jus"}, lettres={"sandwich": "S", "jus": "J"}, pluriels={"sandwich": "sandwichs", "jus": "jus"},
-   legende={"sandwich": "un sandwich", "jus": "un jus"},
-   titres={"Les deux plateaux": "Les deux achats", "Je remplace le petit plateau par son total": "Je remplace le petit achat par son prix"},
-   reponse="Un sandwich coûte {sandwich} €, un jus {jus} €."),
- "5.3": dict(noms={3: "stylo", 5: "cahier"}, lettres={"stylo": "S", "cahier": "C"}, pluriels={"stylo": "stylos", "cahier": "cahiers"},
-   legende={"stylo": "un stylo", "cahier": "un cahier"},
-   titres={"Les deux plateaux": "Les deux achats", "Je retrouve 2 fois le petit plateau": "Je retrouve 2 fois le petit achat"},
-   reponse="Un stylo coûte {stylo} €, un cahier {cahier} €."),
+ # 5.2 en masses, 5.3 en longueurs (17/10/2026) ; legendeLettre comme le livret 2 (corrigés en lettre et en équations)
+ "5.2": dict(noms={4: "sac de croquettes", 3: "sac de graines"}, lettres={"sac de croquettes": "C", "sac de graines": "G"},
+   pluriels={"sac de croquettes": "sacs de croquettes", "sac de graines": "sacs de graines"},
+   legende={"sac de croquettes": "un sac de croquettes", "sac de graines": "un sac de graines"},
+   legendeLettre={"sac de croquettes": "masse d’un sac de croquettes, en kg", "sac de graines": "masse d’un sac de graines, en kg"},
+   titres={"Les deux plateaux": "Les deux pesées", "Je remplace le petit plateau par son total": "Je remplace la petite pesée par sa masse"},
+   reponse="Un sac de croquettes pèse {sac de croquettes} kg, un sac de graines {sac de graines} kg."),
+ "5.3": dict(noms={3: "bande rouge", 5: "bande bleue"}, lettres={"bande rouge": "R", "bande bleue": "B"},
+   pluriels={"bande rouge": "bandes rouges", "bande bleue": "bandes bleues"},
+   legende={"bande rouge": "une bande rouge", "bande bleue": "une bande bleue"},
+   legendeLettre={"bande rouge": "longueur d’une bande rouge, en cm", "bande bleue": "longueur d’une bande bleue, en cm"},
+   titres={"Les deux plateaux": "Les deux morceaux de frise", "Je retrouve 2 fois le petit plateau": "Je retrouve 2 fois le petit morceau"},
+   reponse="Une bande rouge mesure {bande rouge} cm, une bande bleue {bande bleue} cm."),
  "5.4": dict(noms={6: "enfant", 8: "adulte"}, lettres={"enfant": "E", "adulte": "A"}, pluriels={"enfant": "enfants", "adulte": "adultes"},
    legende={"enfant": "une entrée enfant", "adulte": "une entrée adulte"},
    titres={"Les deux plateaux": "Les deux groupes", "Je retrouve 2 paires dans le plateau": "Je retrouve 2 paires dans le groupe à 36 €"},

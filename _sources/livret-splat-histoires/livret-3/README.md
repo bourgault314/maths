@@ -35,10 +35,13 @@ Ce qui est propre au livret 3 :
   chaque barre à gauche (`rangs`), le calcul à droite, puis « Je réponds » et « Je vérifie ». En
   équations : ② l'équation de l'énoncé, ③ « Je résous » sur les mêmes étapes (`balance_resous` dans
   `render.py`), chaque ligne revérifiée. 11.2 : le théâtre est à droite sur la carte (`inverser`).
-- **Les petites parts (13.1, 13.2)** : en équations, 𝑥 est **une petite part** (comme le corrigé
+- **Les petites parts (13.1)** : en équations, 𝑥 est **une petite part** (comme le corrigé
   de l'outil) ; `ordre` dans `habillage.py` ; « trois orange » (le pluriel de la couleur) devient le nom
-  de l'histoire (`__plurielsHabilles`). Écriture : l'étiquette sous une accolade courte, que l'outil
-  écrit en petit, à 3,4 et 3,7 pt ; 13.3 à 4,3 pt (`ECRITURE_MIN`).
+  de l'histoire (`__plurielsHabilles`). Depuis le 17/10/2026, 13.1 a un « fois plus » et un « fois moins »
+  (le mélange de l'ancien 13.2 ; nouvelle graine) et 13.2 est « on cherche le tout » (pas de carte,
+  `habillage.py`, clé `tout` ; voir `../livret-1/README.md`). Écriture : l'étiquette sous une accolade
+  courte, que l'outil écrit en petit (3,4 pt), et 13.3 (4,3 pt) remontent à 4,5 pt (`PLANCHER`) :
+  plus aucune exception aux 4,5 pt.
 - **Deux gestes à la suite (H15)** : en équations, « J'écris le système » = « Le grand achat » puis
   « Les deux petits achats », comme l'outil (`nSysteme`).
 - **2 problèmes par page** (`PAR_PAGE`, `DISPOSITION_2P = "pile"`) : le corrigé en schéma essaie
@@ -59,6 +62,6 @@ MATHS_RACINE=/chemin/du/clone/maths HISTOIRES_SORTIE=/chemin/des/pdf python3 ren
 
 Sous Linux, Playwright 1.56.0 et le vrai Chromium, `fonts.conf` avec DejaVu Sans (voir le livret 1).
 Le rendu s'arrête si une carte n'a plus les nombres de son énoncé, s'il reste un mot de l'outil,
-si une page déborde, si une écriture passe sous 4,5 pt (exceptions : `ECRITURE_MIN`), si une police
+si une page déborde, si une écriture passe sous 4,5 pt, si une police
 inattendue entre dans un PDF, ou si une ligne du corrigé en équations est fausse (150 lignes
 vérifiées le 15/10/2026, sur main e3251de).

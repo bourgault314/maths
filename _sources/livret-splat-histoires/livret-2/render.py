@@ -109,6 +109,18 @@ DEFI_EQUATIONS = {
 for _c, _d in DEFI_EQUATIONS.items():
     assert _d["controle"](_d["x"]), _c
 
+# « On cherche le tout » (17/10/2026) et les défis du dos : une page de l'outil pour dessiner (aucune carte n'est tirée)
+CARTE_TOUT = CARTES["6.1"][1]
+
+# (17/10/2026) Les corrigés serrés : « Je vérifie » vérifie aussi chaque indice, et quelques énoncés ont
+# grandi d'une ligne. SERRE : les blancs entre ①, ② et ③ tombent à 0 (corrigés de l'Enquête). PLANCHER : la
+# plus petite écriture du dessin, en unités de l'outil, pour qu'elle fasse au moins 4,5 pt sur le papier à
+# l'échelle de sa carte (lue dans rapport-mise-en-page.json) — le contrôle du rendu (4,5 pt) reste juge.
+SERRE = {"9.3"}
+PLANCHER = {"10.3": dict(schema=35, equations=38)}     # l’escalier : 4,2 pt avant (petits calculs), 4,4 pt en équations
+def serrage(code, quoi):
+    return dict(serre=code in SERRE, plancher=PLANCHER.get(code, {}).get(quoi))
+
 # ------------------------------------------------------------------------------------------
 def serveur():
     class Gestion(http.server.SimpleHTTPRequestHandler):
@@ -155,7 +167,7 @@ async def dessins_outil(nav, lettres, equations=False):
     les deux défis du dos."""
     pg = await nav.new_page(viewport={"width": 1200, "height": 900})
     js = (ICI / "habit.js").read_text(encoding="utf-8") + "\n;0"
-    js2 = (ICI / "corrige.js").read_text(encoding="utf-8") + "\n;0"
+    js2 = (ICI / "corrige.js").read_text(encoding="utf-8") + "\n;0\n" + (ICI.parent / "tout.js").read_text(encoding="utf-8") + "\n;0"
 
     async def ouvrir(q, lettre):
         await pg.goto(f"http://127.0.0.1:{PORT}/outils/splat.html?{q}&unknown={'letter' if lettre else 'question'}", wait_until="networkidle")
@@ -171,13 +183,16 @@ async def dessins_outil(nav, lettres, equations=False):
     for f in FICHES:
         for p in f[3]:
             code = p["code"]
+            if "tout" in H[code]:
+                await dessins_tout(pg, ouvrir, code, lettres, equations, corr)
+                continue
             fam, q, graine = CARTES[code]
             for lettre in ([False, True] if lettres else [False]):
                 await ouvrir(q, lettre)
                 c = await valeurs(fam, graine)
                 controle_carte(code, fam, c)
                 spec = dict(famille=fam, graine=graine, lettre=lettre, habit=habit_js(code), inverser=code in INVERSER,
-                            valeurs=sorted(c["v"]))
+                            valeurs=sorted(c["v"]), **serrage(code, "schema"))
                 r = await pg.evaluate("(s) => window.__corrige(s)", spec)
                 if r.get("erreur"):
                     raise SystemExit(f"{code} : {r['erreur']}")
@@ -189,7 +204,7 @@ async def dessins_outil(nav, lettres, equations=False):
                 # le corrigé en équations : la page de l'outil est déjà en lettre (dernier tour)
                 c = await valeurs(fam, graine)
                 r = await pg.evaluate("(s) => window.__equation(s)", dict(famille=fam, graine=graine, valeurs=sorted(c["v"]),
-                                      habit=habit_js(code), inverser=code in INVERSER))
+                                      habit=habit_js(code), inverser=code in INVERSER, **serrage(code, "equations")))
                 if r.get("erreur"):
                     raise SystemExit(f"{code} (équations) : {r['erreur']}")
                 if r["reste"]:
@@ -221,7 +236,7 @@ async def dessins_outil(nav, lettres, equations=False):
         n = sum(r["controles"] for r in list(corr["eq"].values()) + list(defis["eq"].values()))
         print(f"équations : {n} lignes vérifiées avec les valeurs des cartes, toutes vraies")
     for lettre in ([False, True] if lettres else [False]):
-        await ouvrir(CARTES["6.2"][1], lettre)
+        await ouvrir(CARTE_TOUT, lettre)
         for code, d in DEFI_SCHEMAS.items():
             spec = json.loads(json.dumps(d))
             if lettre:   # l'inconnue en lettre, comme les autres corrigés
@@ -239,6 +254,33 @@ async def dessins_outil(nav, lettres, equations=False):
             defis[lettre][code] = r
     await pg.close()
     return corr, ex, defis
+
+async def dessins_tout(pg, ouvrir, code, lettres, equations, corr):
+    """« On cherche le tout » (17/10/2026) : pas de carte. Le corrigé est dessiné par les fonctions de
+    l'Enquête sur le modèle de habillage.py (../tout.js) ; en équations, les blocs écrits dans habillage.py,
+    vérifiés comme ceux des défis du dos."""
+    t = H[code]["tout"]
+    hab = dict(H[code], noms={str(k): v for k, v in H[code]["noms"].items()}, teinte=TEINTE)
+    hab.pop("tout")
+    for lettre in ([False, True] if lettres else [False]):
+        await ouvrir(CARTE_TOUT, lettre)
+        spec = {k: t[k] for k in ("titre1", "rows", "ligne", "calculs")}
+        r = await pg.evaluate("(s) => window.__tout(s)", dict(spec, habit=hab, teinte=TEINTE, lettre=lettre))
+        if r.get("erreur"):
+            raise SystemExit(f"{code} : {r['erreur']}")
+        if r["reste"]:
+            raise SystemExit(f"{code} : mots de l'outil restés dans le dessin : {r['reste']}")
+        r["famille"] = "C"
+        corr[lettre][code] = r
+    if equations:
+        await ouvrir(CARTE_TOUT, True)
+        r = await pg.evaluate("(s) => window.__equation(s)", dict(famille="X", blocs=t["equation"], habit=hab, x=t["x"]))
+        if r.get("erreur"):
+            raise SystemExit(f"{code} (équations) : {r['erreur']}")
+        if r["controles"] < 2:
+            raise SystemExit(f"{code} (équations) : trop peu de lignes contrôlées ({r['controles']})")
+        r["famille"] = "E"
+        corr["eq"][code] = r
 
 def controle_carte(code, fam, c):
     """La carte cachée a EXACTEMENT les nombres de l'énoncé (problemes.py, ses contrôles)."""
@@ -540,7 +582,7 @@ CSS_DOS = """
 
 # Contrôles de mise en page, faits dans la page avant l'impression
 # L'escalier (10.3) : sept étapes dans un quart de page ; ses calculs font 4,3 pt au lieu de 4,5 (seule exception, 15/10/2026)
-ECRITURE_MIN = {"10.3": 4.2}
+ECRITURE_MIN = {}      # (17/10/2026) plus d’exception : 10.3 écrit à 4,5 pt au moins (PLANCHER)
 JS_VERIFIE = r"""(genre) => {
   const minPar = """ + json.dumps(ECRITURE_MIN) + r""";
   const mm = px => +(px / 3.7795).toFixed(1);
@@ -704,6 +746,8 @@ async def planche_equation(fiches):
             svgs = {}
             for pb in f[3]:
                 code = pb["code"]
+                if "tout" in H[code]:      # « on cherche le tout » : pas de carte (dessins_tout)
+                    continue
                 fam, q, graine = CARTES[code]
                 await pg.goto(f"http://127.0.0.1:{PORT}/outils/splat.html?{q}&unknown=letter", wait_until="networkidle")
                 await pg.wait_for_timeout(250)

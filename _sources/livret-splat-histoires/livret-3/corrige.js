@@ -49,10 +49,20 @@ window.__corrige = function(spec){
       window.__habit = h;
       const remet = window.__plurielsHabilles(card, h);
       try{
+        /* (17/10/2026) « Je vérifie » vérifie aussi chaque indice. Ses lignes en plus sont d'abord resserrées
+           (__verifsSerrees, habit.js), puis reprises sur les blancs entre ①, ② et ③ (40 → 0 au plus serré) : le
+           corrigé garde la hauteur — donc l'écriture — d'avant */
+        window.__habit = { ...h, verifTotalSeul:true };
+        const r0 = drawEnqueteCorrectionImprimee(sv, card, 40, 4000);
+        while(sv.firstChild) sv.removeChild(sv.firstChild);
+        window.__habit = h;
         const r1 = drawEnqueteCorrectionImprimee(sv, card, 40, 4000);
         const n = sv.querySelectorAll('#enqueteCorrectionImprimee > g').length;
+        const gain = window.__verifsSerrees(sv);
         while(sv.firstChild) sv.removeChild(sv.firstChild);
-        drawEnqueteCorrectionImprimee(sv, card, 40, 40 + r1.hauteur + (n - 1) * 40);
+        const blanc = n > 1 ? (spec.serre ? 0 : Math.max(0, 40 - (r1.hauteur - gain - r0.hauteur) / (n - 1))) : 40;   // serre : render.py, SERRE
+        drawEnqueteCorrectionImprimee(sv, card, 40, 40 + r1.hauteur + (n - 1) * blanc);
+        window.__verifsSerrees(sv);
       }finally{ remet(); }
     }else{
       let bas;
@@ -135,6 +145,10 @@ window.__corrige = function(spec){
     sv.querySelectorAll('text, tspan').forEach(t => { if(t.childElementCount === 0 && t.textContent.includes(a)){ t.textContent = t.textContent.split(a).join(b); vu = true; } });
     if(!vu) throw new Error('remplacer : « ' + a + ' » introuvable');
   });
+  /* (17/10/2026) le plancher d'écriture (render.py, PLANCHER) : dans quelques corrigés serrés, les plus petites
+     écritures (les petits calculs du Système, les noms sous une accolade courte, le chiffre des titres)
+     remontent à 4,5 pt sur le papier ; le reste du dessin ne bouge pas */
+  if(spec.plancher) sv.querySelectorAll('text').forEach(t => { const f = parseFloat(t.getAttribute('font-size')); if(f < spec.plancher) t.setAttribute('font-size', String(spec.plancher)); });
   const bb = sv.getBBox();
   const textes = [...sv.querySelectorAll('text')].map(t => t.textContent).filter(t => t.trim());
   /* aucun mot de l'outil ne doit rester (les noms du problème mis à part) */
@@ -481,10 +495,14 @@ window.__equation = function(spec){
     if(spec.largeur) ENQ_PROFIL_IMPRIME.boxW = spec.largeur;   // 2 problèmes par page : « Je réponds » plus étroit
     try{
       drawEnqueteCalculs(fin, carteDessin, { isPrint:true, modele:{ calculs:[], reponse:[{ i:0 }], verification:spec.famille === 'C' ? enqueteBarresModele(card).verification : null,
-        sansIndices:spec.famille === 'C', ligne:null }, sansTitre:true, boxY:y });
+        sansIndices:false, filtreIndices:null, ligne:null }, sansTitre:true, boxY:y });   /* « Je vérifie » : le total ET chaque indice (17/10/2026) */
     }finally{ ENQ_PROFIL_IMPRIME.boxW = boxW; }
   }catch(e){ window.__habit = null; sv.remove(); return { erreur:String(e && e.message || e) }; }
   window.__habit = null;
+  /* (17/10/2026) le plancher d'écriture (render.py, PLANCHER) : dans quelques corrigés serrés, les plus petites
+     écritures (les petits calculs du Système, les noms sous une accolade courte, le chiffre des titres)
+     remontent à 4,5 pt sur le papier ; le reste du dessin ne bouge pas */
+  if(spec.plancher) sv.querySelectorAll('text').forEach(t => { const f = parseFloat(t.getAttribute('font-size')); if(f < spec.plancher) t.setAttribute('font-size', String(spec.plancher)); });
   const bb = sv.getBBox();
   const textes = [...sv.querySelectorAll('text')].map(t => t.textContent).filter(t => t.trim());
   const noms = Object.values(h.noms).concat(Object.values(h.articles || {}));

@@ -20,10 +20,20 @@ window.__corrige = function(spec){
   try{
     if(spec.famille === 'C'){
       window.__habit = h;
+      /* (17/10/2026) « Je vérifie » vérifie aussi chaque indice. Ses lignes en plus sont d'abord resserrées
+         (__verifsSerrees, habit.js), puis reprises sur les blancs entre ①, ② et ③ (40 → 0 au plus serré) : le
+         corrigé garde la hauteur — donc l'écriture — d'avant */
+      window.__habit = { ...h, verifTotalSeul:true };
+      const r0 = drawEnqueteCorrectionImprimee(sv, card, 40, 4000);
+      while(sv.firstChild) sv.removeChild(sv.firstChild);
+      window.__habit = h;
       const r1 = drawEnqueteCorrectionImprimee(sv, card, 40, 4000);
       const n = sv.querySelectorAll('#enqueteCorrectionImprimee > g').length;
+      const gain = window.__verifsSerrees(sv);
       while(sv.firstChild) sv.removeChild(sv.firstChild);
-      drawEnqueteCorrectionImprimee(sv, card, 40, 40 + r1.hauteur + (n - 1) * 40);
+      const blanc = n > 1 ? (spec.serre ? 0 : Math.max(0, 40 - (r1.hauteur - gain - r0.hauteur) / (n - 1))) : 40;   // serre : render.py, SERRE
+      drawEnqueteCorrectionImprimee(sv, card, 40, 40 + r1.hauteur + (n - 1) * blanc);
+      window.__verifsSerrees(sv);
     }else{
       let bas;
       if(spec.famille === 'N'){
@@ -80,11 +90,17 @@ window.__corrige = function(spec){
            « 𝑡 : prix d’un tour de manège… ») — les noms ne tiennent pas dans les cases */
         const leg = Object.entries(spec.habit.legende || {}).map(([nom, quoi]) => {
           if(!h.lettres || !h.lettres[nom]) throw new Error('légende : pas de lettre pour ' + nom);
-          return `${h.lettres[nom]} : ${spec.lettre ? 'prix d’' + quoi : quoi}`;
+          /* (17/10/2026) une masse, une longueur : legendeLettre (« 𝑐 : masse d’un sac de croquettes, en kg »), comme le livret 2 */
+          const ql = spec.habit.legendeLettre && spec.habit.legendeLettre[nom];
+          return `${h.lettres[nom]} : ${spec.lettre ? (ql || 'prix d’' + quoi) : quoi}`;
         });
         if(leg.length !== card._sys.colors.length) throw new Error('légende incomplète');
-        sv.appendChild(mkText(70, 78, leg.join('   ·   '), { "font-size":40, "font-weight":700, fill:"#374151" }));
-        bas = drawSysCorrectionImprimee(sv, carteDessin, 130, 4000, ctx);
+        /* (17/10/2026) une légende plus large que le dessin (« 𝑐 : masse d’un sac de croquettes, en kg ») passe sur
+           deux lignes, sinon elle élargit le dessin et toute l'écriture rapetisse ; les autres restent sur une ligne */
+        const uneLigne = leg.join('   ·   ');
+        const lignesLeg = (leg.length > 1 && enqueteTexteLargeur(uneLigne, 40, 700) > 1450) ? leg : [uneLigne];
+        lignesLeg.forEach((t, i) => sv.appendChild(mkText(70, 78 + 50 * i, t, { "font-size":40, "font-weight":700, fill:"#374151" })));
+        bas = drawSysCorrectionImprimee(sv, carteDessin, 130 + 50 * (lignesLeg.length - 1), 4000, ctx);
         sv.querySelectorAll('line[stroke-dasharray]').forEach(l => l.remove());   // le pointillé sous l'énoncé
       }
       /* « Je réponds » (la phrase, encadrée) puis « Je vérifie », dessinés par l'outil (drawEnqueteCalculs) */
@@ -99,10 +115,15 @@ window.__corrige = function(spec){
     sv.querySelectorAll('text, tspan').forEach(t => { if(t.childElementCount === 0 && t.textContent.includes(a)){ t.textContent = t.textContent.split(a).join(b); vu = true; } });
     if(!vu) throw new Error('remplacer : « ' + a + ' » introuvable');
   });
+  /* (17/10/2026) le plancher d'écriture (render.py, PLANCHER) : dans quelques corrigés serrés, les plus petites
+     écritures (les petits calculs du Système, les noms sous une accolade courte, le chiffre des titres)
+     remontent à 4,5 pt sur le papier ; le reste du dessin ne bouge pas */
+  if(spec.plancher) sv.querySelectorAll('text').forEach(t => { const f = parseFloat(t.getAttribute('font-size')); if(f < spec.plancher) t.setAttribute('font-size', String(spec.plancher)); });
   const bb = sv.getBBox();
   const textes = [...sv.querySelectorAll('text')].map(t => t.textContent).filter(t => t.trim());
   /* aucun mot de l'outil ne doit rester (les noms du problème mis à part) */
-  const noms = Object.values(h.noms).concat(Object.values(h.articles || {}));
+  /* (17/10/2026) les pluriels aussi : « 2 bandes rouges » est le nom du problème, pas une couleur de l'outil */
+  const noms = Object.values(h.noms).concat(Object.values(h.articles || {}), Object.values(h.pluriels || {}));
   const nettoie = t => noms.reduce((s, n) => s.split(n).join(''), t);
   const reste = textes.filter(t => (/tache|jeton|plateau|noire|verte|bleue|rouge|orange|violette/i.test(nettoie(t)) || /TOTAL/.test(t)));
   const out = { svg:sv.innerHTML, bb:[bb.x - 10, bb.y - 10, bb.width + 20, bb.height + 20], textes, reste };
@@ -292,7 +313,7 @@ window.__equation = function(spec){
       const sit = card._sys, C = sit.colors;
       const L = k => investigateColorInitial(investigateColorByKey(k));
       C.forEach(k => { env[L(k)] = Number(sit.values[k]); });
-      const leg = Object.entries(spec.habit.legende).map(([nom, quoi]) => `${h.lettres[nom]} : le prix d’${quoi}, en €`);
+      const leg = Object.entries(spec.habit.legende).map(([nom, quoi]) => `${h.lettres[nom]} : ${(spec.habit.legendeLettre && spec.habit.legendeLettre[nom]) ? 'la ' + spec.habit.legendeLettre[nom] : 'le prix d’' + quoi + ', en €'}`);
       blocs.push(['Je choisis les inconnues', leg]);
       /* ② et ③ (15/10/2026, choix de Gwenaël sur planche : « le mélange ») : les étapes du corrigé
          en équations de l'outil (lot M4-8, sysEquationsMorceaux) — le système avec l'accolade, puis
@@ -383,13 +404,19 @@ window.__equation = function(spec){
       y += 18 - fs * E.ecartEtape;
     }
     const fin = mkEl('g'); sv.appendChild(fin);
+    /* « Je vérifie » (17/10/2026, choix de Gwenaël après l'audit) : le total ET chaque indice, en mots comme
+       l'outil (« filles = garçons + 5 : 26 = 21 + 5 ✓ ») ; sans total (H4.3, H4.4), les deux indices */
     drawEnqueteCalculs(fin, carteDessin, { isPrint:true, modele:{ calculs:[], reponse:[{ i:0 }], verification:spec.famille === 'C' ? enqueteBarresModele(card).verification : null,
-      sansIndices:spec.famille === 'C', ligne:null }, sansTitre:true, boxY:y });
+      sansIndices:false, filtreIndices:null, ligne:null }, sansTitre:true, boxY:y });
   }catch(e){ window.__habit = null; sv.remove(); return { erreur:String(e && e.message || e) }; }
   window.__habit = null;
+  /* (17/10/2026) le plancher d'écriture (render.py, PLANCHER) : dans quelques corrigés serrés, les plus petites
+     écritures (les petits calculs du Système, les noms sous une accolade courte, le chiffre des titres)
+     remontent à 4,5 pt sur le papier ; le reste du dessin ne bouge pas */
+  if(spec.plancher) sv.querySelectorAll('text').forEach(t => { const f = parseFloat(t.getAttribute('font-size')); if(f < spec.plancher) t.setAttribute('font-size', String(spec.plancher)); });
   const bb = sv.getBBox();
   const textes = [...sv.querySelectorAll('text')].map(t => t.textContent).filter(t => t.trim());
-  const noms = Object.values(h.noms).concat(Object.values(h.articles || {}));
+  const noms = Object.values(h.noms).concat(Object.values(h.articles || {}), Object.values(h.pluriels || {}));
   const nettoie = t => noms.reduce((s, n) => s.split(n).join(''), t);
   const reste = textes.filter(t => /tache|jeton|plateau|noire|verte|bleue|rouge|orange|violette/i.test(nettoie(t)) || /TOTAL/.test(t));
   const out = { svg:sv.innerHTML, bb:[bb.x - 10, bb.y - 10, bb.width + 20, bb.height + 20], textes, reste, blocs, controles:nControles };

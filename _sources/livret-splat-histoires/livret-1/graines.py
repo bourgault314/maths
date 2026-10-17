@@ -4,7 +4,7 @@
 07/10/2026 sur main f96e42d, avec le « ? » des cases appliqué — il ne change pas le
 tirage). Contrôle : genInvestigate / genNumbered / genSystem(makeRng(String(graine))) après
 chargement de l'adresse ; valeurs, total et indices comparés à problemes.py.
-D1 et D2 (le dos) n'ont pas de carte : schémas dessinés à part."""
+D1 et D2 (le dos) et 4.2 (« on cherche le tout », 17/10/2026) n'ont pas de carte : schémas dessinés à part."""
 C = "mode=C&clues=SENTENCE&visibleMin=0&visibleMax=0&cards=1"
 D = "&visibleMin=0&visibleMax=0&totalMin=5&totalMax=60&cards=1"
 CARTES = {
@@ -27,10 +27,11 @@ CARTES = {
  "3.4": ("C", C + "&splats=3&mul=1&div=1&add=1&sub=1&deltaMax=10&totalMin=38&totalMax=38", 283),
  # fiche 4 : Enquête, taches répétées puis sans total
  "4.1": ("C", C + "&splats=2&repeat=3&mul=0&div=0&add=1&sub=1&deltaMax=10&totalMin=46&totalMax=46", 18),
- "4.2": ("C", C + "&splats=2&repeat=3&mul=1&div=1&add=0&sub=0&deltaMax=10&totalMin=35&totalMax=35", 3),
+ # 4.2 (17/10/2026) : « on cherche le tout », pas de carte (le total y est toujours donné) — habillage.py, clé « tout »
  "4.3": ("C", "mode=C&clues=SENTENCE&splats=2&noTotal=1&mul=1&div=0&add=1&sub=0&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60&cards=1", 16),
  "4.4": ("C", "mode=C&clues=SENTENCE&splats=2&noTotal=1&mul=0&div=1&add=0&sub=1&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60&cards=1", 28),
- # fiche 5 : Système (mode D) — 5.2 et 5.3 aux nombres du 07/10 au soir (plus petite valeur ≥ 3)
+ # fiche 5 : Système (mode D) — 5.2 et 5.3 aux nombres du 07/10 au soir (plus petite valeur ≥ 3) ; en masses et en
+ # longueurs depuis le 17/10/2026 (mêmes nombres, mêmes cartes)
  "5.1": ("D", "mode=D&geste=PARTIELLE" + D, 337),
  "5.2": ("D", "mode=D&geste=COEF" + D, 291),
  "5.3": ("D", "mode=D&geste=DOUBLE" + D, 346),
