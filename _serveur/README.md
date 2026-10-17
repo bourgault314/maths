@@ -160,7 +160,10 @@ navigateur — puis efface tout.
 la séance, ses questions (un type et un réglage pris dans une liste fermée —
 jamais d'énoncé), et une réponse courte par élève et par question, dont la
 forme est vérifiée par son type. Tout part à « Terminer », et de toute façon
-**une heure et demie après le dernier geste du professeur** (`DUREE_DIRECT`) :
+**vingt minutes après que l'écran du tableau a cessé d'appeler le serveur**
+(`VEILLE_DIRECT` : tableau quitté, onglet fermé, ordinateur en veille ; un
+onglet caché continue d'appeler une fois par minute), et au plus tard **trois
+heures après l'ouverture** (`PLAFOND_DIRECT`). Les élèves ne prolongent rien :
 la purge est jouée par chaque interrogation d'un élève, par chaque appel du
 tableau, par l'ouverture de « Mes classes » et par `menage.php`. Ces tables
 n'entrent dans la sauvegarde qu'**en structure**. Supprimer la classe, le

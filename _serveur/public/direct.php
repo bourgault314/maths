@@ -220,7 +220,10 @@ $nonce = entetes_page();
       $("attente").hidden = false;
       return;
     }
-    $("titre").textContent = "Question " + direct.numero;
+    // Le numéro du TABLEAU quand il l'a envoyé (« Question 1 / 8 » d'un
+    // questionnaire), sinon celui de la séance (17/10/2026).
+    const rang = direct.reglage && Number.isInteger(direct.reglage.rang) ? direct.reglage.rang : direct.numero;
+    $("titre").textContent = "Question " + rang;
     if (!rendu) {
       // Un type que cette page ne connaît pas encore (page restée ouverte
       // pendant une mise à jour) : on le dit, sans rien casser.

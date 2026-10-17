@@ -539,9 +539,10 @@ try {
             // tâche planifiée d'OVH, qui tient la promesse du 1er août.
             $echues = classes_a_proposer($pdo, $profId);
             // Une séance en direct oubliée ouverte ne survit pas à l'ouverture
-            // de « Mes classes » (lib/direct.php : une heure et demie après le
-            // dernier geste). Sans objet tant que migrer.php n'a pas créé la table.
-            if (table_existe($pdo, 'directs')) purger_directs($pdo);
+            // de « Mes classes » (lib/direct.php : vingt minutes sans écran du
+            // tableau). Sans objet tant que migrer.php n'a pas créé la table.
+            $avecDirects = table_existe($pdo, 'directs');
+            if ($avecDirects) purger_directs($pdo);
             $requete = $pdo->prepare(
                 // c.* plutôt que la liste des colonnes : « reglages » n'existe
                 // qu'après migrer.php (lot « splat-suivi-5 ») — avant, la classe
@@ -556,9 +557,15 @@ try {
                  ORDER BY c.libelle'
             );
             $requete->execute([$profId, $profId, $profId]);
+            $lignesClasses = $requete->fetchAll();
+            // 17/10/2026 : la séance restée ouverte se voit sur la carte de sa
+            // classe (« ● En direct », « 📝 Évaluation »). Le MODE seulement,
+            // et pas pour un collègue en lecture seule : il ne peut pas la mener.
+            $modesDirects = $avecDirects ? modes_des_directs_ouverts($pdo, array_column($lignesClasses, 'id')) : [];
             $classes = [];
-            foreach ($requete->fetchAll() as $ligne) {
+            foreach ($lignesClasses as $ligne) {
                 $mien = (int)$ligne['prof_id'] === $profId;
+                $droit = $mien ? 'proprietaire' : (in_array($ligne['partage'], DROITS_PARTAGE, true) ? $ligne['partage'] : 'lecture');
                 $classes[] = [
                     'id' => (int)$ligne['id'],
                     'libelle' => $ligne['libelle'],
@@ -567,8 +574,9 @@ try {
                     'cree_le' => $ligne['cree_le'],
                     'annee' => annee_scolaire((string)$ligne['cree_le']),
                     'eleves' => (int)$ligne['eleves'],
-                    'droit' => $mien ? 'proprietaire' : (in_array($ligne['partage'], DROITS_PARTAGE, true) ? $ligne['partage'] : 'lecture'),
+                    'droit' => $droit,
                     'proprietaire' => $mien ? null : (string)$ligne['proprietaire'],
+                    'direct' => $droit === 'lecture' ? null : ($modesDirects[(int)$ligne['id']] ?? null),
                 ];
             }
             repondre([
@@ -953,6 +961,10 @@ try {
                     'applis' => explode(',', (string)$classe['applis']),
                     'reglages' => reglages_json(reglages_de_classe($classe)),
                     'droit' => $classe['droit'],
+                    // 17/10/2026 : « ● Reprendre la séance en direct » quand
+                    // une séance de la classe est restée ouverte.
+                    'direct' => $avecCodes && table_existe($pdo, 'directs')
+                        ? (modes_des_directs_ouverts($pdo, [(int)$classe['id']])[(int)$classe['id']] ?? null) : null,
                 ],
                 'eleves' => $lignes,
             ]);
@@ -990,14 +1002,18 @@ try {
         // Lot 1 « question éclair » (07/10/2026) — lib/direct.php. Le tableau
         // interroge « direct.etat » toutes les secondes et demie : c'est la
         // seule action de ce fichier appelée en boucle, elle ne journalise
-        // rien et ne prolonge pas la séance. Les gestes (ouvrir, poser une
-        // question, dévoiler, désigner la bonne réponse) repoussent sa fin.
+        // rien. Depuis la veille du 17/10/2026, elle dit « le tableau est
+        // là » : elle repousse la fin de vingt minutes (une écriture toutes
+        // les trente secondes au plus, garder_direct_en_vie). Les gestes
+        // (ouvrir, poser une question, dévoiler, désigner la bonne réponse)
+        // aussi. Les interrogations des élèves, jamais.
 
         case 'direct.etat':
             $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
             purger_directs($pdo);
             // Lot E1 : une évaluation ouverte n'est pas une séance pour le tableau.
             $direct = direct_eclair_de_la_classe($pdo, (int)$classe['id']);
+            if ($direct !== null) garder_direct_en_vie($pdo, $direct);
             repondre([
                 'ok' => true,
                 'classe' => ['id' => (int)$classe['id'], 'libelle' => $classe['libelle']],

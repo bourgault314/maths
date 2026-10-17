@@ -151,6 +151,11 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   .p-gris { background: #eef1f5; color: var(--muted); }
   .message.info { background: #eef3f9; color: var(--blue-dark); }
   .classes .badge { display: block; margin-top: 4px; color: var(--muted); font-size: .82rem; }
+  /* 17/10/2026 : une séance restée ouverte se voit sur la carte de sa classe. */
+  .classes strong .en-direct { float: right; font-style: normal; margin-left: 8px; padding: 2px 9px; border-radius: 999px;
+                               background: #fdf0e3; color: #a15c11; font-size: .78rem; font-weight: 800;
+                               line-height: 1.5; white-space: nowrap; }
+  #seance-direct .point { color: #f9bf3b; }
   .classes button.partagee { border-left-color: var(--orange); }
   .profs { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
   .profs li { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 12px;
@@ -2152,6 +2157,9 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     }
   });
 
+  // La pastille d'une classe dont une séance est ouverte (classes.liste, « direct »).
+  const LIBELLES_DIRECT = {eclair: "● En direct", evaluation: "📝 Évaluation"};
+
   async function chargerClasses() {
     try {
       const donnees = await api("classes.liste");
@@ -2164,6 +2172,17 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
         bouton.type = "button";
         bouton.innerHTML = "<strong></strong><span></span>";
         bouton.querySelector("strong").textContent = uneClasse.libelle;
+        // Une séance de la classe est restée ouverte (17/10/2026) : on la
+        // voit ici, on la reprend depuis la classe.
+        const enCours = LIBELLES_DIRECT[uneClasse.direct];
+        if (enCours) {
+          // Un <em>, pas un <span> : la ligne suivante cherche LE span de la
+          // carte pour y écrire le nombre d'élèves.
+          const pastille = document.createElement("em");
+          pastille.className = "en-direct";
+          pastille.textContent = enCours;
+          bouton.querySelector("strong").appendChild(pastille);
+        }
         bouton.querySelector("span").textContent =
           `${uneClasse.eleves} élève${uneClasse.eleves > 1 ? "s" : ""}`;
         if (uneClasse.droit !== "proprietaire") {
@@ -3096,6 +3115,16 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     // Mener une séance en direct, c'est recevoir les réponses avec les
     // prénoms : pas en lecture seule (même règle que le serveur).
     $("seance-direct").hidden = !ecriture;
+    // Une séance restée ouverte se reprend d'ici (17/10/2026).
+    $("seance-direct").textContent = "";
+    if (classe && classe.direct === "eclair") {
+      const point = document.createElement("span");
+      point.className = "point";
+      point.textContent = "● ";
+      $("seance-direct").append(point, "Reprendre la séance en direct");
+    } else {
+      $("seance-direct").textContent = "Séance en direct";
+    }
     $("ajouter").hidden = !ecriture;
     $("coller-prenoms").hidden = !ecriture;
     $("imprimer-bandelettes").hidden = !ecriture;
@@ -3931,6 +3960,19 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     } catch (erreur) { surErreur(erreur, "message-compte"); }
   });
 
+  // Retour du tableau de la séance en direct (17/10/2026) : « Ma classe » y
+  // ramène dans LA classe (direct.php#classe=… → ./#classe=…). L'ancre est
+  // effacée aussitôt : un rechargement ne la rejoue pas. Une classe absente
+  // de la liste (supprimée, partage retiré) laisse simplement « Mes classes ».
+  function rouvrirClasseDemandee() {
+    const demandee = Number((/(?:^|[#&])classe=(\d+)/.exec(window.location.hash) || [])[1]) || 0;
+    if (window.location.hash) {
+      try { history.replaceState(null, "", window.location.pathname + window.location.search); } catch (_) {}
+    }
+    if (demandee && classes.some(uneClasse => uneClasse.id === demandee)) return ouvrirClasse(demandee);
+    return undefined;
+  }
+
   // Une seule porte d'entrée : on demande qui on est (et si on est administrateur),
   // puis on affiche les classes.
   function demarrer() {
@@ -3941,7 +3983,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       estAdmin = Boolean(donnees.admin);
       mdpTemporaire = Boolean(donnees.mdp_temporaire);
       if (mdpTemporaire) { ouvrirCompte(); return undefined; }
-      return chargerClasses();
+      return chargerClasses().then(rouvrirClasseDemandee);
     }).catch(erreur => {
       deconnecter({silencieux: true});
       if (!erreur) return;

@@ -56,6 +56,132 @@
 
   function lettre(i) { return LETTRES[i] || "?"; }
 
+  // Le texte COLLÉ (17/10/2026) : la réponse d'une IA arrive souvent avec ce
+  // qui l'entoure — « ```json » avant, « ``` » après, une phrase d'annonce.
+  // On garde ce qui va de la première « { » à la dernière « } ». Un fichier
+  // propre n'y perd rien ; un texte sans accolade reste tel quel (et sera
+  // refusé avec la phrase habituelle).
+  function extraire(texte) {
+    const source = String(texte).replace(/^\uFEFF/, "").trim();
+    if (source.startsWith("{")) return source;
+    const debut = source.indexOf("{");
+    const fin = source.lastIndexOf("}");
+    return debut >= 0 && fin > debut ? source.slice(debut, fin + 1) : source;
+  }
+
+  // L'EXEMPLE (17/10/2026) : celui de _serveur/questionnaires/, recopié ici
+  // pour le bouton « ▶ Essayer avec l'exemple » du tableau — rien à aller
+  // chercher, rien de plus à déposer. Un test du dépôt vérifie que les deux
+  // restent identiques.
+  const EXEMPLE = {
+    "format": "mathsgo-questionnaire",
+    "version": 1,
+    "titre": "Exemple — fractions, puissances, figures",
+    "chrono": 30,
+    "questions": [
+      {
+        "id": "exemple-01",
+        "enonce": "Combien vaut $\\frac{3}{4}+\\frac{1}{8}$ ?",
+        "choix": [
+          "$\\frac{4}{12}$",
+          "$\\frac{7}{8}$",
+          "$\\frac{4}{8}$",
+          "$1$"
+        ],
+        "bonne": "B"
+      },
+      {
+        "id": "exemple-02",
+        "enonce": "Quelle est l’écriture décimale de $10^{-3}$ ?",
+        "choix": [
+          "0,001",
+          "−1 000",
+          "0,000 1",
+          "−0,001"
+        ],
+        "bonne": "A"
+      },
+      {
+        "id": "exemple-03",
+        "enonce": "Quelle est l’aire de ce rectangle ?",
+        "image": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MjAiIGhlaWdodD0iMjQwIiB2aWV3Qm94PSIwIDAgNDIwIDI0MCI+PHJlY3Qgd2lkdGg9IjQyMCIgaGVpZ2h0PSIyNDAiIGZpbGw9IiNmZmYiLz48cmVjdCB4PSI0MCIgeT0iMzYiIHdpZHRoPSIyODAiIGhlaWdodD0iMTA1IiBmaWxsPSIjZTZmNmY1IiBzdHJva2U9IiMxMDI5NGEiIHN0cm9rZS13aWR0aD0iMyIvPjx0ZXh0IHg9IjE4MCIgeT0iMTgwIiBmb250LWZhbWlseT0iRGVqYVZ1IFNhbnMsIFNlZ29lIFVJLCBBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzEwMjk0YSI+OCBjbTwvdGV4dD48dGV4dCB4PSIzMzQiIHk9Ijk4IiBmb250LWZhbWlseT0iRGVqYVZ1IFNhbnMsIFNlZ29lIFVJLCBBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNiIgZmlsbD0iIzEwMjk0YSI+MyBjbTwvdGV4dD48L3N2Zz4=",
+        "choix": [
+          "11 cm²",
+          "22 cm²",
+          "24 cm²",
+          "24 cm"
+        ],
+        "bonne": "C",
+        "chrono": 45
+      },
+      {
+        "id": "exemple-04",
+        "enonce": "Quelle figure a exactement deux axes de symétrie ?",
+        "choix": [
+          {
+            "image": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMjAiIGhlaWdodD0iMTYwIiB2aWV3Qm94PSIwIDAgMjIwIDE2MCI+PHJlY3Qgd2lkdGg9IjIyMCIgaGVpZ2h0PSIxNjAiIGZpbGw9IiNmZmYiLz48cG9seWdvbiBwb2ludHM9IjMwLDQwIDE5MCw0MCAxOTAsMTIwIDMwLDEyMCIgZmlsbD0iI2U2ZjZmNSIgc3Ryb2tlPSIjMTAyOTRhIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4="
+          },
+          {
+            "image": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMjAiIGhlaWdodD0iMTYwIiB2aWV3Qm94PSIwIDAgMjIwIDE2MCI+PHJlY3Qgd2lkdGg9IjIyMCIgaGVpZ2h0PSIxNjAiIGZpbGw9IiNmZmYiLz48cG9seWdvbiBwb2ludHM9IjYwLDMwIDE2MCwzMCAxNjAsMTMwIDYwLDEzMCIgZmlsbD0iI2U2ZjZmNSIgc3Ryb2tlPSIjMTAyOTRhIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4="
+          },
+          {
+            "image": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMjAiIGhlaWdodD0iMTYwIiB2aWV3Qm94PSIwIDAgMjIwIDE2MCI+PHJlY3Qgd2lkdGg9IjIyMCIgaGVpZ2h0PSIxNjAiIGZpbGw9IiNmZmYiLz48cG9seWdvbiBwb2ludHM9IjExMCwyMiAxOTAsMTQwIDMwLDE0MCIgZmlsbD0iI2U2ZjZmNSIgc3Ryb2tlPSIjMTAyOTRhIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4="
+          },
+          {
+            "image": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMjAiIGhlaWdodD0iMTYwIiB2aWV3Qm94PSIwIDAgMjIwIDE2MCI+PHJlY3Qgd2lkdGg9IjIyMCIgaGVpZ2h0PSIxNjAiIGZpbGw9IiNmZmYiLz48cG9seWdvbiBwb2ludHM9IjcwLDQwIDE1MCw0MCAxOTUsMTI1IDI1LDEyNSIgZmlsbD0iI2U2ZjZmNSIgc3Ryb2tlPSIjMTAyOTRhIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4="
+          }
+        ],
+        "bonne": "A",
+        "chrono": null
+      },
+      {
+        "id": "exemple-05",
+        "enonce": "Combien vaut $(-3)\\times(-4)$ ?",
+        "choix": [
+          "$-12$",
+          "$12$",
+          "$-7$",
+          "$7$"
+        ],
+        "bonne": "B"
+      },
+      {
+        "id": "exemple-06",
+        "enonce": "Quelle est la solution de l’équation $2x+5=17$ ?",
+        "choix": [
+          "$6$",
+          "$11$",
+          "$12$",
+          "$6{,}5$",
+          "$24$"
+        ],
+        "bonne": "A",
+        "chrono": 60
+      },
+      {
+        "id": "exemple-07",
+        "enonce": "Vrai ou faux : $\\sqrt{16}=4$",
+        "choix": [
+          "Vrai",
+          "Faux"
+        ],
+        "bonne": "A",
+        "chrono": 15
+      },
+      {
+        "id": "exemple-08",
+        "enonce": "Les fractions, pour toi, c’est…",
+        "choix": [
+          "facile",
+          "ça dépend",
+          "encore difficile"
+        ],
+        "chrono": null
+      }
+    ]
+  };
+  function exemple() { return JSON.stringify(EXEMPLE, null, 2); }
+
   // « texte $maths$ texte » → [{texte}, {maths}, {texte}]. « \$ » est un
   // dollar ordinaire. Un « $ » sans son partenaire laisse « ferme: false ».
   function decouper(texte) {
@@ -163,14 +289,14 @@
     if (texte.length > MAX_OCTETS_FICHIER) {
       return {ok: false, erreurs: ["Le fichier est trop lourd (20 Mo au plus) : allège les images."]};
     }
-    const source = texte.replace(/^﻿/, "");
+    const source = extraire(texte);
     let brut;
     try {
       brut = JSON.parse(source);
     } catch (erreur) {
       const ligne = ligneDeLErreur(String(erreur && erreur.message), source);
       return {ok: false, erreurs: [
-        "Ce fichier n'est pas un questionnaire lisible"
+        "Ce texte n'est pas un questionnaire lisible"
         + (ligne ? ` : erreur à la ligne ${ligne}` : "")
         + " (une virgule, un guillemet ou une accolade manque ou est en trop)."
       ]};
@@ -270,6 +396,8 @@
     MAX_OCTETS_FICHIER,
     lettre,
     decouper,
+    extraire,
+    exemple,
     lire
   });
 });

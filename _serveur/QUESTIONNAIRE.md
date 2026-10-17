@@ -8,7 +8,19 @@ C'est le **contrat** commun : Défi tables (lot 3) puis Automatismes
 fabriqueront des questionnaires de cette forme. Le seul code qui les lit est
 `_serveur/public/prof/questionnaire.js` ; ses tests :
 `tests/suivi-questionnaire.test.mjs`. Exemple complet :
-`_serveur/questionnaires/exemple-questionnaire.json`.
+`_serveur/questionnaires/exemple-questionnaire.json` — recopié dans
+`questionnaire.js` (`QZ.exemple()`) pour le bouton « ▶ Essayer avec l'exemple »
+du tableau : un test exige que les deux restent identiques.
+
+Depuis le 17/10/2026, un professeur qui découvre la page trouve sous « Ouvrir
+un questionnaire » : **▶ Essayer avec l'exemple** (l'exemple s'ouvre en
+aperçu) et **Comment préparer un questionnaire ?** — une fenêtre en trois
+étapes : le texte à donner à son IA (dans `prof/direct.php`, `#prompt-ia` ; un
+test vérifie que son exemple se lit), une zone où **coller** la réponse de
+l'IA, puis l'aperçu. Le texte collé passe par le même lecteur qu'un fichier :
+`QZ.extraire()` garde ce qui va de la première « { » à la dernière « } »
+(les « ```json » et les phrases d'une IA tombent). Un fichier `.txt` s'ouvre
+aussi. Tout cela avant la séance seulement : l'écran est peut-être projeté.
 
 ## La forme
 

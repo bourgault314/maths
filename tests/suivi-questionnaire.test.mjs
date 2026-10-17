@@ -181,7 +181,7 @@ test("le questionnaire d'exemple du dépôt se lit sans erreur", () => {
 test("la page du tableau : le questionnaire ne part JAMAIS au serveur", () => {
   const lancer = script.slice(script.indexOf("  function lancerQuestionDuFichier() {"), script.indexOf("  $(\"action\").addEventListener"));
   assert.ok(lancer.length > 100, "lancerQuestionDuFichier() est dans la page");
-  assert.match(lancer, /const reglage = \{choix: question\.choix\.length\};/, "le nombre de réponses");
+  assert.match(lancer, /const reglage = \{choix: question\.choix\.length, rang: question\.numero\};/, "le nombre de réponses, et le numéro affiché (17/10/2026)");
   assert.match(lancer, /if \(question\.chrono\) reglage\.duree = question\.chrono;/, "la durée du chrono");
   assert.match(lancer, /agir\("direct\.question", \{type: question\.type, reglage\}, /, "et rien d'autre");
   for (const appel of script.matchAll(/(?:agir|api)\(("[^"]+")[^\n]*/g)) {
@@ -225,4 +225,45 @@ test("la copie de KaTeX servie par le suivi est identique à celle du site", () 
     assert.ok(readFileSync(join(site, nom)).equals(readFileSync(join(suivi, nom))), `${nom} : octet pour octet`);
   }
   assert.match(page, /<link rel="stylesheet" href="\.\.\/vendor\/katex-0\.16\.47\/katex\.min\.css\?v=<\?= htmlspecialchars\(\$versionKatexCss, ENT_QUOTES\) \?>">/);
+});
+
+// ------------------------------------------------ 17/10/2026 : l'exemple, le texte collé, le texte pour l'IA
+//
+// Sabotages attendus : x) l'exemple de questionnaire.js diffère de celui du dépôt ;
+// y) extraire() ne retire plus ce qui entoure le questionnaire ; z) le JSON du texte pour l'IA ne se lit plus.
+
+test("l'exemple du bouton « Essayer » est celui du dépôt, et se lit", () => {
+  assert.deepEqual(JSON.parse(QZ.exemple()), JSON.parse(lire("_serveur/questionnaires/exemple-questionnaire.json")),
+    "questionnaire.js et _serveur/questionnaires/ restent identiques");
+  assert.equal(QZ.lire(QZ.exemple()).ok, true);
+});
+
+test("un texte collé : ce qui entoure le questionnaire est retiré, le reste est lu comme un fichier", () => {
+  const propre = fichier({questions: [{enonce: "2 + 2 ?", choix: ["3", "4"], bonne: "B"}]});
+  const bavard = "Voici ton questionnaire :\n```json\n" + propre + "\n```\nBonne séance !";
+  assert.equal(QZ.extraire(bavard), propre);
+  assert.equal(QZ.extraire("﻿  " + propre + "\n"), propre, "BOM et espaces");
+  assert.deepEqual(QZ.lire(bavard), QZ.lire(propre), "lu exactement comme le fichier propre");
+  assert.equal(QZ.extraire("pas d'accolade"), "pas d'accolade", "sans accolade, rien n'est inventé");
+  assert.match(QZ.lire("```\nrien\n```").erreurs[0], /n'est pas un questionnaire lisible/);
+});
+
+test("le texte à donner à son IA : son exemple se lit, ses règles sont celles du lecteur", () => {
+  const brut = page.match(/<textarea id="prompt-ia"[^>]*>([\s\S]*?)<\/textarea>/)[1];
+  const texte = brut.replace(/&lt;/g, "<").replace(/&amp;/g, "&");
+  const lu = QZ.lire(texte.slice(texte.indexOf("{"), texte.indexOf("Règles")));
+  assert.equal(lu.ok, true, JSON.stringify(lu.erreurs));
+  assert.match(texte, /de 2 à 6 réponses/);
+  assert.match(texte, new RegExp(`de ${QZ.CHRONO_MIN} à ${QZ.CHRONO_MAX}`));
+  assert.match(texte, /chaque \\ s'écrit \\\\/, "la règle des barres obliques");
+  assert.match(texte, /jamais un lien vers un site/, "les images dans le fichier, jamais par adresse");
+});
+
+test("le rang : le téléphone affiche le numéro du tableau, et le serveur n'accepte qu'un entier borné", () => {
+  const eleve = lire("_serveur/public/direct.php");
+  assert.match(eleve, /const rang = direct\.reglage && Number\.isInteger\(direct\.reglage\.rang\) \? direct\.reglage\.rang : direct\.numero;/);
+  assert.match(eleve, /\$\("titre"\)\.textContent = "Question " \+ rang;/);
+  const rang = lib.slice(lib.indexOf("function rang_direct("), lib.indexOf("// Une réponse d'élève, remise au propre"));
+  assert.match(rang, /if \(!is_int\(\$rang\) \|\| \$rang < 1 \|\| \$rang > MAX_QUESTIONS_DIRECT\) return null;/);
+  assert.equal((lib.match(/return rang_direct\(\$brut, \$reglage\);/g) || []).length, 2, "pour les deux types");
 });

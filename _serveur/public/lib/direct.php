@@ -17,8 +17,10 @@
 //                         le tableau compte « 18 / 24 » sur les élèves présents,
 //                         pas sur la classe entière avec ses absents).
 // Tout part quand le professeur termine la séance, et de toute façon
-// DUREE_DIRECT secondes après son dernier geste (purger_directs(), jouée par
-// chaque appel du professeur, chaque interrogation d'un élève et le ménage).
+// VEILLE_DIRECT secondes après que l'écran du tableau a cessé d'appeler le
+// serveur, PLAFOND_DIRECT secondes après l'ouverture au plus tard
+// (purger_directs(), jouée par chaque appel du professeur, chaque
+// interrogation d'un élève et le ménage).
 // Rien n'entre dans la sauvegarde (structure seule, comme les billets) : une
 // réponse d'élève ne doit pas survivre dans un fichier chiffré de l'an passé.
 //
@@ -52,10 +54,22 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/bd.php';
 
-// Une heure et demie après le DERNIER geste du professeur (ouvrir, poser une
-// question, dévoiler) : une heure de cours et sa marge. Les interrogations des
-// élèves ne prolongent rien.
-const DUREE_DIRECT = 5400;
+// La VEILLE (17/10/2026, demande de Gwenaël : « c'est généralement un prof qui
+// oublie »). Jusque-là, une séance vivait une heure et demie après le dernier
+// geste du professeur, même tableau fermé. Désormais elle vit tant que
+// l'écran du TABLEAU est là : chaque appel du tableau — son interrogation
+// (toutes les secondes et demie, toutes les minutes quand l'onglet est
+// caché), et chaque geste — repousse la fin à VEILLE_DIRECT secondes. Tableau
+// quitté, onglet fermé, ordinateur en veille ou page déconnectée par le verrou
+// des 30 minutes : la séance s'arrête seule vingt minutes plus tard, et tout
+// s'efface. Les interrogations des ÉLÈVES ne prolongent rien.
+// PLAFOND_DIRECT borne le tout, quoi que fasse le tableau : trois heures
+// après l'ouverture, une séance s'arrête.
+const VEILLE_DIRECT = 1200;
+const PLAFOND_DIRECT = 10800;
+// Le tableau interroge toutes les secondes et demie : sa présence ne s'écrit
+// qu'une fois toutes les PAS_VEILLE_DIRECT secondes, pas à chaque appel.
+const PAS_VEILLE_DIRECT = 30;
 // Garde-fou, très au-dessus d'une heure de cours : une touche restée enfoncée
 // ne remplit pas la base.
 const MAX_QUESTIONS_DIRECT = 80;
@@ -112,7 +126,7 @@ function reglage_direct(string $type, mixed $brut): ?array
                 if (!is_int($duree) || $duree < DUREE_DIRECT_MIN || $duree > DUREE_DIRECT_MAX) return null;
                 $reglage['duree'] = $duree;
             }
-            return $reglage;
+            return rang_direct($brut, $reglage);
         case 'entier':
             // Combien de chiffres au plus ; et le même chrono facultatif.
             $chiffres = $brut['chiffres'] ?? 3;
@@ -123,10 +137,25 @@ function reglage_direct(string $type, mixed $brut): ?array
                 if (!is_int($duree) || $duree < DUREE_DIRECT_MIN || $duree > DUREE_DIRECT_MAX) return null;
                 $reglage['duree'] = $duree;
             }
-            return $reglage;
+            return rang_direct($brut, $reglage);
         default:
             return null;
     }
+}
+
+// Le RANG (17/10/2026) : le numéro que le TABLEAU affiche (« Question 1 / 8 »
+// d'un questionnaire), pour que le téléphone dise le même. Sans lui, l'élève
+// voyait le numéro du serveur (« Question 2 » si une question éclair avait
+// précédé). Un entier de 1 au plafond de questions, rien d'autre ; absent pour
+// une question éclair (l'élève voit alors le numéro de la séance, comme le
+// tableau). Rien du questionnaire : un nombre.
+function rang_direct(array $brut, array $reglage): ?array
+{
+    $rang = $brut['rang'] ?? null;
+    if ($rang === null) return $reglage;
+    if (!is_int($rang) || $rang < 1 || $rang > MAX_QUESTIONS_DIRECT) return null;
+    $reglage['rang'] = $rang;
+    return $reglage;
 }
 
 // Une réponse d'élève, remise au propre ; null si elle n'a pas la forme que
@@ -182,11 +211,31 @@ function reglage_pour_l_eleve_direct(array $reglage): array
 
 // -------------------------------------------------------------------- la purge
 //
-// Une séance dont le professeur ne s'est plus occupé depuis DUREE_DIRECT
-// disparaît, questions et réponses comprises. La table « directs » ne porte
-// que quelques lignes (une par classe en séance) : la chercher à chaque appel
-// ne coûte rien, et c'est ce qui tient la promesse « rien n'est conservé »
-// même quand personne ne clique sur « Terminer ».
+// La fin d'une séance éclair, vue d'un appel du tableau fait MAINTENANT :
+// vingt minutes plus tard, jamais au-delà du plafond compté depuis l'ouverture.
+function echeance_direct(int $ouvertLe, ?int $maintenant = null): int
+{
+    $maintenant ??= time();
+    return min($maintenant + VEILLE_DIRECT, $ouvertLe + PLAFOND_DIRECT);
+}
+
+// Le tableau est là (direct.etat) : la fin recule. Une écriture au plus toutes
+// les PAS_VEILLE_DIRECT secondes ; ni l'état ni la révision ne bougent, les
+// élèves n'en voient rien. Jamais une évaluation (elle a sa propre fin).
+function garder_direct_en_vie(PDO $pdo, array $direct): void
+{
+    if (($direct['mode'] ?? 'eclair') !== 'eclair') return;
+    $echeance = echeance_direct((int)$direct['ouvert_le']);
+    if ($echeance - (int)$direct['expire_le'] < PAS_VEILLE_DIRECT) return;
+    $pdo->prepare("UPDATE directs SET expire_le = ? WHERE id = ? AND mode = 'eclair' AND expire_le < ?")
+        ->execute([$echeance, (int)$direct['id'], $echeance]);
+}
+
+// Une séance dont le tableau ne s'est plus manifesté depuis VEILLE_DIRECT (ou
+// ouverte depuis PLAFOND_DIRECT) disparaît, questions et réponses comprises.
+// La table « directs » ne porte que quelques lignes (une par classe en
+// séance) : la chercher à chaque appel ne coûte rien, et c'est ce qui tient la
+// promesse « rien n'est conservé » même quand personne ne clique sur « Terminer ».
 function purger_directs(PDO $pdo, ?int $maintenant = null): int
 {
     $requete = $pdo->prepare('SELECT id FROM directs WHERE expire_le < ?');
@@ -237,6 +286,25 @@ function direct_de_la_classe(PDO $pdo, int $classeId): ?array
     $direct = $requete->fetch();
     $requete->closeCursor();
     return $direct === false ? null : $direct;
+}
+
+// Les séances ouvertes de ces classes : [classe_id => mode] (« eclair » ou
+// « evaluation »). Pour la pastille de « Mes classes » (17/10/2026) : rien
+// d'autre ne sort, ni question, ni réponse, ni nombre.
+function modes_des_directs_ouverts(PDO $pdo, array $classeIds): array
+{
+    $ids = array_values(array_unique(array_map('intval', $classeIds)));
+    if ($ids === []) return [];
+    $marques = implode(',', array_fill(0, count($ids), '?'));
+    $requete = $pdo->prepare("SELECT classe_id, mode FROM directs WHERE expire_le >= ? AND classe_id IN ($marques)");
+    $requete->execute(array_merge([time()], $ids));
+    $modes = [];
+    foreach ($requete->fetchAll() as $ligne) {
+        $mode = (string)$ligne['mode'];
+        if (in_array($mode, MODES_DIRECT, true)) $modes[(int)$ligne['classe_id']] = $mode;
+    }
+    $requete->closeCursor();
+    return $modes;
 }
 
 // La question en cours d'une séance (type, réglage, bonne réponse), ou null
@@ -328,8 +396,9 @@ function ouvrir_direct(PDO $pdo, int $classeId, int $profId): array
     // Une séance périmée de cette classe occuperait la clé unique.
     purger_directs($pdo);
     try {
+        $maintenant = time();
         $pdo->prepare('INSERT INTO directs (classe_id, prof_id, mode, etat, numero, revision, ouvert_le, expire_le) VALUES (?, ?, ?, ?, 0, 1, ?, ?)')
-            ->execute([$classeId, $profId, 'eclair', 'attente', time(), time() + DUREE_DIRECT]);
+            ->execute([$classeId, $profId, 'eclair', 'attente', $maintenant, echeance_direct($maintenant, $maintenant)]);
     } catch (PDOException $e) {
         if (!doublon($e)) throw $e;
     }
@@ -359,7 +428,7 @@ function poser_question_direct(PDO $pdo, array $direct, string $type, array $reg
             $pdo->prepare('INSERT INTO directs_questions (direct_id, numero, type, reglage, bonne) VALUES (?, ?, ?, ?, NULL)')
                 ->execute([(int)$direct['id'], $suivant, $type, json_encode($reglage)]);
             $pdo->prepare('UPDATE directs SET numero = ?, etat = ?, revision = revision + 1, expire_le = ? WHERE id = ?')
-                ->execute([$suivant, 'question', time() + DUREE_DIRECT, (int)$direct['id']]);
+                ->execute([$suivant, 'question', echeance_direct((int)$direct['ouvert_le']), (int)$direct['id']]);
             transaction_valider($pdo);
             return true;
         } catch (Throwable $e) {
@@ -383,7 +452,7 @@ function devoiler_direct(PDO $pdo, array $direct, ?string $bonne = null): bool
         transaction_ouvrir($pdo);
         try {
             $requete = $pdo->prepare('UPDATE directs SET etat = ?, revision = revision + 1, expire_le = ? WHERE id = ? AND etat = ?');
-            $requete->execute(['devoile', time() + DUREE_DIRECT, (int)$direct['id'], 'question']);
+            $requete->execute(['devoile', echeance_direct((int)$direct['ouvert_le']), (int)$direct['id'], 'question']);
             $devoile = $requete->rowCount() === 1;
             if ($devoile && $bonne !== null) {
                 $pdo->prepare('UPDATE directs_questions SET bonne = ? WHERE direct_id = ? AND numero = ?')
@@ -406,7 +475,7 @@ function designer_bonne_reponse_direct(PDO $pdo, array $direct, ?string $bonne):
     $pdo->prepare('UPDATE directs_questions SET bonne = ? WHERE direct_id = ? AND numero = ?')
         ->execute([$bonne, (int)$direct['id'], (int)$direct['numero']]);
     $pdo->prepare('UPDATE directs SET revision = revision + 1, expire_le = ? WHERE id = ?')
-        ->execute([time() + DUREE_DIRECT, (int)$direct['id']]);
+        ->execute([echeance_direct((int)$direct['ouvert_le']), (int)$direct['id']]);
 }
 
 // Tout ce que la séance contient, pour le fichier que le professeur télécharge
