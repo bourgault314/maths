@@ -857,7 +857,8 @@ function makeSumOrProductQcm(d){
 // Cible DNB (liste officielle NC1) : 1/2 ; 1/4 ; 3/4 ; 3/2 ; 4/2 ; 5/2 ; 1/10 ;
 // 100/100 ; 7/1, et la question réelle du DNB 2026 « Donner une écriture du
 // nombre 0,75 sous la forme d'une fraction » (toute fraction égale est juste).
-// Les numéros des types retirés (7, 8, 12, 14, 18, 20) ne sont pas réutilisés.
+// Les numéros des types retirés (12, 14, 18, 20) ne sont pas réutilisés. Les tiers
+// (types 7 et 8 : 3/3, 6/3, 9/3) sont revenus le 17/10/2026, à la demande de Gwenaël.
 const MODULE01_OFFICIAL_F2D=[
   {num:1,den:2},{num:1,den:4},{num:3,den:4},{num:3,den:2},{num:4,den:2},{num:5,den:2},
   {num:1,den:10},{num:1,den:100},{num:100,den:100},{num:7,den:1}
@@ -878,6 +879,8 @@ const MODULE01_TEMPLATES=[
   {n:4,options:{module01_kind:'benchmark_d2f',module01_format:'qcm'}},
   {n:5,options:{module01_kind:'tenths_f2d',module01_format:'open'}},
   {n:6,options:{module01_kind:'hundredths_f2d',module01_format:'open'}},
+  {n:7,options:{module01_kind:'integer_thirds_f2d',module01_format:'open'}},
+  {n:8,options:{module01_kind:'integer_thirds_f2d',module01_format:'qcm'}},
   {n:9,options:{module01_kind:'benchmark_improper_f2d',module01_format:'qcm'}},
   {n:10,options:{module01_kind:'improper_f2d',module01_format:'open'}},
   {n:11,options:{module01_kind:'benchmark_improper_f2d',module01_format:'truefalse'}},
@@ -897,7 +900,8 @@ function module01Family(q){
   const n=Number(q&&q.n);
   if([1,2].includes(n)) return 'reperes';
   if([5,6].includes(n)) return 'dixiemes-centiemes';
-  if([9,10,11].includes(n)) return 'plus-grand-que-1';
+  // Les tiers (7, 8 : 6/3 = 2) tournent avec les fractions plus grandes que 1.
+  if([7,8,9,10,11].includes(n)) return 'plus-grand-que-1';
   if(n===13) return 'simplifier';
   // Les QCM décimal → fraction (4, 16) tournent avec les réponses à écrire : brevet 2027 sans QCM.
   if([21,23].includes(n)) return 'comparer';
@@ -1023,6 +1027,17 @@ function module01ImproperDecimalDistractors(num,den,dec){
   ];
   return module01PickDistinct(candidates,item=>item.value===dec);
 }
+// Distracteurs des tiers (type 8 : 6/3 = 2) : chacun correspond à une erreur nommée.
+function module01ThirdsDistractors(num,den,dec){
+  const F=module01Frac(num,den);
+  const candidates=[
+    {value:num+','+den,code:'E1',feedback:'La barre de fraction n’est pas une virgule : '+F+' n’est pas '+num+','+den+'.'},
+    {value:String(num-den),code:'E-sous',feedback:F+', c’est '+num+' divisé par '+den+', pas '+num+' − '+den+'.'},
+    {value:String(num),code:'E-num',feedback:F+', ce sont '+num+' tiers, pas '+num+' unités : il faut 3 tiers pour faire 1 unité.'},
+    {value:den+','+num,code:'E1b',feedback:'La barre de fraction n’est pas une virgule.'}
+  ];
+  return module01PickDistinct(candidates,item=>item.value===dec);
+}
 // Distracteurs « décimal → fraction » (QCM de type 4).
 function module01FractionDistractors(num,den){
   const dec=module01Decimal(num,den), parts=module01DecimalParts(dec), D='$$'+dec+'$$';
@@ -1100,7 +1115,7 @@ function module01F2DSteps(num,den,dec){
 }
 function module01PlaceWord(den,count=2){
   const plural=count>1;
-  const words={1:['unité','unités'],2:['demi','demis'],4:['quart','quarts'],5:['cinquième','cinquièmes'],10:['dixième','dixièmes'],100:['centième','centièmes']};
+  const words={1:['unité','unités'],2:['demi','demis'],3:['tiers','tiers'],4:['quart','quarts'],5:['cinquième','cinquièmes'],10:['dixième','dixièmes'],100:['centième','centièmes']};
   const word=words[den]||[den+'e',den+'es'];
   return plural?word[1]:word[0];
 }
@@ -1131,6 +1146,8 @@ function module01F2DAide(num,den){
     const places=den===10?1:2;
     return ['Le dénominateur '+den+' indique des '+module01PlaceName(places)+' : '+F+' = '+num+' '+module01PlaceName(places,num)+'.', places===1?'Les dixièmes s’écrivent au 1<sup>er</sup> rang après la virgule.':'Les centièmes s’écrivent au 2<sup>e</sup> rang après la virgule.'];
   }
+  // 4/2, 6/3 : il ne reste rien après les unités entières.
+  if(num>den&&num%den===0) return ['Combien de '+module01PlaceWord(den)+' font une unité ?','Combien d’unités entières peux-tu former ?'];
   if(num>den) return ['Combien de '+module01PlaceWord(den)+' font une unité ?','Écris '+F+' comme une somme : des unités entières + ce qui reste.'];
   return ['Cherche une fraction égale avec 10 ou 100 au dénominateur.','Par combien multiplier '+den+' pour obtenir '+(den===2||den===5?'10':'100')+' ?'];
 }
@@ -1158,8 +1175,14 @@ function makeModule01Instance(mod,q){
     const e=module01DistinctFrom('fixedF2D',MODULE01_OFFICIAL_F2D);
     num=e.num; den=e.den;
     if(den===1) num=pick([2,3,5,6,7,8,9]);
-    // Pas de dessin quand la fraction vaut un entier (n/1, 4/2, 100/100) : compter les unités donnerait la réponse.
-    visualKind=num%den===0?'none':((den===10||den===100)?'place-empty':'grouped');
+    // Règle du 17/10/2026 : on peut compter sur le dessin, la réponse n'y est jamais écrite.
+    // Demis et quarts : la droite graduée de la V2 (bandes posées, arrivée « ? »), à la place
+    // du rectangle. n/1 et 100/100 : les unités de Gwenaël, sans le « 1 » sur chaque unité.
+    visualKind=(den===2||den===4)?'rail':(den===1||num===den?'grouped':'place-empty');
+  } else if(kind==='integer_thirds_f2d'){
+    // Les tiers qui font un entier (3/3, 6/3, 9/3), sur la droite des tiers.
+    const e=module01DistinctFrom('thirds',[{num:3},{num:6},{num:9}]);
+    num=e.num; den=3; visualKind='rail';
   } else if(kind==='fixed_d2f'){
     const e=module01DistinctFrom('fixedD2F',MODULE01_OFFICIAL_D2F); num=e.num; den=e.den; direction='d2f';
   } else if(kind==='benchmark_d2f'){
@@ -1223,7 +1246,7 @@ function makeModule01Instance(mod,q){
     } else if(format==='qcm'){
       prompt='Quelle est l’écriture décimale de '+F+'&nbsp;?';
       display='';
-      const distractors=kind==='fixed_f2d'?module01OfficialDecimalDistractors(num,den,dec):module01ImproperDecimalDistractors(num,den,dec);
+      const distractors=kind==='fixed_f2d'?module01OfficialDecimalDistractors(num,den,dec):(kind==='integer_thirds_f2d'?module01ThirdsDistractors(num,den,dec):module01ImproperDecimalDistractors(num,den,dec));
       qcm=module01QcmFrom(dec,distractors); answers=[qcm.correctIndex]; feedback=qcm.feedback;
     } else {
       const wrong=module01ImproperDecimalDistractors(num,den,dec);
@@ -1240,9 +1263,14 @@ function makeModule01Instance(mod,q){
       extra.truth=truth; extra.shown=shown;
     }
     // A0 : pour /10 et /100, le plateau de Gwenaël (unité partagée, parts coloriées) revient
-    // dans l'aide, avant le tableau de numération vide.
-    visualData=visualKind==='place-empty'?[{num,den,reduced,visualKind:'grouped',dec},{num,den,reduced,visualKind,dec}]:{num,den,reduced,visualKind,dec};
-    correctionVisualData=visualKind==='place-empty'?{kind:'place-value',value:dec}:(visualKind==='none'?null:{num,den,reduced,visualKind,showUnits:true});
+    // dans l'aide, avant le tableau de numération vide. Droite graduée : la même en correction,
+    // l'arrivée porte alors la réponse.
+    if(visualKind==='rail'){
+      visualData={kind:'rail',num,den,dec}; correctionVisualData={kind:'rail',num,den,dec};
+    } else {
+      visualData=visualKind==='place-empty'?[{num,den,reduced,visualKind:'grouped',dec},{num,den,reduced,visualKind,dec}]:{num,den,reduced,visualKind,dec};
+      correctionVisualData=visualKind==='place-empty'?{kind:'place-value',value:dec}:(visualKind==='none'?null:{num,den,reduced,visualKind,showUnits:true});
+    }
   } else if(!special&&direction==='d2f'){
     fractionPolicy='equivalent';
     steps=module01D2FSteps(dec,reduced);
@@ -1262,11 +1290,11 @@ function makeModule01Instance(mod,q){
       qcm=module01QcmFrom(correct,distractors); answers=[qcm.correctIndex]; feedback=qcm.feedback;
       if(kind==='place_d2f') steps=steps.slice(0,1);
     }
-    // Question : le plateau de Gwenaël (A0) avec ses unités partagées en dixièmes ou en
-    // centièmes, sans rien colorier (colorier le nombre donnerait la réponse), puis le
-    // tableau vide (dans quel rang est chaque chiffre ?) ; correction : tableau rempli.
+    // Aide : le plateau de Gwenaël, le nombre colorié comme dans sa version (règle du
+    // 17/10/2026 : on compte 75 centièmes, la réponse n'est pas écrite). Plus de tableau
+    // de numération vide : le panneau était trop chargé. Correction : le tableau rempli.
     const plateau=(kind==='fixed_d2f'||kind==='benchmark_d2f')?(num>den&&den>1?'bar':(den===10?'grouped':'neutral')):(den===10?'grouped':'neutral');
-    visualData=[{num,den,reduced,visualKind:plateau,dec,vide:true},{kind:'place-value',value:null}];
+    visualData={num,den,reduced,visualKind:plateau,dec};
     correctionVisualData={kind:'place-value',value:dec};
   } else if(kind==='compare'){
     // « Complète par <, = ou > » (sujet de référence n° 1, Q4 : comparer 7/4 et des décimaux).
@@ -1392,7 +1420,6 @@ function makeModule01Instance(mod,q){
     visualData=null; correctionVisualData=null; visualKind='none'; direction='extreme';
   }
 
-  // Le dessin du sens décimal → fraction est un tableau de numération rempli (lecture des rangs).
   const aideHtml=visualData?module01AideVisual(Array.isArray(visualData)||visualData.kind?visualData:{...visualData}):'';
   const hasVisual=!!aideHtml;
   prompt=module01Tidy(prompt); display=module01Tidy(display); equality=module01Tidy(equality);
@@ -5109,8 +5136,8 @@ const LEVEL_4E_QUESTIONS={
 // Le filtre DNB reste volontairement classique : calculs directs et QCM
 // courts sur la distributivité simple, sans manipulation ni identité remarquable.
 const LEVEL_DNB_QUESTIONS={
-  // dnb_01 : le vrai/faux (type 11) n'est pas une forme du DNB général.
-  dnb_01:[1,2,3,4,5,6,9,10,13,15,16,17,19,21,22,23],
+  // dnb_01 : tous les types, le vrai/faux (11) et les tiers (7, 8) compris (Gwenaël, 17/10/2026).
+  dnb_01:'all',
   // dnb_02 : l'encadrement entre deux entiers (type 4) reste en 5e-4e.
   dnb_02:[1,3,7,8,9,10,11,13,14,15,16,17,18],
   // dnb_03 : les types 3, 5 et 6 (même dénominateur ou même numérateur)

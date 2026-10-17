@@ -187,7 +187,56 @@
     const label=digits.some(Boolean)?'Tableau de numération : '+String(value):'Tableau de numération vide : unités, dixièmes, centièmes';
     return `<div class="module01-visual module01-place-value"><svg viewBox="0 0 ${width} ${height}" style="max-width:${Math.round(width*1.35)}px;max-height:24vh" role="img" aria-label="${label}">${out}</svg></div>`;
   }
+  // Droite graduée de bandes (reprise de la V2 de Gwenaël, 17/10/2026) : des bandes
+  // de 1/2, 1/4, 1/3 ou 1 posées bout à bout sur une droite graduée. Règle de l'aide :
+  // on peut compter, mais la réponse n'est jamais écrite. Les graduations franchies
+  // sont nommées, l'arrivée reste « ? » ; en correction, l'arrivée porte la réponse.
+  function railLabel(k,den){
+    const value=k/den;
+    if(Math.abs(value-Math.round(value))<1e-9) return String(Math.round(value));
+    if(den===3) return '';
+    return value.toFixed(2).replace(/0+$/,'').replace(/\.$/,'').replace('.',',');
+  }
+  function railVisual(data,correction=false){
+    const num=Math.max(1,Math.round(Number(data.num)||1)),den=Math.max(1,Math.round(Number(data.den)||1));
+    const maxRail=Math.max(1,Math.ceil(num/den)),parts=maxRail*den;
+    const W=360,left=22,right=34,unitW=(W-left-right)/maxRail,partW=unitW/den;
+    const yBand=12,hBand=46,yAxis=104,yLabel=131,H=142;
+    const [dark,,stroke]=palette(den),ink='#111827',font='Arial,Helvetica,sans-serif';
+    const target=left+num*partW,answer=String(data.dec||railLabel(num,den));
+    let out='';
+    for(let index=0;index<num;index++){
+      const x=left+index*partW;
+      out+=`<rect x="${x.toFixed(2)}" y="${yBand}" width="${partW.toFixed(2)}" height="${hBand}" fill="${dark}" stroke="${stroke}" stroke-width="1.6"/>`;
+      const cx=x+partW/2;
+      if(den===1) out+=`<text x="${cx.toFixed(2)}" y="${yBand+hBand/2+6}" text-anchor="middle" font-family="${font}" font-size="17" font-weight="800" fill="${ink}">1</text>`;
+      else if(partW>=20){
+        const fs=partW>=34?14:12,half=Math.min(9,partW*.28);
+        out+=`<text x="${cx.toFixed(2)}" y="${yBand+hBand/2-4}" text-anchor="middle" font-family="${font}" font-size="${fs}" font-weight="800" fill="${ink}">1</text>`;
+        out+=`<line x1="${(cx-half).toFixed(2)}" y1="${yBand+hBand/2}" x2="${(cx+half).toFixed(2)}" y2="${yBand+hBand/2}" stroke="${ink}" stroke-width="1.4"/>`;
+        out+=`<text x="${cx.toFixed(2)}" y="${yBand+hBand/2+fs+1}" text-anchor="middle" font-family="${font}" font-size="${fs}" font-weight="800" fill="${ink}">${den}</text>`;
+      }
+    }
+    // Repères pointillés du départ et de l'arrivée.
+    [left,target].forEach(x=>{out+=`<line x1="${x.toFixed(2)}" y1="${yBand+hBand+3}" x2="${x.toFixed(2)}" y2="${yAxis-2}" stroke="#1e3a8a" stroke-width="1.6" stroke-dasharray="3 3"/>`;});
+    // L'axe et sa flèche.
+    const end=W-right+20;
+    out+=`<line x1="${left-6}" y1="${yAxis}" x2="${end}" y2="${yAxis}" stroke="#18324f" stroke-width="2"/>`;
+    out+=`<path d="M${end-9} ${yAxis-6} L${end} ${yAxis} L${end-9} ${yAxis+6}" fill="none" stroke="#18324f" stroke-width="2"/>`;
+    for(let k=0;k<=parts;k++){
+      const x=left+k*partW,major=k%den===0,h=major?8:5;
+      out+=`<line x1="${x.toFixed(2)}" y1="${yAxis-h}" x2="${x.toFixed(2)}" y2="${yAxis+h}" stroke="#18324f" stroke-width="${major?2:1.4}"/>`;
+      let label='',color=ink,weight=700,size=15;
+      if(k===num){ label=correction?answer:'?'; color=correction?'#0b7c67':'#1d4ed8'; weight=900; size=correction?17:20; }
+      else if(k<num||major) label=railLabel(k,den);
+      if(label) out+=`<text x="${x.toFixed(2)}" y="${yLabel}" text-anchor="middle" font-family="${font}" font-size="${size}" font-weight="${weight}" fill="${color}">${label}</text>`;
+    }
+    const names={1:['unité','unités'],2:['demi','demis'],3:['tiers','tiers'],4:['quart','quarts']}[den]||['part','parts'];
+    const aria=num+' '+(num>1?names[1]:names[0])+' posé'+(num>1?'s':'')+' bout à bout sur une droite graduée'+(correction?' : ils arrivent à '+answer+'.':' ; l’arrivée est à trouver.');
+    return `<div class="module01-visual module01-rail"><svg viewBox="0 0 ${W} ${H}" style="max-width:${Math.round(W*1.5)}px;max-height:30vh" role="img" aria-label="${aria}">${out}</svg></div>`;
+  }
   function render(data,correction=false){
+    if(data&&data.kind==='rail') return railVisual(data,correction);
     if(data&&data.kind==='decimal-complement') return decimalComplementVisual(data,correction);
     if(data&&data.kind==='place-value') return placeValueVisual(data.value);
     if(data&&data.visualKind==='place-empty') return placeValueVisual(null);
@@ -216,7 +265,7 @@
 
   if(!global.MATHSGO_VISUALS)throw new Error('Le registre MATHSGO_VISUALS doit être chargé avant fraction-decimal-grid.js.');
   global.MATHSGO_VISUALS.register('arithmetic.fraction-decimal-grid',{
-    version:'1.3.0',
+    version:'1.4.0',
     label:'Plateau fraction–décimal',
     family:'Arithmétique',
     description:'Construit les unités partagées, grilles de cent cases (remplies par quarts), unités complètes repérées en correction et tableau de numération figé, pour passer d’une fraction à un décimal.',
