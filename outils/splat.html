@@ -15020,9 +15020,10 @@ function eleveCasesEnqueteHtml(card, enquete){
 }
 /* La copie d'une case de tache : même étiquette, pas de champ (le pavé et la validation
    l'ignorent), le nombre tapé dans la première case de la couleur, « ? » tant qu'elle est vide.
-   data-copie = le rang, dans la ligne du bas, de cette première case. */
-function eleveCaseCopieHtml(attendu, tacheHtml, rangSource){
-  return `<div class="eleveCase grise copie" style="flex:1 1 0" data-attendu="${attendu}" data-copie="${rangSource}">` +
+   data-copie = le rang, dans la ligne du bas, de cette première case. largeur : la part de la
+   ligne (1 dans l'Enquête et le Système, cases égales ; au monde 2, la largeur de la tache). */
+function eleveCaseCopieHtml(attendu, tacheHtml, rangSource, largeur = 1){
+  return `<div class="eleveCase grise copie" style="flex:${largeur} 1 0" data-attendu="${attendu}" data-copie="${rangSource}">` +
     tacheHtml + `<span class="eleveCopieVal vide">?</span></div>`;
 }
 /* Recopie, dans les cases copies, le nombre et l'état (juste, faux, réponse montrée) de la
@@ -15038,6 +15039,24 @@ function eleveCopiesSynchroniser(){
     if(val){ val.textContent = v || "?"; val.classList.toggle("vide", !v); }
     ["ok", "ko", "montre"].forEach(k => c.classList.toggle(k, src.classList.contains(k)));
   });
+}
+
+/* Monde 2 (Splat classique, jetons et billes) : les jetons visibles, puis une case par tache, de la
+   largeur de ce qu'elle cache (le schéma en barres). RECOPIE (18/10/2026, décidé le 14/10 par
+   Gwenaël : « c'était long de réécrire », jusqu'à six fois le même nombre) : l'élève tape dans la
+   PREMIÈRE case de tache, les autres recopient ce nombre, comme dans l'Enquête et le Système depuis
+   le 03/10 (eleveCopiesSynchroniser). Le monde 1 (Petit SPLAT!) ne change pas. */
+function eleveCasesClassiqueHtml(card, infos){
+  const flexVis = Math.max(infos.visibleSum, card.total * 0.05, 1);
+  const flexHid = Math.max(infos.H, card.total * 0.05, 1);
+  let bas = "";
+  if(infos.visibleSum > 0) bas += eleveCaseHtml("blanche", infos.visibleSum, flexVis, false);
+  const rangPremiere = infos.visibleSum > 0 ? 1 : 0; /* rang de la première case de tache dans la ligne */
+  for(let i = 0; i < infos.tasks; i++){
+    bas += i === 0 ? eleveCaseHtml("grise", infos.H, flexHid, true)
+      : eleveCaseCopieHtml(infos.H, ELEVE_TACHE_MINI, rangPremiere, flexHid);
+  }
+  return bas;
 }
 
 function eleveEnregistrerReussite(sansFaute, total){
@@ -15344,10 +15363,7 @@ function renderEleveSplat(){
   }else if(infos.uf){
     const uf = ufCasesEleve(card); bas = uf.bas; haut = uf.haut; /* A — Jetons et parts (lot F2) */
   }else{
-    const flexVis = Math.max(infos.visibleSum, card.total * 0.05, 1);
-    const flexHid = Math.max(infos.H, card.total * 0.05, 1);
-    if(infos.visibleSum > 0) bas += eleveCaseHtml("blanche", infos.visibleSum, flexVis, false);
-    for(let i = 0; i < infos.tasks; i++) bas += eleveCaseHtml("grise", infos.H, flexHid, true);
+    bas = eleveCasesClassiqueHtml(card, infos); /* monde 2 : la première case de tache, puis ses copies */
     haut = eleveCaseHtml("haut blanche", card.total, 1, false);
   }
 

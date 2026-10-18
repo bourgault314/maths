@@ -58,8 +58,14 @@ test("la case d'une tache garde son « ? » (et sa mini-tache)", () => {
 });
 
 test("dans la carte, seules les cases des taches reçoivent le « ? »", () => {
-  const debut = page.indexOf("\nfunction renderEleveSplat(");
-  const rendu = page.slice(debut, page.indexOf("\n}\n", debut));
+  /* 18/10/2026 (recopie au monde 2) : la ligne des cases est fabriquée par eleveCasesClassiqueHtml,
+     appelée par renderEleveSplat ; les cases de taches recopiées montrent le même « ? » gris
+     (.eleveCopieVal.vide), sans champ. */
+  const morceau = (nom) => { const d = page.indexOf(`\nfunction ${nom}(`); return page.slice(d, page.indexOf("\n}\n", d)); };
+  assert.match(morceau("renderEleveSplat"), /bas = eleveCasesClassiqueHtml\(card, infos\);/);
+  const rendu = morceau("eleveCasesClassiqueHtml") + morceau("renderEleveSplat");
+  assert.deepEqual(regles(feuille).filter((r) => r.sel === ".eleveCopieVal.vide").map((r) => r.decl), ["color:#94a3b8;font-weight:700"],
+    "le « ? » d'une case recopiée a le gris du « ? » des cases de taches");
   const appels = [...rendu.matchAll(/eleveCaseHtml\(("[^"]+"), [^,]+, [^,]+, (true|false)\)/g)].map((m) => `${m[1]} ${m[2]}`);
   assert.deepEqual(appels, ['"blanche" false', '"grise" true', '"haut blanche" false'], "jetons visibles, taches, total");
   // deux « ? » dans la page élève, tous deux sur la case de la tache : celle d'eleveCaseHtml, et la case décimale
