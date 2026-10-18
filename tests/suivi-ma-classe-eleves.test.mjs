@@ -406,18 +406,22 @@ test("Mes classes : plus de formulaire toujours affiché, une carte « + Nouvell
 test("« + Nouvelle classe » : la petite fenêtre, un nom, une seule création, puis la classe s'ouvre", async () => {
   const rejoue = async (reponse) => {
     const appels = [], messages = [];
-    let finir;
+    // Le faux serveur répond à TOUTES les demandes en attente : si un second
+    // clic en envoyait une deuxième, elle se termine aussi, et le test rougit
+    // sur le compte des créations au lieu de rester bloqué (vu par Code le
+    // 18/10 sur Windows : le sabotage faisait pendre le test 600 s).
+    const enAttente = [];
     const f = new Function("demander", "api", "chargerClasses", "ouvrirClasse", "messager", "surErreur",
       `let creationEnCours = false;\n${fonction("creerClasse")}\nreturn creerClasse;`)(
       async (texte, champs) => { appels.push(["demander", texte, champs]); return reponse; },
-      (action, corps) => { appels.push([action, corps]); return new Promise(r => { finir = () => r({id: 42}); }); },
+      (action, corps) => { appels.push([action, corps]); return new Promise(r => { enAttente.push(() => r({id: 42})); }); },
       async () => { appels.push(["chargerClasses"]); }, async id => { appels.push(["ouvrir", id]); },
       (id, t, type) => messages.push([id, t, type]), e => { throw e; });
     const p1 = f();
     await new Promise(r => setTimeout(r, 0));
     const p2 = f();   // un second clic pendant l'envoi
     await new Promise(r => setTimeout(r, 0));
-    if (finir) finir();
+    enAttente.forEach(repondre => repondre());
     await Promise.all([p1, p2]);
     return {appels, messages};
   };
