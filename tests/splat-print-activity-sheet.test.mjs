@@ -15,8 +15,8 @@ test("les deux outils proposent un titre imprime et le conservent dans le lien p
 });
 
 test("les titres de bandeau distinguent les deux outils", () => {
-  assert.match(classic, /title\.textContent = "Splat!"/);
-  assert.match(equations, /title\.textContent = "Splat! Équations"/);
+  assert.match(classic, /title\.textContent = "SPLAT!"/);
+  assert.match(equations, /title\.textContent = "SPLAT! Équations"/);
   for(const html of [classic, equations]){
     assert.match(html, /customTitle \? `\$\{customTitle\} — Correction` : "Correction"/);
   }

@@ -369,11 +369,13 @@ function texteDesPages(p) {
   return pages;
 }
 
-/* Les pages de fiche lues par texteExact commencent par le « Splat! » du bandeau (lot P, 24/09/2026 :
+/* Les pages de fiche lues par texteExact commencent par le « SPLAT! » du bandeau (lot P, 24/09/2026 :
    texteDesPages, qui devine la table de chaque police, lit « lat!Fiche — » quand le « Splat! » gras
    est posé dans une police découpée en plusieurs sous-ensembles ; texteExact suit la vraie police et
    lit le même texte, au caractère près, sur les PDF d'avant et d'après). */
-const titreFiche = (t) => t.replace(/^Splat!/, "");
+// (lot D, 17/10/2026) le bandeau dit « SPLAT! » en capitales, comme partout dans l'univers : une page de
+// fiche qui ne commence pas par lui ne passe pas
+const titreFiche = (t) => (t.startsWith("SPLAT!") ? t.slice(6) : "(pas de « SPLAT! » dans le bandeau) " + t);
 
 test("dans le PDF publié : la 2e page de chaque fiche porte « Fiche N bis — … »", () => {
   const pages = texteExact("outils/livret_splat_classique.pdf");
@@ -709,7 +711,9 @@ const CORRECTIONS_M2 = [
 ];
 // (26/09/2026 : sans les logos, le titre a plus de place dans le bandeau — il se coupe autrement)
 // Ce sont les titres du livret À PLIER, sans logo.
-const TITRES_M2 = ["Fiche 7 — Le même jeu, un nouveau plateau— Correction", "Fiche 7 bis — Le même jeu, un nouveauplateau — Correction",
+// (lot D, 17/10/2026) « SPLAT! » en capitales prend un peu plus de place : au livret à plier, la fiche 7
+// se coupe comme la 7 bis (« … un nouveau » / « plateau — Correction »)
+const TITRES_M2 = ["Fiche 7 — Le même jeu, un nouveauplateau — Correction", "Fiche 7 bis — Le même jeu, un nouveauplateau — Correction",
                    "Fiche 8 — Avec des paquets de jetons —Correction", "Fiche 8 bis — Avec des paquets de jetons —Correction",
                    "Fiche 9 — Le déﬁ — Correction", "Fiche 9 bis — Le déﬁ — Correction"];
 // Le PDF page par page garde le logo de l'IREMI (04/10/2026) : le bandeau a moins de place, un titre
@@ -738,7 +742,7 @@ test("K2 : pages 2 à 7 = la correction des fiches, même consigne que l'élève
     assert.equal(corr.length, 8, `${s} : huit pages`);
     for (let p = 1; p <= 6; p++) {
       const t = corr[p];
-      assert.ok(t.startsWith(`Splat!${TITRES_M2_PAGE[p - 1]}`), `${s} p.${p + 1} : ${TITRES_M2_PAGE[p - 1]} (lu : ${t.slice(0, 60)})`);
+      assert.ok(t.startsWith(`SPLAT!${TITRES_M2_PAGE[p - 1]}`), `${s} p.${p + 1} : ${TITRES_M2_PAGE[p - 1]} (lu : ${t.slice(0, 60)})`);
       assert.match(t, /Je rejoueces cartesen ligne/, `${s} p.${p + 1} : la boîte du QR du corrigé`);
       assert.doesNotMatch(t, /terminé/, `${s} p.${p + 1} : plus la phrase de l'élève`);
       assert.ok(t.endsWith("mathsgo.re/splat · CC BY-NC-SA 4.0 · correction"), `${s} p.${p + 1} : pied « · correction »`);
@@ -754,7 +758,7 @@ test("K2 : pages 2 à 7 = la correction des fiches, même consigne que l'élève
     assert.equal(corr[7], eleve[7], `${s} : le dos est identique`);
     // le livret à plier : les mêmes pages, au titre près (sans logo, le titre se coupe comme avant)
     const plier = (n) => n >= 2 && n <= 7
-      ? `Splat!${TITRES_M2[n - 2]}` + corr[n - 1].slice(`Splat!${TITRES_M2_PAGE[n - 2]}`.length) : corr[n - 1];
+      ? `SPLAT!${TITRES_M2[n - 2]}` + corr[n - 1].slice(`SPLAT!${TITRES_M2_PAGE[n - 2]}`.length) : corr[n - 1];
     const a3 = texteExact(`outils/${s}_a_plier.pdf`);
     [[8, 1], [2, 7], [6, 3], [4, 5]].forEach(([g, d], k) =>
       assert.equal(a3[k], plier(g) + plier(d), `${s} : feuille ${k + 1} = pages ${g} | ${d}`));
@@ -910,7 +914,7 @@ const CARTES_MONDES = [
   [3, "SPLAT! Enquête", "fiches 10 à 24", 3, "Monde 3 · "],     // 25/09/2026 : le monde 3 en trois parties
   [4, "SPLAT! Système", "fiches 25 à 28", 4, "Monde 4 · "],     // 25/09/2026 : le Système, monde 4 ; lot M4-4 (04/10/2026) : un livret, 25 à 28
   [5, "SPLAT! Équations", "fiches 35 à 37", 5, "Monde 5 · "],     // lot Q3 (24/09/2026) : la carte saute de 19 à 35
-  [6, "SPLAT! Relatifs", "fiches 38 à 43", 6, "Monde 6 · "],      // lot R2 (26/09/2026)
+  [6, "SPLAT! Relatifs", '<span class="mot">fiches </span>É1-É3, 38 à 43', 6, "Monde 6 · "],      // lot R2 (26/09/2026) ; lot D (17/10/2026) : l'échauffement É1-É3
 ];
 test("cartes des mondes : numéro, nom et fiches, dans l'ordre, toujours des onglets, sans couverture", () => {
   const nav = page.slice(page.indexOf('<nav class="onglets"'), page.indexOf("</nav>"));

@@ -39,7 +39,7 @@ mode EQPMSTEP, « Énoncé seul, 6/page », et pour le corrigé la correction co
 « zero=1 » (lot R1) tire une équation à solution nulle.
 
 Ce que ce script ajoute aux pages de l'outil (checklist de la relecture du monde 1, 26/09) :
-le QR de la fiche tout à droite du bandeau, le nom « Splat! / Relatifs » sur deux étages, AUCUN
+le QR de la fiche tout à droite du bandeau, le nom « SPLAT! / Relatifs » sur deux étages, AUCUN
 logo sur les pages-fiches (retiré au rendu : l'outil garde le sien), « page N » au coin
 extérieur du bas, le pied « mathsgo.re/splat ». Au dos, le seul logo maths&go (décision de
 Gwenaël du 26/09 : ni IREMI, ni Unité apprenante, ni crédit à Claire — « c'est juste maths&go »).
@@ -210,7 +210,7 @@ VUES = {
         sortie="livret_splat_relatifs_1",
         sur="Mon livret · Monde 6 · Livret 1",
         accroche="Des jetons rouges, une tache «&nbsp;opposé&nbsp;»…<br>et les taches sur un seul plateau&nbsp;!",
-        fiches=[PAR_N[38], PAR_N[39], PAR_N[40]], exemple=EXEMPLE_1,
+        fiches=[PAR_N[38], PAR_N[39], PAR_N[40]], exemple=EXEMPLE_1, oppose_lu=True,
         dos=[("Les jetons rouges", "Des nombres négatifs, comme la fiche&nbsp;38.", "1"),
              ("Des négatifs partout", "Des jetons à regrouper, comme la fiche&nbsp;39.", "2"),
              ("La tache opposée", "La tache «&nbsp;opposé&nbsp;», comme la fiche&nbsp;40.", "3")],
@@ -279,7 +279,7 @@ VUES["defi1"] = dict(VUES["livret1"],
     sortie="livret_splat_relatifs_defi_1",
     sur="Mon livret · Monde 6 · Livret 1 · Le défi",
     accroche="Des jetons partout, de grands partages…<br>et la lettre sur les taches&nbsp;!",
-    fiches=[DEFI_PAR_N[38], DEFI_PAR_N[39], DEFI_PAR_N[40]], exemple=EXEMPLE_D1, lettre=True,
+    fiches=[DEFI_PAR_N[38], DEFI_PAR_N[39], DEFI_PAR_N[40]], exemple=EXEMPLE_D1, lettre=True, oppose_lu=False,
     dos=[("Un seul plateau", "Des jetons partout et jusqu'à six taches, comme les fiches&nbsp;38 et&nbsp;39.", "d1"),
          ("La tache –" + X_HTML, "Des taches opposées, seules puis mélangées, comme la fiche&nbsp;40.", "d2")],
     css_dos=CSS_DOS_DEFI, css_couv=CSS_COUV_DEFI,
@@ -410,9 +410,9 @@ JS_TITRE = """() => {
   return coupe.length ? 'titre coupé : ' + coupe.join(' | ') : 'ok';
 }"""
 
-# Le nom de l'outil dans le bandeau des fiches : « Splat! » et, dessous, « Relatifs » (comme
-# « Splat! / Équations » au monde 5).
-TITRE_BANDEAU = "Splat!<small>Relatifs</small>"
+# Le nom de l'outil dans le bandeau des fiches : « SPLAT! » et, dessous, « Relatifs » (comme
+# « SPLAT! / Équations » au monde 5 ; en capitales depuis le lot D, 17/10/2026).
+TITRE_BANDEAU = "SPLAT!<small>Relatifs</small>"
 CSS_TITRE_OUTIL = (".printArea .print-page-title{line-height:1.02 !important}"
                    ".printArea .print-page-title small{display:block;font-size:.62em;letter-spacing:.2px}")
 JS_TITRE_OUTIL = """(t) => {
@@ -463,6 +463,7 @@ JS_COUV = """(d) => {
   if (!txt('.tete .accroche', d.accroche)) return 'pas d\\'accroche';
   if (!txt('.expl .intro', d.intro)) return 'pas de texte d\\'exemple';
   if (!txt('.lg-corr', 'L\\'équation')) return 'pas de légende de la résolution';
+  if (d.oppose && !txt('.neuf-oppose', d.oppose)) return 'pas de nouveauté « opposé »';
   const li = document.querySelectorAll('.som ol li');
   if (li.length !== d.sommaire.length) return 'sommaire : ' + li.length + ' lignes';
   d.sommaire.forEach((t, i) => {
@@ -532,7 +533,7 @@ JS_LETTRE = """(page) => {
     if (!it) return 'nouveauté « opposé » introuvable';
     if (!badge(it.parentElement.querySelector('svg'))) return 'tache de la nouveauté introuvable';
     it.innerHTML = "Dans ce livret, la <b>lettre</b> est sur les taches&nbsp;: une tache –" + X +
-      " cache l'<b>opposé</b> de ce que cache une tache " + X + ".";
+      " cache le même nombre qu'une tache " + X + ", mais en prend l'<b>opposé</b>.";
     return 'ok';
   }
   const li = document.querySelectorAll('.lex li');
@@ -547,7 +548,7 @@ JS_LETTRE = """(page) => {
   if (!tx || !tm) return 'lettres des taches du dos introuvables';
   tx.setAttribute('font-size', String(LETTRE_DOS.taille)); tx.setAttribute('y', String(LETTRE_DOS.yX));
   tm.setAttribute('font-size', String(LETTRE_DOS.taille)); tm.setAttribute('y', String(LETTRE_DOS.yMoins));
-  t1.innerHTML = "Une tache <b>–" + X + "</b> cache l'<b>opposé</b> de ce nombre.";
+  t1.innerHTML = "Une tache <b>–" + X + "</b> prend l'<b>opposé</b> de ce nombre.";
   return 'ok';
 }"""
 
@@ -601,6 +602,20 @@ def ecrit(ligne):
     out = ligne.replace("−", TIRET + "\u2060").replace(" ", NB)
     return re.sub(r"([\U0001D400-\U0001D7FF])", r'<span class="x">\1</span>', out)
 
+def nw(t):
+    """Un nombre qui ne se coupe pas en fin de ligne (le navigateur coupe après le tiret « – »)."""
+    return f'<span class="nw">{t}</span>'
+
+def texte_oppose(ex):
+    """Livret 1 (lot D, 17/10/2026, règle de Gwenaël) : la tache « opposé » cache le même nombre que
+    les autres et en prend l'opposé ; transparente, on lit ce nombre. Le livret 1 l'introduit (fiche
+    40) mais son exemple n'a pas de tache « opposé » : la phrase prend la valeur de son exemple, pour
+    ne pas mentir sur ses nombres."""
+    x = ex["x"]
+    return (f"Une tache <b>«{NB}opposé{NB}»</b> cache le même nombre que les autres taches, mais elle en "
+            f"prend l'<b>opposé</b>{NB}: elle s'écrit {TIRET}<span class=\"x\">𝑥</span>. Transparente, on voit "
+            f"ce nombre{NB}: si on y lit {nw(signe(x))}, elle vaut {nw(signe(-x))}.")
+
 def textes_exemple(ex, lettre=False, court=False):
     """Le texte « Comment ça marche ? », écrit à partir de la carte que l'outil vient de dessiner
     et de sa résolution : il ne peut pas mentir sur ses nombres."""
@@ -638,22 +653,25 @@ def textes_exemple(ex, lettre=False, court=False):
         # livrets « défi » (30/09/2026) : l'exemple a ses taches dévoilées sans lettre ; la phrase
         # courte, pour que la couverture du défi 2 (deux taches « opposé ») tienne sur la page
         nom_opp = f"«{NB}opposé{NB}»"
-        cache = (f"Ici, elles sont transparentes&nbsp;: on lit {signe(x)} sous chaque tache, et une tache "
-                 f"«{NB}opposé{NB}» cache donc {signe(-x)}. ")
+        # (lot D) un nombre négatif ne se coupe jamais après son « – » (vu au défi 1 : « vaut donc – » / « 7 »)
+        cache = (f"Ici, elles sont transparentes&nbsp;: on lit {nw(signe(x))} sous chaque tache, et une tache "
+                 f"«{NB}opposé{NB}» vaut donc {nw(signe(-x))}. ")
     else:
         nom_opp = f"«{NB}opposé{NB}»"
-        cache = (f"Ici, elles sont transparentes&nbsp;: une tache cache {signe(x)}"
-                 + (f"&nbsp;; sous la tache «{NB}opposé{NB}», on lit «{NB}opposé{NB}» et {signe(x)}&nbsp;: elle cache {signe(-x)}" if opp else "") + ". ")
+        cache = (f"Ici, elles sont transparentes&nbsp;: on lit {nw(signe(x))} sous chaque tache, et la tache "
+                 f"«{NB}opposé{NB}» vaut donc {nw(signe(-x))}. " if opp else
+                 f"Ici, elles sont transparentes&nbsp;: une tache cache {signe(x)}. ")
     # dans la première phrase, la lettre ne doit pas être un <span> (ils y font un paragraphe)
     d_let = f'<i class="x">{v}</i>' if lettre else None
     return (f"Sur cette carte, il y a la même quantité à gauche et à droite. À gauche, {decrit(g, d_let)}&nbsp;; "
             f"à droite, {decrit(d, d_let)}."
             "\n      <span>Les taches cachent toutes le même nombre&nbsp;: c'est l'<b>inconnue</b>, la lettre "
-            f"{let}" + ((f" — sauf les taches {nom_opp}, qui cachent son opposé" if n_opp > 1 else
-                         f" — sauf la tache {nom_opp}, qui cache son opposé") if opp else "") + ". "
+            f"{let}" + ((f"&nbsp;; les taches {nom_opp} en prennent l'opposé" if n_opp > 1 else
+                         f"&nbsp;; la tache {nom_opp} en prend l'opposé") if opp else "") + ". "
             + cache
             + f"L'<b>équation</b> s'écrit {ecrit(lignes[0])}&nbsp;: " + phrase_gestes
-            + f" — {let}{NB}={NB}{signe(x)}.</span>")
+            # (lot D, 17/10/2026) « — 𝑏 = 5 » ne se coupe plus en fin de ligne (vu au livret 2 : « en 3 — » / « 𝑏 = 5 »)
+            + f"{NB}—{NB}{let}{NB}={NB}{signe(x)}.</span>")
 
 # Les petits dessins du dos, avec les nombres de l'exemple de la couverture : les flèches de la
 # résolution (le premier geste sur les nombres, écrit « + 6 » comme dans l'outil) et l'équation.
@@ -848,7 +866,7 @@ async def pages(v, tmp, jeu, corr=None):
                     sur=v["sur"], accroche=v["accroche"], intro=textes_exemple(ex, court=v.get("lettre", False)),
                     sommaire=[[f["n"], f["t"], f["resume"]] for f in v["fiches"]],
                     prof=dict(PROF, dit=CORRECTION["dit"]) if corr else None,
-                    lettre=v.get("lettre", False))
+                    lettre=v.get("lettre", False), oppose=texte_oppose(ex) if v.get("oppose_lu") else None)
         await pdf_html("couverture.html", tmp / "p1.pdf", JS_COUV, couv, v.get("css_couv"))
         fleches, equation = dessins_dos(ex)
         dos = dict(niveaux=[[nom, desc, f"{qrweb}/serie-{s}.png"] for nom, desc, s in v["dos"]],

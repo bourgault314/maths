@@ -82,7 +82,7 @@ test("Q2 : le monde 5 a trois étapes, 12 équations chacune, et garde ses étoi
   assert.deepEqual(EQUATIONS.etapes.map((e) => e.o), [
     "Une tache : enlève les jetons en trop, ou partage. D'abord un par un, puis en paquets.",
     "Enlève d'abord les jetons en trop, puis partage entre les taches.",
-    "Enlève d'abord les taches en trop, puis résous."]);
+    "Enlève d'abord le même nombre de taches sur les deux plateaux, puis résous."]);
   assert.equal(NOTES_PROF[4].length, 3);
 });
 

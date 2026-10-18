@@ -286,9 +286,9 @@ JS_TITRE = """() => {
   return coupe.length ? 'titre coupé : ' + coupe.join(' | ') : 'ok';
 }"""
 
-# Le nom de l'outil dans le bandeau des fiches : « Splat! » et, dessous, « Relatifs » (comme
-# « Splat! / Équations » au monde 5).
-TITRE_BANDEAU = "Splat!<small>Relatifs</small>"
+# Le nom de l'outil dans le bandeau des fiches : « SPLAT! » et, dessous, « Relatifs » (comme
+# « SPLAT! / Équations » au monde 5 ; en capitales depuis le lot D, 17/10/2026).
+TITRE_BANDEAU = "SPLAT!<small>Relatifs</small>"
 CSS_TITRE_OUTIL = (".printArea .print-page-title{line-height:1.02 !important}"
                    ".printArea .print-page-title small{display:block;font-size:.62em;letter-spacing:.2px}")
 JS_TITRE_OUTIL = """(t) => {

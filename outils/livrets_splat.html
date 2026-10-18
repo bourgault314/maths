@@ -221,6 +221,9 @@ footer a{font-weight:700}
   .onglets a .num b{font-size:14.5px}
   .onglets a .etiq{font-size:14px}
   .onglets a .fiches{font-size:12px;white-space:nowrap}
+  /* monde 6 (lot D, 17/10/2026) : « fiches É1-É3, 38 à 43 » ne tient pas sur une ligne au téléphone ;
+     le mot « fiches » s'efface, « É1-É3, 38 à 43 » tient (mesuré à 390 et 360 px) */
+  .onglets a .fiches .mot{display:none}
   .liv .couv-lien{flex-basis:92px;padding:10px 8px}
   .liv .corps{padding:10px 12px 12px}
   .liv h3{font-size:18px}
@@ -241,7 +244,7 @@ footer a{font-weight:700}
 <body>
 
 <header>
-  <a class="back" href="/outils/?domain=algebre&amp;collection=splat" title="Retour aux outils Splat!">
+  <a class="back" href="/outils/?domain=algebre&amp;collection=splat" title="Retour aux outils SPLAT!">
     <svg viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
   </a>
   <a class="brand" href="/" aria-label="Accueil maths&amp;go"><img src="/assets/img/mathsgo-logo-390.png" alt="maths&amp;go"></a>
@@ -262,7 +265,7 @@ footer a{font-weight:700}
     <a href="#monde-3" data-m="3" id="onglet-3" role="tab" aria-controls="monde-3" aria-selected="false"><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>3</b></span><span class="txt"><span class="sr">Monde 3 · </span><span class="etiq">SPLAT! Enquête</span><span class="fiches">fiches 10 à 24</span></span></a>
     <a href="#monde-4" data-m="4" id="onglet-4" role="tab" aria-controls="monde-4" aria-selected="false"><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>4</b></span><span class="txt"><span class="sr">Monde 4 · </span><span class="etiq">SPLAT! Système</span><span class="fiches">fiches 25 à 28</span></span></a>
     <a href="#monde-5" data-m="5" id="onglet-5" role="tab" aria-controls="monde-5" aria-selected="false"><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>5</b></span><span class="txt"><span class="sr">Monde 5 · </span><span class="etiq">SPLAT! Équations</span><span class="fiches">fiches 35 à 37</span></span></a>
-    <a href="#monde-6" data-m="6" id="onglet-6" role="tab" aria-controls="monde-6" aria-selected="false"><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>6</b></span><span class="txt"><span class="sr">Monde 6 · </span><span class="etiq">SPLAT! Relatifs</span><span class="fiches">fiches 38 à 43</span></span></a>
+    <a href="#monde-6" data-m="6" id="onglet-6" role="tab" aria-controls="monde-6" aria-selected="false"><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>6</b></span><span class="txt"><span class="sr">Monde 6 · </span><span class="etiq">SPLAT! Relatifs</span><span class="fiches"><span class="mot">fiches </span>É1-É3, 38 à 43</span></span></a>
     <a href="#histoires" data-m="h" id="onglet-h" role="tab" aria-controls="histoires" aria-selected="false"><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>?</b></span><span class="txt"><span class="etiq">Les histoires de SPLAT!</span><span class="fiches">les mêmes problèmes, en histoires</span></span></a>
   </nav>
   <p class="prepaPhrase" id="prepaPhrase" hidden></p>
@@ -776,7 +779,7 @@ footer a{font-weight:700}
 
       <article class="liv">
         <a class="couv-lien" href="/outils/livret_splat_equations_schema.pdf" target="_blank" rel="noopener" title="Voir le livret Le schéma en barres (PDF, 8 pages)">
-          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-equations-schema.png?v=4" alt="Couverture du livret SPLAT! Équations, le schéma en barres" loading="lazy">
+          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-equations-schema.png?v=5" alt="Couverture du livret SPLAT! Équations, le schéma en barres" loading="lazy">
         </a>
         <div class="corps">
           <div class="titre"><h3>Le schéma en barres</h3><span class="plage">fiches 35, 36 et 37</span></div>
@@ -824,7 +827,7 @@ footer a{font-weight:700}
 
       <article class="liv">
         <a class="couv-lien" href="/outils/livret_splat_equations_equation.pdf" target="_blank" rel="noopener" title="Voir le livret L'équation (PDF, 8 pages)">
-          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-equations-equation.png?v=4" alt="Couverture du livret SPLAT! Équations, l'équation" loading="lazy">
+          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-equations-equation.png?v=5" alt="Couverture du livret SPLAT! Équations, l'équation" loading="lazy">
         </a>
         <div class="corps">
           <div class="titre"><h3>L’équation</h3><span class="plage">fiches 35, 36 et 37</span></div>
@@ -908,7 +911,7 @@ footer a{font-weight:700}
 
       <article class="liv">
         <a class="couv-lien" href="/outils/livret_splat_relatifs_1.pdf" target="_blank" rel="noopener" title="Voir le livret 1 du monde 6 (PDF, 8 pages)">
-          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-relatifs-1.png?v=3" alt="Couverture du livret 1 de SPLAT! Relatifs, les taches sur un seul plateau" loading="lazy">
+          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-relatifs-1.png?v=4" alt="Couverture du livret 1 de SPLAT! Relatifs, les taches sur un seul plateau" loading="lazy">
         </a>
         <div class="corps">
           <div class="titre"><h3>Livret 1</h3><span class="plage">fiches 38, 39 et 40</span></div>
@@ -929,7 +932,7 @@ footer a{font-weight:700}
 
       <article class="liv">
         <a class="couv-lien" href="/outils/livret_splat_relatifs_2.pdf" target="_blank" rel="noopener" title="Voir le livret 2 du monde 6 (PDF, 8 pages)">
-          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-relatifs-2.png?v=4" alt="Couverture du livret 2 de SPLAT! Relatifs, les taches sur les deux plateaux" loading="lazy">
+          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-relatifs-2.png?v=5" alt="Couverture du livret 2 de SPLAT! Relatifs, les taches sur les deux plateaux" loading="lazy">
         </a>
         <div class="corps">
           <div class="titre"><h3>Livret 2</h3><span class="plage">fiches 41, 42 et 43</span></div>
@@ -956,7 +959,7 @@ footer a{font-weight:700}
 
       <article class="liv">
         <a class="couv-lien" href="/outils/livret_splat_relatifs_defi_1.pdf" target="_blank" rel="noopener" title="Voir le livret Le défi 1 du monde 6 (PDF, 8 pages)">
-          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-relatifs-defi-1.png?v=1" alt="Couverture du livret SPLAT! Relatifs, Le défi du livret 1" loading="lazy">
+          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-relatifs-defi-1.png?v=2" alt="Couverture du livret SPLAT! Relatifs, Le défi du livret 1" loading="lazy">
         </a>
         <div class="corps">
           <div class="titre"><h3>Le défi 1</h3><span class="plage">fiches 38, 39 et 40</span></div>
@@ -977,7 +980,7 @@ footer a{font-weight:700}
 
       <article class="liv">
         <a class="couv-lien" href="/outils/livret_splat_relatifs_defi_2.pdf" target="_blank" rel="noopener" title="Voir le livret Le défi 2 du monde 6 (PDF, 8 pages)">
-          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-relatifs-defi-2.png?v=1" alt="Couverture du livret SPLAT! Relatifs, Le défi du livret 2" loading="lazy">
+          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-relatifs-defi-2.png?v=2" alt="Couverture du livret SPLAT! Relatifs, Le défi du livret 2" loading="lazy">
         </a>
         <div class="corps">
           <div class="titre"><h3>Le défi 2</h3><span class="plage">fiches 41, 42 et 43</span></div>

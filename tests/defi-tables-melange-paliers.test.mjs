@@ -409,5 +409,5 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // (avant : seance-en-direct-aide-et-veille).
   assert.match(lire("_serveur/public/VERSION"), /^lot ma-classe-reglages$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-comment-on-joue-20261011-3/);
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-lot-d-20261017-1/);
 });

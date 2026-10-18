@@ -84,7 +84,7 @@ test("la page classique reserve un bandeau, une consigne et un pied de page comp
   assert.match(html, /\.print-page-header\{[\s\S]*?flex:0 0 16mm;/);
   assert.match(html, /\.print-page-instruction\{/);
   assert.match(html, /\.print-page-footer\{flex:0 0 3\.5mm/);
-  assert.match(html, /title\.textContent = "Splat!"/);
+  assert.match(html, /title\.textContent = "SPLAT!"/);
   assert.match(html, /mathsgo\.re\/splat\/classique/);
 });
 

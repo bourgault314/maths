@@ -129,3 +129,12 @@ Le livret 1 de l'élève n'a pas été redéposé : refait, il ne diffère que d
 millimètre sur la première ligne de l'exemple de couverture, invisible à l'impression.
 
 *mathsgo.re · CC BY-NC-SA 4.0*
+
+## La tache « opposé » : les mots suivent le dessin (lot D, 17/10/2026)
+
+Règle de Gwenaël : **la tache « opposé » cache le même nombre que les autres taches, et elle en prend
+l'opposé** — c'est ce que montre le dessin (dans le corrigé, la valeur de 𝑥 sous le mot « opposé »,
+comme l'écriture −𝑥). Les textes disaient « elle cache l'opposé » : ils sont réécrits partout (encadré
+des couvertures, exemple du livret 2 et des défis, dos, consigne des fiches 40 à 43 dans l'outil, carte
+des mondes). Le livret 1, qui introduit la tache (fiche 40), ajoute : « Transparente, on voit ce nombre :
+si on y lit –3, elle vaut 3. » (le nombre de son exemple, `texte_oppose`). Le dessin ne change pas.

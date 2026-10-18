@@ -404,7 +404,7 @@ test("Q3 : couverture et dos sans logo, signature et licence au pied, lisible en
 });
 
 test("Q3 : le bandeau des fiches sur deux étages, la lettre arrondie, pas de flèche au livret schéma", () => {
-  assert.match(render, /^TITRE_BANDEAU = "Splat!<small>Équations<\/small>"$/m);
+  assert.match(render, /^TITRE_BANDEAU = "SPLAT!<small>Équations<\/small>"$/m);
   assert.match(render, /await pg\.add_style_tag\(content=CSS_QR \+ CSS_TITRE_OUTIL \+ \(CSS_TITRE_CORR if corr else ""\)\)/);
   // plus la vieille règle fausse (« quand il ne reste que des taches, on partage »)
   assert.doesNotMatch(render + dos, /Quand il ne reste que des taches/);
@@ -474,7 +474,8 @@ test("page des livrets : l'onglet du monde 5, ses deux livrets, leurs couverture
     const b = readFileSync(new URL(`../${png}`, import.meta.url));
     assert.deepEqual([b.readUInt32BE(16), b.readUInt32BE(20)], [993, 1404], `${nom} : page 1 rendue à 120 dpi`);
     // (nuit du 27/09/2026) les deux livrets de base changent de sommaire : ?v=4 ; les défis restent à ?v=3
-    const v = nom.endsWith("-defi") ? 3 : 4;
+    // (lot D, 17/10/2026) la fiche 37 du sommaire dit « le même nombre de taches… » : ?v=5
+    const v = nom.endsWith("-defi") ? 3 : 5;
     assert.ok(p.includes(`src="/assets/img/thumbnails/splat/${nom}.png?v=${v}"`), `${nom} : sur la page`);
   }
 });
@@ -589,7 +590,7 @@ test("Q4 : page des livrets — les corrigés du monde 5 repliés sous chaque li
   assert.match(catalogue, /Pour chaque livret : le PDF, le livret à plier et le corrigé\./);   // « de 8 pages » retiré à l'ouverture du monde 4 (livrets de 12 pages)
   assert.doesNotMatch(pageLivrets, /pour les mondes 1 à 4/);
   assert.doesNotMatch(lire("outils/toutes-les-ressources.html"), /pour les mondes 1 à 4, les livrets corrigés/);
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-comment-on-joue-20261011-3/, "le cache-buster du catalogue suit");
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-lot-d-20261017-1/, "le cache-buster du catalogue suit");
 });
 
 /* ------------------------------------------------------------------ lot Q5 (25/09/2026)
@@ -791,7 +792,7 @@ test("Q5 : la page des livrets et la carte des mondes — « Le défi » au mond
   const catalogue = lire("assets/js/catalogue-refonte-data.js");
   // (01/10/2026) les textes du catalogue raccourcis : « du monde 1 au monde 6 »
   assert.match(catalogue, /"cardDescription": "Tous les livrets SPLAT! à plier, du monde 1 au monde 6, avec leurs corrigés\."/);
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-comment-on-joue-20261011-3/);
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-lot-d-20261017-1/);
 });
 
 test("Q5 : ÉquaSplat ne reprend une série interrompue que si c'est la même (empreinte)", () => {

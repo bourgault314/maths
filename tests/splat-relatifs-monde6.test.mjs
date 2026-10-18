@@ -271,7 +271,8 @@ test("R1 : à l'impression, le vrai signe moins, le mot « opposé » lisible, p
   assert.match(fonction("drawEqPrintTacheMark"), /: eqPrintOpposeFontSize\(r, revealed\);/);
   // (relecture du monde 5, 27/09/2026) plus aucun logo IREMI dans l'outil, relatifs comme entiers naturels
   assert.doesNotMatch(fonction("createEquationPrintHeader"), /iremLogo|IREM_PRINT_LOGO_URL/);
-  assert.match(fonction("getEquationPrintInstruction"), /sauf les taches «\\u00a0opposé\\u00a0»\\u00a0: elles cachent l’opposé de cette valeur\./);
+  // (lot D, 17/10/2026, règle de Gwenaël) la tache « opposé » cache la même valeur et en prend l'opposé
+  assert.match(fonction("getEquationPrintInstruction"), /Les taches cachent toutes la même valeur\\u00a0; les taches «\\u00a0opposé\\u00a0» en prennent l’opposé\./);
 });
 
 test("R1 : ÉquaSplat conclut une solution nulle (4𝑥 = 0), jamais −𝑥 = 0 sans « Prendre l'opposé »", () => {
@@ -335,7 +336,7 @@ test("R3 : « taches=lettre » — 𝑡 et −𝑡 sur les taches imprimées, la
   // les jetons cachés dévoilés passent par eqPrintHiddenValue dans les trois scènes
   assert.equal((outil.match(/(?<!function )eqPrintHiddenValue\(card, /g) || []).length, 3);
   // la consigne le dit
-  assert.match(fonction("getEquationPrintInstruction"), /if\(hasOpposed && tachesLettre\) note = "Les taches cachent toutes la même valeur, sauf celles qui ont un «\\u00a0−\\u00a0» devant la lettre\\u00a0: elles cachent l’opposé de cette valeur\.";/);
+  assert.match(fonction("getEquationPrintInstruction"), /if\(hasOpposed && tachesLettre\) note = "Les taches cachent toutes la même valeur\\u00a0; celles qui ont un «\\u00a0−\\u00a0» devant la lettre en prennent l’opposé\.";/);
 });
 
 test("R3 puis 28/09/2026 : les deux livrets gardent « opposé » (la lettre sur les taches reste prête pour le livret « défi »)", () => {
@@ -542,7 +543,8 @@ test("défi : les huit PDF, les QR, les miniatures, la page des livrets et le ca
     const im = readFileSync(new URL(`../${png}`, import.meta.url));
     assert.deepEqual([im.readUInt32BE(16), im.readUInt32BE(20)], [993, 1404], "page 1 rendue à 120 dpi");
     assert.ok(taille(png.replace(".png", ".webp")) < taille(png));
-    assert.ok(pageLivrets.includes(`src="/${png}?v=1"`));
+    // (lot D, 17/10/2026) l'encadré « opposé » de la couverture change : ?v=2
+    assert.ok(pageLivrets.includes(`src="/${png}?v=2"`));
   }
   for (const q of ["38d", "39d", "40d", "41d", "42d", "43d"]) assert.ok(taille(`${SRC}qr/fiche${q}.png`) > 0);
   for (const s of ["d1", "d2", "d3", "d4"]) assert.ok(taille(`${SRC}qr/serie-${s}.png`) > 0);

@@ -359,13 +359,20 @@ CORRECTIONS = [
     dict(suffixe="_correction_equations", lettre=True, equations=True, dit="en équations", livrets=("tour2",)),
 ]
 PROF = dict(bandeau="Correction", ligne="Livret corrigé")
+# Lot D (17/10/2026, audit du 17/10) : sur la couverture des corrigés, le bandeau « Correction » (9 mm,
+# posé par-dessus le haut de la page) masquait le « TOTAL ? » de la petite carte décorative en haut à
+# droite (.hero, à 5 mm du haut). Elle descend de 5,5 mm, sous le bandeau, avec 3 mm de blanc ;
+# les livrets de l'élève et la carte de l'exemple ne bougent pas. tests/livret-splat-systeme.test.mjs
+# refait le calcul (bandeau, viewBox du dessin, premier cadre « TOTAL »).
+HERO_TOP_CORRIGE = "10.5mm"
 CSS_PROF = """
 .bandeau-prof{position:absolute;top:0;left:0;right:0;height:9mm;z-index:5;display:flex;align-items:center;justify-content:center;
   background:#b91c1c;color:#fff;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:3px}
 .ident .champ.prof{padding:2.5mm 4mm;text-align:center;line-height:1.25}
 .ident .champ.prof span{display:block;font-size:17px;color:#7c2d12}
 .ident .champ.prof small{display:block;font-size:12.5px;font-weight:700;color:#475569;margin-top:1mm}
-"""
+.tete .hero{top:HERO_TOP_CORRIGE}
+""".replace("HERO_TOP_CORRIGE", HERO_TOP_CORRIGE)
 
 # ---------------------------------------------------------------------------
 # L'EXEMPLE ET LA CARTE « À TOI » : dessinés par l'outil. La carte (ses plateaux, comme sur la
