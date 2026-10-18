@@ -90,7 +90,6 @@ FONT_REGULAR = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 FONT_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 
 INK = HexColor("#143451")
-BLUE = HexColor("#0B57B7")
 MUTED = HexColor("#506B7D")
 COUPE = HexColor("#9DB4C4")
 
@@ -179,7 +178,7 @@ def carte_titre(pdf: canvas.Canvas, col: int, row: int, table: int) -> None:
 def carte_titre_verso(pdf: canvas.Canvas, col: int, row: int, table: int) -> None:
     x, y = case(col, row)
     cadre(pdf, x, y, table, fond=True)
-    pdf.setFillColor(BLUE)
+    pdf.setFillColor(INK)   # encre foncée comme tous les textes des dos, jamais de couleur sur une teinte
     texte_centre(pdf, "Cartes-Bold", 20, x + CARTE_L / 2, y + CARTE_H / 2 + 3 * mm, TITRE_VERSO)
     pdf.setFillColor(MUTED)
     texte_centre(pdf, "Cartes", 11, x + CARTE_L / 2, y + CARTE_H / 2 - 5 * mm, SOUS_TITRE_VERSO)

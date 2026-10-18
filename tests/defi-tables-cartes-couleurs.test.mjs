@@ -26,6 +26,8 @@ test("recto épuré (le calcul seul dans son cadre), dos teinté de la couleur d
   assert.match(verso, /f"table de \{table\}"/, "la table en bas du dos, pour trier en noir et blanc");
   const titreVerso = source.match(/def carte_titre_verso\([\s\S]*?\n\n\n/)[0];
   assert.match(titreVerso, /fond=True/, "le dos de la carte-titre est teinté comme les autres dos");
+  assert.match(titreVerso, /pdf\.setFillColor\(INK\)[^\n]*\n\s*texte_centre\(pdf, "Cartes-Bold", 20, [^\n]*TITRE_VERSO\)/, "« Défi tables » à l'encre foncée, comme les autres dos");
+  assert.doesNotMatch(source, /0B57B7|BLUE/, "plus de bleu : aucun texte coloré sur une teinte");
 });
 
 test("cartes bord à bord, traits de coupe au recto seulement", () => {
