@@ -56,7 +56,7 @@ test("les cinq miniatures utilisent des vues fideles et adaptees aux outils", ()
   assert.match(catalogue, /assets\/img\/thumbnails\/splat\/splat\.png\?v=6/);
   assert.match(catalogue, /assets\/img\/thumbnails\/splat\/splat-equations\.png\?v=6/);
   assert.match(catalogue, /assets\/img\/thumbnails\/splat\/petit-splat\.png\?v=5/);
-  assert.match(cataloguePage, /catalogue-refonte-data\.js\?v=splat-comment-on-joue-20261011-3/);
+  assert.match(cataloguePage, /catalogue-refonte-data\.js\?v=splat-lot-d-20261017-1/);
   for(const thumbnail of [equasplatThumb, equascribeThumb, classicThumb, equationThumb, petitThumb]){
     assert.deepEqual(pngSize(thumbnail), {width:720, height:320});
   }
@@ -79,17 +79,17 @@ test("les quatre outils Splat utilisent une fleche de retour vers la collection"
 });
 
 test("la collection et les outils portent tous le nom Splat avec son point d’exclamation", () => {
-  assert.match(catalogue, /"id": "splat",[\s\S]*?"title": "Splat!"/);
-  assert.match(catalogue, /"title": "Splat! — relations et inconnues"/);
-  assert.match(catalogue, /"title": "Petit Splat! — fiches et schémas en barres"/);
-  assert.match(catalogue, /"title": "Splat! — équations"/);
-  assert.match(catalogue, /"outils\/splat\.html": \{[\s\S]{0,180}?"cardTitle": "Splat!"/);
-  assert.match(catalogue, /"outils\/splat_tache_barre\.html": \{[\s\S]{0,180}?"cardTitle": "Petit Splat!"/);
-  assert.match(catalogue, /"outils\/splat_equations\.html": \{[\s\S]{0,180}?"cardTitle": "Splat! — équations"/);
-  assert.match(legacyCatalogue, /"id": "splat",[\s\S]*?"title": "Splat!"/);
-  assert.match(classic, /<title>Splat! — relations et inconnues/);
-  assert.match(equations, /<title>Splat! — équations/);
-  assert.match(petit, /<title>Petit Splat! — fiches et schémas en barres/);
+  assert.match(catalogue, /"id": "splat",[\s\S]*?"title": "SPLAT!"/);
+  assert.match(catalogue, /"title": "SPLAT! — relations et inconnues"/);
+  assert.match(catalogue, /"title": "Petit SPLAT! — fiches et schémas en barres"/);
+  assert.match(catalogue, /"title": "SPLAT! — équations"/);
+  assert.match(catalogue, /"outils\/splat\.html": \{[\s\S]{0,180}?"cardTitle": "SPLAT!"/);
+  assert.match(catalogue, /"outils\/splat_tache_barre\.html": \{[\s\S]{0,180}?"cardTitle": "Petit SPLAT!"/);
+  assert.match(catalogue, /"outils\/splat_equations\.html": \{[\s\S]{0,180}?"cardTitle": "SPLAT! — équations"/);
+  assert.match(legacyCatalogue, /"id": "splat",[\s\S]*?"title": "SPLAT!"/);
+  assert.match(classic, /<title>SPLAT! — relations et inconnues/);
+  assert.match(equations, /<title>SPLAT! — équations/);
+  assert.match(petit, /<title>Petit SPLAT! — fiches et schémas en barres/);
 });
 
 test("la collection Splat dispose d’un bandeau propre et credite Steve Wyborney", () => {

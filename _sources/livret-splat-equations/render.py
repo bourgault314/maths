@@ -109,7 +109,7 @@ FICHES = [
     dict(n=36, t="Enlever, puis partager",           parties=EQ5_F36, parcours="m3e2",
          resume="2 ou 3 taches, puis jusqu'à 6."),
     dict(n=37, t="Des taches sur les deux plateaux", parties=EQ5_F37, parcours="m3e4",
-         resume="Enlève d'abord les taches en trop."),
+         resume="Enlève d'abord le même nombre de taches sur les deux plateaux."),
 ]
 
 # ------------------------------------------------------------------ le livret « Le défi » (lot Q5)
@@ -510,10 +510,10 @@ JS_TITRE = """() => {
   return coupe.length ? 'titre coupé : ' + coupe.join(' | ') : 'ok';
 }"""
 
-# Le nom de l'outil dans le bandeau des fiches : « Splat! » et, dessous, « Équations » (décision du
-# 24/09/2026). Sur une seule ligne, « Splat! Équations » (17 pt) ne laissait que 3 cm au titre de la
+# Le nom de l'outil dans le bandeau des fiches : « SPLAT! » (en capitales depuis le lot D, 17/10/2026)
+# et, dessous, « Équations » (décision du 24/09/2026). Sur une seule ligne, « Splat! Équations » (17 pt) ne laissait que 3 cm au titre de la
 # fiche une fois la boîte du QR posée : « Des taches des deux côtés » ne tenait pas sur deux lignes.
-TITRE_BANDEAU = "Splat!<small>Équations</small>"
+TITRE_BANDEAU = "SPLAT!<small>Équations</small>"
 CSS_TITRE_OUTIL = (".printArea .print-page-title{line-height:1.02 !important}"
                    ".printArea .print-page-title small{display:block;font-size:.62em;letter-spacing:.2px}")
 JS_TITRE_OUTIL = """(t) => {

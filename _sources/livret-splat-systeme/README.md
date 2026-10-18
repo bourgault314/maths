@@ -158,3 +158,11 @@ main au pixel près).
   maths&go, avec l'IREMI de La Réunion (plus de ligne de crédit pour la progression, 07/10/2026).
   Les fiches, réglages, graines, livrets et PDF du Système sont le travail de
   Gwenaël Bourgault.
+
+## Lot D de l'audit du 17/10/2026
+
+- Le bandeau des fiches dit **« SPLAT! »** en capitales (l'outil, `createClassicPrintHeader`), comme
+  partout dans l'univers : les 14 PDF du Système sont refaits, seul le bandeau des pages-fiches bouge.
+- **Couverture des 5 corrigés** : la petite carte décorative en haut à droite (`.hero`) descend de
+  5,5 mm (`HERO_TOP_CORRIGE`, dans `CSS_PROF`) ; le bandeau « Correction », posé par-dessus le haut
+  de la page, masquait son « TOTAL ? ». Les livrets de l'élève et la carte de l'exemple ne bougent pas.

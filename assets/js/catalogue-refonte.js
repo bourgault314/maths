@@ -379,7 +379,7 @@
       icon: "tiles"
     },
     splat: {
-      description: "Explorer Splat!, Petit Splat!, Splat! Équations et ÉquaSplat autour de l’inconnue.",
+      description: "Explorer SPLAT!, Petit SPLAT!, SPLAT! Équations et ÉquaSplat autour de l’inconnue.",
       icon: "splat"
     }
   };

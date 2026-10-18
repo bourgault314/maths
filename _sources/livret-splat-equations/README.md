@@ -1,5 +1,31 @@
 # Livrets « SPLAT! Équations » (monde 5) — 8 pages chacun, à plier
 
+> **État actuel (17/10/2026) — à lire d'abord.** Ce fichier raconte les livrets lot après lot :
+> les parties qui suivent sont l'**historique** (titres, graines et répartitions d'avant). Ce qui
+> est vrai aujourd'hui :
+>
+> - **Quatre livrets de l'élève**, chacun avec son corrigé (16 PDF) : `schema`, `equation`, et
+>   leurs défis `defi_schema`, `defi`.
+> - **Fiche 35 « Premières équations »** : six cartes 𝑥 + 𝑏 = 𝑐, puis six cartes 𝑎𝑥 = 𝑐, chaque
+>   forme d'abord un par un, puis en paquets. **Fiche 36 « Enlever, puis partager »** : 𝑎𝑥 + 𝑏 = 𝑐,
+>   2 ou 3 taches, puis 4 à 6. **Fiche 37 « Des taches sur les deux plateaux »** : le grand
+>   mélange en 37 bis. Six séries de 2 cartes par fiche (`EQ5_F35`, `EQ5_F36`, `EQ5_F37` de
+>   `render.py`, les mêmes que `outils/splat_univers.html`).
+> - **Le défi** : 35 « De deux à quatre taches », 36 « Jusqu'à six taches », 37 « Le grand défi :
+>   les deux plateaux » (`FICHES_DEFI`).
+> - **Sommaire de la couverture, fiche 37** : « Enlève d'abord le même nombre de taches sur les
+>   deux plateaux. » (lot D, 17/10/2026 ; avant : « les taches en trop »). Même phrase sur la carte
+>   des mondes, suivie de « puis résous. ».
+> - **Bandeau des fiches** : « SPLAT! » en capitales puis « Équations » en dessous (lot D ; avant :
+>   « Splat! »), comme partout dans l'univers.
+> - **Vocabulaire** : « sur les deux plateaux » / « sur un seul plateau », plus « des deux côtés »
+>   (27/09/2026).
+> - **Rendu** : sous Linux, en DejaVu Sans (décision du 03/10/2026). Si la police **Inter** est
+>   installée sur la machine de rendu, fontconfig la prend pour `sans-serif` et toutes les fiches
+>   changent : l'écarter avant de rendre (fichier `fonts.conf` avec `<rejectfont>` sur son dossier,
+>   passé par `FONTCONFIG_FILE`), puis vérifier qu'un livret refait sans changement est identique au
+>   PDF du site.
+
 Les trois fiches du monde 5 de l'univers SPLAT! — **35 Premières équations**, **36 Des paquets
 de jetons**, **37 Des taches des deux côtés** — en deux livrets aux **mêmes 36 cartes** (lot Q3,
 24/09/2026). Même fabrication que les livrets des mondes 1 à 4 : **2 feuilles A3 recto-verso**,
@@ -25,6 +51,8 @@ en barres » partout (demande de Claire). Les corrigés sont venus au lot Q4, «
 
 ## Les 8 pages
 
+*(Historique, 24/09/2026 : les titres des fiches 36 et 37 ont changé depuis, voir « État actuel ».)*
+
 1. **Couverture** — bandeau teal (le monde 5 de la carte des mondes, comme le bandeau imprimé
    des fiches), « Mon livret · Monde 5 · Le schéma en barres » (ou « · L'équation »), la tache
    marquée d'une lettre, « Comment ça marche ? » (l'exemple, voir plus bas), « Nom, prénom » +
@@ -34,7 +62,7 @@ en barres » partout (demande de Claire). Les corrigés sont venus au lot Q4, «
 8. **Dos** — « Encore des cartes ! » (trois QR), « La suite du voyage » (le monde 6, SPLAT!
    relatifs), « Pour se souvenir », « Mes fiches » (une étoile à colorier par fiche), crédits.
 
-Dans le bandeau des fiches, le nom de l'outil est écrit sur **deux étages**, « Splat! » puis
+Dans le bandeau des fiches, le nom de l'outil est écrit sur **deux étages**, « SPLAT! » puis
 « Équations » en plus petit (décision du 24/09/2026) : sur une seule ligne, une fois la boîte du QR
 posée, il ne laissait que 3 cm au titre de la fiche, et « Des taches des deux côtés » ne tenait pas
 sur deux lignes.
@@ -65,6 +93,8 @@ le moins est le tiret « – » de Poppins (son vrai « − » est plus court qu
 - `render.py` — régénère les PDF. Tous les réglages sont en tête de fichier.
 
 ## Les fiches : celles de la carte des mondes, et celles du jeu en ligne
+
+*(Les graines citées ici sont celles du 24/09/2026 ; celles d'aujourd'hui sont en tête de `render.py`.)*
 
 Rien n'est tiré ici : `EQ5_S1` … `EQ5_DEUX_COTES` sont **exactement** les réglages et les graines
 de `outils/splat_univers.html` (lot Q2) — fiche 35 : graines 355, 814, 19 mises bout à bout

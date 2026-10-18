@@ -421,7 +421,7 @@ JS_TITRE = """() => {
   st.forEach(e => {
     const t = e.textContent, i = t.indexOf(' — ');
     e.style.whiteSpace = 'nowrap';
-    const bloc = e.parentElement;              // « Splat! » + le titre : c'est lui qui déborde
+    const bloc = e.parentElement;              // « SPLAT! » + le titre : c'est lui qui déborde
     const trop = bloc.scrollWidth > bloc.clientWidth + 1;
     e.style.whiteSpace = '';
     if (trop && i > 0) {

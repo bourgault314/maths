@@ -389,8 +389,9 @@ test("dans les PDF — couverture, exemple en page 2, les cinq fiches dans l'ord
       // « Je vérifie » : le total seulement (07/10/2026), plus les indices à la suite
       assert.doesNotMatch(pages[1], /✓ ?;/, `${s}, page 2 : une seule vérification`);
       TITRES[nom].forEach((f, k) => {
-        // (03/10/2026) l'en-tête « Splat! » se lit aussi (Segoe UI Black, Type 3 sous Linux)
-        const p = pages[2 + k].replace(/^Splat! ?/, "");
+        // (03/10/2026) l'en-tête se lit aussi ; « SPLAT! » en capitales depuis le lot D (17/10/2026)
+        assert.ok(pages[2 + k].startsWith("SPLAT!"), `${s}, page ${3 + k} : « SPLAT! » dans le bandeau (lu : ${pages[2 + k].slice(0, 20)})`);
+        const p = pages[2 + k].replace(/^SPLAT! ?/, "");
         assert.ok(p.startsWith(`Fiche ${f.code} —`), `${s}, page ${3 + k} : fiche ${f.code} (lu : ${p.slice(0, 40)})`);
         assert.ok(p.replace(/\s/g, "").includes(f.t.replace(/\s/g, "")), `${s}, page ${3 + k} : « ${f.t} »`);
         if (v) assert.match(p, /Correction/, `${s}, page ${3 + k}`);
