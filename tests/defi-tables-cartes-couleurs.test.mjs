@@ -40,7 +40,7 @@ test("cartes bord à bord, traits de coupe au recto seulement", () => {
 test("textes retirés, consigne d'impression gardée sur le recto", () => {
   assert.doesNotMatch(source, /les réponses, au dos de chaque calcul/);
   assert.doesNotMatch(source, /"11 cartes à retourner"|CONSIGNE_VERSO/);
-  assert.match(source, /CONSIGNE_RECTO = "Imprime en recto verso \(retourner sur le bord long\), puis découpe sur les traits\."/);
+  assert.match(source, /CONSIGNE_RECTO = "Imprime en recto verso sur papier épais \(160 g ou plus\), bord long, puis découpe sur les traits\."/);
   assert.match(source, /pied\(pdf, None, False\)/, "verso : la signature seule");
 });
 

@@ -32,7 +32,8 @@ trier le paquet quand on imprime toutes les tables) :
   - carte-titre : « table de » en petit, le numéro seul en très grand ;
   - retirés : « Verso : les réponses… » et « 11 cartes à retourner » ; la
     consigne d'impression reste sur le recto (on la lit à l'écran, avant
-    d'imprimer).
+    d'imprimer), avec le papier épais : sur du 80 g, la réponse se voit par
+    transparence.
 
 Règles du site : logo maths&go en bas à gauche (une seule fois par document,
 page 1 : ces feuilles n'ont pas d'en-tête), signature « mathsgo.re · CC BY-NC-SA
@@ -54,7 +55,7 @@ from reportlab.pdfgen import canvas
 TABLES = range(2, 11)
 MULTIPLIERS = range(0, 11)
 FOOTER_TEXT = "mathsgo.re  ·  CC BY-NC-SA 4.0"
-CONSIGNE_RECTO = "Imprime en recto verso (retourner sur le bord long), puis découpe sur les traits."
+CONSIGNE_RECTO = "Imprime en recto verso sur papier épais (160 g ou plus), bord long, puis découpe sur les traits."
 TITRE_VERSO = "Défi tables"
 SOUS_TITRE_VERSO = "mathsgo.re"
 # Le calcul tel qu'il est écrit sur le recto : le multiplicateur d'abord
