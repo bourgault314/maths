@@ -686,7 +686,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "imprimer",
       "collections": [],
       "tags": ["calcul-mental", "tables", "multiplication", "cartes", "memorisation", "imprimable"],
-      "thumbnail": "assets/img/thumbnails/calcul-mental/cartes-tables.png?v=1",
+      "thumbnail": "assets/img/thumbnails/calcul-mental/cartes-tables.png?v=2",
       "cardDescription": "Les cartes recto verso des tables de 2 à 10 : le calcul devant, la réponse derrière, à découper."
     },
     "outils/calcul_mental/defi_calcul.html": {
@@ -7356,7 +7356,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-calcul-mental-cartes-tables-pdf",
       "title": "Cartes des tables de multiplication — recto verso à découper",
-      "description": "Onze cartes par table, de 2 à 10 : le calcul devant, la réponse derrière. À imprimer en recto verso, à découper, et à retourner pour se tester — un PDF par table dans Défi tables, toutes les tables ici.",
+      "description": "Onze cartes par table, de 2 à 10, une couleur par table : le calcul devant, la réponse derrière. À imprimer en recto verso sur papier épais (160 g ou plus, sinon la réponse se voit par transparence), bord long, puis à découper et à retourner pour se tester — un PDF par table dans Défi tables, toutes les tables ici.",
       "path": "outils/calcul_mental/cartes_tables.pdf",
       "domains": [
         "nombres-calculs"
