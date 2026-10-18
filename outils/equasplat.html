@@ -708,6 +708,29 @@
     text-align:center;
   }
 
+  /* LE JETON DESSINÉ (18/10/2026, Gwenaël : « on ne voit pas assez que c'est 16 qu'on veut
+     décomposer »). Décomposer et Partager montrent le jeton lui-même, avec sa couleur du
+     plateau, à la place de la phrase grise qui répétait le titre. Une erreur s'écrit dessous. */
+  .dialogJeton{
+    display:block;
+    width:76px;
+    height:76px;
+    margin:0 auto;
+    overflow:visible;
+  }
+
+  .dialogJeton text{
+    font-weight:950;
+    fill:#0f172a;
+    text-anchor:middle;
+    dominant-baseline:central;
+  }
+
+  .dialogMessage{
+    display:block;
+    margin-top:10px;
+  }
+
   dialog label{
     text-align:center;
     margin-top:0;
@@ -2687,8 +2710,27 @@
     display:none;
     width:min(330px,100%);
     margin:12px auto 4px;
-    grid-template-columns:repeat(3,minmax(0,1fr));
+    grid-template-columns:repeat(6,minmax(0,1fr));
     gap:7px;
+  }
+
+  /* LE BOUTON D'ACTION SEUL SUR SA LIGNE (18/10/2026, Gwenaël sur sa Surface : « Décompose »).
+     Windows écrit les touches en Arial Black : « Décomposer » dépassait de sa touche et perdait
+     son « r » (« Regrouper » aussi, à quelques points près). Six colonnes : un chiffre en prend
+     deux, Effacer et ⌫ trois chacun, et le bouton d'action toute la ligne, sous le pavé — plus
+     aucun mot ne se coupe, quelle que soit la police. */
+  .touchKeypad > .touchKeypadKey,
+  .touchKeypad > .touchKeypadSpacer{
+    grid-column:span 2;
+  }
+
+  .touchKeypad > .touchKeypadKey.action{
+    grid-column:span 3;
+  }
+
+  .touchKeypad > .touchKeypadKey.validate{
+    grid-column:1 / -1;
+    font-size:18px;
   }
 
   .touchKeypad.open{
@@ -2717,6 +2759,32 @@
       justify-content:center;
     }
     dialog.touchKeypadActive:not(#addBothDialog) .touchKeypad.open{
+      position:absolute;
+      right:38px;
+      top:50%;
+      transform:translateY(-50%);
+      width:300px;
+      margin:0;
+    }
+  }
+
+  /* « Ajouter des deux côtés » sans les taches (une seule partie, 18/10/2026) : le pavé passe à
+     droite lui aussi. Empilé, il dépassait déjà du bas de la fenêtre à 650 px de haut (la
+     Surface de Gwenaël : touche Ajouter coupée, Annuler hors de l'écran), et le pavé a une ligne
+     de plus depuis que le bouton d'action est seul. Ajouter avec les taches garde ses deux parties. */
+  @media screen and (min-width:860px){
+    #addBothDialog.touchKeypadActive:not(.deuxParties){
+      width:min(840px, calc(100vw - 40px));
+    }
+    #addBothDialog.touchKeypadActive:not(.deuxParties) .dialogInner{
+      position:relative;
+      padding:34px calc(300px + 70px) 32px 38px;
+      min-height:340px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+    }
+    #addBothDialog.touchKeypadActive:not(.deuxParties) .touchKeypad.open{
       position:absolute;
       right:38px;
       top:50%;
@@ -3059,9 +3127,33 @@
       gap:6px;
     }
 
+    .dialogJeton{
+      width:64px;
+      height:64px;
+    }
+
     .touchKeypadKey,
     .touchKeypadSpacer{
       min-height:42px;
+    }
+  }
+
+  /* Petit téléphone (667 px de haut) : depuis le 18/10/2026, le pavé a une ligne de plus (le
+     bouton d'action seul) ; les touches perdent 4 px et le jeton rapetisse, pour que Décomposer
+     tienne sans défiler. */
+  @media (max-width:700px) and (max-height:720px){
+    .touchKeypad{
+      gap:5px;
+    }
+
+    .touchKeypadKey,
+    .touchKeypadSpacer{
+      min-height:38px;
+    }
+
+    .dialogJeton{
+      width:56px;
+      height:56px;
     }
   }
 
@@ -5234,6 +5326,29 @@
     }
   }
 
+  /* LA SOMME S'ÉCRIT COMME SUR PAPIER (18/10/2026, Gwenaël : « −2+−1 », « ça ne fait pas très
+     mathématique »). La case de Décomposer garde ce qu'on tape (chiffres, + et −) et l'écrit
+     « −2 + (−1) » : le vrai signe moins, des espaces autour des opérations, et une parenthèse
+     qui s'ouvre quand un signe suit une opération, puis se ferme toute seule au bout du nombre.
+     sommeBrute(sommeCommeSurPapier(t)) === t : parseSum lit la même somme qu'avant. */
+  function sommeBrute(texte){
+    return String(texte || "").replace(/[\s()]/g, "").replace(/[−–]/g, "-");
+  }
+
+  function sommeCommeSurPapier(brut){
+    let out = "", ouverte = false;
+    for(let i = 0; i < brut.length; i++){
+      const c = brut[i], avant = i ? brut[i - 1] : "";
+      if(c >= "0" && c <= "9"){ out += c; continue; }
+      if(ouverte){ out += ")"; ouverte = false; }
+      if(i === 0){ out += c === "-" ? "−" : c; continue; } /* le signe du premier terme */
+      if(avant === "+" || avant === "-"){ out += "(" + (c === "-" ? "−" : "+"); ouverte = true; continue; }
+      out += c === "+" ? " + " : " − ";
+    }
+    if(ouverte && /\d$/.test(brut)) out += ")";
+    return out;
+  }
+
   function insertTouchKey(value){
     const input = touchKeypadInput;
     if(!input) return;
@@ -5244,15 +5359,17 @@
       setTouchInputValue("", 0);
       return;
     }
+    /* Décomposer : on tape toujours au bout de la somme, et ⌫ retire le dernier chiffre ou signe
+       tapé (jamais une parenthèse ajoutée par l'outil). */
+    if(options.expression && value !== "submit"){
+      const brut = sommeBrute(current);
+      const suite = value === "backspace" ? brut.slice(0, -1) : brut + (value === "−" ? "-" : value);
+      const texte = sommeCommeSurPapier(suite);
+      setTouchInputValue(texte, texte.length);
+      return;
+    }
     if(value === "backspace"){
-      if(options.expression){
-        const start = Number.isInteger(input.selectionStart) ? input.selectionStart : current.length;
-        const end = Number.isInteger(input.selectionEnd) ? input.selectionEnd : start;
-        const from = start === end ? Math.max(0, start - 1) : start;
-        setTouchInputValue(current.slice(0, from) + current.slice(end), from);
-      }else{
-        setTouchInputValue(current.slice(0, -1), Math.max(0, current.length - 1));
-      }
+      setTouchInputValue(current.slice(0, -1), Math.max(0, current.length - 1));
       return;
     }
     if(value === "submit"){
@@ -5261,16 +5378,14 @@
       return;
     }
     if(value === "−" && !options.expression){
-      const next = current.startsWith("-") ? current.slice(1) : `-${current}`;
+      const nombre = current.replace(/^[-−]/, "");
+      const next = /^[-−]/.test(current) ? nombre : `−${nombre}`; /* le vrai signe moins (18/10/2026) */
       setTouchInputValue(next, next.length);
       return;
     }
 
-    const text = value === "−" ? "-" : value;
-    const start = options.expression && Number.isInteger(input.selectionStart) ? input.selectionStart : current.length;
-    const end = options.expression && Number.isInteger(input.selectionEnd) ? input.selectionEnd : start;
-    const next = current.slice(0, start) + text + current.slice(end);
-    setTouchInputValue(next, start + text.length);
+    const next = current + value; /* un seul nombre : les chiffres s'ajoutent au bout */
+    setTouchInputValue(next, next.length);
   }
 
   function renderTouchKeypad(){
@@ -5368,6 +5483,31 @@
     }, {passive:false});
   }
   [groupInput, sharePartInput, fusionInput, addBothInput].forEach(bloquerFlechesNombre);
+
+  /* Au clavier de l'ordinateur (pas de pavé) : même écriture, tant qu'on tape au bout de la case.
+     Une correction au milieu est laissée telle quelle ; parseSum la lit de toute façon. */
+  function decomposeAuBout(){
+    const v = decomposeInput.value;
+    return decomposeInput.selectionStart === v.length && decomposeInput.selectionEnd === v.length;
+  }
+  decomposeInput.addEventListener("beforeinput", event => {
+    if(usesTouchKeypad() || event.inputType !== "deleteContentBackward" || !decomposeAuBout()) return;
+    const brut = sommeBrute(decomposeInput.value);
+    if(!/^[0-9+-]*$/.test(brut)) return;
+    event.preventDefault(); /* ⌫ retire le dernier chiffre ou signe, pas la parenthèse ajoutée */
+    const texte = sommeCommeSurPapier(brut.slice(0, -1));
+    decomposeInput.value = texte;
+    decomposeInput.setSelectionRange(texte.length, texte.length);
+  });
+  decomposeInput.addEventListener("input", () => {
+    if(usesTouchKeypad() || !decomposeAuBout()) return; /* au pavé, insertTouchKey écrit déjà la somme */
+    const brut = sommeBrute(decomposeInput.value);
+    if(!/^[0-9+-]*$/.test(brut)) return;
+    const texte = sommeCommeSurPapier(brut);
+    if(texte === decomposeInput.value) return;
+    decomposeInput.value = texte;
+    decomposeInput.setSelectionRange(texte.length, texte.length);
+  });
 
   bindTouchKeypadInput(decomposeInput, decomposeDialog, () => ({
     expression:true,
@@ -5671,6 +5811,27 @@
     if(opts.shareBatch) token.shareBatch = opts.shareBatch;
     return token;
   }
+  /* Le jeton tel qu'il est sur le plateau (couleurs de drawPieces), pour les fenêtres
+     Décomposer et Partager (18/10/2026). */
+  function jetonDialogueHtml(piece){
+    const v = Number(piece && piece.value) || 0;
+    let cls = "tokenCircle", style = "";
+    if(piece && piece.unit) style = ' style="fill:rgba(27,102,255,0.18);stroke:rgba(27,102,255,0.58)"';
+    else if(v < 0) cls += " negative";
+    else if(v === 0) cls += " zero";
+    else if(isRelativeUniverse()) cls += " positive relativePositive";
+    else{
+      const col = positiveTokenColorForValue(v);
+      cls += " positive";
+      style = ` style="fill:${col.fill};stroke:${col.stroke}"`;
+    }
+    const t = formatSignedNumber(v);
+    const taille = t.length <= 2 ? 30 : (t.length === 3 ? 25 : 20);
+    return `<svg class="dialogJeton" viewBox="0 0 76 76" role="img" aria-label="le jeton ${t}">` +
+      `<circle class="${cls}"${style} cx="38" cy="38" r="35"></circle>` +
+      `<text x="38" y="39" font-size="${taille}">${t}</text></svg>`;
+  }
+
   function formatSignedNumber(n){
     const v = Number(n) || 0;
     if(v < 0) return `−${Math.abs(v)}`;
@@ -7694,7 +7855,7 @@
     const piece = state[side].find(p => p.id === id);
     if(!piece || piece.type !== "token" || piece.removed) return;
     selectedPieceRef = {side,id};
-    dialogText.innerHTML = `Décomposer le jeton <strong>${formatSignedNumber(piece.value)}</strong> en une somme.`;
+    dialogText.innerHTML = jetonDialogueHtml(piece);
     decomposeInput.value = "";
     openAppDialog(decomposeDialog, decomposeInput, {
       expression:true,
@@ -7709,6 +7870,12 @@
      (12 + 16 pour 28 face à 𝑥 + 12) : l'élève n'avait plus qu'à la reconnaître, alors que tout
      le travail de Décomposer est de trouver quoi faire apparaître. Regrouper n'en a jamais eu.
      Restent le contrôle de la somme et l'exemple d'écriture (applyDecomposeInput). */
+  /* Une erreur de Décomposer s'écrit sous le jeton, qui reste affiché (18/10/2026). Les
+     messages sont des phrases fixes : seuls des nombres calculés y entrent. */
+  function decomposeMessage(piece, html){
+    dialogText.innerHTML = jetonDialogueHtml(piece) + `<span class="dialogMessage">${html}</span>`;
+  }
+
   function applyDecomposeInput(){
     if(!selectedPieceRef) return;
     const piece = getPieceBySideAndId(selectedPieceRef);
@@ -7719,21 +7886,21 @@
       // l'outil refusait lui-même.
       const half = Math.trunc(piece.value/2);
       const exemple = half !== 0 ? [half, piece.value - half] : [2 * piece.value, -piece.value];
-      dialogText.innerHTML = `Écris une somme avec au moins deux termes, par exemple <strong>${formatSumOfTerms(exemple)}</strong>.`;
+      decomposeMessage(piece, `Écris une somme avec au moins deux termes, par exemple <strong>${formatSumOfTerms(exemple)}</strong>.`);
       return;
     }
     // « −9 + 0 » posait un jeton 0 qui restait sur le plateau.
     if(values.some(v => v === 0)){
-      dialogText.innerHTML = "Pas de jeton <strong>0</strong> : écris des nombres différents de 0.";
+      decomposeMessage(piece, "Pas de jeton <strong>0</strong> : écris des nombres différents de 0.");
       return;
     }
     const sum = values.reduce((a,b)=>a+b,0);
     if(sum !== piece.value){
-      dialogText.innerHTML = `La somme doit faire <strong>${formatSignedNumber(piece.value)}</strong>. Ici, elle fait <strong>${formatSignedNumber(sum)}</strong>.`;
+      decomposeMessage(piece, `La somme doit faire <strong>${formatSignedNumber(piece.value)}</strong>. Ici, elle fait <strong>${formatSignedNumber(sum)}</strong>.`);
       return;
     }
     if(!isRelativeUniverse() && values.some(v => v < 0)){
-      dialogText.innerHTML = "En Splat positif, écris une somme de nombres <strong>positifs</strong>.";
+      decomposeMessage(piece, "En Splat positif, écris une somme de nombres <strong>positifs</strong>.");
       return;
     }
     applyTokenSplit(selectedPieceRef.side, selectedPieceRef.id, values);
@@ -7751,8 +7918,8 @@
     if(!piece || piece.type !== "token" || piece.removed) return;
     selectedPieceRef = {side,id};
     const value = Number(piece.value);
-    pendingShare = {side, id, value, count:null};
-    shareDialogText.innerHTML = `Partager le jeton <strong>${formatSignedNumber(value)}</strong> en parts égales.`;
+    pendingShare = {side, id, value, count:null, piece};
+    shareDialogText.innerHTML = jetonDialogueHtml(piece);
     sharePartStep.hidden = true;
     btnApplyShare.hidden = true;
     sharePartInput.value = "";
@@ -7791,7 +7958,7 @@
     if(!pendingShare) return;
     pendingShare.count = count;
     shareChoices.querySelectorAll(".chip").forEach(btn => btn.classList.toggle("selected", Number(btn.dataset.n) === count));
-    shareDialogText.innerHTML = `Partager le jeton <strong>${formatSignedNumber(pendingShare.value)}</strong> en <strong>${count} parts</strong> égales.`;
+    shareDialogText.innerHTML = jetonDialogueHtml(pendingShare.piece); /* la puce choisie dit le nombre de parts */
     sharePartStep.hidden = false;
     btnApplyShare.hidden = false;
     sharePartInput.value = "";
@@ -9244,7 +9411,7 @@
 
   function applyAddBoth(){
     if(!state) return;
-    const raw = Number(addBothInput.value);
+    const raw = Number(String(addBothInput.value || "").trim().replace(/−/g, "-")); /* « −7 » au pavé */
     if(!Number.isFinite(raw) || Math.round(raw) !== raw || raw === 0){
       addBothFeedback.textContent = isRelativeUniverse() ? "Écris un entier non nul, positif ou négatif." : "Écris un entier positif non nul.";
       addBothInput.select();

@@ -38,7 +38,8 @@ test("les films des étapes : pas d'arrêt, format téléphone pris par le lecte
   assert.match(jetons, /D\.glisse\(T\.lache,B\.lache\)/);
   // 15/10/2026 : glisser ouvre la même fenêtre « Regrouper » que le bouton (plus de « Fusionner »)
   assert.match(jetons, /F:\{w:600,h:426,r:24,el:\[\['titre','Regrouper',/);
-  assert.match(jetons, /F:\{w:352,h:616,r:20,el:\[\['titre','Regrouper',/);
+  // 18/10/2026 : au téléphone, la fenêtre a une ligne de plus (le bouton d'action du pavé seul sur sa ligne)
+  assert.match(jetons, /F:\{w:352,h:664,r:20,el:\[\['titre','Regrouper',/);
   assert.doesNotMatch(jetons, /Fusionner/);
   assert.ok(jetons.includes("{g:'3𝑝',d:'12 + 9'},{g:'3𝑝',d:'21',t:T.fusionne+.05}"));
   // le lecteur règle le rapport largeur / hauteur du portrait d'après le film (3:4 pour l'introduction)
