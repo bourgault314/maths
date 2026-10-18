@@ -69,10 +69,12 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   input[type=text], input[type=password], input[type=number], select {
     width: 100%; min-height: 44px; padding: 8px 12px; font: inherit; color: var(--ink);
     border: 2px solid var(--line); border-radius: 10px; background: #fff; }
-  /* Le prénom se saisit directement dans le tableau : discret tant qu'on n'y touche pas. */
-  #tableau td input { min-height: 40px; padding: 6px 8px; font-weight: 600; border-color: transparent; background: transparent; }
-  #tableau td input:hover { border-color: var(--line); background: #fff; }
-  #tableau td input::placeholder { font-weight: 400; font-style: italic; color: #9aa9bb; }
+  /* Le prénom se saisit directement dans la liste de l'onglet Élèves : discret
+     tant qu'on n'y touche pas. Dans les tableaux des applis, c'est du texte. */
+  #tableau-eleves td input { min-height: 40px; padding: 6px 8px; font-weight: 600; border-color: transparent; background: transparent; }
+  #tableau-eleves td input:hover { border-color: var(--line); background: #fff; }
+  #tableau-eleves td input::placeholder { font-weight: 400; font-style: italic; color: #9aa9bb; }
+  #tableau td.nom { font-weight: 600; }
   input:focus, select:focus { outline: 3px solid rgba(11,103,178,.3); border-color: var(--blue); }
   button { min-height: 44px; padding: 0 16px; font: inherit; font-weight: 700;
            color: #fff; background: var(--blue); border: 0; border-radius: 10px; cursor: pointer; }
@@ -99,11 +101,22 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   .classes button:hover { border-color: var(--blue); border-left-color: var(--blue); background: #f3f8fc; }
   .classes strong { display: block; font-size: 1.1rem; color: var(--blue-dark); }
   .classes span { color: var(--muted); font-size: .88rem; }
+  /* Lot « Ma classe : élèves » (18/10/2026) : « + Nouvelle classe » ne sert
+     qu'en septembre — une carte en pointillés au bout de la liste, qui ouvre
+     la petite fenêtre, au lieu d'un formulaire toujours affiché. */
+  .classes button.nouvelle-classe { display: flex; align-items: center; justify-content: center; gap: 8px;
+                                    height: 100%; text-align: center; color: var(--blue); background: transparent;
+                                    border: 2px dashed #c4d2e2; font-weight: 800; }
+  .classes button.nouvelle-classe:hover { border-color: var(--blue); border-left-color: var(--blue); background: #f3f8fc; }
+  .classes button.nouvelle-classe svg { display: block; flex: 0 0 auto; }
   .tableau-enveloppe { overflow-x: auto; margin-top: 12px; }
   table { width: 100%; border-collapse: collapse; background: var(--paper); font-size: .92rem; }
   th, td { padding: 8px 6px; text-align: left; border-bottom: 1px solid var(--line);
            white-space: nowrap; }
-  #tableau td.actions-eleve { display: flex; gap: 6px; justify-content: flex-end; }
+  /* « Fiche » (ou « Détail ») au même endroit sur chaque ligne, que la ligne
+     ait un « ⋯ » ou non (lot « Ma classe : élèves » : il n'y reste que
+     « Revenir à… », pour les élèves qui ont une version à restaurer). */
+  #tableau td.actions-eleve { display: flex; gap: 6px; justify-content: flex-start; }
   /* Lot 2b (03/10/2026) : la ligne d'un élève se lit sans survol et
      s'imprime en noir et blanc — du texte, pas des cases de couleur. */
   .acquises-liste { margin-left: 7px; color: var(--muted); font-size: .86rem; }
@@ -139,8 +152,6 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   th button { min-height: 44px; padding: 0; color: var(--blue-dark); background: none;
               font: inherit; font-weight: 700; text-transform: inherit; letter-spacing: inherit; }
   th button:hover { background: none; text-decoration: underline; }
-  /* En lecture seule, la colonne des codes n'existe pas. */
-  #tableau.sans-codes th:nth-child(2), #tableau.sans-codes td.code { display: none; }
   td.code { font-family: ui-monospace, Consolas, monospace; font-weight: 700;
             letter-spacing: .08em; color: var(--blue-dark); }
   td.sans { color: var(--muted); font-style: italic; }
@@ -210,8 +221,12 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
                     border-bottom: 3px solid transparent; color: var(--muted); background: none; font-weight: 800; }
   .onglets button:hover { color: var(--blue-dark); background: #eaf0f7; }
   .onglets button[aria-pressed="true"] { color: var(--blue-dark); border-bottom-color: var(--blue); background: none; }
-  .onglets .onglet-reglages { margin-left: auto; display: inline-flex; align-items: center; gap: 7px; }
-  .onglet-reglages svg { display: block; }
+  /* Lot « Ma classe : élèves » (18/10/2026) : au bout à droite, ce qui
+     concerne la classe elle-même — « Élèves » (propriétaire et collègue en
+     écriture), puis « Réglages » (propriétaire). */
+  .onglets-classe { margin-left: auto; display: flex; gap: 4px; }
+  .onglets .onglet-eleves, .onglets .onglet-reglages { display: inline-flex; align-items: center; gap: 7px; }
+  .onglet-eleves svg, .onglet-reglages svg { display: block; }
   .ligne-tri { display: flex; align-items: center; gap: 10px; }
   .ligne-tri label { margin: 0; font-size: .88rem; color: var(--muted); font-weight: 600; }
   .ligne-tri select { width: auto; min-width: 170px; }
@@ -237,6 +252,15 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   .ligne-nom input { flex: 1 1 160px; max-width: 260px; }
   .carte.danger-zone { border-left: 5px solid var(--rouge); }
   .carte.danger-zone p { margin: 0 0 12px; color: var(--ink); font-size: .92rem; }
+  /* L'onglet « Élèves » (lot « Ma classe : élèves », 18/10/2026) : les
+     boutons de la classe, puis la feuille prénom ↔ code à l'écran — mêmes
+     numéros, même ordre. Les codes ne sont écrits qu'ici. */
+  #vue-eleves > .barre-outils { margin-top: 0; }
+  #vue-eleves .tableau-enveloppe { max-width: 720px; }
+  #tableau-eleves td.numero { width: 2.6em; padding-right: 10px; color: var(--muted); font-weight: 800; text-align: right; }
+  #tableau-eleves td.actions-eleve { width: 1%; text-align: right; }
+  #tableau-eleves td input { min-width: 150px; }
+  p.sous.note-eleves { margin: 12px 0 0; font-size: .88rem; }
   /* Les six mondes : le dessin des pastilles de l'espace élève (index.php). */
   .mondes { display: inline-flex; gap: 5px; vertical-align: middle; }
   .mondes svg { display: block; }
@@ -439,6 +463,13 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     .eval-plein { padding: 16px; }
   }
   @media (max-width: 700px) { .rec-deux { grid-template-columns: 1fr; } .rec-plein { padding: 16px; } }
+  /* Téléphone (choix de Gwenaël, 18/10/2026) : quatre onglets ne tiennent pas
+     sur une ligne (430 px pour 358 à 390 de large) — Élèves et Réglages n'y
+     gardent que leur dessin ; les mots reviennent dès la largeur d'une tablette. */
+  @media (max-width: 520px) {
+    .onglets .onglet-eleves, .onglets .onglet-reglages { padding: 0 13px; }
+    .onglet-eleves .mot, .onglet-reglages .mot { display: none; }
+  }
   @media (max-width: 700px) {
     .tableau-enveloppe { overflow-x: visible; }
     #tableau, #tableau tbody, #tableau tr, #tableau td { display: block; width: 100%; }
@@ -451,7 +482,11 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
                           font-size: .74rem; font-weight: 800; text-transform: uppercase;
                           letter-spacing: .04em; }
     #tableau td[data-libelle=""]::before { display: none; }
-    #tableau td input { width: 100%; min-height: 44px; }
+    #tableau td.nom { padding-top: 10px; font-size: 1rem; font-weight: 700; }
+    /* La liste de l'onglet Élèves reste un tableau : quatre colonnes courtes. */
+    #tableau-eleves th, #tableau-eleves td { padding: 6px 4px; }
+    #tableau-eleves td input { width: 100%; min-width: 0; min-height: 44px; }
+    #tableau-eleves td.numero { width: 2em; padding-right: 6px; }
     #tableau td.actions-eleve { flex-wrap: wrap; gap: 8px; justify-content: flex-start; }
     #tableau td.actions-eleve > button { flex: 1 1 auto; margin-left: 0 !important; }
     #tableau td { flex-wrap: wrap; }
@@ -526,15 +561,9 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
         <button type="button" class="secondaire" id="echues-plus-tard">Plus tard</button>
       </div>
     </div>
+    <!-- La dernière carte de la liste est « + Nouvelle classe » (chargerClasses) :
+         elle ouvre la petite fenêtre (lot « Ma classe : élèves », 18/10/2026). -->
     <ul class="classes" id="liste-classes"></ul>
-    <h2>Nouvelle classe</h2>
-    <div class="carte" style="max-width:420px">
-      <form id="form-classe">
-        <label for="libelle">Nom de la classe</label>
-        <input id="libelle" type="text" maxlength="40" placeholder="405" required>
-        <div class="actions"><button type="submit" id="creer-classe">Créer la classe</button></div>
-      </form>
-    </div>
     <p class="message" id="message-classes" hidden></p>
 
     <!-- Visible seulement pour le compte administrateur. -->
@@ -571,13 +600,22 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
          la vue de l'activité par celle des réglages de la classe. Le dernier
          choix d'activité est retenu dans l'onglet du navigateur ; « Réglages »
          ne l'est pas (une classe s'ouvre toujours sur son tableau). Le rouage
-         est le dessin « settings » de Feather Icons (licence MIT). -->
+         est le dessin « settings » de Feather Icons (licence MIT).
+         Lot « Ma classe : élèves » (18/10/2026) : « Élèves » avant
+         « Réglages » — les prénoms, les codes et les papiers de la classe,
+         pour le propriétaire et les collègues en écriture. Il ne se retient
+         pas non plus : ouvrir une classe devant les élèves ne montre jamais
+         les codes. Les deux silhouettes sont le dessin « users » de Feather
+         Icons (licence MIT). -->
     <div class="onglets" id="onglets">
       <div class="choix-appli" id="choix-appli" role="group" aria-label="Activité affichée">
         <button type="button" data-appli="defi-tables" aria-pressed="true">Défi tables</button>
         <button type="button" data-appli="splat" aria-pressed="false">SPLAT!</button>
       </div>
-      <button type="button" class="onglet-reglages" id="onglet-reglages" aria-pressed="false" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Réglages</button>
+      <div class="onglets-classe">
+      <button type="button" class="onglet-eleves" id="onglet-eleves" aria-pressed="false" aria-label="Élèves" title="Élèves : prénoms, codes, papiers" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="mot">Élèves</span></button>
+      <button type="button" class="onglet-reglages" id="onglet-reglages" aria-pressed="false" aria-label="Réglages" title="Réglages de la classe" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span class="mot">Réglages</span></button>
+      </div>
     </div>
 
     <!-- La vue de l'activité : ce qu'on regarde et ce qu'on fait avec l'appli. -->
@@ -618,11 +656,9 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       <p class="message" id="message-evaluations" hidden></p>
     </div>
 
+    <!-- Lot « Ma classe : élèves » (18/10/2026) : les boutons des élèves sont
+         partis dans l'onglet Élèves ; ici, la progression seulement. -->
     <div class="barre-outils">
-      <button type="button" class="secondaire" id="ajouter">Ajouter des élèves</button>
-      <button type="button" class="secondaire" id="coller-prenoms">Coller la liste des prénoms</button>
-      <button type="button" class="secondaire" id="imprimer-bandelettes" title="À découper et à distribuer : une par élève, son code sans son prénom">Imprimer les bandelettes</button>
-      <button type="button" class="secondaire" id="imprimer-recap" title="À garder : le seul papier qui relie chaque prénom à son code">Imprimer la feuille prénom&nbsp;↔&nbsp;code</button>
       <div class="ligne-tri espace">
         <label for="tri">Trier&nbsp;par</label>
         <select id="tri">
@@ -635,15 +671,14 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
         </select>
       </div>
     </div>
-    <!-- Le message des boutons ci-dessus (ajout, collage, impression) : juste
-         sous eux, pas sous un tableau de trente lignes. -->
-    <p class="message" id="message-classe" hidden></p>
+    <!-- Le message de l'activité (fiche, version restaurée, moteur absent) :
+         au-dessus du tableau, pas sous trente lignes. -->
+    <p class="message" id="message-appli" hidden></p>
     <div class="tableau-enveloppe">
       <table id="tableau">
         <thead>
           <tr id="entete-defi-tables">
             <th><button type="button" data-tri="prenom">Élève</button></th>
-            <th>Code</th>
             <th><button type="button" data-tri="acquises">Tables passées</button></th>
             <th><button type="button" data-tri="encours">En cours</button></th>
             <th><button type="button" data-tri="semaine">Cette semaine</button></th>
@@ -654,7 +689,6 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
           <!-- L'onglet SPLAT! (lot « splat-suivi-4 ») : ses colonnes à lui. -->
           <tr id="entete-splat" hidden>
             <th><button type="button" data-tri="prenom">Élève</button></th>
-            <th>Code</th>
             <th>Mondes</th>
             <th><button type="button" data-tri="etapes">Étapes réussies</button></th>
             <th><button type="button" data-tri="date">Dernière activité</button></th>
@@ -701,6 +735,34 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     </div>
 
     </div><!-- /vue-appli -->
+
+    <!-- Lot « Ma classe : élèves » (18/10/2026, choix de Gwenaël du 17/10) :
+         les prénoms, les codes et les papiers de la classe, au même endroit —
+         propriétaire et collègues en écriture (un collègue « voir seulement »
+         ne reçoit pas les codes du serveur et n'a pas l'onglet). Avant, les
+         codes étaient dans chaque tableau d'appli : Ma classe ouverte avec le
+         vidéoprojecteur allumé les montrait à toute la classe. La liste suit
+         l'ordre et les numéros de la feuille prénom ↔ code (ordreDeLaFeuille). -->
+    <div id="vue-eleves" hidden>
+      <div class="barre-outils">
+        <button type="button" class="secondaire" id="ajouter">Ajouter des élèves</button>
+        <button type="button" class="secondaire" id="coller-prenoms">Coller la liste des prénoms</button>
+        <button type="button" class="secondaire" id="imprimer-bandelettes" title="À découper et à distribuer : une par élève, son code sans son prénom">Imprimer les bandelettes</button>
+        <button type="button" class="secondaire" id="imprimer-recap" title="À garder : le seul papier qui relie chaque prénom à son code">Imprimer la feuille prénom&nbsp;↔&nbsp;code</button>
+      </div>
+      <!-- Le message des boutons ci-dessus (ajout, collage, nouveau code) :
+           juste sous eux, pas sous une liste de trente lignes. -->
+      <p class="message" id="message-classe" hidden></p>
+      <div id="liste-eleves">
+        <p class="sous note-eleves">Mêmes numéros que sur la feuille prénom ↔ code et les bandelettes.</p>
+        <div class="tableau-enveloppe">
+          <table id="tableau-eleves">
+            <thead><tr><th title="Le numéro de la feuille prénom ↔ code et des bandelettes">N°</th><th>Élève</th><th>Code</th><th></th></tr></thead>
+            <tbody id="corps-eleves"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
     <!-- Lot « Ma classe : réglages » (17/10/2026) : tout ce qui règle la
          classe elle-même, au même endroit — propriétaire seulement (le
@@ -756,7 +818,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
         <div class="carte">
           <ul class="legende-partage">
             <li><b>Voir seulement</b> : le tableau, sans les codes des élèves.</li>
-            <li><b>Voir et modifier</b> : aussi les codes — avec un code, on entre dans l’appli comme l’élève et on peut changer sa progression. Il gère les élèves (ajout, prénoms, nouveau code, version précédente) et lance séances et évaluations.</li>
+            <li><b>Voir et modifier</b> : aussi l’onglet Élèves, avec les codes — avec un code, on entre dans l’appli comme l’élève et on peut changer sa progression. Il gère les élèves (ajout, prénoms, nouveau code, version précédente) et lance séances et évaluations.</li>
             <li><b>Toi seul</b> : supprimer un élève, renommer ou supprimer la classe.</li>
           </ul>
           <ul class="profs" id="liste-partages"></ul>
@@ -829,7 +891,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
          surprise, on explique quel bouton appuyer. -->
     <div class="note-impression">
       <h2>Que veux-tu imprimer ?</h2>
-      <p>Reviens à la page et choisis un bouton : <strong>« Imprimer les bandelettes »</strong>
+      <p>Reviens à la page et choisis un bouton de l’onglet Élèves : <strong>« Imprimer les bandelettes »</strong>
       (une par élève, à découper et à distribuer) ou <strong>« Imprimer la feuille prénom ↔ code »</strong>
       (celle que tu gardes). Chaque bouton n’imprime que sa feuille.</p>
       <div class="pied-impression">
@@ -1024,9 +1086,11 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   let SPLAT = window.MathsGoSplatParcours || null;
   let chargementSplat = null;
   let appliAffichee = "defi-tables";
-  // Lot « Ma classe : réglages » (17/10/2026) : vrai quand la vue des
-  // Réglages remplace celle de l'activité (propriétaire seulement).
-  let vueReglages = false;
+  // La vue sous les onglets : "appli" (le tableau de l'activité), "eleves"
+  // (lot « Ma classe : élèves », 18/10/2026 : propriétaire et collègues en
+  // écriture) ou "reglages" (lot « Ma classe : réglages », 17/10/2026 :
+  // propriétaire seulement).
+  let vue = "appli";
   // Les élèves déjà lus de la classe ouverte, par activité (un appel
   // « tableau » par activité, refait seulement quand la classe change).
   let tableaux = {};
@@ -1163,20 +1227,21 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   // « Se déconnecter », l'écran montrait bien le formulaire de connexion —
   // mais les 28 prénoms et les 28 codes étaient toujours dans le document :
   // Ctrl+U, Ctrl+S, l'inspecteur ou une extension les lisaient encore.
-  const ZONES_TEXTE = ["corps", "fiche-corps", "fiche-titre", "bandelettes-liste",
+  const ZONES_TEXTE = ["corps", "corps-eleves", "fiche-corps", "fiche-titre", "bandelettes-liste",
     "bandelettes-titre", "liste-classes", "liste-profs", "liste-partages", "fragiles-liste",
     "fragiles-sous", "titre-classe", "resume-classe", "objectif-compte", "objectif-lignes",
     "qui", "compte-qui", "boite-texte",
     "boite-champs", "secret-texte", "secret-valeur", "echues-texte", "supprimer-echues",
     // Lot E1 : la carte « Évaluations » et ses deux boîtes.
     "evaluations-zone", "em-titre", "em-tables", "em-types", "em-grille", "eo-titre", "eo-texte", "eo-durees"];
-  const ZONES_MESSAGE = ["erreur-connexion", "message-classes", "message-classe",
+  const ZONES_MESSAGE = ["erreur-connexion", "message-classes", "message-classe", "message-appli",
     "message-profs", "message-partage", "message-compte", "bandeau-droit", "bandeau-annee",
     "message-activites", "message-records", "message-evaluations", "em-message", "message-nom", "message-supprimer"];
-  const CHAMPS_A_VIDER = ["identifiant", "motdepasse", "libelle",
+  const CHAMPS_A_VIDER = ["identifiant", "motdepasse",
     "mdp-ancien", "mdp-nouveau", "mdp-confirme", "em-nom"];
   const BLOCS_A_CACHER = ["fiche", "bandelettes", "objectif", "fragiles", "bloc-profs",
-    "bandeau-echues", "bloc-records", "bloc-evaluations", "vue-reglages", "onglet-reglages"];
+    "bandeau-echues", "bloc-records", "bloc-evaluations", "vue-reglages", "onglet-reglages",
+    "vue-eleves", "onglet-eleves"];
 
   function viderZones() {
     ZONES_TEXTE.forEach(id => { const noeud = $(id); if (noeud) noeud.textContent = ""; });
@@ -1209,7 +1274,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     echues = [];
     tri = {colonne: "prenom", sens: 1};
     appliAffichee = "defi-tables";
-    vueReglages = false;
+    vue = "appli";
     tableaux = {};
     detailsOuverts.clear();
     veille.arreter();
@@ -1427,7 +1492,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   // sortirait par le bas de l'écran ; un seul ouvert à la fois.
   function placerMenu(plus, poignee, menu) {
     if (!plus.open) return;
-    document.querySelectorAll("#corps details.plus[open]").forEach(autre => { if (autre !== plus) autre.open = false; });
+    document.querySelectorAll("details.plus[open]").forEach(autre => { if (autre !== plus) autre.open = false; });
     const cadre = poignee.getBoundingClientRect();
     const hauteur = menu.getBoundingClientRect().height;
     const dessous = cadre.bottom + 4 + hauteur <= window.innerHeight;
@@ -1436,13 +1501,13 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   }
 
   function fermerMenus(evenement) {
-    document.querySelectorAll("#corps details.plus[open]").forEach(plus => {
+    document.querySelectorAll("details.plus[open]").forEach(plus => {
       if (!evenement || !plus.contains(evenement.target)) plus.open = false;
     });
   }
 
-  // Les cellules communes aux deux tableaux (lot « splat-suivi-4 ») : le
-  // prénom, qu'on saisit dans la ligne, et le code.
+  // Le prénom à saisir (lot « splat-suivi-4 ») — depuis le lot « Ma classe :
+  // élèves » (18/10/2026), seulement dans la liste de l'onglet Élèves.
   function celluleNom(eleve, ecriture) {
     const cNom = document.createElement("td");
     const champ = document.createElement("input");
@@ -1450,13 +1515,24 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     champ.value = nomAffiche(eleve);
     champ.placeholder = ecriture ? "Prénom et initiale" : "—";
     champ.maxLength = 44;
-    champ.style.minWidth = "132px";
     if (ecriture) champ.addEventListener("change", () => nommer(eleve, champ));
     else { champ.readOnly = true; champ.tabIndex = -1; }
     cNom.appendChild(champ);
     return cNom;
   }
 
+  // Dans les tableaux des applis, le prénom est du texte (lot « Ma classe :
+  // élèves ») : un tableau projeté ne se modifie pas par mégarde, et il se
+  // lit comme une liste, pas comme un formulaire.
+  function celluleNomTexte(eleve) {
+    const cNom = document.createElement("td");
+    const nom = nomAffiche(eleve);
+    cNom.className = nom ? "nom" : "nom sans";
+    cNom.textContent = nom || "sans prénom";
+    return cNom;
+  }
+
+  // Le code : seulement dans la liste de l'onglet Élèves.
   function celluleCode(eleve) {
     const cCode = document.createElement("td");
     cCode.className = "code";
@@ -1472,9 +1548,20 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     return cDate;
   }
 
-  // Les gestes rares d'une ligne, derrière « ⋯ » (lot 2b) — les mêmes dans
-  // les deux tableaux ; « Revenir à… » revient dans l'activité affichée.
-  function poserGestes(eleve, ecriture, cActions) {
+  // Les gestes rares d'une ligne, derrière « ⋯ » (lot 2b) : un menu, un seul
+  // ouvert à la fois. Sans geste, pas de « ⋯ ».
+  function boutonGeste(texte, classeCss, action, titre) {
+    const bouton = document.createElement("button");
+    bouton.type = "button";
+    bouton.className = classeCss;
+    bouton.textContent = texte;
+    if (titre) bouton.title = titre;
+    bouton.addEventListener("click", action);
+    return bouton;
+  }
+
+  function menuGestes(cActions, boutons) {
+    if (!boutons.length) return;
     const plus = document.createElement("details");
     plus.className = "plus";
     const poignee = document.createElement("summary");
@@ -1482,50 +1569,81 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     poignee.setAttribute("aria-label", "Autres actions");
     poignee.title = "Autres actions";
     const menu = document.createElement("div");
+    menu.append(...boutons);
     plus.append(poignee, menu);
+    menu.addEventListener("click", () => { plus.open = false; });
+    plus.addEventListener("toggle", () => placerMenu(plus, poignee, menu));
+    cActions.append(plus);
+  }
+
+  // Dans le tableau d'une appli : « Revenir à… », qui revient dans l'activité
+  // affichée — il concerne sa progression, pas l'élève lui-même.
+  function poserGestes(eleve, ecriture, cActions) {
+    const boutons = [];
     if (ecriture && (eleve.restaurable || (eleve.journees || []).length)) {
       // Le serveur garde la version d'avant le dernier enregistrement ET la
       // fin de chacune des sept dernières journées : un écrasement (par
       // quelqu'un qui avait le code, ou un « Recommencer à zéro »
       // malheureux) se répare même si on ne s'en aperçoit que le lendemain.
-      const revenir = document.createElement("button");
-      revenir.type = "button";
-      revenir.className = "secondaire petit";
-      revenir.textContent = "Revenir à…";
-      revenir.title = "Revenir à une version précédente de sa progression";
-      revenir.addEventListener("click", () => revenirA(eleve));
-      menu.append(revenir);
+      boutons.push(boutonGeste("Revenir à…", "secondaire petit", () => revenirA(eleve),
+        "Revenir à une version précédente de sa progression"));
     }
-    if (ecriture) {
-      const regen = document.createElement("button");
-      regen.type = "button";
-      regen.className = "secondaire petit";
-      regen.textContent = "Nouveau code";
-      regen.addEventListener("click", () => regenerer(eleve));
-      menu.append(regen);
-    }
+    menuGestes(cActions, boutons);
+  }
+
+  // Dans la liste de l'onglet Élèves : ce qui concerne l'élève lui-même.
+  function poserGestesEleve(eleve, cActions) {
+    const boutons = [
+      // Choix de Gwenaël (18/10/2026) : l'élève qui a perdu son code, ou qui
+      // en a un nouveau, repart avec SA bandelette, et rien à l'écran.
+      boutonGeste("Imprimer sa bandelette", "secondaire petit", () => imprimer("bandelettes", eleve),
+        "Sa bandelette seule, avec son numéro de la feuille"),
+      boutonGeste("Nouveau code", "secondaire petit", () => regenerer(eleve))
+    ];
     // Supprimer un élève efface sa progression pour de bon : depuis le lot 11,
     // c'est au propriétaire de la classe, comme la supprimer. Un collègue en
     // écriture prépare et dépanne, il n'efface pas.
     if (droitClasse === "proprietaire") {
-      const sup = document.createElement("button");
-      sup.type = "button";
-      sup.className = "danger petit";
-      sup.textContent = "Supprimer";
-      sup.addEventListener("click", () => supprimerEleve(eleve));
-      menu.append(sup);
+      boutons.push(boutonGeste("Supprimer", "danger petit", () => supprimerEleve(eleve)));
     }
-    if (menu.children.length) {
-      menu.addEventListener("click", () => { plus.open = false; });
-      plus.addEventListener("toggle", () => placerMenu(plus, poignee, menu));
-      cActions.append(plus);
-    }
+    menuGestes(cActions, boutons);
+  }
+
+  // La liste de l'onglet Élèves : la feuille prénom ↔ code à l'écran — même
+  // ordre et mêmes numéros que la feuille imprimée et les bandelettes
+  // (ordreDeLaFeuille). Une saisie de prénom ne la redessine pas (nommer) :
+  // la ligne ne saute pas sous le doigt ; l'ordre suit au prochain dessin.
+  // En lecture seule, rien : ni l'onglet, ni les codes (le serveur ne les
+  // envoie pas).
+  function dessinerOngletEleves(ecriture) {
+    const corps = $("corps-eleves");
+    corps.textContent = "";
+    $("liste-eleves").hidden = !ecriture || !eleves.length;
+    // Une classe sans élève : « Ajouter des élèves » seul — rien à coller ni
+    // à imprimer tant qu'il n'y a pas de code.
+    ["coller-prenoms", "imprimer-bandelettes", "imprimer-recap"].forEach(id => { $(id).hidden = !ecriture || !eleves.length; });
+    if (!ecriture) return;
+    ordreDeLaFeuille(eleves).forEach((eleve, index) => {
+      const ligne = document.createElement("tr");
+      const cNumero = document.createElement("td");
+      cNumero.className = "numero";
+      cNumero.textContent = String(index + 1);
+      const cNom = celluleNom(eleve, true);
+      const cCode = celluleCode(eleve);
+      const cActions = document.createElement("td");
+      cActions.className = "actions-eleve";
+      poserGestesEleve(eleve, cActions);
+      ligne.append(cNumero, cNom, cCode, cActions);
+      corps.appendChild(ligne);
+    });
   }
 
   function dessinerTableau() {
     trierEleves();
     const ecriture = droitClasse !== "lecture";
-    $("tableau").classList.toggle("sans-codes", !ecriture);
+    // La liste de l'onglet Élèves suit chaque dessin du tableau (lot « Ma
+    // classe : élèves ») : un nouveau code, un élève ajouté ou supprimé.
+    dessinerOngletEleves(ecriture);
     const corps = $("corps");
     corps.textContent = "";
     // Lot « splat-suivi-4 » : l'onglet SPLAT! a ses colonnes et sa carte.
@@ -1534,8 +1652,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     eleves.forEach(eleve => {
       const ligne = document.createElement("tr");
 
-      const cNom = celluleNom(eleve, ecriture);
-      const cCode = celluleCode(eleve);
+      const cNom = celluleNomTexte(eleve);
 
       const cAcquises = document.createElement("td");
       const nombre = eleve.lu.acquises.length;
@@ -1630,7 +1747,6 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       poserGestes(eleve, ecriture, cActions);
 
       cNom.dataset.libelle = "";
-      cCode.dataset.libelle = "Code";
       cAcquises.dataset.libelle = "Passées";
       cEnCours.dataset.libelle = "En cours";
       cSemaine.dataset.libelle = "Séances";
@@ -1639,7 +1755,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       cActions.dataset.libelle = "";
       cActions.className = "actions-eleve";
 
-      ligne.append(cNom, cCode, cAcquises, cEnCours, cSemaine, cRetard, cDate, cActions);
+      ligne.append(cNom, cAcquises, cEnCours, cSemaine, cRetard, cDate, cActions);
       corps.appendChild(ligne);
     });
 
@@ -1648,7 +1764,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
 
     $("resume-classe").textContent = resumeDeLaClasse(eleves);
     if (!PARCOURS) {
-      messager("message-classe",
+      messager("message-appli",
         "La progression ne peut pas être détaillée : le moteur de Défi tables (prof/defi_tables_mon_parcours.js) n’a pas pu être chargé — vérifie qu’il est bien déposé sur le serveur.",
         "erreur");
     }
@@ -1731,16 +1847,21 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
 
   // Ce qu'il faut revoir au tableau lundi matin. Aucune donnée de plus n'est
   // enregistrée : c'est un comptage sur les progressions déjà chargées.
+  // Choix de Gwenaël (18/10/2026) : un calcul ne « coince dans cette classe »
+  // qu'à partir de 3 élèves. Raté par un ou deux, il se voit dans leur fiche ;
+  // avant, un calcul raté par un seul élève pouvait s'afficher ici.
+  const SEUIL_FRAGILES = 3;
   function dessinerFragiles() {
     const bloc = $("fragiles");
     const liste = $("fragiles-liste");
     liste.textContent = "";
     if (!PARCOURS || !PARCOURS.fragilesDeLaClasse) { bloc.hidden = true; return; }
     const parcoursDeLaClasse = eleves.map(eleve => eleve.lu.parcours).filter(Boolean);
-    const fragiles = PARCOURS.fragilesDeLaClasse(parcoursDeLaClasse, {max: 6});
+    const fragiles = PARCOURS.fragilesDeLaClasse(parcoursDeLaClasse, {max: Infinity})
+      .filter(fragile => fragile.eleves >= SEUIL_FRAGILES).slice(0, 6);
     if (!fragiles.length) { bloc.hidden = true; return; }
     $("fragiles-sous").textContent =
-      parcoursDeLaClasse.length > 1 ? `Sur ${parcoursDeLaClasse.length} élèves qui ont commencé.` : "Sur 1 élève qui a commencé.";
+      `Sur ${parcoursDeLaClasse.length} élèves qui ont commencé · ${SEUIL_FRAGILES} élèves au moins par calcul.`;
     fragiles.forEach(fragile => {
       const li = document.createElement("li");
       const nom = document.createElement("b");
@@ -1868,8 +1989,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     $("fragiles").hidden = true;
     eleves.forEach(eleve => {
       const ligne = document.createElement("tr");
-      const cNom = celluleNom(eleve, ecriture);
-      const cCode = celluleCode(eleve);
+      const cNom = celluleNomTexte(eleve);
 
       const cMondes = document.createElement("td");
       const mondes = document.createElement("span");
@@ -1925,14 +2045,13 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       poserGestes(eleve, ecriture, cActions);
 
       cNom.dataset.libelle = "";
-      cCode.dataset.libelle = "Code";
       cMondes.dataset.libelle = "Mondes";
       cEtapes.dataset.libelle = "Réussies";
       cDate.dataset.libelle = "Activité";
       cActions.dataset.libelle = "";
       cActions.className = "actions-eleve";
 
-      ligne.append(cNom, cCode, cMondes, cEtapes, cDate, cActions);
+      ligne.append(cNom, cMondes, cEtapes, cDate, cActions);
       corps.appendChild(ligne);
       if (ligne.poserDetail && detailsOuverts.has(eleve.id)) ligne.poserDetail();
     });
@@ -1941,7 +2060,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
 
     $("resume-classe").textContent = resumeDeLaClasse(eleves);
     if (!SPLAT) {
-      messager("message-classe",
+      messager("message-appli",
         "La progression SPLAT! ne peut pas être détaillée : le moteur (prof/splat-parcours.js) n’a pas pu être chargé — vérifie qu’il est bien déposé sur le serveur.",
         "erreur");
     }
@@ -2067,11 +2186,15 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   const CONSIGNE_BANDELETTE = "Ton code est personnel : ne le prête à personne.";
   const ADRESSE_ELEVE = "suivi.mathsgo.re";
 
-  function dessinerBandelettes() {
-    $("bandelettes-titre").textContent = `Bandelettes à découper — ${classe.libelle}`;
+  // `seulId` (lot « Ma classe : élèves ») : la bandelette d'un seul élève,
+  // avec SON numéro de la feuille — le temps d'une impression (imprimer).
+  function dessinerBandelettes(seulId) {
+    $("bandelettes-titre").textContent = seulId
+      ? `Bandelette à découper — ${classe.libelle}` : `Bandelettes à découper — ${classe.libelle}`;
     const liste = $("bandelettes-liste");
     liste.textContent = "";
     ordreDeLaFeuille(eleves).forEach((eleve, index) => {
+      if (seulId && eleve.id !== seulId) return;
       const item = document.createElement("li");
       item.className = "bandelette";
 
@@ -2134,14 +2257,21 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     dessinerBandelettes();
   }
 
-  // Une impression à la fois, et seulement celle qu'on a demandée.
-  function imprimer(quoi) {
+  // Une impression à la fois, et seulement celle qu'on a demandée. `seul`
+  // (lot « Ma classe : élèves », 18/10/2026) : la bandelette de cet élève
+  // seulement ; la liste entière revient après l'impression.
+  function imprimer(quoi, seul) {
     if (droitClasse === "lecture") return false;
     const classeCss = quoi === "bandelettes" ? "imprime-bandelettes" : "imprime-recap";
+    if (seul && quoi === "bandelettes") dessinerBandelettes(seul.id);
     document.body.classList.add(classeCss);
+    let fait = false;
     const nettoyer = () => {
+      if (fait) return;
+      fait = true;
       document.body.classList.remove(classeCss);
       window.removeEventListener("afterprint", nettoyer);
+      if (seul && classe) dessinerPapier();
     };
     window.addEventListener("afterprint", nettoyer);
     // Filet : si le navigateur n'envoie jamais « afterprint » (impression
@@ -2276,6 +2406,21 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
         li.textContent = "Aucune classe pour l’instant.";
         liste.appendChild(li);
       }
+      // Lot « Ma classe : élèves » (18/10/2026) : la dernière carte, en
+      // pointillés, ouvre la petite fenêtre « Nouvelle classe ».
+      const li = document.createElement("li");
+      const nouvelle = document.createElement("button");
+      nouvelle.type = "button";
+      nouvelle.className = "nouvelle-classe";
+      nouvelle.id = "nouvelle-classe";
+      // Le « + » dessiné (createElementNS, comme les pastilles de SPLAT!), puis le texte.
+      const plus = elementSvg("svg", {viewBox: "0 0 24 24", width: "20", height: "20", "aria-hidden": "true", fill: "none",
+        stroke: "currentColor", "stroke-width": "2.4", "stroke-linecap": "round"});
+      plus.append(elementSvg("path", {d: "M12 5v14M5 12h14"}));
+      nouvelle.append(plus, "Nouvelle classe");
+      nouvelle.addEventListener("click", creerClasse);
+      li.appendChild(nouvelle);
+      liste.appendChild(li);
       annoncerFinAnnee(donnees, classes.length);
       montrer("ecran-classes");
       $("bloc-profs").hidden = !estAdmin;
@@ -2302,13 +2447,19 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       classe = donnees.classe;
       droitClasse = classe.droit || "proprietaire";
       if (connue) connue.applis = classe.applis;
-      // Une autre classe s'ouvre toujours sur son tableau, jamais sur ses Réglages.
-      if (!memeClasse) { detailsOuverts.clear(); vueReglages = false; }
+      // Une autre classe s'ouvre toujours sur son tableau, jamais sur ses
+      // Réglages ni sur ses codes — sauf une classe sans aucun élève, qui
+      // s'ouvre sur Élèves : c'est la seule chose utile à y faire.
+      if (!memeClasse) {
+        detailsOuverts.clear();
+        vue = (donnees.eleves || []).length === 0 && droitClasse !== "lecture" ? "eleves" : "appli";
+      }
       appliAffichee = voulue;
       eleves = elevesLus(voulue, donnees.eleves);
       tableaux = {[voulue]: eleves};
       $("titre-classe").textContent = classe.libelle;
       messager("message-classe", "", "");
+      messager("message-appli", "", "");
       messager("message-activites", "", "");
       messager("message-nom", "", "");
       messager("message-supprimer", "", "");
@@ -2376,7 +2527,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     const presentes = applisDeLaClasse();
     document.querySelectorAll("#choix-appli button[data-appli]").forEach(bouton => {
       bouton.hidden = !presentes.includes(bouton.dataset.appli);
-      bouton.setAttribute("aria-pressed", String(!vueReglages && bouton.dataset.appli === appliAffichee));
+      bouton.setAttribute("aria-pressed", String(vue === "appli" && bouton.dataset.appli === appliAffichee));
     });
     const splat = appliAffichee === "splat";
     $("entete-defi-tables").hidden = splat;
@@ -2393,19 +2544,30 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     poserEvaluations();
   }
 
-  // La vue sous les onglets : l'activité, ou les Réglages (lot « Ma classe :
-  // réglages »). Un collègue n'a pas l'onglet Réglages : pour lui, toujours
-  // l'activité.
+  // La vue sous les onglets : l'activité, les Élèves (lot « Ma classe :
+  // élèves ») ou les Réglages (lot « Ma classe : réglages »). Un collègue n'a
+  // pas l'onglet Réglages, un collègue « voir seulement » pas l'onglet
+  // Élèves : pour eux, l'activité.
   function poserVue() {
-    if (droitClasse !== "proprietaire") vueReglages = false;
-    $("vue-appli").hidden = vueReglages;
-    $("vue-reglages").hidden = !vueReglages;
-    $("onglet-reglages").setAttribute("aria-pressed", String(vueReglages));
+    if (vue === "reglages" && droitClasse !== "proprietaire") vue = "appli";
+    if (vue === "eleves" && droitClasse === "lecture") vue = "appli";
+    if (vue !== "eleves" && vue !== "reglages") vue = "appli";
+    $("vue-appli").hidden = vue !== "appli";
+    $("vue-eleves").hidden = vue !== "eleves";
+    $("vue-reglages").hidden = vue !== "reglages";
+    $("onglet-eleves").setAttribute("aria-pressed", String(vue === "eleves"));
+    $("onglet-reglages").setAttribute("aria-pressed", String(vue === "reglages"));
+  }
+
+  function ouvrirEleves() {
+    if (!classe || droitClasse === "lecture") return;
+    vue = "eleves";
+    poserAppli();
   }
 
   function ouvrirReglages() {
     if (!classe || droitClasse !== "proprietaire") return;
-    vueReglages = true;
+    vue = "reglages";
     $("nom-classe").value = classe.libelle;
     messager("message-nom", "", "");
     messager("message-supprimer", "", "");
@@ -2443,11 +2605,11 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       appliAffichee = cle;
       eleves = liste;
       retenirChoixAppli(cle);
-      messager("message-classe", "", "");
+      messager("message-appli", "", "");
       poserAppli();
       redessin.demander();
     } catch (erreur) {
-      if (numero === demandeAppli) surErreur(erreur, "message-classe");
+      if (numero === demandeAppli) surErreur(erreur, "message-appli");
     }
   }
 
@@ -2507,7 +2669,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   // Lot « Ma classe : réglages » : ni dans les Réglages, ni dans une classe
   // sans élève (elle commence par « Ajouter des élèves », juste dessous).
   function evalVisible() {
-    return Boolean(classe) && !vueReglages && eleves.length > 0 && appliAffichee === "defi-tables" && droitClasse !== "lecture" && Boolean(CORE);
+    return Boolean(classe) && vue === "appli" && eleves.length > 0 && appliAffichee === "defi-tables" && droitClasse !== "lecture" && Boolean(CORE);
   }
 
   function arreterVeilleEvaluation() {
@@ -3046,7 +3208,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
 
   async function chargerRecords() {
     ligueRecords = null;
-    if (droitClasse !== "proprietaire" || appliAffichee !== "defi-tables" || vueReglages) { dessinerRecords(); return; }
+    if (droitClasse !== "proprietaire" || appliAffichee !== "defi-tables" || vue !== "appli") { dessinerRecords(); return; }
     try {
       ligueRecords = await api("records.ligue");
     } catch (erreur) {
@@ -3233,6 +3395,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     $("coller-prenoms").hidden = !ecriture;
     $("imprimer-bandelettes").hidden = !ecriture;
     $("imprimer-recap").hidden = !ecriture;
+    $("onglet-eleves").hidden = !ecriture;
     $("onglet-reglages").hidden = !proprietaire;
     messager("message-partage", "", "");
     if (proprietaire) {
@@ -3246,7 +3409,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       const connue = classes.find(uneClasse => uneClasse.id === (classe && classe.id));
       const qui = (connue && connue.proprietaire) || "un collègue";
       messager("bandeau-droit", ecriture
-        ? `Classe de ${qui}, partagée avec toi (voir et modifier) : tu ajoutes des élèves, saisis les prénoms, donnes un nouveau code et reviens à une version précédente. Supprimer un élève ou la classe reste à ${qui}.`
+        ? `Classe de ${qui}, partagée avec toi (voir et modifier) : dans l’onglet Élèves, tu ajoutes des élèves, saisis les prénoms et donnes un nouveau code ; tu reviens aussi à une version précédente. Supprimer un élève ou la classe reste à ${qui}.`
         : `Classe de ${qui}, partagée avec toi (voir seulement) : tu vois la progression, sans les codes des élèves, et tu ne modifies rien.`, "info");
     }
   }
@@ -3595,6 +3758,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
           if (champ.min !== undefined) entree.min = champ.min;
           if (champ.max !== undefined) entree.max = champ.max;
           if (champ.maxlength !== undefined) entree.maxLength = champ.maxlength;
+          if (champ.placeholder) entree.placeholder = champ.placeholder;
         }
         entree.id = "boite-" + champ.nom;
         zone.append(etiquette, entree);
@@ -3715,7 +3879,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       await ouvrirClasse(classe.id);
       const sansNom = sansPrenomDansLOrdre(eleves);
       if (!sansNom.length) {
-        messager("message-classe", "Tous les élèves de cette classe ont déjà un prénom. Pour en changer un, écris directement dans le tableau.", "erreur");
+        messager("message-classe", "Tous les élèves de cette classe ont déjà un prénom. Pour en changer un, écris directement dans la liste.", "erreur");
         return;
       }
       const reponse = await demander(
@@ -3742,7 +3906,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       }
       await ouvrirClasse(classe.id);
       messager("message-classe",
-        `${prenoms.length > 1 ? `${prenoms.length} prénoms enregistrés` : "1 prénom enregistré"}. Vérifie-les dans le tableau, puis imprime les bandelettes (à distribuer) et la feuille prénom ↔ code (à garder).`,
+        `${prenoms.length > 1 ? `${prenoms.length} prénoms enregistrés` : "1 prénom enregistré"}. Vérifie-les dans la liste, puis imprime les bandelettes (à distribuer) et la feuille prénom ↔ code (à garder).`,
         "ok");
     } catch (erreur) { surErreur(erreur, "message-classe"); }
     finally { bouton.disabled = false; }
@@ -3764,7 +3928,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       else window.location.assign(adresse);
     } catch (erreur) {
       if (fenetre) { try { fenetre.close(); } catch (_) {} }
-      surErreur(erreur, "message-classe");
+      surErreur(erreur, "message-appli");
     } finally {
       if (bouton) bouton.disabled = false;
     }
@@ -3783,7 +3947,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       // décaler les numéros de toute la feuille. On le dit, au lieu de laisser
       // une feuille imprimée cinq minutes plus tôt devenir fausse en silence.
       messager("message-classe",
-        `Nouveau code : ${donnees.code}. Réimprime sa bandelette — et, si des élèves n’ont pas encore de prénom, les numéros ont pu changer : réimprime la feuille prénom ↔ code.`,
+        `Nouveau code : ${donnees.code}. Imprime sa bandelette (menu ⋯) — et, si des élèves n’ont pas encore de prénom, les numéros ont pu changer : réimprime la feuille prénom ↔ code.`,
         "ok");
     } catch (erreur) { surErreur(erreur, "message-classe"); }
   }
@@ -3813,7 +3977,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   async function revenirA(eleve) {
     const options = versionsProposees(eleve);
     if (!options.length) {
-      messager("message-classe", "Aucune version à restaurer pour cet élève.", "info");
+      messager("message-appli", "Aucune version à restaurer pour cet élève.", "info");
       return;
     }
     const choix = await demander(
@@ -3836,9 +4000,9 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       // haute, un appareil resté ouvert sur l'ancien état ne le rend plus —
       // il se range. La phrase le dit, parce que c'est la question que
       // Gwenaël s'est posée devant l'écran le 06/09.
-      messager("message-classe",
+      messager("message-appli",
         `Version restaurée : ${choisie.libelle}. L’appareil de l’élève adoptera cette version à sa prochaine connexion.`, "ok");
-    } catch (erreur) { surErreur(erreur, "message-classe"); }
+    } catch (erreur) { surErreur(erreur, "message-appli"); }
   }
 
   async function supprimerEleve(eleve) {
@@ -3933,7 +4097,12 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
 
   $("imprimer-bandelettes").addEventListener("click", () => imprimer("bandelettes"));
   $("imprimer-recap").addEventListener("click", () => imprimer("recap"));
-  $("retour").addEventListener("click", () => { chargerClasses(); });
+  // « Toutes mes classes » : la vue ne se retient pas (lot « Ma classe :
+  // élèves ») — rouvrir la même classe ne retombe ni sur ses codes ni sur ses
+  // Réglages. Trouvé en essayant les boutons au navigateur (18/10/2026) :
+  // `ouvrirClasse` la prenait pour la « même classe » et gardait la vue.
+  $("retour").addEventListener("click", () => { vue = "appli"; chargerClasses(); });
+  $("onglet-eleves").addEventListener("click", ouvrirEleves);
   $("onglet-reglages").addEventListener("click", ouvrirReglages);
   // Renommer la classe (lot « Ma classe : réglages ») : classes.modifier avec
   // le seul nom — les activités et leurs réglages ne bougent pas. Le serveur
@@ -3958,7 +4127,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   });
   document.querySelectorAll("#choix-appli button[data-appli]").forEach(bouton => {
     // Un onglet d'activité sort des Réglages (lot « Ma classe : réglages »).
-    bouton.addEventListener("click", () => { vueReglages = false; afficherAppli(bouton.dataset.appli); });
+    bouton.addEventListener("click", () => { vue = "appli"; afficherAppli(bouton.dataset.appli); });
   });
   document.querySelectorAll("#liste-activites input[data-appli]").forEach(caseActivite => {
     caseActivite.addEventListener("change", () => changerActivite(caseActivite));
@@ -3986,23 +4155,26 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     redessin.demander();
   });
 
-  $("form-classe").addEventListener("submit", async event => {
-    event.preventDefault();
-    const bouton = $("creer-classe");
-    if (bouton.disabled) return;
-    const libelle = $("libelle").value.trim();
-    if (!libelle) return;
-    // Désactivé pendant l'envoi : deux clics faisaient deux classes du même
-    // nom, impossibles à distinguer dans la liste.
-    bouton.disabled = true;
+  // « + Nouvelle classe » (lot « Ma classe : élèves », 18/10/2026) : la petite
+  // fenêtre, puis la classe s'ouvre — sur Élèves, puisqu'elle est vide.
+  let creationEnCours = false;
+  async function creerClasse() {
+    if (creationEnCours) return;
+    const reponse = await demander("Nouvelle classe",
+      [{nom: "libelle", libelle: "Nom de la classe", maxlength: 40, placeholder: "405"}]);
+    if (!reponse) return;
+    const libelle = String(reponse.libelle || "").trim();
+    if (!libelle) { messager("message-classes", "Donne un nom à la classe.", "erreur"); return; }
+    // Une création à la fois : deux clics faisaient deux classes du même nom,
+    // impossibles à distinguer dans la liste.
+    creationEnCours = true;
     try {
       const donnees = await api("classes.creer", {libelle, applis: ["defi-tables"]});
-      $("libelle").value = "";
       await chargerClasses();
       await ouvrirClasse(donnees.id);
     } catch (erreur) { surErreur(erreur, "message-classes"); }
-    finally { bouton.disabled = false; }
-  });
+    finally { creationEnCours = false; }
+  }
 
   $("form-connexion").addEventListener("submit", async event => {
     event.preventDefault();

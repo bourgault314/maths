@@ -4084,12 +4084,34 @@ verifier("splat-suivi-4 — « Ma classe » charge le moteur SPLAT! d'ici, à la
     // nom et la suppression sont dans la vue « Réglages », cachée tant
     // qu'aucune classe n'est ouverte, avec son onglet.
     vrai(str_contains($r['texte'], '<div class="reglages" id="vue-reglages" hidden>'), 'la vue « Réglages » : cachée tant qu’aucune classe n’est ouverte');
-    vrai(str_contains($r['texte'], 'id="onglet-reglages" aria-pressed="false" hidden>'), 'son onglet aussi');
+    // (Depuis le lot « Ma classe : élèves », l'onglet porte aussi son nom et sa bulle.)
+    vrai((bool)preg_match('#id="onglet-reglages" aria-pressed="false"[^>]* hidden>#', $r['texte']), 'son onglet aussi');
     $vue = substr($r['texte'], strpos($r['texte'], 'id="vue-reglages"'));
     $vue = substr($vue, 0, strpos($vue, "<!-- Ce qui sort de l'imprimante"));
     foreach (['bloc-activites', 'bloc-partage', 'form-nom-classe', 'supprimer-classe'] as $id) {
         vrai(str_contains($vue, 'id="' . $id . '"'), "« $id » est dans la vue Réglages");
     }
+});
+
+verifier("ma-classe-eleves — « Ma classe » : les codes et les boutons des élèves sont dans la vue Élèves, cachée, et nulle part ailleurs", function () {
+    $r = page('/prof/');
+    egal(200, $r['code'], 'la page « Ma classe » répond');
+    // Lot « Ma classe : élèves » (18/10/2026) : la vue Élèves et son onglet,
+    // cachés tant qu'aucune classe n'est ouverte ; les tableaux des applis
+    // n'ont plus de colonne « Code » ; « Nouvelle classe » est une carte.
+    vrai(str_contains($r['texte'], '<div id="vue-eleves" hidden>'), 'la vue « Élèves » : cachée tant qu’aucune classe n’est ouverte');
+    vrai(str_contains($r['texte'], 'id="onglet-eleves" aria-pressed="false"'), 'son onglet existe');
+    vrai((bool)preg_match('#id="onglet-eleves"[^>]* hidden>#', $r['texte']), 'son onglet aussi est caché');
+    $vue = substr($r['texte'], strpos($r['texte'], 'id="vue-eleves"'));
+    $vue = substr($vue, 0, strpos($vue, 'id="vue-reglages"'));
+    foreach (['ajouter', 'coller-prenoms', 'imprimer-bandelettes', 'imprimer-recap', 'message-classe', 'tableau-eleves'] as $id) {
+        vrai(str_contains($vue, 'id="' . $id . '"'), "« $id » est dans la vue Élèves");
+    }
+    $appli = substr($r['texte'], strpos($r['texte'], 'id="vue-appli"'));
+    $appli = substr($appli, 0, strpos($appli, '<!-- /vue-appli -->'));
+    vrai(!str_contains($appli, '<th>Code</th>'), 'plus de colonne « Code » dans les tableaux des applis');
+    vrai(!str_contains($appli, 'id="imprimer-bandelettes"'), 'plus de bouton d’élève dans la vue de l’activité');
+    vrai(!str_contains($r['texte'], 'id="form-classe"'), '« Nouvelle classe » n’est plus un formulaire toujours affiché');
 });
 
 verifier("ma-classe-reglages — renommer la classe : seul le nom change, nettoyé comme à la création", function () use (&$jetonS1) {

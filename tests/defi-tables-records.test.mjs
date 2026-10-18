@@ -470,8 +470,9 @@ test("la page prof : le temps à côté de la couronne, la carte des records ave
   assert.match(pageProf, /await api\("classes\.modifier", \{classe_id: classe\.id, reglages: \{"defi-tables": \{records: ouvre\}\}\}\);/);
   assert.match(pageProf, /const visible = Boolean\(ligueRecords\) && appliAffichee === "defi-tables" && droitClasse === "proprietaire"/, "propriétaire, Défi tables");
   assert.match(pageProf, /fermer\.textContent = "✕ Fermer";/);
-  // Lot « Ma classe : réglages » : la case est dans la vue Réglages, cachée avec elle à la déconnexion.
-  assert.match(pageProf, /"bandeau-echues", "bloc-records", "bloc-evaluations", "vue-reglages", "onglet-reglages"\];/);
+  // Lot « Ma classe : réglages » : la case est dans la vue Réglages, cachée avec elle à la déconnexion
+  // (et, depuis le lot « Ma classe : élèves », la vue Élèves et son onglet aussi).
+  assert.match(pageProf, /"bandeau-echues", "bloc-records", "bloc-evaluations", "vue-reglages", "onglet-reglages",\s*"vue-eleves", "onglet-eleves"\];/);
   assert.match(pageProf, /<div class="reglages" id="vue-reglages" hidden>[\s\S]*<strong>Défi tables<\/strong><\/label>\s*<!--[\s\S]*?-->\s*<div class="sous-reglage" id="rec-reglage" hidden>\s*<label><input type="checkbox" id="case-records">/,
     "la case des records est rangée SOUS Défi tables, dans les Réglages");
   // Le plein écran (posé sur <body>) ne s'imprime pas avec les bandelettes ; la carte est dans #ecran-classe, déjà cachée à l'impression.

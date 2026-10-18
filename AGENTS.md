@@ -83,6 +83,11 @@ Défi tables est la référence.
 - Réglage par classe : dans Ma classe, onglet « ⚙ Réglages », carte
   « Activités », sous la case de l'appli ; propriétaire seulement ; tout
   ouvert par défaut.
+- Dans Ma classe, l'onglet d'une appli montre sa progression, sans aucun code
+  d'élève : les codes ne s'écrivent que dans l'onglet « Élèves » (et sur les
+  papiers imprimés), pour qu'une page projetée ne les montre jamais à la
+  classe (lot « Ma classe : élèves », 18/10/2026 ; gardé par
+  `tests/suivi-ma-classe-eleves.test.mjs`).
 - Le cadre de l'appli tient entier dans l'écran avec le bloc de suivi, sur
   téléphone comme sur ordinateur.
 - Sans code, rien ne change : en-tête, fil d'Ariane et pied du site.
