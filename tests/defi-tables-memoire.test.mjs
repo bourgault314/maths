@@ -242,7 +242,8 @@ test("le serveur : « boite » et « echeance » acceptés, « cases » toujours
   assert.match(prof, /retard: PARCOURS\.calculsEnRetard \? PARCOURS\.calculsEnRetard\(parcours\) : null,/);
   assert.match(prof, /if \(tri\.colonne === "retard"\) return eleve\.lu\.retard \? eleve\.lu\.retard\.length : -1;/);
   assert.match(prof, /cRetard\.dataset\.libelle = "En retard";/);
-  assert.match(prof, /ligne\.append\(cNom, cCode, cAcquises, cEnCours, cSemaine, cRetard, cDate, cActions\);/);
+  // (Sans la colonne Code depuis le lot « Ma classe : élèves » : les codes sont dans l'onglet Élèves.)
+  assert.match(prof, /ligne\.append\(cNom, cAcquises, cEnCours, cSemaine, cRetard, cDate, cActions\);/);
   // Le compteur est bien celui du moteur : dus AVANT aujourd'hui.
   // Lot « un seul système » : parmi les calculs que Mes calculs du jour prend
   // (ceux des tables passées avant aujourd'hui).

@@ -451,9 +451,12 @@ test("le mot de passe temporaire d'un collègue ne s'écrit plus dans la page", 
 });
 
 test("les boutons qui envoient sont désactivés pendant l'envoi", () => {
-  const creerClasse = blocDepuis(script, script.indexOf('$("form-classe").addEventListener("submit"'));
-  assert.match(creerClasse, /bouton\.disabled = true/);
-  assert.match(creerClasse, /finally \{ bouton\.disabled = false; \}/);
+  // Lot « Ma classe : élèves » (18/10/2026) : « + Nouvelle classe » ouvre une
+  // petite fenêtre ; une création à la fois, même si l'on reclique pendant l'envoi.
+  const creerClasse = fonction("creerClasse");
+  assert.match(creerClasse, /if \(creationEnCours\) return;/);
+  assert.match(creerClasse, /creationEnCours = true;/);
+  assert.match(creerClasse, /finally \{ creationEnCours = false; \}/);
   const ajouter = blocDepuis(script, script.indexOf('$("ajouter").addEventListener("click"'));
   assert.match(ajouter, /bouton\.disabled = true/);
   assert.match(ajouter, /finally \{ bouton\.disabled = false; \}/);
@@ -632,7 +635,7 @@ test("le tableau : sept colonnes, la liste des tables écrite, les gestes rares 
   const debutEntete = page.indexOf('<tr id="entete-defi-tables">');
   const entete = page.slice(debutEntete, page.indexOf("</tr>", debutEntete));
   assert.deepEqual([...entete.matchAll(/<th>(?:<button type="button" data-tri="(\w+)">)?([^<]*)/g)].map(m => `${m[2]}${m[1] ? `:${m[1]}` : ""}`),
-    ["Élève:prenom", "Code", "Tables passées:acquises", "En cours:encours", "Cette semaine:semaine", "En retard:retard", "Dernière activité:date", ""]);
+    ["Élève:prenom", "Tables passées:acquises", "En cours:encours", "Cette semaine:semaine", "En retard:retard", "Dernière activité:date", ""]);
   // Lot « un seul système » (05/10/2026) : « Tables passées » partout (la clé de tri reste « acquises »).
   assert.match(page, /<option value="acquises">Tables passées<\/option>/);
   assert.match(page, /cAcquises\.dataset\.libelle = "Passées";/);
@@ -642,15 +645,18 @@ test("le tableau : sept colonnes, la liste des tables écrite, les gestes rares 
   assert.match(page, /<option value="encours">En cours<\/option>\s*<option value="semaine">Séances cette semaine<\/option>/);
   // La liste des tables se LIT (une info-bulle ne s'imprime pas).
   assert.match(page, /liste\.textContent = reste\.length <= 3 \? `reste \$\{reste\.join\(", "\)\}` : eleve\.lu\.acquises\.join\(", "\);\s*cAcquises\.append\(liste\);/);
-  // « Fiche » reste visible ; revenir à une version, nouveau code, supprimer : dans le menu.
+  // « Fiche » reste visible ; « Revenir à… » dans le menu de la ligne. Depuis le
+  // lot « Ma classe : élèves », « Nouveau code » et « Supprimer » sont dans le
+  // menu de l'onglet Élèves (testé dans suivi-ma-classe-eleves).
   assert.match(page, /fiche\.textContent = "Fiche";/);
-  assert.match(page, /menu\.append\(revenir\);[\s\S]*?menu\.append\(regen\);[\s\S]*?menu\.append\(sup\);/);
-  assert.match(page, /if \(menu\.children\.length\) \{\s*menu\.addEventListener\("click", \(\) => \{ plus\.open = false; \}\);\s*plus\.addEventListener\("toggle", \(\) => placerMenu\(plus, poignee, menu\)\);\s*cActions\.append\(plus\);/, "pas de menu vide pour un collègue en lecture seule");
+  assert.match(fonction("poserGestes"), /boutonGeste\("Revenir à…"/);
+  assert.doesNotMatch(fonction("poserGestes"), /Nouveau code|Supprimer/);
+  assert.match(fonction("menuGestes"), /if \(!boutons\.length\) return;[\s\S]*menu\.addEventListener\("click", \(\) => \{ plus\.open = false; \}\);\s*plus\.addEventListener\("toggle", \(\) => placerMenu\(plus, poignee, menu\)\);\s*cActions\.append\(plus\);/, "pas de menu vide pour un collègue en lecture seule");
   // Le menu est en position fixe (l'enveloppe du tableau le couperait sur les dernières lignes).
   assert.match(page, /\.plus\[open\] > div \{ position: fixed; z-index: 5;/);
   assert.match(page, /menu\.style\.top = `\$\{dessous \? cadre\.bottom \+ 4 : Math\.max\(4, cadre\.top - 4 - hauteur\)\}px`;/);
   assert.match(page, /document\.addEventListener\("click", fermerMenus\);\s*window\.addEventListener\("scroll", \(\) => fermerMenus\(null\), true\);/);
-  assert.match(page, /ligne\.append\(cNom, cCode, cAcquises, cEnCours, cSemaine, cRetard, cDate, cActions\);/);
+  assert.match(page, /ligne\.append\(cNom, cAcquises, cEnCours, cSemaine, cRetard, cDate, cActions\);/);
 });
 
 test("« lireProgression » demande tout au moteur, et un parcours illisible donne une ligne vide complète", () => {

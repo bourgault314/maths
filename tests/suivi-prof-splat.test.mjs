@@ -140,7 +140,7 @@ const TOM = parcours({m1e1: etape(false, 0, 5)});
 
 // ------------------------------------------------------------ la page, exécutée
 
-const SOURCES_TABLEAU = ["nomAffiche", "dateLisible", "celluleNom", "celluleCode", "celluleDate", "poserGestes",
+const SOURCES_TABLEAU = ["nomAffiche", "dateLisible", "celluleNomTexte", "celluleDate", "boutonGeste", "menuGestes", "poserGestes",
   "elementSvg", "pastilleMonde", "ligneDetailSplat", "dessinerTableauSplat", "objectifSplat",
   "dessinerObjectifSplat", "resumeDeLaClasse", "lireSplat", "mondesOuverts"].map(fonction).join("\n");
 const CONSTANTES = ["COULEURS_MONDES", "ETATS_MONDE", "GRIS_FERME", "CASES_ETAPE", "SVG", "NOMBRE_MONDES"].map(constante).join("\n");
@@ -174,6 +174,8 @@ const classe8 = () => [
 ];
 
 const cellules = tr => tr.children;
+// Les colonnes de l'onglet SPLAT! (sans la colonne Code depuis le lot « Ma classe : élèves »).
+const C_ETAPES = 2, C_DATE = 3, C_GESTES = 4;
 const COULEUR = n => ({1: "#d9690c", 2: "#0b67b2", 3: "#be185d", 4: "#92400e", 5: "#08857f", 6: "#7b42b4"})[n];
 const pastilles = tr => tr.tous(n => n.tag === "svg");
 const etatPastille = svg => svg.className.replace("monde-p ", "");
@@ -181,14 +183,20 @@ const etatPastille = svg => svg.className.replace("monde-p ", "");
 test("l'onglet SPLAT! : six pastilles, les étapes sur 40, ✨ pour les Bonus, « Détail » et « ⋯ » — plus de « Fiche »", () => {
   const {lignes} = ongletSplat(classe8());
   assert.equal(lignes.length, 4);
-  lignes.forEach(tr => assert.equal(cellules(tr).length, 6, "Élève · Code · Mondes · Étapes réussies · Dernière activité · gestes"));
+  // Lot « Ma classe : élèves » (18/10/2026) : plus de colonne Code, le prénom en texte.
+  lignes.forEach(tr => assert.equal(cellules(tr).length, 5, "Élève · Mondes · Étapes réussies · Dernière activité · gestes"));
+  lignes.forEach(tr => {
+    assert.equal(cellules(tr)[0].children.length, 0, "le prénom est du texte, pas un champ");
+    assert.ok(!cellules(tr).some(c => aClasse(c, "code")), "aucune cellule de code");
+  });
+  assert.deepEqual(lignes.map(tr => cellules(tr)[0].textContent), ["Léa", "Maëlys", "Tom", "Yanis"]);
   const [lea, maelys, tom, yanis] = lignes;
   assert.deepEqual(pastilles(lea).map(etatPastille), ["fini", "fini", "cours", "vide", "vide", "vide"]);
   assert.deepEqual(pastilles(maelys).map(etatPastille), Array(6).fill("fini"));
   assert.deepEqual(pastilles(tom).map(etatPastille), ["cours", "vide", "vide", "vide", "vide", "vide"], "une série en cours met le monde à moitié");
   assert.deepEqual(pastilles(yanis).map(etatPastille), Array(6).fill("vide"), "rien fait : six mondes vides");
-  const compte = tr => cellules(tr)[3].premier(n => aClasse(n, "pastille")).textContent;
-  const bonus = tr => (cellules(tr)[3].premier(n => aClasse(n, "bonus-compte")) || {textContent: ""}).textContent;
+  const compte = tr => cellules(tr)[C_ETAPES].premier(n => aClasse(n, "pastille")).textContent;
+  const bonus = tr => (cellules(tr)[C_ETAPES].premier(n => aClasse(n, "bonus-compte")) || {textContent: ""}).textContent;
   assert.equal(compte(lea), "13 / 40");
   assert.equal(bonus(lea), "✨ 1", "les Bonus comptés à part (Q3)");
   assert.equal(compte(maelys), "40 / 40");
@@ -196,13 +204,19 @@ test("l'onglet SPLAT! : six pastilles, les étapes sur 40, ✨ pour les Bonus, �
   assert.equal(compte(tom), "0 / 40");
   assert.equal(bonus(tom), "", "pas de ✨ 0");
   assert.equal(compte(yanis), "0 / 40");
-  assert.ok(aClasse(cellules(lea)[3].children[0], "p-vert") && aClasse(cellules(yanis)[3].children[0], "p-gris"));
-  assert.equal(cellules(yanis)[4].textContent, "rien fait");
+  assert.ok(aClasse(cellules(lea)[C_ETAPES].children[0], "p-vert") && aClasse(cellules(yanis)[C_ETAPES].children[0], "p-gris"));
+  assert.equal(cellules(yanis)[C_DATE].textContent, "rien fait");
   lignes.forEach(tr => {
-    const boutons = cellules(tr)[5].children.filter(n => n.tag === "button").map(b => b.textContent);
+    const boutons = cellules(tr)[C_GESTES].children.filter(n => n.tag === "button").map(b => b.textContent);
     assert.deepEqual(boutons, ["Détail ▾"], "« Détail » à la place de « Fiche »");
-    assert.ok(cellules(tr)[5].premier(n => n.tag === "details"), "« ⋯ » garde Nouveau code / Supprimer");
+    assert.equal(cellules(tr)[C_GESTES].premier(n => n.tag === "details"), null,
+      "sans version à restaurer, pas de « ⋯ » : Nouveau code et Supprimer sont dans l'onglet Élèves");
   });
+  // Une version à restaurer : le « ⋯ » ne contient que « Revenir à… ».
+  const {lignes: avecVersion} = ongletSplat([{prenom: "Léa", parcours: LEA, restaurable: true}]);
+  const menu = cellules(avecVersion[0])[C_GESTES].premier(n => n.tag === "details");
+  assert.ok(menu, "« ⋯ » pour l'élève qui a une version à restaurer");
+  assert.deepEqual(menu.tous(n => n.tag === "button").map(b => b.textContent), ["Revenir à…"]);
   assert.equal(SPLAT.CARTE.ETAPES.length, 40, "le total vient du moteur, jamais écrit dans la page");
   assert.doesNotMatch(sectionSplat, /\b37\b|\b40\b/, "aucun total écrit en dur");
 });
@@ -234,14 +248,14 @@ test("la pastille : le dessin de l'espace élève, et « Monde 3 · SPLAT! Enqu�
 
 test("le Détail : une rangée par monde, les Bonus à part, la légende — et il se replie", () => {
   const {corps, lignes, etat} = ongletSplat(classe8());
-  const bouton = cellules(lignes[0])[5].children[0];
+  const bouton = cellules(lignes[0])[C_GESTES].children[0];
   bouton.cliquer();
   assert.equal(bouton.textContent, "Replier ▴");
   assert.equal(bouton.attributs["aria-expanded"], "true");
   assert.ok(etat.detailsOuverts.has(1), "Léa (id 1) est retenue comme dépliée");
   const detail = corps.children[1];
   assert.ok(aClasse(detail, "detail"), "le Détail se déplie JUSTE sous la ligne de l'élève");
-  assert.equal(detail.children[0].colSpan, 6);
+  assert.equal(detail.children[0].colSpan, 5, "toute la largeur : cinq colonnes depuis le lot « Ma classe : élèves »");
   const rangees = detail.tous(n => aClasse(n, "detail-monde"));
   assert.deepEqual(rangees.map(r => r.children[0].textContent), ["Monde 1 · Petit SPLAT!", "Monde 2 · SPLAT! Classique",
     "Monde 3 · SPLAT! Enquête", "Monde 4 · SPLAT! Système", "Monde 5 · SPLAT! Équations", "Monde 6 · SPLAT! Relatifs",
@@ -274,12 +288,12 @@ test("échauffement : É1-É3 comptent au monde 6 ; un élève qui l'avait fini 
   const ancien = parcours(faits(M6));
   const echauffe = parcours({...faits(M6), ...faits(["ech1"])});
   const {corps, lignes} = ongletSplat([{prenom: "Inès", parcours: ancien}, {prenom: "Noé", parcours: echauffe}]);
-  const compte = tr => cellules(tr)[3].premier(n => aClasse(n, "pastille")).textContent;
+  const compte = tr => cellules(tr)[C_ETAPES].premier(n => aClasse(n, "pastille")).textContent;
   assert.deepEqual(lignes.map(compte), ["6 / 40", "7 / 40"]);
   assert.deepEqual(lignes.map(tr => etatPastille(pastilles(tr)[5])), ["cours", "cours"]);
   assert.deepEqual(lignes.map(tr => pastilles(tr)[5].premier(n => n.tag === "title").textContent),
     ["Monde 6 · SPLAT! Relatifs : 6 / 9", "Monde 6 · SPLAT! Relatifs : 7 / 9"]);
-  cellules(lignes[1])[5].children[0].cliquer();
+  cellules(lignes[1])[C_GESTES].children[0].cliquer();
   const m6 = corps.children[2].tous(n => aClasse(n, "detail-monde"))[5];
   assert.deepEqual(m6.children.slice(1).map(c => [c.textContent, c.className]).slice(0, 4),
     [["É1", "et ok"], ["É2", "et"], ["É3", "et"], ["38", "et ok"]]);
@@ -287,7 +301,7 @@ test("échauffement : É1-É3 comptent au monde 6 ; un élève qui l'avait fini 
 
 test("un Détail déplié le reste quand le tableau est redessiné (tri, saisie)", () => {
   const {corps} = ongletSplat(classe8(), {detailsOuverts: new Set([2])});
-  const ordre = corps.children.map(tr => (aClasse(tr, "detail") ? "détail" : tr.children[0].children[0].value));
+  const ordre = corps.children.map(tr => (aClasse(tr, "detail") ? "détail" : tr.children[0].textContent));
   assert.deepEqual(ordre, ["Léa", "Maëlys", "détail", "Tom", "Yanis"]);
 });
 
@@ -321,19 +335,20 @@ test("sans moteur : l'onglet le dit, chaque ligne reste lisible, ni carte ni Dé
   const {lignes, messages, zones} = ongletSplat(classe8(), {sansMoteur: true});
   assert.equal(lignes.length, 4);
   lignes.forEach(tr => {
-    assert.equal(cellules(tr)[3].textContent, "—");
-    assert.deepEqual(cellules(tr)[5].children.filter(n => n.tag === "button"), []);
+    assert.equal(cellules(tr)[C_ETAPES].textContent, "—");
+    assert.deepEqual(cellules(tr)[C_GESTES].children.filter(n => n.tag === "button"), []);
   });
   assert.equal(zones.get("objectif").hidden, true);
-  assert.ok(messages.some(m => m.id === "message-classe" && /prof\/splat-parcours\.js/.test(m.t) && m.type === "erreur"));
+  assert.ok(messages.some(m => m.id === "message-appli" && /prof\/splat-parcours\.js/.test(m.t) && m.type === "erreur"),
+    "le message de l'activité, au-dessus de son tableau");
 });
 
 test("en lecture seule : pas de code, pas de saisie, pas de « ⋯ » vide", () => {
-  const {lignes} = ongletSplat(classe8().map(e => ({...e, code: null})), {droit: "lecture"});
+  const {lignes} = ongletSplat(classe8().map(e => ({...e, code: null, restaurable: true})), {droit: "lecture"});
   lignes.forEach(tr => {
-    assert.equal(cellules(tr)[1].textContent, "");
-    assert.equal(cellules(tr)[0].children[0].readOnly, true);
-    assert.equal(cellules(tr)[5].premier(n => n.tag === "details"), null);
+    assert.equal(cellules(tr).length, 5, "pas de colonne Code");
+    assert.equal(cellules(tr)[0].tous(n => n.tag === "input").length, 0, "pas de champ de saisie");
+    assert.equal(cellules(tr)[C_GESTES].premier(n => n.tag === "details"), null, "même avec une version : « Revenir à… » est en écriture");
   });
 });
 
@@ -380,11 +395,13 @@ test("APPLIS : ce que la page sait montrer est disponible au catalogue, proposé
   // appli était le tableau).
   assert.match(page, /<div class="choix-appli" id="choix-appli" role="group" aria-label="Activité affichée">/,
     "toujours là, même avec une seule activité");
-  assert.match(page, /<button type="button" class="onglet-reglages" id="onglet-reglages" aria-pressed="false" hidden>/,
+  assert.match(page, /<button type="button" class="onglet-reglages" id="onglet-reglages" aria-pressed="false" aria-label="Réglages" title="[^"]+" hidden>/,
     "« Réglages » : caché tant que le droit n'est pas connu");
+  assert.match(page, /<button type="button" class="onglet-eleves" id="onglet-eleves" aria-pressed="false" aria-label="Élèves" title="[^"]+" hidden>/,
+    "« Élèves » : caché tant que le droit n'est pas connu");
   const entete = page.slice(page.indexOf('<tr id="entete-splat" hidden>'), page.indexOf("</tr>", page.indexOf('<tr id="entete-splat"')));
   assert.deepEqual([...entete.matchAll(/<th>(?:<button type="button" data-tri="(\w+)">)?([^<]*)/g)].map(m => `${m[2]}${m[1] ? `:${m[1]}` : ""}`),
-    ["Élève:prenom", "Code", "Mondes", "Étapes réussies:etapes", "Dernière activité:date", ""]);
+    ["Élève:prenom", "Mondes", "Étapes réussies:etapes", "Dernière activité:date", ""]);
 });
 
 function choixAppli() {
@@ -420,7 +437,7 @@ function casesMondes() {
   });
 }
 
-function poserAppliRejoue(applis, appliAffichee, droit = "proprietaire", triAvant = {colonne: "acquises", sens: -1}, reglages = {}, reglagesOuverts = false) {
+function poserAppliRejoue(applis, appliAffichee, droit = "proprietaire", triAvant = {colonne: "acquises", sens: -1}, reglages = {}, vueAvant = "appli") {
   const {$} = creerZones();
   const boutons = ["defi-tables", "splat"].map(cle => Object.assign(new Noeud("button"), {dataset: {appli: cle}}));
   const cases = ["defi-tables", "splat"].map(cle => Object.assign(new Noeud("input"), {dataset: {appli: cle}}));
@@ -431,10 +448,10 @@ function poserAppliRejoue(applis, appliAffichee, droit = "proprietaire", triAvan
     "splat": [["prenom", "Prénom"], ["etapes", "Étapes réussies"], ["date", "Dernière activité"]]};
   const lus = {records: 0, evaluations: 0};
   const etat = new Function("document", "$", "classe", "appliAffichee", "droitClasse", "TRIS", "APPLIS", "triInitial", "vueInitiale", "lus",
-    `let tri = triInitial;\nlet vueReglages = vueInitiale;\n${constante("NOMBRE_MONDES")}\n${["lesApplisConnues", "applisDeLaClasse", "poserAppli", "poserVue", "poserTris", "poserActivites",
-      "mondesOuverts", "poserPuce", "recordsOuvertsPourLaClasse"].map(fonction).join("\n")}\nfunction chargerRecords() { lus.records += 1; }\nfunction poserEvaluations() { lus.evaluations += 1; }\nposerAppli();\nreturn {tri, vueReglages};`)(
-    doc, $, {applis, reglages}, appliAffichee, droit, TRIS, [{cle: "defi-tables"}, {cle: "splat"}], triAvant, reglagesOuverts, lus);
-  return {$, boutons, cases, mondes, tri: etat.tri, vueReglages: etat.vueReglages, lus};
+    `let tri = triInitial;\nlet vue = vueInitiale;\n${constante("NOMBRE_MONDES")}\n${["lesApplisConnues", "applisDeLaClasse", "poserAppli", "poserVue", "poserTris", "poserActivites",
+      "mondesOuverts", "poserPuce", "recordsOuvertsPourLaClasse"].map(fonction).join("\n")}\nfunction chargerRecords() { lus.records += 1; }\nfunction poserEvaluations() { lus.evaluations += 1; }\nposerAppli();\nreturn {tri, vue};`)(
+    doc, $, {applis, reglages}, appliAffichee, droit, TRIS, [{cle: "defi-tables"}, {cle: "splat"}], triAvant, vueAvant === true ? "reglages" : vueAvant, lus);
+  return {$, boutons, cases, mondes, tri: etat.tri, vue: etat.vue, vueReglages: etat.vue === "reglages", lus};
 }
 
 test("un onglet par activité de la classe, même seule ; l'onglet SPLAT! change l'en-tête, les tris, et cache ce qui est à Défi tables", () => {
@@ -461,7 +478,9 @@ test("un onglet par activité de la classe, même seule ; l'onglet SPLAT! change
   // Hors Réglages : la vue de l'activité, ses cartes lues.
   assert.equal(deux.$("vue-appli").hidden, false);
   assert.equal(deux.$("vue-reglages").hidden, true);
+  assert.equal(deux.$("vue-eleves").hidden, true);
   assert.equal(deux.$("onglet-reglages").attributs["aria-pressed"], "false");
+  assert.equal(deux.$("onglet-eleves").attributs["aria-pressed"], "false");
   assert.deepEqual(deux.lus, {records: 1, evaluations: 1});
 });
 
@@ -482,13 +501,13 @@ test("lot « Ma classe : réglages » : la vue Réglages remplace celle de l'act
   }
   // Le droit, l'onglet, la sortie des Réglages et ce qu'on ne lit pas dedans.
   assert.match(fonction("appliquerDroits"), /\$\("onglet-reglages"\)\.hidden = !proprietaire;/);
-  assert.match(fonction("ouvrirReglages"), /if \(!classe \|\| droitClasse !== "proprietaire"\) return;\s*vueReglages = true;/);
-  assert.match(script, /bouton\.addEventListener\("click", \(\) => \{ vueReglages = false; afficherAppli\(bouton\.dataset\.appli\); \}\);/,
-    "un onglet d'activité sort des Réglages");
-  assert.doesNotMatch(fonction("afficherAppli"), /vueReglages/, "après un changement d'activités, on reste dans les Réglages");
-  assert.match(fonction("ouvrirClasse"), /if \(!memeClasse\) \{ detailsOuverts\.clear\(\); vueReglages = false; \}/, "une autre classe s'ouvre sur son tableau");
-  assert.match(fonction("evalVisible"), /!vueReglages && eleves\.length > 0 &&/, "ni veille d'évaluation dans les Réglages, ni carte sans élève");
-  assert.match(fonction("chargerRecords"), /\|\| vueReglages\) \{ dessinerRecords\(\); return; \}/);
+  assert.match(fonction("ouvrirReglages"), /if \(!classe \|\| droitClasse !== "proprietaire"\) return;\s*vue = "reglages";/);
+  assert.match(script, /bouton\.addEventListener\("click", \(\) => \{ vue = "appli"; afficherAppli\(bouton\.dataset\.appli\); \}\);/,
+    "un onglet d'activité sort des Réglages (et des Élèves)");
+  assert.doesNotMatch(fonction("afficherAppli"), /\bvue\b/, "après un changement d'activités, on reste dans les Réglages");
+  assert.match(fonction("ouvrirClasse"), /if \(!memeClasse\) \{\s*detailsOuverts\.clear\(\);\s*vue = /, "une autre classe s'ouvre sur son tableau");
+  assert.match(fonction("evalVisible"), /vue === "appli" && eleves\.length > 0 &&/, "ni veille d'évaluation hors de la vue de l'activité, ni carte sans élève");
+  assert.match(fonction("chargerRecords"), /\|\| vue !== "appli"\) \{ dessinerRecords\(\); return; \}/);
 });
 
 test("le tri « Étapes réussies » : les étapes, puis les Bonus, puis une série en cours", () => {
@@ -704,7 +723,7 @@ test("à la déconnexion, l'onglet, les Réglages et les activités partent avec
     }
   }
   const oublier = fonction("oublierEtat");
-  assert.match(oublier, /appliAffichee = "defi-tables";\s*vueReglages = false;\s*tableaux = \{\};\s*detailsOuverts\.clear\(\);/);
+  assert.match(oublier, /appliAffichee = "defi-tables";\s*vue = "appli";\s*tableaux = \{\};\s*detailsOuverts\.clear\(\);/);
 });
 
 // ------------------------------------------------------------ lot « splat-suivi-5 »
@@ -723,8 +742,8 @@ test("mondes 1 et 2 ouverts : pastilles grises pour les autres, étapes comptée
   assert.deepEqual(pastilles(lea).map(etatPastille), ["fini", "fini", "ferme", "ferme", "ferme", "ferme"]);
   assert.deepEqual(pastilles(tom).map(etatPastille), ["cours", "vide", "ferme", "ferme", "ferme", "ferme"]);
   assert.deepEqual(pastilles(maelys).map(etatPastille), ["fini", "fini", "ferme", "ferme", "ferme", "ferme"]);
-  const compte = tr => cellules(tr)[3].premier(n => aClasse(n, "pastille")).textContent;
-  const bonus = tr => (cellules(tr)[3].premier(n => aClasse(n, "bonus-compte")) || {textContent: ""}).textContent;
+  const compte = tr => cellules(tr)[C_ETAPES].premier(n => aClasse(n, "pastille")).textContent;
+  const bonus = tr => (cellules(tr)[C_ETAPES].premier(n => aClasse(n, "bonus-compte")) || {textContent: ""}).textContent;
   assert.equal(compte(lea), "9 / 9");
   assert.equal(compte(maelys), "9 / 9");
   assert.equal(compte(tom), "0 / 9");
@@ -745,13 +764,13 @@ test("mondes 1 et 2 ouverts : pastilles grises pour les autres, étapes comptée
   assert.equal(ferme.premier(n => n.tag === "path"), null);
   // Les mondes 5 et 6 seulement : 3 + 9 = 12 étapes (l'échauffement compris).
   const {lignes: l2} = ongletSplat(classe8(), {reglages: {splat: {mondes: [5, 6]}}});
-  assert.equal(cellules(l2[1])[3].premier(n => aClasse(n, "pastille")).textContent, "12 / 12", "Maëlys a tout fini");
+  assert.equal(cellules(l2[1])[C_ETAPES].premier(n => aClasse(n, "pastille")).textContent, "12 / 12", "Maëlys a tout fini");
   assert.deepEqual(pastilles(l2[1]).map(etatPastille), ["ferme", "ferme", "ferme", "ferme", "fini", "fini"]);
 });
 
 test("mondes fermés : le Détail garde tout le travail, les rangées des mondes fermés plus pâles avec un cadenas", () => {
   const {corps, lignes} = ongletSplat(classe8(), {reglages: MONDES_1_2});
-  cellules(lignes[0])[5].children[0].cliquer();
+  cellules(lignes[0])[C_GESTES].children[0].cliquer();
   const detail = corps.children[1];
   const rangees = detail.tous(n => (n.className || "").startsWith("detail-monde"));
   const noms = rangees.map(r => r.premier(n => n.tag === "b").textContent);

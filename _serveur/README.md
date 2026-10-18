@@ -131,7 +131,17 @@ toute la base). `verifier.php` devient rouge tant que l'un d'eux traîne, et
   propriétaire seulement : Activités (chaque appli et ses réglages dessous —
   les records sous Défi tables, les mondes sous SPLAT!), Partager cette classe,
   Nom de la classe (`classes.modifier` avec le seul `libelle`) et Supprimer la
-  classe. L'onglet SPLAT! : six pastilles de monde,
+  classe. Depuis le lot « Ma classe : élèves » (18/10/2026), les prénoms, les
+  codes et les papiers sont dans l'onglet **« Élèves »**, avant « Réglages »
+  (propriétaire et collègues en écriture ; un collègue « voir seulement » n'a
+  ni l'onglet ni les codes) : les boutons Ajouter, Coller, Bandelettes et
+  Feuille, puis la liste dans l'ordre et avec les numéros de la feuille
+  prénom ↔ code, où se saisit le prénom ; le « ⋯ » de chaque élève : Imprimer
+  sa bandelette (elle seule, avec son numéro), Nouveau code, Supprimer
+  (propriétaire). Les tableaux des applis n'ont plus aucun code et le prénom y
+  est du texte ; leur « ⋯ » ne garde que « Revenir à… ». Une classe s'ouvre
+  sur son tableau, jamais sur Élèves, sauf une classe vide ; « + Nouvelle
+  classe » est une carte au bout de Mes classes. L'onglet SPLAT! : six pastilles de monde,
   étapes réussies (✨ pour les Bonus, à part), dernière activité, un
   « Détail » qui déplie les étapes monde par monde (réussie, réussie avec des
   réponses vues, en cours), et sa carte « Notre classe, ensemble ».
