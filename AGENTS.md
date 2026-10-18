@@ -80,8 +80,9 @@ Défi tables est la référence.
   clair) ; si l'élève ferme tout, il retrouve tout fermé.
 - Tuile dans Mon espace : rien tant qu'aucune réussite, puis une jauge et
   « N … sur M », comptés sur ce que la classe a d'ouvert.
-- Réglage par classe : dans Ma classe, carte « Activités de la classe », sous la
-  case de l'appli ; propriétaire seulement ; tout ouvert par défaut.
+- Réglage par classe : dans Ma classe, onglet « ⚙ Réglages », carte
+  « Activités », sous la case de l'appli ; propriétaire seulement ; tout
+  ouvert par défaut.
 - Le cadre de l'appli tient entier dans l'écran avec le bloc de suivi, sur
   téléphone comme sur ordinateur.
 - Sans code, rien ne change : en-tête, fil d'Ariane et pied du site.

@@ -120,12 +120,18 @@ toute la base). `verifier.php` devient rouge tant que l'un d'eux traîne, et
   (tables acquises, mélange, Expert, dernière activité), trier, régénérer un code,
   supprimer, imprimer la liste code ↔ élève.
   Depuis le lot « splat-suivi-4 » (08/10/2026), une classe peut avoir plusieurs
-  activités : le bloc **« Activités de la classe »** (propriétaire seulement)
-  coche celles que les élèves trouvent dans leur espace (`classes.modifier` ;
-  décocher retire la tuile et n'efface aucune progression). Avec deux
-  activités, un choix **« Défi tables | SPLAT! »** apparaît sous le nom de la
-  classe (retenu le temps de l'onglet) ; chaque activité a son tableau (un
-  appel `tableau` par activité). L'onglet SPLAT! : six pastilles de monde,
+  activités : le bloc **« Activités »** (propriétaire seulement) coche celles
+  que les élèves trouvent dans leur espace (`classes.modifier` ; décocher
+  retire la tuile et n'efface aucune progression). Sous le nom de la classe,
+  une rangée d'onglets **« Défi tables | SPLAT! »** (toujours là depuis le lot
+  « Ma classe : réglages », même avec une seule activité ; retenue le temps de
+  l'onglet du navigateur) ; chaque activité a son tableau (un appel `tableau`
+  par activité). Depuis le lot « Ma classe : réglages » (17/10/2026), ce qui
+  règle la classe est dans l'onglet **« ⚙ Réglages »**, au bout de la rangée,
+  propriétaire seulement : Activités (chaque appli et ses réglages dessous —
+  les records sous Défi tables, les mondes sous SPLAT!), Partager cette classe,
+  Nom de la classe (`classes.modifier` avec le seul `libelle`) et Supprimer la
+  classe. L'onglet SPLAT! : six pastilles de monde,
   étapes réussies (✨ pour les Bonus, à part), dernière activité, un
   « Détail » qui déplie les étapes monde par monde (réussie, réussie avec des
   réponses vues, en cours), et sa carte « Notre classe, ensemble ».

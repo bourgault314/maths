@@ -373,10 +373,15 @@ test("APPLIS : ce que la page sait montrer est disponible au catalogue, proposé
   // Le HTML suit la même liste : les boutons du choix, les cases des activités.
   const boutons = [...page.matchAll(/<button type="button" data-appli="([\w-]+)" aria-pressed="(\w+)">([^<]+)<\/button>/g)];
   assert.deepEqual(boutons.map(m => [m[1], m[3]]), APPLIS.map(a => [a.cle, a.nom]));
-  const cases = [...page.matchAll(/<label><input type="checkbox" data-appli="([\w-]+)"> ([^<]+)<\/label>/g)];
+  const cases = [...page.matchAll(/<label class="activite-tete"><input type="checkbox" data-appli="([\w-]+)"> <strong>([^<]+)<\/strong><\/label>/g)];
   assert.deepEqual(cases.map(m => [m[1], m[2]]), APPLIS.map(a => [a.cle, a.nom]));
-  assert.match(page, /<div class="choix-appli" id="choix-appli" role="group" aria-label="Activité affichée" hidden>/,
-    "caché tant que la classe n'a pas deux activités");
+  // Lot « Ma classe : réglages » : les onglets sont TOUJOURS là (avant, le
+  // choix n'apparaissait qu'avec deux activités, et rien ne disait de quelle
+  // appli était le tableau).
+  assert.match(page, /<div class="choix-appli" id="choix-appli" role="group" aria-label="Activité affichée">/,
+    "toujours là, même avec une seule activité");
+  assert.match(page, /<button type="button" class="onglet-reglages" id="onglet-reglages" aria-pressed="false" hidden>/,
+    "« Réglages » : caché tant que le droit n'est pas connu");
   const entete = page.slice(page.indexOf('<tr id="entete-splat" hidden>'), page.indexOf("</tr>", page.indexOf('<tr id="entete-splat"')));
   assert.deepEqual([...entete.matchAll(/<th>(?:<button type="button" data-tri="(\w+)">)?([^<]*)/g)].map(m => `${m[2]}${m[1] ? `:${m[1]}` : ""}`),
     ["Élève:prenom", "Code", "Mondes", "Étapes réussies:etapes", "Dernière activité:date", ""]);
@@ -415,7 +420,7 @@ function casesMondes() {
   });
 }
 
-function poserAppliRejoue(applis, appliAffichee, droit = "proprietaire", triAvant = {colonne: "acquises", sens: -1}, reglages = {}) {
+function poserAppliRejoue(applis, appliAffichee, droit = "proprietaire", triAvant = {colonne: "acquises", sens: -1}, reglages = {}, reglagesOuverts = false) {
   const {$} = creerZones();
   const boutons = ["defi-tables", "splat"].map(cle => Object.assign(new Noeud("button"), {dataset: {appli: cle}}));
   const cases = ["defi-tables", "splat"].map(cle => Object.assign(new Noeud("input"), {dataset: {appli: cle}}));
@@ -424,16 +429,19 @@ function poserAppliRejoue(applis, appliAffichee, droit = "proprietaire", triAvan
     : s.startsWith("#mondes-ouverts") ? mondes : cases)});
   const TRIS = {"defi-tables": [["prenom", "Prénom"], ["acquises", "Tables passées"], ["date", "Dernière activité"]],
     "splat": [["prenom", "Prénom"], ["etapes", "Étapes réussies"], ["date", "Dernière activité"]]};
-  const etat = new Function("document", "$", "classe", "appliAffichee", "droitClasse", "TRIS", "APPLIS", "triInitial",
-    `let tri = triInitial;\n${constante("NOMBRE_MONDES")}\n${["lesApplisConnues", "applisDeLaClasse", "poserAppli", "poserTris", "poserActivites",
-      "mondesOuverts", "poserPuce", "recordsOuvertsPourLaClasse"].map(fonction).join("\n")}\nfunction chargerRecords() {}\nfunction poserEvaluations() {}\nposerAppli();\nreturn {tri};`)(
-    doc, $, {applis, reglages}, appliAffichee, droit, TRIS, [{cle: "defi-tables"}, {cle: "splat"}], triAvant);
-  return {$, boutons, cases, mondes, tri: etat.tri};
+  const lus = {records: 0, evaluations: 0};
+  const etat = new Function("document", "$", "classe", "appliAffichee", "droitClasse", "TRIS", "APPLIS", "triInitial", "vueInitiale", "lus",
+    `let tri = triInitial;\nlet vueReglages = vueInitiale;\n${constante("NOMBRE_MONDES")}\n${["lesApplisConnues", "applisDeLaClasse", "poserAppli", "poserVue", "poserTris", "poserActivites",
+      "mondesOuverts", "poserPuce", "recordsOuvertsPourLaClasse"].map(fonction).join("\n")}\nfunction chargerRecords() { lus.records += 1; }\nfunction poserEvaluations() { lus.evaluations += 1; }\nposerAppli();\nreturn {tri, vueReglages};`)(
+    doc, $, {applis, reglages}, appliAffichee, droit, TRIS, [{cle: "defi-tables"}, {cle: "splat"}], triAvant, reglagesOuverts, lus);
+  return {$, boutons, cases, mondes, tri: etat.tri, vueReglages: etat.vueReglages, lus};
 }
 
-test("le choix n'apparaît qu'avec deux activités ; l'onglet SPLAT! change l'en-tête, les tris, et cache ce qui est à Défi tables", () => {
+test("un onglet par activité de la classe, même seule ; l'onglet SPLAT! change l'en-tête, les tris, et cache ce qui est à Défi tables", () => {
   const seule = poserAppliRejoue(["defi-tables"], "defi-tables");
-  assert.equal(seule.$("choix-appli").hidden, true, "une seule activité : pas de choix");
+  assert.notEqual(seule.$("choix-appli").hidden, true, "une seule activité : son onglet est là quand même");
+  assert.deepEqual(seule.boutons.map(b => [b.hidden, b.attributs["aria-pressed"]]), [[false, "true"], [true, "false"]],
+    "l'onglet Défi tables, souligné ; pas d'onglet SPLAT!");
   assert.equal(seule.$("entete-splat").hidden, true);
   assert.equal(seule.$("bloc-imprimer").hidden, false);
   const deux = poserAppliRejoue(["defi-tables", "splat"], "splat");
@@ -447,12 +455,40 @@ test("le choix n'apparaît qu'avec deux activités ; l'onglet SPLAT! change l'en
   assert.deepEqual(deux.tri, {colonne: "prenom", sens: 1}, "un tri qui n'existe pas dans l'onglet revient au prénom");
   assert.equal(poserAppliRejoue(["defi-tables", "splat"], "splat", "proprietaire", {colonne: "date", sens: -1}).tri.colonne, "date",
     "« Dernière activité » existe des deux côtés : il reste");
-  // Les activités de la classe : propriétaire seulement, cases à l'état du serveur.
-  assert.equal(deux.$("bloc-activites").hidden, false);
+  // Les activités de la classe : cases à l'état du serveur.
   assert.deepEqual(deux.cases.map(c => c.checked), [true, true]);
   assert.deepEqual(seule.cases.map(c => c.checked), [true, false]);
-  assert.equal(poserAppliRejoue(["defi-tables", "splat"], "splat", "ecriture").$("bloc-activites").hidden, true, "un collègue en écriture ne change pas les activités");
-  assert.equal(poserAppliRejoue(["defi-tables", "splat"], "splat", "lecture").$("bloc-activites").hidden, true);
+  // Hors Réglages : la vue de l'activité, ses cartes lues.
+  assert.equal(deux.$("vue-appli").hidden, false);
+  assert.equal(deux.$("vue-reglages").hidden, true);
+  assert.equal(deux.$("onglet-reglages").attributs["aria-pressed"], "false");
+  assert.deepEqual(deux.lus, {records: 1, evaluations: 1});
+});
+
+test("lot « Ma classe : réglages » : la vue Réglages remplace celle de l'activité, propriétaire seulement", () => {
+  const reglages = poserAppliRejoue(["defi-tables", "splat"], "splat", "proprietaire", undefined, {}, true);
+  assert.equal(reglages.vueReglages, true);
+  assert.equal(reglages.$("vue-appli").hidden, true, "le tableau n'est plus à l'écran");
+  assert.equal(reglages.$("vue-reglages").hidden, false);
+  assert.equal(reglages.$("onglet-reglages").attributs["aria-pressed"], "true");
+  assert.deepEqual(reglages.boutons.map(b => b.attributs["aria-pressed"]), ["false", "false"], "aucun onglet d'activité souligné");
+  assert.deepEqual(reglages.cases.map(c => c.checked), [true, true], "les cases sont posées");
+  // Un collègue n'a jamais la vue Réglages, même si l'état le demandait.
+  for (const droit of ["ecriture", "lecture"]) {
+    const collegue = poserAppliRejoue(["defi-tables", "splat"], "splat", droit, undefined, {}, true);
+    assert.equal(collegue.vueReglages, false, droit);
+    assert.equal(collegue.$("vue-appli").hidden, false, droit);
+    assert.equal(collegue.$("vue-reglages").hidden, true, droit);
+  }
+  // Le droit, l'onglet, la sortie des Réglages et ce qu'on ne lit pas dedans.
+  assert.match(fonction("appliquerDroits"), /\$\("onglet-reglages"\)\.hidden = !proprietaire;/);
+  assert.match(fonction("ouvrirReglages"), /if \(!classe \|\| droitClasse !== "proprietaire"\) return;\s*vueReglages = true;/);
+  assert.match(script, /bouton\.addEventListener\("click", \(\) => \{ vueReglages = false; afficherAppli\(bouton\.dataset\.appli\); \}\);/,
+    "un onglet d'activité sort des Réglages");
+  assert.doesNotMatch(fonction("afficherAppli"), /vueReglages/, "après un changement d'activités, on reste dans les Réglages");
+  assert.match(fonction("ouvrirClasse"), /if \(!memeClasse\) \{ detailsOuverts\.clear\(\); vueReglages = false; \}/, "une autre classe s'ouvre sur son tableau");
+  assert.match(fonction("evalVisible"), /!vueReglages && eleves\.length > 0 &&/, "ni veille d'évaluation dans les Réglages, ni carte sans élève");
+  assert.match(fonction("chargerRecords"), /\|\| vueReglages\) \{ dessinerRecords\(\); return; \}/);
 });
 
 test("le tri « Étapes réussies » : les étapes, puis les Bonus, puis une série en cours", () => {
@@ -647,13 +683,28 @@ test("le moteur SPLAT! est servi d'ici, chargé à la première ouverture de l'o
   assert.equal(scripts2.length, 2, "une nouvelle tentative à la prochaine ouverture de l'onglet");
 });
 
-test("à la déconnexion, le choix, l'onglet et les activités partent avec le reste", () => {
+test("à la déconnexion, l'onglet, les Réglages et les activités partent avec le reste", () => {
   const zones = new Function(`${constante("ZONES_MESSAGE")}\n${constante("BLOCS_A_CACHER")}\nreturn {ZONES_MESSAGE, BLOCS_A_CACHER};`)();
-  assert.ok(zones.ZONES_MESSAGE.includes("message-activites"));
-  assert.ok(zones.BLOCS_A_CACHER.includes("bloc-activites"));
-  assert.ok(zones.BLOCS_A_CACHER.includes("choix-appli"));
+  for (const id of ["message-activites", "message-partage", "message-nom", "message-supprimer"]) assert.ok(zones.ZONES_MESSAGE.includes(id), id);
+  // Lot « Ma classe : réglages » : les blocs du propriétaire sont DANS la vue
+  // Réglages ; c'est elle (et son onglet) qu'on cache.
+  assert.ok(zones.BLOCS_A_CACHER.includes("vue-reglages"));
+  assert.ok(zones.BLOCS_A_CACHER.includes("onglet-reglages"));
+  // DANS la vue, pas seulement plus bas dans le fichier : entre l'ouverture
+  // de la vue et l'élément, les <div> ne se referment jamais toutes.
+  const debut = page.indexOf('<div class="reglages" id="vue-reglages" hidden>');
+  assert.ok(debut > 0);
+  for (const id of ["bloc-activites", "rec-reglage", "mondes-ouverts", "bloc-partage", "form-nom-classe", "supprimer-classe"]) {
+    const position = page.indexOf(`id="${id}"`, debut);
+    assert.ok(position > debut, `${id} après l'ouverture de la vue`);
+    let profondeur = 0;
+    for (const balise of page.slice(debut, position).matchAll(/<div\b|<\/div>/g)) {
+      profondeur += balise[0] === "</div>" ? -1 : 1;
+      assert.ok(profondeur > 0, `${id} est DANS la vue Réglages`);
+    }
+  }
   const oublier = fonction("oublierEtat");
-  assert.match(oublier, /appliAffichee = "defi-tables";\s*tableaux = \{\};\s*detailsOuverts\.clear\(\);/);
+  assert.match(oublier, /appliAffichee = "defi-tables";\s*vueReglages = false;\s*tableaux = \{\};\s*detailsOuverts\.clear\(\);/);
 });
 
 // ------------------------------------------------------------ lot « splat-suivi-5 »
@@ -745,8 +796,8 @@ test("« Activités de la classe » : les six mondes sous SPLAT!, cochés d'apr�
   const deux = poserAppliRejoue(["defi-tables", "splat"], "splat", "proprietaire", undefined, MONDES_1_2);
   assert.deepEqual(deux.mondes.map(c => c.checked), [true, true, false, false, false, false]);
   assert.deepEqual(deux.mondes.map(c => aClasse(c.puce, "ferme")), [false, false, true, true, true, true]);
-  assert.equal(poserAppliRejoue(["defi-tables", "splat"], "splat", "ecriture", undefined, MONDES_1_2).$("bloc-activites").hidden, true,
-    "un collègue ne choisit pas les mondes");
+  assert.equal(poserAppliRejoue(["defi-tables", "splat"], "splat", "ecriture", undefined, MONDES_1_2, true).$("vue-reglages").hidden, true,
+    "un collègue ne choisit pas les mondes (pas de vue Réglages)");
 });
 
 function changerMondeRejoue({ouverts = [1, 2, 3, 4, 5, 6], clic, echec = null}) {

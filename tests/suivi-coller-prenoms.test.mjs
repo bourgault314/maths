@@ -190,12 +190,15 @@ test("l'aperçu « code → prénom » montre, avant validation, exactement ce q
   const parId = new Map(eleves.map(e => [e.id, e.code]));
   assert.deepEqual(lignes.map(l => [l.numero, l.code, l.texte]),
     nommes.map((n, i) => [i + 1, parId.get(n.eleve_id), n.prenom]));
-  assert.match(options.boite.apercu.at(-1).texte, /3 code\(s\) restent sans prénom/);
+  assert.match(options.boite.apercu.at(-1).texte, /^3 codes restent sans prénom\.$/);
   assert.match(options.boite.texte, /numéros 1, 2, 3/, "la consigne parle des numéros de la feuille");
   // Trop de prénoms : l'aperçu prévient.
   const trop = apercuCollage(["a", "b", "c"], sansPrenomDansLOrdre(eleves).slice(0, 2));
   assert.equal(trop.filter(l => l.code).length, 2);
-  assert.match(trop.at(-1).texte, /1 prénom\(s\) en trop \(c\)/);
+  assert.match(trop.at(-1).texte, /^1 prénom en trop \(c\)/);
+  // Lot « Ma classe : réglages » : les accords, sans « (s) ».
+  assert.match(apercuCollage(["a", "b", "c", "d"], sansPrenomDansLOrdre(eleves).slice(0, 2)).at(-1).texte, /^2 prénoms en trop \(c, d\)/);
+  assert.match(apercuCollage(["a"], sansPrenomDansLOrdre(eleves).slice(0, 2)).at(-1).texte, /^1 code reste sans prénom\.$/);
   assert.equal(trop.at(-1).classe, "alerte");
 });
 
