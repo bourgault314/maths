@@ -29,6 +29,7 @@ import {
   bilanHTML,
   brevetHTML,
   lancementHTML,
+  coursHTML,
   bouton,
   ICONES,
 } from "./vues.js";
@@ -551,11 +552,16 @@ function terminer() {
     .forEach((detail) => detail.addEventListener("toggle", ajusterAffichage));
 }
 
-function fenetre(contenu, fermer = "Fermer") {
+function fenetre(contenu, fermer = "Fermer", titre = "") {
   fermerClavier();
   const dialogue = document.createElement("dialog");
   dialogue.className = "cours-dialog";
-  dialogue.innerHTML = `<div class="cours-contenu">${contenu}
+  // Avec un titre (le cours), le bouton de retour est en haut, à côté du titre.
+  dialogue.innerHTML = titre
+    ? `<div class="fenetre-entete"><h2>${titre}</h2>
+      <form method="dialog"><button class="bouton secondaire petit">${fermer}</button></form></div>
+      <div class="cours-contenu">${contenu}</div>`
+    : `<div class="cours-contenu">${contenu}
     <form method="dialog"><button class="bouton primaire">${fermer}</button></form></div>`;
   document.body.append(dialogue);
   dialogue.addEventListener("close", () => dialogue.remove());
@@ -595,12 +601,10 @@ function ouvrirCours() {
     (famille.atlas
       ? `<img src="${esc(famille.atlas)}" alt="${esc(famille.atlasAlt || "Exemple")}">`
       : "");
-  fenetre(
-    `<h2>${esc(famille.nom)}</h2><p>${mathHtml(regle)}</p>
+  const entier = `<p>${mathHtml(regle)}</p>
     ${!cours.independentExample ? `<p>${mathHtml(exemple.prompt)}</p>` : ""}
-    <div class="figure">${dessin}</div><p>${mathHtml(cours.exemple || cours.example || "")}</p>`,
-    "J’ai compris",
-  );
+    <div class="figure">${dessin}</div><p>${mathHtml(cours.exemple || cours.example || "")}</p>`;
+  fenetre(coursHTML(famille, question, entier), "Revenir à la question", esc(famille.nom));
 }
 
 function lireReglages() {

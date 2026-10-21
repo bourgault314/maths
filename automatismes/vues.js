@@ -435,6 +435,25 @@ export function bilanHTML(seance, parId) {
       ${bouton("Retour", "accueil", "secondaire")}</div>`;
 }
 
+/* Le cours (C8), dans sa fenêtre. Quand le cours de la famille est découpé en morceaux (champ
+   cours.morceaux du catalogue : [{ titre, texte, exemple, formes: ["e", …] }], rempli par les
+   cahiers), en haut « Pour cette question » et le morceau du type de question en cours, encadré ;
+   dessous « Le reste du cours ↓ ». Sinon, le cours entier, comme avant. */
+export function coursHTML(famille, question, entier) {
+  const morceaux = famille.cours?.morceaux;
+  if (!Array.isArray(morceaux) || !morceaux.length) return entier;
+  const actif = morceaux.find((morceau) => morceau.formes?.includes(question.forme));
+  const morceauHTML = (morceau) => `<div class="morceau${morceau === actif ? " actif" : ""}">
+    <h3>${esc(morceau.titre || "")}</h3><p>${mathHtml(morceau.texte || "")}</p>
+    ${morceau.exemple ? `<div class="exemple">${mathHtml(morceau.exemple)}</div>` : ""}</div>`;
+  const reste = morceaux
+    .filter((morceau) => morceau !== actif)
+    .map(morceauHTML)
+    .join("");
+  return `${actif ? `<div class="sepa">Pour cette question</div>${morceauHTML(actif)}` : ""}
+    ${reste ? `<div class="sepa">${actif ? "Le reste du cours ↓" : "Le cours"}</div>${reste}` : ""}`;
+}
+
 /* L'écran de départ du brevet : ce qui attend l'élève, en quatre mots, puis Commencer. */
 export function brevetHTML() {
   const tuiles = [

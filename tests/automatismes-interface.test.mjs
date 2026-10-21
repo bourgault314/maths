@@ -187,7 +187,7 @@ test(
         await photo(page, "aide-clavier", mesures);
         await page.locator('[data-action="cours"]').click();
         await photo(page, "cours", mesures);
-        await page.getByRole("button", { name: "J’ai compris" }).click();
+        await page.getByRole("button", { name: "Revenir à la question" }).click();
         await question(page, base);
         await page.locator(".champ").fill("999");
         await page.locator('[data-action="valider"]').click();

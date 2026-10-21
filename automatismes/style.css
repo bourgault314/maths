@@ -1405,6 +1405,48 @@ input.case {
   font-size: 1.0625rem;
   text-align: left;
 }
+/* Le cours (C8) : sa fenêtre, « Revenir à la question » en haut ; le morceau de la question encadré. */
+.cours-dialog .fenetre-entete {
+  align-items: center;
+}
+.cours-dialog .fenetre-entete h2 {
+  font-size: 1.375rem;
+}
+.cours-dialog .fenetre-entete form {
+  flex: 0 0 auto;
+}
+.sepa {
+  margin: 12px 2px 6px;
+  color: var(--attenue);
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.morceau {
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--ligne);
+  border-radius: 14px;
+}
+.morceau.actif {
+  border-color: var(--orange);
+  background: color-mix(in srgb, var(--orange) 6%, var(--papier));
+}
+.morceau h3 {
+  margin: 0 0 4px;
+  color: var(--bleu-identite);
+  font-size: 1rem;
+}
+.morceau p {
+  margin: 0 0 6px;
+}
+.morceau .exemple {
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: var(--fond-doux);
+  font-weight: 800;
+}
 /* Tablette et ordinateur : même écran, la carte et ce qui s'ouvre dessous font 640 px (760 px à la
    souris), centrés en largeur. */
 @media (min-width: 700px) {
