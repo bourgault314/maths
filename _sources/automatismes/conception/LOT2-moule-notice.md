@@ -126,10 +126,9 @@ ce résultat décrit les tests du lot 2. Les contrôles existants du dépôt rel
   Cadre extérieur et contenu intérieur contrôlés ; commandes accessibles et aide au-dessus du clavier.
   Les captures ont été relues visuellement, puis corrigées et reprises après les défauts constatés.
 
-Pièces : [captures](../tests/captures/automatismes/),
-[mesures](../tests/captures/automatismes/mesures.json),
-[empreintes de l’archive](../tests/fixtures/automatismes/empreintes-archive.json),
-[audit détaillé des aides](../tests/fixtures/automatismes/aides-a-revoir.json).
+Pièces : captures et mesures rangées hors dépôt (automatismes-refonte\codex\RAPPORTS\captures-lot2\),
+[empreintes de l’archive](../../../tests/fixtures/automatismes/empreintes-archive.json),
+[audit détaillé des aides](../../../tests/fixtures/automatismes/aides-a-revoir.json).
 
 Les tests numériques ne prouvent pas la qualité pédagogique de chaque tirage. Aucun téléphone,
 aucune tablette et aucun TNI physique n’a été utilisé : seuls les navigateurs aux tailles indiquées
