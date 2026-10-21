@@ -1659,8 +1659,14 @@ body:not(.tactile) #commandes > * {
 }
 /* « Refaire mes erreurs » en premier, sur toute la largeur ; dessous Changer de notions · Encore. */
 .actions-bilan {
+  position: sticky;
+  bottom: 0;
   display: grid;
   grid-template-columns: 1fr 1fr;
+  margin-top: 4px;
+  padding: 12px 0 4px;
+  border-top: 1px solid var(--ligne);
+  background: var(--papier);
 }
 .actions-bilan .refaire {
   grid-column: 1 / -1;

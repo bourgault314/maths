@@ -583,23 +583,26 @@ test(
     const browser = await ouvrirNavigateur();
     const page = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true });
     try {
-      await page.goto(`${base}?notions=NC04&nombre=3&graine=12`);
+      await page.goto(`${base}?notions=NC04&nombre=10&graine=12`);
       const enonces = [];
-      for (let rang = 0; rang < 3; rang++) {
+      for (let rang = 0; rang < 10; rang++) {
         await page.locator(".carte").waitFor();
         enonces.push(await page.locator(".carte .reponses").innerText());
-        // Toutes passées : trois erreurs à refaire, dans le même ordre, mêmes formes et graines.
+        // Toutes passées : dix erreurs à refaire, dans le même ordre, mêmes formes et graines.
         await page.locator('[data-action="passer"]').click();
         await page.locator('[data-action="suivante"]').click();
       }
       await page.locator(".grand-score").waitFor();
-      assert.equal(await page.locator(".score").innerText(), "0 / 3");
+      assert.equal(await page.locator(".score").innerText(), "0 / 10");
       assert.equal(
         await page.locator(".actions-bilan button").first().innerText(),
         "Refaire mes erreurs",
       );
+      // Les boutons du bilan restent visibles sans défiler, sous la liste (planche 10).
+      const bouton = await page.locator('[data-action="refaire"]').boundingBox();
+      assert.ok(bouton.y + bouton.height <= 844, "Refaire mes erreurs visible sans défiler");
       await page.locator('[data-action="refaire"]').click();
-      await page.locator(".barre-question .centre").getByText("1 sur 3").waitFor();
+      await page.locator(".barre-question .centre").getByText("1 sur 10").waitFor();
       assert.equal(await page.locator(".carte .reponses").innerText(), enonces[0]);
     } finally {
       await browser.close();
