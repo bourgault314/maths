@@ -7137,7 +7137,7 @@ window.MATHSGO_CATALOGUE = {
         "équilibre"
       ],
       "kind": "tool",
-      "status": "published",
+      "status": "hidden",
       "featured": false,
       "recent": true
     },

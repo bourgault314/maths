@@ -34,9 +34,10 @@ function create(query = "?domain=jeux-recherches") {
   const header = d.q(".site-header"), shell = d.q(".site-shell");
   assert.ok(d.q('[data-notion-card="jeux-courts"] .notion-icon svg'), "La rubrique Jeux courts porte une icône, comme les deux autres");
   d.click('[data-notion-card="jeux-courts"]');
-  assert.equal(d.doc.querySelectorAll("[data-short-game]").length, 5);
+  assert.equal(d.doc.querySelectorAll("[data-short-game]").length, 4);
   assert.ok(!d.q('#resource-grid a[href$="jeux-cadeaux/index.html"]'));
-  for (const id of ["luciole", "dodo", "galets", "cases", "carres-gloutons"]) {
+  assert.equal(d.q('[data-short-game="galets"]'), null, "Le jeu inachevé ne figure plus dans le catalogue");
+  for (const id of ["luciole", "dodo", "cases", "carres-gloutons"]) {
     d.click('[data-short-game="' + id + '"]');
     assert.equal(d.w.location.pathname, "/outils/");
     assert.equal(new URL(d.w.location.href).searchParams.get("jeu"), id);
@@ -47,8 +48,6 @@ function create(query = "?domain=jeux-recherches") {
     if (id === "carres-gloutons") {
       assert.equal(frame.src, "https://mathsgo.re/outils/club_maths/carres_gloutons.html?integre=1&v=1");
       assert.equal(frame.allowFullscreen, true);
-    } else if (id === "galets") {
-      assert.equal(frame.src, "https://mathsgo.re/jeux-cadeaux/galets-riviere/index.html?integre=1&v=1");
     } else if (id === "dodo") {
       assert.equal(frame.src, "https://mathsgo.re/jeux-cadeaux/tec-tec/index.html?integre=1&v=4");
       assert.equal(d.q("#page-title").textContent, "Tec-tec bondissant");
@@ -75,17 +74,18 @@ function create(query = "?domain=jeux-recherches") {
   assert.equal(d.q("#resource-grid").hidden, false);
   assert.deepEqual(d.errors, []);
   d.dom.window.close();
-  console.log("OK · Les cinq jeux s’ouvrent dans le catalogue, retours et historique compris.");
+  console.log("OK · Les quatre jeux publiés s’ouvrent dans le catalogue, retours et historique compris.");
 
+  // Le jeu masqué reste accessible par son adresse pour poursuivre son développement.
   const direct = create("?jeu=galets");
   assert.equal(direct.q("#page-title").textContent, "La pile de galets");
   direct.click('[data-breadcrumb-target="short-games"]');
   assert.equal(direct.q("#resource-grid").hidden, false);
-  assert.equal(direct.doc.querySelectorAll("[data-short-game]").length, 5);
+  assert.equal(direct.doc.querySelectorAll("[data-short-game]").length, 4);
   assert.deepEqual(direct.errors, []); direct.dom.window.close();
   const invalid = create("?domain=jeux-recherches&notion=jeux-courts&jeu=inconnu");
   assert.equal(invalid.q("iframe"), null);
-  assert.equal(invalid.doc.querySelectorAll("[data-short-game]").length, 5);
+  assert.equal(invalid.doc.querySelectorAll("[data-short-game]").length, 4);
   assert.equal(new URL(invalid.w.location.href).searchParams.get("jeu"), null);
   assert.deepEqual(invalid.errors, []); invalid.dom.window.close();
   console.log("OK · Liens directs et paramètre inconnu rejoignent le bon niveau du catalogue.");
