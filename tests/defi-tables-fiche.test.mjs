@@ -201,7 +201,7 @@ test("les cartes : un PDF de 2 pages par table de 2 à 10, un PDF de 18 pages po
   const source = await readFile(new URL("_sources/defi-tables/generer_cartes_tables.py", racine), "utf8");
   assert.match(source, /MULTIPLIERS = range\(0, 11\)/, "onze cartes : × 0 à × 10");
   assert.match(source, /carte_reponse\(pdf, COLONNES - 1 - col, row, table, k\)/, "le verso en miroir, pour le recto verso bord long");
-  assert.match(source, /f"\{libelle\(table, k\)\} ="/, "le verso rappelle le calcul au-dessus du résultat");
+  assert.match(source, /str\(table \* k\)\)/, "le verso porte le résultat (seul depuis le 21/10/2026, voir defi-tables-cartes-couleurs)");
   assert.match(source, /FOOTER_TEXT = "mathsgo\.re  ·  CC BY-NC-SA 4\.0"/);
   assert.match(source, /page_recto\(pdf, table, logo=index == 0\)/, "un seul logo par document");
   // Le catalogue ne déclare que le PDF complet (les neuf autres sont ceux de l'appli).
