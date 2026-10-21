@@ -35,6 +35,10 @@ trier le paquet quand on imprime toutes les tables) :
     d'imprimer), avec le papier épais : sur du 80 g, la réponse se voit par
     transparence.
 
+Version 2 bis (21/10/2026, Gwenaël) : au dos, le résultat seul en grand, plus
+« 3 × 7 = » au-dessus. Avec « table de 7 » en bas, le dos devient une question
+(21 → 3 × 7) : la carte se joue dans les deux sens.
+
 Règles du site : logo maths&go en bas à gauche (une seule fois par document,
 page 1 : ces feuilles n'ont pas d'en-tête), signature « mathsgo.re · CC BY-NC-SA
 4.0 » centrée en pied de chaque page, police DejaVu (chemin Linux du dépôt : le
@@ -153,10 +157,11 @@ def carte_calcul(pdf: canvas.Canvas, col: int, row: int, table: int, k: int) -> 
 def carte_reponse(pdf: canvas.Canvas, col: int, row: int, table: int, k: int) -> None:
     x, y = case(col, row)
     cadre(pdf, x, y, table, fond=True)
-    pdf.setFillColor(MUTED)
-    texte_centre(pdf, "Cartes", 13, x + CARTE_L / 2, y + CARTE_H / 2 + 10 * mm, f"{libelle(table, k)} =")
+    # Le résultat SEUL (21/10/2026) : sans « 3 × 7 = » au-dessus, le dos est une
+    # question à son tour — « 21, table de 7 » → 3 × 7 —, la carte se joue dans
+    # les deux sens. Dans une même table, chaque résultat est unique.
     pdf.setFillColor(INK)
-    texte_centre(pdf, "Cartes-Bold", 40, x + CARTE_L / 2, y + CARTE_H / 2 - 4 * mm, str(table * k))
+    texte_centre(pdf, "Cartes-Bold", 48, x + CARTE_L / 2, y + CARTE_H / 2 + 2 * mm, str(table * k))
     # La table en bas du dos seulement : le recto reste la question seule, et
     # photocopié en noir et blanc on trie le paquet côté dos en lisant cette
     # ligne (« 4 × 7 » seul pourrait être rangé dans la table de 4). À l'encre

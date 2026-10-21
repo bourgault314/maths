@@ -22,7 +22,8 @@ test("recto épuré (le calcul seul dans son cadre), dos teinté de la couleur d
   assert.match(recto, /cadre\(pdf, x, y, table\)\n/, "recto blanc");
   assert.doesNotMatch(recto, /table de|etiquette|pastille/, "rien d'autre que le calcul");
   assert.match(verso, /cadre\(pdf, x, y, table, fond=True\)/, "dos teinté");
-  assert.match(verso, /f"\{libelle\(table, k\)\} ="/, "le dos rappelle le calcul au-dessus du résultat");
+  assert.doesNotMatch(verso, /libelle\(table, k\)/, "le dos : le résultat seul, sans « 3 × 7 = » (la carte se joue aussi à l'envers)");
+  assert.match(verso, /texte_centre\(pdf, "Cartes-Bold", 48, [^\n]*str\(table \* k\)\)/, "le résultat en grand");
   assert.match(verso, /f"table de \{table\}"/, "la table en bas du dos, pour trier en noir et blanc");
   const titreVerso = source.match(/def carte_titre_verso\([\s\S]*?\n\n\n/)[0];
   assert.match(titreVerso, /fond=True/, "le dos de la carte-titre est teinté comme les autres dos");
