@@ -685,10 +685,11 @@ test("le tableau : sept colonnes, la liste des tables écrite, les gestes rares 
   assert.match(page, /<option value="encours">En cours<\/option>\s*<option value="semaine">Séances cette semaine<\/option>/);
   // La liste des tables se LIT (une info-bulle ne s'imprime pas).
   assert.match(page, /liste\.textContent = reste\.length <= 3 \? `reste \$\{reste\.join\(", "\)\}` : eleve\.lu\.acquises\.join\(", "\);\s*cAcquises\.append\(liste\);/);
-  // « Fiche » reste visible ; « Revenir à… » dans le menu de la ligne. Depuis le
-  // lot « Ma classe : élèves », « Nouveau code » et « Supprimer » sont dans le
-  // menu de l'onglet Élèves (testé dans suivi-ma-classe-eleves).
-  assert.match(page, /fiche\.textContent = "Fiche";/);
+  // « Parcours » (« Fiche » jusqu'au lot « Ma classe : le parcours de Léa »,
+  // 21/10/2026) reste visible ; « Revenir à… » dans le menu de la ligne. Depuis
+  // le lot « Ma classe : élèves », « Nouveau code » et « Supprimer » sont dans
+  // le menu de l'onglet Élèves (testé dans suivi-ma-classe-eleves).
+  assert.match(page, /fiche\.textContent = "Parcours";\s*\n\s*fiche\.title = "Voir son parcours";/);
   assert.match(fonction("poserGestes"), /boutonGeste\("Revenir à…"/);
   assert.doesNotMatch(fonction("poserGestes"), /Nouveau code|Supprimer/);
   assert.match(fonction("menuGestes"), /if \(!boutons\.length\) return;[\s\S]*menu\.addEventListener\("click", \(\) => \{ plus\.open = false; \}\);\s*plus\.addEventListener\("toggle", \(\) => placerMenu\(plus, poignee, menu\)\);\s*cActions\.append\(plus\);/, "pas de menu vide pour un collègue en lecture seule");

@@ -243,14 +243,15 @@ function lanceur(parcours, {aujourdhui = jour(2)} = {}) {
   const appels = [];
   const state = {apresMesCalculs: "reste d'avant", apresMelange: "reste d'avant", origin: null};
   const configuration = {};
-  const fabrique = new Function("state", "PARCOURS", "parcours", "configuration", "startRevision", "start", "TRAIN_TYPES", "CORE", "NOM_DU_TEST", "majuscule", "NOMS_ENTRAINEMENTS", "recordConnu",
+  // VUE_PROF (lot « Ma classe : le parcours de Léa ») : ici, jamais la vue du professeur.
+  const fabrique = new Function("state", "PARCOURS", "parcours", "configuration", "startRevision", "start", "TRAIN_TYPES", "CORE", "NOM_DU_TEST", "majuscule", "NOMS_ENTRAINEMENTS", "recordConnu", "VUE_PROF",
     `${source("nomDeLaSuite")}\n${source("launchFromParcours")}\nreturn launchFromParcours;`);
   const launchFromParcours = fabrique(state, {...P, mesCalculsAFaire: q => P.mesCalculsAFaire(q, aujourdhui)}, parcours, configuration,
     (table, origin) => appels.push(["revision", table, origin]), () => appels.push(["start", configuration.mode, [...configuration.tables].join(",")]),
     {desordre: ["direct"]}, {PRESETS: {validation: {total: 20, duration: 90}, train: {total: 10, duration: null}, learn: {total: 11, duration: null}, test: {total: 25, duration: 120}}},
     "Je passe le test", texte => texte.charAt(0).toUpperCase() + texte.slice(1),
     {desordre: "dans le désordre", trous: "nombres manquants et divisions", mixte: "résultats, nombres manquants et divisions"},
-    () => ({meilleur: null}));
+    () => ({meilleur: null}), false);
   return {launchFromParcours, appels, state};
 }
 
@@ -410,8 +411,9 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // Puis « Ma classe : élèves » (18/10/2026) : prof/index.php seul change
   // (avant : ma-classe-reglages).
   // Puis « Ma classe : tri et bandelette » (21/10/2026) : prof/index.php seul
-  // change (avant : ma-classe-eleves).
-  assert.match(lire("_serveur/public/VERSION"), /^lot ma-classe-tri-bandelette$/m);
+  // change (avant : ma-classe-eleves). Puis « Ma classe : le parcours de Léa »
+  // (21/10/2026) : prof/index.php seul change (avant : ma-classe-tri-bandelette).
+  assert.match(lire("_serveur/public/VERSION"), /^lot ma-classe-parcours$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=cartes-tables-20261018-1/);
 });

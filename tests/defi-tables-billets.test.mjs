@@ -209,6 +209,8 @@ test("l’échange envoie le billet dans le CORPS, vers eleve.php, et le billet 
     "ni le script du <head>, ni l’appli, n’adoptent plus de code venu de l’adresse");
   assert.doesNotMatch(html, /ouvrirFicheEleve/, "et la fiche par code n’existe plus");
   assert.match(html, /ouvrirFicheParBillet\(ENTREE\.billet\)/, "la fiche par billet est branchée");
-  assert.match(html, /body\.classList\.add\("mode-fiche"\);\s*\n\s*\$\("fiche-ecran"\)\.hidden = false;\s*\n\s*\$\("fiche-ecran-info"\)\.textContent = "Un instant…";/,
-    "en mode fiche, l’appli se cache AVANT d’attendre le serveur");
+  // Lot « Ma classe : le parcours de Léa » (21/10/2026) : la vue du professeur
+  // montre les points de chargement (billetEnCours) AVANT d'attendre le serveur.
+  assert.match(html, /async function ouvrirFicheParBillet\(billet\) \{[\s\S]*?billetEnCours = true;\s*\n\s*renderAccueil\(\);\s*\n\s*const reponse = await echangerBillet\(billet\);/,
+    "en vue du professeur, le cadre attend AVANT d’interroger le serveur");
 });

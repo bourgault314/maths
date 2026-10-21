@@ -46,10 +46,19 @@ test("« Imprimer ma fiche » : un seul chemin, depuis Mon parcours, vers un éc
   assert.match(html, /window\.addEventListener\("beforeprint", \(\) => renderFiche\(ficheAffichee\)\)/);
 });
 
-test("la vue « fiche d'un élève » du professeur est intacte (mode-fiche, #fiche-ecran)", () => {
+test("la vue du professeur (lot « Ma classe : le parcours de Léa ») : la feuille est remplie depuis le serveur, la barre mode-fiche ne sert plus qu'à la fiche vierge", () => {
+  // La fiche vierge (?vierge) garde body.mode-fiche et sa barre « Imprimer cette fiche ».
   assert.match(html, /body\.mode-fiche > \*:not\(#fiche-print\):not\(#fiche-ecran\) \{ display: none !important; \}/);
   assert.match(html, /<div id="fiche-ecran" class="fiche-ecran" hidden>[\s\S]*<button id="fiche-ecran-print" class="primary" type="button">Imprimer cette fiche<\/button>/);
-  assert.match(html, /function afficherFicheEleve\(\{existe, parcours: brut, maj_le, prenom, classe\}\) \{[\s\S]*renderFiche\(distant\);\s*\n\s*ajusterFiche\(\);/);
+  // Le professeur : la feuille (deux pages) est remplie avec le parcours reçu,
+  // puis l'écran Mon parcours s'ouvre sur ce parcours, et la carte « Pour le
+  // professeur » est recopiée dessous. Jamais mode-fiche : l'écran est le parcours.
+  assert.match(html, /function afficherFicheEleve\(\{existe, parcours: brut, maj_le, prenom, classe\}\) \{[\s\S]*?parcoursProf = distant;\s*\n\s*parcours = distant;[\s\S]*?renderFiche\(distant\);\s*\n\s*ajusterFiche\(\);\s*\n\s*renderRepere\(\);\s*\n\s*openParcours\(\);\s*\n\s*renderCarteProf\(\);/);
+  const ouvrir = html.slice(html.indexOf("async function ouvrirFicheParBillet(billet) {"), html.indexOf("\n      }\n", html.indexOf("async function ouvrirFicheParBillet(billet) {")));
+  assert.doesNotMatch(ouvrir, /mode-fiche|fiche-ecran/, "le professeur ne voit plus la fiche A4 à l’écran");
+  // « Imprimer sa fiche » : le bouton de Mon parcours, qui imprime tout de suite (les deux pages).
+  assert.match(html, /\$\("parcours-fiche"\)\.querySelector\("span"\)\.textContent = "Imprimer sa fiche";/);
+  assert.match(html, /function openFiche\(\) \{\s*\n[\s\S]*?if \(VUE_PROF\) \{ imprimerFicheProf\(\); return; \}/);
 });
 
 test("fiche vierge : aucun lien dans l'appli élève ; la feuille des tables, un seul, dans « Lire la table » ; le catalogue et la page prof gardent les deux (Q6)", () => {

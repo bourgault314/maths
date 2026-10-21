@@ -144,7 +144,8 @@ test("on ne demande le prénom que quand il sert : pas sous un code, pas s'il ex
   assert.match(html, /function printFiche\(\) \{\s*\n\s*if \(!suiviActif\(\) && !parcours\.prenom && !state\.fichePrenomDemande\) \{\s*\n\s*ouvrirPrenomFiche\(\);\s*\n\s*return;\s*\n\s*\}\s*\n\s*imprimerLaFiche\(\);\s*\n\s*\}/);
   // « Plus tard » imprime quand même ; OK enregistre puis imprime.
   assert.match(html, /\$\("fiche-prenom-plus-tard"\)\.addEventListener\("click", \(\) => \{\s*\n\s*fermerPrenomFiche\(\);\s*\n\s*imprimerLaFiche\(\);\s*\n\s*\}\);/);
-  assert.match(html, /\$\("fiche-prenom-form"\)\.addEventListener\("submit", event => \{\s*\n\s*event\.preventDefault\(\);\s*\n\s*parcours = PARCOURS\.definirPrenom\(parcours, \$\("fiche-prenom-input"\)\.value\);\s*\n\s*sauverParcours\(\);\s*\n\s*fermerPrenomFiche\(\);[\s\S]{0,200}imprimerLaFiche\(\);/);
+  // (lot « Ma classe : le parcours de Léa » : la vue du professeur sort en premier)
+  assert.match(html, /\$\("fiche-prenom-form"\)\.addEventListener\("submit", event => \{\s*\n\s*event\.preventDefault\(\);\s*\n\s*if \(VUE_PROF\) return;\s*\n\s*parcours = PARCOURS\.definirPrenom\(parcours, \$\("fiche-prenom-input"\)\.value\);\s*\n\s*sauverParcours\(\);\s*\n\s*fermerPrenomFiche\(\);[\s\S]{0,200}imprimerLaFiche\(\);/);
   // Rouvrir l'écran referme la question restée ouverte.
   assert.match(html, /function openFiche\(\) \{[\s\S]*?fermerPrenomFiche\(\);\s*\n\s*show\("fiche"\);/);
   // Ctrl+P n'a pas changé : c'est beforeprint qui remplit, sans rien demander.

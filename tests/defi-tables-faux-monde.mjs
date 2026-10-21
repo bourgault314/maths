@@ -23,6 +23,9 @@ export function entre(debut, fin) {
 }
 
 export const SOURCE_SUIVI = entre("// [suivi:debut]", "// [suivi:fin]");
+// Lot « Ma classe : le parcours de Léa » (21/10/2026) : storage() et
+// stockageSession() — et la mémoire jetable de la vue du professeur.
+export const SOURCE_STOCKAGE = entre("// [stockage:debut]", "// [stockage:fin]");
 export const SOURCE_AIGUILLAGE = entre("// [aiguillage:debut]", "// [aiguillage:fin]");
 const blocsEnLigne = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map(b => b[1]);
 export const SOURCE_BOOTSTRAP = blocsEnLigne[0];
@@ -217,7 +220,12 @@ export function fauxTemps() {
 // qui s'ouvre est déjà sous un code — une adresse n'en porte plus (#code= a
 // disparu), un billet doit d'abord être échangé. C'est ce que vit un onglet
 // rechargé (F5) après une entrée par billet.
-export function demarrerAppli({entree = {}, local, session, reseau, running = false, minuteries = "immediates", codeOnglet = ""} = {}) {
+// stockageReel (lot « Ma classe : le parcours de Léa ») : au lieu d'injecter
+// storage() et stockageSession(), on exécute les VRAIES fonctions de la page
+// (bloc [stockage]) sur window.localStorage / window.sessionStorage = local /
+// session — c'est ainsi que la mémoire jetable de la vue du professeur se
+// prouve : l'appareil (local, session) ne bouge pas d'un octet.
+export function demarrerAppli({entree = {}, local, session, reseau, running = false, minuteries = "immediates", codeOnglet = "", stockageReel = false} = {}) {
   local = local || fauxStockage();
   session = session || fauxStockage();
   if (codeOnglet) PARCOURS.sauverCode(session, codeOnglet);
@@ -242,6 +250,7 @@ export function demarrerAppli({entree = {}, local, session, reseau, running = fa
     scrollTo: () => {},
     addEventListener(type, fn) { (ecouteurs[type] = ecouteurs[type] || []).push(fn); }
   };
+  if (stockageReel) { window.localStorage = local; window.sessionStorage = session; }
   const navigator = {sendBeacon(url, blob) { balises.push({url, blob}); return true; }};
   const state = {parcoursOptionsOpen: false, nameSkipped: false, running};
   // Lot « Les records » : le bloc des records vit dans le bloc suivi ; ce
@@ -253,7 +262,8 @@ export function demarrerAppli({entree = {}, local, session, reseau, running = fa
   const api = new Function("window", "document", "navigator", "fetch", "PARCOURS", "storage", "stockageSession",
     "state", "renderParcours", "Date", "$", "renderRecords", "renderAccueil", "show", "launchFromParcours", "rafraichirRecords",
     "CORE", "stopTimer", "quitterSeance", "renderFilSeance", "majSortieJeu", "renderQuestion", "ajusterEchelle", "backToModes",
-    "clearAnswerError", "showAnswerError", "horlogeSerie", "formatTime", "TOTAL", "DURATION", "updateTimer", `${SOURCE_SUIVI}
+    "clearAnswerError", "showAnswerError", "horlogeSerie", "formatTime", "TOTAL", "DURATION", "updateTimer", `${stockageReel ? SOURCE_STOCKAGE : ""}
+    ${SOURCE_SUIVI}
     return {
       get evalEtat() { return evalEtat; }, get evalSerie() { return evalSerie; }, get TOTAL() { return TOTAL; }, get DURATION() { return DURATION; },
       lireEvaluation, veillerEvaluation, retenirEtatEvaluation, lireEtatEvaluation, scoreDeLEvaluation, renderCarteEvaluation,
@@ -267,6 +277,7 @@ export function demarrerAppli({entree = {}, local, session, reseau, running = fa
       get erreurDefinitive() { return erreurDefinitive; }, get entreeRefusee() { return entreeRefusee; },
       get gardeVisible() { return gardeVisible; },
       get recordsEtat() { return recordsEtat; }, get recordsReglage() { return recordsReglage; },
+      get profEtat() { return profEtat; }, VUE_PROF, storage, stockageSession, // lot « Ma classe : le parcours de Léa »
       ENTREE, suiviActif, demarrerSuivi, quitterSuivi, sauverParcours, envoyerAvantDeFermer, envoyerMaintenant,
       renderRepere, majLienRetour, entrerParBillet, adopterCode, echangerBillet, prenomAffiche,
       verifierGarde, repondreGarde, GARDE_INACTIVITE_MS, GARDE_ESSAIS_MAX,

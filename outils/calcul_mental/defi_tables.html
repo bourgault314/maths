@@ -2670,6 +2670,40 @@
       body.mode-eleve #lien-retour .catalogue-link-label { display: none; }
       .site-footer .pied-logo img { width: 56px; }
     }
+    /* Lot « Ma classe : le parcours de Léa » (21/10/2026) : la vue du
+       professeur (body.mode-prof, ouverte par « Ma classe » avec
+       #b=…&vue=fiche). C'est l'écran Mon parcours de l'élève, en lecture
+       seule. Disparaissent : « Plein écran », le pied de page, l'accueil, la
+       flèche « Ma table » et le « ⋯ » (leur place reste, le titre ne bouge
+       pas), le ▶ de Mon mélange (la grille passe sur une colonne, sinon les
+       coupes chevauchent « Mon mélange »), « Comment ça marche ? ». Les
+       marches de l'expert gardent EXACTEMENT leur aspect — pas de grisé —
+       mais ne réagissent à rien (launchFromParcours, verrou 3). Dessous, la
+       carte « Pour le professeur » : le même rendu que la page 2 de la fiche,
+       sans son cadre pointillé ; à l'écran, son tableau est dans une boîte
+       qui défile de côté (640 px au moins), la colonne « Table de … » fixe à
+       gauche ; pas de hauteur minimale. Elle est retirée le temps de la
+       mesure de l'échelle (body.mesure-cadre) : le cadre du parcours seul
+       doit tenir dans l'écran, à la même échelle que chez l'élève. */
+    body.mode-prof .fullscreen-toggle, body.mode-prof footer.site-footer, body.mode-prof #intro,
+    body.mode-prof #parcours-options, body.mode-prof #parcours-name, body.mode-prof #parcours-confirm,
+    body.mode-prof .parcours-notice-action .saut, body.mode-prof #parcours-notice-bouton, body.mode-prof #parcours-notice,
+    body.mode-prof #parcours-melange .mp-melange > .cell { display: none !important; }
+    body.mode-prof #parcours-back, body.mode-prof #parcours-more { visibility: hidden; pointer-events: none; }
+    body.mode-prof #parcours-melange .mp-melange { grid-template-columns: minmax(0, 1fr); }
+    body.mode-prof .cell { cursor: default; }
+    /* Le bandeau : « Léa · 306 · lecture seule · dernière activité le … »,
+       centré ; au téléphone, chaque morceau est insécable et passe à la ligne
+       entier. */
+    .suivi-repere.lecture-seule .repere-lecture { flex: 1 1 auto; min-width: 0; text-align: center; }
+    .suivi-repere.lecture-seule .repere-lecture > span { display: inline-block; white-space: nowrap; }
+    .suivi-repere.lecture-seule b { font-weight: 800; }
+    .parcours-prof { min-height: 0; margin-top: 18px; }
+    .parcours-prof .fiche-prof { padding: 4px 6px; border: 0; }
+    .parcours-prof-defile { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .parcours-prof .fiche-prof table { min-width: 640px; }
+    .parcours-prof .fiche-prof tbody th { position: sticky; left: 0; background: #fff; }
+    body.mesure-cadre #parcours-prof { display: none !important; }
   </style>
 </head>
 <body class="avec-seance">
@@ -3092,6 +3126,14 @@
         </div>
       </div>
     </section>
+    <!-- Lot « Ma classe : le parcours de Léa » (21/10/2026) : dans la vue du
+         professeur (body.mode-prof), une seconde carte blanche sous le cadre du
+         parcours — « Pour le professeur », la copie du cadre de la page 2 de
+         la fiche (#fiche-prof), remplie par renderCarteProf. Vide et cachée
+         pour tout le monde d'autre. Hors de la mesure de l'échelle
+         (body.mesure-cadre) : c'est le cadre du parcours seul qui doit tenir
+         dans l'écran, comme chez l'élève. -->
+    <section id="parcours-prof" class="panel parcours-prof" aria-label="Pour le professeur" hidden></section>
   </main>
   <!-- Lot « le cadre qui dépasse » (11/10/2026, choix N1 de Gwenaël) : sur
        ordinateur, « Comment ça marche ? » (accueil et Mon parcours) s'ouvre
@@ -3107,10 +3149,12 @@
       <div class="notice" data-notice></div>
     </div>
   </dialog>
-  <!-- Vue « fiche d'un élève » : ouverte par le professeur depuis « Ma classe »
-       (…/defi_tables.html#fiche=CODE). Lecture seule, elle ne touche jamais au
-       parcours de l'appareil, et elle réutilise le gabarit d'impression
-       ci-dessous : une seule fiche, une seule vérité. -->
+  <!-- La barre de la fiche à l'écran (body.mode-fiche) : depuis le lot « Ma
+       classe : le parcours de Léa » (21/10/2026), elle ne sert plus qu'à la
+       fiche VIERGE (defi_tables.html?vierge). Le professeur, lui, voit le
+       parcours de l'élève (ouvrirFicheParBillet) et imprime depuis là ; la
+       feuille #fiche-print ci-dessous reste le seul gabarit d'impression :
+       une seule fiche, une seule vérité. -->
   <div id="fiche-ecran" class="fiche-ecran" hidden>
     <div class="fiche-ecran-barre">
       <p><strong id="fiche-ecran-nom">Fiche de suivi</strong><span id="fiche-ecran-info">Chargement…</span></p>
@@ -3217,21 +3261,50 @@
       const PARCOURS = window.MATHSGO_DEFI_TABLES_MON_PARCOURS;
       if (!PARCOURS) throw new Error("Le moteur de Mon parcours est indisponible.");
       const PARCOURS_TABLES = [...PARCOURS.TABLES];
+      // [stockage:debut]
+      // Lot « Ma classe : le parcours de Léa » (21/10/2026), verrou 1 : la
+      // MÉMOIRE JETABLE. Le professeur ouvre le parcours d'un élève
+      // (#b=<billet>&vue=fiche) depuis « Ma classe » — sur n'importe quel
+      // appareil : la tablette de la classe, le PC de la salle où un élève
+      // est connecté à Défi tables dans l'onglet d'à côté. Dans cette vue,
+      // storage() et stockageSession() rendent une mémoire en RAM, décidée
+      // ICI, avant la première lecture ou écriture (la clé ?seance=1 juste
+      // dessous, puis la migration, la purge et le chargement de la case) :
+      // rien de ce que la page fait ne touche l'appareil, et rien de
+      // l'appareil n'entre dans la page. Un seul point, pas un bouton par
+      // bouton. (lireEntree et estVueProf vivent dans le bloc « suivi »,
+      // plus bas : ce sont des déclarations, elles sont déjà là.)
+      function memoireJetable() {
+        const cases = new Map();
+        return {
+          get length() { return cases.size; },
+          key(index) { return [...cases.keys()][index] ?? null; },
+          getItem(cle) { return cases.has(String(cle)) ? cases.get(String(cle)) : null; },
+          setItem(cle, valeur) { cases.set(String(cle), String(valeur)); },
+          removeItem(cle) { cases.delete(String(cle)); },
+          clear() { cases.clear(); }
+        };
+      }
+      const MEMOIRE_PROF = estVueProf(lireEntree()) ? {durable: memoireJetable(), onglet: memoireJetable()} : null;
       // « Ma séance du jour » est l'accueil de tous depuis le lot 2b
       // (03/10/2026). La clé ?seance=1 des lots 1 et 2a n'existe plus ; sa
-      // trace sur l'appareil est effacée.
-      try { window.localStorage.removeItem("mathsgo-defi-tables-seance"); } catch (_) {}
+      // trace sur l'appareil est effacée — sauf dans la vue du professeur,
+      // qui ne touche pas à l'appareil.
+      if (!MEMOIRE_PROF) { try { window.localStorage.removeItem("mathsgo-defi-tables-seance"); } catch (_) {} }
       // Deux stockages, deux durées de vie. Les parcours (une case par code,
       // plus la case « sans code ») restent sur l'appareil : hors-ligne et
       // fusion en dépendent. L'identité — QUEL code est actif — ne vit que le
       // temps de l'onglet : fermer l'onglet, c'est ne plus être personne, et
       // l'élève revient toujours par son espace, dont le lien porte le code.
       function storage() {
+        if (MEMOIRE_PROF) return MEMOIRE_PROF.durable;
         try { return window.localStorage; } catch (_) { return null; }
       }
       function stockageSession() {
+        if (MEMOIRE_PROF) return MEMOIRE_PROF.onglet;
         try { return window.sessionStorage; } catch (_) { return null; }
       }
+      // [stockage:fin]
 
       // ------------------------------------------------- suivi de classe (lot C)
       //
@@ -3268,6 +3341,17 @@
         return {billet: parametres.get("b") || "", vue: parametres.get("vue") || "", ouvrir: parametres.get("ouvrir") || ""};
       }
       const ENTREE = lireEntree();
+      // Lot « Ma classe : le parcours de Léa » (21/10/2026) : la vue du
+      // professeur — un billet de fiche, « vue=fiche ». C'est la même
+      // lecture qui a choisi la mémoire jetable (storage, plus haut). Dans
+      // cette vue : aucun envoi sauf l'échange du billet (appelSuivi), rien
+      // ne se lance (launchFromParcours), rien ne s'enregistre (la mémoire
+      // est jetable). Une classe sur <body> pour ce que le CSS retire.
+      function estVueProf(entree) {
+        return Boolean(entree && entree.billet) && String(entree.vue || "") === "fiche";
+      }
+      const VUE_PROF = estVueProf(ENTREE);
+      if (VUE_PROF && document.body) document.body.classList.add("mode-prof");
 
       // Le code actif : celui de l'onglet, et rien d'autre. Décidé AVANT de
       // charger le parcours : c'est ce qui fait qu'on ne montre jamais la case
@@ -3443,7 +3527,9 @@
         // ou venu de son espace, l'élève ne voit ni Réglages libres ni
         // l'évaluation CM1 — la classe est lue par le CSS (body.mode-eleve).
         // Aucun paramètre d'adresse : c'est le code, et lui seul, qui le dit.
-        if (document.body) document.body.classList.toggle("mode-eleve", Boolean(suiviActif() || entreeRefusee));
+        // La vue du professeur (lot « Ma classe : le parcours de Léa ») a la
+        // même barre fine que l'élève : son bandeau y tient seul.
+        if (document.body) document.body.classList.toggle("mode-eleve", Boolean(suiviActif() || entreeRefusee || VUE_PROF));
         majPiedDePage(vers === RETOUR_ESPACE);
         // Le logo suit la même règle que le lien du haut. C'était la dernière
         // porte qui faisait sortir un élève suivi de son espace : pour lui, le
@@ -3464,7 +3550,14 @@
 
       // Un seul point de contact avec le serveur : il n'échoue jamais, il
       // renvoie simplement un statut 0 quand rien n'a répondu.
+      // Verrou 2 de la vue du professeur : UN seul échange, celui du billet
+      // (echangerBillet lève le drapeau le temps de l'appel) ; tout autre
+      // appel — parcours, identité, records, évaluation — est refusé ici,
+      // avant de partir. Le serveur ne rend de toute façon jamais le code
+      // avec un billet de fiche.
+      let echangeDuBillet = false;
       async function appelSuivi(chemin, options) {
+        if (VUE_PROF && !echangeDuBillet) return {statut: 0, donnees: null};
         try {
           const controle = typeof AbortController === "function" ? new AbortController() : null;
           const minuteur = controle ? window.setTimeout(() => controle.abort(), 8000) : null;
@@ -3511,11 +3604,18 @@
       // Le billet d'entrée (lot 3) : le serveur le consomme et rend le code —
       // ou, pour un billet de fiche, la progression sans le code.
       function echangerBillet(billet) {
-        return appelSuivi("/api/eleve.php", {
-          method: "POST",
-          headers: {"Content-Type": "text/plain;charset=UTF-8"},
-          body: JSON.stringify({billet, appli: "defi-tables"})
-        });
+        // Le drapeau ne vaut que le temps de l'appel : appelSuivi part (fetch
+        // est lancé avant sa première attente), puis il retombe.
+        echangeDuBillet = true;
+        try {
+          return appelSuivi("/api/eleve.php", {
+            method: "POST",
+            headers: {"Content-Type": "text/plain;charset=UTF-8"},
+            body: JSON.stringify({billet, appli: "defi-tables"})
+          });
+        } finally {
+          echangeDuBillet = false;
+        }
       }
 
       // text/plain : le serveur lit le corps tel quel, et cela évite au
@@ -3538,6 +3638,9 @@
       }
 
       function envoiPossible() {
+        // La vue du professeur n'envoie jamais rien (verrou 2) — elle n'a
+        // d'ailleurs pas de code : le billet de fiche n'en rend pas.
+        if (VUE_PROF) return false;
         return suiviActif() && !sync.detache && !erreurDefinitive;
       }
 
@@ -3664,6 +3767,9 @@
       // « dirty » reste levé, et le prochain démarrage confirmera (au pire par
       // un 409 sans conséquence).
       function envoyerAvantDeFermer() {
+        // Verrou 2 : ni sendBeacon ni appel au moment de fermer la vue du
+        // professeur (pagehide et visibilitychange y arrivent sans effet).
+        if (VUE_PROF) return;
         if (!envoiPossible() || !sync.dirty) return;
         annulerEnvoiGroupe();
         const paquet = paquetParcours(codeSuivi, parcours, sync.revision);
@@ -3757,6 +3863,7 @@
       function renderRepere() {
         const repere = document.getElementById("suivi-repere");
         if (!repere) return;
+        if (VUE_PROF) { renderRepereProf(repere); return; }
         if (!suiviActif() && entreeRefusee) { renderEntreeRefusee(repere); return; }
         repere.hidden = !suiviActif();
         if (!suiviActif()) { repere.replaceChildren(); return; }
@@ -3825,6 +3932,52 @@
 
       // Lot « Mon parcours » (point 6) : plus de pilule « Se déconnecter » dans
       // l'en-tête du téléphone — la sortie est dans le bloc de suivi, partout.
+
+      // Le bandeau de la vue du professeur (lot « Ma classe : le parcours de
+      // Léa ») : « Léa · 306 · lecture seule · dernière activité le 17/10/2026 »,
+      // puis le record s'il y en a un — comme la ligne de la fiche d'avant.
+      // Pas de puce (rien ne part), pas de sortie (il n'y a personne de
+      // connecté). Au téléphone, deux morceaux insécables : « Léa · 306 ·
+      // lecture seule » puis « · dernière activité le … » (les spans du repère
+      // de l'élève empilent chaque morceau sur sa ligne : pas réutilisés).
+      // profEtat : null le temps de l'échange du billet ; {erreur} s'il est
+      // refusé ; sinon ce que le serveur a rendu.
+      let profEtat = null;
+      function renderRepereProf(repere) {
+        repere.hidden = false;
+        repere.classList.add("lecture-seule");
+        repere.classList.toggle("detache", Boolean(profEtat && profEtat.erreur));
+        repere.classList.toggle("hors-ligne", false);
+        repere.replaceChildren();
+        const texte = document.createElement("span");
+        texte.className = "repere-lecture";
+        if (!profEtat) {
+          texte.textContent = "Un instant…";
+        } else if (profEtat.erreur) {
+          texte.textContent = profEtat.erreur === "expire"
+            ? "Ce lien a expiré : rouvre le parcours depuis « Ma classe »."
+            : "Le serveur n’a pas répondu. Réessaie dans un instant.";
+        } else {
+          const morceau = (...noeuds) => {
+            const bloc = document.createElement("span");
+            bloc.append(...noeuds);
+            return bloc;
+          };
+          const gras = document.createElement("b");
+          gras.textContent = "lecture seule";
+          const qui = [profEtat.prenom, profEtat.classe].filter(Boolean).join(" · ");
+          texte.append(morceau(document.createTextNode(qui ? `${qui} · ` : ""), gras));
+          texte.append(document.createTextNode(" "), morceau(document.createTextNode(profEtat.maj_le
+            ? `· dernière activité le ${new Date(profEtat.maj_le).toLocaleDateString("fr-FR")}`
+            : "· aucune activité enregistrée")));
+          // Lot « Les records » : le record de la Légende (planche R5).
+          const record = profEtat.record;
+          if (record && Number.isInteger(record.meilleur)) {
+            texte.append(document.createTextNode(" "), morceau(document.createTextNode(`· record ${PARCOURS.formatTemps(record.meilleur)}`)));
+          }
+        }
+        repere.append(texte);
+      }
 
       // Le billet n'a rien ouvert : on le dit à la place du repère, avec le
       // seul geste utile — repasser par l'espace, qui a encore le code dans
@@ -3914,6 +4067,10 @@
       // code dans cet onglet : un seul geste vide les deux domaines et laisse
       // l'appareil prêt pour le camarade suivant.
       function quitterSuivi() {
+        // Vue du professeur : personne n'est connecté, il n'y a rien à
+        // quitter — et surtout pas en partant vers l'espace élève (un clic
+        // forcé sur « Non, ce n'est pas moi », caché, y menait).
+        if (VUE_PROF) return;
         envoyerAvantDeFermer();
         if (relance !== null) { window.clearTimeout(relance); relance = null; }
         codeSuivi = "";
@@ -4172,6 +4329,9 @@
       }
 
       function demarrerSuivi() {
+        // La vue du professeur n'y passe jamais (l'aiguillage va à
+        // ouvrirFicheParBillet) ; si on l'appelait quand même : rien.
+        if (VUE_PROF) { finAttente(); return; }
         if (!suiviActif()) { finAttente(); return; }
         PARCOURS.sauverCode(stockageSession(), codeSuivi);
         // Du travail dans la case et aucune révision confirmée : par définition,
@@ -5183,41 +5343,89 @@
       }
 
 
-      // Vue « fiche d'un élève », ouverte par le professeur depuis « Ma classe ».
-      // Elle ne touche jamais au parcours de cet appareil.
+      // Vue « le parcours d'un élève », ouverte par le professeur depuis « Ma
+      // classe » (lot « Ma classe : le parcours de Léa », 21/10/2026, à la
+      // place de la fiche A4 à l'écran). C'est l'écran Mon parcours de
+      // l'élève, tel qu'il le verrait ce jour-là — sa table, Aujourd'hui, les
+      // boîtes, le tableau, Mon mélange, Je deviens expert — et il « bouge » :
+      // une case ou une boîte touchée ouvre son détail. Mais rien ne se lance
+      // (le professeur n'a aucun bouton d'activité : ça fausserait tout), rien
+      // ne s'enregistre, rien ne part (VUE_PROF : mémoire jetable, appelSuivi,
+      // launchFromParcours). Dessous, une seconde carte blanche, « Pour le
+      // professeur » : la page 2 de la fiche, à l'écran. « Imprimer sa
+      // fiche » sort les deux mêmes pages qu'avant.
+      // Le parcours affiché vient de l'échange du billet, jamais de l'appareil.
       let ficheRecord = null;
+      let parcoursProf = null;
       function afficherFicheEleve({existe, parcours: brut, maj_le, prenom, classe}) {
         const record = ficheRecord;
         const distant = existe ? PARCOURS.normaliserParcours(brut) : PARCOURS.creerParcours();
         if (!distant.prenom && prenom) distant.prenom = prenom;
-        $("fiche-ecran-nom").textContent = distant.prenom || "Fiche de suivi";
         // Le navigateur propose le titre de la page comme nom du PDF.
         document.title = `Fiche Défi tables${distant.prenom ? ` - ${distant.prenom}` : ""}${classe ? ` - ${classe}` : ""}`;
         $("fiche-classe").textContent = classe || "";
-        $("fiche-ecran-info").textContent = [
-          classe ? `Classe ${classe}` : "",
-          maj_le
-            ? `dernière activité le ${new Date(maj_le).toLocaleDateString("fr-FR")}`
-            : "aucune activité enregistrée",
-          // Lot « Les records » : le record de la Légende (planche R5).
-          record && Number.isInteger(record.meilleur) ? `record ${PARCOURS.formatTemps(record.meilleur)}` : ""
-        ].filter(Boolean).join(" · ");
+        profEtat = {prenom: distant.prenom, classe: classe || "", maj_le: maj_le || null, record};
+        // La variable « parcours » que lisent renderParcours et renderCalculs :
+        // celle de l'élève, en mémoire seulement (la mémoire est jetable).
+        parcoursProf = distant;
+        parcours = distant;
+        state.nameSkipped = true;
+        // La feuille (page 1, et la page 2 « Pour le professeur »), remplie
+        // maintenant : c'est elle qui s'imprime, et c'est son cadre du
+        // professeur que la carte sous le parcours recopie.
         renderFiche(distant);
         ajusterFiche();
+        renderRepere();
+        openParcours();
+        renderCarteProf();
+      }
+
+      // « Pour le professeur », à l'écran : une copie du cadre de la page 2
+      // (#fiche-prof, rempli par renderFicheProf), dans une carte sous le
+      // parcours. Le tableau y défile de côté (640 px au moins), la colonne
+      // « Table de … » reste à gauche.
+      function renderCarteProf() {
+        const carte = $("parcours-prof");
+        if (!carte) return;
+        if (!VUE_PROF || !parcoursProf) { carte.hidden = true; return; }
+        const copie = $("fiche-prof").querySelector(".fiche-prof").cloneNode(true);
+        copie.querySelectorAll("[id]").forEach(element => element.removeAttribute("id"));
+        const tableau = copie.querySelector("table");
+        const defile = document.createElement("div");
+        defile.className = "parcours-prof-defile";
+        tableau.replaceWith(defile);
+        defile.append(tableau);
+        carte.replaceChildren(copie);
+        carte.hidden = false;
+      }
+
+      // « Imprimer sa fiche » : la feuille de l'élève affiché (beforeprint la
+      // remplit à nouveau à partir de ficheAffichee, jamais de l'appareil).
+      function imprimerFicheProf() {
+        window.setTimeout(() => window.print(), 30);
       }
 
       // Par un billet de fiche (lot 3) : « Ma classe » ne met plus le code dans
       // l'adresse. Le serveur rend la progression et le prénom — jamais le code.
+      // L'adresse reste « #b=…&vue=fiche » (lot « Ma classe : le parcours de
+      // Léa ») : la page prof et le site peuvent se mettre à jour dans
+      // n'importe quel ordre, l'un sans l'autre continue de marcher.
       async function ouvrirFicheParBillet(billet) {
-        document.body.classList.add("mode-fiche");
-        $("fiche-ecran").hidden = false;
-        $("fiche-ecran-info").textContent = "Un instant…";
+        // Le temps de l'échange : la barre fine, le bandeau « Un instant… »,
+        // les points de chargement dans le cadre (billetEnCours).
+        majLienRetour();
+        renderRepere();
+        $("parcours-fiche").querySelector("span").textContent = "Imprimer sa fiche";
+        $("parcours-fiche").removeAttribute("aria-controls");
+        billetEnCours = true;
+        renderAccueil();
         const reponse = await echangerBillet(billet);
+        billetEnCours = false;
         const donnees = reponse.statut === 200 && reponse.donnees && reponse.donnees.ok ? reponse.donnees : null;
         if (!donnees || donnees.type !== "fiche") {
-          $("fiche-ecran-info").textContent = reponse.statut === 404 || donnees
-            ? "Ce lien a expiré : rouvre la fiche depuis « Ma classe »."
-            : "Le serveur n’a pas répondu. Réessaie dans un instant.";
+          profEtat = {erreur: reponse.statut === 404 || donnees ? "expire" : "injoignable"};
+          renderRepere();
+          renderAccueil();
           return;
         }
         ficheRecord = donnees.record || null;
@@ -5576,6 +5784,10 @@
         // Lot E4 : passage d'évaluation en cours → seuls l'accueil (réduit à
         // la carte) et la série de l'évaluation s'ouvrent.
         if (name !== "intro" && verrouPassage() && !(name === "play" && enEvaluation())) name = "intro";
+        // Vue du professeur (lot « Ma classe : le parcours de Léa ») : un seul
+        // écran, le parcours — la flèche « Ma table » (cachée) ou le bouton
+        // Retour du navigateur ne mènent nulle part ailleurs.
+        if (VUE_PROF) name = "parcours";
         // Lot « la flèche de retour » : le choix du nom ramène là d'où on
         // l'a ouvert (« Changer mon nom » → Les records).
         if (name === "records-nom") majRetourNom(ecranCourant);
@@ -7681,6 +7893,7 @@
       }
 
       function start() {
+        if (VUE_PROF) return;
         stopTimer();
         const config = captureConfiguration();
         if (!config.mode || (config.mode !== "evaluation" && !config.tables.length)) {
@@ -8572,6 +8785,7 @@
       }
 
       function startRevision(table = null, origin = "parcours") {
+        if (VUE_PROF) return;
         stopTimer();
         const plan = PARCOURS.planRevision(parcours, {table});
         if (!plan.length) return;
@@ -10423,12 +10637,17 @@
       // prénom est dans la barre du haut, sur tous les écrans — le titre ne le
       // répète pas.
       function parcoursTitle() {
+        // Vue du professeur : « Le parcours de Léa » (choix de Gwenaël).
+        if (VUE_PROF) return `Le parcours de ${(parcours && parcours.prenom) || "l’élève"}`;
         if (suiviActif()) return "Mon parcours";
         const prenom = prenomAffiche();
         return prenom ? `Le parcours de ${prenom}` : "Mon parcours";
       }
 
       function launchFromParcours(config, origin = "parcours", {puis} = {}) {
+        // Verrou 3 (vue du professeur) : aucun lanceur ne répond — ni les
+        // marches, ni Mon mélange, ni un clic forcé.
+        if (VUE_PROF) return;
         if (!config) return;
         state.apresMesCalculs = null;
         state.apresMelange = null;
@@ -10582,8 +10801,10 @@
           cell.replaceChildren(texte !== null ? texte : document.createTextNode(kind === "check" ? "✓" : "★"));
         }
         const stateLabel = etat === 2 ? "réussi" : etat === 1 ? "commencé" : "pas encore fait";
-        cell.setAttribute("aria-label", `${label}${stateLabel ? ` : ${stateLabel}` : ""}. ${config ? "Lancer." : ""}`.trim());
-        if (!config && action) cell.setAttribute("aria-disabled", "true");
+        // Vue du professeur : la marche garde son aspect, mais elle ne lance
+        // rien — le lecteur d'écran ne doit pas promettre « Lancer ».
+        cell.setAttribute("aria-label", `${label}${stateLabel ? ` : ${stateLabel}` : ""}. ${config && !VUE_PROF ? "Lancer." : ""}`.trim());
+        if ((!config && action) || VUE_PROF) cell.setAttribute("aria-disabled", "true");
         cell.title = label;
         cell.addEventListener("click", () => (config ? launchFromParcours(config) : action && action()));
         return cell;
@@ -10609,7 +10830,8 @@
         $("parcours-title").classList.toggle("est-long", parcoursTitle().length > 22);
         // Sous un code, on ne demande pas de prénom : le professeur l'a déjà
         // saisi, et rien de tapé ici ne resterait sur l'appareil (lot 8).
-        $("parcours-name").hidden = suiviActif() || !((!parcours.prenom && PARCOURS.estVide(parcours) && !state.nameSkipped) || state.renaming);
+        // Vue du professeur : jamais de prénom demandé (ni de « ⋯ »).
+        $("parcours-name").hidden = VUE_PROF || suiviActif() || !((!parcours.prenom && PARCOURS.estVide(parcours) && !state.nameSkipped) || state.renaming);
         $("parcours-rename").hidden = suiviActif();
         $("parcours-confirm").hidden = !state.confirmingReset;
         $("parcours-options").hidden = !state.parcoursOptionsOpen;
@@ -11124,6 +11346,9 @@
       // l'expert » : on y vient de Mon parcours (« Imprimer ma fiche »), et la
       // flèche y ramène.
       function openFiche() {
+        // Vue du professeur : « Imprimer sa fiche » imprime tout de suite
+        // (les deux pages), sans écran « Ma fiche ».
+        if (VUE_PROF) { imprimerFicheProf(); return; }
         configuration.mode = null;
         configuration.tables = new Set();
         state.running = false;
@@ -11197,6 +11422,7 @@
       $("result-records").addEventListener("click", allerAuxRecords);
       $("fiche-prenom-form").addEventListener("submit", event => {
         event.preventDefault();
+        if (VUE_PROF) return;
         parcours = PARCOURS.definirPrenom(parcours, $("fiche-prenom-input").value);
         sauverParcours();
         fermerPrenomFiche();
@@ -11243,6 +11469,9 @@
       });
       $("parcours-name").addEventListener("submit", event => {
         event.preventDefault();
+        // Vue du professeur : le parcours affiché ne se modifie pas (le
+        // formulaire et le « ⋯ » sont cachés ; un clic forcé ne fait rien).
+        if (VUE_PROF) return;
         parcours = PARCOURS.definirPrenom(parcours, $("parcours-name-input").value);
         sauverParcours();
         state.renaming = false;
@@ -11267,6 +11496,7 @@
         $("parcours-confirm-no").focus?.({preventScroll: true});
       });
       $("parcours-confirm-yes").addEventListener("click", () => {
+        if (VUE_PROF) return;
         parcours = PARCOURS.remettreAZero(parcours);
         // « Recommencer à zéro » efface aussi ce que le professeur voit :
         // on renvoie le parcours vide avant de tout oublier.
