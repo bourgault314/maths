@@ -169,17 +169,17 @@ test("un entraînement sur plusieurs tables ou de 20 questions ne compte pas", (
   assert.equal(parcours.classerSerie(etat, normaliser({mode: "evaluation"})), null);
 });
 
-test("Passée : « Je passe le test », 20 questions en 1 min 30 avec 2 erreurs max ; 2 ou 3 minutes = préparation", () => {
+test("Passée : « Je passe le test », 20 questions en 1 min 30 avec 1 erreur max (lot du 21/10/2026) ; 2 ou 3 minutes = préparation", () => {
   let etat = parcours.creerParcours();
-  let resultat = jouer(etat, parcours.configValidation(7), 17, 20);
+  let resultat = jouer(etat, parcours.configValidation(7), 18, 20);
   assert.equal(resultat.evenements[0].reussi, false);
   assert.equal(resultat.parcours.tables[7].acquise, null);
 
-  resultat = jouer(etat, parcours.configValidation(7), 18, 20);
+  resultat = jouer(etat, parcours.configValidation(7), 19, 20);
   etat = resultat.parcours;
   assert.equal(etat.tables[7].acquise, DATE);
   assert.deepEqual(resultat.evenements, [
-    {type: "validation", table: 7, reussi: true, score: 18, total: 20, dejaAcquise: false, nouvelle: true},
+    {type: "validation", table: 7, reussi: true, score: 19, total: 20, dejaAcquise: false, nouvelle: true},
     {type: "rang", rang: 1, nom: "Bronze", cle: "bronze"}
   ], "la première table donne le rang Bronze — et l’événement n’a plus de champ « verrouillee »");
 
@@ -388,7 +388,7 @@ test("plus de verrou : une nouvelle table est passée même sans mélange — en
   // Un mélange raté ne ferme rien non plus.
   etat = jouer(etat, parcours.configMelange(etat), 10, 20).parcours;
   assert.equal(etat.melange.aJour, false);
-  resultat = jouer(etat, parcours.configValidation(5), 18, 20);
+  resultat = jouer(etat, parcours.configValidation(5), 19, 20);
   assert.equal(resultat.evenements[0].nouvelle, true);
   assert.deepEqual(parcours.tablesAcquises(resultat.parcours), [2, 5, 10]);
 });

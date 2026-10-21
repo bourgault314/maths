@@ -6,6 +6,13 @@
 // jamais deux fois le même calcul. L'écran « Pas encore » dit alors
 // « 18 sur 20 — mais 7 × 8 raté deux fois » (choix de Gwenaël) ; l'écran
 // avant le test ne change pas (choix de Gwenaël). Mon mélange garde sa règle.
+//
+// Lot « test : une erreur au plus » (21/10/2026, décision de Gwenaël) : le
+// test passe à 19 sur 20. 18 sur 20 ne suffit donc plus, même avec deux
+// calculs différents ; la clé « rateDeuxFois » reste posée dans l'événement
+// (le moteur la garde), mais l'écran dit « il en faut 19 ». Les tests
+// ci-dessous sont mis à cette règle ; le détail est dans
+// defi-tables-test-une-erreur.test.mjs.
 
 process.env.TZ = "Indian/Reunion";
 
@@ -58,13 +65,13 @@ test("calculRateDeuxFois : le premier calcul raté deux fois, sinon null", () =>
   assert.equal(P.calculRateDeuxFois("7-8,7-8"), null, "pas une liste : ignorée");
 });
 
-test("le test : 18 sur 20 avec deux calculs différents ratés → table passée", () => {
+test("le test : 18 sur 20 avec deux calculs différents ratés → pas encore depuis le 21/10 (une erreur au plus)", () => {
   const resultat = jouer(P.creerParcours(), P.configValidation(7), 18, ["7-8", "2-7"]);
   const validation = evenement(resultat, "validation");
-  assert.equal(validation.reussi, true);
-  assert.equal(validation.nouvelle, true);
-  assert.equal("rateDeuxFois" in validation, false, "rien à signaler");
-  assert.equal(resultat.parcours.tables[7].acquise, DATE);
+  assert.equal(validation.reussi, false);
+  assert.equal(validation.nouvelle, false);
+  assert.equal("rateDeuxFois" in validation, false, "rien à signaler : c'est le seuil qui manque");
+  assert.equal(resultat.parcours.tables[7].acquise, null);
 });
 
 test("le test : 18 sur 20 avec le même calcul raté deux fois → pas encore, et le calcul est nommé", () => {
@@ -86,9 +93,9 @@ test("le test : 19 et 20 sur 20 passent toujours ; 17 sur 20 reste raté", () =>
   assert.equal("rateDeuxFois" in dixSept, false, "17 sur 20 : c'est le seuil qui manque, pas un calcul");
 });
 
-test("sans liste des calculs ratés (un appel d'avant ce lot) : l'ancienne règle, 18 sur 20 passe", () => {
-  const resultat = jouer(P.creerParcours(), P.configValidation(7), 18);
-  assert.equal(evenement(resultat, "validation").reussi, true);
+test("sans liste des calculs ratés (un appel d'avant ce lot) : le seuil seul — 19 passe, 18 ne passe plus (21/10)", () => {
+  assert.equal(evenement(jouer(P.creerParcours(), P.configValidation(7), 19), "validation").reussi, true);
+  assert.equal(evenement(jouer(P.creerParcours(), P.configValidation(7), 18), "validation").reussi, false);
 });
 
 test("une table déjà passée reste passée, même ratée par un calcul raté deux fois", () => {
@@ -105,7 +112,9 @@ test("« comme le test » (2 ou 3 minutes) suit la même règle", () => {
   assert.equal(rate.reussi, false);
   assert.equal(rate.rateDeuxFois, "7-8");
   assert.equal(rate.duree, 180);
-  const reussi = evenement(jouer(P.creerParcours(), P.configValidation(7, 120), 18, ["7-8", "2-7"]), "preparation");
+  const deuxCalculs = evenement(jouer(P.creerParcours(), P.configValidation(7, 120), 18, ["7-8", "2-7"]), "preparation");
+  assert.equal(deuxCalculs.reussi, false, "18 sur 20 ne suffit plus (21/10)");
+  const reussi = evenement(jouer(P.creerParcours(), P.configValidation(7, 120), 19, ["7-8"]), "preparation");
   assert.equal(reussi.reussi, true);
   assert.equal("rateDeuxFois" in reussi, false);
 });
@@ -152,7 +161,10 @@ test("de bout en bout : un vrai test de la table de 7, 7 × 8 raté dans les deu
   assert.equal(rate.rateDeuxFois, "7-8");
   const deuxCalculs = {questions, responses: repondre(["7-8", "7-9"])};
   assert.equal(deuxCalculs.responses.filter(reponse => reponse.correct).length, 18);
-  assert.equal(evenement(jouer(P.creerParcours(), P.configValidation(7), 18, calculsRates(deuxCalculs)), "validation").reussi, true);
+  assert.equal(evenement(jouer(P.creerParcours(), P.configValidation(7), 18, calculsRates(deuxCalculs)), "validation").reussi, false, "deux calculs différents : 18 ne suffit plus (21/10)");
+  const unCalcul = {questions, responses: repondre(["7-8"])};
+  assert.equal(unCalcul.responses.filter(reponse => reponse.correct).length, 19);
+  assert.equal(evenement(jouer(P.creerParcours(), P.configValidation(7), 19, calculsRates(unCalcul)), "validation").reussi, true, "une erreur : passée");
 });
 
 test("l'écran dit « 18 sur 20 — mais 7 × 8 raté deux fois », la table du test d'abord", () => {
@@ -170,6 +182,6 @@ test("l'écran dit « 18 sur 20 — mais 7 × 8 raté deux fois », la table du 
 });
 
 test("le moteur a changé : son numéro monte, et la copie du serveur reste identique", () => {
-  assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261016-1"><\/script>/);
+  assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261021-1"><\/script>/);
   assert.equal(copieServeur, moteur, "_serveur/public/prof/defi_tables_mon_parcours.js = outils/calcul_mental/defi_tables_mon_parcours.js");
 });

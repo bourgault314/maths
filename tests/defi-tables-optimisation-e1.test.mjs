@@ -139,6 +139,6 @@ test("en plus : le fil « Ma séance » sur une ligne au téléphone", () => {
 });
 
 test("des écrans seulement : les moteurs ne changent pas, leurs numéros de cache non plus", () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261016-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261021-1/);
   assert.match(html, /defi_tables_core\.js\?v=20261015-1/);
 });

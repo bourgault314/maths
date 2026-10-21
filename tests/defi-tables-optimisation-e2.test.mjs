@@ -136,7 +136,8 @@ test("E2 · 1 (audit GPT, F ; lot « Mon parcours », version B ; lots « trois 
   lancer(PARCOURS.configValidation(7));
   assert.equal(zone.hidden, false);
   const [ligne, exemple] = zone.tous("p");
-  assert.equal(ligne.textContent, `18${N}bonnes réponses pour réussir.`);
+  // Lot « test : une erreur au plus » (21/10/2026) : 19, plus 18.
+  assert.equal(ligne.textContent, `19${N}bonnes réponses pour réussir.`);
   assert.equal(exemple.className, "launch-exemple");
   assert.deepEqual(exemple.tous("b").map(b => b.textContent), [`7${N}×${N}4${N}=${N}?`, `7${N}×${N}?${N}=${N}28`, `28${N}÷${N}7${N}=${N}?`, `28${N}÷${N}?${N}=${N}7`], "quatre pastilles : résultat, nombre manquant, puis les deux divisions où l'on cherche (la réponse n'est jamais la table)");
   assert.equal(exemple.enfants.length, 4, "rien entre les pastilles : ni « ou », ni « · »");

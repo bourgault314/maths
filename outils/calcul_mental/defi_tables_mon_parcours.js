@@ -256,7 +256,11 @@
     // CONSEILLÉE que quand les 8 calculs de la table sont en boîte 3 ou plus
     // — deux rendez-vous réussis, donc au plus tôt le lendemain des
     // entraînements. Un conseil, jamais un verrou : « Je valide » reste libre.
-    validation: Object.freeze({total: 20, dureeMax: 90, erreursMax: 2, boiteMin: 3}),
+    // Lot « test : une erreur au plus » (21/10/2026, décision de Gwenaël) :
+    // le test d'une table et « Comme le test » passent de 2 erreurs à UNE
+    // (19 sur 20) — « une erreur, c'est une faute de frappe ; deux, l'élève
+    // ne connaît pas son résultat ». Mon mélange et les étoiles gardent 2.
+    validation: Object.freeze({total: 20, dureeMax: 90, erreursMax: 1, boiteMin: 3}),
     // Le mélange a le format du test d'une table : 20 questions en 1 min 30,
     // 2 erreurs max — dès 2 tables passées. Libre depuis le lot « un seul
     // système » : il ne verrouille rien.
@@ -932,7 +936,10 @@
       // Lot « test : pas deux fois le même calcul » (16/10/2026, décision de
       // Gwenaël) : 2 erreurs au plus, et jamais les deux sur le même calcul —
       // au test, chaque calcul sort deux fois ; les rater toutes les deux,
-      // c'est ne pas le savoir.
+      // c'est ne pas le savoir. Lot « test : une erreur au plus » (21/10) :
+      // SEUILS.validation.erreursMax vaut 1, la règle du même calcul ne peut
+      // plus faire rater à elle seule (deux ratés, c'est déjà trop) ; elle
+      // reste, inoffensive, si le seuil remontait un jour.
       const deuxFois = calculRateDeuxFois(resultat && resultat.rates);
       const reussi = erreurs <= SEUILS.validation.erreursMax && !deuxFois;
       const dejaAcquise = Boolean(copie.tables[classement.table].acquise);
