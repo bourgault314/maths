@@ -94,22 +94,47 @@ export function enonceHTML(question, pastille = "") {
   </div>`;
 }
 
-export function aideHTML(question, etat, garder, projection = false) {
-  if (!etat.aideOuverte) return "";
-  const dessin = question.hints?.[0]?.svg || "";
-  if (projection)
-    return `<section class="aide aide-projetee">${dessin}
-    ${etat.etape ? `<div class="etape">${mathHtml(question.hints?.[1]?.text || "")}</div>` : ""}</section>`;
+/* L'aide (coque V2, C5) : sous la carte, dans la zone de la question ; le clavier reste. En-tête :
+   Aide · « Encore un indice » (l'ancienne « Une étape ») · ×. Une question avec une figure n'a pas
+   d'aide dessous : sa phrase est dans une bulle posée sur la figure (figureHTML). */
+function boutonIndice(question, etat) {
+  if (!question.hints?.[1]?.text) return "";
+  return bouton("Encore un indice", "etape", "indice", etat.etape ? "disabled" : "");
+}
 
-  return `<section class="aide" aria-label="Aide">
-    <div class="aide-entete"><strong>Aide</strong>
-      ${bouton("×", "fermer-aide", "discret petit", 'aria-label="Fermer l’aide"')}</div>
-    ${dessin || `<p>${mathHtml(question.hints?.[0]?.text || "")}</p>`}
+export function aideHTML(question, etat, projection = false) {
+  if (!etat.aideOuverte || question.visual) return "";
+  const dessin = question.hints?.[0]?.svg || "";
+  const fermer = projection
+    ? ""
+    : bouton("×", "fermer-aide", "fermer", 'aria-label="Fermer l’aide"');
+  return `<section class="aide${projection ? " aide-projetee" : ""}" aria-label="Aide">
+    <div class="aide-entete"><strong>${ICONES.aide}Aide</strong>
+      <span class="aide-boutons">${boutonIndice(question, etat)}${fermer}</span></div>
+    <p>${mathHtml(question.hints?.[0]?.text || "")}</p>
+    ${dessin ? `<div class="dessin">${dessin}</div>` : ""}
     ${etat.etape ? `<div class="etape">${mathHtml(question.hints?.[1]?.text || "")}</div>` : ""}
-    <div class="aide-pied">${bouton("Une étape", "etape", "secondaire petit", etat.etape ? "disabled" : "")}
-      <label><input type="checkbox" id="garder-aide" ${garder ? "checked" : ""}> Garder l’aide affichée</label>
-    </div>
   </section>`;
+}
+
+/* La figure de la question. Aide ouverte : sa phrase dans une bulle posée sur la figure, dans un coin
+   (haut-gauche par défaut, champ optionnel coinAide de la forme). Si le dessin d'aide n'est pas la
+   figure elle-même, il la REMPLACE, à sa place. */
+const COINS = ["haut-gauche", "haut-droite", "bas-gauche", "bas-droite"];
+export function figureHTML(question, etat, coin) {
+  if (!question.visual) return "";
+  const aide = etat.aideOuverte;
+  const dessinAide = question.hints?.[0]?.svg || "";
+  const dessin =
+    aide && dessinAide && dessinAide !== question.visual ? dessinAide : question.visual;
+  const place = COINS.includes(coin) ? coin : "haut-gauche";
+  const bulle = aide
+    ? `<div class="bulle-aide ${place}" role="note" aria-label="Aide">${ICONES.aide}
+      <span>${mathHtml(question.hints?.[0]?.text || "")}</span>
+      ${etat.etape ? `<span class="etape">${mathHtml(question.hints?.[1]?.text || "")}</span>` : ""}
+      ${etat.etape ? "" : boutonIndice(question, etat)}</div>`
+    : "";
+  return `<div class="figure">${dessin}${bulle}</div>`;
 }
 
 export function correctionHTML(question) {
@@ -269,7 +294,7 @@ function consigneHTML(question, famille) {
   return `<h1 class="consigne">${texte}</h1>`;
 }
 
-export function questionHTML(seance, famille, garder, clavier = false) {
+export function questionHTML(seance, famille, clavier = false) {
   const question = seance.questions[seance.index];
   const etat = seance.etats[seance.index];
   const projection = seance.mode === "project";
@@ -279,11 +304,11 @@ export function questionHTML(seance, famille, garder, clavier = false) {
     <div class="espace-question">
       <section class="carte enonce">${pastilleNotionHTML(seance, famille)}${consigneHTML(question, famille)}
         ${question.math ? `<div class="calcul">${mathHtml(question.math)}</div>` : ""}
-        ${question.visual ? `<div class="figure">${question.visual}</div>` : ""}
+        ${figureHTML(question, etat, reglageForme(question, famille, "coinAide"))}
         ${projection ? choixProjectionHTML(question) : '<div class="reponses"></div>'}
         ${outilsHTML(seance, etat)}
       </section>
-      ${aideHTML(question, etat, garder, projection)}
+      ${aideHTML(question, etat, projection)}
       ${etat.message ? `<p class="retour-reponse ${etat.juste ? "juste" : "faux"}" role="status">${esc(etat.message)}</p>` : ""}
       ${etat.erreurs && !etat.terminee ? bouton("Voir la correction", "correction", "discret") : ""}
       ${etat.correction ? correctionHTML(question) : ""}

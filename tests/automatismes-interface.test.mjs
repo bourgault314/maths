@@ -166,16 +166,17 @@ test(
         await photo(page, "question-clavier", mesures);
         await verifierCommandes(page);
         await page.locator('[data-action="aide"]').click();
-        assert.equal(await page.locator(".clavier").isVisible(), false);
+        // Coque V2 (C5) : au téléphone, le clavier reste avec l'aide ; l'ordinateur n'en a pas.
+        assert.equal(await page.locator(".clavier").isVisible(), width === 390);
         await photo(page, "aide", mesures);
         await page.locator('[data-action="etape"]').click();
-        assert.equal(await page.locator(".aide svg").count(), 1);
+        assert.equal(await page.locator(".aide .dessin svg").count(), 1);
         await photo(page, "etape", mesures);
         await page.locator(".champ").first().click();
         await stabiliser(page);
         if (width === 390) {
           assert.equal(await page.locator(".clavier").isVisible(), true);
-          const aide = await page.locator(".aide svg").boundingBox();
+          const aide = await page.locator(".aide .dessin svg").boundingBox();
           const commandes = await page.locator("#commandes").boundingBox();
           assert.ok(
             aide.y >= 0 && aide.y + aide.height <= commandes.y,
@@ -317,10 +318,11 @@ test(
         };
       });
     try {
-      for (const [width, height, tactile, fixe] of [
-        [820, 1180, true, true],
-        [1180, 820, true, false],
-        [1366, 768, false, false],
+      for (const [width, height, tactile] of [
+        [390, 844, true],
+        [820, 1180, true],
+        [1180, 820, true],
+        [1366, 768, false],
       ]) {
         const page = await browser.newPage({
           viewport: { width, height },
@@ -338,8 +340,8 @@ test(
         const apres = await mesurer(page);
         assert.ok(apres.champEntier, `${nom} : champ entier avec l’aide`);
         assert.ok(apres.enonce <= avant.enonce + 1, `${nom} : l’énoncé ne descend pas`);
-        // Là où l'aide tient (tablette debout), l'énoncé ne bouge pas d'un pixel.
-        if (fixe) assert.ok(Math.abs(apres.enonce - avant.enonce) <= 1, `${nom} : énoncé immobile`);
+        // Coque V2 : la carte est en haut, l'aide s'ajoute dessous ; l'énoncé ne bouge pas d'un pixel.
+        assert.ok(Math.abs(apres.enonce - avant.enonce) <= 1, `${nom} : énoncé immobile`);
         await page.close();
       }
     } finally {
@@ -440,12 +442,11 @@ test(
           true,
           `${nom} : le clavier reste ouvert avec l’aide`,
         );
-        const aide = await page.locator(".aide svg").boundingBox();
+        const aide = await page.locator(".aide .dessin svg").boundingBox();
         const touches = await page.locator(".clavier").boundingBox();
         assert.ok(aide.y >= 0, `${nom} : dessin visible`);
-        if (width === 820)
-          assert.ok(aide.y + aide.height <= touches.y, `${nom} : dessin au-dessus du clavier`);
-        else assert.ok(aide.x + aide.width <= touches.x, `${nom} : dessin à gauche du clavier`);
+        // Coque V2 : une seule place partout, le dessin sous la question, au-dessus du clavier.
+        assert.ok(aide.y + aide.height <= touches.y, `${nom} : dessin au-dessus du clavier`);
         await page.screenshot({ path: resolve(captures, `${nom}-aide-clavier.png`) });
         await page.close();
       }
@@ -525,14 +526,11 @@ test(
       assert.match(await page.locator(".contenu").innerText(), /1 sans aide/);
       await page.goto(`${base}?notions=NC27&nombre=2&graine=123&niveau=brevet`);
       await page.locator('[data-action="aide"]').click();
-      await page.locator("#garder-aide").check();
+      // Coque V2 (C5) : plus de case « Garder l'aide affichée » ; l'aide se referme à la question suivante.
+      assert.equal(await page.locator("#garder-aide").count(), 0);
       await page.locator('[data-action="passer"]').click();
       await page.locator('[data-action="suivante"]').click();
-      assert.equal(
-        await page.locator(".aide").isVisible(),
-        true,
-        "Préférence appliquée à la question suivante",
-      );
+      assert.equal(await page.locator(".aide").count(), 0, "Aide refermée à la question suivante");
       await page.goto(`${base}?prof=1`);
       await page.locator('[data-selection-domaine="nombres-calculs"]').check();
       await page.locator("#nombre").fill("2");

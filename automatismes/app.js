@@ -187,8 +187,14 @@ function changerNiveau(niveau) {
   else afficherAccueil();
 }
 
+// L'aide affichée d'office ne vaut que pour le diaporama (réglage « Avec aide », ou la préférence
+// garderAide) ; l'élève, lui, ouvre l'aide question par question.
+function aideDOffice(mode, aideOffice) {
+  return mode === "project" && Boolean(aideOffice || preferences.garderAide);
+}
+
 function nouvelEtat(question, mode, aideOffice) {
-  const aideOuverte = mode !== "exam" && (aideOffice || preferences.garderAide);
+  const aideOuverte = aideDOffice(mode, aideOffice);
   return {
     reponses: question.fields.map(() => ""),
     aide: aideOuverte ? 1 : 0,
@@ -237,23 +243,19 @@ function afficherQuestion() {
   const question = questionCourante();
   const etat = etatCourant();
   if (!etat.visitee && seance.mode !== "exam") {
-    etat.aideOuverte = preferences.garderAide || seance.options.aideOffice;
+    etat.aideOuverte = aideDOffice(seance.mode, seance.options.aideOffice);
     etat.aide = etat.aideOuverte ? 1 : 0;
     etat.visitee = true;
   }
-  cadre(questionHTML(seance, parId[question.famille], preferences.garderAide, clavierVoulu()));
+  garderClavier = false;
+  delete document.body.dataset.clavierRange;
+  cadre(questionHTML(seance, parId[question.famille], clavierVoulu()));
   document.body.classList.toggle(
     "avec-choix",
     question.fields.some((champ) => champ.options),
   );
   if (seance.mode !== "project") preparerSaisie(question, etat);
   else paginerChoixProjection(document.querySelector(".espace-question"));
-  const garder = document.querySelector("#garder-aide");
-  if (garder)
-    garder.onchange = () => {
-      preferences.garderAide = garder.checked;
-      sauverPreferences();
-    };
   document.querySelectorAll(".champ").forEach((champ) => {
     champ.classList.toggle("faux", Boolean(etat.erreurs && !etat.juste));
     champ.classList.toggle("juste", etat.juste);
@@ -301,8 +303,8 @@ function preparerSaisie(question, etat) {
   monterClavier(document.querySelector(".clavier"), question, { inserer });
   reponses.hidden = etat.correction;
   const premier = document.querySelector(".champ:not(:disabled)");
-  // Le clavier s'ouvre dès l'arrivée partout où on le veut ; au téléphone, pas quand l'aide est ouverte.
-  if (premier && clavierVoulu() && (!telephone() || !etat.aideOuverte)) ciblerChamp(premier);
+  // Le clavier s'ouvre dès l'arrivée partout où on le veut, aide ouverte ou non (coque V2, C5).
+  if (premier && clavierVoulu()) ciblerChamp(premier);
 }
 
 // Le clavier à l'écran : toujours sur un appareil tactile, sur ordinateur seulement si on l'a demandé
@@ -330,8 +332,14 @@ function tactile() {
   return telephone() || matchMedia("(pointer: coarse)").matches;
 }
 
-function ciblerChamp(champ) {
+// Toucher une case (parUtilisateur) fait revenir le clavier que l'aide avait rangé, et il reste.
+let garderClavier = false;
+function ciblerChamp(champ, parUtilisateur = false) {
   champActif = champ;
+  if (parUtilisateur && document.body.dataset.clavierRange) {
+    garderClavier = true;
+    delete document.body.dataset.clavierRange;
+  }
   // La case active est cerclée d'orange : toucher une case la rend active.
   document.querySelectorAll(".champ.active").forEach((autre) => autre.classList.remove("active"));
   champ.classList.add("active");
@@ -411,8 +419,6 @@ function ouvrirAide(etape = false) {
   etat.etape ||= etape;
   if (!etat.terminee) etat.aide = Math.max(etat.aide, etape ? 2 : 1);
   afficherQuestion();
-  // Au téléphone seulement : le clavier s'efface pour laisser la place au dessin.
-  if (telephone()) fermerClavier();
 }
 
 function fermerAide() {
@@ -785,8 +791,8 @@ function relierActions(racine = application) {
 function ajusterAffichage() {
   requestAnimationFrame(() => {
     rectifierElisions(application);
-    ajusterDessinProjete();
     fitMathExpressions(application);
+    ajusterQuestion();
     ajusterEchelle();
   });
 }
@@ -802,17 +808,75 @@ function rectifierElisions(racine) {
   });
 }
 
-function ajusterDessinProjete() {
-  if (!document.body.classList.contains("projection")) return;
-  const zone = document.querySelector(".espace-question");
-  const aide = document.querySelector(".aide-projetee");
-  const dessin = aide?.querySelector("svg");
+/* La règle de taille de la coque V2 (fonction ajuster de la maquette, portée ici). Priorité : la
+   question (texte + cases) > la figure de la question (≥ 70 %) > le dessin d'aide (≥ 76 %) > le
+   clavier. Le dessin d'aide grandit jusqu'à × 1,5 si la fenêtre fait 700 px de large ou plus, × 2,2 en
+   projection. Si l'aide ne tient toujours pas, le clavier se range ; toucher une case le fait revenir
+   (ciblerChamp). Sans aide ouverte, seule la figure se réduit (jusqu'à 60 %) pour que la question tienne.
+   Les pourcentages se comptent sur la taille de départ du dessin, ramenée à sa taille naturelle au
+   plus : un dessin du moteur plus large que la colonne (550 px) part déjà réduit à la largeur. */
+function largeurNaturelle(dessin) {
+  return dessin.viewBox?.baseVal?.width || parseFloat(dessin.getAttribute("width")) || 0;
+}
+
+function poserDessin(dessin, echelle) {
   if (!dessin) return;
-  const autres = [...zone.children]
-    .filter((element) => element !== aide)
-    .reduce((total, element) => total + element.getBoundingClientRect().height, 0);
-  const etape = aide.querySelector(".etape")?.getBoundingClientRect().height || 0;
-  dessin.style.maxHeight = `${Math.max(80, zone.clientHeight - autres - etape - 64)}px`;
+  dessin.style.width = `${Math.round(largeurNaturelle(dessin) * echelle)}px`;
+  dessin.style.maxWidth = "none";
+  dessin.style.maxHeight = "none";
+  dessin.style.height = "auto";
+  dessin.dataset.echelle = echelle.toFixed(2);
+}
+
+function reduireCalculs(zone) {
+  // Un calcul trop long pour la largeur se réduit (comme fitMathExpressions), jamais sous 70 %.
+  zone.querySelectorAll(".carte .calcul:not(.phrase)").forEach((calcul) => {
+    calcul.style.fontSize = "";
+    calcul.style.flexWrap = "";
+    const base = parseFloat(getComputedStyle(calcul).fontSize);
+    const trop = () => calcul.scrollWidth > calcul.clientWidth + 1;
+    let taille = base;
+    while (trop() && taille > base * 0.7) calcul.style.fontSize = `${(taille -= 1)}px`;
+    calcul.style.flexWrap = "nowrap";
+    while (trop() && taille > base * 0.7) calcul.style.fontSize = `${(taille -= 1)}px`;
+    if (trop()) calcul.style.flexWrap = "wrap";
+  });
+}
+
+function ajusterQuestion() {
+  const zone = document.querySelector(".espace-question");
+  if (!zone || ecran !== "question") return;
+  reduireCalculs(zone);
+  const projection = seance?.mode === "project";
+  const aide = zone.querySelector(".aide .dessin svg, .explication .dessin svg");
+  const figure = zone.querySelector(".carte .figure > svg");
+  const aideOuverte = Boolean(zone.querySelector(".aide, .explication, .bulle-aide"));
+  const trop = () => zone.scrollHeight > zone.clientHeight + 1;
+  const depart = (dessin, maximum) => {
+    const naturelle = dessin ? largeurNaturelle(dessin) : 0;
+    return naturelle ? Math.min(maximum, dessin.parentElement.clientWidth / naturelle) : 0;
+  };
+  const maxAide = projection ? 2.2 : innerWidth >= 700 ? 1.5 : 1;
+  const essayer = () => {
+    let echelleAide = depart(aide, maxAide);
+    let echelleFigure = depart(figure, 1);
+    const planAide = 0.76 * Math.min(1, echelleAide);
+    const planFigure = (aideOuverte ? 0.7 : 0.6) * echelleFigure;
+    poserDessin(aide, echelleAide);
+    poserDessin(figure, echelleFigure);
+    while (trop() && aide && echelleAide - 0.02 >= planAide)
+      poserDessin(aide, (echelleAide -= 0.02));
+    while (trop() && figure && echelleFigure - 0.02 >= planFigure)
+      poserDessin(figure, (echelleFigure -= 0.02));
+  };
+  essayer();
+  const clavier = document.querySelector(".clavier");
+  if (trop() && aideOuverte && clavier && !clavier.hidden && !garderClavier) {
+    clavier.hidden = true;
+    document.body.classList.remove("clavier-ouvert");
+    document.body.dataset.clavierRange = "1";
+    essayer();
+  }
 }
 
 function ajusterEchelle() {

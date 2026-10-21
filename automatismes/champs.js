@@ -61,7 +61,7 @@ function ajouterSaisie(parent, champ, valeur, etiquette, options) {
   saisie.disabled = options.terminee;
   saisie.addEventListener("input", options.changer);
   saisie.addEventListener("focus", () => options.cibler(saisie));
-  saisie.addEventListener("click", () => options.cibler(saisie));
+  saisie.addEventListener("click", () => options.cibler(saisie, true));
   saisie.addEventListener("keydown", (evenement) => {
     if (evenement.key === "Enter") {
       evenement.preventDefault();

@@ -555,50 +555,11 @@ label {
   max-height: 280px;
   margin: 0 auto;
 }
-.aide {
-  width: 100%;
-  max-width: 400px;
-  margin: 16px auto;
-  padding: 12px;
-  border: 1px solid var(--ligne);
-  border-radius: 16px;
-  background: var(--fond-doux);
-}
-.aide-entete {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  color: var(--turquoise-texte);
-  font-size: 0.8125rem;
-  font-weight: 800;
-  margin-bottom: 4px;
-}
-.aide svg,
 .correction svg {
   display: block;
   width: 100%;
   height: auto;
   margin: 0 auto;
-}
-.aide p {
-  margin: 8px 0;
-  font-size: 0.9375rem;
-}
-.aide-pied {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 8px;
-}
-.aide-pied label {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--attenue);
-  font-size: 0.75rem;
 }
 .etape {
   margin-top: 12px;
@@ -1223,6 +1184,138 @@ input.case {
   font-size: 1.5rem;
   font-weight: 800;
 }
+/* L'aide (C5) : sous la carte, au même endroit au téléphone, à la tablette, à l'ordinateur et au
+   diaporama. En-tête : Aide · Encore un indice · ×. La taille des dessins est réglée par
+   ajusterQuestion() (app.js). */
+.espace-question .aide {
+  max-width: none;
+  margin: 0;
+  padding: 10px 12px 12px;
+  border: 1.5px solid color-mix(in srgb, var(--turquoise) 30%, var(--papier));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--turquoise) 6%, var(--papier));
+  text-align: left;
+}
+.aide-entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+  color: var(--turquoise-texte);
+  font-size: 1rem;
+  font-weight: 900;
+}
+.aide-entete strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.aide-entete svg {
+  width: 18px;
+  height: 18px;
+}
+.aide-boutons {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.indice {
+  min-height: 32px;
+  padding: 4px 12px;
+  border: 1.5px solid var(--bleu);
+  border-radius: 999px;
+  background: var(--papier);
+  color: var(--bleu);
+  font-size: 0.8125rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.indice:disabled {
+  display: none;
+}
+.espace-question .aide p {
+  margin: 2px 0 6px;
+  color: var(--attenue);
+  font-size: 0.9375rem;
+}
+.dessin {
+  display: flex;
+  justify-content: center;
+}
+.dessin svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+.espace-question .etape {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--ligne);
+  text-align: center;
+}
+/* La figure de la question, et l'aide posée dessus dans une bulle, dans un coin vide. */
+.carte .figure {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  max-width: none;
+  margin: 2px 0 8px;
+}
+.carte .figure > svg {
+  display: block;
+  max-width: 100%;
+  max-height: none;
+  height: auto;
+}
+.bulle-aide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-width: 46%;
+  padding: 6px 10px;
+  border: 1.5px solid color-mix(in srgb, var(--turquoise) 45%, var(--papier));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--turquoise) 6%, var(--papier));
+  color: var(--encre);
+  font-size: 0.875rem;
+  line-height: 1.3;
+  text-align: left;
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--encre) 12%, transparent);
+}
+.bulle-aide.haut-droite {
+  left: auto;
+  right: 0;
+}
+.bulle-aide.bas-gauche {
+  top: auto;
+  bottom: 0;
+}
+.bulle-aide.bas-droite {
+  top: auto;
+  left: auto;
+  right: 0;
+  bottom: 0;
+}
+.bulle-aide > svg {
+  display: inline;
+  width: 15px;
+  height: 15px;
+  margin: 0 2px 0 0;
+  color: var(--turquoise-texte);
+  vertical-align: -2px;
+}
+.bulle-aide .etape {
+  display: block;
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--ligne);
+  text-align: left;
+}
+.bulle-aide .indice {
+  display: block;
+  margin-top: 6px;
+}
 /* Tablette et ordinateur : même écran, la carte et ce qui s'ouvre dessous font 640 px (760 px à la
    souris), centrés en largeur. */
 @media (min-width: 700px) {
@@ -1247,6 +1340,10 @@ input.case {
   input.case {
     width: 120px;
   }
+}
+/* Tablette debout : grosses touches ; couchée (moins de 900 px de haut), celles du téléphone, pour
+   que la question, le dessin d'aide et le clavier tiennent ensemble. */
+@media (min-width: 700px) and (min-height: 900px) {
   .touches button {
     height: 58px;
     font-size: 1.625rem;
@@ -1596,7 +1693,6 @@ body.projection .aide svg {
   max-width: 760px;
   max-height: 320px;
 }
-body.projection .aide-pied,
 body.projection .aide p {
   font-size: 1.125rem;
 }
@@ -1748,39 +1844,6 @@ body.projection .minuteur {
   }
   .figure svg {
     max-height: 240px;
-  }
-  .aide {
-    max-width: none;
-    padding: 8px;
-    margin: 8px auto;
-    border-radius: 12px;
-  }
-  .aide-entete {
-    font-size: 0.75rem;
-    margin: 0;
-  }
-  .aide-entete .fermer {
-    min-height: 28px;
-    min-width: 28px;
-  }
-  .aide p {
-    font-size: 0.8125rem;
-  }
-  .aide-pied {
-    margin-top: 4px;
-    gap: 4px;
-  }
-  .aide-pied label {
-    font-size: 0.6875rem;
-  }
-  .aide-pied input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-  }
-  .aide-pied .bouton {
-    min-height: 32px;
-    padding: 4px 8px;
-    font-size: 0.75rem;
   }
   .etape {
     margin-top: 8px;
