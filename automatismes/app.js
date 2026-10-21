@@ -779,7 +779,46 @@ function ajusterAffichage() {
     ajusterDessinProjete();
     fitMathExpressions(application);
     ajusterEchelle();
+    centrerQuestion();
   });
+}
+
+/* L'énoncé et sa réponse centrés dans la zone de question (tablette, ordinateur), calculé à l'arrivée sur
+   la question sans compter l'aide ni la correction, puis gardé : ce qui s'ouvre ensuite (aide, « Une
+   étape », correction) s'ajoute dessous et l'énoncé ne bouge pas, tant que tout tient. Sinon l'énoncé
+   remonte juste de ce qui dépasse : le champ de réponse reste entier. On recalcule au changement de
+   question, de taille de fenêtre ou de disposition du clavier. Téléphone et projection : en haut. */
+let centrage = { cle: "", decalage: 0, applique: 0 };
+function centrerQuestion() {
+  const zone = document.querySelector(".espace-question");
+  if (!zone || ecran !== "question" || telephone() || seance.mode === "project") return;
+  const clavier = document.body.classList.contains("clavier-ouvert");
+  const cle = [seance.id, seance.index, innerWidth, innerHeight, clavier].join("|");
+  if (cle !== centrage.cle) {
+    zone.classList.remove("centree");
+    const style = getComputedStyle(zone);
+    const libre =
+      zone.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+    const bloc = [".enonce", ".reponses"]
+      .map((selecteur) => zone.querySelector(selecteur))
+      .filter((element) => element && !element.hidden)
+      .reduce((total, element) => {
+        const marges = getComputedStyle(element);
+        return (
+          total +
+          element.offsetHeight +
+          parseFloat(marges.marginTop) +
+          parseFloat(marges.marginBottom)
+        );
+      }, 0);
+    centrage = { cle, decalage: Math.max(0, Math.floor((libre - bloc) / 2)), applique: 0 };
+  }
+  zone.style.setProperty("--decalage-question", `${centrage.decalage}px`);
+  zone.classList.add("centree");
+  const depasse = Math.ceil(zone.scrollHeight - zone.clientHeight);
+  centrage.applique = Math.max(0, centrage.decalage - Math.max(0, depasse));
+  if (centrage.applique !== centrage.decalage)
+    zone.style.setProperty("--decalage-question", `${centrage.applique}px`);
 }
 
 function rectifierElisions(racine) {
@@ -822,12 +861,14 @@ function ajusterEchelle() {
       : ecran === "accueil"
         ? document.querySelector(".contenu")
         : null;
+  // Le décalage de centrage n'est pas du contenu : il ne doit pas faire rétrécir l'écran.
+  const decalage = zone?.classList.contains("centree") ? centrage.applique : 0;
   const tient = (echelle) => {
     racine.style.setProperty("--echelle", echelle.toFixed(3));
     racine.style.setProperty("--hauteur-cadre", `${innerHeight / echelle - marge}px`);
     return (
       coque.getBoundingClientRect().bottom <= innerHeight - 4 &&
-      (!zone || zone.scrollHeight <= zone.clientHeight + 1)
+      (!zone || zone.scrollHeight - decalage <= zone.clientHeight + 1)
     );
   };
   if (tient(1)) return;

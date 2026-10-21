@@ -869,6 +869,10 @@ body[data-ecran="question"] .progression {
   scrollbar-gutter: stable;
   overscroll-behavior: contain;
 }
+/* Centrage gardé de la question (R5b) : l'espace au-dessus de l'énoncé, calculé par centrerQuestion(). */
+.espace-question.centree {
+  padding-top: calc(4px + var(--decalage-question, 0px));
+}
 .enonce {
   text-align: center;
 }
@@ -1002,28 +1006,14 @@ body[data-ecran="question"] .progression {
     grid-column: 1;
     grid-row: 3;
   }
-  /* La question centrée dans sa colonne, le clavier et Aide · Cours · Passer · Valider centrés en
-     face : les deux blocs ont le même milieu. */
-  body.clavier-ouvert:not(.projection) .espace-question {
-    display: flex;
-    flex-direction: column;
-    justify-content: safe center;
-  }
+  /* Le clavier et Aide · Cours · Passer · Valider centrés dans leur colonne ; la question est centrée
+     en face par centrerQuestion() (app.js). */
   body.clavier-ouvert #commandes {
     grid-column: 2;
     grid-row: 3;
     width: auto;
     margin: 0;
     justify-content: center;
-  }
-}
-/* Ordinateur (ou tablette) sans clavier : la question centrée entre la barre du haut et la ligne du bas.
-   Le téléphone garde sa question en haut. */
-@media (min-width: 681px) {
-  body[data-ecran="question"]:not(.clavier-ouvert):not(.projection) .espace-question {
-    display: flex;
-    flex-direction: column;
-    justify-content: safe center;
   }
 }
 /* Téléphone : le clavier et Passer · Valider sont fixés en bas ; la barre du haut se resserre. */

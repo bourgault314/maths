@@ -301,6 +301,54 @@ test(
   },
 );
 
+test(
+  "question : l’énoncé reste en place quand l’aide s’ouvre, le champ reste entier",
+  { skip: ignorer, timeout: 90000 },
+  async () => {
+    const { serveur, base } = await serveurLocal();
+    const browser = await ouvrirNavigateur();
+    const mesurer = (page) =>
+      page.evaluate(() => {
+        const zone = document.querySelector(".espace-question").getBoundingClientRect();
+        const champ = document.querySelector(".reponses").getBoundingClientRect();
+        return {
+          enonce: document.querySelector(".enonce").getBoundingClientRect().top,
+          champEntier: champ.top >= zone.top - 1 && champ.bottom <= zone.bottom + 1,
+        };
+      });
+    try {
+      for (const [width, height, tactile, fixe] of [
+        [820, 1180, true, true],
+        [1180, 820, true, false],
+        [1366, 768, false, false],
+      ]) {
+        const page = await browser.newPage({
+          viewport: { width, height },
+          isMobile: tactile,
+          hasTouch: tactile,
+        });
+        const nom = `${width}x${height}`;
+        await page.goto(`${base}?notion=NC27&forme=a&graine=12`);
+        await page.locator(".reponses").waitFor();
+        await stabiliser(page);
+        const avant = await mesurer(page);
+        await page.locator('[data-action="aide"]').click();
+        await page.locator(".aide").waitFor();
+        await stabiliser(page);
+        const apres = await mesurer(page);
+        assert.ok(apres.champEntier, `${nom} : champ entier avec l’aide`);
+        assert.ok(apres.enonce <= avant.enonce + 1, `${nom} : l’énoncé ne descend pas`);
+        // Là où l'aide tient (tablette debout), l'énoncé ne bouge pas d'un pixel.
+        if (fixe) assert.ok(Math.abs(apres.enonce - avant.enonce) <= 1, `${nom} : énoncé immobile`);
+        await page.close();
+      }
+    } finally {
+      await browser.close();
+      await new Promise((fin) => serveur.close(fin));
+    }
+  },
+);
+
 async function dansEcran(page, selecteur) {
   const rect = await page.locator(selecteur).first().boundingBox();
   const { width, height } = page.viewportSize();
