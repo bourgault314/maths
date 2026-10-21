@@ -210,7 +210,7 @@ export function bilanHTML(seance, parId, etoiles) {
   const projection = seance.mode === "project";
   const justes = seance.etats.filter((etat) => etat.juste);
   const autonomes = justes.filter((etat) => etat.aide === 0).length;
-  const dessins = justes.filter((etat) => etat.aide === 1).length;
+  const dessins = justes.filter((etat) => etat.aide === 1 || etat.aide === 2).length;
   const familles = [...new Set(seance.questions.map((question) => question.famille))];
   return `<h1>${projection ? "Corrections" : "Ma séance"}</h1>
     ${
