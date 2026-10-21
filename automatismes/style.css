@@ -766,6 +766,23 @@ body[data-ecran="question"] .contenu {
   background: var(--bleu-identite);
   color: var(--papier);
 }
+.barre-question .minuteur {
+  font-size: 1.375rem;
+  padding: 0 4px;
+}
+body.projection .barre-question {
+  min-height: 64px;
+}
+body.projection .barre-question .minuteur {
+  font-size: 2rem;
+}
+body.projection .barre-question .centre {
+  font-size: 1.25rem;
+}
+body.projection .barre-question .bouton {
+  min-height: 48px;
+  font-size: 1.0625rem;
+}
 .score-barre {
   display: inline-flex;
   align-items: center;

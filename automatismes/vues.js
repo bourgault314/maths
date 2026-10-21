@@ -110,20 +110,30 @@ export const ICONES = {
   aide: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.7.55 1.1 1.3 1.1 2.1V16h5v-.1c0-.8.4-1.55 1.1-2.1A6 6 0 0 0 12 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 };
 
-/* Le haut de l'écran de question, sur une ligne comme /auto/ :
-   Menu · notion et compteur · score, clavier, plein écran, Cours. */
-export function barreQuestionHTML(seance, famille, etoiles, clavier) {
+/* Le haut de l'écran de question, sur une ligne comme /auto/, dans les trois modes :
+   entraînement  ← Menu · notion · n / N · ✓ score · clavier · plein écran · Cours
+   brevet        ← Menu · Entraînement brevet · n / N · chrono · clavier · plein écran
+   projection    ← Quitter · notion · n / N · minuteur · Pause · plein écran */
+export function barreQuestionHTML(seance, famille, clavier) {
   const exam = seance.mode === "exam";
+  const projection = seance.mode === "project";
   const justes = seance.etats.filter((e) => e.juste).length;
+  const retour = projection ? "Quitter" : "Menu";
+  const droite = projection
+    ? `<span class="minuteur"><span id="temps" role="timer"></span></span>
+      ${bouton(seance.pause ? "Reprendre" : "Pause", "pause", "secondaire pause")}`
+    : exam
+      ? `<span class="minuteur chrono"><span id="temps" role="timer"></span></span>
+      ${bouton(ICONES.clavier, "clavier", "secondaire icone-bouton clavier-bascule", `aria-pressed="${clavier}" aria-label="${clavier ? "Cacher" : "Afficher"} le clavier" title="Clavier"`)}`
+      : `<span class="score-barre" aria-label="${justes} réponse${justes > 1 ? "s" : ""} juste${justes > 1 ? "s" : ""}">✓ ${justes}</span>
+      ${bouton(ICONES.clavier, "clavier", "secondaire icone-bouton clavier-bascule", `aria-pressed="${clavier}" aria-label="${clavier ? "Cacher" : "Afficher"} le clavier" title="Clavier"`)}`;
   return `<header class="barre-question">
-    <div class="gauche">${bouton('<span aria-hidden="true">←</span><span class="mot">Menu</span>', "retour", "discret menu", 'aria-label="Retour au menu"')}</div>
+    <div class="gauche">${bouton(`<span aria-hidden="true">←</span><span class="mot">${retour}</span>`, "retour", "discret menu", `aria-label="${retour}"`)}</div>
     <div class="centre"><span class="notion-nom">${exam ? "Entraînement brevet" : esc(famille.nom)}</span>
-      <strong>${seance.index + 1} / ${seance.questions.length}</strong>${exam ? "" : etoilesHTML(etoiles(famille.id))}</div>
-    <div class="droite">
-      <span class="score-barre" aria-label="${justes} réponse${justes > 1 ? "s" : ""} juste${justes > 1 ? "s" : ""}">✓ ${justes}</span>
-      ${bouton(ICONES.clavier, "clavier", "secondaire icone-bouton clavier-bascule", `aria-pressed="${clavier}" aria-label="${clavier ? "Cacher" : "Afficher"} le clavier" title="Clavier"`)}
+      <strong>${seance.index + 1} / ${seance.questions.length}</strong></div>
+    <div class="droite">${droite}
       ${bouton(ICONES.pleinEcran, "plein-ecran", "secondaire icone-bouton plein-ecran", 'aria-label="Plein écran" title="Plein écran"')}
-      ${exam ? "" : bouton(`${ICONES.cours}<span>Cours</span>`, "cours", "cours-bouton")}
+      ${exam || projection ? "" : bouton(`${ICONES.cours}<span>Cours</span>`, "cours", "cours-bouton")}
     </div></header>`;
 }
 
@@ -157,18 +167,13 @@ function actionsProjectionHTML(seance) {
   </div>`;
 }
 
-export function questionHTML(seance, famille, garder, etoiles, clavier = false) {
+export function questionHTML(seance, famille, garder, clavier = false) {
   const question = seance.questions[seance.index];
   const etat = seance.etats[seance.index];
   const projection = seance.mode === "project";
   const minuterie = projection || seance.mode === "exam";
-  const haut = projection
-    ? `<div class="question-entete"><span>${esc(famille.nom)}</span>
-    <strong>${seance.index + 1} / ${seance.questions.length}</strong>${etoilesHTML(etoiles(famille.id))}</div>`
-    : barreQuestionHTML(seance, famille, etoiles, clavier);
-  return `${haut}
+  return `${barreQuestionHTML(seance, famille, clavier)}
     <progress class="progression" max="${seance.questions.length}" value="${seance.index + 1}"></progress>
-    ${minuterie ? minuteurHTML(projection, seance.pause) : ""}
     <div class="espace-question">
       ${enonceHTML(question)}${aideHTML(question, etat, garder, projection)}
       ${projection ? choixProjectionHTML(question) : '<div class="reponses"></div>'}
@@ -178,13 +183,6 @@ export function questionHTML(seance, famille, garder, etoiles, clavier = false) 
     </div>
     ${minuterie ? pointsHTML(seance) : ""}
     <div id="commandes"><section class="clavier" aria-label="Clavier mathématique" hidden></section>${actionsHTML(seance, etat)}</div>`;
-}
-
-function minuteurHTML(projection, pause) {
-  return `<div class="minuteur"><span id="temps" role="timer"></span>
-    ${projection ? bouton(pause ? "Reprendre" : "Pause", "pause", "secondaire petit") : ""}
-    ${projection ? bouton("Plein écran", "plein-ecran", "discret petit", 'aria-label="Plein écran"') : ""}
-  </div>`;
 }
 
 function choixProjectionHTML(question) {

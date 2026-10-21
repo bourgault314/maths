@@ -3,7 +3,7 @@ import { genererQuestion } from "./moteur.js";
 import { mathHtml } from "./math-format.js";
 import { fitMathExpressions } from "./math-layout.js";
 import { esc } from "./generateurs/draw.js";
-import { initialiserSuivi, enregistrerEssai, terminerSeance, etoiles, vuesForme } from "./suivi.js";
+import { initialiserSuivi, enregistrerEssai, terminerSeance, vuesForme } from "./suivi.js";
 import {
   creerSerie,
   famillesEligibles,
@@ -106,7 +106,7 @@ function cadre(contenu) {
         ${bouton(`${ICONES.pleinEcran}<span>Plein écran</span>`, "plein-ecran", "pastille", 'aria-label="Plein écran"')}
       </div></header>`;
   const retourCadre =
-    simple || ecran === "accueil"
+    question || ecran === "accueil"
       ? ""
       : `<div class="barre-cadre">${bouton("← Retour", "retour", "discret petit")}</div>`;
   application.innerHTML = `<div class="coque">${entete}
@@ -205,9 +205,7 @@ function afficherQuestion() {
     etat.aide = etat.aideOuverte ? 1 : 0;
     etat.visitee = true;
   }
-  cadre(
-    questionHTML(seance, parId[question.famille], preferences.garderAide, etoiles, clavierVoulu()),
-  );
+  cadre(questionHTML(seance, parId[question.famille], preferences.garderAide, clavierVoulu()));
   document.body.classList.toggle(
     "avec-choix",
     question.fields.some((champ) => champ.options),
@@ -341,7 +339,11 @@ function valider() {
   const question = questionCourante();
   const etat = etatCourant();
   const resultat = checkAnswer(question, etat.reponses);
-  enregistrerEssai(detailEssai(question, etat, resultat.ok));
+  // Contrat §5.3 : un seul événement par question, à la première réponse ; les réessais ne comptent pas.
+  if (!etat.emis) {
+    enregistrerEssai(detailEssai(question, etat, resultat.ok));
+    etat.emis = true;
+  }
   etat.juste = resultat.ok;
   etat.terminee = resultat.ok;
   etat.message = resultat.ok ? "Réponse juste." : messageErreur(resultat);
@@ -385,8 +387,10 @@ function montrerCorrection() {
   etat.terminee = true;
   etat.juste = false;
   etat.message = "";
-  if (seance.mode !== "project" && !dejaTerminee)
+  if (seance.mode !== "project" && !dejaTerminee && !etat.emis) {
     enregistrerEssai(detailEssai(questionCourante(), etat, false));
+    etat.emis = true;
+  }
   afficherQuestion();
   fermerClavier();
 }
