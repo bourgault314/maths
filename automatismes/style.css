@@ -1531,19 +1531,29 @@ body:not(.tactile) #commandes > * {
   display: flex;
   margin: 20px auto 0;
 }
-.score {
-  color: var(--bleu-identite);
+/* Le bilan (C9) : « n / N » seul, en grand, dans un cadre vert ; dessous, sans aide · avec l'aide. */
+.grand-score {
+  margin: 12px 0 4px;
+  padding: 12px;
+  border: 1.5px solid color-mix(in srgb, var(--vert) 35%, var(--papier));
+  border-radius: 18px;
+  background: var(--vert-fond);
   text-align: center;
+}
+.score {
+  margin: 0;
+  color: var(--vert);
   font-family: "Fredoka", sans-serif;
-  font-size: 4rem;
+  font-size: 3.25rem;
   font-weight: 600;
-  line-height: 1.2;
-  margin: 12px 0;
+  line-height: 1.1;
+  text-align: center;
 }
 .resume-bilan {
-  text-align: center;
+  margin: 4px 0 0;
   color: var(--attenue);
-  margin: 0 0 8px;
+  font-size: 0.875rem;
+  text-align: center;
 }
 .liste-resultats {
   margin: 16px 0;
@@ -1554,7 +1564,7 @@ body:not(.tactile) #commandes > * {
 }
 .liste-resultats summary {
   display: grid;
-  grid-template-columns: 32px minmax(0, 1fr) auto auto;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
   cursor: pointer;
@@ -1596,22 +1606,40 @@ body:not(.tactile) #commandes > * {
 .liste-resultats .resultat-nom .figure {
   display: none;
 }
+/* La correction dépliée : l'énoncé en petit, puis l'explication. */
+.liste-resultats details > .enonce {
+  margin: 10px 0 8px;
+  text-align: center;
+}
+.liste-resultats details > .enonce h1 {
+  color: var(--encre);
+  font-size: 1.125rem;
+}
+.liste-resultats details > .enonce .figure svg {
+  max-height: 200px;
+}
+/* La bonne réponse, à droite. */
+.liste-resultats .resultat-reponse {
+  color: var(--vert);
+  font-style: normal;
+  font-weight: 900;
+  white-space: nowrap;
+}
 .liste-resultats .voir {
+  grid-column: 2 / -1;
   color: var(--bleu);
   font-size: 0.875rem;
   font-weight: 800;
   white-space: nowrap;
 }
 .etat-ligne {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  min-height: 28px;
-  padding: 0 10px;
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
   border-radius: 999px;
   font-size: 0.875rem;
-  font-weight: 800;
-  white-space: nowrap;
+  font-weight: 900;
 }
 .etat-ligne.juste {
   color: var(--vert);
@@ -1628,6 +1656,14 @@ body:not(.tactile) #commandes > * {
 .etat-ligne.passee {
   color: var(--attenue);
   background: var(--fond-doux);
+}
+/* « Refaire mes erreurs » en premier, sur toute la largeur ; dessous Changer de notions · Encore. */
+.actions-bilan {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.actions-bilan .refaire {
+  grid-column: 1 / -1;
 }
 .brevet-depart {
   text-align: center;
@@ -1949,11 +1985,7 @@ body.projection .minuteur {
     justify-content: center;
   }
   .liste-resultats summary {
-    grid-template-columns: 28px minmax(0, 1fr) auto;
-    row-gap: 6px;
-  }
-  .liste-resultats .voir {
-    grid-column: 2 / -1;
+    row-gap: 4px;
   }
   body[data-ecran="question"] .coque {
     padding-bottom: 0;

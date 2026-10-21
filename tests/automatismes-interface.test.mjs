@@ -270,8 +270,8 @@ test(
         [...notions].sort((a, b) => a.localeCompare(b, "fr")),
         ["Équations à une ou deux étapes", "Rapports trigonométriques"],
       );
-      // La sélection part avec la série : de retour à l'accueil, plus rien n'est coché.
-      await page.locator('[data-action="accueil"]').click();
+      // La sélection part avec la série : « Changer de notions » (bilan, coque V2), plus rien n'est coché.
+      await page.locator('[data-action="changer"]').click();
       assert.equal(await page.locator(".barre-lancement").count(), 0);
       assert.deepEqual(erreurs, []);
     } finally {
@@ -568,6 +568,39 @@ test(
         9,
         "Corrections à la fin du chrono",
       );
+    } finally {
+      await browser.close();
+      await new Promise((fin) => serveur.close(fin));
+    }
+  },
+);
+
+test(
+  "bilan (coque V2) : « Refaire mes erreurs » relance les mêmes questions ratées",
+  { skip: ignorer, timeout: 60000 },
+  async () => {
+    const { serveur, base } = await serveurLocal();
+    const browser = await ouvrirNavigateur();
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true });
+    try {
+      await page.goto(`${base}?notions=NC04&nombre=3&graine=12`);
+      const enonces = [];
+      for (let rang = 0; rang < 3; rang++) {
+        await page.locator(".carte").waitFor();
+        enonces.push(await page.locator(".carte .reponses").innerText());
+        // Toutes passées : trois erreurs à refaire, dans le même ordre, mêmes formes et graines.
+        await page.locator('[data-action="passer"]').click();
+        await page.locator('[data-action="suivante"]').click();
+      }
+      await page.locator(".grand-score").waitFor();
+      assert.equal(await page.locator(".score").innerText(), "0 / 3");
+      assert.equal(
+        await page.locator(".actions-bilan button").first().innerText(),
+        "Refaire mes erreurs",
+      );
+      await page.locator('[data-action="refaire"]').click();
+      await page.locator(".barre-question .centre").getByText("1 sur 3").waitFor();
+      assert.equal(await page.locator(".carte .reponses").innerText(), enonces[0]);
     } finally {
       await browser.close();
       await new Promise((fin) => serveur.close(fin));

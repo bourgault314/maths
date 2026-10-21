@@ -552,6 +552,18 @@ function terminer() {
     .forEach((detail) => detail.addEventListener("toggle", ajusterAffichage));
 }
 
+// « Refaire mes erreurs » : une série avec les mêmes questions ratées (faux ou passées), même forme
+// et même graine. Après le brevet, on les refait en entraînement (avec aide et cours).
+function refaireErreurs() {
+  const ratees = seance.questions.filter((_, rang) => !seance.etats[rang].juste);
+  if (!ratees.length) return;
+  const mode = seance.mode === "exam" ? "train" : seance.mode;
+  const questions = ratees.map((question) =>
+    genererQuestion(question.famille, question.forme, question.graine),
+  );
+  lancer({ ...seance.options, mode, nombre: questions.length }, questions);
+}
+
 function fenetre(contenu, fermer = "Fermer", titre = "") {
   fermerClavier();
   const dialogue = document.createElement("dialog");
@@ -801,6 +813,8 @@ function relierActions(racine = application) {
         ? document.exitFullscreen()
         : document.documentElement.requestFullscreen(),
     encore: () => lancer({ ...seance.options, graine: nouvelleGraine() }),
+    refaire: refaireErreurs,
+    changer: () => (domaine ? afficherDomaine(domaine) : afficherAccueil()),
   };
   racine.querySelectorAll("[data-action]").forEach((element) => {
     element.onclick = (evenement) => {

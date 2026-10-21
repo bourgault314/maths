@@ -407,6 +407,7 @@ export function bilanHTML(seance, parId) {
   const justes = seance.etats.filter((etat) => etat.juste);
   const autonomes = justes.filter((etat) => etat.aide === 0).length;
   const dessins = justes.length - autonomes;
+  const ratees = seance.etats.length - justes.length;
   const etatLigne = (etat) =>
     etat.juste
       ? etat.aide === 0
@@ -416,23 +417,34 @@ export function bilanHTML(seance, parId) {
         ? ["faux", "✗", "Faux"]
         : ["passee", "○", "Passée"];
   const titre = projection ? "Corrections" : exam ? "Entraînement brevet" : "Bilan";
-  const sousTitre = exam
-    ? `${justes.length} juste${justes.length > 1 ? "s" : ""} sur 9`
-    : `${autonomes} sans aide · ${dessins} avec l’aide`;
-  return `<h1>${titre}</h1>
-    ${projection ? "" : `<div class="score">${justes.length} / ${seance.questions.length}</div><p class="resume-bilan">${sousTitre}</p>`}
-    <div class="liste-resultats">${seance.questions
-      .map((question, i) => {
-        const [classe, signe, mot] = projection ? ["", "", ""] : etatLigne(seance.etats[i]);
-        return `<details><summary><span class="numero">${i + 1}</span>
+  // Coque V2 (C9) : « n / N » seul, en grand ; dessous, sans aide · avec l'aide.
+  const score = `<div class="grand-score"><div class="score">${justes.length} / ${seance.questions.length}</div>
+    <p class="resume-bilan">${autonomes} sans aide · ${dessins} avec l’aide</p></div>`;
+  const liste = seance.questions
+    .map((question, i) => {
+      const [classe, signe, mot] = projection ? ["", "", ""] : etatLigne(seance.etats[i]);
+      const famille = parId[question.famille];
+      const modele = modeleQuestion(question, reglageForme(question, famille, "gabarit"));
+      return `<details><summary>${
+        projection
+          ? `<span class="numero">${i + 1}</span>`
+          : `<span class="etat-ligne ${classe}" aria-label="${mot}">${signe}</span>`
+      }
         <span class="resultat-nom">${questionPrompt(question)}</span>
-        ${projection ? "" : `<span class="etat-ligne ${classe}"><span aria-hidden="true">${signe}</span> ${mot}</span>`}
+        <em class="resultat-reponse">${mathHtml(bonneReponseTexte(question, modele).replace(/^.* = /, ""))}</em>
         <span class="voir">Voir la correction</span></summary>
         ${enonceHTML(question)}${explicationHTML(question, false)}</details>`;
-      })
-      .join("")}</div>
-    <div class="actions-prof">${bouton(exam ? "Encore un entraînement" : "Encore une série", "encore", "primaire")}
-      ${bouton("Retour", "accueil", "secondaire")}</div>`;
+    })
+    .join("");
+  // « Refaire mes erreurs » en premier, sur toute la largeur (choix de Gwenaël, 21/10), absent sans erreur.
+  const actions = projection
+    ? `${bouton("Encore une série", "encore", "primaire")}${bouton("Retour", "accueil", "secondaire")}`
+    : `${ratees ? bouton("Refaire mes erreurs", "refaire", "orange refaire") : ""}
+      ${bouton("Changer de notions", "changer", "secondaire")}
+      ${bouton(exam ? "Encore un entraînement" : "Encore une série", "encore", "primaire")}`;
+  return `<h1>${titre}</h1>${projection ? "" : score}
+    <div class="liste-resultats">${liste}</div>
+    <div class="actions-prof actions-bilan">${actions}</div>`;
 }
 
 /* Le cours (C8), dans sa fenêtre. Quand le cours de la famille est découpé en morceaux (champ
