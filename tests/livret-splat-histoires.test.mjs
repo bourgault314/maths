@@ -12,9 +12,12 @@ import { readFileSync, statSync, existsSync } from "node:fs";
 import { inflateSync } from "node:zlib";
 import vm from "node:vm";
 
-/* ══ OUVERTES À TOUS le 17/10/2026 (lot A) : EN_ESSAI à false, les deux « data-prepa » retirés de la page
-   (l'onglet #onglet-h et le panneau #histoires). Pour les recacher : EN_ESSAI à true et les remettre. ══ */
-const EN_ESSAI = false;
+/* ══ OUVERTES À TOUS le 17/10/2026 (lot A), REMISES « EN PRÉPARATION » le 21/10/2026 (Gwenaël ne les a
+   pas encore relues) : EN_ESSAI à true. L'onglet #onglet-h reste visible mais grisé, sans clic
+   (data-grise aria-disabled="true" tabindex="-1", « 🚧 en préparation ») ; le panneau #histoires porte
+   data-prepa. La clé ?essai=1 rouvre les deux. Pour les rouvrir à tous : EN_ESSAI à false et retirer
+   ces attributs de la page. ══ */
+const EN_ESSAI = true;
 
 const lire = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 const taille = (p) => statSync(new URL(`../${p}`, import.meta.url)).size;
@@ -31,9 +34,9 @@ const SUFFIXES = ["", "_a_plier", "_correction", "_correction_a_plier", "_correc
   "_correction_lettre_a_plier", "_correction_equations", "_correction_equations_a_plier"];
 
 const ONGLET = '<a href="#histoires" data-m="h" id="onglet-h" role="tab" aria-controls="histoires" aria-selected="false"'
-  + (EN_ESSAI ? " data-prepa" : "")
+  + (EN_ESSAI ? ' data-grise aria-disabled="true" tabindex="-1"' : "")
   + '><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>?</b></span>'
-  + '<span class="txt"><span class="etiq">Les histoires de SPLAT!</span><span class="fiches">les mêmes problèmes, en histoires</span></span></a>';
+  + '<span class="txt"><span class="etiq">Les histoires de SPLAT!</span><span class="fiches">les mêmes problèmes, en histoires</span><span class="bientot">🚧 en préparation</span></span></a>';
 const PANNEAU = '<section class="panneau" data-m="h" id="histoires"' + (EN_ESSAI ? " data-prepa" : "")
   + ' role="tabpanel" aria-labelledby="onglet-h" hidden>';
 
@@ -127,18 +130,19 @@ function jouerLaPage({ cle, hash = "" }) {
   const code = page.slice(debut, page.indexOf("})();", debut) + 5);
   const prepaHistoires = page.includes(ONGLET) && EN_ESSAI;
   const onglets = [1, 2, 3, 4, 5, 6].map((n) => element({ "data-m": String(n), id: `onglet-${n}` }))
-    .concat(element({ "data-m": "h", id: "onglet-h", ...(prepaHistoires ? { "data-prepa": "" } : {}) }));
+    .concat(element({ "data-m": "h", id: "onglet-h", ...(prepaHistoires ? { "data-grise": "", "aria-disabled": "true", tabindex: "-1" } : {}) }));
   const panneaux = [1, 2, 3, 4, 5, 6].map((n) => element({ "data-m": String(n), id: `monde-${n}`, class: "panneau" }, { hidden: n !== 1 }))
     .concat(element({ "data-m": "h", id: "histoires", class: "panneau", ...(prepaHistoires ? { "data-prepa": "" } : {}) }, { hidden: true }));
   const barre = element({ id: "onglets", "data-n": "6" });
   const phrase = { hidden: true, textContent: "" };
-  const sansPrepa = (els) => els.filter((e) => !("data-prepa" in e.attrs));
+  const sansPrepa = (els) => els.filter((e) => !("data-prepa" in e.attrs) && !("data-grise" in e.attrs));
   const document = {
     getElementById: (id) => (id === "onglets" ? barre : id === "prepaPhrase" ? phrase : null),
     querySelectorAll(sel) {
       if (sel === "#onglet-h[data-prepa], #histoires[data-prepa]") return [onglets[6], panneaux[6]].filter((e) => "data-prepa" in e.attrs);
+      if (sel === "#onglet-h[data-grise]") return [onglets[6]].filter((e) => "data-grise" in e.attrs);
       if (sel === "#onglets a[data-m], .panneau[data-m]") return [...onglets, ...panneaux];
-      if (sel === "#onglets a:not([data-prepa])") return sansPrepa(onglets);
+      if (sel === "#onglets a:not([data-prepa]):not([data-grise])") return sansPrepa(onglets);
       if (sel === ".panneau") return panneaux;
       throw new Error(`sélecteur inattendu : ${sel}`);
     },
@@ -150,15 +154,22 @@ function jouerLaPage({ cle, hash = "" }) {
   return { onglets, panneaux, barre, location, visibles: sansPrepa(onglets).map((e) => e.dataset.m) };
 }
 
-test("en essai : la carte et ses livrets cachés au public, avec ou sans JavaScript ; la clé ?essai=1 les montre", () => {
+test("en préparation : la carte grisée et ses livrets cachés au public, avec ou sans JavaScript ; la clé ?essai=1 les montre", () => {
   // sans JavaScript : « data-prepa » écrit dans la page, et la règle qui cache
   assert.ok(page.includes(ONGLET), "l'onglet des histoires");
   assert.ok(page.includes(PANNEAU), "le panneau des histoires");
   assert.match(page, /\.panneau\[data-prepa\],#onglets a\[data-prepa\]\{display:none\}/);
+  // la carte grisée : visible, sans clic, « 🚧 en préparation » à la place de sa ligne
+  assert.match(page, /#onglets a\[data-grise\]\{filter:grayscale\(1\);opacity:\.55;pointer-events:none;/);
+  assert.match(page, /#onglets a\[data-grise\] \.fiches\{display:none\}/);
+  assert.match(page, /#onglets a\[data-grise\] \.bientot\{display:block;/);
   // avec JavaScript, sans la clé : rien ne bouge, même avec l'adresse #histoires
   let r = jouerLaPage({ cle: false, hash: "#histoires" });
   if (EN_ESSAI) {
     assert.deepEqual(r.visibles, ["1", "2", "3", "4", "5", "6"]);
+    assert.ok("data-grise" in r.onglets[6].attrs, "la carte reste, grisée");
+    assert.equal(r.onglets[6].attrs["aria-disabled"], "true");
+    assert.equal(r.onglets[6].ecoutes.click, undefined, "pas de clic sur la carte grisée");
     assert.ok("data-prepa" in r.panneaux[6].attrs);
     assert.equal(r.panneaux[6].hidden, true);
     assert.equal(r.panneaux[0].hidden, false, "le monde 1 reste ouvert");
@@ -166,11 +177,12 @@ test("en essai : la carte et ses livrets cachés au public, avec ou sans JavaScr
   assert.equal(r.barre.attrs["data-n"], "6", "data-n compte les mondes seulement");
   // une clé qui n'est pas exactement « vrai » ne montre rien
   r = jouerLaPage({ cle: "1" });
-  if (EN_ESSAI) assert.ok("data-prepa" in r.onglets[6].attrs);
+  if (EN_ESSAI) assert.ok("data-grise" in r.onglets[6].attrs);
   // avec la clé : la carte et le panneau se montrent, l'adresse #histoires ouvre le panneau
   r = jouerLaPage({ cle: true, hash: "#histoires" });
   assert.deepEqual(r.visibles, ["1", "2", "3", "4", "5", "6", "h"]);
   assert.ok(!("data-prepa" in r.panneaux[6].attrs));
+  assert.ok(!("data-grise" in r.onglets[6].attrs) && !("aria-disabled" in r.onglets[6].attrs) && !("tabindex" in r.onglets[6].attrs));
   assert.equal(r.barre.attrs["data-n"], "6", "data-n compte les mondes seulement : deux lignes de 3, puis les histoires");
   assert.equal(r.panneaux[6].hidden, false);
   assert.ok(r.panneaux.slice(0, 6).every((p) => p.hidden), "les mondes se ferment");

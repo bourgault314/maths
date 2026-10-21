@@ -111,6 +111,13 @@ html.js .panneau[hidden]{display:none}
    « data-prepa » écrits dans la page ne servent qu'aux navigateurs sans JavaScript
    (tests/splat-mondes-en-preparation.test.mjs vérifie qu'ils suivent la liste). */
 .panneau[data-prepa],#onglets a[data-prepa]{display:none}
+/* Les histoires de SPLAT! remises « en préparation » le 21/10/2026 : leur carte reste en place,
+   grisée et sans clic, « 🚧 en préparation » à la place de sa ligne ; leur panneau est caché
+   (data-prepa). La clé ?essai=1 retire les deux (script du bas). */
+.onglets a .bientot{display:none}
+#onglets a[data-grise]{filter:grayscale(1);opacity:.55;pointer-events:none;cursor:default;box-shadow:none}
+#onglets a[data-grise] .fiches{display:none}
+#onglets a[data-grise] .bientot{display:block;margin-top:4px;font-size:12.5px;font-weight:700;color:var(--muted)}
 .prepaPhrase{margin:12px 0 0;font-size:14px;font-weight:700;color:var(--muted)}
 .monde-nom{margin:20px 0 0;font-size:21px;line-height:1.2;color:var(--c-fonce)}
 .chapo{margin:6px 0 0;font-size:15px;line-height:1.45;color:var(--ink);font-weight:600;
@@ -266,7 +273,7 @@ footer a{font-weight:700}
     <a href="#monde-4" data-m="4" id="onglet-4" role="tab" aria-controls="monde-4" aria-selected="false"><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>4</b></span><span class="txt"><span class="sr">Monde 4 · </span><span class="etiq">SPLAT! Système</span><span class="fiches">fiches 25 à 28</span></span></a>
     <a href="#monde-5" data-m="5" id="onglet-5" role="tab" aria-controls="monde-5" aria-selected="false"><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>5</b></span><span class="txt"><span class="sr">Monde 5 · </span><span class="etiq">SPLAT! Équations</span><span class="fiches">fiches 35 à 37</span></span></a>
     <a href="#monde-6" data-m="6" id="onglet-6" role="tab" aria-controls="monde-6" aria-selected="false"><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>6</b></span><span class="txt"><span class="sr">Monde 6 · </span><span class="etiq">SPLAT! Relatifs</span><span class="fiches"><span class="mot">fiches </span>É1-É3, 38 à 43</span></span></a>
-    <a href="#histoires" data-m="h" id="onglet-h" role="tab" aria-controls="histoires" aria-selected="false"><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>?</b></span><span class="txt"><span class="etiq">Les histoires de SPLAT!</span><span class="fiches">les mêmes problèmes, en histoires</span></span></a>
+    <a href="#histoires" data-m="h" id="onglet-h" role="tab" aria-controls="histoires" aria-selected="false" data-grise aria-disabled="true" tabindex="-1"><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>?</b></span><span class="txt"><span class="etiq">Les histoires de SPLAT!</span><span class="fiches">les mêmes problèmes, en histoires</span><span class="bientot">🚧 en préparation</span></span></a>
   </nav>
   <p class="prepaPhrase" id="prepaPhrase" hidden></p>
 
@@ -1007,8 +1014,11 @@ footer a{font-weight:700}
   <!-- ===================================================== Les histoires de SPLAT! (15/10/2026)
        Les problèmes de SPLAT! écrits en histoires, en trois livrets (fiches H1 à H15) ; sources :
        _sources/livret-splat-histoires/. Ouvertes à tous le 17/10/2026 (lot A ; en essai derrière la
-       clé ?essai=1 du 15 au 17/10). Pour les recacher : remettre « data-prepa » sur l'onglet et ce panneau. -->
-  <section class="panneau" data-m="h" id="histoires" role="tabpanel" aria-labelledby="onglet-h" hidden>
+       clé ?essai=1 du 15 au 17/10). Remises « en préparation » le 21/10/2026 (pas encore relues par
+       Gwenaël) : l'onglet grisé (data-grise), ce panneau caché (data-prepa) ; la clé ?essai=1 les
+       rouvre. Pour les rouvrir à tous : retirer data-grise, aria-disabled et tabindex de l'onglet,
+       data-prepa de ce panneau, et EN_ESSAI = false dans tests/livret-splat-histoires.test.mjs. -->
+  <section class="panneau" data-m="h" id="histoires" data-prepa role="tabpanel" aria-labelledby="onglet-h" hidden>
     <h2 class="monde-nom">Les histoires de SPLAT!</h2>
     <p class="chapo">Les problèmes de SPLAT!, écrits en histoires. L’élève dessine le schéma en barres ou écrit l’équation, puis répond par une phrase.</p>
     <div class="grille">
@@ -1137,12 +1147,17 @@ footer a{font-weight:700}
 </script>
 <script>
 (function(){
-  /* Les histoires de SPLAT! (15/10/2026), ouvertes à tous le 17/10/2026 : leur onglet et leur panneau
-     n'ont plus « data-prepa ». Si on les recache un jour (remettre « data-prepa » dans la page), seule
-     la clé ?essai=1 le retire. */
+  /* Les histoires de SPLAT! (15/10/2026), ouvertes à tous le 17/10/2026, remises « en préparation »
+     le 21/10/2026 : l'onglet grisé (data-grise) et le panneau caché (data-prepa), écrits dans la page.
+     Seule la clé ?essai=1 les rouvre. */
   if(window.MathsGoSplatEtapes && window.MathsGoSplatEtapes.cle === true){
     Array.prototype.forEach.call(document.querySelectorAll('#onglet-h[data-prepa], #histoires[data-prepa]'), function(el){
       el.removeAttribute("data-prepa");
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('#onglet-h[data-grise]'), function(el){
+      el.removeAttribute("data-grise");
+      el.removeAttribute("aria-disabled");
+      el.removeAttribute("tabindex");
     });
   }
   /* Mondes « en préparation » (26/09/2026) : d'après la liste de assets/js/splat-etapes.js
@@ -1169,7 +1184,7 @@ footer a{font-weight:700}
       phrase.hidden = false;
     }
   }
-  var onglets = Array.prototype.slice.call(document.querySelectorAll("#onglets a:not([data-prepa])"));
+  var onglets = Array.prototype.slice.call(document.querySelectorAll("#onglets a:not([data-prepa]):not([data-grise])"));
   var panneaux = Array.prototype.slice.call(document.querySelectorAll(".panneau"));
   var barre = document.getElementById("onglets");
   // data-n compte les mondes seulement : la carte des histoires a sa propre ligne
