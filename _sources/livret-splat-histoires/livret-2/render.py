@@ -69,6 +69,16 @@ LEGENDES_EX = {
     "Je partage": "Je trouve les coquillages de Lila.",
     "Je trouve les autres": "Noa, c'est Lila moins 7&nbsp;; Tom, c'est Lila moins 4.",
 }
+# (21/10/2026, lot B, décision de Gwenaël après l'audit du 21/10) « Je vérifie » de la page 2 : le total ET chaque
+# indice, comme les corrigés des fiches depuis le lot A ; la première ligne est celle de l'outil (contrôlé au rendu)
+VERIFS_EXEMPLE = ["18 + 21 + 25 = 64", "25 − 18 = 7", "25 − 21 = 4"]
+def ligne_vraie(t):
+    """« 18 + 21 + 25 = 64 », « 18 = 2 × 9 » : chaque membre vaut le même nombre."""
+    e = t.replace("✓", "").replace("−", "-").replace("×", "*").replace("÷", "/").strip()
+    v = [eval(m, {}, {}) for m in e.split("=")]
+    return len(v) > 1 and all(abs(x - v[0]) < 1e-9 for x in v)
+assert all(ligne_vraie(t) for t in VERIFS_EXEMPLE), VERIFS_EXEMPLE
+
 # Le dos : les deux problèmes « avant / après » et leurs schémas (mêmes briques que l'outil)
 # « ? » (𝑥 en lettre) ne désigne qu'UNE quantité, celle qu'on cherche (le défi 1 : l'argent du matin) ;
 # les autres quantités sont écrites avec leur nom (« à midi », « Nina », « Paul »). Remarque de Gwenaël
@@ -89,7 +99,7 @@ DEFI_SCHEMAS = {
         dict(titre="Le don : 2 fois la dépense",
              barres=[dict(totalTexte="don", parts=[dict(v=9), dict(v=9)], calcul="don : 2 × 9 = 18")]),
     ], habit=dict(noms={9: "dépensé", 18: "reçu"}, reponse="Lina a dépensé {dépensé} €, sa grand-mère lui a donné {reçu} €.",
-                  verifs=["36 − 9 + 18 = 45 ✓"])),
+                  verifs=["36 − 9 + 18 = 45 ✓", "18 = 2 × 9 ✓"])),
 }
 
 # Les défis du dos, en équations (corrigé « en équations ») : écrits ici, vérifiés au rendu
@@ -103,11 +113,14 @@ DEFI_EQUATIONS = {
                       ["J’écris l’équation", ["36 − 𝑥 + 2 × 𝑥 = 45"]],
                       ["Je résous", ["36 + 𝑥 = 45", "𝑥 = 45 − 36 = 9", "Le don : 2 × 9 = 18"]]],
                habit=dict(noms={9: "dépensé", 18: "reçu"}, reponse="Lina a dépensé {dépensé} €, sa grand-mère lui a donné {reçu} €.",
-                          verifs=["36 − 9 + 18 = 45 ✓"]),
+                          verifs=["36 − 9 + 18 = 45 ✓", "18 = 2 × 9 ✓"]),
                x=9, controle=lambda x: 36 - x + 2 * x == 45),
 }
 for _c, _d in DEFI_EQUATIONS.items():
     assert _d["controle"](_d["x"]), _c
+# (lot B, 21/10/2026) « Je vérifie » des défis : chaque ligne est vraie (le total et le double du défi 2)
+for _c, _d in list(DEFI_SCHEMAS.items()) + list(DEFI_EQUATIONS.items()):
+    assert all(ligne_vraie(t) for t in _d["habit"].get("verifs", [])), (_c, _d["habit"].get("verifs"))
 
 # « On cherche le tout » (17/10/2026) et les défis du dos : une page de l'outil pour dessiner (aucune carte n'est tirée)
 CARTE_TOUT = CARTES["6.1"][1]
@@ -390,6 +403,8 @@ def page_couverture(ex, corr=None):
 
 def page_exemple(ex):
     e = EXEMPLE
+    if ex["verification"] != VERIFS_EXEMPLE[0]:
+        raise SystemExit(f"page 2 : l'outil vérifie « {ex['verification']} », le livret « {VERIFS_EXEMPLE[0]} »")
     etapes = []
     n = len(ex["etapes"])
     for i, st in enumerate(ex["etapes"], 1):
@@ -399,7 +414,7 @@ def page_exemple(ex):
                       f'<svg class="dessin" viewBox="50 612 1500 {st["h"]}" xmlns="http://www.w3.org/2000/svg">{st["svg"]}</svg></li>')
     rep = "".join(f'<b>{html.escape(s["t"])}</b>' if s["gras"] else html.escape(s["t"]) for s in ex["reponse"])
     etapes.append(f'<li class="et texte"><span class="num">{n + 1}</span><div class="txt duo"><div><h3>Je réponds</h3><p class="rep">{rep}</p></div>'
-                  f'<div><h3>Je vérifie</h3><p class="leg">{ex["verification"]}&nbsp;✓</p></div></div></li>')
+                  f'<div><h3>Je vérifie</h3><p class="leg">{"<br>".join(v + "&nbsp;✓" for v in VERIFS_EXEMPLE)}</p></div></div></li>')
     corps = f'''
 <header class="tete">{bandeau_vague(34, 25, "deg3")}<div class="bloc"><div class="sur">Un exemple résolu</div><h1>L'histoire pas à pas</h1></div></header>
 <div class="corps">

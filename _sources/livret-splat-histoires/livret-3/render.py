@@ -31,7 +31,7 @@ Les PDF se rendent sous Linux, avec le vrai Chromium (channel="chromium") : comm
 SPLAT!, l'écriture des cartes est DejaVu Sans (Segoe UI sous Windows changerait les largeurs).
 Dépendances : playwright 1.56.0 (+ chromium), pikepdf ; qpdf s'il est là.
 """
-import asyncio, functools, html, http.server, json, os, socketserver, sys, tempfile, threading
+import asyncio, functools, html, http.server, json, os, re, socketserver, sys, tempfile, threading
 from pathlib import Path
 
 ICI = Path(__file__).resolve().parent
@@ -41,7 +41,7 @@ PORT = int(os.environ.get("PORT", "8131"))
 BASE = "/_histoires"                    # ce dossier, servi à côté du dépôt
 sys.path.insert(0, str(ICI))
 from problemes import EXEMPLES, FICHES, DEFI    # noqa: E402
-from graines import CARTES                      # noqa: E402
+from graines import CARTES, RECOPIE             # noqa: E402
 from habillage import H                         # noqa: E402
 
 # ------------------------------------------------------------------------------------------
@@ -57,14 +57,15 @@ MONDES = {"11": "Comme le monde 5<br>SPLAT! Équations", "12": "Comme le monde 3
           "13": "Comme le monde 3<br>SPLAT! Enquête, 2e tour", "14": "Comme le monde 4<br>SPLAT! Système, 2e livret",
           "15": "Comme le monde 4<br>SPLAT! Système, 2e livret"}
 RESUMES = {"11": "La même chose des deux côtés.", "12": "Fois moins, en chaîne, je complète.",
-           "13": "Une part commune ; des indices dans le désordre.", "14": "Le double dépasse, le miroir, je recopie.",
+           "13": "Une part commune ; des indices dans le désordre.", "14": "Je recopie un achat, je retrouve l’autre dedans.",
            "15": "Les petits achats d’abord, puis le grand."}
 # H14 et H15 : 2 problèmes par page (deux colonnes en hauteur), sur deux pages chacune
 PAR_PAGE = {"14": 2, "15": 2}
 # Le premier schéma du Système dans l'ordre de l'énoncé (choix de Gwenaël du 08/10 pour H5) :
-# 14.1 donne le petit achat d'abord ; 15.4 donne les trois achats dans le désordre (petit, grand, petit).
+# 15.4 donne les trois achats dans le désordre (petit, grand, petit). 14.1 (lot B, 21/10/2026) : corrigé en
+# « je recopie », l'achat de 19 € (le premier de l'énoncé) est le premier du plan — plus rien à retourner.
 # La balance 11.2 : le théâtre (1er dans l'énoncé) est à droite sur la carte (graines.py, inverser).
-INVERSER = {"14.1"}
+INVERSER = set()
 ORDRE = {"15.4": [2, 0, 1]}
 CORRECTIONS = [dict(suffixe="-corrige", lettre=False, dit="inconnue «&nbsp;?&nbsp;»"),
                dict(suffixe="-corrige-lettre", lettre=True, dit="inconnue en lettre"),
@@ -78,6 +79,16 @@ LEGENDES_B = {   # page 2 : la balance (et la couverture)
     "J’enlève 4 cartes de chaque côté": "Encore la même chose de chaque côté. Il reste 2 paquets en haut, 16 cartes en bas.",
     "Je partage en 2": "2 paquets valent 16 cartes&nbsp;: un paquet en contient 8.",
 }
+# (21/10/2026, lot B, décision de Gwenaël après l'audit du 21/10) « Je vérifie » de la page 5 : le total ET chaque
+# indice ; la première ligne est celle de l'outil (contrôlé au rendu)
+VERIFS_EXEMPLE_U = ["30 + 15 + 10 = 55", "30 = 2 × 15", "30 = 3 × 10"]
+def ligne_vraie(t):
+    """« 30 = 2 × 15 » : chaque membre vaut le même nombre."""
+    e = t.replace("✓", "").replace("−", "-").replace("×", "*").replace("÷", "/").strip()
+    v = [eval(m, {}, {}) for m in e.split("=")]
+    return len(v) > 1 and all(abs(x - v[0]) < 1e-9 for x in v)
+assert all(ligne_vraie(t) for t in VERIFS_EXEMPLE_U), VERIFS_EXEMPLE_U
+
 LEGENDES_U = {   # page 5 : les petites parts (les titres du pas à pas de la projection)
     "Schéma de comparaison": "Une barre pour chacun. Malik, c'est 3 fois Kim&nbsp;; Lou, c'est la moitié de Malik.",
     "Je coupe en petites parts": "Je coupe Malik en 6 petites parts&nbsp;: Kim en vaut 2, Lou en vaut 3.",
@@ -219,7 +230,7 @@ def habit_js(code):
     return h
 
 def spec_ordre(code):
-    return dict(inverser=code in INVERSER, ordre=ORDRE.get(code))
+    return dict(inverser=code in INVERSER, ordre=ORDRE.get(code), recopie=RECOPIE.get(code))
 
 # ------------------------------------------------------------------------------------------
 # 1. Ce que l'outil dessine
@@ -574,7 +585,11 @@ def page_exemple_balance(exb):
 def page_exemple_parts(exu):
     """Page 5 : les petites parts (le pas à pas de la projection de l'Enquête, comme la page 2 du livret 2)."""
     et = [dict(titre=st["titre"], legende=legende_de(LEGENDES_U, st["titre"], "page 5"), svg=st["svg"], vb=f"50 612 1500 {st['h']}") for st in exu["etapes"]]
-    return page_exemple("ExU", et, reponse_html(exu["reponse"]), exu["verification"] + "&nbsp;✓", "Un exemple résolu · les petites parts", "Une part commune", ref=1750)
+    termes = lambda t: sorted(re.findall(r"\d+", t))     # les mêmes nombres (l'outil les écrit dans l'ordre des taches)
+    if termes(exu["verification"]) != termes(VERIFS_EXEMPLE_U[0]):
+        raise SystemExit(f"page 5 : l'outil vérifie « {exu['verification']} », le livret « {VERIFS_EXEMPLE_U[0]} »")
+    return page_exemple("ExU", et, reponse_html(exu["reponse"]), "<br>".join(v + "&nbsp;✓" for v in VERIFS_EXEMPLE_U),
+                        "Un exemple résolu · les petites parts", "Une part commune", ref=1750)
 
 def page_exemple_gestes(exg):
     """Page 9 : deux gestes à la suite (les étapes du corrigé du Système, une par ligne)."""

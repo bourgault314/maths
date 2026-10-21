@@ -6,7 +6,9 @@ cherche_graines.py : le générateur rejoué dans Chromium).
   B    : outils/splat_equations.html (la balance, monde 5 fiche 37) — genEquationStep(makeRng(String(graine))) ;
          4e élément : les deux côtés dans l'ordre de l'énoncé, 𝑥, et « inverser » quand le 1er côté de
          l'énoncé est à droite sur la carte (11.2).
-D5 et D6 (le dos) et 13.2 (« on cherche le tout », 17/10/2026) n'ont pas de carte : schémas dessinés à part."""
+D5 et D6 (le dos) et 13.2 (« on cherche le tout », 17/10/2026) n'ont pas de carte : schémas dessinés à part.
+RECOPIE (21/10/2026, lot B) : 14.1 et 14.2 gardent leur carte (mêmes plateaux, mêmes nombres) mais se corrigent avec le
+plan « je recopie » de l'outil (corrige.js, __carteRecopie) ; le nombre : le rang, sur la carte, du plateau recopié."""
 CARTES = {
  "ExB": ("B", "mode=EQSTEP&form=BOTH&cards=1&tasksMax=3&visibleMin=1&visibleMax=1&totalMin=28&totalMax=28", 2, dict(cotes=[[3, [4]], [1, [20]]], x=8, inverser=False)),
  "11.1": ("B", "mode=EQSTEP&form=BOTH&cards=1&tasksMax=5&visibleMin=0&visibleMax=1&totalMin=125&totalMax=125", 182, dict(cotes=[[5, []], [3, [50]]], x=25, inverser=False)),
@@ -33,3 +35,5 @@ CARTES = {
  "15.3": ("D", "mode=D&geste=ETAGES&sous=RECOPIE&fois=2&grand=112&totalMin=53&totalMax=100&visibleMin=0&visibleMax=0&cards=1", 935),
  "15.4": ("D", "mode=D&geste=EMBOITE1&ordre=MELANGE&visibleMin=1&visibleMax=1&cards=1&totalMin=24&totalMax=24", 9),
 }
+# 14.1 : l’achat de 19 € (2e plateau de la carte) recopié 2 fois ; 14.2 : la pesée de 35 kg (1er plateau) recopiée 3 fois
+RECOPIE = {"14.1": 1, "14.2": 0}
