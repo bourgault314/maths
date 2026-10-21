@@ -1,11 +1,13 @@
 # Jeux courts
 
 Entrée publique : **Jeux & recherches → Jeux courts → le jeu choisi**.
-Adresse : `/outils/?domain=jeux-recherches&notion=jeux-courts`. Le catalogue montre directement les cinq cartes, avec une illustration en bandeau et la description dessous, et ouvre le jeu dans son panneau central, sans changer de page. Les quatre premières illustrations proviennent de `art.js` ; les Carrés gloutons conservent leur illustration existante.
+Adresse : `/outils/?domain=jeux-recherches&notion=jeux-courts`. Le catalogue montre directement les quatre cartes publiées, avec une illustration en bandeau et la description dessous, et ouvre le jeu dans son panneau central, sans changer de page. Les trois premières illustrations proviennent de `art.js` ; les Carrés gloutons conservent leur illustration existante.
 
 Chaque jeu possède aussi un lien direct (`luciole.html`, `dodo.html`, `galets.html`, `tempo.html`) avec le même en-tête, fil d’Ariane et pied de page. L’ancien lien `/jeux-cadeaux/` rejoint le catalogue en mode libre. Le mode cadeau conserve son entrée dédiée.
 
 Les Carrés gloutons restent à leur adresse `/outils/club_maths/carres_gloutons.html` et dans **Jeux de stratégie**. Depuis **Jeux courts**, le même jeu s’ouvre dans le catalogue grâce à `?integre=1`. Son match aller-retour et ses règles restent identiques.
+
+La pile de galets est masquée du catalogue (statut `hidden`), de la recherche, du répertoire public et de la sélection du mode cadeau depuis le 21 octobre 2026. Ses fichiers et ses liens directs sont conservés pour une éventuelle reprise ; ce retrait des menus ne bloque pas une adresse déjà connue. Pour la rétablir, remettre son statut à `published`, rétablir sa carte dans `index.html`, actualiser les textes et régénérer le référencement.
 
 ## Jeux
 
