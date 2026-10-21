@@ -458,23 +458,16 @@ function fermerAide() {
   afficherQuestion();
 }
 
-function montrerCorrection() {
+// L'explication s'ouvre et se referme sous la question (C7). À l'élève, une fois la question finie ;
+// au diaporama, quand le professeur la demande.
+function basculerExplication() {
   if (seance.mode === "exam") return;
   recueillir();
   const etat = etatCourant();
-  const dejaTerminee = etat.terminee;
-  etat.aide = 3;
-  etat.correction = true;
-  etat.aideOuverte = false;
-  etat.terminee = true;
-  etat.juste = false;
-  etat.message = "";
-  if (seance.mode !== "project" && !dejaTerminee && !etat.emis) {
-    enregistrerEssai(detailEssai(questionCourante(), etat, false));
-    etat.emis = true;
-  }
+  if (seance.mode === "train" && !etat.terminee) return;
+  etat.correction = !etat.correction;
+  if (etat.correction) etat.aideOuverte = seance.mode === "project" && etat.aideOuverte;
   afficherQuestion();
-  fermerClavier();
 }
 
 // Passer : la question est finie sans réponse ; la bonne réponse s'affiche, comme après une erreur.
@@ -790,8 +783,8 @@ function relierActions(racine = application) {
     clavier: basculerClavier,
     "fermer-aide": fermerAide,
     cours: ouvrirCours,
-    correction: montrerCorrection,
-    explication: montrerCorrection,
+    correction: basculerExplication,
+    explication: basculerExplication,
     passer,
     valider,
     suivante,

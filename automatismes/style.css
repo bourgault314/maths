@@ -1387,6 +1387,24 @@ input.case {
 .bonne strong .math-expression {
   font-weight: inherit;
 }
+/* L'explication (C7) : au même endroit que l'aide, en bleu. */
+.explication {
+  margin: 0;
+  padding: 10px 12px 12px;
+  border: 1.5px solid color-mix(in srgb, var(--bleu) 22%, var(--papier));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--bleu) 4%, var(--papier));
+  text-align: left;
+}
+.explication .aide-entete {
+  color: var(--bleu-identite);
+}
+.explication .solution {
+  margin: 4px 0 8px;
+  color: var(--encre);
+  font-size: 1.0625rem;
+  text-align: left;
+}
 /* Tablette et ordinateur : même écran, la carte et ce qui s'ouvre dessous font 640 px (760 px à la
    souris), centrés en largeur. */
 @media (min-width: 700px) {

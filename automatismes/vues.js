@@ -137,10 +137,16 @@ export function figureHTML(question, etat, coin) {
   return `<div class="figure">${dessin}${bulle}</div>`;
 }
 
-export function correctionHTML(question) {
-  return `<section class="correction" aria-label="Correction">
-    <h2>Correction</h2><div class="solution">${mathHtml(question.solution || "")}</div>
-    ${question.hints?.[0]?.svg ? `<div class="figure">${question.hints[0].svg}</div>` : ""}
+/* « Voir l'explication » (C7) : sous la question, au même endroit que l'aide, pas de fenêtre ; la
+   solution de la question et son dessin (celui de l'aide, sauf s'il n'est que la figure). */
+export function explicationHTML(question, fermer = true) {
+  const dessin = question.hints?.[0]?.svg || "";
+  const montrer = dessin && dessin !== question.visual;
+  return `<section class="explication" aria-label="L’explication">
+    <div class="aide-entete"><strong>L’explication</strong>
+      ${fermer ? bouton("×", "explication", "fermer", 'aria-label="Cacher l’explication"') : ""}</div>
+    <p class="solution">${mathHtml(question.solution || "")}</p>
+    ${montrer ? `<div class="dessin">${dessin}</div>` : ""}
   </section>`;
 }
 
@@ -341,7 +347,7 @@ export function questionHTML(seance, famille, clavier = false) {
         ${outilsHTML(seance, etat)}
       </section>
       ${aideHTML(question, etat, projection)}
-      ${etat.correction ? correctionHTML(question) : ""}
+      ${etat.correction ? explicationHTML(question, !projection) : ""}
     </div>
     ${minuterie ? pointsHTML(seance) : ""}
     <div id="commandes"><section class="clavier" aria-label="Clavier mathématique" hidden></section>
@@ -422,7 +428,7 @@ export function bilanHTML(seance, parId) {
         <span class="resultat-nom">${questionPrompt(question)}</span>
         ${projection ? "" : `<span class="etat-ligne ${classe}"><span aria-hidden="true">${signe}</span> ${mot}</span>`}
         <span class="voir">Voir la correction</span></summary>
-        ${enonceHTML(question)}${correctionHTML(question)}</details>`;
+        ${enonceHTML(question)}${explicationHTML(question, false)}</details>`;
       })
       .join("")}</div>
     <div class="actions-prof">${bouton(exam ? "Encore un entraînement" : "Encore une série", "encore", "primaire")}
