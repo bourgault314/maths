@@ -688,3 +688,33 @@ test(
     }
   },
 );
+
+test(
+  "calcul long (coque V2) : réduit jusqu'à 70 %, puis à la ligne, la case reste dans l'écran",
+  { skip: ignorer, timeout: 60000 },
+  async () => {
+    const { serveur, base } = await serveurLocal();
+    const browser = await ouvrirNavigateur();
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true });
+    try {
+      // Graine 12 : « 4,7 × 10² − 3 × 10 + 1,1 × 10⁻¹ = [ ] », trop long pour 390 px.
+      await page.goto(`${base}?notion=NC15&forme=g&graine=12`);
+      await page.locator(".carte .calcul .case").waitFor();
+      await stabiliser(page);
+      const mesure = await page.evaluate(() => {
+        const calcul = document.querySelector(".carte .calcul");
+        const carte = document.querySelector(".carte").getBoundingClientRect();
+        const kase = document.querySelector(".carte .calcul .case").getBoundingClientRect();
+        return {
+          tient: calcul.scrollWidth <= calcul.clientWidth + 1,
+          caseDansCarte: kase.left >= carte.left && kase.right <= carte.right,
+        };
+      });
+      assert.ok(mesure.tient, "Le calcul tient dans la carte");
+      assert.ok(mesure.caseDansCarte, "La case est dans la carte");
+    } finally {
+      await browser.close();
+      await new Promise((fin) => serveur.close(fin));
+    }
+  },
+);

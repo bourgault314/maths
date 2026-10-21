@@ -968,6 +968,7 @@ body[data-ecran="question"] .progression {
 }
 /* Le calcul et ses cases (C3) : « 0,7 × 7 = [ ] », « 47 = 6 × [ ] + [ ] », « 4,7 [ ] 4,68 ». */
 .carte .reponses {
+  display: block;
   margin: 0;
 }
 .carte .calcul {
@@ -985,6 +986,13 @@ body[data-ecran="question"] .progression {
 }
 .carte .calcul .t {
   white-space: nowrap;
+}
+.carte .calcul {
+  justify-content: safe center;
+}
+.carte .calcul.long .t,
+.carte .calcul.long .t .math-expression {
+  white-space: normal !important;
 }
 .carte .calcul .math-expression {
   font-weight: inherit;

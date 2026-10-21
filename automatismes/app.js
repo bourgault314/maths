@@ -910,6 +910,7 @@ function reduireCalculs(zone) {
   zone.querySelectorAll(".carte .calcul:not(.phrase)").forEach((calcul) => {
     calcul.style.fontSize = "";
     calcul.style.flexWrap = "";
+    calcul.classList.remove("long");
     const base = parseFloat(getComputedStyle(calcul).fontSize);
     const trop = () => calcul.scrollWidth > calcul.clientWidth + 1;
     let taille = base;
@@ -917,6 +918,8 @@ function reduireCalculs(zone) {
     calcul.style.flexWrap = "nowrap";
     while (trop() && taille > base * 0.7) calcul.style.fontSize = `${(taille -= 1)}px`;
     if (trop()) calcul.style.flexWrap = "wrap";
+    // Encore trop large à 70 % : le texte du calcul passe à la ligne entre ses termes, la case suit.
+    if (trop()) calcul.classList.add("long");
   });
 }
 
