@@ -1,0 +1,236 @@
+{
+  "id": "NC30",
+  "titre": "Inéquations simples",
+  "categorie": "Calcul littéral et équations",
+  "objectif": "Tester une valeur, résoudre ax≥b et représenter tous les nombres solutions.",
+  "prerequis": ["Ordre des relatifs", "Division signée", "NC27", "Repérage sur une droite"],
+  "perimetre": "Nouveau programme 3e uniquement pour ces quatre variantes.",
+  "cours": {
+    "regle": "En divisant une inégalité par un nombre positif, son sens reste le même. En divisant par un nombre négatif, son sens s’inverse.",
+    "exemple": "−2x ≥ 6 donne x ≤ −3.",
+    "visuel": "Droite graduée − 6 à 2 ; borne − 3 incluse marquée par un point plein et un crochet ; demi-droite vers la gauche. Labels « borne » et « valeurs plus petites ».",
+    "mouvement": "Un curseur facultatif teste une valeur de chaque côté ; version statique avec−4 valide et−2 invalide."
+  },
+  "erreurs": [
+    "Oublier l’inversion du signe",
+    "Remplacer un ensemble par une valeur unique",
+    "Exclure la borne d’une inégalité large"
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 4,2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "PDF p.11 et 20",
+      "apport": "Niveaux et objectifs du calcul littéral ; introduction distincte de l’entretien.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples pour la mise en œuvre des programmes de mathématiques — cycle 4",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "p.21 imprimée",
+      "apport": "a non nul, lien graphique, crochet sur la droite ; intervalles facultatifs.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Programme du cycle 4,2020",
+      "url": "https://cache.media.education.gouv.fr/file/31/89/1/ensel714_annexe3_1312891.pdf",
+      "repere": "PDF p.131–132, calcul littéral",
+      "apport": "Périmètre mathématique utilisé par le filtre DNB2027.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Contrat de conception Matégo",
+      "url": null,
+      "repere": "Étape 1, NC19–NC31",
+      "apport": "Exemples originaux, bornes des générateurs, interfaces et aides proposées ; choix éditoriaux à valider par prototype.",
+      "statut": "choix de conception"
+    }
+  ],
+  "limites": [
+    "Hors filtre DNB2027 de l’ancien programme.",
+    "Ne pas imposer le langage des intervalles.",
+    "Pas de tableau de signes, produit d’inégalités ni inéquation quadratique."
+  ],
+  "acces_secondaires": ["Fonctions et graphiques"],
+  "nom": "Inéquations simples",
+  "domaine": "nombres-calculs",
+  "sousDomaine": "Calcul littéral et équations",
+  "niveaux": ["3e"],
+  "niveauxDescription": "3e nouveau programme. Résolution analytique et graphique deax≥b aveca≠0 ; notation d’intervalle non requise.",
+  "origine": "GPT",
+  "valide": false,
+  "brevet": {
+    "present": false,
+    "codesGrille": [],
+    "questions": []
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Tester l’appartenance d’une valeur",
+      "niveau": "3e",
+      "dnb2027": false,
+      "enonce": "Le nombre 3 est-il solution de 2x ≥ 5 ?",
+      "reponse": "Oui",
+      "donnees": "a entier non nul−5 à 5 ; b−12 à 12 ; valeur test−5 à 5 ; équilibre oui/non et cas égalité exacte.",
+      "saisie": "Oui/Non ou Vrai/Faux ; calcul intermédiaire facultatif.",
+      "acceptation": "Oui/vrai pour cet exemple ; vérification exacte y compris≥ et égalité.",
+      "aide1": {
+        "texte": "Remplace x par 3.",
+        "visuel": "Machine de substitution puis comparaison avec le second membre de l’inégalité."
+      },
+      "aide2": {
+        "texte": "Compare 2 × 3 à 5.",
+        "visuel": "Afficher 6 ≥ 5 avec les deux nombres placés sur une droite."
+      },
+      "correction": "2 × 3 = 6 et 6 ≥ 5 :3 est solution.",
+      "controles": ["Testerx=2 donne non ;x=2,5 donne oui carégalité ; ne pas coder≥ comme>."],
+      "identifiant": "NC30-a",
+      "ancienId": "NC30-V1",
+      "ancienIdGenerateur": "NC30-V1",
+      "indiceGenerateur": 0,
+      "nom": "Tester l’appartenance d’une valeur",
+      "niveauDescription": "3e nouveau programme",
+      "niveaux": ["3e"],
+      "brevet": false,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": false,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Diviser par un positif",
+      "niveau": "3e",
+      "dnb2027": false,
+      "enonce": "Résous : 3x ≥ 12.",
+      "reponse": "x ≥ 4",
+      "donnees": "a positif 1 à 6 ; b−18 à 18 ; borne entière ou demi-entière ; a≠0.",
+      "saisie": "Sélecteur du signe<,≤,>,≥ puis case borne ; la lettrex est fixe. Alternative demi-droite à choisir.",
+      "acceptation": "Accepterx≥4 et 4≤x ; borne 4 incluse ; intervalle[4;+∞[ accepté mais jamais exigé.",
+      "aide1": {
+        "texte": "Divise les deux membres par 3.",
+        "visuel": "Division identique des deux membres par un positif ; le signe entre les résultats est à décider."
+      },
+      "aide2": {
+        "texte": "3 est positif : le sens de l’inégalité reste le même.",
+        "visuel": "Afficherx ≥ 12 ÷ 3, valeur non calculée."
+      },
+      "correction": "3x ≥ 12 équivaut àx ≥ 4.",
+      "controles": ["Refuserx≤4 et x>4 ; test 4 vrai,3 faux,5 vrai ; borne incluse."],
+      "identifiant": "NC30-b",
+      "ancienId": "NC30-V2",
+      "ancienIdGenerateur": "NC30-V2",
+      "indiceGenerateur": 1,
+      "nom": "Diviser par un positif",
+      "niveauDescription": "3e nouveau programme",
+      "niveaux": ["3e"],
+      "brevet": false,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Ensemble des solutions",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": false,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Diviser par un négatif",
+      "niveau": "3e",
+      "dnb2027": false,
+      "enonce": "Résous : −2x ≥ 6.",
+      "reponse": "x ≤ −3",
+      "donnees": "a négatif−6 à−1 ; b−18 à 18 ; borne simple ; a≠0.",
+      "saisie": "Signe et borne séparés ; clavier signé.",
+      "acceptation": "Accepterx≤−3 et−3≥x ; aucune notation d’intervalle imposée.",
+      "aide1": {
+        "texte": "Diviser par un nombre négatif inverse l’ordre.",
+        "visuel": "Division identique des deux membres par un négatif ; le signe entre les résultats est à décider et sera inversé."
+      },
+      "aide2": {
+        "texte": "Divise 6 par − 2 et garde le sens inversé.",
+        "visuel": "Afficherx ≤ 6 ÷ (−2)."
+      },
+      "correction": "x ≤ −3. Test :x = −4 donne 8 ≥ 6 ;x = −2 donne 4 ≥ 6, faux.",
+      "controles": ["Refuserx≥−3 et x≤3 ; tester−3 inclus,−4 valide,−2 invalide."],
+      "identifiant": "NC30-c",
+      "ancienId": "NC30-V3",
+      "ancienIdGenerateur": "NC30-V3",
+      "indiceGenerateur": 2,
+      "nom": "Diviser par un négatif",
+      "niveauDescription": "3e nouveau programme",
+      "niveaux": ["3e"],
+      "brevet": false,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Ensemble des solutions",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": false,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Lire et produire une représentation graphique",
+      "niveau": "3e",
+      "dnb2027": false,
+      "enonce": "Représente les solutions de x ≤ 2 sur une droite graduée.",
+      "reponse": "Borne 2 incluse, demi-droite vers la gauche.",
+      "donnees": "Bornes entières−5 à 5 ;≤ ou≥ seulement pour cœur du programme ; axe porte au moins deux graduations numérotées.",
+      "saisie": "Choix de borne numérique, direction gauche/droite et incluse/exclue ; aucune action de glisser obligatoire.",
+      "acceptation": "État exact{borne:2,direction:gauche,incluse:true} ; version textuellex≤2 acceptée.",
+      "aide1": {
+        "texte": "Les nombres plus petits que 2 sont à gauche.",
+        "visuel": "Colorer provisoirement les graduations 0 et 1 sans tracer toute la réponse."
+      },
+      "aide2": {
+        "texte": "Le signe ≤ inclut aussi 2.",
+        "visuel": "Entourer le signe = dans ≤ et faire apparaître les deux options point plein/point creux, sans présélection."
+      },
+      "correction": "On inclut 2 et tous les nombres situés à sa gauche.",
+      "controles": [
+        "Refuser directiondroite ou borneexclue ; clavier complet doit permettre la même réponse ; l’axe ne suggère pas une borne différente."
+      ],
+      "identifiant": "NC30-d",
+      "ancienId": "NC30-V4",
+      "ancienIdGenerateur": "NC30-V4",
+      "indiceGenerateur": 3,
+      "nom": "Lire et produire une représentation graphique",
+      "niveauDescription": "3e nouveau programme",
+      "niveaux": ["3e"],
+      "brevet": false,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Représentation",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": false,
+      "referencesBrevet": []
+    }
+  ]
+}

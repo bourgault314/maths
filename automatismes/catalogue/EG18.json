@@ -1,0 +1,234 @@
+{
+  "id": "EG18",
+  "titre": "Milieux et cercle du triangle rectangle",
+  "categorie": "Géométrie et repérage",
+  "objectif": "Utiliser les théorèmes des milieux et reconnaître le lien entre triangle rectangle et cercle de diamètre son hypoténuse.",
+  "prerequis": "Milieu ; parallélisme ; moitié et double ; cercle ; diamètre ; triangle rectangle.",
+  "perimetre": "Nouveau programme. Au DNB 2027, une propriété donnée peut servir de support, mais ces variantes n’exigent pas sa connaissance autonome.",
+  "cours": {
+    "regle": "Dans un triangle, le segment joignant les milieux de deux côtés est parallèle au troisième et sa longueur en est la moitié. Dans un triangle rectangle, l’hypoténuse est un diamètre du cercle circonscrit.",
+    "exemple": "M et N milieux de [AB] et [AC] : (MN) ∥ (BC) et MN=BC/2. Si BC=10 cm, MN=5 cm.",
+    "visuel": "Deux cartes distinctes : triangle avec milieux codés et segment [MN] parallèle à (BC) ; triangle rectangle inscrit dans un cercle, hypoténuse [BC] diamètre, centre O milieu de [BC], trois rayons égaux OA,OB,OC.",
+    "mouvement": "Révélation facultative codages puis propriété. Version statique avec les deux cartes, légendes et calculs reliés."
+  },
+  "erreurs": [
+    "Utiliser un seul milieu sans parallélisme.",
+    "Diviser par deux pour retrouver le grand côté.",
+    "Confondre rayon et diamètre.",
+    "Étendre la propriété du triangle rectangle à tout triangle."
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 4 — 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "p. 14–15 — Triangles",
+      "apport": "Théorèmes des milieux et cercle du triangle rectangle ; automatisation en 3e.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples pour la mise en œuvre des programmes de mathématiques — cycle 4",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "PDF p. 29–31 — Triangles",
+      "apport": "Propriétés, constructions et automatismes associés.",
+      "statut": "appui pédagogique"
+    }
+  ],
+  "limites": "En DNB 2027, ces variantes restent désactivées si la propriété n’est pas fournie. Une application équivalente de Thalès peut relever d’EG11.",
+  "acces_secondaires": ["Grandeurs et mesures"],
+  "nom": "Milieux et cercle du triangle rectangle",
+  "domaine": "espace-geometrie",
+  "sousDomaine": "Géométrie et repérage",
+  "niveaux": ["4e", "3e"],
+  "niveauxDescription": "Nouveau programme : apprentissage en 4e, automatismes explicites en 3e. Le filtre DNB 2027 est désactivé lorsque ces propriétés doivent être mémorisées.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": false,
+    "codesGrille": [],
+    "questions": []
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Calculer un segment de milieux.",
+      "niveau": "4e",
+      "dnb2027": false,
+      "enonce": "M et N sont les milieux de [AB] et [AC]. BC = 14 cm. Calcule MN.",
+      "reponse": "7 cm",
+      "donnees": "A(0;6), B(−7;0), C(7;0), M(−3,5;3), N(3,5;3). Milieux calculés exactement ; BC entier, moitié simple.",
+      "saisie": "Champ numérique avec cm fixe.",
+      "acceptation": "7 ou 7 cm.",
+      "aide1": "« Repère les deux milieux. » Surligner AM = MB et AN = NC.",
+      "aide2": "« Le segment entre les milieux mesure la moitié du troisième côté. » Flèche de BC vers MN étiquetée ÷ 2.",
+      "correction": "MN = BC/2 = 7 cm.",
+      "controles": ["Refuser 28.", "Vérifier exactement M=(A + B)/2 et N=(A + C)/2."],
+      "identifiant": "EG18-a",
+      "ancienId": "EG18-V1",
+      "ancienIdGenerateur": "EG18-V1",
+      "indiceGenerateur": 0,
+      "nom": "Calculer un segment de milieux.",
+      "niveauDescription": "4e nouveau ; 3e automatisme",
+      "niveaux": ["4e", "3e"],
+      "brevet": false,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "MN",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Déduire un milieu d’un parallélisme.",
+      "niveau": "4e",
+      "dnb2027": false,
+      "enonce": "M est le milieu de [AB]. La parallèle à (BC) passant par M coupe [AC] en N. AC = 12 cm. Calcule AN.",
+      "reponse": "6 cm",
+      "donnees": "A(0;0), B(8;0), C(0;12), M(4;0), N(0;6). Coder M milieu et (MN) ∥ (BC) ; ne pas coder N milieu avant l’aide.",
+      "saisie": "Champ numérique avec cm fixe.",
+      "acceptation": "6 ou 6 cm.",
+      "aide1": "« Une parallèle passe par le milieu d’un côté. » Surligner les deux données.",
+      "aide2": "« Elle coupe l’autre côté en son milieu. » Ajouter en aide les deux marques égales sur AN et NC.",
+      "correction": "N est le milieu de [AC] : AN = AC/2 = 6 cm.",
+      "controles": [
+        "Refuser 12 ou 24.",
+        "La question initiale ne donne pas déjà le codage de N milieu."
+      ],
+      "identifiant": "EG18-b",
+      "ancienId": "EG18-V2",
+      "ancienIdGenerateur": "EG18-V2",
+      "indiceGenerateur": 1,
+      "nom": "Déduire un milieu d’un parallélisme.",
+      "niveauDescription": "4e nouveau ; 3e automatisme",
+      "niveaux": ["4e", "3e"],
+      "brevet": false,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "AN",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Retrouver le troisième côté.",
+      "niveau": "4e",
+      "dnb2027": false,
+      "enonce": "M et N sont les milieux de [AB] et [AC]. MN = 4,5 cm. Calcule BC.",
+      "reponse": "9 cm",
+      "donnees": "A(0;6), B(−4,5;0), C(4,5;0) ; milieux calculés ; MN choisi dans {2;2,5;3;3,5;4,5;6}.",
+      "saisie": "Champ numérique avec cm fixe.",
+      "acceptation": "9 ou 9 cm.",
+      "aide1": "« MN est la moitié de BC. » Montrer BC formé de deux segments de longueur MN.",
+      "aide2": "« Pour retrouver le tout, prends deux fois 4,5. » Afficher 4,5 + 4,5.",
+      "correction": "BC = 2 × 4,5 cm = 9 cm.",
+      "controles": ["Refuser 2,25.", "Vérifier BC = 2MN."],
+      "identifiant": "EG18-c",
+      "ancienId": "EG18-V3",
+      "ancienIdGenerateur": "EG18-V3",
+      "indiceGenerateur": 2,
+      "nom": "Retrouver le troisième côté.",
+      "niveauDescription": "4e nouveau ; 3e automatisme",
+      "niveaux": ["4e", "3e"],
+      "brevet": false,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "BC",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Calculer le rayon du cercle circonscrit au triangle rectangle.",
+      "niveau": "4e",
+      "dnb2027": false,
+      "enonce": "ABC est rectangle en A et BC = 10 cm. O est le centre du cercle circonscrit. Calcule OA.",
+      "reponse": "5 cm",
+      "donnees": "A(0;0), B(6;0), C(0;8), O(3;4) ; BC = 10 et OA = OB = OC = 5 ; cercle exact.",
+      "saisie": "Champ numérique avec cm fixe.",
+      "acceptation": "5 ou 5 cm.",
+      "aide1": "« L’hypoténuse est un diamètre du cercle. » Surligner BC.",
+      "aide2": "« O est le milieu de [BC] ; OA, OB et OC sont des rayons égaux. » Coder les trois rayons.",
+      "correction": "OA = BC/2 = 5 cm.",
+      "controles": ["Refuser 10.", "Ne pas placer O au centre de gravité."],
+      "identifiant": "EG18-d",
+      "ancienId": "EG18-V4",
+      "ancienIdGenerateur": "EG18-V4",
+      "indiceGenerateur": 3,
+      "nom": "Calculer le rayon du cercle circonscrit au triangle rectangle.",
+      "niveauDescription": "4e nouveau ; 3e automatisme",
+      "niveaux": ["4e", "3e"],
+      "brevet": false,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "OA",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Reconnaître un angle droit inscrit dans un demi-cercle.",
+      "niveau": "4e",
+      "dnb2027": false,
+      "enonce": "[BC] est un diamètre du cercle. A appartient au cercle et diffère de B et C. Combien mesure l’angle [angle:BAC] ?",
+      "reponse": "90°",
+      "donnees": "O(0;0), rayon 5, B(−5;0), C(5;0), A(3;4). A sur le cercle, distinct des extrémités ; éviter une figure presque aplatie.",
+      "saisie": "Champ numérique avec ° fixe.",
+      "acceptation": "90 ou 90°.",
+      "aide1": "« Vérifie : [BC] est un diamètre et A est sur le cercle. » Mettre en évidence les deux conditions.",
+      "aide2": "« L’angle opposé au diamètre est droit. » Relier le diamètre au sommet A.",
+      "correction": "ABC est rectangle en A, donc [angle:BAC] = 90°.",
+      "controles": [
+        "La propriété ne s’applique pas à un point seulement à l’intérieur du cercle.",
+        "L’angle droit est en A, pas en B ou C."
+      ],
+      "identifiant": "EG18-e",
+      "ancienId": "EG18-V5",
+      "ancienIdGenerateur": "EG18-V5",
+      "indiceGenerateur": 4,
+      "nom": "Reconnaître un angle droit inscrit dans un demi-cercle.",
+      "niveauDescription": "4e nouveau ; 3e automatisme",
+      "niveaux": ["4e", "3e"],
+      "brevet": false,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "[angle:BAC]",
+          "unite": "°"
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

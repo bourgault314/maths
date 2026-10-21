@@ -1,0 +1,452 @@
+{
+  "id": "GM02",
+  "titre": "Unités d’aire et de volume",
+  "categorie": "Grandeurs et mesures",
+  "objectif": "Relier carrés/cubes unités et facteurs de conversion.",
+  "prerequis": ["Multiplier/diviser par 100/1000", "Aire/volume", "Longueur des unités"],
+  "perimetre": "DNB 2027 ; respecter la différence6e/5e.",
+  "cours": {
+    "regle": "1 m²=100 dm² ; 1 dm²=100 cm². 1 m³=1000 dm³ ; 1 dm³=1000 cm³=1 L.",
+    "exemple": "0,4 dm²=40 cm² ; 2,5 L=2500 cm³.",
+    "visuel": "Carré de côté 1 dm découpé en 10×10 carrés centimétriques. Cube de côté 1 dm : 10 couches de 100 cubes centimétriques.",
+    "mouvement": "Découpage facultatif ; carré quadrillé et couche isolée en version statique."
+  },
+  "erreurs": ["Facteur10aulieude 100ou1000", "1 L=1m³", "Mélanger aire et volume"],
+  "sources": [
+    {
+      "titre": "Programme cycle 3 2025",
+      "url": "https://www.education.gouv.fr/sites/default/files/ensel620_annexe2-v2.pdf",
+      "repere": "PDF p.19–20",
+      "apport": "Sens des unités carrées et cubiques.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Programme cycle 4 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "PDF p.12",
+      "apport": "Conversions de volume et capacité.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples cycle 4 2026",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "p.23 imprimée",
+      "apport": "Dénombrement et correspondance1 L=1 dm³.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Liste indicative DNB 2025",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/liste-indicative-dautomatismes-pour-le-dnbpdf-116340.pdf",
+      "repere": "p.2",
+      "apport": "Unitésmm²àkm², cm³à m³, équivalences avec les capacités.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Mathsgo — Unités d’aire",
+      "url": "https://mathsgo.re/outils/conversions/conversions_unites_aires.html",
+      "repere": "Catalogue et source HTML de la page consultés ; aucun test interactif ni audit de correction du code.",
+      "apport": "Montrer1 dm²=100 cm² avec côtés10 cm ; rapprocher calcul10×10.",
+      "statut": "choix de conception"
+    },
+    {
+      "titre": "Mathsgo — Unités de volume en 3D",
+      "url": "https://mathsgo.re/outils/conversions/conversions_unites_volumes.html",
+      "repere": "Catalogue public consulté ; fonctionnalité décrite, interaction non testée.",
+      "apport": "1 dm³=1000 cm³ :10 couches de 10×10 ; relier litres à dm³.",
+      "statut": "choix de conception"
+    },
+    {
+      "titre": "Mathsgo — Glisse-unité virtuel",
+      "url": "https://mathsgo.re/outils/conversions/conversions_materiel_virtuel.html",
+      "repere": "Catalogue public consulté ; fonctionnalité décrite, interaction non testée.",
+      "apport": "Après sens unités, afficher flèche de facteur et écriture équivalente.",
+      "statut": "choix de conception"
+    },
+    {
+      "titre": "Sujet zéro 2026, série professionnelle B",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-b-mathematiquespdf-123302.pdf",
+      "repere": "Q7",
+      "apport": "Convertir directement entre litre et mètre cube ; format source adapté à une réponse construite.",
+      "statut": "appui pédagogique"
+    }
+  ],
+  "limites": "En 6e, ne pas présenter les conversions générales de volume comme un automatisme obligatoire déjà acquis. Les facteurs sont reliés aux carrés ou cubes-unités.",
+  "acces_secondaires": ["Nombres et calculs", "Géométrie et repérage"],
+  "atlas": "cours/10.svg",
+  "atlasAlt": "Carré1mde côté représenté en10×10carreaux de10cm. Chaque côté mesure100cm ; aire100×100cm².",
+  "nom": "Unités d’aire et de volume",
+  "domaine": "espace-geometrie",
+  "sousDomaine": "Grandeurs et mesures",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6e : cm², dm² et m², conversions d’aire et sens du cm³. 5e : autres préfixes d’aire, conversions de volumes et capacités. Entretien en 4e et 3e.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_19"],
+    "questions": [
+      {
+        "source": "A2604",
+        "question": "Q7",
+        "referenceAncienne": "PO 7",
+        "forme": "d",
+        "identifiant": "GM02-d",
+        "ancienId": "GM02-V4",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Conversion litres vers centimètres cubes",
+        "formatSource": "Saisie",
+        "document": "Polynésie, 26 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/Brevet_Polynesie_26_juin_2026_DV-3.pdf"
+      },
+      {
+        "source": "Z26PB",
+        "question": "Q7",
+        "referenceAncienne": "ZPB 7",
+        "forme": "f",
+        "identifiant": "GM02-f",
+        "ancienId": "GM02-V6",
+        "support": "comparable",
+        "difference": "Conversion L↔m³ directe requise ; enchaîner séparément L↔cm³ et m³↔dm³ ne prouve pas que la variante est présente.",
+        "savoirFaire": "Correspondance litre et mètre cube",
+        "formatSource": "Vrai-faux",
+        "document": "Sujet zéro 2026, série professionnelle B",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-b-mathematiquespdf-123302.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Convertir une aire vers une unité plus petite",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Convertis 0,4 dm² en cm².",
+      "reponse": "40 cm²",
+      "donnees": "Conversions adjacentesm²/dm²/cm² ; décimaux≤2chiffres ; extensionsmm²/km²en DNB après acquisition.",
+      "saisie": "Nombre, unitécm².",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "« Un carré de 1 dm de côté contient100 carrés de 1 cm de côté. » Montrer10×10.",
+      "aide2": "« Multiplie0,4 par 100. » Afficher0,4×100.",
+      "correction": "0,4 dm²=40 cm².",
+      "controles": [
+        "Accepter40 ; refuser4, facteur 10.",
+        "Comparerfacteurd’aire au facteur de longueur au carré."
+      ],
+      "identifiant": "GM02-a",
+      "ancienId": "GM02-V1",
+      "ancienIdGenerateur": "GM02-V1",
+      "indiceGenerateur": 0,
+      "nom": "Convertir une aire vers une unité plus petite",
+      "niveauDescription": "6e",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cm²"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Convertir une aire vers une unité plus grande",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Convertis 250 cm² en dm².",
+      "reponse": "2,5 dm²",
+      "donnees": "Aireentière1–2000 cm² ; sortie≤2décimales ; unitésadjacentes.",
+      "saisie": "Nombre, unitédm².",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "«100 cm² forment1 dm². » Regrouper les carrés par 100.",
+      "aide2": "« Divise250 par 100. » Afficher250÷100.",
+      "correction": "250 cm²=2,5 dm².",
+      "controles": ["Accepter2,5/2.5 ; refuser25.", "Round-tri rationnel exact sans flottants."],
+      "identifiant": "GM02-b",
+      "ancienId": "GM02-V2",
+      "ancienIdGenerateur": "GM02-V2",
+      "indiceGenerateur": 1,
+      "nom": "Convertir une aire vers une unité plus grande",
+      "niveauDescription": "6e",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "dm²"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Convertir des unités cubiques",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Convertis 0,2m³ en dm³.",
+      "reponse": "200 dm³",
+      "donnees": "m³/dm³/cm³ ; facteur 1000 àchaquepas ; décimauxcourts ; aucune confusion avec la longueur.",
+      "saisie": "Nombre, unitédm³.",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "« Dans1m³, on peut ranger10×10×10 cubes de 1 dm³. » Montrer10 couches de 100.",
+      "aide2": "«1m³=1000 dm³. Multiplie0,2 par 1000. » Afficher le produit.",
+      "correction": "0,2m³=200 dm³.",
+      "controles": [
+        "Accepter200 ; refuser2ou20.",
+        "Le volume unitaire doit être représenté en 3D, pasuncarré."
+      ],
+      "identifiant": "GM02-c",
+      "ancienId": "GM02-V3",
+      "ancienIdGenerateur": "GM02-V3",
+      "indiceGenerateur": 2,
+      "nom": "Convertir des unités cubiques",
+      "niveauDescription": "5e apprentissage puis entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "dm³"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Relier volume et capacité",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Convertis 3,5 L en cm³.",
+      "reponse": "3500 cm³",
+      "donnees": "L→cm³, mL→cm³, dm³→L, m³→L ; une seule correspondance chaînée simple ; valeurs mentalement accessibles.",
+      "saisie": "Nombre, unitécm³.",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "«1 L=1 dm³. » Mettre la bouteille et cubedm³encorrespondance.",
+      "aide2": "«1 dm³=1000 cm³. Calcule3,5×1000. » Afficher les deux égalités.",
+      "correction": "3,5 L=3500 cm³.",
+      "controles": ["Accepter3500 ; refuser3,5 et 350.", "1 mL=1 cm³ ; 1m³=1000Lvalidésaussi."],
+      "identifiant": "GM02-d",
+      "ancienId": "GM02-V4",
+      "ancienIdGenerateur": "GM02-V4",
+      "indiceGenerateur": 3,
+      "nom": "Relier volume et capacité",
+      "niveauDescription": "5e apprentissage puis entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cm³"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2604",
+          "question": "Q7",
+          "referenceAncienne": "PO 7",
+          "forme": "d",
+          "identifiant": "GM02-d",
+          "ancienId": "GM02-V4",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Conversion litres vers centimètres cubes",
+          "formatSource": "Saisie",
+          "document": "Polynésie, 26 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/Brevet_Polynesie_26_juin_2026_DV-3.pdf"
+        }
+      ]
+    },
+    {
+      "id": "e",
+      "objectif": "Choisir une unité cohérente",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Le volume d’un petit cube est27 … . Choisis l’unité :cm, cm² oucm³.",
+      "reponse": "cm³",
+      "donnees": "Choisirlongueur/aire/volume clairement nommés ; distracteurs de même préfixe ; questionn’évalue pas l’ordre de grandeur.",
+      "saisie": "Choixd’unité.",
+      "acceptation": "Unité dimensionnelle exacte.",
+      "aide1": "« Un volume compte des cubes-unités. » Dessineruncubede 1 cm³.",
+      "aide2": "« Le3 indique trois dimensions. » Mettre en valeur les3arêtes perpendiculaires.",
+      "correction": "L’unité estcm³.",
+      "controles": [
+        "Acceptercm³ ; refusercm².",
+        "Les exposants restent lisibles à320pxetparlecteurd’écran."
+      ],
+      "identifiant": "GM02-e",
+      "ancienId": "GM02-V5",
+      "ancienIdGenerateur": "GM02-V5",
+      "indiceGenerateur": 4,
+      "nom": "Choisir une unité cohérente",
+      "niveauDescription": "6e puis entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "f",
+      "objectif": "Convertir directement entre litre et mètre cube",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Convertis 0,125 m³ en L.",
+      "reponse": "125 L",
+      "donnees": "Volumes en litres parmi 50, 125, 250, 500, 750, 1500, 2500. Inverser aléatoirement le sens L vers m³ ou m³ vers L.",
+      "saisie": "Réponse : champ de réponse numérique ; unité L",
+      "acceptation": "Valeur exacte. Virgule ou point décimal, fractions équivalentes acceptés. Une réponse vide est refusée. L’unité cible est fixée par le champ.",
+      "aide1": "Un petit cube de 1 dm³ contient 1 L. Visuel : une couche de 10 × 10 petits cubes, puis 10 couches pour le cube de 1 m³.",
+      "aide2": "Chaque mètre cube contient mille litres. Le schéma est relié explicitement au calcul affiché.",
+      "correction": "0,125 × 1 000 = 125 L.",
+      "controles": [
+        "La réponse exacte 125 L est acceptée ; une valeur différente est refusée.",
+        "Les valeurs générées respectent : Volumes en litres parmi 50, 125, 250, 500, 750, 1500, 2500. Inverser aléatoirement le sens L vers m³ ou m³ vers L.",
+        "Les calculs sont recoupés depuis l’énoncé par etape1/test_mesures.mjs sur 200 graines."
+      ],
+      "identifiant": "GM02-f",
+      "ancienId": "GM02-V6",
+      "ancienIdGenerateur": "GM02-V6",
+      "indiceGenerateur": 5,
+      "nom": "Convertir directement entre litre et mètre cube",
+      "niveauDescription": "5e apprentissage ou réactivation, puis entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "m³"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "Z26PB",
+          "question": "Q7",
+          "referenceAncienne": "ZPB 7",
+          "forme": "f",
+          "identifiant": "GM02-f",
+          "ancienId": "GM02-V6",
+          "support": "comparable",
+          "difference": "Conversion L↔m³ directe requise ; enchaîner séparément L↔cm³ et m³↔dm³ ne prouve pas que la variante est présente.",
+          "savoirFaire": "Correspondance litre et mètre cube",
+          "formatSource": "Vrai-faux",
+          "document": "Sujet zéro 2026, série professionnelle B",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-b-mathematiquespdf-123302.pdf"
+        }
+      ]
+    },
+    {
+      "id": "g",
+      "objectif": "Convertir les autres préfixes des unités d’aire",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Convertis 250 mm² en cm².",
+      "reponse": "2.5 cm²",
+      "donnees": "Paires voisines km²/hm², hm²/dam², dam²/m², cm²/mm². Sens direct ou inverse ; résultat décimal fini et calcul mental. À partir de 5e.",
+      "saisie": "Réponse : champ de réponse numérique ; unité cm²",
+      "acceptation": "Valeur exacte. Virgule ou point décimal, fractions équivalentes acceptés. Une réponse vide est refusée. L’unité cible est fixée par le champ.",
+      "aide1": "Compte les petites unités sur les deux dimensions. Visuel : carré de côté 1 cm partagé en 10 × 10 carrés ; aire d’une case : 1 mm².",
+      "aide2": "Une grande unité d’aire contient 10 × 10 petites unités d’aire. Relier au calcul 250 ÷ 100.",
+      "correction": "250 ÷ 100 = 2,5 cm².",
+      "controles": [
+        "La réponse exacte 2.5 cm² est acceptée ; une valeur différente est refusée.",
+        "Les valeurs générées respectent : Paires voisines km²/hm², hm²/dam², dam²/m², cm²/mm². Sens direct ou inverse ; résultat décimal fini et calcul mental. À partir de 5e.",
+        "Les calculs sont recoupés depuis l’énoncé par etape1/test_mesures.mjs sur 200 graines."
+      ],
+      "identifiant": "GM02-g",
+      "ancienId": "GM02-V7",
+      "ancienIdGenerateur": "GM02-V7",
+      "indiceGenerateur": 6,
+      "nom": "Convertir les autres préfixes des unités d’aire",
+      "niveauDescription": "5e apprentissage ou réactivation, puis entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "hm²"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "h",
+      "objectif": "Convertir les volumes en cm³, dm³ et m³",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Convertis 1500 cm³ en m³.",
+      "reponse": "0.0015 m³",
+      "donnees": "Paires dm³/cm³ et m³/cm³ ; facteurs 1000 ou 1000000. Valeurs exactes sélectionnées pour un calcul mental court. Sens direct ou inverse.",
+      "saisie": "Réponse : champ de réponse numérique ; unité m³",
+      "acceptation": "Valeur exacte. Virgule ou point décimal, fractions équivalentes acceptés. Une réponse vide est refusée. L’unité cible est fixée par le champ.",
+      "aide1": "1 m³ = 1 000 000 cm³. Visuel : Cube unité : facteur de longueur répété sur trois dimensions.",
+      "aide2": "De m à cm : × 100 sur chacune des trois dimensions. Le schéma est relié explicitement au calcul affiché.",
+      "correction": "1500 ÷ 1 000 000 = 0,0015 m³.",
+      "controles": [
+        "La réponse exacte 0.0015 m³ est acceptée ; une valeur différente est refusée.",
+        "Les valeurs générées respectent : Paires dm³/cm³ et m³/cm³ ; facteurs 1000 ou 1000000. Valeurs exactes sélectionnées pour un calcul mental court. Sens direct ou inverse.",
+        "Les calculs sont recoupés depuis l’énoncé par etape1/test_mesures.mjs sur 200 graines."
+      ],
+      "identifiant": "GM02-h",
+      "ancienId": "GM02-V8",
+      "ancienIdGenerateur": "GM02-V8",
+      "indiceGenerateur": 7,
+      "nom": "Convertir les volumes en cm³, dm³ et m³",
+      "niveauDescription": "5e apprentissage ou réactivation, puis entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cm³"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

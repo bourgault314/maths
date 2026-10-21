@@ -1,0 +1,469 @@
+{
+  "id": "NC13",
+  "titre": "Fraction d’une quantité",
+  "categorie": "Nombres et calculs",
+  "objectif": "Passer du tout à une part et, dans un cas simple, d’une part connue au tout.",
+  "prerequis": ["Sens de la fraction", "Parts égales d’une même unité", "Tables et quotient"],
+  "perimetre": "Couverture des prérequis et automatismes du collège. Le filtre DNB2027 utilise l’ancien programme du cycle 4 ; les niveaux indiqués suivent le nouveau programme. Le statut est précisé par variante.",
+  "cours": {
+    "regle": "Une part vaut le tout divisé par b. Pour obtenir a/b du tout, multiplie cette valeur par a.",
+    "exemple": "1/5 × 25 = 5.",
+    "visuel": "Barre partagée en parts égales ; tout et nombre de parts sélectionnées indiqués ; les cases inconnues portent ?.",
+    "mouvement": "Le schéma est entièrement compréhensible à l’arrêt. Une animation éventuelle révèle les étapes sans cacher les états précédents."
+  },
+  "erreurs": [
+    "Changer seulement un terme de la fraction",
+    "Additionner les dénominateurs",
+    "Perdre le signe ou l’unité"
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 3 (2025)",
+      "url": "https://www.education.gouv.fr/sites/default/files/ensel620_annexe2-v2.pdf",
+      "statut": "prescription",
+      "repere": "PDF p 15–16",
+      "apport": "Objectifs et progression officiels du programme ; niveau de classe vérifié."
+    },
+    {
+      "titre": "Exemples de mise en œuvre du programme de 6e (2025)",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/exemplesmiseenoeuvre6e-mathpdf-111549.pdf",
+      "statut": "appui pédagogique",
+      "repere": "PDF p 7, imprimée 6",
+      "apport": "Exemples officiels de mise en œuvre : progressivité, représentations et types de calculs."
+    },
+    {
+      "titre": "Liste indicative d’automatismes DNB (octobre 2025)",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/liste-indicative-dautomatismes-pour-le-dnbpdf-116340.pdf",
+      "statut": "prescription",
+      "repere": "p 1",
+      "apport": "Périmètre indicatif des automatismes du DNB ; la liste n’est pas limitative."
+    },
+    {
+      "titre": "Mathsgo — bandes de fractions",
+      "url": "https://mathsgo.re/outils/fractions/bandes_fractions.html",
+      "repere": "HTML lu par l’agent de repérage ; interaction non testée",
+      "apport": "Une unité constante, des parts égales, un repartage visible avant le calcul abstrait.",
+      "statut": "inspiration visuelle"
+    },
+    {
+      "titre": "NCETM — Bar models",
+      "url": "https://www.ncetm.org.uk/media/8d84e791bafa491/ncetm_ks3_representations_bar_models.pdf",
+      "repere": "p.3,5,9,12 lues visuellement",
+      "apport": "Structures partie-tout et comparaison ; identifier explicitement le tout.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "Une quantité d’objets indivisibles reste entière. La recherche du tout est distincte du calcul direct d’une part.",
+  "acces_secondaires": ["Proportionnalité"],
+  "implementation": {
+    "module": "app-automatismes/dist/modules/nombres.js",
+    "tests": "etape1/test_nombres.mjs",
+    "variantes": 6,
+    "graines_par_variante": 200,
+    "principe": "Aide 1 : représentation visuelle des données. Aide 2 : étape de calcul. Deux aides maximum.",
+    "aide1_visuelle": true
+  },
+  "atlas": "cours/01.svg",
+  "atlasAlt": "Une barre représentant80est partagée en4parts égales. Une part vaut20et représente25%.",
+  "nom": "Fraction d’une quantité",
+  "domaine": "nombres-calculs",
+  "sousDomaine": "Nombres et calculs",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6e : du tout à une part ; 5e : tout inconnu et fraction supérieure à 1.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_04", "dnb_09"],
+    "questions": [
+      {
+        "source": "A2610",
+        "question": "Q5",
+        "referenceAncienne": "AG-pro 5",
+        "forme": "a",
+        "identifiant": "NC13-a",
+        "ancienId": "NC13-A",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Quart d’une quantité",
+        "formatSource": "Saisie",
+        "document": "Antilles-Guyane professionnelle, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Antilles_30_06_2026_DV-2.pdf"
+      },
+      {
+        "source": "Z26A",
+        "question": "Q1",
+        "referenceAncienne": "ZA 1",
+        "forme": "a",
+        "identifiant": "NC13-a",
+        "ancienId": "NC13-A",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Tiers d’une quantité",
+        "formatSource": "Nombre",
+        "document": "Sujet zéro 2026, série générale A",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-mathematiquespdf-123317.pdf"
+      },
+      {
+        "source": "Z26PB",
+        "question": "Q1",
+        "referenceAncienne": "ZPB 1",
+        "forme": "a",
+        "identifiant": "NC13-a",
+        "ancienId": "NC13-A",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Moitié d’une quantité",
+        "formatSource": "Nombre",
+        "document": "Sujet zéro 2026, série professionnelle B",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-b-mathematiquespdf-123302.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Fraction unitaire d’un entier",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Calcule 1/5 de 25.",
+      "reponse": "5",
+      "donnees": "Entier multiple du dénominateur 2–6 ; chercher une seule part.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Partage 25 en 5 parts égales.",
+      "aide2": "Calcule 25 ÷ 5.",
+      "correction": "1/5 × 25 = 5.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["5"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "5",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Modèle du tout partagé en parts égales, avec les inconnues conservées. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Étape de calcul explicite.",
+      "identifiant": "NC13-a",
+      "ancienId": "NC13-a",
+      "ancienIdGenerateur": "NC13-A",
+      "indiceGenerateur": 0,
+      "nom": "Fraction unitaire d’un entier",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2610",
+          "question": "Q5",
+          "referenceAncienne": "AG-pro 5",
+          "forme": "a",
+          "identifiant": "NC13-a",
+          "ancienId": "NC13-A",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Quart d’une quantité",
+          "formatSource": "Saisie",
+          "document": "Antilles-Guyane professionnelle, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Antilles_30_06_2026_DV-2.pdf"
+        },
+        {
+          "source": "Z26A",
+          "question": "Q1",
+          "referenceAncienne": "ZA 1",
+          "forme": "a",
+          "identifiant": "NC13-a",
+          "ancienId": "NC13-A",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Tiers d’une quantité",
+          "formatSource": "Nombre",
+          "document": "Sujet zéro 2026, série générale A",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-mathematiquespdf-123317.pdf"
+        },
+        {
+          "source": "Z26PB",
+          "question": "Q1",
+          "referenceAncienne": "ZPB 1",
+          "forme": "a",
+          "identifiant": "NC13-a",
+          "ancienId": "NC13-A",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Moitié d’une quantité",
+          "formatSource": "Nombre",
+          "document": "Sujet zéro 2026, série professionnelle B",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-b-mathematiquespdf-123302.pdf"
+        }
+      ]
+    },
+    {
+      "id": "b",
+      "objectif": "Fraction d’une quantité divisible",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Calcule 3/5 de 25.",
+      "reponse": "15",
+      "donnees": "Fraction propre de dénominateur 2–6 ; tout divisible par le dénominateur.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Partage en 5 parts, puis prends-en 3.",
+      "aide2": "Une part vaut 25 ÷ 5 = 5. Calcule 5 × 3.",
+      "correction": "3/5 × 25 = 15.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["15"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "15",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Modèle du tout partagé en parts égales, avec les inconnues conservées. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Étape de calcul explicite.",
+      "identifiant": "NC13-b",
+      "ancienId": "NC13-b",
+      "ancienIdGenerateur": "NC13-B",
+      "indiceGenerateur": 1,
+      "nom": "Fraction d’une quantité divisible",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Calculer la quantité restante",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Une boîte contient 25 jetons. On en retire 3/5. Combien en reste-t-il ?",
+      "reponse": "10",
+      "donnees": "Effectif entier ; fraction retirée propre ; reste entier et positif.",
+      "saisie": "Réponse : nombre (jetons)",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Il reste 2 parts sur 5.",
+      "aide2": "Calcule 25 ÷ 5 × 2.",
+      "correction": "Il reste 2/5 des jetons : 2/5 × 25 = 10 jetons.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["10"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "10",
+          "kind": "number",
+          "unit": "jetons",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Modèle du tout partagé en parts égales, avec les inconnues conservées. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Étape de calcul explicite.",
+      "identifiant": "NC13-c",
+      "ancienId": "NC13-c",
+      "ancienIdGenerateur": "NC13-C",
+      "indiceGenerateur": 2,
+      "nom": "Calculer la quantité restante",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "jetons"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Retrouver le tout à partir d’une part",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Les 3/5 d’un nombre valent 15. Quel est ce nombre ?",
+      "reponse": "25",
+      "donnees": "a parts valent a×k, avec a<b ; tout inconnu ; une part puis b parts.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "3 parts valent 15. Cherche une part.",
+      "aide2": "Une part vaut 15 ÷ 3 = 5. Le tout contient 5 parts.",
+      "correction": "15 ÷ 3 × 5 = 25.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["25"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "25",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Modèle du tout partagé en parts égales, avec les inconnues conservées. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC13-d",
+      "ancienId": "NC13-d",
+      "ancienIdGenerateur": "NC13-D",
+      "indiceGenerateur": 3,
+      "nom": "Retrouver le tout à partir d’une part",
+      "niveauDescription": "5e ; entretien dans les classes suivantes.",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Obtenir une quantité décimale",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Calcule 3/4 de 15.",
+      "reponse": "45/4",
+      "donnees": "3/4 d’un entier impair 3–17 ; résultat fractionnaire accepté ; aucun objet indivisible dans le contexte.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Une part peut avoir une valeur décimale.",
+      "aide2": "Calcule (15 × 3) ÷ 4.",
+      "correction": "3/4 × 15 = 45/4.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["45/4"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "45/4",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Modèle du tout partagé en parts égales, avec les inconnues conservées. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Étape de calcul explicite.",
+      "identifiant": "NC13-e",
+      "ancienId": "NC13-e",
+      "ancienIdGenerateur": "NC13-E",
+      "indiceGenerateur": 4,
+      "nom": "Obtenir une quantité décimale",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "f",
+      "objectif": "Fraction supérieure à 1 d’une quantité",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Calcule 7/5 de 25.",
+      "reponse": "35",
+      "donnees": "Numérateur supérieur au dénominateur d’une ou deux unités ; tout multiple du dénominateur.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "La fraction dépasse 1 : le résultat dépassera 25.",
+      "aide2": "Une part vaut 25 ÷ 5 = 5. Prends-en 7.",
+      "correction": "7/5 × 25 = 35.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["35"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "35",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Modèle du tout partagé en parts égales, avec les inconnues conservées. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC13-f",
+      "ancienId": "NC13-f",
+      "ancienIdGenerateur": "NC13-F",
+      "indiceGenerateur": 5,
+      "nom": "Fraction supérieure à 1 d’une quantité",
+      "niveauDescription": "5e ; entretien dans les classes suivantes.",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

@@ -1,0 +1,586 @@
+{
+  "id": "NC08",
+  "titre": "Écritures d’un même nombre",
+  "categorie": "Nombres et calculs",
+  "objectif": "Reconnaître une même quantité dans plusieurs écritures, y compris au-delà de l’unité.",
+  "prerequis": ["Sens de la fraction", "Parts égales d’une même unité", "Tables et quotient"],
+  "perimetre": "Couverture des prérequis et automatismes du collège. Le filtre DNB2027 utilise l’ancien programme du cycle 4 ; les niveaux indiqués suivent le nouveau programme. Le statut est précisé par variante.",
+  "cours": {
+    "regle": "Pour b non nul, a/b est le quotient a ÷ b. Une même quantité peut avoir plusieurs écritures.",
+    "exemple": "3/5 = 0,6.",
+    "visuel": "Bandes d’une même unité ; plusieurs unités si nécessaire ; correspondance fraction, quotient, décimal et pourcentage.",
+    "mouvement": "Le schéma est entièrement compréhensible à l’arrêt. Une animation éventuelle révèle les étapes sans cacher les états précédents."
+  },
+  "erreurs": [
+    "Changer seulement un terme de la fraction",
+    "Additionner les dénominateurs",
+    "Perdre le signe ou l’unité"
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 3 (2025)",
+      "url": "https://www.education.gouv.fr/sites/default/files/ensel620_annexe2-v2.pdf",
+      "statut": "prescription",
+      "repere": "PDF p 13–16",
+      "apport": "Objectifs et progression officiels du programme ; niveau de classe vérifié."
+    },
+    {
+      "titre": "Exemples de mise en œuvre du programme de 6e (2025)",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/exemplesmiseenoeuvre6e-mathpdf-111549.pdf",
+      "statut": "appui pédagogique",
+      "repere": "PDF p 3,6–8 ; imprimées 2,5–7",
+      "apport": "Exemples officiels de mise en œuvre : progressivité, représentations et types de calculs."
+    },
+    {
+      "titre": "Liste indicative d’automatismes DNB (octobre 2025)",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/liste-indicative-dautomatismes-pour-le-dnbpdf-116340.pdf",
+      "statut": "prescription",
+      "repere": "p 1",
+      "apport": "Périmètre indicatif des automatismes du DNB ; la liste n’est pas limitative."
+    },
+    {
+      "titre": "Mathsgo — bandes de fractions",
+      "url": "https://mathsgo.re/outils/fractions/bandes_fractions.html",
+      "repere": "HTML lu par l’agent de repérage ; interaction non testée",
+      "apport": "Une unité constante, des parts égales, un repartage visible avant le calcul abstrait.",
+      "statut": "inspiration visuelle"
+    },
+    {
+      "titre": "NCETM — Single number lines",
+      "url": "https://www.ncetm.org.uk/media/8d84e79498db675/ncetm_ks3_representations_single_number_lines.pdf",
+      "repere": "p.3,5,7 lues visuellement",
+      "apport": "Ordre, opérations et fractions sur une droite ; limites pour les produits négatifs.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "Les fractions supérieures à 1 sont représentées par plusieurs unités ; le sens fraction→pourcentage est inclus.",
+  "acces_secondaires": ["Proportionnalité"],
+  "implementation": {
+    "module": "app-automatismes/dist/modules/nombres.js",
+    "tests": "etape1/test_nombres.mjs",
+    "variantes": 7,
+    "graines_par_variante": 200,
+    "principe": "Aide 1 : représentation visuelle des données. Aide 2 : étape de calcul. Deux aides maximum.",
+    "aide1_visuelle": true
+  },
+  "nom": "Écritures d’un même nombre",
+  "domaine": "nombres-calculs",
+  "sousDomaine": "Nombres et calculs",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6e : écritures, partage, fractions et pourcentages de 0 à 100.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_01", "dnb_05"],
+    "questions": [
+      {
+        "source": "A2606",
+        "question": "Q1",
+        "referenceAncienne": "ME 1",
+        "forme": "b",
+        "identifiant": "NC08-b",
+        "ancienId": "NC08-B",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Écrire un décimal sous forme de fraction",
+        "formatSource": "Saisie",
+        "document": "Métropole, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Metropole_FK-v2.pdf"
+      },
+      {
+        "source": "A2609",
+        "question": "Q2",
+        "referenceAncienne": "PO-pro 2",
+        "forme": "b",
+        "identifiant": "NC08-b",
+        "ancienId": "NC08-B",
+        "support": "adaptation",
+        "difference": "Décimal vers fraction, avec tableau de numération en aide ; le verre gradué est une autre représentation de la même quantité.",
+        "savoirFaire": "Relier décimal et fraction sur un verre gradué",
+        "formatSource": "Sélection",
+        "document": "Polynésie professionnelle, 26 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_professionnelle_Sujet_2026-06-26_Polynesie_DV-v4.pdf"
+      },
+      {
+        "source": "A2611",
+        "question": "Q4",
+        "referenceAncienne": "ME-pro 4",
+        "forme": "g",
+        "identifiant": "NC08-g",
+        "ancienId": "NC08-G",
+        "support": "comparable",
+        "difference": "Sens fraction vers pourcentage nécessaire, distinct de pourcentage vers fraction.",
+        "savoirFaire": "Fraction en pourcentage",
+        "formatSource": "Saisie",
+        "document": "Métropole professionnelle, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Metropole_30_juin_2026_DV.pdf"
+      },
+      {
+        "source": "Z26PA",
+        "question": "Q3",
+        "referenceAncienne": "ZPA 3",
+        "forme": "a",
+        "identifiant": "NC08-a",
+        "ancienId": "NC08-A",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Fraction usuelle en décimal",
+        "formatSource": "Nombre",
+        "document": "Sujet zéro 2026, série professionnelle A",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-mathematiquespdf-123305.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Fraction vers décimal",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Écris 3/5 sous forme décimale.",
+      "reponse": "0.6",
+      "donnees": "Dénominateur 2, 4, 5 ou 10 ; fraction propre positive ; écriture décimale exacte.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Partage 1 en 5 parts égales.",
+      "aide2": "Calcule 3 ÷ 5.",
+      "correction": "3/5 = 0,6.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["0.6"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "0.6",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Bandes, tableau de rangs ou quadrillage de cent cases. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Étape de calcul explicite.",
+      "identifiant": "NC08-a",
+      "ancienId": "NC08-a",
+      "ancienIdGenerateur": "NC08-A",
+      "indiceGenerateur": 0,
+      "nom": "Fraction vers décimal",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "Z26PA",
+          "question": "Q3",
+          "referenceAncienne": "ZPA 3",
+          "forme": "a",
+          "identifiant": "NC08-a",
+          "ancienId": "NC08-A",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Fraction usuelle en décimal",
+          "formatSource": "Nombre",
+          "document": "Sujet zéro 2026, série professionnelle A",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-mathematiquespdf-123305.pdf"
+        }
+      ]
+    },
+    {
+      "id": "b",
+      "objectif": "Décimal vers fraction",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Écris 0,38 sous forme d’une fraction.",
+      "reponse": "19/50",
+      "donnees": "Décimal entre 0,01 et 0,99 ; fraction équivalente libre, pas de simplification obligatoire.",
+      "saisie": "Réponse : numérateur et dénominateur",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Lis le nombre de centièmes.",
+      "aide2": "38 centièmes s’écrivent avec 100 au dénominateur.",
+      "correction": "0,38 = 38/100 = 19/50.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["19/50"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "19/50",
+          "kind": "fraction",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Bandes, tableau de rangs ou quadrillage de cent cases. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Étape de calcul explicite.",
+      "identifiant": "NC08-b",
+      "ancienId": "NC08-b",
+      "ancienIdGenerateur": "NC08-B",
+      "indiceGenerateur": 1,
+      "nom": "Décimal vers fraction",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2606",
+          "question": "Q1",
+          "referenceAncienne": "ME 1",
+          "forme": "b",
+          "identifiant": "NC08-b",
+          "ancienId": "NC08-B",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Écrire un décimal sous forme de fraction",
+          "formatSource": "Saisie",
+          "document": "Métropole, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Metropole_FK-v2.pdf"
+        },
+        {
+          "source": "A2609",
+          "question": "Q2",
+          "referenceAncienne": "PO-pro 2",
+          "forme": "b",
+          "identifiant": "NC08-b",
+          "ancienId": "NC08-B",
+          "support": "adaptation",
+          "difference": "Décimal vers fraction, avec tableau de numération en aide ; le verre gradué est une autre représentation de la même quantité.",
+          "savoirFaire": "Relier décimal et fraction sur un verre gradué",
+          "formatSource": "Sélection",
+          "document": "Polynésie professionnelle, 26 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_professionnelle_Sujet_2026-06-26_Polynesie_DV-v4.pdf"
+        }
+      ]
+    },
+    {
+      "id": "c",
+      "objectif": "Fraction en partie entière et fraction propre",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Complète : 13/5 = □ + □/5, avec la dernière fraction inférieure à 1.",
+      "reponse": "2 ; 3",
+      "donnees": "Dénominateur 2, 4, 5 ou 10 ; une à trois unités et un reste strictement inférieur au dénominateur.",
+      "saisie": "Partie entière : nombre ; Numérateur sur 5 : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Une unité contient 5/5.",
+      "aide2": "Groupe les parts par 5 ; compte les unités puis le reste.",
+      "correction": "13/5 = 2 + 3/5.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "fields",
+        "values": ["2", "3"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Partie entière",
+          "answer": "2",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        },
+        {
+          "label": "Numérateur sur 5",
+          "answer": "3",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Bandes, tableau de rangs ou quadrillage de cent cases. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Étape de calcul explicite.",
+      "identifiant": "NC08-c",
+      "ancienId": "NC08-c",
+      "ancienIdGenerateur": "NC08-C",
+      "indiceGenerateur": 2,
+      "nom": "Fraction en partie entière et fraction propre",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Partie entière",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "Numérateur sur 10",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Pourcentage vers fraction",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Écris 38 % sous forme d’une fraction.",
+      "reponse": "19/50",
+      "donnees": "Pourcentage entier 1–99 ; fraction sur 100 ou toute fraction équivalente.",
+      "saisie": "Réponse : numérateur et dénominateur",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Pour cent signifie sur 100.",
+      "aide2": "38 % représente 38 parts sur 100.",
+      "correction": "38 % = 38/100 = 19/50.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["19/50"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "19/50",
+          "kind": "fraction",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Bandes, tableau de rangs ou quadrillage de cent cases. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC08-d",
+      "ancienId": "NC08-d",
+      "ancienIdGenerateur": "NC08-D",
+      "indiceGenerateur": 3,
+      "nom": "Pourcentage vers fraction",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Fraction comme quotient d’un partage",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "On partage équitablement 4 m de ruban entre 8 personnes. Quelle longueur reçoit chacune ?",
+      "reponse": "1/2",
+      "donnees": "Ruban de 1–9 m partagé entre 2, 4, 5 ou 8 personnes ; unité divisible et longueur exacte.",
+      "saisie": "Réponse : numérateur et dénominateur (m)",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Partage les 4 mètres en 8 parts égales.",
+      "aide2": "Une personne reçoit (4 ÷ 8) m.",
+      "correction": "Chaque personne reçoit 4/8 m = 0,5 m.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["1/2"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "1/2",
+          "kind": "fraction",
+          "unit": "m",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Bandes, tableau de rangs ou quadrillage de cent cases. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Étape de calcul explicite.",
+      "identifiant": "NC08-e",
+      "ancienId": "NC08-e",
+      "ancienIdGenerateur": "NC08-E",
+      "indiceGenerateur": 4,
+      "nom": "Fraction comme quotient d’un partage",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "Réponse",
+          "unite": "m"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "f",
+      "objectif": "Reconnaître plusieurs écritures équivalentes",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Pour chaque écriture, indique si elle est égale à 0,8.",
+      "reponse": "Oui ; Oui ; Non",
+      "donnees": "Décimal égal à x/5, x de 2 à 8 ; deux fractions équivalentes et un pourcentage différent ; jugement par ligne.",
+      "saisie": "8/10 : choix explicites ; 4/5 : choix explicites ; 4% : choix explicites",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Transforme les fractions en dixièmes.",
+      "aide2": "4 % = 4/100, tandis que 4/5 = 8/10.",
+      "correction": "8/10 et 4/5 valent 0,8 ; 4 % vaut 0,04.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "fields",
+        "values": ["Oui", "Oui", "Non"]
+      },
+      "exemple_champs": [
+        {
+          "label": "8/10",
+          "answer": "Oui",
+          "kind": "text",
+          "unit": "",
+          "placeholder": "",
+          "options": ["Oui", "Non"]
+        },
+        {
+          "label": "4/5",
+          "answer": "Oui",
+          "kind": "text",
+          "unit": "",
+          "placeholder": "",
+          "options": ["Oui", "Non"]
+        },
+        {
+          "label": "4%",
+          "answer": "Non",
+          "kind": "text",
+          "unit": "",
+          "placeholder": "",
+          "options": ["Oui", "Non"]
+        }
+      ],
+      "visuel_aide1": "Bandes, tableau de rangs ou quadrillage de cent cases. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC08-f",
+      "ancienId": "NC08-f",
+      "ancienIdGenerateur": "NC08-F",
+      "indiceGenerateur": 5,
+      "nom": "Reconnaître plusieurs écritures équivalentes",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "6/10",
+          "unite": ""
+        },
+        {
+          "type": "qcm",
+          "libelle": "3/5",
+          "unite": ""
+        },
+        {
+          "type": "qcm",
+          "libelle": "3%",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "g",
+      "objectif": "Fraction vers pourcentage",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Écris 4/4 sous forme de pourcentage.",
+      "reponse": "100",
+      "donnees": "Dénominateur 2, 4, 5, 10 ou 20 ; numérateur 1 à d ; pourcentage entier de 5 à 100.",
+      "saisie": "Réponse : nombre (%)",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Un pourcentage s’écrit avec 100 au dénominateur.",
+      "aide2": "Multiplie le numérateur et le dénominateur par 25.",
+      "correction": "4/4 = 100/100 = 100 %.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["100"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "100",
+          "kind": "number",
+          "unit": "%",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Bandes, tableau de rangs ou quadrillage de cent cases. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC08-g",
+      "ancienId": "NC08-g",
+      "ancienIdGenerateur": "NC08-G",
+      "indiceGenerateur": 6,
+      "nom": "Fraction vers pourcentage",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "%"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2611",
+          "question": "Q4",
+          "referenceAncienne": "ME-pro 4",
+          "forme": "g",
+          "identifiant": "NC08-g",
+          "ancienId": "NC08-G",
+          "support": "comparable",
+          "difference": "Sens fraction vers pourcentage nécessaire, distinct de pourcentage vers fraction.",
+          "savoirFaire": "Fraction en pourcentage",
+          "formatSource": "Saisie",
+          "document": "Métropole professionnelle, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Metropole_30_juin_2026_DV.pdf"
+        }
+      ]
+    }
+  ]
+}

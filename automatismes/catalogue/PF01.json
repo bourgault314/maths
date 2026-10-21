@@ -1,0 +1,200 @@
+{
+  "id": "PF01",
+  "titre": "Reconnaître une proportionnalité",
+  "categorie": "Proportionnalité et pourcentages",
+  "objectif": "Identifier une relation proportionnelle et un contre-exemple.",
+  "prerequis": "Multiplication, lecture de tableau.",
+  "perimetre": "DNB2027 et apprentissages collège ; variantes filtrées par niveau.",
+  "cours": {
+    "regle": "Proportionnel : quand une quantité est multipliée par un nombre, l’autre l’est aussi.",
+    "exemple": "2 kg coûtent 6 € ; 4 kg coûtent 12 € : ×2 dans les deux grandeurs.",
+    "visuel": "Deux barres alignées : masse 2 puis 4 kg, prix 6 puis 12 €. Flèches ×2 et étiquettes distinctes. Contre-exemple à côté seulement dans une deuxième étape.",
+    "mouvement": "Dupliquer les deux barres simultanément ; alternative statique avec flèches."
+  },
+  "erreurs": [
+    "Croire que deux grandeurs qui augmentent sont proportionnelles.",
+    "Vérifier seulement deux colonnes."
+  ],
+  "sources": [
+    {
+      "titre": "Éduscol — Exemples cycle 4, 2026",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "PDF p40–46, Proportionnalité et fonctions",
+      "apport": "Progression des contextes, représentations et procédures ; les schémas et exemples ci-dessous sont nos choix de conception.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Éduscol — Accompagnement mathématiques 6e, 2026",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/2026livretaccompagnementmaths6e-pdf-126656.pdf",
+      "repere": "PDF p19–24, proportionnalité",
+      "apport": "Sens des grandeurs, linéarité, retour à unité ; pas de produit en croix en 6e.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Éduscol — Résoudre des problèmes de proportionnalité",
+      "url": "https://eduscol.education.fr/document/17281/download",
+      "repere": "PDF p1–6",
+      "apport": "Choisir une procédure selon les nombres et relier les représentations ; document antérieur, utilisé en appui.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "NCETM — Double number lines and ratio tables",
+      "url": "https://www.ncetm.org.uk/media/8d84e7902c198f9/ncetm_ks3_representations_double_number_lines_ratio_tables.pdf",
+      "repere": "p.3–6 lues visuellement",
+      "apport": "Relier multiplicateurs, unité, tableau et grandeurs composées.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "",
+  "acces_secondaires": [],
+  "nom": "Reconnaître une proportionnalité",
+  "domaine": "proportionnalite-fonctions",
+  "sousDomaine": "Proportionnalité et pourcentages",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6e : situations concrètes ; 5e : tableaux contextualisés et graphiques. Entretien ensuite.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_33"],
+    "questions": [
+      {
+        "source": "A2611",
+        "question": "Q6",
+        "referenceAncienne": "ME-pro 6",
+        "forme": "c",
+        "identifiant": "PF01-c",
+        "ancienId": "PF01-3",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Reconnaître un graphique de proportionnalité",
+        "formatSource": "QCM",
+        "document": "Métropole professionnelle, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Metropole_30_juin_2026_DV.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Reconnaître dans un contexte",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Des cahiers identiques coûtent 3 € chacun, sans frais fixes. Le prix est-il proportionnel au nombre de cahiers ?",
+      "reponse": "Oui",
+      "donnees": "Prix unitaire entier 1–9 ; expliciter absence de forfait/remise.",
+      "saisie": "Oui/non puis justification courte proposée",
+      "acceptation": "Oui ; justification prix unitaire constant.",
+      "aide1": "Un cahier : une part de 3 €. Dessiner trois parts identiques.",
+      "aide2": "Deux cahiers donnent deux parts ; quatre cahiers quatre parts.",
+      "correction": "Oui : prix = 3 × nombre de cahiers.",
+      "controles": "Changer le prix unitaire ne change pas le verdict ; frais fixes strictement positifs doivent inverser verdict.",
+      "identifiant": "PF01-a",
+      "ancienId": "PF01-A",
+      "ancienIdGenerateur": "PF01-1",
+      "indiceGenerateur": 0,
+      "nom": "Reconnaître dans un contexte",
+      "niveauDescription": "6e",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Détecter un contre-exemple",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Masse (kg) : 2 ; 4 ; 6. Prix (€) : 5 ; 10 ; 16. Est-ce proportionnel ?",
+      "reponse": "Non",
+      "donnees": "Tableaux 3 couples ; deux cohérents et troisième modifié de 1–3 unités, positif.",
+      "saisie": "Oui/non + paire fautive facultative",
+      "acceptation": "Non ; ne pas valider à partir des deux premières colonnes seules.",
+      "aide1": "Relier 2 kg et 6 kg par ×3.",
+      "aide2": "Sous 5 €, tracer trois parts égales : 3 × 5. Comparer au prix annoncé.",
+      "correction": "Non : 6 kg devraient coûter 15 €, pas 16 €.",
+      "controles": "Cas toutes colonnes cohérentes accepté ; origine 0/0 ne doit pas provoquer division par zéro.",
+      "identifiant": "PF01-b",
+      "ancienId": "PF01-B",
+      "ancienIdGenerateur": "PF01-2",
+      "indiceGenerateur": 1,
+      "nom": "Détecter un contre-exemple",
+      "niveauDescription": "5e",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Reconnaître graphiquement",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Un graphique relie les points (0 ; 2), (1 ; 5), (2 ; 8) par une droite. Représente-t-il une proportionnalité ?",
+      "reponse": "Non",
+      "donnees": "Axes quantité et prix ; droite y=ax+b, a>0, b=0 ou entier positif ; origine visible.",
+      "saisie": "Oui/non",
+      "acceptation": "Non pour b≠0.",
+      "aide1": "Repère le point où la droite rencontre l’axe vertical.",
+      "aide2": "À quantité 0, le prix vaut 2 €. Montrer origine et point (0 ; 2) séparément.",
+      "correction": "Non : cette droite ne passe pas par l’origine.",
+      "controles": "Ne pas accepter tout alignement ; axes correctement gradués et origine non tronquée.",
+      "identifiant": "PF01-c",
+      "ancienId": "PF01-C",
+      "ancienIdGenerateur": "PF01-3",
+      "indiceGenerateur": 2,
+      "nom": "Reconnaître graphiquement",
+      "niveauDescription": "5e",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2611",
+          "question": "Q6",
+          "referenceAncienne": "ME-pro 6",
+          "forme": "c",
+          "identifiant": "PF01-c",
+          "ancienId": "PF01-3",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Reconnaître un graphique de proportionnalité",
+          "formatSource": "QCM",
+          "document": "Métropole professionnelle, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Metropole_30_juin_2026_DV.pdf"
+        }
+      ]
+    }
+  ]
+}

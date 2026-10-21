@@ -1,0 +1,418 @@
+{
+  "id": "PF08",
+  "titre": "Vitesse et grandeurs composées",
+  "categorie": "Grandeurs et mesures",
+  "objectif": "Relier distance, durée et vitesse ; appliquer un débit ou un prix unitaire.",
+  "prerequis": "Proportionnalité, durées, conversions.",
+  "perimetre": "DNB2027 et apprentissages collège ; variantes filtrées par niveau.",
+  "cours": {
+    "regle": "Une vitesse compare distance et durée : v = d ÷ t, avec des unités cohérentes.",
+    "exemple": "90 km en1,5h :90÷1,5 =60 km/h.",
+    "visuel": "Double droite durée0,0,5,1,1,5h etdistance0,30,60,90km ; la valeur pour1h apparaît ensuite.",
+    "mouvement": "Faire défiler temps etdistance ensemble ; arrêt sur1h ; version fixe graduée."
+  },
+  "erreurs": ["Confondre heure décimale et heures/minutes.", "Inverser quotient."],
+  "sources": [
+    {
+      "titre": "Éduscol — Exemples cycle 4, 2026",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "PDF p40–46, Proportionnalité et fonctions",
+      "apport": "Progression des contextes, représentations et procédures ; les schémas et exemples ci-dessous sont nos choix de conception.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Éduscol — Accompagnement mathématiques 6e, 2026",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/2026livretaccompagnementmaths6e-pdf-126656.pdf",
+      "repere": "PDF p19–24, proportionnalité",
+      "apport": "Appui sur les procédures de proportionnalité déjà travaillées en 6e ; ne fixe pas le niveau des variantes de cette famille au cycle 4.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Éduscol — Résoudre des problèmes de proportionnalité",
+      "url": "https://eduscol.education.fr/document/17281/download",
+      "repere": "PDF p1–6",
+      "apport": "Choisir une procédure selon les nombres et relier les représentations ; document antérieur, utilisé en appui.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "NCETM — Double number lines and ratio tables",
+      "url": "https://www.ncetm.org.uk/media/8d84e7902c198f9/ncetm_ks3_representations_double_number_lines_ratio_tables.pdf",
+      "repere": "p.3–6 lues visuellement",
+      "apport": "Relier multiplicateurs, unité, tableau et grandeurs composées.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "Les grandeurs scientifiques restent des applications de formule donnée, sans prérequis de physique caché.",
+  "acces_secondaires": ["Proportionnalité et pourcentages"],
+  "atlas": "cours/02.svg",
+  "atlasAlt": "Deux droites alignées :0à5kg et0à20euros.3kg correspond à12euros,5kg à20euros.",
+  "nom": "Vitesse et grandeurs composées",
+  "domaine": "proportionnalite-fonctions",
+  "sousDomaine": "Grandeurs et mesures",
+  "niveaux": ["4e", "3e"],
+  "niveauxDescription": "4e : grandeurs quotients ; 3e : conversions composées et entretien.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": [],
+    "questions": [
+      {
+        "source": "A2602",
+        "question": "Q5",
+        "referenceAncienne": "AA 5",
+        "forme": "a",
+        "identifiant": "PF08-a",
+        "ancienId": "PF08-1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Vitesse avec durée exprimée en minutes",
+        "formatSource": "Saisie",
+        "document": "Asie, 15 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-15_Asie_DV-v3.pdf"
+      },
+      {
+        "source": "A2603",
+        "question": "Q6",
+        "referenceAncienne": "G1 6",
+        "forme": "b",
+        "identifiant": "PF08-b",
+        "ancienId": "PF08-2",
+        "support": "adaptation",
+        "difference": "Durée en minutes dans le générateur, en heures et minutes dans la source : même conversion vers des heures, entraînée aussi dans GM03.",
+        "savoirFaire": "Distance parcourue avec durée en heures et minutes",
+        "formatSource": "Saisie",
+        "document": "Centres étrangers, 18 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-18_Centres-etrangers_DV-v3.pdf"
+      },
+      {
+        "source": "A2605",
+        "question": "Q9",
+        "referenceAncienne": "AG 9",
+        "forme": "f",
+        "identifiant": "PF08-f",
+        "ancienId": "PF08-6",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Durée à partir de distance et vitesse",
+        "formatSource": "Saisie",
+        "document": "Antilles-Guyane, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Antilles-Guyane_DV-v2.pdf"
+      },
+      {
+        "source": "A2610",
+        "question": "Q6",
+        "referenceAncienne": "AG-pro 6",
+        "forme": "a",
+        "identifiant": "PF08-a",
+        "ancienId": "PF08-1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Vitesse à partir de distance et durée",
+        "formatSource": "Saisie",
+        "document": "Antilles-Guyane professionnelle, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Antilles_30_06_2026_DV-2.pdf"
+      },
+      {
+        "source": "Z26B",
+        "question": "Q5",
+        "referenceAncienne": "ZB 5",
+        "forme": "f",
+        "identifiant": "PF08-f",
+        "ancienId": "PF08-6",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Durée à partir de distance et vitesse",
+        "formatSource": "QCM",
+        "document": "Sujet zéro 2026, série générale B",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-b-mathematiquespdf-123314.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Vitesse moyenne",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Un trajet de90 km dure1h30min. Vitesse moyenne en km/h ?",
+      "reponse": "60 km/h",
+      "donnees": "Distance construite=v×t ; v20–100 multiples10 ; durée0,5/1/1,5/2h.",
+      "saisie": "Nombre, km/h fixé",
+      "acceptation": "60.",
+      "aide1": "Découper1h30en3partsde30min ; distance90en3parts.",
+      "aide2": "30min→30km ;1h→deuxparts.",
+      "correction": "60 km/h.",
+      "controles": "1h30=1,5h, pas1,30h ; durée>0.",
+      "identifiant": "PF08-a",
+      "ancienId": "PF08-A",
+      "ancienIdGenerateur": "PF08-1",
+      "indiceGenerateur": 0,
+      "nom": "Vitesse moyenne",
+      "niveauDescription": "4e",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "km/h"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2602",
+          "question": "Q5",
+          "referenceAncienne": "AA 5",
+          "forme": "a",
+          "identifiant": "PF08-a",
+          "ancienId": "PF08-1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Vitesse avec durée exprimée en minutes",
+          "formatSource": "Saisie",
+          "document": "Asie, 15 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-15_Asie_DV-v3.pdf"
+        },
+        {
+          "source": "A2610",
+          "question": "Q6",
+          "referenceAncienne": "AG-pro 6",
+          "forme": "a",
+          "identifiant": "PF08-a",
+          "ancienId": "PF08-1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Vitesse à partir de distance et durée",
+          "formatSource": "Saisie",
+          "document": "Antilles-Guyane professionnelle, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Antilles_30_06_2026_DV-2.pdf"
+        }
+      ]
+    },
+    {
+      "id": "b",
+      "objectif": "Distance à vitesse constante",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "À vitesse constante de12 km/h, quelle distance parcourt-on en15min ?",
+      "reponse": "3 km",
+      "donnees": "Temps15,30,45min ; v divisible4 ; contexte vélo/marche cohérent.",
+      "saisie": "Nombre, km fixé",
+      "acceptation": "3.",
+      "aide1": "Une heure divisée en4quarts ; barre distance12kmaussi.",
+      "aide2": "15min est un quart d’heure.",
+      "correction": "12 ÷ 4 = 3 km.",
+      "controles": "Ne pas12×15 ; préciser constante.",
+      "identifiant": "PF08-b",
+      "ancienId": "PF08-B",
+      "ancienIdGenerateur": "PF08-2",
+      "indiceGenerateur": 1,
+      "nom": "Distance à vitesse constante",
+      "niveauDescription": "4e",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "km"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2603",
+          "question": "Q6",
+          "referenceAncienne": "G1 6",
+          "forme": "b",
+          "identifiant": "PF08-b",
+          "ancienId": "PF08-2",
+          "support": "adaptation",
+          "difference": "Durée en minutes dans le générateur, en heures et minutes dans la source : même conversion vers des heures, entraînée aussi dans GM03.",
+          "savoirFaire": "Distance parcourue avec durée en heures et minutes",
+          "formatSource": "Saisie",
+          "document": "Centres étrangers, 18 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-18_Centres-etrangers_DV-v3.pdf"
+        }
+      ]
+    },
+    {
+      "id": "c",
+      "objectif": "Convertir vitesse",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Convertir10 m/s en km/h.",
+      "reponse": "36 km/h",
+      "donnees": "Vitesseentièrem/s2–20 ; conversions avec3600set1000m ; résultat≤72.",
+      "saisie": "Nombre, km/h fixé",
+      "acceptation": "36.",
+      "aide1": "Double droite1s↔10m ; agrandir à3600s.",
+      "aide2": "En1h :36000m ; puis mètres→kilomètres.",
+      "correction": "36000 m/h = 36 km/h.",
+      "controles": "Refuser2,777… ; inverser correctement dans variante km/h→m/s.",
+      "identifiant": "PF08-c",
+      "ancienId": "PF08-C",
+      "ancienIdGenerateur": "PF08-3",
+      "indiceGenerateur": 2,
+      "nom": "Convertir vitesse",
+      "niveauDescription": "3e",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "km/h"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Autre grandeur quotient",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Une matière a une masse de300 g pour un volume de100 cm³. Masse volumique en g/cm³ ?",
+      "reponse": "3 g/cm³",
+      "donnees": "Masse=coefficiententier1–12×volume10/20/50/100 ; pas substances identifiées sansdonnéevérifiée.",
+      "saisie": "Nombre, g/cm³ fixé",
+      "acceptation": "3.",
+      "aide1": "Dessiner100petitesunités regroupées en10blocs, accolade300g ; chercher masse par1cm³.",
+      "aide2": "300 ÷ 100.",
+      "correction": "3 g/cm³.",
+      "controles": "Volume>0 ; unitéquotient conservée.",
+      "identifiant": "PF08-d",
+      "ancienId": "PF08-D",
+      "ancienIdGenerateur": "PF08-4",
+      "indiceGenerateur": 3,
+      "nom": "Autre grandeur quotient",
+      "niveauDescription": "4e",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "g/cm³"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Grandeur produit simple",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Un appareil de puissance2 kW fonctionne pendant3h. Avec E=P×t, quelle énergie en kWh ?",
+      "reponse": "6 kWh",
+      "donnees": "Formule fournie, puissance1–5, durée1–5, pasconversionjoules.",
+      "saisie": "Nombre, kWh fixé",
+      "acceptation": "6.",
+      "aide1": "Trois blocs horaires, chacun2kWh ; montrer somme des trois blocs.",
+      "aide2": "2 + 2 + 2.",
+      "correction": "E = 2 × 3 = 6 kWh.",
+      "controles": "UnitékWh pas kW/h ; formule donnée et cohérence grandeurs.",
+      "identifiant": "PF08-e",
+      "ancienId": "PF08-E",
+      "ancienIdGenerateur": "PF08-5",
+      "indiceGenerateur": 4,
+      "nom": "Grandeur produit simple",
+      "niveauDescription": "3e",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "kWh"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "f",
+      "objectif": "Retrouver une durée à partir de la distance et de la vitesse",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "À48km/h, combien de minutes faut-il pour parcourir36km à vitesse constante ?",
+      "reponse": "45",
+      "donnees": "Vitesse24,36,48,60ou72km/h ; durée15,30,45,60,90ou120min ; distance calculée à partir de la durée ; contexte vitesse constante.",
+      "saisie": "Champ numérique ; unité affichée en dehors du champ.",
+      "acceptation": "Valeur numérique exacte ; virgule et point décimaux acceptés ; unité déjà indiquée.",
+      "aide1": "48kmcorrespondent à60min. Double droite distance/durée avec origines communes et36kmrepérés.",
+      "aide2": "Calculer36÷48en heures, puis multiplier par60.",
+      "correction": "36÷48×60=45min.",
+      "controles": "Accepter45 ; refuser0,75car unité demandée minute ; conversions exactes ; placements proportionnels sur double droite.",
+      "identifiant": "PF08-f",
+      "ancienId": "PF08-F",
+      "ancienIdGenerateur": "PF08-6",
+      "indiceGenerateur": 5,
+      "nom": "Retrouver une durée à partir de la distance et de la vitesse",
+      "niveauDescription": "4e puis entretien",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "min"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2605",
+          "question": "Q9",
+          "referenceAncienne": "AG 9",
+          "forme": "f",
+          "identifiant": "PF08-f",
+          "ancienId": "PF08-6",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Durée à partir de distance et vitesse",
+          "formatSource": "Saisie",
+          "document": "Antilles-Guyane, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Antilles-Guyane_DV-v2.pdf"
+        },
+        {
+          "source": "Z26B",
+          "question": "Q5",
+          "referenceAncienne": "ZB 5",
+          "forme": "f",
+          "identifiant": "PF08-f",
+          "ancienId": "PF08-6",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Durée à partir de distance et vitesse",
+          "formatSource": "QCM",
+          "document": "Sujet zéro 2026, série générale B",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-b-mathematiquespdf-123314.pdf"
+        }
+      ]
+    }
+  ]
+}

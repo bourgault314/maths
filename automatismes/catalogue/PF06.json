@@ -1,0 +1,182 @@
+{
+  "id": "PF06",
+  "titre": "Ratios et partages",
+  "categorie": "Proportionnalité et pourcentages",
+  "objectif": "Partager une quantité selon un ratio.",
+  "prerequis": "Division, fraction d’un total.",
+  "perimetre": "DNB2027 et apprentissages collège ; variantes filtrées par niveau.",
+  "cours": {
+    "regle": "Dans le ratio 2 : 3, les deux parts contiennent 2 et 3 unités identiques.",
+    "exemple": "Partager35dans2 :3 :5unités ; une unité vaut7 ; parts14et21.",
+    "visuel": "Deux barres de2et3cases de même largeur ; accolade commune35.",
+    "mouvement": "Révéler valeur d’une case puis groupements."
+  },
+  "erreurs": ["Prendre2/3du total au lieu de2/5.", "Confondre part et totalité."],
+  "sources": [
+    {
+      "titre": "Éduscol — Exemples cycle 4, 2026",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "PDF p40–46, Proportionnalité et fonctions",
+      "apport": "Progression des contextes, représentations et procédures ; les schémas et exemples ci-dessous sont nos choix de conception.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Éduscol — Accompagnement mathématiques 6e, 2026",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/2026livretaccompagnementmaths6e-pdf-126656.pdf",
+      "repere": "PDF p19–24, proportionnalité",
+      "apport": "Appui sur les procédures de proportionnalité déjà travaillées en 6e ; ne fixe pas le niveau des variantes de cette famille au cycle 4.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Éduscol — Résoudre des problèmes de proportionnalité",
+      "url": "https://eduscol.education.fr/document/17281/download",
+      "repere": "PDF p1–6",
+      "apport": "Choisir une procédure selon les nombres et relier les représentations ; document antérieur, utilisé en appui.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "NCETM — Bar models",
+      "url": "https://www.ncetm.org.uk/media/8d84e791bafa491/ncetm_ks3_representations_bar_models.pdf",
+      "repere": "p.3,5,9,12 lues visuellement",
+      "apport": "Structures partie-tout et comparaison ; identifier explicitement le tout.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "",
+  "acces_secondaires": [],
+  "nom": "Ratios et partages",
+  "domaine": "proportionnalite-fonctions",
+  "sousDomaine": "Proportionnalité et pourcentages",
+  "niveaux": ["4e", "3e"],
+  "niveauxDescription": "4e : ratios et partage ; 3e : automatisation ; pas diffusion6e par défaut.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": [],
+    "questions": []
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Partager total entre deux",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Partager 35 jetons dans le ratio 2 : 3. Donner les deux parts dans cet ordre.",
+      "reponse": "14 ; 21",
+      "donnees": "a,b1–5 ; total=k(a+b), k2–12 ; contexte discret.",
+      "saisie": "Deux champs entiers étiquetés première/seconde part",
+      "acceptation": "Couple ordonné14,21 ; pas21,14.",
+      "aide1": "Dessiner2cases puis3cases identiques sous accolade35.",
+      "aide2": "5cases valent35 ; une case vaut7.",
+      "correction": "2×7=14 et3×7=21.",
+      "controles": "Somme35etégalité rapports ; refuser parts inversées.",
+      "identifiant": "PF06-a",
+      "ancienId": "PF06-A",
+      "ancienIdGenerateur": "PF06-1",
+      "indiceGenerateur": 0,
+      "nom": "Partager total entre deux",
+      "niveauDescription": "4e",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Part 1",
+          "unite": "€"
+        },
+        {
+          "type": "nombre",
+          "libelle": "Part 2",
+          "unite": "€"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Retrouver seconde à partir première",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Dans un mélange, sirop et eau sont dans le ratio 1 : 4. Pour 3 cL de sirop, combien d’eau ?",
+      "reponse": "12 cL",
+      "donnees": "Partspositives1–6 ; première quantité multiple de premièrepart ; unités identiques.",
+      "saisie": "Nombre, cL fixé",
+      "acceptation": "12.",
+      "aide1": "Deux groupes distingués par couleur : une case sirop et quatre cases eau de même largeur. Une case représente une même part.",
+      "aide2": "La case sirop vaut3 cL ; chaque case eau vaut aussi3 cL.",
+      "correction": "4 × 3 = 12 cL d’eau.",
+      "controles": "Ne pas répondre15 volume total ; ordre explicite.",
+      "identifiant": "PF06-b",
+      "ancienId": "PF06-B",
+      "ancienIdGenerateur": "PF06-2",
+      "indiceGenerateur": 1,
+      "nom": "Retrouver seconde à partir première",
+      "niveauDescription": "4e",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cL"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Partager entre trois",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Partager 48 € selon le ratio 1 : 2 : 3. Donner les trois parts.",
+      "reponse": "8 ; 16 ; 24",
+      "donnees": "3coefficients1–5 ; somme≤12 ; total multiple somme.",
+      "saisie": "Trois champs €",
+      "acceptation": "Ordre8,16,24.",
+      "aide1": "Barres1,2,3cases ; accolade48 €.",
+      "aide2": "6cases :48÷6=8 € parcase.",
+      "correction": "8 €,16 €,24 €.",
+      "controles": "Somme48etrapports ; aucune partarrondie.",
+      "identifiant": "PF06-c",
+      "ancienId": "PF06-C",
+      "ancienIdGenerateur": "PF06-3",
+      "indiceGenerateur": 2,
+      "nom": "Partager entre trois",
+      "niveauDescription": "3e",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Part 1",
+          "unite": "€"
+        },
+        {
+          "type": "nombre",
+          "libelle": "Part 2",
+          "unite": "€"
+        },
+        {
+          "type": "nombre",
+          "libelle": "Part 3",
+          "unite": "€"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

@@ -1,0 +1,230 @@
+{
+  "id": "EG20",
+  "titre": "Vues et assemblages de cubes",
+  "categorie": "Géométrie et repérage",
+  "objectif": "Passer d’un assemblage défini à sa vue ou à son nombre de cubes.",
+  "prerequis": ["Repérage simple", "Dénombrement", "Unité cube"],
+  "perimetre": "Prérequis collège et DNB 2027.",
+  "cours": {
+    "regle": "Une vue écrase une direction. Compte les cubes par colonnes ou couches, y compris les cubes cachés.",
+    "exemple": "Colonnes de hauteurs 2, 1 et 3 : 2+1+3=6 cubes.",
+    "visuel": "Plateau 2×2 : A1=2, B1=1, A2=0, B2=3. Chaque colonne est pleine. Relier le tableau des hauteurs à la vue choisie.",
+    "mouvement": "Démontage par couches facultatif ; trois couches séparées dans la version statique."
+  },
+  "erreurs": [
+    "Compter uniquement les cubes visibles",
+    "Additionner les hauteurs dans une projection",
+    "Déduire un volume unique d’une vue insuffisante"
+  ],
+  "sources": [
+    {
+      "titre": "Programme cycle 3 2025",
+      "url": "https://www.education.gouv.fr/sites/default/files/ensel620_annexe2-v2.pdf",
+      "repere": "PDF p.20,24",
+      "apport": "Volume par cubes et mises en relation de vues.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Programme cycle 4 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "PDF p.12",
+      "apport": "Vues et dénombrement explicitement entretenus en 5e.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples 6e 2025",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/exemplesmiseenoeuvre6e-mathpdf-111549.pdf",
+      "repere": "p.10 imprimée, volumes",
+      "apport": "Dénombrement de cubes-unités.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Mathsgo — Le pavé droit dans l’espace",
+      "url": "https://mathsgo.re/outils/espace/pave_droit.html",
+      "repere": "Catalogue public consulté ; fonctionnalité décrite, interaction non testée.",
+      "apport": "Vue fixe lisible et bouton tourner facultatif ; afficher face de référence pour repérage.",
+      "statut": "choix de conception"
+    },
+    {
+      "titre": "NCETM — Geometry",
+      "url": "https://www.ncetm.org.uk/classroom-resources/secmm-6-geometry/",
+      "repere": "Présentation du thème 6 consultée",
+      "apport": "Relier propriétés géométriques, formules de mesure et transformations ; appui thématique.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "Toute scène doit fournir assez d’informations. Les perspectives sont produites depuis des coordonnées3D, pas dessinées arbitrairement.",
+  "acces_secondaires": ["Grandeurs et mesures"],
+  "nom": "Vues et assemblages de cubes",
+  "domaine": "espace-geometrie",
+  "sousDomaine": "Géométrie et repérage",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6e : assemblages et vues appris ; 5e : automatismes explicites ; entretien en 4e et 3e.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": [],
+    "questions": []
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Reconnaître l’empreinte vue du dessus",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Les hauteurs sont A1=2, B1=1, A2=0 et B2=3. La case A2 est-elle occupée dans la vue de dessus ?",
+      "reponse": "Non",
+      "donnees": "Grille2×2 ou3×3 ; hauteurs 0–4 ; au moinsune vide ; aucune colonne flottante ; orientation de vue fléchée.",
+      "saisie": "Choix Oui/Non sur une case ciblée ; les cases changent à chaque question.",
+      "acceptation": "Non pour A2 ; Oui pour les trois autres cases dans cet exemple.",
+      "aide1": "« Vue du dessus, une colonne apparaît dans sa case quelle que soit sa hauteur. » Colorer les cases de hauteur non nulle.",
+      "aide2": "« A2 a une hauteur nulle. » Barrer doucement A2, garder les trois autres à examiner.",
+      "correction": "A2 a une hauteur nulle : la case est vide dans la vue de dessus.",
+      "controles": [
+        "A2 doit être vide, A1/B1/B2 occupées.",
+        "Aucune colonne de hauteur positive ne peut être annoncée vide."
+      ],
+      "identifiant": "EG20-a",
+      "ancienId": "EG20-V1",
+      "ancienIdGenerateur": "EG20-V1",
+      "indiceGenerateur": 0,
+      "nom": "Reconnaître l’empreinte vue du dessus",
+      "niveauDescription": "6e puis 5e entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Construire une vue de face",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Les colonnes avant gauche/droite ont les hauteurs 2 et 1 ; les colonnes arrière gauche/droite ont les hauteurs 1 et 3. Vue de face depuis l’avant : quelles hauteurs vois-tu à gauche et à droite ?",
+      "reponse": "2 ; 3",
+      "donnees": "Grille2×2 ; axes avant/arrière explicités ; toutes colonnes pleines ; maxima par colonne de projection.",
+      "saisie": "Deux champs gauche/droite.",
+      "acceptation": "Paire ordonnée exacte ; la direction de vue fixe le sens.",
+      "aide1": "« Les colonnes alignées se cachent les unes derrière les autres. » Tracer les deux lignes de visée.",
+      "aide2": "« À gauche compare2 et 1 ; à droite compare1 et 3. » Superposer les silhouettes sans donner les maxima.",
+      "correction": "La silhouette monte à2 cubes à gauche et 3 à droite.",
+      "controles": [
+        "Accepter (2,3) ; refuser (3,4), somme des profondeurs.",
+        "Retourner la direction ou permuter gauche/droite uniquement avec une nouvelle flèche explicite."
+      ],
+      "identifiant": "EG20-b",
+      "ancienId": "EG20-V2",
+      "ancienIdGenerateur": "EG20-V2",
+      "indiceGenerateur": 1,
+      "nom": "Construire une vue de face",
+      "niveauDescription": "6e puis 5e entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Gauche",
+          "unite": "cubes"
+        },
+        {
+          "type": "nombre",
+          "libelle": "Droite",
+          "unite": "cubes"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Compter les cubes cachés",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Trois colonnes pleines ont pour hauteurs 2,1 et 3 cubes. Combien de cubes contient l’assemblage ?",
+      "reponse": "6",
+      "donnees": "Hauteurs0–4 sur≤6 cases ; vues ne suffisant pas seules doivent être accompagnées d’un tableau de hauteurs ; absence de vide annoncée.",
+      "saisie": "Champ entier.",
+      "acceptation": "Entier exact.",
+      "aide1": "« Compte une colonne à la fois, pas seulement les faces visibles. » Détacher visuellement les trois colonnes.",
+      "aide2": "« Additionne les hauteurs :2+1+3. » Afficher le calcul.",
+      "correction": "Il y a6 cubes.",
+      "controles": [
+        "Accepter6 ; refuser3, nombre de colonnes.",
+        "Comptage colonnes = comptage couches = cardinal des coordonnées3D."
+      ],
+      "identifiant": "EG20-c",
+      "ancienId": "EG20-V3",
+      "ancienIdGenerateur": "EG20-V3",
+      "indiceGenerateur": 2,
+      "nom": "Compter les cubes cachés",
+      "niveauDescription": "6e puis 5e entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cubes"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Reconnaître une information insuffisante",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "La vue de dessus montre deux cases occupées. Les hauteurs ne sont pas données. Peut-on connaître le nombre exact de cubes ?",
+      "reponse": "Non",
+      "donnees": "Empreinte de 1–4 cases ; aucun maximum de hauteur annoncé ; montrer deux assemblages compatibles seulement dans la correction.",
+      "saisie": "Oui/non.",
+      "acceptation": "Réponse Non ; ne pas demander un nombre unique impossible.",
+      "aide1": "« Une case vue du dessus peut cacher une colonne plus haute. » Montrer une seule colonne extensible.",
+      "aide2": "« Deux cubes ou quatre cubes peuvent avoir cette même empreinte. » Afficher les deux configurations en aide avancée.",
+      "correction": "Non : les hauteurs manquent.",
+      "controles": [
+        "AccepterNon ; refuser2 comme total certain.",
+        "Les deux contre-exemples ont exactement la même empreinte."
+      ],
+      "identifiant": "EG20-d",
+      "ancienId": "EG20-V4",
+      "ancienIdGenerateur": "EG20-V4",
+      "indiceGenerateur": 3,
+      "nom": "Reconnaître une information insuffisante",
+      "niveauDescription": "5e entretien, question de lecture",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

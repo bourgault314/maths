@@ -1,0 +1,466 @@
+{
+  "id": "NC14",
+  "titre": "Carrés, cubes et racines carrées",
+  "categorie": "Nombres et calculs",
+  "objectif": "Relier produit répété, aire, volume et racine carrée sans confondre longueur et carré de longueur.",
+  "prerequis": ["Produits et quotients", "Carrés et tables", "Numération de position"],
+  "perimetre": "Couverture des prérequis et automatismes du collège. Le filtre DNB2027 utilise l’ancien programme du cycle 4 ; les niveaux indiqués suivent le nouveau programme. Le statut est précisé par variante.",
+  "cours": {
+    "regle": "a² = a × a ; a³ = a × a × a. Pour A ≥ 0, √A est le nombre positif ou nul dont le carré vaut A.",
+    "exemple": "8² = 8 × 8 = 64.",
+    "visuel": "Carré et aire, produits répétés, trois directions du cube ; radicande encadré par deux carrés parfaits.",
+    "mouvement": "Le schéma est entièrement compréhensible à l’arrêt. Une animation éventuelle révèle les étapes sans cacher les états précédents."
+  },
+  "erreurs": [
+    "Confondre base et exposant",
+    "Oublier une condition de signe",
+    "Confondre carré et double"
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 4 (2026)",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "statut": "prescription",
+      "repere": "PDF p 8–11",
+      "apport": "Objectifs et progression officiels du programme ; niveau de classe vérifié."
+    },
+    {
+      "titre": "Exemples de mise en œuvre du cycle 4 (2026)",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "statut": "appui pédagogique",
+      "repere": "PDF p 18, imprimée 17",
+      "apport": "Exemples officiels de mise en œuvre : progressivité, représentations et types de calculs."
+    },
+    {
+      "titre": "Liste indicative d’automatismes DNB (octobre 2025)",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/liste-indicative-dautomatismes-pour-le-dnbpdf-116340.pdf",
+      "statut": "prescription",
+      "repere": "p 1",
+      "apport": "Périmètre indicatif des automatismes du DNB ; la liste n’est pas limitative."
+    },
+    {
+      "titre": "DNB sujet de référence 2027 n°2",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n02-129661.pdf",
+      "statut": "appui pédagogique",
+      "repere": "PDF p 2 Q 3",
+      "apport": "Situation effectivement observée dans le sujet de référence, repérée par numéro de question."
+    }
+  ],
+  "limites": "√A est positif ou nul ; l’exemple officiel qui parle généralement d’un nombre entier contient une coquille. Ne pas confondre (−a)² et −a².",
+  "acces_secondaires": ["Géométrie", "Grandeurs et mesures"],
+  "implementation": {
+    "module": "app-automatismes/dist/modules/nombres.js",
+    "tests": "etape1/test_nombres.mjs",
+    "variantes": 7,
+    "graines_par_variante": 200,
+    "principe": "Aide 1 : représentation visuelle des données. Aide 2 : étape de calcul. Deux aides maximum.",
+    "aide1_visuelle": true
+  },
+  "nom": "Carrés, cubes et racines carrées",
+  "domaine": "nombres-calculs",
+  "sousDomaine": "Nombres et calculs",
+  "niveaux": ["5e", "4e", "3e"],
+  "niveauxDescription": "5e : carrés et cubes ; 4e : racines, encadrement et signe avec parenthèses.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_07", "dnb_09", "dnb_11", "dnb_22"],
+    "questions": [
+      {
+        "source": "R27B",
+        "question": "Q3",
+        "referenceAncienne": "R2 3",
+        "forme": "c",
+        "identifiant": "NC14-c",
+        "ancienId": "NC14-C",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Retrouver le côté d’un carré à partir de son aire",
+        "formatSource": "Nombre",
+        "document": "Sujet de référence mathématiques n°2",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n02-129661.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Carrés de 0 à 12",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Calcule 8².",
+      "reponse": "64",
+      "donnees": "Base entière 0–12 ; couvrir aussi 0 et 1.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Un carré utilise deux facteurs identiques.",
+      "aide2": "8² = 8 × 8.",
+      "correction": "8² = 8 × 8 = 64.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["64"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "64",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Carrés, cubes subdivisés ou regroupement de la base du carré. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC14-a",
+      "ancienId": "NC14-a",
+      "ancienIdGenerateur": "NC14-A",
+      "indiceGenerateur": 0,
+      "nom": "Carrés de 0 à 12",
+      "niveauDescription": "5e ; entretien dans les classes suivantes.",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Cubes de 0 à 5",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Calcule 4³.",
+      "reponse": "64",
+      "donnees": "Base entière 0–5 ; produit de trois facteurs, résultat 0–125.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Un cube utilise trois facteurs identiques.",
+      "aide2": "4³ = 4 × 4 × 4.",
+      "correction": "4³ = 4 × 4 × 4 = 64.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["64"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "64",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Carrés, cubes subdivisés ou regroupement de la base du carré. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC14-b",
+      "ancienId": "NC14-b",
+      "ancienIdGenerateur": "NC14-B",
+      "indiceGenerateur": 1,
+      "nom": "Cubes de 0 à 5",
+      "niveauDescription": "5e ; entretien dans les classes suivantes.",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Côté d’un carré à partir de son aire",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Un carré a une aire de 81 cm². Quelle est la longueur de son côté ?",
+      "reponse": "9",
+      "donnees": "Aire k² cm² avec k entre 1 et 12 ; longueur positive attendue en cm.",
+      "saisie": "Réponse : nombre (cm)",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Le côté multiplié par lui-même donne l’aire.",
+      "aide2": "Cherche ? × ? = 81, avec deux facteurs égaux.",
+      "correction": "9 × 9 = 81 : le côté mesure 9 cm.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["9"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "9",
+          "kind": "number",
+          "unit": "cm",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Carrés, cubes subdivisés ou regroupement de la base du carré. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Étape de calcul explicite.",
+      "identifiant": "NC14-c",
+      "ancienId": "NC14-c",
+      "ancienIdGenerateur": "NC14-C",
+      "indiceGenerateur": 2,
+      "nom": "Côté d’un carré à partir de son aire",
+      "niveauDescription": "4e ; entretien dans les classes suivantes.",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "R27B",
+          "question": "Q3",
+          "referenceAncienne": "R2 3",
+          "forme": "c",
+          "identifiant": "NC14-c",
+          "ancienId": "NC14-C",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Retrouver le côté d’un carré à partir de son aire",
+          "formatSource": "Nombre",
+          "document": "Sujet de référence mathématiques n°2",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n02-129661.pdf"
+        }
+      ]
+    },
+    {
+      "id": "d",
+      "objectif": "Racines des carrés parfaits jusqu’à 144",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Calcule √64.",
+      "reponse": "8",
+      "donnees": "Radicande k² avec k entre 0 et 12 ; seule racine positive ou nulle.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "La racine carrée est positive ou nulle.",
+      "aide2": "Quel nombre a pour carré 64 ?",
+      "correction": "√64 = 8, car 8² = 64.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["8"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "8",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Carrés, cubes subdivisés ou regroupement de la base du carré. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC14-d",
+      "ancienId": "NC14-d",
+      "ancienIdGenerateur": "NC14-D",
+      "indiceGenerateur": 3,
+      "nom": "Racines des carrés parfaits jusqu’à 144",
+      "niveauDescription": "4e ; entretien dans les classes suivantes.",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Encadrer une racine entre deux entiers consécutifs",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Complète avec deux entiers consécutifs : □ < √88 < □.",
+      "reponse": "9 ; 10",
+      "donnees": "Radicande strictement entre k² et (k+1)², k entre 1 et 11 ; bornes entières consécutives.",
+      "saisie": "Borne inférieure : nombre ; Borne supérieure : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Encadre le nombre sous la racine par deux carrés.",
+      "aide2": "9² = 81 < 88 < 100 = 10².",
+      "correction": "81 < 88 < 100, donc 9 < √88 < 10.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "fields",
+        "values": ["9", "10"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Borne inférieure",
+          "answer": "9",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        },
+        {
+          "label": "Borne supérieure",
+          "answer": "10",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Carrés, cubes subdivisés ou regroupement de la base du carré. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC14-e",
+      "ancienId": "NC14-e",
+      "ancienIdGenerateur": "NC14-E",
+      "indiceGenerateur": 4,
+      "nom": "Encadrer une racine entre deux entiers consécutifs",
+      "niveauDescription": "4e ; entretien dans les classes suivantes.",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Borne inférieure",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "Borne supérieure",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "f",
+      "objectif": "Distinguer (−a)² et −a²",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Calcule (−9)².",
+      "reponse": "81",
+      "donnees": "Base de valeur absolue 1–12 ; présence ou absence des parenthèses tirée au hasard.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Les parenthèses incluent le signe − dans le carré.",
+      "aide2": "(−9) × (−9).",
+      "correction": "(−9)² = 81.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["81"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "81",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Carrés, cubes subdivisés ou regroupement de la base du carré. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC14-f",
+      "ancienId": "NC14-f",
+      "ancienIdGenerateur": "NC14-F",
+      "indiceGenerateur": 5,
+      "nom": "Distinguer (−a)² et −a²",
+      "niveauDescription": "4e ; entretien dans les classes suivantes.",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "g",
+      "objectif": "Arête d’un cube par comptage",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Un cube est formé de 64 petits cubes d’arête 1 cm. Quelle est l’arête du grand cube ?",
+      "reponse": "4",
+      "donnees": "Nombre de petits cubes égal à k³, k entre 1 et 5 ; recherche de l’arête sans notation de racine cubique.",
+      "saisie": "Réponse : nombre (cm)",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Il y a le même nombre de petits cubes dans les trois directions.",
+      "aide2": "Cherche ? × ? × ? = 64.",
+      "correction": "4 × 4 × 4 = 64 : l’arête mesure 4 cm.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["4"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "4",
+          "kind": "number",
+          "unit": "cm",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Carrés, cubes subdivisés ou regroupement de la base du carré. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC14-g",
+      "ancienId": "NC14-g",
+      "ancienIdGenerateur": "NC14-G",
+      "indiceGenerateur": 6,
+      "nom": "Arête d’un cube par comptage",
+      "niveauDescription": "5e ; entretien dans les classes suivantes.",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

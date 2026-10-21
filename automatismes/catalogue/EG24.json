@@ -1,0 +1,240 @@
+{
+  "id": "EG24",
+  "titre": "Effets d’un changement d’échelle",
+  "categorie": "Grandeurs et mesures",
+  "objectif": "Associer changement de longueur, d’aire et de volume.",
+  "prerequis": ["Proportionnalité", "Carrés/cubes", "Aire/volume"],
+  "perimetre": "DNB 2027 : agrandissements et réductions du programme de 2020. Autres niveaux selon enseignement préalable.",
+  "cours": {
+    "regle": "Si toutes les longueurs sont multipliées par k>0, les aires le sont par k² et les volumes par k³.",
+    "exemple": "Facteur 2 : longueur×2, aire×4, volume×8.",
+    "visuel": "Carrés de côtés 1 et 2 quadrillés ; cubes d’arêtes 1 et 2 décomposés en huit cubes-unités identiques.",
+    "mouvement": "Agrandissement facultatif ; figures côte à côte et facteurs écrits en version statique."
+  },
+  "erreurs": [
+    "Appliquer k aux aires ou volumes",
+    "Lire un rapport d’aire comme un facteur de longueur",
+    "Donner une longueur négative"
+  ],
+  "sources": [
+    {
+      "titre": "Programme cycle 4 2020",
+      "url": "https://cache.media.education.gouv.fr/file/31/89/1/ensel714_annexe3_1312891.pdf",
+      "repere": "PDF p.134",
+      "apport": "Effets des transformations sur longueurs, aires, volumes ; agrandissements/réductions.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples cycle 4 2026",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "p.30 imprimée",
+      "apport": "Sections parallèles et dimensions proportionnelles ; réinvestissement des grandeurs.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "NCETM — Geometry",
+      "url": "https://www.ncetm.org.uk/classroom-resources/secmm-6-geometry/",
+      "repere": "Présentation du thème 6 consultée",
+      "apport": "Relier propriétés géométriques, formules de mesure et transformations ; appui thématique.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "Les questions courtes ne valident pas une démonstration de similitude. Les facteurs d’aire et de volume sont explicitement conservés dans le filtre DNB 2027.",
+  "acces_secondaires": ["Géométrie et repérage", "Proportionnalité et pourcentages"],
+  "nom": "Effets d’un changement d’échelle",
+  "domaine": "espace-geometrie",
+  "sousDomaine": "Grandeurs et mesures",
+  "niveaux": ["5e", "4e", "3e"],
+  "niveauxDescription": "5e : longueurs et proportionnalité ; 3e DNB 2027 : facteurs d’aire k² et de volume k³ du programme de 2020. Ne pas attribuer à tous ces cas un statut explicite d’automatisme dans le nouveau programme.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": [],
+    "questions": []
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Transformer une longueur",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Une figure est agrandie avec un facteur 3. Un côté mesurait4 cm. Combien mesure le côté correspondant ?",
+      "reponse": "12 cm",
+      "donnees": "k∈{2,3,1/2,1/3}, longueurentière dont le produit est simple ; agrandissement global affirmé.",
+      "saisie": "Nombre, unitécm.",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "« Le facteur porte sur chaque longueur. » Relier les deux côtés correspondants.",
+      "aide2": "« Multiplie4 par 3. » Afficher4×3.",
+      "correction": "La nouvelle longueur est12 cm.",
+      "controles": ["Accepter12 ; refuser7.", "Unfacteur 1/2doitdiviser lalongueurpar 2."],
+      "identifiant": "EG24-a",
+      "ancienId": "EG24-V1",
+      "ancienIdGenerateur": "EG24-V1",
+      "indiceGenerateur": 0,
+      "nom": "Transformer une longueur",
+      "niveauDescription": "5e proportionnalité ; 3eDNB",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Transformer une aire",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Toutes les longueurs d’une figure sont multipliées par 2. Son aire était7 cm². Quelle est sa nouvelle aire ?",
+      "reponse": "28 cm²",
+      "donnees": "k∈{2,3,1/2}; A1–20, sortieexacte ; mention toutes les longueurs ; pas de déformation anisotrope.",
+      "saisie": "Nombre, unitécm².",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "« L’aire change dans deux directions. » Montreruncarré2×2depetitscarrés.",
+      "aide2": "« Le facteur d’aire est2²=4. » Afficher7×4.",
+      "correction": "A'=7×4=28 cm².",
+      "controles": ["Accepter28 ; refuser14.", "Quandk=1/2, l’aire est divisée par 4."],
+      "identifiant": "EG24-b",
+      "ancienId": "EG24-V2",
+      "ancienIdGenerateur": "EG24-V2",
+      "indiceGenerateur": 1,
+      "nom": "Transformer une aire",
+      "niveauDescription": "3eDNB 2027",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cm²"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Transformer un volume",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Un solide de volume 40 cm³ est réduit en divisant toutes ses longueurs par 2. Quel est le nouveau volume ?",
+      "reponse": "5 cm³",
+      "donnees": "k∈{1/2,1/3,2}; Vchoisi pour un résultat entier ; scénario homothétique3D.",
+      "saisie": "Nombre, unitécm³.",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "« Le volume change dans trois directions. » Montreruncube2×2×2.",
+      "aide2": "« Diviser les longueurs par 2 divise le volume par 2³=8. » Afficher40÷8.",
+      "correction": "V'=40÷8=5 cm³.",
+      "controles": ["Accepter5 ; refuser20 ou10.", "Le volume est positif et transformépark³."],
+      "identifiant": "EG24-c",
+      "ancienId": "EG24-V3",
+      "ancienIdGenerateur": "EG24-V3",
+      "indiceGenerateur": 2,
+      "nom": "Transformer un volume",
+      "niveauDescription": "3eDNB 2027",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cm³"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Retrouver le facteur de longueur depuis l’aire",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Deux figures sont semblables. L’aire de la seconde est9 fois celle de la première. Quel est le facteur d’agrandissement des longueurs ?",
+      "reponse": "3",
+      "donnees": "Rapportaires∈{4,9,16,1/4}; kpositif ; semblables : texte explicite ; ne pas inférer à partir des deux aires seules.",
+      "saisie": "Nombre oufraction.",
+      "acceptation": "Accepter la valeur positive3 ; refuser−3car le facteur de longueur est positif demandé.",
+      "aide1": "« Le facteur d’aire est le carré du facteur de longueur. » Montrerk×k=9.",
+      "aide2": "« Cherche le nombre positif dont le carré vaut9. » Afficher3×3 sans nommer le facteur final.",
+      "correction": "k=3car3²=9.",
+      "controles": [
+        "Accepter3 ; refuser9.",
+        "Sans hypothèse de figures semblables, ne pas générer cette question."
+      ],
+      "identifiant": "EG24-d",
+      "ancienId": "EG24-V4",
+      "ancienIdGenerateur": "EG24-V4",
+      "indiceGenerateur": 3,
+      "nom": "Retrouver le facteur de longueur depuis l’aire",
+      "niveauDescription": "3eDNB 2027 application",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Traiter un rapport d’homothétie négatif pour une mesure",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Une homothétie de rapport−2 transforme un segment de 3 cm. Quelle est la longueur de son image ?",
+      "reponse": "6 cm",
+      "donnees": "k∈{−2,−3,−1/2}; Lpositive convenable ; schémacentreO avec points de départ opposés.",
+      "saisie": "Nombre, unitécm.",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "« Une longueur ne peut pas être négative. Le signe indique le côté du centre. » MontrerAetA'departetd’autredeO.",
+      "aide2": "« Le facteur de longueur est la valeur positive2. » Afficher3×2.",
+      "correction": "La longueur de l’image est6 cm.",
+      "controles": [
+        "Accepter6 ; refuser−6.",
+        "Le rapport orienté est−2mais le rapport des longueurs est2."
+      ],
+      "identifiant": "EG24-e",
+      "ancienId": "EG24-V5",
+      "ancienIdGenerateur": "EG24-V5",
+      "indiceGenerateur": 4,
+      "nom": "Traiter un rapport d’homothétie négatif pour une mesure",
+      "niveauDescription": "3eDNB 2027 ancien programme",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

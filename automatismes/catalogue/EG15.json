@@ -1,0 +1,322 @@
+{
+  "id": "EG15",
+  "titre": "Translations",
+  "categorie": "Géométrie et repérage",
+  "objectif": "Déterminer l’image d’un point ou d’une figure par un même déplacement orienté.",
+  "prerequis": "Quadrillage ; correspondance des points ; direction, sens et distance.",
+  "perimetre": "DNB 2027 : translation qui envoie A sur B ; aucun calcul vectoriel formel exigé.",
+  "cours": {
+    "regle": "Une translation déplace tous les points avec la même direction, le même sens et la même distance.",
+    "exemple": "Le déplacement de A vers B est de 3 carreaux à droite et 1 en haut. Depuis C, on effectue le même déplacement pour trouver D.",
+    "visuel": "Quadrillage carré ; A(0;0), B(3;1), C(1;−2), D(4;−1). Flèches AB et CD portant les mêmes labels « 3 à droite » et « 1 en haut ». Orientation et dimensions conservées.",
+    "mouvement": "Glissement simultané des sommets, sans rotation. Version statique : positions initiales et finales reliées par des flèches."
+  },
+  "erreurs": [
+    "Inverser le déplacement.",
+    "Tourner ou réfléchir la figure.",
+    "Déplacer chaque sommet différemment."
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 4 — 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "p. 14–16 — Transformations",
+      "apport": "Translation en 4e, automatisation en 3e.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples pour la mise en œuvre des programmes de mathématiques — cycle 4",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "PDF p. 29 — Parallélogrammes et translations",
+      "apport": "Effet global ; conservation des distances et des angles.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Repères annuels de progression — cycle 4 — 2019",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/26-maths-c4-reperes-eduscol1114756pdf-74694.pdf",
+      "repere": "PDF p. 12 — Transformations",
+      "apport": "Ancienne progression ; aucune connaissance formelle attendue sur les vecteurs.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "NCETM — Geometry",
+      "url": "https://www.ncetm.org.uk/classroom-resources/secmm-6-geometry/",
+      "repere": "Présentation du thème 6 consultée",
+      "apport": "Relier propriétés géométriques, formules de mesure et transformations ; appui thématique.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "La famille utilise le déplacement de A vers B. Les propriétés formelles des vecteurs sont séparées dans EG17.",
+  "acces_secondaires": [],
+  "nom": "Translations",
+  "domaine": "espace-geometrie",
+  "sousDomaine": "Géométrie et repérage",
+  "niveaux": ["4e", "3e"],
+  "niveauxDescription": "4e : apprentissage ; 3e : automatisme explicite. Ancien programme : 4e puis entretien au DNB 2027.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_27"],
+    "questions": [
+      {
+        "source": "A2603",
+        "question": "Q2",
+        "referenceAncienne": "G1 2",
+        "forme": "b",
+        "identifiant": "EG15-b",
+        "ancienId": "EG15-V2",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Image d’un motif par translation",
+        "formatSource": "Nom du motif",
+        "document": "Centres étrangers, 18 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-18_Centres-etrangers_DV-v3.pdf"
+      },
+      {
+        "source": "R27A",
+        "question": "Q7",
+        "referenceAncienne": "R1 7",
+        "forme": "e",
+        "identifiant": "EG15-e",
+        "ancienId": "EG15-V5",
+        "support": "comparable",
+        "difference": "Image d’un triangle nommé dans un pavage : ne pas remplacer par la seule image d’un point.",
+        "savoirFaire": "Image d’un triangle par translation",
+        "formatSource": "Nom du triangle",
+        "document": "Sujet de référence mathématiques n°1",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n01-129658.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Placer une image.",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "La translation transforme A en B : 3 carreaux à droite et 1 en haut. C(1 ; −2). Place son image D.",
+      "reponse": "D(4 ; −1)",
+      "donnees": "A(0;0), B(3;1), C(1;−2), D(4;−1) ; axes unitaires ; coordonnées entières de −5 à 5, images visibles.",
+      "saisie": "Pointage ou deux champs de coordonnées.",
+      "acceptation": "(4 ; −1).",
+      "aide1": "« Reprends le déplacement de A vers B. » Surligner la flèche AB.",
+      "aide2": "« Depuis C, avance de 3 carreaux à droite puis de 1 en haut. » Tracer le chemin sans nommer le point final.",
+      "correction": "D(1 + 3 ; −2 + 1)=D(4 ; −1).",
+      "controles": [
+        "Refuser (−2;−3), déplacement inverse.",
+        "Appliquer le même déplacement à chaque point."
+      ],
+      "identifiant": "EG15-a",
+      "ancienId": "EG15-V1",
+      "ancienIdGenerateur": "EG15-V1",
+      "indiceGenerateur": 0,
+      "nom": "Placer une image.",
+      "niveauDescription": "4e apprentissage ; 3e automatisme",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Abscisse x",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "Ordonnée y",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Reconnaître une figure translatée.",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "La flèche indique 4 carreaux vers la droite. Quelle figure est l’image du triangle [angle:ABC] ?",
+      "reponse": "Figure 2",
+      "donnees": "A(0;0), B(2;0), C(0;1) ; figure 2 : (4;0),(6;0),(4;1). Figure 1 réfléchie, figure 3 tournée. Permuter les numéros au tirage.",
+      "saisie": "Choix du numéro de figure.",
+      "acceptation": "Identifiant de la figure obtenue par translation.",
+      "aide1": "« La figure glisse sans tourner. » Comparer les orientations.",
+      "aide2": "« Contrôle le déplacement de deux sommets. » Montrer deux flèches de quatre carreaux.",
+      "correction": "La figure 2 conserve l’orientation et le même déplacement pour tous les sommets.",
+      "controles": [
+        "Ne pas accepter une figure seulement de même forme.",
+        "Vérifier les trois sommets avant génération."
+      ],
+      "identifiant": "EG15-b",
+      "ancienId": "EG15-V2",
+      "ancienIdGenerateur": "EG15-V2",
+      "indiceGenerateur": 1,
+      "nom": "Reconnaître une figure translatée.",
+      "niveauDescription": "4e apprentissage ; 3e automatisme",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2603",
+          "question": "Q2",
+          "referenceAncienne": "G1 2",
+          "forme": "b",
+          "identifiant": "EG15-b",
+          "ancienId": "EG15-V2",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Image d’un motif par translation",
+          "formatSource": "Nom du motif",
+          "document": "Centres étrangers, 18 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-18_Centres-etrangers_DV-v3.pdf"
+        }
+      ]
+    },
+    {
+      "id": "c",
+      "objectif": "Trouver le déplacement inverse.",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "De A vers B : 2 carreaux à droite et 3 en bas. Quel déplacement ramène B sur A ?",
+      "reponse": "2 carreaux à gauche et 3 en haut",
+      "donnees": "A(0;0), B(2;−3) ; composants entiers de valeur absolue 1 à 4 ; inverse calculé exactement.",
+      "saisie": "Deux nombres et deux sélecteurs de direction.",
+      "acceptation": "2 à gauche, 3 en haut.",
+      "aide1": "« Pour revenir, inverse le sens. » Montrer la flèche BA.",
+      "aide2": "« Garde le même nombre de carreaux dans chaque direction. » Montrer les deux trajets inversés, étiquetés 2 et 3.",
+      "correction": "Le retour est de 2 carreaux à gauche et 3 en haut.",
+      "controles": ["Refuser 2 à gauche et 3 en bas.", "Pas de vocabulaire vectoriel obligatoire."],
+      "identifiant": "EG15-c",
+      "ancienId": "EG15-V3",
+      "ancienIdGenerateur": "EG15-V3",
+      "indiceGenerateur": 2,
+      "nom": "Trouver le déplacement inverse.",
+      "niveauDescription": "4e ; entretien 3e",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Carreaux à gauche",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "Carreaux en bas",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Utiliser la conservation d’un angle.",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "A′B′C′ est l’image de ABC par translation. L’angle [angle:ABC] mesure 42°. Combien mesure [angle:A′B′C′] ?",
+      "reponse": "42°",
+      "donnees": "Triangle d’angle [angle:B] = 42° ; image obtenue par translation exacte ; correspondances A↦A′, B↦B′, C↦C′ données.",
+      "saisie": "Champ numérique avec ° fixe.",
+      "acceptation": "42 ou 42°.",
+      "aide1": "« Une translation conserve les mesures des angles. » Mettre en évidence les deux secteurs en B et B′.",
+      "aide2": "« Le sommet B devient B′. » Relier les trois lettres de chaque angle à leurs images.",
+      "correction": "[angle:A′B′C′] = [angle:ABC] = 42°.",
+      "controles": [
+        "Refuser une mesure d’angle en A′.",
+        "Vérifier les correspondances des trois sommets."
+      ],
+      "identifiant": "EG15-d",
+      "ancienId": "EG15-V4",
+      "ancienIdGenerateur": "EG15-V4",
+      "indiceGenerateur": 3,
+      "nom": "Utiliser la conservation d’un angle.",
+      "niveauDescription": "4e ; entretien 3e",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "[angle:A′B′C′]",
+          "unite": "°"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Nommer le triangle image dans un pavage",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Dans ce pavage, la translation transforme A en E. Quel est le triangle image de ABF ?",
+      "reponse": "Trois sommets : EFJ",
+      "donnees": "Grille 4 colonnes × 3 lignes ; lettres A–D puis E–H puis I–L ; diagonales identiques ; déplacements autorisés (1;0),(0;1),(1;1),(2;0). Paramètres de cet exemple : {\"moves\":[0,1],\"target\":\"E\",\"names\":\"EFJ\"}",
+      "saisie": "Trois sommets : text",
+      "acceptation": "Formes acceptées : EFJ, EJF, FEJ, FJE, JEF, JFE",
+      "aide1": "Repère le déplacement de A vers E. Visuel : Montrer le déplacement depuis A puis reporter la même flèche depuis B et F.",
+      "aide2": "Reproduis ce même déplacement depuis B puis depuis F. Visuel : Montrer le déplacement depuis A puis reporter la même flèche depuis B et F.",
+      "correction": "ABF a pour image EFJ.",
+      "controles": [
+        "Accepter toutes les permutations des trois sommets images.",
+        "Refuser un triangle seulement de même forme."
+      ],
+      "identifiant": "EG15-e",
+      "ancienId": "EG15-V5",
+      "ancienIdGenerateur": "EG15-V5",
+      "indiceGenerateur": 4,
+      "nom": "Nommer le triangle image dans un pavage",
+      "niveauDescription": "4e apprentissage ; 3e automatisme",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "texte-court",
+      "champs": [
+        {
+          "type": "texte-court",
+          "libelle": "Trois sommets",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "R27A",
+          "question": "Q7",
+          "referenceAncienne": "R1 7",
+          "forme": "e",
+          "identifiant": "EG15-e",
+          "ancienId": "EG15-V5",
+          "support": "comparable",
+          "difference": "Image d’un triangle nommé dans un pavage : ne pas remplacer par la seule image d’un point.",
+          "savoirFaire": "Image d’un triangle par translation",
+          "formatSource": "Nom du triangle",
+          "document": "Sujet de référence mathématiques n°1",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n01-129658.pdf"
+        }
+      ]
+    }
+  ]
+}

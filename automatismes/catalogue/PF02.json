@@ -1,0 +1,237 @@
+{
+  "id": "PF02",
+  "titre": "Calculer en proportionnalité",
+  "categorie": "Proportionnalité et pourcentages",
+  "objectif": "Choisir linéarité, coefficient ou retour à l’unité.",
+  "prerequis": "Tables, opérations sur décimaux simples.",
+  "perimetre": "DNB2027 et apprentissages collège ; variantes filtrées par niveau.",
+  "cours": {
+    "regle": "On applique le même changement aux deux grandeurs. Choisis le chemin le plus simple.",
+    "exemple": "4 places coûtent 12 €. 6 places : 4+2 places, donc 12+6 = 18 €.",
+    "visuel": "Double droite : places 0,2,4,6 ; euros 0,6,12,18. Flèches ÷2 puis addition ; unités toujours visibles.",
+    "mouvement": "Révéler un couple à la fois puis écrire le calcul."
+  },
+  "erreurs": [
+    "Appliquer deux facteurs différents.",
+    "Utiliser un produit en croix sans identifier les grandeurs."
+  ],
+  "sources": [
+    {
+      "titre": "Éduscol — Exemples cycle 4, 2026",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "PDF p40–46, Proportionnalité et fonctions",
+      "apport": "Progression des contextes, représentations et procédures ; les schémas et exemples ci-dessous sont nos choix de conception.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Éduscol — Accompagnement mathématiques 6e, 2026",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/2026livretaccompagnementmaths6e-pdf-126656.pdf",
+      "repere": "PDF p19–24, proportionnalité",
+      "apport": "Sens des grandeurs, linéarité, retour à unité ; pas de produit en croix en 6e.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Éduscol — Résoudre des problèmes de proportionnalité",
+      "url": "https://eduscol.education.fr/document/17281/download",
+      "repere": "PDF p1–6",
+      "apport": "Choisir une procédure selon les nombres et relier les représentations ; document antérieur, utilisé en appui.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "NCETM — Double number lines and ratio tables",
+      "url": "https://www.ncetm.org.uk/media/8d84e7902c198f9/ncetm_ks3_representations_double_number_lines_ratio_tables.pdf",
+      "repere": "p.3–6 lues visuellement",
+      "apport": "Relier multiplicateurs, unité, tableau et grandeurs composées.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "",
+  "acces_secondaires": [],
+  "atlas": "cours/02.svg",
+  "atlasAlt": "Deux droites alignées :0à5kg et0à20euros.3kg correspond à12euros,5kg à20euros.",
+  "nom": "Calculer en proportionnalité",
+  "domaine": "proportionnalite-fonctions",
+  "sousDomaine": "Proportionnalité et pourcentages",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6e : linéarité et unité ; 5e : coefficient contextualisé ; 4e : égalité de rapports si utile.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_34"],
+    "questions": [
+      {
+        "source": "A2606",
+        "question": "Q3",
+        "referenceAncienne": "ME 3",
+        "forme": "b",
+        "identifiant": "PF02-b",
+        "ancienId": "PF02-2",
+        "support": "adaptation",
+        "difference": "Le générateur peut présenter la proportionnalité en texte plutôt qu’en tableau ; le passage à l’unité est identique.",
+        "savoirFaire": "Compléter un tableau de proportionnalité",
+        "formatSource": "Saisie",
+        "document": "Métropole, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Metropole_FK-v2.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Utiliser un facteur simple",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Une recette pour 4 personnes utilise 120 g de riz. Quelle masse pour 8 personnes ?",
+      "reponse": "240 g",
+      "donnees": "Personnes 2–12 ; facteur 2,3,1/2 ; masses multiples permettant résultat entier.",
+      "saisie": "Nombre, g fixé",
+      "acceptation": "240 ; unité non redemandée si fixée.",
+      "aide1": "Dessiner une barre 4 personnes ↔ 120 g.",
+      "aide2": "8 personnes, c’est deux barres identiques : 120 + 120.",
+      "correction": "120 × 2 = 240 g.",
+      "controles": "Ne pas ajouter 4 à 120 ; résultat entier, quantité strictement positive.",
+      "identifiant": "PF02-a",
+      "ancienId": "PF02-A",
+      "ancienIdGenerateur": "PF02-1",
+      "indiceGenerateur": 0,
+      "nom": "Utiliser un facteur simple",
+      "niveauDescription": "6e",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "g"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Retour à unité",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "3 kg de pommes coûtent 12 €. Combien coûtent 5 kg au même prix au kilogramme ?",
+      "reponse": "20 €",
+      "donnees": "Prix unitaire 1–8 €, masses entières 2–9, prix total construit par multiplication.",
+      "saisie": "Nombre, € fixé",
+      "acceptation": "20 et 20,00.",
+      "aide1": "Double droite : 3 kg ↔ 12 € ; placer 1 kg.",
+      "aide2": "Pour 1 kg : 12 ÷ 3 = 4 €. Pour 5 kg : cinq parts de 4 €.",
+      "correction": "5 × 4 = 20 €.",
+      "controles": "Refuser 12÷5×3 ; gérer virgule et point.",
+      "identifiant": "PF02-b",
+      "ancienId": "PF02-B",
+      "ancienIdGenerateur": "PF02-2",
+      "indiceGenerateur": 1,
+      "nom": "Retour à unité",
+      "niveauDescription": "6e",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "€"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2606",
+          "question": "Q3",
+          "referenceAncienne": "ME 3",
+          "forme": "b",
+          "identifiant": "PF02-b",
+          "ancienId": "PF02-2",
+          "support": "adaptation",
+          "difference": "Le générateur peut présenter la proportionnalité en texte plutôt qu’en tableau ; le passage à l’unité est identique.",
+          "savoirFaire": "Compléter un tableau de proportionnalité",
+          "formatSource": "Saisie",
+          "document": "Métropole, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Metropole_FK-v2.pdf"
+        }
+      ]
+    },
+    {
+      "id": "c",
+      "objectif": "Combiner addition et moitié",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "4 billets coûtent 28 €. Quel est le prix de 6 billets identiques ?",
+      "reponse": "42 €",
+      "donnees": "Départ pair 2–10, arrivée 3/2 du départ ; prix divisible par2.",
+      "saisie": "Nombre",
+      "acceptation": "42.",
+      "aide1": "Couper la barre de 4 billets en deux : 2 billets.",
+      "aide2": "6 billets = 4 billets + 2 billets ; 28 + 14.",
+      "correction": "28 + 14 = 42 €.",
+      "controles": "Ne pas forcer méthode unique ; retour unité valide.",
+      "identifiant": "PF02-c",
+      "ancienId": "PF02-C",
+      "ancienIdGenerateur": "PF02-3",
+      "indiceGenerateur": 2,
+      "nom": "Combiner addition et moitié",
+      "niveauDescription": "6e",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "€"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Résultat fractionnaire exact",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "2,5 kg coûtent 6 €. Combien coûtent 4 kg au même tarif ?",
+      "reponse": "9,60 €",
+      "donnees": "Masses quarts/demis et prix donnant quotient décimal de ≤2 chiffres ; aucune approximation monétaire cachée.",
+      "saisie": "Nombre, € fixé",
+      "acceptation": "9,6 ; 9.60.",
+      "aide1": "Double droite : 2,5 kg ↔ 6 € ; chercher 1 kg.",
+      "aide2": "6 ÷ 2,5 = 2,4 €/kg, puis multiplier par4.",
+      "correction": "4 × 2,4 = 9,6 €.",
+      "controles": "Calcul rationnel exact ; empêcher prix avec plus de2 décimales sauf consigne arrondi.",
+      "identifiant": "PF02-d",
+      "ancienId": "PF02-D",
+      "ancienIdGenerateur": "PF02-4",
+      "indiceGenerateur": 3,
+      "nom": "Résultat fractionnaire exact",
+      "niveauDescription": "4e",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "€"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

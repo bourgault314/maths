@@ -1,0 +1,195 @@
+{
+  "id": "PF10",
+  "titre": "Fonctions linéaires et affines",
+  "categorie": "Fonctions et graphiques",
+  "objectif": "Relier formule, graphique et situation.",
+  "prerequis": "PF01, PF09, repérage et équations.",
+  "perimetre": "DNB2027 et apprentissages collège ; variantes filtrées par niveau.",
+  "cours": {
+    "regle": "Linéaire : f(x)=ax. Affine : f(x)=ax+b. Sur le graphique, b est l’ordonnée pour x=0.",
+    "exemple": "f(x)=2x+3 : quand x augmente de1, f(x) augmente de2 ; f(0)=3.",
+    "visuel": "Axes nonorthonormés autorisés ; points(0;3),(1;5) ; marche horizontale+1, verticale+2.",
+    "mouvement": "Révéler marche puis formule ; pas faireconfondrepentenumériqueetanglevisuel."
+  },
+  "erreurs": ["Confondre ordonnée et coefficient.", "Exclure les linéaires de la famille affine."],
+  "sources": [
+    {
+      "titre": "Éduscol — Exemples cycle 4, 2026",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "PDF p40–46, Proportionnalité et fonctions",
+      "apport": "Progression des contextes, représentations et procédures ; les schémas et exemples ci-dessous sont nos choix de conception.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Éduscol — Résoudre des problèmes de proportionnalité",
+      "url": "https://eduscol.education.fr/document/17281/download",
+      "repere": "PDF p1–6",
+      "apport": "Appui sur la proportionnalité pour la fonction linéaire uniquement ; ne justifie pas l’ensemble du travail sur les fonctions affines.",
+      "statut": "appui pédagogique"
+    }
+  ],
+  "limites": "",
+  "acces_secondaires": [],
+  "atlas": "cours/16.svg",
+  "atlasAlt": "Machine transforme3en7par×2puis+1. Dans un repère schématique, le point de coordonnées3,7correspond.",
+  "nom": "Fonctions linéaires et affines",
+  "domaine": "proportionnalite-fonctions",
+  "sousDomaine": "Fonctions et graphiques",
+  "niveaux": ["3e"],
+  "niveauxDescription": "3e : fonctions linéaires et affines ; graphiques contextualisés avant sans formalisation exigée.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_33"],
+    "questions": []
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Reconnaître forme",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "La fonction f(x)=−3x est-elle linéaire, affine non linéaire, ou ni l’une ni l’autre ?",
+      "reponse": "Linéaire",
+      "donnees": "Formes ax,ax+b b≠0,x² ; options catégories disjointes.",
+      "saisie": "Trois libellés, pas lettresABCD",
+      "acceptation": "Linéaire ; noter au cours qu’une linéaire est aussi affine.",
+      "aide1": "Machine : seulement une multiplication, aucun ajoutconstant.",
+      "aide2": "Reconnaître laforme ax aveca=−3.",
+      "correction": "f est linéaire.",
+      "controles": "Éviter options affine etlinéairesansprécision ; casf=0linéaire.",
+      "identifiant": "PF10-a",
+      "ancienId": "PF10-A",
+      "ancienIdGenerateur": "PF10-1",
+      "indiceGenerateur": 0,
+      "nom": "Reconnaître forme",
+      "niveauDescription": "3e",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Coefficient linéaire",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "f est linéaire et f(4)=10. Donner son coefficient.",
+      "reponse": "2,5",
+      "donnees": "x0 nonnul2–8 ; coefficient demi-entier−3à5 ; y produitexact.",
+      "saisie": "Nombre oufraction",
+      "acceptation": "2,5 ;5/2.",
+      "aide1": "Double droite4→10 ; chercher1→?.",
+      "aide2": "10÷4.",
+      "correction": "a=2,5 ; f(x)=2,5x.",
+      "controles": "Refuser4/10 ; x0jamais0pour déterminer coefficient.",
+      "identifiant": "PF10-b",
+      "ancienId": "PF10-B",
+      "ancienIdGenerateur": "PF10-2",
+      "indiceGenerateur": 1,
+      "nom": "Coefficient linéaire",
+      "niveauDescription": "3e",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Lire coefficient graphique",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Une droite passe par(0;3) et(2;7). Écrire f(x)=…x+… .",
+      "reponse": "2 ; 3",
+      "donnees": "b−4à4 ; aentier−3à3 ; pas unitégraphique identique obligatoire.",
+      "saisie": "Deuxcoefficients a,b, signes gérés",
+      "acceptation": "a=2,b=3 ; expression2x+3 si saisielibre.",
+      "aide1": "Partirdubas :àx=0,lire3. Tracer marcheentrelesdeuxpoints.",
+      "aide2": "Variationverticale4 pourvariationhorizontale2 :a=4÷2.",
+      "correction": "f(x)=2x+3.",
+      "controles": "Refusera=4 ; marche scaledavecvaleurs etpas pixels.",
+      "identifiant": "PF10-c",
+      "ancienId": "PF10-C",
+      "ancienIdGenerateur": "PF10-3",
+      "indiceGenerateur": 2,
+      "nom": "Lire coefficient graphique",
+      "niveauDescription": "3e",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "a",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "b",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Modéliser tarif",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Une location coûte5 € fixes puis2 € parheure. Exprimer le prix P(h).",
+      "reponse": "2h+5",
+      "donnees": "Forfait1–10, tarif1–5 ; domaineh≥0 ; duréeentière oudemiheureprécisée.",
+      "saisie": "Expression avecboutonh",
+      "acceptation": "2h+5 et5+2h ; formeséquivalentes autorisées.",
+      "aide1": "Machine : h → × 2 → + 5 → P(h). Le résultat est un prix en euros ; ne pas additionner une longueur en heures à une longueur en euros.",
+      "aide2": "Prix =partfixe +prixdesheures.",
+      "correction": "P(h)=5+2h.",
+      "controles": "Refuser7h ; h=0doitdonner5.",
+      "identifiant": "PF10-d",
+      "ancienId": "PF10-D",
+      "ancienIdGenerateur": "PF10-4",
+      "indiceGenerateur": 3,
+      "nom": "Modéliser tarif",
+      "niveauDescription": "3e",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "expression",
+      "champs": [
+        {
+          "type": "expression",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

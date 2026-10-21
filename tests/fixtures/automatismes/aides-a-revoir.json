@@ -1,0 +1,2369 @@
+{
+  "origine": "8feecca64107ee9cdbd3dc5cb9963db38e25bfc0",
+  "grainesParForme": 50,
+  "tirages": 21750,
+  "methode": "Inclusion littérale de String(fields[].answer) dans hints[0].svg ; les valeurs dans les attributs SVG comptent aussi.",
+  "avertissement": "Ce sont des occurrences à revoir, pas toutes des réponses affichées : les nombres courts rencontrent souvent des coordonnées SVG.",
+  "formes": [
+    {
+      "id": "NC01-a",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["9"]
+      }
+    },
+    {
+      "id": "NC01-b",
+      "occurrences": 1,
+      "premierExemple": {
+        "graine": 7,
+        "reponses": ["109"]
+      }
+    },
+    {
+      "id": "NC01-c",
+      "occurrences": 1,
+      "premierExemple": {
+        "graine": 3,
+        "reponses": ["72"]
+      }
+    },
+    {
+      "id": "NC01-d",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["0", "5"]
+      }
+    },
+    {
+      "id": "NC02-a",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": [">"]
+      }
+    },
+    {
+      "id": "NC02-c",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["<"]
+      }
+    },
+    {
+      "id": "NC03-a",
+      "occurrences": 6,
+      "premierExemple": {
+        "graine": 13,
+        "reponses": ["34"]
+      }
+    },
+    {
+      "id": "NC03-b",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["3,77"]
+      }
+    },
+    {
+      "id": "NC03-c",
+      "occurrences": 19,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["60"]
+      }
+    },
+    {
+      "id": "NC04-a",
+      "occurrences": 40,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["14"]
+      }
+    },
+    {
+      "id": "NC04-b",
+      "occurrences": 7,
+      "premierExemple": {
+        "graine": 19,
+        "reponses": ["3"]
+      }
+    },
+    {
+      "id": "NC04-d",
+      "occurrences": 1,
+      "premierExemple": {
+        "graine": 27,
+        "reponses": ["22"]
+      }
+    },
+    {
+      "id": "NC04-e",
+      "occurrences": 5,
+      "premierExemple": {
+        "graine": 18,
+        "reponses": ["3"]
+      }
+    },
+    {
+      "id": "NC04-f",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["2"]
+      }
+    },
+    {
+      "id": "NC05-a",
+      "occurrences": 3,
+      "premierExemple": {
+        "graine": 18,
+        "reponses": ["8"]
+      }
+    },
+    {
+      "id": "NC05-c",
+      "occurrences": 2,
+      "premierExemple": {
+        "graine": 28,
+        "reponses": ["0"]
+      }
+    },
+    {
+      "id": "NC05-d",
+      "occurrences": 33,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["12"]
+      }
+    },
+    {
+      "id": "NC05-e",
+      "occurrences": 44,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["11"]
+      }
+    },
+    {
+      "id": "NC05-f",
+      "occurrences": 28,
+      "premierExemple": {
+        "graine": 2,
+        "reponses": ["1"]
+      }
+    },
+    {
+      "id": "NC06-a",
+      "occurrences": 22,
+      "premierExemple": {
+        "graine": 3,
+        "reponses": ["35"]
+      }
+    },
+    {
+      "id": "NC06-b",
+      "occurrences": 28,
+      "premierExemple": {
+        "graine": 3,
+        "reponses": ["5"]
+      }
+    },
+    {
+      "id": "NC06-d",
+      "occurrences": 28,
+      "premierExemple": {
+        "graine": 3,
+        "reponses": ["5"]
+      }
+    },
+    {
+      "id": "NC07-a",
+      "occurrences": 6,
+      "premierExemple": {
+        "graine": 13,
+        "reponses": ["8"]
+      }
+    },
+    {
+      "id": "NC07-b",
+      "occurrences": 33,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["12"]
+      }
+    },
+    {
+      "id": "NC07-c",
+      "occurrences": 37,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["12"]
+      }
+    },
+    {
+      "id": "NC07-d",
+      "occurrences": 8,
+      "premierExemple": {
+        "graine": 9,
+        "reponses": ["75"]
+      }
+    },
+    {
+      "id": "NC07-e",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["2"]
+      }
+    },
+    {
+      "id": "NC08-c",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["2", "1"]
+      }
+    },
+    {
+      "id": "NC08-e",
+      "occurrences": 8,
+      "premierExemple": {
+        "graine": 4,
+        "reponses": ["1"]
+      }
+    },
+    {
+      "id": "NC08-g",
+      "occurrences": 32,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["100"]
+      }
+    },
+    {
+      "id": "NC09-a",
+      "occurrences": 39,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["4"]
+      }
+    },
+    {
+      "id": "NC09-b",
+      "occurrences": 37,
+      "premierExemple": {
+        "graine": 4,
+        "reponses": ["27"]
+      }
+    },
+    {
+      "id": "NC09-c",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["1", "7"]
+      }
+    },
+    {
+      "id": "NC10-a",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["<"]
+      }
+    },
+    {
+      "id": "NC10-b",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": [">"]
+      }
+    },
+    {
+      "id": "NC10-c",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["<"]
+      }
+    },
+    {
+      "id": "NC10-d",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["<"]
+      }
+    },
+    {
+      "id": "NC10-f",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": [">"]
+      }
+    },
+    {
+      "id": "NC11-a",
+      "occurrences": 9,
+      "premierExemple": {
+        "graine": 5,
+        "reponses": ["1"]
+      }
+    },
+    {
+      "id": "NC11-b",
+      "occurrences": 1,
+      "premierExemple": {
+        "graine": 36,
+        "reponses": ["1/12"]
+      }
+    },
+    {
+      "id": "NC11-c",
+      "occurrences": 6,
+      "premierExemple": {
+        "graine": 19,
+        "reponses": ["1"]
+      }
+    },
+    {
+      "id": "NC11-f",
+      "occurrences": 3,
+      "premierExemple": {
+        "graine": 25,
+        "reponses": ["2/3"]
+      }
+    },
+    {
+      "id": "NC12-a",
+      "occurrences": 10,
+      "premierExemple": {
+        "graine": 3,
+        "reponses": ["2"]
+      }
+    },
+    {
+      "id": "NC12-b",
+      "occurrences": 18,
+      "premierExemple": {
+        "graine": 3,
+        "reponses": ["3"]
+      }
+    },
+    {
+      "id": "NC12-d",
+      "occurrences": 8,
+      "premierExemple": {
+        "graine": 7,
+        "reponses": ["1"]
+      }
+    },
+    {
+      "id": "NC12-e",
+      "occurrences": 15,
+      "premierExemple": {
+        "graine": 4,
+        "reponses": ["5/3"]
+      }
+    },
+    {
+      "id": "NC12-g",
+      "occurrences": 16,
+      "premierExemple": {
+        "graine": 5,
+        "reponses": ["1/2"]
+      }
+    },
+    {
+      "id": "NC13-a",
+      "occurrences": 49,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["6"]
+      }
+    },
+    {
+      "id": "NC13-b",
+      "occurrences": 42,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["6"]
+      }
+    },
+    {
+      "id": "NC13-c",
+      "occurrences": 45,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["24"]
+      }
+    },
+    {
+      "id": "NC13-d",
+      "occurrences": 34,
+      "premierExemple": {
+        "graine": 2,
+        "reponses": ["20"]
+      }
+    },
+    {
+      "id": "NC13-f",
+      "occurrences": 34,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["42"]
+      }
+    },
+    {
+      "id": "NC14-a",
+      "occurrences": 28,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["64"]
+      }
+    },
+    {
+      "id": "NC14-b",
+      "occurrences": 31,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["0"]
+      }
+    },
+    {
+      "id": "NC14-c",
+      "occurrences": 38,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["1"]
+      }
+    },
+    {
+      "id": "NC14-d",
+      "occurrences": 45,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["8"]
+      }
+    },
+    {
+      "id": "NC14-e",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["1", "2"]
+      }
+    },
+    {
+      "id": "NC14-f",
+      "occurrences": 14,
+      "premierExemple": {
+        "graine": 3,
+        "reponses": ["1"]
+      }
+    },
+    {
+      "id": "NC14-g",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["1"]
+      }
+    },
+    {
+      "id": "NC15-a",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["5", "2"]
+      }
+    },
+    {
+      "id": "NC15-b",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["6"]
+      }
+    },
+    {
+      "id": "NC15-c",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["30", "2"]
+      }
+    },
+    {
+      "id": "NC15-d",
+      "occurrences": 14,
+      "premierExemple": {
+        "graine": 3,
+        "reponses": ["1"]
+      }
+    },
+    {
+      "id": "NC15-e",
+      "occurrences": 28,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["0"]
+      }
+    },
+    {
+      "id": "NC15-f",
+      "occurrences": 49,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["10"]
+      }
+    },
+    {
+      "id": "NC16-a",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["2"]
+      }
+    },
+    {
+      "id": "NC16-c",
+      "occurrences": 2,
+      "premierExemple": {
+        "graine": 11,
+        "reponses": ["56"]
+      }
+    },
+    {
+      "id": "NC16-d",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["2"]
+      }
+    },
+    {
+      "id": "NC16-e",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["<"]
+      }
+    },
+    {
+      "id": "NC17-a",
+      "occurrences": 42,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["5"]
+      }
+    },
+    {
+      "id": "NC17-c",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["4"]
+      }
+    },
+    {
+      "id": "NC18-b",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["3"]
+      }
+    },
+    {
+      "id": "NC18-c",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["1", "1", "1", "1"]
+      }
+    },
+    {
+      "id": "NC18-d",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["5", "1"]
+      }
+    },
+    {
+      "id": "NC18-e",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["11"]
+      }
+    },
+    {
+      "id": "NC18-f",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["6"]
+      }
+    },
+    {
+      "id": "NC20-c",
+      "occurrences": 7,
+      "premierExemple": {
+        "graine": 5,
+        "reponses": ["2"]
+      }
+    },
+    {
+      "id": "NC21-a",
+      "occurrences": 43,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["16"]
+      }
+    },
+    {
+      "id": "NC21-b",
+      "occurrences": 37,
+      "premierExemple": {
+        "graine": 2,
+        "reponses": ["18"]
+      }
+    },
+    {
+      "id": "NC21-c",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["36"]
+      }
+    },
+    {
+      "id": "NC21-e",
+      "occurrences": 41,
+      "premierExemple": {
+        "graine": 2,
+        "reponses": ["24"]
+      }
+    },
+    {
+      "id": "NC21-f",
+      "occurrences": 28,
+      "premierExemple": {
+        "graine": 2,
+        "reponses": ["15"]
+      }
+    },
+    {
+      "id": "NC25-d",
+      "occurrences": 4,
+      "premierExemple": {
+        "graine": 2,
+        "reponses": ["96"]
+      }
+    },
+    {
+      "id": "NC25-e",
+      "occurrences": 29,
+      "premierExemple": {
+        "graine": 3,
+        "reponses": ["19"]
+      }
+    },
+    {
+      "id": "NC27-a",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["5"]
+      }
+    },
+    {
+      "id": "NC27-b",
+      "occurrences": 10,
+      "premierExemple": {
+        "graine": 5,
+        "reponses": ["1"]
+      }
+    },
+    {
+      "id": "NC27-c",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["0"]
+      }
+    },
+    {
+      "id": "NC27-d",
+      "occurrences": 27,
+      "premierExemple": {
+        "graine": 2,
+        "reponses": ["2"]
+      }
+    },
+    {
+      "id": "NC27-e",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["5"]
+      }
+    },
+    {
+      "id": "NC28-a",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["3"]
+      }
+    },
+    {
+      "id": "NC28-b",
+      "occurrences": 26,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["0"]
+      }
+    },
+    {
+      "id": "NC28-c",
+      "occurrences": 17,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["4"]
+      }
+    },
+    {
+      "id": "NC28-d",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["5"]
+      }
+    },
+    {
+      "id": "NC29-c",
+      "occurrences": 30,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["2"]
+      }
+    },
+    {
+      "id": "NC29-e",
+      "occurrences": 8,
+      "premierExemple": {
+        "graine": 7,
+        "reponses": ["0"]
+      }
+    },
+    {
+      "id": "NC31-a",
+      "occurrences": 36,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["16"]
+      }
+    },
+    {
+      "id": "NC31-b",
+      "occurrences": 4,
+      "premierExemple": {
+        "graine": 16,
+        "reponses": ["28"]
+      }
+    },
+    {
+      "id": "NC31-d",
+      "occurrences": 22,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["9"]
+      }
+    },
+    {
+      "id": "NC31-e",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["5"]
+      }
+    },
+    {
+      "id": "EG01-b",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["5"]
+      }
+    },
+    {
+      "id": "EG01-d",
+      "occurrences": 19,
+      "premierExemple": {
+        "graine": 5,
+        "reponses": ["0"]
+      }
+    },
+    {
+      "id": "EG02-a",
+      "occurrences": 43,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["1"]
+      }
+    },
+    {
+      "id": "EG02-b",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["1", "0"]
+      }
+    },
+    {
+      "id": "EG02-c",
+      "occurrences": 32,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["6"]
+      }
+    },
+    {
+      "id": "EG02-d",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["C"]
+      }
+    },
+    {
+      "id": "EG03-a",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["4", "2", "3"]
+      }
+    },
+    {
+      "id": "EG03-b",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["2", "1", "0"]
+      }
+    },
+    {
+      "id": "EG03-c",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["20", "N", "60", "O"]
+      }
+    },
+    {
+      "id": "EG03-d",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["B"]
+      }
+    },
+    {
+      "id": "EG04-a",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["B"]
+      }
+    },
+    {
+      "id": "EG15-a",
+      "occurrences": 45,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["1", "0"]
+      }
+    },
+    {
+      "id": "EG15-c",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["2", "2"]
+      }
+    },
+    {
+      "id": "EG15-d",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["52"]
+      }
+    },
+    {
+      "id": "EG16-a",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["0"]
+      }
+    },
+    {
+      "id": "EG16-b",
+      "occurrences": 17,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["45"]
+      }
+    },
+    {
+      "id": "EG16-c",
+      "occurrences": 36,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["4"]
+      }
+    },
+    {
+      "id": "EG16-d",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["3"]
+      }
+    },
+    {
+      "id": "EG16-e",
+      "occurrences": 25,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["6"]
+      }
+    },
+    {
+      "id": "EG16-f",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["O", "45"]
+      }
+    },
+    {
+      "id": "EG17-d",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["4", "3"]
+      }
+    },
+    {
+      "id": "EG18-a",
+      "occurrences": 34,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["5"]
+      }
+    },
+    {
+      "id": "EG18-b",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["3"]
+      }
+    },
+    {
+      "id": "EG18-c",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["10"]
+      }
+    },
+    {
+      "id": "EG18-d",
+      "occurrences": 28,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["15"]
+      }
+    },
+    {
+      "id": "EG18-e",
+      "occurrences": 20,
+      "premierExemple": {
+        "graine": 2,
+        "reponses": ["90"]
+      }
+    },
+    {
+      "id": "EG11-a",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["BD"]
+      }
+    },
+    {
+      "id": "EG11-b",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["5"]
+      }
+    },
+    {
+      "id": "EG11-c",
+      "occurrences": 41,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["8"]
+      }
+    },
+    {
+      "id": "EG11-f",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["12"]
+      }
+    },
+    {
+      "id": "EG13-a",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["15"]
+      }
+    },
+    {
+      "id": "EG13-b",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["15"]
+      }
+    },
+    {
+      "id": "EG13-c",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["9"]
+      }
+    },
+    {
+      "id": "EG14-a",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["P"]
+      }
+    },
+    {
+      "id": "EG14-b",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["P"]
+      }
+    },
+    {
+      "id": "EG14-c",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["Q"]
+      }
+    },
+    {
+      "id": "EG14-d",
+      "occurrences": 49,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["7"]
+      }
+    },
+    {
+      "id": "EG05-b",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["10"]
+      }
+    },
+    {
+      "id": "EG05-e",
+      "occurrences": 12,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["15"]
+      }
+    },
+    {
+      "id": "EG05-f",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["2"]
+      }
+    },
+    {
+      "id": "EG06-c",
+      "occurrences": 5,
+      "premierExemple": {
+        "graine": 4,
+        "reponses": ["25"]
+      }
+    },
+    {
+      "id": "EG06-d",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["62"]
+      }
+    },
+    {
+      "id": "EG06-e",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["65"]
+      }
+    },
+    {
+      "id": "EG06-g",
+      "occurrences": 31,
+      "premierExemple": {
+        "graine": 2,
+        "reponses": ["90"]
+      }
+    },
+    {
+      "id": "EG07-a",
+      "occurrences": 25,
+      "premierExemple": {
+        "graine": 2,
+        "reponses": ["80"]
+      }
+    },
+    {
+      "id": "EG07-b",
+      "occurrences": 37,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["38"]
+      }
+    },
+    {
+      "id": "EG07-c",
+      "occurrences": 23,
+      "premierExemple": {
+        "graine": 4,
+        "reponses": ["60"]
+      }
+    },
+    {
+      "id": "EG07-d",
+      "occurrences": 14,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["50"]
+      }
+    },
+    {
+      "id": "EG10-b",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["13"]
+      }
+    },
+    {
+      "id": "EG10-c",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["12"]
+      }
+    },
+    {
+      "id": "EG08-a",
+      "occurrences": 18,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["22"]
+      }
+    },
+    {
+      "id": "EG08-b",
+      "occurrences": 38,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["9"]
+      }
+    },
+    {
+      "id": "EG08-c",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["7"]
+      }
+    },
+    {
+      "id": "EG08-d",
+      "occurrences": 27,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["22"]
+      }
+    },
+    {
+      "id": "EG08-f",
+      "occurrences": 34,
+      "premierExemple": {
+        "graine": 2,
+        "reponses": ["12"]
+      }
+    },
+    {
+      "id": "EG09-a",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["8"]
+      }
+    },
+    {
+      "id": "EG09-b",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["2"]
+      }
+    },
+    {
+      "id": "EG09-c",
+      "occurrences": 47,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["20"]
+      }
+    },
+    {
+      "id": "EG09-d",
+      "occurrences": 26,
+      "premierExemple": {
+        "graine": 2,
+        "reponses": ["20"]
+      }
+    },
+    {
+      "id": "EG09-e",
+      "occurrences": 20,
+      "premierExemple": {
+        "graine": 6,
+        "reponses": ["25"]
+      }
+    },
+    {
+      "id": "EG09-f",
+      "occurrences": 22,
+      "premierExemple": {
+        "graine": 2,
+        "reponses": ["23"]
+      }
+    },
+    {
+      "id": "EG09-g",
+      "occurrences": 18,
+      "premierExemple": {
+        "graine": 7,
+        "reponses": ["10"]
+      }
+    },
+    {
+      "id": "EG09-h",
+      "occurrences": 18,
+      "premierExemple": {
+        "graine": 2,
+        "reponses": ["25"]
+      }
+    },
+    {
+      "id": "EG19-c",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["7"]
+      }
+    },
+    {
+      "id": "EG19-d",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["TK"]
+      }
+    },
+    {
+      "id": "EG20-b",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["2", "3"]
+      }
+    },
+    {
+      "id": "EG20-c",
+      "occurrences": 35,
+      "premierExemple": {
+        "graine": 2,
+        "reponses": ["10"]
+      }
+    },
+    {
+      "id": "EG21-a",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["A"]
+      }
+    },
+    {
+      "id": "EG21-b",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["R"]
+      }
+    },
+    {
+      "id": "EG21-c",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["2"]
+      }
+    },
+    {
+      "id": "EG21-d",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["8"]
+      }
+    },
+    {
+      "id": "EG21-e",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["5"]
+      }
+    },
+    {
+      "id": "EG21-f",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["8", "3"]
+      }
+    },
+    {
+      "id": "EG22-a",
+      "occurrences": 11,
+      "premierExemple": {
+        "graine": 7,
+        "reponses": ["8"]
+      }
+    },
+    {
+      "id": "EG22-b",
+      "occurrences": 25,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["48"]
+      }
+    },
+    {
+      "id": "EG22-c",
+      "occurrences": 4,
+      "premierExemple": {
+        "graine": 7,
+        "reponses": ["20"]
+      }
+    },
+    {
+      "id": "EG22-d",
+      "occurrences": 25,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["18"]
+      }
+    },
+    {
+      "id": "EG22-e",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["2"]
+      }
+    },
+    {
+      "id": "EG23-a",
+      "occurrences": 38,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["25"]
+      }
+    },
+    {
+      "id": "EG23-b",
+      "occurrences": 47,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["9"]
+      }
+    },
+    {
+      "id": "EG23-d",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["2"]
+      }
+    },
+    {
+      "id": "EG24-a",
+      "occurrences": 25,
+      "premierExemple": {
+        "graine": 4,
+        "reponses": ["20"]
+      }
+    },
+    {
+      "id": "EG24-b",
+      "occurrences": 18,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["18"]
+      }
+    },
+    {
+      "id": "EG24-c",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["2"]
+      }
+    },
+    {
+      "id": "EG24-d",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["4"]
+      }
+    },
+    {
+      "id": "EG24-e",
+      "occurrences": 26,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["6"]
+      }
+    },
+    {
+      "id": "EG25-c",
+      "occurrences": 36,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["3"]
+      }
+    },
+    {
+      "id": "EG25-d",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["F"]
+      }
+    },
+    {
+      "id": "EG26-a",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["8", "2"]
+      }
+    },
+    {
+      "id": "EG26-c",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["7"]
+      }
+    },
+    {
+      "id": "EG26-d",
+      "occurrences": 28,
+      "premierExemple": {
+        "graine": 4,
+        "reponses": ["8"]
+      }
+    },
+    {
+      "id": "GM01-a",
+      "occurrences": 14,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["12"]
+      }
+    },
+    {
+      "id": "GM01-b",
+      "occurrences": 15,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["11"]
+      }
+    },
+    {
+      "id": "GM01-c",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": [">"]
+      }
+    },
+    {
+      "id": "GM01-d",
+      "occurrences": 4,
+      "premierExemple": {
+        "graine": 8,
+        "reponses": ["250"]
+      }
+    },
+    {
+      "id": "GM01-e",
+      "occurrences": 22,
+      "premierExemple": {
+        "graine": 5,
+        "reponses": ["80"]
+      }
+    },
+    {
+      "id": "GM02-a",
+      "occurrences": 30,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["120"]
+      }
+    },
+    {
+      "id": "GM02-b",
+      "occurrences": 13,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["3"]
+      }
+    },
+    {
+      "id": "GM02-c",
+      "occurrences": 8,
+      "premierExemple": {
+        "graine": 7,
+        "reponses": ["100"]
+      }
+    },
+    {
+      "id": "GM02-d",
+      "occurrences": 1,
+      "premierExemple": {
+        "graine": 9,
+        "reponses": ["2000"]
+      }
+    },
+    {
+      "id": "GM02-f",
+      "occurrences": 5,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["50"]
+      }
+    },
+    {
+      "id": "GM02-g",
+      "occurrences": 20,
+      "premierExemple": {
+        "graine": 5,
+        "reponses": ["50"]
+      }
+    },
+    {
+      "id": "GM02-h",
+      "occurrences": 13,
+      "premierExemple": {
+        "graine": 5,
+        "reponses": ["2000"]
+      }
+    },
+    {
+      "id": "GM03-a",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["3", "5"]
+      }
+    },
+    {
+      "id": "GM03-b",
+      "occurrences": 28,
+      "premierExemple": {
+        "graine": 6,
+        "reponses": ["90"]
+      }
+    },
+    {
+      "id": "GM03-c",
+      "occurrences": 39,
+      "premierExemple": {
+        "graine": 2,
+        "reponses": ["17"]
+      }
+    },
+    {
+      "id": "GM03-d",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["2"]
+      }
+    },
+    {
+      "id": "GM03-e",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["0", "10"]
+      }
+    },
+    {
+      "id": "GM03-f",
+      "occurrences": 41,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["14", "15"]
+      }
+    },
+    {
+      "id": "GM03-g",
+      "occurrences": 38,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["10"]
+      }
+    },
+    {
+      "id": "GM03-h",
+      "occurrences": 40,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["2"]
+      }
+    },
+    {
+      "id": "GM04-a",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["19", "5"]
+      }
+    },
+    {
+      "id": "GM04-b",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["2"]
+      }
+    },
+    {
+      "id": "GM04-c",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["4"]
+      }
+    },
+    {
+      "id": "GM04-d",
+      "occurrences": 22,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["100"]
+      }
+    },
+    {
+      "id": "GM04-e",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["4", "1"]
+      }
+    },
+    {
+      "id": "DP01-a",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["6"]
+      }
+    },
+    {
+      "id": "DP01-b",
+      "occurrences": 46,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["35"]
+      }
+    },
+    {
+      "id": "DP01-c",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["50"]
+      }
+    },
+    {
+      "id": "DP01-d",
+      "occurrences": 47,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["18"]
+      }
+    },
+    {
+      "id": "DP02-a",
+      "occurrences": 45,
+      "premierExemple": {
+        "graine": 2,
+        "reponses": ["3"]
+      }
+    },
+    {
+      "id": "DP02-c",
+      "occurrences": 32,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["7"]
+      }
+    },
+    {
+      "id": "DP02-d",
+      "occurrences": 47,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["9"]
+      }
+    },
+    {
+      "id": "DP02-e",
+      "occurrences": 27,
+      "premierExemple": {
+        "graine": 2,
+        "reponses": ["10"]
+      }
+    },
+    {
+      "id": "DP03-a",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["10"]
+      }
+    },
+    {
+      "id": "DP03-c",
+      "occurrences": 31,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["12"]
+      }
+    },
+    {
+      "id": "DP04-a",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["5"]
+      }
+    },
+    {
+      "id": "DP04-b",
+      "occurrences": 24,
+      "premierExemple": {
+        "graine": 2,
+        "reponses": ["6"]
+      }
+    },
+    {
+      "id": "DP04-c",
+      "occurrences": 38,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["2"]
+      }
+    },
+    {
+      "id": "DP04-d",
+      "occurrences": 43,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["13"]
+      }
+    },
+    {
+      "id": "DP04-e",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["19", "3"]
+      }
+    },
+    {
+      "id": "DP05-a",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["6", "15"]
+      }
+    },
+    {
+      "id": "DP05-b",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["1", "4"]
+      }
+    },
+    {
+      "id": "DP05-c",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["2"]
+      }
+    },
+    {
+      "id": "DP05-d",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["B"]
+      }
+    },
+    {
+      "id": "DP06-d",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["1"]
+      }
+    },
+    {
+      "id": "DP07-a",
+      "occurrences": 9,
+      "premierExemple": {
+        "graine": 4,
+        "reponses": ["0"]
+      }
+    },
+    {
+      "id": "DP08-d",
+      "occurrences": 33,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["10"]
+      }
+    },
+    {
+      "id": "PI01-a",
+      "occurrences": 22,
+      "premierExemple": {
+        "graine": 2,
+        "reponses": ["18"]
+      }
+    },
+    {
+      "id": "PI01-b",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["6"]
+      }
+    },
+    {
+      "id": "PI01-d",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["B"]
+      }
+    },
+    {
+      "id": "PI02-a",
+      "occurrences": 32,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["21"]
+      }
+    },
+    {
+      "id": "PI02-b",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["2"]
+      }
+    },
+    {
+      "id": "PI02-c",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["0"]
+      }
+    },
+    {
+      "id": "PI02-d",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["7"]
+      }
+    },
+    {
+      "id": "PI02-e",
+      "occurrences": 27,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["21"]
+      }
+    },
+    {
+      "id": "PI03-a",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["5", "0"]
+      }
+    },
+    {
+      "id": "PI03-b",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["2"]
+      }
+    },
+    {
+      "id": "PI03-c",
+      "occurrences": 37,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["90"]
+      }
+    },
+    {
+      "id": "PI03-d",
+      "occurrences": 33,
+      "premierExemple": {
+        "graine": 4,
+        "reponses": ["10"]
+      }
+    },
+    {
+      "id": "PI03-e",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["6"]
+      }
+    },
+    {
+      "id": "PI03-f",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["4", "90"]
+      }
+    },
+    {
+      "id": "PI03-g",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["3", "3"]
+      }
+    },
+    {
+      "id": "PI03-h",
+      "occurrences": 22,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["90"]
+      }
+    },
+    {
+      "id": "PI03-i",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["5"]
+      }
+    },
+    {
+      "id": "PI04-a",
+      "occurrences": 18,
+      "premierExemple": {
+        "graine": 6,
+        "reponses": ["20"]
+      }
+    },
+    {
+      "id": "PI04-b",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["5", "5"]
+      }
+    },
+    {
+      "id": "PI04-c",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["C", "C"]
+      }
+    },
+    {
+      "id": "PI04-d",
+      "occurrences": 28,
+      "premierExemple": {
+        "graine": 2,
+        "reponses": ["32"]
+      }
+    },
+    {
+      "id": "PF02-a",
+      "occurrences": 8,
+      "premierExemple": {
+        "graine": 6,
+        "reponses": ["200"]
+      }
+    },
+    {
+      "id": "PF02-b",
+      "occurrences": 28,
+      "premierExemple": {
+        "graine": 4,
+        "reponses": ["24"]
+      }
+    },
+    {
+      "id": "PF02-c",
+      "occurrences": 20,
+      "premierExemple": {
+        "graine": 2,
+        "reponses": ["63"]
+      }
+    },
+    {
+      "id": "PF02-d",
+      "occurrences": 23,
+      "premierExemple": {
+        "graine": 8,
+        "reponses": ["12"]
+      }
+    },
+    {
+      "id": "PF03-a",
+      "occurrences": 26,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["20"]
+      }
+    },
+    {
+      "id": "PF03-b",
+      "occurrences": 25,
+      "premierExemple": {
+        "graine": 2,
+        "reponses": ["35"]
+      }
+    },
+    {
+      "id": "PF03-c",
+      "occurrences": 25,
+      "premierExemple": {
+        "graine": 4,
+        "reponses": ["20"]
+      }
+    },
+    {
+      "id": "PF03-d",
+      "occurrences": 15,
+      "premierExemple": {
+        "graine": 3,
+        "reponses": ["48"]
+      }
+    },
+    {
+      "id": "PF04-a",
+      "occurrences": 7,
+      "premierExemple": {
+        "graine": 8,
+        "reponses": ["100"]
+      }
+    },
+    {
+      "id": "PF04-b",
+      "occurrences": 8,
+      "premierExemple": {
+        "graine": 8,
+        "reponses": ["60"]
+      }
+    },
+    {
+      "id": "PF04-d",
+      "occurrences": 2,
+      "premierExemple": {
+        "graine": 7,
+        "reponses": ["480"]
+      }
+    },
+    {
+      "id": "PF05-a",
+      "occurrences": 24,
+      "premierExemple": {
+        "graine": 2,
+        "reponses": ["25"]
+      }
+    },
+    {
+      "id": "PF05-b",
+      "occurrences": 28,
+      "premierExemple": {
+        "graine": 2,
+        "reponses": ["25"]
+      }
+    },
+    {
+      "id": "PF05-c",
+      "occurrences": 23,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["40"]
+      }
+    },
+    {
+      "id": "PF05-d",
+      "occurrences": 25,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["40"]
+      }
+    },
+    {
+      "id": "PF06-a",
+      "occurrences": 41,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["12", "12"]
+      }
+    },
+    {
+      "id": "PF06-b",
+      "occurrences": 32,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["12"]
+      }
+    },
+    {
+      "id": "PF06-c",
+      "occurrences": 48,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["12", "12"]
+      }
+    },
+    {
+      "id": "PF07-a",
+      "occurrences": 40,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["4"]
+      }
+    },
+    {
+      "id": "PF07-b",
+      "occurrences": 46,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["2"]
+      }
+    },
+    {
+      "id": "PF07-d",
+      "occurrences": 36,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["6"]
+      }
+    },
+    {
+      "id": "PF08-a",
+      "occurrences": 6,
+      "premierExemple": {
+        "graine": 14,
+        "reponses": ["60"]
+      }
+    },
+    {
+      "id": "PF08-b",
+      "occurrences": 14,
+      "premierExemple": {
+        "graine": 8,
+        "reponses": ["9"]
+      }
+    },
+    {
+      "id": "PF08-d",
+      "occurrences": 43,
+      "premierExemple": {
+        "graine": 2,
+        "reponses": ["6"]
+      }
+    },
+    {
+      "id": "PF08-e",
+      "occurrences": 47,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["15"]
+      }
+    },
+    {
+      "id": "PF08-f",
+      "occurrences": 39,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["15"]
+      }
+    },
+    {
+      "id": "PF09-a",
+      "occurrences": 21,
+      "premierExemple": {
+        "graine": 6,
+        "reponses": ["3"]
+      }
+    },
+    {
+      "id": "PF09-c",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["400"]
+      }
+    },
+    {
+      "id": "PF09-d",
+      "occurrences": 30,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["1"]
+      }
+    },
+    {
+      "id": "PF09-e",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["40"]
+      }
+    },
+    {
+      "id": "PF09-f",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["4"]
+      }
+    },
+    {
+      "id": "PF09-g",
+      "occurrences": 29,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["100"]
+      }
+    },
+    {
+      "id": "PF10-b",
+      "occurrences": 37,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["2"]
+      }
+    },
+    {
+      "id": "PF10-c",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["2", "1"]
+      }
+    },
+    {
+      "id": "PF11-a",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["4"]
+      }
+    },
+    {
+      "id": "PF11-c",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["6"]
+      }
+    },
+    {
+      "id": "PF11-d",
+      "occurrences": 50,
+      "premierExemple": {
+        "graine": 1,
+        "reponses": ["8"]
+      }
+    }
+  ]
+}

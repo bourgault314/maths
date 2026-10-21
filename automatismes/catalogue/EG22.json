@@ -1,0 +1,328 @@
+{
+  "id": "EG22",
+  "titre": "Volumes de prismes et cylindres",
+  "categorie": "Grandeurs et mesures",
+  "objectif": "Calculer un volume en reliant aire de base et hauteur.",
+  "prerequis": ["Aires", "Multiplication", "Unités cubiques"],
+  "perimetre": "DNB 2027 : cube, pavé, prisme et cylindre.",
+  "cours": {
+    "regle": "Prisme droit ou cylindre : V = aire de base × hauteur. Cube : V = c³, avec c la longueur d’une arête. Pavé droit : V = L × l × h.",
+    "exemple": "Pavé 4×3×2 : V=24 cm³.",
+    "visuel": "Pavé composé de deux couches de 12 cubes de 1 cm³ ; isoler une couche puis compter les couches.",
+    "mouvement": "Empilement facultatif ; deux couches distinctes en version statique."
+  },
+  "erreurs": [
+    "Additionner les trois dimensions",
+    "Confondre aire de base et périmètre",
+    "Confondre diamètre et rayon",
+    "Écrire une unité carrée"
+  ],
+  "sources": [
+    {
+      "titre": "Programme cycle 4 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "PDF p.12,14",
+      "apport": "Apprentissage5e et automatismes4e desvolumes.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples cycle 4 2026",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "p.23 imprimée",
+      "apport": "Construire la formule du pavé par dénombrement ; V=base×hauteur.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Liste indicative DNB 2025",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/liste-indicative-dautomatismes-pour-le-dnbpdf-116340.pdf",
+      "repere": "p.2",
+      "apport": "Volumes cube, pavé, prisme, cylindre.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Mathsgo — Unités de volume en 3D",
+      "url": "https://mathsgo.re/outils/conversions/conversions_unites_volumes.html",
+      "repere": "Catalogue public consulté ; fonctionnalité décrite, interaction non testée.",
+      "apport": "1 dm³=1000 cm³ :10 couches de 10×10 ; relier litres à dm³.",
+      "statut": "choix de conception"
+    },
+    {
+      "titre": "Mathsgo — Le pavé droit dans l’espace",
+      "url": "https://mathsgo.re/outils/espace/pave_droit.html",
+      "repere": "Catalogue public consulté ; fonctionnalité décrite, interaction non testée.",
+      "apport": "Vue fixe lisible et bouton tourner facultatif ; afficher face de référence pour repérage.",
+      "statut": "choix de conception"
+    },
+    {
+      "titre": "NCETM — Geometry",
+      "url": "https://www.ncetm.org.uk/classroom-resources/secmm-6-geometry/",
+      "repere": "Présentation du thème 6 consultée",
+      "apport": "Relier propriétés géométriques, formules de mesure et transformations ; appui thématique.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "En 6e du nouveau programme, EG20 couvre le dénombrement de cubes ; les formules générales de volume sont introduites en 5e. Les réponses demandées sont exactes.",
+  "acces_secondaires": ["Géométrie et repérage"],
+  "atlas": "cours/11.svg",
+  "atlasAlt": "Deux couches de3fois2cubes unité :6par couche et12au total.",
+  "nom": "Volumes de prismes et cylindres",
+  "domaine": "espace-geometrie",
+  "sousDomaine": "Grandeurs et mesures",
+  "niveaux": ["5e", "4e", "3e"],
+  "niveauxDescription": "6e : volume par dénombrement uniquement ; 5e : formules apprises ; 4e : automatismes explicites ; 3e entretien.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_02", "dnb_23"],
+    "questions": [
+      {
+        "source": "A2602",
+        "question": "Q3",
+        "referenceAncienne": "AA 3",
+        "forme": "b",
+        "identifiant": "EG22-b",
+        "ancienId": "EG22-V2",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Volume d’un pavé droit",
+        "formatSource": "QCM",
+        "document": "Asie, 15 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-15_Asie_DV-v3.pdf"
+      },
+      {
+        "source": "Z26PA",
+        "question": "Q9",
+        "referenceAncienne": "ZPA 9",
+        "forme": "b",
+        "identifiant": "EG22-b",
+        "ancienId": "EG22-V2",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Volume d’un pavé droit",
+        "formatSource": "QCM",
+        "document": "Sujet zéro 2026, série professionnelle A",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-mathematiquespdf-123305.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Calculer le volume d’un cube",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Un cube a une arête de 3 cm. Quel est son volume ?",
+      "reponse": "27 cm³",
+      "donnees": "c entier1–6 ; montrer3arêtes congruentes ou une arête et motcube ; sans calculatrice.",
+      "saisie": "Nombre, unitécm³.",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "Une couche de cubes repose sur toute la base carrée.",
+      "aide2": "Empile 3 couches de 9 cubes de 1 cm³. Relier au calcul V = 3 × 3 × 3.",
+      "correction": "V=3×3×3=27 cm³.",
+      "controles": [
+        "Accepter27 ; refuser9 et 18.",
+        "Comptage3D donne c³ ; aucune confusion aire totale6c²."
+      ],
+      "identifiant": "EG22-a",
+      "ancienId": "EG22-V1",
+      "ancienIdGenerateur": "EG22-V1",
+      "indiceGenerateur": 0,
+      "nom": "Calculer le volume d’un cube",
+      "niveauDescription": "5e puis 4e entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cm³"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Calculer le volume d’un pavé",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Un pavé droit mesure 4 cm de long,3 cm de large et 2 cm de haut. Calcule son volume.",
+      "reponse": "24 cm³",
+      "donnees": "L, l, h entiers1–10 ; produit≤300 ; variantes décimales simples seulement si produitmental ; unitéscommunes.",
+      "saisie": "Nombre, unitécm³.",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "« La base est un rectangle de 4 sur 3. » Colorer cette face.",
+      "aide2": "« Son aire vaut12 cm². Multiplie par la hauteur 2 cm. » Afficher12×2.",
+      "correction": "V=4×3×2=24 cm³.",
+      "controles": [
+        "Accepter24 ; refuser9, somme des dimensions.",
+        "Permuter la base et la hauteur sans changer le volume."
+      ],
+      "identifiant": "EG22-b",
+      "ancienId": "EG22-V2",
+      "ancienIdGenerateur": "EG22-V2",
+      "indiceGenerateur": 1,
+      "nom": "Calculer le volume d’un pavé",
+      "niveauDescription": "5e puis 4e entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cm³"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2602",
+          "question": "Q3",
+          "referenceAncienne": "AA 3",
+          "forme": "b",
+          "identifiant": "EG22-b",
+          "ancienId": "EG22-V2",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Volume d’un pavé droit",
+          "formatSource": "QCM",
+          "document": "Asie, 15 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-15_Asie_DV-v3.pdf"
+        },
+        {
+          "source": "Z26PA",
+          "question": "Q9",
+          "referenceAncienne": "ZPA 9",
+          "forme": "b",
+          "identifiant": "EG22-b",
+          "ancienId": "EG22-V2",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Volume d’un pavé droit",
+          "formatSource": "QCM",
+          "document": "Sujet zéro 2026, série professionnelle A",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-mathematiquespdf-123305.pdf"
+        }
+      ]
+    },
+    {
+      "id": "c",
+      "objectif": "Utiliser une base triangulaire",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Un prisme droit a pour base un triangle de base 4 cm et de hauteur 3 cm. La hauteur du prisme est5 cm. Quel est son volume ?",
+      "reponse": "30 cm³",
+      "donnees": "Aire triangulaire bh/2 entière ; longueurprisme distincte ; distinguer les deuxhauteurs par labels ; b, h≤8 etH≤6.",
+      "saisie": "Nombre, unitécm³.",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "« Calcule d’abord l’aire du triangle de base. » Colorer4 et 3 dans la mêmeface.",
+      "aide2": "« Aire de base :4×3÷2=6 cm². Il reste6×5. » Isoler les5 cm reliantlesbases.",
+      "correction": "V=(4×3÷2)×5=30 cm³.",
+      "controles": [
+        "Accepter30 ; refuser60, oubli÷2.",
+        "Ne jamaisutiliser3comme hauteur du prisme àlaplacede 5."
+      ],
+      "identifiant": "EG22-c",
+      "ancienId": "EG22-V3",
+      "ancienIdGenerateur": "EG22-V3",
+      "indiceGenerateur": 2,
+      "nom": "Utiliser une base triangulaire",
+      "niveauDescription": "5e application puis entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cm³"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Volume exact du cylindre",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Un cylindre de hauteur 3 cm a un diamètre de 4 cm. Donne son volume exact.",
+      "reponse": "12π cm³",
+      "donnees": "r entier1–5, h entier1–8 ; rayon oudiamètre choisi ; coefficient r²h≤144.",
+      "saisie": "Coefficient×π, unitécm³.",
+      "acceptation": "Expression exacte équivalente avec π ; accepter 2π×r si équivalente. Refuser une approximation décimale lorsque la valeur exacte est demandée.",
+      "aide1": "« Le rayon vaut la moitié du diamètre. » Couper visuellement le segment4 en 2+2.",
+      "aide2": "« Aire de base :π×2²=4π. Multiplie par 3. » Colorer la base puis la hauteur.",
+      "correction": "V=π×2²×3=12π cm³.",
+      "controles": [
+        "Accepter12π ; refuser48π et 24π.",
+        "Pourmêmecylindre donnéparrayon 2, réponseinchangée."
+      ],
+      "identifiant": "EG22-d",
+      "ancienId": "EG22-V4",
+      "ancienIdGenerateur": "EG22-V4",
+      "indiceGenerateur": 3,
+      "nom": "Volume exact du cylindre",
+      "niveauDescription": "5e application puis entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "V =",
+          "unite": "π cm³"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Retrouver la hauteur depuis le volume",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Un prisme droit a un volume de 36 cm³ et une aire de base de 12 cm². Quelle est sa hauteur ?",
+      "reponse": "3 cm",
+      "donnees": "ChoisirA entier2–20 etH entier1–10 ; V=A×H ; fournirA sansrecalculd’aire ; unitéscohérentes.",
+      "saisie": "Nombre, unitécm.",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "« Volume=aire de base×hauteur. » MontreruncadreH entredeuxbases.",
+      "aide2": "« 12×hauteur=36. » Afficher36÷12.",
+      "correction": "h=36÷12=3 cm.",
+      "controles": ["Accepter3 ; refuser432 et 3 cm³.", "Vérifier A×réponse=V ; Ajamaisnul."],
+      "identifiant": "EG22-e",
+      "ancienId": "EG22-V5",
+      "ancienIdGenerateur": "EG22-V5",
+      "indiceGenerateur": 4,
+      "nom": "Retrouver la hauteur depuis le volume",
+      "niveauDescription": "5e application ; 4e–3e entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

@@ -1,0 +1,734 @@
+{
+  "id": "PI03",
+  "titre": "Boucles, déplacements et tracés",
+  "categorie": "Algorithmique et programmation",
+  "objectif": "Relier instructions, nombre de répétitions, position et orientation d’un déplacement.",
+  "prerequis": [
+    "Repérage sur un quadrillage",
+    "Sens horaire/antihoraire et angle droit",
+    "Multiplication pour répétitions",
+    "Comparaison pour boucle conditionnelle"
+  ],
+  "perimetre": "DNB2027 pour les variantes proposées. Boucle conditionnelle et bloc personnalisé sont des applications courtes du programme, pas des faits à réciter.",
+  "cours": {
+    "regle": "Une boucle répète des instructions. Une boucle « répéter jusqu’à » s’arrête lorsque sa condition devient vraie.",
+    "exemple": "Répéter 4 fois « avancer 5 » donne 4 × 5 = 20 pas.",
+    "visuel": "Quadrillage unité avec pointdépart(0;0), flècheorientéeversladroite ; trois flèchesdelongueur2, numérotées1,2,3, arrivée(6;0). Bloc « répéter3fois » englobant« avancer2 ».",
+    "mouvement": "Pasàpas optionnel, positionetorientationvisibles. Statique : trois positions successives reliées et numéro d’itération."
+  },
+  "erreurs": [
+    "Tourner déplace le lutin",
+    "Oublier l’orientation initiale",
+    "Confondre angle intérieur et rotation",
+    "Ne répéter que la dernière instruction",
+    "Arrêter une boucle sur la mauvaise borne"
+  ],
+  "sources": [
+    {
+      "titre": "Programme cycle 3, 2025",
+      "url": "https://www.education.gouv.fr/sites/default/files/ensel620_annexe2-v2.pdf",
+      "repere": "Pensée informatique6ᵉ, PDFp.28",
+      "apport": "Séquences et répétitions.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Programme cycle 4, 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "Pensée informatique5ᵉ–3ᵉ, PDFp.20",
+      "apport": "Boucles fixes puis conditionnelles et structuration.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples de mise en œuvre cycle 4, 2026",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "Pensée informatique, PDFp.47–51",
+      "apport": "Tracés, répétitions et blocs personnalisés.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Programme cycle 4, 2020",
+      "url": "https://cache.media.education.gouv.fr/file/31/89/1/ensel714_annexe3_1312891.pdf",
+      "repere": "MathématiquesThèmeE, PDFp.136",
+      "apport": "Algorithmes simples, boucles et conditions.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Liste indicative d’automatismes DNB, octobre 2025",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/liste-indicative-dautomatismes-pour-le-dnbpdf-116340.pdf",
+      "repere": "Algorithmique et programmation,p.3",
+      "apport": "Instructions de déplacement et construction.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Sujet zéro 2026, série générale A",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-mathematiquespdf-123317.pdf",
+      "repere": "Question 9",
+      "apport": "Compléter un programme de tracé ; reproduction du sujet consultée lors de l’audit de couverture.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Métropole professionnelle, 30 juin 2026",
+      "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Metropole_30_juin_2026_DV.pdf",
+      "repere": "Question 9",
+      "apport": "Position finale après une boucle de déplacements ; reproduction du sujet consultée lors de l’audit de couverture.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Sujet de référence mathématiques n°2",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n02-129661.pdf",
+      "repere": "Question 9",
+      "apport": "Compter les motifs de créneaux pour compléter une boucle ; reproduction du sujet consultée lors de l’audit de couverture.",
+      "statut": "appui pédagogique"
+    }
+  ],
+  "limites": "Angles et coordonnées sont exacts. Les questions ne demandent pas de deviner une orientation cachée. Tout mouvement possède une version statique et un contrôle pasàpas.",
+  "acces_secondaires": ["Géométrie et repérage", "Nombres et calculs"],
+  "nom": "Boucles, déplacements et tracés",
+  "domaine": "pensee-informatique",
+  "sousDomaine": "Algorithmique et programmation",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6ᵉ : séquences et répétitions très simples. 5ᵉ : boucle à nombre fixé et modification de paramètres. 4ᵉ : variable dans une boucle. 3ᵉ : boucle conditionnelle et bloc personnalisé.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_37"],
+    "questions": [
+      {
+        "source": "A2611",
+        "question": "Q9",
+        "referenceAncienne": "ME-pro 9",
+        "forme": "g",
+        "identifiant": "PI03-g",
+        "ancienId": "PI03-V7",
+        "support": "adaptation",
+        "difference": "La source combine déplacement et boucle. PI03-V7 combine effectivement répétitions, rotations et position finale ; coordonnées numériques au lieu de la grille lettre/chiffre.",
+        "savoirFaire": "Exécuter un déplacement avec boucle",
+        "formatSource": "Case d’arrivée",
+        "document": "Métropole professionnelle, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Metropole_30_juin_2026_DV.pdf"
+      },
+      {
+        "source": "R27B",
+        "question": "Q9",
+        "referenceAncienne": "R2 9",
+        "forme": "i",
+        "identifiant": "PI03-i",
+        "ancienId": "PI03-V9",
+        "support": "comparable",
+        "difference": "Compter les motifs de créneaux à répéter. Le script répète avancer30, tourner90, avancer10, tourner90, avancer30, tourner90, avancer10, tourner90, en alternant les sens. Variante PI03-V9 dédiée ; le tracé de polygones réguliers seul ne suffit pas.",
+        "savoirFaire": "Compléter un script pour obtenir une figure",
+        "formatSource": "Nombre",
+        "document": "Sujet de référence mathématiques n°2",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n02-129661.pdf"
+      },
+      {
+        "source": "Z26A",
+        "question": "Q9",
+        "referenceAncienne": "ZA 9",
+        "forme": "f",
+        "identifiant": "PI03-f",
+        "ancienId": "PI03-V6",
+        "support": "comparable",
+        "difference": "Deux blancs répétitions et angle ; carré figuré et script.",
+        "savoirFaire": "Compléter répétition et angle dans Scratch",
+        "formatSource": "Deux nombres",
+        "document": "Sujet zéro 2026, série générale A",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-mathematiquespdf-123317.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Lire la position finale d’une séquence",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Sur le quadrillage, départ(1;1) vers la droite. Avancer de3 cases, tourner à gauche d’un quart de tour, avancer de2 cases. Donne les coordonnées d’arrivée.",
+      "reponse": "(4;3)",
+      "donnees": "Repère axesorientésxversdroite,yvershaut ; départ1–3 ; déplacements1–4 ; tracédansgrille0–10. Touràgauche/droiteexplicite.",
+      "saisie": "Deux champsx ety",
+      "acceptation": "4 puis3 acceptés ;(4;−1) refusé pour touràgauche.",
+      "aide1": "« Avancer suit l’orientation de la flèche. » Dessiner le départ et la flècheversladroite.",
+      "aide2": "« Après3 cases, tu es en(4;1). Tourner à gauche oriente vers le haut. » Montrer l’étatintermédiaire, sans trajetfinal.",
+      "correction": "(1;1)→(4;1)→(4;3).",
+      "controles": [
+        "Rotationmodifieorientation,pasposition.",
+        "Aucune diagonaleinventée.",
+        "Coordonnées etcasesexactes."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Départ (3 ; 2), vers la droite. Avancer de 2 cases, tourner à gauche d’un quart de tour, avancer de 1 case. Coordonnées d’arrivée ?",
+        "reponses": [
+          {
+            "libelle": "Abscisse x",
+            "reponse": "5",
+            "unite": ""
+          },
+          {
+            "libelle": "Ordonnée y",
+            "reponse": "3",
+            "unite": ""
+          }
+        ],
+        "aide1": "Le premier déplacement est horizontal vers la droite.",
+        "aide2": "Après ce déplacement : (5 ; 2). Le lutin regarde maintenant vers le haut.",
+        "cours": {
+          "regle": "Une boucle répète des instructions. Une boucle « répéter jusqu’à » s’arrête lorsque sa condition devient vraie.",
+          "exemple": "Répéter 4 fois « avancer 5 » donne 4 × 5 = 20 pas."
+        },
+        "correction": "Arrivée : (5 ; 3)."
+      },
+      "identifiant": "PI03-a",
+      "ancienId": "PI03-V1",
+      "ancienIdGenerateur": "PI03-V1",
+      "indiceGenerateur": 0,
+      "nom": "Lire la position finale d’une séquence",
+      "niveauDescription": "6ᵉ apprentissage ;5ᵉ entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Abscisse x",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "Ordonnée y",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Déterminer un nombre de répétitions",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Le lutin avance de3 pas à chaque répétition, toujours tout droit. Combien de répétitions faut-il pour avancer de15 pas ?",
+      "reponse": "5",
+      "donnees": "Pasunitaire2–6,nombre2–8,totalproduit ≤ 40 ; pasderotationnidebordure.",
+      "saisie": "Nombre entier",
+      "acceptation": "5 accepté ;12 et45 refusés.",
+      "aide1": "« Chaque répétition ajoute le même déplacement. » Dessiner un segmenttotal15 et un premiersegment3.",
+      "aide2": "« Cherche combien de segments de3 composent15 :15 ÷ 3. » Marquer les graduationssansnuméroterlessegments.",
+      "correction": "15 ÷ 3 = 5 répétitions.",
+      "controles": [
+        "Total divisibleparpas.",
+        "n0 si distance0explicitementautorisée.",
+        "Nombre derépétitionsentiernonnegatif."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Le lutin avance de 5 pas par répétition, toujours tout droit. Combien de répétitions pour avancer de 15 pas ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "3",
+            "unite": ""
+          }
+        ],
+        "aide1": "Chaque répétition ajoute le même déplacement.",
+        "aide2": "Cherche combien de fois 5 dans 15.",
+        "cours": {
+          "regle": "Une boucle répète des instructions. Une boucle « répéter jusqu’à » s’arrête lorsque sa condition devient vraie.",
+          "exemple": "Répéter 4 fois « avancer 5 » donne 4 × 5 = 20 pas."
+        },
+        "correction": "15 ÷ 5 = 3 répétitions."
+      },
+      "identifiant": "PI03-b",
+      "ancienId": "PI03-V2",
+      "ancienIdGenerateur": "PI03-V2",
+      "indiceGenerateur": 1,
+      "nom": "Déterminer un nombre de répétitions",
+      "niveauDescription": "5ᵉ apprentissage ;6ᵉ guidépossible",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Compléter l’angle extérieur d’un polygone régulier",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Pour tracer un hexagone régulier, on répète6fois « avancer de20 ; tourner à gauche de…° ». Un tour complet vaut360°. Quel angle faut-il ?",
+      "reponse": "60°",
+      "donnees": "n∈{3,4,6} ; angle360/n entier ; n etlongueurcôté6–30. Pas de formule d’angleintérieurnécessaire.",
+      "saisie": "Nombre avecunité°",
+      "acceptation": "60 accepté ;120 refusé.",
+      "aide1": "« Les six rotations identiques forment un tour complet. » Dessiner une flèchetournante360° en6secteurségaux.",
+      "aide2": "« Partage360° entre les6 rotations :360 ÷ 6. » Marquerles6changementsd’orientation, paslesanglesintérieurs.",
+      "correction": "360 ÷ 6 = 60°.",
+      "controles": [
+        "Sommeanglesextérieurs360.",
+        "TracerprogrammefermelepoygoneàtoléranceSVG.",
+        "Triangle120°, carré90°, hexagone60°."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Pour tracer un hexagone régulier, on répète 6 fois : avancer de 13 ; tourner à gauche de …°. Un tour complet vaut 360°. Quelle est la mesure de l’angle de rotation ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "60",
+            "unite": "°"
+          }
+        ],
+        "aide1": "Les 6 rotations égales forment un tour complet.",
+        "aide2": "Partage 360° entre 6 rotations.",
+        "cours": {
+          "regle": "Une boucle répète des instructions. Une boucle « répéter jusqu’à » s’arrête lorsque sa condition devient vraie.",
+          "exemple": "Répéter 4 fois « avancer 5 » donne 4 × 5 = 20 pas."
+        },
+        "correction": "360 ÷ 6 = 60°."
+      },
+      "identifiant": "PI03-c",
+      "ancienId": "PI03-V3",
+      "ancienIdGenerateur": "PI03-V3",
+      "indiceGenerateur": 2,
+      "nom": "Compléter l’angle extérieur d’un polygone régulier",
+      "niveauDescription": "5ᵉ après angles et tourcomplet ;entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "°"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Exécuter une boucle conditionnelle",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Mettrex à1. Répéter jusqu’à ce que x > 10 : ajouter3 àx. Puis afficherx. Quelle valeur s’affiche ?",
+      "reponse": "13",
+      "donnees": "Départ0–5 ; pas1–4 ; seuil5–20 ; boucle« jusqu’à »testeavantchaqueitérationetarrêtquandconditionvraie. Passtrictementpositifgarantitterminaison.",
+      "saisie": "Nombre",
+      "acceptation": "13 accepté ;10 et11 refusés.",
+      "aide1": "« La boucle continue tant que x > 10 est faux. » Tableauitération/valeur/test, ligneinitiale1/Faux.",
+      "aide2": "« Les valeurs sont1,4,7,10,… . À10, le test > 10 est encore faux. » Afficherquatrepremièresvaleurs.",
+      "correction": "Après10 vient13 ;13 > 10, donc affichage13.",
+      "controles": [
+        "Casconditionvraiedèsdépart→0itération.",
+        "Pas > 0 ; borneitérationsfinie.",
+        "Ne pasarrêterà10poursigne > ."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Quelle valeur s’affiche ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "12",
+            "unite": ""
+          }
+        ],
+        "aide1": "La boucle s’arrête dès que le test x > 11 est vrai.",
+        "aide2": "Les valeurs commencent par 3, 4, 5, 6. Continue si le test reste faux.",
+        "cours": {
+          "regle": "Une boucle répète des instructions. Une boucle « répéter jusqu’à » s’arrête lorsque sa condition devient vraie.",
+          "exemple": "Répéter 4 fois « avancer 5 » donne 4 × 5 = 20 pas."
+        },
+        "correction": "3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11 → 12. Affichage 12."
+      },
+      "identifiant": "PI03-d",
+      "ancienId": "PI03-V4",
+      "ancienIdGenerateur": "PI03-V4",
+      "indiceGenerateur": 3,
+      "nom": "Exécuter une boucle conditionnelle",
+      "niveauDescription": "3ᵉ apprentissage ;applicationDNB",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Comprendre un bloc personnalisé appelé plusieurs fois",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Le bloc « motif » contient deux instructions « avancer ». Le programme appelle « motif » trois fois. Combien d’instructions « avancer » sont exécutées ?",
+      "reponse": "6",
+      "donnees": "Blocde2–4instructionsavancer,intercaléestoursfaciles ; appelé2–5fois ; total ≤ 20. Ne pasdemander nombre desegmentsgéométriquesdistincts si retracementpossible.",
+      "saisie": "Nombre entier",
+      "acceptation": "6 accepté ;3 et2 refusés.",
+      "aide1": "« Un appel de « motif » exécute tout son contenu. » Encadrer lesdeuxinstructionsavancer danslebloc.",
+      "aide2": "« Il y a3 appels, chacun contenant2 avances :3 × 2. » Montrertroiscopiescompactesducontenu.",
+      "correction": "3 × 2 = 6 instructionsavancer.",
+      "controles": [
+        "Compterlesexécutions,paslestraitsvisuellementdistincts.",
+        "Casappelsmultiplesnumérotés.",
+        "Blocdéfinitavantutilisationetpasderécursion."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Le bloc « motif » contient 4 instructions « avancer ». Le programme appelle « motif » 2 fois. Combien d’instructions « avancer » sont exécutées ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "8",
+            "unite": ""
+          }
+        ],
+        "aide1": "Chaque appel exécute tout le bloc.",
+        "aide2": "Il y a 2 appels de 4 avances chacun.",
+        "cours": {
+          "regle": "Une boucle répète des instructions. Une boucle « répéter jusqu’à » s’arrête lorsque sa condition devient vraie.",
+          "exemple": "Répéter 4 fois « avancer 5 » donne 4 × 5 = 20 pas."
+        },
+        "correction": "2 × 4 = 8 instructions."
+      },
+      "identifiant": "PI03-e",
+      "ancienId": "PI03-V5",
+      "ancienIdGenerateur": "PI03-V5",
+      "indiceGenerateur": 4,
+      "nom": "Comprendre un bloc personnalisé appelé plusieurs fois",
+      "niveauDescription": "3ᵉ apprentissage ;applicationDNB",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "f",
+      "objectif": "Compléter répétitions et rotation d’un tracé de polygone régulier",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Pour tracer un carré, on répète « avancer de 20 ; tourner à gauche ». Complète les répétitions et la rotation.",
+      "reponse": "4 ; 90°",
+      "donnees": "Polygones réguliers à 3, 4 ou 6 côtés ; longueur 10 à 30. Figure exacte et nombre de rotations cohérent.",
+      "saisie": "Deux champs : Répétitions ; Angle en degrés",
+      "acceptation": "Nombre de côtés n et angle extérieur 360/n.",
+      "aide1": "Une répétition trace un côté puis tourne.",
+      "aide2": "Les n rotations égales forment un tour complet de 360°.",
+      "correction": "4 répétitions ; 360 ÷ 4 = 90°.",
+      "controles": [
+        "Ne pas utiliser l’angle intérieur pour la rotation.",
+        "Total des rotations égal à 360°.",
+        "Polygone fermé après n répétitions."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Pour tracer un hexagone régulier, le programme répète « avancer de 13 ; tourner à gauche ». Complète le nombre de répétitions et la mesure de l’angle de rotation.",
+        "reponses": [
+          {
+            "libelle": "Répétitions",
+            "reponse": "6",
+            "unite": ""
+          },
+          {
+            "libelle": "Mesure en degrés",
+            "reponse": "60",
+            "unite": ""
+          }
+        ],
+        "aide1": "Une répétition trace un côté puis tourne.",
+        "aide2": "Il faut 6 côtés. Les rotations égales totalisent 360°.",
+        "cours": {
+          "regle": "Une boucle répète des instructions. Une boucle « répéter jusqu’à » s’arrête lorsque sa condition devient vraie.",
+          "exemple": "Répéter 4 fois « avancer 5 » donne 4 × 5 = 20 pas."
+        },
+        "correction": "6 répétitions ; mesure de l’angle : 360 ÷ 6 = 60°."
+      },
+      "identifiant": "PI03-f",
+      "ancienId": "PI03-V6",
+      "ancienIdGenerateur": "PI03-V6",
+      "indiceGenerateur": 5,
+      "nom": "Compléter répétitions et rotation d’un tracé de polygone régulier",
+      "niveauDescription": "5ᵉ, puis entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Répétitions",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "Mesure en degrés",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "Z26A",
+          "question": "Q9",
+          "referenceAncienne": "ZA 9",
+          "forme": "f",
+          "identifiant": "PI03-f",
+          "ancienId": "PI03-V6",
+          "support": "comparable",
+          "difference": "Deux blancs répétitions et angle ; carré figuré et script.",
+          "savoirFaire": "Compléter répétition et angle dans Scratch",
+          "formatSource": "Deux nombres",
+          "document": "Sujet zéro 2026, série générale A",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-mathematiquespdf-123317.pdf"
+        }
+      ]
+    },
+    {
+      "id": "g",
+      "objectif": "Exécuter une boucle de déplacements et rotations pour repérer l’arrivée",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Départ (2 ; 3), vers la droite. Répéter 2 fois : avancer de 2 cases, tourner à gauche de 90°. Donne l’arrivée.",
+      "reponse": "(4 ; 5)",
+      "donnees": "Départ x = 2 ou 3, y = 3 ou 4 ; pas 1 ou 2 ; 2 à 4 répétitions ; quart de tour à gauche ou à droite. Le trajet reste dans le repère x = 0…8, y = 0…7.",
+      "saisie": "Deux champs numériques x puis y",
+      "acceptation": "Coordonnées exactes après toutes les répétitions.",
+      "aide1": "Chaque répétition comprend un déplacement et une rotation. La direction change.",
+      "aide2": "Schéma du parcours : déplacements numérotés et changements de direction ; lire ensuite l’arrivée.",
+      "correction": "(2 ; 3) → (4 ; 3) → (4 ; 5).",
+      "controles": [
+        "Rotation appliquée après chaque déplacement.",
+        "Direction initiale explicite.",
+        "Aucun trajet hors repère.",
+        "2 à 4 répétitions pour éviter la superposition des numéros après un tour complet."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Départ (3 ; 3), vers la droite. Répéter 2 fois : avancer de 1 case, puis tourner à gauche d’un quart de tour. Donne les coordonnées d’arrivée.",
+        "reponses": [
+          {
+            "libelle": "Abscisse x",
+            "reponse": "4",
+            "unite": ""
+          },
+          {
+            "libelle": "Ordonnée y",
+            "reponse": "4",
+            "unite": ""
+          }
+        ],
+        "aide1": "Une répétition comporte un déplacement et une rotation. La direction change pour la répétition suivante.",
+        "aide2": "Suis les 2 déplacements numérotés, puis lis les coordonnées du point d’arrivée.",
+        "cours": {
+          "regle": "Une boucle répète des instructions. Une boucle « répéter jusqu’à » s’arrête lorsque sa condition devient vraie.",
+          "exemple": "Répéter 4 fois « avancer 5 » donne 4 × 5 = 20 pas."
+        },
+        "correction": "Positions successives : (3 ; 3) → (4 ; 3) → (4 ; 4). Arrivée (4 ; 4)."
+      },
+      "identifiant": "PI03-g",
+      "ancienId": "PI03-V7",
+      "ancienIdGenerateur": "PI03-V7",
+      "indiceGenerateur": 6,
+      "nom": "Exécuter une boucle de déplacements et rotations pour repérer l’arrivée",
+      "niveauDescription": "5ᵉ, puis entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Abscisse x",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "Ordonnée y",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2611",
+          "question": "Q9",
+          "referenceAncienne": "ME-pro 9",
+          "forme": "g",
+          "identifiant": "PI03-g",
+          "ancienId": "PI03-V7",
+          "support": "adaptation",
+          "difference": "La source combine déplacement et boucle. PI03-V7 combine effectivement répétitions, rotations et position finale ; coordonnées numériques au lieu de la grille lettre/chiffre.",
+          "savoirFaire": "Exécuter un déplacement avec boucle",
+          "formatSource": "Case d’arrivée",
+          "document": "Métropole professionnelle, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Metropole_30_juin_2026_DV.pdf"
+        }
+      ]
+    },
+    {
+      "id": "h",
+      "objectif": "Trouver une rotation à partir de l’angle intérieur d’un triangle",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Le lutin va de A vers B, puis de B vers C. L’angle [angle:ABC] mesure 75°. De combien tourne-t-il à gauche en B ?",
+      "reponse": "105°",
+      "donnees": "Angle intérieur dans 30°, 45°, 60°, 75°, 90°, 120°, 135° ; coordonnées du triangle construites trigonométriquement pour respecter cet angle. Le prolongement de AB apparaît dans l’aide.",
+      "saisie": "Nombre, unité degré affichée",
+      "acceptation": "180 − angle intérieur ; ne pas confondre l’angle intérieur et la rotation.",
+      "aide1": "La rotation part de la direction AB prolongée au-delà de B.",
+      "aide2": "L’angle intérieur et l’angle de rotation sont supplémentaires : leurs mesures ont pour somme 180°. Montrer les deux arcs adjacents.",
+      "correction": "Mesure de l’angle de rotation = 180° − 75° = 105°.",
+      "controles": [
+        "Triangle non dégénéré.",
+        "Sens de parcours A→B→C et rotation à gauche explicites.",
+        "Extension du programme ; aucun rattachement à une question d’annale particulière."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Le lutin va de A vers B, puis de B vers C. L’angle [angle:ABC] mesure 120°. De combien de degrés doit-il tourner à gauche en B ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "60",
+            "unite": "°"
+          }
+        ],
+        "aide1": "La rotation part de la direction de déplacement AB, prolongée au-delà de B.",
+        "aide2": "L’angle intérieur et l’angle de rotation sont supplémentaires : leurs mesures ont pour somme 180°.",
+        "cours": {
+          "regle": "Pour passer d’un côté au suivant, l’angle de rotation et l’angle intérieur sont supplémentaires.",
+          "exemple": "Angle intérieur de 120° : angle de rotation de 180° − 120° = 60°."
+        },
+        "correction": "Mesure de l’angle de rotation = 180° − 120° = 60°."
+      },
+      "identifiant": "PI03-h",
+      "ancienId": "PI03-V8",
+      "ancienIdGenerateur": "PI03-V8",
+      "indiceGenerateur": 7,
+      "nom": "Trouver une rotation à partir de l’angle intérieur d’un triangle",
+      "niveauDescription": "5ᵉ, puis entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "°"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "i",
+      "objectif": "Compter les répétitions d’un motif de créneau",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Le bloc créneau trace le motif du bas. Combien de fois le répéter pour obtenir le trajet du haut ?",
+      "reponse": "6 dans l’exemple du sujet de référence",
+      "donnees": "Nombre de motifs de 2 à 6 ; chaque motif contient deux avances horizontales de 30 et deux verticales de 10, avec rotations + 90,−90,−90, + 90. Schéma explicitement non à l’échelle pour garantir la lisibilité des créneaux sur téléphone.",
+      "saisie": "Nombre entier",
+      "acceptation": "Nombre de motifs complets, non nombre de segments ou de virages.",
+      "aide1": "Un motif comprend une montée et une descente et retrouve la direction initiale.",
+      "aide2": "Compter les motifs complets du départ à la fin ; la définition du bloc est montrée en aide.",
+      "correction": "Six motifs : répéter 6 fois.",
+      "controles": [
+        "Fin d’un motif égale début du suivant.",
+        "Direction finale égale direction initiale.",
+        "Nombre de montées égal au nombre de motifs.",
+        "Schéma déclaré non à l’échelle ; aucune longueur n’est inférée du dessin."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Le bloc « créneau » trace le motif du bas. Combien de fois faut-il le répéter pour obtenir le trajet du haut ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "5",
+            "unite": ""
+          }
+        ],
+        "aide1": "Un motif contient une montée et une descente, puis revient à la direction initiale.",
+        "aide2": "Compte les motifs complets du départ à l’arrivée. Chaque montée correspond à un motif.",
+        "cours": {
+          "regle": "Une boucle répète des instructions. Une boucle « répéter jusqu’à » s’arrête lorsque sa condition devient vraie.",
+          "exemple": "Répéter 4 fois « avancer 5 » donne 4 × 5 = 20 pas."
+        },
+        "correction": "Le trajet contient 5 motifs : répéter 5 fois."
+      },
+      "identifiant": "PI03-i",
+      "ancienId": "PI03-V9",
+      "ancienIdGenerateur": "PI03-V9",
+      "indiceGenerateur": 8,
+      "nom": "Compter les répétitions d’un motif de créneau",
+      "niveauDescription": "5ᵉ, puis entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "R27B",
+          "question": "Q9",
+          "referenceAncienne": "R2 9",
+          "forme": "i",
+          "identifiant": "PI03-i",
+          "ancienId": "PI03-V9",
+          "support": "comparable",
+          "difference": "Compter les motifs de créneaux à répéter. Le script répète avancer30, tourner90, avancer10, tourner90, avancer30, tourner90, avancer10, tourner90, en alternant les sens. Variante PI03-V9 dédiée ; le tracé de polygones réguliers seul ne suffit pas.",
+          "savoirFaire": "Compléter un script pour obtenir une figure",
+          "formatSource": "Nombre",
+          "document": "Sujet de référence mathématiques n°2",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n02-129661.pdf"
+        }
+      ]
+    }
+  ]
+}

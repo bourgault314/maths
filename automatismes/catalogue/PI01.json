@@ -1,0 +1,326 @@
+{
+  "id": "PI01",
+  "titre": "Exécuter un programme de calcul",
+  "categorie": "Algorithmique et programmation",
+  "objectif": "Respecter l’ordre d’une suite d’instructions, traduire ou remonter un programme simple.",
+  "prerequis": [
+    "Opérations et priorités",
+    "Sens des parenthèses",
+    "Lettres pour la variante littérale"
+  ],
+  "perimetre": "DNB2027, automatismes pour exécution courte et applications pour inversion/traduction.",
+  "cours": {
+    "regle": "Exécute les instructions dans l’ordre. Pour remonter un programme, inverse les opérations en commençant par la dernière.",
+    "exemple": "Départ5 ; ajouter3 ; multiplier par2 :5→8→16. Pour retrouver5 depuis16 :16 ÷ 2 − 3 = 5.",
+    "visuel": "Trois cases5,8,16 reliées par flèches étiquetées + 3 puis × 2. Dessous flèches inverses ÷ 2 puis−3. Les flèches, pas une couleur seule, donnent l’ordre.",
+    "mouvement": "Une étape à la fois, valeur courante mise en évidence. Version statique avec numéros1 et2."
+  },
+  "erreurs": [
+    "Oublier les parenthèses",
+    "Confondre entrée et sortie",
+    "Inverser les opérations dans le mauvais ordre",
+    "Croire que changer l’ordre ne change jamais le résultat"
+  ],
+  "sources": [
+    {
+      "titre": "Programme cycle 3, 2025",
+      "url": "https://www.education.gouv.fr/sites/default/files/ensel620_annexe2-v2.pdf",
+      "repere": "Pensée informatique6ᵉ, PDFp.28",
+      "apport": "Instructions et séquences.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Programme cycle 4, 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "Fonctions4ᵉ et pensée informatique5ᵉ, PDFp.19–20",
+      "apport": "Exécuter/remonter et traduire un programme.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples de mise en œuvre cycle 4, 2026",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "Pensée informatique5ᵉ, PDFp.47–48",
+      "apport": "Imbrication des blocs et ordre des opérations.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Liste indicative d’automatismes DNB, octobre 2025",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/liste-indicative-dautomatismes-pour-le-dnbpdf-116340.pdf",
+      "repere": "Algorithmique et programmation, p.3",
+      "apport": "Suite d’instructions de calcul.",
+      "statut": "prescription"
+    }
+  ],
+  "limites": "Une inversion de programme non injectif, comme un carré, nécessiterait toutes les solutions et relève d’une autre variante. Les exemples de ce contrat sont injectifs.",
+  "acces_secondaires": ["Calcul littéral et équations", "Fonctions et graphiques"],
+  "nom": "Exécuter un programme de calcul",
+  "domaine": "pensee-informatique",
+  "sousDomaine": "Algorithmique et programmation",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6ᵉ : instructions et séquences numériques simples. 5ᵉ : entrées/sorties et expressions par blocs. 4ᵉ : remontée et traduction littérale explicites. 3ᵉ : entretien.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_13", "dnb_37"],
+    "questions": [
+      {
+        "source": "Z26B",
+        "question": "Q9",
+        "referenceAncienne": "ZB 9",
+        "forme": "a",
+        "identifiant": "PI01-a",
+        "ancienId": "PI01-V1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Exécuter un programme de calcul",
+        "formatSource": "Nombre",
+        "document": "Sujet zéro 2026, série générale B",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-b-mathematiquespdf-123314.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Calculer la sortie",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Choisir5, ajouter3, puis multiplier le résultat par2. Quel nombre obtient-on ?",
+      "reponse": "16",
+      "donnees": "Départentier0–12 ; ajout1–8 ;multiplicateur2–5 ;résultat ≤ 100. Variantesultérieures avecrelatifs selongrade.",
+      "saisie": "Nombre",
+      "acceptation": "16 accepté ;11 refusé (5 + 3 × 2).",
+      "aide1": "« Fais d’abord l’instruction « ajouter3 ». » Afficher trois cases reliées, + 3 puis × 2.",
+      "aide2": "« Après la première étape :5 + 3 = 8. Applique maintenant × 2 à8. » Remplir la caseintermédiaire8.",
+      "correction": "(5 + 3) × 2 = 8 × 2 = 16.",
+      "controles": [
+        "Ordredesinstructionsrespecté.",
+        "Compareràerreur de priorité5 + 3 × 2 = 11.",
+        "Toutesintermédiairesdansdomaine."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Choisir 8, ajouter 2, puis multiplier le résultat par 3. Quel nombre obtient-on ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "30",
+            "unite": ""
+          }
+        ],
+        "aide1": "Commence par ajouter 2.",
+        "aide2": "Le résultat intermédiaire est 10. Multiplie-le par 3.",
+        "cours": {
+          "regle": "Exécute les opérations dans l’ordre. Les parenthèses gardent une somme groupée.",
+          "exemple": "Choisir 3, ajouter 2, multiplier par 4 : (3 + 2) × 4 = 20."
+        },
+        "correction": "(8 + 2) × 3 = 30."
+      },
+      "identifiant": "PI01-a",
+      "ancienId": "PI01-V1",
+      "ancienIdGenerateur": "PI01-V1",
+      "indiceGenerateur": 0,
+      "nom": "Calculer la sortie",
+      "niveauDescription": "6ᵉ séquence ;5ᵉ–3ᵉ entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "Z26B",
+          "question": "Q9",
+          "referenceAncienne": "ZB 9",
+          "forme": "a",
+          "identifiant": "PI01-a",
+          "ancienId": "PI01-V1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Exécuter un programme de calcul",
+          "formatSource": "Nombre",
+          "document": "Sujet zéro 2026, série générale B",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-b-mathematiquespdf-123314.pdf"
+        }
+      ]
+    },
+    {
+      "id": "b",
+      "objectif": "Retrouver le nombre de départ",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "On ajoute4 au nombre de départ, puis on multiplie par3. Le résultat est27. Quel était le nombre de départ ?",
+      "reponse": "5",
+      "donnees": "Générerentréex0–12, a1–8,b2–5,sortieb(x + a). Opérationsinversesexactes ; pas de multiplicationpar0.",
+      "saisie": "Nombre",
+      "acceptation": "5 accepté ;77 et9 refusés.",
+      "aide1": "« Remonte les flèches en partant de27. » Dessiner□→( + 4)→□→( × 3)→27 et une flèchede retour.",
+      "aide2": "« Annule d’abord × 3 :27 ÷ 3 = 9. Il reste à annuler + 4. » Remplir le milieu9 et étiqueter−4 enretour.",
+      "correction": "27 ÷ 3 − 4 = 9 − 4 = 5.",
+      "controles": ["Réinjecter5 dansprogramme→27.", "bnonzero.", "Ne pasinverserdanslemêmeordre."],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "On ajoute 2 au nombre de départ, puis on multiplie par 3. Le résultat est 30. Quel était le nombre de départ ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "8",
+            "unite": ""
+          }
+        ],
+        "aide1": "Remonte le programme depuis le résultat.",
+        "aide2": "Annule d’abord la multiplication : 30 ÷ 3 = 10.",
+        "cours": {
+          "regle": "Exécute les opérations dans l’ordre. Les parenthèses gardent une somme groupée.",
+          "exemple": "Choisir 3, ajouter 2, multiplier par 4 : (3 + 2) × 4 = 20."
+        },
+        "correction": "30 ÷ 3 − 2 = 8."
+      },
+      "identifiant": "PI01-b",
+      "ancienId": "PI01-V2",
+      "ancienIdGenerateur": "PI01-V2",
+      "indiceGenerateur": 1,
+      "nom": "Retrouver le nombre de départ",
+      "niveauDescription": "4ᵉ apprentissage ;3ᵉ entretien",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Traduire le programme par une expression",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "On choisitx, on ajoute3, puis on multiplie par2. Écris l’expression obtenue.",
+      "reponse": "2(x + 3)",
+      "donnees": "a1–6 ;b2–5 ; expressionb(x + a). Demander expression et non formefactorisée. Lesvarientesa × x + b traitées distinctement.",
+      "saisie": "Expression compacte",
+      "acceptation": "Accepter2(x + 3),2 × (x + 3),(x + 3) × 2,2x + 6 ;refuserx + 6. Équivalencepolynomiale sansformerestrictive.",
+      "aide1": "« Le résultat après « ajouter3 » estx + 3. » Remplacer la case de sortieintermédiaireparx + 3.",
+      "aide2": "« Il faut multiplier toute cette somme par2. Entourex + 3 avant d’écrire × 2. » Dessiner une boîteautourdelasomme.",
+      "correction": "2(x + 3) = 2x + 6.",
+      "controles": [
+        "Équivalencesacceptées.",
+        "Testsymbolique ;nepascomparersuruneuniquevaleur.",
+        "Coefficientnégatifuniquementniveauadapté."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "On choisit x, on ajoute 2, puis on multiplie par 3. Écris l’expression obtenue.",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "3 × (x + 2)",
+            "unite": ""
+          }
+        ],
+        "aide1": "Après la première étape, tu as x + 2.",
+        "aide2": "Multiplie toute cette somme par 3 : les parenthèses regroupent la somme.",
+        "cours": {
+          "regle": "Exécute les opérations dans l’ordre. Les parenthèses gardent une somme groupée.",
+          "exemple": "Choisir 3, ajouter 2, multiplier par 4 : (3 + 2) × 4 = 20."
+        },
+        "correction": "3(x + 2) = 3x + 6."
+      },
+      "identifiant": "PI01-c",
+      "ancienId": "PI01-V3",
+      "ancienIdGenerateur": "PI01-V3",
+      "indiceGenerateur": 2,
+      "nom": "Traduire le programme par une expression",
+      "niveauDescription": "5ᵉ après lettres ;4ᵉ–3ᵉ entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "expression",
+      "champs": [
+        {
+          "type": "expression",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Comparer deux ordres d’instructions",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Avec le nombre4 : programmeA, ajouter3 puis multiplier par2 ; programmeB, multiplier par2 puis ajouter3. Quel programme donne14 ?",
+      "reponse": "A",
+      "donnees": "x1–8,a1–6,b2–4 ;A = b(x + a),B = bx + a ;choisirb ≠ 1 eta ≠ 0 pourrésultatsdistincts.",
+      "saisie": "ChoixA/B",
+      "acceptation": "A accepté ;B refusé.",
+      "aide1": "« Les deux programmes utilisent les mêmes opérations, dans un ordre différent. » Montrer deux rails d’instructions côteàcôte.",
+      "aide2": "« A commence par4 + 3 ;B commence par4 × 2. » Compléter seulementlespremièresétapes7 et8.",
+      "correction": "A:(4 + 3) × 2 = 14 ;B:4 × 2 + 3 = 11.",
+      "controles": [
+        "A ≠ B parconstruction.",
+        "Permuter leprogrammequestionné.",
+        "Pasdetraitementcommutatifdesopérations."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Avec 8 au départ, quel programme donne 30 ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "A",
+            "unite": "",
+            "choix": ["A", "B"]
+          }
+        ],
+        "aide1": "Les opérations sont les mêmes, mais pas leur ordre.",
+        "aide2": "A commence par 8 + 2 ; B par 8 × 3.",
+        "cours": {
+          "regle": "Exécute les opérations dans l’ordre. Les parenthèses gardent une somme groupée.",
+          "exemple": "Choisir 3, ajouter 2, multiplier par 4 : (3 + 2) × 4 = 20."
+        },
+        "correction": "A donne 30 ; B donne 26."
+      },
+      "identifiant": "PI01-d",
+      "ancienId": "PI01-V4",
+      "ancienIdGenerateur": "PI01-V4",
+      "indiceGenerateur": 3,
+      "nom": "Comparer deux ordres d’instructions",
+      "niveauDescription": "5ᵉ application ;4ᵉ–3ᵉ entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

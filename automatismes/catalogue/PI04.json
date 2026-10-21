@@ -1,0 +1,370 @@
+{
+  "id": "PI04",
+  "titre": "Formules de tableur",
+  "categorie": "Algorithmique et programmation",
+  "objectif": "Distinguer adresse, valeur et formule ; comprendre le déplacement des références relatives.",
+  "prerequis": [
+    "Repérage ligne/colonne",
+    "Opérations et priorités",
+    "Moyenne pour la variante correspondante"
+  ],
+  "perimetre": "DNB2027 pour lecture de formule et recopie simple. Pas de référenceabsolue ni fonctioncomplexe exigée.",
+  "cours": {
+    "regle": "Une formule commence par = . A2 désigne la cellule de colonneA et de ligne2. Quand on recopie une référence relative, elle se déplace comme la formule.",
+    "exemple": "C2 contient=A2+B2. Recopiée une ligne plus bas enC3, la formule devient=A3+B3.",
+    "visuel": "Petite grilleA–C, lignes1–3. C2 encadrée ; traits versA2 etB2. Dessous, flèched’uneligne et même configurationC3→A3/B3. Lettres et numéros visibles, cellules désignées par noms enplusdescouleurs.",
+    "mouvement": "Recopie d’une ligne montrée une seulefois à la demande. Statique : grillesavant/après alignées etflècheétiquetée + 1ligne."
+  },
+  "erreurs": [
+    "Confondre adresse et valeur",
+    "Oublier le déplacement d’une référence",
+    "Déplacer une ligne lors d’une recopie horizontale",
+    "Exclure une borne d’une plage",
+    "Confondre SOMME et MOYENNE"
+  ],
+  "sources": [
+    {
+      "titre": "Programme cycle 4, 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "Statistiques, PDFp.16–17",
+      "apport": "Recours au tableur dans le traitementdesdonnées.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples de mise en œuvre cycle 4, 2026",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "Statistiques4ᵉ–3ᵉ, PDFp.37–39",
+      "apport": "Fonctions somme,moyenne,médiane,max,min,nb.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Programme cycle 4, 2020",
+      "url": "https://cache.media.education.gouv.fr/file/31/89/1/ensel714_annexe3_1312891.pdf",
+      "repere": "Mathématiques, ThèmeB, PDFp.132",
+      "apport": "Utilisation du tableur-grapheur.",
+      "statut": "prescription"
+    }
+  ],
+  "limites": "Syntaxe affichée en français ; la versionanglaiseSUM/AVERAGE peut être montrée comme équivalente. Les exemples de recopie excluent lesdollars etréférencesmixtes. Les fonctionscomplexes et la manipulation d’un vrai logiciel restent horsdecepetitentraînement.",
+  "acces_secondaires": ["Statistiques et probabilités", "Fonctions et graphiques"],
+  "nom": "Formules de tableur",
+  "domaine": "pensee-informatique",
+  "sousDomaine": "Algorithmique et programmation",
+  "niveaux": ["5e", "4e", "3e"],
+  "niveauxDescription": "5ᵉ : lire des cellules et formules simples lors de données/statistiques. 4ᵉ : somme, moyenne et recopie. 3ᵉ : entretien. Classement transversal : le tableur est utilisé dans plusieurs thèmes, pas un domaine officiel autonome.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": [],
+    "questions": []
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Évaluer une formule à partir de cellules",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "A2 contient4. B2 contient la formule=2*A2+3. Quelle valeur s’affiche dansB2 ?",
+      "reponse": "11",
+      "donnees": "ValeurA2entière0–12 ; coefficients2–5 et ajout0–8 ; résultat ≤ 70. Affichergrille etformuleenbarredeformule.",
+      "saisie": "Nombre",
+      "acceptation": "11 accepté ;14 refusé.",
+      "aide1": "« Remplace l’adresseA2 par la valeur de cette cellule. » RelierA2 = 4 àA2danslaformule.",
+      "aide2": "« La formule devient2 × 4 + 3. Effectue la multiplication avant l’addition. » Afficherl’expression.",
+      "correction": "2 × 4 + 3 = 11.",
+      "controles": [
+        "Formuleetvaleuraffichée distinctes.",
+        "Rang etcolonneconstants.",
+        "Prioritésrespectées."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Quelle valeur s’affiche dans B2 ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "24",
+            "unite": ""
+          }
+        ],
+        "aide1": "Remplace A2 par le nombre contenu dans A2.",
+        "aide2": "Calcule 2 × 10 + 4.",
+        "cours": {
+          "regle": "Une référence désigne une cellule. Une recopie relative déplace les références du même nombre de lignes ou de colonnes.",
+          "exemple": "Recopier =A2+B2 une ligne plus bas donne =A3+B3."
+        },
+        "correction": "2 × 10 + 4 = 24."
+      },
+      "identifiant": "PI04-a",
+      "ancienId": "PI04-V1",
+      "ancienIdGenerateur": "PI04-V1",
+      "indiceGenerateur": 0,
+      "nom": "Évaluer une formule à partir de cellules",
+      "niveauDescription": "5ᵉ ;entretien4ᵉ–3ᵉ",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Recopier une référence vers le bas",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "C2 contient=A2+B2. On recopie la formule enC5. Complète : =A…+B… .",
+      "reponse": "5 ;5",
+      "donnees": "Déplacementverticaldelta1–4 ; référencesrelatives ; colonnesA/B inchangées ; lignes1–9. Deuxchampsd’indices uniquement.",
+      "saisie": "Deux champsentiers",
+      "acceptation": "5et5acceptés ;2et2refusés. Le nombre demandéestunnumérodeligne.",
+      "aide1": "« DeC2 àC5, combien de lignes descend-on ? » Tracerlaflèchede3lignes.",
+      "aide2": "« Toutes les références relatives descendent aussi de3lignes :2 + 3. » MontrerA2etB2aveclaflèche + 3.",
+      "correction": "La formule devient=A5+B5.",
+      "controles": [
+        "Même delta surchaqueréférence.",
+        "Colonnesinchangées.",
+        "Tester recopieverslehautdansbornespositives."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "C5 contient =A5+B5. Recopie en C6. Complète les deux numéros de ligne : =A…+B… .",
+        "reponses": [
+          {
+            "libelle": "Ligne après A",
+            "reponse": "6",
+            "unite": ""
+          },
+          {
+            "libelle": "Ligne après B",
+            "reponse": "6",
+            "unite": ""
+          }
+        ],
+        "aide1": "La formule descend de 1 ligne.",
+        "aide2": "Les deux références descendent aussi de 1 ligne.",
+        "cours": {
+          "regle": "Une référence désigne une cellule. Une recopie relative déplace les références du même nombre de lignes ou de colonnes.",
+          "exemple": "Recopier =A2+B2 une ligne plus bas donne =A3+B3."
+        },
+        "correction": "=A6+B6"
+      },
+      "identifiant": "PI04-b",
+      "ancienId": "PI04-V2",
+      "ancienIdGenerateur": "PI04-V2",
+      "indiceGenerateur": 1,
+      "nom": "Recopier une référence vers le bas",
+      "niveauDescription": "4ᵉ apprentissage ;3ᵉ entretien",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Ligne après A",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "Ligne après B",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Recopier une référence vers la droite",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "B3 contient=B1+B2. On recopie enD3. Complète : =…1+…2 .",
+      "reponse": "D ;D",
+      "donnees": "ColonnesA–F ; déplacementhorizontal1–3 ; indicesdelignesfixes1/2 ; aucune référenceabsolue.",
+      "saisie": "Deux champslettres",
+      "acceptation": "D,Dacceptés, casseinsensible ;B,Brefusés.",
+      "aide1": "« DeB3 àD3, on se déplace de deux colonnes. » Encadreren-têtesB,C,D.",
+      "aide2": "« Chaque référence se déplace de deux colonnes :B devientD. » RelierB1→D1etB2→D2.",
+      "correction": "La formule devient=D1+D2.",
+      "controles": [
+        "Majuscules/minusculesacceptées.",
+        "Numérosdelignesinchangés.",
+        "Colonnes finalesdanslagrille."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "C3 contient =C1+C2. Recopie en D3. Complète les deux lettres : =…1+…2 .",
+        "reponses": [
+          {
+            "libelle": "Colonne avant 1",
+            "reponse": "D",
+            "unite": ""
+          },
+          {
+            "libelle": "Colonne avant 2",
+            "reponse": "D",
+            "unite": ""
+          }
+        ],
+        "aide1": "La formule se déplace de 1 colonne vers la droite.",
+        "aide2": "Les références se déplacent du même nombre de colonnes.",
+        "cours": {
+          "regle": "Une référence désigne une cellule. Une recopie relative déplace les références du même nombre de lignes ou de colonnes.",
+          "exemple": "Recopier =A2+B2 une ligne plus bas donne =A3+B3."
+        },
+        "correction": "=D1+D2"
+      },
+      "identifiant": "PI04-c",
+      "ancienId": "PI04-V3",
+      "ancienIdGenerateur": "PI04-V3",
+      "indiceGenerateur": 2,
+      "nom": "Recopier une référence vers la droite",
+      "niveauDescription": "4ᵉ apprentissage ;3ᵉ entretien",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "texte-court",
+      "champs": [
+        {
+          "type": "texte-court",
+          "libelle": "Colonne avant 1",
+          "unite": ""
+        },
+        {
+          "type": "texte-court",
+          "libelle": "Colonne avant 2",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Lire une fonction SOMME",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "A2 = 3, A3 = 5, A4 = 4. B2 contient=SOMME(A2:A4). Quelle valeur s’affiche ?",
+      "reponse": "12",
+      "donnees": "3 à5 cellulescontiguës ; valeurs0–12 ; somme ≤ 60 ;bornesincluses. MentionSUMcommeéquivalentlinguistiqueencours, passousforme de piège.",
+      "saisie": "Nombre",
+      "acceptation": "12accepté ;7et9refusés (borneomise).",
+      "aide1": "« A2:A4 désigne toutes les cellules deA2 àA4, bornes comprises. » Encadrerleblocvertical3cases.",
+      "aide2": "« Additionne les trois valeurs :3 + 5 + 4. » Relierlescellulesàl’expression.",
+      "correction": "3 + 5 + 4 = 12.",
+      "controles": [
+        "Bornehauteetbasseincluses.",
+        "Caszéroconservé.",
+        "Ne pascompterlaformuledanssasomme."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "B2 contient =SOMME(A2:A6). Quelle valeur s’affiche ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "25",
+            "unite": ""
+          }
+        ],
+        "aide1": "La plage contient toutes les cellules de A2 à A6, bornes comprises.",
+        "aide2": "Additionne les 5 valeurs.",
+        "cours": {
+          "regle": "Une référence désigne une cellule. Une recopie relative déplace les références du même nombre de lignes ou de colonnes.",
+          "exemple": "Recopier =A2+B2 une ligne plus bas donne =A3+B3."
+        },
+        "correction": "2 + 6 + 3 + 4 + 10 = 25."
+      },
+      "identifiant": "PI04-d",
+      "ancienId": "PI04-V4",
+      "ancienIdGenerateur": "PI04-V4",
+      "indiceGenerateur": 3,
+      "nom": "Lire une fonction SOMME",
+      "niveauDescription": "5ᵉ–4ᵉ ;entretien3ᵉ",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Lire une fonction MOYENNE",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "A2 = 6, A3 = 8, A4 = 10. B2 contient=MOYENNE(A2:A4). Quelle valeur s’affiche ?",
+      "reponse": "8",
+      "donnees": "3–5 valeursnumériques,ycompris0 ; exclurecellulesvides/textespournepasenseignerconventionlogicielhorsobjectif ; moyenneentière/demientière.",
+      "saisie": "Nombre",
+      "acceptation": "8accepté ;24refusé.",
+      "aide1": "« MOYENNE partage le total entre les cellules numériques. » Troiscolonnes6,8,10etsommeaccoladée.",
+      "aide2": "« Le total vaut24 et il y a3 valeurs :24 ÷ 3. » Placerlesdeuxquantitésdanslequotient.",
+      "correction": "(6 + 8 + 10) ÷ 3 = 8.",
+      "controles": [
+        "Zérocomptecommevaleur.",
+        "Ne pasutiliser tableauvacioutextuel.",
+        "Résultatentreminetmax."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "B2 contient =MOYENNE(A2:A6). Quelle valeur s’affiche ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "25/5",
+            "unite": ""
+          }
+        ],
+        "aide1": "La plage contient toutes les cellules de A2 à A6, bornes comprises.",
+        "aide2": "Additionne les 5 valeurs, puis divise le total par 5.",
+        "cours": {
+          "regle": "Une référence désigne une cellule. Une recopie relative déplace les références du même nombre de lignes ou de colonnes.",
+          "exemple": "Recopier =A2+B2 une ligne plus bas donne =A3+B3."
+        },
+        "correction": "Moyenne = (2 + 6 + 3 + 4 + 10)/5 = 25/5."
+      },
+      "identifiant": "PI04-e",
+      "ancienId": "PI04-V5",
+      "ancienIdGenerateur": "PI04-V5",
+      "indiceGenerateur": 4,
+      "nom": "Lire une fonction MOYENNE",
+      "niveauDescription": "4ᵉ ;entretien3ᵉ",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

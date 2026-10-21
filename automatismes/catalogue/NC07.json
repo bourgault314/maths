@@ -1,0 +1,346 @@
+{
+  "id": "NC07",
+  "titre": "Priorités opératoires",
+  "categorie": "Nombres et calculs",
+  "objectif": "Identifier la structure d’une expression et effectuer les opérations dans l’ordre correct.",
+  "prerequis": ["Entiers et décimaux", "Droite graduée", "Tables de multiplication"],
+  "perimetre": "Couverture des prérequis et automatismes du collège. Le filtre DNB2027 utilise l’ancien programme du cycle 4 ; les niveaux indiqués suivent le nouveau programme. Le statut est précisé par variante.",
+  "cours": {
+    "regle": "Parenthèses, puissances, produits et quotients, puis sommes et différences. À priorité égale : de gauche à droite.",
+    "exemple": "4,2 − 2 + 7 × 5 = 37,2.",
+    "visuel": "Expression puis calcul prioritaire isolé ; parenthèses, puissance ou groupe au numérateur visibles.",
+    "mouvement": "Le schéma est entièrement compréhensible à l’arrêt. Une animation éventuelle révèle les étapes sans cacher les états précédents."
+  },
+  "erreurs": [
+    "Confondre addition et produit des signes",
+    "Oublier les parenthèses",
+    "Changer l’ordre de calcul"
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 4 (2026)",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "statut": "prescription",
+      "repere": "PDF p 7–11",
+      "apport": "Objectifs et progression officiels du programme ; niveau de classe vérifié."
+    },
+    {
+      "titre": "Exemples de mise en œuvre du cycle 4 (2026)",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "statut": "appui pédagogique",
+      "repere": "PDF p 10,12,17,20 ; imprimées 9,11,16,19",
+      "apport": "Exemples officiels de mise en œuvre : progressivité, représentations et types de calculs."
+    },
+    {
+      "titre": "DNB sujet de référence 2027 n°2",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n02-129661.pdf",
+      "statut": "appui pédagogique",
+      "repere": "PDF p 2 Q 1–2",
+      "apport": "Situation effectivement observée dans le sujet de référence, repérée par numéro de question."
+    }
+  ],
+  "limites": "La barre de fraction groupe tout le numérateur. Aucun changement d’ordre à priorité égale.",
+  "implementation": {
+    "module": "app-automatismes/dist/modules/nombres.js",
+    "tests": "etape1/test_nombres.mjs",
+    "variantes": 5,
+    "graines_par_variante": 200,
+    "principe": "Aide 1 : représentation visuelle des données. Aide 2 : étape de calcul. Deux aides maximum.",
+    "aide1_visuelle": true
+  },
+  "nom": "Priorités opératoires",
+  "domaine": "nombres-calculs",
+  "sousDomaine": "Nombres et calculs",
+  "niveaux": ["5e", "4e", "3e"],
+  "niveauxDescription": "5e ; entretien ultérieur.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_02", "dnb_07"],
+    "questions": [
+      {
+        "source": "R27B",
+        "question": "Q1",
+        "referenceAncienne": "R2 1",
+        "forme": "a",
+        "identifiant": "NC07-a",
+        "ancienId": "NC07-A",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Priorités et décimaux relatifs",
+        "formatSource": "Nombre",
+        "document": "Sujet de référence mathématiques n°2",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n02-129661.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Produit prioritaire dans une somme",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Calcule 4,2 − 2 + 7 × 5.",
+      "reponse": "37.2",
+      "donnees": "Deux décimaux au dixième et un produit d’entiers 2–9 ; résultat signé possible.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Le produit est prioritaire.",
+      "aide2": "D’abord 7 × 5 = 35.",
+      "correction": "4,2 − 2 + 7 × 5 = 37,2.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["37.2"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "37.2",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Arbre des opérations, avec l’opération prioritaire repérée. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC07-a",
+      "ancienId": "NC07-a",
+      "ancienIdGenerateur": "NC07-A",
+      "indiceGenerateur": 0,
+      "nom": "Produit prioritaire dans une somme",
+      "niveauDescription": "5e ; entretien dans les classes suivantes.",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "R27B",
+          "question": "Q1",
+          "referenceAncienne": "R2 1",
+          "forme": "a",
+          "identifiant": "NC07-a",
+          "ancienId": "NC07-A",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Priorités et décimaux relatifs",
+          "formatSource": "Nombre",
+          "document": "Sujet de référence mathématiques n°2",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n02-129661.pdf"
+        }
+      ]
+    },
+    {
+      "id": "b",
+      "objectif": "Parenthèses prioritaires",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Calcule (14 − 7) × 5.",
+      "reponse": "35",
+      "donnees": "Différence positive entre parenthèses, multipliée par un entier 2–9.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Commence par le groupe entre parenthèses.",
+      "aide2": "D’abord 14 − 7 = 7.",
+      "correction": "(14 − 7) × 5 = 35.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["35"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "35",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Arbre des opérations, avec l’opération prioritaire repérée. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC07-b",
+      "ancienId": "NC07-b",
+      "ancienIdGenerateur": "NC07-B",
+      "indiceGenerateur": 1,
+      "nom": "Parenthèses prioritaires",
+      "niveauDescription": "5e ; entretien dans les classes suivantes.",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Produits et quotients de gauche à droite",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Calcule 49 ÷ 7 × 5.",
+      "reponse": "35",
+      "donnees": "Division exacte suivie d’une multiplication ; aucune parenthèse implicite au dénominateur.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Division et multiplication ont la même priorité.",
+      "aide2": "À gauche : 49 ÷ 7 = 7.",
+      "correction": "49 ÷ 7 × 5 = 35.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["35"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "35",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Arbre des opérations, avec l’opération prioritaire repérée. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC07-c",
+      "ancienId": "NC07-c",
+      "ancienIdGenerateur": "NC07-C",
+      "indiceGenerateur": 2,
+      "nom": "Produits et quotients de gauche à droite",
+      "niveauDescription": "5e ; entretien dans les classes suivantes.",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Puissance avant produit et somme",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Calcule 7 + 7 × 5².",
+      "reponse": "182",
+      "donnees": "Petit entier + entier × carré d’un entier 2–9.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "La puissance est prioritaire.",
+      "aide2": "D’abord 5² = 25, puis 7 × 25.",
+      "correction": "7 + 7 × 5² = 182.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["182"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "182",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Arbre des opérations, avec l’opération prioritaire repérée. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC07-d",
+      "ancienId": "NC07-d",
+      "ancienIdGenerateur": "NC07-D",
+      "indiceGenerateur": 3,
+      "nom": "Puissance avant produit et somme",
+      "niveauDescription": "5e ; entretien dans les classes suivantes.",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Tout le numérateur avant la division",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Calcule (54 − 5) / 7.",
+      "reponse": "7",
+      "donnees": "Différence entière au numérateur, explicitement parenthésée ; quotient entier exact.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Commence par le groupe entre parenthèses.",
+      "aide2": "Toute la différence est au numérateur : 54 − 5 = 49.",
+      "correction": "(54 − 5) / 7 = 7.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["7"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "7",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Arbre des opérations, avec l’opération prioritaire repérée. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC07-e",
+      "ancienId": "NC07-e",
+      "ancienIdGenerateur": "NC07-E",
+      "indiceGenerateur": 4,
+      "nom": "Tout le numérateur avant la division",
+      "niveauDescription": "5e ; entretien dans les classes suivantes.",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

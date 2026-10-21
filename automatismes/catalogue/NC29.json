@@ -1,0 +1,327 @@
+{
+  "id": "NC29",
+  "titre": "Produits nuls et équations x²=a",
+  "categorie": "Calcul littéral et équations",
+  "objectif": "Trouver toutes les solutions et distinguer aucun, un ou deux résultats.",
+  "prerequis": ["NC27", "Carrés et racine carrée", "NC24"],
+  "perimetre": "DNB2027 et programme 3e nouveau ; applications directes simples.",
+  "cours": {
+    "regle": "Un produit est nul si au moins un facteur est nul. Pour x² = a : deux solutions si a>0, une si a = 0, aucune réelle si a<0.",
+    "exemple": "(x − 2)(x + 3) = 0 : x − 2 = 0 ou x + 3 = 0, donc x = 2 ou x = −3.",
+    "visuel": "Deux branches issues du produit : facteur 1 = 0 et facteur 2 = 0 ; réunion des résultats en bas. Pour x² = a, droite graduée symétrique autour de 0 et graphique de la fonction carré si demandé.",
+    "mouvement": "Révéler les deux branches, puis réunir sans doublons ; version statique des deux branches."
+  },
+  "erreurs": [
+    "Oublier une solution",
+    "Croire qu’un produit nul oblige les deux facteurs à être nuls ensemble",
+    "Confondre racine carrée et équation",
+    "Exiger deux solutions même quand a=0"
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 4,2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "PDF p.11",
+      "apport": "Niveaux et objectifs du calcul littéral ; introduction distincte de l’entretien.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples pour la mise en œuvre des programmes de mathématiques — cycle 4",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "p.20–21 imprimées",
+      "apport": "Traitement séparé dea>0,a=0,a<0 ; produit nul et ensemble des solutions.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Programme du cycle 4,2020",
+      "url": "https://cache.media.education.gouv.fr/file/31/89/1/ensel714_annexe3_1312891.pdf",
+      "repere": "PDF p.131–132, calcul littéral",
+      "apport": "Périmètre mathématique utilisé par le filtre DNB2027.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Contrat de conception Matégo",
+      "url": null,
+      "repere": "Étape 1, NC19–NC31",
+      "apport": "Exemples originaux, bornes des générateurs, interfaces et aides proposées ; choix éditoriaux à valider par prototype.",
+      "statut": "choix de conception"
+    }
+  ],
+  "limites": [
+    "Ensemble solution non annoncé par le nombre de champs.",
+    "Pas de nombre complexe.",
+    "Cas limites obligatoires : zéro, racine double, absence de solution, solution fractionnaire."
+  ],
+  "acces_secondaires": ["Nombres et calculs", "Fonctions et graphiques"],
+  "nom": "Produits nuls et équations x²=a",
+  "domaine": "nombres-calculs",
+  "sousDomaine": "Calcul littéral et équations",
+  "niveaux": ["3e"],
+  "niveauxDescription": "3e dans le nouveau programme ; produits nuls et équations x²=a déjà dans l’ancien programme applicable au DNB2027.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": [],
+    "questions": []
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Produit de deux facteurs distincts",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Résous : (x − 2)(x + 5) = 0.",
+      "reponse": "{−5 ;2}",
+      "donnees": "Facteurs(x−a)(x−b), a,b entiers−9 à 9 distincts ; zéro possible ; réponseensemble.",
+      "saisie": "Liste de solutions : une case initiale, bouton « Ajouter une solution », bouton « Aucune solution » ; champ racine disponible si nécessaire. Ne pas préafficher le nombre attendu de solutions.",
+      "acceptation": "Comparer des ensembles exacts : ordre libre, doublons normalisés ; fraction équivalente admise ; ne pas accepter un ensemble incomplet ou avec une solution de trop.",
+      "aide1": {
+        "texte": "Le produit est nul dès qu’un des facteurs vaut 0.",
+        "visuel": "Arbre avec le produit nul en haut et deux équations alternatives reliées par « ou » en bas. Aucune flèche d’une alternative vers l’autre."
+      },
+      "aide2": {
+        "texte": "Résous séparément x − 2 = 0 et x + 5 = 0.",
+        "visuel": "Deux lignes de résolution indépendantes, cases vides aprèsx = ."
+      },
+      "correction": "x = 2 ou x = −5. Les solutions sont − 5 et 2.",
+      "controles": [
+        "Accepter 2;−5 et−5;2 ; refuser 2 seul,−5 seul et−2;5 ; chaque solution doit annuler l’original."
+      ],
+      "identifiant": "NC29-a",
+      "ancienId": "NC29-V1",
+      "ancienIdGenerateur": "NC29-V1",
+      "indiceGenerateur": 0,
+      "nom": "Produit de deux facteurs distincts",
+      "niveauDescription": "3e ; DNB2027",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "ensemble",
+      "champs": [
+        {
+          "type": "texte-court",
+          "libelle": "Toutes les solutions",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Produit nul avec une solution fractionnaire",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Résous : (2x − 3)(x + 1) = 0.",
+      "reponse": "{−1 ;3/2}",
+      "donnees": "Premier facteurax+b avec a 2 à 5 et racine fraction simple ; secondx+c,c−5 à 5 ; racines distinctes.",
+      "saisie": "Liste de solutions : une case initiale, bouton « Ajouter une solution », bouton « Aucune solution » ; champ racine disponible si nécessaire. Ne pas préafficher le nombre attendu de solutions.",
+      "acceptation": "Comparer des ensembles exacts : ordre libre, doublons normalisés ; fraction équivalente admise ; ne pas accepter un ensemble incomplet ou avec une solution de trop.",
+      "aide1": {
+        "texte": "Chaque facteur donne une équation à une étape.",
+        "visuel": "Arbre de produit nul : deux équations indépendantes, dont une à coefficient non unitaire."
+      },
+      "aide2": {
+        "texte": "Dans la première branche,2x = 3.",
+        "visuel": "Afficher 2x = 3 et x + 1 = 0 ; laisser les deux solutions à saisir."
+      },
+      "correction": "2x − 3 = 0 donnex = 3/2 ;x + 1 = 0 donnex = −1.",
+      "controles": ["Accepter 1,5;−1 ; refuser 2/3;−1 ;3/2 exact, pas 1,49."],
+      "identifiant": "NC29-b",
+      "ancienId": "NC29-V2",
+      "ancienIdGenerateur": "NC29-V2",
+      "indiceGenerateur": 1,
+      "nom": "Produit nul avec une solution fractionnaire",
+      "niveauDescription": "3e ; DNB2027",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "ensemble",
+      "champs": [
+        {
+          "type": "texte-court",
+          "libelle": "Toutes les solutions",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Deux facteurs donnant la même solution",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Résous : (x − 4)² = 0.",
+      "reponse": "{4}",
+      "donnees": "Carré d’un facteurx−a,a−9 à 9 ; une seule solution malgré deux facteurs identiques.",
+      "saisie": "Liste de solutions : une case initiale, bouton « Ajouter une solution », bouton « Aucune solution » ; champ racine disponible si nécessaire. Ne pas préafficher le nombre attendu de solutions.",
+      "acceptation": "Comparer des ensembles exacts : ordre libre, doublons normalisés ; fraction équivalente admise ; ne pas accepter un ensemble incomplet ou avec une solution de trop.",
+      "aide1": {
+        "texte": "Le carré est le produit du même facteur par lui-même.",
+        "visuel": "Arbre avec deux branches identiques : le facteur répété donne une seule solution distincte."
+      },
+      "aide2": {
+        "texte": "Les deux branches donnent la même équation x − 4 = 0.",
+        "visuel": "Relier les deux branches à une seule case résultat, sans valeur."
+      },
+      "correction": "x − 4 = 0, donc x = 4. Il n’y a qu’une solution distincte.",
+      "controles": [
+        "Accepter 4 et 4;4 après dédoublonnage ; refuser−4;4 ; ne pas exiger deux cases."
+      ],
+      "identifiant": "NC29-c",
+      "ancienId": "NC29-V3",
+      "ancienIdGenerateur": "NC29-V3",
+      "indiceGenerateur": 2,
+      "nom": "Deux facteurs donnant la même solution",
+      "niveauDescription": "3e ; DNB2027",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "ensemble",
+      "champs": [
+        {
+          "type": "texte-court",
+          "libelle": "Toutes les solutions",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Carré égal à un carré positif",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Résous : x² = 36.",
+      "reponse": "{−6 ;6}",
+      "donnees": "a carré parfait 1 à 144 ; prendre racine 1 à 12 ; variante non carré traitéenV6.",
+      "saisie": "Liste de solutions : une case initiale, bouton « Ajouter une solution », bouton « Aucune solution » ; champ racine disponible si nécessaire. Ne pas préafficher le nombre attendu de solutions.",
+      "acceptation": "Comparer des ensembles exacts : ordre libre, doublons normalisés ; fraction équivalente admise ; ne pas accepter un ensemble incomplet ou avec une solution de trop.",
+      "aide1": {
+        "texte": "Un nombre et son opposé ont le même carré.",
+        "visuel": "Deux flèches : u et −u arrivent au même carré u²."
+      },
+      "aide2": {
+        "texte": "6² = 36. Quel autre nombre a ce carré ?",
+        "visuel": "Afficher 6 × 6 = 36 puis(−6) × (−6) = □ sans calcul final."
+      },
+      "correction": "6² = 36 et(−6)² = 36. Les solutions sont − 6 et 6.",
+      "controles": [
+        "Refuser 6 seul et±36 ; ne pas confondre√36=6 avec les solutions de l’équation."
+      ],
+      "identifiant": "NC29-d",
+      "ancienId": "NC29-V4",
+      "ancienIdGenerateur": "NC29-V4",
+      "indiceGenerateur": 3,
+      "nom": "Carré égal à un carré positif",
+      "niveauDescription": "3e ; DNB2027",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "ensemble",
+      "champs": [
+        {
+          "type": "texte-court",
+          "libelle": "Toutes les solutions",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Distinguer second membre nul et négatif",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Résous dans les nombres réels : x² = −9.",
+      "reponse": "Aucune solution",
+      "donnees": "a négatif−12 à−1 ou 0, cas alternés ; si a=0 réponse{0} ; jamais racine d’un négatif réelle.",
+      "saisie": "Liste de solutions : une case initiale, bouton « Ajouter une solution », bouton « Aucune solution » ; champ racine disponible si nécessaire. Ne pas préafficher le nombre attendu de solutions.",
+      "acceptation": "Comparer des ensembles exacts : ordre libre, doublons normalisés ; fraction équivalente admise ; ne pas accepter un ensemble incomplet ou avec une solution de trop.",
+      "aide1": {
+        "texte": "Le carré d’un nombre réel est toujours positif ou nul.",
+        "visuel": "Droite des valeurs possibles de x² : demi-droite positive avec 0 inclus, côté négatif impossible. Ce n’est pas une droite des solutions x."
+      },
+      "aide2": {
+        "texte": "−9 appartient-il aux valeurs possibles d’un carré ?",
+        "visuel": "Souligner l’écart entre − 9 et la zone ≥ 0, sans sélectionner le bouton réponse."
+      },
+      "correction": "Un carré ne peut pas être négatif : aucune solution réelle. Pourx² = 0, seule la valeur 0 convient.",
+      "controles": [
+        "Pour−9 accepter « aucune solution »,∅ ; refuser−3;3 et 0 ; pour 0 accepter 0 seulement, refuseraucune."
+      ],
+      "identifiant": "NC29-e",
+      "ancienId": "NC29-V5",
+      "ancienIdGenerateur": "NC29-V5",
+      "indiceGenerateur": 4,
+      "nom": "Distinguer second membre nul et négatif",
+      "niveauDescription": "3e ; DNB2027",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "texte-court",
+      "champs": [
+        {
+          "type": "texte-court",
+          "libelle": "Toutes les solutions",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "f",
+      "objectif": "Conserver une racine exacte non entière",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Résous : x² = 5.",
+      "reponse": "{−√5 ;√5}",
+      "donnees": "a entier positif non carré parmi 2,3,5,6,7,10 ; aucun arrondi demandé ;2 solutions réelles.",
+      "saisie": "Liste de solutions : une case initiale, bouton « Ajouter une solution », bouton « Aucune solution » ; champ racine disponible si nécessaire. Ne pas préafficher le nombre attendu de solutions.",
+      "acceptation": "Comparer des ensembles exacts : ordre libre, doublons normalisés ; fraction équivalente admise ; ne pas accepter un ensemble incomplet ou avec une solution de trop.Racines exactes exigées ; approximations 2,24 ou−2,24 refusées.",
+      "aide1": {
+        "texte": "La racine carrée de 5 est le nombre positif dont le carré vaut 5.",
+        "visuel": "Machine racine positive → carré → nombre donné, puis recherche de l’opposé dans l’aide suivante."
+      },
+      "aide2": {
+        "texte": "Ajoute aussi l’opposé de cette racine.",
+        "visuel": "Deux emplacements « racine positive » et « son opposé », sans bouton de validation automatique."
+      },
+      "correction": "Les solutions sont√5 et−√5.",
+      "controles": [
+        "Accepter−sqrt(5);sqrt(5) ; refuser 5;−5 et√5 seul ; parseur ne doit pas évaluer uniquement en décimal."
+      ],
+      "identifiant": "NC29-f",
+      "ancienId": "NC29-V6",
+      "ancienIdGenerateur": "NC29-V6",
+      "indiceGenerateur": 5,
+      "nom": "Conserver une racine exacte non entière",
+      "niveauDescription": "3e après racine ; DNB2027",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "ensemble",
+      "champs": [
+        {
+          "type": "texte-court",
+          "libelle": "Toutes les solutions",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

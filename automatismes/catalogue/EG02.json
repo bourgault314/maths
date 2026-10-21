@@ -1,0 +1,312 @@
+{
+  "id": "EG02",
+  "titre": "Coordonnées dans le plan",
+  "categorie": "Géométrie et repérage",
+  "objectif": "Lire et placer un point dans un repère orthogonal en respectant l’ordre abscisse–ordonnée.",
+  "prerequis": "Droite graduée ; nombres relatifs ; lecture de deux axes.",
+  "perimetre": "DNB 2027 et nouveau cycle 4 ; graduations éventuellement différentes sur les deux axes.",
+  "cours": {
+    "regle": "Dans (x ; y), x est l’abscisse : lis l’axe horizontal. y est l’ordonnée : lis l’axe vertical.",
+    "exemple": "A se projette sur −3 horizontalement et sur 2 verticalement : A(−3 ; 2).",
+    "visuel": "Repère orthogonal gradué, x horizontal et y vertical ; A(−3;2). Projections pointillées vers les deux axes, labels « abscisse −3 » et « ordonnée 2 » associés à deux styles de traits distincts.",
+    "mouvement": "Option : révéler d’abord la projection vers x puis celle vers y ; statique : les deux projections numérotées 1 et 2."
+  },
+  "erreurs": [
+    "Inverser x et y.",
+    "Confondre abscisse nulle et champ vide.",
+    "Compter les carreaux sans lire les unités."
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 4 — 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "p. 12, 14 et 15 — Repérage",
+      "apport": "Progression 5e apprentissage puis automatisation.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples pour la mise en œuvre des programmes de mathématiques — cycle 4",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "PDF p. 23, 28 et 30 — Repérage",
+      "apport": "Coordonnées, origine et vocabulaire ; liens aux fonctions.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Liste indicative d’automatismes pour le DNB",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/liste-indicative-dautomatismes-pour-le-dnbpdf-116340.pdf",
+      "repere": "p. 2 — Espace et géométrie",
+      "apport": "Lecture de coordonnées dans le plan.",
+      "statut": "prescription"
+    }
+  ],
+  "limites": "Le tracé est orthogonal. Une alternative textuelle doit transmettre les mêmes repères, sans révéler directement les coordonnées à lire.",
+  "acces_secondaires": ["Fonctions et graphiques"],
+  "nom": "Coordonnées dans le plan",
+  "domaine": "espace-geometrie",
+  "sousDomaine": "Géométrie et repérage",
+  "niveaux": ["5e", "4e", "3e"],
+  "niveauxDescription": "5e : introduction ; 4e et 3e : automatisme explicite. Pas de repère signé imposé en 6e.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_15"],
+    "questions": [
+      {
+        "source": "A2601",
+        "question": "Q5a-b",
+        "referenceAncienne": "AN 5a-b",
+        "forme": "a",
+        "identifiant": "EG02-a",
+        "ancienId": "EG02-V1",
+        "support": "adaptation",
+        "difference": "Deux champs de coordonnées couvrent aussi la lecture isolée de l’abscisse.",
+        "savoirFaire": "Abscisse puis coordonnées d’un point",
+        "formatSource": "Saisie multiple",
+        "document": "Amérique du Nord, 3 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/Brevet_Ameri_Nord_3_06_2026_DV.pdf"
+      },
+      {
+        "source": "A2605",
+        "question": "Q1",
+        "referenceAncienne": "AG 1",
+        "forme": "a",
+        "identifiant": "EG02-a",
+        "ancienId": "EG02-V1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Coordonnées d’un point",
+        "formatSource": "Saisie",
+        "document": "Antilles-Guyane, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Antilles-Guyane_DV-v2.pdf"
+      },
+      {
+        "source": "Z26PA",
+        "question": "Q1",
+        "referenceAncienne": "ZPA 1",
+        "forme": "a",
+        "identifiant": "EG02-a",
+        "ancienId": "EG02-V1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Coordonnées d’un point",
+        "formatSource": "Coordonnées",
+        "document": "Sujet zéro 2026, série professionnelle A",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-mathematiquespdf-123305.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Lire un couple de coordonnées signé.",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Lis les coordonnées du point A représenté dans le repère.",
+      "reponse": "(−3 ; 2)",
+      "donnees": "Figure exacte A(−3;2), axes unitaires gradués de −4 à 4 ; générateur points entiers dans [−5;5]², au moins une coordonnée non nulle.",
+      "saisie": "Deux champs signés étiquetés x et y ; parenthèses et point-virgule fixes.",
+      "acceptation": "x = −3 et y = 2 ; couples textuels équivalents en solution alternative.",
+      "aide1": "« Lis d’abord l’abscisse sur l’axe horizontal. » Tracer uniquement la projection de A vers l’axe horizontal.",
+      "aide2": "« Lis ensuite l’ordonnée sur l’axe vertical. » Ajouter la seconde projection et les étiquettes x puis y, sans valeurs remplies.",
+      "correction": "A a pour abscisse −3 et pour ordonnée 2 : A(−3 ; 2).",
+      "controles": [
+        "Refuser (2;−3) et (3;2).",
+        "Labels A et coordonnées ne recouvrent ni point ni graduation."
+      ],
+      "identifiant": "EG02-a",
+      "ancienId": "EG02-V1",
+      "ancienIdGenerateur": "EG02-V1",
+      "indiceGenerateur": 0,
+      "nom": "Lire un couple de coordonnées signé.",
+      "niveauDescription": "5e ; entretien 4e–3e",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Abscisse x",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "Ordonnée y",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2601",
+          "question": "Q5a-b",
+          "referenceAncienne": "AN 5a-b",
+          "forme": "a",
+          "identifiant": "EG02-a",
+          "ancienId": "EG02-V1",
+          "support": "adaptation",
+          "difference": "Deux champs de coordonnées couvrent aussi la lecture isolée de l’abscisse.",
+          "savoirFaire": "Abscisse puis coordonnées d’un point",
+          "formatSource": "Saisie multiple",
+          "document": "Amérique du Nord, 3 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/Brevet_Ameri_Nord_3_06_2026_DV.pdf"
+        },
+        {
+          "source": "A2605",
+          "question": "Q1",
+          "referenceAncienne": "AG 1",
+          "forme": "a",
+          "identifiant": "EG02-a",
+          "ancienId": "EG02-V1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Coordonnées d’un point",
+          "formatSource": "Saisie",
+          "document": "Antilles-Guyane, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Antilles-Guyane_DV-v2.pdf"
+        },
+        {
+          "source": "Z26PA",
+          "question": "Q1",
+          "referenceAncienne": "ZPA 1",
+          "forme": "a",
+          "identifiant": "EG02-a",
+          "ancienId": "EG02-V1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Coordonnées d’un point",
+          "formatSource": "Coordonnées",
+          "document": "Sujet zéro 2026, série professionnelle A",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-mathematiquespdf-123305.pdf"
+        }
+      ]
+    },
+    {
+      "id": "b",
+      "objectif": "Lire un point sur un axe.",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "B est sur l’axe des ordonnées, à la graduation −4. Complète B(… ; …).",
+      "reponse": "(0 ; −4)",
+      "donnees": "Point sur un seul axe, coordonnée non nulle entière entre −5 et 5 ; alterner les deux axes. Origine incluse dans une variante séparée sans ambiguïté.",
+      "saisie": "Deux champs numériques signés.",
+      "acceptation": "0 puis −4 ; refuser un champ vide même si sa valeur attendue est zéro.",
+      "aide1": "« Un point sur l’axe vertical n’est décalé ni à droite ni à gauche. » Montrer l’alignement de B avec 0 horizontal.",
+      "aide2": "« Son abscisse vaut donc 0 ; lis sa hauteur sur l’axe vertical. » Remplir seulement l’étiquette de méthode x = 0.",
+      "correction": "B(0 ; −4).",
+      "controles": [
+        "Un zéro absent n’est pas accepté.",
+        "Refuser (−4;0) ; générer aussi des points sur l’axe horizontal."
+      ],
+      "identifiant": "EG02-b",
+      "ancienId": "EG02-V2",
+      "ancienIdGenerateur": "EG02-V2",
+      "indiceGenerateur": 1,
+      "nom": "Lire un point sur un axe.",
+      "niveauDescription": "5e ; entretien 4e–3e",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Abscisse x",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "Ordonnée y",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Lire avec deux unités de graduation différentes.",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Sur x, une graduation vaut 2 ; sur y, elle vaut 0,5. C est deux graduations à droite et trois vers le haut. Donne ses coordonnées.",
+      "reponse": "(4 ; 1,5)",
+      "donnees": "Pas x∈{1,2,5}, pas y∈{0,5;1;2}; au moins un couple de pas distincts. Figure orthogonale non nécessairement orthonormée, graduations numérotées.",
+      "saisie": "Deux champs numériques.",
+      "acceptation": "(4;1,5), (4;3/2) ; fraction acceptée dans y.",
+      "aide1": "« Les deux axes n’ont pas la même unité. » Entourer 2 sur x et 0,5 sur y.",
+      "aide2": "« Pour x : 2 × 2. Pour y : 3 × 0,5. » Afficher ces deux calculs à côté des projections.",
+      "correction": "x = 4 ; y = 1,5 : C(4 ; 1,5).",
+      "controles": [
+        "Refuser (2;3).",
+        "Ne jamais déduire une longueur géométrique de ce repère non orthonormé."
+      ],
+      "identifiant": "EG02-c",
+      "ancienId": "EG02-V3",
+      "ancienIdGenerateur": "EG02-V3",
+      "indiceGenerateur": 2,
+      "nom": "Lire avec deux unités de graduation différentes.",
+      "niveauDescription": "5e après initiation ; entretien 4e–3e",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Abscisse x",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "Ordonnée y",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Placer un point donné.",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Place D(2 ; −3) dans le repère.",
+      "reponse": "Point (2 ; −3)",
+      "donnees": "Axes unitaires ; point dans la zone visible ; coordonnées entières de −5 à 5 ; pas de point superposé à un autre label.",
+      "saisie": "Sélection intersection ; alternative réglage x puis y par deux champs, aperçu puis validation.",
+      "acceptation": "Intersection exacte (2;−3), indépendamment de la précision du toucher.",
+      "aide1": "« Pars de 0 et repère l’abscisse 2. » Mettre l’axe horizontal en évidence.",
+      "aide2": "« À l’abscisse 2, descends jusqu’à l’ordonnée −3. » Tracer une ligne guide verticale sans marquer le point final.",
+      "correction": "D se place deux unités à droite et trois vers le bas.",
+      "controles": [
+        "Refuser (−3;2) et (2;3).",
+        "Tout point visible sélectionnable au clavier ; aucune réponse validée au simple survol."
+      ],
+      "identifiant": "EG02-d",
+      "ancienId": "EG02-V4",
+      "ancienIdGenerateur": "EG02-V4",
+      "indiceGenerateur": 3,
+      "nom": "Placer un point donné.",
+      "niveauDescription": "5e ; entretien 4e–3e",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

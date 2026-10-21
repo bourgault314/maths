@@ -1,0 +1,546 @@
+{
+  "id": "EG09",
+  "titre": "Aires",
+  "categorie": "Grandeurs et mesures",
+  "objectif": "Mesurer une surface avec l’unité carrée et sélectionner base/hauteur.",
+  "prerequis": ["Multiplication", "Unités carrées", "Perpendicularité", "Rayon/diamètre"],
+  "perimetre": "DNB 2027 : formules usuelles et applications directes ; parallèle nouveau programme respecté par niveau.",
+  "cours": {
+    "regle": "L’aire mesure une surface. Rectangle : L×l. Triangle : base×hauteur÷2. Parallélogramme : base×hauteur. Disque : πr².",
+    "exemple": "Triangle de base 8 cm et hauteur 3 cm : A=8×3÷2=12 cm².",
+    "visuel": "Triangle ABC avec A(0,0), B(8,0), C(2,3), H(2,0) ; AB=8, CH=3, angle droit en H ; pas de longueur oblique utilisée.",
+    "mouvement": "Copie du triangle assemblée en parallélogramme, facultative ; version statique montrant les deux triangles et le facteur 1/2."
+  },
+  "erreurs": [
+    "Base multipliée par côté oblique",
+    "Oublier ÷2 pour triangle",
+    "Utiliser diamètre au lieu du rayon",
+    "Confondre cm et cm²"
+  ],
+  "sources": [
+    {
+      "titre": "Programme cycle 3 2025",
+      "url": "https://www.education.gouv.fr/sites/default/files/ensel620_annexe2-v2.pdf",
+      "repere": "PDF p.19",
+      "apport": "Aires par découpage, unités carrées, carré/rectangle.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Programme cycle 4 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "PDF p.12–14",
+      "apport": "Aires triangle, disque, parallélogramme et entretien.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples cycle 4 2026",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "p.23,25–27 imprimées",
+      "apport": "Découpages pour disque, triangle et parallélogramme.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Mathsgo — Aire et périmètre",
+      "url": "https://mathsgo.re/outils/plateaux_manipulation/aire_perimetre_plateau.html",
+      "repere": "Catalogue public consulté ; fonctionnalité décrite, interaction non testée.",
+      "apport": "Parcourir bord avec trait animé pour périmètre ; couvrir intérieur avec unités carrées pour aire.",
+      "statut": "choix de conception"
+    },
+    {
+      "titre": "Mathsgo — Unités d’aire",
+      "url": "https://mathsgo.re/outils/conversions/conversions_unites_aires.html",
+      "repere": "Catalogue et source HTML de la page consultés ; aucun test interactif ni audit de correction du code.",
+      "apport": "Montrer1 dm²=100 cm² avec côtés10 cm ; rapprocher calcul10×10.",
+      "statut": "choix de conception"
+    },
+    {
+      "titre": "Sujet zéro 2026, série professionnelle B",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-b-mathematiquespdf-123302.pdf",
+      "repere": "Q3",
+      "apport": "Calculer directement l’aire d’un rectangle ; format source adapté à une réponse construite.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Antilles-Guyane professionnelle, 30 juin 2026",
+      "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Antilles_30_06_2026_DV-2.pdf",
+      "repere": "Q7",
+      "apport": "Retrouver un nombre de carreaux par quotient d’aires ; format source adapté à une réponse construite.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "NCETM — Geometry",
+      "url": "https://www.ncetm.org.uk/classroom-resources/secmm-6-geometry/",
+      "repere": "Présentation du thème 6 consultée",
+      "apport": "Relier propriétés géométriques, formules de mesure et transformations ; appui thématique.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "La construction instrumentale des hauteurs ne se déduit pas d’une réussite à ce quiz. Les exemples et leurs aides sont des choix de conception. La fiche de cours affiche seulement les formules déjà introduites au niveau choisi.",
+  "acces_secondaires": ["Géométrie et repérage"],
+  "nom": "Aires",
+  "domaine": "espace-geometrie",
+  "sousDomaine": "Grandeurs et mesures",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6e : dénombrement, découpage, carré/rectangle ; 5e : triangle, disque, parallélogramme ; entretien 4e–3e.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_11", "dnb_22"],
+    "questions": [
+      {
+        "source": "A2604",
+        "question": "Q3",
+        "referenceAncienne": "PO 3",
+        "forme": "c",
+        "identifiant": "EG09-c",
+        "ancienId": "EG09-V3",
+        "support": "adaptation",
+        "difference": "Triangle de base et hauteur données ; le cas rectangle identifie deux côtés perpendiculaires comme base et hauteur.",
+        "savoirFaire": "Aire d’un triangle rectangle",
+        "formatSource": "Saisie",
+        "document": "Polynésie, 26 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/Brevet_Polynesie_26_juin_2026_DV-3.pdf"
+      },
+      {
+        "source": "A2605",
+        "question": "Q3",
+        "referenceAncienne": "AG 3",
+        "forme": "c",
+        "identifiant": "EG09-c",
+        "ancienId": "EG09-V3",
+        "support": "adaptation",
+        "difference": "Le calcul d’aire mobilise base et hauteur ; fidélité au support à confirmer si la hauteur est déjà désignée au lieu d’être choisie.",
+        "savoirFaire": "Choisir base et hauteur pour l’aire d’un triangle",
+        "formatSource": "QCM",
+        "document": "Antilles-Guyane, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Antilles-Guyane_DV-v2.pdf"
+      },
+      {
+        "source": "A2607",
+        "question": "Q8",
+        "referenceAncienne": null,
+        "forme": "e",
+        "identifiant": "EG09-e",
+        "ancienId": "EG09-V5",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Aire d’un disque à partir de son diamètre",
+        "formatSource": "QCM",
+        "document": "Polynésie, 7 septembre 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-09-07_polynesie-FB.pdf"
+      },
+      {
+        "source": "A2610",
+        "question": "Q7",
+        "referenceAncienne": "AG-pro 7",
+        "forme": "h",
+        "identifiant": "EG09-h",
+        "ancienId": "EG09-V8",
+        "support": "comparable",
+        "difference": "Inconnue nombre de carreaux = aire totale / aire d’un carreau : ni aire du rectangle ni dénombrement visuel seul ne suffit.",
+        "savoirFaire": "Nombre de carreaux par quotient d’aires",
+        "formatSource": "Expression",
+        "document": "Antilles-Guyane professionnelle, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Antilles_30_06_2026_DV-2.pdf"
+      },
+      {
+        "source": "Z26PB",
+        "question": "Q3",
+        "referenceAncienne": "ZPB 3",
+        "forme": "g",
+        "identifiant": "EG09-g",
+        "ancienId": "EG09-V7",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Aire d’un rectangle",
+        "formatSource": "QCM",
+        "document": "Sujet zéro 2026, série professionnelle B",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-b-mathematiquespdf-123302.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Dénombrer des unités d’aire",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "La surface colorée couvre 5 carreaux entiers et 4 demi-carreaux. Chaque carreau entier a une aire de 1 cm². Quelle est son aire ?",
+      "reponse": "7 cm²",
+      "donnees": "Polygone sur quadrillage unité ; demis triangulaires complets par paires ; 2–12 entiers et 0–6 demis ; intérieur sans chevauchement.",
+      "saisie": "Nombre, unité cm².",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "« Deux demi-carreaux forment un carreau entier. » Apparier les quatre demi-carreaux.",
+      "aide2": "« Les quatre moitiés donnent deux carreaux. » Afficher 5+2.",
+      "correction": "A=5+4÷2=7 cm².",
+      "controles": [
+        "Accepter 7 ; refuser 9 en comptant chaque moitié comme un entier.",
+        "Comparer l’aire polygonale à celle du dénombrement."
+      ],
+      "identifiant": "EG09-a",
+      "ancienId": "EG09-V1",
+      "ancienIdGenerateur": "EG09-V1",
+      "indiceGenerateur": 0,
+      "nom": "Dénombrer des unités d’aire",
+      "niveauDescription": "6e",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cm²"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Retrouver une dimension d’un rectangle",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Un rectangle a une aire de 42 cm² et une longueur de 7 cm. Quelle est sa largeur ?",
+      "reponse": "6 cm",
+      "donnees": "Choisir côtés entiers 1–12 et aire produit ; largeur inconnue ; unité de longueur attendue.",
+      "saisie": "Nombre, unité cm.",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "« L’aire compte les rangées de 7 carrés. » Montrer une rangée de sept unités.",
+      "aide2": "« 7×largeur=42. » Afficher 42÷7.",
+      "correction": "La largeur vaut 42÷7=6 cm.",
+      "controles": [
+        "Accepter 6 ; refuser 14, 35 et 6 cm².",
+        "La largeur retrouvée doit redonner l’aire."
+      ],
+      "identifiant": "EG09-b",
+      "ancienId": "EG09-V2",
+      "ancienIdGenerateur": "EG09-V2",
+      "indiceGenerateur": 1,
+      "nom": "Retrouver une dimension d’un rectangle",
+      "niveauDescription": "6e",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Utiliser la hauteur associée à la base d’un triangle",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Dans le triangle ABC, AB=8 cm et la hauteur issue de C mesure 3 cm. Calcule son aire.",
+      "reponse": "12 cm²",
+      "donnees": "Base paire 2–12 ; hauteur entière 1–8 ; pied intérieur ou extérieur clairement codé ; pas de longueur oblique ambiguë.",
+      "saisie": "Nombre, unité cm².",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "« Choisis le segment perpendiculaire à AB. » Surligner CH et son angle droit.",
+      "aide2": "« Un triangle occupe la moitié du parallélogramme de même base et hauteur. » Afficher 8×3÷2.",
+      "correction": "A=8×3÷2=12 cm².",
+      "controles": [
+        "Accepter 12 ; refuser 24 et produit avec un côté oblique.",
+        "Tester aussi pied extérieur ; conserver l’aire avec sommet déplacé parallèlement à AB."
+      ],
+      "identifiant": "EG09-c",
+      "ancienId": "EG09-V3",
+      "ancienIdGenerateur": "EG09-V3",
+      "indiceGenerateur": 2,
+      "nom": "Utiliser la hauteur associée à la base d’un triangle",
+      "niveauDescription": "5e apprentissage ; 4e–3e entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cm²"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2604",
+          "question": "Q3",
+          "referenceAncienne": "PO 3",
+          "forme": "c",
+          "identifiant": "EG09-c",
+          "ancienId": "EG09-V3",
+          "support": "adaptation",
+          "difference": "Triangle de base et hauteur données ; le cas rectangle identifie deux côtés perpendiculaires comme base et hauteur.",
+          "savoirFaire": "Aire d’un triangle rectangle",
+          "formatSource": "Saisie",
+          "document": "Polynésie, 26 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/Brevet_Polynesie_26_juin_2026_DV-3.pdf"
+        },
+        {
+          "source": "A2605",
+          "question": "Q3",
+          "referenceAncienne": "AG 3",
+          "forme": "c",
+          "identifiant": "EG09-c",
+          "ancienId": "EG09-V3",
+          "support": "adaptation",
+          "difference": "Le calcul d’aire mobilise base et hauteur ; fidélité au support à confirmer si la hauteur est déjà désignée au lieu d’être choisie.",
+          "savoirFaire": "Choisir base et hauteur pour l’aire d’un triangle",
+          "formatSource": "QCM",
+          "document": "Antilles-Guyane, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Antilles-Guyane_DV-v2.pdf"
+        }
+      ]
+    },
+    {
+      "id": "d",
+      "objectif": "Calculer l’aire d’un parallélogramme",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Un parallélogramme a une base de 6 cm et une hauteur de 4 cm. Son côté oblique mesure 5 cm. Quelle est son aire ?",
+      "reponse": "24 cm²",
+      "donnees": "Coordonnées (0,0),(6,0),(9,4),(3,4) ; côté oblique 5 ; base 6, hauteur 4 ; variantes issues de triangles rectangles simples.",
+      "saisie": "Nombre, unité cm².",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "« La hauteur est perpendiculaire à la base. » Colorer le segment de 4 cm, pas le côté de 5 cm.",
+      "aide2": "« Découpe le triangle du bord et déplace-le : tu obtiens un rectangle 6 sur 4. » Afficher 6×4.",
+      "correction": "A=6×4=24 cm².",
+      "controles": [
+        "Accepter 24 ; refuser 30, produit base×côté oblique.",
+        "Découpage conserve l’aire et les pièces n’empiètent pas."
+      ],
+      "identifiant": "EG09-d",
+      "ancienId": "EG09-V4",
+      "ancienIdGenerateur": "EG09-V4",
+      "indiceGenerateur": 3,
+      "nom": "Calculer l’aire d’un parallélogramme",
+      "niveauDescription": "5e apprentissage puis entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cm²"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Calculer une aire de disque à partir du diamètre",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Un disque a un diamètre de 10 cm. Donne son aire exacte en cm².",
+      "reponse": "25π",
+      "donnees": "Diamètre pair 2–12 ; rayon moitié ; rotations du diamètre ; pas de π approché.",
+      "saisie": "Coefficient×π.",
+      "acceptation": "Expression exacte équivalente avec π ; accepter 2π×r si équivalente. Refuser une approximation décimale lorsque la valeur exacte est demandée.",
+      "aide1": "« Le rayon est la moitié du diamètre. » Marquer le centre et deux moitiés égales.",
+      "aide2": "« Le rayon vaut 5 cm. L’aire vaut π×5². » Colorer r sur le schéma.",
+      "correction": "A=π×5²=25π cm².",
+      "controles": [
+        "Accepter 25π ; refuser 100π et 10π.",
+        "Le même disque donné par r=5 produit la même aire."
+      ],
+      "identifiant": "EG09-e",
+      "ancienId": "EG09-V5",
+      "ancienIdGenerateur": "EG09-V5",
+      "indiceGenerateur": 4,
+      "nom": "Calculer une aire de disque à partir du diamètre",
+      "niveauDescription": "5e apprentissage puis entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "A =",
+          "unite": "π cm²"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2607",
+          "question": "Q8",
+          "referenceAncienne": null,
+          "forme": "e",
+          "identifiant": "EG09-e",
+          "ancienId": "EG09-V5",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Aire d’un disque à partir de son diamètre",
+          "formatSource": "QCM",
+          "document": "Polynésie, 7 septembre 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-09-07_polynesie-FB.pdf"
+        }
+      ]
+    },
+    {
+      "id": "f",
+      "objectif": "Décomposer une surface composée",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Un rectangle mesure 8 cm sur 5 cm. On retire un rectangle de 3 cm sur 2 cm dans un coin. Quelle aire reste-t-il ?",
+      "reponse": "34 cm²",
+      "donnees": "Retrait rectangulaire bord à bord sans dépassement ; tous entiers ≤12 ; aire restante positive ; unités communes.",
+      "saisie": "Nombre, unité cm².",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "« Calcule la grande surface puis le morceau retiré. » Deux aplats distincts avec dimensions.",
+      "aide2": "« Grande aire : 8×5=40. Aire retirée : 3×2. » Afficher 40−3×2.",
+      "correction": "A=40−6=34 cm².",
+      "controles": [
+        "Accepter 34 ; refuser 26 (périmètre) et 40.",
+        "Tester somme de deux rectangles équivalente au grand rectangle moins retrait."
+      ],
+      "identifiant": "EG09-f",
+      "ancienId": "EG09-V6",
+      "ancienIdGenerateur": "EG09-V6",
+      "indiceGenerateur": 5,
+      "nom": "Décomposer une surface composée",
+      "niveauDescription": "6e pour rectangles ; 5e si triangles/disques",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cm²"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "g",
+      "objectif": "Calculer directement l’aire d’un rectangle",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Un rectangle mesure 9 cm sur 2 cm. Quelle est son aire ?",
+      "reponse": "18 cm²",
+      "donnees": "Longueur entière de 5 à 10 cm, largeur entière de 2 à 5 cm. Dessin à proportions exactes.",
+      "saisie": "Réponse : champ de réponse numérique ; unité cm²",
+      "acceptation": "Valeur exacte. Virgule ou point décimal, fractions équivalentes acceptés. Une réponse vide est refusée. L’unité cible est fixée par le champ.",
+      "aide1": "Repère les rangées de carrés de 1 cm de côté. Visuel : rectangle coté sur deux côtés adjacents.",
+      "aide2": "Il y a 2 rangées de 9 carrés de 1 cm². Relier au calcul A = 9 × 2.",
+      "correction": "9 × 2 = 18 cm².",
+      "controles": [
+        "La réponse exacte 18 cm² est acceptée ; une valeur différente est refusée.",
+        "Les valeurs générées respectent : Longueur entière de 5 à 10 cm, largeur entière de 2 à 5 cm. Dessin à proportions exactes.",
+        "Les calculs sont recoupés depuis l’énoncé par etape1/test_mesures.mjs sur 200 graines."
+      ],
+      "identifiant": "EG09-g",
+      "ancienId": "EG09-V7",
+      "ancienIdGenerateur": "EG09-V7",
+      "indiceGenerateur": 6,
+      "nom": "Calculer directement l’aire d’un rectangle",
+      "niveauDescription": "6e apprentissage ou réactivation, puis entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cm²"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "Z26PB",
+          "question": "Q3",
+          "referenceAncienne": "ZPB 3",
+          "forme": "g",
+          "identifiant": "EG09-g",
+          "ancienId": "EG09-V7",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Aire d’un rectangle",
+          "formatSource": "QCM",
+          "document": "Sujet zéro 2026, série professionnelle B",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-b-mathematiquespdf-123302.pdf"
+        }
+      ]
+    },
+    {
+      "id": "h",
+      "objectif": "Retrouver un nombre de carreaux par quotient d’aires",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Un sol de 4,25 m² est pavé exactement, sans découpe ni joint, avec des carreaux couvrant chacun 0,25 m². Combien de carreaux faut-il ?",
+      "reponse": "17 carreaux",
+      "donnees": "Aire d’un carreau 0,25 ou 0,5 m² ; nombre entier de 12 à 36 ; aire totale calculée comme produit. Pavage exact, sans découpe ni joint.",
+      "saisie": "Réponse : champ de réponse numérique ; unité carreaux",
+      "acceptation": "Valeur exacte. Virgule ou point décimal, fractions équivalentes acceptés. Une réponse vide est refusée. L’unité cible est fixée par le champ.",
+      "aide1": "L’aire totale est la somme des aires des carreaux identiques. Visuel : Barre ou égalité aire d’un carreau × nombre = aire totale.",
+      "aide2": "Cherche combien de fois l’aire d’un carreau entre dans l’aire du sol. Le schéma est relié explicitement au calcul affiché.",
+      "correction": "4,25 ÷ 0,25 = 17 carreaux.",
+      "controles": [
+        "La réponse exacte 17 carreaux est acceptée ; une valeur différente est refusée.",
+        "Les valeurs générées respectent : Aire d’un carreau 0,25 ou 0,5 m² ; nombre entier de 12 à 36 ; aire totale calculée comme produit. Pavage exact, sans découpe ni joint.",
+        "Les calculs sont recoupés depuis l’énoncé par etape1/test_mesures.mjs sur 200 graines."
+      ],
+      "identifiant": "EG09-h",
+      "ancienId": "EG09-V8",
+      "ancienIdGenerateur": "EG09-V8",
+      "indiceGenerateur": 7,
+      "nom": "Retrouver un nombre de carreaux par quotient d’aires",
+      "niveauDescription": "6e apprentissage ou réactivation, puis entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "carreaux"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2610",
+          "question": "Q7",
+          "referenceAncienne": "AG-pro 7",
+          "forme": "h",
+          "identifiant": "EG09-h",
+          "ancienId": "EG09-V8",
+          "support": "comparable",
+          "difference": "Inconnue nombre de carreaux = aire totale / aire d’un carreau : ni aire du rectangle ni dénombrement visuel seul ne suffit.",
+          "savoirFaire": "Nombre de carreaux par quotient d’aires",
+          "formatSource": "Expression",
+          "document": "Antilles-Guyane professionnelle, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Antilles_30_06_2026_DV-2.pdf"
+        }
+      ]
+    }
+  ]
+}

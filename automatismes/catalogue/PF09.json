@@ -1,0 +1,405 @@
+{
+  "id": "PF09",
+  "titre": "Images et antécédents",
+  "categorie": "Fonctions et graphiques",
+  "objectif": "Utiliser une formule, un tableau ou un graphique de fonction.",
+  "prerequis": "Lire coordonnées, substituer, équations simples.",
+  "perimetre": "DNB2027 et apprentissages collège ; variantes filtrées par niveau.",
+  "cours": {
+    "regle": "L’image est le résultat. Un antécédent est un nombre de départ qui donne ce résultat.",
+    "exemple": "f(x)=2x+1 : f(3)=7. Un antécédent de7 est3.",
+    "visuel": "Machine entrée3→×2→+1→sortie7 ; puis même lien surtableauetcourbe. Couleurs entrée/sortie + labels.",
+    "mouvement": "Trajet entrée→sortie puis trajet inverse guidé ; séquence statique équivalente."
+  },
+  "erreurs": ["Confondre entrée et sortie.", "Supposer toujours un seul antécédent."],
+  "sources": [
+    {
+      "titre": "Éduscol — Exemples cycle 4, 2026",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "PDF p40–46, Proportionnalité et fonctions",
+      "apport": "Progression des contextes, représentations et procédures ; les schémas et exemples ci-dessous sont nos choix de conception.",
+      "statut": "appui pédagogique"
+    }
+  ],
+  "limites": "En5e éviter exigence formelle du vocabulaire3e ; les tâches contextualisées restentdiffusables.",
+  "acces_secondaires": [],
+  "atlas": "cours/16.svg",
+  "atlasAlt": "Machine transforme3en7par×2puis+1. Dans un repère schématique, le point de coordonnées3,7correspond.",
+  "nom": "Images et antécédents",
+  "domaine": "proportionnalite-fonctions",
+  "sousDomaine": "Fonctions et graphiques",
+  "niveaux": ["5e", "4e", "3e"],
+  "niveauxDescription": "5e : dépendance concrète/tableaux ; 4e : programmes et formules ; 3e : vocabulaire images/antécédents.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_11", "dnb_32", "dnb_36"],
+    "questions": [
+      {
+        "source": "A2604",
+        "question": "Q8",
+        "referenceAncienne": "PO 8",
+        "forme": "a",
+        "identifiant": "PF09-a",
+        "ancienId": "PF09-1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Image par formule affine",
+        "formatSource": "QCM",
+        "document": "Polynésie, 26 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/Brevet_Polynesie_26_juin_2026_DV-3.pdf"
+      },
+      {
+        "source": "Z26B",
+        "question": "Q4",
+        "referenceAncienne": "ZB 4",
+        "forme": "g",
+        "identifiant": "PF09-g",
+        "ancienId": "PF09-7",
+        "support": "comparable",
+        "difference": "Deux lectures puis soustraction ; PF09-7 ajouté après audit.",
+        "savoirFaire": "Écart entre deux valeurs d’un graphique",
+        "formatSource": "Nombre",
+        "document": "Sujet zéro 2026, série générale B",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-b-mathematiquespdf-123314.pdf"
+      },
+      {
+        "source": "Z26PB",
+        "question": "Q5",
+        "referenceAncienne": "ZPB 5",
+        "forme": "e",
+        "identifiant": "PF09-e",
+        "ancienId": "PF09-5",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Image initiale sur un graphique",
+        "formatSource": "Nombre",
+        "document": "Sujet zéro 2026, série professionnelle B",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-b-mathematiquespdf-123302.pdf"
+      },
+      {
+        "source": "Z26PB",
+        "question": "Q6",
+        "referenceAncienne": "ZPB 6",
+        "forme": "f",
+        "identifiant": "PF09-f",
+        "ancienId": "PF09-6",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Antécédent sur un graphique",
+        "formatSource": "Nombre",
+        "document": "Sujet zéro 2026, série professionnelle B",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-b-mathematiquespdf-123302.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Image par formule",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "f(x)=2x+1. Calculer f(3).",
+      "reponse": "7",
+      "donnees": "a entiers−3à5, b−5à5, x−5à5 ; calcul≤2opérations.",
+      "saisie": "Nombre",
+      "acceptation": "7.",
+      "aide1": "Machine :placer3dansla caseentrée.",
+      "aide2": "2×3+1 ; commencer par2×3.",
+      "correction": "f(3)=6+1=7.",
+      "controles": "Ne pas3×f ; substitutions négatives parenthésées.",
+      "identifiant": "PF09-a",
+      "ancienId": "PF09-A",
+      "ancienIdGenerateur": "PF09-1",
+      "indiceGenerateur": 0,
+      "nom": "Image par formule",
+      "niveauDescription": "3e",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2604",
+          "question": "Q8",
+          "referenceAncienne": "PO 8",
+          "forme": "a",
+          "identifiant": "PF09-a",
+          "ancienId": "PF09-1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Image par formule affine",
+          "formatSource": "QCM",
+          "document": "Polynésie, 26 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/Brevet_Polynesie_26_juin_2026_DV-3.pdf"
+        }
+      ]
+    },
+    {
+      "id": "b",
+      "objectif": "Antécédents dans tableau",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Tableau : x = −2 ; −1 ; 0 ; 1 ; 2 et f(x)=4 ; 1 ; 0 ; 1 ; 4. Donner tous les antécédents de1 présents dans ce tableau.",
+      "reponse": "−1 ; 1",
+      "donnees": "Tableau4–7colonnes ; au moins2sorties répétées ; ne réclamer que valeurs présentes.",
+      "saisie": "Liste de nombres avec boutonAjouter",
+      "acceptation": "Ensemble{−1,1}, ordreindifférent ; doublons normalisés.",
+      "aide1": "Surlignerlesdeuxcases1surla lignef(x).",
+      "aide2": "Remonter verticalement versla ligne x.",
+      "correction": "Les départs sont−1et1.",
+      "controles": "Refuserune seulevaleur ; ne pasprétendreaucunautreantécédent horsdomaine donné.",
+      "identifiant": "PF09-b",
+      "ancienId": "PF09-B",
+      "ancienIdGenerateur": "PF09-2",
+      "indiceGenerateur": 1,
+      "nom": "Antécédents dans tableau",
+      "niveauDescription": "3e",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "ensemble",
+      "champs": [
+        {
+          "type": "texte-court",
+          "libelle": "Antécédents séparés par ;",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Image graphique contextualisée",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "La courbe relie (0min;0m), (2min;100m), (4min;100m), (6min;200m). À4min, à quelle distance se trouve-t-on ?",
+      "reponse": "100 m",
+      "donnees": "Polyligne fonctionnelle ; pointsàgraduations exactes ; axes/unités visibles ; valeurs positives.",
+      "saisie": "Nombre, m fixé",
+      "acceptation": "100.",
+      "aide1": "Partir de4suraxe horizontal ; traceruneverticale jusqu’àlacourbe.",
+      "aide2": "Puisunehorizontale versaxedistance.",
+      "correction": "À4min, ladistance est100m.",
+      "controles": "Échelles indépendantes ; ne paslire200àcauseaxe inversé.",
+      "identifiant": "PF09-c",
+      "ancienId": "PF09-C",
+      "ancienIdGenerateur": "PF09-3",
+      "indiceGenerateur": 2,
+      "nom": "Image graphique contextualisée",
+      "niveauDescription": "5e",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "m"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Antécédent par formule",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "g(x)=3x−2. Quel nombre a pour image10 ?",
+      "reponse": "4",
+      "donnees": "a nonnulpetit, solutionentière construite ; pasdivisionlaborieuse.",
+      "saisie": "Nombre",
+      "acceptation": "4.",
+      "aide1": "Machine sortie10 ; remonter dernièreopération−2.",
+      "aide2": "Avant−2 :12 ; avant×3 :12÷3.",
+      "correction": "3×4−2=10 ; antécédent4.",
+      "controles": "Ne pascalculerg(10)=28 ; inverseordreopérations.",
+      "identifiant": "PF09-d",
+      "ancienId": "PF09-D",
+      "ancienIdGenerateur": "PF09-4",
+      "indiceGenerateur": 3,
+      "nom": "Antécédent par formule",
+      "niveauDescription": "3e",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Lire la valeur initiale d’une grandeur sur une courbe",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "La courbe passe par(0;30),(2;50),(4;70), temps en minutes et distance en mètres. Quelle distance indique-t-elle à0minute ?",
+      "reponse": "30",
+      "donnees": "Valeur initiale10à60m parpas10, incrément10à40m ; abscisses0,2,4 ; segments reliant points ; ordonnée initiale positive non nulle.",
+      "saisie": "Champ numérique ; unité affichée en dehors du champ.",
+      "acceptation": "Valeur numérique exacte ; virgule et point décimaux acceptés ; unité déjà indiquée.",
+      "aide1": "Repérer0sur l’axe horizontal.",
+      "aide2": "Lire la hauteur du point sur l’axe vertical.",
+      "correction": "À0minute, la distance indiquée est30m.",
+      "controles": "Accepter30 ; refuser0 ; distinguer axe et courbe ; conserver ordonnée initiale non nulle et graduation visible.",
+      "identifiant": "PF09-e",
+      "ancienId": "PF09-E",
+      "ancienIdGenerateur": "PF09-5",
+      "indiceGenerateur": 4,
+      "nom": "Lire la valeur initiale d’une grandeur sur une courbe",
+      "niveauDescription": "5e : dépendance entre grandeurs ; 3e : langage des fonctions",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "m"
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "Z26PB",
+          "question": "Q5",
+          "referenceAncienne": "ZPB 5",
+          "forme": "e",
+          "identifiant": "PF09-e",
+          "ancienId": "PF09-5",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Image initiale sur un graphique",
+          "formatSource": "Nombre",
+          "document": "Sujet zéro 2026, série professionnelle B",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-b-mathematiquespdf-123302.pdf"
+        }
+      ]
+    },
+    {
+      "id": "f",
+      "objectif": "Lire un antécédent unique sur une courbe",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "La courbe passe par(0;20),(3;110),(6;200), temps en minutes et distance en mètres. À quel instant la distance indiquée vaut-elle110m ?",
+      "reponse": "3",
+      "donnees": "Abscisse cible2à5 ; pente20à60m/min parpas10 ; valeur initiale10à40m ; courbe strictement croissante sur intervalle ; graduation cible visible.",
+      "saisie": "Champ numérique ; unité affichée en dehors du champ.",
+      "acceptation": "Valeur numérique exacte ; virgule et point décimaux acceptés ; unité déjà indiquée.",
+      "aide1": "Partir de110m sur l’axe vertical.",
+      "aide2": "Rejoindre la courbe horizontalement, puis descendre sur l’axe du temps.",
+      "correction": "La distance indiquée vaut110m à3min.",
+      "controles": "Accepter3 ; refuser110 ; antécédent unique dans domaine représenté ; axes/unités/gradations lisibles.",
+      "identifiant": "PF09-f",
+      "ancienId": "PF09-F",
+      "ancienIdGenerateur": "PF09-6",
+      "indiceGenerateur": 5,
+      "nom": "Lire un antécédent unique sur une courbe",
+      "niveauDescription": "5e : dépendance entre grandeurs ; 3e : langage des fonctions",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "min"
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "Z26PB",
+          "question": "Q6",
+          "referenceAncienne": "ZPB 6",
+          "forme": "f",
+          "identifiant": "PF09-f",
+          "ancienId": "PF09-6",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Antécédent sur un graphique",
+          "formatSource": "Nombre",
+          "document": "Sujet zéro 2026, série professionnelle B",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-b-mathematiquespdf-123302.pdf"
+        }
+      ]
+    },
+    {
+      "id": "g",
+      "objectif": "Calculer une variation par différence de deux lectures graphiques",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "La courbe passe par(0;20),(2;60),(4;60),(6;140), temps en minutes et distance en mètres. De2à6minutes, de combien de mètres la distance indiquée augmente-t-elle ?",
+      "reponse": "80",
+      "donnees": "Pas temporel1,2ou3min ; distance initiale10à50m parpas10 ; incrément20à80m parpas10 ; points(0;b),(t;b+s),(2t;b+s),(3t;b+3s). Graduation de toutes les données visibles.",
+      "saisie": "Champ numérique, unité m affichée.",
+      "acceptation": "Valeur exacte de la différence des deux ordonnées ; ne pas accepter la seule ordonnée finale.",
+      "aide1": "Lis la hauteur de la courbe aux deux instants demandés. Surligner séparément les deux points.",
+      "aide2": "Les distances indiquées sont60m puis140m. Calcule leur différence.",
+      "correction": "140−60=80m.",
+      "controles": "Accepter80 ; refuser140et4 ; distinguer différence d’ordonnées, ordonnée finale et durée ; conserver m comme unité du résultat.",
+      "identifiant": "PF09-g",
+      "ancienId": "PF09-G",
+      "ancienIdGenerateur": "PF09-7",
+      "indiceGenerateur": 6,
+      "nom": "Calculer une variation par différence de deux lectures graphiques",
+      "niveauDescription": "5e puis entretien ; 3e langage des fonctions",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "m"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "Z26B",
+          "question": "Q4",
+          "referenceAncienne": "ZB 4",
+          "forme": "g",
+          "identifiant": "PF09-g",
+          "ancienId": "PF09-7",
+          "support": "comparable",
+          "difference": "Deux lectures puis soustraction ; PF09-7 ajouté après audit.",
+          "savoirFaire": "Écart entre deux valeurs d’un graphique",
+          "formatSource": "Nombre",
+          "document": "Sujet zéro 2026, série générale B",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-b-mathematiquespdf-123314.pdf"
+        }
+      ]
+    }
+  ]
+}

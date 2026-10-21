@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Automatismes · maquette lot 1</title>
+<link rel="stylesheet" href="assets/vendor/polices/polices.css">
+<style>
+@font-face{font-family:"MG Math";src:url(mg-math.woff) format("woff");font-display:block}
+:root{
+  --ink:#143451; --muted:#506b7d; --line:#d4e3ed; --blue:#0755b8; --blue-sombre:#043f8c; --teal:#087a71; --turquoise:#08b9b2; --orange:#f58220;
+  --green:#147447; --green-soft:#e5f7eb; --red:#a93030; --red-soft:#ffebeb; --amber-soft:#fff6e0; --paper:#fff;
+  --barre-filet:rgba(15,23,42,.36); --barre-inconnue:#dbeafe; --barre-inconnue-txt:#1d4ed8; --barre-resultat:#dcfce7;
+  --r:28px;
+}
+*{box-sizing:border-box}
+html{min-height:100%;background:#edf5fb}
+body{margin:0;min-height:100vh;color:var(--ink);font:16px/1.45 "Nunito","Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 8% 5%, rgba(8,168,159,.14), transparent 26rem),radial-gradient(circle at 92% 7%, rgba(250,204,21,.18), transparent 24rem),linear-gradient(#fbfdff,#edf5fb)}
+button,a,input{font:inherit;touch-action:manipulation}
+.math,.m{font-family:"MG Math","Times New Roman",serif;font-size:1.08em}
+.vfrac{display:inline-grid;grid-template-rows:1fr 1fr;vertical-align:middle;line-height:1.05;font-size:.72em;text-align:center}.vfrac>span:first-child{border-bottom:2px solid currentColor;padding:0 4px}.vfrac>span:last-child{padding:0 4px}
+.var{font-family:"MG Math","Times New Roman",serif}
+h1,h2,h3,.fredoka{font-family:"Fredoka","Segoe UI",sans-serif;font-weight:600;margin:0}
+.shell{width:min(850px,calc(100% - 28px));margin:auto;padding-bottom:22px}
+.topbar{min-height:62px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.topbar img{height:34px}
+.pill{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:6px 14px;border-radius:999px;border:1px solid #c5d9e6;background:#fff;color:var(--blue);font-weight:800;text-decoration:none;font-size:.9rem}
+.pill.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.panel{position:relative;padding:clamp(18px,4vw,36px);border:1px solid var(--line);border-radius:var(--r);background:#fff;box-shadow:0 18px 40px rgba(20,52,81,.08)}
+.eyebrow{margin:0 0 6px;color:var(--muted);font-size:.78rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:10px 18px;border-radius:13px;border:1px solid #c5d9e6;background:#fff;color:var(--blue);font-weight:800;cursor:pointer;text-decoration:none}
+.btn.primary{color:#fff;border:0;background:var(--blue);box-shadow:0 5px 0 var(--blue-sombre);padding-top:12px;padding-bottom:8px}
+.btn.primary.big{font-size:1.2rem;min-height:60px;padding:14px 28px 10px;border-radius:16px}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--blue)}
+.btn.orange{color:#fff;border:0;background:var(--orange);box-shadow:0 5px 0 #c4650f;padding-top:12px;padding-bottom:8px}
+.btn.small{min-height:36px;padding:6px 12px;border-radius:10px;font-size:.9rem}
+.btn:disabled{opacity:.45}
+.muted{color:var(--muted)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.between{justify-content:space-between}
+.center{text-align:center}
+
+/* ---------- accueil ---------- */
+.hero{text-align:center;padding:4px 0 10px}
+.hero h1{font-size:clamp(2rem,6vw,3.2rem);line-height:1.05;color:var(--blue)}
+.hero p{margin:8px auto 18px;max-width:520px;color:var(--muted)}
+.seance{display:grid;gap:4px;justify-items:center;margin-bottom:22px}
+.seance small{color:var(--muted);font-weight:700}
+.filtres{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:0 0 18px}
+.seg{display:inline-flex;border:1px solid #c5d9e6;border-radius:12px;overflow:hidden;background:#fff}
+.seg button{border:0;background:#fff;padding:8px 14px;font-weight:800;color:var(--muted);min-height:40px}
+.seg button.on{background:var(--blue);color:#fff}
+.domaines{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.domaine{display:grid;grid-template-columns:48px 1fr auto;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--line);border-radius:16px;background:#fff;text-align:left;cursor:pointer;min-height:76px}
+.domaine:hover{border-color:#9fc0da;box-shadow:0 6px 18px rgba(20,52,81,.08)}
+.domaine .ico{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;font-family:Fredoka;font-weight:600;font-size:1.25rem}
+.domaine strong{display:block;font-family:Fredoka;font-weight:600;font-size:1.05rem;line-height:1.15}
+.domaine small{color:var(--muted);font-weight:700}
+.domaine .n{font-family:Fredoka;color:var(--muted);font-size:.95rem}
+.ico.nc{background:#dbeafe;color:#1d4ed8}.ico.eg{background:#e5f7eb;color:#147447}.ico.dp{background:#fde7e7;color:#b91c1c}.ico.pf{background:#fff1dc;color:#b45309}.ico.pi{background:#ede9fe;color:#6d28d9}
+.pied{margin-top:14px;text-align:center;color:var(--muted);font-size:.8rem}
+.pied img{height:16px;vertical-align:middle;opacity:.8}
+
+/* ---------- domaine ---------- */
+.retour{display:inline-flex;align-items:center;gap:6px;color:var(--blue);font-weight:800;text-decoration:none;margin-bottom:8px}
+.notions{display:grid;gap:8px;margin-top:14px}
+.notion{display:grid;grid-template-columns:36px 1fr auto;align-items:center;gap:12px;padding:10px 14px;border:1px solid var(--line);border-radius:14px;background:#fff;text-align:left;cursor:pointer}
+.notion .num{width:32px;height:32px;border-radius:10px;background:#eef4fa;display:grid;place-items:center;font-family:Fredoka;color:var(--blue);font-weight:600}
+.notion strong{display:block;font-weight:800}
+.badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:3px}
+.badge{font-size:.72rem;font-weight:900;padding:2px 8px;border-radius:999px;background:#eef4fa;color:var(--muted);letter-spacing:.03em}
+.badge.brevet{background:#fff1dc;color:#b45309}
+.etoiles{font-size:1rem;letter-spacing:2px;color:#f5b301}
+.etoiles .off{color:#d4e3ed}
+
+/* ---------- question ---------- */
+.q-top{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;margin:-6px 0 10px}
+.q-top .titre{text-align:center;font-weight:800;color:var(--muted);font-size:.9rem}
+.q-top .titre b{color:var(--ink)}
+.track{height:6px;border-radius:999px;background:#e6eef5;overflow:hidden;margin-bottom:14px}
+.track i{display:block;height:100%;background:var(--turquoise);width:12.5%}
+.enonce{text-align:center}
+.enonce .consigne{font-family:Fredoka;font-weight:600;font-size:clamp(1.35rem,3.2vw,1.9rem);line-height:1.2}
+.enonce .math{display:block;font-size:clamp(2rem,5vw,2.8rem);margin:6px 0 4px;line-height:1.2}
+.aide{margin:12px auto 0;max-width:620px;border:1px solid #cfe3f2;border-radius:16px;background:#f5faff;padding:12px 14px 10px;position:relative}
+.aide .aide-tete{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.aide .aide-tete span{font-size:.78rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--teal)}
+.aide .fermer{border:0;background:transparent;font-size:1.3rem;line-height:1;color:var(--muted);cursor:pointer;padding:0 4px}
+.aide svg{display:block;width:100%;height:auto;max-width:400px;margin:0 auto}
+.aide .etape{margin:8px 0 0;text-align:center}
+.aide .etape .math{font-size:1.5rem}
+.aide .aide-pied{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
+.garder{display:inline-flex;align-items:center;gap:6px;font-size:.84rem;color:var(--muted);font-weight:700}
+.reponse{display:flex;justify-content:center;align-items:center;gap:10px;margin:18px 0 8px}
+.reponse .math{font-size:2rem}
+.champ{width:120px;height:56px;border:2px solid var(--blue);border-radius:12px;font-size:1.7rem;text-align:center;font-family:"MG Math","Times New Roman",serif;background:#fff;outline:none}
+.champ.vide::placeholder{color:#b9c9d6}
+.champ.faux{border-color:var(--red);background:var(--red-soft)}
+.champ.juste{border-color:var(--green);background:var(--green-soft)}
+.fraction{display:inline-grid;grid-template-rows:1fr 2px 1fr;justify-items:center;gap:4px}
+.fraction .champ{height:46px;width:84px}
+.fraction i{display:block;width:100%;height:2px;background:var(--ink)}
+.retour-eleve{margin:6px auto 0;max-width:620px;padding:10px 14px;border-radius:12px;font-weight:800}
+.retour-eleve.faux{background:var(--red-soft);color:var(--red)}
+.retour-eleve.juste{background:var(--green-soft);color:var(--green)}
+.correction{margin:10px auto 0;max-width:620px;padding:12px 14px;border-radius:16px;background:#f7fbf8;border:1px solid #cfe9d8}
+.correction .eyebrow{color:var(--green)}.correction svg{display:block;width:100%;height:auto;max-width:400px;margin:0 auto}
+.q-actions{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:18px;flex-wrap:wrap}
+.q-actions .g,.q-actions .d{display:flex;gap:8px}
+.symboles{display:flex;gap:6px;justify-content:center;margin:4px 0 0;flex-wrap:wrap}
+.symboles button{min-width:44px;height:40px;border:1px solid #c5d9e6;border-radius:10px;background:#fff;font-family:"MG Math","Times New Roman",serif;font-size:1.2rem;color:var(--ink)}
+
+/* pavé téléphone (ancré en bas, ne cache rien) */
+.pave{display:none}
+@media (max-width:600px){
+  .shell{width:calc(100% - 16px)}
+  .panel{padding:16px 14px;border-radius:22px}
+  body.pad .shell{padding-bottom:calc(var(--pave-h,250px) + 8px)}
+  body.pad .q-actions{display:none}
+  .pave{display:block;position:fixed;left:0;right:0;bottom:0;background:#f4f8fb;border-top:1px solid var(--line);padding:6px 8px calc(8px + env(safe-area-inset-bottom));z-index:5}
+  .pave .acts{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+  .pave .acts .g,.pave .acts .d{display:flex;gap:6px}
+  .pave .sym{display:flex;gap:6px;margin-bottom:6px}
+  .pave .sym button{flex:1;height:40px;border:1px solid #c5d9e6;border-radius:10px;background:#fff;font-family:"MG Math","Times New Roman",serif;font-size:1.15rem}
+  .pave .grille{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  .pave .grille button{height:46px;border:1px solid #c5d9e6;border-radius:10px;background:#fff;font-size:1.35rem;font-weight:800;color:var(--ink)}
+  .pave .grille button.ok{background:var(--blue);color:#fff;border-color:var(--blue);grid-row:span 2;height:auto}
+  .pave .grille button.util{background:#eef4fa}
+  .q-top .titre{font-size:.8rem}
+}
+
+/* ---------- cours (fenêtre) ---------- */
+.voile{position:fixed;inset:0;background:rgba(20,52,81,.45);display:grid;place-items:center;padding:14px;z-index:10}
+.fenetre{width:min(560px,100%);max-height:calc(100vh - 28px);overflow:auto;background:#fff;border-radius:22px;padding:22px 22px 18px;box-shadow:0 30px 60px rgba(0,0,0,.25);position:relative}
+.fenetre .x{position:absolute;top:10px;right:12px;border:0;background:#eef4fa;width:36px;height:36px;border-radius:50%;font-size:1.2rem;cursor:pointer}
+.fenetre h2{color:var(--blue);font-size:1.5rem;margin-bottom:10px;padding-right:40px}
+.regle{padding:12px 14px;border-radius:14px;background:#f5faff;border:1px solid #cfe3f2;margin-bottom:10px}
+.regle b{display:block;color:var(--teal);font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
+.exemple{padding:12px 14px;border-radius:14px;border:1px solid var(--line)}
+.exemple svg{display:block;width:100%;max-width:360px;margin:6px auto}
+.exemple .lignes{text-align:center;font-size:1.3rem;line-height:1.7}
+
+/* ---------- bilan ---------- */
+.score{font-family:Fredoka;font-weight:600;font-size:4rem;line-height:1;color:var(--blue);text-align:center}
+.score small{font-size:1.6rem;color:var(--muted)}
+.bilan-notions{display:grid;gap:8px;margin:18px 0}
+.bilan-notion{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--line);border-radius:14px}
+.bilan-notion .jauge{height:8px;border-radius:999px;background:#e6eef5;overflow:hidden;margin-top:6px}
+.bilan-notion .jauge i{display:block;height:100%;background:var(--turquoise)}
+.ligne-q{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;padding:10px 6px;border-top:1px solid var(--line)}
+.ligne-q .ok{color:var(--green);font-weight:900}.ligne-q .ko{color:var(--red);font-weight:900}
+
+/* ---------- projection ---------- */
+body.proj{background:#fff}
+body.proj .shell{width:100%;max-width:none;padding:0}
+body.proj .panel{border:0;border-radius:0;box-shadow:none;min-height:100vh;display:grid;grid-template-rows:auto 1fr auto;padding:14px 28px}
+.proj-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.proj-top .chrono{font-family:Fredoka;font-size:2rem;color:var(--blue);display:flex;align-items:center;gap:10px}
+.proj-top .chrono .b{font-size:1.1rem;padding:4px 10px;border-radius:10px;border:1px solid #c5d9e6;background:#fff}
+.proj-corps{display:grid;place-items:center;text-align:center}.proj-corps>div{width:100%}
+.proj-corps .consigne{font-family:Fredoka;font-weight:600;font-size:3rem;line-height:1.15}
+.proj-corps .math{font-size:5rem;line-height:1.15;margin:8px 0 10px}
+.proj-corps .aide{max-width:1000px;width:100%;padding:18px 26px;margin-top:18px}
+.proj-corps .aide svg{max-width:760px}
+.proj-bas{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.proj-bas .pts{display:flex;gap:6px}
+.proj-bas .pts span{width:34px;height:34px;border-radius:10px;border:1px solid #c5d9e6;display:grid;place-items:center;font-weight:900;color:var(--muted)}
+.proj-bas .pts span.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+/* ---------- brevet ---------- */
+.points{display:flex;gap:6px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+.points span{width:34px;height:34px;border-radius:10px;border:1px solid #c5d9e6;display:grid;place-items:center;font-weight:900;color:var(--muted)}
+.points span.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.points span.rep{background:#e5f7eb;border-color:#9fd3b4;color:var(--green)}
+
+/* ---------- prof ---------- */
+.prof-grille{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px}
+.carte{border:1px solid var(--line);border-radius:16px;padding:14px}
+.carte h3{font-size:1.1rem;color:var(--blue);margin-bottom:8px}
+.cases{display:grid;gap:6px}
+.cases label{display:flex;gap:8px;align-items:center;font-weight:700}
+.cases input{width:18px;height:18px}
+.reglage{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:6px 0;border-top:1px solid var(--line)}
+.reglage select,.reglage input[type=number]{min-height:36px;border:1px solid #c5d9e6;border-radius:10px;padding:4px 8px;background:#fff}
+@media (max-width:600px){.prof-grille{grid-template-columns:1fr}}
+
+/* rendu « cadre entier » sur ordinateur */
+@media (min-width:900px){
+  body.cadre-entier .panel{min-height:0}
+}
+</style>
+</head>
+<body>
+<div class="shell" id="shell"></div>
+
+<!-- Dessins réutilisés : schéma en barres SPLAT (jamais la réponse écrite) -->
+<script>
+function balance({gauche, droite, w=440, grand=false, etape=false, revele=null}){
+  // gauche/droite : listes d'éléments : 'x' (tache SPLAT) ou un nombre ; etape : retrait de la même quantité des deux côtés
+  const k=grand?2:1; const h=150*k, pw=(w-30)/2, ph=100*k, y0=14*k;
+  const splat=(cx,cy,sc)=>`<path transform="translate(${cx} ${cy}) scale(${sc})" fill="#050505" d="M-16,-9 C-20,-18 -8,-22 -2,-15 C4,-24 16,-18 12,-8 C22,-6 22,8 11,10 C14,20 0,24 -4,14 C-12,22 -22,12 -15,4 C-24,0 -22,-10 -16,-9 Z"/>`;
+  const plateau=(items,x)=>{
+    let o=`<rect x="${x}" y="${y0}" width="${pw}" height="${ph}" rx="${10*k}" fill="#f8fafc" stroke="#94a3b8" stroke-width="${2*k}"/>`;
+    const n=items.length, step=pw/(n+1);
+    items.forEach((it,i)=>{
+      const cx=x+step*(i+1), cy=y0+ph/2;
+      if(it==='x'){ o+= (revele!==null) ? `<circle cx="${cx}" cy="${cy}" r="${22*k}" fill="#dcfce7" stroke="#16a34a" stroke-width="${2*k}"/><text x="${cx}" y="${cy+9*k}" text-anchor="middle" font-family="MG Math,Times New Roman,serif" font-size="${26*k}" fill="#166534">${revele}</text>` : splat(cx,cy,1.1*k); }
+      else { o+=`<circle cx="${cx}" cy="${cy}" r="${22*k}" fill="#dbeafe" stroke="#1d4ed8" stroke-width="${2*k}"/><text x="${cx}" y="${cy+9*k}" text-anchor="middle" font-family="MG Math,Times New Roman,serif" font-size="${26*k}" fill="#143451">${it}</text>`;
+        if(etape && it===etape) o+=`<line x1="${cx-26*k}" y1="${cy+26*k}" x2="${cx+26*k}" y2="${cy-26*k}" stroke="#f97316" stroke-width="${4*k}" stroke-linecap="round"/>`; }
+    });
+    return o; };
+  let s=`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Balance : les deux plateaux restent en équilibre">`;
+  s+=plateau(gauche,10)+plateau(droite,20+pw);
+  // le fléau
+  s+=`<line x1="${w/2}" y1="${y0-6*k}" x2="${w/2}" y2="${y0+ph+8*k}" stroke="#143451" stroke-width="${3*k}"/>`;
+  s+=`<text x="${w/2}" y="${y0+ph+32*k}" text-anchor="middle" font-family="MG Math,Times New Roman,serif" font-size="${22*k}" fill="#143451">=</text>`;
+  if(etape){ s+=`<text x="${10+pw/2}" y="${y0+ph+32*k}" text-anchor="middle" font-family="Nunito,sans-serif" font-weight="800" font-size="${15*k}" fill="#c2410c">− ${etape}</text><text x="${20+pw+pw/2}" y="${y0+ph+32*k}" text-anchor="middle" font-family="Nunito,sans-serif" font-weight="800" font-size="${15*k}" fill="#c2410c">− ${etape}</text>`; }
+  s+=`</svg>`; return s;
+}
+
+function splatBarre({total, parts, hidden=0, w=440, label=true, grand=false}){
+  // parts: tableau de libellés ; hidden: index de la part cachée par la tache
+  const k=grand?2.2:1; const h=96*k, x0=10, y0=42*k, bh=50*k, bw=w-20;
+  const n=parts.length, cw=bw/n;
+  let s=`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Schéma en barres">`;
+  // accolade du total
+  s+=`<text x="${x0+bw/2}" y="${16*k}" text-anchor="middle" font-family="Fredoka,sans-serif" font-weight="600" font-size="${18*k}" fill="#143451">${total}</text>`;
+  s+=`<path d="M${x0} ${30*k} v-${6*k} h${bw} v${6*k}" fill="none" stroke="#143451" stroke-width="${2*k}"/>`;
+  parts.forEach((p,i)=>{
+    const x=x0+i*cw;
+    const inconnue=i===hidden;
+    s+=`<rect x="${x}" y="${y0}" width="${cw}" height="${bh}" fill="${inconnue?'#ffffff':'#ffffff'}" stroke="rgba(15,23,42,.6)" stroke-width="${2*k}"/>`;
+    if(inconnue){
+      // la tache SPLAT
+      const cx=x+cw/2, cy=y0+bh/2;
+      s+=`<path transform="translate(${cx} ${cy}) scale(${1.05*k})" fill="#050505" d="M-16,-9 C-20,-18 -8,-22 -2,-15 C4,-24 16,-18 12,-8 C22,-6 22,8 11,10 C14,20 0,24 -4,14 C-12,22 -22,12 -15,4 C-24,0 -22,-10 -16,-9 Z"/>`;
+    } else {
+      s+=`<text x="${x+cw/2}" y="${y0+bh/2+8*k}" text-anchor="middle" font-family="MG Math,Times New Roman,serif" font-size="${26*k}" fill="#143451">${p}</text>`;
+    }
+  });
+  s+=`</svg>`; return s;
+}
+</script>
+
+<script>
+const frac=(a,b)=>`<span class="vfrac"><span>${a}</span><span>${b}</span></span>`;
+const P=new URLSearchParams(location.search);
+const ecran=P.get('ecran')||'accueil';
+const tel=matchMedia('(max-width:600px)').matches;
+const logo=`<img src="assets/img/mathsgo-logo.png" alt="maths&go">`;
+const topEleve=(retour='')=>`<div class="topbar"><div class="row">${retour?`<a class="pill" href="#">← ${retour}</a>`:''}${logo}</div><a class="pill" href="#">👩‍🏫 Professeur</a></div>`;
+const topApp=()=>`<div class="topbar"><a class="pill" href="#">← Mon espace</a>${logo}<span class="pill" style="color:var(--teal);border-color:#bfe3e0;background:#eef6f6">● Léa · 405</span></div>`;
+const pied=`<div class="pied"><img src="assets/img/mathsgo-logo.png" alt=""> mathsgo.re · Sans calculatrice · Collège et brevet</div>`;
+
+const domaines=[
+ ['nc','Nombres et calculs','N','34 notions'],
+ ['pf','Proportionnalité, fonctions','%','11 notions'],
+ ['eg','Espace et géométrie','△','27 notions'],
+ ['dp','Données et probabilités','▥','8 notions'],
+ ['pi','Pensée informatique','⟨⟩','4 notions'],
+];
+
+const E={};
+E.accueil=()=>`${topEleve()}<section class="panel">
+ <div class="hero"><h1>Automatismes</h1><p>Des questions courtes, sans calculatrice, avec un dessin pour t’aider.</p></div>
+ <div class="seance"><a class="btn primary big" href="#">Ma séance du jour →</a><small>8 questions · ce que tu revois + du nouveau</small></div>
+ <div class="filtres"><div class="seg"><button>6<sup>e</sup></button><button>5<sup>e</sup></button><button>4<sup>e</sup></button><button class="on">3<sup>e</sup></button></div><div class="seg"><button class="on">Brevet</button></div></div>
+ <p class="eyebrow center">Ou choisis une notion</p>
+ <div class="domaines">${domaines.map(d=>`<button class="domaine"><span class="ico ${d[0]}">${d[2]}</span><span><strong>${d[1]}</strong><small>${d[3]}</small></span><span class="n">›</span></button>`).join('')}</div>
+ ${pied}
+</section>`;
+
+E.domaine=()=>`${topEleve()}<section class="panel">
+ <a class="retour" href="#">← Automatismes</a>
+ <p class="eyebrow">Nombres et calculs · 3<sup>e</sup> · Brevet</p>
+ <div class="row between"><h1 style="font-size:1.9rem;color:var(--blue)">Calcul littéral et équations</h1><a class="btn" href="#">Mélanger ces notions →</a></div>
+ <div class="notions">
+  ${[['Traduire en calcul littéral','4e',true,2],['Réduire et simplifier une expression','4e',true,3],['Substituer et tester une égalité','4e',true,1],['Développer par distributivité simple','4e',true,0],['Développer un produit de deux sommes','3e',true,0],['Factoriser par facteur commun','3e',true,0],['Équations à une ou deux étapes','4e',true,2]].map((n,i)=>`<button class="notion"><span class="num">${i+1}</span><span><strong>${n[0]}</strong><span class="badges"><span class="badge">${n[1]}</span>${n[2]?'<span class="badge brevet">Brevet</span>':''}</span></span><span class="etoiles">${'★'.repeat(n[3])}<span class="off">${'★'.repeat(3-n[3])}</span></span></button>`).join('')}
+ </div>
+ ${pied}
+</section>`;
+
+function questionCadre({aide=false, etape=false, garder=false, etat='', correction=false, exam=false, fraction=false}={}){
+  const titre = exam ? `<b>Brevet</b> · question 3 / 9` : `<b>Équations</b> · 1 / 8`;
+  const chrono = exam ? `<span class="pill" style="font-family:Fredoka;font-size:1.05rem;color:var(--blue)">19:12</span>` : `<span class="pill" style="color:var(--muted)">★ 2</span>`;
+  const enonce = fraction ? `<div class="enonce"><div class="consigne">Calcule et donne le résultat sous forme de fraction irréductible.</div><span class="math">${frac(2,3)} + ${frac(1,6)}</span></div>`
+    : `<div class="enonce"><div class="consigne">Résous :</div><span class="math"><span class="var">x</span> + 2 = 6</span></div>`;
+  const aideHtml = aide ? `<div class="aide"><div class="aide-tete"><span>Aide · le dessin</span><button class="fermer" aria-label="Fermer l’aide">×</button></div>
+    ${balance({gauche:['x','2'], droite:['6'], etape: etape?'2':false})}
+    ${etape?`<div class="etape"><span class="math"><span class="var">x</span> = 6 − 2</span></div>`:''}
+    <div class="aide-pied">${etape?'<span class="muted" style="font-size:.84rem;font-weight:700">L’étape est affichée</span>':'<button class="btn small">Une étape</button>'}<label class="garder"><input type="checkbox" ${garder?'checked':''}> Garder l’aide affichée</label></div></div>` : '';
+  const rep = fraction ? `<div class="reponse"><span class="fraction"><input class="champ vide" placeholder="…"><i></i><input class="champ vide" placeholder="…"></span></div>`
+    : `<div class="reponse"><span class="math"><span class="var">x</span> =</span><input class="champ ${etat||'vide'}" value="${etat==='faux'?'8':etat==='juste'?'4':''}" placeholder="…"></div>`;
+  const retour = etat==='faux' ? `<div class="retour-eleve faux">Pas encore. Tu as ajouté 2 au lieu de l’enlever. Essaie encore.</div>` : etat==='juste' ? `<div class="retour-eleve juste">✓ Juste !</div>` : '';
+  const corr = correction ? `<div class="correction"><p class="eyebrow">Correction</p>${balance({gauche:['x','2'], droite:['6'], revele:'4'})}<p class="center" style="margin:6px 0 0"><span class="math"><span class="var">x</span> = 6 − 2 = 4</span></p></div>` : '';
+  const symboles = (!tel && !exam) ? `<div class="symboles"><button>−</button><button>,</button><button>/</button></div>` : (!tel ? `<div class="symboles"><button>−</button><button>,</button><button>/</button></div>`:'');
+  const actions = exam
+    ? `<div class="q-actions"><div class="g"><button class="btn">← Précédente</button></div><div class="d"><button class="btn primary">Suivante →</button></div></div><div class="points">${[1,2,3,4,5,6,7,8,9].map(n=>`<span class="${n===3?'on':n<3?'rep':''}">${n}</span>`).join('')}</div>`
+    : (etat==='juste'||correction)
+      ? `<div class="q-actions"><div class="g"><button class="btn" disabled>Aide</button><button class="btn">Cours</button></div><div class="d"><button class="btn primary">Suivante →</button></div></div>`
+      : `<div class="q-actions"><div class="g"><button class="btn ${aide?'primary':''}">Aide</button><button class="btn">Cours</button></div><div class="d">${etat==='faux'?'<button class="btn ghost">Voir la correction</button>':''}<button class="btn ghost">Passer</button><button class="btn orange">Valider</button></div></div>`;
+  return `${topApp()}<section class="panel">
+   <div class="q-top"><a class="pill" href="#" style="min-height:32px">← Quitter</a><div class="titre">${titre}</div>${chrono}</div>
+   <div class="track"><i style="width:${exam?'33%':'12.5%'}"></i></div>
+   ${enonce}${aideHtml}${rep}${retour}${corr}${symboles}${actions}
+  </section>`;
+}
+const paveTel=(exam=false)=>`<div class="pave"><div class="acts"><div class="g"><button class="btn small ${P.get('aide')?'primary':''}">Aide</button><button class="btn small">Cours</button></div><div class="d">${exam?'<button class="btn small">← Préc.</button><button class="btn small primary">Suiv. →</button>':'<button class="btn small ghost">Passer</button><button class="btn small orange">Valider</button>'}</div></div>
+ <div class="sym"><button>−</button><button>/</button><button>(</button><button>)</button><button><span class="var">x</span></button></div>
+ <div class="grille"><button>7</button><button>8</button><button>9</button><button class="util">⌫</button><button>4</button><button>5</button><button>6</button><button class="util">⇥</button><button>1</button><button>2</button><button>3</button><button class="ok">✓</button><button>,</button><button>0</button><button>00</button></div></div>`;
+
+E.question=()=>questionCadre({});
+E.aide=()=>questionCadre({aide:true});
+E.etape=()=>questionCadre({aide:true, etape:true, garder:true});
+E.faux=()=>questionCadre({etat:'faux'});
+E.juste=()=>questionCadre({etat:'juste'});
+E.correction=()=>questionCadre({etat:'faux', correction:true});
+E.fraction=()=>questionCadre({fraction:true});
+E.brevet=()=>questionCadre({exam:true});
+E.cours=()=>questionCadre({})+`<div class="voile"><div class="fenetre"><button class="x">×</button><p class="eyebrow">Cours</p><h2>Équations à une ou deux étapes</h2>
+ <div class="regle"><b>La règle</b>Une équation est une égalité où un nombre se cache. Pour le trouver, on fait la même opération des deux côtés.</div>
+ <div class="exemple"><b class="eyebrow">Un exemple</b><p class="center" style="margin:0"><span class="math">3<span class="var">x</span> + 5 = 17</span></p>${balance({gauche:['x','x','x','5'], droite:['17'], w:360})}<div class="lignes"><span class="math">3<span class="var">x</span> = 17 − 5 = 12</span><br><span class="math"><span class="var">x</span> = 12 ÷ 3 = 4</span></div></div>
+ <div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn primary">J’ai compris →</button></div></div></div>`;
+
+E.bilan=()=>`${topApp()}<section class="panel">
+ <p class="eyebrow center">Séance terminée</p>
+ <div class="score">6<small> / 8</small></div>
+ <p class="center muted" style="margin:6px 0 0">5 réussites sans aide · 1 avec le dessin</p>
+ <div class="row" style="justify-content:center;margin:14px 0 4px"><a class="btn primary" href="#">Encore une séance →</a><a class="btn" href="#">Retour</a></div>
+ <div class="bilan-notions">
+  ${[['Équations à une ou deux étapes',2,3,'★★☆'],['Notation scientifique',3,3,'★★★'],['Fractions : additionner',1,2,'★☆☆']].map(n=>`<div class="bilan-notion"><div><strong>${n[0]}</strong><div class="jauge"><i style="width:${n[1]/n[2]*100}%"></i></div></div><span class="etoiles">${n[3]}</span></div>`).join('')}
+ </div>
+ <div>
+  <div class="ligne-q"><span class="ok">✓</span><span class="math"><span class="var">x</span> + 2 = 6</span><button class="btn small ghost">Revoir</button></div>
+  <div class="ligne-q"><span class="ko">✗</span><span class="math">${frac(2,3)} + ${frac(1,6)}</span><button class="btn small">Voir la correction</button></div>
+  <div class="ligne-q"><span class="ok">✓</span><span class="math">0,000 42 en écriture scientifique</span><button class="btn small ghost">Revoir</button></div>
+ </div>
+ ${pied}
+</section>`;
+
+E.projection=()=>{document.body.classList.add('proj');return `<section class="panel">
+ <div class="proj-top"><a class="pill" href="#">← Quitter</a><span class="muted" style="font-weight:800">Équations à une ou deux étapes · question 1 / 10</span><div class="chrono">0:38 <button class="b">Ⅱ</button><button class="b">⛶</button></div></div>
+ <div class="proj-corps"><div><div class="consigne">Résous :</div><div class="math"><span class="var">x</span> + 2 = 6</div>
+  ${P.get('aide')?`<div class="aide"><div class="aide-tete"><span>Aide · le dessin</span></div>${balance({gauche:['x','2'], droite:['6'], w:900, grand:true, etape: P.get('etape')?'2':false})}${P.get('etape')?`<div class="etape"><span class="math" style="font-size:3rem"><span class="var">x</span> = 6 − 2</span></div>`:''}</div>`:''}
+  ${P.get('corr')?`<div class="correction" style="max-width:980px"><p class="eyebrow">Correction</p>${balance({gauche:['x','2'], droite:['6'], w:900, grand:true, revele:'4'})}<p class="center" style="margin:6px 0 0"><span class="math" style="font-size:3rem"><span class="var">x</span> = 6 − 2 = 4</span></p></div>`:''}
+ </div></div>
+ <div class="proj-bas"><div class="row"><button class="btn">← Précédente</button><div class="pts">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<span class="${n===1?'on':''}">${n}</span>`).join('')}</div></div><div class="row"><button class="btn ${P.get('aide')?'primary':''}">Aide</button><button class="btn">Une étape</button><button class="btn">Correction</button><button class="btn primary">Suivante →</button></div></div>
+</section>`};
+
+E.prof=()=>`${topEleve('Automatismes')}<section class="panel">
+ <p class="eyebrow">Professeur</p>
+ <h1 style="font-size:1.9rem;color:var(--blue)">Préparer une série</h1>
+ <div class="prof-grille">
+  <div class="carte"><h3>1 · Les notions</h3><div class="cases">
+   <label><input type="checkbox" checked> Nombres et calculs <span class="badge">4 / 23</span></label>
+   <label style="padding-left:26px"><input type="checkbox" checked> Notation scientifique</label>
+   <label style="padding-left:26px"><input type="checkbox" checked> Équations à une ou deux étapes</label>
+   <label style="padding-left:26px"><input type="checkbox" checked> Fractions : additionner</label>
+   <label style="padding-left:26px"><input type="checkbox" checked> Critères de divisibilité</label>
+   <label><input type="checkbox"> Proportionnalité, fonctions <span class="badge">0 / 14</span></label>
+   <label><input type="checkbox"> Espace et géométrie <span class="badge">0 / 21</span></label>
+   <label><input type="checkbox"> Données et probabilités <span class="badge">0 / 8</span></label>
+   <label><input type="checkbox"> Pensée informatique <span class="badge">0 / 4</span></label>
+  </div></div>
+  <div class="carte"><h3>2 · Les réglages</h3>
+   <div class="reglage"><span>Niveau</span><select><option>3e</option></select></div>
+   <div class="reglage"><span>Seulement le brevet</span><input type="checkbox" checked></div>
+   <div class="reglage"><span>Questions</span><select><option>10</option></select></div>
+   <div class="reglage"><span>Temps de recherche</span><input type="number" value="45" style="width:80px"> s</div>
+   <div class="reglage"><span>Correction</span><select><option>Après chaque question</option><option>À la fin</option></select></div>
+   <div class="reglage"><span>Enchaîner tout seul</span><input type="checkbox"></div>
+   <div class="reglage"><span>Aide projetée d’office</span><input type="checkbox"></div>
+  </div>
+ </div>
+ <div class="row" style="margin-top:16px;justify-content:space-between">
+  <div class="row"><a class="btn primary" href="#">Projeter au tableau ↗</a><a class="btn" href="#">Ouvrir sur un écran</a></div>
+  <a class="btn" href="#">Donner cette série à ma classe (suivi) →</a>
+ </div>
+ ${pied}
+</section>`;
+
+document.getElementById('shell').innerHTML=(E[ecran]||E.accueil)();
+if(tel && ['question','aide','etape','faux','fraction','brevet'].includes(ecran) && P.get('pave')!=='0'){document.body.classList.add('pad');document.getElementById('shell').insertAdjacentHTML('beforeend',paveTel(ecran==='brevet'));
+  const pv=document.querySelector('.pave');document.documentElement.style.setProperty('--pave-h',pv.getBoundingClientRect().height+'px');}
+</script>
+</body>
+</html>

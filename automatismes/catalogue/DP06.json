@@ -1,0 +1,603 @@
+{
+  "id": "DP06",
+  "titre": "Probabilité d’un événement",
+  "categorie": "Statistiques et probabilités",
+  "objectif": "Exprimer et calculer une probabilité simple en vérifiant le modèle d’équiprobabilité.",
+  "prerequis": [
+    "Compter des objets ou issues",
+    "Fractions et pourcentages simples",
+    "Lire une droite graduée0–1"
+  ],
+  "perimetre": "DNB2027 pour toutes les variantes. La reconnaissance de données insuffisantes est un exercice de compréhension, sans exigence de calcul de probabilité non équipée.",
+  "cours": {
+    "regle": "Issues équiprobables : P(événement) = nombre d’issues favorables ÷ nombre total d’issues.",
+    "exemple": "Chaque boule a la même chance d’être tirée. 3 bleues parmi 8 : P(bleu) = 3/8.",
+    "visuel": "Dix boules numérotées1à10 pour le dénombrement, trois marquéesB et septR. Accolades « 3favorables » et « 10possibles » reliées au quotient. Puis repère0–1 gradué en dixièmes avec0,3 marqué ; les lettres doublent les couleurs.",
+    "mouvement": "Aucun tirage aléatoire nécessaire pour calculer la probabilité. Révéler seulement dénombrement puis point0,3. Une simulation éventuelle est séparée et étiquetée « expérience »."
+  },
+  "erreurs": [
+    "Diviser par le nombre de couleurs sans équiprobabilité",
+    "Confondre rare et impossible",
+    "Donner une probabilité supérieureà1",
+    "Oublier de compter toutes les issues",
+    "Confondre fréquence mesurée et probabilité théorique"
+  ],
+  "sources": [
+    {
+      "titre": "Programme cycle 3, 2025",
+      "url": "https://www.education.gouv.fr/sites/default/files/ensel620_annexe2-v2.pdf",
+      "repere": "6ᵉ, Probabilités, PDFp.26",
+      "apport": "Probabilité comme nombre et situations simples.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Livret d’accompagnement mathématiques 6ᵉ, 2026",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/2026livretaccompagnementmaths6e-pdf-126656.pdf",
+      "repere": "Séquence probabilités, PDFp.6–13",
+      "apport": "Équiprobabilité, contre-exemple de roue et changement de représentations.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Programme cycle 4, 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "Probabilités5ᵉ, PDFp.16–17",
+      "apport": "Échelle, écritures et vocabulaire.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Programme cycle 4, 2020",
+      "url": "https://cache.media.education.gouv.fr/file/31/89/1/ensel714_annexe3_1312891.pdf",
+      "repere": "ThèmeB, PDFp.132",
+      "apport": "Calculs simples de probabilités du DNB2027.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Asie, 15 juin 2026",
+      "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-15_Asie_DV-v3.pdf",
+      "repere": "Question 6",
+      "apport": "Probabilité sur une roue de secteurs égaux ; reproduction du sujet consultée lors de l’audit de couverture.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "NCETM — Statistics and probability",
+      "url": "https://www.ncetm.org.uk/classroom-resources/secmm-5-statistics-and-probability/",
+      "repere": "Présentation du thème 5 consultée",
+      "apport": "Interpréter les données et quantifier l’incertitude ; appui thématique.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "La règle casfavorables/total n’est proposée que sous équiprobabilité. Pour des données ne déterminant pas un modèle, prévoir « on ne peut pas déterminer » plutôt qu’un calcul arbitraire.",
+  "acces_secondaires": ["Nombres et calculs", "Proportionnalité et pourcentages"],
+  "atlas": "cours/15.svg",
+  "atlasAlt": "Arbre de deux lancers indépendants d’une pièce équilibrée :PP,PF,FP,FF chacun de probabilité1/4.",
+  "nom": "Probabilité d’un événement",
+  "domaine": "donnees-probabilites",
+  "sousDomaine": "Statistiques et probabilités",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6ᵉ : probabilité comme nombre0–1 et calculs simples, dans la continuité du CM. 5ᵉ : vocabulaire, écritures et automatisation des situations familières. 4ᵉ–3ᵉ : entretien et critique du modèle.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_28"],
+    "questions": [
+      {
+        "source": "A2602",
+        "question": "Q6",
+        "referenceAncienne": "AA 6",
+        "forme": "f",
+        "identifiant": "DP06-f",
+        "ancienId": "DP06-V6",
+        "support": "adaptation",
+        "difference": "Couleurs de secteurs au lieu de nombres inscrits : même dénombrement de cas équiprobables.",
+        "savoirFaire": "Probabilité à partir d’une roue",
+        "formatSource": "Saisie",
+        "document": "Asie, 15 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-15_Asie_DV-v3.pdf"
+      },
+      {
+        "source": "A2603",
+        "question": "Q3",
+        "referenceAncienne": "G1 3",
+        "forme": "a",
+        "identifiant": "DP06-a",
+        "ancienId": "DP06-V1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Probabilité d’un tirage dans une urne",
+        "formatSource": "Saisie",
+        "document": "Centres étrangers, 18 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-18_Centres-etrangers_DV-v3.pdf"
+      },
+      {
+        "source": "A2604",
+        "question": "Q4",
+        "referenceAncienne": "PO 4",
+        "forme": "a",
+        "identifiant": "DP06-a",
+        "ancienId": "DP06-V1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Probabilité d’un tirage parmi plusieurs catégories",
+        "formatSource": "Saisie",
+        "document": "Polynésie, 26 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/Brevet_Polynesie_26_juin_2026_DV-3.pdf"
+      },
+      {
+        "source": "A2606",
+        "question": "Q4",
+        "referenceAncienne": "ME 4",
+        "forme": "a",
+        "identifiant": "DP06-a",
+        "ancienId": "DP06-V1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Probabilité d’un tirage en équiprobabilité",
+        "formatSource": "QCM",
+        "document": "Métropole, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Metropole_FK-v2.pdf"
+      },
+      {
+        "source": "A2609",
+        "question": "Q5",
+        "referenceAncienne": "PO-pro 5",
+        "forme": "a",
+        "identifiant": "DP06-a",
+        "ancienId": "DP06-V1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Probabilité d’un tirage en équiprobabilité",
+        "formatSource": "QCM",
+        "document": "Polynésie professionnelle, 26 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_professionnelle_Sujet_2026-06-26_Polynesie_DV-v4.pdf"
+      },
+      {
+        "source": "Z26PA",
+        "question": "Q5",
+        "referenceAncienne": "ZPA 5",
+        "forme": "f",
+        "identifiant": "DP06-f",
+        "ancienId": "DP06-V6",
+        "support": "adaptation",
+        "difference": "La roue de secteurs colorés entraîne le même dénombrement que la roue à numéros répétés.",
+        "savoirFaire": "Probabilité sur une roue",
+        "formatSource": "Fraction",
+        "document": "Sujet zéro 2026, série professionnelle A",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-mathematiquespdf-123305.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Calculer dans une urne équiprobable",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "On tire au hasard une boule parmi10 boules indiscernables au toucher :3 bleues et7 rouges. Quelle est la probabilité de tirer une bleue ?",
+      "reponse": "3/10 = 0,3 = 30 %",
+      "donnees": "N∈{4,5,8,10,12,20} ;0 ≤ k ≤ N ; même forme et masse, tirage au hasard. Couleurs doublées de lettres ; ne pas utiliserdesprobabilitésbaséesseulement surcouleurduSVG.",
+      "saisie": "Fraction à deux cases ou nombre avec choix%",
+      "acceptation": "Accepter3/10,6/20,0,3,30 %. Refuser3,3/7 et7/10.",
+      "aide1": "« Combien de boules sont favorables ? Combien peuvent être tirées ? » Encadrer le groupeB et l’ensemble complet, sans nombres supplémentaires.",
+      "aide2": "« Les boules ont la même chance : place3 au numérateur et le total au dénominateur. » Afficher3/□ sous les deux accolades.",
+      "correction": "3 cas favorables sur10 :3/10.",
+      "controles": [
+        "N > 0 ; sommeeffectifs = N.",
+        "Tester k0 et kN.",
+        "Fractioncomparableexactement ; dénominateur0refusé."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "On tire au hasard une boule parmi ces boules indiscernables au toucher. B signifie bleue, R rouge. Quelle est la probabilité de tirer une boule bleue ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "1/10",
+            "unite": ""
+          }
+        ],
+        "aide1": "Chaque boule a la même chance d’être tirée.",
+        "aide2": "Compte les boules bleues puis le nombre total de boules.",
+        "cours": {
+          "regle": "Issues équiprobables : P(événement) = nombre d’issues favorables ÷ nombre total d’issues.",
+          "exemple": "Chaque boule a la même chance d’être tirée. 3 bleues parmi 8 : P(bleu) = 3/8."
+        },
+        "correction": "Issues favorables : 1 sur 10 ; 1/10."
+      },
+      "identifiant": "DP06-a",
+      "ancienId": "DP06-V1",
+      "ancienIdGenerateur": "DP06-V1",
+      "indiceGenerateur": 0,
+      "nom": "Calculer dans une urne équiprobable",
+      "niveauDescription": "6ᵉ apprentissage ;5ᵉ–3ᵉ entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2603",
+          "question": "Q3",
+          "referenceAncienne": "G1 3",
+          "forme": "a",
+          "identifiant": "DP06-a",
+          "ancienId": "DP06-V1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Probabilité d’un tirage dans une urne",
+          "formatSource": "Saisie",
+          "document": "Centres étrangers, 18 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-18_Centres-etrangers_DV-v3.pdf"
+        },
+        {
+          "source": "A2604",
+          "question": "Q4",
+          "referenceAncienne": "PO 4",
+          "forme": "a",
+          "identifiant": "DP06-a",
+          "ancienId": "DP06-V1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Probabilité d’un tirage parmi plusieurs catégories",
+          "formatSource": "Saisie",
+          "document": "Polynésie, 26 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/Brevet_Polynesie_26_juin_2026_DV-3.pdf"
+        },
+        {
+          "source": "A2606",
+          "question": "Q4",
+          "referenceAncienne": "ME 4",
+          "forme": "a",
+          "identifiant": "DP06-a",
+          "ancienId": "DP06-V1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Probabilité d’un tirage en équiprobabilité",
+          "formatSource": "QCM",
+          "document": "Métropole, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Metropole_FK-v2.pdf"
+        },
+        {
+          "source": "A2609",
+          "question": "Q5",
+          "referenceAncienne": "PO-pro 5",
+          "forme": "a",
+          "identifiant": "DP06-a",
+          "ancienId": "DP06-V1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Probabilité d’un tirage en équiprobabilité",
+          "formatSource": "QCM",
+          "document": "Polynésie professionnelle, 26 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_professionnelle_Sujet_2026-06-26_Polynesie_DV-v4.pdf"
+        }
+      ]
+    },
+    {
+      "id": "b",
+      "objectif": "Décrire puis dénombrer les issues d’un dé",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "On lance un dé équilibré à six faces numérotées1à6. Quelle est la probabilité d’obtenir un nombre pair ?",
+      "reponse": "1/2 = 3/6 = 0,5 = 50 %",
+      "donnees": "Dé6faces ; événements simples :pair,impair,multiplede2/3,strictementplusgrandqueseuil. Toujours expliciter numérotation et équilibre.",
+      "saisie": "Fraction ou nombre",
+      "acceptation": "Accepter toute écriture de1/2 ; refuser1/3 et2/6.",
+      "aide1": "« Liste les nombres pairs parmi1,2,3,4,5,6. » Afficher les six faces sans présélection.",
+      "aide2": "« Les faces favorables sont2,4 et6. Compare leur nombre aux six faces. » Encadrer ces faces avec un motif commun.",
+      "correction": "3/6 = 1/2.",
+      "controles": [
+        "Dénombrer des faces, pas la somme2 + 4 + 6.",
+        "Seuilsinclus/exclus vérifiés.",
+        "Même probabilité après permutation visuelle des faces."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "On lance un dé équilibré à 6 faces numérotées de 1 à 6. Quelle est la probabilité d’obtenir un nombre supérieur à 4 ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "2/6",
+            "unite": ""
+          }
+        ],
+        "aide1": "Les six faces ont la même chance de sortir.",
+        "aide2": "Repère les issues qui conviennent parmi 1, 2, 3, 4, 5, 6. Divise leur nombre par 6.",
+        "cours": {
+          "regle": "Issues équiprobables : P(événement) = nombre d’issues favorables ÷ nombre total d’issues.",
+          "exemple": "Chaque boule a la même chance d’être tirée. 3 bleues parmi 8 : P(bleu) = 3/8."
+        },
+        "correction": "Cas favorables : 5, 6. Probabilité 2/6."
+      },
+      "identifiant": "DP06-b",
+      "ancienId": "DP06-V2",
+      "ancienIdGenerateur": "DP06-V2",
+      "indiceGenerateur": 1,
+      "nom": "Décrire puis dénombrer les issues d’un dé",
+      "niveauDescription": "6ᵉ après parité ;5ᵉ–3ᵉ entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Changer d’écriture et placer une probabilité",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Un événement a une chance sur quatre de se produire. Écris sa probabilité sous forme décimale.",
+      "reponse": "0,25",
+      "donnees": "Dénominateurs2/4/5/10/20/25/100 ; numérateurentier0–d ; consignechoisitfraction/décimal/% ; ici1/4. Hypothèse explicite : chaque secteur a la même chance d’être obtenu.",
+      "saisie": "Champ décimal",
+      "acceptation": "0,25 et0,25 acceptés ;1/4 détecté comme correct mais invitation à écrire en décimal ;25 refusé.",
+      "aide1": "Chaque secteur constitue ici une issue équiprobable. Repérer les secteurs bleus.",
+      "aide2": "« Chaque quart vaut25 centièmes. Écris ce nombre avec une virgule. » Faire correspondre un quart à25 cases d’une grille100, sans écrire0,25.",
+      "correction": "1/4 = 25/100 = 0,25.",
+      "controles": [
+        "Toutesformesmontrentlamêmequantité.",
+        "Ne pas valider25 dansunchampdécimal.",
+        "Cas0/1 et1/1 correctementacceptés."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Une roue a 10 secteurs égaux, dont 2 bleus. Chaque secteur a la même chance d’être obtenu. Écris la probabilité d’obtenir bleu sous forme décimale.",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "0,2",
+            "unite": ""
+          }
+        ],
+        "aide1": "La probabilité vaut 2/10.",
+        "aide2": "Divise 2 par 10 pour obtenir l’écriture décimale.",
+        "cours": {
+          "regle": "Issues équiprobables : P(événement) = nombre d’issues favorables ÷ nombre total d’issues.",
+          "exemple": "Chaque boule a la même chance d’être tirée. 3 bleues parmi 8 : P(bleu) = 3/8."
+        },
+        "correction": "2/10 = 0,2."
+      },
+      "identifiant": "DP06-c",
+      "ancienId": "DP06-V3",
+      "ancienIdGenerateur": "DP06-V3",
+      "indiceGenerateur": 2,
+      "nom": "Changer d’écriture et placer une probabilité",
+      "niveauDescription": "6ᵉ apprentissage ;5ᵉ automatisation",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Reconnaître impossible et certain",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "On lance un dé équilibré numéroté1à6. Quelle est la probabilité d’obtenir7 ?",
+      "reponse": "0",
+      "donnees": "Événement impossible horsensemble ; alternance avec certain « nombre inférieurà7 ». Pas de distinction « trèsrare »/impossible ambiguë.",
+      "saisie": "Nombre ou sélection suréchelle0–1",
+      "acceptation": "0 accepté pour7 ;1 accepté uniquement pour l’événementcertain ; « impossible » accepté dans unesaisieverbalealternative.",
+      "aide1": "« Regarde tous les résultats possibles du dé. » Montrer les six faces1à6.",
+      "aide2": "« Aucune face ne porte7 : il y a0 cas favorable sur6. » Afficher0/6 et laisser compléter la valeur.",
+      "correction": "0/6 = 0 : l’événement est impossible.",
+      "controles": [
+        "Inclure événementcertain→1.",
+        "Ne pas classer « 10fois1 » commeimpossible.",
+        "Échelle0et1clairementétiquetée."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "On lance un dé à 6 faces numérotées de 1 à 6. Quelle est la probabilité d’obtenir un nombre inférieur à 8 ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "1",
+            "unite": ""
+          }
+        ],
+        "aide1": "Un événement impossible a une probabilité de 0 ; un événement certain de 1.",
+        "aide2": "Les six nombres du dé satisfont cette condition.",
+        "cours": {
+          "regle": "Issues équiprobables : P(événement) = nombre d’issues favorables ÷ nombre total d’issues.",
+          "exemple": "Chaque boule a la même chance d’être tirée. 3 bleues parmi 8 : P(bleu) = 3/8."
+        },
+        "correction": "Événement certain : 1."
+      },
+      "identifiant": "DP06-d",
+      "ancienId": "DP06-V4",
+      "ancienIdGenerateur": "DP06-V4",
+      "indiceGenerateur": 3,
+      "nom": "Reconnaître impossible et certain",
+      "niveauDescription": "6ᵉ, puis entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Repérer une absence d’équiprobabilité",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Un sac contient 1 boule bleue et 3 boules rouges indiscernables au toucher. On tire une boule au hasard. « La probabilité de tirer une boule bleue vaut 1/2. » Vrai ou faux ?",
+      "reponse": "Faux",
+      "donnees": "Deuxcouleurs,effectifsinégaux ; boulesindiscernablesettirageauhasard. N ≤ 12 ; le nombredecouleursneconstituepasunnombred’issueséquiprobables.",
+      "saisie": "Vrai/Faux",
+      "acceptation": "Faux accepté ; Vrai refusé. Correction relie aux quatre boules.",
+      "aide1": "« Les boules sont équiprobables. Les couleurs le sont-elles ? » Afficher uneB et troisR de même taille.",
+      "aide2": "« La couleur bleue correspond à1 boule sur4 ; la rouge à3 sur4. » Deux accolades distinctes, sans les comparer à1/2 graphiquement avant ce niveau.",
+      "correction": "Les probabilités sont1/4 et3/4 ; elles ne valent pas1/2.",
+      "controles": [
+        "Générer aussi1B1R : affirmationVrai.",
+        "Ne pas confondre deuxcouleursetdeuxboules.",
+        "LabelsB/R toujoursvisibles.",
+        "L’affirmation porte sur la probabilité, sans la justifier par le seul nombre de couleurs. Tester des effectifs égaux et différents."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "On tire au hasard une boule, toutes indiscernables au toucher. « La probabilité de tirer une boule bleue vaut 1/2. » Vrai ou faux ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "Vrai",
+            "unite": "",
+            "choix": ["Vrai", "Faux"]
+          }
+        ],
+        "aide1": "Ce sont les boules qui sont équiprobables, pas nécessairement les couleurs.",
+        "aide2": "Il y a 4 boules bleues sur 8.",
+        "cours": {
+          "regle": "Issues équiprobables : P(événement) = nombre d’issues favorables ÷ nombre total d’issues.",
+          "exemple": "Chaque boule a la même chance d’être tirée. 3 bleues parmi 8 : P(bleu) = 3/8."
+        },
+        "correction": "P(bleu) = 4/8 = 1/2."
+      },
+      "identifiant": "DP06-e",
+      "ancienId": "DP06-V5",
+      "ancienIdGenerateur": "DP06-V5",
+      "indiceGenerateur": 4,
+      "nom": "Repérer une absence d’équiprobabilité",
+      "niveauDescription": "6ᵉ situation expliquée ;5ᵉ–3ᵉ entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "f",
+      "objectif": "Calculer une probabilité à partir d’une roue de secteurs équiprobables",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Une roue a huit secteurs de même angle, dont trois bleus. Quelle est la probabilité d’obtenir bleu ?",
+      "reponse": "3/8",
+      "donnees": "4, 6, 8, 10 ou 12 secteurs de même angle ; 1 à N − 1 secteurs bleus. Les labels B et R doublent les couleurs ; la roue s’arrête au hasard. Hypothèse explicite : chaque secteur a la même chance d’être obtenu.",
+      "saisie": "Fraction en deux cases",
+      "acceptation": "Toute fraction équivalente à 3/8 acceptée ; simplification non exigée.",
+      "aide1": "Chaque secteur constitue ici une issue équiprobable. Repérer les secteurs bleus.",
+      "aide2": "Compte les secteurs B puis tous les secteurs.",
+      "correction": "3 secteurs favorables sur 8 : 3/8.",
+      "controles": [
+        "Somme des angles exactement 360°.",
+        "Le nombre de secteurs bleus égale le numérateur du comptage.",
+        "Dénominateur non nul."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Les secteurs de la roue sont égaux et chacun a la même chance d’être obtenu. Quelle est la probabilité d’obtenir bleu ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "2/10",
+            "unite": ""
+          }
+        ],
+        "aide1": "Chaque secteur constitue ici une issue équiprobable.",
+        "aide2": "Au numérateur : le nombre de secteurs B. Au dénominateur : le nombre total de secteurs.",
+        "cours": {
+          "regle": "Issues équiprobables : P(événement) = nombre d’issues favorables ÷ nombre total d’issues.",
+          "exemple": "Chaque boule a la même chance d’être tirée. 3 bleues parmi 8 : P(bleu) = 3/8."
+        },
+        "correction": "P(bleu) = 2/10."
+      },
+      "identifiant": "DP06-f",
+      "ancienId": "DP06-V6",
+      "ancienIdGenerateur": "DP06-V6",
+      "indiceGenerateur": 5,
+      "nom": "Calculer une probabilité à partir d’une roue de secteurs équiprobables",
+      "niveauDescription": "6ᵉ, puis entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2602",
+          "question": "Q6",
+          "referenceAncienne": "AA 6",
+          "forme": "f",
+          "identifiant": "DP06-f",
+          "ancienId": "DP06-V6",
+          "support": "adaptation",
+          "difference": "Couleurs de secteurs au lieu de nombres inscrits : même dénombrement de cas équiprobables.",
+          "savoirFaire": "Probabilité à partir d’une roue",
+          "formatSource": "Saisie",
+          "document": "Asie, 15 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-15_Asie_DV-v3.pdf"
+        },
+        {
+          "source": "Z26PA",
+          "question": "Q5",
+          "referenceAncienne": "ZPA 5",
+          "forme": "f",
+          "identifiant": "DP06-f",
+          "ancienId": "DP06-V6",
+          "support": "adaptation",
+          "difference": "La roue de secteurs colorés entraîne le même dénombrement que la roue à numéros répétés.",
+          "savoirFaire": "Probabilité sur une roue",
+          "formatSource": "Fraction",
+          "document": "Sujet zéro 2026, série professionnelle A",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-mathematiquespdf-123305.pdf"
+        }
+      ]
+    }
+  ]
+}

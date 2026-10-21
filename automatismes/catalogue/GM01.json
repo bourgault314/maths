@@ -1,0 +1,334 @@
+{
+  "id": "GM01",
+  "titre": "Unités de longueur, masse et capacité",
+  "categorie": "Grandeurs et mesures",
+  "objectif": "Changer d’unité sans changer la grandeur mesurée.",
+  "prerequis": ["Numération décimale", "Multiplier/diviser par 10,100,1000"],
+  "perimetre": "Prérequis collège etDNB 2027.",
+  "cours": {
+    "regle": "Convertir change le nombre et l’unité, pas la grandeur. 1 m=100 cm ; 1 kg=1000 g ; 1 L=1000 mL.",
+    "exemple": "2,4 m=2,4×100 cm=240 cm.",
+    "visuel": "Une longueur de 1 m partagée en 100 cm, puis une flèche ×100 entre les deux écritures.",
+    "mouvement": "Zoom facultatif sur l’unité ; égalité et opération en version statique."
+  },
+  "erreurs": [
+    "Multiplier dans le mauvais sens",
+    "Comparer les nombres sans unités",
+    "Convertir une longueur comme une aire"
+  ],
+  "sources": [
+    {
+      "titre": "Programme cycle 3 2025",
+      "url": "https://www.education.gouv.fr/sites/default/files/ensel620_annexe2-v2.pdf",
+      "repere": "PDF p.19",
+      "apport": "Préfixes et relations entre unités de longueur.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Liste indicative DNB 2025",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/liste-indicative-dautomatismes-pour-le-dnbpdf-116340.pdf",
+      "repere": "p.2",
+      "apport": "Conversions de longueurs, masses, capacités.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples 6e 2025",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/exemplesmiseenoeuvre6e-mathpdf-111549.pdf",
+      "repere": "p.9 imprimée",
+      "apport": "Longueurs en contextes et conversions.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Mathsgo — Glisse-unité virtuel",
+      "url": "https://mathsgo.re/outils/conversions/conversions_materiel_virtuel.html",
+      "repere": "Catalogue public consulté ; fonctionnalité décrite, interaction non testée.",
+      "apport": "Après sens unités, afficher flèche de facteur et écriture équivalente.",
+      "statut": "choix de conception"
+    }
+  ],
+  "limites": "Montrer seulement l’équivalence utile ; ne pas convertir des grandeurs de natures différentes.",
+  "acces_secondaires": ["Nombres et calculs"],
+  "nom": "Unités de longueur, masse et capacité",
+  "domaine": "nombres-calculs",
+  "sousDomaine": "Grandeurs et mesures",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6e : longueurs automatisées ; masses et capacités réactivées. Entretien en 5e, 4e, 3e et préparation au DNB 2027.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_19"],
+    "questions": [
+      {
+        "source": "A2609",
+        "question": "Q1",
+        "referenceAncienne": "PO-pro 1",
+        "forme": "a",
+        "identifiant": "GM01-a",
+        "ancienId": "GM01-V1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Conversion kilomètres vers mètres",
+        "formatSource": "Saisie",
+        "document": "Polynésie professionnelle, 26 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_professionnelle_Sujet_2026-06-26_Polynesie_DV-v4.pdf"
+      },
+      {
+        "source": "A2610",
+        "question": "Q8",
+        "referenceAncienne": "AG-pro 8",
+        "forme": "e",
+        "identifiant": "GM01-e",
+        "ancienId": "GM01-V5",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Écart entre deux longueurs d’unités différentes",
+        "formatSource": "Saisie",
+        "document": "Antilles-Guyane professionnelle, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Antilles_30_06_2026_DV-2.pdf"
+      },
+      {
+        "source": "Z26PB",
+        "question": "Q8",
+        "referenceAncienne": "ZPB 8",
+        "forme": "a",
+        "identifiant": "GM01-a",
+        "ancienId": "GM01-V1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Correspondance kilomètre et mètre",
+        "formatSource": "Vrai-faux",
+        "document": "Sujet zéro 2026, série professionnelle B",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-b-mathematiquespdf-123302.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Convertir vers une unité plus petite",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Convertis 2,4 m en cm.",
+      "reponse": "240 cm",
+      "donnees": "Paires m/cm, km/m, cm/mm, m/dm ; facteur 100, 1000 ou 10. Valeur de départ avec un chiffre après la virgule, réponse exacte.",
+      "saisie": "Nombre, unitéciblefixée.",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "« Dans1 m, il y a100 cm. » Montrer1 m=100 cm.",
+      "aide2": "« Multiplie2,4 par 100. » Afficher2,4×100.",
+      "correction": "2,4 m=240 cm.",
+      "controles": ["Accepter240 ; refuser0,024.", "Conserver la valeur physique via facteurSI."],
+      "identifiant": "GM01-a",
+      "ancienId": "GM01-V1",
+      "ancienIdGenerateur": "GM01-V1",
+      "indiceGenerateur": 0,
+      "nom": "Convertir vers une unité plus petite",
+      "niveauDescription": "6e",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "m"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2609",
+          "question": "Q1",
+          "referenceAncienne": "PO-pro 1",
+          "forme": "a",
+          "identifiant": "GM01-a",
+          "ancienId": "GM01-V1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Conversion kilomètres vers mètres",
+          "formatSource": "Saisie",
+          "document": "Polynésie professionnelle, 26 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_professionnelle_Sujet_2026-06-26_Polynesie_DV-v4.pdf"
+        },
+        {
+          "source": "Z26PB",
+          "question": "Q8",
+          "referenceAncienne": "ZPB 8",
+          "forme": "a",
+          "identifiant": "GM01-a",
+          "ancienId": "GM01-V1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Correspondance kilomètre et mètre",
+          "formatSource": "Vrai-faux",
+          "document": "Sujet zéro 2026, série professionnelle B",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-b-mathematiquespdf-123302.pdf"
+        }
+      ]
+    },
+    {
+      "id": "b",
+      "objectif": "Convertir vers une unité plus grande",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Convertis 350 cm en m.",
+      "reponse": "3,5 m",
+      "donnees": "Paires inverses cm/m, m/km, mm/cm, dm/m ; division par 100, 1000 ou 10. Résultats décimaux finis.",
+      "saisie": "Nombre, unitéciblefixée.",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "«100 cm forment1 m. » Grouper les centimètres par 100.",
+      "aide2": "« Divise350 par 100. » Afficher350÷100.",
+      "correction": "350 cm=3,5 m.",
+      "controles": ["Accepter3,5 et 3.5 ; refuser35000.", "Conversion inverse doitrendre350 cm."],
+      "identifiant": "GM01-b",
+      "ancienId": "GM01-V2",
+      "ancienIdGenerateur": "GM01-V2",
+      "indiceGenerateur": 1,
+      "nom": "Convertir vers une unité plus grande",
+      "niveauDescription": "6e",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "m"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Comparer deux mesures dans des unités différentes",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Complète :750 g …0,8 kg avec <, = ou >.",
+      "reponse": "<",
+      "donnees": "Massesg/kg ; valeurs positives exactes ; cas<,=,>équilibrés ; idemlongueurs/capacité dans des séries distinctes.",
+      "saisie": "Troisboutons<,=,>.",
+      "acceptation": "Symboleexact.",
+      "aide1": "« Mets les deux masses dans la même unité. » Afficher1 kg=1000 g.",
+      "aide2": "«0,8 kg=800 g. Compare750 et 800. » Aligner les deux mesures.",
+      "correction": "750 g<800 g, donc750 g<0,8 kg.",
+      "controles": ["Accepter< ; refuser>basésur 750>0,8.", "Cas750 g et 0,75 kg→=."],
+      "identifiant": "GM01-c",
+      "ancienId": "GM01-V3",
+      "ancienIdGenerateur": "GM01-V3",
+      "indiceGenerateur": 2,
+      "nom": "Comparer deux mesures dans des unités différentes",
+      "niveauDescription": "6e entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Convertir une capacité",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Convertis 0,75 L en mL.",
+      "reponse": "750 mL",
+      "donnees": "L/mL/cL/dL ; facteurs10/100/1000 ; décimaux multiples de 0,05ou0,1 pourcalculmental.",
+      "saisie": "Nombre, unitécible.",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "«1 L contient1000 mL. » Dessiner un verre avec1Lrepéré.",
+      "aide2": "« Calcule0,75×1000. » Utiliser3/4Lsi cette écriture est connue.",
+      "correction": "0,75 L=750 mL.",
+      "controles": [
+        "Accepter750 ; refuser75.",
+        "0,75 L=75 cL=750 mL ; l’unité cible change la valeur numérique."
+      ],
+      "identifiant": "GM01-d",
+      "ancienId": "GM01-V4",
+      "ancienIdGenerateur": "GM01-V4",
+      "indiceGenerateur": 3,
+      "nom": "Convertir une capacité",
+      "niveauDescription": "6e réactivation puis entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "mL"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Soustraire des longueurs après conversion",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Une pièce mesure 2,50 m de haut. Une armoire mesure 170 cm de haut. Quelle distance reste entre l’armoire et le plafond, en cm ?",
+      "reponse": "80 cm",
+      "donnees": "H enm à2décimales ; hencm entier ; 0<h<100H ; différence positive≤200 ; schéma vertical clairement étiqueté.",
+      "saisie": "Nombre, unitécm.",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "« Les deux hauteurs doivent être dans la même unité. » Mettre les unités en relief.",
+      "aide2": "«2,50 m=250 cm. Il reste250−170. » Montrer le segment vide au-dessus de l’armoire.",
+      "correction": "Il reste80 cm.",
+      "controles": [
+        "Accepter80 ; refuser168,5.",
+        "La la hauteur de l’armoire doit être inférieure à celle de la pièce."
+      ],
+      "identifiant": "GM01-e",
+      "ancienId": "GM01-V5",
+      "ancienIdGenerateur": "GM01-V5",
+      "indiceGenerateur": 4,
+      "nom": "Soustraire des longueurs après conversion",
+      "niveauDescription": "6e application directe",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2610",
+          "question": "Q8",
+          "referenceAncienne": "AG-pro 8",
+          "forme": "e",
+          "identifiant": "GM01-e",
+          "ancienId": "GM01-V5",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Écart entre deux longueurs d’unités différentes",
+          "formatSource": "Saisie",
+          "document": "Antilles-Guyane professionnelle, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Antilles_30_06_2026_DV-2.pdf"
+        }
+      ]
+    }
+  ]
+}

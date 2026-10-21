@@ -1,0 +1,386 @@
+{
+  "id": "EG04",
+  "titre": "Figures et codages",
+  "categorie": "Géométrie et repérage",
+  "objectif": "Déduire une propriété ou une nature de figure de ses données et codages, sans se fier à son apparence.",
+  "prerequis": "Segments, angles droits, égalités de longueurs, parallélisme.",
+  "perimetre": "DNB 2027 pour toutes ces variantes. Les propriétés de diagonales sont introduites après les définitions du parallélogramme.",
+  "cours": {
+    "regle": "Un même codage indique une même longueur ou une même mesure d’angle. Les propriétés données comptent, même si le dessin paraît différent.",
+    "exemple": "AB = AC : ABC est isocèle en A. Un carré possède à la fois les propriétés d’un rectangle et celles d’un losange.",
+    "visuel": "Triangle [angle:A](0,3), B(−2,0), C(2,0) : même trait sur AB et AC, aucun sur BC ; légende « mêmes traits → mêmes longueurs ». À côté, carré avec quatre côtés codés et quatre angles droits ; deux étiquettes « rectangle » et « losange » reliées au même carré.",
+    "mouvement": "Aucun nécessaire. Option : révélation séparée codage → propriété, conservée sous forme statique.",
+    "exemples_par_variante": [
+      {
+        "id": "EG04-V1",
+        "regle": "Les données et les codages permettent de conclure. L’apparence seule ne suffit pas.",
+        "exemple": "AB=AC : ABC est isocèle en A. Les codages donnent une propriété ; l’apparence seule ne suffit pas."
+      },
+      {
+        "id": "EG04-V2",
+        "regle": "Les données et les codages permettent de conclure. L’apparence seule ne suffit pas.",
+        "exemple": "Un carré a quatre angles droits et quatre côtés de même longueur. C’est donc un rectangle et un losange. Tout rectangle et tout losange sont des parallélogrammes."
+      },
+      {
+        "id": "EG04-V3",
+        "regle": "Les données et les codages permettent de conclure. L’apparence seule ne suffit pas.",
+        "exemple": "Les diagonales ont le même milieu et sont perpendiculaires : le quadrilatère est un losange."
+      },
+      {
+        "id": "EG04-V4",
+        "regle": "Les données et les codages permettent de conclure. L’apparence seule ne suffit pas.",
+        "exemple": "AB=AC : ABC est isocèle en A. Les codages donnent une propriété ; l’apparence seule ne suffit pas."
+      },
+      {
+        "id": "EG04-V5",
+        "regle": "Les données et les codages permettent de conclure. L’apparence seule ne suffit pas.",
+        "exemple": "Les diagonales ont le même milieu et la même longueur : le quadrilatère est un rectangle."
+      },
+      {
+        "id": "EG04-V6",
+        "regle": "Les données et les codages permettent de conclure. L’apparence seule ne suffit pas.",
+        "exemple": "Les diagonales ont le même milieu : le quadrilatère est un parallélogramme."
+      }
+    ]
+  },
+  "erreurs": [
+    "Déduire une égalité sans codage.",
+    "Exclure le carré des rectangles et losanges.",
+    "Confondre diagonales perpendiculaires et côtés perpendiculaires.",
+    "Confondre non prouvé et faux."
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 3 — 2025",
+      "url": "https://www.education.gouv.fr/sites/default/files/ensel620_annexe2-v2.pdf",
+      "repere": "p. 23 — Espace et géométrie, automatismes",
+      "apport": "Reconnaissance des figures usuelles et interprétation des codages.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Programme de mathématiques du cycle 4 — 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "p. 13–14 — Géométrie plane",
+      "apport": "Parallélogrammes et propriétés caractéristiques.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples pour la mise en œuvre des programmes de mathématiques — cycle 4",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "PDF p. 27 et 29 — Parallélogrammes",
+      "apport": "Inclusion du carré dans rectangles et losanges ; propriétés des diagonales.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Livret d’accompagnement du programme de mathématiques de 6e — 2026",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/2026livretaccompagnementmaths6e-pdf-126656.pdf",
+      "repere": "PDF p. 33–35 — Activités de géométrie mentale",
+      "apport": "Figures variées et contrôle par propriétés et codages.",
+      "statut": "appui pédagogique"
+    }
+  ],
+  "limites": "Choix de conception : les contre-exemples visuels sont accompagnés de « figure non à l’échelle ». Les énoncés n’assimilent jamais absence de codage et propriété fausse.",
+  "acces_secondaires": [],
+  "nom": "Figures et codages",
+  "domaine": "espace-geometrie",
+  "sousDomaine": "Géométrie et repérage",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6e : figures usuelles et codages ; 5e : propriétés des parallélogrammes ; 4e–3e : automatisation, notamment diagonales.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_16", "dnb_37"],
+    "questions": [
+      {
+        "source": "A2601",
+        "question": "Q3",
+        "referenceAncienne": "AN 3",
+        "forme": "e",
+        "identifiant": "EG04-e",
+        "ancienId": "EG04-V5",
+        "support": "comparable",
+        "difference": "La propriété nécessaire est rectangle : diagonales de même longueur et même milieu. Le losange seul ne couvre pas cette propriété.",
+        "savoirFaire": "Nature d’un quadrilatère par codages des diagonales",
+        "formatSource": "QCM",
+        "document": "Amérique du Nord, 3 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/Brevet_Ameri_Nord_3_06_2026_DV.pdf"
+      },
+      {
+        "source": "A2604",
+        "question": "Q9",
+        "referenceAncienne": "PO 9",
+        "forme": "f",
+        "identifiant": "EG04-f",
+        "ancienId": "EG04-V6",
+        "support": "comparable",
+        "difference": "Parallélogramme déterminé par le même milieu des diagonales ; ne pas limiter la banque au losange.",
+        "savoirFaire": "Nature d’un quadrilatère codé",
+        "formatSource": "QCM",
+        "document": "Polynésie, 26 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/Brevet_Polynesie_26_juin_2026_DV-3.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Reconnaître un triangle isocèle à partir du codage.",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "AB et AC portent le même codage de longueur ; BC n’a pas ce codage. Quel sommet est le sommet principal du triangle isocèle ?",
+      "reponse": "A",
+      "donnees": "Triangle non dégénéré ; AB = AC ; pour exemple A(0,3), B(−2,0), C(2,0), BC ≠ AB. Rotation et permutation des lettres autorisées.",
+      "saisie": "Choix d’un sommet ou lettre saisie.",
+      "acceptation": "A ; ne pas accepter B ou C.",
+      "aide1": "« Quels sont les deux côtés de même longueur ? » Surligner les deux traits de codage, pas la base.",
+      "aide2": "« Cherche leur sommet commun. » Prolonger visuellement AB et AC jusqu’au même point sans afficher son nom en réponse.",
+      "correction": "AB et AC sont égaux et se rejoignent en A : sommet principal A.",
+      "controles": [
+        "Une rotation du triangle ne change pas la réponse.",
+        "Un codage absent ne prouve pas une inégalité ; celle-ci n’est pas nécessaire à la question."
+      ],
+      "identifiant": "EG04-a",
+      "ancienId": "EG04-V1",
+      "ancienIdGenerateur": "EG04-V1",
+      "indiceGenerateur": 0,
+      "nom": "Reconnaître un triangle isocèle à partir du codage.",
+      "niveauDescription": "6e ; entretien 5e–3e",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Utiliser l’inclusion des catégories de quadrilatères.",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "ABCD est un carré. Coche toutes les affirmations vraies : c’est un rectangle ; c’est un losange ; c’est un parallélogramme.",
+      "reponse": "Les trois affirmations sont vraies",
+      "donnees": "Carré annoncé dans le texte, indépendamment de l’orientation du dessin. Variants rectangle/losange non carré avec propriétés explicitement données ; corrigé basé sur implications logiques.",
+      "saisie": "Sélection multiple, consigne « toutes » et validation explicites.",
+      "acceptation": "Ensemble complet des trois propositions ; pas de validation partielle comme réussite.",
+      "aide1": "« Un rectangle a quatre angles droits. Le carré les possède-t-il ? » Mettre en évidence quatre angles droits.",
+      "aide2": "« Regarde aussi les quatre côtés égaux et les côtés opposés parallèles. » Révéler ces deux codages avec leur propriété.",
+      "correction": "Un carré est un rectangle, un losange et un parallélogramme.",
+      "controles": [
+        "Refuser la règle fausse « rectangle et losange s’excluent ».",
+        "Ne pas limiter le corrigé à une seule catégorie."
+      ],
+      "identifiant": "EG04-b",
+      "ancienId": "EG04-V2",
+      "ancienIdGenerateur": "EG04-V2",
+      "indiceGenerateur": 1,
+      "nom": "Utiliser l’inclusion des catégories de quadrilatères.",
+      "niveauDescription": "5e ; entretien 4e–3e",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Reconnaître un losange par ses diagonales.",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Dans ABCD, les diagonales se coupent en leur milieu O et sont perpendiculaires. Parmi parallélogramme, rectangle et losange, quelle nature la plus précise est garantie ?",
+      "reponse": "Losange",
+      "donnees": "Figure exemple A(−3,0),B(0,2),C(3,0),D(0,−2). Coder AO = OC, BO = OD et angle [angle:AOB] droit. Aucun codage d’égalité entre AC et BD.",
+      "saisie": "Choix de terme ou saisie lexicale.",
+      "acceptation": "losange ; une réponse rectangle est injustifiée.",
+      "aide1": "« Les diagonales se coupent en leur milieu. » Montrer les deux paires de demi-diagonales égales.",
+      "aide2": "« Un parallélogramme à diagonales perpendiculaires est un losange. » Relier le codage droit à la propriété, sans sélectionner le bouton.",
+      "correction": "Le milieu commun donne un parallélogramme ; les diagonales perpendiculaires garantissent un losange.",
+      "controles": [
+        "Ne pas conclure carré sans diagonales égales ou angle droit entre côtés.",
+        "Vérifier même milieu, perpendicularité exacte et quadrilatère non croisé."
+      ],
+      "identifiant": "EG04-c",
+      "ancienId": "EG04-V3",
+      "ancienIdGenerateur": "EG04-V3",
+      "indiceGenerateur": 2,
+      "nom": "Reconnaître un losange par ses diagonales.",
+      "niveauDescription": "5e apprentissage ; 4e–3e automatisme",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Distinguer donnée codée et impression visuelle.",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Sur le dessin, le triangle paraît rectangle en B, mais aucun angle droit ni mesure d’angle n’est donné. Peut-on affirmer que l’angle [angle:B] est droit ?",
+      "reponse": "Non, les données ne permettent pas de l’affirmer.",
+      "donnees": "Triangle volontairement proche d’un triangle rectangle mais non rectangle ; coordonnées internes A(0,0),B(4,0),C(4,1;3), avec virgule décimale pour 4,1. Aucun codage droit ; texte dit « figure non à l’échelle ».",
+      "saisie": "Choix « oui / non, données insuffisantes ».",
+      "acceptation": "Non, données insuffisantes ; ne pas demander d’affirmer qu’il n’est pas rectangle.",
+      "aide1": "« Une apparence n’est pas une donnée. » Entourer la zone où un codage d’angle droit serait nécessaire.",
+      "aide2": "« Cherche une mesure de 90°, un codage ou une propriété qui le prouve. » Afficher cette courte liste ; aucun n’est présent.",
+      "correction": "Le dessin seul ne prouve pas que l’angle vaut 90°.",
+      "controles": [
+        "Ne pas corriger par « l’angle n’est pas droit » : seule l’absence de preuve est demandée.",
+        "Une capture avec autre échelle doit conserver la même réponse."
+      ],
+      "identifiant": "EG04-d",
+      "ancienId": "EG04-V4",
+      "ancienIdGenerateur": "EG04-V4",
+      "indiceGenerateur": 3,
+      "nom": "Distinguer donnée codée et impression visuelle.",
+      "niveauDescription": "6e ; entretien 5e–3e",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Reconnaître un rectangle par ses diagonales",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Les diagonales ont le même milieu et la même longueur. Quelle nature est garantie ?",
+      "reponse": "Réponse : Rectangle",
+      "donnees": "Quadrilatère non croisé ; diagonales de même milieu et même longueur ; quatre demi-diagonales de même codage. Paramètres de cet exemple : {\"w\":5,\"h\":2,\"slant\":0}",
+      "saisie": "Réponse : text ; choix Parallélogramme, Rectangle, Losange",
+      "acceptation": "Valeurs exactes des champs ; virgule ou point pour un décimal.",
+      "aide1": "Le milieu commun des diagonales garantit un parallélogramme. Visuel : Montrer le milieu commun puis les quatre demi-diagonales égales.",
+      "aide2": "Des diagonales de même longueur garantissent alors un rectangle. Visuel : Montrer le milieu commun puis les quatre demi-diagonales égales.",
+      "correction": "Le quadrilatère est un rectangle, éventuellement un carré.",
+      "controles": [
+        "Un milieu commun seul ne garantit pas le rectangle.",
+        "Ne pas conclure losange sans autre propriété."
+      ],
+      "identifiant": "EG04-e",
+      "ancienId": "EG04-V5",
+      "ancienIdGenerateur": "EG04-V5",
+      "indiceGenerateur": 4,
+      "nom": "Reconnaître un rectangle par ses diagonales",
+      "niveauDescription": "5e apprentissage ; 4e–3e entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2601",
+          "question": "Q3",
+          "referenceAncienne": "AN 3",
+          "forme": "e",
+          "identifiant": "EG04-e",
+          "ancienId": "EG04-V5",
+          "support": "comparable",
+          "difference": "La propriété nécessaire est rectangle : diagonales de même longueur et même milieu. Le losange seul ne couvre pas cette propriété.",
+          "savoirFaire": "Nature d’un quadrilatère par codages des diagonales",
+          "formatSource": "QCM",
+          "document": "Amérique du Nord, 3 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/Brevet_Ameri_Nord_3_06_2026_DV.pdf"
+        }
+      ]
+    },
+    {
+      "id": "f",
+      "objectif": "Reconnaître un parallélogramme par ses diagonales",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Les diagonales se coupent en leur milieu. Quelle nature est garantie, sans autre donnée ?",
+      "reponse": "Réponse : Parallélogramme",
+      "donnees": "Quadrilatère non croisé ; deux paires de demi-diagonales égales ; aucun angle droit ni égalité entre les deux diagonales donné. Paramètres de cet exemple : {\"w\":5,\"h\":2,\"slant\":1}",
+      "saisie": "Réponse : text ; choix Parallélogramme, Rectangle, Losange",
+      "acceptation": "Valeurs exactes des champs ; virgule ou point pour un décimal.",
+      "aide1": "Le milieu commun des diagonales garantit un parallélogramme. Visuel : Surligner les deux paires de demi-diagonales et leur milieu commun.",
+      "aide2": "Sans autre propriété, on ne peut pas préciser davantage. Visuel : Surligner les deux paires de demi-diagonales et leur milieu commun.",
+      "correction": "Le quadrilatère est un parallélogramme.",
+      "controles": [
+        "Vérifier exactement les deux milieux.",
+        "Ne pas déduire une propriété plus précise sans donnée."
+      ],
+      "identifiant": "EG04-f",
+      "ancienId": "EG04-V6",
+      "ancienIdGenerateur": "EG04-V6",
+      "indiceGenerateur": 5,
+      "nom": "Reconnaître un parallélogramme par ses diagonales",
+      "niveauDescription": "5e apprentissage ; 4e–3e entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2604",
+          "question": "Q9",
+          "referenceAncienne": "PO 9",
+          "forme": "f",
+          "identifiant": "EG04-f",
+          "ancienId": "EG04-V6",
+          "support": "comparable",
+          "difference": "Parallélogramme déterminé par le même milieu des diagonales ; ne pas limiter la banque au losange.",
+          "savoirFaire": "Nature d’un quadrilatère codé",
+          "formatSource": "QCM",
+          "document": "Polynésie, 26 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/Brevet_Polynesie_26_juin_2026_DV-3.pdf"
+        }
+      ]
+    }
+  ]
+}

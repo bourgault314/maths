@@ -1,0 +1,218 @@
+{
+  "id": "EG25",
+  "titre": "Comparer et valider des triangles",
+  "categorie": "Géométrie et repérage",
+  "objectif": "Identifier une possibilité de triangle, des correspondances et un rapport de similitude.",
+  "prerequis": ["Longueurs", "Angles d’un triangle", "Proportionnalité"],
+  "perimetre": "DNB 2027 : inégalité triangulaire, triangles égaux et semblables du programme de 2020.",
+  "cours": {
+    "regle": "Triangle non aplati : la plus grande longueur doit être strictement inférieure à la somme des deux autres. Des triangles égaux sont superposables : mêmes longueurs de côtés et mêmes mesures d’angles. Des triangles semblables ont les mêmes mesures d’angles.",
+    "exemple": "Longueurs 3, 4, 6 : 6<3+4, donc triangle non aplati possible.",
+    "visuel": "Aligner des barres de longueurs 3 et 4 au-dessus d’une barre de longueur 6. Pour la similitude, apparier des angles portant le même codage.",
+    "mouvement": "Rapprochement ou rotation facultatifs ; barres alignées et codages dans la version statique."
+  },
+  "erreurs": [
+    "Accepter un triangle aplati malgré la consigne",
+    "Confondre égalité et similitude",
+    "Apparier par position sur l’écran plutôt que par propriété"
+  ],
+  "sources": [
+    {
+      "titre": "Programme cycle 4 2020",
+      "url": "https://cache.media.education.gouv.fr/file/31/89/1/ensel714_annexe3_1312891.pdf",
+      "repere": "PDF p.135–136",
+      "apport": "Inégalité triangulaire, triangles égaux et semblables.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Programme cycle 4 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "PDF p.11, principes de géométrie",
+      "apport": "Distinguer perception, raisonnement etpreuve.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "NCETM — Geometry",
+      "url": "https://www.ncetm.org.uk/classroom-resources/secmm-6-geometry/",
+      "repere": "Présentation du thème 6 consultée",
+      "apport": "Relier propriétés géométriques, formules de mesure et transformations ; appui thématique.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    },
+    {
+      "titre": "Éduscol — Utiliser les notions de géométrie plane pour démontrer (2016)",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/ra16c4mathgeoplanedocmaitre574312pdf-77673.pdf",
+      "repere": "p.2–4 ; document ancien, pas référence des niveaux 2026",
+      "apport": "Codages, raisonnement, transformations et triangles. Les niveaux viennent des programmes actuels.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "Une réponse courte ne constitue pas une preuve complète. Si des angles sont égaux dans un triangle isocèle, prévoir les correspondances multiples ou contraindre l’appariement.",
+  "acces_secondaires": ["Grandeurs et mesures", "Proportionnalité et pourcentages"],
+  "nom": "Comparer et valider des triangles",
+  "domaine": "espace-geometrie",
+  "sousDomaine": "Géométrie et repérage",
+  "niveaux": ["3e"],
+  "niveauxDescription": "3e DNB 2027 : notions du programme de 2020. Réactivation possible après enseignement en 5e ou 4e. Aucun statut de nouvel automatisme officiel présumé.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": [],
+    "questions": []
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Tester l’inégalité triangulaire",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Peut-on construire un triangle non aplati de côtés3 cm,4 cm et 8 cm ?",
+      "reponse": "Non",
+      "donnees": "a, b, c entiers1–12 ; trier pour comparaison ; tirer cas c<a+b, c=a+b, c>a+b ; pas de figure triangulaire incohérente.",
+      "saisie": "Oui/non.",
+      "acceptation": "Oui seulementsi maximum<somme des deux autres.",
+      "aide1": "Compare la longueur du plus grand côté à la somme des deux autres longueurs. Aligner deux barres de longueurs 3 et 4 face à celle de longueur 8.",
+      "aide2": "« 3+4=7, plus petit que8. » Montrer que le chaînon n’atteintpasl’extrémité.",
+      "correction": "Non :3+4<8.",
+      "controles": [
+        "RefuserOui ; cas3,4,7→Nonpourtriangle nonaplati.",
+        "Cas3,4,6→Oui ; ne pas exclure un triangle obtus."
+      ],
+      "identifiant": "EG25-a",
+      "ancienId": "EG25-V1",
+      "ancienIdGenerateur": "EG25-V1",
+      "indiceGenerateur": 0,
+      "nom": "Tester l’inégalité triangulaire",
+      "niveauDescription": "3eDNB 2027 ; réactivation après enseignement",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Reconnaître deux triangles égaux par leurs côtés",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "ABC a des côtés3,4 et 5 cm. DEF a des côtés5,3 et 4 cm. Ces triangles sont-ils égaux, c’est-à-dire superposables ?",
+      "reponse": "Oui",
+      "donnees": "Triplets positifs valides ; même multiensemble de 3longueurs ; rotation et réflexion permises ; distraiteur3,4,6.",
+      "saisie": "Oui/non.",
+      "acceptation": "Oui pourmêmes3longueurs, indépendamment de l’ordre.",
+      "aide1": "« Compare les trois longueurs, pas l’orientation. » Mettreenpaire 3avec3,4avec4,5avec5.",
+      "aide2": "« Chaque côté trouve un côté de même longueur. » Aligner les listes triées.",
+      "correction": "Oui, les trois côtés correspondants ont les mêmes longueurs.",
+      "controles": [
+        "AccepterOui ; refuser Non fondé sur l’orientation.",
+        "Cas3,4,5 et 3,4,6→Non ; toutes les figures respectent leurs triangulations."
+      ],
+      "identifiant": "EG25-b",
+      "ancienId": "EG25-V2",
+      "ancienIdGenerateur": "EG25-V2",
+      "indiceGenerateur": 1,
+      "nom": "Reconnaître deux triangles égaux par leurs côtés",
+      "niveauDescription": "3eDNB 2027",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Déterminer un rapport de similitude",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Les côtés de deux triangles semblables mesurent3,4,5 cm et 6,8,10 cm, dans l’ordre des correspondances. Quel facteur transforme les longueurs du premier en celles du second ?",
+      "reponse": "2",
+      "donnees": "Triangle de base entier à inégalité stricte ; facteur∈{2,3,1/2}; correspondances annoncées ou codées; rapportunique.",
+      "saisie": "Nombre oufraction.",
+      "acceptation": "Accepter2 ; fraction équivalente4/2si aucune forme imposée.",
+      "aide1": "« Compare deux côtés correspondants. » Surligner3 et 6.",
+      "aide2": "« Le facteur vaut6÷3. Vérifie aussi8÷4. » Montrer les deux rapports.",
+      "correction": "k=2 ; 5×2=10confirme.",
+      "controles": [
+        "Accepter 2 ; refuser 4, rapport des aires.",
+        "Les deux triplets sont strictement proportionnels et vérifient l’inégalité triangulaire."
+      ],
+      "identifiant": "EG25-c",
+      "ancienId": "EG25-V3",
+      "ancienIdGenerateur": "EG25-V3",
+      "indiceGenerateur": 2,
+      "nom": "Déterminer un rapport de similitude",
+      "niveauDescription": "3eDNB 2027",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Trouver des correspondances à partir des angles",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Dans ABC : [angle:A] = 40°, [angle:B] = 60°, [angle:C] = 80°. Dans DEF : [angle:D] = 80°, [angle:E] = 40°, [angle:F] = 60°. Quel sommet correspond à B ?",
+      "reponse": "F",
+      "donnees": "Trois angles distincts positifs dont la somme180 ; permuterlabels ; faire varier l’orientation ettaille sans changer les angles.",
+      "saisie": "Nom de sommet.",
+      "acceptation": "LettreF, sanscasse ; ne pas utiliser la position à l’écran.",
+      "aide1": "Les angles aux sommets correspondants ont la même mesure. Colorer l’angle de 60° au sommet B.",
+      "aide2": "Cherche l’angle de 60° dans le second triangle. Mettre en valeur les mesures données.",
+      "correction": "B correspond à F, car les deux angles mesurent 60°.",
+      "controles": [
+        "AccepterF ; refuser E par voisinage graphique semblable.",
+        "Sianglesrépétés, prévoir plusieurs correspondances valides ou éviter ce générateur."
+      ],
+      "identifiant": "EG25-d",
+      "ancienId": "EG25-V4",
+      "ancienIdGenerateur": "EG25-V4",
+      "indiceGenerateur": 3,
+      "nom": "Trouver des correspondances à partir des angles",
+      "niveauDescription": "3eDNB 2027",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

@@ -1,0 +1,535 @@
+{
+  "id": "NC15",
+  "titre": "Puissances",
+  "categorie": "Nombres et calculs",
+  "objectif": "Passer du produit répété à la puissance et appliquer les règles dans des cas courts.",
+  "prerequis": ["Produits et quotients", "Carrés et tables", "Numération de position"],
+  "perimetre": "Couverture des prérequis et automatismes du collège. Le filtre DNB2027 utilise l’ancien programme du cycle 4 ; les niveaux indiqués suivent le nouveau programme. Le statut est précisé par variante.",
+  "cours": {
+    "regle": "Même base : additionne les exposants pour un produit, soustrais-les pour un quotient. a⁻ⁿ = 1/aⁿ pour a non nul.",
+    "exemple": "6 × 6 × 6 × 6 = 6⁴.",
+    "visuel": "Facteurs répétés regroupés puis écriture puissance ; quotient et exposant négatif reliés à l’inverse.",
+    "mouvement": "Le schéma est entièrement compréhensible à l’arrêt. Une animation éventuelle révèle les étapes sans cacher les états précédents."
+  },
+  "erreurs": [
+    "Confondre base et exposant",
+    "Oublier une condition de signe",
+    "Confondre carré et double"
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 4 (2026)",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "statut": "prescription",
+      "repere": "PDF p 10–11",
+      "apport": "Objectifs et progression officiels du programme ; niveau de classe vérifié."
+    },
+    {
+      "titre": "Exemples de mise en œuvre du cycle 4 (2026)",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "statut": "appui pédagogique",
+      "repere": "PDF p 18,20 ;imprimées 17,19",
+      "apport": "Exemples officiels de mise en œuvre : progressivité, représentations et types de calculs."
+    },
+    {
+      "titre": "DNB sujet de référence 2027 n°1",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n01-129658.pdf",
+      "statut": "appui pédagogique",
+      "repere": "PDF p 2 Q 2",
+      "apport": "Situation effectivement observée dans le sujet de référence, repérée par numéro de question."
+    },
+    {
+      "titre": "DNB sujet de référence 2027 n°2",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n02-129661.pdf",
+      "statut": "appui pédagogique",
+      "repere": "PDF p 2 Q 2",
+      "apport": "Situation effectivement observée dans le sujet de référence, repérée par numéro de question."
+    }
+  ],
+  "limites": "Aucune base nulle avec exposant nul ou négatif. La structure de puissance est vérifiée par champs séparés.",
+  "implementation": {
+    "module": "app-automatismes/dist/modules/nombres.js",
+    "tests": "etape1/test_nombres.mjs",
+    "variantes": 7,
+    "graines_par_variante": 200,
+    "principe": "Aide 1 : représentation visuelle des données. Aide 2 : étape de calcul. Deux aides maximum.",
+    "aide1_visuelle": true
+  },
+  "nom": "Puissances",
+  "domaine": "nombres-calculs",
+  "sousDomaine": "Nombres et calculs",
+  "niveaux": ["4e", "3e"],
+  "niveauxDescription": "4e : exposants positifs ; 3e : exposants nuls ou négatifs et puissances de 10.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_06", "dnb_11"],
+    "questions": [
+      {
+        "source": "A2610",
+        "question": "Q1",
+        "referenceAncienne": "AG-pro 1",
+        "forme": "a",
+        "identifiant": "NC15-a",
+        "ancienId": "NC15-A",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Interpréter une puissance comme produit répété",
+        "formatSource": "QCM",
+        "document": "Antilles-Guyane professionnelle, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Antilles_30_06_2026_DV-2.pdf"
+      },
+      {
+        "source": "R27A",
+        "question": "Q2",
+        "referenceAncienne": "R1 2",
+        "forme": "g",
+        "identifiant": "NC15-g",
+        "ancienId": "NC15-G",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Calcul numérique avec puissances de dix",
+        "formatSource": "Nombre",
+        "document": "Sujet de référence mathématiques n°1",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n01-129658.pdf"
+      },
+      {
+        "source": "R27B",
+        "question": "Q2",
+        "referenceAncienne": "R2 2",
+        "forme": "f",
+        "identifiant": "NC15-f",
+        "ancienId": "NC15-F",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Calculer et exprimer sous forme de puissance de dix",
+        "formatSource": "Puissance",
+        "document": "Sujet de référence mathématiques n°2",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n02-129661.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Produit répété vers puissance",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Écris 6 × 6 × 6 × 6 sous la forme aⁿ.",
+      "reponse": "6 ; 4",
+      "donnees": "Base 2–7 répétée 2–5 fois ; base et exposant exigés, pas seulement valeur.",
+      "saisie": "Base a : nombre ; Exposant n : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "La base est le facteur répété.",
+      "aide2": "Compte les 4 facteurs, pas les signes ×.",
+      "correction": "6 × 6 × 6 × 6 = 6⁴.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "fields",
+        "values": ["6", "4"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Base a",
+          "answer": "6",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        },
+        {
+          "label": "Exposant n",
+          "answer": "4",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Facteurs regroupés, échelle des puissances ou tableau de rangs. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC15-a",
+      "ancienId": "NC15-a",
+      "ancienIdGenerateur": "NC15-A",
+      "indiceGenerateur": 0,
+      "nom": "Produit répété vers puissance",
+      "niveauDescription": "4e ; entretien dans les classes suivantes.",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Base a",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "Exposant n",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2610",
+          "question": "Q1",
+          "referenceAncienne": "AG-pro 1",
+          "forme": "a",
+          "identifiant": "NC15-a",
+          "ancienId": "NC15-A",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Interpréter une puissance comme produit répété",
+          "formatSource": "QCM",
+          "document": "Antilles-Guyane professionnelle, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Antilles_30_06_2026_DV-2.pdf"
+        }
+      ]
+    },
+    {
+      "id": "b",
+      "objectif": "Produit de puissances de même base",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Complète : 6⁴ × 6³ = 6ⁿ.",
+      "reponse": "7",
+      "donnees": "Même base 2–7 ; exposants 2–5 ; demander le seul exposant final.",
+      "saisie": "Exposant n : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Les deux puissances ont la même base.",
+      "aide2": "Il y a 4 facteurs, puis 3 autres.",
+      "correction": "6⁴ × 6³ = 6⁷.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["7"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Exposant n",
+          "answer": "7",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Facteurs regroupés, échelle des puissances ou tableau de rangs. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC15-b",
+      "ancienId": "NC15-b",
+      "ancienIdGenerateur": "NC15-B",
+      "indiceGenerateur": 1,
+      "nom": "Produit de puissances de même base",
+      "niveauDescription": "4e ; entretien dans les classes suivantes.",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Exposant n",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Produit de puissances de même exposant",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Écris 6⁴ × 6⁴ sous la forme d’une seule puissance aⁿ.",
+      "reponse": "36 ; 4",
+      "donnees": "Bases 2–7 et 2–6 ; exposant commun 2–5 ; demander base produite et exposant.",
+      "saisie": "Base a : nombre ; Exposant n : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Les deux exposants sont identiques.",
+      "aide2": "Regroupe les facteurs 6 × 6, répétés 4 fois.",
+      "correction": "6⁴ × 6⁴ = 36⁴.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "fields",
+        "values": ["36", "4"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Base a",
+          "answer": "36",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        },
+        {
+          "label": "Exposant n",
+          "answer": "4",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Facteurs regroupés, échelle des puissances ou tableau de rangs. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC15-c",
+      "ancienId": "NC15-c",
+      "ancienIdGenerateur": "NC15-C",
+      "indiceGenerateur": 2,
+      "nom": "Produit de puissances de même exposant",
+      "niveauDescription": "4e ; entretien dans les classes suivantes.",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Base a",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "Exposant n",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Puissance de 10 d’exposant nul ou négatif",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Écris 10⁻⁴ sous forme décimale.",
+      "reponse": "0.0001",
+      "donnees": "Puissances de 10 : exposants 0, −1, −2, −3, −4, −5 ; zéro exclu comme base.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Un exposant négatif indique l’inverse de 10⁴.",
+      "aide2": "10⁻⁴ = 1/10000.",
+      "correction": "10⁻⁴ = 0,0001.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["0.0001"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "0.0001",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Facteurs regroupés, échelle des puissances ou tableau de rangs. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC15-d",
+      "ancienId": "NC15-d",
+      "ancienIdGenerateur": "NC15-D",
+      "indiceGenerateur": 3,
+      "nom": "Puissance de 10 d’exposant nul ou négatif",
+      "niveauDescription": "3e ; entretien dans les classes suivantes.",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Quotient de puissances",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Complète : 10⁴ ÷ 10⁻¹ = 10ⁿ.",
+      "reponse": "5",
+      "donnees": "Base 10 ; exposants entiers de −3 à 5 ; quotient et différence des exposants.",
+      "saisie": "Exposant n : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Pour un quotient de même base, soustrais les exposants.",
+      "aide2": "Calcule 4 − (−1).",
+      "correction": "10⁴ ÷ 10⁻¹ = 10⁵.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["5"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Exposant n",
+          "answer": "5",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Facteurs regroupés, échelle des puissances ou tableau de rangs. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC15-e",
+      "ancienId": "NC15-e",
+      "ancienIdGenerateur": "NC15-E",
+      "indiceGenerateur": 4,
+      "nom": "Quotient de puissances",
+      "niveauDescription": "3e ; entretien dans les classes suivantes.",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Exposant n",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "f",
+      "objectif": "Réécrire une base elle-même puissance de 10",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Complète : 1000² × 10⁻⁴ = 10ⁿ.",
+      "reponse": "2",
+      "donnees": "Base 100 ou 1 000 élevée à un petit exposant, multipliée par une puissance négative de 10.",
+      "saisie": "Exposant n : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "1000 = 10³.",
+      "aide2": "Il y a 3 × 2 facteurs 10, puis un exposant −4.",
+      "correction": "1000² × 10⁻⁴ = 10².",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["2"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Exposant n",
+          "answer": "2",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Facteurs regroupés, échelle des puissances ou tableau de rangs. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC15-f",
+      "ancienId": "NC15-f",
+      "ancienIdGenerateur": "NC15-F",
+      "indiceGenerateur": 5,
+      "nom": "Réécrire une base elle-même puissance de 10",
+      "niveauDescription": "3e ; entretien dans les classes suivantes.",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Exposant n",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "R27B",
+          "question": "Q2",
+          "referenceAncienne": "R2 2",
+          "forme": "f",
+          "identifiant": "NC15-f",
+          "ancienId": "NC15-F",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Calculer et exprimer sous forme de puissance de dix",
+          "formatSource": "Puissance",
+          "document": "Sujet de référence mathématiques n°2",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n02-129661.pdf"
+        }
+      ]
+    },
+    {
+      "id": "g",
+      "objectif": "Expression mêlant puissances de 10",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Calcule 4,2 × 10² − 3 × 10 + 3,7 × 10⁻¹.",
+      "reponse": "390.37",
+      "donnees": "Trois termes à puissances 2, 1 et −1 ; coefficients simples au dixième ; somme exacte au centième.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Calcule séparément chaque produit par une puissance de 10.",
+      "aide2": "420 − 30 + 0,37.",
+      "correction": "420 − 30 + 0,37 = 390,37.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["390.37"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "390.37",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Facteurs regroupés, échelle des puissances ou tableau de rangs. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC15-g",
+      "ancienId": "NC15-g",
+      "ancienIdGenerateur": "NC15-G",
+      "indiceGenerateur": 6,
+      "nom": "Expression mêlant puissances de 10",
+      "niveauDescription": "3e ; entretien dans les classes suivantes.",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "R27A",
+          "question": "Q2",
+          "referenceAncienne": "R1 2",
+          "forme": "g",
+          "identifiant": "NC15-g",
+          "ancienId": "NC15-G",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Calcul numérique avec puissances de dix",
+          "formatSource": "Nombre",
+          "document": "Sujet de référence mathématiques n°1",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n01-129658.pdf"
+        }
+      ]
+    }
+  ]
+}

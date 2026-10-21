@@ -1,0 +1,294 @@
+{
+  "id": "EG19",
+  "titre": "Reconnaître les solides",
+  "categorie": "Géométrie et repérage",
+  "objectif": "Reconnaître le solide et identifier ses éléments sans se fier à son orientation.",
+  "prerequis": ["Figures planes", "Parallèle/perpendiculaire"],
+  "perimetre": "DNB 2027 : solides usuels ; distinction sphère/boule au niveau approprié.",
+  "cours": {
+    "regle": "Un prisme droit a deux bases polygonales superposables et parallèles. Une pyramide a une base et un sommet commun aux faces latérales. La hauteur est la distance entre les plans des bases du prisme, ou du sommet au plan de la base de la pyramide.",
+    "exemple": "Prisme droit à base triangulaire : 2 triangles et 3 rectangles, donc 5 faces.",
+    "visuel": "Prisme triangulaire ABCDEF ; ABC et DEF colorés pareil, AD=BE=CF, arêtes cachées en pointillés ; rotation du solide sans changer ses noms.",
+    "mouvement": "Rotation contrôlée facultative ; trois vues fixes équivalentes si mouvement réduit."
+  },
+  "erreurs": [
+    "Nommer selon l’orientation",
+    "Confondre base et face visible du bas",
+    "Compter les faces cachées comme absentes",
+    "Confondre hauteur et arête"
+  ],
+  "sources": [
+    {
+      "titre": "Programme cycle 3 2025",
+      "url": "https://www.education.gouv.fr/sites/default/files/ensel620_annexe2-v2.pdf",
+      "repere": "PDF p.24",
+      "apport": "Reconnaissance des solides usuels.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Programme cycle 4 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "PDF p.12,14–15",
+      "apport": "Prismes/cylindres, pyramides/cônes, sphère/boule.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples cycle 4 2026",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "p.22,27,29 imprimées",
+      "apport": "Correspondance perspectives, bases et représentations.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Mathsgo — Le pavé droit dans l’espace",
+      "url": "https://mathsgo.re/outils/espace/pave_droit.html",
+      "repere": "Catalogue public consulté ; fonctionnalité décrite, interaction non testée.",
+      "apport": "Vue fixe lisible et bouton tourner facultatif ; afficher face de référence pour repérage.",
+      "statut": "choix de conception"
+    },
+    {
+      "titre": "NCETM — Geometry",
+      "url": "https://www.ncetm.org.uk/classroom-resources/secmm-6-geometry/",
+      "repere": "Présentation du thème 6 consultée",
+      "apport": "Relier propriétés géométriques, formules de mesure et transformations ; appui thématique.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "Un nom correct ne valide pas une construction ou un dessin à main levée. Les polyèdres doivent être géométriquement cohérents.",
+  "acces_secondaires": ["Grandeurs et mesures"],
+  "nom": "Reconnaître les solides",
+  "domaine": "espace-geometrie",
+  "sousDomaine": "Géométrie et repérage",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6e : reconnaissance des solides usuels, dont prisme, cylindre, pyramide et cône. 5e : bases et hauteur du prisme ; 4e : hauteur de pyramide ; 3e : distinction formelle sphère/boule.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_20"],
+    "questions": [
+      {
+        "source": "A2611",
+        "question": "Q3",
+        "referenceAncienne": "ME-pro 3",
+        "forme": "a",
+        "identifiant": "EG19-a",
+        "ancienId": "EG19-V1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Reconnaître un solide",
+        "formatSource": "Nom du solide",
+        "document": "Métropole professionnelle, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Metropole_30_juin_2026_DV.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Nommer un solide depuis sa structure",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Le solide dessiné possède deux bases triangulaires parallèles et superposables, reliées par trois faces rectangulaires. Quel est son nom ?",
+      "reponse": "Prisme droit à base triangulaire",
+      "donnees": "Reconnaissance de prisme droit, cylindre, pyramide et cône ; varier l’ordre des propositions et l’orientation sans déformer le solide.",
+      "saisie": "Choix de noms ou saisie avec propositions.",
+      "acceptation": "Accepter prisme droit ou prisme droit à base triangulaire ; ne pas imposer orthographe accentuée.",
+      "aide1": "« Repère les deux faces identiques aux extrémités. » Colorer les deux triangles.",
+      "aide2": "« Deux bases polygonales et des faces rectangulaires caractérisent un prisme droit. » Relier les bases par les arêtes.",
+      "correction": "C’est un prisme droit à base triangulaire.",
+      "controles": [
+        "Accepter prisme droit ; refuser pyramide.",
+        "Tourner la figure sans modifier la bonne réponse."
+      ],
+      "identifiant": "EG19-a",
+      "ancienId": "EG19-V1",
+      "ancienIdGenerateur": "EG19-V1",
+      "indiceGenerateur": 0,
+      "nom": "Nommer un solide depuis sa structure",
+      "niveauDescription": "6e : reconnaissance des solides usuels, puis entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2611",
+          "question": "Q3",
+          "referenceAncienne": "ME-pro 3",
+          "forme": "a",
+          "identifiant": "EG19-a",
+          "ancienId": "EG19-V1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Reconnaître un solide",
+          "formatSource": "Nom du solide",
+          "document": "Métropole professionnelle, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Metropole_30_juin_2026_DV.pdf"
+        }
+      ]
+    },
+    {
+      "id": "b",
+      "objectif": "Identifier base et hauteur d’un prisme",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Dans le prisme droit ABCDEF, ABC et DEF sont les bases. Quel segment représente une hauteur du prisme : [AB], [AC] ou [AD] ?",
+      "reponse": "AD",
+      "donnees": "ABC et DEF bases correspondantes ; AD, BE, CF perpendiculaires aux plans de base ; les angles projetés ne servent pas de preuve.",
+      "saisie": "Sélection d’un segment ou nom.",
+      "acceptation": "Accepter AD ou DA ; si BE/CF proposés accepter aussi car même hauteur ; ne proposer qu’AD dans ce cas.",
+      "aide1": "Un segment de hauteur relie les deux bases perpendiculairement à leurs plans. Repérer les deux bases.",
+      "aide2": "Les arêtes [AD], [BE] et [CF] sont perpendiculaires aux plans des bases.",
+      "correction": "Le segment [AD] est perpendiculaire aux plans des bases ; sa longueur AD est la hauteur du prisme.",
+      "controles": [
+        "Accepter AD/DA ; refuser AB et AC, situés dans une base.",
+        "Vérifier la perpendicularité en données3D, pas l’aspect de la perspective."
+      ],
+      "identifiant": "EG19-b",
+      "ancienId": "EG19-V2",
+      "ancienIdGenerateur": "EG19-V2",
+      "indiceGenerateur": 1,
+      "nom": "Identifier base et hauteur d’un prisme",
+      "niveauDescription": "5e apprentissage ; 4e–3e entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Compter faces, arêtes ou sommets",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Combien de faces possède un prisme droit à base triangulaire ?",
+      "reponse": "5",
+      "donnees": "Prisme à base n-gone avec n=3,4,5 ; poser séparément faces n+2, sommets2n ou arêtes3n ; figure explicite.",
+      "saisie": "Champ entier.",
+      "acceptation": "Entier exact ; ne pas accepter un comptage d’arêtes à la place des faces.",
+      "aide1": "« Compte d’abord les deux bases. » Les deux triangles s’éclairent.",
+      "aide2": "« Entre les bases, il y a un rectangle pour chaque côté du triangle. » Montrer les trois rectangles.",
+      "correction": "2+3=5 faces.",
+      "controles": [
+        "Accepter 5 ; refuser 6 ou9.",
+        "Pour cube :6faces/12arêtes/8sommets ; ne pas appliquer ces nombres à tous les solides."
+      ],
+      "identifiant": "EG19-c",
+      "ancienId": "EG19-V3",
+      "ancienIdGenerateur": "EG19-V3",
+      "indiceGenerateur": 2,
+      "nom": "Compter faces, arêtes ou sommets",
+      "niveauDescription": "6e avec cube/pavé ; 5e prisme",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "faces"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Distinguer hauteur et arête oblique d’une pyramide",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "SABCD est une pyramide. H est dans le plan ABCD et [SH] est perpendiculaire à ce plan. Quel segment représente sa hauteur ?",
+      "reponse": "SH",
+      "donnees": "Pyramide de base triangle/carré ; piedH intérieur puis extérieur seulement si affichage clair ; SA arête oblique distincte.",
+      "saisie": "Segment sélectionné ou nom.",
+      "acceptation": "Accepter SH/HS ; refuser toute arête latérale sauf si elle est réellement perpendiculaire dans un cas explicitement choisi.",
+      "aide1": "Pars du sommet et repère l’angle droit avec le plan de la base.",
+      "aide2": "Une arête oblique ne représente pas forcément la hauteur. Le codage indique que [SH] est perpendiculaire au plan de la base.",
+      "correction": "Le segment [SH] relie le sommet au plan de la base perpendiculairement. Sa longueur SH est la hauteur.",
+      "controles": [
+        "Accepter SH ; refuser SA.",
+        "Ne jamais coder une perspective2D comme preuve de perpendicularité3D sans donnée explicite."
+      ],
+      "identifiant": "EG19-d",
+      "ancienId": "EG19-V4",
+      "ancienIdGenerateur": "EG19-V4",
+      "indiceGenerateur": 3,
+      "nom": "Distinguer hauteur et arête oblique d’une pyramide",
+      "niveauDescription": "4e apprentissage ; 3e entretien",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Distinguer surface sphérique et boule",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Quel mot désigne l’ensemble des points de l’espace situés à une distance inférieure ou égale à 3 cm de O ?",
+      "reponse": "Boule",
+      "donnees": "R positif entier1–9 ; variantes distance=R→sphère, distance≤R→boule ; montrer enveloppe seule ou coupe pleine selon cas.",
+      "saisie": "Choix sphère/boule.",
+      "acceptation": "Nom exact ; aucun piège lié à une métaphore de ballon creux.",
+      "aide1": "« La condition inclut aussi les points à l’intérieur. » Montrer un point à 1 cm de O.",
+      "aide2": "« La sphère ne garde que les points à exactement 3 cm. » Mettre en évidence surface et intérieur séparément.",
+      "correction": "L’ensemble est la boule de centre O et de rayon 3 cm.",
+      "controles": [
+        "Accepter boule ; refuser sphère pour≤.",
+        "Pour=3, la réponse doit devenir sphère."
+      ],
+      "identifiant": "EG19-e",
+      "ancienId": "EG19-V5",
+      "ancienIdGenerateur": "EG19-V5",
+      "indiceGenerateur": 4,
+      "nom": "Distinguer surface sphérique et boule",
+      "niveauDescription": "3e nouveau ; DNB 2027 entretien cycle 4",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

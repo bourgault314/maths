@@ -1,0 +1,552 @@
+{
+  "id": "GM03",
+  "titre": "Durées et horaires",
+  "categorie": "Grandeurs et mesures",
+  "objectif": "Convertir une durée et calculer début, fin ouécart entre deux instants.",
+  "prerequis": ["Addition/soustraction", "Multiplication/division par 60", "Fractions usuelles"],
+  "perimetre": "DNB 2027 et prérequis collège.",
+  "cours": {
+    "regle": "1 h=60 min ; 1 min=60 s. Pour convertir des heures décimales en minutes, multiplie par 60. Une durée sépare deux instants.",
+    "exemple": "De 14 h 35 à 16 h 10 : 25 min + 60 min + 10 min = 1 h 35 min.",
+    "visuel": "Frise 14 h 35 → 15 h → 16 h → 16 h 10. Segments de 25, 60 et 10 minutes ; distinguer horaires et durées.",
+    "mouvement": "Parcours facultatif ; les trois sauts sont visibles simultanément en version statique."
+  },
+  "erreurs": [
+    "Base100aulieude 60",
+    "Confondre horaire et durée",
+    "Oublier le jour après minuit",
+    "Traiter un blanc comme zéro"
+  ],
+  "sources": [
+    {
+      "titre": "Programme cycle 3 2025",
+      "url": "https://www.education.gouv.fr/sites/default/files/ensel620_annexe2-v2.pdf",
+      "repere": "PDF p.20",
+      "apport": "Unités, horaires, duréeset conversions.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples 6e 2025",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/exemplesmiseenoeuvre6e-mathpdf-111549.pdf",
+      "repere": "p.10–11 imprimées",
+      "apport": "Retrouver l’instant initial, finaloudurée etconversions.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Liste indicative DNB 2025",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/liste-indicative-dautomatismes-pour-le-dnbpdf-116340.pdf",
+      "repere": "p.2",
+      "apport": "Relations secondes/minutes/heures/jours.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Mathsgo — Disques de temps",
+      "url": "https://mathsgo.re/outils/plateaux_manipulation/maitre_du_temps.html",
+      "repere": "Catalogue public consulté ; fonctionnalité décrite, interaction non testée.",
+      "apport": "Quart d’heure→15min ; compléter60min ; puis ligne de temps pour passage d’heure.",
+      "statut": "choix de conception"
+    },
+    {
+      "titre": "Antilles-Guyane, 30 juin 2026",
+      "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Antilles-Guyane_DV-v2.pdf",
+      "repere": "Q6",
+      "apport": "Convertir une fraction d’heure en minutes ; format source adapté à une réponse construite.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Sujet zéro 2026, série générale A",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-mathematiquespdf-123317.pdf",
+      "repere": "Q2",
+      "apport": "Convertir des durées entières usuelles ; format source adapté à une réponse construite.",
+      "statut": "appui pédagogique"
+    }
+  ],
+  "limites": "Distinguer instants et durées. Exclure les changements de fuseau horaire, d’heure légale et les calendriers complexes.",
+  "acces_secondaires": ["Nombres et calculs"],
+  "nom": "Durées et horaires",
+  "domaine": "nombres-calculs",
+  "sousDomaine": "Grandeurs et mesures",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6e : relations d’unités, calculs sur horaires et conversion entre heures décimales et heures/minutes ; entretien de la 5e à la 3e.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_19"],
+    "questions": [
+      {
+        "source": "A2605",
+        "question": "Q6",
+        "referenceAncienne": "AG 6",
+        "forme": "g",
+        "identifiant": "GM03-g",
+        "ancienId": "GM03-V7",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Fraction d’heure en minutes",
+        "formatSource": "QCM",
+        "document": "Antilles-Guyane, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Antilles-Guyane_DV-v2.pdf"
+      },
+      {
+        "source": "A2608",
+        "question": "Q4",
+        "referenceAncienne": null,
+        "forme": "c",
+        "identifiant": "GM03-c",
+        "ancienId": "GM03-V3",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Heure d’arrivée après ajout de minutes",
+        "formatSource": "Saisie",
+        "document": "Métropole-Antilles-Guyane, 10 septembre 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-09-10_Metropole_FB.pdf"
+      },
+      {
+        "source": "A2611",
+        "question": "Q5",
+        "referenceAncienne": "ME-pro 5",
+        "forme": "a",
+        "identifiant": "GM03-a",
+        "ancienId": "GM03-V1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Minutes en heures et minutes",
+        "formatSource": "Saisie structurée",
+        "document": "Métropole professionnelle, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Metropole_30_juin_2026_DV.pdf"
+      },
+      {
+        "source": "Z26A",
+        "question": "Q2",
+        "referenceAncienne": "ZA 2",
+        "forme": "h",
+        "identifiant": "GM03-h",
+        "ancienId": "GM03-V8",
+        "support": "comparable",
+        "difference": "Une durée multiple de60 doit pouvoir être convertie en heures entières ; le résultat h/min reste une adaptation acceptable si minutes0.",
+        "savoirFaire": "Minutes en heures",
+        "formatSource": "Nombre",
+        "document": "Sujet zéro 2026, série générale A",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-mathematiquespdf-123317.pdf"
+      },
+      {
+        "source": "Z26PB",
+        "question": "Q2",
+        "referenceAncienne": "ZPB 2",
+        "forme": "b",
+        "identifiant": "GM03-b",
+        "ancienId": "GM03-V2",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Heures décimales en minutes",
+        "formatSource": "Nombre",
+        "document": "Sujet zéro 2026, série professionnelle B",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-b-mathematiquespdf-123302.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Minutes vers heures et minutes",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Exprime 135 minutes en heures et minutes.",
+      "reponse": "2h15min",
+      "donnees": "m entier0–240 ; division euclidienne par 60 ; réponseen 2champsnormalisés0≤minutes<60.",
+      "saisie": "Deuxchampsheures/minutes.",
+      "acceptation": "Exiger(2,15)dans le format normalisé ; signaler135min équivalent mais forme non demandée.",
+      "aide1": "« Une heure contient60 minutes. » Regrouper des paquets de 60.",
+      "aide2": "«135=2×60+15. » Montrer deux heures complètes et le reste.",
+      "correction": "135min=2h15min.",
+      "controles": [
+        "Accepter2/15 ; refuser1/75si format normalisé imposé.",
+        "Cas60→1h00,0→0h00 ; pas de champ vide assimilé à0."
+      ],
+      "identifiant": "GM03-a",
+      "ancienId": "GM03-V1",
+      "ancienIdGenerateur": "GM03-V1",
+      "indiceGenerateur": 0,
+      "nom": "Minutes vers heures et minutes",
+      "niveauDescription": "6e",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Heures",
+          "unite": "h"
+        },
+        {
+          "type": "nombre",
+          "libelle": "Minutes",
+          "unite": "min"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2611",
+          "question": "Q5",
+          "referenceAncienne": "ME-pro 5",
+          "forme": "a",
+          "identifiant": "GM03-a",
+          "ancienId": "GM03-V1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Minutes en heures et minutes",
+          "formatSource": "Saisie structurée",
+          "document": "Métropole professionnelle, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Metropole_30_juin_2026_DV.pdf"
+        }
+      ]
+    },
+    {
+      "id": "b",
+      "objectif": "Heures décimales vers minutes",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Convertis 1,25 h en minutes.",
+      "reponse": "75min",
+      "donnees": "Durées∈{0,1; 0,25; 0,5; 0,75; 1,25; 1,5; 2,5}; conversionexacte ; virgule/point acceptés en entrée.",
+      "saisie": "Nombre, unitémin.",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "« Sépare1heure et 0,25heure. » Décomposer1,25=1+1/4.",
+      "aide2": "«1 h=60min et 1/4 h=15min. » Afficher60+15.",
+      "correction": "1,25 h=75min.",
+      "controles": ["Accepter75 ; refuser125.", "0,1hdoitdonner6min, pas10min."],
+      "identifiant": "GM03-b",
+      "ancienId": "GM03-V2",
+      "ancienIdGenerateur": "GM03-V2",
+      "indiceGenerateur": 1,
+      "nom": "Heures décimales vers minutes",
+      "niveauDescription": "6e",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "min"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "Z26PB",
+          "question": "Q2",
+          "referenceAncienne": "ZPB 2",
+          "forme": "b",
+          "identifiant": "GM03-b",
+          "ancienId": "GM03-V2",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Heures décimales en minutes",
+          "formatSource": "Nombre",
+          "document": "Sujet zéro 2026, série professionnelle B",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-b-mathematiquespdf-123302.pdf"
+        }
+      ]
+    },
+    {
+      "id": "c",
+      "objectif": "Calculer une heure d’arrivée",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Un film commence à14h35 et dure1h35. À quelle heure finit-il ?",
+      "reponse": "16h10",
+      "donnees": "Départ minute0–59 ; durée10–150min ; mêmejour ; donnéeh/min ; pas de fuseaux horaires.",
+      "saisie": "Deuxchampsheures/minutes.",
+      "acceptation": "Accepter16h10ou16:10 ; refuser15h70formatnonhoraire.",
+      "aide1": "Avance de la durée du film à partir de l’horaire de départ. Frise 14 h 35 → ?.",
+      "aide2": "Avance d’abord d’une heure entière, puis des 35 minutes restantes. Frise 14 h 35 → 15 h 35 → 16 h 10.",
+      "correction": "14h35+1h35=16h10.",
+      "controles": [
+        "Accepter16:10 ; refuser15:70.",
+        "Sommes de minutes depuis minuit vérifiées indépendamment."
+      ],
+      "identifiant": "GM03-c",
+      "ancienId": "GM03-V3",
+      "ancienIdGenerateur": "GM03-V3",
+      "indiceGenerateur": 2,
+      "nom": "Calculer une heure d’arrivée",
+      "niveauDescription": "6e puis entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Heures",
+          "unite": "h"
+        },
+        {
+          "type": "nombre",
+          "libelle": "Minutes",
+          "unite": "min"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2608",
+          "question": "Q4",
+          "referenceAncienne": null,
+          "forme": "c",
+          "identifiant": "GM03-c",
+          "ancienId": "GM03-V3",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Heure d’arrivée après ajout de minutes",
+          "formatSource": "Saisie",
+          "document": "Métropole-Antilles-Guyane, 10 septembre 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-09-10_Metropole_FB.pdf"
+        }
+      ]
+    },
+    {
+      "id": "d",
+      "objectif": "Calculer une durée entre deux horaires",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Une activité commence à9h50 et finit à11h15. Quelle est sa durée en heures et minutes ?",
+      "reponse": "1h25min",
+      "donnees": "Début<finmêmejour ; écart≤180min ; minutes du début parfois>minutesfin ; aucunarrondi.",
+      "saisie": "Deuxchampsheures/minutes.",
+      "acceptation": "Accepter1h25 ; formatnormalisé requis.",
+      "aide1": "« Passe d’abord de 9h50 à10 h. » Afficher un bond vide vers10 h.",
+      "aide2": "«10min jusqu’à 10 h, puis 1 h jusqu’à 11 h et 15min ensuite. » Montrerles3sauts.",
+      "correction": "Durée=10+60+15=85min=1h25.",
+      "controles": [
+        "Accepter1:25 ; refuser2h35 en soustrayant les chiffres isolés.",
+        "Cas début/fin identiques→0h00si explicitement le même jour."
+      ],
+      "identifiant": "GM03-d",
+      "ancienId": "GM03-V4",
+      "ancienIdGenerateur": "GM03-V4",
+      "indiceGenerateur": 3,
+      "nom": "Calculer une durée entre deux horaires",
+      "niveauDescription": "6e puis entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Heures",
+          "unite": "h"
+        },
+        {
+          "type": "nombre",
+          "libelle": "Minutes",
+          "unite": "min"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Gérer un passage à minuit",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Un trajet commence à23h40 et dure50min. À quelle heure arrive-t-on le lendemain ?",
+      "reponse": "00h30",
+      "donnees": "Départaprès22 h ; durée≤180min ; franchissement de minuit assuré et mot lendemain ; pasdate/calendrier complexe.",
+      "saisie": "Heures/minutes.",
+      "acceptation": "Accepter0h30,00:30 ; refuser24h30comme horaire civil normalisé.",
+      "aide1": "« Il reste20min avant minuit. » Frise23h40→00h00.",
+      "aide2": "« Après ces20min, il reste30min. » Montrer le segment sur le lendemain.",
+      "correction": "Arrivéeà00h30le lendemain.",
+      "controles": [
+        "Accepter00:30 ; refuser23:90.",
+        "Conserver l’indication du jour+1 ; nepasperdrel’information de jour."
+      ],
+      "identifiant": "GM03-e",
+      "ancienId": "GM03-V5",
+      "ancienIdGenerateur": "GM03-V5",
+      "indiceGenerateur": 4,
+      "nom": "Gérer un passage à minuit",
+      "niveauDescription": "6e application courte",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Heures",
+          "unite": "h"
+        },
+        {
+          "type": "nombre",
+          "libelle": "Minutes",
+          "unite": "min"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "f",
+      "objectif": "Retrouver l’heure de départ",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Un bus arrive à10h15 après45min de trajet. À quelle heure est-il parti ?",
+      "reponse": "9h30",
+      "donnees": "Arrivéeetdurée compatibles le même jour ; durée≤120min ; éviter une durée négative.",
+      "saisie": "Heures/minutes.",
+      "acceptation": "Accepter9h30ou09:30.",
+      "aide1": "« Remonte la frise depuis 10h15. » Flèche vers la gauche.",
+      "aide2": "« Retire15min pour atteindre10 h, puis les30min restantes. » Montrerdeuxsauts.",
+      "correction": "10h15−45min=9h30.",
+      "controles": ["Accepter09:30 ; refuser11:00.", "Le départ plus la durée redonnel’arrivée."],
+      "identifiant": "GM03-f",
+      "ancienId": "GM03-V6",
+      "ancienIdGenerateur": "GM03-V6",
+      "indiceGenerateur": 5,
+      "nom": "Retrouver l’heure de départ",
+      "niveauDescription": "6e application courte",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Heures",
+          "unite": "h"
+        },
+        {
+          "type": "nombre",
+          "libelle": "Minutes",
+          "unite": "min"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "g",
+      "objectif": "Convertir une fraction d’heure en minutes",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Combien de minutes représentent 2/10 d’heure ?",
+      "reponse": "12 min",
+      "donnees": "Dénominateur dans 2,3,4,5,6,10,12 ; numérateur de 1 au dénominateur moins 1. Les 60 minutes se partagent exactement.",
+      "saisie": "Réponse : champ de réponse numérique ; unité min",
+      "acceptation": "Valeur exacte. Virgule ou point décimal, fractions équivalentes acceptés. Une réponse vide est refusée. L’unité cible est fixée par le champ.",
+      "aide1": "Les parts ont la même durée. Garde celles qui sont colorées. Visuel : disque représentant une heure, partagé en dix parts égales, dont deux colorées.",
+      "aide2": "Une part vaut 60 ÷ 10 minutes. Prends 2 part(s). Le schéma est relié explicitement au calcul affiché.",
+      "correction": "60 × 2/10 = 12 min.",
+      "controles": [
+        "La réponse exacte 12 min est acceptée ; une valeur différente est refusée.",
+        "Les valeurs générées respectent : Dénominateur dans 2,3,4,5,6,10,12 ; numérateur de 1 au dénominateur moins 1. Les 60 minutes se partagent exactement.",
+        "Les calculs sont recoupés depuis l’énoncé par etape1/test_mesures.mjs sur 200 graines."
+      ],
+      "identifiant": "GM03-g",
+      "ancienId": "GM03-V7",
+      "ancienIdGenerateur": "GM03-V7",
+      "indiceGenerateur": 6,
+      "nom": "Convertir une fraction d’heure en minutes",
+      "niveauDescription": "6e apprentissage ou réactivation, puis entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "min"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2605",
+          "question": "Q6",
+          "referenceAncienne": "AG 6",
+          "forme": "g",
+          "identifiant": "GM03-g",
+          "ancienId": "GM03-V7",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Fraction d’heure en minutes",
+          "formatSource": "QCM",
+          "document": "Antilles-Guyane, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Antilles-Guyane_DV-v2.pdf"
+        }
+      ]
+    },
+    {
+      "id": "h",
+      "objectif": "Convertir des durées entières usuelles",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Convertis 3 jours en heures.",
+      "reponse": "72 h",
+      "donnees": "Minutes vers heures, secondes vers minutes, heures vers jours, jours vers heures. Facteur 60 ou 24 ; entiers de 2 à 12, multipliés au départ si division.",
+      "saisie": "Réponse : champ de réponse numérique ; unité h",
+      "acceptation": "Valeur exacte. Virgule ou point décimal, fractions équivalentes acceptés. Une réponse vide est refusée. L’unité cible est fixée par le champ.",
+      "aide1": "La relation entre ces unités utilise 24. Visuel : Flèche de conversion avec relation 1 jour = 24 h, 1 h = 60 min, 1 min = 60 s.",
+      "aide2": "Chaque jour contient 24 heures. Le schéma est relié explicitement au calcul affiché.",
+      "correction": "3 × 24 = 72 heures.",
+      "controles": [
+        "La réponse exacte 72 h est acceptée ; une valeur différente est refusée.",
+        "Les valeurs générées respectent : Minutes vers heures, secondes vers minutes, heures vers jours, jours vers heures. Facteur 60 ou 24 ; entiers de 2 à 12, multipliés au départ si division.",
+        "Les calculs sont recoupés depuis l’énoncé par etape1/test_mesures.mjs sur 200 graines."
+      ],
+      "identifiant": "GM03-h",
+      "ancienId": "GM03-V8",
+      "ancienIdGenerateur": "GM03-V8",
+      "indiceGenerateur": 7,
+      "nom": "Convertir des durées entières usuelles",
+      "niveauDescription": "6e apprentissage ou réactivation, puis entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "h"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "Z26A",
+          "question": "Q2",
+          "referenceAncienne": "ZA 2",
+          "forme": "h",
+          "identifiant": "GM03-h",
+          "ancienId": "GM03-V8",
+          "support": "comparable",
+          "difference": "Une durée multiple de60 doit pouvoir être convertie en heures entières ; le résultat h/min reste une adaptation acceptable si minutes0.",
+          "savoirFaire": "Minutes en heures",
+          "formatSource": "Nombre",
+          "document": "Sujet zéro 2026, série générale A",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-mathematiquespdf-123317.pdf"
+        }
+      ]
+    }
+  ]
+}

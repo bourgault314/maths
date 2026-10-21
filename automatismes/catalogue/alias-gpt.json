@@ -1,0 +1,3482 @@
+{
+  "NC01-a": {
+    "id": "NC01-a",
+    "famille": "NC01",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["NC01-a", "NC01-A", "NC01-V1"]
+  },
+  "NC01-b": {
+    "id": "NC01-b",
+    "famille": "NC01",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["NC01-b", "NC01-B", "NC01-V2"]
+  },
+  "NC01-c": {
+    "id": "NC01-c",
+    "famille": "NC01",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["NC01-c", "NC01-C", "NC01-V3"]
+  },
+  "NC01-d": {
+    "id": "NC01-d",
+    "famille": "NC01",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["NC01-d", "NC01-D", "NC01-V4"]
+  },
+  "NC02-a": {
+    "id": "NC02-a",
+    "famille": "NC02",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["NC02-a", "NC02-A", "NC02-V1"]
+  },
+  "NC02-b": {
+    "id": "NC02-b",
+    "famille": "NC02",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["NC02-b", "NC02-B", "NC02-V2"]
+  },
+  "NC02-c": {
+    "id": "NC02-c",
+    "famille": "NC02",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["NC02-c", "NC02-C", "NC02-V3"]
+  },
+  "NC02-d": {
+    "id": "NC02-d",
+    "famille": "NC02",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["NC02-d", "NC02-D", "NC02-V4"]
+  },
+  "NC03-a": {
+    "id": "NC03-a",
+    "famille": "NC03",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["NC03-a", "NC03-A", "NC03-V1"]
+  },
+  "NC03-b": {
+    "id": "NC03-b",
+    "famille": "NC03",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["NC03-b", "NC03-B", "NC03-V2"]
+  },
+  "NC03-c": {
+    "id": "NC03-c",
+    "famille": "NC03",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["NC03-c", "NC03-C", "NC03-V3"]
+  },
+  "NC03-d": {
+    "id": "NC03-d",
+    "famille": "NC03",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["NC03-d", "NC03-D", "NC03-V4"]
+  },
+  "NC04-a": {
+    "id": "NC04-a",
+    "famille": "NC04",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["NC04-a", "NC04-A", "NC04-V1"]
+  },
+  "NC04-b": {
+    "id": "NC04-b",
+    "famille": "NC04",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["NC04-b", "NC04-B", "NC04-V2"]
+  },
+  "NC04-c": {
+    "id": "NC04-c",
+    "famille": "NC04",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["NC04-c", "NC04-C", "NC04-V3"]
+  },
+  "NC04-d": {
+    "id": "NC04-d",
+    "famille": "NC04",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["NC04-d", "NC04-D", "NC04-V4"]
+  },
+  "NC04-e": {
+    "id": "NC04-e",
+    "famille": "NC04",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["NC04-e", "NC04-E", "NC04-V5"]
+  },
+  "NC04-f": {
+    "id": "NC04-f",
+    "famille": "NC04",
+    "forme": "f",
+    "indiceGenerateur": 5,
+    "ancienParametre": "forme=5",
+    "identifiantsAnciens": ["NC04-f", "NC04-F", "NC04-V6"]
+  },
+  "NC05-a": {
+    "id": "NC05-a",
+    "famille": "NC05",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["NC05-a", "NC05-A", "NC05-V1"]
+  },
+  "NC05-b": {
+    "id": "NC05-b",
+    "famille": "NC05",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["NC05-b", "NC05-B", "NC05-V2"]
+  },
+  "NC05-c": {
+    "id": "NC05-c",
+    "famille": "NC05",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["NC05-c", "NC05-C", "NC05-V3"]
+  },
+  "NC05-d": {
+    "id": "NC05-d",
+    "famille": "NC05",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["NC05-d", "NC05-D", "NC05-V4"]
+  },
+  "NC05-e": {
+    "id": "NC05-e",
+    "famille": "NC05",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["NC05-e", "NC05-E", "NC05-V5"]
+  },
+  "NC05-f": {
+    "id": "NC05-f",
+    "famille": "NC05",
+    "forme": "f",
+    "indiceGenerateur": 5,
+    "ancienParametre": "forme=5",
+    "identifiantsAnciens": ["NC05-f", "NC05-F", "NC05-V6"]
+  },
+  "NC06-a": {
+    "id": "NC06-a",
+    "famille": "NC06",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["NC06-a", "NC06-A", "NC06-V1"]
+  },
+  "NC06-b": {
+    "id": "NC06-b",
+    "famille": "NC06",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["NC06-b", "NC06-B", "NC06-V2"]
+  },
+  "NC06-c": {
+    "id": "NC06-c",
+    "famille": "NC06",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["NC06-c", "NC06-C", "NC06-V3"]
+  },
+  "NC06-d": {
+    "id": "NC06-d",
+    "famille": "NC06",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["NC06-d", "NC06-D", "NC06-V4"]
+  },
+  "NC07-a": {
+    "id": "NC07-a",
+    "famille": "NC07",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["NC07-a", "NC07-A", "NC07-V1"]
+  },
+  "NC07-b": {
+    "id": "NC07-b",
+    "famille": "NC07",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["NC07-b", "NC07-B", "NC07-V2"]
+  },
+  "NC07-c": {
+    "id": "NC07-c",
+    "famille": "NC07",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["NC07-c", "NC07-C", "NC07-V3"]
+  },
+  "NC07-d": {
+    "id": "NC07-d",
+    "famille": "NC07",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["NC07-d", "NC07-D", "NC07-V4"]
+  },
+  "NC07-e": {
+    "id": "NC07-e",
+    "famille": "NC07",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["NC07-e", "NC07-E", "NC07-V5"]
+  },
+  "NC08-a": {
+    "id": "NC08-a",
+    "famille": "NC08",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["NC08-a", "NC08-A", "NC08-V1"]
+  },
+  "NC08-b": {
+    "id": "NC08-b",
+    "famille": "NC08",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["NC08-b", "NC08-B", "NC08-V2"]
+  },
+  "NC08-c": {
+    "id": "NC08-c",
+    "famille": "NC08",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["NC08-c", "NC08-C", "NC08-V3"]
+  },
+  "NC08-d": {
+    "id": "NC08-d",
+    "famille": "NC08",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["NC08-d", "NC08-D", "NC08-V4"]
+  },
+  "NC08-e": {
+    "id": "NC08-e",
+    "famille": "NC08",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["NC08-e", "NC08-E", "NC08-V5"]
+  },
+  "NC08-f": {
+    "id": "NC08-f",
+    "famille": "NC08",
+    "forme": "f",
+    "indiceGenerateur": 5,
+    "ancienParametre": "forme=5",
+    "identifiantsAnciens": ["NC08-f", "NC08-F", "NC08-V6"]
+  },
+  "NC08-g": {
+    "id": "NC08-g",
+    "famille": "NC08",
+    "forme": "g",
+    "indiceGenerateur": 6,
+    "ancienParametre": "forme=6",
+    "identifiantsAnciens": ["NC08-g", "NC08-G", "NC08-V7"]
+  },
+  "NC09-a": {
+    "id": "NC09-a",
+    "famille": "NC09",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["NC09-a", "NC09-A", "NC09-V1"]
+  },
+  "NC09-b": {
+    "id": "NC09-b",
+    "famille": "NC09",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["NC09-b", "NC09-B", "NC09-V2"]
+  },
+  "NC09-c": {
+    "id": "NC09-c",
+    "famille": "NC09",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["NC09-c", "NC09-C", "NC09-V3"]
+  },
+  "NC09-d": {
+    "id": "NC09-d",
+    "famille": "NC09",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["NC09-d", "NC09-D", "NC09-V4"]
+  },
+  "NC09-e": {
+    "id": "NC09-e",
+    "famille": "NC09",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["NC09-e", "NC09-E", "NC09-V5"]
+  },
+  "NC10-a": {
+    "id": "NC10-a",
+    "famille": "NC10",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["NC10-a", "NC10-A", "NC10-V1"]
+  },
+  "NC10-b": {
+    "id": "NC10-b",
+    "famille": "NC10",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["NC10-b", "NC10-B", "NC10-V2"]
+  },
+  "NC10-c": {
+    "id": "NC10-c",
+    "famille": "NC10",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["NC10-c", "NC10-C", "NC10-V3"]
+  },
+  "NC10-d": {
+    "id": "NC10-d",
+    "famille": "NC10",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["NC10-d", "NC10-D", "NC10-V4"]
+  },
+  "NC10-e": {
+    "id": "NC10-e",
+    "famille": "NC10",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["NC10-e", "NC10-E", "NC10-V5"]
+  },
+  "NC10-f": {
+    "id": "NC10-f",
+    "famille": "NC10",
+    "forme": "f",
+    "indiceGenerateur": 5,
+    "ancienParametre": "forme=5",
+    "identifiantsAnciens": ["NC10-f", "NC10-F", "NC10-V6"]
+  },
+  "NC11-a": {
+    "id": "NC11-a",
+    "famille": "NC11",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["NC11-a", "NC11-A", "NC11-V1"]
+  },
+  "NC11-b": {
+    "id": "NC11-b",
+    "famille": "NC11",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["NC11-b", "NC11-B", "NC11-V2"]
+  },
+  "NC11-c": {
+    "id": "NC11-c",
+    "famille": "NC11",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["NC11-c", "NC11-C", "NC11-V3"]
+  },
+  "NC11-d": {
+    "id": "NC11-d",
+    "famille": "NC11",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["NC11-d", "NC11-D", "NC11-V4"]
+  },
+  "NC11-e": {
+    "id": "NC11-e",
+    "famille": "NC11",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["NC11-e", "NC11-E", "NC11-V5"]
+  },
+  "NC11-f": {
+    "id": "NC11-f",
+    "famille": "NC11",
+    "forme": "f",
+    "indiceGenerateur": 5,
+    "ancienParametre": "forme=5",
+    "identifiantsAnciens": ["NC11-f", "NC11-F", "NC11-V6"]
+  },
+  "NC11-g": {
+    "id": "NC11-g",
+    "famille": "NC11",
+    "forme": "g",
+    "indiceGenerateur": 6,
+    "ancienParametre": "forme=6",
+    "identifiantsAnciens": ["NC11-g", "NC11-G", "NC11-V7"]
+  },
+  "NC12-a": {
+    "id": "NC12-a",
+    "famille": "NC12",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["NC12-a", "NC12-A", "NC12-V1"]
+  },
+  "NC12-b": {
+    "id": "NC12-b",
+    "famille": "NC12",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["NC12-b", "NC12-B", "NC12-V2"]
+  },
+  "NC12-c": {
+    "id": "NC12-c",
+    "famille": "NC12",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["NC12-c", "NC12-C", "NC12-V3"]
+  },
+  "NC12-d": {
+    "id": "NC12-d",
+    "famille": "NC12",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["NC12-d", "NC12-D", "NC12-V4"]
+  },
+  "NC12-e": {
+    "id": "NC12-e",
+    "famille": "NC12",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["NC12-e", "NC12-E", "NC12-V5"]
+  },
+  "NC12-f": {
+    "id": "NC12-f",
+    "famille": "NC12",
+    "forme": "f",
+    "indiceGenerateur": 5,
+    "ancienParametre": "forme=5",
+    "identifiantsAnciens": ["NC12-f", "NC12-F", "NC12-V6"]
+  },
+  "NC12-g": {
+    "id": "NC12-g",
+    "famille": "NC12",
+    "forme": "g",
+    "indiceGenerateur": 6,
+    "ancienParametre": "forme=6",
+    "identifiantsAnciens": ["NC12-g", "NC12-G", "NC12-V7"]
+  },
+  "NC13-a": {
+    "id": "NC13-a",
+    "famille": "NC13",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["NC13-a", "NC13-A", "NC13-V1"]
+  },
+  "NC13-b": {
+    "id": "NC13-b",
+    "famille": "NC13",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["NC13-b", "NC13-B", "NC13-V2"]
+  },
+  "NC13-c": {
+    "id": "NC13-c",
+    "famille": "NC13",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["NC13-c", "NC13-C", "NC13-V3"]
+  },
+  "NC13-d": {
+    "id": "NC13-d",
+    "famille": "NC13",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["NC13-d", "NC13-D", "NC13-V4"]
+  },
+  "NC13-e": {
+    "id": "NC13-e",
+    "famille": "NC13",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["NC13-e", "NC13-E", "NC13-V5"]
+  },
+  "NC13-f": {
+    "id": "NC13-f",
+    "famille": "NC13",
+    "forme": "f",
+    "indiceGenerateur": 5,
+    "ancienParametre": "forme=5",
+    "identifiantsAnciens": ["NC13-f", "NC13-F", "NC13-V6"]
+  },
+  "NC14-a": {
+    "id": "NC14-a",
+    "famille": "NC14",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["NC14-a", "NC14-A", "NC14-V1"]
+  },
+  "NC14-b": {
+    "id": "NC14-b",
+    "famille": "NC14",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["NC14-b", "NC14-B", "NC14-V2"]
+  },
+  "NC14-c": {
+    "id": "NC14-c",
+    "famille": "NC14",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["NC14-c", "NC14-C", "NC14-V3"]
+  },
+  "NC14-d": {
+    "id": "NC14-d",
+    "famille": "NC14",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["NC14-d", "NC14-D", "NC14-V4"]
+  },
+  "NC14-e": {
+    "id": "NC14-e",
+    "famille": "NC14",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["NC14-e", "NC14-E", "NC14-V5"]
+  },
+  "NC14-f": {
+    "id": "NC14-f",
+    "famille": "NC14",
+    "forme": "f",
+    "indiceGenerateur": 5,
+    "ancienParametre": "forme=5",
+    "identifiantsAnciens": ["NC14-f", "NC14-F", "NC14-V6"]
+  },
+  "NC14-g": {
+    "id": "NC14-g",
+    "famille": "NC14",
+    "forme": "g",
+    "indiceGenerateur": 6,
+    "ancienParametre": "forme=6",
+    "identifiantsAnciens": ["NC14-g", "NC14-G", "NC14-V7"]
+  },
+  "NC15-a": {
+    "id": "NC15-a",
+    "famille": "NC15",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["NC15-a", "NC15-A", "NC15-V1"]
+  },
+  "NC15-b": {
+    "id": "NC15-b",
+    "famille": "NC15",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["NC15-b", "NC15-B", "NC15-V2"]
+  },
+  "NC15-c": {
+    "id": "NC15-c",
+    "famille": "NC15",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["NC15-c", "NC15-C", "NC15-V3"]
+  },
+  "NC15-d": {
+    "id": "NC15-d",
+    "famille": "NC15",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["NC15-d", "NC15-D", "NC15-V4"]
+  },
+  "NC15-e": {
+    "id": "NC15-e",
+    "famille": "NC15",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["NC15-e", "NC15-E", "NC15-V5"]
+  },
+  "NC15-f": {
+    "id": "NC15-f",
+    "famille": "NC15",
+    "forme": "f",
+    "indiceGenerateur": 5,
+    "ancienParametre": "forme=5",
+    "identifiantsAnciens": ["NC15-f", "NC15-F", "NC15-V6"]
+  },
+  "NC15-g": {
+    "id": "NC15-g",
+    "famille": "NC15",
+    "forme": "g",
+    "indiceGenerateur": 6,
+    "ancienParametre": "forme=6",
+    "identifiantsAnciens": ["NC15-g", "NC15-G", "NC15-V7"]
+  },
+  "NC16-a": {
+    "id": "NC16-a",
+    "famille": "NC16",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["NC16-a", "NC16-A", "NC16-V1"]
+  },
+  "NC16-b": {
+    "id": "NC16-b",
+    "famille": "NC16",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["NC16-b", "NC16-B", "NC16-V2"]
+  },
+  "NC16-c": {
+    "id": "NC16-c",
+    "famille": "NC16",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["NC16-c", "NC16-C", "NC16-V3"]
+  },
+  "NC16-d": {
+    "id": "NC16-d",
+    "famille": "NC16",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["NC16-d", "NC16-D", "NC16-V4"]
+  },
+  "NC16-e": {
+    "id": "NC16-e",
+    "famille": "NC16",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["NC16-e", "NC16-E", "NC16-V5"]
+  },
+  "NC17-a": {
+    "id": "NC17-a",
+    "famille": "NC17",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["NC17-a", "NC17-A", "NC17-V1"]
+  },
+  "NC17-b": {
+    "id": "NC17-b",
+    "famille": "NC17",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["NC17-b", "NC17-B", "NC17-V2"]
+  },
+  "NC17-c": {
+    "id": "NC17-c",
+    "famille": "NC17",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["NC17-c", "NC17-C", "NC17-V3"]
+  },
+  "NC17-d": {
+    "id": "NC17-d",
+    "famille": "NC17",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["NC17-d", "NC17-D", "NC17-V4"]
+  },
+  "NC17-e": {
+    "id": "NC17-e",
+    "famille": "NC17",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["NC17-e", "NC17-E", "NC17-V5"]
+  },
+  "NC18-a": {
+    "id": "NC18-a",
+    "famille": "NC18",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["NC18-a", "NC18-A", "NC18-V1"]
+  },
+  "NC18-b": {
+    "id": "NC18-b",
+    "famille": "NC18",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["NC18-b", "NC18-B", "NC18-V2"]
+  },
+  "NC18-c": {
+    "id": "NC18-c",
+    "famille": "NC18",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["NC18-c", "NC18-C", "NC18-V3"]
+  },
+  "NC18-d": {
+    "id": "NC18-d",
+    "famille": "NC18",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["NC18-d", "NC18-D", "NC18-V4"]
+  },
+  "NC18-e": {
+    "id": "NC18-e",
+    "famille": "NC18",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["NC18-e", "NC18-E", "NC18-V5"]
+  },
+  "NC18-f": {
+    "id": "NC18-f",
+    "famille": "NC18",
+    "forme": "f",
+    "indiceGenerateur": 5,
+    "ancienParametre": "forme=5",
+    "identifiantsAnciens": ["NC18-f", "NC18-F", "NC18-V6"]
+  },
+  "NC19-V1": {
+    "id": "NC19-a",
+    "famille": "NC19",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["NC19-V1"]
+  },
+  "NC19-V2": {
+    "id": "NC19-b",
+    "famille": "NC19",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["NC19-V2"]
+  },
+  "NC19-V3": {
+    "id": "NC19-c",
+    "famille": "NC19",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["NC19-V3"]
+  },
+  "NC19-V4": {
+    "id": "NC19-d",
+    "famille": "NC19",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["NC19-V4"]
+  },
+  "NC19-V5": {
+    "id": "NC19-e",
+    "famille": "NC19",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["NC19-V5"]
+  },
+  "NC20-V1": {
+    "id": "NC20-a",
+    "famille": "NC20",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["NC20-V1"]
+  },
+  "NC20-V2": {
+    "id": "NC20-b",
+    "famille": "NC20",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["NC20-V2"]
+  },
+  "NC20-V3": {
+    "id": "NC20-c",
+    "famille": "NC20",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["NC20-V3"]
+  },
+  "NC20-V4": {
+    "id": "NC20-d",
+    "famille": "NC20",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["NC20-V4"]
+  },
+  "NC20-V5": {
+    "id": "NC20-e",
+    "famille": "NC20",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["NC20-V5"]
+  },
+  "NC20-V6": {
+    "id": "NC20-f",
+    "famille": "NC20",
+    "forme": "f",
+    "indiceGenerateur": 5,
+    "ancienParametre": "forme=5",
+    "identifiantsAnciens": ["NC20-V6"]
+  },
+  "NC21-V1": {
+    "id": "NC21-a",
+    "famille": "NC21",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["NC21-V1"]
+  },
+  "NC21-V2": {
+    "id": "NC21-b",
+    "famille": "NC21",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["NC21-V2"]
+  },
+  "NC21-V3": {
+    "id": "NC21-c",
+    "famille": "NC21",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["NC21-V3"]
+  },
+  "NC21-V4": {
+    "id": "NC21-d",
+    "famille": "NC21",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["NC21-V4"]
+  },
+  "NC21-V5": {
+    "id": "NC21-e",
+    "famille": "NC21",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["NC21-V5"]
+  },
+  "NC21-V6": {
+    "id": "NC21-f",
+    "famille": "NC21",
+    "forme": "f",
+    "indiceGenerateur": 5,
+    "ancienParametre": "forme=5",
+    "identifiantsAnciens": ["NC21-V6"]
+  },
+  "NC22-V1": {
+    "id": "NC22-a",
+    "famille": "NC22",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["NC22-V1"]
+  },
+  "NC22-V2": {
+    "id": "NC22-b",
+    "famille": "NC22",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["NC22-V2"]
+  },
+  "NC22-V3": {
+    "id": "NC22-c",
+    "famille": "NC22",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["NC22-V3"]
+  },
+  "NC22-V4": {
+    "id": "NC22-d",
+    "famille": "NC22",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["NC22-V4"]
+  },
+  "NC22-V5": {
+    "id": "NC22-e",
+    "famille": "NC22",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["NC22-V5"]
+  },
+  "NC23-V1": {
+    "id": "NC23-a",
+    "famille": "NC23",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["NC23-V1"]
+  },
+  "NC23-V2": {
+    "id": "NC23-b",
+    "famille": "NC23",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["NC23-V2"]
+  },
+  "NC23-V3": {
+    "id": "NC23-c",
+    "famille": "NC23",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["NC23-V3"]
+  },
+  "NC23-V4": {
+    "id": "NC23-d",
+    "famille": "NC23",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["NC23-V4"]
+  },
+  "NC24-V1": {
+    "id": "NC24-a",
+    "famille": "NC24",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["NC24-V1"]
+  },
+  "NC24-V2": {
+    "id": "NC24-b",
+    "famille": "NC24",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["NC24-V2"]
+  },
+  "NC24-V3": {
+    "id": "NC24-c",
+    "famille": "NC24",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["NC24-V3"]
+  },
+  "NC24-V4": {
+    "id": "NC24-d",
+    "famille": "NC24",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["NC24-V4"]
+  },
+  "NC24-V5": {
+    "id": "NC24-e",
+    "famille": "NC24",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["NC24-V5"]
+  },
+  "NC25-V1": {
+    "id": "NC25-a",
+    "famille": "NC25",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["NC25-V1"]
+  },
+  "NC25-V2": {
+    "id": "NC25-b",
+    "famille": "NC25",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["NC25-V2"]
+  },
+  "NC25-V3": {
+    "id": "NC25-c",
+    "famille": "NC25",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["NC25-V3"]
+  },
+  "NC25-V4": {
+    "id": "NC25-d",
+    "famille": "NC25",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["NC25-V4"]
+  },
+  "NC25-V5": {
+    "id": "NC25-e",
+    "famille": "NC25",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["NC25-V5"]
+  },
+  "NC26-V1": {
+    "id": "NC26-a",
+    "famille": "NC26",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["NC26-V1"]
+  },
+  "NC26-V2": {
+    "id": "NC26-b",
+    "famille": "NC26",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["NC26-V2"]
+  },
+  "NC26-V3": {
+    "id": "NC26-c",
+    "famille": "NC26",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["NC26-V3"]
+  },
+  "NC26-V4": {
+    "id": "NC26-d",
+    "famille": "NC26",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["NC26-V4"]
+  },
+  "NC27-V1": {
+    "id": "NC27-a",
+    "famille": "NC27",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["NC27-V1"]
+  },
+  "NC27-V2": {
+    "id": "NC27-b",
+    "famille": "NC27",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["NC27-V2"]
+  },
+  "NC27-V3": {
+    "id": "NC27-c",
+    "famille": "NC27",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["NC27-V3"]
+  },
+  "NC27-V4": {
+    "id": "NC27-d",
+    "famille": "NC27",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["NC27-V4"]
+  },
+  "NC27-V5": {
+    "id": "NC27-e",
+    "famille": "NC27",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["NC27-V5"]
+  },
+  "NC28-V1": {
+    "id": "NC28-a",
+    "famille": "NC28",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["NC28-V1"]
+  },
+  "NC28-V2": {
+    "id": "NC28-b",
+    "famille": "NC28",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["NC28-V2"]
+  },
+  "NC28-V3": {
+    "id": "NC28-c",
+    "famille": "NC28",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["NC28-V3"]
+  },
+  "NC28-V4": {
+    "id": "NC28-d",
+    "famille": "NC28",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["NC28-V4"]
+  },
+  "NC29-V1": {
+    "id": "NC29-a",
+    "famille": "NC29",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["NC29-V1"]
+  },
+  "NC29-V2": {
+    "id": "NC29-b",
+    "famille": "NC29",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["NC29-V2"]
+  },
+  "NC29-V3": {
+    "id": "NC29-c",
+    "famille": "NC29",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["NC29-V3"]
+  },
+  "NC29-V4": {
+    "id": "NC29-d",
+    "famille": "NC29",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["NC29-V4"]
+  },
+  "NC29-V5": {
+    "id": "NC29-e",
+    "famille": "NC29",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["NC29-V5"]
+  },
+  "NC29-V6": {
+    "id": "NC29-f",
+    "famille": "NC29",
+    "forme": "f",
+    "indiceGenerateur": 5,
+    "ancienParametre": "forme=5",
+    "identifiantsAnciens": ["NC29-V6"]
+  },
+  "NC30-V1": {
+    "id": "NC30-a",
+    "famille": "NC30",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["NC30-V1"]
+  },
+  "NC30-V2": {
+    "id": "NC30-b",
+    "famille": "NC30",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["NC30-V2"]
+  },
+  "NC30-V3": {
+    "id": "NC30-c",
+    "famille": "NC30",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["NC30-V3"]
+  },
+  "NC30-V4": {
+    "id": "NC30-d",
+    "famille": "NC30",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["NC30-V4"]
+  },
+  "NC31-V1": {
+    "id": "NC31-a",
+    "famille": "NC31",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["NC31-V1"]
+  },
+  "NC31-V2": {
+    "id": "NC31-b",
+    "famille": "NC31",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["NC31-V2"]
+  },
+  "NC31-V3": {
+    "id": "NC31-c",
+    "famille": "NC31",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["NC31-V3"]
+  },
+  "NC31-V4": {
+    "id": "NC31-d",
+    "famille": "NC31",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["NC31-V4"]
+  },
+  "NC31-V5": {
+    "id": "NC31-e",
+    "famille": "NC31",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["NC31-V5"]
+  },
+  "PF01-A": {
+    "id": "PF01-a",
+    "famille": "PF01",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["PF01-A", "PF01-1", "PF01-V1"]
+  },
+  "PF01-B": {
+    "id": "PF01-b",
+    "famille": "PF01",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["PF01-B", "PF01-2", "PF01-V2"]
+  },
+  "PF01-C": {
+    "id": "PF01-c",
+    "famille": "PF01",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["PF01-C", "PF01-3", "PF01-V3"]
+  },
+  "PF02-A": {
+    "id": "PF02-a",
+    "famille": "PF02",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["PF02-A", "PF02-1", "PF02-V1"]
+  },
+  "PF02-B": {
+    "id": "PF02-b",
+    "famille": "PF02",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["PF02-B", "PF02-2", "PF02-V2"]
+  },
+  "PF02-C": {
+    "id": "PF02-c",
+    "famille": "PF02",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["PF02-C", "PF02-3", "PF02-V3"]
+  },
+  "PF02-D": {
+    "id": "PF02-d",
+    "famille": "PF02",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["PF02-D", "PF02-4", "PF02-V4"]
+  },
+  "PF03-A": {
+    "id": "PF03-a",
+    "famille": "PF03",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["PF03-A", "PF03-1", "PF03-V1"]
+  },
+  "PF03-B": {
+    "id": "PF03-b",
+    "famille": "PF03",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["PF03-B", "PF03-2", "PF03-V2"]
+  },
+  "PF03-C": {
+    "id": "PF03-c",
+    "famille": "PF03",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["PF03-C", "PF03-3", "PF03-V3"]
+  },
+  "PF03-D": {
+    "id": "PF03-d",
+    "famille": "PF03",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["PF03-D", "PF03-4", "PF03-V4"]
+  },
+  "PF04-A": {
+    "id": "PF04-a",
+    "famille": "PF04",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["PF04-A", "PF04-1", "PF04-V1"]
+  },
+  "PF04-B": {
+    "id": "PF04-b",
+    "famille": "PF04",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["PF04-B", "PF04-2", "PF04-V2"]
+  },
+  "PF04-C": {
+    "id": "PF04-c",
+    "famille": "PF04",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["PF04-C", "PF04-3", "PF04-V3"]
+  },
+  "PF04-D": {
+    "id": "PF04-d",
+    "famille": "PF04",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["PF04-D", "PF04-4", "PF04-V4"]
+  },
+  "PF05-A": {
+    "id": "PF05-a",
+    "famille": "PF05",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["PF05-A", "PF05-1", "PF05-V1"]
+  },
+  "PF05-B": {
+    "id": "PF05-b",
+    "famille": "PF05",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["PF05-B", "PF05-2", "PF05-V2"]
+  },
+  "PF05-C": {
+    "id": "PF05-c",
+    "famille": "PF05",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["PF05-C", "PF05-3", "PF05-V3"]
+  },
+  "PF05-D": {
+    "id": "PF05-d",
+    "famille": "PF05",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["PF05-D", "PF05-4", "PF05-V4"]
+  },
+  "PF06-A": {
+    "id": "PF06-a",
+    "famille": "PF06",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["PF06-A", "PF06-1", "PF06-V1"]
+  },
+  "PF06-B": {
+    "id": "PF06-b",
+    "famille": "PF06",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["PF06-B", "PF06-2", "PF06-V2"]
+  },
+  "PF06-C": {
+    "id": "PF06-c",
+    "famille": "PF06",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["PF06-C", "PF06-3", "PF06-V3"]
+  },
+  "PF07-A": {
+    "id": "PF07-a",
+    "famille": "PF07",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["PF07-A", "PF07-1", "PF07-V1"]
+  },
+  "PF07-B": {
+    "id": "PF07-b",
+    "famille": "PF07",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["PF07-B", "PF07-2", "PF07-V2"]
+  },
+  "PF07-C": {
+    "id": "PF07-c",
+    "famille": "PF07",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["PF07-C", "PF07-3", "PF07-V3"]
+  },
+  "PF07-D": {
+    "id": "PF07-d",
+    "famille": "PF07",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["PF07-D", "PF07-4", "PF07-V4"]
+  },
+  "EG08-V1": {
+    "id": "EG08-a",
+    "famille": "EG08",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["EG08-V1"]
+  },
+  "EG08-V2": {
+    "id": "EG08-b",
+    "famille": "EG08",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["EG08-V2"]
+  },
+  "EG08-V3": {
+    "id": "EG08-c",
+    "famille": "EG08",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["EG08-V3"]
+  },
+  "EG08-V4": {
+    "id": "EG08-d",
+    "famille": "EG08",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["EG08-V4"]
+  },
+  "EG08-V5": {
+    "id": "EG08-e",
+    "famille": "EG08",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["EG08-V5"]
+  },
+  "EG08-V6": {
+    "id": "EG08-f",
+    "famille": "EG08",
+    "forme": "f",
+    "indiceGenerateur": 5,
+    "ancienParametre": "forme=5",
+    "identifiantsAnciens": ["EG08-V6"]
+  },
+  "EG09-V1": {
+    "id": "EG09-a",
+    "famille": "EG09",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["EG09-V1"]
+  },
+  "EG09-V2": {
+    "id": "EG09-b",
+    "famille": "EG09",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["EG09-V2"]
+  },
+  "EG09-V3": {
+    "id": "EG09-c",
+    "famille": "EG09",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["EG09-V3"]
+  },
+  "EG09-V4": {
+    "id": "EG09-d",
+    "famille": "EG09",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["EG09-V4"]
+  },
+  "EG09-V5": {
+    "id": "EG09-e",
+    "famille": "EG09",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["EG09-V5"]
+  },
+  "EG09-V6": {
+    "id": "EG09-f",
+    "famille": "EG09",
+    "forme": "f",
+    "indiceGenerateur": 5,
+    "ancienParametre": "forme=5",
+    "identifiantsAnciens": ["EG09-V6"]
+  },
+  "EG09-V7": {
+    "id": "EG09-g",
+    "famille": "EG09",
+    "forme": "g",
+    "indiceGenerateur": 6,
+    "ancienParametre": "forme=6",
+    "identifiantsAnciens": ["EG09-V7"]
+  },
+  "EG09-V8": {
+    "id": "EG09-h",
+    "famille": "EG09",
+    "forme": "h",
+    "indiceGenerateur": 7,
+    "ancienParametre": "forme=7",
+    "identifiantsAnciens": ["EG09-V8"]
+  },
+  "EG22-V1": {
+    "id": "EG22-a",
+    "famille": "EG22",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["EG22-V1"]
+  },
+  "EG22-V2": {
+    "id": "EG22-b",
+    "famille": "EG22",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["EG22-V2"]
+  },
+  "EG22-V3": {
+    "id": "EG22-c",
+    "famille": "EG22",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["EG22-V3"]
+  },
+  "EG22-V4": {
+    "id": "EG22-d",
+    "famille": "EG22",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["EG22-V4"]
+  },
+  "EG22-V5": {
+    "id": "EG22-e",
+    "famille": "EG22",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["EG22-V5"]
+  },
+  "EG23-V1": {
+    "id": "EG23-a",
+    "famille": "EG23",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["EG23-V1"]
+  },
+  "EG23-V2": {
+    "id": "EG23-b",
+    "famille": "EG23",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["EG23-V2"]
+  },
+  "EG23-V3": {
+    "id": "EG23-c",
+    "famille": "EG23",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["EG23-V3"]
+  },
+  "EG23-V4": {
+    "id": "EG23-d",
+    "famille": "EG23",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["EG23-V4"]
+  },
+  "EG24-V1": {
+    "id": "EG24-a",
+    "famille": "EG24",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["EG24-V1"]
+  },
+  "EG24-V2": {
+    "id": "EG24-b",
+    "famille": "EG24",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["EG24-V2"]
+  },
+  "EG24-V3": {
+    "id": "EG24-c",
+    "famille": "EG24",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["EG24-V3"]
+  },
+  "EG24-V4": {
+    "id": "EG24-d",
+    "famille": "EG24",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["EG24-V4"]
+  },
+  "EG24-V5": {
+    "id": "EG24-e",
+    "famille": "EG24",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["EG24-V5"]
+  },
+  "GM01-V1": {
+    "id": "GM01-a",
+    "famille": "GM01",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["GM01-V1"]
+  },
+  "GM01-V2": {
+    "id": "GM01-b",
+    "famille": "GM01",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["GM01-V2"]
+  },
+  "GM01-V3": {
+    "id": "GM01-c",
+    "famille": "GM01",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["GM01-V3"]
+  },
+  "GM01-V4": {
+    "id": "GM01-d",
+    "famille": "GM01",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["GM01-V4"]
+  },
+  "GM01-V5": {
+    "id": "GM01-e",
+    "famille": "GM01",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["GM01-V5"]
+  },
+  "GM02-V1": {
+    "id": "GM02-a",
+    "famille": "GM02",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["GM02-V1"]
+  },
+  "GM02-V2": {
+    "id": "GM02-b",
+    "famille": "GM02",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["GM02-V2"]
+  },
+  "GM02-V3": {
+    "id": "GM02-c",
+    "famille": "GM02",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["GM02-V3"]
+  },
+  "GM02-V4": {
+    "id": "GM02-d",
+    "famille": "GM02",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["GM02-V4"]
+  },
+  "GM02-V5": {
+    "id": "GM02-e",
+    "famille": "GM02",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["GM02-V5"]
+  },
+  "GM02-V6": {
+    "id": "GM02-f",
+    "famille": "GM02",
+    "forme": "f",
+    "indiceGenerateur": 5,
+    "ancienParametre": "forme=5",
+    "identifiantsAnciens": ["GM02-V6"]
+  },
+  "GM02-V7": {
+    "id": "GM02-g",
+    "famille": "GM02",
+    "forme": "g",
+    "indiceGenerateur": 6,
+    "ancienParametre": "forme=6",
+    "identifiantsAnciens": ["GM02-V7"]
+  },
+  "GM02-V8": {
+    "id": "GM02-h",
+    "famille": "GM02",
+    "forme": "h",
+    "indiceGenerateur": 7,
+    "ancienParametre": "forme=7",
+    "identifiantsAnciens": ["GM02-V8"]
+  },
+  "GM03-V1": {
+    "id": "GM03-a",
+    "famille": "GM03",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["GM03-V1"]
+  },
+  "GM03-V2": {
+    "id": "GM03-b",
+    "famille": "GM03",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["GM03-V2"]
+  },
+  "GM03-V3": {
+    "id": "GM03-c",
+    "famille": "GM03",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["GM03-V3"]
+  },
+  "GM03-V4": {
+    "id": "GM03-d",
+    "famille": "GM03",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["GM03-V4"]
+  },
+  "GM03-V5": {
+    "id": "GM03-e",
+    "famille": "GM03",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["GM03-V5"]
+  },
+  "GM03-V6": {
+    "id": "GM03-f",
+    "famille": "GM03",
+    "forme": "f",
+    "indiceGenerateur": 5,
+    "ancienParametre": "forme=5",
+    "identifiantsAnciens": ["GM03-V6"]
+  },
+  "GM03-V7": {
+    "id": "GM03-g",
+    "famille": "GM03",
+    "forme": "g",
+    "indiceGenerateur": 6,
+    "ancienParametre": "forme=6",
+    "identifiantsAnciens": ["GM03-V7"]
+  },
+  "GM03-V8": {
+    "id": "GM03-h",
+    "famille": "GM03",
+    "forme": "h",
+    "indiceGenerateur": 7,
+    "ancienParametre": "forme=7",
+    "identifiantsAnciens": ["GM03-V8"]
+  },
+  "GM04-V1": {
+    "id": "GM04-a",
+    "famille": "GM04",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["GM04-V1"]
+  },
+  "GM04-V2": {
+    "id": "GM04-b",
+    "famille": "GM04",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["GM04-V2"]
+  },
+  "GM04-V3": {
+    "id": "GM04-c",
+    "famille": "GM04",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["GM04-V3"]
+  },
+  "GM04-V4": {
+    "id": "GM04-d",
+    "famille": "GM04",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["GM04-V4"]
+  },
+  "GM04-V5": {
+    "id": "GM04-e",
+    "famille": "GM04",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["GM04-V5"]
+  },
+  "PF08-A": {
+    "id": "PF08-a",
+    "famille": "PF08",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["PF08-A", "PF08-1", "PF08-V1"]
+  },
+  "PF08-B": {
+    "id": "PF08-b",
+    "famille": "PF08",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["PF08-B", "PF08-2", "PF08-V2"]
+  },
+  "PF08-C": {
+    "id": "PF08-c",
+    "famille": "PF08",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["PF08-C", "PF08-3", "PF08-V3"]
+  },
+  "PF08-D": {
+    "id": "PF08-d",
+    "famille": "PF08",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["PF08-D", "PF08-4", "PF08-V4"]
+  },
+  "PF08-E": {
+    "id": "PF08-e",
+    "famille": "PF08",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["PF08-E", "PF08-5", "PF08-V5"]
+  },
+  "PF08-F": {
+    "id": "PF08-f",
+    "famille": "PF08",
+    "forme": "f",
+    "indiceGenerateur": 5,
+    "ancienParametre": "forme=5",
+    "identifiantsAnciens": ["PF08-F", "PF08-6", "PF08-V6"]
+  },
+  "EG01-V1": {
+    "id": "EG01-a",
+    "famille": "EG01",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["EG01-V1"]
+  },
+  "EG01-V2": {
+    "id": "EG01-b",
+    "famille": "EG01",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["EG01-V2"]
+  },
+  "EG01-V3": {
+    "id": "EG01-c",
+    "famille": "EG01",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["EG01-V3"]
+  },
+  "EG01-V4": {
+    "id": "EG01-d",
+    "famille": "EG01",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["EG01-V4"]
+  },
+  "EG01-V5": {
+    "id": "EG01-e",
+    "famille": "EG01",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["EG01-V5"]
+  },
+  "EG02-V1": {
+    "id": "EG02-a",
+    "famille": "EG02",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["EG02-V1"]
+  },
+  "EG02-V2": {
+    "id": "EG02-b",
+    "famille": "EG02",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["EG02-V2"]
+  },
+  "EG02-V3": {
+    "id": "EG02-c",
+    "famille": "EG02",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["EG02-V3"]
+  },
+  "EG02-V4": {
+    "id": "EG02-d",
+    "famille": "EG02",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["EG02-V4"]
+  },
+  "EG03-V1": {
+    "id": "EG03-a",
+    "famille": "EG03",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["EG03-V1"]
+  },
+  "EG03-V2": {
+    "id": "EG03-b",
+    "famille": "EG03",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["EG03-V2"]
+  },
+  "EG03-V3": {
+    "id": "EG03-c",
+    "famille": "EG03",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["EG03-V3"]
+  },
+  "EG03-V4": {
+    "id": "EG03-d",
+    "famille": "EG03",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["EG03-V4"]
+  },
+  "EG04-V1": {
+    "id": "EG04-a",
+    "famille": "EG04",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["EG04-V1"]
+  },
+  "EG04-V2": {
+    "id": "EG04-b",
+    "famille": "EG04",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["EG04-V2"]
+  },
+  "EG04-V3": {
+    "id": "EG04-c",
+    "famille": "EG04",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["EG04-V3"]
+  },
+  "EG04-V4": {
+    "id": "EG04-d",
+    "famille": "EG04",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["EG04-V4"]
+  },
+  "EG04-V5": {
+    "id": "EG04-e",
+    "famille": "EG04",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["EG04-V5"]
+  },
+  "EG04-V6": {
+    "id": "EG04-f",
+    "famille": "EG04",
+    "forme": "f",
+    "indiceGenerateur": 5,
+    "ancienParametre": "forme=5",
+    "identifiantsAnciens": ["EG04-V6"]
+  },
+  "EG05-V1": {
+    "id": "EG05-a",
+    "famille": "EG05",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["EG05-V1"]
+  },
+  "EG05-V2": {
+    "id": "EG05-b",
+    "famille": "EG05",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["EG05-V2"]
+  },
+  "EG05-V3": {
+    "id": "EG05-c",
+    "famille": "EG05",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["EG05-V3"]
+  },
+  "EG05-V4": {
+    "id": "EG05-d",
+    "famille": "EG05",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["EG05-V4"]
+  },
+  "EG05-V5": {
+    "id": "EG05-e",
+    "famille": "EG05",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["EG05-V5"]
+  },
+  "EG05-V6": {
+    "id": "EG05-f",
+    "famille": "EG05",
+    "forme": "f",
+    "indiceGenerateur": 5,
+    "ancienParametre": "forme=5",
+    "identifiantsAnciens": ["EG05-V6"]
+  },
+  "EG06-V1": {
+    "id": "EG06-a",
+    "famille": "EG06",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["EG06-V1"]
+  },
+  "EG06-V2": {
+    "id": "EG06-b",
+    "famille": "EG06",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["EG06-V2"]
+  },
+  "EG06-V3": {
+    "id": "EG06-c",
+    "famille": "EG06",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["EG06-V3"]
+  },
+  "EG06-V4": {
+    "id": "EG06-d",
+    "famille": "EG06",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["EG06-V4"]
+  },
+  "EG06-V5": {
+    "id": "EG06-e",
+    "famille": "EG06",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["EG06-V5"]
+  },
+  "EG06-V6": {
+    "id": "EG06-f",
+    "famille": "EG06",
+    "forme": "f",
+    "indiceGenerateur": 5,
+    "ancienParametre": "forme=5",
+    "identifiantsAnciens": ["EG06-V6"]
+  },
+  "EG06-V7": {
+    "id": "EG06-g",
+    "famille": "EG06",
+    "forme": "g",
+    "indiceGenerateur": 6,
+    "ancienParametre": "forme=6",
+    "identifiantsAnciens": ["EG06-V7"]
+  },
+  "EG07-V1": {
+    "id": "EG07-a",
+    "famille": "EG07",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["EG07-V1"]
+  },
+  "EG07-V2": {
+    "id": "EG07-b",
+    "famille": "EG07",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["EG07-V2"]
+  },
+  "EG07-V3": {
+    "id": "EG07-c",
+    "famille": "EG07",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["EG07-V3"]
+  },
+  "EG07-V4": {
+    "id": "EG07-d",
+    "famille": "EG07",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["EG07-V4"]
+  },
+  "EG10-V1": {
+    "id": "EG10-a",
+    "famille": "EG10",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["EG10-V1"]
+  },
+  "EG10-V2": {
+    "id": "EG10-b",
+    "famille": "EG10",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["EG10-V2"]
+  },
+  "EG10-V3": {
+    "id": "EG10-c",
+    "famille": "EG10",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["EG10-V3"]
+  },
+  "EG10-V4": {
+    "id": "EG10-d",
+    "famille": "EG10",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["EG10-V4"]
+  },
+  "EG10-V5": {
+    "id": "EG10-e",
+    "famille": "EG10",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["EG10-V5"]
+  },
+  "EG10-V6": {
+    "id": "EG10-f",
+    "famille": "EG10",
+    "forme": "f",
+    "indiceGenerateur": 5,
+    "ancienParametre": "forme=5",
+    "identifiantsAnciens": ["EG10-V6"]
+  },
+  "EG11-V1": {
+    "id": "EG11-a",
+    "famille": "EG11",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["EG11-V1"]
+  },
+  "EG11-V2": {
+    "id": "EG11-b",
+    "famille": "EG11",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["EG11-V2"]
+  },
+  "EG11-V3": {
+    "id": "EG11-c",
+    "famille": "EG11",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["EG11-V3"]
+  },
+  "EG11-V4": {
+    "id": "EG11-d",
+    "famille": "EG11",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["EG11-V4"]
+  },
+  "EG11-V5": {
+    "id": "EG11-e",
+    "famille": "EG11",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["EG11-V5"]
+  },
+  "EG11-V6": {
+    "id": "EG11-f",
+    "famille": "EG11",
+    "forme": "f",
+    "indiceGenerateur": 5,
+    "ancienParametre": "forme=5",
+    "identifiantsAnciens": ["EG11-V6"]
+  },
+  "EG12-V1": {
+    "id": "EG12-a",
+    "famille": "EG12",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["EG12-V1"]
+  },
+  "EG12-V2": {
+    "id": "EG12-b",
+    "famille": "EG12",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["EG12-V2"]
+  },
+  "EG12-V3": {
+    "id": "EG12-c",
+    "famille": "EG12",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["EG12-V3"]
+  },
+  "EG12-V4": {
+    "id": "EG12-d",
+    "famille": "EG12",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["EG12-V4"]
+  },
+  "EG12-V5": {
+    "id": "EG12-e",
+    "famille": "EG12",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["EG12-V5"]
+  },
+  "EG13-V1": {
+    "id": "EG13-a",
+    "famille": "EG13",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["EG13-V1"]
+  },
+  "EG13-V2": {
+    "id": "EG13-b",
+    "famille": "EG13",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["EG13-V2"]
+  },
+  "EG13-V3": {
+    "id": "EG13-c",
+    "famille": "EG13",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["EG13-V3"]
+  },
+  "EG13-V4": {
+    "id": "EG13-d",
+    "famille": "EG13",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["EG13-V4"]
+  },
+  "EG13-V5": {
+    "id": "EG13-e",
+    "famille": "EG13",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["EG13-V5"]
+  },
+  "EG14-V1": {
+    "id": "EG14-a",
+    "famille": "EG14",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["EG14-V1"]
+  },
+  "EG14-V2": {
+    "id": "EG14-b",
+    "famille": "EG14",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["EG14-V2"]
+  },
+  "EG14-V3": {
+    "id": "EG14-c",
+    "famille": "EG14",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["EG14-V3"]
+  },
+  "EG14-V4": {
+    "id": "EG14-d",
+    "famille": "EG14",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["EG14-V4"]
+  },
+  "EG15-V1": {
+    "id": "EG15-a",
+    "famille": "EG15",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["EG15-V1"]
+  },
+  "EG15-V2": {
+    "id": "EG15-b",
+    "famille": "EG15",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["EG15-V2"]
+  },
+  "EG15-V3": {
+    "id": "EG15-c",
+    "famille": "EG15",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["EG15-V3"]
+  },
+  "EG15-V4": {
+    "id": "EG15-d",
+    "famille": "EG15",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["EG15-V4"]
+  },
+  "EG15-V5": {
+    "id": "EG15-e",
+    "famille": "EG15",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["EG15-V5"]
+  },
+  "EG16-V1": {
+    "id": "EG16-a",
+    "famille": "EG16",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["EG16-V1"]
+  },
+  "EG16-V2": {
+    "id": "EG16-b",
+    "famille": "EG16",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["EG16-V2"]
+  },
+  "EG16-V3": {
+    "id": "EG16-c",
+    "famille": "EG16",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["EG16-V3"]
+  },
+  "EG16-V4": {
+    "id": "EG16-d",
+    "famille": "EG16",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["EG16-V4"]
+  },
+  "EG16-V5": {
+    "id": "EG16-e",
+    "famille": "EG16",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["EG16-V5"]
+  },
+  "EG16-V6": {
+    "id": "EG16-f",
+    "famille": "EG16",
+    "forme": "f",
+    "indiceGenerateur": 5,
+    "ancienParametre": "forme=5",
+    "identifiantsAnciens": ["EG16-V6"]
+  },
+  "EG17-V1": {
+    "id": "EG17-a",
+    "famille": "EG17",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["EG17-V1"]
+  },
+  "EG17-V2": {
+    "id": "EG17-b",
+    "famille": "EG17",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["EG17-V2"]
+  },
+  "EG17-V3": {
+    "id": "EG17-c",
+    "famille": "EG17",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["EG17-V3"]
+  },
+  "EG17-V4": {
+    "id": "EG17-d",
+    "famille": "EG17",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["EG17-V4"]
+  },
+  "EG18-V1": {
+    "id": "EG18-a",
+    "famille": "EG18",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["EG18-V1"]
+  },
+  "EG18-V2": {
+    "id": "EG18-b",
+    "famille": "EG18",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["EG18-V2"]
+  },
+  "EG18-V3": {
+    "id": "EG18-c",
+    "famille": "EG18",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["EG18-V3"]
+  },
+  "EG18-V4": {
+    "id": "EG18-d",
+    "famille": "EG18",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["EG18-V4"]
+  },
+  "EG18-V5": {
+    "id": "EG18-e",
+    "famille": "EG18",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["EG18-V5"]
+  },
+  "EG19-V1": {
+    "id": "EG19-a",
+    "famille": "EG19",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["EG19-V1"]
+  },
+  "EG19-V2": {
+    "id": "EG19-b",
+    "famille": "EG19",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["EG19-V2"]
+  },
+  "EG19-V3": {
+    "id": "EG19-c",
+    "famille": "EG19",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["EG19-V3"]
+  },
+  "EG19-V4": {
+    "id": "EG19-d",
+    "famille": "EG19",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["EG19-V4"]
+  },
+  "EG19-V5": {
+    "id": "EG19-e",
+    "famille": "EG19",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["EG19-V5"]
+  },
+  "EG20-V1": {
+    "id": "EG20-a",
+    "famille": "EG20",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["EG20-V1"]
+  },
+  "EG20-V2": {
+    "id": "EG20-b",
+    "famille": "EG20",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["EG20-V2"]
+  },
+  "EG20-V3": {
+    "id": "EG20-c",
+    "famille": "EG20",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["EG20-V3"]
+  },
+  "EG20-V4": {
+    "id": "EG20-d",
+    "famille": "EG20",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["EG20-V4"]
+  },
+  "EG21-V1": {
+    "id": "EG21-a",
+    "famille": "EG21",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["EG21-V1"]
+  },
+  "EG21-V2": {
+    "id": "EG21-b",
+    "famille": "EG21",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["EG21-V2"]
+  },
+  "EG21-V3": {
+    "id": "EG21-c",
+    "famille": "EG21",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["EG21-V3"]
+  },
+  "EG21-V4": {
+    "id": "EG21-d",
+    "famille": "EG21",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["EG21-V4"]
+  },
+  "EG21-V5": {
+    "id": "EG21-e",
+    "famille": "EG21",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["EG21-V5"]
+  },
+  "EG21-V6": {
+    "id": "EG21-f",
+    "famille": "EG21",
+    "forme": "f",
+    "indiceGenerateur": 5,
+    "ancienParametre": "forme=5",
+    "identifiantsAnciens": ["EG21-V6"]
+  },
+  "EG21-V7": {
+    "id": "EG21-g",
+    "famille": "EG21",
+    "forme": "g",
+    "indiceGenerateur": 6,
+    "ancienParametre": "forme=6",
+    "identifiantsAnciens": ["EG21-V7"]
+  },
+  "EG25-V1": {
+    "id": "EG25-a",
+    "famille": "EG25",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["EG25-V1"]
+  },
+  "EG25-V2": {
+    "id": "EG25-b",
+    "famille": "EG25",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["EG25-V2"]
+  },
+  "EG25-V3": {
+    "id": "EG25-c",
+    "famille": "EG25",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["EG25-V3"]
+  },
+  "EG25-V4": {
+    "id": "EG25-d",
+    "famille": "EG25",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["EG25-V4"]
+  },
+  "EG26-V1": {
+    "id": "EG26-a",
+    "famille": "EG26",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["EG26-V1"]
+  },
+  "EG26-V2": {
+    "id": "EG26-b",
+    "famille": "EG26",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["EG26-V2"]
+  },
+  "EG26-V3": {
+    "id": "EG26-c",
+    "famille": "EG26",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["EG26-V3"]
+  },
+  "EG26-V4": {
+    "id": "EG26-d",
+    "famille": "EG26",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["EG26-V4"]
+  },
+  "PF09-A": {
+    "id": "PF09-a",
+    "famille": "PF09",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["PF09-A", "PF09-1", "PF09-V1"]
+  },
+  "PF09-B": {
+    "id": "PF09-b",
+    "famille": "PF09",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["PF09-B", "PF09-2", "PF09-V2"]
+  },
+  "PF09-C": {
+    "id": "PF09-c",
+    "famille": "PF09",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["PF09-C", "PF09-3", "PF09-V3"]
+  },
+  "PF09-D": {
+    "id": "PF09-d",
+    "famille": "PF09",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["PF09-D", "PF09-4", "PF09-V4"]
+  },
+  "PF09-E": {
+    "id": "PF09-e",
+    "famille": "PF09",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["PF09-E", "PF09-5", "PF09-V5"]
+  },
+  "PF09-F": {
+    "id": "PF09-f",
+    "famille": "PF09",
+    "forme": "f",
+    "indiceGenerateur": 5,
+    "ancienParametre": "forme=5",
+    "identifiantsAnciens": ["PF09-F", "PF09-6", "PF09-V6"]
+  },
+  "PF09-G": {
+    "id": "PF09-g",
+    "famille": "PF09",
+    "forme": "g",
+    "indiceGenerateur": 6,
+    "ancienParametre": "forme=6",
+    "identifiantsAnciens": ["PF09-G", "PF09-7", "PF09-V7"]
+  },
+  "PF10-A": {
+    "id": "PF10-a",
+    "famille": "PF10",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["PF10-A", "PF10-1", "PF10-V1"]
+  },
+  "PF10-B": {
+    "id": "PF10-b",
+    "famille": "PF10",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["PF10-B", "PF10-2", "PF10-V2"]
+  },
+  "PF10-C": {
+    "id": "PF10-c",
+    "famille": "PF10",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["PF10-C", "PF10-3", "PF10-V3"]
+  },
+  "PF10-D": {
+    "id": "PF10-d",
+    "famille": "PF10",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["PF10-D", "PF10-4", "PF10-V4"]
+  },
+  "PF11-A": {
+    "id": "PF11-a",
+    "famille": "PF11",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["PF11-A", "PF11-1", "PF11-V1"]
+  },
+  "PF11-B": {
+    "id": "PF11-b",
+    "famille": "PF11",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["PF11-B", "PF11-2", "PF11-V2"]
+  },
+  "PF11-C": {
+    "id": "PF11-c",
+    "famille": "PF11",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["PF11-C", "PF11-3", "PF11-V3"]
+  },
+  "PF11-D": {
+    "id": "PF11-d",
+    "famille": "PF11",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["PF11-D", "PF11-4", "PF11-V4"]
+  },
+  "DP01-V1": {
+    "id": "DP01-a",
+    "famille": "DP01",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["DP01-V1"]
+  },
+  "DP01-V2": {
+    "id": "DP01-b",
+    "famille": "DP01",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["DP01-V2"]
+  },
+  "DP01-V3": {
+    "id": "DP01-c",
+    "famille": "DP01",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["DP01-V3"]
+  },
+  "DP01-V4": {
+    "id": "DP01-d",
+    "famille": "DP01",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["DP01-V4"]
+  },
+  "DP01-V5": {
+    "id": "DP01-e",
+    "famille": "DP01",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["DP01-V5"]
+  },
+  "DP02-V1": {
+    "id": "DP02-a",
+    "famille": "DP02",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["DP02-V1"]
+  },
+  "DP02-V2": {
+    "id": "DP02-b",
+    "famille": "DP02",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["DP02-V2"]
+  },
+  "DP02-V3": {
+    "id": "DP02-c",
+    "famille": "DP02",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["DP02-V3"]
+  },
+  "DP02-V4": {
+    "id": "DP02-d",
+    "famille": "DP02",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["DP02-V4"]
+  },
+  "DP02-V5": {
+    "id": "DP02-e",
+    "famille": "DP02",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["DP02-V5"]
+  },
+  "DP03-V1": {
+    "id": "DP03-a",
+    "famille": "DP03",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["DP03-V1"]
+  },
+  "DP03-V2": {
+    "id": "DP03-b",
+    "famille": "DP03",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["DP03-V2"]
+  },
+  "DP03-V3": {
+    "id": "DP03-c",
+    "famille": "DP03",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["DP03-V3"]
+  },
+  "DP03-V4": {
+    "id": "DP03-d",
+    "famille": "DP03",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["DP03-V4"]
+  },
+  "DP03-V5": {
+    "id": "DP03-e",
+    "famille": "DP03",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["DP03-V5"]
+  },
+  "DP04-V1": {
+    "id": "DP04-a",
+    "famille": "DP04",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["DP04-V1"]
+  },
+  "DP04-V2": {
+    "id": "DP04-b",
+    "famille": "DP04",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["DP04-V2"]
+  },
+  "DP04-V3": {
+    "id": "DP04-c",
+    "famille": "DP04",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["DP04-V3"]
+  },
+  "DP04-V4": {
+    "id": "DP04-d",
+    "famille": "DP04",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["DP04-V4"]
+  },
+  "DP04-V5": {
+    "id": "DP04-e",
+    "famille": "DP04",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["DP04-V5"]
+  },
+  "DP05-V1": {
+    "id": "DP05-a",
+    "famille": "DP05",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["DP05-V1"]
+  },
+  "DP05-V2": {
+    "id": "DP05-b",
+    "famille": "DP05",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["DP05-V2"]
+  },
+  "DP05-V3": {
+    "id": "DP05-c",
+    "famille": "DP05",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["DP05-V3"]
+  },
+  "DP05-V4": {
+    "id": "DP05-d",
+    "famille": "DP05",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["DP05-V4"]
+  },
+  "DP06-V1": {
+    "id": "DP06-a",
+    "famille": "DP06",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["DP06-V1"]
+  },
+  "DP06-V2": {
+    "id": "DP06-b",
+    "famille": "DP06",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["DP06-V2"]
+  },
+  "DP06-V3": {
+    "id": "DP06-c",
+    "famille": "DP06",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["DP06-V3"]
+  },
+  "DP06-V4": {
+    "id": "DP06-d",
+    "famille": "DP06",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["DP06-V4"]
+  },
+  "DP06-V5": {
+    "id": "DP06-e",
+    "famille": "DP06",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["DP06-V5"]
+  },
+  "DP06-V6": {
+    "id": "DP06-f",
+    "famille": "DP06",
+    "forme": "f",
+    "indiceGenerateur": 5,
+    "ancienParametre": "forme=5",
+    "identifiantsAnciens": ["DP06-V6"]
+  },
+  "DP07-V1": {
+    "id": "DP07-a",
+    "famille": "DP07",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["DP07-V1"]
+  },
+  "DP07-V2": {
+    "id": "DP07-b",
+    "famille": "DP07",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["DP07-V2"]
+  },
+  "DP07-V3": {
+    "id": "DP07-c",
+    "famille": "DP07",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["DP07-V3"]
+  },
+  "DP07-V4": {
+    "id": "DP07-d",
+    "famille": "DP07",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["DP07-V4"]
+  },
+  "DP07-V5": {
+    "id": "DP07-e",
+    "famille": "DP07",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["DP07-V5"]
+  },
+  "DP08-V1": {
+    "id": "DP08-a",
+    "famille": "DP08",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["DP08-V1"]
+  },
+  "DP08-V2": {
+    "id": "DP08-b",
+    "famille": "DP08",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["DP08-V2"]
+  },
+  "DP08-V3": {
+    "id": "DP08-c",
+    "famille": "DP08",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["DP08-V3"]
+  },
+  "DP08-V4": {
+    "id": "DP08-d",
+    "famille": "DP08",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["DP08-V4"]
+  },
+  "DP08-V5": {
+    "id": "DP08-e",
+    "famille": "DP08",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["DP08-V5"]
+  },
+  "PI01-V1": {
+    "id": "PI01-a",
+    "famille": "PI01",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["PI01-V1"]
+  },
+  "PI01-V2": {
+    "id": "PI01-b",
+    "famille": "PI01",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["PI01-V2"]
+  },
+  "PI01-V3": {
+    "id": "PI01-c",
+    "famille": "PI01",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["PI01-V3"]
+  },
+  "PI01-V4": {
+    "id": "PI01-d",
+    "famille": "PI01",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["PI01-V4"]
+  },
+  "PI02-V1": {
+    "id": "PI02-a",
+    "famille": "PI02",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["PI02-V1"]
+  },
+  "PI02-V2": {
+    "id": "PI02-b",
+    "famille": "PI02",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["PI02-V2"]
+  },
+  "PI02-V3": {
+    "id": "PI02-c",
+    "famille": "PI02",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["PI02-V3"]
+  },
+  "PI02-V4": {
+    "id": "PI02-d",
+    "famille": "PI02",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["PI02-V4"]
+  },
+  "PI02-V5": {
+    "id": "PI02-e",
+    "famille": "PI02",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["PI02-V5"]
+  },
+  "PI03-V1": {
+    "id": "PI03-a",
+    "famille": "PI03",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["PI03-V1"]
+  },
+  "PI03-V2": {
+    "id": "PI03-b",
+    "famille": "PI03",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["PI03-V2"]
+  },
+  "PI03-V3": {
+    "id": "PI03-c",
+    "famille": "PI03",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["PI03-V3"]
+  },
+  "PI03-V4": {
+    "id": "PI03-d",
+    "famille": "PI03",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["PI03-V4"]
+  },
+  "PI03-V5": {
+    "id": "PI03-e",
+    "famille": "PI03",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["PI03-V5"]
+  },
+  "PI03-V6": {
+    "id": "PI03-f",
+    "famille": "PI03",
+    "forme": "f",
+    "indiceGenerateur": 5,
+    "ancienParametre": "forme=5",
+    "identifiantsAnciens": ["PI03-V6"]
+  },
+  "PI03-V7": {
+    "id": "PI03-g",
+    "famille": "PI03",
+    "forme": "g",
+    "indiceGenerateur": 6,
+    "ancienParametre": "forme=6",
+    "identifiantsAnciens": ["PI03-V7"]
+  },
+  "PI03-V8": {
+    "id": "PI03-h",
+    "famille": "PI03",
+    "forme": "h",
+    "indiceGenerateur": 7,
+    "ancienParametre": "forme=7",
+    "identifiantsAnciens": ["PI03-V8"]
+  },
+  "PI03-V9": {
+    "id": "PI03-i",
+    "famille": "PI03",
+    "forme": "i",
+    "indiceGenerateur": 8,
+    "ancienParametre": "forme=8",
+    "identifiantsAnciens": ["PI03-V9"]
+  },
+  "PI04-V1": {
+    "id": "PI04-a",
+    "famille": "PI04",
+    "forme": "a",
+    "indiceGenerateur": 0,
+    "ancienParametre": "forme=0",
+    "identifiantsAnciens": ["PI04-V1"]
+  },
+  "PI04-V2": {
+    "id": "PI04-b",
+    "famille": "PI04",
+    "forme": "b",
+    "indiceGenerateur": 1,
+    "ancienParametre": "forme=1",
+    "identifiantsAnciens": ["PI04-V2"]
+  },
+  "PI04-V3": {
+    "id": "PI04-c",
+    "famille": "PI04",
+    "forme": "c",
+    "indiceGenerateur": 2,
+    "ancienParametre": "forme=2",
+    "identifiantsAnciens": ["PI04-V3"]
+  },
+  "PI04-V4": {
+    "id": "PI04-d",
+    "famille": "PI04",
+    "forme": "d",
+    "indiceGenerateur": 3,
+    "ancienParametre": "forme=3",
+    "identifiantsAnciens": ["PI04-V4"]
+  },
+  "PI04-V5": {
+    "id": "PI04-e",
+    "famille": "PI04",
+    "forme": "e",
+    "indiceGenerateur": 4,
+    "ancienParametre": "forme=4",
+    "identifiantsAnciens": ["PI04-V5"]
+  }
+}

@@ -1,0 +1,393 @@
+{
+  "id": "NC21",
+  "titre": "Substituer et tester une égalité",
+  "categorie": "Calcul littéral et équations",
+  "objectif": "Remplacer chaque lettre par la même valeur puis calculer dans le bon ordre.",
+  "prerequis": ["Priorités opératoires", "NC19", "Carrés", "Relatifs si valeur négative"],
+  "perimetre": "DNB2027 : variantes simples conformes à l’ancien cycle 4 ; niveaux du parcours collège selon le programme 2026.",
+  "cours": {
+    "regle": "Remplace chaque lettre par la valeur qui lui est donnée. Mets une valeur négative entre parenthèses.",
+    "exemple": "Pour x = −2 : 3x² − 1 = 3 × (−2)² − 1 = 12 − 1 = 11.",
+    "visuel": "Expression de départ et ligne substituée superposées ; flèches verticales reliant chaque x à(−2), exposant conservé.",
+    "mouvement": "Révélation de la substitution, puis du carré ; version statique en trois lignes."
+  },
+  "erreurs": [
+    "Ne remplacer qu’une occurrence",
+    "Oublier les parenthèses autour d’une valeur négative",
+    "Confondre tester et démontrer",
+    "Lire 3x comme 3+x"
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 4,2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "PDF p.8–11",
+      "apport": "Niveaux et objectifs du calcul littéral ; introduction distincte de l’entretien.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples pour la mise en œuvre des programmes de mathématiques — cycle 4",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "p.12–13,18,20 imprimées",
+      "apport": "Substitution, statut du signe égal, test d’une solution et attention aux puissances.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Programme du cycle 4,2020",
+      "url": "https://cache.media.education.gouv.fr/file/31/89/1/ensel714_annexe3_1312891.pdf",
+      "repere": "PDF p.131–132, calcul littéral",
+      "apport": "Périmètre mathématique utilisé par le filtre DNB2027.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Contrat de conception Matégo",
+      "url": null,
+      "repere": "Étape 1, NC19–NC31",
+      "apport": "Exemples originaux, bornes des générateurs, interfaces et aides proposées ; choix éditoriaux à valider par prototype.",
+      "statut": "choix de conception"
+    },
+    {
+      "titre": "DNB — sujet zéro2026, série professionnelle A",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-mathematiquespdf-123305.pdf",
+      "repere": "PDF p.2, Q2",
+      "apport": "Substitution avec parenthèses observée en partie1.",
+      "statut": "appui pédagogique"
+    }
+  ],
+  "limites": [
+    "Les variantes signées attendent la multiplication des relatifs en 4e.",
+    "Aucun calcul approché requis."
+  ],
+  "acces_secondaires": [],
+  "nom": "Substituer et tester une égalité",
+  "domaine": "nombres-calculs",
+  "sousDomaine": "Calcul littéral et équations",
+  "niveaux": ["5e", "4e", "3e"],
+  "niveauxDescription": "5e : substitution positive, formules et carré ; 4e : valeurs négatives après règles de multiplication ; 3e : entretien.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_11"],
+    "questions": [
+      {
+        "source": "A2609",
+        "question": "Q8",
+        "referenceAncienne": "PO-pro 8",
+        "forme": "a",
+        "identifiant": "NC21-a",
+        "ancienId": "NC21-V1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Substitution dans une expression affine",
+        "formatSource": "Saisie",
+        "document": "Polynésie professionnelle, 26 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_professionnelle_Sujet_2026-06-26_Polynesie_DV-v4.pdf"
+      },
+      {
+        "source": "Z26PA",
+        "question": "Q2",
+        "referenceAncienne": "ZPA 2",
+        "forme": "f",
+        "identifiant": "NC21-f",
+        "ancienId": "NC21-V6",
+        "support": "comparable",
+        "difference": "Substitution dans une expression avec parenthèses ; NC21-V6 ajouté après audit.",
+        "savoirFaire": "Substitution dans une expression",
+        "formatSource": "Nombre",
+        "document": "Sujet zéro 2026, série professionnelle A",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-mathematiquespdf-123305.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Calculer une valeur positive",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Calcule 4x + 3 pour x = 2.",
+      "reponse": "11",
+      "donnees": "a de 2 à 6,b de 0 à 9,x entier 0 à 6 ; résultat≤50.",
+      "saisie": "Nombre signé ou fraction à deux cases ; virgule et point admis. Aucun arrondi implicite.",
+      "acceptation": "Égalité numérique exacte ; 11 ou 11,0 admis.",
+      "aide1": {
+        "texte": "Fais entrer la valeur de x dans la machine, puis suis les opérations.",
+        "visuel": "Machine : valeur de x → multiplication → ajout."
+      },
+      "aide2": {
+        "texte": "Le produit se calcule avant l’addition.",
+        "visuel": "Afficher 4 × 2 + 3 ; encadrer 4 × 2, sans résultat."
+      },
+      "correction": "4 × 2 + 3 = 8 + 3 = 11.",
+      "controles": ["Refuser 14 et 423 ; cas x=0 doit rendre b ; toutes occurrences remplacées."],
+      "identifiant": "NC21-a",
+      "ancienId": "NC21-V1",
+      "ancienIdGenerateur": "NC21-V1",
+      "indiceGenerateur": 0,
+      "nom": "Calculer une valeur positive",
+      "niveauDescription": "5e ; entretien 4e–3e",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2609",
+          "question": "Q8",
+          "referenceAncienne": "PO-pro 8",
+          "forme": "a",
+          "identifiant": "NC21-a",
+          "ancienId": "NC21-V1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Substitution dans une expression affine",
+          "formatSource": "Saisie",
+          "document": "Polynésie professionnelle, 26 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_professionnelle_Sujet_2026-06-26_Polynesie_DV-v4.pdf"
+        }
+      ]
+    },
+    {
+      "id": "b",
+      "objectif": "Substituer une valeur négative",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Calcule 5 − 2x pour x = −3.",
+      "reponse": "11",
+      "donnees": "x entier−5 à−1 ; coefficient 2 à 5 ; constante−5 à 9 ; |résultat|≤40.",
+      "saisie": "Nombre signé ou fraction à deux cases ; virgule et point admis. Aucun arrondi implicite.",
+      "acceptation": "Valeur exacte.",
+      "aide1": {
+        "texte": "Multiplie, prends l’opposé du produit, puis ajoute la constante.",
+        "visuel": "Machine : valeur négative de x → multiplication par le coefficient positif → opposé → ajout de la constante."
+      },
+      "aide2": {
+        "texte": "Calcule d’abord 2 × (−3).",
+        "visuel": "Le produit est remplacé par − 6 : afficher 5 − (−6)."
+      },
+      "correction": "5 − 2 × (−3) = 5 − (−6) = 11.",
+      "controles": ["Refuser−1 et−9 ; tester expression 5+2x donne−1 pour distinguer les signes."],
+      "identifiant": "NC21-b",
+      "ancienId": "NC21-V2",
+      "ancienIdGenerateur": "NC21-V2",
+      "indiceGenerateur": 1,
+      "nom": "Substituer une valeur négative",
+      "niveauDescription": "4e après produits relatifs ; 3e entretien",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Distinguer carré et multiplication",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Calcule A = −x² et B = (−x)² pour x = −2.",
+      "reponse": "A = −4 ; B = 4",
+      "donnees": "x non nul−5 à 5 ; valeur négative seulement 4e+ ; deux résultats opposés ; inclure x positif en variante 5e sans produit de deux négatifs explicité.",
+      "saisie": "Deux cases A et B ; clavier signé.",
+      "acceptation": "Deux résultats exacts dans les cases correspondant aux labels.",
+      "aide1": {
+        "texte": "Dans A : carré puis opposé. Dans B : opposé puis carré.",
+        "visuel": "Deux machines comparées : valeur de x → carré → opposé ; valeur de x → opposé → carré."
+      },
+      "aide2": {
+        "texte": "Remplace x par(−2) avant de calculer.",
+        "visuel": "Afficher A = −((−2)²), B = (−(−2))² ; ne pas fusionner les signes."
+      },
+      "correction": "A = −4 ; B = 2² = 4.",
+      "controles": [
+        "Refuser 4;4 et−4;−4 ; ne pas générer x=0 pour cette distinction ; cohérence des labels A/B."
+      ],
+      "identifiant": "NC21-c",
+      "ancienId": "NC21-V3",
+      "ancienIdGenerateur": "NC21-V3",
+      "indiceGenerateur": 2,
+      "nom": "Distinguer carré et multiplication",
+      "niveauDescription": "5e avec x positif ; exemple signé en 4e–3e",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "A",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "B",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Tester une égalité pour une valeur donnée",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Pour x = 3, l’égalité 2x + 1 = x + 4 est-elle vraie ?",
+      "reponse": "Oui : les deux membres valent 7.",
+      "donnees": "Deux expressions ax+b,cx+d ; x choisi 0 à 6 en 5e ; autant de tests vrais que faux ; aucun mot « toujours ».",
+      "saisie": "Deux cases de calcul facultatives puis Vrai/Faux ; en examen réponse courte « vraie » ou « fausse ».",
+      "acceptation": "Accepter vrai/oui ; les valeurs auxiliaires ne sont pas exigées en mode réponse courte.",
+      "aide1": {
+        "texte": "La même valeur entre dans les deux machines. Compare leurs sorties.",
+        "visuel": "Deux machines étiquetées Gauche et Droite reçoivent la même valeur ; les résultats doivent être comparés."
+      },
+      "aide2": {
+        "texte": "Remplace x par 3 des deux côtés.",
+        "visuel": "Afficher 2 × 3 + 1 et 3 + 4 ; égalité centrale remplacée par un point d’interrogation."
+      },
+      "correction": "À gauche 2 × 3 + 1 = 7 ; à droite 3 + 4 = 7. L’égalité est vraie pour x = 3.",
+      "controles": [
+        "Àx=2, réponse fausse :5≠6 ; ne pas conclure « vraie pour tout x » depuis un seul test."
+      ],
+      "identifiant": "NC21-d",
+      "ancienId": "NC21-V4",
+      "ancienIdGenerateur": "NC21-V4",
+      "indiceGenerateur": 3,
+      "nom": "Tester une égalité pour une valeur donnée",
+      "niveauDescription": "5e avec valeur positive ; 4e entretien explicite ; 3e entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "L’égalité est…",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Utiliser une formule avec deux données",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Le périmètre d’un rectangle est P = 2(L + ℓ). Calcule P pour L = 5 cm et ℓ = 3 cm.",
+      "reponse": "16 cm",
+      "donnees": "Longueurs positives 1 à 9 ; formule fournie ; même unité ; L≥ℓ ; pas de conversion simultanée.",
+      "saisie": "Nombre ; cm affiché après la case.",
+      "acceptation": "Valeur 16 ; unité ne doit pas être saisie deux fois.",
+      "aide1": {
+        "texte": "Deux côtés mesurent L ; les deux autres mesurent ℓ.",
+        "visuel": "Rectangle dont les quatre côtés portent les longueurs numériques ; longueurs opposées associées par couleur."
+      },
+      "aide2": {
+        "texte": "Commence par l’intérieur des parenthèses.",
+        "visuel": "AfficherP = 2 × (5 + 3), groupe 5 + 3 encadré."
+      },
+      "correction": "P = 2 × (5 + 3) = 2 × 8 = 16 cm.",
+      "controles": [
+        "Refuser 13 et 30 ; ne pas traiter la lettreℓ comme chiffre 1 ; variante L=ℓ valide."
+      ],
+      "identifiant": "NC21-e",
+      "ancienId": "NC21-V5",
+      "ancienIdGenerateur": "NC21-V5",
+      "indiceGenerateur": 4,
+      "nom": "Utiliser une formule avec deux données",
+      "niveauDescription": "5e substitution de formule ; entretien 4e–3e",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "f",
+      "objectif": "Substituer dans une expression comportant un groupe parenthésé",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Calcule A(x) = 2(x + 3) − 3 pour x = 2.",
+      "reponse": "7",
+      "donnees": "a2 à6,b1 à9,c1 à8 ; x entier0 à6 ; calcul mental exact ; parenthèses conservées à la substitution.",
+      "saisie": "Nombre signé ou fraction à deux cases ; virgule et point admis. Aucun arrondi implicite.",
+      "acceptation": "Égalité numérique exacte ; 11 ou 11,0 admis.",
+      "aide1": {
+        "texte": "Commence par la somme, puis suis la machine.",
+        "visuel": "Machine : somme entre parenthèses → multiplication → soustraction."
+      },
+      "aide2": {
+        "texte": "Après les parenthèses, effectue le produit puis la soustraction.",
+        "visuel": "Substitution écrite avec les parenthèses, puis ordre des opérations explicité."
+      },
+      "correction": "2 × (2 + 3) − 3 = 2 × 5 − 3 = 7.",
+      "controles": ["Refuser4,10 et1 ; vérifier x=0 et terme soustrait non nul."],
+      "identifiant": "NC21-f",
+      "ancienId": "NC21-V6",
+      "ancienIdGenerateur": "NC21-V6",
+      "indiceGenerateur": 5,
+      "nom": "Substituer dans une expression comportant un groupe parenthésé",
+      "niveauDescription": "5e ; entretien 4e–3e",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "Z26PA",
+          "question": "Q2",
+          "referenceAncienne": "ZPA 2",
+          "forme": "f",
+          "identifiant": "NC21-f",
+          "ancienId": "NC21-V6",
+          "support": "comparable",
+          "difference": "Substitution dans une expression avec parenthèses ; NC21-V6 ajouté après audit.",
+          "savoirFaire": "Substitution dans une expression",
+          "formatSource": "Nombre",
+          "document": "Sujet zéro 2026, série professionnelle A",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-mathematiquespdf-123305.pdf"
+        }
+      ]
+    }
+  ]
+}

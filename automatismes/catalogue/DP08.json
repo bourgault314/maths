@@ -1,0 +1,371 @@
+{
+  "id": "DP08",
+  "titre": "Deux épreuves et expérimentation",
+  "categorie": "Statistiques et probabilités",
+  "objectif": "Organiser les issues de deux épreuves et distinguer fréquence observée et probabilité.",
+  "prerequis": [
+    "Probabilité équiprobable",
+    "Tableau à double entrée",
+    "Fréquence et division simple"
+  ],
+  "perimetre": "DNB2027 pour les cas élémentaires proposés, classés applications directes. Aucun arbre pondéré avec formalisme de probabilité conditionnelle.",
+  "cours": {
+    "regle": "Pour une expérience à deux étapes, une issue décrit les deux résultats dans l’ordre.",
+    "exemple": "Deux lancers indépendants d’une pièce équilibrée : PP, PF, FP, FF sont équiprobables. P(FF) = 1/4.",
+    "visuel": "Tableau des couples PP, PF, FP, FF, pour deux lancers indépendants d’une pièce équilibrée. Les variantes fréquence ont un cours propre, avec 12 piles observés sur 20 lancers.",
+    "mouvement": "Parcours ligneparligne du tableau avec une étape manuelle. Statique : couples tous visibles ; la distinction des épreuves repose sur les labels."
+  },
+  "erreurs": [
+    "Oublier l’ordre des deux résultats",
+    "Supposer les sommes de dés équiprobables",
+    "Oublier la remise ou son absence",
+    "Confondre fréquence et probabilité",
+    "Croire que la fréquence se rapproche à chaque essai"
+  ],
+  "sources": [
+    {
+      "titre": "Programme cycle 3, 2025",
+      "url": "https://www.education.gouv.fr/sites/default/files/ensel620_annexe2-v2.pdf",
+      "repere": "CM2 et6ᵉ, Probabilités, PDFp.25–26",
+      "apport": "Tableaux/arbres à deux étapes déjà amorcés au cycle3.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Programme cycle 4, 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "Probabilités4ᵉ–3ᵉ, PDFp.17–18",
+      "apport": "Deux épreuves et fréquence.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples de mise en œuvre cycle 4, 2026",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "Probabilités, PDFp.38–39",
+      "apport": "Distinguer les dés et organiser les couples ; fluctuations.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Livret d’accompagnement mathématiques 6ᵉ, 2026",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/2026livretaccompagnementmaths6e-pdf-126656.pdf",
+      "repere": "Probabilités, PDFp.10–13",
+      "apport": "Expérimentation et stabilisation.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Programme cycle 4, 2020",
+      "url": "https://cache.media.education.gouv.fr/file/31/89/1/ensel714_annexe3_1312891.pdf",
+      "repere": "ThèmeB, PDFp.132",
+      "apport": "Probabilités élémentaires et lien fréquence-probabilité.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "NCETM — Statistics and probability",
+      "url": "https://www.ncetm.org.uk/classroom-resources/secmm-5-statistics-and-probability/",
+      "repere": "Présentation du thème 5 consultée",
+      "apport": "Interpréter les données et quantifier l’incertitude ; appui thématique.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "Les activités sansremise restent du dénombrement explicite de très petits univers. La simulation n’est pas une preuve de la probabilité exacte. La loi des grands nombres n’est pas formulée comme une garantie de rapprochement monotone.",
+  "acces_secondaires": ["Algorithmique et programmation", "Proportionnalité et pourcentages"],
+  "atlas": "cours/15.svg",
+  "atlasAlt": "Arbre de deux lancers indépendants d’une pièce équilibrée :PP,PF,FP,FF chacun de probabilité1/4.",
+  "nom": "Deux épreuves et expérimentation",
+  "domaine": "donnees-probabilites",
+  "sousDomaine": "Statistiques et probabilités",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6ᵉ : reprendre les tableaux/arbres simples déjà rencontrés auCM2. 4ᵉ : expériences à deux épreuves et fluctuations. 3ᵉ : entretien, indépendance explicitée et interprétation de simulations.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_28", "dnb_29"],
+    "questions": []
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Énumérer deux lancers de pièce",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "On lance deux pièces équilibrées, indépendamment. Quelle est la probabilité d’obtenir deux résultats différents ?",
+      "reponse": "1/2",
+      "donnees": "UniversPP,PF,FP,FF équiprobable. Alternerévénementsdeuxmêmes/deuxdifférents/deuxP/au moinsunP. Nelesignerqueparépreuvesdistinguées.",
+      "saisie": "Fraction",
+      "acceptation": "2/4,1/2 et0,5 acceptés ;1/3 refusé.",
+      "aide1": "« Distingue le résultat de la pièce1 et celui de la pièce2. » Afficher le tableau2 × 2 vide avec en-têtesP/F.",
+      "aide2": "« Les quatre couples sontPP,PF,FP,FF. Quels couples sont différents ? » Remplir les cases, sans les colorer commefavorables.",
+      "correction": "PF etFP conviennent :2/4 = 1/2.",
+      "controles": ["PFetFPdistincts.", "Au moinsunP→3/4, pas2/3.", "Chaque case représente1/4."],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "On lance deux fois une pièce équilibrée, de façon indépendante. Quelle est la probabilité d’obtenir au moins un pile ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "3/4",
+            "unite": ""
+          }
+        ],
+        "aide1": "Distingue le premier lancer du deuxième.",
+        "aide2": "Les quatre issues équiprobables sont PP, PF, FP, FF.",
+        "cours": {
+          "regle": "Pour une expérience à deux étapes, une issue décrit les deux résultats dans l’ordre.",
+          "exemple": "Deux lancers indépendants d’une pièce équilibrée : PP, PF, FP, FF sont équiprobables. P(FF) = 1/4."
+        },
+        "correction": "Cas favorables : PP, PF, FP. Probabilité 3/4."
+      },
+      "identifiant": "DP08-a",
+      "ancienId": "DP08-V1",
+      "ancienIdGenerateur": "DP08-V1",
+      "indiceGenerateur": 0,
+      "nom": "Énumérer deux lancers de pièce",
+      "niveauDescription": "6ᵉ consolidation ;4ᵉ entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Calculer une probabilité sur deux dés",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "On lance indépendamment un dé rouge et un dé bleu équilibrés de1à6. Quelle est la probabilité que la somme soit7 ?",
+      "reponse": "1/6",
+      "donnees": "Tableau6 × 6 de couples ; sommek∈{2,…,12}; exemple7 favorable6cases. Couleurs doubléesdesnomsdé1/dé2. Pourtéléphonevisuelagrandissable, pas de ciblesdedrag.",
+      "saisie": "Fraction",
+      "acceptation": "6/36 et1/6 acceptés ;1/11 refusé.",
+      "aide1": "« Les sommes ne sont pas toutes aussi probables. Compte les couples de faces. » Afficher les36cases du tableau, en-têtes1à6.",
+      "aide2": "« Pour une première face1, il faut6 ; pour2, il faut5. Continue sur chaque ligne. » Montrer seulement les deux premierscouplesfavorables.",
+      "correction": "Les six couples(1;6),(2;5),(3;4),(4;3),(5;2),(6;1) conviennent :6/36 = 1/6.",
+      "controles": [
+        "Dénombrementsdes sommes[1,2,3,4,5,6,5,4,3,2,1].",
+        "Total36.",
+        "SymétrieP(s) = P(14−s).",
+        "Tableau de sommes 6 × 6 : lignes compactes pour conserver une largeur lisible sur téléphone."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "On lance deux dés équilibrés indépendants, numérotés de 1 à 6. Quelle est la probabilité que leur somme soit 10 ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "3/36",
+            "unite": ""
+          }
+        ],
+        "aide1": "Chaque dé a 6 issues : 6 × 6 couples équiprobables.",
+        "aide2": "Compte les cases dont la somme vaut 10. Les sommes ne sont pas toutes équiprobables.",
+        "cours": {
+          "regle": "Pour une expérience à deux étapes, une issue décrit les deux résultats dans l’ordre.",
+          "exemple": "Deux lancers indépendants d’une pièce équilibrée : PP, PF, FP, FF sont équiprobables. P(FF) = 1/4."
+        },
+        "correction": "3 couples favorables sur 36 : 3/36."
+      },
+      "identifiant": "DP08-b",
+      "ancienId": "DP08-V2",
+      "ancienIdGenerateur": "DP08-V2",
+      "indiceGenerateur": 1,
+      "nom": "Calculer une probabilité sur deux dés",
+      "niveauDescription": "4ᵉ application ;3ᵉ entretien",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Dénombrer sans remise",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Trois jetons indiscernables portentR1,R2 etB. On tire deux jetons au hasard, successivement, sans remise. Quelle est la probabilité de tirer deux jetons rouges ?",
+      "reponse": "1/3",
+      "donnees": "Trois ouquatre jetons numérotés ; tirer deux distincts uniformément sansremise. Exemple3jetons,6couplesordonnés ; pas de calcul formeldeprobabilitéconditionnelle.",
+      "saisie": "Fraction",
+      "acceptation": "2/6 et1/3 acceptés ;4/9 refusé.",
+      "aide1": "« Le premier jeton tiré ne peut pas être tiré de nouveau. » Afficher tableau3 × 3 avec diagonale barrée et label« sansremise ».",
+      "aide2": "P(rouge au premier tirage) = 2/3. Si le premier jeton est rouge, il reste 1 jeton rouge sur 2. Multiplier 2/3 par 1/2.",
+      "correction": "2 couples favorables sur6 :2/6 = 1/3.",
+      "controles": [
+        "Aucune paire(i;i).",
+        "N(N − 1)couples.",
+        "Comparer avecremiseoù4/9seraitcorrect pour2rougessur3."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Une urne contient 3 boules rouges et 1 bleue, indiscernables au toucher. On tire deux boules au hasard sans remise. Quelle est la probabilité de tirer deux rouges ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "6/12",
+            "unite": ""
+          }
+        ],
+        "aide1": "Sans remise, la première boule tirée ne retourne pas dans l’urne.",
+        "aide2": "P(rouge au premier tirage) = 3/4. Si la première boule est rouge, il reste 2 rouges sur 3. Multiplie les deux probabilités.",
+        "cours": {
+          "regle": "Pour une expérience à deux étapes, une issue décrit les deux résultats dans l’ordre.",
+          "exemple": "Deux lancers indépendants d’une pièce équilibrée : PP, PF, FP, FF sont équiprobables. P(FF) = 1/4."
+        },
+        "correction": "3/4 × 2/3 = 6/12."
+      },
+      "identifiant": "DP08-c",
+      "ancienId": "DP08-V3",
+      "ancienIdGenerateur": "DP08-V3",
+      "indiceGenerateur": 2,
+      "nom": "Dénombrer sans remise",
+      "niveauDescription": "3ᵉ application courte, après deux épreuves",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Calculer une fréquence expérimentale",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Lors de200 lancers d’une pièce, on a obtenu112 fois pile. Quelle est la fréquence de pile, en pourcentage ?",
+      "reponse": "56 %",
+      "donnees": "Nombre de lancers N dans 20, 40, 100, 200 ; pourcentage multiple de 5 de 10 à 90 ; effectif k = N × p/100 toujours entier. Les observations ne sont pas confondues avec la probabilité théorique.",
+      "saisie": "Nombre avecsuffixe%",
+      "acceptation": "56 accepté danschamp% ;0,56 correctmaisdemanderconversion ;50 refusé.",
+      "aide1": "« La fréquence utilise les résultats réellement observés. » Montrer une barre de200essais avec112P et88F.",
+      "aide2": "« Fréquence :112/200. Pour un pourcentage, ramène le total à100. » Diviserpartieettotalpar2visuellement.",
+      "correction": "112/200 = 56/100 = 56 %.",
+      "controles": [
+        "k ≤ N ;N > 0.",
+        "Pasdevalidationautomatique50pourpièceéquilibrée.",
+        "Valeurfréquenceetprobabilitéstockéesséparément."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Sur 200 lancers, on observe 50 fois pile. Quelle est la fréquence de pile en pourcentage ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "25",
+            "unite": "%"
+          }
+        ],
+        "aide1": "Une fréquence se calcule à partir des observations.",
+        "aide2": "Calcule 50/200, puis multiplie par 100.",
+        "cours": {
+          "regle": "Fréquence observée = effectif observé ÷ nombre d’essais. Elle peut varier entre les séries.",
+          "exemple": "12 piles observés en 20 lancers : fréquence = 12/20 = 60 %. La probabilité de pile d’une pièce équilibrée reste 1/2."
+        },
+        "correction": "50/200 = 25/100 = 25 %."
+      },
+      "identifiant": "DP08-d",
+      "ancienId": "DP08-V4",
+      "ancienIdGenerateur": "DP08-V4",
+      "indiceGenerateur": 3,
+      "nom": "Calculer une fréquence expérimentale",
+      "niveauDescription": "6ᵉ découverte ;5ᵉ–3ᵉ entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "%"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Interpréter des fréquences fluctuantes",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Une pièce équilibrée donne58 % de pile après50 lancers,48 % après100 et51 % après200. Doit-on obtenir exactement50 % à chaque série ?",
+      "reponse": "Non",
+      "donnees": "Jeu dedonnées réaliste :29/50,48/100,102/200 ; cohérence cumulative possible. Réponseporte sur nécessité, pas sur rapprochementmonotone.",
+      "saisie": "Oui/Non",
+      "acceptation": "Non accepté ;Oui refusé.",
+      "aide1": "« Une probabilité décrit le modèle, pas le nombre exact de résultats d’une petite série. » Placer58 %,48 %,51 % et repère50 % sur un même axe.",
+      "aide2": "« Sur200 lancers,51 % signifie102piles. C’est possible même si la probabilité de pile vaut1/2. » Montrer102contre100, sanschaquefoisaugmenterlamêmevaleur.",
+      "correction": "Non. Les fréquences fluctuent ;50 % n’est pas imposé dans chaque série.",
+      "controles": [
+        "Ne pas enseigner rapprochementmonotone.",
+        "Donnéescomptables :% × N entier.",
+        "Pasd’inférence« truquée »d’uneseulefréquence."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Une pièce équilibrée a donné 48 piles en 100 lancers. Lors d’une autre série de lancers indépendants, obtiendra-t-on forcément exactement 50 piles en 100 lancers ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "Non",
+            "unite": "",
+            "choix": ["Oui", "Non"]
+          }
+        ],
+        "aide1": "La probabilité de pile vaut 1/2 à chaque lancer.",
+        "aide2": "Les fréquences observées peuvent varier d’une série de lancers à l’autre.",
+        "cours": {
+          "regle": "Fréquence observée = effectif observé ÷ nombre d’essais. Elle peut varier entre les séries.",
+          "exemple": "12 piles observés en 20 lancers : fréquence = 12/20 = 60 %. La probabilité de pile d’une pièce équilibrée reste 1/2."
+        },
+        "correction": "Non. 1/2 est la probabilité ; elle n’impose pas un effectif exact dans une série finie."
+      },
+      "identifiant": "DP08-e",
+      "ancienId": "DP08-V5",
+      "ancienIdGenerateur": "DP08-V5",
+      "indiceGenerateur": 4,
+      "nom": "Interpréter des fréquences fluctuantes",
+      "niveauDescription": "4ᵉ apprentissage ;3ᵉ entretien",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

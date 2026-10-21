@@ -1,0 +1,242 @@
+{
+  "id": "NC26",
+  "titre": "Carré d’une somme ou d’une différence",
+  "categorie": "Calcul littéral et équations",
+  "objectif": "Développer et reconnaître les deux identités comportant un double produit.",
+  "prerequis": ["NC23", "Carrés", "NC24"],
+  "perimetre": "Nouveau programme 3e : les 4 variantes de ce contrat sont étiquetées hors filtre examen 2027.",
+  "cours": {
+    "regle": "(a + b)² = a² + 2ab + b² ; (a − b)² = a² − 2ab + b². Le carré du deuxième terme est positif.",
+    "exemple": "(x + 3)² = x² + 6x + 9.",
+    "visuel": "Carré de côtéx + 3 partagé en quatre zones : x²,3x,3x,9. Le double produit correspond aux deux rectangles. Modèle positif pour le sens ; écriture symbolique pour les autres réels.",
+    "mouvement": "Assemblage facultatif des deux rectangles 3x ; version statique avec chacun étiqueté."
+  },
+  "erreurs": [
+    "Oublier le double produit",
+    "Confondre(a−b)² et a²−b²",
+    "Ne pas mettre tout le premier terme au carré"
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 4,2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "PDF p.11",
+      "apport": "Niveaux et objectifs du calcul littéral ; introduction distincte de l’entretien.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples pour la mise en œuvre des programmes de mathématiques — cycle 4",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "p.21 imprimée",
+      "apport": "Les carrés de somme et différence découlent de la double distributivité ; factorisation par reconnaissance.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Programme du cycle 4,2020",
+      "url": "https://cache.media.education.gouv.fr/file/31/89/1/ensel714_annexe3_1312891.pdf",
+      "repere": "PDF p.131–132, calcul littéral",
+      "apport": "Périmètre mathématique utilisé par le filtre DNB2027.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Contrat de conception Matégo",
+      "url": null,
+      "repere": "Étape 1, NC19–NC31",
+      "apport": "Exemples originaux, bornes des générateurs, interfaces et aides proposées ; choix éditoriaux à valider par prototype.",
+      "statut": "choix de conception"
+    },
+    {
+      "titre": "NCETM — Algebra tiles",
+      "url": "https://www.ncetm.org.uk/media/dj5o223w/ncetm_ks3_representations_algebra_tilespdf.pdf",
+      "repere": "p.3–4,9–14",
+      "apport": "Associer schéma et symboles ; limites des aires négatives.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": [
+    "Ne pas retirer les développements de binômes du DNB2027 : ils restent possibles par double distributivité dans NC23.",
+    "Ce contrat isole l’apprentissage explicite des identités et la factorisation de trinômes."
+  ],
+  "acces_secondaires": [],
+  "nom": "Carré d’une somme ou d’une différence",
+  "domaine": "nombres-calculs",
+  "sousDomaine": "Calcul littéral et équations",
+  "niveaux": ["3e"],
+  "niveauxDescription": "3e nouveau programme : usage explicite des trois identités. Les tâches demandant de mémoriser ces deux identités restent hors filtre DNB2027 ; un développement possible par double distributivité relève de NC23.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": false,
+    "codesGrille": ["dnb_11", "dnb_12"],
+    "questions": []
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Développer un carré de somme par identité",
+      "niveau": "3e",
+      "dnb2027": false,
+      "enonce": "Utilise une identité remarquable pour développer : (x + 4)².",
+      "reponse": "x² + 8x + 16",
+      "donnees": "b 1 à 9 ; a=x ; coefficients petits ; propriété visée explicitement.",
+      "saisie": "Expression courte avec touches lettre, chiffres, +, −, ×, /, parenthèses et carré. Gabarit de coefficients seulement en entraînement guidé.",
+      "acceptation": "Vérifier exactement l’équivalence algébrique et la forme demandée ; normaliser × implicite, espaces et²/^2. Développée et réduite ; identité attendue en aide mais méthode non sanctionnée si résultat exact.",
+      "aide1": {
+        "texte": "Le carré d’un groupe est son produit par lui-même. Les deux produits croisés sont égaux.",
+        "visuel": "Tableau carré de quatre produits : mêmes en-têtes de lignes et colonnes ; deux produits croisés identiques."
+      },
+      "aide2": {
+        "texte": "Additionne les deux termes 4x.",
+        "visuel": "Afficherx² + 4x + 4x + 16."
+      },
+      "correction": "(x + 4)² = x² + 8x + 16.",
+      "controles": ["Refuserx²+16 et x²+4x+16 ; les deux zones 4x doivent être visibles."],
+      "identifiant": "NC26-a",
+      "ancienId": "NC26-V1",
+      "ancienIdGenerateur": "NC26-V1",
+      "indiceGenerateur": 0,
+      "nom": "Développer un carré de somme par identité",
+      "niveauDescription": "3e nouveau programme",
+      "niveaux": ["3e"],
+      "brevet": false,
+      "reponseType": "expression",
+      "champs": [
+        {
+          "type": "expression",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Développer un carré de différence",
+      "niveau": "3e",
+      "dnb2027": false,
+      "enonce": "Développe à l’aide d’une identité remarquable : (x − 3)².",
+      "reponse": "x² − 6x + 9",
+      "donnees": "b 1 à 9 ; x réel ; pas de surface à longueur négative.",
+      "saisie": "Expression courte avec touches lettre, chiffres, +, −, ×, /, parenthèses et carré. Gabarit de coefficients seulement en entraînement guidé.",
+      "acceptation": "Vérifier exactement l’équivalence algébrique et la forme demandée ; normaliser × implicite, espaces et²/^2. Polynôme développé réduit.",
+      "aide1": {
+        "texte": "Le carré d’un groupe est son produit par lui-même. Les deux produits croisés sont égaux.",
+        "visuel": "Même tableau avec terme négatif : deux produits croisés négatifs, dernier carré positif."
+      },
+      "aide2": {
+        "texte": "Le dernier terme est le carré de 3, donc positif.",
+        "visuel": "Afficherx² − 2 × x × 3 + 3² ; souligner + 3²."
+      },
+      "correction": "(x − 3)² = x² − 6x + 9.",
+      "controles": ["Refuserx²−9 et x²−6x−9 ; vérifier àx=0 donne 9."],
+      "identifiant": "NC26-b",
+      "ancienId": "NC26-V2",
+      "ancienIdGenerateur": "NC26-V2",
+      "indiceGenerateur": 1,
+      "nom": "Développer un carré de différence",
+      "niveauDescription": "3e nouveau programme",
+      "niveaux": ["3e"],
+      "brevet": false,
+      "reponseType": "expression",
+      "champs": [
+        {
+          "type": "expression",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Reconnaître et factoriser un trinôme carré",
+      "niveau": "3e",
+      "dnb2027": false,
+      "enonce": "Factorise à l’aide d’une identité remarquable : x² + 10x + 25.",
+      "reponse": "(x + 5)²",
+      "donnees": "b 2 à 9 ; trinômex²+2bx+b² ; signe médian positif ou négatif ; résultat carré exact.",
+      "saisie": "Expression courte avec touches lettre, chiffres, +, −, ×, /, parenthèses et carré. Gabarit de coefficients seulement en entraînement guidé.",
+      "acceptation": "Vérifier exactement l’équivalence algébrique et la forme demandée ; normaliser × implicite, espaces et²/^2. Forme carré de binôme ou produit de deux binômes identiques ; expression initiale non admise.",
+      "aide1": {
+        "texte": "Le carré d’un groupe est son produit par lui-même. Les deux produits croisés sont égaux.",
+        "visuel": "Tableau rempli montrant les deux produits croisés identiques qui composent le terme central."
+      },
+      "aide2": {
+        "texte": "Vérifie que le terme du milieu est 2 × x × 5.",
+        "visuel": "Afficher 10x = 2 × x × 5 ; modèle(a + b)² laissé sans substitution finale."
+      },
+      "correction": "x² + 10x + 25 = x² + 2 × x × 5 + 5² = (x + 5)².",
+      "controles": [
+        "Refuser(x+25)² et(x+5)(x−5) ; inclure contre-exemplex²+8x+25 qui n’est pas ce carré."
+      ],
+      "identifiant": "NC26-c",
+      "ancienId": "NC26-V3",
+      "ancienIdGenerateur": "NC26-V3",
+      "indiceGenerateur": 2,
+      "nom": "Reconnaître et factoriser un trinôme carré",
+      "niveauDescription": "3e nouveau programme",
+      "niveaux": ["3e"],
+      "brevet": false,
+      "reponseType": "expression",
+      "champs": [
+        {
+          "type": "expression",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Gérer une base 2x dans un carré",
+      "niveau": "3e",
+      "dnb2027": false,
+      "enonce": "Développe à l’aide d’une identité remarquable : (2x − 1)².",
+      "reponse": "4x² − 4x + 1",
+      "donnees": "a 2 à 4,b 1 à 5 ; forme(ax±b)² ; résultat coefficients absolus≤40.",
+      "saisie": "Expression courte avec touches lettre, chiffres, +, −, ×, /, parenthèses et carré. Gabarit de coefficients seulement en entraînement guidé.",
+      "acceptation": "Vérifier exactement l’équivalence algébrique et la forme demandée ; normaliser × implicite, espaces et²/^2. Forme développée réduite.",
+      "aide1": {
+        "texte": "Le carré d’un groupe est son produit par lui-même. Les deux produits croisés sont égaux.",
+        "visuel": "Tableau carré avec coefficient littéral et terme négatif ; tous les facteurs sont inclus dans les produits."
+      },
+      "aide2": {
+        "texte": "Calcule(2x)² et 2 × (2x) × 1 séparément.",
+        "visuel": "Afficher(2x)² − 2 × (2x) × 1 + 1²."
+      },
+      "correction": "(2x − 1)² = 4x² − 4x + 1.",
+      "controles": ["Refuser 2x²−4x+1 et 4x²−2x+1 ; contrôler le terme constant positif."],
+      "identifiant": "NC26-d",
+      "ancienId": "NC26-V4",
+      "ancienIdGenerateur": "NC26-V4",
+      "indiceGenerateur": 3,
+      "nom": "Gérer une base 2x dans un carré",
+      "niveauDescription": "3e nouveau programme",
+      "niveaux": ["3e"],
+      "brevet": false,
+      "reponseType": "expression",
+      "champs": [
+        {
+          "type": "expression",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

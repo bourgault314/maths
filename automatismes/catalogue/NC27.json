@@ -1,0 +1,469 @@
+{
+  "id": "NC27",
+  "titre": "Équations à une ou deux étapes",
+  "categorie": "Calcul littéral et équations",
+  "objectif": "Trouver la valeur de l’inconnue en effectuant des opérations inverses.",
+  "prerequis": ["Opérations inverses", "Nombre quotient", "NC21", "Relatifs en 4e"],
+  "perimetre": "DNB2027 : cas simples de l’ancien cycle 4. Niveaux collège selon la progression 2026.",
+  "cours": {
+    "regle": "Une solution rend l’égalité vraie. Pour garder l’égalité, fais la même opération des deux côtés.",
+    "exemple": "3x + 2 = 14 → 3x = 12 → x = 4 ; vérification :3 × 4 + 2 = 14.",
+    "visuel": "Deux lignes d’équation alignées sur = ; opérations − 2 puis ÷ 3 affichées symétriquement à gauche et à droite. Barre de 3 parts égales plus 2 seulement pour données positives.",
+    "mouvement": "Retrait simultané des mêmes unités puis partage des deux côtés ; version statique avec flèches annotées."
+  },
+  "erreurs": [
+    "Faire une opération sur un seul membre",
+    "Inverser la fraction",
+    "Confondre−3x et x−3",
+    "Oublier de vérifier"
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 4,2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "PDF p.8–11",
+      "apport": "Niveaux et objectifs du calcul littéral ; introduction distincte de l’entretien.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples pour la mise en œuvre des programmes de mathématiques — cycle 4",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "p.13–14 et 18 imprimées",
+      "apport": "Opérations inverses, barres/balances et contrôle de la solution ; cas nul explicite.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Programme du cycle 4,2020",
+      "url": "https://cache.media.education.gouv.fr/file/31/89/1/ensel714_annexe3_1312891.pdf",
+      "repere": "PDF p.131–132, calcul littéral",
+      "apport": "Périmètre mathématique utilisé par le filtre DNB2027.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Contrat de conception Matégo",
+      "url": null,
+      "repere": "Étape 1, NC19–NC31",
+      "apport": "Exemples originaux, bornes des générateurs, interfaces et aides proposées ; choix éditoriaux à valider par prototype.",
+      "statut": "choix de conception"
+    },
+    {
+      "titre": "Mathsgo — ÉquaScribe",
+      "url": "https://mathsgo.re/outils/equascribe.html",
+      "repere": "Aide et raccourcis, source HTML locale l.956–981, consultée le 20octobre 2026",
+      "apport": "Principe repris : hachurer le même retrait sur les deux membres, puis afficher la ligne suivante et l’opération correspondante. Source lue ; application existante non auditée intégralement.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "NCETM — Algebra tiles",
+      "url": "https://www.ncetm.org.uk/media/dj5o223w/ncetm_ks3_representations_algebra_tilespdf.pdf",
+      "repere": "p.3–4,9–14",
+      "apport": "Associer schéma et symboles ; limites des aires négatives.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": [
+    "Les balances concrètes servent aux quantités positives ; opérations signées affichées symboliquement.",
+    "Ne pas générer coefficienta=0 dans la banque à solution unique."
+  ],
+  "acces_secondaires": ["Nombres et calculs"],
+  "atlas": "cours/06.svg",
+  "atlasAlt": "Deux parts xet une part3composent11. Retirer3laisse8pour les deux parts.",
+  "nom": "Équations à une ou deux étapes",
+  "domaine": "nombres-calculs",
+  "sousDomaine": "Calcul littéral et équations",
+  "niveaux": ["5e", "4e", "3e"],
+  "niveauxDescription": "5e : x+b=c, ax=c et quotient simple par opérations inverses ; 4e : ax+b=c avec entiers relatifs ; 3e : entretien explicite des trois formes.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_09", "dnb_13"],
+    "questions": [
+      {
+        "source": "A2601",
+        "question": "Q4",
+        "referenceAncienne": "AN 4",
+        "forme": "d",
+        "identifiant": "NC27-d",
+        "ancienId": "NC27-V4",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Équation ax+b=c",
+        "formatSource": "Saisie",
+        "document": "Amérique du Nord, 3 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/Brevet_Ameri_Nord_3_06_2026_DV.pdf"
+      },
+      {
+        "source": "A2606",
+        "question": "Q5",
+        "referenceAncienne": "ME 5",
+        "forme": "d",
+        "identifiant": "NC27-d",
+        "ancienId": "NC27-V4",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Résoudre une équation ax+b=c à solution négative",
+        "formatSource": "QCM",
+        "document": "Métropole, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Metropole_FK-v2.pdf"
+      },
+      {
+        "source": "A2611",
+        "question": "Q8",
+        "referenceAncienne": "ME-pro 8",
+        "forme": "d",
+        "identifiant": "NC27-d",
+        "ancienId": "NC27-V4",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Équation ax+b=c",
+        "formatSource": "Saisie",
+        "document": "Métropole professionnelle, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Metropole_30_juin_2026_DV.pdf"
+      },
+      {
+        "source": "R27A",
+        "question": "Q5",
+        "referenceAncienne": "R1 5",
+        "forme": "d",
+        "identifiant": "NC27-d",
+        "ancienId": "NC27-V4",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Équation ax+b=c",
+        "formatSource": "Nombre",
+        "document": "Sujet de référence mathématiques n°1",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n01-129658.pdf"
+      },
+      {
+        "source": "Z26B",
+        "question": "Q7",
+        "referenceAncienne": "ZB 7",
+        "forme": "d",
+        "identifiant": "NC27-d",
+        "ancienId": "NC27-V4",
+        "support": "adaptation",
+        "difference": "Saisie de la solution plutôt que choix du calcul ; même isolation de l’inconnue, calcul détaillé dans l’aide.",
+        "savoirFaire": "Choisir le calcul d’une solution d’équation",
+        "formatSource": "QCM",
+        "document": "Sujet zéro 2026, série générale B",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-b-mathematiquespdf-123314.pdf"
+      },
+      {
+        "source": "Z26PB",
+        "question": "Q9",
+        "referenceAncienne": "ZPB 9",
+        "forme": "d",
+        "identifiant": "NC27-d",
+        "ancienId": "NC27-V4",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Équation ax+b=c",
+        "formatSource": "QCM",
+        "document": "Sujet zéro 2026, série professionnelle B",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-b-mathematiquespdf-123302.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Inverser une addition",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Résous : x + 7 = 12.",
+      "reponse": "x = 5",
+      "donnees": "b,c entiers 0 à 20 ; c≥b en premières 5e ; ensuite solution négative par soustraction autorisée ; pas de coefficient multiplicatif.",
+      "saisie": "Nombre signé ou fraction numérateur/dénominateur ; virgule et point acceptés ; aucun arrondi implicite.",
+      "acceptation": "Valeur 5 ou x=5 ; toutes fractions égales à 5 admises.",
+      "aide1": {
+        "texte": "Quelle opération annule l’ajout de 7 ?",
+        "visuel": "Sur une barre totale 12, isoler le segment 7 et un segmentx."
+      },
+      "aide2": {
+        "texte": "Retire 7 de chaque côté.",
+        "visuel": "Afficherx + 7 − 7 = 12 − 7 ; ne pas calculer 12 − 7."
+      },
+      "correction": "x = 12 − 7 = 5. Vérification :5 + 7 = 12.",
+      "controles": [
+        "Refuser 19 et−5 ; vérifier exemple x+7=7 donne 0 ; égalité conservée à chaque étape."
+      ],
+      "identifiant": "NC27-a",
+      "ancienId": "NC27-V1",
+      "ancienIdGenerateur": "NC27-V1",
+      "indiceGenerateur": 0,
+      "nom": "Inverser une addition",
+      "niveauDescription": "5e introduction ; 4e–3e automatisme",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Inverser une multiplication, solution fractionnaire",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Résous : 4x = 3.",
+      "reponse": "x = 3/4",
+      "donnees": "a entier 2 à 9 non nul ; c 1 à 12 ; fraction simple, dénominateur≤9 ; 5e coefficients positifs.",
+      "saisie": "Nombre signé ou fraction numérateur/dénominateur ; virgule et point acceptés ; aucun arrondi implicite.",
+      "acceptation": "Accepter 3/4,6/8,0,75 et 0.75 ; aucune forme irréductible imposée.",
+      "aide1": {
+        "texte": "4x représente quatre fois x.",
+        "visuel": "Quatre segments égaux sous une accolade totale 3 ; chaque segment portex."
+      },
+      "aide2": {
+        "texte": "Partage 3 en quatre parts égales.",
+        "visuel": "Afficherx = 3 ÷ 4 ; fraction verticale vide disponible."
+      },
+      "correction": "x = 3/4 = 0,75. Vérification :4 × 3/4 = 3.",
+      "controles": ["Refuser 4/3 et 12 ; dénominateur non nul ; éviter fausse tolérance sur 0,74."],
+      "identifiant": "NC27-b",
+      "ancienId": "NC27-V2",
+      "ancienIdGenerateur": "NC27-V2",
+      "indiceGenerateur": 1,
+      "nom": "Inverser une multiplication, solution fractionnaire",
+      "niveauDescription": "5e sens quotient ; 4e–3e automatisme",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Gérer un résultat nul",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Résous : 6x = 0.",
+      "reponse": "x = 0",
+      "donnees": "a entier 2 à 9 non nul ; second membre 0 ; variante x/3=0 ; ne pas générer 0x=0.",
+      "saisie": "Nombre signé ou fraction numérateur/dénominateur ; virgule et point acceptés ; aucun arrondi implicite.",
+      "acceptation": "Accepter 0 et 0/7 ; refuser « aucune solution ».",
+      "aide1": {
+        "texte": "Quel nombre multiplié par 6 donne 0 ?",
+        "visuel": "Machine x → multiplication ou division par le nombre non nul → 0 ; rechercher l’entrée."
+      },
+      "aide2": {
+        "texte": "Divise les deux membres par 6.",
+        "visuel": "Afficherx = 0 ÷ 6."
+      },
+      "correction": "x = 0 ;6 × 0 = 0.",
+      "controles": [
+        "Refuser 6,1/6 etaucune solution ; a ne doit jamais être 0 dans cette variante."
+      ],
+      "identifiant": "NC27-c",
+      "ancienId": "NC27-V3",
+      "ancienIdGenerateur": "NC27-V3",
+      "indiceGenerateur": 2,
+      "nom": "Gérer un résultat nul",
+      "niveauDescription": "5e introduction ; 4e–3e entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Résoudre deux étapes avec coefficient négatif",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Résous : −3x + 2 = 11.",
+      "reponse": "x = −3",
+      "donnees": "a entier−6 à−1 ; b−9 à 9 ; solution entière−6 à 6 choisie d’abord ; c=a×solution+b ; |c|≤40.",
+      "saisie": "Nombre signé ou fraction numérateur/dénominateur ; virgule et point acceptés ; aucun arrondi implicite.",
+      "acceptation": "Valeur exacte signée ; fraction équivalente admise.",
+      "aide1": {
+        "texte": "Enlève d’abord le terme ajouté à−3x.",
+        "visuel": "Deux membres encadrés ; la même addition ou soustraction est portée sur les deux flèches verticales ; nouvelle égalité en dessous."
+      },
+      "aide2": {
+        "texte": "Après retrait de 2, on obtient − 3x = 9.",
+        "visuel": "Afficher cette ligne puis ÷ (−3) des deux côtés."
+      },
+      "correction": "−3x = 9, donc x = 9/(−3) = −3. Vérification :−3 × (−3) + 2 = 11.",
+      "controles": [
+        "Refuser 3 et−13/3 ; test solution 0 autorisé ; vérifier substitution dans l’original."
+      ],
+      "identifiant": "NC27-d",
+      "ancienId": "NC27-V4",
+      "ancienIdGenerateur": "NC27-V4",
+      "indiceGenerateur": 3,
+      "nom": "Résoudre deux étapes avec coefficient négatif",
+      "niveauDescription": "4e après produits relatifs ; 3e automatisme",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2601",
+          "question": "Q4",
+          "referenceAncienne": "AN 4",
+          "forme": "d",
+          "identifiant": "NC27-d",
+          "ancienId": "NC27-V4",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Équation ax+b=c",
+          "formatSource": "Saisie",
+          "document": "Amérique du Nord, 3 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/Brevet_Ameri_Nord_3_06_2026_DV.pdf"
+        },
+        {
+          "source": "A2606",
+          "question": "Q5",
+          "referenceAncienne": "ME 5",
+          "forme": "d",
+          "identifiant": "NC27-d",
+          "ancienId": "NC27-V4",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Résoudre une équation ax+b=c à solution négative",
+          "formatSource": "QCM",
+          "document": "Métropole, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Metropole_FK-v2.pdf"
+        },
+        {
+          "source": "A2611",
+          "question": "Q8",
+          "referenceAncienne": "ME-pro 8",
+          "forme": "d",
+          "identifiant": "NC27-d",
+          "ancienId": "NC27-V4",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Équation ax+b=c",
+          "formatSource": "Saisie",
+          "document": "Métropole professionnelle, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Metropole_30_juin_2026_DV.pdf"
+        },
+        {
+          "source": "R27A",
+          "question": "Q5",
+          "referenceAncienne": "R1 5",
+          "forme": "d",
+          "identifiant": "NC27-d",
+          "ancienId": "NC27-V4",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Équation ax+b=c",
+          "formatSource": "Nombre",
+          "document": "Sujet de référence mathématiques n°1",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n01-129658.pdf"
+        },
+        {
+          "source": "Z26B",
+          "question": "Q7",
+          "referenceAncienne": "ZB 7",
+          "forme": "d",
+          "identifiant": "NC27-d",
+          "ancienId": "NC27-V4",
+          "support": "adaptation",
+          "difference": "Saisie de la solution plutôt que choix du calcul ; même isolation de l’inconnue, calcul détaillé dans l’aide.",
+          "savoirFaire": "Choisir le calcul d’une solution d’équation",
+          "formatSource": "QCM",
+          "document": "Sujet zéro 2026, série générale B",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-b-mathematiquespdf-123314.pdf"
+        },
+        {
+          "source": "Z26PB",
+          "question": "Q9",
+          "referenceAncienne": "ZPB 9",
+          "forme": "d",
+          "identifiant": "NC27-d",
+          "ancienId": "NC27-V4",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Équation ax+b=c",
+          "formatSource": "QCM",
+          "document": "Sujet zéro 2026, série professionnelle B",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-b-mathematiquespdf-123302.pdf"
+        }
+      ]
+    },
+    {
+      "id": "e",
+      "objectif": "Modéliser une situation courte à deux étapes",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Trois cahiers au même prix et un stylo à 2 € coûtent 14 €. Quel est le prix d’un cahier ?",
+      "reponse": "4 €",
+      "donnees": "Nombre de cahiers 2 à 5 ; stylo 1 à 5 € ; prix cahier entier 1 à 9 € ; total construit exactement ; aucun coût négatif.",
+      "saisie": "Nombre ; symbole€ affiché hors case.",
+      "acceptation": "Valeur 4 ou 4,00 ; aucune équation exigée en réponse courte.",
+      "aide1": {
+        "texte": "Sépare le prix du stylo du total.",
+        "visuel": "Barre totale 14 € composée de trois cases identiques « cahier » puis 2 €."
+      },
+      "aide2": {
+        "texte": "Après le stylo, il reste 12 € pour trois cahiers.",
+        "visuel": "Barrer visuellement le segment 2 € ; accolade 12 € au-dessus des trois cases."
+      },
+      "correction": "(14 − 2) ÷ 3 = 4 €. Chaque cahier coûte 4 €.",
+      "controles": [
+        "Refuser 12 et 14/3 ; nombre de cahiers entier positif ; prix représentés sans somme cachée."
+      ],
+      "identifiant": "NC27-e",
+      "ancienId": "NC27-V5",
+      "ancienIdGenerateur": "NC27-V5",
+      "indiceGenerateur": 4,
+      "nom": "Modéliser une situation courte à deux étapes",
+      "niveauDescription": "4e ; entretien 3e",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "€"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

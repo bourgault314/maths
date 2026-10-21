@@ -1,0 +1,262 @@
+{
+  "id": "EG03",
+  "titre": "Repérage dans l’espace et sur une sphère",
+  "categorie": "Géométrie et repérage",
+  "objectif": "Lire trois coordonnées dans un pavé ou une latitude et une longitude sur un globe gradué.",
+  "prerequis": "Coordonnées planes ; orientation des axes ; angles en degrés.",
+  "perimetre": "Maintien spécifique DNB 2027 ancien programme. Ne pas présenter latitude/longitude ou coordonnées 3D comme de nouveaux automatismes prescrits du programme 2026.",
+  "cours": {
+    "regle": "Dans un pavé, lis x puis y puis z sur les axes indiqués. Sur un globe, la latitude se lit depuis l’équateur, la longitude depuis le méridien de Greenwich.",
+    "exemple": "P(2 ; 3 ; 1) : 2 selon x, 3 selon y, 1 en altitude. Q : latitude 30° N, longitude 60° E.",
+    "visuel": "Deux cartes de cours séparées : pavé OABC… avec axes x,y,z fléchés et chemins parallèles aux arêtes ; globe avec équateur, Greenwich, N/S/E/O et deux arcs gradués pour Q. Aucun calcul de profondeur à partir de la perspective.",
+    "mouvement": "Pavé : chemin en trois étapes x,y,z avec arrêt possible. Globe : rotation facultative uniquement pour voir les repères ; version fixe avec équateur et méridien visibles.",
+    "exemples_par_variante": [
+      {
+        "id": "EG03-V1",
+        "regle": "Dans un pavé, lis les coordonnées dans l’ordre des axes x, y, z.",
+        "exemple": "Le sommet opposé à O utilise les trois dimensions du pavé : G(4 ; 3 ; 2)."
+      },
+      {
+        "id": "EG03-V2",
+        "regle": "Dans un pavé, lis les coordonnées dans l’ordre des axes x, y, z.",
+        "exemple": "Le sommet opposé à O utilise les trois dimensions du pavé : G(4 ; 3 ; 2)."
+      },
+      {
+        "id": "EG03-V3",
+        "regle": "La latitude se lit au nord ou au sud de l’équateur ; la longitude à l’est ou à l’ouest du méridien de Greenwich.",
+        "exemple": "Q est sur le parallèle 20° N et le méridien 40° E : latitude 20° N, longitude 40° E."
+      },
+      {
+        "id": "EG03-V4",
+        "regle": "La latitude se lit au nord ou au sud de l’équateur ; la longitude à l’est ou à l’ouest du méridien de Greenwich.",
+        "exemple": "Q est sur le parallèle 20° N et le méridien 40° E : latitude 20° N, longitude 40° E."
+      }
+    ]
+  },
+  "erreurs": [
+    "Intervertir ordonnée et altitude.",
+    "Croire que la profondeur se mesure sur le dessin.",
+    "Intervertir latitude et longitude.",
+    "Confondre hémisphère et signe non explicité."
+  ],
+  "sources": [
+    {
+      "titre": "Programme du cycle 4 — BO du 30 juillet 2020",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/programme-d-enseignement-du-cycle-4-67722.pdf",
+      "repere": "p. 136 — Représenter l’espace",
+      "apport": "Abscisse, ordonnée, altitude, latitude, longitude ; repérage dans un parallélépipède et sur une sphère.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Repères annuels de progression — cycle 4 — 2019",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/26-maths-c4-reperes-eduscol1114756pdf-74694.pdf",
+      "repere": "PDF p. 10 — Représenter l’espace",
+      "apport": "Pavé en 4e, sphère en 3e.",
+      "statut": "appui pédagogique"
+    }
+  ],
+  "limites": "Aucune distance sur la sphère, aucune trigonométrie 3D. Les variantes DNB maintenues ne doivent pas migrer automatiquement dans les parcours nouveaux 4e/3e.",
+  "acces_secondaires": [],
+  "nom": "Repérage dans l’espace et sur une sphère",
+  "domaine": "espace-geometrie",
+  "sousDomaine": "Géométrie et repérage",
+  "niveaux": ["4e", "3e"],
+  "niveauxDescription": "Ancien programme : 4e pour le pavé, 3e pour la sphère. Parcours Brevet 2027 : entretien. Ces variantes restent séparées des automatismes annuels du nouveau programme.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": [],
+    "questions": []
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Lire les coordonnées d’un sommet du pavé.",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Dans le pavé dessiné, O est l’origine ; OA porte x avec OA = 4, OC porte y avec OC = 3, OE porte z avec OE = 2. G est le sommet opposé à O. Donne G(x ; y ; z).",
+      "reponse": "(4 ; 3 ; 2)",
+      "donnees": "Sommets O(0,0,0), A(4,0,0), B(4,3,0), C(0,3,0), E(0,0,2), F(4,0,2), G(4,3,2), H(0,3,2) ; perspective cavalière avec arêtes cachées en pointillés. Dimensions entières 1–6.",
+      "saisie": "Trois champs x,y,z.",
+      "acceptation": "4 puis 3 puis 2 ; pas de permutation.",
+      "aide1": "« Repère les trois axes et leur ordre. » Afficher x sur OA, y sur OC, z sur OE avec styles distincts.",
+      "aide2": "« Pour rejoindre G, avance de OA selon x, de OC selon y, puis de OE vers le haut. » Montrer les trois segments du chemin, sans remplir le triplet.",
+      "correction": "G(4 ; 3 ; 2).",
+      "controles": [
+        "Refuser (4;2;3).",
+        "Projections numériques exactes et labels des huit sommets cohérents."
+      ],
+      "identifiant": "EG03-a",
+      "ancienId": "EG03-V1",
+      "ancienIdGenerateur": "EG03-V1",
+      "indiceGenerateur": 0,
+      "nom": "Lire les coordonnées d’un sommet du pavé.",
+      "niveauDescription": "4e ancien programme ; 3e Brevet 2027",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "x",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "y",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "z",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Repérer un point dont une coordonnée vaut zéro.",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Dans le repère du pavé, P est sur la face z = 0. Les pointillés indiquent x = 2 et y = 3. Complète ses coordonnées.",
+      "reponse": "(2 ; 3 ; 0)",
+      "donnees": "P(2,3,0) dans pavé dimensions 4 × 4 × 3 ; projections vers axes explicitement tracées ; alterner faces x = 0, y = 0, z = 0.",
+      "saisie": "Trois champs signés sans possibilité d’omettre un zéro.",
+      "acceptation": "2 ; 3 ; 0.",
+      "aide1": "« Sur la face du bas, quelle est l’altitude ? » Surligner la face z = 0 et l’origine de l’axe vertical.",
+      "aide2": "« L’altitude est nulle. Lis maintenant x puis y sur les pointillés. » Étiquette z = 0, deux projections à suivre.",
+      "correction": "P(2 ; 3 ; 0).",
+      "controles": [
+        "Refuser deux coordonnées seulement.",
+        "Les pointillés de projection se distinguent des arêtes cachées par des labels x,y,z."
+      ],
+      "identifiant": "EG03-b",
+      "ancienId": "EG03-V2",
+      "ancienIdGenerateur": "EG03-V2",
+      "indiceGenerateur": 1,
+      "nom": "Repérer un point dont une coordonnée vaut zéro.",
+      "niveauDescription": "4e ancien programme ; 3e Brevet 2027",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "x",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "y",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "z",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Lire latitude et longitude.",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Q est à l’intersection du parallèle 30° N et du méridien 60° E. Indique sa latitude puis sa longitude.",
+      "reponse": "Latitude 30° N ; longitude 60° E",
+      "donnees": "Globe ou schéma cartographique pédagogique ; équateur 0°, Greenwich 0° explicitement indiqués ; latitudes hors pôles entre −60° et 60°, longitudes hors antiméridien entre −150° et 150°. Exemple Q30N60E.",
+      "saisie": "Deux nombres et deux sélecteurs N/S puis E/O ; degrés fixes.",
+      "acceptation": "30 N puis 60 E ; les formulations Nord/Est sont équivalentes.",
+      "aide1": "« La latitude se lit depuis l’équateur : nord ou sud. » Surligner équateur et parallèle passant par Q.",
+      "aide2": "« La longitude se lit depuis Greenwich : est ou ouest. » Surligner le méridien 0° puis celui de Q.",
+      "correction": "Q a pour latitude 30° N et pour longitude 60° E.",
+      "controles": [
+        "Refuser 60 N ; 30 E et 30 S ; 60 O.",
+        "Ne pas exiger N ou S pour 0° ; traiter les pôles hors générateur."
+      ],
+      "identifiant": "EG03-c",
+      "ancienId": "EG03-V3",
+      "ancienIdGenerateur": "EG03-V3",
+      "indiceGenerateur": 2,
+      "nom": "Lire latitude et longitude.",
+      "niveauDescription": "3e ancien programme ; Brevet 2027",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Latitude",
+          "unite": "°"
+        },
+        {
+          "type": "qcm",
+          "libelle": "Nord ou sud",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "Longitude",
+          "unite": "°"
+        },
+        {
+          "type": "qcm",
+          "libelle": "Est ou ouest",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Choisir le point de coordonnées géographiques données.",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Sur le globe gradué, choisis le point de latitude 20° S et de longitude 40° O : A(20° N;40° O), B(20° S;40° E), C(20° S;40° O).",
+      "reponse": "C",
+      "donnees": "Trois points d’intersections explicitement graduées ; mêmes valeurs absolues, signes hémisphériques différents ; pas de points cachés. Les couples entre parenthèses sont pour les métadonnées du dessin, pas imprimés à côté des points en mode visuel.",
+      "saisie": "Toucher un point ou choisir sa lettre dans des boutons.",
+      "acceptation": "C uniquement.",
+      "aide1": "« Cherche d’abord l’hémisphère sud. » Mettre l’équateur en évidence et l’étiquette S sous celui-ci.",
+      "aide2": "« Dans cet hémisphère, cherche le méridien 40° à l’ouest de Greenwich. » Mettre les deux méridiens 40° E/O en contraste avec leurs labels.",
+      "correction": "C est au sud de l’équateur et à l’ouest de Greenwich.",
+      "controles": [
+        "Changer les lettres et positions pour éviter une bonne réponse stable.",
+        "Vérifier convention E/O géographique, distincte de droite/gauche arbitraire d’un globe tourné."
+      ],
+      "identifiant": "EG03-d",
+      "ancienId": "EG03-V4",
+      "ancienIdGenerateur": "EG03-V4",
+      "indiceGenerateur": 3,
+      "nom": "Choisir le point de coordonnées géographiques données.",
+      "niveauDescription": "3e ancien programme ; Brevet 2027",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

@@ -1,0 +1,215 @@
+{
+  "id": "EG23",
+  "titre": "Volumes de pyramides, cônes et boules",
+  "categorie": "Grandeurs et mesures",
+  "objectif": "Appliquer une formule avec les bonnes grandeurs.",
+  "prerequis": ["Aire de base", "Hauteur perpendiculaire", "Carré/cube", "Fraction un tiers"],
+  "perimetre": "DNB 2027 : applications directes du programme de 2020. Les formules sont données quand l’objectif est leur utilisation.",
+  "cours": {
+    "regle": "Pyramide ou cône : V=aire de base×hauteur÷3. Boule de rayon r : V=4πr³/3.",
+    "exemple": "Cône de rayon 3 cm, hauteur 4 cm : V=π×3²×4÷3=12π cm³.",
+    "visuel": "Cône et cylindre de mêmes base et hauteur. La hauteur rejoint le centre de la base ; le rayon est dans le disque de base.",
+    "mouvement": "Transvasement illustratif facultatif ; version statique V du cône = V du cylindre÷3."
+  },
+  "erreurs": [
+    "Oublier le facteur 1/3",
+    "Utiliser une arête oblique comme hauteur",
+    "Confondrevolume de boule et aire de sphère"
+  ],
+  "sources": [
+    {
+      "titre": "Programme cycle 4 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "PDF p.14–15",
+      "apport": "Pyramides, cônes, boules et progression.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples cycle 4 2026",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "p.27,29–30 imprimées",
+      "apport": "Comparaison par transvasement et formule de la boule.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Programme cycle 4 2020",
+      "url": "https://cache.media.education.gouv.fr/file/31/89/1/ensel714_annexe3_1312891.pdf",
+      "repere": "PDF p.134",
+      "apport": "Volumes et grandeurs pour DNB 2027.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "NCETM — Geometry",
+      "url": "https://www.ncetm.org.uk/classroom-resources/secmm-6-geometry/",
+      "repere": "Présentation du thème 6 consultée",
+      "apport": "Relier propriétés géométriques, formules de mesure et transformations ; appui thématique.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "Toutes ces formules ne figurent pas dans la liste indicative de mémorisation de 2025 : distinguer application et restitution. L’animation illustre une relation ; elle ne remplace pas sa démonstration.",
+  "acces_secondaires": ["Géométrie et repérage"],
+  "nom": "Volumes de pyramides, cônes et boules",
+  "domaine": "espace-geometrie",
+  "sousDomaine": "Grandeurs et mesures",
+  "niveaux": ["4e", "3e"],
+  "niveauxDescription": "4e : pyramide et cône ; 3e : boule et entretien. DNB 2027 : application directe des formules du programme de 2020.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": [],
+    "questions": []
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Volume d’une pyramide",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Une pyramide a une base carrée de côté 6 cm et une hauteur 5 cm. Avec V=aire de base×hauteur÷3, calcule son volume.",
+      "reponse": "60 cm³",
+      "donnees": "Côté2–9 ; hauteur 1–9 ; produitc²h divisiblepar 3 ; code hauteur perpendiculaire ; formulefournie.",
+      "saisie": "Nombre, unitécm³.",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "« La base est un carré. » Surligner deuxcôtésde 6 cm.",
+      "aide2": "« Aire de base :6×6=36 cm². Calcule36×5÷3. » Isolerhauteur 5.",
+      "correction": "V=36×5÷3=60 cm³.",
+      "controles": [
+        "Accepter60 ; refuser180, oubli÷3.",
+        "Ne ne pas remplacer la hauteur 5 par arêteoblique d’uneperspective."
+      ],
+      "identifiant": "EG23-a",
+      "ancienId": "EG23-V1",
+      "ancienIdGenerateur": "EG23-V1",
+      "indiceGenerateur": 0,
+      "nom": "Volume d’une pyramide",
+      "niveauDescription": "4e apprentissage ; 3e entretien",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cm³"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Volume exact d’un cône",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Un cône a un rayon de 3 cm et une hauteur 4 cm. Avec V=πr²h/3, donne son volume exact.",
+      "reponse": "12πcm³",
+      "donnees": "r1–6, h1–9 ; r²h divisiblepar 3 ; variationrayon/diamètre ; formulefournie.",
+      "saisie": "Coefficient×π, unitécm³.",
+      "acceptation": "Expression exacte équivalente avec π ; accepter 2π×r si équivalente. Refuser une approximation décimale lorsque la valeur exacte est demandée.",
+      "aide1": "« Dans la formule, r est le rayon. » Colorerr3 et h4.",
+      "aide2": "« π×3²×4÷3=π×9×4÷3. » Montrer la divisionpar 3.",
+      "correction": "V=12πcm³.",
+      "controles": [
+        "Accepter12π ; refuser36π et 4π.",
+        "Correspondance volumeavec pyramide de mêmeairedebase et hauteur."
+      ],
+      "identifiant": "EG23-b",
+      "ancienId": "EG23-V2",
+      "ancienIdGenerateur": "EG23-V2",
+      "indiceGenerateur": 1,
+      "nom": "Volume exact d’un cône",
+      "niveauDescription": "4e apprentissage ; 3e entretien",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "V =",
+          "unite": "π cm³"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Volume exact d’une boule",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Une boule a pour rayon 3 cm. Avec V=4πr³/3, donne son volume exact.",
+      "reponse": "36πcm³",
+      "donnees": "r∈{1,2,3,6} ; coefficient rationnel possible mais petit ; variante diamètre 6 ; accepter fraction ×π.",
+      "saisie": "Coefficient entier ou fraction×π.",
+      "acceptation": "Expression exacte équivalente avec π ; accepter 2π×r si équivalente. Refuser une approximation décimale lorsque la valeur exacte est demandée.",
+      "aide1": "« Il faut le cube du rayon, pas son carré. » Montrer3×3×3.",
+      "aide2": "« 3³=27. Calcule4×27÷3, puis conserveπ. » Afficherlecalcul.",
+      "correction": "V=4π×27÷3=36πcm³.",
+      "controles": [
+        "Accepter36π ; refuser12π (rayoncarré) et 288π (diamètrecubé).",
+        "Pourr=1, accepter4π/3 et nonarrondi4,19."
+      ],
+      "identifiant": "EG23-c",
+      "ancienId": "EG23-V3",
+      "ancienIdGenerateur": "EG23-V3",
+      "indiceGenerateur": 2,
+      "nom": "Volume exact d’une boule",
+      "niveauDescription": "3e apprentissage et DNB 2027",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "V =",
+          "unite": "π cm³"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Retrouver la hauteur d’une pyramide",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Une pyramide a un volume 20 cm³ et une aire de base 12 cm². Quelle est sa hauteur ? Formule : V=aire de base×hauteur÷3.",
+      "reponse": "5 cm",
+      "donnees": "ChoisirB multiplede 3≤30 etH1–9 ; V=BH/3 ; fournirB ; toutes les unités sont cohérentes.",
+      "saisie": "Nombre, unitécm.",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "« Le volume est le tiers de base×hauteur. » Montrer3volumeségaux.",
+      "aide2": "« Multiplie20 par 3 pour retrouver12×hauteur. » Afficher12 h=60.",
+      "correction": "h=3×20÷12=5 cm.",
+      "controles": ["Accepter5 ; refuser20/36.", "Vérifier12×5÷3=20 ; basejamaisnulle."],
+      "identifiant": "EG23-d",
+      "ancienId": "EG23-V4",
+      "ancienIdGenerateur": "EG23-V4",
+      "indiceGenerateur": 3,
+      "nom": "Retrouver la hauteur d’une pyramide",
+      "niveauDescription": "4e application ; 3e entretien",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

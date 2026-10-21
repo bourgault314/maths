@@ -1,0 +1,319 @@
+{
+  "id": "PF03",
+  "titre": "Pourcentage d’une quantité",
+  "categorie": "Proportionnalité et pourcentages",
+  "objectif": "Déterminer une part exprimée en pourcentage.",
+  "prerequis": "Fractions d’une quantité.",
+  "perimetre": "DNB2027 et apprentissages collège ; variantes filtrées par niveau.",
+  "cours": {
+    "regle": "p % signifie p parts sur 100. Le tout correspond à 100 %.",
+    "exemple": "25 % de 80 = un quart de 80 = 20.",
+    "visuel": "Barre de 80 divisée en quatre ; sous chaque quart 25 %, au-dessus 20 après révélation. Puis double droite 0–25–100 % / 0–20–80.",
+    "mouvement": "Sélectionner un quart, puis afficher ÷4 ; pas de100petitescases sur téléphone."
+  },
+  "erreurs": ["Prendre le taux pour la quantité.", "Oublier quelle quantité représente100 %."],
+  "sources": [
+    {
+      "titre": "Éduscol — Exemples cycle 4, 2026",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "PDF p40–46, Proportionnalité et fonctions",
+      "apport": "Progression des contextes, représentations et procédures ; les schémas et exemples ci-dessous sont nos choix de conception.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Éduscol — Accompagnement mathématiques 6e, 2026",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/2026livretaccompagnementmaths6e-pdf-126656.pdf",
+      "repere": "PDF p19–24, proportionnalité",
+      "apport": "Sens des grandeurs, linéarité, retour à unité ; pas de produit en croix en 6e.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Éduscol — Résoudre des problèmes de proportionnalité",
+      "url": "https://eduscol.education.fr/document/17281/download",
+      "repere": "PDF p1–6",
+      "apport": "Choisir une procédure selon les nombres et relier les représentations ; document antérieur, utilisé en appui.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "NCETM — Bar models",
+      "url": "https://www.ncetm.org.uk/media/8d84e791bafa491/ncetm_ks3_representations_bar_models.pdf",
+      "repere": "p.3,5,9,12 lues visuellement",
+      "apport": "Structures partie-tout et comparaison ; identifier explicitement le tout.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "",
+  "acces_secondaires": [],
+  "atlas": "cours/01.svg",
+  "atlasAlt": "Une barre représentant80est partagée en4parts égales. Une part vaut20et représente25%.",
+  "nom": "Pourcentage d’une quantité",
+  "domaine": "proportionnalite-fonctions",
+  "sousDomaine": "Proportionnalité et pourcentages",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6e : sens et taux usuels ; 5e : pourcentages généraux simples ; entretien 4e–3e.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_04", "dnb_35"],
+    "questions": [
+      {
+        "source": "A2607",
+        "question": "Q3",
+        "referenceAncienne": null,
+        "forme": "a",
+        "identifiant": "PF03-a",
+        "ancienId": "PF03-1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Pourcentage usuel d’une quantité",
+        "formatSource": "Saisie",
+        "document": "Polynésie, 7 septembre 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-09-07_polynesie-FB.pdf"
+      },
+      {
+        "source": "A2609",
+        "question": "Q7",
+        "referenceAncienne": "PO-pro 7",
+        "forme": "a",
+        "identifiant": "PF03-a",
+        "ancienId": "PF03-1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Pourcentage usuel d’une quantité",
+        "formatSource": "QCM",
+        "document": "Polynésie professionnelle, 26 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_professionnelle_Sujet_2026-06-26_Polynesie_DV-v4.pdf"
+      },
+      {
+        "source": "Z26A",
+        "question": "Q8",
+        "referenceAncienne": "ZA 8",
+        "forme": "d",
+        "identifiant": "PF03-d",
+        "ancienId": "PF03-4",
+        "support": "comparable",
+        "difference": "Effectif complémentaire : la variante ne doit pas s’arrêter à la part indiquée en pourcentage.",
+        "savoirFaire": "Complément d’un pourcentage d’effectif",
+        "formatSource": "Nombre",
+        "document": "Sujet zéro 2026, série générale A",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-mathematiquespdf-123317.pdf"
+      },
+      {
+        "source": "Z26B",
+        "question": "Q3",
+        "referenceAncienne": "ZB 3",
+        "forme": "a",
+        "identifiant": "PF03-a",
+        "ancienId": "PF03-1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Pourcentage d’un effectif",
+        "formatSource": "Nombre",
+        "document": "Sujet zéro 2026, série générale B",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-b-mathematiquespdf-123314.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Taux usuels",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Combien vaut 25 % de 80 ?",
+      "reponse": "20",
+      "donnees": "Taux 10,25,50,75,100 ; quantités divisibles par partitions utiles.",
+      "saisie": "Nombre",
+      "acceptation": "20 ; toute écriture numérique équivalente.",
+      "aide1": "Partager la barre de 80 en quatre parts égales.",
+      "aide2": "25 % = 1/4 ; calcule 80 ÷ 4.",
+      "correction": "80 ÷ 4 = 20.",
+      "controles": "Ne pas accepter 25 ; distinguer part et tout.",
+      "identifiant": "PF03-a",
+      "ancienId": "PF03-A",
+      "ancienIdGenerateur": "PF03-1",
+      "indiceGenerateur": 0,
+      "nom": "Taux usuels",
+      "niveauDescription": "6e",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2607",
+          "question": "Q3",
+          "referenceAncienne": null,
+          "forme": "a",
+          "identifiant": "PF03-a",
+          "ancienId": "PF03-1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Pourcentage usuel d’une quantité",
+          "formatSource": "Saisie",
+          "document": "Polynésie, 7 septembre 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-09-07_polynesie-FB.pdf"
+        },
+        {
+          "source": "A2609",
+          "question": "Q7",
+          "referenceAncienne": "PO-pro 7",
+          "forme": "a",
+          "identifiant": "PF03-a",
+          "ancienId": "PF03-1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Pourcentage usuel d’une quantité",
+          "formatSource": "QCM",
+          "document": "Polynésie professionnelle, 26 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_professionnelle_Sujet_2026-06-26_Polynesie_DV-v4.pdf"
+        },
+        {
+          "source": "Z26B",
+          "question": "Q3",
+          "referenceAncienne": "ZB 3",
+          "forme": "a",
+          "identifiant": "PF03-a",
+          "ancienId": "PF03-1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Pourcentage d’un effectif",
+          "formatSource": "Nombre",
+          "document": "Sujet zéro 2026, série générale B",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-b-mathematiquespdf-123314.pdf"
+        }
+      ]
+    },
+    {
+      "id": "b",
+      "objectif": "Composer un taux",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Calcule 15 % de 60.",
+      "reponse": "9",
+      "donnees": "Taux 5,15,20,30,35,40 ; quantités multiples20, ≤400.",
+      "saisie": "Nombre",
+      "acceptation": "9.",
+      "aide1": "Barre : 10 % puis 5 %, soit la moitié du premier morceau.",
+      "aide2": "10 % de 60 = 6 ; 5 % = 3.",
+      "correction": "6 + 3 = 9.",
+      "controles": "Vérifier résultat avec p×q/100 exact ; aucun taux décimal non annoncé.",
+      "identifiant": "PF03-b",
+      "ancienId": "PF03-B",
+      "ancienIdGenerateur": "PF03-2",
+      "indiceGenerateur": 1,
+      "nom": "Composer un taux",
+      "niveauDescription": "5e",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Identifier la base",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Une classe compte 30 élèves. 40 % viennent à pied. Combien viennent à pied ?",
+      "reponse": "12 élèves",
+      "donnees": "Effectif 10–40 ; taux donnant effectif entier ; contexte réaliste.",
+      "saisie": "Entier, élèves fixé",
+      "acceptation": "12 uniquement valeur entière.",
+      "aide1": "Le tout est la classe : une barre de 30 élèves.",
+      "aide2": "10 % correspondent à 3 élèves ; prendre quatre parts.",
+      "correction": "4 × 3 = 12 élèves.",
+      "controles": "Interdire effectifs fractionnaires à génération ; ne pas confondre40et30.",
+      "identifiant": "PF03-c",
+      "ancienId": "PF03-C",
+      "ancienIdGenerateur": "PF03-3",
+      "indiceGenerateur": 2,
+      "nom": "Identifier la base",
+      "niveauDescription": "5e",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "élèves"
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Calculer un effectif à partir du pourcentage complémentaire",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Dans un groupe de40élèves,25%viennent à pied. Les autres viennent en bus. Combien viennent en bus ?",
+      "reponse": "30",
+      "donnees": "Effectif20,40ou60 ; taux20,25,40,50ou60 ; deux modes exhaustifs et disjoints ; effectifs entiers.",
+      "saisie": "Champ numérique ; unité affichée en dehors du champ.",
+      "acceptation": "Valeur numérique exacte ; virgule et point décimaux acceptés ; unité déjà indiquée.",
+      "aide1": "Le groupe entier vaut100%. Barre40élèves, une portion25%identifiée.",
+      "aide2": "Il reste75%. Calculer75/100de40.",
+      "correction": "40×75/100=30élèves.",
+      "controles": "Effectifs entiers ; accepter30, refuser10 ; ne pas confondre part donnée et complément ; totalité des modes explicitée.",
+      "identifiant": "PF03-d",
+      "ancienId": "PF03-D",
+      "ancienIdGenerateur": "PF03-4",
+      "indiceGenerateur": 3,
+      "nom": "Calculer un effectif à partir du pourcentage complémentaire",
+      "niveauDescription": "5e puis entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "élèves"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "Z26A",
+          "question": "Q8",
+          "referenceAncienne": "ZA 8",
+          "forme": "d",
+          "identifiant": "PF03-d",
+          "ancienId": "PF03-4",
+          "support": "comparable",
+          "difference": "Effectif complémentaire : la variante ne doit pas s’arrêter à la part indiquée en pourcentage.",
+          "savoirFaire": "Complément d’un pourcentage d’effectif",
+          "formatSource": "Nombre",
+          "document": "Sujet zéro 2026, série générale A",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-mathematiquespdf-123317.pdf"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,531 @@
+{
+  "id": "NC16",
+  "titre": "Notation scientifique",
+  "categorie": "Nombres et calculs",
+  "objectif": "Produire une écriture scientifique normalisée et repasser à l’écriture décimale.",
+  "prerequis": ["Produits et quotients", "Carrés et tables", "Numération de position"],
+  "perimetre": "Couverture des prérequis et automatismes du collège. Le filtre DNB2027 utilise l’ancien programme du cycle 4 ; les niveaux indiqués suivent le nouveau programme. Le statut est précisé par variante.",
+  "cours": {
+    "regle": "Un nombre strictement positif s’écrit en notation scientifique a × 10ⁿ, avec 1 ≤ a < 10 et n entier.",
+    "exemple": "721000 = 7,21 × 10⁵.",
+    "visuel": "Tableau de rangs fixe ; mantisse comprise entre 1 et 10 ; puissance de 10 liée à la valeur initiale.",
+    "mouvement": "Le schéma est entièrement compréhensible à l’arrêt. Une animation éventuelle révèle les étapes sans cacher les états précédents."
+  },
+  "erreurs": [
+    "Confondre base et exposant",
+    "Oublier une condition de signe",
+    "Confondre carré et double"
+  ],
+  "sources": [
+    {
+      "titre": "Liste indicative d’automatismes DNB (octobre 2025)",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/liste-indicative-dautomatismes-pour-le-dnbpdf-116340.pdf",
+      "statut": "prescription",
+      "repere": "p 1",
+      "apport": "Périmètre indicatif des automatismes du DNB ; la liste n’est pas limitative."
+    },
+    {
+      "titre": "Programme de mathématiques du cycle 4 (2026)",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "statut": "prescription",
+      "repere": "PDF p 10–11",
+      "apport": "Objectifs et progression officiels du programme ; niveau de classe vérifié."
+    },
+    {
+      "titre": "Exemples de mise en œuvre du cycle 4 (2026)",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "statut": "appui pédagogique",
+      "repere": "PDF p 20, imprimée 19",
+      "apport": "Exemples officiels de mise en œuvre : progressivité, représentations et types de calculs."
+    },
+    {
+      "titre": "Mathsgo — glisse-nombres décimaux",
+      "url": "https://mathsgo.re/outils/plateaux_manipulation/glisse_nombres_decimaux.html",
+      "repere": "Catalogue public des outils ; interaction non testée",
+      "apport": "Réemploi du principe : rangs et virgule fixes, chiffres associés à leur valeur ; aucune copie de code.",
+      "statut": "inspiration visuelle"
+    }
+  ],
+  "limites": "Zéro exclu ; la mantisse est positive, au moins 1 et strictement inférieure à 10. Ne pas enseigner seulement un déplacement de virgule.",
+  "implementation": {
+    "module": "app-automatismes/dist/modules/nombres.js",
+    "tests": "etape1/test_nombres.mjs",
+    "variantes": 5,
+    "graines_par_variante": 200,
+    "principe": "Aide 1 : représentation visuelle des données. Aide 2 : étape de calcul. Deux aides maximum.",
+    "aide1_visuelle": true
+  },
+  "nom": "Notation scientifique",
+  "domaine": "nombres-calculs",
+  "sousDomaine": "Nombres et calculs",
+  "niveaux": ["3e"],
+  "niveauxDescription": "3e dans le nouveau programme ; DNB2027 selon l’ancien cycle 4.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_06"],
+    "questions": [
+      {
+        "source": "A2602",
+        "question": "Q1",
+        "referenceAncienne": "AA 1",
+        "forme": "a",
+        "identifiant": "NC16-a",
+        "ancienId": "NC16-A",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Notation scientifique d’un grand nombre",
+        "formatSource": "QCM",
+        "document": "Asie, 15 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-15_Asie_DV-v3.pdf"
+      },
+      {
+        "source": "A2603",
+        "question": "Q5",
+        "referenceAncienne": "G1 5",
+        "forme": "a",
+        "identifiant": "NC16-a",
+        "ancienId": "NC16-A",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Notation scientifique d’une distance",
+        "formatSource": "Saisie",
+        "document": "Centres étrangers, 18 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-18_Centres-etrangers_DV-v3.pdf"
+      },
+      {
+        "source": "A2604",
+        "question": "Q2",
+        "referenceAncienne": "PO 2",
+        "forme": "b",
+        "identifiant": "NC16-b",
+        "ancienId": "NC16-B",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Notation scientifique d’un petit nombre",
+        "formatSource": "Saisie",
+        "document": "Polynésie, 26 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/Brevet_Polynesie_26_juin_2026_DV-3.pdf"
+      },
+      {
+        "source": "A2606",
+        "question": "Q6",
+        "referenceAncienne": "ME 6",
+        "forme": "b",
+        "identifiant": "NC16-b",
+        "ancienId": "NC16-B",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Notation scientifique d’un petit nombre",
+        "formatSource": "QCM",
+        "document": "Métropole, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Metropole_FK-v2.pdf"
+      },
+      {
+        "source": "A2609",
+        "question": "Q3",
+        "referenceAncienne": "PO-pro 3",
+        "forme": "b",
+        "identifiant": "NC16-b",
+        "ancienId": "NC16-B",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Notation scientifique d’un petit nombre",
+        "formatSource": "QCM",
+        "document": "Polynésie professionnelle, 26 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_professionnelle_Sujet_2026-06-26_Polynesie_DV-v4.pdf"
+      },
+      {
+        "source": "A2610",
+        "question": "Q2",
+        "referenceAncienne": "AG-pro 2",
+        "forme": "a",
+        "identifiant": "NC16-a",
+        "ancienId": "NC16-A",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Notation scientifique d’un grand nombre",
+        "formatSource": "Saisie",
+        "document": "Antilles-Guyane professionnelle, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Antilles_30_06_2026_DV-2.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Grand nombre vers notation scientifique",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Écris 721000 en notation scientifique.",
+      "reponse": "7.21 ; 5",
+      "donnees": "Mantisse 1,01–9,99 ; exposant 2–6 ; deux champs distincts mantisse et exposant.",
+      "saisie": "Mantisse a : nombre ; Exposant n : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Place un seul chiffre non nul avant la virgule.",
+      "aide2": "La mantisse est 7,21 ; cherche la puissance de 10.",
+      "correction": "721000 = 7,21 × 10⁵.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "fields",
+        "values": ["7.21", "5"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Mantisse a",
+          "answer": "7.21",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        },
+        {
+          "label": "Exposant n",
+          "answer": "5",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Tableau des rangs du nombre ou de ses coefficients. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC16-a",
+      "ancienId": "NC16-a",
+      "ancienIdGenerateur": "NC16-A",
+      "indiceGenerateur": 0,
+      "nom": "Grand nombre vers notation scientifique",
+      "niveauDescription": "3e ; entretien dans les classes suivantes.",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Mantisse a",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "Exposant n",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2602",
+          "question": "Q1",
+          "referenceAncienne": "AA 1",
+          "forme": "a",
+          "identifiant": "NC16-a",
+          "ancienId": "NC16-A",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Notation scientifique d’un grand nombre",
+          "formatSource": "QCM",
+          "document": "Asie, 15 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-15_Asie_DV-v3.pdf"
+        },
+        {
+          "source": "A2603",
+          "question": "Q5",
+          "referenceAncienne": "G1 5",
+          "forme": "a",
+          "identifiant": "NC16-a",
+          "ancienId": "NC16-A",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Notation scientifique d’une distance",
+          "formatSource": "Saisie",
+          "document": "Centres étrangers, 18 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-18_Centres-etrangers_DV-v3.pdf"
+        },
+        {
+          "source": "A2610",
+          "question": "Q2",
+          "referenceAncienne": "AG-pro 2",
+          "forme": "a",
+          "identifiant": "NC16-a",
+          "ancienId": "NC16-A",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Notation scientifique d’un grand nombre",
+          "formatSource": "Saisie",
+          "document": "Antilles-Guyane professionnelle, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Antilles_30_06_2026_DV-2.pdf"
+        }
+      ]
+    },
+    {
+      "id": "b",
+      "objectif": "Petit nombre vers notation scientifique",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Écris 0,0721 en notation scientifique.",
+      "reponse": "7.21 ; -2",
+      "donnees": "Mantisse 1,01–9,99 ; exposant −1 à −5 ; aucun zéro.",
+      "saisie": "Mantisse a : nombre ; Exposant n : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Place un seul chiffre non nul avant la virgule.",
+      "aide2": "La mantisse est 7,21 ; cherche la puissance de 10.",
+      "correction": "0,0721 = 7,21 × 10⁻².",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "fields",
+        "values": ["7.21", "-2"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Mantisse a",
+          "answer": "7.21",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        },
+        {
+          "label": "Exposant n",
+          "answer": "-2",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Tableau des rangs du nombre ou de ses coefficients. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC16-b",
+      "ancienId": "NC16-b",
+      "ancienIdGenerateur": "NC16-B",
+      "indiceGenerateur": 1,
+      "nom": "Petit nombre vers notation scientifique",
+      "niveauDescription": "3e ; entretien dans les classes suivantes.",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Mantisse a",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "Exposant n",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2604",
+          "question": "Q2",
+          "referenceAncienne": "PO 2",
+          "forme": "b",
+          "identifiant": "NC16-b",
+          "ancienId": "NC16-B",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Notation scientifique d’un petit nombre",
+          "formatSource": "Saisie",
+          "document": "Polynésie, 26 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/Brevet_Polynesie_26_juin_2026_DV-3.pdf"
+        },
+        {
+          "source": "A2606",
+          "question": "Q6",
+          "referenceAncienne": "ME 6",
+          "forme": "b",
+          "identifiant": "NC16-b",
+          "ancienId": "NC16-B",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Notation scientifique d’un petit nombre",
+          "formatSource": "QCM",
+          "document": "Métropole, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Metropole_FK-v2.pdf"
+        },
+        {
+          "source": "A2609",
+          "question": "Q3",
+          "referenceAncienne": "PO-pro 3",
+          "forme": "b",
+          "identifiant": "NC16-b",
+          "ancienId": "NC16-B",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Notation scientifique d’un petit nombre",
+          "formatSource": "QCM",
+          "document": "Polynésie professionnelle, 26 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_professionnelle_Sujet_2026-06-26_Polynesie_DV-v4.pdf"
+        }
+      ]
+    },
+    {
+      "id": "c",
+      "objectif": "Scientifique vers décimal",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Écris 7,21 × 10⁻¹ sous forme décimale.",
+      "reponse": "0.7210000000000001",
+      "donnees": "Mantisse 1,01–9,99 ; exposant −5 à 5 ; résultat décimal exact, sans arrondi demandé.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Multiplie par 1/10.",
+      "aide2": "Chaque chiffre change de 1 rang vers la droite du tableau.",
+      "correction": "7,21 × 10⁻¹ = 0,721.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["0.7210000000000001"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "0.7210000000000001",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Tableau des rangs du nombre ou de ses coefficients. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC16-c",
+      "ancienId": "NC16-c",
+      "ancienIdGenerateur": "NC16-C",
+      "indiceGenerateur": 2,
+      "nom": "Scientifique vers décimal",
+      "niveauDescription": "3e ; entretien dans les classes suivantes.",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Normaliser une écriture scientifique",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Mets 72,1 × 10⁴ en notation scientifique.",
+      "reponse": "7.21 ; 5",
+      "donnees": "Mantisse dénormalisée par un facteur 0,1, 10 ou 100 ; compenser dans l’exposant.",
+      "saisie": "Mantisse a : nombre ; Exposant n : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "La mantisse doit être comprise entre 1 inclus et 10 exclu.",
+      "aide2": "72,1 = 7,21 × 10¹. Regroupe les puissances.",
+      "correction": "721000 = 7,21 × 10⁵.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "fields",
+        "values": ["7.21", "5"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Mantisse a",
+          "answer": "7.21",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        },
+        {
+          "label": "Exposant n",
+          "answer": "5",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Tableau des rangs du nombre ou de ses coefficients. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC16-d",
+      "ancienId": "NC16-d",
+      "ancienIdGenerateur": "NC16-D",
+      "indiceGenerateur": 3,
+      "nom": "Normaliser une écriture scientifique",
+      "niveauDescription": "3e ; entretien dans les classes suivantes.",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Mantisse a",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "Exposant n",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Comparer deux écritures scientifiques",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Complète : 7,21 × 10⁵ □ 4,3 × 10⁶.",
+      "reponse": "<",
+      "donnees": "Mantisses normalisées ; exposants égaux ou différents d’une unité ; nombres strictement positifs.",
+      "saisie": "Choisis une réponse : choix explicites",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Compare les exposants ; à exposants égaux, compare les mantisses.",
+      "aide2": "721000 et 4300000.",
+      "correction": "721000 < 4300000.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "text",
+        "values": ["<"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Choisis une réponse",
+          "answer": "<",
+          "kind": "text",
+          "unit": "",
+          "placeholder": "",
+          "options": ["<", "=", ">"]
+        }
+      ],
+      "visuel_aide1": "Tableau des rangs du nombre ou de ses coefficients. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC16-e",
+      "ancienId": "NC16-e",
+      "ancienIdGenerateur": "NC16-E",
+      "indiceGenerateur": 4,
+      "nom": "Comparer deux écritures scientifiques",
+      "niveauDescription": "3e ; entretien dans les classes suivantes.",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Choisis une réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

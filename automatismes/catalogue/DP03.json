@@ -1,0 +1,464 @@
+{
+  "id": "DP03",
+  "titre": "Moyennes",
+  "categorie": "Statistiques et probabilités",
+  "objectif": "Calculer une moyenne en tenant compte du nombre de valeurs et des effectifs.",
+  "prerequis": [
+    "Addition et division exacte simples",
+    "Lecture d’un tableau d’effectifs",
+    "Multiplication par un effectif"
+  ],
+  "perimetre": "DNB2027 pour toutes les variantes ; valeurs manquantes et regroupement relèvent d’applications courtes, pas seulement de restitution.",
+  "cours": {
+    "regle": "La moyenne est la valeur d’un partage égal : total ÷ nombre de valeurs.",
+    "exemple": "8 + 10 + 12 = 30 ; 30 ÷ 3 = 10.",
+    "visuel": "Piles 8, 10 et 12 ; une ligne orange horizontale montre la moyenne 10. Légende explicite « Ligne orange : moyenne ».",
+    "mouvement": "Transfert de deux carrés seulement, commandé par l’élève. Statique : dessin avant/après, total30 conservé."
+  },
+  "erreurs": [
+    "Diviser par une valeur au lieu du nombre de valeurs",
+    "Oublier la pondération",
+    "Faire la moyenne de moyennes sans effectifs",
+    "Croire qu’une moyenne doit être une valeur de la série"
+  ],
+  "sources": [
+    {
+      "titre": "Programme cycle 4, 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "Statistiques5ᵉ–3ᵉ, PDFp.16–17",
+      "apport": "Moyenne simple puis pondérée et automatisation.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples de mise en œuvre cycle 4, 2026",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "Statistiques5ᵉ–4ᵉ, PDFp.35–37",
+      "apport": "Sens des unités, moyenne non entière, pondération et comparaison.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Programme cycle 4, 2020",
+      "url": "https://cache.media.education.gouv.fr/file/31/89/1/ensel714_annexe3_1312891.pdf",
+      "repere": "ThèmeB, PDFp.132",
+      "apport": "Moyenne et interprétation.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Liste indicative d’automatismes DNB, octobre 2025",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/liste-indicative-dautomatismes-pour-le-dnbpdf-116340.pdf",
+      "repere": "Organisation et gestion de données, p.3",
+      "apport": "Moyenne simple d’une petite série.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Antilles-Guyane professionnelle, 30 juin 2026",
+      "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Antilles_30_06_2026_DV-2.pdf",
+      "repere": "Question 3",
+      "apport": "Choisir l’expression du calcul de moyenne ; reproduction du sujet consultée lors de l’audit de couverture.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "NCETM — Statistical representations and measures",
+      "url": "https://www.ncetm.org.uk/classroom-resources/secmm-51-statistical-representations-and-measures/",
+      "repere": "Page du concept 5.1 consultée ; pas de lecture exhaustive du PDF lié",
+      "apport": "Choisir des représentations selon les mesures statistiques étudiées.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "Calculs choisis mentalement accessibles. Les valeurs manquantes ou regroupements ne doivent pas remplacer l’entretien de la moyenne simple.",
+  "atlas": "cours/13.svg",
+  "atlasAlt": "Piles2,4,6transformées en trois piles4, total12conservé.",
+  "nom": "Moyennes",
+  "domaine": "donnees-probabilites",
+  "sousDomaine": "Statistiques et probabilités",
+  "niveaux": ["5e", "4e", "3e"],
+  "niveauxDescription": "5ᵉ : moyenne simple. 4ᵉ : moyenne pondérée et problèmes courts. 3ᵉ : entretien et interprétation. Aucune exigence nouvelle de moyenne en6ᵉ.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_30"],
+    "questions": [
+      {
+        "source": "A2605",
+        "question": "Q7",
+        "referenceAncienne": "AG 7",
+        "forme": "a",
+        "identifiant": "DP03-a",
+        "ancienId": "DP03-V1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Moyenne simple",
+        "formatSource": "Saisie",
+        "document": "Antilles-Guyane, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Antilles-Guyane_DV-v2.pdf"
+      },
+      {
+        "source": "A2610",
+        "question": "Q3",
+        "referenceAncienne": "AG-pro 3",
+        "forme": "e",
+        "identifiant": "DP03-e",
+        "ancienId": "DP03-V5",
+        "support": "comparable",
+        "difference": "Expression du calcul demandée : la valeur numérique seule ne prouve pas la mise en forme du calcul de moyenne.",
+        "savoirFaire": "Écrire le calcul d’une moyenne",
+        "formatSource": "Expression",
+        "document": "Antilles-Guyane professionnelle, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Antilles_30_06_2026_DV-2.pdf"
+      },
+      {
+        "source": "Z26B",
+        "question": "Q2",
+        "referenceAncienne": "ZB 2",
+        "forme": "a",
+        "identifiant": "DP03-a",
+        "ancienId": "DP03-V1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Moyenne simple",
+        "formatSource": "QCM",
+        "document": "Sujet zéro 2026, série générale B",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-b-mathematiquespdf-123314.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Calculer une moyenne simple",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Les scores sont8,10 et12 points. Quelle est leur moyenne ?",
+      "reponse": "10 points",
+      "donnees": "3 à6 valeurs entières0–20 ; somme divisible parN ou quotient décimal fini simple. Unité commune.",
+      "saisie": "Nombre, unitépoints affichée",
+      "acceptation": "10 accepté ;30 refusé. Accepter10,0.",
+      "aide1": "« La moyenne partage le total entre les trois scores. » Montrer trois colonnes et l’accolade du total, sans égaliser.",
+      "aide2": "« Le total est8 + 10 + 12 = 30. Il y a3 scores : calcule30 ÷ 3. » Afficher les deux nombres reliés au quotient.",
+      "correction": "(8 + 10 + 12) ÷ 3 = 10 points.",
+      "controles": [
+        "Nombre de diviseurs = N, pasplusgrandevaleur.",
+        "Moyenne entremin etmax.",
+        "Inclure zéro et moyenne non entière simple."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Quelle est la moyenne des valeurs 11 ; 12 ; 10 ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "11",
+            "unite": ""
+          }
+        ],
+        "aide1": "Additionne les valeurs : tu obtiens le total à partager.",
+        "aide2": "Partage ce total en 3 parts égales.",
+        "cours": {
+          "regle": "La moyenne est la valeur d’un partage égal : total ÷ nombre de valeurs.",
+          "exemple": "8 + 10 + 12 = 30 ; 30 ÷ 3 = 10."
+        },
+        "correction": "11 + 12 + 10 = 33 ; 33 ÷ 3 = 11."
+      },
+      "identifiant": "DP03-a",
+      "ancienId": "DP03-V1",
+      "ancienIdGenerateur": "DP03-V1",
+      "indiceGenerateur": 0,
+      "nom": "Calculer une moyenne simple",
+      "niveauDescription": "5ᵉ apprentissage ;4ᵉ–3ᵉ automatisation",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2605",
+          "question": "Q7",
+          "referenceAncienne": "AG 7",
+          "forme": "a",
+          "identifiant": "DP03-a",
+          "ancienId": "DP03-V1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Moyenne simple",
+          "formatSource": "Saisie",
+          "document": "Antilles-Guyane, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Antilles-Guyane_DV-v2.pdf"
+        },
+        {
+          "source": "Z26B",
+          "question": "Q2",
+          "referenceAncienne": "ZB 2",
+          "forme": "a",
+          "identifiant": "DP03-a",
+          "ancienId": "DP03-V1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Moyenne simple",
+          "formatSource": "QCM",
+          "document": "Sujet zéro 2026, série générale B",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-b-mathematiquespdf-123314.pdf"
+        }
+      ]
+    },
+    {
+      "id": "b",
+      "objectif": "Calculer une moyenne avec effectifs",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Nombre de livres lus :1,2,4. Effectifs :2,3,1. Quel est le nombre moyen de livres lus ?",
+      "reponse": "2 livres",
+      "donnees": "Valeurs 0, 1, 2 avec effectifs entiers de 1 à 4. Moyenne exacte sous forme entière, décimale ou fractionnaire ; aucune approximation présentée comme exacte.",
+      "saisie": "Nombre, unitélivres affichée",
+      "acceptation": "2 accepté ;7/3 refusé (moyenne des trois modalités).",
+      "aide1": "« Chaque valeur compte autant de fois que son effectif. » Déployer visuellement1,1 puis2,2,2 puis4 sous le tableau.",
+      "aide2": "« Total des livres :1 × 2 + 2 × 3 + 4 × 1 = 12. Nombre d’élèves :2 + 3 + 1 = 6. » Placer12 et6 dans un quotient non calculé.",
+      "correction": "12 ÷ 6 = 2 livres par élève en moyenne.",
+      "controles": [
+        "Calcul indépendant en développant la liste.",
+        "Effectifnul permis dans variantes sans compter une observation.",
+        "Refuser division par le nombre de colonnes."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Le tableau donne le nombre de livres lus par élève. Quel est le nombre moyen de livres lus ? Une fraction est acceptée.",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "5/7",
+            "unite": ""
+          }
+        ],
+        "aide1": "Chaque valeur compte autant de fois que son effectif.",
+        "aide2": "Total de livres : 0 × 4 + 1 × 1 + 2 × 2. Puis divise par 7.",
+        "cours": {
+          "regle": "La moyenne est la valeur d’un partage égal : total ÷ nombre de valeurs.",
+          "exemple": "8 + 10 + 12 = 30 ; 30 ÷ 3 = 10."
+        },
+        "correction": "Moyenne = 5/7."
+      },
+      "identifiant": "DP03-b",
+      "ancienId": "DP03-V2",
+      "ancienIdGenerateur": "DP03-V2",
+      "indiceGenerateur": 1,
+      "nom": "Calculer une moyenne avec effectifs",
+      "niveauDescription": "4ᵉ apprentissage ;3ᵉ entretien",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Retrouver une valeur manquante connaissant la moyenne",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Quatre scores ont une moyenne de10. Trois scores valent7,9 et12. Quel est le quatrième ?",
+      "reponse": "12",
+      "donnees": "N3 à5 ; moyenneM5 à15 ; générerN valeurs0–20 puis choisirM = somme/N exact ; masquer une valeur.",
+      "saisie": "Nombre entier",
+      "acceptation": "12 accepté ;10 et28 refusés.",
+      "aide1": "« Les quatre scores doivent totaliser quatre fois la moyenne. » Dessiner quatre parts identiques de10 reliées à une barre de total inconnu.",
+      "aide2": "« Total attendu :4 × 10 = 40. Les trois scores connus totalisent7 + 9 + 12 = 28. Il manque40 − 28. » Surligner la part manquante.",
+      "correction": "40 − 28 = 12.",
+      "controles": [
+        "Recalculer la moyenne après insertion = 10.",
+        "Valeur manquante dans le domaine annoncé.",
+        "Ne pas masquer le nombre total d’observations."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Les quatre valeurs 13 ; 14 ; 13 ; ? ont pour moyenne 13. Quelle valeur manque ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "12",
+            "unite": ""
+          }
+        ],
+        "aide1": "La moyenne multipliée par 4 donne le total attendu.",
+        "aide2": "Total attendu : 4 × 13 = 52. Enlève les trois valeurs connues.",
+        "cours": {
+          "regle": "La moyenne est la valeur d’un partage égal : total ÷ nombre de valeurs.",
+          "exemple": "8 + 10 + 12 = 30 ; 30 ÷ 3 = 10."
+        },
+        "correction": "4 × 13 − (13 + 14 + 13) = 12."
+      },
+      "identifiant": "DP03-c",
+      "ancienId": "DP03-V3",
+      "ancienIdGenerateur": "DP03-V3",
+      "indiceGenerateur": 2,
+      "nom": "Retrouver une valeur manquante connaissant la moyenne",
+      "niveauDescription": "4ᵉ application ;3ᵉ entretien",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Regrouper deux groupes d’effectifs différents",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Deux élèves ont une moyenne de10 points ; six autres ont une moyenne de14 points. Quelle est la moyenne des huit élèves ?",
+      "reponse": "13 points",
+      "donnees": "Deux groupes disjoints : n1 de 1 à 3, n2 de 4 à 6 ; moyennes entières respectivement 5–10 et 11–16. Résultat exact entier, décimal ou fractionnaire ; fraction acceptée explicitement.",
+      "saisie": "Nombre",
+      "acceptation": "13 accepté ;12 refusé. Pas de justification obligatoire mais correction pondérée.",
+      "aide1": "« Les groupes n’ont pas le même nombre d’élèves. » Dessiner deux emplacements portant10 et six portant14.",
+      "aide2": "« Totaux :2 × 10 = 20 et6 × 14 = 84. Partage20 + 84 entre8 élèves. » Afficher(20 + 84)/8.",
+      "correction": "(20 + 84) ÷ 8 = 104 ÷ 8 = 13 points.",
+      "controles": [
+        "Cas effectifségaux : moyenne des moyennes autorisée.",
+        "Cas inégauxdoit distinguer moyennepondérée.",
+        "Résultat entre10 et14."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Quelle est la moyenne de l’ensemble des deux groupes ? Une fraction est acceptée.",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "69/7",
+            "unite": ""
+          }
+        ],
+        "aide1": "Les groupes n’ont pas le même effectif : reconstitue leurs totaux.",
+        "aide2": "Total A : 3 × 7. Total B : 4 × 12. Additionne ces totaux, puis divise par 7.",
+        "cours": {
+          "regle": "La moyenne est la valeur d’un partage égal : total ÷ nombre de valeurs.",
+          "exemple": "8 + 10 + 12 = 30 ; 30 ÷ 3 = 10."
+        },
+        "correction": "(3 × 7 + 4 × 12)/(3 + 4) = 69/7."
+      },
+      "identifiant": "DP03-d",
+      "ancienId": "DP03-V4",
+      "ancienIdGenerateur": "DP03-V4",
+      "indiceGenerateur": 3,
+      "nom": "Regrouper deux groupes d’effectifs différents",
+      "niveauDescription": "4ᵉ application après pondération ;3ᵉ entretien",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Reconnaître le calcul qui donne une moyenne",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Quel calcul donne la moyenne de 4 ; 7 ; 10 ?",
+      "reponse": "(4 + 7 + 10)/3",
+      "donnees": "3 à 5 valeurs entières de 1 à 15. Mélanger l’ordre des quatre propositions : somme divisée par N, par N − 1, par N + 1, somme seule.",
+      "saisie": "Choix du calcul",
+      "acceptation": "Choix de la somme complète divisée par l’effectif ; les distracteurs restent tous distincts.",
+      "aide1": "La moyenne partage le total en parts égales.",
+      "aide2": "Additionne toutes les valeurs, puis divise par leur nombre.",
+      "correction": "(4 + 7 + 10)/3 = 7.",
+      "controles": [
+        "Nombre de termes égal à N.",
+        "Distracteurs distincts même si N = 3.",
+        "Ne pas confondre moyenne et somme."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Quel calcul permet de déterminer la moyenne de cette série ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "(3 + 8 + 4 + 6 + 13)/5",
+            "unite": "",
+            "choix": [
+              "(3 + 8 + 4 + 6 + 13)/5",
+              "(3 + 8 + 4 + 6 + 13)/4",
+              "3 + 8 + 4 + 6 + 13",
+              "(3 + 8 + 4 + 6 + 13)/6"
+            ]
+          }
+        ],
+        "aide1": "La moyenne partage le total en parts égales.",
+        "aide2": "Additionne toutes les valeurs, puis divise par le nombre de valeurs.",
+        "cours": {
+          "regle": "La moyenne est la valeur d’un partage égal : total ÷ nombre de valeurs.",
+          "exemple": "8 + 10 + 12 = 30 ; 30 ÷ 3 = 10."
+        },
+        "correction": "Moyenne = (3 + 8 + 4 + 6 + 13)/5."
+      },
+      "identifiant": "DP03-e",
+      "ancienId": "DP03-V5",
+      "ancienIdGenerateur": "DP03-V5",
+      "indiceGenerateur": 4,
+      "nom": "Reconnaître le calcul qui donne une moyenne",
+      "niveauDescription": "5ᵉ, puis entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2610",
+          "question": "Q3",
+          "referenceAncienne": "AG-pro 3",
+          "forme": "e",
+          "identifiant": "DP03-e",
+          "ancienId": "DP03-V5",
+          "support": "comparable",
+          "difference": "Expression du calcul demandée : la valeur numérique seule ne prouve pas la mise en forme du calcul de moyenne.",
+          "savoirFaire": "Écrire le calcul d’une moyenne",
+          "formatSource": "Expression",
+          "document": "Antilles-Guyane professionnelle, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Antilles_30_06_2026_DV-2.pdf"
+        }
+      ]
+    }
+  ]
+}
