@@ -1276,6 +1276,21 @@ input.case {
   max-height: none;
   height: auto;
 }
+/* aideSurFigure : le dessin d'aide dans la boîte exacte de la figure, la figure cachée dessous. */
+.carte .figure.aide-sur-figure > svg {
+  visibility: hidden;
+}
+.figure-aide {
+  position: absolute;
+}
+/* Le SVG du moteur porte style="height:auto" : il faut l'emporter pour remplir la boîte. */
+.figure-aide > svg {
+  display: block;
+  width: 100% !important;
+  max-width: none !important;
+  height: 100% !important;
+  max-height: none !important;
+}
 .bulle-aide {
   position: absolute;
   top: 0;

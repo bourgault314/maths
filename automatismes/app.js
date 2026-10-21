@@ -953,6 +953,19 @@ function ajusterQuestion() {
       poserDessin(figure, (echelleFigure -= 0.02));
     figureGardee = { cle, echelle: echelleFigure };
   }
+  // Le dessin d'aide posé sur la figure (aideSurFigure) prend exactement sa boîte : rien ne bouge.
+  const calque = zone.querySelector(".carte .figure > .figure-aide");
+  if (calque && figure) {
+    // Un SVG n'a pas d'offsetLeft : on mesure sa boîte par rapport à celle de la figure.
+    const boite = figure.getBoundingClientRect();
+    const cadre = figure.parentElement.getBoundingClientRect();
+    Object.assign(calque.style, {
+      left: `${boite.left - cadre.left}px`,
+      top: `${boite.top - cadre.top}px`,
+      width: `${boite.width}px`,
+      height: `${boite.height}px`,
+    });
+  }
   const essayer = () => {
     let echelleAide = depart(aide, maxAide);
     const planAide = 0.76 * Math.min(1, echelleAide);

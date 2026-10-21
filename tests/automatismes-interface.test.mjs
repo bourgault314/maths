@@ -746,3 +746,102 @@ test(
     }
   },
 );
+
+// Corrections après C7 (K2) : les 31 formes dont le dessin d'aide n'est pas la figure (29 lançables,
+// liste de Codex, figures.json). La figure reste en place : rien ne bouge à l'ouverture de l'aide.
+const FIGURES_AIDE_DIFFERENTE = (
+  "NC19-d NC31-b EG02-a EG02-b EG02-c EG05-e EG06-a EG06-b EG06-c EG07-a EG07-b EG07-c EG07-d " +
+  "DP01-a DP02-a DP02-e DP03-a DP04-c DP04-e DP08-c PI01-a PI02-a PI02-d PI02-e PI03-a PI03-d " +
+  "PI03-g PI03-h PI03-i"
+).split(" ");
+
+test(
+  "figures (coque V2, K2) : 29 formes, le calcul et les réponses ne bougent pas à l'aide",
+  { skip: ignorer, timeout: 400000 },
+  async () => {
+    const { serveur, base } = await serveurLocal();
+    const browser = await ouvrirNavigateur();
+    const bouges = [];
+    try {
+      for (const [width, height, tactile] of [
+        [390, 844, true],
+        [375, 667, true],
+        [820, 1180, true],
+        [1366, 768, false],
+      ]) {
+        const page = await browser.newPage({
+          viewport: { width, height },
+          isMobile: tactile,
+          hasTouch: tactile,
+        });
+        for (const id of FIGURES_AIDE_DIFFERENTE) {
+          const [notion, forme] = id.split("-");
+          await page.goto(`${base}?notion=${notion}&forme=${forme}&graine=12`);
+          await page.locator(".carte .figure svg").waitFor();
+          await stabiliser(page);
+          const avant = await positionQuestion(page);
+          await page.locator('.carte [data-action="aide"]').click();
+          await page.locator(".espace-question > .aide").waitFor();
+          await stabiliser(page);
+          const apres = await positionQuestion(page);
+          const ecart = Math.max(...apres.map((haut, rang) => Math.abs(haut - avant[rang])));
+          if (ecart > 1) bouges.push(`${id} ${width}x${height} : ${ecart.toFixed(1)} px`);
+        }
+        await page.close();
+      }
+      assert.deepEqual(bouges, []);
+    } finally {
+      await browser.close();
+      await new Promise((fin) => serveur.close(fin));
+    }
+  },
+);
+
+test(
+  "figure (coque V2, K2) : avec aideSurFigure, le dessin d'aide prend exactement la boîte de la figure",
+  { skip: ignorer, timeout: 90000 },
+  async () => {
+    const { serveur, base } = await serveurLocal();
+    const browser = await ouvrirNavigateur();
+    try {
+      for (const [width, height, tactile] of [
+        [390, 844, true],
+        [1366, 768, false],
+      ]) {
+        const page = await browser.newPage({
+          viewport: { width, height },
+          isMobile: tactile,
+          hasTouch: tactile,
+        });
+        // Aucune forme n'a encore aideSurFigure : le catalogue servi en reçoit un pour EG02-a.
+        await page.route("**/catalogue/catalogue.json", async (route) => {
+          const catalogue = await (await route.fetch()).json();
+          catalogue
+            .find((famille) => famille.id === "EG02")
+            .formes.find((forme) => forme.id === "a").aideSurFigure = true;
+          await route.fulfill({ json: catalogue });
+        });
+        await page.goto(`${base}?notion=EG02&forme=a&graine=9`);
+        await page.locator(".carte .figure svg").waitFor();
+        await stabiliser(page);
+        const avant = await positionQuestion(page);
+        const boite = await page.locator(".carte .figure > svg").boundingBox();
+        await page.locator('.carte [data-action="aide"]').click();
+        await page.locator(".carte .figure-aide svg").waitFor();
+        await stabiliser(page);
+        const calque = await page.locator(".carte .figure-aide svg").boundingBox();
+        for (const cle of ["x", "y", "width", "height"])
+          assert.ok(Math.abs(calque[cle] - boite[cle]) <= 1, `${width} : même ${cle}`);
+        const apres = await positionQuestion(page);
+        apres.forEach((haut, rang) =>
+          assert.ok(Math.abs(haut - avant[rang]) <= 1, `${width} : la question ne bouge pas`),
+        );
+        assert.equal(await page.locator(".espace-question > .aide .dessin").count(), 0);
+        await page.close();
+      }
+    } finally {
+      await browser.close();
+      await new Promise((fin) => serveur.close(fin));
+    }
+  },
+);

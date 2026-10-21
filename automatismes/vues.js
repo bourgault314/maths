@@ -112,7 +112,8 @@ function enBulle(question, reglages) {
 export function aideHTML(question, etat, projection = false, reglages = {}) {
   if (!etat.aideOuverte || enBulle(question, reglages)) return "";
   const dessin = question.hints?.[0]?.svg || "";
-  const montrer = dessin && dessin !== question.visual;
+  // Un dessin d'aide « sur la figure » (aideSurFigure) se pose sur elle ; sinon il est ici.
+  const montrer = dessin && dessin !== question.visual && !surFigure(question, reglages);
   const fermer = projection
     ? ""
     : bouton("×", "fermer-aide", "fermer", 'aria-label="Fermer l’aide"');
@@ -126,9 +127,22 @@ export function aideHTML(question, etat, projection = false, reglages = {}) {
 }
 
 /* La figure de la question, toujours en place. Avec coinAide seulement, l'aide ouverte est une bulle
-   posée dans ce coin de la figure. */
+   posée dans ce coin de la figure. Avec aideSurFigure seulement (K2 : un dessin d'aide différent
+   n'est pas forcément la figure annotée), le dessin d'aide se pose EXACTEMENT dans la boîte de la
+   figure (calque .figure-aide, dimensionné par ajusterQuestion) ; la figure garde sa place. */
+function surFigure(question, reglages) {
+  const dessin = question.hints?.[0]?.svg || "";
+  return Boolean(
+    reglages?.aideSurFigure && question.visual && dessin && dessin !== question.visual,
+  );
+}
+
 export function figureHTML(question, etat, reglages = {}) {
   if (!question.visual) return "";
+  const calque =
+    etat.aideOuverte && surFigure(question, reglages)
+      ? `<div class="figure-aide">${question.hints[0].svg}</div>`
+      : "";
   const bulle =
     etat.aideOuverte && enBulle(question, reglages)
       ? `<div class="bulle-aide ${reglages.coinAide}" role="note" aria-label="Aide">${ICONES.aide}
@@ -136,7 +150,7 @@ export function figureHTML(question, etat, reglages = {}) {
       ${etat.etape ? `<span class="etape">${mathHtml(question.hints?.[1]?.text || "")}</span>` : ""}
       ${etat.etape ? "" : boutonIndice(question, etat)}</div>`
       : "";
-  return `<div class="figure">${question.visual}${bulle}</div>`;
+  return `<div class="figure${calque ? " aide-sur-figure" : ""}">${question.visual}${calque}${bulle}</div>`;
 }
 
 /* « Voir l'explication » (C7) : sous la question, au même endroit que l'aide, pas de fenêtre ; la
