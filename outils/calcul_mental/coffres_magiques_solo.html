@@ -12,6 +12,66 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+  <script>
+    // Suivi de classe (lot « Coffres magiques sur le suivi », 21/10/2026),
+    // repris du <head> de la carte des mondes SPLAT!, en JavaScript ancien (pas
+    // de const, pas d'URLSearchParams) : quoi qu'il arrive au reste, le billet
+    // sort de la barre d'adresse avant tout. L'espace élève ouvre l'appli avec
+    // un BILLET (#b=…, usage unique, deux minutes), jamais le code ; la page
+    // l'échange ensuite contre le code (assets/js/coffres-parcours.js). Le
+    // code ne doit apparaître dans AUCUNE adresse : une adresse reste dans
+    // l'historique et s'affiche quand la page est projetée. Un #code= ou un
+    // #fiche= tapé à la main n'ouvre rien : il est seulement effacé.
+    (function (window) {
+      var entree = {billet: ""};
+      var reste = [];
+      var aEffacer = false;
+      try {
+        var brut = String(window.location.hash || "").replace(/^#/, "");
+        if (brut) {
+          var morceaux = brut.split("&");
+          for (var i = 0; i < morceaux.length; i++) {
+            var egal = morceaux[i].indexOf("=");
+            var cle = egal < 0 ? morceaux[i] : morceaux[i].slice(0, egal);
+            var valeur = egal < 0 ? "" : morceaux[i].slice(egal + 1);
+            try { cle = decodeURIComponent(cle); valeur = decodeURIComponent(valeur); } catch (e) {}
+            if (cle === "code" || cle === "fiche") aEffacer = true;
+            else if (cle === "b") entree.billet = valeur;
+            else if (morceaux[i]) reste.push(morceaux[i]);
+          }
+        }
+      } catch (e) {}
+      window.MATHSGO_ENTREE = entree;
+      // L'élève qui arrive de son espace (un billet, ou son code déjà dans
+      // l'onglet) a l'en-tête du modèle commun dès le premier affichage (la
+      // flèche, le bloc de suivi) : posé ici, pour que le bandeau du site ne
+      // clignote pas avant. La page le confirme ensuite (majSuivi).
+      try {
+        var codeOnglet = "";
+        try { codeOnglet = window.sessionStorage.getItem("mathsgo-suivi-code") || ""; } catch (e) {}
+        if (entree.billet || codeOnglet) {
+          window.document.documentElement.className += " suivi-eleve";
+          // Tant qu'on ne sait pas qui entre ni s'il a une partie à reprendre,
+          // rien d'autre que l'en-tête (quelques dixièmes de seconde).
+          window.document.documentElement.className += " suivi-attente";
+        }
+      } catch (e) {}
+      if (aEffacer || entree.billet) {
+        try {
+          window.history.replaceState(null, "", window.location.pathname
+            + window.location.search + (reste.length ? "#" + reste.join("&") : ""));
+        } catch (e) {}
+      }
+      // Un lien #b= posé sur une page DÉJÀ ouverte n'est pas un nouveau
+      // document : ce script ne rejouerait pas. On recharge.
+      try {
+        window.addEventListener("hashchange", function () {
+          var hash = String(window.location.hash || "");
+          if (/(^#|&)(code|fiche|b)=/.test(hash)) window.location.reload();
+        });
+      } catch (e) {}
+    })(window);
+  </script>
   <script defer src="../../assets/js/mention-confidentialite.js"></script>
   <style>
     :root {
@@ -1569,6 +1629,95 @@
       .mode-continue { margin-top: 8px; }
     }
 
+    /* ---------- l'élève à code (lot « Coffres magiques sur le suivi », 21/10/2026) ----------
+       Le MODÈLE COMMUN des applis suivies (AGENTS.md), Défi tables en référence, maquettes
+       validées par Gwenaël : en haut, la flèche de retour (ronde, en haut à gauche du cadre)
+       puis le bloc « Suivi par ton professeur · Léa · CM1 · Se déconnecter » (dessiné et stylé
+       par assets/js/coffres-suivi.js) ; sur l'écran de jeu, la pastille « ● Léa » et Plein
+       écran ; plus de logo en haut, plus de lien « Calcul mental », plus de « Réglages » (la
+       flèche y mène) ; en bas, le petit logo et « Mon espace ». L'écran de choix (niveau,
+       opérations) et le mémo ne sont plus des fenêtres par-dessus le plateau : ce sont des
+       pages, sur le fond de l'appli. La classe « suivi-eleve » est posée dès le <head> pour
+       l'élève venu de son espace ; sans code, rien ne change. */
+    html.suivi-eleve .topbar > .brand,
+    html.suivi-eleve .topbar .back-link[data-origin-link],
+    html.suivi-eleve .mode-switch-button,
+    html.suivi-eleve .mode-options { display: none; }
+    html.suivi-eleve .topbar { align-items: flex-start; }
+    html.suivi-eleve .topbar-actions { align-self: center; }
+    .retour-espace {
+      display: none;
+      width: 44px;
+      min-width: 44px;
+      height: 44px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #c8d9e5;
+      border-radius: 50%;
+      color: #17405e;
+      background: rgba(255, 255, 255, .96);
+      box-shadow: 0 4px 12px rgba(28, 69, 101, .12);
+      text-decoration: none;
+      flex: none;
+    }
+    .retour-espace svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+    /* sans pastille, l'emplacement ne prend aucune place (sinon un écart de 7 px dans la barre) */
+    #suivi-pastille-slot:empty { display: none; }
+    html.suivi-eleve .retour-espace { display: inline-flex; }
+    /* le bloc, à droite de la flèche ; au téléphone, il prend la largeur qui reste */
+    .topbar .suivi-repere { flex: 0 1 auto; max-width: 640px; margin-left: auto; }
+    @media (max-width: 620px) { .topbar .suivi-repere { flex: 1 1 auto; margin-left: 0; } }
+    /* l'écran de jeu : la pastille et Plein écran, pas le bloc ; les autres écrans : le bloc seul */
+    html.suivi-eleve body:not(.ecran-jeu) .topbar-actions { display: none; }
+    html.suivi-eleve body.ecran-jeu .suivi-repere { display: none; }
+    /* le choix et le mémo sont des pages : le cadre du jeu disparaît sous eux */
+    html.suivi-eleve body.sur-choix .solo-page,
+    html.suivi-eleve.suivi-attente .solo-page,
+    html.suivi-eleve.suivi-attente #mode-dialog,
+    html.suivi-eleve.suivi-attente #lesson { display: none !important; }
+    html.suivi-eleve #mode-dialog,
+    html.suivi-eleve #lesson {
+      position: static;
+      inset: auto;
+      z-index: auto;
+      min-height: 0;
+      padding: 4px 15px 14px;
+      background: none;
+      backdrop-filter: none;
+      place-items: start center;
+    }
+    html.suivi-eleve #mode-dialog .dialog-card,
+    html.suivi-eleve #lesson .dialog-card { max-height: none; box-shadow: 0 16px 45px rgba(28, 69, 101, .12); }
+    html.suivi-eleve #mode-dialog .mode-settings-scroll { max-height: none; overflow: visible; }
+    html.suivi-eleve #lesson .learn-card { overflow: visible; }
+    /* le sous-titre du mémo (maquette 05) : « Coffres magiques · niveau 2 · addition » */
+    .lesson-subline { display: none; margin: -4px 0 8px; color: #49677b; font-size: .9rem; font-weight: 800; }
+    html.suivi-eleve .lesson-subline { display: block; grid-column: 1 / -1; }
+    html.suivi-eleve .learn-card { grid-template-rows: auto auto auto minmax(0, 1fr) auto auto; }
+    html.suivi-eleve .learn-card > .lesson-subline { grid-row: 2; }
+    html.suivi-eleve .learn-card > p { grid-row: 3; }
+    html.suivi-eleve .learn-card > .operation-grid { grid-row: 4; }
+    html.suivi-eleve .learn-card > .reglages-changes { grid-row: 5; margin-bottom: 8px; }
+    html.suivi-eleve .learn-card > .lesson-actions { grid-row: 6; }
+    /* « Ton professeur a changé les réglages. » (maquette 09) */
+    .reglages-changes {
+      margin: 12px 0 2px;
+      padding: 12px 14px;
+      border: 1px solid #f0d19a;
+      border-radius: 14px;
+      background: #fff6e6;
+      color: #6b4a00;
+      font-size: .92rem;
+      line-height: 1.45;
+      text-align: left;
+    }
+    .reglages-changes strong { display: block; margin-bottom: 2px; color: #4a3600; }
+    /* « Repartir à zéro clé ? » (maquette 10) */
+    .confirm-card { width: min(100%, 420px); }
+    .confirm-card p { margin: 8px 0; color: #49677b; line-height: 1.42; }
+    .confirm-card strong { color: #143e62; }
+    .confirm-actions { display: grid; gap: 10px; justify-items: center; margin-top: 16px; }
+    .confirm-actions .reset-button, .confirm-actions .primary-button { width: min(100%, 260px); }
     @media (prefers-reduced-motion: reduce) {
       *,
       *::before,
@@ -1584,8 +1733,14 @@
 <body>
   <header class="topbar">
     <a class="brand" href="/" aria-label="Accueil maths&go"><img src="/assets/img/mathsgo-logo.png" alt="maths&go" width="1338" height="622"></a>
+    <!-- l'élève à code (modèle commun) : la flèche de retour — vers le choix du niveau depuis le
+         jeu ou le mémo, vers Mon espace depuis le choix —, puis le bloc de suivi ; cachés pour
+         tous les autres -->
+    <a class="retour-espace" id="lien-retour" href="https://suivi.mathsgo.re/" aria-label="Retour à mon espace" hidden><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M19 12H5M11 18l-6-6 6-6"/></svg></a>
+    <p id="suivi-repere" class="suivi-repere" hidden></p>
     <div class="topbar-actions">
       <a class="back-link" data-origin-link href="../index.html?domain=nombres-calculs&amp;notion=calcul-mental" aria-label="Retour au calcul mental"><span aria-hidden="true">←</span> <span class="back-link-copy" data-origin-copy>Calcul mental</span></a>
+      <span id="suivi-pastille-slot"></span>
       <button class="fullscreen-toggle" type="button" data-fullscreen-toggle aria-pressed="false" aria-label="Passer en plein écran"><span class="fullscreen-toggle-icon" data-fullscreen-icon aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path class="fullscreen-expand" d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/><path class="fullscreen-collapse" d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg></span><span data-fullscreen-label>Plein écran</span></button>
     </div>
   </header>
@@ -1622,6 +1777,9 @@
         <h2 id="mode-title" tabindex="-1">Choisis ton mode</h2>
       </div>
       <div class="mode-settings-scroll" role="region" aria-label="Mode, niveau et opérations" tabindex="0">
+      <!-- l'élève à code, à la prochaine ouverture (maquette 09) : son niveau a été fermé ou une
+           de ses opérations retirée par le professeur -->
+      <div id="reglages-changes-choix" class="reglages-changes" role="status" hidden><strong>Ton professeur a changé les réglages.</strong>Ta partie repart à 0 clé.<br>Tu gardes tes trésors.</div>
       <div class="mode-options" role="group" aria-label="Mode de jeu">
         <button id="choose-solo" class="mode-choice mode-choice-solo" type="button" data-game-mode="solo" aria-pressed="true">
           <span class="mode-choice-icon" aria-hidden="true"><svg viewBox="0 0 32 32" focusable="false"><circle cx="16" cy="9" r="4.5"/><path d="M8 28v-4a8 8 0 0 1 16 0v4Z"/></svg></span>
@@ -1656,6 +1814,7 @@
     <div class="dialog-card learn-card">
       <div class="dialog-icon" aria-hidden="true">+ − × ÷</div>
       <h2 id="lesson-title" tabindex="-1">Quatre mots à connaître</h2>
+      <p id="lesson-subline" class="lesson-subline"></p>
       <p>À chaque coffre, choisis deux cases qui se touchent par un côté.</p>
       <div id="lesson-course" class="operation-grid" role="region" aria-label="Cours complet sur les quatre opérations" tabindex="0">
         <article data-operation="sum">
@@ -1745,6 +1904,7 @@
           <p data-operation="quotient"><strong>Quotient :</strong> le jeu calcule le plus grand nombre ÷ le plus petit, seulement si la division tombe juste.</p>
         </aside>
       </div>
+      <div id="reglages-changes-memo" class="reglages-changes" role="status" hidden><strong>Ton professeur a changé les réglages.</strong>Ta partie repart à 0 clé.<br>Tu gardes tes trésors.</div>
       <div class="lesson-actions">
         <button id="start-game" class="primary-button" type="button">J’ai compris, jouer</button>
       </div>
@@ -1777,6 +1937,19 @@
     </div>
   </section>
 
+  <!-- l'élève à code qui change de niveau ou d'opérations en cours de partie (maquette 10) -->
+  <section id="confirm-zero" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="confirm-zero-title">
+    <div class="dialog-card confirm-card">
+      <h2 id="confirm-zero-title" tabindex="-1">Repartir à zéro clé ?</h2>
+      <p>Tu as <strong id="confirm-zero-cles">6 clés</strong>. Avec ces nouveaux réglages, tu repartiras à <strong>0 clé</strong>.</p>
+      <p>Tu gardes tes trésors.</p>
+      <div class="confirm-actions">
+        <button id="confirm-zero-garder" class="reset-button" type="button">Garder ma partie</button>
+        <button id="confirm-zero-repartir" class="primary-button" type="button">Repartir à 0 clé</button>
+      </div>
+    </div>
+  </section>
+
   <section id="result" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="result-title">
     <div class="dialog-card">
       <div class="dialog-icon" aria-hidden="true">★</div>
@@ -1800,6 +1973,10 @@
 
   <script src="../../assets/js/coffres-settings.js?v=4"></script>
   <script src="../../assets/js/coffres-moteur.js?v=1"></script>
+  <!-- Le parcours de l'élève (moteur partagé avec le serveur de suivi) et l'habillage du suivi de
+       classe (bloc, pastille, pied, garde) : lot « Coffres magiques sur le suivi », 21/10/2026 -->
+  <script src="../../assets/js/coffres-parcours.js?v=20261021-1"></script>
+  <script src="../../assets/js/coffres-suivi.js?v=20261021-1"></script>
   <script>
     (() => {
       "use strict";
@@ -1970,6 +2147,199 @@
       const dialogs = createModalController();
       const settingsChoices = settingsCore.createChoices(modeDialog, CURRENT_MODE, confirmSettings);
 
+      // ------------------------------------------------------------ le suivi de classe
+      //
+      // Lot « Coffres magiques sur le suivi » (21/10/2026). Le moteur du parcours
+      // (assets/js/coffres-parcours.js) et l'habillage du suivi (coffres-suivi.js)
+      // ne font rien sans code dans l'onglet : la page joue comme avant, sans rien
+      // enregistrer. Sous un code (l'élève venu de son espace, par un billet) :
+      //   - l'en-tête du modèle commun (la flèche, le bloc, la pastille), le pied
+      //     « Mon espace », et le choix du niveau et des opérations devient une page ;
+      //   - seuls les niveaux et les opérations ouverts à sa classe sont proposés ;
+      //     un seul choix possible = sélectionné d'office ; plus aucun choix = le mémo ;
+      //   - la partie en cours (clés, série) est reprise telle quelle, sur un plateau
+      //     neuf, sur n'importe quel appareil ; si le professeur a fermé son niveau ou
+      //     retiré une de ses opérations, elle repart à 0 clé et l'élève le lit ;
+      //   - chaque clé, erreur, aide, solution montrée et trésor est noté dans la case
+      //     de l'élève et envoyé au serveur (jamais les calculs eux-mêmes).
+      const PARCOURS = window.MathsGoCoffresParcours || null;
+      const SUIVI = PARCOURS && window.MathsGoCoffresSuivi
+        ? window.MathsGoCoffresSuivi.creer({ surRepere: majSuivi, surParcours: () => {}, enJeu: () => gameStarted })
+        : null;
+      const confirmZero = document.querySelector("#confirm-zero");
+      const lienRetour = document.querySelector("#lien-retour");
+      const pastilleSlot = document.querySelector("#suivi-pastille-slot");
+      const ADRESSE_ESPACE = SUIVI ? SUIVI.ADRESSE_ESPACE : "https://suivi.mathsgo.re/";
+      // « Ton professeur a changé les réglages. » (maquette 09) : vrai depuis
+      // l'abandon de la partie jusqu'au début de la suivante.
+      let reglagesChanges = false;
+
+      // L'élève venu de son espace : sous un code, pendant l'échange de son
+      // billet, ou quand ce billet a été refusé (il vient quand même de là).
+      function modeEleve() {
+        return Boolean(SUIVI && (SUIVI.actif() || SUIVI.attente() || SUIVI.client.entreeRefusee));
+      }
+
+      function reglagesClasse() {
+        if (SUIVI && SUIVI.actif()) return SUIVI.client.reglagesOuverts();
+        return PARCOURS ? PARCOURS.reglagesDeClasse(null) : { niveaux: null, operations: null };
+      }
+
+      function niveauxOuverts() {
+        return PARCOURS ? PARCOURS.niveauxOuverts(reglagesClasse()) : [1, 2, 3];
+      }
+
+      function operationsOuvertes() {
+        return PARCOURS ? PARCOURS.operationsOuvertes(reglagesClasse()).map(o => o.cle) : settingsCore.OPERATIONS.slice();
+      }
+
+      // Y a-t-il encore quelque chose à choisir ? Sinon l'élève arrive droit
+      // sur le mémo, et la flèche mène à Mon espace.
+      function aUnChoix() {
+        return niveauxOuverts().length > 1 || operationsOuvertes().length > 1;
+      }
+
+      // Un geste noté dans la case de l'élève (puis envoyé). Rien sans code.
+      function suiviEcrire(maj) {
+        if (SUIVI && SUIVI.actif()) SUIVI.ecrire(maj);
+      }
+
+      function poserPastille() {
+        if (!pastilleSlot) return;
+        pastilleSlot.innerHTML = SUIVI && modeEleve() ? SUIVI.pastilleHtml() : "";
+      }
+
+      // Les liens de retour de l'élève (le lien « Retour au calcul mental » de
+      // « Trésor ouvert ! ») mènent à son espace, et le disent (choix de
+      // Gwenaël, 21/10/2026) ; le petit logo du pied aussi (dessinerPied).
+      function majLiensRetour() {
+        if (!modeEleve()) return;
+        document.querySelectorAll("[data-origin-link]").forEach(link => {
+          link.href = ADRESSE_ESPACE;
+          link.setAttribute("aria-label", "Retour à mon espace");
+          const shortCopy = link.querySelector("[data-origin-copy]");
+          const returnCopy = link.querySelector("[data-origin-return-copy]");
+          if (shortCopy) shortCopy.textContent = "Mon espace";
+          if (returnCopy) returnCopy.textContent = "Mon espace";
+        });
+      }
+
+      function majSuivi() {
+        const eleve = modeEleve();
+        document.documentElement.classList.toggle("suivi-eleve", eleve);
+        lienRetour.hidden = !eleve;
+        if (!SUIVI) return;
+        SUIVI.dessinerBloc(document.getElementById("suivi-repere"));
+        SUIVI.dessinerPied(document.querySelector("footer.site-footer"));
+        poserPastille();
+        majLiensRetour();
+      }
+
+      // Quel écran l'élève a sous les yeux : le choix ou le mémo (des pages, le
+      // cadre du jeu caché dessous), ou le jeu (la pastille et Plein écran).
+      function majEcran() {
+        const eleve = modeEleve();
+        const surChoix = !modeDialog.hidden || !lesson.hidden || !confirmZero.hidden;
+        document.body.classList.toggle("sur-choix", eleve && surChoix);
+        document.body.classList.toggle("ecran-jeu", eleve && !surChoix);
+        if (eleve) poserPastille();
+      }
+      [modeDialog, lesson, confirmZero].forEach(dialog => {
+        new MutationObserver(majEcran).observe(dialog, { attributes: true, attributeFilter: ["hidden"] });
+      });
+
+      // Dans la fenêtre des réglages de l'élève : seulement ce que sa classe a
+      // d'ouvert, le titre de l'appli, « Continuer » (la confirmation de la
+      // maquette 10 remplace « Nouvelle partie »), l'encadré de la maquette 09.
+      function appliquerReglagesEleve() {
+        if (!modeEleve()) return;
+        const niveaux = niveauxOuverts();
+        const ops = operationsOuvertes();
+        modeDialog.querySelectorAll("[data-level]").forEach(button => {
+          button.hidden = !niveaux.includes(Number(button.dataset.level));
+        });
+        modeDialog.querySelectorAll("[name=operation]").forEach(input => {
+          const ouverte = ops.includes(input.value);
+          const option = input.closest(".operation-option");
+          if (option) option.hidden = !ouverte;
+          if (!ouverte) input.checked = false;
+        });
+        document.querySelector("#mode-title").textContent = "Coffres magiques";
+        document.querySelector("#continue-current-mode").textContent = "Continuer";
+        document.querySelector("#reglages-changes-choix").hidden = !reglagesChanges;
+      }
+      ["click", "change"].forEach(type => modeDialog.addEventListener(type, () => {
+        if (modeEleve()) document.querySelector("#continue-current-mode").textContent = "Continuer";
+      }));
+
+      // Les réglages courants ramenés à ce que la classe a d'ouvert.
+      function ramenerAuxReglages() {
+        const niveaux = niveauxOuverts();
+        const ops = operationsOuvertes();
+        if (!niveaux.includes(level)) level = niveaux[0];
+        const gardees = selectedOperations.filter(operation => ops.includes(operation));
+        selectedOperations = gardees.length ? gardees : ops.slice();
+      }
+
+      // « Repartir à zéro clé ? » (maquette 10) : l'élève change de niveau ou
+      // d'opérations avec des clés en main.
+      function ouvrirConfirmZero(config) {
+        document.querySelector("#confirm-zero-cles").textContent = `${keys} clé${keys > 1 ? "s" : ""}`;
+        const garder = () => {
+          dialogs.close(confirmZero, { restoreFocus: false });
+          modeDialogMandatory = false;
+          modeDialog.hidden = true;
+          focusAfterReset(null);
+        };
+        const repartir = () => {
+          dialogs.close(confirmZero, { restoreFocus: false });
+          level = gameLevel = config.level;
+          selectedOperations = config.operations;
+          syncSettingsUrl();
+          syncLevelUi();
+          modeDialogMandatory = false;
+          modeDialog.hidden = true;
+          openLesson();
+        };
+        document.querySelector("#confirm-zero-garder").onclick = garder;
+        document.querySelector("#confirm-zero-repartir").onclick = repartir;
+        dialogs.open(confirmZero, { trigger: null, initialFocus: "#confirm-zero-garder", onEscape: garder });
+        // La question se pose PAR-DESSUS l'écran de choix (maquette 10) : le
+        // contrôleur ne garde qu'une fenêtre active et vient de cacher l'autre.
+        modeDialog.hidden = false;
+      }
+
+      // La flèche de retour de l'élève : depuis le jeu ou le mémo, le choix du
+      // niveau et des opérations (s'il y a un choix) ; depuis le choix — ou
+      // quand il n'y a rien à choisir —, Mon espace (le lien lui-même).
+      lienRetour.addEventListener("click", event => {
+        if (!modeEleve() || !modeDialog.hidden || !aUnChoix()) return;
+        event.preventDefault();
+        dialogs.close(lesson, { restoreFocus: false });
+        openModeDialog({ mandatory: !gameStarted });
+      });
+
+      // Au démarrage sous un code : une partie en cours compatible avec les
+      // réglages de la classe reprend telle quelle ; sinon elle est abandonnée
+      // (les clés gagnées restent comptées, les trésors restent) et l'élève le
+      // lit ; puis le choix, ou droit le mémo s'il n'y a rien à choisir.
+      function demarrerEleve() {
+        document.documentElement.classList.remove("suivi-attente");
+        majSuivi();
+        const partie = SUIVI.actif() ? SUIVI.client.partieEnCours() : null;
+        if (partie && PARCOURS.partieCompatible(partie, reglagesClasse())) {
+          start({ reprise: partie });
+          return;
+        }
+        if (partie) {
+          reglagesChanges = true;
+          suiviEcrire((P, avant) => P.oublierPartie(avant));
+        }
+        ramenerAuxReglages();
+        if (aUnChoix()) openModeDialog({ mandatory: true });
+        else openLesson();
+      }
+
       function resolveOrigin() {
         const candidate = new URLSearchParams(window.location.search).get("from");
         return Object.prototype.hasOwnProperty.call(ORIGINS, candidate) ? candidate : DEFAULT_ORIGIN;
@@ -2017,7 +2387,9 @@
         // Le délai de correction et celui d'une réussite se terminent avant les réglages.
         if (!mandatory && locked && !bonusOpen) return;
         modeDialogMandatory = mandatory;
-        settingsChoices.reset(selectedOperations, gameLevel, gameStarted);
+        if (modeEleve()) ramenerAuxReglages();
+        settingsChoices.reset(selectedOperations, modeEleve() && !gameStarted ? level : gameLevel, gameStarted);
+        appliquerReglagesEleve();
         dialogs.open(modeDialog, {
           trigger: mandatory ? null : document.activeElement,
           initialFocus: "#mode-title",
@@ -2034,11 +2406,17 @@
       }
 
       function confirmSettings(config) {
-        if (config.mode !== CURRENT_MODE) {
+        if (config.mode !== CURRENT_MODE && !modeEleve()) {
           window.location.replace(modeUrl(config.mode, config.operations, config.level));
           return;
         }
         const changed = config.level !== gameLevel || !settingsCore.sameOperations(config.operations, selectedOperations);
+        // L'élève à code qui change ses choix avec des clés en main : on demande
+        // d'abord (maquette 10) ; « Garder ma partie » ne change rien.
+        if (modeEleve() && changed && gameStarted && keys > 0 && keys < GOAL) {
+          ouvrirConfirmZero(config);
+          return;
+        }
         level = gameLevel = config.level;
         selectedOperations = config.operations;
         syncSettingsUrl();
@@ -2534,6 +2912,7 @@
         if (locked || !values.length) return;
         clearSelection();
         locked = true;
+        suiviEcrire((P, avant) => P.noterAide(avant, mode));
         renderHelpCard(mode);
         dialogs.open(helpDialog, {
           trigger: document.activeElement,
@@ -2597,6 +2976,7 @@
       function showSolution() {
         const trigger = dialogs.trigger(helpDialog) || helpButton;
         dialogs.close(helpDialog, { restoreFocus: false });
+        suiviEcrire((P, avant) => P.noterSolution(avant, mode));
         openCorrection({ trigger });
       }
 
@@ -2632,6 +3012,7 @@
       function complete() {
         locked = true;
         hideNextButton();
+        suiviEcrire((P, avant) => P.noterTresor(avant, null, { niveau: gameLevel }));
         document.querySelector("#result-score").textContent = `${GOAL} clés trouvées`;
         dialogs.open(result, { initialFocus: "#play-again" });
       }
@@ -2658,6 +3039,7 @@
         if (correct) {
           keys += 1;
           updateCounter();
+          suiviEcrire((P, avant) => P.noterCle(avant, mode));
           lastResolvedPosition = secondPosition;
           firstSelection = null;
           if (largeScreen.matches) {
@@ -2671,6 +3053,7 @@
             pendingTimer = window.setTimeout(advance, 750);
           }
         } else {
+          suiviEcrire((P, avant) => P.noterErreur(avant, mode));
           const resolvedBoard = boardId;
           pendingTimer = window.setTimeout(() => {
             pendingTimer = null;
@@ -2767,7 +3150,10 @@
         });
       }
 
-      function start({ moveFocus = false, focusTarget = null } = {}) {
+      // `reprise` (l'élève à code) : la partie en cours de sa case — niveau,
+      // opérations, série, familles, clés — reprise telle quelle, sur un plateau
+      // neuf. Sans reprise, une partie neuve, notée dans sa case.
+      function start({ moveFocus = false, focusTarget = null, reprise = null } = {}) {
         gameStarted = true;
         if (pendingTimer) window.clearTimeout(pendingTimer);
         pendingTimer = null;
@@ -2776,9 +3162,23 @@
         dialogs.close(lesson, { restoreFocus: false });
         dialogs.close(helpDialog, { restoreFocus: false });
         dialogs.close(correctionDialog, { restoreFocus: false });
-        modes = shuffle(settingsCore.soloSeries(selectedOperations));
-        familyPlan = engine.planFamilies(modes, level);
-        keys = 0;
+        reglagesChanges = false;
+        document.querySelector("#reglages-changes-choix").hidden = true;
+        document.querySelector("#reglages-changes-memo").hidden = true;
+        if (reprise && PARCOURS) {
+          const cle = numero => PARCOURS.operationParNumero(numero).cle;
+          level = reprise.niveau;
+          selectedOperations = reprise.ops.map(cle);
+          modes = reprise.serie.map(cle);
+          familyPlan = reprise.familles.slice();
+          keys = reprise.cles;
+          syncSettingsUrl();
+        } else {
+          modes = shuffle(settingsCore.soloSeries(selectedOperations));
+          familyPlan = engine.planFamilies(modes, level);
+          keys = 0;
+          suiviEcrire((P, avant) => P.commencerPartie(avant, { niveau: level, ops: selectedOperations, serie: modes, familles: familyPlan }));
+        }
         locked = false;
         gameLevel = level;
         syncLevelUi();
@@ -2797,6 +3197,12 @@
         lesson.querySelector(".dialog-icon").textContent = selectedOperations.map(operation => symbols[operation]).join(" ");
         course.querySelectorAll("[data-operation]").forEach(node => { node.hidden = !selectedOperations.includes(node.dataset.operation); });
         course.querySelector(".operation-conventions").hidden = !selectedOperations.some(operation => operation === "difference" || operation === "quotient");
+        // L'élève à code (maquette 05) : « Coffres magiques · niveau 2 · addition »
+        // sous le titre, et l'encadré de la maquette 09 quand il n'a pas eu
+        // d'écran de choix pour le lire.
+        document.querySelector("#lesson-subline").textContent = modeEleve() && PARCOURS
+          ? `Coffres magiques · niveau ${level} · ${PARCOURS.nommerOperations(selectedOperations)}` : "";
+        document.querySelector("#reglages-changes-memo").hidden = !(modeEleve() && reglagesChanges && !aUnChoix());
         dialogs.open(lesson, {
           trigger: null,
           initialFocus: "#start-game"
@@ -2838,19 +3244,31 @@
         searchMetrics: engine.searchMetrics,
         createOperationVisual,
         start,
-        getState: () => ({ values: values.slice(), modes: modes.slice(), familyPlan: familyPlan.slice(), family: currentFamily, mode, target, keys, locked, boardId, level: gameLevel, solutions: solutionCount, bonusOpen, selectedOperations: selectedOperations.slice() })
+        getState: () => ({ values: values.slice(), modes: modes.slice(), familyPlan: familyPlan.slice(), family: currentFamily, mode, target, keys, locked, boardId, level: gameLevel, solutions: solutionCount, bonusOpen, selectedOperations: selectedOperations.slice(), reglagesChanges, modeEleve: modeEleve() }),
+        suivi: () => SUIVI
       };
       setupFullscreen();
       syncOriginLinks();
       syncLevelUi();
       updateCounter();
-      if (requestedMode === CURRENT_MODE) {
+      if (SUIVI && (SUIVI.attente() || SUIVI.actif())) {
+        // L'élève venu de son espace : on attend de savoir qui entre et ce que
+        // le serveur a de lui (sa partie en cours, les réglages de sa classe) —
+        // six secondes au plus, puis on part avec ce que l'appareil sait.
+        majSuivi();
+        SUIVI.lancer();
+        Promise.race([
+          SUIVI.client.pret(),
+          new Promise(resolve => window.setTimeout(resolve, 6000))
+        ]).then(demarrerEleve);
+      } else if (requestedMode === CURRENT_MODE) {
         openLesson();
       } else if (requestedMode === "duo") {
         window.location.replace(modeUrl("duo"));
       } else {
         openModeDialog({ mandatory: true });
       }
+      majSuivi();
     })();
   </script>
 </body>

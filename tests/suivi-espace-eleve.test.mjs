@@ -74,8 +74,9 @@ test("chaque appli du catalogue a son propre dessin", () => {
 
 test("l'ordre d'affichage du catalogue est celui décidé le 07/09/2026", () => {
   const cles = [...catalogue.matchAll(/^\s{4}'([a-z0-9-]+)' => \[$/gm)].map(m => m[1]);
-  // « splat-equations » est devenu « splat » le 07/10/2026 (lot splat-suivi-3), à la même place.
-  assert.deepEqual(cles, ["defi-tables", "defi-calcul", "automatismes", "splat", "soley"],
+  // « splat-equations » est devenu « splat » le 07/10/2026 (lot splat-suivi-3), à la même place ;
+  // Coffres magiques juste après Défi tables (lot « Coffres magiques sur le suivi », 21/10/2026).
+  assert.deepEqual(cles, ["defi-tables", "coffres", "defi-calcul", "automatismes", "splat", "soley"],
     "l'ordre du tableau CATALOGUE_APPLIS est l'ordre des tuiles chez l'élève");
 });
 

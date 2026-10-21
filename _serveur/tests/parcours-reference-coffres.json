@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "epoque": 2,
+  "niveaux": {
+    "1": {
+      "tresors": 5,
+      "parfaits": 3
+    },
+    "2": {
+      "tresors": 2,
+      "parfaits": 1
+    },
+    "3": {
+      "tresors": 1,
+      "parfaits": 0
+    }
+  },
+  "operations": {
+    "sum": {
+      "cles": 28,
+      "aides": 1,
+      "solutions": 0,
+      "erreurs": 1
+    },
+    "difference": {
+      "cles": 15,
+      "aides": 0,
+      "solutions": 0,
+      "erreurs": 1
+    },
+    "product": {
+      "cles": 23,
+      "aides": 2,
+      "solutions": 1,
+      "erreurs": 1
+    },
+    "quotient": {
+      "cles": 20,
+      "aides": 1,
+      "solutions": 1,
+      "erreurs": 1
+    }
+  },
+  "dernier": "2026-10-21",
+  "partie": {
+    "niveau": 2,
+    "ops": [
+      1,
+      3
+    ],
+    "serie": [
+      1,
+      3,
+      1,
+      3,
+      1,
+      3,
+      1,
+      3,
+      1,
+      3
+    ],
+    "familles": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      true
+    ],
+    "cles": 6,
+    "parfait": false,
+    "jour": "2026-10-21"
+  }
+}

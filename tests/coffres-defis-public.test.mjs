@@ -65,8 +65,9 @@ test("les cinq adaptations sont publiques, autonomes et reliées à leur vrai pa
     // Le stockage de session servait au laissez-passer du club : banni des
     // adaptations publiques. Défi tables l'emploie depuis le lot A1 pour une
     // autre raison — l'identité de l'élève suivi y vit le temps d'un onglet —
-    // et seulement là.
-    if (definition.path !== "outils/calcul_mental/defi_tables.html") {
+    // et, depuis le lot « Coffres magiques sur le suivi » (21/10/2026), Coffres
+    // solo pour la même raison (l'amorce du <head> lit le code de l'onglet).
+    if (!["outils/calcul_mental/defi_tables.html", "outils/calcul_mental/coffres_magiques_solo.html"].includes(definition.path)) {
       assert.doesNotMatch(html, /sessionStorage/i, definition.path);
     }
     for (const source of inlineScripts(html)) assert.doesNotThrow(() => new vm.Script(source), definition.path);

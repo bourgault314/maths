@@ -248,7 +248,14 @@ test("le repère de la seconde paire n’apparaît qu’après la réussite ; ni
   assert.match(html, /2: \{ sum: \[28, 7\], difference: \[52, 7\], product: \[18, 4\], quotient: \[72, 4\] \}/);
   assert.match(html, /3: \{ sum: \[46, 27\], difference: \[72, 38\], product: \[24, 7\], quotient: \[168, 7\] \}/);
   assert.match(html, /visualLevel >= 2 \|\| \(nextMode === "quotient" && model\.total > 36\)/);
-  assert.doesNotMatch(html, /localStorage|sessionStorage/);
+  // Le script de la page ne touche à aucun stockage : c'est le moteur du
+  // suivi (assets/js/coffres-parcours.js) qui range la case de l'élève, et
+  // l'amorce du <head> ne lit que le code de l'onglet (lot « Coffres magiques
+  // sur le suivi », 21/10/2026).
+  assert.doesNotMatch(script, /localStorage|sessionStorage/);
+  assert.doesNotMatch(html, /localStorage/);
+  assert.equal((html.match(/sessionStorage/g) || []).length, 1, "l'amorce du <head>, et elle seule");
+  assert.match(html, /window\.sessionStorage\.getItem\("mathsgo-suivi-code"\)/);
 });
 
 test("le défi accorde correctement le genre des quatre opérations", () => {
