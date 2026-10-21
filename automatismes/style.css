@@ -989,7 +989,8 @@ body[data-ecran="question"] .progression {
 @media (min-width: 1000px) and (orientation: landscape) {
   body.clavier-ouvert[data-ecran="question"] .contenu {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 340px;
+    /* 392 px : la colonne du clavier porte aussi Aide · Cours · Passer · Valider sur une ligne. */
+    grid-template-columns: minmax(0, 1fr) 392px;
     grid-template-rows: auto auto minmax(0, 1fr);
     column-gap: 24px;
   }
