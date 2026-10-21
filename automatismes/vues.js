@@ -230,8 +230,8 @@ export function professeurHTML(familles, filtre, options, selection) {
     </div><p id="lien-serie" hidden></p>`;
 }
 
-/* Le bilan d'une série : le score, puis chaque question avec son état (juste / juste avec l'aide /
-   faux / passée) et sa correction dépliable. Pas d'étoiles, pas de notion : le parcours viendra après. */
+/* Le bilan d'une série : le score, puis chaque question (son énoncé, comme /auto/) avec son état
+   (juste / juste avec l'aide / faux / passée) et sa correction dépliable. Pas d'étoiles : le parcours viendra après. */
 export function bilanHTML(seance, parId) {
   const projection = seance.mode === "project";
   const exam = seance.mode === "exam";
@@ -256,7 +256,7 @@ export function bilanHTML(seance, parId) {
       .map((question, i) => {
         const [classe, signe, mot] = projection ? ["", "", ""] : etatLigne(seance.etats[i]);
         return `<details><summary><span class="numero">${i + 1}</span>
-        <span class="resultat-nom">${esc(parId[question.famille].nom)}</span>
+        <span class="resultat-nom">${questionPrompt(question)}</span>
         ${projection ? "" : `<span class="etat-ligne ${classe}"><span aria-hidden="true">${signe}</span> ${mot}</span>`}
         <span class="voir">Voir la correction</span></summary>
         ${enonceHTML(question)}${correctionHTML(question)}</details>`;
