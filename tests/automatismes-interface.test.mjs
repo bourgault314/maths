@@ -105,13 +105,6 @@ async function question(page, base, notion = "NC27", forme = "a") {
   await stabiliser(page);
 }
 
-// Valider : le bouton orange, ou le ✓ du clavier quand celui-ci est ouvert (téléphone, tablette).
-async function valider(page) {
-  if (await page.locator(".touches .confirmer").isVisible())
-    await page.locator(".touches .confirmer").click();
-  else await page.locator('[data-action="valider"]').click();
-}
-
 async function verifierCommandes(page) {
   const positions = await page.locator("#commandes").evaluate((commandes) => {
     return [...commandes.querySelectorAll('[data-action="passer"], [data-action="valider"]')].map(
@@ -187,7 +180,7 @@ test(
         await page.getByRole("button", { name: "J’ai compris" }).click();
         await question(page, base);
         await page.locator(".champ").fill("999");
-        await valider(page);
+        await page.locator('[data-action="valider"]').click();
         assert.equal(await page.locator('[data-action="correction"]').isVisible(), true);
         await photo(page, "faux", mesures);
         await page.locator('[data-action="correction"]').click();
@@ -258,7 +251,7 @@ test(
         await page.goto(adresse);
         await page.locator(".reponses").waitFor();
         await stabiliser(page);
-        // Sur tablette, le clavier est ouvert dès l'arrivée ; le ✓ valide, « Valider » s'efface.
+        // Sur tablette, le clavier est ouvert dès l'arrivée ; Aide · Passer · Valider sont dessous.
         const clavier = await page.locator(".clavier").evaluate((element) => ({
           cache: element.hidden,
           hauteur: element.getBoundingClientRect().height,
@@ -268,9 +261,14 @@ test(
         assert.ok(clavier.hauteur > 0, `${nom} : clavier visible`);
         assert.ok(clavier.largeur >= 300 && clavier.largeur <= 460, `${nom} : largeur du clavier`);
         assert.equal(await page.locator(".champ").first().getAttribute("inputmode"), "none");
-        assert.equal(await page.locator('[data-action="valider"]').isVisible(), false);
         assert.ok(await dansEcran(page, '[data-action="passer"]'), `${nom} : Passer visible`);
-        assert.ok(await dansEcran(page, ".touches .confirmer"), `${nom} : ✓ visible`);
+        assert.ok(await dansEcran(page, '[data-action="valider"]'), `${nom} : Valider visible`);
+        assert.equal(await page.locator(".touches .confirmer").count(), 0, `${nom} : pas de ✓`);
+        assert.equal(
+          await page.locator(".touches .symbole").count(),
+          2,
+          `${nom} : − et / au clavier`,
+        );
         assert.ok(await dansEcran(page, ".champ"), `${nom} : champ visible`);
         assert.equal(
           await page.locator(".symboles").count(),
@@ -293,16 +291,15 @@ test(
           .evaluate((element) => parseFloat(getComputedStyle(element).fontSize));
         assert.ok(consigne >= 27, `${nom} : consigne lisible (${consigne}px)`);
         await page.screenshot({ path: resolve(captures, `${nom}-question-clavier.png`) });
-        // Le bouton clavier de la barre du haut replie le clavier : « Valider » revient.
+        // Le bouton clavier de la barre du haut replie le clavier, puis le rouvre.
         await page.locator('[data-action="clavier"]').click();
         await stabiliser(page);
         assert.equal(await page.locator(".clavier").isVisible(), false, `${nom} : replié`);
-        assert.ok(await dansEcran(page, '[data-action="valider"]'), `${nom} : Valider revenu`);
         await page.locator('[data-action="clavier"]').click();
         await stabiliser(page);
         // Graine 12 : « x + 1 = 6 ».
         await page.locator('.touches button[aria-label="5"]').click();
-        await page.locator(".touches .confirmer").click();
+        await page.locator('[data-action="valider"]').click();
         await page.getByText("Réponse juste.").waitFor();
 
         await page.goto(adresse);

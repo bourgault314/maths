@@ -23,7 +23,6 @@ export function filtresHTML(filtre) {
 export function accueilHTML(familles, filtre) {
   return `<section class="accueil">
     <h1>Automatismes</h1>
-    <p class="sous-titre">Choisis un domaine, puis une notion.</p>
     ${filtresHTML(filtre)}
     <div class="domaines">${DOMAINES.map(([id, nom]) => {
       const nombre = familles.filter((famille) => famille.domaine === id).length;
@@ -36,11 +35,23 @@ export function accueilHTML(familles, filtre) {
   </section>`;
 }
 
-export function domaineHTML(domaine, familles, filtre) {
+export function nombreHTML(nombre) {
+  return `<div class="nombre-questions" role="group" aria-label="Nombre de questions">
+    <span>Questions</span>${[5, 10, 15, 20]
+      .map(
+        (valeur) =>
+          `<button class="bouton petit ${valeur === nombre ? "primaire" : "secondaire"}" data-nombre="${valeur}"
+      aria-pressed="${valeur === nombre}">${valeur}</button>`,
+      )
+      .join("")}</div>`;
+}
+
+export function domaineHTML(domaine, familles, filtre, nombre) {
   const nom = DOMAINES.find(([id]) => id === domaine)?.[1] || "Notions";
   return `<div class="entete-domaine"><span class="icone" aria-hidden="true">${ICONES_DOMAINES[domaine] || ""}</span>
-    <h1>${nom}</h1></div>${filtresHTML(filtre)}
-    ${bouton("Mélanger ce domaine · 8 questions", "melanger", "primaire")}
+    <h1>${nom}</h1></div>
+    <div class="reglages-domaine">${filtresHTML(filtre)}${nombreHTML(nombre)}</div>
+    ${bouton("Mélanger ce domaine", "melanger", "primaire")}
     <div class="liste-notions">${familles
       .map((famille) => {
         const formes = formesEligibles(famille, filtre);
@@ -101,6 +112,22 @@ export function pointsHTML(seance) {
 }
 
 export const ICONES = {
+  questions:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2.5" ' +
+    'fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 8h8M8 12h8M8 16h5" fill="none" ' +
+    'stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  chrono:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8" fill="none" ' +
+    'stroke="currentColor" stroke-width="2"/><path d="M12 9v4l3 2M9 2h6" fill="none" stroke="currentColor" ' +
+    'stroke-width="2" stroke-linecap="round"/></svg>',
+  sansAide:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.7.55 ' +
+    '1.1 1.3 1.1 2.1V16h5v-.1c0-.8.4-1.55 1.1-2.1A6 6 0 0 0 12 3z" fill="none" stroke="currentColor" ' +
+    'stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 4l16 16" fill="none" ' +
+    'stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
+  corrections:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5" fill="none" ' +
+    'stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   clavier:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" ' +
     'rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M6.5 9h1M10 ' +
@@ -181,7 +208,7 @@ export function actionsHTML(seance, etat) {
   const suite =
     etat.terminee && seance.mode !== "exam"
       ? bouton("Suivante", "suivante", "orange")
-      : bouton("Passer", "passer", "discret") + bouton("Valider", "valider", "orange");
+      : bouton("Passer", "passer", "secondaire") + bouton("Valider", "valider", "orange");
   return `<div class="actions-question">${gauche}${suite}</div>`;
 }
 
@@ -228,8 +255,8 @@ function reglageHTML(nom, libelle, valeur, min, max) {
 }
 
 export function professeurHTML(familles, filtre, options, selection) {
-  return `<h1>Projeter au tableau</h1>
-    <p class="sous-titre">Choisis les notions, règle le temps, puis projette.</p>${filtresHTML(filtre)}
+  return `<h1>Diaporama</h1>
+    <p class="sous-titre">Au tableau : choisis les notions, règle le temps, puis projette.</p>${filtresHTML(filtre)}
     <div class="configuration-prof"><div class="reglages"><h2>Réglages</h2>
       ${reglageHTML("nombre", "Questions", options.nombre, 1, 40)}
       ${reglageHTML("secondes", "Recherche (s)", options.secondes, 5, 600)}
@@ -297,14 +324,17 @@ export function bilanHTML(seance, parId) {
 
 /* L'écran de départ du brevet : ce qui attend l'élève, en quatre mots, puis Commencer. */
 export function brevetHTML() {
+  const tuiles = [
+    [ICONES.questions, "9 questions"],
+    [ICONES.chrono, "20 minutes"],
+    [ICONES.sansAide, "Sans aide"],
+    [ICONES.corrections, "Corrections à la fin"],
+  ];
   return `<section class="brevet-depart">
     <h1>Entraînement brevet</h1>
-    <ul class="brevet-regles">
-      <li><strong>9 questions</strong>, comme la partie sans calculatrice de l’épreuve</li>
-      <li><strong>20 minutes</strong> : le chrono démarre quand tu commences</li>
-      <li><strong>Sans aide</strong> : ni dessin, ni cours</li>
-      <li><strong>Les corrections à la fin</strong>, question par question</li>
-    </ul>
+    <div class="brevet-tuiles">${tuiles
+      .map(([icone, mot]) => `<div class="tuile">${icone}<span>${mot}</span></div>`)
+      .join("")}</div>
     ${bouton("Commencer", "brevet-commencer", "primaire grand")}
   </section>`;
 }

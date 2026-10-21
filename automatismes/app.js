@@ -61,11 +61,12 @@ function lirePreferences() {
       : "brevet";
     return {
       niveau,
+      nombre: [5, 10, 15, 20].includes(valeur.nombre) ? valeur.nombre : 10,
       garderAide: valeur.garderAide === true,
       clavierOrdinateur: valeur.clavierOrdinateur === true,
     };
   } catch {
-    return { niveau: "brevet", garderAide: false, clavierOrdinateur: false };
+    return { niveau: "brevet", nombre: 10, garderAide: false, clavierOrdinateur: false };
   }
 }
 
@@ -103,7 +104,7 @@ function cadre(contenu) {
     : `<header class="entete"><a class="logo" href="/" aria-label="Accueil maths et go">
       <img src="../assets/img/logos/mathsgo/logo-390.png" alt="maths&go"></a>
       <div class="entete-droite">
-        ${ecran === "prof" ? "" : '<a class="pastille" href="?prof=1" data-action="prof">Professeur</a>'}
+        ${ecran === "prof" ? "" : '<a class="pastille" href="?prof=1" data-action="prof">Diaporama</a>'}
         ${bouton(`${ICONES.pleinEcran}<span>Plein écran</span>`, "plein-ecran", "pastille", 'aria-label="Plein écran"')}
       </div></header>`;
   const retourCadre =
@@ -130,7 +131,7 @@ function afficherDomaine(id) {
   ecran = "domaine";
   domaine = id;
   const familles = famillesEligibles(catalogue, filtre).filter((famille) => famille.domaine === id);
-  cadre(domaineHTML(id, familles, filtre));
+  cadre(domaineHTML(id, familles, filtre, preferences.nombre));
 }
 
 function afficherBrevet() {
@@ -683,7 +684,6 @@ function relierActions() {
     accueil: afficherAccueil,
     retour,
     prof: afficherProfesseur,
-    jour: () => lancer({ mode: "jour", nombre: 8 }),
     brevet: afficherBrevet,
     "brevet-commencer": () => lancer({ mode: "exam", nombre: 9 }),
     melanger: () =>
@@ -692,7 +692,7 @@ function relierActions() {
         ids: famillesEligibles(catalogue, filtre)
           .filter((famille) => famille.domaine === domaine)
           .map((famille) => famille.id),
-        nombre: 8,
+        nombre: preferences.nombre,
       }),
     aide: () => (etatCourant().aideOuverte ? fermerAide() : ouvrirAide()),
     etape: () => ouvrirAide(true),
@@ -722,11 +722,19 @@ function relierActions() {
   application.querySelectorAll("[data-niveau]").forEach((element) => {
     element.onclick = () => changerNiveau(element.dataset.niveau);
   });
+  application.querySelectorAll("[data-nombre]").forEach((element) => {
+    element.onclick = () => {
+      preferences.nombre = Number(element.dataset.nombre);
+      sauverPreferences();
+      afficherDomaine(domaine);
+    };
+  });
   application.querySelectorAll("[data-domaine]").forEach((element) => {
     element.onclick = () => afficherDomaine(element.dataset.domaine);
   });
   application.querySelectorAll("[data-notion]").forEach((element) => {
-    element.onclick = () => lancer({ mode: "train", ids: [element.dataset.notion], nombre: 5 });
+    element.onclick = () =>
+      lancer({ mode: "train", ids: [element.dataset.notion], nombre: preferences.nombre });
   });
   application.querySelectorAll("[data-question]").forEach((element) => {
     element.onclick = () => changerQuestion(Number(element.dataset.question));
