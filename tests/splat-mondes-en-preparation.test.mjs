@@ -187,7 +187,7 @@ test("la page des livrets : sans JavaScript, les mondes de la liste restent cach
   // avec JavaScript, c'est la liste (et la clé) qui décident, pas ce qui est écrit
   assert.match(livrets, /if\(etapes\.mondeCache\(n\)\)\{\n\s*el\.setAttribute\("data-prepa", ""\);/);
   assert.match(livrets, /\} else el\.removeAttribute\("data-prepa"\);/);
-  assert.match(livrets, /querySelectorAll\("#onglets a:not\(\[data-prepa\]\)"\)/, "les flèches du clavier et #monde-N ignorent les mondes cachés");
+  assert.match(livrets, /querySelectorAll\("#onglets a:not\(\[data-prepa\]\):not\(\[data-grise\]\)"\)/, "les flèches du clavier et #monde-N ignorent les mondes cachés");
 });
 
 test("la phrase de la page des livrets, exécutée", () => {

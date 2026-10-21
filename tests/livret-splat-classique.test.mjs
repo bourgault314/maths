@@ -960,7 +960,7 @@ test("cartes des mondes : numéro, nom et fiches, dans l'ordre, toujours des ong
   assert.match(page, /\.onglets a\[aria-selected="true"\]::after\{content:none\}/);
   // le script des onglets n'a pas changé : clic, flèches du clavier, adresse #monde-N
   // (26/09/2026) sans les onglets des mondes en préparation : tests/splat-mondes-en-preparation.test.mjs
-  assert.match(page, /querySelectorAll\("#onglets a:not\(\[data-prepa\]\)"\)/);
+  assert.match(page, /querySelectorAll\("#onglets a:not\(\[data-prepa\]\):not\(\[data-grise\]\)"\)/);
   assert.match(page, /e\.key === "ArrowRight" \? 1 : e\.key === "ArrowLeft" \? -1 : 0/);
   assert.match(page, /history\.replaceState\(null, "", m === "h" \? "#histoires" : "#monde-" \+ m\)/);
 });

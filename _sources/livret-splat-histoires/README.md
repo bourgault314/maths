@@ -4,11 +4,15 @@ Les problèmes de SPLAT! écrits en histoires : trois livrets (parties 1 à 3, f
 chacun avec trois corrigés (schéma avec « ? », schéma avec une lettre, en équations). Sur le site :
 `outils/livrets_splat.html`, la 7e entrée, sous les six mondes (`#histoires`).
 
-**Ouvertes à tous depuis le 17/10/2026** (lot A, après l'audit). Du 15 au 17/10, elles étaient en
+**Ouvertes à tous du 17 au 21/10/2026** (lot A, après l'audit). Du 15 au 17/10, elles étaient en
 essai : l'onglet (`#onglet-h`) et le panneau (`#histoires`) portaient `data-prepa` dans la page, et
 seule la clé `?essai=1` (celle des mondes en préparation, `assets/js/splat-etapes.js`) les montrait.
-Pour les recacher un jour : remettre ces deux `data-prepa`, et `EN_ESSAI = true` dans
-`tests/livret-splat-histoires.test.mjs`.
+**Remises « en préparation » le 21/10/2026** (Gwenaël ne les a pas encore relues) : la carte
+`#onglet-h` reste visible mais grisée, sans clic, « 🚧 en préparation » (`data-grise`,
+`aria-disabled`, `tabindex="-1"`) ; le panneau `#histoires` porte `data-prepa`. La clé
+`?essai=1` rouvre les deux : https://mathsgo.re/outils/livrets_splat.html?essai=1#histoires.
+Les PDF restent en ligne à leur adresse. Pour les rouvrir à tous : retirer ces attributs, et
+`EN_ESSAI = false` dans `tests/livret-splat-histoires.test.mjs`.
 
 | Dossier | Sur le site | Fiches | Pages |
 |---|---|---|---|
