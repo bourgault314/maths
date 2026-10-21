@@ -57,7 +57,7 @@ function ajouterSaisie(parent, champ, valeur, etiquette, options) {
   saisie.spellcheck = false;
   saisie.maxLength = 160;
   saisie.placeholder = "…";
-  saisie.inputMode = "none";
+  saisie.inputMode = options.clavierEcran ? "none" : "text";
   saisie.disabled = options.terminee;
   saisie.addEventListener("input", options.changer);
   saisie.addEventListener("focus", () => options.cibler(saisie));

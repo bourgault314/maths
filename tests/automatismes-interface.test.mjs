@@ -218,6 +218,103 @@ test(
   },
 );
 
+async function dansEcran(page, selecteur) {
+  const rect = await page.locator(selecteur).first().boundingBox();
+  const { width, height } = page.viewportSize();
+  return rect && rect.y >= 0 && rect.y + rect.height <= height + 1 && rect.x + rect.width <= width;
+}
+
+test(
+  "tablette : le clavier à l’écran apparaît dans le cadre et Valider reste visible",
+  { skip: ignorer, timeout: 90000 },
+  async () => {
+    const { serveur, base } = await serveurLocal();
+    const browser = await ouvrirNavigateur();
+    const erreurs = [];
+    await mkdir(captures, { recursive: true });
+    const adresse = `${base}?notion=NC27&forme=a&graine=12`;
+    try {
+      for (const [width, height] of [
+        [820, 1180],
+        [1180, 820],
+      ]) {
+        const page = await browser.newPage({
+          viewport: { width, height },
+          hasTouch: true,
+          isMobile: true,
+        });
+        page.on("pageerror", (erreur) => erreurs.push(erreur.message));
+        const nom = `${width}x${height}`;
+        await page.goto(adresse);
+        await page.locator(".reponses").waitFor();
+        await stabiliser(page);
+        assert.equal(await page.locator(".clavier").isVisible(), false, `${nom} : clavier replié`);
+        await page.locator(".champ").first().click();
+        await stabiliser(page);
+        const clavier = await page.locator(".clavier").evaluate((element) => ({
+          cache: element.hidden,
+          hauteur: element.getBoundingClientRect().height,
+        }));
+        assert.equal(clavier.cache, false, `${nom} : clavier ouvert`);
+        assert.ok(clavier.hauteur > 0, `${nom} : clavier visible`);
+        assert.equal(await page.locator(".champ").first().getAttribute("inputmode"), "none");
+        assert.ok(await dansEcran(page, '[data-action="valider"]'), `${nom} : Valider visible`);
+        assert.ok(await dansEcran(page, ".champ"), `${nom} : champ visible`);
+        assert.ok(
+          await page.evaluate(
+            () =>
+              document.querySelector(".coque").getBoundingClientRect().bottom <= innerHeight + 1,
+          ),
+          `${nom} : cadre entier dans l’écran`,
+        );
+        if (width === 820)
+          await page.screenshot({ path: resolve(captures, `${nom}-question-clavier.png`) });
+        // Graine 12 : « x + 1 = 6 ».
+        await page.locator('.touches button[aria-label="5"]').click();
+        await page.locator(".touches .confirmer").click();
+        await page.getByText("Réponse juste.").waitFor();
+
+        await page.goto(adresse);
+        await page.locator(".reponses").waitFor();
+        await page.locator('[data-action="aide"]').click();
+        await page.locator(".champ").first().click();
+        await stabiliser(page);
+        assert.equal(
+          await page.locator(".clavier").isVisible(),
+          true,
+          `${nom} : clavier avec l’aide`,
+        );
+        const aide = await page.locator(".aide svg").boundingBox();
+        const touches = await page.locator(".clavier").boundingBox();
+        assert.ok(
+          aide.y >= 0 && aide.y + aide.height <= touches.y,
+          `${nom} : dessin visible au-dessus du clavier`,
+        );
+        assert.ok(await dansEcran(page, '[data-action="valider"]'), `${nom} : Valider avec l’aide`);
+        await page.screenshot({ path: resolve(captures, `${nom}-aide-clavier.png`) });
+        await page.close();
+      }
+
+      const page = await browser.newPage({ viewport: { width: 1366, height: 768 } });
+      await page.goto(adresse);
+      await page.locator(".reponses").waitFor();
+      await page.locator(".champ").first().click();
+      await stabiliser(page);
+      assert.equal(
+        await page.locator(".clavier").isVisible(),
+        false,
+        "Ordinateur : pas de clavier",
+      );
+      assert.equal(await page.locator(".champ").first().getAttribute("inputmode"), "text");
+      await page.close();
+      assert.deepEqual(erreurs, []);
+    } finally {
+      await browser.close();
+      await new Promise((fin) => serveur.close(fin));
+    }
+  },
+);
+
 test(
   "sécurité : aucune saisie HTML réinjectée pour chaque type de réponse",
   { skip: ignorer, timeout: 60000 },

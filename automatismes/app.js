@@ -86,6 +86,7 @@ function cadre(contenu) {
   const projection = question && seance.mode === "project";
   document.body.dataset.ecran = ecran;
   document.body.classList.toggle("projection", projection);
+  document.body.classList.toggle("tactile", tactile());
   document.body.classList.remove("clavier-ouvert");
   clavierOuvert = false;
   champActif = null;
@@ -222,6 +223,7 @@ function preparerSaisie(question, etat) {
   const reponses = document.querySelector(".reponses");
   monterChamps(reponses, question, etat.reponses, {
     terminee: etat.terminee && seance.mode !== "exam",
+    clavierEcran: tactile(),
     changer: recueillir,
     cibler: ciblerChamp,
     valider,
@@ -246,9 +248,13 @@ function telephone() {
   return matchMedia("(max-width: 680px)").matches;
 }
 
+function tactile() {
+  return telephone() || matchMedia("(pointer: coarse)").matches;
+}
+
 function ciblerChamp(champ) {
   champActif = champ;
-  if (!telephone() || ecran !== "question") return;
+  if (!tactile() || ecran !== "question") return;
   clavierOuvert = true;
   document.querySelector(".clavier").hidden = false;
   document.body.classList.add("clavier-ouvert");

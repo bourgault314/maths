@@ -729,6 +729,58 @@ body[data-ecran="question"] .contenu {
 .clavier {
   display: none;
 }
+.clavier-entete {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 28px;
+  color: var(--attenue);
+  font-size: 0.75rem;
+}
+.clavier-entete button {
+  min-width: 36px;
+  min-height: 28px;
+  padding: 0 8px;
+  border: 0;
+  background: transparent;
+  color: var(--bleu);
+}
+.clavier-symboles {
+  display: flex;
+  gap: 4px;
+  margin: 4px 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+.clavier-symboles button {
+  flex: 1 0 auto;
+  min-width: 36px;
+  min-height: 32px;
+  padding: 0 4px;
+}
+.touches {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+}
+.touches button {
+  min-width: 0;
+  min-height: 40px;
+  padding: 4px;
+  border: 1px solid var(--ligne);
+  border-radius: 8px;
+  color: var(--encre);
+  background: var(--papier);
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+.touches .confirmer {
+  grid-column: 4;
+  grid-row: 3 / 5;
+  color: var(--papier);
+  background: var(--bleu);
+  border-color: var(--bleu);
+}
 .cours-dialog {
   width: min(600px, calc(100% - 32px));
   max-height: calc(100dvh - 32px);
@@ -996,6 +1048,11 @@ body.projection .minuteur {
   .coque {
     zoom: var(--echelle);
   }
+  body.tactile .clavier {
+    display: block;
+    max-width: 420px;
+    margin: 8px auto 0;
+  }
 }
 @media (max-width: 680px) {
   body {
@@ -1228,58 +1285,6 @@ body.projection .minuteur {
   }
   .clavier {
     display: block;
-  }
-  .clavier-entete {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    min-height: 28px;
-    color: var(--attenue);
-    font-size: 0.75rem;
-  }
-  .clavier-entete button {
-    min-width: 36px;
-    min-height: 28px;
-    padding: 0 8px;
-    border: 0;
-    background: transparent;
-    color: var(--bleu);
-  }
-  .clavier-symboles {
-    display: flex;
-    gap: 4px;
-    margin: 4px 0;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-  }
-  .clavier-symboles button {
-    flex: 1 0 auto;
-    min-width: 36px;
-    min-height: 32px;
-    padding: 0 4px;
-  }
-  .touches {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 4px;
-  }
-  .touches button {
-    min-width: 0;
-    min-height: 40px;
-    padding: 4px;
-    border: 1px solid var(--ligne);
-    border-radius: 8px;
-    color: var(--encre);
-    background: var(--papier);
-    font-size: 1.25rem;
-    font-weight: 800;
-  }
-  .touches .confirmer {
-    grid-column: 4;
-    grid-row: 3 / 5;
-    color: var(--papier);
-    background: var(--bleu);
-    border-color: var(--bleu);
   }
   .cours-dialog {
     width: calc(100% - 16px);
