@@ -78,3 +78,20 @@ test("le bandeau suit la bascule lettre ⇄ « ? »", () => {
   const handler = html.slice(i, html.indexOf("});", i));
   assert.match(handler, /eleveBravoVisible[\s\S]*eleveEtatResolue\("bravo"\)/);
 });
+
+// Les films d'ÉquaSplat (outils/splat_intro.html) montrent la même chose que l'outil (30/09/2026 : un même dessin est
+// homogène partout) : plus de bouton vert dans la barre, le bandeau « Bravo » à la place des boutons sous le plateau,
+// dans le film des billes, le tutoriel « À toi de faire » et le film des jetons numérotés.
+const intro = await readFile(new URL("../outils/splat_intro.html", import.meta.url), "utf8");
+
+test("films : la barre n'a plus de bouton « Équation suivante », le bandeau prend la place des boutons", () => {
+  assert.ok(!/o\.suivant\b|Y\.barre\.btn|btn:\{x:1236/.test(intro), "plus de bouton vert dans la barre des films");
+  assert.match(intro, /function barre\(o,Y,t,tr,tCache\)\{/);
+  assert.match(intro, /const AVANCE_FIGE=1\.0,APRES_BRAVO=\.4;/, "1,4 s entre les boutons figés et le bandeau, comme ELEVE_PAUSE_SOLUTION");
+  assert.match(intro, /if\(G\)\{op\(G,vu\?0:1-\.65\*f\);if\(f>0&&!vu\)G\.setAttribute\('filter','url\(#fsGris\)'\)/);
+  assert.equal((intro.match(/Q\.grouperOutils\(o,S,/g) || []).length, 3);
+  assert.equal((intro.match(/const bv=enA\?Q\.bravo\(o,t,o\.bravoA,/g) || []).length, 3);
+  for (const sol of ["'𝑡 = 4'", "'𝑦 = 3'", "'𝑡 = 3'", "'𝑘 = 14'", "'𝑝 = 7'"]) assert.ok(intro.includes(`Q.bandeau(o,Y,S,${sol})`), sol);
+  assert.equal((intro.match(/o\.cSuivant=o\.bravoA\.btn\.c;/g) || []).length, 2, "le doigt des films touche le bouton du bandeau");
+  assert.match(intro, /case 6:return \[bt\(o\.bravoA\.btn\)\];/, "le tutoriel attend le toucher sur le bouton du bandeau");
+});

@@ -613,6 +613,8 @@ function defs(svg,port){
     E('feDropShadow',{dx:0,dy:0,stdDeviation:port?1.2:2.6,'flood-color':c,'flood-opacity':.55},f);};
   halo('fsHalo',C.anneau);halo('fsHaloVert',C.anneauVert);
   const flou=E('filter',{id:'fsFlou',x:'-5%',y:'-5%',width:'110%',height:'110%'},d);E('feGaussianBlur',{stdDeviation:4},flou);
+  /* boutons figés quand l'équation est résolue (grayscale de l'outil, 21/10/2026) */
+  const gris=E('filter',{id:'fsGris'},d);E('feColorMatrix',{type:'saturate',values:0},gris);
 }
 /* un bouton de l'outil (une ou deux lignes de texte) ; le texte remonte de 8 % de sa taille : mesuré à l'encre, il tombe alors
    comme dans l'outil (« central » centre la boîte des lettres, descendantes comprises) */
@@ -635,10 +637,7 @@ function ecran(o,Y,svg,port){
     txt(o.barre,B.pil.x+24,B.pil.y+B.pil.h/2+.5,13,{fill:'#dbeafe','font-weight':800}).textContent=B.retour;}
   else txt(o.barre,B.pil.x+B.pil.w/2,B.pil.y+B.pil.h/2+.5,13,{fill:'#dbeafe','font-weight':800,'text-anchor':'middle'}).textContent='◀︎';
   o.note=txt(o.barre,B.pil.x+B.pil.w+16,B.h/2+.5,15,{fill:'#f9bf3b','font-weight':800});o.note.textContent='✅ Résolue !';
-  o.suivant=E('g',{},o.barre);
-  E('rect',{x:B.btn.x,y:B.btn.y,width:B.btn.w,height:B.btn.h,rx:B.btn.h/2,fill:'#22c55e'},o.suivant);
-  F.etiquette(o.suivant,B.btn.x+B.btn.w/2,B.btn.y+B.btn.h/2+.5,B.btn.fs,B.btn.txt,'#08301b');
-  o.cSuivant=[B.btn.x+B.btn.w/2,B.btn.y+B.btn.h/2];
+  /* plus de bouton vert « Équation suivante » dans la barre (21/10/2026) : il est dans le bandeau sous le plateau (bandeau) */
   E('rect',{x:Y.carte.x,y:Y.carte.y,width:Y.carte.w,height:Y.carte.h,rx:Y.carte.r,fill:'#ffffff',filter:'url(#fsOmbre)'},S);
   if(Y.eq.boite){const b=Y.eq.boite;E('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:b.r,fill:'#eff6ff',stroke:'#93c5fd','stroke-width':2},S);}
   return S;
@@ -756,11 +755,42 @@ function titre(o,Y,t,tEcran){const tOut=1-P(t,2.4,.4);op(o.titre,tOut);
     o.titreMot.setAttribute('transform',`translate(${ti.tx},${cy}) scale(${L(.4,1,m)}) translate(${-ti.tx},${-cy})`);
     op(o.titreSous,P(t,1.4,.4,F.out));}
   op(o.ecran,P(t,tEcran-.3,.35,F.lin));}
-/* barre : « ✅ Résolue ! » et « Équation suivante » à partir de tr, jusqu'à tCache ; tTouche = l'appui sur le bouton */
-function barre(o,Y,t,tr,tCache,tTouche){const B=Y.barre,vu=t>=tr&&t<tCache;
-  op(o.note,B.note&&vu?P(t,tr,.25,F.lin):0);op(o.suivant,vu?P(t,tr,.15,F.lin):0);
-  const pb=P(t,tr,.35,F.back),press=tTouche!=null?1-.06*Math.sin(Math.PI*clamp((t-tTouche+.08)/.22)):1,c=o.cSuivant;
-  o.suivant.setAttribute('transform',`translate(${c[0]},${c[1]}) scale(${(L(.6,1,pb)*press).toFixed(3)}) translate(${-c[0]},${-c[1]})`);}
+/* barre : « ✅ Résolue ! » dès que l'équation est résolue (tr − AVANCE_FIGE), jusqu'à tCache. Depuis le 21/10/2026, la barre
+   ne porte plus le bouton « Équation suivante » (il faisait grandir la barre dans l'outil) : voir bandeau et bravo */
+function barre(o,Y,t,tr,tCache){const B=Y.barre,t0=tr-AVANCE_FIGE,vu=t>=t0&&t<tCache;
+  op(o.note,B.note&&vu?P(t,t0,.25,F.lin):0);}
+/* « C'est fini » comme dans l'outil (21/10/2026, equasplat.html : #eleveBravo) : à la résolution, les boutons sous le plateau
+   grisent et ne répondent plus ; ELEVE_PAUSE_SOLUTION (1,4 s) plus tard, un bandeau vert « 🎉 Bravo ! Tu as trouvé 𝑡 = 4 » et
+   son bouton « Équation suivante ▶ » prennent EXACTEMENT leur place. Dans les films, tr reste le moment déjà réglé de
+   « résolu » : les boutons se figent AVANCE_FIGE avant, le bandeau arrive APRES_BRAVO après (1,4 s d'écart, comme l'outil).
+   Mesures relevées dans l'outil (1440 × 900 et 390 × 844), recalées sur les boutons du film (Y.bravo). */
+const AVANCE_FIGE=1.0,APRES_BRAVO=.4;
+/* les éléments de la barre d'outils (boîtes de couleur et boutons) rangés dans un groupe, à leur place dans le dessin */
+function grouperOutils(o,S,els){els=els.filter(Boolean);const G=E('g',{});S.insertBefore(G,els[0]);for(const e of els)G.appendChild(e);o.outilsG=G;return G;}
+/* un bandeau : la solution recopiée de la dernière ligne, l'inconnue d'abord */
+function bandeau(o,Y,S,solution){const B=Y.bravo,g=E('g',{},S),fond=E('rect',{fill:'#dcfce7',stroke:'#16a34a','stroke-width':2,filter:'url(#fsOmbre)'},g);
+  const t=txt(g,0,0,B.fs,{'font-weight':900,fill:'#14532d','text-anchor':B.col?'middle':'start'});t.textContent='🎉 Bravo\u00a0! Tu as trouvé '+solution;
+  const bg=E('g',{},g),br=E('rect',{width:B.bw,height:B.bh,rx:B.bh/2,fill:'#15803d'},bg);
+  const bt=txt(bg,0,0,B.bfs,{'font-weight':900,fill:'#ffffff','text-anchor':'middle'});bt.textContent='Équation suivante ▶︎';
+  const res={g,btn:{g:bg,r:br,c:[0,0]},centre:[0,0]};
+  const placer=()=>{let lg=B.lg;try{lg=t.getComputedTextLength()||B.lg;}catch(e){}
+    let x0,y0=B.y,w,bx,by;
+    if(B.col){w=Math.max(lg,B.bw)+2*(B.pad+2);x0=B.cx-w/2;t.setAttribute('x',B.cx);t.setAttribute('y',B.ty);bx=B.cx-B.bw/2;by=B.by;}
+    else{w=B.pg+2+lg+B.gap+B.bw+B.pd+2;x0=B.cx-w/2;t.setAttribute('x',x0+B.pg+2);t.setAttribute('y',y0+B.h/2-B.fs*.04);bx=x0+B.pg+2+lg+B.gap;by=y0+(B.h-B.bh)/2;}
+    for(const [k,v] of [['x',x0],['y',y0],['width',w],['height',B.h],['rx',B.r]])fond.setAttribute(k,v);
+    br.setAttribute('x',bx);br.setAttribute('y',by);bt.setAttribute('x',bx+B.bw/2);bt.setAttribute('y',by+B.bh/2-B.bfs*.08);
+    res.btn.c=[bx+B.bw/2,by+B.bh/2];res.centre=[x0+w/2,y0+B.h/2];};
+  placer();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(placer);
+  op(g,0);(o.bandeaux=o.bandeaux||[]).push(res);return res;}
+/* le rendu : renvoie vrai quand le bandeau est là (le film cache alors sa zone d'action, comme l'outil) */
+function bravo(o,t,bd,tr,tCache,tTouche,appuiFn){const tF=tr-AVANCE_FIGE,tB=tr+APRES_BRAVO,actif=t>=tF&&t<tCache,vu=actif&&t>=tB;
+  const f=actif?P(t,tF,.25,F.lin):0,G=o.outilsG;
+  if(G){op(G,vu?0:1-.65*f);if(f>0&&!vu)G.setAttribute('filter','url(#fsGris)');else G.removeAttribute('filter');}
+  for(const b of o.bandeaux||[])if(b!==bd)op(b.g,0);
+  if(bd){const a=vu?P(t,tB,.35,F.out):0,c=bd.centre;op(bd.g,a);
+    if(a>0)bd.g.setAttribute('transform',`translate(${c[0]},${c[1]}) scale(${L(.92,1,a).toFixed(3)}) translate(${-c[0]},${-c[1]})`);
+    if(tTouche!=null)(appuiFn||appui)(bd.btn,t,tTouche);}
+  return vu;}
 /* une équation qui s'écrit : chaque nouvelle ligne arrive, les anciennes grisent, les flèches se tracent */
 function ecrire(Y,bl,t,vu){op(bl.g,vu);if(vu<=0)return;
   const n=bl.L.filter(li=>t>=li.t).length,ys=yLignes(Y,Math.max(1,n)),tDer=bl.L[Math.max(0,n-1)].t;
@@ -819,7 +849,9 @@ function apresPolice(film,o,blocs){if(document.fonts&&document.fonts.ready)docum
 const BASE={
   paysage:{W:1600,H:900,s:.93,ox:130.4,oy:134,w:1440,h:815,
     cap:{x:800,y:76,size:38,max:1500,gap:0},
-    barre:{h:44,pil:{x:14,y:11,w:150,h:22},retour:'Carte des mondes',btn:{x:1236,y:4,w:190,h:36,fs:15,txt:'Équation suivante'},note:true},
+    barre:{h:44,pil:{x:14,y:11,w:150,h:22},retour:'Carte des mondes',note:true},
+    /* bandeau « Bravo » : outil à 1440 × 900, « Faire des paquets » en y 722 → 632 dans le film (−90) */
+    bravo:{cx:720,y:650.5,h:68,r:34,pg:24,pd:10,gap:18,fs:24,lg:330.1,bw:269.3,bh:48,bfs:21.6},
     carte:{x:15,y:52,w:1410,h:753,r:16},
     eq:{x:720,g:42,d:23,fs:33.1,fleche:'colle',lab:19,sw:2.28},
     tR:71.6,tRB:61.5,bR:15.3,jR:46,jFs:42.6,bSW:2.56,anW:6,anG:5.1,div:3.4,bfs:16,br:15,doigt:.8,
@@ -827,7 +859,9 @@ const BASE={
     fin:{x:800,ty:300,tr:62,my:520,size:104,sy:600,ssize:36,jy:720,jw:330,jh:88,js:44}},
   portrait:{W:900,H:1600,s:2,ox:60,oy:150,w:390,h:660,
     cap:{x:450,y:62,size:36,max:840,gap:44},
-    barre:{h:34,pil:{x:10,y:6,w:30,h:22},retour:'',btn:{x:204,y:3,w:176,h:28,fs:13,txt:'✅ Équation suivante'},note:false},
+    barre:{h:34,pil:{x:10,y:6,w:30,h:22},retour:'',note:false},
+    /* bandeau « Bravo » en colonne : outil à 390 × 844, « Faire des paquets » en y 596,5 → 439 dans le film (−157,5) */
+    bravo:{col:true,cx:195,y:462.2,h:103,r:22,pad:14,fs:18,ty:485.7,lg:247.6,bw:213.9,bh:48,by:505.2,bfs:16.2},
     carte:{x:5,y:39,w:380,h:617,r:18},
     eq:{x:195,g:19,d:19,fs:24,fleche:'bords',lab:13,sw:2.1},
     tR:25.3,tRB:22,bR:5.6,jR:17,jFs:11.7,bSW:.7,anW:3.3,anG:2.8,div:.94,bfs:13,br:12,doigt:.38,
@@ -837,7 +871,7 @@ const BASE={
 function mise(mode,ajout){const b=BASE[mode]||BASE.paysage,a=(ajout&&ajout[mode])||{},Y=Object.assign({},b,a);
   for(const k of ['eq','barre','titre','fin','cap'])if(a[k])Y[k]=Object.assign({},b[k],a[k]);return Y;}
 return {C,POLICE,ARIAL,blob,couleurJeton,txt,defs,bouton,ecran,equation,placerFleches,plateau,tache,piece,cartes,doigt,cartons,
-  legende,sousTitres,titre,barre,ecrire,consigne,appui,rendreDoigt,fin,evenements,apresPolice,mise};
+  legende,sousTitres,titre,barre,grouperOutils,bandeau,bravo,ecrire,consigne,appui,rendreDoigt,fin,evenements,apresPolice,mise};
 })();
 </script>
 <script>
@@ -872,7 +906,7 @@ const TA=[0,1,2,3,4,5].map(k=>T.toucheA+k*PAS_TOUCHE);
 const I0='Il y a la même quantité à gauche qu’à droite.';
 /* après le bouton : la consigne de l'outil en mode « Enlever » sans sélection (equasplat.html, renderActions) */
 const CONSIGNES=[[0,I0],[T.modeE,'Sélectionne la même quantité des deux côtés.'],[TA[0],'Sélectionne maintenant l’autre côté.'],[TA[3],'Les jetons sélectionnés ne font pas la même somme.'],
-  [TA[5],'Même quantité sélectionnée : 3.'],[T.valider,'Sélectionne la même quantité des deux côtés.'],
+  [TA[5],'Même quantité sélectionnée : 3.'],[T.valider,''],   /* résolue : l'outil efface la phrase (15/10/2026), comme les deux autres films */
   [T.b,I0],[T.fp,'Choisis comment ranger les 9 jetons en paquets.'],[T.groupes,'3 groupes identiques — touche-en un.',C.orangeC],[T.replie,'']];
 /* trois jetons en paquet autour d'un point (assez écartés : aucun n'est posé sur un autre) */
 const paquet=(c,dx,dy,dz)=>[[c[0]-dx,c[1]-dy],[c[0]+dx,c[1]-dy],[c[0],c[1]+dz]];
@@ -942,8 +976,8 @@ const film={
     const K=X.B.cartes;
     o.cartes=Q.cartes(Y,S,K,'𝑦',(g,cy)=>{for(const bx of K.bx)E('circle',{cx:bx,cy,r:K.bR,fill:C.bille,'fill-opacity':.18,stroke:C.bille,'stroke-opacity':.58,'stroke-width':Y.bSW*1.1},g);});
     /* les boutons */
-    if(Y.fp.boite){const b=Y.fp.boite;E('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:14,fill:'#f0f6fc',stroke:'rgba(59,130,246,.18)','stroke-width':1},S);}
-    if(Y.grille){const b=Y.grille;E('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:14,fill:'#e8f6f6',stroke:'rgba(22,163,74,.16)','stroke-width':1},S);}
+    if(Y.fp.boite){const b=Y.fp.boite;o.boite=E('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:14,fill:'#f0f6fc',stroke:'rgba(59,130,246,.18)','stroke-width':1},S);}
+    if(Y.grille){const b=Y.grille;o.grille=E('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:14,fill:'#e8f6f6',stroke:'rgba(22,163,74,.16)','stroke-width':1},S);}
     o.fp=Q.bouton(Y,S,Y.fp,'Faire des paquets',port?{fond:'#f8fbff',bord:'rgba(59,130,246,.18)',encre:'#1e3a5f'}:{fond:'#ffffff',bord:'rgba(15,23,42,.11)',encre:'#334155'});
     /* Enlever n'est plus allumé au départ : sa couleur de repos (blanc à l'ordinateur, orange au téléphone) */
     const st={enl:port?{fond:'#fff7ed',bord:'rgba(249,115,22,.25)',encre:'#9a3412'}:{fond:'#ffffff',bord:'rgba(15,23,42,.11)',encre:'#334155'},
@@ -968,6 +1002,9 @@ const film={
       o.act.effSel2=Q.bouton(Y,S,{x:A.effSel2.x,y:A.y,w:A.effSel2.w,h:A.h},'Effacer la sélection',ghost);
       o.act.choix=choix.map((l,k)=>Q.bouton(Y,S,{x:A.choix[k].x,y:A.y,w:A.choix[k].w,h:A.h},l,ghost));
     }
+    /* la barre d'outils et, à sa place quand c'est résolu, le bandeau « Bravo » de l'outil (21/10/2026) */
+    Q.grouperOutils(o,S,[o.boite,o.grille,o.fp.g].concat(Y.rangs.map(b=>o.rangs[b.id].g)));
+    o.bravoA=Q.bandeau(o,Y,S,'𝑡 = 4');o.bravoB=Q.bandeau(o,Y,S,'𝑦 = 3');o.cSuivant=o.bravoA.btn.c;
     /* ---- le doigt : ce qu'il fait, dans l'ordre ---- */
     const D=Q.evenements(port);o.ev=D.ev;
     const sA=o.glisses.filter(b=>b.tg<T.b),sB=o.glisses.filter(b=>b.tg>T.b);
@@ -988,7 +1025,7 @@ const film={
   render(t){
     const o=this.o,Y=this.Y,port=o.port,enA=t<T.b;
     Q.titre(o,Y,t,T.ecran);
-    if(enA)Q.barre(o,Y,t,T.resolu,T.b-.05,T.suivant);else Q.barre(o,Y,t,T.resoluB,1e9,null);
+    if(enA)Q.barre(o,Y,t,T.resolu,T.b-.05);else Q.barre(o,Y,t,T.resoluB,1e9);
     const vA=1-P(t,T.b-.3,.3,F.lin),vB=P(t,T.b,.3,F.lin);
     Q.ecrire(Y,o.eqA,t,vA);Q.ecrire(Y,o.eqB,t,t>=T.b-.3?vB:0);
     Q.consigne(o,t,CONSIGNES,t<T.b?vA:1);
@@ -1032,6 +1069,9 @@ const film={
       ac.choix.forEach(b=>op(b.g,entre(T.fp,T.groupes)));}
     Q.appui(ac.valider,t,T.valider);Q.appui(ac.choix[1],t,T.choix);
     ac.choix[1].r.setAttribute('fill',t>=T.choix-.05?'#eff6ff':'#ffffff');
+    /* résolu : boutons figés, puis le bandeau à leur place ; la zone d'action disparaît avec eux */
+    const bv=enA?Q.bravo(o,t,o.bravoA,T.resolu,T.b-.05,T.suivant):Q.bravo(o,t,o.bravoB,T.resoluB,1e9,null);
+    if(bv)for(const k in ac)(Array.isArray(ac[k])?ac[k]:[ac[k]]).forEach(b=>op(b.g,0));
     Q.rendreDoigt(o,t,port);
     Q.sousTitres(o,Y,t,SOUS_TITRES);
     Q.fin(o,Y,t,T.fin);
@@ -1106,8 +1146,8 @@ const aToi={
     const K=X.B.cartes;
     o.cartes=Q.cartes(Y,S,K,'𝑦',(g,cy)=>{for(const bx of K.bx)E('circle',{cx:bx,cy,r:K.bR,fill:C.bille,'fill-opacity':.18,stroke:C.bille,'stroke-opacity':.58,'stroke-width':Y.bSW*1.1},g);});
     /* les boutons, comme dans le film */
-    if(Y.fp.boite){const b=Y.fp.boite;E('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:14,fill:'#f0f6fc',stroke:'rgba(59,130,246,.18)','stroke-width':1},S);}
-    if(Y.grille){const b=Y.grille;E('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:14,fill:'#e8f6f6',stroke:'rgba(22,163,74,.16)','stroke-width':1},S);}
+    if(Y.fp.boite){const b=Y.fp.boite;o.boite=E('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:14,fill:'#f0f6fc',stroke:'rgba(59,130,246,.18)','stroke-width':1},S);}
+    if(Y.grille){const b=Y.grille;o.grille=E('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:14,fill:'#e8f6f6',stroke:'rgba(22,163,74,.16)','stroke-width':1},S);}
     o.fp=Q.bouton(Y,S,Y.fp,'Faire des paquets',port?{fond:'#f8fbff',bord:'rgba(59,130,246,.18)',encre:'#1e3a5f'}:{fond:'#ffffff',bord:'rgba(15,23,42,.11)',encre:'#334155'});
     const st={enl:port?{fond:'#fff7ed',bord:'rgba(249,115,22,.25)',encre:'#9a3412'}:{fond:'#ffffff',bord:'rgba(15,23,42,.11)',encre:'#334155'},
       ajo:{fond:'#f6fef9',bord:'rgba(22,163,74,.18)',encre:'#166534'},ann:{fond:'#fffaf4',bord:'rgba(249,115,22,.2)',encre:'#9a3412'},
@@ -1129,13 +1169,15 @@ const aToi={
       o.act.effSel2=Q.bouton(Y,S,{x:A.effSel2.x,y:A.y,w:A.effSel2.w,h:A.h},'Effacer la sélection',ghost);
       o.act.choix=choix.map((l,k)=>Q.bouton(Y,S,{x:A.choix[k].x,y:A.y,w:A.choix[k].w,h:A.h},l,ghost));
     }
+    Q.grouperOutils(o,S,[o.boite,o.grille,o.fp.g].concat(Y.rangs.map(b=>o.rangs[b.id].g)));
+    o.bravoA=Q.bandeau(o,Y,S,'𝑡 = 3');o.bravoB=Q.bandeau(o,Y,S,'𝑦 = 3');
     Q.doigt(o,Y,o.ecran,port);
     Y.fin=Object.assign({},Y.fin,{revoir:'↺ Recommencer'});
     Q.cartons(o,Y,svg,'Comment on joue ?');
     Q.placerFleches(Y,o.eqA);Q.placerFleches(Y,o.eqB);Q.apresPolice(this,o,[o.eqA,o.eqB]);
   },
   /* ce qu'on peut toucher à l'attente k : des zones en pixels de l'outil, agrandies pour le doigt (44 px à l'écran au moins) ;
-     un jeton déjà touché ne compte plus */
+     un jeton déjà touché ne compte plus ; « Équation suivante » (k = 6) est dans le bandeau sous le plateau depuis le 21/10/2026 */
   zones(k){
     const o=this.o,Y=this.Y,ch=this.choix,K=this.X.B.cartes;
     let px=1;try{px=this.svg.getScreenCTM().a*Y.s||1;}catch(e){}
@@ -1144,13 +1186,13 @@ const aToi={
     const bt=(b,faire)=>{const r=b.r,n=a=>+r.getAttribute(a);return rect(n('x'),n('y'),n('width'),n('height'),faire);};
     const rond=(c,faire)=>{const R=Math.max(Y.bR+Y.anG,22/px);return {c,d:q=>{const e=Math.hypot(q[0]-c[0],q[1]-c[1]);return e<=R?e:null;},faire};};
     const libres=(liste,pris,ta)=>liste.map((b,i)=>pris.some(x=>x.i===i)?null:rond(b.c,()=>{pris.push({i,t:ta});})).filter(Boolean);
-    const B=Y.barre.btn,a=ATT[k];
+    const a=ATT[k];
     switch(k){
       case 0:return [bt(o.rangs.enl)];
       case 1:case 2:return libres(o.Ag,ch.g,a);
       case 3:case 4:return libres(o.Ad,ch.d,a);
       case 5:return [bt(o.act.valider)];
-      case 6:return [rect(B.x,B.y,B.w,B.h)];
+      case 6:return [bt(o.bravoA.btn)];
       case 7:return [bt(o.fp)];
       case 8:return [bt(o.act.choix[1])];
       case 9:return K.ys.map((y,i)=>rect(K.x,y,K.w,K.h,()=>{ch.groupe=i;}));
@@ -1175,7 +1217,7 @@ const aToi={
     if(t<TT.a1-1e-6){ch.g=[];ch.d=[];ch.groupe=null;ch.touches={};this.indice=null;}   /* au départ, et quand on recommence */
     const apres=a=>t>a+1e-6,entre=(a,b)=>apres(a)&&t<b?1:0;
     Q.titre(o,Y,t,TT.ecran);
-    if(enA)Q.barre(o,Y,t,TT.resolu,TT.b-.05,TT.a5+.08);else Q.barre(o,Y,t,TT.resoluB,1e9,null);
+    if(enA)Q.barre(o,Y,t,TT.resolu,TT.b-.05);else Q.barre(o,Y,t,TT.resoluB,1e9);
     const vA=1-P(t,TT.b-.3,.3,F.lin),vB=P(t,TT.b,.3,F.lin);
     Q.ecrire(Y,o.eqA,t,vA);Q.ecrire(Y,o.eqB,t,t>=TT.b-.3?vB:0);
     Q.consigne(o,t,CONS_T,t<TT.b?vA:1);
@@ -1219,6 +1261,8 @@ const aToi={
       ac.choix.forEach(b=>op(b.g,entre(TT.a6,TT.range)));}
     appuiT(ac.valider,t,TT.a4);appuiT(ac.choix[1],t,TT.a7);
     ac.choix[1].r.setAttribute('fill',apres(TT.a7)?'#eff6ff':'#ffffff');
+    const bv=enA?Q.bravo(o,t,o.bravoA,TT.resolu,TT.b-.05,TT.a5,appuiT):Q.bravo(o,t,o.bravoB,TT.resoluB,1e9,null);
+    if(bv)for(const k in ac)(Array.isArray(ac[k])?ac[k]:[ac[k]]).forEach(b=>op(b.g,0));
     /* le rond bleu sous le doigt de l'élève, quand le geste est bon */
     let rip=null;for(const k in ch.touches){const v=ch.touches[k];if(t>v.t+1e-6&&t<v.t+.45)rip=v;}
     if(rip){const u=F.clamp((t-rip.t)/.45);o.ripple.setAttribute('cx',rip.p[0]);o.ripple.setAttribute('cy',rip.p[1]);
@@ -1393,8 +1437,8 @@ const film={
     o.cartes=Q.cartes(Y,S,K,'𝑝',(g,cy)=>{E('circle',{cx:K.jx,cy,r:K.jR,fill:cc.fill,stroke:cc.stroke,'stroke-width':Y.bSW},g);
       Q.txt(g,K.jx,cy+K.jFs*.04,K.jFs,{'dominant-baseline':'middle','text-anchor':'middle','font-weight':900,fill:C.encre}).textContent='7';});
     /* les boutons : Décomposer / Regrouper / Partager, puis Enlever / Ajouter / Annuler / Recommencer */
-    if(Y.boiteOutils){const b=Y.boiteOutils;E('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:14,fill:'#f0f6fc',stroke:'rgba(59,130,246,.18)','stroke-width':1},S);}
-    if(Y.grille){const b=Y.grille;E('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:14,fill:'#e8f6f6',stroke:'rgba(22,163,74,.16)','stroke-width':1},S);}
+    if(Y.boiteOutils){const b=Y.boiteOutils;o.boite=E('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:14,fill:'#f0f6fc',stroke:'rgba(59,130,246,.18)','stroke-width':1},S);}
+    if(Y.grille){const b=Y.grille;o.grille=E('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:14,fill:'#e8f6f6',stroke:'rgba(22,163,74,.16)','stroke-width':1},S);}
     const repos=port?{fond:'#f8fbff',bord:'rgba(59,130,246,.18)',encre:'#1e3a5f'}:{fond:'#ffffff',bord:'rgba(15,23,42,.11)',encre:'#334155'};
     o.outils={};for(const b of Y.outils){const nom=Array.isArray(NOMS[b.id])?NOMS[b.id][port?1:0]:NOMS[b.id];o.outils[b.id]=Q.bouton(Y,S,b,nom,repos);}
     const st={enl:port?{fond:'#fff7ed',bord:'rgba(249,115,22,.25)',encre:'#9a3412'}:repos,
@@ -1419,6 +1463,9 @@ const film={
       o.act.valider=Q.bouton(Y,S,{x:Ac.valider.x,y:Ac.y,w:Ac.valider.w,h:Ac.h},'Valider la suppression',orange);
       o.act.effSel2=Q.bouton(Y,S,{x:Ac.effSel2.x,y:Ac.y,w:Ac.effSel2.w,h:Ac.h},'Effacer la sélection',ghost);
     }
+    /* la barre d'outils et, à sa place quand c'est résolu, le bandeau « Bravo » de l'outil (21/10/2026) */
+    Q.grouperOutils(o,S,[o.boite,o.grille].concat(Y.outils.map(b=>o.outils[b.id].g),Y.rangs.map(b=>o.rangs[b.id].g)));
+    o.bravoA=Q.bandeau(o,Y,S,'𝑘 = 14');o.bravoB=Q.bandeau(o,Y,S,'𝑝 = 7');o.cSuivant=o.bravoA.btn.c;
     /* les fenêtres, au-dessus d'un voile (l'écran derrière est flouté, comme dans l'outil) */
     o.voile=E('rect',{x:0,y:0,width:Y.w,height:Y.h,rx:port?22:14,fill:'rgba(15,23,42,.35)'},o.ecran);
     const DD=DLG[mode]||DLG.paysage;
@@ -1450,7 +1497,7 @@ const film={
   render(t){
     const o=this.o,Y=this.Y,X=this.X,port=o.port,enA=t<T.b;
     Q.titre(o,Y,t,T.ecran);
-    if(enA)Q.barre(o,Y,t,T.resolu,T.b-.05,T.suivant);else Q.barre(o,Y,t,T.resoluB,1e9,null);
+    if(enA)Q.barre(o,Y,t,T.resolu,T.b-.05);else Q.barre(o,Y,t,T.resoluB,1e9);
     const vA=1-P(t,T.b-.3,.3,F.lin),vB=P(t,T.b,.3,F.lin);
     Q.ecrire(Y,o.eqA,t,vA);Q.ecrire(Y,o.eqB,t,t>=T.b-.3?vB:0);
     Q.consigne(o,t,CONSIGNES,t<T.b?vA:1);
@@ -1503,6 +1550,8 @@ const film={
     }else{op(ac.effacer.g,entre(T.g20,T.g15)+entre(T.e21g,T.e21d));op(ac.regrouper.g,entre(T.g15,T.dlgG+.05));op(ac.effacer2.g,entre(T.g15,T.dlgG+.05));
       op(ac.valider.g,entre(T.e21d,T.valider+.15));op(ac.effSel2.g,entre(T.e21d,T.valider+.15));}
     Q.appui(ac.regrouper,t,T.btnG);Q.appui(ac.valider,t,T.valider);
+    const bv=enA?Q.bravo(o,t,o.bravoA,T.resolu,T.b-.05,T.suivant):Q.bravo(o,t,o.bravoB,T.resoluB,1e9,null);
+    if(bv)for(const k in ac)(Array.isArray(ac[k])?ac[k]:[ac[k]]).forEach(b=>op(b.g,0));
     /* ---- les fenêtres ---- */
     const dlg=[[o.dG,T.dlgG,T.okG+.1,T.cleG,TAPE_G],[o.dD,T.dlgD,T.okD+.1,T.cleD,TAPE_D],[o.dF,T.dlgF,T.okF+.1,T.cleF,TAPE_F],
       [o.dP1,T.dlgP,T.chip+.02,null,null],[o.dP2,T.chip+.02,T.okP+.1,T.cleP,TAPE_P]];

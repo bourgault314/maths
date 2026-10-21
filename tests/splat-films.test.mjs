@@ -390,7 +390,7 @@ test("« À toi de faire » : un seul bon geste par attente, des zones assez gra
   // les cibles, dans l'ordre : Enlever, les deux jetons de gauche, deux des jetons de droite (un jeton déjà touché ne compte
   // plus), Valider, Équation suivante, Faire des paquets, « 3 paquets de 3 », un des groupes
   assert.ok(code.includes("const libres=(liste,pris,ta)=>liste.map((b,i)=>pris.some(x=>x.i===i)?null:rond(b.c,()=>{pris.push({i,t:ta});})).filter(Boolean);"));
-  assert.ok(code.includes("case 0:return [bt(o.rangs.enl)];\n      case 1:case 2:return libres(o.Ag,ch.g,a);\n      case 3:case 4:return libres(o.Ad,ch.d,a);\n      case 5:return [bt(o.act.valider)];\n      case 6:return [rect(B.x,B.y,B.w,B.h)];\n      case 7:return [bt(o.fp)];\n      case 8:return [bt(o.act.choix[1])];\n      case 9:return K.ys.map("));
+  assert.ok(code.includes("case 0:return [bt(o.rangs.enl)];\n      case 1:case 2:return libres(o.Ag,ch.g,a);\n      case 3:case 4:return libres(o.Ad,ch.d,a);\n      case 5:return [bt(o.act.valider)];\n      case 6:return [bt(o.bravoA.btn)];\n      case 7:return [bt(o.fp)];\n      case 8:return [bt(o.act.choix[1])];\n      case 9:return K.ys.map("));
   // un toucher ailleurs : rien ne change, le doigt montre la cible la plus proche (il appuie sans rien faire)
   assert.match(code, /if\(bon\)\{this\.indice=null;if\(bon\.faire\)bon\.faire\(\);this\.choix\.touches\[k\]=\{t:ATT\[k\],p:q\};return true;\}/);
   assert.match(code, /if\(pres\)this\.indice=\{r0:performance\.now\(\),c:pres\.c\};\s*return false;/);
