@@ -607,3 +607,39 @@ test(
     }
   },
 );
+
+test(
+  "diaporama (coque V2) : ← · Aide · Réponse · Explication · →, la réponse en vert dans la case",
+  { skip: ignorer, timeout: 60000 },
+  async () => {
+    const { serveur, base } = await serveurLocal();
+    const browser = await ouvrirNavigateur();
+    const page = await browser.newPage({ viewport: { width: 1366, height: 768 } });
+    try {
+      await page.goto(`${base}?notion=NC04&forme=e&graine=12&mode=project`);
+      await page.locator(".barre-projection").waitFor();
+      assert.deepEqual(await page.locator(".barre-projection button").allInnerTexts(), [
+        "←",
+        "Aide",
+        "Réponse",
+        "Explication",
+        "→",
+      ]);
+      // Graine 12 : « 0,4 × 2 = [ ] », la case vide tant que le professeur ne montre pas la réponse.
+      assert.equal(await page.locator(".carte .calcul .case").innerText(), "");
+      await page.locator('[data-action="reponse"]').click();
+      assert.equal(await page.locator(".carte .calcul .case.juste").innerText(), "0,8");
+      await page.locator('#commandes [data-action="aide"]').click();
+      await page.locator(".aide .dessin svg").waitFor();
+      await page.locator('[data-action="explication"]').click();
+      await page.locator(".explication").waitFor();
+      const tient = await page.evaluate(
+        () => document.querySelector(".coque").getBoundingClientRect().bottom <= innerHeight + 1,
+      );
+      assert.ok(tient, "La coque tient dans l’écran");
+    } finally {
+      await browser.close();
+      await new Promise((fin) => serveur.close(fin));
+    }
+  },
+);

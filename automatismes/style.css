@@ -1791,20 +1791,9 @@ body:not(.tactile) #commandes > * {
   font-size: 1.5rem;
   font-variant-numeric: tabular-nums;
 }
-/* La projection garde sa barre pleine largeur : le bas en colonne de 440 px ne la concerne pas. */
-body.projection #commandes {
-  display: block;
-  width: auto;
-  margin: 0;
-}
-.barre-projection {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  padding-top: 16px;
-}
+/* Le diaporama (C10) : la même coque, en très grand. Barre du haut : ← Quitter · n sur N · minuteur
+   · Pause · plein écran ; barre du bas : ← · Aide · Réponse · Explication · →. « Avec aide » : le
+   dessin reste sous la question, agrandi jusqu'à × 2,2 (ajusterQuestion). */
 .message {
   padding: 12px;
   margin: 8px 0;
@@ -1813,77 +1802,89 @@ body.projection #commandes {
   color: var(--encre);
 }
 body.projection {
-  background: var(--papier);
-}
-body.projection .coque {
-  width: 100%;
-  max-width: none;
-  padding: 0;
+  background: var(--fond-page);
 }
 body.projection .pied {
   display: none;
 }
-body.projection .cadre {
-  height: 100dvh;
-  max-height: 100dvh;
-  min-height: 0;
-  padding: 16px 32px;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-}
-body.projection .barre-cadre {
-  margin-bottom: 8px;
-}
-body.projection .espace-question {
-  padding-top: 8px;
-}
-body.projection .enonce h1 {
-  font-size: clamp(2rem, 3.4vw, 3.25rem);
-}
-body.projection .question-expression {
-  font-size: 1.35em;
-  margin: 8px 0;
-}
-body.projection .figure {
-  max-width: 760px;
-}
-body.projection .figure svg {
-  max-height: 360px;
-}
-body.projection .aide {
-  max-width: 760px;
-  padding: 16px;
-  margin: 16px auto;
-}
-body.projection .aide svg {
-  max-width: 760px;
-  max-height: 320px;
-}
-body.projection .aide p {
+body.projection .barre-question .bouton {
+  min-height: 44px;
   font-size: 1.125rem;
 }
-body.projection .etape {
+body.projection .barre-question .centre strong {
+  font-size: 1.625rem;
+}
+body.projection .barre-question .minuteur {
   font-size: 1.375rem;
 }
-body.projection .correction {
-  max-width: 760px;
-  font-size: 1.5rem;
+body.projection .espace-question > * {
+  width: min(1100px, 94vw);
 }
-body.projection .correction svg {
-  max-width: 760px;
-  max-height: 300px;
+body.projection .carte {
+  padding: 10px 14px;
 }
-body.projection .choix {
-  max-width: 1000px;
-  margin: 16px auto;
+body.projection .carte .consigne {
+  margin-bottom: 4px;
+  font-size: 2.125rem;
 }
-body.projection .choix-bouton {
-  font-size: 2rem;
-  min-height: 72px;
+body.projection .carte .calcul {
+  font-size: 4rem;
 }
-body.projection .minuteur {
-  font-size: 2rem;
+body.projection .case {
+  height: 84px;
+  min-width: 150px;
+  font-size: 3.375rem;
+}
+body.projection .carte .choix-bouton {
+  min-height: 80px;
+  font-size: 2.25rem;
+}
+body.projection .carte-nombre {
+  font-size: 2.25rem;
+}
+body.projection .aide,
+body.projection .explication {
+  padding: 12px 16px;
+}
+body.projection .aide-entete {
+  font-size: 1.25rem;
+}
+body.projection .aide-entete .indice {
+  font-size: 1rem;
+}
+body.projection .espace-question .aide p,
+body.projection .explication .solution {
+  font-size: 1.25rem;
+}
+body.projection .espace-question .etape {
+  font-size: 1.375rem;
+}
+body.projection .bulle-aide {
+  font-size: 1.25rem;
+}
+body.projection #commandes {
+  padding: 8px 8px 14px;
+  border: 0;
+  background: transparent;
+}
+body.projection #commandes > * {
+  max-width: none;
+}
+.barre-projection {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+.barre-projection .bouton {
+  flex: 0 0 auto;
+  min-width: 150px;
+  height: 56px;
+  font-size: 1.25rem;
+}
+.barre-projection .bouton[aria-pressed="true"] {
+  border-color: var(--bleu-identite);
+  background: var(--bleu-identite);
+  color: var(--papier);
 }
 @media (min-width: 681px) {
   .coque {
@@ -2062,35 +2063,12 @@ body.projection .minuteur {
     font-size: 1.125rem;
     gap: 8px;
   }
-  body.projection .cadre {
-    height: 100dvh;
-    min-height: 0;
-    max-height: 100dvh;
-    padding: 12px;
-  }
-  body.projection .enonce h1 {
-    font-size: 1.75rem;
-  }
-  body.projection .aide {
-    padding: 12px;
-  }
-  body.projection .choix-bouton {
-    font-size: 1.25rem;
-    min-height: 48px;
-  }
-  body.projection .minuteur {
-    font-size: 1.25rem;
-  }
-  body.projection #commandes {
-    position: static;
-    padding: 8px 0 0;
-    border: 0;
-    background: var(--papier);
-  }
-  body.projection .bouton {
-    min-height: 36px;
-    padding: 4px 8px;
-    font-size: 0.8125rem;
+  /* Diaporama ouvert sur un téléphone : la barre du bas tient sur une ligne. */
+  .barre-projection .bouton {
+    min-width: 0;
+    flex: 1 1 auto;
+    height: 48px;
+    font-size: 0.9375rem;
   }
 }
 @media (prefers-reduced-motion: no-preference) {

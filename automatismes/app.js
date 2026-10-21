@@ -19,7 +19,6 @@ import {
   insererTexte,
   monterClavier,
   monterSignes,
-  paginerChoixProjection,
 } from "./champs.js";
 import {
   accueilHTML,
@@ -256,7 +255,7 @@ function afficherQuestion() {
     question.fields.some((champ) => champ.options),
   );
   if (seance.mode !== "project") preparerSaisie(question, etat);
-  else paginerChoixProjection(document.querySelector(".espace-question"));
+  else montrerProjection(question, etat);
   mettreAJourTemps();
   ajusterAffichage();
 }
@@ -280,6 +279,7 @@ function preparerSaisie(question, etat) {
       modele,
       terminee: finie,
       lecture: finie,
+      corriger: finie,
       etatCases: finie ? etat.etatCases : null,
       clavierEcran: tactile(),
       changer: recueillir,
@@ -304,6 +304,26 @@ function preparerSaisie(question, etat) {
   const premier = document.querySelector(".champ:not(:disabled)");
   // Le clavier s'ouvre dès l'arrivée partout où on le veut, aide ouverte ou non (coque V2, C5).
   if (premier && clavierVoulu()) ciblerChamp(premier);
+}
+
+// Diaporama (C10) : les cases vides dans le calcul ; « Réponse » les remplit, en vert.
+function montrerProjection(question, etat) {
+  const reponses = document.querySelector(".reponses");
+  const montree = Boolean(etat.reponseMontree);
+  monterReponse(reponses, question, montree ? question.fields.map((champ) => champ.answer) : [], {
+    modele: modeleQuestion(question, reglageForme(question, parId[question.famille], "gabarit")),
+    terminee: true,
+    lecture: true,
+    corriger: montree,
+    etatCases: montree ? question.fields.map(() => "juste") : null,
+    choisir: () => {},
+  });
+}
+
+function basculerReponse() {
+  if (seance?.mode !== "project") return;
+  etatCourant().reponseMontree = !etatCourant().reponseMontree;
+  afficherQuestion();
 }
 
 // Le clavier à l'écran : toujours sur un appareil tactile, sur ordinateur seulement si on l'a demandé
@@ -496,7 +516,8 @@ function changerQuestion(rang) {
   seance.reste = seance.options.secondes;
   seance.transition = null;
   seance.pause = seance.phase === "correction";
-  if (seance.phase === "correction") seance.etats[rang].correction = true;
+  if (seance.phase === "correction")
+    Object.assign(seance.etats[rang], { correction: true, reponseMontree: true });
   afficherQuestion();
 }
 
@@ -745,7 +766,8 @@ function rechercheTerminee() {
     return;
   }
   seance.transition = seance.options.delai;
-  if (seance.options.correction === "each") etatCourant().correction = true;
+  if (seance.options.correction === "each")
+    Object.assign(etatCourant(), { correction: true, reponseMontree: true });
   afficherQuestion();
 }
 
@@ -801,6 +823,7 @@ function relierActions(racine = application) {
     cours: ouvrirCours,
     correction: basculerExplication,
     explication: basculerExplication,
+    reponse: basculerReponse,
     passer,
     valider,
     suivante,

@@ -83,7 +83,7 @@ function ajouterChoix(parent, champ, valeur, rang, options) {
     bouton.disabled = options.terminee;
     bouton.classList.toggle("selectionne", String(proposition) === String(valeur));
     // Après la réponse : le choix de l'élève en rouge s'il est faux, le bon en vert.
-    if (options.lecture) {
+    if (options.corriger) {
       const bon = String(proposition) === String(champ.answer);
       bouton.classList.toggle("bon", bon);
       bouton.classList.toggle("faux", !bon && String(proposition) === String(valeur));
@@ -127,12 +127,6 @@ function ajouterPagesChoix(parent, choix) {
     afficher();
   };
   afficher();
-}
-
-export function paginerChoixProjection(parent) {
-  parent.querySelectorAll(".choix").forEach((choix) => {
-    if (choix.children.length > 4) ajouterPagesChoix(parent, choix);
-  });
 }
 
 /* ------------------------------------------------------------------

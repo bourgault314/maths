@@ -285,13 +285,17 @@ export function outilsHTML(seance, etat) {
   </div>`;
 }
 
-function actionsProjectionHTML(seance) {
+/* Diaporama (C10) : ← · Aide · Réponse (remplit la case en vert) · Explication · →, les mêmes mots
+   qu'au téléphone ; « Encore un indice » est dans l'en-tête de l'aide. Correction « à la fin » :
+   Réponse et Explication attendent la phase de correction. */
+function actionsProjectionHTML(seance, etat) {
   const fin = seance.options.correction === "end" && seance.phase !== "correction";
+  const presse = (actif) => `aria-pressed="${Boolean(actif)}"`;
   return `<div class="actions-question barre-projection">
     ${bouton("←", "precedente", "secondaire", 'aria-label="Question précédente"')}
-    ${bouton("Aide", "aide", "secondaire")}
-    ${bouton("Une étape", "etape", "secondaire")}
-    ${bouton("Correction", "correction", "secondaire", fin ? "disabled" : "")}
+    ${bouton("Aide", "aide", "secondaire", presse(etat.aideOuverte))}
+    ${bouton("Réponse", "reponse", "secondaire", `${presse(etat.reponseMontree)} ${fin ? "disabled" : ""}`)}
+    ${bouton("Explication", "explication", "secondaire", `${presse(etat.correction)} ${fin ? "disabled" : ""}`)}
     ${bouton("→", "suivante", "orange", 'aria-label="Question suivante"')}
   </div>`;
 }
@@ -340,7 +344,7 @@ export function questionHTML(seance, famille, clavier = false) {
       <section class="carte enonce">${pastilleNotionHTML(seance, famille)}${consigneHTML(question, modele)}
         ${question.math ? `<div class="calcul">${mathHtml(question.math)}</div>` : ""}
         ${figureHTML(question, etat, reglageForme(question, famille, "coinAide"))}
-        ${projection ? choixProjectionHTML(question) : '<div class="reponses"></div>'}
+        <div class="reponses"></div>
         ${avantReponse ? `<p class="erreur-connue" role="status">${esc(etat.message)}</p>` : ""}
         ${seance.mode === "train" ? retourHTML(question, etat, modele) : ""}
         ${outilsHTML(seance, etat)}
@@ -351,15 +355,6 @@ export function questionHTML(seance, famille, clavier = false) {
     <div id="commandes">${seance.mode === "exam" ? pointsHTML(seance) : ""}
       <section class="clavier" aria-label="Clavier mathématique" hidden></section>
       <div class="signes" role="group" aria-label="Signe" hidden></div>${actionsHTML(seance, etat)}</div>`;
-}
-
-function choixProjectionHTML(question) {
-  return question.fields
-    .filter((champ) => champ.options)
-    .map((champ) => {
-      return `<div class="choix">${champ.options.map((choix) => `<div class="choix-bouton">${mathHtml(choix)}</div>`).join("")}</div>`;
-    })
-    .join("");
 }
 
 function reglageHTML(nom, libelle, valeur, min, max) {
