@@ -95,3 +95,12 @@ test("films : la barre n'a plus de bouton « Équation suivante », le bandeau p
   assert.equal((intro.match(/o\.cSuivant=o\.bravoA\.btn\.c;/g) || []).length, 2, "le doigt des films touche le bouton du bandeau");
   assert.match(intro, /case 6:return \[bt\(o\.bravoA\.btn\)\];/, "le tutoriel attend le toucher sur le bouton du bandeau");
 });
+
+test("le bandeau se centre sous le plateau : sur ordinateur il couvre aussi la zone d'action vide (21/10/2026)", () => {
+  const centrer = html.slice(html.indexOf("function eleveCentrerBravo(){"), html.indexOf("function eleveEtatResolue(etat){"));
+  assert.match(centrer, /zone\.getBoundingClientRect\(\)\.bottom - outils\.getBoundingClientRect\(\)\.bottom/);
+  assert.match(centrer, /if\(zone && !eleveEcranEtroit\(\)\)/, "au téléphone, on n'y touche pas : le lien « Sans cookie » suit la zone d'action");
+  assert.match(centrer, /bravo\.style\.bottom = bas \? `\$\{-Math\.round\(bas\)\}px` : "";/);
+  assert.match(html, /bravo\.hidden = false;\n\s*eleveCentrerBravo\(\);/);
+  assert.match(intro, /bravo:\{cx:720,y:676\.5,/, "le film suit (mesuré dans l'outil à 1440 × 900 : 766,5 − 90)");
+});
