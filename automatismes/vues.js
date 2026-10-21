@@ -2,13 +2,10 @@ import { esc } from "./generateurs/draw.js";
 import { mathHtml } from "./math-format.js";
 import { questionPrompt } from "./math-layout.js";
 import { DOMAINES, formesEligibles } from "./seances.js";
+import { ICONES_DOMAINES } from "./icones-domaines.js";
 
 export function bouton(texte, action, classe = "secondaire", attributs = "") {
   return `<button class="bouton ${classe}" data-action="${action}" ${attributs}>${texte}</button>`;
-}
-
-export function etoilesHTML(nombre) {
-  return `<span class="etoiles" aria-label="${nombre} étoile${nombre > 1 ? "s" : ""} sur 3">${"★".repeat(nombre)}${"☆".repeat(3 - nombre)}</span>`;
 }
 
 export function filtresHTML(filtre) {
@@ -23,38 +20,70 @@ export function filtresHTML(filtre) {
   </div>`;
 }
 
-export function accueilHTML(familles, filtre) {
+// Sur chaque carte : « n notions », ou « k sur n » dès que k notions du domaine sont cochées.
+export function accueilHTML(familles, filtre, selection) {
   return `<section class="accueil">
     <h1>Automatismes</h1>
-    <div class="seance-jour">${bouton("Ma séance du jour", "jour", "primaire")}
-      <span>8 questions</span></div>
     ${filtresHTML(filtre)}
-    <div class="domaines">${DOMAINES.map(([id, nom, icone]) => {
-      const nombre = familles.filter((famille) => famille.domaine === id).length;
-      return `<button class="domaine-carte" data-domaine="${id}" ${nombre ? "" : "disabled"}>
-        <span class="icone" aria-hidden="true">${mathHtml(icone)}</span>
-        <span class="nom">${nom}<small>${nombre} notions</small></span><span aria-hidden="true">›</span>
+    <div class="domaines">${DOMAINES.map(([id, nom]) => {
+      const liste = familles.filter((famille) => famille.domaine === id);
+      const nombre = liste.length;
+      const coches = liste.filter((famille) => selection.has(famille.id)).length;
+      const compte = coches
+        ? `${coches} sur ${nombre}`
+        : `${nombre} notion${nombre > 1 ? "s" : ""}`;
+      return `<button class="domaine-carte ${coches ? "avec-selection" : ""}" data-domaine="${id}" ${nombre ? "" : "disabled"}>
+        <span class="icone" aria-hidden="true">${ICONES_DOMAINES[id] || ""}</span>
+        <span class="nom">${nom}<small>${compte}</small></span><span class="chevron" aria-hidden="true">›</span>
       </button>`;
     }).join("")}</div>
     ${bouton("Entraînement brevet · 9 questions · 20 min", "brevet", "secondaire brevet")}
   </section>`;
 }
 
-export function domaineHTML(domaine, familles, filtre, etoiles) {
-  const nom = DOMAINES.find(([id]) => id === domaine)?.[1] || "Notions";
-  return `<h1>${nom}</h1>${filtresHTML(filtre)}
-    ${bouton("Mélanger ces notions", "melanger", "primaire")}
-    <div class="liste-notions">${familles
-      .map((famille) => {
-        const formes = formesEligibles(famille, filtre);
-        return `<button class="notion" data-notion="${famille.id}">
-        <span class="nom">${esc(famille.nom)}<span class="badges">
-          <span class="badge">${famille.niveaux.join(" · ")}</span>
-          ${formes.some((forme) => forme.brevet) ? '<span class="badge brevet">Brevet</span>' : ""}
-        </span></span>${etoilesHTML(etoiles(famille.id))}
-      </button>`;
-      })
+/* La barre de lancement, en bas du cadre sur l'accueil et les domaines, dès qu'une notion est cochée :
+   « N notions » · 5 · 10 · 15 · 20 · Lancer. Absente quand rien n'est coché. */
+export function lancementHTML(compte, nombre) {
+  if (!compte) return "";
+  return `<div class="barre-lancement">
+    <span class="compte" aria-live="polite">${compte} notion${compte > 1 ? "s" : ""}</span>
+    ${nombreHTML(nombre)}${bouton("Lancer", "lancer", "orange")}
+  </div>`;
+}
+
+function nombreHTML(nombre) {
+  return `<div class="nombre-questions" role="group" aria-label="Nombre de questions">
+    <span>Questions</span>${[5, 10, 15, 20]
+      .map(
+        (valeur) =>
+          `<button class="bouton petit ${valeur === nombre ? "primaire" : "secondaire"}" data-nombre="${valeur}"
+      aria-pressed="${valeur === nombre}">${valeur}</button>`,
+      )
       .join("")}</div>`;
+}
+
+/* Le domaine : une case par notion (toute la ligne coche ou décoche), « Tout le domaine » en tête.
+   Un tap ne lance rien : la série part de la barre de lancement. */
+export function domaineHTML(domaine, familles, filtre, selection) {
+  const nom = DOMAINES.find(([id]) => id === domaine)?.[1] || "Notions";
+  const tout = familles.length && familles.every((famille) => selection.has(famille.id));
+  return `<div class="entete-domaine"><span class="icone" aria-hidden="true">${ICONES_DOMAINES[domaine] || ""}</span>
+    <h1>${nom}</h1></div>
+    <div class="reglages-domaine">${filtresHTML(filtre)}</div>
+    <div class="liste-notions groupe-selection">
+      <label class="notion tout-domaine"><input type="checkbox" data-selection-domaine="${domaine}"
+        ${tout ? "checked" : ""}><span class="nom">Tout le domaine</span></label>
+      ${familles
+        .map((famille) => {
+          const formes = formesEligibles(famille, filtre);
+          return `<label class="notion"><input type="checkbox" data-selection="${famille.id}"
+          ${selection.has(famille.id) ? "checked" : ""}>
+          <span class="nom">${esc(famille.nom)}<span class="badges">
+            <span class="badge">${famille.niveaux.join(" · ")}</span>
+            ${formes.some((forme) => forme.brevet) ? '<span class="badge brevet">Brevet</span>' : ""}
+          </span></span></label>`;
+        })
+        .join("")}</div>`;
 }
 
 export function enonceHTML(question) {
@@ -103,24 +132,105 @@ export function pointsHTML(seance) {
       .join("")}</nav>`;
 }
 
+export const ICONES = {
+  questions:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2.5" ' +
+    'fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 8h8M8 12h8M8 16h5" fill="none" ' +
+    'stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  chrono:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8" fill="none" ' +
+    'stroke="currentColor" stroke-width="2"/><path d="M12 9v4l3 2M9 2h6" fill="none" stroke="currentColor" ' +
+    'stroke-width="2" stroke-linecap="round"/></svg>',
+  sansAide:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.7.55 ' +
+    '1.1 1.3 1.1 2.1V16h5v-.1c0-.8.4-1.55 1.1-2.1A6 6 0 0 0 12 3z" fill="none" stroke="currentColor" ' +
+    'stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 4l16 16" fill="none" ' +
+    'stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
+  corrections:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5" fill="none" ' +
+    'stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  clavier:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" ' +
+    'rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M6.5 9h1M10 ' +
+    '9h1M13.5 9h1M17 9h1M6.5 12.5h1M10 12.5h1M13.5 12.5h1M17 12.5h1M8 16h8" fill="none" ' +
+    'stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  pleinEcran:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 ' +
+    '20H4v-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" ' +
+    'stroke-linejoin="round"/></svg>',
+  cours:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.4c2.8-.9 5.3-.45 7.5 ' +
+    "1.25v12c-2.2-1.7-4.7-2.15-7.5-1.25zM20.5 5.4c-2.8-.9-5.3-.45-7.5 1.25v12c2.2-1.7 4.7-2.15 " +
+    '7.5-1.25z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" ' +
+    'stroke-linejoin="round"/><path d="M12 6.8v11.8" fill="none" stroke="currentColor" ' +
+    'stroke-width="2" stroke-linecap="round"/></svg>',
+  aide:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 ' +
+    '10.8c.7.55 1.1 1.3 1.1 2.1V16h5v-.1c0-.8.4-1.55 1.1-2.1A6 6 0 0 0 12 3z" fill="none" ' +
+    'stroke="currentColor" stroke-width="2" stroke-linecap="round" ' +
+    'stroke-linejoin="round"/></svg>',
+};
+
+/* Le haut de l'écran de question, sur une ligne comme /auto/, dans les trois modes :
+   entraînement  ← Menu · notion · n / N · ✓ score · clavier · plein écran
+   brevet        ← Menu · Entraînement brevet · n / N · chrono · clavier · plein écran
+   projection    ← Quitter · notion · n / N · minuteur · Pause · plein écran */
+function boutonClavier(clavier) {
+  const libelle = `${clavier ? "Cacher" : "Afficher"} le clavier`;
+  return bouton(
+    ICONES.clavier,
+    "clavier",
+    "secondaire icone-bouton clavier-bascule",
+    `aria-pressed="${clavier}" aria-label="${libelle}" title="Clavier"`,
+  );
+}
+
+export function barreQuestionHTML(seance, famille, clavier) {
+  const exam = seance.mode === "exam";
+  const projection = seance.mode === "project";
+  const justes = seance.etats.filter((e) => e.juste).length;
+  const retour = projection ? "Quitter" : "Menu";
+  const droite = projection
+    ? `<span class="minuteur"><span id="temps" role="timer"></span></span>
+      ${bouton(seance.pause ? "Reprendre" : "Pause", "pause", "secondaire pause")}`
+    : exam
+      ? `<span class="minuteur chrono"><span id="temps" role="timer"></span></span>
+      ${boutonClavier(clavier)}`
+      : `<span class="score-barre" aria-label="${justes} réponse${justes > 1 ? "s" : ""} juste${justes > 1 ? "s" : ""}">✓ ${justes}</span>
+      ${boutonClavier(clavier)}`;
+  const menu = bouton(
+    `<span aria-hidden="true">←</span><span class="mot">${retour}</span>`,
+    "retour",
+    "discret menu",
+    `aria-label="${retour}"`,
+  );
+  return `<header class="barre-question">
+    <div class="gauche">${menu}</div>
+    <div class="centre"><span class="notion-nom">${exam ? "Entraînement brevet" : esc(famille.nom)}</span>
+      <strong>${seance.index + 1} / ${seance.questions.length}</strong></div>
+    <div class="droite">${droite}
+      ${bouton(ICONES.pleinEcran, "plein-ecran", "secondaire icone-bouton plein-ecran", 'aria-label="Plein écran" title="Plein écran"')}
+    </div></header>`;
+}
+
 export function actionsHTML(seance, etat) {
   if (seance.mode === "project") return actionsProjectionHTML(seance, etat);
-  if (seance.mode === "exam") {
-    return `<div class="actions-question"><div class="actions-gauche">
-      ${bouton("←", "precedente", "secondaire", 'aria-label="Question précédente"')}
-    </div><div class="actions-droite">
-      ${bouton("Passer", "passer", "discret")}${bouton("Valider", "valider", "orange")}
-    </div></div>`;
-  }
-  return `<div class="actions-question"><div class="actions-gauche">
-    ${bouton("Aide", "aide", "secondaire")}${bouton("Cours", "cours", "discret")}
-    </div><div class="actions-droite">
-    ${
-      etat.terminee
-        ? bouton("Suivante", "suivante", "orange")
-        : bouton("Passer", "passer", "discret") + bouton("Valider", "valider", "orange")
-    }
-    </div></div>`;
+  // À gauche, ce qui sert pendant la réponse : Aide · Cours (ou « ← » au brevet) ; à droite Passer · Valider.
+  const gauche =
+    seance.mode === "exam"
+      ? bouton("←", "precedente", "secondaire precedente", 'aria-label="Question précédente"')
+      : bouton(
+          `${ICONES.aide}<span>Aide</span>`,
+          "aide",
+          "aide-bouton",
+          `aria-pressed="${Boolean(etat.aideOuverte)}" aria-label="Aide"`,
+        ) +
+        bouton(`${ICONES.cours}<span>Cours</span>`, "cours", "cours-bouton", 'aria-label="Cours"');
+  const suite =
+    etat.terminee && seance.mode !== "exam"
+      ? bouton("Suivante", "suivante", "orange")
+      : bouton("Passer", "passer", "secondaire") + bouton("Valider", "valider", "orange");
+  return `<div class="actions-question"><div class="outils-question">${gauche}</div>${suite}</div>`;
 }
 
 function actionsProjectionHTML(seance) {
@@ -134,31 +244,22 @@ function actionsProjectionHTML(seance) {
   </div>`;
 }
 
-export function questionHTML(seance, famille, garder, etoiles) {
+export function questionHTML(seance, famille, garder, clavier = false) {
   const question = seance.questions[seance.index];
   const etat = seance.etats[seance.index];
   const projection = seance.mode === "project";
   const minuterie = projection || seance.mode === "exam";
-  return `<div class="question-entete"><span>${esc(famille.nom)}</span>
-    <strong>${seance.index + 1} / ${seance.questions.length}</strong>${etoilesHTML(etoiles(famille.id))}</div>
+  return `${barreQuestionHTML(seance, famille, clavier)}
     <progress class="progression" max="${seance.questions.length}" value="${seance.index + 1}"></progress>
-    ${minuterie ? minuteurHTML(projection, seance.pause) : ""}
     <div class="espace-question">
       ${enonceHTML(question)}${aideHTML(question, etat, garder, projection)}
-      ${projection ? choixProjectionHTML(question) : '<div class="reponses"></div><div class="symboles"></div>'}
+      ${projection ? choixProjectionHTML(question) : '<div class="reponses"></div>'}
       ${etat.message ? `<p class="retour-reponse ${etat.juste ? "juste" : "faux"}" role="status">${esc(etat.message)}</p>` : ""}
       ${etat.erreurs && !etat.terminee ? bouton("Voir la correction", "correction", "discret") : ""}
       ${etat.correction ? correctionHTML(question) : ""}
     </div>
     ${minuterie ? pointsHTML(seance) : ""}
-    <div id="commandes">${actionsHTML(seance, etat)}<section class="clavier" aria-label="Clavier mathématique" hidden></section></div>`;
-}
-
-function minuteurHTML(projection, pause) {
-  return `<div class="minuteur"><span id="temps" role="timer"></span>
-    ${projection ? bouton(pause ? "Reprendre" : "Pause", "pause", "secondaire petit") : ""}
-    ${projection ? bouton("Plein écran", "plein-ecran", "discret petit", 'aria-label="Plein écran"') : ""}
-  </div>`;
+    <div id="commandes"><section class="clavier" aria-label="Clavier mathématique" hidden></section>${actionsHTML(seance, etat)}</div>`;
 }
 
 function choixProjectionHTML(question) {
@@ -175,8 +276,9 @@ function reglageHTML(nom, libelle, valeur, min, max) {
 }
 
 export function professeurHTML(familles, filtre, options, selection) {
-  return `<h1>Professeur</h1>${filtresHTML(filtre)}
-    <div class="configuration-prof"><div class="reglages">
+  return `<h1>Diaporama</h1>
+    <p class="sous-titre">Au tableau : choisis les notions, règle le temps, puis projette.</p>${filtresHTML(filtre)}
+    <div class="configuration-prof"><div class="reglages"><h2>Réglages</h2>
       ${reglageHTML("nombre", "Questions", options.nombre, 1, 40)}
       ${reglageHTML("secondes", "Recherche (s)", options.secondes, 5, 600)}
       ${reglageHTML("delai", "Pause entre questions (s)", options.delai, 0, 60)}
@@ -186,10 +288,10 @@ export function professeurHTML(familles, filtre, options, selection) {
       </select></label>
       <label><input id="automatique" type="checkbox" ${options.automatique ? "checked" : ""}> Enchaîner automatiquement</label>
       <label><input id="aide-office" type="checkbox" ${options.aideOffice ? "checked" : ""}> Aide affichée d’office</label>
-    </div><div class="selection-notions">${DOMAINES.map(([domaine, nom]) => {
+    </div><div class="selection-notions"><h2>Notions</h2>${DOMAINES.map(([domaine, nom]) => {
       const liste = familles.filter((famille) => famille.domaine === domaine);
       const coches = liste.length && liste.every((famille) => selection.has(famille.id));
-      return `<details class="selection-domaine"><summary>
+      return `<details class="selection-domaine groupe-selection"><summary>
         <input type="checkbox" data-selection-domaine="${domaine}" aria-label="Choisir ${nom}" ${coches ? "checked" : ""}>
         ${nom} <span>${liste.length}</span></summary>
         ${liste
@@ -202,44 +304,58 @@ export function professeurHTML(familles, filtre, options, selection) {
     }).join("")}</div>
     </div><div class="actions-prof">${bouton("Projeter au tableau", "projeter", "primaire")}
       ${bouton("Ouvrir sur un écran", "partager", "secondaire")}
-      ${bouton("Donner cette série à ma classe", "classe", "secondaire", 'disabled title="Disponible au lot suivi"')}
     </div><p id="lien-serie" hidden></p>`;
 }
 
-export function bilanHTML(seance, parId, etoiles) {
+/* Le bilan d'une série : le score, puis chaque question (son énoncé, comme /auto/) avec son état
+   (juste / juste avec l'aide / faux / passée) et sa correction dépliable. Pas d'étoiles : le parcours viendra après. */
+export function bilanHTML(seance, parId) {
   const projection = seance.mode === "project";
+  const exam = seance.mode === "exam";
   const justes = seance.etats.filter((etat) => etat.juste);
   const autonomes = justes.filter((etat) => etat.aide === 0).length;
-  const dessins = justes.filter((etat) => etat.aide === 1 || etat.aide === 2).length;
-  const familles = [...new Set(seance.questions.map((question) => question.famille))];
-  return `<h1>${projection ? "Corrections" : "Ma séance"}</h1>
-    ${
-      projection
-        ? ""
-        : `<div class="score">${justes.length} / ${seance.questions.length}</div>
-      <p>${autonomes} sans aide · ${dessins} avec le dessin</p>`
-    }
-    ${
-      projection
-        ? ""
-        : familles
-            .map((id) => {
-              const indices = seance.questions
-                .map((question, i) => (question.famille === id ? i : -1))
-                .filter((i) => i >= 0);
-              const nombre = indices.filter((i) => seance.etats[i].juste).length;
-              return `<div class="resume-notion"><span>${esc(parId[id].nom)}</span>
-        <progress max="${indices.length}" value="${nombre}"></progress>${etoilesHTML(etoiles(id))}</div>`;
-            })
-            .join("")
-    }
+  const dessins = justes.length - autonomes;
+  const etatLigne = (etat) =>
+    etat.juste
+      ? etat.aide === 0
+        ? ["juste", "✓", "Juste"]
+        : ["aidee", "✓", "Juste, avec l’aide"]
+      : etat.erreurs
+        ? ["faux", "✗", "Faux"]
+        : ["passee", "○", "Passée"];
+  const titre = projection ? "Corrections" : exam ? "Entraînement brevet" : "Bilan";
+  const sousTitre = exam
+    ? `${justes.length} juste${justes.length > 1 ? "s" : ""} sur 9`
+    : `${autonomes} sans aide · ${dessins} avec l’aide`;
+  return `<h1>${titre}</h1>
+    ${projection ? "" : `<div class="score">${justes.length} / ${seance.questions.length}</div><p class="resume-bilan">${sousTitre}</p>`}
     <div class="liste-resultats">${seance.questions
       .map((question, i) => {
-        return `<details><summary>${i + 1}. ${esc(parId[question.famille].nom)}
-        <span>${projection ? "" : seance.etats[i].juste ? "✓" : "○"} Voir la correction</span></summary>
+        const [classe, signe, mot] = projection ? ["", "", ""] : etatLigne(seance.etats[i]);
+        return `<details><summary><span class="numero">${i + 1}</span>
+        <span class="resultat-nom">${questionPrompt(question)}</span>
+        ${projection ? "" : `<span class="etat-ligne ${classe}"><span aria-hidden="true">${signe}</span> ${mot}</span>`}
+        <span class="voir">Voir la correction</span></summary>
         ${enonceHTML(question)}${correctionHTML(question)}</details>`;
       })
       .join("")}</div>
-    <div class="actions-prof">${bouton("Encore une séance", "encore", "primaire")}
+    <div class="actions-prof">${bouton(exam ? "Encore un entraînement" : "Encore une série", "encore", "primaire")}
       ${bouton("Retour", "accueil", "secondaire")}</div>`;
+}
+
+/* L'écran de départ du brevet : ce qui attend l'élève, en quatre mots, puis Commencer. */
+export function brevetHTML() {
+  const tuiles = [
+    [ICONES.questions, "9 questions"],
+    [ICONES.chrono, "20 minutes"],
+    [ICONES.sansAide, "Sans aide"],
+    [ICONES.corrections, "Corrections à la fin"],
+  ];
+  return `<section class="brevet-depart">
+    <h1>Entraînement brevet</h1>
+    <div class="brevet-tuiles">${tuiles
+      .map(([icone, mot]) => `<div class="tuile">${icone}<span>${mot}</span></div>`)
+      .join("")}</div>
+    ${bouton("Commencer", "brevet-commencer", "primaire grand")}
+  </section>`;
 }

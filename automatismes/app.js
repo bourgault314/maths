@@ -3,7 +3,7 @@ import { genererQuestion } from "./moteur.js";
 import { mathHtml } from "./math-format.js";
 import { fitMathExpressions } from "./math-layout.js";
 import { esc } from "./generateurs/draw.js";
-import { initialiserSuivi, enregistrerEssai, terminerSeance, etoiles, vuesForme } from "./suivi.js";
+import { initialiserSuivi, enregistrerEssai, terminerSeance, vuesForme } from "./suivi.js";
 import {
   creerSerie,
   famillesEligibles,
@@ -15,7 +15,6 @@ import {
   monterChamps,
   lireChamps,
   insererTexte,
-  monterSymboles,
   monterClavier,
   paginerChoixProjection,
 } from "./champs.js";
@@ -25,7 +24,10 @@ import {
   questionHTML,
   professeurHTML,
   bilanHTML,
+  brevetHTML,
+  lancementHTML,
   bouton,
+  ICONES,
 } from "./vues.js";
 
 const catalogue = await fetch("./catalogue/catalogue.json").then((reponse) => reponse.json());
@@ -58,9 +60,14 @@ function lirePreferences() {
     const niveau = ["6e", "5e", "4e", "3e", "brevet"].includes(valeur.niveau)
       ? valeur.niveau
       : "brevet";
-    return { niveau, garderAide: valeur.garderAide === true };
+    return {
+      niveau,
+      nombre: [5, 10, 15, 20].includes(valeur.nombre) ? valeur.nombre : 10,
+      garderAide: valeur.garderAide === true,
+      clavierOrdinateur: valeur.clavierOrdinateur === true,
+    };
   } catch {
-    return { niveau: "brevet", garderAide: false };
+    return { niveau: "brevet", nombre: 10, garderAide: false, clavierOrdinateur: false };
   }
 }
 
@@ -90,17 +97,46 @@ function cadre(contenu) {
   document.body.classList.remove("clavier-ouvert");
   clavierOuvert = false;
   champActif = null;
+  // Pas d'en-tête hors du cadre : la barre du cadre porte « ← Retour » à gauche (sauf sur l'accueil)
+  // et les pastilles Diaporama · Plein écran à droite. L'écran de question a sa propre barre.
+  const pastilles = `<div class="barre-cadre-droite">
+    ${ecran === "prof" ? "" : '<a class="pastille" href="?prof=1" data-action="prof">Diaporama</a>'}
+    ${bouton(`${ICONES.pleinEcran}<span>Plein écran</span>`, "plein-ecran", "pastille", 'aria-label="Plein écran"')}
+  </div>`;
+  const barreCadre = question
+    ? ""
+    : `<div class="barre-cadre">${ecran === "accueil" ? "" : bouton("← Retour", "retour", "discret petit")}
+      ${pastilles}</div>`;
+  const pied = `<footer class="pied"><a class="logo" href="/" aria-label="Accueil maths et go">
+    <img src="../assets/img/logos/mathsgo/logo-390.png" alt="maths&go"></a>
+    <span>Sans calculatrice · Collège et brevet</span></footer>`;
   application.innerHTML = `<div class="coque">
-    <header class="entete-logo"><a href="/" aria-label="Accueil maths et go">
-      <img src="../assets/img/logos/mathsgo/logo-390.png" alt="maths&go"></a></header>
-    <main class="cadre"><div class="barre-cadre">
-      ${bouton(question ? "← Quitter" : "← Retour", "retour", "discret petit")}
-      ${question ? "" : '<a class="bouton discret petit" href="?prof=1" data-action="prof">Professeur</a>'}
-    </div><div class="contenu">${contenu}</div></main>
-    <footer class="pied">mathsgo.re · Sans calculatrice · Collège et brevet</footer>
+    <main class="cadre">${barreCadre}<div class="contenu">${contenu}</div>
+      ${ecran === "accueil" || ecran === "domaine" ? '<div id="lancement"></div>' : ""}</main>
+    ${question ? "" : pied}
   </div>`;
   relierActions();
+  majLancement();
   ajusterAffichage();
+}
+
+// La barre de lancement suit la sélection (accueil et domaines) ; rien de coché, pas de barre.
+function majLancement() {
+  const zone = document.querySelector("#lancement");
+  if (!zone) return;
+  zone.innerHTML = lancementHTML(selection.size, preferences.nombre);
+  relierActions(zone);
+  ajusterAffichage();
+}
+
+// La sélection de l'élève part avec sa série : elle est vidée au lancement.
+function lancerSelection() {
+  const ids = famillesEligibles(catalogue, filtre)
+    .filter((famille) => selection.has(famille.id))
+    .map((famille) => famille.id);
+  if (!ids.length) return;
+  selection.clear();
+  lancer({ mode: "train", ids, nombre: preferences.nombre });
 }
 
 function afficherAccueil() {
@@ -108,14 +144,22 @@ function afficherAccueil() {
   ecran = "accueil";
   seance = null;
   history.replaceState(null, "", location.pathname);
-  cadre(accueilHTML(famillesEligibles(catalogue, filtre), filtre));
+  cadre(accueilHTML(famillesEligibles(catalogue, filtre), filtre, selection));
 }
 
 function afficherDomaine(id) {
   ecran = "domaine";
   domaine = id;
   const familles = famillesEligibles(catalogue, filtre).filter((famille) => famille.domaine === id);
-  cadre(domaineHTML(id, familles, filtre, etoiles));
+  cadre(domaineHTML(id, familles, filtre, selection));
+  relierSelection();
+}
+
+function afficherBrevet() {
+  arreterHorloge();
+  ecran = "brevet";
+  seance = null;
+  cadre(brevetHTML());
 }
 
 function afficherProfesseur() {
@@ -132,6 +176,9 @@ function changerNiveau(niveau) {
   filtre = niveau;
   preferences.niveau = niveau;
   sauverPreferences();
+  // Les notions cochées qui ne sont plus de ce niveau quittent la sélection.
+  const eligibles = new Set(famillesEligibles(catalogue, niveau).map((famille) => famille.id));
+  for (const id of [...selection]) if (!eligibles.has(id)) selection.delete(id);
   if (ecran === "prof") afficherProfesseur();
   else if (ecran === "domaine") afficherDomaine(domaine);
   else afficherAccueil();
@@ -191,7 +238,7 @@ function afficherQuestion() {
     etat.aide = etat.aideOuverte ? 1 : 0;
     etat.visitee = true;
   }
-  cadre(questionHTML(seance, parId[question.famille], preferences.garderAide, etoiles));
+  cadre(questionHTML(seance, parId[question.famille], preferences.garderAide, clavierVoulu()));
   document.body.classList.toggle(
     "avec-choix",
     question.fields.some((champ) => champ.options),
@@ -231,17 +278,32 @@ function preparerSaisie(question, etat) {
       etat.reponses[rang] = valeur;
     },
   });
-  monterSymboles(document.querySelector(".symboles"), question, inserer);
   monterClavier(document.querySelector(".clavier"), question, {
     inserer,
     valider,
-    fermer: fermerClavier,
     suivant: champSuivant,
   });
   reponses.hidden = etat.correction;
-  document.querySelector(".symboles").hidden = etat.correction;
   const premier = document.querySelector(".champ:not(:disabled)");
-  if (premier && !etat.aideOuverte && telephone()) ciblerChamp(premier);
+  // Le clavier s'ouvre dès l'arrivée partout où on le veut ; au téléphone, pas quand l'aide est ouverte.
+  if (premier && clavierVoulu() && (!telephone() || !etat.aideOuverte)) ciblerChamp(premier);
+}
+
+// Le clavier à l'écran : toujours sur un appareil tactile, sur ordinateur seulement si on l'a demandé
+// (bouton clavier de la barre du haut, mémorisé). Un refus sur tactile vaut pour la page ouverte.
+let clavierRefuse = false;
+function clavierVoulu() {
+  return tactile() ? !clavierRefuse : preferences.clavierOrdinateur;
+}
+
+function basculerClavier() {
+  if (tactile()) clavierRefuse = !clavierRefuse;
+  else {
+    preferences.clavierOrdinateur = !preferences.clavierOrdinateur;
+    sauverPreferences();
+  }
+  recueillir();
+  afficherQuestion();
 }
 
 function telephone() {
@@ -254,7 +316,7 @@ function tactile() {
 
 function ciblerChamp(champ) {
   champActif = champ;
-  if (!tactile() || ecran !== "question") return;
+  if (!clavierVoulu() || ecran !== "question") return;
   clavierOuvert = true;
   document.querySelector(".clavier").hidden = false;
   document.body.classList.add("clavier-ouvert");
@@ -310,7 +372,11 @@ function valider() {
   const question = questionCourante();
   const etat = etatCourant();
   const resultat = checkAnswer(question, etat.reponses);
-  enregistrerEssai(detailEssai(question, etat, resultat.ok));
+  // Contrat §5.3 : un seul événement par question, à la première réponse ; les réessais ne comptent pas.
+  if (!etat.emis) {
+    enregistrerEssai(detailEssai(question, etat, resultat.ok));
+    etat.emis = true;
+  }
   etat.juste = resultat.ok;
   etat.terminee = resultat.ok;
   etat.message = resultat.ok ? "Réponse juste." : messageErreur(resultat);
@@ -333,7 +399,8 @@ function ouvrirAide(etape = false) {
   etat.etape ||= etape;
   if (!etat.terminee) etat.aide = Math.max(etat.aide, etape ? 2 : 1);
   afficherQuestion();
-  fermerClavier();
+  // Au téléphone seulement : le clavier s'efface pour laisser la place au dessin.
+  if (telephone()) fermerClavier();
 }
 
 function fermerAide() {
@@ -353,8 +420,10 @@ function montrerCorrection() {
   etat.terminee = true;
   etat.juste = false;
   etat.message = "";
-  if (seance.mode !== "project" && !dejaTerminee)
+  if (seance.mode !== "project" && !dejaTerminee && !etat.emis) {
     enregistrerEssai(detailEssai(questionCourante(), etat, false));
+    etat.emis = true;
+  }
   afficherQuestion();
   fermerClavier();
 }
@@ -423,7 +492,7 @@ function terminer() {
     });
   }
   ecran = "bilan";
-  cadre(bilanHTML(seance, parId, etoiles));
+  cadre(bilanHTML(seance, parId));
   document
     .querySelectorAll("details")
     .forEach((detail) => detail.addEventListener("toggle", ajusterAffichage));
@@ -497,24 +566,38 @@ function lireReglages() {
   reglageProf.aideOffice = Boolean(document.querySelector("#aide-office")?.checked);
 }
 
+// Une seule mécanique de sélection pour l'élève (écran de domaine) et le prof (page Diaporama) :
+// une case par notion, une case « tout » par groupe, la même liste `selection`.
 function relierSelection() {
   document.querySelectorAll("[data-selection]").forEach((caseNotion) => {
     caseNotion.onchange = () => {
       if (caseNotion.checked) selection.add(caseNotion.dataset.selection);
       else selection.delete(caseNotion.dataset.selection);
+      majCasesTout();
+      majLancement();
     };
   });
   document.querySelectorAll("[data-selection-domaine]").forEach((caseDomaine) => {
     caseDomaine.onclick = (evenement) => evenement.stopPropagation();
     caseDomaine.onchange = () => {
+      const coche = caseDomaine.checked;
       caseDomaine
-        .closest("details")
+        .closest(".groupe-selection")
         .querySelectorAll("[data-selection]")
         .forEach((caseNotion) => {
-          caseNotion.checked = caseDomaine.checked;
+          caseNotion.checked = coche;
           caseNotion.dispatchEvent(new Event("change"));
         });
     };
+  });
+}
+
+function majCasesTout() {
+  document.querySelectorAll("[data-selection-domaine]").forEach((caseDomaine) => {
+    const cases = [
+      ...caseDomaine.closest(".groupe-selection").querySelectorAll("[data-selection]"),
+    ];
+    caseDomaine.checked = cases.length > 0 && cases.every((caseNotion) => caseNotion.checked);
   });
 }
 
@@ -634,23 +717,17 @@ function retour() {
   afficherAccueil();
 }
 
-function relierActions() {
+function relierActions(racine = application) {
   const actions = {
     accueil: afficherAccueil,
     retour,
     prof: afficherProfesseur,
-    jour: () => lancer({ mode: "jour", nombre: 8 }),
-    brevet: () => lancer({ mode: "exam", nombre: 9 }),
-    melanger: () =>
-      lancer({
-        mode: "train",
-        ids: famillesEligibles(catalogue, filtre)
-          .filter((famille) => famille.domaine === domaine)
-          .map((famille) => famille.id),
-        nombre: 8,
-      }),
-    aide: () => ouvrirAide(),
+    brevet: afficherBrevet,
+    "brevet-commencer": () => lancer({ mode: "exam", nombre: 9 }),
+    lancer: lancerSelection,
+    aide: () => (etatCourant().aideOuverte ? fermerAide() : ouvrirAide()),
     etape: () => ouvrirAide(true),
+    clavier: basculerClavier,
     "fermer-aide": fermerAide,
     cours: ouvrirCours,
     correction: montrerCorrection,
@@ -667,22 +744,28 @@ function relierActions() {
         : document.documentElement.requestFullscreen(),
     encore: () => lancer({ ...seance.options, graine: nouvelleGraine() }),
   };
-  application.querySelectorAll("[data-action]").forEach((element) => {
+  racine.querySelectorAll("[data-action]").forEach((element) => {
     element.onclick = (evenement) => {
       evenement.preventDefault();
       actions[element.dataset.action]?.();
     };
   });
-  application.querySelectorAll("[data-niveau]").forEach((element) => {
+  racine.querySelectorAll("[data-niveau]").forEach((element) => {
     element.onclick = () => changerNiveau(element.dataset.niveau);
   });
-  application.querySelectorAll("[data-domaine]").forEach((element) => {
+  racine.querySelectorAll("[data-nombre]").forEach((element) => {
+    element.onclick = () => {
+      const valeur = Number(element.dataset.nombre);
+      if (![5, 10, 15, 20].includes(valeur)) return;
+      preferences.nombre = valeur;
+      sauverPreferences();
+      majLancement();
+    };
+  });
+  racine.querySelectorAll("[data-domaine]").forEach((element) => {
     element.onclick = () => afficherDomaine(element.dataset.domaine);
   });
-  application.querySelectorAll("[data-notion]").forEach((element) => {
-    element.onclick = () => lancer({ mode: "train", ids: [element.dataset.notion], nombre: 5 });
-  });
-  application.querySelectorAll("[data-question]").forEach((element) => {
+  racine.querySelectorAll("[data-question]").forEach((element) => {
     element.onclick = () => changerQuestion(Number(element.dataset.question));
   });
 }
@@ -696,7 +779,46 @@ function ajusterAffichage() {
     ajusterDessinProjete();
     fitMathExpressions(application);
     ajusterEchelle();
+    centrerQuestion();
   });
+}
+
+/* L'énoncé et sa réponse centrés dans la zone de question (tablette, ordinateur), calculé à l'arrivée sur
+   la question sans compter l'aide ni la correction, puis gardé : ce qui s'ouvre ensuite (aide, « Une
+   étape », correction) s'ajoute dessous et l'énoncé ne bouge pas, tant que tout tient. Sinon l'énoncé
+   remonte juste de ce qui dépasse : le champ de réponse reste entier. On recalcule au changement de
+   question, de taille de fenêtre ou de disposition du clavier. Téléphone et projection : en haut. */
+let centrage = { cle: "", decalage: 0, applique: 0 };
+function centrerQuestion() {
+  const zone = document.querySelector(".espace-question");
+  if (!zone || ecran !== "question" || telephone() || seance.mode === "project") return;
+  const clavier = document.body.classList.contains("clavier-ouvert");
+  const cle = [seance.id, seance.index, innerWidth, innerHeight, clavier].join("|");
+  if (cle !== centrage.cle) {
+    zone.classList.remove("centree");
+    const style = getComputedStyle(zone);
+    const libre =
+      zone.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+    const bloc = [".enonce", ".reponses"]
+      .map((selecteur) => zone.querySelector(selecteur))
+      .filter((element) => element && !element.hidden)
+      .reduce((total, element) => {
+        const marges = getComputedStyle(element);
+        return (
+          total +
+          element.offsetHeight +
+          parseFloat(marges.marginTop) +
+          parseFloat(marges.marginBottom)
+        );
+      }, 0);
+    centrage = { cle, decalage: Math.max(0, Math.floor((libre - bloc) / 2)), applique: 0 };
+  }
+  zone.style.setProperty("--decalage-question", `${centrage.decalage}px`);
+  zone.classList.add("centree");
+  const depasse = Math.ceil(zone.scrollHeight - zone.clientHeight);
+  centrage.applique = Math.max(0, centrage.decalage - Math.max(0, depasse));
+  if (centrage.applique !== centrage.decalage)
+    zone.style.setProperty("--decalage-question", `${centrage.applique}px`);
 }
 
 function rectifierElisions(racine) {
@@ -726,9 +848,12 @@ function ajusterDessinProjete() {
 function ajusterEchelle() {
   const racine = document.documentElement;
   const coque = document.querySelector(".coque");
+  const projection = document.body.classList.contains("projection");
+  // Sans en-tête, la marge autour du cadre est la même partout : haut de la coque, pied, bas.
+  const marge = 72;
   racine.style.setProperty("--echelle", "1");
-  racine.style.setProperty("--hauteur-cadre", `${innerHeight - 120}px`);
-  if (telephone() || !coque || document.body.classList.contains("projection")) return;
+  racine.style.setProperty("--hauteur-cadre", `${innerHeight - marge}px`);
+  if (telephone() || !coque || projection) return;
   // Défi tables : mesurer aussi le contenu, puis retenir la plus grande échelle qui tient.
   const zone =
     ecran === "question"
@@ -736,12 +861,14 @@ function ajusterEchelle() {
       : ecran === "accueil"
         ? document.querySelector(".contenu")
         : null;
+  // Le décalage de centrage n'est pas du contenu : il ne doit pas faire rétrécir l'écran.
+  const decalage = zone?.classList.contains("centree") ? centrage.applique : 0;
   const tient = (echelle) => {
     racine.style.setProperty("--echelle", echelle.toFixed(3));
-    racine.style.setProperty("--hauteur-cadre", `${innerHeight / echelle - 120}px`);
+    racine.style.setProperty("--hauteur-cadre", `${innerHeight / echelle - marge}px`);
     return (
       coque.getBoundingClientRect().bottom <= innerHeight - 4 &&
-      (!zone || zone.scrollHeight <= zone.clientHeight + 1)
+      (!zone || zone.scrollHeight - decalage <= zone.clientHeight + 1)
     );
   };
   if (tient(1)) return;

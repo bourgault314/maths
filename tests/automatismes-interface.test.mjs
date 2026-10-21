@@ -152,7 +152,16 @@ test(
         await page.locator(".domaines").waitFor();
         await photo(page, "accueil", mesures);
         await page.locator('[data-domaine="nombres-calculs"]').click();
+        assert.equal(
+          await page.locator(".barre-lancement").count(),
+          0,
+          "Rien de coché, pas de barre",
+        );
+        await page.locator('[data-selection="NC27"]').check();
+        await page.locator(".barre-lancement").getByText("1 notion").waitFor();
         await photo(page, "domaine", mesures);
+        await page.locator('[data-action="lancer"]').click();
+        await page.locator(".barre-question .centre").getByText("1 / 10").waitFor();
         await question(page, base);
         await photo(page, "question-clavier", mesures);
         await verifierCommandes(page);
@@ -205,12 +214,134 @@ test(
         await photo(page, "projection-aide", mesures);
         await page.goto(base);
         await page.locator('[data-action="brevet"]').click();
+        await photo(page, "brevet-depart", mesures);
+        await page.locator('[data-action="brevet-commencer"]').click();
         assert.equal(await page.locator('[data-action="aide"]').count(), 0);
+        assert.equal(await page.locator(".etoiles").count(), 0, "Aucune étoile nulle part");
         await photo(page, "brevet", mesures);
         await page.close();
       }
       assert.deepEqual(erreurs, []);
       await writeFile(resolve(captures, "mesures.json"), JSON.stringify(mesures, null, 2) + "\n");
+    } finally {
+      await browser.close();
+      await new Promise((fin) => serveur.close(fin));
+    }
+  },
+);
+
+test(
+  "sélection : deux notions de deux domaines, une seule série qui les mélange",
+  { skip: ignorer, timeout: 90000 },
+  async () => {
+    const { serveur, base } = await serveurLocal();
+    const browser = await ouvrirNavigateur();
+    const erreurs = [];
+    try {
+      const page = await browser.newPage({ viewport: { width: 1366, height: 768 } });
+      page.on("pageerror", (erreur) => erreurs.push(erreur.message));
+      await page.goto(base);
+      await page.locator('[data-domaine="nombres-calculs"]').click();
+      await page.locator('[data-selection="NC27"]').check();
+      await page.locator('[data-action="retour"]').click();
+      await page.locator(".domaines").waitFor();
+      assert.match(
+        await page.locator('[data-domaine="nombres-calculs"] small').innerText(),
+        /^1 sur \d+$/,
+      );
+      assert.equal(await page.locator(".barre-lancement .compte").innerText(), "1 notion");
+      await page.locator('[data-domaine="espace-geometrie"]').click();
+      assert.equal(await page.locator('[data-selection="EG12"]').isChecked(), false);
+      await page.locator('[data-selection="EG12"]').check();
+      assert.equal(await page.locator(".barre-lancement .compte").innerText(), "2 notions");
+      await page.locator('[data-action="lancer"]').click();
+      const notions = new Set();
+      while ((await page.evaluate(() => document.body.dataset.ecran)) === "question") {
+        notions.add(await page.locator(".barre-question .notion-nom").innerText());
+        await page.locator('[data-action="passer"]').click();
+        await page.locator('[data-action="suivante"]').click();
+      }
+      assert.deepEqual(
+        [...notions].sort((a, b) => a.localeCompare(b, "fr")),
+        ["Équations à une ou deux étapes", "Rapports trigonométriques"],
+      );
+      // La sélection part avec la série : de retour à l'accueil, plus rien n'est coché.
+      await page.locator('[data-action="accueil"]').click();
+      assert.equal(await page.locator(".barre-lancement").count(), 0);
+      assert.deepEqual(erreurs, []);
+    } finally {
+      await browser.close();
+      await new Promise((fin) => serveur.close(fin));
+    }
+  },
+);
+
+test(
+  "sélection : changer de niveau retire les notions qui n’en sont plus",
+  { skip: ignorer, timeout: 60000 },
+  async () => {
+    const { serveur, base } = await serveurLocal();
+    const browser = await ouvrirNavigateur();
+    try {
+      const page = await browser.newPage({ viewport: { width: 1366, height: 768 } });
+      await page.goto(base);
+      await page.locator('[data-domaine="nombres-calculs"]').click();
+      await page.locator('[data-selection-domaine="nombres-calculs"]').check();
+      const avant = Number.parseInt(await page.locator(".barre-lancement .compte").innerText());
+      await page.locator('[data-niveau="6e"]').click();
+      const apres = Number.parseInt(await page.locator(".barre-lancement .compte").innerText());
+      // Le compteur ne garde que les notions cochées encore visibles en 6e.
+      const cochees = await page.locator("[data-selection]:checked").count();
+      assert.ok(apres < avant, `6e : moins de notions (${avant} → ${apres})`);
+      assert.equal(apres, cochees, "Le compteur = les cases cochées de 6e");
+    } finally {
+      await browser.close();
+      await new Promise((fin) => serveur.close(fin));
+    }
+  },
+);
+
+test(
+  "question : l’énoncé reste en place quand l’aide s’ouvre, le champ reste entier",
+  { skip: ignorer, timeout: 90000 },
+  async () => {
+    const { serveur, base } = await serveurLocal();
+    const browser = await ouvrirNavigateur();
+    const mesurer = (page) =>
+      page.evaluate(() => {
+        const zone = document.querySelector(".espace-question").getBoundingClientRect();
+        const champ = document.querySelector(".reponses").getBoundingClientRect();
+        return {
+          enonce: document.querySelector(".enonce").getBoundingClientRect().top,
+          champEntier: champ.top >= zone.top - 1 && champ.bottom <= zone.bottom + 1,
+        };
+      });
+    try {
+      for (const [width, height, tactile, fixe] of [
+        [820, 1180, true, true],
+        [1180, 820, true, false],
+        [1366, 768, false, false],
+      ]) {
+        const page = await browser.newPage({
+          viewport: { width, height },
+          isMobile: tactile,
+          hasTouch: tactile,
+        });
+        const nom = `${width}x${height}`;
+        await page.goto(`${base}?notion=NC27&forme=a&graine=12`);
+        await page.locator(".reponses").waitFor();
+        await stabiliser(page);
+        const avant = await mesurer(page);
+        await page.locator('[data-action="aide"]').click();
+        await page.locator(".aide").waitFor();
+        await stabiliser(page);
+        const apres = await mesurer(page);
+        assert.ok(apres.champEntier, `${nom} : champ entier avec l’aide`);
+        assert.ok(apres.enonce <= avant.enonce + 1, `${nom} : l’énoncé ne descend pas`);
+        // Là où l'aide tient (tablette debout), l'énoncé ne bouge pas d'un pixel.
+        if (fixe) assert.ok(Math.abs(apres.enonce - avant.enonce) <= 1, `${nom} : énoncé immobile`);
+        await page.close();
+      }
     } finally {
       await browser.close();
       await new Promise((fin) => serveur.close(fin));
@@ -248,18 +379,30 @@ test(
         await page.goto(adresse);
         await page.locator(".reponses").waitFor();
         await stabiliser(page);
-        assert.equal(await page.locator(".clavier").isVisible(), false, `${nom} : clavier replié`);
-        await page.locator(".champ").first().click();
-        await stabiliser(page);
+        // Sur tablette, le clavier est ouvert dès l'arrivée ; Aide · Passer · Valider sont dessous.
         const clavier = await page.locator(".clavier").evaluate((element) => ({
           cache: element.hidden,
           hauteur: element.getBoundingClientRect().height,
+          largeur: element.getBoundingClientRect().width,
         }));
-        assert.equal(clavier.cache, false, `${nom} : clavier ouvert`);
+        assert.equal(clavier.cache, false, `${nom} : clavier ouvert à l’arrivée`);
         assert.ok(clavier.hauteur > 0, `${nom} : clavier visible`);
+        assert.ok(clavier.largeur >= 300 && clavier.largeur <= 460, `${nom} : largeur du clavier`);
         assert.equal(await page.locator(".champ").first().getAttribute("inputmode"), "none");
+        assert.ok(await dansEcran(page, '[data-action="passer"]'), `${nom} : Passer visible`);
         assert.ok(await dansEcran(page, '[data-action="valider"]'), `${nom} : Valider visible`);
+        assert.equal(await page.locator(".touches .confirmer").count(), 0, `${nom} : pas de ✓`);
+        assert.equal(
+          await page.locator(".touches .symbole").count(),
+          2,
+          `${nom} : − et / au clavier`,
+        );
         assert.ok(await dansEcran(page, ".champ"), `${nom} : champ visible`);
+        assert.equal(
+          await page.locator(".symboles").count(),
+          0,
+          `${nom} : symboles une seule fois`,
+        );
         assert.ok(
           await page.evaluate(
             () =>
@@ -267,30 +410,41 @@ test(
           ),
           `${nom} : cadre entier dans l’écran`,
         );
-        if (width === 820)
-          await page.screenshot({ path: resolve(captures, `${nom}-question-clavier.png`) });
+        const echelle = await page.evaluate(() =>
+          Number(getComputedStyle(document.documentElement).getPropertyValue("--echelle")),
+        );
+        assert.ok(echelle >= 0.98, `${nom} : rien ne rétrécit (${echelle})`);
+        const consigne = await page
+          .locator(".enonce h1")
+          .evaluate((element) => parseFloat(getComputedStyle(element).fontSize));
+        assert.ok(consigne >= 27, `${nom} : consigne lisible (${consigne}px)`);
+        await page.screenshot({ path: resolve(captures, `${nom}-question-clavier.png`) });
+        // Le bouton clavier de la barre du haut replie le clavier, puis le rouvre.
+        await page.locator('[data-action="clavier"]').click();
+        await stabiliser(page);
+        assert.equal(await page.locator(".clavier").isVisible(), false, `${nom} : replié`);
+        await page.locator('[data-action="clavier"]').click();
+        await stabiliser(page);
         // Graine 12 : « x + 1 = 6 ».
         await page.locator('.touches button[aria-label="5"]').click();
-        await page.locator(".touches .confirmer").click();
+        await page.locator('[data-action="valider"]').click();
         await page.getByText("Réponse juste.").waitFor();
 
         await page.goto(adresse);
         await page.locator(".reponses").waitFor();
         await page.locator('[data-action="aide"]').click();
-        await page.locator(".champ").first().click();
         await stabiliser(page);
         assert.equal(
           await page.locator(".clavier").isVisible(),
           true,
-          `${nom} : clavier avec l’aide`,
+          `${nom} : le clavier reste ouvert avec l’aide`,
         );
         const aide = await page.locator(".aide svg").boundingBox();
         const touches = await page.locator(".clavier").boundingBox();
-        assert.ok(
-          aide.y >= 0 && aide.y + aide.height <= touches.y,
-          `${nom} : dessin visible au-dessus du clavier`,
-        );
-        assert.ok(await dansEcran(page, '[data-action="valider"]'), `${nom} : Valider avec l’aide`);
+        assert.ok(aide.y >= 0, `${nom} : dessin visible`);
+        if (width === 820)
+          assert.ok(aide.y + aide.height <= touches.y, `${nom} : dessin au-dessus du clavier`);
+        else assert.ok(aide.x + aide.width <= touches.x, `${nom} : dessin à gauche du clavier`);
         await page.screenshot({ path: resolve(captures, `${nom}-aide-clavier.png`) });
         await page.close();
       }
@@ -390,13 +544,14 @@ test(
       await page.clock.install();
       await page.locator('[data-action="projeter"]').click();
       await page.clock.runFor(5400);
-      assert.match(await page.locator(".question-entete").innerText(), /2 \/ 2/);
+      assert.match(await page.locator(".barre-question .centre").innerText(), /2 \/ 2/);
       await page.keyboard.press("Space");
       const temps = await page.locator("#temps").innerText();
       await page.clock.fastForward(10000);
       assert.equal(await page.locator("#temps").innerText(), temps, "Pause par espace");
       await page.goto(base);
       await page.locator('[data-action="brevet"]').click();
+      await page.locator('[data-action="brevet-commencer"]').click();
       assert.equal(await page.locator(".navigation-points button").count(), 9);
       await page.clock.fastForward(1201000);
       await page.locator(".score").waitFor();

@@ -137,28 +137,35 @@ label {
 .coque {
   width: min(850px, calc(100% - 32px));
   margin: 0 auto;
-  padding-bottom: 16px;
+  padding: 16px 0;
 }
-.entete-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 64px;
-}
-.entete-logo a {
+/* Les pastilles Diaporama · Plein écran, dans la barre du cadre, à droite. */
+.pastille {
   display: inline-flex;
   align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 6px 14px;
+  border: 1px solid var(--ligne);
+  border-radius: 999px;
+  background: var(--papier);
+  color: var(--bleu-identite);
+  font-size: 0.875rem;
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--encre) 8%, transparent);
 }
-.entete-logo img {
-  width: auto;
-  max-width: 180px;
-  height: 40px;
-  object-fit: contain;
+.pastille:hover {
+  border-color: var(--bleu);
+}
+.pastille svg {
+  width: 18px;
+  height: 18px;
 }
 .cadre {
   display: flex;
   flex-direction: column;
-  max-height: var(--hauteur-cadre, calc(100dvh - 112px));
+  max-height: var(--hauteur-cadre, calc(100dvh - 72px));
   padding: 24px 32px;
   border: 1px solid var(--ligne);
   border-radius: 28px;
@@ -173,17 +180,41 @@ label {
   flex: 0 0 auto;
   margin-bottom: 16px;
 }
+/* « Plein écran » est un bouton : même hauteur que la pastille « Diaporama » à côté. */
+.bouton.pastille {
+  min-height: 40px;
+  padding: 6px 14px;
+  border-radius: 999px;
+}
+.barre-cadre-droite {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
 .contenu {
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
 }
+/* Le pied : le petit logo maths&go (lien vers l'accueil du site) et la consigne de l'appli. */
 .pied {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   color: var(--attenue);
   font-size: 0.8125rem;
   padding-top: 12px;
+}
+.pied .logo {
+  display: inline-flex;
+  align-items: center;
+}
+.pied img {
+  width: auto;
+  height: 24px;
 }
 .bouton {
   display: inline-flex;
@@ -245,18 +276,32 @@ label {
 .accueil h1 {
   margin-bottom: 24px;
 }
-.seance-jour {
+.reglages-domaine {
   display: flex;
-  justify-content: center;
+  flex-wrap: wrap;
   align-items: center;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 24px;
+  justify-content: space-between;
+  gap: 8px 24px;
+  margin: 12px 0;
 }
-.seance-jour .primaire {
-  min-height: 64px;
-  padding: 16px 24px;
-  font-size: 1.25rem;
+.reglages-domaine .filtres {
+  margin: 0;
+  justify-content: flex-start;
+}
+.nombre-questions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.nombre-questions > span {
+  margin-right: 4px;
+  color: var(--attenue);
+  font-size: 0.875rem;
+  font-weight: 800;
+}
+.nombre-questions .bouton {
+  min-width: 44px;
+  padding: 4px 8px;
 }
 .filtres {
   display: flex;
@@ -301,8 +346,11 @@ label {
   color: var(--encre);
   text-align: left;
 }
+/* Cinq domaines : la cinquième carte est centrée, à la largeur des autres. */
 .domaine-carte:last-child {
   grid-column: 1 / -1;
+  width: calc(50% - 6px);
+  justify-self: center;
 }
 .domaine-carte:hover {
   border-color: var(--bleu);
@@ -313,11 +361,25 @@ label {
   place-items: center;
   width: 48px;
   height: 48px;
-  border-radius: 12px;
-  color: var(--bleu);
-  background: var(--fond-doux);
-  font-family: "Fredoka", sans-serif;
-  font-size: 1.375rem;
+}
+.icone svg {
+  width: 48px;
+  height: 48px;
+}
+.chevron {
+  color: var(--attenue);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+.entete-domaine {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.entete-domaine .icone,
+.entete-domaine .icone svg {
+  width: 44px;
+  height: 44px;
 }
 .nom {
   font-family: "Fredoka", "Segoe UI", sans-serif;
@@ -333,7 +395,10 @@ label {
   font-weight: 600;
 }
 .accueil > .brevet {
-  margin-top: 20px;
+  width: 100%;
+  min-height: 56px;
+  margin-top: 16px;
+  font-size: 1.0625rem;
 }
 .calcul {
   font-size: 2rem;
@@ -365,7 +430,7 @@ label {
 }
 .notion {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 12px;
   align-items: center;
   min-height: 72px;
@@ -375,6 +440,48 @@ label {
   color: var(--encre);
   background: var(--papier);
   text-align: left;
+  cursor: pointer;
+}
+/* Une case par notion : toute la ligne coche ou décoche. */
+.notion input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  accent-color: var(--bleu);
+  cursor: pointer;
+}
+.notion:has(input:checked) {
+  border-color: var(--bleu);
+  background: var(--fond-doux);
+}
+.notion.tout-domaine {
+  min-height: 56px;
+}
+.notion.tout-domaine .nom {
+  color: var(--bleu-identite);
+  font-weight: 800;
+}
+.domaine-carte.avec-selection {
+  border-color: var(--bleu);
+}
+.domaine-carte.avec-selection small {
+  color: var(--bleu-identite);
+  font-weight: 800;
+}
+/* La barre de lancement, fixée en bas du cadre : N notions · 5 · 10 · 15 · 20 · Lancer. */
+.barre-lancement {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  flex: 0 0 auto;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--ligne);
+}
+.barre-lancement .compte {
+  font-weight: 800;
+  white-space: nowrap;
 }
 .notion:hover {
   border-color: var(--bleu);
@@ -401,21 +508,6 @@ label {
 }
 .badge.brevet {
   color: var(--bleu-identite);
-}
-.etoiles {
-  color: var(--bleu-identite);
-  font-size: 1.125rem;
-  white-space: nowrap;
-  letter-spacing: 1px;
-}
-body[data-ecran="question"] .cadre {
-  min-height: min(640px, var(--hauteur-cadre, calc(100dvh - 112px)));
-}
-body[data-ecran="question"] .contenu {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  flex: 1;
 }
 .question-entete {
   display: flex;
@@ -451,39 +543,6 @@ body[data-ecran="question"] .contenu {
 .progression::-moz-progress-bar {
   background: var(--turquoise);
   border-radius: 12px;
-}
-.espace-question {
-  min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  flex: 1 1 auto;
-  padding: 4px 8px 12px;
-  scrollbar-gutter: stable;
-  overscroll-behavior: contain;
-}
-.enonce {
-  text-align: center;
-}
-.enonce h1 {
-  color: var(--encre);
-  font-size: clamp(1.375rem, 3.2vw, 1.875rem);
-  line-height: 1.35;
-  margin: 0;
-}
-.question-expression {
-  display: block;
-  margin: 12px 0 4px;
-  font-size: 1.25em;
-}
-.math-expression {
-  max-width: 100%;
-}
-.enonce .math-expression {
-  font-family: "Nunito", "Segoe UI", sans-serif;
-  font-weight: 400;
-}
-.math-expression math {
-  font-size: 1em;
 }
 .figure {
   margin: 12px auto;
@@ -657,24 +716,6 @@ body[data-ecran="question"] .contenu {
   background: var(--fond-doux);
   box-shadow: inset 0 0 0 1px var(--bleu);
 }
-.symboles {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
-}
-.symboles button,
-.clavier-symboles button {
-  min-width: 40px;
-  min-height: 36px;
-  padding: 4px 8px;
-  border: 1px solid var(--ligne);
-  border-radius: 8px;
-  color: var(--encre);
-  background: var(--papier);
-  font-size: 1.125rem;
-}
 .retour-reponse {
   max-width: 560px;
   margin: 12px auto;
@@ -710,53 +751,219 @@ body[data-ecran="question"] .contenu {
 .correction p {
   text-align: center;
 }
-#commandes {
-  flex: 0 0 auto;
-}
-.actions-question {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
+/* ============================================================
+   Écran de question (modes élève : séance, notion, brevet).
+   Le haut sur une ligne comme /auto/ : Menu · notion et compteur · score, clavier, plein écran, Cours.
+   Dessous : la question, l'aide, le champ ; puis le clavier (s'il est là) et Aide · Passer · Valider,
+   tous dans la même colonne de 440 px. Tablette couchée et ordinateur : le clavier passe à droite.
+   ============================================================ */
+body[data-ecran="question"] .coque {
   padding-top: 16px;
 }
-.actions-gauche,
-.actions-droite {
+body[data-ecran="question"] .cadre {
+  /* Le cadre prend toute la hauteur : le clavier et Passer · Valider restent en bas, sous le pouce. */
+  min-height: var(--hauteur-cadre, calc(100dvh - 72px));
+  padding: 12px 24px 20px;
+}
+body[data-ecran="question"] .contenu {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex: 1;
+}
+.barre-question {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  flex: 0 0 auto;
+}
+.barre-question .gauche,
+.barre-question .droite {
   display: flex;
   align-items: center;
   gap: 8px;
 }
-.clavier {
-  display: none;
-}
-.clavier-entete {
+.barre-question .centre {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  min-height: 28px;
+  gap: 10px;
+  min-width: 0;
   color: var(--attenue);
-  font-size: 0.75rem;
+  font-size: 0.9375rem;
 }
-.clavier-entete button {
-  min-width: 36px;
-  min-height: 28px;
-  padding: 0 8px;
-  border: 0;
-  background: transparent;
-  color: var(--bleu);
+.barre-question .notion-nom {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.barre-question .centre strong {
+  color: var(--encre);
+  white-space: nowrap;
+}
+.barre-question .bouton {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 13px;
+  gap: 7px;
+}
+.barre-question .icone-bouton {
+  width: 44px;
+  padding: 0;
+  display: inline-grid;
+  place-items: center;
+}
+.barre-question .bouton svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+.barre-question .clavier-bascule[aria-pressed="true"] {
+  border-color: var(--bleu-identite);
+  background: var(--bleu-identite);
+  color: var(--papier);
+}
+.barre-question .minuteur {
+  font-size: 1.375rem;
+  padding: 0 4px;
+}
+body.projection .barre-question {
+  min-height: 64px;
+}
+body.projection .barre-question .minuteur {
+  font-size: 2rem;
+}
+body.projection .barre-question .centre {
+  font-size: 1.25rem;
+}
+body.projection .barre-question .bouton {
+  min-height: 48px;
+  font-size: 1.0625rem;
+}
+.score-barre {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1.5px solid color-mix(in srgb, var(--vert) 35%, var(--papier));
+  border-radius: 999px;
+  background: var(--vert-fond);
+  color: var(--vert);
+  font-weight: 800;
+  white-space: nowrap;
+}
+body[data-ecran="question"] .progression {
+  height: 6px;
+  margin: 8px 0 12px;
+}
+.espace-question {
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1 1 auto;
+  padding: 4px 8px 12px;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+}
+/* Centrage gardé de la question (R5b) : l'espace au-dessus de l'énoncé, calculé par centrerQuestion(). */
+.espace-question.centree {
+  padding-top: calc(4px + var(--decalage-question, 0px));
+}
+.enonce {
+  text-align: center;
+}
+.enonce h1 {
+  color: var(--encre);
+  /* Tablette debout 29 px, tablette couchée et ordinateur 36 px ; le téléphone a sa taille plus bas. */
+  font-size: clamp(1.5rem, 3.6vw, 2.25rem);
+  line-height: 1.3;
+  margin: 0;
+}
+.question-expression {
+  display: block;
+  margin: 14px 0 6px;
+  font-size: 1.6em;
+}
+.math-expression {
+  max-width: 100%;
+}
+.enonce .math-expression {
+  font-family: "Nunito", "Segoe UI", sans-serif;
+  font-weight: 400;
+}
+.math-expression math {
+  font-size: 1em;
+}
+.aide {
+  max-width: 440px;
+}
+/* Le bas : le clavier puis Passer · Valider, à la largeur de l'aide et du champ. */
+#commandes {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  flex: 0 0 auto;
+  width: min(100%, 440px);
+  margin: 8px auto 0;
+}
+.actions-question {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+/* Aide · Cours à gauche, Passer · Valider à droite, sur une seule ligne. */
+.outils-question {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: auto;
+}
+.actions-question .aide-bouton,
+.actions-question .cours-bouton {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1.5px solid var(--bleu);
+  border-radius: 13px;
+  background: var(--fond-doux);
+  color: var(--bleu-identite);
+}
+.actions-question .aide-bouton svg,
+.actions-question .cours-bouton svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+.actions-question .aide-bouton[aria-pressed="true"] {
+  border-color: var(--bleu-identite);
+  background: var(--bleu-identite);
+  color: var(--papier);
 }
 .clavier-symboles {
   display: flex;
   gap: 4px;
-  margin: 4px 0;
+  margin: 0 0 4px;
   overflow-x: auto;
   overscroll-behavior-x: contain;
 }
 .clavier-symboles button {
   flex: 1 0 auto;
   min-width: 36px;
-  min-height: 32px;
-  padding: 0 4px;
+  min-height: 36px;
+  padding: 0 8px;
+  border: 1px solid var(--ligne);
+  border-radius: 8px;
+  color: var(--encre);
+  background: var(--papier);
+  font-size: 1.125rem;
 }
 .touches {
   display: grid;
@@ -765,7 +972,7 @@ body[data-ecran="question"] .contenu {
 }
 .touches button {
   min-width: 0;
-  min-height: 40px;
+  min-height: 48px;
   padding: 4px;
   border: 1px solid var(--ligne);
   border-radius: 8px;
@@ -774,13 +981,139 @@ body[data-ecran="question"] .contenu {
   font-size: 1.25rem;
   font-weight: 800;
 }
-.touches .confirmer {
-  grid-column: 4;
-  grid-row: 3 / 5;
-  color: var(--papier);
-  background: var(--bleu);
-  border-color: var(--bleu);
+.touches .symbole {
+  color: var(--bleu-identite);
+  background: var(--fond-doux);
+  font-weight: 700;
 }
+.touches .vide {
+  visibility: hidden;
+}
+/* Large et couché (tablette couchée, ordinateur) : le clavier à droite de la question, rien ne rétrécit. */
+@media (min-width: 1000px) and (orientation: landscape) {
+  body.clavier-ouvert[data-ecran="question"] .contenu {
+    display: grid;
+    /* 392 px : la colonne du clavier porte aussi Aide · Cours · Passer · Valider sur une ligne. */
+    grid-template-columns: minmax(0, 1fr) 392px;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    column-gap: 24px;
+  }
+  body.clavier-ouvert .barre-question,
+  body.clavier-ouvert[data-ecran="question"] .progression {
+    grid-column: 1 / -1;
+  }
+  body.clavier-ouvert .espace-question {
+    grid-column: 1;
+    grid-row: 3;
+  }
+  /* Le clavier et Aide · Cours · Passer · Valider centrés dans leur colonne ; la question est centrée
+     en face par centrerQuestion() (app.js). */
+  body.clavier-ouvert #commandes {
+    grid-column: 2;
+    grid-row: 3;
+    width: auto;
+    margin: 0;
+    justify-content: center;
+  }
+}
+/* Téléphone : le clavier et Passer · Valider sont fixés en bas ; la barre du haut se resserre. */
+@media (max-width: 680px) {
+  body[data-ecran="question"] .coque {
+    padding-top: 8px;
+  }
+  body[data-ecran="question"] .cadre {
+    height: calc(100dvh - 16px - var(--hauteur-commandes));
+    min-height: 160px;
+    max-height: calc(100dvh - 16px - var(--hauteur-commandes));
+    padding: 8px 12px 12px;
+  }
+  .barre-question {
+    gap: 6px;
+    min-height: 48px;
+  }
+  .barre-question .bouton {
+    min-height: 40px;
+    padding: 0 10px;
+    font-size: 0.875rem;
+  }
+  .barre-question .icone-bouton {
+    width: 40px;
+  }
+  .barre-question .plein-ecran,
+  .barre-question .clavier-bascule,
+  .barre-question .notion-nom,
+  .barre-question .menu .mot {
+    display: none;
+  }
+  .barre-question .menu {
+    width: 40px;
+    padding: 0;
+    justify-content: center;
+  }
+  .barre-question .centre {
+    font-size: 0.875rem;
+    gap: 6px;
+    overflow: hidden;
+  }
+  .score-barre {
+    min-height: 32px;
+    padding: 0 10px;
+  }
+  body[data-ecran="question"] .progression {
+    height: 4px;
+    margin: 6px 0 8px;
+  }
+  .espace-question {
+    padding: 4px 0 8px;
+    scrollbar-gutter: auto;
+  }
+  .enonce h1 {
+    font-size: 1.375rem;
+  }
+  .question-expression {
+    margin: 10px 0 4px;
+    font-size: 1.6em;
+  }
+  #commandes {
+    position: fixed;
+    z-index: 5;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: auto;
+    margin: 0;
+    gap: 6px;
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--ligne);
+    background: var(--fond-doux);
+  }
+  .touches button {
+    min-height: 44px;
+  }
+  .actions-question .bouton {
+    padding: 8px 14px;
+    min-height: 40px;
+    font-size: 0.875rem;
+  }
+  .actions-question,
+  .outils-question {
+    gap: 6px;
+  }
+}
+/* Petits téléphones (360 px) : Aide et Cours en icône seule, les quatre boutons tiennent sur une ligne. */
+@media (max-width: 379px) {
+  .actions-question .aide-bouton,
+  .actions-question .cours-bouton {
+    width: 44px;
+    padding: 0;
+    justify-content: center;
+  }
+  .actions-question .aide-bouton span,
+  .actions-question .cours-bouton span {
+    display: none;
+  }
+}
+
 .cours-dialog {
   width: min(600px, calc(100% - 32px));
   max-height: calc(100dvh - 32px);
@@ -832,38 +1165,127 @@ body[data-ecran="question"] .contenu {
 .resume-bilan {
   text-align: center;
   color: var(--attenue);
-}
-.resume-notion {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 8px 16px;
-  padding: 12px 16px;
-  margin-top: 8px;
-  border: 1px solid var(--ligne);
-  border-radius: 12px;
-}
-.resume-notion progress {
-  width: 100%;
-  height: 8px;
-  accent-color: var(--turquoise);
-  grid-column: 1;
+  margin: 0 0 8px;
 }
 .liste-resultats {
-  margin: 20px 0;
+  margin: 16px 0;
 }
 .liste-resultats details {
-  padding: 12px 0;
+  padding: 10px 0;
   border-top: 1px solid var(--ligne);
 }
 .liste-resultats summary {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
   cursor: pointer;
-  color: var(--bleu);
+  color: var(--encre);
+  font-weight: 700;
+  list-style: none;
+}
+.liste-resultats summary::-webkit-details-marker {
+  display: none;
+}
+.liste-resultats .numero {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--fond-doux);
+  color: var(--attenue);
+  font-size: 0.875rem;
   font-weight: 800;
 }
-.liste-resultats summary span {
-  display: inline-block;
-  margin-right: 8px;
+.liste-resultats .resultat-nom {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.liste-resultats .resultat-nom .math-expression {
+  font-weight: 400;
+}
+.liste-resultats .resultat-nom .question-expression {
+  display: inline;
+  margin: 0 0 0 6px;
+  font-size: 1em;
+}
+.liste-resultats .resultat-nom .math-expression math {
+  display: inline;
+}
+.liste-resultats .resultat-nom .figure {
+  display: none;
+}
+.liste-resultats .voir {
+  color: var(--bleu);
+  font-size: 0.875rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.etat-ligne {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.etat-ligne.juste {
+  color: var(--vert);
+  background: var(--vert-fond);
+}
+.etat-ligne.aidee {
+  color: var(--turquoise-texte);
+  background: color-mix(in srgb, var(--turquoise) 14%, var(--papier));
+}
+.etat-ligne.faux {
+  color: var(--rouge);
+  background: var(--rouge-fond);
+}
+.etat-ligne.passee {
+  color: var(--attenue);
+  background: var(--fond-doux);
+}
+.brevet-depart {
+  text-align: center;
+}
+.brevet-tuiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  max-width: 640px;
+  margin: 24px auto 28px;
+}
+.tuile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 96px;
+  padding: 12px 8px;
+  border: 1px solid var(--ligne);
+  border-radius: 16px;
+  background: var(--fond-doux);
+  color: var(--bleu-identite);
+  font-family: "Fredoka", "Segoe UI", sans-serif;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.tuile svg {
+  width: 32px;
+  height: 32px;
+}
+.grand {
+  min-height: 60px;
+  padding: 12px 32px;
+  font-size: 1.125rem;
 }
 .reglages {
   display: grid;
@@ -955,12 +1377,19 @@ body[data-ecran="question"] .contenu {
   font-size: 1.5rem;
   font-variant-numeric: tabular-nums;
 }
+/* La projection garde sa barre pleine largeur : le bas en colonne de 440 px ne la concerne pas. */
+body.projection #commandes {
+  display: block;
+  width: auto;
+  margin: 0;
+}
 .barre-projection {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+  padding-top: 16px;
 }
 .message {
   padding: 12px;
@@ -977,7 +1406,6 @@ body.projection .coque {
   max-width: none;
   padding: 0;
 }
-body.projection .entete-logo,
 body.projection .pied {
   display: none;
 }
@@ -1048,11 +1476,6 @@ body.projection .minuteur {
   .coque {
     zoom: var(--echelle);
   }
-  body.tactile .clavier {
-    display: block;
-    max-width: 420px;
-    margin: 8px auto 0;
-  }
 }
 @media (max-width: 680px) {
   body {
@@ -1060,18 +1483,21 @@ body.projection .minuteur {
   }
   .coque {
     width: calc(100% - 16px);
-    padding-bottom: 12px;
+    padding: 8px 0 12px;
   }
-  .entete-logo {
-    min-height: 52px;
+  .pastille,
+  .bouton.pastille {
+    min-height: 36px;
+    padding: 4px 10px;
+    font-size: 0.8125rem;
   }
-  .entete-logo img {
-    height: 32px;
+  .pastille span {
+    display: none;
   }
   .cadre {
     padding: 16px;
     border-radius: 28px;
-    max-height: calc(100dvh - 96px);
+    max-height: calc(100dvh - 60px);
   }
   .barre-cadre {
     margin-bottom: 12px;
@@ -1093,14 +1519,6 @@ body.projection .minuteur {
     font-size: 2rem;
     margin-bottom: 16px;
   }
-  .seance-jour {
-    margin-bottom: 16px;
-  }
-  .seance-jour .primaire {
-    min-height: 56px;
-    padding: 12px 16px;
-    font-size: 1.125rem;
-  }
   .domaines {
     grid-template-columns: 1fr;
     gap: 8px;
@@ -1117,6 +1535,17 @@ body.projection .minuteur {
   }
   .domaine-carte:last-child {
     grid-column: auto;
+    width: auto;
+  }
+  .brevet-tuiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .reglages-domaine {
+    justify-content: center;
+  }
+  .reglages-domaine .filtres {
+    justify-content: center;
   }
   .nom {
     font-size: 1rem;
@@ -1133,23 +1562,27 @@ body.projection .minuteur {
     padding: 12px;
     gap: 8px;
   }
-  .etoiles {
-    font-size: 0.9375rem;
+  /* Téléphone : « N notions » et Lancer sur une ligne, le nombre de questions dessous. */
+  .barre-lancement {
+    flex-wrap: wrap;
+  }
+  .barre-lancement .nombre-questions {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+  }
+  .liste-resultats summary {
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    row-gap: 6px;
+  }
+  .liste-resultats .voir {
+    grid-column: 2 / -1;
   }
   body[data-ecran="question"] .coque {
     padding-bottom: 0;
   }
-  body[data-ecran="question"] .cadre {
-    height: calc(100dvh - 64px - var(--hauteur-commandes));
-    min-height: 160px;
-    max-height: calc(100dvh - 64px - var(--hauteur-commandes));
-    padding: 12px;
-  }
   body[data-ecran="question"] .pied {
     display: none;
-  }
-  body[data-ecran="question"] .barre-cadre {
-    margin-bottom: 8px;
   }
   .question-entete {
     font-size: 0.75rem;
@@ -1159,18 +1592,6 @@ body.projection .minuteur {
   .progression {
     height: 4px;
     margin-bottom: 8px;
-  }
-  .espace-question {
-    padding: 4px 0 8px;
-    scrollbar-gutter: auto;
-  }
-  .enonce h1 {
-    font-size: 1.25rem;
-    line-height: 1.3;
-  }
-  .question-expression {
-    margin: 8px 0 4px;
-    font-size: 1.25em;
   }
   .figure {
     margin: 8px auto;
@@ -1248,9 +1669,6 @@ body.projection .minuteur {
     padding: 8px 12px;
     font-size: 1rem;
   }
-  .symboles {
-    display: none;
-  }
   .retour-reponse {
     margin: 8px 0;
     padding: 8px;
@@ -1259,32 +1677,6 @@ body.projection .minuteur {
   .correction {
     padding: 12px;
     margin: 8px 0;
-  }
-  #commandes {
-    position: fixed;
-    z-index: 5;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
-    border-top: 1px solid var(--ligne);
-    background: var(--fond-doux);
-  }
-  .actions-question {
-    padding: 0;
-    gap: 8px;
-  }
-  .actions-gauche,
-  .actions-droite {
-    gap: 4px;
-  }
-  .actions-question .bouton {
-    padding: 8px 12px;
-    min-height: 40px;
-    font-size: 0.8125rem;
-  }
-  .clavier {
-    display: block;
   }
   .cours-dialog {
     width: calc(100% - 16px);
@@ -1388,6 +1780,15 @@ body[data-ecran="prof"] .filtres {
   gap: 8px;
   padding: 12px;
 }
+.configuration-prof h2 {
+  grid-column: 1 / -1;
+  font-size: 1.125rem;
+  margin-bottom: 4px;
+}
+body[data-ecran="prof"] .sous-titre {
+  margin: 4px 0 0;
+  color: var(--attenue);
+}
 .configuration-prof .reglages > label:nth-child(n + 3) {
   grid-column: 1 / -1;
 }
@@ -1431,23 +1832,6 @@ body[data-ecran="prof"] #lien-serie {
     padding: 8px;
     font-size: 0.8125rem;
   }
-}
-
-.resume-notion progress {
-  appearance: none;
-  border: 0;
-  border-radius: 12px;
-  overflow: hidden;
-  background: var(--fond-doux);
-}
-.resume-notion progress::-webkit-progress-bar {
-  background: var(--fond-doux);
-}
-.resume-notion progress::-webkit-progress-value {
-  background: var(--turquoise);
-}
-.resume-notion progress::-moz-progress-bar {
-  background: var(--turquoise);
 }
 
 .pages-choix {

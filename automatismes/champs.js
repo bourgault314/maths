@@ -177,9 +177,9 @@ export function insererTexte(saisie, texte) {
   saisie.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
-export function monterSymboles(parent, question, inserer) {
+export function monterSymboles(parent, question, inserer, liste = symbolesQuestion(question)) {
   parent.replaceChildren();
-  symbolesQuestion(question).forEach((symbole) => {
+  liste.forEach((symbole) => {
     const bouton = element("button", "bouton petit", parent);
     bouton.innerHTML = mathHtml(symbole);
     bouton.setAttribute("aria-label", `Insérer ${symbole}`);
@@ -190,25 +190,57 @@ export function monterSymboles(parent, question, inserer) {
 
 export function monterClavier(parent, question, actions) {
   parent.replaceChildren();
-  const entete = element("div", "clavier-entete", parent);
-  element("span", "", entete).textContent = "Clavier";
-  const fermer = element("button", "bouton discret petit", entete);
-  fermer.textContent = "Replier ⌄";
-  fermer.onclick = actions.fermer;
-  monterSymboles(element("div", "clavier-symboles", parent), question, actions.inserer);
+  // Le clavier n'a plus de touche ✓ : « Valider » est sous le clavier, avec Aide et Passer (Gwenaël, 21/10).
+  // Les deux premiers symboles de la forme prennent la place du ✓ ; les autres, s'il y en a, au-dessus.
+  const symboles = symbolesQuestion(question);
+  const [premier = "", second = ""] = symboles;
+  const autres = symboles.slice(2);
+  if (autres.length) {
+    monterSymboles(
+      element("div", "clavier-symboles", parent),
+      { ...question },
+      actions.inserer,
+      autres,
+    );
+  }
   const touches = element("div", "touches", parent);
-  const liste = ["7", "8", "9", "⌫", "4", "5", "6", "⇥", "1", "2", "3", "✓", ",", "0", "00"];
+  const liste = [
+    "7",
+    "8",
+    "9",
+    "⌫",
+    "4",
+    "5",
+    "6",
+    "⇥",
+    "1",
+    "2",
+    "3",
+    premier,
+    ",",
+    "0",
+    "00",
+    second,
+  ];
   liste.forEach((touche) => {
-    const bouton = element("button", touche === "✓" ? "confirmer" : "", touches);
-    bouton.textContent = touche;
+    const bouton = element("button", touche ? "" : "vide", touches);
+    if (!touche) {
+      bouton.disabled = true;
+      bouton.setAttribute("aria-hidden", "true");
+      return;
+    }
+    const symbole = touche === premier || touche === second;
+    if (symbole) {
+      bouton.classList.add("symbole");
+      bouton.innerHTML = mathHtml(touche);
+    } else bouton.textContent = touche;
     bouton.setAttribute(
       "aria-label",
-      { "⌫": "Effacer", "⇥": "Champ suivant", "✓": "Valider" }[touche] || touche,
+      { "⌫": "Effacer", "⇥": "Champ suivant" }[touche] || (symbole ? `Insérer ${touche}` : touche),
     );
     bouton.onpointerdown = (evenement) => evenement.preventDefault();
     bouton.onclick = () => {
-      if (touche === "✓") actions.valider();
-      else if (touche === "⇥") actions.suivant();
+      if (touche === "⇥") actions.suivant();
       else actions.inserer(touche === "⌫" ? "effacer" : touche);
     };
   });
