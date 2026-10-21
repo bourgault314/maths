@@ -1122,6 +1122,17 @@ body.clavier-ouvert .actions-question [data-action="valider"] {
 .liste-resultats .resultat-nom .math-expression {
   font-weight: 400;
 }
+.liste-resultats .resultat-nom .question-expression {
+  display: inline;
+  margin: 0 0 0 6px;
+  font-size: 1em;
+}
+.liste-resultats .resultat-nom .math-expression math {
+  display: inline;
+}
+.liste-resultats .resultat-nom .figure {
+  display: none;
+}
 .liste-resultats .voir {
   color: var(--bleu);
   font-size: 0.875rem;
