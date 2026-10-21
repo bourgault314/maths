@@ -105,6 +105,13 @@ async function question(page, base, notion = "NC27", forme = "a") {
   await stabiliser(page);
 }
 
+// Valider : le bouton orange, ou le ✓ du clavier quand celui-ci est ouvert (téléphone, tablette).
+async function valider(page) {
+  if (await page.locator(".touches .confirmer").isVisible())
+    await page.locator(".touches .confirmer").click();
+  else await page.locator('[data-action="valider"]').click();
+}
+
 async function verifierCommandes(page) {
   const positions = await page.locator("#commandes").evaluate((commandes) => {
     return [...commandes.querySelectorAll('[data-action="passer"], [data-action="valider"]')].map(
@@ -180,7 +187,7 @@ test(
         await page.getByRole("button", { name: "J’ai compris" }).click();
         await question(page, base);
         await page.locator(".champ").fill("999");
-        await page.locator('[data-action="valider"]').click();
+        await valider(page);
         assert.equal(await page.locator('[data-action="correction"]').isVisible(), true);
         await photo(page, "faux", mesures);
         await page.locator('[data-action="correction"]').click();
@@ -205,7 +212,10 @@ test(
         await photo(page, "projection-aide", mesures);
         await page.goto(base);
         await page.locator('[data-action="brevet"]').click();
+        await photo(page, "brevet-depart", mesures);
+        await page.locator('[data-action="brevet-commencer"]').click();
         assert.equal(await page.locator('[data-action="aide"]').count(), 0);
+        assert.equal(await page.locator(".etoiles").count(), 0, "Aucune étoile nulle part");
         await photo(page, "brevet", mesures);
         await page.close();
       }
@@ -248,18 +258,25 @@ test(
         await page.goto(adresse);
         await page.locator(".reponses").waitFor();
         await stabiliser(page);
-        assert.equal(await page.locator(".clavier").isVisible(), false, `${nom} : clavier replié`);
-        await page.locator(".champ").first().click();
-        await stabiliser(page);
+        // Sur tablette, le clavier est ouvert dès l'arrivée ; le ✓ valide, « Valider » s'efface.
         const clavier = await page.locator(".clavier").evaluate((element) => ({
           cache: element.hidden,
           hauteur: element.getBoundingClientRect().height,
+          largeur: element.getBoundingClientRect().width,
         }));
-        assert.equal(clavier.cache, false, `${nom} : clavier ouvert`);
+        assert.equal(clavier.cache, false, `${nom} : clavier ouvert à l’arrivée`);
         assert.ok(clavier.hauteur > 0, `${nom} : clavier visible`);
+        assert.ok(clavier.largeur >= 300 && clavier.largeur <= 460, `${nom} : largeur du clavier`);
         assert.equal(await page.locator(".champ").first().getAttribute("inputmode"), "none");
-        assert.ok(await dansEcran(page, '[data-action="valider"]'), `${nom} : Valider visible`);
+        assert.equal(await page.locator('[data-action="valider"]').isVisible(), false);
+        assert.ok(await dansEcran(page, '[data-action="passer"]'), `${nom} : Passer visible`);
+        assert.ok(await dansEcran(page, ".touches .confirmer"), `${nom} : ✓ visible`);
         assert.ok(await dansEcran(page, ".champ"), `${nom} : champ visible`);
+        assert.equal(
+          await page.locator(".symboles").count(),
+          0,
+          `${nom} : symboles une seule fois`,
+        );
         assert.ok(
           await page.evaluate(
             () =>
@@ -267,8 +284,22 @@ test(
           ),
           `${nom} : cadre entier dans l’écran`,
         );
-        if (width === 820)
-          await page.screenshot({ path: resolve(captures, `${nom}-question-clavier.png`) });
+        const echelle = await page.evaluate(() =>
+          Number(getComputedStyle(document.documentElement).getPropertyValue("--echelle")),
+        );
+        assert.ok(echelle >= 0.98, `${nom} : rien ne rétrécit (${echelle})`);
+        const consigne = await page
+          .locator(".enonce h1")
+          .evaluate((element) => parseFloat(getComputedStyle(element).fontSize));
+        assert.ok(consigne >= 27, `${nom} : consigne lisible (${consigne}px)`);
+        await page.screenshot({ path: resolve(captures, `${nom}-question-clavier.png`) });
+        // Le bouton clavier de la barre du haut replie le clavier : « Valider » revient.
+        await page.locator('[data-action="clavier"]').click();
+        await stabiliser(page);
+        assert.equal(await page.locator(".clavier").isVisible(), false, `${nom} : replié`);
+        assert.ok(await dansEcran(page, '[data-action="valider"]'), `${nom} : Valider revenu`);
+        await page.locator('[data-action="clavier"]').click();
+        await stabiliser(page);
         // Graine 12 : « x + 1 = 6 ».
         await page.locator('.touches button[aria-label="5"]').click();
         await page.locator(".touches .confirmer").click();
@@ -277,20 +308,18 @@ test(
         await page.goto(adresse);
         await page.locator(".reponses").waitFor();
         await page.locator('[data-action="aide"]').click();
-        await page.locator(".champ").first().click();
         await stabiliser(page);
         assert.equal(
           await page.locator(".clavier").isVisible(),
           true,
-          `${nom} : clavier avec l’aide`,
+          `${nom} : le clavier reste ouvert avec l’aide`,
         );
         const aide = await page.locator(".aide svg").boundingBox();
         const touches = await page.locator(".clavier").boundingBox();
-        assert.ok(
-          aide.y >= 0 && aide.y + aide.height <= touches.y,
-          `${nom} : dessin visible au-dessus du clavier`,
-        );
-        assert.ok(await dansEcran(page, '[data-action="valider"]'), `${nom} : Valider avec l’aide`);
+        assert.ok(aide.y >= 0, `${nom} : dessin visible`);
+        if (width === 820)
+          assert.ok(aide.y + aide.height <= touches.y, `${nom} : dessin au-dessus du clavier`);
+        else assert.ok(aide.x + aide.width <= touches.x, `${nom} : dessin à gauche du clavier`);
         await page.screenshot({ path: resolve(captures, `${nom}-aide-clavier.png`) });
         await page.close();
       }
@@ -390,13 +419,14 @@ test(
       await page.clock.install();
       await page.locator('[data-action="projeter"]').click();
       await page.clock.runFor(5400);
-      assert.match(await page.locator(".question-entete").innerText(), /2 \/ 2/);
+      assert.match(await page.locator(".barre-question .centre").innerText(), /2 \/ 2/);
       await page.keyboard.press("Space");
       const temps = await page.locator("#temps").innerText();
       await page.clock.fastForward(10000);
       assert.equal(await page.locator("#temps").innerText(), temps, "Pause par espace");
       await page.goto(base);
       await page.locator('[data-action="brevet"]').click();
+      await page.locator('[data-action="brevet-commencer"]').click();
       assert.equal(await page.locator(".navigation-points button").count(), 9);
       await page.clock.fastForward(1201000);
       await page.locator(".score").waitFor();
