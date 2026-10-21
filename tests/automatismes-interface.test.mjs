@@ -647,40 +647,68 @@ test(
   },
 );
 
+// Corrections après C7 (K1) : la bulle cachait le point A (EG02-a, graine 9) et la lettre C (EG06-d).
+// L'aide d'une question à figure passe sous la carte ; la figure reste entière et rien ne la couvre.
+async function figureDecouverte(page) {
+  return page.evaluate(() => {
+    const figure = document.querySelector(".carte .figure > svg").getBoundingClientRect();
+    const zone = document.querySelector(".espace-question").getBoundingClientRect();
+    const haut = Math.max(figure.top, zone.top);
+    const bas = Math.min(figure.bottom, zone.bottom);
+    const couverts = [];
+    for (let i = 1; i < 8; i++)
+      for (let j = 1; j < 8; j++) {
+        const x = figure.left + (figure.width * i) / 8;
+        const y = haut + ((bas - haut) * j) / 8;
+        const element = document.elementFromPoint(x, y);
+        if (!element?.closest(".carte .figure > svg"))
+          couverts.push([Math.round(x), Math.round(y)]);
+      }
+    return couverts;
+  });
+}
+
+const positionQuestion = (page) =>
+  page.evaluate(() =>
+    [".carte .consigne", ".carte .reponses"].map(
+      (selecteur) => document.querySelector(selecteur).getBoundingClientRect().top,
+    ),
+  );
+
 test(
-  "figure (coque V2) : l'aide en bulle sur la figure, la question ne bouge pas, le clavier reste",
-  { skip: ignorer, timeout: 60000 },
+  "figure (coque V2, K1) : l'aide sous la carte, rien sur la figure, la question ne bouge pas",
+  { skip: ignorer, timeout: 90000 },
   async () => {
     const { serveur, base } = await serveurLocal();
     const browser = await ouvrirNavigateur();
     try {
       for (const [width, height, tactile] of [
         [390, 844, true],
+        [375, 667, true],
         [1366, 768, false],
       ]) {
-        const page = await browser.newPage({
-          viewport: { width, height },
-          isMobile: tactile,
-          hasTouch: tactile,
-        });
-        await page.goto(`${base}?notion=EG06&forme=d&graine=12`);
-        await page.locator(".carte .figure svg").waitFor();
-        await stabiliser(page);
-        const haut = () =>
-          page.locator(".carte .reponses").evaluate((el) => el.getBoundingClientRect().top);
-        const avant = await haut();
-        await page.locator('.carte [data-action="aide"]').click();
-        await page.locator(".bulle-aide").waitFor();
-        await stabiliser(page);
-        assert.equal(
-          await page.locator(".espace-question > .aide").count(),
-          0,
-          "Rien sous la carte",
-        );
-        assert.ok(Math.abs((await haut()) - avant) <= 1, `${width} : la question ne bouge pas`);
-        if (tactile)
-          assert.equal(await page.locator(".clavier").isVisible(), true, "Clavier gardé");
-        await page.close();
+        for (const adresse of ["notion=EG02&forme=a&graine=9", "notion=EG06&forme=d&graine=12"]) {
+          const page = await browser.newPage({
+            viewport: { width, height },
+            isMobile: tactile,
+            hasTouch: tactile,
+          });
+          const nom = `${adresse} ${width}x${height}`;
+          await page.goto(`${base}?${adresse}`);
+          await page.locator(".carte .figure svg").waitFor();
+          await stabiliser(page);
+          const avant = await positionQuestion(page);
+          await page.locator('.carte [data-action="aide"]').click();
+          await page.locator(".espace-question > .aide").waitFor();
+          await stabiliser(page);
+          assert.equal(await page.locator(".bulle-aide").count(), 0, `${nom} : pas de bulle`);
+          assert.deepEqual(await figureDecouverte(page), [], `${nom} : rien ne couvre la figure`);
+          const apres = await positionQuestion(page);
+          apres.forEach((haut, rang) =>
+            assert.ok(Math.abs(haut - avant[rang]) <= 1, `${nom} : la question ne bouge pas`),
+          );
+          await page.close();
+        }
       }
     } finally {
       await browser.close();

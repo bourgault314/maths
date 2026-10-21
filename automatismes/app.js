@@ -887,9 +887,11 @@ function rectifierElisions(racine) {
 
 /* La règle de taille de la coque V2 (fonction ajuster de la maquette, portée ici). Priorité : la
    question (texte + cases) > la figure de la question (≥ 70 %) > le dessin d'aide (≥ 76 %) > le
-   clavier. Le dessin d'aide grandit jusqu'à × 1,5 si la fenêtre fait 700 px de large ou plus, × 2,2 en
-   projection. Si l'aide ne tient toujours pas, le clavier se range ; toucher une case le fait revenir
-   (ciblerChamp). Sans aide ouverte, seule la figure se réduit (jusqu'à 60 %) pour que la question tienne.
+   clavier. La figure fait partie de la question : sa taille se fixe à l'arrivée et ne change plus
+   quand l'aide s'ouvre (K1). Le dessin d'aide grandit jusqu'à × 1,5 si la fenêtre fait 700 px de
+   large ou plus, × 2,2 en projection. Si l'aide ne tient toujours pas, le clavier se range ; toucher
+   une case le fait revenir (ciblerChamp). Sans aide ouverte, seule la figure se réduit (jusqu'à
+   60 %) pour que la question tienne.
    Les pourcentages se comptent sur la taille de départ du dessin, ramenée à sa taille naturelle au
    plus : un dessin du moteur plus large que la colonne (550 px) part déjà réduit à la largeur. */
 function largeurNaturelle(dessin) {
@@ -923,6 +925,8 @@ function reduireCalculs(zone) {
   });
 }
 
+// La taille de la figure trouvée à l'arrivée sur la question (même question, même fenêtre) : ouvrir ou
+// fermer l'aide, l'explication ou la bulle ne la change plus (K1) — la question ne bouge pas (R5b).
 let figureGardee = { cle: "", echelle: 1 };
 function ajusterQuestion() {
   const zone = document.querySelector(".espace-question");
@@ -931,8 +935,6 @@ function ajusterQuestion() {
   const projection = seance?.mode === "project";
   const aide = zone.querySelector(".aide .dessin svg, .explication .dessin svg");
   const figure = zone.querySelector(".carte .figure > svg");
-  // La bulle posée sur la figure n'ajoute aucune hauteur : la figure garde alors sa règle « sans
-  // aide » (60 %), sinon elle grandirait et la question bougerait à l'ouverture de l'aide (R5b).
   const aideOuverte = Boolean(zone.querySelector(".aide, .explication"));
   const trop = () => zone.scrollHeight > zone.clientHeight + 1;
   const depart = (dessin, maximum) => {
@@ -940,26 +942,23 @@ function ajusterQuestion() {
     return naturelle ? Math.min(maximum, dessin.parentElement.clientWidth / naturelle) : 0;
   };
   const maxAide = projection ? 2.2 : innerWidth >= 700 ? 1.5 : 1;
+  const cle = [seance.id, seance.index, innerWidth, innerHeight].join("|");
+  if (figure && figureGardee.cle === cle) poserDessin(figure, figureGardee.echelle);
+  else if (figure) {
+    poserDessin(aide, 0.2);
+    let echelleFigure = depart(figure, 1);
+    const planFigure = (aideOuverte ? 0.7 : 0.6) * echelleFigure;
+    poserDessin(figure, echelleFigure);
+    while (trop() && echelleFigure - 0.02 >= planFigure)
+      poserDessin(figure, (echelleFigure -= 0.02));
+    figureGardee = { cle, echelle: echelleFigure };
+  }
   const essayer = () => {
     let echelleAide = depart(aide, maxAide);
-    let echelleFigure = depart(figure, 1);
     const planAide = 0.76 * Math.min(1, echelleAide);
-    const planFigure = (aideOuverte ? 0.7 : 0.6) * echelleFigure;
     poserDessin(aide, echelleAide);
-    // Sans rien dessous (la bulle comprise), la figure garde la taille trouvée à l'arrivée sur la
-    // question : ouvrir l'aide ne la change pas d'un pixel.
-    const clavierVisible = !document.querySelector(".clavier")?.hidden;
-    const cle = [seance.id, seance.index, innerWidth, innerHeight, clavierVisible].join("|");
-    if (figure && !aideOuverte && figureGardee.cle === cle) {
-      poserDessin(figure, figureGardee.echelle);
-      return;
-    }
-    poserDessin(figure, echelleFigure);
     while (trop() && aide && echelleAide - 0.02 >= planAide)
       poserDessin(aide, (echelleAide -= 0.02));
-    while (trop() && figure && echelleFigure - 0.02 >= planFigure)
-      poserDessin(figure, (echelleFigure -= 0.02));
-    if (figure && !aideOuverte) figureGardee = { cle, echelle: echelleFigure };
   };
   essayer();
   const clavier = document.querySelector(".clavier");
