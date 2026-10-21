@@ -3231,7 +3231,7 @@
        lignes (la notice d'avant a été retirée avec la clé, lot 2b). -->
   <template id="notice-seance">
     <p><b>Ma séance du jour.</b> 4&nbsp;étapes (parfois 5), environ 5&nbsp;min. Réussi&nbsp;: j’avance. Raté&nbsp;: je reprends un peu plus bas.</p>
-    <p><b>Ma table.</b> De marche en marche&nbsp;: les perles, la bande, dans l’ordre, dans le désordre, les nombres manquants et les divisions… jusqu’à «&nbsp;Je passe le test&nbsp;»&nbsp;: 20&nbsp;questions en 1&nbsp;min&nbsp;30, 2&nbsp;erreurs au plus.</p>
+    <p><b>Ma table.</b> De marche en marche&nbsp;: les perles, la bande, dans l’ordre, dans le désordre, les nombres manquants et les divisions… jusqu’à «&nbsp;Je passe le test&nbsp;»&nbsp;: 20&nbsp;questions en 1&nbsp;min&nbsp;30, une erreur au plus.</p>
     <p><b>Ma rangée.</b> En gris quand je l’ai construite, puis les couleurs de Mes calculs&nbsp;: rouge&nbsp;à&nbsp;revoir, bleu&nbsp;en&nbsp;route, vert&nbsp;su.</p>
     <p><b>Mes calculs du jour.</b> D’abord, chaque jour&nbsp;: 10&nbsp;calculs de mes tables passées, en 1&nbsp;minute. Réussi, un calcul revient plus tard. Raté, il revient demain.</p>
     <p><b>Mon mélange.</b> Mes tables passées mélangées&nbsp;: 20&nbsp;questions en 1&nbsp;min&nbsp;30. À 3, puis 6&nbsp;tables, il passe avant le test jusqu’à ce que je gagne la coupe.</p>
@@ -3246,7 +3246,7 @@
   </footer>
 
   <script src="./defi_tables_core.js?v=20261015-1"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20261016-1"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20261021-1"></script>
   <script>
     (() => {
       "use strict";
@@ -7575,7 +7575,9 @@
           verdict.titre = "Pas encore";
           verdict.config = rappelCourt();
           // Lot « test : pas deux fois le même calcul » (16/10/2026, choix de
-          // Gwenaël) : « 18 sur 20 — mais 7 × 8 raté deux fois ».
+          // Gwenaël) : « 18 sur 20 — mais 7 × 8 raté deux fois ». Depuis le
+          // lot « une erreur au plus » (21/10), 18 ne suffit plus : l'écran
+          // dit « il en faut 19 » (assez reste faux).
           const assez = principal.rateDeuxFois && principal.score >= seuilDe(principal);
           verdict.score = assez
             ? `${sur(principal.score, principal.total)} — mais ${libelleRateDeuxFois(principal)} raté\u00a0deux\u00a0fois`
@@ -7974,7 +7976,7 @@
       // de bonnes réponses pour réussir, avec un exemple pris dans SA table
       // (validation, mélange). Rien pour les réglages libres.
       // Lot « Mon parcours » (point 5, version B de Gwenaël) : moins de texte.
-      // « 18 bonnes réponses pour réussir. », puis l'exemple en trois
+      // « 19 bonnes réponses pour réussir. » (18 avant le 21/10), puis l'exemple en trois
       // pastilles un peu plus grosses (7 × 4 = ? · 7 × ? = 28 · 28 ÷ 7 = ?) —
       // c'est là que l'élève voit qu'il y aura des divisions —, sans « Par
       // exemple » ni « ou » (un « · » entre deux calculs se lisait « fois »,
@@ -10968,7 +10970,7 @@
         const preparation = trouve("preparation");
         if (preparation) return preparation.reussi
           ? "Maintenant, passe le test en 1 min 30."
-          : "Continue à t’entraîner, puis vise 18 sur 20 en 1 min 30.";
+          : `Continue à t’entraîner, puis vise ${PARCOURS.SEUILS.validation.total - PARCOURS.SEUILS.validation.erreursMax} sur ${PARCOURS.SEUILS.validation.total} en 1 min 30.`;
         const entraine = trouve("entraine");
         if (entraine && entraine.reussi && entraine.pret) {
           // Les trois réussis : « tu peux valider » seulement si les 8 calculs
