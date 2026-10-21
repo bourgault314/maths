@@ -25,6 +25,7 @@ import {
   professeurHTML,
   bilanHTML,
   brevetHTML,
+  lancementHTML,
   bouton,
   ICONES,
 } from "./vues.js";
@@ -110,11 +111,32 @@ function cadre(contenu) {
     <img src="../assets/img/logos/mathsgo/logo-390.png" alt="maths&go"></a>
     <span>Sans calculatrice · Collège et brevet</span></footer>`;
   application.innerHTML = `<div class="coque">
-    <main class="cadre">${barreCadre}<div class="contenu">${contenu}</div></main>
+    <main class="cadre">${barreCadre}<div class="contenu">${contenu}</div>
+      ${ecran === "accueil" || ecran === "domaine" ? '<div id="lancement"></div>' : ""}</main>
     ${question ? "" : pied}
   </div>`;
   relierActions();
+  majLancement();
   ajusterAffichage();
+}
+
+// La barre de lancement suit la sélection (accueil et domaines) ; rien de coché, pas de barre.
+function majLancement() {
+  const zone = document.querySelector("#lancement");
+  if (!zone) return;
+  zone.innerHTML = lancementHTML(selection.size, preferences.nombre);
+  relierActions(zone);
+  ajusterAffichage();
+}
+
+// La sélection de l'élève part avec sa série : elle est vidée au lancement.
+function lancerSelection() {
+  const ids = famillesEligibles(catalogue, filtre)
+    .filter((famille) => selection.has(famille.id))
+    .map((famille) => famille.id);
+  if (!ids.length) return;
+  selection.clear();
+  lancer({ mode: "train", ids, nombre: preferences.nombre });
 }
 
 function afficherAccueil() {
@@ -122,14 +144,15 @@ function afficherAccueil() {
   ecran = "accueil";
   seance = null;
   history.replaceState(null, "", location.pathname);
-  cadre(accueilHTML(famillesEligibles(catalogue, filtre), filtre));
+  cadre(accueilHTML(famillesEligibles(catalogue, filtre), filtre, selection));
 }
 
 function afficherDomaine(id) {
   ecran = "domaine";
   domaine = id;
   const familles = famillesEligibles(catalogue, filtre).filter((famille) => famille.domaine === id);
-  cadre(domaineHTML(id, familles, filtre, preferences.nombre));
+  cadre(domaineHTML(id, familles, filtre, selection));
+  relierSelection();
 }
 
 function afficherBrevet() {
@@ -153,6 +176,9 @@ function changerNiveau(niveau) {
   filtre = niveau;
   preferences.niveau = niveau;
   sauverPreferences();
+  // Les notions cochées qui ne sont plus de ce niveau quittent la sélection.
+  const eligibles = new Set(famillesEligibles(catalogue, niveau).map((famille) => famille.id));
+  for (const id of [...selection]) if (!eligibles.has(id)) selection.delete(id);
   if (ecran === "prof") afficherProfesseur();
   else if (ecran === "domaine") afficherDomaine(domaine);
   else afficherAccueil();
@@ -540,24 +566,38 @@ function lireReglages() {
   reglageProf.aideOffice = Boolean(document.querySelector("#aide-office")?.checked);
 }
 
+// Une seule mécanique de sélection pour l'élève (écran de domaine) et le prof (page Diaporama) :
+// une case par notion, une case « tout » par groupe, la même liste `selection`.
 function relierSelection() {
   document.querySelectorAll("[data-selection]").forEach((caseNotion) => {
     caseNotion.onchange = () => {
       if (caseNotion.checked) selection.add(caseNotion.dataset.selection);
       else selection.delete(caseNotion.dataset.selection);
+      majCasesTout();
+      majLancement();
     };
   });
   document.querySelectorAll("[data-selection-domaine]").forEach((caseDomaine) => {
     caseDomaine.onclick = (evenement) => evenement.stopPropagation();
     caseDomaine.onchange = () => {
+      const coche = caseDomaine.checked;
       caseDomaine
-        .closest("details")
+        .closest(".groupe-selection")
         .querySelectorAll("[data-selection]")
         .forEach((caseNotion) => {
-          caseNotion.checked = caseDomaine.checked;
+          caseNotion.checked = coche;
           caseNotion.dispatchEvent(new Event("change"));
         });
     };
+  });
+}
+
+function majCasesTout() {
+  document.querySelectorAll("[data-selection-domaine]").forEach((caseDomaine) => {
+    const cases = [
+      ...caseDomaine.closest(".groupe-selection").querySelectorAll("[data-selection]"),
+    ];
+    caseDomaine.checked = cases.length > 0 && cases.every((caseNotion) => caseNotion.checked);
   });
 }
 
@@ -677,21 +717,14 @@ function retour() {
   afficherAccueil();
 }
 
-function relierActions() {
+function relierActions(racine = application) {
   const actions = {
     accueil: afficherAccueil,
     retour,
     prof: afficherProfesseur,
     brevet: afficherBrevet,
     "brevet-commencer": () => lancer({ mode: "exam", nombre: 9 }),
-    melanger: () =>
-      lancer({
-        mode: "train",
-        ids: famillesEligibles(catalogue, filtre)
-          .filter((famille) => famille.domaine === domaine)
-          .map((famille) => famille.id),
-        nombre: preferences.nombre,
-      }),
+    lancer: lancerSelection,
     aide: () => (etatCourant().aideOuverte ? fermerAide() : ouvrirAide()),
     etape: () => ouvrirAide(true),
     clavier: basculerClavier,
@@ -711,30 +744,28 @@ function relierActions() {
         : document.documentElement.requestFullscreen(),
     encore: () => lancer({ ...seance.options, graine: nouvelleGraine() }),
   };
-  application.querySelectorAll("[data-action]").forEach((element) => {
+  racine.querySelectorAll("[data-action]").forEach((element) => {
     element.onclick = (evenement) => {
       evenement.preventDefault();
       actions[element.dataset.action]?.();
     };
   });
-  application.querySelectorAll("[data-niveau]").forEach((element) => {
+  racine.querySelectorAll("[data-niveau]").forEach((element) => {
     element.onclick = () => changerNiveau(element.dataset.niveau);
   });
-  application.querySelectorAll("[data-nombre]").forEach((element) => {
+  racine.querySelectorAll("[data-nombre]").forEach((element) => {
     element.onclick = () => {
-      preferences.nombre = Number(element.dataset.nombre);
+      const valeur = Number(element.dataset.nombre);
+      if (![5, 10, 15, 20].includes(valeur)) return;
+      preferences.nombre = valeur;
       sauverPreferences();
-      afficherDomaine(domaine);
+      majLancement();
     };
   });
-  application.querySelectorAll("[data-domaine]").forEach((element) => {
+  racine.querySelectorAll("[data-domaine]").forEach((element) => {
     element.onclick = () => afficherDomaine(element.dataset.domaine);
   });
-  application.querySelectorAll("[data-notion]").forEach((element) => {
-    element.onclick = () =>
-      lancer({ mode: "train", ids: [element.dataset.notion], nombre: preferences.nombre });
-  });
-  application.querySelectorAll("[data-question]").forEach((element) => {
+  racine.querySelectorAll("[data-question]").forEach((element) => {
     element.onclick = () => changerQuestion(Number(element.dataset.question));
   });
 }

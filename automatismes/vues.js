@@ -20,22 +20,38 @@ export function filtresHTML(filtre) {
   </div>`;
 }
 
-export function accueilHTML(familles, filtre) {
+// Sur chaque carte : « n notions », ou « k sur n » dès que k notions du domaine sont cochées.
+export function accueilHTML(familles, filtre, selection) {
   return `<section class="accueil">
     <h1>Automatismes</h1>
     ${filtresHTML(filtre)}
     <div class="domaines">${DOMAINES.map(([id, nom]) => {
-      const nombre = familles.filter((famille) => famille.domaine === id).length;
-      return `<button class="domaine-carte" data-domaine="${id}" ${nombre ? "" : "disabled"}>
+      const liste = familles.filter((famille) => famille.domaine === id);
+      const nombre = liste.length;
+      const coches = liste.filter((famille) => selection.has(famille.id)).length;
+      const compte = coches
+        ? `${coches} sur ${nombre}`
+        : `${nombre} notion${nombre > 1 ? "s" : ""}`;
+      return `<button class="domaine-carte ${coches ? "avec-selection" : ""}" data-domaine="${id}" ${nombre ? "" : "disabled"}>
         <span class="icone" aria-hidden="true">${ICONES_DOMAINES[id] || ""}</span>
-        <span class="nom">${nom}<small>${nombre} notion${nombre > 1 ? "s" : ""}</small></span><span class="chevron" aria-hidden="true">›</span>
+        <span class="nom">${nom}<small>${compte}</small></span><span class="chevron" aria-hidden="true">›</span>
       </button>`;
     }).join("")}</div>
     ${bouton("Entraînement brevet · 9 questions · 20 min", "brevet", "secondaire brevet")}
   </section>`;
 }
 
-export function nombreHTML(nombre) {
+/* La barre de lancement, en bas du cadre sur l'accueil et les domaines, dès qu'une notion est cochée :
+   « N notions » · 5 · 10 · 15 · 20 · Lancer. Absente quand rien n'est coché. */
+export function lancementHTML(compte, nombre) {
+  if (!compte) return "";
+  return `<div class="barre-lancement">
+    <span class="compte" aria-live="polite">${compte} notion${compte > 1 ? "s" : ""}</span>
+    ${nombreHTML(nombre)}${bouton("Lancer", "lancer", "orange")}
+  </div>`;
+}
+
+function nombreHTML(nombre) {
   return `<div class="nombre-questions" role="group" aria-label="Nombre de questions">
     <span>Questions</span>${[5, 10, 15, 20]
       .map(
@@ -46,23 +62,28 @@ export function nombreHTML(nombre) {
       .join("")}</div>`;
 }
 
-export function domaineHTML(domaine, familles, filtre, nombre) {
+/* Le domaine : une case par notion (toute la ligne coche ou décoche), « Tout le domaine » en tête.
+   Un tap ne lance rien : la série part de la barre de lancement. */
+export function domaineHTML(domaine, familles, filtre, selection) {
   const nom = DOMAINES.find(([id]) => id === domaine)?.[1] || "Notions";
+  const tout = familles.length && familles.every((famille) => selection.has(famille.id));
   return `<div class="entete-domaine"><span class="icone" aria-hidden="true">${ICONES_DOMAINES[domaine] || ""}</span>
     <h1>${nom}</h1></div>
-    <div class="reglages-domaine">${filtresHTML(filtre)}${nombreHTML(nombre)}</div>
-    ${bouton("Mélanger ce domaine", "melanger", "primaire")}
-    <div class="liste-notions">${familles
-      .map((famille) => {
-        const formes = formesEligibles(famille, filtre);
-        return `<button class="notion" data-notion="${famille.id}">
-        <span class="nom">${esc(famille.nom)}<span class="badges">
-          <span class="badge">${famille.niveaux.join(" · ")}</span>
-          ${formes.some((forme) => forme.brevet) ? '<span class="badge brevet">Brevet</span>' : ""}
-        </span></span><span class="chevron" aria-hidden="true">›</span>
-      </button>`;
-      })
-      .join("")}</div>`;
+    <div class="reglages-domaine">${filtresHTML(filtre)}</div>
+    <div class="liste-notions groupe-selection">
+      <label class="notion tout-domaine"><input type="checkbox" data-selection-domaine="${domaine}"
+        ${tout ? "checked" : ""}><span class="nom">Tout le domaine</span></label>
+      ${familles
+        .map((famille) => {
+          const formes = formesEligibles(famille, filtre);
+          return `<label class="notion"><input type="checkbox" data-selection="${famille.id}"
+          ${selection.has(famille.id) ? "checked" : ""}>
+          <span class="nom">${esc(famille.nom)}<span class="badges">
+            <span class="badge">${famille.niveaux.join(" · ")}</span>
+            ${formes.some((forme) => forme.brevet) ? '<span class="badge brevet">Brevet</span>' : ""}
+          </span></span></label>`;
+        })
+        .join("")}</div>`;
 }
 
 export function enonceHTML(question) {
@@ -270,7 +291,7 @@ export function professeurHTML(familles, filtre, options, selection) {
     </div><div class="selection-notions"><h2>Notions</h2>${DOMAINES.map(([domaine, nom]) => {
       const liste = familles.filter((famille) => famille.domaine === domaine);
       const coches = liste.length && liste.every((famille) => selection.has(famille.id));
-      return `<details class="selection-domaine"><summary>
+      return `<details class="selection-domaine groupe-selection"><summary>
         <input type="checkbox" data-selection-domaine="${domaine}" aria-label="Choisir ${nom}" ${coches ? "checked" : ""}>
         ${nom} <span>${liste.length}</span></summary>
         ${liste

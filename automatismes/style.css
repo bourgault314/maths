@@ -430,8 +430,7 @@ label {
 }
 .notion {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  min-height: 64px;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 12px;
   align-items: center;
   min-height: 72px;
@@ -441,6 +440,48 @@ label {
   color: var(--encre);
   background: var(--papier);
   text-align: left;
+  cursor: pointer;
+}
+/* Une case par notion : toute la ligne coche ou décoche. */
+.notion input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  accent-color: var(--bleu);
+  cursor: pointer;
+}
+.notion:has(input:checked) {
+  border-color: var(--bleu);
+  background: var(--fond-doux);
+}
+.notion.tout-domaine {
+  min-height: 56px;
+}
+.notion.tout-domaine .nom {
+  color: var(--bleu-identite);
+  font-weight: 800;
+}
+.domaine-carte.avec-selection {
+  border-color: var(--bleu);
+}
+.domaine-carte.avec-selection small {
+  color: var(--bleu-identite);
+  font-weight: 800;
+}
+/* La barre de lancement, fixée en bas du cadre : N notions · 5 · 10 · 15 · 20 · Lancer. */
+.barre-lancement {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  flex: 0 0 auto;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--ligne);
+}
+.barre-lancement .compte {
+  font-weight: 800;
+  white-space: nowrap;
 }
 .notion:hover {
   border-color: var(--bleu);
@@ -1513,6 +1554,15 @@ body.projection .minuteur {
   .notion {
     padding: 12px;
     gap: 8px;
+  }
+  /* Téléphone : « N notions » et Lancer sur une ligne, le nombre de questions dessous. */
+  .barre-lancement {
+    flex-wrap: wrap;
+  }
+  .barre-lancement .nombre-questions {
+    order: 3;
+    width: 100%;
+    justify-content: center;
   }
   .liste-resultats summary {
     grid-template-columns: 28px minmax(0, 1fr) auto;

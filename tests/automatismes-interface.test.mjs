@@ -152,7 +152,16 @@ test(
         await page.locator(".domaines").waitFor();
         await photo(page, "accueil", mesures);
         await page.locator('[data-domaine="nombres-calculs"]').click();
+        assert.equal(
+          await page.locator(".barre-lancement").count(),
+          0,
+          "Rien de coché, pas de barre",
+        );
+        await page.locator('[data-selection="NC27"]').check();
+        await page.locator(".barre-lancement").getByText("1 notion").waitFor();
         await photo(page, "domaine", mesures);
+        await page.locator('[data-action="lancer"]').click();
+        await page.locator(".barre-question .centre").getByText("1 / 10").waitFor();
         await question(page, base);
         await photo(page, "question-clavier", mesures);
         await verifierCommandes(page);
@@ -214,6 +223,77 @@ test(
       }
       assert.deepEqual(erreurs, []);
       await writeFile(resolve(captures, "mesures.json"), JSON.stringify(mesures, null, 2) + "\n");
+    } finally {
+      await browser.close();
+      await new Promise((fin) => serveur.close(fin));
+    }
+  },
+);
+
+test(
+  "sélection : deux notions de deux domaines, une seule série qui les mélange",
+  { skip: ignorer, timeout: 90000 },
+  async () => {
+    const { serveur, base } = await serveurLocal();
+    const browser = await ouvrirNavigateur();
+    const erreurs = [];
+    try {
+      const page = await browser.newPage({ viewport: { width: 1366, height: 768 } });
+      page.on("pageerror", (erreur) => erreurs.push(erreur.message));
+      await page.goto(base);
+      await page.locator('[data-domaine="nombres-calculs"]').click();
+      await page.locator('[data-selection="NC27"]').check();
+      await page.locator('[data-action="retour"]').click();
+      await page.locator(".domaines").waitFor();
+      assert.match(
+        await page.locator('[data-domaine="nombres-calculs"] small').innerText(),
+        /^1 sur \d+$/,
+      );
+      assert.equal(await page.locator(".barre-lancement .compte").innerText(), "1 notion");
+      await page.locator('[data-domaine="espace-geometrie"]').click();
+      assert.equal(await page.locator('[data-selection="EG12"]').isChecked(), false);
+      await page.locator('[data-selection="EG12"]').check();
+      assert.equal(await page.locator(".barre-lancement .compte").innerText(), "2 notions");
+      await page.locator('[data-action="lancer"]').click();
+      const notions = new Set();
+      while ((await page.evaluate(() => document.body.dataset.ecran)) === "question") {
+        notions.add(await page.locator(".barre-question .notion-nom").innerText());
+        await page.locator('[data-action="passer"]').click();
+        await page.locator('[data-action="suivante"]').click();
+      }
+      assert.deepEqual(
+        [...notions].sort((a, b) => a.localeCompare(b, "fr")),
+        ["Équations à une ou deux étapes", "Rapports trigonométriques"],
+      );
+      // La sélection part avec la série : de retour à l'accueil, plus rien n'est coché.
+      await page.locator('[data-action="accueil"]').click();
+      assert.equal(await page.locator(".barre-lancement").count(), 0);
+      assert.deepEqual(erreurs, []);
+    } finally {
+      await browser.close();
+      await new Promise((fin) => serveur.close(fin));
+    }
+  },
+);
+
+test(
+  "sélection : changer de niveau retire les notions qui n’en sont plus",
+  { skip: ignorer, timeout: 60000 },
+  async () => {
+    const { serveur, base } = await serveurLocal();
+    const browser = await ouvrirNavigateur();
+    try {
+      const page = await browser.newPage({ viewport: { width: 1366, height: 768 } });
+      await page.goto(base);
+      await page.locator('[data-domaine="nombres-calculs"]').click();
+      await page.locator('[data-selection-domaine="nombres-calculs"]').check();
+      const avant = Number.parseInt(await page.locator(".barre-lancement .compte").innerText());
+      await page.locator('[data-niveau="6e"]').click();
+      const apres = Number.parseInt(await page.locator(".barre-lancement .compte").innerText());
+      // Le compteur ne garde que les notions cochées encore visibles en 6e.
+      const cochees = await page.locator("[data-selection]:checked").count();
+      assert.ok(apres < avant, `6e : moins de notions (${avant} → ${apres})`);
+      assert.equal(apres, cochees, "Le compteur = les cases cochées de 6e");
     } finally {
       await browser.close();
       await new Promise((fin) => serveur.close(fin));
