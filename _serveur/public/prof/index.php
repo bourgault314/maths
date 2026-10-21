@@ -300,9 +300,9 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   /* dans le Détail : la rangée d'un monde fermé à la classe, plus pâle, avec un cadenas */
   .detail-monde.ferme { opacity: .5; }
   /* Le papier (lot 7). Deux impressions distinctes, jamais ensemble : les
-     BANDELETTES à distribuer (adresse, code, consigne — aucun prénom du côté
-     donné à l'élève) et la FEUILLE prénom ↔ code, que le professeur garde.
-     À l'écran, ni l'une ni l'autre ne s'affiche. */
+     BANDELETTES à distribuer (numéro, prénom, adresse, code, consigne : une
+     par élève, d'un seul tenant) et la FEUILLE prénom ↔ code, que le
+     professeur garde. À l'écran, ni l'une ni l'autre ne s'affiche. */
   .fiche, .bandelettes, .note-impression { display: none; }
   .fiche h2 { margin-top: 0; }
   .fiche table { font-size: 1rem; }
@@ -312,18 +312,20 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
                           border-radius: 2mm; font-size: .82rem; color: #333; }
   .bandelettes h2 { margin: 0 0 2mm; }
   .bandelettes-liste { list-style: none; margin: 0; padding: 0; }
-  /* Une bandelette = une souche (le professeur la détache et la garde : le
-     numéro et le prénom, JAMAIS le code) et la partie remise à l'élève
-     (l'adresse, le code, la consigne, JAMAIS le prénom). Séparées, aucune des
-     deux n'associe un enfant à un code : ce lien n'existe que sur la feuille
-     récapitulative, imprimée à part. */
+  /* Une bandelette = une seule pièce, remise à l'élève : à gauche son numéro
+     et son prénom, à droite l'adresse, son code et la consigne (lot « Ma
+     classe : tri et bandelette », 21/10/2026). Avant, une souche (numéro et
+     prénom) se détachait et restait au professeur ; elle ne protégeait rien
+     — qui tape un code voit de toute façon le prénom et la classe — et une
+     bandelette sans prénom pouvait s'échanger à la distribution. Le cadre en
+     pointillés sépare les bandelettes sur la feuille ; plus de trait au milieu. */
   .bandelette { display: flex; align-items: stretch; margin: 0 0 2mm; line-height: 1.35;
                 border: 1px dashed #8a8a8a; border-radius: 2mm;
                 break-inside: avoid; page-break-inside: avoid; }
-  .bandelette .souche { flex: 0 0 40mm; display: flex; align-items: center; gap: 3mm;
-                        padding: 2mm 3mm; border-right: 1px dashed #8a8a8a; }
-  .bandelette .souche .numero { font-weight: 800; color: #666; font-size: .85rem; }
-  .bandelette .souche .nom { font-weight: 700; }
+  .bandelette .identite { flex: 0 0 40mm; display: flex; align-items: center; gap: 3mm;
+                          padding: 2mm 3mm; }
+  .bandelette .identite .numero { font-weight: 800; color: #666; font-size: .85rem; }
+  .bandelette .identite .nom { font-weight: 700; }
   .bandelette .part { flex: 1; padding: 2mm 4mm; }
   .bandelette .marque { font-family: Georgia, serif; font-weight: 700; font-size: .88rem; color: #063f86; }
   .bandelette .marque .appli { margin-left: 6px; font-family: inherit; font-weight: 400; color: #444; }
@@ -747,7 +749,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       <div class="barre-outils">
         <button type="button" class="secondaire" id="ajouter">Ajouter des élèves</button>
         <button type="button" class="secondaire" id="coller-prenoms">Coller la liste des prénoms</button>
-        <button type="button" class="secondaire" id="imprimer-bandelettes" title="À découper et à distribuer : une par élève, son code sans son prénom">Imprimer les bandelettes</button>
+        <button type="button" class="secondaire" id="imprimer-bandelettes" title="À découper et à distribuer : une par élève, avec son prénom et son code">Imprimer les bandelettes</button>
         <button type="button" class="secondaire" id="imprimer-recap" title="À garder : le seul papier qui relie chaque prénom à son code">Imprimer la feuille prénom&nbsp;↔&nbsp;code</button>
       </div>
       <!-- Le message des boutons ci-dessus (ajout, collage, nouveau code) :
@@ -852,19 +854,19 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
 
     <!-- Ce qui sort de l'imprimante (lot 7).
 
-         1. LES BANDELETTES, à découper et à distribuer. La partie remise à
-            l'enfant porte l'adresse, son code et la consigne, et RIEN d'autre :
-            une bandelette trouvée par terre est un code sans nom. La souche,
-            que le professeur détache et garde, porte le numéro et le prénom, et
-            PAS le code : une souche perdue est un nom sans code.
+         1. LES BANDELETTES, à découper et à distribuer, une par élève et
+            d'un seul tenant : son numéro, son prénom, l'adresse, son code et
+            la consigne. Le prénom évite qu'elles s'échangent à la
+            distribution ; il n'apprend rien à qui trouverait la bandelette
+            et taperait le code — l'espace élève affiche de toute façon le
+            prénom et la classe. Une bandelette perdue se règle par « Nouveau
+            code » (menu ⋯ de l'onglet Élèves).
          2. LA FEUILLE PRÉNOM ↔ CODE, imprimée à part. C'est le seul papier qui
             associe les deux ; il est fait pour rester dans le classeur du
             professeur, et il le dit en haut. -->
     <div class="bandelettes" id="bandelettes">
       <h2 id="bandelettes-titre"></h2>
-      <p class="avertissement-papier">Découpe sur les pointillés. Tu détaches la souche de gauche
-      (numéro et prénom) et tu la gardes ; l’élève reçoit la partie de droite, qui ne porte pas son
-      prénom. Les numéros sont les mêmes que sur la feuille prénom ↔ code.</p>
+      <p class="avertissement-papier" id="bandelettes-consigne"></p>
       <ul class="bandelettes-liste" id="bandelettes-liste"></ul>
       <div class="pied-impression">
         <img src="../mathsgo-logo-print.png" alt="maths&go" style="height:26px">
@@ -1468,7 +1470,21 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
 
   // ---------------------------------------------------------------- tableau de la classe
 
+  // Le tri « Prénom » (lot « Ma classe : tri et bandelette », 21/10/2026) :
+  // de A à Z, exactement l'ordre de la feuille prénom ↔ code et de l'onglet
+  // Élèves (ordreDeLaFeuille, comparaison à la française : Léa avant Lina,
+  // Maëlys avant Manon) ; de Z à A, le même à l'envers. Les élèves sans prénom
+  // restent en bas dans les deux sens. Avant, les prénoms se comparaient
+  // caractère par caractère : Léa passait après Lucas.
   function trierEleves() {
+    if (tri.colonne === "prenom") {
+      const ordre = ordreDeLaFeuille(eleves);
+      const avecPrenom = ordre.filter(eleve => eleve.prenom);
+      const sansPrenom = ordre.filter(eleve => !eleve.prenom);
+      if (tri.sens !== 1) avecPrenom.reverse();
+      eleves.splice(0, eleves.length, ...avecPrenom, ...sansPrenom);
+      return;
+    }
     const clef = eleve => {
       // SPLAT! : les étapes réussies, puis les Bonus, puis une série en
       // cours, pour départager.
@@ -1477,8 +1493,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       if (tri.colonne === "encours") return eleve.lu.enCours.ordre;
       if (tri.colonne === "semaine") return eleve.lu.seances;
       if (tri.colonne === "retard") return eleve.lu.retard ? eleve.lu.retard.length : -1;
-      if (tri.colonne === "date") return eleve.maj_le || "";
-      return (eleve.prenom || "￿").toLocaleLowerCase("fr");
+      return eleve.maj_le || "";
     };
     eleves.sort((a, b) => {
       const x = clef(a), y = clef(b);
@@ -1513,7 +1528,9 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     const champ = document.createElement("input");
     champ.type = "text";
     champ.value = nomAffiche(eleve);
-    champ.placeholder = ecriture ? "Prénom et initiale" : "—";
+    // « Prénom » seul (21/10/2026) : l'initiale du nom (« Léa B. ») reste
+    // possible pour départager deux Léa, mais rien ne l'impose.
+    champ.placeholder = ecriture ? "Prénom" : "—";
     champ.maxLength = 44;
     if (ecriture) champ.addEventListener("change", () => nommer(eleve, champ));
     else { champ.readOnly = true; champ.tabIndex = -1; }
@@ -2179,10 +2196,11 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   // (ordreDeLaFeuille, une seule fonction pour les deux) : la ligne 3 de la
   // feuille est la bandelette n° 3.
   //
-  // Ce qui part chez l'enfant : l'adresse où entrer, son code, et « ton code
-  // est personnel ». Pas son prénom — une bandelette ramassée par terre ne dit
-  // pas de qui elle est. Ce que le professeur détache et garde : le numéro et
-  // le prénom. Pas le code — une souche oubliée n'ouvre rien.
+  // Ce qui part chez l'enfant, d'un seul tenant : son numéro et son prénom,
+  // l'adresse où entrer, son code, et « ton code est personnel ». Le prénom
+  // sert à distribuer sans échange ; il ne protège ni n'expose rien de plus
+  // que le code, puisque l'espace élève affiche le prénom à qui tape le code.
+  // La vraie protection reste « Nouveau code » et « Revenir à… ».
   const CONSIGNE_BANDELETTE = "Ton code est personnel : ne le prête à personne.";
   const ADRESSE_ELEVE = "suivi.mathsgo.re";
 
@@ -2191,6 +2209,9 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   function dessinerBandelettes(seulId) {
     $("bandelettes-titre").textContent = seulId
       ? `Bandelette à découper — ${classe.libelle}` : `Bandelettes à découper — ${classe.libelle}`;
+    $("bandelettes-consigne").textContent = seulId
+      ? "Découpe sur les pointillés et donne-la à l’élève. Même numéro que sur la feuille prénom\u00a0↔\u00a0code."
+      : "Découpe sur les pointillés et donne à chaque élève sa bandelette. Mêmes numéros que sur la feuille prénom\u00a0↔\u00a0code.";
     const liste = $("bandelettes-liste");
     liste.textContent = "";
     ordreDeLaFeuille(eleves).forEach((eleve, index) => {
@@ -2198,15 +2219,15 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       const item = document.createElement("li");
       item.className = "bandelette";
 
-      const souche = document.createElement("div");
-      souche.className = "souche";
+      const identite = document.createElement("div");
+      identite.className = "identite";
       const numero = document.createElement("span");
       numero.className = "numero";
       numero.textContent = `n° ${index + 1}`;
       const nom = document.createElement("span");
       nom.className = "nom";
       nom.textContent = nomAffiche(eleve) || "—";
-      souche.append(numero, nom);
+      identite.append(numero, nom);
 
       const part = document.createElement("div");
       part.className = "part";
@@ -2234,7 +2255,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       consigne.textContent = CONSIGNE_BANDELETTE;
       part.append(marque, adresse, ligneCode, consigne);
 
-      item.append(souche, part);
+      item.append(identite, part);
       liste.appendChild(item);
     });
   }

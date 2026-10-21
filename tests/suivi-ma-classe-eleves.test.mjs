@@ -120,7 +120,7 @@ test("l'onglet Élèves : la feuille prénom ↔ code à l'écran — même ordr
     const champ = tr.children[1].children[0];
     assert.equal(champ.tag, "input");
     assert.notEqual(champ.readOnly, true, "le prénom se saisit ici");
-    assert.equal(champ.placeholder, "Prénom et initiale");
+    assert.equal(champ.placeholder, "Prénom", "le prénom seul suffit ; l'initiale reste possible, pas imposée");
   });
 });
 
@@ -315,7 +315,8 @@ function impressionRejouee(liste) {
     impressions: [],
     print() { fenetre.impressions.push({classes: [...corps.classes], bandelettes: $("bandelettes-liste").children.length,
       titre: $("bandelettes-titre").textContent, numeros: $("bandelettes-liste").tous(n => aClasse(n, "numero")).map(n => n.textContent),
-      noms: $("bandelettes-liste").tous(n => aClasse(n, "nom")).map(n => n.textContent)}); },
+      noms: $("bandelettes-liste").tous(n => aClasse(n, "nom")).map(n => n.textContent),
+      consigne: $("bandelettes-consigne").textContent}); },
     addEventListener(type, f) { (ecouteurs[type] = ecouteurs[type] || []).push(f); },
     removeEventListener(type, f) { ecouteurs[type] = (ecouteurs[type] || []).filter(g => g !== f); },
   };
@@ -341,6 +342,8 @@ test("« Imprimer sa bandelette » : une seule bandelette sort, avec SON numéro
   assert.equal(impression.bandelettes, 1, "une seule bandelette à l'impression");
   assert.deepEqual(impression.numeros, ["n° 3"]);
   assert.equal(impression.titre, "Bandelette à découper — 306", "au singulier");
+  assert.equal(impression.consigne, "Découpe sur les pointillés et donne-la à l’élève. Même numéro que sur la feuille prénom\u00a0↔\u00a0code.",
+    "la consigne au singulier, sans souche");
   // Le retour d'impression : la classe d'impression part, la liste entière revient — une seule fois.
   r.ecouteurs.afterprint.forEach(g => g());
   assert.equal(r.corps.classes.size, 0);
@@ -352,6 +355,7 @@ test("« Imprimer sa bandelette » : une seule bandelette sort, avec SON numéro
   r.f.imprimer("bandelettes");
   assert.equal(r.fenetre.impressions[1].bandelettes, 4);
   assert.equal(r.fenetre.impressions[1].titre, "Bandelettes à découper — 306");
+  assert.equal(r.fenetre.impressions[1].consigne, "Découpe sur les pointillés et donne à chaque élève sa bandelette. Mêmes numéros que sur la feuille prénom\u00a0↔\u00a0code.");
   r.ecouteurs.afterprint.forEach(g => g());
   assert.equal(r.papiers(), 1, "l'impression de toute la classe n'a rien à remettre");
 });

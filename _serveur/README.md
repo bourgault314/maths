@@ -138,7 +138,10 @@ toute la base). `verifier.php` devient rouge tant que l'un d'eux traîne, et
   Feuille, puis la liste dans l'ordre et avec les numéros de la feuille
   prénom ↔ code, où se saisit le prénom ; le « ⋯ » de chaque élève : Imprimer
   sa bandelette (elle seule, avec son numéro), Nouveau code, Supprimer
-  (propriétaire). Les tableaux des applis n'ont plus aucun code et le prénom y
+  (propriétaire). Depuis le lot « Ma classe : tri et bandelette »
+  (21/10/2026), la bandelette est d'une seule pièce (numéro, prénom, adresse,
+  code, consigne — plus de souche à détacher) et le tri « Prénom » des
+  tableaux suit l'ordre de la feuille. Les tableaux des applis n'ont plus aucun code et le prénom y
   est du texte ; leur « ⋯ » ne garde que « Revenir à… ». Une classe s'ouvre
   sur son tableau, jamais sur Élèves, sauf une classe vide ; « + Nouvelle
   classe » est une carte au bout de Mes classes. L'onglet SPLAT! : six pastilles de monde,
