@@ -1,4 +1,4 @@
-import { checkAnswer, VERSION } from "./core.js";
+import { checkAnswer, normalize, VERSION } from "./core.js";
 import { genererQuestion } from "./moteur.js";
 import { mathHtml } from "./math-format.js";
 import { fitMathExpressions } from "./math-layout.js";
@@ -256,10 +256,6 @@ function afficherQuestion() {
   );
   if (seance.mode !== "project") preparerSaisie(question, etat);
   else paginerChoixProjection(document.querySelector(".espace-question"));
-  document.querySelectorAll(".champ").forEach((champ) => {
-    champ.classList.toggle("faux", Boolean(etat.erreurs && !etat.juste));
-    champ.classList.toggle("juste", etat.juste);
-  });
   mettreAJourTemps();
   ajusterAffichage();
 }
@@ -278,9 +274,12 @@ function preparerSaisie(question, etat) {
     reglageForme(question, parId[question.famille], "gabarit"),
   );
   const monter = () => {
+    const finie = etat.terminee && seance.mode !== "exam";
     monterReponse(reponses, question, etat.reponses, {
       modele,
-      terminee: etat.terminee && seance.mode !== "exam",
+      terminee: finie,
+      lecture: finie,
+      etatCases: finie ? etat.etatCases : null,
       clavierEcran: tactile(),
       changer: recueillir,
       cibler: ciblerChamp,
@@ -301,7 +300,6 @@ function preparerSaisie(question, etat) {
   };
   monter();
   monterClavier(document.querySelector(".clavier"), question, { inserer });
-  reponses.hidden = etat.correction;
   const premier = document.querySelector(".champ:not(:disabled)");
   // Le clavier s'ouvre dès l'arrivée partout où on le veut, aide ouverte ou non (coque V2, C5).
   if (premier && clavierVoulu()) ciblerChamp(premier);
@@ -392,23 +390,56 @@ function valider() {
   const question = questionCourante();
   const etat = etatCourant();
   const resultat = checkAnswer(question, etat.reponses);
-  // Contrat §5.3 : un seul événement par question, à la première réponse ; les réessais ne comptent pas.
+  // Une réponse incomplète ou illisible n'est pas une réponse : on le dit, l'élève corrige.
+  if (resultat.syntax) {
+    etat.message = resultat.message;
+    return afficherQuestion();
+  }
+  // Contrat §5.3 : un seul événement par question, à la première réponse.
   if (!etat.emis) {
     enregistrerEssai(detailEssai(question, etat, resultat.ok));
     etat.emis = true;
   }
+  // Coque V2 (C6) : plus de second essai ; juste ou faux, la question est finie.
   etat.juste = resultat.ok;
-  etat.terminee = resultat.ok;
-  etat.message = resultat.ok ? "Réponse juste." : messageErreur(resultat);
+  etat.terminee = true;
+  etat.aideOuverte = false;
+  etat.etatCases = etatDesCases(question, etat.reponses, resultat.ok);
+  etat.erreurConnue = resultat.ok ? null : erreurConnue(question, etat.reponses);
+  etat.message =
+    resultat.ok || /Pas encore|Bien joué/.test(resultat.message) ? "" : resultat.message;
   if (!resultat.ok) etat.erreurs += 1;
   afficherQuestion();
 }
 
-function messageErreur(resultat) {
-  if (resultat.syntax) return resultat.message;
-  if (/indice|Pas encore/.test(resultat.message))
-    return "Pas encore. Regarde le dessin, puis essaie encore.";
-  return resultat.message;
+// Juste ou faux, case par case quand le moteur compare champ par champ (« 47 = 6 × [7] + [4] » :
+// la première verte, la seconde rouge) ; sinon toutes les cases ensemble.
+function etatDesCases(question, reponses, juste) {
+  const type = question.check?.type || "fields";
+  if (juste || question.fields.length < 2 || !["fields", "numeric", "text"].includes(type))
+    return question.fields.map(() => (juste ? "juste" : "faux"));
+  const valeurs = question.check?.values || question.fields.map((champ) => champ.answer);
+  return question.fields.map((champ, rang) => {
+    const seul = { ...question, fields: [champ], check: { type, values: [valeurs[rang]] } };
+    return checkAnswer(seul, [reponses[rang]]).ok ? "juste" : "faux";
+  });
+}
+
+// Une erreur connue de la forme : champ `erreurs` de la question ou de sa forme au catalogue, sous
+// la forme [{ reponse: "0,49" (ou une liste, une par champ), phrase: "7 × 7 dixièmes…" }]. Les
+// erreurs de famille du catalogue (des descriptions, sans réponse) ne se comparent pas.
+function erreurConnue(question, reponses) {
+  const liste = reglageForme(question, parId[question.famille], "erreurs");
+  if (!Array.isArray(liste)) return null;
+  const pareil = (a, b) => normalize(a) === normalize(b);
+  const trouvee = liste.find((erreur) => {
+    if (!erreur || typeof erreur !== "object" || !erreur.phrase) return false;
+    const attendues = [].concat(erreur.reponse ?? erreur.reponses ?? []);
+    return (
+      attendues.length === reponses.length && attendues.every((r, i) => pareil(r, reponses[i]))
+    );
+  });
+  return trouvee?.phrase || null;
 }
 
 function ouvrirAide(etape = false) {
@@ -446,11 +477,22 @@ function montrerCorrection() {
   fermerClavier();
 }
 
+// Passer : la question est finie sans réponse ; la bonne réponse s'affiche, comme après une erreur.
 function passer() {
-  if (seance.mode === "exam") {
-    recueillir();
-    suivante();
-  } else montrerCorrection();
+  recueillir();
+  if (seance.mode === "exam") return suivante();
+  const etat = etatCourant();
+  if (!etat.emis) {
+    enregistrerEssai(detailEssai(questionCourante(), etat, false));
+    etat.emis = true;
+  }
+  etat.terminee = true;
+  etat.juste = false;
+  etat.aideOuverte = false;
+  etat.message = "";
+  etat.erreurConnue = null;
+  etat.etatCases = null;
+  afficherQuestion();
 }
 
 function changerQuestion(rang) {
@@ -749,6 +791,7 @@ function relierActions(racine = application) {
     "fermer-aide": fermerAide,
     cours: ouvrirCours,
     correction: montrerCorrection,
+    explication: montrerCorrection,
     passer,
     valider,
     suivante,

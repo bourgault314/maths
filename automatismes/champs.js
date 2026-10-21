@@ -82,6 +82,12 @@ function ajouterChoix(parent, champ, valeur, rang, options) {
     bouton.innerHTML = mathHtml(proposition);
     bouton.disabled = options.terminee;
     bouton.classList.toggle("selectionne", String(proposition) === String(valeur));
+    // Après la réponse : le choix de l'élève en rouge s'il est faux, le bon en vert.
+    if (options.lecture) {
+      const bon = String(proposition) === String(champ.answer);
+      bouton.classList.toggle("bon", bon);
+      bouton.classList.toggle("faux", !bon && String(proposition) === String(valeur));
+    }
     bouton.setAttribute("aria-pressed", String(String(proposition) === String(valeur)));
     bouton.onclick = () => {
       options.choisir(rang, String(proposition));
@@ -407,7 +413,8 @@ function monterCartes(parent, cartes, valeurs, options) {
    (« juste » / « faux » par champ), clavierEcran, changer, cibler, valider, choisir(rang, valeur). */
 export function monterReponse(parent, question, valeurs, options) {
   parent.replaceChildren();
-  const contexte = options.modele || modeleQuestion(question);
+  // Une copie : le modèle sert à chaque nouveau montage (une carte posée, un signe choisi).
+  const contexte = { ...(options.modele || modeleQuestion(question)) };
   parent.dataset.cas = contexte.cas;
   contexte.plusieurs = question.fields.length > 1;
   if (contexte.cas === "ranger") {

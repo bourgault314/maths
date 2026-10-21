@@ -1316,6 +1316,77 @@ input.case {
   display: block;
   margin-top: 6px;
 }
+/* Après la réponse (C6). Faux : la case en rouge, la réponse barrée EN BIAIS (trait à −20°, les
+   chiffres restent lisibles). Juste : la case verte et un ✓ à côté, sans phrase. */
+.case.faux {
+  position: relative;
+  border-color: var(--rouge);
+  background: var(--rouge-fond);
+  color: var(--rouge);
+}
+.case.faux:not(.vide)::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 50%;
+  border-top: 3px solid var(--rouge);
+  border-radius: 2px;
+  transform: rotate(-20deg);
+}
+.case.juste {
+  border-color: var(--vert);
+  background: var(--vert-fond);
+  color: var(--vert);
+}
+.carte .choix-bouton.faux {
+  border-color: var(--rouge);
+  background: var(--rouge-fond);
+  color: var(--rouge);
+}
+.carte .choix-bouton.bon {
+  border-color: var(--vert);
+  background: var(--vert-fond);
+  color: var(--vert);
+}
+.carte .choix-bouton:disabled {
+  cursor: default;
+  box-shadow: none;
+}
+/* La phrase d'une erreur connue (ou le message précis du moteur), courte, en rouge. */
+.erreur-connue {
+  margin: 10px 0 0;
+  color: var(--rouge);
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+/* « Bonne réponse » et l'égalité entière, en vert. */
+.bonne {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: 10px;
+}
+.bonne > span {
+  color: var(--vert);
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.bonne strong {
+  max-width: 100%;
+  padding: 6px 18px;
+  border-radius: 999px;
+  background: var(--vert);
+  color: var(--papier);
+  font-size: 1.625rem;
+  font-weight: 800;
+}
+.bonne strong .math-expression {
+  font-weight: inherit;
+}
 /* Tablette et ordinateur : même écran, la carte et ce qui s'ouvre dessous font 640 px (760 px à la
    souris), centrés en largeur. */
 @media (min-width: 700px) {

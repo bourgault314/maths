@@ -2,7 +2,7 @@ import { esc } from "./generateurs/draw.js";
 import { mathHtml } from "./math-format.js";
 import { questionPrompt } from "./math-layout.js";
 import { DOMAINES, formesEligibles } from "./seances.js";
-import { modeleQuestion, reglageForme } from "./champs.js";
+import { modeleQuestion, reglageForme, ecrireReponse } from "./champs.js";
 import { ICONES_DOMAINES } from "./icones-domaines.js";
 
 export function bouton(texte, action, classe = "secondaire", attributs = "") {
@@ -257,9 +257,14 @@ export function actionsHTML(seance, etat) {
     seance.mode === "exam"
       ? bouton("←", "precedente", "secondaire precedente", 'aria-label="Question précédente"')
       : "";
+  // Après la réponse (C6) : « Voir l'explication » (pas après une réponse juste) · « Question
+  // suivante », ou « Voir le bilan » à la dernière question.
+  const derniere = seance.index + 1 >= seance.questions.length;
+  const explication = etat.correction ? "Cacher l’explication" : "Voir l’explication";
   const suite =
     etat.terminee && seance.mode !== "exam"
-      ? bouton("Suivante", "suivante", "orange")
+      ? (etat.juste ? "" : bouton(explication, "explication", "secondaire")) +
+        bouton(derniere ? "Voir le bilan" : "Question suivante", "suivante", "primaire large")
       : bouton("Passer", "passer", "secondaire") + bouton("Valider", "valider", "orange large");
   return `<div class="actions-question">${retour}${suite}</div>`;
 }
@@ -267,7 +272,7 @@ export function actionsHTML(seance, etat) {
 /* Aide · Cours : deux boutons discrets (38 px) juste sous le calcul, là où l'aide s'ouvre.
    Ni l'un ni l'autre au brevet ni au diaporama. */
 export function outilsHTML(seance, etat) {
-  if (seance.mode !== "train") return "";
+  if (seance.mode !== "train" || etat.terminee) return "";
   return `<div class="outils">
     <button class="outil" data-action="aide" aria-pressed="${Boolean(etat.aideOuverte)}">${ICONES.aide}Aide</button>
     <button class="outil" data-action="cours">${ICONES.cours}Cours</button>
@@ -287,11 +292,34 @@ function actionsProjectionHTML(seance) {
 
 /* La consigne de la carte. Quand le calcul s'écrit avec ses cases (« 0,7 × 7 = [ ] »), la consigne
    ne garde que la phrase (« Calcule. ») ; sinon c'est l'énoncé entier, comme avant. */
-function consigneHTML(question, famille) {
-  const modele = modeleQuestion(question, reglageForme(question, famille, "gabarit"));
+function consigneHTML(question, modele) {
   if (modele.phrase) return `<h1 class="consigne sr-only">${questionPrompt(question)}</h1>`;
   const texte = modele.consigne ? mathHtml(modele.consigne) : questionPrompt(question);
   return `<h1 class="consigne">${texte}</h1>`;
+}
+
+/* Après la réponse (C6). Plus de phrase toute faite : la case barrée et la bonne réponse disent tout.
+   Seules exceptions : la phrase courte d'une ERREUR CONNUE de la forme (champ erreurs), ou le message
+   précis du moteur (« La valeur est juste. Écris-la sous forme irréductible. »). Puis « Bonne
+   réponse » : l'égalité entière quand la question a un calcul, sinon les valeurs attendues. */
+export function bonneReponseTexte(question, modele) {
+  const valeurs = question.fields.map((champ) => ecrireReponse(champ.answer));
+  if (modele?.modele) return modele.modele.replace(/\[(\d+)\]/g, (_, rang) => valeurs[rang] ?? "");
+  if (question.fields.length === 1) {
+    const unite = question.fields[0].unit;
+    return `${valeurs[0]}${unite && !/^[°%]$/.test(unite) ? " " : ""}${unite || ""}`;
+  }
+  return question.fields
+    .map((champ, rang) => `${champ.label ? `${champ.label} : ` : ""}${valeurs[rang]}`)
+    .join(" · ");
+}
+
+function retourHTML(question, etat, modele) {
+  if (!etat.terminee || etat.juste) return "";
+  const phrase = etat.erreurConnue || etat.message;
+  return `${phrase ? `<p class="erreur-connue" role="status">${mathHtml(phrase)}</p>` : ""}
+    <div class="bonne"><span>Bonne réponse</span>
+      <strong>${mathHtml(bonneReponseTexte(question, modele))}</strong></div>`;
 }
 
 export function questionHTML(seance, famille, clavier = false) {
@@ -299,18 +327,20 @@ export function questionHTML(seance, famille, clavier = false) {
   const etat = seance.etats[seance.index];
   const projection = seance.mode === "project";
   const minuterie = projection || seance.mode === "exam";
+  const modele = modeleQuestion(question, reglageForme(question, famille, "gabarit"));
+  const avantReponse = !etat.terminee && etat.message;
   return `${barreQuestionHTML(seance, clavier)}
     <progress class="progression" max="${seance.questions.length}" value="${seance.index + 1}"></progress>
     <div class="espace-question">
-      <section class="carte enonce">${pastilleNotionHTML(seance, famille)}${consigneHTML(question, famille)}
+      <section class="carte enonce">${pastilleNotionHTML(seance, famille)}${consigneHTML(question, modele)}
         ${question.math ? `<div class="calcul">${mathHtml(question.math)}</div>` : ""}
         ${figureHTML(question, etat, reglageForme(question, famille, "coinAide"))}
         ${projection ? choixProjectionHTML(question) : '<div class="reponses"></div>'}
+        ${avantReponse ? `<p class="erreur-connue" role="status">${esc(etat.message)}</p>` : ""}
+        ${seance.mode === "train" ? retourHTML(question, etat, modele) : ""}
         ${outilsHTML(seance, etat)}
       </section>
       ${aideHTML(question, etat, projection)}
-      ${etat.message ? `<p class="retour-reponse ${etat.juste ? "juste" : "faux"}" role="status">${esc(etat.message)}</p>` : ""}
-      ${etat.erreurs && !etat.terminee ? bouton("Voir la correction", "correction", "discret") : ""}
       ${etat.correction ? correctionHTML(question) : ""}
     </div>
     ${minuterie ? pointsHTML(seance) : ""}

@@ -191,9 +191,13 @@ test(
         await question(page, base);
         await page.locator(".champ").fill("999");
         await page.locator('[data-action="valider"]').click();
-        assert.equal(await page.locator('[data-action="correction"]').isVisible(), true);
+        // Coque V2 (C6) : plus de second essai ; la case barrée, la bonne réponse, « Voir l'explication ».
+        assert.equal(await page.locator('[data-action="explication"]').isVisible(), true);
+        assert.equal(await page.locator(".carte .case.faux").count(), 1);
+        assert.equal(await page.locator(".bonne").isVisible(), true);
+        assert.equal(await page.locator(".clavier").isVisible(), false, "Le clavier s’en va");
         await photo(page, "faux", mesures);
-        await page.locator('[data-action="correction"]').click();
+        await page.locator('[data-action="explication"]').click();
         await photo(page, "correction", mesures);
         await page.locator('[data-action="suivante"]').click();
         await photo(page, "bilan", mesures);
@@ -431,7 +435,8 @@ test(
         // Graine 12 : « x + 1 = 6 ».
         await page.locator('.touches button[aria-label="5"]').click();
         await page.locator('[data-action="valider"]').click();
-        await page.getByText("Réponse juste.").waitFor();
+        // Coque V2 (C6) : juste, la case verte et un ✓ à côté, sans phrase.
+        await page.locator(".carte .case.juste + .coche, .carte .coche").first().waitFor();
 
         await page.goto(adresse);
         await page.locator(".reponses").waitFor();
@@ -494,7 +499,11 @@ test(
         await page.locator('[data-action="valider"]').click();
         assert.equal(await page.locator('img[src="x"], [onerror]').count(), 0);
         assert.equal(await page.evaluate(() => window.injection), undefined);
-        assert.equal(await page.locator('[data-action="correction"]').isVisible(), true);
+        // Une écriture illisible n'est pas une réponse (message, on corrige) ; un nombre faux finit la question.
+        assert.equal(
+          await page.locator('[data-action="explication"], .erreur-connue').first().isVisible(),
+          true,
+        );
       }
       await question(page, base, "EG19", "a");
       assert.ok(await page.locator(".choix-bouton").count());
@@ -520,8 +529,8 @@ test(
       await question(page, base);
       await page.locator(".champ").fill("4");
       await page.locator('[data-action="valider"]').click();
-      await page.locator('[data-action="cours"]').click();
-      await page.getByRole("button", { name: "J’ai compris" }).click();
+      // Coque V2 (C6) : la question finie, Aide et Cours quittent la carte.
+      assert.equal(await page.locator('[data-action="cours"]').count(), 0);
       await page.locator('[data-action="suivante"]').click();
       assert.match(await page.locator(".contenu").innerText(), /1 sans aide/);
       await page.goto(`${base}?notions=NC27&nombre=2&graine=123&niveau=brevet`);
