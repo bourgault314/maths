@@ -19,12 +19,14 @@ const PAGE = "_serveur/public/prof/index.php";
 //
 // Sabotages attendus (chacun rend un test rouge) :
 //  a) rendre `creerFileRedessin.demander()` inconditionnel → le tri efface la saisie
-//  b) remettre le prénom dans la partie « part » de la bandelette → fuite du prénom
-//  c) mettre le code dans la souche → la souche redevient un dossier nominatif
+//  b) retirer le prénom de la bandelette → elle ne dit plus à qui la donner
+//  c) remettre un trait au milieu (border-right sur .identite) → la souche revient
 //  d) enlever l'adresse ou la consigne de la bandelette
 //  e) enlever "corps" ou "fiche-corps" de ZONES_TEXTE
 //  f) rendre texteConfirmationPartage() vide pour "ecriture"
 //  g) faire dépendre creerVeille d'un compteur au lieu de l'horloge
+//  h) trier les prénoms avec < et > (caractère par caractère) → Léa après Lucas
+//  i) laisser les sans-prénom remonter en tête quand on trie de Z à A
 
 const page = readFileSync(join(racine, PAGE), "utf8");
 const BALISE = '<script nonce="<?= htmlspecialchars($nonce, ENT_QUOTES) ?>">';
@@ -131,12 +133,12 @@ function papierRendu(eleves, droit = "proprietaire") {
     cellules: ligne.enfants.length,
   }));
   const bandelettes = faux.$("bandelettes-liste").enfants.map(item => {
-    const souche = item.enfants.find(e => e.className === "souche");
+    const identite = item.enfants.find(e => e.className === "identite");
     const part = item.enfants.find(e => e.className === "part");
-    return {souche: souche.textContent, part: part.textContent,
+    return {identite: identite.textContent, part: part.textContent, pieces: item.enfants.map(e => e.className),
             code: part.enfants.find(e => e.className === "code-ligne").enfants.find(e => e.className === "code").textContent};
   });
-  return {recap, bandelettes, faux,
+  return {recap, bandelettes, faux, consigne: faux.$("bandelettes-consigne").textContent,
           titreRecap: faux.$("fiche-titre").textContent,
           titreBandelettes: faux.$("bandelettes-titre").textContent,
           ficheCachee: faux.$("fiche").hidden, bandelettesCachees: faux.$("bandelettes").hidden};
@@ -144,42 +146,41 @@ function papierRendu(eleves, droit = "proprietaire") {
 
 // ---------------------------------------------------------------- les bandelettes
 
-test("chaque bandelette porte l'adresse, le code et la consigne — et jamais le prénom", () => {
+// Lot « Ma classe : tri et bandelette » (21/10/2026) : la bandelette est d'un
+// seul tenant. La souche que le professeur détachait (numéro et prénom) ne
+// protégeait rien — qui tape un code voit de toute façon le prénom et la
+// classe — et une bandelette sans prénom pouvait s'échanger à la distribution.
+test("chaque bandelette, d'un seul tenant : numéro, prénom, adresse, code et consigne", () => {
   const eleves = classeDEssai();
   eleves[0].prenom = "Léa"; eleves[0].initiale = "B";
   eleves[3].prenom = "Sam";
-  const {bandelettes} = papierRendu(eleves);
+  const {bandelettes, consigne} = papierRendu(eleves);
   assert.equal(bandelettes.length, 8);
   bandelettes.forEach((bandelette, index) => {
+    assert.deepEqual(bandelette.pieces, ["identite", "part"], `bandelette ${index + 1} : le prénom à gauche, le reste à droite`);
+    assert.match(bandelette.identite, new RegExp(`^n° ${index + 1}\\b`), `bandelette ${index + 1} : son numéro de la feuille`);
     assert.match(bandelette.part, /suivi\.mathsgo\.re/, `bandelette ${index + 1} : l'adresse`);
     assert.match(bandelette.part, /ton code/, `bandelette ${index + 1} : « ton code »`);
     assert.match(bandelette.part, /Ton code est personnel : ne le prête à personne\./,
       `bandelette ${index + 1} : la consigne`);
     assert.ok(bandelette.part.includes(bandelette.code), `bandelette ${index + 1} : le code`);
   });
-  // La partie remise à l'enfant ne dit pas de qui elle est.
-  ["Léa", "Sam", "Léa B."].forEach(prenom => {
-    bandelettes.forEach((bandelette, index) => {
-      assert.ok(!bandelette.part.includes(prenom),
-        `bandelette ${index + 1} : « ${prenom} » n'a rien à faire du côté de l'élève`);
-    });
-  });
+  assert.match(bandelettes[0].identite, /Léa B\./, "le prénom et l'initiale, pour distribuer sans échange");
+  assert.match(bandelettes[1].identite, /Sam/);
+  // Sans prénom, la bandelette garde son numéro et un tiret : on distribue par numéro.
+  assert.match(bandelettes[2].identite, /^n° 3\s*—$/);
+  assert.equal(consigne, "Découpe sur les pointillés et donne à chaque élève sa bandelette. Mêmes numéros que sur la feuille prénom\u00a0↔\u00a0code.");
 });
 
-test("la souche que le professeur garde porte le numéro et le prénom, jamais le code", () => {
-  const eleves = classeDEssai();
-  eleves[0].prenom = "Léa"; eleves[0].initiale = "B";
-  const {bandelettes, recap} = papierRendu(eleves);
-  assert.match(bandelettes[0].souche, /n° 1/);
-  assert.match(bandelettes[0].souche, /Léa B\./);
-  bandelettes.forEach((bandelette, index) => {
-    assert.ok(!bandelette.souche.includes(bandelette.code),
-      `souche ${index + 1} : une souche perdue ne doit ouvrir aucun compte`);
-    assert.match(bandelette.souche, new RegExp(`n° ${index + 1}\\b`));
-  });
-  // Sans prénom, la souche reste lisible (un tiret) : on distribue par numéro.
-  assert.match(bandelettes[1].souche, /—/);
-  assert.equal(recap.length, 8);
+test("plus de souche : ni trait au milieu, ni consigne « tu détaches… », ni classe .souche", () => {
+  const style = page.slice(page.indexOf("<style>"), page.indexOf("</style>"));
+  const regle = style.slice(style.indexOf(".bandelette .identite {"), style.indexOf("}", style.indexOf(".bandelette .identite {")));
+  assert.ok(regle.length > 0, "la règle de la partie gauche existe");
+  assert.doesNotMatch(regle, /border/, "pas de trait entre le prénom et le code : une seule pièce");
+  assert.match(style, /\.bandelette \{ display: flex;[^}]*border: 1px dashed #8a8a8a;/, "le cadre en pointillés reste autour de chaque bandelette");
+  assert.doesNotMatch(page, /class(Name)? ?=? ?"souche"|\.souche\b/, "plus aucune souche dans la page");
+  assert.doesNotMatch(page, /[Tt]u détaches|ne porte pas son\s+prénom|son code sans son prénom/, "plus de consigne de souche");
+  assert.match(page, /title="À découper et à distribuer : une par élève, avec son prénom et son code">Imprimer les bandelettes</);
 });
 
 test("bandelettes et feuille prénom ↔ code : même ordre, mêmes numéros", () => {
@@ -191,7 +192,7 @@ test("bandelettes et feuille prénom ↔ code : même ordre, mêmes numéros", (
   assert.deepEqual(recap.map(l => l.code), attendu);
   assert.deepEqual(bandelettes.map(b => b.code), attendu);
   assert.deepEqual(recap.map(l => l.numero), ["1", "2", "3", "4", "5", "6", "7", "8"]);
-  bandelettes.forEach((b, i) => assert.match(b.souche, new RegExp(`n° ${i + 1}\\b`)));
+  bandelettes.forEach((b, i) => assert.match(b.identite, new RegExp(`n° ${i + 1}\\b`)));
   assert.match(titreRecap, /Prénom ↔ code — 6eB/);
   assert.match(titreBandelettes, /Bandelettes à découper — 6eB/);
   // La feuille récapitulative n'a plus de colonne « Découper » : les ciseaux
@@ -233,7 +234,7 @@ test("à l'écran, les deux feuilles restent cachées et [hidden] cache pour de 
     ".fiche, .bandelettes, .note-impression { display: none; }",
     "[hidden] { display: none !important; }",
     ".bandelette { display: flex;",
-    ".bandelette .souche {",
+    ".bandelette .identite {",
     ".bandelette .code-ligne .code {",
     ".avertissement-papier {",
     ".apercu {",
@@ -244,6 +245,45 @@ test("à l'écran, les deux feuilles restent cachées et [hidden] cache pour de 
     ".barre-outils {"
   ].forEach(regle => assert.ok(ecran.includes(regle), `règle perdue : ${regle}`));
   assert.ok(!style.includes(".rang {") && !style.includes(".expert-case"), "les styles de la colonne Expert, eux, sont partis");
+});
+
+// ------------------------------------------------- le tri « Prénom » des tableaux
+
+// Lot « Ma classe : tri et bandelette » (21/10/2026) : les prénoms se
+// comparaient caractère par caractère, Léa passait après Lucas et Maëlys après
+// Mathis. Le tableau trié par prénom suit maintenant la feuille prénom ↔ code.
+const trierPar = (liste, tri) => new Function("eleves", "tri",
+  `${fonction("ordreDeLaFeuille")}\n${fonction("trierEleves")}\ntrierEleves();\nreturn eleves;`)(liste, tri);
+const classeAccents = () => ["Lucas", "", "Léa", "Mathis", "Lina", "émile", "Maëlys", "Loïc", "", "Manon", "Zoé", "ali"]
+  .map((prenom, i) => ({id: i + 1, code: `C${String(20 - i).padStart(2, "0")}XYZ`, prenom, initiale: "", lu: {}}));
+
+test("tri « Prénom » de A à Z : à la française, et exactement l'ordre de la feuille prénom ↔ code", () => {
+  const eleves = classeAccents();
+  const memeTableau = eleves;
+  const trie = trierPar(eleves, {colonne: "prenom", sens: 1});
+  assert.equal(trie, memeTableau, "le tableau est trié sur place (les autres fonctions gardent la même liste)");
+  assert.deepEqual(trie.map(e => e.prenom),
+    ["ali", "émile", "Léa", "Lina", "Loïc", "Lucas", "Maëlys", "Manon", "Mathis", "Zoé", "", ""]);
+  assert.deepEqual(trie.map(e => e.id), ordreDeLaFeuille(classeAccents()).map(e => e.id),
+    "même ordre que la feuille, sans-prénom compris (rangés par code)");
+});
+
+test("tri « Prénom » de Z à A : l'inverse, et les sans-prénom restent en bas", () => {
+  const trie = trierPar(classeAccents(), {colonne: "prenom", sens: -1});
+  assert.deepEqual(trie.map(e => e.prenom),
+    ["Zoé", "Mathis", "Manon", "Maëlys", "Lucas", "Loïc", "Lina", "Léa", "émile", "ali", "", ""]);
+  const feuille = ordreDeLaFeuille(classeAccents()).filter(e => !e.prenom).map(e => e.code);
+  assert.deepEqual(trie.slice(-2).map(e => e.code), feuille, "les sans-prénom dans l'ordre de la feuille");
+});
+
+test("le clic sur « Élève » et le menu « Trier par » passent tous deux par trierEleves", () => {
+  assert.match(fonction("dessinerTableau"), /^\s*function dessinerTableau\(\) \{\s*trierEleves\(\);/);
+  const clic = blocDepuis(script, script.indexOf('document.querySelectorAll("th button[data-tri]")'));
+  assert.match(clic, /tri = \{colonne, sens: tri\.colonne === colonne \? -tri\.sens : \(colonne === "prenom" \? 1 : -1\)\};/);
+  assert.match(clic, /redessin\.demander\(\)/);
+  const menu = blocDepuis(script, script.indexOf('$("tri").addEventListener("change"'));
+  assert.match(menu, /tri = \{colonne, sens: colonne === "prenom" \? 1 : -1\};/);
+  assert.match(menu, /redessin\.demander\(\)/);
 });
 
 // ------------------------------------------------- tri pendant une saisie de prénom

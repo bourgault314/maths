@@ -409,7 +409,9 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // (avant : seance-en-direct-aide-et-veille).
   // Puis « Ma classe : élèves » (18/10/2026) : prof/index.php seul change
   // (avant : ma-classe-reglages).
-  assert.match(lire("_serveur/public/VERSION"), /^lot ma-classe-eleves$/m);
+  // Puis « Ma classe : tri et bandelette » (21/10/2026) : prof/index.php seul
+  // change (avant : ma-classe-eleves).
+  assert.match(lire("_serveur/public/VERSION"), /^lot ma-classe-tri-bandelette$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=cartes-tables-20261018-1/);
 });
