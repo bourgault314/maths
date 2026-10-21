@@ -1,0 +1,294 @@
+TAP version 13
+# (node:38) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/scratch/2681e19ddf02/maths/automatismes/moteur.js is not specified and it doesn't parse as CommonJS.
+# Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+# To eliminate this warning, add "type": "module" to /workspace/scratch/2681e19ddf02/maths/package.json.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: 21 750 aides comparées : les occurrences détectées restent celles de l’archive
+ok 1 - 21 750 aides comparées : les occurrences détectées restent celles de l’archive
+  ---
+  duration_ms: 4122.013778
+  type: 'test'
+  ...
+# 295 formes signalées : ce contrôle constate les défauts hérités, il ne valide pas leurs aides.
+# Comparaison littérale demandée : une réponse courte peut aussi correspondre à une coordonnée SVG.
+# (node:39) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/scratch/2681e19ddf02/maths/automatismes/moteur.js is not specified and it doesn't parse as CommonJS.
+# Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+# To eliminate this warning, add "type": "module" to /workspace/scratch/2681e19ddf02/maths/package.json.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: 84 cartes uniques, cinq domaines et une identité stable par forme
+ok 2 - 84 cartes uniques, cinq domaines et une identité stable par forme
+  ---
+  duration_ms: 241.821681
+  type: 'test'
+  ...
+# Subtest: le classement des grandeurs est explicite et les trois familles réservées sont cachées
+ok 3 - le classement des grandeurs est explicite et les trois familles réservées sont cachées
+  ---
+  duration_ms: 0.877932
+  type: 'test'
+  ...
+# Subtest: 435 alias relient les trois anciennes notations aux lettres canoniques
+ok 4 - 435 alias relient les trois anciennes notations aux lettres canoniques
+  ---
+  duration_ms: 2.979795
+  type: 'test'
+  ...
+# (node:40) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/scratch/2681e19ddf02/maths/packages/charte/src/charte.js is not specified and it doesn't parse as CommonJS.
+# Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+# To eliminate this warning, add "type": "module" to /workspace/scratch/2681e19ddf02/maths/package.json.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: chaque couleur de style.css provient de la charte ou de Défi tables
+ok 5 - chaque couleur de style.css provient de la charte ou de Défi tables
+  ---
+  duration_ms: 2.002156
+  type: 'test'
+  ...
+# Subtest: chaque paire de texte dépasse le contraste 4,5 de la charte
+ok 6 - chaque paire de texte dépasse le contraste 4,5 de la charte
+  ---
+  duration_ms: 0.69758
+  type: 'test'
+  ...
+# Subtest: aucun rôle de texte ne peut être ajouté sans son contrôle de contraste
+ok 7 - aucun rôle de texte ne peut être ajouté sans son contrôle de contraste
+  ---
+  duration_ms: 3.001572
+  type: 'test'
+  ...
+# Subtest: les couleurs de texte sont des rôles, jamais un hexadécimal dispersé
+ok 8 - les couleurs de texte sont des rôles, jamais un hexadécimal dispersé
+  ---
+  duration_ms: 0.517093
+  type: 'test'
+  ...
+# Subtest: interface : parcours et captures aux trois tailles du contrat
+ok 9 - interface : parcours et captures aux trois tailles du contrat
+  ---
+  duration_ms: 14372.141093
+  type: 'test'
+  ...
+# Subtest: sécurité : aucune saisie HTML réinjectée pour chaque type de réponse
+ok 10 - sécurité : aucune saisie HTML réinjectée pour chaque type de réponse
+  ---
+  duration_ms: 2227.333554
+  type: 'test'
+  ...
+# Subtest: parcours : préférences, événements, partage et minuteurs
+ok 11 - parcours : préférences, événements, partage et minuteurs
+  ---
+  duration_ms: 1677.911457
+  type: 'test'
+  ...
+# (node:47) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/scratch/2681e19ddf02/maths/automatismes/core.js is not specified and it doesn't parse as CommonJS.
+# Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+# To eliminate this warning, add "type": "module" to /workspace/scratch/2681e19ddf02/maths/package.json.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: 84 familles et 435 formes : 87 000 réponses canoniques acceptées
+ok 12 - 84 familles et 435 formes : 87 000 réponses canoniques acceptées
+  ---
+  duration_ms: 19307.702223
+  type: 'test'
+  ...
+# Subtest: la même graine et la même forme reproduisent exactement la même question
+ok 13 - la même graine et la même forme reproduisent exactement la même question
+  ---
+  duration_ms: 267.850508
+  type: 'test'
+  ...
+# Subtest: les identifiants inconnus et les graines hors limites sont refusés
+ok 14 - les identifiants inconnus et les graines hors limites sont refusés
+  ---
+  duration_ms: 0.706373
+  type: 'test'
+  ...
+# Subtest: le correcteur applique les priorités et refuse les expressions exécutables
+ok 15 - le correcteur applique les priorités et refuse les expressions exécutables
+  ---
+  duration_ms: 0.695076
+  type: 'test'
+  ...
+# Subtest: fractions équivalentes, irréductibilité et ensembles respectent leur contrat
+ok 16 - fractions équivalentes, irréductibilité et ensembles respectent leur contrat
+  ---
+  duration_ms: 0.346572
+  type: 'test'
+  ...
+# Subtest: aucun appel à eval ni constructeur de fonction dans l’application
+ok 17 - aucun appel à eval ni constructeur de fonction dans l’application
+  ---
+  duration_ms: 7.216575
+  type: 'test'
+  ...
+# (node:48) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/scratch/2681e19ddf02/maths/automatismes/seances.js is not specified and it doesn't parse as CommonJS.
+# Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+# To eliminate this warning, add "type": "module" to /workspace/scratch/2681e19ddf02/maths/package.json.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: la séance du jour contient huit questions du niveau ou du filtre Brevet
+ok 18 - la séance du jour contient huit questions du niveau ou du filtre Brevet
+  ---
+  duration_ms: 88.073709
+  type: 'test'
+  ...
+# Subtest: les familles masquées et les formes non validées sont exclues des sélections
+ok 19 - les familles masquées et les formes non validées sont exclues des sélections
+  ---
+  duration_ms: 1.599122
+  type: 'test'
+  ...
+# Subtest: 200 brevets gardent la composition 3 + 2 + 1 + 1 + 1 + 1 sans QCM
+ok 20 - 200 brevets gardent la composition 3 + 2 + 1 + 1 + 1 + 1 sans QCM
+  ---
+  duration_ms: 12920.039245
+  type: 'test'
+  ...
+# Subtest: une sélection insuffisante ne dégrade pas silencieusement la composition brevet
+ok 21 - une sélection insuffisante ne dégrade pas silencieusement la composition brevet
+  ---
+  duration_ms: 36.886947
+  type: 'test'
+  ...
+# Subtest: une série partagée se reproduit indépendamment de l’historique local
+ok 22 - une série partagée se reproduit indépendamment de l’historique local
+  ---
+  duration_ms: 6.780611
+  type: 'test'
+  ...
+# Subtest: chaque forme est utilisée avant de répéter une forme de la même famille
+ok 23 - chaque forme est utilisée avant de répéter une forme de la même famille
+  ---
+  duration_ms: 8.243762
+  type: 'test'
+  ...
+# Subtest: les formes les moins vues passent d’abord, puis les autres sans répétition
+ok 24 - les formes les moins vues passent d’abord, puis les autres sans répétition
+  ---
+  duration_ms: 0.824908
+  type: 'test'
+  ...
+# Subtest: le nombre demandé reste un entier de 1 à 40
+ok 25 - le nombre demandé reste un entier de 1 à 40
+  ---
+  duration_ms: 6.795533
+  type: 'test'
+  ...
+# Subtest: une graine de série invalide est refusée avant le tirage
+ok 26 - une graine de série invalide est refusée avant le tirage
+  ---
+  duration_ms: 0.522321
+  type: 'test'
+  ...
+# Subtest: les graines neuves respectent toutes les bornes du contrat
+ok 27 - les graines neuves respectent toutes les bornes du contrat
+  ---
+  duration_ms: 2.002457
+  type: 'test'
+  ...
+# (node:54) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/scratch/2681e19ddf02/maths/automatismes/suivi.js is not specified and it doesn't parse as CommonJS.
+# Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+# To eliminate this warning, add "type": "module" to /workspace/scratch/2681e19ddf02/maths/package.json.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: suivi : l’événement émis contient exactement les six champs du contrat
+ok 28 - suivi : l’événement émis contient exactement les six champs du contrat
+  ---
+  duration_ms: 3.020029
+  type: 'test'
+  ...
+# Subtest: suivi : aucun champ libre, identifiant inconnu ou résultat mal typé n’est enregistré
+ok 29 - suivi : aucun champ libre, identifiant inconnu ou résultat mal typé n’est enregistré
+  ---
+  duration_ms: 1.168996
+  type: 'test'
+  ...
+# Subtest: suivi : le journal conserve les 10 000 derniers essais, dans l’ordre
+ok 30 - suivi : le journal conserve les 10 000 derniers essais, dans l’ordre
+  ---
+  duration_ms: 116.287676
+  type: 'test'
+  ...
+# Subtest: suivi : le stockage absent, bloqué ou corrompu ne bloque pas la séance
+ok 31 - suivi : le stockage absent, bloqué ou corrompu ne bloque pas la séance
+  ---
+  duration_ms: 0.83273
+  type: 'test'
+  ...
+# Subtest: suivi : les entrées locales non conformes sont ignorées au chargement
+ok 32 - suivi : les entrées locales non conformes sont ignorées au chargement
+  ---
+  duration_ms: 0.5615
+  type: 'test'
+  ...
+# Subtest: suivi : les vues ne comptent qu’une fois une question réessayée
+ok 33 - suivi : les vues ne comptent qu’une fois une question réessayée
+  ---
+  duration_ms: 0.41285
+  type: 'test'
+  ...
+# Subtest: étoiles : une réussite aidée découvre la notion, sans valider une série
+ok 34 - étoiles : une réussite aidée découvre la notion, sans valider une série
+  ---
+  duration_ms: 1.011764
+  type: 'test'
+  ...
+# Subtest: étoiles : quatre réussites sur cinq, sans aide et sur des formes variées
+ok 35 - étoiles : quatre réussites sur cinq, sans aide et sur des formes variées
+  ---
+  duration_ms: 0.745391
+  type: 'test'
+  ...
+# Subtest: étoiles : toutes les formes disponibles suffisent quand la famille en compte moins de cinq
+ok 36 - étoiles : toutes les formes disponibles suffisent quand la famille en compte moins de cinq
+  ---
+  duration_ms: 0.366561
+  type: 'test'
+  ...
+# Subtest: étoiles : la variété tient compte des formes ouvertes par le filtre de niveau
+ok 37 - étoiles : la variété tient compte des formes ouvertes par le filtre de niveau
+  ---
+  duration_ms: 0.640045
+  type: 'test'
+  ...
+# Subtest: étoiles : la confirmation exige une séance d’entraînement réussie un autre jour
+ok 38 - étoiles : la confirmation exige une séance d’entraînement réussie un autre jour
+  ---
+  duration_ms: 0.435022
+  type: 'test'
+  ...
+# Subtest: étoiles : une série de notion le lendemain confirme sans attendre le futur parcours
+ok 39 - étoiles : une série de notion le lendemain confirme sans attendre le futur parcours
+  ---
+  duration_ms: 0.278341
+  type: 'test'
+  ...
+# Subtest: étoiles : finir deux fois la même séance ne confirme pas une notion
+ok 40 - étoiles : finir deux fois la même séance ne confirme pas une notion
+  ---
+  duration_ms: 0.199294
+  type: 'test'
+  ...
+# Subtest: étoiles : la projection n’accorde aucune réussite et ne produit aucun événement
+ok 41 - étoiles : la projection n’accorde aucune réussite et ne produit aucun événement
+  ---
+  duration_ms: 0.236269
+  type: 'test'
+  ...
+# Subtest: étoiles : le bilan local persiste sans doubler les événements des réponses
+ok 42 - étoiles : le bilan local persiste sans doubler les événements des réponses
+  ---
+  duration_ms: 0.354343
+  type: 'test'
+  ...
+# Subtest: étoiles : une validation acquise reste acquise après la rotation de l’historique
+ok 43 - étoiles : une validation acquise reste acquise après la rotation de l’historique
+  ---
+  duration_ms: 5.05182
+  type: 'test'
+  ...
+1..43
+# tests 43
+# suites 0
+# pass 43
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 19863.410533
