@@ -230,40 +230,52 @@ export function professeurHTML(familles, filtre, options, selection) {
     </div><p id="lien-serie" hidden></p>`;
 }
 
-export function bilanHTML(seance, parId, etoiles) {
+/* Le bilan d'une série : le score, puis chaque question avec son état (juste / juste avec l'aide /
+   faux / passée) et sa correction dépliable. Pas d'étoiles, pas de notion : le parcours viendra après. */
+export function bilanHTML(seance, parId) {
   const projection = seance.mode === "project";
+  const exam = seance.mode === "exam";
   const justes = seance.etats.filter((etat) => etat.juste);
   const autonomes = justes.filter((etat) => etat.aide === 0).length;
-  const dessins = justes.filter((etat) => etat.aide === 1 || etat.aide === 2).length;
-  const familles = [...new Set(seance.questions.map((question) => question.famille))];
-  return `<h1>${projection ? "Corrections" : "Ma séance"}</h1>
-    ${
-      projection
-        ? ""
-        : `<div class="score">${justes.length} / ${seance.questions.length}</div>
-      <p>${autonomes} sans aide · ${dessins} avec le dessin</p>`
-    }
-    ${
-      projection
-        ? ""
-        : familles
-            .map((id) => {
-              const indices = seance.questions
-                .map((question, i) => (question.famille === id ? i : -1))
-                .filter((i) => i >= 0);
-              const nombre = indices.filter((i) => seance.etats[i].juste).length;
-              return `<div class="resume-notion"><span>${esc(parId[id].nom)}</span>
-        <progress max="${indices.length}" value="${nombre}"></progress>${etoilesHTML(etoiles(id))}</div>`;
-            })
-            .join("")
-    }
+  const dessins = justes.length - autonomes;
+  const etatLigne = (etat) =>
+    etat.juste
+      ? etat.aide === 0
+        ? ["juste", "✓", "Juste"]
+        : ["aidee", "✓", "Juste, avec l’aide"]
+      : etat.erreurs
+        ? ["faux", "✗", "Faux"]
+        : ["passee", "○", "Passée"];
+  const titre = projection ? "Corrections" : exam ? "Entraînement brevet" : "Bilan";
+  const sousTitre = exam
+    ? `${justes.length} juste${justes.length > 1 ? "s" : ""} sur 9`
+    : `${autonomes} sans aide · ${dessins} avec l’aide`;
+  return `<h1>${titre}</h1>
+    ${projection ? "" : `<div class="score">${justes.length} / ${seance.questions.length}</div><p class="resume-bilan">${sousTitre}</p>`}
     <div class="liste-resultats">${seance.questions
       .map((question, i) => {
-        return `<details><summary>${i + 1}. ${esc(parId[question.famille].nom)}
-        <span>${projection ? "" : seance.etats[i].juste ? "✓" : "○"} Voir la correction</span></summary>
+        const [classe, signe, mot] = projection ? ["", "", ""] : etatLigne(seance.etats[i]);
+        return `<details><summary><span class="numero">${i + 1}</span>
+        <span class="resultat-nom">${esc(parId[question.famille].nom)}</span>
+        ${projection ? "" : `<span class="etat-ligne ${classe}"><span aria-hidden="true">${signe}</span> ${mot}</span>`}
+        <span class="voir">Voir la correction</span></summary>
         ${enonceHTML(question)}${correctionHTML(question)}</details>`;
       })
       .join("")}</div>
-    <div class="actions-prof">${bouton("Encore une séance", "encore", "primaire")}
+    <div class="actions-prof">${bouton(exam ? "Encore un entraînement" : "Encore une série", "encore", "primaire")}
       ${bouton("Retour", "accueil", "secondaire")}</div>`;
+}
+
+/* L'écran de départ du brevet : ce qui attend l'élève, en quatre mots, puis Commencer. */
+export function brevetHTML() {
+  return `<section class="brevet-depart">
+    <h1>Entraînement brevet</h1>
+    <ul class="brevet-regles">
+      <li><strong>9 questions</strong>, comme la partie sans calculatrice de l’épreuve</li>
+      <li><strong>20 minutes</strong> : le chrono démarre quand tu commences</li>
+      <li><strong>Sans aide</strong> : ni dessin, ni cours</li>
+      <li><strong>Les corrections à la fin</strong>, question par question</li>
+    </ul>
+    ${bouton("Commencer", "brevet-commencer", "primaire grand")}
+  </section>`;
 }

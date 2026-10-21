@@ -24,6 +24,7 @@ import {
   questionHTML,
   professeurHTML,
   bilanHTML,
+  brevetHTML,
   bouton,
   ICONES,
 } from "./vues.js";
@@ -130,6 +131,13 @@ function afficherDomaine(id) {
   domaine = id;
   const familles = famillesEligibles(catalogue, filtre).filter((famille) => famille.domaine === id);
   cadre(domaineHTML(id, familles, filtre));
+}
+
+function afficherBrevet() {
+  arreterHorloge();
+  ecran = "brevet";
+  seance = null;
+  cadre(brevetHTML());
 }
 
 function afficherProfesseur() {
@@ -459,7 +467,7 @@ function terminer() {
     });
   }
   ecran = "bilan";
-  cadre(bilanHTML(seance, parId, etoiles));
+  cadre(bilanHTML(seance, parId));
   document
     .querySelectorAll("details")
     .forEach((detail) => detail.addEventListener("toggle", ajusterAffichage));
@@ -676,7 +684,8 @@ function relierActions() {
     retour,
     prof: afficherProfesseur,
     jour: () => lancer({ mode: "jour", nombre: 8 }),
-    brevet: () => lancer({ mode: "exam", nombre: 9 }),
+    brevet: afficherBrevet,
+    "brevet-commencer": () => lancer({ mode: "exam", nombre: 9 }),
     melanger: () =>
       lancer({
         mode: "train",
