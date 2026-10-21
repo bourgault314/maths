@@ -199,8 +199,9 @@ function reglageHTML(nom, libelle, valeur, min, max) {
 }
 
 export function professeurHTML(familles, filtre, options, selection) {
-  return `<h1>Professeur</h1>${filtresHTML(filtre)}
-    <div class="configuration-prof"><div class="reglages">
+  return `<h1>Projeter au tableau</h1>
+    <p class="sous-titre">Choisis les notions, règle le temps, puis projette.</p>${filtresHTML(filtre)}
+    <div class="configuration-prof"><div class="reglages"><h2>Réglages</h2>
       ${reglageHTML("nombre", "Questions", options.nombre, 1, 40)}
       ${reglageHTML("secondes", "Recherche (s)", options.secondes, 5, 600)}
       ${reglageHTML("delai", "Pause entre questions (s)", options.delai, 0, 60)}
@@ -210,7 +211,7 @@ export function professeurHTML(familles, filtre, options, selection) {
       </select></label>
       <label><input id="automatique" type="checkbox" ${options.automatique ? "checked" : ""}> Enchaîner automatiquement</label>
       <label><input id="aide-office" type="checkbox" ${options.aideOffice ? "checked" : ""}> Aide affichée d’office</label>
-    </div><div class="selection-notions">${DOMAINES.map(([domaine, nom]) => {
+    </div><div class="selection-notions"><h2>Notions</h2>${DOMAINES.map(([domaine, nom]) => {
       const liste = familles.filter((famille) => famille.domaine === domaine);
       const coches = liste.length && liste.every((famille) => selection.has(famille.id));
       return `<details class="selection-domaine"><summary>
@@ -226,7 +227,6 @@ export function professeurHTML(familles, filtre, options, selection) {
     }).join("")}</div>
     </div><div class="actions-prof">${bouton("Projeter au tableau", "projeter", "primaire")}
       ${bouton("Ouvrir sur un écran", "partager", "secondaire")}
-      ${bouton("Donner cette série à ma classe", "classe", "secondaire", 'disabled title="Disponible au lot suivi"')}
     </div><p id="lien-serie" hidden></p>`;
 }
 
