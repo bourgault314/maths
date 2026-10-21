@@ -190,11 +190,7 @@ export function monterSymboles(parent, question, inserer) {
 
 export function monterClavier(parent, question, actions) {
   parent.replaceChildren();
-  const entete = element("div", "clavier-entete", parent);
-  element("span", "", entete).textContent = "Clavier";
-  const fermer = element("button", "bouton discret petit", entete);
-  fermer.textContent = "Replier ⌄";
-  fermer.onclick = actions.fermer;
+  // Plus de « Replier » : c'est le bouton clavier de la barre du haut qui montre ou cache le clavier.
   monterSymboles(element("div", "clavier-symboles", parent), question, actions.inserer);
   const touches = element("div", "touches", parent);
   const liste = ["7", "8", "9", "⌫", "4", "5", "6", "⇥", "1", "2", "3", "✓", ",", "0", "00"];

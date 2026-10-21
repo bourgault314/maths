@@ -15,7 +15,6 @@ import {
   monterChamps,
   lireChamps,
   insererTexte,
-  monterSymboles,
   monterClavier,
   paginerChoixProjection,
 } from "./champs.js";
@@ -58,9 +57,13 @@ function lirePreferences() {
     const niveau = ["6e", "5e", "4e", "3e", "brevet"].includes(valeur.niveau)
       ? valeur.niveau
       : "brevet";
-    return { niveau, garderAide: valeur.garderAide === true };
+    return {
+      niveau,
+      garderAide: valeur.garderAide === true,
+      clavierOrdinateur: valeur.clavierOrdinateur === true,
+    };
   } catch {
-    return { niveau: "brevet", garderAide: false };
+    return { niveau: "brevet", garderAide: false, clavierOrdinateur: false };
   }
 }
 
@@ -90,13 +93,22 @@ function cadre(contenu) {
   document.body.classList.remove("clavier-ouvert");
   clavierOuvert = false;
   champActif = null;
+  const simple = question && !projection;
   application.innerHTML = `<div class="coque">
-    <header class="entete-logo"><a href="/" aria-label="Accueil maths et go">
-      <img src="../assets/img/logos/mathsgo/logo-390.png" alt="maths&go"></a></header>
-    <main class="cadre"><div class="barre-cadre">
-      ${bouton(question ? "← Quitter" : "← Retour", "retour", "discret petit")}
+    ${
+      simple
+        ? ""
+        : `<header class="entete-logo"><a href="/" aria-label="Accueil maths et go">
+      <img src="../assets/img/logos/mathsgo/logo-390.png" alt="maths&go"></a></header>`
+    }
+    <main class="cadre">${
+      simple
+        ? ""
+        : `<div class="barre-cadre">
+      ${bouton("← Retour", "retour", "discret petit")}
       ${question ? "" : '<a class="bouton discret petit" href="?prof=1" data-action="prof">Professeur</a>'}
-    </div><div class="contenu">${contenu}</div></main>
+    </div>`
+    }<div class="contenu">${contenu}</div></main>
     <footer class="pied">mathsgo.re · Sans calculatrice · Collège et brevet</footer>
   </div>`;
   relierActions();
@@ -191,7 +203,9 @@ function afficherQuestion() {
     etat.aide = etat.aideOuverte ? 1 : 0;
     etat.visitee = true;
   }
-  cadre(questionHTML(seance, parId[question.famille], preferences.garderAide, etoiles));
+  cadre(
+    questionHTML(seance, parId[question.famille], preferences.garderAide, etoiles, clavierVoulu()),
+  );
   document.body.classList.toggle(
     "avec-choix",
     question.fields.some((champ) => champ.options),
@@ -231,17 +245,32 @@ function preparerSaisie(question, etat) {
       etat.reponses[rang] = valeur;
     },
   });
-  monterSymboles(document.querySelector(".symboles"), question, inserer);
   monterClavier(document.querySelector(".clavier"), question, {
     inserer,
     valider,
-    fermer: fermerClavier,
     suivant: champSuivant,
   });
   reponses.hidden = etat.correction;
-  document.querySelector(".symboles").hidden = etat.correction;
   const premier = document.querySelector(".champ:not(:disabled)");
-  if (premier && !etat.aideOuverte && telephone()) ciblerChamp(premier);
+  // Le clavier s'ouvre dès l'arrivée partout où on le veut ; au téléphone, pas quand l'aide est ouverte.
+  if (premier && clavierVoulu() && (!telephone() || !etat.aideOuverte)) ciblerChamp(premier);
+}
+
+// Le clavier à l'écran : toujours sur un appareil tactile, sur ordinateur seulement si on l'a demandé
+// (bouton clavier de la barre du haut, mémorisé). Un refus sur tactile vaut pour la page ouverte.
+let clavierRefuse = false;
+function clavierVoulu() {
+  return tactile() ? !clavierRefuse : preferences.clavierOrdinateur;
+}
+
+function basculerClavier() {
+  if (tactile()) clavierRefuse = !clavierRefuse;
+  else {
+    preferences.clavierOrdinateur = !preferences.clavierOrdinateur;
+    sauverPreferences();
+  }
+  recueillir();
+  afficherQuestion();
 }
 
 function telephone() {
@@ -254,7 +283,7 @@ function tactile() {
 
 function ciblerChamp(champ) {
   champActif = champ;
-  if (!tactile() || ecran !== "question") return;
+  if (!clavierVoulu() || ecran !== "question") return;
   clavierOuvert = true;
   document.querySelector(".clavier").hidden = false;
   document.body.classList.add("clavier-ouvert");
@@ -333,7 +362,8 @@ function ouvrirAide(etape = false) {
   etat.etape ||= etape;
   if (!etat.terminee) etat.aide = Math.max(etat.aide, etape ? 2 : 1);
   afficherQuestion();
-  fermerClavier();
+  // Au téléphone seulement : le clavier s'efface pour laisser la place au dessin.
+  if (telephone()) fermerClavier();
 }
 
 function fermerAide() {
@@ -649,8 +679,9 @@ function relierActions() {
           .map((famille) => famille.id),
         nombre: 8,
       }),
-    aide: () => ouvrirAide(),
+    aide: () => (etatCourant().aideOuverte ? fermerAide() : ouvrirAide()),
     etape: () => ouvrirAide(true),
+    clavier: basculerClavier,
     "fermer-aide": fermerAide,
     cours: ouvrirCours,
     correction: montrerCorrection,
@@ -726,9 +757,11 @@ function ajusterDessinProjete() {
 function ajusterEchelle() {
   const racine = document.documentElement;
   const coque = document.querySelector(".coque");
+  const projection = document.body.classList.contains("projection");
+  const marge = ecran === "question" && !projection ? 72 : 120;
   racine.style.setProperty("--echelle", "1");
-  racine.style.setProperty("--hauteur-cadre", `${innerHeight - 120}px`);
-  if (telephone() || !coque || document.body.classList.contains("projection")) return;
+  racine.style.setProperty("--hauteur-cadre", `${innerHeight - marge}px`);
+  if (telephone() || !coque || projection) return;
   // Défi tables : mesurer aussi le contenu, puis retenir la plus grande échelle qui tient.
   const zone =
     ecran === "question"
@@ -738,7 +771,7 @@ function ajusterEchelle() {
         : null;
   const tient = (echelle) => {
     racine.style.setProperty("--echelle", echelle.toFixed(3));
-    racine.style.setProperty("--hauteur-cadre", `${innerHeight / echelle - 120}px`);
+    racine.style.setProperty("--hauteur-cadre", `${innerHeight / echelle - marge}px`);
     return (
       coque.getBoundingClientRect().bottom <= innerHeight - 4 &&
       (!zone || zone.scrollHeight <= zone.clientHeight + 1)

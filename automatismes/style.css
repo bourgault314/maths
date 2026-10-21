@@ -408,15 +408,6 @@ label {
   white-space: nowrap;
   letter-spacing: 1px;
 }
-body[data-ecran="question"] .cadre {
-  min-height: min(640px, var(--hauteur-cadre, calc(100dvh - 112px)));
-}
-body[data-ecran="question"] .contenu {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  flex: 1;
-}
 .question-entete {
   display: flex;
   justify-content: space-between;
@@ -451,39 +442,6 @@ body[data-ecran="question"] .contenu {
 .progression::-moz-progress-bar {
   background: var(--turquoise);
   border-radius: 12px;
-}
-.espace-question {
-  min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  flex: 1 1 auto;
-  padding: 4px 8px 12px;
-  scrollbar-gutter: stable;
-  overscroll-behavior: contain;
-}
-.enonce {
-  text-align: center;
-}
-.enonce h1 {
-  color: var(--encre);
-  font-size: clamp(1.375rem, 3.2vw, 1.875rem);
-  line-height: 1.35;
-  margin: 0;
-}
-.question-expression {
-  display: block;
-  margin: 12px 0 4px;
-  font-size: 1.25em;
-}
-.math-expression {
-  max-width: 100%;
-}
-.enonce .math-expression {
-  font-family: "Nunito", "Segoe UI", sans-serif;
-  font-weight: 400;
-}
-.math-expression math {
-  font-size: 1em;
 }
 .figure {
   margin: 12px auto;
@@ -657,24 +615,6 @@ body[data-ecran="question"] .contenu {
   background: var(--fond-doux);
   box-shadow: inset 0 0 0 1px var(--bleu);
 }
-.symboles {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
-}
-.symboles button,
-.clavier-symboles button {
-  min-width: 40px;
-  min-height: 36px;
-  padding: 4px 8px;
-  border: 1px solid var(--ligne);
-  border-radius: 8px;
-  color: var(--encre);
-  background: var(--papier);
-  font-size: 1.125rem;
-}
 .retour-reponse {
   max-width: 560px;
   margin: 12px auto;
@@ -710,53 +650,203 @@ body[data-ecran="question"] .contenu {
 .correction p {
   text-align: center;
 }
-#commandes {
-  flex: 0 0 auto;
-}
-.actions-question {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
+/* ============================================================
+   Écran de question (modes élève : séance, notion, brevet).
+   Le haut sur une ligne comme /auto/ : Menu · notion et compteur · score, clavier, plein écran, Cours.
+   Dessous : la question, l'aide, le champ ; puis le clavier (s'il est là) et Aide · Passer · Valider,
+   tous dans la même colonne de 440 px. Tablette couchée et ordinateur : le clavier passe à droite.
+   ============================================================ */
+body[data-ecran="question"] .coque {
   padding-top: 16px;
 }
-.actions-gauche,
-.actions-droite {
+body[data-ecran="question"] .cadre {
+  /* Le cadre prend toute la hauteur : le clavier et Passer · Valider restent en bas, sous le pouce. */
+  min-height: var(--hauteur-cadre, calc(100dvh - 72px));
+  padding: 12px 24px 20px;
+}
+body[data-ecran="question"] .contenu {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex: 1;
+}
+.barre-question {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  flex: 0 0 auto;
+}
+.barre-question .gauche,
+.barre-question .droite {
   display: flex;
   align-items: center;
   gap: 8px;
 }
-.clavier {
-  display: none;
-}
-.clavier-entete {
+.barre-question .centre {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  min-height: 28px;
+  gap: 10px;
+  min-width: 0;
   color: var(--attenue);
-  font-size: 0.75rem;
+  font-size: 0.9375rem;
 }
-.clavier-entete button {
-  min-width: 36px;
-  min-height: 28px;
-  padding: 0 8px;
-  border: 0;
-  background: transparent;
-  color: var(--bleu);
+.barre-question .notion-nom {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.barre-question .centre strong {
+  color: var(--encre);
+  white-space: nowrap;
+}
+.barre-question .bouton {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 13px;
+  gap: 7px;
+}
+.barre-question .icone-bouton {
+  width: 44px;
+  padding: 0;
+  display: inline-grid;
+  place-items: center;
+}
+.barre-question .bouton svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+.barre-question .cours-bouton {
+  display: inline-flex;
+  align-items: center;
+  border: 1.5px solid var(--orange);
+  background: color-mix(in srgb, var(--orange) 10%, var(--papier));
+  color: var(--encre);
+}
+.barre-question .clavier-bascule[aria-pressed="true"] {
+  border-color: var(--bleu-identite);
+  background: var(--bleu-identite);
+  color: var(--papier);
+}
+.score-barre {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1.5px solid color-mix(in srgb, var(--vert) 35%, var(--papier));
+  border-radius: 999px;
+  background: var(--vert-fond);
+  color: var(--vert);
+  font-weight: 800;
+  white-space: nowrap;
+}
+body[data-ecran="question"] .progression {
+  height: 6px;
+  margin: 8px 0 12px;
+}
+.espace-question {
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1 1 auto;
+  padding: 4px 8px 12px;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+}
+.enonce {
+  text-align: center;
+}
+.enonce h1 {
+  color: var(--encre);
+  font-size: clamp(1.5rem, 2.9vw, 2.375rem);
+  line-height: 1.3;
+  margin: 0;
+}
+.question-expression {
+  display: block;
+  margin: 14px 0 6px;
+  font-size: 1.6em;
+}
+.math-expression {
+  max-width: 100%;
+}
+.enonce .math-expression {
+  font-family: "Nunito", "Segoe UI", sans-serif;
+  font-weight: 400;
+}
+.math-expression math {
+  font-size: 1em;
+}
+.aide {
+  max-width: 440px;
+}
+/* Le bas : le clavier puis Passer · Valider, à la largeur de l'aide et du champ. */
+#commandes {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  flex: 0 0 auto;
+  width: min(100%, 440px);
+  margin: 8px auto 0;
+}
+.actions-question {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+.actions-question .precedente,
+.actions-question .aide-bouton {
+  margin-right: auto;
+}
+.actions-question .aide-bouton {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1.5px solid var(--bleu);
+  border-radius: 13px;
+  background: var(--fond-doux);
+  color: var(--bleu-identite);
+}
+.actions-question .aide-bouton svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+.actions-question .aide-bouton[aria-pressed="true"] {
+  border-color: var(--bleu-identite);
+  background: var(--bleu-identite);
+  color: var(--papier);
+}
+/* Clavier à l'écran : le ✓ valide, « Valider » s'efface. */
+body.clavier-ouvert .actions-question [data-action="valider"] {
+  display: none;
 }
 .clavier-symboles {
   display: flex;
   gap: 4px;
-  margin: 4px 0;
+  margin: 0 0 4px;
   overflow-x: auto;
   overscroll-behavior-x: contain;
 }
 .clavier-symboles button {
   flex: 1 0 auto;
   min-width: 36px;
-  min-height: 32px;
-  padding: 0 4px;
+  min-height: 36px;
+  padding: 0 8px;
+  border: 1px solid var(--ligne);
+  border-radius: 8px;
+  color: var(--encre);
+  background: var(--papier);
+  font-size: 1.125rem;
 }
 .touches {
   display: grid;
@@ -765,7 +855,7 @@ body[data-ecran="question"] .contenu {
 }
 .touches button {
   min-width: 0;
-  min-height: 40px;
+  min-height: 48px;
   padding: 4px;
   border: 1px solid var(--ligne);
   border-radius: 8px;
@@ -781,6 +871,113 @@ body[data-ecran="question"] .contenu {
   background: var(--bleu);
   border-color: var(--bleu);
 }
+/* Large et couché (tablette couchée, ordinateur) : le clavier à droite de la question, rien ne rétrécit. */
+@media (min-width: 1000px) and (orientation: landscape) {
+  body.clavier-ouvert[data-ecran="question"] .contenu {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    column-gap: 24px;
+  }
+  body.clavier-ouvert .barre-question,
+  body.clavier-ouvert[data-ecran="question"] .progression {
+    grid-column: 1 / -1;
+  }
+  body.clavier-ouvert .espace-question {
+    grid-column: 1;
+    grid-row: 3;
+  }
+  body.clavier-ouvert #commandes {
+    grid-column: 2;
+    grid-row: 3;
+    width: auto;
+    margin: 0;
+    justify-content: flex-end;
+  }
+}
+/* Téléphone : le clavier et Passer · Valider sont fixés en bas ; la barre du haut se resserre. */
+@media (max-width: 680px) {
+  body[data-ecran="question"] .coque {
+    padding-top: 8px;
+  }
+  body[data-ecran="question"] .cadre {
+    height: calc(100dvh - 16px - var(--hauteur-commandes));
+    min-height: 160px;
+    max-height: calc(100dvh - 16px - var(--hauteur-commandes));
+    padding: 8px 12px 12px;
+  }
+  .barre-question {
+    gap: 6px;
+    min-height: 48px;
+  }
+  .barre-question .bouton {
+    min-height: 40px;
+    padding: 0 10px;
+    font-size: 0.875rem;
+  }
+  .barre-question .icone-bouton {
+    width: 40px;
+  }
+  .barre-question .plein-ecran,
+  .barre-question .clavier-bascule,
+  .barre-question .notion-nom,
+  .barre-question .menu .mot,
+  .barre-question .cours-bouton span {
+    display: none;
+  }
+  .barre-question .menu,
+  .barre-question .cours-bouton {
+    width: 40px;
+    padding: 0;
+    justify-content: center;
+  }
+  .barre-question .centre {
+    font-size: 0.875rem;
+    gap: 6px;
+    overflow: hidden;
+  }
+  .score-barre {
+    min-height: 32px;
+    padding: 0 10px;
+  }
+  body[data-ecran="question"] .progression {
+    height: 4px;
+    margin: 6px 0 8px;
+  }
+  .espace-question {
+    padding: 4px 0 8px;
+    scrollbar-gutter: auto;
+  }
+  .enonce h1 {
+    font-size: 1.375rem;
+  }
+  .question-expression {
+    margin: 10px 0 4px;
+    font-size: 1.6em;
+  }
+  #commandes {
+    position: fixed;
+    z-index: 5;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: auto;
+    margin: 0;
+    gap: 6px;
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--ligne);
+    background: var(--fond-doux);
+  }
+  .touches button {
+    min-height: 44px;
+  }
+  .actions-question .bouton {
+    padding: 8px 14px;
+    min-height: 40px;
+    font-size: 0.875rem;
+  }
+}
+
 .cours-dialog {
   width: min(600px, calc(100% - 32px));
   max-height: calc(100dvh - 32px);
@@ -955,12 +1152,19 @@ body[data-ecran="question"] .contenu {
   font-size: 1.5rem;
   font-variant-numeric: tabular-nums;
 }
+/* La projection garde sa barre pleine largeur : le bas en colonne de 440 px ne la concerne pas. */
+body.projection #commandes {
+  display: block;
+  width: auto;
+  margin: 0;
+}
 .barre-projection {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+  padding-top: 16px;
 }
 .message {
   padding: 12px;
@@ -1048,11 +1252,6 @@ body.projection .minuteur {
   .coque {
     zoom: var(--echelle);
   }
-  body.tactile .clavier {
-    display: block;
-    max-width: 420px;
-    margin: 8px auto 0;
-  }
 }
 @media (max-width: 680px) {
   body {
@@ -1139,17 +1338,8 @@ body.projection .minuteur {
   body[data-ecran="question"] .coque {
     padding-bottom: 0;
   }
-  body[data-ecran="question"] .cadre {
-    height: calc(100dvh - 64px - var(--hauteur-commandes));
-    min-height: 160px;
-    max-height: calc(100dvh - 64px - var(--hauteur-commandes));
-    padding: 12px;
-  }
   body[data-ecran="question"] .pied {
     display: none;
-  }
-  body[data-ecran="question"] .barre-cadre {
-    margin-bottom: 8px;
   }
   .question-entete {
     font-size: 0.75rem;
@@ -1159,18 +1349,6 @@ body.projection .minuteur {
   .progression {
     height: 4px;
     margin-bottom: 8px;
-  }
-  .espace-question {
-    padding: 4px 0 8px;
-    scrollbar-gutter: auto;
-  }
-  .enonce h1 {
-    font-size: 1.25rem;
-    line-height: 1.3;
-  }
-  .question-expression {
-    margin: 8px 0 4px;
-    font-size: 1.25em;
   }
   .figure {
     margin: 8px auto;
@@ -1248,9 +1426,6 @@ body.projection .minuteur {
     padding: 8px 12px;
     font-size: 1rem;
   }
-  .symboles {
-    display: none;
-  }
   .retour-reponse {
     margin: 8px 0;
     padding: 8px;
@@ -1259,32 +1434,6 @@ body.projection .minuteur {
   .correction {
     padding: 12px;
     margin: 8px 0;
-  }
-  #commandes {
-    position: fixed;
-    z-index: 5;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
-    border-top: 1px solid var(--ligne);
-    background: var(--fond-doux);
-  }
-  .actions-question {
-    padding: 0;
-    gap: 8px;
-  }
-  .actions-gauche,
-  .actions-droite {
-    gap: 4px;
-  }
-  .actions-question .bouton {
-    padding: 8px 12px;
-    min-height: 40px;
-    font-size: 0.8125rem;
-  }
-  .clavier {
-    display: block;
   }
   .cours-dialog {
     width: calc(100% - 16px);
