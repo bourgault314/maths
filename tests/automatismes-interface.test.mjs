@@ -643,3 +643,45 @@ test(
     }
   },
 );
+
+test(
+  "figure (coque V2) : l'aide en bulle sur la figure, la question ne bouge pas, le clavier reste",
+  { skip: ignorer, timeout: 60000 },
+  async () => {
+    const { serveur, base } = await serveurLocal();
+    const browser = await ouvrirNavigateur();
+    try {
+      for (const [width, height, tactile] of [
+        [390, 844, true],
+        [1366, 768, false],
+      ]) {
+        const page = await browser.newPage({
+          viewport: { width, height },
+          isMobile: tactile,
+          hasTouch: tactile,
+        });
+        await page.goto(`${base}?notion=EG06&forme=d&graine=12`);
+        await page.locator(".carte .figure svg").waitFor();
+        await stabiliser(page);
+        const haut = () =>
+          page.locator(".carte .reponses").evaluate((el) => el.getBoundingClientRect().top);
+        const avant = await haut();
+        await page.locator('.carte [data-action="aide"]').click();
+        await page.locator(".bulle-aide").waitFor();
+        await stabiliser(page);
+        assert.equal(
+          await page.locator(".espace-question > .aide").count(),
+          0,
+          "Rien sous la carte",
+        );
+        assert.ok(Math.abs((await haut()) - avant) <= 1, `${width} : la question ne bouge pas`);
+        if (tactile)
+          assert.equal(await page.locator(".clavier").isVisible(), true, "Clavier gardé");
+        await page.close();
+      }
+    } finally {
+      await browser.close();
+      await new Promise((fin) => serveur.close(fin));
+    }
+  },
+);

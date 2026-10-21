@@ -920,6 +920,7 @@ function reduireCalculs(zone) {
   });
 }
 
+let figureGardee = { cle: "", echelle: 1 };
 function ajusterQuestion() {
   const zone = document.querySelector(".espace-question");
   if (!zone || ecran !== "question") return;
@@ -927,7 +928,9 @@ function ajusterQuestion() {
   const projection = seance?.mode === "project";
   const aide = zone.querySelector(".aide .dessin svg, .explication .dessin svg");
   const figure = zone.querySelector(".carte .figure > svg");
-  const aideOuverte = Boolean(zone.querySelector(".aide, .explication, .bulle-aide"));
+  // La bulle posée sur la figure n'ajoute aucune hauteur : la figure garde alors sa règle « sans
+  // aide » (60 %), sinon elle grandirait et la question bougerait à l'ouverture de l'aide (R5b).
+  const aideOuverte = Boolean(zone.querySelector(".aide, .explication"));
   const trop = () => zone.scrollHeight > zone.clientHeight + 1;
   const depart = (dessin, maximum) => {
     const naturelle = dessin ? largeurNaturelle(dessin) : 0;
@@ -940,11 +943,20 @@ function ajusterQuestion() {
     const planAide = 0.76 * Math.min(1, echelleAide);
     const planFigure = (aideOuverte ? 0.7 : 0.6) * echelleFigure;
     poserDessin(aide, echelleAide);
+    // Sans rien dessous (la bulle comprise), la figure garde la taille trouvée à l'arrivée sur la
+    // question : ouvrir l'aide ne la change pas d'un pixel.
+    const clavierVisible = !document.querySelector(".clavier")?.hidden;
+    const cle = [seance.id, seance.index, innerWidth, innerHeight, clavierVisible].join("|");
+    if (figure && !aideOuverte && figureGardee.cle === cle) {
+      poserDessin(figure, figureGardee.echelle);
+      return;
+    }
     poserDessin(figure, echelleFigure);
     while (trop() && aide && echelleAide - 0.02 >= planAide)
       poserDessin(aide, (echelleAide -= 0.02));
     while (trop() && figure && echelleFigure - 0.02 >= planFigure)
       poserDessin(figure, (echelleFigure -= 0.02));
+    if (figure && !aideOuverte) figureGardee = { cle, echelle: echelleFigure };
   };
   essayer();
   const clavier = document.querySelector(".clavier");
