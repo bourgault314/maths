@@ -298,11 +298,7 @@ function preparerSaisie(question, etat) {
     ajusterAffichage();
   };
   monter();
-  monterClavier(document.querySelector(".clavier"), question, {
-    inserer,
-    valider,
-    suivant: champSuivant,
-  });
+  monterClavier(document.querySelector(".clavier"), question, { inserer });
   reponses.hidden = etat.correction;
   const premier = document.querySelector(".champ:not(:disabled)");
   // Le clavier s'ouvre dès l'arrivée partout où on le veut ; au téléphone, pas quand l'aide est ouverte.
@@ -357,13 +353,6 @@ function fermerClavier() {
 function inserer(texte) {
   champActif ||= document.querySelector(".champ:not(:disabled)");
   insererTexte(champActif, texte);
-}
-
-function champSuivant() {
-  const champs = [...document.querySelectorAll(".champ:not(:disabled)")];
-  if (!champs.length) return;
-  const suivant = champs[(champs.indexOf(champActif) + 1) % champs.length];
-  suivant.focus({ preventScroll: true });
 }
 
 function recueillir() {

@@ -387,7 +387,8 @@ test(
         }));
         assert.equal(clavier.cache, false, `${nom} : clavier ouvert à l’arrivée`);
         assert.ok(clavier.hauteur > 0, `${nom} : clavier visible`);
-        assert.ok(clavier.largeur >= 300 && clavier.largeur <= 460, `${nom} : largeur du clavier`);
+        // Coque V2 (C4) : pavé 5 colonnes, 560 px au plus (comme la maquette).
+        assert.ok(clavier.largeur >= 300 && clavier.largeur <= 560, `${nom} : largeur du clavier`);
         assert.equal(await page.locator(".champ").first().getAttribute("inputmode"), "none");
         assert.ok(await dansEcran(page, '[data-action="passer"]'), `${nom} : Passer visible`);
         assert.ok(await dansEcran(page, '[data-action="valider"]'), `${nom} : Valider visible`);

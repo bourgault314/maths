@@ -487,60 +487,33 @@ export function monterSymboles(parent, question, inserer, liste = symbolesQuesti
   });
 }
 
+/* Le pavé (coque V2, C4) : 5 colonnes, 3 rangées — 1 2 3 4 5 / 6 7 8 9 0 / , − / ⌫ (⌫ sur deux
+   colonnes). Plus de touche ⇥ « case suivante » : on touche la case qu'on veut remplir (Tab reste au
+   clavier de l'ordinateur). Les symboles propres à la question (sauf − et /, déjà sur le pavé) vont
+   sur UNE rangée au-dessus, seulement quand la question en a besoin ; les lettres restent rondes
+   (police MG Math, par mathHtml). */
 export function monterClavier(parent, question, actions) {
   parent.replaceChildren();
-  // Le clavier n'a plus de touche ✓ : « Valider » est sous le clavier, avec Aide et Passer (Gwenaël, 21/10).
-  // Les deux premiers symboles de la forme prennent la place du ✓ ; les autres, s'il y en a, au-dessus.
-  const symboles = symbolesQuestion(question);
-  const [premier = "", second = ""] = symboles;
-  const autres = symboles.slice(2);
+  // La lettre de l'expression en tête de la rangée (« x + × ( ) ² »), comme sur la planche 16.
+  const lettre = (symbole) => (/^[a-z]$/.test(symbole) ? 0 : 1);
+  const autres = symbolesQuestion(question)
+    .filter((symbole) => !["−", "/"].includes(symbole))
+    .sort((a, b) => lettre(a) - lettre(b));
   if (autres.length) {
-    monterSymboles(
-      element("div", "clavier-symboles", parent),
-      { ...question },
-      actions.inserer,
-      autres,
-    );
+    monterSymboles(element("div", "clavier-symboles", parent), question, actions.inserer, autres);
   }
   const touches = element("div", "touches", parent);
-  const liste = [
-    "7",
-    "8",
-    "9",
-    "⌫",
-    "4",
-    "5",
-    "6",
-    "⇥",
-    "1",
-    "2",
-    "3",
-    premier,
-    ",",
-    "0",
-    "00",
-    second,
-  ];
-  liste.forEach((touche) => {
-    const bouton = element("button", touche ? "" : "vide", touches);
-    if (!touche) {
-      bouton.disabled = true;
-      bouton.setAttribute("aria-hidden", "true");
-      return;
-    }
-    const symbole = touche === premier || touche === second;
-    if (symbole) {
-      bouton.classList.add("symbole");
-      bouton.innerHTML = mathHtml(touche);
-    } else bouton.textContent = touche;
+  for (const touche of [..."1234567890", ",", "−", "/", "⌫"]) {
+    const bouton = element("button", "", touches);
+    bouton.type = "button";
+    bouton.textContent = touche;
+    if (["−", "/"].includes(touche)) bouton.classList.add("symbole");
+    if (touche === "⌫") bouton.classList.add("effacer");
     bouton.setAttribute(
       "aria-label",
-      { "⌫": "Effacer", "⇥": "Champ suivant" }[touche] || (symbole ? `Insérer ${touche}` : touche),
+      touche === "⌫" ? "Effacer" : ["−", "/"].includes(touche) ? `Insérer ${touche}` : touche,
     );
     bouton.onpointerdown = (evenement) => evenement.preventDefault();
-    bouton.onclick = () => {
-      if (touche === "⇥") actions.suivant();
-      else actions.inserer(touche === "⌫" ? "effacer" : touche);
-    };
-  });
+    bouton.onclick = () => actions.inserer(touche === "⌫" ? "effacer" : touche);
+  }
 }
