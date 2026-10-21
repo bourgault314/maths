@@ -216,7 +216,7 @@ test("« ← Calcul mental » seulement sur l’accueil : body.ecran-interne par
   const avant = `const document = ARG.document; const $ = ARG.$; const window = {scrollTo: () => {}};
     const renderAccueil = () => {}; const renderParcours = () => {}; const renderCalculs = () => {}; const syncControls = () => {};
     const configuration = {mode: null}; const suivreHistorique = () => {}; const ajusterEchelle = () => {};
-    const verrouPassage = () => false; const enEvaluation = () => false;`;
+    const verrouPassage = () => false; const enEvaluation = () => false; const VUE_PROF = false;`;
   const show = new Function("ARG", `${avant}\n${source("show")}\nreturn show;`)({document, $});
   const vus = {};
   const panneau = {};
@@ -234,7 +234,7 @@ test("E4 : pendant un passage, show() ne mène qu'à l'accueil — sauf la séri
     const avant = `const document = ARG.document; const $ = ARG.$; const window = {scrollTo: () => {}};
       const renderAccueil = () => {}; const renderParcours = () => {}; const syncControls = () => {}; const renderFiche = () => {}; const ajusterFiche = () => {}; const prenomAffiche = () => "";
       const configuration = {mode: null}; const suivreHistorique = () => {}; const ajusterEchelle = () => {};
-      const verrouPassage = () => ${verrou}; const enEvaluation = () => ${evaluation};`;
+      const verrouPassage = () => ${verrou}; const enEvaluation = () => ${evaluation}; const VUE_PROF = false;`;
     return {show: new Function("ARG", `${avant}\n${source("show")}\nreturn show;`)({document, $}), $};
   };
   const visible = $ => ["intro", "launch", "play", "result", "parcours", "lire", "fiche"].find(id => !$(id).hidden);

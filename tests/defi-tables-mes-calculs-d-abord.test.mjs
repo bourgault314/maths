@@ -49,14 +49,14 @@ function lanceur(parcours) {
   const appels = [];
   const state = {apresMesCalculs: "reste d'avant", origin: null};
   const configuration = {};
-  const fabrique = new Function("state", "PARCOURS", "parcours", "configuration", "startRevision", "start", "TRAIN_TYPES", "CORE", "NOM_DU_TEST", "majuscule", "NOMS_ENTRAINEMENTS", "renderAccueil",
+  const fabrique = new Function("state", "PARCOURS", "parcours", "configuration", "startRevision", "start", "TRAIN_TYPES", "CORE", "NOM_DU_TEST", "majuscule", "NOMS_ENTRAINEMENTS", "renderAccueil", "VUE_PROF",
     `${source("nomDeLaSuite")}\n${source("launchFromParcours")}\nreturn launchFromParcours;`);
   const launchFromParcours = fabrique(state, {...P, mesCalculsAFaire: q => P.mesCalculsAFaire(q, AUJ)}, parcours, configuration,
     (table, origin) => appels.push(["revision", table, origin]), () => appels.push(["start", configuration.mode]),
     {desordre: ["direct"]}, {PRESETS: {validation: {total: 20, duration: 90}, train: {total: 10, duration: null}, learn: {total: 11, duration: null}, test: {total: 25, duration: 120}}},
     "Je passe le test", texte => texte.charAt(0).toUpperCase() + texte.slice(1),
     {desordre: "dans le désordre", trous: "nombres manquants et divisions", mixte: "résultats, nombres manquants et divisions"},
-    () => appels.push(["accueil"]));
+    () => appels.push(["accueil"]), false);
   return {launchFromParcours, appels, state};
 }
 
@@ -184,7 +184,9 @@ test("la journée ouverte : la porte s'ouvre, la séance n'est pas commencée et
 test("quitter efface la suite : retour à l'accueil, une séance qui commence, un nouveau lancement", () => {
   assert.match(html, /function backToModes\(\) \{\s*quitterSeance\(\);\s*state\.apresMesCalculs = null;/);
   assert.match(html, /function commencerSeance\(table\) \{\s*state\.encoreOuverte = false;\s*state\.apresMesCalculs = null;/);
-  assert.match(html, /function launchFromParcours\(config, origin = "parcours", \{puis\} = \{\}\) \{\s*if \(!config\) return;\s*state\.apresMesCalculs = null;\s*state\.apresMelange = null;/);
+  // Lot « Ma classe : le parcours de Léa » (21/10/2026) : la vue du professeur
+  // sort en premier (verrou 3), avant même de regarder la configuration.
+  assert.match(html, /function launchFromParcours\(config, origin = "parcours", \{puis\} = \{\}\) \{\s*(?:\/\/[^\n]*\n\s*)*if \(VUE_PROF\) return;\s*if \(!config\) return;\s*state\.apresMesCalculs = null;\s*state\.apresMelange = null;/);
   assert.match(html, /apresMesCalculs: null,/, "nul au chargement");
 });
 

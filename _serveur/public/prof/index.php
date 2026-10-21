@@ -113,7 +113,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   table { width: 100%; border-collapse: collapse; background: var(--paper); font-size: .92rem; }
   th, td { padding: 8px 6px; text-align: left; border-bottom: 1px solid var(--line);
            white-space: nowrap; }
-  /* « Fiche » (ou « Détail ») au même endroit sur chaque ligne, que la ligne
+  /* « Parcours » (ou « Détail ») au même endroit sur chaque ligne, que la ligne
      ait un « ⋯ » ou non (lot « Ma classe : élèves » : il n'y reste que
      « Revenir à… », pour les élèves qui ont une version à restaurer). */
   #tableau td.actions-eleve { display: flex; gap: 6px; justify-content: flex-start; }
@@ -1749,15 +1749,19 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       const cDate = celluleDate(eleve);
 
       const cActions = document.createElement("td");
-      // La fiche vit dans l'appli du site : un seul gabarit, une seule vérité.
-      // Depuis le lot 3, elle s'ouvre par un BILLET de lecture demandé au
-      // serveur au moment du clic (voirFiche), jamais par le code dans
+      // Le parcours vit dans l'appli du site : un seul gabarit, une seule
+      // vérité. Depuis le lot 3, il s'ouvre par un BILLET de lecture demandé
+      // au serveur au moment du clic (voirFiche), jamais par le code dans
       // l'adresse : un collègue en lecture seule y a donc droit lui aussi.
+      // Lot « Ma classe : le parcours de Léa » (21/10/2026) : « Parcours » à
+      // la place de « Fiche » — l'appli montre l'écran Mon parcours de
+      // l'élève, en lecture seule, avec « Imprimer sa fiche » dessous. Même
+      // bouton, même place, même classe.
       const fiche = document.createElement("button");
       fiche.type = "button";
       fiche.className = "secondaire petit";
-      fiche.textContent = "Fiche";
-      fiche.title = "Voir sa fiche";
+      fiche.textContent = "Parcours";
+      fiche.title = "Voir son parcours";
       fiche.addEventListener("click", () => voirFiche(eleve, fiche));
       cActions.append(fiche);
       // Les gestes rares, derrière « ⋯ » (lot 2b).
@@ -3933,11 +3937,13 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     finally { bouton.disabled = false; }
   });
 
-  // « Voir sa fiche » (lot 3) : un billet de lecture, à usage unique, valable
-  // deux minutes, glissé dans l'adresse de l'appli à la place du code — le
-  // code n'entre plus dans l'historique de ce navigateur. L'onglet est ouvert
-  // AVANT d'attendre le serveur (les navigateurs ne laissent ouvrir une
-  // fenêtre que dans le geste du clic), puis dirigé vers la fiche.
+  // « Voir son parcours » (lot 3, « Voir sa fiche » à l'époque) : un billet
+  // de lecture, à usage unique, valable deux minutes, glissé dans l'adresse
+  // de l'appli à la place du code — le code n'entre plus dans l'historique de
+  // ce navigateur. L'onglet est ouvert AVANT d'attendre le serveur (les
+  // navigateurs ne laissent ouvrir une fenêtre que dans le geste du clic),
+  // puis dirigé vers le parcours. L'adresse reste « #b=…&vue=fiche » : le site
+  // et cette page se mettent à jour dans n'importe quel ordre.
   async function voirFiche(eleve, bouton) {
     const fenetre = window.open("about:blank", "_blank");
     if (fenetre) { try { fenetre.opener = null; } catch (_) {} }

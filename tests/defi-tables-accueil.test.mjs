@@ -293,8 +293,8 @@ test("la phrase « Reviens demain : N calculs t’attendront » ; 10 à la fois"
 test("avec un code, les liens Réglages libres et Évaluation CM1 n’existent pas ; sans code, ils sont là", async () => {
   assert.match(html, /body\.mode-eleve \.acc-site \{ display: none !important; \}/);
   assert.equal((html.match(/class="acc-site"/g) || []).length, 2);
-  assert.match(html, /if \(document\.body\) document\.body\.classList\.toggle\("mode-eleve", Boolean\(suiviActif\(\) \|\| entreeRefusee\)\);/,
-    "le même signal que le lien du haut (majLienRetour), pas un paramètre d’adresse");
+  assert.match(html, /if \(document\.body\) document\.body\.classList\.toggle\("mode-eleve", Boolean\(suiviActif\(\) \|\| entreeRefusee \|\| VUE_PROF\)\);/,
+    "le même signal que le lien du haut (majLienRetour), pas un paramètre d’adresse — et la vue du professeur a la même barre");
 
   // Sans code : mode site.
   const site = demarrerAppli({});

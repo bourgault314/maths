@@ -263,9 +263,12 @@ test("la page : le tableau — onglets au téléphone, deux colonnes sur ordinat
   assert.match(html, /\.rec-liste li\.moi \{ border: 2px solid var\(--blue\); background: #eef5ff; \}/);
 });
 
-test("la page : la fiche d'un élève porte son record (ligne d'en-tête), la vue professeur inchangée par ailleurs", () => {
+test("la page : le parcours d'un élève porte son record (bandeau), la vue professeur inchangée par ailleurs", () => {
   assert.match(html, /ficheRecord = donnees\.record \|\| null;\s*afficherFicheEleve\(donnees\);/);
-  assert.match(html, /record && Number\.isInteger\(record\.meilleur\) \? `record \$\{PARCOURS\.formatTemps\(record\.meilleur\)\}` : ""/);
+  // Lot « Ma classe : le parcours de Léa » : le record est dans le bandeau
+  // (renderRepereProf), à la suite de la dernière activité.
+  assert.match(html, /profEtat = \{prenom: distant\.prenom, classe: classe \|\| "", maj_le: maj_le \|\| null, record\};/);
+  assert.match(html, /const record = profEtat\.record;\s*\n\s*if \(record && Number\.isInteger\(record\.meilleur\)\) \{[\s\S]*?`· record \$\{PARCOURS\.formatTemps\(record\.meilleur\)\}`/);
 });
 
 // ------------------------------------------------------ la page, en marche (faux-monde)
