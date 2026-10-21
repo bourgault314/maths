@@ -96,24 +96,22 @@ function cadre(contenu) {
   document.body.classList.remove("clavier-ouvert");
   clavierOuvert = false;
   champActif = null;
-  // La coque des applis suivies (Défi tables) : logo à gauche, pastilles à droite, cadre blanc.
-  // L'écran de question n'a ni en-tête ni pied : sa barre du haut est dans le cadre.
-  const simple = question && !projection;
-  const entete = simple
+  // Pas d'en-tête hors du cadre : la barre du cadre porte « ← Retour » à gauche (sauf sur l'accueil)
+  // et les pastilles Diaporama · Plein écran à droite. L'écran de question a sa propre barre.
+  const pastilles = `<div class="barre-cadre-droite">
+    ${ecran === "prof" ? "" : '<a class="pastille" href="?prof=1" data-action="prof">Diaporama</a>'}
+    ${bouton(`${ICONES.pleinEcran}<span>Plein écran</span>`, "plein-ecran", "pastille", 'aria-label="Plein écran"')}
+  </div>`;
+  const barreCadre = question
     ? ""
-    : `<header class="entete"><a class="logo" href="/" aria-label="Accueil maths et go">
-      <img src="../assets/img/logos/mathsgo/logo-390.png" alt="maths&go"></a>
-      <div class="entete-droite">
-        ${ecran === "prof" ? "" : '<a class="pastille" href="?prof=1" data-action="prof">Diaporama</a>'}
-        ${bouton(`${ICONES.pleinEcran}<span>Plein écran</span>`, "plein-ecran", "pastille", 'aria-label="Plein écran"')}
-      </div></header>`;
-  const retourCadre =
-    question || ecran === "accueil"
-      ? ""
-      : `<div class="barre-cadre">${bouton("← Retour", "retour", "discret petit")}</div>`;
-  application.innerHTML = `<div class="coque">${entete}
-    <main class="cadre">${retourCadre}<div class="contenu">${contenu}</div></main>
-    ${simple ? "" : '<footer class="pied">mathsgo.re · Sans calculatrice · Collège et brevet</footer>'}
+    : `<div class="barre-cadre">${ecran === "accueil" ? "" : bouton("← Retour", "retour", "discret petit")}
+      ${pastilles}</div>`;
+  const pied = `<footer class="pied"><a class="logo" href="/" aria-label="Accueil maths et go">
+    <img src="../assets/img/logos/mathsgo/logo-390.png" alt="maths&go"></a>
+    <span>Sans calculatrice · Collège et brevet</span></footer>`;
+  application.innerHTML = `<div class="coque">
+    <main class="cadre">${barreCadre}<div class="contenu">${contenu}</div></main>
+    ${question ? "" : pied}
   </div>`;
   relierActions();
   ajusterAffichage();
@@ -781,7 +779,8 @@ function ajusterEchelle() {
   const racine = document.documentElement;
   const coque = document.querySelector(".coque");
   const projection = document.body.classList.contains("projection");
-  const marge = ecran === "question" && !projection ? 72 : 120;
+  // Sans en-tête, la marge autour du cadre est la même partout : haut de la coque, pied, bas.
+  const marge = 72;
   racine.style.setProperty("--echelle", "1");
   racine.style.setProperty("--hauteur-cadre", `${innerHeight - marge}px`);
   if (telephone() || !coque || projection) return;

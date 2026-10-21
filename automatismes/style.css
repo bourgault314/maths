@@ -137,32 +137,9 @@ label {
 .coque {
   width: min(850px, calc(100% - 32px));
   margin: 0 auto;
-  padding-bottom: 16px;
+  padding: 16px 0;
 }
-/* En-tête hors du cadre, comme Défi tables : le logo à gauche, les pastilles à droite. */
-.entete {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  min-height: 64px;
-  padding: 8px 4px;
-}
-.entete .logo {
-  display: inline-flex;
-  align-items: center;
-}
-.entete img {
-  width: auto;
-  max-width: 180px;
-  height: 40px;
-  object-fit: contain;
-}
-.entete-droite {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+/* Les pastilles Diaporama · Plein écran, dans la barre du cadre, à droite. */
 .pastille {
   display: inline-flex;
   align-items: center;
@@ -188,7 +165,7 @@ label {
 .cadre {
   display: flex;
   flex-direction: column;
-  max-height: var(--hauteur-cadre, calc(100dvh - 112px));
+  max-height: var(--hauteur-cadre, calc(100dvh - 72px));
   padding: 24px 32px;
   border: 1px solid var(--ligne);
   border-radius: 28px;
@@ -203,17 +180,41 @@ label {
   flex: 0 0 auto;
   margin-bottom: 16px;
 }
+/* « Plein écran » est un bouton : même hauteur que la pastille « Diaporama » à côté. */
+.bouton.pastille {
+  min-height: 40px;
+  padding: 6px 14px;
+  border-radius: 999px;
+}
+.barre-cadre-droite {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
 .contenu {
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
 }
+/* Le pied : le petit logo maths&go (lien vers l'accueil du site) et la consigne de l'appli. */
 .pied {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   color: var(--attenue);
   font-size: 0.8125rem;
   padding-top: 12px;
+}
+.pied .logo {
+  display: inline-flex;
+  align-items: center;
+}
+.pied img {
+  width: auto;
+  height: 24px;
 }
 .bouton {
   display: inline-flex;
@@ -1357,7 +1358,6 @@ body.projection .coque {
   max-width: none;
   padding: 0;
 }
-body.projection .entete,
 body.projection .pied {
   display: none;
 }
@@ -1435,16 +1435,10 @@ body.projection .minuteur {
   }
   .coque {
     width: calc(100% - 16px);
-    padding-bottom: 12px;
+    padding: 8px 0 12px;
   }
-  .entete {
-    min-height: 52px;
-    padding: 4px 2px;
-  }
-  .entete img {
-    height: 32px;
-  }
-  .pastille {
+  .pastille,
+  .bouton.pastille {
     min-height: 36px;
     padding: 4px 10px;
     font-size: 0.8125rem;
@@ -1455,7 +1449,7 @@ body.projection .minuteur {
   .cadre {
     padding: 16px;
     border-radius: 28px;
-    max-height: calc(100dvh - 96px);
+    max-height: calc(100dvh - 60px);
   }
   .barre-cadre {
     margin-bottom: 12px;
