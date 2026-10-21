@@ -892,3 +892,43 @@ test(
     }
   },
 );
+
+// Corrections après C7 (K5) : en EG06-b, le « dessin d'aide » (90° / 180°) n'est pas la figure
+// annotée ; il remplaçait l'angle de 60°. La figure reste celle de la question, le schéma va dessous.
+test(
+  "figure (coque V2, K5) : EG06-b garde son angle, le schéma d'aide est dans le panneau",
+  { skip: ignorer, timeout: 60000 },
+  async () => {
+    const { serveur, base } = await serveurLocal();
+    const browser = await ouvrirNavigateur();
+    const page = await browser.newPage({
+      viewport: { width: 390, height: 844 },
+      isMobile: true,
+      hasTouch: true,
+    });
+    try {
+      await page.goto(`${base}?notion=EG06&forme=b&graine=12`);
+      await page.locator(".carte .figure > svg").waitFor();
+      await stabiliser(page);
+      const figure = () => page.locator(".carte .figure > svg").evaluate((svg) => svg.outerHTML);
+      const avant = await figure();
+      const positions = await positionQuestion(page);
+      await page.locator('.carte [data-action="aide"]').click();
+      await page.locator(".espace-question > .aide .dessin svg").waitFor();
+      await stabiliser(page);
+      const apres = await figure();
+      assert.equal(
+        apres.replace(/ style="[^"]*"/, ""),
+        avant.replace(/ style="[^"]*"/, ""),
+        "La figure de la question reste la même",
+      );
+      assert.equal(await page.locator(".carte .figure-aide").count(), 0, "Pas de calque");
+      (await positionQuestion(page)).forEach((haut, rang) =>
+        assert.ok(Math.abs(haut - positions[rang]) <= 1, "La question ne bouge pas"),
+      );
+    } finally {
+      await browser.close();
+      await new Promise((fin) => serveur.close(fin));
+    }
+  },
+);
