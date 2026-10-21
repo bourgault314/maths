@@ -139,21 +139,51 @@ label {
   margin: 0 auto;
   padding-bottom: 16px;
 }
-.entete-logo {
+/* En-tête hors du cadre, comme Défi tables : le logo à gauche, les pastilles à droite. */
+.entete {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  gap: 12px;
   min-height: 64px;
+  padding: 8px 4px;
 }
-.entete-logo a {
+.entete .logo {
   display: inline-flex;
   align-items: center;
 }
-.entete-logo img {
+.entete img {
   width: auto;
   max-width: 180px;
   height: 40px;
   object-fit: contain;
+}
+.entete-droite {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pastille {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 6px 14px;
+  border: 1px solid var(--ligne);
+  border-radius: 999px;
+  background: var(--papier);
+  color: var(--bleu-identite);
+  font-size: 0.875rem;
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--encre) 8%, transparent);
+}
+.pastille:hover {
+  border-color: var(--bleu);
+}
+.pastille svg {
+  width: 18px;
+  height: 18px;
 }
 .cadre {
   display: flex;
@@ -245,18 +275,9 @@ label {
 .accueil h1 {
   margin-bottom: 24px;
 }
-.seance-jour {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 24px;
-}
-.seance-jour .primaire {
-  min-height: 64px;
-  padding: 16px 24px;
-  font-size: 1.25rem;
+.accueil .sous-titre {
+  margin: -12px 0 8px;
+  color: var(--attenue);
 }
 .filtres {
   display: flex;
@@ -313,11 +334,25 @@ label {
   place-items: center;
   width: 48px;
   height: 48px;
-  border-radius: 12px;
-  color: var(--bleu);
-  background: var(--fond-doux);
-  font-family: "Fredoka", sans-serif;
-  font-size: 1.375rem;
+}
+.icone svg {
+  width: 48px;
+  height: 48px;
+}
+.chevron {
+  color: var(--attenue);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+.entete-domaine {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.entete-domaine .icone,
+.entete-domaine .icone svg {
+  width: 44px;
+  height: 44px;
 }
 .nom {
   font-family: "Fredoka", "Segoe UI", sans-serif;
@@ -333,7 +368,10 @@ label {
   font-weight: 600;
 }
 .accueil > .brevet {
-  margin-top: 20px;
+  width: 100%;
+  min-height: 56px;
+  margin-top: 16px;
+  font-size: 1.0625rem;
 }
 .calcul {
   font-size: 2rem;
@@ -366,6 +404,7 @@ label {
 .notion {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
+  min-height: 64px;
   gap: 12px;
   align-items: center;
   min-height: 72px;
@@ -401,12 +440,6 @@ label {
 }
 .badge.brevet {
   color: var(--bleu-identite);
-}
-.etoiles {
-  color: var(--bleu-identite);
-  font-size: 1.125rem;
-  white-space: nowrap;
-  letter-spacing: 1px;
 }
 .question-entete {
   display: flex;
@@ -1181,7 +1214,7 @@ body.projection .coque {
   max-width: none;
   padding: 0;
 }
-body.projection .entete-logo,
+body.projection .entete,
 body.projection .pied {
   display: none;
 }
@@ -1261,11 +1294,20 @@ body.projection .minuteur {
     width: calc(100% - 16px);
     padding-bottom: 12px;
   }
-  .entete-logo {
+  .entete {
     min-height: 52px;
+    padding: 4px 2px;
   }
-  .entete-logo img {
+  .entete img {
     height: 32px;
+  }
+  .pastille {
+    min-height: 36px;
+    padding: 4px 10px;
+    font-size: 0.8125rem;
+  }
+  .pastille span {
+    display: none;
   }
   .cadre {
     padding: 16px;
@@ -1291,14 +1333,6 @@ body.projection .minuteur {
   .accueil h1 {
     font-size: 2rem;
     margin-bottom: 16px;
-  }
-  .seance-jour {
-    margin-bottom: 16px;
-  }
-  .seance-jour .primaire {
-    min-height: 56px;
-    padding: 12px 16px;
-    font-size: 1.125rem;
   }
   .domaines {
     grid-template-columns: 1fr;
@@ -1331,9 +1365,6 @@ body.projection .minuteur {
   .notion {
     padding: 12px;
     gap: 8px;
-  }
-  .etoiles {
-    font-size: 0.9375rem;
   }
   body[data-ecran="question"] .coque {
     padding-bottom: 0;

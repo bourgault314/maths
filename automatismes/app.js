@@ -25,6 +25,7 @@ import {
   professeurHTML,
   bilanHTML,
   bouton,
+  ICONES,
 } from "./vues.js";
 
 const catalogue = await fetch("./catalogue/catalogue.json").then((reponse) => reponse.json());
@@ -93,23 +94,24 @@ function cadre(contenu) {
   document.body.classList.remove("clavier-ouvert");
   clavierOuvert = false;
   champActif = null;
+  // La coque des applis suivies (Défi tables) : logo à gauche, pastilles à droite, cadre blanc.
+  // L'écran de question n'a ni en-tête ni pied : sa barre du haut est dans le cadre.
   const simple = question && !projection;
-  application.innerHTML = `<div class="coque">
-    ${
-      simple
-        ? ""
-        : `<header class="entete-logo"><a href="/" aria-label="Accueil maths et go">
-      <img src="../assets/img/logos/mathsgo/logo-390.png" alt="maths&go"></a></header>`
-    }
-    <main class="cadre">${
-      simple
-        ? ""
-        : `<div class="barre-cadre">
-      ${bouton("← Retour", "retour", "discret petit")}
-      ${question ? "" : '<a class="bouton discret petit" href="?prof=1" data-action="prof">Professeur</a>'}
-    </div>`
-    }<div class="contenu">${contenu}</div></main>
-    <footer class="pied">mathsgo.re · Sans calculatrice · Collège et brevet</footer>
+  const entete = simple
+    ? ""
+    : `<header class="entete"><a class="logo" href="/" aria-label="Accueil maths et go">
+      <img src="../assets/img/logos/mathsgo/logo-390.png" alt="maths&go"></a>
+      <div class="entete-droite">
+        ${ecran === "prof" ? "" : '<a class="pastille" href="?prof=1" data-action="prof">Professeur</a>'}
+        ${bouton(`${ICONES.pleinEcran}<span>Plein écran</span>`, "plein-ecran", "pastille", 'aria-label="Plein écran"')}
+      </div></header>`;
+  const retourCadre =
+    simple || ecran === "accueil"
+      ? ""
+      : `<div class="barre-cadre">${bouton("← Retour", "retour", "discret petit")}</div>`;
+  application.innerHTML = `<div class="coque">${entete}
+    <main class="cadre">${retourCadre}<div class="contenu">${contenu}</div></main>
+    ${simple ? "" : '<footer class="pied">mathsgo.re · Sans calculatrice · Collège et brevet</footer>'}
   </div>`;
   relierActions();
   ajusterAffichage();
@@ -127,7 +129,7 @@ function afficherDomaine(id) {
   ecran = "domaine";
   domaine = id;
   const familles = famillesEligibles(catalogue, filtre).filter((famille) => famille.domaine === id);
-  cadre(domaineHTML(id, familles, filtre, etoiles));
+  cadre(domaineHTML(id, familles, filtre));
 }
 
 function afficherProfesseur() {

@@ -2,13 +2,10 @@ import { esc } from "./generateurs/draw.js";
 import { mathHtml } from "./math-format.js";
 import { questionPrompt } from "./math-layout.js";
 import { DOMAINES, formesEligibles } from "./seances.js";
+import { ICONES_DOMAINES } from "./icones-domaines.js";
 
 export function bouton(texte, action, classe = "secondaire", attributs = "") {
   return `<button class="bouton ${classe}" data-action="${action}" ${attributs}>${texte}</button>`;
-}
-
-export function etoilesHTML(nombre) {
-  return `<span class="etoiles" aria-label="${nombre} étoile${nombre > 1 ? "s" : ""} sur 3">${"★".repeat(nombre)}${"☆".repeat(3 - nombre)}</span>`;
 }
 
 export function filtresHTML(filtre) {
@@ -26,24 +23,24 @@ export function filtresHTML(filtre) {
 export function accueilHTML(familles, filtre) {
   return `<section class="accueil">
     <h1>Automatismes</h1>
-    <div class="seance-jour">${bouton("Ma séance du jour", "jour", "primaire")}
-      <span>8 questions</span></div>
+    <p class="sous-titre">Choisis un domaine, puis une notion.</p>
     ${filtresHTML(filtre)}
-    <div class="domaines">${DOMAINES.map(([id, nom, icone]) => {
+    <div class="domaines">${DOMAINES.map(([id, nom]) => {
       const nombre = familles.filter((famille) => famille.domaine === id).length;
       return `<button class="domaine-carte" data-domaine="${id}" ${nombre ? "" : "disabled"}>
-        <span class="icone" aria-hidden="true">${mathHtml(icone)}</span>
-        <span class="nom">${nom}<small>${nombre} notions</small></span><span aria-hidden="true">›</span>
+        <span class="icone" aria-hidden="true">${ICONES_DOMAINES[id] || ""}</span>
+        <span class="nom">${nom}<small>${nombre} notion${nombre > 1 ? "s" : ""}</small></span><span class="chevron" aria-hidden="true">›</span>
       </button>`;
     }).join("")}</div>
     ${bouton("Entraînement brevet · 9 questions · 20 min", "brevet", "secondaire brevet")}
   </section>`;
 }
 
-export function domaineHTML(domaine, familles, filtre, etoiles) {
+export function domaineHTML(domaine, familles, filtre) {
   const nom = DOMAINES.find(([id]) => id === domaine)?.[1] || "Notions";
-  return `<h1>${nom}</h1>${filtresHTML(filtre)}
-    ${bouton("Mélanger ces notions", "melanger", "primaire")}
+  return `<div class="entete-domaine"><span class="icone" aria-hidden="true">${ICONES_DOMAINES[domaine] || ""}</span>
+    <h1>${nom}</h1></div>${filtresHTML(filtre)}
+    ${bouton("Mélanger ce domaine · 8 questions", "melanger", "primaire")}
     <div class="liste-notions">${familles
       .map((famille) => {
         const formes = formesEligibles(famille, filtre);
@@ -51,7 +48,7 @@ export function domaineHTML(domaine, familles, filtre, etoiles) {
         <span class="nom">${esc(famille.nom)}<span class="badges">
           <span class="badge">${famille.niveaux.join(" · ")}</span>
           ${formes.some((forme) => forme.brevet) ? '<span class="badge brevet">Brevet</span>' : ""}
-        </span></span>${etoilesHTML(etoiles(famille.id))}
+        </span></span><span class="chevron" aria-hidden="true">›</span>
       </button>`;
       })
       .join("")}</div>`;
@@ -103,7 +100,7 @@ export function pointsHTML(seance) {
       .join("")}</nav>`;
 }
 
-const ICONES = {
+export const ICONES = {
   clavier:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M6.5 9h1M10 9h1M13.5 9h1M17 9h1M6.5 12.5h1M10 12.5h1M13.5 12.5h1M17 12.5h1M8 16h8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
   pleinEcran:
