@@ -345,7 +345,7 @@ test("equasplat.html : au téléphone, avec « Passer ▶ » ou un message, la p
   const bloc = css.slice(0, css.indexOf("\n  }\n"));
   assert.match(bloc, /#eleveBarre #elevePasser \+ \.suivi-pastille,\n\s*body\.importMode\.eleveMode #eleveBarre \.eleveBarreNote \+ \.suivi-pastille\{margin-left:-4px;padding:2px 5px;gap:0\}/);
   assert.match(bloc, /#eleveBarre #elevePasser \+ \.suivi-pastille \.nom,\n\s*body\.importMode\.eleveMode #eleveBarre \.eleveBarreNote \+ \.suivi-pastille \.nom\{display:none\}/);
-  assert.match(PAGES.equa, /#eleveBarre #elevePasser \+ \.suivi-pastille, #eleveBarre #eleveSuivante \+ \.suivi-pastille\{margin-left:0\}/);
+  assert.match(PAGES.equa, /#eleveBarre #elevePasser \+ \.suivi-pastille\{margin-left:0\}/);
 });
 
 // ------------------------------------------------------------- les outils

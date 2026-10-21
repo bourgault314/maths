@@ -4818,10 +4818,6 @@
   #eleveBarre{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#10294a;color:#fff;
     padding:8px 14px;font-weight:800;font-size:15px}
   #eleveBarre .eleveBarreEtoiles{letter-spacing:2px}
-  #eleveBarre #eleveSuivante{font:inherit;font-weight:900;border:none;border-radius:999px;
-    padding:8px 18px;cursor:pointer;background:#22c55e;color:#08301b;margin-left:auto;
-    min-height:36px}
-  #eleveBarre #eleveSuivante:focus-visible{outline:3px solid #93c5fd;outline-offset:2px}
   #eleveBarre .eleveBarreNote{font-weight:800}
   .elevePastilles{display:inline-flex;gap:5px;align-items:center;flex-wrap:wrap}
   .elevePastilles .p{width:11px;height:11px;border-radius:50%;border:2px solid #cbd5e1;background:transparent;display:inline-block}
@@ -4832,8 +4828,10 @@
   #eleveBarre a.eleveMondes{color:#dbeafe;text-decoration:none;font-size:13px;font-weight:800;background:rgba(255,255,255,.14);
     border-radius:999px;padding:4px 9px;white-space:nowrap}
   #eleveBarre a.eleveMondes:hover{background:rgba(255,255,255,.26)}
+  /* marges négatives (21/10/2026) : le bouton garde sa taille au doigt, mais ne fait plus grandir la
+     barre quand il apparaît (avant : 40 → 48 px au bout de 90 s, et tout le jeu descendait d'autant) */
   #eleveBarre #elevePasser{font:inherit;font-weight:900;border:none;border-radius:999px;padding:6px 14px;cursor:pointer;
-    background:#fde68a;color:#78350f;margin-left:auto;min-height:32px;font-size:13px}
+    background:#fde68a;color:#78350f;margin:-4px 0 -4px auto;min-height:32px;font-size:13px}
   #eleveBarre #elevePasser:focus-visible{outline:3px solid #93c5fd;outline-offset:2px}
   .eleveCarton .eleveCartonBoutons{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:6px}
   .eleveCarton button.secondaire{background:#fde68a;color:#78350f}
@@ -4851,10 +4849,8 @@
     body.importMode.eleveMode #eleveBarre .eleveBarreTexte .mot{display:none}
     body.importMode.eleveMode #eleveBarre .elevePastilles{gap:3px}
     body.importMode.eleveMode #eleveBarre .elevePastilles .p{width:9px;height:9px}
-    body.importMode.eleveMode #eleveBarre #eleveSuivante, body.importMode.eleveMode #eleveBarre #elevePasser{padding:6px 12px;font-size:13px;min-height:28px}
+    body.importMode.eleveMode #eleveBarre #elevePasser{padding:6px 12px;font-size:13px;min-height:28px;margin-top:-2px;margin-bottom:-2px}
     body.importMode.eleveMode main{flex:1 1 auto;min-height:0;height:auto;max-height:none}
-    /* équation résolue : le bouton vert prend la place des pastilles (une seule ligne) */
-    body.importMode.eleveMode #eleveBarre.avecSuivante .elevePastilles{display:none}
     /* Suivi de classe (lot 2, 08/10/2026) : avec « Passer ▶ » ou un message (« ✅ Résolue ! »), il ne
        reste plus la place du prénom de la pastille « ● Léa » — le point seul, collé à ce qui le
        précède : la barre reste sur une ligne (mesuré de 360 à 414 px, douze pastilles). */
@@ -4863,9 +4859,41 @@
     body.importMode.eleveMode #eleveBarre #elevePasser + .suivi-pastille .nom,
     body.importMode.eleveMode #eleveBarre .eleveBarreNote + .suivi-pastille .nom{display:none}
   }
-  /* la pastille « ● Léa » (lot 2 du suivi) suit le bouton « Passer ▶ » ou « Équation suivante ▶ »
-     quand il est là, au lieu de partager avec lui la place libre */
-  #eleveBarre #elevePasser + .suivi-pastille, #eleveBarre #eleveSuivante + .suivi-pastille{margin-left:0}
+  /* la pastille « ● Léa » (lot 2 du suivi) suit le bouton « Passer ▶ » quand il est là,
+     au lieu de partager avec lui la place libre */
+  #eleveBarre #elevePasser + .suivi-pastille{margin-left:0}
+  /* ===== Équation résolue (21/10/2026, choix de Gwenaël) =====
+     Avant : le bouton « Équation suivante ▶ » apparaissait dans la barre du haut, qui grandissait
+     (40 → 52 px) et faisait descendre tout le jeu ; le bas du cadre sortait de l'écran. Et rien
+     ne disait vraiment à l'élève que c'était fini : un petit « ✅ Résolue ! » dans la barre
+     sombre, les boutons du plateau toujours allumés.
+     Maintenant : à la résolution, les boutons et le plateau se figent (gris) ; après la pause
+     ELEVE_PAUSE_SOLUTION, le temps de voir la solution, un bandeau vert « 🎉 Bravo ! Tu as
+     trouvé 𝑥 = 3 » et son bouton prennent la place des boutons, SOUS le plateau — là où l'élève
+     regarde après son dernier geste. Le bandeau est posé DANS la barre d'outils, par-dessus ses
+     rangées masquées : il occupe exactement leur place, donc rien ne bouge (ni plateau, ni
+     équation), quelle que soit la vue (« Au-dessus », « À côté », plein écran, téléphone). */
+  #toolBar{position:relative}
+  body.eleveMode.eleveResolue #toolBar > .toolRow{pointer-events:none;opacity:.35;filter:grayscale(1);transition:opacity .25s}
+  body.eleveMode.eleveResolue #board,
+  body.eleveMode.eleveResolue #actionZone{pointer-events:none}
+  body.eleveMode.eleveBravoVisible #toolBar > .toolRow,
+  body.eleveMode.eleveBravoVisible #actionZone{visibility:hidden}
+  #eleveBravo{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:3}
+  #eleveBravo[hidden]{display:none}
+  #eleveBravo .bravoBandeau{pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;flex-wrap:wrap;
+    gap:8px 18px;max-width:100%;background:#dcfce7;border:2px solid #16a34a;border-radius:999px;
+    padding:8px 10px 8px 24px;font-weight:900;font-size:clamp(18px,1.7vw,24px);color:#14532d;
+    box-shadow:0 6px 18px rgba(22,163,74,.25);animation:eleveBravoArrive .35s ease-out}
+  #eleveBravo .bravoSolution{white-space:nowrap}
+  #eleveBravo button{font:inherit;font-size:.9em;font-weight:900;border:none;border-radius:999px;padding:10px 24px;
+    min-height:48px;background:#15803d;color:#fff;cursor:pointer}
+  #eleveBravo button:focus-visible{outline:3px solid #93c5fd;outline-offset:3px}
+  @keyframes eleveBravoArrive{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){ #eleveBravo .bravoBandeau{animation:none} }
+  @media (max-width:760px){
+    #eleveBravo .bravoBandeau{flex-direction:column;gap:8px;border-radius:22px;padding:10px 14px;font-size:18px}
+  }
   /* Plein écran (09/10/2026) : le bouton ⛶ ne met que la scène (#stage) en plein écran.
      La barre du parcours y est rangée le temps du plein écran (eleveRangerPleinEcran) :
      posée tout en haut, sur toute la largeur, comme hors plein écran ; la scène descend
@@ -4873,8 +4901,9 @@
      Sélecteurs à #stage : ils passent devant toutes les mises en page plein écran
      (« Au-dessus » en colonne, « À côté » en grille), sans toucher à leur rangement. */
   body.eleveMode #stage:fullscreen{padding-top:calc(var(--eleve-barre-h, 52px) + 14px)}
-  /* min-height : la hauteur avec le bouton vert « Équation suivante ▶ » (36 + 2 × 8) — la barre ne
-     grandit plus à la résolution, donc le plateau ne rapetisse pas sous les yeux de l'élève */
+  /* min-height : la hauteur de l'ancien bouton vert « Équation suivante ▶ » (36 + 2 × 8). Depuis le
+     21/10/2026 ce bouton est dans le bandeau sous le plateau ; on garde 52 px tels quels : la barre
+     ne change toujours pas de hauteur, et le plein écran ne bouge pas par rapport à avant */
   body.eleveMode #stage:fullscreen > #eleveBarre{position:absolute;top:0;left:0;right:0;z-index:6;min-height:52px}
   body.eleveMode #stage:fullscreen .stageQuickActions{top:calc(var(--eleve-barre-h, 52px) + 10px)}
   .eleveVoile{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
@@ -9920,6 +9949,8 @@
       }
       syncUnknownToggleButton();
       if(state) render();
+      /* bandeau « Bravo » déjà posé (parcours élève) : il suit la nouvelle écriture */
+      if(document.body.classList.contains("eleveBravoVisible")) eleveEtatResolue("bravo");
     });
     unknownDisplayModeEl.addEventListener("change", syncUnknownToggleButton);
     syncUnknownToggleButton();
@@ -10144,7 +10175,11 @@
 
   document.addEventListener("keydown", (e) => {
     if(e.key === "Escape") return;
-    if(e.key === "z" && (e.ctrlKey || e.metaKey)){ e.preventDefault(); undo(); }
+    if(e.key === "z" && (e.ctrlKey || e.metaKey)){
+      e.preventDefault();
+      /* parcours élève : une équation résolue est figée (21/10/2026), Annuler est masqué */
+      if(!document.body.classList.contains("eleveResolue")) undo();
+    }
     if(e.key.toLowerCase() === "f" && !decomposeDialog.open && !shareDialog.open && !addBothDialog.open && !fusionDialog.open){
       e.preventDefault(); btnFullscreen.click();
     }
@@ -10373,7 +10408,7 @@
   let eleveMode = false, eleveParcours = "", eleveEqs = [], eleveIdx = 0, eleveResolues = 0, eleveCompteeCourante = false, eleveAttenteSuivante = false;
   /* eleveRes[i] : true = résolue, "ko" = passée (rouge, à rejouer) ; eleveRejeu : file des rouges à rejouer ;
      elevePasserVisible : le bouton « Passer » n'apparaît qu'après un moment sur la même équation. */
-  let eleveRes = [], eleveRejeu = null, elevePasserVisible = false, elevePasserTimer = null;
+  let eleveRes = [], eleveRejeu = null, elevePasserVisible = false, elevePasserTimer = null, eleveBravoTimer = null;
   const ELEVE_PASSER_DELAI = 90000, ELEVE_URL_MONDES = "/outils/splat_univers.html";
   /* équations de la série passées (« Passer ») : rejouées et résolues, elles redeviennent vertes —
      on les compte donc à part, c'est ce que le professeur voit (lot 2 du suivi) ; et la série
@@ -10468,7 +10503,6 @@
            `<span class="eleveBarreTexte"><span class="mot">\u00c9quation </span>${Math.min(eleveIdx + 1, eleveEqs.length)} / ${eleveEqs.length}</span>` +
            elevePastillesHtml() +
            (message && !(eleveAttenteSuivante && eleveEcranEtroit()) ? `<span class="eleveBarreNote">${message}</span>` : "") +
-           (eleveAttenteSuivante ? `<button type="button" id="eleveSuivante">${eleveEcranEtroit() ? "\u2705 " : ""}\u00c9quation suivante \u25b6</button>` : "") +
            (!eleveAttenteSuivante && elevePasserVisible ? `<button type="button" id="elevePasser" title="Je bloque : passer \u00e0 la suivante, je la rejouerai \u00e0 la fin">Passer \u25b6</button>` : "") +
            eleveSuiviPastilleHtml(); /* « ● Léa » au bout de la barre, sous un code (lot 2 du suivi) */
   }
@@ -10480,22 +10514,71 @@
       eleveHote().prepend(barre);
       /* le bouton est reconstruit avec la barre : un seul écouteur, délégué */
       barre.addEventListener("click", ev => {
-        if(!ev.target) return;
-        if(ev.target.id === "eleveSuivante"){
-          eleveAttenteSuivante = false;
-          eleveEquationSuivante();
-        }else if(ev.target.id === "elevePasser"){
-          elevePasser();
-        }
+        if(ev.target && ev.target.id === "elevePasser") elevePasser();
       });
     }
     barre.innerHTML = eleveBarreHtml(message || "");
-    barre.classList.toggle("avecSuivante", !!eleveAttenteSuivante);
     eleveMesurerBarre(); /* le message ou le bouton a pu changer sa hauteur */
-    if(eleveAttenteSuivante){
-      const bouton = barre.querySelector("#eleveSuivante");
-      if(bouton) bouton.focus(); /* Entr\u00e9e suffit pour encha\u00eener */
+  }
+
+  /* Équation résolue (21/10/2026) : « fige » grise les boutons et le plateau, « bravo » pose le
+     bandeau vert à leur place (sous le plateau), « » remet tout en jeu. Le bandeau recopie la
+     dernière ligne écrite, l'inconnue d'abord (« 2 = 𝑏 » → « 𝑏 = 2 ») : l'outil ne calcule rien
+     que l'élève n'a pas déjà écrit. Sans ligne de solution lisible, « 🎉 Bravo ! » seul. */
+  function eleveSolutionTexte(){
+    const steps = state && Array.isArray(state.steps) ? state.steps : [];
+    const derniere = steps.length ? steps[steps.length - 1] : currentEquationString();
+    if(!isSolvedEquationString(derniere)) return "";
+    const {lhs, rhs} = splitEquation(derniere);
+    const v = displayedUnknown();
+    return lhs === v ? `${lhs} = ${rhs}` : `${rhs} = ${lhs}`;
+  }
+  /* Le bandeau centré dans la zone sous le plateau (21/10/2026, remarque de Gwenaël : « il ne me paraît pas centré ») :
+     sur ordinateur et tablette, sous les boutons, la zone d'action (« Valider la suppression ») garde sa place vide ; le
+     bandeau couvre donc les boutons ET cette zone, et se centre sur l'ensemble (mesuré à 1440 × 791 : 29 px au-dessus,
+     81 en dessous avant ; 54 et 55 après). Au téléphone, la zone d'action est suivie de « Sans cookie ni traceur » : le
+     bandeau est déjà au milieu entre le plateau et ce lien (77 et 78 px), on n'y touche pas. Rien ne bouge : le bandeau
+     est posé par-dessus, il ne prend pas de place. */
+  function eleveCentrerBravo(){
+    const bravo = document.getElementById("eleveBravo"), outils = document.getElementById("toolBar");
+    if(!bravo || bravo.hidden || !outils) return;
+    let bas = 0;
+    const zone = document.getElementById("actionZone");
+    if(zone && !eleveEcranEtroit()){
+      const ecart = zone.getBoundingClientRect().bottom - outils.getBoundingClientRect().bottom;
+      if(ecart > 0 && ecart < 200) bas = ecart;
     }
+    bravo.style.bottom = bas ? `${-Math.round(bas)}px` : "";
+  }
+  window.addEventListener("resize", eleveCentrerBravo);
+  document.addEventListener("fullscreenchange", () => window.requestAnimationFrame(eleveCentrerBravo));
+
+  function eleveEtatResolue(etat){
+    document.body.classList.toggle("eleveResolue", etat === "fige" || etat === "bravo");
+    document.body.classList.toggle("eleveBravoVisible", etat === "bravo");
+    let bravo = document.getElementById("eleveBravo");
+    if(etat !== "bravo"){ if(bravo) bravo.hidden = true; return; }
+    const outils = document.getElementById("toolBar");
+    if(!outils) return;
+    if(!bravo){
+      bravo = document.createElement("div");
+      bravo.id = "eleveBravo";
+      bravo.setAttribute("role", "status");
+      bravo.addEventListener("click", ev => {
+        if(!ev.target || !ev.target.closest("button")) return;
+        eleveAttenteSuivante = false;
+        eleveEquationSuivante();
+      });
+    }
+    if(bravo.parentNode !== outils) outils.appendChild(bravo);
+    const solution = eleveSolutionTexte();
+    bravo.innerHTML = `<div class="bravoBandeau"><span class="bravoTexte">\ud83c\udf89 Bravo\u00a0!` +
+      (solution ? ` Tu as trouv\u00e9 <span class="bravoSolution">${escapeHtml(solution)}</span>` : ``) + `</span>` +
+      `<button type="button">\u00c9quation suivante \u25b6</button></div>`;
+    bravo.hidden = false;
+    eleveCentrerBravo();
+    const bouton = bravo.querySelector("button");
+    if(bouton) bouton.focus({ preventScroll: true }); /* Entr\u00e9e suffit pour encha\u00eener */
   }
 
   /* Plein écran (09/10/2026). Le bouton ⛶ met la SCÈNE seule en plein écran (#stage) :
@@ -10543,6 +10626,8 @@
     eleveCompteeCourante = false;
     elevePasserVisible = false;
     if(elevePasserTimer) window.clearTimeout(elevePasserTimer);
+    if(eleveBravoTimer){ window.clearTimeout(eleveBravoTimer); eleveBravoTimer = null; }
+    eleveEtatResolue("");
     const ok = createImportedEquationState(eleveEqs[eleveIdx]);
     if(ok){
       eleveMajBarre();
@@ -10683,19 +10768,25 @@
 
   /* Quand l'\u00e9quation est r\u00e9solue, RIEN ne recouvre le plateau : l'\u00e9l\u00e8ve
      garde sa solution (« 2 = \ud835\udc4e ») sous les yeux aussi longtemps qu'il veut,
-     la pastille passe au vert, la barre affiche « \u2705 R\u00e9solue ! » et c'est LUI
-     qui clique sur \u00ab \u00c9quation suivante \u00bb (le bouton a le focus : Entr\u00e9e suffit).
-     Seule la fin de s\u00e9rie pose un carton, apr\u00e8s une pause pour voir la derni\u00e8re
-     solution. */
+     la pastille passe au vert, la barre affiche « \u2705 R\u00e9solue ! », les boutons se
+     figent, et apr\u00e8s une pause le bandeau vert « Bravo » arrive sous le plateau avec
+     \u00ab \u00c9quation suivante \u00bb : c'est LUI qui clique (le bouton a le focus : Entr\u00e9e suffit).
+     Seule la fin de s\u00e9rie pose un carton, apr\u00e8s la m\u00eame pause. */
   const ELEVE_PAUSE_SOLUTION = 1400;
 
   function eleveCelebrer(finale){
+    eleveEtatResolue("fige");
     if(finale){
       eleveMajBarre("\u2705 R\u00e9solue !");
       window.setTimeout(eleveFinDeSerie, ELEVE_PAUSE_SOLUTION);
     }else{
       eleveAttenteSuivante = true;
       eleveMajBarre("\u2705 R\u00e9solue !");
+      if(eleveBravoTimer) window.clearTimeout(eleveBravoTimer);
+      eleveBravoTimer = window.setTimeout(() => {
+        eleveBravoTimer = null;
+        if(eleveAttenteSuivante) eleveEtatResolue("bravo");
+      }, ELEVE_PAUSE_SOLUTION);
     }
   }
 

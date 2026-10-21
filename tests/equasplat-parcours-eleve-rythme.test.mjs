@@ -7,9 +7,12 @@ import test from "node:test";
 // demi-seconde puis la carte suivante arrivait toute seule — l'élève n'avait
 // pas le temps de voir sa propre solution (« 2 = 𝑎 »).
 // Maintenant : entre deux équations, RIEN ne recouvre le plateau. La barre du
-// haut affiche « ✅ Résolue ! » et un bouton « Équation suivante » ; l'élève
-// enchaîne quand il veut (le bouton a le focus, Entrée suffit). Seule la fin
-// de série pose un carton, après une pause pour voir la dernière solution.
+// haut affiche « ✅ Résolue ! » ; les boutons se figent, puis, après une pause,
+// un bandeau vert « Bravo » et son bouton « Équation suivante » prennent leur
+// place SOUS le plateau (21/10/2026 : dans la barre du haut, le bouton la
+// faisait grandir et tout le jeu descendait). L'élève enchaîne quand il veut
+// (le bouton a le focus, Entrée suffit). Seule la fin de série pose un carton,
+// après la même pause.
 const html = await readFile(new URL("../outils/equasplat.html", import.meta.url), "utf8");
 
 const bloc = (debut, fin) => {
@@ -31,12 +34,15 @@ test("entre deux équations, rien ne recouvre le plateau", () => {
     "la carte suivante ne doit plus arriver toute seule");
 });
 
-test("c'est l'élève qui passe à l'équation suivante, depuis la barre", () => {
-  assert.match(html, /id="eleveSuivante"/);
-  const barre = bloc("function eleveMajBarre(message){", "\n  function ");
-  assert.match(barre, /eleveSuivante/);
-  assert.match(barre, /eleveEquationSuivante\(\)/);
-  assert.match(barre, /bouton\.focus\(\)/);
+test("c'est l'élève qui passe à l'équation suivante, depuis le bandeau sous le plateau", () => {
+  const etat = bloc("function eleveEtatResolue(etat){", "\n  function ");
+  assert.match(etat, /bravo\.id = "eleveBravo"/);
+  assert.match(etat, /document\.getElementById\("toolBar"\)/, "le bandeau est posé dans la barre d'outils, à la place des boutons");
+  assert.match(etat, /eleveEquationSuivante\(\)/);
+  assert.match(etat, /bouton\.focus\(\{ preventScroll: true \}\)/);
+  // le bandeau n'arrive qu'après la pause, le temps de voir la solution
+  assert.match(celebrer, /eleveEtatResolue\("fige"\)/);
+  assert.match(celebrer, /eleveBravoTimer = window\.setTimeout\([\s\S]*?eleveEtatResolue\("bravo"\)[\s\S]*?ELEVE_PAUSE_SOLUTION\)/);
 });
 
 test("la carte de fin attend un instant, puis garde son bouton Rejouer", () => {
