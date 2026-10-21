@@ -25,6 +25,16 @@ tout » (4.2, 6.2, 13.2 — 17/10/2026), qui n'ont pas de carte.
 masses et en longueurs…), un problème « on cherche le tout » par livret, « Je vérifie » qui vérifie aussi
 chaque indice, plus aucune écriture de corrigé sous 4,5 pt.
 
+**Lot B « énoncés » (21/10/2026, après l'audit Codex du 21/10, décisions de Gwenaël)** : mises en page inchangées
+(les corrigés restent à 4 problèmes par page, H14-H15 à 2) ; nombres, cartes et graines inchangés.
+- énoncés retouchés, textes aussi courts : 1.4 (futsal), 5.2, 14.2 et 15.2 (« Tous les sacs d’une même sorte ont
+  la même masse. »), 8.4 (20 kg de fournitures), 11.4 (« un wagon de Malo »), 12.1 (« Préparer la pâte »), 13.2
+  (« Son parcours à vélo »), 14.1 (« une part de gâteau »), 15.3 (une phrase au lieu de la parenthèse) ;
+- H14.1 et H14.2 corrigés en **« je recopie »** (le titre de la fiche), dans les trois corrigés (`livret-3/corrige.js`,
+  `__carteRecopie` ; `livret-3/graines.py`, `RECOPIE`) ; résumé de H14 sur la couverture du livret 3 ;
+- « Je vérifie » des exemples et des défis : le total ET chaque indice (pages 2 des livrets 1 et 2, page 5 du
+  livret 3, défi 2 du livret 2), chaque ligne recalculée au rendu. L'Enquête et l'outil ne changent pas.
+
 ## Refaire un livret (un texte, un nombre ou une graine changés)
 
 1. `MATHS_RACINE=<racine du dépôt> HISTOIRES_SORTIE=<dossier> python3 livret-N/render.py`

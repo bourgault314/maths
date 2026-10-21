@@ -29,6 +29,8 @@ Ce qui est propre au livret 2 (15/10/2026) :
 - **10.3** (sept étapes dans un quart de page) écrivait ses petits calculs à 4,2 pt : depuis le 17/10/2026,
   `PLANCHER` les remonte à 4,5 pt au moins (plus aucune exception). **9.3** : `SERRE` (son énoncé a pris une
   ligne, « tous de même durée »).
+- **8.4** (lot B, 21/10/2026) : « 20 kg de fournitures » ; **D4** (le dos) : « Je vérifie » vérifie aussi le double
+  (« 18 = 2 × 9 ») ; page 2 : « Je vérifie » vérifie aussi les deux écarts (`VERIFS_EXEMPLE`).
 - **6.2** (17/10/2026) : « on cherche le tout » — pas de carte, corrigé dessiné sur un modèle (`habillage.py`,
   clé `tout` ; voir `../livret-1/README.md`).
 - `cherche_graines.py` : la recherche des graines (le générateur rejoué dans Chromium, 20 000 graines

@@ -29,14 +29,33 @@ window.__plurielsHabilles = function(card, h){
   return () => Object.keys(sauve).forEach(k => { if(sauve[k] === undefined) delete SYS_COULEURS_PLURIEL[k]; else SYS_COULEURS_PLURIEL[k] = sauve[k]; });
 };
 
+/* H14.1 et H14.2 « je recopie » (21/10/2026, lot B, décision de Gwenaël après l'audit du 21/10 : la fiche
+   s'appelle « Je recopie », mais 14.1 montrait « je remplace » et 14.2 « j'additionne »). La carte de la
+   graine garde ses deux plateaux et ses valeurs (mêmes nombres, même dessin de carte) ; seul son plan de
+   correction change : le plan « je recopie » DE L'OUTIL (sysPlan, geste RECOPIE), sur la même situation,
+   le plateau recopié en premier (recopie : son rang sur la carte). Le générateur de l'outil ne tire pas
+   ces cartes en RECOPIE (14.1 : 2 J ≤ 3 J, un plateau tient dans le double de l'autre sans le dépasser ;
+   14.2 : le miroir 1 + 3 et 3 + 1, qu'il écarte) : la carte est donc assemblée ici, par sysAssemblerCarte. */
+window.__carteRecopie = function(card, recopie){
+  const S = card._sys;
+  if(!S || S.boards.length !== 2 || !(recopie === 0 || recopie === 1)) throw new Error('recopie : pas deux plateaux');
+  const boards = [S.boards[recopie], S.boards[1 - recopie]].map(b => ({ counts:{ ...b.counts }, total:b.total, visible:[] }));
+  const sit = { geste:'RECOPIE', colors:S.colors.slice(), values:{ ...S.values }, boards };
+  const [A, B] = sit.colors, P = boards[0].counts, Q = boards[1].counts;
+  const k = (Q[A] || 0) / (P[A] || 1);
+  if(!Number.isInteger(k) || k < 2 || k * (P[B] || 0) <= (Q[B] || 0)) throw new Error('recopie : le plateau recopié ne contient pas l’autre');
+  return sysAssemblerCarte(sit, sysPlan(sit), S.clues);
+};
+
 window.__corrige = function(spec){
   const NS = 'http://www.w3.org/2000/svg';
   const mkEl = (n, a = {}) => { const e = document.createElementNS(NS, n); for(const k in a) e.setAttribute(k, a[k]); return e; };
   const mkText = (x, y, t, a = {}) => { const e = mkEl('text', { x, y, ...a }); e.textContent = t; return e; };
   const rng = makeRng(String(spec.graine));
-  const card = spec.famille === 'C' ? genInvestigate(rng) : spec.famille === 'N' ? genNumbered(rng) : genSystem(rng);
+  let card = spec.famille === 'C' ? genInvestigate(rng) : spec.famille === 'N' ? genNumbered(rng) : genSystem(rng);
   const vals = (card._rel ? card._rel.hiddenValues : card.hidden).map(Number).slice().sort((a, b) => a - b);
   if(JSON.stringify(vals) !== JSON.stringify(spec.valeurs)) return { erreur:'graine ' + spec.graine + ' : ' + vals };
+  if(spec.recopie != null) card = window.__carteRecopie(card, spec.recopie);   // H14.1, H14.2 (lot B)
   const lettreMath = c => String.fromCodePoint(0x1D44E + c.toLowerCase().charCodeAt(0) - 97);
   const h = { ...spec.habit, famille:spec.famille, card };
   h.noms = Object.fromEntries(Object.entries(h.noms).map(([k, v]) => [String(k), v]));
@@ -292,6 +311,7 @@ window.__equation = function(spec){
     card = spec.famille === 'C' ? genInvestigate(rng) : spec.famille === 'N' ? genNumbered(rng) : genSystem(rng);
     const vals = (card._rel ? card._rel.hiddenValues : card.hidden).map(Number).slice().sort((a, b) => a - b);
     if(JSON.stringify(vals) !== JSON.stringify(spec.valeurs)) return { erreur:'graine ' + spec.graine + ' : ' + vals };
+    if(spec.recopie != null) card = window.__carteRecopie(card, spec.recopie);   // H14.1, H14.2 (lot B)
   }
   const lettreMath = c => String.fromCodePoint(0x1D44E + c.toLowerCase().charCodeAt(0) - 97);
   const h = { ...spec.habit, famille:spec.famille, card };

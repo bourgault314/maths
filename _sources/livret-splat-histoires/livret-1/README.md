@@ -40,6 +40,8 @@ Gwenaël après l'audit : « filles = garçons + 5 : 26 = 21 + 5 ✓ » ; sans t
 les trois corrigés — `habit.js` le demande à l'outil (`sansIndices`), qui garde, lui, « le total
 seulement » (07/10). Pour que le corrigé garde l'écriture d'avant, les lignes en plus sont resserrées
 (`__verifsSerrees`, écriture 42 → 36 au plus) puis reprises sur les blancs entre ①, ② et ③.
+Depuis le lot B (21/10/2026), la page 2 (l'exemple) fait de même : « 9 + 17 = 26 ✓ · 17 − 9 = 8 ✓ »
+(`VERIFS_EXEMPLE` dans `render.py`, la 1re ligne comparée à celle de l'outil, chaque ligne recalculée).
 
 **« On cherche le tout »** (17/10/2026, un problème par livret : 4.2 ici, 6.2 et 13.2 dans les livrets 2
 et 3) : le total est l'inconnue, les parties sont données par un nombre et des indices. Une carte SPLAT!

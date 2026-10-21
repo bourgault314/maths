@@ -30,7 +30,8 @@ FICHES = [
     "Combien coûte une pizza ?",
     "Deux taches qui cachent le même nombre", "TOTAL 31 · 3 jetons visibles · 2 taches noires", "Une pizza coûte 14 €",
     dict(p=14), ["2*p+3==31"], "prix"),
-  P("1.4", "Le tournoi de ping-pong dure 77 minutes : 5 minutes d’échauffement, puis 6 matchs de la même durée.",
+  # (21/10/2026, lot B) futsal plutôt que ping-pong : un match de ping-pong ne se joue pas au temps
+  P("1.4", "Le tournoi de futsal dure 77 minutes : 5 minutes d’échauffement, puis 6 matchs de la même durée.",
     "Combien de temps dure un match ?",
     "Plein de taches (la même, plusieurs fois)", "TOTAL 77 · 5 jetons visibles · 6 taches noires", "12 minutes par match",
     dict(b=12), ["6*b+5==77"], "durée"),
@@ -97,7 +98,8 @@ FICHES = [
     "Je retire · une partie connue (1a)", "Plateau 1 : 3 A = 12 · plateau 2 : 3 A + 2 B = 18", "Tour de manège : 4 € · barbe à papa : 3 €",
     dict(t=4, b=3), ["3*t==12", "3*t+2*b==18"], "prix"),
   # 5.2 en masses, 5.3 en longueurs (17/10/2026, choix de Gwenaël : H5 n'avait que des prix) — mêmes nombres, mêmes cartes
-  P("5.2", "2 sacs de croquettes et 3 sacs de graines pèsent 17 kg ; 2 sacs de croquettes et 1 sac de graines, 11 kg.",
+  # (21/10/2026, lot B) les sacs d’une même sorte ont la même masse : dit dans l’énoncé
+  P("5.2", "2 sacs de croquettes et 3 sacs de graines pèsent 17 kg ; 2 sacs de croquettes et 1 sac de graines, 11 kg. Tous les sacs d’une même sorte ont la même masse.",
     "Combien pèse un sac de graines ? un sac de croquettes ?",
     "Je retire, je partage (1c)", "Plateau 1 : 2 A + 3 B = 17 · plateau 2 : 2 A + 1 B = 11", "Graines : 3 kg · croquettes : 4 kg",
     dict(c=4, g=3), ["2*c+3*g==17", "2*c+g==11"], "masse"),

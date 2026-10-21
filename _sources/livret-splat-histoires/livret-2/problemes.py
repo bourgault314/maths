@@ -79,7 +79,8 @@ FICHES = [
     "Deux quantités réunies, avec un écart entre les deux (type 16)",
     "TOTAL 72 · B = A + 6 · C = A + B", "Jaune : 15 L · vert : 21 L · noir : 36 L",
     dict(j=15, v=21, n=36), ["j+v+n==72", "v==j+6", "n==j+v"], "contenance"),
-  P("8.4", "Un colis de 20 kg pour l’école contient 4 kg de livres, des cahiers et des jeux. Les cahiers pèsent 2 kg de plus que les jeux.",
+  # (21/10/2026, lot B) les 20 kg sont ceux des fournitures (pas de l’emballage)
+  P("8.4", "Le colis pour l’école contient 20 kg de fournitures : 4 kg de livres, des cahiers et des jeux. Les cahiers pèsent 2 kg de plus que les jeux.",
     "Combien pèsent les jeux ? les cahiers ?",
     "Une quantité déjà connue (les jetons visibles) et un écart (type 17)",
     "TOTAL 20 · 4 jetons visibles · B = A + 2", "Jeux : 7 kg · cahiers : 9 kg",

@@ -47,8 +47,15 @@ Ce qui est propre au livret 3 :
 - **2 problèmes par page** (`PAR_PAGE`, `DISPOSITION_2P = "pile"`) : le corrigé en schéma essaie
   plusieurs largeurs de rangement des étapes (`LARGEURS_ESSAYEES`) et garde celle qui écrit le plus
   gros dans la carte (182 × 92 mm) ; le corrigé en équations passe sur deux colonnes (`colonnes`).
-- **L'ordre de l'énoncé** au Système : 14.1 `INVERSER` ; 15.4 `ORDRE` (les trois achats dans le
-  désordre, dans le premier schéma et dans « Je vérifie »).
+- **H14.1 et H14.2 en « je recopie »** (lot B, 21/10/2026, décision de Gwenaël : la fiche s'appelle « Je
+  recopie ») : même carte, même graine ; le plan de correction est celui de l'outil pour le geste RECOPIE, sur
+  la même situation (`corrige.js`, `__carteRecopie` ; `graines.py`, `RECOPIE` : le plateau recopié). 14.1 :
+  l'achat de 19 € recopié 2 fois (38 €) contient l'achat de 32 € ; 14.2 : la pesée de 35 kg recopiée 3 fois
+  (105 kg) contient la pesée de 25 kg. Le générateur de l'outil ne tire pas ces cartes en RECOPIE (14.1 : le
+  second plateau a plus de jus que le premier ; 14.2 : le miroir 1 + 3, qu'il écarte).
+- **L'ordre de l'énoncé** au Système : 15.4 `ORDRE` (les trois achats dans le désordre, dans le premier
+  schéma et dans « Je vérifie ») ; 14.1 n'a plus d'`INVERSER` (l'achat recopié, 19 €, est le premier).
+- **Page 5** : « Je vérifie » vérifie aussi les deux rapports (`VERIFS_EXEMPLE_U`, lot B).
 - **Les exemples** : page 2 (`__corrigeBalance` en mode `exemple`), page 5 (`__exemple`, comme le
   livret 2), page 9 (`__exempleSys` : chaque étape du plan dessinée seule, `drawSysEtape`) ; les
   légendes sont dans `render.py` (`LEGENDES_B`, `LEGENDES_U`, `LEGENDES_G`).
