@@ -794,14 +794,32 @@ body[data-ecran="question"] .contenu {
   color: var(--attenue);
   font-size: 0.9375rem;
 }
-.barre-question .notion-nom {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 .barre-question .centre strong {
   color: var(--encre);
+  font-size: 1.125rem;
+  font-weight: 900;
   white-space: nowrap;
+}
+/* ⌨ et plein écran : sur ordinateur seulement (souris) ; au doigt, la barre garde Menu · n sur N · ✓. */
+.barre-question .outils-ordinateur {
+  display: contents;
+}
+body.tactile .barre-question .outils-ordinateur {
+  display: none;
+}
+/* Le nom de la notion, en pastille en tête de la carte de la question. */
+.pastille-notion {
+  display: inline-block;
+  margin-bottom: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--turquoise) 12%, var(--papier));
+  color: var(--turquoise-texte);
+  font-size: 0.6875rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  text-transform: uppercase;
 }
 .barre-question .bouton {
   display: inline-flex;
@@ -1038,17 +1056,6 @@ body[data-ecran="question"] .progression {
   }
   .barre-question .icone-bouton {
     width: 40px;
-  }
-  .barre-question .plein-ecran,
-  .barre-question .clavier-bascule,
-  .barre-question .notion-nom,
-  .barre-question .menu .mot {
-    display: none;
-  }
-  .barre-question .menu {
-    width: 40px;
-    padding: 0;
-    justify-content: center;
   }
   .barre-question .centre {
     font-size: 0.875rem;

@@ -161,7 +161,7 @@ test(
         await page.locator(".barre-lancement").getByText("1 notion").waitFor();
         await photo(page, "domaine", mesures);
         await page.locator('[data-action="lancer"]').click();
-        await page.locator(".barre-question .centre").getByText("1 / 10").waitFor();
+        await page.locator(".barre-question .centre").getByText("1 sur 10").waitFor();
         await question(page, base);
         await photo(page, "question-clavier", mesures);
         await verifierCommandes(page);
@@ -257,7 +257,7 @@ test(
       await page.locator('[data-action="lancer"]').click();
       const notions = new Set();
       while ((await page.evaluate(() => document.body.dataset.ecran)) === "question") {
-        notions.add(await page.locator(".barre-question .notion-nom").innerText());
+        notions.add(await page.locator(".pastille-notion").textContent());
         await page.locator('[data-action="passer"]').click();
         await page.locator('[data-action="suivante"]').click();
       }
@@ -419,12 +419,12 @@ test(
           .evaluate((element) => parseFloat(getComputedStyle(element).fontSize));
         assert.ok(consigne >= 27, `${nom} : consigne lisible (${consigne}px)`);
         await page.screenshot({ path: resolve(captures, `${nom}-question-clavier.png`) });
-        // Le bouton clavier de la barre du haut replie le clavier, puis le rouvre.
-        await page.locator('[data-action="clavier"]').click();
-        await stabiliser(page);
-        assert.equal(await page.locator(".clavier").isVisible(), false, `${nom} : replié`);
-        await page.locator('[data-action="clavier"]').click();
-        await stabiliser(page);
+        // Coque V2 (C1) : au doigt, pas de bouton ⌨ ni plein écran dans la barre (ordinateur seulement).
+        assert.equal(
+          await page.locator('[data-action="clavier"]').isVisible(),
+          false,
+          `${nom} : pas de ⌨`,
+        );
         // Graine 12 : « x + 1 = 6 ».
         await page.locator('.touches button[aria-label="5"]').click();
         await page.locator('[data-action="valider"]').click();
@@ -544,7 +544,7 @@ test(
       await page.clock.install();
       await page.locator('[data-action="projeter"]').click();
       await page.clock.runFor(5400);
-      assert.match(await page.locator(".barre-question .centre").innerText(), /2 \/ 2/);
+      assert.match(await page.locator(".barre-question .centre").innerText(), /2 sur 2/);
       await page.keyboard.press("Space");
       const temps = await page.locator("#temps").innerText();
       await page.clock.fastForward(10000);

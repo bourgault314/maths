@@ -86,8 +86,8 @@ export function domaineHTML(domaine, familles, filtre, selection) {
         .join("")}</div>`;
 }
 
-export function enonceHTML(question) {
-  return `<div class="enonce"><h1>${questionPrompt(question)}</h1>
+export function enonceHTML(question, pastille = "") {
+  return `<div class="enonce">${pastille}<h1>${questionPrompt(question)}</h1>
     ${question.math ? `<div class="calcul">${mathHtml(question.math)}</div>` : ""}
     ${question.visual ? `<div class="figure">${question.visual}</div>` : ""}
   </div>`;
@@ -171,10 +171,11 @@ export const ICONES = {
     'stroke-linejoin="round"/></svg>',
 };
 
-/* Le haut de l'écran de question, sur une ligne comme /auto/, dans les trois modes :
-   entraînement  ← Menu · notion · n / N · ✓ score · clavier · plein écran
-   brevet        ← Menu · Entraînement brevet · n / N · chrono · clavier · plein écran
-   projection    ← Quitter · notion · n / N · minuteur · Pause · plein écran */
+/* Le haut de l'écran de question, sur une ligne, dans les trois modes (coque d'après la V2) :
+   entraînement  ← Menu · n sur N · ✓ score (· clavier · plein écran sur ordinateur)
+   brevet        ← Menu · n sur N · chrono (· clavier · plein écran sur ordinateur)
+   projection    ← Quitter · n sur N · minuteur · Pause · plein écran
+   Le nom de la notion (ou « Entraînement brevet ») est une pastille en tête de la carte. */
 function boutonClavier(clavier) {
   const libelle = `${clavier ? "Cacher" : "Afficher"} le clavier`;
   return bouton(
@@ -185,32 +186,41 @@ function boutonClavier(clavier) {
   );
 }
 
-export function barreQuestionHTML(seance, famille, clavier) {
+export function barreQuestionHTML(seance, clavier) {
   const exam = seance.mode === "exam";
   const projection = seance.mode === "project";
   const justes = seance.etats.filter((e) => e.juste).length;
   const retour = projection ? "Quitter" : "Menu";
+  const pleinEcran = bouton(
+    ICONES.pleinEcran,
+    "plein-ecran",
+    "secondaire icone-bouton plein-ecran",
+    'aria-label="Plein écran" title="Plein écran"',
+  );
   const droite = projection
     ? `<span class="minuteur"><span id="temps" role="timer"></span></span>
-      ${bouton(seance.pause ? "Reprendre" : "Pause", "pause", "secondaire pause")}`
-    : exam
-      ? `<span class="minuteur chrono"><span id="temps" role="timer"></span></span>
-      ${boutonClavier(clavier)}`
-      : `<span class="score-barre" aria-label="${justes} réponse${justes > 1 ? "s" : ""} juste${justes > 1 ? "s" : ""}">✓ ${justes}</span>
-      ${boutonClavier(clavier)}`;
+      ${bouton(seance.pause ? "Reprendre" : "Pause", "pause", "secondaire pause")}${pleinEcran}`
+    : `${
+        exam
+          ? '<span class="minuteur chrono"><span id="temps" role="timer"></span></span>'
+          : `<span class="score-barre" aria-label="${justes} réponse${justes > 1 ? "s" : ""} juste${justes > 1 ? "s" : ""}">✓ ${justes}</span>`
+      }<span class="outils-ordinateur">${boutonClavier(clavier)}${pleinEcran}</span>`;
   const menu = bouton(
     `<span aria-hidden="true">←</span><span class="mot">${retour}</span>`,
     "retour",
-    "discret menu",
+    "secondaire menu",
     `aria-label="${retour}"`,
   );
   return `<header class="barre-question">
     <div class="gauche">${menu}</div>
-    <div class="centre"><span class="notion-nom">${exam ? "Entraînement brevet" : esc(famille.nom)}</span>
-      <strong>${seance.index + 1} / ${seance.questions.length}</strong></div>
-    <div class="droite">${droite}
-      ${bouton(ICONES.pleinEcran, "plein-ecran", "secondaire icone-bouton plein-ecran", 'aria-label="Plein écran" title="Plein écran"')}
-    </div></header>`;
+    <div class="centre"><strong class="position">${seance.index + 1} sur ${seance.questions.length}</strong></div>
+    <div class="droite">${droite}</div></header>`;
+}
+
+/* La pastille en tête de la carte : le nom de la notion, ou « Entraînement brevet ». */
+export function pastilleNotionHTML(seance, famille) {
+  const nom = seance.mode === "exam" ? "Entraînement brevet" : famille?.nom || "";
+  return `<span class="pastille-notion">${esc(nom)}</span>`;
 }
 
 export function actionsHTML(seance, etat) {
@@ -249,10 +259,10 @@ export function questionHTML(seance, famille, garder, clavier = false) {
   const etat = seance.etats[seance.index];
   const projection = seance.mode === "project";
   const minuterie = projection || seance.mode === "exam";
-  return `${barreQuestionHTML(seance, famille, clavier)}
+  return `${barreQuestionHTML(seance, clavier)}
     <progress class="progression" max="${seance.questions.length}" value="${seance.index + 1}"></progress>
     <div class="espace-question">
-      ${enonceHTML(question)}${aideHTML(question, etat, garder, projection)}
+      ${enonceHTML(question, pastilleNotionHTML(seance, famille))}${aideHTML(question, etat, garder, projection)}
       ${projection ? choixProjectionHTML(question) : '<div class="reponses"></div>'}
       ${etat.message ? `<p class="retour-reponse ${etat.juste ? "juste" : "faux"}" role="status">${esc(etat.message)}</p>` : ""}
       ${etat.erreurs && !etat.terminee ? bouton("Voir la correction", "correction", "discret") : ""}
