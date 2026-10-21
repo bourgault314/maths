@@ -84,6 +84,47 @@ const CATALOGUE_APPLIS = [
         // ({"defi-tables": {"records": false}}). Voir reglages_recus().
         'reglages' => ['records' => true],
     ],
+    // Coffres magiques, version SOLO (lot « Coffres magiques sur le suivi »,
+    // 21/10/2026, pour un professeur des écoles qui la teste avec ses élèves ;
+    // le duo reste hors du suivi). Juste après Défi tables : c'est l'ordre des
+    // tuiles chez l'élève. Une ligne par élève, écrite par le moteur
+    // assets/js/coffres-parcours.js (copie dans prof/) — rien que des nombres,
+    // des booléens et des dates :
+    //   { version, epoque,
+    //     niveaux: { "1": {tresors, parfaits}, "2", "3" }   — par niveau, les
+    //              trésors ouverts et, parmi eux, les PARFAITS (sans erreur ni
+    //              solution montrée) ; le motif /^[1-3]$/ accepte ces clés ;
+    //     operations: { sum | difference | product | quotient :
+    //              {cles, aides, solutions, erreurs} }       — par opération, les
+    //              CLÉS gagnées, les aides ouvertes, les solutions montrées,
+    //              les erreurs (jamais les calculs) ;
+    //     dernier: le jour du dernier trésor ;
+    //     partie:  la partie en cours — niveau, ops (numéros 1 à 4), serie (les
+    //              dix opérations), familles (dix booléens), cles (0 à 10),
+    //              parfait, jour — pour reprendre à 6 clés sur 10 sur
+    //              n'importe quel appareil. }
+    // Un test compare ces listes à CLES_SERVEUR et MOTIF_NIVEAUX_PHP du moteur.
+    'coffres' => [
+        'nom' => 'Coffres magiques',
+        'description' => 'Trouve les deux nombres qui ouvrent le coffre.',
+        'url' => 'https://mathsgo.re/outils/calcul_mental/coffres_magiques_solo.html',
+        'ancre' => null,
+        'disponible' => true,
+        'cles' => ['version', 'epoque', 'niveaux', 'tresors', 'parfaits', 'operations',
+            'sum', 'difference', 'product', 'quotient', 'cles', 'aides', 'solutions', 'erreurs',
+            'dernier', 'partie', 'niveau', 'ops', 'serie', 'familles', 'parfait', 'jour'],
+        'mots' => [],
+        'motifs' => ['/^[1-3]$/'],
+        // « Revenir à… » nomme une version par ce compte : les niveaux
+        // commencés (le serveur ne sait compter que des entrées).
+        'compteur' => 'niveaux',
+        // Ce qu'un professeur règle pour SA classe (⚙ Réglages) : les niveaux
+        // accessibles (1 à 3) et les opérations accessibles (1 à 4, dans
+        // l'ordre addition, soustraction, multiplication, division). Comme les
+        // mondes de SPLAT! : la liste des numéros OUVERTS ; tout ouvert = rien
+        // d'écrit ({"coffres": {"niveaux": [1, 2], "operations": [1, 3]}}).
+        'reglages' => ['niveaux' => 3, 'operations' => 4],
+    ],
     // Les entrées qui suivent, SPLAT! excepté, ne sont PAS ouvertes : l'appli
     // ne sait pas encore parler au serveur (« disponible » à false, « url » à
     // null). Depuis le lot « retours de classe » (06/10/2026), elles ne
@@ -234,18 +275,43 @@ function reglages_disponibles(PDO $pdo): bool
     return $vu[$cle];
 }
 
-// Les mondes ouverts, propres : null quand ils le sont TOUS (rien à garder).
-// Lecture indulgente (ce qui sort de la base) : un élément faux est ignoré.
-function mondes_lus(mixed $liste, int $nombre): ?array
+// Les mots des messages, réglage par réglage : un réglage déclaré par un
+// ENTIER est une liste de numéros ouverts (1 à N) — les mondes de SPLAT!,
+// puis, depuis le lot « Coffres magiques sur le suivi » (21/10/2026), les
+// niveaux et les opérations de Coffres magiques.
+const LIBELLES_LISTES = [
+    'mondes' => ['illisible' => "Liste de mondes illisible.", 'inconnu' => "Monde inconnu.",
+        'dernier' => "Une classe garde au moins un monde ouvert."],
+    'niveaux' => ['illisible' => "Liste de niveaux illisible.", 'inconnu' => "Niveau inconnu.",
+        'dernier' => "Une classe garde au moins un niveau ouvert."],
+    'operations' => ['illisible' => "Liste d'opérations illisible.", 'inconnu' => "Opération inconnue.",
+        'dernier' => "Une classe garde au moins une opération ouverte."],
+];
+
+function libelle_liste(string $nom, string $cas): string
+{
+    return LIBELLES_LISTES[$nom][$cas] ?? LIBELLES_LISTES['mondes'][$cas];
+}
+
+// Une liste de numéros ouverts, propre : null quand ils le sont TOUS (rien à
+// garder). Lecture indulgente (ce qui sort de la base) : un élément faux est
+// ignoré.
+function liste_lue(mixed $liste, int $nombre): ?array
 {
     if (!is_array($liste)) return null;
-    $mondes = [];
-    foreach ($liste as $monde) {
-        if (is_int($monde) && $monde >= 1 && $monde <= $nombre) $mondes[$monde] = $monde;
+    $numeros = [];
+    foreach ($liste as $numero) {
+        if (is_int($numero) && $numero >= 1 && $numero <= $nombre) $numeros[$numero] = $numero;
     }
-    if ($mondes === [] || count($mondes) === $nombre) return null;
-    ksort($mondes);
-    return array_values($mondes);
+    if ($numeros === [] || count($numeros) === $nombre) return null;
+    ksort($numeros);
+    return array_values($numeros);
+}
+
+// L'ancien nom, gardé : les mondes de SPLAT! sont une liste comme les autres.
+function mondes_lus(mixed $liste, int $nombre): ?array
+{
+    return liste_lue($liste, $nombre);
 }
 
 // Les réglages d'une classe tels qu'on les relit de la base : seulement ce que
@@ -263,13 +329,15 @@ function reglages_lus(?string $json, ?array $applis = null): array
         if ($declares === []) continue;
         if ($applis !== null && !in_array($cle, $applis, true)) continue;
         $reglage = [];
-        if (isset($declares['mondes'])) {
-            $mondes = mondes_lus($reglageBrut['mondes'] ?? null, (int)$declares['mondes']);
-            if ($mondes !== null) $reglage['mondes'] = $mondes;
-        }
-        // Un réglage booléen (lot « Les records ») : seul « false » est gardé,
-        // « true » est le défaut et ne s'écrit pas.
         foreach ($declares as $nom => $defaut) {
+            // Une liste de numéros ouverts (les mondes de SPLAT!, les niveaux
+            // et les opérations de Coffres magiques) : rien quand tout l'est.
+            if (is_int($defaut)) {
+                $liste = liste_lue($reglageBrut[$nom] ?? null, $defaut);
+                if ($liste !== null) $reglage[$nom] = $liste;
+            }
+            // Un réglage booléen (lot « Les records ») : seul « false » est
+            // gardé, « true » est le défaut et ne s'écrit pas.
             if ($defaut === true && ($reglageBrut[$nom] ?? null) === false) $reglage[$nom] = false;
         }
         if ($reglage !== []) $sortie[$cle] = $reglage;
@@ -311,26 +379,30 @@ function reglages_recus(mixed $recus, array $actuels): array
             if (!array_key_exists($nom, $declares)) throw new InvalidArgumentException("Réglage inconnu.");
         }
         $nouveau = $sortie[$cle] ?? [];
-        if (array_key_exists('mondes', $reglage)) {
-            $nombre = (int)$declares['mondes'];
-            $liste = $reglage['mondes'];
-            if (!is_array($liste) || !array_is_list($liste)) throw new InvalidArgumentException("Liste de mondes illisible.");
-            $mondes = [];
-            foreach ($liste as $monde) {
-                if (!is_int($monde) || $monde < 1 || $monde > $nombre) {
-                    throw new InvalidArgumentException("Monde inconnu.");
-                }
-                $mondes[$monde] = $monde;
-            }
-            if ($mondes === []) throw new InvalidArgumentException("Une classe garde au moins un monde ouvert.");
-            ksort($mondes);
-            if (count($mondes) === $nombre) unset($nouveau['mondes']);
-            else $nouveau['mondes'] = array_values($mondes);
-        }
-        // Les réglages booléens (« records » de Défi tables) : vrai ou faux,
-        // rien d'autre ; vrai = le défaut, donc rien d'écrit.
         foreach ($declares as $nom => $defaut) {
-            if ($defaut !== true || !array_key_exists($nom, $reglage)) continue;
+            if (!array_key_exists($nom, $reglage)) continue;
+            // Une liste de numéros ouverts (mondes, niveaux, opérations) : des
+            // entiers de 1 à N, au moins un ; tous = le défaut, rien d'écrit.
+            if (is_int($defaut)) {
+                $nombre = $defaut;
+                $liste = $reglage[$nom];
+                if (!is_array($liste) || !array_is_list($liste)) throw new InvalidArgumentException(libelle_liste($nom, 'illisible'));
+                $numeros = [];
+                foreach ($liste as $numero) {
+                    if (!is_int($numero) || $numero < 1 || $numero > $nombre) {
+                        throw new InvalidArgumentException(libelle_liste($nom, 'inconnu'));
+                    }
+                    $numeros[$numero] = $numero;
+                }
+                if ($numeros === []) throw new InvalidArgumentException(libelle_liste($nom, 'dernier'));
+                ksort($numeros);
+                if (count($numeros) === $nombre) unset($nouveau[$nom]);
+                else $nouveau[$nom] = array_values($numeros);
+                continue;
+            }
+            // Les réglages booléens (« records » de Défi tables) : vrai ou
+            // faux, rien d'autre ; vrai = le défaut, donc rien d'écrit.
+            if ($defaut !== true) continue;
             if (!is_bool($reglage[$nom])) throw new InvalidArgumentException("Réglage illisible.");
             if ($reglage[$nom]) unset($nouveau[$nom]);
             else $nouveau[$nom] = false;

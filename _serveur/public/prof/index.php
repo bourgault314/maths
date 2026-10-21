@@ -14,6 +14,11 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
 // déposée au lot 3), chargé seulement quand on ouvre l'onglet SPLAT! d'une classe.
 $moteurSplat = __DIR__ . '/splat-parcours.js';
 $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : '0';
+// Lot « Coffres magiques sur le suivi » (21/10/2026) : le moteur de Coffres
+// (copie de assets/js/coffres-parcours.js), chargé seulement quand on ouvre
+// l'onglet Coffres magiques d'une classe.
+$moteurCoffres = __DIR__ . '/coffres-parcours.js';
+$versionCoffres = is_file($moteurCoffres) ? substr(md5_file($moteurCoffres), 0, 10) : '0';
 // Lot E1 « les évaluations en classe » (15/10/2026) : le NOYAU de Défi tables
 // (copie de outils/calcul_mental/defi_tables_core.js, identité vérifiée par un
 // test), pour refaire le tirage d'une évaluation et la corriger ici.
@@ -299,6 +304,28 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   .puce-monde[data-monde="5"] { --c: #08857f; } .puce-monde[data-monde="6"] { --c: #7b42b4; }
   /* dans le Détail : la rangée d'un monde fermé à la classe, plus pâle, avec un cadenas */
   .detail-monde.ferme { opacity: .5; }
+  /* Lot « Coffres magiques sur le suivi » (21/10/2026, maquettes validées par
+     Gwenaël) : dans la colonne d'un niveau, « 5 trésors » et dessous « dont 3
+     parfaits » seulement au-dessus de zéro ; « — » si rien. Le Détail : la
+     partie en cours sur une ligne, puis un tableau par opération (clés
+     gagnées, aides ouvertes, solutions montrées, erreurs). */
+  .tresors b { display: block; color: var(--ink); }
+  .tresors small { display: block; margin-top: 1px; color: var(--muted); font-size: .8rem; }
+  .partie-en-cours { margin: 0 0 8px; color: var(--ink); font-size: .9rem; }
+  .partie-en-cours b { color: var(--ink); }
+  .tableau-operations { width: auto; min-width: min(100%, 560px); margin: 0; }
+  .tableau-operations th, .tableau-operations td { padding: 7px 12px; font-size: .88rem; white-space: nowrap; }
+  .tableau-operations th { background: #eef2f7; color: var(--ink); font-size: .74rem; letter-spacing: .04em; text-transform: uppercase; }
+  .tableau-operations td.nombre { font-variant-numeric: tabular-nums; }
+  #tableau tr.detail td .tableau-operations td { padding: 7px 12px; }
+  p.sous.note-coffres { margin: 10px 0 0; font-size: .88rem; }
+  /* Les réglages de Coffres (⚙ Réglages) : deux rangées de cases, comme les
+     mondes de SPLAT! mais en cases simples (choix de Gwenaël, 21/10/2026). */
+  .cases-coffres { display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 0 0 6px; }
+  .cases-coffres label { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; margin: 0;
+                         font-size: .93rem; font-weight: 700; cursor: pointer; }
+  .cases-coffres input { width: 20px; height: 20px; margin: 0; accent-color: var(--blue); }
+  .cases-coffres[aria-busy="true"] label { opacity: .6; cursor: progress; }
   /* Le papier (lot 7). Deux impressions distinctes, jamais ensemble : les
      BANDELETTES à distribuer (numéro, prénom, adresse, code, consigne : une
      par élève, d'un seul tenant) et la FEUILLE prénom ↔ code, que le
@@ -491,6 +518,17 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     #tableau-eleves td.numero { width: 2em; padding-right: 6px; }
     #tableau td.actions-eleve { flex-wrap: wrap; gap: 8px; justify-content: flex-start; }
     #tableau td.actions-eleve > button { flex: 1 1 auto; margin-left: 0 !important; }
+    /* Le tableau par opération du Détail Coffres (lot « Coffres magiques sur le
+       suivi ») reste un tableau dans la carte : les règles ci-dessus, faites
+       pour les lignes d'élèves, ne le mettent pas en pile. */
+    #tableau .tableau-operations { display: table; width: 100%; min-width: 0; }
+    #tableau .tableau-operations thead { display: table-header-group; }
+    #tableau .tableau-operations tbody { display: table-row-group; }
+    #tableau .tableau-operations tr { display: table-row; margin: 0; padding: 0; border: 0; border-radius: 0; background: none; }
+    #tableau .tableau-operations th, #tableau .tableau-operations td { display: table-cell; width: auto; padding: 5px 4px;
+                                                                      font-size: .78rem; white-space: normal; vertical-align: middle; }
+    #tableau .tableau-operations th { font-size: .66rem; line-height: 1.2; }
+    #tableau .tableau-operations td::before { display: none; }
     #tableau td { flex-wrap: wrap; }
     .alerte { margin-left: 0; }
     /* Le Détail : la carte de l'élève se prolonge, le nom du monde au-dessus
@@ -498,6 +536,9 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     #tableau tr.detail { margin-top: -10px; border-top-left-radius: 0; border-top-right-radius: 0; }
     #tableau tr.detail td { display: block; padding: 6px 10px; background: none; }
     .detail-monde b { flex-basis: 100%; }
+    /* …sauf les cellules du tableau par opération de Coffres (règle écrite plus
+       haut, à redire ici : la cellule du Détail est aussi un « tr.detail td »). */
+    #tableau tr.detail td .tableau-operations td { display: table-cell; padding: 5px 4px; }
   }
   @media print {
     @page { margin: 12mm; }
@@ -612,6 +653,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     <div class="onglets" id="onglets">
       <div class="choix-appli" id="choix-appli" role="group" aria-label="Activité affichée">
         <button type="button" data-appli="defi-tables" aria-pressed="true">Défi tables</button>
+        <button type="button" data-appli="coffres" aria-pressed="false">Coffres magiques</button>
         <button type="button" data-appli="splat" aria-pressed="false">SPLAT!</button>
       </div>
       <div class="onglets-classe">
@@ -688,6 +730,17 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
             <th><button type="button" data-tri="date">Dernière activité</button></th>
             <th></th>
           </tr>
+          <!-- L'onglet Coffres magiques (lot « Coffres magiques sur le suivi »,
+               21/10/2026, maquette 01 validée) : un niveau par colonne, le
+               jour du dernier trésor. -->
+          <tr id="entete-coffres" hidden>
+            <th><button type="button" data-tri="prenom">Élève</button></th>
+            <th>Niveau 1</th>
+            <th>Niveau 2</th>
+            <th>Niveau 3</th>
+            <th><button type="button" data-tri="date">Dernier trésor</button></th>
+            <th></th>
+          </tr>
           <!-- L'onglet SPLAT! (lot « splat-suivi-4 ») : ses colonnes à lui. -->
           <tr id="entete-splat" hidden>
             <th><button type="button" data-tri="prenom">Élève</button></th>
@@ -700,6 +753,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
         <tbody id="corps"></tbody>
       </table>
     </div>
+    <p class="sous note-coffres" id="note-coffres" hidden>Parfait : sans erreur ni solution montrée.</p>
     <p class="sous note-tableau">Ce tableau est un <strong>indicateur pédagogique, pas une preuve
     d’évaluation</strong> : la progression vient de l’appareil de l’élève, et quiconque connaît son code
     peut la modifier.</p>
@@ -788,6 +842,29 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
             <div class="sous-reglage" id="rec-reglage" hidden>
               <label><input type="checkbox" id="case-records"> 🏆 Les records</label>
               <small>Le concours de temps des Légendes des tables. Décoché : cette classe ne le voit pas et n’y apparaît pas.</small>
+            </div>
+          </div>
+          <div class="activite">
+            <label class="activite-tete"><input type="checkbox" data-appli="coffres"> <strong>Coffres magiques</strong></label>
+            <!-- Lot « Coffres magiques sur le suivi » (21/10/2026, maquettes
+                 02/03 validées) : les niveaux et les opérations accessibles
+                 aux élèves, tout coché par défaut (rien d'écrit), enregistrés
+                 à chaque clic ; la dernière case cochée d'un groupe ne se
+                 décoche pas. Les trésors déjà ouverts restent. -->
+            <div class="sous-reglage" id="coffres-reglages" hidden>
+              <p class="titre-sous" id="titre-coffres-niveaux">Niveaux accessibles aux élèves</p>
+              <div class="cases-coffres" id="cases-coffres-niveaux" role="group" aria-labelledby="titre-coffres-niveaux">
+                <label><input type="checkbox" data-niveau="1"> Niveau 1</label>
+                <label><input type="checkbox" data-niveau="2"> Niveau 2</label>
+                <label><input type="checkbox" data-niveau="3"> Niveau 3</label>
+              </div>
+              <p class="titre-sous" id="titre-coffres-operations">Opérations accessibles</p>
+              <div class="cases-coffres" id="cases-coffres-operations" role="group" aria-labelledby="titre-coffres-operations">
+                <label><input type="checkbox" data-operation="1"> Addition</label>
+                <label><input type="checkbox" data-operation="2"> Soustraction</label>
+                <label><input type="checkbox" data-operation="3"> Multiplication</label>
+                <label><input type="checkbox" data-operation="4"> Division</label>
+              </div>
             </div>
           </div>
           <div class="activite">
@@ -1072,6 +1149,9 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   // l'activité au catalogue).
   const APPLIS = [
     {cle: "defi-tables", nom: "Défi tables", unite: ["calcul", "calculs"]},
+    // Coffres magiques (21/10/2026) : le serveur ne sait compter que des
+    // entrées — ici les niveaux commencés (1 à 3).
+    {cle: "coffres", nom: "Coffres magiques", unite: ["niveau commencé", "niveaux commencés"]},
     {cle: "splat", nom: "SPLAT!", unite: ["étape", "étapes"]}
   ];
   // Le dernier choix, retenu le temps de l'onglet.
@@ -1080,13 +1160,19 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   // première ouverture de l'onglet SPLAT! : 60 ko qu'une classe sans SPLAT!
   // n'a pas à télécharger. Sa version dans l'adresse suit son contenu.
   const MOTEUR_SPLAT = "splat-parcours.js?v=<?= htmlspecialchars($versionSplat, ENT_QUOTES) ?>";
+  // Le moteur de Coffres magiques, de même (lot « Coffres magiques sur le
+  // suivi », 21/10/2026) : chargé à la première ouverture de son onglet.
+  const MOTEUR_COFFRES = "coffres-parcours.js?v=<?= htmlspecialchars($versionCoffres, ENT_QUOTES) ?>";
   // Les tris de chaque activité : ceux de Défi tables sont lus dans la page.
   const TRIS = {
     "defi-tables": [...document.getElementById("tri").options].map(option => [option.value, option.textContent]),
+    "coffres": [["prenom", "Prénom"], ["tresors", "Trésors"], ["date", "Dernier trésor"]],
     "splat": [["prenom", "Prénom"], ["etapes", "Étapes réussies"], ["date", "Dernière activité"]]
   };
   let SPLAT = window.MathsGoSplatParcours || null;
   let chargementSplat = null;
+  let COFFRES = window.MathsGoCoffresParcours || null;
+  let chargementCoffres = null;
   let appliAffichee = "defi-tables";
   // La vue sous les onglets : "appli" (le tableau de l'activité), "eleves"
   // (lot « Ma classe : élèves », 18/10/2026 : propriétaire et collègues en
@@ -1425,8 +1511,23 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     return ouverts.length && ouverts.length < NOMBRE_MONDES ? ouverts : null;
   }
 
+  // Lot « Coffres magiques sur le suivi » (21/10/2026) : la ligne Coffres
+  // d'un élève, lue par le moteur (prof/coffres-parcours.js) et par lui seul —
+  // la page ne touche jamais aux compteurs du parcours. Un élève sans
+  // parcours a ses trois niveaux à zéro : resumeProf part d'un parcours
+  // vierge. Le moteur borne tout ce qu'il relit (une partie à 99 clés se lit
+  // 10, un niveau 4 saute) : rien de ce qu'un appareil bricolé enverrait ne
+  // déforme la page.
+  function lireCoffres(brut) {
+    const vide = {niveaux: [], operations: [], tresors: 0, parfaits: 0, dernier: null, partie: null, commence: false, lisible: false};
+    if (!COFFRES) return vide;
+    try {
+      return Object.assign({}, COFFRES.resumeProf(brut || null), {lisible: true});
+    } catch (_) { return vide; }
+  }
+
   function elevesLus(cle, liste) {
-    const lire = cle === "splat" ? lireSplat : lireProgression;
+    const lire = cle === "splat" ? lireSplat : cle === "coffres" ? lireCoffres : lireProgression;
     return (liste || []).map(eleve => Object.assign({}, eleve, {lu: lire(eleve.parcours)}));
   }
 
@@ -1489,6 +1590,10 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       // SPLAT! : les étapes réussies, puis les Bonus, puis une série en
       // cours, pour départager.
       if (tri.colonne === "etapes") return (eleve.lu.faits || 0) * 10000 + (eleve.lu.bonus || 0) * 10 + (eleve.lu.cours ? 1 : 0);
+      // Coffres magiques : les trésors, puis les parfaits, puis une partie en cours.
+      if (tri.colonne === "tresors") return (eleve.lu.tresors || 0) * 10000 + (eleve.lu.parfaits || 0) * 10 + (eleve.lu.partie ? 1 : 0);
+      // « Dernier trésor » : le jour du dernier trésor, pas la dernière activité.
+      if (tri.colonne === "date" && appliAffichee === "coffres") return eleve.lu.dernier || "";
       if (tri.colonne === "acquises") return eleve.lu.acquises.length;
       if (tri.colonne === "encours") return eleve.lu.enCours.ordre;
       if (tri.colonne === "semaine") return eleve.lu.seances;
@@ -1665,6 +1770,8 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     corps.textContent = "";
     // Lot « splat-suivi-4 » : l'onglet SPLAT! a ses colonnes et sa carte.
     if (appliAffichee === "splat") { dessinerTableauSplat(corps, ecriture); return; }
+    // Lot « Coffres magiques sur le suivi » : l'onglet Coffres, ses niveaux et son Détail.
+    if (appliAffichee === "coffres") { dessinerTableauCoffres(corps, ecriture); return; }
 
     eleves.forEach(eleve => {
       const ligne = document.createElement("tr");
@@ -2147,6 +2254,158 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     bloc.hidden = false;
   }
 
+  // ------------------------------------------------------- l'onglet Coffres magiques
+  //
+  // Lot « Coffres magiques sur le suivi » (21/10/2026, maquette 01 validée par
+  // Gwenaël) : une ligne par élève — un niveau par colonne (« 5 trésors », et
+  // dessous « dont 3 parfaits » seulement au-dessus de zéro ; « — » si rien),
+  // le jour du dernier trésor — et un « Détail » qui déplie la partie en cours
+  // (« niveau 2 · addition et multiplication · 6 clés sur 10 ») puis un tableau
+  // par opération : clés gagnées, aides ouvertes, solutions montrées, erreurs.
+  // Pas de trésors par opération (Gwenaël a refusé : ça trompait), pas de carte
+  // de classe. Tout est construit par createElement et textContent : rien de ce
+  // que renvoie le serveur ne devient du HTML. C'est le moteur qui lit le
+  // parcours (lireCoffres).
+
+  // « 20 oct. 2026 » : le jour du dernier trésor, une date du parcours (jamais
+  // une heure), telle que la maquette l'écrit.
+  function jourCourt(jour) {
+    if (!jour) return "";
+    const date = new Date(String(jour) + "T12:00:00Z");
+    if (isNaN(date)) return "";
+    return date.toLocaleDateString("fr-FR", {timeZone: "Indian/Reunion", day: "numeric", month: "short", year: "numeric"});
+  }
+
+  function celluleNiveau(niveau) {
+    const cellule = document.createElement("td");
+    cellule.className = "tresors";
+    if (!niveau || !niveau.tresors) {
+      cellule.textContent = "—";
+      cellule.classList.add("sans");
+      return cellule;
+    }
+    const compte = document.createElement("b");
+    compte.textContent = `${niveau.tresors} trésor${niveau.tresors > 1 ? "s" : ""}`;
+    cellule.append(compte);
+    if (niveau.parfaits > 0) {
+      const parfaits = document.createElement("small");
+      parfaits.textContent = `dont ${niveau.parfaits} parfait${niveau.parfaits > 1 ? "s" : ""}`;
+      cellule.append(parfaits);
+    }
+    return cellule;
+  }
+
+  // Le Détail : la partie en cours (à partir d'une clé), puis les quatre
+  // opérations, dans l'ordre de l'appli, même à zéro.
+  function ligneDetailCoffres(eleve, colonnes) {
+    const ligne = document.createElement("tr");
+    ligne.className = "detail";
+    const cellule = document.createElement("td");
+    cellule.colSpan = colonnes;
+    cellule.dataset.libelle = "";
+    const lu = eleve.lu;
+    if (lu.partie) {
+      const partie = document.createElement("p");
+      partie.className = "partie-en-cours";
+      const titre = document.createElement("b");
+      titre.textContent = "Partie en cours : ";
+      const cles = document.createElement("b");
+      cles.textContent = `${lu.partie.cles} clé${lu.partie.cles > 1 ? "s" : ""} sur ${lu.partie.total}`;
+      partie.append(titre, document.createTextNode(`niveau ${lu.partie.niveau} · ${lu.partie.operations} · `), cles);
+      cellule.append(partie);
+    }
+    const table = document.createElement("table");
+    table.className = "tableau-operations";
+    const thead = document.createElement("thead");
+    const enTete = document.createElement("tr");
+    ["Opération", "Clés gagnées", "Aides ouvertes", "Solutions montrées", "Erreurs"].forEach(texte => {
+      const th = document.createElement("th");
+      th.textContent = texte;
+      enTete.append(th);
+    });
+    thead.append(enTete);
+    const tbody = document.createElement("tbody");
+    (lu.operations || []).forEach(operation => {
+      const tr = document.createElement("tr");
+      const nom = document.createElement("td");
+      nom.textContent = operation.nom[0].toUpperCase() + operation.nom.slice(1);
+      tr.append(nom);
+      [operation.cles, operation.aides, operation.solutions, operation.erreurs].forEach(valeur => {
+        const td = document.createElement("td");
+        td.className = "nombre";
+        td.textContent = String(valeur);
+        tr.append(td);
+      });
+      tbody.append(tr);
+    });
+    table.append(thead, tbody);
+    cellule.append(table);
+    ligne.append(cellule);
+    return ligne;
+  }
+
+  function dessinerTableauCoffres(corps, ecriture) {
+    $("fragiles").hidden = true;
+    $("objectif").hidden = true;
+    eleves.forEach(eleve => {
+      const ligne = document.createElement("tr");
+      const cNom = celluleNomTexte(eleve);
+      const niveaux = eleve.lu.niveaux || [];
+      const cNiveaux = [1, 2, 3].map(numero => celluleNiveau(niveaux.find(n => n.numero === numero)));
+
+      const cDate = document.createElement("td");
+      const quand = jourCourt(eleve.lu.dernier);
+      cDate.textContent = quand || "—";
+      if (!quand) cDate.className = "sans";
+
+      const cActions = document.createElement("td");
+      if (eleve.lu.lisible) {
+        // Le Détail se déplie sous la ligne, sans redessiner le tableau ; il
+        // reste déplié quand on trie (comme l'onglet SPLAT!).
+        const detail = document.createElement("button");
+        detail.type = "button";
+        detail.className = "secondaire petit";
+        let ligneDetail = null;
+        const poser = () => {
+          const ouvert = detailsOuverts.has(eleve.id);
+          detail.textContent = ouvert ? "Masquer le détail" : "Détail";
+          detail.setAttribute("aria-expanded", String(ouvert));
+          if (ouvert) {
+            if (!ligneDetail) ligneDetail = ligneDetailCoffres(eleve, ligne.children.length);
+            ligne.after(ligneDetail);
+          } else if (ligneDetail) ligneDetail.remove();
+        };
+        detail.addEventListener("click", () => {
+          if (detailsOuverts.has(eleve.id)) detailsOuverts.delete(eleve.id);
+          else detailsOuverts.add(eleve.id);
+          poser();
+        });
+        cActions.append(detail);
+        poser();
+        ligne.poserDetail = poser;
+      }
+      poserGestes(eleve, ecriture, cActions);
+
+      cNom.dataset.libelle = "";
+      cNiveaux.forEach((cellule, index) => { cellule.dataset.libelle = `Niveau ${index + 1}`; });
+      cDate.dataset.libelle = "Dernier trésor";
+      cActions.dataset.libelle = "";
+      cActions.className = "actions-eleve";
+
+      ligne.append(cNom, ...cNiveaux, cDate, cActions);
+      corps.appendChild(ligne);
+      if (ligne.poserDetail && detailsOuverts.has(eleve.id)) ligne.poserDetail();
+    });
+
+    $("resume-classe").textContent = resumeDeLaClasse(eleves);
+    if (!COFFRES) {
+      messager("message-appli",
+        "La progression Coffres magiques ne peut pas être détaillée : le moteur (prof/coffres-parcours.js) n’a pas pu être chargé — vérifie qu’il est bien déposé sur le serveur.",
+        "erreur");
+    }
+    dessinerPapier();
+  }
+
   // ---------------------------------------------------------------- feuille imprimée
 
   // L'ORDRE DE LA FEUILLE IMPRIMÉE, calculé à UN SEUL endroit : les élèves qui
@@ -2467,8 +2726,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       const connue = classes.find(uneClasse => uneClasse.id === id);
       const voulue = appliAMontrer(lesApplisConnues(connue ? connue.applis : ["defi-tables"]),
         memeClasse ? appliAffichee : lireChoixAppli());
-      const [donnees] = await Promise.all([api("tableau", {classe_id: id, appli: voulue}),
-        voulue === "splat" ? chargerMoteurSplat() : null]);
+      const [donnees] = await Promise.all([api("tableau", {classe_id: id, appli: voulue}), chargerMoteurDe(voulue)]);
       classe = donnees.classe;
       droitClasse = classe.droit || "proprietaire";
       if (connue) connue.applis = classe.applis;
@@ -2542,6 +2800,30 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     return chargementSplat;
   }
 
+  // Le moteur de Coffres magiques, de même : chargé une fois, à la première
+  // ouverture de son onglet. Introuvable : null, et l'onglet le dit.
+  function chargerMoteurCoffres() {
+    if (!COFFRES && window.MathsGoCoffresParcours) COFFRES = window.MathsGoCoffresParcours;
+    if (COFFRES) return Promise.resolve(COFFRES);
+    if (!chargementCoffres) {
+      chargementCoffres = new Promise(resolve => {
+        const script = document.createElement("script");
+        script.src = MOTEUR_COFFRES;
+        script.addEventListener("load", () => { COFFRES = window.MathsGoCoffresParcours || null; resolve(COFFRES); });
+        script.addEventListener("error", () => { chargementCoffres = null; resolve(null); });
+        document.head.appendChild(script);
+      });
+    }
+    return chargementCoffres;
+  }
+
+  // Le moteur qu'il faut à une activité (Défi tables : déjà dans la page).
+  function chargerMoteurDe(cle) {
+    if (cle === "splat") return chargerMoteurSplat();
+    if (cle === "coffres") return chargerMoteurCoffres();
+    return Promise.resolve(null);
+  }
+
   // Ce qui change avec l'activité affichée : les onglets (un par activité de
   // la classe, TOUJOURS là depuis le lot « Ma classe : réglages » ; celui
   // qu'on regarde est souligné, aucun dans les Réglages), l'en-tête du
@@ -2555,10 +2837,14 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       bouton.setAttribute("aria-pressed", String(vue === "appli" && bouton.dataset.appli === appliAffichee));
     });
     const splat = appliAffichee === "splat";
-    $("entete-defi-tables").hidden = splat;
+    const coffres = appliAffichee === "coffres";
+    $("entete-defi-tables").hidden = splat || coffres;
     $("entete-splat").hidden = !splat;
-    $("bloc-imprimer").hidden = splat;
-    if (splat) $("fragiles").hidden = true;
+    $("entete-coffres").hidden = !coffres;
+    $("note-coffres").hidden = !coffres;
+    $("bloc-imprimer").hidden = splat || coffres;
+    if (splat || coffres) $("fragiles").hidden = true;
+    if (coffres) $("objectif").hidden = true;
     poserTris();
     poserActivites();
     // Lot « Les records » : la carte, Défi tables seulement (relue à chaque
@@ -2622,7 +2908,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     if (!classe || !applisDeLaClasse().includes(cle)) return;
     const numero = ++demandeAppli;
     try {
-      if (cle === "splat") await chargerMoteurSplat();
+      await chargerMoteurDe(cle);
       const liste = tableaux[cle]
         || elevesLus(cle, (await api("tableau", {classe_id: classe.id, appli: cle})).eleves);
       if (numero !== demandeAppli) return;
@@ -3322,6 +3608,64 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       caseMonde.disabled = false;
       poserPuce(caseMonde);
     });
+    // Lot « Coffres magiques sur le suivi » : niveaux et opérations
+    // accessibles, seulement quand la classe a Coffres ; tout coché par défaut.
+    $("coffres-reglages").hidden = !presentes.includes("coffres");
+    const niveaux = coffresOuverts("niveaux");
+    const operations = coffresOuverts("operations");
+    document.querySelectorAll("#coffres-reglages input[data-niveau]").forEach(caseNiveau => {
+      caseNiveau.checked = !niveaux || niveaux.includes(Number(caseNiveau.dataset.niveau));
+      caseNiveau.disabled = false;
+    });
+    document.querySelectorAll("#coffres-reglages input[data-operation]").forEach(caseOperation => {
+      caseOperation.checked = !operations || operations.includes(Number(caseOperation.dataset.operation));
+      caseOperation.disabled = false;
+    });
+  }
+
+  // Les niveaux (1 à 3) ou les opérations (1 à 4) de Coffres magiques ouverts
+  // à la classe ouverte (classe.reglages.coffres) : null quand tout l'est — le
+  // cas de toute classe où personne n'a rien choisi.
+  const NOMBRES_COFFRES = {niveaux: 3, operations: 4};
+  function coffresOuverts(nom) {
+    const reglages = classe && classe.reglages;
+    const liste = reglages && reglages.coffres && reglages.coffres[nom];
+    const nombre = NOMBRES_COFFRES[nom];
+    if (!Array.isArray(liste)) return null;
+    const ouverts = liste.filter(numero => Number.isInteger(numero) && numero >= 1 && numero <= nombre);
+    return ouverts.length && ouverts.length < nombre ? ouverts : null;
+  }
+
+  // Cocher ou décocher un niveau ou une opération de Coffres magiques pour la
+  // classe (choix de Gwenaël, 21/10/2026) : enregistré à chaque clic, comme
+  // les mondes de SPLAT!, sans bouton « Enregistrer ». La dernière case
+  // cochée d'un groupe ne se décoche pas (le message ne vient que si on
+  // essaie). Rien n'est effacé : les trésors restent ; l'élève dont la partie
+  // en cours ne tient plus repart à 0 clé, à sa prochaine ouverture.
+  async function changerReglageCoffres(nom, caseCochee) {
+    const attribut = nom === "niveaux" ? "niveau" : "operation";
+    const cases = [...document.querySelectorAll(`#coffres-reglages input[data-${attribut}]`)];
+    const voulus = cases.filter(uneCase => uneCase.checked).map(uneCase => Number(uneCase.dataset[attribut]));
+    if (!voulus.length) {
+      caseCochee.checked = true;
+      messager("message-activites", nom === "niveaux"
+        ? "Une classe garde au moins un niveau ouvert." : "Une classe garde au moins une opération ouverte.", "erreur");
+      return;
+    }
+    const groupe = $(nom === "niveaux" ? "cases-coffres-niveaux" : "cases-coffres-operations");
+    cases.forEach(uneCase => { uneCase.disabled = true; });
+    groupe.setAttribute("aria-busy", "true");
+    try {
+      await api("classes.modifier", {classe_id: classe.id, reglages: {coffres: {[nom]: voulus}}});
+      await ouvrirClasse(classe.id);
+      messager("message-activites", "Réglages de Coffres magiques enregistrés.", "ok");
+    } catch (erreur) {
+      caseCochee.checked = !caseCochee.checked;
+      surErreur(erreur, "message-activites");
+    } finally {
+      cases.forEach(uneCase => { uneCase.disabled = false; });
+      groupe.setAttribute("aria-busy", "false");
+    }
   }
 
   // Le dessin d'une case de monde suit la case (pointillés gris quand il est fermé).
@@ -4161,6 +4505,12 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   });
   document.querySelectorAll("#mondes-ouverts input[data-monde]").forEach(caseMonde => {
     caseMonde.addEventListener("change", () => changerMonde(caseMonde));
+  });
+  document.querySelectorAll("#coffres-reglages input[data-niveau]").forEach(caseNiveau => {
+    caseNiveau.addEventListener("change", () => changerReglageCoffres("niveaux", caseNiveau));
+  });
+  document.querySelectorAll("#coffres-reglages input[data-operation]").forEach(caseOperation => {
+    caseOperation.addEventListener("change", () => changerReglageCoffres("operations", caseOperation));
   });
   $("case-records").addEventListener("change", () => changerRecords($("case-records")));
   $("records-plein-ecran").addEventListener("click", ouvrirRecordsPleinEcran);

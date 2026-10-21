@@ -413,7 +413,10 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // Puis « Ma classe : tri et bandelette » (21/10/2026) : prof/index.php seul
   // change (avant : ma-classe-eleves). Puis « Ma classe : le parcours de Léa »
   // (21/10/2026) : prof/index.php seul change (avant : ma-classe-tri-bandelette).
-  assert.match(lire("_serveur/public/VERSION"), /^lot ma-classe-parcours$/m);
+  // Puis « Coffres magiques sur le suivi » (21/10/2026) : l'API, le catalogue,
+  // l'espace élève, Ma classe, verifier.php et la copie du moteur de Coffres,
+  // 61 au manifeste (avant : ma-classe-parcours).
+  assert.match(lire("_serveur/public/VERSION"), /^lot coffres-suivi$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=galets-masques-20261021-1/);
 });

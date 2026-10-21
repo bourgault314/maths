@@ -19,6 +19,7 @@ function version_moteur(string $fichier): string
 }
 $versionMoteur = version_moteur('defi_tables_mon_parcours.js');
 $versionSplat = version_moteur('splat-parcours.js');
+$versionCoffres = version_moteur('coffres-parcours.js');
 ?>
 <!doctype html>
 <html lang="fr">
@@ -201,6 +202,13 @@ $versionSplat = version_moteur('splat-parcours.js');
   .appli .jauge-ligne .bonus { padding: 2px 9px; border-radius: 999px; border: 1px solid #f0dc8c;
                                background: #fff4cc; color: #7a5a00; font-size: .78rem; font-weight: 800;
                                white-space: nowrap; }
+  /* Coffres magiques (lot « Coffres magiques sur le suivi », 21/10/2026,
+     planche validée par Gwenaël) : ni barre ni pastilles — une ligne par
+     niveau commencé (« Niveau 1 : 5 trésors »), et au bout de la ligne du
+     niveau où l'élève s'est arrêté, la partie en cours dans la pastille
+     dorée (« 🔑 6 / 10 »). Le minimum, rien d'autre. */
+  .appli .jauge.niveaux { margin-top: 2px; }
+  .appli .jauge.niveaux .jauge-ligne { margin-top: 4px; min-height: 24px; }
   /* La séance en direct (07/10/2026) : une tuile de plus, AU-DESSUS des
      activités, qui n'existe que pendant que le professeur mène une séance
      avec la classe. Même dessin qu'une activité, liseré orange. */
@@ -374,6 +382,16 @@ $versionSplat = version_moteur('splat-parcours.js');
       + '<path d="M11 27.5l8 8M19 27.5l-8 8"/><path d="M26.5 31.5h9"/></g>'
       + '<g fill="#d95f02"><circle cx="31" cy="26.5" r="2.2"/><circle cx="31" cy="36.5" r="2.2"/></g>'
       + '</svg>',
+    // Coffres magiques (21/10/2026) : le coffre — couvercle bombé, ferrure
+    // dorée et serrure — aux couleurs de la vignette du site (bois, or).
+    "coffres":
+      '<svg class="icone" width="40" height="40" viewBox="0 0 46 46" aria-hidden="true" focusable="false">'
+      + '<rect width="46" height="46" rx="12" fill="#eaf1fa"/>'
+      + '<path d="M9 20a14 9 0 0 1 28 0Z" fill="#a77b50" stroke="#62412d" stroke-width="1.8" stroke-linejoin="round"/>'
+      + '<rect x="9" y="20" width="28" height="16" rx="2.5" fill="#a77b50" stroke="#62412d" stroke-width="1.8"/>'
+      + '<rect x="9" y="18.5" width="28" height="4" fill="#f9bf3b" stroke="#a85b08" stroke-width="1.4"/>'
+      + '<rect x="19.5" y="20.5" width="7" height="9" rx="1.6" fill="#f9bf3b" stroke="#a85b08" stroke-width="1.4"/>'
+      + '<path d="M23 23.4v3.2" stroke="#62412d" stroke-width="1.8" stroke-linecap="round"/></svg>',
     // Automatismes : LE MÉTRONOME de la bibliothèque d'icônes du site
     // (assets/js/mathsgo-icon-library.js, clé « automatismes »), repris tel
     // quel — c'est le dessin déjà utilisé partout ailleurs sur mathsgo.re.
@@ -551,6 +569,28 @@ $versionSplat = version_moteur('splat-parcours.js');
           mondes: tout.mondes.map(monde => ({numero: monde.numero, etat: ouvert(monde.numero) ? monde.etat : "ferme"}))
         };
       }
+    },
+    // Coffres magiques (lot « Coffres magiques sur le suivi », 21/10/2026,
+    // planche validée par Gwenaël) : une ligne par niveau commencé — « Niveau
+    // 1 : 5 trésors », « Niveau 3 : pas encore de trésor » — et, au bout de
+    // la ligne du niveau de la partie en cours, « 🔑 6 / 10 ». Rien tant que
+    // l'élève n'a ni trésor ni partie en cours (une partie à 0 clé n'est
+    // qu'un choix de réglages : elle ne se montre pas). C'est le moteur qui
+    // lit le parcours (resumeTuile) ; les mots sont écrits ici.
+    "coffres": {
+      url: "prof/coffres-parcours.js?v=<?= htmlspecialchars($versionCoffres, ENT_QUOTES) ?>",
+      global: "MathsGoCoffresParcours",
+      lecteur: (P, brut) => {
+        const resume = P.resumeTuile(brut);
+        if (resume.vide) return null;
+        return {
+          lignes: resume.lignes.map(ligne => ({
+            texte: `Niveau ${ligne.niveau} : ` + (ligne.tresors
+              ? `${ligne.tresors} trésor${ligne.tresors > 1 ? "s" : ""}` : "pas encore de trésor"),
+            bonus: ligne.cles !== null ? `\u{1F511} ${ligne.cles} / ${ligne.total}` : ""
+          }))
+        };
+      }
     }
   };
   const moteursEnCours = {};
@@ -664,6 +704,29 @@ $versionSplat = version_moteur('splat-parcours.js');
   function poserJauge(tuile, jauge) {
     const bloc = document.createElement("div");
     bloc.className = "jauge";
+    // Coffres magiques : des lignes de texte, une par niveau commencé, et la
+    // partie en cours au bout de la sienne — ni barre, ni rang, ni note.
+    if (jauge.lignes) {
+      bloc.className = "jauge niveaux";
+      jauge.lignes.forEach(ligneNiveau => {
+        const ligne = document.createElement("div");
+        ligne.className = "jauge-ligne";
+        const compte = document.createElement("span");
+        compte.className = "compte";
+        compte.textContent = ligneNiveau.texte;
+        ligne.append(compte);
+        if (ligneNiveau.bonus) {
+          const bonus = document.createElement("span");
+          bonus.className = "bonus";
+          bonus.textContent = ligneNiveau.bonus;
+          ligne.append(bonus);
+        }
+        bloc.append(ligne);
+      });
+      tuile.classList.add("a-jauge");
+      tuile.append(bloc);
+      return;
+    }
     if (jauge.mondes) {
       const mondes = document.createElement("div");
       mondes.className = "mondes";

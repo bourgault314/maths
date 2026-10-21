@@ -375,14 +375,15 @@ test("APPLIS : ce que la page sait montrer est disponible au catalogue, proposé
   const api = lire("_serveur/public/api/prof.php");
   const proposables = JSON.parse(api.match(/const APPLIS_PROPOSABLES = (\[[^\]]+\]);/)[1].replace(/'/g, '"'));
   const ordre = [...catalogue.matchAll(/^ {4}'([a-z-]+)' => \[/gm)].map(m => m[1]);
-  assert.deepEqual(APPLIS.map(a => a.cle), ["defi-tables", "splat"]);
+  // Coffres magiques entre les deux (lot « Coffres magiques sur le suivi », 21/10/2026).
+  assert.deepEqual(APPLIS.map(a => a.cle), ["defi-tables", "coffres", "splat"]);
   APPLIS.forEach(appli => {
     const entree = catalogue.slice(catalogue.indexOf(`'${appli.cle}' => [`));
     const bloc = entree.slice(0, entree.indexOf("\n    ],"));
     assert.match(bloc, /'disponible' => true,/, `${appli.cle} disponible au catalogue`);
     assert.ok(proposables.includes(appli.cle), `${appli.cle} proposée par l'API`);
     const compteur = bloc.match(/'compteur' => '(\w+)'/)[1];
-    assert.equal({calculs: "calculs", etapes: "étapes"}[compteur], appli.unite[1], "« Revenir à… » compte ce que compte le serveur");
+    assert.equal({calculs: "calculs", etapes: "étapes", niveaux: "niveaux commencés"}[compteur], appli.unite[1], "« Revenir à… » compte ce que compte le serveur");
   });
   assert.deepEqual(APPLIS.map(a => a.cle), ordre.filter(c => APPLIS.some(a => a.cle === c)));
   // Le HTML suit la même liste : les boutons du choix, les cases des activités.
@@ -439,31 +440,33 @@ function casesMondes() {
 
 function poserAppliRejoue(applis, appliAffichee, droit = "proprietaire", triAvant = {colonne: "acquises", sens: -1}, reglages = {}, vueAvant = "appli") {
   const {$} = creerZones();
-  const boutons = ["defi-tables", "splat"].map(cle => Object.assign(new Noeud("button"), {dataset: {appli: cle}}));
-  const cases = ["defi-tables", "splat"].map(cle => Object.assign(new Noeud("input"), {dataset: {appli: cle}}));
+  const boutons = ["defi-tables", "coffres", "splat"].map(cle => Object.assign(new Noeud("button"), {dataset: {appli: cle}}));
+  const cases = ["defi-tables", "coffres", "splat"].map(cle => Object.assign(new Noeud("input"), {dataset: {appli: cle}}));
   const mondes = casesMondes();
+  // Les cases de Coffres magiques (niveaux, opérations) : à part, elles ne comptent pas ici.
+  const casesCoffres = s => (s.includes("data-niveau") ? [1, 2, 3] : [1, 2, 3, 4]).map(n => Object.assign(new Noeud("input"), {dataset: {niveau: String(n), operation: String(n)}}));
   const doc = Object.assign({}, document, {querySelectorAll: s => (s.startsWith("#choix-appli") ? boutons
-    : s.startsWith("#mondes-ouverts") ? mondes : cases)});
+    : s.startsWith("#mondes-ouverts") ? mondes : s.startsWith("#coffres-reglages") ? casesCoffres(s) : cases)});
   const TRIS = {"defi-tables": [["prenom", "Prénom"], ["acquises", "Tables passées"], ["date", "Dernière activité"]],
     "splat": [["prenom", "Prénom"], ["etapes", "Étapes réussies"], ["date", "Dernière activité"]]};
   const lus = {records: 0, evaluations: 0};
   const etat = new Function("document", "$", "classe", "appliAffichee", "droitClasse", "TRIS", "APPLIS", "triInitial", "vueInitiale", "lus",
-    `let tri = triInitial;\nlet vue = vueInitiale;\n${constante("NOMBRE_MONDES")}\n${["lesApplisConnues", "applisDeLaClasse", "poserAppli", "poserVue", "poserTris", "poserActivites",
-      "mondesOuverts", "poserPuce", "recordsOuvertsPourLaClasse"].map(fonction).join("\n")}\nfunction chargerRecords() { lus.records += 1; }\nfunction poserEvaluations() { lus.evaluations += 1; }\nposerAppli();\nreturn {tri, vue};`)(
-    doc, $, {applis, reglages}, appliAffichee, droit, TRIS, [{cle: "defi-tables"}, {cle: "splat"}], triAvant, vueAvant === true ? "reglages" : vueAvant, lus);
+    `let tri = triInitial;\nlet vue = vueInitiale;\n${constante("NOMBRE_MONDES")}\n${constante("NOMBRES_COFFRES")}\n${["lesApplisConnues", "applisDeLaClasse", "poserAppli", "poserVue", "poserTris", "poserActivites",
+      "mondesOuverts", "coffresOuverts", "poserPuce", "recordsOuvertsPourLaClasse"].map(fonction).join("\n")}\nfunction chargerRecords() { lus.records += 1; }\nfunction poserEvaluations() { lus.evaluations += 1; }\nposerAppli();\nreturn {tri, vue};`)(
+    doc, $, {applis, reglages}, appliAffichee, droit, TRIS, [{cle: "defi-tables"}, {cle: "coffres"}, {cle: "splat"}], triAvant, vueAvant === true ? "reglages" : vueAvant, lus);
   return {$, boutons, cases, mondes, tri: etat.tri, vue: etat.vue, vueReglages: etat.vue === "reglages", lus};
 }
 
 test("un onglet par activité de la classe, même seule ; l'onglet SPLAT! change l'en-tête, les tris, et cache ce qui est à Défi tables", () => {
   const seule = poserAppliRejoue(["defi-tables"], "defi-tables");
   assert.notEqual(seule.$("choix-appli").hidden, true, "une seule activité : son onglet est là quand même");
-  assert.deepEqual(seule.boutons.map(b => [b.hidden, b.attributs["aria-pressed"]]), [[false, "true"], [true, "false"]],
-    "l'onglet Défi tables, souligné ; pas d'onglet SPLAT!");
+  assert.deepEqual(seule.boutons.map(b => [b.hidden, b.attributs["aria-pressed"]]), [[false, "true"], [true, "false"], [true, "false"]],
+    "l'onglet Défi tables, souligné ; ni onglet Coffres ni onglet SPLAT!");
   assert.equal(seule.$("entete-splat").hidden, true);
   assert.equal(seule.$("bloc-imprimer").hidden, false);
   const deux = poserAppliRejoue(["defi-tables", "splat"], "splat");
   assert.equal(deux.$("choix-appli").hidden, false);
-  assert.deepEqual(deux.boutons.map(b => [b.hidden, b.attributs["aria-pressed"]]), [[false, "false"], [false, "true"]]);
+  assert.deepEqual(deux.boutons.map(b => [b.hidden, b.attributs["aria-pressed"]]), [[false, "false"], [true, "false"], [false, "true"]]);
   assert.equal(deux.$("entete-defi-tables").hidden, true);
   assert.equal(deux.$("entete-splat").hidden, false);
   assert.equal(deux.$("bloc-imprimer").hidden, true, "« À imprimer » (papiers de Défi tables) caché");
@@ -473,8 +476,8 @@ test("un onglet par activité de la classe, même seule ; l'onglet SPLAT! change
   assert.equal(poserAppliRejoue(["defi-tables", "splat"], "splat", "proprietaire", {colonne: "date", sens: -1}).tri.colonne, "date",
     "« Dernière activité » existe des deux côtés : il reste");
   // Les activités de la classe : cases à l'état du serveur.
-  assert.deepEqual(deux.cases.map(c => c.checked), [true, true]);
-  assert.deepEqual(seule.cases.map(c => c.checked), [true, false]);
+  assert.deepEqual(deux.cases.map(c => c.checked), [true, false, true]);
+  assert.deepEqual(seule.cases.map(c => c.checked), [true, false, false]);
   // Hors Réglages : la vue de l'activité, ses cartes lues.
   assert.equal(deux.$("vue-appli").hidden, false);
   assert.equal(deux.$("vue-reglages").hidden, true);
@@ -490,8 +493,8 @@ test("lot « Ma classe : réglages » : la vue Réglages remplace celle de l'act
   assert.equal(reglages.$("vue-appli").hidden, true, "le tableau n'est plus à l'écran");
   assert.equal(reglages.$("vue-reglages").hidden, false);
   assert.equal(reglages.$("onglet-reglages").attributs["aria-pressed"], "true");
-  assert.deepEqual(reglages.boutons.map(b => b.attributs["aria-pressed"]), ["false", "false"], "aucun onglet d'activité souligné");
-  assert.deepEqual(reglages.cases.map(c => c.checked), [true, true], "les cases sont posées");
+  assert.deepEqual(reglages.boutons.map(b => b.attributs["aria-pressed"]), ["false", "false", "false"], "aucun onglet d'activité souligné");
+  assert.deepEqual(reglages.cases.map(c => c.checked), [true, false, true], "les cases sont posées");
   // Un collègue n'a jamais la vue Réglages, même si l'état le demandait.
   for (const droit of ["ecriture", "lecture"]) {
     const collegue = poserAppliRejoue(["defi-tables", "splat"], "splat", droit, undefined, {}, true);
@@ -528,13 +531,15 @@ test("passer d'un onglet à l'autre : une liste déjà lue est reprise, sinon un
   const api = (action, corps) => { appels.push(corps.appli); return new Promise(r => attentes.push(() => r({eleves: [{id: 1, prenom: corps.appli}]}))); };
   const retenus = [];
   let dessins = 0;
-  const monde = new Function("api", "retenirChoixAppli", "redessin", "classe", "chargerMoteurSplat", "elevesLus",
+  // Depuis le lot « Coffres magiques sur le suivi » (21/10/2026), afficherAppli
+  // passe par chargerMoteurDe(cle), qui choisit le moteur à charger.
+  const monde = new Function("api", "retenirChoixAppli", "redessin", "classe", "chargerMoteurSplat", "chargerMoteurCoffres", "elevesLus",
     "messager", "poserAppli", "surErreur", "APPLIS",
     `let appliAffichee = "defi-tables", eleves = [], tableaux = {"defi-tables": [{id: 1, prenom: "cache"}]}, demandeAppli = 0;\n`
-    + `${["lesApplisConnues", "applisDeLaClasse", "afficherAppli"].map(fonction).join("\n")}\n`
+    + `${["lesApplisConnues", "applisDeLaClasse", "chargerMoteurDe", "afficherAppli"].map(fonction).join("\n")}\n`
     + "return {afficherAppli, etat: () => ({appliAffichee, eleves, tableaux})};")(
     api, cle => retenus.push(cle), {demander: () => { dessins += 1; }}, {id: 7, applis: ["defi-tables", "splat"]},
-    async () => SPLAT, (cle, liste) => liste, () => {}, () => {}, e => { throw e; }, [{cle: "defi-tables"}, {cle: "splat"}]);
+    async () => SPLAT, async () => null, (cle, liste) => liste, () => {}, () => {}, e => { throw e; }, [{cle: "defi-tables"}, {cle: "splat"}]);
   const p1 = monde.afficherAppli("splat");
   await new Promise(r => setTimeout(r, 0));
   const p2 = monde.afficherAppli("defi-tables");

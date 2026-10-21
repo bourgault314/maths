@@ -194,11 +194,13 @@ function appel(string $chemin, array|string|null $corps = null, array $options =
     $reponse = curl_exec($ch);
     $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $tailleEntetes = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+    $erreurCurl = curl_error($ch);
     curl_close($ch);
     $brutEntetes = substr((string)$reponse, 0, $tailleEntetes);
     $corpsReponse = substr((string)$reponse, $tailleEntetes);
     return [
         'code' => (int)$code,
+        'erreur_curl' => $erreurCurl,
         'entetes' => $brutEntetes,
         'texte' => $corpsReponse,
         'json' => json_decode($corpsReponse, true),
@@ -589,10 +591,12 @@ verifier("le manifeste connaît la page Infos", function () {
     // le script, la feuille et ses 20 polices).
     // 60 depuis les évaluations en classe (lot E1, 15/10/2026) : lib/evaluation.php
     // et la copie du noyau de Défi tables, prof/defi_tables_core.js.
-    vrai((bool)preg_match('/^fichiers 60$/m', $manifeste),
-        'le serveur compte 60 fichiers depuis les évaluations en classe');
+    // 61 depuis Coffres magiques sur le suivi (21/10/2026) : la copie du moteur
+    // de parcours, prof/coffres-parcours.js.
+    vrai((bool)preg_match('/^fichiers 61$/m', $manifeste),
+        'le serveur compte 61 fichiers depuis Coffres magiques sur le suivi');
     foreach (['direct.php', 'prof/direct.php', 'api/direct.php', 'lib/direct.php', 'prof/questionnaire.js',
-              'lib/evaluation.php', 'prof/defi_tables_core.js',
+              'lib/evaluation.php', 'prof/defi_tables_core.js', 'prof/coffres-parcours.js',
               'vendor/katex-0.16.47/katex.min.js', 'vendor/katex-0.16.47/katex.min.css',
               'vendor/katex-0.16.47/fonts/KaTeX_Main-Regular.woff2'] as $fichier) {
         vrai((bool)preg_match('/^[0-9a-f]{64}  ' . preg_quote($fichier, '/') . '$/m', $manifeste),
@@ -4325,7 +4329,7 @@ verifier("splat-suivi-5 — avant migrer.php (colonne absente) : tout se lit « 
     $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classe5['id'], 'reglages' => ['splat' => ['mondes' => [1, 2]]]], ['jeton' => $jetonS1]);
     egal(200, $r['code'], 'après la mise à niveau, le choix des mondes marche');
     $v = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
-    vrai((bool)preg_match('#class="etat oui">✓</span>\s*Mondes ouverts par classe\s*<div class="detail">en place \(\d+ classe\(s\) avec un choix de mondes\)#u', $v['texte']),
+    vrai((bool)preg_match('#class="etat oui">✓</span>\s*Mondes ouverts par classe\s*<div class="detail">en place \(\d+ classe\(s\) avec un réglage — mondes de SPLAT!, niveaux ou opérations de Coffres\)#u', $v['texte']),
         'verifier.php : la ligne est verte');
 });
 
@@ -4335,6 +4339,267 @@ verifier("splat-suivi-5 — le nombre de mondes déclaré au catalogue est celui
     vrai((bool)preg_match('#const MONDES = Object\.freeze\(\[(.*?)\]\);#s', $moteur, $m), 'la liste des mondes du moteur');
     egal(preg_match_all('#Object\.freeze\(\[(\d), "#', $m[1]), CATALOGUE_APPLIS['splat']['reglages']['mondes'],
         'lib/applis.php déclare autant de mondes que la carte');
+});
+
+// -------------------------------- lot « Coffres magiques sur le suivi » (21/10/2026)
+//
+// Le serveur apprend Coffres magiques (solo) : la clé « coffres », juste après
+// Défi tables au catalogue, ses clés déclarées (trésors et parfaits par
+// niveau, clés / aides / solutions / erreurs par opération, le jour du dernier
+// trésor, la partie en cours), la copie du moteur dans prof/, et deux réglages
+// de classe — les niveaux et les opérations accessibles — rangés dans la même
+// colonne classes.reglages que les mondes de SPLAT!. Rien ne change chez
+// l'élève ni chez le professeur tant qu'aucune classe n'a « coffres » dans sa
+// liste.
+
+verifier("coffres-suivi — le parcours de référence de Coffres ressort identique du filtre du serveur", function () {
+    require_once dirname(__DIR__) . '/public/lib/applis.php';
+    require_once dirname(__DIR__) . '/public/lib/progression.php';
+    $chemin = __DIR__ . '/parcours-reference-coffres.json';
+    vrai(is_file($chemin), "tests/parcours-reference-coffres.json manque : node scripts/generer-parcours-reference-coffres.mjs");
+    $texte = (string)file_get_contents($chemin);
+    $attendu = json_encode(json_decode($texte, false), JSON_UNESCAPED_UNICODE);
+    $obtenu = json_encode(filtrer_progression('coffres', json_decode($texte, false)), JSON_UNESCAPED_UNICODE);
+    egal($attendu, $obtenu, "le filtre du serveur jette un champ que le moteur Coffres produit : compléter 'cles'/'motifs' de « coffres » dans lib/applis.php");
+    $reference = json_decode($texte, false);
+    egal(3, count(get_object_vars($reference->niveaux)), 'les trois niveaux commencés');
+    egal(4, count(get_object_vars($reference->operations)), 'les quatre opérations');
+    egal(6, $reference->partie->cles, 'une partie en cours à 6 clés');
+    egal(3, compter_elements_declares('coffres', $attendu), '« Revenir à… » compte les niveaux commencés');
+});
+
+verifier("coffres-suivi — un texte, une clé étrangère, un niveau hors 1-3 ou un plateau sont retirés", function () {
+    require_once dirname(__DIR__) . '/public/lib/applis.php';
+    require_once dirname(__DIR__) . '/public/lib/progression.php';
+    $propre = json_decode((string)file_get_contents(__DIR__ . '/parcours-reference-coffres.json'), false);
+    $attendu = json_encode($propre, JSON_UNESCAPED_UNICODE);
+    $sale = json_decode($attendu, false);
+    $sale->prenom = 'Léa';
+    $sale->niveaux->{'4'} = (object)['tresors' => 9, 'parfaits' => 9];
+    $sale->niveaux->{'0'} = (object)['tresors' => 9, 'parfaits' => 9];
+    $sale->niveaux->{'1'}->note = 'super';
+    $sale->operations->puissance = (object)['cles' => 3];
+    $sale->operations->sum->calculs = ['3+2', '5+4'];
+    $sale->partie->plateau = [5, 12, 7, 11, 13, 12, 13, 12, 13, 13, 8, 8, 13, 11, 11, 11];
+    $sale->partie->cible = 77;
+    $sale->partie->jour = 'mardi';
+    $sale->dernier = '2026-13-45';
+    $obtenu = filtrer_progression('coffres', $sale);
+    vrai(!isset($obtenu->prenom), 'le prénom reste sur l’appareil');
+    vrai(!isset($obtenu->niveaux->{'4'}) && !isset($obtenu->niveaux->{'0'}), 'un niveau hors 1-3 saute');
+    vrai(!isset($obtenu->niveaux->{'1'}->note), 'un texte dans un niveau saute');
+    vrai(!isset($obtenu->operations->puissance), 'une opération inconnue saute');
+    vrai(!isset($obtenu->operations->sum->calculs), 'les calculs de l’élève ne sont jamais gardés');
+    vrai(!isset($obtenu->partie->plateau) && !isset($obtenu->partie->cible), 'ni le plateau ni la cible : la partie reprend sur un plateau neuf');
+    vrai(!isset($obtenu->partie->jour), 'un texte à la place d’une date saute');
+    vrai(!isset($obtenu->dernier), 'une fausse date saute');
+    unset($propre->partie->jour, $propre->dernier);
+    egal(json_encode($propre, JSON_UNESCAPED_UNICODE), json_encode($obtenu, JSON_UNESCAPED_UNICODE), 'tout le reste ressort intact');
+    $texte = json_encode($obtenu, JSON_UNESCAPED_UNICODE);
+    vrai(!str_contains($texte, 'Léa') && !str_contains($texte, 'super') && !str_contains($texte, '3+2') && !str_contains($texte, 'mardi'), 'aucun texte libre ne ressort');
+    // Le filtre est propre à chaque appli : un parcours Coffres envoyé sous
+    // « splat » ne laisse passer ni niveau ni opération.
+    egal('{"version":1,"epoque":2}', json_encode(filtrer_progression('splat', $propre)), 'les compteurs de Coffres ne sont pas des clés de SPLAT!');
+});
+
+$classeCoffres = null;
+verifier("coffres-suivi — Coffres s'enregistre et se relit par l'API élève, à côté de Défi tables et de SPLAT!", function () use (&$jetonS1, &$classeCoffres) {
+    vider_compteurs();
+    $r = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'test-coffres', 'applis' => ['splat', 'coffres', 'defi-tables']], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'classe créée avec Coffres');
+    $classe = $r['json']['id'];
+    $eleves = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 2], ['jeton' => $jetonS1])['json']['eleves'];
+    $classeCoffres = ['id' => $classe, 'eleves' => $eleves];
+    $code = $eleves[0]['code'];
+    $reference = json_decode((string)file_get_contents(__DIR__ . '/parcours-reference-coffres.json'), true);
+    egal(false, lire($code, 'coffres')['json']['existe'], 'rien avant le premier envoi');
+    $w = ecrire($code, $reference, 0, 'coffres');
+    egal(200, $w['code'], 'premier envoi accepté (révision 0)');
+    egal(1, $w['json']['revision']);
+    $r = lire($code, 'coffres');
+    egal(true, $r['json']['existe']);
+    egal($reference, $r['json']['parcours'], 'relu exactement tel que le moteur l’a envoyé');
+    egal(false, lire($code)['json']['existe'], 'Défi tables du même élève n’a pas bougé');
+    egal(false, lire($code, 'splat')['json']['existe'], 'SPLAT! non plus');
+    $ligne = bd_test()->prepare("SELECT calculs FROM versions WHERE eleve_id = ? AND appli = 'coffres'");
+    $ligne->execute([(int)$eleves[0]['id']]);
+    $compte = (int)$ligne->fetchColumn();
+    // Le curseur se referme tout de suite : ouvert, il garde un verrou de
+    // lecture SQLite, et le prochain appel qui écrit (le limiteur de
+    // eleve.php) attendrait jusqu'au délai de curl.
+    $ligne->closeCursor();
+    egal(3, $compte, 'la version du jour est comptée en niveaux commencés');
+    $r = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $classe, 'appli' => 'coffres'], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'le tableau de la classe se demande pour Coffres');
+    $lu = null;
+    foreach ($r['json']['eleves'] as $e) if ((int)$e['id'] === (int)$eleves[0]['id']) $lu = $e;
+    vrai($lu !== null && is_array($lu['parcours'] ?? null) && ($lu['parcours']['partie']['cles'] ?? 0) === 6,
+        'le tableau rend le parcours Coffres de l’élève, partie en cours comprise');
+    // L'ordre de la liste de la classe est celui du catalogue : Coffres juste après Défi tables.
+    $classes = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1])['json']['classes'];
+    $trouvee = null;
+    foreach ($classes as $c) if ((int)$c['id'] === (int)$classe) $trouvee = $c;
+    egal(['defi-tables', 'coffres', 'splat'], $trouvee['applis'], 'Coffres entre Défi tables et SPLAT!, quel que soit l’ordre envoyé');
+    $e = identite($code);
+    egal(200, $e['code'], 'l’identité par le code : ' . $e['texte'] . ' ' . $e['erreur_curl']);
+    $applis = $e['json']['applis'] ?? [];
+    egal(['defi-tables', 'coffres', 'splat'], array_column($applis, 'cle'), 'l’espace élève reçoit les trois tuiles dans cet ordre');
+    egal(['cle' => 'coffres', 'nom' => 'Coffres magiques', 'description' => 'Trouve les deux nombres qui ouvrent le coffre.',
+        'url' => 'https://mathsgo.re/outils/calcul_mental/coffres_magiques_solo.html', 'ancre' => null, 'disponible' => true], $applis[1],
+        'la tuile : le nom, la phrase convenue, l’adresse de l’appli solo ; pas de « cles » ni de « motifs »');
+});
+
+verifier("coffres-suivi — rien ne change tant qu'aucune classe n'a « coffres » dans sa liste ; décoché, le parcours reste", function () use (&$jetonS1, &$classeCoffres) {
+    require_once __DIR__ . '/../public/lib/applis.php';
+    egal(['defi-tables'], array_column(applis_de_classe('defi-tables'), 'cle'), 'une classe de Défi tables ne reçoit pas Coffres');
+    egal(['defi-tables', 'coffres'], array_column(applis_de_classe('defi-tables,coffres'), 'cle'), 'une classe qui l’a le reçoit');
+    vider_compteurs();
+    $classe = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'test-sans-coffres'], ['jeton' => $jetonS1])['json']['id'];
+    $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
+    egal(['defi-tables'], array_column(identite($eleve['code'])['json']['applis'], 'cle'), 'l’espace de l’élève ne montre que Défi tables');
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classeCoffres['id'], 'applis' => ['defi-tables', 'splat']], ['jeton' => $jetonS1]);
+    egal(['defi-tables', 'splat'], array_column(identite($classeCoffres['eleves'][0]['code'])['json']['applis'], 'cle'),
+        'décochée : la tuile disparaît de l’espace élève');
+    egal(true, lire($classeCoffres['eleves'][0]['code'], 'coffres')['json']['existe'], 'et son parcours reste en base');
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classeCoffres['id'], 'applis' => ['defi-tables', 'coffres', 'splat']], ['jeton' => $jetonS1]);
+    egal(['defi-tables', 'coffres', 'splat'], array_column(identite($classeCoffres['eleves'][0]['code'])['json']['applis'], 'cle'), 'recochée : elle revient');
+});
+
+verifier("coffres-suivi — réglages : par défaut tout est ouvert, rien n'est écrit ; classes.modifier range niveaux et opérations, triés, sans doublon", function () use (&$jetonS1, &$classeCoffres) {
+    vider_compteurs();
+    $id = $classeCoffres['id'];
+    $code = $classeCoffres['eleves'][0]['code'];
+    egal(null, classe_en_base($id)['reglages'], 'la colonne reste vide');
+    vrai(str_contains(identite($code)['texte'], '"reglages":{}'), 'l’élève reçoit « {} » : tous les niveaux, toutes les opérations');
+    // Deux niveaux, deux opérations (la maquette 03a).
+    $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['coffres' => ['niveaux' => [2, 1, 2], 'operations' => [3, 1]]]], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'accepté');
+    egal(['coffres' => ['niveaux' => [1, 2], 'operations' => [1, 3]]], $r['json']['reglages'], 'la réponse rend la nouvelle valeur');
+    egal('{"coffres":{"niveaux":[1,2],"operations":[1,3]}}', classe_en_base($id)['reglages'], 'en base : les listes propres');
+    $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $id, 'appli' => 'coffres'], ['jeton' => $jetonS1]);
+    egal(['coffres' => ['niveaux' => [1, 2], 'operations' => [1, 3]]], $t['json']['classe']['reglages'], 'tableau');
+    egal(['coffres' => ['niveaux' => [1, 2], 'operations' => [1, 3]]], identite($code)['json']['reglages'], 'l’élève les reçoit par son code');
+    // Un seul des deux réglages envoyé : l'autre ne bouge pas.
+    $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['coffres' => ['niveaux' => [2]]]], ['jeton' => $jetonS1]);
+    egal(['coffres' => ['niveaux' => [2], 'operations' => [1, 3]]], $r['json']['reglages'], 'les opérations restent');
+    // Tout coché = rien d'écrit, réglage par réglage.
+    $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['coffres' => ['niveaux' => [1, 2, 3]]]], ['jeton' => $jetonS1]);
+    egal(['coffres' => ['operations' => [1, 3]]], $r['json']['reglages'], 'tous les niveaux cochés : le réglage des niveaux disparaît');
+    $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['coffres' => ['operations' => [4, 3, 2, 1]]]], ['jeton' => $jetonS1]);
+    vrai(str_contains($r['texte'], '"reglages":{}'), 'tout ouvert : « {} »');
+    egal(null, classe_en_base($id)['reglages'], 'en base : NULL, comme une classe où personne n’a rien choisi');
+    // Les mondes de SPLAT! et les réglages de Coffres vivent côte à côte dans la même colonne.
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['splat' => ['mondes' => [1, 2]]]], ['jeton' => $jetonS1]);
+    $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['coffres' => ['niveaux' => [2], 'operations' => [1]]]], ['jeton' => $jetonS1]);
+    egal(['splat' => ['mondes' => [1, 2]], 'coffres' => ['niveaux' => [2], 'operations' => [1]]], $r['json']['reglages'], 'côte à côte');
+    // Renommer sans « reglages » ne touche à rien.
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'libelle' => 'test-coffres-2'], ['jeton' => $jetonS1]);
+    egal('{"splat":{"mondes":[1,2]},"coffres":{"niveaux":[2],"operations":[1]}}', classe_en_base($id)['reglages'], 'renommer garde tout');
+});
+
+verifier("coffres-suivi — réglages : une valeur fausse est refusée avec un message, et rien n'est écrit", function () use (&$jetonS1, &$classeCoffres) {
+    $id = $classeCoffres['id'];
+    $avant = classe_en_base($id)['reglages'];
+    foreach ([
+        [['niveaux' => []], 'Une classe garde au moins un niveau ouvert.', 'aucun niveau'],
+        [['operations' => []], "Une classe garde au moins une opération ouverte.", 'aucune opération'],
+        [['niveaux' => [0]], 'Niveau inconnu.', 'niveau 0'],
+        [['niveaux' => [4]], 'Niveau inconnu.', 'niveau 4'],
+        [['niveaux' => ['1']], 'Niveau inconnu.', 'un niveau en texte'],
+        [['operations' => [5]], 'Opération inconnue.', 'opération 5'],
+        [['operations' => [1.5]], 'Opération inconnue.', 'une opération à virgule'],
+        [['niveaux' => '1,2'], 'Liste de niveaux illisible.', 'une chaîne'],
+        [['operations' => ['a' => 1]], "Liste d'opérations illisible.", 'un objet'],
+        [['cadeau' => true], 'Réglage inconnu.', 'un réglage que Coffres ne déclare pas'],
+        [['mondes' => [1]], 'Réglage inconnu.', 'les mondes ne sont pas à Coffres'],
+    ] as [$reglage, $message, $quoi]) {
+        $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['coffres' => $reglage]], ['jeton' => $jetonS1]);
+        egal(400, $r['code'], "$quoi : refusé");
+        egal($message, $r['json']['erreur'] ?? null, "$quoi : le message");
+    }
+    egal($avant, classe_en_base($id)['reglages'], 'la classe n’a pas bougé');
+    // En base, une valeur abîmée se lit « tout ouvert » ou ce qui reste lisible.
+    $maj = bd_test()->prepare('UPDATE classes SET reglages = ? WHERE id = ?');
+    foreach ([
+        ['{"coffres":{"niveaux":"1"}}', '{}'], ['{"coffres":{"niveaux":[1,2,3],"operations":[1,2,3,4]}}', '{}'],
+        ['{"coffres":{"niveaux":[9,"2",2,1,1],"operations":[0,4]}}', '{"coffres":{"niveaux":[1,2],"operations":[4]}}'],
+    ] as [$brut, $attendu]) {
+        $maj->execute([$brut, $id]);
+        $r = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $id, 'appli' => 'coffres'], ['jeton' => $jetonS1]);
+        vrai(str_contains($r['texte'], '"reglages":' . $attendu), "« $brut » → $attendu");
+    }
+    $maj->execute([$avant, $id]);
+});
+
+verifier("coffres-suivi — seul le propriétaire règle niveaux et opérations ; un collègue les voit ; l'élève les reçoit par son code et à l'échange du billet", function () use (&$jetonS1, &$classeCoffres) {
+    vider_compteurs();
+    $id = $classeCoffres['id'];
+    $code = $classeCoffres['eleves'][0]['code'];
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['coffres' => ['niveaux' => [2], 'operations' => [1]]]], ['jeton' => $jetonS1]);
+    $tmp = appel('/api/prof.php', ['action' => 'profs.ajouter', 'identifiant' => 'collegue-coffres'], ['jeton' => $jetonS1])['json']['motdepasse'];
+    $jc = connexion('collegue-coffres', $tmp)['json']['jeton'];
+    appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => $tmp, 'nouveau' => 'coffres-collegue-2026'], ['jeton' => $jc]);
+    $idc = null;
+    foreach (appel('/api/prof.php', ['action' => 'profs.annuaire'], ['jeton' => $jetonS1])['json']['profs'] as $pr) {
+        if ($pr['identifiant'] === 'collegue-coffres') $idc = $pr['id'];
+    }
+    foreach (['lecture', 'ecriture'] as $droit) {
+        appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $id, 'prof_id' => $idc, 'droit' => $droit], ['jeton' => $jetonS1]);
+        $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['coffres' => ['niveaux' => [1]]]], ['jeton' => $jc]);
+        egal(403, $r['code'], "un collègue en $droit ne règle pas Coffres");
+        $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $id, 'appli' => 'coffres'], ['jeton' => $jc]);
+        egal(['splat' => ['mondes' => [1, 2]], 'coffres' => ['niveaux' => [2], 'operations' => [1]]], $t['json']['classe']['reglages'], "un collègue en $droit voit les réglages");
+        appel('/api/prof.php', ['action' => 'partages.supprimer', 'classe_id' => $id, 'prof_id' => $idc], ['jeton' => $jetonS1]);
+    }
+    $e = identite($code);
+    egal(['splat' => ['mondes' => [1, 2]], 'coffres' => ['niveaux' => [2], 'operations' => [1]]], $e['json']['reglages'], 'par le code (l’espace élève, et l’appli qui relit l’identité)');
+    $billet = appel('/api/eleve.php', ['code' => $code, 'billet' => true])['json']['billet'];
+    $r = echanger($billet, ['appli' => 'coffres']);
+    egal(200, $r['code'], 'l’échange du billet avec appli « coffres »');
+    egal('entree', $r['json']['type']);
+    egal(['splat' => ['mondes' => [1, 2]], 'coffres' => ['niveaux' => [2], 'operations' => [1]]], $r['json']['reglages'], 'à l’échange du billet (l’appli)');
+    // Coffres décoché : l'élève ne reçoit plus rien de Coffres ; recoché : ses réglages reviennent.
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'applis' => ['defi-tables', 'splat']], ['jeton' => $jetonS1]);
+    egal(['splat' => ['mondes' => [1, 2]]], identite($code)['json']['reglages'], 'Coffres décoché : rien de Coffres pour l’élève');
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'applis' => ['defi-tables', 'coffres', 'splat']], ['jeton' => $jetonS1]);
+    egal(['splat' => ['mondes' => [1, 2]], 'coffres' => ['niveaux' => [2], 'operations' => [1]]], identite($code)['json']['reglages'], 'recoché : les mêmes réglages');
+});
+
+verifier("coffres-suivi — l'espace élève et « Ma classe » chargent le moteur Coffres d'ici, identique à celui du dépôt ; verifier.php le contrôle", function () use ($racine) {
+    $r = page('/');
+    vrai((bool)preg_match('#"prof/coffres-parcours\.js\?v=([0-9a-f]{10})"#', $r['texte'], $m), 'l’espace élève : le moteur est relatif, avec une version');
+    vrai(str_contains($r['texte'], '"coffres":'), 'ICONES et JAUGES connaissent « coffres »');
+    $moteur = page('/prof/coffres-parcours.js');
+    egal(200, $moteur['code'], 'le moteur est servi');
+    vrai(str_contains($moteur['texte'], 'MathsGoCoffresParcours'), "c'est bien le moteur de Coffres");
+    egal(substr(md5($moteur['texte']), 0, 10), $m[1], 'la version dans l’adresse est l’empreinte du fichier servi');
+    $original = dirname($racine) . '/assets/js/coffres-parcours.js';
+    if (is_file($original)) {
+        egal(md5_file($original), md5($moteur['texte']), 'octet pour octet le moteur du site (sinon : cp assets/js/coffres-parcours.js _serveur/public/prof/)');
+    }
+    $p = page('/prof/');
+    vrai((bool)preg_match('#const MOTEUR_COFFRES = "coffres-parcours\.js\?v=([0-9a-f]{10})";#', $p['texte'], $mp), '« Ma classe » : l’adresse du moteur, relative, avec une version');
+    egal($m[1], $mp[1], 'la même empreinte des deux côtés');
+    vrai(!str_contains($p['texte'], '<script src="coffres-parcours.js'), 'pas chargé d’office : seulement à l’ouverture de l’onglet Coffres magiques');
+    vrai(str_contains($p['texte'], '<button type="button" data-appli="coffres" aria-pressed="false">Coffres magiques</button>'), 'l’onglet Coffres magiques, entre Défi tables et SPLAT!');
+    vrai(str_contains($p['texte'], 'id="coffres-reglages"'), 'les réglages de Coffres sous sa case, dans la vue Réglages');
+    $v = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai((bool)preg_match('#class="etat oui">✓</span>\s*Moteur Coffres magiques servi localement\s*<div class="detail">en place \(#u', $v['texte']),
+        'verifier.php : la ligne existe, et elle est verte');
+});
+
+verifier("coffres-suivi — le catalogue déclare exactement ce que le moteur exporte (clés, motif des niveaux, nombre de niveaux et d'opérations)", function () use ($racine) {
+    require_once __DIR__ . '/../public/lib/applis.php';
+    $moteur = (string)file_get_contents($racine . '/public/prof/coffres-parcours.js');
+    vrai((bool)preg_match('#const CLES_SERVEUR = Object\.freeze\(\[(.*?)\]\);#s', $moteur, $m), 'CLES_SERVEUR du moteur');
+    preg_match_all('#"([a-z]+)"#', $m[1], $cles);
+    egal($cles[1], CATALOGUE_APPLIS['coffres']['cles'], 'les clés déclarées sont celles du moteur, dans l’ordre');
+    vrai((bool)preg_match('#const MOTIF_NIVEAUX_PHP = "([^"]+)";#', $moteur, $mm), 'MOTIF_NIVEAUX_PHP du moteur');
+    egal([$mm[1]], CATALOGUE_APPLIS['coffres']['motifs'], 'le motif des niveaux est celui du moteur');
+    vrai((bool)preg_match('#const NOMBRE_NIVEAUX = (\d);#', $moteur, $mn) && (int)$mn[1] === CATALOGUE_APPLIS['coffres']['reglages']['niveaux'], 'autant de niveaux que le moteur');
+    vrai((bool)preg_match('#const NOMBRE_OPERATIONS = (\d);#', $moteur, $mo) && (int)$mo[1] === CATALOGUE_APPLIS['coffres']['reglages']['operations'], 'autant d’opérations que le moteur');
+    egal([], CATALOGUE_APPLIS['coffres']['mots'], 'aucun mot : le parcours n’a que des nombres, des booléens et des dates');
+    egal(['defi-tables', 'coffres', 'defi-calcul', 'automatismes', 'splat', 'soley'], array_keys(CATALOGUE_APPLIS), 'Coffres juste après Défi tables : l’ordre des tuiles');
 });
 
 // ------------------------------------------------- 🏆 Les records (lot du 09/10/2026)

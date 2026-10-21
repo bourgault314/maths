@@ -257,9 +257,11 @@ if ($autorise) {
             throw new RuntimeException("manque la colonne « classes.reglages » — ouvre migrer.php avec ton mot de passe d'installation.");
         }
         $reglees = (int)$pdo->query("SELECT COUNT(*) FROM classes WHERE reglages IS NOT NULL AND reglages <> ''")->fetchColumn();
+        // Depuis le lot « Coffres magiques sur le suivi » (21/10/2026), la même
+        // colonne porte aussi les niveaux et les opérations de Coffres ouverts.
         return $reglees === 0
-            ? "en place (toutes les classes ont tous leurs mondes ouverts)"
-            : "en place ($reglees classe(s) avec un choix de mondes)";
+            ? "en place (toutes les classes ont tout ouvert : mondes de SPLAT!, niveaux et opérations de Coffres)"
+            : "en place ($reglees classe(s) avec un réglage — mondes de SPLAT!, niveaux ou opérations de Coffres)";
     });
     // Lot « Les records » (09/10/2026) : la table des meilleurs temps des
     // Légendes des tables, ajoutée par migrer.php. Sans elle, l'appli dit
@@ -390,6 +392,20 @@ if ($autorise) {
         }
         if (!str_contains((string)file_get_contents($chemin), 'MathsGoSplatParcours')) {
             throw new RuntimeException("prof/splat-parcours.js n'est pas le moteur attendu.");
+        }
+        return "en place (" . number_format((float)filesize($chemin), 0, ',', ' ') . " octets, empreinte " . substr(md5_file($chemin), 0, 10) . ")";
+    });
+    // Lot « Coffres magiques sur le suivi » (21/10/2026) : le moteur de Coffres
+    // magiques, servi d'ici pour la même raison. S'il manque, la tuile Coffres
+    // de l'espace élève reste sans ses lignes de niveaux (rien ne casse), et
+    // « Ma classe » ne saura pas lire les parcours Coffres.
+    verif($lignes, "Moteur Coffres magiques servi localement", function () {
+        $chemin = __DIR__ . '/prof/coffres-parcours.js';
+        if (!is_file($chemin) || filesize($chemin) === 0) {
+            throw new RuntimeException("prof/coffres-parcours.js absent : à déposer (copie de assets/js/coffres-parcours.js du dépôt).");
+        }
+        if (!str_contains((string)file_get_contents($chemin), 'MathsGoCoffresParcours')) {
+            throw new RuntimeException("prof/coffres-parcours.js n'est pas le moteur attendu.");
         }
         return "en place (" . number_format((float)filesize($chemin), 0, ',', ' ') . " octets, empreinte " . substr(md5_file($chemin), 0, 10) . ")";
     });

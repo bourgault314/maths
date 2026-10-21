@@ -123,7 +123,7 @@ function gameFixture() {
   const board = { querySelector: selector => nodes[Number(selector.match(/data-index="(\d+)"/)[1])], querySelectorAll: () => nodes };
   const context = vm.createContext({
     Element, board, settingsCore: settings, engine,
-    document: { createTextNode: text => new Element(text) },
+    document: { createTextNode: text => new Element(text), querySelector: () => new Element() },
     window: {
       setTimeout(callback, delay) { const id = ++timerId; timers.set(id, { at: now + delay, callback }); return id; },
       clearTimeout(id) { timers.delete(id); }
@@ -148,6 +148,11 @@ function gameFixture() {
     const hideNextButton = () => {}, showNextButton = () => {}, updateCounter = () => {}, syncLevelUi = () => {}, focusAfterReset = () => {};
     const advance = () => {};
     const selectBonus = () => {};
+    // Le suivi de classe (lot « Coffres magiques sur le suivi », 21/10/2026) : muet ici.
+    const PARCOURS = null;
+    const suiviEcrire = () => {};
+    const syncSettingsUrl = () => {};
+    let reglagesChanges = false;
     const shuffle = array => array.slice();
     let replayed = null;
     const makeChallenge = (nextMode, { target: replayTarget = null } = {}) => { mode = nextMode || modes[keys]; replayed = replayTarget; boardId += 1; locked = false; values = Array(16).fill(2); };

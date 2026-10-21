@@ -49,12 +49,33 @@ test("le moteur SPLAT! servi par suivi.mathsgo.re est la copie exacte de celui d
   );
 });
 
+// Lot « Coffres magiques sur le suivi » (21/10/2026) : même règle pour le
+// moteur de Coffres. La tuile de l'espace élève le charge pour ses lignes de
+// niveaux, « Ma classe » pour son onglet. Tout lot qui touche
+// assets/js/coffres-parcours.js recopie le fichier dans _serveur/public/prof/
+// ET le met dans son dossier à déposer.
+const ORIGINAL_COFFRES = "assets/js/coffres-parcours.js";
+const COPIE_COFFRES = "_serveur/public/prof/coffres-parcours.js";
+
+test("le moteur Coffres magiques servi par suivi.mathsgo.re est la copie exacte de celui du site", () => {
+  const original = readFileSync(join(racine, ORIGINAL_COFFRES));
+  const copie = readFileSync(join(racine, COPIE_COFFRES));
+  assert.ok(original.length > 1000, `${ORIGINAL_COFFRES} doit être le vrai moteur`);
+  assert.ok(
+    original.equals(copie),
+    `${COPIE_COFFRES} diffère de ${ORIGINAL_COFFRES} (${copie.length} contre ${original.length} octets) : `
+      + `recopie le fichier (cp ${ORIGINAL_COFFRES} ${COPIE_COFFRES}) et ajoute-le au dossier à déposer.`
+  );
+});
+
 test("l'espace élève charge ses moteurs d'ici, avec une version qui suit leur contenu", () => {
   const page = readFileSync(join(racine, "_serveur/public/index.php"), "utf8");
   assert.match(page, /url: "prof\/defi_tables_mon_parcours\.js\?v=<\?= htmlspecialchars\(\$versionMoteur, ENT_QUOTES\) \?>"/);
   assert.match(page, /url: "prof\/splat-parcours\.js\?v=<\?= htmlspecialchars\(\$versionSplat, ENT_QUOTES\) \?>"/);
   assert.match(page, /\$versionSplat = version_moteur\('splat-parcours\.js'\);/,
     "la version dans l'adresse est l'empreinte du fichier déposé : un nouveau dépôt n'est jamais masqué par le cache");
+  assert.match(page, /url: "prof\/coffres-parcours\.js\?v=<\?= htmlspecialchars\(\$versionCoffres, ENT_QUOTES\) \?>"/);
+  assert.match(page, /\$versionCoffres = version_moteur\('coffres-parcours\.js'\);/);
   assert.doesNotMatch(page, /https?:\/\/[^"']*\.js/, "aucun script d'un autre domaine");
 });
 

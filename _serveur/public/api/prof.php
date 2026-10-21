@@ -26,8 +26,11 @@ require_once __DIR__ . '/../lib/evaluation.php';
 
 const MAX_ELEVES_PAR_LOT = 60;
 // L'ordre de cette liste est celui des activités dans la liste d'une classe
-// (array_intersect le garde) : celui du catalogue, lib/applis.php.
-const APPLIS_PROPOSABLES = ['defi-tables', 'automatismes', 'splat'];
+// (array_intersect le garde) : celui du catalogue, lib/applis.php. Une appli
+// absente d'ici est retirée EN SILENCE de la liste d'une classe à sa création
+// ou à sa modification (vérifié au banc, 21/10/2026) : toute appli ouverte au
+// catalogue doit y être.
+const APPLIS_PROPOSABLES = ['defi-tables', 'coffres', 'automatismes', 'splat'];
 const DROITS_PARTAGE = ['lecture', 'ecriture'];
 
 // ------------------------------------------------------------------- quotas
