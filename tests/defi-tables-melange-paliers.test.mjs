@@ -415,5 +415,5 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // (21/10/2026) : prof/index.php seul change (avant : ma-classe-tri-bandelette).
   assert.match(lire("_serveur/public/VERSION"), /^lot ma-classe-parcours$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=cartes-tables-20261018-1/);
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=galets-masques-20261021-1/);
 });
