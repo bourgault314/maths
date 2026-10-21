@@ -2,7 +2,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { genererQuestion, formesDisponibles, generateurs } from "../automatismes/moteur.js";
-import { modeleQuestion, morceauxModele, ecrireReponse } from "../automatismes/champs.js";
+import {
+  modeleQuestion,
+  morceauxModele,
+  ecrireReponse,
+  symbolesQuestion,
+} from "../automatismes/champs.js";
 import { bonneReponseTexte, coursHTML } from "../automatismes/vues.js";
 
 const question = (id, graine = 12) => {
@@ -98,4 +103,18 @@ test("C8 : le cours s'ouvre sur le morceau de la question, sinon il est entier",
   assert.ok(html.indexOf("Le reste du cours ↓") < html.indexOf("Ajouter"));
   assert.match(html, /class="morceau actif">\s*<h3>Multiplier/);
   assert.equal(coursHTML({ cours: { regle: "…" } }, { forme: "e" }, "ENTIER"), "ENTIER");
+});
+
+// Corrections après C7 (K4) : la rangée A B C… s'affichait pour « 42 » (EG06-d), décidée par famille.
+test("K4 : la rangée de lettres seulement si une réponse attendue s'écrit en lettres", () => {
+  assert.ok(!symbolesQuestion(question("EG06-d")).includes("B"), "EG06-d : réponse 42");
+  assert.ok(!symbolesQuestion(question("PI04-a")).includes("B"), "PI04-a : réponse numérique");
+  assert.ok(symbolesQuestion(question("EG06-a")).includes("B"), "EG06-a : réponse AOB");
+  assert.ok(symbolesQuestion(question("PI04-c")).includes("B"), "PI04-c : réponse B");
+  for (const famille of Object.keys(generateurs))
+    for (const forme of formesDisponibles(famille)) {
+      const q = genererQuestion(famille, forme, 12);
+      const lettres = q.fields.some((c) => !c.options && /^[A-Z][A-Z′']*$/.test(String(c.answer)));
+      assert.equal(symbolesQuestion(q).includes("Q"), lettres, `${famille}-${forme}`);
+    }
 });

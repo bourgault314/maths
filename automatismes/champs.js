@@ -22,7 +22,10 @@ export function symbolesQuestion(question) {
     symboles.push(";", "√");
   }
   if (question.famille === "NC29") symboles.push("Aucune solution");
-  if (["EG06", "EG15", "PI04"].includes(question.famille)) {
+  // Les lettres A B C… seulement si une réponse attendue s'écrit en lettres (« AOB », « B ») :
+  // décidé champ par champ, plus par famille (K4 : « 42 » en EG06-d n'en a pas besoin).
+  const nomPoint = (reponse) => /^[A-Z][A-Z′']*$/.test(String(reponse).trim());
+  if (question.fields.some((champ) => !champ.options && nomPoint(champ.answer))) {
     symboles.push(..."ABCDEFGHIJKLMNOPQRSTUVWXYZ");
   }
   if (/π|sqrt|√/.test(question.prompt + question.fields.map((champ) => champ.answer).join(" "))) {
