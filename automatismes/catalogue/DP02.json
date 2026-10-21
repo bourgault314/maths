@@ -1,0 +1,429 @@
+{
+  "id": "DP02",
+  "titre": "Effectifs et fréquences",
+  "categorie": "Statistiques et probabilités",
+  "objectif": "Relier une partie de la population à l’effectif total, puis à une fréquence.",
+  "prerequis": [
+    "Additionner des effectifs",
+    "Fraction d’une quantité",
+    "Fraction, décimal et pourcentage simples"
+  ],
+  "perimetre": "DNB2027 : total, effectif manquant, fréquence, effectif associé à une proportion. Cumul présenté comme calcul court possible, mais sa formalisation est ciblée3ᵉ nouveau programme.",
+  "cours": {
+    "regle": "La fréquence d’une catégorie est son effectif divisé par l’effectif total.",
+    "exemple": "8 élèves sur20 :8 ÷ 20 = 8/20 = 0,4 = 40 %.",
+    "visuel": "Vingt petits carrés en2 lignes de10 ; huit marqués « catégorieA » en bleu et douze gris. Accolades « 8 élèves » et « 20 élèves au total ». Relier ces nombres aux places de8/20, puis à40 %.",
+    "mouvement": "Révéler successivement partie, total et quotient. Statique : trois éléments reliés par traits numérotés."
+  },
+  "erreurs": [
+    "Diviser le total par la partie",
+    "Confondre25 % et25",
+    "Compter deux fois une catégorie",
+    "Oublier l’inclusion de la borne"
+  ],
+  "sources": [
+    {
+      "titre": "Programme cycle 4, 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "Statistiques5ᵉ–3ᵉ, PDFp.16–17",
+      "apport": "Effectifs, fréquences puis cumul en3ᵉ.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples de mise en œuvre cycle 4, 2026",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "Statistiques5ᵉ, PDFp.34 ;3ᵉ, PDFp.38",
+      "apport": "Fréquences à partir de diagrammes et cumul.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Liste indicative d’automatismes DNB, octobre 2025",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/liste-indicative-dautomatismes-pour-le-dnbpdf-116340.pdf",
+      "repere": "Organisation et gestion de données, p.3",
+      "apport": "Fréquence simple.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Programme cycle 4, 2020",
+      "url": "https://cache.media.education.gouv.fr/file/31/89/1/ensel714_annexe3_1312891.pdf",
+      "repere": "ThèmeB, PDFp.132",
+      "apport": "Effectifs et fréquences du périmètre2027.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Métropole, 30 juin 2026",
+      "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Metropole_FK-v2.pdf",
+      "repere": "Question 7",
+      "apport": "Effectif depuis diagramme circulaire ; reproduction du sujet consultée lors de l’audit de couverture.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "NCETM — Statistical representations and measures",
+      "url": "https://www.ncetm.org.uk/classroom-resources/secmm-51-statistical-representations-and-measures/",
+      "repere": "Page du concept 5.1 consultée ; pas de lecture exhaustive du PDF lié",
+      "apport": "Choisir des représentations selon les mesures statistiques étudiées.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "Une fréquence expérimentale n’est pas automatiquement la probabilité exacte. Le verrouDNB de la variante cumul est conservateur : sa somme reste élémentaire mais la notion nouvelle ne doit pas être présentée comme un nouvel automatisme officiel2027.",
+  "acces_secondaires": ["Proportionnalité et pourcentages"],
+  "nom": "Effectifs et fréquences",
+  "domaine": "donnees-probabilites",
+  "sousDomaine": "Statistiques et probabilités",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6ᵉ : compter et organiser des données ; fréquence observée dans des expériences. 5ᵉ : calcul d’effectifs et de fréquences. 4ᵉ : automatisation de cas simples. 3ᵉ nouveau programme : effectifs cumulés formalisés.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_28", "dnb_29"],
+    "questions": [
+      {
+        "source": "A2605",
+        "question": "Q4",
+        "referenceAncienne": "AG 4",
+        "forme": "b",
+        "identifiant": "DP02-b",
+        "ancienId": "DP02-V2",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Fréquence observée lors de lancers",
+        "formatSource": "QCM",
+        "document": "Antilles-Guyane, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Antilles-Guyane_DV-v2.pdf"
+      },
+      {
+        "source": "A2606",
+        "question": "Q7",
+        "referenceAncienne": "ME 7",
+        "forme": "e",
+        "identifiant": "DP02-e",
+        "ancienId": "DP02-V5",
+        "support": "comparable",
+        "difference": "Combiner lecture de la part sur diagramme circulaire et calcul d’effectif à partir du total ; les deux exercices séparés sont un prérequis, pas la variante complète.",
+        "savoirFaire": "Effectif à partir d’un secteur de diagramme circulaire",
+        "formatSource": "Saisie",
+        "document": "Métropole, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Metropole_FK-v2.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Retrouver un effectif manquant",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Dans un groupe de24 élèves,9 viennent à pied,7 à vélo et les autres en bus. Combien viennent en bus ?",
+      "reponse": "8",
+      "donnees": "Trois catégories disjointes couvrant le groupe. TotalN de10 à40 ; effectifsk1,k2 ≥ 0, k1 + k2 ≤ N. ExempleN24,k1 = 9,k2 = 7.",
+      "saisie": "Nombre entier",
+      "acceptation": "8 accepté ;16 et24 refusés.",
+      "aide1": "« Tous les élèves sont répartis dans les trois catégories. » Montrer une barre totale24, deux segments9 et7 et un segment inconnu.",
+      "aide2": "« À pied et à vélo :9 + 7 = 16. Il reste24 − 16. » Écrire16 sous l’accolade des deux segments.",
+      "correction": "24 − 9 − 7 = 8 élèves viennent en bus.",
+      "controles": [
+        "Vérifier somme des trois effectifs = N.",
+        "Inclure reste0.",
+        "Ne pas générer des catégories qui se chevauchent."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Parmi 20 élèves, 10 viennent à pied, 4 à vélo et les autres en bus. Combien viennent en bus ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "6",
+            "unite": ""
+          }
+        ],
+        "aide1": "Les trois effectifs réunis donnent le total.",
+        "aide2": "Retire du total les élèves à pied et à vélo.",
+        "cours": {
+          "regle": "Fréquence = effectif de la catégorie ÷ effectif total.",
+          "exemple": "3 élèves sur 12 : 3/12 = 1/4 = 25 %."
+        },
+        "correction": "20 − 10 − 4 = 6."
+      },
+      "identifiant": "DP02-a",
+      "ancienId": "DP02-V1",
+      "ancienIdGenerateur": "DP02-V1",
+      "indiceGenerateur": 0,
+      "nom": "Retrouver un effectif manquant",
+      "niveauDescription": "6ᵉ comptage,5ᵉ puis automatisation4ᵉ",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Calculer une fréquence sous forme fractionnaire ou décimale",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "6 élèves sur24 portent des lunettes. Quelle est leur fréquence ?",
+      "reponse": "1/4 = 0,25 = 25 %",
+      "donnees": "N∈{10,12,20,24,25,40,50,100} ;0 ≤ k ≤ N ; choisirquotient simple. Exemplek6,N24.",
+      "saisie": "Nombre ou fraction à deux cases, choix% explicite",
+      "acceptation": "Accepter6/24,1/4,0,25 et25 % ; aucune irréductibilité exigée. Refuser24/6 et25 sans%.",
+      "aide1": "« Quelle est la partie ? Quel est le total ? » Encadrer6 et24 avec leurs labels.",
+      "aide2": "« Écris partie ÷ total :6/24. Tu peux simplifier par6. » Relier les cases au schéma de24 places dont6 marquées.",
+      "correction": "6/24 = 1/4 = 0,25 = 25 %.",
+      "controles": [
+        "Comparer les fractions en rationnels exacts.",
+        "k0→0 ;kN→1.",
+        "Refuser une fréquence hors[0;1] après conversion des%."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "4 élèves sur 24 pratiquent le basket. Quelle est leur fréquence ? Donne une fraction.",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "4/24",
+            "unite": ""
+          }
+        ],
+        "aide1": "Au numérateur : l’effectif concerné.",
+        "aide2": "Au dénominateur : l’effectif total.",
+        "cours": {
+          "regle": "Fréquence = effectif de la catégorie ÷ effectif total.",
+          "exemple": "3 élèves sur 12 : 3/12 = 1/4 = 25 %."
+        },
+        "correction": "Fréquence = 4/24."
+      },
+      "identifiant": "DP02-b",
+      "ancienId": "DP02-V2",
+      "ancienIdGenerateur": "DP02-V2",
+      "indiceGenerateur": 1,
+      "nom": "Calculer une fréquence sous forme fractionnaire ou décimale",
+      "niveauDescription": "5ᵉ apprentissage ;4ᵉ–3ᵉ entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2605",
+          "question": "Q4",
+          "referenceAncienne": "AG 4",
+          "forme": "b",
+          "identifiant": "DP02-b",
+          "ancienId": "DP02-V2",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Fréquence observée lors de lancers",
+          "formatSource": "QCM",
+          "document": "Antilles-Guyane, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Antilles-Guyane_DV-v2.pdf"
+        }
+      ]
+    },
+    {
+      "id": "c",
+      "objectif": "Retrouver un effectif à partir d’une fréquence",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Dans une classe de28 élèves,25 % pratiquent le basket. Combien d’élèves est-ce ?",
+      "reponse": "7",
+      "donnees": "N multiple4 entre8 et40 ; fréquence25 %, puis variantes10/20/50/75 % avec N garantissant un entier.",
+      "saisie": "Nombre entier",
+      "acceptation": "7 accepté ;0,25 et25 refusés.",
+      "aide1": "« 25 %, c’est un quart de la classe. » Dessiner une barre28 partagée en quatre parts égales, une mise en évidence.",
+      "aide2": "« Partage28 en4 :28 ÷ 4. » Inscrire ce calcul sous une part sans afficher le résultat.",
+      "correction": "28 × 25/100 = 28 ÷ 4 = 7 élèves.",
+      "controles": [
+        "Effectif calculé entier et compris0–N.",
+        "Valeur donnéeen% visible.",
+        "Tester75 % comme trois parts surquatre."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "25 % des 36 élèves choisissent le théâtre. Combien d’élèves cela représente-t-il ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "9",
+            "unite": ""
+          }
+        ],
+        "aide1": "25 % correspond à 1 quart du groupe.",
+        "aide2": "Un quart du groupe : 36 ÷ 4 = 9.",
+        "cours": {
+          "regle": "Fréquence = effectif de la catégorie ÷ effectif total.",
+          "exemple": "3 élèves sur 12 : 3/12 = 1/4 = 25 %."
+        },
+        "correction": "36 × 25/100 = 9."
+      },
+      "identifiant": "DP02-c",
+      "ancienId": "DP02-V3",
+      "ancienIdGenerateur": "DP02-V3",
+      "indiceGenerateur": 2,
+      "nom": "Retrouver un effectif à partir d’une fréquence",
+      "niveauDescription": "5ᵉ après pourcentages ; entretien4ᵉ–3ᵉ",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Calculer un effectif cumulé croissant",
+      "niveau": "3e",
+      "dnb2027": false,
+      "enonce": "Nombre de livres lus :0,1,2,3. Effectifs :2,5,4,1. Combien d’élèves ont lu au plus2 livres ?",
+      "reponse": "11",
+      "donnees": "Valeurs ordonnées distinctes0–6 ; effectifsentiers0–8 ; total ≤ 30. Exemple[0,1,2,3]→[2,5,4,1]. Seuil exact, sens « au plus » explicite.",
+      "saisie": "Nombre entier",
+      "acceptation": "11 accepté ;4 et12 refusés.",
+      "aide1": "« Au plus2 signifie0,1 ou2. » Encadrer les trois valeurs concernées, avec crochet fermé au seuil2.",
+      "aide2": "« Additionne leurs effectifs :2 + 5 + 4. » Relier les trois cases à une accolade « au plus2 ».",
+      "correction": "2 + 5 + 4 = 11 élèves.",
+      "controles": [
+        "Seuilinclus : distinguer auplus2 = 11 et moinsde2 = 7.",
+        "Ne pas additionner les valeurs0 + 1 + 2.",
+        "Ajouter cas seuilminimum/maximum et effectifnul."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Le tableau indique les livres lus. Combien d’élèves ont lu au plus 1 livre ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "7",
+            "unite": ""
+          }
+        ],
+        "aide1": "« Au plus 1 » comprend 1 et toutes les valeurs inférieures.",
+        "aide2": "Additionne les effectifs des colonnes 0, 1.",
+        "cours": {
+          "regle": "Fréquence = effectif de la catégorie ÷ effectif total.",
+          "exemple": "3 élèves sur 12 : 3/12 = 1/4 = 25 %."
+        },
+        "correction": "5 + 2 = 7."
+      },
+      "identifiant": "DP02-d",
+      "ancienId": "DP02-V4",
+      "ancienIdGenerateur": "DP02-V4",
+      "indiceGenerateur": 3,
+      "nom": "Calculer un effectif cumulé croissant",
+      "niveauDescription": "3ᵉ nouveau programme, après lecture d’effectifs",
+      "niveaux": ["3e"],
+      "brevet": false,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Calculer un effectif à partir d’un diagramme circulaire et du total",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Le diagramme représente 28 élèves. Trois quarts sont au club de basket. Combien sont-ils ?",
+      "reponse": "21",
+      "donnees": "Total multiple de 4, de 12 à 48 ; 1, 2 ou 3 quarts colorés. Les secteurs B sont de même angle ; légende B basket, R autres.",
+      "saisie": "Nombre entier",
+      "acceptation": "Effectif 21 accepté ; fraction 3/4 et pourcentage 75 seuls refusés.",
+      "aide1": "Le diagramme est partagé en quatre quarts égaux.",
+      "aide2": "Un quart vaut 28 ÷ 4 = 7 élèves ; il y a trois quarts B. Montrer quatre parts égales du total.",
+      "correction": "28 × 3/4 = 21 élèves.",
+      "controles": [
+        "Effectif entier et entre 0 et total.",
+        "Diagramme et part coloriée concordants.",
+        "Ne pas supposer équiprobabilité : il s’agit d’une représentation statistique."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Ce diagramme représente 40 élèves. B désigne les élèves du club de basket, R les autres. Combien d’élèves sont au club de basket ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "10",
+            "unite": ""
+          }
+        ],
+        "aide1": "Le diagramme est partagé en quatre quarts égaux.",
+        "aide2": "Un quart représente 40 ÷ 4 = 10 élèves. Compte les quarts B.",
+        "cours": {
+          "regle": "Fréquence = effectif de la catégorie ÷ effectif total.",
+          "exemple": "3 élèves sur 12 : 3/12 = 1/4 = 25 %."
+        },
+        "correction": "40 × 1/4 = 10 élèves."
+      },
+      "identifiant": "DP02-e",
+      "ancienId": "DP02-V5",
+      "ancienIdGenerateur": "DP02-V5",
+      "indiceGenerateur": 4,
+      "nom": "Calculer un effectif à partir d’un diagramme circulaire et du total",
+      "niveauDescription": "5ᵉ, puis entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2606",
+          "question": "Q7",
+          "referenceAncienne": "ME 7",
+          "forme": "e",
+          "identifiant": "DP02-e",
+          "ancienId": "DP02-V5",
+          "support": "comparable",
+          "difference": "Combiner lecture de la part sur diagramme circulaire et calcul d’effectif à partir du total ; les deux exercices séparés sont un prérequis, pas la variante complète.",
+          "savoirFaire": "Effectif à partir d’un secteur de diagramme circulaire",
+          "formatSource": "Saisie",
+          "document": "Métropole, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Metropole_FK-v2.pdf"
+        }
+      ]
+    }
+  ]
+}

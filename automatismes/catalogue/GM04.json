@@ -1,0 +1,265 @@
+{
+  "id": "GM04",
+  "titre": "Horloge et calendrier",
+  "categorie": "Grandeurs et mesures",
+  "objectif": "Lire et représenter un horaire ; utiliser des repères calendaires donnés.",
+  "prerequis": ["Comptage par 5", "Relations heure/minute", "Ordre des dates"],
+  "perimetre": "Prérequis collège ; désactivépar défaut dans la simulation DNB 2027 faute de variante prioritaire explicite.",
+  "cours": {
+    "regle": "La grande aiguille indique les minutes ; la petite avance progressivement entre les heures. Une semaine a 7 jours ; une année a 365 ou 366 jours ; un siècle a 100 ans.",
+    "exemple": "Grande aiguille sur 7, petite entre 2 et 3, l’après-midi : 14 h 35.",
+    "visuel": "Cadran à 12 nombres. Grande aiguille à 210° et petite à 77,5° depuis 12 dans le sens horaire. Distinguer les aiguilles par leur longueur, épaisseur et nom.",
+    "mouvement": "Mouvement facultatif ; position intermédiaire exacte en version statique."
+  },
+  "erreurs": [
+    "Lire7 minutes quand l’aiguille des minutes est sur 7",
+    "Fixer la petite aiguille sur le chiffre de l’heure",
+    "Compter les deux dates incluses comme une durée",
+    "Supposer30 joursparmois"
+  ],
+  "sources": [
+    {
+      "titre": "Programme cycle 3 2025",
+      "url": "https://www.education.gouv.fr/sites/default/files/ensel620_annexe2-v2.pdf",
+      "repere": "PDF p.20, automatismes",
+      "apport": "Cadran, aiguilles, unitésdurées, annéebissextile, siècle, millénaire.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples 6e 2025",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/exemplesmiseenoeuvre6e-mathpdf-111549.pdf",
+      "repere": "p.10–11 imprimées",
+      "apport": "Repérage temporel et conversions en contextes.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Mathsgo — Disques de temps",
+      "url": "https://mathsgo.re/outils/plateaux_manipulation/maitre_du_temps.html",
+      "repere": "Catalogue public consulté ; fonctionnalité décrite, interaction non testée.",
+      "apport": "Quart d’heure→15min ; compléter60min ; puis ligne de temps pour passage d’heure.",
+      "statut": "choix de conception"
+    }
+  ],
+  "limites": "Le placement est renseigné par champs et sélecteurs accessibles. Le déplacement continu des aiguilles n’est pas implémenté. Les positions du dessin sont calculées exactement ; aucune heure courante automatique. Ces variantes sont des prérequis, désactivés dans la simulation DNB.",
+  "acces_secondaires": ["Nombres et calculs"],
+  "nom": "Horloge et calendrier",
+  "domaine": "nombres-calculs",
+  "sousDomaine": "Grandeurs et mesures",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6e : automatismes hérités du CM. Entretien à tous les niveaux. Le caractère bissextile est donné ; aucun algorithme de reconnaissance demandé.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": false,
+    "codesGrille": [],
+    "questions": []
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Lire un cadran à aiguilles",
+      "niveau": "6e",
+      "dnb2027": false,
+      "enonce": "Il est l’après-midi. La grande aiguille est sur 7 ; la petite est entre 2 et 3, plus près de 3. Quelle heure est-il ?",
+      "reponse": "14h35",
+      "donnees": "Minute multiplede 5 puis minutes unitaires ; angleminute6 m ; angleheure30(hmod12)+0,5 m ; AM/PMinclus ; ici77,5°estplusprèsde 3(90°)quede 2(60°).",
+      "saisie": "Heures/minutes, alternative par lecture vocale.",
+      "acceptation": "Accepter14:35 ; refuser2:35caraprès-midiindiqué ; autre présentation12h35nonvalide.",
+      "aide1": "La grande aiguille indique les minutes. Deux nombres voisins du cadran sont séparés par 5 minutes.",
+      "aide2": "« La grande aiguille donne35min. La petite a dépassé2 : c’est la deuxième heure de l’après-midi. » Souligneraprès-midi.",
+      "correction": "Il est14h35.",
+      "controles": [
+        "Vérifierangles210°et 77,5° ; refuser14h07.",
+        "Petite aiguille jamais figée sur 2pendant35 minutes."
+      ],
+      "identifiant": "GM04-a",
+      "ancienId": "GM04-V1",
+      "ancienIdGenerateur": "GM04-V1",
+      "indiceGenerateur": 0,
+      "nom": "Lire un cadran à aiguilles",
+      "niveauDescription": "6e entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": false,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Heures",
+          "unite": "h"
+        },
+        {
+          "type": "nombre",
+          "libelle": "Minutes",
+          "unite": "min"
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Placer les deux aiguilles",
+      "niveau": "6e",
+      "dnb2027": false,
+      "enonce": "Place les aiguilles pour indiquer3h20.",
+      "reponse": "Grande aiguille sur 4 ; petite àun tiers du trajet entre 3 et 4",
+      "donnees": "Heures1–12, minutes multiples de 5 ; positions continues oucransd’heurecalculés ; pas le même angle pour les deux aiguilles.",
+      "saisie": "Un champ pour le numéro de la grande aiguille ; un sélecteur pour l’intervalle contenant la petite aiguille.",
+      "acceptation": "Grande aiguille : 4 ; petite aiguille : entre 3 et 4. Une grande aiguille sur 20 ou une petite aiguille fixée sur 3 sont refusées.",
+      "aide1": "Deux nombres voisins du cadran sont séparés par 5 minutes. La petite aiguille avance aussi.",
+      "aide2": "« La petite aiguille a parcouru20/60, soit un tiers de l’intervalle3→4. » Diviser cetarcen 3parties.",
+      "correction": "Grandeaiguille sur 4 ; petite entre 3 et 4, àun tiers.",
+      "controles": [
+        "Pour 3 h 20 : grande aiguille sur 4 et petite entre 3 et 4.",
+        "Le dessin du corrigé positionne la petite aiguille à un tiers de l’intervalle."
+      ],
+      "identifiant": "GM04-b",
+      "ancienId": "GM04-V2",
+      "ancienIdGenerateur": "GM04-V2",
+      "indiceGenerateur": 1,
+      "nom": "Placer les deux aiguilles",
+      "niveauDescription": "6e entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": false,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Grande aiguille : nombre",
+          "unite": ""
+        },
+        {
+          "type": "qcm",
+          "libelle": "Petite aiguille : entre",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Compter des jours sur un calendrier fourni",
+      "niveau": "6e",
+      "dnb2027": false,
+      "enonce": "Le calendrier fourni indique que février2028 comporte29 jours. Combien de jours s’écoulent du28 févrierà00 h au2 marsà00 h ?",
+      "reponse": "3 jours",
+      "donnees": "Calendrier grégorien affiché ; datesintervalle≤14 jours ; compterdurée sans inclure deux fois les bornes ; aucuneheure d’été en jeu car unité jour calendaire.",
+      "saisie": "Nombre, unitéjours.",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "« Compte les passages d’un minuit au suivant. » Surligner28,29 février,1,2 mars.",
+      "aide2": "«28→29 :1jour ; 29→1ermars :1jour. Il reste1er→2 mars. » Dessiner3flèches.",
+      "correction": "3 jours s’écoulent.",
+      "controles": [
+        "Accepter3 ; refuser4, comptage inclusif des dates.",
+        "Même intervalle d’année à28 joursdonnerait2, mais calendrier fourni doitêtrecohérent."
+      ],
+      "identifiant": "GM04-c",
+      "ancienId": "GM04-V3",
+      "ancienIdGenerateur": "GM04-V3",
+      "indiceGenerateur": 2,
+      "nom": "Compter des jours sur un calendrier fourni",
+      "niveauDescription": "6e entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": false,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "jours"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Restituer des durées calendaires usuelles",
+      "niveau": "6e",
+      "dnb2027": false,
+      "enonce": "Combien de jours compte une année bissextile ?",
+      "reponse": "366",
+      "donnees": "Questionsisolées :annéeordinaire 365, bissextile366, siècle100 ans, millénaire 1000 ans ; préciserunité ; pas de calcul pour reconnaître une année bissextile.",
+      "saisie": "Nombre, unitéjours.",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "« Une année ordinaire compte365 jours. » Montrerun calendrierannuel.",
+      "aide2": "« Une année bissextile ajoute le29 février. » Surligner le jour supplémentaire.",
+      "correction": "365+1=366 jours.",
+      "controles": [
+        "Accepter366 ; refuser365.",
+        "Ne pasprétendrequ’un mois vaut toujours30 joursouqu’uneannéevaut52 semainesexactes."
+      ],
+      "identifiant": "GM04-d",
+      "ancienId": "GM04-V4",
+      "ancienIdGenerateur": "GM04-V4",
+      "indiceGenerateur": 3,
+      "nom": "Restituer des durées calendaires usuelles",
+      "niveauDescription": "6e entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": false,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "ans"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Semaines et jours",
+      "niveau": "6e",
+      "dnb2027": false,
+      "enonce": "Exprime 17 jours en semaines et jours.",
+      "reponse": "2 semaines3 jours",
+      "donnees": "Nombrejours0–70 ; quotient/restepar 7 ; réponsejours0–6 normalisée.",
+      "saisie": "Deux champs semaines/jours.",
+      "acceptation": "Accepter(2,3) ; rejeterformat1semaine10 jours avec indication d’équivalence mais forme non normalisée.",
+      "aide1": "« Une semaine contient7 jours. » Montrer des rangées de 7 cases.",
+      "aide2": "« Deux semaines font14 jours. Il reste17−14. » Colorer14 cases.",
+      "correction": "17 jours=2 semaines3 jours.",
+      "controles": [
+        "Accepter2/3 ; refuser2/5.",
+        "Cas14→2/0 ; ne pas assimiler des jours vides automatiquement à0."
+      ],
+      "identifiant": "GM04-e",
+      "ancienId": "GM04-V5",
+      "ancienIdGenerateur": "GM04-V5",
+      "indiceGenerateur": 4,
+      "nom": "Semaines et jours",
+      "niveauDescription": "6e entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": false,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Semaines",
+          "unite": "semaines"
+        },
+        {
+          "type": "nombre",
+          "libelle": "Jours",
+          "unite": "jours"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

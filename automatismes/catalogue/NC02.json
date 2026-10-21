@@ -1,0 +1,310 @@
+{
+  "id": "NC02",
+  "titre": "Comparer des décimaux",
+  "categorie": "Nombres et calculs",
+  "objectif": "Comparer, ordonner et intercaler des décimaux sans se fier à la longueur de leur écriture.",
+  "prerequis": ["Numération de position", "Sens des opérations et des signes de comparaison"],
+  "perimetre": "Couverture des prérequis et automatismes du collège. Le filtre DNB2027 utilise l’ancien programme du cycle 4 ; les niveaux indiqués suivent le nouveau programme. Le statut est précisé par variante.",
+  "cours": {
+    "regle": "À droite sur la droite graduée, les nombres sont plus grands.",
+    "exemple": "5,8 < 5,82.",
+    "visuel": "Écritures décimales alignées et droite graduée ; positions et bornes clairement étiquetées.",
+    "mouvement": "Le schéma est entièrement compréhensible à l’arrêt. Une animation éventuelle révèle les étapes sans cacher les états précédents."
+  },
+  "erreurs": [
+    "Confondre rangs et longueur de l’écriture",
+    "Oublier un zéro de position",
+    "Confondre valeur exacte et estimation"
+  ],
+  "sources": [
+    {
+      "titre": "Liste indicative d’automatismes DNB (octobre 2025)",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/liste-indicative-dautomatismes-pour-le-dnbpdf-116340.pdf",
+      "statut": "prescription",
+      "repere": "p 1, nombres et calculs",
+      "apport": "Périmètre indicatif des automatismes du DNB ; la liste n’est pas limitative."
+    },
+    {
+      "titre": "Programme de mathématiques du cycle 3 (2025)",
+      "url": "https://www.education.gouv.fr/sites/default/files/ensel620_annexe2-v2.pdf",
+      "statut": "prescription",
+      "repere": "PDF p 14",
+      "apport": "Objectifs et progression officiels du programme ; niveau de classe vérifié."
+    },
+    {
+      "titre": "Exemples de mise en œuvre du programme de 6e (2025)",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/exemplesmiseenoeuvre6e-mathpdf-111549.pdf",
+      "statut": "appui pédagogique",
+      "repere": "PDF p 3, imprimée 2",
+      "apport": "Exemples officiels de mise en œuvre : progressivité, représentations et types de calculs."
+    },
+    {
+      "titre": "Exemples de mise en œuvre du cycle 4 (2026)",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "statut": "appui pédagogique",
+      "repere": "PDF p 11, imprimée 10",
+      "apport": "Exemples officiels de mise en œuvre : progressivité, représentations et types de calculs."
+    },
+    {
+      "titre": "NCETM — Single number lines",
+      "url": "https://www.ncetm.org.uk/media/8d84e79498db675/ncetm_ks3_representations_single_number_lines.pdf",
+      "repere": "p.3,5,7 lues visuellement",
+      "apport": "Ordre, opérations et fractions sur une droite ; limites pour les produits négatifs.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "Les bornes strictes sont refusées ; pas de validation par comparaison à un exemple unique.",
+  "implementation": {
+    "module": "app-automatismes/dist/modules/nombres.js",
+    "tests": "etape1/test_nombres.mjs",
+    "variantes": 4,
+    "graines_par_variante": 200,
+    "principe": "Aide 1 : représentation visuelle des données. Aide 2 : étape de calcul. Deux aides maximum.",
+    "aide1_visuelle": true
+  },
+  "nom": "Comparer des décimaux",
+  "domaine": "nombres-calculs",
+  "sousDomaine": "Nombres et calculs",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6e pour positifs ; 5e pour les négatifs.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_02", "dnb_39"],
+    "questions": []
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Comparer deux décimaux positifs",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Complète : 5,8 □ 5,82.",
+      "reponse": "<",
+      "donnees": "Un nombre au dixième 1–8 ; second à ±0,01, ±0,02, ±0,05 ou égal ; ajout de zéros possible.",
+      "saisie": "Choisis une réponse : choix explicites",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Compare les mêmes rangs.",
+      "aide2": "Ajoute des zéros à droite si besoin.",
+      "correction": "5,8 < 5,82.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "text",
+        "values": ["<"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Choisis une réponse",
+          "answer": "<",
+          "kind": "text",
+          "unit": "",
+          "placeholder": "",
+          "options": ["<", "=", ">"]
+        }
+      ],
+      "visuel_aide1": "Rangs décimaux alignés ou droite graduée. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC02-a",
+      "ancienId": "NC02-a",
+      "ancienIdGenerateur": "NC02-A",
+      "indiceGenerateur": 0,
+      "nom": "Comparer deux décimaux positifs",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Choisis une réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Ordonner une liste de décimaux",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Range par ordre croissant : 0,4 ; 0,04 ; 0,404.",
+      "reponse": "0.04 ; 0.4 ; 0.404",
+      "donnees": "Trois décimaux positifs distincts construits à partir du même chiffre 1–8 ; jusqu’à trois décimales.",
+      "saisie": "Le plus petit : nombre ; Au milieu : nombre ; Le plus grand : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Compare des écritures avec trois décimales.",
+      "aide2": "Commence par le plus petit.",
+      "correction": "0,04 < 0,4 < 0,404",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "fields",
+        "values": ["0.04", "0.4", "0.404"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Le plus petit",
+          "answer": "0.04",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        },
+        {
+          "label": "Au milieu",
+          "answer": "0.4",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        },
+        {
+          "label": "Le plus grand",
+          "answer": "0.404",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Rangs décimaux alignés ou droite graduée. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC02-b",
+      "ancienId": "NC02-b",
+      "ancienIdGenerateur": "NC02-B",
+      "indiceGenerateur": 1,
+      "nom": "Ordonner une liste de décimaux",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Le plus petit",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "Au milieu",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "Le plus grand",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Comparer deux nombres négatifs",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Complète : −5,8 □ −5,82.",
+      "reponse": ">",
+      "donnees": "Deux nombres négatifs proches ; inclure l’égalité et tester l’ordre inverse des distances à 0.",
+      "saisie": "Choisis une réponse : choix explicites",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Un négatif plus éloigné de 0 est plus petit.",
+      "aide2": "Observe leur position.",
+      "correction": "−5,8 > −5,82.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "text",
+        "values": [">"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Choisis une réponse",
+          "answer": ">",
+          "kind": "text",
+          "unit": "",
+          "placeholder": "",
+          "options": ["<", "=", ">"]
+        }
+      ],
+      "visuel_aide1": "Rangs décimaux alignés ou droite graduée. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC02-c",
+      "ancienId": "NC02-c",
+      "ancienIdGenerateur": "NC02-C",
+      "indiceGenerateur": 2,
+      "nom": "Comparer deux nombres négatifs",
+      "niveauDescription": "5e ; entretien dans les classes suivantes.",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Choisis une réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Produire un décimal entre deux bornes strictes",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Donne un nombre décimal strictement compris entre 3,8 et 3,9.",
+      "reponse": "3.8499999999999996",
+      "donnees": "Bornes positives consécutives au dixième ; toute valeur strictement intérieure convient.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Tout nombre strictement compris entre les bornes ; bornes exclues.",
+      "aide1": "Les deux bornes ne sont pas autorisées.",
+      "aide2": "Écris les bornes 3,80 et 3,90.",
+      "correction": "Par exemple 3,85 : 3,8 < 3,85 < 3,9.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "property",
+        "rule": "range",
+        "min": 3.8,
+        "max": 3.9,
+        "minInclusive": false,
+        "maxInclusive": false
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "3.8499999999999996",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Rangs décimaux alignés ou droite graduée. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Étape de calcul explicite.",
+      "identifiant": "NC02-d",
+      "ancienId": "NC02-d",
+      "ancienIdGenerateur": "NC02-D",
+      "indiceGenerateur": 3,
+      "nom": "Produire un décimal entre deux bornes strictes",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

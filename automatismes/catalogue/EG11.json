@@ -1,0 +1,387 @@
+{
+  "id": "EG11",
+  "titre": "Thalès",
+  "categorie": "Géométrie et repérage",
+  "objectif": "Associer les côtés correspondants, calculer une longueur simple et reconnaître les conditions du parallélisme.",
+  "prerequis": "Alignement, parallélisme, proportionnalité, fractions égales, division simple.",
+  "perimetre": "DNB2027 : configurations emboîtées et croisées ; problèmes courts séparant calcul et justification.",
+  "cours": {
+    "regle": "Avec deux alignements et deux droites parallèles, les longueurs des côtés correspondants des deux triangles sont proportionnelles. Écris les rapports dans le même ordre.",
+    "exemple": "M ∈ [AB], N ∈ [AC], (MN) ∥ (BC) : AM/AB = AN/AC = MN/BC. Avec AM = 3 cm, AB = 6 cm et AC = 8 cm : AN = 4 cm.",
+    "visuel": "Triangle [angle:A](0,0),B(6,0),C(0,8),M(3,0),N(0,4) ; MN etBC marqués parallèles. Deux triangles extraits côte à côte, côtés homologues étiquetés AM↔AB,AN↔AC,MN↔BC ; tableau petit/grand avec facteur 1/2.",
+    "mouvement": "Option : superposer petit et grand triangle par agrandissement ; version statique deux triangles et flèches de correspondance. Le rapport est une longueur relative, pas un déplacement."
+  },
+  "erreurs": [
+    "Comparer un petit côté à un morceau restant au lieu du côté entier.",
+    "Inverser un seul rapport.",
+    "Oublier alignement ou parallélisme.",
+    "Appliquer la réciproque sans ordre des points."
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 4 — 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "p. 15 — Triangles de 3e",
+      "apport": "Thalès, réciproque et contraposée, emboîté et papillon.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples pour la mise en œuvre des programmes de mathématiques — cycle 4",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "PDF p. 31 — Triangles",
+      "apport": "Proportionnalité des côtés homologues et travail sur la logique.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Programme du cycle 4 — BO du 30 juillet 2020",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/programme-d-enseignement-du-cycle-4-67722.pdf",
+      "repere": "p. 136 — Géométrie plane",
+      "apport": "Deux configurations du théorème et sa réciproque.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Repères annuels de progression — cycle 4 — 2019",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/26-maths-c4-reperes-eduscol1114756pdf-74694.pdf",
+      "repere": "PDF p. 11 — Géométrie plane",
+      "apport": "Progression ancienne emboîté puis papillon.",
+      "statut": "appui pédagogique"
+    }
+  ],
+  "limites": "Une question demande au plus une correspondance, un calcul ou une décision. Les figures sont générées par homothétie géométrique contrôlée, sans exiger que l’élève connaisse cette construction.",
+  "acces_secondaires": ["Proportionnalité et pourcentages"],
+  "nom": "Thalès",
+  "domaine": "espace-geometrie",
+  "sousDomaine": "Géométrie et repérage",
+  "niveaux": ["3e"],
+  "niveauxDescription": "Nouveau programme :3e apprentissage. Ancien programme :4e triangles emboîtés,3e papillon ; entretien DNB2027.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_25"],
+    "questions": [
+      {
+        "source": "R27A",
+        "question": "Q8",
+        "referenceAncienne": "R1 8",
+        "forme": "f",
+        "identifiant": "EG11-f",
+        "ancienId": "EG11-V6",
+        "support": "comparable",
+        "difference": "Longueur du grand triangle à retrouver : sens inverse du calcul de longueur du petit triangle.",
+        "savoirFaire": "Longueur par Thalès en triangles emboîtés",
+        "formatSource": "Nombre",
+        "document": "Sujet de référence mathématiques n°1",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n01-129658.pdf"
+      },
+      {
+        "source": "Z26A",
+        "question": "Q7",
+        "referenceAncienne": "ZA 7",
+        "forme": "f",
+        "identifiant": "EG11-f",
+        "ancienId": "EG11-V6",
+        "support": "comparable",
+        "difference": "Longueur du grand triangle à retrouver.",
+        "savoirFaire": "Longueur par Thalès emboîté",
+        "formatSource": "Nombre",
+        "document": "Sujet zéro 2026, série générale A",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-mathematiquespdf-123317.pdf"
+      },
+      {
+        "source": "Z26B",
+        "question": "Q8",
+        "referenceAncienne": "ZB 8",
+        "forme": "a",
+        "identifiant": "EG11-a",
+        "ancienId": "EG11-V1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Égalité de rapports de Thalès",
+        "formatSource": "Rapports",
+        "document": "Sujet zéro 2026, série générale B",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-b-mathematiquespdf-123314.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Compléter des rapports correspondants.",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Dans ABC, M∈[AB],N∈[AC] et (MN) ∥ (BC). Complète AM/AB = AN/□ = MN/□ .",
+      "reponse": "AC puis BC",
+      "donnees": "A(0,0),B(6,0),C(1,5),M = 0,5B,N = 0,5C ; triangles non dégénérés ; ratio k dans{1/2,1/3,2/3,3/4}.",
+      "saisie": "Deux champs de segments ; fractions préformées.",
+      "acceptation": "AC ouCA ; BC ouCB ; conserver ordre petit/grand.",
+      "aide1": "« Repère le sommet commun A. » Faire apparaître les deux triangles AMN etABC avec sommets homologues reliés.",
+      "aide2": "« AM correspond à AB ; AN correspond au côté entier qui part de A vers C. » Montrer les deux lignes d’un tableau petit/grand à compléter.",
+      "correction": "AM/AB = AN/AC = MN/BC.",
+      "controles": [
+        "Refuser AN/NC : NC n’est pas le côté correspondant entier.",
+        "Tous les rapports doivent garder le même ordre de triangles."
+      ],
+      "identifiant": "EG11-a",
+      "ancienId": "EG11-V1",
+      "ancienIdGenerateur": "EG11-V1",
+      "indiceGenerateur": 0,
+      "nom": "Compléter des rapports correspondants.",
+      "niveauDescription": "3e nouveau programme ; dès 4e ancien emboîté",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "AM/AB = AN/□",
+          "unite": ""
+        },
+        {
+          "type": "qcm",
+          "libelle": "MN/□",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "Z26B",
+          "question": "Q8",
+          "referenceAncienne": "ZB 8",
+          "forme": "a",
+          "identifiant": "EG11-a",
+          "ancienId": "EG11-V1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Égalité de rapports de Thalès",
+          "formatSource": "Rapports",
+          "document": "Sujet zéro 2026, série générale B",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-b-mathematiquespdf-123314.pdf"
+        }
+      ]
+    },
+    {
+      "id": "b",
+      "objectif": "Calculer une longueur entière en distinguant partie et total.",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "M∈[AB],N∈[AC],(MN) ∥ (BC). AM = 3 cm,MB = 3 cm etAC = 10 cm. Calcule AN.",
+      "reponse": "5 cm",
+      "donnees": "AM = 3,MB = 3 doncAB = 6 ; triangle avecAC = 10, A(0,0),B(6,0),C(0,10),M(3,0),N(0,5). Générer AM,MB positifs et ratio simple ; inconnue entière ou décimale finie.",
+      "saisie": "Champ numérique avec cm fixe.",
+      "acceptation": "5 ;5 cm.",
+      "aide1": "« Le grand côté est AB, pas MB. » AccoladeAB couvrantAM etMB.",
+      "aide2": "« AB = AM + MB = 6 cm. Le petit triangle est à l’échelle 3/6 du grand. » Tableau des longueurs en cm : AM = 3, AB = 6, AN inconnue et AC = 10.",
+      "correction": "AN/AC = 3/6 = 1/2, donc AN = AC/2 = 5 cm.",
+      "controles": [
+        "Refuser 10 qui prendMB pourAB.",
+        "Vérifier sommeAM + MB = AB et placement deM entreA etB."
+      ],
+      "identifiant": "EG11-b",
+      "ancienId": "EG11-V2",
+      "ancienIdGenerateur": "EG11-V2",
+      "indiceGenerateur": 1,
+      "nom": "Calculer une longueur entière en distinguant partie et total.",
+      "niveauDescription": "3e nouveau ; dès 4e ancien emboîté",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "AN",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Utiliser la configuration papillon.",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "A,O,B sont alignés dans cet ordre, C,O,D aussi. (AC) ∥ (BD). OA = 2 cm,OB = 6 cm,OC = 3 cm. Calcule OD.",
+      "reponse": "9 cm",
+      "donnees": "O(0,0),A(−2,0),B(6,0),C(0,−3),D(0,9). Rapports OA/OB = OC/OD = 1/3 ; parallélisme AC/BD exact. Choisir facteur positif 2,3 ou 4 entre triangles opposés.",
+      "saisie": "Champ numérique avec cm fixe.",
+      "acceptation": "9 ;9 cm.",
+      "aide1": "« Les triangles correspondants sont OAC etOBD, de part et d’autre de O. » Surligner chaque triangle séparément.",
+      "aide2": "« De OA = 2 cm à OB = 6 cm, on multiplie par 3. » Faire de même de OC à OD.",
+      "correction": "OD = 3 cm × 3 = 9 cm.",
+      "controles": [
+        "Refuser 1 ou 6.",
+        "Les distances OA,OB sont positives ; ne pas introduire de rapport algébrique négatif dans Thalès collège."
+      ],
+      "identifiant": "EG11-c",
+      "ancienId": "EG11-V3",
+      "ancienIdGenerateur": "EG11-V3",
+      "indiceGenerateur": 2,
+      "nom": "Utiliser la configuration papillon.",
+      "niveauDescription": "3e",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "OD",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Établir le parallélisme par des rapports égaux.",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "M∈[AB] etN∈[AC]. AM = 2,AB = 6,AN = 3,AC = 9. Les droites(MN) et(BC) sont-elles parallèles ?",
+      "reponse": "Oui",
+      "donnees": "Deux points dans le même ordre sur les demi-droites d’origineA ; proportions 2/6 = 3/9 ; unités communes implicites indiquéescm. A(0,0),B(6,0),C(0,9).",
+      "saisie": "Oui/non ; deux fractions à compléter facultativement en entraînement.",
+      "acceptation": "Oui ; rapports tous deux 1/3.",
+      "aide1": "« Les points sont-ils alignés dans le même ordre ? » Mettre en évidence les deux demi-droites etM,N intérieurs.",
+      "aide2": "« Compare AM/AB etAN/AC. » Afficher 2/6 et 3/9 côte à côte, sans signe prérempli.",
+      "correction": "2/6 = 3/9 = 1/3 ; par la réciproque de Thalès, (MN) ∥ (BC).",
+      "controles": [
+        "Pas de conclusion sans alignements et ordre compatibles.",
+        "Ne pas accepter seulement égalitéAM = AN comme justification."
+      ],
+      "identifiant": "EG11-d",
+      "ancienId": "EG11-V4",
+      "ancienIdGenerateur": "EG11-V4",
+      "indiceGenerateur": 3,
+      "nom": "Établir le parallélisme par des rapports égaux.",
+      "niveauDescription": "3e nouveau ; dès 4e ancien emboîté",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Écarter un parallélisme par des rapports différents.",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "M∈[AB],N∈[AC]. AM = 2 cm,AB = 6 cm,AN = 4 cm,AC = 9 cm. (MN) peut-elle être parallèle à (BC) ?",
+      "reponse": "Non",
+      "donnees": "Même configuration queV4 avec ratios distincts 2/6 et 4/9 ; figure exacte M(2,0),N(0,4),B(6,0),C(0,9).",
+      "saisie": "Oui/non.",
+      "acceptation": "Non.",
+      "aide1": "« Si les droites étaient parallèles, les deux rapports seraient égaux. » Placer les deux rapports attendus dans un tableau.",
+      "aide2": "« Compare 2 × 9 et 4 × 6. » Montrer les produits croisés 18 et 24 uniquement après demande d’aide 2.",
+      "correction": "2/6 ≠ 4/9 car 18 ≠ 24. (MN) n’est pas parallèle à (BC).",
+      "controles": [
+        "Refuser une égalité fondée sur les seules approximations décimales.",
+        "Vérifier figure effectivement non parallèle ; ne jamais coder le parallélisme dans cette variante."
+      ],
+      "identifiant": "EG11-e",
+      "ancienId": "EG11-V5",
+      "ancienIdGenerateur": "EG11-V5",
+      "indiceGenerateur": 4,
+      "nom": "Écarter un parallélisme par des rapports différents.",
+      "niveauDescription": "3e",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "f",
+      "objectif": "Calculer un côté du grand triangle",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "M∈[AB], N∈[AC] et (MN) ∥ (BC). AM = 3 cm, AB = 12 cm et AN = 3 cm. Calcule AC.",
+      "reponse": "AC : 12 cm",
+      "donnees": "Deux alignements compatibles, parallélisme donné ; facteur grand/petit entier 2,3 ou 4 ; côtés positifs. Paramètres de cet exemple : {\"factor\":4,\"am\":3,\"ab\":12,\"an\":3,\"ac\":12}",
+      "saisie": "AC : number",
+      "acceptation": "Valeurs exactes des champs ; virgule ou point pour un décimal.",
+      "aide1": "Le grand triangle est un agrandissement du petit. Visuel : Extraire petit et grand triangles puis montrer la même flèche multiplicative sur les côtés correspondants.",
+      "aide2": "De AM à AB, on multiplie par 4. Fais de même de AN à AC. Visuel : Extraire petit et grand triangles puis montrer la même flèche multiplicative sur les côtés correspondants.",
+      "correction": "AC = 4 × 3 cm = 12 cm.",
+      "controles": [
+        "Refuser la division par le facteur lorsque le grand côté est demandé.",
+        "Vérifier alignements et parallélisme des coordonnées."
+      ],
+      "identifiant": "EG11-f",
+      "ancienId": "EG11-V6",
+      "ancienIdGenerateur": "EG11-V6",
+      "indiceGenerateur": 5,
+      "nom": "Calculer un côté du grand triangle",
+      "niveauDescription": "3e nouveau ; ancien emboîté dès 4e",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "AC",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "R27A",
+          "question": "Q8",
+          "referenceAncienne": "R1 8",
+          "forme": "f",
+          "identifiant": "EG11-f",
+          "ancienId": "EG11-V6",
+          "support": "comparable",
+          "difference": "Longueur du grand triangle à retrouver : sens inverse du calcul de longueur du petit triangle.",
+          "savoirFaire": "Longueur par Thalès en triangles emboîtés",
+          "formatSource": "Nombre",
+          "document": "Sujet de référence mathématiques n°1",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n01-129658.pdf"
+        },
+        {
+          "source": "Z26A",
+          "question": "Q7",
+          "referenceAncienne": "ZA 7",
+          "forme": "f",
+          "identifiant": "EG11-f",
+          "ancienId": "EG11-V6",
+          "support": "comparable",
+          "difference": "Longueur du grand triangle à retrouver.",
+          "savoirFaire": "Longueur par Thalès emboîté",
+          "formatSource": "Nombre",
+          "document": "Sujet zéro 2026, série générale A",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-mathematiquespdf-123317.pdf"
+        }
+      ]
+    }
+  ]
+}

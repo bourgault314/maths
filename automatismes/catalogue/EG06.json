@@ -1,0 +1,360 @@
+{
+  "id": "EG06",
+  "titre": "Angles et configurations",
+  "categorie": "Géométrie et repérage",
+  "objectif": "Nommer, reconnaître et calculer des angles à partir des configurations données.",
+  "prerequis": "Sommet et demi-droites ; mesures en degrés ; addition/soustraction.",
+  "perimetre": "DNB 2027 : variantes ci-dessous. La propriété des angles alternes-internes ou correspondants est utilisée uniquement avec parallélisme donné ou établi.",
+  "cours": {
+    "regle": "Le sommet est la lettre du milieu du nom de l’angle. Deux angles opposés par le sommet sont égaux. Deux angles qui forment un angle plat totalisent 180°. Avec deux parallèles, les angles alternes-internes sont égaux, comme les angles correspondants.",
+    "exemple": "Deux angles adjacents forment un angle plat. L’un mesure 65° : l’autre vaut 180°−65° = 115°.",
+    "visuel": "Carte 1 : A,O,B et secteur [angle:AOB], O encadré dans le nom. Carte 2 : demi-cercle de 180° partagé en 65° et une partie inconnue ; barre de même total avec deux parts. Carte 3 : deux parallèles et une sécante ; paires alternes-internes et correspondantes présentées séparément.",
+    "mouvement": "Option : passer du secteur plat à la barre 180° ; version statique deux schémas reliés par « même total ». Aucune animation de parallélisme imposée."
+  },
+  "erreurs": [
+    "Mettre le sommet en première lettre.",
+    "Utiliser 90° à la place de 180°.",
+    "Affirmer l’égalité d’angles de parallèles sans parallélisme donné.",
+    "Confondre opposés et adjacents."
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 3 — 2025",
+      "url": "https://www.education.gouv.fr/sites/default/files/ensel620_annexe2-v2.pdf",
+      "repere": "p. 23 — Géométrie plane",
+      "apport": "Vocabulaire et mesures d’angles.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Programme de mathématiques du cycle 4 — 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "p. 13 — Géométrie plane de 5e",
+      "apport": "Vocabulaire des angles, parallélisme et sécante.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples pour la mise en œuvre des programmes de mathématiques — cycle 4",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "PDF p. 25 — Angles",
+      "apport": "Propriétés des angles et travail sur configurations.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Programme du cycle 4 — BO du 30 juillet 2020",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/programme-d-enseignement-du-cycle-4-67722.pdf",
+      "repere": "p. 136 — Géométrie plane",
+      "apport": "Caractérisation angulaire du parallélisme.",
+      "statut": "prescription"
+    }
+  ],
+  "limites": "Chaque secteur possède un identifiant stable ; réponses tactiles et clavier pointent vers ce même identifiant. L’aide peut nommer une propriété, mais reste absente en examen.",
+  "acces_secondaires": [],
+  "nom": "Angles et configurations",
+  "domaine": "espace-geometrie",
+  "sousDomaine": "Géométrie et repérage",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6e : vocabulaire, angle droit/plat/aigu/obtus et nomination ; 5e : angles adjacents, opposés, supplémentaires, angles de parallèles ; 4e–3e entretien.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_17"],
+    "questions": [
+      {
+        "source": "Z26B",
+        "question": "Q1",
+        "referenceAncienne": "ZB 1",
+        "forme": "g",
+        "identifiant": "EG06-g",
+        "ancienId": "EG06-V7",
+        "support": "comparable",
+        "difference": "Produire90° à partir du codage de l’angle droit, distinct de nommer droit un angle dont90° est déjà donné.",
+        "savoirFaire": "Mesure d’un angle droit",
+        "formatSource": "Nombre",
+        "document": "Sujet zéro 2026, série générale B",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-b-mathematiquespdf-123314.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Nommer l’angle au bon sommet.",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "L’angle colorié est délimité par [OA) et [OB). Écris son nom avec trois lettres.",
+      "reponse": "[angle:AOB] ou [angle:BOA]",
+      "donnees": "Trois points non alignés ; O sommet ; deux demi-droites distinctes ; secteur visé explicite. Permuter lettres et orientation.",
+      "saisie": "Trois cases lettres ou choix des lettres ; chapeau d’angle fixe.",
+      "acceptation": "Saisie des trois lettres AOB ou BOA, sans demander de saisir le chapeau ; le rendu affiche [angle:AOB] ou [angle:BOA]. OAB et ABO refusés.",
+      "aide1": "« La lettre du sommet va au milieu. » Entourer O sur la figure et la case centrale.",
+      "aide2": "Chaque autre lettre nomme un point sur un des côtés de l’angle. Surligner les deux points sur les demi-droites.",
+      "correction": "Les deux noms possibles sont [angle:AOB] et [angle:BOA].",
+      "controles": [
+        "Accepter les deux ordres des côtés.",
+        "Une lettre ne désignant pas un point des côtés doit être refusée."
+      ],
+      "identifiant": "EG06-a",
+      "ancienId": "EG06-V1",
+      "ancienIdGenerateur": "EG06-V1",
+      "indiceGenerateur": 0,
+      "nom": "Nommer l’angle au bon sommet.",
+      "niveauDescription": "6e ; entretien 5e–3e",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "texte-court",
+      "champs": [
+        {
+          "type": "texte-court",
+          "libelle": "Trois lettres",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Classifier un angle par sa mesure.",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Un angle mesure 120°. Est-il aigu, droit, obtus ou plat ?",
+      "reponse": "Obtus",
+      "donnees": "Mesures générées dans 1–179, plus 90 et 180 traités explicitement ; 0 et 360 possibles seulement sous consigne vocabulaire nouveau 5e. Exemple 120°. Ne pas classer 180 obtus.",
+      "saisie": "Choix de catégorie.",
+      "acceptation": "obtus.",
+      "aide1": "« Un angle droit mesure 90° et un angle plat 180°. » Montrer les deux repères sur un demi-cercle gradué.",
+      "aide2": "« 120° est entre 90° et 180°. » Marquer cette zone et le rayon de 120°.",
+      "correction": "90°<120°<180° : c’est un angle obtus.",
+      "controles": [
+        "90 doit donner droit,180 plat.",
+        "Figure conforme à 120°, jamais dessin aigu avec label 120°."
+      ],
+      "identifiant": "EG06-b",
+      "ancienId": "EG06-V2",
+      "ancienIdGenerateur": "EG06-V2",
+      "indiceGenerateur": 1,
+      "nom": "Classifier un angle par sa mesure.",
+      "niveauDescription": "6e ; entretien 5e–3e",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Calculer un angle supplémentaire.",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "A, O et C sont alignés dans cet ordre. L’angle [angle:AOB] vaut 65°. Calcule l’angle [angle:BOC] situé dans le même demi-plan.",
+      "reponse": "115°",
+      "donnees": "OA et OC demi-droites opposées ; B dans un des demi-plans ; mesure entière entre 10 et 170. Deux secteurs adjacents couvrent exactement un angle plat.",
+      "saisie": "Champ numérique avec ° fixe.",
+      "acceptation": "115 ; 115°.",
+      "aide1": "« Les deux angles forment un angle plat. » Relier les deux arcs sous une accolade 180°.",
+      "aide2": "« Retire la partie connue du total. » Afficher une barre 180° partagée en 65° et ? puis 180−65.",
+      "correction": "180°−65° = 115°.",
+      "controles": [
+        "Refuser 25 qui utiliserait 90°.",
+        "Vérifier B dans le même demi-plan que le secteur visé et l’ordre A,O,C."
+      ],
+      "identifiant": "EG06-c",
+      "ancienId": "EG06-V3",
+      "ancienIdGenerateur": "EG06-V3",
+      "indiceGenerateur": 2,
+      "nom": "Calculer un angle supplémentaire.",
+      "niveauDescription": "5e ; entretien 4e–3e",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "[angle:BOC]",
+          "unite": "°"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Utiliser les angles opposés par le sommet.",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Les droites (AC) et (BD) se coupent en O, avec O entre A et C et entre B et D. L’angle [angle:AOB] vaut 48°. Combien vaut [angle:COD] ?",
+      "reponse": "48°",
+      "donnees": "Deux droites non perpendiculaires ; A et C opposés, B et D opposés ; angle 48° géométriquement exact.",
+      "saisie": "Champ numérique avec ° fixe.",
+      "acceptation": "48 ; 48°.",
+      "aide1": "« Les deux angles ont le même sommet et leurs côtés se prolongent. » Mettre en évidence les deux droites.",
+      "aide2": "« Ils sont opposés par le sommet. » Coder les deux secteurs avec un même arc.",
+      "correction": "Les angles opposés par le sommet sont égaux : [angle:COD] = 48°.",
+      "controles": [
+        "Refuser 132 qui correspond à un angle adjacent.",
+        "Ne jamais confondre deux angles seulement adjacents avec deux angles opposés."
+      ],
+      "identifiant": "EG06-d",
+      "ancienId": "EG06-V4",
+      "ancienIdGenerateur": "EG06-V4",
+      "indiceGenerateur": 3,
+      "nom": "Utiliser les angles opposés par le sommet.",
+      "niveauDescription": "5e ; entretien 4e–3e",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "[angle:COD]",
+          "unite": "°"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Utiliser une paire d’angles de deux parallèles.",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Deux droites parallèles sont coupées par une sécante. L’angle marqué α vaut 55°. L’angle β est son angle alterne-interne. Calcule β.",
+      "reponse": "55°",
+      "donnees": "Deux droites parallèles d 1,d 2 ; sécante non perpendiculaire ; paire intérieure sur côtés opposés de la sécante. Générer aussi le sous-type correspondant avec paire même position relative ; nommer la relation sans l’indiquer en évaluation avancée.",
+      "saisie": "Champ numérique avec ° fixe ; sous-type reconnaissance par sélection des secteurs.",
+      "acceptation": "55 ; 55°.",
+      "aide1": "« Vérifie d’abord que les deux droites sont parallèles. » Mettre en évidence les flèches de parallélisme.",
+      "aide2": "« Entre deux parallèles, ces angles alternes-internes sont égaux. » Surligner seulement les deux secteurs et leurs labels α,β.",
+      "correction": "Les droites sont parallèles, donc β=α=55°.",
+      "controles": [
+        "Si le parallélisme manque, ne pas accepter l’égalité comme garantie.",
+        "Pour le sous-type correspondant, vérifier même position relative à chaque intersection ; pour alternes-internes, les deux secteurs doivent être intérieurs."
+      ],
+      "identifiant": "EG06-e",
+      "ancienId": "EG06-V5",
+      "ancienIdGenerateur": "EG06-V5",
+      "indiceGenerateur": 4,
+      "nom": "Utiliser une paire d’angles de deux parallèles.",
+      "niveauDescription": "5e apprentissage ; 4e–3e entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "β",
+          "unite": "°"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "f",
+      "objectif": "Déduire le parallélisme à partir d’angles.",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Deux droites sont coupées par une sécante. Les deux angles alternes-internes repérés mesurent chacun 70°. Peut-on affirmer que les deux droites sont parallèles ?",
+      "reponse": "Oui",
+      "donnees": "Deux droites distinctes et une sécante ; les secteurs explicitement repérés sont réellement alternes-internes ; mesures égales 70. Sous-type négatif angles correspondants 65/70 implique non-parallélisme.",
+      "saisie": "Oui/non avec propriété courte proposée après réponse.",
+      "acceptation": "Oui ; la justification attendue est l’égalité d’angles alternes-internes.",
+      "aide1": "« Repère la position des deux angles : intérieurs et de part et d’autre de la sécante. » Mettre en évidence les positions.",
+      "aide2": "« Deux angles alternes-internes égaux permettent d’affirmer le parallélisme. » Afficher 70° = 70° entre les deux secteurs.",
+      "correction": "Les angles alternes-internes sont égaux ; les deux droites sont parallèles.",
+      "controles": [
+        "Une égalité entre une paire quelconque d’angles ne suffit pas.",
+        "Variante négative : ne pas conclure parallélisme pour 65° et 70°."
+      ],
+      "identifiant": "EG06-f",
+      "ancienId": "EG06-V6",
+      "ancienIdGenerateur": "EG06-V6",
+      "indiceGenerateur": 5,
+      "nom": "Déduire le parallélisme à partir d’angles.",
+      "niveauDescription": "5e apprentissage ; 4e–3e entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "g",
+      "objectif": "Restituer la mesure d’un angle droit codé",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Quelle est la mesure de l’angle codé au sommet C ?",
+      "reponse": "Mesure : 90°",
+      "donnees": "Deux demi-droites perpendiculaires ; petit carré sans mesure ; lettres et longueurs variables. Paramètres de cet exemple : {\"name\":\"C\",\"pts\":{\"C\":[0,0],\"A\":[4,0],\"B\":[0,3]}}",
+      "saisie": "Mesure : number",
+      "acceptation": "Valeurs exactes des champs ; virgule ou point pour un décimal.",
+      "aide1": "Le petit carré code un angle droit. Visuel : Surligner le petit carré puis le relier à un quart de tour.",
+      "aide2": "Un angle droit est un quart de tour. Visuel : Surligner le petit carré puis le relier à un quart de tour.",
+      "correction": "Un angle droit mesure 90°.",
+      "controles": ["Refuser 180°.", "La figure initiale ne porte pas la mesure 90°."],
+      "identifiant": "EG06-g",
+      "ancienId": "EG06-V7",
+      "ancienIdGenerateur": "EG06-V7",
+      "indiceGenerateur": 6,
+      "nom": "Restituer la mesure d’un angle droit codé",
+      "niveauDescription": "6e puis entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Mesure",
+          "unite": "°"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "Z26B",
+          "question": "Q1",
+          "referenceAncienne": "ZB 1",
+          "forme": "g",
+          "identifiant": "EG06-g",
+          "ancienId": "EG06-V7",
+          "support": "comparable",
+          "difference": "Produire90° à partir du codage de l’angle droit, distinct de nommer droit un angle dont90° est déjà donné.",
+          "savoirFaire": "Mesure d’un angle droit",
+          "formatSource": "Nombre",
+          "document": "Sujet zéro 2026, série générale B",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-b-mathematiquespdf-123314.pdf"
+        }
+      ]
+    }
+  ]
+}

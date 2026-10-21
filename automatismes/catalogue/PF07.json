@@ -1,0 +1,235 @@
+{
+  "id": "PF07",
+  "titre": "Échelles",
+  "categorie": "Proportionnalité et pourcentages",
+  "objectif": "Relier longueur représentée et longueur réelle.",
+  "prerequis": "Conversions longueurs, proportionnalité.",
+  "perimetre": "DNB2027 et apprentissages collège ; variantes filtrées par niveau.",
+  "cours": {
+    "regle": "À l’échelle 1:n, 1 unité sur le plan représente n unités réelles.",
+    "exemple": "1:100 ; 3 cm sur le plan représentent300 cm =3 m.",
+    "visuel": "Deux segments reliés : plan3cm, réel300cm ; légende « pas dessinés à la même échelle ». Double droite cmplan/cmréels.",
+    "mouvement": "Faire correspondre une unité puis multiplier ; ne pas donner une longueur écran comme mesure réelle."
+  },
+  "erreurs": [
+    "Multiplier des mesures exprimées dans deux unités différentes.",
+    "Prendre un rapport d’aires pour une échelle de longueurs."
+  ],
+  "sources": [
+    {
+      "titre": "Éduscol — Exemples cycle 4, 2026",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "PDF p40–46, Proportionnalité et fonctions",
+      "apport": "Progression des contextes, représentations et procédures ; les schémas et exemples ci-dessous sont nos choix de conception.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Éduscol — Accompagnement mathématiques 6e, 2026",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/2026livretaccompagnementmaths6e-pdf-126656.pdf",
+      "repere": "PDF p19–24, proportionnalité",
+      "apport": "Appui sur les procédures de proportionnalité déjà travaillées en 6e ; ne fixe pas le niveau des variantes de cette famille au cycle 4.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Éduscol — Résoudre des problèmes de proportionnalité",
+      "url": "https://eduscol.education.fr/document/17281/download",
+      "repere": "PDF p1–6",
+      "apport": "Choisir une procédure selon les nombres et relier les représentations ; document antérieur, utilisé en appui.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "NCETM — Double number lines and ratio tables",
+      "url": "https://www.ncetm.org.uk/media/8d84e7902c198f9/ncetm_ks3_representations_double_number_lines_ratio_tables.pdf",
+      "repere": "p.3–6 lues visuellement",
+      "apport": "Relier multiplicateurs, unité, tableau et grandeurs composées.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "Liens avec EG24 ; ne pas transformer cette famille en mesure au doigt.",
+  "acces_secondaires": ["Grandeurs et mesures"],
+  "nom": "Échelles",
+  "domaine": "proportionnalite-fonctions",
+  "sousDomaine": "Proportionnalité et pourcentages",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6e : premières échelles contextualisées ; 5e : échelle simple ; 3e : automatisation et inverse.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_34"],
+    "questions": [
+      {
+        "source": "Z26PA",
+        "question": "Q6",
+        "referenceAncienne": "ZPA 6",
+        "forme": "d",
+        "identifiant": "PF07-d",
+        "ancienId": "PF07-4",
+        "support": "adaptation",
+        "difference": "Échelle donnée sous correspondance de segments, au lieu de1cm→plusieurskm ; même multiplication du nombre d’intervalles.",
+        "savoirFaire": "Échelle carte-réalité",
+        "formatSource": "Nombre",
+        "document": "Sujet zéro 2026, série professionnelle A",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-mathematiquespdf-123305.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Distance réelle",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Plan à l’échelle1:100. Un mur mesure3 cm sur le plan. Longueur réelle en mètres ?",
+      "reponse": "3 m",
+      "donnees": "Échelle100,1000,10000 ; distancesplan entières1–9 ; unité cible explicite.",
+      "saisie": "Nombre, m fixé",
+      "acceptation": "3.",
+      "aide1": "Sous1cmplan, écrire100cmréels.",
+      "aide2": "3cmplan→300cmréels ; convertir en mètres.",
+      "correction": "300 cm = 3 m.",
+      "controles": "Refuser300 dans champm ; nepasconfondrecmécranetcotation.",
+      "identifiant": "PF07-a",
+      "ancienId": "PF07-A",
+      "ancienIdGenerateur": "PF07-1",
+      "indiceGenerateur": 0,
+      "nom": "Distance réelle",
+      "niveauDescription": "5e",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "m"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Distance sur plan",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "À l’échelle1:200, quelle longueur en cm représente un mur de8 m ?",
+      "reponse": "4 cm",
+      "donnees": "Réels construits avec longueurplan×n ; longueurplan1–15cm.",
+      "saisie": "Nombre, cm fixé",
+      "acceptation": "4.",
+      "aide1": "Double droite :1cmplan↔200cmréels.",
+      "aide2": "8m=800cm ; cherche combien de200dans800.",
+      "correction": "800 ÷ 200 = 4 cm.",
+      "controles": "Convertiravantdivision ; refuser0,04.",
+      "identifiant": "PF07-b",
+      "ancienId": "PF07-B",
+      "ancienIdGenerateur": "PF07-2",
+      "indiceGenerateur": 1,
+      "nom": "Distance sur plan",
+      "niveauDescription": "5e",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Déterminer échelle",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "2 cm sur une carte représentent1 km. Compléter l’échelle1:…",
+      "reponse": "50000",
+      "donnees": "Longueurcarte1,2,4,5 ; distance réellemultiples permettantentiern.",
+      "saisie": "Entier après1:",
+      "acceptation": "50000 et50 000.",
+      "aide1": "Deux droites :2cmcarte↔100000cmréels.",
+      "aide2": "Pour1cm, diviser100000par2.",
+      "correction": "Échelle1:50000.",
+      "controles": "Refuser500 ; distancesmêmesunités.",
+      "identifiant": "PF07-c",
+      "ancienId": "PF07-C",
+      "ancienIdGenerateur": "PF07-3",
+      "indiceGenerateur": 2,
+      "nom": "Déterminer échelle",
+      "niveauDescription": "3e",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Échelle graphique",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Une échelle graphique indique que chaque segment représente2 km. Un trajet droit couvre3segments. Distance réelle ?",
+      "reponse": "6 km",
+      "donnees": "Nombresegmentsentier1–6 ; échellegraphique lisible, pas mesure tactile.",
+      "saisie": "Nombre, km fixé",
+      "acceptation": "6.",
+      "aide1": "Colorer les3segments égaux de la barreéchelle.",
+      "aide2": "Chaque segment vaut2km :2+2+2.",
+      "correction": "3 × 2 = 6 km.",
+      "controles": "ResizingSVG ne modifie réponse ; compter intervalles pas graduations.",
+      "identifiant": "PF07-d",
+      "ancienId": "PF07-D",
+      "ancienIdGenerateur": "PF07-4",
+      "indiceGenerateur": 3,
+      "nom": "Échelle graphique",
+      "niveauDescription": "6e",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "km"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "Z26PA",
+          "question": "Q6",
+          "referenceAncienne": "ZPA 6",
+          "forme": "d",
+          "identifiant": "PF07-d",
+          "ancienId": "PF07-4",
+          "support": "adaptation",
+          "difference": "Échelle donnée sous correspondance de segments, au lieu de1cm→plusieurskm ; même multiplication du nombre d’intervalles.",
+          "savoirFaire": "Échelle carte-réalité",
+          "formatSource": "Nombre",
+          "document": "Sujet zéro 2026, série professionnelle A",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-mathematiquespdf-123305.pdf"
+        }
+      ]
+    }
+  ]
+}

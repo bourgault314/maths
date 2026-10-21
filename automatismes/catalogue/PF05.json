@@ -1,0 +1,205 @@
+{
+  "id": "PF05",
+  "titre": "Retrouver un taux ou une valeur initiale",
+  "categorie": "Proportionnalité et pourcentages",
+  "objectif": "Résoudre une évolution dans l’autre sens, avec nombres simples.",
+  "prerequis": "PF03–PF04, fractions et quotient.",
+  "perimetre": "DNB2027 et apprentissages collège ; variantes filtrées par niveau.",
+  "cours": {
+    "regle": "Un taux compare une part à son tout. Pour retrouver le tout, remonte au 100 %.",
+    "exemple": "12 sur 30 : 12/30 = 40/100 = 40 %.",
+    "visuel": "Double droite : 0–12–30 élèves et0–40–100 %. Pour valeur initiale placer valeur finale sous80 % ou120 %, jamais sous100 %.",
+    "mouvement": "Révéler base puis flèche vers100 %."
+  },
+  "erreurs": [
+    "Diviser par la valeur finale pour un taux de variation.",
+    "Annuler une réduction par la même hausse."
+  ],
+  "sources": [
+    {
+      "titre": "Éduscol — Exemples cycle 4, 2026",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "PDF p40–46, Proportionnalité et fonctions",
+      "apport": "Progression des contextes, représentations et procédures ; les schémas et exemples ci-dessous sont nos choix de conception.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Éduscol — Accompagnement mathématiques 6e, 2026",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/2026livretaccompagnementmaths6e-pdf-126656.pdf",
+      "repere": "PDF p19–24, proportionnalité",
+      "apport": "Appui sur les procédures de proportionnalité déjà travaillées en 6e ; ne fixe pas le niveau des variantes de cette famille au cycle 4.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Éduscol — Résoudre des problèmes de proportionnalité",
+      "url": "https://eduscol.education.fr/document/17281/download",
+      "repere": "PDF p1–6",
+      "apport": "Choisir une procédure selon les nombres et relier les représentations ; document antérieur, utilisé en appui.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "NCETM — Bar models",
+      "url": "https://www.ncetm.org.uk/media/8d84e791bafa491/ncetm_ks3_representations_bar_models.pdf",
+      "repere": "p.3,5,9,12 lues visuellement",
+      "apport": "Structures partie-tout et comparaison ; identifier explicitement le tout.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "",
+  "acces_secondaires": [],
+  "nom": "Retrouver un taux ou une valeur initiale",
+  "domaine": "proportionnalite-fonctions",
+  "sousDomaine": "Proportionnalité et pourcentages",
+  "niveaux": ["5e", "4e", "3e"],
+  "niveauxDescription": "5e : proportion en pourcentage ; 4e : taux de variation ; 3e : valeur initiale après évolution.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_29"],
+    "questions": []
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Proportion en pourcentage",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Sur 30 élèves, 12 sont demi-pensionnaires. Quel pourcentage cela représente-t-il ?",
+      "reponse": "40 %",
+      "donnees": "Effectifs donnant taux entier usuel ; N>0, 0≤part≤N.",
+      "saisie": "Nombre, % fixé",
+      "acceptation": "40.",
+      "aide1": "Barre30élèves ; colorer12 ; le total vaut100 %.",
+      "aide2": "12/30 = 4/10.",
+      "correction": "4/10 = 40/100, soit40 %.",
+      "controles": "Refuser0,4 quand champ exige pourcent ; feedback convertir plutôt que erreur de sens.",
+      "identifiant": "PF05-a",
+      "ancienId": "PF05-A",
+      "ancienIdGenerateur": "PF05-1",
+      "indiceGenerateur": 0,
+      "nom": "Proportion en pourcentage",
+      "niveauDescription": "5e",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "%"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Taux évolution",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Un prix passe de 50 € à 60 €. Quel est le pourcentage d’augmentation ?",
+      "reponse": "20 %",
+      "donnees": "Prixinitial>0, différence multiple pratique ; taux5–50.",
+      "saisie": "Nombre, % fixé",
+      "acceptation": "20.",
+      "aide1": "Barre initiale50 ; portion ajoutée10.",
+      "aide2": "Compare10au prix initial50 :10/50.",
+      "correction": "10/50 = 20/100 : hausse de20 %.",
+      "controles": "Refuser10et16,666… ; baseinitiale explicite.",
+      "identifiant": "PF05-b",
+      "ancienId": "PF05-B",
+      "ancienIdGenerateur": "PF05-2",
+      "indiceGenerateur": 1,
+      "nom": "Taux évolution",
+      "niveauDescription": "4e",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "%"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Valeur initiale après réduction",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Après une remise de 20 %, un article coûte 64 €. Quel était son prix ?",
+      "reponse": "80 €",
+      "donnees": "Construire initialmultiple5/10, taux10,20,25,50 ; final exact ; ne pas tirer données indépendamment.",
+      "saisie": "Nombre, € fixé",
+      "acceptation": "80.",
+      "aide1": "Barre :64 € correspond à80 %, pas à100 %.",
+      "aide2": "80 % =4parts de20 %. Une part :64÷4 =16 €.",
+      "correction": "100 % =5parts :5×16 =80 €.",
+      "controles": "Refuser76,8 ; calculinverse divisionpar0,8.",
+      "identifiant": "PF05-c",
+      "ancienId": "PF05-C",
+      "ancienIdGenerateur": "PF05-3",
+      "indiceGenerateur": 2,
+      "nom": "Valeur initiale après réduction",
+      "niveauDescription": "3e",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "€"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Valeur initiale après hausse",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Après une hausse de 25 %, le prix est 100 €. Quel était le prix avant hausse ?",
+      "reponse": "80 €",
+      "donnees": "Initialmultiple4 ; hausse25/50/20 ; total représentable en parts.",
+      "saisie": "Nombre",
+      "acceptation": "80.",
+      "aide1": "125 % se représentent par5quarts ; ces5parts valent100 €.",
+      "aide2": "Un quart vaut20 € ; le prix initial représente4quarts.",
+      "correction": "4 × 20 = 80 €.",
+      "controles": "Refuser75 ; nouvellevaleur ne sert pas base au tauxinverse.",
+      "identifiant": "PF05-d",
+      "ancienId": "PF05-D",
+      "ancienIdGenerateur": "PF05-4",
+      "indiceGenerateur": 3,
+      "nom": "Valeur initiale après hausse",
+      "niveauDescription": "3e",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "€"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

@@ -1,0 +1,298 @@
+{
+  "id": "EG10",
+  "titre": "Pythagore",
+  "categorie": "Géométrie et repérage",
+  "objectif": "Reconnaître l’égalité adaptée, calculer un côté et déterminer si un triangle est rectangle.",
+  "prerequis": "Carrés parfaits, racine carrée, addition/soustraction ; angle droit ; côté opposé.",
+  "perimetre": "DNB2027 : toutes les variantes. Les calculs sont exacts et courts sans calculatrice.",
+  "cours": {
+    "regle": "Si ABC est rectangle en A, alors BC² = AB² + AC².",
+    "exemple": "ABC est rectangle en A, AB = 3 cm et AC = 4 cm : BC² = (3² + 4²) cm² = 25 cm². Donc BC = 5 cm. Les barres représentent les aires des carrés.",
+    "visuel": "Triangle 3–4–5 rectangle en A, carré de côté 3 marqué « aire 9 », de côté 4 « aire 16 », de côté 5 « aire 25 ». Barre d’aires 9 + 16 = 25 : légende « aires des carrés, pas longueurs des côtés ». Égalité BC² = AB² + AC² reliée aux trois carrés.",
+    "mouvement": "Option PythaBarre : passage des aires carrées à une barre de total 25 ; conservation des labels aire 9,aire 16,aire 25. Statique : carrés et barre côte à côte."
+  },
+  "erreurs": [
+    "Choisir l’hypoténuse par sa position.",
+    "Additionner les longueurs au lieu des carrés.",
+    "Oublier la racine carrée.",
+    "Confondre théorème et réciproque.",
+    "Accepter un triangle impossible avant même le test."
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 4 — 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "p. 14–15 — Triangles",
+      "apport": "Pythagore, réciproque et contraposée ; égalité automatique en 3e.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples pour la mise en œuvre des programmes de mathématiques — cycle 4",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "PDF p. 29 — Triangles",
+      "apport": "Calcul de côté et décision rectangle/non rectangle.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Liste indicative d’automatismes pour le DNB",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/liste-indicative-dautomatismes-pour-le-dnbpdf-116340.pdf",
+      "repere": "p. 2 — Espace et géométrie",
+      "apport": "Identifier les conditions d’utilisation du théorème.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Programme du cycle 4 — BO du 30 juillet 2020",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/programme-d-enseignement-du-cycle-4-67722.pdf",
+      "repere": "p. 136 — Géométrie plane",
+      "apport": "Théorème de Pythagore et réciproque au DNB2027.",
+      "statut": "prescription"
+    }
+  ],
+  "limites": "Les réciproques restent des mini-raisonnements guidés à une comparaison. Les carrés dans le visuel portent des aires ; aucune barre 3 + 4 = 5. Les calculs avec radicaux restent exacts.",
+  "acces_secondaires": ["Nombres et calculs", "Grandeurs et mesures"],
+  "atlas": "cours/08.svg",
+  "atlasAlt": "Triangle rectangle côtés3,4,5. Carrés extérieurs d’aires9,16,25.",
+  "nom": "Pythagore",
+  "domaine": "espace-geometrie",
+  "sousDomaine": "Géométrie et repérage",
+  "niveaux": ["4e", "3e"],
+  "niveauxDescription": "4e : apprentissage et premières automatisations ; 3e : écriture de l’égalité explicitement automatique, entretien des applications simples.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_24", "dnb_24b"],
+    "questions": []
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Écrire l’égalité de Pythagore.",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "ABC est rectangle en B. Complète : …² = …² + …².",
+      "reponse": "AC² = AB² + BC²",
+      "donnees": "Triangle rectangle non dégénéré ; choisir sommet droit parmi A,B,C ; figure tournée ; longueurs non nécessaires.",
+      "saisie": "Trois sélecteurs de côtés avec exposants² fixes.",
+      "acceptation": "AC en premier ; AB et BC dans n’importe quel ordre ensuite. CA,BA,CB équivalents.",
+      "aide1": "« L’hypoténuse est en face de l’angle droit. » Surligner le carré droit en B puis le côté opposé.",
+      "aide2": "« Son carré est seul d’un côté de l’égalité. » Encadrer la première case ; relier les deux autres cases aux côtés de l’angle droit.",
+      "correction": "AC est l’hypoténuse, donc AC² = AB² + BC².",
+      "controles": [
+        "Accepter AC² = BC² + AB².",
+        "Refuser AB² = AC² + BC² ; ne pas détecter l’hypoténuse par orientation du dessin."
+      ],
+      "identifiant": "EG10-a",
+      "ancienId": "EG10-V1",
+      "ancienIdGenerateur": "EG10-V1",
+      "indiceGenerateur": 0,
+      "nom": "Écrire l’égalité de Pythagore.",
+      "niveauDescription": "4e apprentissage ; 3e automatisme",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Calculer une hypoténuse entière.",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "ABC est rectangle en A. AB = 6 cm, AC = 8 cm. Calcule BC.",
+      "reponse": "10 cm",
+      "donnees": "Triplets pythagoriciens simples (3,4,5),(5,12,13),(8,15,17) ou multiples petits ; privilégier carrés≤225. Exemple coordonnéesA(0,0),B(6,0),C(0,8).",
+      "saisie": "Champ numérique avec cm fixe.",
+      "acceptation": "10 ;10 cm.",
+      "aide1": "« Cherche le côté opposé à l’angle droit. » Mettre BC en évidence et les carrés construits sur AB et AC.",
+      "aide2": "« BC² = AB² + AC². » Calculer 6² + 8² puis relier le résultat à l’aire du grand carré, en cm².",
+      "correction": "BC² = 36 cm² + 64 cm² = 100 cm² ; BC = 10 cm.",
+      "controles": [
+        "Refuser 100 cm et 14 cm.",
+        "La réponse doit être positive et supérieure à chacun des deux côtés connus."
+      ],
+      "identifiant": "EG10-b",
+      "ancienId": "EG10-V2",
+      "ancienIdGenerateur": "EG10-V2",
+      "indiceGenerateur": 1,
+      "nom": "Calculer une hypoténuse entière.",
+      "niveauDescription": "4e ; entretien 3e",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "BC",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Calculer un côté de l’angle droit.",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "ABC est rectangle en A. BC = 13 cm et AB = 5 cm. Calcule AC.",
+      "reponse": "12 cm",
+      "donnees": "Triplet(5,12,13), hypotenuse strictement plus grande ; masquer un petit côté. Générer depuis triplets vérifiés, jamais choisir indépendamment deux longueurs contradictoires.",
+      "saisie": "Champ numérique avec cm fixe.",
+      "acceptation": "12 ;12 cm.",
+      "aide1": "« Le grand carré a pour côté l’hypoténuse 13. » Mettre BC et sa place dans l’égalité en évidence.",
+      "aide2": "« AC² = BC² − AB². » Barre d’aire totale 169 cm², part connue 25 cm², part inconnue.",
+      "correction": "AC² = 169 cm² − 25 cm² = 144 cm² ; AC = 12 cm.",
+      "controles": [
+        "Refuser√194 ou 194, issus d’une addition.",
+        "Vérifier résultat carré positif et plus petit que 13."
+      ],
+      "identifiant": "EG10-c",
+      "ancienId": "EG10-V3",
+      "ancienIdGenerateur": "EG10-V3",
+      "indiceGenerateur": 2,
+      "nom": "Calculer un côté de l’angle droit.",
+      "niveauDescription": "4e ; entretien 3e",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "AC",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Reconnaître un triangle rectangle par réciproque.",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Un triangle a pour côtés 5 cm,12 cm et 13 cm. Est-il rectangle ?",
+      "reponse": "Oui",
+      "donnees": "Triples de longueurs positives satisfaisant l’inégalité triangulaire ; cas rectangle issu d’un triplet. Pas de codage droit donné ; comparer au plus grand côté.",
+      "saisie": "Oui/non puis choix facultatif de l’égalité justificative.",
+      "acceptation": "Oui ; justification 13² = 5² + 12².",
+      "aide1": "« Commence par le plus grand côté. » Entourer 13 puis les deux autres longueurs.",
+      "aide2": "« Compare 13² et 5² + 12². » Deux cases de calcul côte à côte, sans signe relationnel rempli.",
+      "correction": "13² = 169 et 5² + 12² = 169 : par la réciproque de Pythagore, le triangle est rectangle.",
+      "controles": [
+        "Refuser comparaison 12² avec 5² + 13².",
+        "Quand les côtés sont présentés dans un ordre différent, conserver la même conclusion."
+      ],
+      "identifiant": "EG10-d",
+      "ancienId": "EG10-V4",
+      "ancienIdGenerateur": "EG10-V4",
+      "indiceGenerateur": 3,
+      "nom": "Reconnaître un triangle rectangle par réciproque.",
+      "niveauDescription": "4e ; entretien 3e",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Écarter un triangle non rectangle.",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Un triangle a pour côtés 4 cm,5 cm et 6 cm. Est-il rectangle ?",
+      "reponse": "Non",
+      "donnees": "Triples entiers de 2 à 12, inégalité triangulaire stricte, plus grand côté unique ; filtrer c² ≠ a² + b². Exemple 4 + 5>6.",
+      "saisie": "Oui/non avec comparaison proposée en correction.",
+      "acceptation": "Non ;36 ≠ 41.",
+      "aide1": "« Le plus grand côté mesure 6. » Surligner 6 ; rappeler que le carré seul doit être celui du plus grand côté.",
+      "aide2": "« Compare 6² et 4² + 5². » Afficher les deux calculs sans en tirer immédiatement la conclusion.",
+      "correction": "6² = 36 ;4² + 5² = 41 ; les nombres diffèrent : le triangle n’est pas rectangle.",
+      "controles": [
+        "Ne pas générer de triangle impossible comme 2,3,6.",
+        "Le mot « contraposée » est présenté en correction nouveauprogramme, sans exiger sa saisie."
+      ],
+      "identifiant": "EG10-e",
+      "ancienId": "EG10-V5",
+      "ancienIdGenerateur": "EG10-V5",
+      "indiceGenerateur": 4,
+      "nom": "Écarter un triangle non rectangle.",
+      "niveauDescription": "4e ; entretien 3e",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "f",
+      "objectif": "Donner une longueur exacte sous forme de racine.",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "ABC est rectangle en A, AB = 1 cm et AC = 2 cm. Donne BC sous forme exacte.",
+      "reponse": "√5 cm",
+      "donnees": "Somme des carrés non carrée, résultat n petit≤50 ; pas de simplification de radical complexe exigée. Exemple 1² + 2² = 5. Angles/longueurs de la figure construits exactement.",
+      "saisie": "Champ sous radical fixe : √[ ] cm ; option réponse entière si radicande carré dans autre tirage.",
+      "acceptation": "√5 ; ne pas accepter 2,24 comme réponse exacte. Radicande 5 dans le champ prévu.",
+      "aide1": "« Tu peux garder une racine carrée pour une valeur exacte. » Mettre en évidence le champ√[ ].",
+      "aide2": "« BC² = AB² + AC². » Montrer les deux aires 1 cm² et 4 cm² à additionner, puis BC = √5 cm.",
+      "correction": "BC² = 5 cm², donc BC = √5 cm.",
+      "controles": [
+        "Refuser 5 et±√5 : une longueur est positive.",
+        "Sans champ radical adapté, désactiver cette variante ; aucune approximation calculatrice requise."
+      ],
+      "identifiant": "EG10-f",
+      "ancienId": "EG10-V6",
+      "ancienIdGenerateur": "EG10-V6",
+      "indiceGenerateur": 5,
+      "nom": "Donner une longueur exacte sous forme de racine.",
+      "niveauDescription": "4e après racines ; entretien 3e",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "BC",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

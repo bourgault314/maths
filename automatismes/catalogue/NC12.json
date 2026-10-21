@@ -1,0 +1,469 @@
+{
+  "id": "NC12",
+  "titre": "Produits, inverses et quotients de fractions",
+  "categorie": "Nombres et calculs",
+  "objectif": "Multiplier des fractions, construire un inverse et interpréter la division comme multiplication par l’inverse.",
+  "prerequis": ["Sens de la fraction", "Parts égales d’une même unité", "Tables et quotient"],
+  "perimetre": "Couverture des prérequis et automatismes du collège. Le filtre DNB2027 utilise l’ancien programme du cycle 4 ; les niveaux indiqués suivent le nouveau programme. Le statut est précisé par variante.",
+  "cours": {
+    "regle": "Multiplie les numérateurs et les dénominateurs. Diviser par une fraction non nulle revient à multiplier par son inverse.",
+    "exemple": "2 × 1/7 = 2/7.",
+    "visuel": "Rectangle unité partagé horizontalement et verticalement ; l’intersection représente le produit des fractions.",
+    "mouvement": "Le schéma est entièrement compréhensible à l’arrêt. Une animation éventuelle révèle les étapes sans cacher les états précédents."
+  },
+  "erreurs": [
+    "Changer seulement un terme de la fraction",
+    "Additionner les dénominateurs",
+    "Perdre le signe ou l’unité"
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 3 (2025)",
+      "url": "https://www.education.gouv.fr/sites/default/files/ensel620_annexe2-v2.pdf",
+      "statut": "prescription",
+      "repere": "PDF p 15–16",
+      "apport": "Objectifs et progression officiels du programme ; niveau de classe vérifié."
+    },
+    {
+      "titre": "Exemples de mise en œuvre du programme de 6e (2025)",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/exemplesmiseenoeuvre6e-mathpdf-111549.pdf",
+      "statut": "appui pédagogique",
+      "repere": "PDF p 7–8, imprimées 6–7",
+      "apport": "Exemples officiels de mise en œuvre : progressivité, représentations et types de calculs."
+    },
+    {
+      "titre": "Programme de mathématiques du cycle 4 (2026)",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "statut": "prescription",
+      "repere": "PDF p 9–10",
+      "apport": "Objectifs et progression officiels du programme ; niveau de classe vérifié."
+    },
+    {
+      "titre": "Exemples de mise en œuvre du cycle 4 (2026)",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "statut": "appui pédagogique",
+      "repere": "PDF p 16–17, imprimées 15–16",
+      "apport": "Exemples officiels de mise en œuvre : progressivité, représentations et types de calculs."
+    },
+    {
+      "titre": "Mathsgo — produit de fractions par manipulation",
+      "url": "https://mathsgo.re/outils/fractions/fractions_produit_manipulation.html",
+      "repere": "HTML lu par l’agent de repérage ; interaction non testée",
+      "apport": "Deux partages perpendiculaires d’un rectangle unité ; intersection puis produit des numérateurs et dénominateurs.",
+      "statut": "inspiration visuelle"
+    },
+    {
+      "titre": "NCETM — Bar models",
+      "url": "https://www.ncetm.org.uk/media/8d84e791bafa491/ncetm_ks3_representations_bar_models.pdf",
+      "repere": "p.3,5,9,12 lues visuellement",
+      "apport": "Structures partie-tout et comparaison ; identifier explicitement le tout.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "Diviseur et nombre dont on cherche l’inverse non nuls ; parenthèses autour de chaque fraction pour le quotient.",
+  "implementation": {
+    "module": "app-automatismes/dist/modules/nombres.js",
+    "tests": "etape1/test_nombres.mjs",
+    "variantes": 7,
+    "graines_par_variante": 200,
+    "principe": "Aide 1 : représentation visuelle des données. Aide 2 : étape de calcul. Deux aides maximum.",
+    "aide1_visuelle": true
+  },
+  "atlas": "cours/04.svg",
+  "atlasAlt": "Rectangle unité3colonnes4lignes.2colonnes sont bleues ;3de leurs4lignes forment6cases sur12.",
+  "nom": "Produits, inverses et quotients de fractions",
+  "domaine": "nombres-calculs",
+  "sousDomaine": "Nombres et calculs",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6e : produit par un entier ; 4e : produits, inverses et quotients de fractions.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_03b", "dnb_04"],
+    "questions": [
+      {
+        "source": "A2608",
+        "question": "Q9",
+        "referenceAncienne": null,
+        "forme": "e",
+        "identifiant": "NC12-e",
+        "ancienId": "NC12-E",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Division de fractions",
+        "formatSource": "QCM",
+        "document": "Métropole-Antilles-Guyane, 10 septembre 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-09-10_Metropole_FB.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Multiplier une fraction par un entier",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Calcule 2 × 1/7.",
+      "reponse": "2/7",
+      "donnees": "Entier 2–5 fois fraction propre de dénominateur 2–9 ; plusieurs unités peuvent être nécessaires dans la bande.",
+      "saisie": "Réponse : numérateur et dénominateur",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Prends 2 fois 1/7.",
+      "aide2": "Multiplie le numérateur 1 par 2 ; garde 7.",
+      "correction": "2 × 1/7 = 2/7.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["2/7"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "2/7",
+          "kind": "fraction",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Rectangle à deux partages, facteurs regroupés ou arbre d’opérations. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Étape de calcul explicite.",
+      "identifiant": "NC12-a",
+      "ancienId": "NC12-a",
+      "ancienIdGenerateur": "NC12-A",
+      "indiceGenerateur": 0,
+      "nom": "Multiplier une fraction par un entier",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Produit de deux fractions",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Calcule 4/6 × 2/6.",
+      "reponse": "2/9",
+      "donnees": "Numérateurs 1–5 et dénominateurs 2–7 ; produit exact ; aucune division par zéro.",
+      "saisie": "Réponse : numérateur et dénominateur",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Les numérateurs se multiplient entre eux ; les dénominateurs aussi.",
+      "aide2": "Calcule (4 × 2) / (6 × 6).",
+      "correction": "4/6 × 2/6 = 2/9.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["2/9"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "2/9",
+          "kind": "fraction",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Rectangle à deux partages, facteurs regroupés ou arbre d’opérations. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC12-b",
+      "ancienId": "NC12-b",
+      "ancienIdGenerateur": "NC12-B",
+      "indiceGenerateur": 1,
+      "nom": "Produit de deux fractions",
+      "niveauDescription": "4e ; entretien dans les classes suivantes.",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Simplifier avant le produit",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Calcule 2/6 × 2/8.",
+      "reponse": "1/12",
+      "donnees": "Deux facteurs croisés communs sont construits ; simplification possible avant multiplication.",
+      "saisie": "Réponse : numérateur et dénominateur",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Cherche des facteurs communs avant de multiplier.",
+      "aide2": "Dans (2 × 2) / (6 × 8), simplifie les facteurs.",
+      "correction": "2/6 × 2/8 = 1/12.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["1/12"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "1/12",
+          "kind": "fraction",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Rectangle à deux partages, facteurs regroupés ou arbre d’opérations. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC12-c",
+      "ancienId": "NC12-c",
+      "ancienIdGenerateur": "NC12-C",
+      "indiceGenerateur": 2,
+      "nom": "Simplifier avant le produit",
+      "niveauDescription": "4e ; entretien dans les classes suivantes.",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Produire un inverse",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Quel est l’inverse de −3/2 ?",
+      "reponse": "-2/3",
+      "donnees": "Numérateur signé non nul de valeur absolue 1–9 ; dénominateur 2–9 ; produit avec l’inverse égal à 1.",
+      "saisie": "Réponse : numérateur et dénominateur",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Un nombre multiplié par son inverse donne 1.",
+      "aide2": "Échange numérateur et dénominateur, en gardant le signe.",
+      "correction": "L’inverse de −3/2 est −2/3.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["-2/3"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "-2/3",
+          "kind": "fraction",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Rectangle à deux partages, facteurs regroupés ou arbre d’opérations. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC12-d",
+      "ancienId": "NC12-d",
+      "ancienIdGenerateur": "NC12-D",
+      "indiceGenerateur": 3,
+      "nom": "Produire un inverse",
+      "niveauDescription": "4e ; entretien dans les classes suivantes.",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Diviser deux fractions",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Calcule (4/6) ÷ (2/6).",
+      "reponse": "2",
+      "donnees": "Deux fractions positives non nulles ; chaque fraction parenthésée autour du signe ÷.",
+      "saisie": "Réponse : numérateur et dénominateur",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Inverse seulement la fraction par laquelle tu divises.",
+      "aide2": "(4/6) ÷ (2/6) = 4/6 × 6/2.",
+      "correction": "(4/6) ÷ (2/6) = 2.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["2"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "2",
+          "kind": "fraction",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Rectangle à deux partages, facteurs regroupés ou arbre d’opérations. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC12-e",
+      "ancienId": "NC12-e",
+      "ancienIdGenerateur": "NC12-E",
+      "indiceGenerateur": 4,
+      "nom": "Diviser deux fractions",
+      "niveauDescription": "4e ; entretien dans les classes suivantes.",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2608",
+          "question": "Q9",
+          "referenceAncienne": null,
+          "forme": "e",
+          "identifiant": "NC12-e",
+          "ancienId": "NC12-E",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Division de fractions",
+          "formatSource": "QCM",
+          "document": "Métropole-Antilles-Guyane, 10 septembre 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-09-10_Metropole_FB.pdf"
+        }
+      ]
+    },
+    {
+      "id": "f",
+      "objectif": "Fraction d’une fraction par un rectangle",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Quelle fraction représente 1/2 de 1/2 de l’unité ?",
+      "reponse": "1/4",
+      "donnees": "Deux fractions propres, dénominateurs 2–5 ; rectangle unité partagé selon les deux directions.",
+      "saisie": "Réponse : numérateur et dénominateur",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "La partie commune reçoit les deux partages.",
+      "aide2": "Compte 1 cases communes parmi 4 cases : le produit vaut (1 × 1) / (2 × 2).",
+      "correction": "1/2 × 1/2 = 1/4.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["1/4"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "1/4",
+          "kind": "fraction",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Rectangle à deux partages, facteurs regroupés ou arbre d’opérations. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Étape de calcul explicite.",
+      "identifiant": "NC12-f",
+      "ancienId": "NC12-f",
+      "ancienIdGenerateur": "NC12-F",
+      "indiceGenerateur": 5,
+      "nom": "Fraction d’une fraction par un rectangle",
+      "niveauDescription": "4e ; entretien dans les classes suivantes.",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "g",
+      "objectif": "Produit prioritaire dans une somme de fractions",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Calcule 1/5 + 1/3 × 3/5.",
+      "reponse": "2/5",
+      "donnees": "Un produit de fractions se simplifie à 1/d ; addition à une autre fraction 1/d, d entre 2 et 6.",
+      "saisie": "Réponse : numérateur et dénominateur",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Le produit est prioritaire sur la somme.",
+      "aide2": "1/3 × 3/5 = 1/5 ; il reste 1/5 + 1/5.",
+      "correction": "1/5 + 1/3 × 3/5 = 2/5.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["2/5"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "2/5",
+          "kind": "fraction",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Rectangle à deux partages, facteurs regroupés ou arbre d’opérations. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC12-g",
+      "ancienId": "NC12-g",
+      "ancienIdGenerateur": "NC12-G",
+      "indiceGenerateur": 6,
+      "nom": "Produit prioritaire dans une somme de fractions",
+      "niveauDescription": "4e ; entretien dans les classes suivantes.",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

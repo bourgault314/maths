@@ -1,0 +1,341 @@
+{
+  "id": "NC19",
+  "titre": "Traduire en calcul littéral",
+  "categorie": "Calcul littéral et équations",
+  "objectif": "Passer d’une relation exprimée en mots ou en schéma à une expression.",
+  "prerequis": ["Sens des opérations", "Périmètre", "Notion de variable"],
+  "perimetre": "DNB2027 : variantes simples conformes à l’ancien cycle 4 ; niveaux du parcours collège selon le programme 2026.",
+  "cours": {
+    "regle": "Une lettre représente un nombre. Garde l’ordre des opérations indiqué par la phrase.",
+    "exemple": "Le triple de n augmenté de 2 : 3n + 2.",
+    "visuel": "Deux cartes reliées : « n » → « × 3 » → « + 2 » ; sous chaque flèche, le fragment correspondant de 3n + 2. Pas de personnage décoratif.",
+    "mouvement": "Révélation facultative des étapes ; version statique avec les deux flèches numérotées."
+  },
+  "erreurs": [
+    "Confondre double et carré",
+    "Oublier les parenthèses",
+    "Traiter une lettre comme un chiffre ou une unité"
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 4,2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "PDF p.8–11",
+      "apport": "Niveaux et objectifs du calcul littéral ; introduction distincte de l’entretien.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples pour la mise en œuvre des programmes de mathématiques — cycle 4",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "p.13 et 18 imprimées",
+      "apport": "Verbalisation avant la lettre, variation des lettres, formules géométriques et pair/impair.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Programme du cycle 4,2020",
+      "url": "https://cache.media.education.gouv.fr/file/31/89/1/ensel714_annexe3_1312891.pdf",
+      "repere": "PDF p.131–132, calcul littéral",
+      "apport": "Périmètre mathématique utilisé par le filtre DNB2027.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Contrat de conception Matégo",
+      "url": null,
+      "repere": "Étape 1, NC19–NC31",
+      "apport": "Exemples originaux, bornes des générateurs, interfaces et aides proposées ; choix éditoriaux à valider par prototype.",
+      "statut": "choix de conception"
+    }
+  ],
+  "limites": [
+    "Ne pas imposer une lettre formelle en 6e : utiliser NC31.",
+    "Le gabarit coefficient×x ne doit pas révéler la structure lorsque la traduction est évaluée."
+  ],
+  "acces_secondaires": ["Grandeurs et mesures", "Nombres et calculs"],
+  "nom": "Traduire en calcul littéral",
+  "domaine": "nombres-calculs",
+  "sousDomaine": "Calcul littéral et équations",
+  "niveaux": ["5e", "4e", "3e"],
+  "niveauxDescription": "5e : premières formules et conventions ; 4e : entretien des traductions usuelles et écriture pair/impair ; 3e : entretien explicite de pair/impair.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_09"],
+    "questions": [
+      {
+        "source": "A2605",
+        "question": "Q5",
+        "referenceAncienne": "AG 5",
+        "forme": "b",
+        "identifiant": "NC19-b",
+        "ancienId": "NC19-V2",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Expression de la moitié d’un entier",
+        "formatSource": "QCM",
+        "document": "Antilles-Guyane, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Antilles-Guyane_DV-v2.pdf"
+      },
+      {
+        "source": "A2607",
+        "question": "Q9",
+        "referenceAncienne": null,
+        "forme": "d",
+        "identifiant": "NC19-d",
+        "ancienId": "NC19-V4",
+        "support": "adaptation",
+        "difference": "Périmètre littéral du rectangle proposé : même somme de longueurs que le polygone de la source ; le modèle exact de polygone peut différer.",
+        "savoirFaire": "Périmètre littéral d’un polygone",
+        "formatSource": "QCM",
+        "document": "Polynésie, 7 septembre 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-09-07_polynesie-FB.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Distinguer multiplication et ajout",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Écris en fonction de n : le nombre n multiplié par 2, puis augmenté de 5.",
+      "reponse": "2n + 5",
+      "donnees": "Lettre parmi n,x,t ; multiplicateur 2 à 5 ; ajout entier 1 à 9 ; phrase non ambiguë.",
+      "saisie": "Expression courte avec touches lettre, chiffres, +, −, ×, /, parenthèses et carré ; coefficients séparés seulement en entraînement guidé.",
+      "acceptation": "Comparer exactement les expressions sur le domaine annoncé ; ne pas utiliser quelques essais numériques comme preuve. Normaliser × implicite, espaces, ² et ^2. Toute forme équivalente admise, dont 5+2n.",
+      "aide1": {
+        "texte": "Le double correspond à deux fois le même nombre.",
+        "visuel": "Machine : lettre → multiplication → ajout ; ordre explicite de la phrase."
+      },
+      "aide2": {
+        "texte": "Écris d’abord le double, puis ajoute 5.",
+        "visuel": "Afficher 2 × n puis une flèche + 5, sans réunir l’expression finale."
+      },
+      "correction": "Deux fois n donne 2n ; on ajoute 5 : 2n + 5.",
+      "controles": ["Accepter 2*n+5 et 5+n+n ; refuser 2(n+5), n+10 et 2n 5."],
+      "identifiant": "NC19-a",
+      "ancienId": "NC19-V1",
+      "ancienIdGenerateur": "NC19-V1",
+      "indiceGenerateur": 0,
+      "nom": "Distinguer multiplication et ajout",
+      "niveauDescription": "5e introduction ; 4e–3e entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "expression",
+      "champs": [
+        {
+          "type": "expression",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Traduire une moitié avec une fraction",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Écris la moitié de n.",
+      "reponse": "n/2",
+      "donnees": "Lettre unique ; moitié, tiers ou quart ; diviseur 2,3 ou 4 non nul.",
+      "saisie": "Expression courte avec touches lettre, chiffres, +, −, ×, /, parenthèses et carré ; coefficients séparés seulement en entraînement guidé.",
+      "acceptation": "Comparer exactement les expressions sur le domaine annoncé ; ne pas utiliser quelques essais numériques comme preuve. Normaliser × implicite, espaces, ² et ^2. Accepter n÷2, 0,5n et fraction n/2 ; aucune valeur particulière de n imposée.",
+      "aide1": {
+        "texte": "La moitié partage le nombre en deux parts égales.",
+        "visuel": "Bande entière n découpée en deux parts, une part accentuée."
+      },
+      "aide2": {
+        "texte": "Quelle opération partage n en deux ?",
+        "visuel": "Sous la bande afficher « n ÷ □ », case non remplie."
+      },
+      "correction": "La moitié de n s’écrit n/2.",
+      "controles": [
+        "Accepter n/2 ; refuser 2/n et n−2 ; ne pas proposer 0,333n comme tiers exact."
+      ],
+      "identifiant": "NC19-b",
+      "ancienId": "NC19-V2",
+      "ancienIdGenerateur": "NC19-V2",
+      "indiceGenerateur": 1,
+      "nom": "Traduire une moitié avec une fraction",
+      "niveauDescription": "5e introduction ; 4e–3e entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "expression",
+      "champs": [
+        {
+          "type": "expression",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2605",
+          "question": "Q5",
+          "referenceAncienne": "AG 5",
+          "forme": "b",
+          "identifiant": "NC19-b",
+          "ancienId": "NC19-V2",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Expression de la moitié d’un entier",
+          "formatSource": "QCM",
+          "document": "Antilles-Guyane, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Antilles-Guyane_DV-v2.pdf"
+        }
+      ]
+    },
+    {
+      "id": "c",
+      "objectif": "Respecter les parenthèses dans une traduction",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Écris le carré de la somme de x et 3.",
+      "reponse": "(x + 3)²",
+      "donnees": "Décalage entier 1 à 6 ; x réel ; consigne explicite « carré de la somme ».",
+      "saisie": "Expression courte avec touches lettre, chiffres, +, −, ×, /, parenthèses et carré ; coefficients séparés seulement en entraînement guidé.",
+      "acceptation": "Comparer exactement les expressions sur le domaine annoncé ; ne pas utiliser quelques essais numériques comme preuve. Normaliser × implicite, espaces, ² et ^2. Accepter (x+3)(x+3) ; une forme développée équivalente est recevable mais non demandée en 5e.",
+      "aide1": {
+        "texte": "Calcule d’abord la somme.",
+        "visuel": "Encadrer les mots « somme de x et 3 » comme un seul bloc."
+      },
+      "aide2": {
+        "texte": "C’est tout le bloc x + 3 qui est multiplié par lui-même.",
+        "visuel": "Deux blocs identiques x + 3 reliés par × ; exposant non encore rempli."
+      },
+      "correction": "Le carré porte sur la somme entière : (x + 3)².",
+      "controles": [
+        "Refuser x²+3 et x²+9 ; accepter(x+3)^2 ; varier avec « somme du carré de x et 3 », réponsex²+3."
+      ],
+      "identifiant": "NC19-c",
+      "ancienId": "NC19-V3",
+      "ancienIdGenerateur": "NC19-V3",
+      "indiceGenerateur": 2,
+      "nom": "Respecter les parenthèses dans une traduction",
+      "niveauDescription": "5e après carré et conventions ; 4e–3e entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "expression",
+      "champs": [
+        {
+          "type": "expression",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Produire une formule de périmètre",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Un rectangle a pour longueur x cm et pour largeur 3 cm. Exprime son périmètre en cm.",
+      "reponse": "2x + 6",
+      "donnees": "x>0 ; largeur entière 2 à 8 ; figure non à l’échelle avec longueurs opposées codées.",
+      "saisie": "Expression courte avec touches lettre, chiffres, +, −, ×, /, parenthèses et carré ; coefficients séparés seulement en entraînement guidé.",
+      "acceptation": "Comparer exactement les expressions sur le domaine annoncé ; ne pas utiliser quelques essais numériques comme preuve. Normaliser × implicite, espaces, ² et ^2. Accepter 2(x+3), x+3+x+3, 2x+6 ; unité cm affichée hors saisie.",
+      "aide1": {
+        "texte": "Additionne les quatre côtés ; les côtés opposés ont la même longueur.",
+        "visuel": "Rectangle avec les quatre longueurs, côtés opposés de même couleur ; schéma non à l’échelle."
+      },
+      "aide2": {
+        "texte": "Il y a deux côtés de longueur x et deux de longueur 3.",
+        "visuel": "Écriture de la somme ou du produit attendu ; aucune flèche de procédure entre deux termes ou facteurs sans opération."
+      },
+      "correction": "P = x + 3 + x + 3 = 2x + 6 cm.",
+      "controles": [
+        "Refuser 3x, x+3 et 2x+3 ; ne pas mesurer le dessin ; vérifier que x représente une longueur positive."
+      ],
+      "identifiant": "NC19-d",
+      "ancienId": "NC19-V4",
+      "ancienIdGenerateur": "NC19-V4",
+      "indiceGenerateur": 3,
+      "nom": "Produire une formule de périmètre",
+      "niveauDescription": "5e introduction ; 4e–3e entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "expression",
+      "champs": [
+        {
+          "type": "expression",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2607",
+          "question": "Q9",
+          "referenceAncienne": null,
+          "forme": "d",
+          "identifiant": "NC19-d",
+          "ancienId": "NC19-V4",
+          "support": "adaptation",
+          "difference": "Périmètre littéral du rectangle proposé : même somme de longueurs que le polygone de la source ; le modèle exact de polygone peut différer.",
+          "savoirFaire": "Périmètre littéral d’un polygone",
+          "formatSource": "QCM",
+          "document": "Polynésie, 7 septembre 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-09-07_polynesie-FB.pdf"
+        }
+      ]
+    },
+    {
+      "id": "e",
+      "objectif": "Exprimer pair et impair",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "n est un entier. Écris le nombre impair qui suit immédiatement 2n.",
+      "reponse": "2n + 1",
+      "donnees": "n entier ; paire 2n/impair suivant ; variante pair précédant 2n+1 ; ne pas demander tous les impairs sans fixer n.",
+      "saisie": "Expression courte avec touches lettre, chiffres, +, −, ×, /, parenthèses et carré ; coefficients séparés seulement en entraînement guidé.",
+      "acceptation": "Comparer exactement les expressions sur le domaine annoncé ; ne pas utiliser quelques essais numériques comme preuve. Normaliser × implicite, espaces, ² et ^2. Exiger le même n, expressions équivalentes admises.",
+      "aide1": {
+        "texte": "Le nombre suivant s’obtient en ajoutant 1.",
+        "visuel": "Droite graduée : point 2n, puis graduation immédiatement à droite avec case vide."
+      },
+      "aide2": {
+        "texte": "Pars de 2n et avance d’une unité.",
+        "visuel": "Flèche + 1 depuis 2n ; ne pas écrire l’expression au bout."
+      },
+      "correction": "Le suivant de 2n est 2n + 1.",
+      "controles": [
+        "Refuser 2(n+1) ; vérifier n=0 donne 1 et n=−2 donne−3 ; ne pas définir « impair » comme nécessairement positif."
+      ],
+      "identifiant": "NC19-e",
+      "ancienId": "NC19-V5",
+      "ancienIdGenerateur": "NC19-V5",
+      "indiceGenerateur": 4,
+      "nom": "Exprimer pair et impair",
+      "niveauDescription": "4e introduction explicite ; 3e automatisme",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "expression",
+      "champs": [
+        {
+          "type": "expression",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

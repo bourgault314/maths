@@ -1,0 +1,244 @@
+{
+  "id": "PF11",
+  "titre": "Lire une égalité ou un seuil sur un graphique",
+  "categorie": "Fonctions et graphiques",
+  "objectif": "Repérer une intersection ou une plage de valeurs.",
+  "prerequis": "EG01/EG02, durées, lecture courbe.",
+  "perimetre": "DNB2027 et apprentissages collège ; variantes filtrées par niveau.",
+  "cours": {
+    "regle": "Pour une valeur donnée, lis les abscisses des points de la courbe. Pour une durée, mesure les intervalles de temps.",
+    "exemple": "Au-dessus de20°C entre2h et5h : durée5−2=3h.",
+    "visuel": "Seuilhorizontal enpointillés; intersectionsrepérées; portionau-dessus épaissie; projection suraxetemps.",
+    "mouvement": "Passerdu seuilàlacourbepuisauxintervalles ; pauseàchaqueétape."
+  },
+  "erreurs": [
+    "Confondre instant et durée.",
+    "Garder seulement première intersection.",
+    "Soustraire extrêmes malgré plusieurs intervalles."
+  ],
+  "sources": [
+    {
+      "titre": "Éduscol — Exemples cycle 4, 2026",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "PDF p40–46, Proportionnalité et fonctions",
+      "apport": "Progression des contextes, représentations et procédures ; les schémas et exemples ci-dessous sont nos choix de conception.",
+      "statut": "appui pédagogique"
+    }
+  ],
+  "limites": "DansPF11-D, rendu final doit préciser temps en heures et valeur en°C ; le squelette de points n’est pas à afficher comme liste brute.",
+  "acces_secondaires": [],
+  "nom": "Lire une égalité ou un seuil sur un graphique",
+  "domaine": "proportionnalite-fonctions",
+  "sousDomaine": "Fonctions et graphiques",
+  "niveaux": ["5e", "4e", "3e"],
+  "niveauxDescription": "5e : lecture concrète d’un graphique ; 3e : équations/inégalités graphiques et plusieurs intervalles.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": [],
+    "questions": [
+      {
+        "source": "A2603",
+        "question": "Q9",
+        "referenceAncienne": "G1 9",
+        "forme": "d",
+        "identifiant": "PF11-d",
+        "ancienId": "PF11-4",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Durée au-dessus d’un seuil sur un graphique",
+        "formatSource": "QCM",
+        "document": "Centres étrangers, 18 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-18_Centres-etrangers_DV-v3.pdf"
+      },
+      {
+        "source": "A2608",
+        "question": "Q6",
+        "referenceAncienne": null,
+        "forme": "a",
+        "identifiant": "PF11-a",
+        "ancienId": "PF11-1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Lecture du franchissement d’un seuil sur un graphique",
+        "formatSource": "Saisie",
+        "document": "Métropole-Antilles-Guyane, 10 septembre 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-09-10_Metropole_FB.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Lire une égalité",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Courbe température : points(0h;10°C),(2h;20°C),(4h;10°C), reliés parsegments. À quelle heure atteint-elle20°C ?",
+      "reponse": "2 h",
+      "donnees": "Sommetuniqueexact ; tempsentiers0–12 ; courbefonctionnelle ; domainefermé.",
+      "saisie": "Nombre, h fixé",
+      "acceptation": "2.",
+      "aide1": "Tracerl’horizontalepassantpar20°C.",
+      "aide2": "Du pointderencontre, descendre versaxedesheures.",
+      "correction": "La température atteint20°C à2h.",
+      "controles": "Pas20heures ; aucuneinterpolationambigüe.",
+      "identifiant": "PF11-a",
+      "ancienId": "PF11-A",
+      "ancienIdGenerateur": "PF11-1",
+      "indiceGenerateur": 0,
+      "nom": "Lire une égalité",
+      "niveauDescription": "5e",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "h"
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2608",
+          "question": "Q6",
+          "referenceAncienne": null,
+          "forme": "a",
+          "identifiant": "PF11-a",
+          "ancienId": "PF11-1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Lecture du franchissement d’un seuil sur un graphique",
+          "formatSource": "Saisie",
+          "document": "Métropole-Antilles-Guyane, 10 septembre 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-09-10_Metropole_FB.pdf"
+        }
+      ]
+    },
+    {
+      "id": "b",
+      "objectif": "Plusieurs antécédents graphiques",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Courbe passantpar(−2;4),(0;0),(2;4), segmentsdroits. Résoudre graphiquement f(x)=2.",
+      "reponse": "−1 ; 1",
+      "donnees": "Polylignesàintersectionsrationnellessimples ; graduationsdemi-unités siutile.",
+      "saisie": "Liste de nombres",
+      "acceptation": "Ensemble{−1,1}.",
+      "aide1": "Tracerhorizontale y=2 ; deuxrencontres.",
+      "aide2": "Descendre desdeuxpoints versaxex.",
+      "correction": "x=−1 oux=1.",
+      "controles": "Refuserune seule ; vérifiergéométrie exacte dessegments.",
+      "identifiant": "PF11-b",
+      "ancienId": "PF11-B",
+      "ancienIdGenerateur": "PF11-2",
+      "indiceGenerateur": 1,
+      "nom": "Plusieurs antécédents graphiques",
+      "niveauDescription": "3e",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "ensemble",
+      "champs": [
+        {
+          "type": "texte-court",
+          "libelle": "Solutions séparées par ;",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Durée sur un intervalle",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Température : points(0h;10°C),(2h;20°C),(5h;20°C),(7h;10°C), reliés. Pendant combien de temps est-elle au moins20°C ?",
+      "reponse": "3 h",
+      "donnees": "Plateauaulieud’arrondis ; borneincluses, tempsentiers.",
+      "saisie": "Nombre, h fixé",
+      "acceptation": "3.",
+      "aide1": "Épaissirlaportionduplateau entre2het5h.",
+      "aide2": "Suraxetemps, comparerheurefinetdébut :5−2.",
+      "correction": "3h.",
+      "controles": "Refuser5h, heuredefin ; segmentplateaunonoublié.",
+      "identifiant": "PF11-c",
+      "ancienId": "PF11-C",
+      "ancienIdGenerateur": "PF11-3",
+      "indiceGenerateur": 2,
+      "nom": "Durée sur un intervalle",
+      "niveauDescription": "5e",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "h"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Additionner plusieurs durées",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Courbe sur[0;8] : (0;10),(1;20),(2;30),(3;20),(4;10),(5;20),(6;30),(7;20),(8;10). Durée où la valeur est strictement supérieure à20 ?",
+      "reponse": "4 unités de temps",
+      "donnees": "Deuxbosses, croisementsauxtempsentiers ; axeetunitétempsnommés dansrendu.",
+      "saisie": "Nombre, h fixé dansversion horaire",
+      "acceptation": "4.",
+      "aide1": "Surlignerlesdeuxportionsau-dessusde20 ; projeter(1;3)et(5;7).",
+      "aide2": "Deuxdurées :3−1 et7−5.",
+      "correction": "2+2=4h pourunaxegraduéenheures.",
+      "controles": "Ne pas7−1 ; inégalitéstrictechangebornesmais paslongueurtotale.",
+      "identifiant": "PF11-d",
+      "ancienId": "PF11-D",
+      "ancienIdGenerateur": "PF11-4",
+      "indiceGenerateur": 3,
+      "nom": "Additionner plusieurs durées",
+      "niveauDescription": "3e",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "h"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2603",
+          "question": "Q9",
+          "referenceAncienne": "G1 9",
+          "forme": "d",
+          "identifiant": "PF11-d",
+          "ancienId": "PF11-4",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Durée au-dessus d’un seuil sur un graphique",
+          "formatSource": "QCM",
+          "document": "Centres étrangers, 18 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-18_Centres-etrangers_DV-v3.pdf"
+        }
+      ]
+    }
+  ]
+}

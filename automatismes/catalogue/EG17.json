@@ -1,0 +1,204 @@
+{
+  "id": "EG17",
+  "titre": "Vecteurs",
+  "categorie": "Géométrie et repérage",
+  "objectif": "Reconnaître des vecteurs égaux, opposés ou nuls et calculer une somme par enchaînement de déplacements.",
+  "prerequis": "Translation ; direction, sens et norme ; parallélogramme.",
+  "perimetre": "DNB 2027 désactivé : le calcul vectoriel nouveau n’est pas attendu dans l’ancien programme.",
+  "cours": {
+    "regle": "Des vecteurs égaux décrivent le même déplacement. L’opposé décrit le retour. Enchaîner A vers B puis B vers C donne A vers C : [vector:AB] + [vector:BC] = [vector:AC].",
+    "exemple": "Dans un parallélogramme ABCD, [vector:AB] = [vector:DC]. Un vecteur ajouté à son opposé donne [vector:AB] + [vector:BA] = [vector:0].",
+    "visuel": "Parallélogramme A(0;0), B(3;0), C(4;2), D(1;2), flèches AB et DC de même style. À côté : chemin A→B→C et flèche résultante A→C. Notation vectorielle distincte des longueurs.",
+    "mouvement": "Déplacement d’une copie de vecteur sans la tourner, pour la placer bout à bout. Version statique avec chaîne et résultante."
+  },
+  "erreurs": [
+    "Confondre [vector:AB] et [vector:BA].",
+    "Simplifier des lettres sans enchaînement.",
+    "Confondre vecteurs égaux et longueurs égales.",
+    "Exiger le même point de départ pour des vecteurs égaux."
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 4 — 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "p. 15–16 — Vecteurs",
+      "apport": "Égalité, opposé, vecteur nul, somme et Chasles en nouveau 3e.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples pour la mise en œuvre des programmes de mathématiques — cycle 4",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "PDF p. 32 — Vecteurs",
+      "apport": "Approche par translations, flèches et construction des sommes.",
+      "statut": "appui pédagogique"
+    }
+  ],
+  "limites": "Pas de produit scalaire, de colinéarité algébrique ni de calcul de norme par coordonnées. Aucune assimilation à une exigence DNB 2027.",
+  "acces_secondaires": [],
+  "nom": "Vecteurs",
+  "domaine": "espace-geometrie",
+  "sousDomaine": "Géométrie et repérage",
+  "niveaux": ["3e"],
+  "niveauxDescription": "Nouveau programme de 3e : apprentissage. Ces questions ne sont pas présentées comme des automatismes déjà acquis en début de 3e.",
+  "origine": "GPT",
+  "valide": false,
+  "brevet": {
+    "present": false,
+    "codesGrille": [],
+    "questions": []
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Reconnaître des vecteurs égaux.",
+      "niveau": "3e",
+      "dnb2027": false,
+      "enonce": "ABCD est un parallélogramme. Complète [vector:AB] = … .",
+      "reponse": "[vector:DC]",
+      "donnees": "A(0;0), B(3;0), C(4;2), D(1;2) dans l’ordre autour du quadrilatère ; candidats DC,CD,AD,BC.",
+      "saisie": "Deux lettres sous une flèche vectorielle fixe.",
+      "acceptation": "DC ; pas CD.",
+      "aide1": "« Compare direction, sens et longueur. » Montrer AB et les flèches du côté opposé.",
+      "aide2": "« Dans le même sens, la flèche du côté opposé part de D. » Marquer D.",
+      "correction": "[vector:AB] = [vector:DC].",
+      "controles": ["Refuser CD, de sens opposé.", "Ne pas confondre les ordres ABCD et ABDC."],
+      "identifiant": "EG17-a",
+      "ancienId": "EG17-V1",
+      "ancienIdGenerateur": "EG17-V1",
+      "indiceGenerateur": 0,
+      "nom": "Reconnaître des vecteurs égaux.",
+      "niveauDescription": "3e nouveau programme — apprentissage",
+      "niveaux": ["3e"],
+      "brevet": false,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": false,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Identifier le vecteur nul.",
+      "niveau": "3e",
+      "dnb2027": false,
+      "enonce": "Complète [vector:AB] + [vector:BA] = … .",
+      "reponse": "[vector:0]",
+      "donnees": "A distinct de B ; aller puis retour. Sous-type [vector:AA] = [vector:0] avec tout point A.",
+      "saisie": "Choix du vecteur nul ou deux lettres identiques.",
+      "acceptation": "[vector:0] ; [vector:AA] ou [vector:BB] si cette saisie est proposée.",
+      "aide1": "« Va de A à B puis reviens à A. » Montrer les deux flèches.",
+      "aide2": "« Le départ et l’arrivée sont le même point. » Afficher ce point avec les deux labels départ/arrivée.",
+      "correction": "[vector:AB] + [vector:BA] = [vector:0].",
+      "controles": ["Refuser 2[vector:AB].", "Un vecteur nul a une norme nulle."],
+      "identifiant": "EG17-b",
+      "ancienId": "EG17-V2",
+      "ancienIdGenerateur": "EG17-V2",
+      "indiceGenerateur": 1,
+      "nom": "Identifier le vecteur nul.",
+      "niveauDescription": "3e nouveau programme — apprentissage",
+      "niveaux": ["3e"],
+      "brevet": false,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": false,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Appliquer la relation de Chasles.",
+      "niveau": "3e",
+      "dnb2027": false,
+      "enonce": "Complète [vector:AB] + [vector:BC] = … .",
+      "reponse": "[vector:AC]",
+      "donnees": "A(0;0), B(3;0), C(4;2) ; extrémité du premier déplacement égale à l’origine du second ; cas alignés possibles.",
+      "saisie": "Deux lettres sous une flèche vectorielle.",
+      "acceptation": "AC ; pas CA.",
+      "aide1": "« La fin du premier trajet est le départ du second. » Encadrer les deux B.",
+      "aide2": "« Le trajet part de A et finit en C. » Tracer la résultante sans écrire son nom.",
+      "correction": "[vector:AB] + [vector:BC] = [vector:AC].",
+      "controles": [
+        "Refuser CA.",
+        "Le cas [vector:AB] + [vector:CB] ne doit pas être simplifié de la même façon."
+      ],
+      "identifiant": "EG17-c",
+      "ancienId": "EG17-V3",
+      "ancienIdGenerateur": "EG17-V3",
+      "indiceGenerateur": 2,
+      "nom": "Appliquer la relation de Chasles.",
+      "niveauDescription": "3e nouveau programme — apprentissage",
+      "niveaux": ["3e"],
+      "brevet": false,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": false,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Additionner des déplacements non consécutifs.",
+      "niveau": "3e",
+      "dnb2027": false,
+      "enonce": "[vector:AB] décrit 2 carreaux à droite. [vector:EF] décrit 1 carreau à droite et 2 en haut. Quel déplacement représente leur somme ?",
+      "reponse": "3 carreaux à droite et 2 en haut",
+      "donnees": "A(0;0), B(2;0), E(−2;−2), F(−1;0). Une copie de EF partant de B se termine en C(3;2).",
+      "saisie": "Deux nombres et directions ou choix de la flèche résultante.",
+      "acceptation": "3 à droite, 2 en haut.",
+      "aide1": "« Place une copie du second vecteur à la suite du premier. » Déplacer EF sans le tourner.",
+      "aide2": "« Additionne les déplacements horizontaux puis verticaux. » Montrer 2 + 1 à droite et 0 + 2 en haut.",
+      "correction": "La somme décrit 3 carreaux à droite et 2 en haut.",
+      "controles": [
+        "Refuser 3 à droite et 2 en bas.",
+        "La copie conserve direction, sens et norme."
+      ],
+      "identifiant": "EG17-d",
+      "ancienId": "EG17-V4",
+      "ancienIdGenerateur": "EG17-V4",
+      "indiceGenerateur": 3,
+      "nom": "Additionner des déplacements non consécutifs.",
+      "niveauDescription": "3e nouveau programme — apprentissage",
+      "niveaux": ["3e"],
+      "brevet": false,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Carreaux à droite",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "Carreaux en haut",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": false,
+      "referencesBrevet": []
+    }
+  ]
+}

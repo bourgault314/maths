@@ -1,0 +1,345 @@
+{
+  "id": "NC22",
+  "titre": "Développer par distributivité simple",
+  "categorie": "Calcul littéral et équations",
+  "objectif": "Multiplier chacun des termes d’un groupe par le facteur extérieur.",
+  "prerequis": ["Produits", "NC19", "Relatifs selon variante"],
+  "perimetre": "DNB2027 : variantes simples conformes à l’ancien cycle 4 ; niveaux du parcours collège selon le programme 2026.",
+  "cours": {
+    "regle": "Développer transforme un produit en somme : k(a + b) = ka + kb.",
+    "exemple": "3(x + 4) = 3x + 12.",
+    "visuel": "Rectangle partagé en deux bandes de largeurs x et 4, hauteur 3 ; aires 3x et 12. Pour les signes négatifs, utiliser des flèches symboliques, pas des longueurs négatives.",
+    "mouvement": "Les deux flèches partent du même facteur ; version statique avec chacune numérotée."
+  },
+  "erreurs": [
+    "Multiplier seulement le premier terme",
+    "Oublier un signe",
+    "Confondre produit et somme"
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 4,2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "PDF p.8–11",
+      "apport": "Niveaux et objectifs du calcul littéral ; introduction distincte de l’entretien.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples pour la mise en œuvre des programmes de mathématiques — cycle 4",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "p.13 et 18 imprimées",
+      "apport": "Aires de rectangles et distributivité dans les deux orientations ; rôle de−1.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Programme du cycle 4,2020",
+      "url": "https://cache.media.education.gouv.fr/file/31/89/1/ensel714_annexe3_1312891.pdf",
+      "repere": "PDF p.131–132, calcul littéral",
+      "apport": "Périmètre mathématique utilisé par le filtre DNB2027.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Contrat de conception Matégo",
+      "url": null,
+      "repere": "Étape 1, NC19–NC31",
+      "apport": "Exemples originaux, bornes des générateurs, interfaces et aides proposées ; choix éditoriaux à valider par prototype.",
+      "statut": "choix de conception"
+    },
+    {
+      "titre": "NCETM — Algebra tiles",
+      "url": "https://www.ncetm.org.uk/media/dj5o223w/ncetm_ks3_representations_algebra_tilespdf.pdf",
+      "repere": "p.3–4,9–14",
+      "apport": "Associer schéma et symboles ; limites des aires négatives.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": [
+    "Un dessin d’aire représente les cas positifs ; la règle symbolique s’applique aux réels.",
+    "Le guidage à coefficients préremplis reste un entraînement, pas un test autonome."
+  ],
+  "acces_secondaires": [],
+  "atlas": "cours/07.svg",
+  "atlasAlt": "Rectangle de hauteur3, coupé en largeurs xet2 ; ses aires sont3xet6.",
+  "nom": "Développer par distributivité simple",
+  "domaine": "nombres-calculs",
+  "sousDomaine": "Calcul littéral et équations",
+  "niveaux": ["5e", "4e", "3e"],
+  "niveauxDescription": "5e : facteur numérique positif, différence et facteur placé à droite ; 4e : facteurs négatifs/littéraux ; 3e : entretien explicite.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_12"],
+    "questions": [
+      {
+        "source": "A2604",
+        "question": "Q6",
+        "referenceAncienne": "PO 6",
+        "forme": "e",
+        "identifiant": "NC22-e",
+        "ancienId": "NC22-V5",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Développer un produit avec une lettre en facteur",
+        "formatSource": "Expression",
+        "document": "Polynésie, 26 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/Brevet_Polynesie_26_juin_2026_DV-3.pdf"
+      },
+      {
+        "source": "A2607",
+        "question": "Q6",
+        "referenceAncienne": null,
+        "forme": "e",
+        "identifiant": "NC22-e",
+        "ancienId": "NC22-V5",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Développer un produit avec une lettre en facteur",
+        "formatSource": "Expression",
+        "document": "Polynésie, 7 septembre 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-09-07_polynesie-FB.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Développer une somme",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Développe : 4(x + 3).",
+      "reponse": "4x + 12",
+      "donnees": "k 2 à 9,b 1 à 9 ; produit kb≤54 ; x réel.",
+      "saisie": "Expression courte avec touches lettre, chiffres, +, −, ×, /, parenthèses et carré ; coefficients séparés seulement en entraînement guidé.",
+      "acceptation": "Comparer exactement les expressions sur le domaine annoncé ; ne pas utiliser quelques essais numériques comme preuve. Normaliser × implicite, espaces, ² et ^2. Forme développée exigée ; 12+4x admis ; produit initial refusé comme réponse non développée.",
+      "aide1": {
+        "texte": "Le facteur 4 multiplie les deux termes.",
+        "visuel": "Deux flèches de 4 versx et vers 3."
+      },
+      "aide2": {
+        "texte": "Écris les deux produits.",
+        "visuel": "Afficher 4 × x + 4 × 3 ; dernier produit à calculer."
+      },
+      "correction": "4(x + 3) = 4x + 12.",
+      "controles": ["Refuser 4x+3 ; accepter 12+4x ; vérifier chaque terme multiplié une fois."],
+      "identifiant": "NC22-a",
+      "ancienId": "NC22-V1",
+      "ancienIdGenerateur": "NC22-V1",
+      "indiceGenerateur": 0,
+      "nom": "Développer une somme",
+      "niveauDescription": "5e introduction ; entretien 4e–3e",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "expression",
+      "champs": [
+        {
+          "type": "expression",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Développer une différence",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Développe : 5(x − 2).",
+      "reponse": "5x − 10",
+      "donnees": "k 2 à 8,b 1 à 6 ; k positif ; différence à deux termes.",
+      "saisie": "Expression courte avec touches lettre, chiffres, +, −, ×, /, parenthèses et carré ; coefficients séparés seulement en entraînement guidé.",
+      "acceptation": "Comparer exactement les expressions sur le domaine annoncé ; ne pas utiliser quelques essais numériques comme preuve. Normaliser × implicite, espaces, ² et ^2. Forme développée exigée.",
+      "aide1": {
+        "texte": "La soustraction reste entre les deux produits.",
+        "visuel": "Encadrer le signe − entre x et 2 ; flèches 5→x et 5→2."
+      },
+      "aide2": {
+        "texte": "Multiplie 5 par x, puis 5 par 2.",
+        "visuel": "Afficher 5 × x − 5 × 2."
+      },
+      "correction": "5(x − 2) = 5x − 10.",
+      "controles": ["Refuser 5x+10 et 5x−2 ; générer x−b et b−x avec ordre correctement conservé."],
+      "identifiant": "NC22-b",
+      "ancienId": "NC22-V2",
+      "ancienIdGenerateur": "NC22-V2",
+      "indiceGenerateur": 1,
+      "nom": "Développer une différence",
+      "niveauDescription": "5e facteur positif ; entretien 4e–3e",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "expression",
+      "champs": [
+        {
+          "type": "expression",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Gérer un facteur négatif",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Développe : −3(2x − 5).",
+      "reponse": "−6x + 15",
+      "donnees": "k−5 à−1,a 1 à 5,b 1 à 6 ; |ka|,|kb|≤30.",
+      "saisie": "Expression courte avec touches lettre, chiffres, +, −, ×, /, parenthèses et carré ; coefficients séparés seulement en entraînement guidé.",
+      "acceptation": "Comparer exactement les expressions sur le domaine annoncé ; ne pas utiliser quelques essais numériques comme preuve. Normaliser × implicite, espaces, ² et ^2. Forme développée et réduite.",
+      "aide1": {
+        "texte": "Le facteur − 3 multiplie chaque terme, signe compris.",
+        "visuel": "Souligner les termes 2x et − 5 ; flèches depuis − 3."
+      },
+      "aide2": {
+        "texte": "Un produit de deux nombres négatifs est positif.",
+        "visuel": "Afficher(−3) × 2x + (−3) × (−5)."
+      },
+      "correction": "−3(2x − 5) = −6x + 15.",
+      "controles": ["Refuser−6x−15 et−6x−5 ; tester k=−1 sans afficher 1x."],
+      "identifiant": "NC22-c",
+      "ancienId": "NC22-V3",
+      "ancienIdGenerateur": "NC22-V3",
+      "indiceGenerateur": 2,
+      "nom": "Gérer un facteur négatif",
+      "niveauDescription": "4e après produits relatifs ; 3e entretien",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "expression",
+      "champs": [
+        {
+          "type": "expression",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Reconnaître le facteur à droite",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Développe : (x + 2) × 6.",
+      "reponse": "6x + 12",
+      "donnees": "k 2 à 8 à droite ; deux termes, coefficients positifs ; ×visible si nécessaire.",
+      "saisie": "Expression courte avec touches lettre, chiffres, +, −, ×, /, parenthèses et carré ; coefficients séparés seulement en entraînement guidé.",
+      "acceptation": "Comparer exactement les expressions sur le domaine annoncé ; ne pas utiliser quelques essais numériques comme preuve. Normaliser × implicite, espaces, ² et ^2. Forme développée ; x 6 accepté uniquement si parseur reconnaît clairement 6x, sinon demander convention 6x.",
+      "aide1": {
+        "texte": "Le facteur peut être écrit à droite.",
+        "visuel": "Encadrer 6, flèches retournées versx et 2."
+      },
+      "aide2": {
+        "texte": "Tu peux écrire 6 × (x + 2) avant de développer.",
+        "visuel": "Afficher cette écriture équivalente, sans produits calculés."
+      },
+      "correction": "(x + 2) × 6 = 6x + 12.",
+      "controles": [
+        "Refuserx+12 ; contrôler invariance de la réponse quand le facteur change de côté."
+      ],
+      "identifiant": "NC22-d",
+      "ancienId": "NC22-V4",
+      "ancienIdGenerateur": "NC22-V4",
+      "indiceGenerateur": 3,
+      "nom": "Reconnaître le facteur à droite",
+      "niveauDescription": "5e ; entretien 4e–3e",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "expression",
+      "champs": [
+        {
+          "type": "expression",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Distribuer un facteur littéral",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Développe et réduis : 4x(3x − 2).",
+      "reponse": "12x² − 8x",
+      "donnees": "Facteur ax, avec a entier de 2 à 7 ; groupe cx+b, c de 1 à 5 et b entier non nul de −6 à 6 ; inclure des sommes et des différences.",
+      "saisie": "Expression courte avec touches lettre, chiffres, +, −, ×, /, parenthèses et carré ; coefficients séparés seulement en entraînement guidé.",
+      "acceptation": "Comparer exactement les expressions sur le domaine annoncé ; ne pas utiliser quelques essais numériques comme preuve. Normaliser × implicite, espaces, ² et ^2. Forme développée et réduite ; carré saisi² ou^2.",
+      "aide1": {
+        "texte": "Le facteur extérieur complet est 4x.",
+        "visuel": "Encadrer 4x ; tracer deux flèches vers 3x et − 2."
+      },
+      "aide2": {
+        "texte": "Utilise x × x = x² et garde le signe −.",
+        "visuel": "Afficher 4 × 3 × x² puis 4 × (−2) × x."
+      },
+      "correction": "4x(3x − 2) = 12x² − 8x.",
+      "controles": [
+        "Tester coefficient intérieur différent de1 et constante négative ; ne pas perdre le x du second produit."
+      ],
+      "identifiant": "NC22-e",
+      "ancienId": "NC22-V5",
+      "ancienIdGenerateur": "NC22-V5",
+      "indiceGenerateur": 4,
+      "nom": "Distribuer un facteur littéral",
+      "niveauDescription": "4e après produits de monômes ; 3e entretien",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "expression",
+      "champs": [
+        {
+          "type": "expression",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2604",
+          "question": "Q6",
+          "referenceAncienne": "PO 6",
+          "forme": "e",
+          "identifiant": "NC22-e",
+          "ancienId": "NC22-V5",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Développer un produit avec une lettre en facteur",
+          "formatSource": "Expression",
+          "document": "Polynésie, 26 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/Brevet_Polynesie_26_juin_2026_DV-3.pdf"
+        },
+        {
+          "source": "A2607",
+          "question": "Q6",
+          "referenceAncienne": null,
+          "forme": "e",
+          "identifiant": "NC22-e",
+          "ancienId": "NC22-V5",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Développer un produit avec une lettre en facteur",
+          "formatSource": "Expression",
+          "document": "Polynésie, 7 septembre 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-09-07_polynesie-FB.pdf"
+        }
+      ]
+    }
+  ]
+}

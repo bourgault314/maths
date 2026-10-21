@@ -1,0 +1,415 @@
+{
+  "id": "EG12",
+  "titre": "Rapports trigonométriques",
+  "categorie": "Géométrie et repérage",
+  "objectif": "Identifier les côtés relatifs à un angle aigu et écrire cosinus, sinus ou tangente.",
+  "prerequis": "Triangle rectangle, hypoténuse, fraction de longueurs.",
+  "perimetre": "DNB2027 :cosinus explicitement dans la liste indicative ; sinus et tangente inclus comme applications directes du programme, sans prétendre qu’ils y sont nommés.",
+  "cours": {
+    "regle": "Dans un triangle rectangle, le cosinus, le sinus et la tangente d’un angle aigu sont des rapports de longueurs de côtés.",
+    "exemple": "ABC rectangle en A : pour l’angle [angle:B], cos([angle:B])=AB/BC, sin([angle:B])=AC/BC, tan([angle:B])=AC/AB. Pour l’angle [angle:C], les rôles des côtés [AB] et [AC] s’échangent.",
+    "visuel": "Triangle [angle:A](0,0),B(4,0),C(0,3), angle [angle:B] marqué. Côtés étiquetés « adjacent AB », « opposé AC », « hypoténuse BC » avec traits distincts. Trois fractions empilées, chaque segment lié à son rôle. Deuxième petite carte angle [angle:C] pour montrer le changement adjacent/opposé.",
+    "mouvement": "Option : sélectionnerB puisC ; les labels adjacent/opposé changent, hypoténuse resteBC. Version statique deux cartes B/C."
+  },
+  "erreurs": [
+    "Confondre adjacent et hypoténuse.",
+    "Conserver les mêmes rôles en changeant l’angle.",
+    "Inverser numérateur et dénominateur.",
+    "Appliquer ces rapports à un triangle non rectangle."
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 4 — 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "p. 15 — Triangles de 3e",
+      "apport": "Cosinus, sinus et tangente d’un angle aigu.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples pour la mise en œuvre des programmes de mathématiques — cycle 4",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "PDF p. 31 — Trigonométrie",
+      "apport": "Relations entre angles aigus et longueurs de côtés.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Programme du cycle 4 — BO du 30 juillet 2020",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/programme-d-enseignement-du-cycle-4-67722.pdf",
+      "repere": "p. 136 — Géométrie plane",
+      "apport": "Trois rapports dans le programme ancien.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Liste indicative d’automatismes pour le DNB",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/liste-indicative-dautomatismes-pour-le-dnbpdf-116340.pdf",
+      "repere": "p. 2 — Espace et géométrie",
+      "apport": "Conditions d’utilisation du cosinus dans un triangle rectangle.",
+      "statut": "prescription"
+    }
+  ],
+  "limites": "Pas de calculatrice, pas de valeur trigonométrique arbitraire à mémoriser. Les aides colorées restent doublées de noms et de styles de trait.",
+  "acces_secondaires": [],
+  "nom": "Rapports trigonométriques",
+  "domaine": "espace-geometrie",
+  "sousDomaine": "Géométrie et repérage",
+  "niveaux": ["3e"],
+  "niveauxDescription": "Nouveau programme :3e. Ancien programme :cosinus dès 4e ; sinus et tangente en 3e. Entretien DNB2027.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_26"],
+    "questions": [
+      {
+        "source": "A2603",
+        "question": "Q4",
+        "referenceAncienne": "G1 4",
+        "forme": "b",
+        "identifiant": "EG12-b",
+        "ancienId": "EG12-V2",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Compléter le rapport du cosinus avec des côtés",
+        "formatSource": "Fraction littérale",
+        "document": "Centres étrangers, 18 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-18_Centres-etrangers_DV-v3.pdf"
+      },
+      {
+        "source": "A2606",
+        "question": "Q9",
+        "referenceAncienne": "ME 9",
+        "forme": "e",
+        "identifiant": "EG12-e",
+        "ancienId": "EG12-V5",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Rapport numérique du cosinus",
+        "formatSource": "QCM",
+        "document": "Métropole, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Metropole_FK-v2.pdf"
+      },
+      {
+        "source": "A2607",
+        "question": "Q5",
+        "referenceAncienne": null,
+        "forme": "b",
+        "identifiant": "EG12-b",
+        "ancienId": "EG12-V2",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Compléter le rapport du cosinus",
+        "formatSource": "Fraction littérale",
+        "document": "Polynésie, 7 septembre 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-09-07_polynesie-FB.pdf"
+      },
+      {
+        "source": "A2609",
+        "question": "Q6",
+        "referenceAncienne": "PO-pro 6",
+        "forme": "b",
+        "identifiant": "EG12-b",
+        "ancienId": "EG12-V2",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Rapport littéral du cosinus",
+        "formatSource": "QCM",
+        "document": "Polynésie professionnelle, 26 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_professionnelle_Sujet_2026-06-26_Polynesie_DV-v4.pdf"
+      },
+      {
+        "source": "Z26A",
+        "question": "Q6",
+        "referenceAncienne": "ZA 6",
+        "forme": "b",
+        "identifiant": "EG12-b",
+        "ancienId": "EG12-V2",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Rapport du cosinus",
+        "formatSource": "Expression",
+        "document": "Sujet zéro 2026, série générale A",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-mathematiquespdf-123317.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Repérer le côté adjacent à un angle aigu.",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "ABC est rectangle en A. Pour l’angle [angle:ABC], quel est le côté adjacent qui n’est pas l’hypoténuse ?",
+      "reponse": "[AB]",
+      "donnees": "Triangle [angle:A](0,0),B(4,0),C(0,3) ; angle [angle:B] marqué. Faire varier sommetdroit etrotation ; angle demandé toujours aigu.",
+      "saisie": "Sélection du côté ou nom de segment.",
+      "acceptation": "AB ouBA.",
+      "aide1": "« Écarte d’abord l’hypoténuse, en face de l’angle droit. » SurlignerBC et labelhypoténuse.",
+      "aide2": "« Parmi les deux autres côtés, lequel touche l’angle [angle:B] ? » Montrer les deux côtés de l’angle [angle:B] puis atténuerBC.",
+      "correction": "[AB] est le côté adjacent à l’angle [angle:ABC], distinct de l’hypoténuse [BC].",
+      "controles": [
+        "RefuserBC malgré sa proximité avec l’angle.",
+        "Pour l’angle [angle:C], la réponse doit devenirAC."
+      ],
+      "identifiant": "EG12-a",
+      "ancienId": "EG12-V1",
+      "ancienIdGenerateur": "EG12-V1",
+      "indiceGenerateur": 0,
+      "nom": "Repérer le côté adjacent à un angle aigu.",
+      "niveauDescription": "3e nouveau ;4e anciencosinus",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Écrire un cosinus.",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "ABC est rectangle en A. Complète cos([angle:ABC])=…/… .",
+      "reponse": "AB/BC",
+      "donnees": "Triangle rectangle non dégénéré, angle [angle:B] ; deux segments non nuls ; fraction présentée sans valeurs numériques.",
+      "saisie": "Numérateur et dénominateur constitués de sélecteurs de côtés.",
+      "acceptation": "AB/BC ; BA/CB équivalent ; inverse refusé.",
+      "aide1": "« Cosinus : adjacent sur hypoténuse. » Montrer ces deux mots au-dessus des cases, angle [angle:B] marqué.",
+      "aide2": "« L’hypoténuse estBC. Le côté adjacent à l’angle [angle:B] estAB. » Relier les segments aux étiquettes sans remplir les champs.",
+      "correction": "cos([angle:ABC])=AB/BC.",
+      "controles": [
+        "RefuserBC/AB etAC/BC.",
+        "La réponse doit être un quotient de longueurs positives, inférieur à 1."
+      ],
+      "identifiant": "EG12-b",
+      "ancienId": "EG12-V2",
+      "ancienIdGenerateur": "EG12-V2",
+      "indiceGenerateur": 1,
+      "nom": "Écrire un cosinus.",
+      "niveauDescription": "3e nouveau ;4e anciencosinus",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Numérateur",
+          "unite": ""
+        },
+        {
+          "type": "qcm",
+          "libelle": "Dénominateur",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2603",
+          "question": "Q4",
+          "referenceAncienne": "G1 4",
+          "forme": "b",
+          "identifiant": "EG12-b",
+          "ancienId": "EG12-V2",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Compléter le rapport du cosinus avec des côtés",
+          "formatSource": "Fraction littérale",
+          "document": "Centres étrangers, 18 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-18_Centres-etrangers_DV-v3.pdf"
+        },
+        {
+          "source": "A2607",
+          "question": "Q5",
+          "referenceAncienne": null,
+          "forme": "b",
+          "identifiant": "EG12-b",
+          "ancienId": "EG12-V2",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Compléter le rapport du cosinus",
+          "formatSource": "Fraction littérale",
+          "document": "Polynésie, 7 septembre 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-09-07_polynesie-FB.pdf"
+        },
+        {
+          "source": "A2609",
+          "question": "Q6",
+          "referenceAncienne": "PO-pro 6",
+          "forme": "b",
+          "identifiant": "EG12-b",
+          "ancienId": "EG12-V2",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Rapport littéral du cosinus",
+          "formatSource": "QCM",
+          "document": "Polynésie professionnelle, 26 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_professionnelle_Sujet_2026-06-26_Polynesie_DV-v4.pdf"
+        },
+        {
+          "source": "Z26A",
+          "question": "Q6",
+          "referenceAncienne": "ZA 6",
+          "forme": "b",
+          "identifiant": "EG12-b",
+          "ancienId": "EG12-V2",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Rapport du cosinus",
+          "formatSource": "Expression",
+          "document": "Sujet zéro 2026, série générale A",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-mathematiquespdf-123317.pdf"
+        }
+      ]
+    },
+    {
+      "id": "c",
+      "objectif": "Écrire un sinus en changeant l’angle de référence.",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "ABC est rectangle en A. Complète sin([angle:ACB])=…/… .",
+      "reponse": "AB/BC",
+      "donnees": "Mêmetriangle 3–4–5 maisangle [angle:C] ; générerangle [angle:B] ouC équilibrés ; rotation possible.",
+      "saisie": "Deux champs de segments dans une fraction.",
+      "acceptation": "AB/BC ; BA/CB équivalent.",
+      "aide1": "« Sinus : opposé sur hypoténuse. » Marquer l’angle [angle:C] et le côté qui ne le touche pas.",
+      "aide2": "« Le côté opposé à l’angle [angle:C] estAB ; l’hypoténuse resteBC. » Relier ces deux côtés aux mots numérateur/dénominateur.",
+      "correction": "sin([angle:ACB])=AB/BC.",
+      "controles": [
+        "RefuserAC/BC qui est lecosinus deC.",
+        "Changer l’angle sans changer la figure doit modifier les rôles."
+      ],
+      "identifiant": "EG12-c",
+      "ancienId": "EG12-V3",
+      "ancienIdGenerateur": "EG12-V3",
+      "indiceGenerateur": 2,
+      "nom": "Écrire un sinus en changeant l’angle de référence.",
+      "niveauDescription": "3e",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Numérateur",
+          "unite": ""
+        },
+        {
+          "type": "qcm",
+          "libelle": "Dénominateur",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Écrire une tangente.",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "ABC est rectangle en A. Complète tan([angle:ABC])=…/… .",
+      "reponse": "AC/AB",
+      "donnees": "Triangle rectangle, angle [angle:B]. Côtés de l’angle droit de longueurs différentes afin de distinguer quotient et inverse.",
+      "saisie": "Fraction à deux sélecteurs de segments.",
+      "acceptation": "AC/AB ; CA/BA équivalent.",
+      "aide1": "« Tangente : opposé sur adjacent. » Atténuer l’hypoténuse qui n’entre pas dans ce quotient.",
+      "aide2": "« Par rapport à l’angle [angle:B], AC est opposé etAB est adjacent. » Relier les deux côtés à la fraction vide.",
+      "correction": "tan([angle:ABC])=AC/AB.",
+      "controles": [
+        "RefuserAC/BC qui correspond au sinus.",
+        "Ne pas imposer résultat≤1 : une tangente d’angle aigu peut dépasser 1."
+      ],
+      "identifiant": "EG12-d",
+      "ancienId": "EG12-V4",
+      "ancienIdGenerateur": "EG12-V4",
+      "indiceGenerateur": 3,
+      "nom": "Écrire une tangente.",
+      "niveauDescription": "3e",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Numérateur",
+          "unite": ""
+        },
+        {
+          "type": "qcm",
+          "libelle": "Dénominateur",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Calculer un cosinus comme rapport numérique",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "ABC est rectangle en A. Calcule cos([angle:C]) sous forme de fraction.",
+      "reponse": "cos([angle:C]) : 15/17",
+      "donnees": "Triplets 3–4–5,5–12–13,8–15–17 ; angle [angle:B] ou C choisi ; triangle rectangle en A. Paramètres de cet exemple : {\"a\":8,\"b\":15,\"c\":17,\"angle\":\"C\"}",
+      "saisie": "cos([angle:C]) : fraction",
+      "acceptation": "Fractions équivalentes exactes acceptées ; dénominateur non nul.",
+      "aide1": "Cosinus : adjacent sur hypoténuse. Visuel : Marquer l’angle choisi puis relier les deux longueurs utiles au numérateur et au dénominateur.",
+      "aide2": "Le côté adjacent à l’angle [angle:C] mesure 15 cm ; l’hypoténuse mesure 17 cm. Relier ces deux longueurs au numérateur et au dénominateur.",
+      "correction": "cos([angle:C])=15/17.",
+      "controles": [
+        "Changer d’angle change le numérateur.",
+        "Refuser le quotient inverse ; accepter les fractions équivalentes."
+      ],
+      "identifiant": "EG12-e",
+      "ancienId": "EG12-V5",
+      "ancienIdGenerateur": "EG12-V5",
+      "indiceGenerateur": 4,
+      "nom": "Calculer un cosinus comme rapport numérique",
+      "niveauDescription": "3e nouveau ; ancien cosinus dès 4e",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "cos([angle:C])",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2606",
+          "question": "Q9",
+          "referenceAncienne": "ME 9",
+          "forme": "e",
+          "identifiant": "EG12-e",
+          "ancienId": "EG12-V5",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Rapport numérique du cosinus",
+          "formatSource": "QCM",
+          "document": "Métropole, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Metropole_FK-v2.pdf"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,527 @@
+{
+  "id": "NC11",
+  "titre": "Additionner et soustraire des fractions",
+  "categorie": "Nombres et calculs",
+  "objectif": "Conserver l’unité de fraction et, si besoin, construire un dénominateur commun.",
+  "prerequis": ["Sens de la fraction", "Parts égales d’une même unité", "Tables et quotient"],
+  "perimetre": "Couverture des prérequis et automatismes du collège. Le filtre DNB2027 utilise l’ancien programme du cycle 4 ; les niveaux indiqués suivent le nouveau programme. Le statut est précisé par variante.",
+  "cours": {
+    "regle": "Même dénominateur : calcule les numérateurs et garde la taille des parts.",
+    "exemple": "7/9 + 4/9 = 7/9 + 4/9 = 11/9.",
+    "visuel": "Deux bandes de même unité, repartagées en parts égales ; numérateurs recalculés sur le même dénominateur.",
+    "mouvement": "Le schéma est entièrement compréhensible à l’arrêt. Une animation éventuelle révèle les étapes sans cacher les états précédents."
+  },
+  "erreurs": [
+    "Changer seulement un terme de la fraction",
+    "Additionner les dénominateurs",
+    "Perdre le signe ou l’unité"
+  ],
+  "sources": [
+    {
+      "titre": "Exemples de mise en œuvre du programme de 6e (2025)",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/exemplesmiseenoeuvre6e-mathpdf-111549.pdf",
+      "statut": "appui pédagogique",
+      "repere": "PDF p 8, imprimée 7",
+      "apport": "Exemples officiels de mise en œuvre : progressivité, représentations et types de calculs."
+    },
+    {
+      "titre": "Programme de mathématiques du cycle 4 (2026)",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "statut": "prescription",
+      "repere": "PDF p 8–10",
+      "apport": "Objectifs et progression officiels du programme ; niveau de classe vérifié."
+    },
+    {
+      "titre": "Exemples de mise en œuvre du cycle 4 (2026)",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "statut": "appui pédagogique",
+      "repere": "PDF p 12–13,16–17,19",
+      "apport": "Exemples officiels de mise en œuvre : progressivité, représentations et types de calculs."
+    },
+    {
+      "titre": "DNB sujet de référence 2027 n°1",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n01-129658.pdf",
+      "statut": "appui pédagogique",
+      "repere": "PDF p 2 Q 1",
+      "apport": "Situation effectivement observée dans le sujet de référence, repérée par numéro de question."
+    },
+    {
+      "titre": "Mathsgo — bandes de fractions",
+      "url": "https://mathsgo.re/outils/fractions/bandes_fractions.html",
+      "repere": "HTML lu par l’agent de repérage ; interaction non testée",
+      "apport": "Une unité constante, des parts égales, un repartage visible avant le calcul abstrait.",
+      "statut": "inspiration visuelle"
+    },
+    {
+      "titre": "NCETM — Bar models",
+      "url": "https://www.ncetm.org.uk/media/8d84e791bafa491/ncetm_ks3_representations_bar_models.pdf",
+      "repere": "p.3,5,9,12 lues visuellement",
+      "apport": "Structures partie-tout et comparaison ; identifier explicitement le tout.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "L’addition de dénominateurs quelconques simples est documentée dès la 6e ; le mot irréductible reste une exigence de 3e.",
+  "implementation": {
+    "module": "app-automatismes/dist/modules/nombres.js",
+    "tests": "etape1/test_nombres.mjs",
+    "variantes": 7,
+    "graines_par_variante": 200,
+    "principe": "Aide 1 : représentation visuelle des données. Aide 2 : étape de calcul. Deux aides maximum.",
+    "aide1_visuelle": true
+  },
+  "atlas": "cours/03.svg",
+  "atlasAlt": "Trois bandes de même longueur unité sont partagées en6.3parts et2parts donnent5parts.",
+  "nom": "Additionner et soustraire des fractions",
+  "domaine": "nombres-calculs",
+  "sousDomaine": "Nombres et calculs",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6e : cas simples, y compris dénominateurs quelconques selon les exemples officiels ; 4e : signés ; 3e : forme irréductible.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_03"],
+    "questions": [
+      {
+        "source": "A2601",
+        "question": "Q1",
+        "referenceAncienne": "AN 1",
+        "forme": "g",
+        "identifiant": "NC11-g",
+        "ancienId": "NC11-G",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Addition de fractions de dénominateurs différents",
+        "formatSource": "Saisie",
+        "document": "Amérique du Nord, 3 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/Brevet_Ameri_Nord_3_06_2026_DV.pdf"
+      },
+      {
+        "source": "R27A",
+        "question": "Q1",
+        "referenceAncienne": "R1 1",
+        "forme": "d",
+        "identifiant": "NC11-d",
+        "ancienId": "NC11-D",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Soustraire des fractions et rendre irréductible",
+        "formatSource": "Fraction",
+        "document": "Sujet de référence mathématiques n°1",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n01-129658.pdf"
+      },
+      {
+        "source": "Z26PB",
+        "question": "Q4",
+        "referenceAncienne": "ZPB 4",
+        "forme": "g",
+        "identifiant": "NC11-g",
+        "ancienId": "NC11-G",
+        "support": "adaptation",
+        "difference": "Addition de dénominateurs non multiples requise ; saisie du résultat au lieu du choix du calcul.",
+        "savoirFaire": "Addition de deux fractions",
+        "formatSource": "QCM",
+        "document": "Sujet zéro 2026, série professionnelle B",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-b-mathematiquespdf-123302.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Addition à dénominateur commun",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Calcule 7/9 + 4/9.",
+      "reponse": "11/9",
+      "donnees": "Dénominateur 3–12 commun ; numérateurs 1 à d ; résultat pouvant dépasser 1.",
+      "saisie": "Réponse : numérateur et dénominateur",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Les parts doivent avoir la même taille.",
+      "aide2": "7/9 = 7/9 ; 4/9 = 4/9. Calcule 7 + 4.",
+      "correction": "7/9 + 4/9 = 7/9 + 4/9 = 11/9.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["11/9"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "11/9",
+          "kind": "fraction",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Bandes de même unité, déplacement signé ou barre avec terme inconnu. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Étape de calcul explicite.",
+      "identifiant": "NC11-a",
+      "ancienId": "NC11-a",
+      "ancienIdGenerateur": "NC11-A",
+      "indiceGenerateur": 0,
+      "nom": "Addition à dénominateur commun",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Complément à 1",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Calcule 1/1 − 6/9.",
+      "reponse": "1/3",
+      "donnees": "1 moins une fraction propre ; dénominateur 3–12 ; résultat positif.",
+      "saisie": "Réponse : numérateur et dénominateur",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Les parts doivent avoir la même taille.",
+      "aide2": "1/1 = 9/9 ; 6/9 = 6/9. Calcule 9 − 6.",
+      "correction": "1/1 − 6/9 = 9/9 − 6/9 = 1/3.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["1/3"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "1/3",
+          "kind": "fraction",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Bandes de même unité, déplacement signé ou barre avec terme inconnu. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Étape de calcul explicite.",
+      "identifiant": "NC11-b",
+      "ancienId": "NC11-b",
+      "ancienIdGenerateur": "NC11-B",
+      "indiceGenerateur": 1,
+      "nom": "Complément à 1",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Addition avec dénominateurs multiples",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Calcule 1/5 + 6/15.",
+      "reponse": "3/5",
+      "donnees": "Dénominateur 2–6 et son double ou triple ; addition positive ; fraction finale libre.",
+      "saisie": "Réponse : numérateur et dénominateur",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Les parts doivent avoir la même taille.",
+      "aide2": "1/5 = 3/15 ; 6/15 = 6/15. Calcule 3 + 6.",
+      "correction": "1/5 + 6/15 = 3/15 + 6/15 = 3/5.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["3/5"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "3/5",
+          "kind": "fraction",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Bandes de même unité, déplacement signé ou barre avec terme inconnu. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Étape de calcul explicite.",
+      "identifiant": "NC11-c",
+      "ancienId": "NC11-c",
+      "ancienIdGenerateur": "NC11-C",
+      "indiceGenerateur": 2,
+      "nom": "Addition avec dénominateurs multiples",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Soustraction et résultat irréductible",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Calcule 4/5 − 1/8. Donne une fraction irréductible.",
+      "reponse": "27/40",
+      "donnees": "Dénominateurs 3, 4 ou 5 et 7 ou 8 ; différence positive ; consigne irréductible en 3e.",
+      "saisie": "Réponse : numérateur et dénominateur",
+      "acceptation": "Valeur rationnelle exacte et fraction irréductible, ou entier si le dénominateur final est 1.",
+      "aide1": "Les parts doivent avoir la même taille.",
+      "aide2": "4/5 = 32/40 ; 1/8 = 5/40. Calcule 32 − 5.",
+      "correction": "4/5 − 1/8 = 32/40 − 5/40 = 27/40.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["27/40"],
+        "form": "irreducible"
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "27/40",
+          "kind": "fraction",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Bandes de même unité, déplacement signé ou barre avec terme inconnu. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Étape de calcul explicite.",
+      "identifiant": "NC11-d",
+      "ancienId": "NC11-d",
+      "ancienIdGenerateur": "NC11-D",
+      "indiceGenerateur": 3,
+      "nom": "Soustraction et résultat irréductible",
+      "niveauDescription": "3e ; entretien dans les classes suivantes.",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "R27A",
+          "question": "Q1",
+          "referenceAncienne": "R1 1",
+          "forme": "d",
+          "identifiant": "NC11-d",
+          "ancienId": "NC11-D",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Soustraire des fractions et rendre irréductible",
+          "formatSource": "Fraction",
+          "document": "Sujet de référence mathématiques n°1",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n01-129658.pdf"
+        }
+      ]
+    },
+    {
+      "id": "e",
+      "objectif": "Somme de fractions signées",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Calcule −4/6 + 1/12.",
+      "reponse": "-7/12",
+      "donnees": "Fraction négative et fraction positive ; second dénominateur double du premier ; résultat signé.",
+      "saisie": "Réponse : numérateur et dénominateur",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Les parts doivent avoir la même taille.",
+      "aide2": "−4/6 = −8/12 ; 1/12 = 1/12. Calcule −8 + 1.",
+      "correction": "−4/6 + 1/12 = −8/12 + 1/12 = −7/12.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["-7/12"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "-7/12",
+          "kind": "fraction",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Bandes de même unité, déplacement signé ou barre avec terme inconnu. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Étape de calcul explicite.",
+      "identifiant": "NC11-e",
+      "ancienId": "NC11-e",
+      "ancienIdGenerateur": "NC11-E",
+      "indiceGenerateur": 4,
+      "nom": "Somme de fractions signées",
+      "niveauDescription": "4e ; entretien dans les classes suivantes.",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "f",
+      "objectif": "Fraction manquante dans une somme",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Complète : □ + 2/4 = 4/3.",
+      "reponse": "5/6",
+      "donnees": "Résultat construit comme somme de deux fractions propres ; un terme caché ; dénominateurs 2–6.",
+      "saisie": "Réponse : numérateur et dénominateur",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Enlève la fraction connue au résultat.",
+      "aide2": "Calcule 4/3 − 2/4.",
+      "correction": "5/6 + 2/4 = 4/3.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["5/6"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "5/6",
+          "kind": "fraction",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Bandes de même unité, déplacement signé ou barre avec terme inconnu. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC11-f",
+      "ancienId": "NC11-f",
+      "ancienIdGenerateur": "NC11-F",
+      "indiceGenerateur": 5,
+      "nom": "Fraction manquante dans une somme",
+      "niveauDescription": "5e ; entretien dans les classes suivantes.",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "g",
+      "objectif": "Addition avec dénominateurs quelconques simples",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Calcule 7/5 + 6/8.",
+      "reponse": "43/20",
+      "donnees": "Dénominateurs parmi 3, 4, 5, 7 et 8, premiers entre eux ; PPCM au plus 40 ; numérateurs 1 à 2d−1 : fractions propres ou supérieures à 1.",
+      "saisie": "Réponse : numérateur et dénominateur",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Les parts doivent avoir la même taille.",
+      "aide2": "7/5 = 56/40 ; 6/8 = 30/40. Calcule 56 + 30.",
+      "correction": "7/5 + 6/8 = 56/40 + 30/40 = 43/20.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["43/20"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "43/20",
+          "kind": "fraction",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Bandes de même unité, déplacement signé ou barre avec terme inconnu. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Étape de calcul explicite.",
+      "identifiant": "NC11-g",
+      "ancienId": "NC11-g",
+      "ancienIdGenerateur": "NC11-G",
+      "indiceGenerateur": 6,
+      "nom": "Addition avec dénominateurs quelconques simples",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2601",
+          "question": "Q1",
+          "referenceAncienne": "AN 1",
+          "forme": "g",
+          "identifiant": "NC11-g",
+          "ancienId": "NC11-G",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Addition de fractions de dénominateurs différents",
+          "formatSource": "Saisie",
+          "document": "Amérique du Nord, 3 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/Brevet_Ameri_Nord_3_06_2026_DV.pdf"
+        },
+        {
+          "source": "Z26PB",
+          "question": "Q4",
+          "referenceAncienne": "ZPB 4",
+          "forme": "g",
+          "identifiant": "NC11-g",
+          "ancienId": "NC11-G",
+          "support": "adaptation",
+          "difference": "Addition de dénominateurs non multiples requise ; saisie du résultat au lieu du choix du calcul.",
+          "savoirFaire": "Addition de deux fractions",
+          "formatSource": "QCM",
+          "document": "Sujet zéro 2026, série professionnelle B",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-b-mathematiquespdf-123302.pdf"
+        }
+      ]
+    }
+  ]
+}

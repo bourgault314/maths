@@ -1,0 +1,373 @@
+{
+  "id": "NC04",
+  "titre": "Calcul mental positif",
+  "categorie": "Nombres et calculs",
+  "objectif": "Mobiliser tables, décompositions, compensation et changements d’unité de numération.",
+  "prerequis": ["Numération de position", "Sens des opérations et des signes de comparaison"],
+  "perimetre": "Couverture des prérequis et automatismes du collège. Le filtre DNB2027 utilise l’ancien programme du cycle 4 ; les niveaux indiqués suivent le nouveau programme. Le statut est précisé par variante.",
+  "cours": {
+    "regle": "Choisis une décomposition simple. Déplacer tous les chiffres d’un rang vers la gauche multiplie le nombre par 10 ; vers la droite, il le divise par 10.",
+    "exemple": "49 ÷ 7 = 7.",
+    "visuel": "Décomposition du calcul ; tableau fixe de numération pour les facteurs 10, 100 et 1 000.",
+    "mouvement": "Le schéma est entièrement compréhensible à l’arrêt. Une animation éventuelle révèle les étapes sans cacher les états précédents."
+  },
+  "erreurs": [
+    "Confondre rangs et longueur de l’écriture",
+    "Oublier un zéro de position",
+    "Confondre valeur exacte et estimation"
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 3 (2025)",
+      "url": "https://www.education.gouv.fr/sites/default/files/ensel620_annexe2-v2.pdf",
+      "statut": "prescription",
+      "repere": "PDF p 13–14",
+      "apport": "Objectifs et progression officiels du programme ; niveau de classe vérifié."
+    },
+    {
+      "titre": "Exemples de mise en œuvre du programme de 6e (2025)",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/exemplesmiseenoeuvre6e-mathpdf-111549.pdf",
+      "statut": "appui pédagogique",
+      "repere": "PDF p 3–5, imprimées 2–4",
+      "apport": "Exemples officiels de mise en œuvre : progressivité, représentations et types de calculs."
+    },
+    {
+      "titre": "Exemples de mise en œuvre du cycle 4 (2026)",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "statut": "appui pédagogique",
+      "repere": "PDF p 10, imprimée 9",
+      "apport": "Exemples officiels de mise en œuvre : progressivité, représentations et types de calculs."
+    },
+    {
+      "titre": "Mathsgo — glisse-nombres décimaux",
+      "url": "https://mathsgo.re/outils/plateaux_manipulation/glisse_nombres_decimaux.html",
+      "repere": "Catalogue public des outils ; interaction non testée",
+      "apport": "Réemploi du principe : rangs et virgule fixes, chiffres associés à leur valeur ; aucune copie de code.",
+      "statut": "inspiration visuelle"
+    }
+  ],
+  "limites": "Aucune division par zéro ; les produits et quotients restent adaptés au calcul sans calculatrice.",
+  "implementation": {
+    "module": "app-automatismes/dist/modules/nombres.js",
+    "tests": "etape1/test_nombres.mjs",
+    "variantes": 6,
+    "graines_par_variante": 200,
+    "principe": "Aide 1 : représentation visuelle des données. Aide 2 : étape de calcul. Deux aides maximum.",
+    "aide1_visuelle": true
+  },
+  "nom": "Calcul mental positif",
+  "domaine": "nombres-calculs",
+  "sousDomaine": "Nombres et calculs",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6e ; division par un décimal en 5e.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_02", "dnb_02b", "dnb_09", "dnb_38"],
+    "questions": []
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Mobiliser une table ou une division inverse",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Calcule 49 ÷ 7.",
+      "reponse": "7",
+      "donnees": "Facteurs 2–9 ; produit ou division exacte de la même table, tirés alternativement.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Dans la table de 7, cherche 49.",
+      "aide2": "7 × ? = 49",
+      "correction": "49 ÷ 7 = 7.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["7"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "7",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Rectangle de cases, barres ou tableau de rangs. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC04-a",
+      "ancienId": "NC04-a",
+      "ancienIdGenerateur": "NC04-A",
+      "indiceGenerateur": 0,
+      "nom": "Mobiliser une table ou une division inverse",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Addition, soustraction ou complément décimal",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Complète : 2,3 + □ = 5,5.",
+      "reponse": "3.2",
+      "donnees": "Décimaux positifs au dixième ; addition, différence positive ou terme manquant ; résultat exact.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Raisonne en dixièmes.",
+      "aide2": "5,5 − 2,3 = ?",
+      "correction": "2,3 + 3,2 = 5,5.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["3.2"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "3.2",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Rectangle de cases, barres ou tableau de rangs. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC04-b",
+      "ancienId": "NC04-b",
+      "ancienIdGenerateur": "NC04-B",
+      "indiceGenerateur": 1,
+      "nom": "Addition, soustraction ou complément décimal",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Multiplier en compensant",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Calcule 7 × 29.",
+      "reponse": "203",
+      "donnees": "Un facteur 2–9 ; autre facteur 19, 29, 39, 49 ou 99 ; compensation par un multiple de 10.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "29 est proche de 30.",
+      "aide2": "Calcule 7 × 30, puis enlève 7.",
+      "correction": "7 × 29 = 210 − 7 = 203.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["203"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "203",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Rectangle de cases, barres ou tableau de rangs. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC04-c",
+      "ancienId": "NC04-c",
+      "ancienIdGenerateur": "NC04-C",
+      "indiceGenerateur": 2,
+      "nom": "Multiplier en compensant",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Multiplier ou diviser par 10, 100 ou 1 000",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Calcule 37,7 ÷ 1000.",
+      "reponse": "0.037700000000000004",
+      "donnees": "Décimal positif au dixième ; multiplication ou division par 10, 100 ou 1 000.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "La valeur de chaque chiffre devient 1000 fois plus petite.",
+      "aide2": "Déplace les chiffres de 3 rangs vers la droite dans le tableau.",
+      "correction": "37,7 ÷ 1000 = 0,0377.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["0.037700000000000004"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "0.037700000000000004",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Rectangle de cases, barres ou tableau de rangs. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC04-d",
+      "ancienId": "NC04-d",
+      "ancienIdGenerateur": "NC04-D",
+      "indiceGenerateur": 3,
+      "nom": "Multiplier ou diviser par 10, 100 ou 1 000",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Multiplier un décimal par un entier",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Calcule 0,7 × 7.",
+      "reponse": "4.9",
+      "donnees": "Un facteur compris entre 0,2 et 0,9 ; entier 2–9 ; résultat au dixième.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "0,7 représente 7 dixièmes.",
+      "aide2": "Calcule 7 × 7 dixièmes.",
+      "correction": "0,7 × 7 = 49 dixièmes = 4,9.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["4.9"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "4.9",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Rectangle de cases, barres ou tableau de rangs. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC04-e",
+      "ancienId": "NC04-e",
+      "ancienIdGenerateur": "NC04-E",
+      "indiceGenerateur": 4,
+      "nom": "Multiplier un décimal par un entier",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "f",
+      "objectif": "Diviser par un décimal",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Calcule 4,9 ÷ 0,7.",
+      "reponse": "7",
+      "donnees": "Diviseur 0,2–0,9 ; dividende construit pour obtenir un quotient entier 2–9 ; aucun zéro au diviseur.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Multiplie les deux nombres par 10 : le quotient ne change pas.",
+      "aide2": "4,9 ÷ 0,7 = 49 ÷ 7.",
+      "correction": "4,9 ÷ 0,7 = 49 ÷ 7 = 7.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["7"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "7",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Rectangle de cases, barres ou tableau de rangs. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC04-f",
+      "ancienId": "NC04-f",
+      "ancienIdGenerateur": "NC04-F",
+      "indiceGenerateur": 5,
+      "nom": "Diviser par un décimal",
+      "niveauDescription": "5e ; entretien dans les classes suivantes.",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

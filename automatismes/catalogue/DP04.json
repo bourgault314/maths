@@ -1,0 +1,665 @@
+{
+  "id": "DP04",
+  "titre": "Médiane et étendue",
+  "categorie": "Statistiques et probabilités",
+  "objectif": "Ordonner une petite série pour trouver une médiane et mesurer son étendue.",
+  "prerequis": [
+    "Comparer et ranger des nombres",
+    "Compter les observations, y compris les répétitions",
+    "Soustraire des relatifs pour l’exemple de température"
+  ],
+  "perimetre": "DNB2027. Pour un effectif pair, respecter la formulation de la question : une médiane peut ne pas être unique.",
+  "cours": {
+    "regle": "Range la série. Une médiane m vérifie : au moins la moitié des valeurs ≤ m et au moins la moitié ≥ m. Étendue = maximum − minimum.",
+    "exemple": "1 ; 3 ; 5 ; 7 : toute valeur entre 3 et 5 est une médiane. La demi-somme vaut 4.",
+    "visuel": "Cartes numériques triées, rangs1à5 sous les cartes,5 encadré et deux cartes de chaque côté. Deuxième ligne de quatre cartes avec segment plein[4;8] entre les deux valeurs centrales. Accolade séparée minimum→maximum pour l’étendue.",
+    "mouvement": "Tri animé par déplacements de cartes, uniquement à la demande. Version statique : série initiale puis série triée, rangs identiques."
+  },
+  "erreurs": [
+    "Prendre la valeur centrale avant de trier",
+    "Supprimer les répétitions",
+    "Imposer la demi-somme lorsqu’on demande une médiane",
+    "Confondre moyenne, médiane et étendue",
+    "Soustraire les extrêmes dans le mauvais sens"
+  ],
+  "sources": [
+    {
+      "titre": "Programme cycle 4, 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "Statistiques4ᵉ–3ᵉ, PDFp.17",
+      "apport": "Médiane et étendue, puis automatismes3ᵉ.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples de mise en œuvre cycle 4, 2026",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "Quatrième, Statistiques, PDFp.37",
+      "apport": "Une médiane n’est pas nécessairement unique pour un effectif pair.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Programme cycle 4, 2020",
+      "url": "https://cache.media.education.gouv.fr/file/31/89/1/ensel714_annexe3_1312891.pdf",
+      "repere": "ThèmeB, PDFp.132",
+      "apport": "Indicateurs du programme applicable au DNB2027.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Liste indicative d’automatismes DNB, octobre 2025",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/liste-indicative-dautomatismes-pour-le-dnbpdf-116340.pdf",
+      "repere": "Organisation et gestion de données, p.3",
+      "apport": "Médiane d’une petite série.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Asie, 15 juin 2026",
+      "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-15_Asie_DV-v3.pdf",
+      "repere": "Question 9",
+      "apport": "Effectif et médiane sur diagramme en barres ; reproduction du sujet consultée lors de l’audit de couverture.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "NCETM — Statistical representations and measures",
+      "url": "https://www.ncetm.org.uk/classroom-resources/secmm-51-statistical-representations-and-measures/",
+      "repere": "Page du concept 5.1 consultée ; pas de lecture exhaustive du PDF lié",
+      "apport": "Choisir des représentations selon les mesures statistiques étudiées.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "L’application doit afficher la convention si elle exige la demi-somme. La définition donnée vise les séries finies non vides ; pas de série continue ni d’interpolation.",
+  "atlas": "cours/14.svg",
+  "atlasAlt": "Cinq valeurs ordonnées1,3,4,7,9. La troisième4est encadrée par deux valeurs de chaque côté.",
+  "nom": "Médiane et étendue",
+  "domaine": "donnees-probabilites",
+  "sousDomaine": "Statistiques et probabilités",
+  "niveaux": ["4e", "3e"],
+  "niveauxDescription": "4ᵉ : introduction de médiane et étendue. 3ᵉ : automatisation sur petite série ; tableau d’effectifs en application. Pas de médiane exigée en6ᵉ/5ᵉ dans la progression nouvelle.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_31"],
+    "questions": [
+      {
+        "source": "A2601",
+        "question": "Q6",
+        "referenceAncienne": "AN 6",
+        "forme": "a",
+        "identifiant": "DP04-a",
+        "ancienId": "DP04-V1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Médiane d’une série non ordonnée",
+        "formatSource": "Saisie",
+        "document": "Amérique du Nord, 3 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/Brevet_Ameri_Nord_3_06_2026_DV.pdf"
+      },
+      {
+        "source": "A2602",
+        "question": "Q9a-b",
+        "referenceAncienne": "AA 9a-b",
+        "forme": "e",
+        "identifiant": "DP04-e",
+        "ancienId": "DP04-V5",
+        "support": "comparable",
+        "difference": "Deux sorties requises par la source : effectif total puis médiane. Vérifier les deux champs de la variante.",
+        "savoirFaire": "Effectif total et médiane sur diagramme en barres",
+        "formatSource": "Saisie multiple",
+        "document": "Asie, 15 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-15_Asie_DV-v3.pdf"
+      },
+      {
+        "source": "A2603",
+        "question": "Q1",
+        "referenceAncienne": "G1 1",
+        "forme": "a",
+        "identifiant": "DP04-a",
+        "ancienId": "DP04-V1",
+        "support": "comparable",
+        "difference": "La série doit pouvoir contenir des valeurs négatives ; l’ordre de nombres relatifs est aussi entretenu dans NC02.",
+        "savoirFaire": "Médiane de températures négatives et positives",
+        "formatSource": "Saisie",
+        "document": "Centres étrangers, 18 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-18_Centres-etrangers_DV-v3.pdf"
+      },
+      {
+        "source": "A2604",
+        "question": "Q1",
+        "referenceAncienne": "PO 1",
+        "forme": "a",
+        "identifiant": "DP04-a",
+        "ancienId": "DP04-V1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Médiane d’une série non ordonnée avec répétitions",
+        "formatSource": "Saisie",
+        "document": "Polynésie, 26 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/Brevet_Polynesie_26_juin_2026_DV-3.pdf"
+      },
+      {
+        "source": "A2607",
+        "question": "Q2",
+        "referenceAncienne": null,
+        "forme": "a",
+        "identifiant": "DP04-a",
+        "ancienId": "DP04-V1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Médiane d’une série non ordonnée",
+        "formatSource": "Saisie",
+        "document": "Polynésie, 7 septembre 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-09-07_polynesie-FB.pdf"
+      },
+      {
+        "source": "A2609",
+        "question": "Q4",
+        "referenceAncienne": "PO-pro 4",
+        "forme": "a",
+        "identifiant": "DP04-a",
+        "ancienId": "DP04-V1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Médiane d’une série non ordonnée",
+        "formatSource": "Saisie",
+        "document": "Polynésie professionnelle, 26 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_professionnelle_Sujet_2026-06-26_Polynesie_DV-v4.pdf"
+      },
+      {
+        "source": "A2610",
+        "question": "Q4",
+        "referenceAncienne": "AG-pro 4",
+        "forme": "a",
+        "identifiant": "DP04-a",
+        "ancienId": "DP04-V1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Médiane d’une série ordonnée",
+        "formatSource": "Saisie",
+        "document": "Antilles-Guyane professionnelle, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Antilles_30_06_2026_DV-2.pdf"
+      },
+      {
+        "source": "A2611",
+        "question": "Q7",
+        "referenceAncienne": "ME-pro 7",
+        "forme": "a",
+        "identifiant": "DP04-a",
+        "ancienId": "DP04-V1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Médiane d’une série non ordonnée",
+        "formatSource": "Saisie",
+        "document": "Métropole professionnelle, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Metropole_30_juin_2026_DV.pdf"
+      },
+      {
+        "source": "Z26A",
+        "question": "Q3",
+        "referenceAncienne": "ZA 3",
+        "forme": "a",
+        "identifiant": "DP04-a",
+        "ancienId": "DP04-V1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Médiane d’une petite série",
+        "formatSource": "Nombre",
+        "document": "Sujet zéro 2026, série générale A",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-mathematiquespdf-123317.pdf"
+      },
+      {
+        "source": "Z26PA",
+        "question": "Q7",
+        "referenceAncienne": "ZPA 7",
+        "forme": "a",
+        "identifiant": "DP04-a",
+        "ancienId": "DP04-V1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Médiane d’une petite série",
+        "formatSource": "Nombre",
+        "document": "Sujet zéro 2026, série professionnelle A",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-mathematiquespdf-123305.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Trouver une médiane d’effectif impair",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Donne la médiane de cette série :7;3;9;3;5.",
+      "reponse": "5",
+      "donnees": "Série de 5 ou 7 entiers entre −10 et 15, non triée ; médiane unique. Valeurs négatives possibles, notamment températures.",
+      "saisie": "Nombre",
+      "acceptation": "5 accepté ;7 refusé. Corriger d’après les observations triées, pas les valeurs distinctes.",
+      "aide1": "« Range les valeurs sans oublier les répétitions. » Montrer cinq emplacements avec rangs, laisser les cartes non triées.",
+      "aide2": "« Série rangée :3;3;5;7;9. Il y a deux valeurs avant la troisième et deux après. » Encadrer le rang3, sans recopier de réponse à côté.",
+      "correction": "La troisième valeur est5 ; c’est la médiane.",
+      "controles": [
+        "Conserver les deux3.",
+        "Permuter l’ordre d’entrée sans changer5.",
+        "Vérifier au moins3 valeurs ≤ 5 et ≥ 5."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Donne la médiane de cette série : −6 ; 2 ; −4 ; −1 ; 11 ; 12 ; 14.",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "2",
+            "unite": ""
+          }
+        ],
+        "aide1": "Range les valeurs dans l’ordre croissant.",
+        "aide2": "Avec 7 valeurs, la valeur centrale est au rang 4.",
+        "cours": {
+          "regle": "Range la série. Une médiane m vérifie : au moins la moitié des valeurs ≤ m et au moins la moitié ≥ m. Étendue = maximum − minimum.",
+          "exemple": "1 ; 3 ; 5 ; 7 : toute valeur entre 3 et 5 est une médiane. La demi-somme vaut 4."
+        },
+        "correction": "Série rangée : −6 ; −4 ; −1 ; 2 ; 11 ; 12 ; 14. Médiane : 2."
+      },
+      "identifiant": "DP04-a",
+      "ancienId": "DP04-V1",
+      "ancienIdGenerateur": "DP04-V1",
+      "indiceGenerateur": 0,
+      "nom": "Trouver une médiane d’effectif impair",
+      "niveauDescription": "4ᵉ apprentissage ;3ᵉ automatisation",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2601",
+          "question": "Q6",
+          "referenceAncienne": "AN 6",
+          "forme": "a",
+          "identifiant": "DP04-a",
+          "ancienId": "DP04-V1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Médiane d’une série non ordonnée",
+          "formatSource": "Saisie",
+          "document": "Amérique du Nord, 3 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/Brevet_Ameri_Nord_3_06_2026_DV.pdf"
+        },
+        {
+          "source": "A2603",
+          "question": "Q1",
+          "referenceAncienne": "G1 1",
+          "forme": "a",
+          "identifiant": "DP04-a",
+          "ancienId": "DP04-V1",
+          "support": "comparable",
+          "difference": "La série doit pouvoir contenir des valeurs négatives ; l’ordre de nombres relatifs est aussi entretenu dans NC02.",
+          "savoirFaire": "Médiane de températures négatives et positives",
+          "formatSource": "Saisie",
+          "document": "Centres étrangers, 18 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-18_Centres-etrangers_DV-v3.pdf"
+        },
+        {
+          "source": "A2604",
+          "question": "Q1",
+          "referenceAncienne": "PO 1",
+          "forme": "a",
+          "identifiant": "DP04-a",
+          "ancienId": "DP04-V1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Médiane d’une série non ordonnée avec répétitions",
+          "formatSource": "Saisie",
+          "document": "Polynésie, 26 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/Brevet_Polynesie_26_juin_2026_DV-3.pdf"
+        },
+        {
+          "source": "A2607",
+          "question": "Q2",
+          "referenceAncienne": null,
+          "forme": "a",
+          "identifiant": "DP04-a",
+          "ancienId": "DP04-V1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Médiane d’une série non ordonnée",
+          "formatSource": "Saisie",
+          "document": "Polynésie, 7 septembre 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-09-07_polynesie-FB.pdf"
+        },
+        {
+          "source": "A2609",
+          "question": "Q4",
+          "referenceAncienne": "PO-pro 4",
+          "forme": "a",
+          "identifiant": "DP04-a",
+          "ancienId": "DP04-V1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Médiane d’une série non ordonnée",
+          "formatSource": "Saisie",
+          "document": "Polynésie professionnelle, 26 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_professionnelle_Sujet_2026-06-26_Polynesie_DV-v4.pdf"
+        },
+        {
+          "source": "A2610",
+          "question": "Q4",
+          "referenceAncienne": "AG-pro 4",
+          "forme": "a",
+          "identifiant": "DP04-a",
+          "ancienId": "DP04-V1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Médiane d’une série ordonnée",
+          "formatSource": "Saisie",
+          "document": "Antilles-Guyane professionnelle, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Antilles_30_06_2026_DV-2.pdf"
+        },
+        {
+          "source": "A2611",
+          "question": "Q7",
+          "referenceAncienne": "ME-pro 7",
+          "forme": "a",
+          "identifiant": "DP04-a",
+          "ancienId": "DP04-V1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Médiane d’une série non ordonnée",
+          "formatSource": "Saisie",
+          "document": "Métropole professionnelle, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Metropole_30_juin_2026_DV.pdf"
+        },
+        {
+          "source": "Z26A",
+          "question": "Q3",
+          "referenceAncienne": "ZA 3",
+          "forme": "a",
+          "identifiant": "DP04-a",
+          "ancienId": "DP04-V1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Médiane d’une petite série",
+          "formatSource": "Nombre",
+          "document": "Sujet zéro 2026, série générale A",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-mathematiquespdf-123317.pdf"
+        },
+        {
+          "source": "Z26PA",
+          "question": "Q7",
+          "referenceAncienne": "ZPA 7",
+          "forme": "a",
+          "identifiant": "DP04-a",
+          "ancienId": "DP04-V1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Médiane d’une petite série",
+          "formatSource": "Nombre",
+          "document": "Sujet zéro 2026, série professionnelle A",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-mathematiquespdf-123305.pdf"
+        }
+      ]
+    },
+    {
+      "id": "b",
+      "objectif": "Accepter plusieurs médianes pour un effectif pair",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Donne une médiane de la série :2;4;8;10.",
+      "reponse": "Tout nombre m tel que4 ≤ m ≤ 8, par exemple6",
+      "donnees": "N pair4/6/8 ; valeursordonnées ; deux valeurs centrales distinctes. Accepter l’intervalle fermé entre elles. Variante explicite « utilise la demi-somme » possible, alors une réponse unique est exigée.",
+      "saisie": "Nombre décimal ou fraction",
+      "acceptation": "Pour l’énoncé donné, accepter4,5,6,7,8 et tout rationnel de[4;8]. Si la consigne exige la demi-somme, accepter6 seulement.",
+      "aide1": "« Il y a quatre valeurs : repère les deux du milieu. » Encadrer les rangs2 et3.",
+      "aide2": "« Tout nombre entre4 et8 laisse au moins deux valeurs de chaque côté. Tu peux choisir leur demi-somme : (4 + 8) ÷ 2. » Tracer le segment fermé[4;8].",
+      "correction": "Par exemple6 convient :2 et4 sont ≤ 6 ;8 et10 sont ≥ 6.",
+      "controles": [
+        "4,6,8 acceptés ;3,9 refusés.",
+        "Unicité si les valeurs centrales sont égales.",
+        "Ne pas utiliser uniquement la fonctionMEDIAN comme correcteur d’une réponse ouverte."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Donne une médiane de la série 3 ; 4 ; 7 ; 8. Plusieurs réponses sont possibles.",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "5,5",
+            "unite": ""
+          }
+        ],
+        "aide1": "La série est déjà rangée. Repère les deux valeurs centrales.",
+        "aide2": "Une valeur entre 4 et 7, bornes comprises, convient.",
+        "cours": {
+          "regle": "Range la série. Une médiane m vérifie : au moins la moitié des valeurs ≤ m et au moins la moitié ≥ m. Étendue = maximum − minimum.",
+          "exemple": "1 ; 3 ; 5 ; 7 : toute valeur entre 3 et 5 est une médiane. La demi-somme vaut 4."
+        },
+        "correction": "Toute valeur de 4 à 7 convient. La demi-somme est 5,5."
+      },
+      "identifiant": "DP04-b",
+      "ancienId": "DP04-V2",
+      "ancienIdGenerateur": "DP04-V2",
+      "indiceGenerateur": 1,
+      "nom": "Accepter plusieurs médianes pour un effectif pair",
+      "niveauDescription": "4ᵉ, puis entretien3ᵉ",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Trouver la médiane d’un tableau d’effectifs",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Nombre de livres :0,1,2,3. Effectifs :1,2,4,1. Donne une médiane.",
+      "reponse": "2",
+      "donnees": "Tableau3–5 modalités ; total ≤ 12 ; choisir d’abord deux positions centrales portant la même valeur pour éviter de cumuler les difficultés. Exempleliste[0,1,1,2,2,2,2,3].",
+      "saisie": "Nombre",
+      "acceptation": "2 accepté ;1,5 refusé. Généralisation : appliquer la règle des deux valeurs centrales, sans moyenner les modalités seules.",
+      "aide1": "« Chaque effectif indique combien de fois la valeur apparaît. » Déplier le tableau en huit cartes, groupées sous leur valeur.",
+      "aide2": "« Les deux places centrales sont les places4 et5. Repère leur valeur. » Numéroter les cartes puis encadrer les deux places.",
+      "correction": "Les quatrième et cinquième valeurs sont2 : la médiane est2.",
+      "controles": [
+        "N = 1 + 2 + 4 + 1 = 8.",
+        "Ne pas remplacer les effectifs par quatre valeurs équipondérées.",
+        "Effectifsnuls possibles, sans créer de carte."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Donne une médiane du nombre de livres lus. Plusieurs réponses sont parfois possibles.",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "0,5",
+            "unite": ""
+          }
+        ],
+        "aide1": "Il y a 8 valeurs, en comptant les répétitions.",
+        "aide2": "Repère les rangs 4 et 5.",
+        "cours": {
+          "regle": "Range la série. Une médiane m vérifie : au moins la moitié des valeurs ≤ m et au moins la moitié ≥ m. Étendue = maximum − minimum.",
+          "exemple": "1 ; 3 ; 5 ; 7 : toute valeur entre 3 et 5 est une médiane. La demi-somme vaut 4."
+        },
+        "correction": "Toute valeur de 0 à 1 convient."
+      },
+      "identifiant": "DP04-c",
+      "ancienId": "DP04-V3",
+      "ancienIdGenerateur": "DP04-V3",
+      "indiceGenerateur": 2,
+      "nom": "Trouver la médiane d’un tableau d’effectifs",
+      "niveauDescription": "4ᵉ application guidée ;3ᵉ entretien",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Calculer une étendue avec une valeur négative",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Les températures relevées sont−2 °C,3 °C,7 °C et1 °C. Quelle est l’étendue ?",
+      "reponse": "9 °C",
+      "donnees": "3–7 entiers entre−10 et20 ; valeursen°C ; max−min ≤ 30. Variantepositive puis avecminnégatif.",
+      "saisie": "Nombre, unité°C affichée",
+      "acceptation": "9 accepté ;5 et−9 refusés.",
+      "aide1": "« Cherche la plus petite et la plus grande température. » Les placer sur une droite graduée de−2 à7.",
+      "aide2": "« L’écart va de−2 à0, puis de0 à7. Calcule2 + 7, ou7 − (−2). » Dessiner deux segments2 et7.",
+      "correction": "7 − (−2) = 9 °C.",
+      "controles": [
+        "Étendue ≥ 0 ; sérieconstante→0.",
+        "Ne pas utiliser somme des valeurs.",
+        "9 accepté ;5 refusé."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Températures en °C : −5 ; 0 ; 8 ; 1. Quelle est l’étendue ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "13",
+            "unite": "°C"
+          }
+        ],
+        "aide1": "Repère le minimum et le maximum.",
+        "aide2": "Calcule maximum − minimum, même si le minimum est négatif.",
+        "cours": {
+          "regle": "L’étendue est la différence entre la valeur maximale et la valeur minimale.",
+          "exemple": "Maximum 7 ; minimum −2 : étendue = 7 − (−2) = 9."
+        },
+        "correction": "8 − (−5) = 13 °C."
+      },
+      "identifiant": "DP04-d",
+      "ancienId": "DP04-V4",
+      "ancienIdGenerateur": "DP04-V4",
+      "indiceGenerateur": 3,
+      "nom": "Calculer une étendue avec une valeur négative",
+      "niveauDescription": "4ᵉ après relatifs ;3ᵉ automatisation",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "°C"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Lire effectif total et médiane sur un diagramme en barres",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Le diagramme des livres lus donne les effectifs 2 ; 3 ; 1 ; 4 ; 3 pour les valeurs 0 ; 1 ; 2 ; 3 ; 4. Donne l’effectif total et la médiane.",
+      "reponse": "13 ; 3",
+      "donnees": "Cinq valeurs 0 à 4 ; effectifs de 1 à 6 ; total impair, obtenu en ajustant le dernier effectif. Axe vertical gradué de 1 en 1, explicitement nommé Effectif.",
+      "saisie": "Deux champs numériques : Effectif total ; Médiane",
+      "acceptation": "Deux réponses exactes attendues dans l’ordre.",
+      "aide1": "Additionne les hauteurs : elles donnent les effectifs, pas les valeurs de la série.",
+      "aide2": "Avec 13 élèves, cherche la valeur de la 7ᵉ observation. Tableau des effectifs issu des barres en aide.",
+      "correction": "Total 13 ; rang central 7 ; médiane 3.",
+      "controles": [
+        "Somme des effectifs impaire : médiane unique.",
+        "Échelle du graphique conforme.",
+        "Ne pas prendre la médiane des hauteurs des barres."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Le diagramme donne le nombre de livres lus. Donne l’effectif total, puis la médiane de cette série.",
+        "reponses": [
+          {
+            "libelle": "Effectif total",
+            "reponse": "13",
+            "unite": ""
+          },
+          {
+            "libelle": "Médiane",
+            "reponse": "2",
+            "unite": ""
+          }
+        ],
+        "aide1": "L’axe vertical donne les effectifs : 13 élèves au total.",
+        "aide2": "Repère la valeur de la 7ᵉ observation dans la série rangée.",
+        "cours": {
+          "regle": "Range la série. Une médiane m vérifie : au moins la moitié des valeurs ≤ m et au moins la moitié ≥ m. Étendue = maximum − minimum.",
+          "exemple": "1 ; 3 ; 5 ; 7 : toute valeur entre 3 et 5 est une médiane. La demi-somme vaut 4."
+        },
+        "correction": "Effectif 13 ; rang central 7 ; médiane 2."
+      },
+      "identifiant": "DP04-e",
+      "ancienId": "DP04-V5",
+      "ancienIdGenerateur": "DP04-V5",
+      "indiceGenerateur": 4,
+      "nom": "Lire effectif total et médiane sur un diagramme en barres",
+      "niveauDescription": "4ᵉ, puis entretien",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Effectif total",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "Médiane",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2602",
+          "question": "Q9a-b",
+          "referenceAncienne": "AA 9a-b",
+          "forme": "e",
+          "identifiant": "DP04-e",
+          "ancienId": "DP04-V5",
+          "support": "comparable",
+          "difference": "Deux sorties requises par la source : effectif total puis médiane. Vérifier les deux champs de la variante.",
+          "savoirFaire": "Effectif total et médiane sur diagramme en barres",
+          "formatSource": "Saisie multiple",
+          "document": "Asie, 15 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-15_Asie_DV-v3.pdf"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+MG Math: renamed subset derivative of Latin Modern Math under GUST Font License. ASCII letters map to mathematical italic glyphs. Digits/operators remain upright. Original authors: Boguslaw Jackowski, Piotr Strzelczyk, Janusz M. Nowacki. Modified for maths&go, 2026.

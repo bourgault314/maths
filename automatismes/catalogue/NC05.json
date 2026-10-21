@@ -1,0 +1,412 @@
+{
+  "id": "NC05",
+  "titre": "Opposés, sommes et différences de relatifs",
+  "categorie": "Nombres et calculs",
+  "objectif": "Distinguer opposé, somme et différence ; comprendre le signe sans appliquer la règle du produit à l’addition.",
+  "prerequis": ["Entiers et décimaux", "Droite graduée", "Tables de multiplication"],
+  "perimetre": "Couverture des prérequis et automatismes du collège. Le filtre DNB2027 utilise l’ancien programme du cycle 4 ; les niveaux indiqués suivent le nouveau programme. Le statut est précisé par variante.",
+  "cours": {
+    "regle": "Deux opposés ont pour somme 0. Soustraire un nombre revient à ajouter son opposé.",
+    "exemple": "L’opposé de −2,5 est 2,5.",
+    "visuel": "Droite graduée signée, origine visible ; deux positions opposées à la même distance de 0.",
+    "mouvement": "Le schéma est entièrement compréhensible à l’arrêt. Une animation éventuelle révèle les étapes sans cacher les états précédents."
+  },
+  "erreurs": [
+    "Confondre addition et produit des signes",
+    "Oublier les parenthèses",
+    "Changer l’ordre de calcul"
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 4 (2026)",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "statut": "prescription",
+      "repere": "PDF p 7–9",
+      "apport": "Objectifs et progression officiels du programme ; niveau de classe vérifié."
+    },
+    {
+      "titre": "Exemples de mise en œuvre du cycle 4 (2026)",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "statut": "appui pédagogique",
+      "repere": "PDF p 11–12, imprimées 10–11",
+      "apport": "Exemples officiels de mise en œuvre : progressivité, représentations et types de calculs."
+    },
+    {
+      "titre": "Liste indicative d’automatismes DNB (octobre 2025)",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/liste-indicative-dautomatismes-pour-le-dnbpdf-116340.pdf",
+      "statut": "prescription",
+      "repere": "p 1",
+      "apport": "Périmètre indicatif des automatismes du DNB ; la liste n’est pas limitative."
+    },
+    {
+      "titre": "Mathsgo — somme et différence de relatifs",
+      "url": "https://mathsgo.re/outils/nombres_relatifs/nombres_relatifs_somme_differenceC.html",
+      "repere": "HTML lu par l’agent de repérage ; interaction non testée",
+      "apport": "Paires de signes opposés valant 0 ; option de jetons après la droite graduée, sans surcharge simultanée.",
+      "statut": "inspiration visuelle"
+    },
+    {
+      "titre": "NCETM — Single number lines",
+      "url": "https://www.ncetm.org.uk/media/8d84e79498db675/ncetm_ks3_representations_single_number_lines.pdf",
+      "repere": "p.3,5,7 lues visuellement",
+      "apport": "Ordre, opérations et fractions sur une droite ; limites pour les produits négatifs.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "Le terme valeur absolue peut servir dans l’explication de distance à 0 ; aucun exercice autonome ni notation |x| imposée en 5e.",
+  "implementation": {
+    "module": "app-automatismes/dist/modules/nombres.js",
+    "tests": "etape1/test_nombres.mjs",
+    "variantes": 6,
+    "graines_par_variante": 200,
+    "principe": "Aide 1 : représentation visuelle des données. Aide 2 : étape de calcul. Deux aides maximum.",
+    "aide1_visuelle": true
+  },
+  "atlas": "cours/05.svg",
+  "atlasAlt": "Départ−2, déplacement de5unités vers la droite, arrivée3.",
+  "nom": "Opposés, sommes et différences de relatifs",
+  "domaine": "nombres-calculs",
+  "sousDomaine": "Nombres et calculs",
+  "niveaux": ["5e", "4e", "3e"],
+  "niveauxDescription": "5e ; entretien ultérieur.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_38", "dnb_39"],
+    "questions": [
+      {
+        "source": "A2606",
+        "question": "Q2",
+        "referenceAncienne": "ME 2",
+        "forme": "c",
+        "identifiant": "NC05-c",
+        "ancienId": "NC05-C",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Addition de nombres décimaux relatifs",
+        "formatSource": "Saisie",
+        "document": "Métropole, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Metropole_FK-v2.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Produire l’opposé",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Quel est l’opposé de −2,5 ?",
+      "reponse": "2.5",
+      "donnees": "Décimal signé non nul, de valeur absolue 0,1–9,9 ; l’opposé conserve la distance à 0.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "L’opposé est à la même distance de 0, de l’autre côté.",
+      "aide2": "−2,5 + ? = 0.",
+      "correction": "L’opposé de −2,5 est 2,5.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["2.5"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "2.5",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Droite avec déplacement orienté ou paires de signes opposés. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC05-a",
+      "ancienId": "NC05-a",
+      "ancienIdGenerateur": "NC05-A",
+      "indiceGenerateur": 0,
+      "nom": "Produire l’opposé",
+      "niveauDescription": "5e ; entretien dans les classes suivantes.",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Additionner deux négatifs",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Calcule −3 + (−9).",
+      "reponse": "-12",
+      "donnees": "Deux entiers négatifs de −12 à −1 ; somme négative.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Deux déplacements vers la gauche se cumulent.",
+      "aide2": "Additionne les distances 3 et 9, puis garde le signe −.",
+      "correction": "−3 + (−9) = −12.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["-12"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "-12",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Droite avec déplacement orienté ou paires de signes opposés. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC05-b",
+      "ancienId": "NC05-b",
+      "ancienIdGenerateur": "NC05-B",
+      "indiceGenerateur": 1,
+      "nom": "Additionner deux négatifs",
+      "niveauDescription": "5e ; entretien dans les classes suivantes.",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Additionner deux nombres de signes contraires",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Calcule −3 + 6,5.",
+      "reponse": "3.5",
+      "donnees": "Un décimal négatif et un positif, au dixième ; résultat positif, nul ou négatif.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Les deux déplacements sont de sens contraires.",
+      "aide2": "Compare 3 et 6,5 ; retire la plus petite distance de la plus grande.",
+      "correction": "−3 + 6,5 = 3,5.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["3.5"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "3.5",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Droite avec déplacement orienté ou paires de signes opposés. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC05-c",
+      "ancienId": "NC05-c",
+      "ancienIdGenerateur": "NC05-C",
+      "indiceGenerateur": 2,
+      "nom": "Additionner deux nombres de signes contraires",
+      "niveauDescription": "5e ; entretien dans les classes suivantes.",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2606",
+          "question": "Q2",
+          "referenceAncienne": "ME 2",
+          "forme": "c",
+          "identifiant": "NC05-c",
+          "ancienId": "NC05-C",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Addition de nombres décimaux relatifs",
+          "formatSource": "Saisie",
+          "document": "Métropole, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Metropole_FK-v2.pdf"
+        }
+      ]
+    },
+    {
+      "id": "d",
+      "objectif": "Soustraire un négatif",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Calcule −5 − (−7).",
+      "reponse": "2",
+      "donnees": "Premier entier −9 à 9 ; soustraction d’un entier −9 à −1.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Soustraire un négatif revient à ajouter son opposé.",
+      "aide2": "−5 − (−7) = −5 + 7.",
+      "correction": "−5 − (−7) = 2.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["2"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "2",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Droite avec déplacement orienté ou paires de signes opposés. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC05-d",
+      "ancienId": "NC05-d",
+      "ancienIdGenerateur": "NC05-D",
+      "indiceGenerateur": 3,
+      "nom": "Soustraire un négatif",
+      "niveauDescription": "5e ; entretien dans les classes suivantes.",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Trouver un terme manquant",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Complète −3 + □ = 5.",
+      "reponse": "8",
+      "donnees": "Premier terme −12 à −1 ; résultat −5 à 10 ; terme manquant obtenu par soustraction.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Cherche le déplacement du premier nombre au résultat.",
+      "aide2": "Le nombre manquant vaut 5 − (−3).",
+      "correction": "−3 + 8 = 5.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["8"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "8",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Droite avec déplacement orienté ou paires de signes opposés. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC05-e",
+      "ancienId": "NC05-e",
+      "ancienIdGenerateur": "NC05-E",
+      "indiceGenerateur": 4,
+      "nom": "Trouver un terme manquant",
+      "niveauDescription": "5e ; entretien dans les classes suivantes.",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "f",
+      "objectif": "Regrouper des opposés dans une somme",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Calcule −4 + 7 + 4 − 1.",
+      "reponse": "6",
+      "donnees": "Quatre termes ; une paire d’opposés de valeur absolue 2–12 ; deux autres entiers 1–9.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Regroupe d’abord les deux nombres opposés.",
+      "aide2": "−4 + 4 = 0 ; il reste 7 − 1.",
+      "correction": "−4 + 7 + 4 − 1 = 6.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["6"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "6",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Droite avec déplacement orienté ou paires de signes opposés. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC05-f",
+      "ancienId": "NC05-f",
+      "ancienIdGenerateur": "NC05-F",
+      "indiceGenerateur": 5,
+      "nom": "Regrouper des opposés dans une somme",
+      "niveauDescription": "5e ; entretien dans les classes suivantes.",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

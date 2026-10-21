@@ -1,0 +1,439 @@
+{
+  "id": "NC10",
+  "titre": "Comparer et encadrer des fractions",
+  "categorie": "Nombres et calculs",
+  "objectif": "Choisir un repère ou une écriture commune pour comparer des fractions.",
+  "prerequis": ["Sens de la fraction", "Parts égales d’une même unité", "Tables et quotient"],
+  "perimetre": "Couverture des prérequis et automatismes du collège. Le filtre DNB2027 utilise l’ancien programme du cycle 4 ; les niveaux indiqués suivent le nouveau programme. Le statut est précisé par variante.",
+  "cours": {
+    "regle": "Compare des parts de même taille, ou utilise les repères 1 et 1/2.",
+    "exemple": "6/10 < 7/10.",
+    "visuel": "Bandes alignées de même longueur ; repères 1 et 1/2 ; négatifs comparés après les distances à 0.",
+    "mouvement": "Le schéma est entièrement compréhensible à l’arrêt. Une animation éventuelle révèle les étapes sans cacher les états précédents."
+  },
+  "erreurs": [
+    "Changer seulement un terme de la fraction",
+    "Additionner les dénominateurs",
+    "Perdre le signe ou l’unité"
+  ],
+  "sources": [
+    {
+      "titre": "Exemples de mise en œuvre du programme de 6e (2025)",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/exemplesmiseenoeuvre6e-mathpdf-111549.pdf",
+      "statut": "appui pédagogique",
+      "repere": "PDF p 7–8, imprimées 6–7",
+      "apport": "Exemples officiels de mise en œuvre : progressivité, représentations et types de calculs."
+    },
+    {
+      "titre": "Exemples de mise en œuvre du cycle 4 (2026)",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "statut": "appui pédagogique",
+      "repere": "PDF p 12,16 ; imprimées 11,15",
+      "apport": "Exemples officiels de mise en œuvre : progressivité, représentations et types de calculs."
+    },
+    {
+      "titre": "DNB sujet de référence 2027 n°1",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n01-129658.pdf",
+      "statut": "appui pédagogique",
+      "repere": "PDF p 2 Q 4",
+      "apport": "Situation effectivement observée dans le sujet de référence, repérée par numéro de question."
+    },
+    {
+      "titre": "Mathsgo — bandes de fractions",
+      "url": "https://mathsgo.re/outils/fractions/bandes_fractions.html",
+      "repere": "HTML lu par l’agent de repérage ; interaction non testée",
+      "apport": "Une unité constante, des parts égales, un repartage visible avant le calcul abstrait.",
+      "statut": "inspiration visuelle"
+    },
+    {
+      "titre": "NCETM — Single number lines",
+      "url": "https://www.ncetm.org.uk/media/8d84e79498db675/ncetm_ks3_representations_single_number_lines.pdf",
+      "repere": "p.3,5,7 lues visuellement",
+      "apport": "Ordre, opérations et fractions sur une droite ; limites pour les produits négatifs.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "Le critère du même numérateur est appliqué aux positifs ; pour les négatifs, le changement d’ordre est explicité.",
+  "implementation": {
+    "module": "app-automatismes/dist/modules/nombres.js",
+    "tests": "etape1/test_nombres.mjs",
+    "variantes": 6,
+    "graines_par_variante": 200,
+    "principe": "Aide 1 : représentation visuelle des données. Aide 2 : étape de calcul. Deux aides maximum.",
+    "aide1_visuelle": true
+  },
+  "nom": "Comparer et encadrer des fractions",
+  "domaine": "nombres-calculs",
+  "sousDomaine": "Nombres et calculs",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6e : fractions positives ; 4e : fractions négatives.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_01", "dnb_03"],
+    "questions": [
+      {
+        "source": "R27A",
+        "question": "Q4",
+        "referenceAncienne": "R1 4",
+        "forme": "e",
+        "identifiant": "NC10-e",
+        "ancienId": "NC10-E",
+        "support": "adaptation",
+        "difference": "Trois écritures mixtes dans la variante, quatre dans la source ; même conversion et même ordre.",
+        "savoirFaire": "Ordonner des nombres sous écritures mixtes",
+        "formatSource": "Classement",
+        "document": "Sujet de référence mathématiques n°1",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n01-129658.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Comparer à dénominateur commun",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Complète : 6/10 □ 7/10.",
+      "reponse": "<",
+      "donnees": "Deux fractions positives de même dénominateur 4–12, numérateurs différents ; ordre d’affichage variable.",
+      "saisie": "Choisis une réponse : choix explicites",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Les parts ont la même taille.",
+      "aide2": "Compare les numérateurs 6 et 7.",
+      "correction": "6/10 < 7/10.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "text",
+        "values": ["<"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Choisis une réponse",
+          "answer": "<",
+          "kind": "text",
+          "unit": "",
+          "placeholder": "",
+          "options": ["<", "=", ">"]
+        }
+      ],
+      "visuel_aide1": "Bandes de même unité, tableau de rangs ou droite graduée. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Étape de calcul explicite.",
+      "identifiant": "NC10-a",
+      "ancienId": "NC10-a",
+      "ancienIdGenerateur": "NC10-A",
+      "indiceGenerateur": 0,
+      "nom": "Comparer à dénominateur commun",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Choisis une réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Comparer à numérateur positif commun",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Complète : 3/6 □ 3/8.",
+      "reponse": ">",
+      "donnees": "Même numérateur positif 1–4 ; deux dénominateurs plus grands ; bandes de même unité.",
+      "saisie": "Choisis une réponse : choix explicites",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Même numérateur : compare la taille des parts.",
+      "aide2": "Plus le partage est fin, plus chaque part est petite.",
+      "correction": "3/6 > 3/8.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "text",
+        "values": [">"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Choisis une réponse",
+          "answer": ">",
+          "kind": "text",
+          "unit": "",
+          "placeholder": "",
+          "options": ["<", "=", ">"]
+        }
+      ],
+      "visuel_aide1": "Bandes de même unité, tableau de rangs ou droite graduée. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Étape de calcul explicite.",
+      "identifiant": "NC10-b",
+      "ancienId": "NC10-b",
+      "ancienIdGenerateur": "NC10-B",
+      "indiceGenerateur": 1,
+      "nom": "Comparer à numérateur positif commun",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Choisis une réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Utiliser le repère 1",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Complète : 9/8 □ 6/7.",
+      "reponse": ">",
+      "donnees": "Une fraction inférieure à 1 et une supérieure à 1 ; dénominateurs 3–9 ; ordre variable.",
+      "saisie": "Choisis une réponse : choix explicites",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Utilise le repère 1.",
+      "aide2": "6/7 < 1 et 9/8 > 1.",
+      "correction": "9/8 > 6/7.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "text",
+        "values": [">"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Choisis une réponse",
+          "answer": ">",
+          "kind": "text",
+          "unit": "",
+          "placeholder": "",
+          "options": ["<", "=", ">"]
+        }
+      ],
+      "visuel_aide1": "Bandes de même unité, tableau de rangs ou droite graduée. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC10-c",
+      "ancienId": "NC10-c",
+      "ancienIdGenerateur": "NC10-C",
+      "indiceGenerateur": 2,
+      "nom": "Utiliser le repère 1",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Choisis une réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Utiliser le repère 1/2",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Complète : 6/10 □ 4/10.",
+      "reponse": ">",
+      "donnees": "Dénominateurs pairs 4–12 ; une fraction de chaque côté de 1/2 ; dénominateurs différents possibles.",
+      "saisie": "Choisis une réponse : choix explicites",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Utilise le repère 1/2.",
+      "aide2": "4/10 < 1/2 et 6/10 > 1/2.",
+      "correction": "6/10 > 4/10.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "text",
+        "values": [">"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Choisis une réponse",
+          "answer": ">",
+          "kind": "text",
+          "unit": "",
+          "placeholder": "",
+          "options": ["<", "=", ">"]
+        }
+      ],
+      "visuel_aide1": "Bandes de même unité, tableau de rangs ou droite graduée. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Étape de calcul explicite.",
+      "identifiant": "NC10-d",
+      "ancienId": "NC10-d",
+      "ancienIdGenerateur": "NC10-D",
+      "indiceGenerateur": 3,
+      "nom": "Utiliser le repère 1/2",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Choisis une réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Ordonner des écritures différentes",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Range par ordre croissant : 2,25 ; 2 + 3/100 ; 11/4.",
+      "reponse": "2.03 ; 2.25 ; 2.75",
+      "donnees": "Trois écritures : décimal, entier + centièmes, fraction de dénominateur 4 ; trois valeurs distinctes.",
+      "saisie": "Le plus petit : nombre ; Au milieu : nombre ; Le plus grand : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Choisis une même écriture pour comparer.",
+      "aide2": "Écris les trois nombres sous forme décimale.",
+      "correction": "2,03 < 2,25 < 2,75",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "fields",
+        "values": ["2.03", "2.25", "2.75"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Le plus petit",
+          "answer": "2.03",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        },
+        {
+          "label": "Au milieu",
+          "answer": "2.25",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        },
+        {
+          "label": "Le plus grand",
+          "answer": "2.75",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Bandes de même unité, tableau de rangs ou droite graduée. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC10-e",
+      "ancienId": "NC10-e",
+      "ancienIdGenerateur": "NC10-E",
+      "indiceGenerateur": 4,
+      "nom": "Ordonner des écritures différentes",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Le plus petit",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "Au milieu",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "Le plus grand",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "R27A",
+          "question": "Q4",
+          "referenceAncienne": "R1 4",
+          "forme": "e",
+          "identifiant": "NC10-e",
+          "ancienId": "NC10-E",
+          "support": "adaptation",
+          "difference": "Trois écritures mixtes dans la variante, quatre dans la source ; même conversion et même ordre.",
+          "savoirFaire": "Ordonner des nombres sous écritures mixtes",
+          "formatSource": "Classement",
+          "document": "Sujet de référence mathématiques n°1",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n01-129658.pdf"
+        }
+      ]
+    },
+    {
+      "id": "f",
+      "objectif": "Comparer des fractions négatives",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Complète : −3/6 □ −5/6.",
+      "reponse": ">",
+      "donnees": "Fractions négatives ; dénominateurs 3, 4, 6 ou 8 ; égalité autorisée ; produits croisés avec dénominateurs positifs.",
+      "saisie": "Choisis une réponse : choix explicites",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Compare les distances à 0, puis inverse l’ordre.",
+      "aide2": "Compare 18/36 et 30/36 avant de remettre les signes −.",
+      "correction": "−3/6 > −5/6.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "text",
+        "values": [">"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Choisis une réponse",
+          "answer": ">",
+          "kind": "text",
+          "unit": "",
+          "placeholder": "",
+          "options": ["<", "=", ">"]
+        }
+      ],
+      "visuel_aide1": "Bandes de même unité, tableau de rangs ou droite graduée. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC10-f",
+      "ancienId": "NC10-f",
+      "ancienIdGenerateur": "NC10-F",
+      "indiceGenerateur": 5,
+      "nom": "Comparer des fractions négatives",
+      "niveauDescription": "4e ; entretien dans les classes suivantes.",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Choisis une réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

@@ -1,0 +1,278 @@
+{
+  "id": "EG14",
+  "titre": "Symétries",
+  "categorie": "Géométrie et repérage",
+  "objectif": "Reconnaître ou construire une image par symétrie axiale ou centrale et utiliser les conservations.",
+  "prerequis": "Milieu, perpendicularité, distance, quadrillage ; coordonnées uniquement après 5e.",
+  "perimetre": "DNB2027 et nouveauprogramme. Les quadrillages sans coordonnées permettent l’accès 6e à l’axiale.",
+  "cours": {
+    "regle": "Symétrie axiale : l’axe est la médiatrice du segment qui joint un point à son image. Demi-tour de centreO : O est le milieu du segment qui joint un point à son image.",
+    "exemple": "Sur quadrillage, A est 3 carreaux à gauche de l’axe vertical : son image est 3 carreaux à droite, à la même hauteur. Pour un demi-tour,2 carreaux à droite et 1 en haut deviennent 2 à gauche et 1 en bas.",
+    "visuel": "Deux cartes distinctes : axe vertical et segmentAA′ perpendiculaire, milieuH sur l’axe, AH = HA′ codé ; demi-tour avec A,O,A′ alignés etAO = OA′. Points fixes visibles :H sur axe, O centre.",
+    "mouvement": "Axiale : pliage visuel optionnel ; centrale : rotation 180° optionnelle. Version statique codages d’égalité et alignements ; jamais dépendance à l’animation.",
+    "exemples_par_variante": [
+      {
+        "id": "EG14-V1",
+        "regle": "Pour un point hors de l’axe, l’axe de symétrie est la médiatrice du segment joignant ce point à son image.",
+        "exemple": "A et A′ sont de part et d’autre de l’axe, à la même distance. L’axe coupe [AA′] en son milieu et est perpendiculaire à (AA′)."
+      },
+      {
+        "id": "EG14-V2",
+        "regle": "Pour un point hors de l’axe, l’axe de symétrie est la médiatrice du segment joignant ce point à son image.",
+        "exemple": "A et A′ sont de part et d’autre de l’axe, à la même distance. L’axe coupe [AA′] en son milieu et est perpendiculaire à (AA′)."
+      },
+      {
+        "id": "EG14-V3",
+        "regle": "Pour une symétrie centrale de centre O, O est le milieu du segment joignant un point à son image.",
+        "exemple": "O est le milieu de [AA′] : A′ est l’image de A par le demi-tour de centre O."
+      },
+      {
+        "id": "EG14-V4",
+        "regle": "Une symétrie axiale ou centrale conserve les longueurs.",
+        "exemple": "[A′B′] est l’image de [AB] par symétrie. Si AB=4 cm, alors A′B′=4 cm."
+      }
+    ]
+  },
+  "erreurs": [
+    "Confondre symétrie axiale et demi-tour.",
+    "Reporter une distance non perpendiculaire àl’axe.",
+    "Croire qu’un point sur l’axe doitbouger.",
+    "Oublier la correspondance des sommets."
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 3 — 2025",
+      "url": "https://www.education.gouv.fr/sites/default/files/ensel620_annexe2-v2.pdf",
+      "repere": "p. 23–24 — Symétrieaxiale",
+      "apport": "Construction et propriétés en 6e.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Programme de mathématiques du cycle 4 — 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "p. 12–14 — Transformations",
+      "apport": "Axiale enautomatisme 5e, demi-tour appris 5e puis automatisé 4e.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples pour la mise en œuvre des programmes de mathématiques — cycle 4",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "PDF p. 24 et 29 — Transformations",
+      "apport": "Axes verticaux,horizontaux,diagonaux etconservation des propriétés.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Livret d’accompagnement du programme de mathématiques de 6e — 2026",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/2026livretaccompagnementmaths6e-pdf-126656.pdf",
+      "repere": "PDF p. 29–30 — Médiatrice",
+      "apport": "Pliage,axe etéquidistance comme appuis visuels.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "NCETM — Geometry",
+      "url": "https://www.ncetm.org.uk/classroom-resources/secmm-6-geometry/",
+      "repere": "Présentation du thème 6 consultée",
+      "apport": "Relier propriétés géométriques, formules de mesure et transformations ; appui thématique.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "Les figures sont calculées àpartir de transformations exactes ; une alternative clavier accompagne toujours lepointage. Les textes techniques de génération ne sont pas des énoncés élèves.",
+  "acces_secondaires": [],
+  "nom": "Symétries",
+  "domaine": "espace-geometrie",
+  "sousDomaine": "Géométrie et repérage",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6e : symétrie axiale en apprentissage ;5e : axiale en entretien, demi-tour en apprentissage ;4e–3e : automatisation des deux.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_27"],
+    "questions": [
+      {
+        "source": "A2605",
+        "question": "Q2",
+        "referenceAncienne": "AG 2",
+        "forme": "c",
+        "identifiant": "EG14-c",
+        "ancienId": "EG14-V3",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Image par symétrie centrale sur quadrillage",
+        "formatSource": "Nom de point",
+        "document": "Antilles-Guyane, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Antilles-Guyane_DV-v2.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Construire l’image d’un point par rapport à un axe vertical.",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "A est placé 3 carreaux à gauche de l’axe vertical et 2 carreaux au-dessus du pointO marqué sur cet axe. Place son symétriqueA′.",
+      "reponse": "3 carreaux à droite et 2 au-dessus deO",
+      "donnees": "Quadrillage carré ; axe x = 0 interne, O(0,0),A(−3,2),A′(3,2). Coordonnées non affichées en 6e. Axeverticalouhorizontal alterné.",
+      "saisie": "Sélection d’un nœud ; alternative déplacement par flèches depuisO.",
+      "acceptation": "Nœud(3,2) interne.",
+      "aide1": "« Le segment qui joint A à son image est perpendiculaire à l’axe. » Tracer une ligne horizontale passant parA.",
+      "aide2": "« Reporte la même distance de l’autre côté de l’axe. » Montrer les 3 intervalles à gauche et trois emplacements à droite sanspointfinal.",
+      "correction": "A′ est à 3 carreaux à droite de l’axe, à la même hauteur queA.",
+      "controles": [
+        "Refuser(3,−2), image centrale.",
+        "Inclure les points sur l’axe : leur image est le point lui-même."
+      ],
+      "identifiant": "EG14-a",
+      "ancienId": "EG14-V1",
+      "ancienIdGenerateur": "EG14-V1",
+      "indiceGenerateur": 0,
+      "nom": "Construire l’image d’un point par rapport à un axe vertical.",
+      "niveauDescription": "6e ; entretien 5e–3e",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Reconnaître une symétrie axiale d’axe oblique.",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Sur le quadrillage, quel point est l’image de A par la symétrie d’axe (d) : P, Q ou R ?",
+      "reponse": "P",
+      "donnees": "Données internes O0,0, axe y = x, A2,1 ;P1,2,Q−2,−1,R2,−1. Enoncéélève affiché : « Quel point est l’image deA par rapport àl’axe(d) ? » ; coordonnées internes jamais exigées en 6e.",
+      "saisie": "Choix du point ou de sa lettre.",
+      "acceptation": "P.",
+      "aide1": "« L’axe doit couper [AA′] en son milieu et à angle droit. » Afficher une petite équerre sur l’axe, sans choisir le candidat.",
+      "aide2": "« Teste pour chaque candidat la perpendicularité et les distances à l’axe. » Ajouter le segmentA–candidat seulement lors de la sélection exploratoire en aide, pas valider.",
+      "correction": "PourP, [AP] est perpendiculaire à(d) et son milieu est sur(d) : P est l’image deA.",
+      "controles": [
+        "Ne pas accepter simple inversion gauche-droite horizontale.",
+        "Les coordonnées internes ne doivent pas fuiter dans le libelléélève ; vérifier axe y = x avec rapportd’échelle 1:1."
+      ],
+      "identifiant": "EG14-b",
+      "ancienId": "EG14-V2",
+      "ancienIdGenerateur": "EG14-V2",
+      "indiceGenerateur": 1,
+      "nom": "Reconnaître une symétrie axiale d’axe oblique.",
+      "niveauDescription": "6e après initiation ;5e–3e entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Construire l’image par demi-tour.",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "O est le centre du demi-tour. A est 2 carreaux à droite et 1 carreau au-dessus deO. PlaceA′.",
+      "reponse": "2 carreaux à gauche et 1 carreau en dessous deO",
+      "donnees": "O0,0,A2,1,A′−2,−1 ; grillecarrée ; centreéventuellementnonorigine mais clairementnommé.",
+      "saisie": "Sélection de nœud ; alternative flèches depuisO.",
+      "acceptation": "Nœud(−2,−1) interne.",
+      "aide1": "« O doit être le milieu de [AA′]. » Tracer la droite(AO).",
+      "aide2": "« Continue de l’autre côté deO sur la même distance. » Reporter un segment de longueurAO au-delàdeO, pointfinal non marqué.",
+      "correction": "A′ est 2 carreaux àgauche et 1 enbas deO ; O est le milieu de[AA′].",
+      "controles": [
+        "Refuser(−2,1) et(2,−1), symétriesaxiales.",
+        "Le centre est fixe ; vérifier l’involution : image deA′ = A."
+      ],
+      "identifiant": "EG14-c",
+      "ancienId": "EG14-V3",
+      "ancienIdGenerateur": "EG14-V3",
+      "indiceGenerateur": 2,
+      "nom": "Construire l’image par demi-tour.",
+      "niveauDescription": "5e apprentissage ;4e–3e entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2605",
+          "question": "Q2",
+          "referenceAncienne": "AG 2",
+          "forme": "c",
+          "identifiant": "EG14-c",
+          "ancienId": "EG14-V3",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Image par symétrie centrale sur quadrillage",
+          "formatSource": "Nom de point",
+          "document": "Antilles-Guyane, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Antilles-Guyane_DV-v2.pdf"
+        }
+      ]
+    },
+    {
+      "id": "d",
+      "objectif": "Utiliser la conservation des longueurs.",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "A′B′C′ est l’image deABC par une symétrie axiale. AB = 7 cm. Combien vautA′B′ ?",
+      "reponse": "7 cm",
+      "donnees": "Figureoriginale etimageexacte par réflexion ; correspondance des lettres donnée ; tester aussi demi-tour à partir 5e.",
+      "saisie": "Champ numérique aveccm fixe.",
+      "acceptation": "7 ;7 cm.",
+      "aide1": "« Une symétrie conserve les longueurs. » MettreAB etA′B′ avec même style de trait.",
+      "aide2": "« Le segment image de[AB] est[A′B′]. » Relier les deux noms et garder l’étiquette 7 cm sur l’original.",
+      "correction": "A′B′ = AB = 7 cm.",
+      "controles": [
+        "Refuser 14 ou 3,5.",
+        "La conservation ne dépend pas d’une superposition visuelle àl’écran."
+      ],
+      "identifiant": "EG14-d",
+      "ancienId": "EG14-V4",
+      "ancienIdGenerateur": "EG14-V4",
+      "indiceGenerateur": 3,
+      "nom": "Utiliser la conservation des longueurs.",
+      "niveauDescription": "5e ; entretien 4e–3e",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "A′B′",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

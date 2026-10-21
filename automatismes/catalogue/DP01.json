@@ -1,0 +1,364 @@
+{
+  "id": "DP01",
+  "titre": "Lire tableaux et diagrammes",
+  "categorie": "Statistiques et probabilités",
+  "objectif": "Prélever une information, reconnaître la grandeur lue et contrôler l’échelle de sa représentation.",
+  "prerequis": [
+    "Lire nombres entiers et décimaux simples",
+    "Repérer ligne, colonne et unité",
+    "Connaître moitié et quart"
+  ],
+  "perimetre": "DNB2027 pour les cinq variantes. La critique d’un axe est une application courte, pas une restitution de fait.",
+  "cours": {
+    "regle": "Lis d’abord le titre, les étiquettes et l’unité. Dans un graphique, vérifie la valeur d’une graduation.",
+    "exemple": "La barre « mardi » atteint 12 sur l’axe « livres prêtés » : 12 livres ont été prêtés mardi.",
+    "visuel": "Diagramme de trois barres lundi8, mardi12, mercredi6. Axe vertical de0 à14, pas2, intitulé « livres prêtés ». Encadrer mardi, puis tracer un guide horizontal pointillé vers12. Labels présents en plus d’un accent bleu.",
+    "mouvement": "Deux révélations manuelles : étiquette, puis guide de lecture. Version statique avec les deux repères numérotés."
+  },
+  "erreurs": [
+    "Confondre catégorie et valeur",
+    "Supposer qu’une graduation vaut1",
+    "Confondre proportion et effectif",
+    "Lire une hauteur sans contrôler l’origine de l’axe"
+  ],
+  "sources": [
+    {
+      "titre": "Programme cycle 3, 2025",
+      "url": "https://www.education.gouv.fr/sites/default/files/ensel620_annexe2-v2.pdf",
+      "repere": "6ᵉ, Organisation et gestion de données, PDFp.26",
+      "apport": "Lecture immédiate des tableaux, barres, secteurs et courbes.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Programme cycle 4, 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "5ᵉ, Statistiques, PDFp.16",
+      "apport": "Lecture, représentation et interprétation de données.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples de mise en œuvre cycle 4, 2026",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "Statistiques5ᵉ, PDFp.34–35",
+      "apport": "Discussion des échelles et représentations trompeuses.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Programme cycle 4, 2020",
+      "url": "https://cache.media.education.gouv.fr/file/31/89/1/ensel714_annexe3_1312891.pdf",
+      "repere": "Mathématiques, ThèmeB, PDFp.132",
+      "apport": "Tableaux et diagrammes pour le DNB2027.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "NCETM — Statistical representations and measures",
+      "url": "https://www.ncetm.org.uk/classroom-resources/secmm-51-statistical-representations-and-measures/",
+      "repere": "Page du concept 5.1 consultée ; pas de lecture exhaustive du PDF lié",
+      "apport": "Choisir des représentations selon les mesures statistiques étudiées.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "Les valeurs et les formats proposés sont des choix de conception. Cette famille ne couvre pas une enquête complète ni une argumentation statistique longue.",
+  "acces_secondaires": ["Fonctions et graphiques", "Proportionnalité et pourcentages"],
+  "nom": "Lire tableaux et diagrammes",
+  "domaine": "donnees-probabilites",
+  "sousDomaine": "Statistiques et probabilités",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6ᵉ : lectures directes entretenues depuis le CM. 5ᵉ : représentation et interprétation, choix d’échelle et regard critique. 4ᵉ–3ᵉ : entretien dans des contextes variés.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_32"],
+    "questions": []
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Lire un tableau à double entrée",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Le tableau donne les inscriptions : 6A, basket8 et danse5 ; 6B, basket9 et danse6. Combien d’élèves de6B sont inscrits au basket ?",
+      "reponse": "9",
+      "donnees": "Tableau 2 à4 lignes et2 à4 colonnes ; effectifs entiers0 à30 ; intitulés explicites. Exemple : lignes6A/6B, colonnesbasket/danse, matrice[[8,5],[9,6]].",
+      "saisie": "Nombre entier",
+      "acceptation": "Accepter9 ; refuser total de ligne15 et total de colonne17. Une case vide n’est pas0.",
+      "aide1": "« Repère la classe et l’activité demandées. » Encadrer les en-têtes6B et basket, sans colorer la cellule de réponse.",
+      "aide2": "« Suis la ligne6B et la colonne basket jusqu’à leur croisement. » Faire apparaître deux guides pointillés.",
+      "correction": "La cellule au croisement de6B et basket contient9.",
+      "controles": [
+        "Permuter lignes/colonnes sans changer le sens des labels.",
+        "Tester une cellule0 et des valeurs répétées.",
+        "9 accepté ;15 et17 refusés."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Combien d’élèves de 6B sont inscrits au basket ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "6",
+            "unite": ""
+          }
+        ],
+        "aide1": "Croise la ligne 6B et la colonne Basket.",
+        "aide2": "Lis la case à leur intersection.",
+        "cours": {
+          "regle": "Repère la catégorie, l’unité et la valeur d’une graduation.",
+          "exemple": "La barre de mardi atteint 12 : 12 livres."
+        },
+        "correction": "6 élèves."
+      },
+      "identifiant": "DP01-a",
+      "ancienId": "DP01-V1",
+      "ancienIdGenerateur": "DP01-V1",
+      "indiceGenerateur": 0,
+      "nom": "Lire un tableau à double entrée",
+      "niveauDescription": "6ᵉ, puis entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Lire des barres dont chaque graduation ne vaut pas1",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Sur le diagramme des fruits choisis, combien d’élèves ont choisi la poire ?",
+      "reponse": "14",
+      "donnees": "Barres pomme8, poire14, orange6. Axe vertical0,2,4,…,16 ; titre « fruit choisi », unité « élèves ». Générer3 à5 catégories, pas1/2/5 et hauteurs sur graduations.",
+      "saisie": "Nombre entier",
+      "acceptation": "Accepter14, pas7 qui compte les intervalles.",
+      "aide1": "« Combien vaut une graduation ? » Encadrer0,2 et4 sur l’axe.",
+      "aide2": "« Pars du sommet de la barre poire et lis horizontalement sur l’axe. » Ajouter un guide, sans afficher de nouvelle valeur.",
+      "correction": "La barre atteint la graduation14 :14 élèves.",
+      "controles": [
+        "Hauteur SVG proportionnelle à14/pas.",
+        "7 refusé ;14 accepté.",
+        "Inclure barres de hauteur0, sans inventer un rectangle visible."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Le diagramme donne le nombre de fruits. Combien y a-t-il de oranges ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "12",
+            "unite": ""
+          }
+        ],
+        "aide1": "Deux lignes horizontales successives sont espacées de 2.",
+        "aide2": "Pars du sommet de la barre Orange et lis sa hauteur sur l’axe.",
+        "cours": {
+          "regle": "Repère la catégorie, l’unité et la valeur d’une graduation.",
+          "exemple": "La barre de mardi atteint 12 : 12 livres."
+        },
+        "correction": "12 fruits."
+      },
+      "identifiant": "DP01-b",
+      "ancienId": "DP01-V2",
+      "ancienIdGenerateur": "DP01-V2",
+      "indiceGenerateur": 1,
+      "nom": "Lire des barres dont chaque graduation ne vaut pas1",
+      "niveauDescription": "6ᵉ, puis entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Lire une proportion sur un diagramme circulaire codé",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Le disque représente les transports de la classe : bus occupe un demi-disque ; marche et vélo occupent chacun un quart. Quel pourcentage correspond au vélo ?",
+      "reponse": "25 %",
+      "donnees": "Cercle partagé en secteurs180°,90°,90° ; labelsbus/marche/vélo et angle droit codé pour vélo. Générer seulement parts1/2,1/4,3/4 explicitement codées ou secteurs égaux dénombrables.",
+      "saisie": "Nombre avec suffixe% fixe",
+      "acceptation": "Saisir25 dans le champ% ;0,25 déclenche « valeur correcte sous forme décimale ; écris le pourcentage » et n’est pas validé comme25 %.",
+      "aide1": "« Le disque entier représente100 %. » Faire apparaître100 % autour du cercle, sans modifier les secteurs.",
+      "aide2": "« Le vélo occupe un quart : partage100 en quatre parts égales. » Afficher100 ÷ 4 sans résultat.",
+      "correction": "100 ÷ 4 = 25. Le vélo représente25 %.",
+      "controles": [
+        "Somme des angles360°.",
+        "Pas de lecture précise fondée sur une image sans codage.",
+        "25 accepté ;90 et0,25 dans le champ% non validés."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Quelle part des déplacements représente « Vélo » ? Donne le pourcentage.",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "25",
+            "unite": "%"
+          }
+        ],
+        "aide1": "La zone bleue est un quart du disque.",
+        "aide2": "Le disque entier représente 100 %. Calcule 100 ÷ 4.",
+        "cours": {
+          "regle": "Repère la catégorie, l’unité et la valeur d’une graduation.",
+          "exemple": "La barre de mardi atteint 12 : 12 livres."
+        },
+        "correction": "100 ÷ 4 = 25 %."
+      },
+      "identifiant": "DP01-c",
+      "ancienId": "DP01-V3",
+      "ancienIdGenerateur": "DP01-V3",
+      "indiceGenerateur": 2,
+      "nom": "Lire une proportion sur un diagramme circulaire codé",
+      "niveauDescription": "6ᵉ après travail des pourcentages",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "%"
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Lire une valeur dans une courbe temporelle",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "La courbe indique la température au cours de la journée. Quelle température lit-on à14 h ?",
+      "reponse": "24 °C",
+      "donnees": "Points(8;16),(10;20),(12;22),(14;24),(16;22). Axeheures8–16 pas2 ; axe°C0–26 pas2 ; courbe reliant les relevés. Pas de lecture entre relevés dans cette variante.",
+      "saisie": "Nombre avec unité°C affichée",
+      "acceptation": "24 accepté ;14 refusé. Même résultat si l’axe horizontal porte14:00.",
+      "aide1": "« Cherche14 h sur l’axe horizontal. » Encadrer14 h.",
+      "aide2": "« Monte jusqu’à la courbe, puis rejoins l’axe des températures. » Afficher les deux guides pointillés.",
+      "correction": "À14 h, la courbe correspond à24 °C.",
+      "controles": [
+        "Coordonnées du rendu identiques aux données.",
+        "24 accepté ;22/14 refusés.",
+        "Les unités restent visibles au zoom et sur téléphone."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Quelle température mesure-t-on à 12 h ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "26",
+            "unite": "°C"
+          }
+        ],
+        "aide1": "Repère 12 h sur l’axe horizontal.",
+        "aide2": "Monte jusqu’au point puis lis la température à gauche.",
+        "cours": {
+          "regle": "Repère la catégorie, l’unité et la valeur d’une graduation.",
+          "exemple": "La barre de mardi atteint 12 : 12 livres."
+        },
+        "correction": "26 °C."
+      },
+      "identifiant": "DP01-d",
+      "ancienId": "DP01-V4",
+      "ancienIdGenerateur": "DP01-V4",
+      "indiceGenerateur": 3,
+      "nom": "Lire une valeur dans une courbe temporelle",
+      "niveauDescription": "6ᵉ, puis entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "°C"
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Éviter une lecture trompeuse d’un axe tronqué",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Deux barres indiquent40 et50 inscriptions. L’axe commence à40. « 50 inscriptions, c’est deux fois40. » Vrai ou faux ?",
+      "reponse": "Faux",
+      "donnees": "BarresA40,B50 ; axe tronqué de40 à60, rupture explicite et valeurs40/45/50/55/60. Produire deux nombres a,b positifs avec b ≠ 2a ; ne pas utiliser la longueur graphique comme valeur.",
+      "saisie": "Vrai/Faux, correction argumentée",
+      "acceptation": "Faux accepté ; Vrai refusé.",
+      "aide1": "« Lis les nombres de l’axe, pas seulement la hauteur des barres. » Surligner la rupture et les valeurs40 et50.",
+      "aide2": "« Le double de40 est40 + 40. Compare-le à50. » Afficher40 + 40 sans résultat.",
+      "correction": "40 × 2 = 80 ;50 n’est pas le double de40.",
+      "controles": [
+        "Rupture d’axe toujours visible.",
+        "Changer l’axe à0 ne doit pas changer la réponse.",
+        "Ajouter aussi des cas où b = 2a dans le générateur, avec réponseVrai."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Les barres donnent deux effectifs. « B vaut le double de A. » Vrai ou faux ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "Faux",
+            "unite": "",
+            "choix": ["Vrai", "Faux"]
+          }
+        ],
+        "aide1": "Attention : l’axe ne commence pas à zéro.",
+        "aide2": "Lis les valeurs puis calcule 2 × 50.",
+        "cours": {
+          "regle": "Repère la catégorie, l’unité et la valeur d’une graduation.",
+          "exemple": "La barre de mardi atteint 12 : 12 livres."
+        },
+        "correction": "A = 50, B = 60 ; 2 × 50 = 100."
+      },
+      "identifiant": "DP01-e",
+      "ancienId": "DP01-V5",
+      "ancienIdGenerateur": "DP01-V5",
+      "indiceGenerateur": 4,
+      "nom": "Éviter une lecture trompeuse d’un axe tronqué",
+      "niveauDescription": "5ᵉ application, puis entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

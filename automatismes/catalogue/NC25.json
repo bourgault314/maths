@@ -1,0 +1,380 @@
+{
+  "id": "NC25",
+  "titre": "Différence de deux carrés",
+  "categorie": "Calcul littéral et équations",
+  "objectif": "Reconnaître des carrés et utiliser des facteurs conjugués dans les deux sens.",
+  "prerequis": ["Carrés usuels", "NC23", "NC24"],
+  "perimetre": "DNB2027 : cas simples de l’ancien cycle 4. Niveaux collège selon la progression 2026.",
+  "cours": {
+    "regle": "a² − b² = (a − b)(a + b). Le signe entre les deux carrés est une soustraction.",
+    "exemple": "9x² − 16 = (3x − 4)(3x + 4).",
+    "visuel": "Deux lignes reliées :9x² = (3x)²,16 = 4² ; puis deux parenthèses identiques sauf signe. Pour l’explication d’aire, choisir des longueurs positives avec a>b.",
+    "mouvement": "Révélation des bases 3x et 4, puis des deux signes ; version statique avec ces deux correspondances."
+  },
+  "erreurs": [
+    "Confondre différence de carrés et carré d’une différence",
+    "Oublier de mettre le coefficient au carré",
+    "Utiliser l’identité pour une somme de carrés"
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 4,2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "PDF p.11",
+      "apport": "Niveaux et objectifs du calcul littéral ; introduction distincte de l’entretien.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples pour la mise en œuvre des programmes de mathématiques — cycle 4",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "p.21 imprimée",
+      "apport": "Reconnaissance des carrés, produits conjugués et lien avec les équations.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Programme du cycle 4,2020",
+      "url": "https://cache.media.education.gouv.fr/file/31/89/1/ensel714_annexe3_1312891.pdf",
+      "repere": "PDF p.131–132, calcul littéral",
+      "apport": "Périmètre mathématique utilisé par le filtre DNB2027.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Contrat de conception Matégo",
+      "url": null,
+      "repere": "Étape 1, NC19–NC31",
+      "apport": "Exemples originaux, bornes des générateurs, interfaces et aides proposées ; choix éditoriaux à valider par prototype.",
+      "statut": "choix de conception"
+    },
+    {
+      "titre": "DNB — sujet de référence2027, série générale n°1",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n01-129658.pdf",
+      "repere": "PDF p.2, Q3",
+      "apport": "Forme réellement observée en partie1, ajoutée après contrôle de couverture.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "NCETM — Algebra tiles",
+      "url": "https://www.ncetm.org.uk/media/dj5o223w/ncetm_ks3_representations_algebra_tilespdf.pdf",
+      "repere": "p.3–4,9–14",
+      "apport": "Associer schéma et symboles ; limites des aires négatives.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": [
+    "La somme x²+25 ne se factorise pas par cette identité dans les réels.",
+    "Les deux autres identités ont un statut distinct dans NC26."
+  ],
+  "acces_secondaires": [],
+  "nom": "Différence de deux carrés",
+  "domaine": "nombres-calculs",
+  "sousDomaine": "Calcul littéral et équations",
+  "niveaux": ["3e"],
+  "niveauxDescription": "3e dans le nouveau programme ; identité déjà à mémoriser dans l’ancien cycle 4 pour le DNB2027.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_12"],
+    "questions": [
+      {
+        "source": "A2602",
+        "question": "Q2",
+        "referenceAncienne": "AA 2",
+        "forme": "c",
+        "identifiant": "NC25-c",
+        "ancienId": "NC25-V3",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Développement par différence de carrés",
+        "formatSource": "QCM",
+        "document": "Asie, 15 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-15_Asie_DV-v3.pdf"
+      },
+      {
+        "source": "R27A",
+        "question": "Q3",
+        "referenceAncienne": "R1 3",
+        "forme": "e",
+        "identifiant": "NC25-e",
+        "ancienId": "NC25-V5",
+        "support": "comparable",
+        "difference": "Produit de conjugués avec coefficient contenant une racine ; NC25-V5 ajouté après audit, car différence de carrés polynomiale seule ne couvrait pas cette forme.",
+        "savoirFaire": "Produit de conjugués avec racine carrée",
+        "formatSource": "Nombre exact",
+        "document": "Sujet de référence mathématiques n°1",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n01-129658.pdf"
+      },
+      {
+        "source": "R27B",
+        "question": "Q5",
+        "referenceAncienne": "R2 5",
+        "forme": "b",
+        "identifiant": "NC25-b",
+        "ancienId": "NC25-V2",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Factoriser une différence de carrés",
+        "formatSource": "Expression factorisée",
+        "document": "Sujet de référence mathématiques n°2",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n02-129661.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Factoriser avec coefficient 1",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Factorise : x² − 25.",
+      "reponse": "(x − 5)(x + 5)",
+      "donnees": "Carré b² avec b 1 à 12 ; x réel ; différence, jamais somme dans cette variante.",
+      "saisie": "Expression courte avec touches lettre, chiffres, +, −, ×, /, parenthèses et carré. Gabarit de coefficients seulement en entraînement guidé.",
+      "acceptation": "Vérifier exactement l’équivalence algébrique et la forme demandée ; normaliser × implicite, espaces et²/^2. Forme factorisée exigée ; ordre des facteurs libre.",
+      "aide1": {
+        "texte": "25 est le carré de quel nombre ?",
+        "visuel": "Deux machines base → carré : une base littérale et une base numérique. Aucune confusion avec une racine carrée positive."
+      },
+      "aide2": {
+        "texte": "Utilise les deux bases x et 5 dans deux facteurs de signes opposés.",
+        "visuel": "Afficher(a − b)(a + b) avec a = x,b = 5 dans une légende séparée."
+      },
+      "correction": "x² − 25 = x² − 5² = (x − 5)(x + 5).",
+      "controles": ["Accepter(x+5)(x−5) ; refuser(x−5)² et(x−25)(x+25)."],
+      "identifiant": "NC25-a",
+      "ancienId": "NC25-V1",
+      "ancienIdGenerateur": "NC25-V1",
+      "indiceGenerateur": 0,
+      "nom": "Factoriser avec coefficient 1",
+      "niveauDescription": "3e ; DNB2027",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "expression",
+      "champs": [
+        {
+          "type": "expression",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Identifier une base littérale composée",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Factorise : 4x² − 49.",
+      "reponse": "(2x − 7)(2x + 7)",
+      "donnees": "a 1 à 5,b 1 à 9 ; expressiona²x²−b² ; coefficients carrés exacts.",
+      "saisie": "Expression courte avec touches lettre, chiffres, +, −, ×, /, parenthèses et carré. Gabarit de coefficients seulement en entraînement guidé.",
+      "acceptation": "Vérifier exactement l’équivalence algébrique et la forme demandée ; normaliser × implicite, espaces et²/^2. Deux facteurs conjugués ; formes réordonnées admises.",
+      "aide1": {
+        "texte": "4x² est le carré de 2x.",
+        "visuel": "Deux machines base → carré avec le coefficient de la lettre inclus dans la base."
+      },
+      "aide2": {
+        "texte": "L’identité utilise les bases 2x et 7, pas leurs carrés.",
+        "visuel": "Cartes a = 2x etb = 7 sous le modèle(a − b)(a + b)."
+      },
+      "correction": "4x² − 49 = (2x)² − 7² = (2x − 7)(2x + 7).",
+      "controles": ["Refuser(4x−7)(4x+7) et(2x−49)(2x+49) ; vérifier factorisation àx=0."],
+      "identifiant": "NC25-b",
+      "ancienId": "NC25-V2",
+      "ancienIdGenerateur": "NC25-V2",
+      "indiceGenerateur": 1,
+      "nom": "Identifier une base littérale composée",
+      "niveauDescription": "3e ; DNB2027",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "expression",
+      "champs": [
+        {
+          "type": "expression",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "R27B",
+          "question": "Q5",
+          "referenceAncienne": "R2 5",
+          "forme": "b",
+          "identifiant": "NC25-b",
+          "ancienId": "NC25-V2",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Factoriser une différence de carrés",
+          "formatSource": "Expression factorisée",
+          "document": "Sujet de référence mathématiques n°2",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n02-129661.pdf"
+        }
+      ]
+    },
+    {
+      "id": "c",
+      "objectif": "Développer des facteurs conjugués",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Développe et réduis : (3x − 2)(3x + 2).",
+      "reponse": "9x² − 4",
+      "donnees": "a 1 à 5,b 1 à 6 ; mêmes termes et signes opposés ; résultatdegré 2.",
+      "saisie": "Expression courte avec touches lettre, chiffres, +, −, ×, /, parenthèses et carré. Gabarit de coefficients seulement en entraînement guidé.",
+      "acceptation": "Vérifier exactement l’équivalence algébrique et la forme demandée ; normaliser × implicite, espaces et²/^2. Forme développée réduite exigée ; coefficient carré calculé.",
+      "aide1": {
+        "texte": "Les deux produits croisés sont opposés : ils s’annulent.",
+        "visuel": "Tableau des quatre produits ; les deux produits croisés sont opposés et s’annulent."
+      },
+      "aide2": {
+        "texte": "Calcule le carré de 3x puis le carré de 2.",
+        "visuel": "Afficher(3x)² − 2², carrés à calculer."
+      },
+      "correction": "(3x − 2)(3x + 2) = (3x)² − 2² = 9x² − 4.",
+      "controles": ["Refuser 3x²−4 et 9x²+4 ; accepter−4+9x²."],
+      "identifiant": "NC25-c",
+      "ancienId": "NC25-V3",
+      "ancienIdGenerateur": "NC25-V3",
+      "indiceGenerateur": 2,
+      "nom": "Développer des facteurs conjugués",
+      "niveauDescription": "3e ; DNB2027",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "expression",
+      "champs": [
+        {
+          "type": "expression",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2602",
+          "question": "Q2",
+          "referenceAncienne": "AA 2",
+          "forme": "c",
+          "identifiant": "NC25-c",
+          "ancienId": "NC25-V3",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Développement par différence de carrés",
+          "formatSource": "QCM",
+          "document": "Asie, 15 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-15_Asie_DV-v3.pdf"
+        }
+      ]
+    },
+    {
+      "id": "d",
+      "objectif": "Calcul mental par produit conjugué",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Calcule sans calculatrice : 19 × 21.",
+      "reponse": "399",
+      "donnees": "Forme(m−d)(m+d) ; m 10,20,30 ; d 1 à 3 ; résultat≤1000 ; identité choisie utile.",
+      "saisie": "Nombre signé ou fraction numérateur/dénominateur ; virgule et point acceptés ; aucun arrondi implicite.",
+      "acceptation": "Réponse numérique exacte ; autre procédure correcte autorisée.",
+      "aide1": {
+        "texte": "19 et 21 sont à la même distance de 20.",
+        "visuel": "Droite graduée : centre et deux nombres à égale distance, flèches −b et +b."
+      },
+      "aide2": {
+        "texte": "Utilise le carré de 20 moins le carré de 1.",
+        "visuel": "Afficher 20² − 1² sans calculer le résultat."
+      },
+      "correction": "19 × 21 = (20 − 1)(20 + 1) = 400 − 1 = 399.",
+      "controles": [
+        "Refuser 400 et 401 ; ne pas imposer cette procédure à l’élève qui calcule autrement."
+      ],
+      "identifiant": "NC25-d",
+      "ancienId": "NC25-V4",
+      "ancienIdGenerateur": "NC25-V4",
+      "indiceGenerateur": 3,
+      "nom": "Calcul mental par produit conjugué",
+      "niveauDescription": "3e ; application numérique DNB2027",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Calculer un produit de conjugués avec une racine carrée",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Calcule exactement : (5 + 2√3)(5 − 2√3).",
+      "reponse": "13",
+      "donnees": "Entier m2 à8 ; coefficient k1 à3 ; radicande2,3,5,6 ou7 ; réponse entière m²−k²d, éventuellement négative ; aucune approximation.",
+      "saisie": "Nombre signé ou fraction numérateur/dénominateur ; virgule et point acceptés ; aucun arrondi implicite.",
+      "acceptation": "Réponse numérique exacte ; autre procédure correcte autorisée.",
+      "aide1": {
+        "texte": "Les deux produits croisés sont opposés : ils s’annulent.",
+        "visuel": "Tableau des quatre produits avec racines ; produits croisés opposés et dernier terme égal à l’opposé du carré de la racine pondérée."
+      },
+      "aide2": {
+        "texte": "Le carré porte aussi sur le coefficient2.",
+        "visuel": "Afficher(2√3)² = 2² × 3 puis25 − 4 × 3, sans résultat final."
+      },
+      "correction": "(5 + 2√3)(5 − 2√3) = 25 − 4 × 3 = 13.",
+      "controles": [
+        "Accepter13 ; refuser19,22 et25−2×3 ; tester aussi une réponse négative lorsque k²d>m²."
+      ],
+      "identifiant": "NC25-e",
+      "ancienId": "NC25-V5",
+      "ancienIdGenerateur": "NC25-V5",
+      "indiceGenerateur": 4,
+      "nom": "Calculer un produit de conjugués avec une racine carrée",
+      "niveauDescription": "3e ; application numérique DNB2027",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "R27A",
+          "question": "Q3",
+          "referenceAncienne": "R1 3",
+          "forme": "e",
+          "identifiant": "NC25-e",
+          "ancienId": "NC25-V5",
+          "support": "comparable",
+          "difference": "Produit de conjugués avec coefficient contenant une racine ; NC25-V5 ajouté après audit, car différence de carrés polynomiale seule ne couvrait pas cette forme.",
+          "savoirFaire": "Produit de conjugués avec racine carrée",
+          "formatSource": "Nombre exact",
+          "document": "Sujet de référence mathématiques n°1",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n01-129658.pdf"
+        }
+      ]
+    }
+  ]
+}

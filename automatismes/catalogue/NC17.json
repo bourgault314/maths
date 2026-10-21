@@ -1,0 +1,442 @@
+{
+  "id": "NC17",
+  "titre": "Critères de divisibilité et exemples",
+  "categorie": "Nombres et calculs",
+  "objectif": "Utiliser un critère ou produire un entier satisfaisant plusieurs contraintes.",
+  "prerequis": ["Tables de multiplication", "Entiers et division"],
+  "perimetre": "Couverture des prérequis et automatismes du collège. Le filtre DNB2027 utilise l’ancien programme du cycle 4 ; les niveaux indiqués suivent le nouveau programme. Le statut est précisé par variante.",
+  "cours": {
+    "regle": "Par 2, 5 ou 10 : regarde le chiffre des unités. Par 3 ou 9 : additionne les chiffres.",
+    "exemple": "7414 est divisible par 2 parmi ces trois nombres.",
+    "visuel": "Chiffre des unités isolé ou somme de tous les chiffres ; cases pour l’exemple à construire.",
+    "mouvement": "Le schéma est entièrement compréhensible à l’arrêt. Une animation éventuelle révèle les étapes sans cacher les états précédents."
+  },
+  "erreurs": [
+    "Confondre multiple et diviseur",
+    "Croire que 1 est premier",
+    "Accepter un reste au moins égal au diviseur"
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 4 (2026)",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "statut": "prescription",
+      "repere": "PDF p 7,11",
+      "apport": "Objectifs et progression officiels du programme ; niveau de classe vérifié."
+    },
+    {
+      "titre": "Exemples de mise en œuvre du cycle 4 (2026)",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "statut": "appui pédagogique",
+      "repere": "PDF p 10–11,21 ;imprimées 9–10,20",
+      "apport": "Exemples officiels de mise en œuvre : progressivité, représentations et types de calculs."
+    },
+    {
+      "titre": "DNB sujet de référence 2027 n°2",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n02-129661.pdf",
+      "statut": "appui pédagogique",
+      "repere": "PDF p 2 Q 4",
+      "apport": "Situation effectivement observée dans le sujet de référence, repérée par numéro de question."
+    }
+  ],
+  "limites": "Plusieurs entiers satisfaisant les contraintes sont acceptés ; une réponse valable différente de l’exemple ne doit pas être refusée.",
+  "implementation": {
+    "module": "app-automatismes/dist/modules/nombres.js",
+    "tests": "etape1/test_nombres.mjs",
+    "variantes": 5,
+    "graines_par_variante": 200,
+    "principe": "Aide 1 : représentation visuelle des données. Aide 2 : étape de calcul. Deux aides maximum.",
+    "aide1_visuelle": true
+  },
+  "nom": "Critères de divisibilité et exemples",
+  "domaine": "nombres-calculs",
+  "sousDomaine": "Nombres et calculs",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6e : 2, 5 et 10 ; 5e : 3 et 9, puis production d’exemples.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_08"],
+    "questions": [
+      {
+        "source": "A2602",
+        "question": "Q4",
+        "referenceAncienne": "AA 4",
+        "forme": "b",
+        "identifiant": "NC17-b",
+        "ancienId": "NC17-B",
+        "support": "adaptation",
+        "difference": "Le test est exercé sur un entier à la fois ; deux questions successives couvrent les deux tests de la source.",
+        "savoirFaire": "Divisibilité par 9 de deux entiers",
+        "formatSource": "QCM",
+        "document": "Asie, 15 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-15_Asie_DV-v3.pdf"
+      },
+      {
+        "source": "A2607",
+        "question": "Q7",
+        "referenceAncienne": null,
+        "forme": "e",
+        "identifiant": "NC17-e",
+        "ancienId": "NC17-E",
+        "support": "comparable",
+        "difference": "La justification de divisibilité doit faire intervenir la somme des chiffres, pas le résultat numérique d’une division.",
+        "savoirFaire": "Identifier une justification correcte de divisibilité",
+        "formatSource": "QCM",
+        "document": "Polynésie, 7 septembre 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-09-07_polynesie-FB.pdf"
+      },
+      {
+        "source": "A2608",
+        "question": "Q7",
+        "referenceAncienne": null,
+        "forme": "b",
+        "identifiant": "NC17-b",
+        "ancienId": "NC17-B",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Divisibilité par 3",
+        "formatSource": "QCM",
+        "document": "Métropole-Antilles-Guyane, 10 septembre 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-09-10_Metropole_FB.pdf"
+      },
+      {
+        "source": "R27B",
+        "question": "Q4",
+        "referenceAncienne": "R2 4",
+        "forme": "d",
+        "identifiant": "NC17-d",
+        "ancienId": "NC17-D",
+        "support": "adaptation",
+        "difference": "Nombre de chiffres et chiffre final varient ; la contrainte cinq chiffres et terminaison7 est dans le domaine de génération à vérifier.",
+        "savoirFaire": "Produire un entier à cinq chiffres sous contraintes de divisibilité",
+        "formatSource": "Exemple à produire",
+        "document": "Sujet de référence mathématiques n°2",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n02-129661.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Utiliser le chiffre des unités : 2, 5 et 10",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Parmi 2, 5 et 10, quels nombres divisent 7414 ? Écris tous les nombres convenables, séparés par ;.",
+      "reponse": "2",
+      "donnees": "Entier 10–9 998 terminant par 0, 2, 4, 5, 6 ou 8 ; ensemble non vide parmi 2, 5 et 10.",
+      "saisie": "Diviseurs, séparés par ; : texte ou liste",
+      "acceptation": "Ensemble exact des valeurs attendues ; ordre indifférent ; aucun élément manquant ou ajouté.",
+      "aide1": "Observe le chiffre des unités : 4.",
+      "aide2": "Par 2 : chiffre des unités pair. Par 5 : 0 ou 5. Par 10 : 0.",
+      "correction": "7414 est divisible par 2 parmi ces trois nombres.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "set",
+        "values": [2]
+      },
+      "exemple_champs": [
+        {
+          "label": "Diviseurs, séparés par ;",
+          "answer": "2",
+          "kind": "text",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Cases des chiffres et schéma de leur somme. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC17-a",
+      "ancienId": "NC17-a",
+      "ancienIdGenerateur": "NC17-A",
+      "indiceGenerateur": 0,
+      "nom": "Utiliser le chiffre des unités : 2, 5 et 10",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "ensemble",
+      "champs": [
+        {
+          "type": "texte-court",
+          "libelle": "Diviseurs, séparés par ;",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Somme des chiffres : 3 ou 9",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "6904 est-il divisible par 9 ?",
+      "reponse": "Non",
+      "donnees": "Entier 10–9 999 ; diviseur 3 ou 9 ; cas positifs et négatifs.",
+      "saisie": "Choisis une réponse : choix explicites",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Additionne les chiffres.",
+      "aide2": "La somme vaut 19. Est-elle divisible par 9 ?",
+      "correction": "6 + 9 + 0 + 4 = 19 : non.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "text",
+        "values": ["Non"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Choisis une réponse",
+          "answer": "Non",
+          "kind": "text",
+          "unit": "",
+          "placeholder": "",
+          "options": ["Oui", "Non"]
+        }
+      ],
+      "visuel_aide1": "Cases des chiffres et schéma de leur somme. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Étape de calcul explicite.",
+      "identifiant": "NC17-b",
+      "ancienId": "NC17-b",
+      "ancienIdGenerateur": "NC17-B",
+      "indiceGenerateur": 1,
+      "nom": "Somme des chiffres : 3 ou 9",
+      "niveauDescription": "5e ; entretien dans les classes suivantes.",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Choisis une réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2602",
+          "question": "Q4",
+          "referenceAncienne": "AA 4",
+          "forme": "b",
+          "identifiant": "NC17-b",
+          "ancienId": "NC17-B",
+          "support": "adaptation",
+          "difference": "Le test est exercé sur un entier à la fois ; deux questions successives couvrent les deux tests de la source.",
+          "savoirFaire": "Divisibilité par 9 de deux entiers",
+          "formatSource": "QCM",
+          "document": "Asie, 15 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-15_Asie_DV-v3.pdf"
+        },
+        {
+          "source": "A2608",
+          "question": "Q7",
+          "referenceAncienne": null,
+          "forme": "b",
+          "identifiant": "NC17-b",
+          "ancienId": "NC17-B",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Divisibilité par 3",
+          "formatSource": "QCM",
+          "document": "Métropole-Antilles-Guyane, 10 septembre 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-09-10_Metropole_FB.pdf"
+        }
+      ]
+    },
+    {
+      "id": "c",
+      "objectif": "Compléter un chiffre pour la divisibilité",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Quel chiffre faut-il mettre dans 6□7 pour obtenir un nombre divisible par 9 ?",
+      "reponse": "5",
+      "donnees": "Gabarit à trois chiffres avec trou central ; somme des chiffres connus non multiple de 9 pour assurer un chiffre unique.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "La somme des trois chiffres doit être un multiple de 9.",
+      "aide2": "6 + □ + 7 : complète 13 jusqu’au prochain multiple de 9.",
+      "correction": "6 + 5 + 7 = 18 : 657 convient.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["5"],
+        "form": "integer"
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "5",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Cases des chiffres et schéma de leur somme. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC17-c",
+      "ancienId": "NC17-c",
+      "ancienIdGenerateur": "NC17-C",
+      "indiceGenerateur": 2,
+      "nom": "Compléter un chiffre pour la divisibilité",
+      "niveauDescription": "5e ; entretien dans les classes suivantes.",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Produire un entier sous plusieurs contraintes",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Donne un entier à 5 chiffres, divisible par 9 et se terminant par 4.",
+      "reponse": "10044",
+      "donnees": "Entier à 3, 4 ou 5 chiffres ; divisible par 9 ; chiffre des unités imposé de 1 à 9 ; toutes les solutions validées.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Tout entier satisfaisant simultanément le nombre de chiffres, le chiffre des unités et la divisibilité.",
+      "aide1": "Respecte les trois conditions : 5 chiffres, somme multiple de 9, chiffre des unités 4.",
+      "aide2": "Choisis le premier chiffre non nul, puis ajuste un autre chiffre pour la somme.",
+      "correction": "Par exemple 10044 : 5 chiffres, chiffre des unités 4, somme 9.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "property",
+        "rule": "digitMultiple",
+        "digits": 5,
+        "divisor": 9,
+        "lastDigit": 4
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "10044",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Cases des chiffres et schéma de leur somme. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Étape de calcul explicite.",
+      "identifiant": "NC17-d",
+      "ancienId": "NC17-d",
+      "ancienIdGenerateur": "NC17-D",
+      "indiceGenerateur": 3,
+      "nom": "Produire un entier sous plusieurs contraintes",
+      "niveauDescription": "5e ; entretien dans les classes suivantes.",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "R27B",
+          "question": "Q4",
+          "referenceAncienne": "R2 4",
+          "forme": "d",
+          "identifiant": "NC17-d",
+          "ancienId": "NC17-D",
+          "support": "adaptation",
+          "difference": "Nombre de chiffres et chiffre final varient ; la contrainte cinq chiffres et terminaison7 est dans le domaine de génération à vérifier.",
+          "savoirFaire": "Produire un entier à cinq chiffres sous contraintes de divisibilité",
+          "formatSource": "Exemple à produire",
+          "document": "Sujet de référence mathématiques n°2",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n02-129661.pdf"
+        }
+      ]
+    },
+    {
+      "id": "e",
+      "objectif": "Reconnaître une justification de divisibilité",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Quelle justification prouve que 768 est divisible par 3 ?",
+      "reponse": "La somme des chiffres vaut 21, multiple de 3.",
+      "donnees": "Multiple de 3 entre 102 et 999 ; trois justifications ; seul le critère de somme des chiffres est suffisant.",
+      "saisie": "Choisis une réponse : choix explicites",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Le critère de divisibilité par 3 utilise tous les chiffres.",
+      "aide2": "7 + 6 + 8 = 21.",
+      "correction": "7 + 6 + 8 = 21, multiple de 3 : 768 est divisible par 3.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "text",
+        "values": ["La somme des chiffres vaut 21, multiple de 3."]
+      },
+      "exemple_champs": [
+        {
+          "label": "Choisis une réponse",
+          "answer": "La somme des chiffres vaut 21, multiple de 3.",
+          "kind": "text",
+          "unit": "",
+          "placeholder": "",
+          "options": [
+            "Le chiffre des unités suffit.",
+            "La somme des chiffres vaut 21, multiple de 3.",
+            "Tous les nombres impairs sont divisibles par 3."
+          ]
+        }
+      ],
+      "visuel_aide1": "Cases des chiffres et schéma de leur somme. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC17-e",
+      "ancienId": "NC17-e",
+      "ancienIdGenerateur": "NC17-E",
+      "indiceGenerateur": 4,
+      "nom": "Reconnaître une justification de divisibilité",
+      "niveauDescription": "5e ; entretien dans les classes suivantes.",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Choisis une réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2607",
+          "question": "Q7",
+          "referenceAncienne": null,
+          "forme": "e",
+          "identifiant": "NC17-e",
+          "ancienId": "NC17-E",
+          "support": "comparable",
+          "difference": "La justification de divisibilité doit faire intervenir la somme des chiffres, pas le résultat numérique d’une division.",
+          "savoirFaire": "Identifier une justification correcte de divisibilité",
+          "formatSource": "QCM",
+          "document": "Polynésie, 7 septembre 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-09-07_polynesie-FB.pdf"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,396 @@
+{
+  "id": "EG08",
+  "titre": "Périmètres",
+  "categorie": "Grandeurs et mesures",
+  "objectif": "Identifier le contour utile puis calculer sa longueur.",
+  "prerequis": ["Addition de longueurs", "Multiplication", "Rayon et diamètre"],
+  "perimetre": "DNB 2027 : polygones et disque ; variantes littérales selon acquis.",
+  "cours": {
+    "regle": "Le périmètre est la longueur du contour. Rectangle : P=2(L+l). Disque de rayon r et diamètre d : P=2πr=πd.",
+    "exemple": "Rectangle 7 cm sur 3 cm : P=7+3+7+3=20 cm.",
+    "visuel": "Rectangle 7×3, chaque côté étiqueté, diagonale fine grise non comptée ; contour coloré avec flèches.",
+    "mouvement": "Parcours facultatif du contour ; version statique avec quatre flèches numérotées."
+  },
+  "erreurs": [
+    "Confondre aire et périmètre",
+    "Compter les diagonales",
+    "Doubler le diamètre au lieu du rayon"
+  ],
+  "sources": [
+    {
+      "titre": "Programme cycle 3 2025",
+      "url": "https://www.education.gouv.fr/sites/default/files/ensel620_annexe2-v2.pdf",
+      "repere": "PDF p.19",
+      "apport": "Périmètres carré, rectangle, disque et figures composées.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples 6e 2025",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/exemplesmiseenoeuvre6e-mathpdf-111549.pdf",
+      "repere": "p.9–10 imprimées",
+      "apport": "Relier contour, formules et substitutions.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Liste indicative DNB octobre 2025",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/liste-indicative-dautomatismes-pour-le-dnbpdf-116340.pdf",
+      "repere": "p.2",
+      "apport": "Périmètre d’un polygone ou disque.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Mathsgo — Aire et périmètre",
+      "url": "https://mathsgo.re/outils/plateaux_manipulation/aire_perimetre_plateau.html",
+      "repere": "Catalogue public consulté ; fonctionnalité décrite, interaction non testée.",
+      "apport": "Parcourir bord avec trait animé pour périmètre ; couvrir intérieur avec unités carrées pour aire.",
+      "statut": "choix de conception"
+    },
+    {
+      "titre": "Sujet zéro 2026, série générale B",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-b-mathematiquespdf-123314.pdf",
+      "repere": "Q6",
+      "apport": "Calculer le périmètre d’un losange ; format source adapté à une réponse construite.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "NCETM — Geometry",
+      "url": "https://www.ncetm.org.uk/classroom-resources/secmm-6-geometry/",
+      "repere": "Présentation du thème 6 consultée",
+      "apport": "Relier propriétés géométriques, formules de mesure et transformations ; appui thématique.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "Les découpages complexes à plusieurs inconnues relèvent du problème. Aucun mesurage d’un dessin redimensionné.",
+  "acces_secondaires": ["Géométrie et repérage", "Calcul littéral et équations"],
+  "nom": "Périmètres",
+  "domaine": "espace-geometrie",
+  "sousDomaine": "Grandeurs et mesures",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6e : carré/rectangle entretenus, disque et figures composées appris ; entretien 5e–3e. Variante littérale à partir de 5e.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_21"],
+    "questions": [
+      {
+        "source": "A2606",
+        "question": "Q8",
+        "referenceAncienne": "ME 8",
+        "forme": "a",
+        "identifiant": "EG08-a",
+        "ancienId": "EG08-V1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Périmètre d’un rectangle avec unité correcte",
+        "formatSource": "QCM",
+        "document": "Métropole, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Metropole_FK-v2.pdf"
+      },
+      {
+        "source": "A2611",
+        "question": "Q2",
+        "referenceAncienne": "ME-pro 2",
+        "forme": "f",
+        "identifiant": "EG08-f",
+        "ancienId": "EG08-V6",
+        "support": "adaptation",
+        "difference": "Quatre côtés égaux du losange : même calcul 4c que le carré. Le changement de figure est une adaptation, pas un manque de compétence.",
+        "savoirFaire": "Choisir le calcul du périmètre d’un carré",
+        "formatSource": "QCM",
+        "document": "Métropole professionnelle, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Metropole_30_juin_2026_DV.pdf"
+      },
+      {
+        "source": "Z26B",
+        "question": "Q6",
+        "referenceAncienne": "ZB 6",
+        "forme": "f",
+        "identifiant": "EG08-f",
+        "ancienId": "EG08-V6",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Périmètre d’un losange",
+        "formatSource": "Nombre",
+        "document": "Sujet zéro 2026, série générale B",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-b-mathematiquespdf-123314.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Additionner un contour sans compter une diagonale",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Un rectangle mesure 7 cm sur 3 cm. Sa diagonale est dessinée. Quel est son périmètre, en cm ?",
+      "reponse": "20",
+      "donnees": "L, l entiers 1–15 ; L≠l ; diagonale décorative non cotée ; contour fermé simple.",
+      "saisie": "Champ nombre, unité cm.",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "« Suis seulement le bord extérieur. » Surligner les quatre côtés, laisser la diagonale grise.",
+      "aide2": "« Deux côtés mesurent 7 cm et deux mesurent 3 cm. » Afficher 7+3+7+3.",
+      "correction": "7+3+7+3=20 cm.",
+      "controles": [
+        "Accepter 20 ou 20,0 ; refuser 21, aire 7×3.",
+        "Le dessin ne contient aucun segment intérieur ajouté au périmètre."
+      ],
+      "identifiant": "EG08-a",
+      "ancienId": "EG08-V1",
+      "ancienIdGenerateur": "EG08-V1",
+      "indiceGenerateur": 0,
+      "nom": "Additionner un contour sans compter une diagonale",
+      "niveauDescription": "6e puis entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2606",
+          "question": "Q8",
+          "referenceAncienne": "ME 8",
+          "forme": "a",
+          "identifiant": "EG08-a",
+          "ancienId": "EG08-V1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Périmètre d’un rectangle avec unité correcte",
+          "formatSource": "QCM",
+          "document": "Métropole, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Metropole_FK-v2.pdf"
+        }
+      ]
+    },
+    {
+      "id": "b",
+      "objectif": "Retrouver une longueur à partir du périmètre",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Un rectangle a un périmètre de 26 cm et une largeur de 5 cm. Quelle est sa longueur, en cm ?",
+      "reponse": "8",
+      "donnees": "Choisir L, l entiers positifs ≤12 puis P=2(L+l) ; demander L ou l ; éviter carré sauf variante explicite.",
+      "saisie": "Champ nombre.",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "« La moitié du périmètre vaut longueur + largeur. » Regrouper un long côté et un petit côté.",
+      "aide2": "« 26÷2=13. Il reste à retirer les 5 cm de largeur. » Afficher L+5=13.",
+      "correction": "L=26÷2−5=8 cm.",
+      "controles": [
+        "Accepter 8 ; refuser 16, obtenu en oubliant les deux longueurs.",
+        "Vérifier 2×(réponse+5)=26 ; aucun L≤0 généré."
+      ],
+      "identifiant": "EG08-b",
+      "ancienId": "EG08-V2",
+      "ancienIdGenerateur": "EG08-V2",
+      "indiceGenerateur": 1,
+      "nom": "Retrouver une longueur à partir du périmètre",
+      "niveauDescription": "6e puis entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Distinguer rayon et diamètre",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Un disque a un diamètre de 6 cm. Donne la valeur exacte de son périmètre, en cm.",
+      "reponse": "6π",
+      "donnees": "Rayon entier 1–6 ou diamètre entier 2–12 ; montrer seulement la donnée choisie ; bouton π accessible.",
+      "saisie": "Champ coefficient×π ou éditeur court.",
+      "acceptation": "Expression exacte équivalente avec π ; accepter 2π×r si équivalente. Refuser une approximation décimale lorsque la valeur exacte est demandée.",
+      "aide1": "« Le diamètre traverse tout le disque en passant par son centre. » Colorer le segment de 6 cm.",
+      "aide2": "« Avec le diamètre, P=π×d. » Afficher P=π×6 sans évaluer.",
+      "correction": "P=π×6=6π cm.",
+      "controles": [
+        "Accepter 6π, π×6 ; refuser 12π et 36π.",
+        "Un rayon de 3 cm doit produire la même réponse que le diamètre 6 cm."
+      ],
+      "identifiant": "EG08-c",
+      "ancienId": "EG08-V3",
+      "ancienIdGenerateur": "EG08-V3",
+      "indiceGenerateur": 2,
+      "nom": "Distinguer rayon et diamètre",
+      "niveauDescription": "6e après formule du disque",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "P =",
+          "unite": "π cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Calculer le contour d’une figure composée",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Un rectangle de 8 cm sur 5 cm a un coin rectangulaire de 3 cm sur 2 cm retiré. Quel est le périmètre de la forme en L, en cm ?",
+      "reponse": "26",
+      "donnees": "Polygone exact (0,0),(8,0),(8,3),(5,3),(5,5),(0,5) ; coter 8,5,3,2 ; rotation possible ; retraits strictement intérieurs aux dimensions.",
+      "saisie": "Champ nombre.",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "« Les deux petits bords du coin retiré remplacent deux morceaux du contour. » Apparier les segments parallèles de même longueur.",
+      "aide2": "« Les longueurs horizontales totalisent 8+8 ; les verticales 5+5. » Colorer les deux groupes.",
+      "correction": "P=16+10=26 cm.",
+      "controles": [
+        "Accepter 26 ; refuser 16 en soustrayant deux fois le coin.",
+        "Somme des six arêtes calculée indépendamment ; figure simple sans auto-intersection."
+      ],
+      "identifiant": "EG08-d",
+      "ancienId": "EG08-V4",
+      "ancienIdGenerateur": "EG08-V4",
+      "indiceGenerateur": 3,
+      "nom": "Calculer le contour d’une figure composée",
+      "niveauDescription": "6e, application courte",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Produire une expression de périmètre",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Un rectangle a pour longueur x cm et pour largeur 3 cm. Exprime son périmètre en fonction de x.",
+      "reponse": "2x+6",
+      "donnees": "x représente une longueur strictement positive ; largeur entière 1–9 ; aucun gabarit □x+□ en autonomie.",
+      "saisie": "Éditeur x, +, ×, parenthèses.",
+      "acceptation": "Accepter 2x+6, 2(x+3), x+3+x+3 : aucune forme particulière demandée.",
+      "aide1": "« Chaque longueur apparaît deux fois. » Apposer x sur les côtés opposés.",
+      "aide2": "« Additionne x+3+x+3. » Regrouper visuellement les deux x et les deux 3.",
+      "correction": "P=2x+6 cm.",
+      "controles": [
+        "Accepter toutes les formes équivalentes ; refuser x+6 et 6x.",
+        "Si consigne future exige réduction, distinguer équivalence et forme réduite."
+      ],
+      "identifiant": "EG08-e",
+      "ancienId": "EG08-V5",
+      "ancienIdGenerateur": "EG08-V5",
+      "indiceGenerateur": 4,
+      "nom": "Produire une expression de périmètre",
+      "niveauDescription": "5e puis entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "expression",
+      "champs": [
+        {
+          "type": "expression",
+          "libelle": "P =",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "f",
+      "objectif": "Calculer le périmètre d’un losange",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Un losange a un côté de 4 cm. Quel est son périmètre ?",
+      "reponse": "16 cm",
+      "donnees": "Côté parmi 2,5 ; 3 ; 4 ; 5 ; 6,5 cm. Losange convexe, quatre côtés de même longueur.",
+      "saisie": "Réponse : champ de réponse numérique ; unité cm",
+      "acceptation": "Valeur exacte. Virgule ou point décimal, fractions équivalentes acceptés. Une réponse vide est refusée. L’unité cible est fixée par le champ.",
+      "aide1": "Un losange a quatre côtés de même longueur. Visuel : Le losange porte le nom de la figure et la longueur du côté ; les quatre côtés sont de même longueur.",
+      "aide2": "Multiplie la longueur d’un côté par quatre. Le schéma est relié explicitement au calcul affiché.",
+      "correction": "Les quatre côtés ont la même longueur : 4 × 4 = 16 cm.",
+      "controles": [
+        "La réponse exacte 16 cm est acceptée ; une valeur différente est refusée.",
+        "Les valeurs générées respectent : Côté parmi 2,5 ; 3 ; 4 ; 5 ; 6,5 cm. Losange convexe, quatre côtés égaux.",
+        "Les calculs sont recoupés depuis l’énoncé par etape1/test_mesures.mjs sur 200 graines."
+      ],
+      "identifiant": "EG08-f",
+      "ancienId": "EG08-V6",
+      "ancienIdGenerateur": "EG08-V6",
+      "indiceGenerateur": 5,
+      "nom": "Calculer le périmètre d’un losange",
+      "niveauDescription": "6e apprentissage ou réactivation, puis entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2611",
+          "question": "Q2",
+          "referenceAncienne": "ME-pro 2",
+          "forme": "f",
+          "identifiant": "EG08-f",
+          "ancienId": "EG08-V6",
+          "support": "adaptation",
+          "difference": "Quatre côtés égaux du losange : même calcul 4c que le carré. Le changement de figure est une adaptation, pas un manque de compétence.",
+          "savoirFaire": "Choisir le calcul du périmètre d’un carré",
+          "formatSource": "QCM",
+          "document": "Métropole professionnelle, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Metropole_30_juin_2026_DV.pdf"
+        },
+        {
+          "source": "Z26B",
+          "question": "Q6",
+          "referenceAncienne": "ZB 6",
+          "forme": "f",
+          "identifiant": "EG08-f",
+          "ancienId": "EG08-V6",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Périmètre d’un losange",
+          "formatSource": "Nombre",
+          "document": "Sujet zéro 2026, série générale B",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-b-mathematiquespdf-123314.pdf"
+        }
+      ]
+    }
+  ]
+}

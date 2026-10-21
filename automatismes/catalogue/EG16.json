@@ -1,0 +1,333 @@
+{
+  "id": "EG16",
+  "titre": "Rotations et homothéties",
+  "categorie": "Géométrie et repérage",
+  "objectif": "Identifier l’effet d’une rotation et d’une homothétie, avec centre, angle, sens et rapport explicites.",
+  "prerequis": "Angles ; demi-tour ; rayon ; proportionnalité ; nombres relatifs pour les rapports négatifs.",
+  "perimetre": "Maintien DNB 2027 selon l’ancien programme ; aucun niveau nouveau programme imposé.",
+  "cours": {
+    "regle": "Rotation : centre, mesure d’angle et sens. Homothétie de rapport k : longueurs multipliées par |k|. Si k<0, un point distinct du centre change de côté par rapport au centre.",
+    "exemple": "Dans une rosace à 8 secteurs, l’angle au centre d’un secteur mesure 45°. Pour envoyer A sur B : centre O, 45° antihoraire ou 315° horaire.",
+    "visuel": "Deux cartes : cercle de centre O avec rayons OA et OA′ et flèche de 90° ; droite A′–O–A avec OA = 3, OA′ = 6 et k = −2. Distinguer le rapport signé et la longueur positive.",
+    "mouvement": "Rotation animée facultative ; homothétie le long de (OA). Version statique avec arc orienté ou alignement et distances."
+  },
+  "erreurs": [
+    "Oublier le sens de rotation.",
+    "Utiliser le rapport signé comme une longueur.",
+    "Déplacer le centre.",
+    "Confondre facteurs de longueur, d’aire et de volume."
+  ],
+  "sources": [
+    {
+      "titre": "Programme du cycle 4 — BO du 30 juillet 2020",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/programme-d-enseignement-du-cycle-4-67722.pdf",
+      "repere": "p. 136–137 — Transformations",
+      "apport": "Rotations et homothéties dans l’ancien programme.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Repères annuels de progression — cycle 4 — 2019",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/26-maths-c4-reperes-eduscol1114756pdf-74694.pdf",
+      "repere": "PDF p. 12 — Transformations",
+      "apport": "Rotations et homothéties de rapport positif ou négatif en 3e.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "NCETM — Geometry",
+      "url": "https://www.ncetm.org.uk/classroom-resources/secmm-6-geometry/",
+      "repere": "Présentation du thème 6 consultée",
+      "apport": "Relier propriétés géométriques, formules de mesure et transformations ; appui thématique.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    },
+    {
+      "titre": "Éduscol — Utiliser les notions de géométrie plane pour démontrer (2016)",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/ra16c4mathgeoplanedocmaitre574312pdf-77673.pdf",
+      "repere": "p.2–4 ; document ancien, pas référence des niveaux 2026",
+      "apport": "Codages, raisonnement, transformations et triangles. Les niveaux viennent des programmes actuels.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "Les définitions ponctuelles formelles ne sont pas exigées. Sur téléphone, privilégier des points déjà placés, les quarts de tour et les demi-tours.",
+  "acces_secondaires": ["Proportionnalité et pourcentages"],
+  "nom": "Rotations et homothéties",
+  "domaine": "espace-geometrie",
+  "sousDomaine": "Géométrie et repérage",
+  "niveaux": ["3e"],
+  "niveauxDescription": "Ancien programme : 3e, entretien DNB 2027. Cette famille n’est pas une rubrique d’automatismes prescrite du nouveau cycle 4.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": [],
+    "questions": [
+      {
+        "source": "R27B",
+        "question": "Q8",
+        "referenceAncienne": "R2 8",
+        "forme": "f",
+        "identifiant": "EG16-f",
+        "ancienId": "EG16-V6",
+        "support": "adaptation",
+        "difference": "La rosace source comporte trois pentagones autour de B ; rotations120° et240°. EG16-V6 propose des secteurs et les deux sens de rotation autour d’un même centre. Le dessin est adapté, les éléments de description centre/angles/sens sont exercés.",
+        "savoirFaire": "Décrire deux rotations d’une rosace",
+        "formatSource": "Centre et angle",
+        "document": "Sujet de référence mathématiques n°2",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n02-129661.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Trouver l’image par quart de tour.",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "A est à 3 unités à droite de O. On tourne de 90° autour de O, dans le sens inverse des aiguilles d’une montre. Où arrive A ?",
+      "reponse": "3 unités au-dessus de O",
+      "donnees": "O(0;0), A(3;0), A′(0;3) ; repère orthonormé ; rayon 1 à 4 ; sens indiqué par texte et flèche.",
+      "saisie": "Choix du point ou coordonnées.",
+      "acceptation": "(0;3) ou point à cette position.",
+      "aide1": "« La distance à O reste la même. » Montrer le cercle passant par A.",
+      "aide2": "« Suis un quart de tour dans le sens de la flèche. » Afficher l’arc orienté.",
+      "correction": "A′ est à 3 unités au-dessus de O.",
+      "controles": ["Refuser (0;−3), sens horaire.", "Centre fixe ; OA′ = OA."],
+      "identifiant": "EG16-a",
+      "ancienId": "EG16-V1",
+      "ancienIdGenerateur": "EG16-V1",
+      "indiceGenerateur": 0,
+      "nom": "Trouver l’image par quart de tour.",
+      "niveauDescription": "3e ancien programme ; DNB 2027",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Abscisse x",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "Ordonnée y",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Déterminer un angle de rotation.",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Sur un cercle de centre O, A est à droite et B en haut. Quel est le plus petit angle positif de la rotation antihoraire qui envoie A sur B ?",
+      "reponse": "90°",
+      "donnees": "O(0;0), A(2;0), B(0;2) ; rayons perpendiculaires codés ; angle demandé entre 0° et 360°.",
+      "saisie": "Champ numérique avec ° fixe.",
+      "acceptation": "90 ou 90°.",
+      "aide1": "« Un tour complet vaut 360°. » Montrer quatre quartiers égaux.",
+      "aide2": "« De A à B, le trajet demandé est un quart de tour. » Surligner ce quartier.",
+      "correction": "360°/4 = 90°.",
+      "controles": [
+        "Refuser 270° dans le sens demandé.",
+        "Toujours indiquer le sens et l’intervalle d’angles."
+      ],
+      "identifiant": "EG16-b",
+      "ancienId": "EG16-V2",
+      "ancienIdGenerateur": "EG16-V2",
+      "indiceGenerateur": 1,
+      "nom": "Déterminer un angle de rotation.",
+      "niveauDescription": "3e ancien programme ; DNB 2027",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Mesure de l’angle",
+          "unite": "°"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Utiliser un rapport positif.",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Une homothétie de centre O et de rapport 3 transforme A en A′. OA = 2 cm. Calcule OA′.",
+      "reponse": "6 cm",
+      "donnees": "k dans {1/2,2,3} ; O distinct de A ; image sur la même demi-droite pour k>0 ; résultat entier ou décimal fini.",
+      "saisie": "Champ numérique avec cm fixe.",
+      "acceptation": "6 ou 6 cm.",
+      "aide1": "« Le rapport 3 multiplie les distances par 3. » Montrer les deux segments.",
+      "aide2": "« OA′ = 3 × OA. » Tracer trois segments de longueur 2 bout à bout.",
+      "correction": "OA′ = 3 × 2 cm = 6 cm.",
+      "controles": ["Refuser 2/3.", "Un rapport 1/2 doit produire une réduction."],
+      "identifiant": "EG16-c",
+      "ancienId": "EG16-V3",
+      "ancienIdGenerateur": "EG16-V3",
+      "indiceGenerateur": 2,
+      "nom": "Utiliser un rapport positif.",
+      "niveauDescription": "3e ancien programme ; DNB 2027",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "OA′",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Interpréter un rapport négatif.",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "A est à 3 cm à droite de O. On applique l’homothétie de centre O et de rapport −2. Où se trouve A′ ?",
+      "reponse": "À 6 cm à gauche de O",
+      "donnees": "O(0;0), A(3;0), A′(−6;0) ; k dans {−1/2,−1,−2,−3} ; fenêtre adaptée à l’image.",
+      "saisie": "Distance positive et choix du côté.",
+      "acceptation": "6 cm, de l’autre côté de O ; position −6 si axe gradué.",
+      "aide1": "« Le signe moins place l’image de l’autre côté du centre. » Montrer les deux demi-droites opposées.",
+      "aide2": "« La distance est multipliée par 2. » Afficher OA′ = 2 × 3 cm sans résultat.",
+      "correction": "A′ est à 6 cm à gauche de O.",
+      "controles": ["Refuser une longueur de −6 cm.", "Refuser 6 cm à droite."],
+      "identifiant": "EG16-d",
+      "ancienId": "EG16-V4",
+      "ancienIdGenerateur": "EG16-V4",
+      "indiceGenerateur": 3,
+      "nom": "Interpréter un rapport négatif.",
+      "niveauDescription": "3e ancien programme ; DNB 2027",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "OA′",
+          "unite": "cm"
+        },
+        {
+          "type": "qcm",
+          "libelle": "Côté",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Calculer une longueur avec un rapport négatif.",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Une homothétie de rapport −1/2 transforme un segment de 8 cm. Quelle est la longueur de son image ?",
+      "reponse": "4 cm",
+      "donnees": "Segment non nul ; rapport négatif −1/2 ou −2 ; résultat simple ; distinction position/longueur explicite.",
+      "saisie": "Champ numérique avec cm fixe.",
+      "acceptation": "4 ou 4 cm.",
+      "aide1": "« Une longueur reste positive. » Afficher |−1/2|=1/2.",
+      "aide2": "« Prends la moitié de 8 cm. » Montrer une barre de 8 partagée en deux parts égales.",
+      "correction": "|−1/2| × 8 cm = 4 cm.",
+      "controles": ["Refuser −4.", "Ne pas utiliser le facteur d’aire 1/4."],
+      "identifiant": "EG16-e",
+      "ancienId": "EG16-V5",
+      "ancienIdGenerateur": "EG16-V5",
+      "indiceGenerateur": 4,
+      "nom": "Calculer une longueur avec un rapport négatif.",
+      "niveauDescription": "3e ancien programme ; DNB 2027",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Longueur",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "f",
+      "objectif": "Décrire deux rotations dans une rosace",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "La rosace possède 8 secteurs égaux. Décris les deux rotations de centre commun, l’une antihoraire et l’autre horaire, qui envoient A sur G (angles entre 0° et 360°).",
+      "reponse": "Centre : O ; Angle antihoraire : 270° ; Angle horaire : 90°",
+      "donnees": "Rosace régulière à 6 ou 8 secteurs ; sommets A,B,… dans le sens antihoraire ; cible différente de A ; angles strictement entre 0° et 360°. Paramètres de cet exemple : {\"sectors\":8,\"step\":6}",
+      "saisie": "Centre : text ; choix O, A, G / Angle antihoraire : number / Angle horaire : number",
+      "acceptation": "Valeurs exactes des champs ; virgule ou point pour un décimal.",
+      "aide1": "L’angle au centre d’un secteur mesure 45°. Le centre reste fixe. Visuel : Surligner un secteur et le centre fixe ; puis les deux trajets complémentaires.",
+      "aide2": "Les deux trajets complètent un tour de 360°. Visuel : Surligner un secteur et le centre fixe ; puis les deux trajets complémentaires.",
+      "correction": "Centre O : 270° antihoraire ou 90° horaire.",
+      "controles": [
+        "La somme des deux angles vaut 360°.",
+        "Le centre est O, pas un sommet de la rosace."
+      ],
+      "identifiant": "EG16-f",
+      "ancienId": "EG16-V6",
+      "ancienIdGenerateur": "EG16-V6",
+      "indiceGenerateur": 5,
+      "nom": "Décrire deux rotations dans une rosace",
+      "niveauDescription": "3e ancien programme ; DNB 2027",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Centre",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "Mesure antihoraire",
+          "unite": "°"
+        },
+        {
+          "type": "nombre",
+          "libelle": "Mesure horaire",
+          "unite": "°"
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "R27B",
+          "question": "Q8",
+          "referenceAncienne": "R2 8",
+          "forme": "f",
+          "identifiant": "EG16-f",
+          "ancienId": "EG16-V6",
+          "support": "adaptation",
+          "difference": "La rosace source comporte trois pentagones autour de B ; rotations120° et240°. EG16-V6 propose des secteurs et les deux sens de rotation autour d’un même centre. Le dessin est adapté, les éléments de description centre/angles/sens sont exercés.",
+          "savoirFaire": "Décrire deux rotations d’une rosace",
+          "formatSource": "Centre et angle",
+          "document": "Sujet de référence mathématiques n°2",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n02-129661.pdf"
+        }
+      ]
+    }
+  ]
+}

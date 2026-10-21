@@ -1,0 +1,374 @@
+{
+  "id": "EG21",
+  "titre": "Patrons de solides",
+  "categorie": "Géométrie et repérage",
+  "objectif": "Relier les faces dépliées, leurs dimensions et le solide.",
+  "prerequis": [
+    "Solides",
+    "Longueurs",
+    "Périmètre du disque",
+    "Proportionnalité pour patron du cône"
+  ],
+  "perimetre": "DNB 2027 ; patron de cylindre explicitement montré dans la référence n°2.",
+  "cours": {
+    "regle": "Un patron recouvre chaque face une seule fois. Cylindre : un côté du rectangle est la hauteur ; l’autre est le périmètre de la base.",
+    "exemple": "Rayon 3 cm, hauteur 5 cm : rectangle de dimensions 5 cm et 6π cm.",
+    "visuel": "Disque de rayon 3 cm et rectangle 5×6π. Relier le bord circulaire au côté qui s’enroule ; nommer hauteur et circonférence.",
+    "mouvement": "Dépliage facultatif ; solide et patron côte à côte en version statique."
+  },
+  "erreurs": [
+    "Croire que tout assemblage de 6 carrés est un patron",
+    "Confondre faces adjacentes/opposées",
+    "Confondre hauteur et circonférence du cylindre"
+  ],
+  "sources": [
+    {
+      "titre": "Programme cycle 4 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "PDF p.12,14–15",
+      "apport": "Patrons et représentations des solides.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples cycle 4 2026",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "p.22,27 imprimées",
+      "apport": "Arêtes correspondantes ; patron du cône et proportionnalité des arcs.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Sujet de référence 2027 n°2",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n02-129661.pdf",
+      "repere": "Partie1 Q7, PDF p.2–3",
+      "apport": "Patron de cylindre et longueur du rectangle.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "NCETM — Geometry",
+      "url": "https://www.ncetm.org.uk/classroom-resources/secmm-6-geometry/",
+      "repere": "Présentation du thème 6 consultée",
+      "apport": "Relier propriétés géométriques, formules de mesure et transformations ; appui thématique.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "Un pliage numérique ne valide pas seul la construction instrumentale. Le cas du cône est une application plus exigeante, proposé séparément des automatismes courts de base.",
+  "acces_secondaires": ["Grandeurs et mesures"],
+  "atlas": "cours/12.svg",
+  "atlasAlt": "Patron avec deux disques rayon2et rectangle dont les côtés mesurent4πet3. Dessin schématique non à l’échelle.",
+  "nom": "Patrons de solides",
+  "domaine": "espace-geometrie",
+  "sousDomaine": "Géométrie et repérage",
+  "niveaux": ["5e", "4e", "3e"],
+  "niveauxDescription": "5e : cube, pavé, prisme et cylindre ; 4e : pyramide et cône ; 3e : entretien.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": [],
+    "questions": [
+      {
+        "source": "R27B",
+        "question": "Q7",
+        "referenceAncienne": "R2 7",
+        "forme": "d",
+        "identifiant": "EG21-d",
+        "ancienId": "EG21-V4",
+        "support": "comparable",
+        "difference": "La longueur du rectangle du patron correspond à la circonférence 2πr, pas au diamètre.",
+        "savoirFaire": "Relier circonférence et dimension du patron d’un cylindre",
+        "formatSource": "Expression exacte",
+        "document": "Sujet de référence mathématiques n°2",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n02-129661.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Distinguer patron valide et assemblage invalide",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Le dessin A est une croix de 6 carrés : quatre alignés, un au-dessus et un au-dessous du deuxième. Le dessin B est un rectangle2×3 de 6 carrés. Lequel est un patron de cube ?",
+      "reponse": "A",
+      "donnees": "A coordonnées(0,0),(1,0),(2,0),(3,0),(1,1),(1,-1) ; B rectangle2×3 ; rotations et symétries autorisées ; taille uniforme.",
+      "saisie": "Sélection A/B.",
+      "acceptation": "Choix A ; éviter de faire apprendre seulement une orientation en variant parmi11patrons de cube validés.",
+      "aide1": "« Six carrés ne suffisent pas : ils doivent se replier sans se superposer. » Repérer les arêtes de pliage.",
+      "aide2": "« Dans B, certaines faces se rencontreraient au même emplacement. » Montrer un pliage partiel, garder la réponse à valider.",
+      "correction": "A se replie en cube ; B ne convient pas.",
+      "controles": [
+        "Valider chaque patron par normales de faces distinctes et pas de chevauchement.",
+        "Refuser rectangle2×3 même s’il comporte6 carrés."
+      ],
+      "identifiant": "EG21-a",
+      "ancienId": "EG21-V1",
+      "ancienIdGenerateur": "EG21-V1",
+      "indiceGenerateur": 0,
+      "nom": "Distinguer patron valide et assemblage invalide",
+      "niveauDescription": "5e apprentissage puis entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Trouver la face opposée sur un patron",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Sur le patron, A, B, C, D sont quatre carrés alignés dans cet ordre ; E est au-dessus de B et F au-dessous de B. Quelle face sera opposée à A ?",
+      "reponse": "C",
+      "donnees": "Même patron valide ; labels uniques ; permutations de lettres indépendantes du placement ; opposés déduits par pliage3D.",
+      "saisie": "Nom de face.",
+      "acceptation": "Lettre exacte sans distinction de casse.",
+      "aide1": "« Imagine la bande A–B–C–D autour du cube. » Mettre en évidence la bande.",
+      "aide2": "« B sépare A et C sur cette bande. » Plier les trois premières faces à angle droit.",
+      "correction": "La face C est opposée à A.",
+      "controles": [
+        "AopC, BopD, EopF ; tester toutes les orientations.",
+        "Ne pas valider une face adjacente, même si éloignée dans le dessin2D."
+      ],
+      "identifiant": "EG21-b",
+      "ancienId": "EG21-V2",
+      "ancienIdGenerateur": "EG21-V2",
+      "indiceGenerateur": 1,
+      "nom": "Trouver la face opposée sur un patron",
+      "niveauDescription": "5e entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Reporter une dimension du pavé dans son patron",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Un pavé mesure 4 cm de long,3 cm de large et 2 cm de haut. Dans son patron, une face latérale partage un côté de 4 cm avec la base. Quelle est son autre dimension ?",
+      "reponse": "2 cm",
+      "donnees": "Dimensions positives distinctes1–9 ; face de base 4×3, face latérale4×2 ; côté commun mis en évidence.",
+      "saisie": "Nombre, unitécm.",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "« La face latérale rejoint la base du haut et celle du bas. » Colorer l’arête verticale du solide.",
+      "aide2": "« Cette distance est la hauteur du pavé. » Relier le2 cm à l’arête correspondante du patron.",
+      "correction": "L’autre dimension vaut2 cm.",
+      "controles": [
+        "Accepter2 ; refuser3.",
+        "Les arêtes collées du patron ont exactement la même longueur."
+      ],
+      "identifiant": "EG21-c",
+      "ancienId": "EG21-V3",
+      "ancienIdGenerateur": "EG21-V3",
+      "indiceGenerateur": 2,
+      "nom": "Reporter une dimension du pavé dans son patron",
+      "niveauDescription": "5e apprentissage",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Trouver le rectangle latéral d’un cylindre",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Un cylindre a un rayon de 3 cm et une hauteur de 5 cm. Quelle est la longueur du côté du rectangle de son patron qui s’enroule autour de la base ? Donne la valeur exacte.",
+      "reponse": "6π cm",
+      "donnees": "r entier1–6 ; h entier2–10 ; préciser explicitement le côté qui s’enroule pour éviter ambiguïté longueur/largeur.",
+      "saisie": "Coefficient×π, unitécm.",
+      "acceptation": "Expression exacte équivalente avec π ; accepter 2π×r si équivalente. Refuser une approximation décimale lorsque la valeur exacte est demandée.",
+      "aide1": "« Ce côté fait exactement un tour de la base. » Colorer le cercle et le côté correspondant.",
+      "aide2": "« Sa longueur est le périmètre du disque :2πr. » Afficher2π×3.",
+      "correction": "2π×3=6π cm.",
+      "controles": [
+        "Accepter6π ; refuser5 et 9π.",
+        "Le rectangle doit mesurer h par 2πr ; diamètre donné=2r produit la même réponse."
+      ],
+      "identifiant": "EG21-d",
+      "ancienId": "EG21-V4",
+      "ancienIdGenerateur": "EG21-V4",
+      "indiceGenerateur": 3,
+      "nom": "Trouver le rectangle latéral d’un cylindre",
+      "niveauDescription": "5e apprentissage puis entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Longueur =",
+          "unite": "π cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "R27B",
+          "question": "Q7",
+          "referenceAncienne": "R2 7",
+          "forme": "d",
+          "identifiant": "EG21-d",
+          "ancienId": "EG21-V4",
+          "support": "comparable",
+          "difference": "La longueur du rectangle du patron correspond à la circonférence 2πr, pas au diamètre.",
+          "savoirFaire": "Relier circonférence et dimension du patron d’un cylindre",
+          "formatSource": "Expression exacte",
+          "document": "Sujet de référence mathématiques n°2",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n02-129661.pdf"
+        }
+      ]
+    },
+    {
+      "id": "e",
+      "objectif": "Relier le nombre de faces d’une pyramide à sa base",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Le patron d’une pyramide à base carrée contient un carré. Combien de triangles faut-il ajouter pour ses faces latérales ?",
+      "reponse": "4",
+      "donnees": "Base régulière ou quelconque à n côtés n=3,4,5 ; même sommet au pliage ; faces latérales triangulaires.",
+      "saisie": "Champ entier.",
+      "acceptation": "Entier exact.",
+      "aide1": "« Chaque côté de la base porte une face latérale. » Surligner les quatre côtés du carré.",
+      "aide2": "« Associe un triangle à chacun des quatre côtés. » Dessiner les emplacements vides.",
+      "correction": "Il faut4 triangles.",
+      "controles": [
+        "Accepter4 ; refuser5, qui compte aussi la base.",
+        "Le patron généré ne comporte aucun chevauchement de triangles."
+      ],
+      "identifiant": "EG21-e",
+      "ancienId": "EG21-V5",
+      "ancienIdGenerateur": "EG21-V5",
+      "indiceGenerateur": 4,
+      "nom": "Relier le nombre de faces d’une pyramide à sa base",
+      "niveauDescription": "4e apprentissage ; 3e entretien",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "triangles"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "f",
+      "objectif": "Trouver les rectangles latéraux d’un prisme triangulaire",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Un prisme droit a pour base un triangle de côtés3,4 et 5 cm, et pour hauteur 6 cm. Donne les dimensions du rectangle latéral attaché au côté de 5 cm.",
+      "reponse": "5 cm ×6 cm",
+      "donnees": "Base triangulaire valide, ici3-4-5 ; h positif≤8 ; côté demandé clairement coloré ; patron à3rectangles.",
+      "saisie": "Deux champs de dimensions.",
+      "acceptation": "Accepter(5,6)ou(6,5) ; unitéscm ; refuser les dimensions d’une base.",
+      "aide1": "« Le rectangle partage le côté de 5 cm avec le triangle. » Colorer ce côté dans les deux vues.",
+      "aide2": "« Son autre côté relie les deux bases, distantes de 6 cm. » Montrer une arête de 6 cm.",
+      "correction": "Ses dimensions sont5 cm et 6 cm.",
+      "controles": [
+        "Accepter les deux ordres ; refuser3×4.",
+        "Patron total comprend2 triangles et 3rectangles aux côtés3,4,5 par 6."
+      ],
+      "identifiant": "EG21-f",
+      "ancienId": "EG21-V6",
+      "ancienIdGenerateur": "EG21-V6",
+      "indiceGenerateur": 5,
+      "nom": "Trouver les rectangles latéraux d’un prisme triangulaire",
+      "niveauDescription": "5e apprentissage",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Côté partagé avec la base",
+          "unite": "cm"
+        },
+        {
+          "type": "nombre",
+          "libelle": "Autre côté",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "g",
+      "objectif": "Déterminer un angle simple du patron d’un cône",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Un cône a un rayon de base de 3 cm et une génératrice de 6 cm. Son patron latéral est un secteur de cercle de rayon 6 cm. Quelle est la mesure de l’angle de ce secteur ?",
+      "reponse": "180°",
+      "donnees": "Choisir r/g dans{1/2,1/3,1/4,2/3} avec0<r<g ; angle=360r/g entier ; donnéesr etg fournies pour éviter recherche de hauteur.",
+      "saisie": "Nombre, unitédegré.",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "La longueur de l’arc du secteur doit égaler le périmètre de la base du cône.",
+      "aide2": "Le périmètre de la base vaut 6π cm ; le cercle entier de rayon 6 cm a pour périmètre 12π cm. Le secteur représente la moitié du disque.",
+      "correction": "Mesure de l’angle = 360° × (6π/12π) = 180°.",
+      "controles": [
+        "Accepter180 ; refuser360 et 90.",
+        "Longueur d’arc g×angle×π/180 égale2πr ; secteur non dégénéré."
+      ],
+      "identifiant": "EG21-g",
+      "ancienId": "EG21-V7",
+      "ancienIdGenerateur": "EG21-V7",
+      "indiceGenerateur": 6,
+      "nom": "Déterminer un angle simple du patron d’un cône",
+      "niveauDescription": "4e application après proportionnalité ; 3e",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "°"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

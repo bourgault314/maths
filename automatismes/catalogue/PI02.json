@@ -1,0 +1,410 @@
+{
+  "id": "PI02",
+  "titre": "Variables et conditions",
+  "categorie": "Algorithmique et programmation",
+  "objectif": "Suivre les valeurs stockées et décider quelle branche d’une condition s’exécute.",
+  "prerequis": ["Lire une séquence", "Comparer des nombres", "Addition et multiplication simples"],
+  "perimetre": "DNB2027 au titre des programmes simples de l’ancien cycle4 ; les conditions composées restent une application explicite, pas un automatisme déclaratif.",
+  "cours": {
+    "regle": "Une affectation remplace la valeur mémorisée dans une variable. Le résultat d’un test détermine la branche exécutée.",
+    "exemple": "x = 3 ; x ← x + 2 : la nouvelle valeur de x est 5.",
+    "visuel": "Une boîte nommée« x » contenant3 puis7, reliée à l’instruction + 4. Pour une condition, losange« x > 5? » avec deux branchesVrai/Faux, seule la brancheVrai tracée en trait épais lorsque x = 7.",
+    "mouvement": "Lecture pasàpas avec tableau « instruction / valeur dex ». Statique : lignesdu tableau numérotées,anciennevaleur barréeuniquementdanslatrace."
+  },
+  "erreurs": [
+    "Interpréter une affectation comme une égalité permanente",
+    "Réutiliser la valeur initiale après mise à jour",
+    "Confondre > et ≥",
+    "Exécuter les deux branches",
+    "ConfondreET etOU"
+  ],
+  "sources": [
+    {
+      "titre": "Programme cycle 4, 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "Pensée informatique, PDFp.20",
+      "apport": "Progression variable4ᵉ et plusieurs variables/conditionscomposées3ᵉ.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples de mise en œuvre cycle 4, 2026",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "Pensée informatique, PDFp.49–50",
+      "apport": "Une variable en4ᵉ ; plusieurs en3ᵉ et opérateurslogiques.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Programme cycle 4, 2020",
+      "url": "https://cache.media.education.gouv.fr/file/31/89/1/ensel714_annexe3_1312891.pdf",
+      "repere": "Mathématiques, ThèmeE, PDFp.136",
+      "apport": "Variables, boucles et instructionsconditionnelles.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Polynésie professionnelle, 26 juin 2026",
+      "url": "https://www.apmep.fr/IMG/pdf/DNB_professionnelle_Sujet_2026-06-26_Polynesie_DV-v4.pdf",
+      "repere": "Question 9",
+      "apport": "Deux variables intermédiaires et produit ; reproduction du sujet consultée lors de l’audit de couverture.",
+      "statut": "appui pédagogique"
+    }
+  ],
+  "limites": "Pas de concurrence entre scripts ni de variable locale/globale. Les programmes sont courts, déterministes et entièrement visibles.",
+  "nom": "Variables et conditions",
+  "domaine": "pensee-informatique",
+  "sousDomaine": "Algorithmique et programmation",
+  "niveaux": ["4e", "3e"],
+  "niveauxDescription": "5ᵉ : lecture d’une donnée saisie seulement. 4ᵉ : une variable modifiée et conditions simples. 3ᵉ : plusieurs variables et conditions composées. Les variantes respectent cette progression.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_37"],
+    "questions": [
+      {
+        "source": "A2609",
+        "question": "Q9",
+        "referenceAncienne": "PO-pro 9",
+        "forme": "e",
+        "identifiant": "PI02-e",
+        "ancienId": "PI02-V5",
+        "support": "comparable",
+        "difference": "Script avec deux variables x+a et x−b, puis produit ; PI02-V5 ajouté pour exercer la combinaison des deux valeurs intermédiaires.",
+        "savoirFaire": "Exécuter un script de calcul à variables",
+        "formatSource": "Saisie",
+        "document": "Polynésie professionnelle, 26 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_professionnelle_Sujet_2026-06-26_Polynesie_DV-v4.pdf"
+      },
+      {
+        "source": "Z26PB",
+        "question": "Q10",
+        "referenceAncienne": "ZPB 10",
+        "forme": "e",
+        "identifiant": "PI02-e",
+        "ancienId": "PI02-V5",
+        "support": "adaptation",
+        "difference": "Le script source calcule variable×variable. PI02-V5 lit deux variables intermédiaires et leur produit ; NC14-V1 entretient séparément le carré numérique. Support adapté : affectations et produit de valeurs de variables, sans reproduire exactement le carré du script source.",
+        "savoirFaire": "Exécuter un script de calcul",
+        "formatSource": "Nombre",
+        "document": "Sujet zéro 2026, série professionnelle B",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-b-mathematiquespdf-123302.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Suivre une affectation et une mise à jour",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Mettrex à4 ; mettrex àx + 3 ; mettrex à2 × x ; afficherx. Quelle valeur est affichée ?",
+      "reponse": "14",
+      "donnees": "Unevariable ; départ0–10 ; deux misesàjouraddition1–5 puis × 2/3 ; résultat ≤ 60.",
+      "saisie": "Nombre",
+      "acceptation": "14 accepté ;8,11 refusés.",
+      "aide1": "Chaque affectation « mettre x à… » remplace la valeur mémorisée dans x. L’instruction afficher ne modifie pas cette valeur.",
+      "aide2": "Après x ← x + 3, x vaut 7. L’affectation x ← 2 × x utilise la valeur 7.",
+      "correction": "x passe de4 à7 puis14.",
+      "controles": [
+        "Simuler successivement, jamaisenparallèle.",
+        "Anciennevaleur remplacée.",
+        "Casx0 accepté."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Quelle valeur de x est affichée ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "27",
+            "unite": ""
+          }
+        ],
+        "aide1": "Chaque affectation « mettre x à… » remplace la valeur mémorisée dans x.",
+        "aide2": "Après l’addition, x vaut 9. Utilise cette valeur pour la multiplication.",
+        "cours": {
+          "regle": "Une affectation remplace la valeur mémorisée dans une variable. Le résultat d’un test détermine la branche exécutée.",
+          "exemple": "x = 3 ; x ← x + 2 : la nouvelle valeur de x est 5."
+        },
+        "correction": "x : 8 → 9 → 27."
+      },
+      "identifiant": "PI02-a",
+      "ancienId": "PI02-V1",
+      "ancienIdGenerateur": "PI02-V1",
+      "indiceGenerateur": 0,
+      "nom": "Suivre une affectation et une mise à jour",
+      "niveauDescription": "4ᵉ apprentissage ;3ᵉ entretien",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Traiter la frontière d’une condition stricte",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "n vaut10. Si n > 10, afficher1 ; sinon afficher2. Quel nombre s’affiche ?",
+      "reponse": "2",
+      "donnees": "Seuils5–15 ; n choisi parmiseuil−1,seuil,seuil + 1 ; opérateur > ou < . Deuxsortiesdistinctes1–9.",
+      "saisie": "Nombre",
+      "acceptation": "2 accepté ;1 refusé.",
+      "aide1": "« Le signe > signifie strictement supérieur. » Encadrer n = 10 et le test > 10.",
+      "aide2": "« 10 est égal à10, donc le test n > 10 est faux. » Mettre en évidence la branchesinon, laisser le résultat à lire.",
+      "correction": "Le test est faux ; le programme affiche2.",
+      "controles": [
+        "Tester n9,10,11.",
+        "Permutationdesbranches n’altère pasl’interprétation.",
+        "Ne pas confondre > avec ≥ ."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Quelle valeur s’affiche ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "9",
+            "unite": ""
+          }
+        ],
+        "aide1": "Le signe > signifie strictement supérieur.",
+        "aide2": "Le test 7 > 7 est faux.",
+        "cours": {
+          "regle": "Une affectation remplace la valeur mémorisée dans une variable. Le résultat d’un test détermine la branche exécutée.",
+          "exemple": "x = 3 ; x ← x + 2 : la nouvelle valeur de x est 5."
+        },
+        "correction": "La branche sinon affiche 9."
+      },
+      "identifiant": "PI02-b",
+      "ancienId": "PI02-V2",
+      "ancienIdGenerateur": "PI02-V2",
+      "indiceGenerateur": 1,
+      "nom": "Traiter la frontière d’une condition stricte",
+      "niveauDescription": "4ᵉ apprentissage ;3ᵉ entretien",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Évaluer une condition composée",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "n vaut8. Si (n > 2) et (n < 8), afficher1 ; sinon afficher0. Quelle valeur est affichée ?",
+      "reponse": "0",
+      "donnees": "Deuxbornesa < b ;n∈{a,a + 1,b − 1,b,b + 1} ;opérateurET/OU explicite. Domaines0–20 ; sorties0/1.",
+      "saisie": "Nombre",
+      "acceptation": "0 accepté ;1 refusé.",
+      "aide1": "« Avec « et », les deux tests doivent être vrais. » Montrer deux cases de test reliéesparET.",
+      "aide2": "« 8 > 2 est vrai ;8 < 8 est faux. » MarquerVrai etFaux en texte, pas seulementcouleurs.",
+      "correction": "Vrai etFaux donneFaux : affichage0.",
+      "controles": [
+        "TablevéritéET/OU vérifiée.",
+        "Bornesstrictes testées.",
+        "Aucunepauseouanimationnechange n."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Quelle valeur s’affiche ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "1",
+            "unite": ""
+          }
+        ],
+        "aide1": "« Ou » exige au moins un test vrai.",
+        "aide2": "Premier test : faux. Second : vrai.",
+        "cours": {
+          "regle": "Une affectation remplace la valeur mémorisée dans une variable. Le résultat d’un test détermine la branche exécutée.",
+          "exemple": "x = 3 ; x ← x + 2 : la nouvelle valeur de x est 5."
+        },
+        "correction": "Condition vraie : affichage 1."
+      },
+      "identifiant": "PI02-c",
+      "ancienId": "PI02-V3",
+      "ancienIdGenerateur": "PI02-V3",
+      "indiceGenerateur": 2,
+      "nom": "Évaluer une condition composée",
+      "niveauDescription": "3ᵉ apprentissage, programme simpleDNB",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Distinguer deux variables stockées",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Mettrex à3 ; mettrey àx + 2 ; mettrex à10 ; affichery. Quelle valeur est affichée ?",
+      "reponse": "5",
+      "donnees": "Deuxvariables ; xinitial1–9 ; ajout1–5 ; nouvelex différent ; y reçoitunevaleur etnonunelienpermanent.",
+      "saisie": "Nombre",
+      "acceptation": "5 accepté ;12 et10 refusés.",
+      "aide1": "« Quand on met y àx + 2, on calcule avec la valeur dex à cet instant. » Montrer deux boîtesnomméesx ety.",
+      "aide2": "« À cet instant x = 3, donc y = 3 + 2 = 5. La ligne suivante ne change que x. » Modifier la boîte x en10, laisser y visible.",
+      "correction": "y reste5 ; l’affichage est5.",
+      "controles": [
+        "Changerxaprèsycopienechangepasy.",
+        "Varianteordreinversé donneautrerésultat.",
+        "Interpréteurindépendantpetitprogrammes."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Quelle valeur de y est affichée ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "9",
+            "unite": ""
+          }
+        ],
+        "aide1": "y reçoit une valeur au moment de son affectation.",
+        "aide2": "À ce moment, x vaut 8. La ligne suivante ne change que x.",
+        "cours": {
+          "regle": "Une affectation remplace la valeur mémorisée dans une variable. Le résultat d’un test détermine la branche exécutée.",
+          "exemple": "x = 3 ; x ← x + 2 : la nouvelle valeur de x est 5."
+        },
+        "correction": "y reste égal à 8 + 1 = 9."
+      },
+      "identifiant": "PI02-d",
+      "ancienId": "PI02-V4",
+      "ancienIdGenerateur": "PI02-V4",
+      "indiceGenerateur": 3,
+      "nom": "Distinguer deux variables stockées",
+      "niveauDescription": "3ᵉ apprentissage ;programme simpleDNB",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Calculer deux variables intermédiaires puis leur produit",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "x vaut 4 ; u reçoit x + 3 ; v reçoit x − 2 ; afficher u × v. Que s’affiche-t-il ?",
+      "reponse": "14",
+      "donnees": "x entier 1 à 9 ; a entier 1 à 5 ; b entier 2 à 4 ; u = x + a, v = x − b. Résultat pouvant être négatif ou nul.",
+      "saisie": "Nombre",
+      "acceptation": "Produit exact ; ne pas multiplier x par x avant de calculer les deux variables.",
+      "aide1": "u et v se calculent à partir de la même valeur initiale de x. Schéma bifurquant x vers u et v.",
+      "aide2": "u = 7 et v = 2, puis u × v.",
+      "correction": "7 × 2 = 14.",
+      "controles": [
+        "Les deux affectations lisent x sans le modifier.",
+        "Cas v = 0 et v négatif inclus.",
+        "Variables distinctes et ordre du programme conservé."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Quelle valeur est affichée à la fin du programme ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "45",
+            "unite": ""
+          }
+        ],
+        "aide1": "u et v sont calculés à partir de la même valeur de x.",
+        "aide2": "u = 8 + 1 = 9 ; v = 8 − 3 = 5. Multiplie ensuite u par v.",
+        "cours": {
+          "regle": "Une affectation remplace la valeur mémorisée dans une variable. Le résultat d’un test détermine la branche exécutée.",
+          "exemple": "x = 3 ; x ← x + 2 : la nouvelle valeur de x est 5."
+        },
+        "correction": "u = 9, v = 5 ; u × v = 45."
+      },
+      "identifiant": "PI02-e",
+      "ancienId": "PI02-V5",
+      "ancienIdGenerateur": "PI02-V5",
+      "indiceGenerateur": 4,
+      "nom": "Calculer deux variables intermédiaires puis leur produit",
+      "niveauDescription": "3ᵉ ; DNB sur programme antérieur",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2609",
+          "question": "Q9",
+          "referenceAncienne": "PO-pro 9",
+          "forme": "e",
+          "identifiant": "PI02-e",
+          "ancienId": "PI02-V5",
+          "support": "comparable",
+          "difference": "Script avec deux variables x+a et x−b, puis produit ; PI02-V5 ajouté pour exercer la combinaison des deux valeurs intermédiaires.",
+          "savoirFaire": "Exécuter un script de calcul à variables",
+          "formatSource": "Saisie",
+          "document": "Polynésie professionnelle, 26 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_professionnelle_Sujet_2026-06-26_Polynesie_DV-v4.pdf"
+        },
+        {
+          "source": "Z26PB",
+          "question": "Q10",
+          "referenceAncienne": "ZPB 10",
+          "forme": "e",
+          "identifiant": "PI02-e",
+          "ancienId": "PI02-V5",
+          "support": "adaptation",
+          "difference": "Le script source calcule variable×variable. PI02-V5 lit deux variables intermédiaires et leur produit ; NC14-V1 entretient séparément le carré numérique. Support adapté : affectations et produit de valeurs de variables, sans reproduire exactement le carré du script source.",
+          "savoirFaire": "Exécuter un script de calcul",
+          "formatSource": "Nombre",
+          "document": "Sujet zéro 2026, série professionnelle B",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-b-mathematiquespdf-123302.pdf"
+        }
+      ]
+    }
+  ]
+}

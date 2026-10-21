@@ -1,0 +1,382 @@
+{
+  "id": "NC09",
+  "titre": "Fractions équivalentes et simplification",
+  "categorie": "Nombres et calculs",
+  "objectif": "Transformer une fraction sans changer sa valeur, puis rendre une fraction irréductible lorsque c’est demandé.",
+  "prerequis": ["Sens de la fraction", "Parts égales d’une même unité", "Tables et quotient"],
+  "perimetre": "Couverture des prérequis et automatismes du collège. Le filtre DNB2027 utilise l’ancien programme du cycle 4 ; les niveaux indiqués suivent le nouveau programme. Le statut est précisé par variante.",
+  "cours": {
+    "regle": "Multiplie ou divise le numérateur ET le dénominateur par le même nombre non nul.",
+    "exemple": "8/7 = 24/21.",
+    "visuel": "Flèches identiques au numérateur et au dénominateur ; facteur multiplicatif ou diviseur affiché.",
+    "mouvement": "Le schéma est entièrement compréhensible à l’arrêt. Une animation éventuelle révèle les étapes sans cacher les états précédents."
+  },
+  "erreurs": [
+    "Changer seulement un terme de la fraction",
+    "Additionner les dénominateurs",
+    "Perdre le signe ou l’unité"
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 3 (2025)",
+      "url": "https://www.education.gouv.fr/sites/default/files/ensel620_annexe2-v2.pdf",
+      "statut": "prescription",
+      "repere": "PDF p 15–16",
+      "apport": "Objectifs et progression officiels du programme ; niveau de classe vérifié."
+    },
+    {
+      "titre": "Exemples de mise en œuvre du programme de 6e (2025)",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/exemplesmiseenoeuvre6e-mathpdf-111549.pdf",
+      "statut": "appui pédagogique",
+      "repere": "PDF p 7, imprimée 6",
+      "apport": "Exemples officiels de mise en œuvre : progressivité, représentations et types de calculs."
+    },
+    {
+      "titre": "Exemples de mise en œuvre du cycle 4 (2026)",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "statut": "appui pédagogique",
+      "repere": "PDF p 16,19 ; imprimées 15,18",
+      "apport": "Exemples officiels de mise en œuvre : progressivité, représentations et types de calculs."
+    },
+    {
+      "titre": "DNB sujet de référence 2027 n°1",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n01-129658.pdf",
+      "statut": "appui pédagogique",
+      "repere": "PDF p 2 Q 1",
+      "apport": "Situation effectivement observée dans le sujet de référence, repérée par numéro de question."
+    },
+    {
+      "titre": "Mathsgo — bandes de fractions",
+      "url": "https://mathsgo.re/outils/fractions/bandes_fractions.html",
+      "repere": "HTML lu par l’agent de repérage ; interaction non testée",
+      "apport": "Une unité constante, des parts égales, un repartage visible avant le calcul abstrait.",
+      "statut": "inspiration visuelle"
+    },
+    {
+      "titre": "NCETM — Single number lines",
+      "url": "https://www.ncetm.org.uk/media/8d84e79498db675/ncetm_ks3_representations_single_number_lines.pdf",
+      "repere": "p.3,5,7 lues visuellement",
+      "apport": "Ordre, opérations et fractions sur une droite ; limites pour les produits négatifs.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "Une simplification imposée et une forme irréductible sont deux consignes distinctes ; préserver le signe.",
+  "implementation": {
+    "module": "app-automatismes/dist/modules/nombres.js",
+    "tests": "etape1/test_nombres.mjs",
+    "variantes": 5,
+    "graines_par_variante": 200,
+    "principe": "Aide 1 : représentation visuelle des données. Aide 2 : étape de calcul. Deux aides maximum.",
+    "aide1_visuelle": true
+  },
+  "atlas": "cours/03.svg",
+  "atlasAlt": "Trois bandes de même longueur unité sont partagées en6.3parts et2parts donnent5parts.",
+  "nom": "Fractions équivalentes et simplification",
+  "domaine": "nombres-calculs",
+  "sousDomaine": "Nombres et calculs",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6e : équivalences ; 4e : signés ; 3e : forme irréductible.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_03", "dnb_05"],
+    "questions": [
+      {
+        "source": "Z26PA",
+        "question": "Q4",
+        "referenceAncienne": "ZPA 4",
+        "forme": "d",
+        "identifiant": "NC09-d",
+        "ancienId": "NC09-D",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Simplification de fraction",
+        "formatSource": "Fraction",
+        "document": "Sujet zéro 2026, série professionnelle A",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-mathematiquespdf-123305.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Compléter le numérateur",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Complète : 8/7 = □/21.",
+      "reponse": "24",
+      "donnees": "Fraction initiale à termes premiers entre eux ; coefficient multiplicatif entier 2–6 ; numérateur caché.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Le dénominateur est multiplié par 3.",
+      "aide2": "Fais aussi 8 × 3 au numérateur.",
+      "correction": "8/7 = 24/21.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["24"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "24",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Partages, zoom sur une part, regroupements ou droite signée. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Étape de calcul explicite.",
+      "identifiant": "NC09-a",
+      "ancienId": "NC09-a",
+      "ancienIdGenerateur": "NC09-A",
+      "indiceGenerateur": 0,
+      "nom": "Compléter le numérateur",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Compléter le dénominateur",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Complète : 8/7 = 24/□.",
+      "reponse": "21",
+      "donnees": "Même construction ; dénominateur caché ; aucune division par 0.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Le numérateur est multiplié par 3.",
+      "aide2": "Multiplie aussi 7 par 3.",
+      "correction": "8/7 = 24/21.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["21"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "21",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Partages, zoom sur une part, regroupements ou droite signée. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC09-b",
+      "ancienId": "NC09-b",
+      "ancienIdGenerateur": "NC09-B",
+      "indiceGenerateur": 1,
+      "nom": "Compléter le dénominateur",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Simplifier par un facteur imposé",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Divise le numérateur et le dénominateur de 24/21 par 3. Complète la nouvelle fraction.",
+      "reponse": "8 ; 7",
+      "donnees": "Fraction multipliée par un coefficient 2–6 ; ce même coefficient est imposé pour simplifier.",
+      "saisie": "Numérateur : nombre ; Dénominateur : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Les parts sont regroupées par 3.",
+      "aide2": "Calcule 24 ÷ 3 et 21 ÷ 3.",
+      "correction": "24/21 = 8/7.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "fields",
+        "values": ["8", "7"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Numérateur",
+          "answer": "8",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        },
+        {
+          "label": "Dénominateur",
+          "answer": "7",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Partages, zoom sur une part, regroupements ou droite signée. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC09-c",
+      "ancienId": "NC09-c",
+      "ancienIdGenerateur": "NC09-C",
+      "indiceGenerateur": 2,
+      "nom": "Simplifier par un facteur imposé",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Numérateur",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "Dénominateur",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Rendre une fraction irréductible",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Écris 24/21 sous forme irréductible.",
+      "reponse": "8/7",
+      "donnees": "Fraction positive ayant un facteur commun 2–6 ; dénominateur final 2–9 ; contrôle de la forme irréductible.",
+      "saisie": "Réponse : numérateur et dénominateur",
+      "acceptation": "Valeur rationnelle exacte et fraction irréductible, ou entier si le dénominateur final est 1.",
+      "aide1": "Cherche un diviseur commun.",
+      "aide2": "24 = 3 × 8 et 21 = 3 × 7.",
+      "correction": "24/21 = 8/7 ; 8 et 7 sont premiers entre eux.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["8/7"],
+        "form": "irreducible"
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "8/7",
+          "kind": "fraction",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Partages, zoom sur une part, regroupements ou droite signée. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC09-d",
+      "ancienId": "NC09-d",
+      "ancienIdGenerateur": "NC09-D",
+      "indiceGenerateur": 3,
+      "nom": "Rendre une fraction irréductible",
+      "niveauDescription": "3e ; entretien dans les classes suivantes.",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "Z26PA",
+          "question": "Q4",
+          "referenceAncienne": "ZPA 4",
+          "forme": "d",
+          "identifiant": "NC09-d",
+          "ancienId": "NC09-D",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Simplification de fraction",
+          "formatSource": "Fraction",
+          "document": "Sujet zéro 2026, série professionnelle A",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-mathematiquespdf-123305.pdf"
+        }
+      ]
+    },
+    {
+      "id": "e",
+      "objectif": "Simplifier une fraction négative",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Simplifie (−24)/21.",
+      "reponse": "-8/7",
+      "donnees": "Fraction négative avec facteur commun 2–6 ; dénominateur positif ; conservation du signe.",
+      "saisie": "Réponse : numérateur et dénominateur",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Le signe − reste celui de la fraction.",
+      "aide2": "Divise 24 et 21 par 3.",
+      "correction": "(−24)/21 = −8/7.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["-8/7"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "-8/7",
+          "kind": "fraction",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Partages, zoom sur une part, regroupements ou droite signée. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC09-e",
+      "ancienId": "NC09-e",
+      "ancienIdGenerateur": "NC09-E",
+      "indiceGenerateur": 4,
+      "nom": "Simplifier une fraction négative",
+      "niveauDescription": "4e ; entretien dans les classes suivantes.",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

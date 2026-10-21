@@ -1,0 +1,278 @@
+{
+  "id": "NC01",
+  "titre": "Numération décimale",
+  "categorie": "Nombres et calculs",
+  "objectif": "Associer chaque chiffre à sa valeur et passer d’une décomposition à une écriture décimale.",
+  "prerequis": ["Numération de position", "Sens des opérations et des signes de comparaison"],
+  "perimetre": "Couverture des prérequis et automatismes du collège. Le filtre DNB2027 utilise l’ancien programme du cycle 4 ; les niveaux indiqués suivent le nouveau programme. Le statut est précisé par variante.",
+  "cours": {
+    "regle": "La position du chiffre donne sa valeur : unité, dixième, centième, millième.",
+    "exemple": "Le chiffre des dixièmes est 7.",
+    "visuel": "Tableau fixe des rangs : unités, dixièmes, centièmes, millièmes ; chaque chiffre reste associé à son rang.",
+    "mouvement": "Le schéma est entièrement compréhensible à l’arrêt. Une animation éventuelle révèle les étapes sans cacher les états précédents."
+  },
+  "erreurs": [
+    "Confondre rangs et longueur de l’écriture",
+    "Oublier un zéro de position",
+    "Confondre valeur exacte et estimation"
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 3 (2025)",
+      "url": "https://www.education.gouv.fr/sites/default/files/ensel620_annexe2-v2.pdf",
+      "statut": "prescription",
+      "repere": "PDF p 13–14",
+      "apport": "Objectifs et progression officiels du programme ; niveau de classe vérifié."
+    },
+    {
+      "titre": "Exemples de mise en œuvre du programme de 6e (2025)",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/exemplesmiseenoeuvre6e-mathpdf-111549.pdf",
+      "statut": "appui pédagogique",
+      "repere": "PDF p 2–3, pages imprimées 1–2",
+      "apport": "Exemples officiels de mise en œuvre : progressivité, représentations et types de calculs."
+    },
+    {
+      "titre": "Mathsgo — glisse-nombres décimaux",
+      "url": "https://mathsgo.re/outils/plateaux_manipulation/glisse_nombres_decimaux.html",
+      "repere": "Catalogue public des outils ; interaction non testée",
+      "apport": "Réemploi du principe : rangs et virgule fixes, chiffres associés à leur valeur ; aucune copie de code.",
+      "statut": "inspiration visuelle"
+    }
+  ],
+  "limites": "Le chiffre d’un rang ne doit pas être confondu avec le nombre entier d’unités de ce rang.",
+  "implementation": {
+    "module": "app-automatismes/dist/modules/nombres.js",
+    "tests": "etape1/test_nombres.mjs",
+    "variantes": 4,
+    "graines_par_variante": 200,
+    "principe": "Aide 1 : représentation visuelle des données. Aide 2 : étape de calcul. Deux aides maximum.",
+    "aide1_visuelle": true
+  },
+  "nom": "Numération décimale",
+  "domaine": "nombres-calculs",
+  "sousDomaine": "Nombres et calculs",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6e ; entretien ultérieur.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_01"],
+    "questions": []
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Lire un chiffre à un rang donné",
+      "niveau": "6e",
+      "dnb2027": false,
+      "enonce": "Dans 69,738, quel est le chiffre des dixièmes ?",
+      "reponse": "7",
+      "donnees": "Partie entière 0–99 ; trois décimales ; rang demandé tiré parmi dixième, centième et millième ; les zéros sont autorisés.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Repère la virgule, puis compte les rangs à droite.",
+      "aide2": "Le rang des dixièmes est le 1ᵉʳ après la virgule.",
+      "correction": "Le chiffre des dixièmes est 7.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["7"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "7",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Tableau de numération ou unité en centièmes. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC01-a",
+      "ancienId": "NC01-a",
+      "ancienIdGenerateur": "NC01-A",
+      "indiceGenerateur": 0,
+      "nom": "Lire un chiffre à un rang donné",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": false,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Compter les centièmes entiers contenus dans un nombre",
+      "niveau": "6e",
+      "dnb2027": false,
+      "enonce": "Combien de centièmes entiers contient 69,73 ?",
+      "reponse": "6973",
+      "donnees": "Partie entière 0–99 ; deux décimales ; nombre entier de centièmes.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Une unité contient 100 centièmes.",
+      "aide2": "69 × 100 + 73 centièmes.",
+      "correction": "Combien de centièmes entiers contient 69,73 ? → 6973.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["6973"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "6973",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Tableau de numération ou unité en centièmes. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC01-b",
+      "ancienId": "NC01-b",
+      "ancienIdGenerateur": "NC01-B",
+      "indiceGenerateur": 1,
+      "nom": "Compter les centièmes entiers contenus dans un nombre",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": false,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Recomposer une écriture décimale",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Écris sous forme décimale : 69 + 7/10 + 8/1000.",
+      "reponse": "69.708",
+      "donnees": "Partie entière 0–99 ; dixième et millième 0–9 ; centième nul, pour conserver sa place.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Place chaque fraction dans son rang.",
+      "aide2": "Aucun centième : garde la place avec 0.",
+      "correction": "69 + 7/10 + 8/1000 = 69,708.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["69.708"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "69.708",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Tableau de numération ou unité en centièmes. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC01-c",
+      "ancienId": "NC01-c",
+      "ancienIdGenerateur": "NC01-C",
+      "indiceGenerateur": 2,
+      "nom": "Recomposer une écriture décimale",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Décomposer par rang",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Complète : 69,73 = 69 + □/10 + □/100.",
+      "reponse": "7 ; 3",
+      "donnees": "Partie entière 0–99 ; deux décimales ; deux numérateurs de rang à compléter.",
+      "saisie": "Numérateur sur 10 : nombre ; Numérateur sur 100 : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Lis les chiffres après la virgule.",
+      "aide2": "Le premier donne les dixièmes, le second les centièmes.",
+      "correction": "69,73 = 69 + 7/10 + 3/100.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "fields",
+        "values": ["7", "3"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Numérateur sur 10",
+          "answer": "7",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        },
+        {
+          "label": "Numérateur sur 100",
+          "answer": "3",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Tableau de numération ou unité en centièmes. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC01-d",
+      "ancienId": "NC01-d",
+      "ancienIdGenerateur": "NC01-D",
+      "indiceGenerateur": 3,
+      "nom": "Décomposer par rang",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Numérateur sur 10",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "Numérateur sur 100",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

@@ -1,0 +1,274 @@
+{
+  "id": "NC06",
+  "titre": "Produits et quotients de relatifs",
+  "categorie": "Nombres et calculs",
+  "objectif": "Déterminer séparément le signe et la valeur d’un produit ou quotient de relatifs.",
+  "prerequis": ["Entiers et décimaux", "Droite graduée", "Tables de multiplication"],
+  "perimetre": "Couverture des prérequis et automatismes du collège. Le filtre DNB2027 utilise l’ancien programme du cycle 4 ; les niveaux indiqués suivent le nouveau programme. Le statut est précisé par variante.",
+  "cours": {
+    "regle": "Pour deux nombres non nuls : même signe, produit ou quotient positif ; signes différents, négatif. On ne divise pas par 0.",
+    "exemple": "(−7) × (−4) = 28.",
+    "visuel": "Signe et valeur absolue traités séparément ; un signe par facteur dans le produit.",
+    "mouvement": "Le schéma est entièrement compréhensible à l’arrêt. Une animation éventuelle révèle les étapes sans cacher les états précédents."
+  },
+  "erreurs": [
+    "Confondre addition et produit des signes",
+    "Oublier les parenthèses",
+    "Changer l’ordre de calcul"
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 4 (2026)",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "statut": "prescription",
+      "repere": "PDF p 9",
+      "apport": "Objectifs et progression officiels du programme ; niveau de classe vérifié."
+    },
+    {
+      "titre": "Exemples de mise en œuvre du cycle 4 (2026)",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "statut": "appui pédagogique",
+      "repere": "PDF p 15, imprimée 14",
+      "apport": "Exemples officiels de mise en œuvre : progressivité, représentations et types de calculs."
+    },
+    {
+      "titre": "Liste indicative d’automatismes DNB (octobre 2025)",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/liste-indicative-dautomatismes-pour-le-dnbpdf-116340.pdf",
+      "statut": "prescription",
+      "repere": "p 1",
+      "apport": "Périmètre indicatif des automatismes du DNB ; la liste n’est pas limitative."
+    },
+    {
+      "titre": "NCETM — Single number lines",
+      "url": "https://www.ncetm.org.uk/media/8d84e79498db675/ncetm_ks3_representations_single_number_lines.pdf",
+      "repere": "p.3,5,7 lues visuellement",
+      "apport": "Ordre, opérations et fractions sur une droite ; limites pour les produits négatifs.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "La règle du produit des signes ne s’applique pas à l’addition. Le signe est déterminé avant la valeur.",
+  "implementation": {
+    "module": "app-automatismes/dist/modules/nombres.js",
+    "tests": "etape1/test_nombres.mjs",
+    "variantes": 4,
+    "graines_par_variante": 200,
+    "principe": "Aide 1 : représentation visuelle des données. Aide 2 : étape de calcul. Deux aides maximum.",
+    "aide1_visuelle": true
+  },
+  "nom": "Produits et quotients de relatifs",
+  "domaine": "nombres-calculs",
+  "sousDomaine": "Nombres et calculs",
+  "niveaux": ["4e", "3e"],
+  "niveauxDescription": "4e ; entretien en 3e.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": [],
+    "questions": []
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Multiplier des relatifs",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Calcule (−7) × (−4).",
+      "reponse": "28",
+      "donnees": "Deux entiers non nuls de valeur absolue 1–9 ; quatre combinaisons de signes.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Détermine le signe avant la valeur.",
+      "aide2": "Calcule 7 × 4.",
+      "correction": "(−7) × (−4) = 28.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["28"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "28",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Tableau de signes ou regroupement des facteurs négatifs. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC06-a",
+      "ancienId": "NC06-a",
+      "ancienIdGenerateur": "NC06-A",
+      "indiceGenerateur": 0,
+      "nom": "Multiplier des relatifs",
+      "niveauDescription": "4e ; entretien dans les classes suivantes.",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Diviser des relatifs",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Calcule (28) ÷ (−7).",
+      "reponse": "-4",
+      "donnees": "Dividende construit comme produit de deux entiers signés 1–9 ; quotient exact et diviseur non nul.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Détermine le signe avant la valeur.",
+      "aide2": "Utilise 28 ÷ 7.",
+      "correction": "(28) ÷ (−7) = −4.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["-4"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "-4",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Tableau de signes ou regroupement des facteurs négatifs. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC06-b",
+      "ancienId": "NC06-b",
+      "ancienIdGenerateur": "NC06-B",
+      "indiceGenerateur": 1,
+      "nom": "Diviser des relatifs",
+      "niveauDescription": "4e ; entretien dans les classes suivantes.",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Trouver le signe d’un produit",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Sans calculer, donne le signe de (7) × (−4) × (8).",
+      "reponse": "Négatif",
+      "donnees": "Trois à cinq facteurs non nuls ; nombre pair ou impair de facteurs négatifs.",
+      "saisie": "Choisis une réponse : choix explicites",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Compte les facteurs négatifs.",
+      "aide2": "1 facteur négatif : un nombre impair.",
+      "correction": "1 facteurs négatifs : le produit est négatif.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "text",
+        "values": ["Négatif"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Choisis une réponse",
+          "answer": "Négatif",
+          "kind": "text",
+          "unit": "",
+          "placeholder": "",
+          "options": ["Positif", "Négatif"]
+        }
+      ],
+      "visuel_aide1": "Tableau de signes ou regroupement des facteurs négatifs. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC06-c",
+      "ancienId": "NC06-c",
+      "ancienIdGenerateur": "NC06-C",
+      "indiceGenerateur": 2,
+      "nom": "Trouver le signe d’un produit",
+      "niveauDescription": "4e ; entretien dans les classes suivantes.",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Choisis une réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Trouver un facteur signé manquant",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Complète (−7) × □ = 28.",
+      "reponse": "-4",
+      "donnees": "Un facteur signé et le produit ; facteur manquant non nul, de valeur absolue 1–9.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Détermine le signe avant la valeur.",
+      "aide2": "Utilise 28 ÷ 7.",
+      "correction": "(−7) × (−4) = 28.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["-4"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "-4",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Tableau de signes ou regroupement des facteurs négatifs. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC06-d",
+      "ancienId": "NC06-d",
+      "ancienIdGenerateur": "NC06-D",
+      "indiceGenerateur": 3,
+      "nom": "Trouver un facteur signé manquant",
+      "niveauDescription": "4e ; entretien dans les classes suivantes.",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

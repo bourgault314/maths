@@ -1,0 +1,371 @@
+{
+  "id": "EG07",
+  "titre": "Angles d’un triangle",
+  "categorie": "Géométrie et repérage",
+  "objectif": "Calculer un angle d’un triangle en combinant somme 180° et propriétés du triangle.",
+  "prerequis": "Somme et différence ; triangle rectangle, isocèle, équilatéral ; codages.",
+  "perimetre": "DNB2027 pour les quatre variantes ; seules configurations non dégénérées.",
+  "cours": {
+    "regle": "La somme des mesures des angles d’un triangle est 180°. Les angles à la base d’un triangle isocèle ont la même mesure.",
+    "exemple": "47°+61°+72°=180°. Si deux angles mesurent 47° et 61°, le troisième mesure 180°−47°−61°=72°.",
+    "visuel": "Barre de total 180° : 47°,61°,72° pour la somme ; 46°,67°,67° pour les triangles isocèles. Les largeurs sont proportionnelles aux mesures. Ces valeurs ne reproduisent pas une question générée.",
+    "mouvement": "Option AngleBarre : déplacer des copies des trois secteurs pour former un angle plat puis les relier à la barre 180°. Version statique triangle, angle plat et barre ; animation désactivable.",
+    "exemples_par_variante": {
+      "EG07-V1": "47°+61°+72°=180°. Si deux angles mesurent 47° et 61°, le troisième mesure 180°−47°−61°=72°.",
+      "EG07-V2": "47°+61°+72°=180°. Si deux angles mesurent 47° et 61°, le troisième mesure 180°−47°−61°=72°.",
+      "EG07-V3": "Dans un triangle isocèle, si l’angle au sommet principal mesure 46°, chaque angle à la base mesure (180°−46°)÷2=67°.",
+      "EG07-V4": "Dans un triangle isocèle, si chaque angle à la base mesure 67°, l’angle au sommet principal mesure 180°−2×67°=46°."
+    }
+  },
+  "erreurs": [
+    "Partager par deux avant de retirer l’angle principal.",
+    "Confondre sommet principal et angle de base.",
+    "Utiliser 360° au lieu de 180°.",
+    "Donner 60° à tout triangle isocèle."
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 3 — 2025",
+      "url": "https://www.education.gouv.fr/sites/default/files/ensel620_annexe2-v2.pdf",
+      "repere": "p. 23–24 — Triangles",
+      "apport": "Triangles particuliers et somme des angles en 6e.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Programme de mathématiques du cycle 4 — 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "p. 13 — Automatismes de 5e",
+      "apport": "Somme des angles, triangles isocèle, rectangle et équilatéral.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples pour la mise en œuvre des programmes de mathématiques — cycle 4",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "PDF p. 25 — Triangles",
+      "apport": "Calcul d’un troisième angle à partir des propriétés.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Programme du cycle 4 — BO du 30 juillet 2020",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/programme-d-enseignement-du-cycle-4-67722.pdf",
+      "repere": "p. 136 — Triangle",
+      "apport": "Somme des angles dans le périmètre DNB2027.",
+      "statut": "prescription"
+    }
+  ],
+  "limites": "Le schéma d’aide n’est pas affiché par défaut en évaluation. Le réemploi d’AngleBarre est un choix de conception, pas une prescription officielle.",
+  "acces_secondaires": [],
+  "atlas": "cours/09.svg",
+  "atlasAlt": "Barre180°composée de portions50°,60°,70°.",
+  "nom": "Angles d’un triangle",
+  "domaine": "espace-geometrie",
+  "sousDomaine": "Géométrie et repérage",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6e nouveau programme : somme des angles et triangles particuliers en apprentissage ; 5e : automatisme explicite ; 4e–3e entretien. DNB2027 : acquis de l’ancien cycle 4.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_17", "dnb_18"],
+    "questions": [
+      {
+        "source": "A2602",
+        "question": "Q8",
+        "referenceAncienne": "AA 8",
+        "forme": "b",
+        "identifiant": "EG07-b",
+        "ancienId": "EG07-V2",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Angle d’un triangle à partir d’un codage",
+        "formatSource": "Saisie",
+        "document": "Asie, 15 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-15_Asie_DV-v3.pdf"
+      },
+      {
+        "source": "A2605",
+        "question": "Q8",
+        "referenceAncienne": "AG 8",
+        "forme": "c",
+        "identifiant": "EG07-c",
+        "ancienId": "EG07-V3",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Angles d’un triangle isocèle",
+        "formatSource": "Saisie",
+        "document": "Antilles-Guyane, 30 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Antilles-Guyane_DV-v2.pdf"
+      },
+      {
+        "source": "A2607",
+        "question": "Q4",
+        "referenceAncienne": null,
+        "forme": "a",
+        "identifiant": "EG07-a",
+        "ancienId": "EG07-V1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Troisième angle d’un triangle",
+        "formatSource": "Saisie",
+        "document": "Polynésie, 7 septembre 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-09-07_polynesie-FB.pdf"
+      },
+      {
+        "source": "A2608",
+        "question": "Q8",
+        "referenceAncienne": null,
+        "forme": "a",
+        "identifiant": "EG07-a",
+        "ancienId": "EG07-V1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Troisième angle d’un triangle",
+        "formatSource": "QCM",
+        "document": "Métropole-Antilles-Guyane, 10 septembre 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-09-10_Metropole_FB.pdf"
+      },
+      {
+        "source": "Z26A",
+        "question": "Q5",
+        "referenceAncienne": "ZA 5",
+        "forme": "b",
+        "identifiant": "EG07-b",
+        "ancienId": "EG07-V2",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Angle d’un triangle rectangle",
+        "formatSource": "Nombre",
+        "document": "Sujet zéro 2026, série générale A",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-mathematiquespdf-123317.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Calculer le troisième angle d’un triangle quelconque.",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Dans ABC, [angle:A] = 40° et [angle:B] = 65°. Calcule [angle:C].",
+      "reponse": "75°",
+      "donnees": "A,B,C entiers positifs ; A + B<180 ; angle inconnu≥10°, autres≥10°. Dessin construit par angles et base, sans dessin contradictoire.",
+      "saisie": "Champ numérique avec ° fixe.",
+      "acceptation": "75 ; 75°.",
+      "aide1": "« Les trois angles remplissent un angle plat de 180°. » Montrer la barre 180° avec parts 40°,65°,?.",
+      "aide2": "« Retire les deux angles connus. » Afficher 180−(40 + 65), relié aux deux parts connues.",
+      "correction": "[angle:C] = 180°−40°−65° = 75°.",
+      "controles": [
+        "Refuser 105° qui est la somme connue.",
+        "Vérifier somme 180° et triangle non aplati à chaque tirage."
+      ],
+      "identifiant": "EG07-a",
+      "ancienId": "EG07-V1",
+      "ancienIdGenerateur": "EG07-V1",
+      "indiceGenerateur": 0,
+      "nom": "Calculer le troisième angle d’un triangle quelconque.",
+      "niveauDescription": "6e nouveau programme apprentissage ; 5e–3e entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "[angle:C]",
+          "unite": "°"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2607",
+          "question": "Q4",
+          "referenceAncienne": null,
+          "forme": "a",
+          "identifiant": "EG07-a",
+          "ancienId": "EG07-V1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Troisième angle d’un triangle",
+          "formatSource": "Saisie",
+          "document": "Polynésie, 7 septembre 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-09-07_polynesie-FB.pdf"
+        },
+        {
+          "source": "A2608",
+          "question": "Q8",
+          "referenceAncienne": null,
+          "forme": "a",
+          "identifiant": "EG07-a",
+          "ancienId": "EG07-V1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Troisième angle d’un triangle",
+          "formatSource": "QCM",
+          "document": "Métropole-Antilles-Guyane, 10 septembre 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-09-10_Metropole_FB.pdf"
+        }
+      ]
+    },
+    {
+      "id": "b",
+      "objectif": "Calculer un angle aigu d’un triangle rectangle.",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "ABC est rectangle en A et [angle:B] = 28°. Calcule [angle:C].",
+      "reponse": "62°",
+      "donnees": "Un angle droit exactement codé ; autre angle aigu entier entre 10 et 80 ; varier position du sommet droit.",
+      "saisie": "Champ numérique avec ° fixe.",
+      "acceptation": "62 ; 62°.",
+      "aide1": "« L’angle droit utilise 90° sur les 180°. » Afficher la moitié de la barre étiquetée 90°.",
+      "aide2": "« Les deux angles aigus se partagent les 90° restants. » Afficher 90−28 à côté des deux petits secteurs.",
+      "correction": "[angle:C] = 90°−28° = 62°.",
+      "controles": [
+        "Refuser 152 qui oublie l’angle droit.",
+        "Changement d’orientation ne doit pas déplacer le sommet de 90°."
+      ],
+      "identifiant": "EG07-b",
+      "ancienId": "EG07-V2",
+      "ancienIdGenerateur": "EG07-V2",
+      "indiceGenerateur": 1,
+      "nom": "Calculer un angle aigu d’un triangle rectangle.",
+      "niveauDescription": "6e nouveau programme apprentissage ; 5e–3e entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "[angle:C]",
+          "unite": "°"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2602",
+          "question": "Q8",
+          "referenceAncienne": "AA 8",
+          "forme": "b",
+          "identifiant": "EG07-b",
+          "ancienId": "EG07-V2",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Angle d’un triangle à partir d’un codage",
+          "formatSource": "Saisie",
+          "document": "Asie, 15 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-15_Asie_DV-v3.pdf"
+        },
+        {
+          "source": "Z26A",
+          "question": "Q5",
+          "referenceAncienne": "ZA 5",
+          "forme": "b",
+          "identifiant": "EG07-b",
+          "ancienId": "EG07-V2",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Angle d’un triangle rectangle",
+          "formatSource": "Nombre",
+          "document": "Sujet zéro 2026, série générale A",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-mathematiquespdf-123317.pdf"
+        }
+      ]
+    },
+    {
+      "id": "c",
+      "objectif": "Calculer les angles à la base d’un triangle isocèle.",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "ABC est isocèle en A et [angle:A] = 40°. Calcule [angle:B].",
+      "reponse": "70°",
+      "donnees": "AB = AC codés ; angle principal pair entre 20 et 140 ; deux angles base égaux. ExempleA40,B70,C70.",
+      "saisie": "Champ numérique avec ° fixe.",
+      "acceptation": "70 ; 70°.",
+      "aide1": "« Les deux angles à la base sont égaux. » Coder les secteurs B et C avec le même arc.",
+      "aide2": "« Retire 40° de 180°, puis partage le reste en deux parts égales. » Barre 40° + ? + ? avec deux parts marquées égales.",
+      "correction": "[angle:B]=(180°−40°)/2 = 70°.",
+      "controles": [
+        "Refuser 140 ; ne pas diviser 40 par 2.",
+        "Le sommet principal doit être le sommet commun aux deux côtés codés égaux."
+      ],
+      "identifiant": "EG07-c",
+      "ancienId": "EG07-V3",
+      "ancienIdGenerateur": "EG07-V3",
+      "indiceGenerateur": 2,
+      "nom": "Calculer les angles à la base d’un triangle isocèle.",
+      "niveauDescription": "6e nouveau programme apprentissage ; 5e–3e entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "[angle:B]",
+          "unite": "°"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2605",
+          "question": "Q8",
+          "referenceAncienne": "AG 8",
+          "forme": "c",
+          "identifiant": "EG07-c",
+          "ancienId": "EG07-V3",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Angles d’un triangle isocèle",
+          "formatSource": "Saisie",
+          "document": "Antilles-Guyane, 30 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-30_Antilles-Guyane_DV-v2.pdf"
+        }
+      ]
+    },
+    {
+      "id": "d",
+      "objectif": "Calculer l’angle principal à partir d’un angle de base.",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "ABC est isocèle en A et [angle:B] = 55°. Calcule [angle:A].",
+      "reponse": "70°",
+      "donnees": "AB = AC ; [angle:B] = [angle:C] = b, b entier de 15 à 80 ; angleA180−2b>0. Sous-type équilatéral indépendant : trois côtés égaux, chaque angle 60°.",
+      "saisie": "Champ numérique avec ° fixe.",
+      "acceptation": "70 ; 70°.",
+      "aide1": "« L’autre angle de base a aussi 55°. » Marquer B et C avec le même arc, sans afficher A.",
+      "aide2": "« Les deux angles connus prennent 55° + 55°. » Barre ? +55° + 55° ; calcul 180−2 × 55.",
+      "correction": "[angle:A] = 180°−55°−55° = 70°.",
+      "controles": [
+        "Refuser 62,5 qui suppose à tort que 55° est au sommet principal.",
+        "Sous-type équilatéral : accepter 60°, refuser 90°."
+      ],
+      "identifiant": "EG07-d",
+      "ancienId": "EG07-V4",
+      "ancienIdGenerateur": "EG07-V4",
+      "indiceGenerateur": 3,
+      "nom": "Calculer l’angle principal à partir d’un angle de base.",
+      "niveauDescription": "6e nouveau programme apprentissage ; 5e–3e entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "[angle:A]",
+          "unite": "°"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

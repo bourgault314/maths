@@ -1,0 +1,377 @@
+{
+  "id": "DP07",
+  "titre": "Événement contraire, réunion et intersection",
+  "categorie": "Statistiques et probabilités",
+  "objectif": "Compter sans doublon et relier une probabilité à celle de l’événement contraire.",
+  "prerequis": ["Probabilités simples", "Complément à1", "Reconnaître les propriétés d’un entier"],
+  "perimetre": "DNB2027 pour contraire et dénombrements concrets. Formule générale union/intersection exclue du filtre2027.",
+  "cours": {
+    "regle": "La probabilité de l’événement contraire à A vaut 1 − P(A). « Et » demande les deux conditions ; « ou » au moins une.",
+    "exemple": "Dé équilibré : pair ou supérieur à 4 → 2, 4, 5, 6 ; probabilité 4/6.",
+    "visuel": "Barre unité en dix parts, deux marquéesG et huitN. Accolades0,2 et? sous les deux ensembles, total1 au-dessus. Pour la réunion, montrer six cartes de dé avec contourA ouB, double contour sur les cas communs mais une seule carte.",
+    "mouvement": "Aucun mouvement nécessaire ; révélation des labels et du lien1 − 0,2."
+  },
+  "erreurs": [
+    "Oublier un cas du contraire",
+    "Compter deux fois une intersection",
+    "Confondre « et » avec « ou »",
+    "Traiter le « ou » comme toujours exclusif"
+  ],
+  "sources": [
+    {
+      "titre": "Programme cycle 4, 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "Probabilités4ᵉ–3ᵉ, PDFp.17–18",
+      "apport": "Contraire, ensemble, réunion/intersection et relation en3ᵉ.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples de mise en œuvre cycle 4, 2026",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "Probabilités4ᵉ–3ᵉ, PDFp.38–39",
+      "apport": "Dénombrement concret puis formule de réunion.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Programme cycle 4, 2020",
+      "url": "https://cache.media.education.gouv.fr/file/31/89/1/ensel714_annexe3_1312891.pdf",
+      "repere": "ThèmeB, PDFp.132",
+      "apport": "Contraires et probabilités dans des cas simples.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "NCETM — Statistics and probability",
+      "url": "https://www.ncetm.org.uk/classroom-resources/secmm-5-statistics-and-probability/",
+      "repere": "Présentation du thème 5 consultée",
+      "apport": "Interpréter les données et quantifier l’incertitude ; appui thématique.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "Le symbole∪ n’est pas nécessaire dans le filtre2027. Les énoncés en mots restent prioritaires ; l’algèbre des événements est distincte des automatismes de dénombrement.",
+  "nom": "Événement contraire, réunion et intersection",
+  "domaine": "donnees-probabilites",
+  "sousDomaine": "Statistiques et probabilités",
+  "niveaux": ["5e", "4e", "3e"],
+  "niveauxDescription": "6ᵉ–5ᵉ : situations concrètes décrites en mots. 4ᵉ : contraire et langage des ensembles. 3ᵉ nouveau programme : relation entre réunion et intersection.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_28"],
+    "questions": [
+      {
+        "source": "A2608",
+        "question": "Q3",
+        "referenceAncienne": null,
+        "forme": "a",
+        "identifiant": "DP07-a",
+        "ancienId": "DP07-V1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Probabilité de l’événement contraire",
+        "formatSource": "Saisie",
+        "document": "Métropole-Antilles-Guyane, 10 septembre 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-09-10_Metropole_FB.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Utiliser le contraire",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "La probabilité de gagner est0,2. Quelle est la probabilité de ne pas gagner ?",
+      "reponse": "0,8",
+      "donnees": "p = k/10 aveck0–10 ou fraction simple ; événementcontraire explicitement exhaustif, ne pas confondre perdreetnepasgagnersiégalitépossible.",
+      "saisie": "Nombre ou fraction",
+      "acceptation": "0,8,4/5,80 % acceptés ;0,2 refusé.",
+      "aide1": "« Gagner et ne pas gagner couvrent tous les cas. » Montrer la barre unité avec deux partsG surdix.",
+      "aide2": "« Cherche ce qui manque à0,2 pour atteindre1 :1 − 0,2. » Écrire le calcul sous la barre.",
+      "correction": "1 − 0,2 = 0,8.",
+      "controles": ["p0→1 ;p1→0.", "Sommeexacte1.", "Pas de troisième issue omise."],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "La probabilité de gagner est 0,8. Quelle est la probabilité de ne pas gagner ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "0,2",
+            "unite": ""
+          }
+        ],
+        "aide1": "Gagner et ne pas gagner sont deux événements contraires.",
+        "aide2": "Les deux probabilités ont pour somme 1.",
+        "cours": {
+          "regle": "La probabilité de l’événement contraire à A vaut 1 − P(A). « Et » demande les deux conditions ; « ou » au moins une.",
+          "exemple": "Dé équilibré : pair ou supérieur à 4 → 2, 4, 5, 6 ; probabilité 4/6."
+        },
+        "correction": "1 − 0,8 = 0,2."
+      },
+      "identifiant": "DP07-a",
+      "ancienId": "DP07-V1",
+      "ancienIdGenerateur": "DP07-V1",
+      "indiceGenerateur": 0,
+      "nom": "Utiliser le contraire",
+      "niveauDescription": "4ᵉ apprentissage ;3ᵉ entretien",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2608",
+          "question": "Q3",
+          "referenceAncienne": null,
+          "forme": "a",
+          "identifiant": "DP07-a",
+          "ancienId": "DP07-V1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Probabilité de l’événement contraire",
+          "formatSource": "Saisie",
+          "document": "Métropole-Antilles-Guyane, 10 septembre 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-09-10_Metropole_FB.pdf"
+        }
+      ]
+    },
+    {
+      "id": "b",
+      "objectif": "Réunir deux catégories disjointes",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Un sac contient3 boules rouges,2 bleues et5 vertes, indiscernables au toucher. On en tire une au hasard. Quelle est la probabilité d’obtenir rouge ou bleu ?",
+      "reponse": "1/2",
+      "donnees": "Trois effectifsentiers1–6,total ≤ 18 ; exemplesR3,B2,V5. Catégoriesdisjointes.",
+      "saisie": "Fraction",
+      "acceptation": "5/10,1/2,0,5 acceptés ;3/10 ou2/10 refusés.",
+      "aide1": "« Rouge ou bleu : les deux couleurs conviennent. » Encadrer les groupesR etB avec une accoladecommune.",
+      "aide2": "« Cas favorables :3 + 2. Cas possibles :3 + 2 + 5. » Afficher(3 + 2)/(3 + 2 + 5).",
+      "correction": "5/10 = 1/2.",
+      "controles": [
+        "Sommeeffectifs = total.",
+        "Chaque boule comptéeunefois.",
+        "Permutationdespositionssanschangementderéponse."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "On tire au hasard une boule, toutes indiscernables au toucher. Quelle est la probabilité de tirer une boule rouge ou bleue ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "5/8",
+            "unite": ""
+          }
+        ],
+        "aide1": "Les boules rouges et bleues conviennent toutes.",
+        "aide2": "Additionne leurs effectifs puis divise par 8.",
+        "cours": {
+          "regle": "La probabilité de l’événement contraire à A vaut 1 − P(A). « Et » demande les deux conditions ; « ou » au moins une.",
+          "exemple": "Dé équilibré : pair ou supérieur à 4 → 2, 4, 5, 6 ; probabilité 4/6."
+        },
+        "correction": "(4 + 1)/8 = 5/8."
+      },
+      "identifiant": "DP07-b",
+      "ancienId": "DP07-V2",
+      "ancienIdGenerateur": "DP07-V2",
+      "indiceGenerateur": 1,
+      "nom": "Réunir deux catégories disjointes",
+      "niveauDescription": "5ᵉ ;entretien4ᵉ–3ᵉ",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Compter une réunion avec recouvrement",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Dé équilibré de1à6 : quelle est la probabilité d’obtenir un nombre pair ou supérieur à3 ?",
+      "reponse": "2/3",
+      "donnees": "A = {2,4,6},B = {4,5,6},union = {2,4,5,6}. Générer critères simples sur univers ≤ 12 ; « ou » inclusif explicité : l’un, l’autre oulesdeux.",
+      "saisie": "Fraction",
+      "acceptation": "4/6 et2/3 acceptés ;6/6 refusé.",
+      "aide1": "« Liste les résultats qui vérifient au moins une condition. » Montrer six cartes avec deux types de contoursA etB.",
+      "aide2": "« 4 et6 vérifient les deux conditions, mais on ne les compte qu’une fois. » Superposer les contours sans dupliquer les cartes.",
+      "correction": "Les résultats2,4,5,6 conviennent :4/6 = 2/3.",
+      "controles": [
+        "Contrôle par uniond’ensembles.",
+        "Casrecouvrementvideetnonvide.",
+        "Ne pasadditionner2probabilitéssansretirerledoublon."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "On lance un dé équilibré numéroté de 1 à 6. Probabilité d’obtenir un nombre pair ou supérieur à 4 ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "4/6",
+            "unite": ""
+          }
+        ],
+        "aide1": "« Ou » demande au moins une des propriétés.",
+        "aide2": "Teste chaque face. Une face qui convient ne se compte qu’une fois.",
+        "cours": {
+          "regle": "La probabilité de l’événement contraire à A vaut 1 − P(A). « Et » demande les deux conditions ; « ou » au moins une.",
+          "exemple": "Dé équilibré : pair ou supérieur à 4 → 2, 4, 5, 6 ; probabilité 4/6."
+        },
+        "correction": "Cas favorables : 2, 4, 5, 6. Probabilité 4/6."
+      },
+      "identifiant": "DP07-c",
+      "ancienId": "DP07-V3",
+      "ancienIdGenerateur": "DP07-V3",
+      "indiceGenerateur": 2,
+      "nom": "Compter une réunion avec recouvrement",
+      "niveauDescription": "4ᵉ application ;3ᵉ entretien",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Utiliser la relation union/intersection",
+      "niveau": "3e",
+      "dnb2027": false,
+      "enonce": "P(A) = 0,4 ; P(B) = 0,5 ; P(A ∩ B) = 0,2. Calcule P(A ∪ B).",
+      "reponse": "0,7",
+      "donnees": "Donnéesaupas0,1 avecmax(0,pA + pB−1) ≤ pIntersection ≤ min(pA,pB). Union∈[0;1].",
+      "saisie": "Nombre ou fraction",
+      "acceptation": "0,7 et7/10 acceptés ;0,9 refusé.",
+      "aide1": "« Les cas communs sont inclus dansA et dansB. » Montrer deux ensembles qui se recouvrent, intersectionétiquetée0,2.",
+      "aide2": "« En additionnant0,4 et0,5, tu comptes0,2 deux fois. Retire-le une fois. » Afficher0,4 + 0,5 − 0,2.",
+      "correction": "0,4 + 0,5 − 0,2 = 0,7.",
+      "controles": [
+        "Vérifier admissibilitédes3probabilités.",
+        "Casintersection0.",
+        "Refuser unionhors[0;1]."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "P(A) = 0,3 ; P(B) = 0,2 ; P(A ∩ B) = 0. Calcule P(A ∪ B).",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "0,5",
+            "unite": ""
+          }
+        ],
+        "aide1": "En additionnant P(A) et P(B), la partie commune est comptée deux fois.",
+        "aide2": "Additionne P(A) et P(B), puis retire une fois P(A ∩ B).",
+        "cours": {
+          "regle": "La probabilité de l’événement contraire à A vaut 1 − P(A). « Et » demande les deux conditions ; « ou » au moins une.",
+          "exemple": "Dé équilibré : pair ou supérieur à 4 → 2, 4, 5, 6 ; probabilité 4/6."
+        },
+        "correction": "0,3 + 0,2 − 0 = 0,5."
+      },
+      "identifiant": "DP07-d",
+      "ancienId": "DP07-V4",
+      "ancienIdGenerateur": "DP07-V4",
+      "indiceGenerateur": 3,
+      "nom": "Utiliser la relation union/intersection",
+      "niveauDescription": "3ᵉ nouveau programme",
+      "niveaux": ["3e"],
+      "brevet": false,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Compter une intersection",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Dé équilibré de1à6 : quelle est la probabilité d’obtenir un nombre pair et multiple de3 ?",
+      "reponse": "1/6",
+      "donnees": "Critèrespair etmultiple3 ; autresvariantes sur1–12 avecdénominateur12explicitementéquiprobable. Intersectionexacte.",
+      "saisie": "Fraction",
+      "acceptation": "1/6 accepté ;4/6 et5/6 refusés.",
+      "aide1": "« Le résultat doit vérifier les deux conditions. » Afficher les six cartes avec leurs deux étiquettes éventuelles.",
+      "aide2": "« Les pairs sont2,4,6 ; les multiples de3 sont3,6. Cherche le résultat commun. » Relier les deux listes à une casecommune.",
+      "correction": "Seul6 convient :1/6.",
+      "controles": [
+        "Uneintersectionvide→0.",
+        "Pasdeconfusionavecou.",
+        "Calculenensemblesindépendant."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "On lance un dé équilibré numéroté de 1 à 6. Probabilité d’obtenir un nombre pair et supérieur à 4 ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "1/6",
+            "unite": ""
+          }
+        ],
+        "aide1": "« Et » demande les deux propriétés à la fois.",
+        "aide2": "Teste chaque face. Une face qui convient ne se compte qu’une fois.",
+        "cours": {
+          "regle": "La probabilité de l’événement contraire à A vaut 1 − P(A). « Et » demande les deux conditions ; « ou » au moins une.",
+          "exemple": "Dé équilibré : pair ou supérieur à 4 → 2, 4, 5, 6 ; probabilité 4/6."
+        },
+        "correction": "Cas favorables : 6. Probabilité 1/6."
+      },
+      "identifiant": "DP07-e",
+      "ancienId": "DP07-V5",
+      "ancienIdGenerateur": "DP07-V5",
+      "indiceGenerateur": 4,
+      "nom": "Compter une intersection",
+      "niveauDescription": "4ᵉ application ;3ᵉ entretien",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

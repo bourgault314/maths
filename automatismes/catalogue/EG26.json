@@ -1,0 +1,227 @@
+{
+  "id": "EG26",
+  "titre": "Sections de solides et grand cercle",
+  "categorie": "Géométrie et repérage",
+  "objectif": "Identifier une section et utiliser une coupe adaptée à une longueur.",
+  "prerequis": ["Solides", "Perpendicularité/parallélisme", "Pythagore pour le rayon de section"],
+  "perimetre": "DNB 2027 et objectifs de 3e du nouveau programme. Les sections ne constituent pas une nouveauté intégrale.",
+  "cours": {
+    "regle": "Un plan passant par le centre d’une sphère la coupe suivant un grand cercle, de même rayon que la sphère.",
+    "exemple": "Rayon de sphère 5 cm, distance du plan 3 cm : r²=5²−3²=16, donc r=4 cm.",
+    "visuel": "Sphère de centre O, plan de coupe, H centre du cercle de section et A sur ce cercle. OH=3, OA=5, HA=r. Vue de face du triangle OHA rectangle en H.",
+    "mouvement": "Déplacement du plan facultatif ; perspective et coupe de face en version statique."
+  },
+  "erreurs": [
+    "Prendre l’ellipse de perspective pour la forme mathématique",
+    "Confondre sphère et boule",
+    "Garder le rayon R pour un plan hors du centre"
+  ],
+  "sources": [
+    {
+      "titre": "Programme cycle 4 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "PDF p.15",
+      "apport": "Grand cercle, sections, bouleetsphère.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples cycle 4 2026",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "p.29–30 imprimées",
+      "apport": "Sections usuelles et rayon du cercle avec distanceaucentre.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Programme cycle 4 2020",
+      "url": "https://cache.media.education.gouv.fr/file/31/89/1/ensel714_annexe3_1312891.pdf",
+      "repere": "PDF p.135",
+      "apport": "Sections planes dans les représentations de solides.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Mathsgo — Le pavé droit dans l’espace",
+      "url": "https://mathsgo.re/outils/espace/pave_droit.html",
+      "repere": "Catalogue public consulté ; fonctionnalité décrite, interaction non testée.",
+      "apport": "Vue fixe lisible et bouton tourner facultatif ; afficher face de référence pour repérage.",
+      "statut": "choix de conception"
+    },
+    {
+      "titre": "NCETM — Geometry",
+      "url": "https://www.ncetm.org.uk/classroom-resources/secmm-6-geometry/",
+      "repere": "Présentation du thème 6 consultée",
+      "apport": "Relier propriétés géométriques, formules de mesure et transformations ; appui thématique.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "Plans strictement sécants dans les variantes numériques. Les cas tangent ou extérieur restent à ajouter. La construction en vraie grandeur demande un travail instrumental complémentaire.",
+  "acces_secondaires": ["Grandeurs et mesures"],
+  "nom": "Sections de solides et grand cercle",
+  "domaine": "espace-geometrie",
+  "sousDomaine": "Géométrie et repérage",
+  "niveaux": ["3e"],
+  "niveauxDescription": "3e : boule, sphère, grand cercle et sections du nouveau programme. Sections également inscrites au programme de 2020 applicable au DNB 2027.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": [],
+    "questions": []
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Reconnaître la section parallèle à une face d’un pavé",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Un pavé mesure 6 cm de long,4 cm de large et 3 cm de haut. On le coupe par un plan parallèle à la base 6×4. Quelles sont les dimensions de la surface de coupe ?",
+      "reponse": "6 cm ×4 cm",
+      "donnees": "Pavédroit ; plan strictement intérieur parallèleàface donnée ; dimensions distinctes pour éviter l’ambiguïté.",
+      "saisie": "Deuxdimensions.",
+      "acceptation": "Accepter(6,4)ou(4,6) ; ne pas inclure la hauteur 3.",
+      "aide1": "« Une coupe parallèle garde la forme et les dimensions de cette face. » Colorerbase 6×4 etplancoupe.",
+      "aide2": "« La coupe suit les directions de 6 cm et 4 cm. » Reporter les arêtes correspondantes.",
+      "correction": "La section est un rectangle6 cm×4 cm.",
+      "controles": ["Accepter6 et 4 ; refuser6 et 3.", "Aucun plan oblique dans cette variante."],
+      "identifiant": "EG26-a",
+      "ancienId": "EG26-V1",
+      "ancienIdGenerateur": "EG26-V1",
+      "indiceGenerateur": 0,
+      "nom": "Reconnaître la section parallèle à une face d’un pavé",
+      "niveauDescription": "3e",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Longueur",
+          "unite": "cm"
+        },
+        {
+          "type": "nombre",
+          "libelle": "Largeur",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Distinguer deux orientations de coupe d’un cylindre",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Un cylindre plein est coupé par un plan perpendiculaire à son axe, entre ses deux bases. Quelle est la forme de la surface de coupe ?",
+      "reponse": "Disque",
+      "donnees": "Cylindre droit plein ; plan perpendiculaire à l’axe etintérieur ; variante plan contenant l’axe→rectangle ; pascoupetangente.",
+      "saisie": "Choix disque/rectangle/triangle.",
+      "acceptation": "Disque pour une surface pleine ; acceptercercle seulement si la question portait explicitement sur le contour.",
+      "aide1": "« Le plan est parallèle aux deux bases. » Colorer bases et plan avec angles droits à l’axe.",
+      "aide2": "« La surface de coupe a la même forme que la base pleine. » Montrerla coupe de face.",
+      "correction": "La surface de coupe est un disque.",
+      "controles": [
+        "Accepterdisque ; refuserellipse, effet de perspective.",
+        "Si plancontientaxe, réponse rectangle."
+      ],
+      "identifiant": "EG26-b",
+      "ancienId": "EG26-V2",
+      "ancienIdGenerateur": "EG26-V2",
+      "indiceGenerateur": 1,
+      "nom": "Distinguer deux orientations de coupe d’un cylindre",
+      "niveauDescription": "3e",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Relier grand cercle et rayon de sphère",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Une sphère de centreO a un rayon 5 cm. Un plan passe parO. Quel est le rayon du cercle d’intersection ?",
+      "reponse": "5 cm",
+      "donnees": "Rayonentier1–10 ; plan passant strictement par le centre ; question rayon ou diamètre clairement distinguée.",
+      "saisie": "Nombre, unitécm.",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "« Le cercle de coupe passe par des points de la sphère. » Placer A surlegrandcercle.",
+      "aide2": "Un rayon dans le plan de coupe relie toujours le centre à la sphère. Représenter le cercle sans remplissage et son rayon de 5 cm.",
+      "correction": "Le rayon du grand cercle est5 cm.",
+      "controles": [
+        "Accepter5 ; refuser10, diamètre.",
+        "Pour un plan ne passant pas par le centre, ne pas appliquer cette égalité."
+      ],
+      "identifiant": "EG26-c",
+      "ancienId": "EG26-V3",
+      "ancienIdGenerateur": "EG26-V3",
+      "indiceGenerateur": 2,
+      "nom": "Relier grand cercle et rayon de sphère",
+      "niveauDescription": "3e",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Calculer un rayon de section par Pythagore",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Une sphère de rayon 5 cm est coupée par un plan situé à3 cm de son centre. Quel est le rayon du cercle d’intersection ?",
+      "reponse": "4 cm",
+      "donnees": "Triplets rectangles(3,4,5),(5,12,13),(6,8,10) ; distanceplan0<d<R ; encart du triangle rectangle OHA fourni ; rayoncercle>0.",
+      "saisie": "Nombre, unitécm.",
+      "acceptation": "Nombre exact ; virgule et point décimaux acceptés. L’unité cible est fixée par le champ.",
+      "aide1": "« Le rayon de la sphère relie son centre à un point du cercle de coupe. » Isoler le triangle OHA droit enH.",
+      "aide2": "« HA²=5²−3²=25−9. » ColorerHAinconnu sans évaluer la racine.",
+      "correction": "HA²=16, doncHA=4 cm.",
+      "controles": [
+        "Accepter4 ; refuser2, différence5−3.",
+        "Vérifier r²+d²=R² ; exclured≥R dans cet exercice de cercle."
+      ],
+      "identifiant": "EG26-d",
+      "ancienId": "EG26-V4",
+      "ancienIdGenerateur": "EG26-V4",
+      "indiceGenerateur": 3,
+      "nom": "Calculer un rayon de section par Pythagore",
+      "niveauDescription": "3e application directe",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

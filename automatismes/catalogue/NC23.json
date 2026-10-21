@@ -1,0 +1,242 @@
+{
+  "id": "NC23",
+  "titre": "Développer un produit de deux sommes",
+  "categorie": "Calcul littéral et équations",
+  "objectif": "Former tous les produits avant de réunir les termes semblables.",
+  "prerequis": ["NC22", "NC20", "Produits relatifs"],
+  "perimetre": "DNB2027 : variantes simples conformes à l’ancien cycle 4 ; niveaux du parcours collège selon le programme 2026.",
+  "cours": {
+    "regle": "Chaque terme du premier groupe multiplie chaque terme du second. Deux termes par groupe donnent quatre produits.",
+    "exemple": "(x + 2)(x + 3) = x² + 3x + 2x + 6 = x² + 5x + 6.",
+    "visuel": "Grille 2 × 2 : lignes x,2 ; colonnes x,3 ; cellules x²,3x,2x,6. Le périmètre de la grille ne simule pas une aire pour les valeurs négatives.",
+    "mouvement": "Remplissage facultatif cellule après cellule ; grille statique à quatre cellules disponible."
+  },
+  "erreurs": [
+    "Oublier deux produits",
+    "Additionner au lieu de multiplier les coefficients",
+    "Oublier de réduire"
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 4,2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "PDF p.11",
+      "apport": "Niveaux et objectifs du calcul littéral ; introduction distincte de l’entretien.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples pour la mise en œuvre des programmes de mathématiques — cycle 4",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "p.21 imprimée",
+      "apport": "Lien entre distributivité simple et double ; nécessité de choisir la forme utile.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Programme du cycle 4,2020",
+      "url": "https://cache.media.education.gouv.fr/file/31/89/1/ensel714_annexe3_1312891.pdf",
+      "repere": "PDF p.131–132, calcul littéral",
+      "apport": "Périmètre mathématique utilisé par le filtre DNB2027.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Contrat de conception Matégo",
+      "url": null,
+      "repere": "Étape 1, NC19–NC31",
+      "apport": "Exemples originaux, bornes des générateurs, interfaces et aides proposées ; choix éditoriaux à valider par prototype.",
+      "statut": "choix de conception"
+    },
+    {
+      "titre": "NCETM — Algebra tiles",
+      "url": "https://www.ncetm.org.uk/media/dj5o223w/ncetm_ks3_representations_algebra_tilespdf.pdf",
+      "repere": "p.3–4,9–14",
+      "apport": "Associer schéma et symboles ; limites des aires négatives.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": [
+    "Grille à quatre cases seulement en aide ou entraînement guidé.",
+    "NC25 propose la reconnaissance rapide des produits conjugués."
+  ],
+  "acces_secondaires": [],
+  "nom": "Développer un produit de deux sommes",
+  "domaine": "nombres-calculs",
+  "sousDomaine": "Calcul littéral et équations",
+  "niveaux": ["3e"],
+  "niveauxDescription": "3e dans le nouveau programme ; présent au programme de cycle 4 applicable au DNB2027.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_12"],
+    "questions": []
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Deux sommes à coefficients unitaires",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Développe et réduis : (x + 2)(x + 5).",
+      "reponse": "x² + 7x + 10",
+      "donnees": "Constantes 1 à 6 ; produits≤36 ; coefficient de x 1 dans chaque facteur.",
+      "saisie": "Expression courte avec touches lettre, chiffres, +, −, ×, /, parenthèses et carré ; coefficients séparés seulement en entraînement guidé.",
+      "acceptation": "Comparer exactement les expressions sur le domaine annoncé ; ne pas utiliser quelques essais numériques comme preuve. Normaliser × implicite, espaces, ² et ^2. Polynôme développé et réduit exigé ; ordre libre.",
+      "aide1": {
+        "texte": "Prévois quatre produits.",
+        "visuel": "Grille : lignes x,2 ; colonnes x,5 ; quatre cellules vides."
+      },
+      "aide2": {
+        "texte": "Les deux produits en x se regroupent.",
+        "visuel": "Afficherx² + 5x + 2x + 10 ; surligner 5x et 2x."
+      },
+      "correction": "x² + 5x + 2x + 10 = x² + 7x + 10.",
+      "controles": ["Refuserx²+10 et x²+10x+10 ; quatre produits présents avant réduction."],
+      "identifiant": "NC23-a",
+      "ancienId": "NC23-V1",
+      "ancienIdGenerateur": "NC23-V1",
+      "indiceGenerateur": 0,
+      "nom": "Deux sommes à coefficients unitaires",
+      "niveauDescription": "3e apprentissage ; DNB2027",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "expression",
+      "champs": [
+        {
+          "type": "expression",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Une somme et une différence",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Développe et réduis : (x − 3)(x + 4).",
+      "reponse": "x² + x − 12",
+      "donnees": "Constantes signées−6 à 6 non nulles ; au moins une négative ; résultats petits.",
+      "saisie": "Expression courte avec touches lettre, chiffres, +, −, ×, /, parenthèses et carré ; coefficients séparés seulement en entraînement guidé.",
+      "acceptation": "Comparer exactement les expressions sur le domaine annoncé ; ne pas utiliser quelques essais numériques comme preuve. Normaliser × implicite, espaces, ² et ^2. Forme développée et réduite ; coefficient 1 de x peut être implicite.",
+      "aide1": {
+        "texte": "Garde − 3 avec son signe.",
+        "visuel": "Grille lignes x,−3 ; colonnes x,4."
+      },
+      "aide2": {
+        "texte": "Calcule les produits croisés puis additionne leurs coefficients.",
+        "visuel": "Afficherx² + 4x − 3x − 12."
+      },
+      "correction": "x² + (4 − 3)x − 12 = x² + x − 12.",
+      "controles": ["Refuserx²+7x−12 et x²+x+12 ; accepterx²+1x−12."],
+      "identifiant": "NC23-b",
+      "ancienId": "NC23-V2",
+      "ancienIdGenerateur": "NC23-V2",
+      "indiceGenerateur": 1,
+      "nom": "Une somme et une différence",
+      "niveauDescription": "3e apprentissage ; DNB2027",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "expression",
+      "champs": [
+        {
+          "type": "expression",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Coefficients de x différents de 1",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Développe et réduis : (2x + 1)(3x − 2).",
+      "reponse": "6x² − x − 2",
+      "donnees": "Coefficients de x 1 à 4 ; constantes−4 à 4 ; limiter |coefficient final|≤20.",
+      "saisie": "Expression courte avec touches lettre, chiffres, +, −, ×, /, parenthèses et carré ; coefficients séparés seulement en entraînement guidé.",
+      "acceptation": "Comparer exactement les expressions sur le domaine annoncé ; ne pas utiliser quelques essais numériques comme preuve. Normaliser × implicite, espaces, ² et ^2. Forme développée réduite.",
+      "aide1": {
+        "texte": "Multiplie aussi les coefficients devant x.",
+        "visuel": "Grille lignes 2x,1 ; colonnes 3x,−2."
+      },
+      "aide2": {
+        "texte": "2x × 3x = 6x². Calcule les trois autres cases.",
+        "visuel": "Première case 6x² remplie ; autres cases indiquent 2x × (−2),1 × 3x,1 × (−2)."
+      },
+      "correction": "6x² − 4x + 3x − 2 = 6x² − x − 2.",
+      "controles": ["Refuser 5x²−x−2 et 6x²−7x−2 ; coefficient−1 accepté comme−x."],
+      "identifiant": "NC23-c",
+      "ancienId": "NC23-V3",
+      "ancienIdGenerateur": "NC23-V3",
+      "indiceGenerateur": 2,
+      "nom": "Coefficients de x différents de 1",
+      "niveauDescription": "3e apprentissage ; DNB2027",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "expression",
+      "champs": [
+        {
+          "type": "expression",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Repérer l’annulation des termes croisés",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Développe et réduis : (x − 4)(x + 4).",
+      "reponse": "x² − 16",
+      "donnees": "Constante 1 à 9 ; deux facteurs conjugués ; identité optionnelle non imposée.",
+      "saisie": "Expression courte avec touches lettre, chiffres, +, −, ×, /, parenthèses et carré ; coefficients séparés seulement en entraînement guidé.",
+      "acceptation": "Comparer exactement les expressions sur le domaine annoncé ; ne pas utiliser quelques essais numériques comme preuve. Normaliser × implicite, espaces, ² et ^2. Forme développée réduite ; pas de terme 0x exigé.",
+      "aide1": {
+        "texte": "Les deux produits en x auront des signes opposés.",
+        "visuel": "Grille lignesx,−4 ; colonnesx,4 ; deux cellules croisées marquées."
+      },
+      "aide2": {
+        "texte": "Additionne 4x et − 4x.",
+        "visuel": "Afficherx² + 4x − 4x − 16 ; paire 4x/−4x reliée."
+      },
+      "correction": "4x − 4x = 0, donc(x − 4)(x + 4) = x² − 16.",
+      "controles": [
+        "Refuserx²+16 ; accepterx²+0x−16 après normalisation ; ne pas généraliser cette annulation aux constantes différentes."
+      ],
+      "identifiant": "NC23-d",
+      "ancienId": "NC23-V4",
+      "ancienIdGenerateur": "NC23-V4",
+      "indiceGenerateur": 3,
+      "nom": "Repérer l’annulation des termes croisés",
+      "niveauDescription": "3e apprentissage ; DNB2027",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "expression",
+      "champs": [
+        {
+          "type": "expression",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

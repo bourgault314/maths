@@ -1,0 +1,318 @@
+{
+  "id": "EG01",
+  "titre": "Droite graduée",
+  "categorie": "Géométrie et repérage",
+  "objectif": "Lire ou placer une abscisse en identifiant l’unité et le pas des graduations.",
+  "prerequis": "Ordre des nombres ; fraction d’une unité ; additions simples.",
+  "perimetre": "DNB 2027 : toutes les variantes ci-dessous ; les relatifs ne sont pas proposés en 6e.",
+  "cours": {
+    "regle": "Entre deux graduations voisines, le pas est constant. Lis les nombres repères avant de compter les intervalles.",
+    "exemple": "De 2 à 3, il y a 4 intervalles : le pas vaut 1/4. Le troisième trait après 2 vaut 2 + 3/4 = 2,75.",
+    "visuel": "Droite horizontale fléchée ; 2 et 3 espacés de quatre intervalles égaux ; A sur le troisième trait après 2. Une accolade « 1 unité » puis une petite accolade « 1/4 » relient le dessin au calcul.",
+    "mouvement": "Option : révéler les quatre intervalles successivement ; version statique avec quatre segments numérotés. Aucun déplacement nécessaire."
+  },
+  "erreurs": [
+    "Compter les traits au lieu des intervalles.",
+    "Supposer que chaque pas vaut 1.",
+    "Oublier le signe négatif.",
+    "Confondre numérateur et position entière."
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 3 — 2025",
+      "url": "https://www.education.gouv.fr/sites/default/files/ensel620_annexe2-v2.pdf",
+      "repere": "6e — nombres et calculs",
+      "apport": "Repérage des nombres positifs et des fractions.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Programme de mathématiques du cycle 4 — 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "p. 12, 14 et 15 — Repérage",
+      "apport": "Décimaux acquis en 5e, relatifs appris en 5e puis entretenus.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples pour la mise en œuvre des programmes de mathématiques — cycle 4",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "PDF p. 23 et 28 — Repérage",
+      "apport": "Lien explicite avec nombres relatifs, vocabulaire et repère orthogonal.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "NCETM — Single number lines",
+      "url": "https://www.ncetm.org.uk/media/8d84e79498db675/ncetm_ks3_representations_single_number_lines.pdf",
+      "repere": "p.3,5,7 lues visuellement",
+      "apport": "Ordre, opérations et fractions sur une droite ; limites pour les produits négatifs.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "Les fractions et la graduation sont rendues en vectoriel, sans approximation des positions. Le zoom ne doit pas modifier le pas.",
+  "acces_secondaires": ["Nombres et calculs"],
+  "atlas": "cours/05.svg",
+  "atlasAlt": "Départ−2, déplacement de5unités vers la droite, arrivée3.",
+  "nom": "Droite graduée",
+  "domaine": "espace-geometrie",
+  "sousDomaine": "Géométrie et repérage",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6e : nombres positifs entiers, décimaux et fractions ; 5e : nombres relatifs en apprentissage ; 4e–3e : entretien des abscisses relatives.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_14"],
+    "questions": [
+      {
+        "source": "A2608",
+        "question": "Q1",
+        "referenceAncienne": null,
+        "forme": "a",
+        "identifiant": "EG01-a",
+        "ancienId": "EG01-V1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Abscisse décimale sur graduation intermédiaire",
+        "formatSource": "Saisie",
+        "document": "Métropole-Antilles-Guyane, 10 septembre 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-09-10_Metropole_FB.pdf"
+      },
+      {
+        "source": "Z26A",
+        "question": "Q4",
+        "referenceAncienne": "ZA 4",
+        "forme": "e",
+        "identifiant": "EG01-e",
+        "ancienId": "EG01-V5",
+        "support": "comparable",
+        "difference": "Lire une fraction sur une droite, distinct de compter où placer une fraction fournie.",
+        "savoirFaire": "Abscisse fractionnaire sur une droite",
+        "formatSource": "QCM",
+        "document": "Sujet zéro 2026, série générale A",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-mathematiquespdf-123317.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Lire un décimal avec un pas différent de 1.",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Sur la droite, 2 et 3 sont séparés par quatre intervalles égaux. A est sur le troisième trait après 2. Quelle est son abscisse ?",
+      "reponse": "2,75",
+      "donnees": "Graduations exactes de pas 1/n, n∈{2,4,5,10}; repères entiers distants d’une unité ; A strictement entre eux. Exemple positions 2;2,25;2,5;2,75;3.",
+      "saisie": "Champ numérique décimal ; bouton fraction disponible.",
+      "acceptation": "2,75 ; 2.75 ; 11/4 ; toute écriture rationnelle égale.",
+      "aide1": "« Combien d’intervalles forment une unité ? » Surligner les quatre espaces entre 2 et 3, pas les traits.",
+      "aide2": "« Un intervalle vaut 1 ÷ 4. A est à trois intervalles de 2. » Afficher 2 + 3 × 1/4 sans résultat.",
+      "correction": "1 ÷ 4 = 0,25 ; 2 + 3 × 0,25 = 2,75.",
+      "controles": [
+        "Accepter 11/4 et 2,750 ; refuser 3,5 et 2,3.",
+        "Vérifier quatre intervalles, cinq traits ; position exacte de A au troisième intervalle."
+      ],
+      "identifiant": "EG01-a",
+      "ancienId": "EG01-V1",
+      "ancienIdGenerateur": "EG01-V1",
+      "indiceGenerateur": 0,
+      "nom": "Lire un décimal avec un pas différent de 1.",
+      "niveauDescription": "6e ; entretien 5e–3e",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Abscisse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2608",
+          "question": "Q1",
+          "referenceAncienne": null,
+          "forme": "a",
+          "identifiant": "EG01-a",
+          "ancienId": "EG01-V1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Abscisse décimale sur graduation intermédiaire",
+          "formatSource": "Saisie",
+          "document": "Métropole-Antilles-Guyane, 10 septembre 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-09-10_Metropole_FB.pdf"
+        }
+      ]
+    },
+    {
+      "id": "b",
+      "objectif": "Placer une fraction supérieure à 1.",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Place A d’abscisse 7/4 sur la droite graduée en quarts de 0 à 2.",
+      "reponse": "Point à 1,75",
+      "donnees": "Dénominateurs 2,3,4,5,6 ; numérateur entre d + 1 et 2d−1 ; grille exactement en 1/d. Exemple huit intervalles entre 0 et 2.",
+      "saisie": "Sélection d’une graduation ; alternative liste des numéros de traits, comptés depuis 0, explicitement affichés.",
+      "acceptation": "Graduation d’indice 7 depuis 0 ; les touches fléchées déplacent d’un pas, validation explicite.",
+      "aide1": "« 4/4 fait une unité. » Grouper les quatre premiers intervalles sous l’étiquette 1.",
+      "aide2": "« 7/4 = 1 + 3/4. » Montrer trois intervalles vides à compter après 1, sans placer A.",
+      "correction": "7/4 = 1 + 3/4 = 1,75.",
+      "controles": [
+        "Refuser la graduation 7 et celle de 3/4.",
+        "Toucher près d’un trait choisit ce trait ; pas de validation par pixel hors zone accessible."
+      ],
+      "identifiant": "EG01-b",
+      "ancienId": "EG01-V2",
+      "ancienIdGenerateur": "EG01-V2",
+      "indiceGenerateur": 1,
+      "nom": "Placer une fraction supérieure à 1.",
+      "niveauDescription": "6e ; entretien 5e–3e",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Nombre de graduations",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Lire une abscisse relative.",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Sur une droite de pas 0,5, A est situé trois intervalles à gauche de 0. Lis son abscisse.",
+      "reponse": "−1,5",
+      "donnees": "Pas dans {0,1;0,2;0,5;1;2}; origine visible ; orientation croissante vers la droite ; points négatifs et positifs équilibrés.",
+      "saisie": "Champ numérique signé.",
+      "acceptation": "−1,5 ; -1.5 ; −3/2.",
+      "aide1": "« À gauche de zéro, les abscisses sont négatives. » Mettre en évidence 0 et le sens croissant.",
+      "aide2": "« Trois pas de 0,5 vers la gauche : 0 − 3 × 0,5. » Tracer trois flèches identiques vers la gauche.",
+      "correction": "0 − 3 × 0,5 = −1,5.",
+      "controles": [
+        "Accepter le signe moins Unicode ou ASCII ; refuser 1,5 et −3.",
+        "Une origine non située au milieu de l’écran doit donner la même réponse."
+      ],
+      "identifiant": "EG01-c",
+      "ancienId": "EG01-V3",
+      "ancienIdGenerateur": "EG01-V3",
+      "indiceGenerateur": 2,
+      "nom": "Lire une abscisse relative.",
+      "niveauDescription": "5e apprentissage ; 4e–3e automatisme",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Abscisse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Déterminer le pas à partir de deux repères.",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Entre les graduations −2 et 4, il y a trois intervalles égaux. B est sur le premier trait à droite de −2. Lis son abscisse.",
+      "reponse": "0",
+      "donnees": "Repères a<b rationnels ; n∈{2,3,4,5}; pas (b−a)/n simple ; positions demandées sur traits intérieurs. Exemple −2;0;2;4.",
+      "saisie": "Champ numérique signé.",
+      "acceptation": "0 ; 0,0.",
+      "aide1": "« L’écart entre les repères vaut 4 − (−2). » Accolade de −2 à 4 et trois intervalles indiqués.",
+      "aide2": "« Répartis cet écart en trois parts égales, puis ajoute une part à −2. » Afficher −2 + (4 − (−2))/3.",
+      "correction": "Le pas vaut 6/3 = 2 ; −2 + 2 = 0.",
+      "controles": [
+        "Refuser −1 : le pas n’est pas imposé à 1.",
+        "Vérifier l’écart arithmétique avant génération ; aucun pas décimal périodique sauf saisie fraction autorisée."
+      ],
+      "identifiant": "EG01-d",
+      "ancienId": "EG01-V4",
+      "ancienIdGenerateur": "EG01-V4",
+      "indiceGenerateur": 3,
+      "nom": "Déterminer le pas à partir de deux repères.",
+      "niveauDescription": "5e ; entretien 4e–3e",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Abscisse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Lire une abscisse fractionnaire",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Lis l’abscisse de A. Écris-la sous forme de fraction.",
+      "reponse": "Abscisse : 7/5",
+      "donnees": "Dénominateurs 3,4,5,6 ; numérateur de 1 à 2d−1 ; position exacte sur une graduation. Paramètres de cet exemple : {\"num\":7,\"d\":5}",
+      "saisie": "Abscisse : fraction",
+      "acceptation": "Fractions équivalentes exactes acceptées ; dénominateur non nul.",
+      "aide1": "Compte combien de parts forment une unité. Visuel : Surligner les intervalles d’une unité puis ceux entre 0 et A.",
+      "aide2": "Une unité contient 5 intervalles égaux. Compte ceux qui vont de 0 à A. Visuel : Surligner les intervalles d’une unité puis ceux entre 0 et A.",
+      "correction": "A a pour abscisse 7/5.",
+      "controles": [
+        "Accepter les fractions équivalentes.",
+        "Refuser numérateur et dénominateur inversés."
+      ],
+      "identifiant": "EG01-e",
+      "ancienId": "EG01-V5",
+      "ancienIdGenerateur": "EG01-V5",
+      "indiceGenerateur": 4,
+      "nom": "Lire une abscisse fractionnaire",
+      "niveauDescription": "6e puis entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "Abscisse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "Z26A",
+          "question": "Q4",
+          "referenceAncienne": "ZA 4",
+          "forme": "e",
+          "identifiant": "EG01-e",
+          "ancienId": "EG01-V5",
+          "support": "comparable",
+          "difference": "Lire une fraction sur une droite, distinct de compter où placer une fraction fournie.",
+          "savoirFaire": "Abscisse fractionnaire sur une droite",
+          "formatSource": "QCM",
+          "document": "Sujet zéro 2026, série générale A",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-generale-mathematiquespdf-123317.pdf"
+        }
+      ]
+    }
+  ]
+}

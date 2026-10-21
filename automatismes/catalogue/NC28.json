@@ -1,0 +1,283 @@
+{
+  "id": "NC28",
+  "titre": "Équations avec l’inconnue dans les deux membres",
+  "categorie": "Calcul littéral et équations",
+  "objectif": "Réunir les termes en x puis isoler une solution unique.",
+  "prerequis": ["NC27", "NC20", "Calcul relatif"],
+  "perimetre": "DNB2027 : cas simples de l’ancien cycle 4. Niveaux collège selon la progression 2026.",
+  "cours": {
+    "regle": "Retire le même terme en x aux deux membres. Puis résous l’équation obtenue.",
+    "exemple": "5x + 2 = 2x + 11 → 3x + 2 = 11 → 3x = 9 → x = 3.",
+    "visuel": "Deux colonnes alignées ; retrait du même paquet 2x dans les deux membres, puis retrait de 2 et partage par 3. Les termes gardent leur signe.",
+    "mouvement": "Hachurer les termes retirés sur les deux côtés, puis afficher la ligne suivante ; version statique avec opérations en marge."
+  },
+  "erreurs": [
+    "Changer un signe sans opération justifiée",
+    "Diviser avant de regrouper",
+    "Répondre par un coût au lieu du nombre demandé"
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 4,2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "PDF p.10–11",
+      "apport": "Niveaux et objectifs du calcul littéral ; introduction distincte de l’entretien.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples pour la mise en œuvre des programmes de mathématiques — cycle 4",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "p.18 et 21 imprimées",
+      "apport": "Modélisation par équation, vérification et équivalence des étapes.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Programme du cycle 4,2020",
+      "url": "https://cache.media.education.gouv.fr/file/31/89/1/ensel714_annexe3_1312891.pdf",
+      "repere": "PDF p.131–132, calcul littéral",
+      "apport": "Périmètre mathématique utilisé par le filtre DNB2027.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Contrat de conception Matégo",
+      "url": null,
+      "repere": "Étape 1, NC19–NC31",
+      "apport": "Exemples originaux, bornes des générateurs, interfaces et aides proposées ; choix éditoriaux à valider par prototype.",
+      "statut": "choix de conception"
+    },
+    {
+      "titre": "Mathsgo — ÉquaScribe",
+      "url": "https://mathsgo.re/outils/equascribe.html",
+      "repere": "Aide et raccourcis, source HTML locale l.956–981, consultée le 20octobre 2026",
+      "apport": "Principe repris : hachurer le même retrait sur les deux membres, puis afficher la ligne suivante et l’opération correspondante. Source lue ; application existante non auditée intégralement.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "NCETM — Algebra tiles",
+      "url": "https://www.ncetm.org.uk/media/dj5o223w/ncetm_ks3_representations_algebra_tilespdf.pdf",
+      "repere": "p.3–4,9–14",
+      "apport": "Associer schéma et symboles ; limites des aires négatives.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": [
+    "Banque centrale à solution unique :a≠c.",
+    "Identité et absence de solution peuvent être ajoutées dans une extension distincte ; elles ne sont pas générées accidentellement."
+  ],
+  "acces_secondaires": ["Proportionnalité et pourcentages"],
+  "nom": "Équations avec l’inconnue dans les deux membres",
+  "domaine": "nombres-calculs",
+  "sousDomaine": "Calcul littéral et équations",
+  "niveaux": ["4e", "3e"],
+  "niveauxDescription": "4e : modéliser et résoudre un problème menant à ax+b=cx+d ; 3e : consolidation. Les exercices techniques courts servent l’application, sans prétendre figurer tous dans une rubrique Automatismes.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_13"],
+    "questions": [
+      {
+        "source": "R27B",
+        "question": "Q6",
+        "referenceAncienne": "R2 6",
+        "forme": "a",
+        "identifiant": "NC28-a",
+        "ancienId": "NC28-V1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Équation avec x dans les deux membres",
+        "formatSource": "Nombre",
+        "document": "Sujet de référence mathématiques n°2",
+        "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n02-129661.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Réunir x et constantes",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Résous : 5x + 2 = 2x + 11.",
+      "reponse": "x = 3",
+      "donnees": "a,c entiers 1 à 7 distincts ; solution entière 0 à 8 choisie ; b,d construits pour |b|,|d|≤25 ; au moins unx chaque côté.",
+      "saisie": "Nombre signé ou fraction numérateur/dénominateur ; virgule et point acceptés ; aucun arrondi implicite.",
+      "acceptation": "Valeur 3,3/1 ou x=3 admise.",
+      "aide1": {
+        "texte": "Retire 2x des deux membres.",
+        "visuel": "Deux membres encadrés ; soustraction du même terme en x des deux côtés, puis égalité obtenue."
+      },
+      "aide2": {
+        "texte": "Tu obtiens 3x + 2 = 11.",
+        "visuel": "Afficher 3x = 11 − 2 ; opération ÷ 3 disponible mais non appliquée."
+      },
+      "correction": "5x − 2x = 11 − 2, donc 3x = 9 et x = 3.",
+      "controles": ["Refuser 13/7 et 9 ; contrôler(a−c)≠0 ; vérification originale :17=17."],
+      "identifiant": "NC28-a",
+      "ancienId": "NC28-V1",
+      "ancienIdGenerateur": "NC28-V1",
+      "indiceGenerateur": 0,
+      "nom": "Réunir x et constantes",
+      "niveauDescription": "4e ; entretien 3e ; DNB2027",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "R27B",
+          "question": "Q6",
+          "referenceAncienne": "R2 6",
+          "forme": "a",
+          "identifiant": "NC28-a",
+          "ancienId": "NC28-V1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Équation avec x dans les deux membres",
+          "formatSource": "Nombre",
+          "document": "Sujet de référence mathématiques n°2",
+          "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n02-129661.pdf"
+        }
+      ]
+    },
+    {
+      "id": "b",
+      "objectif": "Obtenir un coefficient négatif",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Résous : 2x + 7 = 5x + 1.",
+      "reponse": "x = 2",
+      "donnees": "a,c 1 à 7 aveca<c ; solution entière−5 à 5 ; constantes−20 à 20 ; choisir pour garder le calcul bref.",
+      "saisie": "Nombre signé ou fraction numérateur/dénominateur ; virgule et point acceptés ; aucun arrondi implicite.",
+      "acceptation": "Valeur exacte ; démarches retirant 2x ou 5x toutes admises.",
+      "aide1": {
+        "texte": "Choisis le même terme en x à retirer des deux côtés.",
+        "visuel": "Même opération des deux côtés ; le coefficient restant peut être négatif, sans modèle de longueur négative."
+      },
+      "aide2": {
+        "texte": "En retirant 5x puis 7 :−3x = −6.",
+        "visuel": "Afficher 2x − 5x = 1 − 7, coefficients et constantes regroupés séparément."
+      },
+      "correction": "−3x = −6, donc x = 2. Vérification :11 = 11.",
+      "controles": [
+        "Refuser−2 ; accepter méthode 3x=6 ; tests avec solution négative pour ne pas privilégier le signe positif."
+      ],
+      "identifiant": "NC28-b",
+      "ancienId": "NC28-V2",
+      "ancienIdGenerateur": "NC28-V2",
+      "indiceGenerateur": 1,
+      "nom": "Obtenir un coefficient négatif",
+      "niveauDescription": "4e après relatifs ; entretien 3e",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Trouver une solution fractionnaire",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Résous : 5x − 1 = x + 2.",
+      "reponse": "x = 3/4",
+      "donnees": "a−c de 2 à 8 ; d−b de 1 à 9 ; quotient non entier simple ; a≠c ; coefficients relatifs courts.",
+      "saisie": "Nombre signé ou fraction numérateur/dénominateur ; virgule et point acceptés ; aucun arrondi implicite.",
+      "acceptation": "Accepter 3/4,6/8,0,75 ; refuser arrondi non exact.",
+      "aide1": {
+        "texte": "Retirex aux deux membres pour n’en garder que d’un côté.",
+        "visuel": "Deux membres et opération identique des deux côtés, avant résolution fractionnaire."
+      },
+      "aide2": {
+        "texte": "L’équation devient 4x = 3.",
+        "visuel": "Afficher 5x − x = 2 + 1, puis 4x = 3 ; fraction réponse laissée vide."
+      },
+      "correction": "4x = 3, donc x = 3/4. Vérification :11/4 = 11/4.",
+      "controles": [
+        "Refuser 4/3 et 3 ; ne pas imposer solution entière ; fraction dénominateur 0 interdite."
+      ],
+      "identifiant": "NC28-c",
+      "ancienId": "NC28-V3",
+      "ancienIdGenerateur": "NC28-V3",
+      "indiceGenerateur": 2,
+      "nom": "Trouver une solution fractionnaire",
+      "niveauDescription": "4e avec quotient fractionnaire ; entretien 3e",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "fraction",
+      "champs": [
+        {
+          "type": "fraction",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Comparer deux tarifs par une équation",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Un atelier propose A :3 € par séance plus 6 € d’inscription ; B :5 € par séance sans inscription. Pour combien de séances les coûts sont-ils égaux ?",
+      "reponse": "3 séances",
+      "donnees": "a,c prix entiers 1 à 8, a<c ; n entier 1 à 8 choisi ; inscription=(c−a)n ; une seule inconnue ; unités€ etséances distinctes.",
+      "saisie": "Nombre entier ; « séances » affiché après la case.",
+      "acceptation": "Exactement 3 ;3,0 admis ; prix 15 € ne répond pas à la question.",
+      "aide1": {
+        "texte": "Les deux coûts portent sur le même nombre de séances.",
+        "visuel": "Deux machines de tarif : nombre de séances puis multiplication ; ajout du coût fixe seulement pour le tarif concerné."
+      },
+      "aide2": {
+        "texte": "Écris les deux prix :3n + 6 et 5n.",
+        "visuel": "Afficher 3n + 6 = 5n ; égalité de prix centrale."
+      },
+      "correction": "3n + 6 = 5n →6 = 2n →n = 3. Les deux coûts valent 15 €.",
+      "controles": [
+        "Refuser 15 et 2 ; n entier et positif par construction ; pas de tarifs identiques ni absence d’intersection."
+      ],
+      "identifiant": "NC28-d",
+      "ancienId": "NC28-V4",
+      "ancienIdGenerateur": "NC28-V4",
+      "indiceGenerateur": 3,
+      "nom": "Comparer deux tarifs par une équation",
+      "niveauDescription": "4e modélisation ; entretien 3e",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "séances"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

@@ -1,0 +1,269 @@
+{
+  "id": "NC03",
+  "titre": "Estimer et arrondir",
+  "categorie": "Nombres et calculs",
+  "objectif": "Arrondir à la précision demandée et contrôler un résultat par un ordre de grandeur.",
+  "prerequis": ["Numération de position", "Sens des opérations et des signes de comparaison"],
+  "perimetre": "Couverture des prérequis et automatismes du collège. Le filtre DNB2027 utilise l’ancien programme du cycle 4 ; les niveaux indiqués suivent le nouveau programme. Le statut est précisé par variante.",
+  "cours": {
+    "regle": "L’arrondi est la valeur la plus proche à la précision demandée. Pour un nombre positif exactement au milieu, on choisit la valeur supérieure. Un ordre de grandeur aide à repérer un résultat impossible.",
+    "exemple": "41,57 est plus proche de 41,6.",
+    "visuel": "Segment entre les deux arrondis possibles, point du nombre et milieu ; estimation sur une ligne séparée.",
+    "mouvement": "Le schéma est entièrement compréhensible à l’arrêt. Une animation éventuelle révèle les étapes sans cacher les états précédents."
+  },
+  "erreurs": [
+    "Confondre rangs et longueur de l’écriture",
+    "Oublier un zéro de position",
+    "Confondre valeur exacte et estimation"
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 3 (2025)",
+      "url": "https://www.education.gouv.fr/sites/default/files/ensel620_annexe2-v2.pdf",
+      "statut": "prescription",
+      "repere": "PDF p 14",
+      "apport": "Objectifs et progression officiels du programme ; niveau de classe vérifié."
+    },
+    {
+      "titre": "Exemples de mise en œuvre du programme de 6e (2025)",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/exemplesmiseenoeuvre6e-mathpdf-111549.pdf",
+      "statut": "appui pédagogique",
+      "repere": "PDF p 3–4, imprimées 2–3",
+      "apport": "Exemples officiels de mise en œuvre : progressivité, représentations et types de calculs."
+    },
+    {
+      "titre": "NCETM — Single number lines",
+      "url": "https://www.ncetm.org.uk/media/8d84e79498db675/ncetm_ks3_representations_single_number_lines.pdf",
+      "repere": "p.3,5,7 lues visuellement",
+      "apport": "Ordre, opérations et fractions sur une droite ; limites pour les produits négatifs.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "Les demi-unités exactes sont évitées : aucune convention d’arrondi implicite.",
+  "implementation": {
+    "module": "app-automatismes/dist/modules/nombres.js",
+    "tests": "etape1/test_nombres.mjs",
+    "variantes": 4,
+    "graines_par_variante": 200,
+    "principe": "Aide 1 : représentation visuelle des données. Aide 2 : étape de calcul. Deux aides maximum.",
+    "aide1_visuelle": true
+  },
+  "nom": "Estimer et arrondir",
+  "domaine": "nombres-calculs",
+  "sousDomaine": "Nombres et calculs",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6e ; entretien ultérieur.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": [],
+    "questions": []
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Arrondir au dixième",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Arrondis 41,57 au dixième.",
+      "reponse": "41.6",
+      "donnees": "Nombre positif au centième ; chiffre des unités différent de 5 pour éviter le cas à mi-distance.",
+      "saisie": "Réponse : nombre",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Encadre par deux dixièmes consécutifs.",
+      "aide2": "Compare la position du point au milieu 41,55.",
+      "correction": "41,57 est plus proche de 41,6.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["41.6"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Réponse",
+          "answer": "41.6",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Droite entre deux repères ou modèle en barres. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Étape de calcul explicite.",
+      "identifiant": "NC03-a",
+      "ancienId": "NC03-a",
+      "ancienIdGenerateur": "NC03-A",
+      "indiceGenerateur": 0,
+      "nom": "Arrondir au dixième",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Arrondir au centième et distinguer la troncature",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Arrondis 4,157 au centième.",
+      "reponse": "4,16",
+      "donnees": "Nombre positif au millième ; centièmes voisins proposés ; chiffre des unités différent de 5 ; retenues possibles.",
+      "saisie": "Choisis une réponse : choix explicites",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Encadre par deux centièmes consécutifs.",
+      "aide2": "Compare la position du point au milieu 4,155.",
+      "correction": "4,16 est l’arrondi ; 4,15 est la troncature.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "text",
+        "values": ["4,16"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Choisis une réponse",
+          "answer": "4,16",
+          "kind": "text",
+          "unit": "",
+          "placeholder": "",
+          "options": ["4,15", "4,16"]
+        }
+      ],
+      "visuel_aide1": "Droite entre deux repères ou modèle en barres. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Étape de calcul explicite.",
+      "identifiant": "NC03-b",
+      "ancienId": "NC03-b",
+      "ancienIdGenerateur": "NC03-B",
+      "indiceGenerateur": 1,
+      "nom": "Arrondir au centième et distinguer la troncature",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Choisis une réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Estimer un produit",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Quel ordre de grandeur convient à 29,8 × 7,1 ?",
+      "reponse": "210",
+      "donnees": "Facteurs proches de 10, 20, 30 ou 40 et d’un entier 2–9 ; choix séparés par un facteur 10.",
+      "saisie": "Choisis une réponse : choix explicites",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "Remplace les facteurs par des entiers proches.",
+      "aide2": "29,8 ≈ 30 et 7,1 ≈ 7.",
+      "correction": "29,8 × 7,1 ≈ 30 × 7 = 210.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "text",
+        "values": ["210"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Choisis une réponse",
+          "answer": "210",
+          "kind": "text",
+          "unit": "",
+          "placeholder": "",
+          "options": ["21", "210", "2100"]
+        }
+      ],
+      "visuel_aide1": "Droite entre deux repères ou modèle en barres. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC03-c",
+      "ancienId": "NC03-c",
+      "ancienIdGenerateur": "NC03-C",
+      "indiceGenerateur": 2,
+      "nom": "Estimer un produit",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Choisis une réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Repérer une somme manifestement impossible",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Lina écrit 6,8 + 7,2 = 0,14. Ce résultat est-il possible ?",
+      "reponse": "Non",
+      "donnees": "Somme de deux positifs entre 2,1 et 8,9 ; faux résultat divisé par 100, inférieur à chacun.",
+      "saisie": "Choisis une réponse : choix explicites",
+      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
+      "aide1": "La somme de deux nombres positifs dépasse chacun des deux.",
+      "aide2": "0,14 est déjà plus petit que 6,8.",
+      "correction": "Non : 6,8 + 7,2 = 14.",
+      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "controle_math": {
+        "type": "text",
+        "values": ["Non"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Choisis une réponse",
+          "answer": "Non",
+          "kind": "text",
+          "unit": "",
+          "placeholder": "",
+          "options": ["Oui", "Non"]
+        }
+      ],
+      "visuel_aide1": "Droite entre deux repères ou modèle en barres. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
+      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "identifiant": "NC03-d",
+      "ancienId": "NC03-d",
+      "ancienIdGenerateur": "NC03-D",
+      "indiceGenerateur": 3,
+      "nom": "Repérer une somme manifestement impossible",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Choisis une réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

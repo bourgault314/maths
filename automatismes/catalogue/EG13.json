@@ -1,0 +1,277 @@
+{
+  "id": "EG13",
+  "titre": "Applications trigonométriques directes",
+  "categorie": "Géométrie et repérage",
+  "objectif": "Utiliser un rapport trigonométrique fourni pour calculer une longueur ou identifier un angle.",
+  "prerequis": "Rapports trigonométriques ; proportionnalité ; fraction et division simples.",
+  "perimetre": "DNB2027 comme applications courtes du programme. Aucune évaluation mentale de cos(37°), de sinus arbitraire ou d’arccosinus.",
+  "cours": {
+    "regle": "Choisis le rapport utile, remplace par les données, puis calcule la longueur ou utilise la mesure d’angle fournie.",
+    "exemple": "Si cos([angle:B])=1/2 et BC=10 cm : AB/BC=1/2, donc AB=5 cm. Si AB était connu, on aurait BC=AB÷cos([angle:B]).",
+    "visuel": "Triangle rectangle angle [angle:B] marqué ; AB étiqueté« adjacent ? », BC« hypoténuse 10 cm ». Tableau adjacent/hypoténuse :1/2 puis?/10, flèches × 5. Les données trigonométriques fournies apparaissent dans un cartouche distinct.",
+    "mouvement": "Aucun nécessaire. Option : révéler rapport, substitution puis opération en trois étapes ; version statique séquence numérotée."
+  },
+  "erreurs": [
+    "Multiplier au lieu de diviser lorsque l’hypoténuse est inconnue.",
+    "Choisir le mauvais rapport.",
+    "Demander une valeur de trigonométrie non donnée.",
+    "Accepter une longueur négative ou unehypoténuse trop petite."
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 4 — 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "p. 15 — Triangles",
+      "apport": "Calcul de longueurs et d’angles par lesrapports.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples pour la mise en œuvre des programmes de mathématiques — cycle 4",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "PDF p. 31 — Trigonométrie",
+      "apport": "Correspondance rapport de longueurs/angle aigu.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Programme du cycle 4 — BO du 30 juillet 2020",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/programme-d-enseignement-du-cycle-4-67722.pdf",
+      "repere": "p. 136–137 — Géométrieplane",
+      "apport": "Trigonométrie et détermination de grandeurs au DNB2027.",
+      "statut": "prescription"
+    }
+  ],
+  "limites": "Choix de conception sans calculatrice : valeurs exactes fournies et résultats simples. Les angles usuels ne deviennent pas une nouvelle liste de valeurs à mémoriser.",
+  "acces_secondaires": ["Proportionnalité et pourcentages"],
+  "nom": "Applications trigonométriques directes",
+  "domaine": "espace-geometrie",
+  "sousDomaine": "Géométrie et repérage",
+  "niveaux": ["3e"],
+  "niveauxDescription": "3e nouveau programme ;4e ancien pour lecosinus,3e ancien pour sinus/tangente. Sélection après EG12.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_26"],
+    "questions": [
+      {
+        "source": "A2601",
+        "question": "Q7",
+        "referenceAncienne": "AN 7",
+        "forme": "e",
+        "identifiant": "EG13-e",
+        "ancienId": "EG13-V5",
+        "support": "comparable",
+        "difference": "La source demande une expression avec cos(angle), sans valeur numérique de cos donnée. Le calcul avec une valeur de cos fournie ne suffit pas à lui seul.",
+        "savoirFaire": "Choisir le calcul d’une longueur avec le cosinus",
+        "formatSource": "QCM",
+        "document": "Amérique du Nord, 3 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/Brevet_Ameri_Nord_3_06_2026_DV.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Calculer un côté adjacent à partir du cosinus donné.",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "ABC est rectangle en A. BC = 10 cm et cos([angle:B]) = 1/2. Calcule AB.",
+      "reponse": "5 cm",
+      "donnees": "Rapport exactr∈{1/2,3/5,4/5}, hypoténuseh multiple du dénominateur≤20 ; adjacent = rh. Troisième côté généré parh√(1−r²) pour figure, jamais demandé s’il estirrationnel.",
+      "saisie": "Champ numérique aveccm fixe.",
+      "acceptation": "5 ;5 cm.",
+      "aide1": "« Le cosinus relie adjacent et hypoténuse. » SurlignerAB etBC.",
+      "aide2": "« AB/BC = 1/2. Quelle est la moitié de BC ? » Barre de longueur 10 cm partagée en deux, une part étiquetée AB.",
+      "correction": "AB = BC/2 = 5 cm.",
+      "controles": [
+        "Refuser 20 qui inverse la relation.",
+        "Contrôler 0<AB<BC et cohérence géométrique du rapport."
+      ],
+      "identifiant": "EG13-a",
+      "ancienId": "EG13-V1",
+      "ancienIdGenerateur": "EG13-V1",
+      "indiceGenerateur": 0,
+      "nom": "Calculer un côté adjacent à partir du cosinus donné.",
+      "niveauDescription": "3e nouveau ;4e ancien aprèscosinus",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "AB",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Calculer une hypoténuse à partir du sinus donné.",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "ABC est rectangle en A. AC = 6 cm et sin([angle:B]) = 3/5. Calcule BC.",
+      "reponse": "10 cm",
+      "donnees": "Sinus exact 3/5 ou 4/5 ou 1/2 ; côté opposé multiple du numérateur ; hypoténuse≤25. ExempleAC6,BC10,AB8.",
+      "saisie": "Champ numérique aveccm fixe.",
+      "acceptation": "10 ;10 cm.",
+      "aide1": "« Le sinus relie le côté opposé à l’hypoténuse. » MettreAC etBC en évidence.",
+      "aide2": "« AC/BC = 3/5. » Dans le tableau des longueurs en cm, passer de 3 à 6 revient à multiplier par 2. Appliquer le même facteur à 5.",
+      "correction": "BC = 5 × AC/3 = 10 cm.",
+      "controles": ["Refuser 3,6 qui multiplie 6 par 3/5.", "La longueur trouvée doit dépasser 6."],
+      "identifiant": "EG13-b",
+      "ancienId": "EG13-V2",
+      "ancienIdGenerateur": "EG13-V2",
+      "indiceGenerateur": 1,
+      "nom": "Calculer une hypoténuse à partir du sinus donné.",
+      "niveauDescription": "3e",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "BC",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Calculer un côté opposé avec une tangente donnée.",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "ABC est rectangle en A. AB = 8 cm et tan([angle:B]) = 3/4. Calcule AC.",
+      "reponse": "6 cm",
+      "donnees": "Tangenter∈{1/2,3/4,4/3,2}, adjacent multiple du dénominateur≤12 ; figure angle correspondant exact, côtéopposé = r × adjacent.",
+      "saisie": "Champ numérique aveccm fixe.",
+      "acceptation": "6 ;6 cm.",
+      "aide1": "« Tangente : opposé sur adjacent. » Coderangle [angle:B] puisAC opposé,AB adjacent.",
+      "aide2": "« AC/AB = 3/4. » Tableau des longueurs en cm : 3 correspond à 4 ; AC inconnue correspond à 8.",
+      "correction": "AC = 3 × AB/4 = 6 cm.",
+      "controles": [
+        "Refuser 8 × 4/3.",
+        "Inclure des tangentes>1 sans les rejeter comme impossibles."
+      ],
+      "identifiant": "EG13-c",
+      "ancienId": "EG13-V3",
+      "ancienIdGenerateur": "EG13-V3",
+      "indiceGenerateur": 2,
+      "nom": "Calculer un côté opposé avec une tangente donnée.",
+      "niveauDescription": "3e",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "AC",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Identifier un angle à partir d’une valeur fournie.",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "ABC est rectangle en A,AB = 4 cm,BC = 8 cm. On donne cos(60°)=1/2. Quelle est la mesure de l’angle [angle:B] ?",
+      "reponse": "60°",
+      "donnees": "Angle aigu dans un triangle rectangle ; rapport adjacent/hypoténuse exactement 1/2. Fournir explicitement la correspondance de valeur pour l’angle demandé. Autres valeurs permises uniquement fournies dans une mini-table cohérente.",
+      "saisie": "Champ numérique avec° fixe.",
+      "acceptation": "60 ;60°.",
+      "aide1": "« Calcule le cosinus de [angle:B] avec les deux longueurs. » MettreAB etBC en évidence.",
+      "aide2": "« cos([angle:B])=4/8 = 1/2. Cherche l’angle associé à cette valeur dans la donnée. » Relier 1/2 àla ligne fournie cos(60°).",
+      "correction": "cos([angle:B]) = 1/2 et l’angle [angle:B] est aigu ; la donnée permet d’obtenir [angle:B] = 60°.",
+      "controles": [
+        "Ne jamais demander un inverse trigonométrique sans correspondance fournie.",
+        "Refuser 120 : dans un triangle rectangle, les autres angles sont aigus."
+      ],
+      "identifiant": "EG13-d",
+      "ancienId": "EG13-V4",
+      "ancienIdGenerateur": "EG13-V4",
+      "indiceGenerateur": 3,
+      "nom": "Identifier un angle à partir d’une valeur fournie.",
+      "niveauDescription": "3e",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "[angle:B]",
+          "unite": "°"
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Choisir une expression trigonométrique sans calculer le cosinus",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "ABC est rectangle en A, [angle:B] = 55°. BC = 10 cm. Quel calcul donne AB ?",
+      "reponse": "Réponse : 10 × cos(55°)",
+      "donnees": "Angle aigu 35°,45°,55°,65° ; longueur connue entière 3 à 12 ; adjacent ou hypoténuse inconnus ; figure construite par trigonométrie exacte. Paramètres de cet exemple : {\"angle\":55,\"len\":10,\"hyp\":true,\"a\":5.7357643635104605,\"b\":8.191520442889917,\"c\":10}",
+      "saisie": "Réponse : text ; choix 10 × cos(55°), 10 ÷ cos(55°), 10 × sin(55°)",
+      "acceptation": "Valeurs exactes des champs ; virgule ou point pour un décimal.",
+      "aide1": "cos([angle:B])=AB/BC. Visuel : Relier l’angle et les deux côtés au quotient AB/BC ; montrer l’égalité littérale avec les valeurs données.",
+      "aide2": "Pour trouver le numérateur, multiplie la longueur de l’hypoténuse par le cosinus. Visuel : Relier l’angle et les deux côtés au quotient AB/BC ; montrer l’égalité littérale avec les valeurs données.",
+      "correction": "AB = (10 × cos(55°)) cm. Aucun calcul de cosinus n’est demandé.",
+      "controles": [
+        "Refuser la multiplication lorsque l’hypoténuse est inconnue.",
+        "Aucune valeur de cosinus arbitraire à calculer mentalement."
+      ],
+      "identifiant": "EG13-e",
+      "ancienId": "EG13-V5",
+      "ancienIdGenerateur": "EG13-V5",
+      "indiceGenerateur": 4,
+      "nom": "Choisir une expression trigonométrique sans calculer le cosinus",
+      "niveauDescription": "3e nouveau ; ancien cosinus dès 4e",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2601",
+          "question": "Q7",
+          "referenceAncienne": "AN 7",
+          "forme": "e",
+          "identifiant": "EG13-e",
+          "ancienId": "EG13-V5",
+          "support": "comparable",
+          "difference": "La source demande une expression avec cos(angle), sans valeur numérique de cos donnée. Le calcul avec une valeur de cos fournie ne suffit pas à lui seul.",
+          "savoirFaire": "Choisir le calcul d’une longueur avec le cosinus",
+          "formatSource": "QCM",
+          "document": "Amérique du Nord, 3 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/Brevet_Ameri_Nord_3_06_2026_DV.pdf"
+        }
+      ]
+    }
+  ]
+}

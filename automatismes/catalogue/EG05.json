@@ -1,0 +1,295 @@
+{
+  "id": "EG05",
+  "titre": "Droites remarquables et cercle circonscrit",
+  "categorie": "Géométrie et repérage",
+  "objectif": "Reconnaître médiatrice, hauteur, médiane et bissectrice à leurs propriétés ; relier médiatrices et cercle circonscrit.",
+  "prerequis": "Milieu, perpendicularité, distance, angle, cercle.",
+  "perimetre": "Les drapeaux DNB portent sur les connaissances à mobiliser sans définition fournie. Les variantes médiane et bissectrice servent ici le nouveau programme.",
+  "cours": {
+    "regle": "Médiatrice de [AB] : droite perpendiculaire à (AB) passant par le milieu de [AB]. Hauteur : droite passant par un sommet et perpendiculaire à la droite portant le côté opposé. Médiane : droite passant par un sommet et le milieu du côté opposé. Bissectrice : demi-droite partageant un angle en deux angles de même mesure.",
+    "exemple": "M milieu de [BC] et (d) perpendiculaire à (BC) en M : (d) est la médiatrice de [BC]. Si O appartient aux médiatrices de [AB] et [AC], alors OA = OB = OC.",
+    "visuel": "Quatre mini-cartes séparées sur le même triangle scalène oblique : médiatrice avec deux moitiés codées et angle droit ; hauteur avec sommet et pied ; médiane avec sommet et milieu ; bissectrice avec deux arcs égaux. Cinquième carte cercle passant par A,B,C, centre O à l’intersection de deux médiatrices. Ne pas superposer les cinq lignes.",
+    "mouvement": "Option : un bouton révèle chaque propriété sur sa carte. Version statique : propriétés numérotées et codages visibles ; aucun mouvement nécessaire."
+  },
+  "erreurs": [
+    "Confondre médiane et médiatrice.",
+    "Croire qu’une hauteur reste toujours à l’intérieur du triangle.",
+    "Prendre le milieu d’un côté pour le centre du cercle dans tout triangle.",
+    "Exiger des noms exclusifs lorsque plusieurs propriétés coïncident."
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 3 — 2025",
+      "url": "https://www.education.gouv.fr/sites/default/files/ensel620_annexe2-v2.pdf",
+      "repere": "p. 23–24 — Géométrie plane",
+      "apport": "Médiatrice, bissectrice et construction du cercle circonscrit.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Programme de mathématiques du cycle 4 — 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "p. 13–14 — Triangles",
+      "apport": "Hauteurs et médianes puis reconnaissance des quatre droites.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Livret d’accompagnement du programme de mathématiques de 6e — 2026",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/2026livretaccompagnementmaths6e-pdf-126656.pdf",
+      "repere": "PDF p. 29–35 — Médiatrice et géométrie mentale",
+      "apport": "Lien entre équidistance, milieu, perpendicularité, figures variées et questions flash.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Repères annuels de progression — cycle 4 — 2019",
+      "url": "https://eduscol.education.gouv.fr/sites/default/files/document/26-maths-c4-reperes-eduscol1114756pdf-74694.pdf",
+      "repere": "PDF p. 11 — Géométrie plane",
+      "apport": "Ancien programme : hauteurs, médiatrice et concours des médiatrices.",
+      "statut": "appui pédagogique"
+    }
+  ],
+  "limites": "La reconnaissance rapide ne remplace pas les constructions instrumentées. Le rôle du cercle du triangle rectangle est traité dans EG18 ; aucune propriété n’est déduite de l’allure du dessin.",
+  "acces_secondaires": [],
+  "nom": "Droites remarquables et cercle circonscrit",
+  "domaine": "espace-geometrie",
+  "sousDomaine": "Géométrie et repérage",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "Nouveau programme : 6e médiatrice, bissectrice et cercle circonscrit en apprentissage ; 5e entretien, hauteurs et médianes en apprentissage ; 4e–3e reconnaissance automatisée. DNB 2027 : médiatrice, hauteur et cercle associé aux médiatrices ; médiane et bissectrice isolées ne sont pas imposées dans ce filtre.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_16", "dnb_37"],
+    "questions": []
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Reconnaître une médiatrice.",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "M est le milieu de [AB] et (d) est perpendiculaire à (AB) en M. Quel est le nom de (d) pour [AB] ?",
+      "reponse": "La médiatrice de [AB]",
+      "donnees": "A(−3,0),B(3,0),M(0,0),d:x = 0 ; appliquer une rotation globale quelconque. Deux conditions données et codées.",
+      "saisie": "Choix de nom ; alternative saisie lexicale.",
+      "acceptation": "médiatrice ; tolérer accents absents, pas médiane.",
+      "aide1": "« Cherche le milieu et l’angle droit. » Surligner AM = MB et le carré de perpendicularité.",
+      "aide2": "« Perpendiculaire au segment en son milieu : retrouve la définition. » Afficher les deux critères reliés, sans sélectionner la réponse.",
+      "correction": "(d) est la médiatrice de [AB].",
+      "controles": [
+        "Supprimer l’une des conditions doit rendre la conclusion non garantie.",
+        "Une droite oblique à l’écran peut être médiatrice."
+      ],
+      "identifiant": "EG05-a",
+      "ancienId": "EG05-V1",
+      "ancienIdGenerateur": "EG05-V1",
+      "indiceGenerateur": 0,
+      "nom": "Reconnaître une médiatrice.",
+      "niveauDescription": "6e apprentissage ; 5e–3e entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Utiliser l’équidistance sur une médiatrice.",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "P appartient à la médiatrice de [AB]. PA = 5 cm. Quelle est la longueur PB ?",
+      "reponse": "5 cm",
+      "donnees": "A(−3,0),B(3,0),P(0,4) ; PA = PB = 5 ; générer triangles isocèles réalisables et ne donner qu’une distance.",
+      "saisie": "Champ numérique avec cm fixe.",
+      "acceptation": "5 ; 5 cm ; aucune exigence de décimales inutiles.",
+      "aide1": "« Un point de la médiatrice est à la même distance des deux extrémités. » Tracer [PA] et [PB] avec un même style.",
+      "aide2": "« PA = PB. Remplace PA par la longueur donnée. » Afficher 5 cm = PB.",
+      "correction": "PB = PA = 5 cm.",
+      "controles": [
+        "Refuser 2,5 et 10.",
+        "Les segments PA et PB sont effectivement égaux dans les données géométriques."
+      ],
+      "identifiant": "EG05-b",
+      "ancienId": "EG05-V2",
+      "ancienIdGenerateur": "EG05-V2",
+      "indiceGenerateur": 1,
+      "nom": "Utiliser l’équidistance sur une médiatrice.",
+      "niveauDescription": "6e apprentissage ; 5e–3e entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "PB",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Reconnaître une hauteur avec un pied extérieur au triangle.",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Dans le triangle [angle:ABC], H appartient à la droite (BC) et (AH) est perpendiculaire à (BC). H est à l’extérieur de [BC]. Comment nomme-t-on (AH) ?",
+      "reponse": "La hauteur issue de A",
+      "donnees": "B(0,0),C(4,0),A(−2,3),H(−2,0) ; triangle obtus en B. Coder AH ⊥ BC ; prolonger BC en pointillés.",
+      "saisie": "Choix de nom et du sommet.",
+      "acceptation": "hauteur issue de A ; accepter droite support de la hauteur.",
+      "aide1": "« Une hauteur part d’un sommet. » Marquer A et suivre la droite jusqu’à (BC).",
+      "aide2": "« Elle rencontre la droite du côté opposé à angle droit, même en dehors du segment. » Mettre en évidence le prolongement et le codage droit.",
+      "correction": "(AH) est la hauteur issue de A, car A∈(AH) et (AH)⊥(BC).",
+      "controles": [
+        "Ne pas exiger que H soit entre B et C.",
+        "Refuser médiane si BH = HC n’est pas établi."
+      ],
+      "identifiant": "EG05-c",
+      "ancienId": "EG05-V3",
+      "ancienIdGenerateur": "EG05-V3",
+      "indiceGenerateur": 2,
+      "nom": "Reconnaître une hauteur avec un pied extérieur au triangle.",
+      "niveauDescription": "5e apprentissage ; 4e–3e entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Reconnaître une médiane.",
+      "niveau": "5e",
+      "dnb2027": false,
+      "enonce": "M est le milieu de [BC]. Quel nom porte la droite (AM) dans le triangle [angle:ABC] ?",
+      "reponse": "La médiane issue de A",
+      "donnees": "B(0,0),C(6,0),A(1,4),M(3,0) ; BM = MC codé, AM non perpendiculaire à BC ; triangles non isocèles pour distinguer les droites.",
+      "saisie": "Choix de nom.",
+      "acceptation": "médiane issue de A ; pas médiatrice.",
+      "aide1": "« M partage [BC] en deux segments égaux. » Surligner les deux demi-segments.",
+      "aide2": "« La droite joint le sommet A au milieu du côté opposé. » Relier les mots sommet et milieu au schéma.",
+      "correction": "(AM) est la médiane issue de A.",
+      "controles": [
+        "Refuser médiatrice et hauteur.",
+        "Générer aussi des cas isocèles où une même droite a plusieurs rôles, avec consigne de sélection multiple si nécessaire."
+      ],
+      "identifiant": "EG05-d",
+      "ancienId": "EG05-V4",
+      "ancienIdGenerateur": "EG05-V4",
+      "indiceGenerateur": 3,
+      "nom": "Reconnaître une médiane.",
+      "niveauDescription": "5e nouveau programme apprentissage ; 4e–3e entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": false,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Reconnaître et utiliser une bissectrice.",
+      "niveau": "6e",
+      "dnb2027": false,
+      "enonce": "[BD) est la bissectrice de l’angle [angle:ABC] qui mesure 70°. Quelle est la mesure de l’angle [angle:ABD] ?",
+      "reponse": "35°",
+      "donnees": "Deux demi-droites BA et BC d’angle aigu ou obtus entre 20° et 160°, mesure paire ; BD intérieure partage exactement en deux ; exemple 70°. Aucun D ambigu hors secteur.",
+      "saisie": "Champ numérique avec ° fixe.",
+      "acceptation": "35 ; 35°.",
+      "aide1": "« Une bissectrice partage l’angle en deux angles égaux. » Tracer les deux arcs de même codage.",
+      "aide2": "« Les deux parts totalisent 70°. » Afficher deux cases égales sous une accolade 70°.",
+      "correction": "70° ÷ 2 = 35°.",
+      "controles": [
+        "Refuser 140 et 70.",
+        "Le sommet de l’angle est B, placé au centre du nom ABD."
+      ],
+      "identifiant": "EG05-e",
+      "ancienId": "EG05-V5",
+      "ancienIdGenerateur": "EG05-V5",
+      "indiceGenerateur": 4,
+      "nom": "Reconnaître et utiliser une bissectrice.",
+      "niveauDescription": "6e nouveau programme apprentissage ; 5e–3e entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": false,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "[angle:AOD]",
+          "unite": "°"
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "f",
+      "objectif": "Identifier le centre du cercle circonscrit.",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "O est l’intersection des médiatrices de [AB] et [AC]. OA = 4 cm. Quel est le rayon du cercle passant par A, B et C ?",
+      "reponse": "4 cm",
+      "donnees": "Triangle non aligné sur cercle de centre O et rayon 4 ; exemple O(0,0),A(4,0),B(0,4),C(−12/5,−16/5). Intersection unique des deux médiatrices ; ne pas donner la nature rectangle.",
+      "saisie": "Champ numérique avec cm fixe.",
+      "acceptation": "4 ; 4 cm.",
+      "aide1": "« Sur la médiatrice de [AB], O vérifie OA = OB. » Montrer OA et OB avec mêmes marques.",
+      "aide2": "« La seconde médiatrice donne aussi OA = OC. » Montrer les trois rayons égaux et le cercle passant par les trois sommets.",
+      "correction": "OA = OB = OC = 4 cm : le rayon est 4 cm.",
+      "controles": [
+        "Refuser diamètre 8.",
+        "Le centre peut être extérieur au triangle ; ne pas limiter les dessins aux triangles aigus."
+      ],
+      "identifiant": "EG05-f",
+      "ancienId": "EG05-V6",
+      "ancienIdGenerateur": "EG05-V6",
+      "indiceGenerateur": 5,
+      "nom": "Identifier le centre du cercle circonscrit.",
+      "niveauDescription": "6e nouveau programme apprentissage ; 5e–3e entretien ; 5e ancien programme via médiatrices",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Rayon",
+          "unite": "cm"
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

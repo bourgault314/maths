@@ -1,0 +1,316 @@
+{
+  "id": "NC24",
+  "titre": "Factoriser par facteur commun",
+  "categorie": "Calcul littéral et équations",
+  "objectif": "Transformer une somme en produit en identifiant ce qui multiplie chaque terme.",
+  "prerequis": ["Distributivité simple", "Produits de monômes", "Sens somme/produit"],
+  "perimetre": "DNB2027 : cas simples de l’ancien cycle 4. Niveaux collège selon la progression 2026.",
+  "cours": {
+    "regle": "Factoriser, c’est écrire un produit. Dans ka + kb, le facteur k est commun : ka + kb = k(a + b).",
+    "exemple": "6x + 9 = 3(2x + 3).",
+    "visuel": "Deux rectangles de même hauteur 3, largeurs 2x et 3 ; aires 6x et 9 ; accolade montrant la largeur totale 2x + 3. Cas signés représentés symboliquement.",
+    "mouvement": "Assembler facultativement les deux rectangles ; version statique côte à côte avec contour extérieur."
+  },
+  "erreurs": [
+    "Additionner les facteurs au lieu de les extraire",
+    "Oublier le facteur 1",
+    "Diviser parx et perdrex=0",
+    "Confondre équivalence et forme exigée"
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 4,2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "PDF p.8–11",
+      "apport": "Niveaux et objectifs du calcul littéral ; introduction distincte de l’entretien.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples pour la mise en œuvre des programmes de mathématiques — cycle 4",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "p.13,18,21 imprimées",
+      "apport": "Distributivité dans les deux sens et facteur apparent avant une équation produit nul.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Programme du cycle 4,2020",
+      "url": "https://cache.media.education.gouv.fr/file/31/89/1/ensel714_annexe3_1312891.pdf",
+      "repere": "PDF p.131–132, calcul littéral",
+      "apport": "Périmètre mathématique utilisé par le filtre DNB2027.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Contrat de conception Matégo",
+      "url": null,
+      "repere": "Étape 1, NC19–NC31",
+      "apport": "Exemples originaux, bornes des générateurs, interfaces et aides proposées ; choix éditoriaux à valider par prototype.",
+      "statut": "choix de conception"
+    },
+    {
+      "titre": "NCETM — Algebra tiles",
+      "url": "https://www.ncetm.org.uk/media/dj5o223w/ncetm_ks3_representations_algebra_tilespdf.pdf",
+      "repere": "p.3–4,9–14",
+      "apport": "Associer schéma et symboles ; limites des aires négatives.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": [
+    "Aucune recherche longue d’un facteur caché.",
+    "En mode autonome, ne pas afficher la structure de réponse attendue."
+  ],
+  "acces_secondaires": [],
+  "nom": "Factoriser par facteur commun",
+  "domaine": "nombres-calculs",
+  "sousDomaine": "Calcul littéral et équations",
+  "niveaux": ["5e", "4e", "3e"],
+  "niveauxDescription": "5e : facteur numérique positif ; 4e : facteur x, signes et terme restant 1 ; 3e : facteur binomial apparent.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_12"],
+    "questions": [
+      {
+        "source": "A2603",
+        "question": "Q7",
+        "referenceAncienne": "G1 7",
+        "forme": "a",
+        "identifiant": "NC24-a",
+        "ancienId": "NC24-V1",
+        "support": "comparable",
+        "difference": "",
+        "savoirFaire": "Factorisation par facteur commun",
+        "formatSource": "QCM",
+        "document": "Centres étrangers, 18 juin 2026",
+        "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-18_Centres-etrangers_DV-v3.pdf"
+      }
+    ]
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Extraire un facteur numérique",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Factorise :6x + 9.",
+      "reponse": "3(2x + 3)",
+      "donnees": "k de2 à6 ; termes ka x et kb ; a,b1 à7 ; extraction d’un facteur commun non trivial, sans imposer un facteur unique.",
+      "saisie": "Expression courte avec touches lettre, chiffres, +, −, ×, /, parenthèses et carré. Gabarit de coefficients seulement en entraînement guidé.",
+      "acceptation": "Produit équivalent non trivial exigé ; ordre des facteurs libre. Accepter3(2x+3),6(x+1,5) et leurs équivalents factorisés ; refuser une somme non factorisée.",
+      "aide1": {
+        "texte": "Cherche 3 dans chacun des deux termes.",
+        "visuel": "Tableau de produits inversé : facteur commun connu, produits connus et facteurs restants à retrouver."
+      },
+      "aide2": {
+        "texte": "Quel nombre multiplié par 3 donne 6x, puis 9 ?",
+        "visuel": "Afficher 3 × 2x + 3 × 3 ; entourer les deux 3."
+      },
+      "correction": "6x + 9 = 3 × 2x + 3 × 3 = 3(2x + 3).",
+      "controles": ["Accepter(2x+3)×3 et6(x+1,5) ; refuser3(2x+9) et6x+9 non factorisé."],
+      "identifiant": "NC24-a",
+      "ancienId": "NC24-V1",
+      "ancienIdGenerateur": "NC24-V1",
+      "indiceGenerateur": 0,
+      "nom": "Extraire un facteur numérique",
+      "niveauDescription": "5e introduction ; entretien 4e–3e",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "expression",
+      "champs": [
+        {
+          "type": "expression",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": [
+        {
+          "source": "A2603",
+          "question": "Q7",
+          "referenceAncienne": "G1 7",
+          "forme": "a",
+          "identifiant": "NC24-a",
+          "ancienId": "NC24-V1",
+          "support": "comparable",
+          "difference": "",
+          "savoirFaire": "Factorisation par facteur commun",
+          "formatSource": "QCM",
+          "document": "Centres étrangers, 18 juin 2026",
+          "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-06-18_Centres-etrangers_DV-v3.pdf"
+        }
+      ]
+    },
+    {
+      "id": "b",
+      "objectif": "Extraire x",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Factorise : 4x² + 7x.",
+      "reponse": "x(4x + 7)",
+      "donnees": "a,b entiers 1 à 9 ; somme ax²+bx ; au moins facteurx visible ; x réel.",
+      "saisie": "Expression courte avec touches lettre, chiffres, +, −, ×, /, parenthèses et carré. Gabarit de coefficients seulement en entraînement guidé.",
+      "acceptation": "Vérifier exactement l’équivalence algébrique et la forme demandée ; normaliser × implicite, espaces et²/^2. Produit avec facteurx exigé ; ne pas diviser l’égalité parx ni exclurex=0.",
+      "aide1": {
+        "texte": "x est présent dans les deux termes.",
+        "visuel": "Tableau de produits inversé : x commun, deux produits connus, deux facteurs restants à retrouver."
+      },
+      "aide2": {
+        "texte": "Rassemble ce qui reste après le facteur commun.",
+        "visuel": "Écriture de la somme ou du produit attendu ; aucune flèche de procédure entre deux termes ou facteurs sans opération."
+      },
+      "correction": "4x² + 7x = x(4x + 7), valable aussi pour x = 0.",
+      "controles": ["Refuserx(4x+7x) et 4x+7 ; vérifier égalité àx=0 ; accepter(4x+7)x."],
+      "identifiant": "NC24-b",
+      "ancienId": "NC24-V2",
+      "ancienIdGenerateur": "NC24-V2",
+      "indiceGenerateur": 1,
+      "nom": "Extraire x",
+      "niveauDescription": "4e après produits littéraux ; 3e entretien",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "expression",
+      "champs": [
+        {
+          "type": "expression",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Conserver le 1 après extraction",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Factorise : x² − x.",
+      "reponse": "x(x − 1)",
+      "donnees": "Forme ax²−ax avec a 1 à 5 ; commencer par a=1 ; x réel.",
+      "saisie": "Expression courte avec touches lettre, chiffres, +, −, ×, /, parenthèses et carré. Gabarit de coefficients seulement en entraînement guidé.",
+      "acceptation": "Vérifier exactement l’équivalence algébrique et la forme demandée ; normaliser × implicite, espaces et²/^2. Produit complet exigé ; aucun domaine exclu.",
+      "aide1": {
+        "texte": "Le second terme est le facteur commun multiplié par −1.",
+        "visuel": "Tableau de produits inversé avec le facteur commun ax. Le second terme est le produit de ax par −1."
+      },
+      "aide2": {
+        "texte": "Le facteur x est commun aux deux termes.",
+        "visuel": "Écriture de la somme ou du produit attendu ; aucune flèche de procédure entre deux termes ou facteurs sans opération."
+      },
+      "correction": "x² − x = x(x − 1).",
+      "controles": ["Refuserx(x−x) et x² ; àx=1, résultat 0 ; àx=0, résultat 0."],
+      "identifiant": "NC24-c",
+      "ancienId": "NC24-V3",
+      "ancienIdGenerateur": "NC24-V3",
+      "indiceGenerateur": 2,
+      "nom": "Conserver le 1 après extraction",
+      "niveauDescription": "4e ; entretien 3e",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "expression",
+      "champs": [
+        {
+          "type": "expression",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Extraire un facteur négatif",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Factorise :−6x + 15.",
+      "reponse": "−3(2x − 5)",
+      "donnees": "Coefficient de x négatif, constante positive ; coefficients absolus≤49 ; choisir un facteur négatif est proposé en aide mais non imposé.",
+      "saisie": "Expression courte avec touches lettre, chiffres, +, −, ×, /, parenthèses et carré. Gabarit de coefficients seulement en entraînement guidé.",
+      "acceptation": "Accepter tout produit factorisé équivalent, dont−3(2x−5) ou3(−2x+5).",
+      "aide1": {
+        "texte": "Quel facteur manque dans(−3) × □ = 15 ?",
+        "visuel": "Tableau de produits inversé avec un facteur commun négatif ; les signes sont conservés."
+      },
+      "aide2": {
+        "texte": "Le second facteur doit être négatif.",
+        "visuel": "Afficher − 6x = (−3) × 2x et 15 = (−3) × (−5)."
+      },
+      "correction": "−6x + 15 = −3(2x − 5).",
+      "controles": [
+        "Refuser−3(2x+5) ; accepter3(−2x+5) ; distinguer une erreur de signe d’un autre choix correct de facteur."
+      ],
+      "identifiant": "NC24-d",
+      "ancienId": "NC24-V4",
+      "ancienIdGenerateur": "NC24-V4",
+      "indiceGenerateur": 3,
+      "nom": "Extraire un facteur négatif",
+      "niveauDescription": "4e après produits relatifs ; entretien 3e",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "expression",
+      "champs": [
+        {
+          "type": "expression",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Repérer un binôme commun",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Factorise : (x + 2)(x + 3) + 4(x + 2).",
+      "reponse": "(x + 2)(x + 7)",
+      "donnees": "Deux termes ayant même binôme ax+b apparent ; autres facteurs x+c et entierd ; a 1 ou 2, b,c,d 1 à 5 ; degré≤2.",
+      "saisie": "Expression courte avec touches lettre, chiffres, +, −, ×, /, parenthèses et carré. Gabarit de coefficients seulement en entraînement guidé.",
+      "acceptation": "Vérifier exactement l’équivalence algébrique et la forme demandée ; normaliser × implicite, espaces et²/^2. Produit de deux facteurs avec binôme commun visible ; (x+2)(x+3+4) équivalent mais demander réduction de la seconde parenthèse.",
+      "aide1": {
+        "texte": "Le même groupe(x + 2) apparaît deux fois.",
+        "visuel": "Tableau de produits dont la ligne est le groupe commun et les colonnes les facteurs restants."
+      },
+      "aide2": {
+        "texte": "Mets ce groupe en facteur ; additionne les facteurs qui restent.",
+        "visuel": "Afficher(x + 2)[(x + 3) + 4]."
+      },
+      "correction": "(x + 2)[(x + 3) + 4] = (x + 2)(x + 7).",
+      "controles": [
+        "Refuser(x+2)(x+12) et x²+9x+14 car non factorisé ; vérifier les deux occurrences exactement identiques."
+      ],
+      "identifiant": "NC24-e",
+      "ancienId": "NC24-V5",
+      "ancienIdGenerateur": "NC24-V5",
+      "indiceGenerateur": 4,
+      "nom": "Repérer un binôme commun",
+      "niveauDescription": "3e objectif ; application directe DNB2027",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "expression",
+      "champs": [
+        {
+          "type": "expression",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}

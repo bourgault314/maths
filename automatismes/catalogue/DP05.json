@@ -1,0 +1,316 @@
+{
+  "id": "DP05",
+  "titre": "Quartiles et boîtes",
+  "categorie": "Statistiques et probabilités",
+  "objectif": "Lire des positions dans une série ordonnée et dans une boîte à moustaches.",
+  "prerequis": [
+    "Série ordonnée, rang et effectif total",
+    "Médiane",
+    "Quart et trois quarts d’un effectif",
+    "Lecture d’un axe gradué"
+  ],
+  "perimetre": "Complément du nouveau programme de3ᵉ. Toutes les variantes sont exclues du filtreDNB2027.",
+  "cours": {
+    "regle": "Range les N valeurs. Q₁ est au rang N ÷ 4 ; Q₃ au rang 3N ÷ 4. Si le rang n’est pas entier, prends l’entier suivant.",
+    "exemple": "1;2;3;4;5;6;7;8 :25 % de8 = 2 et75 % de8 = 6. DoncQ1 = 2 etQ3 = 6.",
+    "visuel": "Huit cartes ordonnées numérotées1à8. Repères au rang2 et6. Dessous, boîte sur axe0–9 : minimum1,Q₁ = 2,médiane4,5,Q₃ = 6,maximum8. Chaque repère porte son nom, sa valeur et une ligne de correspondance avec les cartes.",
+    "mouvement": "Passage des rangs à la boîte par révélations successives, sans déplacer les repères sur l’axe. Statique : cartes et boîte alignées. Aucun histogramme décoratif."
+  },
+  "erreurs": [
+    "Utiliser les rangs comme valeurs",
+    "Interpoler automatiquement comme un tableur",
+    "Compter les modalités au lieu des observations",
+    "Lire une boîte sans son échelle",
+    "Confondre boîte étroite et faible effectif"
+  ],
+  "sources": [
+    {
+      "titre": "Programme cycle 4, 2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "Troisième, Statistiques, PDFp.17",
+      "apport": "Quartiles, effectifs cumulés et boîtes comme objectifs d’apprentissage.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples de mise en œuvre cycle 4, 2026",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "Troisième, Statistiques, PDFp.38–39",
+      "apport": "Détermination par cumuls ; cinq repères et échelle de la boîte.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "NCETM — Statistical representations and measures",
+      "url": "https://www.ncetm.org.uk/classroom-resources/secmm-51-statistical-representations-and-measures/",
+      "repere": "Page du concept 5.1 consultée ; pas de lecture exhaustive du PDF lié",
+      "apport": "Choisir des représentations selon les mesures statistiques étudiées.",
+      "statut": "appui pédagogique — pas validation institutionnelle de l’application"
+    }
+  ],
+  "limites": "La convention des quartiles est explicitée dans chaque série d’exercices. Le programme consulté prescrit les quartiles sans détailler ici un algorithme de tableur : l’application n’attribue pas sa convention logicielle au texte officiel. Les boîtes ne révèlent ni les données individuelles ni la moyenne.",
+  "nom": "Quartiles et boîtes",
+  "domaine": "donnees-probabilites",
+  "sousDomaine": "Statistiques et probabilités",
+  "niveaux": ["3e"],
+  "niveauxDescription": "3ᵉ nouveau programme : apprentissage des effectifs cumulés, quartiles et boîtes. Entretien après enseignement. Non inclus dans le parcours Brevet2027.",
+  "origine": "GPT",
+  "valide": false,
+  "brevet": {
+    "present": false,
+    "codesGrille": [],
+    "questions": []
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Déterminer Q₁ et Q₃ sur une petite série",
+      "niveau": "3e",
+      "dnb2027": false,
+      "enonce": "Pour1;2;3;4;5;6;7;8, donneQ1 etQ3. On prend la plus petite valeur telle qu’au moins25 % ou75 % des données lui soient inférieures ou égales.",
+      "reponse": "Q₁ = 2 ;Q₃ = 6",
+      "donnees": "EffectifN4–12 ; rangQ1 = plafond(N/4),rangQ3 = plafond(3N/4) ; valeursordonnées0–30, répétitionspermises. Aucun calcul d’interpolation.",
+      "saisie": "Deux champsQ1 etQ3",
+      "acceptation": "2 et6 acceptés ;2,75/6,25 issus d’une interpolation logicielle refusés selon la définition affichée.",
+      "aide1": "« Il y a8 données. Repère un quart et trois quarts de l’effectif. » Afficher une bande de8 cases, seuils25 % et75 %.",
+      "aide2": "« 25 % de8 = 2 ;75 % de8 = 6. Lis les valeurs des rangs2 et6. » Surligner les numéros de rangs.",
+      "correction": "Les rangs2 et6 portent2 et6 :Q₁ = 2,Q₃ = 6.",
+      "controles": [
+        "CasNnonmultiple4 :N9→rangs3 et7.",
+        "Conserver les valeursrépétées.",
+        "Pas de fonctionQUARTILE par défaut sans vérifier sa convention."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "La série est rangée. Donne le premier quartile Q₁ et le troisième quartile Q₃.",
+        "reponses": [
+          {
+            "libelle": "Q₁",
+            "reponse": "6",
+            "unite": ""
+          },
+          {
+            "libelle": "Q₃",
+            "reponse": "13",
+            "unite": ""
+          }
+        ],
+        "aide1": "Q₁ et Q₃ sont des valeurs de la série, pas des rangs.",
+        "aide2": "Avec 11 valeurs, prends les rangs 3 et 9.",
+        "cours": {
+          "regle": "Range les N valeurs. Q₁ est au rang N ÷ 4 ; Q₃ au rang 3N ÷ 4. Si le rang n’est pas entier, prends l’entier suivant.",
+          "exemple": "Pour 8 valeurs : Q₁ au rang 2 et Q₃ au rang 6."
+        },
+        "correction": "Q₁ = 6 ; Q₃ = 13."
+      },
+      "identifiant": "DP05-a",
+      "ancienId": "DP05-V1",
+      "ancienIdGenerateur": "DP05-V1",
+      "indiceGenerateur": 0,
+      "nom": "Déterminer Q₁ et Q₃ sur une petite série",
+      "niveauDescription": "3ᵉ nouveau programme",
+      "niveaux": ["3e"],
+      "brevet": false,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Q₁",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "Q₃",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": false,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Passer d’effectifs cumulés aux quartiles",
+      "niveau": "3e",
+      "dnb2027": false,
+      "enonce": "Valeurs :1,2,3,4. Effectifs :2,3,2,1. Avec la même définition par seuils25 % et75 %, donneQ1 etQ3.",
+      "reponse": "Q₁ = 1 ;Q₃ = 3",
+      "donnees": "2–5 valeurs distinctes ordonnées ; effectifsentiers ; N ≤ 20 ; calculs25/75 % faciles. Exemplecumuls[2,5,7,8].",
+      "saisie": "Deux nombres",
+      "acceptation": "Q₁ = 1,Q₃ = 3 acceptés ;2,3 refusé pourQ1. Vérifier séparément les champs.",
+      "aide1": "« Le total vaut8. Cherche les seuils2 et6 dans les effectifs cumulés. » Ajouter une ligne cumulative vide sous le tableau.",
+      "aide2": "« Cumuls :2,5,7,8. Le premier cumul atteignant2 correspond à1 ; cherche celui qui atteint6. » Mettre en évidence la lecture cumulative, sans donner la seconde valeur.",
+      "correction": "Le seuil2 est atteint à1 ; le seuil6 est atteint à3. Q₁ = 1,Q₃ = 3.",
+      "controles": [
+        "Reconstruire la série pour un contrôle indépendant.",
+        "Valeursrépétées décrites par effectifs, pas par nombres de colonnes.",
+        "Cumulfinal = N et non décroissant."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Donne Q₁ et Q₃ pour la série du tableau.",
+        "reponses": [
+          {
+            "libelle": "Q₁",
+            "reponse": "1",
+            "unite": ""
+          },
+          {
+            "libelle": "Q₃",
+            "reponse": "3",
+            "unite": ""
+          }
+        ],
+        "aide1": "L’effectif total est 8. Chaque valeur se répète selon son effectif.",
+        "aide2": "Repère les observations de rangs 2 et 6.",
+        "cours": {
+          "regle": "Range les N valeurs. Q₁ est au rang N ÷ 4 ; Q₃ au rang 3N ÷ 4. Si le rang n’est pas entier, prends l’entier suivant.",
+          "exemple": "Pour 8 valeurs : Q₁ au rang 2 et Q₃ au rang 6."
+        },
+        "correction": "Q₁ = 1 ; Q₃ = 3."
+      },
+      "identifiant": "DP05-b",
+      "ancienId": "DP05-V2",
+      "ancienIdGenerateur": "DP05-V2",
+      "indiceGenerateur": 1,
+      "nom": "Passer d’effectifs cumulés aux quartiles",
+      "niveauDescription": "3ᵉ nouveau programme",
+      "niveaux": ["3e"],
+      "brevet": false,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Q₁",
+          "unite": ""
+        },
+        {
+          "type": "nombre",
+          "libelle": "Q₃",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": false,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Lire les cinq repères d’une boîte",
+      "niveau": "3e",
+      "dnb2027": false,
+      "enonce": "Sur la boîte à moustaches représentée, quelle est la médiane ?",
+      "reponse": "7",
+      "donnees": "Axe0–14 pas1 ; moustaches2 et12 ; boîte de4 à9 ; barre intérieure à7. Autres questions générées :minimum,maximum,Q₁,Q₃ ; ordre min ≤ Q₁ ≤ médiane ≤ Q₃ ≤ max.",
+      "saisie": "Nombre ou étiquette à sélectionner",
+      "acceptation": "7 accepté ;4,9 et12 refusés pour la médiane.",
+      "aide1": "« La médiane est indiquée par le trait à l’intérieur de la boîte. » Encadrer ce trait et son nom, sans donner la coordonnée.",
+      "aide2": "« Prolonge ce trait jusqu’à l’axe gradué. » Tracer un guide vertical pointillé.",
+      "correction": "Le trait intérieur se lit7 sur l’axe.",
+      "controles": [
+        "Échelleaffichée et distancesproportionnelles.",
+        "Casboîteou moustachedegénérée gérés sans masquer leslabels.",
+        "Ne pas placer systématiquement la médiane au centre de la boîte.",
+        "Les moustaches se terminent exactement au minimum et au maximum. Les deux boîtes sont comparées sur une échelle commune, dans un SVG compact."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Lis le maximum sur le diagramme en boîte.",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "8",
+            "unite": ""
+          }
+        ],
+        "aide1": "De gauche à droite : minimum, Q₁, médiane, Q₃, maximum.",
+        "aide2": "Repère le maximum puis lis sa valeur sur l’axe.",
+        "cours": {
+          "regle": "Range les N valeurs. Q₁ est au rang N ÷ 4 ; Q₃ au rang 3N ÷ 4. Si le rang n’est pas entier, prends l’entier suivant.",
+          "exemple": "Pour 8 valeurs : Q₁ au rang 2 et Q₃ au rang 6."
+        },
+        "correction": "le maximum : 8."
+      },
+      "identifiant": "DP05-c",
+      "ancienId": "DP05-V3",
+      "ancienIdGenerateur": "DP05-V3",
+      "indiceGenerateur": 2,
+      "nom": "Lire les cinq repères d’une boîte",
+      "niveauDescription": "3ᵉ nouveau programme",
+      "niveaux": ["3e"],
+      "brevet": false,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": false,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Comparer la dispersion visible dans deux boîtes",
+      "niveau": "3e",
+      "dnb2027": false,
+      "enonce": "BoîteA :Q₁ = 2,Q₃ = 8. BoîteB :Q₁ = 4,Q₃ = 6. Quelle série a le plus petit écartQ3−Q₁ ?",
+      "reponse": "B",
+      "donnees": "Deux boîtes sur le même axe0–10 ; A[min0,Q₁ = 2,méd5,Q₃ = 8,max10] ; B[1,4,5,6,9]. Générer écarts distincts positifs ; ne pas inférer les effectifs des séries.",
+      "saisie": "ChoixA/B, avec labels accessibles",
+      "acceptation": "B accepté ;A refusé. Ne demander ni moyenne ni effectif, non déterminables ici.",
+      "aide1": "« Compare la largeur des boîtes, deQ1 àQ3. » Colorer seulement les deux segmentsQ1–Q₃, labels conservés.",
+      "aide2": "« PourA :8 − 2. PourB :6 − 4. Compare les deux écarts. » Afficher les calculs sous les boîtes.",
+      "correction": "A :6 ;B :2. La sérieB a le plus petit écartQ3−Q₁.",
+      "controles": [
+        "Axesidentiques ; pas de redimensionnementindépendant trompeur.",
+        "Écartségaux autorisés seulement avec choix« mêmeécart ».",
+        "Ne pas conclure queB a une moyenneplusfaible.",
+        "Les moustaches se terminent exactement au minimum et au maximum. Les deux boîtes sont comparées sur une échelle commune, dans un SVG compact."
+      ],
+      "exemple_runtime_verifie": {
+        "graine": 123,
+        "enonce": "Quelle série a le plus petit écart interquartile Q₃ − Q₁ ?",
+        "reponses": [
+          {
+            "libelle": "Réponse",
+            "reponse": "B",
+            "unite": "",
+            "choix": ["A", "B"]
+          }
+        ],
+        "aide1": "Compare les largeurs des boîtes à l’aide des graduations.",
+        "aide2": "Pour A : 7 − 2. Pour B : 4 − 3.",
+        "cours": {
+          "regle": "Range les N valeurs. Q₁ est au rang N ÷ 4 ; Q₃ au rang 3N ÷ 4. Si le rang n’est pas entier, prends l’entier suivant.",
+          "exemple": "Pour 8 valeurs : Q₁ au rang 2 et Q₃ au rang 6."
+        },
+        "correction": "A : 5 ; B : 1. La série B est moins dispersée entre Q₁ et Q₃."
+      },
+      "identifiant": "DP05-d",
+      "ancienId": "DP05-V4",
+      "ancienIdGenerateur": "DP05-V4",
+      "indiceGenerateur": 3,
+      "nom": "Comparer la dispersion visible dans deux boîtes",
+      "niveauDescription": "3ᵉ nouveau programme",
+      "niveaux": ["3e"],
+      "brevet": false,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "GPT",
+      "valide": false,
+      "referencesBrevet": []
+    }
+  ]
+}

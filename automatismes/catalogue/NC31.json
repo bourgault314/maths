@@ -1,0 +1,300 @@
+{
+  "id": "NC31",
+  "titre": "Motifs évolutifs et préalgèbre",
+  "categorie": "Calcul littéral et équations",
+  "objectif": "Repérer une structure, compter sans tout dessiner et préparer l’usage de la lettre.",
+  "prerequis": ["Dénombrement", "Multiplication", "Sens de l’égalité"],
+  "perimetre": "Prérequis 6e et applications compatibles DNB2027 ; statut par tâche, sans assimiler toute recherche de motif à un automatisme.",
+  "cours": {
+    "regle": "Cherche ce qui reste fixe et ce qui se répète. Pour un grand rang, utilise cette structure au lieu de tout dessiner.",
+    "exemple": "Une rangée de 5 carrés accolés utilise 1 + 3 × 5 = 16 allumettes.",
+    "visuel": "Rangées de 1,2,3 carrés partageant un côté :4,7,10 allumettes ; premier bord vertical distinct, chaque carré apporte 3 nouvelles allumettes. Labels «1bord fixe » et «3par carré ».",
+    "mouvement": "Ajouter un carré en surlignant exactement ses 3 nouvelles allumettes ; version statique avec rangées 1,2,3 et apports indiqués."
+  },
+  "erreurs": [
+    "Confondre rang et nombre d’objets",
+    "Compter deux fois un côté partagé",
+    "Poursuivre des nombres sans règle suffisamment définie",
+    "Imposer trop tôt la lettre"
+  ],
+  "sources": [
+    {
+      "titre": "Programme de mathématiques du cycle 3,2025",
+      "url": "https://www.education.gouv.fr/sites/default/files/ensel620_annexe2-v2.pdf",
+      "repere": "PDF p.16, initiation à la pensée algébrique",
+      "apport": "Modèles et structures de motifs en 6e ; formalisme littéral non prioritaire.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Programme de mathématiques du cycle 4,2026",
+      "url": "https://www.education.gouv.fr/sites/default/files/document/Annexe%202%20%E2%80%93%20Programme%20de%20math%C3%A9matiques%20pour%20le%20cycle%204-480716.pdf",
+      "repere": "PDF p.8 et 10",
+      "apport": "Niveaux et objectifs du calcul littéral ; introduction distincte de l’entretien.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Exemples pour la mise en œuvre des programmes de mathématiques — cycle 4",
+      "url": "https://eduscol.education.gouv.fr/media/126080/download?attachment=",
+      "repere": "p.13 et 18 imprimées",
+      "apport": "Passage verbal puis littéral ; formules issues de rangées de carrés et d’allumettes.",
+      "statut": "appui pédagogique"
+    },
+    {
+      "titre": "Programme du cycle 4,2020",
+      "url": "https://cache.media.education.gouv.fr/file/31/89/1/ensel714_annexe3_1312891.pdf",
+      "repere": "PDF p.131–132, calcul littéral",
+      "apport": "Périmètre mathématique utilisé par le filtre DNB2027.",
+      "statut": "prescription"
+    },
+    {
+      "titre": "Contrat de conception Matégo",
+      "url": null,
+      "repere": "Étape 1, NC19–NC31",
+      "apport": "Exemples originaux, bornes des générateurs, interfaces et aides proposées ; choix éditoriaux à valider par prototype.",
+      "statut": "choix de conception"
+    },
+    {
+      "titre": "Mathsgo — ÉquaScribe",
+      "url": "https://mathsgo.re/outils/equascribe.html",
+      "repere": "Aide et raccourcis, source HTML locale l.956–981, consultée le 20octobre 2026",
+      "apport": "Principe repris : hachurer le même retrait sur les deux membres, puis afficher la ligne suivante et l’opération correspondante. Source lue ; application existante non auditée intégralement.",
+      "statut": "appui pédagogique"
+    }
+  ],
+  "limites": [
+    "Les séries numériques seules peuvent admettre plusieurs prolongements : toujours définir le motif.",
+    "Ces tâches préparent la modélisation ; le drapeau DNB2027 signifie périmètre compatible, pas apparition démontrée en première partie.",
+    "Ne pas imposer n² ni une équation écrite en 6e."
+  ],
+  "acces_secondaires": ["Nombres et calculs", "Géométrie et repérage"],
+  "nom": "Motifs évolutifs et préalgèbre",
+  "domaine": "nombres-calculs",
+  "sousDomaine": "Calcul littéral et équations",
+  "niveaux": ["6e", "5e", "4e", "3e"],
+  "niveauxDescription": "6e : modèles préalgébriques et motifs, mots et dessins prioritaires ; 5e : entretien explicite des motifs et passage progressif à une formule ; 4e : consolidation des formules ; 3e : remédiation et modélisation.",
+  "origine": "GPT",
+  "valide": true,
+  "brevet": {
+    "present": true,
+    "codesGrille": ["dnb_13"],
+    "questions": []
+  },
+  "v1": [],
+  "formes": [
+    {
+      "id": "a",
+      "objectif": "Poursuivre un motif défini",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "On aligne des carrés en allumettes ; deux carrés voisins partagent un côté. Combien d’allumettes faut-il pour 4 carrés ?",
+      "reponse": "13",
+      "donnees": "Rang 1 à 8 ; chaque carré de même taille, aligné sans chevauchement ; segments communs uniques ; règle géométrique fournie, pas seulement trois nombres.",
+      "saisie": "Nombre entier ; dessin accessible avec description textuelle des côtés partagés.",
+      "acceptation": "Exactement 13 ; formule 1+3×4 admise si calcul ensuite évalué séparément.",
+      "aide1": {
+        "texte": "Un nouveau carré réutilise un côté déjà présent.",
+        "visuel": "Montrer 3 carrés, puis contour du quatrième ; côté commun grisé."
+      },
+      "aide2": {
+        "texte": "Le premier carré utilise 4 allumettes ; chaque suivant en ajoute 3.",
+        "visuel": "Afficher 4 + 3 + 3 + 3 avec les trois ajouts reliés aux carrés 2,3,4."
+      },
+      "correction": "4 + 3 + 3 + 3 = 13 allumettes.",
+      "controles": [
+        "Refuser 16 et 12 ; compter les segments uniques dans le SVG ; pour 1carré réponse 4."
+      ],
+      "identifiant": "NC31-a",
+      "ancienId": "NC31-V1",
+      "ancienIdGenerateur": "NC31-V1",
+      "indiceGenerateur": 0,
+      "nom": "Poursuivre un motif défini",
+      "niveauDescription": "6e structure visuelle ; 5e entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "b",
+      "objectif": "Compter à un rang éloigné",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Même règle : des carrés alignés partagent un côté. Combien d’allumettes pour 10 carrés ?",
+      "reponse": "31",
+      "donnees": "Rang 8 à 20 ; aires jamais utilisées ; calcul≤61 ; règle rappelée à chaque question.",
+      "saisie": "Nombre entier ; aucune lettre imposée en 6e.",
+      "acceptation": "Exactement 31 ; procédure 4+9×3 ou 1+10×3 autorisée.",
+      "aide1": {
+        "texte": "Compte un bord de départ, puis trois allumettes par carré.",
+        "visuel": "Dessin de 3 carrés avec 1bord fixe séparé et trois groupes de 3 identifiés ; pointillés indiquent répétition jusqu’à 10."
+      },
+      "aide2": {
+        "texte": "Multiplie 3 par 10, puis ajoute le bord de départ.",
+        "visuel": "Afficher 3 × 10 + 1, dernière opération laissée à effectuer."
+      },
+      "correction": "3 × 10 + 1 = 31 allumettes.",
+      "controles": [
+        "Refuser 30 et 40 ; tester cohérence rang 1 :3×1+1=4 ; ne pas traiter le rang 10 comme 10 carrés séparés."
+      ],
+      "identifiant": "NC31-b",
+      "ancienId": "NC31-V2",
+      "ancienIdGenerateur": "NC31-V2",
+      "indiceGenerateur": 1,
+      "nom": "Compter à un rang éloigné",
+      "niveauDescription": "6e en calcul et mots ; 5e entretien",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "c",
+      "objectif": "Passer du motif à la formule",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Un motif comporte n groupes de3jetons et1jeton fixe. Exprime le nombre total de jetons en fonction de n.",
+      "reponse": "3n + 1",
+      "donnees": "Taille de groupe2 à5 ; partie fixe1 à4 ; lettre n,k,t ; groupes disjoints et partie fixe explicitée. Un lien avec la formule des allumettes est proposé en cours.",
+      "saisie": "Expression avec n, nombres et opérations ; pas de gabarit 3□+□ en mode autonome.",
+      "acceptation": "Accepter3n+1,1+3n ou toute expression équivalente sur les entiers n≥1 ; les exemples de groupes utilisent d’autres coefficients et lettres.",
+      "aide1": {
+        "texte": "Sépare le jeton fixe et les groupes de3jetons.",
+        "visuel": "Groupes contenant réellement des jetons, points de suspension pour la répétition, accolade du nombre de groupes et jetons fixes séparés."
+      },
+      "aide2": {
+        "texte": "Multiplie3 par le nombre de groupes, puis ajoute1.",
+        "visuel": "Afficher3 × [nombre de groupes] + 1 ; étiquette n à substituer."
+      },
+      "correction": "Le total est3n + 1 :3jetons par groupe, plus1jeton fixe.",
+      "controles": [
+        "Refuser 4n et 3n−1 ; ne pas rejeter 4+3(n−1) ; les essais n=1,3 sont contrôles et pas preuve générale."
+      ],
+      "identifiant": "NC31-c",
+      "ancienId": "NC31-V3",
+      "ancienIdGenerateur": "NC31-V3",
+      "indiceGenerateur": 2,
+      "nom": "Passer du motif à la formule",
+      "niveauDescription": "5e introduction des formules ; 4e entretien",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "expression",
+      "champs": [
+        {
+          "type": "expression",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "d",
+      "objectif": "Compter un motif non linéaire",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Au rang n, on range les jetons en carré : n lignes de n jetons. Combien y a-t-il de jetons au rang 6 ?",
+      "reponse": "36",
+      "donnees": "Rangs 1 à 10 ; disposition complète n×n sans trou ; en 6e utiliser 6×6, notationn² seulement 5e.",
+      "saisie": "Nombre entier ; tableau carré décrit par 6 lignes et 6 colonnes.",
+      "acceptation": "Valeur 36 ;6×6 admis dans zone de calcul mais résultat demandé numérique.",
+      "aide1": {
+        "texte": "Compte les lignes et les jetons dans une ligne.",
+        "visuel": "Surligner une ligne de 6 et placer une accolade verticale «6 lignes »."
+      },
+      "aide2": {
+        "texte": "Il y a 6 groupes de 6 jetons.",
+        "visuel": "Afficher 6 × 6 ; aucun comptage unitaire animé imposé."
+      },
+      "correction": "6 × 6 = 36 jetons.",
+      "controles": [
+        "Refuser 12 et 30 ; vérifier SVG6 lignes×6 colonnes ; ne pas utiliser la règle d’écart constant des motifs linéaires."
+      ],
+      "identifiant": "NC31-d",
+      "ancienId": "NC31-V4",
+      "ancienIdGenerateur": "NC31-V4",
+      "indiceGenerateur": 3,
+      "nom": "Compter un motif non linéaire",
+      "niveauDescription": "6e structure multiplicative ; 5e lien carré",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Trouver un inconnu avec un modèle préalgébrique",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Trois sachets identiques et 2 billes isolées font 17 billes. Combien de billes contient un sachet ?",
+      "reponse": "5",
+      "donnees": "Nombre de sachets 2 à 5 ; billes par sachet 1 à 9 ; billes isolées 0 à 5 ; total exact ; tous effectifs entiers.",
+      "saisie": "Nombre entier ; aucune lettre ou équation imposée en 6e.",
+      "acceptation": "Valeur 5 ; le nombre de billes par sachet, pas le total sans billes isolées.",
+      "aide1": {
+        "texte": "Retire les 2 billes isolées du total.",
+        "visuel": "Barre 17 composée de trois cases « sachet » puis 2 billes ; hachurer les 2 billes dans les deux représentations."
+      },
+      "aide2": {
+        "texte": "Il reste 15 billes réparties également dans 3sachets.",
+        "visuel": "Trois cases égales sous accolade 15 ; afficher 15 ÷ 3 sans résultat."
+      },
+      "correction": "(17 − 2) ÷ 3 = 5 billes par sachet.",
+      "controles": [
+        "Refuser 15 et 17/3 ; résultat entier assuré ; pas de masse négative ni interprétation d’une case comme une bille unique."
+      ],
+      "identifiant": "NC31-e",
+      "ancienId": "NC31-V5",
+      "ancienIdGenerateur": "NC31-V5",
+      "indiceGenerateur": 4,
+      "nom": "Trouver un inconnu avec un modèle préalgébrique",
+      "niveauDescription": "6e modèles préalgébriques ; 5e équation à une étape après retrait",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Réponse",
+          "unite": "billes"
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT",
+      "valide": true,
+      "referencesBrevet": []
+    }
+  ]
+}
