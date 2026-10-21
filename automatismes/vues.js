@@ -223,24 +223,29 @@ export function pastilleNotionHTML(seance, famille) {
   return `<span class="pastille-notion">${esc(nom)}</span>`;
 }
 
+/* Sous la carte, dans la zone des commandes : Passer · Valider (« ← » en plus au brevet). Aide et Cours
+   ne sont plus ici : ils sont dans la carte, sous le calcul (outilsHTML). */
 export function actionsHTML(seance, etat) {
   if (seance.mode === "project") return actionsProjectionHTML(seance, etat);
-  // À gauche, ce qui sert pendant la réponse : Aide · Cours (ou « ← » au brevet) ; à droite Passer · Valider.
-  const gauche =
+  const retour =
     seance.mode === "exam"
       ? bouton("←", "precedente", "secondaire precedente", 'aria-label="Question précédente"')
-      : bouton(
-          `${ICONES.aide}<span>Aide</span>`,
-          "aide",
-          "aide-bouton",
-          `aria-pressed="${Boolean(etat.aideOuverte)}" aria-label="Aide"`,
-        ) +
-        bouton(`${ICONES.cours}<span>Cours</span>`, "cours", "cours-bouton", 'aria-label="Cours"');
+      : "";
   const suite =
     etat.terminee && seance.mode !== "exam"
       ? bouton("Suivante", "suivante", "orange")
-      : bouton("Passer", "passer", "secondaire") + bouton("Valider", "valider", "orange");
-  return `<div class="actions-question"><div class="outils-question">${gauche}</div>${suite}</div>`;
+      : bouton("Passer", "passer", "secondaire") + bouton("Valider", "valider", "orange large");
+  return `<div class="actions-question">${retour}${suite}</div>`;
+}
+
+/* Aide · Cours : deux boutons discrets (38 px) juste sous le calcul, là où l'aide s'ouvre.
+   Ni l'un ni l'autre au brevet ni au diaporama. */
+export function outilsHTML(seance, etat) {
+  if (seance.mode !== "train") return "";
+  return `<div class="outils">
+    <button class="outil" data-action="aide" aria-pressed="${Boolean(etat.aideOuverte)}">${ICONES.aide}Aide</button>
+    <button class="outil" data-action="cours">${ICONES.cours}Cours</button>
+  </div>`;
 }
 
 function actionsProjectionHTML(seance) {
@@ -262,8 +267,13 @@ export function questionHTML(seance, famille, garder, clavier = false) {
   return `${barreQuestionHTML(seance, clavier)}
     <progress class="progression" max="${seance.questions.length}" value="${seance.index + 1}"></progress>
     <div class="espace-question">
-      ${enonceHTML(question, pastilleNotionHTML(seance, famille))}${aideHTML(question, etat, garder, projection)}
-      ${projection ? choixProjectionHTML(question) : '<div class="reponses"></div>'}
+      <section class="carte enonce">${pastilleNotionHTML(seance, famille)}<h1 class="consigne">${questionPrompt(question)}</h1>
+        ${question.math ? `<div class="calcul">${mathHtml(question.math)}</div>` : ""}
+        ${question.visual ? `<div class="figure">${question.visual}</div>` : ""}
+        ${projection ? choixProjectionHTML(question) : '<div class="reponses"></div>'}
+        ${outilsHTML(seance, etat)}
+      </section>
+      ${aideHTML(question, etat, garder, projection)}
       ${etat.message ? `<p class="retour-reponse ${etat.juste ? "juste" : "faux"}" role="status">${esc(etat.message)}</p>` : ""}
       ${etat.erreurs && !etat.terminee ? bouton("Voir la correction", "correction", "discret") : ""}
       ${etat.correction ? correctionHTML(question) : ""}

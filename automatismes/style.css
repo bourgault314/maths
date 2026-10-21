@@ -18,7 +18,6 @@
   --fond-haut: #fbfdff;
   --jaune: #facc15;
   --echelle: 1;
-  --hauteur-commandes: 72px;
   color-scheme: light;
   font-family: "Nunito", "Segoe UI", sans-serif;
   font-synthesis: none;
@@ -752,52 +751,65 @@ label {
   text-align: center;
 }
 /* ============================================================
-   Écran de question (modes élève : séance, notion, brevet).
-   Le haut sur une ligne comme /auto/ : Menu · notion et compteur · score, clavier, plein écran, Cours.
-   Dessous : la question, l'aide, le champ ; puis le clavier (s'il est là) et Aide · Passer · Valider,
-   tous dans la même colonne de 440 px. Tablette couchée et ordinateur : le clavier passe à droite.
+   Écran de question — la coque d'après la V2 (planches du 21/10/2026).
+   Quatre zones de haut en bas, sur toute la hauteur de l'écran : la barre (← Menu · n sur N · ✓),
+   la progression, la zone de la question (elle défile si besoin) et les commandes (clavier,
+   Passer · Valider). La carte de la question est EN HAUT de sa zone : ce qui s'ouvre ensuite (aide,
+   explication) s'ajoute dessous et la question ne bouge pas (R5b). Téléphone : pleine largeur ;
+   tablette : carte de 640 px ; ordinateur : 760 px, centrée en largeur.
    ============================================================ */
 body[data-ecran="question"] .coque {
-  padding-top: 16px;
+  width: 100%;
+  padding: 0;
 }
 body[data-ecran="question"] .cadre {
-  /* Le cadre prend toute la hauteur : le clavier et Passer · Valider restent en bas, sous le pouce. */
-  min-height: var(--hauteur-cadre, calc(100dvh - 72px));
-  padding: 12px 24px 20px;
+  height: 100dvh;
+  min-height: 0;
+  max-height: 100dvh;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--fond-page);
+  box-shadow: none;
 }
 body[data-ecran="question"] .contenu {
   display: flex;
-  flex-direction: column;
-  overflow: hidden;
   flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  scrollbar-gutter: auto;
 }
 .barre-question {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: 10px;
-  min-height: 56px;
+  gap: 8px;
   flex: 0 0 auto;
+  padding: 8px 12px 6px;
+  border-bottom: 1px solid var(--ligne);
+  background: var(--papier);
 }
 .barre-question .gauche,
 .barre-question .droite {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+}
+.barre-question .gauche {
+  justify-self: start;
+}
+.barre-question .droite {
+  justify-self: end;
 }
 .barre-question .centre {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-  color: var(--attenue);
-  font-size: 0.9375rem;
+  text-align: center;
 }
 .barre-question .centre strong {
   color: var(--encre);
   font-size: 1.125rem;
   font-weight: 900;
+  line-height: 1.1;
   white-space: nowrap;
 }
 /* ⌨ et plein écran : sur ordinateur seulement (souris) ; au doigt, la barre garde Menu · n sur N · ✓. */
@@ -824,20 +836,24 @@ body.tactile .barre-question .outils-ordinateur {
 .barre-question .bouton {
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
-  padding: 0 14px;
-  border-radius: 13px;
-  gap: 7px;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1.5px solid var(--ligne);
+  border-radius: 12px;
+  color: var(--bleu-identite);
+  font-size: 0.9375rem;
+  box-shadow: none;
 }
 .barre-question .icone-bouton {
-  width: 44px;
+  width: 38px;
   padding: 0;
   display: inline-grid;
   place-items: center;
 }
 .barre-question .bouton svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   flex: none;
 }
 .barre-question .clavier-bascule[aria-pressed="true"] {
@@ -846,65 +862,67 @@ body.tactile .barre-question .outils-ordinateur {
   color: var(--papier);
 }
 .barre-question .minuteur {
-  font-size: 1.375rem;
-  padding: 0 4px;
-}
-body.projection .barre-question {
-  min-height: 64px;
-}
-body.projection .barre-question .minuteur {
-  font-size: 2rem;
-}
-body.projection .barre-question .centre {
-  font-size: 1.25rem;
-}
-body.projection .barre-question .bouton {
-  min-height: 48px;
-  font-size: 1.0625rem;
+  color: var(--attenue);
+  font-family: "Nunito", "Segoe UI", sans-serif;
+  font-size: 1.125rem;
+  font-weight: 900;
 }
 .score-barre {
   display: inline-flex;
   align-items: center;
-  min-height: 36px;
-  padding: 0 12px;
+  padding: 5px 12px;
   border: 1.5px solid color-mix(in srgb, var(--vert) 35%, var(--papier));
   border-radius: 999px;
   background: var(--vert-fond);
   color: var(--vert);
-  font-weight: 800;
+  font-size: 0.9375rem;
+  font-weight: 900;
   white-space: nowrap;
 }
 body[data-ecran="question"] .progression {
-  height: 6px;
-  margin: 8px 0 12px;
+  height: 5px;
+  margin: 0;
+  border-radius: 0;
 }
 .espace-question {
-  min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
+  display: flex;
   flex: 1 1 auto;
-  padding: 4px 8px 12px;
-  scrollbar-gutter: stable;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  padding: 12px 12px 10px;
+  overflow-x: hidden;
+  overflow-y: auto;
   overscroll-behavior: contain;
 }
-/* Centrage gardé de la question (R5b) : l'espace au-dessus de l'énoncé, calculé par centrerQuestion(). */
-.espace-question.centree {
-  padding-top: calc(4px + var(--decalage-question, 0px));
+.espace-question > * {
+  flex: 0 0 auto;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
 }
-.enonce {
+/* La carte de la question : pastille, consigne, calcul (avec ses cases), puis Aide · Cours. */
+.carte {
+  padding: 14px 14px 12px;
+  border: 1px solid var(--ligne);
+  border-top: 4px solid var(--turquoise);
+  border-radius: 18px;
+  background: var(--papier);
   text-align: center;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--encre) 5%, transparent);
 }
-.enonce h1 {
+.carte .consigne {
+  margin: 2px 0 10px;
   color: var(--encre);
-  /* Tablette debout 29 px, tablette couchée et ordinateur 36 px ; le téléphone a sa taille plus bas. */
-  font-size: clamp(1.5rem, 3.6vw, 2.25rem);
-  line-height: 1.3;
-  margin: 0;
+  font-family: "Fredoka", "Nunito", sans-serif;
+  font-size: 1.375rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 .question-expression {
   display: block;
-  margin: 14px 0 6px;
-  font-size: 1.6em;
+  margin: 10px 0 4px;
+  font-size: 1.5em;
 }
 .math-expression {
   max-width: 100%;
@@ -916,54 +934,69 @@ body[data-ecran="question"] .progression {
 .math-expression math {
   font-size: 1em;
 }
-.aide {
-  max-width: 440px;
-}
-/* Le bas : le clavier puis Passer · Valider, à la largeur de l'aide et du champ. */
-#commandes {
+/* Aide · Cours, discrets, juste sous le calcul (38 px de haut, police 15 px, fond doux). */
+.outils {
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 10px;
-  flex: 0 0 auto;
-  width: min(100%, 440px);
-  margin: 8px auto 0;
-}
-.actions-question {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
+  justify-content: center;
   gap: 8px;
+  margin-top: 12px;
 }
-/* Aide · Cours à gauche, Passer · Valider à droite, sur une seule ligne. */
-.outils-question {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-right: auto;
-}
-.actions-question .aide-bouton,
-.actions-question .cours-bouton {
+.outil {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  min-height: 44px;
+  gap: 6px;
+  min-height: 38px;
   padding: 0 14px;
-  border: 1.5px solid var(--bleu);
-  border-radius: 13px;
+  border: 1.5px solid var(--ligne);
+  border-radius: 999px;
   background: var(--fond-doux);
   color: var(--bleu-identite);
+  font-size: 0.9375rem;
+  font-weight: 800;
 }
-.actions-question .aide-bouton svg,
-.actions-question .cours-bouton svg {
-  width: 20px;
-  height: 20px;
-  flex: none;
-}
-.actions-question .aide-bouton[aria-pressed="true"] {
+.outil[aria-pressed="true"] {
   border-color: var(--bleu-identite);
   background: var(--bleu-identite);
   color: var(--papier);
+}
+.outil svg {
+  width: 17px;
+  height: 17px;
+  flex: none;
+}
+/* La zone des commandes, à part, en bas : le clavier (s'il est là) puis Passer · Valider. */
+#commandes {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--ligne);
+  background: color-mix(in srgb, var(--ligne) 50%, var(--fond-page));
+}
+#commandes > * {
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+}
+.actions-question {
+  display: flex;
+  gap: 8px;
+}
+.actions-question .bouton {
+  flex: 1;
+  min-height: 48px;
+  padding: 0 8px;
+  border-radius: 14px;
+  font-size: 1.0625rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+.actions-question .large {
+  flex: 1.4;
+}
+.actions-question .precedente {
+  flex: 0.5;
 }
 .clavier-symboles {
   display: flex;
@@ -1007,118 +1040,30 @@ body[data-ecran="question"] .progression {
 .touches .vide {
   visibility: hidden;
 }
-/* Large et couché (tablette couchée, ordinateur) : le clavier à droite de la question, rien ne rétrécit. */
-@media (min-width: 1000px) and (orientation: landscape) {
-  body.clavier-ouvert[data-ecran="question"] .contenu {
-    display: grid;
-    /* 392 px : la colonne du clavier porte aussi Aide · Cours · Passer · Valider sur une ligne. */
-    grid-template-columns: minmax(0, 1fr) 392px;
-    grid-template-rows: auto auto minmax(0, 1fr);
-    column-gap: 24px;
-  }
-  body.clavier-ouvert .barre-question,
-  body.clavier-ouvert[data-ecran="question"] .progression {
-    grid-column: 1 / -1;
-  }
-  body.clavier-ouvert .espace-question {
-    grid-column: 1;
-    grid-row: 3;
-  }
-  /* Le clavier et Aide · Cours · Passer · Valider centrés dans leur colonne ; la question est centrée
-     en face par centrerQuestion() (app.js). */
-  body.clavier-ouvert #commandes {
-    grid-column: 2;
-    grid-row: 3;
-    width: auto;
-    margin: 0;
-    justify-content: center;
-  }
-}
-/* Téléphone : le clavier et Passer · Valider sont fixés en bas ; la barre du haut se resserre. */
-@media (max-width: 680px) {
-  body[data-ecran="question"] .coque {
-    padding-top: 8px;
-  }
-  body[data-ecran="question"] .cadre {
-    height: calc(100dvh - 16px - var(--hauteur-commandes));
-    min-height: 160px;
-    max-height: calc(100dvh - 16px - var(--hauteur-commandes));
-    padding: 8px 12px 12px;
-  }
-  .barre-question {
-    gap: 6px;
-    min-height: 48px;
-  }
-  .barre-question .bouton {
-    min-height: 40px;
-    padding: 0 10px;
-    font-size: 0.875rem;
-  }
-  .barre-question .icone-bouton {
-    width: 40px;
-  }
-  .barre-question .centre {
-    font-size: 0.875rem;
-    gap: 6px;
-    overflow: hidden;
-  }
-  .score-barre {
-    min-height: 32px;
-    padding: 0 10px;
-  }
-  body[data-ecran="question"] .progression {
-    height: 4px;
-    margin: 6px 0 8px;
-  }
+/* Tablette et ordinateur : même écran, la carte et ce qui s'ouvre dessous font 640 px (760 px à la
+   souris), centrés en largeur. */
+@media (min-width: 700px) {
   .espace-question {
-    padding: 4px 0 8px;
-    scrollbar-gutter: auto;
+    align-items: center;
+    padding: 18px 0 12px;
   }
-  .enonce h1 {
-    font-size: 1.375rem;
+  .espace-question > * {
+    width: min(640px, 94vw);
   }
-  .question-expression {
-    margin: 10px 0 4px;
-    font-size: 1.6em;
-  }
-  #commandes {
-    position: fixed;
-    z-index: 5;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: auto;
-    margin: 0;
-    gap: 6px;
-    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
-    border-top: 1px solid var(--ligne);
-    background: var(--fond-doux);
-  }
-  .touches button {
-    min-height: 44px;
-  }
-  .actions-question .bouton {
-    padding: 8px 14px;
-    min-height: 40px;
-    font-size: 0.875rem;
-  }
-  .actions-question,
-  .outils-question {
-    gap: 6px;
+  .carte .consigne {
+    font-size: 1.75rem;
   }
 }
-/* Petits téléphones (360 px) : Aide et Cours en icône seule, les quatre boutons tiennent sur une ligne. */
-@media (max-width: 379px) {
-  .actions-question .aide-bouton,
-  .actions-question .cours-bouton {
-    width: 44px;
-    padding: 0;
-    justify-content: center;
-  }
-  .actions-question .aide-bouton span,
-  .actions-question .cours-bouton span {
-    display: none;
-  }
+body:not(.tactile) .espace-question > * {
+  width: min(760px, 90vw);
+}
+body:not(.tactile) #commandes {
+  padding: 0 0 14px;
+  border: 0;
+  background: transparent;
+}
+body:not(.tactile) #commandes > * {
+  max-width: 760px;
 }
 
 .cours-dialog {
