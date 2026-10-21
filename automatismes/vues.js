@@ -302,14 +302,15 @@ export function outilsHTML(seance, etat) {
 }
 
 /* Diaporama (C10) : ← · Aide · Réponse (remplit la case en vert) · Explication · →, les mêmes mots
-   qu'au téléphone ; « Encore un indice » est dans l'en-tête de l'aide. Correction « à la fin » :
+   qu'au téléphone ; « Encore un indice » est dans l'en-tête de l'aide. Un seul panneau à la fois
+   sous la question (K3) : l'explication prend la place de l'aide, qui revient quand on la referme. Correction « à la fin » :
    Réponse et Explication attendent la phase de correction. */
 function actionsProjectionHTML(seance, etat) {
   const fin = seance.options.correction === "end" && seance.phase !== "correction";
   const presse = (actif) => `aria-pressed="${Boolean(actif)}"`;
   return `<div class="actions-question barre-projection">
     ${bouton("←", "precedente", "secondaire", 'aria-label="Question précédente"')}
-    ${bouton("Aide", "aide", "secondaire", presse(etat.aideOuverte))}
+    ${bouton("Aide", "aide", "secondaire", presse(etat.aideOuverte && !etat.correction))}
     ${bouton("Réponse", "reponse", "secondaire", `${presse(etat.reponseMontree)} ${fin ? "disabled" : ""}`)}
     ${bouton("Explication", "explication", "secondaire", `${presse(etat.correction)} ${fin ? "disabled" : ""}`)}
     ${bouton("→", "suivante", "orange", 'aria-label="Question suivante"')}
@@ -369,7 +370,7 @@ export function questionHTML(seance, famille, clavier = false) {
         ${seance.mode === "train" ? retourHTML(question, etat, modele) : ""}
         ${outilsHTML(seance, etat)}
       </section>
-      ${aideHTML(question, etat, projection, reglages)}
+      ${projection && etat.correction ? "" : aideHTML(question, etat, projection, reglages)}
       ${etat.correction ? explicationHTML(question, !projection) : ""}
     </div>
     <div id="commandes">${seance.mode === "exam" ? pointsHTML(seance) : ""}

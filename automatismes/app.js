@@ -473,6 +473,16 @@ function ouvrirAide(etape = false) {
   afficherQuestion();
 }
 
+// Au diaporama, l'explication cache l'aide (K3) : toucher Aide la referme et montre l'aide.
+function basculerAide() {
+  const etat = etatCourant();
+  if (seance.mode === "project" && etat.correction) {
+    etat.correction = false;
+    etat.aideOuverte = false;
+  }
+  return etat.aideOuverte ? fermerAide() : ouvrirAide();
+}
+
 function fermerAide() {
   recueillir();
   etatCourant().aideOuverte = false;
@@ -487,7 +497,9 @@ function basculerExplication() {
   const etat = etatCourant();
   if (seance.mode === "train" && !etat.terminee) return;
   etat.correction = !etat.correction;
-  if (etat.correction) etat.aideOuverte = seance.mode === "project" && etat.aideOuverte;
+  // Élève : l'aide est déjà refermée (question finie). Diaporama : l'aide reste ouverte mais cachée
+  // derrière l'explication, et revient quand on la referme (K3).
+  if (etat.correction && seance.mode !== "project") etat.aideOuverte = false;
   afficherQuestion();
 }
 
@@ -816,7 +828,7 @@ function relierActions(racine = application) {
     brevet: afficherBrevet,
     "brevet-commencer": () => lancer({ mode: "exam", nombre: 9 }),
     lancer: lancerSelection,
-    aide: () => (etatCourant().aideOuverte ? fermerAide() : ouvrirAide()),
+    aide: basculerAide,
     etape: () => ouvrirAide(true),
     clavier: basculerClavier,
     "fermer-aide": fermerAide,
@@ -933,7 +945,8 @@ function ajusterQuestion() {
   if (!zone || ecran !== "question") return;
   reduireCalculs(zone);
   const projection = seance?.mode === "project";
-  const aide = zone.querySelector(".aide .dessin svg, .explication .dessin svg");
+  // Tous les dessins visibles sous la carte (K3 : querySelectorAll, pas seulement le premier).
+  const aides = [...zone.querySelectorAll(".aide .dessin svg, .explication .dessin svg")];
   const figure = zone.querySelector(".carte .figure > svg");
   const aideOuverte = Boolean(zone.querySelector(".aide, .explication"));
   const trop = () => zone.scrollHeight > zone.clientHeight + 1;
@@ -945,7 +958,7 @@ function ajusterQuestion() {
   const cle = [seance.id, seance.index, innerWidth, innerHeight].join("|");
   if (figure && figureGardee.cle === cle) poserDessin(figure, figureGardee.echelle);
   else if (figure) {
-    poserDessin(aide, 0.2);
+    aides.forEach((dessin) => poserDessin(dessin, 0.2));
     let echelleFigure = depart(figure, 1);
     const planFigure = (aideOuverte ? 0.7 : 0.6) * echelleFigure;
     poserDessin(figure, echelleFigure);
@@ -966,12 +979,18 @@ function ajusterQuestion() {
       height: `${boite.height}px`,
     });
   }
+  // Les dessins se réduisent ensemble, du même facteur, chacun jusqu'à 76 % de son départ.
   const essayer = () => {
-    let echelleAide = depart(aide, maxAide);
-    const planAide = 0.76 * Math.min(1, echelleAide);
-    poserDessin(aide, echelleAide);
-    while (trop() && aide && echelleAide - 0.02 >= planAide)
-      poserDessin(aide, (echelleAide -= 0.02));
+    const departs = aides.map((dessin) => depart(dessin, maxAide));
+    const poser = (facteur) =>
+      aides.forEach((dessin, rang) => {
+        const plancher = 0.76 * Math.min(1, departs[rang]);
+        poserDessin(dessin, Math.max(plancher, departs[rang] * facteur));
+      });
+    let facteur = 1;
+    poser(facteur);
+    const plancher = Math.min(...departs.map((d) => (0.76 * Math.min(1, d)) / (d || 1)));
+    while (trop() && aides.length && facteur - 0.02 >= plancher) poser((facteur -= 0.02));
   };
   essayer();
   const clavier = document.querySelector(".clavier");

@@ -845,3 +845,50 @@ test(
     }
   },
 );
+
+// Corrections après C7 (K3) : au diaporama, Réponse → Aide → Explication laissait les deux
+// panneaux ouverts et le second dessin débordait (125 px). Un seul panneau, tous les dessins mesurés.
+test(
+  "diaporama (coque V2, K3) : l'explication prend la place de l'aide, rien ne défile",
+  { skip: ignorer, timeout: 60000 },
+  async () => {
+    const { serveur, base } = await serveurLocal();
+    const browser = await ouvrirNavigateur();
+    const page = await browser.newPage({ viewport: { width: 1366, height: 768 } });
+    const contenuVisible = () =>
+      page.evaluate(() => {
+        const zone = document.querySelector(".espace-question");
+        const cadre = zone.getBoundingClientRect();
+        const dessins = [...zone.querySelectorAll(".dessin svg")].map((dessin) => {
+          const boite = dessin.getBoundingClientRect();
+          return boite.top >= cadre.top - 1 && boite.bottom <= cadre.bottom + 1;
+        });
+        return { defile: zone.scrollHeight > zone.clientHeight + 1, dessins };
+      });
+    try {
+      await page.goto(`${base}?notion=NC04&forme=e&graine=12&mode=project`);
+      await page.locator(".barre-projection").waitFor();
+      await page.locator('[data-action="reponse"]').click();
+      await page.locator('#commandes [data-action="aide"]').click();
+      await page.locator(".aide .dessin svg").waitFor();
+      await stabiliser(page);
+      assert.deepEqual(await contenuVisible(page), { defile: false, dessins: [true] }, "Aide");
+      await page.locator('#commandes [data-action="explication"]').click();
+      await page.locator(".explication").waitFor();
+      await stabiliser(page);
+      assert.equal(await page.locator(".espace-question > .aide").count(), 0, "Un seul panneau");
+      assert.deepEqual(
+        await contenuVisible(page),
+        { defile: false, dessins: [true] },
+        "Explication",
+      );
+      // Refermer l'explication ramène l'aide.
+      await page.locator('#commandes [data-action="explication"]').click();
+      await page.locator(".espace-question > .aide").waitFor();
+      assert.equal(await page.locator(".explication").count(), 0);
+    } finally {
+      await browser.close();
+      await new Promise((fin) => serveur.close(fin));
+    }
+  },
+);
