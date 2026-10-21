@@ -332,7 +332,6 @@ export function questionHTML(seance, famille, clavier = false) {
   const question = seance.questions[seance.index];
   const etat = seance.etats[seance.index];
   const projection = seance.mode === "project";
-  const minuterie = projection || seance.mode === "exam";
   const modele = modeleQuestion(question, reglageForme(question, famille, "gabarit"));
   const avantReponse = !etat.terminee && etat.message;
   return `${barreQuestionHTML(seance, clavier)}
@@ -349,8 +348,8 @@ export function questionHTML(seance, famille, clavier = false) {
       ${aideHTML(question, etat, projection)}
       ${etat.correction ? explicationHTML(question, !projection) : ""}
     </div>
-    ${minuterie ? pointsHTML(seance) : ""}
-    <div id="commandes"><section class="clavier" aria-label="Clavier mathématique" hidden></section>
+    <div id="commandes">${seance.mode === "exam" ? pointsHTML(seance) : ""}
+      <section class="clavier" aria-label="Clavier mathématique" hidden></section>
       <div class="signes" role="group" aria-label="Signe" hidden></div>${actionsHTML(seance, etat)}</div>`;
 }
 

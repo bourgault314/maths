@@ -1754,33 +1754,33 @@ body:not(.tactile) #commandes > * {
 .selection-domaine > div {
   padding-top: 8px;
 }
+/* Brevet (C10bis) : les numéros des questions, juste au-dessus du pavé, pour revenir en arrière. */
 .navigation-points {
   display: flex;
-  justify-content: center;
   flex-wrap: wrap;
-  gap: 8px;
-  padding: 12px 0;
+  justify-content: center;
+  gap: 5px;
 }
 .point {
   display: grid;
   place-items: center;
-  min-width: 36px;
-  min-height: 36px;
-  padding: 4px;
-  border: 1px solid var(--ligne);
-  border-radius: 12px;
-  color: var(--attenue);
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1.5px solid var(--ligne);
+  border-radius: 999px;
   background: var(--papier);
+  color: var(--encre);
+  font-size: 0.875rem;
   font-weight: 800;
 }
 .point.rempli {
-  color: var(--vert);
-  background: var(--vert-fond);
+  border-color: var(--bleu);
 }
 .point.active {
-  color: var(--papier);
-  background: var(--bleu);
   border-color: var(--bleu);
+  background: var(--bleu);
+  color: var(--papier);
 }
 .minuteur {
   display: inline-flex;
@@ -2057,15 +2057,6 @@ body.projection .minuteur {
   }
   .selection-domaine {
     padding: 12px;
-  }
-  .navigation-points {
-    gap: 4px;
-    padding: 8px 0;
-  }
-  .point {
-    min-width: 32px;
-    min-height: 32px;
-    border-radius: 8px;
   }
   .minuteur {
     font-size: 1.125rem;
