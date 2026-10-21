@@ -151,7 +151,7 @@ export const ICONES = {
 };
 
 /* Le haut de l'écran de question, sur une ligne comme /auto/, dans les trois modes :
-   entraînement  ← Menu · notion · n / N · ✓ score · clavier · plein écran · Cours
+   entraînement  ← Menu · notion · n / N · ✓ score · clavier · plein écran
    brevet        ← Menu · Entraînement brevet · n / N · chrono · clavier · plein écran
    projection    ← Quitter · notion · n / N · minuteur · Pause · plein écran */
 function boutonClavier(clavier) {
@@ -189,13 +189,12 @@ export function barreQuestionHTML(seance, famille, clavier) {
       <strong>${seance.index + 1} / ${seance.questions.length}</strong></div>
     <div class="droite">${droite}
       ${bouton(ICONES.pleinEcran, "plein-ecran", "secondaire icone-bouton plein-ecran", 'aria-label="Plein écran" title="Plein écran"')}
-      ${exam || projection ? "" : bouton(`${ICONES.cours}<span>Cours</span>`, "cours", "cours-bouton")}
     </div></header>`;
 }
 
 export function actionsHTML(seance, etat) {
   if (seance.mode === "project") return actionsProjectionHTML(seance, etat);
-  // À gauche, ce qui sert pendant la réponse : Aide (ou « ← » au brevet) ; à droite Passer · Valider.
+  // À gauche, ce qui sert pendant la réponse : Aide · Cours (ou « ← » au brevet) ; à droite Passer · Valider.
   const gauche =
     seance.mode === "exam"
       ? bouton("←", "precedente", "secondaire precedente", 'aria-label="Question précédente"')
@@ -203,13 +202,14 @@ export function actionsHTML(seance, etat) {
           `${ICONES.aide}<span>Aide</span>`,
           "aide",
           "aide-bouton",
-          `aria-pressed="${Boolean(etat.aideOuverte)}"`,
-        );
+          `aria-pressed="${Boolean(etat.aideOuverte)}" aria-label="Aide"`,
+        ) +
+        bouton(`${ICONES.cours}<span>Cours</span>`, "cours", "cours-bouton", 'aria-label="Cours"');
   const suite =
     etat.terminee && seance.mode !== "exam"
       ? bouton("Suivante", "suivante", "orange")
       : bouton("Passer", "passer", "secondaire") + bouton("Valider", "valider", "orange");
-  return `<div class="actions-question">${gauche}${suite}</div>`;
+  return `<div class="actions-question"><div class="outils-question">${gauche}</div>${suite}</div>`;
 }
 
 function actionsProjectionHTML(seance) {
