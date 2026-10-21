@@ -637,29 +637,6 @@ label {
   gap: 8px;
   max-width: 100%;
 }
-.champ {
-  width: 136px;
-  max-width: 100%;
-  height: 52px;
-  border: 2px solid var(--bleu);
-  border-radius: 12px;
-  background: var(--papier);
-  color: var(--encre);
-  text-align: center;
-  padding: 4px 8px;
-  font-size: 1.5rem;
-  font-variant-numeric: tabular-nums;
-}
-.champ.expression {
-  width: 280px;
-  font-family: "MG Math", serif;
-  font-style: normal;
-  font-weight: 400;
-}
-.champ::placeholder {
-  color: var(--attenue);
-  opacity: 1;
-}
 .champ.faux,
 .faux .champ {
   border-color: var(--rouge);
@@ -669,25 +646,6 @@ label {
 .juste .champ {
   border-color: var(--vert);
   background: var(--vert-fond);
-}
-.fraction-saisie {
-  display: grid;
-  grid-template-rows: 1fr 2px 1fr;
-  gap: 4px;
-  justify-items: center;
-  width: 84px;
-}
-.fraction-saisie .champ {
-  width: 76px;
-  height: 40px;
-  font-size: 1.25rem;
-}
-.fraction-saisie .barre,
-.fraction-saisie > span,
-.fraction-saisie > i {
-  width: 100%;
-  height: 2px;
-  background: var(--encre);
 }
 .choix {
   display: grid;
@@ -1040,6 +998,224 @@ body[data-ecran="question"] .progression {
 .touches .vide {
   visibility: hidden;
 }
+/* Le calcul et ses cases (C3) : « 0,7 × 7 = [ ] », « 47 = 6 × [ ] + [ ] », « 4,7 [ ] 4,68 ». */
+.carte .reponses {
+  margin: 0;
+}
+.carte .calcul {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 10px;
+  margin: 0;
+  color: var(--encre);
+  font-size: 2.125rem;
+  font-weight: 800;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+}
+.carte .calcul .t {
+  white-space: nowrap;
+}
+.carte .calcul .math-expression {
+  font-weight: inherit;
+}
+.carte .calcul.phrase {
+  font-family: "Fredoka", "Nunito", sans-serif;
+  font-size: 1.375rem;
+  font-weight: 600;
+}
+/* La case reste dans la phrase (« Quel chiffre faut-il mettre dans 1 [ ] 5… ») : le texte coule autour. */
+.carte .calcul.phrase {
+  display: block;
+}
+.carte .calcul.phrase .t {
+  white-space: normal;
+}
+.carte .calcul.phrase .case {
+  margin: 4px 2px;
+}
+.case {
+  display: inline-grid;
+  place-items: center;
+  width: auto;
+  min-width: 86px;
+  max-width: 100%;
+  height: 54px;
+  padding: 0 10px;
+  border: 2.5px solid var(--bleu);
+  border-radius: 14px;
+  background: var(--papier);
+  color: var(--encre);
+  font: inherit;
+  font-size: 1.875rem;
+  font-weight: 800;
+  text-align: center;
+  vertical-align: middle;
+}
+input.case {
+  width: 96px;
+  field-sizing: content;
+}
+.case.petite {
+  min-width: 64px;
+  width: 72px;
+}
+.case.expression {
+  min-width: 170px;
+  width: 210px;
+  font-family: "MG Math", serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+}
+.case.active,
+.case:focus {
+  border-color: var(--orange);
+  outline: none;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--orange) 22%, var(--papier));
+}
+.case.vide {
+  color: var(--attenue);
+}
+.case.ordre {
+  min-width: 80px;
+  border-style: dashed;
+  color: var(--attenue);
+}
+.case.ordre:not(.vide) {
+  border-style: solid;
+  color: var(--encre);
+}
+.fraction-case,
+.fraction-saisie {
+  display: inline-grid;
+  grid-template-rows: auto 3px auto;
+  justify-items: center;
+  align-items: center;
+  gap: 4px;
+  vertical-align: middle;
+}
+.fraction-case .barre,
+.fraction-saisie .barre-fraction {
+  width: 100%;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--encre);
+}
+.fraction-case .case,
+.fraction-saisie .case {
+  min-width: 56px;
+  width: 64px;
+  height: 44px;
+  font-size: 1.5rem;
+}
+.fraction-case .haut,
+.fraction-case .bas {
+  font-size: 0.8em;
+}
+.puissance-case {
+  display: inline-flex;
+  align-items: flex-start;
+}
+.puissance-case .bas {
+  margin-top: -0.35em;
+}
+.puissance-case .case {
+  min-width: 40px;
+  width: 44px;
+  height: 36px;
+  padding: 0 4px;
+  font-size: 1.125rem;
+}
+.carte .coche {
+  color: var(--vert);
+  font-size: 2.125rem;
+  font-weight: 900;
+}
+/* Ranger : les nombres en cartes à toucher, au-dessus de [ ] < [ ] < [ ]. */
+.cartes-ordre {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 4px 0 12px;
+}
+.carte-nombre {
+  min-width: 84px;
+  padding: 8px 16px;
+  border: 2px solid var(--ligne);
+  border-radius: 14px;
+  background: var(--fond-doux);
+  color: var(--encre);
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+.carte-nombre.pris {
+  opacity: 0.35;
+}
+.carte .calcul .case.ordre {
+  font-size: 1.5rem;
+}
+/* Comparer : les trois signes, en grosses touches à la place du clavier. */
+.signes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.signes .signe {
+  height: 58px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--papier);
+  color: var(--encre);
+  font-size: 2rem;
+  font-weight: 900;
+  box-shadow: 0 1px 0 var(--ligne);
+}
+.signes .signe[aria-pressed="true"] {
+  background: var(--bleu-identite);
+  color: var(--papier);
+}
+/* QCM : grille 2 × 2 de gros boutons, pas de clavier. */
+.carte .reponses[data-cas="qcm"] .champ-groupe {
+  width: 100%;
+}
+.carte .choix {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 4px;
+}
+.carte .choix-bouton {
+  min-height: 64px;
+  padding: 12px 14px;
+  border: 2px solid var(--ligne);
+  border-radius: 14px;
+  background: var(--fond-doux);
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+.carte .choix-bouton.selectionne {
+  border-color: var(--bleu);
+  background: color-mix(in srgb, var(--bleu) 8%, var(--papier));
+  box-shadow: none;
+}
+/* La case seule, centrée sous la phrase. */
+.carte .reponses[data-cas="seule"],
+.carte .reponses[data-cas="qcm"] {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 16px;
+}
+.carte .reponses[data-cas="seule"] {
+  margin-top: 4px;
+}
+.carte .saisie-ligne {
+  font-size: 1.5rem;
+  font-weight: 800;
+}
 /* Tablette et ordinateur : même écran, la carte et ce qui s'ouvre dessous font 640 px (760 px à la
    souris), centrés en largeur. */
 @media (min-width: 700px) {
@@ -1052,6 +1228,17 @@ body[data-ecran="question"] .progression {
   }
   .carte .consigne {
     font-size: 1.75rem;
+  }
+  .carte .calcul {
+    font-size: 2.625rem;
+  }
+  .case {
+    height: 62px;
+    min-width: 110px;
+    font-size: 2.25rem;
+  }
+  input.case {
+    width: 120px;
   }
 }
 body:not(.tactile) .espace-question > * {
@@ -1596,22 +1783,6 @@ body.projection .minuteur {
   .champ-groupe > label {
     font-size: 0.75rem;
   }
-  .champ {
-    height: 44px;
-    width: 112px;
-    font-size: 1.375rem;
-  }
-  .champ.expression {
-    width: min(260px, 100%);
-  }
-  .fraction-saisie {
-    width: 72px;
-  }
-  .fraction-saisie .champ {
-    width: 64px;
-    height: 36px;
-    font-size: 1.125rem;
-  }
   .choix {
     grid-template-columns: 1fr;
     gap: 8px;
@@ -1799,12 +1970,5 @@ body.avec-choix .enonce .figure svg {
 @media (max-width: 680px) {
   body.avec-choix .enonce .figure svg {
     max-height: 160px;
-  }
-  body.avec-choix .choix {
-    gap: 8px;
-  }
-  body.avec-choix .choix-bouton {
-    min-height: 44px;
-    padding: 4px 12px;
   }
 }

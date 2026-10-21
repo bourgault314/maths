@@ -2,6 +2,7 @@ import { esc } from "./generateurs/draw.js";
 import { mathHtml } from "./math-format.js";
 import { questionPrompt } from "./math-layout.js";
 import { DOMAINES, formesEligibles } from "./seances.js";
+import { modeleQuestion, reglageForme } from "./champs.js";
 import { ICONES_DOMAINES } from "./icones-domaines.js";
 
 export function bouton(texte, action, classe = "secondaire", attributs = "") {
@@ -259,6 +260,15 @@ function actionsProjectionHTML(seance) {
   </div>`;
 }
 
+/* La consigne de la carte. Quand le calcul s'écrit avec ses cases (« 0,7 × 7 = [ ] »), la consigne
+   ne garde que la phrase (« Calcule. ») ; sinon c'est l'énoncé entier, comme avant. */
+function consigneHTML(question, famille) {
+  const modele = modeleQuestion(question, reglageForme(question, famille, "gabarit"));
+  if (modele.phrase) return `<h1 class="consigne sr-only">${questionPrompt(question)}</h1>`;
+  const texte = modele.consigne ? mathHtml(modele.consigne) : questionPrompt(question);
+  return `<h1 class="consigne">${texte}</h1>`;
+}
+
 export function questionHTML(seance, famille, garder, clavier = false) {
   const question = seance.questions[seance.index];
   const etat = seance.etats[seance.index];
@@ -267,7 +277,7 @@ export function questionHTML(seance, famille, garder, clavier = false) {
   return `${barreQuestionHTML(seance, clavier)}
     <progress class="progression" max="${seance.questions.length}" value="${seance.index + 1}"></progress>
     <div class="espace-question">
-      <section class="carte enonce">${pastilleNotionHTML(seance, famille)}<h1 class="consigne">${questionPrompt(question)}</h1>
+      <section class="carte enonce">${pastilleNotionHTML(seance, famille)}${consigneHTML(question, famille)}
         ${question.math ? `<div class="calcul">${mathHtml(question.math)}</div>` : ""}
         ${question.visual ? `<div class="figure">${question.visual}</div>` : ""}
         ${projection ? choixProjectionHTML(question) : '<div class="reponses"></div>'}
@@ -279,7 +289,8 @@ export function questionHTML(seance, famille, garder, clavier = false) {
       ${etat.correction ? correctionHTML(question) : ""}
     </div>
     ${minuterie ? pointsHTML(seance) : ""}
-    <div id="commandes"><section class="clavier" aria-label="Clavier mathématique" hidden></section>${actionsHTML(seance, etat)}</div>`;
+    <div id="commandes"><section class="clavier" aria-label="Clavier mathématique" hidden></section>
+      <div class="signes" role="group" aria-label="Signe" hidden></div>${actionsHTML(seance, etat)}</div>`;
 }
 
 function choixProjectionHTML(question) {

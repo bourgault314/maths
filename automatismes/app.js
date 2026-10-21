@@ -12,10 +12,13 @@ import {
   adresseSerie,
 } from "./seances.js";
 import {
-  monterChamps,
+  monterReponse,
+  modeleQuestion,
+  reglageForme,
   lireChamps,
   insererTexte,
   monterClavier,
+  monterSignes,
   paginerChoixProjection,
 } from "./champs.js";
 import {
@@ -268,16 +271,33 @@ function etatCourant() {
 
 function preparerSaisie(question, etat) {
   const reponses = document.querySelector(".reponses");
-  monterChamps(reponses, question, etat.reponses, {
-    terminee: etat.terminee && seance.mode !== "exam",
-    clavierEcran: tactile(),
-    changer: recueillir,
-    cibler: ciblerChamp,
-    valider,
-    choisir: (rang, valeur) => {
-      etat.reponses[rang] = valeur;
-    },
-  });
+  const modele = modeleQuestion(
+    question,
+    reglageForme(question, parId[question.famille], "gabarit"),
+  );
+  const monter = () => {
+    monterReponse(reponses, question, etat.reponses, {
+      modele,
+      terminee: etat.terminee && seance.mode !== "exam",
+      clavierEcran: tactile(),
+      changer: recueillir,
+      cibler: ciblerChamp,
+      valider,
+      choisir: (rang, valeur) => {
+        etat.reponses[rang] = valeur;
+        // Cartes à ranger et signes < = > : la case du calcul se remplit (ou se vide) aussitôt.
+        if (modele.cas === "ranger" || modele.cas === "comparaison") monter();
+      },
+    });
+    const signes = document.querySelector(".signes");
+    if (signes && modele.cas === "comparaison" && !etat.terminee)
+      monterSignes(signes, question.fields[0], etat.reponses[0], (valeur) => {
+        etat.reponses[0] = valeur;
+        monter();
+      });
+    ajusterAffichage();
+  };
+  monter();
   monterClavier(document.querySelector(".clavier"), question, {
     inserer,
     valider,
@@ -316,6 +336,9 @@ function tactile() {
 
 function ciblerChamp(champ) {
   champActif = champ;
+  // La case active est cerclée d'orange : toucher une case la rend active.
+  document.querySelectorAll(".champ.active").forEach((autre) => autre.classList.remove("active"));
+  champ.classList.add("active");
   if (!clavierVoulu() || ecran !== "question") return;
   clavierOuvert = true;
   document.querySelector(".clavier").hidden = false;
