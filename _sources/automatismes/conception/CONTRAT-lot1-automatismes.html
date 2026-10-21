@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Automatismes · le contrat (lot 1) — 21 octobre 2026</title>
+<style>
+:root{--ink:#143451;--muted:#506b7d;--line:#d4e3ed;--blue:#063f86;--teal:#087a71;--orange:#f58220;--soft:#f5f9fc;--paper:#fff}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.5 "Segoe UI",system-ui,-apple-system,sans-serif;color:var(--ink);background:#eef3f8}
+.page{max-width:1000px;margin:0 auto;padding:28px 22px 60px;background:#fff}
+h1,h2,h3,h4{font-family:"Fredoka","Segoe UI",sans-serif;font-weight:600;line-height:1.15;margin:0}
+h1{font-size:2.3rem;color:var(--blue)}
+h2{font-size:1.6rem;color:var(--blue);margin:40px 0 12px;padding-top:14px;border-top:3px solid var(--blue)}
+h3{font-size:1.2rem;color:var(--teal);margin:24px 0 8px}
+h4{font-size:1rem;margin:14px 0 6px}
+p{margin:8px 0}
+.lead{font-size:1.05rem;color:var(--muted)}
+.entete{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;border-bottom:1px solid var(--line);padding-bottom:16px;margin-bottom:16px}
+.entete img{height:54px}
+.meta{color:var(--muted);font-size:.9rem}
+.resume{background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin:14px 0}
+.resume ul{margin:6px 0 0 18px;padding:0}
+.decision{border-left:5px solid var(--teal);background:#f2fbfa;padding:10px 14px;border-radius:0 12px 12px 0;margin:12px 0}
+.decision b:first-child{color:var(--teal)}
+.question{border-left:5px solid var(--orange);background:#fff7ee;padding:10px 14px;border-radius:0 12px 12px 0;margin:12px 0}
+.question b:first-child{color:#b45309}
+.pirate{border-left:5px solid #a93030;background:#fff3f3;padding:10px 14px;border-radius:0 12px 12px 0;margin:12px 0}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:.92rem}
+th,td{border:1px solid var(--line);padding:6px 8px;vertical-align:top;text-align:left}
+th{background:var(--soft)}
+td.c{text-align:center}
+code,pre{font-family:Consolas,"Courier New",monospace;font-size:.88em}
+code{background:#f1f5f9;padding:1px 5px;border-radius:4px}
+pre{background:#0f172a;color:#e2e8f0;padding:14px 16px;border-radius:12px;overflow:auto;line-height:1.4;white-space:pre-wrap}
+figure{margin:14px 0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+figure img{display:block;width:100%;height:auto}
+figcaption{padding:8px 12px;background:var(--soft);font-size:.88rem;color:var(--muted)}
+.deux{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:700px){.deux{grid-template-columns:1fr}}
+.sommaire{columns:2;column-gap:30px;font-size:.95rem}
+.sommaire a{color:var(--blue);text-decoration:none}
+.pied{margin-top:40px;padding-top:12px;border-top:1px solid var(--line);color:var(--muted);font-size:.85rem;text-align:center}
+.tag{display:inline-block;font-size:.75rem;font-weight:800;padding:2px 8px;border-radius:999px;background:#eef4fa;color:var(--muted);margin-left:6px;vertical-align:middle}
+.tag.go{background:#e5f7eb;color:#147447}
+.tag.q{background:#fff1dc;color:#b45309}
+@media print{body{background:#fff}.page{max-width:none;padding:0}h2{break-before:page}figure{break-inside:avoid}pre{white-space:pre-wrap}}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="entete">
+  <div>
+    <h1>Automatismes · le contrat</h1>
+    <p class="lead">Lot 1 — la nouvelle appli <code>/automatismes/</code> : ce qui est décidé avant d’écrire une ligne de code.</p>
+    <p class="meta">Chef de chantier : Fable (Cowork) · 21 octobre 2026 · pour Gwenaël Bourgault, mathsgo.re</p>
+  </div>
+  <img src="planches-lot1/logo-mathsgo.png" alt="maths&amp;go">
+</div>
+
+<div class="resume">
+<b>En dix lignes.</b>
+<ul>
+<li>Le moule est celui de GPT (catalogue + générateurs + correcteur + événements, 87 000 tirages testés sans échec) ; le contenu, l’interface et la projection sont à nous.</li>
+<li><b>Identifiants</b> : famille <code>NC27</code>, forme <code>NC27-a</code> (une lettre, partout), question <code>NC27-a@graine</code>. Noms en français. Cinq domaines du nouveau programme ; la grille du brevet dans la carte.</li>
+<li><b>L’aide</b> : le dessin s’ouvre <em>sous la question</em>, dans le cadre, et y reste ; « Une étape » s’ajoute dessous, jamais imposée ; l’aide de référence est <em>la nôtre d’avant la refonte</em> (pour les équations : la balance à deux plateaux et ses splats, choisie par Gwenaël le 21/10).</li>
+<li><b>Le cadre</b> : la coque commune des applis suivies (Défi tables) ; cadre blanc entier dans l’écran ; clavier de GPT au téléphone (ancré en bas, ne cache rien) ; projection validée le 17/10 + minuteur de GPT.</li>
+<li><b>Le parcours</b> : plus de « 5 questions » ; une <em>séance du jour</em> (8 questions : ce qui revient + du nouveau), des boîtes comme Défi tables, une notion <em>validée</em> quand elle est réussie deux fois sans aide à froid ; le prof fixe des notions ou crée une séance depuis Ma classe ; évaluation par les séances en direct.</li>
+<li><b>Le serveur</b> ne reçoit que <code>famille, forme, graine, juste, aide</code> et refuse tout le reste.</li>
+<li><b>Les cahiers</b> : le format de GPT, une fiche par forme, avec trois aides côte à côte (avant / refonte / GPT) et Gwenaël qui choisit. Fiche-type sur NC27-a au §6.</li>
+<li>Dix planches comparatives (GPT / nous / proposition, même cadre) dans <code>planches-lot1\</code> ; la maquette cliquable dans <code>maquette-lot1\</code>.</li>
+<li>Les trois dernières questions ont été tranchées le 21/10 (§8) ; tout est décidé, réversible.</li>
+<li>Le prompt du lot 2 pour Codex est au §7 et dans <code>codex\PROMPTS\PROMPT-CODEX-lot2-moule.md</code>.</li>
+</ul>
+</div>
+
+<div class="sommaire">
+<a href="#s1">1. Ce que disent les rapports de Codex</a><br>
+<a href="#s2">2. La carte d’identité et la structure</a><br>
+<a href="#s3">3. L’interface, élément par élément (a → j)</a><br>
+<a href="#s4">4. La charte</a><br>
+<a href="#s5">5. Le parcours, le suivi, les événements, le pirate</a><br>
+<a href="#s6">6. Le cahier de domaine et la fiche-type NC27</a><br>
+<a href="#s7">7. Le prompt du lot 2 pour Codex</a><br>
+<a href="#s8">8. Ce qui reste à trancher</a>
+</div>
+
+<!-- ===================================================== -->
+<h2 id="s1">1. Ce que disent les trois rapports de Codex</h2>
+<p>Lecture complète dans <code>plan\LECTURE-rapports-C1-Codex.md</code>. Les captures sont bien là : <code>codex\RAPPORTS\captures\</code> (1 988 PNG avant/après, 14 planches, 10 aperçus V2, <code>manifest.json</code>). Ce qui change le contrat :</p>
+<table>
+<tr><th>Rapport</th><th>Ce qu’on retient</th><th>Conséquence</th></tr>
+<tr><td><b>42 ↔ 84</b></td><td>506 types V1 contre 435 formes GPT : 319 identiques, 163 partiels, 24 absents. Ce qui disparaît chez GPT : les <b>manipulations</b> (jetons, produits partiels, étiquettes de Pythagore) et les <b>tâches de contrôle</b> (vérifier l’hypoténuse, partie ≤ tout, moyenne entre min et max). Trois numérotations de formes coexistent chez GPT.</td><td>Une lettre par forme, partout. Un champ « type de tâche » dans la carte. Deux conventions à écrire dans les cahiers : π exact, médiane d’un effectif pair = moyenne des deux centrales (notre règle).</td></tr>
+<tr><td><b>Banque d’aides</b></td><td>18 types retirés <em>avec</em> leur dessin ; glisse-nombre de la notation scientifique remplacé ; tableau d’effectifs de dnb_28 perdu ; aides rétrécies de 1 000 px à 300 px une fois en panneau ; 173 types non tranchés à l’œil. Codex n’a pas vérifié si une aide donne la réponse.</td><td>L’aide de référence est celle d’<b>avant</b> (commit <code>8dc3f27b</code>, captures <code>*-avant-*</code>). Plus jamais de panneau latéral. Chaque cahier vérifie « la réponse n’y est jamais écrite ».</td></tr>
+<tr><td><b>Brevet 136 / 153</b></td><td>Aucune de nos 136 questions ne manque ; GPT ajoute 18 questions de septembre 2026. 28 reprises partielles (produire → choisir ; écrire le calcul → donner le résultat ; support disparu). Poids : DP04, PF04, NC16, DP06, NC27 en tête.</td><td>Plusieurs codes de grille par famille. Les cahiers des familles « partielles » rétablissent la tâche d’origine. Ordre des lots de contenu inchangé (Nombres et calculs d’abord).</td></tr>
+</table>
+
+<!-- ===================================================== -->
+<h2 id="s2">2. La carte d’identité d’une famille et la structure de <code>/automatismes/</code></h2>
+
+<h3>2.1 Les identifiants <span class="tag go">décidé</span></h3>
+<div class="decision"><b>Décision.</b> Une famille garde l’identifiant de GPT (<code>NC27</code>). Une forme s’écrit <code>NC27-a</code>, <code>NC27-b</code>… (lettre minuscule, dans l’ordre du cahier). Une question s’écrit <code>NC27-a@2047483</code> (la graine après <code>@</code>). Les anciens identifiants de GPT (<code>NC27-V1</code>, <code>PF04-A</code>, <code>forme=0</code>) sont gardés dans un tableau d’alias pour relire son cahier et ses correspondances ; ils n’apparaissent nulle part ailleurs. <br><i>Pourquoi :</i> Codex a montré trois numérotations incompatibles chez GPT, dont une fondée sur le rang (elle casse dès qu’on réordonne). Une lettre est stable, courte, lisible dans une adresse et dans un événement.</div>
+<p>Adresse d’une question : <code>/automatismes/?notion=NC27&amp;forme=a&amp;graine=2047483</code> — même question partout, pour un élève, un prof au tableau ou un test.</p>
+
+<h3>2.2 Les cinq domaines <span class="tag go">décidé</span></h3>
+<p>Le menu suit le nouveau programme. Les huit catégories de GPT s’y rangent ainsi (les grandeurs d’après ta formation, diapo 17) :</p>
+<table>
+<tr><th>Domaine (menu)</th><th>Sous-domaines (classement secondaire)</th><th>Familles GPT</th><th class="c">Familles</th></tr>
+<tr><td><b>Nombres et calculs</b></td><td>Nombres · Fractions · Puissances · Calcul littéral et équations · Durées et masses</td><td>NC01–NC31, GM01, GM03, GM04</td><td class="c">34</td></tr>
+<tr><td><b>Proportionnalité, fonctions</b></td><td>Proportionnalité et pourcentages · Vitesse et grandeurs quotients · Fonctions et graphiques</td><td>PF01–PF11 (dont PF08 vitesse)</td><td class="c">11</td></tr>
+<tr><td><b>Espace et géométrie</b></td><td>Repérage · Figures et angles · Théorèmes · Transformations · Solides · Aires, volumes et leurs unités</td><td>EG01–EG26, GM02</td><td class="c">27</td></tr>
+<tr><td><b>Données et probabilités</b></td><td>Statistiques · Probabilités</td><td>DP01–DP08</td><td class="c">8</td></tr>
+<tr><td><b>Pensée informatique</b></td><td>Programmes de calcul · Variables, boucles · Tableur</td><td>PI01–PI04</td><td class="c">4</td></tr>
+</table>
+<p class="meta">Trois familles paraissent hors du collège ou à vérifier dans le nouveau programme : EG17 (vecteurs), DP05 (quartiles), NC30 (inéquations). Codex tranchera à l’audit du cahier de leur domaine ; elles restent cachées tant qu’il ne l’a pas fait.</p>
+
+<h3>2.3 La carte d’identité <span class="tag go">décidé</span></h3>
+<p>Un seul fichier par famille, <code>catalogue/NC27.json</code>, écrit <em>depuis le cahier</em> (le cahier est la source, le JSON en est la copie exacte). Le catalogue complet est assemblé par un script.</p>
+<table>
+<tr><th>Champ</th><th>Contenu</th><th>Exemple (NC27)</th></tr>
+<tr><td><code>id</code></td><td>identifiant stable</td><td><code>NC27</code></td></tr>
+<tr><td><code>nom</code></td><td>nom français, relu (jamais « dernier chiffre »)</td><td>Équations à une ou deux étapes</td></tr>
+<tr><td><code>domaine</code>, <code>sousDomaine</code></td><td>un des cinq domaines ; le sous-domaine pour le classement</td><td>nombres-calculs · Calcul littéral et équations</td></tr>
+<tr><td><code>niveaux</code></td><td>première classe où la famille s’ouvre, puis entretien</td><td>["5e","4e","3e"]</td></tr>
+<tr><td><code>brevet</code></td><td>codes de notre grille (plusieurs possibles) + questions reliées (ZB 7 / Z26B Q7…) + forme exacte + différence notée par Codex</td><td>dnb_13 · ZB 7, ZPB 9, ME 5, AN 4, ME-pro 8, R1 5</td></tr>
+<tr><td><code>v1</code></td><td>types de <code>/auto/</code> repris, avec la nature (même / partiel) — pour retrouver l’aide d’avant</td><td>dnb_13 t1–t12</td></tr>
+<tr><td><code>cours</code></td><td>règle courte, exemple différent de la question, dessin de l’exemple</td><td>§6</td></tr>
+<tr><td><code>formes[]</code></td><td>une par lettre : objectif, niveau, <code>brevet</code> oui/non, <b>une seule forme de réponse</b> (nombre, fraction, expression, ensemble, QCM, texte court, manipulation), profil des nombres, contrat de réponse (π exact, irréductible exigée ou non, tolérance), <b>type de tâche</b> (calculer, reconnaître, choisir une méthode, contrôler, manipuler), aide (type et paramètres), étape, correction, erreurs connues (codes), contrôles</td><td>NC27-a : « Inverser une addition »</td></tr>
+<tr><td><code>origine</code>, <code>valide</code></td><td>d’où vient la forme (V1, GPT, nouvelle) ; validée par Gwenaël oui/non ; cachée tant que non</td><td>GPT + V1 · non</td></tr>
+</table>
+<p><b>Trois types d’aide</b>, à choisir forme par forme dans le cahier : <i>dessin sous la question</i> (bandes, balance, droite graduée, barres…) ; <i>annotation sur l’énoncé</i> (notation scientifique : le 1 entouré, « 1 000 = 1 × … » écrit dessous — ton idée du 21/10) ; <i>manipulation</i> (jetons, étiquettes de Pythagore, plateau ÉquaSplat). Les trois obéissent à la même règle : on peut compter sur le dessin, la réponse n’y est jamais écrite.</p>
+
+<h3>2.4 La table unique des codes d’erreur <span class="tag go">décidé</span></h3>
+<p>Un code = une erreur connue + la phrase que l’élève lit (tutoiement, une ligne). Une forme déclare les codes qu’elle sait reconnaître ; le correcteur rend le code, jamais un texte libre. Table de départ (elle grandit avec les cahiers) :</p>
+<table>
+<tr><th>Code</th><th>Erreur</th><th>Phrase lue par l’élève</th></tr>
+<tr><td><code>E-SENS</code></td><td>opération inverse appliquée dans le mauvais sens</td><td>Tu as ajouté au lieu d’enlever (ou l’inverse).</td></tr>
+<tr><td><code>E-UN-SEUL-MEMBRE</code></td><td>opération faite d’un seul côté</td><td>Ce que tu enlèves d’un côté, enlève-le aussi de l’autre.</td></tr>
+<tr><td><code>E-SIGNE</code></td><td>signe oublié ou inversé</td><td>Regarde le signe.</td></tr>
+<tr><td><code>E-VIRGULE</code></td><td>virgule mal placée, zéros ajoutés</td><td>La virgule a bougé d’un rang de trop (ou de trop peu).</td></tr>
+<tr><td><code>E-UNITE</code></td><td>mauvaise unité ou conversion</td><td>Vérifie l’unité demandée.</td></tr>
+<tr><td><code>E-NON-REDUIT</code></td><td>expression juste mais non réduite</td><td>C’est juste, mais pas réduit : regroupe.</td></tr>
+<tr><td><code>E-NON-IRREDUCTIBLE</code></td><td>fraction juste mais réductible</td><td>C’est égal, mais on peut encore simplifier.</td></tr>
+<tr><td><code>E-INVERSE</code></td><td>fraction ou rapport inversé</td><td>Tu as inversé le haut et le bas.</td></tr>
+<tr><td><code>E-FORME</code></td><td>réponse mal écrite (syntaxe)</td><td>Je ne lis pas cette écriture : vérifie.</td></tr>
+<tr><td><code>E-ARRONDI</code></td><td>valeur approchée là où l’exact est demandé</td><td>Donne la valeur exacte (avec π, ou en fraction).</td></tr>
+<tr><td><code>E-ORDRE</code></td><td>priorités opératoires</td><td>Les multiplications d’abord.</td></tr>
+<tr><td><code>E-AUTRE</code></td><td>faux, erreur non reconnue</td><td>Pas encore. Regarde le dessin, puis essaie encore.</td></tr>
+</table>
+
+<h3>2.5 La graine <span class="tag go">décidé</span></h3>
+<p>Entier de 1 à 2 147 483 647, tiré par l’appli en entraînement, <em>distribué par le serveur</em> en séance programmée ou en direct. Le générateur de GPT (<code>rng(seed)</code>) est conservé tel quel : même graine, même question, aujourd’hui et dans un an. La version du moteur accompagne toujours la graine dans un événement (une graine ne vaut que pour une version).</p>
+
+<h3>2.6 La structure des dossiers <span class="tag go">décidé</span></h3>
+<pre>automatismes/
+  index.html              l’élève (et le prof avec ?prof=1, comme l’univers SPLAT!)
+  app.js                  l’interface (réécrite au lot 2 d’après ce contrat)
+  core.js                 tirage par graine, correcteur sans eval, fractions exactes (GPT, inchangé)
+  math-format.js          écriture des maths (fractions verticales, vrai moins, variables MG Math)
+  math-layout.js          ajustement des expressions à la largeur (GPT)
+  style.css               la charte (§4)
+  catalogue/              NC27.json… (une carte par famille) + catalogue.json assemblé + alias-gpt.json
+  generateurs/            nombres.js, algebre.js, geometrie.js, mesures.js, donnees_algo.js, proportion_fonctions.js (GPT, mis en forme)
+  aides/                  nos dessins : balance-splats.js, bandes-fractions.js, droite-graduee.js, numeration.js, barres.js…
+                          (ils consomment packages/charte et packages/objets, jamais une couleur inventée)
+  cours/                  un dessin d’exemple par famille (SVG)
+  fonts/                  mg-math.woff + licence GUST (la variable x arrondie, distincte de ×)
+  suivi.js                le contrat d’événements (§5) ; adaptateur serveur ajouté au lot « suivi »
+tests/automatismes-*.test.mjs   les tests (87 000 tirages, correcteur, cartes d’identité, aides)
+_sources/automatismes/cahiers/  les cahiers de domaine (PDF + source)</pre>
+<p><b>Contrôles automatiques à chaque lot</b> : identifiants uniques et bien formés ; un nom français par famille ; une seule forme de réponse par forme ; niveaux valides ; la bonne réponse est acceptée pour 200 graines par forme ; aucune aide ne contient la réponse (le SVG de l’aide ne contient pas la chaîne de la réponse) ; aucun « dernier chiffre » dans les textes ; cache-buster bumpé pour chaque script modifié (règle du dépôt).</p>
+
+<!-- ===================================================== -->
+<h2 id="s3">3. L’interface, élément par élément</h2>
+<p>Chaque planche met côte à côte, dans le même cadre (fenêtre entière de l’appareil) : l’appli de GPT, la nôtre (<code>/auto/</code> en ligne, ou d’avant la refonte quand c’est elle qui compte), et la proposition (maquette <code>maquette-lot1\index.html?ecran=…</code>). Téléphone 390 × 844, ordinateur 1366 × 768, TNI 1280 × 720.</p>
+
+<h3>a · L’accueil et le menu <span class="tag go">décidé</span></h3>
+<figure><img src="planches-lot1/planche-a-accueil.png" alt="Planche a"><figcaption>Planche a — GPT : un domaine puis les notions, facile à parcourir, sobre mais pas nos couleurs. Nous : tout sur une page, dense, réglages d’abord. Proposition : la coque des applis suivies, « Ma séance du jour » en premier, cinq domaines.</figcaption></figure>
+<div class="decision"><b>Proposition.</b> La coque commune des applis suivies (Défi tables) : logo, cadre blanc, flèche de retour, pastille « prénom · classe » quand l’élève est connecté. En haut, <b>« Ma séance du jour »</b> (8 questions : ce qui revient + du nouveau — c’est l’entrée principale, celle que le parcours remplira). Dessous, les filtres 6<sup>e</sup>–3<sup>e</sup> et « Brevet », puis les <b>cinq domaines</b> en cartes (l’idée de GPT : un domaine, puis les notions ; nos couleurs, aucun slogan). Le bouton « Professeur » en haut à droite mène à la vue prof (§b). Pas de « Mes progrès » séparé : les étoiles sont sur chaque notion.</div>
+
+<h3>b · Le choix des notions : élève et professeur <span class="tag go">décidé</span></h3>
+<figure><img src="planches-lot1/planche-b-notions.png" alt="Planche b"><figcaption>Planche b — Élève : une liste de notions avec niveau, badge Brevet et étoiles ; « Mélanger ces notions » pour tout le domaine. Professeur : choix multiple par domaine et par notion, réglages de projection, « Donner cette série à ma classe ».</figcaption></figure>
+<div class="decision"><b>Proposition.</b> Côté élève, <b>une notion ou un domaine</b>, pas de cases à cocher : un élève qui s’entraîne seul travaille une notion ; le mélange entre domaines, c’est le rôle de « Ma séance du jour », qui le fait pour lui d’après ses boîtes. Côté professeur (<code>?prof=1</code>), le <b>choix multiple</b> de GPT et le nôtre réunis : domaines et notions à cocher, niveau, Brevet seul, nombre de questions, temps de recherche, correction après chaque question ou à la fin, enchaînement automatique, aide projetée d’office ; puis « Projeter », « Ouvrir sur un écran » (lien à donner), ou « Donner cette série à ma classe » (suivi, §5). <br><i>Argument contre que j’ai pesé :</i> un élève voudra parfois réviser « équations + fractions » avant un contrôle. Réponse : le prof peut lui créer cette séance, et « Mélanger ces notions » couvre un domaine entier. Si tu tiens au choix multiple élève, c’est une case de plus, pas une refonte.</div>
+
+<h3>c · La question et son cadre <span class="tag go">décidé</span></h3>
+<figure><img src="planches-lot1/planche-c-cadre.png" alt="Planche c"><figcaption>Planche c — GPT perd la moitié de l’écran (en-tête, marges, carte étroite). Nous : dense, le champ en bas séparé de la question. Proposition : un seul cadre, question en haut, réponse juste dessous, actions en bas du cadre.</figcaption></figure>
+<div class="decision"><b>Proposition.</b> Un cadre blanc de 850 px au plus, <b>entier dans l’écran sur ordinateur</b> (mise à l’échelle de Défi tables, <code>ajusterEchelle</code>), l’énoncé en Fredoka en haut, l’expression mathématique grande (MG Math), le champ juste sous l’énoncé, la barre de progression discrète. En haut du cadre : « ← Quitter », « Équations · 1 / 8 », les étoiles de la notion. En bas du cadre : Aide · Cours à gauche, Passer · Valider à droite. Rien n’est coupé au téléphone : la question tient au-dessus du clavier.</div>
+
+<h3>d · Le champ de réponse et le clavier <span class="tag go">décidé</span></h3>
+<figure><img src="planches-lot1/planche-d-clavier.png" alt="Planche d"><figcaption>Planche d — GPT : clavier ancré en bas, Passer/Valider au-dessus, grandes touches en 4 colonnes, ✓ sur deux rangs. Nous : pavé 5 colonnes, plus petit. Proposition : le clavier de GPT, nos couleurs, une ligne de symboles qui dépend de la forme ; fraction verticale.</figcaption></figure>
+<div class="decision"><b>Proposition.</b> Au téléphone, <b>le clavier de GPT</b> : ancré en bas, il ne cache jamais le champ ni les boutons ; 4 colonnes (7 8 9 ⌫ / 4 5 6 ⇥ / 1 2 3 ✓ / , 0 00) avec ✓ = Valider sur deux rangs ; au-dessus, une ligne de symboles <em>qui dépend de la forme</em> (− , / ( ) x ² π √ ; les lettres de la figure en trigo) ; au-dessus encore, Aide · Cours · Passer · Valider, toujours visibles. Notre pavé 5 colonnes est abandonné : à 390 px, 4 colonnes font des touches plus grandes. Sur ordinateur : le clavier physique, Entrée = Valider, la même ligne de symboles sous le champ. Les fractions se saisissent <b>verticalement</b> (deux champs, le trait entre). Les QCM : 2 × 2 sur ordinateur, en colonne au téléphone, jamais plus de 4 choix (ta règle de la V1).</div>
+
+<h3>e · L’aide : le dessin, puis « Une étape » <span class="tag go">décidé</span></h3>
+<figure><img src="planches-lot1/planche-e-aide.png" alt="Planche e"><figcaption>Planche e — GPT : indice 1 (un dessin, petit, avec un texte), indice 2 remplace le dessin par le calcul. Nous en ligne : panneau à droite qui rétrécit tout (Codex : 1 040 → 300 px). Nous avant la refonte : le dessin dans la question, grand. Proposition : le dessin d’avant, sous la question, dans le cadre ; « Une étape » s’ajoute sans rien retirer.</figcaption></figure>
+<div class="decision"><b>Proposition.</b> Le bouton <b>Aide</b> ouvre le dessin <b>sous la question, dans le cadre</b> (entre l’énoncé et le champ), à la largeur du cadre (400 px au plus sur ordinateur, toute la largeur au téléphone, 760 px au TNI). Il reste affiché tant qu’on ne le ferme pas (×). La case <b>« Garder l’aide affichée »</b>, dans l’aide elle-même, le rouvre à chaque question (mémoire de l’élève s’il est connecté, de l’appareil sinon). Dans l’aide, <b>« Une étape »</b> ajoute la ligne de calcul <em>et</em> annote le dessin (ici : « − 2 » des deux côtés, le jeton barré en orange — la couleur de suppression de nos barres) ; rien n’est jamais imposé, et le dessin ne disparaît pas. Jamais de panneau latéral. Au téléphone, ouvrir l’aide replie le clavier ; toucher le champ le rouvre, l’aide reste au-dessus. <br><b>L’aide de référence est la nôtre d’avant la refonte</b> : pour les équations, la balance à deux plateaux et ses splats (« il manque la même quantité de chaque côté »), pas la barre unique de GPT — choisi par Gwenaël le 21/10. Chaque cahier montre les trois aides côte à côte (avant / refonte / GPT) et Gwenaël choisit forme par forme.</div>
+<div class="question"><b>Idée à discuter plus tard (pas dans le lot 2).</b> Un bouton « Manipuler » dans l’aide des équations qui ouvre un plateau ÉquaSplat : l’élève résout <em>en direct</em> en enlevant la même quantité des deux côtés. C’est ton idée du 21/10 ; je la mets au cahier « Calcul littéral et équations » comme option de manipulation, pas dans le moule.</div>
+
+<h3>f · Le cours <span class="tag go">décidé</span></h3>
+<figure><img src="planches-lot1/planche-f-cours.png" alt="Planche f"><figcaption>Planche f — GPT : fenêtre, règle + exemple différent + dessin, c’est bien. Nous : fenêtre « But / Conserver l’égalité / Exemple », plus chargée. Proposition : la fenêtre de GPT, nos mots, notre dessin, « J’ai compris ».</figcaption></figure>
+<div class="decision"><b>Proposition.</b> <b>Un cours par famille</b> (option « par forme » dans le cahier quand la famille mélange des gestes différents), ouvert à la demande par le bouton Cours, jamais d’office. Une fenêtre : la règle en une ou deux phrases, un exemple <em>différent de la question</em>, le dessin de l’exemple, « J’ai compris ». Au téléphone, la fenêtre prend la hauteur. Pas de lien vers les outils du site pendant une série (ta règle du 08/10).</div>
+
+<h3>g · La réponse fausse et la correction <span class="tag go">décidé</span></h3>
+<figure><img src="planches-lot1/planche-g-correction.png" alt="Planche g"><figcaption>Planche g — GPT : « Pas encore » sans dessin, correction en texte. Nous : la bonne réponse après Passer, cadre ambre. Proposition : l’erreur est nommée quand on la connaît ; la correction, c’est le dessin complété et une ligne.</figcaption></figure>
+<div class="decision"><b>Proposition.</b> Réponse fausse : le champ passe en rouge, une ligne nomme l’erreur si elle est connue (table §2.4), sinon « Pas encore. Regarde le dessin, puis essaie encore. » ; l’élève peut réessayer autant qu’il veut ; <b>« Voir la correction »</b> apparaît dès la première erreur (jamais imposé, jamais caché derrière deux indices). La correction = <b>le dessin complété</b> (le splat révélé, en vert) + une ligne de calcul ; elle est à part de l’aide. Réponse juste : vert, « Suivante ». Passer : la correction s’affiche, la question compte « non réussie ». Pour le suivi, une réussite après correction ou après aide n’est pas une réussite « sans aide ».</div>
+
+<h3>h · Le bilan de fin de série <span class="tag go">décidé</span></h3>
+<figure><img src="planches-lot1/planche-h-bilan.png" alt="Planche h"><figcaption>Planche h — GPT : score, réussites sans aide, liste dépliable, mais un slogan. Nous : pas d’écran de bilan. Proposition : score, étoiles par notion, liste avec « Voir la correction ».</figcaption></figure>
+<div class="decision"><b>Proposition.</b> Score en grand, « réussites sans aide · avec le dessin », puis <b>une ligne par notion</b> avec sa jauge et ses étoiles (c’est l’état du parcours, §5), puis la liste des questions avec « Voir la correction ». Boutons : « Encore une séance », « Retour ». Aucun slogan, aucune cadence imposée.</div>
+
+<h3>i · La projection <span class="tag go">décidé</span></h3>
+<figure><img src="planches-lot1/planche-i-projection.png" alt="Planche i"><figcaption>Planche i — GPT : la moitié de l’écran vide, pas d’aide projetable, pas de correction en dessin, mais un bon minuteur. Nous : question en haut, dessin en grand (validé le 17/10). Proposition : la nôtre + le minuteur de GPT, en quatre états.</figcaption></figure>
+<div class="decision"><b>Proposition.</b> Plein écran blanc. Question en haut, très grande ; <b>le dessin d’aide projeté dessous, en grand</b>, à la demande ou d’office (réglage prof) ; « Une étape » ; « Correction » = le dessin complété + la ligne. Le <b>minuteur de GPT</b> : temps de recherche, pause (espace), enchaînement automatique avec pause entre deux questions, correction après chaque question ou à la fin ; flèches ← → ; les points 1…10 pour sauter ; les choix d’un QCM affichés en grand. Les mêmes dessins qu’à l’écran de l’élève, à la même échelle relative (ta règle d’homogénéité appli / papier / projection).</div>
+
+<h3>j · Le mode « Brevet · 20 minutes » <span class="tag go">décidé le 21/10</span></h3>
+<figure><img src="planches-lot1/planche-j-brevet.png" alt="Planche j"><figcaption>Planche j — GPT : 9 questions sans aide, chrono 20 min, navigation par points, corrections à la fin, composition qui suit la structure des sujets (3 nombres, 2 littéral, 1 géométrie, 1 grandeurs, 1 proportionnalité/fonctions, 1 données/algo). Nous : seulement le filtre « DNB ». Proposition : le garder, renommé.</figcaption></figure>
+<div class="decision"><b>Décision (Gwenaël, 21/10).</b> On le garde, sous le nom « Entraînement brevet · 9 questions · 20 min », avec la composition officielle de GPT, sans aide, corrections en dessin à la fin, navigation par points. C’est motivant, c’est « le brevet d’abord », et il ne coûte rien : une série avec un chrono.</div>
+
+<!-- ===================================================== -->
+<h2 id="s4">4. La charte</h2>
+<p>Tout vient de <code>packages/charte/src/charte.js</code> et de Défi tables (le modèle commun des applis suivies). Aucune couleur inventée : les dessins consomment la charte.</p>
+<table>
+<tr><th>Rôle</th><th>Valeur</th><th>Source</th></tr>
+<tr><td>Bleu identité, boutons de navigation, titres</td><td><code>#063f86</code> (boutons Défi tables : <code>#0755b8</code>, ombre <code>#043f8c</code>)</td><td>charte · Défi tables</td></tr>
+<tr><td>Turquoise (progression, repère de suivi)</td><td><code>#08b9b2</code></td><td>charte</td></tr>
+<tr><td>Orange (Valider, l’action de réponse)</td><td><code>#f58220</code></td><td>charte · /auto/ (les élèves le connaissent)</td></tr>
+<tr><td>Encre, texte atténué, filets, fond doux</td><td><code>#143451</code> · <code>#506b7d</code> · <code>#d4e3ed</code> · <code>#f5f9fc</code></td><td>Défi tables</td></tr>
+<tr><td>Réussite / erreur</td><td><code>#147447</code> sur <code>#e5f7eb</code> · <code>#a93030</code> sur <code>#ffebeb</code></td><td>Défi tables</td></tr>
+<tr><td>Fond de page</td><td>dégradé Défi tables (turquoise et jaune très pâles sur <code>#edf5fb</code>) ; blanc pur en projection</td><td>Défi tables</td></tr>
+<tr><td>Schémas en barres, balance, ÉquaSplat</td><td><code>COULEURS_BARRES</code> : inconnue <code>#dbeafe</code>/<code>#1d4ed8</code>, résultat <code>#dcfce7</code>, suppression hachurée <code>#f97316</code>, splat <code>#050505</code></td><td>charte</td></tr>
+<tr><td>Bandes de fractions, pourcentages, numération, Pythagore</td><td><code>COULEURS_BANDES_FRACTIONS</code>, <code>COULEURS_POURCENTAGES</code>, <code>COULEURS_NUMERATION_DECIMALE</code>, <code>COULEURS_PYTHAGORE</code></td><td>charte (tes outils)</td></tr>
+<tr><td>Titres et nombres manipulés</td><td>Fredoka 600</td><td>charte</td></tr>
+<tr><td>Texte</td><td>Nunito / Segoe UI (polices du site, locales)</td><td>site</td></tr>
+<tr><td>Mathématiques</td><td>MG Math (GPT, licence GUST, locale) pour les variables ; chiffres et opérateurs droits ; vrai signe moins ; virgule décimale ; fractions verticales</td><td>GPT + charte</td></tr>
+<tr><td>Rayons, espacements</td><td>cadre 28 px, boutons 13 px, champs 12 px ; grille de 4 px</td><td>charte</td></tr>
+<tr><td>Boutons</td><td>primaire bleu à ombre portée (Défi tables), secondaire blanc bord bleu, « Valider » orange, hauteur 48 px (36 px en petit)</td><td>Défi tables</td></tr>
+</table>
+<p>Lisibilité au TNI : contraste ≥ 4,5 pour tout texte (la fonction <code>contraste()</code> de la charte est testée sur chaque couleur de texte de <code>style.css</code>). Rien de turquoise ou d’orange clair comme texte.</p>
+
+<!-- ===================================================== -->
+<h2 id="s5">5. Le parcours, le suivi, les événements — et le pirate</h2>
+
+<h3>5.1 Ce que l’élève voit : la séance du jour <span class="tag go">décidé, réversible</span></h3>
+<div class="decision">
+<b>Les étoiles d’une notion.</b> ☆☆☆ jamais travaillée · ★ <i>découverte</i> (au moins une réussite) · ★★ <i>en route</i> (une série réussie sans aide : 4 bonnes réponses sur 5 au moins, sur des formes différentes) · ★★★ <b>validée</b> : la notion a été réussie une seconde fois sans aide, <em>à froid</em>, un autre jour, dans une séance du jour. C’est le modèle que tu as choisi pour Défi tables (confirmation le lendemain) : une réussite le jour même ne prouve rien, une réussite revenue prouve.<br>
+<b>Les boîtes</b> (révision espacée, comme Défi tables) : B0 nouvelle → B1 revoir le lendemain → B2 dans 3 jours → B3 dans 7 jours → B4 validée, revue une fois par mois. Une série réussie sans aide fait monter d’une boîte ; une série ratée fait descendre d’une boîte (jamais en dessous de B1 une fois découverte). Les dates sont des « au plus tôt » : rien n’expire, rien ne punit un oubli.<br>
+<b>La séance du jour</b> = 8 questions : d’abord les notions dont la boîte est échue (2 questions chacune, formes différentes), puis des notions nouvelles — celles que le prof a fixées en priorité, sinon celles du niveau choisi (Brevet d’abord en 3<sup>e</sup>), 2 nouvelles au plus par jour. Les formes sont choisies parmi les moins vues. Une séance ne mélange jamais plus de 4 notions. Séances illimitées : refaire une séance tire d’autres questions des mêmes notions.<br>
+<b>Sans code</b> : tout vit sur ce navigateur (clé <code>mg-automatismes</code>), même algorithme. <b>Avec code</b> : l’état des boîtes et les essais sont sur le serveur ; l’appareil n’est qu’un écran (deux élèves sur une tablette ne se passent rien — modèle commun). Une notion fermée par le prof n’entre jamais dans une séance.</div>
+
+<h3>5.2 Ce que le professeur fait et regarde <span class="tag go">décidé, réversible</span></h3>
+<div class="decision">
+Dans <b>Ma classe → Activités de la classe → Automatismes</b> (même endroit que les autres applis) : les notions ouvertes (tout ouvert par défaut) ; les notions <b>« à travailler cette semaine »</b> (fixées : elles passent en tête des nouvelles) ; <b>« Créer une séance »</b> : des notions, un nombre de questions, une date — elle apparaît sur le bureau de l’élève (tuile Automatismes : « Séance de M. Bourgault · 8 questions ») et remplace la séance du jour ce jour-là.<br>
+Ce qu’il regarde (page prof, à dessiner au lot « suivi ») : la grille notions × élèves, une case = la boîte (couleur) + le nombre d’essais + la date de la dernière réussite sans aide ; par élève, la même liste que son bilan ; par notion, qui l’a validée. La tuile de Mon espace : « 12 notions validées sur 34 ouvertes ».<br>
+<b>L’évaluation en classe</b> passe par les <b>séances en direct</b> (lot 4 de ce chantier) : la page du prof tire la question (graine), l’élève répond sur son appareil, <em>la page du prof connaît la bonne réponse</em> et juge. Le serveur n’a jamais besoin de connaître la question.</div>
+
+<h3>5.3 Le contrat d’événements <span class="tag go">décidé</span></h3>
+<p>Repris du contrat de GPT (<code>INTEGRATION_SERVEUR.txt</code>) et réduit au modèle commun des applis suivies. L’appli émet un événement local <code>mathsgo:automatismes</code> à chaque réponse validée ; l’adaptateur serveur (lot « suivi ») l’envoie si l’élève est connecté par code.</p>
+<pre>{ "famille": "NC27", "forme": "a", "graine": 2047483, "juste": 1, "aide": 2, "moteur": "1.0.0" }
+aide : 0 = sans aide · 1 = le dessin ouvert · 2 = l’étape vue · 3 = correction ou cours vus avant de répondre
+</pre>
+<p>Le serveur ajoute lui-même le code de l’élève (session), la date et la séance ; il <b>refuse (400)</b> : une famille absente de la liste des 84 ids connus côté serveur, une forme hors <code>[a-z]</code>, une graine hors <code>1…2147483647</code>, un <code>juste</code> ou <code>aide</code> hors de leurs valeurs, tout champ en plus, tout texte libre. Pas de durée, pas de réponse brute (RGPD minimal : rien qui ne serve au parcours). Les 10 000 derniers événements restent aussi en local pour « Mes progrès » sans code.</p>
+
+<h3>5.4 Et un pirate ?</h3>
+<div class="pirate">
+<b>Il invente des réussites</b> (événements forgés) : il gonfle ses étoiles d’entraînement, rien d’autre — aucune note, aucun classement ne s’appuie dessus ; l’évaluation est jugée par la page du prof en séance en direct, où la graine vient du serveur et où une réponse ne vaut que pour la question posée. Le prof voit la date et la série des essais : vingt réussites en une minute se repèrent.<br>
+<b>Il inonde</b> : limite de débit par code comme sur les autres applis ; au-delà, 429 et rien d’écrit.<br>
+<b>Il envoie n’importe quoi</b> : validation stricte (§5.3), aucun texte libre n’est stocké ni réaffiché, donc rien à injecter.<br>
+<b>Il rejoue la même graine</b> pour retomber sur une question facile : possible en entraînement (sans effet), impossible en séance programmée ou en direct (graine serveur, une seule réponse par question).<br>
+<b>Il utilise le code d’un autre</b> : même règle que toutes les applis, le code est le secret de l’élève ; rien de nouveau ici.<br>
+<b>Il cherche une faille dans la page</b> : le catalogue est un JSON statique, les générateurs ne lisent rien de l’élève, le correcteur n’a pas d’<code>eval</code> (vérifié dans <code>core.js</code>), tout ce qui est affiché passe par <code>esc()</code> ou <code>mathHtml()</code> à partir du catalogue seulement — le lot 2 vérifie qu’aucune valeur saisie n’est réinjectée dans le HTML. La page cachée n’est pas secrète, elle est seulement non listée : elle ne contient rien de sensible.</div>
+
+<!-- ===================================================== -->
+<h2 id="s6">6. Le cahier de domaine et la fiche-type NC27</h2>
+<p>Le cahier d’un domaine = une fiche par forme, au format du cahier de GPT (314 pages, une fiche par forme), avec nos règles et, pour chaque aide, <b>les trois versions côte à côte</b> (la nôtre d’avant la refonte, la refonte, GPT) en captures, et une case « choix de Gwenaël ». Le cahier est <em>la seule source</em> pour coder le domaine. Voici la fiche de la première forme de NC27, remplie comme elle sera dans le cahier « Nombres et calculs » :</p>
+
+<table>
+<tr><th style="width:170px">NC27-a</th><th>Inverser une addition — <i>Équations à une ou deux étapes</i></th></tr>
+<tr><td>Niveau · brevet</td><td>5<sup>e</sup> introduction, 4<sup>e</sup>–3<sup>e</sup> automatisme · Brevet : oui (dnb_13 ; ZB 7, R1 5)</td></tr>
+<tr><td>Origine</td><td>GPT NC27-V1 ; V1 dnb_13 t1, t2 (même savoir-faire). Type de tâche : calculer.</td></tr>
+<tr><td>Énoncé</td><td>« Résous : <i>x</i> + 2 = 6 » (GPT écrit « Résous : x + 7 = 12. » — on garde, sans point final après une expression).</td></tr>
+<tr><td>Données</td><td><i>b</i>, <i>c</i> entiers de 1 à 20 ; <i>c</i> ≥ <i>b</i> en 5<sup>e</sup> ; solution négative autorisée à partir de la 4<sup>e</sup> ; jamais <i>b</i> = 0 ; jamais 69 en exemple mis en avant.</td></tr>
+<tr><td>Forme de réponse</td><td><b>nombre</b> (une seule forme) ; « <i>x</i> = » écrit devant le champ ; signe moins et virgule sur le clavier.</td></tr>
+<tr><td>Réponses acceptées</td><td>4 ; 4,0 ; 8/2 (toute fraction égale) ; « x = 4 » si tapé au clavier physique. Refusées : 8 (E-SENS), −4 (E-SIGNE), 2 (E-AUTRE).</td></tr>
+<tr><td>Aide (le dessin)</td><td><b>Choix de Gwenaël (21/10) : la balance à deux plateaux de notre V1 d’avant</b> — à gauche un splat et un jeton « 2 », à droite un jeton « 6 », le fléau entre ; la réponse n’est écrite nulle part. <i>Écartés :</i> la barre unique de GPT (total 6, x | 2) ; le panneau de la refonte (même balance, rétrécie à 300 px).</td></tr>
+<tr><td>Une étape</td><td>Le jeton « 2 » barré en orange à gauche, « − 2 » écrit sous chaque plateau, et la ligne <i>x</i> = 6 − 2 (on n’écrit pas 4). Option de manipulation à discuter : plateau ÉquaSplat.</td></tr>
+<tr><td>Correction</td><td>La balance avec le splat révélé « 4 » en vert ; ligne : <i>x</i> = 6 − 2 = 4. Vérification facultative : 4 + 2 = 6.</td></tr>
+<tr><td>Cours (famille)</td><td>Règle : « Une équation est une égalité où un nombre se cache. Pour le trouver, on fait la même opération des deux côtés. » Exemple différent : 3<i>x</i> + 5 = 17, balance à trois splats et un jeton 5 contre 17 ; 3<i>x</i> = 17 − 5 = 12 ; <i>x</i> = 12 ÷ 3 = 4.</td></tr>
+<tr><td>Erreurs connues</td><td>E-SENS (<i>c</i> + <i>b</i>), E-SIGNE (−(<i>c</i> − <i>b</i>)), E-UN-SEUL-MEMBRE (réponse = <i>c</i>).</td></tr>
+<tr><td>Contrôles</td><td>200 graines : la bonne réponse est acceptée ; 19 et −5 refusés pour x + 7 = 12 ; x + 7 = 7 donne 0 ; le SVG de l’aide ne contient jamais la valeur de la solution ; l’étape ne contient jamais le résultat.</td></tr>
+<tr><td>Ce qu’on garde / corrige de la fiche GPT</td><td>Gardé : données, acceptation, contrôles, règle du cours. Corrigé : le dessin (barre → balance), l’étape (GPT : « x + 7 − 7 = 12 − 7 » sans calcul — on garde l’idée, on l’écrit sur le dessin), les phrases d’erreur (codes), l’exemple du cours avec un dessin.</td></tr>
+</table>
+<p>Les quatre autres formes de NC27 (b : inverser une multiplication, solution fractionnaire ; c : résultat nul ; d : deux étapes <i>ax</i> + <i>b</i> = <i>c</i> ; e : quotient <i>x</i>/<i>a</i> = <i>c</i>) suivront le même gabarit dans le cahier « Nombres et calculs », lot 3.</p>
+
+<!-- ===================================================== -->
+<h2 id="s7">7. Le prompt du lot 2 pour Codex</h2>
+<p>À coller tel quel à Codex (fichier <code>codex\PROMPTS\PROMPT-CODEX-lot2-moule.md</code>). Fable vérifie ; Opus applique les retouches et ouvre la PR ; Gwenaël fusionne.</p>
+<pre id="prompt-lot2"># Lot 2 — le moule de la nouvelle appli Automatismes (pour Codex)
+
+Dépôt : `bourgault314/maths`. Branche de travail à créer depuis `main` : `automatismes-moule`. Rien n&#x27;est poussé sur `main` ; tu ouvres une PR vers `main`, Gwenaël fusionne après vérification par Fable.
+
+Tu es l&#x27;auteur de l&#x27;appli archivée dans `archive/automatismes-sites-2026-10-20` (commit `8feecca6`, dossier `archives/automatismes-sites-2026-10-20/` ; copie exacte dans `codex\Dossier_transmission_mathsgo_2026-10-20\application\`). Le lot 2 l&#x27;importe dans le site comme **moule** : son architecture (catalogue, générateurs, correcteur, événements), mise en forme lisible, dans la **coque de maths&amp;go**, avec **l&#x27;interface décidée au lot 1**. Le **contenu** (énoncés, aides, cours, corrections) n&#x27;est PAS touché dans ce lot : il sera revu domaine par domaine aux lots 3 et suivants, à partir des cahiers.
+
+Le contrat du lot 1 fait foi : `automatismes-refonte\plan\CONTRAT-lot1-automatismes.html` (sections 2, 3, 4, 5). La maquette de référence : `automatismes-refonte\plan\maquette-lot1\index.html?ecran=accueil|domaine|question|aide|etape|faux|correction|cours|bilan|brevet|projection|prof`. Les planches a → j : `automatismes-refonte\plan\planches-lot1\`.
+
+## 1. Ce que tu livres
+
+1. **`/automatismes/`** (nouveau dossier, structure du contrat §2.6) :
+   - `index.html`, `app.js` (réécrit d&#x27;après le contrat §3), `core.js`, `math-format.js`, `math-layout.js` (repris, mis en forme), `style.css` (charte §4), `catalogue/` (une carte par famille + `catalogue.json` assemblé + `alias-gpt.json`), `generateurs/` (tes six modules + `draw.js`, mis en forme), `aides/` (vide pour l&#x27;instant, avec un `README.md` qui dit ce qui y viendra), `fonts/` (MG Math + licence GUST), `suivi.js` (émetteur d&#x27;événements §5.3, sans adaptateur serveur).
+   - Tout le code passé à **Prettier** (config du dépôt si elle existe, sinon défauts, largeur 100), noms de fichiers et de fonctions en français là où ils sont nouveaux, commentaires courts en français. Aucune ligne de plus de 160 caractères, aucune fonction de plus de 80 lignes dans `app.js`.
+2. **Identifiants** (§2.1) : famille `NC27` ; forme = lettre minuscule `a, b, c…` dans l&#x27;ordre actuel du catalogue ; `alias-gpt.json` fait la table `NC27-V1 → NC27-a`, `PF04-A → PF04-a`, `NC08-a → NC08-a`, `forme=0 → a`. Les adresses deviennent `?notion=NC27&amp;forme=a&amp;graine=123`. `correspondances.html` est reprise avec les nouveaux identifiants (et l&#x27;ancien entre parenthèses).
+3. **Cinq domaines** (§2.2) : `domaine` et `sousDomaine` ajoutés à chaque carte ; les huit catégories actuelles deviennent des sous-domaines ; GM01, GM03, GM04 → Nombres et calculs ; GM02 → Espace et géométrie ; PF08 → Proportionnalité, fonctions. EG17, DP05, NC30 marquées `valide: false` (cachées).
+4. **L&#x27;interface** du contrat §3, a → j (le mode Brevet est gardé, décidé le 21/10 : bouton « Entraînement brevet · 9 questions · 20 min » sur l&#x27;accueil, ta composition officielle, sans aide, corrections à la fin, navigation par points) :
+   - coque des applis suivies : logo, cadre blanc ≤ 850 px, flèche de retour en haut à gauche du cadre, « Professeur » en haut à droite (`?prof=1`), pied réduit « mathsgo.re · Sans calculatrice · Collège et brevet » ; **le cadre entier tient dans l&#x27;écran sur ordinateur** (reprendre `ajusterEchelle()` de `outils/calcul_mental/defi_tables.html`) ;
+   - accueil : « Ma séance du jour » (pour l&#x27;instant = 8 questions tirées des notions du niveau/Brevet, formes les moins vues — le vrai parcours vient plus tard), filtres 6e–3e + Brevet, cinq domaines ; page de domaine : notions avec niveau, badge Brevet, étoiles ☆☆☆ (calculées en local : ★ une réussite, ★★ une série sans aide à 4/5, ★★★ une seconde série sans aide un autre jour) ; « Mélanger ces notions » ;
+   - question : énoncé en haut, champ dessous, Aide · Cours à gauche, Passer · Valider (orange) à droite ; barre de progression ; « ← Quitter » ;
+   - clavier téléphone : ton clavier (ancré, 4 colonnes, ✓ double hauteur), ligne de symboles selon la forme, Aide · Cours · Passer · Valider toujours visibles au-dessus ; ordinateur : clavier physique + ligne de symboles, Entrée = Valider ; fraction verticale ;
+   - **aide** : un bouton « Aide » ouvre `hints[0].svg` **sous l&#x27;énoncé, dans le cadre** (max 400 px de large sur ordinateur, toute la largeur au téléphone), avec une croix ; il reste ouvert ; case « Garder l&#x27;aide affichée » (préférence locale `mg-automatismes-prefs.garderAide`) ; bouton « Une étape » dans l&#x27;aide qui ajoute `hints[1].text` **sous le dessin sans le retirer** ; jamais de panneau latéral ; au téléphone, ouvrir l&#x27;aide replie le clavier ;
+   - cours : fenêtre (règle, exemple, dessin `atlas`), bouton « J&#x27;ai compris », jamais d&#x27;office ;
+   - réponse fausse : champ rouge + message ; « Voir la correction » dès la première erreur ; correction = `solution` (texte) **et** `hints[0].svg` affiché à part (le dessin complété viendra avec les cahiers) ; réponse juste : vert, « Suivante » ; Passer = correction affichée, question comptée non réussie ;
+   - bilan : score, « sans aide · avec le dessin », une ligne par notion (jauge + étoiles), liste des questions avec « Voir la correction », « Encore une séance », « Retour » — aucun slogan ;
+   - projection (`mode: project`) : plein écran blanc, question en haut très grande, « Aide » projette `hints[0].svg` en grand (max 760 px) sous la question, « Une étape », « Correction », ton minuteur (temps de recherche, pause, enchaînement, correction après chaque question ou à la fin), flèches et espace, points 1…n, QCM en grand ;
+   - vue prof (`?prof=1`) : choix multiple domaines/notions, réglages, « Projeter au tableau », « Ouvrir sur un écran » (adresse avec les notions et la graine de série), « Donner cette série à ma classe » présent mais désactivé (lot « suivi »).
+5. **Charte** (§4) : variables CSS de Défi tables et de `packages/charte/src/charte.js` ; polices locales du site (`assets/vendor/polices/polices.css`) + MG Math ; aucune couleur hors charte (un test lit `style.css` et vérifie chaque hexadécimal contre la liste de la charte) ; contraste ≥ 4,5 pour tout texte.
+6. **Événements** (§5.3) : `suivi.js` émet `mathsgo:automatismes` avec exactement `{famille, forme, graine, juste, aide, moteur}` ; les anciens champs (eventId, sessionId, durationMs, response…) disparaissent de l&#x27;événement émis ; le journal local garde les 10 000 derniers pour « Mes progrès ».
+7. **Caché au public** : pas d&#x27;entrée dans `assets/js/catalogue-refonte-data.js`, pas de lien depuis le site, `&lt;meta name=&quot;robots&quot; content=&quot;noindex, nofollow&quot;&gt;`, pas dans le sitemap (il est généré par `npm run seo:generer` à partir du catalogue : ne rien déclarer). `/auto/` n&#x27;est pas touché.
+8. **Tests** dans `tests/automatismes-*.test.mjs` (lancés par `node --test --test-reporter=tap`) : tes 87 000 tirages (200 graines × 435 formes, réponse canonique acceptée) ; cartes d&#x27;identité (ids uniques et bien formés `^[A-Z]{2}\d{2}$` / `^[a-z]$`, nom présent, domaine ∈ 5, une forme de réponse par forme, niveaux valides) ; `alias-gpt.json` complet (435 entrées) ; correcteur sans `eval` (le test cherche `eval(` et `new Function` dans `/automatismes/**`) ; l&#x27;aide ne contient pas la réponse (pour 50 graines par forme, la chaîne de `fields[].answer` n&#x27;apparaît pas dans `hints[0].svg` — liste les formes qui échouent dans la notice au lieu de les corriger : c&#x27;est le travail des cahiers) ; couleurs hors charte ; aucune valeur saisie réinjectée dans le HTML (test Playwright : saisir `&lt;img src=x onerror=…&gt;` dans chaque type de champ, vérifier qu&#x27;aucun élément `img` n&#x27;apparaît).
+9. **Vérifications Playwright** (captures dans `tests/captures/automatismes/`, à joindre à la PR) : accueil, domaine, question + aide + étape, clavier ouvert, cours, faux, correction, bilan, projection, vue prof — à 390 × 844, 1366 × 768 et 1280 × 720 ; vérifier : rien de coupé, le cadre entier dans l&#x27;écran sur ordinateur, Passer/Valider visibles avec le clavier ouvert, l&#x27;aide visible sous la question avec le clavier ouvert au téléphone.
+10. **Notice** `automatismes-refonte\codex\RAPPORTS\LOT2-moule-notice.md` : ce qui est fait, ce qui s&#x27;écarte du contrat et pourquoi, les formes dont l&#x27;aide contient la réponse, les tests (commandes et résultats), les captures, et une partie **« Et un pirate ? »** (§5.4 du contrat, point par point, avec ce que le code fait vraiment).
+
+## 2. Ce que tu ne fais pas
+
+- Aucun changement d&#x27;énoncé, d&#x27;aide, de cours ou de correction (le contenu, c&#x27;est les cahiers).
+- Aucune couleur, police ou espacement hors charte ; aucun slogan ; aucun texte long.
+- Aucun appel réseau, aucun adaptateur serveur, aucun compte, aucun nom d&#x27;élève.
+- Aucune modification de `/auto/`, de `packages/`, du catalogue du site, du sitemap.
+- Aucun push sur `main` ; aucune fusion.
+- Pas de « dernier chiffre » : « chiffre des unités » partout dans les textes que tu touches.
+
+## 3. Règles du dépôt à respecter
+
+- `node --test --test-reporter=tap` (sans reporter, « not ok » n&#x27;apparaît pas) ; la CI ne fait pas de `npm install`.
+- Tout script modifié qui est chargé avec `?v=` reçoit un cache-buster bumpé `automatismes-AAAAMMJJ-n`.
+- `PLAYWRIGHT_SKIP_BROWSER_GC=1` si tu installes Playwright (rien ne se supprime sur la machine de Gwenaël).
+- Commits en français, un sujet par commit ; la PR décrit ce qu&#x27;elle contient et ce que Gwenaël doit vérifier lui-même (sa tablette, son TNI).
+
+## 4. Résultat attendu
+
+Une PR `automatismes-moule → main` qui ajoute `/automatismes/` caché, avec l&#x27;interface du contrat, les 84 familles telles quelles, tous les tests verts, les captures jointes, et la notice. Fable relit la PR (code et captures) ; Opus applique ses retouches ; Gwenaël fusionne.
+</pre>
+
+<!-- ===================================================== -->
+<h2 id="s8">8. Les trois questions tranchées le 21 octobre</h2>
+<div class="decision"><b>1 — Le mode « Brevet · 20 minutes »</b> : gardé.</div>
+<div class="decision"><b>2 — Le lot 2</b> part chez Codex maintenant ; les retours de Gwenaël sur les planches se corrigent à la relecture de sa PR.</div>
+<div class="decision"><b>3 — Le plateau ÉquaSplat</b> comme manipulation dans l’aide des équations : au cahier « Nombres et calculs » du lot 3 (bouton « Manipuler » dans l’aide de NC27 et NC28 ; la balance fixe reste l’aide par défaut).</div>
+<p>Tout le reste est décidé ici, réversible : il suffit de me dire ce qui ne te va pas sur une planche.</p>
+
+<div class="pied">mathsgo.re · Contrat du lot 1 · 21 octobre 2026</div>
+</div>
+</body>
+</html>
