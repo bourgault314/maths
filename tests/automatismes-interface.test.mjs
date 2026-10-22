@@ -533,7 +533,7 @@ test(
 );
 
 test(
-  "parcours : préférences, événements, partage et minuteurs",
+  "parcours : préférences, événements, Projeter et minuteurs",
   { skip: ignorer, timeout: 60000 },
   async () => {
     const { serveur, base } = await serveurLocal();
@@ -563,10 +563,8 @@ test(
       await page.locator("#secondes").fill("5");
       await page.locator("#delai").fill("0");
       await page.locator("#automatique").check();
-      await page.locator('[data-action="partager"]').click();
-      const lien = await page.locator("#lien-serie a").getAttribute("href");
-      // Niveaux 6e · 5e · 4e · 3e (décision B) : sans préférence, le menu est en 3e.
-      assert.match(lien, /notions=.*graine=\d+.*nombre=5.*niveau=3e/);
+      // P10 : plus de lien vers un autre écran ; la fenêtre rappelle la sélection et le nombre.
+      assert.match(await page.locator(".rappel-selection").innerText(), /notions · 5 questions$/);
       await page.clock.install();
       await page.locator('[data-action="projeter"]').click();
       await page.clock.runFor(5400);

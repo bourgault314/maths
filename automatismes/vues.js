@@ -548,7 +548,7 @@ export function brevetHTML() {
 }
 
 /* « Projeter » (tablette, ordinateur) : les réglages du diaporama dans une petite fenêtre, sur la
-   sélection en cours ; « Ouvrir sur un écran » donne le lien du même diaporama (#lien-serie). */
+   sélection en cours ; un seul bouton d'action, « Projeter » (P10, 22/10). */
 export function reglagesProjectionHTML(options, compte, nombre) {
   const choix = (valeur, texte) =>
     `<option value="${valeur}" ${options.correction === valeur ? "selected" : ""}>${texte}</option>`;
@@ -566,7 +566,5 @@ export function reglagesProjectionHTML(options, compte, nombre) {
       <label class="coche-reglage"><input id="aide-office" type="checkbox" ${coche(options.aideOffice)}>
         Avec aide (le dessin reste affiché)</label>
     </div>
-    <div class="actions-projection">${bouton("Projeter", "projeter", "orange")}
-      ${bouton("Ouvrir sur un écran", "partager", "secondaire")}</div>
-    <p id="lien-serie" hidden></p>`;
+    <div class="actions-projection">${bouton("Projeter", "projeter", "orange")}</div>`;
 }

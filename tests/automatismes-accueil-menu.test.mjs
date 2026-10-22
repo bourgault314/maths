@@ -393,7 +393,7 @@ async function cocher(onglet, domaine, rangs) {
 }
 
 test(
-  "P5 : Projeter — la fenêtre de réglages, 10 questions, réglages gardés, le lien vers l’autre écran",
+  "P5 : Projeter — la fenêtre de réglages, 10 questions, réglages gardés, ?prof=1 ouvre l’accueil",
   { skip: ignorer, timeout: 120000 },
   () =>
     banc(async ({ base, page }) => {
@@ -411,21 +411,6 @@ test(
       assert.equal(await fenetre.locator("#nombre").count(), 0, "Le nombre vient de Préparer");
       await fenetre.locator("#secondes").fill("20");
       await fenetre.locator("#correction").selectOption("end");
-      // « Ouvrir sur un écran » : le lien du même diaporama, construit dans la page.
-      await fenetre.locator('[data-action="partager"]').click();
-      const lien = fenetre.locator("#lien-serie a");
-      assert.equal(await lien.innerText(), "Ouvrir le diaporama sur un autre écran ↗");
-      assert.equal(await lien.getAttribute("target"), "_blank");
-      assert.equal(await lien.getAttribute("rel"), "noopener");
-      const adresse = new URL(await lien.getAttribute("href"));
-      assert.equal(adresse.searchParams.get("mode"), "project");
-      assert.equal(adresse.searchParams.get("secondes"), "20");
-      assert.equal(adresse.searchParams.get("correction"), "end");
-      assert.equal(adresse.searchParams.get("nombre"), "10");
-      assert.deepEqual(
-        ["delai", "auto", "aide"].map((cle) => adresse.searchParams.get(cle)),
-        ["4", "0", "0"],
-      );
       // Projeter : un diaporama de 10 questions (le nombre de « Préparer »), minuteur réglé.
       await fenetre.locator('[data-action="projeter"]').click();
       await onglet.locator(".barre-question").waitFor();
@@ -453,17 +438,62 @@ test(
       assert.equal(await onglet.locator("dialog[open] #secondes").inputValue(), "20");
       assert.equal(await onglet.locator("dialog[open] #correction").inputValue(), "end");
       await onglet.keyboard.press("Escape");
-      // Le lien ouvre un DIAPORAMA sur l'autre écran : « ← Quitter », minuteur réglé.
-      const ecranDeLaClasse = await page(1280, 720);
-      await ecranDeLaClasse.goto(adresse.href);
-      await ecranDeLaClasse.locator(".barre-question").waitFor();
-      assert.match(await ecranDeLaClasse.locator(".barre-question .menu").innerText(), /Quitter/);
-      assert.equal(await ecranDeLaClasse.locator("#temps").innerText(), "0:20");
-      assert.equal(await ecranDeLaClasse.locator(".position").innerText(), "1 sur 10");
       // Plus de page Diaporama : ?prof=1 ouvre l'accueil, adresse nettoyée.
       await accueil(onglet, base, "?prof=1");
       assert.equal(await ecran(onglet), "accueil");
       assert.equal(await onglet.evaluate(() => location.search), "");
+    }),
+);
+
+test(
+  "P10 : la fenêtre Projeter n’a qu’un bouton d’action, Projeter",
+  { skip: ignorer, timeout: 90000 },
+  () =>
+    banc(async ({ base, page }) => {
+      for (const [width, height, tactile] of [
+        [820, 1180, true],
+        [1366, 768, false],
+      ]) {
+        const nom = `${width}x${height}`;
+        const onglet = await page(width, height, tactile, { niveau: "4e", nombre: 10 });
+        await accueil(onglet, base);
+        await cocher(onglet, "donnees-probabilites", [0, 1]);
+        await onglet.locator('[data-action="projeter-reglages"]').click();
+        const fenetre = onglet.locator("dialog.reglages-dialog[open]");
+        await fenetre.waitFor();
+        // Le seul bouton d'action est « Projeter » ; plus de lien vers un autre écran.
+        assert.deepEqual(
+          await fenetre
+            .locator(".actions-projection button")
+            .evaluateAll((boutons) =>
+              boutons.map((bouton) => [bouton.dataset.action, bouton.textContent.trim()]),
+            ),
+          [["projeter", "Projeter"]],
+          nom,
+        );
+        assert.equal(await onglet.locator('[data-action="partager"], #lien-serie').count(), 0);
+        assert.equal(await fenetre.getByText("Ouvrir sur un écran").count(), 0);
+        // Seul, il prend toute la ligne, entier dans la fenêtre.
+        const [rangee] = await boites(onglet, "dialog[open] .actions-projection");
+        const [bouton] = await boites(onglet, 'dialog[open] [data-action="projeter"]');
+        const [cadre] = await boites(onglet, "dialog[open]");
+        assert.ok(
+          Math.abs(bouton.width - rangee.width) <= 1,
+          `${nom} : ${bouton.width}/${rangee.width}`,
+        );
+        assert.ok(bouton.bottom <= cadre.bottom && bouton.height >= 44, `${nom} : bouton entier`);
+        await onglet.context().close();
+      }
+      // Un ancien lien à plusieurs notions avec mode=project n'ouvre plus de diaporama : une série.
+      const onglet = await page(1366, 768);
+      await onglet.goto(`${base}?notions=NC01,NC02&graine=7&nombre=5&mode=project&secondes=20`);
+      await onglet.locator(".barre-question").waitFor();
+      assert.match(await onglet.locator(".barre-question .menu").innerText(), /Menu/);
+      assert.equal(await onglet.locator("#temps").count(), 0);
+      // L'ancien lien à une seule notion (avant ce lot) projette toujours.
+      await onglet.goto(`${base}?notion=NC27&forme=a&graine=123&mode=project`);
+      await onglet.locator(".barre-question").waitFor();
+      assert.match(await onglet.locator(".barre-question .menu").innerText(), /Quitter/);
     }),
 );
 
@@ -688,7 +718,12 @@ test(
       await onglet.goto(trafique);
       await onglet.locator(".barre-question").waitFor();
       assert.equal(await onglet.locator(".position").innerText(), "1 sur 8", "nombre=-3 → 8");
-      assert.equal(await onglet.locator("#temps").innerText(), "0:45", "secondes=999999 → 45");
+      // P10 : mode=project et ses réglages sont ignorés dans un lien à plusieurs notions (série, pas de minuteur).
+      assert.equal(
+        await onglet.locator("#temps").count(),
+        0,
+        "mode=project, secondes=999999 ignorés",
+      );
       assert.equal(await onglet.locator("script:not([src]), b").count(), 0);
       assert.ok(
         (await onglet.locator(".pastille-notion").allInnerTexts()).every((nom) => nom.trim()),

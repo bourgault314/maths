@@ -2052,7 +2052,7 @@ body:not(.tactile) #commandes > * {
   font-size: 1.125rem;
 }
 /* La fenêtre « Projeter au tableau » (décision H) : le rappel de la sélection, les réglages du
-   diaporama, puis Projeter · Ouvrir sur un écran (et le lien, une fois demandé). */
+   diaporama, puis « Projeter », seul, sur toute la largeur (P10). */
 .reglages-dialog {
   width: min(440px, calc(100% - 32px));
 }
@@ -2099,14 +2099,7 @@ body:not(.tactile) #commandes > * {
 }
 .actions-projection {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
   margin-top: 16px;
-}
-.reglages-dialog #lien-serie {
-  display: grid;
-  gap: 8px;
-  overflow-wrap: anywhere;
 }
 /* Brevet (C10bis) : les numéros des questions, juste au-dessus du pavé, pour revenir en arrière. */
 .navigation-points {

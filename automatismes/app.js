@@ -9,7 +9,6 @@ import {
   famillesEligibles,
   formesEligibles,
   nouvelleGraine,
-  adresseSerie,
   DOMAINES,
 } from "./seances.js";
 import {
@@ -819,35 +818,6 @@ function projeter() {
   if (options) lancer({ ...options, mode: "project" });
 }
 
-function partager() {
-  const options = optionsProfesseur();
-  if (!options) return;
-  const adresse = adresseSerie(options, location.href);
-  // Le lien ouvre LE MÊME diaporama sur l'autre écran (décision H) : mode et réglages.
-  adresse.searchParams.set("mode", "project");
-  adresse.searchParams.set("secondes", options.secondes);
-  adresse.searchParams.set("delai", options.delai);
-  adresse.searchParams.set("correction", options.correction);
-  adresse.searchParams.set("auto", options.automatique ? "1" : "0");
-  adresse.searchParams.set("aide", options.aideOffice ? "1" : "0");
-  const emplacement = document.querySelector("#lien-serie");
-  emplacement.replaceChildren();
-  emplacement.hidden = false;
-  const lien = document.createElement("a");
-  lien.href = adresse.href;
-  lien.target = "_blank";
-  lien.rel = "noopener";
-  lien.textContent = "Ouvrir le diaporama sur un autre écran ↗";
-  emplacement.append(lien);
-  const champ = document.createElement("input");
-  champ.readOnly = true;
-  champ.value = adresse.href;
-  champ.setAttribute("aria-label", "Adresse de la série à copier");
-  champ.onclick = () => champ.select();
-  emplacement.append(champ);
-  ajusterAffichage();
-}
-
 function demarrerHorloge() {
   dernierInstant = Date.now();
   horloge = setInterval(avancerHorloge, 200);
@@ -960,7 +930,6 @@ function relierActions(racine = application) {
     precedente: () => changerQuestion(seance.index - 1),
     pause: basculerPause,
     projeter,
-    partager,
     "projeter-reglages": ouvrirReglagesProjection,
     "plein-ecran": () =>
       document.fullscreenElement
@@ -1236,16 +1205,6 @@ function lireAdresse() {
     // Un ancien lien « niveau=brevet » tire ses questions au niveau brevet, comme avant, pour cette
     // série seulement : le niveau choisi sur l'appareil ne change pas.
     if (niveau === "brevet") options.filtre = "brevet";
-    // « Ouvrir le diaporama sur un autre écran » : le même diaporama, avec les réglages de Projeter.
-    if (params.get("mode") === "project")
-      Object.assign(options, {
-        mode: "project",
-        secondes: entier("secondes", 5, 600, reglageProf.secondes),
-        delai: entier("delai", 0, 60, reglageProf.delai),
-        correction: params.get("correction") === "end" ? "end" : "each",
-        automatique: params.get("auto") === "1",
-        aideOffice: params.get("aide") === "1",
-      });
     return lancer(options);
   }
   afficherAccueil();
