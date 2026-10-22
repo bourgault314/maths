@@ -48,7 +48,7 @@ class El {
     this.attrs = {...attrs};
     this.children = [];
     this.parent = null;
-    this.hidden = "hidden" in attrs;
+    this._cache = "hidden" in attrs;
     this.disabled = "disabled" in attrs;
     this.classList = new Classes(attrs.class);
     this.style = new Style();
@@ -58,6 +58,18 @@ class El {
     this.dataset = {};
     for (const [k, v] of Object.entries(attrs)) {
       if (k.startsWith("data-")) this.dataset[k.slice(5).replace(/-([a-z])/g, (_, l) => l.toUpperCase())] = v;
+    }
+  }
+  // Comme un navigateur (3e relecture Codex) : un élément qui disparaît
+  // (hidden) perd le focus, et le rend à la page — même s'il réapparaît.
+  get hidden() { return this._cache; }
+  set hidden(v) {
+    this._cache = Boolean(v);
+    const doc = this.ecran.document;
+    if (this._cache && doc) {
+      for (let e = doc.activeElement; e; e = e.parent) {
+        if (e === this) { doc.activeElement = doc.body; break; }
+      }
     }
   }
   get id() { return this.attrs.id || ""; }
@@ -270,6 +282,20 @@ function ouvrir(memoire, {largeur = 390} = {}) {
   return page;
 }
 
+// Relève les nombres qui apparaissent pendant « ms » millisecondes, avec
+// l'instant de leur apparition.
+function relever(p, ms) {
+  const vus = [];
+  let dernier = "";
+  for (let t = 0; t < ms; t += 5) {
+    p.avancer(5);
+    const texte = p.$("nombre").textContent;
+    if (texte && texte !== dernier) vus.push({texte, t: p.horloge.t});
+    dernier = texte;
+  }
+  return vus;
+}
+
 // Les calculs que la page va tirer : même graine (Math.random = 0,5), même moteur.
 function calculsAttendus(mode, reglages) {
   return CORE.tirerSeance(CORE.normaliser(mode, reglages), CORE.mulberry32((0.5 * 4294967296) >>> 0));
@@ -361,6 +387,54 @@ test("« ↻ Revoir » (Flash) rejoue les mêmes nombres après un décompte, ga
   p.touche("Enter", p.$("panel"));
   assert.match(p.$("verdict").className, /\bok\b/);
   assert.equal(p.$("compte").textContent, "Calcul 1\u00a0/ 5");
+});
+
+test("« ↻ Revoir » rejoue à la même vitesse que le premier passage (3e relecture Codex)", () => {
+  const p = openFlash();
+  const premier = relever(p, DUREE_FLASH);
+  p.$("revoir").click();
+  const second = relever(p, DUREE_FLASH);
+  const ecarts = vus => vus.slice(1).map((v, i) => v.t - vus[i].t);
+  assert.deepEqual(second.map(v => v.texte), premier.map(v => v.texte));
+  const T = FLASH.temps * 100;
+  for (const e of [...ecarts(premier), ...ecarts(second)]) {
+    assert.ok(Math.abs(e - T) <= IMAGE + 5 + 1e-6, `écart de ${e} ms au lieu de ${T}`);
+  }
+});
+
+test("un onglet caché pendant « ↻ Revoir » (décompte ou nombres) garde le même calcul et ce qui est tapé (3e relecture Codex)", () => {
+  for (const pause of [400, 3 * 800 + 150]) {
+    const p = openFlash();
+    const calcul = calculsAttendus("flash", FLASH)[0];
+    p.avancer(DUREE_FLASH);
+    p.taper("12");
+    p.$("revoir").click();
+    p.avancer(pause);
+    p.cacherOnglet(true);
+    p.avancer(4000);
+    p.cacherOnglet(false);
+    assert.equal(p.$("decompte").textContent, "3", "le Revoir recommence par son décompte");
+    assert.equal(p.$("nombre").hidden, true, "aucun nombre resté à l'écran pendant le décompte");
+    const vus = relever(p, DUREE_FLASH).map(v => v.texte);
+    assert.deepEqual(vus, calcul.termes.map(x => (x.signe < 0 ? "−" : "") + x.valeur), "le même calcul");
+    assert.equal(p.$("case").textContent, "12", "ce qui était tapé reste");
+    assert.equal(p.$("compte").textContent, "Calcul 1\u00a0/ 5");
+  }
+});
+
+test("Tab vers « ↻ Revoir », Entrée, puis à la fin Entrée valide (le bouton caché a perdu le focus, comme dans Chrome)", () => {
+  const p = openFlash();
+  const calcul = calculsAttendus("flash", FLASH)[0];
+  p.avancer(DUREE_FLASH);
+  p.taper(calcul.total);
+  p.tabulerVers(p.$("revoir"));
+  p.touche("Enter");
+  assert.equal(p.$("decompte").hidden, false, "Entrée sur Revoir relance le calcul");
+  p.avancer(DUREE_FLASH);
+  assert.equal(p.$("zone-rep").hidden, false);
+  p.touche("Enter");
+  assert.equal(p.vue(), "vue-correction", "la deuxième Entrée valide, elle ne relance pas Revoir");
+  assert.match(p.$("verdict").className, /\bok\b/);
 });
 
 test("pas de « ↻ Revoir » en Colonne : les nombres restent à l'écran", () => {

@@ -650,6 +650,7 @@
         image: null,
         chrono: null,
         revus: 0, // fois où « ↻ Revoir » a rejoué le calcul en cours
+        enRevoir: false, // un « ↻ Revoir » est en train de rejouer le calcul
         echeance: 0, // instant (performance.now) où le temps limite est fini ; 0 = sans limite
         tailleFlash: 0
       };
@@ -705,6 +706,7 @@
         $("revoir").hidden = true;
         $("rangee-valider").classList.remove("avec-revoir");
         seance.revus = 0;
+        seance.enRevoir = false;
         $("vue-jeu").classList.remove("avec-reponse");
         $("question").hidden = true;
         $("colonne").hidden = true;
@@ -795,6 +797,7 @@
 
       function demanderReponse() {
         seance.phase = "reponse";
+        seance.enRevoir = false;
         $("nombre").hidden = true;
         $("question").hidden = false;
         $("revoir").hidden = false;
@@ -880,8 +883,16 @@
       // l'entraînement) ; le nombre de fois est gardé pour plus tard.
       function revoir() {
         if (seance.phase !== "reponse" || seance.mode !== "flash") return;
-        annulerMinuteries();
         seance.revus += 1;
+        rejouerLeCalcul();
+      }
+      // Rejoue le calcul en cours sans le changer ni toucher à la saisie :
+      // pour « ↻ Revoir », et pour reprendre un Revoir coupé par un onglet caché.
+      function rejouerLeCalcul() {
+        annulerMinuteries();
+        seance.enRevoir = true;
+        $("nombre").hidden = true;
+        $("nombre").textContent = "";
         $("question").hidden = true;
         $("zone-rep").hidden = true;
         $("vue-jeu").classList.remove("avec-reponse");
@@ -1043,7 +1054,9 @@
       });
 
       // Un onglet caché arrête les images : un Flash interrompu reprend au
-      // retour avec un nouveau calcul et un nouveau décompte.
+      // retour avec un nouveau calcul et un nouveau décompte (elle en a vu une
+      // partie). Un « ↻ Revoir » interrompu (3e relecture Codex, lot 1d) garde
+      // le même calcul et ce qui est tapé : il recommence simplement.
       document.addEventListener("visibilitychange", () => {
         if (document.hidden) {
           if (seance.phase === "decompte" || seance.phase === "flash") {
@@ -1054,6 +1067,10 @@
         }
         if (corps.classList.contains("en-seance") && seance.phase !== "fin") garderEcranAllume();
         if (seance.phase === "interrompu") {
+          if (seance.enRevoir) {
+            rejouerLeCalcul();
+            return;
+          }
           seance.calculs[seance.index] = CORE.tirerCalcul(seance.reglages, rng);
           lancerCalcul();
         }
