@@ -613,7 +613,10 @@ test("qui voit quoi — ce que la fenêtre envoie : tout l'état, une appli enti
 test("qui voit quoi — 2 000 suites de clics au hasard : jamais « [] », jamais une liste vide, jamais {} sauf une appli ouverte entière", () => {
   const apres = ajoutsApresRejoue();
   let graine = 7;
-  const hasard = n => { graine = (graine * 1103515245 + 12345) % 2147483648; return graine % n; };
+  // Lot 3b (relecture Codex) : les bits BAS de ce générateur tournent en rond
+  // (graine % n donnait 15 921 ouvertures pour 79 retraits) — on prend les bits hauts.
+  const hasard = n => { graine = (graine * 1103515245 + 12345) % 2147483648; return Math.floor(graine / 65536) % n; };
+  const compte = {ouvertures: 0, retraits: 0, retraitsEffectifs: 0, dernierRetire: 0};
   const LISTES = {coffres: {niveaux: 3, operations: 4}, splat: {mondes: 6}};
   for (let essai = 0; essai < 2000; essai += 1) {
     let etat = {};
@@ -627,10 +630,21 @@ test("qui voit quoi — 2 000 suites de clics au hasard : jamais « [] », jamai
         if (geste.ouvre) entieres.add(cle); else entieres.delete(cle);
       } else {
         const liste = listes[hasard(listes.length)];
-        geste = {cle, liste, numero: 1 + hasard(LISTES[cle][liste]), ouvre: hasard(2) === 0};
+        const presents = (etat[cle] && etat[cle][liste]) || [];
+        // Un retrait sur deux vise un numéro PRÉSENT (souvent le dernier de sa liste).
+        const ouvre = hasard(2) === 0;
+        const numero = !ouvre && presents.length && hasard(2) === 0 ? presents[hasard(presents.length)] : 1 + hasard(LISTES[cle][liste]);
+        geste = {cle, liste, numero, ouvre};
         entieres.delete(cle);
       }
+      const avant = JSON.stringify(etat);
       etat = apres(etat, geste);
+      if (geste.ouvre) compte.ouvertures += 1;
+      else {
+        compte.retraits += 1;
+        if (JSON.stringify(etat) !== avant) compte.retraitsEffectifs += 1;
+        if (geste.liste && avant.includes(`"${geste.liste}":[${geste.numero}]`)) compte.dernierRetire += 1;
+      }
       const texte = JSON.stringify(etat);
       assert.doesNotMatch(texte, /\[\]/, texte);
       for (const [une, ajout] of Object.entries(etat)) {
@@ -640,33 +654,43 @@ test("qui voit quoi — 2 000 suites de clics au hasard : jamais « [] », jamai
       }
     }
   }
+  // La couverture, mesurée : autant de retraits que d'ouvertures, des milliers qui changent
+  // vraiment l'état, et des centaines qui retirent le DERNIER numéro d'une liste (le piège).
+  assert.ok(compte.retraits > 0.4 * (compte.ouvertures + compte.retraits), JSON.stringify(compte));
+  assert.ok(compte.retraitsEffectifs > 2000, JSON.stringify(compte));
+  assert.ok(compte.dernierRetire > 300, JSON.stringify(compte));
 });
 
 // ------------------------------------------------------------ la fenêtre « Ce que voit Léa »
 
 function fenetreRejouee(eleve, options = {}) {
   const {$} = creerZones();
-  const appels = [], messages = [], erreurs = [], reportes = [];
+  const appels = [], messages = [], erreurs = [], reportes = [], enAttente = [];
   const boite = $("voit");
   boite.open = false;
   boite.showModal = () => { boite.open = true; };
+  let fermer = () => {};
+  boite.close = () => { boite.open = false; fermer(); };
   const f = new Function("document", "$", "classe", "droitClasse", "api", "messager", "surErreur", "reporterAcces",
-    `${constantesEleves()}\nlet voitEleve = null;\n${["prenomCourt", "motDe", "numerosOuverts", "accesDe", "ajoutsApres", "texteEnregistre",
-      "ouvrirCeQueVoit", "dessinerCeQueVoit", "changerCeQueVoit"].map(fonction).join("\n")}\nreturn {ouvrirCeQueVoit, changerCeQueVoit, voit: () => voitEleve};`)(
+    `${constantesEleves()}\nlet voitEleve = null;\nlet voitFile = Promise.resolve();\nlet voitEnAttente = 0;\nlet voitOuverture = 0;\n${["prenomCourt", "motDe", "numerosOuverts", "accesDe", "ajoutsApres", "texteEnregistre",
+      "ouvrirCeQueVoit", "fermerCeQueVoit", "dessinerCeQueVoit", "changerCeQueVoit", "envoyerCeQueVoit"].map(fonction).join("\n")}\nreturn {ouvrirCeQueVoit, fermerCeQueVoit, changerCeQueVoit, voit: () => voitEleve, enAttente: () => voitEnAttente};`)(
     document, $, options.classe || classe405(), options.droit || "proprietaire",
     async (action, corps) => {
       appels.push([action, JSON.parse(JSON.stringify(corps))]);
+      // « retenir » : la réponse n'arrive que quand le test la libère (reponses[i]()).
+      if (options.retenir) await new Promise(libere => enAttente.push(libere));
       if (options.echec) throw options.echec;
-      return {ok: true, ajouts: corps.ajouts, acces: options.accesApres || eleve.acces};
+      return {ok: true, ajouts: corps.ajouts, acces: options.accesDe ? options.accesDe(corps.ajouts) : (options.accesApres || eleve.acces)};
     },
     (id, t, type) => messages.push([id, t, type]), (e, zone) => erreurs.push([e.message, zone]),
     (el, ajouts, acces) => { reportes.push([el.id, ajouts]); el.ajouts = ajouts; el.acces = acces; });
+  fermer = f.fermerCeQueVoit;
   f.ouvrirCeQueVoit(eleve);
   const liste = $("voit-liste");
   const ligne = cle => liste.children.find(bloc => bloc.premier(n => n.tag === "input" && n.dataset.appli === cle));
   const caseAppli = cle => liste.premier(n => n.tag === "input" && n.dataset.appli === cle);
   const caseNumero = (nom, numero) => liste.premier(n => n.tag === "input" && n.dataset.liste === nom && n.dataset.numero === String(numero));
-  return {f, $, boite, appels, messages, erreurs, reportes, liste, ligne, caseAppli, caseNumero};
+  return {f, $, boite, appels, messages, erreurs, reportes, enAttente, liste, ligne, caseAppli, caseNumero};
 }
 
 test("qui voit quoi — la fenêtre : la classe cochée et grisée « par la classe », l'ajout « en plus », le reste à cocher (planche 2)", () => {
@@ -724,7 +748,7 @@ test("qui voit quoi — chaque clic enregistre l'état complet (eleves.acces) et
   const r3 = fenetreRejouee(RANIA());
   r3.caseAppli("coffres").checked = false;
   r3.caseAppli("coffres").changer();
-  await new Promise(fin => setTimeout(fin, 0));
+  await new Promise(fin => setTimeout(fin, 5));
   assert.deepEqual(r3.appels, [["eleves.acces", {eleve_id: 22, ajouts: {}}]]);
   assert.deepEqual(r3.messages.at(-1), ["voit-message", "Enregistré : Rania ne voit plus Coffres magiques.", "ok"]);
   // Le serveur refuse : la case revient, les cases redeviennent cliquables, le message est dans la fenêtre.
@@ -733,7 +757,9 @@ test("qui voit quoi — chaque clic enregistre l'état complet (eleves.acces) et
   coffres.checked = false;
   await panne.f.changerCeQueVoit({cle: "coffres", ouvre: false}, coffres);
   assert.equal(coffres.checked, true, "Coffres revient coché : rien n'a changé");
-  assert.equal(coffres.disabled, false);
+  // La fenêtre est redessinée d'après l'élève (inchangé) : la case affichée, cochée et cliquable.
+  assert.equal(panne.caseAppli("coffres").checked, true);
+  assert.equal(panne.caseAppli("coffres").disabled, false);
   assert.ok(panne.liste.tous(n => n.tag === "input" && n.dataset.liste).every(c => c.disabled === (Number(c.dataset.numero) <= 2)),
     "seules les cases de la classe restent grisées");
   assert.deepEqual(panne.erreurs, [["Le serveur doit être mis à niveau : ouvre migrer.php avec ton mot de passe d'installation.", "voit-message"]]);
@@ -844,8 +870,9 @@ test("qui voit quoi — le HTML : la colonne, la fenêtre, les lignes des Régla
   assert.match(fonction("viderZones"), /\["boite", "secret", "eval-modele", "eval-ouvrir", "voit"\]\.forEach/, "la fenêtre se ferme à la déconnexion");
   assert.match(fonction("oublierEtat"), /voitEleve = null;/);
   assert.match(script, /\$\("voit-fermer"\)\.addEventListener\("click", \(\) => \{ \$\("voit"\)\.close\(\); \}\);/, "« Fermer » ne fait que fermer");
-  assert.match(script, /\$\("voit"\)\.addEventListener\("close", \(\) => \{\s*voitEleve = null;\s*\["voit-titre", "voit-sous", "voit-liste"\]\.forEach/,
-    "fermée (bouton ou Échap), la fenêtre oublie ses prénoms");
+  assert.match(script, /\$\("voit"\)\.addEventListener\("close", fermerCeQueVoit\);/, "fermée (bouton ou Échap)…");
+  assert.match(fonction("fermerCeQueVoit"), /voitEleve = null;\s*voitOuverture \+= 1;\s*\["voit-titre", "voit-sous", "voit-liste"\]\.forEach\(id => \{ \$\(id\)\.textContent = ""; \}\);\s*messager\("voit-message", "", ""\);/,
+    "…la fenêtre oublie l'élève et ses prénoms");
 });
 
 test("qui voit quoi — les mondes, niveaux et opérations de la fenêtre sont ceux des Réglages, mot pour mot", () => {
@@ -861,4 +888,85 @@ test("qui voit quoi — les mondes, niveaux et opérations de la fenêtre sont c
   assert.match(applis, /'reglages' => \['niveaux' => 3, 'operations' => 4\]/);
   assert.match(applis, /'reglages' => \['mondes' => 6\]/);
   assert.deepEqual([niveaux.length, operations.length, mondes.length], [3, 4, 6]);
+});
+
+// ------------------------------------------------------------ lot 3b : les réponses qui arrivent en retard (relecture Codex, 22/10)
+
+const libererTout = async r => { while (r.enAttente.length) { r.enAttente.shift()(); await new Promise(fin => setTimeout(fin, 5)); } };
+const tic = () => new Promise(fin => setTimeout(fin, 5));
+// Le faux serveur : ce que voit Lucas = mondes 1-2 de la classe + ses ajouts.
+const accesLucas = ajouts => ({applis: ["defi-tables", "splat"],
+  reglages: {splat: {mondes: [...new Set([1, 2, ...((ajouts.splat && ajouts.splat.mondes) || [])])].sort((a, b) => a - b)}}});
+
+test("qui voit quoi 3b — décocher 4, fermer, rouvrir AVANT la réponse, cocher 5 : le serveur reçoit [3], puis [3, 5] — le 4 reste fermé", async () => {
+  const lucas = {...LUCAS(), ajouts: {splat: {mondes: [3, 4]}}, acces: accesLucas({splat: {mondes: [3, 4]}})};
+  const r = fenetreRejouee(lucas, {retenir: true, accesDe: accesLucas});
+  const quatre = r.caseNumero("mondes", 4);
+  quatre.checked = false;
+  const premier = r.f.changerCeQueVoit({cle: "splat", liste: "mondes", numero: 4, ouvre: false}, quatre);
+  await tic();
+  r.boite.close();
+  r.f.ouvrirCeQueVoit(lucas);
+  // La fenêtre rouverte : grisée tant que la réponse n'est pas là.
+  assert.ok(r.liste.tous(n => n.tag === "input").every(c => c.disabled), "tout est grisé pendant l'envoi");
+  assert.equal(r.liste.attributs["aria-busy"], "true");
+  // Un clic qui passerait quand même (clavier, page lente) fait la queue.
+  const cinq = r.caseNumero("mondes", 5);
+  cinq.checked = true;
+  const second = r.f.changerCeQueVoit({cle: "splat", liste: "mondes", numero: 5, ouvre: true}, cinq);
+  await libererTout(r);
+  await Promise.all([premier, second]);
+  assert.deepEqual(r.appels.map(([, corps]) => corps.ajouts), [{splat: {mondes: [3]}}, {splat: {mondes: [3, 5]}}],
+    "le second envoi part de ce que le serveur a répondu au premier");
+  assert.deepEqual(lucas.ajouts, {splat: {mondes: [3, 5]}});
+  // La fenêtre, l'élève et le serveur disent la même chose.
+  assert.deepEqual([3, 4, 5].map(n => r.caseNumero("mondes", n).checked), [true, false, true]);
+  assert.ok([3, 4, 5, 6].every(n => !r.caseNumero("mondes", n).disabled), "les cases redeviennent cliquables");
+  assert.equal(r.f.enAttente(), 0);
+  assert.deepEqual(r.messages.at(-1), ["voit-message", "Enregistré : le monde 5 est ouvert à Lucas.", "ok"],
+    "le message est celui du clic fait DANS cette fenêtre");
+  assert.ok(!r.messages.some(([, t]) => t === "Enregistré : le monde 4 n’est plus ouvert à Lucas."),
+    "le message de la première fenêtre ne s'écrit pas dans la seconde");
+});
+
+test("qui voit quoi 3b — fermée (bouton ou Échap) avant la réponse : rien ne se réécrit dans la fenêtre, l'élève est quand même à jour", async () => {
+  const lucas = {...LUCAS(), acces: accesLucas({splat: {mondes: [3]}})};
+  const r = fenetreRejouee(lucas, {retenir: true, accesDe: accesLucas});
+  const six = r.caseNumero("mondes", 6);
+  six.checked = true;
+  const envoi = r.f.changerCeQueVoit({cle: "splat", liste: "mondes", numero: 6, ouvre: true}, six);
+  await tic();
+  r.boite.close();
+  r.messages.length = 0;
+  await libererTout(r);
+  await envoi;
+  assert.deepEqual(["voit-titre", "voit-sous", "voit-liste", "voit-message"].map(id => r.$(id).textContent), ["", "", "", ""]);
+  assert.deepEqual(r.messages, [], "aucun message vers la fenêtre fermée");
+  assert.deepEqual(lucas.ajouts, {splat: {mondes: [3, 6]}}, "l'enregistrement, lui, est fait et reporté");
+  assert.equal(r.f.voit(), null);
+});
+
+test("qui voit quoi 3b — une erreur qui arrive fenêtre fermée : le message va sous les boutons d'Élèves, pas dans le vide", async () => {
+  const r = fenetreRejouee(RANIA(), {retenir: true, echec: new Error("Le serveur ne répond pas.")});
+  const coffres = r.caseAppli("coffres");
+  coffres.checked = false;
+  const envoi = r.f.changerCeQueVoit({cle: "coffres", ouvre: false}, coffres);
+  await tic();
+  r.boite.close();
+  await libererTout(r);
+  await envoi;
+  assert.deepEqual(r.erreurs, [["Le serveur ne répond pas.", "message-classe"]]);
+  assert.equal(r.$("voit-message").textContent, "");
+  // Rouverte ensuite : la vérité du serveur (Coffres toujours là), cliquable.
+  r.f.ouvrirCeQueVoit(r.f.voit() || RANIA());
+  assert.equal(r.caseAppli("coffres").checked, true);
+  assert.equal(r.caseAppli("coffres").disabled, false);
+});
+
+test("qui voit quoi 3b — les envois font la queue : chacun calcule son état AU MOMENT DE PARTIR", () => {
+  const changer = fonction("changerCeQueVoit"), envoyer = fonction("envoyerCeQueVoit");
+  assert.doesNotMatch(changer, /ajoutsApres/, "pas d'état calculé au moment du clic");
+  assert.match(changer, /const tour = voitFile\.then\(\(\) => envoyerCeQueVoit\(eleve, geste, caseCochee, ouverture\)\);\s*voitFile = tour\.catch\(\(\) => \{\}\);/);
+  assert.match(envoyer, /const ajouts = ajoutsApres\(eleve\.ajouts, geste\);\s*const reponse = await api\("eleves\.acces"/);
+  assert.match(fonction("ouvrirCeQueVoit"), /voitOuverture \+= 1;/);
 });

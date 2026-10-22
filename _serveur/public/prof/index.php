@@ -1281,6 +1281,15 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   let vue = "appli";
   // Lot « Qui voit quoi » : l'élève dont la fenêtre « Ce que voit… » est ouverte.
   let voitEleve = null;
+  // Lot 3b (relecture Codex du 22/10) : les enregistrements de la fenêtre
+  // partent UN PAR UN (voitFile), chacun calcule son état au moment de partir
+  // — jamais d'après un état qu'une réponse pas encore reçue va changer.
+  // voitEnAttente : combien attendent encore (les cases restent grisées) ;
+  // voitOuverture : le numéro de la fenêtre ouverte (un message ne va qu'à
+  // la fenêtre qui a fait le clic).
+  let voitFile = Promise.resolve();
+  let voitEnAttente = 0;
+  let voitOuverture = 0;
   // Les élèves déjà lus de la classe ouverte, par activité (un appel
   // « tableau » par activité, refait seulement quand la classe change).
   let tableaux = {};
@@ -2133,10 +2142,21 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   function ouvrirCeQueVoit(eleve) {
     if (!classe || droitClasse !== "proprietaire" || !eleve) return;
     voitEleve = eleve;
+    voitOuverture += 1;
     messager("voit-message", "", "");
     dessinerCeQueVoit();
     const boite = $("voit");
     if (!boite.open) boite.showModal();
+  }
+
+  // Fermée (bouton ou Échap), la fenêtre oublie l'élève et ses prénoms. Un
+  // enregistrement encore en route continue : sa réponse mettra à jour la
+  // ligne de l'élève, sans rien réécrire dans la fenêtre fermée.
+  function fermerCeQueVoit() {
+    voitEleve = null;
+    voitOuverture += 1;
+    ["voit-titre", "voit-sous", "voit-liste"].forEach(id => { $(id).textContent = ""; });
+    messager("voit-message", "", "");
   }
 
   // La fenêtre (planche 2) : toutes les applis que la page sait montrer, une
@@ -2254,6 +2274,13 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       }
       zone.append(bloc);
     });
+    // Un enregistrement est encore en route (fenêtre rouverte entre-temps) :
+    // tout reste grisé jusqu'à sa réponse, qui redessine la fenêtre.
+    if (voitEnAttente > 0) {
+      [...zone.querySelectorAll("input")].forEach(uneCase => { uneCase.disabled = true; });
+      zone.setAttribute("aria-busy", "true");
+      return;
+    }
     if (aFocaliser) aFocaliser.focus();
   }
 
@@ -2262,24 +2289,48 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   // reporte sur l'élève dans toutes les listes déjà lues. En cas d'erreur,
   // la case revient en arrière et le pied de la fenêtre le dit (comme les
   // puces des mondes des Réglages).
-  async function changerCeQueVoit(geste, caseCochee) {
+  //
+  // Lot 3b (relecture Codex du 22/10/2026) : décocher le monde 4, fermer,
+  // rouvrir AVANT la réponse puis cocher le 5 envoyait [3, 4, 5] — la
+  // seconde fenêtre partait de l'état d'avant la première réponse, et le
+  // monde 4 retiré était rouvert. Désormais les enregistrements font la queue
+  // (voitFile) et chacun calcule l'état complet au moment de partir, d'après
+  // ce que le serveur a répondu au précédent ; la fenêtre reste grisée tant
+  // qu'un enregistrement est en route.
+  function changerCeQueVoit(geste, caseCochee) {
     const eleve = voitEleve;
-    if (!eleve || !classe) return;
-    const ajouts = ajoutsApres(eleve.ajouts, geste);
+    if (!eleve || !classe) return Promise.resolve();
+    const ouverture = voitOuverture;
+    voitEnAttente += 1;
     const zone = $("voit-liste");
-    const actives = [...zone.querySelectorAll("input")].filter(uneCase => !uneCase.disabled);
-    actives.forEach(uneCase => { uneCase.disabled = true; });
+    [...zone.querySelectorAll("input")].forEach(uneCase => { uneCase.disabled = true; });
     zone.setAttribute("aria-busy", "true");
+    const tour = voitFile.then(() => envoyerCeQueVoit(eleve, geste, caseCochee, ouverture));
+    voitFile = tour.catch(() => {});
+    return tour;
+  }
+
+  async function envoyerCeQueVoit(eleve, geste, caseCochee, ouverture) {
+    let erreurRecue = null;
     try {
+      const ajouts = ajoutsApres(eleve.ajouts, geste);
       const reponse = await api("eleves.acces", {eleve_id: eleve.id, ajouts});
       reporterAcces(eleve, reponse.ajouts || {}, reponse.acces || null);
-      if (voitEleve === eleve) dessinerCeQueVoit(geste);
-      messager("voit-message", texteEnregistre(eleve, geste), "ok");
     } catch (erreur) {
-      caseCochee.checked = !caseCochee.checked;
-      actives.forEach(uneCase => { uneCase.disabled = false; });
-      zone.setAttribute("aria-busy", "false");
-      surErreur(erreur, "voit-message");
+      erreurRecue = erreur;
+    } finally {
+      voitEnAttente = Math.max(0, voitEnAttente - 1);
+    }
+    // Le message ne va qu'à la fenêtre qui a fait le clic, encore ouverte.
+    const memeFenetre = $("voit").open && voitEleve === eleve && voitOuverture === ouverture;
+    if (erreurRecue && memeFenetre) caseCochee.checked = !caseCochee.checked;
+    // La fenêtre ouverte (celle-ci ou une rouverte) suit ce que le serveur a rangé.
+    if ($("voit").open && voitEleve) dessinerCeQueVoit(!erreurRecue && memeFenetre ? geste : undefined);
+    if (erreurRecue) {
+      // Fenêtre fermée ou rouverte : le message va sous les boutons d'Élèves.
+      surErreur(erreurRecue, memeFenetre ? "voit-message" : "message-classe");
+    } else if (memeFenetre) {
+      messager("voit-message", texteEnregistre(eleve, geste), "ok");
     }
   }
 
@@ -5095,11 +5146,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   // été enregistré) ; fermée (bouton ou Échap), la fenêtre oublie l'élève et
   // ses prénoms.
   $("voit-fermer").addEventListener("click", () => { $("voit").close(); });
-  $("voit").addEventListener("close", () => {
-    voitEleve = null;
-    ["voit-titre", "voit-sous", "voit-liste"].forEach(id => { $(id).textContent = ""; });
-    messager("voit-message", "", "");
-  });
+  $("voit").addEventListener("close", fermerCeQueVoit);
 
   $("imprimer-bandelettes").addEventListener("click", () => imprimer("bandelettes"));
   $("imprimer-recap").addEventListener("click", () => imprimer("recap"));
