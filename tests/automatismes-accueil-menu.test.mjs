@@ -948,3 +948,102 @@ test(
       }
     }),
 );
+
+test(
+  "Q1 : la carte du domaine reste en haut pendant que la liste défile, et la toucher referme",
+  { skip: ignorer, timeout: PLAFOND },
+  () =>
+    banc(async ({ base, page }) => {
+      // Espace et géométrie en 3e, trois notions cochées, liste défilée à mi-hauteur (décision N, 22/10).
+      const entieres = { 390: 8, 375: 6, 820: 20, 1366: 11 };
+      for (const [width, height, tactile] of TAILLES.slice(0, 4)) {
+        const nom = `${width}x${height}`;
+        const onglet = await page(width, height, tactile, {
+          niveau: "3e",
+          nombre: 10,
+        });
+        await accueil(onglet, base);
+        await onglet.locator('[data-domaine="espace-geometrie"]').click();
+        for (const notion of [
+          "Droite graduée",
+          "Coordonnées dans le plan",
+          "Pythagore",
+        ])
+          await onglet
+            .locator(".notion:has([data-selection])", { hasText: notion })
+            .first()
+            .locator("input")
+            .check();
+        await onglet.locator(".contenu").evaluate((zone) => {
+          zone.scrollTop = (zone.scrollHeight - zone.clientHeight) / 2;
+        });
+        await stabiliser(onglet);
+        const mesure = await onglet.evaluate(() => {
+          const zone = document
+            .querySelector(".contenu")
+            .getBoundingClientRect();
+          const tete = document.querySelector(".domaine-tete");
+          const carte = tete.getBoundingClientRect();
+          const barreBas = document
+            .querySelector(".barre-lancement")
+            .getBoundingClientRect().top;
+          const bas = Math.min(zone.bottom, barreBas);
+          const ouvert = getComputedStyle(
+            document.querySelector(".domaine-ouvert"),
+          );
+          return {
+            ecart: carte.top - zone.top,
+            dessus:
+              document
+                .elementFromPoint(carte.left + carte.width / 2, carte.top + 2)
+                ?.closest(".domaine-tete") === tete,
+            entieres: [...document.querySelectorAll(".notion")].filter(
+              (notion) => {
+                const boite = notion.getBoundingClientRect();
+                return (
+                  boite.top >= carte.bottom - 0.5 && boite.bottom <= bas + 0.5
+                );
+              },
+            ).length,
+            defile: document.querySelector(".contenu").scrollTop > 0,
+            ombre: getComputedStyle(tete).boxShadow,
+            filet: getComputedStyle(tete).borderBottomColor,
+            coins: ouvert.borderTopLeftRadius,
+            colonnes: getComputedStyle(
+              document.querySelector(".grille-notions"),
+            ).gridTemplateColumns.split(" ").length,
+          };
+        });
+        assert.ok(mesure.defile, `${nom} : la liste a défilé`);
+        assert.ok(
+          Math.abs(mesure.ecart) <= 0.5,
+          `${nom} : carte en haut, rien au-dessus (${mesure.ecart})`,
+        );
+        assert.ok(
+          mesure.dessus,
+          `${nom} : la carte passe au-dessus des notions`,
+        );
+        assert.equal(
+          mesure.entieres,
+          entieres[width],
+          `${nom} : notions entières visibles`,
+        );
+        assert.notEqual(mesure.ombre, "none", `${nom} : ombre douce`);
+        assert.equal(
+          mesure.filet,
+          "rgb(8, 185, 178)",
+          `${nom} : filet turquoise (notion cochée)`,
+        );
+        assert.equal(mesure.coins, "24px", `${nom} : coins arrondis`);
+        assert.equal(
+          mesure.colonnes,
+          width >= 700 ? 2 : 1,
+          `${nom} : colonnes`,
+        );
+        // Un seul geste pour refermer, là où la carte est.
+        await onglet.locator(".domaine-tete").click();
+        await onglet.locator(".accueil").waitFor();
+        await onglet.context().close();
+      }
+    }),
+);
