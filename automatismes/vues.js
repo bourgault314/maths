@@ -1,7 +1,8 @@
 import { esc } from "./generateurs/draw.js";
 import { mathHtml } from "./math-format.js";
 import { questionPrompt } from "./math-layout.js";
-import { DOMAINES, formesEligibles } from "./seances.js";
+import { DOMAINES } from "./seances.js";
+import { GROUPES } from "./groupes-domaines.js";
 import { modeleQuestion, reglageForme, ecrireReponse } from "./champs.js";
 import { ICONES_DOMAINES } from "./icones-domaines.js";
 
@@ -58,7 +59,7 @@ function etapeHTML(numero, titre) {
 }
 
 /* « k / n » : k notions cochées sur les n du domaine (« sélectionnée(s) » en plus dès 700 px). */
-function compteurHTML(coches, nombre) {
+export function compteurHTML(coches, nombre) {
   const s = coches > 1 ? "s" : "";
   return `<span class="compteur-domaine" aria-label="${coches} notion${s} cochée${s} sur ${nombre}"
     >${coches} / ${nombre}<span class="mot-selection"> sélectionnée${s}</span></span>`;
@@ -111,28 +112,47 @@ export function lancementHTML(compte) {
   </div>`;
 }
 
-/* Le domaine : une case par notion (toute la ligne coche ou décoche), « Tout le domaine » en tête.
-   Un tap ne lance rien : la série part de la barre de lancement. */
+/* Le domaine ouvert, en plein écran (décision F) : en tête la carte du domaine (icône, nom, « k / n »,
+   chevron) qu'on touche pour refermer ; « Tout sélectionner dans ce domaine » ; puis les notions par
+   groupe, avec leurs sous-titres (deux colonnes dès 700 px). Étiquette de classe (« 4e ») sur les
+   notions qui commencent dans la classe choisie, jamais en 6e. Un tap ne lance rien : la série part
+   de la barre de lancement. */
 export function domaineHTML(domaine, familles, filtre, selection) {
   const nom = DOMAINES.find(([id]) => id === domaine)?.[1] || "Notions";
-  const tout = familles.length && familles.every((famille) => selection.has(famille.id));
-  return `<div class="entete-domaine"><span class="icone" aria-hidden="true">${ICONES_DOMAINES[domaine] || ""}</span>
-    <h1>${nom}</h1></div>
-    <div class="reglages-domaine">${filtresHTML(filtre)}</div>
-    <div class="liste-notions groupe-selection">
-      <label class="notion tout-domaine"><input type="checkbox" data-selection-domaine="${domaine}"
-        ${tout ? "checked" : ""}><span class="nom">Tout le domaine</span></label>
-      ${familles
-        .map((famille) => {
-          const formes = formesEligibles(famille, filtre);
-          return `<label class="notion"><input type="checkbox" data-selection="${famille.id}"
-          ${selection.has(famille.id) ? "checked" : ""}>
-          <span class="nom">${esc(famille.nom)}<span class="badges">
-            <span class="badge">${famille.niveaux.join(" · ")}</span>
-            ${formes.some((forme) => forme.brevet) ? '<span class="badge brevet">Brevet</span>' : ""}
-          </span></span></label>`;
-        })
-        .join("")}</div>`;
+  const coches = familles.filter((famille) => selection.has(famille.id)).length;
+  const tout = familles.length > 0 && coches === familles.length;
+  const ligne = (famille) => {
+    const debut = NIVEAUX.find((niveau) => famille.niveaux.includes(niveau));
+    const classe = debut === filtre && filtre !== "6e";
+    const coche = selection.has(famille.id);
+    return `<label class="notion${coche ? " cochee" : ""}">
+      <input type="checkbox" data-selection="${famille.id}" ${coche ? "checked" : ""}>
+      <span class="nom">${esc(famille.nom)}${classe ? `<span class="badge classe">${filtre}</span>` : ""}
+      </span></label>`;
+  };
+  const grille = (liste) => `<div class="grille-notions">${liste.map(ligne).join("")}</div>`;
+  const parId = Object.fromEntries(familles.map((famille) => [famille.id, famille]));
+  const rangees = new Set();
+  const blocs = (GROUPES[domaine] || [])
+    .map(([titre, ids]) => {
+      const liste = ids.filter((id) => parId[id] && !rangees.has(id)).map((id) => parId[id]);
+      liste.forEach((famille) => rangees.add(famille.id));
+      return liste.length ? `<h3 class="titre-groupe">${titre}</h3>${grille(liste)}` : "";
+    })
+    .join("");
+  const reste = familles.filter((famille) => !rangees.has(famille.id));
+  return `<section class="domaine-ouvert groupe-selection">
+    <button class="domaine-tete${coches ? " avec-selection" : ""}" data-action="retour"
+      aria-expanded="true" aria-label="Refermer ${nom}">
+      <span class="icone" aria-hidden="true">${ICONES_DOMAINES[domaine] || ""}</span>
+      <span class="nom">${nom}</span>${compteurHTML(coches, familles.length)}
+      <span class="chevron ouvert" aria-hidden="true">›</span></button>
+    <div class="domaine-corps">
+      <label class="notion tout-domaine">
+        <input type="checkbox" data-selection-domaine="${domaine}" ${tout ? "checked" : ""}>
+        <span class="nom">Tout sélectionner dans ce domaine</span></label>
+      ${blocs}${reste.length ? grille(reste) : ""}
+    </div></section>`;
 }
 
 export function enonceHTML(question, pastille = "") {

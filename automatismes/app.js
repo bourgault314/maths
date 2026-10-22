@@ -10,6 +10,7 @@ import {
   formesEligibles,
   nouvelleGraine,
   adresseSerie,
+  DOMAINES,
 } from "./seances.js";
 import {
   monterReponse,
@@ -31,6 +32,7 @@ import {
   brevetHTML,
   lancementHTML,
   coursHTML,
+  compteurHTML,
   bouton,
   ICONES,
   NIVEAUX,
@@ -102,10 +104,10 @@ function cadre(contenu) {
   document.body.classList.remove("clavier-ouvert");
   clavierOuvert = false;
   champActif = null;
-  // L'accueil porte sa carte d'en-tête (logo, titre, Plein écran) : pas de barre du cadre, pas de pied.
-  // Ailleurs, la barre du cadre porte « ← Retour » à gauche et Plein écran à droite (dès 700 px).
-  // L'écran de question a sa propre barre.
-  const menu = ecran === "accueil";
+  // L'accueil porte sa carte d'en-tête (logo, titre, Plein écran), le domaine sa carte qui le referme :
+  // ni barre du cadre ni pied. Ailleurs, la barre du cadre porte « ← Retour » à gauche et Plein écran
+  // à droite (dès 700 px). L'écran de question a sa propre barre.
+  const menu = ecran === "accueil" || ecran === "domaine";
   document.body.classList.toggle("menu", menu);
   const pleinEcran = bouton(
     `${ICONES.pleinEcran}<span>Plein écran</span>`,
@@ -150,11 +152,16 @@ function afficherAccueil() {
   arreterHorloge();
   ecran = "accueil";
   seance = null;
-  history.replaceState(null, "", location.pathname);
+  if (!history.state?.domaine) history.replaceState(null, "", location.pathname);
   cadre(accueilHTML(famillesEligibles(catalogue, filtre), filtre, selection, preferences.nombre));
 }
 
-function afficherDomaine(id) {
+/* Le domaine a sa place dans l'historique : le geste retour du téléphone le referme au lieu de
+   quitter l'appli (popstate). Un identifiant inconnu (adresse, historique) ramène à l'accueil. */
+function afficherDomaine(id, depuisHistorique = false) {
+  if (!DOMAINES.some(([connu]) => connu === id)) return afficherAccueil();
+  if (ecran === "accueil" && !depuisHistorique)
+    history.pushState({ domaine: id }, "", location.pathname);
   ecran = "domaine";
   domaine = id;
   const familles = famillesEligibles(catalogue, filtre).filter((famille) => famille.domaine === id);
@@ -712,7 +719,19 @@ function relierSelection() {
   });
 }
 
+// Cocher une notion met à jour sa ligne (.cochee) et le compteur de la carte du domaine, sans
+// redessiner la liste.
 function majCasesTout() {
+  document.querySelectorAll(".notion [data-selection]").forEach((caseNotion) => {
+    caseNotion.closest(".notion").classList.toggle("cochee", caseNotion.checked);
+  });
+  const tete = document.querySelector(".domaine-tete");
+  if (tete) {
+    const cases = [...document.querySelectorAll("[data-selection]")];
+    const coches = cases.filter((caseNotion) => caseNotion.checked).length;
+    tete.querySelector(".compteur-domaine").outerHTML = compteurHTML(coches, cases.length);
+    tete.classList.toggle("avec-selection", coches > 0);
+  }
   document.querySelectorAll("[data-selection-domaine]").forEach((caseDomaine) => {
     const cases = [
       ...caseDomaine.closest(".groupe-selection").querySelectorAll("[data-selection]"),
@@ -835,6 +854,8 @@ function retour() {
     location.href = "/";
     return;
   }
+  // La carte du domaine referme : on rend la place prise dans l'historique si elle est à nous.
+  if (ecran === "domaine" && history.state?.domaine) return history.back();
   afficherAccueil();
 }
 
@@ -1134,6 +1155,9 @@ function lireAdresse() {
 }
 
 window.addEventListener("resize", ajusterAffichage);
+window.addEventListener("popstate", () => {
+  if (ecran === "domaine") afficherAccueil();
+});
 document.addEventListener("keydown", (evenement) => {
   if (ecran !== "question" || seance.mode !== "project" || document.querySelector("dialog[open]"))
     return;

@@ -296,9 +296,12 @@ test(
       await page.locator('[data-domaine="nombres-calculs"]').click();
       await page.locator('[data-selection-domaine="nombres-calculs"]').check();
       const avant = Number.parseInt(await page.locator(".barre-lancement .compte").innerText());
+      // Le niveau se choisit sur l'accueil (« Préparer la série ») : on referme le domaine.
+      await page.locator(".domaine-tete").click();
       await page.locator('[data-niveau="6e"]').click();
       const apres = Number.parseInt(await page.locator(".barre-lancement .compte").innerText());
       // Le compteur ne garde que les notions cochées encore visibles en 6e.
+      await page.locator('[data-domaine="nombres-calculs"]').click();
       const cochees = await page.locator("[data-selection]:checked").count();
       assert.ok(apres < avant, `6e : moins de notions (${avant} → ${apres})`);
       assert.equal(apres, cochees, "Le compteur = les cases cochées de 6e");

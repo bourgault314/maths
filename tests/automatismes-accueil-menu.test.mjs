@@ -221,3 +221,102 @@ test(
       );
     }),
 );
+
+const DOMAINES_IDS = [
+  "nombres-calculs",
+  "proportionnalite-fonctions",
+  "espace-geometrie",
+  "donnees-probabilites",
+  "pensee-informatique",
+];
+
+test(
+  "P3 : le domaine ouvert — sa carte qui referme, les groupes, l’étiquette de classe, le geste retour",
+  { skip: ignorer, timeout: 120000 },
+  () =>
+    banc(async ({ base, page }) => {
+      const { GROUPES } = await import("../automatismes/groupes-domaines.js");
+      const onglet = await page(1366, 768, false, { niveau: "4e", nombre: 10 });
+      await accueil(onglet, base);
+      const longueur = await onglet.evaluate(() => history.length);
+      await onglet.locator('[data-domaine="nombres-calculs"]').click();
+      const tete = onglet.locator(".domaine-ouvert > .domaine-tete");
+      assert.equal(await tete.getAttribute("aria-expanded"), "true");
+      assert.equal(await tete.getAttribute("aria-label"), "Refermer Nombres et calculs");
+      assert.equal(await tete.locator(".icone svg").count(), 1);
+      assert.match(await tete.innerText(), /Nombres et calculs\s+0 \/ 28/);
+      assert.equal(
+        (await onglet.locator(".tout-domaine").innerText()).trim(),
+        "Tout sélectionner dans ce domaine",
+      );
+      assert.equal(await onglet.locator(".barre-cadre").count(), 0, "Pas de barre du cadre");
+      assert.deepEqual(
+        await onglet.locator(".titre-groupe").allInnerTexts(),
+        GROUPES["nombres-calculs"].map(([titre]) => titre.toUpperCase()),
+      );
+      // Deux colonnes dès 700 px.
+      const [une, deux] = await boites(onglet, ".grille-notions .notion");
+      assert.ok(Math.abs(une.top - deux.top) < 1 && deux.left > une.right, "Deux colonnes");
+      // Cocher : la ligne et le compteur suivent, la liste n'est pas redessinée.
+      const ligne = onglet.locator(".grille-notions .notion").first();
+      const temoin = await ligne.evaluateHandle((element) => element);
+      await ligne.locator("input").check();
+      assert.equal(await temoin.evaluate((element) => element.isConnected), true, "Même liste");
+      assert.equal(await temoin.evaluate((element) => element.classList.contains("cochee")), true);
+      assert.match(await tete.innerText(), /1 \/ 28/);
+      assert.match(await tete.getAttribute("class"), /avec-selection/);
+      await ligne.locator("input").uncheck();
+      assert.equal(await temoin.evaluate((element) => element.classList.contains("cochee")), false);
+      // Historique : ouvrir un domaine prend une place ; la carte la rend et ramène à l'accueil.
+      assert.equal(await onglet.evaluate(() => history.length), longueur + 1);
+      await tete.click();
+      assert.equal(await ecran(onglet), "accueil");
+      assert.equal(await onglet.evaluate(() => history.state), null);
+      // Le geste retour du téléphone referme le domaine : on reste sur /automatismes/.
+      const telephone = await page(390, 844, true, { niveau: "4e", nombre: 10 });
+      await accueil(telephone, base);
+      await telephone.locator('[data-domaine="espace-geometrie"]').click();
+      assert.equal(await ecran(telephone), "domaine");
+      const [une3, deux3] = await boites(telephone, ".grille-notions .notion");
+      assert.ok(deux3.top >= une3.bottom, "Une colonne au téléphone");
+      await telephone.goBack();
+      await telephone.locator(".accueil").waitFor();
+      assert.equal(await ecran(telephone), "accueil");
+      assert.match(telephone.url(), /\/automatismes\/$/);
+    }),
+);
+
+test(
+  "P3 : l’étiquette de classe — 19 notions en 5e, 13 en 4e, 12 en 3e, aucune en 6e",
+  { skip: ignorer, timeout: 120000 },
+  () =>
+    banc(async ({ base, page }) => {
+      const onglet = await page(1366, 768);
+      await accueil(onglet, base);
+      for (const [niveau, attendu] of [
+        ["6e", 0],
+        ["5e", 19],
+        ["4e", 13],
+        ["3e", 12],
+      ]) {
+        await onglet.locator(`[data-niveau="${niveau}"]`).click();
+        let total = 0;
+        for (const domaine of DOMAINES_IDS) {
+          await onglet.locator(`[data-domaine="${domaine}"]`).click();
+          const etiquettes = await onglet.locator(".notion .badge.classe").allInnerTexts();
+          assert.ok(
+            etiquettes.every((texte) => texte === niveau),
+            `${niveau} : ${etiquettes}`,
+          );
+          total += etiquettes.length;
+          const ids = await onglet
+            .locator("[data-selection]")
+            .evaluateAll((cases) => cases.map((caseNotion) => caseNotion.dataset.selection));
+          assert.equal(new Set(ids).size, ids.length, `${domaine} : chaque notion une fois`);
+          await onglet.locator(".domaine-tete").click();
+        }
+        assert.equal(total, attendu, `${niveau} : ${total} étiquettes`);
+        assert.equal(await onglet.locator(".badge.brevet").count(), 0);
+      }
+    }),
+);
