@@ -209,8 +209,13 @@ function afficherDomaine(id, depuisHistorique = false) {
   relierSelection();
 }
 
-function afficherBrevet() {
+/* L'introduction du brevet a sa place dans l'historique (C4, 22/10) : le geste retour ramène à
+   l'accueil au lieu de quitter l'appli. « Commencer » remplace cette place par celle de la série. */
+function afficherBrevet(depuisHistorique = false) {
   arreterHorloge();
+  if (ecran === "accueil" && !depuisHistorique)
+    history.pushState({ brevet: true }, "", location.pathname);
+  else if (depuisHistorique) history.replaceState({ brevet: true }, "", location.pathname);
   ecran = "brevet";
   seance = null;
   cadre(brevetHTML());
@@ -285,8 +290,11 @@ function lancer(options, questionsImposees) {
     };
     // La série a sa place dans l'historique : le geste retour du téléphone fait comme « Menu » au
     // lieu de quitter l'appli. « Encore une série » et « Refaire mes erreurs » réutilisent la place.
-    // L'état retient le domaine d'origine : un rechargement pendant la série y ramène.
-    if (!etatHistorique()?.serie)
+    // L'état retient le domaine d'origine : un rechargement pendant la série y ramène. Depuis
+    // l'introduction du brevet, la série prend sa place : « Avant » ne retrouve pas d'étape morte.
+    const place = etatHistorique();
+    if (place?.brevet) history.replaceState({ serie: true, origine: null }, "", location.pathname);
+    else if (!place?.serie)
       history.pushState({ serie: true, origine: domaine }, "", location.pathname);
     ecran = "question";
     afficherQuestion();
@@ -902,8 +910,9 @@ function basculerPause() {
 const domaineConnu = (id) => typeof id === "string" && DOMAINES.some(([connu]) => connu === id);
 
 /* Le seul lecteur de l'état d'historique (P12). Reconnus : { domaine } quand c'est un identifiant de
-   DOMAINES, { serie: true } (son origine : un domaine connu, sinon l'accueil). Tout autre état (un
-   domaine inconnu, du texte, un objet trafiqué) est traité comme vide et remplacé. */
+   DOMAINES, { serie: true } (son origine : un domaine connu, sinon l'accueil), { brevet: true }
+   (l'introduction du brevet). Tout autre état (un domaine inconnu, du texte, un objet trafiqué) est
+   traité comme vide et remplacé. */
 function etatHistorique() {
   const etat = history.state;
   if (etat === null) return null;
@@ -911,6 +920,7 @@ function etatHistorique() {
     if (etat.serie === true)
       return { serie: true, origine: domaineConnu(etat.origine) ? etat.origine : null };
     if (domaineConnu(etat.domaine)) return { domaine: etat.domaine };
+    if (etat.brevet === true) return { brevet: true };
   }
   history.replaceState(null, "");
   return null;
@@ -920,9 +930,24 @@ function etatHistorique() {
 // série en cours (rechargement pendant une série) affiche le menu d'origine et prend son état.
 function afficherMenuSelon(etat) {
   if (etat?.domaine) return afficherDomaine(etat.domaine, true);
+  if (etat?.brevet) return afficherBrevet(true);
   if (etat?.serie && etat.origine) return afficherDomaine(etat.origine, true);
   afficherAccueil();
 }
+
+/* Une place de série sans série en cours est MORTE (C1-bis, 22/10) : « Avant » après une sortie de
+   série, ou la place d'une série perdue au rechargement. On ne l'affiche pas, on la quitte aussitôt
+   (history.back) : l'écran du menu d'en dessous est déjà affiché, le popstate qui suit n'a rien à
+   refaire. Deux places de série ne se suivent jamais (« Encore », « Refaire » réutilisent la place) :
+   ce retour ne peut pas boucler. */
+let placeMorteQuittee = false;
+function quitterPlaceMorte() {
+  placeMorteQuittee = true;
+  history.back();
+}
+// L'état reçu est-il celui du menu déjà affiché ?
+const dejaAffiche = (etat) =>
+  (ecran === "accueil" && etat === null) || (ecran === "domaine" && etat?.domaine === domaine);
 
 /* Sortir d'une série (Menu, Quitter, Retour et Changer de notions du bilan, geste retour) : on revient
    au menu d'où on l'a lancée — le domaine, ou l'accueil —, sélection gardée. Quand la série occupe une
@@ -941,8 +966,11 @@ function retour() {
     location.href = "/";
     return;
   }
-  // La carte du domaine referme : on rend la place prise dans l'historique si elle est à nous.
-  if (ecran === "domaine" && etatHistorique()?.domaine) return history.back();
+  // La carte du domaine referme, « ← Retour » quitte l'introduction du brevet : on rend la place
+  // prise dans l'historique si elle est à nous.
+  const etat = etatHistorique();
+  if ((ecran === "domaine" && etat?.domaine) || (ecran === "brevet" && etat?.brevet))
+    return history.back();
   afficherAccueil();
 }
 
@@ -1210,14 +1238,16 @@ function lireAdresse() {
   const params = new URLSearchParams(location.search);
   // L'ancienne page Diaporama (?prof=1) n'existe plus : l'adresse ouvre l'accueil.
   if (params.get("prof") === "1") history.replaceState(null, "", location.pathname);
-  // Rechargement (P12) : dans un domaine, on y reste. Pendant une série (elle est perdue), on remplace
-  // l'état de sa place par celui du menu d'origine, puis on rend la place : l'entrée d'avant est ce
-  // menu, et un retour de plus ne réafficherait que le même écran.
+  // Rechargement (P12) : dans un domaine, on y reste. Pendant une série (elle est perdue), on affiche
+  // le menu d'origine et on rend la place : l'entrée d'avant est ce menu. La place garde son état de
+  // série : atteinte plus tard par « Avant », elle est reconnue morte (C1-bis).
   const etat = etatHistorique();
   if (!location.search && etat?.domaine) return afficherDomaine(etat.domaine, true);
+  if (!location.search && etat?.brevet) return afficherBrevet(true);
   if (!location.search && etat?.serie) {
     afficherMenuSelon(etat);
-    return history.back();
+    history.replaceState(etat, "", location.pathname);
+    return quitterPlaceMorte();
   }
   const niveau = params.get("niveau");
   if (NIVEAUX.includes(niveau)) filtre = niveau;
@@ -1259,17 +1289,22 @@ function lireAdresse() {
 
 window.addEventListener("resize", ajusterAffichage);
 // Retour et avant (P12) : piloté par l'état reçu. Sur une question ou le bilan, on sort de la série
-// comme avec « Menu » ; ailleurs, on affiche le menu de l'état (domaine connu, sinon l'accueil).
+// comme avec « Menu » ; ailleurs, on affiche le menu de l'état (domaine connu, sinon l'accueil), et
+// une place de série, morte, est quittée sans rien afficher.
 window.addEventListener("popstate", () => {
+  const etat = etatHistorique();
   if (ecran === "question" || ecran === "bilan") {
     arreterHorloge();
     document.querySelectorAll("dialog").forEach((dialogue) => dialogue.remove());
     // Encore une place de série (retour depuis une série plus récente) : on continue à sortir.
-    const etat = etatHistorique();
     if (etat?.serie) return history.back();
     return afficherMenuSelon(etat);
   }
-  afficherMenuSelon(etatHistorique());
+  if (etat?.serie) return quitterPlaceMorte();
+  const revenu = placeMorteQuittee;
+  placeMorteQuittee = false;
+  if (revenu && dejaAffiche(etat)) return;
+  afficherMenuSelon(etat);
 });
 document.addEventListener("keydown", (evenement) => {
   if (ecran !== "question" || seance.mode !== "project" || document.querySelector("dialog[open]"))

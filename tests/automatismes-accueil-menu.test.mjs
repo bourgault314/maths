@@ -898,6 +898,8 @@ test(
       await onglet.reload();
       await onglet.locator(".domaine-ouvert").waitFor();
       assert.equal(await vue(onglet), "domaine:Refermer Données et probabilités");
+      // La place de la série est rendue (history.back, Q2) : on attend d'être sur l'entrée d'en dessous.
+      await onglet.waitForFunction(() => !history.state?.serie);
       assert.deepEqual(await onglet.evaluate(() => history.state), {
         domaine: "donnees-probabilites",
       });
@@ -945,6 +947,330 @@ test(
         await onglet.locator(".accueil").waitFor();
         assert.equal(await ecran(onglet), "accueil", `${nom} par le geste avant`);
         assert.equal(await onglet.evaluate(() => history.state), null, `${nom} remplacé (avant)`);
+      }
+    }),
+);
+
+test(
+  "Q1 : la carte du domaine reste en haut pendant que la liste défile, et la toucher referme",
+  { skip: ignorer, timeout: PLAFOND },
+  () =>
+    banc(async ({ base, page }) => {
+      // Espace et géométrie en 3e, trois notions cochées, liste défilée à mi-hauteur (décision N, 22/10).
+      const entieres = { 390: 8, 375: 6, 820: 20, 1366: 11 };
+      for (const [width, height, tactile] of TAILLES.slice(0, 4)) {
+        const nom = `${width}x${height}`;
+        const onglet = await page(width, height, tactile, {
+          niveau: "3e",
+          nombre: 10,
+        });
+        await accueil(onglet, base);
+        await onglet.locator('[data-domaine="espace-geometrie"]').click();
+        for (const notion of [
+          "Droite graduée",
+          "Coordonnées dans le plan",
+          "Pythagore",
+        ])
+          await onglet
+            .locator(".notion:has([data-selection])", { hasText: notion })
+            .first()
+            .locator("input")
+            .check();
+        await onglet.locator(".contenu").evaluate((zone) => {
+          zone.scrollTop = (zone.scrollHeight - zone.clientHeight) / 2;
+        });
+        await stabiliser(onglet);
+        const mesure = await onglet.evaluate(() => {
+          const zone = document
+            .querySelector(".contenu")
+            .getBoundingClientRect();
+          const tete = document.querySelector(".domaine-tete");
+          const carte = tete.getBoundingClientRect();
+          const barreBas = document
+            .querySelector(".barre-lancement")
+            .getBoundingClientRect().top;
+          const bas = Math.min(zone.bottom, barreBas);
+          const ouvert = getComputedStyle(
+            document.querySelector(".domaine-ouvert"),
+          );
+          return {
+            ecart: carte.top - zone.top,
+            dessus:
+              document
+                .elementFromPoint(carte.left + carte.width / 2, carte.top + 2)
+                ?.closest(".domaine-tete") === tete,
+            entieres: [...document.querySelectorAll(".notion")].filter(
+              (notion) => {
+                const boite = notion.getBoundingClientRect();
+                return (
+                  boite.top >= carte.bottom - 0.5 && boite.bottom <= bas + 0.5
+                );
+              },
+            ).length,
+            defile: document.querySelector(".contenu").scrollTop > 0,
+            ombre: getComputedStyle(tete).boxShadow,
+            filet: getComputedStyle(tete).borderBottomColor,
+            coins: ouvert.borderTopLeftRadius,
+            colonnes: getComputedStyle(
+              document.querySelector(".grille-notions"),
+            ).gridTemplateColumns.split(" ").length,
+          };
+        });
+        assert.ok(mesure.defile, `${nom} : la liste a défilé`);
+        assert.ok(
+          Math.abs(mesure.ecart) <= 0.5,
+          `${nom} : carte en haut, rien au-dessus (${mesure.ecart})`,
+        );
+        assert.ok(
+          mesure.dessus,
+          `${nom} : la carte passe au-dessus des notions`,
+        );
+        assert.equal(
+          mesure.entieres,
+          entieres[width],
+          `${nom} : notions entières visibles`,
+        );
+        assert.notEqual(mesure.ombre, "none", `${nom} : ombre douce`);
+        assert.equal(
+          mesure.filet,
+          "rgb(8, 185, 178)",
+          `${nom} : filet turquoise (notion cochée)`,
+        );
+        assert.equal(mesure.coins, "24px", `${nom} : coins arrondis`);
+        assert.equal(
+          mesure.colonnes,
+          width >= 700 ? 2 : 1,
+          `${nom} : colonnes`,
+        );
+        // Un seul geste pour refermer, là où la carte est.
+        await onglet.locator(".domaine-tete").click();
+        await onglet.locator(".accueil").waitFor();
+        await onglet.context().close();
+      }
+    }),
+);
+
+// Le geste avant du navigateur ; on attend tous ses effets : l'entrée atteinte, et si elle est morte
+// (une place de série sans série), le retour que l'appli fait aussitôt.
+async function avantNavigateur(onglet) {
+  await onglet.evaluate(() => {
+    window.sautsHistorique = 0;
+    addEventListener("popstate", () => (window.sautsHistorique += 1));
+  });
+  await onglet.goForward();
+  await onglet.waitForFunction(() => window.sautsHistorique >= 1);
+  // Après le saut : une place de série à l'écran d'un menu est rendue par l'appli.
+  await onglet.waitForFunction(
+    () => !history.state?.serie || ["question", "bilan"].includes(document.body.dataset.ecran),
+  );
+  await stabiliser(onglet);
+}
+
+// Va jusqu'au bilan, quelle que soit la série (entraînement, brevet, diaporama).
+async function jusquAuBilan(onglet) {
+  for (let tour = 0; tour < 60 && (await ecran(onglet)) === "question"; tour += 1) {
+    const confirmer = onglet.locator('[data-action="confirmer-fin"]');
+    const suivante = onglet.locator('[data-action="suivante"]');
+    if (await confirmer.count()) await confirmer.click();
+    else if (await suivante.isVisible()) await suivante.click();
+    else await onglet.locator('[data-action="passer"]').click();
+  }
+  await onglet.locator(".actions-bilan").waitFor();
+}
+
+test(
+  "Q2 : après une sortie de série, « Avant » ne fait rien de visible et chaque retour change d’écran",
+  { skip: ignorer, timeout: PLAFOND },
+  () =>
+    banc(async ({ base, page }) => {
+      const avant = `${base}../favicon.svg`;
+      const lancerDuDomaine = async (onglet, projeter = false) => {
+        await cocher(onglet, "nombres-calculs", [0]);
+        if (projeter) {
+          await onglet.locator('[data-action="projeter-reglages"]').click();
+          await onglet.locator('dialog [data-action="projeter"]').click();
+        } else await onglet.locator('[data-action="lancer"]').click();
+        await onglet.locator(".barre-question").waitFor();
+      };
+      const brevet = async (onglet) => {
+        await onglet.locator(".ligne-brevet").click();
+        await onglet.locator('[data-action="brevet-commencer"]').click();
+        await onglet.locator(".barre-question").waitFor();
+      };
+      const recharger = async (onglet) => {
+        await onglet.reload();
+        await onglet.waitForFunction(
+          () => ["accueil", "domaine"].includes(document.body.dataset.ecran) && !history.state?.serie,
+        );
+      };
+      // Les scénarios du contrôle C10bis de Codex (sauf l'introduction du brevet : Q3).
+      const scenarios = [
+        ["série → Menu", (o) => lancerDuDomaine(o), (o) => menu(o)],
+        ["série → rechargement", (o) => lancerDuDomaine(o), recharger],
+        [
+          "bilan → Changer de notions",
+          (o) => lancerDuDomaine(o),
+          async (o) => {
+            await jusquAuBilan(o);
+            await o.locator('[data-action="changer"]').click();
+          },
+        ],
+        ["brevet → Menu", brevet, (o) => menu(o)],
+        ["brevet → rechargement", brevet, recharger],
+        [
+          "lien direct → Menu",
+          async (o) => {
+            await o.goto(`${base}?notion=NC27&forme=a&graine=123&mode=project`);
+            await o.locator(".carte").waitFor();
+          },
+          (o) => menu(o),
+        ],
+        ["projection → Menu", (o) => lancerDuDomaine(o, true), (o) => menu(o), 700],
+        [
+          "projection → bilan → Retour",
+          (o) => lancerDuDomaine(o, true),
+          async (o) => {
+            await jusquAuBilan(o);
+            await o.locator('[data-action="accueil"]').click();
+          },
+          700,
+        ],
+      ];
+      for (const [width, height, tactile] of [
+        [390, 844, true],
+        [1366, 768, false],
+      ])
+        for (const [nom, lancerSerie, sortir, largeurMin = 0] of scenarios) {
+          if (width < largeurMin) continue;
+          const cas = `${width} ${nom}`;
+          const onglet = await page(width, height, tactile, { niveau: "4e", nombre: 5 });
+          await onglet.goto(avant);
+          // Le lien direct s'ouvre depuis une autre page ; les autres séries, depuis l'accueil.
+          if (!nom.startsWith("lien")) await accueil(onglet, base);
+          await lancerSerie(onglet);
+          await sortir(onglet);
+          await onglet.waitForFunction(
+            () => ["accueil", "domaine"].includes(document.body.dataset.ecran) && !history.state?.serie,
+          );
+          await stabiliser(onglet);
+          const menuAffiche = await vue(onglet);
+          const etatMenu = await onglet.evaluate(() => JSON.stringify(history.state));
+          // « Avant » atteint la place de la série abandonnée : morte, elle est quittée aussitôt.
+          await avantNavigateur(onglet);
+          assert.equal(await vue(onglet), menuAffiche, `${cas} : « Avant » ne change rien de visible`);
+          assert.equal(
+            await onglet.evaluate(() => JSON.stringify(history.state)),
+            etatMenu,
+            `${cas} : de retour sur l'entrée du menu`,
+          );
+          await retoursJusquALaSortie(onglet, menuAffiche, cas);
+          await onglet.context().close();
+        }
+    }),
+);
+
+test(
+  "Q2 : « Encore » et « Refaire » réutilisent la place de la série — jamais deux places de suite",
+  { skip: ignorer, timeout: PLAFOND },
+  () =>
+    banc(async ({ base, page }) => {
+      const onglet = await page(390, 844, true, { niveau: "4e", nombre: 5 });
+      await onglet.goto(`${base}../favicon.svg`);
+      await accueil(onglet, base);
+      await cocher(onglet, "nombres-calculs", [0, 1]);
+      await onglet.locator('[data-action="lancer"]').click();
+      await onglet.locator(".barre-question").waitFor();
+      const longueur = await onglet.evaluate(() => history.length);
+      // Tout passer : toutes les questions sont des erreurs, « Refaire mes erreurs » est proposé.
+      await jusquAuBilan(onglet);
+      await onglet.locator('[data-action="refaire"]').click();
+      await onglet.locator(".barre-question").waitFor();
+      await jusquAuBilan(onglet);
+      await onglet.locator('[data-action="encore"]').click();
+      await onglet.locator(".barre-question").waitFor();
+      assert.equal(await onglet.evaluate(() => history.length), longueur, "aucune place de plus");
+      assert.deepEqual(await onglet.evaluate(() => history.state), {
+        serie: true,
+        origine: "nombres-calculs",
+      });
+      // Un seul geste sort de la série, un seul referme le domaine.
+      await menu(onglet);
+      await onglet.locator(".domaine-ouvert").waitFor();
+      await avantNavigateur(onglet);
+      assert.equal(await vue(onglet), "domaine:Refermer Nombres et calculs");
+      await retoursJusquALaSortie(onglet, await vue(onglet), "Encore et Refaire");
+    }),
+);
+
+test(
+  "Q3 : l’introduction du brevet a sa place dans l’historique — retour = accueil, « Commencer » la remplace",
+  { skip: ignorer, timeout: PLAFOND },
+  () =>
+    banc(async ({ base, page }) => {
+      const avant = `${base}../favicon.svg`;
+      for (const [width, height, tactile] of [
+        [390, 844, true],
+        [1366, 768, false],
+      ]) {
+        const nom = `${width}x${height}`;
+        const onglet = await page(width, height, tactile, { niveau: "4e", nombre: 5 });
+        const intro = async () => {
+          await onglet.locator(".ligne-brevet").click();
+          await onglet.locator(".brevet-depart").waitFor();
+        };
+        await onglet.goto(avant);
+        await accueil(onglet, base);
+        // 1. Introduction → geste retour : l'accueil (avant : on quittait l'appli).
+        await intro();
+        assert.deepEqual(await onglet.evaluate(() => history.state), { brevet: true });
+        assert.equal(await gesteRetour(onglet), "accueil", `${nom} : intro → retour`);
+        // « Avant » rouvre l'introduction (une vraie étape) ; puis retour, retour : accueil, sortie.
+        await onglet.goForward();
+        await onglet.locator(".brevet-depart").waitFor();
+        await retoursJusquALaSortie(onglet, "brevet", `${nom} intro → retour → avant`);
+        // 2. Le bouton « ← Retour » de l'introduction rend la place : pas de second accueil.
+        await onglet.goto(avant);
+        await accueil(onglet, base);
+        await intro();
+        await onglet.locator('.barre-cadre [data-action="retour"]').click();
+        await onglet.locator(".accueil").waitFor();
+        await retoursJusquALaSortie(onglet, "accueil", `${nom} bouton Retour de l'intro`);
+        // 3. Introduction → Commencer → Menu : l'accueil ; « Commencer » n'ajoute aucune place.
+        await onglet.goto(avant);
+        await accueil(onglet, base);
+        const longueur = await onglet.evaluate(() => history.length);
+        await intro();
+        await onglet.locator('[data-action="brevet-commencer"]').click();
+        await onglet.locator(".barre-question").waitFor();
+        assert.equal(await onglet.evaluate(() => history.length), longueur + 1, `${nom} : une place`);
+        assert.deepEqual(await onglet.evaluate(() => history.state), {
+          serie: true,
+          origine: null,
+        });
+        await menu(onglet);
+        await onglet.locator(".accueil").waitFor();
+        await onglet.waitForFunction(() => history.state === null);
+        // « Avant » : la place de la série, morte — rien de visible, aucune étape morte.
+        await avantNavigateur(onglet);
+        assert.equal(await vue(onglet), "accueil", `${nom} : Avant après le brevet`);
+        await retoursJusquALaSortie(onglet, "accueil", `${nom} intro → Commencer → Menu`);
+        // 4. Rechargement sur l'introduction : on y reste.
+        await onglet.goto(avant);
+        await accueil(onglet, base);
+        await intro();
+        await onglet.reload();
+        await onglet.locator(".brevet-depart").waitFor();
+        await retoursJusquALaSortie(onglet, "brevet", `${nom} rechargement de l'intro`);
+        await onglet.context().close();
+      }
+      // L'état {brevet:true} est validé : toute autre forme est remplacée et n'ouvre rien.
+      const onglet = await page(1366, 768);
+      await accueil(onglet, base);
+      for (const etat of [{ brevet: "oui" }, { brevet: 1 }, { brevet: [true] }]) {
+        await onglet.evaluate((valeur) => history.replaceState(valeur, ""), etat);
+        await onglet.reload();
+        await onglet.locator(".accueil").waitFor();
+        assert.equal(await onglet.evaluate(() => history.state), null, JSON.stringify(etat));
       }
     }),
 );

@@ -264,6 +264,11 @@ body.menu .contenu {
   padding: 2px 2px 8px;
   scrollbar-gutter: auto;
 }
+/* Dans un domaine, la carte du domaine colle au haut de la zone qui défile : sans ce retrait, un
+   liseré de texte passerait au-dessus d'elle. */
+body.menu[data-ecran="domaine"] .contenu {
+  padding-top: 0;
+}
 .entete-appli,
 .carte-menu {
   border: 1px solid var(--ligne);
@@ -557,15 +562,20 @@ body.menu .contenu {
   font-weight: 700;
 }
 /* Le domaine ouvert (décision F) : une carte en plein écran ; en tête la carte du domaine, qui le
-   referme ; dessous « Tout sélectionner dans ce domaine » et les notions par groupe. */
+   referme ; dessous « Tout sélectionner dans ce domaine » et les notions par groupe.
+   La carte du domaine reste en haut pendant que la liste défile (décision N, 22/10) : « clip » et non
+   « hidden », qui ferait de la carte un conteneur de défilement et empêcherait « sticky ». */
 .domaine-ouvert {
-  overflow: hidden;
+  overflow: clip;
   border: 1px solid color-mix(in srgb, var(--turquoise) 55%, var(--ligne));
   border-radius: 24px;
   background: var(--papier);
   box-shadow: 0 10px 28px color-mix(in srgb, var(--encre) 7%, transparent);
 }
 .domaine-tete {
+  position: sticky;
+  top: 0;
+  z-index: 2;
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr) auto 20px;
   gap: 14px;
@@ -580,6 +590,7 @@ body.menu .contenu {
     color-mix(in srgb, var(--turquoise) 10%, var(--papier)),
     var(--papier) 60%
   );
+  box-shadow: 0 6px 14px -10px color-mix(in srgb, var(--encre) 35%, transparent);
   color: var(--encre);
   text-align: left;
 }
