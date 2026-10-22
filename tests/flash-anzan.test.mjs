@@ -206,7 +206,27 @@ test("ce qui est barré l'est en biais, d'un coin à l'autre (demande de Gwenaë
   assert.match(regle[1], /linear-gradient\(to bottom right/, "un trait « / », du bas à gauche au haut à droite");
 });
 
-test("pas encore au catalogue, et pas indexée tant que Gwenaël ne l'a pas validée", () => {
-  assert.doesNotMatch(CATALOGUE, /flash_anzan/);
-  assert.match(PAGE, /<meta name="robots" content="noindex, nofollow">/);
+test("au catalogue (22/10) : dans Calcul mental « S'entraîner » et dans la collection Soroban, une seule fiche, et indexée", () => {
+  assert.equal(CATALOGUE.split('"path": "outils/calcul_mental/flash_anzan.html"').length - 1, 1, "une seule fiche");
+  const classement = /"outils\/calcul_mental\/flash_anzan\.html": \{([^}]*)\}/.exec(CATALOGUE);
+  assert.ok(classement, "le classement de la fiche");
+  assert.match(classement[1], /"primaryNotion": "calcul-mental"/);
+  assert.match(classement[1], /"primaryGroup": "entrainer"/);
+  assert.match(classement[1], /"collections": \["soroban"\]/);
+  assert.match(classement[1], /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/flash-anzan\.svg\?v=1"/);
+  assert.doesNotMatch(PAGE, /noindex/);
+  const hubSoroban = readFileSync(new URL("../outils/bouliers/soroban/index.html", import.meta.url), "utf8");
+  assert.match(hubSoroban, /href="\.\.\/\.\.\/calcul_mental\/flash_anzan\.html"/, "la page Soroban (annuaire, Google) y mène aussi");
+});
+
+test("AGENTS.md garde l'exception du haut de page de Flash Anzan, pour qu'on ne la « corrige » pas", () => {
+  const agents = readFileSync(new URL("../AGENTS.md", import.meta.url), "utf8");
+  assert.match(agents, /### Exception voulue : le haut de page de Flash Anzan/);
+});
+
+test("le titre « Soroban / Flash Anzan » est centré, et la place du plein écran absent l'équilibre (choix de Gwenaël, 22/10)", () => {
+  const style = PAGE.slice(PAGE.indexOf("<style>"), PAGE.indexOf("</style>"));
+  assert.match(style, /\.cadre-haut \.titre-bloc \{[^}]*text-align: center;/);
+  const regle = /@media \(max-width: 620px\), \(max-width: 899px\) and \(max-height: 500px\) and \(pointer: coarse\) \{\s*\.cadre-haut::after \{ content: ""; flex: 0 0 44px; \}/.exec(style);
+  assert.ok(regle, "une place de 44 px à droite, là où le plein écran est caché et la flèche dans la ligne");
 });

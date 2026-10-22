@@ -71,7 +71,7 @@ test("l’annuaire généré expose le socle légal et la mention de confidentia
   assert.match(html, /<span data-mathsgo-confidentialite>Sans cookie ni traceur<\/span>/);
 });
 
-test("l’annuaire range les bouliers en Numération et réserve Calcul mental aux six ressources validées", () => {
+test("l’annuaire range les bouliers en Numération et réserve Calcul mental aux ressources validées", () => {
   const html = buildDirectoryHtml(catalogue);
   const section = (notionId) => {
     const start = html.indexOf(`<section class="notion" aria-labelledby="notion-${notionId}">`);
@@ -86,6 +86,7 @@ test("l’annuaire range les bouliers en Numération et réserve Calcul mental a
     "outils/calcul_mental/coffres_magiques_solo.html",
     "outils/calcul_mental/defi_calcul.html",
     "outils/calcul_mental/defi_tables.html",
+    "outils/calcul_mental/flash_anzan.html",
     "outils/calcul_mental/fiche_tables_multiplication.pdf",
     "outils/calcul_mental/fiche_parcours_tables.pdf",
     "outils/calcul_mental/cartes_tables.pdf"
