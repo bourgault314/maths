@@ -1022,6 +1022,20 @@ body[data-ecran="question"] .progression {
   font-size: 0.8em;
   field-sizing: fixed;
 }
+/* K12 : réponse-expression — le calcul finit par « = », la case passe sur la ligne suivante, centrée ;
+   sa largeur (réponse attendue + 30 %) est posée par largeurCasesExpression. */
+.carte .calcul .saut {
+  flex-basis: 100%;
+  height: 0;
+}
+.carte .calcul input.case.case-expression {
+  min-width: 6em;
+  font-size: 0.8em;
+  field-sizing: fixed;
+}
+.carte .reponses input.case.case-expression {
+  max-width: 100%;
+}
 /* Une case en lecture (réponse donnée, diaporama) prend la largeur de sa réponse, sur une ligne. */
 .carte .calcul span.case,
 .carte .calcul span.case.expression,

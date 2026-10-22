@@ -323,9 +323,30 @@ export function ecrireReponse(valeur) {
     .replace(/(^|[\s(=;])-(?=[\d\p{L}(])/gu, "$1−");
 }
 
+// Quand un calcul trop long passe à la ligne, il se coupe proprement : un signe reste avec le terme
+// qui le suit (« − 7 », pas « − » en fin de ligne) et rien ne se coupe dans une parenthèse.
+function coupuresPropres(span) {
+  const parcours = document.createTreeWalker(span, NodeFilter.SHOW_TEXT);
+  let profondeur = 0;
+  for (let noeud = parcours.nextNode(); noeud; noeud = parcours.nextNode()) {
+    let texte = "";
+    for (const caractere of noeud.textContent) {
+      if (caractere === "(") profondeur += 1;
+      if (caractere === ")") profondeur = Math.max(0, profondeur - 1);
+      const avant = texte.at(-1);
+      texte +=
+        caractere === " " && (profondeur > 0 || /[+−×÷=(]/.test(avant || ""))
+          ? "\u00a0"
+          : caractere;
+    }
+    noeud.textContent = texte;
+  }
+}
+
 function texteMath(parent, texte, classe = "t") {
   const span = element("span", classe, parent);
   span.innerHTML = mathHtml(texte.trim());
+  if (classe === "t") coupuresPropres(span);
   return span;
 }
 
@@ -377,6 +398,41 @@ function creerCase(parent, question, rang, valeurs, options, contexte) {
   const saisie = ajouterSaisie(parent, champ, valeurs[rang] || "", champ.label, options);
   saisie.dataset.champ = rang;
   if (contexte.plusieurs) saisie.classList.add("petite");
+  // K12 : la case d'une réponse-expression sera assez large pour la réponse attendue entière
+  // (largeurCasesExpression) ; la réponse reste en mémoire, jamais dans la page.
+  if (reponseExpression(champ)) {
+    saisie.classList.add("case-expression");
+    reponsesAttendues.set(saisie, ecrireReponse(champ.answer));
+  }
+}
+
+/* K12 — une réponse-expression : champ « expression », ou réponse attendue qui contient une lettre. */
+const reponsesAttendues = new WeakMap();
+export function reponseExpression(champ) {
+  return Boolean(
+    champ &&
+    !champ.options &&
+    (champ.kind === "expression" || /[a-zA-Z]/.test(String(champ.answer))),
+  );
+}
+
+// La largeur de chaque case-expression : la réponse attendue mesurée dans la police de la case,
+// + 30 %, au plus la largeur de la carte ; sans défilement interne pour les réponses du moteur.
+export function largeurCasesExpression(racine) {
+  const contexte = document.createElement("canvas").getContext("2d");
+  racine.querySelectorAll("input.case-expression").forEach((saisie) => {
+    const texte = reponsesAttendues.get(saisie);
+    if (!texte) return;
+    const style = getComputedStyle(saisie);
+    contexte.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+    const bords = ["paddingLeft", "paddingRight", "borderLeftWidth", "borderRightWidth"]
+      .map((cle) => parseFloat(style[cle]) || 0)
+      .reduce((a, b) => a + b, 0);
+    const carte = saisie.closest(".carte");
+    const max = carte ? carte.clientWidth - 28 : innerWidth - 32;
+    const voulue = Math.ceil(contexte.measureText(texte).width * 1.3 + bords);
+    saisie.style.width = `${Math.min(max, Math.max(voulue, parseFloat(style.minWidth) || 0))}px`;
+  });
 }
 
 /* K10 : dans le calcul (écrit en gras), les lettres sont les lettres rondes et grasses d'ÉquaSplat
@@ -392,8 +448,24 @@ export function lettresGrasses(racine) {
 
 function monterModele(parent, question, valeurs, options, contexte) {
   const ligne = element("div", contexte.phrase ? "calcul phrase" : "calcul", parent);
-  for (const morceau of morceauxModele(contexte.modele)) {
-    if ("texte" in morceau) texteMath(ligne, morceau.texte);
+  const morceaux = morceauxModele(contexte.modele);
+  morceaux.forEach((morceau, rang) => {
+    const suivant = morceaux[rang + 1];
+    // K12 : le calcul d'une réponse-expression se termine par « = » (accroché au dernier terme
+    // par une espace insécable) ; la case passe sur la ligne suivante.
+    const dessous =
+      "texte" in morceau &&
+      suivant &&
+      "case" in suivant &&
+      reponseExpression(question.fields[suivant.case]) &&
+      /=\s*$/.test(morceau.texte);
+    if (dessous) {
+      // Dans le dernier bloc du calcul (inline-block) : sinon la ligne se coupe juste avant « = ».
+      const texte = texteMath(ligne, morceau.texte.replace(/\s*=\s*$/, ""));
+      (texte.querySelector(":scope > .math-expression:last-child") || texte).append("\u00a0=");
+      ligne.classList.add("expression-dessous");
+      element("span", "saut", ligne);
+    } else if ("texte" in morceau) texteMath(ligne, morceau.texte);
     else if ("case" in morceau)
       creerCase(ligne, question, morceau.case, valeurs, options, contexte);
     else {
@@ -409,7 +481,7 @@ function monterModele(parent, question, valeurs, options, contexte) {
         if (morceau.fraction && classe === "haut") element("span", "barre", bloc);
       }
     }
-  }
+  });
   lettresGrasses(ligne);
   const coche = options.etatCases?.every((etat) => etat === "juste");
   if (coche) element("span", "coche", ligne).textContent = "✓";

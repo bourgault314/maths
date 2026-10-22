@@ -20,6 +20,7 @@ import {
   monterClavier,
   monterSignes,
   lettresGrasses,
+  largeurCasesExpression,
 } from "./champs.js";
 import {
   accueilHTML,
@@ -940,16 +941,25 @@ function reduireCalculs(zone) {
     calcul.style.fontSize = "";
     calcul.style.flexWrap = "";
     calcul.classList.remove("long");
+    // K12 : la case d'une réponse-expression est sur la ligne suivante ; seul le calcul se mesure,
+    // et il ne descend pas sous 90 % (70 % pour une réponse numérique, la case à côté).
+    const dessous = calcul.classList.contains("expression-dessous");
+    const caches = dessous ? [...calcul.querySelectorAll(":scope > .saut, :scope > .case")] : [];
+    caches.forEach((element) => (element.style.display = "none"));
+    const plancher = dessous ? 0.9 : 0.7;
     const base = parseFloat(getComputedStyle(calcul).fontSize);
     const trop = () => calcul.scrollWidth > calcul.clientWidth + 1;
     let taille = base;
-    while (trop() && taille > base * 0.7) calcul.style.fontSize = `${(taille -= 1)}px`;
+    while (trop() && taille - 1 >= base * plancher) calcul.style.fontSize = `${(taille -= 1)}px`;
     calcul.style.flexWrap = "nowrap";
-    while (trop() && taille > base * 0.7) calcul.style.fontSize = `${(taille -= 1)}px`;
+    while (trop() && taille - 1 >= base * plancher) calcul.style.fontSize = `${(taille -= 1)}px`;
     if (trop()) calcul.style.flexWrap = "wrap";
-    // Encore trop large à 70 % : le texte du calcul passe à la ligne entre ses termes, la case suit.
+    // Encore trop large : le texte du calcul passe à la ligne entre ses termes, la case suit.
     if (trop()) calcul.classList.add("long");
+    if (dessous) calcul.style.flexWrap = "wrap";
+    caches.forEach((element) => (element.style.display = ""));
   });
+  largeurCasesExpression(zone);
 }
 
 // La taille de la figure trouvée à l'arrivée sur la question (même question, même fenêtre) : ouvrir ou

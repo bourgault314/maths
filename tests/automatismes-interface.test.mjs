@@ -1117,7 +1117,7 @@ test(
 // Corrections 3 (K10) : le calcul en gras (Nunito 800), les lettres rondes et grasses de SplatLettres ;
 // un calcul long se réduit sur UNE ligne, la case à côté (NC20-b à 390 px).
 test(
-  "calcul (coque V2, K10) : en gras, lettres SplatLettres, NC20-b sur une ligne à 390 px",
+  "calcul (coque V2, K10) : en gras, lettres SplatLettres ; réponse numérique : la case à côté",
   { skip: ignorer, timeout: 60000 },
   async () => {
     const { serveur, base } = await serveurLocal();
@@ -1149,8 +1149,19 @@ test(
       assert.match(mesure.police, /^SplatLettres/, "Lettres SplatLettres");
       assert.equal(mesure.lettre, "𝑥", "La lettre mathématique ronde");
       assert.ok(mesure.lettreGrasse >= 700, "Lettre grasse");
-      assert.ok(mesure.uneLigne, "La case sur la même ligne que le calcul");
       assert.ok(mesure.tient, "Le calcul tient dans la carte");
+      // Depuis K12, la case d'une réponse-expression (NC20-b) passe dessous ; une réponse
+      // numérique garde sa case à côté, sur la même ligne (NC07-a, 390 px).
+      await page.goto(`${base}?notion=NC07&forme=a&graine=12`);
+      await page.locator(".carte .calcul .case").waitFor();
+      await stabiliser(page);
+      const numerique = await page.evaluate(() => {
+        const calcul = document.querySelector(".carte .calcul");
+        const texte = calcul.querySelector(".t").getBoundingClientRect();
+        const kase = calcul.querySelector(".case").getBoundingClientRect();
+        return Math.abs(kase.top - texte.top) < kase.height && kase.left > texte.left;
+      });
+      assert.ok(numerique, "Réponse numérique : la case sur la même ligne que le calcul");
     } finally {
       await browser.close();
       await new Promise((fin) => serveur.close(fin));
@@ -1190,6 +1201,126 @@ test(
         .locator(".espace-question")
         .evaluate((zone) => zone.scrollHeight > zone.clientHeight + 1);
       assert.equal(defile, false, "Tout tient dans l'écran");
+    } finally {
+      await browser.close();
+      await new Promise((fin) => serveur.close(fin));
+    }
+  },
+);
+
+// Correction 4 (précision de K9) : une figure ne descend jamais sous 60 % de sa taille d'origine
+// POUR GAGNER DE LA HAUTEUR ; la largeur de la carte reste une limite (un dessin de 600 px dans une
+// carte de 329 px est forcément à 54,8 %, il sera redessiné dans les cahiers). Toutes les formes à
+// figure, à 375 × 667 : aucune figure sous 60 % alors que la largeur permettait plus.
+test(
+  "figures (coque V2, K9 précisé) : jamais sous 60 % quand la largeur permet plus, 375 × 667",
+  { skip: ignorer, timeout: 600000 },
+  async () => {
+    const { genererQuestion, formesDisponibles, generateurs } =
+      await import("../automatismes/moteur.js");
+    const formes = Object.keys(generateurs).flatMap((famille) =>
+      formesDisponibles(famille)
+        .filter((forme) => genererQuestion(famille, forme, 12).visual)
+        .map((forme) => [famille, forme]),
+    );
+    const { serveur, base } = await serveurLocal();
+    const browser = await ouvrirNavigateur();
+    const page = await browser.newPage({
+      viewport: { width: 375, height: 667 },
+      isMobile: true,
+      hasTouch: true,
+    });
+    const trop = [];
+    try {
+      for (const [famille, forme] of formes) {
+        await page.goto(`${base}?notion=${famille}&forme=${forme}&graine=12`);
+        // Les formes que l'élève ne peut pas lancer (DP05-a, b) n'ouvrent pas de question.
+        if (!(await page.locator(".carte .figure > svg").count())) continue;
+        await stabiliser(page);
+        const mesure = await page.evaluate(() => {
+          const figure = document.querySelector(".carte .figure > svg");
+          const naturelle = figure.viewBox.baseVal.width;
+          return {
+            echelle: figure.getBoundingClientRect().width / naturelle,
+            largeur: figure.parentElement.clientWidth / naturelle,
+          };
+        });
+        if (mesure.echelle < Math.min(0.6, mesure.largeur) - 0.005)
+          trop.push(`${famille}-${forme} : × ${mesure.echelle.toFixed(3)}`);
+      }
+      assert.deepEqual(trop, []);
+    } finally {
+      await browser.close();
+      await new Promise((fin) => serveur.close(fin));
+    }
+  },
+);
+
+// Correction 4 (K12) : une réponse-expression ne défile plus dans une case minuscule. Le calcul
+// garde au moins 90 % de sa taille, finit par « = », la case passe dessous, assez large pour la
+// réponse attendue entière.
+test(
+  "réponse-expression (coque V2, K12) : calcul ≥ 90 %, case dessous, réponse tapée entière visible",
+  { skip: ignorer, timeout: 300000 },
+  async () => {
+    const { genererQuestion } = await import("../automatismes/moteur.js");
+    const { serveur, base } = await serveurLocal();
+    const browser = await ouvrirNavigateur();
+    const ecarts = [];
+    try {
+      for (const [width, height, tactile] of [
+        [390, 844, true],
+        [375, 667, true],
+        [820, 1180, true],
+        [1366, 768, false],
+      ]) {
+        const page = await browser.newPage({
+          viewport: { width, height },
+          isMobile: tactile,
+          hasTouch: tactile,
+        });
+        for (const [famille, forme] of [
+          ["NC20", "b"],
+          ["NC19", "a"],
+          ["NC22", "e"],
+          ["NC24", "e"],
+        ]) {
+          const nom = `${famille}-${forme} ${width}x${height}`;
+          const reponse = String(genererQuestion(famille, forme, 12).fields[0].answer);
+          await page.goto(`${base}?notion=${famille}&forme=${forme}&graine=12`);
+          await page.locator(".carte .champ").waitFor();
+          await stabiliser(page);
+          await page.locator(".carte .champ").click();
+          await page.keyboard.type(reponse.replace(/−/g, "-"));
+          const mesure = await page.evaluate((large) => {
+            const zone = document.querySelector(".espace-question").getBoundingClientRect();
+            const champ = document.querySelector(".carte .champ");
+            const kase = champ.getBoundingClientRect();
+            const calcul = document.querySelector(".carte .calcul:not(.phrase)");
+            const style = getComputedStyle(champ);
+            const contexte = document.createElement("canvas").getContext("2d");
+            contexte.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+            const place =
+              champ.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+            return {
+              rapport: calcul
+                ? parseFloat(getComputedStyle(calcul).fontSize) / (large ? 42 : 34)
+                : 1,
+              dessous: calcul
+                ? kase.top >= calcul.querySelector(".t").getBoundingClientRect().bottom - 2
+                : true,
+              entiere: kase.top >= zone.top - 1 && kase.bottom <= zone.bottom + 1,
+              visible: contexte.measureText(champ.value).width <= place + 1,
+            };
+          }, width >= 700);
+          if (mesure.rapport < 0.9) ecarts.push(`${nom} : calcul à ${mesure.rapport.toFixed(2)}`);
+          if (!mesure.dessous) ecarts.push(`${nom} : case à côté du calcul`);
+          if (!mesure.entiere) ecarts.push(`${nom} : case coupée`);
+          if (!mesure.visible) ecarts.push(`${nom} : réponse tapée qui défile`);
+        }
+        await page.close();
+      }
+      assert.deepEqual(ecarts, []);
     } finally {
       await browser.close();
       await new Promise((fin) => serveur.close(fin));
