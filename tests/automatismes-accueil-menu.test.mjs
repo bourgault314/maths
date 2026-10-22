@@ -432,8 +432,10 @@ test(
         automatique: false,
         aideOffice: false,
       });
+      // Recharger dans le domaine y laisse (P12) ; la sélection, elle, ne survit pas au rechargement.
       await onglet.reload();
-      await cocher(onglet, "donnees-probabilites", [0]);
+      await onglet.locator(".domaine-ouvert").waitFor();
+      await onglet.locator("[data-selection]").nth(0).check();
       await onglet.locator('[data-action="projeter-reglages"]').click();
       assert.equal(await onglet.locator("dialog[open] #secondes").inputValue(), "20");
       assert.equal(await onglet.locator("dialog[open] #correction").inputValue(), "end");
@@ -779,5 +781,138 @@ test(
       await onglet.locator('[data-action="brevet-commencer"]').click();
       await onglet.locator(".barre-question").waitFor();
       assert.equal(await onglet.locator(".position").innerText(), "1 sur 9", "Entraînement brevet");
+    }),
+);
+
+// L'écran affiché, pour comparer deux gestes : « domaine:<id> », « accueil »… ou « quitté ».
+const vue = async (onglet) => {
+  if (!/\/automatismes\//.test(onglet.url())) return "quitté";
+  return onglet.evaluate(() => {
+    const ecranCourant = document.body.dataset.ecran;
+    const ouvert = document.querySelector(".domaine-tete")?.getAttribute("aria-label");
+    return ecranCourant === "domaine" ? `domaine:${ouvert}` : ecranCourant;
+  });
+};
+
+// Les gestes retour jusqu'à quitter l'appli : jamais deux fois le même écran de suite, et l'on ne
+// quitte l'appli que depuis l'accueil.
+async function retoursJusquALaSortie(onglet, depart, nom) {
+  const vues = [depart];
+  for (let geste = 0; geste < 6 && vues.at(-1) !== "quitté"; geste += 1) {
+    await onglet.goBack().catch(() => null);
+    await onglet
+      .waitForFunction(
+        () => !location.pathname.endsWith("/automatismes/") || document.body.dataset.ecran,
+      )
+      .catch(() => null);
+    vues.push(await vue(onglet));
+  }
+  for (let rang = 1; rang < vues.length; rang += 1)
+    assert.notEqual(vues[rang], vues[rang - 1], `${nom} : retour sans effet (${vues.join(" → ")})`);
+  assert.equal(vues.at(-1), "quitté", `${nom} : ${vues.join(" → ")}`);
+  assert.equal(vues.at(-2), "accueil", `${nom} : on quitte depuis l'accueil (${vues.join(" → ")})`);
+  return vues;
+}
+
+test(
+  "P12 : historique toujours cohérent — les trois parcours de Codex, chaque retour change d’écran",
+  { skip: ignorer, timeout: 120000 },
+  () =>
+    banc(async ({ base, page }) => {
+      const avant = `${base}../favicon.svg`;
+      // 1. Projeter → bilan → « Retour » ; puis fermer, ouvrir un autre domaine, et revenir.
+      let onglet = await page(1366, 768, false, { niveau: "4e", nombre: 5 });
+      await onglet.goto(avant);
+      await accueil(onglet, base);
+      await cocher(onglet, "nombres-calculs", [0]);
+      await onglet.locator('[data-action="projeter-reglages"]').click();
+      await onglet.locator('dialog [data-action="projeter"]').click();
+      for (let tour = 0; tour < 8 && (await ecran(onglet)) === "question"; tour += 1)
+        await onglet.locator('[data-action="suivante"]').click();
+      await onglet.locator(".actions-bilan").waitFor();
+      await onglet.locator('[data-action="accueil"]').click();
+      assert.equal(
+        await vue(onglet),
+        "domaine:Refermer Nombres et calculs",
+        "Retour du bilan = Menu",
+      );
+      assert.equal(await barre(onglet), "1 notion sélectionnée · 4e · 5 questions");
+      await onglet.locator(".domaine-tete").click();
+      await onglet.locator('[data-domaine="espace-geometrie"]').click();
+      await retoursJusquALaSortie(onglet, await vue(onglet), "bilan du diaporama");
+      await onglet.context().close();
+      // 2. Ouvrir un domaine, recharger : on y reste ; puis revenir.
+      onglet = await page(390, 844, true);
+      await onglet.goto(avant);
+      await accueil(onglet, base);
+      await onglet.locator('[data-domaine="nombres-calculs"]').click();
+      await onglet.reload();
+      await onglet.locator(".domaine-ouvert").waitFor();
+      assert.equal(await vue(onglet), "domaine:Refermer Nombres et calculs", "Rechargement");
+      await retoursJusquALaSortie(onglet, await vue(onglet), "rechargement");
+      await onglet.context().close();
+      // 3. Ouvrir → retour → avant : « avant » rouvre le domaine.
+      onglet = await page(390, 844, true);
+      await onglet.goto(avant);
+      await accueil(onglet, base);
+      await onglet.locator('[data-domaine="espace-geometrie"]').click();
+      await onglet.goBack();
+      await onglet.locator(".accueil").waitFor();
+      await onglet.goForward();
+      await onglet.locator(".domaine-ouvert").waitFor();
+      assert.equal(await vue(onglet), "domaine:Refermer Espace et géométrie", "Avant");
+      await retoursJusquALaSortie(onglet, await vue(onglet), "avant");
+      // Rechargement pendant une série lancée d'un domaine : le menu d'origine.
+      await accueil(onglet, base);
+      await cocher(onglet, "donnees-probabilites", [0]);
+      await onglet.locator('[data-action="lancer"]').click();
+      await onglet.locator(".barre-question").waitFor();
+      await onglet.reload();
+      await onglet.locator(".domaine-ouvert").waitFor();
+      assert.equal(await vue(onglet), "domaine:Refermer Données et probabilités");
+      assert.deepEqual(await onglet.evaluate(() => history.state), {
+        domaine: "donnees-probabilites",
+      });
+      // … et la place de la série perdue est rendue : refermer ramène à l'accueil, pas au même domaine.
+      await onglet.locator(".domaine-tete").click();
+      await onglet.locator(".accueil").waitFor();
+      assert.equal(await vue(onglet), "accueil", "Après le rechargement pendant une série");
+    }),
+);
+
+test(
+  "P12 : un état d’historique inconnu ou trafiqué est remplacé et n’ouvre rien",
+  { skip: ignorer, timeout: 60000 },
+  () =>
+    banc(async ({ base, page }) => {
+      const onglet = await page(1366, 768);
+      await accueil(onglet, base);
+      for (const etat of [
+        { domaine: "inconnu" },
+        { domaine: '<img src=x onerror="window.injection=1">' },
+        { domaine: ["nombres-calculs"] },
+        { serie: "oui" },
+        "nombres-calculs",
+        42,
+      ]) {
+        await onglet.evaluate((valeur) => history.replaceState(valeur, ""), etat);
+        await onglet.reload();
+        await onglet.locator(".accueil").waitFor();
+        const nom = JSON.stringify(etat);
+        assert.equal(await ecran(onglet), "accueil", nom);
+        assert.equal(await onglet.evaluate(() => history.state), null, `${nom} remplacé`);
+        assert.equal(await onglet.locator("img[src='x'], [onerror]").count(), 0, nom);
+        assert.equal(await onglet.evaluate(() => window.injection), undefined, nom);
+        // Le même état reçu par un geste avant/retour n'ouvre rien non plus.
+        await onglet.evaluate((valeur) => {
+          history.pushState(valeur, "");
+          history.back();
+        }, etat);
+        await onglet.waitForTimeout(100);
+        await onglet.goForward();
+        await onglet.locator(".accueil").waitFor();
+        assert.equal(await ecran(onglet), "accueil", `${nom} par le geste avant`);
+        assert.equal(await onglet.evaluate(() => history.state), null, `${nom} remplacé (avant)`);
+      }
     }),
 );

@@ -573,7 +573,9 @@ test(
       const temps = await page.locator("#temps").innerText();
       await page.clock.fastForward(10000);
       assert.equal(await page.locator("#temps").innerText(), temps, "Pause par espace");
+      // Même adresse pendant le diaporama = un rechargement : on retrouve le domaine d'origine (P12).
       await page.goto(base);
+      await page.locator(".domaine-tete").click();
       await page.locator('[data-action="brevet"]').click();
       await page.locator('[data-action="brevet-commencer"]').click();
       assert.equal(await page.locator(".navigation-points button").count(), 9);
