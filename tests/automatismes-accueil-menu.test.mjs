@@ -898,6 +898,8 @@ test(
       await onglet.reload();
       await onglet.locator(".domaine-ouvert").waitFor();
       assert.equal(await vue(onglet), "domaine:Refermer Données et probabilités");
+      // La place de la série est rendue (history.back, Q2) : on attend d'être sur l'entrée d'en dessous.
+      await onglet.waitForFunction(() => !history.state?.serie);
       assert.deepEqual(await onglet.evaluate(() => history.state), {
         domaine: "donnees-probabilites",
       });
@@ -1045,5 +1047,157 @@ test(
         await onglet.locator(".accueil").waitFor();
         await onglet.context().close();
       }
+    }),
+);
+
+// Le geste avant du navigateur ; on attend tous ses effets : l'entrée atteinte, et si elle est morte
+// (une place de série sans série), le retour que l'appli fait aussitôt.
+async function avantNavigateur(onglet) {
+  await onglet.evaluate(() => {
+    window.sautsHistorique = 0;
+    addEventListener("popstate", () => (window.sautsHistorique += 1));
+  });
+  await onglet.goForward();
+  await onglet.waitForFunction(() => window.sautsHistorique >= 1);
+  // Après le saut : une place de série à l'écran d'un menu est rendue par l'appli.
+  await onglet.waitForFunction(
+    () => !history.state?.serie || ["question", "bilan"].includes(document.body.dataset.ecran),
+  );
+  await stabiliser(onglet);
+}
+
+// Va jusqu'au bilan, quelle que soit la série (entraînement, brevet, diaporama).
+async function jusquAuBilan(onglet) {
+  for (let tour = 0; tour < 60 && (await ecran(onglet)) === "question"; tour += 1) {
+    const confirmer = onglet.locator('[data-action="confirmer-fin"]');
+    const suivante = onglet.locator('[data-action="suivante"]');
+    if (await confirmer.count()) await confirmer.click();
+    else if (await suivante.isVisible()) await suivante.click();
+    else await onglet.locator('[data-action="passer"]').click();
+  }
+  await onglet.locator(".actions-bilan").waitFor();
+}
+
+test(
+  "Q2 : après une sortie de série, « Avant » ne fait rien de visible et chaque retour change d’écran",
+  { skip: ignorer, timeout: PLAFOND },
+  () =>
+    banc(async ({ base, page }) => {
+      const avant = `${base}../favicon.svg`;
+      const lancerDuDomaine = async (onglet, projeter = false) => {
+        await cocher(onglet, "nombres-calculs", [0]);
+        if (projeter) {
+          await onglet.locator('[data-action="projeter-reglages"]').click();
+          await onglet.locator('dialog [data-action="projeter"]').click();
+        } else await onglet.locator('[data-action="lancer"]').click();
+        await onglet.locator(".barre-question").waitFor();
+      };
+      const brevet = async (onglet) => {
+        await onglet.locator(".ligne-brevet").click();
+        await onglet.locator('[data-action="brevet-commencer"]').click();
+        await onglet.locator(".barre-question").waitFor();
+      };
+      const recharger = async (onglet) => {
+        await onglet.reload();
+        await onglet.waitForFunction(
+          () => ["accueil", "domaine"].includes(document.body.dataset.ecran) && !history.state?.serie,
+        );
+      };
+      // Les scénarios du contrôle C10bis de Codex (sauf l'introduction du brevet : Q3).
+      const scenarios = [
+        ["série → Menu", (o) => lancerDuDomaine(o), (o) => menu(o)],
+        ["série → rechargement", (o) => lancerDuDomaine(o), recharger],
+        [
+          "bilan → Changer de notions",
+          (o) => lancerDuDomaine(o),
+          async (o) => {
+            await jusquAuBilan(o);
+            await o.locator('[data-action="changer"]').click();
+          },
+        ],
+        ["brevet → Menu", brevet, (o) => menu(o)],
+        ["brevet → rechargement", brevet, recharger],
+        [
+          "lien direct → Menu",
+          async (o) => {
+            await o.goto(`${base}?notion=NC27&forme=a&graine=123&mode=project`);
+            await o.locator(".carte").waitFor();
+          },
+          (o) => menu(o),
+        ],
+        ["projection → Menu", (o) => lancerDuDomaine(o, true), (o) => menu(o), 700],
+        [
+          "projection → bilan → Retour",
+          (o) => lancerDuDomaine(o, true),
+          async (o) => {
+            await jusquAuBilan(o);
+            await o.locator('[data-action="accueil"]').click();
+          },
+          700,
+        ],
+      ];
+      for (const [width, height, tactile] of [
+        [390, 844, true],
+        [1366, 768, false],
+      ])
+        for (const [nom, lancerSerie, sortir, largeurMin = 0] of scenarios) {
+          if (width < largeurMin) continue;
+          const cas = `${width} ${nom}`;
+          const onglet = await page(width, height, tactile, { niveau: "4e", nombre: 5 });
+          await onglet.goto(avant);
+          // Le lien direct s'ouvre depuis une autre page ; les autres séries, depuis l'accueil.
+          if (!nom.startsWith("lien")) await accueil(onglet, base);
+          await lancerSerie(onglet);
+          await sortir(onglet);
+          await onglet.waitForFunction(
+            () => ["accueil", "domaine"].includes(document.body.dataset.ecran) && !history.state?.serie,
+          );
+          await stabiliser(onglet);
+          const menuAffiche = await vue(onglet);
+          const etatMenu = await onglet.evaluate(() => JSON.stringify(history.state));
+          // « Avant » atteint la place de la série abandonnée : morte, elle est quittée aussitôt.
+          await avantNavigateur(onglet);
+          assert.equal(await vue(onglet), menuAffiche, `${cas} : « Avant » ne change rien de visible`);
+          assert.equal(
+            await onglet.evaluate(() => JSON.stringify(history.state)),
+            etatMenu,
+            `${cas} : de retour sur l'entrée du menu`,
+          );
+          await retoursJusquALaSortie(onglet, menuAffiche, cas);
+          await onglet.context().close();
+        }
+    }),
+);
+
+test(
+  "Q2 : « Encore » et « Refaire » réutilisent la place de la série — jamais deux places de suite",
+  { skip: ignorer, timeout: PLAFOND },
+  () =>
+    banc(async ({ base, page }) => {
+      const onglet = await page(390, 844, true, { niveau: "4e", nombre: 5 });
+      await onglet.goto(`${base}../favicon.svg`);
+      await accueil(onglet, base);
+      await cocher(onglet, "nombres-calculs", [0, 1]);
+      await onglet.locator('[data-action="lancer"]').click();
+      await onglet.locator(".barre-question").waitFor();
+      const longueur = await onglet.evaluate(() => history.length);
+      // Tout passer : toutes les questions sont des erreurs, « Refaire mes erreurs » est proposé.
+      await jusquAuBilan(onglet);
+      await onglet.locator('[data-action="refaire"]').click();
+      await onglet.locator(".barre-question").waitFor();
+      await jusquAuBilan(onglet);
+      await onglet.locator('[data-action="encore"]').click();
+      await onglet.locator(".barre-question").waitFor();
+      assert.equal(await onglet.evaluate(() => history.length), longueur, "aucune place de plus");
+      assert.deepEqual(await onglet.evaluate(() => history.state), {
+        serie: true,
+        origine: "nombres-calculs",
+      });
+      // Un seul geste sort de la série, un seul referme le domaine.
+      await menu(onglet);
+      await onglet.locator(".domaine-ouvert").waitFor();
+      await avantNavigateur(onglet);
+      assert.equal(await vue(onglet), "domaine:Refermer Nombres et calculs");
+      await retoursJusquALaSortie(onglet, await vue(onglet), "Encore et Refaire");
     }),
 );
