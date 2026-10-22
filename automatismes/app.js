@@ -175,13 +175,12 @@ function majLancement() {
   ajusterAffichage();
 }
 
-// La sélection de l'élève part avec sa série : elle est vidée au lancement.
+// La sélection reste après la série : « Menu » ramène l'élève à ses notions cochées (décision J).
 function lancerSelection() {
   const ids = famillesEligibles(catalogue, filtre)
     .filter((famille) => selection.has(famille.id))
     .map((famille) => famille.id);
   if (!ids.length) return;
-  selection.clear();
   lancer({ mode: "train", ids, nombre: preferences.nombre });
 }
 
@@ -189,6 +188,8 @@ function afficherAccueil() {
   arreterHorloge();
   ecran = "accueil";
   seance = null;
+  // Aucun domaine n'est ouvert : une série lancée d'ici revient ici.
+  domaine = null;
   if (!history.state?.domaine) history.replaceState(null, "", location.pathname);
   cadre(accueilHTML(famillesEligibles(catalogue, filtre), filtre, selection, preferences.nombre));
 }
@@ -268,6 +269,9 @@ function lancer(options, questionsImposees) {
         nouvelEtat(question, configuration.mode, configuration.aideOffice),
       ),
     };
+    // La série a sa place dans l'historique : le geste retour du téléphone fait comme « Menu » au
+    // lieu de quitter l'appli. « Encore une série » et « Refaire mes erreurs » réutilisent la place.
+    if (!history.state?.serie) history.pushState({ serie: true }, "", location.pathname);
     ecran = "question";
     afficherQuestion();
     demarrerHorloge();
@@ -908,12 +912,24 @@ function basculerPause() {
   afficherQuestion();
 }
 
-function retour() {
-  if (ecran === "question") {
-    arreterHorloge();
-    // « Quitter » le diaporama ramène au menu, avec la sélection.
-    if (domaine) return afficherDomaine(domaine);
+/* Sortir d'une série (Menu, Quitter, Retour et Changer de notions du bilan, geste retour) : on revient
+   au menu d'où on l'a lancée — le domaine, ou l'accueil —, sélection gardée. Quand la série occupe une
+   place dans l'historique, on la rend (history.back) et c'est popstate qui affiche la destination. */
+const menuDOrigine = () => (domaine ? afficherDomaine(domaine, true) : afficherAccueil());
+let sortieDemandee = null;
+function sortirDeLaSerie(destination = menuDOrigine) {
+  arreterHorloge();
+  document.querySelectorAll("dialog").forEach((dialogue) => dialogue.remove());
+  if (history.state?.serie) {
+    sortieDemandee = destination;
+    history.back();
+    return;
   }
+  destination();
+}
+
+function retour() {
+  if (ecran === "question" || ecran === "bilan") return sortirDeLaSerie();
   if (ecran === "accueil") {
     location.href = "/";
     return;
@@ -925,7 +941,7 @@ function retour() {
 
 function relierActions(racine = application) {
   const actions = {
-    accueil: afficherAccueil,
+    accueil: () => (ecran === "bilan" ? sortirDeLaSerie(afficherAccueil) : afficherAccueil()),
     retour,
     brevet: afficherBrevet,
     "brevet-commencer": () => lancer({ mode: "exam", nombre: 9 }),
@@ -952,7 +968,7 @@ function relierActions(racine = application) {
         : document.documentElement.requestFullscreen(),
     encore: () => lancer({ ...seance.options, graine: nouvelleGraine() }),
     refaire: refaireErreurs,
-    changer: () => (domaine ? afficherDomaine(domaine) : afficherAccueil()),
+    changer: () => sortirDeLaSerie(),
   };
   racine.querySelectorAll("[data-action]").forEach((element) => {
     element.onclick = (evenement) => {
@@ -1236,7 +1252,12 @@ function lireAdresse() {
 }
 
 window.addEventListener("resize", ajusterAffichage);
+// Le geste retour : sur une question ou le bilan, comme « Menu » ; sur un domaine, il le referme.
 window.addEventListener("popstate", () => {
+  const destination = sortieDemandee;
+  sortieDemandee = null;
+  if (ecran === "question" || ecran === "bilan")
+    return sortirDeLaSerie(destination || menuDOrigine);
   if (ecran === "domaine") afficherAccueil();
 });
 document.addEventListener("keydown", (evenement) => {

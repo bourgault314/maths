@@ -82,9 +82,13 @@ async function banc(corps) {
     nouvelle.on("pageerror", (erreur) => erreurs.push(`${width}x${height} ${erreur.message}`));
     if (prefs)
       await nouvelle.addInitScript((valeur) => {
-        if (!sessionStorage.getItem("prefs-posees")) {
-          localStorage.setItem("mg-automatismes-prefs", valeur);
-          sessionStorage.setItem("prefs-posees", "1");
+        try {
+          if (!sessionStorage.getItem("prefs-posees")) {
+            localStorage.setItem("mg-automatismes-prefs", valeur);
+            sessionStorage.setItem("prefs-posees", "1");
+          }
+        } catch {
+          // about:blank (on a quitté l'appli) : pas de stockage, rien à poser.
         }
       }, JSON.stringify(prefs));
     return nouvelle;
@@ -537,5 +541,106 @@ test(
         domaines.every((carte) => Math.round(carte.width) === 333),
         "375 : 333 px",
       );
+    }),
+);
+
+const menu = (onglet) => onglet.locator('.barre-question [data-action="retour"]').click();
+
+// Le geste retour du navigateur, puis l'écran qui s'affiche (ou « quitté » si on a quitté l'appli).
+async function gesteRetour(onglet) {
+  await onglet.goBack().catch(() => null);
+  await onglet.waitForTimeout(200);
+  if (!/\/automatismes\//.test(onglet.url())) return "quitté";
+  return ecran(onglet);
+}
+
+async function finirLaSerie(onglet) {
+  for (let tour = 0; tour < 25 && (await ecran(onglet)) === "question"; tour += 1) {
+    const suivante = onglet.locator('[data-action="suivante"]');
+    if (await suivante.isVisible()) await suivante.click();
+    else await onglet.locator('[data-action="passer"]').click();
+  }
+  await onglet.locator(".actions-bilan").waitFor();
+}
+
+test(
+  "P8 : « Menu » ramène là d’où l’on a lancé la série, la sélection reste",
+  { skip: ignorer, timeout: 90000 },
+  () =>
+    banc(async ({ base, page }) => {
+      const onglet = await page(390, 844, true, { niveau: "4e", nombre: 5 });
+      await accueil(onglet, base);
+      // Lancée du domaine : « Menu » ramène au domaine ; sa carte, ensuite, à l'accueil.
+      await cocher(onglet, "nombres-calculs", [0, 1]);
+      await onglet.locator('[data-action="lancer"]').click();
+      await menu(onglet);
+      assert.equal(await ecran(onglet), "domaine");
+      assert.equal(await barre(onglet), "2 notions sélectionnées · 4e · 5 questions");
+      await onglet.locator(".domaine-tete").click();
+      assert.equal(await ecran(onglet), "accueil");
+      // Lancée de l'accueil après un passage par un domaine : « Menu » ramène à l'accueil.
+      await cocher(onglet, "espace-geometrie", [0]);
+      await onglet.locator(".domaine-tete").click();
+      await onglet.locator('[data-action="lancer"]').click();
+      assert.equal(await ecran(onglet), "question");
+      await menu(onglet);
+      assert.equal(await ecran(onglet), "accueil");
+      assert.equal(await barre(onglet), "3 notions sélectionnées · 4e · 5 questions");
+      // « Changer de notions » (bilan) : le menu d'origine, sélection gardée.
+      await onglet.locator('[data-action="lancer"]').click();
+      await finirLaSerie(onglet);
+      await onglet.locator('[data-action="changer"]').click();
+      assert.equal(await ecran(onglet), "accueil");
+      assert.equal(await barre(onglet), "3 notions sélectionnées · 4e · 5 questions");
+      assert.equal(await onglet.evaluate(() => history.state), null);
+    }),
+);
+
+test(
+  "P8 : le geste retour pendant une série ou sur le bilan fait comme « Menu » (brevet et diaporama aussi)",
+  { skip: ignorer, timeout: 120000 },
+  () =>
+    banc(async ({ base, page }) => {
+      const onglet = await page(390, 844, true, { niveau: "4e", nombre: 5 });
+      await accueil(onglet, base);
+      await cocher(onglet, "espace-geometrie", [1]);
+      await onglet.locator('[data-action="lancer"]').click();
+      assert.equal(await gesteRetour(onglet), "domaine", "1er geste : le domaine d'origine");
+      assert.equal(await barre(onglet), "1 notion sélectionnée · 4e · 5 questions");
+      assert.equal(await gesteRetour(onglet), "accueil", "2e geste : l'accueil, toujours l'appli");
+      // Lancée de l'accueil : le geste ramène à l'accueil, on reste dans l'appli.
+      await onglet.locator('[data-action="lancer"]').click();
+      assert.equal(await gesteRetour(onglet), "accueil");
+      // Sur le bilan, puis après « Encore une série » : un seul « Menu » suffit.
+      await onglet.locator('[data-action="lancer"]').click();
+      await finirLaSerie(onglet);
+      assert.equal(await gesteRetour(onglet), "accueil", "Bilan : le geste ramène au menu");
+      await onglet.locator('[data-action="lancer"]').click();
+      await finirLaSerie(onglet);
+      await onglet.locator('[data-action="encore"]').click();
+      assert.equal(await ecran(onglet), "question");
+      await menu(onglet);
+      assert.equal(await ecran(onglet), "accueil", "Après « Encore », un seul « Menu »");
+      assert.equal(await onglet.evaluate(() => history.state?.serie ?? null), null);
+      assert.equal(await gesteRetour(onglet), "quitté", "Plus rien de la série dans l'historique");
+      // Brevet : « Menu » et le geste retour ramènent à l'accueil.
+      await accueil(onglet, base);
+      await onglet.locator(".ligne-brevet").click();
+      await onglet.locator('[data-action="brevet-commencer"]').click();
+      assert.match(await onglet.locator(".position").innerText(), /sur 9/);
+      assert.equal(await gesteRetour(onglet), "accueil", "Brevet : le geste");
+      await onglet.locator(".ligne-brevet").click();
+      await onglet.locator('[data-action="brevet-commencer"]').click();
+      await menu(onglet);
+      assert.equal(await ecran(onglet), "accueil", "Brevet : « Menu »");
+      // Diaporama : le geste retour ramène au menu avec la sélection.
+      const tableau = await page(1366, 768, false, { niveau: "4e", nombre: 5 });
+      await accueil(tableau, base);
+      await cocher(tableau, "donnees-probabilites", [0, 1]);
+      await tableau.locator('[data-action="projeter-reglages"]').click();
+      await tableau.locator('dialog [data-action="projeter"]').click();
+      assert.match(await tableau.locator(".barre-question .menu").innerText(), /Quitter/);
+      assert.equal(await gesteRetour(tableau), "domaine", "Diaporama : le geste");
+      assert.equal(await barre(tableau), "2 notions sélectionnées · 4e · 5 questions");
     }),
 );

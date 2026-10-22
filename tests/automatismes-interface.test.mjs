@@ -280,9 +280,10 @@ test(
         [...notions].sort((a, b) => a.localeCompare(b, "fr")),
         ["Équations à une ou deux étapes", "Rapports trigonométriques"],
       );
-      // La sélection part avec la série : « Changer de notions » (bilan, coque V2), plus rien n'est coché.
+      // « Changer de notions » (bilan) ramène au menu d'origine, la sélection reste (décision J).
       await page.locator('[data-action="changer"]').click();
-      assert.equal(await nombreCoche(page), 0);
+      assert.equal(await page.evaluate(() => document.body.dataset.ecran), "domaine");
+      assert.equal(await nombreCoche(page), 2);
       assert.deepEqual(erreurs, []);
     } finally {
       await browser.close();
