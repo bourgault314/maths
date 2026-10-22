@@ -74,6 +74,127 @@
   });
 })(typeof window !== "undefined" ? window : globalThis);
 
+/* La vignette d'Anzan : à chaque ouverture du catalogue, un nombre de 2 à 4 chiffres
+   est tiré UNE fois (le même sur toute la page, même quand les cartes se redessinent),
+   puis posé sur le soroban et écrit à côté de l'éclair.
+   Le fichier flash-anzan.svg reste le modèle et le repli : renderSvg(472) le redonne
+   octet pour octet (un test y veille). */
+(function registerAnzanThumbnail(global) {
+  "use strict";
+
+  const PATH = "assets/img/thumbnails/calcul-mental/flash-anzan.svg";
+  const FALLBACK_NUMBER = 472;
+  const RODS = ["471.7", "513.3", "555.0", "596.7", "638.3"];
+  const BEAD_X = ["453.7", "495.3", "537.0", "578.7", "620.3"];
+  const ACTIVE = "#087a71";
+  const RESTING = "#c9d8e4";
+  /* Pour un boulier jamais triste : au plus un 0, et jamais en dernier chiffre.
+     On écarte aussi les quelques nombres à sous-entendu. */
+  const EXCLUDED = new Set([69, 88, 420, 666, 1312, 1488]);
+
+  function isDrawable(number) {
+    if (!Number.isInteger(number) || number < 10 || number > 9999) return false;
+    if (EXCLUDED.has(number) || number % 10 === 0) return false;
+    return String(number).split("0").length - 1 <= 1;
+  }
+
+  function drawNumber(random = Math.random) {
+    if (typeof random !== "function") {
+      throw new TypeError("La source de hasard doit être une fonction.");
+    }
+    const next = () => {
+      const value = random();
+      if (!Number.isFinite(value) || value < 0 || value >= 1) {
+        throw new RangeError("La source de hasard doit produire un nombre dans [0, 1[.");
+      }
+      return value;
+    };
+    for (let attempt = 0; attempt < 100; attempt += 1) {
+      const digits = 2 + Math.floor(next() * 3);
+      const lowest = 10 ** (digits - 1);
+      const number = lowest + Math.floor(next() * 9 * lowest);
+      if (isDrawable(number)) return number;
+    }
+    return FALLBACK_NUMBER;
+  }
+
+  function beads(number) {
+    const digits = String(number).padStart(RODS.length, "0").split("").map(Number);
+    return digits.map((digit, rod) => {
+      const x = BEAD_X[rod];
+      const upper = digit >= 5;
+      const lower = digit % 5;
+      const lines = [
+        `    <line x1="${RODS[rod]}" y1="76" x2="${RODS[rod]}" y2="254" stroke="#9fb4c4" stroke-width="4"/>`,
+        `    <rect x="${x}" y="${upper ? "110.0" : "78.0"}" width="36" height="17" rx="8.5" fill="${upper ? ACTIVE : RESTING}"/>`
+      ];
+      for (let bead = 0; bead < 4; bead += 1) {
+        const active = bead < lower;
+        const y = (active ? 137 : 178) + 19 * bead;
+        lines.push(`    <rect x="${x}" y="${y.toFixed(1)}" width="36" height="17" rx="8.5" fill="${active ? ACTIVE : RESTING}"/>`);
+      }
+      return lines.join("\n");
+    }).join("\n");
+  }
+
+  function renderSvg(number) {
+    if (!isDrawable(number) && number !== FALLBACK_NUMBER) {
+      throw new RangeError("Nombre impossible à dessiner sur la vignette.");
+    }
+    const cardWidth = number >= 1000 ? 172 : 150;
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="720" height="320" viewBox="0 0 720 320" role="img" aria-labelledby="title description">
+  <title id="title">Flash Anzan</title>
+  <desc id="description">Un soroban qui affiche ${number}, à côté d’un nombre qui apparaît en éclair.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#e9fbf7"/>
+      <stop offset="1" stop-color="#edf5ff"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="7" stdDeviation="8" flood-color="#173a5e" flood-opacity=".15"/>
+    </filter>
+  </defs>
+  <rect width="720" height="320" fill="url(#background)"/>
+  <circle cx="42" cy="284" r="112" fill="#d7f3eb" opacity=".72"/>
+  <circle cx="686" cy="28" r="98" fill="#fff0b8" opacity=".7"/>
+  <g font-family="Inter, system-ui, sans-serif">
+    <text x="42" y="67" fill="#087a71" font-size="15" font-weight="850" letter-spacing="2.6">CALCUL MENTAL</text>
+    <text x="40" y="119" fill="#10294a" font-size="41" font-weight="850">Flash Anzan</text>
+    <text x="42" y="158" fill="#4f687b" font-size="19" font-weight="680">Des nombres en éclair,</text>
+    <text x="42" y="183" fill="#4f687b" font-size="19" font-weight="680">à ajouter de tête</text>
+    <g transform="translate(42 214)">
+      <rect width="${cardWidth}" height="64" rx="16" fill="#fff" stroke="#c5d9e6" stroke-width="2" filter="url(#shadow)"/>
+      <text x="22" y="44" fill="#f2b705" font-size="30" font-weight="900">⚡</text>
+      <text x="60" y="46" fill="#10294a" font-size="34" font-weight="850" font-variant-numeric="tabular-nums">${number}</text>
+    </g>
+  </g>
+  <g>
+    <rect x="430" y="70" width="250" height="190" rx="18" fill="#fff" stroke="#10294a" stroke-width="9" filter="url(#shadow)"/>
+${beads(number)}
+    <rect x="430" y="128" width="250" height="8" fill="#10294a"/>
+  </g>
+</svg>
+`;
+  }
+
+  function isAnzanThumbnail(thumbnail) {
+    return String(thumbnail || "").split("?")[0] === PATH;
+  }
+
+  function dataUrl(number) {
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(renderSvg(number))}`;
+  }
+
+  global.MATHSGO_ANZAN_THUMBNAIL = Object.freeze({
+    PATH,
+    isDrawable,
+    drawNumber,
+    renderSvg,
+    isAnzanThumbnail,
+    dataUrl
+  });
+})(typeof window !== "undefined" ? window : globalThis);
+
 (() => {
   "use strict";
 
@@ -100,6 +221,8 @@
   });
   const dataDieExperiment = window.MATHSGO_DIE_EXPERIMENT?.simulateDieThrows(60) || null;
   const dataDieValue = dataDieExperiment?.lastValue || 1;
+  const anzanThumbnail = window.MATHSGO_ANZAN_THUMBNAIL || null;
+  const anzanThumbnailNumber = anzanThumbnail ? anzanThumbnail.drawNumber() : null;
   const resourceFamilyByPath = new Map();
   resourceFamilies.forEach((family) => {
     (family.paths || []).forEach((path) => resourceFamilyByPath.set(path, family));
@@ -438,7 +561,9 @@
   }
 
   function thumbnailMarkup(thumbnail) {
-    const source = rootPrefix + thumbnail;
+    const source = anzanThumbnailNumber && anzanThumbnail.isAnzanThumbnail(thumbnail)
+      ? anzanThumbnail.dataUrl(anzanThumbnailNumber)
+      : rootPrefix + thumbnail;
     const priority = thumbnailHelpers.thumbnailPriority(thumbnailRenderIndex, thumbnailViewportWidth);
     thumbnailRenderIndex += 1;
     const priorityAttribute = priority.fetchPriority ? ` fetchpriority="${priority.fetchPriority}"` : "";
