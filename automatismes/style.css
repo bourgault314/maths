@@ -8,6 +8,7 @@
   --turquoise: #08b9b2;
   --turquoise-texte: #087a71;
   --orange: #f58220;
+  --orange-texte: #9a3412;
   --vert: #147447;
   --vert-fond: #e5f7eb;
   --rouge: #a93030;
@@ -138,7 +139,7 @@ label {
   margin: 0 auto;
   padding: 16px 0;
 }
-/* Les pastilles Diaporama · Plein écran, dans la barre du cadre, à droite. */
+/* La pastille Plein écran, dans la barre du cadre, à droite (brevet, bilan). */
 .pastille {
   display: inline-flex;
   align-items: center;
@@ -179,7 +180,7 @@ label {
   flex: 0 0 auto;
   margin-bottom: 16px;
 }
-/* « Plein écran » est un bouton : même hauteur que la pastille « Diaporama » à côté. */
+/* « Plein écran » est un bouton : il prend la forme d'une pastille. */
 .bouton.pastille {
   min-height: 40px;
   padding: 6px 14px;
@@ -196,24 +197,6 @@ label {
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
-}
-/* Le pied : le petit logo maths&go (lien vers l'accueil du site) et la consigne de l'appli. */
-.pied {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  color: var(--attenue);
-  font-size: 0.8125rem;
-  padding-top: 12px;
-}
-.pied .logo {
-  display: inline-flex;
-  align-items: center;
-}
-.pied img {
-  width: auto;
-  height: 24px;
 }
 .bouton {
   display: inline-flex;
@@ -269,116 +252,295 @@ label {
   color: var(--attenue);
   font-size: 1.25rem;
 }
-.accueil {
-  text-align: center;
+/* L'accueil (body.menu), d'après la V2 : pas de grand cadre blanc, des cartes posées sur le fond. */
+body.menu .cadre {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
-.accueil h1 {
-  margin-bottom: 24px;
+body.menu .contenu {
+  padding: 2px 2px 8px;
+  scrollbar-gutter: auto;
 }
-.reglages-domaine {
+.entete-appli,
+.carte-menu {
+  border: 1px solid var(--ligne);
+  border-radius: 24px;
+  background: var(--papier);
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--encre) 7%, transparent);
+}
+/* La carte d'en-tête : le logo (lien vers le site), le titre, Plein écran à droite ; le filet
+   turquoise → bleu → orange en haut. */
+.entete-appli {
+  position: relative;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px 24px;
-  margin: 12px 0;
+  justify-content: center;
+  gap: 18px;
+  padding: 16px 20px 14px;
+  overflow: hidden;
 }
-.reglages-domaine .filtres {
-  margin: 0;
-  justify-content: flex-start;
+.entete-appli::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 5px;
+  background: linear-gradient(90deg, var(--turquoise), var(--bleu-identite) 55%, var(--orange));
 }
-.nombre-questions {
+.logo-cadre {
+  display: inline-flex;
+  align-items: center;
+}
+.logo-cadre img {
+  display: block;
+  width: auto;
+  height: 46px;
+}
+.titre-appli {
+  display: grid;
+  justify-items: center;
+  line-height: 1.1;
+}
+.titre-appli h1 {
+  font-size: 1.75rem;
+}
+.titre-appli span {
+  color: var(--bleu-identite);
+  font-family: "Fredoka", "Segoe UI", sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.entete-appli .plein-ecran-cadre {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0;
+  transform: translateY(-50%);
+}
+.entete-appli .plein-ecran-cadre svg {
+  width: 20px;
+  height: 20px;
+}
+.carte-menu {
+  margin-top: 14px;
+  padding: 18px 20px 20px;
+}
+/* « ① Préparer la série », « ② Choisir les automatismes », sous un filet (celui de la maquette 5). */
+.etape-menu {
   display: flex;
   align-items: center;
+  gap: 12px;
+  margin: 0 0 14px;
+  padding-top: 8px;
+  border-top: 1px solid var(--ligne);
+  font-size: 1.35rem;
+}
+.etape-menu .numero {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  color: var(--papier);
+  font-family: "Nunito", sans-serif;
+  font-size: 1rem;
+  font-weight: 900;
+}
+.numero-1 {
+  background: var(--orange);
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--orange) 35%, transparent);
+}
+.numero-2 {
+  background: var(--turquoise);
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--turquoise) 35%, transparent);
+}
+/* Niveau et Questions en boutons, côte à côte (tablette, ordinateur). */
+.reglages-serie {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 18px;
+}
+.champ-reglage {
+  display: grid;
   gap: 6px;
 }
-.nombre-questions > span {
-  margin-right: 4px;
+.etiquette-reglage {
   color: var(--attenue);
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   font-weight: 800;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
 }
-.nombre-questions .bouton {
-  min-width: 44px;
-  padding: 4px 8px;
-}
-.filtres {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin: 20px 0;
-}
-.filtres button {
-  min-width: 48px;
-  min-height: 40px;
-  padding: 8px 12px;
+.segments {
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  gap: 4px;
+  padding: 4px;
   border: 1px solid var(--ligne);
-  border-radius: 12px;
-  color: var(--attenue);
-  background: var(--papier);
+  border-radius: 999px;
+  background: var(--fond-doux);
+}
+.segment {
+  min-height: 44px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--encre);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+.segment.actif {
+  background: var(--bleu-identite);
+  color: var(--papier);
+  font-weight: 900;
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--bleu-identite) 30%, transparent);
+}
+.choix-nombre {
+  display: none;
+}
+.choix-nombre select {
+  min-height: 50px;
+  padding: 4px 8px;
+  border: 1px solid var(--ligne);
+  border-radius: 999px;
+  background: var(--fond-doux);
+  color: var(--bleu-identite);
   font-weight: 800;
 }
-.filtres button.active,
-.filtres button[aria-pressed="true"] {
-  background: var(--bleu);
-  color: var(--papier);
-  border-color: var(--bleu);
-}
+/* Les domaines, sur une colonne : icône, nom, « k / n », ›. */
 .domaines {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  padding: 4px;
+  grid-template-columns: 1fr;
+  gap: 10px;
 }
 .domaine-carte {
   display: grid;
-  grid-template-columns: 48px minmax(0, 1fr) auto;
-  gap: 12px;
+  grid-template-columns: 44px minmax(0, 1fr) auto 20px;
+  gap: 14px;
   align-items: center;
-  min-height: 88px;
-  padding: 16px;
+  width: 100%;
+  min-height: 72px;
+  padding: 12px 16px;
   border: 1px solid var(--ligne);
   border-radius: 16px;
   background: var(--papier);
   color: var(--encre);
   text-align: left;
 }
-/* Cinq domaines : la cinquième carte est centrée, à la largeur des autres. */
-.domaine-carte:last-child {
-  grid-column: 1 / -1;
-  width: calc(50% - 6px);
-  justify-self: center;
-}
 .domaine-carte:hover {
-  border-color: var(--bleu);
-  background: var(--fond-doux);
+  border-color: var(--orange);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--orange) 9%, var(--papier)),
+    var(--papier) 45%
+  );
 }
 .icone {
   display: grid;
   place-items: center;
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
 }
 .icone svg {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
+}
+.domaine-carte .nom {
+  font-size: 1.15rem;
+}
+.compteur-domaine {
+  padding: 3px 12px;
+  border: 1px solid var(--ligne);
+  border-radius: 999px;
+  background: var(--fond-doux);
+  color: var(--attenue);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.domaine-carte.avec-selection .compteur-domaine {
+  border-color: color-mix(in srgb, var(--turquoise) 60%, transparent);
+  background: color-mix(in srgb, var(--turquoise) 12%, var(--papier));
+  color: var(--turquoise-texte);
 }
 .chevron {
   color: var(--attenue);
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   line-height: 1;
+  text-align: center;
 }
-.entete-domaine {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+/* L'Entraînement brevet : une ligne comme un domaine, bord orange (une série toute prête). */
+.ligne-brevet {
+  margin-top: 4px;
+  border-color: color-mix(in srgb, var(--orange) 70%, var(--ligne));
 }
-.entete-domaine .icone,
-.entete-domaine .icone svg {
-  width: 44px;
-  height: 44px;
+.ligne-brevet .icone svg {
+  width: 34px;
+  height: 34px;
+  color: var(--orange-texte);
+}
+/* Téléphone : « Préparer » sur une ligne (6e 5e 4e 3e · « 10 questions ▾ »), sans Plein écran ni
+   « sélectionnée(s) ». */
+@media (max-width: 699px) {
+  .reglages-serie {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+  }
+  .reglages-serie .etiquette-reglage,
+  .champ-nombre .segments,
+  .mot-selection,
+  .plein-ecran-cadre {
+    display: none;
+  }
+  .choix-nombre {
+    display: block;
+  }
+  .segment {
+    padding: 0 2px;
+  }
+}
+/* Ordinateur à l'écran bas (1366 × 768, 1280 × 720) : l'accueil se resserre pour tenir entier. */
+@media (min-width: 700px) and (max-height: 900px) {
+  .entete-appli {
+    padding: 10px 20px 8px;
+  }
+  .entete-appli .logo-cadre img {
+    height: 38px;
+  }
+  .titre-appli h1 {
+    font-size: 1.5rem;
+  }
+  .carte-menu {
+    margin-top: 10px;
+    padding: 12px 18px 14px;
+  }
+  .etape-menu {
+    margin-bottom: 8px;
+    font-size: 1.2rem;
+  }
+  .segment {
+    min-height: 40px;
+  }
+  .domaines {
+    gap: 6px;
+  }
+  .domaine-carte {
+    min-height: 54px;
+    padding: 6px 14px;
+  }
+  .domaine-carte .icone,
+  .domaine-carte .icone svg {
+    width: 38px;
+    height: 38px;
+  }
 }
 .nom {
   font-family: "Fredoka", "Segoe UI", sans-serif;
@@ -388,16 +550,123 @@ label {
 }
 .nom small {
   display: block;
-  margin-top: 4px;
+  margin-top: 2px;
+  color: var(--attenue);
   font-family: "Nunito", "Segoe UI", sans-serif;
-  font-size: 0.8125rem;
-  font-weight: 600;
+  font-size: 0.85rem;
+  font-weight: 700;
 }
-.accueil > .brevet {
+/* Le domaine ouvert (décision F) : une carte en plein écran ; en tête la carte du domaine, qui le
+   referme ; dessous « Tout sélectionner dans ce domaine » et les notions par groupe. */
+.domaine-ouvert {
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--turquoise) 55%, var(--ligne));
+  border-radius: 24px;
+  background: var(--papier);
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--encre) 7%, transparent);
+}
+.domaine-tete {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto 20px;
+  gap: 14px;
+  align-items: center;
   width: 100%;
+  min-height: 72px;
+  padding: 12px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--ligne);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--turquoise) 10%, var(--papier)),
+    var(--papier) 60%
+  );
+  color: var(--encre);
+  text-align: left;
+}
+.domaine-tete .nom {
+  font-size: 1.15rem;
+}
+.domaine-tete.avec-selection {
+  border-bottom-color: var(--turquoise);
+}
+.domaine-tete.avec-selection .compteur-domaine {
+  border-color: color-mix(in srgb, var(--turquoise) 60%, transparent);
+  background: color-mix(in srgb, var(--turquoise) 12%, var(--papier));
+  color: var(--turquoise-texte);
+}
+.chevron.ouvert {
+  transform: rotate(90deg);
+}
+.domaine-corps {
+  padding: 14px 16px 18px;
+}
+.titre-groupe {
+  margin: 18px 4px 8px;
+  color: var(--attenue);
+  font-family: "Nunito", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.grille-notions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+@media (min-width: 700px) {
+  .grille-notions {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+/* Une case par notion : toute la ligne coche ou décoche. */
+.notion {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
   min-height: 56px;
-  margin-top: 16px;
-  font-size: 1.0625rem;
+  padding: 12px 16px;
+  border: 1px solid var(--ligne);
+  border-radius: 14px;
+  color: var(--encre);
+  background: var(--papier);
+  text-align: left;
+  cursor: pointer;
+}
+.notion:hover {
+  border-color: var(--turquoise);
+}
+.notion input[type="checkbox"] {
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  accent-color: var(--turquoise-texte);
+  cursor: pointer;
+}
+.notion.cochee {
+  border-color: var(--turquoise);
+  background: color-mix(in srgb, var(--turquoise) 9%, var(--papier));
+}
+.notion .nom {
+  font-family: "Nunito", "Segoe UI", sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+}
+.notion.tout-domaine .nom {
+  color: var(--attenue);
+}
+/* La classe où la notion commence (« 4e »), quand c'est la classe choisie. */
+.badge.classe {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--bleu-identite);
+  color: var(--papier);
+  font-size: 0.75rem;
+  font-weight: 900;
+  vertical-align: 2px;
 }
 .calcul {
   font-size: 2rem;
@@ -417,96 +686,64 @@ label {
   text-align: center;
   margin-top: 8px;
 }
-.compteur {
-  color: var(--attenue);
-  font-size: 0.875rem;
-}
-.liste-notions {
-  display: grid;
-  gap: 8px;
-  margin-top: 16px;
-  padding: 4px;
-}
-.notion {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 12px;
-  align-items: center;
-  min-height: 72px;
-  padding: 12px 16px;
-  border: 1px solid var(--ligne);
-  border-radius: 12px;
-  color: var(--encre);
-  background: var(--papier);
-  text-align: left;
-  cursor: pointer;
-}
-/* Une case par notion : toute la ligne coche ou décoche. */
-.notion input[type="checkbox"] {
-  width: 22px;
-  height: 22px;
-  margin: 0;
-  accent-color: var(--bleu);
-  cursor: pointer;
-}
-.notion:has(input:checked) {
-  border-color: var(--bleu);
-  background: var(--fond-doux);
-}
-.notion.tout-domaine {
-  min-height: 56px;
-}
-.notion.tout-domaine .nom {
-  color: var(--bleu-identite);
-  font-weight: 800;
-}
-.domaine-carte.avec-selection {
-  border-color: var(--bleu);
-}
-.domaine-carte.avec-selection small {
-  color: var(--bleu-identite);
-  font-weight: 800;
-}
-/* La barre de lancement, fixée en bas du cadre : N notions · 5 · 10 · 15 · 20 · Lancer. */
+/* La barre de lancement, toujours en bas du cadre (accueil et domaine) : le résumé de la sélection,
+   Projeter (dès 700 px) et « Lancer la série » ; boutons grisés tant que rien n'est coché. */
 .barre-lancement {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px 16px;
   flex: 0 0 auto;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--ligne);
+  margin: 8px 2px 0;
+  padding: 10px 12px 10px 18px;
+  border: 1px solid var(--ligne);
+  border-radius: 20px;
+  background: var(--papier);
+  box-shadow: 0 -4px 22px color-mix(in srgb, var(--encre) 10%, transparent);
 }
-.barre-lancement .compte {
-  font-weight: 800;
+.resume {
+  display: grid;
+  min-width: 0;
+  line-height: 1.25;
+}
+.resume strong {
+  color: var(--bleu-identite);
+}
+.resume span {
+  color: var(--attenue);
+  font-size: 0.85rem;
+}
+.resume strong,
+.resume span {
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
-.notion:hover {
-  border-color: var(--bleu);
-  background: var(--fond-doux);
-}
-.notion strong {
-  display: block;
-}
-.badges {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 4px;
-}
-.badge {
-  display: inline-flex;
-  padding: 0 8px;
-  border-radius: 12px;
-  background: var(--fond-doux);
+.barre-lancement.vide .resume strong {
   color: var(--attenue);
-  font-size: 0.75rem;
-  font-weight: 800;
 }
-.badge.brevet {
-  color: var(--bleu-identite);
+.lancer-groupe {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+.barre-lancement .bouton {
+  min-height: 50px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.barre-lancement .orange {
+  padding: 8px 20px;
+  font-size: 1.05rem;
+}
+.barre-lancement .bouton:disabled {
+  opacity: 0.45;
+  box-shadow: none;
+}
+@media (max-width: 699px) {
+  .barre-lancement .projeter {
+    display: none;
+  }
 }
 .question-entete {
   display: flex;
@@ -1814,58 +2051,55 @@ body:not(.tactile) #commandes > * {
   padding: 12px 32px;
   font-size: 1.125rem;
 }
-.reglages {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px 24px;
-  margin: 16px 0;
-  padding: 16px;
-  border: 1px solid var(--ligne);
-  border-radius: 16px;
+/* La fenêtre « Projeter au tableau » (décision H) : le rappel de la sélection, les réglages du
+   diaporama, puis « Projeter », seul, sur toute la largeur (P10). */
+.reglages-dialog {
+  width: min(440px, calc(100% - 32px));
 }
-.reglages label {
+.reglages-dialog .fenetre-entete {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 0.9375rem;
-}
-.reglages label:has(input[type="checkbox"]) {
-  flex-direction: row;
   align-items: center;
+  justify-content: space-between;
 }
-.reglages input:not([type="checkbox"]),
-.reglages select {
-  width: 100%;
-  min-height: 40px;
-  padding: 4px 8px;
+.reglages-dialog .fenetre-entete h2 {
+  margin: 0;
+}
+.rappel-selection {
+  margin: 4px 0 12px;
+  color: var(--attenue);
+  font-weight: 800;
+}
+.reglages-projection {
+  display: grid;
+  gap: 12px;
+}
+.reglages-projection > label:not(.coche-reglage) {
+  display: grid;
+  gap: 4px;
+  color: var(--encre);
+  font-weight: 800;
+}
+.reglages-projection input[type="number"],
+.reglages-projection select {
+  min-height: 44px;
+  padding: 6px 10px;
   border: 1px solid var(--ligne);
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--papier);
 }
-.selection-notions {
-  display: grid;
-  gap: 8px;
-  margin: 16px 0;
-}
-.selection-domaine {
-  border: 1px solid var(--ligne);
-  border-radius: 12px;
-  padding: 12px 16px;
-}
-.selection-domaine summary {
-  cursor: pointer;
-  font-weight: 800;
-  color: var(--bleu-identite);
-}
-.selection-domaine label {
+.coche-reglage {
   display: flex;
   align-items: center;
-  gap: 8px;
-  min-height: 36px;
-  padding: 4px 0;
+  gap: 10px;
+  min-height: 40px;
 }
-.selection-domaine > div {
-  padding-top: 8px;
+.coche-reglage input {
+  width: 22px;
+  height: 22px;
+}
+.actions-projection {
+  display: grid;
+  margin-top: 16px;
 }
 /* Brevet (C10bis) : les numéros des questions, juste au-dessus du pavé, pour revenir en arrière. */
 .navigation-points {
@@ -1916,9 +2150,6 @@ body:not(.tactile) #commandes > * {
 }
 body.projection {
   background: var(--fond-page);
-}
-body.projection .pied {
-  display: none;
 }
 body.projection .barre-question .bouton {
   min-height: 44px;
@@ -2038,74 +2269,89 @@ body.projection #commandes > * {
   .contenu {
     scrollbar-gutter: auto;
   }
-  .pied {
-    font-size: 0.6875rem;
-    padding-top: 8px;
+  body.menu .cadre {
+    max-height: calc(100dvh - 16px);
   }
-  .accueil h1 {
-    font-size: 2rem;
-    margin-bottom: 16px;
+  .entete-appli {
+    gap: 12px;
+    padding: 14px 14px 10px;
   }
-  .domaines {
-    grid-template-columns: 1fr;
-    gap: 8px;
-    padding: 0;
+  .entete-appli .logo-cadre img {
+    height: 38px;
+  }
+  .titre-appli h1 {
+    font-size: 1.5rem;
+  }
+  .carte-menu {
+    margin-top: 10px;
+    padding: 14px 12px;
+  }
+  .etape-menu {
+    margin-bottom: 10px;
+    padding-top: 4px;
+    font-size: 1.15rem;
+  }
+  .segment {
+    min-height: 42px;
+    font-size: 1rem;
   }
   .domaine-carte {
+    grid-template-columns: 40px minmax(0, 1fr) auto 14px;
+    gap: 10px;
     min-height: 64px;
-    padding: 8px 12px;
-    gap: 12px;
+    padding: 10px 12px;
   }
-  .domaine-carte .icone {
+  .domaine-carte .icone,
+  .domaine-carte .icone svg {
     width: 40px;
     height: 40px;
-  }
-  .domaine-carte:last-child {
-    grid-column: auto;
-    width: auto;
   }
   .brevet-tuiles {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
   }
-  .reglages-domaine {
-    justify-content: center;
-  }
-  .reglages-domaine .filtres {
-    justify-content: center;
-  }
-  .nom {
+  .nom,
+  .domaine-carte .nom,
+  .domaine-tete .nom {
     font-size: 1rem;
   }
-  .filtres {
-    margin: 16px 0;
-    gap: 8px;
+  .domaine-tete {
+    grid-template-columns: 40px minmax(0, 1fr) auto 14px;
+    gap: 10px;
+    min-height: 64px;
+    padding: 10px 12px;
   }
-  .filtres button {
-    min-width: 44px;
-    padding: 8px;
+  .domaine-tete .icone,
+  .domaine-tete .icone svg {
+    width: 40px;
+    height: 40px;
+  }
+  .domaine-corps {
+    padding: 10px 10px 14px;
+  }
+  .barre-lancement {
+    padding: 8px 8px 8px 14px;
+  }
+  .barre-lancement .orange {
+    padding: 8px 16px;
+  }
+  /* Domaine court au téléphone (Pensée informatique : 4 notions) : la barre reste en bas de l'écran,
+     à la même place que sur l'accueil. Sur tablette et ordinateur, elle suit la liste. */
+  body[data-ecran="domaine"] .cadre {
+    min-height: calc(100dvh - 16px);
+  }
+  body[data-ecran="domaine"] .contenu {
+    flex: 1 1 auto;
   }
   .notion {
     padding: 12px;
     gap: 8px;
-  }
-  /* Téléphone : « N notions » et Lancer sur une ligne, le nombre de questions dessous. */
-  .barre-lancement {
-    flex-wrap: wrap;
-  }
-  .barre-lancement .nombre-questions {
-    order: 3;
-    width: 100%;
-    justify-content: center;
   }
   .liste-resultats summary {
     row-gap: 4px;
   }
   body[data-ecran="question"] .coque {
     padding-bottom: 0;
-  }
-  body[data-ecran="question"] .pied {
-    display: none;
   }
   .question-entete {
     font-size: 0.75rem;
@@ -2164,14 +2410,6 @@ body.projection #commandes > * {
   .fenetre-entete h2 {
     font-size: 1.25rem;
   }
-  .reglages {
-    grid-template-columns: 1fr;
-    gap: 12px;
-    padding: 12px;
-  }
-  .selection-domaine {
-    padding: 12px;
-  }
   .minuteur {
     font-size: 1.125rem;
     gap: 8px;
@@ -2184,6 +2422,55 @@ body.projection #commandes > * {
     font-size: 0.9375rem;
   }
 }
+/* Petit téléphone (375 × 667, décision I) : l'accueil se resserre pour que les cinq domaines se
+   voient au premier coup d'œil ; l'Entraînement brevet dépasse en bas, on voit qu'il faut défiler. */
+@media (max-width: 699px) and (max-height: 720px) {
+  .entete-appli {
+    padding: 10px 14px 8px;
+  }
+  .entete-appli .logo-cadre img {
+    height: 32px;
+  }
+  .titre-appli h1 {
+    font-size: 1.3rem;
+  }
+  .titre-appli span {
+    font-size: 0.85rem;
+  }
+  .carte-menu {
+    margin-top: 8px;
+    padding: 10px 10px 12px;
+  }
+  .etape-menu {
+    margin-bottom: 8px;
+    font-size: 1.05rem;
+  }
+  .etape-menu .numero {
+    width: 28px;
+    height: 28px;
+  }
+  .segment {
+    min-height: 40px;
+  }
+  .choix-nombre select {
+    min-height: 48px;
+  }
+  .domaines {
+    gap: 6px;
+  }
+  .domaine-carte {
+    min-height: 54px;
+    padding: 6px 12px;
+  }
+  .domaine-carte .icone,
+  .domaine-carte .icone svg {
+    width: 34px;
+    height: 34px;
+  }
+  .domaine-carte .nom {
+    font-size: 0.98rem;
+  }
+}
 @media (prefers-reduced-motion: no-preference) {
   .bouton,
   .domaine-carte,
@@ -2191,88 +2478,6 @@ body.projection #commandes > * {
     transition:
       background-color 120ms ease,
       border-color 120ms ease;
-  }
-}
-
-/* Les réglages défilent, les commandes du professeur restent accessibles. */
-body[data-ecran="prof"] .contenu {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  overflow: hidden;
-}
-body[data-ecran="prof"] .contenu > h1,
-body[data-ecran="prof"] .filtres {
-  flex: 0 0 auto;
-}
-.configuration-prof {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  align-items: start;
-  gap: 16px;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-gutter: stable;
-  padding: 4px;
-}
-.configuration-prof .reglages {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin: 0;
-  gap: 8px;
-  padding: 12px;
-}
-.configuration-prof h2 {
-  grid-column: 1 / -1;
-  font-size: 1.125rem;
-  margin-bottom: 4px;
-}
-body[data-ecran="prof"] .sous-titre {
-  margin: 4px 0 0;
-  color: var(--attenue);
-}
-.configuration-prof .reglages > label:nth-child(n + 3) {
-  grid-column: 1 / -1;
-}
-.configuration-prof .selection-notions {
-  margin: 0;
-}
-.configuration-prof .selection-domaine {
-  padding: 12px;
-}
-.configuration-prof .selection-domaine summary {
-  font-size: 0.9375rem;
-}
-body[data-ecran="prof"] .actions-prof {
-  flex: 0 0 auto;
-  padding: 16px 4px 4px;
-  margin-top: 8px;
-  border-top: 1px solid var(--ligne);
-  background: var(--papier);
-}
-body[data-ecran="prof"] .actions-prof .bouton {
-  flex: 1 1 auto;
-}
-body[data-ecran="prof"] #lien-serie {
-  flex: 0 0 auto;
-  overflow-wrap: anywhere;
-  max-height: 72px;
-  overflow-y: auto;
-}
-@media (max-width: 680px) {
-  .configuration-prof {
-    grid-template-columns: minmax(0, 1fr);
-    scrollbar-gutter: auto;
-    gap: 12px;
-  }
-  body[data-ecran="prof"] .actions-prof {
-    gap: 8px;
-    padding-top: 12px;
-  }
-  body[data-ecran="prof"] .actions-prof .bouton {
-    min-height: 40px;
-    padding: 8px;
-    font-size: 0.8125rem;
   }
 }
 

@@ -1,4 +1,4 @@
-import test from "node:test";
+import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { createServer } from "node:http";
@@ -51,14 +51,33 @@ async function serveurLocal() {
   return { serveur, base: `http://127.0.0.1:${serveur.address().port}/automatismes/` };
 }
 
+/* P14 (accueil et menu) : UN Chromium pour tout le fichier, lancé au premier test. Chaque test reçoit
+   un « navigateur » à lui : newPage ouvre une page dans un contexte neuf, close ferme ses pages (et
+   leurs contextes). Lancer Chromium à chaque test était le plus lent quand npm run verifier joue tous
+   les fichiers en même temps : des tests de 3 s finissaient annulés à 60 ou 90 s. */
+let chromiumPartage = null;
+after(async () => {
+  if (chromiumPartage) await (await chromiumPartage).close();
+});
+
 async function ouvrirNavigateur() {
-  return navigateur.launch({
+  chromiumPartage ||= navigateur.launch({
     headless: true,
     ...(process.env.AUTOMATISMES_NAVIGATEUR
       ? { executablePath: process.env.AUTOMATISMES_NAVIGATEUR }
       : {}),
     args: ["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu"],
   });
+  const partage = await chromiumPartage;
+  const pages = [];
+  return {
+    async newPage(options) {
+      const page = await partage.newPage(options);
+      pages.push(page);
+      return page;
+    },
+    close: () => Promise.all(pages.map((page) => page.close().catch(() => null))),
+  };
 }
 
 async function stabiliser(page) {
@@ -97,6 +116,11 @@ async function photo(page, nom, mesures) {
   const fichier = `${dimensions.width}x${dimensions.height}-${nom}.png`;
   await page.screenshot({ path: resolve(captures, fichier) });
   mesures.push({ fichier, ...controle });
+}
+
+// Le résumé de la barre de lancement : « n notion(s) sélectionnée(s) » (0 si rien n'est coché).
+async function nombreCoche(page) {
+  return Number.parseInt(await page.locator(".barre-lancement .resume strong").innerText()) || 0;
 }
 
 async function question(page, base, notion = "NC27", forme = "a") {
@@ -152,13 +176,10 @@ test(
         await page.locator(".domaines").waitFor();
         await photo(page, "accueil", mesures);
         await page.locator('[data-domaine="nombres-calculs"]').click();
-        assert.equal(
-          await page.locator(".barre-lancement").count(),
-          0,
-          "Rien de coché, pas de barre",
-        );
+        // La barre est toujours là (décision G) : rien de coché, « Lancer la série » est grisé.
+        assert.equal(await page.locator('[data-action="lancer"]').isDisabled(), true);
         await page.locator('[data-selection="NC27"]').check();
-        await page.locator(".barre-lancement").getByText("1 notion").waitFor();
+        await page.locator(".barre-lancement").getByText("1 notion sélectionnée").waitFor();
         await photo(page, "domaine", mesures);
         await page.locator('[data-action="lancer"]').click();
         await page.locator(".barre-question .centre").getByText("1 sur 10").waitFor();
@@ -209,10 +230,15 @@ test(
         await photo(page, "qcm", mesures);
         await question(page, base, "EG12", "a");
         await photo(page, "geometrie", mesures);
-        await page.goto(`${base}?prof=1`);
-        await photo(page, "prof", mesures);
+        // Plus de page Diaporama (décision H) : Projeter ouvre sa fenêtre (tablette, ordinateur).
+        await page.goto(base);
+        await page.locator('[data-domaine="nombres-calculs"]').click();
         await page.locator('[data-selection-domaine="nombres-calculs"]').check();
-        await page.locator('[data-action="projeter"]').click();
+        if (width >= 700) {
+          await page.locator('[data-action="projeter-reglages"]').click();
+          await photo(page, "projeter", mesures);
+          await page.locator('dialog [data-action="projeter"]').click();
+        }
         await page.goto(`${base}?notion=NC27&forme=a&graine=123&mode=project`);
         await photo(page, "projection", mesures);
         await page.locator('[data-action="aide"]').first().click();
@@ -250,15 +276,18 @@ test(
       await page.locator('[data-selection="NC27"]').check();
       await page.locator('[data-action="retour"]').click();
       await page.locator(".domaines").waitFor();
+      // Accueil d'après la V2 : la pastille « k / n » du domaine.
       assert.match(
-        await page.locator('[data-domaine="nombres-calculs"] small').innerText(),
-        /^1 sur \d+$/,
+        await page
+          .locator('[data-domaine="nombres-calculs"] .compteur-domaine')
+          .evaluate((pastille) => pastille.firstChild.textContent),
+        /^1 \/ \d+$/,
       );
-      assert.equal(await page.locator(".barre-lancement .compte").innerText(), "1 notion");
+      assert.equal(await nombreCoche(page), 1);
       await page.locator('[data-domaine="espace-geometrie"]').click();
       assert.equal(await page.locator('[data-selection="EG12"]').isChecked(), false);
       await page.locator('[data-selection="EG12"]').check();
-      assert.equal(await page.locator(".barre-lancement .compte").innerText(), "2 notions");
+      assert.equal(await nombreCoche(page), 2);
       await page.locator('[data-action="lancer"]').click();
       const notions = new Set();
       while ((await page.evaluate(() => document.body.dataset.ecran)) === "question") {
@@ -270,9 +299,10 @@ test(
         [...notions].sort((a, b) => a.localeCompare(b, "fr")),
         ["Équations à une ou deux étapes", "Rapports trigonométriques"],
       );
-      // La sélection part avec la série : « Changer de notions » (bilan, coque V2), plus rien n'est coché.
+      // « Changer de notions » (bilan) ramène au menu d'origine, la sélection reste (décision J).
       await page.locator('[data-action="changer"]').click();
-      assert.equal(await page.locator(".barre-lancement").count(), 0);
+      assert.equal(await page.evaluate(() => document.body.dataset.ecran), "domaine");
+      assert.equal(await nombreCoche(page), 2);
       assert.deepEqual(erreurs, []);
     } finally {
       await browser.close();
@@ -292,10 +322,13 @@ test(
       await page.goto(base);
       await page.locator('[data-domaine="nombres-calculs"]').click();
       await page.locator('[data-selection-domaine="nombres-calculs"]').check();
-      const avant = Number.parseInt(await page.locator(".barre-lancement .compte").innerText());
+      const avant = await nombreCoche(page);
+      // Le niveau se choisit sur l'accueil (« Préparer la série ») : on referme le domaine.
+      await page.locator(".domaine-tete").click();
       await page.locator('[data-niveau="6e"]').click();
-      const apres = Number.parseInt(await page.locator(".barre-lancement .compte").innerText());
+      const apres = await nombreCoche(page);
       // Le compteur ne garde que les notions cochées encore visibles en 6e.
+      await page.locator('[data-domaine="nombres-calculs"]').click();
       const cochees = await page.locator("[data-selection]:checked").count();
       assert.ok(apres < avant, `6e : moins de notions (${avant} → ${apres})`);
       assert.equal(apres, cochees, "Le compteur = les cases cochées de 6e");
@@ -519,7 +552,7 @@ test(
 );
 
 test(
-  "parcours : préférences, événements, partage et minuteurs",
+  "parcours : préférences, événements, Projeter et minuteurs",
   { skip: ignorer, timeout: 60000 },
   async () => {
     const { serveur, base } = await serveurLocal();
@@ -540,24 +573,28 @@ test(
       await page.locator('[data-action="passer"]').click();
       await page.locator('[data-action="suivante"]').click();
       assert.equal(await page.locator(".aide").count(), 0, "Aide refermée à la question suivante");
-      await page.goto(`${base}?prof=1`);
+      // Projeter (décision H) : le nombre vient de « Préparer la série », le reste de la fenêtre.
+      await page.goto(base);
+      await page.locator('[data-nombre="5"]').click();
+      await page.locator('[data-domaine="nombres-calculs"]').click();
       await page.locator('[data-selection-domaine="nombres-calculs"]').check();
-      await page.locator("#nombre").fill("2");
+      await page.locator('[data-action="projeter-reglages"]').click();
       await page.locator("#secondes").fill("5");
       await page.locator("#delai").fill("0");
       await page.locator("#automatique").check();
-      await page.locator('[data-action="partager"]').click();
-      const lien = await page.locator("#lien-serie a").getAttribute("href");
-      assert.match(lien, /notions=.*graine=\d+.*nombre=2.*niveau=brevet/);
+      // P10 : plus de lien vers un autre écran ; la fenêtre rappelle la sélection et le nombre.
+      assert.match(await page.locator(".rappel-selection").innerText(), /notions · 5 questions$/);
       await page.clock.install();
       await page.locator('[data-action="projeter"]').click();
       await page.clock.runFor(5400);
-      assert.match(await page.locator(".barre-question .centre").innerText(), /2 sur 2/);
+      assert.match(await page.locator(".barre-question .centre").innerText(), /2 sur 5/);
       await page.keyboard.press("Space");
       const temps = await page.locator("#temps").innerText();
       await page.clock.fastForward(10000);
       assert.equal(await page.locator("#temps").innerText(), temps, "Pause par espace");
+      // Même adresse pendant le diaporama = un rechargement : on retrouve le domaine d'origine (P12).
       await page.goto(base);
+      await page.locator(".domaine-tete").click();
       await page.locator('[data-action="brevet"]').click();
       await page.locator('[data-action="brevet-commencer"]').click();
       assert.equal(await page.locator(".navigation-points button").count(), 9);

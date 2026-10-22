@@ -9,7 +9,7 @@ import {
   famillesEligibles,
   formesEligibles,
   nouvelleGraine,
-  adresseSerie,
+  DOMAINES,
 } from "./seances.js";
 import {
   monterReponse,
@@ -26,13 +26,15 @@ import {
   accueilHTML,
   domaineHTML,
   questionHTML,
-  professeurHTML,
   bilanHTML,
   brevetHTML,
   lancementHTML,
   coursHTML,
+  compteurHTML,
+  reglagesProjectionHTML,
   bouton,
   ICONES,
+  NIVEAUX,
 } from "./vues.js";
 
 const catalogue = await fetch("./catalogue/catalogue.json").then((reponse) => reponse.json());
@@ -40,6 +42,9 @@ const alias = await fetch("./catalogue/alias-gpt.json").then((reponse) => repons
 const parId = Object.fromEntries(catalogue.map((famille) => [famille.id, famille]));
 const application = document.querySelector("#app");
 const preferences = lirePreferences();
+const CLE_PROJECTION = "mg-automatismes-projection";
+// Les réglages du diaporama : ceux par défaut, puis ceux gardés sur l'appareil (lireReglagesProjection
+// ne lit que CLE_PROJECTION, déclarée juste au-dessus).
 const reglageProf = {
   nombre: 8,
   secondes: 45,
@@ -47,6 +52,7 @@ const reglageProf = {
   correction: "each",
   automatique: false,
   aideOffice: false,
+  ...lireReglagesProjection(),
 };
 const selection = new Set();
 let filtre = preferences.niveau;
@@ -62,9 +68,8 @@ initialiserSuivi(catalogue);
 function lirePreferences() {
   try {
     const valeur = JSON.parse(localStorage.getItem("mg-automatismes-prefs")) || {};
-    const niveau = ["6e", "5e", "4e", "3e", "brevet"].includes(valeur.niveau)
-      ? valeur.niveau
-      : "brevet";
+    // Une ancienne préférence « brevet » (ou rien) donne la 3e.
+    const niveau = NIVEAUX.includes(valeur.niveau) ? valeur.niveau : "3e";
     return {
       niveau,
       nombre: [5, 10, 15, 20].includes(valeur.nombre) ? valeur.nombre : 10,
@@ -72,7 +77,40 @@ function lirePreferences() {
       clavierOrdinateur: valeur.clavierOrdinateur === true,
     };
   } catch {
-    return { niveau: "brevet", nombre: 10, garderAide: false, clavierOrdinateur: false };
+    return { niveau: "3e", nombre: 10, garderAide: false, clavierOrdinateur: false };
+  }
+}
+
+/* « Projeter » garde ses réglages sur l'appareil d'une fois sur l'autre (décision H) : temps de
+   recherche, pause, correction, enchaîner, avec aide — pas le nombre de questions, qui vient de
+   « Préparer la série ». Tout ce qui est lu est revérifié : une valeur abîmée ou hors bornes laisse le
+   réglage par défaut. */
+function lireReglagesProjection() {
+  try {
+    const valeur = JSON.parse(localStorage.getItem(CLE_PROJECTION)) || {};
+    const borne = (x, min, max) => (Number.isInteger(x) && x >= min && x <= max ? x : undefined);
+    const lus = {
+      secondes: borne(valeur.secondes, 5, 600),
+      delai: borne(valeur.delai, 0, 60),
+      correction: ["each", "end"].includes(valeur.correction) ? valeur.correction : undefined,
+      automatique: typeof valeur.automatique === "boolean" ? valeur.automatique : undefined,
+      aideOffice: typeof valeur.aideOffice === "boolean" ? valeur.aideOffice : undefined,
+    };
+    return Object.fromEntries(Object.entries(lus).filter(([, x]) => x !== undefined));
+  } catch {
+    return {};
+  }
+}
+
+function sauverReglagesProjection() {
+  const { secondes, delai, correction, automatique, aideOffice } = reglageProf;
+  try {
+    localStorage.setItem(
+      CLE_PROJECTION,
+      JSON.stringify({ secondes, delai, correction, automatique, aideOffice }),
+    );
+  } catch {
+    // Navigation privée ou stockage bloqué : les réglages valent pour cette page seulement.
   }
 }
 
@@ -102,45 +140,46 @@ function cadre(contenu) {
   document.body.classList.remove("clavier-ouvert");
   clavierOuvert = false;
   champActif = null;
-  // Pas d'en-tête hors du cadre : la barre du cadre porte « ← Retour » à gauche (sauf sur l'accueil)
-  // et les pastilles Diaporama · Plein écran à droite. L'écran de question a sa propre barre.
-  const pastilles = `<div class="barre-cadre-droite">
-    ${ecran === "prof" ? "" : '<a class="pastille" href="?prof=1" data-action="prof">Diaporama</a>'}
-    ${bouton(`${ICONES.pleinEcran}<span>Plein écran</span>`, "plein-ecran", "pastille", 'aria-label="Plein écran"')}
-  </div>`;
-  const barreCadre = question
-    ? ""
-    : `<div class="barre-cadre">${ecran === "accueil" ? "" : bouton("← Retour", "retour", "discret petit")}
-      ${pastilles}</div>`;
-  const pied = `<footer class="pied"><a class="logo" href="/" aria-label="Accueil maths et go">
-    <img src="../assets/img/logos/mathsgo/logo-390.png" alt="maths&go"></a>
-    <span>Sans calculatrice · Collège et brevet</span></footer>`;
+  // L'accueil porte sa carte d'en-tête (logo, titre, Plein écran), le domaine sa carte qui le referme :
+  // ni barre du cadre ni pied. Ailleurs, la barre du cadre porte « ← Retour » à gauche et Plein écran
+  // à droite (dès 700 px). L'écran de question a sa propre barre.
+  const menu = ecran === "accueil" || ecran === "domaine";
+  document.body.classList.toggle("menu", menu);
+  const pleinEcran = bouton(
+    `${ICONES.pleinEcran}<span>Plein écran</span>`,
+    "plein-ecran",
+    "pastille plein-ecran-cadre",
+    'aria-label="Plein écran"',
+  );
+  const barreCadre =
+    question || menu
+      ? ""
+      : `<div class="barre-cadre">${bouton("← Retour", "retour", "discret petit")}
+      <div class="barre-cadre-droite">${pleinEcran}</div></div>`;
   application.innerHTML = `<div class="coque">
     <main class="cadre">${barreCadre}<div class="contenu">${contenu}</div>
       ${ecran === "accueil" || ecran === "domaine" ? '<div id="lancement"></div>' : ""}</main>
-    ${question ? "" : pied}
   </div>`;
   relierActions();
   majLancement();
   ajusterAffichage();
 }
 
-// La barre de lancement suit la sélection (accueil et domaines) ; rien de coché, pas de barre.
+// La barre de lancement suit la sélection (accueil et domaines) ; rien de coché, elle dit quoi faire.
 function majLancement() {
   const zone = document.querySelector("#lancement");
   if (!zone) return;
-  zone.innerHTML = lancementHTML(selection.size, preferences.nombre);
+  zone.innerHTML = lancementHTML(selection.size, preferences.nombre, filtre);
   relierActions(zone);
   ajusterAffichage();
 }
 
-// La sélection de l'élève part avec sa série : elle est vidée au lancement.
+// La sélection reste après la série : « Menu » ramène l'élève à ses notions cochées (décision J).
 function lancerSelection() {
   const ids = famillesEligibles(catalogue, filtre)
     .filter((famille) => selection.has(famille.id))
     .map((famille) => famille.id);
   if (!ids.length) return;
-  selection.clear();
   lancer({ mode: "train", ids, nombre: preferences.nombre });
 }
 
@@ -148,11 +187,21 @@ function afficherAccueil() {
   arreterHorloge();
   ecran = "accueil";
   seance = null;
+  // Aucun domaine n'est ouvert : une série lancée d'ici revient ici.
+  domaine = null;
+  // L'entrée d'historique affichée est celle de l'accueil (état vide), jamais un domaine à l'écran caché.
   history.replaceState(null, "", location.pathname);
-  cadre(accueilHTML(famillesEligibles(catalogue, filtre), filtre, selection));
+  cadre(accueilHTML(famillesEligibles(catalogue, filtre), filtre, selection, preferences.nombre));
 }
 
-function afficherDomaine(id) {
+/* Le domaine a sa place dans l'historique : le geste retour du téléphone le referme au lieu de
+   quitter l'appli (popstate). Un identifiant inconnu (adresse, historique) ramène à l'accueil. Venu de
+   l'historique (retour, avant, rechargement, fin de série), l'entrée affichée porte ce domaine. */
+function afficherDomaine(id, depuisHistorique = false) {
+  if (!domaineConnu(id)) return afficherAccueil();
+  if (ecran === "accueil" && !depuisHistorique)
+    history.pushState({ domaine: id }, "", location.pathname);
+  else if (depuisHistorique) history.replaceState({ domaine: id }, "", location.pathname);
   ecran = "domaine";
   domaine = id;
   const familles = famillesEligibles(catalogue, filtre).filter((famille) => famille.domaine === id);
@@ -167,25 +216,15 @@ function afficherBrevet() {
   cadre(brevetHTML());
 }
 
-function afficherProfesseur() {
-  arreterHorloge();
-  ecran = "prof";
-  history.replaceState(null, "", "?prof=1");
-  cadre(professeurHTML(famillesEligibles(catalogue, filtre), filtre, reglageProf, selection));
-  relierSelection();
-}
-
 function changerNiveau(niveau) {
-  if (!["6e", "5e", "4e", "3e", "brevet"].includes(niveau)) return;
-  if (ecran === "prof") lireReglages();
+  if (!NIVEAUX.includes(niveau)) return;
   filtre = niveau;
   preferences.niveau = niveau;
   sauverPreferences();
   // Les notions cochées qui ne sont plus de ce niveau quittent la sélection.
   const eligibles = new Set(famillesEligibles(catalogue, niveau).map((famille) => famille.id));
   for (const id of [...selection]) if (!eligibles.has(id)) selection.delete(id);
-  if (ecran === "prof") afficherProfesseur();
-  else if (ecran === "domaine") afficherDomaine(domaine);
+  if (ecran === "domaine") afficherDomaine(domaine);
   else afficherAccueil();
 }
 
@@ -210,6 +249,18 @@ function nouvelEtat(question, mode, aideOffice) {
   };
 }
 
+/* L'identifiant d'une séance. crypto.randomUUID n'existe que sur une page sécurisée (HTTPS ou
+   localhost) : sur une adresse de test comme http://192.168.1.13:8000, aucune série ne se lançait.
+   Sinon, un UUID v4 tiré avec crypto.getRandomValues, disponible partout. */
+function idSeance() {
+  if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  const octets = crypto.getRandomValues(new Uint8Array(16));
+  octets[6] = (octets[6] & 0x0f) | 0x40;
+  octets[8] = (octets[8] & 0x3f) | 0x80;
+  const hexa = [...octets].map((octet) => octet.toString(16).padStart(2, "0")).join("");
+  return `${hexa.slice(0, 8)}-${hexa.slice(8, 12)}-${hexa.slice(12, 16)}-${hexa.slice(16, 20)}-${hexa.slice(20)}`;
+}
+
 function lancer(options, questionsImposees) {
   arreterHorloge();
   const graine = options.graine || nouvelleGraine();
@@ -218,7 +269,7 @@ function lancer(options, questionsImposees) {
     const vues = options.partagee ? () => 0 : vuesForme;
     const questions = questionsImposees || creerSerie(catalogue, configuration, vues);
     seance = {
-      id: crypto.randomUUID(),
+      id: idSeance(),
       options: configuration,
       questions,
       index: 0,
@@ -232,6 +283,11 @@ function lancer(options, questionsImposees) {
         nouvelEtat(question, configuration.mode, configuration.aideOffice),
       ),
     };
+    // La série a sa place dans l'historique : le geste retour du téléphone fait comme « Menu » au
+    // lieu de quitter l'appli. « Encore une série » et « Refaire mes erreurs » réutilisent la place.
+    // L'état retient le domaine d'origine : un rechargement pendant la série y ramène.
+    if (!etatHistorique()?.serie)
+      history.pushState({ serie: true, origine: domaine }, "", location.pathname);
     ecran = "question";
     afficherQuestion();
     demarrerHorloge();
@@ -668,13 +724,18 @@ function ouvrirCours() {
   fenetre(coursHTML(famille, question, entier), "Revenir à la question", esc(famille.nom));
 }
 
+// Les champs de la fenêtre Projeter. Un champ absent (le nombre de questions, qui vient de
+// « Préparer la série ») est sauté : il ne remet plus le réglage à son minimum.
 function lireReglages() {
+  if (!document.querySelector("dialog.reglages-dialog")) return;
   for (const [cle, min, max] of [
     ["nombre", 1, 40],
     ["secondes", 5, 600],
     ["delai", 0, 60],
   ]) {
-    const valeur = Number(document.getElementById(cle)?.value);
+    const champ = document.getElementById(cle);
+    if (!champ) continue;
+    const valeur = Number(champ.value);
     reglageProf[cle] = Number.isFinite(valeur)
       ? Math.max(min, Math.min(max, Math.round(valeur)))
       : min;
@@ -682,10 +743,11 @@ function lireReglages() {
   reglageProf.correction = document.querySelector("#correction")?.value === "end" ? "end" : "each";
   reglageProf.automatique = Boolean(document.querySelector("#automatique")?.checked);
   reglageProf.aideOffice = Boolean(document.querySelector("#aide-office")?.checked);
+  sauverReglagesProjection();
 }
 
-// Une seule mécanique de sélection pour l'élève (écran de domaine) et le prof (page Diaporama) :
-// une case par notion, une case « tout » par groupe, la même liste `selection`.
+// La sélection, sur l'écran de domaine : une case par notion, la case « tout » du domaine, la même
+// liste `selection` pour l'élève et pour Projeter.
 function relierSelection() {
   document.querySelectorAll("[data-selection]").forEach((caseNotion) => {
     caseNotion.onchange = () => {
@@ -710,7 +772,19 @@ function relierSelection() {
   });
 }
 
+// Cocher une notion met à jour sa ligne (.cochee) et le compteur de la carte du domaine, sans
+// redessiner la liste.
 function majCasesTout() {
+  document.querySelectorAll(".notion [data-selection]").forEach((caseNotion) => {
+    caseNotion.closest(".notion").classList.toggle("cochee", caseNotion.checked);
+  });
+  const tete = document.querySelector(".domaine-tete");
+  if (tete) {
+    const cases = [...document.querySelectorAll("[data-selection]")];
+    const coches = cases.filter((caseNotion) => caseNotion.checked).length;
+    tete.querySelector(".compteur-domaine").outerHTML = compteurHTML(coches, cases.length);
+    tete.classList.toggle("avec-selection", coches > 0);
+  }
   document.querySelectorAll("[data-selection-domaine]").forEach((caseDomaine) => {
     const cases = [
       ...caseDomaine.closest(".groupe-selection").querySelectorAll("[data-selection]"),
@@ -729,34 +803,36 @@ function optionsProfesseur() {
     avertir("Choisis au moins une notion.");
     return null;
   }
-  return { ...reglageProf, filtre, ids, graine: nouvelleGraine(), partagee: true };
+  return {
+    ...reglageProf,
+    nombre: preferences.nombre,
+    filtre,
+    ids,
+    graine: nouvelleGraine(),
+    partagee: true,
+  };
+}
+
+/* « Projeter » (décision H) : une petite fenêtre de réglages sur la sélection en cours, avec le nombre
+   de questions de « Préparer la série ». Plus de page Diaporama. */
+function ouvrirReglagesProjection() {
+  if (!selection.size) return;
+  const dialogue = document.createElement("dialog");
+  dialogue.className = "cours-dialog reglages-dialog";
+  dialogue.innerHTML = reglagesProjectionHTML(reglageProf, selection.size, preferences.nombre);
+  document.body.append(dialogue);
+  dialogue.addEventListener("close", () => {
+    lireReglages();
+    dialogue.remove();
+  });
+  relierActions(dialogue);
+  dialogue.showModal();
 }
 
 function projeter() {
   const options = optionsProfesseur();
+  document.querySelector("dialog.reglages-dialog")?.close();
   if (options) lancer({ ...options, mode: "project" });
-}
-
-function partager() {
-  const options = optionsProfesseur();
-  if (!options) return;
-  const adresse = adresseSerie(options, location.href);
-  const emplacement = document.querySelector("#lien-serie");
-  emplacement.replaceChildren();
-  emplacement.hidden = false;
-  const lien = document.createElement("a");
-  lien.href = adresse.href;
-  lien.target = "_blank";
-  lien.rel = "noopener";
-  lien.textContent = "Ouvrir la série sur un écran ↗";
-  emplacement.append(lien);
-  const champ = document.createElement("input");
-  champ.readOnly = true;
-  champ.value = adresse.href;
-  champ.setAttribute("aria-label", "Adresse de la série à copier");
-  champ.onclick = () => champ.select();
-  emplacement.append(champ);
-  ajusterAffichage();
 }
 
 function demarrerHorloge() {
@@ -823,24 +899,58 @@ function basculerPause() {
   afficherQuestion();
 }
 
-function retour() {
-  if (ecran === "question") {
-    arreterHorloge();
-    if (seance.mode === "project") return afficherProfesseur();
-    if (domaine) return afficherDomaine(domaine);
+const domaineConnu = (id) => typeof id === "string" && DOMAINES.some(([connu]) => connu === id);
+
+/* Le seul lecteur de l'état d'historique (P12). Reconnus : { domaine } quand c'est un identifiant de
+   DOMAINES, { serie: true } (son origine : un domaine connu, sinon l'accueil). Tout autre état (un
+   domaine inconnu, du texte, un objet trafiqué) est traité comme vide et remplacé. */
+function etatHistorique() {
+  const etat = history.state;
+  if (etat === null) return null;
+  if (typeof etat === "object") {
+    if (etat.serie === true)
+      return { serie: true, origine: domaineConnu(etat.origine) ? etat.origine : null };
+    if (domaineConnu(etat.domaine)) return { domaine: etat.domaine };
   }
+  history.replaceState(null, "");
+  return null;
+}
+
+// Le menu qui correspond à un état reçu (geste retour ou avant, rechargement). Une place de série sans
+// série en cours (rechargement pendant une série) affiche le menu d'origine et prend son état.
+function afficherMenuSelon(etat) {
+  if (etat?.domaine) return afficherDomaine(etat.domaine, true);
+  if (etat?.serie && etat.origine) return afficherDomaine(etat.origine, true);
+  afficherAccueil();
+}
+
+/* Sortir d'une série (Menu, Quitter, Retour et Changer de notions du bilan, geste retour) : on revient
+   au menu d'où on l'a lancée — le domaine, ou l'accueil —, sélection gardée. Quand la série occupe une
+   place dans l'historique, on la rend (history.back) : popstate affiche le menu de l'état précédent. */
+function sortirDeLaSerie() {
+  arreterHorloge();
+  document.querySelectorAll("dialog").forEach((dialogue) => dialogue.remove());
+  if (etatHistorique()?.serie) return history.back();
+  if (domaine) afficherDomaine(domaine, true);
+  else afficherAccueil();
+}
+
+function retour() {
+  if (ecran === "question" || ecran === "bilan") return sortirDeLaSerie();
   if (ecran === "accueil") {
     location.href = "/";
     return;
   }
+  // La carte du domaine referme : on rend la place prise dans l'historique si elle est à nous.
+  if (ecran === "domaine" && etatHistorique()?.domaine) return history.back();
   afficherAccueil();
 }
 
 function relierActions(racine = application) {
   const actions = {
-    accueil: afficherAccueil,
+    // « Retour » du bilan du diaporama : comme « Menu », là d'où la série a été lancée.
+    accueil: () => (ecran === "bilan" ? sortirDeLaSerie() : afficherAccueil()),
     retour,
-    prof: afficherProfesseur,
     brevet: afficherBrevet,
     "brevet-commencer": () => lancer({ mode: "exam", nombre: 9 }),
     lancer: lancerSelection,
@@ -858,14 +968,14 @@ function relierActions(racine = application) {
     precedente: () => changerQuestion(seance.index - 1),
     pause: basculerPause,
     projeter,
-    partager,
+    "projeter-reglages": ouvrirReglagesProjection,
     "plein-ecran": () =>
       document.fullscreenElement
         ? document.exitFullscreen()
         : document.documentElement.requestFullscreen(),
     encore: () => lancer({ ...seance.options, graine: nouvelleGraine() }),
     refaire: refaireErreurs,
-    changer: () => (domaine ? afficherDomaine(domaine) : afficherAccueil()),
+    changer: () => sortirDeLaSerie(),
   };
   racine.querySelectorAll("[data-action]").forEach((element) => {
     element.onclick = (evenement) => {
@@ -876,14 +986,19 @@ function relierActions(racine = application) {
   racine.querySelectorAll("[data-niveau]").forEach((element) => {
     element.onclick = () => changerNiveau(element.dataset.niveau);
   });
+  // Le nombre de questions : boutons (à partir de 700 px) ou liste « 10 questions ▾ » (téléphone).
+  const choisirNombre = (valeur) => {
+    if (![5, 10, 15, 20].includes(valeur)) return;
+    preferences.nombre = valeur;
+    sauverPreferences();
+    if (ecran === "accueil") afficherAccueil();
+    else majLancement();
+  };
   racine.querySelectorAll("[data-nombre]").forEach((element) => {
-    element.onclick = () => {
-      const valeur = Number(element.dataset.nombre);
-      if (![5, 10, 15, 20].includes(valeur)) return;
-      preferences.nombre = valeur;
-      sauverPreferences();
-      majLancement();
-    };
+    element.onclick = () => choisirNombre(Number(element.dataset.nombre));
+  });
+  racine.querySelectorAll("[data-choix-nombre]").forEach((element) => {
+    element.onchange = () => choisirNombre(Number(element.value));
   });
   racine.querySelectorAll("[data-domaine]").forEach((element) => {
     element.onclick = () => afficherDomaine(element.dataset.domaine);
@@ -1064,7 +1179,7 @@ function ajusterEchelle() {
   const racine = document.documentElement;
   const coque = document.querySelector(".coque");
   const projection = document.body.classList.contains("projection");
-  // Sans en-tête, la marge autour du cadre est la même partout : haut de la coque, pied, bas.
+  // Sans en-tête, la marge autour du cadre est la même partout : haut et bas de la coque.
   const marge = 72;
   racine.style.setProperty("--echelle", "1");
   racine.style.setProperty("--hauteur-cadre", `${innerHeight - marge}px`);
@@ -1093,9 +1208,19 @@ function ajusterEchelle() {
 
 function lireAdresse() {
   const params = new URLSearchParams(location.search);
-  if (params.get("prof") === "1") return afficherProfesseur();
+  // L'ancienne page Diaporama (?prof=1) n'existe plus : l'adresse ouvre l'accueil.
+  if (params.get("prof") === "1") history.replaceState(null, "", location.pathname);
+  // Rechargement (P12) : dans un domaine, on y reste. Pendant une série (elle est perdue), on remplace
+  // l'état de sa place par celui du menu d'origine, puis on rend la place : l'entrée d'avant est ce
+  // menu, et un retour de plus ne réafficherait que le même écran.
+  const etat = etatHistorique();
+  if (!location.search && etat?.domaine) return afficherDomaine(etat.domaine, true);
+  if (!location.search && etat?.serie) {
+    afficherMenuSelon(etat);
+    return history.back();
+  }
   const niveau = params.get("niveau");
-  if (["6e", "5e", "4e", "3e", "brevet"].includes(niveau)) filtre = niveau;
+  if (NIVEAUX.includes(niveau)) filtre = niveau;
   const valeur = Number(params.get("graine"));
   const graine =
     Number.isInteger(valeur) && valeur > 0 && valeur <= 2147483647 ? valeur : nouvelleGraine();
@@ -1112,18 +1237,40 @@ function lireAdresse() {
   }
   const ids = (params.get("notions") || "").split(",").filter((id) => parId[id]?.valide);
   if (ids.length) {
-    return lancer({
+    // Tout ce qui vient de l'adresse est relu et borné : un lien trafiqué ne peut rien imposer d'autre.
+    const entier = (cle, min, max, defaut) => {
+      const x = Number(params.get(cle));
+      return params.has(cle) && Number.isInteger(x) && x >= min && x <= max ? x : defaut;
+    };
+    const options = {
       mode: "train",
       ids,
-      nombre: Number(params.get("nombre")) || 8,
+      nombre: entier("nombre", 1, 40, 8),
       graine,
       partagee: true,
-    });
+    };
+    // Un ancien lien « niveau=brevet » tire ses questions au niveau brevet, comme avant, pour cette
+    // série seulement : le niveau choisi sur l'appareil ne change pas.
+    if (niveau === "brevet") options.filtre = "brevet";
+    return lancer(options);
   }
   afficherAccueil();
 }
 
 window.addEventListener("resize", ajusterAffichage);
+// Retour et avant (P12) : piloté par l'état reçu. Sur une question ou le bilan, on sort de la série
+// comme avec « Menu » ; ailleurs, on affiche le menu de l'état (domaine connu, sinon l'accueil).
+window.addEventListener("popstate", () => {
+  if (ecran === "question" || ecran === "bilan") {
+    arreterHorloge();
+    document.querySelectorAll("dialog").forEach((dialogue) => dialogue.remove());
+    // Encore une place de série (retour depuis une série plus récente) : on continue à sortir.
+    const etat = etatHistorique();
+    if (etat?.serie) return history.back();
+    return afficherMenuSelon(etat);
+  }
+  afficherMenuSelon(etatHistorique());
+});
 document.addEventListener("keydown", (evenement) => {
   if (ecran !== "question" || seance.mode !== "project" || document.querySelector("dialog[open]"))
     return;

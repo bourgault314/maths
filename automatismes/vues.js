@@ -1,90 +1,163 @@
 import { esc } from "./generateurs/draw.js";
 import { mathHtml } from "./math-format.js";
 import { questionPrompt } from "./math-layout.js";
-import { DOMAINES, formesEligibles } from "./seances.js";
+import { DOMAINES } from "./seances.js";
+import { GROUPES } from "./groupes-domaines.js";
 import { modeleQuestion, reglageForme, ecrireReponse } from "./champs.js";
-import { ICONES_DOMAINES } from "./icones-domaines.js";
+import { iconeDomaine } from "./icones-domaines.js";
 
 export function bouton(texte, action, classe = "secondaire", attributs = "") {
   return `<button class="bouton ${classe}" data-action="${action}" ${attributs}>${texte}</button>`;
 }
 
-export function filtresHTML(filtre) {
-  return `<div class="filtres" role="group" aria-label="Niveau">
-    ${["6e", "5e", "4e", "3e", "brevet"]
-      .map((niveau) => {
-        const actif = filtre === niveau;
-        return `<button class="bouton petit ${actif ? "primaire" : "secondaire"}"
-        data-niveau="${niveau}" aria-pressed="${actif}">${niveau === "brevet" ? "Brevet" : niveau}</button>`;
-      })
-      .join("")}
-  </div>`;
+/* Un réglage de « Préparer la série » : son étiquette, puis des boutons côte à côte (segments). */
+function segmentHTML(libelle, boutons, classe = "", suite = "") {
+  return `<div class="champ-reglage${classe}"><span class="etiquette-reglage">${libelle}</span>
+    <div class="segments" role="group" aria-label="${libelle}">${boutons}</div>${suite}</div>`;
 }
 
-// Sur chaque carte : « n notions », ou « k sur n » dès que k notions du domaine sont cochées.
-export function accueilHTML(familles, filtre, selection) {
+function segmentsHTML(valeurs, actif, attribut, texte = String) {
+  return valeurs
+    .map((valeur) => {
+      const presse = valeur === actif;
+      return `<button class="segment${presse ? " actif" : ""}" data-${attribut}="${valeur}"
+        aria-pressed="${presse}">${texte(valeur)}</button>`;
+    })
+    .join("");
+}
+
+/* Les niveaux du menu. « Brevet » n'en est plus un (22/10) : 78 notions sur 81 en commun avec la 3e.
+   Le filtre « brevet » reste dans le moteur (Entraînement brevet, anciens liens « niveau=brevet »). */
+export const NIVEAUX = ["6e", "5e", "4e", "3e"];
+
+function filtresHTML(filtre) {
+  return segmentHTML("Niveau", segmentsHTML(NIVEAUX, filtre, "niveau"));
+}
+
+/* Le nombre de questions : des boutons à partir de 700 px ; au téléphone, une seule touche
+   « 10 questions ▾ » pour tenir sur la ligne des niveaux. */
+function nombreHTML(nombre) {
+  const liste = [5, 10, 15, 20]
+    .map((valeur) => {
+      const choisi = valeur === nombre ? "selected" : "";
+      return `<option value="${valeur}" ${choisi}>${valeur} questions</option>`;
+    })
+    .join("");
+  const choix = `<label class="choix-nombre"><span class="sr-only">Nombre de questions</span>
+    <select data-choix-nombre>${liste}</select></label>`;
+  return segmentHTML(
+    "Questions",
+    segmentsHTML([5, 10, 15, 20], nombre, "nombre"),
+    " champ-nombre",
+    choix,
+  );
+}
+
+function etapeHTML(numero, titre) {
+  return `<h2 class="etape-menu"><span class="numero numero-${numero}" aria-hidden="true">${numero}</span>
+    ${titre}</h2>`;
+}
+
+/* « k / n » : k notions cochées sur les n du domaine (« sélectionnée(s) » en plus dès 700 px). */
+export function compteurHTML(coches, nombre) {
+  const s = coches > 1 ? "s" : "";
+  return `<span class="compteur-domaine" aria-label="${coches} notion${s} cochée${s} sur ${nombre}"
+    >${coches} / ${nombre}<span class="mot-selection"> sélectionnée${s}</span></span>`;
+}
+
+/* L'accueil, d'après la V2 : la carte d'en-tête (logo maths&go, seul logo de l'appli, lien vers le
+   site), « ① Préparer la série » (niveau, nombre de questions), « ② Choisir les automatismes » (une
+   ligne par domaine, « k / n »), puis l'Entraînement brevet, une série toute prête. */
+export function accueilHTML(familles, filtre, selection, nombre) {
+  const pleinEcran = bouton(
+    ICONES.pleinEcran,
+    "plein-ecran",
+    "secondaire icone-bouton plein-ecran-cadre",
+    'aria-label="Plein écran" title="Plein écran"',
+  );
   return `<section class="accueil">
-    <h1>Automatismes</h1>
-    ${filtresHTML(filtre)}
-    <div class="domaines">${DOMAINES.map(([id, nom]) => {
-      const liste = familles.filter((famille) => famille.domaine === id);
-      const nombre = liste.length;
-      const coches = liste.filter((famille) => selection.has(famille.id)).length;
-      const compte = coches
-        ? `${coches} sur ${nombre}`
-        : `${nombre} notion${nombre > 1 ? "s" : ""}`;
-      return `<button class="domaine-carte ${coches ? "avec-selection" : ""}" data-domaine="${id}" ${nombre ? "" : "disabled"}>
-        <span class="icone" aria-hidden="true">${ICONES_DOMAINES[id] || ""}</span>
-        <span class="nom">${nom}<small>${compte}</small></span><span class="chevron" aria-hidden="true">›</span>
-      </button>`;
-    }).join("")}</div>
-    ${bouton("Entraînement brevet · 9 questions · 20 min", "brevet", "secondaire brevet")}
+    <header class="entete-appli">
+      <a class="logo-cadre" href="/" aria-label="Accueil maths et go">
+        <img src="../assets/img/logos/mathsgo/logo-390.png" alt="maths&go"></a>
+      <div class="titre-appli"><h1>Automatismes</h1><span>Collège · sans calculatrice</span></div>
+      ${pleinEcran}
+    </header>
+    <section class="carte-menu">${etapeHTML(1, "Préparer la série")}
+      <div class="reglages-serie">${filtresHTML(filtre)}${nombreHTML(nombre)}</div></section>
+    <section class="carte-menu">${etapeHTML(2, "Choisir les automatismes")}
+      <div class="domaines">${DOMAINES.map(([id, nom]) => {
+        const liste = familles.filter((famille) => famille.domaine === id);
+        const coches = liste.filter((famille) => selection.has(famille.id)).length;
+        return `<button class="domaine-carte${coches ? " avec-selection" : ""}" data-domaine="${id}"
+          ${liste.length ? "" : "disabled"}>
+          <span class="icone" aria-hidden="true">${iconeDomaine(id)}</span>
+          <span class="nom">${nom}</span>${compteurHTML(coches, liste.length)}
+          <span class="chevron" aria-hidden="true">›</span></button>`;
+      }).join("")}</div>
+      <button class="domaine-carte ligne-brevet" data-action="brevet">
+        <span class="icone" aria-hidden="true">${ICONES.chrono}</span>
+        <span class="nom">Entraînement brevet<small>9 questions · 20 min · sans aide</small></span>
+        <span></span><span class="chevron" aria-hidden="true">›</span></button>
+    </section>
   </section>`;
 }
 
-/* La barre de lancement, en bas du cadre sur l'accueil et les domaines, dès qu'une notion est cochée :
-   « N notions » · 5 · 10 · 15 · 20 · Lancer. Absente quand rien n'est coché. */
-export function lancementHTML(compte, nombre) {
-  if (!compte) return "";
-  return `<div class="barre-lancement">
-    <span class="compte" aria-live="polite">${compte} notion${compte > 1 ? "s" : ""}</span>
-    ${nombreHTML(nombre)}${bouton("Lancer", "lancer", "orange")}
+/* La barre de lancement, toujours en bas (accueil et domaine, décision G). Rien de coché : elle dit
+   quoi faire, boutons grisés. Sinon « n notions sélectionnées · 4e · 10 questions », Projeter (dès
+   700 px) et « Lancer la série ». */
+export function lancementHTML(compte, nombre, filtre) {
+  const s = compte > 1 ? "s" : "";
+  const titre = compte ? `${compte} notion${s} sélectionnée${s}` : "Aucune notion cochée";
+  const detail = compte ? `${filtre} · ${nombre} questions` : "Coche des notions";
+  const grise = compte ? "" : "disabled";
+  return `<div class="barre-lancement${compte ? "" : " vide"}">
+    <div class="resume" aria-live="polite"><strong>${titre}</strong><span>${detail}</span></div>
+    <span class="lancer-groupe">${bouton("Projeter", "projeter-reglages", "secondaire projeter", grise)}
+      ${bouton("Lancer la série", "lancer", "orange", grise)}</span>
   </div>`;
 }
 
-function nombreHTML(nombre) {
-  return `<div class="nombre-questions" role="group" aria-label="Nombre de questions">
-    <span>Questions</span>${[5, 10, 15, 20]
-      .map(
-        (valeur) =>
-          `<button class="bouton petit ${valeur === nombre ? "primaire" : "secondaire"}" data-nombre="${valeur}"
-      aria-pressed="${valeur === nombre}">${valeur}</button>`,
-      )
-      .join("")}</div>`;
-}
-
-/* Le domaine : une case par notion (toute la ligne coche ou décoche), « Tout le domaine » en tête.
-   Un tap ne lance rien : la série part de la barre de lancement. */
+/* Le domaine ouvert, en plein écran (décision F) : en tête la carte du domaine (icône, nom, « k / n »,
+   chevron) qu'on touche pour refermer ; « Tout sélectionner dans ce domaine » ; puis les notions par
+   groupe, avec leurs sous-titres (deux colonnes dès 700 px). Étiquette de classe (« 4e ») sur les
+   notions qui commencent dans la classe choisie, jamais en 6e. Un tap ne lance rien : la série part
+   de la barre de lancement. */
 export function domaineHTML(domaine, familles, filtre, selection) {
   const nom = DOMAINES.find(([id]) => id === domaine)?.[1] || "Notions";
-  const tout = familles.length && familles.every((famille) => selection.has(famille.id));
-  return `<div class="entete-domaine"><span class="icone" aria-hidden="true">${ICONES_DOMAINES[domaine] || ""}</span>
-    <h1>${nom}</h1></div>
-    <div class="reglages-domaine">${filtresHTML(filtre)}</div>
-    <div class="liste-notions groupe-selection">
-      <label class="notion tout-domaine"><input type="checkbox" data-selection-domaine="${domaine}"
-        ${tout ? "checked" : ""}><span class="nom">Tout le domaine</span></label>
-      ${familles
-        .map((famille) => {
-          const formes = formesEligibles(famille, filtre);
-          return `<label class="notion"><input type="checkbox" data-selection="${famille.id}"
-          ${selection.has(famille.id) ? "checked" : ""}>
-          <span class="nom">${esc(famille.nom)}<span class="badges">
-            <span class="badge">${famille.niveaux.join(" · ")}</span>
-            ${formes.some((forme) => forme.brevet) ? '<span class="badge brevet">Brevet</span>' : ""}
-          </span></span></label>`;
-        })
-        .join("")}</div>`;
+  const coches = familles.filter((famille) => selection.has(famille.id)).length;
+  const tout = familles.length > 0 && coches === familles.length;
+  const ligne = (famille) => {
+    const debut = NIVEAUX.find((niveau) => famille.niveaux.includes(niveau));
+    const classe = debut === filtre && filtre !== "6e";
+    const coche = selection.has(famille.id);
+    return `<label class="notion${coche ? " cochee" : ""}">
+      <input type="checkbox" data-selection="${famille.id}" ${coche ? "checked" : ""}>
+      <span class="nom">${esc(famille.nom)}${classe ? `<span class="badge classe">${filtre}</span>` : ""}
+      </span></label>`;
+  };
+  const grille = (liste) => `<div class="grille-notions">${liste.map(ligne).join("")}</div>`;
+  const parId = Object.fromEntries(familles.map((famille) => [famille.id, famille]));
+  const rangees = new Set();
+  const blocs = (GROUPES[domaine] || [])
+    .map(([titre, ids]) => {
+      const liste = ids.filter((id) => parId[id] && !rangees.has(id)).map((id) => parId[id]);
+      liste.forEach((famille) => rangees.add(famille.id));
+      return liste.length ? `<h3 class="titre-groupe">${titre}</h3>${grille(liste)}` : "";
+    })
+    .join("");
+  const reste = familles.filter((famille) => !rangees.has(famille.id));
+  return `<section class="domaine-ouvert groupe-selection">
+    <button class="domaine-tete${coches ? " avec-selection" : ""}" data-action="retour"
+      aria-expanded="true" aria-label="Refermer ${nom}">
+      <span class="icone" aria-hidden="true">${iconeDomaine(domaine)}</span>
+      <span class="nom">${nom}</span>${compteurHTML(coches, familles.length)}
+      <span class="chevron ouvert" aria-hidden="true">›</span></button>
+    <div class="domaine-corps">
+      <label class="notion tout-domaine">
+        <input type="checkbox" data-selection-domaine="${domaine}" ${tout ? "checked" : ""}>
+        <span class="nom">Tout sélectionner dans ce domaine</span></label>
+      ${blocs}${reste.length ? grille(reste) : ""}
+    </div></section>`;
 }
 
 export function enonceHTML(question, pastille = "") {
@@ -390,38 +463,6 @@ function reglageHTML(nom, libelle, valeur, min, max) {
   return `<label>${libelle}<input id="${nom}" type="number" min="${min}" max="${max}" value="${valeur}"></label>`;
 }
 
-export function professeurHTML(familles, filtre, options, selection) {
-  return `<h1>Diaporama</h1>
-    <p class="sous-titre">Au tableau : choisis les notions, règle le temps, puis projette.</p>${filtresHTML(filtre)}
-    <div class="configuration-prof"><div class="reglages"><h2>Réglages</h2>
-      ${reglageHTML("nombre", "Questions", options.nombre, 1, 40)}
-      ${reglageHTML("secondes", "Recherche (s)", options.secondes, 5, 600)}
-      ${reglageHTML("delai", "Pause entre questions (s)", options.delai, 0, 60)}
-      <label>Correction<select id="correction">
-        <option value="each" ${options.correction === "each" ? "selected" : ""}>Après chaque question</option>
-        <option value="end" ${options.correction === "end" ? "selected" : ""}>À la fin</option>
-      </select></label>
-      <label><input id="automatique" type="checkbox" ${options.automatique ? "checked" : ""}> Enchaîner automatiquement</label>
-      <label><input id="aide-office" type="checkbox" ${options.aideOffice ? "checked" : ""}> Aide affichée d’office</label>
-    </div><div class="selection-notions"><h2>Notions</h2>${DOMAINES.map(([domaine, nom]) => {
-      const liste = familles.filter((famille) => famille.domaine === domaine);
-      const coches = liste.length && liste.every((famille) => selection.has(famille.id));
-      return `<details class="selection-domaine groupe-selection"><summary>
-        <input type="checkbox" data-selection-domaine="${domaine}" aria-label="Choisir ${nom}" ${coches ? "checked" : ""}>
-        ${nom} <span>${liste.length}</span></summary>
-        ${liste
-          .map(
-            (famille) => `<label><input type="checkbox" data-selection="${famille.id}"
-          ${selection.has(famille.id) ? "checked" : ""}> ${esc(famille.nom)}</label>`,
-          )
-          .join("")}
-      </details>`;
-    }).join("")}</div>
-    </div><div class="actions-prof">${bouton("Projeter au tableau", "projeter", "primaire")}
-      ${bouton("Ouvrir sur un écran", "partager", "secondaire")}
-    </div><p id="lien-serie" hidden></p>`;
-}
-
 /* Le bilan d'une série : le score, puis chaque question (son énoncé, comme /auto/) avec son état
    (juste / juste avec l'aide / faux / passée) et sa correction dépliable. Pas d'étoiles : le parcours viendra après. */
 export function bilanHTML(seance, parId) {
@@ -504,4 +545,26 @@ export function brevetHTML() {
       .join("")}</div>
     ${bouton("Commencer", "brevet-commencer", "primaire grand")}
   </section>`;
+}
+
+/* « Projeter » (tablette, ordinateur) : les réglages du diaporama dans une petite fenêtre, sur la
+   sélection en cours ; un seul bouton d'action, « Projeter » (P10, 22/10). */
+export function reglagesProjectionHTML(options, compte, nombre) {
+  const choix = (valeur, texte) =>
+    `<option value="${valeur}" ${options.correction === valeur ? "selected" : ""}>${texte}</option>`;
+  const coche = (actif) => (actif ? "checked" : "");
+  return `<div class="fenetre-entete"><h2>Projeter au tableau</h2>
+      <form method="dialog"><button class="fermer" aria-label="Fermer">×</button></form></div>
+    <p class="rappel-selection">${compte} notion${compte > 1 ? "s" : ""} · ${nombre} questions</p>
+    <div class="reglages-projection">
+      ${reglageHTML("secondes", "Temps de recherche (s)", options.secondes, 5, 600)}
+      ${reglageHTML("delai", "Pause entre deux questions (s)", options.delai, 0, 60)}
+      <label>Correction<select id="correction">${choix("each", "Après chaque question")}
+        ${choix("end", "À la fin")}</select></label>
+      <label class="coche-reglage"><input id="automatique" type="checkbox" ${coche(options.automatique)}>
+        Enchaîner automatiquement</label>
+      <label class="coche-reglage"><input id="aide-office" type="checkbox" ${coche(options.aideOffice)}>
+        Avec aide (le dessin reste affiché)</label>
+    </div>
+    <div class="actions-projection">${bouton("Projeter", "projeter", "orange")}</div>`;
 }

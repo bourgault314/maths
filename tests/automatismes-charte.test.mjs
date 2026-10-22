@@ -41,6 +41,7 @@ const paires = [
   ["--bleu-identite", "--papier"],
   ["--bleu-identite", "--fond-doux"],
   ["--turquoise-texte", "--fond-doux"],
+  ["--orange-texte", "--papier"],
   ["--vert", "--vert-fond"],
   ["--rouge", "--rouge-fond"],
   ["--papier", "--bleu"],
