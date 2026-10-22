@@ -99,6 +99,11 @@ async function photo(page, nom, mesures) {
   mesures.push({ fichier, ...controle });
 }
 
+// Le résumé de la barre de lancement : « n notion(s) sélectionnée(s) » (0 si rien n'est coché).
+async function nombreCoche(page) {
+  return Number.parseInt(await page.locator(".barre-lancement .resume strong").innerText()) || 0;
+}
+
 async function question(page, base, notion = "NC27", forme = "a") {
   await page.goto(`${base}?notion=${notion}&forme=${forme}&graine=123`);
   await page.locator(".reponses").waitFor();
@@ -152,13 +157,10 @@ test(
         await page.locator(".domaines").waitFor();
         await photo(page, "accueil", mesures);
         await page.locator('[data-domaine="nombres-calculs"]').click();
-        assert.equal(
-          await page.locator(".barre-lancement").count(),
-          0,
-          "Rien de coché, pas de barre",
-        );
+        // La barre est toujours là (décision G) : rien de coché, « Lancer la série » est grisé.
+        assert.equal(await page.locator('[data-action="lancer"]').isDisabled(), true);
         await page.locator('[data-selection="NC27"]').check();
-        await page.locator(".barre-lancement").getByText("1 notion").waitFor();
+        await page.locator(".barre-lancement").getByText("1 notion sélectionnée").waitFor();
         await photo(page, "domaine", mesures);
         await page.locator('[data-action="lancer"]').click();
         await page.locator(".barre-question .centre").getByText("1 sur 10").waitFor();
@@ -257,11 +259,11 @@ test(
           .evaluate((pastille) => pastille.firstChild.textContent),
         /^1 \/ \d+$/,
       );
-      assert.equal(await page.locator(".barre-lancement .compte").innerText(), "1 notion");
+      assert.equal(await nombreCoche(page), 1);
       await page.locator('[data-domaine="espace-geometrie"]').click();
       assert.equal(await page.locator('[data-selection="EG12"]').isChecked(), false);
       await page.locator('[data-selection="EG12"]').check();
-      assert.equal(await page.locator(".barre-lancement .compte").innerText(), "2 notions");
+      assert.equal(await nombreCoche(page), 2);
       await page.locator('[data-action="lancer"]').click();
       const notions = new Set();
       while ((await page.evaluate(() => document.body.dataset.ecran)) === "question") {
@@ -275,7 +277,7 @@ test(
       );
       // La sélection part avec la série : « Changer de notions » (bilan, coque V2), plus rien n'est coché.
       await page.locator('[data-action="changer"]').click();
-      assert.equal(await page.locator(".barre-lancement").count(), 0);
+      assert.equal(await nombreCoche(page), 0);
       assert.deepEqual(erreurs, []);
     } finally {
       await browser.close();
@@ -295,11 +297,11 @@ test(
       await page.goto(base);
       await page.locator('[data-domaine="nombres-calculs"]').click();
       await page.locator('[data-selection-domaine="nombres-calculs"]').check();
-      const avant = Number.parseInt(await page.locator(".barre-lancement .compte").innerText());
+      const avant = await nombreCoche(page);
       // Le niveau se choisit sur l'accueil (« Préparer la série ») : on referme le domaine.
       await page.locator(".domaine-tete").click();
       await page.locator('[data-niveau="6e"]').click();
-      const apres = Number.parseInt(await page.locator(".barre-lancement .compte").innerText());
+      const apres = await nombreCoche(page);
       // Le compteur ne garde que les notions cochées encore visibles en 6e.
       await page.locator('[data-domaine="nombres-calculs"]').click();
       const cochees = await page.locator("[data-selection]:checked").count();

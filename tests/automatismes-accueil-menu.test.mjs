@@ -320,3 +320,65 @@ test(
       }
     }),
 );
+
+const barre = (onglet) =>
+  onglet
+    .locator(".barre-lancement .resume")
+    .evaluate((resume) => resume.innerText.replace(/\s*\n\s*/g, " · "));
+
+test(
+  "P4 : la barre toujours en bas — vide, puis la sélection ; 72 px au plus ; en bas d’un domaine court",
+  { skip: ignorer, timeout: 120000 },
+  () =>
+    banc(async ({ base, page }) => {
+      for (const [width, height, tactile] of TAILLES.slice(0, 4)) {
+        const nom = `${width}x${height}`;
+        const onglet = await page(width, height, tactile, { niveau: "4e", nombre: 10 });
+        await accueil(onglet, base);
+        assert.equal(await barre(onglet), "Aucune notion cochée · Coche des notions");
+        assert.equal(await onglet.locator('[data-action="lancer"]').isDisabled(), true);
+        assert.equal(await onglet.locator('[data-action="projeter-reglages"]').isDisabled(), true);
+        let [boite] = await boites(onglet, ".barre-lancement");
+        assert.ok(boite.height <= 72, `${nom} : barre vide de ${boite.height} px`);
+        if (width === 1366) {
+          const cartes = await boites(onglet, ".domaines .domaine-carte, .ligne-brevet");
+          assert.ok(
+            cartes.every((carte) => Math.round(carte.width) === 750),
+            "1366 : 750 px",
+          );
+        }
+        await onglet.locator('[data-domaine="donnees-probabilites"]').click();
+        assert.ok((await boites(onglet, ".barre-lancement"))[0].height <= 72, `${nom} : domaine`);
+        await onglet.locator("[data-selection]").nth(0).check();
+        await onglet.locator("[data-selection]").nth(1).check();
+        assert.equal(await barre(onglet), "2 notions sélectionnées · 4e · 10 questions");
+        assert.equal(await onglet.locator('[data-action="lancer"]').isDisabled(), false);
+        assert.equal(await onglet.locator('[data-action="lancer"]').innerText(), "Lancer la série");
+        // Projeter : tablette et ordinateur seulement.
+        assert.equal(
+          await onglet.locator('[data-action="projeter-reglages"]').isVisible(),
+          width >= 700,
+          `${nom} : Projeter`,
+        );
+        [boite] = await boites(onglet, ".barre-lancement");
+        assert.ok(boite.height <= 72, `${nom} : barre de ${boite.height} px`);
+        assert.ok(boite.bottom <= height, `${nom} : barre dans l’écran`);
+        await onglet.locator(".domaine-tete").click();
+        assert.equal(await barre(onglet), "2 notions sélectionnées · 4e · 10 questions");
+        await onglet.context().close();
+      }
+      // Au téléphone, sur un domaine court, la barre reste en bas de l'écran.
+      const telephone = await page(390, 844, true);
+      await accueil(telephone, base);
+      await telephone.locator('[data-domaine="pensee-informatique"]').click();
+      const [enBas] = await boites(telephone, ".barre-lancement");
+      assert.ok(enBas.bottom >= 830, `Pensée informatique : bas de la barre à ${enBas.bottom}`);
+      // Sur tablette, elle suit la liste.
+      const tablette = await page(820, 1180, true);
+      await accueil(tablette, base);
+      await tablette.locator('[data-domaine="pensee-informatique"]').click();
+      const [suit] = await boites(tablette, ".barre-lancement");
+      const [liste] = await boites(tablette, ".domaine-ouvert");
+      assert.ok(suit.top - liste.bottom < 20, "Tablette : la barre suit la liste");
+    }),
+);

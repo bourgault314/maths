@@ -129,11 +129,11 @@ function cadre(contenu) {
   ajusterAffichage();
 }
 
-// La barre de lancement suit la sélection (accueil et domaines) ; rien de coché, pas de barre.
+// La barre de lancement suit la sélection (accueil et domaines) ; rien de coché, elle dit quoi faire.
 function majLancement() {
   const zone = document.querySelector("#lancement");
   if (!zone) return;
-  zone.innerHTML = lancementHTML(selection.size);
+  zone.innerHTML = lancementHTML(selection.size, preferences.nombre, filtre);
   relierActions(zone);
   ajusterAffichage();
 }
@@ -882,6 +882,7 @@ function relierActions(racine = application) {
     pause: basculerPause,
     projeter,
     partager,
+    "projeter-reglages": afficherProfesseur,
     "plein-ecran": () =>
       document.fullscreenElement
         ? document.exitFullscreen()

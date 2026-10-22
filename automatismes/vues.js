@@ -102,13 +102,18 @@ export function accueilHTML(familles, filtre, selection, nombre) {
   </section>`;
 }
 
-/* La barre de lancement, en bas du cadre sur l'accueil et les domaines, dès qu'une notion est cochée :
-   « N notions » · Lancer (le nombre de questions se choisit dans « Préparer la série »). */
-export function lancementHTML(compte) {
-  if (!compte) return "";
-  return `<div class="barre-lancement">
-    <span class="compte" aria-live="polite">${compte} notion${compte > 1 ? "s" : ""}</span>
-    ${bouton("Lancer", "lancer", "orange")}
+/* La barre de lancement, toujours en bas (accueil et domaine, décision G). Rien de coché : elle dit
+   quoi faire, boutons grisés. Sinon « n notions sélectionnées · 4e · 10 questions », Projeter (dès
+   700 px) et « Lancer la série ». */
+export function lancementHTML(compte, nombre, filtre) {
+  const s = compte > 1 ? "s" : "";
+  const titre = compte ? `${compte} notion${s} sélectionnée${s}` : "Aucune notion cochée";
+  const detail = compte ? `${filtre} · ${nombre} questions` : "Coche des notions";
+  const grise = compte ? "" : "disabled";
+  return `<div class="barre-lancement${compte ? "" : " vide"}">
+    <div class="resume" aria-live="polite"><strong>${titre}</strong><span>${detail}</span></div>
+    <span class="lancer-groupe">${bouton("Projeter", "projeter-reglages", "secondaire projeter", grise)}
+      ${bouton("Lancer la série", "lancer", "orange", grise)}</span>
   </div>`;
 }
 

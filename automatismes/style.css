@@ -329,12 +329,14 @@ body.menu .contenu {
   margin-top: 14px;
   padding: 18px 20px 20px;
 }
-/* « ① Préparer la série », « ② Choisir les automatismes ». */
+/* « ① Préparer la série », « ② Choisir les automatismes », sous un filet (celui de la maquette 5). */
 .etape-menu {
   display: flex;
   align-items: center;
   gap: 12px;
   margin: 0 0 14px;
+  padding-top: 8px;
+  border-top: 1px solid var(--ligne);
   font-size: 1.35rem;
 }
 .etape-menu .numero {
@@ -684,20 +686,64 @@ body.menu .contenu {
   text-align: center;
   margin-top: 8px;
 }
-/* La barre de lancement, fixée en bas du cadre : N notions · Lancer. */
+/* La barre de lancement, toujours en bas du cadre (accueil et domaine) : le résumé de la sélection,
+   Projeter (dès 700 px) et « Lancer la série » ; boutons grisés tant que rien n'est coché. */
 .barre-lancement {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px 16px;
   flex: 0 0 auto;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--ligne);
+  margin: 8px 2px 0;
+  padding: 10px 12px 10px 18px;
+  border: 1px solid var(--ligne);
+  border-radius: 20px;
+  background: var(--papier);
+  box-shadow: 0 -4px 22px color-mix(in srgb, var(--encre) 10%, transparent);
 }
-.barre-lancement .compte {
-  font-weight: 800;
+.resume {
+  display: grid;
+  min-width: 0;
+  line-height: 1.25;
+}
+.resume strong {
+  color: var(--bleu-identite);
+}
+.resume span {
+  color: var(--attenue);
+  font-size: 0.85rem;
+}
+.resume strong,
+.resume span {
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+}
+.barre-lancement.vide .resume strong {
+  color: var(--attenue);
+}
+.lancer-groupe {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+.barre-lancement .bouton {
+  min-height: 50px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.barre-lancement .orange {
+  padding: 8px 20px;
+  font-size: 1.05rem;
+}
+.barre-lancement .bouton:disabled {
+  opacity: 0.45;
+  box-shadow: none;
+}
+@media (max-width: 699px) {
+  .barre-lancement .projeter {
+    display: none;
+  }
 }
 .question-entete {
   display: flex;
@@ -2245,6 +2291,7 @@ body.projection #commandes > * {
   }
   .etape-menu {
     margin-bottom: 10px;
+    padding-top: 4px;
     font-size: 1.15rem;
   }
   .segment {
@@ -2284,6 +2331,20 @@ body.projection #commandes > * {
   }
   .domaine-corps {
     padding: 10px 10px 14px;
+  }
+  .barre-lancement {
+    padding: 8px 8px 8px 14px;
+  }
+  .barre-lancement .orange {
+    padding: 8px 16px;
+  }
+  /* Domaine court au téléphone (Pensée informatique : 4 notions) : la barre reste en bas de l'écran,
+     à la même place que sur l'accueil. Sur tablette et ordinateur, elle suit la liste. */
+  body[data-ecran="domaine"] .cadre {
+    min-height: calc(100dvh - 16px);
+  }
+  body[data-ecran="domaine"] .contenu {
+    flex: 1 1 auto;
   }
   .notion {
     padding: 12px;
