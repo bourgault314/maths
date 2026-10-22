@@ -332,9 +332,12 @@ function montrerProjection(question, etat) {
   });
 }
 
+// K11 : « Réponse » ferme l'aide (comme « Explication » la cache depuis K3).
 function basculerReponse() {
   if (seance?.mode !== "project") return;
-  etatCourant().reponseMontree = !etatCourant().reponseMontree;
+  const etat = etatCourant();
+  etat.reponseMontree = !etat.reponseMontree;
+  if (etat.reponseMontree) etat.aideOuverte = false;
   afficherQuestion();
 }
 

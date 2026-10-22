@@ -1951,12 +1951,12 @@ body.projection .aide-entete {
 body.projection .aide-entete .indice {
   font-size: 1rem;
 }
+/* K11 : lisible du fond de la classe — la phrase d'aide, l'indice et l'explication à 28 px au moins. */
 body.projection .espace-question .aide p,
-body.projection .explication .solution {
-  font-size: 1.25rem;
-}
+body.projection .explication .solution,
 body.projection .espace-question .etape {
-  font-size: 1.375rem;
+  font-size: 1.75rem;
+  line-height: 1.3;
 }
 body.projection .bulle-aide {
   font-size: 1.25rem;

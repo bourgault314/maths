@@ -1157,3 +1157,42 @@ test(
     }
   },
 );
+
+// Corrections 3 (K11) : au diaporama, l'explication était en petit (planche 19). Aide et explication
+// à 28 px au moins ; « Réponse » ferme l'aide.
+test(
+  "diaporama (coque V2, K11) : textes à 28 px au moins, « Réponse » ferme l'aide",
+  { skip: ignorer, timeout: 60000 },
+  async () => {
+    const { serveur, base } = await serveurLocal();
+    const browser = await ouvrirNavigateur();
+    const page = await browser.newPage({ viewport: { width: 1366, height: 768 } });
+    const taille = (selecteur) =>
+      page.locator(selecteur).evaluate((element) => parseFloat(getComputedStyle(element).fontSize));
+    try {
+      await page.goto(`${base}?notion=NC04&forme=e&graine=12&mode=project`);
+      await page.locator(".barre-projection").waitFor();
+      await page.locator('#commandes [data-action="aide"]').click();
+      await page.locator(".espace-question > .aide p").waitFor();
+      assert.ok((await taille(".espace-question > .aide p")) >= 28, "Phrase d'aide à 28 px");
+      await page.locator('[data-action="reponse"]').click();
+      await page.locator(".carte .calcul .case.juste").waitFor();
+      assert.equal(
+        await page.locator(".espace-question > .aide").count(),
+        0,
+        "Réponse ferme l'aide",
+      );
+      await page.locator('#commandes [data-action="explication"]').click();
+      await page.locator(".explication .solution").waitFor();
+      await stabiliser(page);
+      assert.ok((await taille(".explication .solution")) >= 28, "Explication à 28 px");
+      const defile = await page
+        .locator(".espace-question")
+        .evaluate((zone) => zone.scrollHeight > zone.clientHeight + 1);
+      assert.equal(defile, false, "Tout tient dans l'écran");
+    } finally {
+      await browser.close();
+      await new Promise((fin) => serveur.close(fin));
+    }
+  },
+);
