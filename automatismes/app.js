@@ -246,6 +246,18 @@ function nouvelEtat(question, mode, aideOffice) {
   };
 }
 
+/* L'identifiant d'une séance. crypto.randomUUID n'existe que sur une page sécurisée (HTTPS ou
+   localhost) : sur une adresse de test comme http://192.168.1.13:8000, aucune série ne se lançait.
+   Sinon, un UUID v4 tiré avec crypto.getRandomValues, disponible partout. */
+function idSeance() {
+  if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  const octets = crypto.getRandomValues(new Uint8Array(16));
+  octets[6] = (octets[6] & 0x0f) | 0x40;
+  octets[8] = (octets[8] & 0x3f) | 0x80;
+  const hexa = [...octets].map((octet) => octet.toString(16).padStart(2, "0")).join("");
+  return `${hexa.slice(0, 8)}-${hexa.slice(8, 12)}-${hexa.slice(12, 16)}-${hexa.slice(16, 20)}-${hexa.slice(20)}`;
+}
+
 function lancer(options, questionsImposees) {
   arreterHorloge();
   const graine = options.graine || nouvelleGraine();
@@ -254,7 +266,7 @@ function lancer(options, questionsImposees) {
     const vues = options.partagee ? () => 0 : vuesForme;
     const questions = questionsImposees || creerSerie(catalogue, configuration, vues);
     seance = {
-      id: crypto.randomUUID(),
+      id: idSeance(),
       options: configuration,
       questions,
       index: 0,

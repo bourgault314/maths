@@ -747,3 +747,37 @@ test(
       );
     }),
 );
+
+test(
+  "P11 : sans crypto.randomUUID (page non sécurisée), série, Projeter et brevet démarrent",
+  { skip: ignorer, timeout: 90000 },
+  () =>
+    banc(async ({ base, page }) => {
+      const onglet = await page(1366, 768, false, { niveau: "4e", nombre: 5 });
+      // Comme sur http://192.168.1.13:8000 : le navigateur ne donne randomUUID qu'en HTTPS.
+      await onglet.addInitScript(() => {
+        delete Crypto.prototype.randomUUID;
+      });
+      await accueil(onglet, base);
+      assert.equal(await onglet.evaluate(() => typeof crypto.randomUUID), "undefined");
+      await cocher(onglet, "donnees-probabilites", [0, 1]);
+      await onglet.locator('[data-action="lancer"]').click();
+      await onglet.locator(".barre-question").waitFor();
+      assert.equal(await onglet.locator(".position").innerText(), "1 sur 5", "Lancer la série");
+      await menu(onglet);
+      await onglet.locator('[data-action="projeter-reglages"]').click();
+      await onglet.locator('dialog [data-action="projeter"]').click();
+      await onglet.locator(".barre-question").waitFor();
+      assert.match(
+        await onglet.locator(".barre-question .menu").innerText(),
+        /Quitter/,
+        "Projeter",
+      );
+      await menu(onglet);
+      await onglet.locator(".domaine-tete").click();
+      await onglet.locator(".ligne-brevet").click();
+      await onglet.locator('[data-action="brevet-commencer"]').click();
+      await onglet.locator(".barre-question").waitFor();
+      assert.equal(await onglet.locator(".position").innerText(), "1 sur 9", "Entraînement brevet");
+    }),
+);
