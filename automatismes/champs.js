@@ -246,6 +246,34 @@ export function modeleQuestion(question, gabarit = question.gabarit) {
       };
     }
   }
+  // K8 : une case seule avec une étiquette s'écrit dans la ligne, « COD = [ ] ° » ; une étiquette
+  // qui décrit la saisie (« Toutes les solutions », « Diviseurs, séparés par ; ») prend « : ».
+  const etiquette = champs.length === 1 && !champs[0].options ? champs[0].label || "" : "";
+  if (etiquette && !/^(Réponse|Choisis)/.test(etiquette)) {
+    const unite = champs[0].unit
+      ? `${/^[°%]$/.test(champs[0].unit) ? "" : " "}${champs[0].unit}`
+      : "";
+    const lien = /=\s*$/.test(etiquette)
+      ? ""
+      : /[;,]|^(Toutes|Trois|Nombre)\b/.test(etiquette)
+        ? " :"
+        : " =";
+    return { cas: "etiquette", consigne: null, modele: `${etiquette.trim()}${lien} [0]${unite}` };
+  }
+  // K8 : Abscisse / Ordonnée s'écrivent « A ( [ ] ; [ ] ) », le point pris dans l'énoncé s'il y est.
+  if (
+    champs.length === 2 &&
+    champs.every((champ) => !champ.options) &&
+    /^Abscisse/.test(champs[0].label || "") &&
+    /^Ordonnée/.test(champs[1].label || "")
+  ) {
+    const point = prompt.match(/coordonnées de (?:l’image )?([A-Z]′?)(?![\p{L}\p{N}])/u)?.[1] || "";
+    return {
+      cas: "coordonnees",
+      consigne: null,
+      modele: `${point ? `${point} ` : ""}( [0] ; [1] )`,
+    };
+  }
   return { cas: "seule", consigne: null, modele: null };
 }
 

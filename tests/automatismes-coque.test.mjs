@@ -23,12 +23,14 @@ test("C3 : chaque forme tombe dans un cas, avec les comptes de la graine 12", ()
       cas[nom] = (cas[nom] || 0) + 1;
     }
   assert.deepEqual(cas, {
-    seule: 306,
+    seule: 240,
     carres: 11,
     comparaison: 9,
     ranger: 2,
     qcm: 67,
     calcule: 40,
+    etiquette: 59,
+    coordonnees: 7,
   });
 });
 
@@ -117,4 +119,25 @@ test("K4 : la rangée de lettres seulement si une réponse attendue s'écrit en 
       const lettres = q.fields.some((c) => !c.options && /^[A-Z][A-Z′']*$/.test(String(c.answer)));
       assert.equal(symbolesQuestion(q).includes("Q"), lettres, `${famille}-${forme}`);
     }
+});
+
+// Corrections 3 (K8) : l'étiquette d'une case seule s'écrit dans la ligne ; Abscisse / Ordonnée en
+// « A ( [ ] ; [ ] ) ». Un gabarit de cahier reste prioritaire.
+test("K8 : « COD = [ ] ° », « A ( [ ] ; [ ] ) », « Toutes les solutions : [ ] »", () => {
+  assert.deepEqual(modeleQuestion(question("EG06-d"), null), {
+    cas: "etiquette",
+    consigne: null,
+    modele: "[angle:COD] = [0]°",
+  });
+  assert.equal(modeleQuestion(question("EG08-c"), null).modele, "P = [0] π cm");
+  assert.equal(modeleQuestion(question("NC29-a"), null).modele, "Toutes les solutions : [0]");
+  assert.equal(modeleQuestion(question("EG02-a"), null).modele, "A ( [0] ; [1] )");
+  assert.equal(modeleQuestion(question("EG16-a"), null).modele, "( [0] ; [1] )");
+  assert.equal(modeleQuestion(question("EG15-a"), null).modele, "D ( [0] ; [1] )");
+  assert.equal(
+    modeleQuestion(question("NC18-d"), null).cas,
+    "seule",
+    "Quotient / Reste gardent leurs étiquettes",
+  );
+  assert.equal(modeleQuestion(question("EG06-d"), "COD mesure [0] degrés").cas, "gabarit");
 });
