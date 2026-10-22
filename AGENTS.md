@@ -57,6 +57,20 @@ Automatismes V2, lire dans cet ordre :
   comme une vérification visuelle. Actualiser la version de la feuille commune
   dans les pages concernées pour que la correction soit chargée sans vider le cache.
 
+### Exception voulue : le haut de page de Flash Anzan
+
+`outils/calcul_mental/flash_anzan.html` n'a pas de barre du site au-dessus du
+cadre, et c'est voulu (choix de Gwenaël, 22/10/2026 : « des boutons tout seuls
+là-haut, on perd de la place »). Ne pas la « corriger » vers la règle commune :
+
+- la flèche de retour vers Calcul mental et le bouton plein écran sont DANS le
+  cadre blanc, aux places des boutons de la séance ; le logo est dans le pied ;
+- le titre « Soroban / Flash Anzan » est centré dans le cadre ; quand le plein
+  écran est caché (téléphone), une place vide de 44 px à droite équilibre la
+  flèche ;
+- `tests/flash-anzan.test.mjs` garde ces trois points. Étendre cette
+  disposition aux autres applis est une idée de Gwenaël, pas une décision.
+
 ## Applis suivies — modèle commun
 
 Toute appli branchée sur le serveur de suivi (Défi tables, SPLAT!, Défi calcul,

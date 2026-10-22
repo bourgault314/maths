@@ -697,6 +697,14 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/calcul-mental/defi-calcul.svg?v=1",
       "cardDescription": "Enchaîner 30 calculs en trois minutes : sommes, différences, compléments et multiplications par 10 ou 100."
     },
+    "outils/calcul_mental/flash_anzan.html": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "entrainer",
+      "collections": ["soroban"],
+      "tags": ["calcul-mental", "soroban", "anzan", "additions", "soustractions", "entrainement"],
+      "thumbnail": "assets/img/thumbnails/calcul-mental/flash-anzan.svg?v=1",
+      "cardDescription": "Additionner de tête une suite de nombres, affichés un par un (Flash) ou écrits en colonne."
+    },
     "outils/automatismes/CM_Livret_A5.html": {
       "primaryNotion": "calcul-mental",
       "primaryGroup": "generer",
@@ -7409,6 +7417,37 @@ window.MATHSGO_CATALOGUE = {
         "additions et soustractions",
         "compléments",
         "30 calculs en trois minutes"
+      ],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "outils-calcul-mental-flash-anzan-html",
+      "title": "Flash Anzan",
+      "description": "Des nombres qui apparaissent un par un, ou écrits en colonne, à additionner de tête : l’entraînement au calcul mental du soroban.",
+      "path": "outils/calcul_mental/flash_anzan.html",
+      "domains": [
+        "nombres-calculs"
+      ],
+      "notions": [
+        "calcul-mental"
+      ],
+      "uses": [
+        "entrainer",
+        "projeter"
+      ],
+      "types": [
+        "exerciseur"
+      ],
+      "filters": [],
+      "keywords": [
+        "flash anzan",
+        "soroban",
+        "anzan",
+        "additions et soustractions",
+        "calcul en colonne"
       ],
       "kind": "tool",
       "status": "published",

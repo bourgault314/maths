@@ -33,9 +33,9 @@ Object.assign(context, {
 });
 vm.runInContext(`${design[0]}\n${functions.join("\n")}`, context);
 
-test("Numération inclut les 43 ressources des bouliers, sans ajouter leur dossier", () => {
-  assert.equal(context.collectionResourceCount("bouliers"), 43);
-  assert.equal(context.notionResourceCount("numeration", "nombres-calculs"), 47);
+test("Numération inclut les 44 ressources des bouliers, sans ajouter leur dossier", () => {
+  assert.equal(context.collectionResourceCount("bouliers"), 44); // + Flash Anzan, rangé aussi dans Soroban (22/10/2026)
+  assert.equal(context.notionResourceCount("numeration", "nombres-calculs"), 48);
 });
 
 test("les opérations et les variantes ne sont plus comptées comme de simples cartes", () => {
@@ -49,14 +49,14 @@ test("les opérations et les variantes ne sont plus comptées comme de simples c
 test("le boulier commun à Rekenrek et Montessori ne gonfle pas le total du parent", () => {
   assert.equal(context.collectionResourceCount("rekenrek"), 29);
   assert.equal(context.collectionResourceCount("montessori"), 4);
-  assert.equal(context.collectionResourceCount("soroban"), 2);
+  assert.equal(context.collectionResourceCount("soroban"), 3);
   assert.equal(context.collectionResourceCount("gerbert"), 9);
-  assert.equal(context.collectionResourceCount("bouliers"), 43); // 44 liens, 43 destinations.
+  assert.equal(context.collectionResourceCount("bouliers"), 44); // 45 liens, 44 destinations.
 });
 
 test("chaque domaine annonce seulement ses ressources atteignables", () => {
   const expected = {
-    "nombres-calculs": 95,
+    "nombres-calculs": 96,
     "proportionnalite-mesures": 18,
     algebre: 30, // + « Comment on joue ? » de la page Splat : le film, la vidéo, le diaporama (11/10/2026), puis le diaporama en ligne
     geometrie: 20,
@@ -68,8 +68,8 @@ test("chaque domaine annonce seulement ses ressources atteignables", () => {
   for (const [domain, count] of Object.entries(expected)) {
     assert.equal(context.domainResourceCount(domain), count, domain);
   }
-  assert.equal(context.notionResourceCount("calcul-mental", "nombres-calculs"), 7);
-  assert.equal(context.resourceCount(published), 180, "Automatismes reste compté une fois dans le total du catalogue.");
+  assert.equal(context.notionResourceCount("calcul-mental", "nombres-calculs"), 8);
+  assert.equal(context.resourceCount(published), 181, "Automatismes reste compté une fois dans le total du catalogue.");
 });
 
 test("Triangles compte ses descendants et les rubriques vides restent à zéro", () => {

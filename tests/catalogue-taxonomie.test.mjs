@@ -35,7 +35,7 @@ const allowedGroups = new Set([
 
 const expectedGroupCounts = {
   manipuler: 43,
-  entrainer: 30,
+  entrainer: 31, // + Flash Anzan (22/10/2026)
   generer: 34,
   imprimer: 29,
   activites: 14,
@@ -46,7 +46,7 @@ const expectedGroupCounts = {
 
 const expectedVisibleCardCounts = {
   manipuler: 39,
-  entrainer: 28,
+  entrainer: 29,
   generer: 34,
   imprimer: 26,
   activites: 12,
@@ -67,10 +67,10 @@ function assertPathsInGroup(group, paths) {
   }
 }
 
-test("le catalogue conserve 190 entrées dont 180 publiées", () => {
+test("le catalogue conserve 191 entrées dont 181 publiées", () => {
   assert.equal(catalogue.schemaVersion, 5);
-  assert.equal(resources.length, 190);
-  assert.equal(published.length, 180);
+  assert.equal(resources.length, 191);
+  assert.equal(published.length, 181);
   assert.equal(new Set(resources.map((resource) => resource.path)).size, resources.length, "Chaque chemin doit être unique.");
 });
 
@@ -146,7 +146,7 @@ test("aucune carte publiée ne conserve la description générique", () => {
   assert.deepEqual(offenders, []);
 });
 
-test("la répartition arbitrée des 180 ressources reste stable", () => {
+test("la répartition arbitrée des 181 ressources reste stable", () => {
   const actual = Object.fromEntries([...allowedGroups].map((group) => [group, 0]));
   for (const resource of published) actual[resolvedPrimaryGroup(resource)] += 1;
   assert.deepEqual(actual, expectedGroupCounts);
@@ -219,7 +219,8 @@ test("les arbitrages pédagogiques clés restent explicites", () => {
     "auto/index.html",
     "outils/calcul_mental/coffres_magiques_solo.html",
     "outils/calcul_mental/defi_tables.html",
-    "outils/calcul_mental/defi_calcul.html"
+    "outils/calcul_mental/defi_calcul.html",
+    "outils/calcul_mental/flash_anzan.html"
   ]);
   assertPathsInGroup("imprimer", ["outils/angles/fiche_angles_triangles.pdf"]);
   assertPathsInGroup("jeux", [
@@ -430,6 +431,6 @@ test("les familles regroupent toutes leurs variantes sans perte ni chevauchement
   for (const family of families) visibleCardsByGroup[family.group] += 1;
 
   assert.equal(representedResourceCount, published.length, "Aucune variante publiée ne doit disparaître du catalogue.");
-  assert.equal(visibleCardCount, 160, "Les 180 ressources doivent être représentées par 160 cartes après regroupement.");
+  assert.equal(visibleCardCount, 161, "Les 181 ressources doivent être représentées par 161 cartes après regroupement.");
   assert.deepEqual(visibleCardsByGroup, expectedVisibleCardCounts);
 });

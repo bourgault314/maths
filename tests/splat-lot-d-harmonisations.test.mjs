@@ -122,7 +122,7 @@ test("le catalogue, chargé : la collection et ses outils s'écrivent « SPLAT! 
   assert.ok(!JSON.stringify(ancien).includes("Splat!"), "l'ancien catalogue aussi");
   // le cache-buster suit (sinon un visiteur garde l'ancien catalogue)
   const index = lire("outils/index.html");
-  assert.match(index, /catalogue-refonte-data\.js\?v=galets-masques-20261021-1/);
+  assert.match(index, /catalogue-refonte-data\.js\?v=flash-anzan-20261022-1/);
   assert.match(index, /catalogue-refonte\.js\?v=cartes-tables-20261018-1/);
 });
 

@@ -423,5 +423,5 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // (avant : defi-tables-test-une-erreur).
   assert.match(lire("_serveur/public/VERSION"), /^lot qui-voit-quoi-serveur$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=galets-masques-20261021-1/);
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=flash-anzan-20261022-1/);
 });
