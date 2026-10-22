@@ -4,7 +4,7 @@ import { questionPrompt } from "./math-layout.js";
 import { DOMAINES } from "./seances.js";
 import { GROUPES } from "./groupes-domaines.js";
 import { modeleQuestion, reglageForme, ecrireReponse } from "./champs.js";
-import { ICONES_DOMAINES } from "./icones-domaines.js";
+import { iconeDomaine } from "./icones-domaines.js";
 
 export function bouton(texte, action, classe = "secondaire", attributs = "") {
   return `<button class="bouton ${classe}" data-action="${action}" ${attributs}>${texte}</button>`;
@@ -90,7 +90,7 @@ export function accueilHTML(familles, filtre, selection, nombre) {
         const coches = liste.filter((famille) => selection.has(famille.id)).length;
         return `<button class="domaine-carte${coches ? " avec-selection" : ""}" data-domaine="${id}"
           ${liste.length ? "" : "disabled"}>
-          <span class="icone" aria-hidden="true">${ICONES_DOMAINES[id] || ""}</span>
+          <span class="icone" aria-hidden="true">${iconeDomaine(id)}</span>
           <span class="nom">${nom}</span>${compteurHTML(coches, liste.length)}
           <span class="chevron" aria-hidden="true">›</span></button>`;
       }).join("")}</div>
@@ -149,7 +149,7 @@ export function domaineHTML(domaine, familles, filtre, selection) {
   return `<section class="domaine-ouvert groupe-selection">
     <button class="domaine-tete${coches ? " avec-selection" : ""}" data-action="retour"
       aria-expanded="true" aria-label="Refermer ${nom}">
-      <span class="icone" aria-hidden="true">${ICONES_DOMAINES[domaine] || ""}</span>
+      <span class="icone" aria-hidden="true">${iconeDomaine(domaine)}</span>
       <span class="nom">${nom}</span>${compteurHTML(coches, familles.length)}
       <span class="chevron ouvert" aria-hidden="true">›</span></button>
     <div class="domaine-corps">

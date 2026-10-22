@@ -1,14 +1,324 @@
-// Les icônes des cinq domaines : celles de /auto/ (composition fixée), plus celle de
-// « Proportionnalité, fonctions » dessinée dans le même style (droite qui passe par l'origine).
-export const ICONES_DOMAINES = {
-  "nombres-calculs":
-    '<svg viewBox="0 0 36 36" focusable="false"><rect x="3.5" y="3.5" width="29" height="29" rx="4.5" fill="#fffaf3" stroke="#173a5e" stroke-width="1.3"></rect><g fill="none" stroke="#aebfd1" stroke-width="1.2" stroke-linecap="round"><path d="M7.5 11.5h21M7.5 18h21M7.5 24.5h21"></path></g><g stroke="#fffdf8" stroke-width=".72"><circle cx="15" cy="11.5" r="2.55" fill="#08aaa5"></circle><circle cx="20.5" cy="11.5" r="2.55" fill="#08aaa5"></circle><circle cx="26" cy="11.5" r="2.55" fill="#0b67b2"></circle><circle cx="9.5" cy="18" r="2.55" fill="#f58220"></circle><circle cx="15" cy="18" r="2.55" fill="#f58220"></circle><circle cx="20.5" cy="18" r="2.55" fill="#f58220"></circle><circle cx="9.5" cy="24.5" r="2.55" fill="#0b67b2"></circle><circle cx="20.5" cy="24.5" r="2.55" fill="#08aaa5"></circle><circle cx="26" cy="24.5" r="2.55" fill="#08aaa5"></circle></g></svg>',
-  "proportionnalite-fonctions":
-    '<svg viewBox="0 0 36 36" focusable="false"><rect x="3.5" y="3.5" width="29" height="29" rx="4.5" fill="#f3fbfa" stroke="#173a5e" stroke-width="1.3"/><g fill="none" stroke="#aebfd1" stroke-width="1.1" stroke-linecap="round"><path d="M9 28h19M9 28V9"/></g><path d="M9 28L28 10" fill="none" stroke="#0b67b2" stroke-width="2.2" stroke-linecap="round"/><g stroke="#fffdf8" stroke-width=".72"><circle cx="14.7" cy="22.6" r="2.4" fill="#08aaa5"/><circle cx="20.4" cy="17.2" r="2.4" fill="#f58220"/><circle cx="26.1" cy="11.8" r="2.4" fill="#08aaa5"/></g></svg>',
-  "espace-geometrie":
-    '<svg viewBox="0 0 36 36" focusable="false"><defs><clipPath id="mathsgo-truchet-clip"><rect x="4" y="4" width="28" height="28" rx="4"></rect></clipPath></defs><rect x="3.5" y="3.5" width="29" height="29" rx="4.5" fill="#f4fbfa"></rect><g clip-path="url(#mathsgo-truchet-clip)"><g fill="none" stroke="#167f7b" stroke-width="1.2" stroke-linecap="round"><path d="M7.5 4A3.5 3.5 0 0 0 11 7.5"></path><path d="M4 7.5A3.5 3.5 0 0 1 7.5 11"></path><path d="M14.5 4A3.5 3.5 0 0 0 18 7.5"></path><path d="M11 7.5A3.5 3.5 0 0 1 14.5 11"></path><path d="M21.5 4A3.5 3.5 0 0 1 18 7.5"></path><path d="M25 7.5A3.5 3.5 0 0 0 21.5 11"></path><path d="M28.5 4A3.5 3.5 0 0 0 32 7.5"></path><path d="M25 7.5A3.5 3.5 0 0 1 28.5 11"></path><path d="M7.5 11A3.5 3.5 0 0 1 4 14.5"></path><path d="M11 14.5A3.5 3.5 0 0 0 7.5 18"></path><path d="M14.5 11A3.5 3.5 0 0 0 18 14.5"></path><path d="M11 14.5A3.5 3.5 0 0 1 14.5 18"></path><path d="M21.5 11A3.5 3.5 0 0 1 18 14.5"></path><path d="M25 14.5A3.5 3.5 0 0 0 21.5 18"></path><path d="M28.5 11A3.5 3.5 0 0 1 25 14.5"></path><path d="M32 14.5A3.5 3.5 0 0 0 28.5 18"></path><path d="M7.5 18A3.5 3.5 0 0 0 11 21.5"></path><path d="M4 21.5A3.5 3.5 0 0 1 7.5 25"></path><path d="M14.5 18A3.5 3.5 0 0 0 18 21.5"></path><path d="M11 21.5A3.5 3.5 0 0 1 14.5 25"></path><path d="M21.5 18A3.5 3.5 0 0 1 18 21.5"></path><path d="M25 21.5A3.5 3.5 0 0 0 21.5 25"></path><path d="M28.5 18A3.5 3.5 0 0 1 25 21.5"></path><path d="M32 21.5A3.5 3.5 0 0 0 28.5 25"></path><path d="M7.5 25A3.5 3.5 0 0 1 4 28.5"></path><path d="M11 28.5A3.5 3.5 0 0 0 7.5 32"></path><path d="M14.5 25A3.5 3.5 0 0 1 11 28.5"></path><path d="M18 28.5A3.5 3.5 0 0 0 14.5 32"></path><path d="M21.5 25A3.5 3.5 0 0 1 18 28.5"></path><path d="M25 28.5A3.5 3.5 0 0 0 21.5 32"></path><path d="M28.5 25A3.5 3.5 0 0 0 32 28.5"></path><path d="M25 28.5A3.5 3.5 0 0 1 28.5 32"></path></g><g fill="none" stroke="#f58220" stroke-width="2" stroke-linecap="round"><path d="M7.5 4A3.5 3.5 0 0 0 11 7.5"></path><path d="M11 7.5A3.5 3.5 0 0 1 14.5 11"></path><path d="M14.5 11A3.5 3.5 0 0 0 18 14.5"></path><path d="M21.5 11A3.5 3.5 0 0 1 18 14.5"></path><path d="M25 7.5A3.5 3.5 0 0 0 21.5 11"></path><path d="M25 7.5A3.5 3.5 0 0 1 28.5 11"></path><path d="M28.5 11A3.5 3.5 0 0 1 25 14.5"></path><path d="M25 14.5A3.5 3.5 0 0 0 21.5 18"></path><path d="M21.5 18A3.5 3.5 0 0 1 18 21.5"></path><path d="M14.5 18A3.5 3.5 0 0 0 18 21.5"></path><path d="M11 14.5A3.5 3.5 0 0 1 14.5 18"></path><path d="M11 14.5A3.5 3.5 0 0 0 7.5 18"></path><path d="M7.5 18A3.5 3.5 0 0 0 11 21.5"></path><path d="M11 21.5A3.5 3.5 0 0 1 14.5 25"></path><path d="M14.5 25A3.5 3.5 0 0 1 11 28.5"></path><path d="M11 28.5A3.5 3.5 0 0 0 7.5 32"></path></g></g><rect x="3.5" y="3.5" width="29" height="29" rx="4.5" fill="none" stroke="#173a5e" stroke-width="1.3"></rect></svg>',
-  "donnees-probabilites":
-    '<svg viewBox="0 0 36 36" focusable="false"><rect x="3.5" y="3.5" width="29" height="29" rx="4.5" fill="#fffaf5" stroke="#173a5e" stroke-width="1.3"></rect><path d="M8 28h20" fill="none" stroke="#9eb0c2" stroke-width="1.1" stroke-linecap="round"></path><g stroke="#fffdf8" stroke-width=".55"><rect x="8.5" y="17" width="4.25" height="11" rx=".8" fill="#0b67b2"></rect><rect x="13.55" y="9" width="4.25" height="19" rx=".8" fill="#6553b8"></rect><rect x="18.6" y="19.5" width="4.25" height="8.5" rx=".8" fill="#f58220"></rect><rect x="23.65" y="13.5" width="4.25" height="14.5" rx=".8" fill="#08aaa5"></rect></g></svg>',
-  "pensee-informatique":
-    '<svg viewBox="0 0 36 36" focusable="false"><rect x="3.5" y="3.5" width="29" height="29" rx="4.5" fill="#f5f4ff" stroke="#4f5fb3" stroke-width="1.3"></rect><g fill="none" stroke="#c7ccee" stroke-width=".72"><path d="M12 4v28M18 4v28M24 4v28M4 12h28M4 18h28M4 24h28"></path></g><circle cx="8.8" cy="27" r="2.4" fill="#08aaa5" stroke="#087f78" stroke-width=".8"></circle><path d="M9 27h6v-6v-6h6v-6h6" fill="none" stroke="#6553b8" stroke-width="2.35" stroke-linecap="round" stroke-linejoin="round"></path><path d="M27 9V4.8" fill="none" stroke="#b95016" stroke-width="1.35" stroke-linecap="round"></path><path d="M27 4.8h5.6L27 8.4Z" fill="#f58220" stroke="#b95016" stroke-width=".7" stroke-linejoin="round"></path></svg>',
+/* Les icônes des domaines, DU JOUR (décision L, 22/10/2026) : le générateur de la V2 de Gwenaël
+   (automatismes-v2/src/registre-lecteur.js) pour quatre domaines — boulier, barres, trajet, motif de
+   Truchet —, plus « Proportionnalité, fonctions » : un repère pas toujours centré, des points en
+   petites croix orange, et selon le jour une fonction linéaire, affine, carré ou racine carrée
+   (attribut data-courbe). La même icône toute une journée (la graine vient de la date locale), une
+   autre le lendemain. */
+const GRAINES_DOMAINES = Object.freeze({
+  "nombres-calculs": 0x243f6a88,
+  "espace-geometrie": 0x85a308d3,
+  "donnees-probabilites": 0x13198a2e,
+  "pensee-informatique": 0x03707344,
+  "proportionnalite-fonctions": 0x299f31d0,
+});
+const CACHE_ICONES = new Map();
+
+// Le cadre arrondi commun ; `trait` false : sans bord (il est redessiné par-dessus le motif).
+const fond = (couleur, trait = "#173a5e") =>
+  `<rect x="3.5" y="3.5" width="29" height="29" rx="4.5" fill="${couleur}"` +
+  (trait ? ` stroke="${trait}" stroke-width="1.3"/>` : "/>");
+const BORD =
+  '<rect x="3.5" y="3.5" width="29" height="29" rx="4.5" fill="none" ' +
+  'stroke="#173a5e" stroke-width="1.3"/>';
+const masque = (id) =>
+  `<defs><clipPath id="${id}"><rect x="4" y="4" width="28" height="28" rx="4"/></clipPath></defs>`;
+const svg = (contenu, attributs = "") =>
+  `<svg viewBox="0 0 36 36" focusable="false"${attributs}>${contenu}</svg>`;
+
+function hacherTexte(texte) {
+  let valeur = 0x811c9dc5;
+  for (const caractere of texte) {
+    valeur ^= caractere.codePointAt(0);
+    valeur = Math.imul(valeur, 0x01000193);
+  }
+  return valeur >>> 0;
+}
+
+// La graine du jour : la date locale « aaaa-mm-jj », hachée.
+export function graineDuJour(date = new Date()) {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime()))
+    throw new TypeError("Date invalide pour les icônes du jour.");
+  const deux = (nombre) => String(nombre).padStart(2, "0");
+  const annee = String(date.getFullYear()).padStart(4, "0");
+  return hacherTexte(`${annee}-${deux(date.getMonth() + 1)}-${deux(date.getDate())}`);
+}
+
+function creerAleatoire(graine) {
+  let etat = graine >>> 0;
+  return () => {
+    etat = (etat + 0x6d2b79f5) >>> 0;
+    let valeur = etat;
+    valeur = Math.imul(valeur ^ (valeur >>> 15), valeur | 1);
+    valeur ^= valeur + Math.imul(valeur ^ (valeur >>> 7), valeur | 61);
+    return ((valeur ^ (valeur >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const aleatoireDomaine = (domaine, graine) =>
+  creerAleatoire((graine ^ GRAINES_DOMAINES[domaine]) >>> 0);
+
+function melanger(valeurs, aleatoire) {
+  const resultat = valeurs.slice();
+  for (let index = resultat.length - 1; index > 0; index -= 1) {
+    const autre = Math.floor(aleatoire() * (index + 1));
+    [resultat[index], resultat[autre]] = [resultat[autre], resultat[index]];
+  }
+  return resultat;
+}
+
+// Nombres et calculs : un boulier de trois tringles, un trou par tringle.
+function iconeNombres(graine) {
+  const aleatoire = aleatoireDomaine("nombres-calculs", graine);
+  const emplacements = [9.5, 15, 20.5, 26];
+  const lignes = [
+    { y: 11.5, couleurs: ["#08aaa5", "#08aaa5", "#0b67b2"] },
+    { y: 18, couleurs: ["#f58220", "#f58220", "#f58220"] },
+    { y: 24.5, couleurs: ["#0b67b2", "#08aaa5", "#08aaa5"] },
+  ];
+  const trous = melanger([0, 1, 2, 3], aleatoire).slice(0, lignes.length);
+  const boules = lignes
+    .flatMap((ligne, rang) =>
+      emplacements
+        .filter((_, index) => index !== trous[rang])
+        .map(
+          (x, index) =>
+            `<circle cx="${x}" cy="${ligne.y}" r="2.55" fill="${ligne.couleurs[index]}"/>`,
+        ),
+    )
+    .join("");
+  return svg(
+    fond("#fffaf3") +
+      '<g fill="none" stroke="#aebfd1" stroke-width="1.2" stroke-linecap="round">' +
+      '<path d="M7.5 11.5h21M7.5 18h21M7.5 24.5h21"/></g>' +
+      `<g stroke="#fffdf8" stroke-width=".72">${boules}</g>`,
+  );
+}
+
+// Données et probabilités : quatre barres, hauteurs et couleurs mélangées.
+function iconeDonnees(graine) {
+  const aleatoire = aleatoireDomaine("donnees-probabilites", graine);
+  const hauteurs = melanger([8.5, 11, 14.5, 19], aleatoire);
+  const couleurs = melanger(["#08aaa5", "#0b67b2", "#6553b8", "#f58220"], aleatoire);
+  const barres = [8.5, 13.55, 18.6, 23.65]
+    .map((x, index) => {
+      const hauteur = hauteurs[index];
+      return `<rect x="${x}" y="${28 - hauteur}" width="4.25" height="${hauteur}" rx=".8" fill="${couleurs[index]}"/>`;
+    })
+    .join("");
+  return svg(
+    fond("#fffaf5") +
+      '<path d="M8 28h20" fill="none" stroke="#9eb0c2" stroke-width="1.1" stroke-linecap="round"/>' +
+      `<g stroke="#fffdf8" stroke-width=".55">${barres}</g>`,
+  );
+}
+
+function enumererTrajets(droite, haut, prefixe = "", trajets = []) {
+  if (droite === 0 && haut === 0) {
+    trajets.push(prefixe);
+    return trajets;
+  }
+  if (droite > 0) enumererTrajets(droite - 1, haut, `${prefixe}D`, trajets);
+  if (haut > 0) enumererTrajets(droite, haut - 1, `${prefixe}H`, trajets);
+  return trajets;
+}
+const TRAJETS = enumererTrajets(3, 3);
+
+// Pensée informatique : un trajet sur quadrillage, du point turquoise au drapeau.
+function iconeInformatique(graine) {
+  const aleatoire = aleatoireDomaine("pensee-informatique", graine);
+  const trajet = TRAJETS[Math.floor(aleatoire() * TRAJETS.length)];
+  const chemin = `M9 27${[...trajet].map((pas) => (pas === "D" ? "h6" : "v-6")).join("")}`;
+  return svg(
+    fond("#f5f4ff", "#4f5fb3") +
+      '<g fill="none" stroke="#c7ccee" stroke-width=".72">' +
+      '<path d="M12 4v28M18 4v28M24 4v28M4 12h28M4 18h28M4 24h28"/></g>' +
+      '<circle cx="8.8" cy="27" r="2.4" fill="#08aaa5" stroke="#087f78" stroke-width=".8"/>' +
+      `<path d="${chemin}" fill="none" stroke="#6553b8" stroke-width="2.35" ` +
+      'stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<path d="M27 9V4.8" fill="none" stroke="#b95016" stroke-width="1.35" stroke-linecap="round"/>' +
+      '<path d="M27 4.8h5.6L27 8.4Z" fill="#f58220" stroke="#b95016" stroke-width=".7" ' +
+      'stroke-linejoin="round"/>',
+  );
+}
+
+// Espace et géométrie : un motif de Truchet 4 × 4, son plus long chemin en orange.
+function iconeGeometrie(graine) {
+  const aleatoire = aleatoireDomaine("espace-geometrie", graine);
+  const taille = 4;
+  const cellule = 7;
+  const origine = 4;
+  const rayon = cellule / 2;
+  const orientations = Array.from({ length: taille }, () =>
+    Array.from({ length: taille }, () => (aleatoire() < 0.5 ? "a" : "b")),
+  );
+  const pairePour = (orientation, bord) =>
+    (orientation === "a" ? { H: "G", G: "H", D: "B", B: "D" } : { H: "D", D: "H", G: "B", B: "G" })[
+      bord
+    ];
+  const cheminPour = (ligne, colonne, orientation, bord) => {
+    const x = origine + colonne * cellule;
+    const y = origine + ligne * cellule;
+    if (orientation === "a")
+      return bord === "H" || bord === "G"
+        ? `M${x + rayon} ${y}A${rayon} ${rayon} 0 0 1 ${x} ${y + rayon}`
+        : `M${x + cellule} ${y + rayon}A${rayon} ${rayon} 0 0 0 ${x + rayon} ${y + cellule}`;
+    return bord === "H" || bord === "D"
+      ? `M${x + rayon} ${y}A${rayon} ${rayon} 0 0 0 ${x + cellule} ${y + rayon}`
+      : `M${x} ${y + rayon}A${rayon} ${rayon} 0 0 1 ${x + rayon} ${y + cellule}`;
+  };
+  const cheminsBase = [];
+  orientations.forEach((ligne, indexLigne) =>
+    ligne.forEach((orientation, indexColonne) => {
+      cheminsBase.push(cheminPour(indexLigne, indexColonne, orientation, "H"));
+      cheminsBase.push(
+        cheminPour(indexLigne, indexColonne, orientation, orientation === "a" ? "D" : "G"),
+      );
+    }),
+  );
+  const departs = [];
+  for (let index = 0; index < taille; index += 1)
+    departs.push(
+      { ligne: 0, colonne: index, bord: "H" },
+      { ligne: index, colonne: taille - 1, bord: "D" },
+      { ligne: taille - 1, colonne: index, bord: "B" },
+      { ligne: index, colonne: 0, bord: "G" },
+    );
+  const suivre = (depart) => {
+    const parcours = [];
+    const visites = new Set();
+    let courant = { ...depart };
+    while (
+      courant.ligne >= 0 &&
+      courant.ligne < taille &&
+      courant.colonne >= 0 &&
+      courant.colonne < taille
+    ) {
+      const orientation = orientations[courant.ligne][courant.colonne];
+      const sortie = pairePour(orientation, courant.bord);
+      const cle = `${courant.ligne}:${courant.colonne}:${[courant.bord, sortie].sort().join("")}`;
+      if (visites.has(cle)) break;
+      visites.add(cle);
+      parcours.push(cheminPour(courant.ligne, courant.colonne, orientation, courant.bord));
+      const { ligne, colonne } = courant;
+      if (sortie === "H") courant = { ligne: ligne - 1, colonne, bord: "B" };
+      if (sortie === "D") courant = { ligne, colonne: colonne + 1, bord: "G" };
+      if (sortie === "B") courant = { ligne: ligne + 1, colonne, bord: "H" };
+      if (sortie === "G") courant = { ligne, colonne: colonne - 1, bord: "D" };
+    }
+    return parcours;
+  };
+  const decalage = Math.floor(aleatoire() * departs.length);
+  const cheminOrange = departs
+    .slice(decalage)
+    .concat(departs.slice(0, decalage))
+    .map(suivre)
+    .reduce((plusLong, parcours) => (parcours.length > plusLong.length ? parcours : plusLong), []);
+  const id = `mathsgo-truchet-${graine.toString(16)}`;
+  const traits = (chemins) => chemins.map((d) => `<path d="${d}"/>`).join("");
+  return svg(
+    masque(id) +
+      fond("#f4fbfa", false) +
+      `<g clip-path="url(#${id})">` +
+      `<g fill="none" stroke="#167f7b" stroke-width="1.2" stroke-linecap="round">${traits(cheminsBase)}</g>` +
+      `<g fill="none" stroke="#f58220" stroke-width="2" stroke-linecap="round">${traits(cheminOrange)}</g>` +
+      `</g>${BORD}`,
+  );
+}
+
+const arrondi = (valeur) => Math.round(valeur * 100) / 100;
+
+// Les quatre familles de courbes, chacune avec les origines où elle tient dans le cadre.
+const COURBES = {
+  lineaire: [
+    [9, 27],
+    [12, 24],
+    [18, 18],
+    [9, 18],
+  ],
+  affine: [
+    [9, 27],
+    [9, 22],
+    [12, 27],
+  ],
+  carre: [
+    [18, 27],
+    [18, 23],
+    [18, 18],
+  ],
+  racine: [
+    [9, 27],
+    [9, 22],
+    [12, 24],
+  ],
 };
+export const TYPES_COURBES = Object.keys(COURBES);
+
+// Proportionnalité, fonctions : un repère, une courbe du jour, trois points en croix.
+function iconeFonctions(graine) {
+  const aleatoire = aleatoireDomaine("proportionnalite-fonctions", graine);
+  const choisir = (liste) => liste[Math.floor(aleatoire() * liste.length)];
+  const type = choisir(TYPES_COURBES);
+  const [ox, oy] = choisir(COURBES[type]);
+  // f(x) en unités du dessin (x vers la droite depuis O, y vers le HAUT depuis O).
+  let f;
+  let croixX;
+  if (type === "lineaire") {
+    const k = choisir(oy === 18 ? [0.7, 1, 1.4, -0.8, -1.2] : [0.7, 1, 1.4]);
+    f = (x) => k * x;
+    croixX = [-6, 5, 10].filter((x) => ox + x > 5);
+  } else if (type === "affine") {
+    const b = choisir([3, 5, 7]);
+    const m = choisir([0.5, 0.8, -0.4]);
+    f = (x) => m * x + b;
+    croixX = [0, 6, 12];
+  } else if (type === "carre") {
+    const a = oy === 18 ? 0.17 : choisir([0.2, 0.25]);
+    f = (x) => a * x * x;
+    croixX = [-6, 0, 6];
+  } else {
+    const a = choisir([3, 3.6]);
+    f = (x) => (x >= 0 ? a * Math.sqrt(x) : NaN);
+    croixX = [2, 8, 16];
+  }
+  const points = [];
+  for (let x = -14; x <= 24; x += 0.5) {
+    const y = f(x);
+    if (Number.isFinite(y) && ox + x >= 3 && ox + x <= 33) points.push([ox + x, oy - y]);
+  }
+  const courbe = `M${points.map(([x, y]) => `${arrondi(x)} ${arrondi(y)}`).join("L")}`;
+  const croix = croixX
+    .map((x) => [ox + x, oy - f(x)])
+    .filter(([x, y]) => x > 6 && x < 30 && y > 6 && y < 30)
+    .map(([x, y]) => {
+      const [g, h, b] = [arrondi(x - 1.7), arrondi(y - 1.7), arrondi(y + 1.7)];
+      return `M${g} ${h}l3.4 3.4M${g} ${b}l3.4 -3.4`;
+    })
+    .join("");
+  const id = `mathsgo-fonctions-${graine.toString(16)}`;
+  return svg(
+    masque(id) +
+      fond("#f3fbfa", false) +
+      `<g clip-path="url(#${id})">` +
+      `<path d="M4 ${oy}h28M${ox} 32V4" fill="none" stroke="#9eb0c2" stroke-width="1.1"/>` +
+      `<path d="${courbe}" fill="none" stroke="#0b67b2" stroke-width="2.1" ` +
+      'stroke-linecap="round" stroke-linejoin="round"/>' +
+      `<path d="${croix}" fill="none" stroke="#f58220" stroke-width="1.35" stroke-linecap="round"/>` +
+      `</g>${BORD}`,
+    ` data-courbe="${type}"`,
+  );
+}
+
+const GENERATEURS = {
+  "nombres-calculs": iconeNombres,
+  "proportionnalite-fonctions": iconeFonctions,
+  "espace-geometrie": iconeGeometrie,
+  "donnees-probabilites": iconeDonnees,
+  "pensee-informatique": iconeInformatique,
+};
+
+// L'icône d'un domaine pour une graine (par défaut, celle du jour) ; "" pour un domaine inconnu.
+export function iconeDomaine(domaine, graine = graineDuJour()) {
+  const cle = `${domaine}:${graine}`;
+  if (!CACHE_ICONES.has(cle)) CACHE_ICONES.set(cle, GENERATEURS[domaine]?.(graine) || "");
+  return CACHE_ICONES.get(cle);
+}
