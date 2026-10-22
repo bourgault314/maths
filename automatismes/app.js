@@ -1229,7 +1229,7 @@ function lireAdresse() {
     const options = {
       mode: "train",
       ids,
-      nombre: Number(params.get("nombre")) || 8,
+      nombre: entier("nombre", 1, 40, 8),
       graine,
       partagee: true,
     };

@@ -644,3 +644,71 @@ test(
       assert.equal(await barre(tableau), "2 notions sélectionnées · 4e · 5 questions");
     }),
 );
+
+// Les énoncés d'une série ouverte par un lien, question par question (Passer, Question suivante).
+async function enonces(onglet) {
+  const textes = [];
+  await onglet.locator(".carte").waitFor();
+  for (let tour = 0; tour < 12 && (await ecran(onglet)) === "question"; tour += 1) {
+    textes.push((await onglet.locator(".carte").innerText()).replace(/\s+/g, " "));
+    await onglet.locator('[data-action="passer"]').click();
+    await onglet.locator('[data-action="suivante"]').click();
+  }
+  return textes;
+}
+
+test(
+  "P9 : un lien « niveau=brevet » donne les mêmes questions sur un appareil en 6e et un en 3e",
+  { skip: ignorer, timeout: 90000 },
+  () =>
+    banc(async ({ base, page }) => {
+      // Acquis de main (la maquette 3 l'avait cassé) : ce test est vert sur main et sur la branche.
+      const lien = `${base}?notions=NC01,NC08,EG10,PF03&graine=12345&nombre=6&niveau=brevet`;
+      const series = [];
+      for (const niveau of ["6e", "3e"]) {
+        const onglet = await page(1366, 768, false, { niveau, nombre: 10 });
+        await onglet.goto(lien);
+        series.push(await enonces(onglet));
+        await onglet.context().close();
+      }
+      assert.equal(series[0].length, 6);
+      assert.deepEqual(series[0], series[1]);
+    }),
+);
+
+test(
+  "P9 : un lien trafiqué ne lève aucune erreur — nombre borné, réglages par défaut, notions inconnues ignorées",
+  { skip: ignorer, timeout: 90000 },
+  () =>
+    banc(async ({ base, page }) => {
+      const onglet = await page(1366, 768, false, { niveau: "6e", nombre: 10 });
+      const trafique =
+        `${base}?notions=XX99,%3Cscript%3E,NC01,__proto__&graine=7&nombre=-3&mode=project` +
+        "&secondes=999999&delai=abc&correction=%3Cb%3E&auto=oui&aide=2";
+      await onglet.goto(trafique);
+      await onglet.locator(".barre-question").waitFor();
+      assert.equal(await onglet.locator(".position").innerText(), "1 sur 8", "nombre=-3 → 8");
+      assert.equal(await onglet.locator("#temps").innerText(), "0:45", "secondes=999999 → 45");
+      assert.equal(await onglet.locator("script:not([src]), b").count(), 0);
+      assert.ok(
+        (await onglet.locator(".pastille-notion").allInnerTexts()).every((nom) => nom.trim()),
+      );
+      for (const [nombre, attendu] of [
+        ["41", "1 sur 8"],
+        ["40", "1 sur 40"],
+        ["1", "1 sur 1"],
+        ["2.5", "1 sur 8"],
+      ]) {
+        await onglet.goto(`${base}?notions=NC01&graine=7&nombre=${nombre}`);
+        await onglet.locator(".carte").waitFor();
+        assert.equal(await onglet.locator(".position").innerText(), attendu, `nombre=${nombre}`);
+      }
+      // Aucune notion connue : l'accueil, sans erreur ; le niveau de l'appareil n'a pas changé.
+      await accueil(onglet, base, "?notions=XX99,%3Cimg%3E&niveau=brevet");
+      assert.equal(await ecran(onglet), "accueil");
+      assert.equal(
+        await onglet.locator('[data-niveau][aria-pressed="true"]').getAttribute("data-niveau"),
+        "6e",
+      );
+    }),
+);
