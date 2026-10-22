@@ -1000,6 +1000,25 @@ function ajusterQuestion() {
     document.body.dataset.clavierRange = "1";
     essayer();
   }
+  montrerPanneauAide(zone);
+}
+
+/* K7 : si, malgré les réductions, le panneau d'aide s'ouvre en partie sous le bas de la zone, la
+   zone défile toute seule juste assez pour le montrer (comme scrollIntoView « nearest », sans
+   animation). La question ne change pas de place dans la page ; la case active doit rester visible :
+   si les deux ne tiennent pas ensemble, la case passe d'abord (on s'arrête quand elle atteindrait le
+   haut de la zone). */
+function montrerPanneauAide(zone) {
+  const panneau = zone.querySelector(":scope > .aide");
+  if (!panneau) return;
+  const cadre = zone.getBoundingClientRect();
+  const boite = panneau.getBoundingClientRect();
+  if (boite.bottom <= cadre.bottom + 1) return;
+  const besoin = Math.min(boite.bottom - cadre.bottom, boite.top - cadre.top);
+  const kase = zone.querySelector(".champ.active") || zone.querySelector(".carte .reponses");
+  const marge = kase ? kase.getBoundingClientRect().top - cadre.top : besoin;
+  const pas = Math.max(0, Math.min(besoin, marge));
+  if (pas > 0) zone.scrollTop += pas;
 }
 
 function ajusterEchelle() {

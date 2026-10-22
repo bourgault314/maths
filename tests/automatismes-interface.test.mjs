@@ -669,12 +669,23 @@ async function figureDecouverte(page) {
   });
 }
 
+// La boîte d'un élément dans la page (défilement de la zone compris).
+const boitePage = (page, selecteur) =>
+  page.evaluate((cible) => {
+    const boite = document.querySelector(cible).getBoundingClientRect();
+    const defilement = document.querySelector(".espace-question").scrollTop;
+    return { x: boite.x, y: boite.y + defilement, width: boite.width, height: boite.height };
+  }, selecteur);
+
+// La place de la question DANS LA PAGE : sa position à l'écran plus le défilement de la zone (K7
+// fait défiler la zone jusqu'au panneau d'aide ; la question ne doit pas changer de place).
 const positionQuestion = (page) =>
-  page.evaluate(() =>
-    [".carte .consigne", ".carte .reponses"].map(
-      (selecteur) => document.querySelector(selecteur).getBoundingClientRect().top,
-    ),
-  );
+  page.evaluate(() => {
+    const defilement = document.querySelector(".espace-question").scrollTop;
+    return [".carte .consigne", ".carte .reponses"].map(
+      (selecteur) => document.querySelector(selecteur).getBoundingClientRect().top + defilement,
+    );
+  });
 
 test(
   "figure (coque V2, K1) : l'aide sous la carte, rien sur la figure, la question ne bouge pas",
@@ -826,11 +837,11 @@ test(
         await page.locator(".carte .figure svg").waitFor();
         await stabiliser(page);
         const avant = await positionQuestion(page);
-        const boite = await page.locator(".carte .figure > svg").boundingBox();
+        const boite = await boitePage(page, ".carte .figure > svg");
         await page.locator('.carte [data-action="aide"]').click();
         await page.locator(".carte .figure-aide svg").waitFor();
         await stabiliser(page);
-        const calque = await page.locator(".carte .figure-aide svg").boundingBox();
+        const calque = await boitePage(page, ".carte .figure-aide svg");
         for (const cle of ["x", "y", "width", "height"])
           assert.ok(Math.abs(calque[cle] - boite[cle]) <= 1, `${width} : même ${cle}`);
         const apres = await positionQuestion(page);
@@ -966,29 +977,91 @@ test(
           await page.locator(".carte .figure svg").waitFor();
           await stabiliser(page);
           const avant = await positionQuestion(page);
-          const boite = await page.locator(".carte .figure > svg").boundingBox();
+          const boite = await boitePage(page, ".carte .figure > svg");
           await page.locator('.carte [data-action="aide"]').click();
           await page.locator(".espace-question > .aide").waitFor();
           await stabiliser(page);
           if (!(await page.locator(".carte .figure-aide svg").count())) {
             ecarts.push(`${nom} : pas de dessin sur la figure`);
           } else {
-            const calque = await page.locator(".carte .figure-aide svg").boundingBox();
+            const calque = await boitePage(page, ".carte .figure-aide svg");
             for (const cle of ["x", "y", "width", "height"])
               if (Math.abs(calque[cle] - boite[cle]) > 1) ecarts.push(`${nom} : ${cle} différent`);
           }
           if (await page.locator(".espace-question > .aide .dessin").count())
             ecarts.push(`${nom} : dessin répété dans le panneau`);
           const apres = await positionQuestion(page);
-          const defile = await page.locator(".espace-question").evaluate((zone) => zone.scrollTop);
           apres.forEach((haut, rang) => {
-            if (Math.abs(haut + defile - avant[rang]) > 1)
-              ecarts.push(`${nom} : la question bouge`);
+            if (Math.abs(haut - avant[rang]) > 1) ecarts.push(`${nom} : la question bouge`);
           });
         }
         await page.close();
       }
       assert.deepEqual(ecarts, []);
+    } finally {
+      await browser.close();
+      await new Promise((fin) => serveur.close(fin));
+    }
+  },
+);
+
+// Corrections 2 (K7) : le panneau d'aide s'ouvrait sous le bas de l'écran (EG06-b, EG05-e). La zone
+// défile juste assez pour le montrer ; la question garde sa place dans la page, la case reste visible.
+test(
+  "aide hors de vue (coque V2, K7) : la zone défile jusqu'au panneau, la case reste visible",
+  { skip: ignorer, timeout: 120000 },
+  async () => {
+    const { serveur, base } = await serveurLocal();
+    const browser = await ouvrirNavigateur();
+    try {
+      for (const [width, height, tactile] of [
+        [390, 844, true],
+        [1366, 768, false],
+      ]) {
+        for (const [notion, forme] of [
+          ["EG06", "b"],
+          ["EG05", "e"],
+        ]) {
+          const page = await browser.newPage({
+            viewport: { width, height },
+            isMobile: tactile,
+            hasTouch: tactile,
+          });
+          const nom = `${notion}-${forme} ${width}x${height}`;
+          await page.goto(`${base}?notion=${notion}&forme=${forme}&graine=12`);
+          await page.locator(".carte .figure svg").waitFor();
+          await stabiliser(page);
+          const avant = await positionQuestion(page);
+          await page.locator('.carte [data-action="aide"]').click();
+          await page.locator(".espace-question > .aide").waitFor();
+          await stabiliser(page);
+          const mesure = await page.evaluate(() => {
+            const zone = document.querySelector(".espace-question");
+            const cadre = zone.getBoundingClientRect();
+            const dedans = (element) => {
+              const boite = element.getBoundingClientRect();
+              return boite.top >= cadre.top - 1 && boite.bottom <= cadre.bottom + 1;
+            };
+            const kase =
+              document.querySelector(".champ.active") || document.querySelector(".carte .reponses");
+            return {
+              panneau: dedans(document.querySelector(".espace-question > .aide")),
+              kase: kase.getBoundingClientRect().top >= cadre.top - 1,
+              defile: zone.scrollTop,
+            };
+          });
+          assert.ok(mesure.panneau, `${nom} : panneau d'aide entier à l'écran`);
+          assert.ok(mesure.kase, `${nom} : la case reste visible`);
+          const apres = await positionQuestion(page);
+          apres.forEach((haut, rang) =>
+            assert.ok(
+              Math.abs(haut - avant[rang]) <= 1,
+              `${nom} : la question garde sa place dans la page`,
+            ),
+          );
+          await page.close();
+        }
+      }
     } finally {
       await browser.close();
       await new Promise((fin) => serveur.close(fin));
