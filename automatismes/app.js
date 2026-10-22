@@ -1,4 +1,4 @@
-import { checkAnswer, VERSION } from "./core.js";
+import { checkAnswer, normalize, VERSION } from "./core.js";
 import { genererQuestion } from "./moteur.js";
 import { mathHtml } from "./math-format.js";
 import { fitMathExpressions } from "./math-layout.js";
@@ -12,11 +12,15 @@ import {
   adresseSerie,
 } from "./seances.js";
 import {
-  monterChamps,
+  monterReponse,
+  modeleQuestion,
+  reglageForme,
   lireChamps,
   insererTexte,
   monterClavier,
-  paginerChoixProjection,
+  monterSignes,
+  lettresGrasses,
+  largeurCasesExpression,
 } from "./champs.js";
 import {
   accueilHTML,
@@ -26,6 +30,7 @@ import {
   bilanHTML,
   brevetHTML,
   lancementHTML,
+  coursHTML,
   bouton,
   ICONES,
 } from "./vues.js";
@@ -184,8 +189,14 @@ function changerNiveau(niveau) {
   else afficherAccueil();
 }
 
+// L'aide affichée d'office ne vaut que pour le diaporama (réglage « Avec aide », ou la préférence
+// garderAide) ; l'élève, lui, ouvre l'aide question par question.
+function aideDOffice(mode, aideOffice) {
+  return mode === "project" && Boolean(aideOffice || preferences.garderAide);
+}
+
 function nouvelEtat(question, mode, aideOffice) {
-  const aideOuverte = mode !== "exam" && (aideOffice || preferences.garderAide);
+  const aideOuverte = aideDOffice(mode, aideOffice);
   return {
     reponses: question.fields.map(() => ""),
     aide: aideOuverte ? 1 : 0,
@@ -234,27 +245,30 @@ function afficherQuestion() {
   const question = questionCourante();
   const etat = etatCourant();
   if (!etat.visitee && seance.mode !== "exam") {
-    etat.aideOuverte = preferences.garderAide || seance.options.aideOffice;
+    etat.aideOuverte = aideDOffice(seance.mode, seance.options.aideOffice);
     etat.aide = etat.aideOuverte ? 1 : 0;
     etat.visitee = true;
   }
-  cadre(questionHTML(seance, parId[question.famille], preferences.garderAide, clavierVoulu()));
+  garderClavier = false;
+  delete document.body.dataset.clavierRange;
+  cadre(questionHTML(seance, parId[question.famille], clavierVoulu()));
   document.body.classList.toggle(
     "avec-choix",
     question.fields.some((champ) => champ.options),
   );
   if (seance.mode !== "project") preparerSaisie(question, etat);
-  else paginerChoixProjection(document.querySelector(".espace-question"));
-  const garder = document.querySelector("#garder-aide");
-  if (garder)
-    garder.onchange = () => {
-      preferences.garderAide = garder.checked;
-      sauverPreferences();
-    };
-  document.querySelectorAll(".champ").forEach((champ) => {
-    champ.classList.toggle("faux", Boolean(etat.erreurs && !etat.juste));
-    champ.classList.toggle("juste", etat.juste);
-  });
+  else montrerProjection(question, etat);
+  // K10 : le calcul de l'énoncé et la bonne réponse, comme les cases, en gras, lettres rondes grasses.
+  document
+    .querySelectorAll(".carte .question-expression, .carte .bonne strong")
+    .forEach(lettresGrasses);
+  // La police des lettres grasses ne se charge qu'à leur première apparition : on règle de nouveau
+  // les tailles quand elle est là (sinon le calcul s'élargit après coup).
+  if (
+    document.querySelector(".lettre-grasse") &&
+    !document.fonts.check("800 16px SplatLettres", "𝑥")
+  )
+    document.fonts.load("800 16px SplatLettres", "𝑥").then(ajusterAffichage);
   mettreAJourTemps();
   ajusterAffichage();
 }
@@ -268,25 +282,64 @@ function etatCourant() {
 
 function preparerSaisie(question, etat) {
   const reponses = document.querySelector(".reponses");
-  monterChamps(reponses, question, etat.reponses, {
-    terminee: etat.terminee && seance.mode !== "exam",
-    clavierEcran: tactile(),
-    changer: recueillir,
-    cibler: ciblerChamp,
-    valider,
-    choisir: (rang, valeur) => {
-      etat.reponses[rang] = valeur;
-    },
-  });
-  monterClavier(document.querySelector(".clavier"), question, {
-    inserer,
-    valider,
-    suivant: champSuivant,
-  });
-  reponses.hidden = etat.correction;
+  const modele = modeleQuestion(
+    question,
+    reglageForme(question, parId[question.famille], "gabarit"),
+  );
+  const monter = () => {
+    const finie = etat.terminee && seance.mode !== "exam";
+    monterReponse(reponses, question, etat.reponses, {
+      modele,
+      terminee: finie,
+      lecture: finie,
+      corriger: finie,
+      etatCases: finie ? etat.etatCases : null,
+      clavierEcran: tactile(),
+      changer: recueillir,
+      cibler: ciblerChamp,
+      valider,
+      choisir: (rang, valeur) => {
+        etat.reponses[rang] = valeur;
+        // Cartes à ranger et signes < = > : la case du calcul se remplit (ou se vide) aussitôt.
+        if (modele.cas === "ranger" || modele.cas === "comparaison") monter();
+      },
+    });
+    const signes = document.querySelector(".signes");
+    if (signes && modele.cas === "comparaison" && !etat.terminee)
+      monterSignes(signes, question.fields[0], etat.reponses[0], (valeur) => {
+        etat.reponses[0] = valeur;
+        monter();
+      });
+    ajusterAffichage();
+  };
+  monter();
+  monterClavier(document.querySelector(".clavier"), question, { inserer });
   const premier = document.querySelector(".champ:not(:disabled)");
-  // Le clavier s'ouvre dès l'arrivée partout où on le veut ; au téléphone, pas quand l'aide est ouverte.
-  if (premier && clavierVoulu() && (!telephone() || !etat.aideOuverte)) ciblerChamp(premier);
+  // Le clavier s'ouvre dès l'arrivée partout où on le veut, aide ouverte ou non (coque V2, C5).
+  if (premier && clavierVoulu()) ciblerChamp(premier);
+}
+
+// Diaporama (C10) : les cases vides dans le calcul ; « Réponse » les remplit, en vert.
+function montrerProjection(question, etat) {
+  const reponses = document.querySelector(".reponses");
+  const montree = Boolean(etat.reponseMontree);
+  monterReponse(reponses, question, montree ? question.fields.map((champ) => champ.answer) : [], {
+    modele: modeleQuestion(question, reglageForme(question, parId[question.famille], "gabarit")),
+    terminee: true,
+    lecture: true,
+    corriger: montree,
+    etatCases: montree ? question.fields.map(() => "juste") : null,
+    choisir: () => {},
+  });
+}
+
+// K11 : « Réponse » ferme l'aide (comme « Explication » la cache depuis K3).
+function basculerReponse() {
+  if (seance?.mode !== "project") return;
+  const etat = etatCourant();
+  etat.reponseMontree = !etat.reponseMontree;
+  if (etat.reponseMontree) etat.aideOuverte = false;
+  afficherQuestion();
 }
 
 // Le clavier à l'écran : toujours sur un appareil tactile, sur ordinateur seulement si on l'a demandé
@@ -314,8 +367,17 @@ function tactile() {
   return telephone() || matchMedia("(pointer: coarse)").matches;
 }
 
-function ciblerChamp(champ) {
+// Toucher une case (parUtilisateur) fait revenir le clavier que l'aide avait rangé, et il reste.
+let garderClavier = false;
+function ciblerChamp(champ, parUtilisateur = false) {
   champActif = champ;
+  if (parUtilisateur && document.body.dataset.clavierRange) {
+    garderClavier = true;
+    delete document.body.dataset.clavierRange;
+  }
+  // La case active est cerclée d'orange : toucher une case la rend active.
+  document.querySelectorAll(".champ.active").forEach((autre) => autre.classList.remove("active"));
+  champ.classList.add("active");
   if (!clavierVoulu() || ecran !== "question") return;
   clavierOuvert = true;
   document.querySelector(".clavier").hidden = false;
@@ -334,13 +396,6 @@ function fermerClavier() {
 function inserer(texte) {
   champActif ||= document.querySelector(".champ:not(:disabled)");
   insererTexte(champActif, texte);
-}
-
-function champSuivant() {
-  const champs = [...document.querySelectorAll(".champ:not(:disabled)")];
-  if (!champs.length) return;
-  const suivant = champs[(champs.indexOf(champActif) + 1) % champs.length];
-  suivant.focus({ preventScroll: true });
 }
 
 function recueillir() {
@@ -372,23 +427,56 @@ function valider() {
   const question = questionCourante();
   const etat = etatCourant();
   const resultat = checkAnswer(question, etat.reponses);
-  // Contrat §5.3 : un seul événement par question, à la première réponse ; les réessais ne comptent pas.
+  // Une réponse incomplète ou illisible n'est pas une réponse : on le dit, l'élève corrige.
+  if (resultat.syntax) {
+    etat.message = resultat.message;
+    return afficherQuestion();
+  }
+  // Contrat §5.3 : un seul événement par question, à la première réponse.
   if (!etat.emis) {
     enregistrerEssai(detailEssai(question, etat, resultat.ok));
     etat.emis = true;
   }
+  // Coque V2 (C6) : plus de second essai ; juste ou faux, la question est finie.
   etat.juste = resultat.ok;
-  etat.terminee = resultat.ok;
-  etat.message = resultat.ok ? "Réponse juste." : messageErreur(resultat);
+  etat.terminee = true;
+  etat.aideOuverte = false;
+  etat.etatCases = etatDesCases(question, etat.reponses, resultat.ok);
+  etat.erreurConnue = resultat.ok ? null : erreurConnue(question, etat.reponses);
+  etat.message =
+    resultat.ok || /Pas encore|Bien joué/.test(resultat.message) ? "" : resultat.message;
   if (!resultat.ok) etat.erreurs += 1;
   afficherQuestion();
 }
 
-function messageErreur(resultat) {
-  if (resultat.syntax) return resultat.message;
-  if (/indice|Pas encore/.test(resultat.message))
-    return "Pas encore. Regarde le dessin, puis essaie encore.";
-  return resultat.message;
+// Juste ou faux, case par case quand le moteur compare champ par champ (« 47 = 6 × [7] + [4] » :
+// la première verte, la seconde rouge) ; sinon toutes les cases ensemble.
+function etatDesCases(question, reponses, juste) {
+  const type = question.check?.type || "fields";
+  if (juste || question.fields.length < 2 || !["fields", "numeric", "text"].includes(type))
+    return question.fields.map(() => (juste ? "juste" : "faux"));
+  const valeurs = question.check?.values || question.fields.map((champ) => champ.answer);
+  return question.fields.map((champ, rang) => {
+    const seul = { ...question, fields: [champ], check: { type, values: [valeurs[rang]] } };
+    return checkAnswer(seul, [reponses[rang]]).ok ? "juste" : "faux";
+  });
+}
+
+// Une erreur connue de la forme : champ `erreurs` de la question ou de sa forme au catalogue, sous
+// la forme [{ reponse: "0,49" (ou une liste, une par champ), phrase: "7 × 7 dixièmes…" }]. Les
+// erreurs de famille du catalogue (des descriptions, sans réponse) ne se comparent pas.
+function erreurConnue(question, reponses) {
+  const liste = reglageForme(question, parId[question.famille], "erreurs");
+  if (!Array.isArray(liste)) return null;
+  const pareil = (a, b) => normalize(a) === normalize(b);
+  const trouvee = liste.find((erreur) => {
+    if (!erreur || typeof erreur !== "object" || !erreur.phrase) return false;
+    const attendues = [].concat(erreur.reponse ?? erreur.reponses ?? []);
+    return (
+      attendues.length === reponses.length && attendues.every((r, i) => pareil(r, reponses[i]))
+    );
+  });
+  return trouvee?.phrase || null;
 }
 
 function ouvrirAide(etape = false) {
@@ -399,8 +487,16 @@ function ouvrirAide(etape = false) {
   etat.etape ||= etape;
   if (!etat.terminee) etat.aide = Math.max(etat.aide, etape ? 2 : 1);
   afficherQuestion();
-  // Au téléphone seulement : le clavier s'efface pour laisser la place au dessin.
-  if (telephone()) fermerClavier();
+}
+
+// Au diaporama, l'explication cache l'aide (K3) : toucher Aide la referme et montre l'aide.
+function basculerAide() {
+  const etat = etatCourant();
+  if (seance.mode === "project" && etat.correction) {
+    etat.correction = false;
+    etat.aideOuverte = false;
+  }
+  return etat.aideOuverte ? fermerAide() : ouvrirAide();
 }
 
 function fermerAide() {
@@ -409,30 +505,36 @@ function fermerAide() {
   afficherQuestion();
 }
 
-function montrerCorrection() {
+// L'explication s'ouvre et se referme sous la question (C7). À l'élève, une fois la question finie ;
+// au diaporama, quand le professeur la demande.
+function basculerExplication() {
   if (seance.mode === "exam") return;
   recueillir();
   const etat = etatCourant();
-  const dejaTerminee = etat.terminee;
-  etat.aide = 3;
-  etat.correction = true;
-  etat.aideOuverte = false;
-  etat.terminee = true;
-  etat.juste = false;
-  etat.message = "";
-  if (seance.mode !== "project" && !dejaTerminee && !etat.emis) {
+  if (seance.mode === "train" && !etat.terminee) return;
+  etat.correction = !etat.correction;
+  // Élève : l'aide est déjà refermée (question finie). Diaporama : l'aide reste ouverte mais cachée
+  // derrière l'explication, et revient quand on la referme (K3).
+  if (etat.correction && seance.mode !== "project") etat.aideOuverte = false;
+  afficherQuestion();
+}
+
+// Passer : la question est finie sans réponse ; la bonne réponse s'affiche, comme après une erreur.
+function passer() {
+  recueillir();
+  if (seance.mode === "exam") return suivante();
+  const etat = etatCourant();
+  if (!etat.emis) {
     enregistrerEssai(detailEssai(questionCourante(), etat, false));
     etat.emis = true;
   }
+  etat.terminee = true;
+  etat.juste = false;
+  etat.aideOuverte = false;
+  etat.message = "";
+  etat.erreurConnue = null;
+  etat.etatCases = null;
   afficherQuestion();
-  fermerClavier();
-}
-
-function passer() {
-  if (seance.mode === "exam") {
-    recueillir();
-    suivante();
-  } else montrerCorrection();
 }
 
 function changerQuestion(rang) {
@@ -442,7 +544,8 @@ function changerQuestion(rang) {
   seance.reste = seance.options.secondes;
   seance.transition = null;
   seance.pause = seance.phase === "correction";
-  if (seance.phase === "correction") seance.etats[rang].correction = true;
+  if (seance.phase === "correction")
+    Object.assign(seance.etats[rang], { correction: true, reponseMontree: true });
   afficherQuestion();
 }
 
@@ -498,11 +601,28 @@ function terminer() {
     .forEach((detail) => detail.addEventListener("toggle", ajusterAffichage));
 }
 
-function fenetre(contenu, fermer = "Fermer") {
+// « Refaire mes erreurs » : une série avec les mêmes questions ratées (faux ou passées), même forme
+// et même graine. Après le brevet, on les refait en entraînement (avec aide et cours).
+function refaireErreurs() {
+  const ratees = seance.questions.filter((_, rang) => !seance.etats[rang].juste);
+  if (!ratees.length) return;
+  const mode = seance.mode === "exam" ? "train" : seance.mode;
+  const questions = ratees.map((question) =>
+    genererQuestion(question.famille, question.forme, question.graine),
+  );
+  lancer({ ...seance.options, mode, nombre: questions.length }, questions);
+}
+
+function fenetre(contenu, fermer = "Fermer", titre = "") {
   fermerClavier();
   const dialogue = document.createElement("dialog");
   dialogue.className = "cours-dialog";
-  dialogue.innerHTML = `<div class="cours-contenu">${contenu}
+  // Avec un titre (le cours), le bouton de retour est en haut, à côté du titre.
+  dialogue.innerHTML = titre
+    ? `<div class="fenetre-entete"><h2>${titre}</h2>
+      <form method="dialog"><button class="bouton secondaire petit">${fermer}</button></form></div>
+      <div class="cours-contenu">${contenu}</div>`
+    : `<div class="cours-contenu">${contenu}
     <form method="dialog"><button class="bouton primaire">${fermer}</button></form></div>`;
   document.body.append(dialogue);
   dialogue.addEventListener("close", () => dialogue.remove());
@@ -542,12 +662,10 @@ function ouvrirCours() {
     (famille.atlas
       ? `<img src="${esc(famille.atlas)}" alt="${esc(famille.atlasAlt || "Exemple")}">`
       : "");
-  fenetre(
-    `<h2>${esc(famille.nom)}</h2><p>${mathHtml(regle)}</p>
+  const entier = `<p>${mathHtml(regle)}</p>
     ${!cours.independentExample ? `<p>${mathHtml(exemple.prompt)}</p>` : ""}
-    <div class="figure">${dessin}</div><p>${mathHtml(cours.exemple || cours.example || "")}</p>`,
-    "J’ai compris",
-  );
+    <div class="figure">${dessin}</div><p>${mathHtml(cours.exemple || cours.example || "")}</p>`;
+  fenetre(coursHTML(famille, question, entier), "Revenir à la question", esc(famille.nom));
 }
 
 function lireReglages() {
@@ -676,7 +794,8 @@ function rechercheTerminee() {
     return;
   }
   seance.transition = seance.options.delai;
-  if (seance.options.correction === "each") etatCourant().correction = true;
+  if (seance.options.correction === "each")
+    Object.assign(etatCourant(), { correction: true, reponseMontree: true });
   afficherQuestion();
 }
 
@@ -725,12 +844,14 @@ function relierActions(racine = application) {
     brevet: afficherBrevet,
     "brevet-commencer": () => lancer({ mode: "exam", nombre: 9 }),
     lancer: lancerSelection,
-    aide: () => (etatCourant().aideOuverte ? fermerAide() : ouvrirAide()),
+    aide: basculerAide,
     etape: () => ouvrirAide(true),
     clavier: basculerClavier,
     "fermer-aide": fermerAide,
     cours: ouvrirCours,
-    correction: montrerCorrection,
+    correction: basculerExplication,
+    explication: basculerExplication,
+    reponse: basculerReponse,
     passer,
     valider,
     suivante,
@@ -743,6 +864,8 @@ function relierActions(racine = application) {
         ? document.exitFullscreen()
         : document.documentElement.requestFullscreen(),
     encore: () => lancer({ ...seance.options, graine: nouvelleGraine() }),
+    refaire: refaireErreurs,
+    changer: () => (domaine ? afficherDomaine(domaine) : afficherAccueil()),
   };
   racine.querySelectorAll("[data-action]").forEach((element) => {
     element.onclick = (evenement) => {
@@ -772,53 +895,11 @@ function relierActions(racine = application) {
 
 function ajusterAffichage() {
   requestAnimationFrame(() => {
-    const commandes = document.querySelector("#commandes");
-    const hauteur = telephone() && commandes ? commandes.getBoundingClientRect().height : 0;
-    document.documentElement.style.setProperty("--hauteur-commandes", `${hauteur}px`);
     rectifierElisions(application);
-    ajusterDessinProjete();
     fitMathExpressions(application);
+    ajusterQuestion();
     ajusterEchelle();
-    centrerQuestion();
   });
-}
-
-/* L'énoncé et sa réponse centrés dans la zone de question (tablette, ordinateur), calculé à l'arrivée sur
-   la question sans compter l'aide ni la correction, puis gardé : ce qui s'ouvre ensuite (aide, « Une
-   étape », correction) s'ajoute dessous et l'énoncé ne bouge pas, tant que tout tient. Sinon l'énoncé
-   remonte juste de ce qui dépasse : le champ de réponse reste entier. On recalcule au changement de
-   question, de taille de fenêtre ou de disposition du clavier. Téléphone et projection : en haut. */
-let centrage = { cle: "", decalage: 0, applique: 0 };
-function centrerQuestion() {
-  const zone = document.querySelector(".espace-question");
-  if (!zone || ecran !== "question" || telephone() || seance.mode === "project") return;
-  const clavier = document.body.classList.contains("clavier-ouvert");
-  const cle = [seance.id, seance.index, innerWidth, innerHeight, clavier].join("|");
-  if (cle !== centrage.cle) {
-    zone.classList.remove("centree");
-    const style = getComputedStyle(zone);
-    const libre =
-      zone.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
-    const bloc = [".enonce", ".reponses"]
-      .map((selecteur) => zone.querySelector(selecteur))
-      .filter((element) => element && !element.hidden)
-      .reduce((total, element) => {
-        const marges = getComputedStyle(element);
-        return (
-          total +
-          element.offsetHeight +
-          parseFloat(marges.marginTop) +
-          parseFloat(marges.marginBottom)
-        );
-      }, 0);
-    centrage = { cle, decalage: Math.max(0, Math.floor((libre - bloc) / 2)), applique: 0 };
-  }
-  zone.style.setProperty("--decalage-question", `${centrage.decalage}px`);
-  zone.classList.add("centree");
-  const depasse = Math.ceil(zone.scrollHeight - zone.clientHeight);
-  centrage.applique = Math.max(0, centrage.decalage - Math.max(0, depasse));
-  if (centrage.applique !== centrage.decalage)
-    zone.style.setProperty("--decalage-question", `${centrage.applique}px`);
 }
 
 function rectifierElisions(racine) {
@@ -832,17 +913,151 @@ function rectifierElisions(racine) {
   });
 }
 
-function ajusterDessinProjete() {
-  if (!document.body.classList.contains("projection")) return;
-  const zone = document.querySelector(".espace-question");
-  const aide = document.querySelector(".aide-projetee");
-  const dessin = aide?.querySelector("svg");
+/* La règle de taille de la coque V2 (fonction ajuster de la maquette, portée ici). Priorité : la
+   question (texte + cases) > la figure de la question (≥ 70 %) > le dessin d'aide (≥ 76 %) > le
+   clavier. La figure fait partie de la question : sa taille se fixe à l'arrivée et ne change plus
+   quand l'aide s'ouvre (K1). Le dessin d'aide grandit jusqu'à × 1,5 si la fenêtre fait 700 px de
+   large ou plus, × 2,2 en projection. Si l'aide ne tient toujours pas, le clavier se range ; toucher
+   une case le fait revenir (ciblerChamp). Sans aide ouverte, seule la figure se réduit (jusqu'à
+   60 %) pour que la question tienne.
+   Les pourcentages se comptent sur la taille de départ du dessin, ramenée à sa taille naturelle au
+   plus : un dessin du moteur plus large que la colonne (550 px) part déjà réduit à la largeur. */
+function largeurNaturelle(dessin) {
+  return dessin.viewBox?.baseVal?.width || parseFloat(dessin.getAttribute("width")) || 0;
+}
+
+function poserDessin(dessin, echelle) {
   if (!dessin) return;
-  const autres = [...zone.children]
-    .filter((element) => element !== aide)
-    .reduce((total, element) => total + element.getBoundingClientRect().height, 0);
-  const etape = aide.querySelector(".etape")?.getBoundingClientRect().height || 0;
-  dessin.style.maxHeight = `${Math.max(80, zone.clientHeight - autres - etape - 64)}px`;
+  dessin.style.width = `${Math.round(largeurNaturelle(dessin) * echelle)}px`;
+  dessin.style.maxWidth = "none";
+  dessin.style.maxHeight = "none";
+  dessin.style.height = "auto";
+  dessin.dataset.echelle = echelle.toFixed(2);
+}
+
+function reduireCalculs(zone) {
+  // Un calcul trop long pour la largeur se réduit (comme fitMathExpressions), jamais sous 70 %.
+  zone.querySelectorAll(".carte .calcul:not(.phrase)").forEach((calcul) => {
+    calcul.style.fontSize = "";
+    calcul.style.flexWrap = "";
+    calcul.classList.remove("long");
+    // K12 : la case d'une réponse-expression est sur la ligne suivante ; seul le calcul se mesure,
+    // et il ne descend pas sous 90 % (70 % pour une réponse numérique, la case à côté).
+    const dessous = calcul.classList.contains("expression-dessous");
+    const caches = dessous ? [...calcul.querySelectorAll(":scope > .saut, :scope > .case")] : [];
+    caches.forEach((element) => (element.style.display = "none"));
+    const plancher = dessous ? 0.9 : 0.7;
+    const base = parseFloat(getComputedStyle(calcul).fontSize);
+    const trop = () => calcul.scrollWidth > calcul.clientWidth + 1;
+    let taille = base;
+    while (trop() && taille - 1 >= base * plancher) calcul.style.fontSize = `${(taille -= 1)}px`;
+    calcul.style.flexWrap = "nowrap";
+    while (trop() && taille - 1 >= base * plancher) calcul.style.fontSize = `${(taille -= 1)}px`;
+    if (trop()) calcul.style.flexWrap = "wrap";
+    // Encore trop large : le texte du calcul passe à la ligne entre ses termes, la case suit.
+    if (trop()) calcul.classList.add("long");
+    if (dessous) calcul.style.flexWrap = "wrap";
+    caches.forEach((element) => (element.style.display = ""));
+  });
+  largeurCasesExpression(zone);
+}
+
+// La taille de la figure trouvée à l'arrivée sur la question (même question, même fenêtre) : ouvrir ou
+// fermer l'aide, l'explication ou la bulle ne la change plus (K1) — la question ne bouge pas (R5b).
+let figureGardee = { cle: "", echelle: 1 };
+function ajusterQuestion() {
+  const zone = document.querySelector(".espace-question");
+  if (!zone || ecran !== "question") return;
+  reduireCalculs(zone);
+  const projection = seance?.mode === "project";
+  // Tous les dessins visibles sous la carte (K3 : querySelectorAll, pas seulement le premier).
+  const aides = [...zone.querySelectorAll(".aide .dessin svg, .explication .dessin svg")];
+  const figure = zone.querySelector(".carte .figure > svg");
+  const aideOuverte = Boolean(zone.querySelector(".aide, .explication"));
+  const trop = () => zone.scrollHeight > zone.clientHeight + 1;
+  const depart = (dessin, maximum) => {
+    const naturelle = dessin ? largeurNaturelle(dessin) : 0;
+    return naturelle ? Math.min(maximum, dessin.parentElement.clientWidth / naturelle) : 0;
+  };
+  const maxAide = projection ? 2.2 : innerWidth >= 700 ? 1.5 : 1;
+  const cle = [seance.id, seance.index, innerWidth, innerHeight].join("|");
+  if (figure && figureGardee.cle === cle) poserDessin(figure, figureGardee.echelle);
+  else if (figure) {
+    aides.forEach((dessin) => poserDessin(dessin, 0.2));
+    let echelleFigure = depart(figure, 1);
+    // K9 : jamais sous 60 % de la taille d'origine (viewBox), 70 % avec l'aide ouverte — sauf si
+    // la colonne est déjà plus étroite que ça. Au-delà, la zone défile (montrerCaseActive).
+    const planFigure = Math.min(echelleFigure, aideOuverte ? 0.7 : 0.6);
+    poserDessin(figure, echelleFigure);
+    while (trop() && echelleFigure - 0.02 >= planFigure)
+      poserDessin(figure, (echelleFigure -= 0.02));
+    figureGardee = { cle, echelle: echelleFigure };
+  }
+  // Le dessin d'aide posé sur la figure (aideSurFigure) prend exactement sa boîte : rien ne bouge.
+  const calque = zone.querySelector(".carte .figure > .figure-aide");
+  if (calque && figure) {
+    // Un SVG n'a pas d'offsetLeft : on mesure sa boîte par rapport à celle de la figure.
+    const boite = figure.getBoundingClientRect();
+    const cadre = figure.parentElement.getBoundingClientRect();
+    Object.assign(calque.style, {
+      left: `${boite.left - cadre.left}px`,
+      top: `${boite.top - cadre.top}px`,
+      width: `${boite.width}px`,
+      height: `${boite.height}px`,
+    });
+  }
+  // Les dessins se réduisent ensemble, du même facteur, chacun jusqu'à 76 % de son départ.
+  const essayer = () => {
+    const departs = aides.map((dessin) => depart(dessin, maxAide));
+    const poser = (facteur) =>
+      aides.forEach((dessin, rang) => {
+        const plancher = 0.76 * Math.min(1, departs[rang]);
+        poserDessin(dessin, Math.max(plancher, departs[rang] * facteur));
+      });
+    let facteur = 1;
+    poser(facteur);
+    const plancher = Math.min(...departs.map((d) => (0.76 * Math.min(1, d)) / (d || 1)));
+    while (trop() && aides.length && facteur - 0.02 >= plancher) poser((facteur -= 0.02));
+  };
+  essayer();
+  const clavier = document.querySelector(".clavier");
+  if (trop() && aideOuverte && clavier && !clavier.hidden && !garderClavier) {
+    clavier.hidden = true;
+    document.body.classList.remove("clavier-ouvert");
+    document.body.dataset.clavierRange = "1";
+    essayer();
+  }
+  montrerCaseActive(zone);
+  montrerPanneauAide(zone);
+}
+
+/* K9 : si la question ne tient pas au-dessus du clavier (la figure ne descend plus sous 60 %), la
+   zone défile juste assez pour que la case active reste visible. */
+function montrerCaseActive(zone) {
+  const kase = zone.querySelector(".champ.active") || zone.querySelector(".carte .reponses");
+  if (!kase) return;
+  const cadre = zone.getBoundingClientRect();
+  const boite = kase.getBoundingClientRect();
+  if (boite.bottom > cadre.bottom + 1)
+    zone.scrollTop += Math.min(boite.bottom - cadre.bottom, boite.top - cadre.top);
+}
+
+/* K7 : si, malgré les réductions, le panneau d'aide s'ouvre en partie sous le bas de la zone, la
+   zone défile toute seule juste assez pour le montrer (comme scrollIntoView « nearest », sans
+   animation). La question ne change pas de place dans la page ; la case active doit rester visible :
+   si les deux ne tiennent pas ensemble, la case passe d'abord (on s'arrête quand elle atteindrait le
+   haut de la zone). */
+function montrerPanneauAide(zone) {
+  const panneau = zone.querySelector(":scope > .aide");
+  if (!panneau) return;
+  const cadre = zone.getBoundingClientRect();
+  const boite = panneau.getBoundingClientRect();
+  if (boite.bottom <= cadre.bottom + 1) return;
+  const besoin = Math.min(boite.bottom - cadre.bottom, boite.top - cadre.top);
+  const kase = zone.querySelector(".champ.active") || zone.querySelector(".carte .reponses");
+  const marge = kase ? kase.getBoundingClientRect().top - cadre.top : besoin;
+  const pas = Math.max(0, Math.min(besoin, marge));
+  if (pas > 0) zone.scrollTop += pas;
 }
 
 function ajusterEchelle() {
@@ -853,22 +1068,16 @@ function ajusterEchelle() {
   const marge = 72;
   racine.style.setProperty("--echelle", "1");
   racine.style.setProperty("--hauteur-cadre", `${innerHeight - marge}px`);
-  if (telephone() || !coque || projection) return;
+  // L'écran de question occupe toute la hauteur et règle lui-même ses tailles (ajusterQuestion).
+  if (telephone() || !coque || projection || ecran === "question") return;
   // Défi tables : mesurer aussi le contenu, puis retenir la plus grande échelle qui tient.
-  const zone =
-    ecran === "question"
-      ? document.querySelector(".espace-question")
-      : ecran === "accueil"
-        ? document.querySelector(".contenu")
-        : null;
-  // Le décalage de centrage n'est pas du contenu : il ne doit pas faire rétrécir l'écran.
-  const decalage = zone?.classList.contains("centree") ? centrage.applique : 0;
+  const zone = ecran === "accueil" ? document.querySelector(".contenu") : null;
   const tient = (echelle) => {
     racine.style.setProperty("--echelle", echelle.toFixed(3));
     racine.style.setProperty("--hauteur-cadre", `${innerHeight / echelle - marge}px`);
     return (
       coque.getBoundingClientRect().bottom <= innerHeight - 4 &&
-      (!zone || zone.scrollHeight - decalage <= zone.clientHeight + 1)
+      (!zone || zone.scrollHeight <= zone.clientHeight + 1)
     );
   };
   if (tient(1)) return;

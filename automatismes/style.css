@@ -18,7 +18,6 @@
   --fond-haut: #fbfdff;
   --jaune: #facc15;
   --echelle: 1;
-  --hauteur-commandes: 72px;
   color-scheme: light;
   font-family: "Nunito", "Segoe UI", sans-serif;
   font-synthesis: none;
@@ -556,50 +555,11 @@ label {
   max-height: 280px;
   margin: 0 auto;
 }
-.aide {
-  width: 100%;
-  max-width: 400px;
-  margin: 16px auto;
-  padding: 12px;
-  border: 1px solid var(--ligne);
-  border-radius: 16px;
-  background: var(--fond-doux);
-}
-.aide-entete {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  color: var(--turquoise-texte);
-  font-size: 0.8125rem;
-  font-weight: 800;
-  margin-bottom: 4px;
-}
-.aide svg,
 .correction svg {
   display: block;
   width: 100%;
   height: auto;
   margin: 0 auto;
-}
-.aide p {
-  margin: 8px 0;
-  font-size: 0.9375rem;
-}
-.aide-pied {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 8px;
-}
-.aide-pied label {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--attenue);
-  font-size: 0.75rem;
 }
 .etape {
   margin-top: 12px;
@@ -638,29 +598,6 @@ label {
   gap: 8px;
   max-width: 100%;
 }
-.champ {
-  width: 136px;
-  max-width: 100%;
-  height: 52px;
-  border: 2px solid var(--bleu);
-  border-radius: 12px;
-  background: var(--papier);
-  color: var(--encre);
-  text-align: center;
-  padding: 4px 8px;
-  font-size: 1.5rem;
-  font-variant-numeric: tabular-nums;
-}
-.champ.expression {
-  width: 280px;
-  font-family: "MG Math", serif;
-  font-style: normal;
-  font-weight: 400;
-}
-.champ::placeholder {
-  color: var(--attenue);
-  opacity: 1;
-}
 .champ.faux,
 .faux .champ {
   border-color: var(--rouge);
@@ -670,25 +607,6 @@ label {
 .juste .champ {
   border-color: var(--vert);
   background: var(--vert-fond);
-}
-.fraction-saisie {
-  display: grid;
-  grid-template-rows: 1fr 2px 1fr;
-  gap: 4px;
-  justify-items: center;
-  width: 84px;
-}
-.fraction-saisie .champ {
-  width: 76px;
-  height: 40px;
-  font-size: 1.25rem;
-}
-.fraction-saisie .barre,
-.fraction-saisie > span,
-.fraction-saisie > i {
-  width: 100%;
-  height: 2px;
-  background: var(--encre);
 }
 .choix {
   display: grid;
@@ -752,74 +670,109 @@ label {
   text-align: center;
 }
 /* ============================================================
-   Écran de question (modes élève : séance, notion, brevet).
-   Le haut sur une ligne comme /auto/ : Menu · notion et compteur · score, clavier, plein écran, Cours.
-   Dessous : la question, l'aide, le champ ; puis le clavier (s'il est là) et Aide · Passer · Valider,
-   tous dans la même colonne de 440 px. Tablette couchée et ordinateur : le clavier passe à droite.
+   Écran de question — la coque d'après la V2 (planches du 21/10/2026).
+   Quatre zones de haut en bas, sur toute la hauteur de l'écran : la barre (← Menu · n sur N · ✓),
+   la progression, la zone de la question (elle défile si besoin) et les commandes (clavier,
+   Passer · Valider). La carte de la question est EN HAUT de sa zone : ce qui s'ouvre ensuite (aide,
+   explication) s'ajoute dessous et la question ne bouge pas (R5b). Téléphone : pleine largeur ;
+   tablette : carte de 640 px ; ordinateur : 760 px, centrée en largeur.
    ============================================================ */
 body[data-ecran="question"] .coque {
-  padding-top: 16px;
+  width: 100%;
+  padding: 0;
 }
 body[data-ecran="question"] .cadre {
-  /* Le cadre prend toute la hauteur : le clavier et Passer · Valider restent en bas, sous le pouce. */
-  min-height: var(--hauteur-cadre, calc(100dvh - 72px));
-  padding: 12px 24px 20px;
+  height: 100dvh;
+  min-height: 0;
+  max-height: 100dvh;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--fond-page);
+  box-shadow: none;
 }
 body[data-ecran="question"] .contenu {
   display: flex;
-  flex-direction: column;
-  overflow: hidden;
   flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  scrollbar-gutter: auto;
 }
 .barre-question {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: 10px;
-  min-height: 56px;
+  gap: 8px;
   flex: 0 0 auto;
+  padding: 8px 12px 6px;
+  border-bottom: 1px solid var(--ligne);
+  background: var(--papier);
 }
 .barre-question .gauche,
 .barre-question .droite {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+}
+.barre-question .gauche {
+  justify-self: start;
+}
+.barre-question .droite {
+  justify-self: end;
 }
 .barre-question .centre {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-  color: var(--attenue);
-  font-size: 0.9375rem;
-}
-.barre-question .notion-nom {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  text-align: center;
 }
 .barre-question .centre strong {
   color: var(--encre);
+  font-size: 1.125rem;
+  font-weight: 900;
+  line-height: 1.1;
   white-space: nowrap;
+}
+/* ⌨ et plein écran : sur ordinateur seulement (souris) ; au doigt, la barre garde Menu · n sur N · ✓. */
+.barre-question .outils-ordinateur {
+  display: contents;
+}
+body.tactile .barre-question .outils-ordinateur {
+  display: none;
+}
+/* Le nom de la notion, en pastille en tête de la carte de la question. */
+.pastille-notion {
+  display: inline-block;
+  margin-bottom: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--turquoise) 12%, var(--papier));
+  color: var(--turquoise-texte);
+  font-size: 0.6875rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  text-transform: uppercase;
 }
 .barre-question .bouton {
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
-  padding: 0 14px;
-  border-radius: 13px;
-  gap: 7px;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1.5px solid var(--ligne);
+  border-radius: 12px;
+  color: var(--bleu-identite);
+  font-size: 0.9375rem;
+  box-shadow: none;
 }
 .barre-question .icone-bouton {
-  width: 44px;
+  width: 38px;
   padding: 0;
   display: inline-grid;
   place-items: center;
 }
 .barre-question .bouton svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   flex: none;
 }
 .barre-question .clavier-bascule[aria-pressed="true"] {
@@ -828,65 +781,67 @@ body[data-ecran="question"] .contenu {
   color: var(--papier);
 }
 .barre-question .minuteur {
-  font-size: 1.375rem;
-  padding: 0 4px;
-}
-body.projection .barre-question {
-  min-height: 64px;
-}
-body.projection .barre-question .minuteur {
-  font-size: 2rem;
-}
-body.projection .barre-question .centre {
-  font-size: 1.25rem;
-}
-body.projection .barre-question .bouton {
-  min-height: 48px;
-  font-size: 1.0625rem;
+  color: var(--attenue);
+  font-family: "Nunito", "Segoe UI", sans-serif;
+  font-size: 1.125rem;
+  font-weight: 900;
 }
 .score-barre {
   display: inline-flex;
   align-items: center;
-  min-height: 36px;
-  padding: 0 12px;
+  padding: 5px 12px;
   border: 1.5px solid color-mix(in srgb, var(--vert) 35%, var(--papier));
   border-radius: 999px;
   background: var(--vert-fond);
   color: var(--vert);
-  font-weight: 800;
+  font-size: 0.9375rem;
+  font-weight: 900;
   white-space: nowrap;
 }
 body[data-ecran="question"] .progression {
-  height: 6px;
-  margin: 8px 0 12px;
+  height: 5px;
+  margin: 0;
+  border-radius: 0;
 }
 .espace-question {
-  min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
+  display: flex;
   flex: 1 1 auto;
-  padding: 4px 8px 12px;
-  scrollbar-gutter: stable;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  padding: 12px 12px 10px;
+  overflow-x: hidden;
+  overflow-y: auto;
   overscroll-behavior: contain;
 }
-/* Centrage gardé de la question (R5b) : l'espace au-dessus de l'énoncé, calculé par centrerQuestion(). */
-.espace-question.centree {
-  padding-top: calc(4px + var(--decalage-question, 0px));
+.espace-question > * {
+  flex: 0 0 auto;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
 }
-.enonce {
+/* La carte de la question : pastille, consigne, calcul (avec ses cases), puis Aide · Cours. */
+.carte {
+  padding: 14px 14px 12px;
+  border: 1px solid var(--ligne);
+  border-top: 4px solid var(--turquoise);
+  border-radius: 18px;
+  background: var(--papier);
   text-align: center;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--encre) 5%, transparent);
 }
-.enonce h1 {
+.carte .consigne {
+  margin: 2px 0 10px;
   color: var(--encre);
-  /* Tablette debout 29 px, tablette couchée et ordinateur 36 px ; le téléphone a sa taille plus bas. */
-  font-size: clamp(1.5rem, 3.6vw, 2.25rem);
-  line-height: 1.3;
-  margin: 0;
+  font-family: "Fredoka", "Nunito", sans-serif;
+  font-size: 1.375rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 .question-expression {
   display: block;
-  margin: 14px 0 6px;
-  font-size: 1.6em;
+  margin: 10px 0 4px;
+  font-size: 1.5em;
 }
 .math-expression {
   max-width: 100%;
@@ -898,220 +853,750 @@ body[data-ecran="question"] .progression {
 .math-expression math {
   font-size: 1em;
 }
-.aide {
-  max-width: 440px;
-}
-/* Le bas : le clavier puis Passer · Valider, à la largeur de l'aide et du champ. */
-#commandes {
+/* Aide · Cours, discrets, juste sous le calcul (38 px de haut, police 15 px, fond doux). */
+.outils {
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 10px;
-  flex: 0 0 auto;
-  width: min(100%, 440px);
-  margin: 8px auto 0;
-}
-.actions-question {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
+  justify-content: center;
   gap: 8px;
+  margin-top: 12px;
 }
-/* Aide · Cours à gauche, Passer · Valider à droite, sur une seule ligne. */
-.outils-question {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-right: auto;
-}
-.actions-question .aide-bouton,
-.actions-question .cours-bouton {
+.outil {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  min-height: 44px;
+  gap: 6px;
+  min-height: 38px;
   padding: 0 14px;
-  border: 1.5px solid var(--bleu);
-  border-radius: 13px;
+  border: 1.5px solid var(--ligne);
+  border-radius: 999px;
   background: var(--fond-doux);
   color: var(--bleu-identite);
+  font-size: 0.9375rem;
+  font-weight: 800;
 }
-.actions-question .aide-bouton svg,
-.actions-question .cours-bouton svg {
-  width: 20px;
-  height: 20px;
-  flex: none;
-}
-.actions-question .aide-bouton[aria-pressed="true"] {
+.outil[aria-pressed="true"] {
   border-color: var(--bleu-identite);
   background: var(--bleu-identite);
   color: var(--papier);
 }
-.clavier-symboles {
+.outil svg {
+  width: 17px;
+  height: 17px;
+  flex: none;
+}
+/* La zone des commandes, à part, en bas : le clavier (s'il est là) puis Passer · Valider. */
+#commandes {
   display: flex;
-  gap: 4px;
-  margin: 0 0 4px;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--ligne);
+  background: color-mix(in srgb, var(--ligne) 50%, var(--fond-page));
+}
+#commandes > * {
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+}
+.actions-question {
+  display: flex;
+  gap: 8px;
+}
+.actions-question .bouton {
+  flex: 1;
+  min-height: 48px;
+  padding: 0 8px;
+  border-radius: 14px;
+  font-size: 1.0625rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+.actions-question .large {
+  flex: 1.4;
+}
+.actions-question .precedente {
+  flex: 0.5;
+}
+/* Le pavé : 5 colonnes, 3 rangées ; ⌫ sur deux colonnes. Une rangée de symboles au-dessus, seulement
+   quand la question en a besoin (x, +, ×, (, ), ²…). */
+.clavier-symboles {
+  display: grid;
+  grid-auto-columns: minmax(36px, 1fr);
+  grid-auto-flow: column;
+  gap: 6px;
+  margin: 0 0 6px;
   overflow-x: auto;
   overscroll-behavior-x: contain;
 }
 .clavier-symboles button {
-  flex: 1 0 auto;
-  min-width: 36px;
-  min-height: 36px;
+  height: 40px;
   padding: 0 8px;
-  border: 1px solid var(--ligne);
-  border-radius: 8px;
+  border: 0;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--ligne) 70%, var(--papier));
   color: var(--encre);
-  background: var(--papier);
-  font-size: 1.125rem;
+  font-size: 1.25rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.clavier-symboles .math-variable {
+  font-size: 1.5rem;
 }
 .touches {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 4px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
 }
 .touches button {
   min-width: 0;
-  min-height: 48px;
-  padding: 4px;
-  border: 1px solid var(--ligne);
-  border-radius: 8px;
-  color: var(--encre);
+  height: 46px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
   background: var(--papier);
-  font-size: 1.25rem;
+  color: var(--encre);
+  font-size: 1.375rem;
+  font-weight: 800;
+  box-shadow: 0 1px 0 var(--ligne);
+}
+.touches .symbole,
+.touches .effacer {
+  background: color-mix(in srgb, var(--ligne) 70%, var(--papier));
+}
+.touches .effacer {
+  grid-column: span 2;
+}
+/* K10 : le calcul en GRAS (Nunito 800, comme la maquette et la V2) ; les lettres rondes et grasses
+   d'ÉquaSplat (SplatLettres-BoldItalic, lettres mathématiques d'Unicode seulement : unicode-range). */
+@font-face {
+  font-family: SplatLettres;
+  src: url("../assets/fonts/SplatLettres-BoldItalic.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 600 900;
+  font-display: block;
+  size-adjust: 120%;
+  unicode-range: U+1D434-1D467, U+210E;
+}
+.carte .calcul,
+.carte .question-expression,
+.carte .bonne strong {
+  font-family: "Nunito", "Segoe UI", sans-serif;
   font-weight: 800;
 }
-.touches .symbole {
-  color: var(--bleu-identite);
-  background: var(--fond-doux);
-  font-weight: 700;
+.carte .calcul .math-expression,
+.carte .question-expression .math-expression,
+.carte .bonne strong .math-expression,
+.carte .calcul math,
+.carte .question-expression math,
+.carte .bonne strong math {
+  font-family: "Nunito", "Segoe UI", sans-serif;
+  font-weight: 800;
 }
-.touches .vide {
+/* .math-variable.lettre-grasse : plus précis que la règle !important de MG Math (math-format.js). */
+.math-variable.lettre-grasse {
+  font-family: SplatLettres, "MG Math", serif !important;
+  font-style: normal !important;
+  font-weight: 800 !important;
+}
+/* K10 : dans le calcul, la case se mesure en em : quand un calcul trop long se réduit (jusqu'à 70 %),
+   la case se réduit avec lui et l'ensemble tient sur une ligne. */
+.carte .calcul .case {
+  height: 1.6em;
+  min-width: 2.5em;
+  padding: 0 0.3em;
+  border-radius: 0.42em;
+  font-size: 0.88em;
+}
+.carte .calcul input.case {
+  width: 2.8em;
+}
+.carte .calcul .case.petite {
+  min-width: 1.9em;
+  width: 2.1em;
+}
+/* La case d'une expression : largeur fixe (le texte tapé défile dedans), pour que la ligne ne saute
+   pas en tapant ; assez large pour lire « 4x² + 4x − 7 » et tenir sur une ligne à 390 px. */
+.carte .calcul .case.expression {
+  min-width: 4em;
+  width: 4em;
+  font-size: 0.8em;
+  field-sizing: fixed;
+}
+/* K12 : réponse-expression — le calcul finit par « = », la case passe sur la ligne suivante, centrée ;
+   sa largeur (réponse attendue + 30 %) est posée par largeurCasesExpression. */
+.carte .calcul .saut {
+  flex-basis: 100%;
+  height: 0;
+}
+.carte .calcul input.case.case-expression {
+  min-width: 6em;
+  font-size: 0.8em;
+  field-sizing: fixed;
+}
+.carte .reponses input.case.case-expression {
+  max-width: 100%;
+}
+/* Une case en lecture (réponse donnée, diaporama) prend la largeur de sa réponse, sur une ligne. */
+.carte .calcul span.case,
+.carte .calcul span.case.expression,
+.carte .calcul span.case.petite {
+  width: auto;
+  white-space: nowrap;
+}
+/* Le calcul et ses cases (C3) : « 0,7 × 7 = [ ] », « 47 = 6 × [ ] + [ ] », « 4,7 [ ] 4,68 ». */
+.carte .reponses {
+  display: block;
+  margin: 0;
+}
+.carte .calcul {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 0.25em;
+  margin: 0;
+  color: var(--encre);
+  font-size: 2.125rem;
+  font-weight: 800;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+}
+.carte .calcul .t {
+  white-space: nowrap;
+}
+.carte .calcul {
+  justify-content: safe center;
+}
+.carte .calcul.long .t,
+.carte .calcul.long .t .math-expression {
+  white-space: normal !important;
+}
+.carte .calcul .math-expression {
+  font-weight: inherit;
+}
+.carte .calcul.phrase {
+  font-family: "Fredoka", "Nunito", sans-serif;
+  font-size: 1.375rem;
+  font-weight: 600;
+}
+/* La case reste dans la phrase (« Quel chiffre faut-il mettre dans 1 [ ] 5… ») : le texte coule autour. */
+.carte .calcul.phrase {
+  display: block;
+}
+.carte .calcul.phrase .t {
+  white-space: normal;
+}
+.carte .calcul.phrase .case {
+  margin: 4px 2px;
+}
+.case {
+  display: inline-grid;
+  place-items: center;
+  width: auto;
+  min-width: 86px;
+  max-width: 100%;
+  height: 54px;
+  padding: 0 10px;
+  border: 2.5px solid var(--bleu);
+  border-radius: 14px;
+  background: var(--papier);
+  color: var(--encre);
+  font: inherit;
+  font-size: 1.875rem;
+  font-weight: 800;
+  text-align: center;
+  vertical-align: middle;
+}
+input.case {
+  width: 96px;
+  field-sizing: content;
+}
+.case.petite {
+  min-width: 64px;
+  width: 72px;
+}
+.case.expression {
+  min-width: 170px;
+  width: 210px;
+  font-family: "MG Math", serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+}
+.case.active,
+.case:focus {
+  border-color: var(--orange);
+  outline: none;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--orange) 22%, var(--papier));
+}
+.case.vide {
+  color: var(--attenue);
+}
+.case.ordre {
+  min-width: 80px;
+  border-style: dashed;
+  color: var(--attenue);
+}
+.case.ordre:not(.vide) {
+  border-style: solid;
+  color: var(--encre);
+}
+.fraction-case,
+.fraction-saisie {
+  display: inline-grid;
+  grid-template-rows: auto 3px auto;
+  justify-items: center;
+  align-items: center;
+  gap: 4px;
+  vertical-align: middle;
+}
+.fraction-case .barre,
+.fraction-saisie .barre-fraction {
+  width: 100%;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--encre);
+}
+.fraction-case .case,
+.fraction-saisie .case {
+  min-width: 56px;
+  width: 64px;
+  height: 44px;
+  font-size: 1.5rem;
+}
+.fraction-case .haut,
+.fraction-case .bas {
+  font-size: 0.8em;
+}
+.puissance-case {
+  display: inline-flex;
+  align-items: flex-start;
+}
+.puissance-case .bas {
+  margin-top: -0.35em;
+}
+.puissance-case .case {
+  min-width: 40px;
+  width: 44px;
+  height: 36px;
+  padding: 0 4px;
+  font-size: 1.125rem;
+}
+.carte .coche {
+  color: var(--vert);
+  font-size: 2.125rem;
+  font-weight: 900;
+}
+/* Ranger : les nombres en cartes à toucher, au-dessus de [ ] < [ ] < [ ]. */
+.cartes-ordre {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 4px 0 12px;
+}
+.carte-nombre {
+  min-width: 84px;
+  padding: 8px 16px;
+  border: 2px solid var(--ligne);
+  border-radius: 14px;
+  background: var(--fond-doux);
+  color: var(--encre);
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+.carte-nombre.pris {
+  opacity: 0.35;
+}
+.carte .calcul .case.ordre {
+  font-size: 1.5rem;
+}
+/* Comparer : les trois signes, en grosses touches à la place du clavier. */
+.signes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.signes .signe {
+  height: 58px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--papier);
+  color: var(--encre);
+  font-size: 2rem;
+  font-weight: 900;
+  box-shadow: 0 1px 0 var(--ligne);
+}
+.signes .signe[aria-pressed="true"] {
+  background: var(--bleu-identite);
+  color: var(--papier);
+}
+/* QCM : grille 2 × 2 de gros boutons, pas de clavier. */
+.carte .reponses[data-cas="qcm"] .champ-groupe {
+  width: 100%;
+}
+.carte .choix {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 4px;
+}
+.carte .choix-bouton {
+  min-height: 64px;
+  padding: 12px 14px;
+  border: 2px solid var(--ligne);
+  border-radius: 14px;
+  background: var(--fond-doux);
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+.carte .choix-bouton.selectionne {
+  border-color: var(--bleu);
+  background: color-mix(in srgb, var(--bleu) 8%, var(--papier));
+  box-shadow: none;
+}
+/* La case seule, centrée sous la phrase. */
+.carte .reponses[data-cas="seule"],
+.carte .reponses[data-cas="qcm"] {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 16px;
+}
+.carte .reponses[data-cas="seule"] {
+  margin-top: 4px;
+}
+.carte .saisie-ligne {
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+/* L'aide (C5) : sous la carte, au même endroit au téléphone, à la tablette, à l'ordinateur et au
+   diaporama. En-tête : Aide · Encore un indice · ×. La taille des dessins est réglée par
+   ajusterQuestion() (app.js). */
+.espace-question .aide {
+  max-width: none;
+  margin: 0;
+  padding: 10px 12px 12px;
+  border: 1.5px solid color-mix(in srgb, var(--turquoise) 30%, var(--papier));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--turquoise) 6%, var(--papier));
+  text-align: left;
+}
+.aide-entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+  color: var(--turquoise-texte);
+  font-size: 1rem;
+  font-weight: 900;
+}
+.aide-entete strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.aide-entete svg {
+  width: 18px;
+  height: 18px;
+}
+.aide-boutons {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.indice {
+  min-height: 32px;
+  padding: 4px 12px;
+  border: 1.5px solid var(--bleu);
+  border-radius: 999px;
+  background: var(--papier);
+  color: var(--bleu);
+  font-size: 0.8125rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.indice:disabled {
+  display: none;
+}
+.espace-question .aide p {
+  margin: 2px 0 6px;
+  color: var(--attenue);
+  font-size: 0.9375rem;
+}
+.dessin {
+  display: flex;
+  justify-content: center;
+}
+.dessin svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+.espace-question .etape {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--ligne);
+  text-align: center;
+}
+/* La figure de la question, et l'aide posée dessus dans une bulle, dans un coin vide. */
+.carte .figure {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  max-width: none;
+  margin: 2px 0 8px;
+}
+.carte .figure > svg {
+  display: block;
+  max-width: 100%;
+  max-height: none;
+  height: auto;
+}
+/* aideSurFigure : le dessin d'aide dans la boîte exacte de la figure, la figure cachée dessous. */
+.carte .figure.aide-sur-figure > svg {
   visibility: hidden;
 }
-/* Large et couché (tablette couchée, ordinateur) : le clavier à droite de la question, rien ne rétrécit. */
-@media (min-width: 1000px) and (orientation: landscape) {
-  body.clavier-ouvert[data-ecran="question"] .contenu {
-    display: grid;
-    /* 392 px : la colonne du clavier porte aussi Aide · Cours · Passer · Valider sur une ligne. */
-    grid-template-columns: minmax(0, 1fr) 392px;
-    grid-template-rows: auto auto minmax(0, 1fr);
-    column-gap: 24px;
-  }
-  body.clavier-ouvert .barre-question,
-  body.clavier-ouvert[data-ecran="question"] .progression {
-    grid-column: 1 / -1;
-  }
-  body.clavier-ouvert .espace-question {
-    grid-column: 1;
-    grid-row: 3;
-  }
-  /* Le clavier et Aide · Cours · Passer · Valider centrés dans leur colonne ; la question est centrée
-     en face par centrerQuestion() (app.js). */
-  body.clavier-ouvert #commandes {
-    grid-column: 2;
-    grid-row: 3;
-    width: auto;
-    margin: 0;
-    justify-content: center;
+.figure-aide {
+  position: absolute;
+}
+/* Le SVG du moteur porte style="height:auto" : il faut l'emporter pour remplir la boîte. */
+.figure-aide > svg {
+  display: block;
+  width: 100% !important;
+  max-width: none !important;
+  height: 100% !important;
+  max-height: none !important;
+}
+.bulle-aide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-width: 46%;
+  padding: 6px 10px;
+  border: 1.5px solid color-mix(in srgb, var(--turquoise) 45%, var(--papier));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--turquoise) 6%, var(--papier));
+  color: var(--encre);
+  font-size: 0.875rem;
+  line-height: 1.3;
+  text-align: left;
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--encre) 12%, transparent);
+}
+.bulle-aide.haut-droite {
+  left: auto;
+  right: 0;
+}
+.bulle-aide.bas-gauche {
+  top: auto;
+  bottom: 0;
+}
+.bulle-aide.bas-droite {
+  top: auto;
+  left: auto;
+  right: 0;
+  bottom: 0;
+}
+.bulle-aide > svg {
+  display: inline;
+  width: 15px;
+  height: 15px;
+  margin: 0 2px 0 0;
+  color: var(--turquoise-texte);
+  vertical-align: -2px;
+}
+.bulle-aide .etape {
+  display: block;
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--ligne);
+  text-align: left;
+}
+.bulle-aide .indice {
+  display: block;
+  margin-top: 6px;
+}
+/* Après la réponse (C6). Faux : la case en rouge, la réponse barrée EN BIAIS (trait à −20°, les
+   chiffres restent lisibles). Juste : la case verte et un ✓ à côté, sans phrase. */
+.case.faux {
+  position: relative;
+  border-color: var(--rouge);
+  background: var(--rouge-fond);
+  color: var(--rouge);
+}
+.case.faux:not(.vide)::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 50%;
+  border-top: 3px solid var(--rouge);
+  border-radius: 2px;
+  transform: rotate(-20deg);
+}
+.case.juste {
+  border-color: var(--vert);
+  background: var(--vert-fond);
+  color: var(--vert);
+}
+.carte .choix-bouton.faux {
+  border-color: var(--rouge);
+  background: var(--rouge-fond);
+  color: var(--rouge);
+}
+.carte .choix-bouton.bon {
+  border-color: var(--vert);
+  background: var(--vert-fond);
+  color: var(--vert);
+}
+.carte .choix-bouton:disabled {
+  cursor: default;
+  box-shadow: none;
+}
+/* La phrase d'une erreur connue (ou le message précis du moteur), courte, en rouge. */
+.erreur-connue {
+  margin: 10px 0 0;
+  color: var(--rouge);
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+/* « Bonne réponse » et l'égalité entière, en vert. */
+.bonne {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: 10px;
+}
+.bonne > span {
+  color: var(--vert);
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.bonne strong {
+  max-width: 100%;
+  padding: 6px 18px;
+  border-radius: 999px;
+  background: var(--vert);
+  color: var(--papier);
+  font-size: 1.625rem;
+  font-weight: 800;
+}
+.bonne strong .math-expression {
+  font-weight: inherit;
+}
+/* L'explication (C7) : au même endroit que l'aide, en bleu. */
+.explication {
+  margin: 0;
+  padding: 10px 12px 12px;
+  border: 1.5px solid color-mix(in srgb, var(--bleu) 22%, var(--papier));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--bleu) 4%, var(--papier));
+  text-align: left;
+}
+.explication .aide-entete {
+  color: var(--bleu-identite);
+}
+.explication .solution {
+  margin: 4px 0 8px;
+  color: var(--encre);
+  font-size: 1.0625rem;
+  text-align: left;
+}
+/* Le cours (C8) : sa fenêtre, « Revenir à la question » en haut ; le morceau de la question encadré. */
+.cours-dialog .fenetre-entete {
+  align-items: center;
+}
+.cours-dialog .fenetre-entete h2 {
+  font-size: 1.375rem;
+}
+.cours-dialog .fenetre-entete form {
+  flex: 0 0 auto;
+}
+.sepa {
+  margin: 12px 2px 6px;
+  color: var(--attenue);
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.morceau {
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--ligne);
+  border-radius: 14px;
+}
+.morceau.actif {
+  border-color: var(--orange);
+  background: color-mix(in srgb, var(--orange) 6%, var(--papier));
+}
+.morceau h3 {
+  margin: 0 0 4px;
+  color: var(--bleu-identite);
+  font-size: 1rem;
+}
+.morceau p {
+  margin: 0 0 6px;
+}
+.morceau .exemple {
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: var(--fond-doux);
+  font-weight: 800;
+}
+/* Téléphone : la carte resserre ses côtés, un calcul long garde sa case sur la même ligne (K10). */
+@media (max-width: 480px) {
+  .carte {
+    padding-left: 10px;
+    padding-right: 10px;
   }
 }
-/* Téléphone : le clavier et Passer · Valider sont fixés en bas ; la barre du haut se resserre. */
-@media (max-width: 680px) {
-  body[data-ecran="question"] .coque {
-    padding-top: 8px;
-  }
-  body[data-ecran="question"] .cadre {
-    height: calc(100dvh - 16px - var(--hauteur-commandes));
-    min-height: 160px;
-    max-height: calc(100dvh - 16px - var(--hauteur-commandes));
-    padding: 8px 12px 12px;
-  }
-  .barre-question {
-    gap: 6px;
-    min-height: 48px;
-  }
-  .barre-question .bouton {
-    min-height: 40px;
-    padding: 0 10px;
-    font-size: 0.875rem;
-  }
-  .barre-question .icone-bouton {
-    width: 40px;
-  }
-  .barre-question .plein-ecran,
-  .barre-question .clavier-bascule,
-  .barre-question .notion-nom,
-  .barre-question .menu .mot {
-    display: none;
-  }
-  .barre-question .menu {
-    width: 40px;
-    padding: 0;
-    justify-content: center;
-  }
-  .barre-question .centre {
-    font-size: 0.875rem;
-    gap: 6px;
-    overflow: hidden;
-  }
-  .score-barre {
-    min-height: 32px;
-    padding: 0 10px;
-  }
-  body[data-ecran="question"] .progression {
-    height: 4px;
-    margin: 6px 0 8px;
-  }
+/* Tablette et ordinateur : même écran, la carte et ce qui s'ouvre dessous font 640 px (760 px à la
+   souris), centrés en largeur. */
+@media (min-width: 700px) {
   .espace-question {
-    padding: 4px 0 8px;
-    scrollbar-gutter: auto;
+    align-items: center;
+    padding: 18px 0 12px;
   }
-  .enonce h1 {
-    font-size: 1.375rem;
+  .espace-question > * {
+    width: min(640px, 94vw);
   }
-  .question-expression {
-    margin: 10px 0 4px;
-    font-size: 1.6em;
+  .carte .consigne {
+    font-size: 1.75rem;
   }
-  #commandes {
-    position: fixed;
-    z-index: 5;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: auto;
-    margin: 0;
-    gap: 6px;
-    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
-    border-top: 1px solid var(--ligne);
-    background: var(--fond-doux);
+  .carte .calcul {
+    font-size: 2.625rem;
   }
-  .touches button {
-    min-height: 44px;
+  .case {
+    height: 62px;
+    min-width: 110px;
+    font-size: 2.25rem;
   }
-  .actions-question .bouton {
-    padding: 8px 14px;
-    min-height: 40px;
-    font-size: 0.875rem;
-  }
-  .actions-question,
-  .outils-question {
-    gap: 6px;
+  input.case {
+    width: 120px;
   }
 }
-/* Petits téléphones (360 px) : Aide et Cours en icône seule, les quatre boutons tiennent sur une ligne. */
-@media (max-width: 379px) {
-  .actions-question .aide-bouton,
-  .actions-question .cours-bouton {
-    width: 44px;
-    padding: 0;
-    justify-content: center;
+/* Tablette debout : grosses touches ; couchée (moins de 900 px de haut), celles du téléphone, pour
+   que la question, le dessin d'aide et le clavier tiennent ensemble. */
+@media (min-width: 700px) and (min-height: 900px) {
+  .touches button {
+    height: 58px;
+    font-size: 1.625rem;
   }
-  .actions-question .aide-bouton span,
-  .actions-question .cours-bouton span {
-    display: none;
-  }
+}
+body:not(.tactile) .espace-question > * {
+  width: min(760px, 90vw);
+}
+body:not(.tactile) #commandes {
+  padding: 0 0 14px;
+  border: 0;
+  background: transparent;
+}
+body:not(.tactile) #commandes > * {
+  max-width: 760px;
 }
 
 .cours-dialog {
@@ -1153,19 +1638,29 @@ body[data-ecran="question"] .progression {
   display: flex;
   margin: 20px auto 0;
 }
-.score {
-  color: var(--bleu-identite);
+/* Le bilan (C9) : « n / N » seul, en grand, dans un cadre vert ; dessous, sans aide · avec l'aide. */
+.grand-score {
+  margin: 12px 0 4px;
+  padding: 12px;
+  border: 1.5px solid color-mix(in srgb, var(--vert) 35%, var(--papier));
+  border-radius: 18px;
+  background: var(--vert-fond);
   text-align: center;
+}
+.score {
+  margin: 0;
+  color: var(--vert);
   font-family: "Fredoka", sans-serif;
-  font-size: 4rem;
+  font-size: 3.25rem;
   font-weight: 600;
-  line-height: 1.2;
-  margin: 12px 0;
+  line-height: 1.1;
+  text-align: center;
 }
 .resume-bilan {
-  text-align: center;
+  margin: 4px 0 0;
   color: var(--attenue);
-  margin: 0 0 8px;
+  font-size: 0.875rem;
+  text-align: center;
 }
 .liste-resultats {
   margin: 16px 0;
@@ -1176,7 +1671,7 @@ body[data-ecran="question"] .progression {
 }
 .liste-resultats summary {
   display: grid;
-  grid-template-columns: 32px minmax(0, 1fr) auto auto;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
   cursor: pointer;
@@ -1218,22 +1713,40 @@ body[data-ecran="question"] .progression {
 .liste-resultats .resultat-nom .figure {
   display: none;
 }
+/* La correction dépliée : l'énoncé en petit, puis l'explication. */
+.liste-resultats details > .enonce {
+  margin: 10px 0 8px;
+  text-align: center;
+}
+.liste-resultats details > .enonce h1 {
+  color: var(--encre);
+  font-size: 1.125rem;
+}
+.liste-resultats details > .enonce .figure svg {
+  max-height: 200px;
+}
+/* La bonne réponse, à droite. */
+.liste-resultats .resultat-reponse {
+  color: var(--vert);
+  font-style: normal;
+  font-weight: 900;
+  white-space: nowrap;
+}
 .liste-resultats .voir {
+  grid-column: 2 / -1;
   color: var(--bleu);
   font-size: 0.875rem;
   font-weight: 800;
   white-space: nowrap;
 }
 .etat-ligne {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  min-height: 28px;
-  padding: 0 10px;
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
   border-radius: 999px;
   font-size: 0.875rem;
-  font-weight: 800;
-  white-space: nowrap;
+  font-weight: 900;
 }
 .etat-ligne.juste {
   color: var(--vert);
@@ -1250,6 +1763,20 @@ body[data-ecran="question"] .progression {
 .etat-ligne.passee {
   color: var(--attenue);
   background: var(--fond-doux);
+}
+/* « Refaire mes erreurs » en premier, sur toute la largeur ; dessous Changer de notions · Encore. */
+.actions-bilan {
+  position: sticky;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-top: 4px;
+  padding: 12px 0 4px;
+  border-top: 1px solid var(--ligne);
+  background: var(--papier);
+}
+.actions-bilan .refaire {
+  grid-column: 1 / -1;
 }
 .brevet-depart {
   text-align: center;
@@ -1340,33 +1867,33 @@ body[data-ecran="question"] .progression {
 .selection-domaine > div {
   padding-top: 8px;
 }
+/* Brevet (C10bis) : les numéros des questions, juste au-dessus du pavé, pour revenir en arrière. */
 .navigation-points {
   display: flex;
-  justify-content: center;
   flex-wrap: wrap;
-  gap: 8px;
-  padding: 12px 0;
+  justify-content: center;
+  gap: 5px;
 }
 .point {
   display: grid;
   place-items: center;
-  min-width: 36px;
-  min-height: 36px;
-  padding: 4px;
-  border: 1px solid var(--ligne);
-  border-radius: 12px;
-  color: var(--attenue);
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1.5px solid var(--ligne);
+  border-radius: 999px;
   background: var(--papier);
+  color: var(--encre);
+  font-size: 0.875rem;
   font-weight: 800;
 }
 .point.rempli {
-  color: var(--vert);
-  background: var(--vert-fond);
+  border-color: var(--bleu);
 }
 .point.active {
-  color: var(--papier);
-  background: var(--bleu);
   border-color: var(--bleu);
+  background: var(--bleu);
+  color: var(--papier);
 }
 .minuteur {
   display: inline-flex;
@@ -1377,20 +1904,9 @@ body[data-ecran="question"] .progression {
   font-size: 1.5rem;
   font-variant-numeric: tabular-nums;
 }
-/* La projection garde sa barre pleine largeur : le bas en colonne de 440 px ne la concerne pas. */
-body.projection #commandes {
-  display: block;
-  width: auto;
-  margin: 0;
-}
-.barre-projection {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  padding-top: 16px;
-}
+/* Le diaporama (C10) : la même coque, en très grand. Barre du haut : ← Quitter · n sur N · minuteur
+   · Pause · plein écran ; barre du bas : ← · Aide · Réponse · Explication · →. « Avec aide » : le
+   dessin reste sous la question, agrandi jusqu'à × 2,2 (ajusterQuestion). */
 .message {
   padding: 12px;
   margin: 8px 0;
@@ -1399,78 +1915,89 @@ body.projection #commandes {
   color: var(--encre);
 }
 body.projection {
-  background: var(--papier);
-}
-body.projection .coque {
-  width: 100%;
-  max-width: none;
-  padding: 0;
+  background: var(--fond-page);
 }
 body.projection .pied {
   display: none;
 }
-body.projection .cadre {
-  height: 100dvh;
-  max-height: 100dvh;
-  min-height: 0;
-  padding: 16px 32px;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-}
-body.projection .barre-cadre {
-  margin-bottom: 8px;
-}
-body.projection .espace-question {
-  padding-top: 8px;
-}
-body.projection .enonce h1 {
-  font-size: clamp(2rem, 3.4vw, 3.25rem);
-}
-body.projection .question-expression {
-  font-size: 1.35em;
-  margin: 8px 0;
-}
-body.projection .figure {
-  max-width: 760px;
-}
-body.projection .figure svg {
-  max-height: 360px;
-}
-body.projection .aide {
-  max-width: 760px;
-  padding: 16px;
-  margin: 16px auto;
-}
-body.projection .aide svg {
-  max-width: 760px;
-  max-height: 320px;
-}
-body.projection .aide-pied,
-body.projection .aide p {
+body.projection .barre-question .bouton {
+  min-height: 44px;
   font-size: 1.125rem;
 }
-body.projection .etape {
+body.projection .barre-question .centre strong {
+  font-size: 1.625rem;
+}
+body.projection .barre-question .minuteur {
   font-size: 1.375rem;
 }
-body.projection .correction {
-  max-width: 760px;
-  font-size: 1.5rem;
+body.projection .espace-question > * {
+  width: min(1100px, 94vw);
 }
-body.projection .correction svg {
-  max-width: 760px;
-  max-height: 300px;
+body.projection .carte {
+  padding: 10px 14px;
 }
-body.projection .choix {
-  max-width: 1000px;
-  margin: 16px auto;
+body.projection .carte .consigne {
+  margin-bottom: 4px;
+  font-size: 2.125rem;
 }
-body.projection .choix-bouton {
-  font-size: 2rem;
-  min-height: 72px;
+body.projection .carte .calcul {
+  font-size: 4rem;
 }
-body.projection .minuteur {
-  font-size: 2rem;
+body.projection .case {
+  height: 84px;
+  min-width: 150px;
+  font-size: 3.375rem;
+}
+body.projection .carte .choix-bouton {
+  min-height: 80px;
+  font-size: 2.25rem;
+}
+body.projection .carte-nombre {
+  font-size: 2.25rem;
+}
+body.projection .aide,
+body.projection .explication {
+  padding: 12px 16px;
+}
+body.projection .aide-entete {
+  font-size: 1.25rem;
+}
+body.projection .aide-entete .indice {
+  font-size: 1rem;
+}
+/* K11 : lisible du fond de la classe — la phrase d'aide, l'indice et l'explication à 28 px au moins. */
+body.projection .espace-question .aide p,
+body.projection .explication .solution,
+body.projection .espace-question .etape {
+  font-size: 1.75rem;
+  line-height: 1.3;
+}
+body.projection .bulle-aide {
+  font-size: 1.25rem;
+}
+body.projection #commandes {
+  padding: 8px 8px 14px;
+  border: 0;
+  background: transparent;
+}
+body.projection #commandes > * {
+  max-width: none;
+}
+.barre-projection {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+.barre-projection .bouton {
+  flex: 0 0 auto;
+  min-width: 150px;
+  height: 56px;
+  font-size: 1.25rem;
+}
+.barre-projection .bouton[aria-pressed="true"] {
+  border-color: var(--bleu-identite);
+  background: var(--bleu-identite);
+  color: var(--papier);
 }
 @media (min-width: 681px) {
   .coque {
@@ -1572,11 +2099,7 @@ body.projection .minuteur {
     justify-content: center;
   }
   .liste-resultats summary {
-    grid-template-columns: 28px minmax(0, 1fr) auto;
-    row-gap: 6px;
-  }
-  .liste-resultats .voir {
-    grid-column: 2 / -1;
+    row-gap: 4px;
   }
   body[data-ecran="question"] .coque {
     padding-bottom: 0;
@@ -1599,39 +2122,6 @@ body.projection .minuteur {
   .figure svg {
     max-height: 240px;
   }
-  .aide {
-    max-width: none;
-    padding: 8px;
-    margin: 8px auto;
-    border-radius: 12px;
-  }
-  .aide-entete {
-    font-size: 0.75rem;
-    margin: 0;
-  }
-  .aide-entete .fermer {
-    min-height: 28px;
-    min-width: 28px;
-  }
-  .aide p {
-    font-size: 0.8125rem;
-  }
-  .aide-pied {
-    margin-top: 4px;
-    gap: 4px;
-  }
-  .aide-pied label {
-    font-size: 0.6875rem;
-  }
-  .aide-pied input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-  }
-  .aide-pied .bouton {
-    min-height: 32px;
-    padding: 4px 8px;
-    font-size: 0.75rem;
-  }
   .etape {
     margin-top: 8px;
     padding-top: 4px;
@@ -1643,22 +2133,6 @@ body.projection .minuteur {
   }
   .champ-groupe > label {
     font-size: 0.75rem;
-  }
-  .champ {
-    height: 44px;
-    width: 112px;
-    font-size: 1.375rem;
-  }
-  .champ.expression {
-    width: min(260px, 100%);
-  }
-  .fraction-saisie {
-    width: 72px;
-  }
-  .fraction-saisie .champ {
-    width: 64px;
-    height: 36px;
-    font-size: 1.125rem;
   }
   .choix {
     grid-template-columns: 1fr;
@@ -1698,48 +2172,16 @@ body.projection .minuteur {
   .selection-domaine {
     padding: 12px;
   }
-  .navigation-points {
-    gap: 4px;
-    padding: 8px 0;
-  }
-  .point {
-    min-width: 32px;
-    min-height: 32px;
-    border-radius: 8px;
-  }
   .minuteur {
     font-size: 1.125rem;
     gap: 8px;
   }
-  body.projection .cadre {
-    height: 100dvh;
-    min-height: 0;
-    max-height: 100dvh;
-    padding: 12px;
-  }
-  body.projection .enonce h1 {
-    font-size: 1.75rem;
-  }
-  body.projection .aide {
-    padding: 12px;
-  }
-  body.projection .choix-bouton {
-    font-size: 1.25rem;
-    min-height: 48px;
-  }
-  body.projection .minuteur {
-    font-size: 1.25rem;
-  }
-  body.projection #commandes {
-    position: static;
-    padding: 8px 0 0;
-    border: 0;
-    background: var(--papier);
-  }
-  body.projection .bouton {
-    min-height: 36px;
-    padding: 4px 8px;
-    font-size: 0.8125rem;
+  /* Diaporama ouvert sur un téléphone : la barre du bas tient sur une ligne. */
+  .barre-projection .bouton {
+    min-width: 0;
+    flex: 1 1 auto;
+    height: 48px;
+    font-size: 0.9375rem;
   }
 }
 @media (prefers-reduced-motion: no-preference) {
@@ -1847,12 +2289,5 @@ body.avec-choix .enonce .figure svg {
 @media (max-width: 680px) {
   body.avec-choix .enonce .figure svg {
     max-height: 160px;
-  }
-  body.avec-choix .choix {
-    gap: 8px;
-  }
-  body.avec-choix .choix-bouton {
-    min-height: 44px;
-    padding: 4px 12px;
   }
 }

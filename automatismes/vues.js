@@ -2,6 +2,7 @@ import { esc } from "./generateurs/draw.js";
 import { mathHtml } from "./math-format.js";
 import { questionPrompt } from "./math-layout.js";
 import { DOMAINES, formesEligibles } from "./seances.js";
+import { modeleQuestion, reglageForme, ecrireReponse } from "./champs.js";
 import { ICONES_DOMAINES } from "./icones-domaines.js";
 
 export function bouton(texte, action, classe = "secondaire", attributs = "") {
@@ -86,35 +87,90 @@ export function domaineHTML(domaine, familles, filtre, selection) {
         .join("")}</div>`;
 }
 
-export function enonceHTML(question) {
-  return `<div class="enonce"><h1>${questionPrompt(question)}</h1>
+export function enonceHTML(question, pastille = "") {
+  return `<div class="enonce">${pastille}<h1>${questionPrompt(question)}</h1>
     ${question.math ? `<div class="calcul">${mathHtml(question.math)}</div>` : ""}
     ${question.visual ? `<div class="figure">${question.visual}</div>` : ""}
   </div>`;
 }
 
-export function aideHTML(question, etat, garder, projection = false) {
-  if (!etat.aideOuverte) return "";
-  const dessin = question.hints?.[0]?.svg || "";
-  if (projection)
-    return `<section class="aide aide-projetee">${dessin}
-    ${etat.etape ? `<div class="etape">${mathHtml(question.hints?.[1]?.text || "")}</div>` : ""}</section>`;
+/* L'aide (coque V2, C5) : sous la carte, dans la zone de la question ; le clavier reste. En-tête :
+   Aide · « Encore un indice » (l'ancienne « Une étape ») · ×. Correction après C7 (K1) : une question
+   avec figure a aussi son aide SOUS la carte (sa phrase, et son dessin s'il n'est pas la figure) ; la
+   bulle posée sur la figure n'existe que si la forme a un champ coinAide (rempli par les cahiers une
+   fois le coin vérifié vide pour tous les tirages). */
+function boutonIndice(question, etat) {
+  if (!question.hints?.[1]?.text) return "";
+  return bouton("Encore un indice", "etape", "indice", etat.etape ? "disabled" : "");
+}
 
-  return `<section class="aide" aria-label="Aide">
-    <div class="aide-entete"><strong>Aide</strong>
-      ${bouton("×", "fermer-aide", "discret petit", 'aria-label="Fermer l’aide"')}</div>
-    ${dessin || `<p>${mathHtml(question.hints?.[0]?.text || "")}</p>`}
+const COINS = ["haut-gauche", "haut-droite", "bas-gauche", "bas-droite"];
+function enBulle(question, reglages) {
+  return Boolean(question.visual && COINS.includes(reglages?.coinAide));
+}
+
+export function aideHTML(question, etat, projection = false, reglages = {}) {
+  if (!etat.aideOuverte || enBulle(question, reglages)) return "";
+  const dessin = question.hints?.[0]?.svg || "";
+  // Un dessin d'aide « sur la figure » (aideSurFigure) se pose sur elle ; sinon il est ici.
+  const montrer = dessin && dessin !== question.visual && !surFigure(question, reglages);
+  const fermer = projection
+    ? ""
+    : bouton("×", "fermer-aide", "fermer", 'aria-label="Fermer l’aide"');
+  return `<section class="aide${projection ? " aide-projetee" : ""}" aria-label="Aide">
+    <div class="aide-entete"><strong>${ICONES.aide}Aide</strong>
+      <span class="aide-boutons">${boutonIndice(question, etat)}${fermer}</span></div>
+    <p>${mathHtml(question.hints?.[0]?.text || "")}</p>
+    ${montrer ? `<div class="dessin">${dessin}</div>` : ""}
     ${etat.etape ? `<div class="etape">${mathHtml(question.hints?.[1]?.text || "")}</div>` : ""}
-    <div class="aide-pied">${bouton("Une étape", "etape", "secondaire petit", etat.etape ? "disabled" : "")}
-      <label><input type="checkbox" id="garder-aide" ${garder ? "checked" : ""}> Garder l’aide affichée</label>
-    </div>
   </section>`;
 }
 
-export function correctionHTML(question) {
-  return `<section class="correction" aria-label="Correction">
-    <h2>Correction</h2><div class="solution">${mathHtml(question.solution || "")}</div>
-    ${question.hints?.[0]?.svg ? `<div class="figure">${question.hints[0].svg}</div>` : ""}
+/* La figure de la question, toujours en place. Avec coinAide seulement, l'aide ouverte est une bulle
+   posée dans ce coin de la figure. Le dessin d'aide se pose EXACTEMENT dans la boîte de la figure
+   (calque .figure-aide, dimensionné par ajusterQuestion), la figure gardant sa place, quand c'est la
+   figure annotée : même boîte (même viewBox) que la figure (K6, les pointillés de EG02-a), ou forme
+   marquée aideSurFigure (K2). Une boîte différente (le schéma « 90° / 180° » de EG06-b) va dans le
+   panneau sous la carte. */
+const boiteSVG = (svg) =>
+  String(svg)
+    .match(/viewBox="([^"]+)"/)?.[1]
+    ?.trim()
+    .replace(/\s+/g, " ");
+
+export function surFigure(question, reglages = {}) {
+  const dessin = question.hints?.[0]?.svg || "";
+  if (!question.visual || !dessin || dessin === question.visual) return false;
+  const memeBoite = boiteSVG(dessin) && boiteSVG(dessin) === boiteSVG(question.visual);
+  return Boolean(reglages?.aideSurFigure || memeBoite);
+}
+
+export function figureHTML(question, etat, reglages = {}) {
+  if (!question.visual) return "";
+  const calque =
+    etat.aideOuverte && surFigure(question, reglages)
+      ? `<div class="figure-aide">${question.hints[0].svg}</div>`
+      : "";
+  const bulle =
+    etat.aideOuverte && enBulle(question, reglages)
+      ? `<div class="bulle-aide ${reglages.coinAide}" role="note" aria-label="Aide">${ICONES.aide}
+      <span>${mathHtml(question.hints?.[0]?.text || "")}</span>
+      ${etat.etape ? `<span class="etape">${mathHtml(question.hints?.[1]?.text || "")}</span>` : ""}
+      ${etat.etape ? "" : boutonIndice(question, etat)}</div>`
+      : "";
+  return `<div class="figure${calque ? " aide-sur-figure" : ""}">${question.visual}${calque}${bulle}</div>`;
+}
+
+/* « Voir l'explication » (C7) : sous la question, au même endroit que l'aide, pas de fenêtre ; la
+   solution de la question et son dessin (celui de l'aide, sauf s'il n'est que la figure). */
+export function explicationHTML(question, fermer = true) {
+  const dessin = question.hints?.[0]?.svg || "";
+  const montrer = dessin && dessin !== question.visual;
+  return `<section class="explication" aria-label="L’explication">
+    <div class="aide-entete"><strong>L’explication</strong>
+      ${fermer ? bouton("×", "explication", "fermer", 'aria-label="Cacher l’explication"') : ""}</div>
+    <p class="solution">${mathHtml(question.solution || "")}</p>
+    ${montrer ? `<div class="dessin">${dessin}</div>` : ""}
   </section>`;
 }
 
@@ -171,10 +227,11 @@ export const ICONES = {
     'stroke-linejoin="round"/></svg>',
 };
 
-/* Le haut de l'écran de question, sur une ligne comme /auto/, dans les trois modes :
-   entraînement  ← Menu · notion · n / N · ✓ score · clavier · plein écran
-   brevet        ← Menu · Entraînement brevet · n / N · chrono · clavier · plein écran
-   projection    ← Quitter · notion · n / N · minuteur · Pause · plein écran */
+/* Le haut de l'écran de question, sur une ligne, dans les trois modes (coque d'après la V2) :
+   entraînement  ← Menu · n sur N · ✓ score (· clavier · plein écran sur ordinateur)
+   brevet        ← Menu · n sur N · chrono (· clavier · plein écran sur ordinateur)
+   projection    ← Quitter · n sur N · minuteur · Pause · plein écran
+   Le nom de la notion (ou « Entraînement brevet ») est une pastille en tête de la carte. */
 function boutonClavier(clavier) {
   const libelle = `${clavier ? "Cacher" : "Afficher"} le clavier`;
   return bouton(
@@ -185,90 +242,148 @@ function boutonClavier(clavier) {
   );
 }
 
-export function barreQuestionHTML(seance, famille, clavier) {
+export function barreQuestionHTML(seance, clavier) {
   const exam = seance.mode === "exam";
   const projection = seance.mode === "project";
   const justes = seance.etats.filter((e) => e.juste).length;
   const retour = projection ? "Quitter" : "Menu";
+  const pleinEcran = bouton(
+    ICONES.pleinEcran,
+    "plein-ecran",
+    "secondaire icone-bouton plein-ecran",
+    'aria-label="Plein écran" title="Plein écran"',
+  );
   const droite = projection
     ? `<span class="minuteur"><span id="temps" role="timer"></span></span>
-      ${bouton(seance.pause ? "Reprendre" : "Pause", "pause", "secondaire pause")}`
-    : exam
-      ? `<span class="minuteur chrono"><span id="temps" role="timer"></span></span>
-      ${boutonClavier(clavier)}`
-      : `<span class="score-barre" aria-label="${justes} réponse${justes > 1 ? "s" : ""} juste${justes > 1 ? "s" : ""}">✓ ${justes}</span>
-      ${boutonClavier(clavier)}`;
+      ${bouton(seance.pause ? "Reprendre" : "Pause", "pause", "secondaire pause")}${pleinEcran}`
+    : `${
+        exam
+          ? '<span class="minuteur chrono"><span id="temps" role="timer"></span></span>'
+          : `<span class="score-barre" aria-label="${justes} réponse${justes > 1 ? "s" : ""} juste${justes > 1 ? "s" : ""}">✓ ${justes}</span>`
+      }<span class="outils-ordinateur">${boutonClavier(clavier)}${pleinEcran}</span>`;
   const menu = bouton(
     `<span aria-hidden="true">←</span><span class="mot">${retour}</span>`,
     "retour",
-    "discret menu",
+    "secondaire menu",
     `aria-label="${retour}"`,
   );
   return `<header class="barre-question">
     <div class="gauche">${menu}</div>
-    <div class="centre"><span class="notion-nom">${exam ? "Entraînement brevet" : esc(famille.nom)}</span>
-      <strong>${seance.index + 1} / ${seance.questions.length}</strong></div>
-    <div class="droite">${droite}
-      ${bouton(ICONES.pleinEcran, "plein-ecran", "secondaire icone-bouton plein-ecran", 'aria-label="Plein écran" title="Plein écran"')}
-    </div></header>`;
+    <div class="centre"><strong class="position">${seance.index + 1} sur ${seance.questions.length}</strong></div>
+    <div class="droite">${droite}</div></header>`;
 }
 
+/* La pastille en tête de la carte : le nom de la notion, ou « Entraînement brevet ». */
+export function pastilleNotionHTML(seance, famille) {
+  const nom = seance.mode === "exam" ? "Entraînement brevet" : famille?.nom || "";
+  return `<span class="pastille-notion">${esc(nom)}</span>`;
+}
+
+/* Sous la carte, dans la zone des commandes : Passer · Valider (« ← » en plus au brevet). Aide et Cours
+   ne sont plus ici : ils sont dans la carte, sous le calcul (outilsHTML). */
 export function actionsHTML(seance, etat) {
   if (seance.mode === "project") return actionsProjectionHTML(seance, etat);
-  // À gauche, ce qui sert pendant la réponse : Aide · Cours (ou « ← » au brevet) ; à droite Passer · Valider.
-  const gauche =
+  const retour =
     seance.mode === "exam"
       ? bouton("←", "precedente", "secondaire precedente", 'aria-label="Question précédente"')
-      : bouton(
-          `${ICONES.aide}<span>Aide</span>`,
-          "aide",
-          "aide-bouton",
-          `aria-pressed="${Boolean(etat.aideOuverte)}" aria-label="Aide"`,
-        ) +
-        bouton(`${ICONES.cours}<span>Cours</span>`, "cours", "cours-bouton", 'aria-label="Cours"');
+      : "";
+  // Après la réponse (C6) : « Voir l'explication » (pas après une réponse juste) · « Question
+  // suivante », ou « Voir le bilan » à la dernière question.
+  const derniere = seance.index + 1 >= seance.questions.length;
+  const explication = etat.correction ? "Cacher l’explication" : "Voir l’explication";
   const suite =
     etat.terminee && seance.mode !== "exam"
-      ? bouton("Suivante", "suivante", "orange")
-      : bouton("Passer", "passer", "secondaire") + bouton("Valider", "valider", "orange");
-  return `<div class="actions-question"><div class="outils-question">${gauche}</div>${suite}</div>`;
+      ? (etat.juste ? "" : bouton(explication, "explication", "secondaire")) +
+        bouton(derniere ? "Voir le bilan" : "Question suivante", "suivante", "primaire large")
+      : bouton("Passer", "passer", "secondaire") + bouton("Valider", "valider", "orange large");
+  return `<div class="actions-question">${retour}${suite}</div>`;
 }
 
-function actionsProjectionHTML(seance) {
+/* Aide · Cours : deux boutons discrets (38 px) juste sous le calcul, là où l'aide s'ouvre.
+   Ni l'un ni l'autre au brevet ni au diaporama. */
+export function outilsHTML(seance, etat) {
+  if (seance.mode !== "train" || etat.terminee) return "";
+  return `<div class="outils">
+    <button class="outil" data-action="aide" aria-pressed="${Boolean(etat.aideOuverte)}">${ICONES.aide}Aide</button>
+    <button class="outil" data-action="cours">${ICONES.cours}Cours</button>
+  </div>`;
+}
+
+/* Diaporama (C10) : ← · Aide · Réponse (remplit la case en vert) · Explication · →, les mêmes mots
+   qu'au téléphone ; « Encore un indice » est dans l'en-tête de l'aide. Un seul panneau à la fois
+   sous la question (K3) : l'explication prend la place de l'aide, qui revient quand on la referme. Correction « à la fin » :
+   Réponse et Explication attendent la phase de correction. */
+function actionsProjectionHTML(seance, etat) {
   const fin = seance.options.correction === "end" && seance.phase !== "correction";
+  const presse = (actif) => `aria-pressed="${Boolean(actif)}"`;
   return `<div class="actions-question barre-projection">
     ${bouton("←", "precedente", "secondaire", 'aria-label="Question précédente"')}
-    ${bouton("Aide", "aide", "secondaire")}
-    ${bouton("Une étape", "etape", "secondaire")}
-    ${bouton("Correction", "correction", "secondaire", fin ? "disabled" : "")}
+    ${bouton("Aide", "aide", "secondaire", presse(etat.aideOuverte && !etat.correction))}
+    ${bouton("Réponse", "reponse", "secondaire", `${presse(etat.reponseMontree)} ${fin ? "disabled" : ""}`)}
+    ${bouton("Explication", "explication", "secondaire", `${presse(etat.correction)} ${fin ? "disabled" : ""}`)}
     ${bouton("→", "suivante", "orange", 'aria-label="Question suivante"')}
   </div>`;
 }
 
-export function questionHTML(seance, famille, garder, clavier = false) {
+/* La consigne de la carte. Quand le calcul s'écrit avec ses cases (« 0,7 × 7 = [ ] »), la consigne
+   ne garde que la phrase (« Calcule. ») ; sinon c'est l'énoncé entier, comme avant. */
+function consigneHTML(question, modele) {
+  if (modele.phrase) return `<h1 class="consigne sr-only">${questionPrompt(question)}</h1>`;
+  const texte = modele.consigne ? mathHtml(modele.consigne) : questionPrompt(question);
+  return `<h1 class="consigne">${texte}</h1>`;
+}
+
+/* Après la réponse (C6). Plus de phrase toute faite : la case barrée et la bonne réponse disent tout.
+   Seules exceptions : la phrase courte d'une ERREUR CONNUE de la forme (champ erreurs), ou le message
+   précis du moteur (« La valeur est juste. Écris-la sous forme irréductible. »). Puis « Bonne
+   réponse » : l'égalité entière quand la question a un calcul, sinon les valeurs attendues. */
+export function bonneReponseTexte(question, modele) {
+  const valeurs = question.fields.map((champ) => ecrireReponse(champ.answer));
+  if (modele?.modele) return modele.modele.replace(/\[(\d+)\]/g, (_, rang) => valeurs[rang] ?? "");
+  if (question.fields.length === 1) {
+    const unite = question.fields[0].unit;
+    return `${valeurs[0]}${unite && !/^[°%]$/.test(unite) ? " " : ""}${unite || ""}`;
+  }
+  return question.fields
+    .map((champ, rang) => `${champ.label ? `${champ.label} : ` : ""}${valeurs[rang]}`)
+    .join(" · ");
+}
+
+function retourHTML(question, etat, modele) {
+  if (!etat.terminee || etat.juste) return "";
+  const phrase = etat.erreurConnue || etat.message;
+  return `${phrase ? `<p class="erreur-connue" role="status">${mathHtml(phrase)}</p>` : ""}
+    <div class="bonne"><span>Bonne réponse</span>
+      <strong>${mathHtml(bonneReponseTexte(question, modele))}</strong></div>`;
+}
+
+export function questionHTML(seance, famille, clavier = false) {
   const question = seance.questions[seance.index];
   const etat = seance.etats[seance.index];
   const projection = seance.mode === "project";
-  const minuterie = projection || seance.mode === "exam";
-  return `${barreQuestionHTML(seance, famille, clavier)}
+  const modele = modeleQuestion(question, reglageForme(question, famille, "gabarit"));
+  const reglages = {
+    coinAide: reglageForme(question, famille, "coinAide"),
+    aideSurFigure: reglageForme(question, famille, "aideSurFigure") === true,
+  };
+  const avantReponse = !etat.terminee && etat.message;
+  return `${barreQuestionHTML(seance, clavier)}
     <progress class="progression" max="${seance.questions.length}" value="${seance.index + 1}"></progress>
     <div class="espace-question">
-      ${enonceHTML(question)}${aideHTML(question, etat, garder, projection)}
-      ${projection ? choixProjectionHTML(question) : '<div class="reponses"></div>'}
-      ${etat.message ? `<p class="retour-reponse ${etat.juste ? "juste" : "faux"}" role="status">${esc(etat.message)}</p>` : ""}
-      ${etat.erreurs && !etat.terminee ? bouton("Voir la correction", "correction", "discret") : ""}
-      ${etat.correction ? correctionHTML(question) : ""}
+      <section class="carte enonce">${pastilleNotionHTML(seance, famille)}${consigneHTML(question, modele)}
+        ${question.math ? `<div class="calcul">${mathHtml(question.math)}</div>` : ""}
+        ${figureHTML(question, etat, reglages)}
+        <div class="reponses"></div>
+        ${avantReponse ? `<p class="erreur-connue" role="status">${esc(etat.message)}</p>` : ""}
+        ${seance.mode === "train" ? retourHTML(question, etat, modele) : ""}
+        ${outilsHTML(seance, etat)}
+      </section>
+      ${projection && etat.correction ? "" : aideHTML(question, etat, projection, reglages)}
+      ${etat.correction ? explicationHTML(question, !projection) : ""}
     </div>
-    ${minuterie ? pointsHTML(seance) : ""}
-    <div id="commandes"><section class="clavier" aria-label="Clavier mathématique" hidden></section>${actionsHTML(seance, etat)}</div>`;
-}
-
-function choixProjectionHTML(question) {
-  return question.fields
-    .filter((champ) => champ.options)
-    .map((champ) => {
-      return `<div class="choix">${champ.options.map((choix) => `<div class="choix-bouton">${mathHtml(choix)}</div>`).join("")}</div>`;
-    })
-    .join("");
+    <div id="commandes">${seance.mode === "exam" ? pointsHTML(seance) : ""}
+      <section class="clavier" aria-label="Clavier mathématique" hidden></section>
+      <div class="signes" role="group" aria-label="Signe" hidden></div>${actionsHTML(seance, etat)}</div>`;
 }
 
 function reglageHTML(nom, libelle, valeur, min, max) {
@@ -315,6 +430,7 @@ export function bilanHTML(seance, parId) {
   const justes = seance.etats.filter((etat) => etat.juste);
   const autonomes = justes.filter((etat) => etat.aide === 0).length;
   const dessins = justes.length - autonomes;
+  const ratees = seance.etats.length - justes.length;
   const etatLigne = (etat) =>
     etat.juste
       ? etat.aide === 0
@@ -324,23 +440,53 @@ export function bilanHTML(seance, parId) {
         ? ["faux", "✗", "Faux"]
         : ["passee", "○", "Passée"];
   const titre = projection ? "Corrections" : exam ? "Entraînement brevet" : "Bilan";
-  const sousTitre = exam
-    ? `${justes.length} juste${justes.length > 1 ? "s" : ""} sur 9`
-    : `${autonomes} sans aide · ${dessins} avec l’aide`;
-  return `<h1>${titre}</h1>
-    ${projection ? "" : `<div class="score">${justes.length} / ${seance.questions.length}</div><p class="resume-bilan">${sousTitre}</p>`}
-    <div class="liste-resultats">${seance.questions
-      .map((question, i) => {
-        const [classe, signe, mot] = projection ? ["", "", ""] : etatLigne(seance.etats[i]);
-        return `<details><summary><span class="numero">${i + 1}</span>
+  // Coque V2 (C9) : « n / N » seul, en grand ; dessous, sans aide · avec l'aide.
+  const score = `<div class="grand-score"><div class="score">${justes.length} / ${seance.questions.length}</div>
+    <p class="resume-bilan">${autonomes} sans aide · ${dessins} avec l’aide</p></div>`;
+  const liste = seance.questions
+    .map((question, i) => {
+      const [classe, signe, mot] = projection ? ["", "", ""] : etatLigne(seance.etats[i]);
+      const famille = parId[question.famille];
+      const modele = modeleQuestion(question, reglageForme(question, famille, "gabarit"));
+      return `<details><summary>${
+        projection
+          ? `<span class="numero">${i + 1}</span>`
+          : `<span class="etat-ligne ${classe}" aria-label="${mot}">${signe}</span>`
+      }
         <span class="resultat-nom">${questionPrompt(question)}</span>
-        ${projection ? "" : `<span class="etat-ligne ${classe}"><span aria-hidden="true">${signe}</span> ${mot}</span>`}
+        <em class="resultat-reponse">${mathHtml(bonneReponseTexte(question, modele).replace(/^.* = /, ""))}</em>
         <span class="voir">Voir la correction</span></summary>
-        ${enonceHTML(question)}${correctionHTML(question)}</details>`;
-      })
-      .join("")}</div>
-    <div class="actions-prof">${bouton(exam ? "Encore un entraînement" : "Encore une série", "encore", "primaire")}
-      ${bouton("Retour", "accueil", "secondaire")}</div>`;
+        ${enonceHTML(question)}${explicationHTML(question, false)}</details>`;
+    })
+    .join("");
+  // « Refaire mes erreurs » en premier, sur toute la largeur (choix de Gwenaël, 21/10), absent sans erreur.
+  const actions = projection
+    ? `${bouton("Encore une série", "encore", "primaire")}${bouton("Retour", "accueil", "secondaire")}`
+    : `${ratees ? bouton("Refaire mes erreurs", "refaire", "orange refaire") : ""}
+      ${bouton("Changer de notions", "changer", "secondaire")}
+      ${bouton(exam ? "Encore un entraînement" : "Encore une série", "encore", "primaire")}`;
+  return `<h1>${titre}</h1>${projection ? "" : score}
+    <div class="liste-resultats">${liste}</div>
+    <div class="actions-prof actions-bilan">${actions}</div>`;
+}
+
+/* Le cours (C8), dans sa fenêtre. Quand le cours de la famille est découpé en morceaux (champ
+   cours.morceaux du catalogue : [{ titre, texte, exemple, formes: ["e", …] }], rempli par les
+   cahiers), en haut « Pour cette question » et le morceau du type de question en cours, encadré ;
+   dessous « Le reste du cours ↓ ». Sinon, le cours entier, comme avant. */
+export function coursHTML(famille, question, entier) {
+  const morceaux = famille.cours?.morceaux;
+  if (!Array.isArray(morceaux) || !morceaux.length) return entier;
+  const actif = morceaux.find((morceau) => morceau.formes?.includes(question.forme));
+  const morceauHTML = (morceau) => `<div class="morceau${morceau === actif ? " actif" : ""}">
+    <h3>${esc(morceau.titre || "")}</h3><p>${mathHtml(morceau.texte || "")}</p>
+    ${morceau.exemple ? `<div class="exemple">${mathHtml(morceau.exemple)}</div>` : ""}</div>`;
+  const reste = morceaux
+    .filter((morceau) => morceau !== actif)
+    .map(morceauHTML)
+    .join("");
+  return `${actif ? `<div class="sepa">Pour cette question</div>${morceauHTML(actif)}` : ""}
+    ${reste ? `<div class="sepa">${actif ? "Le reste du cours ↓" : "Le cours"}</div>${reste}` : ""}`;
 }
 
 /* L'écran de départ du brevet : ce qui attend l'élève, en quatre mots, puis Commencer. */
