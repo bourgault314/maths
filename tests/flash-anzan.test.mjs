@@ -186,6 +186,13 @@ test("pas de barre au-dessus du cadre : la flèche et le plein écran sont dans 
   assert.match(pied, /<span data-mathsgo-confidentialite>Sans cookie ni traceur<\/span>/);
 });
 
+test("pas de plein écran sur téléphone, tenu en hauteur comme en largeur (relecture Codex A4)", () => {
+  const style = PAGE.slice(PAGE.indexOf("<style>"), PAGE.indexOf("</style>"));
+  const regles = [...style.matchAll(/@media ([^{]+)\{([\s\S]*?)\n    \}/g)]
+    .filter(m => /\.plein-ecran \{ display: none; \}/.test(m[2])).map(m => m[1].trim());
+  assert.deepEqual(regles.sort(), ["(max-height: 500px) and (pointer: coarse)", "(max-width: 620px)"]);
+});
+
 test("pas encore au catalogue, et pas indexée tant que Gwenaël ne l'a pas validée", () => {
   assert.doesNotMatch(CATALOGUE, /flash_anzan/);
   assert.match(PAGE, /<meta name="robots" content="noindex, nofollow">/);

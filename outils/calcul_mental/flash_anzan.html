@@ -275,6 +275,11 @@
       .pas.court output { min-width: 28px; }
       .reglages-ecran .bas { margin-top: 16px; }
     }
+    /* Relecture Codex (A4) : pas de plein écran sur téléphone, en largeur
+       non plus. */
+    @media (max-height: 500px) and (pointer: coarse) {
+      .plein-ecran { display: none; }
+    }
     @media (max-width: 369px) {
       .ligne.chiffres { flex-wrap: wrap; row-gap: 6px; }
       .ligne.chiffres .deux { margin-left: auto; }
@@ -624,6 +629,7 @@
         attente: null,
         image: null,
         chrono: null,
+        echeance: 0, // instant (performance.now) où le temps limite est fini ; 0 = sans limite
         tailleFlash: 0
       };
       const rng = CORE.mulberry32((Math.random() * 4294967296) >>> 0);
@@ -666,8 +672,14 @@
         montrerVue("jeu");
         $("compte").textContent = texteCompte();
         $("chrono").hidden = true;
+        seance.echeance = 0;
         seance.reponse = "";
         dessinerReponse();
+        // Relecture Codex (A1) : un décompte coupé par la flèche ne doit pas
+        // rester affiché au calcul suivant, même dans l'autre mode.
+        $("decompte").hidden = true;
+        $("indic").hidden = true;
+        $("nombre").textContent = "";
         $("zone-rep").hidden = true;
         $("vue-jeu").classList.remove("avec-reponse");
         $("question").hidden = true;
@@ -802,6 +814,7 @@
         chrono.hidden = false;
         const total = secondes * 1000;
         const debut = performance.now();
+        seance.echeance = debut + total;
         const jeton = seance.jeton;
         const tic = maintenant => {
           if (jeton !== seance.jeton) return;
@@ -841,6 +854,9 @@
 
       function valider(tempsEcoule) {
         if (seance.phase !== "reponse") return;
+        // Relecture Codex (A3) : l'échéance se juge à l'heure de la validation,
+        // pas à l'ordre dans lequel le clic et l'image du chrono arrivent.
+        if (seance.echeance && performance.now() >= seance.echeance) tempsEcoule = true;
         if (!tempsEcoule && seance.reponse === "") return;
         const calcul = seance.calculs[seance.index];
         const ecrit = seance.reponse;
@@ -867,6 +883,13 @@
         v.className = `verdict ${res.juste ? "ok" : "ko"}`;
         if (res.juste) {
           v.innerHTML = `<div class="titre"><span class="rond" aria-hidden="true">✓</span>Juste&nbsp;!</div><div class="val">${res.calcul.total}</div>`;
+        } else if (res.tempsEcoule) {
+          // Choix de Gwenaël (22/10/2026) : le temps fini se dit ; ce qui était
+          // tapé n'est barré que s'il était faux. Ça compte faux.
+          const fauxTape = res.ecrit && Number(res.ecrit) !== res.calcul.total;
+          v.innerHTML = '<div class="titre">⏱ Temps écoulé</div>'
+            + (fauxTape ? `<div class="ecrit">Tu as écrit <s>${res.ecrit}</s></div>` : "")
+            + `<div class="bonne">La bonne réponse&nbsp;:</div><div class="val">${res.calcul.total}</div>`;
         } else {
           v.innerHTML = '<div class="titre"><span class="rond" aria-hidden="true">✗</span>Pas tout à fait</div>'
             + (res.ecrit ? `<div class="ecrit">Tu as écrit <s>${res.ecrit}</s></div>` : "")
@@ -944,12 +967,31 @@
       $("retour").addEventListener("click", () => {
         if (seance.phase === "fin") { versReglages(); return; }
         if (seance.resultats.length === 0) { versReglages(); return; }
-        finir(true);
+        // Relecture Codex (B1) : « arrêtée » = moins de calculs faits que
+        // prévu (c'est ce qui servira au professeur au lot 2).
+        finir(seance.resultats.length < seance.reglages.calculs);
       });
 
       // ---- Le clavier de l'ordinateur ----
+      // Le bouton qui a le focus y est-il arrivé au clavier (Tab) ? Pas avec
+      // :focus-visible : Chrome le rallume dès qu'une touche est pressée.
+      let focusParPointeur = null;
+      document.addEventListener("pointerdown", e => {
+        focusParPointeur = e.target && e.target.closest ? e.target.closest("button, a") : null;
+      }, true);
+      document.addEventListener("keydown", e => { if (e.key === "Tab") focusParPointeur = null; }, true);
+      function focusAuClavier(el) {
+        return el.closest("button, a") !== focusParPointeur;
+      }
       document.addEventListener("keydown", e => {
         if (e.altKey || e.ctrlKey || e.metaKey) return;
+        // Relecture Codex (A2) : un autre bouton ou un lien atteint AU CLAVIER
+        // (Tab : Voir le calcul, la flèche, le plein écran) fait sa propre
+        // action sur Entrée. Après un clic à la souris sur « Voir le calcul »,
+        // Entrée continue au calcul suivant, comme l'annonce l'astuce.
+        const cible = e.target && e.target.closest ? e.target : null;
+        if (e.key === "Enter" && cible && cible.closest("button, a") && !cible.closest("#keypad, #valider, #suivant")
+            && focusAuClavier(cible)) return;
         if (seance.phase === "reponse") {
           if (/^\d$/.test(e.key)) { e.preventDefault(); touche(e.key); }
           else if (e.key === "Backspace") { e.preventDefault(); touche("backspace"); }
