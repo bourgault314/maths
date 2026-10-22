@@ -500,3 +500,42 @@ test(
       }
     }),
 );
+
+test(
+  "P6 : téléphone — ni Plein écran ni Projeter ; à 375 × 667, les 5 domaines entiers, le brevet coupé",
+  { skip: ignorer, timeout: 90000 },
+  () =>
+    banc(async ({ base, page }) => {
+      for (const [width, height, tactile] of TAILLES.slice(0, 4)) {
+        const nom = `${width}x${height}`;
+        const onglet = await page(width, height, tactile, { niveau: "4e", nombre: 10 });
+        await accueil(onglet, base);
+        await cocher(onglet, "nombres-calculs", [0]);
+        await onglet.locator(".domaine-tete").click();
+        const visibles = await onglet.evaluate(() =>
+          [".plein-ecran-cadre", '[data-action="projeter-reglages"]'].map((selecteur) =>
+            [...document.querySelectorAll(selecteur)].some((element) => element.offsetParent),
+          ),
+        );
+        assert.deepEqual(visibles, [width >= 700, width >= 700], `${nom} : Plein écran, Projeter`);
+        await onglet.context().close();
+      }
+      const petit = await page(375, 667, true, { niveau: "4e", nombre: 10 });
+      await accueil(petit, base);
+      const [zone] = await boites(petit, ".contenu");
+      const domaines = await boites(petit, ".domaines .domaine-carte");
+      const [brevet] = await boites(petit, ".ligne-brevet");
+      assert.ok(
+        domaines.every((carte) => carte.top >= zone.top && carte.bottom <= zone.bottom),
+        "Les cinq domaines entiers",
+      );
+      assert.ok(
+        brevet.top < zone.bottom - 8 && brevet.bottom > zone.bottom,
+        `Le brevet commence dans l’écran et continue dessous (${brevet.top}-${brevet.bottom})`,
+      );
+      assert.ok(
+        domaines.every((carte) => Math.round(carte.width) === 333),
+        "375 : 333 px",
+      );
+    }),
+);

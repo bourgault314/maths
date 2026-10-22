@@ -2429,6 +2429,55 @@ body.projection #commandes > * {
     font-size: 0.9375rem;
   }
 }
+/* Petit téléphone (375 × 667, décision I) : l'accueil se resserre pour que les cinq domaines se
+   voient au premier coup d'œil ; l'Entraînement brevet dépasse en bas, on voit qu'il faut défiler. */
+@media (max-width: 699px) and (max-height: 720px) {
+  .entete-appli {
+    padding: 10px 14px 8px;
+  }
+  .entete-appli .logo-cadre img {
+    height: 32px;
+  }
+  .titre-appli h1 {
+    font-size: 1.3rem;
+  }
+  .titre-appli span {
+    font-size: 0.85rem;
+  }
+  .carte-menu {
+    margin-top: 8px;
+    padding: 10px 10px 12px;
+  }
+  .etape-menu {
+    margin-bottom: 8px;
+    font-size: 1.05rem;
+  }
+  .etape-menu .numero {
+    width: 28px;
+    height: 28px;
+  }
+  .segment {
+    min-height: 40px;
+  }
+  .choix-nombre select {
+    min-height: 48px;
+  }
+  .domaines {
+    gap: 6px;
+  }
+  .domaine-carte {
+    min-height: 54px;
+    padding: 6px 12px;
+  }
+  .domaine-carte .icone,
+  .domaine-carte .icone svg {
+    width: 34px;
+    height: 34px;
+  }
+  .domaine-carte .nom {
+    font-size: 0.98rem;
+  }
+}
 @media (prefers-reduced-motion: no-preference) {
   .bouton,
   .domaine-carte,
