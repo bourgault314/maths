@@ -421,7 +421,9 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // serveur » (22/10/2026) : lib/bd.php, lib/applis.php, lib/journal.php,
   // api/eleve.php, api/prof.php et verifier.php changent, 61 au manifeste
   // (avant : defi-tables-test-une-erreur).
-  assert.match(lire("_serveur/public/VERSION"), /^lot qui-voit-quoi-serveur$/m);
+  // Puis « Défi tables — fignolage du 22/10 » (22/10/2026) : l'espace élève
+  // seul change, la tuile Défi tables (avant : qui-voit-quoi-serveur).
+  assert.match(lire("_serveur/public/VERSION"), /^lot defi-tables-fignolage-22-10$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=flash-anzan-20261022-1/);
 });

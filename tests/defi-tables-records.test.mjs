@@ -233,13 +233,26 @@ test("la page : le lancement et les trois fins de course, dans les mots des plan
   assert.match(html, /const couronne = suivi\.evenements\.find\(evenement => evenement\.type === "etoile" && evenement\.couronne\);\s*if \(!course && !couronne\) return;/);
 });
 
-test("la page : les boutons de fin de course — « Voir les records » et « Rejouer », pleine largeur au téléphone, le bon devant (planche R6)", () => {
-  assert.match(html, /\.result\.is-course \.result-actions > #result-open-parcours, \.result\.is-course \.result-actions > #result-entraine, \.result\.is-course \.result-actions > #result-accueil \{ display: none; \}/);
-  assert.match(html, /\.result\.is-course\.is-fete \.result-actions > #result-records \{ order: -1; \}\s*\.result\.is-course:not\(\.is-fete\) \.result-actions > #retry \{ order: -1; \}/);
-  assert.match(html, /@media \(max-width: 620px\) \{\s*\.result\.is-course \.result-actions > button \{ grid-column: 1 \/ -1; \}\s*\}/);
-  assert.match(html, /\$\("result-records"\)\.className = fete \? "primary" : "secondary";\s*\$\("retry"\)\.className = fete \? "secondary" : "primary";/);
-  // Dans une séance : « Mon bilan → » d'abord, « Voir les records » dessous (choix de Gwenaël).
-  assert.match(html, /if \(seance\.faites\[seance\.faites\.length - 1\]\.type === "course"\) \{\s*const voir = document\.createElement\("button"\);\s*voir\.type = "button";\s*voir\.className = "secondary";\s*voir\.textContent = "Voir les records";/);
+test("la page : les boutons de fin de course — « ← Ma table » et « Rejouer » côte à côte, « Voir les records » sur la ligne du dessous (lot « fignolage du 22/10 », planches 1 et 4)", () => {
+  // Hors séance : « Ma table » n'est plus caché (il manquait le retour) ; seuls
+  // « Voir mon parcours » et l'entraînement conseillé le restent.
+  assert.match(html, /\.result\.is-course \.result-actions > #result-open-parcours, \.result\.is-course \.result-actions > #result-entraine \{ display: none; \}/);
+  assert.doesNotMatch(html, /\.result\.is-course \.result-actions > #result-accueil \{ display: none; \}/, "la course hors séance a son retour à Ma table");
+  assert.match(html, /\.result\.is-course \.result-actions \{ display: grid; grid-template-columns: auto minmax\(0, 1fr\); gap: 12px; width: min\(100%, 440px\); margin-left: auto; margin-right: auto; \}/,
+    "la même ligne qu'entre deux étapes : « ← Ma table » à sa largeur, « Rejouer » prend le reste");
+  assert.match(html, /\.result\.is-course \.result-actions > #result-records \{ grid-column: 1 \/ -1; \}/, "« Voir les records » sur toute la ligne, dessous");
+  assert.doesNotMatch(html, /\.result\.is-course(\.is-fete|:not\(\.is-fete\)) \.result-actions > #(result-records|retry) \{ order: -1; \}/, "plus d'ordre qui change avec la fête");
+  assert.doesNotMatch(html, /\.result\.avec-erreurs\.is-course \.result-actions > button \{ grid-column: 1 \/ -1; \}/);
+  // « Rejouer » bleu, même quand le record est battu (choix de la planche 1).
+  assert.match(html, /if \(course\) \{\s*\$\("result-accueil"\)\.classList\.remove\("primary"\);\s*\$\("result-accueil"\)\.classList\.add\("secondary"\);\s*\$\("retry"\)\.className = "primary";\s*\$\("result-records"\)\.className = "secondary";\s*\}/);
+  assert.doesNotMatch(html, /\$\("result-records"\)\.className = fete \?/);
+  // « ← Ma table » sort de la course comme « Voir les records ».
+  const retour = html.slice(html.indexOf("      function backToModes() {"), html.indexOf("\n      }\n", html.indexOf("      function backToModes() {")));
+  assert.match(retour, /configuration\.course = null;/);
+  // Dans une séance : « ← Ma table | Mon bilan → », puis « Voir les records » dessous (choix de Gwenaël).
+  assert.match(html, /retour\.className = "secondary retour-flechee";\s*retour\.textContent = "Ma table";\s*retour\.addEventListener\("click", backToModes\);\s*const ligne = document\.createElement\("div"\);\s*ligne\.className = "suite-boutons";\s*ligne\.append\(retour, suite\);\s*zone\.append\(ligne\);/);
+  assert.match(html, /if \(seance\.faites\[seance\.faites\.length - 1\]\.type === "course"\) \{\s*const voir = document\.createElement\("button"\);\s*voir\.type = "button";\s*voir\.className = "secondary voir-records";\s*voir\.textContent = "Voir les records";/);
+  assert.match(html, /\.seance-suite \.voir-records \{ width: min\(100%, 440px\); \}/);
 });
 
 test("la page : le cadre « Les records » de l'accueil (planche R1) et la séance faite en un seul bouton", () => {

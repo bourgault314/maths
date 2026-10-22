@@ -1000,6 +1000,9 @@
     .seance-suite .suite-boutons { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; width: min(100%, 440px); }
     .seance-suite .suite-boutons button { width: 100%; min-width: 0; }
     .seance-suite .suite-boutons .secondary { border: 2px solid #c5d9e6; box-shadow: 0 5px 0 #c5d9e6; padding: 11px 16px 7px 12px; }
+    /* Lot « fignolage du 22/10 » (planche 4) : après la course d'une séance,
+       « Voir les records » prend la largeur de la ligne du dessus. */
+    .seance-suite .voir-records { width: min(100%, 440px); }
     /* « Ma table » qui ramène à l'accueil porte la flèche du site : le même
        dessin que les autres retours, en masque, pour qu'il prenne la couleur
        du texte (blanc sur le bouton bleu, bleu sur le bouton blanc). */
@@ -1887,7 +1890,6 @@
       .result.avec-erreurs.avec-entraine .result-actions > #retry { grid-column: auto; }
       .result.avec-erreurs.avec-entraine .result-actions > #result-open-parcours { grid-column: 1 / -1; }
       .result.avec-erreurs .result-actions > #retry[hidden] + #result-open-parcours { grid-column: 1 / -1; }
-      .result.avec-erreurs.is-course .result-actions > button { grid-column: 1 / -1; }
     }
     .site-footer {
       width: min(100%, 960px);
@@ -2595,16 +2597,22 @@
     .rec-note { text-align: center; color: #5b7286; font-weight: 800; font-size: .86rem; margin: 6px 0 0; }
     .result.is-course .result-fete-rang { color: #7a5a00; font-weight: 900; }
     .result.is-course.is-neutre .hero-icon { display: block; color: var(--ink); }
-    /* La fin d'une course hors séance : « Voir les records » et « Rejouer »,
-       chacun sur sa ligne au téléphone (planche R6, mesuré 12 px de chaque
-       côté — la règle « série ratée » d'en haut ne décale plus rien), côte à
-       côte et centrés sur ordinateur. */
-    .result.is-course .result-actions > #result-open-parcours, .result.is-course .result-actions > #result-entraine, .result.is-course .result-actions > #result-accueil { display: none; }
-    .result.is-course.is-fete .result-actions > #result-records { order: -1; }
-    .result.is-course:not(.is-fete) .result-actions > #retry { order: -1; }
-    @media (max-width: 620px) {
-      .result.is-course .result-actions > button { grid-column: 1 / -1; }
-    }
+    /* La fin d'une course hors séance. Lot « fignolage du 22/10 » (planche 1,
+       choix de Gwenaël) : elle n'avait aucun retour à Ma table. Désormais
+       « ← Ma table » à gauche et « Rejouer » à droite, comme entre deux
+       étapes de la séance (.suite-boutons), puis « Voir les records » sur
+       toute la largeur de la ligne, dessous — au téléphone comme sur
+       ordinateur, avec ou sans erreurs. « Rejouer » reste le bouton bleu,
+       record battu ou pas (noterFinDeCourse). */
+    .result.is-course .result-actions > #result-open-parcours, .result.is-course .result-actions > #result-entraine { display: none; }
+    .result.is-course .result-actions { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; width: min(100%, 440px); margin-left: auto; margin-right: auto; }
+    .result.is-course .result-actions > button { width: 100%; min-width: 0; }
+    /* « .primary » et « .secondary » en plus : ces deux règles passent devant
+       celles de la série ratée (« Rejouer » en tête et sur toute la ligne,
+       .is-rate, plus haut) — une course avec une erreur en est une. */
+    .result.is-course .result-actions > #result-accueil.secondary, .result.is-course .result-actions > #retry.primary { grid-column: auto; order: 0; }
+    .result.is-course .result-actions > #result-accueil { border: 2px solid #c5d9e6; box-shadow: 0 5px 0 #c5d9e6; padding: 11px 16px 7px 12px; }
+    .result.is-course .result-actions > #result-records { grid-column: 1 / -1; }
     @media (min-width: 1024px) {
       .records-screen { max-width: 900px; }
       .rec-liste li { min-height: 38px; }
@@ -3025,8 +3033,8 @@
           <button id="retry" class="secondary" type="button">Rejouer</button>
           <button id="result-open-parcours" class="secondary" type="button">Voir mon parcours</button>
           <!-- Lot « Les records » : après une course hors séance, « Voir les
-               records » remplace « Ma table » (le tableau a sa flèche de retour) ;
-               devant « Rejouer » quand le record est battu (ordre par CSS). -->
+               records » sous « ← Ma table » et « Rejouer » (lot « fignolage
+               du 22/10 », planche 1). -->
           <button id="result-records" class="primary" type="button" hidden>Voir les records</button>
           <!-- Lot R3 (A20) : seulement pour une série lancée depuis « Réglages
                libres » ou « Évaluation CM1 » (les deux portes professeur). Un
@@ -5915,6 +5923,9 @@
         state.apresMesCalculs = null;
         state.apresMelange = null;
         configuration.mode = null;
+        // Lot « fignolage du 22/10 » : « ← Ma table » sort aussi d'une course,
+        // comme allerAuxRecords.
+        configuration.course = null;
         configuration.tables = new Set();
         state.origin = "menu";
         state.running = false;
@@ -7673,7 +7684,8 @@
       }
 
       // Après le verdict d'une course : le temps part vers la ligue (s'il
-      // compte), les boutons deviennent « Voir les records » et « Rejouer ».
+      // compte), les boutons deviennent « ← Ma table », « Rejouer » et « Voir
+      // les records ».
       // La course de la couronne (décision 6 du 09/10) : 25 sur 25 en
       // 1 minute, son temps est le premier record — il part de la même façon,
       // sans rien changer à l'écran de la couronne.
@@ -7684,15 +7696,20 @@
         result.classList.toggle("is-course", course);
         $("result-records").hidden = !course;
         $("result-course-attente").hidden = true;
+        // Lot « fignolage du 22/10 » (planche 1) : « ← Ma table » blanc,
+        // « Rejouer » bleu, « Voir les records » blanc — record battu ou pas.
+        if (course) {
+          $("result-accueil").classList.remove("primary");
+          $("result-accueil").classList.add("secondary");
+          $("retry").className = "primary";
+          $("result-records").className = "secondary";
+        }
         const couronne = suivi.evenements.find(evenement => evenement.type === "etoile" && evenement.couronne);
         if (!course && !couronne) return;
         if (!suiviActif() || !recordsReglage) return;
         const jugement = PARCOURS.courseCompte(state.correct, TOTAL, dixiemes);
         if (jugement.compte) noterCourse(dixiemes);
         if (!course) return;
-        const fete = result.classList.contains("is-fete");
-        $("result-records").className = fete ? "primary" : "secondary";
-        $("retry").className = fete ? "secondary" : "primary";
         $("result-course-attente").textContent = "Temps gardé ici, pas encore envoyé.";
         $("result-course-attente").hidden = !(jugement.compte && sync.course);
       }
@@ -8477,14 +8494,19 @@
         if (calculsSelection.jour) {
           // Lot « un seul système » : la série de Mes calculs du jour, telle
           // qu'elle sera jouée (les calculs dus, puis le complément).
-          const dus = PARCOURS.serieDuJour(parcours, {aujourdhui}).cles;
+          // Lot « fignolage du 22/10 » : tous les calculs dus quand il y en
+          // a plus que la série n'en prend — le même compte que le bouton.
+          const serie = PARCOURS.serieDuJour(parcours, {aujourdhui});
+          const dus = serie.restants > 0 ? PARCOURS.dusDuJour(parcours, aujourdhui) : serie.cles;
           const sortes = sortesDeCalculs(dus);
           zone.className = "calculs-detail is-en-cours";
           zone.replaceChildren(fermer);
           zone.appendChild(ligneDetail("mc-detail-calcul", `Aujourd’hui · ${pluriel(dus.length, "calcul")}`));
           if (sortes.length) zone.appendChild(ligneDetail("mc-detail-etat", sortes.join(" · ")));
           // Le nom de l'étape ne se coupe pas (« jour ». seul à la ligne au téléphone).
-          zone.appendChild(ligneDetail("mc-detail-note", "Ils sont dans ta séance : «\u00a0Mes\u00a0calculs\u00a0du\u00a0jour\u00a0»."));
+          zone.appendChild(ligneDetail("mc-detail-note", serie.restants > 0
+            ? `Ils reviennent ${PARCOURS.SEUILS.revision.total} par séance : «\u00a0Mes\u00a0calculs\u00a0du\u00a0jour\u00a0».`
+            : "Ils sont dans ta séance : «\u00a0Mes\u00a0calculs\u00a0du\u00a0jour\u00a0»."));
           return;
         }
         // Lot « retouches après Mon parcours » (décision 2) : « Demain » touché
@@ -8612,7 +8634,10 @@
         // La table de 10 n'est pas dans le tableau : une ligne quand elle est acquise.
         $("calculs-dix").hidden = !acquises.has(10);
         const serieDuJour = etat.serieDuJour;
-        const duJour = new Set(serieDuJour.cles);
+        // Lot « fignolage du 22/10 » : « Aujourd'hui » allume la série telle
+        // qu'elle sera jouée (complément compris) — ou TOUS les calculs dus
+        // quand il y en a plus que la série n'en prend (« restants »).
+        const duJour = new Set(serieDuJour.restants > 0 ? PARCOURS.dusDuJour(parcours, PARCOURS.jourLocal()) : serieDuJour.cles);
         renderJour(serieDuJour);
         renderBoites(grille.resume);
         const zone = $("calculs-grille");
@@ -8723,22 +8748,22 @@
         zone.classList.toggle("avec-demain", court);
         // Côte à côte, chaque bouton s'écrit en deux lignes au téléphone
         // (« Aujourd'hui » / « 2 calculs ») et en une sur ordinateur.
-        const etiquette = (mot, suite) => {
+        const etiquette = (mot, ...suite) => {
           const nom = document.createElement("span");
           nom.className = "jour-nom";
           nom.textContent = mot;
           const deuxPoints = document.createElement("span");
           deuxPoints.className = "jour-deux-points";
           deuxPoints.textContent = "\u00a0: ";
-          return [nom, deuxPoints, suite];
+          return [nom, deuxPoints, ...suite];
         };
-        const bouton = (cle, mot, nombre, fin) => {
+        const bouton = (cle, mot, nombre, fin, avant = "") => {
           const choisi = Boolean(calculsSelection && calculsSelection[cle]);
           const element = document.createElement("button");
           element.type = "button";
           const gras = document.createElement("b");
           gras.textContent = soude(pluriel(nombre, "calcul"));
-          element.append(...etiquette(mot, gras));
+          element.append(...etiquette(mot, ...(avant ? [avant] : []), gras));
           if (fin) element.append(document.createTextNode(fin));
           element.setAttribute("aria-pressed", String(choisi));
           element.addEventListener("click", () => {
@@ -8749,7 +8774,16 @@
           return element;
         };
         const nombre = serie.cles.length;
-        if (!nombre) {
+        // Lot « fignolage du 22/10 » (choix de Gwenaël) : plus de calculs dus
+        // qu'une séance n'en prend (10), le bouton dit le VRAI total — « 36
+        // calculs · 10 par séance », puis « encore 26 calculs · 10 par
+        // séance » — au lieu de « encore 10 calculs dans ta prochaine
+        // séance ». Côte à côte avec « Demain », le seul total. À 10 ou
+        // moins, les phrases d'avant.
+        const parSeance = PARCOURS.SEUILS.revision.total;
+        if (nombre && serie.restants > 0) {
+          zone.append(bouton("jour", "Aujourd’hui", nombre + serie.restants, court ? "" : ` · ${parSeance}\u00a0par\u00a0séance`, serie.faite ? "encore " : ""));
+        } else if (!nombre) {
           const rien = document.createElement("p");
           if (court) {
             // Un seul enfant : la phrase reste centrée dans son cadre.
@@ -9900,14 +9934,26 @@
             $("result-title").focus?.({preventScroll: true});
             ajusterEchelle();
           });
-          zone.append(suite);
+          // Lot « fignolage du 22/10 » (planche 4, « équilibré », choix de
+          // Gwenaël) : « Mon bilan → » était seul — la même ligne qu'entre
+          // deux étapes, « ← Ma table » à gauche (la séance est déjà finie et
+          // enregistrée : on saute seulement le bilan).
+          const retour = document.createElement("button");
+          retour.type = "button";
+          retour.className = "secondary retour-flechee";
+          retour.textContent = "Ma table";
+          retour.addEventListener("click", backToModes);
+          const ligne = document.createElement("div");
+          ligne.className = "suite-boutons";
+          ligne.append(retour, suite);
+          zone.append(ligne);
           // Lot « Les records » (choix de Gwenaël, 09/10) : après la course
           // d'une séance, « Mon bilan → » reste le premier bouton ; « Voir les
-          // records » dessous.
+          // records » dessous, sur toute la largeur de la ligne (planche 4).
           if (seance.faites[seance.faites.length - 1].type === "course") {
             const voir = document.createElement("button");
             voir.type = "button";
-            voir.className = "secondary";
+            voir.className = "secondary voir-records";
             voir.textContent = "Voir les records";
             voir.addEventListener("click", () => { quitterSeance(); state.origin = "menu"; show("records"); });
             zone.append(voir);

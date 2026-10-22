@@ -193,6 +193,20 @@ $versionCoffres = version_moteur('coffres-parcours.js');
                     transform: rotate(45deg) scale(.85); }
   .appli .rang.legende { background: linear-gradient(135deg, #fff1c2, #ffe08a); color: #6b4a00;
                          border-color: #e6c25a; }
+  /* Lot « fignolage du 22/10 » (planche 3, choix de Gwenaël) : dès la 1re
+     étoile, le badge n'est plus un métal mais les étoiles gagnées (★ à ★★★★),
+     dans l'or de la Légende ; à la couronne, le badge Légende d'avant. */
+  .appli .rang.etoiles { background: linear-gradient(135deg, #fff1c2, #ffe08a); color: #6b4a00;
+                         border-color: #e6c25a; padding: 3px 9px; letter-spacing: .06em; }
+  /* « Aujourd'hui » (même lot) : la prochaine chose à faire dans Défi tables,
+     lue dans la séance du jour par le moteur. Orange du site, une seule
+     ligne au téléphone ; en vert quand la séance du jour est faite. */
+  .appli .jauge-aujourdhui { display: inline-block; max-width: 100%; margin-top: 9px; padding: 4px 11px;
+                             border: 1px solid #f5c48a; border-radius: 999px; background: #fff4e6;
+                             color: #a15c11; font-size: .8rem; font-weight: 800; line-height: 1.35; }
+  .appli .jauge-aujourdhui.faite { border-color: #b8dfc8; background: #e5f7eb; color: #147447; }
+  .appli .jauge.seule { margin-top: 2px; }
+  .appli .jauge.seule .jauge-aujourdhui { margin-top: 0; }
   /* SPLAT! (lot « splat-suivi-3 », 07/10/2026, choix B de Gwenaël) : une
      pastille par monde dans la couleur du monde sur la carte — vide, à moitié
      (en cours), pleine (fini) —, le compte des étapes réussies dessous, et les
@@ -515,26 +529,36 @@ $versionCoffres = version_moteur('coffres-parcours.js');
     "defi-tables": {
       url: "prof/defi_tables_mon_parcours.js?v=<?= htmlspecialchars($versionMoteur, ENT_QUOTES) ?>",
       global: "MATHSGO_DEFI_TABLES_MON_PARCOURS",
-      lecteur: (P, brut) => {
+      lecteur: (P, brut, reglages) => {
+        // Un parcours illisible (pas un objet) : rien du tout, comme avant —
+        // le moteur en ferait un parcours neuf, et la pastille « la table
+        // de 2 » d'un élève qui n'a rien.
+        if (!brut || typeof brut !== "object" || Array.isArray(brut)) return null;
         const parcours = P.normaliserParcours(brut);
         const etat = P.etatAffichage(parcours);
         const fait = etat.acquises.length;
         const total = P.TABLES.length;
-        // Pas de jauge tant qu'AUCUNE table n'est acquise : activité jamais
-        // ouverte, ou ouverte et jouée sans encore réussir une table — il faut
+        const aujourdhui = aujourdhuiDefiTables(P, parcours, reglages);
+        // Pas de barre ni de compte tant qu'AUCUNE table n'est acquise :
+        // activité ouverte et jouée sans encore réussir une table — il faut
         // 20 bonnes réponses en 1 min 30 avec 2 erreurs au plus, et le jour de
         // la distribution des codes, c'est toute la classe. « 0 table acquise
         // sur 9 » au-dessus d'une barre vide est le reproche qu'on refuse ;
         // c'est le même seuil que la carte de classe du professeur (09/09/2026).
-        if (!fait) return null;
+        // Lot « fignolage du 22/10 » (choix de Gwenaël) : la pastille
+        // « Aujourd'hui » seule, elle, se montre (« la table de 2 »). Un élève
+        // qui n'a jamais ouvert Défi tables n'a pas de parcours sur le
+        // serveur : le lecteur n'est même pas appelé, il n'a rien.
+        if (!fait) return aujourdhui ? {aujourdhui} : null;
         return {
           fait, total,
           // Mot pour mot la phrase de l'accueil de Défi tables.
           compte: `${fait} table${fait > 1 ? "s" : ""} passée${fait > 1 ? "s" : ""} sur ${total}`,
-          rang: etat.rang,
+          rang: badgeDefiTables(P, etat),
           // Plus de « Mon mélange à faire » : le mélange est libre (lot « un
           // seul système », 05/10/2026).
-          note: ""
+          note: "",
+          aujourdhui
         };
       }
     },
@@ -595,6 +619,66 @@ $versionCoffres = version_moteur('coffres-parcours.js');
   };
   const moteursEnCours = {};
 
+  // Lot « fignolage du 22/10 » (planche 3, choix de Gwenaël). Le badge de la
+  // tuile Défi tables : Bronze, Argent, Or, Platine tant qu'aucune étoile
+  // n'est gagnée (les rangs de l'appli, inchangés) ; puis les étoiles (★ à
+  // ★★★★) ; à la couronne, « 👑 Légende des tables ». « Diamant » (4 étoiles)
+  // n'apparaît plus ici — l'écart avec l'en-tête de l'appli est accepté.
+  // Le nombre d'étoiles est celui que rend le moteur (etat.expert.niveau).
+  function badgeDefiTables(P, etat) {
+    const etoiles = Number(etat.expert && etat.expert.niveau) || 0;
+    if (etoiles >= P.ETOILES_MAX) return P.rang(P.RANGS.length - 1);
+    if (etoiles >= 1) return {niveau: etoiles, cle: "etoiles", nom: "★".repeat(etoiles),
+      lu: `${etoiles} étoile${etoiles > 1 ? "s" : ""}`};
+    return etat.rang && etat.rang.niveau > 4 ? P.rang(4) : etat.rang;
+  }
+
+  // Lot « fignolage du 22/10 » : ce que dit la pastille « Aujourd'hui » de la
+  // tuile Défi tables — la PROCHAINE chose à faire, lue dans la séance du jour
+  // par le moteur (ouvrirSeance + programmeDeSeance, la même source que la
+  // carte « Ma séance du jour » de l'appli) ; rien n'est deviné ici, et le
+  // moteur n'est pas modifié.
+  //  - la séance pas encore jouée, ou commencée : « 🔔 Aujourd'hui : » + la
+  //    1re étape qui reste, puis la 1re étape qui se dit autrement (quatre
+  //    marches de la table de 5 ne font qu'une « table de 5 ») ;
+  //  - une séance finie aujourd'hui et rien en cours : « ✓ Séance du jour
+  //    faite », ou « ✓ Séance faite · encore 26 calculs » s'il reste des
+  //    calculs dus.
+  // Les records : la classe les a fermés (réglage de Ma classe) → la séance
+  // d'une Légende rejoue la couronne (« puis 👑 ») ; sinon elle court
+  // (« puis ton record »).
+  // Limite connue : la table que l'élève a choisie (« Changer de table ») vit
+  // sur son appareil, pas sur le serveur. La pastille annonce la table que la
+  // séance prend d'elle-même (tableDeSeance) : elle ne ment pas sur ce qu'il
+  // y a à faire, au pire sur le numéro de la table.
+  function motEtapeDefiTables(P, etape) {
+    if (etape.type === "revision") return `${etape.calculs}\u00a0calcul${etape.calculs > 1 ? "s" : ""}`;
+    if (etape.type === "melange") return "Mon mélange";
+    if (etape.type === "etoile") return P.symboleEtoile(etape.etoile);
+    if (etape.type === "course") return "ton record";
+    if (Number.isInteger(etape.table)) return `la table de\u00a0${etape.table}`;
+    return "";
+  }
+
+  function aujourdhuiDefiTables(P, parcours, reglages) {
+    const jour = P.jourLocal();
+    const seance = P.ouvrirSeance(parcours, {aujourdhui: jour});
+    if (!seance.faites.length && P.bilanSeances(parcours, jour).aujourdhui > 0) {
+      const dus = P.dusDuJour(parcours, jour).length;
+      return dus
+        ? {faite: true, texte: `✓ Séance faite · encore ${dus}\u00a0calcul${dus > 1 ? "s" : ""}`}
+        : {faite: true, texte: "✓ Séance du jour faite"};
+    }
+    const reglage = reglages && typeof reglages === "object" ? reglages["defi-tables"] : null;
+    const records = !(reglage && typeof reglage === "object" && reglage.records === false);
+    const options = records ? {records: {meilleur: null}} : {};
+    const mots = P.programmeDeSeance(parcours, seance, jour, options).etapes
+      .map(etape => motEtapeDefiTables(P, etape)).filter(Boolean);
+    if (!mots.length) return null;
+    const ensuite = mots.find(mot => mot !== mots[0]);
+    return {faite: false, texte: `\u{1F514} Aujourd’hui\u00a0: ${mots[0]}${ensuite ? `, puis ${ensuite}` : ""}`};
+  }
+
   // Un moteur est chargé UNE fois, et seulement si son activité a un parcours
   // à habiller : 70 ko qu'un élève qui n'a rien commencé n'a aucune raison de
   // télécharger. C'est le même fichier que celui de la page du professeur,
@@ -636,13 +720,13 @@ $versionCoffres = version_moteur('coffres-parcours.js');
     const badge = document.createElement("span");
     if (!rang || !rang.niveau) return badge;
     badge.className = `rang ${rang.cle}`;
-    if (rang.cle !== "legende") {
+    if (rang.cle !== "legende" && rang.cle !== "etoiles") {
       const point = document.createElement("i");
       point.setAttribute("aria-hidden", "true");
       badge.append(point);
     }
     badge.append(document.createTextNode(rang.cle === "legende" ? `\u{1F451} ${rang.nom}` : rang.nom));
-    badge.setAttribute("aria-label", `Mon rang : ${rang.nom}`);
+    badge.setAttribute("aria-label", `Mon rang : ${rang.lu || rang.nom}`);
     return badge;
   }
 
@@ -699,11 +783,29 @@ $versionCoffres = version_moteur('coffres-parcours.js');
     return dessin;
   }
 
+  // La pastille « Aujourd'hui » de Défi tables (lot « fignolage du 22/10 »),
+  // orange, ou verte quand la séance du jour est faite.
+  function pastilleAujourdhui(aujourdhui) {
+    const pastille = document.createElement("span");
+    pastille.className = aujourdhui.faite ? "jauge-aujourdhui faite" : "jauge-aujourdhui";
+    pastille.textContent = aujourdhui.texte;
+    return pastille;
+  }
+
   // La jauge posée dans la tuile. Tout est construit par createElement et
   // textContent : rien du serveur ne devient du HTML.
   function poserJauge(tuile, jauge) {
     const bloc = document.createElement("div");
     bloc.className = "jauge";
+    // Défi tables sans table passée (lot « fignolage du 22/10 ») : la
+    // pastille « Aujourd'hui » seule — ni barre, ni compte, ni rang.
+    if (jauge.aujourdhui && !jauge.compte) {
+      bloc.className = "jauge seule";
+      bloc.append(pastilleAujourdhui(jauge.aujourdhui));
+      tuile.classList.add("a-jauge");
+      tuile.append(bloc);
+      return;
+    }
     // Coffres magiques : des lignes de texte, une par niveau commencé, et la
     // partie en cours au bout de la sienne — ni barre, ni rang, ni note.
     if (jauge.lignes) {
@@ -764,6 +866,7 @@ $versionCoffres = version_moteur('coffres-parcours.js');
       note.textContent = jauge.note;
       bloc.append(note);
     }
+    if (jauge.aujourdhui) bloc.append(pastilleAujourdhui(jauge.aujourdhui));
     tuile.classList.add("a-jauge");
     tuile.append(bloc);
   }
@@ -794,7 +897,9 @@ $versionCoffres = version_moteur('coffres-parcours.js');
       try { jauge = JAUGES[aLire[i]].lecteur(P, parcours[i], donnees.reglages || {}); } catch (_) { jauge = null; }
       if (!jauge) continue;
       poserJauge(tuile, jauge);
-      remonter(tuile.closest("li"));
+      // La pastille « Aujourd'hui » seule (aucune table passée) ne fait pas
+      // remonter la tuile : l'ordre des tuiles ne change pas avec ce lot.
+      if (!jauge.aujourdhui || jauge.compte) remonter(tuile.closest("li"));
     }
   }
 
