@@ -247,8 +247,14 @@ function ouvrir(memoire, {largeur = 390} = {}) {
       }
       horloge.t = fin;
     },
+    // Une touche du clavier. Comme un navigateur : Entrée non annulée sur
+    // un bouton ou un lien qui a le focus l'active (un clic, sans pointerdown).
     touche(cle, cible = ecran.document.activeElement) {
-      return ecran.diffuser(cible, "keydown", {key: cle});
+      const ev = ecran.diffuser(cible, "keydown", {key: cle});
+      if (cle === "Enter" && !ev.defaultPrevented && cible && cible.closest && cible.closest("button, a") && !cible.disabled) {
+        ecran.diffuser(cible.closest("button, a"), "click", {});
+      }
+      return ev;
     },
     tabulerVers(el) { ecran.diffuser(ecran.document.activeElement, "keydown", {key: "Tab"}); el.focus(); },
     taper(texte) { for (const c of String(texte)) page.touche(c, ecran.document.body); },
@@ -319,9 +325,48 @@ test("le Flash montre les nombres du calcul, dans l'ordre, et un bip programmé 
     dernier = texte;
   }
   assert.deepEqual(vus, calcul.termes.map(x => (x.signe < 0 ? "−" : "") + x.valeur));
-  assert.equal(p.oscillateurs.length, FLASH.nombres, "un bip par nombre");
-  const debuts = p.oscillateurs.map(o => o.debut);
+  const bipsNombres = p.oscillateurs.filter(o => o.frequency.value === 880);
+  const bipsDecompte = p.oscillateurs.filter(o => o.frequency.value === 440);
+  assert.equal(bipsNombres.length, FLASH.nombres, "un bip par nombre");
+  assert.equal(bipsDecompte.length, 3, "un bip plus grave à 3, à 2 et à 1");
+  assert.ok(bipsDecompte.every(o => o.debut < bipsNombres[0].debut));
+  const debuts = bipsNombres.map(o => o.debut);
   for (let i = 1; i < debuts.length; i += 1) assert.ok(Math.abs(debuts[i] - debuts[i - 1] - FLASH.temps / 10) < 1e-9);
+});
+
+test("« ↻ Revoir » (Flash) rejoue les mêmes nombres après un décompte, garde ce qui est tapé, et le calcul se corrige normalement", () => {
+  const p = openFlash();
+  const calcul = calculsAttendus("flash", FLASH)[0];
+  p.avancer(DUREE_FLASH);
+  assert.equal(p.$("question").hidden, false, "le grand « ? »");
+  assert.equal(p.$("revoir").hidden, false);
+  p.taper("12");
+  p.$("revoir").click();
+  assert.equal(p.$("zone-rep").hidden, true);
+  assert.equal(p.$("decompte").hidden, false);
+  assert.equal(p.$("decompte").textContent, "3");
+  const vus = [];
+  let dernier = "";
+  for (let t = 0; t < DUREE_FLASH; t += 5) {
+    p.avancer(5);
+    const texte = p.$("nombre").textContent;
+    if (texte && texte !== dernier) vus.push(texte);
+    dernier = texte;
+  }
+  assert.deepEqual(vus, calcul.termes.map(x => (x.signe < 0 ? "−" : "") + x.valeur), "les mêmes nombres, dans le même ordre");
+  assert.equal(p.$("zone-rep").hidden, false);
+  assert.equal(p.$("case").textContent, "12", "ce qui était tapé reste");
+  p.touche("Delete", p.$("panel"));
+  p.taper(calcul.total);
+  p.touche("Enter", p.$("panel"));
+  assert.match(p.$("verdict").className, /\bok\b/);
+  assert.equal(p.$("compte").textContent, "Calcul 1\u00a0/ 5");
+});
+
+test("pas de « ↻ Revoir » en Colonne : les nombres restent à l'écran", () => {
+  const p = ouvrir(memoireColonne);
+  p.$("partir").click();
+  assert.equal(p.$("revoir").hidden, true);
 });
 
 test("la flèche pendant le Flash coupe les bips ; sans calcul fait, retour aux réglages", () => {
@@ -383,35 +428,73 @@ test("une bonne réponse avant l'échéance compte juste", () => {
   assert.match(p.$("verdict").className, /\bok\b/);
 });
 
-test("Codex A2 : Entrée sur « Voir le calcul » ou sur la flèche fait l'action du bouton, pas le raccourci", () => {
+test("Codex A2 : Entrée sur un bouton atteint avec Tab fait l'action du bouton ; après un clic, Entrée garde son raccourci", () => {
   const p = ouvrir(memoireColonne);
   p.$("partir").click();
   p.taper("12");
-  // Entrée sur la flèche atteinte au clavier (Tab) pendant la réponse : rien n'est validé.
+  // La flèche atteinte avec Tab : c'est elle qui agit (rien de fait → réglages), rien n'est validé.
   p.tabulerVers(p.$("retour"));
-  const surFleche = p.touche("Enter", p.$("retour"));
+  const surFleche = p.touche("Enter");
   assert.equal(surFleche.defaultPrevented, false);
-  assert.equal(p.vue(), "vue-jeu");
-  // Entrée depuis une touche du pavé (focus laissé par la souris) : on valide.
-  const surPave = p.touche("Enter", p.$("keypad").querySelector("[data-key='5']"));
+  assert.equal(p.vue(), "reglages");
+  p.$("partir").click();
+  p.taper("12");
+  // Une touche du pavé CLIQUÉE, puis Entrée : on valide ce qui est écrit.
+  p.$("keypad").querySelector("[data-key='5']").click();
+  const surPave = p.touche("Enter");
   assert.equal(surPave.defaultPrevented, true);
   assert.equal(p.vue(), "vue-correction");
-  // Entrée sur « Voir le calcul » atteint au clavier : on reste sur la correction.
+  assert.match(p.$("verdict").textContent, /125/);
+  // « Voir le calcul » atteint avec Tab : Entrée le déplie, on reste sur la correction.
   p.tabulerVers(p.$("voir-calcul"));
-  const surVoir = p.touche("Enter", p.$("voir-calcul"));
+  const surVoir = p.touche("Enter");
   assert.equal(surVoir.defaultPrevented, false);
+  assert.equal(p.$("suite").hidden, false);
   assert.equal(p.vue(), "vue-correction");
-  // Après un CLIC sur « Voir le calcul », Entrée continue (« Entrée pour continuer »).
+  // Un CLIC sur « Voir le calcul » (il le replie), puis Entrée : calcul suivant (« Entrée pour continuer »).
   p.$("voir-calcul").click();
-  assert.equal(p.$("suite").hidden, false, "le clic ouvre le calcul");
-  const apresClic = p.touche("Enter", p.$("voir-calcul"));
+  assert.equal(p.$("suite").hidden, true);
+  const apresClic = p.touche("Enter");
   assert.equal(apresClic.defaultPrevented, true);
   assert.equal(p.$("compte").textContent, "Calcul 2\u00a0/ 5");
-  // Entrée sur la page elle-même, à la correction suivante : calcul suivant.
+  // Entrée sur la page elle-même : valider, puis calcul suivant.
   p.taper("7");
   p.touche("Enter", p.$("panel"));
   p.touche("Enter", p.$("panel"));
   assert.equal(p.$("compte").textContent, "Calcul 3\u00a0/ 5");
+});
+
+test("lot 1c : une touche du pavé atteinte avec Tab fait son effet sur Entrée (Effacer efface, 5 écrit 5)", () => {
+  const p = ouvrir(memoireColonne);
+  p.$("partir").click();
+  p.taper("12");
+  p.tabulerVers(p.$("keypad").querySelector("[data-key='clear']"));
+  p.touche("Enter");
+  assert.equal(p.$("case").textContent, "");
+  assert.equal(p.vue(), "vue-jeu", "rien n'est validé");
+  p.tabulerVers(p.$("keypad").querySelector("[data-key='5']"));
+  p.touche("Enter");
+  assert.equal(p.$("case").textContent, "5");
+  assert.equal(p.vue(), "vue-jeu");
+});
+
+test("lot 1c : dans le bilan, une bonne réponse pas validée à temps n'est pas barrée ; une fausse l'est", () => {
+  const p = ouvrir(memoireColonne);
+  p.$("partir").click();
+  const [c1, c2] = calculsAttendus("colonne", COLONNE);
+  p.taper(c1.total);
+  p.avancer(10100);
+  assert.match(p.$("verdict").textContent, /Temps écoulé/);
+  p.touche("Enter", p.$("panel"));
+  p.taper(c2.total + 3);
+  p.avancer(10100);
+  p.$("retour").click();
+  assert.equal(p.vue(), "vue-fin");
+  const lignes = p.$("liste").innerHTML.split('<li class="item">').slice(1);
+  assert.equal(lignes.length, 2);
+  assert.doesNotMatch(lignes[0], /<s>/, "la bonne réponse trop tard n'est pas barrée");
+  assert.match(lignes[0], /aria-label="faux"/, "elle compte faux quand même");
+  assert.match(lignes[1], new RegExp(`<s>${c2.total + 3}</s>${c2.total}`));
 });
 
 test("un bouton cliqué puis repris au clavier (Tab) retrouve sa propre action sur Entrée", () => {
