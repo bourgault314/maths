@@ -27,12 +27,12 @@ import {
   accueilHTML,
   domaineHTML,
   questionHTML,
-  professeurHTML,
   bilanHTML,
   brevetHTML,
   lancementHTML,
   coursHTML,
   compteurHTML,
+  reglagesProjectionHTML,
   bouton,
   ICONES,
   NIVEAUX,
@@ -43,6 +43,9 @@ const alias = await fetch("./catalogue/alias-gpt.json").then((reponse) => repons
 const parId = Object.fromEntries(catalogue.map((famille) => [famille.id, famille]));
 const application = document.querySelector("#app");
 const preferences = lirePreferences();
+const CLE_PROJECTION = "mg-automatismes-projection";
+// Les réglages du diaporama : ceux par défaut, puis ceux gardés sur l'appareil (lireReglagesProjection
+// ne lit que CLE_PROJECTION, déclarée juste au-dessus).
 const reglageProf = {
   nombre: 8,
   secondes: 45,
@@ -50,6 +53,7 @@ const reglageProf = {
   correction: "each",
   automatique: false,
   aideOffice: false,
+  ...lireReglagesProjection(),
 };
 const selection = new Set();
 let filtre = preferences.niveau;
@@ -75,6 +79,39 @@ function lirePreferences() {
     };
   } catch {
     return { niveau: "3e", nombre: 10, garderAide: false, clavierOrdinateur: false };
+  }
+}
+
+/* « Projeter » garde ses réglages sur l'appareil d'une fois sur l'autre (décision H) : temps de
+   recherche, pause, correction, enchaîner, avec aide — pas le nombre de questions, qui vient de
+   « Préparer la série ». Tout ce qui est lu est revérifié : une valeur abîmée ou hors bornes laisse le
+   réglage par défaut. */
+function lireReglagesProjection() {
+  try {
+    const valeur = JSON.parse(localStorage.getItem(CLE_PROJECTION)) || {};
+    const borne = (x, min, max) => (Number.isInteger(x) && x >= min && x <= max ? x : undefined);
+    const lus = {
+      secondes: borne(valeur.secondes, 5, 600),
+      delai: borne(valeur.delai, 0, 60),
+      correction: ["each", "end"].includes(valeur.correction) ? valeur.correction : undefined,
+      automatique: typeof valeur.automatique === "boolean" ? valeur.automatique : undefined,
+      aideOffice: typeof valeur.aideOffice === "boolean" ? valeur.aideOffice : undefined,
+    };
+    return Object.fromEntries(Object.entries(lus).filter(([, x]) => x !== undefined));
+  } catch {
+    return {};
+  }
+}
+
+function sauverReglagesProjection() {
+  const { secondes, delai, correction, automatique, aideOffice } = reglageProf;
+  try {
+    localStorage.setItem(
+      CLE_PROJECTION,
+      JSON.stringify({ secondes, delai, correction, automatique, aideOffice }),
+    );
+  } catch {
+    // Navigation privée ou stockage bloqué : les réglages valent pour cette page seulement.
   }
 }
 
@@ -176,25 +213,15 @@ function afficherBrevet() {
   cadre(brevetHTML());
 }
 
-function afficherProfesseur() {
-  arreterHorloge();
-  ecran = "prof";
-  history.replaceState(null, "", "?prof=1");
-  cadre(professeurHTML(famillesEligibles(catalogue, filtre), filtre, reglageProf, selection));
-  relierSelection();
-}
-
 function changerNiveau(niveau) {
   if (!NIVEAUX.includes(niveau)) return;
-  if (ecran === "prof") lireReglages();
   filtre = niveau;
   preferences.niveau = niveau;
   sauverPreferences();
   // Les notions cochées qui ne sont plus de ce niveau quittent la sélection.
   const eligibles = new Set(famillesEligibles(catalogue, niveau).map((famille) => famille.id));
   for (const id of [...selection]) if (!eligibles.has(id)) selection.delete(id);
-  if (ecran === "prof") afficherProfesseur();
-  else if (ecran === "domaine") afficherDomaine(domaine);
+  if (ecran === "domaine") afficherDomaine(domaine);
   else afficherAccueil();
 }
 
@@ -677,13 +704,18 @@ function ouvrirCours() {
   fenetre(coursHTML(famille, question, entier), "Revenir à la question", esc(famille.nom));
 }
 
+// Les champs de la fenêtre Projeter. Un champ absent (le nombre de questions, qui vient de
+// « Préparer la série ») est sauté : il ne remet plus le réglage à son minimum.
 function lireReglages() {
+  if (!document.querySelector("dialog.reglages-dialog")) return;
   for (const [cle, min, max] of [
     ["nombre", 1, 40],
     ["secondes", 5, 600],
     ["delai", 0, 60],
   ]) {
-    const valeur = Number(document.getElementById(cle)?.value);
+    const champ = document.getElementById(cle);
+    if (!champ) continue;
+    const valeur = Number(champ.value);
     reglageProf[cle] = Number.isFinite(valeur)
       ? Math.max(min, Math.min(max, Math.round(valeur)))
       : min;
@@ -691,10 +723,11 @@ function lireReglages() {
   reglageProf.correction = document.querySelector("#correction")?.value === "end" ? "end" : "each";
   reglageProf.automatique = Boolean(document.querySelector("#automatique")?.checked);
   reglageProf.aideOffice = Boolean(document.querySelector("#aide-office")?.checked);
+  sauverReglagesProjection();
 }
 
-// Une seule mécanique de sélection pour l'élève (écran de domaine) et le prof (page Diaporama) :
-// une case par notion, une case « tout » par groupe, la même liste `selection`.
+// La sélection, sur l'écran de domaine : une case par notion, la case « tout » du domaine, la même
+// liste `selection` pour l'élève et pour Projeter.
 function relierSelection() {
   document.querySelectorAll("[data-selection]").forEach((caseNotion) => {
     caseNotion.onchange = () => {
@@ -750,11 +783,35 @@ function optionsProfesseur() {
     avertir("Choisis au moins une notion.");
     return null;
   }
-  return { ...reglageProf, filtre, ids, graine: nouvelleGraine(), partagee: true };
+  return {
+    ...reglageProf,
+    nombre: preferences.nombre,
+    filtre,
+    ids,
+    graine: nouvelleGraine(),
+    partagee: true,
+  };
+}
+
+/* « Projeter » (décision H) : une petite fenêtre de réglages sur la sélection en cours, avec le nombre
+   de questions de « Préparer la série ». Plus de page Diaporama. */
+function ouvrirReglagesProjection() {
+  if (!selection.size) return;
+  const dialogue = document.createElement("dialog");
+  dialogue.className = "cours-dialog reglages-dialog";
+  dialogue.innerHTML = reglagesProjectionHTML(reglageProf, selection.size, preferences.nombre);
+  document.body.append(dialogue);
+  dialogue.addEventListener("close", () => {
+    lireReglages();
+    dialogue.remove();
+  });
+  relierActions(dialogue);
+  dialogue.showModal();
 }
 
 function projeter() {
   const options = optionsProfesseur();
+  document.querySelector("dialog.reglages-dialog")?.close();
   if (options) lancer({ ...options, mode: "project" });
 }
 
@@ -762,6 +819,13 @@ function partager() {
   const options = optionsProfesseur();
   if (!options) return;
   const adresse = adresseSerie(options, location.href);
+  // Le lien ouvre LE MÊME diaporama sur l'autre écran (décision H) : mode et réglages.
+  adresse.searchParams.set("mode", "project");
+  adresse.searchParams.set("secondes", options.secondes);
+  adresse.searchParams.set("delai", options.delai);
+  adresse.searchParams.set("correction", options.correction);
+  adresse.searchParams.set("auto", options.automatique ? "1" : "0");
+  adresse.searchParams.set("aide", options.aideOffice ? "1" : "0");
   const emplacement = document.querySelector("#lien-serie");
   emplacement.replaceChildren();
   emplacement.hidden = false;
@@ -769,7 +833,7 @@ function partager() {
   lien.href = adresse.href;
   lien.target = "_blank";
   lien.rel = "noopener";
-  lien.textContent = "Ouvrir la série sur un écran ↗";
+  lien.textContent = "Ouvrir le diaporama sur un autre écran ↗";
   emplacement.append(lien);
   const champ = document.createElement("input");
   champ.readOnly = true;
@@ -847,7 +911,7 @@ function basculerPause() {
 function retour() {
   if (ecran === "question") {
     arreterHorloge();
-    if (seance.mode === "project") return afficherProfesseur();
+    // « Quitter » le diaporama ramène au menu, avec la sélection.
     if (domaine) return afficherDomaine(domaine);
   }
   if (ecran === "accueil") {
@@ -863,7 +927,6 @@ function relierActions(racine = application) {
   const actions = {
     accueil: afficherAccueil,
     retour,
-    prof: afficherProfesseur,
     brevet: afficherBrevet,
     "brevet-commencer": () => lancer({ mode: "exam", nombre: 9 }),
     lancer: lancerSelection,
@@ -882,7 +945,7 @@ function relierActions(racine = application) {
     pause: basculerPause,
     projeter,
     partager,
-    "projeter-reglages": afficherProfesseur,
+    "projeter-reglages": ouvrirReglagesProjection,
     "plein-ecran": () =>
       document.fullscreenElement
         ? document.exitFullscreen()
@@ -1122,7 +1185,8 @@ function ajusterEchelle() {
 
 function lireAdresse() {
   const params = new URLSearchParams(location.search);
-  if (params.get("prof") === "1") return afficherProfesseur();
+  // L'ancienne page Diaporama (?prof=1) n'existe plus : l'adresse ouvre l'accueil.
+  if (params.get("prof") === "1") history.replaceState(null, "", location.pathname);
   const niveau = params.get("niveau");
   if (NIVEAUX.includes(niveau)) filtre = niveau;
   const valeur = Number(params.get("graine"));
@@ -1141,16 +1205,32 @@ function lireAdresse() {
   }
   const ids = (params.get("notions") || "").split(",").filter((id) => parId[id]?.valide);
   if (ids.length) {
-    // Un ancien lien « niveau=brevet » tire ses questions au niveau brevet, comme avant, pour cette
-    // série seulement : le niveau choisi sur l'appareil ne change pas.
-    return lancer({
+    // Tout ce qui vient de l'adresse est relu et borné : un lien trafiqué ne peut rien imposer d'autre.
+    const entier = (cle, min, max, defaut) => {
+      const x = Number(params.get(cle));
+      return params.has(cle) && Number.isInteger(x) && x >= min && x <= max ? x : defaut;
+    };
+    const options = {
       mode: "train",
       ids,
       nombre: Number(params.get("nombre")) || 8,
       graine,
       partagee: true,
-      ...(niveau === "brevet" ? { filtre: "brevet" } : {}),
-    });
+    };
+    // Un ancien lien « niveau=brevet » tire ses questions au niveau brevet, comme avant, pour cette
+    // série seulement : le niveau choisi sur l'appareil ne change pas.
+    if (niveau === "brevet") options.filtre = "brevet";
+    // « Ouvrir le diaporama sur un autre écran » : le même diaporama, avec les réglages de Projeter.
+    if (params.get("mode") === "project")
+      Object.assign(options, {
+        mode: "project",
+        secondes: entier("secondes", 5, 600, reglageProf.secondes),
+        delai: entier("delai", 0, 60, reglageProf.delai),
+        correction: params.get("correction") === "end" ? "end" : "each",
+        automatique: params.get("auto") === "1",
+        aideOffice: params.get("aide") === "1",
+      });
+    return lancer(options);
   }
   afficherAccueil();
 }

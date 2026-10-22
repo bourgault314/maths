@@ -382,3 +382,121 @@ test(
       assert.ok(suit.top - liste.bottom < 20, "Tablette : la barre suit la liste");
     }),
 );
+
+async function cocher(onglet, domaine, rangs) {
+  await onglet.locator(`[data-domaine="${domaine}"]`).click();
+  for (const rang of rangs) await onglet.locator("[data-selection]").nth(rang).check();
+}
+
+test(
+  "P5 : Projeter — la fenêtre de réglages, 10 questions, réglages gardés, le lien vers l’autre écran",
+  { skip: ignorer, timeout: 120000 },
+  () =>
+    banc(async ({ base, page }) => {
+      const onglet = await page(1366, 768, false, { niveau: "4e", nombre: 15 });
+      await accueil(onglet, base);
+      await onglet.locator('[data-nombre="10"]').click();
+      await cocher(onglet, "donnees-probabilites", [0, 1]);
+      await onglet.locator('[data-action="projeter-reglages"]').click();
+      const fenetre = onglet.locator("dialog.reglages-dialog[open]");
+      await fenetre.waitFor();
+      assert.equal(
+        await fenetre.locator(".rappel-selection").innerText(),
+        "2 notions · 10 questions",
+      );
+      assert.equal(await fenetre.locator("#nombre").count(), 0, "Le nombre vient de Préparer");
+      await fenetre.locator("#secondes").fill("20");
+      await fenetre.locator("#correction").selectOption("end");
+      // « Ouvrir sur un écran » : le lien du même diaporama, construit dans la page.
+      await fenetre.locator('[data-action="partager"]').click();
+      const lien = fenetre.locator("#lien-serie a");
+      assert.equal(await lien.innerText(), "Ouvrir le diaporama sur un autre écran ↗");
+      assert.equal(await lien.getAttribute("target"), "_blank");
+      assert.equal(await lien.getAttribute("rel"), "noopener");
+      const adresse = new URL(await lien.getAttribute("href"));
+      assert.equal(adresse.searchParams.get("mode"), "project");
+      assert.equal(adresse.searchParams.get("secondes"), "20");
+      assert.equal(adresse.searchParams.get("correction"), "end");
+      assert.equal(adresse.searchParams.get("nombre"), "10");
+      assert.deepEqual(
+        ["delai", "auto", "aide"].map((cle) => adresse.searchParams.get(cle)),
+        ["4", "0", "0"],
+      );
+      // Projeter : un diaporama de 10 questions (le nombre de « Préparer »), minuteur réglé.
+      await fenetre.locator('[data-action="projeter"]').click();
+      await onglet.locator(".barre-question").waitFor();
+      assert.equal(await onglet.locator(".position").innerText(), "1 sur 10");
+      assert.equal(await onglet.locator("#temps").innerText(), "0:20");
+      assert.equal(await onglet.locator("dialog[open]").count(), 0);
+      // « Quitter » ramène au menu, avec la sélection.
+      await onglet.locator('.barre-question [data-action="retour"]').click();
+      assert.ok(["domaine", "accueil"].includes(await ecran(onglet)));
+      assert.equal(await barre(onglet), "2 notions sélectionnées · 4e · 10 questions");
+      // Les réglages sont gardés sur l'appareil (pas le nombre de questions).
+      const garde = JSON.parse(
+        await onglet.evaluate(() => localStorage.getItem("mg-automatismes-projection")),
+      );
+      assert.deepEqual(garde, {
+        secondes: 20,
+        delai: 4,
+        correction: "end",
+        automatique: false,
+        aideOffice: false,
+      });
+      await onglet.reload();
+      await cocher(onglet, "donnees-probabilites", [0]);
+      await onglet.locator('[data-action="projeter-reglages"]').click();
+      assert.equal(await onglet.locator("dialog[open] #secondes").inputValue(), "20");
+      assert.equal(await onglet.locator("dialog[open] #correction").inputValue(), "end");
+      await onglet.keyboard.press("Escape");
+      // Le lien ouvre un DIAPORAMA sur l'autre écran : « ← Quitter », minuteur réglé.
+      const ecranDeLaClasse = await page(1280, 720);
+      await ecranDeLaClasse.goto(adresse.href);
+      await ecranDeLaClasse.locator(".barre-question").waitFor();
+      assert.match(await ecranDeLaClasse.locator(".barre-question .menu").innerText(), /Quitter/);
+      assert.equal(await ecranDeLaClasse.locator("#temps").innerText(), "0:20");
+      assert.equal(await ecranDeLaClasse.locator(".position").innerText(), "1 sur 10");
+      // Plus de page Diaporama : ?prof=1 ouvre l'accueil, adresse nettoyée.
+      await accueil(onglet, base, "?prof=1");
+      assert.equal(await ecran(onglet), "accueil");
+      assert.equal(await onglet.evaluate(() => location.search), "");
+    }),
+);
+
+test(
+  "P5 : une valeur abîmée dans le stockage de Projeter redonne le réglage par défaut, sans erreur",
+  { skip: ignorer, timeout: 60000 },
+  () =>
+    banc(async ({ base, page }) => {
+      for (const abime of [
+        "{",
+        '{"secondes":"abc","delai":-5,"correction":"<b>","automatique":"oui","aideOffice":1}',
+        '{"secondes":999999,"delai":3.5}',
+        "null",
+      ]) {
+        const onglet = await page(1366, 768);
+        await onglet.addInitScript((valeur) => {
+          if (!sessionStorage.getItem("abime")) {
+            localStorage.setItem("mg-automatismes-projection", valeur);
+            sessionStorage.setItem("abime", "1");
+          }
+        }, abime);
+        await accueil(onglet, base);
+        await cocher(onglet, "nombres-calculs", [0]);
+        await onglet.locator('[data-action="projeter-reglages"]').click();
+        const fenetre = onglet.locator("dialog[open]");
+        assert.deepEqual(
+          [
+            await fenetre.locator("#secondes").inputValue(),
+            await fenetre.locator("#delai").inputValue(),
+            await fenetre.locator("#correction").inputValue(),
+            await fenetre.locator("#automatique").isChecked(),
+            await fenetre.locator("#aide-office").isChecked(),
+          ],
+          ["45", "4", "each", false, false],
+          abime,
+        );
+        await onglet.context().close();
+      }
+    }),
+);

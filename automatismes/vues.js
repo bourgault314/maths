@@ -30,7 +30,7 @@ function segmentsHTML(valeurs, actif, attribut, texte = String) {
    Le filtre « brevet » reste dans le moteur (Entraînement brevet, anciens liens « niveau=brevet »). */
 export const NIVEAUX = ["6e", "5e", "4e", "3e"];
 
-export function filtresHTML(filtre) {
+function filtresHTML(filtre) {
   return segmentHTML("Niveau", segmentsHTML(NIVEAUX, filtre, "niveau"));
 }
 
@@ -463,38 +463,6 @@ function reglageHTML(nom, libelle, valeur, min, max) {
   return `<label>${libelle}<input id="${nom}" type="number" min="${min}" max="${max}" value="${valeur}"></label>`;
 }
 
-export function professeurHTML(familles, filtre, options, selection) {
-  return `<h1>Diaporama</h1>
-    <p class="sous-titre">Au tableau : choisis les notions, règle le temps, puis projette.</p>${filtresHTML(filtre)}
-    <div class="configuration-prof"><div class="reglages"><h2>Réglages</h2>
-      ${reglageHTML("nombre", "Questions", options.nombre, 1, 40)}
-      ${reglageHTML("secondes", "Recherche (s)", options.secondes, 5, 600)}
-      ${reglageHTML("delai", "Pause entre questions (s)", options.delai, 0, 60)}
-      <label>Correction<select id="correction">
-        <option value="each" ${options.correction === "each" ? "selected" : ""}>Après chaque question</option>
-        <option value="end" ${options.correction === "end" ? "selected" : ""}>À la fin</option>
-      </select></label>
-      <label><input id="automatique" type="checkbox" ${options.automatique ? "checked" : ""}> Enchaîner automatiquement</label>
-      <label><input id="aide-office" type="checkbox" ${options.aideOffice ? "checked" : ""}> Aide affichée d’office</label>
-    </div><div class="selection-notions"><h2>Notions</h2>${DOMAINES.map(([domaine, nom]) => {
-      const liste = familles.filter((famille) => famille.domaine === domaine);
-      const coches = liste.length && liste.every((famille) => selection.has(famille.id));
-      return `<details class="selection-domaine groupe-selection"><summary>
-        <input type="checkbox" data-selection-domaine="${domaine}" aria-label="Choisir ${nom}" ${coches ? "checked" : ""}>
-        ${nom} <span>${liste.length}</span></summary>
-        ${liste
-          .map(
-            (famille) => `<label><input type="checkbox" data-selection="${famille.id}"
-          ${selection.has(famille.id) ? "checked" : ""}> ${esc(famille.nom)}</label>`,
-          )
-          .join("")}
-      </details>`;
-    }).join("")}</div>
-    </div><div class="actions-prof">${bouton("Projeter au tableau", "projeter", "primaire")}
-      ${bouton("Ouvrir sur un écran", "partager", "secondaire")}
-    </div><p id="lien-serie" hidden></p>`;
-}
-
 /* Le bilan d'une série : le score, puis chaque question (son énoncé, comme /auto/) avec son état
    (juste / juste avec l'aide / faux / passée) et sa correction dépliable. Pas d'étoiles : le parcours viendra après. */
 export function bilanHTML(seance, parId) {
@@ -577,4 +545,28 @@ export function brevetHTML() {
       .join("")}</div>
     ${bouton("Commencer", "brevet-commencer", "primaire grand")}
   </section>`;
+}
+
+/* « Projeter » (tablette, ordinateur) : les réglages du diaporama dans une petite fenêtre, sur la
+   sélection en cours ; « Ouvrir sur un écran » donne le lien du même diaporama (#lien-serie). */
+export function reglagesProjectionHTML(options, compte, nombre) {
+  const choix = (valeur, texte) =>
+    `<option value="${valeur}" ${options.correction === valeur ? "selected" : ""}>${texte}</option>`;
+  const coche = (actif) => (actif ? "checked" : "");
+  return `<div class="fenetre-entete"><h2>Projeter au tableau</h2>
+      <form method="dialog"><button class="fermer" aria-label="Fermer">×</button></form></div>
+    <p class="rappel-selection">${compte} notion${compte > 1 ? "s" : ""} · ${nombre} questions</p>
+    <div class="reglages-projection">
+      ${reglageHTML("secondes", "Temps de recherche (s)", options.secondes, 5, 600)}
+      ${reglageHTML("delai", "Pause entre deux questions (s)", options.delai, 0, 60)}
+      <label>Correction<select id="correction">${choix("each", "Après chaque question")}
+        ${choix("end", "À la fin")}</select></label>
+      <label class="coche-reglage"><input id="automatique" type="checkbox" ${coche(options.automatique)}>
+        Enchaîner automatiquement</label>
+      <label class="coche-reglage"><input id="aide-office" type="checkbox" ${coche(options.aideOffice)}>
+        Avec aide (le dessin reste affiché)</label>
+    </div>
+    <div class="actions-projection">${bouton("Projeter", "projeter", "orange")}
+      ${bouton("Ouvrir sur un écran", "partager", "secondaire")}</div>
+    <p id="lien-serie" hidden></p>`;
 }

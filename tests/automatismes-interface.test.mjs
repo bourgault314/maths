@@ -211,10 +211,15 @@ test(
         await photo(page, "qcm", mesures);
         await question(page, base, "EG12", "a");
         await photo(page, "geometrie", mesures);
-        await page.goto(`${base}?prof=1`);
-        await photo(page, "prof", mesures);
+        // Plus de page Diaporama (décision H) : Projeter ouvre sa fenêtre (tablette, ordinateur).
+        await page.goto(base);
+        await page.locator('[data-domaine="nombres-calculs"]').click();
         await page.locator('[data-selection-domaine="nombres-calculs"]').check();
-        await page.locator('[data-action="projeter"]').click();
+        if (width >= 700) {
+          await page.locator('[data-action="projeter-reglages"]').click();
+          await photo(page, "projeter", mesures);
+          await page.locator('dialog [data-action="projeter"]').click();
+        }
         await page.goto(`${base}?notion=NC27&forme=a&graine=123&mode=project`);
         await photo(page, "projection", mesures);
         await page.locator('[data-action="aide"]').first().click();
@@ -548,20 +553,23 @@ test(
       await page.locator('[data-action="passer"]').click();
       await page.locator('[data-action="suivante"]').click();
       assert.equal(await page.locator(".aide").count(), 0, "Aide refermée à la question suivante");
-      await page.goto(`${base}?prof=1`);
+      // Projeter (décision H) : le nombre vient de « Préparer la série », le reste de la fenêtre.
+      await page.goto(base);
+      await page.locator('[data-nombre="5"]').click();
+      await page.locator('[data-domaine="nombres-calculs"]').click();
       await page.locator('[data-selection-domaine="nombres-calculs"]').check();
-      await page.locator("#nombre").fill("2");
+      await page.locator('[data-action="projeter-reglages"]').click();
       await page.locator("#secondes").fill("5");
       await page.locator("#delai").fill("0");
       await page.locator("#automatique").check();
       await page.locator('[data-action="partager"]').click();
       const lien = await page.locator("#lien-serie a").getAttribute("href");
       // Niveaux 6e · 5e · 4e · 3e (décision B) : sans préférence, le menu est en 3e.
-      assert.match(lien, /notions=.*graine=\d+.*nombre=2.*niveau=3e/);
+      assert.match(lien, /notions=.*graine=\d+.*nombre=5.*niveau=3e/);
       await page.clock.install();
       await page.locator('[data-action="projeter"]').click();
       await page.clock.runFor(5400);
-      assert.match(await page.locator(".barre-question .centre").innerText(), /2 sur 2/);
+      assert.match(await page.locator(".barre-question .centre").innerText(), /2 sur 5/);
       await page.keyboard.press("Space");
       const temps = await page.locator("#temps").innerText();
       await page.clock.fastForward(10000);

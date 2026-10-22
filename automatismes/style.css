@@ -2051,58 +2051,62 @@ body:not(.tactile) #commandes > * {
   padding: 12px 32px;
   font-size: 1.125rem;
 }
-.reglages {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px 24px;
-  margin: 16px 0;
-  padding: 16px;
-  border: 1px solid var(--ligne);
-  border-radius: 16px;
+/* La fenêtre « Projeter au tableau » (décision H) : le rappel de la sélection, les réglages du
+   diaporama, puis Projeter · Ouvrir sur un écran (et le lien, une fois demandé). */
+.reglages-dialog {
+  width: min(440px, calc(100% - 32px));
 }
-.reglages label {
+.reglages-dialog .fenetre-entete {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 0.9375rem;
-}
-.reglages label:has(input[type="checkbox"]) {
-  flex-direction: row;
   align-items: center;
+  justify-content: space-between;
 }
-.reglages input:not([type="checkbox"]),
-.reglages select {
-  width: 100%;
-  min-height: 40px;
-  padding: 4px 8px;
+.reglages-dialog .fenetre-entete h2 {
+  margin: 0;
+}
+.rappel-selection {
+  margin: 4px 0 12px;
+  color: var(--attenue);
+  font-weight: 800;
+}
+.reglages-projection {
+  display: grid;
+  gap: 12px;
+}
+.reglages-projection > label:not(.coche-reglage) {
+  display: grid;
+  gap: 4px;
+  color: var(--encre);
+  font-weight: 800;
+}
+.reglages-projection input[type="number"],
+.reglages-projection select {
+  min-height: 44px;
+  padding: 6px 10px;
   border: 1px solid var(--ligne);
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--papier);
 }
-.selection-notions {
-  display: grid;
-  gap: 8px;
-  margin: 16px 0;
-}
-.selection-domaine {
-  border: 1px solid var(--ligne);
-  border-radius: 12px;
-  padding: 12px 16px;
-}
-.selection-domaine summary {
-  cursor: pointer;
-  font-weight: 800;
-  color: var(--bleu-identite);
-}
-.selection-domaine label {
+.coche-reglage {
   display: flex;
   align-items: center;
-  gap: 8px;
-  min-height: 36px;
-  padding: 4px 0;
+  gap: 10px;
+  min-height: 40px;
 }
-.selection-domaine > div {
-  padding-top: 8px;
+.coche-reglage input {
+  width: 22px;
+  height: 22px;
+}
+.actions-projection {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+}
+.reglages-dialog #lien-serie {
+  display: grid;
+  gap: 8px;
+  overflow-wrap: anywhere;
 }
 /* Brevet (C10bis) : les numéros des questions, juste au-dessus du pavé, pour revenir en arrière. */
 .navigation-points {
@@ -2413,14 +2417,6 @@ body.projection #commandes > * {
   .fenetre-entete h2 {
     font-size: 1.25rem;
   }
-  .reglages {
-    grid-template-columns: 1fr;
-    gap: 12px;
-    padding: 12px;
-  }
-  .selection-domaine {
-    padding: 12px;
-  }
   .minuteur {
     font-size: 1.125rem;
     gap: 8px;
@@ -2440,88 +2436,6 @@ body.projection #commandes > * {
     transition:
       background-color 120ms ease,
       border-color 120ms ease;
-  }
-}
-
-/* Les réglages défilent, les commandes du professeur restent accessibles. */
-body[data-ecran="prof"] .contenu {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  overflow: hidden;
-}
-body[data-ecran="prof"] .contenu > h1,
-body[data-ecran="prof"] .filtres {
-  flex: 0 0 auto;
-}
-.configuration-prof {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  align-items: start;
-  gap: 16px;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-gutter: stable;
-  padding: 4px;
-}
-.configuration-prof .reglages {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin: 0;
-  gap: 8px;
-  padding: 12px;
-}
-.configuration-prof h2 {
-  grid-column: 1 / -1;
-  font-size: 1.125rem;
-  margin-bottom: 4px;
-}
-body[data-ecran="prof"] .sous-titre {
-  margin: 4px 0 0;
-  color: var(--attenue);
-}
-.configuration-prof .reglages > label:nth-child(n + 3) {
-  grid-column: 1 / -1;
-}
-.configuration-prof .selection-notions {
-  margin: 0;
-}
-.configuration-prof .selection-domaine {
-  padding: 12px;
-}
-.configuration-prof .selection-domaine summary {
-  font-size: 0.9375rem;
-}
-body[data-ecran="prof"] .actions-prof {
-  flex: 0 0 auto;
-  padding: 16px 4px 4px;
-  margin-top: 8px;
-  border-top: 1px solid var(--ligne);
-  background: var(--papier);
-}
-body[data-ecran="prof"] .actions-prof .bouton {
-  flex: 1 1 auto;
-}
-body[data-ecran="prof"] #lien-serie {
-  flex: 0 0 auto;
-  overflow-wrap: anywhere;
-  max-height: 72px;
-  overflow-y: auto;
-}
-@media (max-width: 680px) {
-  .configuration-prof {
-    grid-template-columns: minmax(0, 1fr);
-    scrollbar-gutter: auto;
-    gap: 12px;
-  }
-  body[data-ecran="prof"] .actions-prof {
-    gap: 8px;
-    padding-top: 12px;
-  }
-  body[data-ecran="prof"] .actions-prof .bouton {
-    min-height: 40px;
-    padding: 8px;
-    font-size: 0.8125rem;
   }
 }
 
