@@ -142,7 +142,7 @@ const TOM = parcours({m1e1: etape(false, 0, 5)});
 
 const SOURCES_TABLEAU = ["nomAffiche", "dateLisible", "celluleNomTexte", "celluleDate", "boutonGeste", "menuGestes", "poserGestes",
   "elementSvg", "pastilleMonde", "ligneDetailSplat", "dessinerTableauSplat", "objectifSplat",
-  "dessinerObjectifSplat", "resumeDeLaClasse", "lireSplat", "mondesOuverts"].map(fonction).join("\n");
+  "dessinerObjectifSplat", "resumeDeLaClasse", "lireSplat", "mondesOuverts", "mondesDeLEleve"].map(fonction).join("\n");
 const CONSTANTES = ["COULEURS_MONDES", "ETATS_MONDE", "GRIS_FERME", "CASES_ETAPE", "SVG", "NOMBRE_MONDES"].map(constante).join("\n");
 
 function ongletSplat(liste, options = {}) {
@@ -159,7 +159,7 @@ function ongletSplat(liste, options = {}) {
     (id, t, type) => messages.push({id, t, type}), () => {}, () => {}, () => {}, () => {}, () => {}, () => {},
     {id: 7, libelle: "405", reglages: options.reglages || {}});
   const eleves = liste.map((e, i) => Object.assign({id: i + 1, code: `CODE0${i}`, initiale: "", restaurable: false, journees: []},
-    e, {lu: f.lireSplat(e.parcours)}));
+    e, {lu: f.lireSplat(e.parcours, e)}));
   f.poser(eleves);
   f.dessinerTableauSplat(corps, (options.droit || "proprietaire") !== "lecture");
   const lignes = corps.children.filter(tr => !aClasse(tr, "detail"));
@@ -452,7 +452,7 @@ function poserAppliRejoue(applis, appliAffichee, droit = "proprietaire", triAvan
   const lus = {records: 0, evaluations: 0};
   const etat = new Function("document", "$", "classe", "appliAffichee", "droitClasse", "TRIS", "APPLIS", "triInitial", "vueInitiale", "lus",
     `let tri = triInitial;\nlet vue = vueInitiale;\n${constante("NOMBRE_MONDES")}\n${constante("NOMBRES_COFFRES")}\n${["lesApplisConnues", "applisDeLaClasse", "poserAppli", "poserVue", "poserTris", "poserActivites",
-      "mondesOuverts", "coffresOuverts", "poserPuce", "recordsOuvertsPourLaClasse"].map(fonction).join("\n")}\nfunction chargerRecords() { lus.records += 1; }\nfunction poserEvaluations() { lus.evaluations += 1; }\nposerAppli();\nreturn {tri, vue};`)(
+      "mondesOuverts", "coffresOuverts", "poserPuce", "recordsOuvertsPourLaClasse"].map(fonction).join("\n")}\nfunction poserEnPlusPour() {}\nfunction chargerRecords() { lus.records += 1; }\nfunction poserEvaluations() { lus.evaluations += 1; }\nposerAppli();\nreturn {tri, vue};`)(
     doc, $, {applis, reglages}, appliAffichee, droit, TRIS, [{cle: "defi-tables"}, {cle: "coffres"}, {cle: "splat"}], triAvant, vueAvant === true ? "reglages" : vueAvant, lus);
   return {$, boutons, cases, mondes, tri: etat.tri, vue: etat.vue, vueReglages: etat.vue === "reglages", lus};
 }
@@ -882,4 +882,70 @@ test("les six boutons de mondes : ceux de la carte du moteur, dans l'ordre, aux 
     assert.match(page, new RegExp(`\\.puce-monde\\[data-monde="${n}"\\] \\{ --c: ${couleurs[n]}; \\}`), `couleur du monde ${n}`);
   }
   assert.match(fonction("changerMonde"), /api\("classes\.modifier", \{classe_id: classe\.id, reglages: \{splat: \{mondes: voulus\}\}\}\)/);
+});
+
+// ------------------------------------------------------------ lot « Qui voit quoi » (22/10/2026)
+//
+// Un élève peut avoir des mondes EN PLUS de sa classe (eleve.acces, calculé
+// par le serveur, lot 2). Dans l'onglet SPLAT!, sa ligne les montre en
+// couleur et les compte dans son « N / M » ; la carte de classe, elle, reste
+// comptée sur les mondes de la classe.
+
+const ACCES_1_2_3 = {applis: ["defi-tables", "splat"], reglages: {splat: {mondes: [1, 2, 3]}}};
+const ACCES_1_2 = {applis: ["defi-tables", "splat"], reglages: {splat: {mondes: [1, 2]}}};
+
+test("qui voit quoi — un monde en plus : en couleur sur SA ligne, compté dans SON « N / M », dit au survol", () => {
+  const liste = classe8().map((e, i) => ({...e, acces: i === 0 ? ACCES_1_2_3 : ACCES_1_2}));
+  const {lignes} = ongletSplat(liste, {reglages: MONDES_1_2});
+  const [lea, maelys] = lignes;
+  assert.deepEqual(pastilles(lea).map(etatPastille), ["fini", "fini", "cours", "ferme", "ferme", "ferme"], "le monde 3 de Léa n'est plus gris");
+  assert.deepEqual(pastilles(maelys).map(etatPastille), ["fini", "fini", "ferme", "ferme", "ferme", "ferme"], "les autres : comme leur classe");
+  const compte = tr => cellules(tr)[C_ETAPES].premier(n => aClasse(n, "pastille")).textContent;
+  const bonus = tr => (cellules(tr)[C_ETAPES].premier(n => aClasse(n, "bonus-compte")) || {textContent: ""}).textContent;
+  assert.equal(compte(lea), "13 / 24", "9 étapes des mondes 1-2 + 4 du monde 3, sur 9 + 15");
+  assert.equal(bonus(lea), "✨ 1", "le Bonus du monde 3 compte aussi, pour elle");
+  assert.equal(compte(maelys), "9 / 9");
+  const titres = pastilles(lea).map(svg => svg.premier(n => n.tag === "title").textContent);
+  assert.equal(titres[2], "Monde 3 · SPLAT! Enquête : 4 / 15 · ouvert en plus de la classe");
+  assert.equal(titres[0], "Monde 1 · Petit SPLAT! : 6 / 6", "un monde de la classe : rien de plus au survol");
+  assert.equal(titres[3], "Monde 4 · SPLAT! Système : fermé pour la classe");
+});
+
+test("qui voit quoi — le Détail d'un élève suit SES mondes : pas de cadenas sur son monde en plus", () => {
+  const liste = classe8().map((e, i) => ({...e, acces: i === 0 ? ACCES_1_2_3 : ACCES_1_2}));
+  const {corps, lignes} = ongletSplat(liste, {reglages: MONDES_1_2});
+  cellules(lignes[0])[C_GESTES].children[0].cliquer();
+  const rangees = corps.children[1].tous(n => (n.className || "").startsWith("detail-monde"));
+  assert.deepEqual(rangees.map(r => r.premier(n => n.tag === "b").textContent).slice(0, 4),
+    ["Monde 1 · Petit SPLAT!", "Monde 2 · SPLAT! Classique", "Monde 3 · SPLAT! Enquête", "🔒 Monde 4 · SPLAT! Système"]);
+  assert.deepEqual(rangees.map(r => aClasse(r, "ferme")), [false, false, false, true, true, true, false, true],
+    "le Bonus du monde 3 non plus");
+});
+
+test("qui voit quoi — la carte de classe reste comptée sur les mondes de la CLASSE", () => {
+  const avec = classe8().map((e, i) => ({...e, acces: i === 0 ? ACCES_1_2_3 : ACCES_1_2}));
+  const sans = classe8();
+  const a = ongletSplat(avec, {reglages: MONDES_1_2}).f.objectifSplat();
+  const b = ongletSplat(sans, {reglages: MONDES_1_2}).f.objectifSplat();
+  assert.deepEqual(a, b, "le monde 3 de Léa ne change rien à « Notre classe, ensemble »");
+  assert.equal(a.total, 4 * 9);
+  assert.equal(a.fait, 9 + 9);
+  assert.deepEqual(a.mondes.map(m => m.numero), [1, 2]);
+  assert.match(fonction("objectifSplat"), /typeof lu\.faitsClasse === "number" \? lu\.faitsClasse : lu\.faits/);
+});
+
+test("mondesDeLEleve : ceux du serveur (classe + ajouts), jamais moins que la classe ; sans acces, ceux de la classe", () => {
+  const lire = (reglagesClasse, eleve) => new Function("classe", `${constante("NOMBRE_MONDES")}\n${fonction("mondesOuverts")}\n${fonction("mondesDeLEleve")}\nreturn mondesDeLEleve;`)(
+    {reglages: reglagesClasse})(eleve);
+  assert.deepEqual(lire(MONDES_1_2, {acces: ACCES_1_2_3}), [1, 2, 3]);
+  assert.deepEqual(lire(MONDES_1_2, {acces: ACCES_1_2}), [1, 2]);
+  assert.deepEqual(lire(MONDES_1_2, {}), [1, 2], "sans acces (serveur d'avant le lot 2) : la classe");
+  assert.deepEqual(lire(MONDES_1_2, undefined), [1, 2]);
+  assert.equal(lire(MONDES_1_2, {acces: {applis: ["splat"], reglages: {}}}), null, "rien d'écrit pour lui : SPLAT! entière, tous les mondes");
+  assert.equal(lire({}, {acces: ACCES_1_2_3}), null, "la classe a tout : lui aussi");
+  assert.deepEqual(lire(MONDES_1_2, {acces: {applis: ["splat"], reglages: {splat: {mondes: [4]}}}}), [1, 2, 4],
+    "un acces qui dirait moins que la classe est complété par elle : on ne retire jamais");
+  assert.equal(lire(MONDES_1_2, {acces: {applis: ["splat"], reglages: {splat: {mondes: [3, 4, 5, 6]}}}}), null, "les six : null");
+  assert.deepEqual(lire(MONDES_1_2, {acces: {applis: ["splat"], reglages: {splat: {mondes: [3, "4", 9, 0]}}}}), [1, 2, 3]);
+  assert.match(fonction("elevesLus"), /lu: lire\(eleve\.parcours, eleve\)/, "le tableau passe l'élève au lecteur");
 });
