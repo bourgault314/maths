@@ -960,7 +960,9 @@ function ajusterQuestion() {
   else if (figure) {
     aides.forEach((dessin) => poserDessin(dessin, 0.2));
     let echelleFigure = depart(figure, 1);
-    const planFigure = (aideOuverte ? 0.7 : 0.6) * echelleFigure;
+    // K9 : jamais sous 60 % de la taille d'origine (viewBox), 70 % avec l'aide ouverte — sauf si
+    // la colonne est déjà plus étroite que ça. Au-delà, la zone défile (montrerCaseActive).
+    const planFigure = Math.min(echelleFigure, aideOuverte ? 0.7 : 0.6);
     poserDessin(figure, echelleFigure);
     while (trop() && echelleFigure - 0.02 >= planFigure)
       poserDessin(figure, (echelleFigure -= 0.02));
@@ -1000,7 +1002,19 @@ function ajusterQuestion() {
     document.body.dataset.clavierRange = "1";
     essayer();
   }
+  montrerCaseActive(zone);
   montrerPanneauAide(zone);
+}
+
+/* K9 : si la question ne tient pas au-dessus du clavier (la figure ne descend plus sous 60 %), la
+   zone défile juste assez pour que la case active reste visible. */
+function montrerCaseActive(zone) {
+  const kase = zone.querySelector(".champ.active") || zone.querySelector(".carte .reponses");
+  if (!kase) return;
+  const cadre = zone.getBoundingClientRect();
+  const boite = kase.getBoundingClientRect();
+  if (boite.bottom > cadre.bottom + 1)
+    zone.scrollTop += Math.min(boite.bottom - cadre.bottom, boite.top - cadre.top);
 }
 
 /* K7 : si, malgré les réductions, le panneau d'aide s'ouvre en partie sous le bas de la zone, la

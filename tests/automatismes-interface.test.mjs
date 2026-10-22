@@ -1068,3 +1068,48 @@ test(
     }
   },
 );
+
+// Corrections 3 (K9) : à 375 × 667, EG06-d tombait à × 0,44 (lettres illisibles). La figure ne
+// descend plus sous 60 % de sa taille d'origine ; la zone défile, la case active reste visible.
+test(
+  "figure (coque V2, K9) : jamais sous 60 %, la case active reste visible",
+  { skip: ignorer, timeout: 90000 },
+  async () => {
+    const { serveur, base } = await serveurLocal();
+    const browser = await ouvrirNavigateur();
+    try {
+      for (const [width, height] of [
+        [375, 667],
+        [390, 844],
+      ]) {
+        for (const notion of ["EG06&forme=d", "EG02&forme=a"]) {
+          const page = await browser.newPage({
+            viewport: { width, height },
+            isMobile: true,
+            hasTouch: true,
+          });
+          const nom = `${notion} ${width}x${height}`;
+          await page.goto(`${base}?notion=${notion}&graine=12`);
+          await page.locator(".carte .figure > svg").waitFor();
+          await stabiliser(page);
+          const mesure = await page.evaluate(() => {
+            const figure = document.querySelector(".carte .figure > svg");
+            const naturelle = figure.viewBox.baseVal.width;
+            const zone = document.querySelector(".espace-question").getBoundingClientRect();
+            const kase = document.querySelector(".champ.active").getBoundingClientRect();
+            return {
+              echelle: figure.getBoundingClientRect().width / naturelle,
+              caseVisible: kase.top >= zone.top - 1 && kase.bottom <= zone.bottom + 1,
+            };
+          });
+          assert.ok(mesure.echelle >= 0.595, `${nom} : figure à × ${mesure.echelle.toFixed(2)}`);
+          assert.ok(mesure.caseVisible, `${nom} : case active visible`);
+          await page.close();
+        }
+      }
+    } finally {
+      await browser.close();
+      await new Promise((fin) => serveur.close(fin));
+    }
+  },
+);
