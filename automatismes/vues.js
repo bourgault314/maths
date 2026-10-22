@@ -127,14 +127,22 @@ export function aideHTML(question, etat, projection = false, reglages = {}) {
 }
 
 /* La figure de la question, toujours en place. Avec coinAide seulement, l'aide ouverte est une bulle
-   posée dans ce coin de la figure. Avec aideSurFigure seulement (K2 : un dessin d'aide différent
-   n'est pas forcément la figure annotée), le dessin d'aide se pose EXACTEMENT dans la boîte de la
-   figure (calque .figure-aide, dimensionné par ajusterQuestion) ; la figure garde sa place. */
-function surFigure(question, reglages) {
+   posée dans ce coin de la figure. Le dessin d'aide se pose EXACTEMENT dans la boîte de la figure
+   (calque .figure-aide, dimensionné par ajusterQuestion), la figure gardant sa place, quand c'est la
+   figure annotée : même boîte (même viewBox) que la figure (K6, les pointillés de EG02-a), ou forme
+   marquée aideSurFigure (K2). Une boîte différente (le schéma « 90° / 180° » de EG06-b) va dans le
+   panneau sous la carte. */
+const boiteSVG = (svg) =>
+  String(svg)
+    .match(/viewBox="([^"]+)"/)?.[1]
+    ?.trim()
+    .replace(/\s+/g, " ");
+
+export function surFigure(question, reglages = {}) {
   const dessin = question.hints?.[0]?.svg || "";
-  return Boolean(
-    reglages?.aideSurFigure && question.visual && dessin && dessin !== question.visual,
-  );
+  if (!question.visual || !dessin || dessin === question.visual) return false;
+  const memeBoite = boiteSVG(dessin) && boiteSVG(dessin) === boiteSVG(question.visual);
+  return Boolean(reglages?.aideSurFigure || memeBoite);
 }
 
 export function figureHTML(question, etat, reglages = {}) {

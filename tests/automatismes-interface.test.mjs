@@ -661,7 +661,8 @@ async function figureDecouverte(page) {
         const x = figure.left + (figure.width * i) / 8;
         const y = haut + ((bas - haut) * j) / 8;
         const element = document.elementFromPoint(x, y);
-        if (!element?.closest(".carte .figure > svg"))
+        // La figure, ou la même figure annotée posée dans sa boîte (K6).
+        if (!element?.closest(".carte .figure > svg, .carte .figure-aide"))
           couverts.push([Math.round(x), Math.round(y)]);
       }
     return couverts;
@@ -926,6 +927,68 @@ test(
       (await positionQuestion(page)).forEach((haut, rang) =>
         assert.ok(Math.abs(haut - positions[rang]) <= 1, "La question ne bouge pas"),
       );
+    } finally {
+      await browser.close();
+      await new Promise((fin) => serveur.close(fin));
+    }
+  },
+);
+
+// Corrections 2 (K6) : un dessin d'aide de même boîte (viewBox) que la figure est la figure annotée
+// (pointillés de EG02-a) : il se pose dans la boîte de la figure ; le panneau garde la phrase.
+test(
+  "figure annotée (coque V2, K6) : même boîte que la figure, le dessin d'aide prend sa place",
+  { skip: ignorer, timeout: 300000 },
+  async () => {
+    const { serveur, base } = await serveurLocal();
+    const browser = await ouvrirNavigateur();
+    const ecarts = [];
+    try {
+      for (const [width, height, tactile] of [
+        [390, 844, true],
+        [375, 667, true],
+        [820, 1180, true],
+        [1366, 768, false],
+      ]) {
+        const page = await browser.newPage({
+          viewport: { width, height },
+          isMobile: tactile,
+          hasTouch: tactile,
+        });
+        for (const [notion, forme, graine] of [
+          ["EG02", "a", 9],
+          ["EG02", "a", 12],
+          ["DP01", "a", 12],
+          ["PI03", "a", 12],
+        ]) {
+          const nom = `${notion}-${forme} g${graine} ${width}x${height}`;
+          await page.goto(`${base}?notion=${notion}&forme=${forme}&graine=${graine}`);
+          await page.locator(".carte .figure svg").waitFor();
+          await stabiliser(page);
+          const avant = await positionQuestion(page);
+          const boite = await page.locator(".carte .figure > svg").boundingBox();
+          await page.locator('.carte [data-action="aide"]').click();
+          await page.locator(".espace-question > .aide").waitFor();
+          await stabiliser(page);
+          if (!(await page.locator(".carte .figure-aide svg").count())) {
+            ecarts.push(`${nom} : pas de dessin sur la figure`);
+          } else {
+            const calque = await page.locator(".carte .figure-aide svg").boundingBox();
+            for (const cle of ["x", "y", "width", "height"])
+              if (Math.abs(calque[cle] - boite[cle]) > 1) ecarts.push(`${nom} : ${cle} différent`);
+          }
+          if (await page.locator(".espace-question > .aide .dessin").count())
+            ecarts.push(`${nom} : dessin répété dans le panneau`);
+          const apres = await positionQuestion(page);
+          const defile = await page.locator(".espace-question").evaluate((zone) => zone.scrollTop);
+          apres.forEach((haut, rang) => {
+            if (Math.abs(haut + defile - avant[rang]) > 1)
+              ecarts.push(`${nom} : la question bouge`);
+          });
+        }
+        await page.close();
+      }
+      assert.deepEqual(ecarts, []);
     } finally {
       await browser.close();
       await new Promise((fin) => serveur.close(fin));
