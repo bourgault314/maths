@@ -551,7 +551,8 @@ test(
       await page.locator("#automatique").check();
       await page.locator('[data-action="partager"]').click();
       const lien = await page.locator("#lien-serie a").getAttribute("href");
-      assert.match(lien, /notions=.*graine=\d+.*nombre=2.*niveau=brevet/);
+      // Niveaux 6e · 5e · 4e · 3e (décision B) : sans préférence, le menu est en 3e.
+      assert.match(lien, /notions=.*graine=\d+.*nombre=2.*niveau=3e/);
       await page.clock.install();
       await page.locator('[data-action="projeter"]').click();
       await page.clock.runFor(5400);

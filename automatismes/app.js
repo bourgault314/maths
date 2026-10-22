@@ -33,6 +33,7 @@ import {
   coursHTML,
   bouton,
   ICONES,
+  NIVEAUX,
 } from "./vues.js";
 
 const catalogue = await fetch("./catalogue/catalogue.json").then((reponse) => reponse.json());
@@ -62,9 +63,8 @@ initialiserSuivi(catalogue);
 function lirePreferences() {
   try {
     const valeur = JSON.parse(localStorage.getItem("mg-automatismes-prefs")) || {};
-    const niveau = ["6e", "5e", "4e", "3e", "brevet"].includes(valeur.niveau)
-      ? valeur.niveau
-      : "brevet";
+    // Une ancienne préférence « brevet » (ou rien) donne la 3e.
+    const niveau = NIVEAUX.includes(valeur.niveau) ? valeur.niveau : "3e";
     return {
       niveau,
       nombre: [5, 10, 15, 20].includes(valeur.nombre) ? valeur.nombre : 10,
@@ -72,7 +72,7 @@ function lirePreferences() {
       clavierOrdinateur: valeur.clavierOrdinateur === true,
     };
   } catch {
-    return { niveau: "brevet", nombre: 10, garderAide: false, clavierOrdinateur: false };
+    return { niveau: "3e", nombre: 10, garderAide: false, clavierOrdinateur: false };
   }
 }
 
@@ -178,7 +178,7 @@ function afficherProfesseur() {
 }
 
 function changerNiveau(niveau) {
-  if (!["6e", "5e", "4e", "3e", "brevet"].includes(niveau)) return;
+  if (!NIVEAUX.includes(niveau)) return;
   if (ecran === "prof") lireReglages();
   filtre = niveau;
   preferences.niveau = niveau;
@@ -1102,7 +1102,7 @@ function lireAdresse() {
   const params = new URLSearchParams(location.search);
   if (params.get("prof") === "1") return afficherProfesseur();
   const niveau = params.get("niveau");
-  if (["6e", "5e", "4e", "3e", "brevet"].includes(niveau)) filtre = niveau;
+  if (NIVEAUX.includes(niveau)) filtre = niveau;
   const valeur = Number(params.get("graine"));
   const graine =
     Number.isInteger(valeur) && valeur > 0 && valeur <= 2147483647 ? valeur : nouvelleGraine();
@@ -1119,12 +1119,15 @@ function lireAdresse() {
   }
   const ids = (params.get("notions") || "").split(",").filter((id) => parId[id]?.valide);
   if (ids.length) {
+    // Un ancien lien « niveau=brevet » tire ses questions au niveau brevet, comme avant, pour cette
+    // série seulement : le niveau choisi sur l'appareil ne change pas.
     return lancer({
       mode: "train",
       ids,
       nombre: Number(params.get("nombre")) || 8,
       graine,
       partagee: true,
+      ...(niveau === "brevet" ? { filtre: "brevet" } : {}),
     });
   }
   afficherAccueil();

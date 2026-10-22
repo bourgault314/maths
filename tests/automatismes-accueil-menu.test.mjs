@@ -194,3 +194,30 @@ test(
       }
     }),
 );
+
+test(
+  "P2 : niveaux 6e · 5e · 4e · 3e, 3e par défaut, une préférence « brevet » devient 3e",
+  { skip: ignorer, timeout: 60000 },
+  () =>
+    banc(async ({ base, page }) => {
+      const actif = (onglet) =>
+        onglet.locator('[data-niveau][aria-pressed="true"]').getAttribute("data-niveau");
+      const neuve = await page(390, 844, true);
+      await accueil(neuve, base);
+      assert.deepEqual(
+        await neuve
+          .locator("[data-niveau]")
+          .evaluateAll((boutons) => boutons.map((bouton) => bouton.textContent.trim())),
+        ["6e", "5e", "4e", "3e"],
+      );
+      assert.equal(await actif(neuve), "3e", "Sans préférence : 3e");
+      const ancienne = await page(1366, 768, false, { niveau: "brevet", nombre: 10 });
+      await accueil(ancienne, base);
+      assert.equal(await actif(ancienne), "3e", "{niveau: brevet} enregistré → 3e");
+      await ancienne.locator('[data-niveau="5e"]').click();
+      assert.match(
+        await ancienne.evaluate(() => localStorage.getItem("mg-automatismes-prefs")),
+        /"niveau":"5e"/,
+      );
+    }),
+);

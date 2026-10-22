@@ -25,10 +25,12 @@ function segmentsHTML(valeurs, actif, attribut, texte = String) {
     .join("");
 }
 
+/* Les niveaux du menu. « Brevet » n'en est plus un (22/10) : 78 notions sur 81 en commun avec la 3e.
+   Le filtre « brevet » reste dans le moteur (Entraînement brevet, anciens liens « niveau=brevet »). */
+export const NIVEAUX = ["6e", "5e", "4e", "3e"];
+
 export function filtresHTML(filtre) {
-  const niveaux = ["6e", "5e", "4e", "3e", "brevet"];
-  const texte = (niveau) => (niveau === "brevet" ? "Brevet" : niveau);
-  return segmentHTML("Niveau", segmentsHTML(niveaux, filtre, "niveau", texte));
+  return segmentHTML("Niveau", segmentsHTML(NIVEAUX, filtre, "niveau"));
 }
 
 /* Le nombre de questions : des boutons à partir de 700 px ; au téléphone, une seule touche
