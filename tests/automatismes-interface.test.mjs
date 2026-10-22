@@ -1,4 +1,4 @@
-import test from "node:test";
+import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { createServer } from "node:http";
@@ -51,14 +51,33 @@ async function serveurLocal() {
   return { serveur, base: `http://127.0.0.1:${serveur.address().port}/automatismes/` };
 }
 
+/* P14 (accueil et menu) : UN Chromium pour tout le fichier, lancé au premier test. Chaque test reçoit
+   un « navigateur » à lui : newPage ouvre une page dans un contexte neuf, close ferme ses pages (et
+   leurs contextes). Lancer Chromium à chaque test était le plus lent quand npm run verifier joue tous
+   les fichiers en même temps : des tests de 3 s finissaient annulés à 60 ou 90 s. */
+let chromiumPartage = null;
+after(async () => {
+  if (chromiumPartage) await (await chromiumPartage).close();
+});
+
 async function ouvrirNavigateur() {
-  return navigateur.launch({
+  chromiumPartage ||= navigateur.launch({
     headless: true,
     ...(process.env.AUTOMATISMES_NAVIGATEUR
       ? { executablePath: process.env.AUTOMATISMES_NAVIGATEUR }
       : {}),
     args: ["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu"],
   });
+  const partage = await chromiumPartage;
+  const pages = [];
+  return {
+    async newPage(options) {
+      const page = await partage.newPage(options);
+      pages.push(page);
+      return page;
+    },
+    close: () => Promise.all(pages.map((page) => page.close().catch(() => null))),
+  };
 }
 
 async function stabiliser(page) {

@@ -1,6 +1,6 @@
 // Accueil et menu de /automatismes/ (lot du 22/10/2026, décisions A à L) : l'accueil d'après la V2,
 // le domaine ouvert, la barre de lancement, Projeter, et la façon de sortir d'une série.
-import test from "node:test";
+import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { createServer } from "node:http";
@@ -19,6 +19,10 @@ try {
 const ignorer = navigateur
   ? false
   : "Playwright absent : exécuter ce contrôle dans l’environnement de revue équipé.";
+
+// P14 : chaque test dure 3 à 6 s seul ; le plafond couvre une machine chargée (tous les fichiers de
+// tests en même temps), sans jamais servir d'attente.
+const PLAFOND = 180000;
 
 const TAILLES = [
   [390, 844, true],
@@ -60,17 +64,28 @@ async function serveurLocal() {
   return { serveur, base: `http://127.0.0.1:${serveur.address().port}/automatismes/` };
 }
 
-// Un navigateur et un serveur pour tout un test ; `page(largeur, hauteur, tactile, prefs)` ouvre une
-// page neuve (préférences de l'appareil posées avant le chargement), les erreurs sont relevées.
-async function banc(corps) {
-  const { serveur, base } = await serveurLocal();
-  const browser = await navigateur.launch({
+/* P14 : UN navigateur pour tout le fichier, lancé au premier test (lancer Chromium est le plus lent,
+   surtout quand npm run verifier joue tous les fichiers en même temps). Chaque test a son serveur et
+   ses contextes, fermés à la fin du test ; les attentes portent sur un état précis de la page. */
+let navigateurPartage = null;
+const navigateurDuFichier = () =>
+  (navigateurPartage ||= navigateur.launch({
     headless: true,
     ...(process.env.AUTOMATISMES_NAVIGATEUR
       ? { executablePath: process.env.AUTOMATISMES_NAVIGATEUR }
       : {}),
     args: ["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu"],
-  });
+  }));
+after(async () => {
+  if (navigateurPartage) await (await navigateurPartage).close();
+});
+
+// Un serveur et des contextes neufs pour un test ; `page(largeur, hauteur, tactile, prefs)` ouvre une
+// page neuve (préférences de l'appareil posées avant le chargement), les erreurs sont relevées.
+async function banc(corps) {
+  const { serveur, base } = await serveurLocal();
+  const browser = await navigateurDuFichier();
+  const contextes = [];
   const erreurs = [];
   const page = async (width = 1366, height = 768, tactile = false, prefs = null) => {
     const contexte = await browser.newContext({
@@ -78,6 +93,7 @@ async function banc(corps) {
       isMobile: tactile,
       hasTouch: tactile,
     });
+    contextes.push(contexte);
     const nouvelle = await contexte.newPage();
     nouvelle.on("pageerror", (erreur) => erreurs.push(`${width}x${height} ${erreur.message}`));
     if (prefs)
@@ -97,7 +113,7 @@ async function banc(corps) {
     await corps({ base, page });
     assert.deepEqual(erreurs, []);
   } finally {
-    await browser.close();
+    await Promise.all(contextes.map((contexte) => contexte.close().catch(() => null)));
     await new Promise((fin) => serveur.close(fin));
   }
 }
@@ -126,7 +142,7 @@ const boites = (page, selecteur) =>
 
 test(
   "P1 : l’accueil d’après la V2 — carte d’en-tête, ① Préparer, ② les domaines, la ligne brevet",
-  { skip: ignorer, timeout: 120000 },
+  { skip: ignorer, timeout: PLAFOND },
   () =>
     banc(async ({ base, page }) => {
       for (const [width, height, tactile] of TAILLES) {
@@ -201,7 +217,7 @@ test(
 
 test(
   "P2 : niveaux 6e · 5e · 4e · 3e, 3e par défaut, une préférence « brevet » devient 3e",
-  { skip: ignorer, timeout: 60000 },
+  { skip: ignorer, timeout: PLAFOND },
   () =>
     banc(async ({ base, page }) => {
       const actif = (onglet) =>
@@ -236,7 +252,7 @@ const DOMAINES_IDS = [
 
 test(
   "P3 : le domaine ouvert — sa carte qui referme, les groupes, l’étiquette de classe, le geste retour",
-  { skip: ignorer, timeout: 120000 },
+  { skip: ignorer, timeout: PLAFOND },
   () =>
     banc(async ({ base, page }) => {
       const { GROUPES } = await import("../automatismes/groupes-domaines.js");
@@ -292,7 +308,7 @@ test(
 
 test(
   "P3 : l’étiquette de classe — 19 notions en 5e, 13 en 4e, 12 en 3e, aucune en 6e",
-  { skip: ignorer, timeout: 120000 },
+  { skip: ignorer, timeout: PLAFOND },
   () =>
     banc(async ({ base, page }) => {
       const onglet = await page(1366, 768);
@@ -332,7 +348,7 @@ const barre = (onglet) =>
 
 test(
   "P4 : la barre toujours en bas — vide, puis la sélection ; 72 px au plus ; en bas d’un domaine court",
-  { skip: ignorer, timeout: 120000 },
+  { skip: ignorer, timeout: PLAFOND },
   () =>
     banc(async ({ base, page }) => {
       for (const [width, height, tactile] of TAILLES.slice(0, 4)) {
@@ -394,7 +410,7 @@ async function cocher(onglet, domaine, rangs) {
 
 test(
   "P5 : Projeter — la fenêtre de réglages, 10 questions, réglages gardés, ?prof=1 ouvre l’accueil",
-  { skip: ignorer, timeout: 120000 },
+  { skip: ignorer, timeout: PLAFOND },
   () =>
     banc(async ({ base, page }) => {
       const onglet = await page(1366, 768, false, { niveau: "4e", nombre: 15 });
@@ -449,7 +465,7 @@ test(
 
 test(
   "P10 : la fenêtre Projeter n’a qu’un bouton d’action, Projeter",
-  { skip: ignorer, timeout: 90000 },
+  { skip: ignorer, timeout: PLAFOND },
   () =>
     banc(async ({ base, page }) => {
       for (const [width, height, tactile] of [
@@ -501,7 +517,7 @@ test(
 
 test(
   "P5 : une valeur abîmée dans le stockage de Projeter redonne le réglage par défaut, sans erreur",
-  { skip: ignorer, timeout: 60000 },
+  { skip: ignorer, timeout: PLAFOND },
   () =>
     banc(async ({ base, page }) => {
       for (const abime of [
@@ -539,7 +555,7 @@ test(
 
 test(
   "P6 : téléphone — ni Plein écran ni Projeter ; à 375 × 667, les 5 domaines entiers, le brevet coupé",
-  { skip: ignorer, timeout: 90000 },
+  { skip: ignorer, timeout: PLAFOND },
   () =>
     banc(async ({ base, page }) => {
       for (const [width, height, tactile] of TAILLES.slice(0, 4)) {
@@ -576,12 +592,29 @@ test(
     }),
 );
 
+/* Le geste retour du navigateur, puis l'attente d'un état précis : l'adresse ou l'état d'historique a
+   changé (chaque entrée a le sien) et l'appli a fini de réagir. Pas de pause fixe. */
+async function retourNavigateur(onglet) {
+  const avant = await onglet
+    .evaluate(() => `${location.href}|${JSON.stringify(history.state)}`)
+    .catch(() => null);
+  await onglet.goBack().catch(() => null);
+  await onglet
+    .waitForFunction(
+      (precedente) =>
+        `${location.href}|${JSON.stringify(history.state)}` !== precedente &&
+        (!/\/automatismes\/$/.test(location.pathname) || document.body.dataset.ecran),
+      avant,
+      { timeout: 15000 },
+    )
+    .catch(() => null);
+}
+
 const menu = (onglet) => onglet.locator('.barre-question [data-action="retour"]').click();
 
 // Le geste retour du navigateur, puis l'écran qui s'affiche (ou « quitté » si on a quitté l'appli).
 async function gesteRetour(onglet) {
-  await onglet.goBack().catch(() => null);
-  await onglet.waitForTimeout(200);
+  await retourNavigateur(onglet);
   if (!/\/automatismes\//.test(onglet.url())) return "quitté";
   return ecran(onglet);
 }
@@ -597,7 +630,7 @@ async function finirLaSerie(onglet) {
 
 test(
   "P8 : « Menu » ramène là d’où l’on a lancé la série, la sélection reste",
-  { skip: ignorer, timeout: 90000 },
+  { skip: ignorer, timeout: PLAFOND },
   () =>
     banc(async ({ base, page }) => {
       const onglet = await page(390, 844, true, { niveau: "4e", nombre: 5 });
@@ -630,7 +663,7 @@ test(
 
 test(
   "P8 : le geste retour pendant une série ou sur le bilan fait comme « Menu » (brevet et diaporama aussi)",
-  { skip: ignorer, timeout: 120000 },
+  { skip: ignorer, timeout: PLAFOND },
   () =>
     banc(async ({ base, page }) => {
       const onglet = await page(390, 844, true, { niveau: "4e", nombre: 5 });
@@ -691,7 +724,7 @@ async function enonces(onglet) {
 
 test(
   "P9 : un lien « niveau=brevet » donne les mêmes questions sur un appareil en 6e et un en 3e",
-  { skip: ignorer, timeout: 90000 },
+  { skip: ignorer, timeout: PLAFOND },
   () =>
     banc(async ({ base, page }) => {
       // Acquis de main (la maquette 3 l'avait cassé) : ce test est vert sur main et sur la branche.
@@ -710,7 +743,7 @@ test(
 
 test(
   "P9 : un lien trafiqué ne lève aucune erreur — nombre borné, réglages par défaut, notions inconnues ignorées",
-  { skip: ignorer, timeout: 90000 },
+  { skip: ignorer, timeout: PLAFOND },
   () =>
     banc(async ({ base, page }) => {
       const onglet = await page(1366, 768, false, { niveau: "6e", nombre: 10 });
@@ -752,7 +785,7 @@ test(
 
 test(
   "P11 : sans crypto.randomUUID (page non sécurisée), série, Projeter et brevet démarrent",
-  { skip: ignorer, timeout: 90000 },
+  { skip: ignorer, timeout: PLAFOND },
   () =>
     banc(async ({ base, page }) => {
       const onglet = await page(1366, 768, false, { niveau: "4e", nombre: 5 });
@@ -799,12 +832,7 @@ const vue = async (onglet) => {
 async function retoursJusquALaSortie(onglet, depart, nom) {
   const vues = [depart];
   for (let geste = 0; geste < 6 && vues.at(-1) !== "quitté"; geste += 1) {
-    await onglet.goBack().catch(() => null);
-    await onglet
-      .waitForFunction(
-        () => !location.pathname.endsWith("/automatismes/") || document.body.dataset.ecran,
-      )
-      .catch(() => null);
+    await retourNavigateur(onglet);
     vues.push(await vue(onglet));
   }
   for (let rang = 1; rang < vues.length; rang += 1)
@@ -816,7 +844,7 @@ async function retoursJusquALaSortie(onglet, depart, nom) {
 
 test(
   "P12 : historique toujours cohérent — les trois parcours de Codex, chaque retour change d’écran",
-  { skip: ignorer, timeout: 120000 },
+  { skip: ignorer, timeout: PLAFOND },
   () =>
     banc(async ({ base, page }) => {
       const avant = `${base}../favicon.svg`;
@@ -882,7 +910,7 @@ test(
 
 test(
   "P12 : un état d’historique inconnu ou trafiqué est remplacé et n’ouvre rien",
-  { skip: ignorer, timeout: 60000 },
+  { skip: ignorer, timeout: PLAFOND },
   () =>
     banc(async ({ base, page }) => {
       const onglet = await page(1366, 768);
@@ -904,11 +932,15 @@ test(
         assert.equal(await onglet.locator("img[src='x'], [onerror]").count(), 0, nom);
         assert.equal(await onglet.evaluate(() => window.injection), undefined, nom);
         // Le même état reçu par un geste avant/retour n'ouvre rien non plus.
-        await onglet.evaluate((valeur) => {
-          history.pushState(valeur, "");
-          history.back();
-        }, etat);
-        await onglet.waitForTimeout(100);
+        await onglet.evaluate(
+          (valeur) =>
+            new Promise((fin) => {
+              history.pushState(valeur, "");
+              addEventListener("popstate", fin, { once: true });
+              history.back();
+            }),
+          etat,
+        );
         await onglet.goForward();
         await onglet.locator(".accueil").waitFor();
         assert.equal(await ecran(onglet), "accueil", `${nom} par le geste avant`);
