@@ -1,5 +1,5 @@
-// Les icônes du jour des domaines (décision L) : stables dans la journée, autres le lendemain,
-// les quatre courbes de « Proportionnalité, fonctions » équilibrées sur un an.
+// Les icônes du jour des domaines (décision L) : stables dans la journée, autres le lendemain pour
+// chaque domaine (P13), les quatre courbes de « Proportionnalité, fonctions » équilibrées sur un an.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { iconeDomaine, graineDuJour, TYPES_COURBES } from "../automatismes/icones-domaines.js";
@@ -9,11 +9,10 @@ const IDS = DOMAINES.map(([id]) => id);
 const jour = (rang, heure = 12) => new Date(2026, 0, 1 + rang, heure, 30);
 const icones = (date) => IDS.map((id) => iconeDomaine(id, graineDuJour(date)));
 
-test("P7 : la même icône toute une journée, une autre le lendemain", () => {
+test("P7 : la même icône toute une journée", () => {
   for (let rang = 0; rang < 365; rang += 1) {
     const matin = icones(new Date(2026, 0, 1 + rang, 0, 1));
     assert.deepEqual(icones(new Date(2026, 0, 1 + rang, 23, 59)), matin, `jour ${rang}`);
-    assert.notDeepEqual(icones(jour(rang + 1)), matin, `jour ${rang} → lendemain`);
   }
   assert.equal(iconeDomaine("nombres-calculs"), iconeDomaine("nombres-calculs", graineDuJour()));
   assert.throws(() => graineDuJour(new Date("pas une date")), TypeError);
@@ -55,4 +54,31 @@ test("P7 : les croix dans le cadre, des clipPath uniques, aucune icône vide", (
     assert.ok(ids.length >= 2);
   }
   assert.equal(iconeDomaine("domaine-inconnu", 1), "");
+});
+
+test("P13 : de 2026 à 2028, chaque domaine change d’icône chaque lendemain", () => {
+  const debut = new Date(2026, 0, 1, 12);
+  const jours = Math.round((new Date(2029, 0, 1, 12) - debut) / 864e5);
+  for (const id of IDS) {
+    let hier = iconeDomaine(id, graineDuJour(debut));
+    for (let rang = 1; rang <= jours; rang += 1) {
+      const date = new Date(2026, 0, 1 + rang, 12);
+      const aujourdhui = iconeDomaine(id, graineDuJour(date));
+      assert.notEqual(aujourdhui, hier, `${id} : même icône la veille du ${date.toDateString()}`);
+      hier = aujourdhui;
+    }
+  }
+});
+
+test("P13 : chaque année de 2026 à 2028, les quatre courbes au moins 60 fois chacune", () => {
+  for (const annee of [2026, 2027, 2028]) {
+    const vues = Object.fromEntries(TYPES_COURBES.map((type) => [type, 0]));
+    for (let date = new Date(annee, 0, 1, 12); date.getFullYear() === annee;) {
+      const icone = iconeDomaine("proportionnalite-fonctions", graineDuJour(date));
+      vues[/data-courbe="(\w+)"/.exec(icone)[1]] += 1;
+      date = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1, 12);
+    }
+    for (const [type, nombre] of Object.entries(vues))
+      assert.ok(nombre >= 60, `${annee}, ${type} : ${nombre}`);
+  }
 });

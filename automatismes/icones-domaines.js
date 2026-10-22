@@ -3,7 +3,10 @@
    Truchet —, plus « Proportionnalité, fonctions » : un repère pas toujours centré, des points en
    petites croix orange, et selon le jour une fonction linéaire, affine, carré ou racine carrée
    (attribut data-courbe). La même icône toute une journée (la graine vient de la date locale), une
-   autre le lendemain. */
+   autre le lendemain, pour CHAQUE domaine, par construction (P13) : le dernier bit de la graine est la
+   parité du jour, et chaque icône a un trait à deux valeurs réglé sur cette parité (trou du boulier à
+   gauche ou à droite, barre la plus haute à gauche ou à droite, premier pas du trajet, coin du motif,
+   origine du repère). Deux jours consécutifs n'ont jamais la même parité. */
 const GRAINES_DOMAINES = Object.freeze({
   "nombres-calculs": 0x243f6a88,
   "espace-geometrie": 0x85a308d3,
@@ -40,8 +43,14 @@ export function graineDuJour(date = new Date()) {
     throw new TypeError("Date invalide pour les icônes du jour.");
   const deux = (nombre) => String(nombre).padStart(2, "0");
   const annee = String(date.getFullYear()).padStart(4, "0");
-  return hacherTexte(`${annee}-${deux(date.getMonth() + 1)}-${deux(date.getDate())}`);
+  const hache = hacherTexte(`${annee}-${deux(date.getMonth() + 1)}-${deux(date.getDate())}`);
+  // Le rang du jour (depuis 1970, date locale) : sa parité devient le dernier bit de la graine.
+  const jour = Math.round(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 864e5);
+  return (((hache >>> 1) << 1) | (jour & 1)) >>> 0;
 }
+
+// La parité du jour, portée par la graine (0 ou 1).
+const parite = (graine) => graine & 1;
 
 function creerAleatoire(graine) {
   let etat = graine >>> 0;
@@ -75,7 +84,9 @@ function iconeNombres(graine) {
     { y: 18, couleurs: ["#f58220", "#f58220", "#f58220"] },
     { y: 24.5, couleurs: ["#0b67b2", "#08aaa5", "#08aaa5"] },
   ];
-  const trous = melanger([0, 1, 2, 3], aleatoire).slice(0, lignes.length);
+  let trous = melanger([0, 1, 2, 3], aleatoire).slice(0, lignes.length);
+  // Le trou du 1er rang à gauche (jour pair) ou à droite (jour impair) : sinon, le boulier en miroir.
+  if (Math.floor(trous[0] / 2) !== parite(graine)) trous = trous.map((trou) => 3 - trou);
   const boules = lignes
     .flatMap((ligne, rang) =>
       emplacements
@@ -98,6 +109,8 @@ function iconeNombres(graine) {
 function iconeDonnees(graine) {
   const aleatoire = aleatoireDomaine("donnees-probabilites", graine);
   const hauteurs = melanger([8.5, 11, 14.5, 19], aleatoire);
+  // La barre la plus haute à gauche (jour pair) ou à droite (jour impair) : sinon, en miroir.
+  if (Math.floor(hauteurs.indexOf(19) / 2) !== parite(graine)) hauteurs.reverse();
   const couleurs = melanger(["#08aaa5", "#0b67b2", "#6553b8", "#f58220"], aleatoire);
   const barres = [8.5, 13.55, 18.6, 23.65]
     .map((x, index) => {
@@ -126,7 +139,10 @@ const TRAJETS = enumererTrajets(3, 3);
 // Pensée informatique : un trajet sur quadrillage, du point turquoise au drapeau.
 function iconeInformatique(graine) {
   const aleatoire = aleatoireDomaine("pensee-informatique", graine);
-  const trajet = TRAJETS[Math.floor(aleatoire() * TRAJETS.length)];
+  let trajet = TRAJETS[Math.floor(aleatoire() * TRAJETS.length)];
+  // Premier pas vers la droite (jour pair) ou vers le haut (jour impair) : sinon, le trajet symétrique.
+  if ((trajet[0] === "D" ? 0 : 1) !== parite(graine))
+    trajet = [...trajet].map((pas) => (pas === "D" ? "H" : "D")).join("");
   const chemin = `M9 27${[...trajet].map((pas) => (pas === "D" ? "h6" : "v-6")).join("")}`;
   return svg(
     fond("#f5f4ff", "#4f5fb3") +
@@ -148,9 +164,12 @@ function iconeGeometrie(graine) {
   const cellule = 7;
   const origine = 4;
   const rayon = cellule / 2;
-  const orientations = Array.from({ length: taille }, () =>
+  let orientations = Array.from({ length: taille }, () =>
     Array.from({ length: taille }, () => (aleatoire() < 0.5 ? "a" : "b")),
   );
+  // La case du coin en « a » (jour pair) ou en « b » (jour impair) : sinon, le motif retourné.
+  if ((orientations[0][0] === "a" ? 0 : 1) !== parite(graine))
+    orientations = orientations.map((ligne) => ligne.map((o) => (o === "a" ? "b" : "a")));
   const pairePour = (orientation, bord) =>
     (orientation === "a" ? { H: "G", G: "H", D: "B", B: "D" } : { H: "D", D: "H", G: "B", B: "G" })[
       bord
@@ -258,7 +277,8 @@ function iconeFonctions(graine) {
   const aleatoire = aleatoireDomaine("proportionnalite-fonctions", graine);
   const choisir = (liste) => liste[Math.floor(aleatoire() * liste.length)];
   const type = choisir(TYPES_COURBES);
-  const [ox, oy] = choisir(COURBES[type]);
+  // Une origine sur deux selon la parité du jour : même courbe deux jours de suite, autre repère.
+  const [ox, oy] = choisir(COURBES[type].filter((_, rang) => rang % 2 === parite(graine)));
   // f(x) en unités du dessin (x vers la droite depuis O, y vers le HAUT depuis O).
   let f;
   let croixX;
