@@ -209,8 +209,13 @@ function afficherDomaine(id, depuisHistorique = false) {
   relierSelection();
 }
 
-function afficherBrevet() {
+/* L'introduction du brevet a sa place dans l'historique (C4, 22/10) : le geste retour ramène à
+   l'accueil au lieu de quitter l'appli. « Commencer » remplace cette place par celle de la série. */
+function afficherBrevet(depuisHistorique = false) {
   arreterHorloge();
+  if (ecran === "accueil" && !depuisHistorique)
+    history.pushState({ brevet: true }, "", location.pathname);
+  else if (depuisHistorique) history.replaceState({ brevet: true }, "", location.pathname);
   ecran = "brevet";
   seance = null;
   cadre(brevetHTML());
@@ -285,8 +290,11 @@ function lancer(options, questionsImposees) {
     };
     // La série a sa place dans l'historique : le geste retour du téléphone fait comme « Menu » au
     // lieu de quitter l'appli. « Encore une série » et « Refaire mes erreurs » réutilisent la place.
-    // L'état retient le domaine d'origine : un rechargement pendant la série y ramène.
-    if (!etatHistorique()?.serie)
+    // L'état retient le domaine d'origine : un rechargement pendant la série y ramène. Depuis
+    // l'introduction du brevet, la série prend sa place : « Avant » ne retrouve pas d'étape morte.
+    const place = etatHistorique();
+    if (place?.brevet) history.replaceState({ serie: true, origine: null }, "", location.pathname);
+    else if (!place?.serie)
       history.pushState({ serie: true, origine: domaine }, "", location.pathname);
     ecran = "question";
     afficherQuestion();
@@ -902,8 +910,9 @@ function basculerPause() {
 const domaineConnu = (id) => typeof id === "string" && DOMAINES.some(([connu]) => connu === id);
 
 /* Le seul lecteur de l'état d'historique (P12). Reconnus : { domaine } quand c'est un identifiant de
-   DOMAINES, { serie: true } (son origine : un domaine connu, sinon l'accueil). Tout autre état (un
-   domaine inconnu, du texte, un objet trafiqué) est traité comme vide et remplacé. */
+   DOMAINES, { serie: true } (son origine : un domaine connu, sinon l'accueil), { brevet: true }
+   (l'introduction du brevet). Tout autre état (un domaine inconnu, du texte, un objet trafiqué) est
+   traité comme vide et remplacé. */
 function etatHistorique() {
   const etat = history.state;
   if (etat === null) return null;
@@ -911,6 +920,7 @@ function etatHistorique() {
     if (etat.serie === true)
       return { serie: true, origine: domaineConnu(etat.origine) ? etat.origine : null };
     if (domaineConnu(etat.domaine)) return { domaine: etat.domaine };
+    if (etat.brevet === true) return { brevet: true };
   }
   history.replaceState(null, "");
   return null;
@@ -920,6 +930,7 @@ function etatHistorique() {
 // série en cours (rechargement pendant une série) affiche le menu d'origine et prend son état.
 function afficherMenuSelon(etat) {
   if (etat?.domaine) return afficherDomaine(etat.domaine, true);
+  if (etat?.brevet) return afficherBrevet(true);
   if (etat?.serie && etat.origine) return afficherDomaine(etat.origine, true);
   afficherAccueil();
 }
@@ -955,8 +966,11 @@ function retour() {
     location.href = "/";
     return;
   }
-  // La carte du domaine referme : on rend la place prise dans l'historique si elle est à nous.
-  if (ecran === "domaine" && etatHistorique()?.domaine) return history.back();
+  // La carte du domaine referme, « ← Retour » quitte l'introduction du brevet : on rend la place
+  // prise dans l'historique si elle est à nous.
+  const etat = etatHistorique();
+  if ((ecran === "domaine" && etat?.domaine) || (ecran === "brevet" && etat?.brevet))
+    return history.back();
   afficherAccueil();
 }
 
@@ -1229,6 +1243,7 @@ function lireAdresse() {
   // série : atteinte plus tard par « Avant », elle est reconnue morte (C1-bis).
   const etat = etatHistorique();
   if (!location.search && etat?.domaine) return afficherDomaine(etat.domaine, true);
+  if (!location.search && etat?.brevet) return afficherBrevet(true);
   if (!location.search && etat?.serie) {
     afficherMenuSelon(etat);
     history.replaceState(etat, "", location.pathname);

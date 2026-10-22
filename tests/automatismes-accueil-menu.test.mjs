@@ -1201,3 +1201,76 @@ test(
       await retoursJusquALaSortie(onglet, await vue(onglet), "Encore et Refaire");
     }),
 );
+
+test(
+  "Q3 : l’introduction du brevet a sa place dans l’historique — retour = accueil, « Commencer » la remplace",
+  { skip: ignorer, timeout: PLAFOND },
+  () =>
+    banc(async ({ base, page }) => {
+      const avant = `${base}../favicon.svg`;
+      for (const [width, height, tactile] of [
+        [390, 844, true],
+        [1366, 768, false],
+      ]) {
+        const nom = `${width}x${height}`;
+        const onglet = await page(width, height, tactile, { niveau: "4e", nombre: 5 });
+        const intro = async () => {
+          await onglet.locator(".ligne-brevet").click();
+          await onglet.locator(".brevet-depart").waitFor();
+        };
+        await onglet.goto(avant);
+        await accueil(onglet, base);
+        // 1. Introduction → geste retour : l'accueil (avant : on quittait l'appli).
+        await intro();
+        assert.deepEqual(await onglet.evaluate(() => history.state), { brevet: true });
+        assert.equal(await gesteRetour(onglet), "accueil", `${nom} : intro → retour`);
+        // « Avant » rouvre l'introduction (une vraie étape) ; puis retour, retour : accueil, sortie.
+        await onglet.goForward();
+        await onglet.locator(".brevet-depart").waitFor();
+        await retoursJusquALaSortie(onglet, "brevet", `${nom} intro → retour → avant`);
+        // 2. Le bouton « ← Retour » de l'introduction rend la place : pas de second accueil.
+        await onglet.goto(avant);
+        await accueil(onglet, base);
+        await intro();
+        await onglet.locator('.barre-cadre [data-action="retour"]').click();
+        await onglet.locator(".accueil").waitFor();
+        await retoursJusquALaSortie(onglet, "accueil", `${nom} bouton Retour de l'intro`);
+        // 3. Introduction → Commencer → Menu : l'accueil ; « Commencer » n'ajoute aucune place.
+        await onglet.goto(avant);
+        await accueil(onglet, base);
+        const longueur = await onglet.evaluate(() => history.length);
+        await intro();
+        await onglet.locator('[data-action="brevet-commencer"]').click();
+        await onglet.locator(".barre-question").waitFor();
+        assert.equal(await onglet.evaluate(() => history.length), longueur + 1, `${nom} : une place`);
+        assert.deepEqual(await onglet.evaluate(() => history.state), {
+          serie: true,
+          origine: null,
+        });
+        await menu(onglet);
+        await onglet.locator(".accueil").waitFor();
+        await onglet.waitForFunction(() => history.state === null);
+        // « Avant » : la place de la série, morte — rien de visible, aucune étape morte.
+        await avantNavigateur(onglet);
+        assert.equal(await vue(onglet), "accueil", `${nom} : Avant après le brevet`);
+        await retoursJusquALaSortie(onglet, "accueil", `${nom} intro → Commencer → Menu`);
+        // 4. Rechargement sur l'introduction : on y reste.
+        await onglet.goto(avant);
+        await accueil(onglet, base);
+        await intro();
+        await onglet.reload();
+        await onglet.locator(".brevet-depart").waitFor();
+        await retoursJusquALaSortie(onglet, "brevet", `${nom} rechargement de l'intro`);
+        await onglet.context().close();
+      }
+      // L'état {brevet:true} est validé : toute autre forme est remplacée et n'ouvre rien.
+      const onglet = await page(1366, 768);
+      await accueil(onglet, base);
+      for (const etat of [{ brevet: "oui" }, { brevet: 1 }, { brevet: [true] }]) {
+        await onglet.evaluate((valeur) => history.replaceState(valeur, ""), etat);
+        await onglet.reload();
+        await onglet.locator(".accueil").waitFor();
+        assert.equal(await onglet.evaluate(() => history.state), null, JSON.stringify(etat));
+      }
+    }),
+);
