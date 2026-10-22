@@ -308,7 +308,7 @@ function reglagesRejoues(applis, reglages, {reponse = null, echec = null} = {}) 
   const api = async (action, corps) => { appels.push({action, corps}); if (echec) throw echec; return reponse || {ok: true}; };
   const etat = {classe: {id: 7, libelle: "CM1", applis, reglages}};
   const monde = new Function("document", "$", "api", "messager", "surErreur", "ouvrirClasse", "etat",
-    `let classe = etat.classe;\n${constante("NOMBRE_MONDES")}\n${constante("NOMBRES_COFFRES")}\n${["mondesOuverts", "coffresOuverts", "poserPuce", "recordsOuvertsPourLaClasse", "poserActivites", "changerReglageCoffres"].map(n => fonction(n)).join("\n")}\nposerActivites();\nreturn {changerReglageCoffres, coffresOuverts, poserActivites};`)(
+    `let classe = etat.classe;\n${constante("NOMBRE_MONDES")}\n${constante("NOMBRES_COFFRES")}\n${["mondesOuverts", "coffresOuverts", "poserPuce", "recordsOuvertsPourLaClasse", "poserActivites", "changerReglageCoffres"].map(n => fonction(n)).join("\n")}\nfunction poserEnPlusPour() {}\nposerActivites();\nreturn {changerReglageCoffres, coffresOuverts, poserActivites};`)(
     doc, $, api, (id, t, type) => messages.push({id, t, type}), (e, id) => messages.push({id, t: e.message, type: "erreur"}), async id => rouverts.push(id), etat);
   return {$, niveaux, operations, appels, messages, rouverts, monde};
 }

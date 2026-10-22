@@ -266,6 +266,66 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   #tableau-eleves td.actions-eleve { width: 1%; text-align: right; }
   #tableau-eleves td input { min-width: 150px; }
   p.sous.note-eleves { margin: 12px 0 0; font-size: .88rem; }
+  /* Lot « Qui voit quoi » (22/10/2026, planches 1 à 4 validées par Gwenaël) :
+     la colonne « En plus » de l'onglet Élèves — une pastille par chose que
+     l'élève voit EN PLUS de sa classe (l'appli entière, ou les mondes /
+     niveaux qu'elle n'a pas) ; « — » sinon. Pour le propriétaire, la pastille
+     est un bouton qui ouvre « Ce que voit Léa » ; pour un collègue, du texte.
+     Sur téléphone, pas de colonne : les pastilles passent sous le prénom. */
+  /* La colonne prend sa part (45 %) : deux pastilles tiennent sur une ligne,
+     au-delà elles passent à la ligne — le tableau ne déborde jamais de son
+     cadre de 720 px (le « ⋯ » resterait hors de l'écran). */
+  #tableau-eleves td.en-plus { width: 45%; white-space: normal; }
+  #tableau-eleves td.en-plus .vide { color: #9aa9bb; }
+  .ajout { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; margin: 2px 6px 2px 0;
+           padding: 3px 11px 3px 9px; border: 0; border-radius: 999px; background: #eaf0f7;
+           color: var(--blue-dark); font: inherit; font-size: .82rem; font-weight: 700; white-space: nowrap; }
+  button.ajout { cursor: pointer; }
+  button.ajout:hover { background: #dbe6f2; }
+  .ajout i { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%;
+             background: var(--c, #0b67b2); color: #fff; font-style: normal; font-size: .72rem; font-weight: 800; }
+  .ajouts-sous { display: none; }
+  #corps-eleves tr.repere td { background: #fff7d6; transition: background .3s; }
+  /* La fenêtre « Ce que voit Léa » (planche 2) : ce que la classe donne est
+     coché, grisé, « par la classe » ; ce qu'on a donné à l'élève, « en plus »
+     en vert ; le reste à cocher. Chaque clic enregistre ; « Fermer » ferme. */
+  dialog.voit { max-width: 560px; max-height: calc(100vh - 32px); padding: 0; }
+  dialog.voit[open] { display: flex; flex-direction: column; }
+  .voit-tete { padding: 18px 20px 10px; }
+  .voit-tete h2 { margin: 0 0 4px; font-size: 1.25rem; }
+  .voit-tete p { margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.45; }
+  .voit-liste { flex: 1 1 auto; overflow-y: auto; padding: 4px 20px 6px; }
+  .voit-liste[aria-busy="true"] { opacity: .6; cursor: progress; }
+  .voit-liste .activite { padding: 6px 0; }
+  .voit-liste .activite + .activite { margin-top: 0; padding-top: 6px; border-top: 1px solid #e6ecf3; }
+  .voit-liste .activite-tete { display: flex; width: 100%; }
+  .voit-liste .activite-tete small { display: block; color: var(--muted); font-size: .82rem; font-weight: 400; }
+  .voit-liste .par-classe .activite-tete { cursor: default; }
+  .voit-liste .par-classe .activite-tete strong { color: #6b7685; }
+  .voit-liste .tag { margin-left: auto; padding: 2px 9px; border-radius: 999px; background: #f0f3f7;
+                     color: #6b7685; font-size: .78rem; font-weight: 700; white-space: nowrap; }
+  .voit-liste .tag.plus { background: #e2f4e4; color: #1b6b2e; }
+  .voit-liste .sous-reglage { margin: 0 0 6px 9px; padding: 2px 0 6px 20px; }
+  .voit-liste .titre-sous { margin: 4px 0 8px; font-size: .88rem; font-weight: 700; color: var(--muted); }
+  .voit-liste .puce-monde.classe { border-style: solid; border-color: #d2d9e2; background: #f6f8fa; color: #6b7685; cursor: default; }
+  .voit-liste .puce-monde.classe i { background: #cfd6df; color: #fff; }
+  .voit-liste .puce-monde.classe input { cursor: default; }
+  .voit-liste .puce-monde.classe::after, .voit-liste .cases-coffres label.classe::after {
+    content: "par la classe"; margin-left: 2px; color: #8a96a5; font-size: .72rem; font-weight: 600; }
+  .voit-liste .puce-monde.plus { box-shadow: 0 0 0 3px #e2f4e4; }
+  .voit-liste .cases-coffres label.classe { color: #6b7685; cursor: default; }
+  .voit-pied { display: flex; align-items: center; gap: 12px; padding: 12px 20px 16px; border-top: 1px solid #e6ecf3; }
+  .voit-pied .message { margin: 0; padding: 0; background: none; font-size: .88rem; }
+  .voit-pied button { margin-left: auto; }
+  /* ⚙ Réglages (planche 4) : sous chaque appli, en lecture seule, à qui on a
+     ouvert quelque chose en plus ; chaque prénom mène à sa ligne d'Élèves. */
+  .en-plus-pour { margin: 0 0 6px 30px; color: var(--muted); font-size: .84rem; line-height: 1.5; }
+  .sous-reglage .en-plus-pour { margin: 6px 0 0; }
+  .en-plus-pour span { display: block; }
+  .en-plus-pour b { color: #1b6b2e; font-weight: 700; }
+  .en-plus-pour button { min-height: 28px; padding: 0; border: 0; background: none; color: var(--blue-dark);
+                         font: inherit; font-weight: 600; text-decoration: underline; cursor: pointer; }
+  .en-plus-pour button:hover { background: #eaf0f7; }
   /* Les six mondes : le dessin des pastilles de l'espace élève (index.php). */
   .mondes { display: inline-flex; gap: 5px; vertical-align: middle; }
   .mondes svg { display: block; }
@@ -498,6 +558,17 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   @media (max-width: 520px) {
     .onglets .onglet-eleves, .onglets .onglet-reglages { padding: 0 13px; }
     .onglet-eleves .mot, .onglet-reglages .mot { display: none; }
+  }
+  /* Lot « Qui voit quoi » (planche 3) : sur téléphone, pas de colonne « En
+     plus » — les pastilles passent sous le prénom ; dans la fenêtre, les
+     étiquettes « par la classe » se taisent (la case grisée le dit). */
+  @media (max-width: 480px) {
+    #tableau-eleves th.th-plus, #tableau-eleves td.en-plus { display: none; }
+    .ajouts-sous { display: flex; flex-wrap: wrap; gap: 0 2px; margin: -4px 0 4px 8px; }
+    .ajouts-sous .ajout { min-height: 26px; margin: 2px 4px 2px 0; padding: 1px 8px 1px 6px; font-size: .74rem; }
+    .ajouts-sous .ajout i { width: 15px; height: 15px; font-size: .62rem; }
+    .voit-liste .tag { display: none; }
+    .voit-liste .puce-monde.classe::after, .voit-liste .cases-coffres label.classe::after { content: none; }
   }
   @media (max-width: 700px) {
     .tableau-enveloppe { overflow-x: visible; }
@@ -813,7 +884,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
         <p class="sous note-eleves">Mêmes numéros que sur la feuille prénom ↔ code et les bandelettes.</p>
         <div class="tableau-enveloppe">
           <table id="tableau-eleves">
-            <thead><tr><th title="Le numéro de la feuille prénom ↔ code et des bandelettes">N°</th><th>Élève</th><th>Code</th><th></th></tr></thead>
+            <thead><tr><th title="Le numéro de la feuille prénom ↔ code et des bandelettes">N°</th><th>Élève</th><th>Code</th><th class="th-plus" title="Ce que l’élève voit en plus de sa classe">En plus</th><th></th></tr></thead>
             <tbody id="corps-eleves"></tbody>
           </table>
         </div>
@@ -843,9 +914,14 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
               <label><input type="checkbox" id="case-records"> 🏆 Les records</label>
               <small>Le concours de temps des Légendes des tables. Décoché : cette classe ne le voit pas et n’y apparaît pas.</small>
             </div>
+            <!-- Lot « Qui voit quoi » (planche 4) : sous chaque appli, en lecture
+                 seule, les élèves à qui elle est ouverte EN PLUS de la classe
+                 (rempli par poserEnPlusPour, d'après le tableau déjà lu). -->
+            <div class="en-plus-pour" id="en-plus-defi-tables" hidden></div>
           </div>
           <div class="activite">
             <label class="activite-tete"><input type="checkbox" data-appli="coffres"> <strong>Coffres magiques</strong></label>
+            <div class="en-plus-pour" id="en-plus-coffres" hidden></div>
             <!-- Lot « Coffres magiques sur le suivi » (21/10/2026, maquettes
                  02/03 validées) : les niveaux et les opérations accessibles
                  aux élèves, tout coché par défaut (rien d'écrit), enregistrés
@@ -865,10 +941,12 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
                 <label><input type="checkbox" data-operation="3"> Multiplication</label>
                 <label><input type="checkbox" data-operation="4"> Division</label>
               </div>
+              <div class="en-plus-pour" id="en-plus-coffres-listes" hidden></div>
             </div>
           </div>
           <div class="activite">
             <label class="activite-tete"><input type="checkbox" data-appli="splat"> <strong>SPLAT!</strong></label>
+            <div class="en-plus-pour" id="en-plus-splat" hidden></div>
             <!-- Lot « splat-suivi-5 » : les mondes ouverts à la classe (tous par
                  défaut). Un monde fermé reste sur la carte de l'élève, grisé,
                  avec un cadenas ; rien n'est effacé. Les six mondes de la
@@ -883,6 +961,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
                 <label class="puce-monde" data-monde="5"><input type="checkbox" data-monde="5"><i aria-hidden="true">5</i>Équations</label>
                 <label class="puce-monde" data-monde="6"><input type="checkbox" data-monde="6"><i aria-hidden="true">6</i>Relatifs</label>
               </div>
+              <div class="en-plus-pour" id="en-plus-splat-listes" hidden></div>
             </div>
           </div>
           <p class="message" id="message-activites" hidden></p>
@@ -1079,6 +1158,23 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   </div>
 </dialog>
 
+<!-- Lot « Qui voit quoi » (22/10/2026, planche 2) : « Ce que voit Léa ».
+     Propriétaire seulement (Q2). Le contenu est construit par
+     dessinerCeQueVoit (createElement et textContent : le prénom n'est jamais
+     du HTML) ; chaque case enregistre aussitôt (eleves.acces) et le message
+     du pied le dit ; « Fermer » ne fait que fermer. -->
+<dialog id="voit" class="voit" aria-labelledby="voit-titre">
+  <div class="voit-tete">
+    <h2 id="voit-titre"></h2>
+    <p id="voit-sous"></p>
+  </div>
+  <div class="voit-liste" id="voit-liste"></div>
+  <div class="voit-pied">
+    <p class="message" id="voit-message" role="status" hidden></p>
+    <button type="button" class="secondaire" id="voit-fermer">Fermer</button>
+  </div>
+</dialog>
+
 <!-- Lot E1 : « Ouvrir pour la classe » — la durée, et c'est tout. -->
 <dialog id="eval-ouvrir">
   <h2 id="eo-titre" style="margin:0 0 6px"></h2>
@@ -1179,6 +1275,8 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   // écriture) ou "reglages" (lot « Ma classe : réglages », 17/10/2026 :
   // propriétaire seulement).
   let vue = "appli";
+  // Lot « Qui voit quoi » : l'élève dont la fenêtre « Ce que voit… » est ouverte.
+  let voitEleve = null;
   // Les élèves déjà lus de la classe ouverte, par activité (un appel
   // « tableau » par activité, refait seulement quand la classe change).
   let tableaux = {};
@@ -1321,10 +1419,15 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     "qui", "compte-qui", "boite-texte",
     "boite-champs", "secret-texte", "secret-valeur", "echues-texte", "supprimer-echues",
     // Lot E1 : la carte « Évaluations » et ses deux boîtes.
-    "evaluations-zone", "em-titre", "em-tables", "em-types", "em-grille", "eo-titre", "eo-texte", "eo-durees"];
+    "evaluations-zone", "em-titre", "em-tables", "em-types", "em-grille", "eo-titre", "eo-texte", "eo-durees",
+    // Lot « Qui voit quoi » : la fenêtre « Ce que voit Léa » et les lignes
+    // « En plus pour » des Réglages (des prénoms).
+    "voit-titre", "voit-sous", "voit-liste", "en-plus-defi-tables", "en-plus-coffres", "en-plus-coffres-listes",
+    "en-plus-splat", "en-plus-splat-listes"];
   const ZONES_MESSAGE = ["erreur-connexion", "message-classes", "message-classe", "message-appli",
     "message-profs", "message-partage", "message-compte", "bandeau-droit", "bandeau-annee",
-    "message-activites", "message-records", "message-evaluations", "em-message", "message-nom", "message-supprimer"];
+    "message-activites", "message-records", "message-evaluations", "em-message", "message-nom", "message-supprimer",
+    "voit-message"];
   const CHAMPS_A_VIDER = ["identifiant", "motdepasse",
     "mdp-ancien", "mdp-nouveau", "mdp-confirme", "em-nom"];
   const BLOCS_A_CACHER = ["fiche", "bandelettes", "objectif", "fragiles", "bloc-profs",
@@ -1336,7 +1439,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     ZONES_MESSAGE.forEach(id => { const noeud = $(id); if (noeud) { noeud.textContent = ""; noeud.hidden = true; } });
     CHAMPS_A_VIDER.forEach(id => { const noeud = $(id); if (noeud) noeud.value = ""; });
     BLOCS_A_CACHER.forEach(id => { const noeud = $(id); if (noeud) noeud.hidden = true; });
-    ["boite", "secret", "eval-modele", "eval-ouvrir"].forEach(id => {
+    ["boite", "secret", "eval-modele", "eval-ouvrir", "voit"].forEach(id => {
       const boite = $(id);
       if (boite && boite.open) { try { boite.close(); } catch (_) {} }
     });
@@ -1365,6 +1468,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     vue = "appli";
     tableaux = {};
     detailsOuverts.clear();
+    voitEleve = null;
     veille.arreter();
   }
 
@@ -1480,20 +1584,30 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   // que sur les mondes ouverts — « 9 / 9 » quand les mondes 1 et 2 sont finis —
   // et les pastilles des mondes fermés sont grises. Le Détail, lui, garde tout le
   // travail de l'élève (les états de TOUTES les étapes).
-  function lireSplat(brut) {
-    const vide = {faits: 0, total: 0, bonus: 0, cours: 0, mondes: [], etats: {}, lisible: false};
+  //
+  // Lot « Qui voit quoi » (22/10/2026) : les mondes sont ceux de L'ÉLÈVE
+  // (mondesDeLEleve : classe + ce qu'on lui a ouvert en plus) — un monde en
+  // plus se montre en couleur et compte dans son « N / M ». `faitsClasse`
+  // garde le compte sur les mondes de la CLASSE : c'est lui que la carte de
+  // classe additionne (objectifSplat), son total restant celui de la classe.
+  function lireSplat(brut, eleve) {
+    const vide = {faits: 0, faitsClasse: 0, total: 0, bonus: 0, cours: 0, mondes: [], etats: {}, lisible: false};
     if (!SPLAT) return vide;
     try {
-      const ouverts = mondesOuverts();
+      const ouverts = mondesDeLEleve(eleve);
       const ouvert = numero => !ouverts || ouverts.includes(numero);
+      const deLaClasse = mondesOuverts();
+      const parLaClasse = numero => !deLaClasse || deLaClasse.includes(numero);
+      const resumeSur = garder => SPLAT.resumeProf(brut || null, SPLAT.CARTE.ETAPES.filter(etape => garder(etape[4])),
+        SPLAT.CARTE.BONUS.filter(etape => garder(etape[4])));
       const tout = SPLAT.resumeProf(brut || null);
-      const resume = ouverts
-        ? SPLAT.resumeProf(brut || null, SPLAT.CARTE.ETAPES.filter(etape => ouvert(etape[4])),
-            SPLAT.CARTE.BONUS.filter(etape => ouvert(etape[4])))
-        : tout;
-      return {faits: resume.faits, total: resume.total, bonus: resume.bonus.faits,
+      const resume = ouverts ? resumeSur(ouvert) : tout;
+      const resumeClasse = String(deLaClasse) === String(ouverts) ? resume : (deLaClasse ? resumeSur(parLaClasse) : tout);
+      return {faits: resume.faits, faitsClasse: resumeClasse.faits, total: resume.total, bonus: resume.bonus.faits,
               cours: resume.cours + resume.bonus.cours,
-              mondes: tout.mondes.map(monde => (ouvert(monde.numero) ? monde : Object.assign({}, monde, {etat: "ferme"}))),
+              mondes: tout.mondes.map(monde => (ouvert(monde.numero)
+                ? (parLaClasse(monde.numero) ? monde : Object.assign({}, monde, {enPlus: true}))
+                : Object.assign({}, monde, {etat: "ferme"}))),
               etats: tout.etapes, lisible: true};
     } catch (_) { return vide; }
   }
@@ -1508,6 +1622,26 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     const liste = reglages && reglages.splat && reglages.splat.mondes;
     if (!Array.isArray(liste)) return null;
     const ouverts = liste.filter(numero => Number.isInteger(numero) && numero >= 1 && numero <= NOMBRE_MONDES);
+    return ouverts.length && ouverts.length < NOMBRE_MONDES ? ouverts : null;
+  }
+
+  // Lot « Qui voit quoi » : les mondes ouverts à UN élève — ceux que le
+  // serveur a calculés (eleve.acces : classe + ajouts, lot 2), null quand il
+  // les a tous. Sans `acces` (un élève lu par un serveur d'avant le lot 2),
+  // ceux de la classe. On n'enlève jamais à un élève : ce que la classe a, il
+  // l'a — un `acces` qui dirait moins que la classe est complété par elle.
+  function mondesDeLEleve(eleve) {
+    const deLaClasse = mondesOuverts();
+    const acces = eleve && eleve.acces;
+    if (!acces || !Array.isArray(acces.applis)) return deLaClasse;
+    // La classe les a tous : lui aussi.
+    if (!deLaClasse) return null;
+    const reglages = acces.reglages;
+    const liste = reglages && reglages.splat && reglages.splat.mondes;
+    // Rien d'écrit pour lui (SPLAT! entière en plus) : il les a tous.
+    if (!Array.isArray(liste)) return null;
+    const ouverts = [...new Set(liste.concat(deLaClasse))]
+      .filter(numero => Number.isInteger(numero) && numero >= 1 && numero <= NOMBRE_MONDES).sort((a, b) => a - b);
     return ouverts.length && ouverts.length < NOMBRE_MONDES ? ouverts : null;
   }
 
@@ -1526,9 +1660,11 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     } catch (_) { return vide; }
   }
 
+  // L'élève est passé aussi : SPLAT! compte sur SES mondes (lot « Qui voit
+  // quoi » : classe + ajouts, eleve.acces), les autres lecteurs l'ignorent.
   function elevesLus(cle, liste) {
     const lire = cle === "splat" ? lireSplat : cle === "coffres" ? lireCoffres : lireProgression;
-    return (liste || []).map(eleve => Object.assign({}, eleve, {lu: lire(eleve.parcours)}));
+    return (liste || []).map(eleve => Object.assign({}, eleve, {lu: lire(eleve.parcours, eleve)}));
   }
 
   // « ven. 02/10 » : le jour de la semaine dit plus vite qu'une année si
@@ -1715,13 +1851,20 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
 
   // Dans la liste de l'onglet Élèves : ce qui concerne l'élève lui-même.
   function poserGestesEleve(eleve, cActions) {
-    const boutons = [
+    const boutons = [];
+    // Lot « Qui voit quoi » (D5, Q2) : « Ce que voit Léa… » en premier —
+    // propriétaire seulement, comme le serveur (eleves.acces).
+    if (droitClasse === "proprietaire") {
+      boutons.push(boutonGeste(`Ce que voit ${prenomCourt(eleve)}…`, "secondaire petit", () => ouvrirCeQueVoit(eleve),
+        "Ce qu’il voit dans son espace, et ce que tu peux lui ouvrir en plus"));
+    }
+    boutons.push(
       // Choix de Gwenaël (18/10/2026) : l'élève qui a perdu son code, ou qui
       // en a un nouveau, repart avec SA bandelette, et rien à l'écran.
       boutonGeste("Imprimer sa bandelette", "secondaire petit", () => imprimer("bandelettes", eleve),
         "Sa bandelette seule, avec son numéro de la feuille"),
       boutonGeste("Nouveau code", "secondaire petit", () => regenerer(eleve))
-    ];
+    );
     // Supprimer un élève efface sa progression pour de bon : depuis le lot 11,
     // c'est au propriétaire de la classe, comme la supprimer. Un collègue en
     // écriture prépare et dépanne, il n'efface pas.
@@ -1752,12 +1895,483 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       cNumero.textContent = String(index + 1);
       const cNom = celluleNom(eleve, true);
       const cCode = celluleCode(eleve);
+      // Lot « Qui voit quoi » : la colonne « En plus » (une pastille par
+      // ajout effectif, « — » sinon) et, pour le téléphone, les mêmes
+      // pastilles sous le prénom (la colonne y est cachée, planche 3).
+      const cPlus = celluleEnPlus(eleve);
+      const sous = pastillesEnPlus(eleve);
+      if (sous.length) {
+        const bloc = document.createElement("div");
+        bloc.className = "ajouts-sous";
+        bloc.append(...sous);
+        cNom.append(bloc);
+      }
       const cActions = document.createElement("td");
       cActions.className = "actions-eleve";
       poserGestesEleve(eleve, cActions);
-      ligne.append(cNumero, cNom, cCode, cActions);
+      ligne.dataset.eleve = String(eleve.id);
+      ligne.append(cNumero, cNom, cCode, cPlus, cActions);
       corps.appendChild(ligne);
     });
+  }
+
+  // ------------------------------------------------ qui voit quoi (lot 3, 22/10/2026)
+  //
+  // Conception validée par Gwenaël (qui-voit-quoi, lot 1, planches 1 à 4) :
+  // ce qu'un élève voit = ce que voit sa classe + ce qu'on lui a ouvert EN
+  // PLUS ; on n'enlève jamais rien à un élève. Deux portes : ⚙ Réglages pour
+  // la classe, la ligne de l'élève (menu ⋯ « Ce que voit Léa… », pastilles
+  // de la colonne « En plus ») pour l'exception. Le serveur range les ajouts
+  // (eleve.ajouts) et CALCULE ce que voit l'élève (eleve.acces : la règle
+  // « classe + ajouts » n'est écrite qu'une fois, en PHP, lib/applis.php) ;
+  // la page lit `acces` pour montrer, et n'écrit que `ajouts`
+  // (eleves.acces, propriétaire seulement). Tout est construit par
+  // createElement et textContent : un prénom n'est jamais du HTML, et aucun
+  // code d'élève n'est écrit ici.
+
+  // Ce qu'un élève peut recevoir en plus à l'intérieur d'une appli : les
+  // listes de numéros qu'elle déclare au catalogue (lib/applis.php,
+  // « reglages » entiers), avec les mots des Réglages (un test les compare
+  // aux puces et aux cases de la page). `mot` : comment on nomme un numéro ;
+  // `seul` : le mot suffit, sans le nom de l'appli (« le monde 3 »).
+  const LISTES_PAR_ELEVE = {
+    "coffres": [
+      {nom: "niveaux", titre: "Niveaux ouverts", mot: "niveau {n}", feminin: false, seul: false,
+       numeros: [[1, "Niveau 1"], [2, "Niveau 2"], [3, "Niveau 3"]]},
+      {nom: "operations", titre: "Opérations ouvertes", mot: "opération {nom}", feminin: true, seul: false,
+       numeros: [[1, "Addition"], [2, "Soustraction"], [3, "Multiplication"], [4, "Division"]]}
+    ],
+    "splat": [
+      {nom: "mondes", titre: "Mondes ouverts", mot: "monde {n}", feminin: false, seul: true,
+       numeros: [[1, "Petit"], [2, "Classique"], [3, "Enquête"], [4, "Système"], [5, "Équations"], [6, "Relatifs"]]}
+    ]
+  };
+
+  // « Léa » (le prénom seul, comme sur les planches), ou « cet élève ».
+  function prenomCourt(eleve) {
+    return (eleve && eleve.prenom) || "cet élève";
+  }
+
+  // « monde 3 », « niveau 2 », « opération Division ».
+  function motDe(liste, numero) {
+    const trouve = liste.numeros.find(([n]) => n === numero);
+    return liste.mot.replace("{n}", String(numero)).replace("{nom}", trouve ? trouve[1] : String(numero));
+  }
+
+  // Les numéros d'une liste ouverts d'après des réglages ({splat: {mondes:
+  // [1, 2]}}) : null quand ils le sont tous (rien d'écrit, la convention du
+  // serveur), bornés à la liste déclarée.
+  function numerosOuverts(reglages, cle, liste) {
+    const valeurs = reglages && reglages[cle] && reglages[cle][liste.nom];
+    if (!Array.isArray(valeurs)) return null;
+    const max = liste.numeros.length;
+    const ouverts = [...new Set(valeurs.filter(numero => Number.isInteger(numero) && numero >= 1 && numero <= max))]
+      .sort((a, b) => a - b);
+    return ouverts.length && ouverts.length < max ? ouverts : null;
+  }
+
+  // Ce que voit l'élève, calculé par le serveur (eleve.acces) ; sans lui (un
+  // serveur d'avant le lot 2), ce que voit sa classe.
+  function accesDe(eleve) {
+    const acces = eleve && eleve.acces;
+    if (acces && Array.isArray(acces.applis)) return {applis: acces.applis, reglages: acces.reglages || {}};
+    return {applis: (classe && classe.applis) || [], reglages: (classe && classe.reglages) || {}};
+  }
+
+  // Ce qu'un élève voit EN PLUS de sa classe — ce qu'elle ne lui donne pas
+  // déjà —, appli par appli, dans l'ordre de APPLIS :
+  // [{appli, entiere, listes: [{liste, numeros}]}]. `entiere` : l'appli,
+  // que la classe n'a pas, lui est ouverte en entier. Un ajout rattrapé par
+  // la classe (D4) ne s'y voit pas : il est gardé, pas montré.
+  function enPlusDe(eleve) {
+    const acces = eleve && eleve.acces;
+    if (!acces || !Array.isArray(acces.applis)) return [];
+    const deLaClasse = (classe && classe.applis) || [];
+    const sortie = [];
+    APPLIS.forEach(appli => {
+      if (!acces.applis.includes(appli.cle)) return;
+      const parClasse = deLaClasse.includes(appli.cle);
+      const listes = [];
+      (LISTES_PAR_ELEVE[appli.cle] || []).forEach(liste => {
+        const pourLui = numerosOuverts(acces.reglages, appli.cle, liste);
+        const pourLaClasse = parClasse ? numerosOuverts(classe.reglages, appli.cle, liste) : [];
+        // La classe a déjà tout ; ou l'appli lui est ouverte entière.
+        if (pourLaClasse === null || (!parClasse && pourLui === null)) return;
+        const numeros = (pourLui || liste.numeros.map(([numero]) => numero)).filter(numero => !pourLaClasse.includes(numero));
+        if (numeros.length) listes.push({liste, numeros});
+      });
+      if (!parClasse) sortie.push({appli, entiere: listes.length === 0, listes});
+      else if (listes.length) sortie.push({appli, entiere: false, listes});
+    });
+    return sortie;
+  }
+
+  // Une pastille par ajout effectif (planche 1) : « ⚡ Coffres magiques »
+  // pour une appli entière ; « ③ SPLAT! Enquête » (le numéro dans la couleur
+  // du monde, comme les puces des Réglages) pour des mondes ; « Coffres
+  // magiques : niveau 2 » pour des niveaux ou des opérations. Propriétaire :
+  // des boutons qui ouvrent « Ce que voit… » ; collègue : du texte (Q2).
+  function pastillesEnPlus(eleve) {
+    const cliquable = droitClasse === "proprietaire";
+    return enPlusDe(eleve).map(plus => {
+      const pastille = document.createElement(cliquable ? "button" : "span");
+      pastille.className = "ajout";
+      if (cliquable) {
+        pastille.type = "button";
+        pastille.title = `En plus de sa classe — voir ou changer ce que voit ${prenomCourt(eleve)}`;
+        pastille.addEventListener("click", () => ouvrirCeQueVoit(eleve));
+      } else {
+        pastille.title = "En plus de sa classe";
+      }
+      const seule = plus.listes.length === 1 ? plus.listes[0] : null;
+      if (plus.entiere) {
+        pastille.textContent = `⚡ ${plus.appli.nom}`;
+      } else if (seule && seule.liste.nom === "mondes") {
+        seule.numeros.forEach(numero => {
+          const rond = document.createElement("i");
+          rond.setAttribute("aria-hidden", "true");
+          rond.style.background = COULEURS_MONDES[numero] || "#0b67b2";
+          rond.textContent = String(numero);
+          pastille.append(rond);
+        });
+        const nomMonde = seule.numeros.length === 1 ? ` ${motDeMonde(seule.liste, seule.numeros[0])}` : "";
+        pastille.append(document.createTextNode(`${plus.appli.nom}${nomMonde}`));
+        pastille.setAttribute("aria-label", `${plus.appli.nom} : ${seule.numeros.map(numero => motDe(seule.liste, numero)).join(", ")} en plus`);
+      } else {
+        pastille.textContent = `${plus.appli.nom} : `
+          + plus.listes.map(({liste, numeros}) => numeros.map(numero => motDe(liste, numero)).join(", ")).join(", ");
+      }
+      return pastille;
+    });
+  }
+
+  // « Enquête » : le nom court d'un monde (celui des puces).
+  function motDeMonde(liste, numero) {
+    const trouve = liste.numeros.find(([n]) => n === numero);
+    return trouve ? trouve[1] : "";
+  }
+
+  function celluleEnPlus(eleve) {
+    const cellule = document.createElement("td");
+    cellule.className = "en-plus";
+    const pastilles = pastillesEnPlus(eleve);
+    if (pastilles.length) {
+      cellule.append(...pastilles);
+    } else {
+      const vide = document.createElement("span");
+      vide.className = "vide";
+      vide.textContent = "—";
+      vide.title = "Rien de plus que sa classe";
+      cellule.append(vide);
+    }
+    return cellule;
+  }
+
+  // Les ajouts après un geste dans la fenêtre — l'état COMPLET que la page
+  // envoie (eleves.acces remplace la colonne entière, comme ⚙ Réglages
+  // envoie la liste des mondes). Jamais de liste vide, jamais « [] » : pour
+  // le serveur (PHP), {"splat": []} et {"splat": {}} sont la même chose —
+  // SPLAT! ENTIÈRE (relevé par Code à l'application du lot 2). Donc :
+  //  - une appli entière s'ouvre par un objet vide {} et se retire en
+  //    SUPPRIMANT sa clé ;
+  //  - un numéro décoché qui vide sa liste supprime la liste ; une appli
+  //    qui n'a plus aucune liste perd sa clé (sinon elle deviendrait
+  //    « entière ») ;
+  //  - décocher un numéro d'une appli donnée entière ({}) : chaque liste est
+  //    d'abord écrite en entier (« tout, sauf ce numéro »).
+  // geste : {cle, ouvre} pour l'appli ; {cle, liste, numero, ouvre} pour un numéro.
+  function ajoutsApres(ajouts, geste) {
+    const suite = {};
+    Object.keys(ajouts || {}).forEach(cle => {
+      const ajout = ajouts[cle];
+      if (!ajout || typeof ajout !== "object" || Array.isArray(ajout)) return;
+      const copie = {};
+      Object.keys(ajout).forEach(nom => { if (Array.isArray(ajout[nom]) && ajout[nom].length) copie[nom] = ajout[nom].slice(); });
+      // Rien de lisible dans un ajout qui nommait des listes : on ne le
+      // change pas en « appli entière ».
+      if (Object.keys(ajout).length && !Object.keys(copie).length) return;
+      suite[cle] = copie;
+    });
+    if (geste.liste === undefined) {
+      if (geste.ouvre) suite[geste.cle] = {};
+      else delete suite[geste.cle];
+      return suite;
+    }
+    let ajout = suite[geste.cle];
+    if (ajout && !Object.keys(ajout).length) {
+      (LISTES_PAR_ELEVE[geste.cle] || []).forEach(liste => { ajout[liste.nom] = liste.numeros.map(([numero]) => numero); });
+    }
+    if (!ajout) ajout = suite[geste.cle] = {};
+    const numeros = new Set(ajout[geste.liste] || []);
+    if (geste.ouvre) numeros.add(geste.numero);
+    else numeros.delete(geste.numero);
+    if (numeros.size) ajout[geste.liste] = [...numeros].sort((a, b) => a - b);
+    else delete ajout[geste.liste];
+    if (!Object.keys(ajout).length) delete suite[geste.cle];
+    return suite;
+  }
+
+  // « Enregistré : Léa voit Coffres magiques. », « Enregistré : le monde 3
+  // est ouvert à Lucas. » (planche 2).
+  function texteEnregistre(eleve, geste) {
+    const prenom = prenomCourt(eleve);
+    const appli = APPLIS.find(une => une.cle === geste.cle) || {nom: geste.cle};
+    if (geste.liste === undefined) {
+      return geste.ouvre ? `Enregistré : ${prenom} voit ${appli.nom}.` : `Enregistré : ${prenom} ne voit plus ${appli.nom}.`;
+    }
+    const liste = (LISTES_PAR_ELEVE[geste.cle] || []).find(une => une.nom === geste.liste);
+    if (!liste) return "Enregistré.";
+    const e = liste.feminin ? "e" : "";
+    const quoi = `${liste.feminin ? "l’" : "le "}${motDe(liste, geste.numero)}${liste.seul ? "" : ` de ${appli.nom}`}`;
+    return geste.ouvre ? `Enregistré : ${quoi} est ouvert${e} à ${prenom}.` : `Enregistré : ${quoi} n’est plus ouvert${e} à ${prenom}.`;
+  }
+
+  function ouvrirCeQueVoit(eleve) {
+    if (!classe || droitClasse !== "proprietaire" || !eleve) return;
+    voitEleve = eleve;
+    messager("voit-message", "", "");
+    dessinerCeQueVoit();
+    const boite = $("voit");
+    if (!boite.open) boite.showModal();
+  }
+
+  // La fenêtre (planche 2) : toutes les applis que la page sait montrer, une
+  // ligne chacune — par la classe : cochée, grisée, « par la classe » ; par
+  // un ajout : cochée, « en plus » ; le reste à cocher. Sous une appli que la
+  // classe a, ses mondes / niveaux / opérations : ceux de la classe grisés,
+  // les autres à cocher un par un. Une appli que la classe n'a pas s'ouvre
+  // ENTIÈRE (D3) : pas de puces. `garder` : la case à refocaliser après un
+  // enregistrement (la fenêtre est redessinée).
+  function dessinerCeQueVoit(garder) {
+    const eleve = voitEleve;
+    if (!eleve) return;
+    const prenom = prenomCourt(eleve);
+    $("voit-titre").textContent = `Ce que voit ${prenom}`;
+    const sous = $("voit-sous");
+    sous.textContent = "";
+    const enPlus = document.createElement("b");
+    enPlus.textContent = "en plus";
+    sous.append(`Sa classe (${classe.libelle}) décide, et tu peux lui ouvrir des choses `, enPlus,
+      `. Rien ne lui est retiré : ce que la classe a, ${prenom} l’a.`);
+    const zone = $("voit-liste");
+    zone.textContent = "";
+    zone.setAttribute("aria-busy", "false");
+    const acces = accesDe(eleve);
+    const deLaClasse = (classe && classe.applis) || [];
+    let aFocaliser = null;
+    APPLIS.forEach(appli => {
+      const parClasse = deLaClasse.includes(appli.cle);
+      const pourLui = acces.applis.includes(appli.cle);
+      const bloc = document.createElement("div");
+      bloc.className = parClasse ? "activite par-classe" : "activite";
+      const tete = document.createElement("label");
+      tete.className = "activite-tete";
+      const caseAppli = document.createElement("input");
+      caseAppli.type = "checkbox";
+      caseAppli.checked = parClasse || pourLui;
+      caseAppli.disabled = parClasse;
+      caseAppli.dataset.appli = appli.cle;
+      const nom = document.createElement("span");
+      const fort = document.createElement("strong");
+      fort.textContent = appli.nom;
+      nom.append(fort);
+      tete.append(caseAppli, nom);
+      if (parClasse || pourLui) {
+        const etiquette = document.createElement("span");
+        etiquette.className = parClasse ? "tag" : "tag plus";
+        etiquette.textContent = parClasse ? "par la classe" : "en plus";
+        tete.append(etiquette);
+      }
+      if (!parClasse) {
+        caseAppli.addEventListener("change", () => changerCeQueVoit({cle: appli.cle, ouvre: caseAppli.checked}, caseAppli));
+        if (garder && garder.cle === appli.cle && garder.liste === undefined) aFocaliser = caseAppli;
+      }
+      bloc.append(tete);
+      const listes = LISTES_PAR_ELEVE[appli.cle] || [];
+      if (parClasse && listes.length) {
+        const dessous = document.createElement("div");
+        dessous.className = "sous-reglage";
+        listes.forEach(liste => {
+          const pourLaClasse = numerosOuverts(classe.reglages, appli.cle, liste);
+          const ouvertsLui = numerosOuverts(acces.reglages, appli.cle, liste);
+          const titre = document.createElement("p");
+          titre.className = "titre-sous";
+          titre.id = `voit-${appli.cle}-${liste.nom}`;
+          titre.textContent = liste.titre;
+          const groupe = document.createElement("div");
+          groupe.className = appli.cle === "splat" ? "puces-mondes" : "cases-coffres";
+          groupe.setAttribute("role", "group");
+          groupe.setAttribute("aria-labelledby", titre.id);
+          liste.numeros.forEach(([numero, libelle]) => {
+            const deClasse = !pourLaClasse || pourLaClasse.includes(numero);
+            const ouvert = deClasse || !ouvertsLui || ouvertsLui.includes(numero);
+            const etiquette = document.createElement("label");
+            const caseNumero = document.createElement("input");
+            caseNumero.type = "checkbox";
+            caseNumero.checked = ouvert;
+            caseNumero.disabled = deClasse;
+            caseNumero.dataset.liste = liste.nom;
+            caseNumero.dataset.numero = String(numero);
+            if (appli.cle === "splat") {
+              etiquette.className = `puce-monde ${deClasse ? "classe" : ouvert ? "plus" : "ferme"}`;
+              etiquette.dataset.monde = String(numero);
+              const rond = document.createElement("i");
+              rond.setAttribute("aria-hidden", "true");
+              rond.textContent = String(numero);
+              etiquette.append(caseNumero, rond, libelle);
+            } else {
+              etiquette.className = deClasse ? "classe" : "";
+              etiquette.append(caseNumero, ` ${libelle}`);
+            }
+            if (deClasse) {
+              etiquette.title = "Ouvert par la classe";
+            } else {
+              caseNumero.addEventListener("change", () =>
+                changerCeQueVoit({cle: appli.cle, liste: liste.nom, numero, ouvre: caseNumero.checked}, caseNumero));
+              if (garder && garder.cle === appli.cle && garder.liste === liste.nom && garder.numero === numero) aFocaliser = caseNumero;
+            }
+            groupe.append(etiquette);
+          });
+          dessous.append(titre, groupe);
+        });
+        bloc.append(dessous);
+      } else if (!parClasse && pourLui) {
+        // Un ajout gardé alors que la classe a perdu l'appli (D4) peut ne
+        // nommer que certains numéros : on le dit, sans puces (D3).
+        const restreint = listes.map(liste => {
+          const numeros = numerosOuverts(acces.reglages, appli.cle, liste);
+          return numeros ? numeros.map(numero => motDe(liste, numero)).join(", ") : "";
+        }).filter(Boolean);
+        if (restreint.length) {
+          const petit = document.createElement("small");
+          petit.textContent = `Seulement : ${restreint.join(" · ")}`;
+          nom.append(petit);
+        }
+      }
+      zone.append(bloc);
+    });
+    if (aFocaliser) aFocaliser.focus();
+  }
+
+  // Chaque clic enregistre (eleves.acces) : la page envoie TOUT l'état
+  // (ajoutsApres) ; le serveur répond le rangé et le calculé, que la page
+  // reporte sur l'élève dans toutes les listes déjà lues. En cas d'erreur,
+  // la case revient en arrière et le pied de la fenêtre le dit (comme les
+  // puces des mondes des Réglages).
+  async function changerCeQueVoit(geste, caseCochee) {
+    const eleve = voitEleve;
+    if (!eleve || !classe) return;
+    const ajouts = ajoutsApres(eleve.ajouts, geste);
+    const zone = $("voit-liste");
+    const actives = [...zone.querySelectorAll("input")].filter(uneCase => !uneCase.disabled);
+    actives.forEach(uneCase => { uneCase.disabled = true; });
+    zone.setAttribute("aria-busy", "true");
+    try {
+      const reponse = await api("eleves.acces", {eleve_id: eleve.id, ajouts});
+      reporterAcces(eleve, reponse.ajouts || {}, reponse.acces || null);
+      if (voitEleve === eleve) dessinerCeQueVoit(geste);
+      messager("voit-message", texteEnregistre(eleve, geste), "ok");
+    } catch (erreur) {
+      caseCochee.checked = !caseCochee.checked;
+      actives.forEach(uneCase => { uneCase.disabled = false; });
+      zone.setAttribute("aria-busy", "false");
+      surErreur(erreur, "voit-message");
+    }
+  }
+
+  // Un élève est le même dans toutes les activités : ses ajouts et ce qu'il
+  // voit valent pour les listes déjà lues (SPLAT! recompte ses mondes), puis
+  // l'onglet Élèves et les lignes « En plus pour » des Réglages suivent.
+  function reporterAcces(eleve, ajouts, acces) {
+    eleve.ajouts = ajouts;
+    eleve.acces = acces;
+    Object.keys(tableaux).forEach(cle => {
+      (tableaux[cle] || []).forEach(autre => {
+        if (autre.id !== eleve.id) return;
+        autre.ajouts = ajouts;
+        autre.acces = acces;
+        if (cle === "splat") autre.lu = lireSplat(autre.parcours, autre);
+      });
+    });
+    redessin.demander();
+    poserEnPlusPour();
+  }
+
+  // ⚙ Réglages (planche 4) : sous chaque appli, en LECTURE SEULE, à qui elle
+  // est ouverte en plus de la classe — « En plus pour Rania, Alice » (l'appli
+  // entière) ou, sous les mondes / niveaux, « En plus pour monde 3 : Lucas,
+  // Alice ». Chaque prénom mène à sa ligne de l'onglet Élèves, la seule porte
+  // pour modifier. Lu dans le tableau déjà chargé : aucun appel de plus.
+  function poserEnPlusPour() {
+    const deLaClasse = (classe && classe.applis) || [];
+    const ordre = ordreDeLaFeuille(eleves || []);
+    const proprietaire = droitClasse === "proprietaire";
+    APPLIS.forEach(appli => {
+      const listes = LISTES_PAR_ELEVE[appli.cle] || [];
+      const tete = $(`en-plus-${appli.cle}`);
+      const dessous = listes.length ? $(`en-plus-${appli.cle}-listes`) : null;
+      [tete, dessous].forEach(zone => { if (zone) { zone.textContent = ""; zone.hidden = true; } });
+      if (!proprietaire || !tete) return;
+      const entiers = [];
+      const parNumero = new Map();
+      ordre.forEach((eleve, index) => {
+        enPlusDe(eleve).filter(plus => plus.appli.cle === appli.cle).forEach(plus => {
+          if (!deLaClasse.includes(appli.cle)) {
+            const precision = plus.listes.map(({liste, numeros}) => numeros.map(numero => motDe(liste, numero)).join(", ")).join(", ");
+            entiers.push({eleve, numero: index + 1, precision});
+            return;
+          }
+          plus.listes.forEach(({liste, numeros}) => numeros.forEach(numero => {
+            const cle = `${liste.nom}:${numero}`;
+            if (!parNumero.has(cle)) parNumero.set(cle, []);
+            parNumero.get(cle).push({eleve, numero: index + 1, precision: ""});
+          }));
+        });
+      });
+      if (entiers.length) {
+        tete.append(ligneEnPlusPour("", entiers));
+        tete.hidden = false;
+      }
+      if (dessous) {
+        listes.forEach(liste => liste.numeros.forEach(([numero]) => {
+          const qui = parNumero.get(`${liste.nom}:${numero}`);
+          if (!qui) return;
+          dessous.append(ligneEnPlusPour(motDe(liste, numero), qui));
+          dessous.hidden = false;
+        }));
+      }
+    });
+  }
+
+  function ligneEnPlusPour(quoi, qui) {
+    const ligne = document.createElement("span");
+    const titre = document.createElement("b");
+    titre.textContent = "En plus pour";
+    ligne.append(titre, quoi ? ` ${quoi} : ` : " ");
+    qui.forEach(({eleve, numero, precision}, rang) => {
+      if (rang) ligne.append(", ");
+      const lien = document.createElement("button");
+      lien.type = "button";
+      lien.textContent = nomAffiche(eleve) || `n° ${numero} (sans prénom)`;
+      lien.title = "Aller à sa ligne dans l’onglet Élèves";
+      lien.addEventListener("click", () => allerALEleve(eleve.id));
+      ligne.append(lien);
+      if (precision) ligne.append(` (${precision})`);
+    });
+    return ligne;
+  }
+
+  // Un prénom de « En plus pour » : l'onglet Élèves, sa ligne au milieu de
+  // l'écran, surlignée un instant, et le focus sur son « ⋯ ».
+  function allerALEleve(id) {
+    ouvrirEleves();
+    const ligne = [...document.querySelectorAll("#corps-eleves tr")].find(tr => tr.dataset.eleve === String(id));
+    if (!ligne) return;
+    ligne.scrollIntoView({block: "center"});
+    ligne.classList.add("repere");
+    window.setTimeout(() => ligne.classList.remove("repere"), 2000);
+    const poignee = ligne.querySelector("summary");
+    if (poignee) poignee.focus({preventScroll: true});
   }
 
   function dessinerTableau() {
@@ -2038,7 +2652,9 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     const dessin = elementSvg("svg", {class: `monde-p ${etat}`, width: "24", height: "24", viewBox: "0 0 24 24",
       focusable: "false"});
     const titre = elementSvg("title", {});
-    titre.textContent = `Monde ${monde.numero} · ${monde.nom} : ${etat === "ferme" ? ETATS_MONDE.ferme : `${monde.faits} / ${monde.total}`}`;
+    // Lot « Qui voit quoi » : un monde ouvert à cet élève en plus de sa classe le dit au survol.
+    titre.textContent = `Monde ${monde.numero} · ${monde.nom} : ${etat === "ferme" ? ETATS_MONDE.ferme : `${monde.faits} / ${monde.total}`}`
+      + (monde.enPlus && etat !== "ferme" ? " · ouvert en plus de la classe" : "");
     dessin.append(titre);
     if (etat === "ferme") {
       dessin.append(elementSvg("circle", {cx: "12", cy: "12", r: "11", fill: "#fff", stroke: GRIS_FERME,
@@ -2074,7 +2690,9 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     cellule.colSpan = colonnes;
     cellule.dataset.libelle = "";
     const etats = eleve.lu.etats || {};
-    const ouverts = mondesOuverts();
+    // Les mondes de L'ÉLÈVE (lot « Qui voit quoi ») : un monde ouvert à lui
+    // seul n'a ni cadenas ni pâleur.
+    const ouverts = mondesDeLEleve(eleve);
     const rangee = (titre, etapes, bonus) => {
       if (!etapes.length) return;
       const div = document.createElement("div");
@@ -2207,8 +2825,10 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     // Lot « splat-suivi-5 » : seulement les mondes ouverts à la classe.
     const ouverts = mondesOuverts();
     const ouvert = numero => !ouverts || ouverts.includes(numero);
+    // Lot « Qui voit quoi » : les mondes ouverts à un élève en plus ne
+    // comptent pas ici — la carte reste celle de la classe (faitsClasse).
     return {
-      fait: lus.reduce((somme, lu) => somme + lu.faits, 0),
+      fait: lus.reduce((somme, lu) => somme + (typeof lu.faitsClasse === "number" ? lu.faitsClasse : lu.faits), 0),
       total: eleves.length * SPLAT.CARTE.ETAPES.filter(etape => ouvert(etape[4])).length,
       mondes: SPLAT.CARTE.MONDES.filter(([numero]) => ouvert(numero)).map(([numero]) => ({
         numero,
@@ -3621,6 +4241,8 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       caseOperation.checked = !operations || operations.includes(Number(caseOperation.dataset.operation));
       caseOperation.disabled = false;
     });
+    // Lot « Qui voit quoi » : sous chaque appli, « En plus pour … ».
+    poserEnPlusPour();
   }
 
   // Les niveaux (1 à 3) ou les opérations (1 à 4) de Coffres magiques ouverts
@@ -4465,6 +5087,15 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   document.addEventListener("click", fermerMenus);
   window.addEventListener("scroll", () => fermerMenus(null), true);
   window.addEventListener("resize", () => fermerMenus(null));
+  // Lot « Qui voit quoi » : « Fermer » ne fait que fermer (chaque clic a déjà
+  // été enregistré) ; fermée (bouton ou Échap), la fenêtre oublie l'élève et
+  // ses prénoms.
+  $("voit-fermer").addEventListener("click", () => { $("voit").close(); });
+  $("voit").addEventListener("close", () => {
+    voitEleve = null;
+    ["voit-titre", "voit-sous", "voit-liste"].forEach(id => { $(id).textContent = ""; });
+    messager("voit-message", "", "");
+  });
 
   $("imprimer-bandelettes").addEventListener("click", () => imprimer("bandelettes"));
   $("imprimer-recap").addEventListener("click", () => imprimer("recap"));
