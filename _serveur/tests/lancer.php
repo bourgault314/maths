@@ -2996,6 +2996,10 @@ const MATRICE_ATTENDUE = [
     'classes.supprimer' => 'proprietaire',
     'classes.supprimer_echues' => 'proprietaire',
     'eleves.supprimer' => 'proprietaire',
+    // Lot « Qui voit quoi » (22/10/2026) : ouvrir quelque chose en plus à un
+    // élève — décider ce qu'il voit, comme ⚙ Réglages pour la classe :
+    // propriétaire (Q2, décision de Gwenaël).
+    'eleves.acces' => 'proprietaire',
     // Lot « après l'audit GPT » (D4, 14/10/2026) : retirer un temps des records.
     'records.retirer' => 'proprietaire',
     'partages.ajouter' => 'proprietaire',
@@ -3136,6 +3140,10 @@ function jouer_action_lot11(string $action, array $lot11, string $jeton): int
         case 'eleves.restaurer':
             $corps['eleve_id'] = $lot11['eleve']['id'];
             $corps['appli'] = 'defi-tables';
+            break;
+        case 'eleves.acces': // rien en plus : la colonne reste vide, le droit seul est éprouvé
+            $corps['eleve_id'] = $lot11['eleve']['id'];
+            $corps['ajouts'] = new stdClass();
             break;
     }
     return appel('/api/prof.php', $corps, ['jeton' => $jeton])['code'];
@@ -3629,6 +3637,7 @@ verifier("lot A — le journal écrit UNE ligne par action du professeur", funct
     ecrire($eleves[0]['code'], ['version' => 1, 'expert' => 1], 1);
     appel('/api/prof.php', ['action' => 'eleves.restaurer', 'eleve_id' => $eleveId], ['jeton' => $jetonS1]);
     appel('/api/prof.php', ['action' => 'eleves.regenerer', 'eleve_id' => $eleveId], ['jeton' => $jetonS1]);
+    appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $eleveId, 'ajouts' => ['coffres' => new stdClass()]], ['jeton' => $jetonS1]);
     appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classe, 'libelle' => 'lot-A-journal-2'], ['jeton' => $jetonS1]);
     appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $classe, 'prof_id' => $claireId, 'droit' => 'lecture'], ['jeton' => $jetonS1]);
     appel('/api/prof.php', ['action' => 'partages.supprimer', 'classe_id' => $classe, 'prof_id' => $claireId], ['jeton' => $jetonS1]);
@@ -3639,7 +3648,7 @@ verifier("lot A — le journal écrit UNE ligne par action du professeur", funct
     foreach (bd_test()->query("SELECT action, COUNT(*) AS n FROM journal WHERE resultat = 'ok' GROUP BY action")->fetchAll(PDO::FETCH_ASSOC) as $ligne) {
         $comptes[(string)$ligne['action']] = (int)$ligne['n'];
     }
-    foreach (['classes.creer', 'eleves.ajouter', 'eleves.nommer', 'eleves.restaurer', 'eleves.regenerer',
+    foreach (['classes.creer', 'eleves.ajouter', 'eleves.nommer', 'eleves.restaurer', 'eleves.regenerer', 'eleves.acces',
               'classes.modifier', 'partages.ajouter', 'partages.supprimer', 'eleves.supprimer', 'classes.supprimer'] as $action) {
         egal(1, $comptes[$action] ?? 0, "« $action » doit écrire exactement une ligne");
     }
@@ -4552,17 +4561,20 @@ verifier("coffres-suivi — seul le propriétaire règle niveaux et opérations 
         appel('/api/prof.php', ['action' => 'partages.supprimer', 'classe_id' => $id, 'prof_id' => $idc], ['jeton' => $jetonS1]);
     }
     $e = identite($code);
-    egal(['splat' => ['mondes' => [1, 2]], 'coffres' => ['niveaux' => [2], 'operations' => [1]]], $e['json']['reglages'], 'par le code (l’espace élève, et l’appli qui relit l’identité)');
+    // Lot « Qui voit quoi » (22/10/2026) : l'élève reçoit ses réglages dans
+    // l'ordre du CATALOGUE (acces_de_l_eleve), plus dans l'ordre où le
+    // professeur a cliqué — Coffres avant SPLAT!.
+    egal(['coffres' => ['niveaux' => [2], 'operations' => [1]], 'splat' => ['mondes' => [1, 2]]], $e['json']['reglages'], 'par le code (l’espace élève, et l’appli qui relit l’identité)');
     $billet = appel('/api/eleve.php', ['code' => $code, 'billet' => true])['json']['billet'];
     $r = echanger($billet, ['appli' => 'coffres']);
     egal(200, $r['code'], 'l’échange du billet avec appli « coffres »');
     egal('entree', $r['json']['type']);
-    egal(['splat' => ['mondes' => [1, 2]], 'coffres' => ['niveaux' => [2], 'operations' => [1]]], $r['json']['reglages'], 'à l’échange du billet (l’appli)');
+    egal(['coffres' => ['niveaux' => [2], 'operations' => [1]], 'splat' => ['mondes' => [1, 2]]], $r['json']['reglages'], 'à l’échange du billet (l’appli)');
     // Coffres décoché : l'élève ne reçoit plus rien de Coffres ; recoché : ses réglages reviennent.
     appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'applis' => ['defi-tables', 'splat']], ['jeton' => $jetonS1]);
     egal(['splat' => ['mondes' => [1, 2]]], identite($code)['json']['reglages'], 'Coffres décoché : rien de Coffres pour l’élève');
     appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'applis' => ['defi-tables', 'coffres', 'splat']], ['jeton' => $jetonS1]);
-    egal(['splat' => ['mondes' => [1, 2]], 'coffres' => ['niveaux' => [2], 'operations' => [1]]], identite($code)['json']['reglages'], 'recoché : les mêmes réglages');
+    egal(['coffres' => ['niveaux' => [2], 'operations' => [1]], 'splat' => ['mondes' => [1, 2]]], identite($code)['json']['reglages'], 'recoché : les mêmes réglages');
 });
 
 verifier("coffres-suivi — l'espace élève et « Ma classe » chargent le moteur Coffres d'ici, identique à celui du dépôt ; verifier.php le contrôle", function () use ($racine) {
@@ -4600,6 +4612,356 @@ verifier("coffres-suivi — le catalogue déclare exactement ce que le moteur ex
     vrai((bool)preg_match('#const NOMBRE_OPERATIONS = (\d);#', $moteur, $mo) && (int)$mo[1] === CATALOGUE_APPLIS['coffres']['reglages']['operations'], 'autant d’opérations que le moteur');
     egal([], CATALOGUE_APPLIS['coffres']['mots'], 'aucun mot : le parcours n’a que des nombres, des booléens et des dates');
     egal(['defi-tables', 'coffres', 'defi-calcul', 'automatismes', 'splat', 'soley'], array_keys(CATALOGUE_APPLIS), 'Coffres juste après Défi tables : l’ordre des tuiles');
+});
+
+// ------------------------------------------------ lot « Qui voit quoi » (22/10/2026)
+//
+// Ce qu'un élève voit = ce que voit sa classe + ce qu'on lui a donné EN PLUS
+// (décision de Gwenaël : on ajoute seulement, on ne retire jamais). Rangé dans
+// eleves.ajouts (JSON, vide pour tout le monde au départ) :
+// {"coffres": {}} = Coffres entière en plus, {"splat": {"mondes": [3]}} = le
+// monde 3 en plus. Écrit par eleves.acces (propriétaire, lecture STRICTE,
+// remplace la colonne entière), rendu au professeur (tableau : « ajouts » le
+// rangé, « acces » le calculé) et à l'élève (api/eleve.php) sous les noms qui
+// existent déjà, « applis » et « reglages » : l'espace élève, SPLAT!, Défi
+// tables et Coffres n'ont rien à changer. Une seule règle, lib/applis.php,
+// acces_de_l_eleve() — testée ici sur le tableau de la conception.
+
+$qvq = null;
+
+// Lecture directe de la colonne d'un élève (curseur fermé aussitôt : un
+// curseur SQLite ouvert garde un verrou, et le serveur de test ne répond plus).
+function ajouts_en_base(int $eleveId): ?string
+{
+    $ligne = bd_test()->prepare('SELECT ajouts FROM eleves WHERE id = ?');
+    $ligne->execute([$eleveId]);
+    $valeur = $ligne->fetchColumn();
+    $ligne->closeCursor();
+    return $valeur === false ? null : $valeur;
+}
+
+verifier("qui-voit-quoi — la règle « classe + ajouts » : les cinq lignes de la conception, et les cas tordus", function () {
+    require_once dirname(__DIR__) . '/public/lib/applis.php';
+    // La classe 405 : Défi tables + SPLAT! mondes 1 et 2.
+    $classe = ['applis' => 'defi-tables,splat', 'reglages' => '{"splat":{"mondes":[1,2]}}'];
+    $regle = fn(?string $ajouts) => acces_de_l_eleve($classe, $ajouts);
+    egal(['applis' => ['defi-tables', 'splat'], 'reglages' => ['splat' => ['mondes' => [1, 2]]]], $regle(null), 'NULL : la classe telle quelle');
+    egal(['applis' => ['defi-tables', 'coffres', 'splat'], 'reglages' => ['splat' => ['mondes' => [1, 2]]]], $regle('{"coffres":{}}'),
+        'Coffres entière en plus, dans l’ordre du catalogue ; ses niveaux et opérations : tous (rien d’écrit)');
+    egal(['applis' => ['defi-tables', 'splat'], 'reglages' => ['splat' => ['mondes' => [1, 2, 3]]]], $regle('{"splat":{"mondes":[3]}}'), 'le monde 3 en plus');
+    egal(['applis' => ['defi-tables', 'splat'], 'reglages' => []], $regle('{"splat":{"mondes":[3,4,5,6]}}'), 'les quatre autres en plus : tout ouvert, rien d’écrit');
+    egal(['applis' => ['defi-tables', 'coffres', 'splat'], 'reglages' => ['coffres' => ['niveaux' => [2]], 'splat' => ['mondes' => [1, 2]]]],
+        $regle('{"coffres":{"niveaux":[2]}}'), 'le niveau 2 de Coffres seul : ses opérations, que l’ajout ne nomme pas, restent toutes ouvertes');
+    // SPLAT! « entière » (« {} ») à un élève dont la classe n'a que les mondes 1 et 2 : tout ouvert.
+    egal(['applis' => ['defi-tables', 'splat'], 'reglages' => []], $regle('{"splat":{}}'), '« {} » ouvre tout, même quand la classe a déjà l’appli avec des mondes fermés');
+    // Un ajout déjà donné par la classe ne change rien (D4 : il reste rangé, il ne se voit pas).
+    egal(['splat' => ['mondes' => [1, 2]]], $regle('{"splat":{"mondes":[1,2]}}')['reglages'], 'les mondes 1 et 2 « en plus » : rien de plus');
+    // Les réglages booléens suivent la classe.
+    $avecRecords = ['applis' => 'defi-tables', 'reglages' => '{"defi-tables":{"records":false}}'];
+    egal(['applis' => ['defi-tables'], 'reglages' => ['defi-tables' => ['records' => false]]], acces_de_l_eleve($avecRecords, '{"defi-tables":{"records":true}}'),
+        '« records » n’est pas un réglage d’élève : la classe décide');
+    // Une classe qui a tout ouvert : un ajout de monde n'écrit rien.
+    egal([], acces_de_l_eleve(['applis' => 'splat'], '{"splat":{"mondes":[3]}}')['reglages'], 'tous ouverts + un monde = tous ouverts');
+    // Une classe sans SPLAT! : « {} » l'ouvre entière, une liste ouvre ces mondes-là.
+    egal([], acces_de_l_eleve(['applis' => 'defi-tables'], '{"splat":{}}')['reglages'], 'SPLAT! entière à un élève d’une classe sans SPLAT!');
+    egal(['splat' => ['mondes' => [3]]], acces_de_l_eleve(['applis' => 'defi-tables'], '{"splat":{"mondes":[3]}}')['reglages'], 'le monde 3 seul (le stockage le permet, D3)');
+    // Lecture indulgente de la colonne : ce qui est faux est ignoré, jamais
+    // transformé en « tout ».
+    foreach ([
+        ['pas du json', []], ['[1,2]', []], ['{"inconnue":{}}', []], ['{"soley":{}}', []], ['{"automatismes":{}}', []],
+        ['{"splat":{"mondes":[9]}}', []], ['{"splat":{"mondes":[]}}', []], ['{"splat":{"mondes":"3"}}', []], ['{"splat":[3]}', []],
+        ['{"splat":{"tables":[1]}}', []], ['{"defi-tables":{"records":false}}', []],
+        ['{"splat":[]}', ['splat' => []]], ['{"splat":{}}', ['splat' => []]],
+        ['{"splat":{"mondes":[9,"2",3,3,"x",0]}}', ['splat' => ['mondes' => [3]]]],
+        ['{"splat":{"mondes":[6,5,4,3,2,1]}}', ['splat' => ['mondes' => [1, 2, 3, 4, 5, 6]]]],
+        ['{"coffres":{"niveaux":[9]}}', []],
+        // Relecture Codex (22/10/2026) : un réglage NOMMÉ mais illisible fait
+        // ignorer l'ajout entier — sinon « operations » disparaissait et la
+        // règle l'ouvrait en entier (une restriction abîmée devenait « tout »).
+        ['{"coffres":{"niveaux":[2],"operations":[9]}}', []],
+        ['{"coffres":{"niveaux":[2],"operations":"1"}}', []],
+        ['{"coffres":{"niveaux":[2],"operations":[]}}', []],
+        ['{"coffres":{"niveaux":[2],"operations":[1]}}', ['coffres' => ['niveaux' => [2], 'operations' => [1]]]],
+    ] as [$brut, $attendu]) {
+        egal($attendu, ajouts_lus($brut), "« $brut »");
+    }
+    // Et ce que ces valeurs OUVRENT, à un élève d'une classe sans Coffres : rien
+    // de plus que ce qui se lit — jamais toutes les opérations.
+    $sansCoffres = ['applis' => 'defi-tables'];
+    foreach (['{"coffres":{"niveaux":[2],"operations":[9]}}', '{"coffres":{"niveaux":[2],"operations":"1"}}', '{"coffres":{"niveaux":[2],"operations":[]}}'] as $brut) {
+        egal(['applis' => ['defi-tables'], 'reglages' => []], acces_de_l_eleve($sansCoffres, $brut), "« $brut » n’ouvre pas Coffres");
+    }
+    egal(['applis' => ['defi-tables', 'coffres'], 'reglages' => ['coffres' => ['niveaux' => [2], 'operations' => [1]]]],
+        acces_de_l_eleve($sansCoffres, '{"coffres":{"niveaux":[2],"operations":[1]}}'), 'lisible : exactement ce qui est écrit');
+    egal('{"coffres":{},"splat":{"mondes":[3]}}', json_encode(ajouts_json(['coffres' => [], 'splat' => ['mondes' => [3]]])), 'en JSON, une appli entière s’écrit « {} », jamais « [] »');
+    egal('{}', json_encode(ajouts_json([])), 'rien en plus : « {} »');
+    egal(null, ajouts_pour_la_base([]), 'rien en plus : NULL en base');
+});
+
+verifier("qui-voit-quoi — par défaut rien en plus : le tableau rend « ajouts » vide et « acces » = la classe, l'élève reçoit ce qu'il recevait", function () use (&$jetonS1, &$qvq) {
+    vider_compteurs();
+    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'qvq-405', 'applis' => ['defi-tables', 'splat']], ['jeton' => $jetonS1])['json']['id'];
+    egal(200, appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['splat' => ['mondes' => [1, 2]]]], ['jeton' => $jetonS1])['code'], 'mondes 1 et 2 pour la classe');
+    $eleves = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 3], ['jeton' => $jetonS1])['json']['eleves'];
+    appel('/api/prof.php', ['action' => 'eleves.nommer', 'eleve_id' => $eleves[0]['id'], 'prenom' => 'Léa', 'initiale' => 'B'], ['jeton' => $jetonS1]);
+    $qvq = ['id' => $id, 'lea' => $eleves[0], 'lucas' => $eleves[1], 'temoin' => $eleves[2]];
+    foreach ($eleves as $e) egal(null, ajouts_en_base((int)$e['id']), 'la colonne est vide');
+    $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $id, 'appli' => 'splat'], ['jeton' => $jetonS1]);
+    egal(200, $t['code']);
+    egal(3, count($t['json']['eleves']));
+    foreach ($t['json']['eleves'] as $ligne) {
+        egal([], $ligne['ajouts'], 'tableau : aucun ajout');
+        egal(['applis' => ['defi-tables', 'splat'], 'reglages' => ['splat' => ['mondes' => [1, 2]]]], $ligne['acces'], 'tableau : il voit ce que voit sa classe');
+    }
+    vrai(substr_count($t['texte'], '"ajouts":{}') === 3, 'un objet JSON « {} » par élève, pas une liste « [] »');
+    $e = identite($qvq['lea']['code']);
+    egal(200, $e['code']);
+    egal(['defi-tables', 'splat'], array_column($e['json']['applis'], 'cle'), 'par le code : les applis de la classe');
+    egal(['cle' => 'splat', 'nom' => 'SPLAT!', 'description' => 'Six mondes de taches et de jetons, étape par étape.',
+        'url' => 'https://mathsgo.re/outils/splat_univers.html', 'ancre' => null, 'disponible' => true], $e['json']['applis'][1], 'la même forme qu’avant : la page n’a rien à changer');
+    egal(['splat' => ['mondes' => [1, 2]]], $e['json']['reglages'], 'et les mondes de la classe');
+    vrai(!str_contains($e['texte'], 'ajouts'), 'l’élève ne reçoit pas le mot « ajouts » : il reçoit ce qu’il voit, sans savoir d’où ça vient');
+});
+
+verifier("qui-voit-quoi — eleves.acces range les ajouts, répond le rangé et le calculé, et l'élève voit la différence par son code et par le billet", function () use (&$jetonS1, &$qvq) {
+    vider_compteurs();
+    $lea = (int)$qvq['lea']['id'];
+    $r = appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $lea,
+        'ajouts' => ['coffres' => new stdClass(), 'splat' => ['mondes' => [3, 3, 2]]]], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], $r['texte']);
+    egal(['coffres' => [], 'splat' => ['mondes' => [2, 3]]], $r['json']['ajouts'], 'le rangé : trié, sans doublon');
+    vrai(str_contains($r['texte'], '"ajouts":{"coffres":{},"splat":{"mondes":[2,3]}}'), 'Coffres entière s’écrit « {} »');
+    egal(['applis' => ['defi-tables', 'coffres', 'splat'], 'reglages' => ['splat' => ['mondes' => [1, 2, 3]]]], $r['json']['acces'], 'le calculé : classe + ajouts');
+    vrai(!str_contains($r['texte'], $qvq['lea']['code']), 'jamais le code');
+    egal('{"coffres":{},"splat":{"mondes":[2,3]}}', ajouts_en_base($lea), 'en base');
+    egal(null, ajouts_en_base((int)$qvq['lucas']['id']), 'Lucas n’a rien');
+    // L'élève, par son code : Coffres apparaît, le monde 3 s'ouvre.
+    $e = identite($qvq['lea']['code']);
+    egal(['defi-tables', 'coffres', 'splat'], array_column($e['json']['applis'], 'cle'), 'Léa voit Coffres, dans l’ordre du catalogue');
+    egal('Coffres magiques', $e['json']['applis'][1]['nom']);
+    egal(['splat' => ['mondes' => [1, 2, 3]]], $e['json']['reglages'], 'et son monde 3');
+    // Par le billet (la carte des mondes relit l'identité à l'échange).
+    $billet = appel('/api/eleve.php', ['code' => $qvq['lea']['code'], 'billet' => true])['json']['billet'];
+    $b = echanger($billet, ['appli' => 'splat']);
+    egal(200, $b['code']);
+    egal(['splat' => ['mondes' => [1, 2, 3]]], $b['json']['reglages'], 'à l’échange du billet aussi');
+    // Lucas, lui, ne voit rien de plus.
+    $l = identite($qvq['lucas']['code']);
+    egal(['defi-tables', 'splat'], array_column($l['json']['applis'], 'cle'));
+    egal(['splat' => ['mondes' => [1, 2]]], $l['json']['reglages']);
+    // Le tableau montre les deux.
+    $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $qvq['id'], 'appli' => 'splat'], ['jeton' => $jetonS1]);
+    $parId = [];
+    foreach ($t['json']['eleves'] as $ligne) $parId[(int)$ligne['id']] = $ligne;
+    egal(['coffres' => [], 'splat' => ['mondes' => [2, 3]]], $parId[$lea]['ajouts']);
+    egal(['applis' => ['defi-tables', 'coffres', 'splat'], 'reglages' => ['splat' => ['mondes' => [1, 2, 3]]]], $parId[$lea]['acces']);
+    egal([], $parId[(int)$qvq['lucas']['id']]['ajouts']);
+    // L'onglet Coffres de la classe s'ouvre, même si la classe n'a pas Coffres : Léa y est.
+    $tc = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $qvq['id'], 'appli' => 'coffres'], ['jeton' => $jetonS1]);
+    egal(200, $tc['code'], 'le tableau Coffres d’une classe sans Coffres');
+    egal(3, count($tc['json']['eleves']), 'la classe entière y est listée');
+    // Tout envoyer remplace tout : « {} » efface, et l'élève revient à sa classe.
+    $r = appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $lea, 'ajouts' => new stdClass()], ['jeton' => $jetonS1]);
+    egal(200, $r['code']);
+    vrai(str_contains($r['texte'], '"ajouts":{}'), 'réponse « {} »');
+    egal(null, ajouts_en_base($lea), 'en base : NULL, comme un élève à qui on n’a jamais rien donné');
+    egal(['defi-tables', 'splat'], array_column(identite($qvq['lea']['code'])['json']['applis'], 'cle'), 'Léa revoit sa classe, rien de plus');
+    // SPLAT! entière (« {} ») à Léa, dont la classe n'a que les mondes 1 et 2 : tout ouvert.
+    $r = appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $lea, 'ajouts' => ['splat' => new stdClass()]], ['jeton' => $jetonS1]);
+    egal(200, $r['code']);
+    egal([], $r['json']['acces']['reglages'], 'SPLAT! entière : plus aucun monde fermé pour elle');
+    vrai(str_contains(identite($qvq['lea']['code'])['texte'], '"reglages":{}'), 'par le code : « {} », tout ouvert');
+    // Un envoi partiel remplace aussi : on ne fusionne pas.
+    appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $lea, 'ajouts' => ['coffres' => new stdClass()]], ['jeton' => $jetonS1]);
+    appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $lea, 'ajouts' => ['splat' => ['mondes' => [3]]]], ['jeton' => $jetonS1]);
+    egal('{"splat":{"mondes":[3]}}', ajouts_en_base($lea), 'le second envoi a remplacé le premier (la fenêtre envoie tout son état)');
+});
+
+verifier("qui-voit-quoi — une valeur fausse est refusée avec un message, et rien n'est écrit", function () use (&$jetonS1, &$qvq) {
+    vider_compteurs();
+    $lea = (int)$qvq['lea']['id'];
+    $avant = ajouts_en_base($lea);
+    foreach ([
+        ['tout', 'Ajouts illisibles.', 'une chaîne'],
+        [[1, 2], 'Ajouts illisibles.', 'une liste'],
+        [null, 'Ajouts illisibles.', 'rien'],
+        [['inconnue' => new stdClass()], 'Application inconnue.', 'une appli inconnue'],
+        [['soley' => new stdClass()], 'Application inconnue.', 'une appli fermée'],
+        [['automatismes' => new stdClass()], 'Application inconnue.', 'une appli annoncée mais fermée'],
+        [['splat' => 'mondes'], 'Ajout illisible.', 'un ajout illisible'],
+        [['splat' => [3]], 'Ajout illisible.', 'une liste à la place de l’objet'],
+        [['splat' => ['tables' => [1]]], 'Réglage inconnu.', 'un réglage non déclaré'],
+        [['defi-tables' => ['records' => false]], 'Réglage inconnu.', 'un réglage booléen : ça ne se donne pas par élève'],
+        [['splat' => ['mondes' => []]], "Une liste vide n'ajoute rien : retire plutôt l'activité.", 'aucun monde'],
+        [['splat' => ['mondes' => [7]]], 'Monde inconnu.', 'un monde qui n’existe pas'],
+        [['splat' => ['mondes' => [0, 1]]], 'Monde inconnu.', 'le monde 0'],
+        [['splat' => ['mondes' => ['1']]], 'Monde inconnu.', 'un texte'],
+        [['splat' => ['mondes' => [1.5]]], 'Monde inconnu.', 'un nombre à virgule'],
+        [['splat' => ['mondes' => '1,2']], 'Liste de mondes illisible.', 'une chaîne'],
+        [['splat' => ['mondes' => ['a' => 1]]], 'Liste de mondes illisible.', 'un objet'],
+        [['coffres' => ['niveaux' => [4]]], 'Niveau inconnu.', 'un niveau de Coffres qui n’existe pas'],
+        [['coffres' => ['operations' => [5]]], 'Opération inconnue.', 'une opération de Coffres qui n’existe pas'],
+        [['coffres' => new stdClass(), 'splat' => ['mondes' => [9]]], 'Monde inconnu.', 'un bon et un mauvais : tout est refusé'],
+    ] as [$ajouts, $message, $quoi]) {
+        $r = appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $lea, 'ajouts' => $ajouts], ['jeton' => $jetonS1]);
+        egal(400, $r['code'], "$quoi : refusé");
+        egal($message, $r['json']['erreur'] ?? null, "$quoi : le message");
+    }
+    egal($avant, ajouts_en_base($lea), 'la colonne n’a pas bougé');
+    // Un élève qui n'existe pas : introuvable, comme partout.
+    egal(404, appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => 999999, 'ajouts' => new stdClass()], ['jeton' => $jetonS1])['code']);
+});
+
+verifier("qui-voit-quoi — le propriétaire seul donne ; un collègue voit « ajouts » et « acces », ne les change pas (refus journalisé)", function () use (&$jetonS1, &$qvq) {
+    vider_compteurs();
+    $tmp = appel('/api/prof.php', ['action' => 'profs.ajouter', 'identifiant' => 'collegue-qvq'], ['jeton' => $jetonS1])['json']['motdepasse'];
+    $jc = connexion('collegue-qvq', $tmp)['json']['jeton'];
+    appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => $tmp, 'nouveau' => 'qvq-collegue-2026'], ['jeton' => $jc]);
+    $idc = null;
+    foreach (appel('/api/prof.php', ['action' => 'profs.liste'], ['jeton' => $jetonS1])['json']['profs'] as $pr) {
+        if ($pr['identifiant'] === 'collegue-qvq') $idc = $pr['id'];
+    }
+    $lea = (int)$qvq['lea']['id'];
+    egal('{"splat":{"mondes":[3]}}', ajouts_en_base($lea), 'point de départ');
+    // Sans partage : la classe n'existe pas pour lui.
+    egal(404, appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $lea, 'ajouts' => new stdClass()], ['jeton' => $jc])['code'], 'sans partage : introuvable');
+    bd_test()->exec('DELETE FROM journal');
+    foreach (['lecture', 'ecriture'] as $droit) {
+        appel('/api/prof.php', ['action' => 'partages.supprimer', 'classe_id' => $qvq['id'], 'prof_id' => $idc], ['jeton' => $jetonS1]);
+        egal(200, appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $qvq['id'], 'prof_id' => $idc, 'droit' => $droit], ['jeton' => $jetonS1])['code'], "partage en $droit");
+        $r = appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $lea, 'ajouts' => new stdClass()], ['jeton' => $jc]);
+        egal(403, $r['code'], "un collègue en $droit ne donne rien à un élève");
+        egal("Cette classe ne t'appartient pas : seul son propriétaire peut faire cela.", $r['json']['erreur'] ?? null, 'le même message que les autres actions du propriétaire');
+        $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $qvq['id'], 'appli' => 'splat'], ['jeton' => $jc]);
+        egal(200, $t['code']);
+        $ligneLea = null;
+        foreach ($t['json']['eleves'] as $ligne) if ((int)$ligne['id'] === $lea) $ligneLea = $ligne;
+        egal(['splat' => ['mondes' => [3]]], $ligneLea['ajouts'], "un collègue en $droit voit la colonne « En plus »");
+        egal(['splat' => ['mondes' => [1, 2, 3]]], $ligneLea['acces']['reglages'], "et les mondes de Léa");
+        if ($droit === 'lecture') egal(null, $ligneLea['code'], 'en lecture, toujours pas de code');
+    }
+    egal(2, (int)bd_test()->query("SELECT COUNT(*) FROM journal WHERE action = 'eleves.acces' AND resultat = 'refus'")->fetchColumn(), 'deux refus au journal');
+    egal('{"splat":{"mondes":[3]}}', ajouts_en_base($lea), 'rien n’a bougé');
+    appel('/api/prof.php', ['action' => 'partages.supprimer', 'classe_id' => $qvq['id'], 'prof_id' => $idc], ['jeton' => $jetonS1]);
+    // Le journal : une ligne « eleves.acces » sur l'élève (son numéro), et
+    // RIEN de ce qui a été donné — ni « coffres », ni un monde.
+    bd_test()->exec('DELETE FROM journal');
+    appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $lea, 'ajouts' => ['coffres' => new stdClass(), 'splat' => ['mondes' => [3]]]], ['jeton' => $jetonS1]);
+    $lignes = bd_test()->query("SELECT * FROM journal WHERE action = 'eleves.acces'")->fetchAll(PDO::FETCH_ASSOC);
+    egal(1, count($lignes), 'une ligne');
+    egal(['eleve', $lea, 'ok'], [$lignes[0]['cible_type'], (int)$lignes[0]['cible_id'], $lignes[0]['resultat']]);
+    vrai(!str_contains(implode('|', $lignes[0]), 'coffres') && !str_contains(implode('|', $lignes[0]), 'splat'), 'ce qui a été donné est dans la ligne de l’élève, pas dans le journal');
+});
+
+verifier("qui-voit-quoi — D4 : un ajout rattrapé par la classe reste rangé ; si la classe referme, l'élève garde ; une appli décochée reste à qui l'a en plus", function () use (&$jetonS1, &$qvq) {
+    vider_compteurs();
+    $lea = (int)$qvq['lea']['id'];
+    egal('{"coffres":{},"splat":{"mondes":[3]}}', ajouts_en_base($lea), 'point de départ : Coffres et le monde 3 en plus');
+    // La classe ouvre le monde 3 à tout le monde : Léa voit la même chose, son ajout reste.
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $qvq['id'], 'reglages' => ['splat' => ['mondes' => [1, 2, 3]]]], ['jeton' => $jetonS1]);
+    egal(['splat' => ['mondes' => [1, 2, 3]]], identite($qvq['lea']['code'])['json']['reglages'], 'Léa : 1, 2, 3');
+    egal(['splat' => ['mondes' => [1, 2, 3]]], identite($qvq['lucas']['code'])['json']['reglages'], 'Lucas aussi');
+    egal('{"coffres":{},"splat":{"mondes":[3]}}', ajouts_en_base($lea), 'l’ajout est gardé (invisible tant que la classe l’a)');
+    // La classe referme le monde 3 : Lucas le perd, Léa le garde.
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $qvq['id'], 'reglages' => ['splat' => ['mondes' => [1, 2]]]], ['jeton' => $jetonS1]);
+    egal(['splat' => ['mondes' => [1, 2, 3]]], identite($qvq['lea']['code'])['json']['reglages'], 'Léa garde son monde 3');
+    egal(['splat' => ['mondes' => [1, 2]]], identite($qvq['lucas']['code'])['json']['reglages'], 'Lucas : 1 et 2');
+    // La classe décoche SPLAT! : Lucas ne le voit plus ; Léa le garde, avec
+    // son seul monde 3 (ce que son ajout nomme) — le stockage le permet (D3).
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $qvq['id'], 'applis' => ['defi-tables']], ['jeton' => $jetonS1]);
+    $l = identite($qvq['lucas']['code'])['json'];
+    egal(['defi-tables'], array_column($l['applis'], 'cle'), 'Lucas : Défi tables seul');
+    vrai(!isset($l['reglages']['splat']), 'et plus rien de SPLAT!');
+    $e = identite($qvq['lea']['code'])['json'];
+    egal(['defi-tables', 'coffres', 'splat'], array_column($e['applis'], 'cle'), 'Léa : Coffres et SPLAT! par ses ajouts');
+    egal(['splat' => ['mondes' => [3]]], $e['reglages'], 'SPLAT! : le monde 3 seul, ce que son ajout nomme');
+    // La classe ouvre Coffres à tous, niveaux 1 et 2 : Léa l'a entière par son ajout.
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $qvq['id'], 'applis' => ['defi-tables', 'coffres', 'splat'],
+        'reglages' => ['coffres' => ['niveaux' => [1, 2]]]], ['jeton' => $jetonS1]);
+    egal(['coffres' => ['niveaux' => [1, 2]], 'splat' => ['mondes' => [1, 2]]], identite($qvq['lucas']['code'])['json']['reglages'], 'Lucas : niveaux 1 et 2');
+    egal(['splat' => ['mondes' => [1, 2, 3]]], identite($qvq['lea']['code'])['json']['reglages'], 'Léa : Coffres entière (rien d’écrit), et son monde 3');
+    // Remise en état pour la suite.
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $qvq['id'], 'applis' => ['defi-tables', 'splat']], ['jeton' => $jetonS1]);
+});
+
+verifier("qui-voit-quoi — parcours.php ne refuse rien (Q1 = non, comme les mondes de SPLAT!) : ouvrir guide, ça ne verrouille pas", function () use (&$qvq) {
+    vider_compteurs();
+    // Lucas n'a pas Coffres ; son appli peut quand même enregistrer (un lien
+    // d'entrée fabriqué à la main) : le professeur le verrait dans son
+    // Parcours, rien de plus. Décision de Gwenaël du 22/10/2026.
+    $r = ecrire($qvq['lucas']['code'], ['version' => 1, 'epoque' => 0, 'niveaux' => ['1' => ['tresors' => 1, 'parfaits' => 0]]], 0, 'coffres');
+    egal(200, $r['code'], 'enregistré, sans refus : ' . $r['texte']);
+    egal(200, lire($qvq['lucas']['code'], 'coffres')['code']);
+});
+
+verifier("qui-voit-quoi — en base, une valeur abîmée se lit « rien en plus » ou ce qui reste lisible, jamais une panne", function () use (&$jetonS1, &$qvq) {
+    vider_compteurs();
+    $lea = (int)$qvq['lea']['id'];
+    $maj = bd_test()->prepare('UPDATE eleves SET ajouts = ? WHERE id = ?');
+    foreach ([
+        ['pas du json', ['defi-tables', 'splat'], '{"splat":{"mondes":[1,2]}}'],
+        ['[1,2]', ['defi-tables', 'splat'], '{"splat":{"mondes":[1,2]}}'],
+        ['{"inconnue":{}}', ['defi-tables', 'splat'], '{"splat":{"mondes":[1,2]}}'],
+        ['{"splat":{"mondes":[9]}}', ['defi-tables', 'splat'], '{"splat":{"mondes":[1,2]}}'],
+        ['{"splat":{"mondes":[9,"2",3,3]}}', ['defi-tables', 'splat'], '{"splat":{"mondes":[1,2,3]}}'],
+        ['{"coffres":[]}', ['defi-tables', 'coffres', 'splat'], '{"splat":{"mondes":[1,2]}}'],
+        ['{"coffres":{"niveaux":[2],"operations":[9]}}', ['defi-tables', 'splat'], '{"splat":{"mondes":[1,2]}}'],
+        ['', ['defi-tables', 'splat'], '{"splat":{"mondes":[1,2]}}'],
+    ] as [$brut, $applis, $reglages]) {
+        $maj->execute([$brut, $lea]);
+        $r = identite($qvq['lea']['code']);
+        egal(200, $r['code'], "« $brut » : l’élève entre");
+        egal($applis, array_column($r['json']['applis'], 'cle'), "« $brut » : ses applis");
+        vrai(str_contains($r['texte'], '"reglages":' . $reglages), "« $brut » → $reglages");
+        $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $qvq['id'], 'appli' => 'splat'], ['jeton' => $jetonS1]);
+        egal(200, $t['code'], "« $brut » : Ma classe s’ouvre");
+    }
+    $maj->execute(['{"coffres":{},"splat":{"mondes":[3]}}', $lea]);
+});
+
+verifier("qui-voit-quoi — avant migrer.php (colonne absente) : tout se lit « rien en plus », seul « Ce que voit… » demande la mise à niveau", function () use (&$jetonS1, &$qvq) {
+    vider_compteurs();
+    $lea = (int)$qvq['lea']['id'];
+    // La base d'avant migrer.php : la colonne retirée le temps de l'essai
+    // (SQLite comme MySQL savent le faire), remise par migrer_schema() dans le
+    // finally. Léa perd ses ajouts avec la colonne : c'est l'état d'un serveur
+    // qui n'a jamais eu le lot.
+    bd_test()->exec('ALTER TABLE eleves DROP COLUMN ajouts');
+    try {
+        egal(false, colonne_existe(bd_test(), 'eleves', 'ajouts'), 'la colonne est retirée pour l’essai');
+        $e = identite($qvq['lea']['code']);
+        egal(200, $e['code'], 'l’élève entre');
+        egal(['defi-tables', 'splat'], array_column($e['json']['applis'], 'cle'), 'et voit sa classe');
+        vrai(str_contains($e['texte'], '"reglages":{"splat":{"mondes":[1,2]}}'), 'avec ses mondes');
+        $billet = appel('/api/eleve.php', ['code' => $qvq['lea']['code'], 'billet' => true])['json']['billet'];
+        egal(200, echanger($billet, ['appli' => 'splat'])['code'], 'le billet s’échange');
+        egal(200, appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1])['code'], 'Ma classe s’ouvre');
+        $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $qvq['id'], 'appli' => 'splat'], ['jeton' => $jetonS1]);
+        egal(200, $t['code'], 'le tableau aussi');
+        egal([], $t['json']['eleves'][0]['ajouts'], 'rien en plus pour personne');
+        egal(['defi-tables', 'splat'], $t['json']['eleves'][0]['acces']['applis']);
+        egal(200, appel('/api/prof.php', ['action' => 'eleves.nommer', 'eleve_id' => $lea, 'prenom' => 'Léa', 'initiale' => 'B'], ['jeton' => $jetonS1])['code'], 'nommer marche encore');
+        $r = appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $lea, 'ajouts' => ['coffres' => new stdClass()]], ['jeton' => $jetonS1]);
+        egal(503, $r['code'], 'donner quelque chose : mise à niveau à faire');
+        vrai(str_contains($r['json']['erreur'] ?? '', 'migrer.php'), 'le message dit quoi faire : ' . ($r['json']['erreur'] ?? ''));
+        $v = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+        vrai((bool)preg_match('#class="etat non">✗</span>\s*Ajouts par élève\s*<div class="detail">manque la colonne « eleves\.ajouts » — ouvre migrer\.php#u', $v['texte']),
+            'verifier.php le dit, en rouge');
+    } finally {
+        $faits = migrer_schema(bd_test());
+    }
+    vrai(in_array("Colonne « ajouts » ajoutée aux élèves (ce qu'un professeur ouvre à un élève en plus de sa classe).", $faits, true),
+        'migrer.php ajoute la colonne et le dit : ' . implode(' | ', $faits));
+    egal([], migrer_schema(bd_test()), 'relancer ne fait plus rien');
+    egal(true, colonne_existe(bd_test(), 'eleves', 'ajouts'));
+    $v = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai((bool)preg_match('#class="etat oui">✓</span>\s*Ajouts par élève\s*<div class="detail">en place \(aucun élève n’a quelque chose en plus de sa classe\)#u', $v['texte']),
+        'verifier.php : la ligne est verte, et compte zéro');
+    $r = appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $lea, 'ajouts' => ['coffres' => new stdClass()]], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'après la mise à niveau, donner marche');
+    $v = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai((bool)preg_match('#Ajouts par élève\s*<div class="detail">en place \(1 élève\(s\) avec quelque chose en plus de sa classe\)#u', $v['texte']),
+        'verifier.php compte Léa');
 });
 
 // ------------------------------------------------- 🏆 Les records (lot du 09/10/2026)

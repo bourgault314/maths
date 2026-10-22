@@ -81,7 +81,8 @@ function schema(string $pilote): array
   code VARCHAR(8) NOT NULL,
   prenom VARCHAR(40) NOT NULL DEFAULT '',
   initiale VARCHAR(4) NOT NULL DEFAULT '',
-  cree_le VARCHAR(25) NOT NULL"
+  cree_le VARCHAR(25) NOT NULL,
+  ajouts TEXT NULL"
         . ($mysql ? ",\n  UNIQUE KEY eleves_code (code),\n  KEY eleves_classe (classe_id)" : "")
         . "\n)$fin",
 
@@ -361,6 +362,14 @@ function migrer_schema(?PDO $pdo = null): array
     if (table_existe($pdo, 'directs') && !colonne_existe($pdo, 'directs', 'reglage')) {
         $pdo->exec('ALTER TABLE directs ADD COLUMN reglage TEXT NULL');
         $faits[] = "Colonne « réglage » ajoutée aux séances en direct (le modèle d'une évaluation ouverte).";
+    }
+    // Lot « Qui voit quoi » (22/10/2026) : ce qu'un professeur ouvre à UN
+    // élève en plus de sa classe — une appli entière, ou des mondes en plus
+    // (lib/applis.php, acces_de_l_eleve). Vide pour tous les élèves existants :
+    // chacun voit exactement ce que voit sa classe, comme avant.
+    if (table_existe($pdo, 'eleves') && !colonne_existe($pdo, 'eleves', 'ajouts')) {
+        $pdo->exec('ALTER TABLE eleves ADD COLUMN ajouts TEXT NULL');
+        $faits[] = "Colonne « ajouts » ajoutée aux élèves (ce qu'un professeur ouvre à un élève en plus de sa classe).";
     }
 
     // Puis les tables et index absents (dont « partages »), sans toucher au reste.

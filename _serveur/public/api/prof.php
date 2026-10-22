@@ -78,6 +78,12 @@ const DROIT_PAR_ACTION = [
     // Elle efface : propriétaire, comme « Supprimer la classe ».
     'classes.supprimer_echues' => 'proprietaire',
     'eleves.supprimer' => 'proprietaire',
+    // Lot « Qui voit quoi » (22/10/2026, décision de Gwenaël) : ouvrir à UN
+    // élève une appli ou des mondes en plus de sa classe. C'est décider ce
+    // que voit un élève, comme ⚙ Réglages décide pour la classe : le
+    // propriétaire seulement. Un collègue en écriture voit la colonne
+    // « En plus » (tableau), sans pouvoir la changer.
+    'eleves.acces' => 'proprietaire',
     // Lot « après l'audit GPT » (D4, 14/10/2026) : effacer le temps d'une
     // Légende dans les records — ça efface : propriétaire.
     'records.retirer' => 'proprietaire',
@@ -258,7 +264,8 @@ function acces_classe(PDO $pdo, int $profId, mixed $classeIdBrut, string $besoin
 
 // Pour toute action sur un élève : on remonte à SA classe et on vérifie là, avec
 // le droit que la matrice exige pour cette action — jamais le classe_id envoyé
-// par le navigateur.
+// par le navigateur. La classe vérifiée est rendue sous « classe » (lot « Qui
+// voit quoi » : eleves.acces calcule « classe + ajouts » sans relire la base).
 function eleve_pour_action(PDO $pdo, int $profId, mixed $eleveIdBrut, string $action): array
 {
     $eleveId = (int)$eleveIdBrut;
@@ -268,7 +275,7 @@ function eleve_pour_action(PDO $pdo, int $profId, mixed $eleveIdBrut, string $ac
     // Même message qu'une classe interdite : un professeur connecté ne doit
     // pas pouvoir distinguer « n'existe pas » de « appartient à un collègue ».
     if ($eleve === false) erreur("Introuvable.", 404);
-    acces_classe($pdo, $profId, (int)$eleve['classe_id'], droit_requis($action), $action);
+    $eleve['classe'] = acces_classe($pdo, $profId, (int)$eleve['classe_id'], droit_requis($action), $action);
     return $eleve;
 }
 
@@ -894,15 +901,48 @@ try {
             journaliser($pdo, $profId, 'eleves.supprimer', 'eleve', (int)$eleve['id']);
             repondre(['ok' => true]);
 
+        case 'eleves.acces':
+            // Lot « Qui voit quoi » (22/10/2026) : « Ce que voit Léa… » —
+            // {eleve_id, ajouts} remplace la colonne eleves.ajouts ENTIÈRE (la
+            // fenêtre envoie tout son état à chaque clic). L'élève est remonté
+            // à SA classe (eleve_pour_action) : propriétaire seulement, pour
+            // ses élèves seulement ; la classe envoyée par le navigateur ne
+            // compte pas. Lu STRICTEMENT (lib/applis.php, ajouts_recus) : une
+            // appli fermée, un réglage non déclaré, un numéro hors bornes sont
+            // refusés avec un message, rien n'est arrangé en silence. Répond
+            // le rangé (« ajouts ») et le calculé (« acces » : ce que voit
+            // l'élève, classe + ajouts) — jamais son code.
+            $eleve = eleve_pour_action($pdo, $profId, $corps['eleve_id'] ?? 0, $action);
+            if (!ajouts_disponibles($pdo)) {
+                erreur("Le serveur doit être mis à niveau : ouvre migrer.php avec ton mot de passe d'installation.", 503);
+            }
+            try {
+                $ajouts = ajouts_recus($corps['ajouts'] ?? null);
+            } catch (InvalidArgumentException $e) {
+                erreur($e->getMessage(), 400);
+            }
+            $pdo->prepare('UPDATE eleves SET ajouts = ? WHERE id = ?')
+                ->execute([ajouts_pour_la_base($ajouts), (int)$eleve['id']]);
+            journaliser($pdo, $profId, 'eleves.acces', 'eleve', (int)$eleve['id']);
+            repondre([
+                'ok' => true,
+                'ajouts' => ajouts_json($ajouts),
+                'acces' => acces_json(acces_de_l_eleve($eleve['classe'], ajouts_pour_la_base($ajouts))),
+            ]);
+
         // ------------------------------------------------------------------ tableau
 
         case 'tableau':
             $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
             $appli = appli_recue($corps['appli'] ?? null);
             if (!in_array($appli, APPLIS_PROPOSABLES, true)) erreur("Application inconnue.", 400);
+            // Lot « Qui voit quoi » : la colonne eleves.ajouts n'existe
+            // qu'après migrer.php ; avant, on ne la demande pas et chaque
+            // élève se lit « rien en plus ».
+            $avecAjouts = ajouts_disponibles($pdo);
             $requete = $pdo->prepare(
                 'SELECT e.id, e.code, e.prenom, e.initiale, p.donnees, p.maj_le, p.revision,
-                        (p.donnees_avant IS NOT NULL) AS restaurable
+                        (p.donnees_avant IS NOT NULL) AS restaurable' . ($avecAjouts ? ', e.ajouts' : '') . '
                  FROM eleves e
                  LEFT JOIN progressions p ON p.eleve_id = e.id AND p.appli = ?
                  WHERE e.classe_id = ?
@@ -954,6 +994,14 @@ try {
                     'restaurable' => (int)$ligne['restaurable'] === 1,
                     'journees' => $journees,
                     'record' => $recordsParEleve[(int)$ligne['id']] ?? null,
+                    // Lot « Qui voit quoi » (22/10/2026) : ce qu'on lui a
+                    // donné en plus (le rangé, nettoyé) et ce qu'il voit (le
+                    // calculé : classe + ajouts), pour tous les droits — ce
+                    // n'est ni un code ni une donnée d'élève. La colonne
+                    // « En plus » et l'onglet SPLAT! (mondes par élève) s'en
+                    // servent (lot 3).
+                    'ajouts' => ajouts_json(ajouts_lus($avecAjouts ? $ligne['ajouts'] : null)),
+                    'acces' => acces_json(acces_de_l_eleve($classe, $avecAjouts ? $ligne['ajouts'] : null)),
                 ];
             }
             repondre([
