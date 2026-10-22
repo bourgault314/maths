@@ -157,8 +157,8 @@
       font-variant-numeric: tabular-nums; letter-spacing: -.01em; color: var(--ink); }
     .nombre .moins { font-weight: 900; font-size: .8em; margin-right: .06em; }
     .question { text-align: center; }
-    .question .combien { margin: 0; font-size: 1.5rem; font-weight: 950; }
-    .question .detail { margin: 6px 0 0; color: var(--muted); font-weight: 700; font-size: .85rem; }
+    /* Demande de Gwenaël (22/10/2026) : un grand « ? », rien d'autre. */
+    .question .combien { margin: 0; font-size: clamp(4.5rem, 14vh, 8rem); line-height: 1; font-weight: 950; color: var(--blue); }
     /* La colonne : nombres alignés à droite, unités sous unités ; le signe −,
        noir et épais, est collé à son nombre (« … − 47 »), comme dans une
        opération posée (remarque de Gwenaël, 22/10/2026). */
@@ -188,6 +188,11 @@
     .keypad button:focus-visible::before { outline: 3px solid #0f6cf9; outline-offset: 1px; }
     .keypad svg { width: 26px; height: 20px; }
     .valider { width: min(100%, 360px); margin-top: 12px; }
+    /* « ↻ Revoir » (choix de Gwenaël, 22/10/2026) : en Flash, à gauche de
+       Valider, il rejoue les mêmes nombres à la même vitesse. */
+    .rangee { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+    .rangee.avec-revoir { grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); }
+    .rangee .secondary { min-height: 52px; padding-left: 8px; padding-right: 8px; white-space: nowrap; }
     .astuce { margin: 10px 0 0; color: var(--muted); font-weight: 700; font-size: .82rem; text-align: center; }
     .astuce-clavier { display: none; }
     @media (hover: hover) and (pointer: fine) { .astuce-clavier { display: block; } }
@@ -207,7 +212,12 @@
     .ko .rond { background: var(--red); }
     .verdict .val { font-size: 3.4rem; font-weight: 900; color: var(--ink); font-variant-numeric: tabular-nums; margin-top: 6px; line-height: 1; }
     .verdict .ecrit { margin-top: 8px; color: var(--ink); font-weight: 800; font-size: 1rem; }
-    .verdict .ecrit s { color: var(--red); text-decoration-thickness: 2px; font-variant-numeric: tabular-nums; }
+    .verdict .ecrit s { color: var(--red); font-variant-numeric: tabular-nums; }
+    /* Demande de Gwenaël (22/10/2026) : barré EN BIAIS, d'un coin à l'autre,
+       pour qu'on lise encore ce qui était écrit. */
+    s { display: inline-block; min-width: 1.5em; padding: 0 3px; text-align: center; text-decoration: none;
+      background: linear-gradient(to bottom right, transparent calc(50% - 1.3px), currentColor calc(50% - 1.3px),
+        currentColor calc(50% + 1.3px), transparent calc(50% + 1.3px)); }
     .verdict .bonne { margin-top: 10px; color: var(--ink); font-weight: 800; }
     .calcul { margin-top: 12px; border: 1px solid var(--line); border-radius: 16px; background: #fff; }
     .calcul .tete { width: 100%; min-height: 44px; display: flex; justify-content: space-between; align-items: center; padding: 0 14px;
@@ -306,7 +316,8 @@
       .vue-jeu.avec-reponse .case { width: 100%; height: 46px; font-size: 1.7rem; }
       .vue-jeu.avec-reponse .keypad, .vue-jeu.avec-reponse .valider { width: 100%; }
       .vue-jeu.avec-reponse .keypad { margin-top: 6px; }
-      .valider { margin-top: 6px; min-height: 44px; }
+      .valider { margin-top: 6px; }
+      .rangee .primary, .rangee .secondary { min-height: 44px; }
       .vue-jeu.avec-reponse .astuce-clavier { display: none; }
       .verdict { padding: 8px; }
       .verdict .val { font-size: 2.4rem; }
@@ -320,7 +331,7 @@
       .zone-rep { --touche-h: 46px; --touche-ecart: 2px; }
       .case { height: 54px; font-size: 1.9rem; }
       .valider { margin-top: 8px; }
-      .primary { min-height: 48px; }
+      .primary, .rangee .secondary { min-height: 48px; }
     }
 
     @media print {
@@ -409,7 +420,7 @@
           <div class="scene" id="scene">
             <div class="decompte" id="decompte" hidden></div>
             <div class="nombre" id="nombre" hidden></div>
-            <div class="question" id="question" hidden><p class="combien">Combien&nbsp;?</p><p class="detail" id="question-detail"></p></div>
+            <div class="question" id="question" hidden><p class="combien" aria-label="Combien ?">?</p></div>
             <div class="colonne" id="colonne" hidden></div>
             <span class="indic" id="indic" hidden></span>
           </div>
@@ -421,7 +432,7 @@
               <button type="button" data-key="7">7</button><button type="button" data-key="8">8</button><button type="button" data-key="9">9</button>
               <button type="button" data-key="clear">Effacer</button><button type="button" data-key="0">0</button><button type="button" data-key="backspace" aria-label="Effacer le dernier chiffre"><svg viewBox="0 0 26 20" fill="none" stroke="#2c4a63" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M8 2h15v16H8L2 10z"/><path d="M12 7l6 6M18 7l-6 6" stroke-linecap="round"/></svg></button>
             </div>
-            <button type="button" class="primary valider" id="valider" disabled>Valider</button>
+            <div class="valider rangee" id="rangee-valider"><button type="button" class="secondary revoir" id="revoir" hidden>↻ Revoir</button><button type="button" class="primary" id="valider" disabled>Valider</button></div>
             <p class="astuce astuce-clavier">Au clavier&nbsp;: les chiffres, <kbd>⌫</kbd> et <kbd>Entrée</kbd></p>
           </div>
         </div>
@@ -579,21 +590,30 @@
         const base = audio.currentTime;
         const duree = Math.min(0.06, tempsMs / 2000);
         for (let i = 0; i < nombres; i += 1) {
-          const debut = base + Math.max(0, (t0 + i * tempsMs - maintenant) / 1000);
-          try {
-            const osc = audio.createOscillator();
-            const gain = audio.createGain();
-            osc.type = "sine";
-            osc.frequency.value = 880;
-            gain.gain.setValueAtTime(0, debut);
-            gain.gain.linearRampToValueAtTime(0.22, debut + 0.004);
-            gain.gain.exponentialRampToValueAtTime(0.001, debut + duree);
-            osc.connect(gain).connect(audio.destination);
-            osc.start(debut);
-            osc.stop(debut + duree + 0.01);
-            bips.push(osc);
-          } catch (e) { /* pas de son : la séance continue */ }
+          bip(BIP_NOMBRE, base + Math.max(0, (t0 + i * tempsMs - maintenant) / 1000), duree);
         }
+      }
+      // Un bip : la fréquence, l'instant (horloge du son), la durée.
+      const BIP_NOMBRE = 880;
+      const BIP_DECOMPTE = 440; // plus grave (choix de Gwenaël, 22/10/2026)
+      function bip(frequence, debut, duree) {
+        try {
+          const osc = audio.createOscillator();
+          const gain = audio.createGain();
+          osc.type = "sine";
+          osc.frequency.value = frequence;
+          gain.gain.setValueAtTime(0, debut);
+          gain.gain.linearRampToValueAtTime(0.22, debut + 0.004);
+          gain.gain.exponentialRampToValueAtTime(0.001, debut + duree);
+          osc.connect(gain).connect(audio.destination);
+          osc.start(debut);
+          osc.stop(debut + duree + 0.01);
+          bips.push(osc);
+        } catch (e) { /* pas de son : la séance continue */ }
+      }
+      function bipDecompte() {
+        if (!audio || seance.reglages.son !== "bip") return;
+        bip(BIP_DECOMPTE, audio.currentTime + 0.01, 0.09);
       }
       function couperBips() {
         bips.forEach(osc => { try { osc.stop(0); osc.disconnect(); } catch (e) {} });
@@ -629,6 +649,8 @@
         attente: null,
         image: null,
         chrono: null,
+        revus: 0, // fois où « ↻ Revoir » a rejoué le calcul en cours
+        enRevoir: false, // un « ↻ Revoir » est en train de rejouer le calcul
         echeance: 0, // instant (performance.now) où le temps limite est fini ; 0 = sans limite
         tailleFlash: 0
       };
@@ -681,6 +703,10 @@
         $("indic").hidden = true;
         $("nombre").textContent = "";
         $("zone-rep").hidden = true;
+        $("revoir").hidden = true;
+        $("rangee-valider").classList.remove("avec-revoir");
+        seance.revus = 0;
+        seance.enRevoir = false;
         $("vue-jeu").classList.remove("avec-reponse");
         $("question").hidden = true;
         $("colonne").hidden = true;
@@ -697,6 +723,7 @@
         const jeton = seance.jeton;
         $("decompte").hidden = false;
         $("decompte").textContent = n;
+        bipDecompte();
         $("indic").hidden = false;
         $("indic").textContent = `⚡ ${CORE.resume("flash", seance.reglages, {avecMode: false})}`;
         seance.attente = window.setTimeout(() => {
@@ -770,12 +797,11 @@
 
       function demanderReponse() {
         seance.phase = "reponse";
+        seance.enRevoir = false;
         $("nombre").hidden = true;
         $("question").hidden = false;
-        const r = seance.reglages;
-        $("question-detail").textContent = r.operations === "plusmoins"
-          ? `${r.nombres} nombres ajoutés ou retirés`
-          : `${r.nombres} nombres ajoutés`;
+        $("revoir").hidden = false;
+        $("rangee-valider").classList.add("avec-revoir");
         $("zone-rep").hidden = false;
         $("vue-jeu").classList.add("avec-reponse");
       }
@@ -852,6 +878,28 @@
       });
       $("valider").addEventListener("click", () => valider(false));
 
+      // « ↻ Revoir » : les mêmes nombres, à la même vitesse, après un nouveau
+      // décompte. Ce qui est déjà tapé reste. Le score ne change pas (on est à
+      // l'entraînement) ; le nombre de fois est gardé pour plus tard.
+      function revoir() {
+        if (seance.phase !== "reponse" || seance.mode !== "flash") return;
+        seance.revus += 1;
+        rejouerLeCalcul();
+      }
+      // Rejoue le calcul en cours sans le changer ni toucher à la saisie :
+      // pour « ↻ Revoir », et pour reprendre un Revoir coupé par un onglet caché.
+      function rejouerLeCalcul() {
+        annulerMinuteries();
+        seance.enRevoir = true;
+        $("nombre").hidden = true;
+        $("nombre").textContent = "";
+        $("question").hidden = true;
+        $("zone-rep").hidden = true;
+        $("vue-jeu").classList.remove("avec-reponse");
+        decompter(3);
+      }
+      $("revoir").addEventListener("click", revoir);
+
       function valider(tempsEcoule) {
         if (seance.phase !== "reponse") return;
         // Relecture Codex (A3) : l'échéance se juge à l'heure de la validation,
@@ -861,7 +909,7 @@
         const calcul = seance.calculs[seance.index];
         const ecrit = seance.reponse;
         const juste = !tempsEcoule && Number(ecrit) === calcul.total;
-        seance.resultats.push({calcul, ecrit, juste, tempsEcoule: Boolean(tempsEcoule)});
+        seance.resultats.push({calcul, ecrit, juste, tempsEcoule: Boolean(tempsEcoule), revus: seance.revus});
         if (seance.chrono) { window.cancelAnimationFrame(seance.chrono); seance.chrono = null; }
         if (tempsEcoule) {
           $("chrono").style.setProperty("--reste", "0");
@@ -934,7 +982,10 @@
           const marque = r.juste
             ? '<span class="m v" aria-label="juste">✓</span>'
             : '<span class="m x" aria-label="faux">✗</span>';
-          const valeur = r.juste || !r.ecrit ? `${r.calcul.total}` : `<s>${r.ecrit}</s>${r.calcul.total}`;
+          // Lot 1c (relecture Codex de B2) : une bonne réponse tapée mais pas
+          // validée à temps n'est pas barrée dans le bilan non plus.
+          const barre = r.ecrit && Number(r.ecrit) !== r.calcul.total;
+          const valeur = barre ? `<s>${r.ecrit}</s>${r.calcul.total}` : `${r.calcul.total}`;
           const voir = r.juste ? "" : `<button type="button" class="voir" aria-expanded="false" data-voir="${i}">Voir</button>`;
           return `<li class="item"><div class="ligne-item"><span class="n">${i + 1}</span>${marque}<span class="r">${valeur}</span>${voir}</div>`
             + (r.juste ? "" : `<div class="suite" hidden>${suiteHtml(r.calcul)}</div>`) + "</li>";
@@ -985,13 +1036,12 @@
       }
       document.addEventListener("keydown", e => {
         if (e.altKey || e.ctrlKey || e.metaKey) return;
-        // Relecture Codex (A2) : un autre bouton ou un lien atteint AU CLAVIER
-        // (Tab : Voir le calcul, la flèche, le plein écran) fait sa propre
-        // action sur Entrée. Après un clic à la souris sur « Voir le calcul »,
-        // Entrée continue au calcul suivant, comme l'annonce l'astuce.
+        // Relecture Codex (A2, puis lot 1c) : tout bouton ou lien atteint AU
+        // CLAVIER (Tab : une touche du pavé, Voir le calcul, la flèche, le
+        // plein écran) fait sa propre action sur Entrée. Après un toucher ou
+        // un clic, Entrée garde son raccourci : valider, puis continuer.
         const cible = e.target && e.target.closest ? e.target : null;
-        if (e.key === "Enter" && cible && cible.closest("button, a") && !cible.closest("#keypad, #valider, #suivant")
-            && focusAuClavier(cible)) return;
+        if (e.key === "Enter" && cible && cible.closest("button, a") && focusAuClavier(cible)) return;
         if (seance.phase === "reponse") {
           if (/^\d$/.test(e.key)) { e.preventDefault(); touche(e.key); }
           else if (e.key === "Backspace") { e.preventDefault(); touche("backspace"); }
@@ -1004,7 +1054,9 @@
       });
 
       // Un onglet caché arrête les images : un Flash interrompu reprend au
-      // retour avec un nouveau calcul et un nouveau décompte.
+      // retour avec un nouveau calcul et un nouveau décompte (elle en a vu une
+      // partie). Un « ↻ Revoir » interrompu (3e relecture Codex, lot 1d) garde
+      // le même calcul et ce qui est tapé : il recommence simplement.
       document.addEventListener("visibilitychange", () => {
         if (document.hidden) {
           if (seance.phase === "decompte" || seance.phase === "flash") {
@@ -1015,6 +1067,10 @@
         }
         if (corps.classList.contains("en-seance") && seance.phase !== "fin") garderEcranAllume();
         if (seance.phase === "interrompu") {
+          if (seance.enRevoir) {
+            rejouerLeCalcul();
+            return;
+          }
           seance.calculs[seance.index] = CORE.tirerCalcul(seance.reglages, rng);
           lancerCalcul();
         }

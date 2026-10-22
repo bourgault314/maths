@@ -193,6 +193,19 @@ test("pas de plein écran sur téléphone, tenu en hauteur comme en largeur (rel
   assert.deepEqual(regles.sort(), ["(max-height: 500px) and (pointer: coarse)", "(max-width: 620px)"]);
 });
 
+test("à la fin du Flash, un grand « ? » et rien d'autre (demande de Gwenaël, 22/10)", () => {
+  assert.match(PAGE, /<div class="question" id="question" hidden><p class="combien" aria-label="Combien \?">\?<\/p><\/div>/);
+  assert.doesNotMatch(PAGE, /nombres ajoutés/);
+});
+
+test("ce qui est barré l'est en biais, d'un coin à l'autre (demande de Gwenaël, 22/10)", () => {
+  const style = PAGE.slice(PAGE.indexOf("<style>"), PAGE.indexOf("</style>"));
+  const regle = /\n    s \{([^}]*)\}/.exec(style);
+  assert.ok(regle, "une règle pour <s>");
+  assert.match(regle[1], /text-decoration: none/);
+  assert.match(regle[1], /linear-gradient\(to bottom right/, "un trait « / », du bas à gauche au haut à droite");
+});
+
 test("pas encore au catalogue, et pas indexée tant que Gwenaël ne l'a pas validée", () => {
   assert.doesNotMatch(CATALOGUE, /flash_anzan/);
   assert.match(PAGE, /<meta name="robots" content="noindex, nofollow">/);
