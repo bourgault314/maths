@@ -4674,11 +4674,25 @@ verifier("qui-voit-quoi — la règle « classe + ajouts » : les cinq lignes de
         ['{"splat":[]}', ['splat' => []]], ['{"splat":{}}', ['splat' => []]],
         ['{"splat":{"mondes":[9,"2",3,3,"x",0]}}', ['splat' => ['mondes' => [3]]]],
         ['{"splat":{"mondes":[6,5,4,3,2,1]}}', ['splat' => ['mondes' => [1, 2, 3, 4, 5, 6]]]],
-        ['{"coffres":{"niveaux":[2],"operations":[9]}}', ['coffres' => ['niveaux' => [2]]]],
         ['{"coffres":{"niveaux":[9]}}', []],
+        // Relecture Codex (22/10/2026) : un réglage NOMMÉ mais illisible fait
+        // ignorer l'ajout entier — sinon « operations » disparaissait et la
+        // règle l'ouvrait en entier (une restriction abîmée devenait « tout »).
+        ['{"coffres":{"niveaux":[2],"operations":[9]}}', []],
+        ['{"coffres":{"niveaux":[2],"operations":"1"}}', []],
+        ['{"coffres":{"niveaux":[2],"operations":[]}}', []],
+        ['{"coffres":{"niveaux":[2],"operations":[1]}}', ['coffres' => ['niveaux' => [2], 'operations' => [1]]]],
     ] as [$brut, $attendu]) {
         egal($attendu, ajouts_lus($brut), "« $brut »");
     }
+    // Et ce que ces valeurs OUVRENT, à un élève d'une classe sans Coffres : rien
+    // de plus que ce qui se lit — jamais toutes les opérations.
+    $sansCoffres = ['applis' => 'defi-tables'];
+    foreach (['{"coffres":{"niveaux":[2],"operations":[9]}}', '{"coffres":{"niveaux":[2],"operations":"1"}}', '{"coffres":{"niveaux":[2],"operations":[]}}'] as $brut) {
+        egal(['applis' => ['defi-tables'], 'reglages' => []], acces_de_l_eleve($sansCoffres, $brut), "« $brut » n’ouvre pas Coffres");
+    }
+    egal(['applis' => ['defi-tables', 'coffres'], 'reglages' => ['coffres' => ['niveaux' => [2], 'operations' => [1]]]],
+        acces_de_l_eleve($sansCoffres, '{"coffres":{"niveaux":[2],"operations":[1]}}'), 'lisible : exactement ce qui est écrit');
     egal('{"coffres":{},"splat":{"mondes":[3]}}', json_encode(ajouts_json(['coffres' => [], 'splat' => ['mondes' => [3]]])), 'en JSON, une appli entière s’écrit « {} », jamais « [] »');
     egal('{}', json_encode(ajouts_json([])), 'rien en plus : « {} »');
     egal(null, ajouts_pour_la_base([]), 'rien en plus : NULL en base');
@@ -4891,6 +4905,7 @@ verifier("qui-voit-quoi — en base, une valeur abîmée se lit « rien en plus 
         ['{"splat":{"mondes":[9]}}', ['defi-tables', 'splat'], '{"splat":{"mondes":[1,2]}}'],
         ['{"splat":{"mondes":[9,"2",3,3]}}', ['defi-tables', 'splat'], '{"splat":{"mondes":[1,2,3]}}'],
         ['{"coffres":[]}', ['defi-tables', 'coffres', 'splat'], '{"splat":{"mondes":[1,2]}}'],
+        ['{"coffres":{"niveaux":[2],"operations":[9]}}', ['defi-tables', 'splat'], '{"splat":{"mondes":[1,2]}}'],
         ['', ['defi-tables', 'splat'], '{"splat":{"mondes":[1,2]}}'],
     ] as [$brut, $applis, $reglages]) {
         $maj->execute([$brut, $lea]);

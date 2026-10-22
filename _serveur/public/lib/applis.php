@@ -469,10 +469,14 @@ function appli_ouverte(string $cle): bool
     return appli_connue($cle) && (CATALOGUE_APPLIS[$cle]['disponible'] ?? false) && (bool)CATALOGUE_APPLIS[$cle]['url'];
 }
 
-// Ce qui sort de la base : lecture INDULGENTE. Une appli inconnue ou fermée,
-// un réglage non déclaré, un numéro hors bornes sont ignorés ; un ajout dont
-// aucune liste n'est lisible est ignoré en entier (une valeur abîmée ne
-// transforme jamais « le monde 3 » en « SPLAT! entière »). Rend
+// Ce qui sort de la base : lecture INDULGENTE, mais jamais dans le sens de
+// l'ouverture. Une appli inconnue ou fermée, un réglage non déclaré sont
+// ignorés ; un réglage déclaré qui est PRÉSENT mais illisible (pas une liste,
+// liste vide, numéros hors bornes) fait ignorer l'ajout de cette appli EN
+// ENTIER — relu par Codex le 22/10/2026 : avant, « {"coffres":{"niveaux":[2],
+// "operations":[9]}} » perdait les opérations, que la règle prenait ensuite
+// pour « non nommées », donc toutes ouvertes ; une restriction abîmée devenait
+// « tout ouvert ». Un réglage absent, lui, reste « non nommé » (T3). Rend
 // [cle => []] pour une appli entière, [cle => [nom => [numéros]]] sinon.
 function ajouts_lus(?string $json): array
 {
@@ -486,12 +490,13 @@ function ajouts_lus(?string $json): array
         if (array_is_list($ajoutBrut)) continue;
         $ajout = [];
         foreach (listes_declarees($cle) as $nom => $nombre) {
-            if (!is_array($ajoutBrut[$nom] ?? null)) continue;
+            if (!array_key_exists($nom, $ajoutBrut)) continue;
             $numeros = [];
-            foreach ($ajoutBrut[$nom] as $numero) {
+            foreach (is_array($ajoutBrut[$nom]) ? $ajoutBrut[$nom] : [] as $numero) {
                 if (is_int($numero) && $numero >= 1 && $numero <= $nombre) $numeros[$numero] = $numero;
             }
-            if ($numeros === []) continue;
+            // Nommé mais illisible : tout l'ajout de cette appli est ignoré.
+            if ($numeros === []) continue 2;
             ksort($numeros);
             $ajout[$nom] = array_values($numeros);
         }
