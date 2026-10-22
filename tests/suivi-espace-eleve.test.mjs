@@ -278,7 +278,11 @@ const PARCOURS = createRequire(import.meta.url)(MOTEUR_SERVI);
 function lecteurDeJauge() {
   const debut = page.indexOf("  const JAUGES = {");
   assert.ok(debut > 0, "la page doit ranger ses lecteurs de jauge dans JAUGES");
-  const fin = page.indexOf("\n  };", debut) + "\n  };".length;
+  // Lot « fignolage du 22/10 » : le lecteur de Défi tables appelle deux
+  // fonctions écrites juste après JAUGES (badgeDefiTables,
+  // aujourdhuiDefiTables) — on les prend avec, jusqu'au chargeur de moteur.
+  const fin = page.indexOf("  // Un moteur est chargé UNE fois", debut);
+  assert.ok(fin > debut, "les aides du lecteur de Défi tables sont rangées avant le chargeur de moteur");
   const source = page.slice(debut, fin) + "\n  return JAUGES;";
   const jauges = new Function(source)();
   const lecteurs = {};
@@ -339,10 +343,18 @@ test("le rang de la tuile est celui de l'état ; plus jamais de « Mon mélange 
   assert.equal(legende.fait, legende.total, "la barre est pleine");
 });
 
-test("une activité jamais ouverte n'a pas de jauge du tout", () => {
+// Lot « fignolage du 22/10 » (choix de Gwenaël) : un parcours tout neuf (l'appli
+// ouverte, rien de joué) n'a toujours ni barre, ni compte, ni rang — mais la
+// pastille « Aujourd'hui » dit par où commencer. L'élève qui n'a JAMAIS ouvert
+// Défi tables n'a pas de parcours sur le serveur : lireParcours rend null et
+// le lecteur n'est pas appelé (test « aucun parcours » plus bas).
+test("un parcours tout neuf : ni barre, ni compte, ni rang — la pastille « Aujourd'hui » seule", () => {
   const lire = lecteurDeJauge()["defi-tables"];
-  assert.equal(lire(PARCOURS, PARCOURS.creerParcours()), null,
-    "une barre vide n'apprend rien à l'élève et ressemble à un reproche");
+  assert.deepEqual(lire(PARCOURS, PARCOURS.creerParcours()), {aujourdhui: {faite: false, texte: "\u{1F514} Aujourd’hui\u00a0: la table de\u00a02"}},
+    "une barre vide n'apprend rien à l'élève et ressemble à un reproche ; « par où commencer » si");
+  assert.equal(lire(PARCOURS, "pas un objet"), null, "un parcours illisible : rien");
+  assert.equal(lire(PARCOURS, null), null);
+  assert.equal(lire(PARCOURS, []), null);
 });
 
 // Le jour de la distribution des codes : l'élève ouvre l'appli, s'entraîne,
@@ -351,7 +363,7 @@ test("une activité jamais ouverte n'a pas de jauge du tout", () => {
 // n'a toujours rien à montrer : « 0 table acquise sur 9 » au-dessus d'une
 // barre vide est le symétrique exact de ce qu'on refuse à la carte de classe
 // du professeur. Trouvé par Claude Code le 09/09/2026, sur la vraie page.
-test("une activité ouverte et jouée sans table acquise n'a pas de jauge non plus", () => {
+test("une activité ouverte et jouée sans table acquise n'a pas de barre non plus — la pastille seule", () => {
   const lire = lecteurDeJauge()["defi-tables"];
   const joue = parcoursFabrique();
   joue.tables[PARCOURS.TABLES[0]].entraine[PARCOURS.ENTRAINEMENTS[0]] = 1;
@@ -360,9 +372,12 @@ test("une activité ouverte et jouée sans table acquise n'a pas de jauge non pl
   assert.equal(PARCOURS.estVide(relu), false,
     "le parcours a bien bougé : ce n'est pas le cas « jamais ouverte », le moteur le sait");
   assert.equal(PARCOURS.etatAffichage(relu).acquises.length, 0, "et pourtant aucune table n'est acquise");
-  assert.equal(lire(PARCOURS, relu), null,
+  // Lot « fignolage du 22/10 » : la pastille seule, sans barre ni compte.
+  const jauge = lire(PARCOURS, relu);
+  assert.deepEqual(Object.keys(jauge), ["aujourdhui"],
     "« 0 table acquise sur 9 » avec une barre vide, le premier jour, est le reproche qu'on refuse");
-  assert.notEqual(lire(PARCOURS, parcoursFabrique({acquises: 1})), null,
+  assert.equal(jauge.aujourdhui.texte, "\u{1F514} Aujourd’hui\u00a0: la table de\u00a02");
+  assert.equal(lire(PARCOURS, parcoursFabrique({acquises: 1})).compte, "1 table passée sur 9",
     "dès la première table, la jauge apparaît");
 });
 

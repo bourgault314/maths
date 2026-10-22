@@ -1,10 +1,10 @@
 # Manifeste du serveur de suivi maths&go — produit par outils/generer-version.php.
 # Ne pas modifier à la main : un test du dépôt refait ce calcul à chaque passage.
 # verifier.php relit ce fichier en ligne et compare chaque empreinte.
-lot qui-voit-quoi-serveur
+lot defi-tables-fignolage-22-10
 genere_le 2026-10-22
 fichiers 61
-manifeste 10e74f57bbd9532ed7d3e95b76b7022d4a83543e07dc50ea40541ed04eb4d3cc
+manifeste c4b77401650478e5aae273b4dad4d2b04659705e9021f3df77aeb0424daa243a
 61b230d36219b3c4515e56c1ff59afb1a85ffa12343956bd73b16ba04867cdca  .htaccess
 9cd1a23b41de0af1865daf73448575f12217f0af5dfbcfac39f9b97db6b7e0d2  api/direct.php
 d6837ab1c6c01f0515639c7143c3b1fe41866fb6f1a2ef68d5f667eb6c8b1109  api/eleve.php
@@ -15,7 +15,7 @@ a9e54f21055be19df37b6bea51f75d775eaf974a2f0688e431e8b14fbb09a7dc  api/records.ph
 cd653974c5df2be35c05d7ff8eee4a921a9b0b761fbf07e9c7e89c8a9adeea68  direct.php
 2ebd7777bfa62e332ddaeb0be3a93e6c3a20bde30deccc6d3e86ca4de8345fce  favicon.ico
 b901e292ec96dadfd1a9415bc315027c93b635d0f4254a6da8ff7afd92c6520e  favicon.svg
-1d59bb6c75b94e0d3ac683760463de36a0cbaddf746f1ea0bef82e9b7c83c359  index.php
+1dcdfd99c8bbcdbde4cd028b4e1fd417be2b41cb8958e23539a91af08b16217c  index.php
 014a992fe48e48144dcaa218601a11ec8745fe1fe7a7d30f3323ec9e213159d5  infos.php
 fa28d421a28ed9b6f4b997d5119c2b8adbacff6e2dd119a179b71230f9664934  lib/.htaccess
 214b1d10a32ee06f51e310902624e8235502b6dcc1290c54947fdb48e7c32e2f  lib/applis.php

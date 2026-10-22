@@ -314,16 +314,29 @@ test("5. « Aujourd’hui » : la série de Mes calculs du jour (tables passées
   for (const cle of ["6-6", "6-7", "6-8", "6-9", "7-7", "7-8", "7-9", "8-8", "8-9", "9-9"]) beaucoup.calculs[cle] = {boite: 5, cases: 0, vu: "2026-09-01", erreur: "", gagne: "", echeance: "2026-10-01"};
   const b = mesCalculs(beaucoup);
   assert.equal(b.jour().textContent, "Aujourd’hui\u00a0: 10\u00a0calculs dans Mes\u00a0calculs du\u00a0jour");
-  // Les 9 tables passées et 18 calculs dus : 10 dans la série, jamais plus
-  // (plus de « 18 calculs reviennent, 10 par séance »).
+  // Les 9 tables passées et 18 calculs dus : 10 dans la série, jamais plus.
+  // Lot « fignolage du 22/10 » (choix de Gwenaël) : le bouton dit pourtant le
+  // VRAI total — « 18 calculs · 10 par séance » — et en allume les 18 (avant :
+  // « 10 calculs dans Mes calculs du jour », alors que 18 étaient dus).
   P.TABLES.forEach(table => { beaucoup.tables[table].acquise = "2026-10-02"; });
   const serieLongue = P.serieDuJour(beaucoup, {aujourdhui: AUJ});
   assert.deepEqual({nombre: serieLongue.cles.length, dus: serieLongue.dus, complement: serieLongue.complement, restants: serieLongue.restants}, {nombre: 10, dus: 10, complement: 0, restants: 8});
   const c = mesCalculs(beaucoup);
-  assert.equal(c.jour().textContent, "Aujourd’hui\u00a0: 10\u00a0calculs dans Mes\u00a0calculs du\u00a0jour");
+  assert.equal(c.jour().textContent, "Aujourd’hui\u00a0: 18\u00a0calculs · 10\u00a0par\u00a0séance");
   c.jour().click();
-  assert.equal(c.lignesDetail()[1], "1\u00a0à\u00a0revoir · 5\u00a0à\u00a0faire\u00a0monter · 4\u00a0à\u00a0garder", "seulement les nombres non nuls, la boîte 5 « à garder »");
-  assert.doesNotMatch(source("renderJour"), /par\\u00a0séance|reviennent/);
+  const tousDus = P.dusDuJour(beaucoup, AUJ);
+  assert.equal(tousDus.length, 18);
+  // Les 9 tables passées : les deux cases d'un calcul (5 × 7 et 7 × 5) s'allument ; on compare les produits.
+  const produits = cles => [...new Set(cles.map(cle => String(cle.split("-")[0] * cle.split("-")[1])))].sort((a, b) => a - b);
+  const allumeesLongue = [...new Set(c.cases().filter(cellule => cellule.classList.contains("is-dans-boite")).map(cellule => cellule.textContent.replace(/\D/g, "")))].sort((a, b) => a - b);
+  assert.deepEqual(allumeesLongue, produits(tousDus), "les 18 calculs dus s'allument, pas seulement les 10 de la prochaine série");
+  assert.ok(produits(tousDus).length > produits(serieLongue.cles).length);
+  assert.equal(c.lignesDetail()[0], "Aujourd’hui · 18 calculs", "le détail suit le bouton");
+  assert.equal(c.lignesDetail()[1], "1\u00a0à\u00a0revoir · 7\u00a0à\u00a0faire\u00a0monter · 10\u00a0à\u00a0garder", "seulement les nombres non nuls, la boîte 5 « à garder »");
+  assert.equal(c.lignesDetail()[2], "Ils reviennent 10 par séance : «\u00a0Mes\u00a0calculs\u00a0du\u00a0jour\u00a0».");
+  // Une fois Mes calculs du jour joué, 18 encore dus : « encore 18 calculs · 10 par séance ».
+  const longueJouee = mesCalculs({...beaucoup, calculsDuJour: AUJ});
+  assert.equal(longueJouee.jour().textContent, "Aujourd’hui\u00a0: encore 18\u00a0calculs · 10\u00a0par\u00a0séance");
   // Une fois Mes calculs du jour joué : plus de complément — les calculs dus
   // qui restent (« encore … dans ta prochaine séance »), ou « fait ✓ ».
   const joue = P.serieDuJour({...lea(), calculsDuJour: AUJ}, {aujourdhui: AUJ});

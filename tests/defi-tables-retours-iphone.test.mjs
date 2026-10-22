@@ -160,7 +160,9 @@ test("une boîte (ou « Aujourd’hui ») touchée s’allume dans la grille : i
   // Lot « un seul système » (05/10/2026) : « Aujourd'hui » allume la série de
   // Mes calculs du jour (etat.serieDuJour : tables passées, 10 au plus), plus
   // tous les calculs dus.
-  assert.match(html, /const serieDuJour = etat\.serieDuJour;\s*const duJour = new Set\(serieDuJour\.cles\);\s*renderJour\(serieDuJour\);/);
+  // Lot « fignolage du 22/10 » : plus de calculs dus que la série n'en prend,
+  // « Aujourd'hui » les allume TOUS (le bouton dit leur vrai nombre).
+  assert.match(html, /const serieDuJour = etat\.serieDuJour;[\s\S]{0,400}?const duJour = new Set\(serieDuJour\.restants > 0 \? PARCOURS\.dusDuJour\(parcours, PARCOURS\.jourLocal\(\)\) : serieDuJour\.cles\);\s*renderJour\(serieDuJour\);/);
   assert.match(html, /const dansBoite = cellule\.active && \(\(Boolean\(boiteChoisie\) && cellule\.boite === boiteChoisie\) \|\| \(jourChoisi && duJour\.has\(cellule\.cle\)\) \|\| Boolean\(demain && demain\.has\(cellule\.cle\)\)\);/, "seule la moitié active s'allume — le miroir reste éteint");
   assert.match(html, /\$\{dansBoite \? " is-dans-boite" : ""\}`;/);
   assert.match(html, /\.calculs-grille\.is-filtre \.mc-cell:not\(\.is-dans-boite\) \{ opacity: \.28; \}/, "les autres s'estompent");
