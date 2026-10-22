@@ -4,9 +4,11 @@
 // arrive avec un billet.
 //
 // Deux entrées, toujours en POST, jamais dans l'adresse :
-//  - {code}            → prénom, classe, applis, réglages de la classe (lot
-//                        « splat-suivi-5 ») ; avec {code, billet: true},
-//                        un billet d'entrée à usage unique en plus (lib/billets.php)
+//  - {code}            → prénom, classe, applis et réglages de l'ÉLÈVE : ceux
+//                        de sa classe (lot « splat-suivi-5 ») plus ce qu'on lui
+//                        a ouvert en plus (lot « Qui voit quoi », 22/10/2026,
+//                        lib/applis.php) ; avec {code, billet: true}, un billet
+//                        d'entrée à usage unique en plus (lib/billets.php)
 //  - {billet}          → l'échange : un billet d'entrée rend {code, prenom,
 //                        classe, reglages} ; un billet de fiche rend la progression en
 //                        lecture seule, sans le code. Le billet est consommé.
@@ -25,10 +27,12 @@ cors();
 
 // Lot « splat-suivi-5 » : la colonne des réglages de la classe (les mondes de
 // SPLAT! ouverts) n'existe qu'après migrer.php ; avant, on ne la demande pas,
-// et tout se lit « tous les mondes ouverts ».
+// et tout se lit « tous les mondes ouverts ». Lot « Qui voit quoi »
+// (22/10/2026) : même chose pour eleves.ajouts — avant la mise à niveau, tout
+// se lit « rien en plus ».
 function colonnes_reglages(PDO $pdo): string
 {
-    return reglages_disponibles($pdo) ? ', c.reglages' : '';
+    return (reglages_disponibles($pdo) ? ', c.reglages' : '') . (ajouts_disponibles($pdo) ? ', e.ajouts' : '');
 }
 
 function identite_eleve(PDO $pdo, int $eleveId): array|false
@@ -42,6 +46,18 @@ function identite_eleve(PDO $pdo, int $eleveId): array|false
     $eleve = $requete->fetch();
     $requete->closeCursor();
     return $eleve;
+}
+
+// Ce que CET élève voit : sa classe + ses ajouts (lib/applis.php,
+// acces_de_l_eleve — la seule règle). Les applis, affichables, dans l'ordre du
+// catalogue ; les réglages, « {} » quand tout est ouvert.
+function acces_affichable(array $eleve): array
+{
+    $acces = acces_de_l_eleve($eleve, isset($eleve['ajouts']) ? (string)$eleve['ajouts'] : null);
+    return [
+        'applis' => array_map('appli_affichable', $acces['applis']),
+        'reglages' => reglages_json($acces['reglages']),
+    ];
 }
 
 try {
@@ -115,9 +131,10 @@ try {
             'code' => $eleve['code'],
             'prenom' => $eleve['prenom'],
             'classe' => $eleve['libelle'],
-            // Les réglages de la classe pour ses activités (aujourd'hui : les
-            // mondes de SPLAT! ouverts) — « {} » quand rien n'est réglé.
-            'reglages' => reglages_json(reglages_de_classe($eleve, true)),
+            // Les réglages de CET élève pour ses activités (les mondes de
+            // SPLAT! ouverts par sa classe, plus les siens) — « {} » quand
+            // rien n'est fermé.
+            'reglages' => acces_affichable($eleve)['reglages'],
         ]);
     }
 
@@ -143,15 +160,16 @@ try {
         erreur("Code inconnu.", 404);
     }
 
+    // Lot « Qui voit quoi » (22/10/2026) : « applis » et « reglages » sont ce
+    // que voit CET élève — sa classe plus ses ajouts —, sous les mêmes noms et
+    // la même forme qu'avant : la page n'a rien à savoir d'où ça vient. La
+    // tuile de l'espace et la carte des mondes grisent les mondes qui ne lui
+    // sont pas ouverts (lot « splat-suivi-5 »).
     $reponse = [
         'ok' => true,
         'prenom' => $eleve['prenom'],
         'classe' => $eleve['libelle'],
-        'applis' => applis_de_classe($eleve['applis']),
-        // Lot « splat-suivi-5 » : la tuile de l'espace et la carte des mondes
-        // grisent les mondes que le professeur n'a pas ouverts à la classe.
-        'reglages' => reglages_json(reglages_de_classe($eleve, true)),
-    ];
+    ] + acces_affichable($eleve);
     // Le billet n'est tiré que si on le demande : l'appli relit l'identité à
     // chaque ouverture sans en avoir besoin, et un billet que personne
     // n'attend est une clé de plus qui traîne, même deux minutes.

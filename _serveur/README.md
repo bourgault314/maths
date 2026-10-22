@@ -161,6 +161,21 @@ toute la base). `verifier.php` devient rouge tant que l'un d'eux traîne, et
   `migrer.php` ; tant qu'elle manque, tout se lit « tous ouverts » et seul le
   choix des mondes répond « mise à niveau » (ligne « Mondes ouverts par
   classe » de `verifier.php`).
+  Depuis le lot « Qui voit quoi » (22/10/2026), le propriétaire peut ouvrir à
+  **un seul élève** une activité ou des mondes en plus de sa classe (« Ce que
+  voit Léa… », lot 3 de la page) : ce qu'un élève voit = ce que voit sa classe
+  **+** ce qu'on lui a donné, on n'enlève jamais ce que la classe a. Rangé dans
+  `eleves.ajouts` (JSON : `{"coffres":{}}` = Coffres entière en plus,
+  `{"splat":{"mondes":[3]}}` = le monde 3 en plus ; un ajout reste rangé même
+  quand la classe finit par avoir la même chose), écrit par `eleves.acces`
+  `{eleve_id, ajouts}` (propriétaire, lecture stricte, remplace la colonne
+  entière, journalisé), rendu au professeur par `tableau` (par élève :
+  `ajouts`, le rangé, et `acces`, le calculé `{applis, reglages}`, pour tous
+  les droits) et à l'élève par `api/eleve.php` sous les noms qui existent
+  déjà, `applis` et `reglages` — l'espace élève et les applis n'ont rien à
+  changer. Une seule règle, `acces_de_l_eleve()` dans `lib/applis.php` ;
+  `api/parcours.php` n'en sait rien (ouvrir guide, ça ne verrouille pas). La
+  colonne arrive par `migrer.php` ; avant, tout se lit « rien en plus ».
 
 ### La séance en direct (lot 1 « question éclair », 07/10/2026)
 
@@ -433,12 +448,12 @@ codes, ni aux progressions, et peut être relancée sans risque.
 |---|---|---|
 | POST | `/api/parcours.php` `{code, appli, lire: true}` | lit la progression, avec sa `revision` |
 | POST | `/api/parcours.php` `{code, appli, parcours, base_revision}` | l'enregistre si `base_revision` est la révision en base ; sinon **409** avec l'état actuel, que l'appli fusionne avant de renvoyer. Le serveur ne garde que ce que `lib/applis.php` déclare (`lib/progression.php`) : jamais un prénom ni un texte libre. La version précédente est conservée (`donnees_avant`), et l'état de fin de journée est rangé dans `versions` (une ligne par jour, sept jours) |
-| POST | `/api/eleve.php` `{code}` | prénom, classe et applis de l'élève (page d'accueil) |
+| POST | `/api/eleve.php` `{code}` | prénom, classe, `applis` et `reglages` de l'élève — sa classe plus ce qu'on lui a ouvert en plus (page d'accueil) |
 | POST | `/api/direct.php` `{code}` | la séance en direct de la classe de l'élève, ou `direct: null` ; avec `{code, numero, reponse}`, range sa réponse tant que la question est ouverte (`enregistree: true/false`) |
 | POST | `/api/direct.php` `{code}` (évaluation en classe) | si une évaluation est ouverte pour sa classe, `direct: null` et `evaluation: {etat, nom, modele, commence, fini, close, suivant, graines, reponses, ecoule}` ; `{code, commencer: true}` tire sa graine et pose son début (une fois) ; `{code, numero, reponse, dixiemes}` range sa réponse à la question suivante (`enregistree`) ; `{code, finir: true}` |
 | POST | `/api/prof.php` `{action: "evaluation.…"}` | `evaluation.modeles`, `evaluation.enregistrer_modele` `{id, nom, reglage}`, `evaluation.supprimer_modele` `{id}` (les modèles du compte) ; avec `classe_id`, au droit **écriture** : `evaluation.ouvrir` `{modele_id, duree}`, `evaluation.etat` (en boucle), `evaluation.fermer`, `evaluation.fichier` (graines, débuts et réponses élève par élève), `evaluation.repasser` `{eleve_id}` (lot E2 : efface le passage d'un élève de l'évaluation ouverte, nouveau tirage à son prochain « Je commence » ; journalisé sur l'élève), `evaluation.terminer` (efface tout) |
 | POST | `/api/prof.php` `{action: "direct.…", classe_id}` | `direct.etat` (interrogé en boucle par le tableau), `direct.ouvrir`, `direct.question` `{type, reglage}`, `direct.devoiler`, `direct.bonne` `{bonne}`, `direct.fichier` (questions + réponses élève par élève), `direct.terminer` (efface tout) — toutes au droit **écriture** |
-| POST | `/api/prof.php` `{action, …}` | `connexion` (répond aussi `mdp_temporaire`), `deconnexion`, `moi`, `profs.motdepasse` `{ancien, nouveau}`, `profs.annuaire`, `profs.liste/ajouter/reinitialiser/desactiver/reactiver/supprimer` (administrateur ; `ajouter` et `reinitialiser` renvoient le temporaire ; `supprimer` veut `avec_classes: true` si le compte possède des classes), `classes.liste/creer/modifier/supprimer/supprimer_echues`, `partages.liste/ajouter/supprimer`, `eleves.ajouter/nommer/regenerer/restaurer/supprimer` (`restaurer` accepte `jour: "AAAA-MM-JJ"` pour revenir à la fin d'une journée gardée), `tableau` |
+| POST | `/api/prof.php` `{action, …}` | `connexion` (répond aussi `mdp_temporaire`), `deconnexion`, `moi`, `profs.motdepasse` `{ancien, nouveau}`, `profs.annuaire`, `profs.liste/ajouter/reinitialiser/desactiver/reactiver/supprimer` (administrateur ; `ajouter` et `reinitialiser` renvoient le temporaire ; `supprimer` veut `avec_classes: true` si le compte possède des classes), `classes.liste/creer/modifier/supprimer/supprimer_echues`, `partages.liste/ajouter/supprimer`, `eleves.ajouter/nommer/regenerer/restaurer/supprimer/acces` (`restaurer` accepte `jour: "AAAA-MM-JJ"` pour revenir à la fin d'une journée gardée ; `acces` `{eleve_id, ajouts}` remplace ce que l'élève a en plus de sa classe, propriétaire seulement, et répond `{ajouts, acces}`), `tableau` (par élève : progression, journées gardées, record, `ajouts` et `acces`) |
 
 `classes.liste` **ne supprime rien** (changé le 06/09/2026 : ouvrir « Ma
 classe » effaçait les classes de l'année écoulée, sans un mot et sans retour).

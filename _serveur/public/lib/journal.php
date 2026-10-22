@@ -38,6 +38,10 @@ const ACTIONS_JOURNAL = [
     'classes.creer', 'classes.modifier', 'classes.supprimer', 'classes.supprimer_echues',
     'classes.menage',
     'eleves.ajouter', 'eleves.nommer', 'eleves.regenerer', 'eleves.restaurer', 'eleves.supprimer',
+    // Lot « Qui voit quoi » (22/10/2026) : qui a ouvert quoi en plus à quel
+    // élève — la cible est l'élève, par son identifiant ; ce qui a été ouvert
+    // est dans sa ligne (eleves.ajouts), pas dans le journal.
+    'eleves.acces',
     'partages.ajouter', 'partages.supprimer',
     // Lot « après l'audit GPT » (D4, 14/10/2026) : un temps retiré des records.
     'records.retirer',

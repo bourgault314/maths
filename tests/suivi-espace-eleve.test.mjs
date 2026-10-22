@@ -781,3 +781,54 @@ test("SPLAT! : l'espace passe les réglages de la classe à la jauge, et la past
   const etiquette = noeuds.find(n => n.attributs && n.attributs["aria-label"]);
   assert.match(etiquette.attributs["aria-label"], /Monde 3 : fermé pour ta classe/);
 });
+
+// -------------------------------------------------------------------------
+// Lot « Qui voit quoi » (22/10/2026). Un professeur peut ouvrir à UN élève une
+// appli ou des mondes en plus de sa classe. Le SERVEUR calcule « classe +
+// ajouts » et le rend sous les noms qui existent déjà, « applis » et
+// « reglages » (lib/applis.php, acces_de_l_eleve) : cette page n'a RIEN à
+// changer — c'est la décision D2 de la conception, et ces tests le prouvent
+// sur une réponse qui contient un ajout.
+
+test("qui-voit-quoi — la page ne lit que « applis » et « reglages » : elle ne sait pas ce qu'est un ajout", () => {
+  assert.doesNotMatch(page, /ajouts?\b/i, "aucune trace d'« ajouts » dans l'espace élève : c'est le serveur qui additionne");
+  assert.doesNotMatch(page, /acces\b/, "ni d'« acces »");
+  assert.match(page, /const disponibles = \(donnees\.applis \|\| \[\]\)\.filter\(a => a\.disponible && a\.url\);/, "les tuiles viennent de « applis »");
+  assert.match(page, /JAUGES\[aLire\[i\]\]\.lecteur\(P, parcours\[i\], donnees\.reglages \|\| \{\}\)/, "les jauges lisent « reglages »");
+  // Le serveur, lui, rend la même forme qu'avant : « applis » affichables et
+  // « reglages » en objet, calculés pour l'élève (par le code ET par le billet).
+  const eleve = readFileSync(join(racine, "_serveur/public/api/eleve.php"), "utf8");
+  assert.equal((eleve.match(/acces_affichable\(\$eleve\)/g) || []).length, 2, "par le code et à l'échange du billet");
+  assert.doesNotMatch(eleve, /applis_de_classe\(|reglages_de_classe\(/, "plus jamais la classe seule : toujours l'élève");
+});
+
+test("qui-voit-quoi — Léa, 405 (mondes 1 et 2) avec le monde 3 en plus : la tuile compte sur SES mondes, sans une ligne de plus dans la page", async () => {
+  // Ce que le serveur rend pour Léa : {"splat": {"mondes": [1, 2, 3]}} — la
+  // classe plus son ajout, déjà additionnés. La page n'y voit qu'un réglage.
+  const {habiller, tuiles} = jouerHabillage({applis: ["splat"], reglages: {splat: {mondes: [1, 2, 3]}},
+    reponse: () => Promise.resolve({ok: true, json: () => Promise.resolve({ok: true, existe: true, parcours: LEA()})})});
+  await habiller;
+  const tuile = tuiles.splat;
+  assert.equal(tuile.enfants.length, 1, "la jauge est posée");
+  const tous = (noeud, sortie = []) => { (noeud.enfants || []).forEach(n => { sortie.push(n); tous(n, sortie); }); return sortie; };
+  const noeuds = tous(tuile);
+  const svgs = noeuds.filter(n => n.nom === "svg");
+  assert.deepEqual(svgs.map(s => s.attributs.class), ["monde-p fini", "monde-p fini", "monde-p cours", "monde-p ferme", "monde-p ferme", "monde-p ferme"],
+    "le monde 3 est ouvert pour elle (en cours), les trois autres fermés");
+  assert.ok(noeuds.some(n => n.textContent === "13 étapes réussies sur 24"), "9 + 4 étapes, sur 9 + 15 : ses mondes à elle");
+  assert.ok(noeuds.some(n => n.textContent === "✨ 1 bonus"), "son Bonus du monde 3 compte");
+  // Lucas, même classe, sans ajout : exactement ce qu'il recevait avant le lot.
+  const lucas = lecteurDeJauge().splat(SPLAT, LEA(), MONDES_1_2);
+  assert.equal(lucas.compte, "9 étapes réussies sur 9");
+  assert.deepEqual(lucas.mondes.map(m => m.etat), ["fini", "fini", "ferme", "ferme", "ferme", "ferme"]);
+});
+
+test("qui-voit-quoi — une appli donnée à un seul élève (Coffres) a sa tuile comme les autres : elle arrive dans « applis », rien d'autre", () => {
+  // Le serveur rend « coffres » dans la liste de Léa, avec nom, description et
+  // adresse, à sa place du catalogue : la page la dessine avec son icône.
+  const debut = page.indexOf("  const ICONES = {");
+  const icones = page.slice(debut, page.indexOf("\n  };", debut));
+  assert.ok(icones.includes('"coffres":'), "Coffres a son dessin");
+  assert.match(page, /lien\.dataset\.cle = appli\.cle;/, "la tuile porte la clé que le serveur rend");
+  assert.doesNotMatch(page, /applis\.filter\([^)]*classe/, "la page ne filtre jamais sur la classe : la liste reçue est la liste");
+});

@@ -412,3 +412,202 @@ function reglages_recus(mixed $recus, array $actuels): array
     }
     return $sortie;
 }
+
+// ---------------------------------------------------- ce qu'un élève a EN PLUS
+//
+// Lot « Qui voit quoi » (22/10/2026, demande de Gwenaël : « ouvrir Anzan à
+// une élève, un monde de SPLAT! en plus à quelques-uns »). La règle, décidée
+// par lui : ce qu'un élève voit = ce que voit sa classe + ce qu'on lui a donné
+// EN PLUS. On n'enlève jamais à un élève ce que sa classe a ; pour un élève on
+// ne peut qu'ajouter. Rangé dans eleves.ajouts (JSON, vide pour tout le
+// monde au départ) :
+//
+//     {"coffres": {}}                        Coffres magiques entière, en plus
+//     {"splat": {"mondes": [3]}}             le monde 3 de SPLAT! en plus
+//     {"coffres": {}, "splat": {"mondes": [3, 4]}}
+//
+// Une clé = une appli ouverte du catalogue ; « {} » = l'appli entière ; une
+// liste (mondes, niveaux, opérations) = ces numéros EN PLUS de ceux de la
+// classe — seuls les réglages « liste de numéros » déclarés par l'appli sont
+// acceptés, jamais un réglage booléen (les records de Défi tables suivent la
+// classe). Un ajout reste rangé même quand la classe finit par avoir la même
+// chose (D4) : tant que la classe l'a, il ne se voit pas ; si elle le referme
+// un jour, l'élève le garde.
+//
+// Le serveur CALCULE « classe + ajouts » (acces_de_l_eleve) et le rend à
+// l'élève sous les noms qui existent déjà, « applis » et « reglages » : l'espace
+// élève, SPLAT!, Défi tables et Coffres n'ont rien à changer, ils reçoivent la
+// liste et les mondes de l'élève sans savoir d'où ça vient. Une seule règle,
+// ici, testée une fois.
+
+// La colonne eleves.ajouts existe-t-elle ? Elle arrive par migrer.php. Tant
+// qu'elle manque, tout se lit « rien en plus » et seule l'action du professeur
+// (eleves.acces) répond « mise à niveau à faire » — comme les mondes en 10/2026.
+function ajouts_disponibles(PDO $pdo): bool
+{
+    static $vu = [];
+    $cle = spl_object_id($pdo);
+    if (!array_key_exists($cle, $vu)) $vu[$cle] = colonne_existe($pdo, 'eleves', 'ajouts');
+    return $vu[$cle];
+}
+
+// Les réglages « liste de numéros » qu'une appli déclare (ce qui peut se
+// donner par élève) : ['mondes' => 6] pour SPLAT!, rien pour Défi tables.
+function listes_declarees(string $cle): array
+{
+    $listes = [];
+    foreach (CATALOGUE_APPLIS[$cle]['reglages'] ?? [] as $nom => $defaut) {
+        if (is_int($defaut)) $listes[$nom] = $defaut;
+    }
+    return $listes;
+}
+
+// Les applis que le catalogue ouvre vraiment (« disponible » et une adresse) :
+// les seules qui puissent être données à une classe ou à un élève.
+function appli_ouverte(string $cle): bool
+{
+    return appli_connue($cle) && (CATALOGUE_APPLIS[$cle]['disponible'] ?? false) && (bool)CATALOGUE_APPLIS[$cle]['url'];
+}
+
+// Ce qui sort de la base : lecture INDULGENTE. Une appli inconnue ou fermée,
+// un réglage non déclaré, un numéro hors bornes sont ignorés ; un ajout dont
+// aucune liste n'est lisible est ignoré en entier (une valeur abîmée ne
+// transforme jamais « le monde 3 » en « SPLAT! entière »). Rend
+// [cle => []] pour une appli entière, [cle => [nom => [numéros]]] sinon.
+function ajouts_lus(?string $json): array
+{
+    if ($json === null || $json === '') return [];
+    $brut = json_decode($json, true);
+    if (!is_array($brut)) return [];
+    $sortie = [];
+    foreach ($brut as $cle => $ajoutBrut) {
+        if (!is_string($cle) || !appli_ouverte($cle) || !is_array($ajoutBrut)) continue;
+        if ($ajoutBrut === []) { $sortie[$cle] = []; continue; }
+        if (array_is_list($ajoutBrut)) continue;
+        $ajout = [];
+        foreach (listes_declarees($cle) as $nom => $nombre) {
+            if (!is_array($ajoutBrut[$nom] ?? null)) continue;
+            $numeros = [];
+            foreach ($ajoutBrut[$nom] as $numero) {
+                if (is_int($numero) && $numero >= 1 && $numero <= $nombre) $numeros[$numero] = $numero;
+            }
+            if ($numeros === []) continue;
+            ksort($numeros);
+            $ajout[$nom] = array_values($numeros);
+        }
+        if ($ajout !== []) $sortie[$cle] = $ajout;
+    }
+    return $sortie;
+}
+
+// Ce que le professeur envoie (eleves.acces) : lecture STRICTE, et la valeur
+// reçue REMPLACE la colonne entière (la fenêtre « Ce que voit Léa » envoie tout
+// son état à chaque clic, comme ⚙ Réglages envoie la liste des mondes). Rien
+// n'est deviné ni arrangé en silence : une valeur fausse est refusée avec un
+// message.
+function ajouts_recus(mixed $recus): array
+{
+    if (!is_array($recus) || ($recus !== [] && array_is_list($recus))) {
+        throw new InvalidArgumentException("Ajouts illisibles.");
+    }
+    $sortie = [];
+    foreach ($recus as $cle => $ajout) {
+        if (!is_string($cle) || !appli_ouverte($cle)) throw new InvalidArgumentException("Application inconnue.");
+        if (!is_array($ajout) || ($ajout !== [] && array_is_list($ajout))) throw new InvalidArgumentException("Ajout illisible.");
+        $declares = listes_declarees($cle);
+        foreach (array_keys($ajout) as $nom) {
+            if (!array_key_exists($nom, $declares)) throw new InvalidArgumentException("Réglage inconnu.");
+        }
+        // « {} » = l'appli entière. Une liste est rangée telle quelle (triée,
+        // sans doublon), même complète : « tous les niveaux » n'est pas
+        // « Coffres entière » — les opérations, elles, suivent la classe.
+        $nouveau = [];
+        foreach ($declares as $nom => $nombre) {
+            if (!array_key_exists($nom, $ajout)) continue;
+            $liste = $ajout[$nom];
+            if (!is_array($liste) || !array_is_list($liste)) throw new InvalidArgumentException(libelle_liste($nom, 'illisible'));
+            $numeros = [];
+            foreach ($liste as $numero) {
+                if (!is_int($numero) || $numero < 1 || $numero > $nombre) {
+                    throw new InvalidArgumentException(libelle_liste($nom, 'inconnu'));
+                }
+                $numeros[$numero] = $numero;
+            }
+            if ($numeros === []) throw new InvalidArgumentException("Une liste vide n'ajoute rien : retire plutôt l'activité.");
+            ksort($numeros);
+            $nouveau[$nom] = array_values($numeros);
+        }
+        $sortie[$cle] = $nouveau;
+    }
+    return $sortie;
+}
+
+// Les ajouts en JSON : toujours un objet (« {} » pour « rien », et « {} » pour
+// une appli entière — jamais « [] », que la page lirait comme une liste).
+function ajouts_json(array $ajouts): object
+{
+    $objet = new stdClass();
+    foreach ($ajouts as $cle => $ajout) {
+        $objet->$cle = $ajout === [] ? new stdClass() : $ajout;
+    }
+    return $objet;
+}
+
+// Ce qui s'écrit dans la colonne : NULL quand il n'y a rien en plus.
+function ajouts_pour_la_base(array $ajouts): ?string
+{
+    return $ajouts === [] ? null : json_encode(ajouts_json($ajouts), JSON_UNESCAPED_UNICODE);
+}
+
+// LA règle « classe + ajouts », à un seul endroit. Reçoit la ligne de la
+// classe (applis, reglages — la colonne peut manquer) et la colonne ajouts de
+// l'élève (peut manquer aussi : null). Rend ['applis' => [...clés, dans
+// l'ordre du catalogue], 'reglages' => [...]] :
+//
+//  1. applis = les applis ouvertes de la classe ∪ les clés des ajouts ;
+//  2. pour chaque appli du résultat et chaque réglage « liste » qu'elle
+//     déclare, ouverts pour l'élève = ouverts par la classe ∪ la liste de
+//     l'ajout, où « ouverts par la classe » = sa liste (ou tous si rien n'est
+//     écrit) si la classe a l'appli, aucun sinon. Un ajout « {} » (l'appli
+//     entière) ouvre tout ; une appli qui ne vient que d'un ajout ouvre tout
+//     ce que l'ajout ne nomme pas (un ajout n'a jamais rien fermé).
+//     « Tous » = rien d'écrit dans reglages, la convention d'aujourd'hui.
+//  3. Les réglages booléens (records) suivent la classe telle quelle.
+function acces_de_l_eleve(array $classe, ?string $ajoutsJson): array
+{
+    $clesClasse = array_column(applis_de_classe((string)($classe['applis'] ?? '')), 'cle');
+    $reglagesClasse = reglages_de_classe($classe, true);
+    $ajouts = ajouts_lus($ajoutsJson);
+    $applis = [];
+    $reglages = [];
+    foreach (array_keys(CATALOGUE_APPLIS) as $cle) {
+        $parClasse = in_array($cle, $clesClasse, true);
+        $parAjout = array_key_exists($cle, $ajouts);
+        if (!$parClasse && !$parAjout) continue;
+        $applis[] = $cle;
+        $reglage = [];
+        foreach (listes_declarees($cle) as $nom => $nombre) {
+            // null = tous ; une liste = ceux-là seulement.
+            $ouverts = $parClasse ? ($reglagesClasse[$cle][$nom] ?? null) : [];
+            if ($parAjout) {
+                $ajout = $ajouts[$cle];
+                if ($ajout === []) $ouverts = null;
+                elseif (!array_key_exists($nom, $ajout)) $ouverts = $parClasse ? $ouverts : null;
+                elseif ($ouverts !== null) $ouverts = liste_lue(array_merge($ouverts, $ajout[$nom]), $nombre);
+            }
+            if ($ouverts !== null && $ouverts !== []) $reglage[$nom] = $ouverts;
+        }
+        foreach ($reglagesClasse[$cle] ?? [] as $nom => $valeur) {
+            if (is_bool($valeur)) $reglage[$nom] = $valeur;
+        }
+        if ($reglage !== []) $reglages[$cle] = $reglage;
+    }
+    return ['applis' => $applis, 'reglages' => $reglages];
+}
+
+// Ce que le professeur reçoit pour chaque élève (tableau, eleves.acces) : les
+// clés et les réglages calculés — ni code ni donnée d'élève.
+function acces_json(array $acces): array
+{
+    return ['applis' => $acces['applis'], 'reglages' => reglages_json($acces['reglages'])];
+}

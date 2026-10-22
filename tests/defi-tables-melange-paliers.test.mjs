@@ -417,8 +417,11 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // l'espace élève, Ma classe, verifier.php et la copie du moteur de Coffres,
   // 61 au manifeste (avant : ma-classe-parcours).
   // Puis « test : une erreur au plus » (21/10/2026) : le moteur copié pour Ma
-  // classe change (avant : coffres-suivi).
-  assert.match(lire("_serveur/public/VERSION"), /^lot defi-tables-test-une-erreur$/m);
+  // classe change (avant : coffres-suivi). Puis « Qui voit quoi », lot 2 « le
+  // serveur » (22/10/2026) : lib/bd.php, lib/applis.php, lib/journal.php,
+  // api/eleve.php, api/prof.php et verifier.php changent, 61 au manifeste
+  // (avant : defi-tables-test-une-erreur).
+  assert.match(lire("_serveur/public/VERSION"), /^lot qui-voit-quoi-serveur$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=galets-masques-20261021-1/);
 });

@@ -263,6 +263,21 @@ if ($autorise) {
             ? "en place (toutes les classes ont tout ouvert : mondes de SPLAT!, niveaux et opérations de Coffres)"
             : "en place ($reglees classe(s) avec un réglage — mondes de SPLAT!, niveaux ou opérations de Coffres)";
     });
+    // Lot « Qui voit quoi » (22/10/2026) : ce qu'un professeur ouvre à un
+    // élève en plus de sa classe vit dans eleves.ajouts, ajoutée par
+    // migrer.php. Sans elle, rien ne tombe en panne (chacun voit ce que voit
+    // sa classe), mais « Ce que voit Léa » dans « Ma classe » répond
+    // « mise à niveau ».
+    verif($lignes, "Ajouts par élève", function () {
+        $pdo = bd();
+        if (!colonne_existe($pdo, 'eleves', 'ajouts')) {
+            throw new RuntimeException("manque la colonne « eleves.ajouts » — ouvre migrer.php avec ton mot de passe d'installation.");
+        }
+        $avecAjouts = (int)$pdo->query("SELECT COUNT(*) FROM eleves WHERE ajouts IS NOT NULL AND ajouts <> ''")->fetchColumn();
+        return $avecAjouts === 0
+            ? "en place (aucun élève n’a quelque chose en plus de sa classe)"
+            : "en place ($avecAjouts élève(s) avec quelque chose en plus de sa classe)";
+    });
     // Lot « Les records » (09/10/2026) : la table des meilleurs temps des
     // Légendes des tables, ajoutée par migrer.php. Sans elle, l'appli dit
     // « mise à niveau » à chaque course et n'enregistre rien.
