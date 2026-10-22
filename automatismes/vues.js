@@ -9,58 +9,104 @@ export function bouton(texte, action, classe = "secondaire", attributs = "") {
   return `<button class="bouton ${classe}" data-action="${action}" ${attributs}>${texte}</button>`;
 }
 
-export function filtresHTML(filtre) {
-  return `<div class="filtres" role="group" aria-label="Niveau">
-    ${["6e", "5e", "4e", "3e", "brevet"]
-      .map((niveau) => {
-        const actif = filtre === niveau;
-        return `<button class="bouton petit ${actif ? "primaire" : "secondaire"}"
-        data-niveau="${niveau}" aria-pressed="${actif}">${niveau === "brevet" ? "Brevet" : niveau}</button>`;
-      })
-      .join("")}
-  </div>`;
+/* Un réglage de « Préparer la série » : son étiquette, puis des boutons côte à côte (segments). */
+function segmentHTML(libelle, boutons, classe = "", suite = "") {
+  return `<div class="champ-reglage${classe}"><span class="etiquette-reglage">${libelle}</span>
+    <div class="segments" role="group" aria-label="${libelle}">${boutons}</div>${suite}</div>`;
 }
 
-// Sur chaque carte : « n notions », ou « k sur n » dès que k notions du domaine sont cochées.
-export function accueilHTML(familles, filtre, selection) {
+function segmentsHTML(valeurs, actif, attribut, texte = String) {
+  return valeurs
+    .map((valeur) => {
+      const presse = valeur === actif;
+      return `<button class="segment${presse ? " actif" : ""}" data-${attribut}="${valeur}"
+        aria-pressed="${presse}">${texte(valeur)}</button>`;
+    })
+    .join("");
+}
+
+export function filtresHTML(filtre) {
+  const niveaux = ["6e", "5e", "4e", "3e", "brevet"];
+  const texte = (niveau) => (niveau === "brevet" ? "Brevet" : niveau);
+  return segmentHTML("Niveau", segmentsHTML(niveaux, filtre, "niveau", texte));
+}
+
+/* Le nombre de questions : des boutons à partir de 700 px ; au téléphone, une seule touche
+   « 10 questions ▾ » pour tenir sur la ligne des niveaux. */
+function nombreHTML(nombre) {
+  const liste = [5, 10, 15, 20]
+    .map((valeur) => {
+      const choisi = valeur === nombre ? "selected" : "";
+      return `<option value="${valeur}" ${choisi}>${valeur} questions</option>`;
+    })
+    .join("");
+  const choix = `<label class="choix-nombre"><span class="sr-only">Nombre de questions</span>
+    <select data-choix-nombre>${liste}</select></label>`;
+  return segmentHTML(
+    "Questions",
+    segmentsHTML([5, 10, 15, 20], nombre, "nombre"),
+    " champ-nombre",
+    choix,
+  );
+}
+
+function etapeHTML(numero, titre) {
+  return `<h2 class="etape-menu"><span class="numero numero-${numero}" aria-hidden="true">${numero}</span>
+    ${titre}</h2>`;
+}
+
+/* « k / n » : k notions cochées sur les n du domaine (« sélectionnée(s) » en plus dès 700 px). */
+function compteurHTML(coches, nombre) {
+  const s = coches > 1 ? "s" : "";
+  return `<span class="compteur-domaine" aria-label="${coches} notion${s} cochée${s} sur ${nombre}"
+    >${coches} / ${nombre}<span class="mot-selection"> sélectionnée${s}</span></span>`;
+}
+
+/* L'accueil, d'après la V2 : la carte d'en-tête (logo maths&go, seul logo de l'appli, lien vers le
+   site), « ① Préparer la série » (niveau, nombre de questions), « ② Choisir les automatismes » (une
+   ligne par domaine, « k / n »), puis l'Entraînement brevet, une série toute prête. */
+export function accueilHTML(familles, filtre, selection, nombre) {
+  const pleinEcran = bouton(
+    ICONES.pleinEcran,
+    "plein-ecran",
+    "secondaire icone-bouton plein-ecran-cadre",
+    'aria-label="Plein écran" title="Plein écran"',
+  );
   return `<section class="accueil">
-    <h1>Automatismes</h1>
-    ${filtresHTML(filtre)}
-    <div class="domaines">${DOMAINES.map(([id, nom]) => {
-      const liste = familles.filter((famille) => famille.domaine === id);
-      const nombre = liste.length;
-      const coches = liste.filter((famille) => selection.has(famille.id)).length;
-      const compte = coches
-        ? `${coches} sur ${nombre}`
-        : `${nombre} notion${nombre > 1 ? "s" : ""}`;
-      return `<button class="domaine-carte ${coches ? "avec-selection" : ""}" data-domaine="${id}" ${nombre ? "" : "disabled"}>
-        <span class="icone" aria-hidden="true">${ICONES_DOMAINES[id] || ""}</span>
-        <span class="nom">${nom}<small>${compte}</small></span><span class="chevron" aria-hidden="true">›</span>
-      </button>`;
-    }).join("")}</div>
-    ${bouton("Entraînement brevet · 9 questions · 20 min", "brevet", "secondaire brevet")}
+    <header class="entete-appli">
+      <a class="logo-cadre" href="/" aria-label="Accueil maths et go">
+        <img src="../assets/img/logos/mathsgo/logo-390.png" alt="maths&go"></a>
+      <div class="titre-appli"><h1>Automatismes</h1><span>Collège · sans calculatrice</span></div>
+      ${pleinEcran}
+    </header>
+    <section class="carte-menu">${etapeHTML(1, "Préparer la série")}
+      <div class="reglages-serie">${filtresHTML(filtre)}${nombreHTML(nombre)}</div></section>
+    <section class="carte-menu">${etapeHTML(2, "Choisir les automatismes")}
+      <div class="domaines">${DOMAINES.map(([id, nom]) => {
+        const liste = familles.filter((famille) => famille.domaine === id);
+        const coches = liste.filter((famille) => selection.has(famille.id)).length;
+        return `<button class="domaine-carte${coches ? " avec-selection" : ""}" data-domaine="${id}"
+          ${liste.length ? "" : "disabled"}>
+          <span class="icone" aria-hidden="true">${ICONES_DOMAINES[id] || ""}</span>
+          <span class="nom">${nom}</span>${compteurHTML(coches, liste.length)}
+          <span class="chevron" aria-hidden="true">›</span></button>`;
+      }).join("")}</div>
+      <button class="domaine-carte ligne-brevet" data-action="brevet">
+        <span class="icone" aria-hidden="true">${ICONES.chrono}</span>
+        <span class="nom">Entraînement brevet<small>9 questions · 20 min · sans aide</small></span>
+        <span></span><span class="chevron" aria-hidden="true">›</span></button>
+    </section>
   </section>`;
 }
 
 /* La barre de lancement, en bas du cadre sur l'accueil et les domaines, dès qu'une notion est cochée :
-   « N notions » · 5 · 10 · 15 · 20 · Lancer. Absente quand rien n'est coché. */
-export function lancementHTML(compte, nombre) {
+   « N notions » · Lancer (le nombre de questions se choisit dans « Préparer la série »). */
+export function lancementHTML(compte) {
   if (!compte) return "";
   return `<div class="barre-lancement">
     <span class="compte" aria-live="polite">${compte} notion${compte > 1 ? "s" : ""}</span>
-    ${nombreHTML(nombre)}${bouton("Lancer", "lancer", "orange")}
+    ${bouton("Lancer", "lancer", "orange")}
   </div>`;
-}
-
-function nombreHTML(nombre) {
-  return `<div class="nombre-questions" role="group" aria-label="Nombre de questions">
-    <span>Questions</span>${[5, 10, 15, 20]
-      .map(
-        (valeur) =>
-          `<button class="bouton petit ${valeur === nombre ? "primaire" : "secondaire"}" data-nombre="${valeur}"
-      aria-pressed="${valeur === nombre}">${valeur}</button>`,
-      )
-      .join("")}</div>`;
 }
 
 /* Le domaine : une case par notion (toute la ligne coche ou décoche), « Tout le domaine » en tête.

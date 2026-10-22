@@ -250,9 +250,12 @@ test(
       await page.locator('[data-selection="NC27"]').check();
       await page.locator('[data-action="retour"]').click();
       await page.locator(".domaines").waitFor();
+      // Accueil d'après la V2 : la pastille « k / n » du domaine.
       assert.match(
-        await page.locator('[data-domaine="nombres-calculs"] small').innerText(),
-        /^1 sur \d+$/,
+        await page
+          .locator('[data-domaine="nombres-calculs"] .compteur-domaine')
+          .evaluate((pastille) => pastille.firstChild.textContent),
+        /^1 \/ \d+$/,
       );
       assert.equal(await page.locator(".barre-lancement .compte").innerText(), "1 notion");
       await page.locator('[data-domaine="espace-geometrie"]').click();

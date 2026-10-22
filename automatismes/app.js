@@ -102,23 +102,25 @@ function cadre(contenu) {
   document.body.classList.remove("clavier-ouvert");
   clavierOuvert = false;
   champActif = null;
-  // Pas d'en-tête hors du cadre : la barre du cadre porte « ← Retour » à gauche (sauf sur l'accueil)
-  // et les pastilles Diaporama · Plein écran à droite. L'écran de question a sa propre barre.
-  const pastilles = `<div class="barre-cadre-droite">
-    ${ecran === "prof" ? "" : '<a class="pastille" href="?prof=1" data-action="prof">Diaporama</a>'}
-    ${bouton(`${ICONES.pleinEcran}<span>Plein écran</span>`, "plein-ecran", "pastille", 'aria-label="Plein écran"')}
-  </div>`;
-  const barreCadre = question
-    ? ""
-    : `<div class="barre-cadre">${ecran === "accueil" ? "" : bouton("← Retour", "retour", "discret petit")}
-      ${pastilles}</div>`;
-  const pied = `<footer class="pied"><a class="logo" href="/" aria-label="Accueil maths et go">
-    <img src="../assets/img/logos/mathsgo/logo-390.png" alt="maths&go"></a>
-    <span>Sans calculatrice · Collège et brevet</span></footer>`;
+  // L'accueil porte sa carte d'en-tête (logo, titre, Plein écran) : pas de barre du cadre, pas de pied.
+  // Ailleurs, la barre du cadre porte « ← Retour » à gauche et Plein écran à droite (dès 700 px).
+  // L'écran de question a sa propre barre.
+  const menu = ecran === "accueil";
+  document.body.classList.toggle("menu", menu);
+  const pleinEcran = bouton(
+    `${ICONES.pleinEcran}<span>Plein écran</span>`,
+    "plein-ecran",
+    "pastille plein-ecran-cadre",
+    'aria-label="Plein écran"',
+  );
+  const barreCadre =
+    question || menu
+      ? ""
+      : `<div class="barre-cadre">${bouton("← Retour", "retour", "discret petit")}
+      <div class="barre-cadre-droite">${pleinEcran}</div></div>`;
   application.innerHTML = `<div class="coque">
     <main class="cadre">${barreCadre}<div class="contenu">${contenu}</div>
       ${ecran === "accueil" || ecran === "domaine" ? '<div id="lancement"></div>' : ""}</main>
-    ${question ? "" : pied}
   </div>`;
   relierActions();
   majLancement();
@@ -129,7 +131,7 @@ function cadre(contenu) {
 function majLancement() {
   const zone = document.querySelector("#lancement");
   if (!zone) return;
-  zone.innerHTML = lancementHTML(selection.size, preferences.nombre);
+  zone.innerHTML = lancementHTML(selection.size);
   relierActions(zone);
   ajusterAffichage();
 }
@@ -149,7 +151,7 @@ function afficherAccueil() {
   ecran = "accueil";
   seance = null;
   history.replaceState(null, "", location.pathname);
-  cadre(accueilHTML(famillesEligibles(catalogue, filtre), filtre, selection));
+  cadre(accueilHTML(famillesEligibles(catalogue, filtre), filtre, selection, preferences.nombre));
 }
 
 function afficherDomaine(id) {
@@ -876,14 +878,19 @@ function relierActions(racine = application) {
   racine.querySelectorAll("[data-niveau]").forEach((element) => {
     element.onclick = () => changerNiveau(element.dataset.niveau);
   });
+  // Le nombre de questions : boutons (à partir de 700 px) ou liste « 10 questions ▾ » (téléphone).
+  const choisirNombre = (valeur) => {
+    if (![5, 10, 15, 20].includes(valeur)) return;
+    preferences.nombre = valeur;
+    sauverPreferences();
+    if (ecran === "accueil") afficherAccueil();
+    else majLancement();
+  };
   racine.querySelectorAll("[data-nombre]").forEach((element) => {
-    element.onclick = () => {
-      const valeur = Number(element.dataset.nombre);
-      if (![5, 10, 15, 20].includes(valeur)) return;
-      preferences.nombre = valeur;
-      sauverPreferences();
-      majLancement();
-    };
+    element.onclick = () => choisirNombre(Number(element.dataset.nombre));
+  });
+  racine.querySelectorAll("[data-choix-nombre]").forEach((element) => {
+    element.onchange = () => choisirNombre(Number(element.value));
   });
   racine.querySelectorAll("[data-domaine]").forEach((element) => {
     element.onclick = () => afficherDomaine(element.dataset.domaine);
@@ -1064,7 +1071,7 @@ function ajusterEchelle() {
   const racine = document.documentElement;
   const coque = document.querySelector(".coque");
   const projection = document.body.classList.contains("projection");
-  // Sans en-tête, la marge autour du cadre est la même partout : haut de la coque, pied, bas.
+  // Sans en-tête, la marge autour du cadre est la même partout : haut et bas de la coque.
   const marge = 72;
   racine.style.setProperty("--echelle", "1");
   racine.style.setProperty("--hauteur-cadre", `${innerHeight - marge}px`);
