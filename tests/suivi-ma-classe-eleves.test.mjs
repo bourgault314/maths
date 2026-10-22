@@ -567,6 +567,13 @@ test("qui voit quoi — téléphone : les mêmes pastilles sous le prénom ; un 
   assert.deepEqual(sous[1].tous(n => aClasse(n, "ajout")).map(p => p.textContent), ["⚡ Coffres magiques"]);
   assert.match(page, /@media \(max-width: 480px\) \{\s*#tableau-eleves th\.th-plus, #tableau-eleves td\.en-plus \{ display: none; \}\s*\.ajouts-sous \{ display: flex;/);
   assert.match(page, /\n  \.ajouts-sous \{ display: none; \}/, "sur tablette et ordinateur, la colonne seule");
+  // Trouvé au navigateur (Windows, 22/10) : « Coffres magiques : niveau 2, niveau 3,
+  // opération … » sur une seule ligne poussait le « ⋯ » hors de l'écran (396 px de
+  // trop à 390, hors du cadre de 720 px à l'ordinateur). La pastille coupe son texte.
+  const regleAjout = page.match(/\n  \.ajout \{([^}]*)\}/)[1];
+  assert.match(regleAjout, /white-space: normal;/, "une pastille trop longue passe à la ligne");
+  assert.doesNotMatch(regleAjout, /nowrap/);
+  assert.match(page, /\n  \.ajout i \{ flex: none; \}/, "la pastille ronde du monde ne s'écrase pas");
   const collegue = ongletEleves([RANIA()], "ecriture");
   const lues = collegue.lignes[0].tous(n => aClasse(n, "ajout"));
   assert.ok(lues.length === 2 && lues.every(p => p.tag === "span" && !(p.ecouteurs.click || []).length), "du texte, pas des boutons");

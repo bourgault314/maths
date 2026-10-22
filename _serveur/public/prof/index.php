@@ -274,12 +274,16 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
      Sur téléphone, pas de colonne : les pastilles passent sous le prénom. */
   /* La colonne prend sa part (45 %) : deux pastilles tiennent sur une ligne,
      au-delà elles passent à la ligne — le tableau ne déborde jamais de son
-     cadre de 720 px (le « ⋯ » resterait hors de l'écran). */
+     cadre de 720 px (le « ⋯ » resterait hors de l'écran). Une pastille trop
+     longue pour sa ligne (Coffres : niveaux et opérations) coupe son texte
+     au lieu d'élargir le tableau. */
   #tableau-eleves td.en-plus { width: 45%; white-space: normal; }
   #tableau-eleves td.en-plus .vide { color: #9aa9bb; }
   .ajout { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; margin: 2px 6px 2px 0;
-           padding: 3px 11px 3px 9px; border: 0; border-radius: 999px; background: #eaf0f7;
-           color: var(--blue-dark); font: inherit; font-size: .82rem; font-weight: 700; white-space: nowrap; }
+           padding: 3px 11px 3px 9px; border: 0; border-radius: 15px; background: #eaf0f7;
+           color: var(--blue-dark); font: inherit; font-size: .82rem; font-weight: 700; white-space: normal;
+           text-align: left; }
+  .ajout i { flex: none; }
   button.ajout { cursor: pointer; }
   button.ajout:hover { background: #dbe6f2; }
   .ajout i { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%;
@@ -565,7 +569,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   @media (max-width: 480px) {
     #tableau-eleves th.th-plus, #tableau-eleves td.en-plus { display: none; }
     .ajouts-sous { display: flex; flex-wrap: wrap; gap: 0 2px; margin: -4px 0 4px 8px; }
-    .ajouts-sous .ajout { min-height: 26px; margin: 2px 4px 2px 0; padding: 1px 8px 1px 6px; font-size: .74rem; }
+    .ajouts-sous .ajout { min-height: 26px; margin: 2px 4px 2px 0; padding: 1px 8px 1px 6px; border-radius: 13px; font-size: .74rem; }
     .ajouts-sous .ajout i { width: 15px; height: 15px; font-size: .62rem; }
     .voit-liste .tag { display: none; }
     .voit-liste .puce-monde.classe::after, .voit-liste .cases-coffres label.classe::after { content: none; }
