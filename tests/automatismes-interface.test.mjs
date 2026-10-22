@@ -1113,3 +1113,47 @@ test(
     }
   },
 );
+
+// Corrections 3 (K10) : le calcul en gras (Nunito 800), les lettres rondes et grasses de SplatLettres ;
+// un calcul long se réduit sur UNE ligne, la case à côté (NC20-b à 390 px).
+test(
+  "calcul (coque V2, K10) : en gras, lettres SplatLettres, NC20-b sur une ligne à 390 px",
+  { skip: ignorer, timeout: 60000 },
+  async () => {
+    const { serveur, base } = await serveurLocal();
+    const browser = await ouvrirNavigateur();
+    const page = await browser.newPage({
+      viewport: { width: 390, height: 844 },
+      isMobile: true,
+      hasTouch: true,
+    });
+    try {
+      await page.goto(`${base}?notion=NC20&forme=b&graine=12`);
+      await page.locator(".carte .calcul .case").waitFor();
+      await stabiliser(page);
+      const mesure = await page.evaluate(() => {
+        const calcul = document.querySelector(".carte .calcul");
+        const texte = calcul.querySelector(".t");
+        const kase = calcul.querySelector(".case").getBoundingClientRect();
+        const lettre = calcul.querySelector(".math-variable");
+        return {
+          gras: Number(getComputedStyle(texte).fontWeight),
+          police: getComputedStyle(lettre).fontFamily,
+          lettre: lettre.textContent,
+          lettreGrasse: Number(getComputedStyle(lettre).fontWeight),
+          uneLigne: Math.abs(kase.top - texte.getBoundingClientRect().top) < kase.height,
+          tient: calcul.scrollWidth <= calcul.clientWidth + 1,
+        };
+      });
+      assert.equal(mesure.gras, 800, "Chiffres et signes en gras");
+      assert.match(mesure.police, /^SplatLettres/, "Lettres SplatLettres");
+      assert.equal(mesure.lettre, "𝑥", "La lettre mathématique ronde");
+      assert.ok(mesure.lettreGrasse >= 700, "Lettre grasse");
+      assert.ok(mesure.uneLigne, "La case sur la même ligne que le calcul");
+      assert.ok(mesure.tient, "Le calcul tient dans la carte");
+    } finally {
+      await browser.close();
+      await new Promise((fin) => serveur.close(fin));
+    }
+  },
+);

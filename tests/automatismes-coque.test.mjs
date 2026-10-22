@@ -23,12 +23,12 @@ test("C3 : chaque forme tombe dans un cas, avec les comptes de la graine 12", ()
       cas[nom] = (cas[nom] || 0) + 1;
     }
   assert.deepEqual(cas, {
-    seule: 240,
+    seule: 213,
     carres: 11,
     comparaison: 9,
     ranger: 2,
     qcm: 67,
-    calcule: 40,
+    calcule: 67,
     etiquette: 59,
     coordonnees: 7,
   });
@@ -140,4 +140,15 @@ test("K8 : « COD = [ ] ° », « A ( [ ] ; [ ] ) », « Toutes les solutions : 
     "Quotient / Reste gardent leurs étiquettes",
   );
   assert.equal(modeleQuestion(question("EG06-d"), "COD mesure [0] degrés").cas, "gabarit");
+});
+
+// Corrections 3 (K10) : « Réduis / Développe / Factorise / Simplifie » s'écrivent aussi « X = [ ] ».
+test("K10 : « 3x² − x + x² + 5x − 7 = [ ] » (NC20-b), « Développe et réduis. »", () => {
+  assert.deepEqual(modeleQuestion(question("NC20-b"), null), {
+    cas: "calcule",
+    consigne: "Réduis.",
+    modele: "3x² − x + x² + 5x − 7 = [0]",
+  });
+  assert.equal(modeleQuestion(question("NC22-a"), null).consigne, "Développe et réduis.");
+  assert.equal(modeleQuestion(question("NC09-e"), null).modele, "(−4)/16 = [0]");
 });

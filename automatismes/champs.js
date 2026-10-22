@@ -227,12 +227,17 @@ export function modeleQuestion(question, gabarit = question.gabarit) {
       };
     }
   }
-  // « Calcule… » et « Calculer… » (PF03) commencent tous deux par « Calcule ».
-  const verbe = prompt.match(/^Calculer?\b/)?.[0];
+  // « Calcule… » et « Calculer… » (PF03) ; depuis K10, aussi « Réduis », « Développe (et réduis) »,
+  // « Factorise », « Simplifie » : « 3x² − x + x² + 5x − 7 = [ ] » (planche 12, NC20-b).
+  const verbe = prompt.match(
+    /^(?:Calculer?|Réduis|Développe|Factorise|Simplifie)(?![\p{L}])/u,
+  )?.[0];
   if (champs.length === 1 && !champs[0].options && verbe) {
     const [premiere, ...autres] = phrases(prompt);
     const phrase = sansPoint(premiere);
-    const avecDeuxPoints = phrase.match(/^(Calculer?[^:]*?)\s*:\s*(.+)$/u);
+    const avecDeuxPoints = phrase.match(
+      /^((?:Calculer?|Réduis|Développe|Factorise|Simplifie)[^:]*?)\s*:\s*(.+)$/u,
+    );
     const [consigne, calcul] = avecDeuxPoints
       ? [avecDeuxPoints[1], avecDeuxPoints[2]]
       : [verbe, phrase.slice(verbe.length).trim()];
@@ -374,6 +379,17 @@ function creerCase(parent, question, rang, valeurs, options, contexte) {
   if (contexte.plusieurs) saisie.classList.add("petite");
 }
 
+/* K10 : dans le calcul (écrit en gras), les lettres sont les lettres rondes et grasses d'ÉquaSplat
+   (SplatLettres-BoldItalic). Cette police ne dessine que les lettres mathématiques d'Unicode
+   (𝑎…𝑧, ℎ) : on remplace la lettre a…z par la sienne. MG Math reste pour le texte maigre. */
+export function lettresGrasses(racine) {
+  const lettre = (c) => (c === "h" ? "ℎ" : String.fromCodePoint(0x1d44e + c.charCodeAt(0) - 97));
+  racine?.querySelectorAll(".math-variable").forEach((variable) => {
+    variable.textContent = variable.textContent.replace(/[a-z]/g, lettre);
+    variable.classList.add("lettre-grasse");
+  });
+}
+
 function monterModele(parent, question, valeurs, options, contexte) {
   const ligne = element("div", contexte.phrase ? "calcul phrase" : "calcul", parent);
   for (const morceau of morceauxModele(contexte.modele)) {
@@ -394,6 +410,7 @@ function monterModele(parent, question, valeurs, options, contexte) {
       }
     }
   }
+  lettresGrasses(ligne);
   const coche = options.etatCases?.every((etat) => etat === "juste");
   if (coche) element("span", "coche", ligne).textContent = "✓";
 }

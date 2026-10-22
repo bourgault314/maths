@@ -966,6 +966,69 @@ body[data-ecran="question"] .progression {
 .touches .effacer {
   grid-column: span 2;
 }
+/* K10 : le calcul en GRAS (Nunito 800, comme la maquette et la V2) ; les lettres rondes et grasses
+   d'ÉquaSplat (SplatLettres-BoldItalic, lettres mathématiques d'Unicode seulement : unicode-range). */
+@font-face {
+  font-family: SplatLettres;
+  src: url("../assets/fonts/SplatLettres-BoldItalic.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 600 900;
+  font-display: block;
+  size-adjust: 120%;
+  unicode-range: U+1D434-1D467, U+210E;
+}
+.carte .calcul,
+.carte .question-expression,
+.carte .bonne strong {
+  font-family: "Nunito", "Segoe UI", sans-serif;
+  font-weight: 800;
+}
+.carte .calcul .math-expression,
+.carte .question-expression .math-expression,
+.carte .bonne strong .math-expression,
+.carte .calcul math,
+.carte .question-expression math,
+.carte .bonne strong math {
+  font-family: "Nunito", "Segoe UI", sans-serif;
+  font-weight: 800;
+}
+/* .math-variable.lettre-grasse : plus précis que la règle !important de MG Math (math-format.js). */
+.math-variable.lettre-grasse {
+  font-family: SplatLettres, "MG Math", serif !important;
+  font-style: normal !important;
+  font-weight: 800 !important;
+}
+/* K10 : dans le calcul, la case se mesure en em : quand un calcul trop long se réduit (jusqu'à 70 %),
+   la case se réduit avec lui et l'ensemble tient sur une ligne. */
+.carte .calcul .case {
+  height: 1.6em;
+  min-width: 2.5em;
+  padding: 0 0.3em;
+  border-radius: 0.42em;
+  font-size: 0.88em;
+}
+.carte .calcul input.case {
+  width: 2.8em;
+}
+.carte .calcul .case.petite {
+  min-width: 1.9em;
+  width: 2.1em;
+}
+/* La case d'une expression : largeur fixe (le texte tapé défile dedans), pour que la ligne ne saute
+   pas en tapant ; assez large pour lire « 4x² + 4x − 7 » et tenir sur une ligne à 390 px. */
+.carte .calcul .case.expression {
+  min-width: 4em;
+  width: 4em;
+  font-size: 0.8em;
+  field-sizing: fixed;
+}
+/* Une case en lecture (réponse donnée, diaporama) prend la largeur de sa réponse, sur une ligne. */
+.carte .calcul span.case,
+.carte .calcul span.case.expression,
+.carte .calcul span.case.petite {
+  width: auto;
+  white-space: nowrap;
+}
 /* Le calcul et ses cases (C3) : « 0,7 × 7 = [ ] », « 47 = 6 × [ ] + [ ] », « 4,7 [ ] 4,68 ». */
 .carte .reponses {
   display: block;
@@ -976,7 +1039,7 @@ body[data-ecran="question"] .progression {
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 6px 10px;
+  gap: 6px 0.25em;
   margin: 0;
   color: var(--encre);
   font-size: 2.125rem;
@@ -1469,6 +1532,13 @@ input.case {
   border-radius: 10px;
   background: var(--fond-doux);
   font-weight: 800;
+}
+/* Téléphone : la carte resserre ses côtés, un calcul long garde sa case sur la même ligne (K10). */
+@media (max-width: 480px) {
+  .carte {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
 }
 /* Tablette et ordinateur : même écran, la carte et ce qui s'ouvre dessous font 640 px (760 px à la
    souris), centrés en largeur. */

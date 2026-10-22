@@ -19,6 +19,7 @@ import {
   insererTexte,
   monterClavier,
   monterSignes,
+  lettresGrasses,
 } from "./champs.js";
 import {
   accueilHTML,
@@ -256,6 +257,17 @@ function afficherQuestion() {
   );
   if (seance.mode !== "project") preparerSaisie(question, etat);
   else montrerProjection(question, etat);
+  // K10 : le calcul de l'énoncé et la bonne réponse, comme les cases, en gras, lettres rondes grasses.
+  document
+    .querySelectorAll(".carte .question-expression, .carte .bonne strong")
+    .forEach(lettresGrasses);
+  // La police des lettres grasses ne se charge qu'à leur première apparition : on règle de nouveau
+  // les tailles quand elle est là (sinon le calcul s'élargit après coup).
+  if (
+    document.querySelector(".lettre-grasse") &&
+    !document.fonts.check("800 16px SplatLettres", "𝑥")
+  )
+    document.fonts.load("800 16px SplatLettres", "𝑥").then(ajusterAffichage);
   mettreAJourTemps();
   ajusterAffichage();
 }
