@@ -70,6 +70,12 @@ là-haut, on perd de la place »). Ne pas la « corriger » vers la règle commu
   flèche ;
 - `tests/flash-anzan.test.mjs` garde ces trois points. Étendre cette
   disposition aux autres applis est une idée de Gwenaël, pas une décision.
+- Avec un code (l'élève venu de Mon espace, lot « Qui voit quoi », lot 4a,
+  23/10/2026), le modèle commun ci-dessous s'applique : le bloc « Suivi par ton
+  professeur » AU-DESSUS du cadre, la flèche du cadre mène à Mon espace (pas de
+  « ← Mon espace » en texte, pour ne pas doubler), la pastille « ● prénom » à
+  la place du plein écran pendant la séance, le pied « Mon espace ». Sans
+  code, rien ne change.
 
 ## Applis suivies — modèle commun
 

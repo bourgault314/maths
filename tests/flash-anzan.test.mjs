@@ -165,10 +165,17 @@ test("jamais le clavier du téléphone : aucune case de saisie dans la page", ()
   assert.doesNotMatch(PAGE, /data-key="(?:minus|-|\.|,)"/, "pas de touche moins ni virgule");
 });
 
-test("lot 1 : pas d'historique, rien n'est envoyé, rien ne part au serveur", () => {
-  assert.doesNotMatch(PAGE, /Mon historique/);
-  assert.doesNotMatch(PAGE, /Envoyé à ton professeur/);
-  assert.doesNotMatch(PAGE, /fetch\(|XMLHttpRequest|sendBeacon|suivi\.mathsgo\.re/);
+test("lot 4a : la page elle-même ne parle jamais au serveur ; seul le moteur du suivi le fait, et seulement sous un code", () => {
+  const script = PAGE.slice(PAGE.lastIndexOf("<script>"), PAGE.lastIndexOf("</script>"));
+  assert.doesNotMatch(script, /fetch\(|XMLHttpRequest|sendBeacon/, "aucun appel réseau dans le script de la page");
+  assert.match(PAGE, /<script src="\.\/flash_anzan_parcours\.js\?v=\d{8}-\d+"><\/script>\s*<script src="\.\/flash_anzan_suivi\.js\?v=\d{8}-\d+"><\/script>/,
+    "le moteur du parcours et l'habillage du suivi, avec une version, après le moteur des calculs");
+  assert.doesNotMatch(PAGE, /<script[^>]+src="https?:\/\//, "aucun script d'un autre domaine");
+  assert.match(script, /function suiviActif\(\) \{\s*return Boolean\(SUIVI && SUIVI\.actif\(\)\);/);
+  assert.match(script, /function noterSeanceSuivi\(\) \{\s*if \(!suiviActif\(\) \|\| !seance\.resultats\.length\) return;/, "rien sans code, rien sans calcul fait");
+  // Ce qui part : le mode, les réglages, les calculs faits, le score — jamais les calculs ni les réponses.
+  assert.match(script, /SUIVI\.client\.noterUneSeance\(\{\s*mode: seance\.mode,\s*reglages: seance\.reglages,\s*faits: seance\.resultats\.length,\s*score: justes\s*\}, seance\.numeroSuivi\);/);
+  assert.doesNotMatch(script, /noterUneSeance\([^)]*(calculs|resultats\[|ecrit|termes)/, "jamais les nombres ni les réponses");
 });
 
 test("la mémoire des réglages passe par un try/catch (navigation privée)", () => {
@@ -180,7 +187,7 @@ test("pas de barre au-dessus du cadre : la flèche et le plein écran sont dans 
   assert.doesNotMatch(PAGE, /class="topbar"/);
   const cadre = PAGE.slice(PAGE.indexOf('<section class="panel"'), PAGE.indexOf("</section>"));
   assert.match(cadre, /<a class="rond" id="lien-retour" href="\.\.\/index\.html\?domain=nombres-calculs&amp;notion=calcul-mental"/);
-  assert.equal((cadre.match(/data-fullscreen-toggle/g) || []).length, 2, "un plein écran sur les réglages, un pendant la séance");
+  assert.equal((cadre.match(/data-fullscreen-toggle/g) || []).length, 3, "un plein écran sur les réglages, un pendant la séance, un sur Mon historique");
   const pied = PAGE.slice(PAGE.indexOf('<footer class="site-footer">'), PAGE.indexOf("</footer>"));
   assert.match(pied, /<a class="pied-logo" href="\/"/);
   assert.match(pied, /<span data-mathsgo-confidentialite>Sans cookie ni traceur<\/span>/);

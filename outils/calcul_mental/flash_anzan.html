@@ -13,6 +13,66 @@
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
   <link rel="stylesheet" href="../../assets/vendor/polices/polices.css">
+  <script>
+    // Suivi de classe (lot « Qui voit quoi », lot 4a, 23/10/2026), repris du
+    // <head> de Coffres magiques, en JavaScript ancien (pas de const, pas
+    // d'URLSearchParams) : quoi qu'il arrive au reste, le billet sort de la
+    // barre d'adresse avant tout. L'espace élève ouvre l'appli avec un BILLET
+    // (#b=…, usage unique, deux minutes), jamais le code ; la page l'échange
+    // ensuite contre le code (flash_anzan_parcours.js). Le code ne doit
+    // apparaître dans AUCUNE adresse : une adresse reste dans l'historique et
+    // s'affiche quand la page est projetée. Un #code= ou un #fiche= tapé à la
+    // main n'ouvre rien : il est seulement effacé.
+    (function (window) {
+      var entree = {billet: ""};
+      var reste = [];
+      var aEffacer = false;
+      try {
+        var brut = String(window.location.hash || "").replace(/^#/, "");
+        if (brut) {
+          var morceaux = brut.split("&");
+          for (var i = 0; i < morceaux.length; i++) {
+            var egal = morceaux[i].indexOf("=");
+            var cle = egal < 0 ? morceaux[i] : morceaux[i].slice(0, egal);
+            var valeur = egal < 0 ? "" : morceaux[i].slice(egal + 1);
+            try { cle = decodeURIComponent(cle); valeur = decodeURIComponent(valeur); } catch (e) {}
+            if (cle === "code" || cle === "fiche") aEffacer = true;
+            else if (cle === "b") entree.billet = valeur;
+            else if (morceaux[i]) reste.push(morceaux[i]);
+          }
+        }
+      } catch (e) {}
+      window.MATHSGO_ENTREE = entree;
+      // L'élève qui arrive de son espace (un billet, ou son code déjà dans
+      // l'onglet) a l'en-tête du modèle commun dès le premier affichage (le
+      // bloc de suivi au-dessus du cadre) : posé ici, pour que rien ne
+      // clignote. La page le confirme ensuite (majSuivi).
+      try {
+        var codeOnglet = "";
+        try { codeOnglet = window.sessionStorage.getItem("mathsgo-suivi-code") || ""; } catch (e) {}
+        if (entree.billet || codeOnglet) {
+          window.document.documentElement.className += " suivi-eleve";
+          // Tant qu'on ne sait pas qui entre ni quels sont ses réglages, les
+          // réglages restent cachés (quelques dixièmes de seconde).
+          window.document.documentElement.className += " suivi-attente";
+        }
+      } catch (e) {}
+      if (aEffacer || entree.billet) {
+        try {
+          window.history.replaceState(null, "", window.location.pathname
+            + window.location.search + (reste.length ? "#" + reste.join("&") : ""));
+        } catch (e) {}
+      }
+      // Un lien #b= posé sur une page DÉJÀ ouverte n'est pas un nouveau
+      // document : ce script ne rejouerait pas. On recharge.
+      try {
+        window.addEventListener("hashchange", function () {
+          var hash = String(window.location.hash || "");
+          if (/(^#|&)(code|fiche|b)=/.test(hash)) window.location.reload();
+        });
+      } catch (e) {}
+    })(window);
+  </script>
   <script defer src="../../assets/js/mention-confidentialite.js"></script>
   <style>
     /* Les couleurs, le pavé, les boutons et la barre du haut sont ceux de
@@ -257,6 +317,53 @@
     .item .suite { font-size: 1rem; padding: 0 12px 10px 44px; }
     .fin .actions { flex: 0 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; padding-bottom: 5px; }
 
+    /* ---- L'élève à code (lot « Qui voit quoi », lot 4a, 23/10/2026) ----
+       Le MODÈLE COMMUN des applis suivies (AGENTS.md), Défi tables en
+       référence : le bloc « Suivi par ton professeur · Rania · 405 · Se
+       déconnecter » AU-DESSUS du cadre (dessiné et stylé par
+       flash_anzan_suivi.js) ; la flèche du cadre mène à Mon espace, sans
+       « ← Mon espace » en texte (la flèche y mène déjà) ; pendant la séance,
+       la pastille « ● Rania » à droite de la barre, à la place du plein écran
+       sur téléphone ; en bas, le petit logo et « Mon espace ». La classe
+       « suivi-eleve » est posée dès le <head> pour ne pas clignoter. */
+    .shell > .suivi-repere { margin: 0 0 12px; }
+    body.en-seance .suivi-repere { display: none; }
+    #suivi-pastille-slot:empty { display: none; }
+    /* Pendant l'échange du billet, on ne sait pas encore qui entre ni quels
+       sont ses réglages : le cadre attend, vide. */
+    html.suivi-eleve.suivi-attente #ecran-reglages > :not(.cadre-haut) { visibility: hidden; }
+    .historique-bouton { margin-top: 10px; }
+    /* « ● Envoyé à ton professeur » sous le résumé de la séance (planche 3
+       du 22/10/2026) ; orange quand rien n'est encore parti. */
+    .envoi { display: inline-flex; align-items: center; gap: 6px; margin: 8px 0 0; color: var(--teal); font-weight: 850; font-size: .82rem; }
+    .envoi::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #08aaa5; flex: 0 0 auto; }
+    .envoi.hors-ligne { color: #8a4c0a; }
+    .envoi.hors-ligne::before { background: #d9822b; }
+    .envoi.detache { color: #3d4a5a; }
+    .envoi.detache::before { display: none; }
+
+    /* ---- Mon historique (élève à code) : les séances, la plus récente en
+       haut, dix par dix (planche 3 du 22/10/2026) ---- */
+    .historique-ecran { width: 100%; max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; }
+    .hist-compte { margin: 2px 0 0; text-align: center; color: var(--muted); font-weight: 800; font-size: .9rem; }
+    .hist-liste { margin-top: 12px; max-height: min(62vh, 560px); }
+    .hist-item { display: grid; grid-template-columns: 62px minmax(0, 1fr) auto; align-items: center; gap: 10px; min-height: 56px; padding: 6px 12px; border-bottom: 1px solid #edf3f7; }
+    .hist-item:last-child { border-bottom: 0; }
+    .hist-jour { font-weight: 900; font-size: .9rem; color: var(--ink); font-variant-numeric: tabular-nums; }
+    .hist-mode { font-weight: 900; font-size: .95rem; }
+    .hist-reglages { display: block; color: var(--muted); font-weight: 700; font-size: .76rem; margin-top: 1px; }
+    .hist-score { text-align: right; font-weight: 950; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+    .hist-score small { display: block; font-size: .68rem; font-weight: 800; color: #8a4c0a; }
+    .historique-ecran .bas { width: 100%; max-width: 380px; margin: 16px auto 0; }
+    @media (max-width: 620px) {
+      /* Au téléphone, le bloc de suivi ne colle pas aux bords, et la liste des
+         séances défile avec la page (pas dans son cadre). */
+      .shell > .suivi-repere { margin: 0 10px 10px; }
+      .hist-liste { max-height: none; overflow: visible; }
+      .hist-item { grid-template-columns: 54px minmax(0, 1fr) auto; padding: 6px 10px; }
+      .hist-jour { font-size: .82rem; }
+    }
+
     /* ---- Le pied du site (Défi tables) ---- */
     .site-footer { width: min(100%, 960px); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 5px 9px;
       margin: 0 auto; padding: 13px 12px calc(13px + env(safe-area-inset-bottom)); color: #5b7283; font-size: .78rem; text-align: center; }
@@ -358,6 +465,9 @@
 </head>
 <body>
   <main class="shell">
+    <!-- L'élève à code (modèle commun) : le bloc de suivi au-dessus du cadre,
+         dessiné par flash_anzan_suivi.js ; caché pour tous les autres -->
+    <p id="suivi-repere" class="suivi-repere" hidden></p>
 
     <section class="panel" id="panel">
       <!-- Les réglages : un réglage par ligne, communs aux deux modes, puis
@@ -421,6 +531,27 @@
         </div>
         <div class="bas">
           <button type="button" class="primary" id="partir">C’est parti&nbsp;!</button>
+          <!-- L'élève à code, dès sa première séance : ses dernières séances -->
+          <button type="button" class="secondary historique-bouton" id="vers-historique" hidden>📜 Mon historique</button>
+        </div>
+      </div>
+
+      <!-- Mon historique (l'élève à code) : le compte, puis les séances, la
+           plus récente en haut, dix par dix. Tout est posé par textContent :
+           ce qui vient du serveur ne devient jamais du HTML. -->
+      <div id="ecran-historique" class="historique-ecran" hidden>
+        <div class="cadre-haut">
+          <button type="button" class="rond" id="historique-retour" aria-label="Retour aux réglages" title="Réglages"><svg viewBox="0 0 24 24" fill="none" stroke="#143451" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
+          <div class="titre-bloc">
+            <p class="eyebrow">Soroban</p>
+            <h1 id="historique-titre" tabindex="-1">Mon historique</h1>
+          </div>
+          <button type="button" class="rond plein-ecran" data-fullscreen-toggle aria-pressed="false" aria-label="Passer en plein écran" title="Plein écran"><svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path class="fullscreen-expand" d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/><path class="fullscreen-collapse" d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg></button>
+        </div>
+        <p class="hist-compte" id="historique-compte"></p>
+        <ol class="liste hist-liste" id="historique-liste" aria-label="Mes séances"></ol>
+        <div class="bas">
+          <button type="button" class="secondary" id="historique-plus" hidden>Voir les séances précédentes</button>
         </div>
       </div>
 
@@ -429,7 +560,7 @@
         <div class="jeu-haut">
           <button type="button" class="rond" id="retour" aria-label="Arrêter la séance"><svg viewBox="0 0 24 24" fill="none" stroke="#143451" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
           <span class="compte" id="compte" aria-live="polite"></span>
-          <span class="haut-droite"><span class="chrono" id="chrono" hidden><span id="chrono-s"></span></span><button type="button" class="rond plein-ecran" data-fullscreen-toggle aria-pressed="false" aria-label="Passer en plein écran" title="Plein écran"><svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path class="fullscreen-expand" d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/><path class="fullscreen-collapse" d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg></button></span>
+          <span class="haut-droite"><span class="chrono" id="chrono" hidden><span id="chrono-s"></span></span><span id="suivi-pastille-slot"></span><button type="button" class="rond plein-ecran" data-fullscreen-toggle aria-pressed="false" aria-label="Passer en plein écran" title="Plein écran"><svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path class="fullscreen-expand" d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/><path class="fullscreen-collapse" d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg></button></span>
         </div>
 
         <div id="vue-jeu" class="vue-jeu">
@@ -472,6 +603,8 @@
           <div class="tete-fin">
             <div class="score" id="score"></div>
             <span class="tag" id="tag-fin"></span>
+            <!-- l'élève à code : « Envoyé à ton professeur » (planche 3 du 22/10/2026) -->
+            <p class="envoi" id="envoi-fin" hidden></p>
           </div>
           <ol class="liste" id="liste"></ol>
           <div class="actions">
@@ -492,6 +625,10 @@
   </footer>
 
   <script src="./flash_anzan_core.js?v=20261022-1"></script>
+  <!-- Le parcours de l'élève (moteur partagé avec le serveur de suivi) et l'habillage du suivi de
+       classe (bloc, pastille, pied, garde) : lot « Qui voit quoi », lot 4a, 23/10/2026 -->
+  <script src="./flash_anzan_parcours.js?v=20261023-1"></script>
+  <script src="./flash_anzan_suivi.js?v=20261023-1"></script>
   <script>
     (function () {
       "use strict";
@@ -501,13 +638,54 @@
       const racine = document.documentElement;
 
       // -----------------------------------------------------------------
-      // Les réglages gardés sur l'appareil (au lot 2 : sur le compte de
-      // l'élève). Chaque mode garde ses propres derniers réglages.
+      // Le suivi de classe (lot « Qui voit quoi », lot 4a, 23/10/2026). Le
+      // moteur du parcours (flash_anzan_parcours.js) et l'habillage du suivi
+      // (flash_anzan_suivi.js) ne font rien sans code dans l'onglet : la page
+      // joue comme avant, sans rien enregistrer (AGENTS.md : « sans code,
+      // rien ne change »). Sous un code (l'élève venu de son espace, par un
+      // billet) :
+      //   - le bloc de suivi au-dessus du cadre, la pastille « ● Rania »
+      //     pendant la séance, la flèche vers Mon espace, le pied « Mon
+      //     espace » ;
+      //   - ses réglages vivent sur son compte et le suivent d'un appareil à
+      //     l'autre (jamais ceux de l'appareil : une tablette partagée garde
+      //     les siens pour les élèves sans code) ;
+      //   - chaque calcul validé note la séance dans sa case (jour, mode,
+      //     réglages, calculs faits, score — jamais les calculs eux-mêmes),
+      //     envoyée au serveur ; une séance fermée en route est donc gardée
+      //     telle quelle (« 6/7 · arrêtée ») ;
+      //   - « Mon historique » : ses séances, la plus récente en haut.
+      // -----------------------------------------------------------------
+      const PARCOURS = window.MathsGoFlashAnzanParcours || null;
+      const SUIVI = PARCOURS && window.MathsGoFlashAnzanSuivi
+        ? window.MathsGoFlashAnzanSuivi.creer({surRepere: majSuivi, surParcours: surParcoursChange, enJeu: () => corps.classList.contains("en-seance")})
+        : null;
+      const ADRESSE_ESPACE = SUIVI ? SUIVI.ADRESSE_ESPACE : "https://suivi.mathsgo.re/";
+
+      // L'élève venu de son espace : sous un code, pendant l'échange de son
+      // billet, ou quand ce billet a été refusé (il vient quand même de là).
+      function modeEleve() {
+        return Boolean(SUIVI && (SUIVI.actif() || SUIVI.attente() || SUIVI.client.entreeRefusee));
+      }
+      function suiviActif() {
+        return Boolean(SUIVI && SUIVI.actif());
+      }
+
+      // -----------------------------------------------------------------
+      // Les réglages : sur l'appareil (localStorage) pour l'élève sans code,
+      // sur son compte (le parcours) pour l'élève à code. Chaque mode garde
+      // ses propres derniers réglages.
       // -----------------------------------------------------------------
       const CLE = "mathsgo-flash-anzan-v1";
       function lireMemoire() {
         let brut = null;
-        try { brut = JSON.parse(window.localStorage.getItem(CLE) || "null"); } catch (e) { brut = null; }
+        if (suiviActif()) {
+          // Le compte de l'élève, et rien de l'appareil : un compte sans
+          // réglage encore choisi part des valeurs de départ.
+          try { brut = SUIVI.client.reglagesDuCompte(); } catch (e) { brut = null; }
+        } else {
+          try { brut = JSON.parse(window.localStorage.getItem(CLE) || "null"); } catch (e) { brut = null; }
+        }
         const b = brut && typeof brut === "object" ? brut : {};
         return {
           mode: CORE.MODES.includes(b.mode) ? b.mode : "flash",
@@ -516,10 +694,19 @@
         };
       }
       function ecrireMemoire() {
+        if (suiviActif()) {
+          SUIVI.ecrire((P, avant) => P.sauverReglages(avant, memoire));
+          return;
+        }
         try { window.localStorage.setItem(CLE, JSON.stringify(memoire)); } catch (e) { /* navigation privée : tant pis */ }
       }
       const memoire = lireMemoire();
       const reglages = () => memoire[memoire.mode];
+      // Les réglages du compte viennent d'arriver (ou de changer sur un autre
+      // appareil) : la page les reprend — jamais en pleine séance.
+      function rechargerMemoire() {
+        Object.assign(memoire, lireMemoire());
+      }
 
       // -----------------------------------------------------------------
       // L'écran des réglages
@@ -668,7 +855,8 @@
         revus: 0, // fois où « ↻ Revoir » a rejoué le calcul en cours
         enRevoir: false, // un « ↻ Revoir » est en train de rejouer le calcul
         echeance: 0, // instant (performance.now) où le temps limite est fini ; 0 = sans limite
-        tailleFlash: 0
+        tailleFlash: 0,
+        numeroSuivi: null // le numéro de cette séance dans la case de l'élève à code
       };
       const rng = CORE.mulberry32((Math.random() * 4294967296) >>> 0);
 
@@ -692,8 +880,11 @@
         seance.calculs = CORE.tirerSeance(seance.reglages, rng);
         seance.resultats = [];
         seance.index = 0;
+        seance.numeroSuivi = null;
         $("ecran-reglages").hidden = true;
+        $("ecran-historique").hidden = true;
         $("ecran-seance").hidden = false;
+        $("envoi-fin").hidden = true;
         corps.classList.add("en-seance");
         racine.style.setProperty("--echelle", "1");
         garderEcranAllume();
@@ -926,6 +1117,7 @@
         const ecrit = seance.reponse;
         const juste = !tempsEcoule && Number(ecrit) === calcul.total;
         seance.resultats.push({calcul, ecrit, juste, tempsEcoule: Boolean(tempsEcoule), revus: seance.revus});
+        noterSeanceSuivi();
         if (seance.chrono) { window.cancelAnimationFrame(seance.chrono); seance.chrono = null; }
         if (tempsEcoule) {
           $("chrono").style.setProperty("--reste", "0");
@@ -983,7 +1175,7 @@
 
       // ---- La fin ----
       // « arretee » : la flèche a arrêté la séance ; ce qui est fait est
-      // gardé (au lot 2, il partira au professeur : « 6/7 arrêtée »).
+      // gardé, et c'est ce que le professeur voit (« 6/7 arrêtée »).
       function finir(arretee) {
         annulerMinuteries();
         seance.phase = "fin";
@@ -994,6 +1186,8 @@
         const justes = seance.resultats.filter(r => r.juste).length;
         $("score").innerHTML = `${justes}<small>&nbsp;/ ${seance.resultats.length}</small>`;
         $("tag-fin").textContent = CORE.resume(seance.mode, seance.reglages);
+        noterSeanceSuivi();
+        majEnvoi();
         $("liste").innerHTML = seance.resultats.map((r, i) => {
           const marque = r.juste
             ? '<span class="m v" aria-label="juste">✓</span>'
@@ -1021,8 +1215,10 @@
         seance.phase = "aucune";
         corps.classList.remove("en-seance");
         $("ecran-seance").hidden = true;
+        $("ecran-historique").hidden = true;
         $("ecran-reglages").hidden = false;
         dessinerReglages();
+        majSuivi();
         $("titre").focus({preventScroll: true});
       }
       $("vers-reglages").addEventListener("click", versReglages);
@@ -1091,6 +1287,145 @@
           lancerCalcul();
         }
       });
+
+      // -----------------------------------------------------------------
+      // Le suivi de classe : ce que la page dessine pour l'élève à code
+      // -----------------------------------------------------------------
+      const lienRetour = $("lien-retour");
+      const pastilleSlot = $("suivi-pastille-slot");
+
+      // La séance en cours est notée dans la case de l'élève : à chaque calcul
+      // validé (la même séance, mise à jour sous son numéro), et à la fin.
+      // Rien sans code ; rien sans calcul fait.
+      function noterSeanceSuivi() {
+        if (!suiviActif() || !seance.resultats.length) return;
+        const justes = seance.resultats.filter(r => r.juste).length;
+        seance.numeroSuivi = SUIVI.client.noterUneSeance({
+          mode: seance.mode,
+          reglages: seance.reglages,
+          faits: seance.resultats.length,
+          score: justes
+        }, seance.numeroSuivi);
+      }
+
+      // « ● Envoyé à ton professeur » sous le résumé de la séance finie ;
+      // orange tant que rien n'est parti, gris si le code ne vaut plus rien.
+      function majEnvoi() {
+        const envoi = $("envoi-fin");
+        if (!suiviActif() || seance.phase !== "fin" || !seance.resultats.length) { envoi.hidden = true; return; }
+        const e = SUIVI.client.etatRepere();
+        envoi.className = "envoi" + (e.etat === "detache" ? " detache" : (e.etat === "hors-ligne" || e.etat === "erreur" ? " hors-ligne" : ""));
+        envoi.textContent = e.etat === "ok" ? "Envoyé à ton professeur" : e.texte;
+        envoi.hidden = false;
+      }
+
+      function poserPastille() {
+        pastilleSlot.innerHTML = SUIVI && modeEleve() ? SUIVI.pastilleHtml() : "";
+      }
+
+      // Y a-t-il quelque chose à montrer dans « Mon historique » ? Dès le
+      // premier calcul fait.
+      function aUnHistorique() {
+        if (!suiviActif()) return false;
+        try { return !PARCOURS.resumeTuile(SUIVI.lire()).vide; } catch (e) { return false; }
+      }
+
+      // Tout ce que l'élève à code voit de son suivi : la classe sur <html>,
+      // le bloc au-dessus du cadre, la flèche vers Mon espace, la pastille, le
+      // pied, le bouton de l'historique, la ligne « Envoyé ».
+      function majSuivi() {
+        const eleve = modeEleve();
+        racine.classList.toggle("suivi-eleve", eleve);
+        if (eleve) {
+          lienRetour.href = ADRESSE_ESPACE;
+          lienRetour.setAttribute("aria-label", "Retour à mon espace");
+          lienRetour.title = "Mon espace";
+        }
+        if (!SUIVI) return;
+        SUIVI.dessinerBloc($("suivi-repere"));
+        SUIVI.dessinerPied(document.querySelector("footer.site-footer"));
+        poserPastille();
+        $("vers-historique").hidden = !aUnHistorique();
+        majEnvoi();
+      }
+
+      // La case a changé sans geste de la page (fusion avec le serveur, autre
+      // appareil) : les réglages du compte et l'historique sont relus — jamais
+      // en pleine séance (le client ne l'appelle pas alors).
+      function surParcoursChange() {
+        if (corps.classList.contains("en-seance")) return;
+        rechargerMemoire();
+        if (!$("ecran-reglages").hidden) dessinerReglages();
+        if (!$("ecran-historique").hidden) dessinerHistorique();
+        majSuivi();
+      }
+
+      // ---- Mon historique ----
+      // « 22 oct. », et l'année quand ce n'est pas celle d'aujourd'hui.
+      function texteJour(jour) {
+        const [annee, mois, j] = jour.split("-").map(Number);
+        const date = new Date(annee, mois - 1, j);
+        const options = {day: "numeric", month: "short"};
+        if (annee !== new Date().getFullYear()) options.year = "numeric";
+        try { return date.toLocaleDateString("fr-FR", options); } catch (e) { return `${j}/${mois}`; }
+      }
+      let historiqueAffiches = 10;
+      function dessinerHistorique() {
+        const liste = $("historique-liste");
+        liste.replaceChildren();
+        if (!suiviActif()) return;
+        const parcours = SUIVI.lire();
+        $("historique-compte").textContent = PARCOURS.texteResume(parcours);
+        const seances = PARCOURS.historique(parcours);
+        seances.slice(0, historiqueAffiches).forEach(s => {
+          const item = document.createElement("li");
+          item.className = "hist-item";
+          const jour = document.createElement("span");
+          jour.className = "hist-jour";
+          jour.textContent = texteJour(s.jour);
+          const milieu = document.createElement("span");
+          const mode = document.createElement("span");
+          mode.className = "hist-mode";
+          mode.textContent = s.mode === "flash" ? "⚡ Flash" : "📝 Colonne";
+          const details = document.createElement("span");
+          details.className = "hist-reglages";
+          details.textContent = CORE.resume(s.mode, s.reglages, {avecMode: false});
+          milieu.append(mode, details);
+          const score = document.createElement("span");
+          score.className = "hist-score";
+          score.textContent = `${s.score}/${s.faits}`;
+          if (s.arretee) {
+            const arretee = document.createElement("small");
+            arretee.textContent = "arrêtée";
+            score.append(arretee);
+          }
+          item.append(jour, milieu, score);
+          liste.append(item);
+        });
+        $("historique-plus").hidden = seances.length <= historiqueAffiches;
+      }
+      function versHistorique() {
+        if (!suiviActif()) return;
+        historiqueAffiches = 10;
+        $("ecran-reglages").hidden = true;
+        $("ecran-historique").hidden = false;
+        dessinerHistorique();
+        ajusterEchelle();
+        $("historique-titre").focus({preventScroll: true});
+      }
+      $("vers-historique").addEventListener("click", versHistorique);
+      $("historique-retour").addEventListener("click", versReglages);
+      $("historique-plus").addEventListener("click", () => { historiqueAffiches += 10; dessinerHistorique(); ajusterEchelle(); });
+
+      // Au démarrage sous un code : les réglages du compte (et l'historique)
+      // sont connus quand le serveur a répondu ; six secondes au plus, puis
+      // on part avec ce que l'appareil sait.
+      function demarrerEleve() {
+        racine.classList.remove("suivi-attente");
+        rechargerMemoire();
+        dessinerReglages();
+        majSuivi();
+      }
 
       // -----------------------------------------------------------------
       // Le plein écran (Défi tables)
@@ -1177,6 +1512,16 @@
       window.addEventListener("resize", () => { ajusterEchelle(); surRedimension(); });
 
       dessinerReglages();
+      if (SUIVI && (SUIVI.attente() || SUIVI.actif())) {
+        majSuivi();
+        SUIVI.lancer();
+        Promise.race([
+          SUIVI.client.pret(),
+          new Promise(resolve => window.setTimeout(resolve, 6000))
+        ]).then(demarrerEleve);
+      } else if (SUIVI) {
+        majSuivi();
+      }
     })();
   </script>
 </body>

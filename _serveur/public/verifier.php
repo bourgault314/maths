@@ -424,6 +424,20 @@ if ($autorise) {
         }
         return "en place (" . number_format((float)filesize($chemin), 0, ',', ' ') . " octets, empreinte " . substr(md5_file($chemin), 0, 10) . ")";
     });
+    // Lot « Qui voit quoi », lot 4a (23/10/2026) : le moteur d'Anzan, servi
+    // d'ici pour la même raison. S'il manque, la tuile Anzan de l'espace élève
+    // reste sans sa ligne « N calculs · M jours » (rien ne casse), et « Ma
+    // classe » ne saura pas lire les séances.
+    verif($lignes, "Moteur Anzan servi localement", function () {
+        $chemin = __DIR__ . '/prof/flash_anzan_parcours.js';
+        if (!is_file($chemin) || filesize($chemin) === 0) {
+            throw new RuntimeException("prof/flash_anzan_parcours.js absent : à déposer (copie de outils/calcul_mental/flash_anzan_parcours.js du dépôt).");
+        }
+        if (!str_contains((string)file_get_contents($chemin), 'MathsGoFlashAnzanParcours')) {
+            throw new RuntimeException("prof/flash_anzan_parcours.js n'est pas le moteur attendu.");
+        }
+        return "en place (" . number_format((float)filesize($chemin), 0, ',', ' ') . " octets, empreinte " . substr(md5_file($chemin), 0, 10) . ")";
+    });
     // Lot 7 (03/09/2026) : le logo et les icônes sont servis d'ici, la
     // politique de contenu n'accepte plus d'image d'un autre domaine. S'ils
     // manquent, les deux pages s'affichent sans logo et sans favicon.

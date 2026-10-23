@@ -125,6 +125,44 @@ const CATALOGUE_APPLIS = [
         // d'écrit ({"coffres": {"niveaux": [1, 2], "operations": [1, 3]}}).
         'reglages' => ['niveaux' => 3, 'operations' => 4],
     ],
+    // Anzan (lot « Qui voit quoi », lot 4a, 23/10/2026 — l'appli de Flash
+    // Anzan / Colonne du soroban, faite pour une élève et donnée élève par
+    // élève depuis « Ce que voit… » : fermée par défaut pour toute classe, un
+    // professeur peut aussi l'ouvrir à une classe entière). Après Coffres :
+    // les applis de calcul mental ensemble, dans l'ordre du catalogue du site.
+    // Une ligne par élève, écrite par le moteur
+    // outils/calcul_mental/flash_anzan_parcours.js (copie dans prof/) — rien
+    // que des nombres, des dates et des mots d'une liste fermée :
+    //   { version, epoque,
+    //     reglages: { mode, flash: {operations, chiffresMin, chiffresMax,
+    //                nombres, temps, calculs, son}, colonne: {…, limite, calculs} }
+    //                — les derniers réglages de l'élève, qui le suivent d'un
+    //                appareil à l'autre ;
+    //     seances:  { "1": [jour, mode, operations, chiffresMin, chiffresMax,
+    //                nombres, temps, calculs prévus, calculs faits, score], … }
+    //                — une séance = une LISTE de dix scalaires (une seule clé
+    //                comptée par séance) ; le motif accepte ses numéros ; une
+    //                séance arrêtée en route a moins de calculs faits que
+    //                prévus. Les 500 dernières sont gardées par le moteur. }
+    // Rien d'autre n'arrive : ni heure, ni calculs posés, ni réponses. Un test
+    // compare ces listes à CLES_SERVEUR, MOTS_SERVEUR et MOTIF_SEANCES_PHP du
+    // moteur ; tests/parcours-reference-anzan.json ressort identique du filtre.
+    'flash-anzan' => [
+        'nom' => 'Anzan',
+        'description' => 'Le calcul mental du soroban, en Flash ou en Colonne.',
+        'url' => 'https://mathsgo.re/outils/calcul_mental/flash_anzan.html',
+        'ancre' => null,
+        'disponible' => true,
+        'cles' => ['version', 'epoque', 'reglages', 'mode', 'flash', 'colonne',
+            'operations', 'chiffresMin', 'chiffresMax', 'nombres', 'temps', 'limite', 'calculs', 'son', 'seances'],
+        'mots' => ['flash', 'colonne', 'plus', 'plusmoins', 'aucun', 'bip'],
+        'motifs' => ['/^[1-9]\d{0,3}$/'],
+        // « Revenir à… » nomme une version par ce compte : les séances
+        // (le serveur ne sait compter que des entrées).
+        'compteur' => 'seances',
+        // Pas de réglage de classe : ouvert ou non, c'est tout (décision du
+        // 22/10/2026 : pas de réglage personnalisé par élève dans une appli).
+    ],
     // Les entrées qui suivent, SPLAT! excepté, ne sont PAS ouvertes : l'appli
     // ne sait pas encore parler au serveur (« disponible » à false, « url » à
     // null). Depuis le lot « retours de classe » (06/10/2026), elles ne

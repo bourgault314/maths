@@ -1,0 +1,1519 @@
+(function initMathsGoFlashAnzanParcours(root, factory) {
+  const api = factory();
+  if (typeof module === "object" && module.exports) module.exports = api;
+  else root.MathsGoFlashAnzanParcours = api;
+})(typeof globalThis !== "undefined" ? globalThis : this, () => {
+  "use strict";
+
+  // Le moteur du parcours élève d'Anzan (lot « Qui voit quoi », lot 4a,
+  // 23/10/2026), sur le modèle de celui de Coffres magiques
+  // (assets/js/coffres-parcours.js) : chargé par l'appli
+  // (outils/calcul_mental/flash_anzan.html) et copié octet pour octet dans
+  // _serveur/public/prof/ pour l'espace élève (la tuile) et « Ma classe ». Il
+  // porte trois choses, et rien d'autre :
+  //
+  //  1. LE FORMAT du parcours (ce que le serveur enregistre, une ligne par
+  //     élève) — rien que des nombres, des dates et des mots d'une liste
+  //     fermée :
+  //       { version, epoque,
+  //         reglages: { mode, flash: {operations, chiffresMin, chiffresMax,
+  //                     nombres, temps, calculs, son}, colonne: {operations,
+  //                     chiffresMin, chiffresMax, nombres, limite, calculs} }
+  //                     — les derniers réglages de l'élève, par mode, et le
+  //                     mode choisi : ils le suivent d'un appareil à l'autre
+  //                     (sans code, ils restent dans le localStorage de la
+  //                     page, comme au lot 1) ;
+  //         seances:  { "1": [jour, mode, operations, chiffresMin, chiffresMax,
+  //                     nombres, temps, calculs, faits, score], "2": … }
+  //                     — une SÉANCE = une liste de dix scalaires dans un ordre
+  //                     fixe (SEANCE_CHAMPS) : le jour (« AAAA-MM-JJ »), le
+  //                     mode, les réglages joués (« temps » est le temps par
+  //                     nombre en dixièmes de seconde en Flash, la limite en
+  //                     secondes en Colonne), le nombre de calculs PRÉVUS, le
+  //                     nombre de calculs FAITS et le score (réponses justes).
+  //                     Une séance arrêtée en route (la flèche, l'onglet fermé)
+  //                     a moins de calculs faits que prévus : c'est ce que
+  //                     l'historique écrit « 6/7 · arrêtée » — pas de booléen
+  //                     à part (choix du 23/10 : on compte des CALCULS, pas des
+  //                     séances, puisqu'une séance fait 5, 10 ou 20 calculs).
+  //                     Pourquoi une liste et pas un objet : le serveur compte
+  //                     les CLÉS (2 000 au plus par progression) ; un objet par
+  //                     séance en coûterait dix, une liste une seule. Rien
+  //                     d'autre n'est envoyé : ni heure, ni calculs posés, ni
+  //                     réponses, ni temps de réponse. }
+  //     Les SEANCES_MAX dernières séances sont gardées (≈ deux années de
+  //     classe à une séance par jour) ; au-delà, la plus ancienne part.
+  //     Fusion entre deux appareils (et avec le serveur) : à époque différente
+  //     la plus haute gagne en bloc (restauration par le professeur, lib/
+  //     progression.php) ; sinon union des séances par numéro — un même numéro
+  //     qui désigne la même séance (jour, mode, réglages) garde le plus de
+  //     calculs faits ; deux séances différentes sous un même numéro (deux
+  //     appareils hors ligne le même jour) gardent toutes les deux leur place,
+  //     la seconde renumérotée — et réglages = ceux du parcours qui a la
+  //     séance la plus récente.
+  //
+  //  2. LE RANGEMENT LOCAL PAR CODE, repris de Coffres, SPLAT! et Défi tables :
+  //     la clé sans code « mathsgo-anzan-parcours » est celle de l'appareil ;
+  //     sous un code, une case par empreinte du code (sel de l'appareil +
+  //     SHA-256, jamais le code en clair dans une clé) et un état d'envoi à
+  //     côté (mathsgo-anzan-sync). L'identité (code, prénom, classe) vit dans
+  //     l'ONGLET, sous les MÊMES clés que Défi tables, SPLAT! et Coffres : un
+  //     élève identifié l'est pour toutes les applis.
+  //
+  //  3. LE CLIENT DU SUIVI (creerClient), celui de Coffres avec appli:
+  //     "flash-anzan" : échange de billet, lecture du parcours du serveur,
+  //     envoi groupé 700 ms, sendBeacon à la fermeture (« dirty » gardé pendant
+  //     un envoi en vol), 200/409/404/429/400/413/5xx, relances 2 s / 10 s /
+  //     60 s, « Se déconnecter » → ?oublier=1, garde d'inactivité 10 min. Une
+  //     promesse `pret` dit quand le serveur a été lu : l'appli attend de
+  //     connaître les réglages du compte avant de les dessiner.
+  //
+  // Anzan n'a pas de réglage de classe (ni mondes, ni niveaux) : rien de la
+  // partie « réglages de la classe » de Coffres n'est repris.
+  //
+  // Logique pure : ni DOM ni réseau en dehors de creerClient, qui reçoit tout
+  // (window, document, navigator, fetch, stockages, horloge) en paramètre —
+  // c'est ainsi que les tests l'exécutent dans node avec un faux monde.
+
+  const VERSION = 1;
+  const APPLI = "flash-anzan";
+  const SUIVI_URL = "https://suivi.mathsgo.re";
+
+  const CLE_STOCKAGE = "mathsgo-anzan-parcours";
+  const CLE_SYNC = "mathsgo-anzan-sync";
+  const CLE_SEL = "mathsgo-anzan-sel";
+  // Les clés d'onglet de Défi tables, de SPLAT! et de Coffres, volontairement les mêmes.
+  const CLE_CODE = "mathsgo-suivi-code";
+  const CLE_IDENTITE = "mathsgo-suivi-identite";
+  const CLE_DERNIER_GESTE = "mathsgo-suivi-dernier-geste";
+
+  // Les bornes des réglages : celles de flash_anzan_core.js, recopiées (la
+  // page prof charge ce moteur seul) ; tests/flash-anzan-parcours.test.mjs
+  // vérifie qu'elles sont les mêmes.
+  const MODES = Object.freeze(["flash", "colonne"]);
+  const OPERATIONS = Object.freeze(["plus", "plusmoins"]);
+  const SONS = Object.freeze(["aucun", "bip"]);
+  const CALCULS = Object.freeze([5, 10, 20]);
+  const CHIFFRES = Object.freeze({min: 1, max: 5});
+  const NOMBRES = Object.freeze({min: 2, max: 30});
+  const TEMPS = Object.freeze([...Array.from({length: 20}, (_, i) => i + 1), 25, 30, 35, 40, 45, 50]);
+  const LIMITES = Object.freeze([0, 10, 15, 20, 30, 45, 60]);
+  const DEFAUTS = Object.freeze({
+    flash: Object.freeze({operations: "plus", chiffresMin: 2, chiffresMax: 3, nombres: 10, temps: 8, calculs: 10, son: "bip"}),
+    colonne: Object.freeze({operations: "plusmoins", chiffresMin: 3, chiffresMax: 3, nombres: 8, limite: 0, calculs: 10})
+  });
+
+  // Une séance : les dix champs, dans cet ordre, et rien d'autre.
+  const SEANCE_CHAMPS = Object.freeze(["jour", "mode", "operations", "chiffresMin", "chiffresMax", "nombres", "temps", "calculs", "faits", "score"]);
+  // D8 (conception du 22/10/2026) : 500 séances ≈ 30 ko, sous la borne du serveur.
+  const SEANCES_MAX = 500;
+  const NUMERO_MAX = 9999;
+
+  // Ce que lib/applis.php doit déclarer pour « flash-anzan » : les clés (à
+  // toute profondeur), les mots et le motif des numéros de séance. Un test
+  // compare le texte du catalogue à ces trois listes.
+  const CLES_SERVEUR = Object.freeze(["version", "epoque", "reglages", "mode", "flash", "colonne",
+    "operations", "chiffresMin", "chiffresMax", "nombres", "temps", "limite", "calculs", "son", "seances"]);
+  const MOTS_SERVEUR = Object.freeze(["flash", "colonne", "plus", "plusmoins", "aucun", "bip"]);
+  const MOTIF_SEANCES_PHP = "/^[1-9]\\d{0,3}$/";
+  const COMPTE_MAX = 1000000;
+
+  // ------------------------------------------------------------- utilitaires
+
+  function cloner(valeur) {
+    return JSON.parse(JSON.stringify(valeur));
+  }
+
+  function entier(valeur, minimum, maximum, defaut) {
+    const nombre = typeof valeur === "string" && /^-?\d+$/.test(valeur) ? Number(valeur) : valeur;
+    if (!Number.isInteger(nombre)) return defaut;
+    return Math.min(maximum, Math.max(minimum, nombre));
+  }
+
+  function dateOuNull(valeur) {
+    if (typeof valeur !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(valeur)) return null;
+    const [annee, mois, jour] = valeur.split("-").map(Number);
+    if (mois < 1 || mois > 12 || jour < 1) return null;
+    const dernier = new Date(Date.UTC(annee, mois, 0)).getUTCDate();
+    return jour <= dernier ? valeur : null;
+  }
+
+  // Le jour LOCAL de l'appareil (à la Réunion, le jour UTC bascule à 4 h du
+  // matin) — la même règle que Défi tables, SPLAT! et Coffres.
+  function jourLocal(instant) {
+    const d = instant instanceof Date ? instant : new Date(typeof instant === "number" ? instant : Date.now());
+    const pad = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+
+  function dans(liste, valeur, defaut) {
+    return liste.indexOf(valeur) >= 0 ? valeur : defaut;
+  }
+
+  // ------------------------------------------------------------- le format
+
+  function creer() {
+    return {version: VERSION, epoque: 0, reglages: {}, seances: {}};
+  }
+
+  // Les réglages d'un mode, propres : la même règle que flash_anzan_core.js
+  // (normaliser) — rien d'inconnu ne passe, les bornes tiennent, « de » reste
+  // sous « à ».
+  function normaliserReglagesMode(mode, brut) {
+    const m = dans(MODES, mode, "flash");
+    const d = DEFAUTS[m];
+    const b = brut && typeof brut === "object" && !Array.isArray(brut) ? brut : {};
+    const chiffresMin = entier(b.chiffresMin, CHIFFRES.min, CHIFFRES.max, d.chiffresMin);
+    let chiffresMax = entier(b.chiffresMax, CHIFFRES.min, CHIFFRES.max, d.chiffresMax);
+    if (chiffresMin > chiffresMax) chiffresMax = chiffresMin;
+    const r = {
+      operations: dans(OPERATIONS, b.operations, d.operations),
+      chiffresMin,
+      chiffresMax,
+      nombres: entier(b.nombres, NOMBRES.min, NOMBRES.max, d.nombres),
+      calculs: dans(CALCULS, b.calculs, d.calculs)
+    };
+    if (m === "flash") {
+      r.temps = dans(TEMPS, b.temps, d.temps);
+      r.son = dans(SONS, b.son, d.son);
+    } else {
+      r.limite = dans(LIMITES, b.limite, d.limite);
+    }
+    return r;
+  }
+
+  // Les réglages du parcours : {} tant que l'élève n'en a pas choisi (la page
+  // prend alors ses valeurs de départ) ; sinon le mode et les deux modes.
+  function normaliserReglages(brut) {
+    if (!brut || typeof brut !== "object" || Array.isArray(brut)) return {};
+    const r = {};
+    if (MODES.indexOf(brut.mode) >= 0) r.mode = brut.mode;
+    MODES.forEach(mode => {
+      if (brut[mode] && typeof brut[mode] === "object") r[mode] = normaliserReglagesMode(mode, brut[mode]);
+    });
+    return r;
+  }
+
+  function numeroValide(valeur) {
+    return Number.isInteger(valeur) && valeur >= 1 && valeur <= NUMERO_MAX;
+  }
+
+  // Une séance lisible, dans l'objet {jour, mode, operations, …} ; null sinon.
+  // Une séance sans calcul fait n'en est pas une.
+  function normaliserSeance(brut) {
+    const liste = Array.isArray(brut) ? brut : (brut && typeof brut === "object" ? SEANCE_CHAMPS.map(champ => brut[champ]) : null);
+    if (!liste || liste.length < SEANCE_CHAMPS.length) return null;
+    const s = {};
+    SEANCE_CHAMPS.forEach((champ, i) => { s[champ] = liste[i]; });
+    s.jour = dateOuNull(s.jour);
+    if (!s.jour || MODES.indexOf(s.mode) < 0 || OPERATIONS.indexOf(s.operations) < 0) return null;
+    s.chiffresMin = entier(s.chiffresMin, 0, CHIFFRES.max + 1, 0);
+    s.chiffresMax = entier(s.chiffresMax, 0, CHIFFRES.max + 1, 0);
+    if (s.chiffresMin < CHIFFRES.min || s.chiffresMax > CHIFFRES.max || s.chiffresMin > s.chiffresMax) return null;
+    s.nombres = entier(s.nombres, 0, NOMBRES.max + 1, 0);
+    if (s.nombres < NOMBRES.min || s.nombres > NOMBRES.max) return null;
+    s.temps = entier(s.temps, -1, COMPTE_MAX, -1);
+    if ((s.mode === "flash" ? TEMPS : LIMITES).indexOf(s.temps) < 0) return null;
+    if (CALCULS.indexOf(s.calculs) < 0) return null;
+    s.faits = entier(s.faits, 0, s.calculs, 0);
+    if (!s.faits) return null;
+    s.score = entier(s.score, 0, s.faits, 0);
+    return s;
+  }
+
+  // La séance telle qu'elle part au serveur : la liste.
+  function seanceEnListe(s) {
+    return SEANCE_CHAMPS.map(champ => s[champ]);
+  }
+
+  // Les réglages d'une séance, au format de la page (temps ou limite).
+  function reglagesDeSeance(s) {
+    const r = {operations: s.operations, chiffresMin: s.chiffresMin, chiffresMax: s.chiffresMax, nombres: s.nombres, calculs: s.calculs};
+    if (s.mode === "flash") r.temps = s.temps; else r.limite = s.temps;
+    return r;
+  }
+
+  // Les numéros d'un parcours, en ordre croissant.
+  function numeros(p) {
+    return Object.keys(p.seances).map(Number).filter(numeroValide).sort((a, b) => a - b);
+  }
+
+  // Les SEANCES_MAX dernières séances (les plus hauts numéros) : les autres partent.
+  function borner(p) {
+    const liste = numeros(p);
+    if (liste.length <= SEANCES_MAX) return p;
+    liste.slice(0, liste.length - SEANCES_MAX).forEach(n => { delete p.seances[String(n)]; });
+    return p;
+  }
+
+  function normaliser(brut) {
+    const p = creer();
+    if (!brut || typeof brut !== "object" || Array.isArray(brut)) return p;
+    p.epoque = entier(brut.epoque, 0, COMPTE_MAX, 0);
+    p.reglages = normaliserReglages(brut.reglages);
+    const seances = brut.seances && typeof brut.seances === "object" && !Array.isArray(brut.seances) ? brut.seances : {};
+    Object.keys(seances).forEach(cle => {
+      if (!/^[1-9]\d{0,3}$/.test(cle)) return;
+      const s = normaliserSeance(seances[cle]);
+      if (s) p.seances[cle] = seanceEnListe(s);
+    });
+    return borner(p);
+  }
+
+  // Vide : aucune séance et aucun réglage choisi.
+  function estVide(parcours) {
+    const p = normaliser(parcours);
+    return !Object.keys(p.seances).length && !Object.keys(p.reglages).length;
+  }
+
+  // Deux listes désignent-elles la même séance (même jour, même mode, mêmes
+  // réglages) ? Le nombre de calculs faits et le score peuvent différer : c'est
+  // la même séance vue à deux moments.
+  function memeSeance(a, b) {
+    return SEANCE_CHAMPS.slice(0, 8).every((_, i) => a[i] === b[i]);
+  }
+
+  // Le jour de la séance la plus récente d'un parcours (et son numéro), pour
+  // choisir les réglages à garder en fusion.
+  function derniereSeance(p) {
+    let meilleure = null;
+    numeros(p).forEach(n => {
+      const s = p.seances[String(n)];
+      if (!meilleure || s[0] > meilleure.jour || (s[0] === meilleure.jour && n > meilleure.numero)) meilleure = {jour: s[0], numero: n};
+    });
+    return meilleure;
+  }
+
+  // Deux parcours du même élève (deux appareils, ou le serveur et la case).
+  function fusionner(premier, second) {
+    const a = normaliser(premier);
+    const b = normaliser(second);
+    if (a.epoque !== b.epoque) return a.epoque > b.epoque ? a : b;
+    const fusion = creer();
+    fusion.epoque = a.epoque;
+    numeros(a).forEach(n => { fusion.seances[String(n)] = a.seances[String(n)].slice(); });
+    const aPlacer = [];
+    numeros(b).forEach(n => {
+      const sb = b.seances[String(n)];
+      const sa = fusion.seances[String(n)];
+      if (!sa) { fusion.seances[String(n)] = sb.slice(); return; }
+      if (memeSeance(sa, sb)) {
+        // La même séance, vue à deux moments : la plus avancée.
+        if (sb[8] > sa[8] || (sb[8] === sa[8] && sb[9] > sa[9])) fusion.seances[String(n)] = sb.slice();
+        return;
+      }
+      aPlacer.push(sb);
+    });
+    // Deux séances différentes sous un même numéro : la seconde prend le
+    // numéro libre suivant, aucune ne se perd.
+    aPlacer.forEach(sb => {
+      const liste = numeros(fusion);
+      const suivant = liste.length ? liste[liste.length - 1] + 1 : 1;
+      if (numeroValide(suivant)) fusion.seances[String(suivant)] = sb.slice();
+    });
+    // Les réglages : ceux du parcours dont la séance est la plus récente ; à
+    // égalité (ou sans séance), ceux qui existent, le premier d'abord.
+    const da = derniereSeance(a);
+    const db = derniereSeance(b);
+    const bGagne = db && (!da || db.jour > da.jour || (db.jour === da.jour && db.numero > da.numero));
+    const prioritaire = bGagne ? b : a;
+    const autre = bGagne ? a : b;
+    fusion.reglages = Object.keys(prioritaire.reglages).length ? cloner(prioritaire.reglages) : cloner(autre.reglages);
+    return normaliser(fusion);
+  }
+
+  // --------------------------------------------------- les gestes de l'appli
+  //
+  // Chacun rend un parcours NEUF (le reçu n'est pas modifié).
+
+  // Le numéro que prendrait une séance nouvelle.
+  function numeroSuivant(parcours) {
+    const liste = numeros(normaliser(parcours));
+    return liste.length ? Math.min(NUMERO_MAX, liste[liste.length - 1] + 1) : 1;
+  }
+
+  // La séance en cours (ou finie) est notée : `seance` = {mode, reglages,
+  // faits, score}, `jour` le jour local de la page (les tests le donnent).
+  // `numero` : celui que la page a reçu à la première note de cette séance ;
+  // s'il désigne encore la même séance (jour, mode, réglages), elle est mise
+  // à jour, sinon — numéro inconnu, ou pris entre-temps par une autre séance
+  // venue d'un autre appareil — la séance prend le numéro libre suivant. Rend
+  // {parcours, numero}. Une séance sans calcul fait n'est pas notée.
+  function noterSeance(parcours, seance, numero, jour) {
+    const p = normaliser(parcours);
+    const s = seance && typeof seance === "object" ? seance : {};
+    const r = s.reglages && typeof s.reglages === "object" ? s.reglages : {};
+    const mode = dans(MODES, s.mode, "flash");
+    const propre = normaliserSeance({
+      jour: dateOuNull(jour) || jourLocal(),
+      mode,
+      operations: r.operations,
+      chiffresMin: r.chiffresMin,
+      chiffresMax: r.chiffresMax,
+      nombres: r.nombres,
+      temps: mode === "flash" ? r.temps : r.limite,
+      calculs: r.calculs,
+      faits: s.faits,
+      score: s.score
+    });
+    if (!propre) return {parcours: p, numero: null};
+    const liste = seanceEnListe(propre);
+    let n = numeroValide(numero) ? numero : null;
+    if (n !== null) {
+      const existante = p.seances[String(n)];
+      if (!existante || !memeSeance(existante, liste)) n = null;
+    }
+    if (n === null) n = numeroSuivant(p);
+    p.seances[String(n)] = liste;
+    return {parcours: borner(p), numero: n};
+  }
+
+  // Les réglages de l'élève changent (un mode, un pas, un choix) : le parcours
+  // garde les derniers, par mode, et le mode choisi.
+  function sauverReglages(parcours, reglages) {
+    const p = normaliser(parcours);
+    p.reglages = normaliserReglages(reglages);
+    return p;
+  }
+
+  // Ce qui part au serveur : exactement le format, rien de plus.
+  function pourServeur(parcours) {
+    return normaliser(parcours);
+  }
+
+  // ------------------------------------------------------- ce qu'on en lit
+  //
+  // Tout ce que la page, la tuile de Mon espace et « Ma classe » affichent
+  // d'un parcours, lu ici et nulle part ailleurs.
+
+  // Les séances, de la plus récente à la plus ancienne (le jour, puis le
+  // numéro), chacune dans l'objet de la page : {numero, jour, mode, reglages,
+  // calculs (prévus), faits, score, arretee}.
+  function historique(parcours) {
+    const p = normaliser(parcours);
+    return numeros(p)
+      .map(n => {
+        const s = normaliserSeance(p.seances[String(n)]);
+        return {numero: n, jour: s.jour, mode: s.mode, reglages: reglagesDeSeance(s),
+          calculs: s.calculs, faits: s.faits, score: s.score, arretee: s.faits < s.calculs};
+      })
+      .sort((x, y) => (x.jour === y.jour ? y.numero - x.numero : (x.jour > y.jour ? -1 : 1)));
+  }
+
+  // Le compte : les calculs faits, les jours d'entraînement (des jours
+  // distincts), les séances, le premier et le dernier jour.
+  function resume(parcours) {
+    const liste = historique(parcours);
+    const jours = {};
+    let calculs = 0;
+    let justes = 0;
+    liste.forEach(s => { jours[s.jour] = true; calculs += s.faits; justes += s.score; });
+    return {
+      calculs,
+      justes,
+      jours: Object.keys(jours).length,
+      seances: liste.length,
+      premier: liste.length ? liste[liste.length - 1].jour : null,
+      dernier: liste.length ? liste[0].jour : null
+    };
+  }
+
+  // Les mots du compte, partout les mêmes (tuile, « Mon historique », Ma
+  // classe) : « 230 calculs · 5 jours d'entraînement » ; rien sans calcul.
+  function texteResume(resumeOuParcours) {
+    const r = resumeOuParcours && typeof resumeOuParcours.calculs === "number" && typeof resumeOuParcours.jours === "number"
+      ? resumeOuParcours : resume(resumeOuParcours);
+    if (!r.calculs) return "";
+    return `${r.calculs} calcul${r.calculs > 1 ? "s" : ""} · ${r.jours} jour${r.jours > 1 ? "s" : ""} d’entraînement`;
+  }
+
+  // Ce que « Ma classe » montre d'un élève : le compte, le dernier jour et les
+  // dix dernières séances.
+  function resumeProf(parcours) {
+    const r = resume(parcours);
+    return Object.assign(r, {texte: texteResume(r), dernieres: historique(parcours).slice(0, 10), commence: r.calculs > 0});
+  }
+
+  // La tuile de l'espace élève : une ligne, « 230 calculs · 5 jours
+  // d'entraînement » ; rien tant qu'aucun calcul n'est fait.
+  function resumeTuile(parcours) {
+    const texte = texteResume(parcours);
+    return {texte, vide: !texte};
+  }
+
+  // ------------------------------------------------------------- empreintes
+  //
+  // Le même rangement que Défi tables (lot 8) et Coffres : la clé d'une case à code porte
+  // l'EMPREINTE du code, pas le code — SHA-256 répété ITERATIONS_EMPREINTE fois
+  // de « sel:code », tronqué à 16 caractères, le sel étant tiré une fois par
+  // appareil. Qui lit le stockage d'une tablette n'en tire aucun code.
+
+  const SHA256_K = [
+    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+  ];
+  const ITERATIONS_EMPREINTE = 10000;
+  const LONGUEUR_EMPREINTE = 16;
+  const memoEmpreintes = new Map();
+
+  function octetsUtf8(texte) {
+    const chaine = String(texte);
+    const octets = [];
+    for (let i = 0; i < chaine.length; i += 1) {
+      let point = chaine.charCodeAt(i);
+      if (point >= 0xd800 && point <= 0xdbff && i + 1 < chaine.length) {
+        const suivant = chaine.charCodeAt(i + 1);
+        if (suivant >= 0xdc00 && suivant <= 0xdfff) {
+          point = 0x10000 + ((point - 0xd800) << 10) + (suivant - 0xdc00);
+          i += 1;
+        }
+      }
+      if (point < 0x80) octets.push(point);
+      else if (point < 0x800) octets.push(0xc0 | (point >> 6), 0x80 | (point & 63));
+      else if (point < 0x10000) octets.push(0xe0 | (point >> 12), 0x80 | ((point >> 6) & 63), 0x80 | (point & 63));
+      else octets.push(0xf0 | (point >> 18), 0x80 | ((point >> 12) & 63), 0x80 | ((point >> 6) & 63), 0x80 | (point & 63));
+    }
+    return octets;
+  }
+
+  function sha256Octets(source) {
+    const octets = source.slice();
+    const longueurBits = octets.length * 8;
+    octets.push(0x80);
+    while (octets.length % 64 !== 56) octets.push(0);
+    for (let i = 7; i >= 0; i -= 1) octets.push(Math.floor(longueurBits / Math.pow(2, i * 8)) & 255);
+    const h = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
+    const w = new Array(64);
+    for (let debut = 0; debut < octets.length; debut += 64) {
+      for (let t = 0; t < 16; t += 1) {
+        const o = debut + t * 4;
+        w[t] = ((octets[o] << 24) | (octets[o + 1] << 16) | (octets[o + 2] << 8) | octets[o + 3]) >>> 0;
+      }
+      for (let t = 16; t < 64; t += 1) {
+        const x = w[t - 15];
+        const y = w[t - 2];
+        const s0 = ((x >>> 7) | (x << 25)) ^ ((x >>> 18) | (x << 14)) ^ (x >>> 3);
+        const s1 = ((y >>> 17) | (y << 15)) ^ ((y >>> 19) | (y << 13)) ^ (y >>> 10);
+        w[t] = (w[t - 16] + s0 + w[t - 7] + s1) >>> 0;
+      }
+      let a = h[0], b = h[1], c = h[2], d = h[3], e = h[4], f = h[5], g = h[6], hh = h[7];
+      for (let t = 0; t < 64; t += 1) {
+        const S1 = ((e >>> 6) | (e << 26)) ^ ((e >>> 11) | (e << 21)) ^ ((e >>> 25) | (e << 7));
+        const ch = (e & f) ^ (~e & g);
+        const t1 = (hh + S1 + ch + SHA256_K[t] + w[t]) >>> 0;
+        const S0 = ((a >>> 2) | (a << 30)) ^ ((a >>> 13) | (a << 19)) ^ ((a >>> 22) | (a << 10));
+        const maj = (a & b) ^ (a & c) ^ (b & c);
+        const t2 = (S0 + maj) >>> 0;
+        hh = g; g = f; f = e; e = (d + t1) >>> 0;
+        d = c; c = b; b = a; a = (t1 + t2) >>> 0;
+      }
+      h[0] = (h[0] + a) >>> 0; h[1] = (h[1] + b) >>> 0; h[2] = (h[2] + c) >>> 0; h[3] = (h[3] + d) >>> 0;
+      h[4] = (h[4] + e) >>> 0; h[5] = (h[5] + f) >>> 0; h[6] = (h[6] + g) >>> 0; h[7] = (h[7] + hh) >>> 0;
+    }
+    const resultat = [];
+    h.forEach(mot => resultat.push((mot >>> 24) & 255, (mot >>> 16) & 255, (mot >>> 8) & 255, mot & 255));
+    return resultat;
+  }
+
+  function enHex(octets) {
+    return octets.map(o => o.toString(16).padStart(2, "0")).join("");
+  }
+
+  function sha256Hex(texte) {
+    return enHex(sha256Octets(octetsUtf8(texte)));
+  }
+
+  function selAppareil(stockage) {
+    try {
+      if (!stockage) return "";
+      const existant = stockage.getItem(CLE_SEL);
+      if (typeof existant === "string" && /^[0-9a-f]{32}$/.test(existant)) return existant;
+      const octets = new Array(16);
+      let tire = false;
+      try {
+        const alea = typeof globalThis !== "undefined" && globalThis.crypto && globalThis.crypto.getRandomValues;
+        if (alea) {
+          const tampon = new Uint8Array(16);
+          globalThis.crypto.getRandomValues(tampon);
+          for (let i = 0; i < 16; i += 1) octets[i] = tampon[i];
+          tire = true;
+        }
+      } catch (_) {}
+      if (!tire) for (let i = 0; i < 16; i += 1) octets[i] = Math.floor(Math.random() * 256);
+      const sel = octets.map(o => o.toString(16).padStart(2, "0")).join("");
+      stockage.setItem(CLE_SEL, sel);
+      return sel;
+    } catch (_) {
+      return "";
+    }
+  }
+
+  function empreinteCode(code, sel) {
+    const memo = sel + ":" + code;
+    const connue = memoEmpreintes.get(memo);
+    if (connue) return connue;
+    let h = sha256Octets(octetsUtf8(memo));
+    for (let i = 1; i < ITERATIONS_EMPREINTE; i += 1) h = sha256Octets(h);
+    const empreinte = enHex(h).slice(0, LONGUEUR_EMPREINTE);
+    memoEmpreintes.set(memo, empreinte);
+    return empreinte;
+  }
+
+  function estEmpreinte(valeur) {
+    return typeof valeur === "string" && valeur.length === LONGUEUR_EMPREINTE && /^[0-9a-f]+$/.test(valeur);
+  }
+
+  // ------------------------------------------------------------- le code élève
+
+  const ALPHABET_CODE = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+  const LONGUEUR_CODE = 6;
+
+  function normaliserCode(brut) {
+    if (typeof brut !== "string") return "";
+    return brut.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, LONGUEUR_CODE);
+  }
+
+  function codeValide(brut) {
+    const code = normaliserCode(brut);
+    if (code.length !== LONGUEUR_CODE) return false;
+    for (let i = 0; i < code.length; i += 1) if (ALPHABET_CODE.indexOf(code[i]) < 0) return false;
+    return true;
+  }
+
+  function chargerCode(stockage) {
+    try {
+      const code = stockage && stockage.getItem(CLE_CODE);
+      return codeValide(code) ? normaliserCode(code) : "";
+    } catch (_) {
+      return "";
+    }
+  }
+
+  function sauverCode(stockage, brut) {
+    try {
+      if (!stockage || !codeValide(brut)) return false;
+      stockage.setItem(CLE_CODE, normaliserCode(brut));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function effacerCode(stockage) {
+    try {
+      if (stockage) {
+        stockage.removeItem(CLE_CODE);
+        stockage.removeItem(CLE_IDENTITE);
+      }
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  const PRENOM_MAX = 24;
+
+  function nettoyerPrenom(valeur) {
+    if (typeof valeur !== "string") return "";
+    return valeur.replace(/\s+/g, " ").trim().slice(0, PRENOM_MAX);
+  }
+
+  function chargerIdentiteOnglet(stockage, code) {
+    try {
+      const propre = normaliserCode(code || "");
+      const brut = stockage && codeValide(propre) ? stockage.getItem(CLE_IDENTITE) : null;
+      if (!brut) return null;
+      const lu = JSON.parse(brut);
+      if (!lu || typeof lu !== "object" || lu.code !== propre) return null;
+      return {prenom: nettoyerPrenom(lu.prenom), classe: typeof lu.classe === "string" ? lu.classe.slice(0, 40) : ""};
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function sauverIdentiteOnglet(stockage, code, identite) {
+    try {
+      const propre = normaliserCode(code || "");
+      if (!stockage || !codeValide(propre) || !identite || typeof identite !== "object") return false;
+      stockage.setItem(CLE_IDENTITE, JSON.stringify({
+        code: propre,
+        prenom: nettoyerPrenom(identite.prenom),
+        classe: typeof identite.classe === "string" ? identite.classe.slice(0, 40) : ""
+      }));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // ------------------------------------------------------- les cases locales
+
+  function cleStockage(code, stockage) {
+    const propre = normaliserCode(code || "");
+    return codeValide(propre) ? CLE_STOCKAGE + ":" + empreinteCode(propre, selAppareil(stockage)) : CLE_STOCKAGE;
+  }
+
+  function charger(stockage, code) {
+    try {
+      const brut = stockage && stockage.getItem(cleStockage(code, stockage));
+      if (!brut) return creer();
+      return normaliser(JSON.parse(brut));
+    } catch (_) {
+      return creer();
+    }
+  }
+
+  function sauver(stockage, parcours, code) {
+    try {
+      if (!stockage) return false;
+      stockage.setItem(cleStockage(code, stockage), JSON.stringify(normaliser(parcours)));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function effacer(stockage, code) {
+    try {
+      if (stockage) stockage.removeItem(cleStockage(code, stockage));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // L'état de synchronisation d'une case, rangé À CÔTÉ d'elle : la dernière
+  // révision connue du serveur, si du travail attend d'être envoyé (dirty), si
+  // le code a été refusé (detache), quand la case a bougé (maj).
+  function cleSync(code, stockage) {
+    const propre = normaliserCode(code || "");
+    return codeValide(propre) ? CLE_SYNC + ":" + empreinteCode(propre, selAppareil(stockage)) : CLE_SYNC;
+  }
+
+  function syncNeutre() {
+    return {revision: 0, dirty: false, detache: false, maj: 0};
+  }
+
+  function normaliserSync(lu) {
+    const sync = syncNeutre();
+    if (!lu || typeof lu !== "object") return sync;
+    sync.revision = entier(lu.revision, 0, 1000000000, 0);
+    sync.dirty = Boolean(lu.dirty);
+    sync.detache = Boolean(lu.detache);
+    sync.maj = entier(lu.maj, 0, Number.MAX_SAFE_INTEGER, 0);
+    return sync;
+  }
+
+  function lireSyncBrut(stockage, cle) {
+    try {
+      const brut = stockage && stockage.getItem(cle);
+      return brut ? normaliserSync(JSON.parse(brut)) : syncNeutre();
+    } catch (_) {
+      return syncNeutre();
+    }
+  }
+
+  function chargerSync(stockage, code) {
+    try {
+      return lireSyncBrut(stockage, cleSync(code, stockage));
+    } catch (_) {
+      return syncNeutre();
+    }
+  }
+
+  function sauverSync(stockage, code, sync) {
+    try {
+      if (!stockage) return false;
+      stockage.setItem(cleSync(code, stockage), JSON.stringify(normaliserSync(Object.assign(syncNeutre(), sync || {}))));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function effacerSync(stockage, code) {
+    try {
+      if (stockage) stockage.removeItem(cleSync(code, stockage));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function clesDuStockage(stockage) {
+    const cles = [];
+    try {
+      if (!stockage || typeof stockage.length !== "number" || typeof stockage.key !== "function") return cles;
+      for (let i = 0; i < stockage.length; i += 1) {
+        const cle = stockage.key(i);
+        if (typeof cle === "string") cles.push(cle);
+      }
+    } catch (_) {}
+    return cles;
+  }
+
+  // Vrai si une clé du stockage laisse lire un code élève : ce que le lot 8 de
+  // Défi tables interdit, et ce que les tests vérifient après une séance.
+  function clesRevelentUnCode(stockage) {
+    return clesDuStockage(stockage).some(cle => {
+      return cle.split(":").slice(1).some(morceau => morceau.length === LONGUEUR_CODE && codeValide(morceau));
+    });
+  }
+
+  // La purge : une case à code que personne n'a ouverte depuis 90 jours quitte
+  // l'appareil (élève parti, tablette de CDI). Le serveur garde tout. La case
+  // active (« garder »), la case sans code et une case sans date ne bougent pas.
+  const DUREE_CONSERVATION_MS = 90 * 24 * 60 * 60 * 1000;
+
+  function purger(stockage, options) {
+    const o = options || {};
+    const maintenant = typeof o.maintenant === "number" ? o.maintenant : Date.now();
+    const duree = typeof o.duree === "number" ? o.duree : DUREE_CONSERVATION_MS;
+    let retirees = 0;
+    try {
+      if (!stockage) return 0;
+      const gardee = codeValide(o.garder || "") ? cleSync(o.garder, stockage) : null;
+      clesDuStockage(stockage).forEach(cle => {
+        if (cle.indexOf(CLE_SYNC + ":") !== 0 || cle === gardee) return;
+        const empreinte = cle.slice(CLE_SYNC.length + 1);
+        if (!estEmpreinte(empreinte)) return;
+        const sync = lireSyncBrut(stockage, cle);
+        if (!sync.maj || maintenant - sync.maj <= duree) return;
+        stockage.removeItem(cle);
+        stockage.removeItem(CLE_STOCKAGE + ":" + empreinte);
+        retirees += 1;
+      });
+    } catch (_) {}
+    return retirees;
+  }
+
+  // ------------------------------------------------------------- le client
+  //
+  // Ce que porte l'adresse d'entrée : le billet (#b=…) que l'espace élève a mis
+  // dans le fragment. Lu par le petit script du <head> de la page (qui le range
+  // dans window.MATHSGO_ENTREE et nettoie l'adresse) ; repli ici. Une ancre
+  // ordinaire (#enq-bonus) n'est pas une entrée.
+  function lireEntree(fenetre) {
+    const e = fenetre && fenetre.MATHSGO_ENTREE;
+    if (e && typeof e === "object") return {billet: String(e.billet || "")};
+    let adresse = "";
+    try { adresse = (fenetre && fenetre.location && fenetre.location.hash) || ""; } catch (_) { adresse = ""; }
+    const fragment = adresse.replace(/^#/, "");
+    if (!/(^|&)b=/.test(fragment)) return {billet: ""};
+    try {
+      return {billet: new URLSearchParams(fragment).get("b") || ""};
+    } catch (_) {
+      return {billet: ""};
+    }
+  }
+  const GARDE_INACTIVITE_MS = 10 * 60 * 1000;
+  const GARDE_ESSAIS_MAX = 3;
+  const ENVOI_GROUPE_MS = 700;
+  const PALIERS_RELANCE_MS = [2000, 10000, 60000];
+
+  // Les textes du repère de suivi, les mêmes que Défi tables ; chaque page les
+  // dessine à sa façon (bandeau sur la carte, pastille dans les outils).
+  const TEXTES = Object.freeze({
+    detache: "Ton code ne marche plus · demande le nouveau à ton professeur",
+    erreur: "Suivi par ton professeur · impossible d’envoyer ce travail",
+    horsLigne: "Suivi par ton professeur · travail gardé ici, pas encore envoyé",
+    suivi: "Suivi par ton professeur",
+    expire: "Ce lien a expiré, repasse par ton espace",
+    injoignable: "Le serveur ne répond pas, repasse par ton espace",
+    sortie: "Se déconnecter",
+    espace: "Mon espace"
+  });
+
+  // env : { fenetre, document, navigator, fetch, stockage(), stockageSession(),
+  //         horloge (Date), rendre: {parcours(), repere(), garde()}, enJeu() }
+  // Tout est facultatif : sans fenêtre ni réseau, le client reste muet et la
+  // case sans code fonctionne comme aujourd'hui.
+  function creerClient(env) {
+    const o = env || {};
+    const fenetre = o.fenetre || (typeof window !== "undefined" ? window : null);
+    const doc = o.document || (typeof document !== "undefined" ? document : null);
+    const nav = o.navigator || (typeof navigator !== "undefined" ? navigator : null);
+    const horloge = o.horloge || Date;
+    const appelReseau = o.fetch || (typeof fetch === "function" ? fetch : null);
+    const stockage = typeof o.stockage === "function" ? o.stockage : () => {
+      try { return fenetre ? fenetre.localStorage : null; } catch (_) { return null; }
+    };
+    const stockageSession = typeof o.stockageSession === "function" ? o.stockageSession : () => {
+      try { return fenetre ? fenetre.sessionStorage : null; } catch (_) { return null; }
+    };
+    const rendre = Object.assign({parcours() {}, repere() {}, garde() {}}, o.rendre || {});
+    const enJeu = typeof o.enJeu === "function" ? o.enJeu : () => false;
+    const minuteur = (fn, ms) => (fenetre && typeof fenetre.setTimeout === "function" ? fenetre.setTimeout(fn, ms) : setTimeout(fn, ms));
+    const annuler = id => { if (fenetre && typeof fenetre.clearTimeout === "function") fenetre.clearTimeout(id); else clearTimeout(id); };
+    const maintenant = () => horloge.now();
+
+    const ENTREE = lireEntree(fenetre);
+
+    // Le code actif : celui de l'onglet, et rien d'autre. Un billet est une
+    // entrée NEUVE : l'identité que l'onglet gardait ne compte plus, et le code
+    // n'arrive qu'après l'échange avec le serveur.
+    if (ENTREE.billet) effacerCode(stockageSession());
+    let codeSuivi = ENTREE.billet ? "" : chargerCode(stockageSession());
+    purger(stockage(), {maintenant: maintenant(), garder: codeSuivi});
+    let parcours = charger(stockage(), codeSuivi);
+    let sync = chargerSync(stockage(), codeSuivi);
+    let suiviIdentite = chargerIdentiteOnglet(stockageSession(), codeSuivi);
+    // « Prêt » : le serveur a été lu (ou n'a pas pu l'être, ou personne n'est
+    // suivi) — l'appli attend ce moment pour connaître les réglages du compte
+    // et l'historique. Résolu une seule fois, avec {actif, lu}.
+    let resoudrePret = null;
+    let pretResolu = false;
+    const pret = new Promise(resoudre => { resoudrePret = resoudre; });
+    function direPret(lu) {
+      if (pretResolu) return;
+      pretResolu = true;
+      resoudrePret({actif: suiviActif(), lu: Boolean(lu)});
+    }
+    let suiviHorsLigne = false;
+    let envoiEnAttente = null;
+    // Vrai tant qu'un envoi groupé est programmé et n'est pas encore parti.
+    // Tenu à part de l'identifiant du minuteur : un minuteur qui s'exécute
+    // avant de rendre son identifiant (les tests) laisserait l'identifiant
+    // debout après le départ.
+    let envoiGroupe = false;
+    let envoiEnVol = false;
+    let renvoiDemande = false;
+    let relance = null;
+    let echecsSuccessifs = 0;
+    let fusionsSuccessives = 0;
+    let erreurDefinitive = false;
+    let entreeRefusee = null; // "expire" | "injoignable" | null
+    let billetEnCours = false;
+
+    function suiviActif() { return Boolean(codeSuivi); }
+
+    function ecrireSync() {
+      if (!sync.maj) sync.maj = maintenant();
+      sauverSync(stockage(), codeSuivi, sync);
+    }
+
+    function sauverCase() {
+      sauver(stockage(), parcours, codeSuivi);
+    }
+
+    function prenomAffiche() {
+      return suiviActif() && suiviIdentite && suiviIdentite.prenom ? suiviIdentite.prenom : "";
+    }
+
+    // Un seul point de contact avec le serveur : il n'échoue jamais, il renvoie
+    // un statut 0 quand rien n'a répondu.
+    async function appelSuivi(chemin, options) {
+      if (!appelReseau) return {statut: 0, donnees: null};
+      try {
+        const controle = typeof AbortController === "function" ? new AbortController() : null;
+        const garde = controle ? minuteur(() => controle.abort(), 8000) : null;
+        try {
+          const reponse = await appelReseau(SUIVI_URL + chemin, Object.assign(
+            {cache: "no-store"}, controle ? {signal: controle.signal} : {}, options || {}));
+          const donnees = await reponse.json().catch(() => null);
+          let reessai = null;
+          try {
+            const valeur = reponse.headers && reponse.headers.get ? reponse.headers.get("Retry-After") : null;
+            if (valeur && /^\d+$/.test(valeur)) reessai = parseInt(valeur, 10);
+          } catch (_) {}
+          return {statut: reponse.status, donnees, reessai};
+        } finally {
+          if (garde !== null) annuler(garde);
+        }
+      } catch (_) {
+        return {statut: 0, donnees: null};
+      }
+    }
+
+    const corpsTexte = objet => ({
+      method: "POST",
+      headers: {"Content-Type": "text/plain;charset=UTF-8"},
+      body: JSON.stringify(objet)
+    });
+
+    // Le code ne voyage JAMAIS dans l'adresse d'une requête (journaux de
+    // l'hébergeur) : il part dans le corps, comme l'enregistrement.
+    function lireParcoursDuServeur(code) {
+      return appelSuivi("/api/parcours.php", corpsTexte({code, appli: APPLI, lire: true}));
+    }
+
+    function lireIdentiteDuServeur(code) {
+      return appelSuivi("/api/eleve.php", corpsTexte({code}));
+    }
+
+    function echangerBillet(billet) {
+      return appelSuivi("/api/eleve.php", corpsTexte({billet, appli: APPLI}));
+    }
+
+    // base_revision : la révision que cet appareil a lue en dernier. Le serveur
+    // refuse (409) d'écrire par-dessus un état qu'on n'a pas vu, et le renvoie :
+    // on fusionne, on renvoie.
+    function paquetParcours(code, source, baseRevision) {
+      const paquet = {code, appli: APPLI, parcours: pourServeur(source)};
+      if (Number.isInteger(baseRevision)) paquet.base_revision = baseRevision;
+      return JSON.stringify(paquet);
+    }
+
+    function envoiPossible() {
+      return suiviActif() && !sync.detache && !erreurDefinitive;
+    }
+
+    // Envoi groupé : jamais plus d'une fois par 700 ms, jamais deux en même temps.
+    function envoyerParcours() {
+      if (!envoiPossible()) return;
+      annulerEnvoiGroupe();
+      envoiGroupe = true;
+      envoiEnAttente = minuteur(() => {
+        envoiEnAttente = null;
+        envoiGroupe = false;
+        envoyerMaintenant();
+      }, ENVOI_GROUPE_MS);
+    }
+
+    function annulerEnvoiGroupe() {
+      if (envoiEnAttente !== null) annuler(envoiEnAttente);
+      envoiEnAttente = null;
+      envoiGroupe = false;
+    }
+
+    function envoyerMaintenant() {
+      if (!envoiPossible()) return;
+      if (envoiEnVol) { renvoiDemande = true; return; }
+      envoiEnVol = true;
+      renvoiDemande = false;
+      const code = codeSuivi;
+      const base = sync.revision;
+      appelSuivi("/api/parcours.php", {
+        method: "POST",
+        headers: {"Content-Type": "text/plain;charset=UTF-8"},
+        body: paquetParcours(code, parcours, base)
+      }).then(reponse => {
+        envoiEnVol = false;
+        // Réponse tardive d'un élève qui n'est plus là : elle ne touche à rien.
+        if (code !== codeSuivi) return;
+        traiterReponseEnvoi(reponse, base);
+      });
+    }
+
+    function planifierRelance(delai) {
+      if (relance !== null) annuler(relance);
+      relance = minuteur(() => {
+        relance = null;
+        if (sync.dirty) envoyerMaintenant();
+      }, delai);
+    }
+
+    //  200  parti — on note la révision ; du nouveau pendant le vol repart aussitôt ;
+    //  409  l'état a bougé ailleurs — fusion avec ce que le serveur renvoie, sa
+    //       révision, renvoi (deux fois de suite au plus, puis 10 s) ;
+    //  404  le code ne vaut plus rien — détaché, tout est gardé ici ;
+    //  400/413  refusé pour de bon — pas de relance ;
+    //  429  trop de demandes — on attend ce que le serveur demande (Retry-After) ;
+    //  5xx/0  panne ou coupure — relances à 2 s, 10 s, 60 s, puis au retour du
+    //       réseau et au prochain démarrage.
+    function traiterReponseEnvoi(reponse, base) {
+      const donnees = reponse.donnees;
+      if (reponse.statut === 200 && donnees && donnees.ok) {
+        sync.revision = Number.isInteger(donnees.revision) ? donnees.revision : base + 1;
+        // Du nouveau pendant le vol : soit un envoi direct demandé (renvoiDemande),
+        // soit un envoi GROUPÉ encore en attente (relecture de Code, lot 1 SPLAT!, repris ici) —
+        // dans les deux cas la case n'est pas à jour sur le serveur, « dirty »
+        // reste levé, sinon une fermeture d'onglet avant les 700 ms perdrait la
+        // dernière série (sendBeacon ne part que si dirty).
+        sync.dirty = renvoiDemande || envoiGroupe;
+        echecsSuccessifs = 0;
+        fusionsSuccessives = 0;
+        suiviHorsLigne = false;
+        ecrireSync();
+        rendre.repere();
+        if (suiviIdentite === null) chargerIdentite(codeSuivi);
+        if (renvoiDemande) envoyerMaintenant();
+        return;
+      }
+      if (reponse.statut === 409 && donnees && donnees.parcours !== undefined) {
+        parcours = fusionner(parcours, normaliser(donnees.parcours));
+        sync.revision = Number.isInteger(donnees.revision) ? donnees.revision : base;
+        sync.dirty = true;
+        sauverCase();
+        ecrireSync();
+        if (!enJeu()) rendre.parcours();
+        fusionsSuccessives += 1;
+        if (fusionsSuccessives <= 2) envoyerMaintenant();
+        else planifierRelance(10000);
+        return;
+      }
+      if (reponse.statut === 404) {
+        detacher();
+        return;
+      }
+      if (reponse.statut === 400 || reponse.statut === 413) {
+        erreurDefinitive = true;
+        suiviHorsLigne = true;
+        rendre.repere();
+        try { console.warn("Anzan : envoi refusé par le serveur (" + reponse.statut + ")", donnees); } catch (_) {}
+        return;
+      }
+      suiviHorsLigne = true;
+      rendre.repere();
+      if (reponse.statut === 429) {
+        planifierRelance((reponse.reessai || 60) * 1000);
+        return;
+      }
+      if (echecsSuccessifs < PALIERS_RELANCE_MS.length) planifierRelance(PALIERS_RELANCE_MS[echecsSuccessifs]);
+      echecsSuccessifs += 1;
+    }
+
+    // À la fermeture de la page, le navigateur se charge de l'envoi tout seul ;
+    // sa réponse ne se lit pas : « dirty » reste levé, le prochain démarrage
+    // confirmera (au pire par un 409 sans conséquence).
+    function envoyerAvantDeFermer() {
+      if (!envoiPossible() || !sync.dirty) return;
+      annulerEnvoiGroupe();
+      const paquet = paquetParcours(codeSuivi, parcours, sync.revision);
+      try {
+        if (nav && typeof nav.sendBeacon === "function") {
+          nav.sendBeacon(SUIVI_URL + "/api/parcours.php", new Blob([paquet], {type: "text/plain;charset=UTF-8"}));
+          return;
+        }
+      } catch (_) {}
+      appelSuivi("/api/parcours.php", {method: "POST", headers: {"Content-Type": "text/plain;charset=UTF-8"}, body: paquet});
+    }
+
+    // Le parcours a bougé sur cet appareil : on range la case, et sous un code
+    // on marque « à envoyer » puis on envoie (groupé).
+    function noterChangement() {
+      sauverCase();
+      if (suiviActif()) {
+        sync.dirty = true;
+        sync.maj = maintenant();
+        ecrireSync();
+      }
+      envoyerParcours();
+    }
+
+    function sauverParcours(nouveau) {
+      if (nouveau) parcours = normaliser(nouveau);
+      noterChangement();
+    }
+
+    // Les gestes de l'appli, par le moteur : la case locale d'abord, le
+    // serveur ensuite. Le jour est celui de l'horloge de la page.
+    // noterUneSeance rend le NUMÉRO de la séance, à redonner à chaque calcul
+    // validé de la même séance (voir noterSeance).
+    function noterUneSeance(seance, numero) {
+      const resultat = noterSeance(parcours, seance, numero, jourLocal(maintenant()));
+      parcours = resultat.parcours;
+      noterChangement();
+      return resultat.numero;
+    }
+    function sauverLesReglages(reglages) {
+      parcours = sauverReglages(parcours, reglages);
+      noterChangement();
+      return parcours;
+    }
+
+    // Le code a été refusé pour de bon : plus d'envoi, l'élève reste dans SA
+    // case, son travail continue de s'y ranger.
+    function detacher() {
+      sync.detache = true;
+      ecrireSync();
+      suiviIdentite = null;
+      suiviHorsLigne = false;
+      if (relance !== null) { annuler(relance); relance = null; }
+      rendre.repere();
+    }
+
+    function reprendreLesEnvois() {
+      if (envoiPossible() && sync.dirty) envoyerMaintenant();
+    }
+
+    async function chargerIdentite(code) {
+      const reponse = await lireIdentiteDuServeur(code);
+      if (code !== codeSuivi) return;
+      if (reponse.statut === 200 && reponse.donnees && reponse.donnees.ok) {
+        suiviIdentite = {prenom: reponse.donnees.prenom || "", classe: reponse.donnees.classe || ""};
+        sauverIdentiteOnglet(stockageSession(), code, suiviIdentite);
+      } else if (reponse.statut === 404) {
+        suiviIdentite = null;
+      }
+      rendre.repere();
+      if (!enJeu()) rendre.parcours();
+    }
+
+    // L'état du repère, pour que chaque page le dessine : etat ∈ cache
+    // (personne n'est suivi), refuse (billet refusé), detache, erreur,
+    // hors-ligne, ok ; le texte à lire ; prénom et classe à part.
+    function etatRepere() {
+      if (!suiviActif() && entreeRefusee) {
+        return {etat: "refuse", texte: entreeRefusee === "expire" ? TEXTES.expire : TEXTES.injoignable, prenom: "", classe: ""};
+      }
+      if (!suiviActif()) return {etat: "cache", texte: "", prenom: "", classe: ""};
+      const prenom = prenomAffiche();
+      const classe = suiviIdentite && suiviIdentite.classe ? suiviIdentite.classe : "";
+      if (sync.detache) return {etat: "detache", texte: TEXTES.detache, prenom, classe};
+      if (erreurDefinitive) return {etat: "erreur", texte: TEXTES.erreur, prenom, classe};
+      if (suiviHorsLigne) return {etat: "hors-ligne", texte: TEXTES.horsLigne, prenom, classe};
+      return {etat: "ok", texte: TEXTES.suivi + (prenom ? " · " + prenom : "") + (classe ? " · " + classe : ""), prenom, classe};
+    }
+
+    // Adopter un code en cours de route (après l'échange d'un billet) : la case
+    // de ce code, son état d'envoi, et rien de l'état d'avant.
+    function adopterCode(code) {
+      codeSuivi = code;
+      noterDernierGeste(maintenant());
+      entreeRefusee = null;
+      suiviIdentite = null;
+      suiviHorsLigne = false;
+      erreurDefinitive = false;
+      echecsSuccessifs = 0;
+      fusionsSuccessives = 0;
+      parcours = charger(stockage(), codeSuivi);
+      sync = chargerSync(stockage(), codeSuivi);
+      rendre.repere();
+      rendre.parcours();
+    }
+
+    // L'entrée par un billet : l'échange d'abord, puis tout se passe comme si le
+    // code était dans l'onglet. Un billet refusé laisse la page sans code et le dit.
+    async function entrerParBillet(billet) {
+      billetEnCours = true;
+      rendre.parcours();
+      const reponse = await echangerBillet(billet);
+      billetEnCours = false;
+      const donnees = reponse.statut === 200 && reponse.donnees && reponse.donnees.ok ? reponse.donnees : null;
+      const code = donnees && donnees.type === "entree" ? normaliserCode(donnees.code || "") : "";
+      if (!codeValide(code)) {
+        entreeRefusee = reponse.statut === 404 || donnees ? "expire" : "injoignable";
+        rendre.repere();
+        if (!enJeu()) rendre.parcours();
+        direPret(false);
+        return false;
+      }
+      adopterCode(code);
+      suiviIdentite = {prenom: donnees.prenom || "", classe: donnees.classe || ""};
+      sauverIdentiteOnglet(stockageSession(), code, suiviIdentite);
+      demarrerSuivi();
+      return true;
+    }
+
+    // « Se déconnecter » : on envoie ce qui restait, on oublie le code, on
+    // revient à la case sans code (celle de l'élève reste sur l'appareil), puis
+    // l'espace élève oublie lui aussi ce code dans cet onglet (?oublier=1).
+    function quitterSuivi() {
+      envoyerAvantDeFermer();
+      if (relance !== null) { annuler(relance); relance = null; }
+      annulerEnvoiGroupe();
+      codeSuivi = "";
+      entreeRefusee = null;
+      suiviIdentite = null;
+      suiviHorsLigne = false;
+      erreurDefinitive = false;
+      echecsSuccessifs = 0;
+      fusionsSuccessives = 0;
+      gardeVisible = false;
+      gardeErreur = "";
+      gardeEssais = 0;
+      noterDernierGeste(maintenant());
+      effacerCode(stockageSession());
+      parcours = charger(stockage(), "");
+      sync = chargerSync(stockage(), "");
+      rendre.repere();
+      rendre.garde();
+      rendre.parcours();
+      try { fenetre.location.assign(SUIVI_URL + "/?oublier=1"); } catch (_) {}
+    }
+
+    // Le garde-fou de temps (Défi tables, lot « appareil partagé ») : après dix
+    // minutes sans un geste, ou quand la page redevient visible après une aussi
+    // longue absence, on redemande « C'est toujours toi ? » — et il faut RETAPER
+    // le code (comparaison locale, aucun appel) ; trois erreurs rendent l'onglet
+    // au camarade suivant. L'instant du dernier geste vit dans l'ONGLET (un F5 ne
+    // remet pas le compteur à zéro), sous la clé de Défi tables.
+    function lireDernierGeste() {
+      try {
+        const onglet = stockageSession();
+        const brut = onglet ? onglet.getItem(CLE_DERNIER_GESTE) : null;
+        if (brut !== null && brut !== "") {
+          const lu = Number(brut);
+          if (Number.isFinite(lu) && lu >= 0 && lu <= maintenant()) return lu;
+        }
+      } catch (_) {}
+      return maintenant();
+    }
+
+    function noterDernierGeste(instant) {
+      derniereActivite = instant;
+      try {
+        const onglet = stockageSession();
+        if (onglet) onglet.setItem(CLE_DERNIER_GESTE, String(instant));
+      } catch (_) {}
+    }
+
+    let derniereActivite = lireDernierGeste();
+    let gardeVisible = false;
+    let gardeEssais = 0;
+    let gardeErreur = "";
+
+    function absenceTropLongue() {
+      return suiviActif() && maintenant() - derniereActivite > GARDE_INACTIVITE_MS;
+    }
+
+    function verifierGarde() {
+      if (gardeVisible || !absenceTropLongue()) return false;
+      gardeVisible = true;
+      gardeEssais = 0;
+      gardeErreur = "";
+      rendre.garde();
+      return true;
+    }
+
+    function retenir(evenement) {
+      if (!evenement || typeof evenement.preventDefault !== "function") return;
+      evenement.preventDefault();
+      if (typeof evenement.stopPropagation === "function") evenement.stopPropagation();
+    }
+
+    // À brancher sur pointerdown / keydown / touchstart (capture). `dansLaGarde`
+    // dit si le geste vise la question elle-même : tant qu'elle est posée, seuls
+    // ses boutons répondent.
+    function noterActivite(evenement, dansLaGarde) {
+      if (gardeVisible) {
+        if (!dansLaGarde) retenir(evenement);
+        return;
+      }
+      if (absenceTropLongue()) {
+        retenir(evenement);
+        verifierGarde();
+        return;
+      }
+      noterDernierGeste(maintenant());
+    }
+
+    function nettoyerCodeSaisi(brut) {
+      let propre = "";
+      const base = normaliserCode(brut);
+      for (let i = 0; i < base.length; i += 1) if (ALPHABET_CODE.indexOf(base[i]) >= 0) propre += base[i];
+      return propre;
+    }
+
+    function repondreGarde(cestMoi, codeTape) {
+      if (!cestMoi) {
+        gardeErreur = "";
+        gardeEssais = 0;
+        quitterSuivi();
+        return false;
+      }
+      if (nettoyerCodeSaisi(codeTape) === codeSuivi && suiviActif()) {
+        gardeVisible = false;
+        gardeErreur = "";
+        gardeEssais = 0;
+        noterDernierGeste(maintenant());
+        rendre.garde();
+        return true;
+      }
+      gardeEssais += 1;
+      if (gardeEssais >= GARDE_ESSAIS_MAX) {
+        gardeErreur = "";
+        gardeEssais = 0;
+        quitterSuivi();
+        return false;
+      }
+      gardeErreur = "Ce n’est pas le bon code.";
+      rendre.garde();
+      return false;
+    }
+
+    // Les écouteurs de la page : retour du réseau et retour du cache arrière-
+    // avant (ce qui attendait part), fermeture (sendBeacon), gestes et
+    // visibilité (la garde), un contrôle par minute.
+    let branche = false;
+    function brancher() {
+      if (branche) return;
+      branche = true;
+      try {
+        if (fenetre && typeof fenetre.addEventListener === "function") {
+          fenetre.addEventListener("online", reprendreLesEnvois);
+          fenetre.addEventListener("pageshow", evenement => { if (evenement && evenement.persisted) reprendreLesEnvois(); });
+          fenetre.addEventListener("pagehide", envoyerAvantDeFermer);
+        }
+        if (doc && typeof doc.addEventListener === "function") {
+          doc.addEventListener("visibilitychange", () => {
+            if (doc.visibilityState === "hidden") envoyerAvantDeFermer();
+            if (doc.visibilityState === "visible") verifierGarde();
+          });
+          ["pointerdown", "keydown", "touchstart"].forEach(type => {
+            doc.addEventListener(type, evenement => {
+              const cible = evenement && evenement.target;
+              const dansLaGarde = Boolean(cible && typeof cible.closest === "function" && cible.closest("[data-suivi-garde]"));
+              noterActivite(evenement, dansLaGarde);
+            }, true);
+          });
+        }
+        if (fenetre && typeof fenetre.setInterval === "function") fenetre.setInterval(verifierGarde, 60000);
+      } catch (_) {}
+      verifierGarde();
+      rendre.garde();
+    }
+
+    // Au démarrage sous un code : le serveur fait foi, fusion avec la case du
+    // code, renvoi seulement si cet appareil apporte quelque chose.
+    function demarrerSuivi() {
+      if (!suiviActif()) { direPret(false); return; }
+      sauverCode(stockageSession(), codeSuivi);
+      // Du travail dans la case et aucune révision confirmée : à envoyer.
+      if (!sync.detache && sync.revision === 0 && !sync.dirty && !estVide(parcours)) {
+        sync.dirty = true;
+        ecrireSync();
+      }
+      rendre.repere();
+      if (sync.detache) { direPret(false); return; }
+      chargerIdentite(codeSuivi);
+      const code = codeSuivi;
+      lireParcoursDuServeur(code).then(reponse => {
+        if (code !== codeSuivi) { direPret(false); return; }
+        if (reponse.statut === 404) {
+          detacher();
+          if (!enJeu()) rendre.parcours();
+          direPret(false);
+          return;
+        }
+        suiviHorsLigne = reponse.statut !== 200 || !reponse.donnees || !reponse.donnees.ok;
+        if (!suiviHorsLigne && reponse.donnees.existe) {
+          const distant = normaliser(reponse.donnees.parcours);
+          const fusion = fusionner(parcours, distant);
+          sync.revision = Number.isInteger(reponse.donnees.revision) ? reponse.donnees.revision : 0;
+          const apporte = sync.dirty || JSON.stringify(pourServeur(fusion)) !== JSON.stringify(pourServeur(distant));
+          parcours = fusion;
+          sauverCase();
+          sync.dirty = apporte;
+          ecrireSync();
+          if (apporte) envoyerParcours();
+        } else if (!suiviHorsLigne) {
+          sync.revision = 0;
+          ecrireSync();
+          if (!estVide(parcours)) { sync.dirty = true; ecrireSync(); envoyerParcours(); }
+        } else if (sync.dirty) {
+          planifierRelance(2000);
+        }
+        rendre.repere();
+        if (!enJeu()) rendre.parcours();
+        direPret(!suiviHorsLigne);
+      });
+    }
+
+    // Tout en un, pour une page : brancher les écouteurs, puis entrer (billet
+    // ou code d'onglet). Rend une promesse qui se résout quand on sait qui joue.
+    async function demarrer() {
+      brancher();
+      if (ENTREE.billet) return entrerParBillet(ENTREE.billet);
+      demarrerSuivi();
+      return suiviActif();
+    }
+
+    // Les réglages du compte tels qu'on les connaît ({} tant que l'élève n'en
+    // a pas choisi), pour que l'appli les dessine.
+    function reglagesDuCompte() { return parcours && parcours.reglages ? cloner(parcours.reglages) : {}; }
+
+    return {
+      get codeSuivi() { return codeSuivi; },
+      get parcours() { return parcours; },
+      get sync() { return sync; },
+      get suiviHorsLigne() { return suiviHorsLigne; },
+      get suiviIdentite() { return suiviIdentite; },
+      get erreurDefinitive() { return erreurDefinitive; },
+      get entreeRefusee() { return entreeRefusee; },
+      get billetEnCours() { return billetEnCours; },
+      pret: () => pret,
+      get gardeVisible() { return gardeVisible; },
+      get gardeErreur() { return gardeErreur; },
+      ENTREE, TEXTES, GARDE_INACTIVITE_MS, GARDE_ESSAIS_MAX,
+      suiviActif, prenomAffiche, etatRepere,
+      appelSuivi, echangerBillet, lireParcoursDuServeur, paquetParcours,
+      envoyerParcours, envoyerMaintenant, envoyerAvantDeFermer,
+      sauverParcours, noterUneSeance, sauverLesReglages,
+      demarrer, demarrerSuivi, entrerParBillet, adopterCode, quitterSuivi, brancher, reglagesDuCompte,
+      verifierGarde, noterActivite, repondreGarde
+    };
+  }
+
+  return Object.freeze({
+    VERSION,
+    APPLI,
+    SUIVI_URL,
+    CLE_STOCKAGE,
+    CLE_SYNC,
+    CLE_SEL,
+    CLE_CODE,
+    CLE_IDENTITE,
+    CLE_DERNIER_GESTE,
+    MODES,
+    OPERATIONS,
+    SONS,
+    CALCULS,
+    CHIFFRES,
+    NOMBRES,
+    TEMPS,
+    LIMITES,
+    DEFAUTS,
+    SEANCE_CHAMPS,
+    SEANCES_MAX,
+    NUMERO_MAX,
+    CLES_SERVEUR,
+    MOTS_SERVEUR,
+    MOTIF_SEANCES_PHP,
+    TEXTES,
+    GARDE_INACTIVITE_MS,
+    GARDE_ESSAIS_MAX,
+    ENVOI_GROUPE_MS,
+    ITERATIONS_EMPREINTE,
+    LONGUEUR_EMPREINTE,
+    LONGUEUR_CODE,
+    DUREE_CONSERVATION_MS,
+    jourLocal,
+    creer,
+    normaliser,
+    normaliserReglages,
+    normaliserReglagesMode,
+    normaliserSeance,
+    estVide,
+    fusionner,
+    numeroSuivant,
+    noterSeance,
+    sauverReglages,
+    pourServeur,
+    historique,
+    resume,
+    texteResume,
+    resumeProf,
+    resumeTuile,
+    sha256Hex,
+    selAppareil,
+    empreinteCode,
+    cleStockage,
+    charger,
+    sauver,
+    effacer,
+    cleSync,
+    chargerSync,
+    sauverSync,
+    effacerSync,
+    purger,
+    clesRevelentUnCode,
+    normaliserCode,
+    codeValide,
+    chargerCode,
+    sauverCode,
+    effacerCode,
+    nettoyerPrenom,
+    chargerIdentiteOnglet,
+    sauverIdentiteOnglet,
+    lireEntree,
+    creerClient
+  });
+});
