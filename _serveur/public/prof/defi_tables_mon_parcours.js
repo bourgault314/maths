@@ -3195,28 +3195,39 @@
       // erreur, aucun gain n'est possible sur ce calcul (appliquerReponse :
       // pas de regain le jour d'une erreur) : une erreur datée de ce jour est
       // donc forcément POSTÉRIEURE à tout gain du même jour. D'où :
-      //  1. un seul côté porte une erreur de ce jour → il gagne EN BLOC
-      //     (boîte, échéance, erreur, gain). Sur un seul appareil (sauverCase,
-      //     le cas de tous les jours), ce côté descend de l'autre : exact ;
+      //  1. un seul côté porte une erreur de ce jour → il gagne : son erreur,
+      //     son échéance (aujourd'hui), son gain, et sa boîte — mais JAMAIS
+      //     plus d'une boîte sous l'autre côté (une erreur = une boîte de
+      //     moins, pas plus). Sur un seul appareil (sauverCase, le cas de tous
+      //     les jours), ce côté descend de l'autre : exact. Sans ce plancher,
+      //     un appareil resté longtemps hors ligne (boîte 2 d'il y a un mois,
+      //     erreur → 1) écrasait la boîte 5 de l'appareil du jour (correctif
+      //     du 23/10/2026, trouvé par Codex) ;
       //  2. les deux côtés portent une erreur de ce jour → la boîte la plus
-      //     BASSE et son échéance (le côté qui a appliqué le plus d'erreurs) ;
+      //     haute et son échéance : au plus une descente par jour, donc chaque
+      //     côté vaut « sa boîte du matin − 1 », et le côté le plus haut est
+      //     celui qui avait le parcours le plus à jour ;
       //  3. aucune erreur de ce jour → la boîte la plus haute et l'échéance
       //     qui va avec (à boîte égale, la plus proche — le calcul revient
       //     plutôt trop tôt que trop tard).
-      // Avant ce lot, « la plus haute » dans tous les cas : sous un code, la
-      // case de l'appareil (réussite du matin) effaçait l'erreur de l'après-
-      // midi à chaque sauvegarde, et le tableau restait bleu (défaut trouvé
-      // le 22/10/2026). LIMITE qui reste, acceptée : deux appareils le même
-      // jour sur le même calcul, gain sur l'un et erreur sur l'autre partie
-      // de l'état d'hier → la fusion finit une boîte plus bas que la vérité ;
-      // rare, et du côté prudent (le calcul revient plus tôt).
+      // Avant le 22/10/2026, « la plus haute » dans tous les cas : sous un
+      // code, la case de l'appareil (réussite du matin) effaçait l'erreur de
+      // l'après-midi à chaque sauvegarde, et le tableau restait bleu. LIMITES
+      // qui restent, acceptées (deux appareils le même jour sur le même
+      // calcul, ce qui suppose l'un des deux hors ligne) : gain sur l'un et
+      // erreur sur l'autre → une boîte au-dessus de la vérité si l'erreur est
+      // venue avant le gain ; appareil hors ligne resté sur une boîte PLUS
+      // HAUTE que le parcours du jour → la fusion le croit.
       const erreurA = faitA.erreur === faitA.vu;
       const erreurB = faitB.erreur === faitB.vu;
       if (erreurA !== erreurB) {
-        fusion.calculs[cle] = cloner(erreurA ? faitA : faitB);
+        const rate = erreurA ? faitA : faitB;
+        const autre = erreurA ? faitB : faitA;
+        const boiteRatee = Math.max(rate.boite, autre.boite - 1);
+        fusion.calculs[cle] = {...cloner(rate), boite: boiteRatee, cases: casesDeBoite(boiteRatee)};
         return;
       }
-      const boite = erreurA ? Math.min(faitA.boite, faitB.boite) : Math.max(faitA.boite, faitB.boite);
+      const boite = Math.max(faitA.boite, faitB.boite);
       const echeance = faitA.boite !== faitB.boite
         ? (faitA.boite === boite ? faitA : faitB).echeance
         : dateLaPlusAncienne(faitA.echeance, faitB.echeance);
