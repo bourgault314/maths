@@ -507,9 +507,10 @@ function ajouts_lus(?string $json): array
 
 // Ce que le professeur envoie (eleves.acces) : lecture STRICTE, et la valeur
 // reçue REMPLACE la colonne entière (la fenêtre « Ce que voit Léa » envoie tout
-// son état à chaque clic, comme ⚙ Réglages envoie la liste des mondes). Rien
-// n'est deviné ni arrangé en silence : une valeur fausse est refusée avec un
-// message.
+// son état à chaque clic, comme ⚙ Réglages envoie la liste des mondes) — à
+// condition que « avant », lu de la même façon, soit encore ce que la colonne
+// contient (memes_ajouts, lot 3c). Rien n'est deviné ni arrangé en silence :
+// une valeur fausse est refusée avec un message.
 function ajouts_recus(mixed $recus): array
 {
     if (!is_array($recus) || ($recus !== [] && array_is_list($recus))) {
@@ -545,6 +546,27 @@ function ajouts_recus(mixed $recus): array
         $sortie[$cle] = $nouveau;
     }
     return $sortie;
+}
+
+// Deux ajouts disent-ils la même chose ? Lot 3c (relecture Codex du 22/10/2026)
+// : la page envoie avec chaque clic l'état qu'elle croit rangé (« avant »), et
+// le serveur n'écrit que si c'est encore celui de la colonne — sinon un onglet
+// en retard rouvrait un monde retiré ailleurs. La comparaison se fait sur la
+// forme CANONIQUE : les deux côtés sortent de ajouts_lus() / ajouts_recus()
+// (numéros triés, sans doublon, listes vides et applis fermées déjà écartées),
+// il ne reste qu'à ranger les clés — l'ordre des applis et des réglages est
+// indifférent, « {"splat":{},"coffres":{}} » vaut « {"coffres":{},"splat":{}} ».
+function memes_ajouts(array $a, array $b): bool
+{
+    return ajouts_canoniques($a) === ajouts_canoniques($b);
+}
+
+function ajouts_canoniques(array $ajouts): array
+{
+    ksort($ajouts);
+    foreach ($ajouts as &$ajout) ksort($ajout);
+    unset($ajout);
+    return $ajouts;
 }
 
 // Les ajouts en JSON : toujours un objet (« {} » pour « rien », et « {} » pour

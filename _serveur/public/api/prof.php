@@ -912,18 +912,74 @@ try {
             // refusés avec un message, rien n'est arrangé en silence. Répond
             // le rangé (« ajouts ») et le calculé (« acces » : ce que voit
             // l'élève, classe + ajouts) — jamais son code.
+            //
+            // Lot 3c (relecture Codex du 22/10 au soir) : la page envoie aussi
+            // « avant », l'état rangé tel qu'elle le connaît. Deux onglets sur
+            // le même élève, ou une réponse perdue en route, lui faisaient
+            // envoyer un état complet PÉRIMÉ — et le serveur, qui remplace
+            // tout, rouvrait un monde retiré ailleurs. Désormais la colonne
+            // n'est remplacée que si elle contient encore « avant » (comparés
+            // sous forme canonique, memes_ajouts) ; sinon 409 avec l'état
+            // actuel, que la page reporte : la fenêtre se remet d'elle-même à
+            // jour, et le clic est à refaire. « avant » absent ou illisible :
+            // 400 — la page et le serveur se déposent ensemble. Comparaison et
+            // écriture sous le verrou de la ligne de l'élève (pour_mise_a_jour,
+            // comme eleves.ajouter) : deux demandes simultanées avec le même
+            // « avant » ne passent pas toutes les deux.
             $eleve = eleve_pour_action($pdo, $profId, $corps['eleve_id'] ?? 0, $action);
             if (!ajouts_disponibles($pdo)) {
                 erreur("Le serveur doit être mis à niveau : ouvre migrer.php avec ton mot de passe d'installation.", 503);
+            }
+            if (!array_key_exists('avant', $corps)) {
+                erreur("Il manque l'état d'avant : recharge la page et refais ton clic.", 400);
+            }
+            try {
+                $avant = ajouts_recus($corps['avant']);
+            } catch (InvalidArgumentException $e) {
+                erreur("État d'avant illisible : recharge la page et refais ton clic.", 400);
             }
             try {
                 $ajouts = ajouts_recus($corps['ajouts'] ?? null);
             } catch (InvalidArgumentException $e) {
                 erreur($e->getMessage(), 400);
             }
-            $pdo->prepare('UPDATE eleves SET ajouts = ? WHERE id = ?')
-                ->execute([ajouts_pour_la_base($ajouts), (int)$eleve['id']]);
-            journaliser($pdo, $profId, 'eleves.acces', 'eleve', (int)$eleve['id']);
+            $eleveId = (int)$eleve['id'];
+            $resultat = avec_reprise($pdo, function () use ($pdo, $eleveId, $avant, $ajouts): array {
+                transaction_ouvrir($pdo);
+                $requete = $pdo->prepare('SELECT ajouts, prenom FROM eleves WHERE id = ?' . pour_mise_a_jour($pdo));
+                $requete->execute([$eleveId]);
+                $ligne = $requete->fetch();
+                $requete->closeCursor();
+                if ($ligne === false) {
+                    transaction_annuler($pdo);
+                    return ['disparu' => true];
+                }
+                $enBase = $ligne['ajouts'] === null ? null : (string)$ligne['ajouts'];
+                if (!memes_ajouts(ajouts_lus($enBase), $avant)) {
+                    transaction_annuler($pdo);
+                    return ['conflit' => true, 'en_base' => $enBase, 'prenom' => (string)($ligne['prenom'] ?? '')];
+                }
+                $pdo->prepare('UPDATE eleves SET ajouts = ? WHERE id = ?')
+                    ->execute([ajouts_pour_la_base($ajouts), $eleveId]);
+                transaction_valider($pdo);
+                return ['ecrit' => true];
+            });
+            if (isset($resultat['disparu'])) erreur("Introuvable.", 404);
+            if (isset($resultat['conflit'])) {
+                // Rien n'est écrit. L'état actuel part avec le refus, pour que
+                // la fenêtre se redessine juste — rien que le propriétaire ne
+                // voie déjà dans son tableau (ni code, ni donnée d'élève). Pas
+                // de ligne au journal : rien n'a été fait, et ce n'est pas un
+                // refus de droit.
+                $qui = $resultat['prenom'] !== '' ? $resultat['prenom'] : 'cet élève';
+                repondre([
+                    'ok' => false,
+                    'erreur' => "Ce que voit $qui a changé ailleurs : la fenêtre est à jour, refais ton clic.",
+                    'ajouts' => ajouts_json(ajouts_lus($resultat['en_base'])),
+                    'acces' => acces_json(acces_de_l_eleve($eleve['classe'], $resultat['en_base'])),
+                ], 409);
+            }
+            journaliser($pdo, $profId, 'eleves.acces', 'eleve', $eleveId);
             repondre([
                 'ok' => true,
                 'ajouts' => ajouts_json($ajouts),
