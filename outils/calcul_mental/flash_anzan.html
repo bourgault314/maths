@@ -219,6 +219,14 @@
       background: linear-gradient(to bottom right, transparent calc(50% - 1.3px), currentColor calc(50% - 1.3px),
         currentColor calc(50% + 1.3px), transparent calc(50% + 1.3px)); }
     .verdict .bonne { margin-top: 10px; color: var(--ink); font-weight: 800; }
+    /* Demande de Gwenaël (23/10/2026) : une réponse juste, c'est le nombre en
+       gros, le petit ✓ à sa gauche et la case verte, sans le mot « Juste ».
+       Trois colonnes pour que le nombre reste au centre de la case ; le mot
+       reste pour les lecteurs d'écran. */
+    .verdict .juste { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; column-gap: 14px; }
+    .verdict .juste .rond { justify-self: end; font-weight: 950; }
+    .verdict .juste .val { margin-top: 0; font-size: 4.4rem; }
+    .lecteur { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
     .calcul { margin-top: 12px; border: 1px solid var(--line); border-radius: 16px; background: #fff; }
     .calcul .tete { width: 100%; min-height: 44px; display: flex; justify-content: space-between; align-items: center; padding: 0 14px;
       border: 0; background: none; font-weight: 900; font-size: .9rem; color: var(--blue); cursor: pointer; }
@@ -264,6 +272,7 @@
       .vue-jeu.avec-reponse .keypad, .vue-jeu.avec-reponse .valider { width: 100%; }
       .verdict { padding: 22px; }
       .verdict .val { font-size: 4.2rem; }
+      .verdict .juste .val { font-size: 5.2rem; }
       .suite { font-size: 1.35rem; }
     }
 
@@ -327,6 +336,7 @@
       .vue-jeu.avec-reponse .astuce-clavier { display: none; }
       .verdict { padding: 8px; }
       .verdict .val { font-size: 2.4rem; }
+      .verdict .juste .val { font-size: 3rem; }
       .correction .bas { margin-top: 8px; }
       .correction .bas .astuce { display: none; }
       .score { font-size: 2.6rem; }
@@ -936,7 +946,7 @@
         const v = $("verdict");
         v.className = `verdict ${res.juste ? "ok" : "ko"}`;
         if (res.juste) {
-          v.innerHTML = `<div class="titre"><span class="rond" aria-hidden="true">✓</span>Juste&nbsp;!</div><div class="val">${res.calcul.total}</div>`;
+          v.innerHTML = `<div class="juste"><span class="rond" aria-hidden="true">✓</span><span class="lecteur">Juste&nbsp;! </span><span class="val">${res.calcul.total}</span></div>`;
         } else if (res.tempsEcoule) {
           // Choix de Gwenaël (22/10/2026) : le temps fini se dit ; ce qui était
           // tapé n'est barré que s'il était faux. Ça compte faux.

@@ -321,7 +321,14 @@ test("séance Flash : décompte, nombres, réponse juste puis fausse, Entrée pa
   p.touche("Enter", p.$("valider"));
   assert.equal(p.vue(), "vue-correction");
   assert.match(p.$("verdict").className, /\bok\b/);
-  assert.match(p.$("verdict").textContent, /Juste/);
+  assert.match(p.$("verdict").textContent, /Juste/, "le mot reste pour les lecteurs d'écran");
+  // Demande de Gwenaël (23/10/2026) : pas de titre « Juste ! » à l'écran,
+  // seulement le ✓ et le nombre en gros dans la case verte.
+  const juste = p.$("verdict").innerHTML;
+  assert.doesNotMatch(juste, /class="titre"/, "pas de titre visible sur une réponse juste");
+  assert.match(juste, /<span class="lecteur">Juste/, "« Juste » caché à l'écran, lu par les lecteurs d'écran");
+  assert.match(juste, new RegExp(`<span class="val">${attendus[0].total}</span>`));
+  assert.match(PAGE, /\.lecteur \{ position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset\(50%\);/);
   p.touche("Enter");
   assert.equal(p.vue(), "vue-jeu");
   assert.equal(p.$("compte").textContent, "Calcul 2\u00a0/ 5");
