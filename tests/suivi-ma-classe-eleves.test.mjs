@@ -680,7 +680,11 @@ function fenetreRejouee(eleve, options = {}) {
   const f = new Function("document", "$", "classe", "droitClasse", "api", "messager", "surErreur", "reporterAcces",
     `${constantesEleves()}\nlet voitEleve = null;\nconst voitFiles = new Map();\nconst voitAttentes = new Map();\nlet voitOuverture = 0;\nconst DELAI_ACCES_MS = ${options.delai || 15000};\n${["prenomCourt", "motDe", "numerosOuverts", "accesDe", "ajoutsApres", "texteEnregistre",
       "ouvrirCeQueVoit", "fermerCeQueVoit", "dessinerCeQueVoit", "voitEnAttenteDe", "changerCeQueVoit", "envoyerCeQueVoit"].map(fonction).join("\n")}
-return {ouvrirCeQueVoit, fermerCeQueVoit, changerCeQueVoit, voit: () => voitEleve,
+// La vraie oublierEtat (« Se déconnecter »), avec ce qu'elle touche d'autre, en figurants.
+let modeles, evaluation, evalContenu, jeton, classes, eleves, estAdmin, mdpTemporaire, identifiant, annuaire, echues, tri, appliAffichee, vue, tableaux;
+const detailsOuverts = new Set(); const veille = {arreter() {}}; function arreterVeilleEvaluation() {}
+${fonction("oublierEtat")}
+return {ouvrirCeQueVoit, fermerCeQueVoit, changerCeQueVoit, voit: () => voitEleve, deconnecter: () => { oublierEtat(); voitEleve = null; },
   enAttente: id => id === undefined ? [...voitAttentes.values()].reduce((a, b) => a + b, 0) : (voitAttentes.get(id) || 0),
   poserClasse: c => { classe = c; }, classe: () => classe, delai: () => DELAI_ACCES_MS};`)(
     document, $, options.classe || classe405(), options.droit || "proprietaire",
@@ -1058,7 +1062,7 @@ test("qui voit quoi 3c — une réponse perdue : le serveur a écrit [3], la pag
   quatre.checked = false;
   await r.f.changerCeQueVoit({cle: "splat", liste: "mondes", numero: 4, ouvre: false}, quatre);
   assert.deepEqual(base.ajouts, {splat: {mondes: [3]}}, "le serveur a bien écrit…");
-  assert.deepEqual(r.erreurs, [["Le serveur n’a pas répondu : vérifie la ligne de Lucas avant de recommencer.", "voit-message"]],
+  assert.deepEqual(r.erreurs, [["Le serveur n’a pas répondu : recharge la page pour vérifier les accès de Lucas avant de recommencer.", "voit-message"]],
     "…mais la page a reçu une erreur réseau (« Failed to fetch » du navigateur, dit en français)");
   assert.deepEqual(r.reportes, [], "elle n'a rien reporté : elle croit toujours à [3, 4]");
   assert.deepEqual(mondesCoches(r), [true, true, false, false], "la case 4 est revenue cochée (c'est ce que la page croit)");
@@ -1143,7 +1147,7 @@ test("qui voit quoi 3c — le serveur ne répond jamais : au bout du délai, la 
   assert.equal(r.liste.attributs["aria-busy"], "true", "pendant : grisé");
   await envoi;
   assert.ok(Date.now() - debut >= 35, "l'attente a bien duré le délai");
-  assert.deepEqual(r.erreurs, [["Le serveur n’a pas répondu : vérifie la ligne de Lucas avant de recommencer.", "voit-message"]]);
+  assert.deepEqual(r.erreurs, [["Le serveur n’a pas répondu : recharge la page pour vérifier les accès de Lucas avant de recommencer.", "voit-message"]]);
   assert.equal(quatre.checked, false, "la case revient");
   assert.deepEqual(mondesCoches(r), [true, false, false, false]);
   assert.ok([4, 5, 6].every(n => !r.caseNumero("mondes", n).disabled), "la fenêtre redevient cliquable");
@@ -1202,8 +1206,9 @@ test("qui voit quoi 3c — une réponse arrivée après « Se déconnecter » (o
   quatre.checked = true;
   await r.f.changerCeQueVoit({cle: "splat", liste: "mondes", numero: 4, ouvre: true}, quatre);
   assert.deepEqual([dessins, lucas.ajouts, tableaux.splat[0].ajouts], [[1], {splat: {mondes: [3, 4]}}, {splat: {mondes: [3, 4]}}]);
-  // Et à la déconnexion, la page vide ses files et ses compteurs.
-  assert.match(fonction("oublierEtat"), /voitFiles\.clear\(\);\s*voitAttentes\.clear\(\);/);
+  // Et à la déconnexion, la page ne vide PAS ses compteurs (3d) : chaque envoi
+  // décompte le sien à l'arrivée, vider ferait décompter sur la session suivante.
+  assert.doesNotMatch(fonction("oublierEtat"), /voitAttentes\.clear|voitFiles\.clear/);
 });
 
 test("qui voit quoi 3c — un 409 arrivé fenêtre fermée : l'élève est mis à jour, le message va sous les boutons d'Élèves ; rouverte, la fenêtre dit l'état vrai", async () => {
@@ -1244,4 +1249,69 @@ test("qui voit quoi 3c — un 409 arrivé dans une fenêtre ROUVERTE sur le mêm
   assert.deepEqual(r.erreurs, [["Ce que voit Lucas a changé ailleurs : la fenêtre est à jour, refais ton clic.", "voit-message"]],
     "le message va dans la fenêtre ouverte sur Lucas — sous les boutons, derrière la fenêtre, personne ne le verrait");
   assert.ok(!r.messages.some(([, t]) => t.startsWith("Enregistré")));
+});
+
+// ------------------------------------------------------------ lot 3d : les attentes quand le contexte change (relecture Codex de la PR #1041)
+
+test("qui voit quoi 3d — la même classe rouverte pendant un envoi : la fenêtre de Lucas (relu) se libère à l'arrivée de la vieille réponse, sans rien reporter", async () => {
+  for (const [variante, options] of [["réponse", {}], ["409", {base: baseLucas([3]), accesDe: accesLucas}], ["panne", {echec: new Error("Le serveur ne répond pas.")}]]) {
+    const ancien = lucasQuiCroit([3, 4]);
+    const r = fenetreRejouee(ancien, {retenir: true, accesDe: accesLucas, ...options});
+    const quatre = r.caseNumero("mondes", 4);
+    quatre.checked = false;
+    const envoi = r.f.changerCeQueVoit({cle: "splat", liste: "mondes", numero: 4, ouvre: false}, quatre);
+    await tic();
+    r.boite.close();
+    // « Toutes mes classes » → la même classe : objets relus, Lucas est un AUTRE objet (même id).
+    r.f.poserClasse({...classe405()});
+    const relu = lucasQuiCroit([3]);
+    r.f.ouvrirCeQueVoit(relu);
+    assert.equal(r.liste.attributs["aria-busy"], "true", `${variante} : rouverte pendant l'envoi, grisée`);
+    r.messages.length = 0;
+    await libererTout(r);
+    await envoi;
+    assert.equal(r.liste.attributs["aria-busy"], "false", `${variante} : plus rien n'est en route, la fenêtre se libère`);
+    assert.ok([4, 5, 6].every(n => !r.caseNumero("mondes", n).disabled), `${variante} : les cases redeviennent cliquables`);
+    assert.deepEqual(mondesCoches(r), [true, false, false, false], `${variante} : dessinée d'après l'élève RELU, pas d'après la vieille réponse`);
+    assert.deepEqual([ancien.ajouts, relu.ajouts], [{splat: {mondes: [3, 4]}}, {splat: {mondes: [3]}}], `${variante} : rien n'est reporté`);
+    assert.deepEqual([r.messages, r.erreurs], [[], []], `${variante} : aucun message`);
+    assert.equal(r.f.enAttente(16), 0);
+  }
+});
+
+test("qui voit quoi 3d — 401 puis reconnexion : la vieille réponse ne décompte pas l'attente du nouvel envoi, la fenêtre reste grisée jusqu'à SA réponse", async () => {
+  const ancien = lucasQuiCroit([3, 4]);
+  const r = fenetreRejouee(ancien, {retenir: true, accesDe: accesLucas});
+  const quatre = r.caseNumero("mondes", 4);
+  quatre.checked = false;
+  const envoiA = r.f.changerCeQueVoit({cle: "splat", liste: "mondes", numero: 4, ouvre: false}, quatre);
+  await tic();
+  r.boite.close();
+  // Un 401 ailleurs : « Se déconnecter » (la vraie oublierEtat), puis reconnexion sur la même classe.
+  r.f.deconnecter();
+  assert.equal(r.f.classe(), null);
+  r.f.poserClasse({...classe405()});
+  const nouveau = lucasQuiCroit([3]);
+  r.f.ouvrirCeQueVoit(nouveau);
+  assert.equal(r.liste.attributs["aria-busy"], "true", "l'ancien envoi est toujours en route : grisée");
+  const cinq = r.caseNumero("mondes", 5);
+  cinq.checked = true;
+  const envoiB = r.f.changerCeQueVoit({cle: "splat", liste: "mondes", numero: 5, ouvre: true}, cinq);
+  await tic();
+  assert.equal(r.f.enAttente(16), 2, "deux envois en route pour Lucas");
+  // La vieille réponse arrive seule.
+  r.enAttente.shift()();
+  await envoiA;
+  await tic();
+  assert.equal(r.f.enAttente(16), 1, "LE point : il reste l'attente du nouvel envoi");
+  assert.equal(r.liste.attributs["aria-busy"], "true", "la fenêtre reste grisée jusqu'à SA réponse");
+  assert.deepEqual(nouveau.ajouts, {splat: {mondes: [3]}}, "rien de l'ancienne session n'est reporté");
+  // Puis la nouvelle.
+  await libererTout(r);
+  await envoiB;
+  assert.equal(r.f.enAttente(16), 0);
+  assert.equal(r.liste.attributs["aria-busy"], "false");
+  assert.deepEqual(nouveau.ajouts, {splat: {mondes: [3, 5]}});
+  assert.deepEqual(mondesCoches(r), [true, false, true, false]);
+  assert.deepEqual(r.messages.at(-1), ["voit-message", "Enregistré : le monde 5 est ouvert à Lucas.", "ok"]);
 });

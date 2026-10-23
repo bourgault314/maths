@@ -1492,9 +1492,10 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     detailsOuverts.clear();
     voitEleve = null;
     // Lot 3c : un envoi encore en route ne touchera plus à rien (sa classe
-    // n'est plus la classe ouverte) ; la session suivante repart sans attente.
-    voitFiles.clear();
-    voitAttentes.clear();
+    // n'est plus la classe ouverte). Ses files et compteurs ne sont PAS
+    // vidés (relecture Codex du 23/10) : chaque envoi décompte lui-même son
+    // attente à l'arrivée, exactement une fois — vider ici faisait décompter
+    // une vieille réponse sur l'attente d'un envoi de la session suivante.
     veille.arreter();
   }
 
@@ -2358,7 +2359,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       // (TypeError « Failed to fetch ») : dans les deux cas le serveur a
       // peut-être écrit — même conseil, en français.
       if (erreur.name === "AbortError" || erreur.name === "TypeError") {
-        erreurRecue = new Error(`Le serveur n’a pas répondu : vérifie la ligne de ${prenomCourt(eleve)} avant de recommencer.`);
+        erreurRecue = new Error(`Le serveur n’a pas répondu : recharge la page pour vérifier les accès de ${prenomCourt(eleve)} avant de recommencer.`);
         erreurRecue.statut = 0;
       } else if (erreur.statut === 409 && erreur.donnees && erreur.donnees.ajouts) {
         // L'état vrai est dans le refus : la page le prend, comme une réponse.
@@ -2369,8 +2370,15 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       voitAttentes.set(eleve.id, Math.max(0, voitEnAttenteDe(eleve) - 1));
     }
     // Une autre session, une autre classe (ou la même, rouverte : son tableau
-    // a été relu) : cette réponse ne vaut plus rien, on ne touche à rien.
-    if (classe !== classeDepart) return;
+    // a été relu) : cette réponse ne vaut plus rien, on ne reporte rien. Mais
+    // si une fenêtre est ouverte sur ce même élève (relu, donc un autre
+    // objet), elle attendait cet envoi : on la redessine, pour qu'elle se
+    // libère dès que plus rien n'est en route (relecture Codex du 23/10 :
+    // elle restait grisée pour de bon).
+    if (classe !== classeDepart) {
+      if ($("voit").open && voitEleve && voitEleve.id === eleve.id) dessinerCeQueVoit();
+      return;
+    }
     if (etatRecu) reporterAcces(eleve, etatRecu.ajouts, etatRecu.acces);
     // Le message d'un enregistrement ne va qu'à la fenêtre qui a fait le
     // clic, encore ouverte ; celui d'une erreur, à la fenêtre de CET élève si
