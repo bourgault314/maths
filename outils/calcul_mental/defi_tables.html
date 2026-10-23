@@ -3457,6 +3457,18 @@
         return parcours.prenom || "";
       }
 
+      // « Le parcours de Léa », « Le parcours d’Axel » : devant un prénom qui
+      // commence par une voyelle, « de » s’élide (Y suivi d’une consonne aussi :
+      // d’Yves, mais de Yanis). Devant un H, « de » reste : pour un prénom, les
+      // deux se disent.
+      function seElide(mot) {
+        return /^(?:[aeiouàâäéèêëîïôöùûüœæ]|y(?![aeiouàâäéèêëîïôöùûü]))/iu.test(String(mot || "").trim());
+      }
+
+      function deNom(nom) {
+        return (seElide(nom) ? "d’" : "de ") + nom;
+      }
+
       // Le lien du haut ramenait toujours au catalogue de mathsgo.re. Un élève
       // suivi n'arrive pas de là : il vient de son espace, et c'est là qu'il
       // doit pouvoir revenir. Sans code, rien ne change pour les autres.
@@ -5814,7 +5826,7 @@
         // la largeur du téléphone comme dans la vue du professeur.
         document.body.classList.toggle("voir-fiche", name === "fiche");
         if (name === "fiche") {
-          $("fiche-title").textContent = prenomAffiche() ? `La fiche de ${prenomAffiche()}` : "Ma fiche";
+          $("fiche-title").textContent = prenomAffiche() ? `La fiche ${deNom(prenomAffiche())}` : "Ma fiche";
           renderFiche();
           ajusterFiche();
         }
@@ -10686,10 +10698,10 @@
       // répète pas.
       function parcoursTitle() {
         // Vue du professeur : « Le parcours de Léa » (choix de Gwenaël).
-        if (VUE_PROF) return `Le parcours de ${(parcours && parcours.prenom) || "l’élève"}`;
+        if (VUE_PROF) return `Le parcours ${deNom((parcours && parcours.prenom) || "l’élève")}`;
         if (suiviActif()) return "Mon parcours";
         const prenom = prenomAffiche();
-        return prenom ? `Le parcours de ${prenom}` : "Mon parcours";
+        return prenom ? `Le parcours ${deNom(prenom)}` : "Mon parcours";
       }
 
       function launchFromParcours(config, origin = "parcours", {puis} = {}) {
@@ -11474,7 +11486,7 @@
         parcours = PARCOURS.definirPrenom(parcours, $("fiche-prenom-input").value);
         sauverParcours();
         fermerPrenomFiche();
-        $("fiche-title").textContent = prenomAffiche() ? `La fiche de ${prenomAffiche()}` : "Ma fiche";
+        $("fiche-title").textContent = prenomAffiche() ? `La fiche ${deNom(prenomAffiche())}` : "Ma fiche";
         imprimerLaFiche();
       });
       $("fiche-prenom-plus-tard").addEventListener("click", () => {
@@ -11538,7 +11550,7 @@
         state.confirmingReset = true;
         state.parcoursOptionsOpen = false;
         $("parcours-confirm-text").textContent = prenomAffiche()
-          ? `Effacer le parcours de ${prenomAffiche()} ? Cette action ne peut pas être annulée.`
+          ? `Effacer le parcours ${deNom(prenomAffiche())} ? Cette action ne peut pas être annulée.`
           : "Effacer tout ton parcours ? Cette action ne peut pas être annulée.";
         renderParcours();
         $("parcours-confirm-no").focus?.({preventScroll: true});

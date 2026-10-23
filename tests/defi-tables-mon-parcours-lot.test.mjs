@@ -659,10 +659,11 @@ test("5 (soir). le titre de lancement : « 1 min 30 », « 20 questions », « T
 });
 
 test("6 (soir). sous un code, Mon parcours s’appelle « Mon parcours » (le prénom est dans la barre) ; sans code, « Le parcours de Léa »", () => {
-  const titre = (suivi, prenom, vueProf = false) => new Function("suiviActif", "prenomAffiche", "VUE_PROF", "parcours", `${source("parcoursTitle")}\nreturn parcoursTitle();`)(() => suivi, () => prenom, vueProf, {prenom});
+  const titre = (suivi, prenom, vueProf = false) => new Function("suiviActif", "prenomAffiche", "VUE_PROF", "parcours", `${source("seElide")}\n${source("deNom")}\n${source("parcoursTitle")}\nreturn parcoursTitle();`)(() => suivi, () => prenom, vueProf, {prenom});
   // Lot « Ma classe : le parcours de Léa » : la vue du professeur dit « Le parcours de Léa » (titre choisi par Gwenaël).
   assert.equal(titre(false, "Léa", true), "Le parcours de Léa");
   assert.equal(titre(false, "", true), "Le parcours de l’élève");
+  assert.equal(titre(false, "Axel", true), "Le parcours d’Axel", "lot « élision devant les prénoms »");
   assert.equal(titre(true, "Léa"), "Mon parcours");
   assert.equal(titre(false, "Léa"), "Le parcours de Léa");
   assert.equal(titre(false, ""), "Mon parcours");
