@@ -427,7 +427,10 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // prof/index.php seul change, 61 au manifeste (avant : defi-tables-fignolage-22-10).
   // Puis « Défi tables : fusion du même jour » (22/10/2026) : le moteur copié pour
   // Ma classe change, 61 au manifeste (avant : qui-voit-quoi-page-prof).
-  assert.match(lire("_serveur/public/VERSION"), /^lot defi-tables-fusion-meme-jour$/m);
+  // Puis « Qui voit quoi », lot 3c « état périmé » (23/10/2026) : api/prof.php,
+  // lib/applis.php et prof/index.php changent, 61 au manifeste
+  // (avant : defi-tables-fusion-meme-jour).
+  assert.match(lire("_serveur/public/VERSION"), /^lot qui-voit-quoi-etat-perime$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=flash-anzan-20261022-1/);
 });

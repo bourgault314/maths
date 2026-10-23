@@ -663,6 +663,11 @@ test("qui voit quoi — 2 000 suites de clics au hasard : jamais « [] », jamai
 
 // ------------------------------------------------------------ la fenêtre « Ce que voit Léa »
 
+// Lot 3c : le faux serveur reçoit (action, corps, options) comme le vrai api()
+// ; « base » (options.base) joue la colonne eleves.ajouts d'un vrai serveur :
+// il compare « avant » à ce qu'il a, écrit ou répond 409 avec l'état vrai —
+// la règle du serveur (lancer.php, « qui-voit-quoi 3c »), rejouée ici pour
+// que deux fenêtres ou une réponse perdue se voient depuis la page.
 function fenetreRejouee(eleve, options = {}) {
   const {$} = creerZones();
   const appels = [], messages = [], erreurs = [], reportes = [], enAttente = [];
@@ -671,19 +676,47 @@ function fenetreRejouee(eleve, options = {}) {
   boite.showModal = () => { boite.open = true; };
   let fermer = () => {};
   boite.close = () => { boite.open = false; fermer(); };
+  const canonique = a => JSON.stringify(Object.keys(a || {}).sort().map(cle => [cle, Object.keys(a[cle]).sort().map(nom => [nom, a[cle][nom]])]));
   const f = new Function("document", "$", "classe", "droitClasse", "api", "messager", "surErreur", "reporterAcces",
-    `${constantesEleves()}\nlet voitEleve = null;\nlet voitFile = Promise.resolve();\nlet voitEnAttente = 0;\nlet voitOuverture = 0;\n${["prenomCourt", "motDe", "numerosOuverts", "accesDe", "ajoutsApres", "texteEnregistre",
-      "ouvrirCeQueVoit", "fermerCeQueVoit", "dessinerCeQueVoit", "changerCeQueVoit", "envoyerCeQueVoit"].map(fonction).join("\n")}\nreturn {ouvrirCeQueVoit, fermerCeQueVoit, changerCeQueVoit, voit: () => voitEleve, enAttente: () => voitEnAttente};`)(
+    `${constantesEleves()}\nlet voitEleve = null;\nconst voitFiles = new Map();\nconst voitAttentes = new Map();\nlet voitOuverture = 0;\nconst DELAI_ACCES_MS = ${options.delai || 15000};\n${["prenomCourt", "motDe", "numerosOuverts", "accesDe", "ajoutsApres", "texteEnregistre",
+      "ouvrirCeQueVoit", "fermerCeQueVoit", "dessinerCeQueVoit", "voitEnAttenteDe", "changerCeQueVoit", "envoyerCeQueVoit"].map(fonction).join("\n")}
+// La vraie oublierEtat (« Se déconnecter »), avec ce qu'elle touche d'autre, en figurants.
+let modeles, evaluation, evalContenu, jeton, classes, eleves, estAdmin, mdpTemporaire, identifiant, annuaire, echues, tri, appliAffichee, vue, tableaux;
+const detailsOuverts = new Set(); const veille = {arreter() {}}; function arreterVeilleEvaluation() {}
+${fonction("oublierEtat")}
+return {ouvrirCeQueVoit, fermerCeQueVoit, changerCeQueVoit, voit: () => voitEleve, deconnecter: () => { oublierEtat(); voitEleve = null; },
+  enAttente: id => id === undefined ? [...voitAttentes.values()].reduce((a, b) => a + b, 0) : (voitAttentes.get(id) || 0),
+  poserClasse: c => { classe = c; }, classe: () => classe, delai: () => DELAI_ACCES_MS};`)(
     document, $, options.classe || classe405(), options.droit || "proprietaire",
-    async (action, corps) => {
+    async (action, corps, opts) => {
       appels.push([action, JSON.parse(JSON.stringify(corps))]);
       // « retenir » : la réponse n'arrive que quand le test la libère (reponses[i]()).
       if (options.retenir) await new Promise(libere => enAttente.push(libere));
+      // « muet » : le serveur ne répond jamais ; seul le signal d'abandon en sort.
+      if (options.muet) {
+        await new Promise((_, refuse) => {
+          const signal = opts && opts.signal;
+          if (!signal) return;
+          const abandon = () => { const e = new Error("The operation was aborted."); e.name = "AbortError"; refuse(e); };
+          if (signal.aborted) abandon(); else signal.addEventListener("abort", abandon);
+        });
+      }
       if (options.echec) throw options.echec;
+      if (options.base) {
+        // Le serveur du lot 3c : « avant » doit être ce qu'il a rangé.
+        if (canonique(corps.avant) !== canonique(options.base.ajouts)) {
+          const e = new Error(`Ce que voit ${eleve.prenom || "cet élève"} a changé ailleurs : la fenêtre est à jour, refais ton clic.`);
+          e.statut = 409;
+          e.donnees = {ok: false, erreur: e.message, ajouts: options.base.ajouts, acces: options.accesDe(options.base.ajouts)};
+          throw e;
+        }
+        options.base.ajouts = JSON.parse(JSON.stringify(corps.ajouts));
+        if (options.perdre && options.perdre()) { const e = new Error("Failed to fetch"); e.name = "TypeError"; throw e; }
+      }
       return {ok: true, ajouts: corps.ajouts, acces: options.accesDe ? options.accesDe(corps.ajouts) : (options.accesApres || eleve.acces)};
     },
     (id, t, type) => messages.push([id, t, type]), (e, zone) => erreurs.push([e.message, zone]),
-    (el, ajouts, acces) => { reportes.push([el.id, ajouts]); el.ajouts = ajouts; el.acces = acces; });
+    options.reporterAcces || ((el, ajouts, acces) => { reportes.push([el.id, ajouts]); el.ajouts = ajouts; el.acces = acces; }));
   fermer = f.fermerCeQueVoit;
   f.ouvrirCeQueVoit(eleve);
   const liste = $("voit-liste");
@@ -733,7 +766,8 @@ test("qui voit quoi — chaque clic enregistre l'état complet (eleves.acces) et
   const quatre = r.caseNumero("mondes", 4);
   quatre.checked = true;
   await r.f.changerCeQueVoit({cle: "splat", liste: "mondes", numero: 4, ouvre: true}, quatre);
-  assert.deepEqual(r.appels, [["eleves.acces", {eleve_id: 16, ajouts: {splat: {mondes: [3, 4]}}}]]);
+  assert.deepEqual(r.appels, [["eleves.acces", {eleve_id: 16, avant: {splat: {mondes: [3]}}, ajouts: {splat: {mondes: [3, 4]}}}]],
+    "lot 3c : « avant », l'état rangé tel que la page le connaît, part avec l'état voulu");
   assert.deepEqual(r.reportes, [[16, {splat: {mondes: [3, 4]}}]], "le rangé et le calculé sont reportés sur l'élève");
   assert.deepEqual(r.messages.at(-1), ["voit-message", "Enregistré : le monde 4 est ouvert à Lucas.", "ok"]);
   // Le dernier monde retiré : la clé part, rien d'autre.
@@ -749,7 +783,7 @@ test("qui voit quoi — chaque clic enregistre l'état complet (eleves.acces) et
   r3.caseAppli("coffres").checked = false;
   r3.caseAppli("coffres").changer();
   await new Promise(fin => setTimeout(fin, 5));
-  assert.deepEqual(r3.appels, [["eleves.acces", {eleve_id: 22, ajouts: {}}]]);
+  assert.deepEqual(r3.appels, [["eleves.acces", {eleve_id: 22, avant: {coffres: {}}, ajouts: {}}]]);
   assert.deepEqual(r3.messages.at(-1), ["voit-message", "Enregistré : Rania ne voit plus Coffres magiques.", "ok"]);
   // Le serveur refuse : la case revient, les cases redeviennent cliquables, le message est dans la fenêtre.
   const panne = fenetreRejouee(RANIA(), {echec: new Error("Le serveur doit être mis à niveau : ouvre migrer.php avec ton mot de passe d'installation.")});
@@ -963,10 +997,321 @@ test("qui voit quoi 3b — une erreur qui arrive fenêtre fermée : le message v
   assert.equal(r.caseAppli("coffres").disabled, false);
 });
 
-test("qui voit quoi 3b — les envois font la queue : chacun calcule son état AU MOMENT DE PARTIR", () => {
+test("qui voit quoi 3b — les envois font la queue (par élève depuis 3c) : chacun calcule son état AU MOMENT DE PARTIR", () => {
   const changer = fonction("changerCeQueVoit"), envoyer = fonction("envoyerCeQueVoit");
   assert.doesNotMatch(changer, /ajoutsApres/, "pas d'état calculé au moment du clic");
-  assert.match(changer, /const tour = voitFile\.then\(\(\) => envoyerCeQueVoit\(eleve, geste, caseCochee, ouverture\)\);\s*voitFile = tour\.catch\(\(\) => \{\}\);/);
-  assert.match(envoyer, /const ajouts = ajoutsApres\(eleve\.ajouts, geste\);\s*const reponse = await api\("eleves\.acces"/);
+  assert.match(changer, /const file = voitFiles\.get\(eleve\.id\) \|\| Promise\.resolve\(\);\s*const tour = file\.then\(\(\) => envoyerCeQueVoit\(eleve, geste, caseCochee, ouverture, classeDepart\)\);\s*voitFiles\.set\(eleve\.id, tour\.catch\(\(\) => \{\}\)\);/);
+  assert.match(envoyer, /const avant = eleve\.ajouts \|\| \{\};\s*const ajouts = ajoutsApres\(eleve\.ajouts, geste\);\s*const reponse = await api\("eleves\.acces", \{eleve_id: eleve\.id, avant, ajouts\}, \{signal: garde\.signal\}\);/);
   assert.match(fonction("ouvrirCeQueVoit"), /voitOuverture \+= 1;/);
+});
+
+// ------------------------------------------------------------ lot 3c : le serveur refuse un état périmé (seconde relecture Codex, 22/10 au soir)
+//
+// La queue du 3b ne protège que ce qu'UNE fenêtre sait. Deux onglets sur le
+// même élève, ou une réponse perdue en route, font envoyer un état complet
+// FAUX — et le serveur, qui remplace tout, rouvrait un monde retiré ailleurs.
+// Désormais chaque envoi porte « avant » ; le faux serveur ci-dessous (options
+// .base) applique la règle du vrai : il n'écrit que si « avant » est encore sa
+// colonne, sinon 409 avec l'état vrai. Les sabotages : voir
+// qui-voit-quoi-lot-3c-sabotages.py dans le dossier du lot.
+
+const baseLucas = mondes => ({ajouts: {splat: {mondes}}});
+const lucasQuiCroit = mondes => ({...LUCAS(), ajouts: {splat: {mondes}}, acces: accesLucas({splat: {mondes}})});
+const mondesCoches = r => [3, 4, 5, 6].map(n => r.caseNumero("mondes", n).checked);
+
+test("qui voit quoi 3c — deux onglets sur Lucas : A retire le 4, B (en retard) ajoute le 5 → B est refusé, la base garde le 4 fermé, B se met à jour", async () => {
+  const base = baseLucas([3, 4]);
+  const a = fenetreRejouee(lucasQuiCroit([3, 4]), {base, accesDe: accesLucas});
+  const b = fenetreRejouee(lucasQuiCroit([3, 4]), {base, accesDe: accesLucas});
+  const quatreA = a.caseNumero("mondes", 4);
+  quatreA.checked = false;
+  await a.f.changerCeQueVoit({cle: "splat", liste: "mondes", numero: 4, ouvre: false}, quatreA);
+  assert.deepEqual(base.ajouts, {splat: {mondes: [3]}}, "A a retiré le 4");
+  // B croit encore à [3, 4] et coche le 5.
+  const cinqB = b.caseNumero("mondes", 5);
+  cinqB.checked = true;
+  await b.f.changerCeQueVoit({cle: "splat", liste: "mondes", numero: 5, ouvre: true}, cinqB);
+  assert.deepEqual(b.appels.at(-1)[1], {eleve_id: 16, avant: {splat: {mondes: [3, 4]}}, ajouts: {splat: {mondes: [3, 4, 5]}}}, "B envoie ce qu'il croit");
+  assert.deepEqual(base.ajouts, {splat: {mondes: [3]}}, "LE point : la base n'a pas pris [3, 4, 5], le 4 reste fermé");
+  assert.deepEqual(b.reportes.at(-1), [16, {splat: {mondes: [3]}}], "B reporte l'état vrai reçu avec le 409");
+  assert.deepEqual(mondesCoches(b), [true, false, false, false], "la fenêtre de B se redessine : 4 et 5 décochés");
+  assert.ok([3, 4, 5, 6].every(n => !b.caseNumero("mondes", n).disabled), "et redevient cliquable");
+  assert.deepEqual(b.erreurs, [["Ce que voit Lucas a changé ailleurs : la fenêtre est à jour, refais ton clic.", "voit-message"]], "le message, dans la fenêtre");
+  assert.ok(!b.messages.some(([, t]) => t.startsWith("Enregistré")), "rien d'« Enregistré » pour un clic refusé");
+  assert.equal(b.f.enAttente(), 0);
+  // B refait son clic : il part de l'état vrai et passe.
+  const cinqB2 = b.caseNumero("mondes", 5);
+  cinqB2.checked = true;
+  await b.f.changerCeQueVoit({cle: "splat", liste: "mondes", numero: 5, ouvre: true}, cinqB2);
+  assert.deepEqual(b.appels.at(-1)[1], {eleve_id: 16, avant: {splat: {mondes: [3]}}, ajouts: {splat: {mondes: [3, 5]}}});
+  assert.deepEqual(base.ajouts, {splat: {mondes: [3, 5]}});
+  assert.deepEqual(b.messages.at(-1), ["voit-message", "Enregistré : le monde 5 est ouvert à Lucas.", "ok"]);
+  // A, lui, est en retard maintenant : son prochain clic sera refusé de la même façon.
+  const sixA = a.caseNumero("mondes", 6);
+  sixA.checked = true;
+  await a.f.changerCeQueVoit({cle: "splat", liste: "mondes", numero: 6, ouvre: true}, sixA);
+  assert.deepEqual(base.ajouts, {splat: {mondes: [3, 5]}}, "A n'a pas écrasé le 5 de B");
+  assert.deepEqual(mondesCoches(a), [true, false, true, false], "A voit maintenant le 5 ouvert par B");
+});
+
+test("qui voit quoi 3c — une réponse perdue : le serveur a écrit [3], la page le croit à [3, 4] ; cocher 5 est refusé, jamais [3, 4, 5] en base", async () => {
+  const base = baseLucas([3, 4]);
+  let perdre = true;
+  const r = fenetreRejouee(lucasQuiCroit([3, 4]), {base, accesDe: accesLucas, perdre: () => perdre});
+  const quatre = r.caseNumero("mondes", 4);
+  quatre.checked = false;
+  await r.f.changerCeQueVoit({cle: "splat", liste: "mondes", numero: 4, ouvre: false}, quatre);
+  assert.deepEqual(base.ajouts, {splat: {mondes: [3]}}, "le serveur a bien écrit…");
+  assert.deepEqual(r.erreurs, [["Le serveur n’a pas répondu : recharge la page pour vérifier les accès de Lucas avant de recommencer.", "voit-message"]],
+    "…mais la page a reçu une erreur réseau (« Failed to fetch » du navigateur, dit en français)");
+  assert.deepEqual(r.reportes, [], "elle n'a rien reporté : elle croit toujours à [3, 4]");
+  assert.deepEqual(mondesCoches(r), [true, true, false, false], "la case 4 est revenue cochée (c'est ce que la page croit)");
+  // Le clic suivant : « avant » dit [3, 4], la base dit [3] → 409, l'état vrai arrive.
+  perdre = false;
+  const cinq = r.caseNumero("mondes", 5);
+  cinq.checked = true;
+  await r.f.changerCeQueVoit({cle: "splat", liste: "mondes", numero: 5, ouvre: true}, cinq);
+  assert.deepEqual(base.ajouts, {splat: {mondes: [3]}}, "LE point : la base ne vaut pas [3, 4, 5]");
+  assert.deepEqual(r.reportes, [[16, {splat: {mondes: [3]}}]]);
+  assert.deepEqual(mondesCoches(r), [true, false, false, false], "la fenêtre dit enfin la vérité : le 4 est fermé");
+  assert.equal(r.erreurs.at(-1)[0], "Ce que voit Lucas a changé ailleurs : la fenêtre est à jour, refais ton clic.");
+  assert.equal(r.erreurs.at(-1)[1], "voit-message");
+  // Refait : ça passe, sans le 4.
+  const cinq2 = r.caseNumero("mondes", 5);
+  cinq2.checked = true;
+  await r.f.changerCeQueVoit({cle: "splat", liste: "mondes", numero: 5, ouvre: true}, cinq2);
+  assert.deepEqual(base.ajouts, {splat: {mondes: [3, 5]}});
+  assert.deepEqual(mondesCoches(r), [true, false, true, false]);
+});
+
+test("qui voit quoi 3c — un envoi qui traîne ne grise que la fenêtre de SON élève ; celle d'un autre élève reste cliquable", async () => {
+  const lucas = lucasQuiCroit([3]);
+  const r = fenetreRejouee(lucas, {retenir: true, accesDe: accesLucas});
+  const quatre = r.caseNumero("mondes", 4);
+  quatre.checked = true;
+  const envoi = r.f.changerCeQueVoit({cle: "splat", liste: "mondes", numero: 4, ouvre: true}, quatre);
+  await tic();
+  assert.equal(r.f.enAttente(16), 1);
+  r.boite.close();
+  // Alice, pendant que Lucas attend : rien n'est grisé chez elle.
+  const alice = ALICE();
+  r.f.ouvrirCeQueVoit(alice);
+  assert.equal(r.$("voit-titre").textContent, "Ce que voit Alice");
+  assert.equal(r.liste.attributs["aria-busy"], "false", "la fenêtre d'Alice n'attend rien");
+  assert.ok(r.liste.tous(n => n.tag === "input" && n.dataset.liste).some(c => !c.disabled), "ses mondes à cocher sont cliquables");
+  assert.equal(r.caseAppli("coffres").disabled, false);
+  assert.equal(r.f.enAttente(1), 0);
+  // Et son clic part tout de suite : il ne fait pas la queue derrière Lucas.
+  const coffresAlice = r.caseAppli("coffres");
+  coffresAlice.checked = false;
+  const envoiAlice = r.f.changerCeQueVoit({cle: "coffres", ouvre: false}, coffresAlice);
+  await tic();
+  assert.deepEqual(r.appels.map(([, corps]) => corps.eleve_id), [16, 1], "l'envoi d'Alice est parti pendant que celui de Lucas attend");
+  assert.equal(r.f.enAttente(1), 1);
+  // Lucas, rouvert : grisé, lui, jusqu'à sa réponse.
+  r.boite.close();
+  r.f.ouvrirCeQueVoit(lucas);
+  assert.equal(r.liste.attributs["aria-busy"], "true");
+  assert.ok(r.liste.tous(n => n.tag === "input").every(c => c.disabled), "tout est grisé chez Lucas");
+  await libererTout(r);
+  await Promise.all([envoi, envoiAlice]);
+  assert.equal(r.f.enAttente(), 0, "plus rien n'attend");
+  assert.ok([4, 5, 6].every(n => !r.caseNumero("mondes", n).disabled), "Lucas redevient cliquable après la réponse");
+  assert.deepEqual(lucas.ajouts, {splat: {mondes: [3, 4]}});
+  assert.deepEqual(alice.ajouts, {splat: {mondes: [3]}}, "Alice a perdu Coffres, chacun son enregistrement");
+  // Une erreur chez Lucas ne grise pas Alice non plus, et se libère.
+  const panne = fenetreRejouee(lucasQuiCroit([3]), {retenir: true, echec: new Error("Le serveur ne répond pas.")});
+  const cinq = panne.caseNumero("mondes", 5);
+  cinq.checked = true;
+  const envoiRate = panne.f.changerCeQueVoit({cle: "splat", liste: "mondes", numero: 5, ouvre: true}, cinq);
+  await tic();
+  panne.boite.close();
+  panne.f.ouvrirCeQueVoit(ALICE());
+  assert.equal(panne.liste.attributs["aria-busy"], "false");
+  await libererTout(panne);
+  await envoiRate;
+  assert.equal(panne.f.enAttente(), 0);
+});
+
+// Borné à 3 s : sans le délai de la page, ce test ne finirait jamais (c'est le
+// sabotage « plus de délai » qui le fait rougir).
+test("qui voit quoi 3c — le serveur ne répond jamais : au bout du délai, la case revient, le message le dit, la fenêtre se libère, rien n'est reporté", {timeout: 3000}, async () => {
+  const lucas = lucasQuiCroit([3]);
+  const r = fenetreRejouee(lucas, {muet: true, delai: 40});
+  assert.equal(r.f.delai(), 40);
+  const quatre = r.caseNumero("mondes", 4);
+  quatre.checked = true;
+  const debut = Date.now();
+  const envoi = r.f.changerCeQueVoit({cle: "splat", liste: "mondes", numero: 4, ouvre: true}, quatre);
+  await tic();
+  assert.equal(r.liste.attributs["aria-busy"], "true", "pendant : grisé");
+  await envoi;
+  assert.ok(Date.now() - debut >= 35, "l'attente a bien duré le délai");
+  assert.deepEqual(r.erreurs, [["Le serveur n’a pas répondu : recharge la page pour vérifier les accès de Lucas avant de recommencer.", "voit-message"]]);
+  assert.equal(quatre.checked, false, "la case revient");
+  assert.deepEqual(mondesCoches(r), [true, false, false, false]);
+  assert.ok([4, 5, 6].every(n => !r.caseNumero("mondes", n).disabled), "la fenêtre redevient cliquable");
+  assert.equal(r.liste.attributs["aria-busy"], "false");
+  assert.deepEqual(r.reportes, [], "rien n'est reporté sur l'élève");
+  assert.deepEqual(lucas.ajouts, {splat: {mondes: [3]}}, "la page garde ce qu'elle savait : le clic suivant partira avec cet « avant »");
+  assert.equal(r.f.enAttente(), 0);
+  // Le vrai api() transmet le signal au fetch : c'est lui qui coupe la demande.
+  const debutApi = script.indexOf("async function api(action, corps = {}, options = {})");
+  assert.ok(debutApi > 0, "api() prend des options");
+  assert.match(script.slice(debutApi, script.indexOf("function messager", debutApi)), /cache: "no-store",\s*signal: options\.signal/);
+  assert.match(fonction("envoyerCeQueVoit"), /const garde = new AbortController\(\);\s*const minuteur = setTimeout\(\(\) => garde\.abort\(\), DELAI_ACCES_MS\);/);
+  assert.match(constante("DELAI_ACCES_MS"), /= 15000;/);
+});
+
+test("qui voit quoi 3c — une réponse arrivée après « Se déconnecter » (ou après une autre classe) n'est pas traitée : la VRAIE reporterAcces n'est pas appelée, aucune erreur", async () => {
+  // La vraie reporterAcces, avec ce qu'elle touche : les tableaux lus et le
+  // redessin du tableau — qui, lui, lit classe.libelle (c'est là que l'écran
+  // de connexion affichait « Cannot read properties of null (reading
+  // 'libelle') », relevé par Codex).
+  for (const apres of ["deconnexion", "autre classe"]) {
+    const lucas = lucasQuiCroit([3]);
+    const tableaux = {splat: [{...lucas, parcours: null}]};
+    const dessins = [];
+    let classeCourante = () => null;
+    const vraie = new Function("tableaux", "redessin", "poserEnPlusPour", "lireSplat",
+      `${fonction("reporterAcces")}\nreturn reporterAcces;`)(
+      tableaux, {demander: () => { dessins.push(classeCourante().libelle); return true; }}, () => {}, () => ({}));
+    const r = fenetreRejouee(lucas, {retenir: true, accesDe: accesLucas, reporterAcces: vraie});
+    classeCourante = r.f.classe;
+    const quatre = r.caseNumero("mondes", 4);
+    quatre.checked = true;
+    const envoi = r.f.changerCeQueVoit({cle: "splat", liste: "mondes", numero: 4, ouvre: true}, quatre);
+    await tic();
+    // Entre-temps : « Se déconnecter » (oublierEtat + viderZones), ou une autre classe ouverte.
+    r.boite.close();
+    r.f.poserClasse(apres === "deconnexion" ? null : {...classe405(), id: 8, libelle: "406"});
+    r.messages.length = 0;
+    await libererTout(r);
+    await envoi; // ne doit pas rejeter
+    assert.deepEqual(dessins, [], `${apres} : le tableau n'est pas redessiné (et classe.libelle n'est pas lu)`);
+    assert.deepEqual(lucas.ajouts, {splat: {mondes: [3]}}, `${apres} : rien n'est reporté sur l'élève`);
+    assert.deepEqual(tableaux.splat[0].ajouts, {splat: {mondes: [3]}}, `${apres} : ni dans les tableaux lus`);
+    assert.deepEqual([r.messages, r.erreurs], [[], []], `${apres} : aucun message, aucune erreur`);
+    assert.equal(r.f.enAttente(), 0, `${apres} : les compteurs sont quand même libérés`);
+    assert.equal(r.$("voit-message").textContent, "");
+  }
+  // Et la même réponse, classe inchangée : la vraie reporterAcces passe bien par là.
+  const lucas = lucasQuiCroit([3]);
+  const tableaux = {splat: [{...lucas, parcours: null}]};
+  const dessins = [];
+  const vraie = new Function("tableaux", "redessin", "poserEnPlusPour", "lireSplat",
+    `${fonction("reporterAcces")}\nreturn reporterAcces;`)(tableaux, {demander: () => { dessins.push(1); return true; }}, () => {}, () => ({}));
+  const r = fenetreRejouee(lucas, {accesDe: accesLucas, reporterAcces: vraie});
+  const quatre = r.caseNumero("mondes", 4);
+  quatre.checked = true;
+  await r.f.changerCeQueVoit({cle: "splat", liste: "mondes", numero: 4, ouvre: true}, quatre);
+  assert.deepEqual([dessins, lucas.ajouts, tableaux.splat[0].ajouts], [[1], {splat: {mondes: [3, 4]}}, {splat: {mondes: [3, 4]}}]);
+  // Et à la déconnexion, la page ne vide PAS ses compteurs (3d) : chaque envoi
+  // décompte le sien à l'arrivée, vider ferait décompter sur la session suivante.
+  assert.doesNotMatch(fonction("oublierEtat"), /voitAttentes\.clear|voitFiles\.clear/);
+});
+
+test("qui voit quoi 3c — un 409 arrivé fenêtre fermée : l'élève est mis à jour, le message va sous les boutons d'Élèves ; rouverte, la fenêtre dit l'état vrai", async () => {
+  const base = baseLucas([3]);
+  const lucas = lucasQuiCroit([3, 4]);
+  const r = fenetreRejouee(lucas, {retenir: true, base, accesDe: accesLucas});
+  const cinq = r.caseNumero("mondes", 5);
+  cinq.checked = true;
+  const envoi = r.f.changerCeQueVoit({cle: "splat", liste: "mondes", numero: 5, ouvre: true}, cinq);
+  await tic();
+  r.boite.close();
+  await libererTout(r);
+  await envoi;
+  assert.deepEqual(base.ajouts, {splat: {mondes: [3]}});
+  assert.deepEqual(lucas.ajouts, {splat: {mondes: [3]}}, "l'état vrai est reporté même fenêtre fermée");
+  assert.deepEqual(r.erreurs, [["Ce que voit Lucas a changé ailleurs : la fenêtre est à jour, refais ton clic.", "message-classe"]]);
+  assert.equal(r.$("voit-liste").textContent, "", "rien n'est redessiné dans une fenêtre fermée");
+  r.f.ouvrirCeQueVoit(lucas);
+  assert.deepEqual(mondesCoches(r), [true, false, false, false]);
+});
+
+test("qui voit quoi 3c — un 409 arrivé dans une fenêtre ROUVERTE sur le même élève : elle se redessine à l'état vrai et le message s'y écrit (pas derrière elle)", async () => {
+  const base = baseLucas([3]);
+  const lucas = lucasQuiCroit([3, 4]);
+  const r = fenetreRejouee(lucas, {retenir: true, base, accesDe: accesLucas});
+  const cinq = r.caseNumero("mondes", 5);
+  cinq.checked = true;
+  const envoi = r.f.changerCeQueVoit({cle: "splat", liste: "mondes", numero: 5, ouvre: true}, cinq);
+  await tic();
+  r.boite.close();
+  r.f.ouvrirCeQueVoit(lucas);
+  assert.equal(r.liste.attributs["aria-busy"], "true", "rouverte pendant l'envoi : grisée");
+  await libererTout(r);
+  await envoi;
+  assert.deepEqual(lucas.ajouts, {splat: {mondes: [3]}});
+  assert.deepEqual(mondesCoches(r), [true, false, false, false], "la fenêtre rouverte dit l'état vrai");
+  assert.equal(r.liste.attributs["aria-busy"], "false");
+  assert.deepEqual(r.erreurs, [["Ce que voit Lucas a changé ailleurs : la fenêtre est à jour, refais ton clic.", "voit-message"]],
+    "le message va dans la fenêtre ouverte sur Lucas — sous les boutons, derrière la fenêtre, personne ne le verrait");
+  assert.ok(!r.messages.some(([, t]) => t.startsWith("Enregistré")));
+});
+
+// ------------------------------------------------------------ lot 3d : les attentes quand le contexte change (relecture Codex de la PR #1041)
+
+test("qui voit quoi 3d — la même classe rouverte pendant un envoi : la fenêtre de Lucas (relu) se libère à l'arrivée de la vieille réponse, sans rien reporter", async () => {
+  for (const [variante, options] of [["réponse", {}], ["409", {base: baseLucas([3]), accesDe: accesLucas}], ["panne", {echec: new Error("Le serveur ne répond pas.")}]]) {
+    const ancien = lucasQuiCroit([3, 4]);
+    const r = fenetreRejouee(ancien, {retenir: true, accesDe: accesLucas, ...options});
+    const quatre = r.caseNumero("mondes", 4);
+    quatre.checked = false;
+    const envoi = r.f.changerCeQueVoit({cle: "splat", liste: "mondes", numero: 4, ouvre: false}, quatre);
+    await tic();
+    r.boite.close();
+    // « Toutes mes classes » → la même classe : objets relus, Lucas est un AUTRE objet (même id).
+    r.f.poserClasse({...classe405()});
+    const relu = lucasQuiCroit([3]);
+    r.f.ouvrirCeQueVoit(relu);
+    assert.equal(r.liste.attributs["aria-busy"], "true", `${variante} : rouverte pendant l'envoi, grisée`);
+    r.messages.length = 0;
+    await libererTout(r);
+    await envoi;
+    assert.equal(r.liste.attributs["aria-busy"], "false", `${variante} : plus rien n'est en route, la fenêtre se libère`);
+    assert.ok([4, 5, 6].every(n => !r.caseNumero("mondes", n).disabled), `${variante} : les cases redeviennent cliquables`);
+    assert.deepEqual(mondesCoches(r), [true, false, false, false], `${variante} : dessinée d'après l'élève RELU, pas d'après la vieille réponse`);
+    assert.deepEqual([ancien.ajouts, relu.ajouts], [{splat: {mondes: [3, 4]}}, {splat: {mondes: [3]}}], `${variante} : rien n'est reporté`);
+    assert.deepEqual([r.messages, r.erreurs], [[], []], `${variante} : aucun message`);
+    assert.equal(r.f.enAttente(16), 0);
+  }
+});
+
+test("qui voit quoi 3d — 401 puis reconnexion : la vieille réponse ne décompte pas l'attente du nouvel envoi, la fenêtre reste grisée jusqu'à SA réponse", async () => {
+  const ancien = lucasQuiCroit([3, 4]);
+  const r = fenetreRejouee(ancien, {retenir: true, accesDe: accesLucas});
+  const quatre = r.caseNumero("mondes", 4);
+  quatre.checked = false;
+  const envoiA = r.f.changerCeQueVoit({cle: "splat", liste: "mondes", numero: 4, ouvre: false}, quatre);
+  await tic();
+  r.boite.close();
+  // Un 401 ailleurs : « Se déconnecter » (la vraie oublierEtat), puis reconnexion sur la même classe.
+  r.f.deconnecter();
+  assert.equal(r.f.classe(), null);
+  r.f.poserClasse({...classe405()});
+  const nouveau = lucasQuiCroit([3]);
+  r.f.ouvrirCeQueVoit(nouveau);
+  assert.equal(r.liste.attributs["aria-busy"], "true", "l'ancien envoi est toujours en route : grisée");
+  const cinq = r.caseNumero("mondes", 5);
+  cinq.checked = true;
+  const envoiB = r.f.changerCeQueVoit({cle: "splat", liste: "mondes", numero: 5, ouvre: true}, cinq);
+  await tic();
+  assert.equal(r.f.enAttente(16), 2, "deux envois en route pour Lucas");
+  // La vieille réponse arrive seule.
+  r.enAttente.shift()();
+  await envoiA;
+  await tic();
+  assert.equal(r.f.enAttente(16), 1, "LE point : il reste l'attente du nouvel envoi");
+  assert.equal(r.liste.attributs["aria-busy"], "true", "la fenêtre reste grisée jusqu'à SA réponse");
+  assert.deepEqual(nouveau.ajouts, {splat: {mondes: [3]}}, "rien de l'ancienne session n'est reporté");
+  // Puis la nouvelle.
+  await libererTout(r);
+  await envoiB;
+  assert.equal(r.f.enAttente(16), 0);
+  assert.equal(r.liste.attributs["aria-busy"], "false");
+  assert.deepEqual(nouveau.ajouts, {splat: {mondes: [3, 5]}});
+  assert.deepEqual(mondesCoches(r), [true, false, true, false]);
+  assert.deepEqual(r.messages.at(-1), ["voit-message", "Enregistré : le monde 5 est ouvert à Lucas.", "ok"]);
 });

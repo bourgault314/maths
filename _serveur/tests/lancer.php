@@ -3143,6 +3143,7 @@ function jouer_action_lot11(string $action, array $lot11, string $jeton): int
             break;
         case 'eleves.acces': // rien en plus : la colonne reste vide, le droit seul est éprouvé
             $corps['eleve_id'] = $lot11['eleve']['id'];
+            $corps['avant'] = new stdClass();
             $corps['ajouts'] = new stdClass();
             break;
     }
@@ -3637,7 +3638,7 @@ verifier("lot A — le journal écrit UNE ligne par action du professeur", funct
     ecrire($eleves[0]['code'], ['version' => 1, 'expert' => 1], 1);
     appel('/api/prof.php', ['action' => 'eleves.restaurer', 'eleve_id' => $eleveId], ['jeton' => $jetonS1]);
     appel('/api/prof.php', ['action' => 'eleves.regenerer', 'eleve_id' => $eleveId], ['jeton' => $jetonS1]);
-    appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $eleveId, 'ajouts' => ['coffres' => new stdClass()]], ['jeton' => $jetonS1]);
+    appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $eleveId, 'avant' => new stdClass(), 'ajouts' => ['coffres' => new stdClass()]], ['jeton' => $jetonS1]);
     appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classe, 'libelle' => 'lot-A-journal-2'], ['jeton' => $jetonS1]);
     appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $classe, 'prof_id' => $claireId, 'droit' => 'lecture'], ['jeton' => $jetonS1]);
     appel('/api/prof.php', ['action' => 'partages.supprimer', 'classe_id' => $classe, 'prof_id' => $claireId], ['jeton' => $jetonS1]);
@@ -4640,6 +4641,17 @@ function ajouts_en_base(int $eleveId): ?string
     return $valeur === false ? null : $valeur;
 }
 
+// Lot 3c : eleves.acces exige « avant », l'état rangé tel que la page le
+// connaît. Ici, sauf quand le test en donne un autre, c'est ce que la colonne
+// contient, lu comme le serveur le lit (ajouts_lus) et écrit comme il le rend
+// à la page (ajouts_json) — exactement ce que la page renverrait.
+function donner(int $eleveId, mixed $ajouts, string $jeton, mixed $avant = 'colonne'): array
+{
+    require_once dirname(__DIR__) . '/public/lib/applis.php';
+    if ($avant === 'colonne') $avant = ajouts_json(ajouts_lus(ajouts_en_base($eleveId)));
+    return appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $eleveId, 'avant' => $avant, 'ajouts' => $ajouts], ['jeton' => $jeton]);
+}
+
 verifier("qui-voit-quoi — la règle « classe + ajouts » : les cinq lignes de la conception, et les cas tordus", function () {
     require_once dirname(__DIR__) . '/public/lib/applis.php';
     // La classe 405 : Défi tables + SPLAT! mondes 1 et 2.
@@ -4726,8 +4738,7 @@ verifier("qui-voit-quoi — par défaut rien en plus : le tableau rend « ajouts
 verifier("qui-voit-quoi — eleves.acces range les ajouts, répond le rangé et le calculé, et l'élève voit la différence par son code et par le billet", function () use (&$jetonS1, &$qvq) {
     vider_compteurs();
     $lea = (int)$qvq['lea']['id'];
-    $r = appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $lea,
-        'ajouts' => ['coffres' => new stdClass(), 'splat' => ['mondes' => [3, 3, 2]]]], ['jeton' => $jetonS1]);
+    $r = donner($lea, ['coffres' => new stdClass(), 'splat' => ['mondes' => [3, 3, 2]]], $jetonS1);
     egal(200, $r['code'], $r['texte']);
     egal(['coffres' => [], 'splat' => ['mondes' => [2, 3]]], $r['json']['ajouts'], 'le rangé : trié, sans doublon');
     vrai(str_contains($r['texte'], '"ajouts":{"coffres":{},"splat":{"mondes":[2,3]}}'), 'Coffres entière s’écrit « {} »');
@@ -4761,19 +4772,19 @@ verifier("qui-voit-quoi — eleves.acces range les ajouts, répond le rangé et 
     egal(200, $tc['code'], 'le tableau Coffres d’une classe sans Coffres');
     egal(3, count($tc['json']['eleves']), 'la classe entière y est listée');
     // Tout envoyer remplace tout : « {} » efface, et l'élève revient à sa classe.
-    $r = appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $lea, 'ajouts' => new stdClass()], ['jeton' => $jetonS1]);
+    $r = donner($lea, new stdClass(), $jetonS1);
     egal(200, $r['code']);
     vrai(str_contains($r['texte'], '"ajouts":{}'), 'réponse « {} »');
     egal(null, ajouts_en_base($lea), 'en base : NULL, comme un élève à qui on n’a jamais rien donné');
     egal(['defi-tables', 'splat'], array_column(identite($qvq['lea']['code'])['json']['applis'], 'cle'), 'Léa revoit sa classe, rien de plus');
     // SPLAT! entière (« {} ») à Léa, dont la classe n'a que les mondes 1 et 2 : tout ouvert.
-    $r = appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $lea, 'ajouts' => ['splat' => new stdClass()]], ['jeton' => $jetonS1]);
+    $r = donner($lea, ['splat' => new stdClass()], $jetonS1);
     egal(200, $r['code']);
     egal([], $r['json']['acces']['reglages'], 'SPLAT! entière : plus aucun monde fermé pour elle');
     vrai(str_contains(identite($qvq['lea']['code'])['texte'], '"reglages":{}'), 'par le code : « {} », tout ouvert');
     // Un envoi partiel remplace aussi : on ne fusionne pas.
-    appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $lea, 'ajouts' => ['coffres' => new stdClass()]], ['jeton' => $jetonS1]);
-    appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $lea, 'ajouts' => ['splat' => ['mondes' => [3]]]], ['jeton' => $jetonS1]);
+    donner($lea, ['coffres' => new stdClass()], $jetonS1);
+    donner($lea, ['splat' => ['mondes' => [3]]], $jetonS1);
     egal('{"splat":{"mondes":[3]}}', ajouts_en_base($lea), 'le second envoi a remplacé le premier (la fenêtre envoie tout son état)');
 });
 
@@ -4803,13 +4814,108 @@ verifier("qui-voit-quoi — une valeur fausse est refusée avec un message, et r
         [['coffres' => ['operations' => [5]]], 'Opération inconnue.', 'une opération de Coffres qui n’existe pas'],
         [['coffres' => new stdClass(), 'splat' => ['mondes' => [9]]], 'Monde inconnu.', 'un bon et un mauvais : tout est refusé'],
     ] as [$ajouts, $message, $quoi]) {
-        $r = appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $lea, 'ajouts' => $ajouts], ['jeton' => $jetonS1]);
+        $r = donner($lea, $ajouts, $jetonS1);
         egal(400, $r['code'], "$quoi : refusé");
         egal($message, $r['json']['erreur'] ?? null, "$quoi : le message");
     }
     egal($avant, ajouts_en_base($lea), 'la colonne n’a pas bougé');
     // Un élève qui n'existe pas : introuvable, comme partout.
-    egal(404, appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => 999999, 'ajouts' => new stdClass()], ['jeton' => $jetonS1])['code']);
+    egal(404, donner(999999, new stdClass(), $jetonS1)['code']);
+});
+
+// Lot 3c (relecture Codex du 22/10 au soir) : la page envoie « avant », l'état
+// rangé tel qu'elle le connaît ; le serveur n'écrit que si la colonne le
+// contient encore. Un onglet en retard (ou une réponse perdue en route) ne
+// peut plus rouvrir un monde retiré ailleurs : il reçoit 409 et l'état vrai.
+verifier("qui-voit-quoi 3c — « avant » égal : écrit ; égal dans un autre ordre : écrit ; différent : 409 avec l'état actuel, rien d'écrit ; absent ou illisible : 400", function () use (&$jetonS1, &$qvq) {
+    vider_compteurs();
+    $lea = (int)$qvq['lea']['id'];
+    $lucas = (int)$qvq['lucas']['id'];
+    egal('{"splat":{"mondes":[3]}}', ajouts_en_base($lea), 'point de départ : Léa a le monde 3');
+    // Égal : on ouvre le 4.
+    $r = donner($lea, ['splat' => ['mondes' => [3, 4]]], $jetonS1, ['splat' => ['mondes' => [3]]]);
+    egal(200, $r['code'], $r['texte']);
+    egal('{"splat":{"mondes":[3,4]}}', ajouts_en_base($lea), 'écrit');
+    // Égal mais écrit autrement : numéros dans le désordre, applis et réglages dans un autre ordre.
+    $r = donner($lea, ['coffres' => ['niveaux' => [2], 'operations' => [1]], 'splat' => ['mondes' => [3, 4]]], $jetonS1, ['splat' => ['mondes' => [4, 3]]]);
+    egal(200, $r['code'], 'numéros dans le désordre : c’est le même état');
+    $r = donner($lea, ['coffres' => ['niveaux' => [2], 'operations' => [1]], 'splat' => ['mondes' => [4]]], $jetonS1,
+        ['splat' => ['mondes' => [3, 4]], 'coffres' => ['operations' => [1], 'niveaux' => [2]]]);
+    egal(200, $r['code'], 'applis et réglages dans un autre ordre : c’est le même état');
+    egal('{"coffres":{"niveaux":[2],"operations":[1]},"splat":{"mondes":[4]}}', ajouts_en_base($lea));
+    // Différent : 409, l'état actuel dans la réponse, la colonne intacte, pas de ligne au journal.
+    bd_test()->exec('DELETE FROM journal');
+    $r = donner($lea, ['splat' => ['mondes' => [4, 5]]], $jetonS1, ['splat' => ['mondes' => [4]]]);
+    egal(409, $r['code'], 'un « avant » qui oublie Coffres : refusé');
+    egal(false, $r['json']['ok']);
+    egal("Ce que voit Léa a changé ailleurs : la fenêtre est à jour, refais ton clic.", $r['json']['erreur'] ?? null, 'le message, avec le prénom');
+    egal(['coffres' => ['niveaux' => [2], 'operations' => [1]], 'splat' => ['mondes' => [4]]], $r['json']['ajouts'], 'l’état rangé part avec le refus');
+    egal(['applis' => ['defi-tables', 'coffres', 'splat'], 'reglages' => ['coffres' => ['niveaux' => [2], 'operations' => [1]], 'splat' => ['mondes' => [1, 2, 4]]]],
+        $r['json']['acces'], 'et le calculé');
+    vrai(!str_contains($r['texte'], $qvq['lea']['code']), 'jamais le code');
+    egal('{"coffres":{"niveaux":[2],"operations":[1]},"splat":{"mondes":[4]}}', ajouts_en_base($lea), 'rien n’est écrit');
+    egal(0, (int)bd_test()->query("SELECT COUNT(*) FROM journal WHERE action = 'eleves.acces'")->fetchColumn(), 'un 409 n’écrit pas au journal : rien n’a été fait');
+    // Le scénario de Codex, à plat : départ [3, 4] ; l'onglet A retire le 4 ;
+    // l'onglet B, en retard, croit encore à [3, 4] et ajoute le 5.
+    donner($lucas, ['splat' => ['mondes' => [3, 4]]], $jetonS1, new stdClass());
+    $a = donner($lucas, ['splat' => ['mondes' => [3]]], $jetonS1, ['splat' => ['mondes' => [3, 4]]]);
+    egal(200, $a['code'], 'A retire le 4');
+    $b = donner($lucas, ['splat' => ['mondes' => [3, 4, 5]]], $jetonS1, ['splat' => ['mondes' => [3, 4]]]);
+    egal(409, $b['code'], 'B, en retard, est refusé');
+    egal("Ce que voit cet élève a changé ailleurs : la fenêtre est à jour, refais ton clic.", $b['json']['erreur'], 'sans prénom : « cet élève »');
+    egal(['splat' => ['mondes' => [3]]], $b['json']['ajouts'], 'B reçoit l’état vrai : le 4 est bien fermé');
+    egal('{"splat":{"mondes":[3]}}', ajouts_en_base($lucas), 'le 4 reste fermé');
+    // B refait son clic d'après ce qu'il vient de recevoir : ça passe.
+    $b = donner($lucas, ['splat' => ['mondes' => [3, 5]]], $jetonS1, ['splat' => ['mondes' => [3]]]);
+    egal(200, $b['code']);
+    egal('{"splat":{"mondes":[3,5]}}', ajouts_en_base($lucas));
+    // Une colonne vide se dit « {} » ; une colonne abîmée se lit comme le
+    // tableau la rend (rien), donc « {} » passe aussi.
+    egal(200, donner((int)$qvq['temoin']['id'], ['coffres' => new stdClass()], $jetonS1, new stdClass())['code'], 'colonne vide, avant « {} »');
+    egal(409, donner((int)$qvq['temoin']['id'], new stdClass(), $jetonS1, new stdClass())['code'], 'colonne pleine, avant « {} » : refusé');
+    bd_test()->prepare('UPDATE eleves SET ajouts = ? WHERE id = ?')->execute(['{"coffres":{"niveaux":[2],"operations":[9]}}', (int)$qvq['temoin']['id']]);
+    egal(200, donner((int)$qvq['temoin']['id'], new stdClass(), $jetonS1, new stdClass())['code'], 'colonne abîmée (se lit « rien ») : « {} » est bien l’état connu');
+    egal(null, ajouts_en_base((int)$qvq['temoin']['id']), 'et le retrait passe : NULL');
+    // Absent ou illisible : 400, et rien n'est écrit — la page et le serveur
+    // se déposent ensemble, une vieille page ne peut pas écrire à l'aveugle.
+    $r = appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $lea, 'ajouts' => new stdClass()], ['jeton' => $jetonS1]);
+    egal(400, $r['code'], 'sans « avant »');
+    egal("Il manque l'état d'avant : recharge la page et refais ton clic.", $r['json']['erreur'] ?? null);
+    foreach ([
+        ['x', 'une chaîne'], [[1, 2], 'une liste'], [null, 'null'], [['splat' => ['mondes' => []]], 'une liste vide'],
+        [['inconnue' => new stdClass()], 'une appli inconnue'], [['splat' => ['mondes' => [9]]], 'un monde qui n’existe pas'],
+    ] as [$avant, $quoi]) {
+        $r = donner($lea, new stdClass(), $jetonS1, $avant);
+        egal(400, $r['code'], "« avant » illisible ($quoi) : refusé");
+        egal("État d'avant illisible : recharge la page et refais ton clic.", $r['json']['erreur'] ?? null, "« avant » illisible ($quoi) : le message");
+    }
+    egal('{"coffres":{"niveaux":[2],"operations":[1]},"splat":{"mondes":[4]}}', ajouts_en_base($lea), 'Léa : rien n’a bougé');
+    // Remise en état pour la suite (le test du collègue part de « monde 3 »).
+    egal(200, donner($lea, ['splat' => ['mondes' => [3]]], $jetonS1)['code']);
+    egal(200, donner($lucas, new stdClass(), $jetonS1)['code']);
+    egal('{"splat":{"mondes":[3]}}', ajouts_en_base($lea));
+});
+
+verifier("qui-voit-quoi 3c — deux demandes au même instant avec le même « avant » : une seule passe, l'autre reçoit 409 (rejoué cinq fois)", function () use (&$jetonS1, &$qvq) {
+    vider_compteurs();
+    $lucas = (int)$qvq['lucas']['id'];
+    for ($tour = 1; $tour <= 5; $tour++) {
+        egal(200, donner($lucas, ['splat' => ['mondes' => [3]]], $jetonS1)['code'], "tour $tour : départ [3]");
+        $reponses = appels_paralleles_mixtes([
+            ['chemin' => '/api/prof.php', 'jeton' => $jetonS1, 'corps' => ['action' => 'eleves.acces', 'eleve_id' => $lucas,
+                'avant' => ['splat' => ['mondes' => [3]]], 'ajouts' => ['splat' => ['mondes' => [3, 4]]]]],
+            ['chemin' => '/api/prof.php', 'jeton' => $jetonS1, 'corps' => ['action' => 'eleves.acces', 'eleve_id' => $lucas,
+                'avant' => ['splat' => ['mondes' => [3]]], 'ajouts' => ['splat' => ['mondes' => [3, 5]]]]],
+        ]);
+        $codes = array_map(fn($r) => $r['code'], $reponses);
+        sort($codes);
+        egal([200, 409], $codes, "tour $tour : une seule passe (codes : " . json_encode($codes) . ')');
+        $gagnant = $reponses[0]['code'] === 200 ? $reponses[0] : $reponses[1];
+        $perdant = $reponses[0]['code'] === 200 ? $reponses[1] : $reponses[0];
+        egal(json_encode($gagnant['json']['ajouts']), ajouts_en_base($lucas), "tour $tour : la base est ce que la gagnante a écrit");
+        egal($gagnant['json']['ajouts'], $perdant['json']['ajouts'], "tour $tour : la perdante reçoit ce que la gagnante a écrit");
+    }
+    egal(200, donner($lucas, new stdClass(), $jetonS1)['code'], 'Lucas remis à rien');
 });
 
 verifier("qui-voit-quoi — le propriétaire seul donne ; un collègue voit « ajouts » et « acces », ne les change pas (refus journalisé)", function () use (&$jetonS1, &$qvq) {
@@ -4824,12 +4930,12 @@ verifier("qui-voit-quoi — le propriétaire seul donne ; un collègue voit « a
     $lea = (int)$qvq['lea']['id'];
     egal('{"splat":{"mondes":[3]}}', ajouts_en_base($lea), 'point de départ');
     // Sans partage : la classe n'existe pas pour lui.
-    egal(404, appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $lea, 'ajouts' => new stdClass()], ['jeton' => $jc])['code'], 'sans partage : introuvable');
+    egal(404, donner($lea, new stdClass(), $jc)['code'], 'sans partage : introuvable');
     bd_test()->exec('DELETE FROM journal');
     foreach (['lecture', 'ecriture'] as $droit) {
         appel('/api/prof.php', ['action' => 'partages.supprimer', 'classe_id' => $qvq['id'], 'prof_id' => $idc], ['jeton' => $jetonS1]);
         egal(200, appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $qvq['id'], 'prof_id' => $idc, 'droit' => $droit], ['jeton' => $jetonS1])['code'], "partage en $droit");
-        $r = appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $lea, 'ajouts' => new stdClass()], ['jeton' => $jc]);
+        $r = donner($lea, new stdClass(), $jc);
         egal(403, $r['code'], "un collègue en $droit ne donne rien à un élève");
         egal("Cette classe ne t'appartient pas : seul son propriétaire peut faire cela.", $r['json']['erreur'] ?? null, 'le même message que les autres actions du propriétaire');
         $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $qvq['id'], 'appli' => 'splat'], ['jeton' => $jc]);
@@ -4846,7 +4952,7 @@ verifier("qui-voit-quoi — le propriétaire seul donne ; un collègue voit « a
     // Le journal : une ligne « eleves.acces » sur l'élève (son numéro), et
     // RIEN de ce qui a été donné — ni « coffres », ni un monde.
     bd_test()->exec('DELETE FROM journal');
-    appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $lea, 'ajouts' => ['coffres' => new stdClass(), 'splat' => ['mondes' => [3]]]], ['jeton' => $jetonS1]);
+    donner($lea, ['coffres' => new stdClass(), 'splat' => ['mondes' => [3]]], $jetonS1);
     $lignes = bd_test()->query("SELECT * FROM journal WHERE action = 'eleves.acces'")->fetchAll(PDO::FETCH_ASSOC);
     egal(1, count($lignes), 'une ligne');
     egal(['eleve', $lea, 'ok'], [$lignes[0]['cible_type'], (int)$lignes[0]['cible_id'], $lignes[0]['resultat']]);
@@ -4941,7 +5047,7 @@ verifier("qui-voit-quoi — avant migrer.php (colonne absente) : tout se lit « 
         egal([], $t['json']['eleves'][0]['ajouts'], 'rien en plus pour personne');
         egal(['defi-tables', 'splat'], $t['json']['eleves'][0]['acces']['applis']);
         egal(200, appel('/api/prof.php', ['action' => 'eleves.nommer', 'eleve_id' => $lea, 'prenom' => 'Léa', 'initiale' => 'B'], ['jeton' => $jetonS1])['code'], 'nommer marche encore');
-        $r = appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $lea, 'ajouts' => ['coffres' => new stdClass()]], ['jeton' => $jetonS1]);
+        $r = appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $lea, 'avant' => new stdClass(), 'ajouts' => ['coffres' => new stdClass()]], ['jeton' => $jetonS1]);
         egal(503, $r['code'], 'donner quelque chose : mise à niveau à faire');
         vrai(str_contains($r['json']['erreur'] ?? '', 'migrer.php'), 'le message dit quoi faire : ' . ($r['json']['erreur'] ?? ''));
         $v = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
@@ -4957,7 +5063,7 @@ verifier("qui-voit-quoi — avant migrer.php (colonne absente) : tout se lit « 
     $v = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
     vrai((bool)preg_match('#class="etat oui">✓</span>\s*Ajouts par élève\s*<div class="detail">en place \(aucun élève n’a quelque chose en plus de sa classe\)#u', $v['texte']),
         'verifier.php : la ligne est verte, et compte zéro');
-    $r = appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $lea, 'ajouts' => ['coffres' => new stdClass()]], ['jeton' => $jetonS1]);
+    $r = donner($lea, ['coffres' => new stdClass()], $jetonS1);
     egal(200, $r['code'], 'après la mise à niveau, donner marche');
     $v = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
     vrai((bool)preg_match('#Ajouts par élève\s*<div class="detail">en place \(1 élève\(s\) avec quelque chose en plus de sa classe\)#u', $v['texte']),

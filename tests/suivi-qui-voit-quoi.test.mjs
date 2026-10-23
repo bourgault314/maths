@@ -38,7 +38,12 @@ test("la règle « classe + ajouts » est à un seul endroit, et les deux API y 
   assert.match(prof, /\$eleve = eleve_pour_action\(\$pdo, \$profId, \$corps\['eleve_id'\] \?\? 0, \$action\);\n\s+if \(!ajouts_disponibles\(\$pdo\)\) \{/, "l'élève est remonté à SA classe, puis la colonne est exigée (503 sinon)");
   assert.match(prof, /\$ajouts = ajouts_recus\(\$corps\['ajouts'\] \?\? null\);/, "lecture stricte");
   assert.match(prof, /UPDATE eleves SET ajouts = \? WHERE id = \?/, "remplace la colonne entière");
-  assert.match(prof, /journaliser\(\$pdo, \$profId, 'eleves\.acces', 'eleve', \(int\)\$eleve\['id'\]\);/, "journalisée sur l'élève");
+  assert.match(prof, /journaliser\(\$pdo, \$profId, 'eleves\.acces', 'eleve', \$eleveId\);/, "journalisée sur l'élève");
+  // Lot 3c : « avant » comparé sous le verrou de la ligne, 409 avec l'état vrai sinon.
+  assert.match(prof, /\$avant = ajouts_recus\(\$corps\['avant'\]\);/, "« avant » lu strictement");
+  assert.match(prof, /SELECT ajouts, prenom FROM eleves WHERE id = \?' \. pour_mise_a_jour\(\$pdo\)/, "la ligne de l'élève verrouillée");
+  assert.match(prof, /if \(!memes_ajouts\(ajouts_lus\(\$enBase\), \$avant\)\) \{\n\s+transaction_annuler\(\$pdo\);/, "différent : rien d'écrit");
+  assert.match(prof, /\], 409\);/, "409");
   assert.match(prof, /'ajouts' => ajouts_json\(ajouts_lus\(\$avecAjouts \? \$ligne\['ajouts'\] : null\)\),\n\s+'acces' => acces_json\(acces_de_l_eleve\(\$classe, \$avecAjouts \? \$ligne\['ajouts'\] : null\)\),/, "tableau : le rangé et le calculé par élève");
   assert.match(prof, /\$eleve\['classe'\] = acces_classe\(\$pdo, \$profId, \(int\)\$eleve\['classe_id'\], droit_requis\(\$action\), \$action\);/, "eleve_pour_action rend la classe vérifiée");
 });
