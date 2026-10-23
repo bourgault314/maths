@@ -172,7 +172,11 @@ test("lot 4a : la page elle-même ne parle jamais au serveur ; seul le moteur du
     "le moteur du parcours et l'habillage du suivi, avec une version, après le moteur des calculs");
   assert.doesNotMatch(PAGE, /<script[^>]+src="https?:\/\//, "aucun script d'un autre domaine");
   assert.match(script, /function suiviActif\(\) \{\s*return Boolean\(SUIVI && SUIVI\.actif\(\)\);/);
-  assert.match(script, /function noterSeanceSuivi\(\) \{\s*if \(!suiviActif\(\) \|\| !seance\.resultats\.length \|\| !seance\.idSuivi\) return;/, "rien sans code, rien sans calcul fait, rien sans identifiant");
+  assert.match(script, /function noterSeanceSuivi\(\) \{\s*if \(!suiviActif\(\) \|\| !seance\.resultats\.length\) return;\s*if \(!seance\.idSuivi\) seance\.idSuivi = PARCOURS\.idLibre\(SUIVI\.lire\(\), 0\);/,
+    "rien sans code, rien sans calcul fait ; une séance partie avant le billet reçoit son identifiant à sa première note");
+  assert.match(script, /if \(e\.etat === "ok" && SUIVI\.client\.sync\.dirty\) \{ envoi\.hidden = true; return; \}/, "« Envoyé » attend la confirmation du serveur");
+  assert.match(script, /\} else if \(!modeEleve\(\)\) \{\s*try \{ brut = JSON\.parse\(window\.localStorage\.getItem\(CLE\)/, "l'élève venu de son espace ne lit jamais les réglages de l'appareil, billet en route compris");
+  assert.match(script, /if \(modeEleve\(\)\) return; \/\/ billet en route ou refusé : rien à l'appareil/);
   // Ce qui part : le mode, les réglages, les calculs faits, le score — jamais les calculs ni les réponses.
   assert.match(script, /SUIVI\.client\.noterUneSeance\(\{\s*id: seance\.idSuivi,\s*mode: seance\.mode,\s*reglages: seance\.reglages,\s*faits: seance\.resultats\.length,\s*score: justes\s*\}\);/);
   assert.match(script, /seance\.idSuivi = suiviActif\(\) \? PARCOURS\.idLibre\(SUIVI\.lire\(\), 0\) : 0;/, "l'identifiant est tiré au début de chaque séance, libre dans la case");

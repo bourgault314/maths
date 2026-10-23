@@ -113,12 +113,59 @@ test("des séances abîmées sautent : fausse date, mode ou mot inconnu, chiffre
   assert.deepEqual(PARCOURS.normaliser([1, 2]), PARCOURS.creer());
 });
 
-test("les réglages du compte : le mode choisi et chaque mode, propres ; {} tant que rien n'est choisi", () => {
+test("les réglages du compte : le mode choisi et chaque mode, propres, et leur rang (+1 à chaque changement) ; {} tant que rien n'est choisi", () => {
   assert.deepEqual(PARCOURS.normaliserReglages(null), {});
   assert.deepEqual(PARCOURS.normaliserReglages({mode: "dictee", flash: "x"}), {});
+  assert.deepEqual(PARCOURS.normaliserReglages({rang: 7}), {}, "un rang sans réglage n'est rien");
+  assert.deepEqual(PARCOURS.normaliserReglages({mode: "flash", rang: "7"}), {mode: "flash", rang: 7});
+  assert.deepEqual(PARCOURS.normaliserReglages({mode: "flash", rang: -3}), {mode: "flash"}, "un rang abîmé est oublié");
   const r = PARCOURS.sauverReglages(PARCOURS.creer(), {mode: "colonne", flash: {...FLASH, temps: 25}, colonne: {...COLONNE, limite: 99}});
-  assert.deepEqual(r.reglages, {mode: "colonne", flash: {...FLASH, temps: 25}, colonne: {...COLONNE, limite: 0}});
+  assert.deepEqual(r.reglages, {mode: "colonne", flash: {...FLASH, temps: 25}, colonne: {...COLONNE, limite: 0}, rang: 1});
   assert.equal(PARCOURS.estVide(r), false, "un réglage choisi fait un parcours à envoyer");
+  const r2 = PARCOURS.sauverReglages(r, {mode: "flash", flash: FLASH, colonne: COLONNE});
+  assert.equal(r2.reglages.rang, 2, "le rang monte à chaque changement, quoi que la page passe");
+  assert.equal(PARCOURS.sauverReglages({...r, reglages: {...r.reglages, rang: 1000000}}, {mode: "flash"}).reglages.rang, 1000000, "et s'arrête à la borne du serveur");
+});
+
+test("fusion : les réglages du rang le plus haut gagnent — un appareil resté sur d'anciens réglages ne les réécrit pas sur le compte (relecture Codex, 23/10)", () => {
+  // A et B ont le même historique. A passe de 10 à 18 nombres (rang 2, envoyé) ; B, fermé, garde le rang 1.
+  const base = PARCOURS.sauverReglages(note(PARCOURS.creer(), {mode: "flash", reglages: FLASH, faits: 10, score: 9}, 41, "2026-10-22").parcours,
+    {mode: "flash", flash: FLASH, colonne: COLONNE});
+  const serveur = PARCOURS.sauverReglages(base, {mode: "flash", flash: {...FLASH, nombres: 18}, colonne: COLONNE});
+  assert.equal(serveur.reglages.rang, 2);
+  // B rouvre : sa case locale (base, rang 1) fusionne avec le serveur (rang 2), dans CE sens (fusionner(local, distant)).
+  const f = PARCOURS.fusionner(base, serveur);
+  assert.equal(f.reglages.flash.nombres, 18, "les 18 nombres d'A restent");
+  assert.equal(f.reglages.rang, 2);
+  assert.deepEqual(PARCOURS.pourServeur(f), PARCOURS.pourServeur(serveur), "rien à renvoyer : B n'apporte rien");
+  assert.deepEqual(PARCOURS.fusionner(serveur, base), f, "dans les deux sens");
+  // À rang égal (deux appareils ont changé chacun une fois, hors ligne) : la séance la plus récente départage, comme avant.
+  const b2 = PARCOURS.sauverReglages(note(base, {mode: "colonne", reglages: COLONNE, faits: 5, score: 5}, 42, "2026-10-23").parcours, {mode: "colonne", flash: FLASH, colonne: COLONNE});
+  assert.equal(b2.reglages.rang, 2);
+  assert.equal(PARCOURS.fusionner(serveur, b2).reglages.mode, "colonne", "à rang égal, la séance la plus récente (b2) l'emporte");
+  // Un parcours sans réglage (rang 0) ne vide jamais ceux de l'autre.
+  assert.deepEqual(PARCOURS.fusionner(serveur, PARCOURS.creer()).reglages, serveur.reglages);
+});
+
+test("la dernière place (9999) prise : les séances sont renumérotées, rien ne s'écrase, une fusion ne perd plus la séance à déplacer", () => {
+  const s = (id, jour, faits) => ["2026-10-" + jour, "flash", "plus", 2, 3, 10, 8, 10, faits, faits, id];
+  const plein = {...PARCOURS.creer(), seances: {"9997": s(1, "20", 10), "9998": s(2, "21", 10), "9999": s(3, "22", 10)}};
+  assert.equal(PARCOURS.numeroSuivant(plein), 4, "après renumérotation, la place suivante est libre");
+  const r = note(plein, {mode: "flash", reglages: FLASH, faits: 3, score: 3}, 4, "2026-10-23");
+  assert.equal(r.numero, 4);
+  assert.deepEqual(Object.keys(r.parcours.seances), ["1", "2", "3", "4"], "renumérotées de 1 en 1, dans l'ordre");
+  assert.deepEqual(r.parcours.seances["1"], s(1, "20", 10));
+  assert.deepEqual(r.parcours.seances["3"], s(3, "22", 10), "la séance du 9999 n'est pas écrasée");
+  assert.equal(PARCOURS.historique(r.parcours).length, 4);
+  const encore = note(r.parcours, {mode: "flash", reglages: FLASH, faits: 5, score: 5}, 4, "2026-10-23");
+  assert.deepEqual(Object.keys(encore.parcours.seances), ["1", "2", "3", "4"], "la même séance (identifiant 4) est mise à jour là où elle est");
+  assert.deepEqual(encore.parcours.seances["4"].slice(8), [5, 5, 4]);
+  // Fusion : deux séances différentes sous le 9999 — la seconde aurait eu besoin du 10000.
+  const autre = {...PARCOURS.creer(), seances: {"9999": s(5, "22", 7)}};
+  const f = PARCOURS.fusionner(plein, autre);
+  assert.deepEqual(Object.keys(f.seances), ["1", "2", "3", "4"], "les quatre séances, renumérotées");
+  assert.deepEqual(f.seances["4"], s(5, "22", 7), "la séance à déplacer a sa place");
+  assert.equal(PARCOURS.resume(f).calculs, 37);
 });
 
 // ------------------------------------------------------------- la fusion
@@ -283,7 +330,7 @@ test("sous un code, une séance notée est rangée dans une case à empreinte (j
   assert.ok([...memoire.keys()].some(k => k.startsWith("mathsgo-anzan-parcours:")), "la case porte une empreinte");
   assert.deepEqual(PARCOURS.charger(stockage, "ABCDEF").seances, client.parcours.seances, "relue par le code");
   client.sauverLesReglages({mode: "colonne", colonne: COLONNE});
-  assert.deepEqual(client.reglagesDuCompte(), {mode: "colonne", colonne: COLONNE});
+  assert.deepEqual(client.reglagesDuCompte(), {mode: "colonne", colonne: COLONNE, rang: 1}, "les réglages du compte portent leur rang");
   // L'envoi groupé part 700 ms plus tard, sous « flash-anzan », avec le code dans le corps.
   await new Promise(resolve => setTimeout(resolve, 800));
   assert.equal(envois.length, 1);

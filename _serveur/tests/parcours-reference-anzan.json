@@ -19,7 +19,8 @@
       "nombres": 8,
       "calculs": 10,
       "limite": 20
-    }
+    },
+    "rang": 1
   },
   "seances": {
     "1": [

@@ -627,7 +627,7 @@
   <script src="./flash_anzan_core.js?v=20261022-1"></script>
   <!-- Le parcours de l'élève (moteur partagé avec le serveur de suivi) et l'habillage du suivi de
        classe (bloc, pastille, pied, garde) : lot « Qui voit quoi », lot 4a, 23/10/2026 -->
-  <script src="./flash_anzan_parcours.js?v=20261023-1"></script>
+  <script src="./flash_anzan_parcours.js?v=20261023-2"></script>
   <script src="./flash_anzan_suivi.js?v=20261023-1"></script>
   <script>
     (function () {
@@ -674,7 +674,9 @@
       // -----------------------------------------------------------------
       // Les réglages : sur l'appareil (localStorage) pour l'élève sans code,
       // sur son compte (le parcours) pour l'élève à code. Chaque mode garde
-      // ses propres derniers réglages.
+      // ses propres derniers réglages. L'élève venu de son espace ne lit ni
+      // n'écrit JAMAIS ceux de l'appareil — pas même pendant que son billet
+      // s'échange (relecture Codex, 23/10/2026).
       // -----------------------------------------------------------------
       const CLE = "mathsgo-flash-anzan-v1";
       function lireMemoire() {
@@ -683,7 +685,7 @@
           // Le compte de l'élève, et rien de l'appareil : un compte sans
           // réglage encore choisi part des valeurs de départ.
           try { brut = SUIVI.client.reglagesDuCompte(); } catch (e) { brut = null; }
-        } else {
+        } else if (!modeEleve()) {
           try { brut = JSON.parse(window.localStorage.getItem(CLE) || "null"); } catch (e) { brut = null; }
         }
         const b = brut && typeof brut === "object" ? brut : {};
@@ -698,6 +700,7 @@
           SUIVI.ecrire((P, avant) => P.sauverReglages(avant, memoire));
           return;
         }
+        if (modeEleve()) return; // billet en route ou refusé : rien à l'appareil
         try { window.localStorage.setItem(CLE, JSON.stringify(memoire)); } catch (e) { /* navigation privée : tant pis */ }
       }
       const memoire = lireMemoire();
@@ -881,7 +884,9 @@
         seance.resultats = [];
         seance.index = 0;
         // L'identifiant de la séance : tiré maintenant, libre dans la case ;
-        // c'est lui qui la retrouve d'un calcul au suivant, et sur un autre appareil.
+        // c'est lui qui la retrouve d'un calcul au suivant, et sur un autre
+        // appareil. Si le billet n'est pas encore échangé, il sera tiré à la
+        // première note (noterSeanceSuivi) : la séance n'est pas perdue.
         seance.idSuivi = suiviActif() ? PARCOURS.idLibre(SUIVI.lire(), 0) : 0;
         $("ecran-reglages").hidden = true;
         $("ecran-historique").hidden = true;
@@ -1219,6 +1224,9 @@
         $("ecran-seance").hidden = true;
         $("ecran-historique").hidden = true;
         $("ecran-reglages").hidden = false;
+        // Le compte a pu bouger pendant la séance (billet arrivé en route,
+        // autre appareil) : ses réglages sont relus maintenant, jamais avant.
+        if (suiviActif()) rechargerMemoire();
         dessinerReglages();
         majSuivi();
         $("titre").focus({preventScroll: true});
@@ -1298,9 +1306,12 @@
 
       // La séance en cours est notée dans la case de l'élève : à chaque calcul
       // validé (la même séance, retrouvée par son identifiant), et à la fin.
-      // Rien sans code ; rien sans calcul fait.
+      // Rien sans code ; rien sans calcul fait. Une séance partie avant que le
+      // billet soit échangé (plus de six secondes d'attente) reçoit son
+      // identifiant ici, à sa première note (relecture Codex, 23/10/2026).
       function noterSeanceSuivi() {
-        if (!suiviActif() || !seance.resultats.length || !seance.idSuivi) return;
+        if (!suiviActif() || !seance.resultats.length) return;
+        if (!seance.idSuivi) seance.idSuivi = PARCOURS.idLibre(SUIVI.lire(), 0);
         const justes = seance.resultats.filter(r => r.juste).length;
         SUIVI.client.noterUneSeance({
           id: seance.idSuivi,
@@ -1311,12 +1322,16 @@
         });
       }
 
-      // « ● Envoyé à ton professeur » sous le résumé de la séance finie ;
-      // orange tant que rien n'est parti, gris si le code ne vaut plus rien.
+      // « ● Envoyé à ton professeur » sous le résumé de la séance finie — quand
+      // le serveur a CONFIRMÉ (plus rien à envoyer), pas avant (relecture
+      // Codex, 23/10/2026) ; orange si c'est resté ici, gris si le code ne
+      // vaut plus rien. Rien pour une séance que la case n'a pas reçue (finie
+      // avant l'échange du billet).
       function majEnvoi() {
         const envoi = $("envoi-fin");
-        if (!suiviActif() || seance.phase !== "fin" || !seance.resultats.length) { envoi.hidden = true; return; }
+        if (!suiviActif() || seance.phase !== "fin" || !seance.resultats.length || !seance.idSuivi) { envoi.hidden = true; return; }
         const e = SUIVI.client.etatRepere();
+        if (e.etat === "ok" && SUIVI.client.sync.dirty) { envoi.hidden = true; return; } // en route : on attend la réponse
         envoi.className = "envoi" + (e.etat === "detache" ? " detache" : (e.etat === "hors-ligne" || e.etat === "erreur" ? " hors-ligne" : ""));
         envoi.textContent = e.etat === "ok" ? "Envoyé à ton professeur" : e.texte;
         envoi.hidden = false;
@@ -1422,8 +1437,10 @@
 
       // Au démarrage sous un code : les réglages du compte (et l'historique)
       // sont connus quand le serveur a répondu ; six secondes au plus, puis
-      // on part avec la copie du compte que l'appareil garde (jamais les
-      // réglages de l'appareil lui-même).
+      // on part avec ce qu'on a — la copie du compte que l'appareil garde
+      // (code déjà connu de l'onglet), ou les valeurs de départ (billet encore
+      // en route) ; jamais les réglages de l'appareil lui-même. Quand le
+      // billet arrive enfin, surParcoursChange relit le compte.
       function demarrerEleve() {
         racine.classList.remove("suivi-attente");
         rechargerMemoire();

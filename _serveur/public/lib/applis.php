@@ -153,7 +153,7 @@ const CATALOGUE_APPLIS = [
         'url' => 'https://mathsgo.re/outils/calcul_mental/flash_anzan.html',
         'ancre' => null,
         'disponible' => true,
-        'cles' => ['version', 'epoque', 'reglages', 'mode', 'flash', 'colonne',
+        'cles' => ['version', 'epoque', 'reglages', 'rang', 'mode', 'flash', 'colonne',
             'operations', 'chiffresMin', 'chiffresMax', 'nombres', 'temps', 'limite', 'calculs', 'son', 'seances'],
         'mots' => ['flash', 'colonne', 'plus', 'plusmoins', 'aucun', 'bip'],
         'motifs' => ['/^[1-9]\d{0,3}$/'],

@@ -119,7 +119,7 @@
   // Ce que lib/applis.php doit déclarer pour « flash-anzan » : les clés (à
   // toute profondeur), les mots et le motif des numéros de séance. Un test
   // compare le texte du catalogue à ces trois listes.
-  const CLES_SERVEUR = Object.freeze(["version", "epoque", "reglages", "mode", "flash", "colonne",
+  const CLES_SERVEUR = Object.freeze(["version", "epoque", "reglages", "rang", "mode", "flash", "colonne",
     "operations", "chiffresMin", "chiffresMax", "nombres", "temps", "limite", "calculs", "son", "seances"]);
   const MOTS_SERVEUR = Object.freeze(["flash", "colonne", "plus", "plusmoins", "aucun", "bip"]);
   const MOTIF_SEANCES_PHP = "/^[1-9]\\d{0,3}$/";
@@ -190,7 +190,10 @@
   }
 
   // Les réglages du parcours : {} tant que l'élève n'en a pas choisi (la page
-  // prend alors ses valeurs de départ) ; sinon le mode et les deux modes.
+  // prend alors ses valeurs de départ) ; sinon le mode et les deux modes, et
+  // leur RANG : +1 à chaque changement (sauverReglages). En fusion, le rang le
+  // plus haut gagne — sans lui, un appareil resté sur d'anciens réglages les
+  // réécrivait sur le compte à sa réouverture (relecture Codex, 23/10/2026).
   function normaliserReglages(brut) {
     if (!brut || typeof brut !== "object" || Array.isArray(brut)) return {};
     const r = {};
@@ -198,7 +201,14 @@
     MODES.forEach(mode => {
       if (brut[mode] && typeof brut[mode] === "object") r[mode] = normaliserReglagesMode(mode, brut[mode]);
     });
+    if (!Object.keys(r).length) return {};
+    const rang = entier(brut.rang, 0, COMPTE_MAX, 0);
+    if (rang) r.rang = rang;
     return r;
+  }
+
+  function rangDesReglages(reglages) {
+    return reglages && Number.isInteger(reglages.rang) ? reglages.rang : 0;
   }
 
   function numeroValide(valeur) {
@@ -307,6 +317,19 @@
     return id;
   }
 
+  // Les numéros ne sont que des places (la séance, c'est son identifiant) :
+  // quand la dernière place est prise (9999), les séances sont renumérotées
+  // de 1 en 1 dans leur ordre — rien ne s'écrase, rien ne se perd (relecture
+  // Codex, 23/10/2026). Modifie p, le rend.
+  function faireDeLaPlace(p) {
+    const liste = numeros(p);
+    if (!liste.length || liste[liste.length - 1] < NUMERO_MAX) return p;
+    const seances = liste.map(n => p.seances[String(n)]);
+    p.seances = {};
+    seances.forEach((s, i) => { p.seances[String(i + 1)] = s; });
+    return p;
+  }
+
   // Le jour de la séance la plus récente d'un parcours (et son numéro), pour
   // choisir les réglages à garder en fusion.
   function derniereSeance(p) {
@@ -338,17 +361,20 @@
       aPlacer.push(sb);
     });
     // Deux séances différentes sous un même numéro : la seconde prend le
-    // numéro libre suivant, aucune ne se perd.
+    // numéro libre suivant (de la place est faite s'il le faut), aucune ne se perd.
     aPlacer.forEach(sb => {
+      faireDeLaPlace(fusion);
       const liste = numeros(fusion);
-      const suivant = liste.length ? liste[liste.length - 1] + 1 : 1;
-      if (numeroValide(suivant)) fusion.seances[String(suivant)] = sb.slice();
+      fusion.seances[String(liste.length ? liste[liste.length - 1] + 1 : 1)] = sb.slice();
     });
-    // Les réglages : ceux du parcours dont la séance est la plus récente ; à
+    // Les réglages : ceux du rang le plus haut (le dernier changement) ; à
+    // rang égal, ceux du parcours dont la séance est la plus récente ; à
     // égalité (ou sans séance), ceux qui existent, le premier d'abord.
+    const ra = rangDesReglages(a.reglages);
+    const rb = rangDesReglages(b.reglages);
     const da = derniereSeance(a);
     const db = derniereSeance(b);
-    const bGagne = db && (!da || db.jour > da.jour || (db.jour === da.jour && db.numero > da.numero));
+    const bGagne = rb !== ra ? rb > ra : Boolean(db && (!da || db.jour > da.jour || (db.jour === da.jour && db.numero > da.numero)));
     const prioritaire = bGagne ? b : a;
     const autre = bGagne ? a : b;
     fusion.reglages = Object.keys(prioritaire.reglages).length ? cloner(prioritaire.reglages) : cloner(autre.reglages);
@@ -359,10 +385,11 @@
   //
   // Chacun rend un parcours NEUF (le reçu n'est pas modifié).
 
-  // Le numéro que prendrait une séance nouvelle.
+  // Le numéro que prendrait une séance nouvelle (après renumérotation si la
+  // dernière place est prise : toujours un numéro libre).
   function numeroSuivant(parcours) {
-    const liste = numeros(normaliser(parcours));
-    return liste.length ? Math.min(NUMERO_MAX, liste[liste.length - 1] + 1) : 1;
+    const liste = numeros(faireDeLaPlace(normaliser(parcours)));
+    return liste.length ? liste[liste.length - 1] + 1 : 1;
   }
 
   // La séance en cours (ou finie) est notée : `seance` = {id, mode, reglages,
@@ -393,16 +420,19 @@
     if (!propre) return {parcours: p, numero: null};
     const liste = seanceEnListe(propre);
     let n = numeroDeId(p, propre.id);
-    if (n === null) n = numeroSuivant(p);
+    if (n === null) { faireDeLaPlace(p); n = numeroSuivant(p); }
     p.seances[String(n)] = liste;
     return {parcours: borner(p), numero: n};
   }
 
   // Les réglages de l'élève changent (un mode, un pas, un choix) : le parcours
-  // garde les derniers, par mode, et le mode choisi.
+  // garde les derniers, par mode, et le mode choisi — au rang suivant, pour
+  // que la fusion sache lesquels sont les plus récents.
   function sauverReglages(parcours, reglages) {
     const p = normaliser(parcours);
-    p.reglages = normaliserReglages(reglages);
+    const r = normaliserReglages(reglages);
+    if (Object.keys(r).length) r.rang = Math.min(COMPTE_MAX, rangDesReglages(p.reglages) + 1);
+    p.reglages = r;
     return p;
   }
 

@@ -211,14 +211,21 @@ const PARCOURS = require("../outils/calcul_mental/flash_anzan_parcours.js");
 const HABILLAGE = require("../outils/calcul_mental/flash_anzan_suivi.js");
 const RANIA = {prenom: "Rania", classe: "405"};
 
-// Un faux serveur de suivi : l'identité, la lecture du parcours (celui qu'on
-// lui donne), et il garde tout ce qu'on lui envoie.
-function fauxServeur(parcoursDistant = null) {
+// Un faux serveur de suivi : l'identité, l'échange d'un billet (rendu tout de
+// suite, ou RETENU jusqu'à livrerBillet() — un serveur qui tarde), la lecture
+// du parcours (celui qu'on lui donne), et il garde tout ce qu'on lui envoie.
+function fauxServeur(parcoursDistant = null, {billetRetenu = false} = {}) {
   const envois = [];
+  const billets = [];
   let revision = parcoursDistant ? 1 : 0;
   const reponse = (status, donnees) => Promise.resolve({status, json: () => Promise.resolve(donnees), headers: {get: () => null}});
   const fetch = (url, options) => {
     const corps = options && options.body ? JSON.parse(options.body) : {};
+    if (/\/api\/eleve\.php$/.test(url) && corps.billet) {
+      const entree = {ok: true, type: "entree", code: "ABCDEF", ...RANIA};
+      if (!billetRetenu) return reponse(200, entree);
+      return new Promise(resolve => billets.push(() => reponse(200, entree).then(resolve)));
+    }
     if (/\/api\/eleve\.php$/.test(url)) return reponse(200, {ok: true, ...RANIA, applis: [], reglages: {}});
     if (/\/api\/parcours\.php$/.test(url)) {
       if (corps.lire) return reponse(200, parcoursDistant ? {ok: true, existe: true, parcours: parcoursDistant, revision} : {ok: true, existe: false});
@@ -228,16 +235,20 @@ function fauxServeur(parcoursDistant = null) {
     }
     return reponse(404, {});
   };
-  return {fetch, envois, dernier: () => (envois.length ? envois[envois.length - 1] : null)};
+  return {fetch, envois, dernier: () => (envois.length ? envois[envois.length - 1] : null),
+    billetsRetenus: () => billets.length, livrerBillet: () => { const b = billets.shift(); if (b) b(); }};
 }
 
+// `suivi: {billet, serveur}` — l'élève arrive de son espace avec un billet
+// dans l'adresse (lu par l'amorce du <head>, ici donné tel quel), pas encore
+// de code dans l'onglet.
 function ouvrir(memoire, {largeur = 390, suivi = null} = {}) {
   const ecran = construireEcran(PAGE);
   const horloge = {t: 0, minuteries: [], images: [], prochain: 1};
   const oscillateurs = [];
   const stockage = new Map(memoire ? [["mathsgo-flash-anzan-v1", JSON.stringify(memoire)]] : []);
   const onglet = new Map(suivi && suivi.code ? [["mathsgo-suivi-code", suivi.code]] : []);
-  const serveur = suivi && suivi.code ? (suivi.serveur || fauxServeur()) : null;
+  const serveur = suivi && (suivi.code || suivi.billet) ? (suivi.serveur || fauxServeur()) : null;
   class Audio {
     constructor() { this.state = "running"; this.destination = {}; }
     get currentTime() { return horloge.t / 1000; }
@@ -283,6 +294,7 @@ function ouvrir(memoire, {largeur = 390, suivi = null} = {}) {
     console
   };
   ctx.window = ctx;
+  if (suivi && suivi.billet) ctx.MATHSGO_ENTREE = {billet: suivi.billet};
   if (suivi) {
     ctx.MathsGoFlashAnzanParcours = PARCOURS;
     // L'habillage prend la fenêtre de la page (ici la simulée), et le faux serveur.
@@ -840,10 +852,12 @@ test("sous un code : chaque calcul validé note la séance (jamais les calculs),
   p.$("retour").click();
   assert.equal(p.vue(), "vue-fin");
   assert.equal(p.$("compte").textContent, "Séance arrêtée");
-  assert.equal(p.$("envoi-fin").hidden, false);
-  assert.equal(p.$("envoi-fin").textContent, "Envoyé à ton professeur");
+  // « Envoyé » attend la CONFIRMATION du serveur (relecture Codex, 23/10) : la note de la fin est en route (700 ms).
+  assert.equal(p.$("envoi-fin").hidden, true, "pas encore : rien n'est confirmé");
   p.avancer(800);
   await p.souffler();
+  assert.equal(p.$("envoi-fin").hidden, false);
+  assert.equal(p.$("envoi-fin").textContent, "Envoyé à ton professeur");
   assert.deepEqual(serveur.dernier().parcours.seances["1"].slice(7), [5, 2, 1, id], "rien de plus que ce qui était déjà noté");
   // Mon historique : le compte, une ligne « 1/2 · arrêtée ».
   p.$("vers-reglages").click();
@@ -869,6 +883,59 @@ test("sous un code : chaque calcul validé note la séance (jamais les calculs),
   await p.souffler();
   assert.deepEqual(Object.keys(serveur.dernier().parcours.seances), ["1", "2"]);
   assert.notEqual(serveur.dernier().parcours.seances["2"][10], id, "un autre identifiant (le hasard de la page est figé : idLibre prend le suivant)");
+});
+
+test("un billet qui tarde (relecture Codex, 23/10) : jamais les réglages de l'appareil, la séance partie avant son arrivée est notée quand même, « Envoyé » une fois confirmé, puis les réglages du compte", async () => {
+  const serveur = fauxServeur(PARCOURS.sauverReglages(PARCOURS.creer(), {mode: "flash", flash: {...FLASH, nombres: 7}}), {billetRetenu: true});
+  // L'appareil garde les réglages d'un autre élève (12 nombres) ; le serveur ne répond pas au billet.
+  const p = ouvrir({mode: "flash", flash: {...FLASH, nombres: 12}}, {suivi: {billet: "B-TARDIF", serveur}});
+  await p.souffler();
+  assert.equal(serveur.billetsRetenus(), 1, "le billet est parti, le serveur garde la réponse");
+  assert.equal(p.$("suivi-repere").hidden, true, "on ne sait pas encore qui entre : pas de bloc");
+  // Six secondes : la page part sans attendre — avec les valeurs de départ, PAS les 12 nombres de l'appareil.
+  p.avancer(6000);
+  await p.souffler();
+  assert.equal(p.$("val-nombres").textContent, "10", "les valeurs de départ, pas celles de l'appareil");
+  // Un réglage changé pendant l'attente ne s'écrit nulle part sur l'appareil.
+  p.$("ecran-reglages").querySelector("[data-pas=nombres][data-sens='1']").click();
+  assert.equal(p.$("val-nombres").textContent, "11");
+  assert.equal(JSON.parse(p.stockage.get("mathsgo-flash-anzan-v1")).flash.nombres, 12, "l'appareil n'a pas bougé");
+  assert.ok(![...p.stockage.keys()].some(k => k.startsWith("mathsgo-anzan-")), "et aucune case de suivi sans code connu");
+  // Elle part (11 nombres, 0,8 s, 10 calculs : les valeurs de départ), le billet arrive pendant le décompte.
+  const regl = {operations: "plus", chiffresMin: 2, chiffresMax: 3, nombres: 11, temps: 8, calculs: 10, son: "bip"};
+  const attendus = calculsAttendus("flash", regl);
+  p.$("partir").click();
+  p.avancer(1000);
+  serveur.livrerBillet();
+  await p.souffler(12);
+  assert.match(p.$("suivi-pastille-slot").innerHTML, /Rania/, "le billet échangé : Rania est là, la séance continue");
+  assert.equal(p.$("suivi-repere").hidden, false, "le bloc est posé (caché par le style en séance)");
+  assert.equal(p.$("val-nombres").textContent, "11", "la mémoire n'est pas relue en pleine séance");
+  p.avancer(3 * 800 + regl.nombres * regl.temps * 100 + 100 - 1000);
+  p.taper(attendus[0].total);
+  p.$("valider").click();
+  p.avancer(800);
+  await p.souffler();
+  const envoye = serveur.dernier();
+  assert.ok(envoye, "la séance partie avant le billet est notée dès son premier calcul validé");
+  const id = envoye.parcours.seances["1"][10];
+  assert.ok(Number.isInteger(id) && id >= 1, "elle a reçu son identifiant à ce moment-là");
+  assert.deepEqual(envoye.parcours.seances, {"1": [PARCOURS.jourLocal(Date.now()), "flash", "plus", 2, 3, 11, 8, 10, 1, 1, id]});
+  assert.equal(envoye.parcours.reglages.flash.nombres, 7, "les réglages du compte n'ont pas été touchés par ceux de l'attente");
+  // La flèche : « Envoyé » n'apparaît qu'une fois la note de la fin confirmée.
+  p.$("suivant").click();
+  p.$("retour").click();
+  assert.equal(p.vue(), "vue-fin");
+  assert.equal(p.$("envoi-fin").hidden, true, "en route, pas encore confirmé");
+  p.avancer(800);
+  await p.souffler();
+  assert.equal(p.$("envoi-fin").hidden, false);
+  assert.equal(p.$("envoi-fin").textContent, "Envoyé à ton professeur");
+  assert.deepEqual(serveur.dernier().parcours.seances["1"].slice(7), [10, 1, 1, id], "la même séance, 1 fait sur 10");
+  // Retour aux réglages : ceux du compte, enfin (7 nombres) — ni les 11 de l'attente, ni les 12 de l'appareil.
+  p.$("vers-reglages").click();
+  assert.equal(p.$("val-nombres").textContent, "7", "les réglages du compte");
+  assert.equal(JSON.parse(p.stockage.get("mathsgo-flash-anzan-v1")).flash.nombres, 12, "l'appareil n'a toujours pas bougé");
 });
 
 test("Mon historique : les séances du compte, dix par dix, la plus récente en haut", async () => {
