@@ -25,7 +25,8 @@ test("Les Carrés gloutons est une ressource publique autonome", () => {
   assert.doesNotMatch(page, /WINS_TO_TAKE_MATCH|playerWins|aiWins|Premier à 2/);
   assert.match(page, /Tracer ce segment entre deux points voisins/);
   assert.doesNotMatch(page, /\btrait(?:s)?\b/i);
-  assert.match(hub, /href="carres_gloutons\.html" class="card gloutons"/);
+  // L’ancien index Club maths renvoie désormais vers le catalogue (lot plan du site, 23/10).
+  assert.match(hub, /url=\/outils\/\?domain=jeux-recherches"/);
 });
 
 test("le match aller-retour donne exactement un départ à chacun et tranche au cumul", () => {
