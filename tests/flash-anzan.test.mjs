@@ -216,7 +216,7 @@ test("au catalogue (22/10) : dans Calcul mental « S'entraîner » et dans la co
   assert.match(classement[1], /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/flash-anzan\.svg\?v=1"/);
   assert.doesNotMatch(PAGE, /noindex/);
   const hubSoroban = readFileSync(new URL("../outils/bouliers/soroban/index.html", import.meta.url), "utf8");
-  assert.match(hubSoroban, /href="\.\.\/\.\.\/calcul_mental\/flash_anzan\.html"/, "la page Soroban (annuaire, Google) y mène aussi");
+  assert.match(hubSoroban, /url=\/outils\/\?domain=nombres-calculs&amp;collection=soroban"/, "l’ancienne page Soroban renvoie vers la collection, qui contient la fiche");
 });
 
 test("AGENTS.md garde l'exception du haut de page de Flash Anzan, pour qu'on ne la « corrige » pas", () => {

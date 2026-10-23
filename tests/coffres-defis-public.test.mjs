@@ -256,11 +256,10 @@ test("la politique de confidentialité explique les meilleurs scores locaux des 
   assert.match(privacy, /supprimant les données du site dans les réglages de votre navigateur/);
 });
 
-test("le hub Club Math relie Coffres magiques et garde une grille équilibrée", () => {
-  assert.match(clubHub, /href="coffres_magiques\.html" class="card coffres"/);
-  assert.match(clubHub, /Choisissez le duel à deux[\s\S]*l’entraînement solo guidé sur les quatre opérations/);
-  assert.match(clubHub, />Choisir solo ou duo</);
-  assert.match(clubHub, /@media \(min-width: 1100px\)[\s\S]*repeat\(3, minmax\(0, 1fr\)\)/);
+test("l’ancien index Club maths renvoie vers le domaine Jeux du catalogue", () => {
+  // Coffres magiques est trouvé par le catalogue ; l’ancien index n’est plus qu’une redirection.
+  assert.match(clubHub, /url=\/outils\/\?domain=jeux-recherches"/);
+  assert.match(clubHub, /<meta name="robots" content="noindex, follow">/);
 });
 
 test("les cinq miniatures sont des SVG 720 × 320", async () => {

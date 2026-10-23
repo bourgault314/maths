@@ -48,7 +48,9 @@ test("le sitemap contient chaque ressource publiée et chaque collection une seu
     assert.ok(urls.includes(publicUrlForPath(resource.path)), resource.path);
   }
   for (const collection of catalogue.collections) {
-    assert.ok(urls.includes(publicUrlForPath(`outils/${collection.hub}`)), collection.id);
+    const url = publicUrlForPath(`outils/${collection.hub}`);
+    if (collection.navigation === "hub") assert.ok(urls.includes(url), collection.id);
+    else assert.ok(!urls.includes(url), `${collection.id} : ancien index déclaré`);
   }
   const xml = buildSitemapXml(catalogue);
   assert.equal((xml.match(/<loc>/g) || []).length, entries.length);
@@ -226,17 +228,10 @@ test("ÉquaBarre et ÉquaSplat restent publics, leurs récepteurs import restent
   );
 });
 
-test("le hub Gerbert ne relie que ses ressources publiées", () => {
-  const hubPath = "outils/bouliers/abaque_de_gerbert/index.html";
-  const hub = fs.readFileSync(path.join(root, hubPath), "utf8");
-  const gerbertResources = catalogue.resources.filter(({ path: resourcePath }) => (
-    resourcePath.startsWith("outils/bouliers/abaque_de_gerbert/") && resourcePath !== hubPath
-  ));
-  for (const resource of gerbertResources) {
-    const href = relativeHref(hubPath, resource.path);
-    if (resource.status === "published") assert.match(hub, new RegExp(`href=["']${href}["']`), resource.path);
-    else assert.doesNotMatch(hub, new RegExp(`href=["']${href}["']`), resource.path);
-  }
+test("l’ancien index Gerbert renvoie vers la collection Gerbert du catalogue", () => {
+  const hub = fs.readFileSync(path.join(root, "outils/bouliers/abaque_de_gerbert/index.html"), "utf8");
+  assert.match(hub, /url=\/outils\/\?domain=nombres-calculs&amp;collection=gerbert"/);
+  assert.match(hub, /<meta name="robots" content="noindex, follow">/);
 });
 
 test("les workflows bloquent le SEO désynchronisé et excluent le gabarit Axelle", () => {
