@@ -3076,6 +3076,12 @@
     return premiere >= seconde ? premiere : seconde;
   }
 
+  // « premiere » est-elle strictement plus récente que « seconde » ? Une date
+  // absente (null) compte comme « jamais » : plus ancienne que tout.
+  function plusRecente(premiere, seconde) {
+    return Boolean(premiere) && (!seconde || premiere > seconde);
+  }
+
   function dateLaPlusAncienne(premiere, seconde) {
     if (!premiere) return seconde || null;
     if (!seconde) return premiere;
@@ -3092,10 +3098,12 @@
   // « On garde le plus avancé des deux, jamais d'écrasement. »
   //
   // Rien ne se perd : chaque compteur prend son maximum, chaque acquisition
-  // gardée à sa PREMIÈRE date, chaque case de la grille son état le plus
-  // récent (et, le même jour, l'erreur l'emporte : voir la boucle FAITS). Les
-  // deux parcours sont interchangeables, sauf pour le prénom : celui du premier
-  // gagne s'il est renseigné (c'est l'appareil devant l'élève qui a raison).
+  // gardée à sa PREMIÈRE date, chaque case de la grille ce que les deux côtés
+  // savent de plus récent — un gain ou une erreur ne compte que s'il est une
+  // nouvelle pour l'autre côté (voir la boucle FAITS ; le même jour, l'erreur
+  // l'emporte). Les deux parcours sont interchangeables, sauf pour le prénom :
+  // celui du premier gagne s'il est renseigné (c'est l'appareil devant l'élève
+  // qui a raison).
   function fusionner(premier, second) {
     const a = normaliserParcours(premier);
     const b = normaliserParcours(second);
@@ -3185,10 +3193,73 @@
         fusion.calculs[cle] = cloner(faitA || faitB);
         return;
       }
-      // Par calcul, le jour le plus récent gagne en bloc : une erreur faite
-      // aujourd'hui ne doit pas être effacée par l'état d'hier à trois cases.
+      // Jours différents (lot « fusion jours différents », 23/10/2026 au soir) : les
+      // deux côtés sont R, vu en dernier, et A, l'autre. Avant ce lot, R
+      // gagnait EN BLOC — juste sur un seul appareil (R descend de A), faux dès
+      // qu'un côté est une COPIE ANCIENNE : un appareil resté hors ligne un
+      // mois en boîte 2 qui ratait 2 × 8 écrasait la boîte 5 de l'appareil du
+      // jour (→ 1, vérité 4), et sa bonne réponse aussi (→ 2, vérité 5 ;
+      // réserve n° 1 de Codex sur la PR #1043). Les dates de l'autre côté
+      // disent ce qu'il sait : un gain (ou une erreur) de R est une NOUVELLE
+      // pour A s'il est plus récent que le dernier gain (la dernière erreur)
+      // de A ; « null » = jamais. Rien ici ne regarde « vu » : une copie prise
+      // le matin ignore ce qui s'est joué l'après-midi du même jour.
+      //  1. R a une erreur que A n'a pas, sans être en retard sur les gains
+      //     (son dernier gain est celui de A, ou plus récent) : R est « A plus
+      //     des erreurs », il gagne — avec son gain à lui aussi plus récent,
+      //     en bloc ; à gain égal, jamais plus haut qu'une boîte sous A
+      //     (min(R, A − 1)) : une vieille copie restée PLUS HAUTE, utilisée
+      //     hors ligne avec une erreur, ne remonte pas le parcours du jour.
+      //     Sur un seul appareil, R vaut exactement A − 1 : inchangé ;
+      //  2. R a un gain que A n'a pas (et aucune erreur nouvelle) : la boîte
+      //     de R, ou une boîte au-dessus de A si c'est plus (un gain = une
+      //     boîte au-dessus de ce que A sait ; la copie ancienne de Codex qui
+      //     répond juste et dû passe ainsi 3 → 5) ; si A porte une erreur
+      //     que R ignore, elle coûte une boîte à R ;
+      //  3. R a une erreur nouvelle mais est EN RETARD sur les gains (sa boîte
+      //     de départ est périmée : c'est la copie ancienne) : une erreur
+      //     connue coûte une boîte à A, jamais plus (max(R, A − 1)) ;
+      //  4. R n'a rien de neuf (il a seulement touché le calcul) : l'état de
+      //     A, et le « vu » de R.
+      // Même jour (« vu » égal) : les règles des PR #1040/#1043, plus bas.
+      // LIMITES qui restent, acceptées : une copie ancienne utilisée hors
+      // ligne qui rate PUIS gagne (deux jours) porte un gain et une erreur
+      // nouveaux → elle gagne en bloc (règle 1) avec sa boîte de départ
+      // périmée ; plusieurs jours d'erreurs hors ligne sur une copie en retard
+      // → une boîte sous A, pas plus (règle 3) ; deux parcours sans aucun gain
+      // enregistré (migration) n'ont pas cet indice de lignée → règle 3 ; et,
+      // comme avant, une erreur d'un côté et un gain de l'autre ne disent pas
+      // lequel est venu en premier.
       if (faitA.vu !== faitB.vu) {
-        fusion.calculs[cle] = cloner(faitA.vu > faitB.vu ? faitA : faitB);
+        const [R, A] = faitA.vu > faitB.vu ? [faitA, faitB] : [faitB, faitA];
+        const gainNouveau = plusRecente(R.gagne, A.gagne);
+        const erreurNouvelle = plusRecente(R.erreur, A.erreur);
+        const gainManque = plusRecente(A.gagne, R.gagne);
+        const erreurManquee = plusRecente(A.erreur, R.erreur);
+        let boite;
+        let gagne;
+        let erreur;
+        if (erreurNouvelle && !gainManque && R.gagne) {
+          boite = gainNouveau ? R.boite : Math.min(R.boite, Math.max(1, A.boite - 1));
+          fusion.calculs[cle] = {...cloner(R), boite, cases: casesDeBoite(boite)};
+          return;
+        }
+        if (gainNouveau) {
+          boite = Math.max(R.boite - (erreurManquee ? 1 : 0), Math.min(SEUILS.revision.boites, A.boite + 1));
+          gagne = R.gagne;
+          erreur = dateLaPlusRecente(R.erreur, A.erreur);
+        } else if (erreurNouvelle) {
+          boite = Math.max(R.boite, A.boite - 1);
+          gagne = A.gagne;
+          erreur = R.erreur;
+        } else {
+          fusion.calculs[cle] = {...cloner(A), vu: R.vu};
+          return;
+        }
+        // Le retour du calcul suit son dernier événement : une erreur le rend
+        // dû le jour même, un gain le renvoie « délai de sa boîte » plus tard.
+        const echeance = erreur && (!gagne || erreur >= gagne) ? erreur : echeanceDeBoite(boite, gagne);
+        fusion.calculs[cle] = {boite, cases: casesDeBoite(boite), vu: R.vu, erreur, gagne, echeance};
         return;
       }
       // Même jour (lot « fusion du même jour », 22/10/2026). Le jour d'une
@@ -3213,11 +3284,14 @@
       // Avant le 22/10/2026, « la plus haute » dans tous les cas : sous un
       // code, la case de l'appareil (réussite du matin) effaçait l'erreur de
       // l'après-midi à chaque sauvegarde, et le tableau restait bleu. LIMITES
-      // qui restent, acceptées (deux appareils le même jour sur le même
-      // calcul, ce qui suppose l'un des deux hors ligne) : gain sur l'un et
-      // erreur sur l'autre → une boîte au-dessus de la vérité si l'erreur est
-      // venue avant le gain ; appareil hors ligne resté sur une boîte PLUS
-      // HAUTE que le parcours du jour → la fusion le croit.
+      // qui restent, acceptées (relecture Codex du 23/10/2026) : gain sur un
+      // appareil et erreur sur l'autre, le même jour → une boîte au-dessus de
+      // la vérité si l'erreur est venue avant le gain — possible avec deux
+      // pages ouvertes et connectées (elles se synchronisent à l'ouverture,
+      // puis divergent dans la journée), pas seulement hors ligne ; une copie
+      // restée sur une boîte PLUS HAUTE que le parcours du jour, sans erreur
+      // ce jour → la fusion la croit (règle 3). Les copies anciennes vues un
+      // AUTRE jour relèvent des règles « jours différents » ci-dessus.
       const erreurA = faitA.erreur === faitA.vu;
       const erreurB = faitB.erreur === faitB.vu;
       if (erreurA !== erreurB) {

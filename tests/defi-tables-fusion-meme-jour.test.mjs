@@ -120,10 +120,16 @@ test("règle 3 : même jour sans erreur du jour → la boîte la plus haute (inc
   assert.equal(calcul(P.fusionner(hier, haut)).boite, 4);
 });
 
-test("jours différents : le jour le plus récent gagne en bloc (inchangé)", () => {
+test("jours différents : une erreur d'aujourd'hui coûte une boîte à l'état d'hier, un gain d'aujourd'hui n'est pas redescendu (règles du lot « fusion jours différents »)", () => {
+  // Depuis le lot « fusion jours différents » (23/10/2026 au soir), le jour le plus
+  // récent ne gagne plus EN BLOC : chaque nouvelle (gain, erreur) est comparée
+  // aux dates de l'autre côté — voir defi-tables-fusion-jours-differents.test.mjs.
+  // Ici, « aujourd'hui » n'a jamais gagné : il ignore le gain du 21 (copie en
+  // retard). Son erreur coûte une boîte à la boîte 4 d'hier : 3, et le gain du
+  // 21 reste connu (avant ce lot : 3 aussi, mais « gagne » à null).
   const hier = fait({boite: 4, vu: "2026-10-21", erreur: null, gagne: "2026-10-21", echeance: "2026-10-28"});
   const aujourdhui = fait({boite: 3, vu: J, erreur: J, gagne: null, echeance: J});
-  const attendu = {boite: 3, cases: 2, vu: J, erreur: J, gagne: null, echeance: J};
+  const attendu = {boite: 3, cases: 2, vu: J, erreur: J, gagne: "2026-10-21", echeance: J};
   assert.deepEqual(calcul(P.fusionner(hier, aujourdhui)), attendu);
   assert.deepEqual(calcul(P.fusionner(aujourdhui, hier)), attendu);
   // Et l'état d'hier, plus bas, ne redescend pas un gain d'aujourd'hui.
@@ -205,5 +211,5 @@ test("le moteur porte la règle, la page charge le moteur du jour, l'ancien comm
   assert.match(moteur, /\} else \{[^}]*?if \(fait\.erreur !== date\) \{\s*descend = fait\.boite > 1;\s*fait\.boite = Math\.max\(1, fait\.boite - 1\);\s*\}\s*fait\.erreur = date;\s*fait\.echeance = date;\s*\}/, "appliquerReponse : la boîte ne descend qu'une fois par jour");
   assert.doesNotMatch(moteur, /LIMITE CONNUE, acceptée : deux appareils utilisés le MÊME JOUR/, "le commentaire faux (« gain puis erreur » et « erreur puis gain » ne peuvent pas être ordonnés) a disparu");
   assert.doesNotMatch(moteur, /Les erreurs comptent toujours, sans limite/);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261023-1/, "cache-buster du moteur bumpé");
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261023-2/, "cache-buster du moteur bumpé");
 });
