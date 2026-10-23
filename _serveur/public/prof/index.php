@@ -1282,14 +1282,18 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   // Lot « Qui voit quoi » : l'élève dont la fenêtre « Ce que voit… » est ouverte.
   let voitEleve = null;
   // Lot 3b (relecture Codex du 22/10) : les enregistrements de la fenêtre
-  // partent UN PAR UN (voitFile), chacun calcule son état au moment de partir
-  // — jamais d'après un état qu'une réponse pas encore reçue va changer.
-  // voitEnAttente : combien attendent encore (les cases restent grisées) ;
+  // partent UN PAR UN, chacun calcule son état au moment de partir — jamais
+  // d'après un état qu'une réponse pas encore reçue va changer.
+  // Lot 3c (seconde relecture, le soir) : la file et le compteur sont PAR
+  // ÉLÈVE (voitFiles, voitAttentes, sur eleve.id) — un envoi qui traîne ne
+  // grise que la fenêtre de CET élève, pas celle des autres ; et chaque envoi
+  // a un délai (DELAI_ACCES_MS), passé lequel la case revient.
   // voitOuverture : le numéro de la fenêtre ouverte (un message ne va qu'à
   // la fenêtre qui a fait le clic).
-  let voitFile = Promise.resolve();
-  let voitEnAttente = 0;
+  const voitFiles = new Map();
+  const voitAttentes = new Map();
   let voitOuverture = 0;
+  const DELAI_ACCES_MS = 15000;
   // Les élèves déjà lus de la classe ouverte, par activité (un appel
   // « tableau » par activité, refait seulement quand la classe change).
   let tableaux = {};
@@ -1377,7 +1381,9 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   }
   const redessin = creerFileRedessin(() => dessinerTableau());
 
-  async function api(action, corps = {}) {
+  // options.signal (lot 3c) : un AbortSignal pour borner l'attente — seul
+  // eleves.acces s'en sert ; sans lui, rien ne change pour les autres appels.
+  async function api(action, corps = {}, options = {}) {
     // Le jeton voyage DANS LE CORPS, et pas seulement dans l'en-tête
     // Authorization : beaucoup d'hébergements Apache (dont OVH) ne transmettent
     // pas cet en-tête à PHP, et le serveur répondrait « session expirée » à
@@ -1389,12 +1395,15 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       headers: jeton ? {"Content-Type": "application/json", "Authorization": "Bearer " + jeton}
                      : {"Content-Type": "application/json"},
       body: JSON.stringify(charge),
-      cache: "no-store"
+      cache: "no-store",
+      signal: options.signal
     });
     const donnees = await reponse.json().catch(() => null);
     if (!reponse.ok || !donnees || !donnees.ok) {
       const erreur = new Error((donnees && donnees.erreur) || "Le serveur ne répond pas.");
       erreur.statut = reponse.status;
+      // Ce que le serveur a joint au refus (lot 3c : un 409 porte l'état vrai).
+      erreur.donnees = donnees;
       throw erreur;
     }
     return donnees;
@@ -1482,6 +1491,11 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     tableaux = {};
     detailsOuverts.clear();
     voitEleve = null;
+    // Lot 3c : un envoi encore en route ne touchera plus à rien (sa classe
+    // n'est plus la classe ouverte). Ses files et compteurs ne sont PAS
+    // vidés (relecture Codex du 23/10) : chaque envoi décompte lui-même son
+    // attente à l'arrivée, exactement une fois — vider ici faisait décompter
+    // une vieille réponse sur l'attente d'un envoi de la session suivante.
     veille.arreter();
   }
 
@@ -2274,14 +2288,19 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       }
       zone.append(bloc);
     });
-    // Un enregistrement est encore en route (fenêtre rouverte entre-temps) :
-    // tout reste grisé jusqu'à sa réponse, qui redessine la fenêtre.
-    if (voitEnAttente > 0) {
+    // Un enregistrement de CET élève est encore en route (fenêtre rouverte
+    // entre-temps) : tout reste grisé jusqu'à sa réponse, qui redessine la
+    // fenêtre. Celle d'un autre élève n'attend rien (lot 3c).
+    if (voitEnAttenteDe(eleve) > 0) {
       [...zone.querySelectorAll("input")].forEach(uneCase => { uneCase.disabled = true; });
       zone.setAttribute("aria-busy", "true");
       return;
     }
     if (aFocaliser) aFocaliser.focus();
+  }
+
+  function voitEnAttenteDe(eleve) {
+    return voitAttentes.get(eleve.id) || 0;
   }
 
   // Chaque clic enregistre (eleves.acces) : la page envoie TOUT l'état
@@ -2294,41 +2313,83 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   // rouvrir AVANT la réponse puis cocher le 5 envoyait [3, 4, 5] — la
   // seconde fenêtre partait de l'état d'avant la première réponse, et le
   // monde 4 retiré était rouvert. Désormais les enregistrements font la queue
-  // (voitFile) et chacun calcule l'état complet au moment de partir, d'après
-  // ce que le serveur a répondu au précédent ; la fenêtre reste grisée tant
-  // qu'un enregistrement est en route.
+  // et chacun calcule l'état complet au moment de partir, d'après ce que le
+  // serveur a répondu au précédent ; la fenêtre reste grisée tant qu'un
+  // enregistrement est en route.
+  //
+  // Lot 3c (seconde relecture Codex, le soir) : la queue ne suffit pas quand
+  // ce que la page croit savoir est FAUX — une réponse perdue en route (le
+  // serveur a écrit, la page ne l'a pas su) ou un second onglet sur le même
+  // élève. La page envoie donc aussi « avant », l'état rangé tel qu'elle le
+  // connaît, et le serveur n'écrit que si c'est encore le sien ; sinon il
+  // répond 409 avec l'état vrai, que la page reporte et redessine — le clic
+  // est à refaire, rien n'a été rouvert. La file et le compteur sont par
+  // élève ; l'attente est bornée (DELAI_ACCES_MS) ; une réponse arrivée après
+  // « Se déconnecter » ou après un changement de classe n'est pas traitée.
   function changerCeQueVoit(geste, caseCochee) {
     const eleve = voitEleve;
     if (!eleve || !classe) return Promise.resolve();
     const ouverture = voitOuverture;
-    voitEnAttente += 1;
+    const classeDepart = classe;
+    voitAttentes.set(eleve.id, voitEnAttenteDe(eleve) + 1);
     const zone = $("voit-liste");
     [...zone.querySelectorAll("input")].forEach(uneCase => { uneCase.disabled = true; });
     zone.setAttribute("aria-busy", "true");
-    const tour = voitFile.then(() => envoyerCeQueVoit(eleve, geste, caseCochee, ouverture));
-    voitFile = tour.catch(() => {});
+    const file = voitFiles.get(eleve.id) || Promise.resolve();
+    const tour = file.then(() => envoyerCeQueVoit(eleve, geste, caseCochee, ouverture, classeDepart));
+    voitFiles.set(eleve.id, tour.catch(() => {}));
     return tour;
   }
 
-  async function envoyerCeQueVoit(eleve, geste, caseCochee, ouverture) {
+  async function envoyerCeQueVoit(eleve, geste, caseCochee, ouverture, classeDepart) {
     let erreurRecue = null;
+    let etatRecu = null;
+    const garde = new AbortController();
+    const minuteur = setTimeout(() => garde.abort(), DELAI_ACCES_MS);
     try {
+      // « avant » : ce que le serveur a rangé, tel qu'il l'a rendu (tableau ou
+      // réponse précédente) — pas recalculé, pas nettoyé.
+      const avant = eleve.ajouts || {};
       const ajouts = ajoutsApres(eleve.ajouts, geste);
-      const reponse = await api("eleves.acces", {eleve_id: eleve.id, ajouts});
-      reporterAcces(eleve, reponse.ajouts || {}, reponse.acces || null);
+      const reponse = await api("eleves.acces", {eleve_id: eleve.id, avant, ajouts}, {signal: garde.signal});
+      etatRecu = {ajouts: reponse.ajouts || {}, acces: reponse.acces || null};
     } catch (erreur) {
       erreurRecue = erreur;
+      // Délai dépassé, ou le navigateur n'a pas pu joindre le serveur
+      // (TypeError « Failed to fetch ») : dans les deux cas le serveur a
+      // peut-être écrit — même conseil, en français.
+      if (erreur.name === "AbortError" || erreur.name === "TypeError") {
+        erreurRecue = new Error(`Le serveur n’a pas répondu : recharge la page pour vérifier les accès de ${prenomCourt(eleve)} avant de recommencer.`);
+        erreurRecue.statut = 0;
+      } else if (erreur.statut === 409 && erreur.donnees && erreur.donnees.ajouts) {
+        // L'état vrai est dans le refus : la page le prend, comme une réponse.
+        etatRecu = {ajouts: erreur.donnees.ajouts, acces: erreur.donnees.acces || null};
+      }
     } finally {
-      voitEnAttente = Math.max(0, voitEnAttente - 1);
+      clearTimeout(minuteur);
+      voitAttentes.set(eleve.id, Math.max(0, voitEnAttenteDe(eleve) - 1));
     }
-    // Le message ne va qu'à la fenêtre qui a fait le clic, encore ouverte.
-    const memeFenetre = $("voit").open && voitEleve === eleve && voitOuverture === ouverture;
+    // Une autre session, une autre classe (ou la même, rouverte : son tableau
+    // a été relu) : cette réponse ne vaut plus rien, on ne reporte rien. Mais
+    // si une fenêtre est ouverte sur ce même élève (relu, donc un autre
+    // objet), elle attendait cet envoi : on la redessine, pour qu'elle se
+    // libère dès que plus rien n'est en route (relecture Codex du 23/10 :
+    // elle restait grisée pour de bon).
+    if (classe !== classeDepart) {
+      if ($("voit").open && voitEleve && voitEleve.id === eleve.id) dessinerCeQueVoit();
+      return;
+    }
+    if (etatRecu) reporterAcces(eleve, etatRecu.ajouts, etatRecu.acces);
+    // Le message d'un enregistrement ne va qu'à la fenêtre qui a fait le
+    // clic, encore ouverte ; celui d'une erreur, à la fenêtre de CET élève si
+    // elle est ouverte (rouverte ou non), sinon sous les boutons d'Élèves.
+    const memeEleve = $("voit").open && voitEleve === eleve;
+    const memeFenetre = memeEleve && voitOuverture === ouverture;
     if (erreurRecue && memeFenetre) caseCochee.checked = !caseCochee.checked;
-    // La fenêtre ouverte (celle-ci ou une rouverte) suit ce que le serveur a rangé.
-    if ($("voit").open && voitEleve) dessinerCeQueVoit(!erreurRecue && memeFenetre ? geste : undefined);
+    // La fenêtre de l'élève, si elle est ouverte, suit ce que le serveur a rangé.
+    if (memeEleve) dessinerCeQueVoit(!erreurRecue && memeFenetre ? geste : undefined);
     if (erreurRecue) {
-      // Fenêtre fermée ou rouverte : le message va sous les boutons d'Élèves.
-      surErreur(erreurRecue, memeFenetre ? "voit-message" : "message-classe");
+      surErreur(erreurRecue, memeEleve ? "voit-message" : "message-classe");
     } else if (memeFenetre) {
       messager("voit-message", texteEnregistre(eleve, geste), "ok");
     }
