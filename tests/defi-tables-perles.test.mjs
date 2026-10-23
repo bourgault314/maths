@@ -399,7 +399,7 @@ test("le rond bleu : J’apprends tant que les cinq ne sont pas terminées et qu
 });
 
 test("le moteur épinglé a changé : nouveau numéro, copie serveur identique, serveur qui accepte « beads »", async () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261021-1/, "le moteur a changé : son numéro monte (et un dépôt FTP suit)");
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261022-1/, "le moteur a changé : son numéro monte (et un dépôt FTP suit)");
   assert.match(html, /defi_tables_core\.js\?v=20261015-1/, "le noyau aussi (« la bande » dans ses libellés)");
   const moteur = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));

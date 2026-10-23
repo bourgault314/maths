@@ -76,7 +76,8 @@
   //    l'entretien de toute l'année, un calcul su ne disparaît plus jamais ;
   //  - une erreur = une boîte de moins (jamais de retour direct en boîte 1) et
   //    le calcul est dû aujourd'hui ; pas de regain le jour d'une erreur ;
-  //    seule la première réponse d'une série compte ;
+  //    seule la première réponse d'une série compte ; au plus UNE descente
+  //    par jour pour un même calcul (22/10/2026), comme pour la montée ;
   //  - la révision = LES CALCULS DUS AUJOURD'HUI, pris dans toutes les boîtes
   //    à tour de rôle (les plus en retard d'abord dans chaque boîte) pour que
   //    chaque série mêle du dur et du facile — verts compris, 10 à la fois ;
@@ -1196,8 +1197,9 @@
   // jour où il revient, pas le répéter dans l'heure). Une erreur = une boîte de
   // moins, et le calcul revient aujourd'hui ; ce jour-là, pas de regain sur ce
   // calcul : le raté « revient dans un nouveau défi » (Claire), un autre jour.
-  // Les erreurs comptent toujours, sans limite : une réussite juste après la
-  // correction prouve peu, une erreur prouve beaucoup.
+  // Une erreur compte toujours (une réussite juste après la correction prouve
+  // peu, une erreur prouve beaucoup), mais la boîte ne descend qu'UNE fois par
+  // jour pour un même calcul (22/10/2026) — comme elle ne monte qu'une fois.
   function appliquerReponse(parcours, cleBrute, reponse = {}) {
     const cle = cleFait(cleBrute);
     if (!cle) {
@@ -1241,8 +1243,15 @@
         fait.echeance = echeanceDeBoite(fait.boite, date);
       }
     } else {
-      descend = fait.boite > 1;
-      fait.boite = Math.max(1, fait.boite - 1);
+      // Lot « une descente par jour » (décision de Gwenaël du 22/10/2026) :
+      // au plus une boîte de moins par jour pour un même calcul — le
+      // symétrique de la montée (une boîte par jour au plus). Déjà raté ce
+      // jour : l'erreur reste notée, le calcul reste dû demain, la boîte ne
+      // bouge plus. Avant : chaque erreur descendait, sans limite par jour.
+      if (fait.erreur !== date) {
+        descend = fait.boite > 1;
+        fait.boite = Math.max(1, fait.boite - 1);
+      }
       fait.erreur = date;
       fait.echeance = date;
     }
@@ -3083,8 +3092,9 @@
   // « On garde le plus avancé des deux, jamais d'écrasement. »
   //
   // Rien ne se perd : chaque compteur prend son maximum, chaque acquisition
-  // gardée à sa PREMIÈRE date, chaque case de la grille son maximum. Les deux
-  // parcours sont interchangeables, sauf pour le prénom : celui du premier
+  // gardée à sa PREMIÈRE date, chaque case de la grille son état le plus
+  // récent (et, le même jour, l'erreur l'emporte : voir la boucle FAITS). Les
+  // deux parcours sont interchangeables, sauf pour le prénom : celui du premier
   // gagne s'il est renseigné (c'est l'appareil devant l'élève qui a raison).
   function fusionner(premier, second) {
     const a = normaliserParcours(premier);
@@ -3177,20 +3187,38 @@
       }
       // Par calcul, le jour le plus récent gagne en bloc : une erreur faite
       // aujourd'hui ne doit pas être effacée par l'état d'hier à trois cases.
-      // LIMITE CONNUE, acceptée : deux appareils utilisés le MÊME JOUR sur le
-      // même calcul ne peuvent pas être ordonnés — « gain puis erreur » et
-      // « erreur puis gain » laissent exactement les mêmes dates, seule l'heure
-      // les séparerait, et on a choisi de ne pas l'enregistrer. Dans ce cas
-      // rare, le plus avancé gagne.
       if (faitA.vu !== faitB.vu) {
         fusion.calculs[cle] = cloner(faitA.vu > faitB.vu ? faitA : faitB);
         return;
       }
-      // Même jour : la boîte la plus haute, et l'échéance qui va avec (à boîte
-      // égale, la plus proche — le calcul revient plutôt trop tôt que trop tard).
-      const boite = Math.max(faitA.boite, faitB.boite);
+      // Même jour (lot « fusion du même jour », 22/10/2026). Le jour d'une
+      // erreur, aucun gain n'est possible sur ce calcul (appliquerReponse :
+      // pas de regain le jour d'une erreur) : une erreur datée de ce jour est
+      // donc forcément POSTÉRIEURE à tout gain du même jour. D'où :
+      //  1. un seul côté porte une erreur de ce jour → il gagne EN BLOC
+      //     (boîte, échéance, erreur, gain). Sur un seul appareil (sauverCase,
+      //     le cas de tous les jours), ce côté descend de l'autre : exact ;
+      //  2. les deux côtés portent une erreur de ce jour → la boîte la plus
+      //     BASSE et son échéance (le côté qui a appliqué le plus d'erreurs) ;
+      //  3. aucune erreur de ce jour → la boîte la plus haute et l'échéance
+      //     qui va avec (à boîte égale, la plus proche — le calcul revient
+      //     plutôt trop tôt que trop tard).
+      // Avant ce lot, « la plus haute » dans tous les cas : sous un code, la
+      // case de l'appareil (réussite du matin) effaçait l'erreur de l'après-
+      // midi à chaque sauvegarde, et le tableau restait bleu (défaut trouvé
+      // le 22/10/2026). LIMITE qui reste, acceptée : deux appareils le même
+      // jour sur le même calcul, gain sur l'un et erreur sur l'autre partie
+      // de l'état d'hier → la fusion finit une boîte plus bas que la vérité ;
+      // rare, et du côté prudent (le calcul revient plus tôt).
+      const erreurA = faitA.erreur === faitA.vu;
+      const erreurB = faitB.erreur === faitB.vu;
+      if (erreurA !== erreurB) {
+        fusion.calculs[cle] = cloner(erreurA ? faitA : faitB);
+        return;
+      }
+      const boite = erreurA ? Math.min(faitA.boite, faitB.boite) : Math.max(faitA.boite, faitB.boite);
       const echeance = faitA.boite !== faitB.boite
-        ? (faitA.boite > faitB.boite ? faitA : faitB).echeance
+        ? (faitA.boite === boite ? faitA : faitB).echeance
         : dateLaPlusAncienne(faitA.echeance, faitB.echeance);
       fusion.calculs[cle] = {
         boite,

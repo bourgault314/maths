@@ -79,17 +79,25 @@ test("cinq boîtes par fait (lot mémoire) : monte quand dû et réussi, −1 pa
   assert.equal(parcours.faitDu(etat.calculs["6-7"], "2026-10-05"), false, "raté aujourd’hui : plus « dû » aujourd’hui (il est revenu en fin de série, il ne peut pas monter)");
   assert.equal(parcours.faitDu(etat.calculs["6-7"], "2026-10-06"), true, "dû demain");
 
+  // Lot « une descente par jour » (22/10/2026) : d'autres erreurs le même
+  // jour ne font plus descendre (avant : « sans limite par jour »).
   etat = repondre(etat, "6-7", false, "2026-10-05");
   etat = repondre(etat, "6-7", false, "2026-10-05");
   etat = repondre(etat, "6-7", false, "2026-10-05");
-  assert.equal(etat.calculs["6-7"].boite, 1, "les erreurs comptent toujours, sans limite par jour, jamais sous la boîte 1");
-  assert.equal(parcours.etatFait(etat.calculs["6-7"]), "a-travailler");
+  assert.deepEqual(etat.calculs["6-7"], {boite: 4, cases: 3, vu: "2026-10-05", erreur: "2026-10-05", gagne: "2026-10-04", echeance: "2026-10-05"}, "au plus une boîte de moins par jour : trois erreurs de plus le même jour, il reste en boîte 4, toujours dû demain");
+  assert.equal(parcours.etatFait(etat.calculs["6-7"]), "su");
 
   etat = repondre(etat, "6-7", true, "2026-10-05");
-  assert.equal(etat.calculs["6-7"].boite, 1, "pas de regain le jour d’une erreur sur ce calcul : il « revient dans un nouveau défi », c’est-à-dire un autre jour");
-  etat = repondre(etat, "6-7", true, "2026-10-06");
-  assert.equal(etat.calculs["6-7"].boite, 2, "le lendemain, la première réussite fait remonter d’une boîte");
-  assert.equal(repondre(etat, "6-7", true, "2026-10-06").calculs["6-7"].boite, 2, "mais une seule fois : il n’est plus dû");
+  assert.equal(etat.calculs["6-7"].boite, 4, "pas de regain le jour d’une erreur sur ce calcul : il « revient dans un nouveau défi », c’est-à-dire un autre jour");
+  etat = repondre(etat, "6-7", false, "2026-10-06");
+  assert.equal(etat.calculs["6-7"].boite, 3, "le lendemain, une erreur fait de nouveau descendre d’une boîte");
+  etat = repondre(etat, "6-7", true, "2026-10-07");
+  assert.equal(etat.calculs["6-7"].boite, 4, "et le surlendemain, la première réussite fait remonter d’une boîte");
+  assert.equal(repondre(etat, "6-7", true, "2026-10-07").calculs["6-7"].boite, 4, "mais une seule fois : il n’est plus dû");
+  // Jamais sous la boîte 1.
+  let bas = repondre(parcours.creerParcours(), "3-4", false, "2026-10-05");
+  bas = repondre(bas, "3-4", false, "2026-10-06");
+  assert.equal(bas.calculs["3-4"].boite, 1, "un calcul jamais vu part de la boîte 1 et n’en descend pas");
 
   const premiereErreur = repondre(parcours.creerParcours(), "3-9", false);
   assert.equal(parcours.etatFait(premiereErreur.calculs["3-9"]), "a-travailler", "une erreur au premier essai suffit");

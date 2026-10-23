@@ -777,14 +777,15 @@ test("fusion : par calcul, le jour le plus récent gagne en bloc — une erreur 
   assert.equal(fusion.calculs["9-9"].boite, 1);
   assert.equal(Object.keys(fusion.calculs).length, 3);
 
-  // Même jour des deux côtés : impossible d'ordonner (on n'enregistre pas
-  // l'heure) — limite connue et acceptée : le plus avancé gagne (et son
-  // échéance), l'erreur et le gain les plus récents sont conservés, le gain
-  // du jour n'est pas rouvert.
+  // Même jour des deux côtés (lot « fusion du même jour », 22/10/2026) : le
+  // jour d'une erreur, aucun gain n'est possible, donc le côté qui porte
+  // l'erreur du jour est le plus récent — il gagne en bloc (avant ce lot, le
+  // plus avancé gagnait, et la case de l'appareil effaçait l'erreur).
   const matin = parcours.normaliserParcours({calculs: {"3-8": {boite: 4, vu: "2026-09-12", erreur: null, gagne: "2026-09-12", echeance: "2026-09-19"}}});
   const apresMidi = parcours.normaliserParcours({calculs: {"3-8": {boite: 3, vu: "2026-09-12", erreur: "2026-09-12", gagne: null, echeance: "2026-09-12"}}});
   const memeJour = parcours.fusionner(matin, apresMidi).calculs["3-8"];
-  assert.deepEqual(memeJour, {boite: 4, cases: 3, vu: "2026-09-12", erreur: "2026-09-12", gagne: "2026-09-12", echeance: "2026-09-19"});
+  assert.deepEqual(memeJour, {boite: 3, cases: 2, vu: "2026-09-12", erreur: "2026-09-12", gagne: null, echeance: "2026-09-12"});
+  assert.deepEqual(parcours.fusionner(apresMidi, matin).calculs["3-8"], memeJour, "dans les deux sens");
   // À boîte égale, l'échéance la plus proche : plutôt trop tôt que trop tard.
   const egal = parcours.fusionner(
     parcours.normaliserParcours({calculs: {"3-8": {boite: 3, vu: "2026-09-12", erreur: null, gagne: "2026-09-12", echeance: "2026-09-15"}}}),
