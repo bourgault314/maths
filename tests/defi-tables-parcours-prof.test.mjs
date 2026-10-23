@@ -252,7 +252,7 @@ test("verrou 3 — launchFromParcours, start et startRevision sortent en premier
 
 test("la page : l'écran Mon parcours de l'élève, « Le parcours de Léa », sans flèche, ⋯, ▶, « Comment ça marche ? », plein écran ni pied ; Mon mélange sur une colonne", () => {
   assert.match(html, /if \(VUE_PROF && document\.body\) document\.body\.classList\.add\("mode-prof"\);/);
-  assert.match(html, /if \(VUE_PROF\) return `Le parcours de \$\{\(parcours && parcours\.prenom\) \|\| "l’élève"\}`;/);
+  assert.match(html, /if \(VUE_PROF\) return `Le parcours \$\{deNom\(\(parcours && parcours\.prenom\) \|\| "l’élève"\)\}`;/);
   assert.match(html, /\$\("parcours-name"\)\.hidden = VUE_PROF \|\| suiviActif\(\) \|\|/);
   assert.match(html, /classList\.toggle\("mode-eleve", Boolean\(suiviActif\(\) \|\| entreeRefusee \|\| VUE_PROF\)\)/, "la même barre fine que l'élève");
   const regle = /body\.mode-prof \.fullscreen-toggle, body\.mode-prof footer\.site-footer, body\.mode-prof #intro,\s*\n\s*body\.mode-prof #parcours-options, body\.mode-prof #parcours-name, body\.mode-prof #parcours-confirm,\s*\n\s*body\.mode-prof \.parcours-notice-action \.saut, body\.mode-prof #parcours-notice-bouton, body\.mode-prof #parcours-notice,\s*\n\s*body\.mode-prof #parcours-melange \.mp-melange > \.cell \{ display: none !important; \}/;

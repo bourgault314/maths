@@ -1979,6 +1979,22 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     return (eleve && eleve.prenom) || "cet élève";
   }
 
+  // « les accès de Léa », « les accès d’Axel », « en tant qu’Inès » : devant un
+  // nom qui commence par une voyelle, « de » et « que » s’élident (Y suivi
+  // d’une consonne aussi : d’Yves, mais de Yanis). Devant un H, on garde
+  // « de » : pour un prénom, les deux se disent.
+  function seElide(mot) {
+    return /^(?:[aeiouàâäéèêëîïôöùûüœæ]|y(?![aeiouàâäéèêëîïôöùûü]))/iu.test(String(mot || "").trim());
+  }
+
+  function deNom(nom) {
+    return (seElide(nom) ? "d’" : "de ") + nom;
+  }
+
+  function queNom(nom) {
+    return (seElide(nom) ? "qu’" : "que ") + nom;
+  }
+
   // « monde 3 », « niveau 2 », « opération Division ».
   function motDe(liste, numero) {
     const trouve = liste.numeros.find(([n]) => n === numero);
@@ -2149,7 +2165,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     const liste = (LISTES_PAR_ELEVE[geste.cle] || []).find(une => une.nom === geste.liste);
     if (!liste) return "Enregistré.";
     const e = liste.feminin ? "e" : "";
-    const quoi = `${liste.feminin ? "l’" : "le "}${motDe(liste, geste.numero)}${liste.seul ? "" : ` de ${appli.nom}`}`;
+    const quoi = `${liste.feminin ? "l’" : "le "}${motDe(liste, geste.numero)}${liste.seul ? "" : ` ${deNom(appli.nom)}`}`;
     return geste.ouvre ? `Enregistré : ${quoi} est ouvert${e} à ${prenom}.` : `Enregistré : ${quoi} n’est plus ouvert${e} à ${prenom}.`;
   }
 
@@ -2359,7 +2375,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       // (TypeError « Failed to fetch ») : dans les deux cas le serveur a
       // peut-être écrit — même conseil, en français.
       if (erreur.name === "AbortError" || erreur.name === "TypeError") {
-        erreurRecue = new Error(`Le serveur n’a pas répondu : recharge la page pour vérifier les accès de ${prenomCourt(eleve)} avant de recommencer.`);
+        erreurRecue = new Error(`Le serveur n’a pas répondu : recharge la page pour vérifier les accès ${deNom(prenomCourt(eleve))} avant de recommencer.`);
         erreurRecue.statut = 0;
       } else if (erreur.statut === 409 && erreur.donnees && erreur.donnees.ajouts) {
         // L'état vrai est dans le refus : la page le prend, comme une réponse.
@@ -4225,13 +4241,13 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   // Le serveur n'accepte que le propriétaire de la classe de l'élève.
   async function retirerTemps(ligne) {
     const qui = `${ligne.eleve.prenom} · ${ligne.eleve.classe}`;
-    const reponse = await demander(`Retirer le temps de ${qui} (${formatTempsRecord(ligne.temps)}) ? Son record et son temps de la semaine s’effacent. Sa prochaine course compte à nouveau.`);
+    const reponse = await demander(`Retirer le temps ${deNom(qui)} (${formatTempsRecord(ligne.temps)}) ? Son record et son temps de la semaine s’effacent. Sa prochaine course compte à nouveau.`);
     if (!reponse) return;
     try {
       const donnees = await api("records.retirer", {eleve_id: ligne.eleve.id});
       ligueRecords = donnees;
       dessinerRecords();
-      messager("message-records", `Le temps de ${qui} est retiré.`, "ok");
+      messager("message-records", `Le temps ${deNom(qui)} est retiré.`, "ok");
       // Le tableau de la classe montre ce temps à côté de la couronne : relu.
       if (classe) await ouvrirClasse(classe.id);
     } catch (erreur) {
@@ -4516,8 +4532,8 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       const connue = classes.find(uneClasse => uneClasse.id === (classe && classe.id));
       const qui = (connue && connue.proprietaire) || "un collègue";
       messager("bandeau-droit", ecriture
-        ? `Classe de ${qui}, partagée avec toi (voir et modifier) : dans l’onglet Élèves, tu ajoutes des élèves, saisis les prénoms et donnes un nouveau code ; tu reviens aussi à une version précédente. Supprimer un élève ou la classe reste à ${qui}.`
-        : `Classe de ${qui}, partagée avec toi (voir seulement) : tu vois la progression, sans les codes des élèves, et tu ne modifies rien.`, "info");
+        ? `Classe ${deNom(qui)}, partagée avec toi (voir et modifier) : dans l’onglet Élèves, tu ajoutes des élèves, saisis les prénoms et donnes un nouveau code ; tu reviens aussi à une version précédente. Supprimer un élève ou la classe reste à ${qui}.`
+        : `Classe ${deNom(qui)}, partagée avec toi (voir seulement) : tu vois la progression, sans les codes des élèves, et tu ne modifies rien.`, "info");
     }
   }
 
@@ -4695,19 +4711,19 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       // Affiché une seule fois, DANS UNE BOÎTE que l'on referme : le serveur ne
       // le garde que haché, et il n'a pas à rester en clair dans la page.
       messager("message-profs", `Nouveau mot de passe temporaire pour ${prof.identifiant}.`, "ok");
-      montrerSecret(`Mot de passe temporaire de ${prof.identifiant}, à lui transmettre de vive voix :`,
+      montrerSecret(`Mot de passe temporaire ${deNom(prof.identifiant)}, à lui transmettre de vive voix :`,
         donnees.motdepasse);
     } catch (erreur) { surErreur(erreur, "message-profs"); }
   }
 
   async function desactiverProf(prof) {
     const reponse = await demander(
-      `Désactiver le compte de ${prof.identifiant} ? Il ne pourra plus se connecter. Ses classes, ses élèves et leurs progressions sont conservés ; tu pourras le réactiver.`);
+      `Désactiver le compte ${deNom(prof.identifiant)} ? Il ne pourra plus se connecter. Ses classes, ses élèves et leurs progressions sont conservés ; tu pourras le réactiver.`);
     if (!reponse) return;
     try {
       await api("profs.desactiver", {prof_id: prof.id});
       await chargerProfs();
-      messager("message-profs", `Compte de ${prof.identifiant} désactivé.`, "ok");
+      messager("message-profs", `Compte ${deNom(prof.identifiant)} désactivé.`, "ok");
     } catch (erreur) { surErreur(erreur, "message-profs"); }
   }
 
@@ -4715,7 +4731,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     try {
       await api("profs.reactiver", {prof_id: prof.id});
       await chargerProfs();
-      messager("message-profs", `Compte de ${prof.identifiant} réactivé : il peut se reconnecter avec son mot de passe.`, "ok");
+      messager("message-profs", `Compte ${deNom(prof.identifiant)} réactivé : il peut se reconnecter avec son mot de passe.`, "ok");
     } catch (erreur) { surErreur(erreur, "message-profs"); }
   }
 
@@ -4733,7 +4749,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       messager("message-profs",
         `Compte créé pour ${reponse.identifiant.trim()}. Il ne verra aucune classe tant que tu ne lui en auras pas partagé une.`,
         "ok");
-      montrerSecret(`Mot de passe temporaire de ${reponse.identifiant.trim()}, à lui transmettre de vive voix :`,
+      montrerSecret(`Mot de passe temporaire ${deNom(reponse.identifiant.trim())}, à lui transmettre de vive voix :`,
         donnees.motdepasse);
     } catch (erreur) { surErreur(erreur, "message-profs"); }
   });
@@ -4744,14 +4760,14 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     const classes = prof.classes > 1 ? `ses ${prof.classes} classes` : "sa classe";
     const eleves = `${prof.eleves} élève${prof.eleves > 1 ? "s" : ""}`;
     const question = prof.classes
-      ? `Supprimer le compte de ${prof.identifiant} ET ${classes} (${eleves}, avec leurs codes et leurs progressions) ? Cette action est définitive. Pour garder ${prof.classes > 1 ? "ses classes" : "sa classe"}, désactive plutôt le compte.`
-      : `Supprimer le compte de ${prof.identifiant} ? Cette action est définitive.`;
+      ? `Supprimer le compte ${deNom(prof.identifiant)} ET ${classes} (${eleves}, avec leurs codes et leurs progressions) ? Cette action est définitive. Pour garder ${prof.classes > 1 ? "ses classes" : "sa classe"}, désactive plutôt le compte.`
+      : `Supprimer le compte ${deNom(prof.identifiant)} ? Cette action est définitive.`;
     const reponse = await demander(question);
     if (!reponse) return;
     try {
       await api("profs.supprimer", {prof_id: prof.id, avec_classes: Boolean(prof.classes)});
       await chargerProfs();
-      messager("message-profs", `Compte de ${prof.identifiant} supprimé.`, "ok");
+      messager("message-profs", `Compte ${deNom(prof.identifiant)} supprimé.`, "ok");
     } catch (erreur) { surErreur(erreur, "message-profs"); }
   }
 
@@ -5352,7 +5368,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   // ------------------------------------------------------------------ mon compte
 
   function ouvrirCompte() {
-    $("compte-qui").textContent = identifiant ? `Connecté en tant que ${identifiant}.` : "";
+    $("compte-qui").textContent = identifiant ? `Connecté en tant ${queNom(identifiant)}.` : "";
     $("bandeau-temporaire").hidden = !mdpTemporaire;
     messager("message-compte", "", "");
     ["mdp-ancien", "mdp-nouveau", "mdp-confirme"].forEach(id => { $(id).value = ""; });

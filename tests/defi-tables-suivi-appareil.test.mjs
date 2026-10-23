@@ -407,7 +407,7 @@ test("après trois élèves, aucune clé du stockage durable ne contient un code
   for (const code of [A, B, C]) assert.equal(PARCOURS.charger(local, code).tables[4].apprends.construct, 2, "chaque case se relit par son code");
   assert.match(html, /\$\("parcours-name"\)\.hidden = VUE_PROF \|\| suiviActif\(\) \|\|/, "sous un code (et dans la vue du professeur), la page ne demande pas de prénom");
   assert.match(html, /\$\("parcours-rename"\)\.hidden = suiviActif\(\);/, "ni ne propose de le modifier");
-  assert.match(html, /const prenom = prenomAffiche\(\);\s*return prenom \? `Le parcours de \$\{prenom\}` : "Mon parcours";/, "le titre affiche le prénom du professeur");
+  assert.match(html, /const prenom = prenomAffiche\(\);\s*return prenom \? `Le parcours \$\{deNom\(prenom\)\}` : "Mon parcours";/, "le titre affiche le prénom du professeur");
 });
 
 test("l’identité donnée par le serveur vit dans l’onglet, avec le code : rechargée hors ligne, elle est encore là ; sous un autre code, non", async () => {
