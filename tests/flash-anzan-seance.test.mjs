@@ -822,7 +822,9 @@ test("sous un code : chaque calcul validé note la séance (jamais les calculs),
   await p.souffler();
   let envoye = serveur.dernier();
   const jour = PARCOURS.jourLocal(Date.now());
-  assert.deepEqual(envoye.parcours.seances, {"1": [jour, "flash", "plusmoins", 2, 3, 4, 5, 5, 1, 1]}, "après un calcul : 1 fait, 1 juste, 5 prévus");
+  const id = envoye.parcours.seances["1"][10];
+  assert.ok(Number.isInteger(id) && id >= 1 && id <= PARCOURS.ID_MAX, "la séance a son identifiant");
+  assert.deepEqual(envoye.parcours.seances, {"1": [jour, "flash", "plusmoins", 2, 3, 4, 5, 5, 1, 1, id]}, "après un calcul : 1 fait, 1 juste, 5 prévus");
   assert.doesNotMatch(JSON.stringify(envoye), new RegExp(String(attendus[0].total)), "le résultat du calcul ne part pas");
   p.$("suivant").click();
   p.avancer(DUREE_FLASH);
@@ -831,7 +833,7 @@ test("sous un code : chaque calcul validé note la séance (jamais les calculs),
   p.avancer(800);
   await p.souffler();
   envoye = serveur.dernier();
-  assert.deepEqual(envoye.parcours.seances["1"].slice(7), [5, 2, 1], "2 faits, 1 juste, la MÊME séance (numéro 1)");
+  assert.deepEqual(envoye.parcours.seances["1"].slice(7), [5, 2, 1, id], "2 faits, 1 juste, la MÊME séance (même identifiant, numéro 1)");
   assert.equal(Object.keys(envoye.parcours.seances).length, 1);
   // La flèche : la séance s'arrête à 2 sur 5, et c'est ce qui est gardé.
   p.$("suivant").click();
@@ -842,7 +844,7 @@ test("sous un code : chaque calcul validé note la séance (jamais les calculs),
   assert.equal(p.$("envoi-fin").textContent, "Envoyé à ton professeur");
   p.avancer(800);
   await p.souffler();
-  assert.deepEqual(serveur.dernier().parcours.seances["1"].slice(7), [5, 2, 1], "rien de plus que ce qui était déjà noté");
+  assert.deepEqual(serveur.dernier().parcours.seances["1"].slice(7), [5, 2, 1, id], "rien de plus que ce qui était déjà noté");
   // Mon historique : le compte, une ligne « 1/2 · arrêtée ».
   p.$("vers-reglages").click();
   assert.equal(p.$("vers-historique").hidden, false, "le bouton apparaît dès la première séance");
@@ -866,12 +868,13 @@ test("sous un code : chaque calcul validé note la séance (jamais les calculs),
   p.avancer(800);
   await p.souffler();
   assert.deepEqual(Object.keys(serveur.dernier().parcours.seances), ["1", "2"]);
+  assert.notEqual(serveur.dernier().parcours.seances["2"][10], id, "un autre identifiant (le hasard de la page est figé : idLibre prend le suivant)");
 });
 
 test("Mon historique : les séances du compte, dix par dix, la plus récente en haut", async () => {
   const {parcoursComplet} = await import("../scripts/generer-parcours-reference-anzan.mjs");
   let distant = parcoursComplet();
-  for (let i = 0; i < 5; i += 1) distant = PARCOURS.noterSeance(distant, {mode: "colonne", reglages: COLONNE, faits: 5, score: 4}, null, "2026-10-23").parcours;
+  for (let i = 0; i < 5; i += 1) distant = PARCOURS.noterSeance(distant, {id: 200 + i, mode: "colonne", reglages: COLONNE, faits: 5, score: 4}, "2026-10-23").parcours;
   const p = ouvrir(null, {suivi: {code: "ABCDEF", serveur: fauxServeur(distant)}});
   await p.souffler();
   p.$("vers-historique").click();

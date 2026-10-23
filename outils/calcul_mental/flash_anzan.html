@@ -856,7 +856,7 @@
         enRevoir: false, // un « ↻ Revoir » est en train de rejouer le calcul
         echeance: 0, // instant (performance.now) où le temps limite est fini ; 0 = sans limite
         tailleFlash: 0,
-        numeroSuivi: null // le numéro de cette séance dans la case de l'élève à code
+        idSuivi: 0 // l'identifiant de cette séance dans la case de l'élève à code (tiré au départ)
       };
       const rng = CORE.mulberry32((Math.random() * 4294967296) >>> 0);
 
@@ -880,7 +880,9 @@
         seance.calculs = CORE.tirerSeance(seance.reglages, rng);
         seance.resultats = [];
         seance.index = 0;
-        seance.numeroSuivi = null;
+        // L'identifiant de la séance : tiré maintenant, libre dans la case ;
+        // c'est lui qui la retrouve d'un calcul au suivant, et sur un autre appareil.
+        seance.idSuivi = suiviActif() ? PARCOURS.idLibre(SUIVI.lire(), 0) : 0;
         $("ecran-reglages").hidden = true;
         $("ecran-historique").hidden = true;
         $("ecran-seance").hidden = false;
@@ -1295,17 +1297,18 @@
       const pastilleSlot = $("suivi-pastille-slot");
 
       // La séance en cours est notée dans la case de l'élève : à chaque calcul
-      // validé (la même séance, mise à jour sous son numéro), et à la fin.
+      // validé (la même séance, retrouvée par son identifiant), et à la fin.
       // Rien sans code ; rien sans calcul fait.
       function noterSeanceSuivi() {
-        if (!suiviActif() || !seance.resultats.length) return;
+        if (!suiviActif() || !seance.resultats.length || !seance.idSuivi) return;
         const justes = seance.resultats.filter(r => r.juste).length;
-        seance.numeroSuivi = SUIVI.client.noterUneSeance({
+        SUIVI.client.noterUneSeance({
+          id: seance.idSuivi,
           mode: seance.mode,
           reglages: seance.reglages,
           faits: seance.resultats.length,
           score: justes
-        }, seance.numeroSuivi);
+        });
       }
 
       // « ● Envoyé à ton professeur » sous le résumé de la séance finie ;
@@ -1419,7 +1422,8 @@
 
       // Au démarrage sous un code : les réglages du compte (et l'historique)
       // sont connus quand le serveur a répondu ; six secondes au plus, puis
-      // on part avec ce que l'appareil sait.
+      // on part avec la copie du compte que l'appareil garde (jamais les
+      // réglages de l'appareil lui-même).
       function demarrerEleve() {
         racine.classList.remove("suivi-attente");
         rechargerMemoire();

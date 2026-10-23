@@ -24,13 +24,18 @@
   //                     (sans code, ils restent dans le localStorage de la
   //                     page, comme au lot 1) ;
   //         seances:  { "1": [jour, mode, operations, chiffresMin, chiffresMax,
-  //                     nombres, temps, calculs, faits, score], "2": … }
-  //                     — une SÉANCE = une liste de dix scalaires dans un ordre
-  //                     fixe (SEANCE_CHAMPS) : le jour (« AAAA-MM-JJ »), le
-  //                     mode, les réglages joués (« temps » est le temps par
+  //                     nombres, temps, calculs, faits, score, id], "2": … }
+  //                     — une SÉANCE = une liste de onze scalaires dans un
+  //                     ordre fixe (SEANCE_CHAMPS) : le jour (« AAAA-MM-JJ »),
+  //                     le mode, les réglages joués (« temps » est le temps par
   //                     nombre en dixièmes de seconde en Flash, la limite en
   //                     secondes en Colonne), le nombre de calculs PRÉVUS, le
-  //                     nombre de calculs FAITS et le score (réponses justes).
+  //                     nombre de calculs FAITS, le score (réponses justes) et
+  //                     un IDENTIFIANT (un entier tiré au hasard par la page
+  //                     quand la séance commence) : c'est lui qui dit « c'est
+  //                     la même séance » — pas les réglages, puisqu'une élève
+  //                     fait souvent plusieurs séances de suite aux mêmes
+  //                     réglages (relecture de Code, 23/10/2026).
   //                     Une séance arrêtée en route (la flèche, l'onglet fermé)
   //                     a moins de calculs faits que prévus : c'est ce que
   //                     l'historique écrit « 6/7 · arrêtée » — pas de booléen
@@ -45,12 +50,11 @@
   //     classe à une séance par jour) ; au-delà, la plus ancienne part.
   //     Fusion entre deux appareils (et avec le serveur) : à époque différente
   //     la plus haute gagne en bloc (restauration par le professeur, lib/
-  //     progression.php) ; sinon union des séances par numéro — un même numéro
-  //     qui désigne la même séance (jour, mode, réglages) garde le plus de
-  //     calculs faits ; deux séances différentes sous un même numéro (deux
-  //     appareils hors ligne le même jour) gardent toutes les deux leur place,
-  //     la seconde renumérotée — et réglages = ceux du parcours qui a la
-  //     séance la plus récente.
+  //     progression.php) ; sinon union des séances par IDENTIFIANT — la même
+  //     séance vue deux fois garde le plus de calculs faits ; deux séances
+  //     différentes sous un même numéro (deux appareils hors ligne le même
+  //     jour) gardent toutes les deux leur place, la seconde renumérotée —
+  //     et réglages = ceux du parcours qui a la séance la plus récente.
   //
   //  2. LE RANGEMENT LOCAL PAR CODE, repris de Coffres, SPLAT! et Défi tables :
   //     la clé sans code « mathsgo-anzan-parcours » est celle de l'appareil ;
@@ -103,8 +107,11 @@
     colonne: Object.freeze({operations: "plusmoins", chiffresMin: 3, chiffresMax: 3, nombres: 8, limite: 0, calculs: 10})
   });
 
-  // Une séance : les dix champs, dans cet ordre, et rien d'autre.
-  const SEANCE_CHAMPS = Object.freeze(["jour", "mode", "operations", "chiffresMin", "chiffresMax", "nombres", "temps", "calculs", "faits", "score"]);
+  // Une séance : les onze champs, dans cet ordre, et rien d'autre.
+  const SEANCE_CHAMPS = Object.freeze(["jour", "mode", "operations", "chiffresMin", "chiffresMax", "nombres", "temps", "calculs", "faits", "score", "id"]);
+  // L'identifiant d'une séance : un entier de 1 à ID_MAX (sous la borne des
+  // entiers du serveur), tiré par la page au début de la séance.
+  const ID_MAX = 999999;
   // D8 (conception du 22/10/2026) : 500 séances ≈ 30 ko, sous la borne du serveur.
   const SEANCES_MAX = 500;
   const NUMERO_MAX = 9999;
@@ -218,6 +225,7 @@
     s.faits = entier(s.faits, 0, s.calculs, 0);
     if (!s.faits) return null;
     s.score = entier(s.score, 0, s.faits, 0);
+    if (!Number.isInteger(s.id) || s.id < 1 || s.id > ID_MAX) return null;
     return s;
   }
 
@@ -266,11 +274,37 @@
     return !Object.keys(p.seances).length && !Object.keys(p.reglages).length;
   }
 
-  // Deux listes désignent-elles la même séance (même jour, même mode, mêmes
-  // réglages) ? Le nombre de calculs faits et le score peuvent différer : c'est
-  // la même séance vue à deux moments.
+  const I_FAITS = SEANCE_CHAMPS.indexOf("faits");
+  const I_SCORE = SEANCE_CHAMPS.indexOf("score");
+  const I_ID = SEANCE_CHAMPS.indexOf("id");
+
+  // Deux listes désignent-elles la même séance ? Même identifiant. Le nombre
+  // de calculs faits et le score peuvent différer : c'est la même séance vue
+  // à deux moments.
   function memeSeance(a, b) {
-    return SEANCE_CHAMPS.slice(0, 8).every((_, i) => a[i] === b[i]);
+    return a[I_ID] === b[I_ID];
+  }
+
+  // La plus avancée des deux vues d'une même séance.
+  function plusAvancee(a, b) {
+    return b[I_FAITS] > a[I_FAITS] || (b[I_FAITS] === a[I_FAITS] && b[I_SCORE] > a[I_SCORE]) ? b : a;
+  }
+
+  // Le numéro de la séance qui porte cet identifiant, ou null.
+  function numeroDeId(p, id) {
+    const trouve = numeros(p).find(n => p.seances[String(n)][I_ID] === id);
+    return trouve === undefined ? null : trouve;
+  }
+
+  // Un identifiant libre dans ce parcours : le tirage, ou le suivant s'il est
+  // déjà pris (deux tirages égaux, ou une page de test au hasard figé).
+  function idLibre(parcours, tirage) {
+    const p = normaliser(parcours);
+    const pris = {};
+    numeros(p).forEach(n => { pris[p.seances[String(n)][I_ID]] = true; });
+    let id = Number.isInteger(tirage) && tirage >= 1 && tirage <= ID_MAX ? tirage : 1 + Math.floor(Math.random() * ID_MAX);
+    while (pris[id]) id = id >= ID_MAX ? 1 : id + 1;
+    return id;
   }
 
   // Le jour de la séance la plus récente d'un parcours (et son numéro), pour
@@ -295,13 +329,12 @@
     const aPlacer = [];
     numeros(b).forEach(n => {
       const sb = b.seances[String(n)];
+      // La même séance (même identifiant), à ce numéro ou à un autre : la
+      // plus avancée des deux vues, à la place qu'elle a déjà dans a.
+      const deja = numeroDeId(fusion, sb[I_ID]);
+      if (deja !== null) { fusion.seances[String(deja)] = plusAvancee(fusion.seances[String(deja)], sb).slice(); return; }
       const sa = fusion.seances[String(n)];
       if (!sa) { fusion.seances[String(n)] = sb.slice(); return; }
-      if (memeSeance(sa, sb)) {
-        // La même séance, vue à deux moments : la plus avancée.
-        if (sb[8] > sa[8] || (sb[8] === sa[8] && sb[9] > sa[9])) fusion.seances[String(n)] = sb.slice();
-        return;
-      }
       aPlacer.push(sb);
     });
     // Deux séances différentes sous un même numéro : la seconde prend le
@@ -332,14 +365,14 @@
     return liste.length ? Math.min(NUMERO_MAX, liste[liste.length - 1] + 1) : 1;
   }
 
-  // La séance en cours (ou finie) est notée : `seance` = {mode, reglages,
+  // La séance en cours (ou finie) est notée : `seance` = {id, mode, reglages,
   // faits, score}, `jour` le jour local de la page (les tests le donnent).
-  // `numero` : celui que la page a reçu à la première note de cette séance ;
-  // s'il désigne encore la même séance (jour, mode, réglages), elle est mise
-  // à jour, sinon — numéro inconnu, ou pris entre-temps par une autre séance
-  // venue d'un autre appareil — la séance prend le numéro libre suivant. Rend
-  // {parcours, numero}. Une séance sans calcul fait n'est pas notée.
-  function noterSeance(parcours, seance, numero, jour) {
+  // `id` : l'identifiant tiré par la page au début de la séance (idLibre) ;
+  // si une séance du parcours le porte déjà — à n'importe quel numéro, une
+  // fusion a pu la déplacer —, elle est mise à jour là où elle est ; sinon la
+  // séance prend le numéro libre suivant. Rend {parcours, numero}. Une séance
+  // sans calcul fait, ou sans identifiant, n'est pas notée.
+  function noterSeance(parcours, seance, jour) {
     const p = normaliser(parcours);
     const s = seance && typeof seance === "object" ? seance : {};
     const r = s.reglages && typeof s.reglages === "object" ? s.reglages : {};
@@ -354,15 +387,12 @@
       temps: mode === "flash" ? r.temps : r.limite,
       calculs: r.calculs,
       faits: s.faits,
-      score: s.score
+      score: s.score,
+      id: s.id
     });
     if (!propre) return {parcours: p, numero: null};
     const liste = seanceEnListe(propre);
-    let n = numeroValide(numero) ? numero : null;
-    if (n !== null) {
-      const existante = p.seances[String(n)];
-      if (!existante || !memeSeance(existante, liste)) n = null;
-    }
+    let n = numeroDeId(p, propre.id);
     if (n === null) n = numeroSuivant(p);
     p.seances[String(n)] = liste;
     return {parcours: borner(p), numero: n};
@@ -394,7 +424,7 @@
     return numeros(p)
       .map(n => {
         const s = normaliserSeance(p.seances[String(n)]);
-        return {numero: n, jour: s.jour, mode: s.mode, reglages: reglagesDeSeance(s),
+        return {numero: n, id: s.id, jour: s.jour, mode: s.mode, reglages: reglagesDeSeance(s),
           calculs: s.calculs, faits: s.faits, score: s.score, arretee: s.faits < s.calculs};
       })
       .sort((x, y) => (x.jour === y.jour ? y.numero - x.numero : (x.jour > y.jour ? -1 : 1)));
@@ -1104,10 +1134,11 @@
 
     // Les gestes de l'appli, par le moteur : la case locale d'abord, le
     // serveur ensuite. Le jour est celui de l'horloge de la page.
-    // noterUneSeance rend le NUMÉRO de la séance, à redonner à chaque calcul
-    // validé de la même séance (voir noterSeance).
-    function noterUneSeance(seance, numero) {
-      const resultat = noterSeance(parcours, seance, numero, jourLocal(maintenant()));
+    // noterUneSeance rend le NUMÉRO de la séance ; c'est son identifiant
+    // (seance.id, tiré par la page au départ) qui la retrouve d'un calcul au
+    // suivant (voir noterSeance).
+    function noterUneSeance(seance) {
+      const resultat = noterSeance(parcours, seance, jourLocal(maintenant()));
       parcours = resultat.parcours;
       noterChangement();
       return resultat.numero;
@@ -1464,6 +1495,7 @@
     SEANCE_CHAMPS,
     SEANCES_MAX,
     NUMERO_MAX,
+    ID_MAX,
     CLES_SERVEUR,
     MOTS_SERVEUR,
     MOTIF_SEANCES_PHP,
@@ -1484,6 +1516,7 @@
     estVide,
     fusionner,
     numeroSuivant,
+    idLibre,
     noterSeance,
     sauverReglages,
     pourServeur,

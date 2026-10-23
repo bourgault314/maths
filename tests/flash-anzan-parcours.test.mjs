@@ -16,7 +16,8 @@ const lire = chemin => readFileSync(new URL(`../${chemin}`, import.meta.url), "u
 
 const FLASH = {operations: "plus", chiffresMin: 2, chiffresMax: 3, nombres: 10, temps: 8, calculs: 10, son: "bip"};
 const COLONNE = {operations: "plusmoins", chiffresMin: 3, chiffresMax: 3, nombres: 8, limite: 20, calculs: 5};
-const note = (p, seance, numero, jour) => PARCOURS.noterSeance(p, seance, numero, jour);
+// Une note : `id` est l'identifiant de la séance (la page le tire au départ, idLibre).
+const note = (p, seance, id, jour) => PARCOURS.noterSeance(p, {id, ...seance}, jour);
 
 // ------------------------------------------------------------- les bornes
 
@@ -39,63 +40,74 @@ test("le moteur partage les bornes et les valeurs de départ de flash_anzan_core
 
 // ------------------------------------------------------------- le format
 
-test("une séance est une liste de dix scalaires dans l'ordre de SEANCE_CHAMPS ; une séance sans calcul fait n'existe pas", () => {
-  assert.deepEqual([...PARCOURS.SEANCE_CHAMPS], ["jour", "mode", "operations", "chiffresMin", "chiffresMax", "nombres", "temps", "calculs", "faits", "score"]);
-  const r = note(PARCOURS.creer(), {mode: "flash", reglages: FLASH, faits: 3, score: 2}, null, "2026-10-22");
+test("une séance est une liste de onze scalaires dans l'ordre de SEANCE_CHAMPS ; sans calcul fait ou sans identifiant, elle n'existe pas", () => {
+  assert.deepEqual([...PARCOURS.SEANCE_CHAMPS], ["jour", "mode", "operations", "chiffresMin", "chiffresMax", "nombres", "temps", "calculs", "faits", "score", "id"]);
+  const r = note(PARCOURS.creer(), {mode: "flash", reglages: FLASH, faits: 3, score: 2}, 501, "2026-10-22");
   assert.equal(r.numero, 1);
-  assert.deepEqual(r.parcours.seances, {"1": ["2026-10-22", "flash", "plus", 2, 3, 10, 8, 10, 3, 2]});
-  const c = note(r.parcours, {mode: "colonne", reglages: COLONNE, faits: 5, score: 5}, null, "2026-10-23");
-  assert.deepEqual(c.parcours.seances["2"], ["2026-10-23", "colonne", "plusmoins", 3, 3, 8, 20, 5, 5, 5], "en Colonne, le septième champ est la limite");
-  const rien = note(PARCOURS.creer(), {mode: "flash", reglages: FLASH, faits: 0, score: 0}, null, "2026-10-22");
+  assert.deepEqual(r.parcours.seances, {"1": ["2026-10-22", "flash", "plus", 2, 3, 10, 8, 10, 3, 2, 501]});
+  const c = note(r.parcours, {mode: "colonne", reglages: COLONNE, faits: 5, score: 5}, 502, "2026-10-23");
+  assert.deepEqual(c.parcours.seances["2"], ["2026-10-23", "colonne", "plusmoins", 3, 3, 8, 20, 5, 5, 5, 502], "en Colonne, le septième champ est la limite");
+  const rien = note(PARCOURS.creer(), {mode: "flash", reglages: FLASH, faits: 0, score: 0}, 503, "2026-10-22");
   assert.equal(rien.numero, null);
   assert.deepEqual(rien.parcours.seances, {});
+  const sansId = PARCOURS.noterSeance(PARCOURS.creer(), {mode: "flash", reglages: FLASH, faits: 3, score: 2}, "2026-10-22");
+  assert.equal(sansId.numero, null, "sans identifiant, rien n'est noté");
+  // idLibre : le tirage s'il est libre, le suivant sinon ; au hasard sans tirage.
+  assert.equal(PARCOURS.idLibre(r.parcours, 501), 502, "501 est pris : le suivant");
+  assert.equal(PARCOURS.idLibre(r.parcours, 777), 777);
+  const tire = PARCOURS.idLibre(r.parcours, 0);
+  assert.ok(Number.isInteger(tire) && tire >= 1 && tire <= PARCOURS.ID_MAX && tire !== 501, "un identifiant au hasard, libre");
   assert.equal(PARCOURS.estVide(rien.parcours), true);
   assert.equal(PARCOURS.estVide(r.parcours), false);
 });
 
-test("la même séance se met à jour sous son numéro ; un numéro pris par une autre séance en donne un nouveau", () => {
-  let r = note(PARCOURS.creer(), {mode: "flash", reglages: FLASH, faits: 1, score: 1}, null, "2026-10-22");
-  for (let i = 2; i <= 10; i += 1) r = note(r.parcours, {mode: "flash", reglages: FLASH, faits: i, score: i - 1}, r.numero, "2026-10-22");
+test("la même séance (même identifiant) se met à jour là où elle est ; une séance déplacée par une fusion est retrouvée ; deux séances aux mêmes réglages restent deux", () => {
+  let r = note(PARCOURS.creer(), {mode: "flash", reglages: FLASH, faits: 1, score: 1}, 901, "2026-10-22");
+  for (let i = 2; i <= 10; i += 1) r = note(r.parcours, {mode: "flash", reglages: FLASH, faits: i, score: i - 1}, 901, "2026-10-22");
   assert.equal(r.numero, 1);
   assert.deepEqual(Object.keys(r.parcours.seances), ["1"], "une seule séance, mise à jour dix fois");
-  assert.deepEqual(r.parcours.seances["1"].slice(8), [10, 9]);
-  // Un autre appareil a pris le numéro 1 pour une autre séance (fusion) : la
-  // nôtre repart sous le numéro libre suivant, rien n'écrase rien.
-  const autre = {...r.parcours, seances: {"1": ["2026-10-21", "colonne", "plusmoins", 3, 3, 8, 20, 5, 5, 5]}};
-  const s = note(autre, {mode: "flash", reglages: FLASH, faits: 4, score: 4}, 1, "2026-10-22");
-  assert.equal(s.numero, 2);
-  assert.deepEqual(s.parcours.seances["1"], autre.seances["1"], "la séance de l'autre appareil n'a pas bougé");
-  // Un numéro inconnu : pareil.
-  const t = note(r.parcours, {mode: "flash", reglages: FLASH, faits: 4, score: 4}, 77, "2026-10-22");
-  assert.equal(t.numero, 2);
+  assert.deepEqual(r.parcours.seances["1"].slice(8), [10, 9, 901]);
+  // Une seconde séance, le même jour, aux MÊMES réglages (une élève enchaîne) : une autre séance, un autre identifiant.
+  const deux = note(r.parcours, {mode: "flash", reglages: FLASH, faits: 3, score: 3}, 902, "2026-10-22");
+  assert.deepEqual(Object.keys(deux.parcours.seances), ["1", "2"], "deux séances, pas une seule");
+  // Une fusion a déplacé notre séance au numéro 4 et mis une autre séance au 1 : la nôtre est retrouvée par son identifiant.
+  const deplace = {...r.parcours, seances: {"1": ["2026-10-21", "colonne", "plusmoins", 3, 3, 8, 20, 5, 5, 5, 777], "4": r.parcours.seances["1"]}};
+  const s = note(deplace, {mode: "flash", reglages: FLASH, faits: 10, score: 10}, 901, "2026-10-22");
+  assert.equal(s.numero, 4, "mise à jour là où elle est");
+  assert.deepEqual(s.parcours.seances["4"].slice(8), [10, 10, 901]);
+  assert.deepEqual(s.parcours.seances["1"], deplace.seances["1"], "la séance de l'autre appareil n'a pas bougé");
+  assert.deepEqual(Object.keys(s.parcours.seances), ["1", "4"], "aucun doublon");
   // Le score ne dépasse jamais les calculs faits, les calculs faits jamais les prévus.
-  const u = note(PARCOURS.creer(), {mode: "flash", reglages: FLASH, faits: 12, score: 15}, null, "2026-10-22");
-  assert.deepEqual(u.parcours.seances["1"].slice(7), [10, 10, 10]);
-  const v = note(PARCOURS.creer(), {mode: "flash", reglages: FLASH, faits: 4, score: 9}, null, "2026-10-22");
-  assert.deepEqual(v.parcours.seances["1"].slice(7), [10, 4, 4], "le score ne dépasse pas les calculs faits, même quand la séance n'est pas finie");
+  const u = note(PARCOURS.creer(), {mode: "flash", reglages: FLASH, faits: 12, score: 15}, 903, "2026-10-22");
+  assert.deepEqual(u.parcours.seances["1"].slice(7), [10, 10, 10, 903]);
+  const v = note(PARCOURS.creer(), {mode: "flash", reglages: FLASH, faits: 4, score: 9}, 904, "2026-10-22");
+  assert.deepEqual(v.parcours.seances["1"].slice(7), [10, 4, 4, 904], "le score ne dépasse pas les calculs faits, même quand la séance n'est pas finie");
 });
 
 test("des séances abîmées sautent : fausse date, mode ou mot inconnu, chiffres hors bornes, temps hors liste, numéro hors motif", () => {
-  const bonne = ["2026-10-22", "flash", "plus", 2, 3, 10, 8, 10, 10, 9];
+  const bonne = ["2026-10-22", "flash", "plus", 2, 3, 10, 8, 10, 10, 9, 31];
   const essais = {
     "1": bonne,
-    "2": ["2026-13-45", "flash", "plus", 2, 3, 10, 8, 10, 10, 9],
-    "3": ["2026-10-22", "dictee", "plus", 2, 3, 10, 8, 10, 10, 9],
-    "4": ["2026-10-22", "flash", "fois", 2, 3, 10, 8, 10, 10, 9],
-    "5": ["2026-10-22", "flash", "plus", 3, 2, 10, 8, 10, 10, 9],
-    "6": ["2026-10-22", "flash", "plus", 2, 3, 10, 7.5, 10, 10, 9],
-    "7": ["2026-10-22", "colonne", "plus", 2, 3, 10, 8, 10, 10, 9],
-    "8": ["2026-10-22", "flash", "plus", 2, 3, 10, 8, 7, 7, 7],
-    "9": ["2026-10-22", "flash", "plus", 2, 3, 10, 8, 10, 0, 0],
+    "2": ["2026-13-45", "flash", "plus", 2, 3, 10, 8, 10, 10, 9, 32],
+    "3": ["2026-10-22", "dictee", "plus", 2, 3, 10, 8, 10, 10, 9, 33],
+    "4": ["2026-10-22", "flash", "fois", 2, 3, 10, 8, 10, 10, 9, 34],
+    "5": ["2026-10-22", "flash", "plus", 3, 2, 10, 8, 10, 10, 9, 35],
+    "6": ["2026-10-22", "flash", "plus", 2, 3, 10, 7.5, 10, 10, 9, 36],
+    "7": ["2026-10-22", "colonne", "plus", 2, 3, 10, 8, 10, 10, 9, 37],
+    "8": ["2026-10-22", "flash", "plus", 2, 3, 10, 8, 7, 7, 7, 38],
+    "9": ["2026-10-22", "flash", "plus", 2, 3, 10, 8, 10, 0, 0, 39],
+    "11": ["2026-10-22", "flash", "plus", 2, 3, 10, 8, 10, 10, 9],
+    "12": ["2026-10-22", "flash", "plus", 2, 3, 10, 8, 10, 10, 9, 0],
+    "13": ["2026-10-22", "flash", "plus", 2, 3, 10, 8, 10, 10, 9, 1000000],
     "0": bonne,
     "12345": bonne,
     "abc": bonne,
-    "10": {jour: "2026-10-22", mode: "colonne", operations: "plusmoins", chiffresMin: 3, chiffresMax: 3, nombres: 8, temps: 0, calculs: 5, faits: 5, score: 4}
+    "10": {jour: "2026-10-22", mode: "colonne", operations: "plusmoins", chiffresMin: 3, chiffresMax: 3, nombres: 8, temps: 0, calculs: 5, faits: 5, score: 4, id: 40}
   };
   const p = PARCOURS.normaliser({version: 1, epoque: 0, seances: essais});
-  assert.deepEqual(Object.keys(p.seances).sort((a, b) => a - b), ["1", "10"]);
+  assert.deepEqual(Object.keys(p.seances).sort((a, b) => a - b), ["1", "10"], "sans identifiant (11), identifiant nul (12) ou hors borne (13) : la séance saute aussi");
   assert.deepEqual(p.seances["1"], bonne);
-  assert.deepEqual(p.seances["10"], ["2026-10-22", "colonne", "plusmoins", 3, 3, 8, 0, 5, 5, 4], "un objet est accepté en entrée, rangé en liste");
+  assert.deepEqual(p.seances["10"], ["2026-10-22", "colonne", "plusmoins", 3, 3, 8, 0, 5, 5, 4, 40], "un objet est accepté en entrée, rangé en liste");
   assert.deepEqual(PARCOURS.normaliser({seances: {"1": {}}}).seances, {}, "rien d'à peu près");
   assert.deepEqual(PARCOURS.normaliser(null), PARCOURS.creer());
   assert.deepEqual(PARCOURS.normaliser([1, 2]), PARCOURS.creer());
@@ -111,34 +123,39 @@ test("les réglages du compte : le mode choisi et chaque mode, propres ; {} tant
 
 // ------------------------------------------------------------- la fusion
 
-test("fusion : union des séances par numéro, la même séance prend la plus avancée, deux séances différentes gardent toutes les deux leur place", () => {
-  const a = note(note(PARCOURS.creer(), {mode: "flash", reglages: FLASH, faits: 10, score: 9}, null, "2026-10-20").parcours,
-    {mode: "flash", reglages: FLASH, faits: 4, score: 3}, null, "2026-10-22").parcours; // 1 (finie), 2 (en cours, 4 faits)
-  const b = note(note(a, {mode: "flash", reglages: FLASH, faits: 7, score: 6}, 2, "2026-10-22").parcours,
-    {mode: "colonne", reglages: COLONNE, faits: 5, score: 5}, null, "2026-10-22").parcours; // 2 avancée à 7, 3 nouvelle
+test("fusion : union des séances par identifiant, la même séance prend la plus avancée, deux séances différentes sous un même numéro gardent toutes les deux leur place", () => {
+  const a = note(note(PARCOURS.creer(), {mode: "flash", reglages: FLASH, faits: 10, score: 9}, 11, "2026-10-20").parcours,
+    {mode: "flash", reglages: FLASH, faits: 4, score: 3}, 12, "2026-10-22").parcours; // 1 (finie), 2 (en cours, 4 faits)
+  const b = note(note(a, {mode: "flash", reglages: FLASH, faits: 7, score: 6}, 12, "2026-10-22").parcours,
+    {mode: "colonne", reglages: COLONNE, faits: 5, score: 5}, 13, "2026-10-22").parcours; // 2 avancée à 7, 3 nouvelle
   const f = PARCOURS.fusionner(a, b);
   assert.deepEqual(Object.keys(f.seances), ["1", "2", "3"]);
-  assert.deepEqual(f.seances["2"].slice(8), [7, 6], "la séance 2 : la plus avancée");
+  assert.deepEqual(f.seances["2"].slice(8), [7, 6, 12], "la séance 2 : la plus avancée");
   assert.deepEqual(PARCOURS.fusionner(b, a), f, "dans les deux sens");
-  // Deux appareils hors ligne le même jour : chacun a noté SA séance sous le numéro 3.
-  const c = note(a, {mode: "colonne", reglages: COLONNE, faits: 5, score: 2}, null, "2026-10-22").parcours; // 3, mais une autre séance (score 2 : même réglages ! donc même séance…)
-  const d = note(a, {mode: "flash", reglages: {...FLASH, chiffresMax: 4}, faits: 10, score: 10}, null, "2026-10-22").parcours; // 3, différente
-  const g = PARCOURS.fusionner(b, d);
-  assert.deepEqual(Object.keys(g.seances), ["1", "2", "3", "4"], "la séance différente prend le numéro libre suivant");
+  // Deux appareils hors ligne le même jour : chacun a noté SA séance sous le numéro 3 — même aux MÊMES réglages.
+  const c = note(a, {mode: "colonne", reglages: COLONNE, faits: 5, score: 2}, 14, "2026-10-22").parcours; // 3, une autre séance aux mêmes réglages que la 3 de b
+  const g = PARCOURS.fusionner(b, c);
+  assert.deepEqual(Object.keys(g.seances), ["1", "2", "3", "4"], "la séance différente prend le numéro libre suivant : aucune ne se perd");
   assert.deepEqual(g.seances["3"], b.seances["3"]);
-  assert.deepEqual(g.seances["4"], d.seances["3"]);
-  // Même jour, même mode, mêmes réglages : c'est la même séance vue deux fois, le plus de calculs faits gagne.
-  const h = PARCOURS.fusionner(b, c);
-  assert.deepEqual(Object.keys(h.seances), ["1", "2", "3"]);
-  assert.deepEqual(h.seances["3"].slice(8), [5, 5]);
+  assert.deepEqual(g.seances["4"], c.seances["3"]);
+  assert.deepEqual(Object.keys(PARCOURS.fusionner(c, b).seances), ["1", "2", "3", "4"], "dans l'autre sens aussi");
+  // Le cas relevé par Code (23/10) : deux appareils jouent en même temps, A a sa séance au 3, le serveur
+  // (après B) a celle de B au 3 et celle de A, moins avancée, au 4 → une seule séance de A, la plus avancée, pas de doublon.
+  const serveur = {...a, seances: {...a.seances, "3": c.seances["3"], "4": ["2026-10-22", "flash", "plus", 2, 3, 10, 8, 10, 2, 2, 15]}};
+  const appareilA = {...a, seances: {...a.seances, "3": ["2026-10-22", "flash", "plus", 2, 3, 10, 8, 10, 6, 5, 15]}};
+  const h = PARCOURS.fusionner(appareilA, serveur);
+  assert.deepEqual(Object.keys(h.seances), ["1", "2", "3", "4"]);
+  assert.deepEqual(h.seances["3"].slice(8), [6, 5, 15], "la séance de A, la vue la plus avancée, là où A l'avait");
+  assert.deepEqual(h.seances["4"], c.seances["3"], "la séance de B, déplacée au numéro libre");
+  assert.equal(PARCOURS.resume(h).calculs, 10 + 4 + 6 + 5, "ses calculs ne sont comptés qu’une fois (1 : 10, 2 : 4, A : 6, B : 5)");
 });
 
 test("fusion : à époque différente la plus haute gagne en bloc ; les réglages suivent la séance la plus récente", () => {
-  const a = note(PARCOURS.creer(), {mode: "flash", reglages: FLASH, faits: 10, score: 9}, null, "2026-10-20").parcours;
+  const a = note(PARCOURS.creer(), {mode: "flash", reglages: FLASH, faits: 10, score: 9}, 21, "2026-10-20").parcours;
   const restaure = {...PARCOURS.creer(), epoque: 3};
   assert.deepEqual(PARCOURS.fusionner(a, restaure), PARCOURS.normaliser(restaure), "une restauration du professeur (époque relevée) efface tout");
   const ra = PARCOURS.sauverReglages(a, {mode: "flash", flash: FLASH});
-  const rb = PARCOURS.sauverReglages(note(PARCOURS.creer(), {mode: "colonne", reglages: COLONNE, faits: 5, score: 5}, null, "2026-10-22").parcours, {mode: "colonne", colonne: COLONNE});
+  const rb = PARCOURS.sauverReglages(note(PARCOURS.creer(), {mode: "colonne", reglages: COLONNE, faits: 5, score: 5}, 22, "2026-10-22").parcours, {mode: "colonne", colonne: COLONNE});
   assert.deepEqual(PARCOURS.fusionner(ra, rb).reglages, rb.reglages, "la séance la plus récente est dans b : ses réglages");
   assert.deepEqual(PARCOURS.fusionner(rb, ra).reglages, rb.reglages, "dans les deux sens");
   assert.deepEqual(PARCOURS.fusionner(ra, PARCOURS.creer()).reglages, ra.reglages, "un parcours vide n'efface pas des réglages");
@@ -148,7 +165,7 @@ test("la borne : les 500 dernières séances restent, les plus anciennes partent
   let p = PARCOURS.creer();
   for (let i = 0; i < 503; i += 1) {
     const jour = `2026-${String(1 + (i % 12)).padStart(2, "0")}-${String(1 + (i % 28)).padStart(2, "0")}`;
-    p = note(p, {mode: "flash", reglages: FLASH, faits: 10, score: 10}, null, jour).parcours;
+    p = note(p, {mode: "flash", reglages: FLASH, faits: 10, score: 10}, 1000 + i, jour).parcours;
   }
   const numeros = Object.keys(p.seances).map(Number);
   assert.equal(numeros.length, PARCOURS.SEANCES_MAX);
@@ -176,7 +193,7 @@ test("l'historique : la plus récente en haut, « arrêtée » quand il manque d
   assert.deepEqual(r, {calculs: 102, justes: 94, jours: 9, seances: 10, premier: "2026-10-13", dernier: "2026-10-22"});
   assert.equal(PARCOURS.texteResume(p), "102 calculs · 9 jours d’entraînement");
   assert.equal(PARCOURS.texteResume(r), PARCOURS.texteResume(p), "depuis le compte ou depuis le parcours");
-  const un = note(PARCOURS.creer(), {mode: "flash", reglages: FLASH, faits: 1, score: 1}, null, "2026-10-22").parcours;
+  const un = note(PARCOURS.creer(), {mode: "flash", reglages: FLASH, faits: 1, score: 1}, 23, "2026-10-22").parcours;
   assert.equal(PARCOURS.texteResume(un), "1 calcul · 1 jour d’entraînement", "au singulier");
   assert.equal(PARCOURS.texteResume(PARCOURS.creer()), "", "rien sans calcul");
   assert.deepEqual(PARCOURS.resumeTuile(PARCOURS.creer()), {texte: "", vide: true});
@@ -257,10 +274,10 @@ test("sous un code, une séance notée est rangée dans une case à empreinte (j
   };
   const client = PARCOURS.creerClient({stockage: () => stockage, stockageSession: () => session, fetch, horloge: {now: () => new Date("2026-10-22T10:00:00").getTime()}});
   assert.equal(client.suiviActif(), true);
-  const numero = client.noterUneSeance({mode: "flash", reglages: FLASH, faits: 3, score: 3}, null);
-  assert.equal(numero, 1);
-  assert.equal(client.noterUneSeance({mode: "flash", reglages: FLASH, faits: 10, score: 8}, numero), 1);
-  assert.deepEqual(client.parcours.seances, {"1": ["2026-10-22", "flash", "plus", 2, 3, 10, 8, 10, 10, 8]});
+  const id = PARCOURS.idLibre(client.parcours, 0);
+  assert.equal(client.noterUneSeance({id, mode: "flash", reglages: FLASH, faits: 3, score: 3}), 1);
+  assert.equal(client.noterUneSeance({id, mode: "flash", reglages: FLASH, faits: 10, score: 8}), 1);
+  assert.deepEqual(client.parcours.seances, {"1": ["2026-10-22", "flash", "plus", 2, 3, 10, 8, 10, 10, 8, id]});
   assert.equal(client.sync.dirty, true, "à envoyer");
   assert.equal(PARCOURS.clesRevelentUnCode(stockage), false, "aucune clé ne laisse lire le code");
   assert.ok([...memoire.keys()].some(k => k.startsWith("mathsgo-anzan-parcours:")), "la case porte une empreinte");
@@ -272,5 +289,5 @@ test("sous un code, une séance notée est rangée dans une case à empreinte (j
   assert.equal(envois.length, 1);
   assert.equal(envois[0].appli, "flash-anzan");
   assert.equal(envois[0].code, "ABCDEF");
-  assert.deepEqual(envois[0].parcours.seances["1"].slice(8), [10, 8]);
+  assert.deepEqual(envois[0].parcours.seances["1"].slice(8, 10), [10, 8]);
 });

@@ -6689,7 +6689,7 @@ verifier("anzan-suivi — le parcours de référence d'Anzan ressort identique d
     $reference = json_decode($texte, false);
     egal(10, count(get_object_vars($reference->seances)), 'dix séances');
     egal('colonne', $reference->reglages->mode, 'le mode choisi');
-    egal(10, count($reference->seances->{'7'}), 'une séance = dix scalaires');
+    egal(11, count($reference->seances->{'7'}), 'une séance = onze scalaires (le dernier : son identifiant)');
     vrai($reference->seances->{'7'}[8] < $reference->seances->{'7'}[7], 'la séance 7 est arrêtée : moins de calculs faits (7) que prévus (10)');
     egal(10, compter_elements_declares('flash-anzan', $attendu), '« Revenir à… » compte les séances');
     vrai(strlen($attendu) < 2000, 'dix séances pèsent moins de 2 ko : 500 tiennent sous la borne de 40 ko');
@@ -6704,10 +6704,10 @@ verifier("anzan-suivi — un texte, une clé étrangère, un numéro de séance 
     $sale->prenom = 'Rania';
     $sale->reglages->flash->note = 'super';
     $sale->reglages->flash->son = 'trompette';
-    $sale->seances->{'0'} = ['2026-10-22', 'flash', 'plus', 2, 3, 10, 8, 10, 10, 10];
-    $sale->seances->{'12345'} = ['2026-10-22', 'flash', 'plus', 2, 3, 10, 8, 10, 10, 10];
-    $sale->seances->{'abc'} = ['2026-10-22', 'flash', 'plus', 2, 3, 10, 8, 10, 10, 10];
-    $sale->seances->{'11'} = ['2026-10-22', 'flash', 'plus', 2, 3, 10, 8, 10, 10, 10, 'mardi', [1, 2], 'Rania'];
+    $sale->seances->{'0'} = ['2026-10-22', 'flash', 'plus', 2, 3, 10, 8, 10, 10, 10, 4242];
+    $sale->seances->{'12345'} = ['2026-10-22', 'flash', 'plus', 2, 3, 10, 8, 10, 10, 10, 4242];
+    $sale->seances->{'abc'} = ['2026-10-22', 'flash', 'plus', 2, 3, 10, 8, 10, 10, 10, 4242];
+    $sale->seances->{'11'} = ['2026-10-22', 'flash', 'plus', 2, 3, 10, 8, 10, 10, 10, 4242, 'mardi', [1, 2], 'Rania'];
     $sale->calculs = ['347+28', '512-99'];
     $sale->reponses = [375, 413];
     $obtenu = filtrer_progression('flash-anzan', $sale);
@@ -6715,7 +6715,7 @@ verifier("anzan-suivi — un texte, une clé étrangère, un numéro de séance 
     vrai(!isset($obtenu->reglages->flash->note), 'un texte dans les réglages saute');
     vrai(!isset($obtenu->reglages->flash->son), 'un son hors de la liste saute');
     vrai(!isset($obtenu->seances->{'0'}) && !isset($obtenu->seances->{'12345'}) && !isset($obtenu->seances->{'abc'}), 'un numéro hors motif saute');
-    egal(['2026-10-22', 'flash', 'plus', 2, 3, 10, 8, 10, 10, 10], $obtenu->seances->{'11'}, 'dans une séance, un texte libre et une liste imbriquée sont retirés ; le moteur, lui, ne garde que les dix premiers champs');
+    egal(['2026-10-22', 'flash', 'plus', 2, 3, 10, 8, 10, 10, 10, 4242], $obtenu->seances->{'11'}, 'dans une séance, un texte libre et une liste imbriquée sont retirés ; le moteur, lui, ne garde que les onze premiers champs');
     vrai(!isset($obtenu->reponses), 'les réponses de l’élève ne sont jamais gardées');
     vrai(isset($obtenu->calculs) && $obtenu->calculs === [], 'la clé « calculs » existe (le nombre de calculs d’un réglage) mais aucun texte n’y entre');
     $texte = json_encode($obtenu, JSON_UNESCAPED_UNICODE);
