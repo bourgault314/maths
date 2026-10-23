@@ -5,7 +5,9 @@
 // lot, « la boîte la plus haute » : la copie de l'appareil (réussite du matin)
 // effaçait l'erreur de l'après-midi, et le tableau Mes calculs restait bleu.
 // La règle : le jour d'une erreur, aucun gain n'est possible, donc le côté qui
-// porte l'erreur du jour est forcément le plus récent — il gagne en bloc.
+// porte l'erreur du jour est forcément le plus récent — il gagne, mais jamais
+// plus d'une boîte sous l'autre côté (correctif du 23/10/2026 : un appareil
+// resté hors ligne ne doit pas écraser l'appareil du jour).
 // Et désormais : au plus UNE descente par jour pour un même calcul.
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -49,7 +51,7 @@ test("il suffit que le calcul ait été touché le même jour : une bonne répon
 
 // ---------------------------------------------- les trois règles du même jour
 
-test("règle 1 : un seul côté porte l'erreur du jour → il gagne en bloc (boîte, échéance, erreur, gain), même s'il est plus haut", () => {
+test("règle 1 : un seul côté porte l'erreur du jour → son erreur, son échéance, son gain et sa boîte, même s'il est plus haut", () => {
   const sansErreur = fait({boite: 4, vu: J, erreur: null, gagne: J, echeance: "2026-10-29"});
   const avecErreur = fait({boite: 3, vu: J, erreur: J, gagne: null, echeance: J});
   const attendu = {boite: 3, cases: 2, vu: J, erreur: J, gagne: null, echeance: J};
@@ -62,17 +64,43 @@ test("règle 1 : un seul côté porte l'erreur du jour → il gagne en bloc (bo�
   assert.deepEqual(calcul(P.fusionner(vieux, recent)), {boite: 4, cases: 3, vu: J, erreur: J, gagne: "2026-10-15", echeance: J});
 });
 
-test("règle 2 : les deux côtés portent l'erreur du jour (deux appareils) → la boîte la plus basse et son échéance", () => {
+test("règle 1, le plancher (correctif du 23/10/2026, trouvé par Codex) : l'erreur d'un appareil resté hors ligne ne descend jamais plus d'une boîte sous l'appareil du jour", () => {
+  // A, l'appareil du jour, en boîte 5 ; B, hors ligne depuis un mois, encore en
+  // boîte 2. B rate aujourd'hui (→ 1), A ne rate pas. Avant : B écrasait A → 1.
+  const aDuJour = fait({boite: 5, vu: J, erreur: null, gagne: "2026-10-20", echeance: "2026-11-03"});
+  const bHorsLigne = repondre(fait({boite: 2, vu: "2026-09-20", erreur: null, gagne: "2026-09-20", echeance: J}), "2-8", false);
+  assert.equal(calcul(bHorsLigne).boite, 1);
+  const attendu = {boite: 4, cases: 3, vu: J, erreur: J, gagne: "2026-09-20", echeance: J};
+  assert.deepEqual(calcul(P.fusionner(aDuJour, bHorsLigne)), attendu, "l'erreur est gardée (notée aujourd'hui, le calcul revient demain), mais une seule boîte de moins");
+  assert.equal(P.faitDu(calcul(P.fusionner(aDuJour, bHorsLigne)), LENDEMAIN), true, "dû demain");
+  assert.deepEqual(calcul(P.fusionner(bHorsLigne, aDuJour)), attendu, "dans les deux sens");
+  // Le plancher ne remonte jamais au-dessus de « l'autre côté − 1 » : si l'autre
+  // côté est en boîte 1 ou 2, le côté raté garde sa boîte.
+  const bas = fait({boite: 2, vu: J, erreur: null, gagne: J, echeance: "2026-10-24"});
+  const rate = fait({boite: 1, vu: J, erreur: J, gagne: null, echeance: J});
+  assert.equal(calcul(P.fusionner(bas, rate)).boite, 1);
+  assert.equal(calcul(P.fusionner(fait({boite: 1, vu: J, erreur: null, gagne: null, echeance: J}), rate)).boite, 1);
+});
+
+test("règle 2 : les deux côtés portent l'erreur du jour (deux appareils) → la boîte la plus haute et son échéance", () => {
+  // Au plus une descente par jour : chaque côté vaut « sa boîte du matin − 1 »,
+  // le plus haut est celui dont le parcours était à jour.
   const a = fait({boite: 3, vu: J, erreur: J, gagne: "2026-10-10", echeance: J});
   const b = fait({boite: 2, vu: J, erreur: J, gagne: null, echeance: J});
-  const attendu = {boite: 2, cases: 1, vu: J, erreur: J, gagne: "2026-10-10", echeance: J};
+  const attendu = {boite: 3, cases: 2, vu: J, erreur: J, gagne: "2026-10-10", echeance: J};
   assert.deepEqual(calcul(P.fusionner(a, b)), attendu);
   assert.deepEqual(calcul(P.fusionner(b, a)), attendu, "dans les deux sens");
-  // Avec « une descente par jour », chaque côté est au pire « boîte du matin
-  // − 1 » : la fusion ne fait jamais descendre deux fois.
+  // Le cas de Codex (23/10/2026) : A du jour 5 → 4, B hors ligne 2 → 1 → 4 (avant : 1).
+  const aDuJour = repondre(fait({boite: 5, vu: "2026-10-20", erreur: null, gagne: "2026-10-20", echeance: J}), "2-8", false);
+  const bHorsLigne = repondre(fait({boite: 2, vu: "2026-09-20", erreur: null, gagne: "2026-09-20", echeance: J}), "2-8", false);
+  assert.deepEqual([calcul(aDuJour).boite, calcul(bHorsLigne).boite], [4, 1]);
+  assert.equal(calcul(P.fusionner(aDuJour, bHorsLigne)).boite, 4);
+  assert.equal(calcul(P.fusionner(bHorsLigne, aDuJour)).boite, 4, "dans les deux sens");
+  // Sur un seul appareil : la case (1re erreur) et la mémoire (2e erreur du
+  // jour, la boîte ne bouge plus) sont égales → rien ne change.
   const matin = enBoite(4);
-  const local = repondre(matin, "2-8", false);              // 1re erreur, rangée dans la case
-  const memoire = repondre(local, "2-8", false);            // 2e erreur du jour : la boîte ne bouge plus
+  const local = repondre(matin, "2-8", false);
+  const memoire = repondre(local, "2-8", false);
   assert.equal(calcul(P.fusionner(local, memoire)).boite, 3, "boîte 4 → 3, pas 2");
 });
 
@@ -173,9 +201,9 @@ test("bout en bout : sous un code, une séance « Dans le désordre » juste pui
 // ---------------------------------------------------------- les épingles
 
 test("le moteur porte la règle, la page charge le moteur du jour, l'ancien commentaire a disparu", () => {
-  assert.match(moteur, /const erreurA = faitA\.erreur === faitA\.vu;\s*const erreurB = faitB\.erreur === faitB\.vu;\s*if \(erreurA !== erreurB\) \{\s*fusion\.calculs\[cle\] = cloner\(erreurA \? faitA : faitB\);\s*return;\s*\}\s*const boite = erreurA \? Math\.min\(faitA\.boite, faitB\.boite\) : Math\.max\(faitA\.boite, faitB\.boite\);/, "fusion : l'erreur du jour gagne en bloc, deux erreurs → la plus basse, sinon la plus haute");
+  assert.match(moteur, /const erreurA = faitA\.erreur === faitA\.vu;\s*const erreurB = faitB\.erreur === faitB\.vu;\s*if \(erreurA !== erreurB\) \{\s*const rate = erreurA \? faitA : faitB;\s*const autre = erreurA \? faitB : faitA;\s*const boiteRatee = Math\.max\(rate\.boite, autre\.boite - 1\);\s*fusion\.calculs\[cle\] = \{\.\.\.cloner\(rate\), boite: boiteRatee, cases: casesDeBoite\(boiteRatee\)\};\s*return;\s*\}\s*const boite = Math\.max\(faitA\.boite, faitB\.boite\);/, "fusion : l'erreur du jour gagne, au plus une boîte sous l'autre côté ; sinon la plus haute");
   assert.match(moteur, /\} else \{[^}]*?if \(fait\.erreur !== date\) \{\s*descend = fait\.boite > 1;\s*fait\.boite = Math\.max\(1, fait\.boite - 1\);\s*\}\s*fait\.erreur = date;\s*fait\.echeance = date;\s*\}/, "appliquerReponse : la boîte ne descend qu'une fois par jour");
   assert.doesNotMatch(moteur, /LIMITE CONNUE, acceptée : deux appareils utilisés le MÊME JOUR/, "le commentaire faux (« gain puis erreur » et « erreur puis gain » ne peuvent pas être ordonnés) a disparu");
   assert.doesNotMatch(moteur, /Les erreurs comptent toujours, sans limite/);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261022-1/, "cache-buster du moteur bumpé");
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261023-1/, "cache-buster du moteur bumpé");
 });

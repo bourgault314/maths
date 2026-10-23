@@ -389,7 +389,7 @@ test("la page : les textes — la notice dit le passage avant le test, la fiche 
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; la fiche vierge et sa vignette refaites", () => {
-  assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261022-1"><\/script>/);
+  assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261023-1"><\/script>/);
   assert.match(html, /<script src="\.\/defi_tables_core\.js\?v=20261015-1"><\/script>/, "le noyau n'a pas bougé");
   assert.equal(lire("_serveur/public/prof/defi_tables_mon_parcours.js"), lire("outils/calcul_mental/defi_tables_mon_parcours.js"));
   // Lot « après l'audit GPT » (14/10/2026) : lib/records.php, api/records.php,
@@ -427,7 +427,9 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // prof/index.php seul change, 61 au manifeste (avant : defi-tables-fignolage-22-10).
   // Puis « Défi tables : fusion du même jour » (22/10/2026) : le moteur copié pour
   // Ma classe change, 61 au manifeste (avant : qui-voit-quoi-page-prof).
-  assert.match(lire("_serveur/public/VERSION"), /^lot defi-tables-fusion-meme-jour$/m);
+  // Puis « Défi tables : fusion, l'appareil resté hors ligne » (23/10/2026) : le
+  // moteur copié pour Ma classe change, 61 au manifeste (avant : defi-tables-fusion-meme-jour).
+  assert.match(lire("_serveur/public/VERSION"), /^lot defi-tables-fusion-appareil-ancien$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=flash-anzan-20261022-1/);
 });
