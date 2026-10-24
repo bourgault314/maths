@@ -33,7 +33,8 @@ function amorcer(hash, search = "", codeOnglet = "") {
 
 test("l'amorce du <head> est en JavaScript ancien, avant tout autre script, et ne nomme pas le code", () => {
   const tete = PAGE.slice(0, PAGE.indexOf("</head>"));
-  assert.ok(tete.indexOf(AMORCE) > 0 && tete.indexOf(AMORCE) < tete.indexOf("<script defer"), "l'amorce passe avant les scripts chargés");
+  const premierScriptCharge = PAGE.search(/<script\b[^>]*\bsrc=/);
+  assert.ok(tete.indexOf(AMORCE) > 0 && premierScriptCharge > 0 && PAGE.indexOf(AMORCE) < premierScriptCharge, "l'amorce passe avant les scripts chargés");
   const code = AMORCE.replace(/\/\/[^\n]*/g, "");
   assert.doesNotMatch(code, /\b(const|let)\b|=>|URLSearchParams|\?\./, "ES5 : il faut qu'elle tourne partout");
   assert.doesNotThrow(() => new vm.Script(AMORCE));

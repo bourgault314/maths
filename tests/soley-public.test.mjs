@@ -422,8 +422,8 @@ test("l’accueil masque réellement le plateau et reprend la charte du site", (
   assert.match(css, /#play\.screen\.active\{display:flex;\}/);
   assert.match(html, /class="brandmark" href="\/"/);
   assert.match(html, /assets\/img\/mathsgo-logo-soley\.png/);
-  assert.match(html, /assets\/js\/mention-confidentialite\.js/);
-  assert.match(html, /<span data-mathsgo-confidentialite>Sans cookie ni traceur<\/span>/);
+  // ni script ni texte de la mention dans une appli (retirée des applis le 23/10/2026 : elle reste sur l'accueil, le catalogue et les pages légales)
+  assert.doesNotMatch(html, /<script[^>]*mention-confidentialite\.js|Sans cookie ni traceur|data-mathsgo-confidentialite/);
   assert.match(html, /aria-label="Recommencer le niveau"/);
   assert.match(js.ui, /class="chip[^"]*"[^>]*aria-pressed=/);
   assert.match(html, /meta name="description" content="Un jeu de réflexion en 73 niveaux/);

@@ -459,7 +459,8 @@ test("l’interface est professorale, responsive, projetable et sans version él
   assert.match(interfaceHtml, /id="projection-recap"[^>]*hidden/);
   assert.match(interfaceHtml, /fullscreen-collapse[^>]*hidden/);
   assert.doesNotMatch(interfaceHtml.match(/<footer[\s\S]*?<\/footer>/)[0], /Gwenaël Bourgault/);
-  assert.match(interfaceHtml, /Sans cookie ni traceur/);
+  // « Sans cookie ni traceur » n'est plus dans le pied des applis (retirée des applis le 23/10/2026 : elle reste sur l'accueil, le catalogue et les pages légales)
+  assert.doesNotMatch(interfaceHtml, /Sans cookie ni traceur|<script[^>]*mention-confidentialite\.js/);
   assert.doesNotMatch(interfaceHtml, /data-mode="(?:integer|decimal)"/);
   assert.doesNotMatch(interfaceHtml, /Vérifier l’étape|score|indice|version élève/i);
 

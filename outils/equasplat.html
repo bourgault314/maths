@@ -3739,60 +3739,6 @@
     display:contents;
   }
 
-  .mobileConsentLink{
-    display:none;
-  }
-
-  /* Mention « Sans cookie ni traceur » explicite : seulement en réception (en
-     usage libre, celle que mention-confidentialite.js pose reste en place). */
-  .equasplatConsentFooter{
-    display:none;
-    justify-content:center;
-    width:min(1240px,calc(100vw - 28px));
-    margin:-8px auto 18px;
-  }
-
-  body.importMode .equasplatConsentFooter{
-    display:flex;
-  }
-
-  /* Lot 6 « en-tête » (08/10/2026) : l'élève venu de son espace (son code dans l'onglet ;
-     « suivi-eleve » posé par assets/js/splat-suivi.js) n'a pas cette mention, qui mène au
-     site — l'information est sur Mon espace, comme dans Défi tables. Sur ordinateur, elle est
-     sous le cadre du jeu : retirée, rien ne bouge, la page cesse seulement de défiler. Au
-     téléphone, elle est dans les commandes du bas : invisible et sans clic, mais sa place
-     reste (la retirer faisait descendre les boutons de 33 px). La pastille « ● Léa » reste au
-     bout de la barre du jeu. */
-  html.suivi-eleve .equasplatConsentFooter{
-    display:none !important;
-  }
-  html.suivi-eleve .mobileConsentLink{
-    visibility:hidden !important;
-  }
-
-  .equasplatConsentLink{
-    display:inline-flex;
-    align-items:center;
-    min-height:32px;
-    padding:5px 7px;
-    border:0;
-    border-radius:8px;
-    background:transparent;
-    color:#526d8d;
-    font:700 .78rem "Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
-    text-decoration:underline;
-    text-underline-offset:3px;
-    cursor:pointer;
-  }
-
-  .equasplatConsentLink:hover,
-  .equasplatConsentLink:focus-visible{
-    background:rgba(255,255,255,.9);
-    color:#07336b;
-    outline:3px solid rgba(8,185,178,.3);
-    outline-offset:2px;
-  }
-
   @media (max-width:760px){
     html.importModeRoot{
       width:100%;
@@ -3991,28 +3937,6 @@
       line-height:1.12;
       width:100%;
       max-width:none;
-    }
-
-    body.importMode .stage:not(:fullscreen) .mobileConsentLink{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      align-self:center;
-      min-height:32px;
-      margin:1px auto 0;
-      padding:4px 8px;
-      border:0;
-      border-radius:8px;
-      background:transparent;
-      color:#526d8d;
-      font-size:12px;
-      font-weight:700;
-      text-decoration:underline;
-      text-underline-offset:3px;
-    }
-
-    body.importMode .equasplatConsentFooter{
-      display:none;
     }
 
     body.importMode .stage:not(:fullscreen) .desktopLabel{
@@ -4946,7 +4870,6 @@
      prennent maintenant la place d'une rangée de boutons ordinaire. */
   .actionZone > .btnrow{margin-top:0}
 </style>
-<script defer src="../assets/js/mention-confidentialite.js"></script>
 <!-- Le texte du bouton « Étape suivante ▶ » de l'écran de fin (lot A). -->
 <script src="../assets/js/splat-etapes.js?v=20261023-1"></script>
 <!-- Le parcours de l'élève (moteur partagé avec la carte des mondes et le serveur de suivi), et
@@ -5116,15 +5039,10 @@
       </div>
 
       <div class="actionZone" id="actionZone"></div>
-      <a class="mobileConsentLink" href="../confidentialite.html">Sans cookie ni traceur · Confidentialité</a>
     </div>
     <div class="solution" id="solution"></div>
   </section>
 </main>
-
-<footer class="equasplatConsentFooter">
-  <a class="equasplatConsentLink" href="../confidentialite.html">Sans cookie ni traceur · Confidentialité</a>
-</footer>
 
 <dialog id="decomposeDialog">
   <div class="dialogInner">
@@ -5266,8 +5184,6 @@
   const toolUndo = document.getElementById("toolUndo");
   const toolShareUnits = document.getElementById("toolShareUnits");
   const mobileBottomControlsEl = document.getElementById("mobileBottomControls");
-  const mobileConsentLink = document.querySelector(".mobileConsentLink");
-  const desktopConsentLink = document.querySelector(".equasplatConsentLink");
   const btnStageUndo = document.getElementById("btnStageUndo");
   const btnStageRandom = document.getElementById("btnStageRandom");
   const btnStageReset = document.getElementById("btnStageReset");
@@ -5677,22 +5593,10 @@
     document.body.classList.toggle("importMode", reception);
     document.documentElement.classList.toggle("importModeRoot", reception);
     if(!reception) document.body.classList.remove("importUnitMode");
-    if(reception) bindReceptionConsentLinks();
     if(!appMain) return;
     appMain.classList.toggle("startMode", appLayoutMode === "start");
     appMain.classList.toggle("activeMode", appLayoutMode === "active");
     appMain.classList.toggle("receptionLayout", reception);
-  }
-
-  function bindReceptionConsentLinks(){
-    // En réception, la mention « Sans cookie ni traceur » est posée dans la
-    // page (pied de page sur ordinateur, commandes du bas au téléphone) : celle
-    // que mention-confidentialite.js ajoute sinon, flottante quand l'écran est
-    // verrouillé, chevauchait la barre d'outils. En usage libre, rien ne change.
-    [mobileConsentLink, desktopConsentLink].forEach(lien => {
-      if(!lien) return;
-      lien.setAttribute("data-mathsgo-confidentialite", "");
-    });
   }
 
   let desktopViewMode = "redaction";
@@ -10587,9 +10491,10 @@
   /* Le bandeau centré dans la zone sous le plateau (21/10/2026, remarque de Gwenaël : « il ne me paraît pas centré ») :
      sur ordinateur et tablette, sous les boutons, la zone d'action (« Valider la suppression ») garde sa place vide ; le
      bandeau couvre donc les boutons ET cette zone, et se centre sur l'ensemble (mesuré à 1440 × 791 : 29 px au-dessus,
-     81 en dessous avant ; 54 et 55 après). Au téléphone, la zone d'action est suivie de « Sans cookie ni traceur » : le
-     bandeau est déjà au milieu entre le plateau et ce lien (77 et 78 px), on n'y touche pas. Rien ne bouge : le bandeau
-     est posé par-dessus, il ne prend pas de place. */
+     81 en dessous avant ; 54 et 55 après). Au téléphone, on n'y touche pas : le bandeau reste sur les boutons (depuis
+     le 23/10/2026, plus de lien « Sans cookie ni traceur » sous la zone d'action : la place rendue va au cadre de
+     l'équation, en haut, et les boutons gardent le même écart avec le plateau). Rien ne bouge : le bandeau est posé
+     par-dessus, il ne prend pas de place. */
   function eleveCentrerBravo(){
     const bravo = document.getElementById("eleveBravo"), outils = document.getElementById("toolBar");
     if(!bravo || bravo.hidden || !outils) return;

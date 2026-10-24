@@ -38,9 +38,10 @@ test("vue professeur, monde 1 : un seul lien vers la page des livrets, et une no
 test("Petit SPLAT! : GÉNÉRER et IMPRIMER sont hors de la partie qui défile", () => {
   const debut = petit.indexOf('<div class="sb-scroll">');
   const actions = petit.indexOf('<div class="actions">');
-  const consent = petit.indexOf('<div class="menuConsent">');
-  /* depuis le 26/09/2026, la mention de confidentialité est au bas de la partie qui défile */
-  assert.ok(debut > 0 && consent > debut && actions > consent);
+  const titre = petit.indexOf('id="activityLabel"');
+  /* le titre imprimé est le dernier réglage de la partie qui défile (la mention de
+     confidentialité qui le suivait a quitté les applis le 23/10/2026) */
+  assert.ok(debut > 0 && titre > debut && actions > titre);
   /* la partie qui défile se ferme avant les boutons : pas de <div class="section"> entre les deux */
   const entre = petit.slice(actions - 400, actions);
   assert.match(entre, /<\/div>\s*<!-- GÉNÉRER et IMPRIMER hors de la partie qui défile/);

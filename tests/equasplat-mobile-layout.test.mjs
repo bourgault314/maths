@@ -318,21 +318,12 @@ test("la validation mobile garde toujours la même hauteur", () => {
   assert.match(html, /renderActions\(\);\s*stabilizeMobileActionZone\(\);/);
 });
 
-test("la mention de confidentialité reste accessible en réception, sans toucher à l’usage libre", () => {
-  assert.doesNotMatch(html, /body\.importMode \.mg-mention-slot\{\s*display:none !important;/);
-  assert.match(html, /<div class="actionZone" id="actionZone"><\/div>\s*<a class="mobileConsentLink" href="\.\.\/confidentialite\.html">Sans cookie ni traceur · Confidentialité<\/a>/);
-  assert.match(html, /<footer class="equasplatConsentFooter">\s*<a class="equasplatConsentLink" href="\.\.\/confidentialite\.html">Sans cookie ni traceur · Confidentialité<\/a>/);
-  assert.match(html, /\.mobileConsentLink\{\s*display:none;/);
-  assert.match(html, /\.stage:not\(:fullscreen\) \.mobileConsentLink\{\s*display:inline-flex;[^}]*min-height:32px;/s);
-  assert.match(html, /\.equasplatConsentFooter\{\s*display:none;/);
-  assert.match(html, /body\.importMode \.equasplatConsentFooter\{\s*display:flex;/);
-  assert.match(html, /body\.importMode \.equasplatConsentFooter\{\s*display:none;/);
+test("plus de mention « Sans cookie ni traceur » dans ÉquaSplat, ni en réception ni en usage libre (23/10/2026)", () => {
+  // Décision de Gwenaël : la mention reste sur l'accueil, le catalogue et les pages légales,
+  // elle quitte les applis. En réception, la zone d'action finit les commandes du bas.
+  assert.doesNotMatch(html, /<script[^>]*mention-confidentialite\.js|Sans cookie ni traceur · Confidentialité|data-mathsgo-confidentialite/);
+  assert.doesNotMatch(html, /mobileConsentLink|equasplatConsentFooter|equasplatConsentLink|bindReceptionConsentLinks|mg-mention-slot/);
+  assert.match(html, /<div class="actionZone" id="actionZone"><\/div>\s*<\/div>\s*<div class="solution" id="solution"><\/div>/);
   assert.match(html, /@media \(max-width:760px\) and \(max-height:680px\)[\s\S]*?\.board\{\s*height:220px;\s*min-height:220px;\s*max-height:220px;/);
-  // En usage libre, aucun lien ne porte l'attribut : mention-confidentialite.js
-  // garde sa mention automatique. En réception, l'attribut est posé et la mention
-  // automatique (flottante sur écran verrouillé) s'efface.
-  assert.ok(!/<a[^>]*data-mathsgo-confidentialite/.test(html), "pas d’attribut dans le HTML statique");
-  assert.match(html, /function bindReceptionConsentLinks\(\)\{[\s\S]*?lien\.setAttribute\("data-mathsgo-confidentialite", ""\);/);
-  assert.match(html, /if\(reception\) bindReceptionConsentLinks\(\);/);
   assert.doesNotMatch(html, /mathsgoConsentement|consent-open|Gérer mes cookies/, "plus rien de l’ancienne bannière");
 });
