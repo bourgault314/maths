@@ -200,7 +200,7 @@ test("les films d'ÉquaSplat disent les phrases de l'outil, mot pour mot, et n'a
     assert.ok(liste.length >= 6, nom);
     for(const p of liste){
       // les nombres viennent de l'exemple (« Jetons regroupés : 35. », « 2 jetons sélectionnés… ») : on cherche le reste
-      const reste = p.replace(/\s*:\s*\d+\.$/, "").replace(/^\d+ /, "").replace(/ \d+ jetons en paquets\.$/, "");
+      const reste = p.replace(/\s*:\s*\d+\.$/, "").replace(/^\d+ /, "").replace(/^Il reste \d+ taches et \d+ jetons : /, "");
       const texteOutil = html.replace(/<\/?strong>/g, "").replace(/&nbsp;/g, " ");
       assert.ok(texteOutil.includes(reste), `« ${p} » (${nom}) est une phrase de l'outil`);
     }
@@ -213,19 +213,21 @@ test("les films d'ÉquaSplat disent les phrases de l'outil, mot pour mot, et n'a
   // jetons numérotés : « Enlever » choisi s'allume aussi au téléphone (plus de « if(!port) »)
   assert.doesNotMatch(intro, /if\(!port\)\{const b=o\.rangs\.enl/);
   // billes (le doigt touche « Enlever » depuis #998) : Enlever n'est plus bleu au repos ; il s'allume quand le doigt
-  // le touche (modeE) jusqu'à l'équation suivante, et « Faire des paquets » le temps du choix
+  // le touche (modeE) jusqu'à l'équation suivante, et « Partager » (ex-« Faire des paquets ») le temps de la fenêtre
   const billes = intro.slice(intro.indexOf("FILMS.equasplat="), intro.indexOf("FILMS['equasplat-jetons']="));
   assert.match(billes, /D\.touche\(T\.modeE,o\.rangs\.enl\.c\);/);
   assert.match(billes, /const st=\{enl:port\?\{fond:'#fff7ed'[^}]*\}:\{fond:'#ffffff'/);
   assert.match(billes, /allume\(o\.rangs\.enl,t>=T\.modeE&&t<T\.b\);allume\(o\.fp,t>=T\.fp&&t<T\.groupes\);/);
 });
 
-test("« Faire des paquets » ne fait plus rétrécir le plateau, et c'est lui qui s'allume (retour de Gwenaël, 15/10 19 h 52)", () => {
-  // la rangée des choix « 2 paquets de 3 » ne grandit plus la zone des boutons (sa marge de .btnrow)
+test("Partager (petits jetons, ex-« Faire des paquets ») ne fait pas rétrécir le plateau, et c'est lui qui s'allume (15/10 puis 23/10)", () => {
+  // une rangée de boutons ne grandit pas la zone des boutons (sa marge de .btnrow) ; depuis le 23/10/2026, il n'y a plus
+  // de rangée « 2 paquets de 3 » du tout : tout se passe dans la fenêtre Partager
   assert.match(html, /\.actionZone > \.btnrow\{margin-top:0\}/);
-  assert.match(source("renderActions"), /row\.className = "btnrow";[\s\S]{0,400}?btn\.className = "unitPacketChoice";/);
-  // le bouton touché s'allume : Enlever restait allumé pendant le choix des paquets
-  assert.match(source("applyUnitShareTokens"), /setActionMode\("unitShare"\);/);
+  assert.doesNotMatch(source("renderActions"), /unitPacketChoice|paquet\$\{|\.choices/);
+  // le bouton touché s'allume le temps de la fenêtre, et s'éteint si on la ferme sans partager
+  assert.match(source("applyUnitShareTokens"), /setActionMode\("unitShare"\);\s*openUnitShareDialog\(situation\);/);
+  assert.match(html, /shareDialog\.addEventListener\("close", \(\) => \{\s*pendingShare = null;[\s\S]{0,200}?if\(actionMode === "unitShare"\) setActionMode\(null\);/);
   assert.doesNotMatch(source("applyUnitShareTokens"), /actionMode = "unitShare"/);
   // le choix fait : retour au mode de départ, « aucun bouton » (Enlever ne s'allume plus tout seul)
   assert.match(source("applyUnitPacketChoice"), /setActionMode\(null\);/);

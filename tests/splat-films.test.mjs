@@ -322,17 +322,19 @@ test("« À toi de faire » : huit consignes, une attente par toucher, chaque co
   assert.match(b, /film\.aToi=aToi;/);
   const TT = tempsTuto(b);
   const ATT = new Function("TT", `return ${b.match(/const ATT=(\[[^\]]*\]);/)[1]};`)(TT);
-  // Enlever, 2 jetons à gauche, 2 jetons à droite, Valider, Équation suivante, Faire des paquets, « 3 paquets de 3 », un groupe
-  assert.equal(ATT.length, 10);
+  // Enlever, 2 jetons à gauche, 2 jetons à droite, Valider, Équation suivante, Partager équitablement, « 3 parts »,
+  // écrire 3, Partager, un groupe (la fenêtre Partager de l'outil depuis le 23/10/2026, plus de « 3 paquets de 3 »)
+  assert.equal(ATT.length, 12);
   for (let k = 1; k < ATT.length; k++) assert.ok(ATT[k] - ATT[k - 1] >= .5, `attentes ${k} et ${k + 1} : ${ATT[k - 1]} → ${ATT[k]}`);
   assert.ok(ATT[0] > TT.ecran && ATT[ATT.length - 1] < TT.fin);
   const GUIDE = new Function("TT", `return ${b.match(/const GUIDE=(\[[\s\S]*?\]\]);/)[1]};`)(TT);
   const consignes = GUIDE.filter((g) => g[2] != null);
+  // une consigne en deux textes : [ordinateur, téléphone]
   assert.deepEqual(consignes.map((g) => g[1]), ["Touche « Enlever des deux côtés ».", "Touche les 2 jetons à gauche.", "Touche 2 jetons à droite.",
-    "Touche « Valider la suppression ».", "Touche « Équation suivante ».", "Touche « Faire des paquets ».",
-    "Choisis « 3 paquets de 3 ».", "Touche un des groupes."]);
+    "Touche « Valider la suppression ».", "Touche « Équation suivante ».", ["Touche « Partager équitablement ».", "Touche « Partager »."],
+    "Choisis « 3 parts ».", ["Touche la case pour écrire 3.", "Touche le 3 du pavé."], "Touche « Partager ».", "Touche un des groupes."]);
   // le ✓ vient après le dernier toucher de la consigne (le 2e jeton) ; chaque attente est sous sa consigne, affichée 0,25 s avant
-  assert.deepEqual(consignes.map((g) => g[2]), [TT.a1, TT.a2b, TT.a3b, TT.a4, TT.a5, TT.a6, TT.a7, TT.a8]);
+  assert.deepEqual(consignes.map((g) => g[2]), [TT.a1, TT.a2b, TT.a3b, TT.a4, TT.a5, TT.a6, TT.a7, TT.a7b, TT.a7c, TT.a8]);
   for (const a of ATT) {
     const g = GUIDE.filter((x) => x[0] <= a).pop();
     assert.ok(g[2] != null && g[2] >= a && a - g[0] >= .25, `attente ${a} : « ${g[1]} »`);
@@ -342,13 +344,13 @@ test("« À toi de faire » : huit consignes, une attente par toucher, chaque co
     const suivante = GUIDE[GUIDE.indexOf(g) + 1];
     assert.ok(suivante[0] - g[2] >= .5, `${g[1]} : ✓ visible ${(suivante[0] - g[2]).toFixed(2)} s`);
   }
-  assert.match(b, /Q\.legende\(o,Y,\(fait\?'✓\\u00a0':''\)\+cur\[1\]\);o\.st\.setAttribute\('fill',fait\?'#15803d':'#1e293b'\);/);
+  assert.match(b, /Q\.legende\(o,Y,\(fait\?'✓\\u00a0':''\)\+\(Array\.isArray\(cur\[1\]\)\?cur\[1\]\[port\?1:0\]:cur\[1\]\)\);o\.st\.setAttribute\('fill',fait\?'#15803d':'#1e293b'\);/);
   // le rond bleu d'un geste (0,45 s) est fini avant l'attente suivante
   for (let k = 1; k < ATT.length; k++) assert.ok(ATT[k] - ATT[k - 1] > .45);
   // la phrase sous l'équation change juste APRÈS le geste : pendant l'attente, on lit encore celle d'avant
   const CONS = new Function("TT", "I0", "C", `return ${b.match(/const CONS_T=(\[[\s\S]*?\]\]);/)[1]};`)(TT, "I0", { orangeC: "o" });
   for (const a of ATT) assert.ok(!CONS.some((c) => c[0] === a), `une phrase change pile à l'attente ${a}`);
-  // « 3 paquets de 3 » (demande de Gwenaël, 16/10) : chaque tache va sur sa ligne, l'une sous l'autre, en face de trois
+  // le partage en 3 parts (demande de Gwenaël, 16/10 ; la fenêtre Partager depuis le 23/10) : chaque tache va sur sa ligne, l'une sous l'autre, en face de trois
   // jetons, à la place et à la taille de son groupe ; puis deux traits coupent les deux plateaux en trois ; puis les
   // groupes prennent la place des bandes, sans bouger (taches et jetons restent pleins pendant le fondu)
   assert.ok(b.includes("o.Bt=X.B.t.map((c,k)=>{const g=E('g',{},o.B);Q.tache(Y,g,[0,0],Y.tRB,'𝑦');return {g,c,c1:[KB.tx,ligne(k)],s1:KB.tR/Y.tRB};});"));
@@ -359,7 +361,7 @@ test("« À toi de faire » : huit consignes, une attente par toucher, chaque co
   assert.equal((b.match(/o\.coupe=KB\.ys\.slice\(1\)/g) || []).length, 1);
   // l'ordre : tout est en place avant que les traits coupent, et les traits sont tracés avant les groupes
   const e = 1e-9;   // (des temps calculés : 16,6 + 0,65 donne 17,250000000000004)
-  assert.ok(TT.range > TT.a7 && TT.coupe >= TT.range + 8 * .04 + .8 - e && TT.groupes >= TT.coupe + .1 + .35 + .2 - e && TT.a8 >= TT.groupes + .6 - e);
+  assert.ok(TT.range > TT.a7c && TT.coupe >= TT.range + 8 * .04 + .8 - e && TT.groupes >= TT.coupe + .1 + .35 + .2 - e && TT.a8 >= TT.groupes + .6 - e);
 });
 
 test("« À toi de faire » : les phrases sous l'équation et les boutons sont ceux d'ÉquaSplat, mot pour mot", () => {
@@ -368,16 +370,17 @@ test("« À toi de faire » : les phrases sous l'équation et les boutons sont c
   const CONS = [...b.slice(b.indexOf("const CONS_T=")).split("];")[0].matchAll(/,'([^']+)'/g)].map((m) => m[1]);
   assert.ok(CONS.length >= 5);
   for (const p of CONS) {
-    const reste = p.replace(/\s*:\s*\d+\.$/, "").replace(/^\d+ /, "").replace(/ \d+ jetons en paquets\.$/, "");
+    const reste = p.replace(/\s*:\s*\d+\.$/, "").replace(/^\d+ /, "").replace(/^Il reste \d+ taches et \d+ jetons : /, "");
     assert.ok(texteOutil.includes(reste), `« ${p} » est une phrase de l'outil`);
   }
   assert.ok(texteOutil.includes("Il y a la même quantité à gauche qu’à droite."));
   // après « Valider la suppression », la tache est seule : l'outil n'écrit plus rien (relevé le 16/10/2026)
   // après 2 jetons à gauche et 1 à droite, l'outil écrit « … ne font pas la même somme. » ; après 2 et 2, « … : 2. »
   assert.match(b, /\[TT\.a3\+\.001,'Les jetons sélectionnés ne font pas la même somme\.'\],\[TT\.a3b\+\.001,'Même quantité sélectionnée : 2\.'\],\[TT\.a4\+\.001,''\]/);
-  for (const nom of ["Enlever des deux côtés", "Faire des paquets", "Valider la suppression", "Équation suivante", "3 paquets de 3"]) {
-    assert.ok(nom === "3 paquets de 3" ? outil.includes("paquet${choice.packetCount > 1 ? \"s\" : \"\"} de ${choice.each}") : outil.includes(nom), nom);
+  for (const nom of ["Enlever des deux côtés", "Partager équitablement", ">Partager<", "Valider la suppression", "Équation suivante", "Chaque part vaut", "${n} parts"]) {
+    assert.ok(outil.includes(nom), nom);
   }
+  assert.ok(!outil.includes("Faire des paquets</"), "plus de bouton « Faire des paquets » dans l'outil");
   // on ne touche pas à ÉquaSplat : le tutoriel vit dans le lecteur des films
   assert.doesNotMatch(outil, /aToi|À toi de faire/);
 });
@@ -388,9 +391,10 @@ test("« À toi de faire » : un seul bon geste par attente, des zones assez gra
   assert.match(code, /const pv=Math\.max\(4\/px,\(44\/px-h\)\/2\),ph=Math\.max\(4\/px,\(44\/px-w\)\/2\);/);
   assert.match(code, /const R=Math\.max\(Y\.bR\+Y\.anG,22\/px\);/);
   // les cibles, dans l'ordre : Enlever, les deux jetons de gauche, deux des jetons de droite (un jeton déjà touché ne compte
-  // plus), Valider, Équation suivante, Faire des paquets, « 3 paquets de 3 », un des groupes
+  // plus), Valider, Équation suivante, Partager équitablement, « 3 parts », la case (ordinateur) ou la touche 3 (téléphone),
+  // Partager, un des groupes
   assert.ok(code.includes("const libres=(liste,pris,ta)=>liste.map((b,i)=>pris.some(x=>x.i===i)?null:rond(b.c,()=>{pris.push({i,t:ta});})).filter(Boolean);"));
-  assert.ok(code.includes("case 0:return [bt(o.rangs.enl)];\n      case 1:case 2:return libres(o.Ag,ch.g,a);\n      case 3:case 4:return libres(o.Ad,ch.d,a);\n      case 5:return [bt(o.act.valider)];\n      case 6:return [bt(o.bravoA.btn)];\n      case 7:return [bt(o.fp)];\n      case 8:return [bt(o.act.choix[1])];\n      case 9:return K.ys.map("));
+  assert.ok(code.includes("case 0:return [bt(o.rangs.enl)];\n      case 1:case 2:return libres(o.Ag,ch.g,a);\n      case 3:case 4:return libres(o.Ad,ch.d,a);\n      case 5:return [bt(o.act.valider)];\n      case 6:return [bt(o.bravoA.btn)];\n      case 7:return [bt(o.fp)];\n      case 8:return [zr(o.dP1.pucesR.p3)];\n      case 9:return [zr(o.port?o.dP2.clesR['3']:o.dP2.champR)];\n      case 10:return [zr(o.dP2.okR)];\n      case 11:return K.ys.map("));
   // un toucher ailleurs : rien ne change, le doigt montre la cible la plus proche (il appuie sans rien faire)
   assert.match(code, /if\(bon\)\{this\.indice=null;if\(bon\.faire\)bon\.faire\(\);this\.choix\.touches\[k\]=\{t:ATT\[k\],p:q\};return true;\}/);
   assert.match(code, /if\(pres\)this\.indice=\{r0:performance\.now\(\),c:pres\.c\};\s*return false;/);
@@ -451,7 +455,7 @@ test("« À toi de faire » ou le film : le chemin de l'élève ouvre le tutorie
 test("le film des billes range toujours les jetons, mais ne le dit plus", () => {
   const b = blocBilles(), film = b.slice(0, b.indexOf("const TT="));
   assert.doesNotMatch(sansCommentaires(b), /Range les jetons/);
-  assert.match(film, /\[25\.6,'Touche «\\u00a0Faire des paquets\\u00a0» : 3 paquets de 3\.'\]/);
+  assert.match(film, /\[25\.6,'Partage les 9 jetons en 3 parts égales\.'\]/);
   assert.match(film, /for\(const b of sA\)\{D\.va\(b\.tg,b\.p0\);D\.glisse\(b\.tg\+\.45,b\.p1\);\}/);
   assert.match(film, /for\(const b of sB\)\{D\.va\(b\.tg,b\.p0\);D\.glisse\(b\.tg\+\.45,b\.p1\);\}/);
 });

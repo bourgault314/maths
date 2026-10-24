@@ -231,23 +231,34 @@ test("un partage qui ne conclut pas reste écrit comme un produit", () => {
   assert.match(html, /applySharedTokenSplit\(side, id, count, answer\)/);
 });
 
-test("les billes unitaires s’écrivent comme un seul nombre et se partagent en paquets", () => {
+test("les billes unitaires s’écrivent comme un seul nombre et se partagent équitablement", () => {
   assert.match(html, /const unitSum = pieces\s*\.filter\(p => p\.type === "token" && p\.unit\)/);
   assert.match(html, /if\(useUnits && piece\.type === "token" && !piece\.unit\)\{/);
   assert.match(html, /out\.push\(makeToken\(1, \{unit:true\}\)\)/);
   assert.match(html, /const TOKEN_UNIT_R = 18;/);
-  assert.match(html, /<button class="toolBtn unitShareToolBtn" id="toolShareUnits" type="button">Faire des paquets<\/button>/);
+  // 23/10/2026 (choix de Gwenaël) : « Faire des paquets » disparaît, même nom que pour les jetons numérotés
+  assert.match(html, /<button class="toolBtn unitShareToolBtn" id="toolShareUnits" type="button"><span class="desktopLabel">Partager équitablement<\/span><span class="mobileLabel">Partager<\/span><\/button>/);
+  assert.doesNotMatch(html, />Faire des paquets</);
   assert.match(html, /#toolShareUnits\{\s*display:none;\s*\}/);
   assert.match(html, /body\.importUnitMode #toolDecompose,\s*body\.importUnitMode #toolGroup,\s*body\.importUnitMode #toolShare\{\s*display:none;\s*\}/);
   assert.match(html, /body\.importUnitMode #toolShareUnits\{\s*display:inline-flex;[^}]*align-items:center;[^}]*justify-content:center;/s);
-  for (const nom of ["isImportedUnitMode", "getUnitShareSituation", "getUnitShareOpportunity", "applyUnitPacketChoice", "applyUnitShareTokens", "clearUnitPacketConclusion", "addUnitPacketConclusion", "drawUnitPacketBoxes", "applyUnitPacketPositions", "packetGridForTray", "positionsInPacketBox"]) {
+  for (const nom of ["isImportedUnitMode", "getUnitShareSituation", "getUnitShareOpportunity", "applyUnitPacketChoice", "applyUnitShareTokens", "openUnitShareDialog", "groupeJetonsDialogueHtml", "clearUnitPacketConclusion", "addUnitPacketConclusion", "drawUnitPacketBoxes", "applyUnitPacketPositions", "packetGridForTray", "positionsInPacketBox"]) {
     assert.match(html, new RegExp(`function ${nom}\\(`), `${nom} est portée`);
   }
   assert.match(html, /if\(toolShareUnits\) toolShareUnits\.addEventListener\("click", applyUnitShareTokens\);/);
   assert.match(html, /\.packetBox\.matchXCount\{/);
-  assert.match(html, /\.unitPacketChoice\{/);
-  assert.match(html, /btn\.textContent = `\$\{choice\.packetCount\} paquet\$\{choice\.packetCount > 1 \? "s" : ""\} de \$\{choice\.each\}`;/);
-  // « Il reste n taches et m jetons : on peut faire des paquets. » ne doit pas être
+  // on partage le groupe : la fenêtre Partager s'ouvre tout de suite (aucun jeton à toucher), avec le groupe dessiné,
+  // toutes les parts entières (2 parts… jusqu'au nombre de jetons), puis l'élève TAPE ce que vaut une part
+  assert.match(html, /\.dialogGroupeJetons\{/);
+  assert.match(html, /parts:divisorsOf\(tokenCount\)\.filter\(n => n >= 2\)/);
+  assert.match(html, /setActionMode\("unitShare"\);\s*openUnitShareDialog\(situation\);/);
+  assert.match(html, /shareDialogText\.innerHTML = groupeJetonsDialogueHtml\(situation\.tokenCount\);/);
+  assert.match(html, /if\(pendingShare\.unit\)\{[\s\S]{0,400}?shareDialog\.close\(\);\s*applyUnitPacketChoice\(parts\);/);
+  // la bonne part est vérifiée AVANT (« Ce n’est pas encore la bonne part. »), comme pour un jeton numéroté
+  assert.match(html, /if\(answer !== pendingShare\.value \/ pendingShare\.count\)\{[\s\S]{0,300}?if\(pendingShare\.unit\)\{/);
+  // plus de boutons « 3 paquets de 2 » qui donnaient la réponse
+  assert.doesNotMatch(html, /unitPacketChoice"|paquet\$\{/);
+  // « Il reste n taches et m jetons : on peut partager. » ne doit pas être
   // recouverte par la consigne générique du mode « Enlever » : c'est la seule aide
   // qui reste depuis que le raccourci « 4𝑛 = 4 × 1 » a disparu.
   assert.match(html, /const selection = selectedDeletePiecesBySide\(\);\s*if\(actionMode === "delete" && !selection\.left\.length && !selection\.right\.length\) return;/);
